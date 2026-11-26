@@ -169,7 +169,8 @@ export function wallAt(x: number, z: number, d: number): number {
   }
   // Fans of talus under the gullies, and the apron's own lumps.
   const apron = smooth(4, 40, d) * smooth(150, 100, d);
-  h += apron * (5 * g * g + 2.4 * (fbm(x / 9, z / 9, 3) - 0.5) + 6 * (noise(x / 61, z / 61 + 4) - 0.5));
+  const lumps = 1 - 0.6 * smooth(40, 75, Math.abs(x - CHANNEL_X)) * smooth(260, 200, Math.abs(x - CHANNEL_X));
+  h += apron * (5 * g * g + 2.4 * lumps * (fbm(x / 9, z / 9, 3) - 0.5) + 6 * (noise(x / 61, z / 61 + 4) - 0.5));
   // West of that cone the wide view looks along the wall's foot: fans of talus lean against the cliff there, each with its apex up a gully,
   // and bury the lower flows. No other key sees them.
   const west = smooth(-245, -300, x) * smooth(-120, -200, z) * smooth(2, 30, d) * smooth(170, 120, d);
@@ -216,7 +217,9 @@ export function wallAt(x: number, z: number, d: number): number {
     }
     h += crop * cut * lerp(0.8, 0.62, free);
   }
-  const knob = free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
+  // Not on the slopes beside the fall, which its lens fills its frame with: those are scree lying at rest, even, with ledges at the channel alone.
+  const even = 1 - 0.8 * smooth(260, 200, Math.abs(x - CHANNEL_X));
+  const knob = even * free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
   if (knob > 0) h += knob * (2.5 + 5 * noise(x / 29 + 4.4, z / 29 + 0.9) + 2.2 * (blocks(x / 3.7 + 0.4 * z, z / 4.3 - 0.3 * x) - 0.5) + 1.2 * (noise(x / 1.9, z / 1.9 + 3) - 0.5));
   // The rim and the country outside: broken crags, then long low hills.
   // The rim is a table of flows broken at its edge into blocks: a level skyline with notches, and nothing behind it stands higher.
@@ -301,7 +304,11 @@ function lineCrag(x: number, z: number): number {
   if (v < -1.2 || v > 27) return 0;
   // The face is fractured into masses of rock that stand a little forward or back of each other, and the top is broken, never level.
   const column = noise(u / 1.15 + 3.3, 7.7);
-  const vj = v - 0.9 * (column - 0.5) - 0.3 * (noise(u / 0.4, v / 0.4) - 0.5);
+  // Each two or three metres of the ridge is a block that stands half a metre forward or back of the next and a fifth taller or shorter,
+  // with a sheer side between them: seen along the ridge, the outline goes down in steps and not along one line.
+  const proud = smooth(0.42, 0.58, noise(u / 2.1 + 0.7, 9.9)) - 0.5;
+  const tall = 0.8 + 0.38 * smooth(0.42, 0.58, noise(u / 1.7 + 6.6, 2.2));
+  const vj = v - 1.1 * proud - 0.5 * (column - 0.5) - 0.3 * (noise(u / 0.4, v / 0.4) - 0.5);
   const uj = u + 0.9 * (noise(v / 1.3 + 1.7, 2.9) - 0.5);
   const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
   // Its far end comes down as a weathered ridge does, in lumps a stride across: not in steps and not in a ruled ramp.
@@ -323,12 +330,12 @@ function lineCrag(x: number, z: number): number {
   // one on the other, not one sheer face: the lens sees every block's edge, so the outline is broken and no ruled line.
   const slab = 2.2 * (smooth(0.2, 0.8, noise(u / 2.6 + 3.7, 1.9)) - 0.65);
   const upper = 1.8 * (smooth(0.2, 0.8, noise(u / 1.9 + 8.2, 5.1)) - 0.6);
-  const p = (vj + 1.1) / 2.0 + 0.34 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5) + 0.3 * slab;
+  const p = (vj + 1.1) / 2.0 + 0.2 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5) + 0.3 * slab;
   const knob = noise(u / 0.75 + 0.4, v / 0.6 + 8.8);
   const rise = Math.min(1, Math.max(0, 0.3 * smooth(0, 0.15, p) + 0.11 * smooth(0.12, 0.6, p + 0.16 * (knob - 0.5)) + 0.26 * smooth(0.58, 0.72, p + 0.1 * (knob - 0.5)) + 0.33 * smooth(0.88, 1.04, p + 0.36 * upper) + 0.06 * smooth(0.05, 0.3, p) * (knob - 0.5)));
   // Between two blocks the crest is notched a third of its height.
-  const notch = 1 - 0.3 * smooth(0.56, 0.74, noise(u / 2.2 + 1.3, 4.4));
-  return top * rise * back * start * notch;
+  const notch = 1 - 0.42 * smooth(0.56, 0.7, noise(u / 2.2 + 1.3, 4.4));
+  return top * tall * rise * back * start * notch;
 }
 
 /** Metres from (x, z) to the cameras' route on the bench. */
@@ -627,12 +634,16 @@ export function stagedButteHeight(x: number, z: number): number {
   // The top: a horn at the left end, then it falls away gently to the right and comes down in two shoulders. Its rim is broken blocks.
   const fall = b < 24 ? 0 : b < 43 ? (b - 24) * 0.3 : 5.7 + (b - 43) * 0.16;
   const shoulders = 1.7 * smooth(45.5, 47, b + 0.5 * noise(s / 2.3, 1.7)) + 1.9 * smooth(55, 56.3, b + 0.5 * noise(s / 2.3, 5.1)) + 3 * smooth(68, 70, b);
-  const horn = 1.3 * smooth(14.5, 16.5, b) * smooth(23, 19, b);
-  const crest = 2.0 * (blocks(b / 3.7 + 0.4, s / 9 + 1.1) - 0.5) + 0.5 * (blocks(b / 1.3 + 5.2, s / 3.1 + 0.3) - 0.5) + 0.3 * (noise(b / 0.45, s / 0.45 + 2.7) - 0.5);
+  // The horn is a worn head, not a box: it rises over some strides, its brow toward the sheer end is rounded off, and it runs into the crest.
+  const horn = 2.2 * smooth(13.5, 19, b) * smooth(31, 20, b) - 3.2 * Math.pow(smooth(18.5, 13.5, b), 2);
+  const worn = smooth(20, 30, b);
+  const crest = (0.7 + 0.9 * worn) * (blocks(b / 3.7 + 0.4, s / 9 + 1.1) - 0.5) + 0.5 * worn * (blocks(b / 1.3 + 5.2, s / 3.1 + 0.3) - 0.5) + 0.9 * (noise(b / 2.9 + 1.4, s / 4.3 + 0.6) - 0.5) + 0.3 * (noise(b / 0.45, s / 0.45 + 2.7) - 0.5);
   const top = 38.5 - fall - shoulders + horn + crest;
   // Three beds: a low band on its talus, a ledge under rubble that leans back, and the sheer upper cliff, in places with a narrow ledge half way up.
   const foot = 13 + 5 * (noise(b / 31 + 7.7, 0.3) - 0.5);
-  const lower = foot + 11 + 2.4 * (blocks(b / 6.1 + 2.9, 5.5) - 0.5);
+  // Left of the sheer end the low band is a ridge under talus: its crest rolls, and does not step.
+  const sheer = smooth(9, 17, b);
+  const lower = foot + 11 + 2.4 * sheer * (blocks(b / 6.1 + 2.9, 5.5) - 0.5) + (1 - sheer) * (2.6 * (noise(b / 13 + 4.4, 2.1) - 0.5) + 0.9 * (noise(b / 3.1 + 0.8, 6.3) - 0.5));
   const d1 = 4 + 5 * noise(b / 11 + 3.3, 9.2) + 2.2 * (blocks(b / 4.3 + 9.1, 1.7) - 0.5);
   const d2 = 4.5 * Math.max(0, blocks(b / 7.3 + 1.9, 3.3) - 0.4);
   const t = Math.min(1, Math.max(0, (s + 34) / 34));

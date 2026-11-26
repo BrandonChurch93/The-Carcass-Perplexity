@@ -8,7 +8,7 @@ import type { HeartContext, HeartPiece, SteamSource } from '../shared/context';
 import { Animal, TUFT_UP, type Env } from './animal';
 import { makeBuild, makePlan } from './herd';
 import { CRUST_HEIGHT_GLSL, crustUniforms } from '../lake/index';
-import { FRAGMENT, GROUND_FRAGMENT, GROUND_VERTEX, VERTEX } from './material';
+import { FRAGMENT, GROUND_FRAGMENT, GROUND_VERTEX, PUFF_FRAGMENT, PUFF_VERTEX, VERTEX } from './material';
 import { Skin } from './skin';
 
 export const PARTS: readonly string[] = ['crust-walkers'];
@@ -20,6 +20,11 @@ const away = (shot: string, who: number[]): { from: number; to: number; who: num
 };
 // Who is away in which shot is the root's staging (shared/anchors.ts).
 const AWAY = Object.entries(STAGED_AWAY).map(([shot, who]) => away(shot, who));
+
+/** Seconds a puff of ash lasts after a pad comes down. */
+const PUFF_LIFE = 1.5;
+/** How thick the puffs are drawn. Nought until they have been seen to be right beside the pictures. */
+const PUFF_SHOWN = 0;
 
 /** Discs of contact shade for each animal: four pads, the body, the tuft. */
 const DISCS = 6;
@@ -143,19 +148,55 @@ export function create(ctx: HeartContext): HeartPiece {
     uniforms: {
       ...rig.uniforms,
       uPixel: pixel,
+      tTorso: { value: ctx.assets.texture('mat/torso.jpg', { anisotropy: 4 }) },
+      tTorsoNh: { value: ctx.assets.texture('mat/torso-nh.jpg', { kind: 'data', anisotropy: 4 }) },
+      tLimb: { value: ctx.assets.texture('mat/limb.jpg', { anisotropy: 4 }) },
+      tLimbNh: { value: ctx.assets.texture('mat/limb-nh.jpg', { kind: 'data', anisotropy: 4 }) },
       tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 4 }) },
       tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
       tFlake: { value: ctx.assets.texture('mat/flake.jpg', { anisotropy: 4 }) },
+      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
       uPools: { value: pools },
       uFeet: { value: feet },
       tGround: { value: ground.texture },
       uFeetN: { value: FEET },
-      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('crust-walkers', mesh));
+  // The ash a pad throws up when it comes down: one card a pad.
+  const puffs = Array.from({ length: FEET }, () => new THREE.Vector4(0, 0, 0, 0));
+  const puffSize = Array.from({ length: FEET }, () => new THREE.Vector4(1, 1, 0, 0));
+  const puffGeometry = new THREE.BufferGeometry();
+  {
+    const corner = new Float32Array(FEET * 8);
+    const foot = new Float32Array(FEET * 4);
+    const index: number[] = [];
+    for (let n = 0; n < FEET; n++) {
+      corner.set([-1, -1, 1, -1, 1, 1, -1, 1], n * 8);
+      foot.fill(n, n * 4, n * 4 + 4);
+      index.push(n * 4, n * 4 + 1, n * 4 + 2, n * 4, n * 4 + 2, n * 4 + 3);
+    }
+    puffGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(FEET * 12), 3));
+    puffGeometry.setAttribute('aCorner', new THREE.BufferAttribute(corner, 2));
+    puffGeometry.setAttribute('aFoot', new THREE.BufferAttribute(foot, 1));
+    puffGeometry.setIndex(index);
+  }
+  const puffMaterial = new THREE.ShaderMaterial({
+    vertexShader: PUFF_VERTEX,
+    fragmentShader: PUFF_FRAGMENT,
+    uniforms: { ...rig.uniforms, uPuffs: { value: puffs }, uPuffSize: { value: puffSize }, tGround: { value: ground.texture } },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.CustomBlending,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+  });
+  const puffMesh = new THREE.Mesh(puffGeometry, puffMaterial);
+  puffMesh.frustumCulled = false;
+  puffMesh.renderOrder = 6;
+  ctx.scene.add(ctx.parts.built('crust-walkers', mesh, puffMesh), puffMesh);
 
   const discs = rig.contactDiscs(herd.length * DISCS);
   // Where a tuft is in the melt, the pool gives off ash and vapour: a source for the air to draw, for the three whose pictures show them feeding.
@@ -188,6 +229,11 @@ export function create(ctx: HeartContext): HeartPiece {
         }
         stood.feet.forEach((foot, j) => {
           (feet[i * 4 + j] as THREE.Vector4).set(foot.x, foot.z, foot.lift / b.k, b.padR);
+          // The ash it threw up when it came down: it spreads for a second and a half and thins away.
+          const life = foot.age / PUFF_LIFE;
+          const thick = life < 1 ? here * foot.hard * smooth(0, 0.07, life) * (1 - life) * (1 - life) : 0;
+          (puffs[i * 4 + j] as THREE.Vector4).set(foot.x, 0.12, foot.z, Math.min(1, life));
+          (puffSize[i * 4 + j] as THREE.Vector4).set(b.padR * (1.8 + 3.6 * Math.sqrt(Math.min(1, life))), b.padR * (0.9 + 1.5 * Math.min(1, life)), 0.42 * thick * PUFF_SHOWN, i * 4 + j);
           const off = Math.min(1, foot.lift / (1.2 * b.k));
           rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (2.0 + 1.6 * off), here * 0.9 * (1 - 0.75 * off));
         });
@@ -218,6 +264,8 @@ export function create(ctx: HeartContext): HeartPiece {
     dispose: () => {
       geometry.dispose();
       material.dispose();
+      puffGeometry.dispose();
+      puffMaterial.dispose();
       groundMaterial?.dispose();
       groundPlane.dispose();
       ground.dispose();

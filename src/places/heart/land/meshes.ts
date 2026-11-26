@@ -60,7 +60,8 @@ export interface Rib {
  * A surface as ribs: each rib is a straight line on the map, and neighbouring ribs are joined by a strip.
  * Along a rib the rows are spread evenly over the length of the surface, not over the map, so a cliff gets as many as a flat.
  */
-export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, flat = 0.3, radii: readonly number[] = [1.6, 5], dip?: Height): THREE.BufferGeometry {
+/** `more(x, z, y)`, where given, is how many times its share of rows a stretch of a rib gets. */
+export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, flat = 0.3, radii: readonly number[] = [1.6, 5], dip?: Height, more?: (x: number, z: number, y: number) => number): THREE.BufferGeometry {
   const tail = list[0]?.tail?.length ?? 0;
   const per = rows + tail;
   const position = new Float32Array(list.length * per * 3);
@@ -81,7 +82,8 @@ export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, fla
     arc[0] = 0;
     for (let k = 1; k < count; k++) {
       const rise = Math.abs((hs[k] as number) - (hs[k - 1] as number));
-      arc[k] = (arc[k - 1] as number) + Math.hypot(step, rise) * (flat + (1 - flat) * Math.min(1, rise / step / 0.9));
+      const share = more ? more(rib.x + rib.dx * k * step, rib.z + rib.dz * k * step, hs[k] as number) : 1;
+      arc[k] = (arc[k - 1] as number) + Math.hypot(step, rise) * (flat + (1 - flat) * Math.min(1, rise / step / 0.9)) * share;
     }
     const total = arc[count - 1] as number;
     let k = 1;

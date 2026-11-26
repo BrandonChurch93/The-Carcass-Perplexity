@@ -10,7 +10,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_STEAM = 16;
 export const MAX_BODIES = 13;
 /** March steps for each texel. Four texels with four offsets are averaged, so the march seen is four times as fine. */
-export const SMOKE_STEPS = { body: 14, most: 24, steam: 10 };
+export const SMOKE_STEPS = { body: 10, most: 18, steam: 8 };
 
 export const SMOKE_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -50,7 +50,7 @@ vec4 noise(vec3 p) {
 }
 // The fire's light as smoke hands it on (the same as the air's, volume.ts): orange, not the pink of pure red over a blue dusk.
 vec3 fireOnSmoke(vec3 g) {
-  return vec3(g.r, max(g.g, 0.36 * g.r), max(g.b, 0.16 * g.r)) * 0.85;
+  return vec3(g.r, max(g.g, 0.3 * g.r), max(g.b, 0.12 * g.r)) * 1.2;
 }
 
 vec3 sumN = vec3(0.0);
@@ -276,7 +276,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   bool close = mid < uSplit;
   vec3 albedo = mix(STEAM_ALBEDO, SMOKE_ALBEDO, kind);
   // How much of the fire under it a vapour takes, and to what height: steam is white and takes a great deal close over its crack, smoke less and higher.
-  float lit = mix(1.5, 0.9, kind);
+  float lit = mix(2.6, 1.5, kind);
   float fall = mix(9.0, 5.0, kind);
   float dt = (t1 - t0) / float(${SMOKE_STEPS.steam});
   for (int k = 0; k < ${SMOKE_STEPS.steam}; k++) {
@@ -316,12 +316,17 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float inside = (1.0 - smoothstep(0.55, 0.9, length(off) / tower)) * (1.0 - smoothstep(0.75 * top, 0.97 * top, h));
     float dens = body * puff * inside * mix(0.03 + 2.2 * wisps * wisps, 4.0 * wisps, kind);
     if (dens <= 0.0) continue;
-    float sigma = dens * B.w;
     // A fountain, a pool or a crack lights the vapour that is close over it; the rest is lit by the sky, like any smoke.
     // The top of a smoke is thin and open to the sky: it is paler than its foot.
-    vec3 light = mix(1.05, mix(0.8, 1.5, u), kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0));
+    // A vapour that stands over open melt is seen against its fire: what the sky gives it is the lesser part, and it is orange and not pale.
+    vec3 below = lakeGlow(p.xz, max(1.2 * h, 2.5));
+    float hot = smoothstep(0.012, 0.15, below.r);
+    // Steam off a vent in cold rock is white and thick where it leaves the vent, and a veil the rock is seen through above that. Over melt it is thin and the fire shows through it.
+    float vent = 1.0 + 2.2 * pow(1.0 - u, 3.0);
+    float sigma = dens * B.w * mix(mix(vent, 1.0, hot), 1.0, kind);
+    vec3 light = mix(1.05, mix(0.8, 1.5, u), kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0)) * (1.0 - 0.5 * hot);
     float near = max(lit * exp(-h / fall) - 0.03, 0.0);
-    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * lakeGlow(p.xz, max(1.5 * h, 4.0)) + roundLights(p));
+    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + roundLights(p));
     float a = 1.0 - exp(-sigma * dt);
     lay(close, t, mid, albedo * light, a);
   }

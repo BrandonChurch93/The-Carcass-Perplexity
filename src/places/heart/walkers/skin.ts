@@ -17,6 +17,7 @@ export class Skin {
   private readonly info: number[] = [];
   private readonly look: number[] = [];
   private readonly whose: number[] = [];
+  private readonly baked: number[] = [];
   /** The animal the tubes made from now on belong to. */
   who = 0;
   position = new Float32Array(0);
@@ -55,6 +56,14 @@ export class Skin {
     this.look[v * 2 + 1] = rib;
   }
 
+  /** Where a vertex of a trunk is on the picture of its fine surface: along and around, 0 to 1, and which trunk. */
+  bake(t: Tube, ring: number, side: number, along: number, around: number, which: number): void {
+    const v = t.start + ring * (t.sides + 1) + side;
+    this.baked[v * 3] = along;
+    this.baked[v * 3 + 1] = around;
+    this.baked[v * 3 + 2] = which;
+  }
+
   build(): THREE.BufferGeometry {
     this.position = new Float32Array(this.total * 3);
     this.normal = new Float32Array(this.total * 3);
@@ -77,6 +86,7 @@ export class Skin {
     g.setAttribute('aInfo', new THREE.BufferAttribute(fill(this.info, 4), 4));
     g.setAttribute('aLook', new THREE.BufferAttribute(fill(this.look, 2), 2));
     g.setAttribute('aWho', new THREE.BufferAttribute(fill(this.whose, 1), 1));
+    g.setAttribute('aBake', new THREE.BufferAttribute(fill(this.baked, 3), 3));
     g.setIndex(this.index);
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
     this.geometry = g;
