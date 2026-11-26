@@ -1,5 +1,7 @@
-2026-11-26 01:43 UTC
-work at bca3bd7 on agent/marsh-ground-2
-hb2: ground from the plates (ledge, thincrust), flood level, mirror brine. Approved left, frame right; keys 0,4 then 1,3
-look-1.jpg = out/work/hb2-land-plates-0-4.jpg
-look-2.jpg = out/work/hb2-land-plates-1-3.jpg
+2026-11-26 02:10 UTC
+work at 9355ad2 on agent/marsh-ground-2
+v1: dark brine with sheen, froth and shore plate, domes as film, low wisps; uhd draft keys 0,1,3,4
+look-1.jpg = out/work/v1-marsh-0.jpg
+look-2.jpg = out/work/v1-marsh-1.jpg
+look-3.jpg = out/work/v1-marsh-3.jpg
+look-4.jpg = out/work/v1-marsh-4.jpg
