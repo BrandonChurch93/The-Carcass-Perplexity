@@ -121,6 +121,8 @@ void main() {
     float quiet = 0.012 * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
     // What heaves at the centre sends out wide slow rings, heavy water, one every five seconds.
     quiet += 0.2 * exp(-r / 170.0) * smoothstep(20.0, 60.0, r) * cos(r * 0.135 - uTime * 1.15 + 2.5 * vnoise(out2 * 2.0) + 2.2 * vnoise(p.xz / 47.0 + 5.0)) * (0.35 + 1.3 * vnoise(p.xz / 29.0 + vec2(0.0, uTime * 0.02)));
+    // From high up the lake is a mirror first: the rings are there, slow and low, and the wall stands whole in them.
+    quiet *= mix(1.0, 0.3, smoothstep(8.0, 30.0, cameraPosition.y));
     float since = uCentre.x;
     float front = 70.0 + 40.0 * max(since, 0.0);
     float thrown = since > -1.5 ? 0.05 * smoothstep(-1.5, 0.3, since) * exp(-max(since, 0.0) / 3.5) * smoothstep(front + 30.0, front - 40.0, r) * exp(-r / 220.0) * cos(r * 0.3 - uTime * 2.6) : 0.0;
@@ -195,6 +197,13 @@ void main() {
   rd = normalize(rd);
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
   vec3 refl = farRadiance(p, rd, soft) * mix(vec3(0.5, 0.6, 0.76), vec3(0.8, 0.86, 0.95), smoothstep(8.0, 40.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
+  // Far off the eye looks along the water: the mirror there is whole and as bright as what stands over it, and the mist that lies at the
+  // foot of the far wall lies on the water too, so that no line shows where the water ends.
+  if (uPlateTone.w > 0.5) {
+    float toPlate = length(p.xz - uPlateAt.xz) / uPlateAt.w;
+    vec3 mistLight = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (0.13 * sunOver(land, p)) + 0.35 * skyRadiance(normalize(vec3(-v.x, 0.05, -v.z)))) * (2.4 / 3.14159);
+    refl = mix(refl, mistLight, 0.9 * smoothstep(0.72, 0.985, toPlate) * (1.0 - uSolo));
+  }
   refl *= 1.0 + 0.42 * tanh(0.33 * dot(heave, normalize(v.xz)) / max(v.y, 0.03)) * smoothstep(0.5, 0.12, v.y);
   // Whatever stands in the water or at its edge, drawn once more from under it.
   if (uMirrorOn > 0.5) {

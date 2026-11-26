@@ -116,10 +116,14 @@ void main() {
       t1 = min(t1, max(a, b));
     } else if (ro.y > TOP) t1 = -1.0;
     t1 = min(t1, 4200.0);
+    // With a picture hung the mist lies only in the last few hundred metres before it: the steps are spent there, close together, so that
+    // the bank is smooth and not a stipple.
+    if (uPlateTone.w > 0.5) t0 = max(t0, plateDistance(ro, rd) - 420.0);
     if (t1 > t0) {
       const int STEPS = 10;
       float dt = (t1 - t0) / float(STEPS);
-      float jitter = hash13(vec3(gl_FragCoord.xy, uSampleIndex + 17.0 * fract(uSeq * 0.137)));
+      // An ordered scatter, not a random one: what is left of it is a fine even weave that four samples close.
+      float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy + 5.588 * uSampleIndex, vec2(0.06711056, 0.00583715))));
       vec3 sum = vec3(0.0);
       float tr = 1.0;
       for (int i = 0; i < STEPS; i++) {
