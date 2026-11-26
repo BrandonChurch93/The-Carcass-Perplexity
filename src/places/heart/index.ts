@@ -58,13 +58,13 @@ const KEY0 = establishing();
 /** heart-3, the group feeding at the seam, through a long lens: 66 m from the hero and 6.3 m over the crust, so its back stands at about twice the
  *  height of the lens and its feet a third of the way up the frame, as in the approved picture. The hero stands left of the axis. */
 const groupAt = walkerPosition(WALKERS[1] as Walker, keySeconds('heart-3'));
-const KEY3 = lens(fly([groupAt[0] - 42.8, 6.3, groupAt[1] + 50.5], 44.5, 0.4, 18), 0.2, 68);
+const KEY3 = lens(fly([groupAt[0] - 42.8, 6.3, groupAt[1] + 50.5], 44.5, 0.4, 18), 0.15, 68);
 
 /** heart-1, the lava at the line: on the last rocks of the shore, with the channel leaving the shore ahead on the left and passing on the right. */
-const KEY1 = lens(fly([LINE[0] - 3.5, 1.7, LINE[1] + 3.5], 52, -7.5, 45), 0.02, 6);
+const KEY1 = lens(fly([LINE[0] - 3.5, 1.7, LINE[1] + 3.5], 52, -7.5, 45), 0.016, 6);
 
 /** heart-2, the one that sank: from the shore, the carcass in the middle distance and the mouth behind it on the left. */
-const KEY2 = lens(fly(over(-520, 287, 4.4), 43, -4.5, 40), 0.1, 21);
+const KEY2 = lens(fly(over(-520, 287, 4.4), 43, -4.5, 40), 0.075, 21);
 
 /** heart-4, the mouth and its fall, through the longest lens of the place, from the crust. */
 const MOUTH_AIM: Vec3 = [MOUTH.x + 26, 68, MOUTH.z];

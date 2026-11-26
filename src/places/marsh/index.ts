@@ -30,7 +30,7 @@ const K2: Pose = {
   aim: [K2_AT[0] + K2_DIR[0] * 20, 2.7 - 20 * Math.tan(7.6 * DEG), K2_AT[1] + K2_DIR[1] * 20],
   fov: 30,
   focus: 3.2,
-  aperture: 0.004,
+  aperture: 0.003,
 };
 
 /** marsh-1, the seep pool, from half a metre over its brine at the lip of the bank. */
@@ -40,13 +40,13 @@ const K1: Pose = {
   aim: [K1_LENS[0] + K1_DIR[0] * 10, K1_LENS[1] - 10 * Math.tan(9.5 * DEG), K1_LENS[2] + K1_DIR[1] * 10],
   fov: 35,
   focus: 3.8,
-  aperture: 0.0045,
+  aperture: 0.00315,
 };
 
 /** marsh-3, the wallowers in the vein. */
-const K3: Pose = { position: at(27.7, 3, 1.5), aim: at(37.7, 3.2, 0.2), fov: 30, aperture: 0.007 };
+const K3: Pose = { position: at(27.7, 3, 1.5), aim: at(37.7, 3.2, 0.2), fov: 30, aperture: 0.00455 };
 /** marsh-4, the one on the thin crust. */
-const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), fov: 35, focus: 5.7, aperture: 0.011 };
+const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), fov: 35, focus: 5.7, aperture: 0.00825 };
 
 // The five shots are one walk: each starts near where the last ended, on a heading close to it, with its subject already small in the last frames
 // of the shot before. Thick stalks stand close to two of the paths, so those paths turn to keep them at the edge of the frame.
@@ -59,9 +59,9 @@ const shots: Record<string, CameraPath> = {
   'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.6, right: -1.2, up: 0.6, turn: 5 }, { forward: 0.6, right: 0.5, up: 0.5, turn: 14, tilt: 3 }),
   // Left along the vein past the wallowers, turning right as it goes, so the stalks on the near bank leave by the left edge.
   'marsh-04': [
-    { at: 0, pose: { position: at(26.9, 6.3, 1.8), aim: at(36.4, 4.6, 0.25), fov: 30, aperture: 0.011 } },
+    { at: 0, pose: { position: at(26.9, 6.3, 1.8), aim: at(36.4, 4.6, 0.25), fov: 30, aperture: 0.00715 } },
     { at: Math.min(0.98, Math.max(0.02, keyPart(shotById('marsh-04')))), pose: K3 },
-    { at: 1, pose: { position: at(28.3, 1.5, 1.5), aim: at(38, 6, 0.25), fov: 30, aperture: 0.011 } },
+    { at: 1, pose: { position: at(28.3, 1.5, 1.5), aim: at(38, 6, 0.25), fov: 30, aperture: 0.00715 } },
   ],
   // From over the thin crust, wide, with the vein, the pool and its stalks behind the stuck one, down and in to it.
   'marsh-05': through(K4, keyPart(shotById('marsh-05')), { forward: -9, up: 2.2, right: 1.5, turn: 14, tilt: -6 }, { forward: 1.7, up: 0.15, right: 0.5 }),
