@@ -74,7 +74,8 @@ void main() {
   vec2 real = vWorld.xz;
   vec2 bendA = vec2(sin(real.y / 173.0 + 1.3) + 0.6 * sin(real.x / 97.0 + real.y / 211.0), sin(real.x / 151.0 + 4.1) + 0.6 * sin(real.y / 83.0 - real.x / 239.0 + 2.0));
   vec2 bendB = vec2(sin(real.y / 41.0 + real.x / 67.0 + 0.7), sin(real.x / 37.0 - real.y / 59.0 + 3.3));
-  vec2 bendC = vec2(sin(real.y / 11.3 + real.x / 23.0 + 5.1), sin(real.x / 9.7 - real.y / 19.0 + 0.4));
+  // (The smallest bend is under a pixel from orbit and is left out there.)
+  vec2 bendC = uViewKm < 900.0 ? vec2(sin(real.y / 11.3 + real.x / 23.0 + 5.1), sin(real.x / 9.7 - real.y / 19.0 + 0.4)) : vec2(0.0);
   vec2 xz = real + (14.0 * bendA + 5.0 * bendB + 1.3 * bendC) * smoothstep(0.35, 1.0, length((real - uLakeMid) / uLakeSize));
   // (And each range is of its own kind: one worn smooth, one deeply cut, one dark, one pale, one under snow.)
   vec3 kind = vec3(0.5);
@@ -326,7 +327,7 @@ void main() {
   // The chest round the Heart is old lava: a black crust between the ribs, which stand out of it pale.
   vec2 fromHeart = xz - uLava;
   float crust = exp(-dot(fromHeart * vec2(0.75, 1.0), fromHeart * vec2(0.75, 1.0)) / 150000.0) * (1.0 - smoothstep(0.24, 0.5, height)) * land;
-  ground = mix(ground, vec3(0.013, 0.043, 0.05) * (0.5 + 2.2 * lum), min(1.0, 1.2 * crust));
+  ground = mix(ground, mix(vec3(0.028, 0.031, 0.033), vec3(0.013, 0.043, 0.05), smoothstep(800.0, 1380.0, uViewKm)) * (0.5 + 2.2 * lum), min(1.0, 1.2 * crust));
   // The pan of the pelvis: salt, white under the sun, and the red brine that veins it. East of it the red runs out over the low ground
   // and into the sea, in streaks drawn along the fall of the land.
   vec2 fromPan = xz - uSalt;
@@ -392,21 +393,34 @@ void main() {
     vec3 inSun = mix(earth, vec3(earthLum), 0.2) * vec3(1.16, 1.07, 0.95);
     earth = mix(earth, mix(inShade, inSun, smoothstep(0.25, 0.7, facing)), 0.85 * forms);
   }
+  if (uViewKm < 240.0 && lakeFar < 9.0) {
+    // (Round the lake, from near: the low sun stands full on the wall east of the water, and the valleys west and south west of it
+    // lie under cool blue haze, their relief gone soft in it.)
+    float nearLake = land * (1.0 - smoothstep(110.0, 240.0, uViewKm));
+    float hazed = smoothstep(0.4, 1.7, -0.7 * fromLake.x + 0.85 * fromLake.y + 0.5 * (vnoise(xz / 38.0 + 2.0) - 0.5)) * (1.0 - 0.35 * smoothstep(0.4, 0.7, height));
+    float litSide = smoothstep(0.2, 1.5, fromLake.x - 0.3 * fromLake.y) * (1.0 - smoothstep(1.6, 3.2, lakeFar));
+    earth = mix(earth, vec3(dot(earth, vec3(0.3, 0.55, 0.15))) * vec3(0.6, 0.74, 0.98) * 0.8 + uAirColour * 0.04, 0.7 * hazed * nearLake);
+    earth *= 1.0 + 0.3 * litSide * nearLake * vec3(1.0, 0.92, 0.8);
+  }
 
   // The lava of the Heart: vents in the black crust of the chest. The great one is the Heart, and it swells with the beat; the heat shows
   // along the cracks round it. Each is a few kilometres of molten rock: from orbit a point of orange light, and its light on the slopes that face it.
   vec2 fromLava = xz - uLava;
-  float swell = 0.8 + 0.9 * uBeat;
+  // (The molten rock works: its light wavers, never the same from one second to the next.)
+  float waver = 1.0;
+  if (dot(xz - uLava, xz - uLava) < 160000.0) waver = 0.8 + 0.4 * vnoise(vec2(uTime * 1.7, 5.0)) + 0.2 * vnoise(vec2(uTime * 4.3, 9.0));
+  float swell = (0.8 + 0.9 * uBeat) * waver;
+  float seenFar = 1.0 + 2.2 * smoothstep(500.0, 1380.0, uViewKm);
   float d0 = dot(fromLava, fromLava);
-  float heat = exp(-d0 / 26.0) * 1.5 * swell;
-  float halo = exp(-d0 / 700.0) * (0.5 + 1.5 * uBeat);
+  float heat = exp(-d0 / (26.0 * seenFar)) * 1.5 * swell;
+  float halo = exp(-d0 / (700.0 * seenFar)) * (0.5 + 1.5 * uBeat) * waver;
   if (d0 < 160000.0) for (int i = 0; i < 6; i++) {
     vec3 vent = VENTS[i];
     vec2 q = fromLava - vent.xy;
     float dd = dot(q, q);
     // The lesser vents answer the beat a little late, each in its turn.
     float answer = 0.75 + 0.5 * uBeat * (0.5 + 0.5 * sin(float(i) * 2.4));
-    heat += exp(-dd / (11.0 * vent.z)) * 2.2 * vent.z * answer;
+    heat += exp(-dd / (11.0 * vent.z * seenFar)) * 2.2 * vent.z * answer;
     halo += exp(-dd / (260.0 * vent.z)) * 0.3 * vent.z * answer;
   }
   float vein = d0 < 18000.0 ? cracks(xz / 7.0) * exp(-d0 / 2200.0) * (0.2 + 0.6 * uBeat) : 0.0;
@@ -414,7 +428,7 @@ void main() {
   vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.17 * smoothstep(0.03, 0.6, heat);
   // (The beat itself: a dull red swell in the whole chest, on the ground and on the flanks of the ribs that face the Heart.)
   glow += vec3(1.0, 0.16, 0.03) * 0.09 * max(uBeat - 0.12, 0.0) * exp(-d0 / 30000.0) * land * (0.6 + 0.8 * clamp(0.5 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.0));
-  glow += vec3(1.0, 0.3, 0.06) * 0.12 * halo * land * clamp(0.25 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
+  glow += vec3(1.0, 0.3, 0.06) * 0.26 * halo * land * clamp(0.4 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
 
   // ---- the water ----
   // What comes back from under the surface: the map's own shallows, bars and silt over the deep, lit by the sun and the sky.
@@ -505,7 +519,7 @@ void main() {
   // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
   water += uSkyColour * 0.006 * max(sparkle - 0.7, 0.0) * ruffle;
   // (Near its middle the sea is one sheet of light; out in the skirt the wind lanes and slicks of the surface show in it.)
-  vec3 glare = uSunColour * mix(vec3(0.82, 0.92, 1.0), vec3(1.0, 0.88, 0.78), smoothstep(0.1, 0.7, glint)) * 0.25 * glint * (0.9 + 0.2 * calm);
+  vec3 glare = uSunColour * mix(vec3(0.86, 0.93, 1.0), vec3(1.0, 0.87, 0.74), smoothstep(0.03, 0.5, glint)) * 0.25 * glint * (0.9 + 0.2 * calm);
   water += glare * (0.35 + 0.65 * shade) * mix(0.4 + 0.6 * sparkle, 0.5 + 0.5 * sparkle, glint);
 
   // (From orbit the sea is seen through the blue of the air over it.)
