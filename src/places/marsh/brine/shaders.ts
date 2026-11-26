@@ -223,7 +223,7 @@ void main() {
   // What the flow carries off the banks goes down the channel in thin strings.
   float strings = max(smoothstep(0.66, 0.76, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, speed) * 0.7, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
   // (And scum catches on whatever stands in it.)
-  want = max(max(want, strings), max(min(boil * 0.8, 0.6), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
+  want = max(max(want, strings), max(min(boil * 0.8, 0.45), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
   // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
   float foam = 0.0;
   vec4 froth = vec4(0.0);
@@ -243,7 +243,7 @@ void main() {
     float high = relief.b * 0.62 + clump.b * 0.38;
     // (A clump is whole or it is not there: the froth's own gaps cut it, and only its edge thins to single bubbles.)
     float dense = smoothstep(0.2, 0.75, want);
-    float over = high - 1.1 + dense * (1.12 + 0.22 * graze);
+    float over = high - 1.1 + dense * (1.12 + 0.12 * graze);
     foam = smoothstep(0.0, 0.1, over);
     // (Round every clump the brine is drawn up to it and lies in its shade: a dark wet line, which is what sets it on the surface.)
     sill = smoothstep(-0.06, 0.0, over) * (1.0 - foam);
@@ -443,16 +443,16 @@ ${RIG_GLSL}
 
 void main() {
   if (vLife.x <= 0.0) discard;
-  vec4 g = texture2D(tGrain, vec2(vLocal.x * 0.6 + vLife.y, vLocal.y * 0.7));
+  vec4 g = texture2D(tGrain, vWorld.xz / 0.9 + vLife.y);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   if (dot(n, v) < 0.0) n = -n;
-  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.12);
+  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.08);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   float open = skyOpen(vWorld);
   // The brine itself, heaved up.
-  vec3 body = vec3(0.055, 0.008, 0.006);
+  vec3 body = vec3(0.07, 0.011, 0.0085);
   vec3 lit = body * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
   // It is wet: the sky stands in it over the mirrored horizon, the dark pool under.
   vec3 pond = vec3(0.05, 0.012, 0.01) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
@@ -460,9 +460,10 @@ void main() {
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
   env *= 1.0 + 0.6 * smoothstep(0.8, 0.99, toward);
   // (The same held-back mirror as the pool's own skin, so that what the pool throws up is the pool's colour.)
-  float fres = 0.02 + 0.25 * pow(1.0 - nv, 2.5) + 0.12 * pow(1.0 - nv, 10.0);
+  float fres = 0.022 + 0.015 * (1.0 - nv) + 0.24 * pow(1.0 - nv, 24.0);
   vec3 mirrored = env * vec3(1.0, 0.8, 0.75) * fres * mix(1.0, open, 0.5);
   // It runs out into the pool with no edge.
-  float cover = smoothstep(1.0, 0.8, vLocal.z);
+  // (And it comes up out of the level and goes back into it: at both ends of its life it is the pool.)
+  float cover = smoothstep(1.0, 0.7, vLocal.z) * smoothstep(0.0, 0.12, vLife.x) * smoothstep(1.0, 0.7, vLife.x);
   gl_FragColor = vec4((lit + mirrored) * cover * (1.0 - uSolo), cover);
 }`;
