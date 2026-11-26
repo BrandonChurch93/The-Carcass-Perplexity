@@ -248,9 +248,9 @@ void main() {
   float s = position.x;
   float a = iShape.z * 40.0;
   // Each rakes to its own time: curled, then flicked out.
-  float curl = max(0.3, 1.7 * uCurl + 0.28 * sin(uSeconds * (2.1 + 1.9 * fract(a)) + a) + 0.1 * sin(uSeconds * 5.3 + a * 2.3));
+  float curl = max(0.3, 1.15 * uCurl + 0.16 * sin(uSeconds * (1.3 + 1.2 * fract(a)) + a) + 0.05 * sin(uSeconds * 3.3 + a * 2.3));
   vec3 dir = normalize(iOut + vec3(0.5, 0.35, 0.0) * uSplay);
-  vec3 c = vec3(-0.75, -1.0, -0.4 * iOut.z);
+  vec3 c = vec3(-0.3, -1.0, -0.25 * iOut.z);
   vec3 bend = normalize(c - dir * dot(c, dir));
   float t = curl * s;
   vec3 centre = iAt + iShape.x * ((sin(t) / curl) * dir + ((1.0 - cos(t)) / curl) * bend);
@@ -258,7 +258,7 @@ void main() {
   vec3 n1 = -sin(t) * dir + cos(t) * bend;
   vec3 n2 = cross(tangent, n1);
   // Thick where it leaves the lip, a long taper, a blunt tip.
-  float radius = iShape.y * (0.16 + 0.84 * pow(1.0 - s, 0.8)) * (1.0 + 0.12 * sin(s * 23.0 + a));
+  float radius = iShape.y * (0.2 + 0.8 * pow(1.0 - s, 0.7)) * (1.0 + 0.06 * sin(s * 23.0 + a));
   vec3 rim = n1 * position.y + n2 * position.z;
   vec4 world = uHead * vec4(centre + rim * radius, 1.0);
   world.y = max(world.y, uFloor + 0.004 * position.y);
@@ -283,12 +283,12 @@ void main() {
   // Old ivory: grooved along its length, ringed where it grew, stained dark at the root and red where it has been in the mud.
   float groove = vnoise(vec2(vLook.y * 3.0 + vLook.z * 9.0, s * 2.0));
   float ring = vnoise(vec2(s * 46.0 + vLook.z * 5.0, vLook.y * 0.7));
-  vec3 albedo = vec3(0.088, 0.06, 0.038) * (0.62 + 0.3 * groove + 0.2 * ring);
-  albedo = mix(albedo, vec3(0.05, 0.03, 0.022), 0.75 * (1.0 - smoothstep(0.0, 0.16, s)));
+  vec3 albedo = vec3(0.2, 0.15, 0.105) * (0.62 + 0.3 * groove + 0.2 * ring);
+  albedo = mix(albedo, vec3(0.07, 0.042, 0.03), 0.75 * (1.0 - smoothstep(0.0, 0.14, s)));
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
   albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.8 * wet);
-  albedo = mix(albedo, vec3(0.022, 0.012, 0.009), 0.85 * smoothstep(0.55, 0.98, s));
-  float rough = mix(0.86, 0.6, wet);
+  albedo = mix(albedo, vec3(0.03, 0.017, 0.012), 0.8 * smoothstep(0.8, 1.0, s));
+  float rough = mix(0.95, 0.7, wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -402,7 +402,7 @@ export class Beast {
       at.set(l.at, i * 3);
       out.set(l.out, i * 3);
       const mid = 1 - Math.abs(i / (lip.length - 1) - 0.5) * 0.6;
-      shape.set([rng.range(0.5, 0.95) * mid * (1 - 0.25 * b.young), (0.017 + 0.022 * rng.next() ** 2) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
+      shape.set([rng.range(0.5, 0.72) * mid * (1 - 0.25 * b.young), (0.05 + 0.018 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
     });
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.index = tube().index;

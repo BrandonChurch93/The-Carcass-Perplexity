@@ -19,7 +19,7 @@ export function create(ctx: Context): Piece {
   // TEMPORARY, until the anchors give it: where the lens of the wallowers stands.
   const lens = rel(27.7, 3);
   // When each has its head up. The first three are the ones by the lens of the wallowers: heads down in the mud at its key, as in the approved picture, and up before and after it.
-  const LOOKS = [10.4, 9.5, 11.3];
+  const LOOKS = [10.4, 13.1, 11.3];
   const add = (x: number, z: number, when: number, dir: [number, number], size: number, sink: number, speed: number, root: number): void => {
     const young = size < 0.7 ? 1 - (size - 0.34) / 0.5 : 0;
     const b: Build = { k: size, young: Math.max(0, Math.min(1, young)), seed: rng.range(1, 60), bulk: rng.range(0.94, 1.08), salt: rng.range(0.5, 1) * (sink > 0.5 ? 0.3 : 1) };
@@ -30,7 +30,7 @@ export function create(ctx: Context): Piece {
     const ground = sink > 0.15 ? Math.min(land, 0) - sink * b.k : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
     // A young one keeps to the shallows: its legs are too short for the bed.
     // One on a bank has sunk into it to the ankle and further: the mud is soft.
-    const stand = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.04 : 0.07) * b.k);
+    const stand = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.2) * b.k);
     // The head hangs to the mud that is under it, or to the top of the brine.
     const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.6 * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
@@ -50,8 +50,7 @@ export function create(ctx: Context): Piece {
     const hl = b.head[1] / n;
     const p = rel(b.d, b.l);
     // TEMPORARY, until the lead sets it in the anchors: the ones that wade nearest the lens of the wide key stand larger in it than anything in the approved picture.
-    // TEMPORARY, the same: the one that lies before the lens of the wallowers is the size of the one in the approved picture, and no longer hides the young one behind it.
-    const size = b.d < 26 ? b.size * 0.6 : b.sink > 0.99 && b.size < 0.7 ? 0.5 : b.size;
+    const size = b.d < 26 ? b.size * 0.6 : b.size;
     add(p[0], p[1], WALLOW_TIME, [F[0] * hd + R[0] * hl, F[1] * hd + R[1] * hl], size, b.sink, b.speed, b.root);
   }
   // The one on the bank of the pool, seen through the stalks.
@@ -63,7 +62,7 @@ export function create(ctx: Context): Piece {
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
   const wallows = herd
     .filter((h) => h.onBank)
-    .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.beast.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.beast.b.k, h.plan.dir, 1.05 * h.beast.b.k, [0.075, 0.038, 0.028], 'wallowers-mud-' + i));
+    .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.beast.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.beast.b.k, h.plan.dir, 1.05 * h.beast.b.k, [0.075, 0.034, 0.025], 'wallowers-mud-' + i, 1));
   const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh)];
   ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);

@@ -90,7 +90,7 @@ void main() {
   vec3 apron = vec3(0.2, 0.172, 0.16) * mix(vec3(1.0), rime, 0.7);
   // A top-down picture smears on a steep side: there the salt has caked over it.
   float steep = smoothstep(0.75, 0.45, nl.y);
-  vec3 albedo = mix(apron, pic * 0.52 * mix(vec3(1.0), rime, 0.25), cover * (1.0 - 0.6 * steep));
+  vec3 albedo = mix(apron, pic * 0.52 * mix(vec3(1.0), rime, 0.25), 0.35 * cover * (1.0 - 0.6 * steep));
   // What ran out of it stains the foot of the mound, and the mud it sank into still holds it.
   float above = vWorld.y - uGround;
   float stain = (1.0 - smoothstep(0.0, 0.07, above + 0.1 * (vnoise(vWorld.xz * 3.0 + uSeed) - 0.5))) * (0.5 + 0.5 * vnoise(vWorld.xz * 1.3 + uSeed * 2.0));
@@ -101,6 +101,85 @@ void main() {
   float rough = mix(0.95, 0.5, 0.6 * stain);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
+}`;
+
+// The kept body itself: the picture of one, stood on the apron as a card that leans back and turns to the lens, raised by its own relief.
+// The picture is of a dead one seen from the side and a little above, which is how every lens here sees them.
+const BODY_GLSL = /* glsl */ `
+uniform sampler2D tPic;
+uniform sampler2D tRelief;
+uniform float uFlip;
+varying vec2 vUv;
+varying vec3 vWorld;
+varying vec3 vRight;
+varying vec3 vUp;
+float bodyCover(vec2 uv) {
+  vec3 pic = texture2D(tPic, uv).rgb;
+  return max(smoothstep(0.03, 0.07, max(pic.r, max(pic.g, pic.b))), smoothstep(0.05, 0.1, textureLod(tRelief, uv, 2.0).r));
+}`;
+
+const BODY_VERTEX = /* glsl */ `
+uniform vec4 uAt;
+uniform vec4 uBody;
+${BODY_GLSL}
+void main() {
+  vec2 uv = vec2(position.x + 0.5, 0.5 - position.z);
+  vUv = vec2(mix(uv.x, 1.0 - uv.x, uFlip), uv.y);
+  vec2 tc = normalize(cameraPosition.xz - uAt.xz);
+  vec3 toLens = vec3(tc.x, 0.0, tc.y);
+  vRight = vec3(tc.y, 0.0, -tc.x);
+  vUp = vec3(0.0, cos(uBody.z), 0.0) - toLens * sin(uBody.z);
+  vec3 nrm = toLens * cos(uBody.z) + vec3(0.0, sin(uBody.z), 0.0);
+  float swell = textureLod(tRelief, vUv, 5.0).r;
+  vWorld = vec3(uAt.x, uAt.y, uAt.z) + vRight * (position.x * uBody.x) + vUp * ((uv.y - uBody.w) * uBody.y) + nrm * (swell * 0.3 * uBody.y);
+  gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
+}`;
+
+const BODY_FRAGMENT = /* glsl */ `
+precision highp float;
+uniform vec4 uAt;
+uniform vec4 uBody;
+uniform sampler2D tSalt;
+uniform float uSeed;
+${NOISE_GLSL}
+${RIG_GLSL}
+${BODY_GLSL}
+const vec3 LUMA = vec3(0.3, 0.5, 0.2);
+const vec3 RIME_MEAN = vec3(0.389, 0.306, 0.282);
+void main() {
+  if (bodyCover(vUv) < 0.5) discard;
+  if (uMirror > 0.5 && vWorld.y < -0.015) discard;
+  vec3 pic = texture2D(tPic, vUv).rgb;
+  float l0 = dot(pic, LUMA);
+  // Its form from the relief, blurred; its ribs and knobs from the light and dark of the picture.
+  vec2 e = vec2(8.0 / 1672.0, 8.0 / 941.0);
+  float sign_ = mix(1.0, -1.0, uFlip);
+  float hx = (textureLod(tRelief, vUv + vec2(e.x, 0.0), 3.5).r - textureLod(tRelief, vUv - vec2(e.x, 0.0), 3.5).r) * sign_;
+  float hy = textureLod(tRelief, vUv + vec2(0.0, e.y), 3.5).r - textureLod(tRelief, vUv - vec2(0.0, e.y), 3.5).r;
+  vec2 de = vec2(1.5 / 1672.0, 1.5 / 941.0);
+  float lx = (dot(texture2D(tPic, vUv + vec2(de.x, 0.0)).rgb, LUMA) - l0) * sign_;
+  float ly = dot(texture2D(tPic, vUv + vec2(0.0, de.y)).rgb, LUMA) - l0;
+  vec3 face = normalize(cross(vRight, vUp));
+  vec3 n = normalize(face - vRight * (hx * 9.0 + lx * 1.6 / (l0 + 0.1)) - vUp * (hy * 9.0 + ly * 1.6 / (l0 + 0.1)) + vec3(0.0, 0.35, 0.0));
+  vec3 v = normalize(cameraPosition - vWorld);
+  vec3 rime = texture2D(tSalt, vWorld.xz * 2.0 + vWorld.y * 1.3 + uSeed).rgb / RIME_MEAN;
+  // Salt white on the knobs, bone and dried hide between them, and the dark of the hollows kept dark.
+  vec3 albedo = pic * 0.62 * mix(vec3(1.0), rime, 0.2);
+  float hollow = smoothstep(0.05, 0.38, l0);
+  float above = vWorld.y - uAt.y;
+  float stain = (1.0 - smoothstep(0.0, 0.16, above + 0.12 * (vnoise(vWorld.xz * 3.0 + uSeed) - 0.5)));
+  albedo = mix(albedo, albedo * vec3(0.36, 0.2, 0.17), 0.8 * stain);
+  float occ = (0.3 + 0.7 * hollow) * (0.6 + 0.4 * smoothstep(0.0, 0.25, above));
+  vec3 c = rigShade(vWorld, n, v, albedo, 0.97, occ);
+  gl_FragColor = vec4(rigOut(c), 1.0);
+}`;
+
+const BODY_DEPTH = /* glsl */ `
+precision highp float;
+${BODY_GLSL}
+void main() {
+  if (bodyCover(vUv) < 0.5) discard;
+  gl_FragColor = vec4(0.0);
 }`;
 
 function grid(across: number, down: number): THREE.BufferGeometry {
@@ -126,8 +205,10 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('dead');
   // TEMPORARY, until the anchors give it: where the lens of the stuck one stands. The dead it looks across are taken finer.
   const lens = rel(24.6, 19.6);
-  const fineGrid = grid(360, 202);
-  const coarseGrid = grid(140, 78);
+  const fineGrid = grid(140, 78);
+  const coarseGrid = grid(90, 50);
+  const bodyGrid = grid(40, 24);
+  const bodies: { mesh: THREE.Mesh; material: THREE.ShaderMaterial }[] = [];
   const nearest = DEAD.reduce((a, b) => (Math.hypot(a.d - STUCK[0], a.l - STUCK[1]) < Math.hypot(b.d - STUCK[0], b.l - STUCK[1]) ? a : b));
   const tPic = ctx.assets.texture('mat/deadone.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
   const tRelief = ctx.assets.texture('mat/deadone-h.png', { kind: 'data', repeat: false });
@@ -140,7 +221,7 @@ export function create(ctx: Context): Piece {
     const ground = Math.min(0.1, ctx.rig.land.height(p[0], p[1]));
     // The one that lies nearest the live one is the furthest gone: it stands no higher than a knee, and the lens of the thin crust looks over it.
     const under = d === nearest ? 1 : 0;
-    const high = (0.62 - 0.2 * under) * d.size * rng.range(0.85, 1.1);
+    const high = (0.3 - 0.1 * under) * d.size * rng.range(0.85, 1.1);
     const material = new THREE.ShaderMaterial({
       uniforms: {
         ...ctx.rig.uniforms,
@@ -167,6 +248,27 @@ export function create(ctx: Context): Piece {
     mesh.frustumCulled = false;
     mesh.updateMatrixWorld();
     cards.push({ mesh, material, x: p[0], z: p[1], yaw: d.yaw, size });
+    // The body: about three metres of it, sunk in its apron to a different depth each, the furthest gone the deepest.
+    const wide = 3.3 * d.size * rng.range(0.9, 1.1);
+    const bodyMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        ...ctx.rig.uniforms,
+        tPic: { value: tPic },
+        tRelief: { value: tRelief },
+        tSalt: { value: tSalt },
+        uFlip: { value: rng.next() < 0.5 ? 1 : 0 },
+        uAt: { value: new THREE.Vector4(p[0], ground + 0.04, p[1], 0) },
+        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672, rng.range(0.5, 0.75), under ? 0.36 : rng.range(0.2, 0.3)) },
+        uSeed: { value: rng.range(1, 60) },
+      },
+      vertexShader: BODY_VERTEX,
+      fragmentShader: BODY_FRAGMENT,
+      side: THREE.DoubleSide,
+    });
+    bodyMaterial.userData.depthFragment = BODY_DEPTH;
+    const body = new THREE.Mesh(bodyGrid, bodyMaterial);
+    body.frustumCulled = false;
+    bodies.push({ mesh: body, material: bodyMaterial });
   }
   // The live one: sunk to the shoulders, head up, working to get out and getting nowhere.
   const at = rel(STUCK[0], STUCK[1]);
@@ -177,7 +279,7 @@ export function create(ctx: Context): Piece {
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)]);
   // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.
   const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.2 * c.size, [0.06, 0.042, 0.036], 'dead-stain-' + i));
-  const meshes = [...cards.map((c) => c.mesh), stuck.mesh, stuck.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
+  const meshes = [...cards.map((c) => c.mesh), ...bodies.map((b) => b.mesh), stuck.mesh, stuck.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
   ctx.parts.built('dead', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
 
@@ -223,6 +325,8 @@ export function create(ctx: Context): Piece {
       fineGrid.dispose();
       coarseGrid.dispose();
       for (const c of cards) c.material.dispose();
+      for (const b of bodies) b.material.dispose();
+      bodyGrid.dispose();
       stuck.dispose();
       mud.dispose();
       for (const w of stains) w.dispose();
