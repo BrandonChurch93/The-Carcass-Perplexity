@@ -47,7 +47,7 @@ float brineSilt = -1.0;
 // to see, which turn part of it toward the lens: the mirror comes in late and never whole.
 float brineFresnel(vec3 n, vec3 v) {
   float nv = max(dot(n, v), 0.02);
-  return 0.02 + 0.25 * pow(1.0 - nv, 2.5) + 0.12 * pow(1.0 - nv, 10.0);
+  return 0.05 + 0.42 * pow(1.0 - nv, 1.6) + 0.08 * pow(1.0 - nv, 10.0);
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
@@ -89,7 +89,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   vec3 taken = vec3(3.4, 19.0, 23.0) * (0.75 + 0.5 * silt) + vec3(14.0) * brineMud + vec3(30.0) * brineSlurry;
   vec3 through = exp(-taken * path);
   // What the liquid itself gives back where no bed shows: a dark rust red, paler and browner where silt hangs in it.
-  vec3 body = mix(vec3(0.055, 0.008, 0.006), vec3(0.115, 0.024, 0.017), smoothstep(0.25, 0.8, silt));
+  vec3 body = mix(vec3(0.042, 0.006, 0.005), vec3(0.09, 0.019, 0.014), smoothstep(0.25, 0.8, silt));
   body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6);
   body = mix(body, vec3(0.045, 0.02, 0.014), brineMud * 0.85);
   body = mix(body, vec3(0.118, 0.086, 0.072) * (0.8 + 0.4 * silt), brineSlurry * 0.92);

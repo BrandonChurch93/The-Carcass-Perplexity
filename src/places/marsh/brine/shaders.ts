@@ -46,7 +46,10 @@ ${BRINE_GLSL}
 vec2 train(vec2 q, vec2 dir, float len, float bend) {
   float k = 6.2832 / len;
   float w = k * sqrt(9.81 / k + 0.000074 * k);
-  return dir * cos(k * dot(dir, q) - w * uTime + bend);
+  // Wavelets go in groups: a few crests, each a few lengths long, that rise and die as the group passes at half the crests' speed.
+  vec2 g = vec2(dot(dir, q) - 0.5 * w / k * uTime, dot(vec2(-dir.y, dir.x), q));
+  vec4 e = texture2D(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)));
+  return dir * cos(k * dot(dir, q) - w * uTime + bend + e.g * 7.0) * smoothstep(0.38, 0.66, e.r) * 1.6;
 }
 
 void main() {
@@ -78,8 +81,10 @@ void main() {
     vec2 run = vec2(-bank.y, bank.x);
     run *= clamp(dot(run, down) * 3.0, -1.0, 1.0);
     vec2 dir = normalize(mix(down, run, 0.75 * smoothstep(0.0, 0.5, gl)) + vec2(1e-4));
-    // Fastest over the deep middle, still at the bank, and none in the round pool, which has no way through.
-    flow = dir * (0.03 + 0.15 * smoothstep(-0.1, -1.6, s)) * (1.0 - inPool) * nearBy;
+    // Fastest over the deep middle, still at the bank, faster where the banks close in (the same brine has to pass), and none in the round
+    // pool, which has no way through.
+    float narrow = smoothstep(-2.2, 0.2, fieldAt(p.xz - bank * 3.5).r);
+    flow = dir * (0.04 + (0.16 + 0.4 * narrow) * smoothstep(-0.05, -1.2, s)) * (1.0 - inPool) * nearBy;
   }
   // What the flow carries is looked up where it came from: twice, half a turn apart, each fading out as the other fades in, so that the
   // carried pattern never snaps back. No two places turn over together.
@@ -102,7 +107,11 @@ void main() {
   // A slow heave of the whole surface, too low to see but in what it mirrors.
   vec2 slope = (texture2D(tGrain, p.xz / 5.3 + vec2(0.013, 0.008) * uTime).ba - 0.5) * 0.035 + (texture2D(tGrain, p.xz / 2.3 - vec2(0.011, 0.017) * uTime).ba - 0.5) * 0.025;
   // The flow dimples the skin where it runs: low boils and seams that go down the channel with it.
-  slope += (carriedFine.ba - 0.5) * 0.09 * smoothstep(0.02, 0.12, length(flow)) * smoothstep(0.5, 0.1, px);
+  float speed = length(flow);
+  slope += (carriedFine.ba - 0.5) * (0.07 + 0.25 * speed) * smoothstep(0.02, 0.12, speed) * smoothstep(0.5, 0.1, px);
+  // What stands in the current leaves a wake down the flow from it: the skin broken, and scum caught in it.
+  float wake = speed > 0.06 ? contactDrawn(p - vec3(flow.x, 0.0, flow.y) / speed * 0.7) * smoothstep(0.06, 0.25, speed) : 0.0;
+  slope += (carried.ba - 0.5) * 0.5 * wake;
   // Where the big ones wade the brine is churned: dark with mud and never still.
   brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
   brineSlurry = 1.0 - smoothstep(1.8, 4.2, length(p.xz - vec2(${STUCK_AT[0].toFixed(3)}, ${STUCK_AT[1].toFixed(3)})));
@@ -111,11 +120,12 @@ void main() {
   vec2 wdir = ${v2(WIND_N)};
   vec2 lane = vec2(dot(p.xz, wdir) - 1.6 * uTime, dot(p.xz, vec2(-wdir.y, wdir.x)));
   float paw = smoothstep(0.5, 0.74, texture2D(tGrain, vec2(lane.x / 41.0, lane.y / 11.0) + patchy.rb * 0.06).g);
-  float ruffle = 0.04 + 0.5 * paw + 0.12 * inPool + 0.8 * brineMud;
+  // Outside the lanes it is not glass either: the flow, the gas and what wades keep a low ripple on it, more here and less there.
+  float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
   vec4 bend = texture2D(tGrain, p.xz / 0.83 + vec2(0.01, 0.007) * uTime);
   vec2 ripples = vec2(0.0);
   // (No train is everywhere: each comes and goes in patches of its own, or the five would weave one cloth.)
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.31), 0.41, bend.r * 4.0) * 0.1 * fine.g * smoothstep(0.2, 0.07, px);
+  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.31), 0.41, bend.r * 4.0) * 0.1 * fine.g * smoothstep(0.13, 0.045, px);
   ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.47), 0.27, bend.g * 5.0) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.13, 0.045, px);
   ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.83), 0.173, bend.b * 5.0) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.085, 0.03, px);
   ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 1.3), 0.117, bend.a * 6.0) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.058, 0.02, px);
@@ -181,7 +191,7 @@ void main() {
   float lip = smoothstep(8.5, 5.0, length(p.xz - vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
   want = max(want, lip * smoothstep(-0.9, -0.06, s) * smoothstep(0.6, 0.78, fleck.g * 0.4 + raft.g * 0.6 + 0.3 * smoothstep(-0.5, -0.04, s)));
   // What the flow carries off the banks goes down the channel in thin strings.
-  float strings = smoothstep(0.71, 0.8, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, length(flow)) * 0.55;
+  float strings = max(smoothstep(0.71, 0.8, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, speed) * 0.55, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
   // (And scum catches on whatever stands in it.)
   want = max(max(want, strings), max(min(boil * 0.8, 0.6), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
   // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
