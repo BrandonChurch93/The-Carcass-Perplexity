@@ -7,7 +7,11 @@ import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { breakdown, envelope, figure, restruck, strokeAt, timingOf, type Line } from './bolt';
 import { createChannel } from './channel';
 import { WIND, WIND_SPEED, strikeTip } from '../shared/anchors';
-import { STRIKES, type StrikeSite } from './where';
+import { STRIKES, during, type StrikeSite } from './where';
+
+/** The fifth strike falls on the last frame of the long lens's shot, close before that lens: there its channel would stand as a white bar
+ * across the frame for one frame. Until the cut only its light is seen; from inside the canal it is drawn. */
+const FIFTH_FROM = during('spine-05').from;
 
 export const PARTS: readonly string[] = STRIKES.map((s) => s.id);
 
@@ -23,7 +27,7 @@ const FLASH_OF = [3.6, 0.8, 0.9, 3.2, 0.6, 0.15];
  * the round lights (the storm's even lift of the place, which a flash must not become): the sixth is seen from inside the hollow, where
  * the lift would fill the animals and the pulse is the picture. */
 const CLOUD_OF = [1.6, 0.5, 0.8, 0.75, 0.45, 0.85];
-const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 1.2];
+const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 2.5];
 const ROUND_OF = [0.02, 0.2, 0.2, 0.7, 0.02, 0.15];
 /** Each strike's share of the light in the cloud about its root. */
 const ROOT_OF = [1, 0.8, 0.9, 0.8, 0.7, 0.8];
@@ -90,7 +94,7 @@ void main() {
   // The brightest of it burns out about the root; its dim billows stay dim, so the cloud keeps its shapes in the light.
   float lum = dot(pic, vec3(0.3, 0.5, 0.2));
   // The dim billows far from the root go dark first.
-  float keep = smoothstep(0.0, 0.22, lum * (1.25 - 0.75 * length(vOff)) - 0.5 * uDie.x);
+  float keep = smoothstep(0.0, 0.45, lum * (1.25 - 0.75 * length(vOff)) - 0.5 * uDie.x);
   vec3 c = pic * (0.35 + 1.6 * lum) * uGlow * (edge * mix(1.0, keep, min(1.0, 3.0 * uDie.x)));
   gl_FragColor = vec4(c * (1.0 - uSolo), 0.0);
 }`;
@@ -172,7 +176,8 @@ void main() {
   float r = length(vUv);
   // White where the channel lands, burning out the tip under it; round that the glare the lens makes of it, violet, falling to nothing
   // inside the card. It hides what is behind it only as far as it outshines it.
-  float core = exp(-r * r * 320.0);
+  // (Taller than wide and small: it is the foot of the channel swollen where it meets the rock. Round and larger it stood as a bead.)
+  float core = exp(-(vUv.x * vUv.x * 1500.0 + vUv.y * vUv.y * 520.0));
   float fall = (1.0 - r) * (1.0 - r);
   float glare = fall / (1.0 + r * r * 14.0);
   float power = max(uColour.r, max(uColour.g, uColour.b));
@@ -361,17 +366,25 @@ export function create(ctx: Context): Piece {
         // The stroke alone throws light: the dim current that goes on in the channel after it is seen and lights nothing.
         const hard = Math.max(0, power - 0.09);
         const of = index % FLASH_OF.length;
-        const round = hard * (ROUND_OF[of] as number);
         b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(hard, 1) * 130);
         const within = e.cloud;
         // Between the strokes the light does not go out: the land keeps a share of the last stroke's light for a few frames and the
         // cloud keeps more of it for longer.
         const land = Math.max(hard, HOLD_LAND * e.held);
         const sky = Math.max(hard, HOLD_CLOUD * e.glow);
+        // The even lift of the air goes with the cloud's glow and not with the stroke alone: lit for one frame and dark the next, the whole
+        // picture flipped twice a strike, which no encoder holds.
+        const round = sky * (ROUND_OF[of] as number);
         // The cloud about the root: full on a stroke, and it dies after the last one over some eight frames. Before the first stroke it flickers.
         // The lit cloud is gone eight frames after its last stroke: its last third sinks faster than the sky's own glow does.
-        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky * Math.min(1, sky / 0.3), 0.5 * before));
+        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky * Math.min(1, sky / 0.3), 0.3 * before));
         b.rootDie.set(before > 0 && sky <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - sky)), stroke);
+        if (index === 4 && seconds < FIFTH_FROM) {
+          b.firstGroup.visible = false;
+          b.againGroup.visible = false;
+          b.rootGlow.set(0, 0, 0);
+          b.spotGlow.set(0, 0, 0);
+        }
         if (within > 0 && hard <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
           // A cloud lit from inside: its own glow and what of it comes in by the canal's mouth. No light with a shadow.
           flashTip.set(INNER_AT.x - 0.4 * INNER_SPAN.x, INNER_AT.y - 0.4 * INNER_SPAN.y, INNER_AT.z - 0.4 * INNER_SPAN.z, FLASH * INNER_PULSE * within);
