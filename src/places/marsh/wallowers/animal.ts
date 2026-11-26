@@ -634,12 +634,15 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
   // The left pair swings about 0.79 of the cycle and the right pair about 0.29: the trunk is over the other side a tenth of a cycle before.
   const lean = Math.cos(TAU * (c - 0.69));
   const walking = clamp(plan.speed / 0.1);
-  out.shift = 0.17 * k * lean * walking;
-  out.roll = 0.07 * lean * walking - 0.03 * front;
-  out.sway = -0.09 * k * Math.cos(TAU * (c - 0.8)) * walking;
-  out.bend = 0.05 * Math.sin(TAU * (c - 0.1)) * walking;
+  // What it does where it stands, on top of the walk: the weight goes from one side to the other, slowly, and never evenly. A young one is quicker in all of it.
+  const q = 1 + 0.7 * b.young;
+  const ease = Math.sin(seconds * 1.15 * q + b.seed * 13) + 0.45 * Math.sin(seconds * 2.4 * q + b.seed * 5);
+  out.shift = 0.17 * k * lean * walking + 0.045 * k * ease;
+  out.roll = 0.07 * lean * walking - 0.03 * front + 0.028 * Math.sin(seconds * 1.15 * q + b.seed * 13 + 0.7);
+  out.sway = -0.09 * k * Math.cos(TAU * (c - 0.8)) * walking - 0.03 * k * ease;
+  out.bend = 0.05 * Math.sin(TAU * (c - 0.1)) * walking + 0.035 * Math.sin(seconds * 0.9 * q + b.seed * 21);
   // Rooting: a shove into the mud and a slower drawing back, the whole trunk behind it.
-  const rootRate = 0.31 + 0.11 * (b.seed - Math.floor(b.seed));
+  const rootRate = (0.34 + 0.12 * (b.seed - Math.floor(b.seed))) * q;
   const rc = seconds * rootRate + b.seed * 7.3;
   const rp = rc - Math.floor(rc);
   // Now and then it stops rooting, lifts its head out of the mud and looks round, and the brine runs off its chin.
@@ -647,21 +650,22 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
   const lp = (lc - Math.floor(lc + 0.5)) * LOOK_EVERY;
   const up = smooth(-3.4, -2.2, lp) * (1 - smooth(0.6, 2.0, lp));
   const shove = (rp < 0.35 ? smooth(0, 0.35, rp) : 1 - smooth(0.35, 1, rp)) * plan.root * (1 - up);
-  out.surge = 0.11 * k * shove;
-  out.pitch = 0.035 * shove + 0.012 * liftSum * 0;
-  out.bob = -0.02 * k * shove - 0.012 * k * liftSum;
-  out.headPitch = plan.hang + 0.1 * shove - 0.4 * up + 0.04 * Math.sin(seconds * 1.3 + b.seed * 5);
-  // The head sweeps the mud from side to side, slowly, and not evenly.
-  out.headYaw = plan.root * (1 - up) * (0.3 * Math.sin(seconds * 0.52 + b.seed * 11) + 0.12 * Math.sin(seconds * 1.17 + b.seed * 3)) + up * 0.42 * Math.sin(seconds * 0.8 + b.seed * 4);
-  out.breath = Math.sin(seconds * (1.7 + 0.35 * Math.sin(b.seed * 17)) + b.seed * 9);
+  out.breath = Math.sin(seconds * (2.0 + 0.4 * Math.sin(b.seed * 17)) * q + b.seed * 9);
+  out.surge = 0.15 * k * shove;
+  out.pitch = 0.05 * shove + 0.008 * out.breath;
+  out.bob = -0.025 * k * shove - 0.012 * k * liftSum + 0.012 * k * out.breath;
+  out.headPitch = plan.hang + 0.07 * shove - 0.4 * up + 0.04 * Math.sin(seconds * 1.9 * q + b.seed * 5);
+  // The head sweeps the mud from side to side: a sweep takes about four seconds, with a quicker shake over it, and no two alike.
+  out.headYaw =
+    (0.4 + 0.6 * plan.root) * (1 - up) * (0.34 * Math.sin(seconds * 1.45 * q + b.seed * 11) + 0.13 * Math.sin(seconds * 3.1 * q + b.seed * 3)) + up * 0.42 * Math.sin(seconds * 1.2 + b.seed * 4);
   out.squash = 1;
   out.cave = 0;
   out.splay = 0.55 + 0.25 * shove;
   for (let f = 0; f < FEELERS; f++) {
-    const w = 2.1 + 1.9 * cell(f, 7, Math.floor(b.seed * 9973));
+    const w = 2.6 + 2.4 * cell(f, 7, Math.floor(b.seed * 9973));
     const a = seconds * w + f * 2.4 + b.seed * 31;
     // Each rakes: curled, then flicked out, each to its own time.
-    out.curl[f] = 0.95 + 0.3 * Math.sin(a) + 0.12 * Math.sin(a * 2.3 + 1) + 0.3 * shove;
+    out.curl[f] = 0.95 + 0.36 * Math.sin(a) + 0.14 * Math.sin(a * 2.3 + 1) + 0.3 * shove;
   }
   return out;
 }

@@ -12,5 +12,19 @@
    2
   ],
   "parentRowsWhy": "the three windows of the bottom row showed only water, and the model drew a rocky shore across the top of each; they are set aside, and below the middle of the reflections the plate is the enlarged parent"
+ },
+ {
+  "place": "eye",
+  "name": "far",
+  "k": 2,
+  "real": "references/drafts/working/real/plate-crater-1.jpg",
+  "model": "gpt_image_2_6_sunburst",
+  "date": "2026-11-26",
+  "asked": "eye_owner_3",
+  "prompt": "The first reference image is a blurred, low-resolution photograph: one part of a wide view across a round mountain lake on a clear, windless evening, taken from a slope above the near shore. In the whole view a wall of pale limestone cliffs about 200 metres tall and two kilometres away runs along the far shore, lit warm gold by low sun from the left and in cool blue shade under an overhanging brow on the right, under a cloudless sky, with a thin line of mist at its foot, above still dark blue water that mirrors it. The picture shows only the part that is there. Where it shows sky, the result is the same empty sky. Where it shows water, the result is the same water with the same reflections. Where it shows the cliffs, the result is the same cliffs. Make the same photograph at full resolution. Keep every cliff, ledge, cave, slope, shadow, reflection and colour exactly where it is and at the same size: add nothing new and move nothing. Add what a real camera records at this distance and the first image lacks: bedding planes and joints in the limestone, small ledges with scree, dark seepage streaks that follow the cracks, broken strata inside the caves, the grain of the scree fans, fine ripples on the water. The second reference image is a real photograph: the standard for how a camera records real rock, with real grain and micro detail and no painted or generated look. Photographic, sharp from edge to edge. No text, no logo, no border, no people, no animals, no birds.",
+  "parentRows": [
+   2
+  ],
+  "parentRowsWhy": "the three windows of the bottom row show only water below the reflections; as with far-low they are not made, and there the plate is the enlarged parent"
  }
 ]
