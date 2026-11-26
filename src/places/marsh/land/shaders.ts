@@ -9,30 +9,61 @@ import { RIG_GLSL } from '../shared/glsl';
 /** True: the fine patches are raised by the pictures' heights (their vertices read the height maps). False: they are level and only shaded. */
 export const RELIEF: boolean = true;
 
-// What the fine patches' vertices and every fragment share: how the pans' sheet is laid, and where the thin crust has gone through.
+// What the fine patches' vertices and every fragment share: how the ground is broken into pans, and what the thin crust does to them.
 const PLATE_GLSL = /* glsl */ `
-// The salt pans are one sheet (mat/pan, three wide by two deep) laid twice over the same ground. The first lay is cut into cells, and in
-// each cell the sheet is turned and shifted on its own; the second lies whole under it, turned once, and shows where two cells meet.
-// Which of the two a spot shows is settled by their heights, so a join runs along rims and cracks and never across a pan.
 uniform sampler2D tPanN;
-vec2 panHash(vec2 c) { return fract(sin(vec2(dot(c, vec2(127.1, 311.7)), dot(c, vec2(269.5, 183.3)))) * 43758.5453); }
-// size: the metres the sheet's width covers. bent: how far the cells' edges are pushed about there, so that none runs straight (the
-// sheet itself is never bent: bent, its grain runs out into streaks). Gives the two places on the sheet and the turn of the first (cos, sin); returns the first
-// lay's share before the heights are asked.
-float panPlace(vec2 xz, vec2 bent, float size, out vec2 uA, out vec2 uB, out vec2 turn) {
-  vec2 g = (xz + bent) / (size * 0.71);
-  vec2 fr = fract(g);
-  vec2 r = panHash(floor(g));
+// The width of a pan in metres, near. (Far off, where one of these is a pixel, the pans drawn are five times that.)
+const float PAN = 1.3;
+vec2 panHash(vec2 c) {
+  vec3 q = fract(vec3(c.xyx) * vec3(0.1031, 0.1030, 0.0973));
+  q += dot(q, q.yzx + 33.33);
+  return fract((q.xx + q.yz) * q.zy);
+}
+// The flats are broken into many-sided pans, each grown from its own seed. At a spot: e, the metres to the nearest edge of its pan;
+// c, the metres from the pan's seed to the spot; dir, the way to that edge; r, two numbers that are the pan's own.
+void panAt(vec2 xz, float size, out float e, out vec2 c, out vec2 dir, out vec2 r) {
+  vec2 q = xz / size;
+  vec2 ip = floor(q);
+  vec2 fp = q - ip;
+  float d1 = 9.0;
+  float d2 = 9.0;
+  vec2 c1 = vec2(0.0);
+  vec2 c2 = vec2(1.0, 0.0);
+  vec2 id = ip;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 o = vec2(float(i), float(j));
+      vec2 at = o + 0.12 + 0.76 * panHash(ip + o) - fp;
+      float d = dot(at, at);
+      if (d < d1) {
+        d2 = d1;
+        c2 = c1;
+        d1 = d;
+        c1 = at;
+        id = ip + o;
+      } else if (d < d2) {
+        d2 = d;
+        c2 = at;
+      }
+    }
+  }
+  dir = normalize(c2 - c1);
+  e = dot(0.5 * (c1 + c2), dir) * size;
+  c = -c1 * size;
+  r = panHash(id + 17.3);
+}
+// Where the sheet of the crust's surface (mat/pan, three metres by two) lies in a pan: every pan turns and shifts it on its own, so no
+// stretch of it is found twice and its joins lie under the rims. turn is the pan's (cos, sin).
+vec2 panSheet(vec2 xz, vec2 r, out vec2 turn) {
   float a = r.x * 6.2832;
   turn = vec2(cos(a), sin(a));
-  uA = vec2(turn.x * xz.x - turn.y * xz.y, turn.y * xz.x + turn.x * xz.y) / vec2(size, size / 1.5) + vec2(r.y, fract(r.x * 7.31 + r.y * 3.17));
-  uB = vec2(0.8 * xz.x - 0.6 * xz.y, 0.6 * xz.x + 0.8 * xz.y) / vec2(size * 0.87, size * 0.58) + 0.37;
-  vec2 e = min(fr, 1.0 - fr);
-  return smoothstep(0.0, 0.2, min(e.x, e.y));
+  return vec2(turn.x * xz.x - turn.y * xz.y, turn.y * xz.x + turn.x * xz.y) / vec2(3.0, 2.0) + vec2(r.y, fract(r.x * 7.31 + r.y * 3.17));
 }
-float panPick(float w, float hA, float hB) { return smoothstep(-0.12, 0.12, (w * 2.0 - 1.0) + (hA - hB) * 1.4 * (1.0 - abs(w * 2.0 - 1.0))); }
-// The thin crust: the height under which a pan's low parts have gone through to the mud. mid is the grain at 13 m, fineG at 1.9 m.
-float thinGap(vec4 mid, float fineG) { return 0.31 + 0.2 * (mid.b - 0.5) + 0.1 * (fineG - 0.5); }
+// Thin crust: the pans are plates lying loose on the mud. Each has drawn back from its edge by its own measure (one in ten is gone
+// altogether), and each is tipped its own way.
+float panGap(float thin, vec2 r) { return smoothstep(0.0, 0.5, thin) * (0.012 + 0.15 * r.x * r.x + 3.0 * step(r.y, 0.1)); }
+vec2 panTilt(vec2 r) { return (fract(r * 7.13 + r.yx * 3.71) - 0.5) * 0.2; }
+float panLift(vec2 r, vec2 c) { return clamp(dot(panTilt(r), c), -0.015, 0.07) + 0.012; }
 `;
 
 // The heights the fine patches are raised by, read at a vertex. y0 is the ground's own height there.
@@ -41,28 +72,23 @@ uniform sampler2D tGrain;
 uniform float uCell;
 uniform vec4 uPatch;
 uniform vec2 uAlong;
-float panHeight(vec2 xz, vec2 bent, float size, float lod) {
-  vec2 uA;
-  vec2 uB;
-  vec2 turn;
-  float w = panPlace(xz, bent, size, uA, uB, turn);
-  float hA = textureLod(tPanN, uA, lod).b;
-  float hB = textureLod(tPanN, uB, lod).b;
-  return mix(hB, hA, panPick(w, hA, hB));
-}
 float reliefAt(vec2 xz, float y0) {
   float rock = smoothstep(0.28, 0.75, y0);
-  float thin = smoothstep(0.0, 0.5, fieldAt(xz).g);
-  float lod = log2(uCell * 205.0);
-  vec4 wide = textureLod(tGrain, xz / 97.0 + 0.11, 0.0);
-  float pan = panHeight(xz, (wide.ba - 0.5) * 5.0, 12.0, lod - 0.7);
-  float up = ((pan - 0.45) * 0.075 + (panHeight(xz + 3.7, (wide.ba - 0.5) * 1.5, 2.3, lod + 1.7) - 0.45) * 0.014) * smoothstep(-0.05, 0.25, y0);
-  if (thin > 0.0) {
-    // (The slabs of the thin crust stand a finger over the mud they lie on.)
-    vec4 fine = textureLod(tGrain, xz / 1.9, 0.0);
-    vec4 mid = textureLod(tGrain, (xz + (wide.ba - 0.5) * 7.0) / 13.0 + 0.37, 0.0);
-    up = mix(up, mix(-0.03, up * 0.6 + 0.008, smoothstep(-0.03, 0.05, pan * 0.85 + mid.g * 0.15 - thinGap(mid, fine.g))), thin);
-  }
+  float thin = fieldAt(xz).g;
+  float e;
+  vec2 c;
+  vec2 dir;
+  vec2 r;
+  vec2 turn;
+  panAt(xz + (textureLod(tGrain, xz / 1.9, 0.0).rg - 0.5) * 0.35, PAN, e, c, dir, r);
+  float sh = textureLod(tPanN, panSheet(xz, r, turn), log2(uCell * 512.0)).b;
+  float ep = e + (sh - 0.5) * 0.06 - panGap(thin, r);
+  // A pan's rim stands two fingers over it.
+  float rim = 1.0 - smoothstep(0.0, (0.03 + 0.04 * r.x) * 1.6, ep);
+  float up = ((sh - 0.45) * 0.02 + 0.022 * rim) * smoothstep(-0.05, 0.25, y0);
+  float k = smoothstep(0.0, 0.5, thin);
+  // (A plate of the thin crust stands on the mud by its own tilt: one edge lifted, the other down in it.)
+  if (k > 0.0) up = mix(up, mix(-0.035, (sh - 0.45) * 0.012 + 0.02 * rim + panLift(r, c), smoothstep(-0.02, 0.01, ep)), k);
   // (The rock's blocks are in the mesh's own heights: nothing is added to them here.)
   up *= 1.0 - rock;
   return up;
@@ -139,25 +165,6 @@ ${FIELD_GLSL}
 ${PLATE_GLSL}
 ${BRINE_GLSL}
 
-// The pans' sheet at one spot: its colour, and in nh the lean of its surface on x and z and its height. px and py are how far the ground
-// moves from one pixel to the next: a cell's edge is no edge to the sheet, so the sheet is told its own size on screen.
-void panLay(vec2 xz, vec2 bent, float size, vec2 px, vec2 py, out vec3 col, out vec3 nh) {
-  vec2 uA;
-  vec2 uB;
-  vec2 turn;
-  float w = panPlace(xz, bent, size, uA, uB, turn);
-  vec2 sz = vec2(size, size / 1.5);
-  vec2 ax = vec2(turn.x * px.x - turn.y * px.y, turn.y * px.x + turn.x * px.y) / sz;
-  vec2 ay = vec2(turn.x * py.x - turn.y * py.y, turn.y * py.x + turn.x * py.y) / sz;
-  vec4 nA = textureGrad(tPanN, uA, ax, ay);
-  vec4 nB = texture2D(tPanN, uB);
-  float k = panPick(w, nA.b, nB.b);
-  col = mix(texture2D(tPan, uB).rgb, textureGrad(tPan, uA, ax, ay).rgb, k);
-  vec2 sA = nA.rg - 0.5;
-  vec2 sB = nB.rg - 0.5;
-  nh = vec3(mix(vec2(0.8 * sB.x + 0.6 * sB.y, 0.8 * sB.y - 0.6 * sB.x), vec2(turn.x * sA.x + turn.y * sA.y, turn.x * sA.y - turn.y * sA.x), k), mix(nB.b, nA.b, k));
-}
-
 void main() {
   vec3 p = vWorld;
   vec3 toEye = cameraPosition - p;
@@ -178,71 +185,105 @@ void main() {
   float near = smoothstep(90.0, 30.0, dist);
   float close = smoothstep(16.0, 6.0, dist);
 
-  // The salt pans: one sheet of them from above (mat/pan) laid at three sizes, and in each lay cut into cells in which the sheet is turned
-  // and shifted on its own (panLay), so that no stretch of it is found twice. Far off a pan is strides across; near, one stride; at the
-  // lens the same sheet a hand to a pan, which is the crystal rind itself. Its heights are what the brine's level stands against.
-  vec2 bent = (wide.ba - 0.5) * 5.0;
+  // The salt pans. The ground is broken into pans (panAt): each has a raised rim of crystals along its edge, drawn from the edge itself and
+  // so as sharp as the picture is fine; its face is the sheet of the crust's surface (mat/pan), turned and shifted pan by pan. Where a
+  // pan is smaller than a few pixels the pans drawn are five times the size. Their heights are what the brine's level stands against.
   vec2 px = dFdx(p.xz);
   vec2 py = dFdy(p.xz);
-  vec3 crust = vec3(1.0);
-  vec3 nP = vec3(0.0, 0.0, 0.45);
-  float farLay = smoothstep(30.0, 80.0, dist);
-  if (farLay < 1.0) {
-    panLay(p.xz, bent, 12.0, px, py, crust, nP);
-    crust /= PAN_MEAN;
+  float big = smoothstep(0.1, 0.3, max(length(px), length(py)));
+  float k = smoothstep(0.0, 0.5, thin);
+  vec3 sheet = vec3(1.0);
+  float sh = 0.5;
+  vec2 bend = vec2(0.0);
+  float tone = 1.0;
+  float rim = 0.0;
+  float prof = 0.0;
+  float footM = 0.0;
+  float slab = 1.0;
+  float ep = 1.0;
+  float aa = 0.01;
+  float lift = 0.0;
+  vec2 tilt = vec2(0.0);
+  if (big < 1.0) {
+    float e;
+    vec2 pc;
+    vec2 pdir;
+    vec2 pr;
+    vec2 turn;
+    panAt(p.xz + (fine.rg - 0.5) * 0.35, PAN, e, pc, pdir, pr);
+    vec2 uv = panSheet(p.xz, pr, turn);
+    vec2 ax = vec2(turn.x * px.x - turn.y * px.y, turn.y * px.x + turn.x * px.y) / vec2(3.0, 2.0);
+    vec2 ay = vec2(turn.x * py.x - turn.y * py.y, turn.y * py.x + turn.x * py.y) / vec2(3.0, 2.0);
+    vec4 nA = textureGrad(tPanN, uv, ax, ay);
+    sheet = textureGrad(tPan, uv, ax, ay).rgb / PAN_MEAN;
+    sh = nA.b;
+    vec2 sl = nA.rg - 0.5;
+    bend = vec2(turn.x * sl.x + turn.y * sl.y, turn.x * sl.y - turn.y * sl.x) * 2.4;
+    // (The rim is knobbed: its edge follows the lumps of the crust.)
+    ep = e + (sh - 0.5) * 0.06 - panGap(thin, pr);
+    aa = max(abs(dot(pdir, px)) + abs(dot(pdir, py)), 0.002);
+    float rimW = 0.03 + 0.04 * pr.x;
+    slab = smoothstep(-aa, aa, ep);
+    rim = smoothstep(rimW + aa, rimW * 0.5 - aa, ep) * slab;
+    prof = (1.0 - smoothstep(0.0, rimW * 1.6, ep)) * slab;
+    footM = smoothstep(rimW * 3.0 + aa, rimW * 1.3, ep) * (1.0 - rim) * slab;
+    bend -= pdir * prof * (1.0 - prof) * 5.0;
+    tone = 0.88 + 0.24 * pr.y;
+    tilt = panTilt(pr);
+    lift = panLift(pr, pc);
   }
-  if (farLay > 0.0) {
-    vec3 cQ;
-    vec3 nQ;
-    panLay(p.xz + 19.0, bent * 3.0, 53.0, px, py, cQ, nQ);
-    crust = mix(crust, cQ / PAN_MEAN, farLay);
-    nP = mix(nP, nQ, farLay);
+  if (big > 0.0) {
+    float e;
+    vec2 pc;
+    vec2 pdir;
+    vec2 pr;
+    panAt(p.xz + (fine.rg - 0.5) * 1.2 + 31.7, PAN * 5.0, e, pc, pdir, pr);
+    float a2 = max(abs(dot(pdir, px)) + abs(dot(pdir, py)), 0.002);
+    float e2 = e - panGap(thin, pr) * 4.0;
+    float slab2 = smoothstep(-a2, a2, e2);
+    float w2 = 0.14 + 0.16 * pr.x;
+    rim = mix(rim, smoothstep(w2 + a2, w2 * 0.5 - a2, e2) * slab2, big);
+    prof = mix(prof, (1.0 - smoothstep(0.0, w2 * 1.6, e2)) * slab2, big);
+    footM *= 1.0 - big;
+    slab = mix(slab, slab2, big);
+    tone = mix(tone, 0.88 + 0.24 * pr.y, big);
+    sheet = mix(sheet, vec3(1.0), big);
+    sh = mix(sh, 0.5, big);
+    bend *= 1.0 - big;
+    lift *= 1.0 - big;
+    tilt *= 1.0 - big;
   }
-  // hgt: how high this spot stands among its neighbours, 0 to 1, from the sheet's heights.
-  float hgt = nP.z * 0.85 + mid.g * 0.15;
-  vec2 bend = nP.xy * 2.4;
-  if (close > 0.0) {
-    vec3 cC;
-    vec3 nC;
-    panLay(p.xz + 3.7, bent * 0.3, 2.3, px, py, cC, nC);
-    crust *= mix(vec3(1.0), 0.45 + 0.55 * cC / PAN_MEAN, close);
-    hgt += (nC.z - 0.45) * 0.25 * close;
-    bend += nC.xy * 1.8 * close;
-  }
-  vec3 colour = greyed(crust, 0.7) * vec3(0.31, 0.297, 0.284) * (0.86 + 0.28 * wide.r);
-  // Salt stands white and crystalline on the raised rims; in the cracks between the pans the red has dried dark.
-  colour = mix(colour, vec3(0.52, 0.505, 0.49) * (0.8 + 0.25 * hgt), smoothstep(0.55, 0.78, hgt) * 0.8);
-  colour = mix(colour, vec3(0.11, 0.05, 0.04), smoothstep(0.3, 0.1, hgt) * (0.45 + 0.4 * stain) * (1.0 - 0.5 * farLay));
-  float occ = 1.0 - 0.45 * smoothstep(0.45, 0.1, hgt) * mix(0.5, 1.0, near);
+  // hgt: how high this spot stands among its neighbours, 0 to 1.
+  float hgt = mix(0.42 + (sh - 0.5) * 0.5 + (tone - 1.0) * 0.6, 0.9, prof) * 0.88 + mid.g * 0.12;
+  vec3 colour = greyed(sheet, 0.7) * vec3(0.3, 0.287, 0.275) * (0.86 + 0.28 * wide.r) * tone;
+  // Salt stands white and crystalline on the rims; at a rim's foot the damp lies dark, and here and there the red has dried in it.
+  colour = mix(colour, vec3(0.53, 0.515, 0.5) * (0.82 + 0.3 * sh), rim * 0.9);
+  colour = mix(colour, vec3(0.11, 0.05, 0.04), max(footM * (0.2 + 0.5 * stain), smoothstep(0.3, 0.1, hgt) * (0.2 + 0.4 * stain) * (1.0 - big)));
+  float occ = 1.0 - (0.3 * footM + 0.3 * smoothstep(0.4, 0.1, hgt)) * mix(0.5, 1.0, near);
   float rough = 1.0;
   float ground = 1.0;
-  // The crust lies ON grey brown mud, in patches: back from the rims the mud shows wet where no crust has grown, and in the seams between
-  // the plates.
+  // The crust lies ON grey brown mud, in patches: back from the rims the mud shows wet where no crust has grown.
   float bare = smoothstep(0.55, 0.66, wide.g * 0.5 + mid.r * 0.5) * smoothstep(0.62, 0.4, hgt) * smoothstep(1.0, 3.0, t) * (1.0 - rock);
-  float mudShare = max(bare * 0.55, smoothstep(0.44, 0.2, hgt) * 0.25 * (1.0 - rock));
+  float mudShare = max(bare * 0.55, smoothstep(0.34, 0.14, hgt) * 0.25 * (1.0 - rock));
   colour = mix(colour, vec3(0.2, 0.158, 0.132) * (0.7 + 0.6 * mid.b), mudShare);
   rough = mix(rough, 0.86, mudShare);
 
   // Slopes of the ground from the plates' relief, in metres a metre, on top of the mesh's own.
   vec2 lean = vec2(0.0);
-  // How wide a pixel is on the ground: the relief is read no finer than that.
-  // The reliefs are soft clay models, not strict heights: slopes are taken from them a hand apart and blurred, and the sharp picture is
-  // kept as how closed a spot is.
   float foot = max(length(fwidth(p.xz)) * 1.5, 0.07);
 
-  // Thin crust over mud: the same pans, broken. Each pan is a slab lying on wet grey mud; the cracks between them have opened into gaps
-  // a hand to a stride wide, wider here and narrower there, and brine stands in them.
-  float slab = 0.0;
-  {
-    float k = smoothstep(0.0, 0.5, thin);
+  // Thin crust over mud: the same pans, loose. Each is a plate lying on wet mud, drawn back from its neighbours and tipped; the gaps
+  // between them are a hand to a stride wide and brine stands in them. A lifted edge shows its broken section and throws its shade.
+  if (k > 0.0) {
     vec3 silt = texture2D(tSilt, p.xz / 3.0).rgb;
     vec4 nS = texture2D(tSiltN, p.xz / 3.0);
-    slab = smoothstep(-0.03, 0.05, hgt - thinGap(mid, fine.g));
     // The wallow (painted into the fine patch): its mud is lower, wetter and darker than any other, and the slabs tipped round it are whole.
     float sunk = vPaint.x * k;
     float tipped = vPaint.y * k;
     slab = max(slab * (1.0 - sunk), tipped);
-    vec3 mudCol = silt * vec3(0.27, 0.205, 0.18) * mix(vec3(1.0), vec3(0.5, 0.42, 0.38), sunk);
+    // (Rust under the plates; grey where the stuck one has stirred it.)
+    float stirred = 1.0 - smoothstep(2.0, 5.5, length(p.xz - vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)})));
+    vec3 mudCol = silt * mix(vec3(0.27, 0.15, 0.12), vec3(0.27, 0.205, 0.18), stirred) * mix(vec3(1.0), vec3(0.5, 0.42, 0.38), sunk);
     vec2 grain = -(nS.rg - 0.5) * 0.8;
     if (close > 0.0) {
       // Close to the lens the silt's own grain is on the mud.
@@ -250,12 +291,14 @@ void main() {
       mudCol *= mix(vec3(1.0), 0.6 + 0.4 * texture2D(tSilt, p.xz / 0.7 + 0.31).rgb / vec3(0.32, 0.281, 0.257), close);
       grain -= (nS2.rg - 0.5) * 0.5 * close;
     }
-    // The slabs keep their salt, a little soiled; the mud between them is wet, and dark with it. A slab's edge is its broken section.
-    float edge = slab * (1.0 - slab) * 4.0;
-    colour = mix(colour, mix(mudCol, colour * vec3(0.94, 0.9, 0.88), slab) * (1.0 - 0.35 * edge), k);
+    float shade = smoothstep(-(0.03 + max(lift, 0.0) * 1.6), 0.0, ep) * (1.0 - big);
+    mudCol *= 1.0 - 0.65 * shade;
+    float section = smoothstep(-0.016 - aa, -0.016 + aa, ep) * smoothstep(0.005, 0.035, lift) * (1.0 - big);
+    mudCol = mix(mudCol, mix(vec3(0.2, 0.09, 0.07), vec3(0.47, 0.43, 0.4), smoothstep(-0.012, -0.004, ep)) * (0.75 + 0.5 * sh), section);
+    colour = mix(colour, mix(mudCol, colour * vec3(0.88, 0.83, 0.8), slab), k);
     hgt = mix(hgt, mix(0.08 + 0.3 * nS.b, max(hgt, 0.5), slab), k);
-    bend = mix(bend, mix(grain, bend, slab), k);
-    occ = mix(occ, mix(0.72, occ, slab), k);
+    bend = mix(bend, mix(grain, bend - tilt * 4.0, slab), k);
+    occ = mix(occ, mix(0.72 - 0.3 * shade, occ, slab), k);
   }
 
   // Rock: pale bedded stone broken into blocks (the blocks, their risers and joints are in the mesh, land/field.ts). What lies level
@@ -423,7 +466,7 @@ void main() {
   // Round every pool, a stride back from its wet margin, the brine has left its salt: a pale rim, broken, wider here and narrower there.
   float rimAt = wetTo + 0.3 + 0.5 * mid.r;
   float salted = smoothstep(wetTo * 0.5, wetTo, tw) * smoothstep(rimAt + 0.9, rimAt, t) * smoothstep(0.3, 0.55, mid.b * 0.6 + fine.b * 0.4) * (1.0 - rock) * step(0.0, s) * (1.0 - flood) * (1.0 - churn) * (1.0 - 0.8 * sheer);
-  colour = mix(colour, vec3(0.53, 0.512, 0.495) * (0.72 + 0.45 * hgt) * mix(1.0, dot(crust, vec3(0.3333)), 0.45), salted * mix(0.7, 0.55, close));
+  colour = mix(colour, vec3(0.53, 0.512, 0.495) * (0.72 + 0.45 * hgt) * mix(1.0, dot(sheet, vec3(0.3333)), 0.45), salted * mix(0.7, 0.55, close));
   // An overcast is not the same all round: the quarter away from the rain is the brighter, and every lump and lip shows it.
   vec2 bright = vec2(-0.86, 0.5);
   // The plates' slopes are real slopes: the mesh's normal leans by them.

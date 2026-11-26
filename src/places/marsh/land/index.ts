@@ -130,11 +130,24 @@ export function create(ctx: Context): Piece {
   const landHeight = (x: number, z: number): number =>
     field.height(x, z) - 0.3 * smooth(0.3, 0.7, Math.max(inPatch(x, z), inside(x, z, bankCentre, BANK.half, K1_DIR))) - 0.6 * smooth(0.3, 0.9, inside(x, z, rockCentre, ROCK.half));
   // How deep a point sits among its neighbours, near and wide: clefts are dark because the sky does not reach into them.
-  const hollowOf = (h: (x: number, z: number) => number, a: number, b: number, da: number, db: number) => (x: number, z: number): [number, number] => {
+  // (The neighbours are taken along the patch's own rows, whole cells away, and every height is kept once it is worked out: a neighbour
+  // is then a vertex the patch has already asked for.)
+  const kept = (h: (x: number, z: number) => number): ((x: number, z: number) => number) => {
+    const known = new Map<number, number>();
+    return (x, z) => {
+      const key = Math.round(x * 1000) * 2097152 + Math.round(z * 1000);
+      let y = known.get(key);
+      if (y === undefined) {
+        y = h(x, z);
+        known.set(key, y);
+      }
+      return y;
+    };
+  };
+  const hollowOf = (h: (x: number, z: number) => number, u: [number, number], a: number, b: number, da: number, db: number) => (x: number, z: number): [number, number] => {
     const here = h(x, z);
-    const near = (h(x + a, z) + h(x - a, z) + h(x, z + a) + h(x, z - a)) / 4;
-    const wide = (h(x + b, z) + h(x - b, z) + h(x, z + b) + h(x, z - b)) / 4;
-    return [Math.min(1, Math.max(0, (near - here) / da)), Math.min(1, Math.max(0, (wide - here) / db))];
+    const ring = (r: number): number => (h(x + u[0] * r, z + u[1] * r) + h(x - u[0] * r, z - u[1] * r) + h(x - u[1] * r, z + u[0] * r) + h(x + u[1] * r, z - u[0] * r)) / 4;
+    return [Math.min(1, Math.max(0, (ring(a) - here) / da)), Math.min(1, Math.max(0, (ring(b) - here) / db))];
   };
 
 
@@ -174,7 +187,8 @@ export function create(ctx: Context): Piece {
   far.frustumCulled = false;
   const land = new THREE.Group();
   land.add(ground, far);
-  const hollow = hollowOf(field.height, 0.12, 0.6, 0.06, 0.34);
+  const rockHeight = kept(field.height);
+  const hollow = hollowOf(rockHeight, F, ROCK.cell * 2, ROCK.cell * 12, 0.05, 0.34);
   // A fine patch is raised by the pictures' heights in its vertices; the raising dies out toward its rim, where the plain ground takes over.
   const raised = (c: [number, number], half: [number, number], cell: number, along: [number, number] = F): THREE.ShaderMaterial => {
     const m = new THREE.ShaderMaterial({
@@ -188,7 +202,7 @@ export function create(ctx: Context): Piece {
     return m;
   };
   const footMaterial = raised(rockCentre, ROCK.half, ROCK.cell);
-  const foot = new THREE.Mesh(patchGeometry(field.height, rockCentre, F, ROCK.half[0] * 2, ROCK.half[1] * 2, ROCK.cell, hollow), footMaterial);
+  const foot = new THREE.Mesh(patchGeometry(rockHeight, rockCentre, F, ROCK.half[0] * 2, ROCK.half[1] * 2, ROCK.cell, hollow), footMaterial);
   const bankMaterial = raised(bankCentre, BANK.half, BANK.cell, K1_DIR);
   const bank = new THREE.Mesh(patchGeometry(field.height, bankCentre, K1_DIR, BANK.half[0] * 2, BANK.half[1] * 2, BANK.cell, () => [0, 0]), bankMaterial);
   land.add(foot, bank);
