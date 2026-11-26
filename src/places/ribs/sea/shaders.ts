@@ -299,8 +299,10 @@ void main() {
   depth += 0.004 * sin(uTime * 0.9 + tide * 19.0) + 0.004 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);
   depth -= 0.07 * drawn;
   // What the water has just left is wet and dark: a band on every stone and bar above the line.
-  bool dry = depth < -0.09;
-  float wetBand = 0.42 * smoothstep(-0.09, -0.004, depth);
+  // Under the wall the whole flat is wet: the first thin sheet runs ahead of it and what it has left still shines.
+  float film = 0.09 + 0.3 * under;
+  bool dry = depth < -film;
+  float wetBand = 0.42 * smoothstep(-film, -0.004, depth);
   float edge = smoothstep(0.0, 0.012, depth);
   // No branch round the work: a picture read inside one has no slope at its border, and the waterlines came out different on every page load.
   vec3 col = vec3(0.0);
@@ -346,8 +348,8 @@ void main() {
   // A ruffled stretch throws the bright sky wide of the lens and reads dark; near the lens the eye looks down into the water and the bed shows.
   refl *= 1.0 - 0.4 * paw * (1.0 - lip);
   // Under the wall the break in the cloud over it lies down the flat as a broad bright path, worked by the ripples, with dark slate either side.
-  float lane = pow(max(dot(normalize(r.xz + 1e-5), vec2(-0.12, -0.99)), 0.0), 14.0) * smoothstep(0.0, 0.3, under);
-  refl = mix(refl * (1.0 - 0.6 * under), uHaze * 1.7 * (0.4 + 0.8 * c2.a), 0.85 * lane);
+  float lane = pow(max(dot(normalize(r.xz + 1e-5), vec2(-0.12, -0.99)), 0.0), 6.0) * smoothstep(0.0, 0.3, under);
+  refl = mix(refl * (1.0 - 0.35 * under), uHaze * 1.9 * (0.4 + 0.8 * c2.a), 0.85 * lane);
   fres *= mix(0.55, 1.0, smoothstep(8.0, 34.0, distance(cameraPosition, vWorld)));
   fres = mix(fres, 0.8, 0.18 * lip);
   col = fres * refl + (1.0 - fres) * murk * body;
@@ -465,7 +467,7 @@ void main() {
   float lifted = smoothstep(0.4 + tear, 0.54 + tear, u) * smoothstep(0.8 + 0.5 * tear, 0.68 + 0.5 * tear, u);
   // Not a band from side to side: windows, each some tens of metres long, in a wall that is otherwise broken white.
   float pane = 0.65 * vnoise(vec2(vRide.x / 34.0 + 7.0, uTime * 0.07)) + 0.35 * vnoise(vec2(vRide.x / 11.0, u * 5.0 + uTime * 0.3));
-  lifted *= smoothstep(0.34, 0.56, pane + 0.22 * (f1.r - 0.45) + 0.12 * (strings - 0.45));
+  lifted *= smoothstep(0.22, 0.44, pane + 0.22 * (f1.r - 0.45) + 0.12 * (strings - 0.45));
   float amount = mix(0.5 + 0.4 * exp(-max(u - 1.0, 0.0) * 0.1), 1.08 - 0.8 * lifted, face);
   // Ahead of the wall foam runs out over the wet flat in tongues, thinning to lace.
   float ahead = clamp(-vRide.y / 48.0, 0.0, 1.0);

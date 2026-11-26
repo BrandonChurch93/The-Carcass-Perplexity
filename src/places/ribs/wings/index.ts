@@ -627,9 +627,9 @@ export function create(ctx: Context): Piece {
           const vz = -gateRight[1] * 10 - gateAhead[1] * 12;
           const x = gateEye[0] + gateAhead[0] * far + gateRight[0] * off + vx * lead;
           const z = gateEye[2] + gateAhead[1] * far + gateRight[1] * off + vz * lead;
-          const y = 3.3 + (1.8 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
-          airborne(x, y, z, vx, 0.5, vz, 0.8 + 0.25 * hash(i, 5), hash(i, 7), seconds, 1, eye);
-          fig.tone = 0.5 + 0.2 * hash(i, 9);
+          const y = 2.5 + (1.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
+          airborne(x, y, z, vx, 0.5, vz, 1.15 + 0.3 * hash(i, 5), hash(i, 7), seconds, 1, eye);
+          fig.tone = 0.42 + 0.16 * hash(i, 9);
           skeinFigures.put(SKEIN + PASSERS + i, fig);
           continue;
         }
