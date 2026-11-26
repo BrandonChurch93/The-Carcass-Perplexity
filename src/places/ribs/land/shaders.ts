@@ -165,7 +165,7 @@ void main() {
   // Black in the hollows and low down where it is soaked, ochre on the tips that stand out and high up where it dries.
   float tip = smoothstep(0.45, 0.8, nh.z);
   float dry = smoothstep(4.0, 26.0, vWorld.y);
-  vec3 albedo = det * (0.5 + 0.5 * mass) * mix(2.2, 4.2, tip * (0.4 + 0.6 * dry));
+  vec3 albedo = det * (0.5 + 0.5 * mass) * mix(1.7, 3.0, tip * (0.4 + 0.6 * dry));
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
   float rough = mix(0.62 + 0.3 * (1.0 - nh.z), 0.12, thread);
@@ -272,7 +272,7 @@ void main() {
   c = mix(uHaze * 0.9, c, exp(-length(vWorld - vAt) * 0.0006));
   // The wind's ripple breaks the image into streaks that lie across the line of sight.
   float streak = 0.5 + 0.5 * vnoise(vec2(dot(vAt.xz, normalize(toEye.xz)) * 1.7, dot(vAt.xz, normalize(toEye.zx * vec2(1.0, -1.0))) * 0.3) + uTime * 0.5);
-  gl_FragColor = vec4(rigOut(c), 0.85 * wet * smoothstep(0.02, 0.45, f) * streak * (1.0 - uSolo));
+  gl_FragColor = vec4(rigOut(c), 0.5 * wet * smoothstep(0.02, 0.45, f) * streak * (1.0 - uSolo));
   // Last, so that every picture above is read with whole neighbours.
   if (wet < 0.01) discard;
 }`;

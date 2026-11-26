@@ -39,6 +39,10 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 - ribs-4: the cliffs left and right are dark and even; the floor is a dark sheet with few stones.
 - ribs-0 at native size: the top of `L1` reads as shaggy brown strands, not rock; the shingle bar is one relief pattern at one scale.
 
+## Round 10 (judged on version 2: match 2, filmed 3, motion 5), item by item
+
+ROUND10
+
 ## Staged by shot
 
 Nothing of mine is staged by time or by shot. Three things are placed by a key camera's pose and stay for the whole film: the small stones strewn before the lens of ribs-02, ribs-04 and ribs-06, the weed heaps before ribs-02, and the bars laid by hand before ribs-02.

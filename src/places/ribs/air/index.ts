@@ -84,7 +84,7 @@ void main() {
   for (int i = 0; i < ${STEPS}; i++) {
     float f = (float(i) + 1.0) / float(${STEPS});
     float t1 = span * f * f;
-    vec3 p = ro + rd * mix(t0, t1, jitter);
+    vec3 p = ro + rd * mix(t0, t1, 0.25 + 0.5 * jitter);
     float a = 1.0 - exp(-thickness(p.y) * (t1 - t0));
     float lit = sunAt(p, landAt(p.xz));
     sum += trans * a * (ambient + sunlit * lit);

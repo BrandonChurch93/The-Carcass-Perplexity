@@ -310,7 +310,7 @@ export function create(ctx: Context): Piece {
       else dummy.scale.setScalar(p.size);
       dummy.updateMatrix();
       herd.setMatrixAt(i, dummy.matrix);
-      if (p.size > 0.3) ctx.rig.setDisc(shades, shade++, p.x, p.z, p.size * 1.7, 0.75);
+      if (p.size > 0.3) ctx.rig.setDisc(shades, shade++, p.x, p.z, p.size * 1.5, 0.5);
     });
     herd.instanceMatrix.needsUpdate = true;
     rocks.add(herd);

@@ -27,8 +27,8 @@ export const LEVELS = { sea: SEA, pool: POOL, tide: TIDE };
 
 /** The sun. It does not move in the 42 seconds of the place. `toward` points from the ground to the sun: ahead and right of the establishing view, 40 degrees up. */
 export const SUN = {
-  // Low and ahead of the cameras of the strait, in the break of the storm sky: the place is seen against the light.
-  toward: [0.549, 0.358, -0.755] as [number, number, number],
+  // Low, from the right and a little ahead of the cameras of the strait (58 degrees right of north, 20 up): it rakes the right flank of every blade.
+  toward: [0.797, 0.342, -0.498] as [number, number, number],
   /** Radiance times solid angle of the sun through thin cloud, scene linear: what a face turned to it takes over and above the sky. */
   colour: [7.0, 6.0, 4.7] as [number, number, number],
 };
