@@ -436,8 +436,8 @@
       "text": "Past the last calm water, there is a shore.",
       "unit": "ribs",
       "first": 84,
-      "frames": 283,
-      "file": null,
+      "frames": 246,
+      "file": "audio/kept/lines/n1-1.wav",
       "carried": false
     },
     {
@@ -446,8 +446,8 @@
       "text": "Nothing on it has a name.",
       "unit": "ribs",
       "first": 432,
-      "frames": 158,
-      "file": null,
+      "frames": 122,
+      "file": "audio/kept/lines/n1-2.wav",
       "carried": false
     },
     {
@@ -456,8 +456,8 @@
       "text": "Nothing on it should be alive.",
       "unit": "ribs",
       "first": 654,
-      "frames": 189,
-      "file": null,
+      "frames": 144,
+      "file": "audio/kept/lines/n1-3.wav",
       "carried": false
     },
     {
@@ -465,9 +465,9 @@
       "line": 4,
       "text": "All of it is.",
       "unit": "ribs",
-      "first": 918,
-      "frames": 82,
-      "file": null,
+      "first": 930,
+      "frames": 87,
+      "file": "audio/kept/lines/n1-4.wav",
       "carried": false
     },
     {
@@ -476,8 +476,8 @@
       "text": "The strait.",
       "unit": "ribs",
       "first": 1074,
-      "frames": 70,
-      "file": null,
+      "frames": 71,
+      "file": "audio/kept/lines/n2-1.wav",
       "carried": false
     },
     {
@@ -485,9 +485,9 @@
       "line": 2,
       "text": "Stone blades, taller than the storms.",
       "unit": "ribs",
-      "first": 1180,
-      "frames": 246,
-      "file": null,
+      "first": 1188,
+      "frames": 217,
+      "file": "audio/kept/lines/n2-2.wav",
       "carried": false
     },
     {
@@ -495,9 +495,9 @@
       "line": 3,
       "text": "At low tide the winged ones feed. They do not have long.",
       "unit": "ribs",
-      "first": 1462,
-      "frames": 383,
-      "file": null,
+      "first": 1533,
+      "frames": 302,
+      "file": "audio/kept/lines/n2-3.wav",
       "carried": false
     },
     {
@@ -505,9 +505,9 @@
       "line": 4,
       "text": "High in the weed hangs one that stayed. Then the sea returns. All at once.",
       "unit": "ribs",
-      "first": 1938,
-      "frames": 527,
-      "file": null,
+      "first": 2016,
+      "frames": 383,
+      "file": "audio/kept/lines/n2-4.wav",
       "carried": false
     },
     {
@@ -516,8 +516,8 @@
       "text": "The fire.",
       "unit": "heart",
       "first": 2550,
-      "frames": 57,
-      "file": null,
+      "frames": 67,
+      "file": "audio/kept/lines/n3-1.wav",
       "carried": false
     },
     {
@@ -526,8 +526,8 @@
       "text": "A lake of it, under a black skin.",
       "unit": "heart",
       "first": 2658,
-      "frames": 220,
-      "file": null,
+      "frames": 200,
+      "file": "audio/kept/lines/n3-2.wav",
       "carried": false
     },
     {
@@ -536,8 +536,8 @@
       "text": "The tall ones walk the skin, and drink from the cracks.",
       "unit": "heart",
       "first": 2964,
-      "frames": 359,
-      "file": null,
+      "frames": 269,
+      "file": "audio/kept/lines/n3-3.wav",
       "carried": false
     },
     {
@@ -545,9 +545,9 @@
       "line": 4,
       "text": "The fire has never cooled. Sometimes the skin gives way.",
       "unit": "heart",
-      "first": 3381,
-      "frames": 383,
-      "file": null,
+      "first": 3414,
+      "frames": 303,
+      "file": "audio/kept/lines/n3-4.wav",
       "carried": false
     },
     {
@@ -556,8 +556,8 @@
       "text": "The pits.",
       "unit": "breath",
       "first": 4257,
-      "frames": 57,
-      "file": null,
+      "frames": 80,
+      "file": "audio/kept/lines/n4-1.wav",
       "carried": false
     },
     {
@@ -565,9 +565,9 @@
       "line": 2,
       "text": "The ground breathes here. Slow. From far below.",
       "unit": "breath",
-      "first": 4368,
-      "frames": 357,
-      "file": null,
+      "first": 4374,
+      "frames": 314,
+      "file": "audio/kept/lines/n4-2.wav",
       "carried": false
     },
     {
@@ -575,9 +575,9 @@
       "line": 3,
       "text": "Red growth feeds on the breath.",
       "unit": "breath",
-      "first": 4872,
-      "frames": 196,
-      "file": null,
+      "first": 4890,
+      "frames": 150,
+      "file": "audio/kept/lines/n4-3.wav",
       "carried": false
     },
     {
@@ -585,9 +585,9 @@
       "line": 4,
       "text": "The pale herds graze the channel, not the rim. One did. One will.",
       "unit": "breath",
-      "first": 5106,
-      "frames": 482,
-      "file": null,
+      "first": 5178,
+      "frames": 380,
+      "file": "audio/kept/lines/n4-4.wav",
       "carried": false
     },
     {
@@ -596,8 +596,8 @@
       "text": "The red flats.",
       "unit": "marsh",
       "first": 5655,
-      "frames": 89,
-      "file": null,
+      "frames": 96,
+      "file": "audio/kept/lines/n5-1.wav",
       "carried": false
     },
     {
@@ -605,9 +605,9 @@
       "line": 2,
       "text": "Stalks root in the red. The ground still bleeds.",
       "unit": "marsh",
-      "first": 5781,
-      "frames": 333,
-      "file": null,
+      "first": 5832,
+      "frames": 300,
+      "file": "audio/kept/lines/n5-2.wav",
       "carried": false
     },
     {
@@ -615,9 +615,9 @@
       "line": 3,
       "text": "The heavy ones wallow in it, and grow fat.",
       "unit": "marsh",
-      "first": 6270,
-      "frames": 277,
-      "file": null,
+      "first": 6288,
+      "frames": 228,
+      "file": "audio/kept/lines/n5-3.wav",
       "carried": false
     },
     {
@@ -626,8 +626,8 @@
       "text": "The salt keeps whatever it catches. Forever.",
       "unit": "marsh",
       "first": 6636,
-      "frames": 308,
-      "file": null,
+      "frames": 215,
+      "file": "audio/kept/lines/n5-4.wav",
       "carried": false
     },
     {
@@ -635,9 +635,9 @@
       "line": 1,
       "text": "The ridge.",
       "unit": "spine",
-      "first": 7050,
-      "frames": 63,
-      "file": null,
+      "first": 7035,
+      "frames": 65,
+      "file": "audio/kept/lines/n6-1.wav",
       "carried": false
     },
     {
@@ -645,9 +645,9 @@
       "line": 2,
       "text": "Above the cloud. Under the storm.",
       "unit": "spine",
-      "first": 7149,
-      "frames": 238,
-      "file": null,
+      "first": 7137,
+      "frames": 207,
+      "file": "audio/kept/lines/n6-2.wav",
       "carried": false
     },
     {
@@ -655,9 +655,9 @@
       "line": 3,
       "text": "Every night the lightning walks it. Spire to spire.",
       "unit": "spine",
-      "first": 7428,
-      "frames": 352,
-      "file": null,
+      "first": 7500,
+      "frames": 268,
+      "file": "audio/kept/lines/n6-3.wav",
       "carried": false
     },
     {
@@ -665,9 +665,9 @@
       "line": 4,
       "text": "The herds shelter in the hollow beneath, until morning.",
       "unit": "spine",
-      "first": 7884,
-      "frames": 359,
-      "file": null,
+      "first": 7908,
+      "frames": 230,
+      "file": "audio/kept/lines/n6-4.wav",
       "carried": false
     },
     {
@@ -676,8 +676,8 @@
       "text": "The lake.",
       "unit": "eye",
       "first": 8337,
-      "frames": 57,
-      "file": null,
+      "frames": 60,
+      "file": "audio/kept/lines/n7-1.wav",
       "carried": false
     },
     {
@@ -685,9 +685,9 @@
       "line": 2,
       "text": "Still. Gold at the edge. Black at the center.",
       "unit": "eye",
-      "first": 8454,
-      "frames": 344,
-      "file": null,
+      "first": 8478,
+      "frames": 306,
+      "file": "audio/kept/lines/n7-2.wav",
       "carried": false
     },
     {
@@ -695,9 +695,9 @@
       "line": 3,
       "text": "The herds drink. None of them looks down.",
       "unit": "eye",
-      "first": 8847,
-      "frames": 289,
-      "file": null,
+      "first": 8874,
+      "frames": 207,
+      "file": "audio/kept/lines/n7-3.wav",
       "carried": false
     },
     {
@@ -705,9 +705,9 @@
       "line": 4,
       "text": "The center has no floor. Something looks back.",
       "unit": "eye",
-      "first": 9174,
-      "frames": 320,
-      "file": null,
+      "first": 9192,
+      "frames": 243,
+      "file": "audio/kept/lines/n7-4.wav",
       "carried": false
     },
     {
@@ -716,8 +716,8 @@
       "text": "The land has a shape.",
       "unit": "reveal",
       "first": 9630,
-      "frames": 133,
-      "file": null,
+      "frames": 152,
+      "file": "audio/kept/lines/n8-1.wav",
       "carried": false
     },
     {
@@ -725,9 +725,9 @@
       "line": 2,
       "text": "None of it was ever land.",
       "unit": "reveal",
-      "first": 9801,
-      "frames": 158,
-      "file": null,
+      "first": 9846,
+      "frames": 120,
+      "file": "audio/kept/lines/n8-2.wav",
       "carried": false
     },
     {
@@ -736,8 +736,8 @@
       "text": "It was a titan.",
       "unit": "reveal",
       "first": 10027,
-      "frames": 95,
-      "file": null,
+      "frames": 101,
+      "file": "audio/kept/lines/n8-3.wav",
       "carried": false,
       "onStrike": "revealHit"
     },
@@ -747,8 +747,8 @@
       "text": "Everything here feeds on it. And it is not finished.",
       "unit": "reveal",
       "first": 10620,
-      "frames": 358,
-      "file": null,
+      "frames": 240,
+      "file": "audio/kept/lines/n8-4.wav",
       "carried": false
     }
   ],

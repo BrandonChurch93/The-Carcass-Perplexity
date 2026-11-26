@@ -38,7 +38,7 @@ ElevenLabs, Creator plan. Read 2026-11-24: Terms of Use, ElevenCreative Terms wi
 
 | Clip or cue | Tool and model | Takes | Date |
 | --- | --- | --- | --- |
-| `audio/kept/narration/n8.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-24 |
+| `audio/kept/narration/n8.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-26 |
 | `audio/kept/sounds/ribs/ribs-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
 | `audio/kept/sounds/heart/heart-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
 | `audio/kept/sounds/spine/spine-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
@@ -59,6 +59,13 @@ ElevenLabs, Creator plan. Read 2026-11-24: Terms of Use, ElevenCreative Terms wi
 | `audio/kept/sounds/marsh/marsh-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept with a fault | 2026-11-25 |
 | `audio/kept/sounds/eye/eye-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 1 kept with a fault | 2026-11-25 |
 | `audio/kept/sounds/spine/spine-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
+| `audio/kept/narration/n1.mp3` | ElevenLabs speech, `eleven_v4` | 2 made, take 2 kept | 2026-11-26 |
+| `audio/kept/narration/n2.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-26 |
+| `audio/kept/narration/n3.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-26 |
+| `audio/kept/narration/n4.mp3` | ElevenLabs speech, `eleven_v4` | 3 made, take 3 kept | 2026-11-26 |
+| `audio/kept/narration/n5.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-26 |
+| `audio/kept/narration/n6.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-26 |
+| `audio/kept/narration/n7.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-26 |
 
 ## Third-party files
 
