@@ -164,7 +164,8 @@ void main() {
   vec4 c4 = textureLod(tChop, (vec2(-p.y, p.x) + (c2.xy - 0.5) * 0.7) / 0.97 + uTime * uWind * 0.31, levelOf(tChop, 0.97));
   float fineKeep = 1.0 - smoothstep(0.004, 0.03, px);
   // Where the swell breaks on a shelving shore the water is all at work: no mirror lies between the breakers.
-  vec4 surf = surfAt(p, uTime, depth, ragged) * (1.0 - smoothstep(0.0, 0.3, feet));
+  // Its front is no ruled line: it runs ahead in one place and hangs back in the next, in fingers a few metres wide.
+  vec4 surf = surfAt(p, uTime, depth, ragged + 2.2 * (c2.b - 0.5) + 1.2 * (c3.b - 0.5)) * smoothstep(3.0, 10.0, feet);
   lively = max(lively, 0.9 * surf.w);
   vec2 chop = ((c1.xy - 0.5) * 0.55 + vec2(-s2.y, s2.x) * 0.5 + (c3.xy - 0.5) * 0.45 + (c4.xy - 0.5) * 0.4 * fineKeep) * lively;
   vec3 n = normalize(vec3(-(g.x + chop.x), 1.0, -(g.y + chop.y)));
@@ -246,9 +247,9 @@ void main() {
   if (surf.w > 0.0) {
     float laceS = dot(textureLod(tFoamPic, p / 7.0 + vec2(0.013, 0.02) * uTime, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 7.0, 1e-6))).rgb, vec3(0.3333));
     float standing = smoothstep(0.0, 0.05, vWorld.y + depth);
-    float white = standing * max(surf.y * smoothstep(0.1, 0.45, laceS + 0.35 * surf.y), smoothstep(1.0 - 0.8 * surf.z, 1.3 - 0.8 * surf.z, laceS + 0.1) * smoothstep(0.0, 0.25, surf.z));
+    float white = standing * max(surf.y * smoothstep(0.1, 0.45, laceS + 0.35 * surf.y), smoothstep(1.0 - 0.6 * surf.z, 1.3 - 0.6 * surf.z, laceS + 0.1) * smoothstep(0.0, 0.25, surf.z));
     pic = mix(pic, laceS, step(foam, white));
-    thick = max(thick, max(surf.y, smoothstep(1.2 - 0.8 * surf.z, 1.7 - 0.8 * surf.z, laceS + 0.1)) * step(foam, white));
+    thick = max(thick, max(surf.y, smoothstep(1.2 - 0.6 * surf.z, 1.7 - 0.6 * surf.z, laceS + 0.1)) * step(foam, white));
     foam = max(foam, white);
   }
   // The break itself is thick white water, ragged at its rim.
@@ -303,6 +304,8 @@ export const SEA_OPENING_FRAGMENT = openingText(
     ],
     ['vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);', 'vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * uOpenSea.x + uSunColour * (uSunDir.y * sun);'],
     ['0.55 * lane);', '(0.55 + 0.35 * uOpenSea.z) * lane);'],
+    // The foam of the open sea stands in the same lifted light as the water it lies on.
+    ['* open * 1.15 + sunCool', '* open * 1.15 * uOpenSea.x + sunCool'],
     [
       '  float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);',
       `  // The heaviest crests of the long swell topple at their tops and leave white water behind them in lace.
