@@ -16,12 +16,8 @@ export const RECIPE = {
   normalStrength: 2.2,
   jpegQuality: 92,
   materials: [
-    { name: 'rock', from: 'land/rock-take1.jpg', to: 'land', width: 2048, height: 1024, dataAs: 'jpg' },
-    { name: 'weed', from: 'land/weed-take1.jpg', to: 'land', width: 1024, height: 1024 },
-    { name: 'sand', from: 'land/sand-take1.jpg', to: 'land', width: 1024, height: 1024 },
     { name: 'shingle', from: 'land/shingle-take1.jpg', to: 'land', width: 1024, height: 1024, dataAs: 'jpg' },
     // The storm sky is laid on the dome whole and mirrored round it: it is not made to tile.
-    { name: 'storm', from: 'air/storm-take1.jpg', to: 'air', width: 2048, height: 1024, colourOnly: true, plain: true },
   ],
 };
 
