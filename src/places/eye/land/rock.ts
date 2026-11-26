@@ -178,12 +178,18 @@ Rock rockAt(vec3 p, vec3 n, float face) {
       vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6, p.xz, lowEye) / vec2(8.0, 4.5);
       float seen = fine;
       vec3 sc = texture2D(tShoreP, su).rgb;
-      float sh = texture2D(tShorePH, su).r;
-      float es = 0.012;
-      vec2 lean = 2.0 * vec2(texture2D(tShorePH, su + vec2(es / 8.0, 0.0)).r - sh, texture2D(tShorePH, su + vec2(0.0, es / 4.5)).r - sh);
-      // Its grit is finer gravel of the same stone, read from the picture again at its own size.
-      vec3 grit = texture2D(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37).rgb;
-      sc = mix(sc * (0.55 + 0.45 * grit / vec3(0.222, 0.161, 0.119)), sc, lowEye);
+      // The lie of each stone is read only by an eye that stands among them; from the rim the picture's own tone is all that is seen of it.
+      float sh = a.a;
+      vec2 lean = vec2(0.0);
+      if (lowEye > 0.01) {
+        sh = texture2D(tShorePH, su).r;
+        float es = 0.012;
+        lean = 2.0 * vec2(texture2D(tShorePH, su + vec2(es / 8.0, 0.0)).r - sh, texture2D(tShorePH, su + vec2(0.0, es / 4.5)).r - sh);
+      } else {
+        // Its grit is finer gravel of the same stone, read from the picture again at its own size.
+        vec3 grit = texture2D(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37).rgb;
+        sc *= 0.55 + 0.45 * grit / vec3(0.222, 0.161, 0.119);
+      }
       sc = mix(sc, vec3(dot(sc, vec3(0.333))), 0.45 * (1.0 - lowEye));
       // Dry gravel in the last light is pale: its grit is hardly darker than its stones.
       sc = mix(sc * 0.6 + 0.16, sc, lowEye);
