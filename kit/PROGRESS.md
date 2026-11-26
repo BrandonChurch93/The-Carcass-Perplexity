@@ -24,27 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 113, 2026-11-26 12:57 UTC:
+Status 114, 2026-11-26 13:22 UTC:
 
-- `01-ending.jpg`: The ending, version 2, merged: frames 10860 to 11670 (draft tier, the builder's sheet). The day leaves the body, the Heart glows, the dark comes last. The pale patch with straight edges round the body at night is the first fault of version 3
-- `02-loop.jpg`: The card loop, version 2, merged: twelve frames spread across its 480 (draft tier, the builder's sheet). The camera goes out to the right and back and the mist thickens once a loop; the animals and the water do not move enough yet
-- `03-heart-hd-final-side-by-side.jpg`: Stress encode, the Heart's peak (final tier, 1080p): as delivered at left, at 10 Mb/s at right, with the part that changed most below
-- `04-frame-11743-preview-draft.jpg`: Film frame 11743, preview, draft tier
+- `01-sheet-1.jpg`: The lens fix (final tier, 4K, crops at native size, the builder's sheet): before at left, after at right. Top: the Eye's near pebbles lose the lattice. Middle: the Ribs' far blade, out of focus, is now truly soft. Bottom: a carcass in front of the focus on the Spine
+- `02-set-b-02.jpg`: Round 26, compression, the Spine's third strike (final tier, 1080p, crops at full size): as rendered at left, out of the 10 Mb/s encode at right. The glow round the bolt breaks into patches; the spire's flat facets at top left are in the render itself
+- `03-heart-frame-2507.jpg`: The Heart's first frame as the jury saw it (frame 2507, final tier): none of five said photograph or film. Three named the near bank's stretched texture; it has a builder since 13:10 UTC
+- `04-marsh-frame-5618.jpg`: The Blood Marsh's first frame as the jury saw it (frame 5618, final tier): none of five said photograph or film. Four named the stalks as one model repeated; they have a builder since 13:10 UTC
 
+Status 113, 2026-11-26 12:57 UTC, showed: The ending, version 2, merged: frames 10860 to 11670 (draft tier, the builder's sheet).
 Status 112, 2026-11-26 12:30 UTC, showed: Round 26, the join from the lake into the rise: twelve consecutive frames, 9535 to 9546 (review tier).
 Status 111, 2026-11-26 12:04 UTC, showed: The cut check, the Reveal: each line of the narration on its picture, a at a fifth of the line and b at seven tenths (draft tier); The...
-Status 110, 2026-11-26 11:42 UTC, showed: The ending, version 1: the day leaves the body and the Heart beats in the dark (draft tier, the builder's sheet); The ending, version 1...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T12:57:21Z
-phase 5: 2.69 h used of 6.00 h
-build: 37.10 h used of 72.00 h
+2026-11-26T13:22:58Z
+phase 5: 3.12 h used of 6.00 h
+build: 37.53 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 27
+half point: reached
+minutes since the last status: 26
 ```
 
 ## Phases
