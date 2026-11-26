@@ -14,6 +14,8 @@ export const HIGH_KM = 10.5;
 export const FULL_SHADE = false;
 
 export const WEATHER_GLSL = /* glsl */ `
+// A field of small cumulus over the open sea, seen from far. Off: the deck cuts its edge hard, so the field reads as flecks (see HANDOVER.md).
+const bool FINE_FIELD = false;
 uniform sampler2D uCloudTile;
 uniform sampler2D uCloudCover;
 uniform sampler2D uMatCells;
@@ -123,6 +125,12 @@ vec3 lowCloud(vec2 at) {
     float cellField = smoothstep(0.54, 0.78, system) * cold;
     float streetField = smoothstep(0.52, 0.78, system) * (1.0 - cold);
     float field = max(grown(cellPic, cellField), grown(streetPic, streetField)) * (1.0 - 0.85 * overBody);
+    // Fair weather cumulus: the same photograph laid small, over the open sea between the systems, drifting on its own wind.
+    if (FINE_FIELD) {
+      float fine = seen(texture2D(uMatCells, mat2(0.6, -0.8, 0.8, 0.6) * (w - 0.4 * drift) / 240.0 + vec2(0.47, 0.83), 1.0).rgb, 0.2, 0.85);
+      float fineField = smoothstep(0.46, 0.72, 0.6 * wide.g + 0.4 * slow) * (1.0 - smoothstep(0.5, 0.72, system));
+      field = max(field, 0.62 * fine * smoothstep(0.05, 0.7, fine) * fineField * (1.0 - overBody));
+    }
     // A front is a deck: smooth and bright along its spine, lumped by its cells, ragged where it thins.
     float lumped = 0.5 * c2 + 0.5 * s1;
     float spine = smoothstep(0.8, 0.98, body) * (0.42 + 0.42 * lumped);
