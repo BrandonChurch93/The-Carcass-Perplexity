@@ -1,6 +1,7 @@
 // The stalks that no lens stands among, each drawn from the Builder's photograph of a whole one: its trunk on a card that turns about the
 // stalk's own line to face the lens, shaded as the round thing it is, and its mop on two more, one of them the other way round and behind.
 import { RIG_GLSL } from '../shared/glsl';
+import { K1_AT } from '../shared/anchors';
 import { OPEN_GLSL } from './shaders';
 
 export const PALM_VERTEX = /* glsl */ `
@@ -119,6 +120,9 @@ ${CUT}
     occ = 0.6 + 0.4 * smoothstep(0.0, 0.3, vWorld.y);
     // The foot stands in red brine and mud.
     float wet = 1.0 - smoothstep(0.02, 0.22, vWorld.y);
+    // The ones at the lip of the seep stand in what it throws: wet and red brown to the mouth, the salt left on them in patches.
+    float thrown = 1.0 - smoothstep(4.0, 6.5, distance(vWorld.xz, vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
+    wet = max(wet, thrown * (0.9 - 0.55 * smoothstep(0.5, 0.75, luma) * smoothstep(-0.2, 0.6, sin(vWorld.y * 5.3 + vUv.x * 30.0 + vKind.w * 40.0))));
     albedo = mix(albedo, albedo * vec3(0.5, 0.2, 0.16) + vec3(0.03, 0.005, 0.004), wet);
     rough = mix(0.97, 0.5, wet);
   } else {
