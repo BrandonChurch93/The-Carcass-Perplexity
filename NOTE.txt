@@ -1,7 +1,5 @@
-2026-11-26 17:44 UTC
-work at dc7ff61 on agent/heart-lava
-v2 test renders (code on agent/heart-lava-e). The fall at 4097, 4157, 4217, v1-with-fume above, v2 below; 4217 hd review v1 left, v2 slabs right; 3900 and 3930 before the surge; 4217 whole at preview. Wrong: bank light on the bed's own banks is faint, the surge lights the smoke at the fan as a soft round glow, slabs at preview read as mottle more than as separate rafts, spatter hardly seen.
-look-1.jpg = out/work/v2g/look.png
-look-2.jpg = out/work/v2c/hd-ba.png
-look-3.jpg = out/work/v2g/pre.png
-look-4.jpg = out/work/v2g/f-4217.png
+2026-11-26 17:58 UTC
+work at e1c3b02 on agent/heart-lava
+v2 candidate (agent/heart-lava-e e1c3b02). 4157 hd review cut out: the head mid cascade, slabs with a dark lee edge and a pale banked edge; the fall at preview: top v2g 4157, v2g 4217, v2h 4127, bottom v2h 4157, v2h 4217. Wrong: fume is thin, the bed's own banks answer the head faintly, spatter is a few dots, slabs at preview are a red mottle more than separate rafts.
+look-1.jpg = out/work/v2h/hd-4157.png
+look-2.jpg = out/work/v2h/look.png
