@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { config } from '../../../config';
 import { resolve } from '../../../core/cameras';
 import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cut';
-import { approachAsScattered, shots } from '../cameras';
+import { approachAsScattered, approachEye, shots } from '../cameras';
 import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { inOpening } from '../shared/opening';
@@ -37,7 +37,11 @@ const SKEIN = 22;
 const CLEAR = 45;
 /** Seconds the shutter is open, for the softness of what crosses the lens fast. */
 const SHUTTER = 1 / 50;
+/** The approach: no flier is near enough to be read as a model. The widest a wing stands at the lens as the film opens (radians), the metres of wing to a unit of size, and the seconds between which that limit grows away (by e to the `grow`). */
+const FAR = { wing: 0.0017, span: 4.5, from: 4.5, to: 10.5, grow: 7 };
 
+/** The approach: a colony lifts off a ledge of the first blade. Where the ledge is, the metres round it from which its fliers come, when the first leaves, over how many seconds they leave, and how long each takes to be on its own way. */
+const LIFT = { at: [-236, 236, 34] as const, within: 320, from: 0.4, spread: 3, takes: 8 };
 const TAU = Math.PI * 2;
 const LOOP_SECONDS = config.deliver.cardLoop.seconds;
 
@@ -699,6 +703,19 @@ export function create(ctx: Context): Piece {
         colonyFigures.put(i, fig);
       }
       colonyFigures.commit();
+      // In the approach no animal comes near the lens: the skein that flew in beside it is not drawn (none of it is ahead of any later lens),
+      // and the flock round the blade tops is specks, each beating its own beat, until the camera has closed on it.
+      const approaching = inOpening();
+      const lens = approaching && seconds < FAR.to ? approachEye(seconds) : null;
+      // The widest a wing may stand at the lens, radians: a few pixels of the full frame as the film opens, and it grows past any flier's
+      // real size before FAR.to, from where every flier is its own size again.
+      const widest = FAR.wing * Math.exp(FAR.grow * smooth(FAR.from, FAR.to, seconds));
+      const lifting = approaching && seconds < LIFT.from + LIFT.spread + LIFT.takes;
+      const far = (): void => {
+        if (!lens) return;
+        const away = Math.hypot(fig.x - lens[0], fig.y - lens[1], fig.z - lens[2]);
+        fig.size *= Math.min(1, (widest * away) / (FAR.span * fig.size));
+      };
       for (let i = 0; i < fliers.length; i++) {
         const f = fliers[i] as Flier;
         if (f.size === 0) {
@@ -706,11 +723,25 @@ export function create(ctx: Context): Piece {
           continue;
         }
         flierAt(f, seconds, eye);
+        if (lifting) {
+          // Those whose way lies near the ledge start on it: they leave it one after another and are on their own way seconds later.
+          const dx = fig.x - LIFT.at[0];
+          const dy = fig.y - LIFT.at[1];
+          const dz = fig.z - LIFT.at[2];
+          const near = smooth(LIFT.within, 0.7 * LIFT.within, Math.hypot(dx, dy, dz));
+          if (near > 0) {
+            const gone = smooth(0, 1, (seconds - LIFT.from - LIFT.spread * hash(i, 31)) / LIFT.takes);
+            const held = (1 - gone) * near;
+            fig.x -= dx * held;
+            fig.y -= dy * held;
+            fig.z -= dz * held;
+            fig.size *= 1 - near * (1 - smooth(0, 0.06, gone));
+          }
+        }
+        far();
         flockFigures.put(i, fig);
       }
       flockFigures.commit();
-      // In the approach no animal comes near the lens: the skein that flew in beside it is not drawn (none of it is ahead of any later lens).
-      const approaching = inOpening();
       for (let i = 0; i < skein.length; i++) {
         const s = skein[i] as Passer;
         if (approaching && i < SKEIN) {
@@ -722,6 +753,7 @@ export function create(ctx: Context): Piece {
         const amp = i < SKEIN ? 0.25 + 0.75 * bout : 1;
         if (lp === null) airborne(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp, eye);
         else circuit(s.x + s.vx * (at - s.t), y, s.z + s.vz * (at - s.t), s.vx, 0.72 * Math.cos(at * 0.6 + s.seed * 20), s.vz, s.seed < 0.5 ? 1 : -1, s.size, s.seed, amp, eye);
+        far();
         skeinFigures.put(i, fig);
       }
       const lead = at - BORE;
