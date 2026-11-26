@@ -1,0 +1,7 @@
+2026-11-26 13:30 UTC
+work at ef230e4 on agent/spine-strike
+v1 on ef230e4: strikes 1, 4, 6 as sheets of every frame and the three keys beside the approved pictures. Wrong: 7015 is lifted pale all over with a round white dot at the tip; a glow patch stands in the cloud between strokes on strike 2; the canal animals go pale all over at 8091; 8090 has too little purple in the cloud
+look-1.jpg = out/work/sheets/strike-1.png
+look-2.jpg = out/work/sheets/strike-4.png
+look-3.jpg = out/work/sheets/strike-6.png
+look-4.jpg = out/work/keys-beside.jpg
