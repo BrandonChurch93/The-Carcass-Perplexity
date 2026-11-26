@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 86, 2026-11-26 02:48 UTC:
+Status 87, 2026-11-26 03:10 UTC:
 
-- `01-spine-1-4.jpg`: The Spine at 02:35 UTC: the dead one, and the herd in the hollow. Approved left, the build right
-- `02-breath-0-2.jpg`: The Breath at 02:33 UTC: the wide view, and the dead wader at the rim. Approved left, the build right
-- `03-eye-4-0.jpg`: The Eye at 02:38 UTC: the last shot, and the wide view. Approved left, the build right
-- `04-new-pictures.jpg`: Working pictures made for owners in this half hour, each with its relief: the Eye's drinker from behind and above, the Ribs' drowned one
+- `01-spine.jpg`: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1. Still wrong: no sea of cloud below the ridge, canal walls too dark, spine-1 two stops under
+- `02-marsh.jpg`: The Blood Marsh at 03:01 UTC: marsh-3, marsh-4, marsh-2, marsh-0. Still wrong: blank sky, the stuck one too smooth, brine too saturated
+- `03-ribs.jpg`: The Ribs at 03:05 UTC, all five keys. Still wrong: the colony crag is cream with black slabs under its ledges, blades too soft and beige
+- `04-reveal.jpg`: The Reveal at 02:59 UTC, approved beside built: reveal-2, reveal-3, reveal-4 with crops. Still wrong: cyclone too coarse, puffs one size, lowland too orange
 
+Status 86, 2026-11-26 02:48 UTC, showed: The Spine at 02:35 UTC: the dead one, and the herd in the hollow.
 Status 85, 2026-11-26 02:18 UTC, showed: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below; The Eye, the drinkers, restaged further off.
 Status 84, 2026-11-26 01:50 UTC, showed: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right; 2 · The...
-Status 83, 2026-11-26 01:34 UTC, showed: Working pictures for the owners, first sheet: far backplates, scenery and animals on black.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T02:48:07Z
-phase 4: 6.62 h used of 17.00 h
-build: 26.95 h used of 72.00 h
+2026-11-26T03:10:31Z
+phase 4: 7.00 h used of 17.00 h
+build: 27.32 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 30, status overdue
+minutes since the last status: 22
 ```
 
 ## Phases
