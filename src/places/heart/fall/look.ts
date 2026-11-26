@@ -516,14 +516,14 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
       bq += 0.7 * vec2(vnoise(bq * 0.6 + 23.0), vnoise(bq * 0.6 + 31.0)) + 0.2 * vec2(vnoise(bq * 2.3 + 5.0), vnoise(bq * 2.3 + 17.0));
       vec3 slabCell = slabs(bq);
       slabCell.y += 0.14 * (vnoise(bq * 3.1 + 9.0) - 0.5);
-      float crowd = mix(0.46, 0.27, smoothstep(1.7, 3.3, speed)) * (1.0 - 0.9 * pool) + 0.16 * smoothstep(0.55, 0.95, u) - 0.3 * lipHotAt;
+      float crowd = mix(0.5, 0.36, smoothstep(1.7, 3.3, speed)) * (1.0 - 0.9 * pool) + 0.16 * smoothstep(0.55, 0.95, u) - 0.3 * lipHotAt;
       float slab = smoothstep(crowd + 0.03, crowd - 0.03, slabCell.y) * smoothstep(0.03, 0.11, slabCell.x) * full * smoothstep(-30.0, -10.0, len);
       // Where they crowd they buckle: a slab is cracked across and the melt shows in the crack.
       float buckle = smoothstep(0.05, 0.0, abs(vnoise(vec2(s * 0.5 + 3.0, ride * 2.6)) - 0.5)) * (1.0 - fast) * seenAt(0.5);
       // A slab is crust lying on the melt and not a hole in it: its face is a dull red that it keeps as it rides, darker in its
       // middle where it is thickest, with its own net of cracks; its edge glows where the melt wells round it.
       vec2 inner = plates(bq * 2.1 + 13.0);
-      float faceK = mix(900.0, 1010.0, slabCell.y / max(crowd, 0.05)) - 50.0 * smoothstep(0.2, 0.5, slabCell.x) + 50.0 * (vnoise(bq * 4.0 + 3.0) - 0.5);
+      float faceK = mix(880.0, 990.0, slabCell.y / max(crowd, 0.05)) - 50.0 * smoothstep(0.2, 0.5, slabCell.x) + 50.0 * (vnoise(bq * 4.0 + 3.0) - 0.5);
       float crack = max(smoothstep(0.06, 0.02, inner.x) * seenAt(0.6), 0.8 * buckle);
       // It has height: the melt banks up pale against the edge that meets the flow, and the edge that looks down the stream, which
       // is the one the lake sees, stands a hand proud of the melt and is in its own shade.
