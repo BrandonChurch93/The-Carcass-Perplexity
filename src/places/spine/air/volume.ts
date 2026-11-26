@@ -1,6 +1,6 @@
 // The half-size pass of the Spine's air. It writes the light the air sends toward the camera in rgb and how much of the scene it lets through in alpha.
 // Nothing in it is marched through with a jittered stride, so nothing in it has grain: the storm is a body whose face each view ray walks up to, the
-// cloud under the crest (the sea far below, the bank against the lee, the pour through the saddles) is a surface with a soft top, the spindrift is a
+// cloud under the crest (the sea far below, the bank against the lee, the pour through the saddles) is a deck of heaps each ray walks to, the spindrift is a
 // column over the snow, and the haze of the height is worked out in one. All of it reads the rig, so the cloud takes the dusk and the lightning as the rock does.
 import { HASH_GLSL } from '../../../core/post';
 import { SEA_LEVEL } from '../shared/anchors';
@@ -396,9 +396,9 @@ void main() {
     float open = 1.0 - smoothstep(0.04, 0.42, rise);
     float dusk = clamp(0.4 + 0.6 * dot(facing, toLight), 0.0, 1.0) * open;
     // The sky from above reaches a crown whole and the floor of a hollow hardly at all: the hollows are deep blue-violet.
-    float above = (0.3 + 0.7 * facing.y) * (0.06 + 0.94 * head * head);
-    vec3 cold = SEA_COLD * (0.04 + 0.55 * above + 0.6 * dusk * (0.2 + 0.8 * head)) * vec3(0.92, 0.95, 1.08);
-    vec3 warm = 0.34 * SEA_WARM * dusk * (0.15 + 0.85 * head) * (1.0 - 0.7 * stormSide(rd));
+    float above = (0.3 + 0.7 * facing.y) * (0.03 + 0.97 * head * head);
+    vec3 cold = SEA_COLD * (0.03 + 0.66 * above + 0.72 * dusk * (0.12 + 0.88 * head)) * mix(vec3(0.74, 0.82, 1.16), vec3(0.96, 0.97, 1.04), head);
+    vec3 warm = 0.46 * SEA_WARM * dusk * (0.1 + 0.9 * head) * (1.0 - 0.7 * stormSide(rd));
     vec3 sea = cold + warm;
     vec3 domeFar = skyCloud(ro, normalize(vec3(rd.x, 0.035, rd.z)), 5.0);
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
