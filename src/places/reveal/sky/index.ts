@@ -2,7 +2,7 @@
 // edge of the planet the air and the black behind it. Each is a sheet at its own height, so the rise passes them at their own speeds.
 // The cloud itself is one field of the world (shared/weather.ts): the surface takes its shade from the same field.
 import * as THREE from 'three';
-import { AT, KM, LIMB, LIMB_FOLLOW, RISE_FIRST, X, Z, driftAt } from '../shared/anchors';
+import { AT, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, X, Z, driftAt } from '../shared/anchors';
 import { FPS } from '../../../config';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
@@ -26,7 +26,7 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 beatOnCloud(vec2 xz) {
   vec2 fromHeart = xz - vec2(${X(AT.lava.x).toFixed(1)}, ${Z(AT.lava.y).toFixed(1)});
   // (By night the fire is on the underside of the cloud all the time, dull, and the beat swells it.)
-  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.012 * (0.4 + 1.6 * uBeat)) * exp(-dot(fromHeart, fromHeart) / 90000.0);
+  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.012 * (0.4 + 1.6 * uBeat) * (0.5 + 1.3 * emberWork())) * exp(-dot(fromHeart, fromHeart) / 90000.0);
   return vec3(1.0, 0.2, 0.04) * 0.3 * max(uBeat - 0.12, 0.0) * exp(-dot(fromHeart, fromHeart) / 90000.0);
 }
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
@@ -69,7 +69,7 @@ void main() {
 
   // The veil: thin ice, far above, drifting the other way.
   vec2 hv = up + uTime * vec2(6.5, -3.8);
-  if (uLive > 0.0) hv += uLive * vec2(36.0, -21.0);
+  if (uLive > 0.0) hv += uWx * vec2(36.0, -21.0);
   float ice = dot(texture2D(uVeil, mat2(0.9, 0.44, -0.44, 0.9) * hv / 800.0).rgb, vec3(0.3, 0.55, 0.15));
   float where = vnoise(hv / 1500.0 + 3.0);
   if (uViewKm < 900.0) where = 0.6 * where + 0.4 * vnoise(hv / 640.0 + 11.0);
@@ -83,6 +83,8 @@ void main() {
   lowColour *= 1.0 - 0.6 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.94;
   float b = high * mix(0.09, 0.11, smoothstep(700.0, 1300.0, uViewKm));
+  // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
+  if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
   if (uDusk > 0.0) {
     // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
@@ -92,7 +94,7 @@ void main() {
     float sunk = 1.0 - smoothstep(-0.34, -0.06, sunHeight(xz));
     float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone) * (1.0 - 0.88 * sunk);
     float sheets = smoothstep(0.56, 0.78, 0.58 * vnoise(hv / 1500.0 + 7.0) + 0.3 * vnoise(hv / 560.0 + 3.0) + 0.12 * vnoise(hv / 210.0 + 11.0)) * (0.55 + 0.45 * ice);
-    vec2 bv = mat2(0.94, 0.34, -0.34, 0.94) * (hv + uLive * vec2(-14.0, 5.0));
+    vec2 bv = mat2(0.94, 0.34, -0.34, 0.94) * (hv + uWx * vec2(-14.0, 5.0));
     float bands = smoothstep(0.6, 0.82, 0.7 * vnoise(bv / vec2(3400.0, 620.0) + 5.0) + 0.3 * vnoise(bv / vec2(1100.0, 260.0) + 9.0)) * (0.6 + 0.4 * ice);
     // (The thin ice far above is lost against the day; with the camera's eye open it is seen, soft sheets that catch the moon.)
     float bNight = min(0.8, b * (1.0 - 0.5 * gone + 1.5 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))) + sunk * (0.3 * sheets + 0.24 * bands));
@@ -136,7 +138,7 @@ float fibre(vec2 p, float turn) {
 }
 // How thick the storm stands at a point: a dense mass round a small clear eye, two long arms wound out of it with sea between
 // them, and all of it thinning to torn cirrus at the rim.
-float storm(vec2 p, float turn) {
+float storm(vec2 p, float turn, float lopsided) {
   float r = max(length(p), 1e-3);
   float around = atan(p.y, p.x) / 6.28318 - turn;
   float lr = log(r);
@@ -144,7 +146,15 @@ float storm(vec2 p, float turn) {
   float arm = (0.5 + 0.5 * cos(6.28318 * 5.0 * (around - 0.239 * lr) + 3.2 * wander)) * (0.78 + 0.22 * cos(6.28318 * 2.0 * (around - 0.239 * lr) + 1.0));
   float mass = pow(1.0 - smoothstep(0.01, 0.06, r), 1.3);
   arm = pow(arm, 1.25);
-  float cover = clamp(0.45 * mass + (0.24 + 0.8 * arm) * pow(1.0 - smoothstep(0.08, 0.9, r), 1.25), 0.0, 1.0);
+  float outward = pow(1.0 - smoothstep(0.08, 0.9, r), 1.25);
+  if (lopsided > 0.0) {
+    // (No storm is the same all the way round. As it is watched one arm of the five grows heavy and the one across from it thins,
+    // and the rim is torn back on one side: these are what the eye follows round when the body turns.)
+    float heavy = 0.5 + 0.5 * cos(6.28318 * (around - 0.239 * lr) + 0.6);
+    arm *= mix(1.0, 0.45 + 1.1 * heavy, lopsided);
+    outward = pow(1.0 - smoothstep(0.08, 0.9 - 0.2 * lopsided * (0.5 + 0.5 * cos(6.28318 * around + 2.2)), r), 1.25);
+  }
+  float cover = clamp(0.45 * mass + (0.24 + 0.8 * arm) * outward, 0.0, 1.0);
   float f = fibre(p, turn);
   // Near the eye the bands are fine lines in a white mass; toward the rim only the fibres themselves are left.
   float torn = smoothstep(0.01, 0.2, r);
@@ -161,9 +171,19 @@ void main() {
   float r = length(p);
   // The whole storm turns, the middle faster than the rim, so its arms wind as the frame is held.
   float turn = uTime * (0.009 + 0.05 / (1.0 + 14.0 * r)) / 6.28318;
-  if (uLive > 0.0) turn += uLive * (0.012 + 0.009 / (1.0 + 14.0 * r));
+  // (Held from orbit it turns about its eye as one body, on the clock of the weather: every band, clump and gap goes round with it,
+  // the inner bands faster than the outer, so the arms keep their shape and wind tighter. The slide of the streaks along the arms
+  // stops where the body's own turn begins: a slide through arms that stand still is not seen as a turn.)
+  vec2 body = p;
+  float lopsided = 0.0;
+  if (uLive > 0.0) {
+    lopsided = smoothstep(0.0, 9.0, uWx);
+    turn = ${LIVE_FROM.toFixed(6)} * (0.009 + 0.05 / (1.0 + 14.0 * r)) / 6.28318;
+    float wound = uWx * (0.0192 + 0.0454 / (1.0 + 14.0 * r));
+    body = mat2(cos(wound), sin(wound), -sin(wound), cos(wound)) * p;
+  }
   vec2 sunStep = normalize(uSunDir.xz);
-  float thick = storm(p, turn);
+  float thick = storm(body, turn, lopsided);
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
   // (How its thickness falls toward the sun, from the change of it across the pixel.)
   vec2 across = vec2(dFdx(thick), dFdy(thick));
@@ -275,7 +295,7 @@ void main() {
   float across = dot(d, vec2(-uWind.y, uWind.x)) / 300.0;
   // The wind carries the curls: the trail is read through a bend that travels down it, stronger the farther it has gone.
   vec2 flow = texture2D(uCloudTile, vec2(along * 1.3 - uTime * 0.011, across * 0.8 + 0.3)).rg - 0.5;
-  if (uLive > 0.0) flow = texture2D(uCloudTile, vec2(along * 1.3 - uTime * 0.011 - uLive * 0.035, across * 0.8 + 0.3)).rg - 0.5;
+  if (uLive > 0.0) flow = texture2D(uCloudTile, vec2(along * 1.3 - uTime * 0.011 - uWx * 0.03, across * 0.8 + 0.3)).rg - 0.5;
   vec2 q = vec2(along + 0.02, across * (1.0 - 0.35 * along) + 0.5 + 0.1 * sin(along * 5.0 + 1.0) * along) + flow * vec2(0.04, 0.26) * smoothstep(0.02, 0.5, along);
   // (Read soft: each trail a thin veil with a denser thread in it, and the three of unlike strength.)
   float seenLight = 0.25 * dot(texture2D(uPicture, clamp(q, 0.0, 1.0), 1.0).rgb, vec3(0.3, 0.55, 0.15)) + 1.2 * dot(texture2D(uPicture, clamp(q, 0.0, 1.0), 4.5).rgb, vec3(0.3, 0.55, 0.15));

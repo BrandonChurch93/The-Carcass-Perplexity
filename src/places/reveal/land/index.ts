@@ -511,12 +511,16 @@ void main() {
     float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 8000.0);
     // (After the beat it breathes, and never evenly: two slow swells that do not keep step. The light on the flanks goes with it.)
     float breathe = mix(1.0, 0.45 + 0.7 * vnoise(vec2(uTime * 1.1, 5.0)) + 0.4 * vnoise(vec2(uTime * 2.6, 9.0)), smoothstep(1.4, 3.2, uEmber.y));
+    // (The swell of the fire between its beats; while the beat itself runs it stands aside, so the beat is the strongest.)
+    float aside = clamp(2.5 * hit, 0.0, 1.0);
+    float work = emberWork() * (1.0 - aside);
     glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.3 + 0.5 * beatFar) * mix(1.0, breathe, 0.7) * reach * facing * uEmber.x * land);
     float crowd = 0.0;
     if (d0 < 250000.0) {
       // The Heart itself: a lake of fire under a cracked skin, no two sides of its shore alike. The skin glows dull red, the cracks
       // bright, hottest at the middle; and the beat widens it.
-      float shore = length(fromLava * mat2(0.82, 0.38, -0.5, 1.25)) / (58.0 * (1.0 + 0.9 * beatNear)) * (0.5 + 1.0 * vnoise(xz / 24.0 + 2.0));
+      // (And between the beats it works: the lake swells and sinks back, slow and uneven, and its shore is never still.)
+      float shore = length(fromLava * mat2(0.82, 0.38, -0.5, 1.25)) / (58.0 * (1.0 + 0.9 * beatNear + 0.38 * work)) * (0.5 + 0.8 * vnoise(xz / 24.0 + 2.0) + 0.4 * vnoise(xz / 13.0 + vec2(1.3 * uTime, -0.9 * uTime)));
       float lake = 1.0 - smoothstep(0.45, 1.0, shore);
       lakeNight = lake * uEmber.x * land;
       crowd = lake * (1.5 + 0.2 * beatNear);
@@ -539,6 +543,8 @@ void main() {
     // (Between its beats the fire lies low: the beat is seen against it.)
     glow *= mix(1.0, 0.5 + 0.5 * clamp(1.4 * hit, 0.0, 1.0), uEmber.x);
     glow *= 0.5 + 0.5 * uEmber.w;
+    // (Held down as it is for the open camera, the fire would lie flat: its swell is laid on after, on the lake and on the rock it lights.)
+    glow *= mix(0.55 + 0.6 * work, 1.0, aside);
   }
 
   // ---- the water ----
