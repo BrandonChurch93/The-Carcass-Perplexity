@@ -7,7 +7,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_HEAT = 12;
 
 /** March steps. The cost of the volume is close to linear in these. */
-export const STEPS = { air: 5 };
+export const STEPS = { air: 4 };
 
 const COMMON = /* glsl */ `
 precision highp float;
@@ -303,7 +303,7 @@ void main() {
     vec2 meet = ro.xz + rd.xz * min((1200.0 - ro.y) / max(rd.y, 0.02), 30000.0);
     float lumps = noise(vec3(meet.x + 2.0 * uTime, 300.0, meet.y) * 0.00021).g;
     float east = smoothstep(0.8, 1.0, dot(normalize(rd.xz), normalize(vec2(1500.0, -300.0) - ro.xz)));
-    float depth = min(0.6 + 6.0 * east, 3.2) * mix(0.8, 1.2, lumps) * smoothstep(0.0, 0.08, rd.y);
+    float depth = min(0.2 + 3.4 * east * east, 3.2) * mix(0.8, 1.2, lumps) * smoothstep(0.0, 0.08, rd.y);
     veil = 1.0 - exp(-depth);
     veilLight = veil * skyHere * vec3(0.5, 0.28, 0.17);
   }

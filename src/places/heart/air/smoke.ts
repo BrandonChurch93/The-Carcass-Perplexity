@@ -10,7 +10,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_STEAM = 16;
 export const MAX_BODIES = 13;
 /** March steps for each texel. Four texels with four offsets are averaged, so the march seen is four times as fine. */
-export const SMOKE_STEPS = { body: 10, most: 18, steam: 8 };
+export const SMOKE_STEPS = { body: 8, most: 14, steam: 6 };
 
 export const SMOKE_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -136,7 +136,7 @@ float bodyDensity(int i, vec3 p, bool fine, out float above) {
   above = A.w * sqrt(max(1.0 - d2, 0.0)) - yy;
   // The lumps climb the lean, so the body shears as it rises; and they change slowly as they go, so that it billows and does not only slide.
   vec4 G = uBodyG[i];
-  vec3 q = vec3(rel.x, (yy - D.x * uTime) / G.x, rel.y) / D.z + B.z + vec3(0.011, 0.0, 0.006) * uTime;
+  vec3 q = vec3(rel.x, (yy - D.x * uTime) / G.x, rel.y) / D.z + B.z + vec3(0.026, 0.0, 0.015) * uTime;
   float g = uBodyF[i].w;
   // A body that is less solid is more of its lumps: they are drawn out the stronger, so that its outline is billows and not the dome.
   float body = 0.5 + (noise(q).r - 0.5) * mix(2.6, 1.0, clamp(g, 0.0, 1.0)) + dome * g - (0.25 + 0.43 * g) - G.z;
