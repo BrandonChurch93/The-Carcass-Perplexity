@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 77, 2026-11-25 23:34 UTC:
+Status 78, 2026-11-26 00:00 UTC:
 
-- `01-all.jpg`: The 34 material and sky pictures made tonight, one row a place. Generated working pictures: they feed the build, the approved pictures stay the target
-- `02-v2-reveal-4.jpg`: The Reveal, version 2: the last frame of the rise. The strip under it shows the built frame small between two approved pictures
-- `03-v2-reveal-123.jpg`: The Reveal, version 2, from the top: just above the lake, the skull massif, head and shoulders
-- `04-hb7-five-a.jpg`: The Breath at 23:27 UTC, before the new materials: approved on the left, built on the right
+- `01-v2-ribs-sea.jpg`: The Ribs, version 2 (draft tier): the drowned one in the weed, the feeders, the colony, the bore
+- `02-v2-marsh-life.jpg`: The Blood Marsh, version 2: approved beside built for the stalks, the wallowers and the one on the thin crust
+- `03-v2-eye-keys.jpg`: The Eye, version 2 (draft tier): the drinkers, the mats, the edge with the skeleton, the centre
+- `04-hb8-five-a.jpg`: The Breath at 23:52 UTC with the new material pictures in: approved on the left, built on the right
 
+Status 77, 2026-11-25 23:34 UTC, showed: The 34 material and sky pictures made tonight, one row a place.
 Status 76, 2026-11-25 23:20 UTC, showed: The Breath, version 2 · keys 0 and 4 · approved on the left, the frame on the right; The Blood Marsh at minute 117 · the establishing key ·...
 Status 75, 2026-11-25 23:03 UTC, showed: The Breath, 23:00 UTC: approved pictures left, built right (draft tier).
-Status 74, 2026-11-25 22:49 UTC, showed: The Reveal, last frame, 22:35 UTC (owner's heartbeat, draft tier): the land is drawn round the bones again.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T23:34:45Z
-phase 4: 3.40 h used of 17.00 h
-build: 23.72 h used of 72.00 h
+2026-11-26T00:00:29Z
+phase 4: 3.83 h used of 17.00 h
+build: 24.15 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 14
+minutes since the last status: 26
 ```
 
 ## Phases
