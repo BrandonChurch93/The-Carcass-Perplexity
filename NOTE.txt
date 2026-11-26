@@ -1,7 +1,7 @@
-2026-11-26 05:23 UTC
-work at 64130a2 on agent/ribs-ground-3
-hb2: frames 0/60/120 with the bank, ribs-0 compare with sheet blades and new sun
-look-1.jpg = /tmp/open-0-60-120.jpg
-look-2.jpg = /tmp/f0.png
-look-3.jpg = /tmp/f120.png
-look-4.jpg = /tmp/ribs-0-compare.png
+2026-11-26 05:56 UTC
+work at e03becf on agent/ribs-ground-3
+V1 e03becf: ribs-0 near bar floor, ribs-3 crag from colony picture, ribs-4 gate stacks from stack pictures + lens, opening frame 60 final
+look-1.jpg = out/work/v1/ribs-0.jpg
+look-2.jpg = out/work/v1/ribs-3.jpg
+look-3.jpg = out/work/v1/ribs-4.jpg
+look-4.jpg = out/work/v1/open-60-final.jpg
