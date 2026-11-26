@@ -37,7 +37,7 @@ const shots: Record<string, CameraPath> = {
   'breath-01': through(look([-36, 11, 44], 18, -13, 50), key('breath-01'), { forward: -24, up: 4, right: -3 }, { forward: 14, up: -3, right: 10, turn: -8 }),
   'breath-02': through(look([-5.0, 3.6, 29.0], 8, -22, 50), key('breath-02'), { forward: -7, up: -1.5, right: 3, turn: 14, tilt: 8 }, { forward: 3, up: 3.5, right: 6, turn: -2, tilt: -4 }),
   'breath-03': through(lens(look([-32.5, 3.6, 5], 12, -8, 38), 0.03, 4.8), key('breath-03'), { forward: -11, up: 0.8, right: 1.5, turn: -4 }, { forward: 0.6, right: 0.1 }),
-  'breath-04': through(lens(look([-50.7, 1.9, -19.5], 15, -8.5, 38), 0.025, 9), key('breath-04'), { right: -5, forward: -3 }, { right: 4, forward: 2.5 }),
+  'breath-04': through(lens(look([-50.7, 1.9, -19.5], 15, -8.5, 38), 0.075, 10.5), key('breath-04'), { right: -5, forward: -3 }, { right: 4, forward: 2.5 }),
   'breath-05': through(lens(look([-28.5, 2.6, 28.3], 12, -10.3, 40), 0.028, 6.2), key('breath-05'), { forward: -6, up: 0.6, right: -1 }, { forward: 2.5, up: -0.1, right: 0.4 }),
 };
 

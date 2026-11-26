@@ -7,6 +7,7 @@
 // Everything is lit by the rig: the sky's cold light from above, the low sun wherever the land's baked shadow lets it through.
 import { HASH_GLSL } from '../../../core/post';
 import { RIG_GLSL } from '../shared/glsl';
+import { SEA } from '../land';
 
 export const MAX_BODIES = 32;
 
@@ -108,26 +109,27 @@ float vapourRho(vec3 p, float ground, float fine) {
   float west = smoothstep(4.0, -22.0, p.x + 0.4 * p.z);
   float surge = uBreath.y * uShow.w;
   float apron = uBreath.z * uShow.w;
-  vec3 q = p - vec3(WINDV.x * 0.6, 0.8, WINDV.y * 0.6) * uTime;
+  // It rises at a walk and drifts with the wind: steam is never still, and its small billows turn over faster than its heaps.
+  vec3 q = p - vec3(WINDV.x * 1.0, 1.5, WINDV.y * 1.0) * uTime;
   vec4 n0 = textureLod(tNoise, q.xzy / 27.0, 0.0);
   float big = n0.r;
   float small = 0.5;
-  if (fine > 0.5) small = textureLod(tNoise, q.xzy / 8.3 + 0.31, 0.0).b;
+  if (fine > 0.5) small = textureLod(tNoise, (q.xzy - vec3(WINDV.x, WINDV.y, 1.2) * (0.9 * uTime)) / 8.3 + 0.31, 0.0).b;
 
   // In the shaft: the heaped top.
-  float top = uBreath.x - 19.0 + 15.0 * west + 30.0 * (big - 0.5) + 6.0 * (small - 0.5) + surge * (18.0 + 5.0 * smoothstep(rim, 6.0, r));
+  float top = uBreath.x - 15.0 + 13.0 * west + 30.0 * (big - 0.5) + 6.0 * (small - 0.5) + surge * (18.0 + 5.0 * smoothstep(rim, 6.0, r));
   float under = top - p.y;
   // Inside the wall; over the brim it may lean out a little on the west, and at the breath all round.
   float inside = smoothstep(0.5, -1.5, out0 - smoothstep(0.0, 3.0, p.y) * (2.5 * way + 3.0 * surge));
-  float body = 0.011 * smoothstep(0.0, 8.0, under) + 0.02 * smoothstep(8.0, 30.0, under);
+  float body = 0.014 * smoothstep(0.0, 8.0, under) + 0.03 * smoothstep(8.0, 30.0, under);
   // The veil over it: wisps, most where the noise is fine and high, gone a few metres up.
   float wisp = (0.012 + 0.012 * surge) * exp(min(under, 0.0) / (2.2 + 2.0 * way)) * smoothstep(0.52, 0.8, 0.55 * n0.a + 0.45 * small + 0.25 * way) * step(under, 0.5);
   // And what leaves it: thin torn sheets that hang over the west brim, a few metres up and a few metres out, where the wind takes them.
   float veil = 0.014 * west * smoothstep(0.5, -2.5, out0) * exp(-abs(out0 + 3.0) / 7.0) * smoothstep(4.5 + 5.0 * n0.a, -2.0, p.y) * smoothstep(-10.0, -3.0, p.y) * smoothstep(0.44, 0.66, 0.55 * n0.g + 0.45 * small + 0.12 * way);
   // One column stands up out of the depth on the west side, widens as it climbs and leans down the wind once it is over the brim.
   vec2 c = p.xz - vec2(-16.0, -11.0) - WINDV * (0.55 * max(p.y + 6.0, 0.0));
-  float cr = length(c) / (4.0 + 0.17 * max(p.y + 34.0, 0.0));
-  float column = 0.04 * smoothstep(1.0, 0.25, cr + 0.9 * (big - 0.5) + 0.35 * (small - 0.5)) * mix(1.0, 0.3, smoothstep(-6.0, 8.0, p.y)) * smoothstep(9.0, 3.5, p.y);
+  float cr = length(c) / (5.0 + 0.17 * max(p.y + 34.0, 0.0));
+  float column = 0.2 * smoothstep(1.0, 0.25, cr + 0.9 * (big - 0.5) + 0.35 * (small - 0.5)) * mix(1.0, 0.3, smoothstep(-6.0, 8.0, p.y)) * smoothstep(9.0, 3.5, p.y);
   float rho = inside * (body + wisp) * (0.45 + 0.55 * west) * (1.0 + 0.6 * surge) + veil + column;
 
   // On the rock by the lip.
@@ -225,15 +227,52 @@ void main() {
         float shade = 6.0 * vapourRho(p + uSunDir * 3.0, land.r, 0.0) + 12.0 * vapourRho(p + uSunDir * 11.0, land.r, 0.0);
         // And straight up, 4 metres on: what lies under a heap of it is in that heap's shade, which is what gives a billow its form down in the shaft.
         float roofed = exp(-9.0 * vapourRho(p + vec3(0.0, 4.0, 0.0), land.r, 0.0) * 6.0);
-        float sun = sunSeen(land, p.y);
+        float sun = sunSeen(land, p.y) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead, and what is deep in the vapour is under the rest of it.
-        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 22.0, 0.06, 1.0);
-        vec3 light = vec3(0.2, 0.205, 0.215) * sunk * sunk * (0.1 + 0.9 * roofed)
+        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 60.0, 0.55, 1.0);
+        vec3 light = vec3(0.4, 0.4, 0.41) * sunk * (0.3 + 0.7 * roofed)
           + mix(uSunColour, vec3(2.2), 0.6) * (sun * (0.12 * phase * exp(-1.6 * shade) + 0.015 * exp(-0.3 * shade)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
         through *= gone;
         if (through < 0.01) break;
+      }
+    }
+  }
+
+  // The mist on the ground: banks a knee to a head deep that lie on the water and the wet shelf and drift with the wind, torn at their
+  // edges. The ray is asked at four places in the layer; none lies within a few metres of the lens.
+  if (uShow.z > 0.5 && abs(rd.y) > 1e-4) {
+    float ya = ${SEA.toFixed(2)} + 0.1;
+    float yb = ${SEA.toFixed(2)} + 2.6;
+    float ta = (ya - ro.y) / rd.y;
+    float tb = (yb - ro.y) / rd.y;
+    float m0 = max(min(ta, tb), 0.0);
+    float m1 = min(max(ta, tb), min(far, 700.0));
+    if (m1 > m0) {
+      float tau = 0.0;
+      float sunny = 0.0;
+      float sum = 0.0;
+      for (int i = 0; i < 4; i++) {
+        float t = mix(m0, m1, (float(i) + 0.5) / 4.0);
+        vec3 p = ro + rd * t;
+        vec2 w = p.xz - WINDV * (2.6 * uTime);
+        float bank = textureLod(tNoise, vec3(w / 83.0, 0.13 + 0.004 * uTime), 0.0).r;
+        float torn = textureLod(tNoise, vec3(w / 19.0 + 0.4, 0.61 + 0.03 * uTime), 0.0).g;
+        vec4 land = landAt(p.xz);
+        // It lies where the ground is low and wet, and not in the shaft.
+        float lies = smoothstep(1.6, 0.2, land.r - (${SEA.toFixed(2)})) * smoothstep(-3.0, -1.0, land.r);
+        float rho = 0.02 * smoothstep(0.42, 0.72, 0.6 * bank + 0.4 * torn) * lies * smoothstep(7.0, 22.0, t) * smoothstep(700.0, 250.0, t) * smoothstep(yb, yb - 1.4, p.y);
+        tau += rho * (m1 - m0) / 4.0;
+        sum += rho;
+        sunny += rho * sunSeen(land, p.y) * sunCloud(p.xz);
+      }
+      tau = min(tau, 0.6);
+      if (tau > 0.001) {
+        float gone = exp(-tau);
+        vec3 light = vec3(0.2, 0.205, 0.215) + mix(uSunColour, vec3(2.2), 0.6) * (0.1 * phase * sunny / max(sum, 1e-6));
+        colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
+        through *= gone;
       }
     }
   }

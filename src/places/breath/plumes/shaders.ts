@@ -15,7 +15,9 @@ vec3 swayed(vec3 p, vec3 root, vec4 sway, float tall) {
   // The stem: a slow lean and return on the wind, a quicker shiver after it, both later the higher up the stem.
   float slow = sin(t * 1.25 - h * 2.6 + sway.y) + 0.45 * sin(t * 0.53 + sway.y * 1.7);
   float quick = sin(t * 3.1 - h * 5.0 + sway.y * 2.3);
-  vec2 push = uWind * (0.07 * slow + 0.024 * quick) * tall * a;
+  // The wind comes in gusts that travel over the shelf: no two bushes lean together.
+  float gustAt = 0.55 + 0.9 * (0.5 + 0.5 * sin(dot(root.xz, vec2(0.23, 0.17)) - t * 1.1)) * (0.5 + 0.5 * sin(dot(root.xz, vec2(-0.071, 0.113)) - t * 0.37 + 1.3));
+  vec2 push = uWind * (0.1 * slow + 0.035 * quick) * gustAt * tall * a;
   // The breath of the shaft comes up past the lip: the fronds are thrown up and outward and shake as it passes.
   float shake = 0.6 + 0.4 * sin(t * 6.3 - h * 7.0 + sway.y * 3.1);
   push += away * (0.2 * uSurge * shake * tall * a);
@@ -52,9 +54,15 @@ const VANE_TEST = /* glsl */ `
   vec3 v = toEye / far;
   float px = uPixel * far;
   vec2 at = vVane.xy;
+  // The cover is a distance to the edge of a thread (0.5 at the edge, a sixteenth to a pixel of the picture): the edge is smooth however close the lens.
   float cover = texture2D(tPlumeA, at).r;
-  // Far off the threads are thinner than a pixel and would go: the spray is kept as full as it is near.
-  float cut = mix(0.5, 0.16, smoothstep(0.002, 0.012, px));
+  // Deep in the growth the threads lie on one another and nothing shows between them: the heart is whole and dark.
+  float heart = smoothstep(0.525, 0.565, texture2D(tPlumeA, at, 4.0).r);
+  cover = max(cover, 0.75 * heart);
+  // Far off the threads are thinner than a pixel and would go: there each is cut a little outside its edge, and the spray stays as full as it is near.
+  float cut = mix(0.5, 0.4, smoothstep(0.002, 0.012, px));
+  // Low down a few sprays are dead: broken short.
+  if (vVane.w > 0.5 && vnoise(at * vec2(9.0, 6.0) + vVane.z) > 0.55) discard;
   if (cover < cut) discard;
 `;
 
@@ -78,15 +86,18 @@ ${VANE_TEST}
   // The colour is bled outward under the cover (plumes/spray.jpg): a thread read at its edge is its own red.
   vec3 told = texture2D(tPlume, at).rgb;
   // Wet, it is darker than the picture of it and deeper in the red: the pale of the stem stays, the mid tones go to wine.
-  vec3 albedo = pow(told, vec3(1.3)) * vec3(1.5, 0.2, 0.3) * (0.65 + 0.5 * tone);
+  vec3 albedo = pow(told, vec3(1.3)) * vec3(1.3, 0.34, 0.36) * (0.65 + 0.5 * tone);
   // The drops that hang at the ends of the threads are water, not red.
   float most = max(told.r, max(told.g, told.b));
   float drop = smoothstep(0.4, 0.2, (most - min(told.r, min(told.g, told.b))) / max(most, 0.01)) * smoothstep(0.3, 0.55, most);
   albedo = mix(albedo, vec3(0.5, 0.47, 0.44), drop);
+  // The dead ones are brown and dry.
+  float dead = step(0.5, vVane.w);
+  albedo = mix(albedo, dot(told, vec3(0.5)) * vec3(0.5, 0.33, 0.22), dead);
   // How thick the spray is here: where its stems meet it is many threads deep, at its ends it is single ones.
-  float body = smoothstep(0.12, 0.45, texture2D(tPlumeA, at, 5.0).r);
+  float body = smoothstep(0.3, 0.55, texture2D(tPlumeA, at, 5.0).r);
   // The heart of the bush is near black: the threads shade each other where they are thick, at the stem and inside.
-  float occ = mix(1.0, 0.45, body) * mix(0.35, 1.0, within) * mix(0.4, 1.0, smoothstep(0.03, 0.4, reach));
+  float occ = mix(1.0, 0.3, body) * mix(1.0, 0.3, heart) * mix(0.35, 1.0, within) * mix(0.4, 1.0, smoothstep(0.03, 0.4, reach));
   // A thread is round and hangs: what light it turns is from above and from the side of the sun, not from the face of the sheet.
   float fine = dot(told, vec3(0.5, 0.3, 0.2));
   n = normalize(n * 0.5 + vec3(0.0, 0.55, 0.0) + (fine - 0.25) * 1.4 * normalize(vec3(uSunDir.x, 0.3, uSunDir.z)));
@@ -96,16 +107,16 @@ ${VANE_TEST}
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float lit = sunAt(vWorld + vec3(0.0, 0.3, 0.0));
   float thinness = 1.0 - body;
-  float rim = smoothstep(0.95, cut, cover);
-  float glow = (0.15 + 0.85 * thinness) * (0.35 + 0.65 * rim) * (0.25 + 0.75 * smoothstep(0.1, 0.6, reach)) * (0.25 + 0.75 * within) * (0.07 + 0.93 * against * against);
+  float rim = smoothstep(cut + 0.14, cut, cover);
+  float glow = (1.0 - 0.9 * heart) * (0.15 + 0.85 * thinness) * (0.15 + 0.85 * rim) * (0.25 + 0.75 * smoothstep(0.1, 0.6, reach)) * (0.25 + 0.75 * within) * (0.07 + 0.93 * against * against);
   // Far off a bush is one dark wine mass: the glow is in single threads, and none is seen there.
   float close = mix(0.25, 1.0, smoothstep(0.02, 0.004, px));
-  colour += vec3(1.0, 0.07, 0.015) * uSunColour * (0.85 * glow * lit * close) * (0.35 + 1.6 * dot(told, vec3(0.33)));
+  colour += vec3(1.0, 0.15, 0.045) * uSunColour * (0.85 * glow * lit * close * (1.0 - 0.8 * dead)) * (0.35 + 1.6 * dot(told, vec3(0.33)));
   // Wet: the drop at the end of a thread turns the sun to the lens, and here and there a thread does.
   float glint = smoothstep(0.95, 0.995, vnoise(at * vec2(700.0, 500.0) + vVane.z)) * smoothstep(0.003, 0.001, px);
   colour += uSunColour * vec3(1.0, 0.8, 0.6) * (glint * (0.02 + 0.4 * pow(against, 6.0)) + drop * (0.12 + 1.2 * pow(against, 3.0))) * lit;
   // The fog behind and round it is bright: it fills the red from every side, so the shade in the bush is wine and not black.
-  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(1.0, 0.45, 0.5) * (0.6 / 3.14159) * (0.25 + 0.75 * occ) * mix(0.45, 1.0, close);
+  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(1.0, 0.45, 0.5) * (0.5 / 3.14159) * (0.12 + 0.88 * occ) * mix(0.45, 1.0, close);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
@@ -117,6 +128,7 @@ varying vec4 vVane;
 varying vec4 vTint;
 uniform float uPixel;
 uniform sampler2D tPlumeA;
+${NOISE_GLSL}
 void main() {
 ${VANE_TEST}  gl_FragColor = vec4(0.0);
 }`;
