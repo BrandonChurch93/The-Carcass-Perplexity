@@ -14,6 +14,10 @@ import { createMirror } from './water';
 
 export const PARTS: readonly string[] = ['lake', 'shallows', 'shaft', 'mats', 'riser'];
 
+/** The rings of the handoff: seconds they take to spread from the centre, from the moment the dome has sunk, and how far their front has run by the end, in metres. The outermost ring, 300 m out, is whole just as the rise begins. */
+const RING_SECONDS = 2.1;
+const RING_REACH = 560;
+
 const LAPS = 22;
 
 const WATER_VERTEX = /* glsl */ `
@@ -77,7 +81,8 @@ uniform vec4 uLap[${LAPS}];
 uniform int uLapCount;
 uniform vec4 uMirror;
 uniform vec4 uDome;
-// x: seconds since the centre rose (negative before), y: how far the rest picture of the handoff has come in.
+// x: seconds since the centre rose (negative before), y: how far the rest picture of the handoff has come in over the whole frame,
+// z: metres the rings of that picture have spread from the centre (0 before they start).
 uniform vec4 uCentre;
 uniform vec3 uRestWater;
 uniform vec3 uRestRing;
@@ -358,15 +363,17 @@ void main() {
   float lap = tanh(22.0 * dot(lapped, normalize(v.xz)) * 0.08 / max(v.y, 0.04));
   c = c * (1.0 - 0.45 * max(lap, 0.0)) + skyRadiance(vec3(-v.x, 0.12, -v.z)) * (0.3 * max(-lap, 0.0));
 
-  // The last second of the place: the picture the rise begins with, soft rings on deep water seen from straight above.
-  if (uCentre.y > 0.0) {
+  // The last two seconds of the place: the picture the rise begins with, soft rings on deep water seen from straight above.
+  // The rings are thrown from the centre and spread: each comes in as the front passes it, and by the last frame the whole frame holds them.
+  if (uCentre.z > 0.0) {
     float theta = atan(p.x, -p.z);
     float m = 0.0;
     for (int i = 0; i < 9; i++) {
       float x = (r - uRestRadius[i]) / (0.5 * uRestWidth * uRestRadius[i]);
       m += exp(-x * x) * (0.35 + 0.30 * (0.5 + 0.5 * sin(2.0 * theta + 2.4 * float(i))));
     }
-    c = mix(c, mix(uRestWater, uRestRing, clamp(m, 0.0, 1.0)), uCentre.y);
+    float come = max(uCentre.y, 1.0 - smoothstep(0.55 * uCentre.z, uCentre.z, r));
+    c = mix(c, mix(uRestWater, uRestRing, clamp(m, 0.0, 1.0)), come);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -549,7 +556,9 @@ void main() {
       else if (during('eye-03')) mirrorTone.value.set(1.4, 1.26, 1.12, 1);
       else mirrorTone.value.set(1, 1, 1, 1);
       centre.x = t - rise;
-      centre.y = smooth(end - 0.45, end - 0.03, t);
+      // The rings of the handoff leave the centre after the dome has sunk and spread past the corners of the frame; the last frames hold the whole picture.
+      centre.y = smooth(end - 0.2, end - 0.03, t);
+      centre.z = RING_REACH * Math.min(1, Math.max(0, (t - (end - 0.05 - RING_SECONDS)) / RING_SECONDS)) ** 1.3;
       laps.forEach((lap, i) => {
         const from = ctx.laps[i];
         if (from) lap.set(from.x, from.z, from.offset, from.strength);
