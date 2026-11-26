@@ -305,8 +305,8 @@ export class Animal {
       // Few and short: torn hide, 0.15 to 0.9 m, never a long string under the belly.
       const strip = hash(n, seed + 25);
       // One in three is a thread, long and thin; the others are flaps as broad as they are long.
-      const rag = strip < 0.33 ? this.rag(n, (0.3 + 0.5 * hash(n, seed + 26)) * k, (0.01 + 0.012 * hash(n, seed + 24)) * k) : this.rag(n, (0.18 + 0.3 * hash(n, seed + 26)) * k, (0.14 + 0.24 * hash(n, seed + 24)) * k);
-      rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9];
+      const rag = strip < 0.33 ? this.rag(n, (0.3 + 0.5 * hash(n, seed + 26)) * k, (0.01 + 0.012 * hash(n, seed + 24)) * k) : this.rag(n, (0.24 + 0.4 * hash(n, seed + 26)) * k, (0.14 + 0.24 * hash(n, seed + 24)) * k);
+      rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.96, -(this.bodyLocal[q + 2] as number) * 0.96];
       this.rags.push(rag);
     }
     for (let n = 0; n < 16; n++) {

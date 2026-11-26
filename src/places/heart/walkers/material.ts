@@ -441,10 +441,10 @@ void main() {
   // Hollow in the middle once it has spread: the ash goes out from under the pad in a ring.
   body *= mix(1.0, 0.45 + 0.55 * smoothstep(0.1, 0.6, abs(c.x)), smoothstep(0.2, 0.7, life));
   float n = vnoise(vec2(c.x * 2.6 + vPuff.z * 7.0, c.y * 3.0 - life * 1.4)) * 0.6 + vnoise(vec2(c.x * 6.5 - vPuff.z * 3.0, c.y * 7.0 - life * 2.2)) * 0.4;
-  float a = smoothstep(0.1, 1.0, body * (0.5 + 1.0 * n)) * min(vPuff.y, 0.6);
+  float a = smoothstep(0.1, 1.0, body * (0.5 + 1.0 * n)) * min(vPuff.y, 0.8);
   if (a < 0.003) discard;
   // Grey ash in the light of the place: the sky on it from above, the lake under it.
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * skyOpen(vWorld) * 0.8 + 0.5 * lakeIrradianceFar(vWorld, vec3(0.0, -1.0, 0.0));
-  vec3 col = vec3(0.3, 0.28, 0.26) * e / 3.14159;
+  vec3 col = vec3(0.36, 0.33, 0.3) * e / 3.14159;
   gl_FragColor = vec4(rigOut(col) * a, a);
 }`;
