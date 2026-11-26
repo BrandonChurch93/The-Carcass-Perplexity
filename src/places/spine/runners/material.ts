@@ -109,6 +109,7 @@ uniform sampler2D tShag;
 uniform sampler2D tShagData;
 uniform sampler2D tBurn;
 uniform vec3 uBurnV;
+uniform float uLockKind;
 float groundY(vec3 p) {
   return uGround.x + dot(uGround.yz, p.xz);
 }
@@ -126,8 +127,17 @@ void main() {
   w /= w.x + w.y + w.z;
   float s = vKind > 3.5 ? 0.3 : 0.55;
   vec3 q = vRest / s + uTone.w * 5.0;
-  vec3 shag = (texture2D(tShag, q.zy).rgb * w.x + texture2D(tShag, q.xz).rgb * w.y + texture2D(tShag, q.xy).rgb * w.z) / SHAG_MEAN;
-  vec3 lie = texture2D(tShagData, q.zy).rgb * w.x + texture2D(tShagData, q.xz).rgb * w.y + texture2D(tShagData, q.xy).rgb * w.z;
+  vec3 shag;
+  vec3 lie;
+  if (uLockKind > 0.5) {
+    // The herd's hide is under its locks and seen from metres away: one laying of the picture, on the axis it faces most.
+    vec2 one = w.x > max(w.y, w.z) ? q.zy : (w.y > w.z ? q.xz : q.xy);
+    shag = texture2D(tShag, one).rgb / SHAG_MEAN;
+    lie = texture2D(tShagData, one).rgb;
+  } else {
+    shag = (texture2D(tShag, q.zy).rgb * w.x + texture2D(tShag, q.xz).rgb * w.y + texture2D(tShag, q.xy).rgb * w.z) / SHAG_MEAN;
+    lie = texture2D(tShagData, q.zy).rgb * w.x + texture2D(tShagData, q.xz).rgb * w.y + texture2D(tShagData, q.xy).rgb * w.z;
+  }
   float fine = vnoise3(vRest * 90.0);
   float grain = vnoise3(vRest * vec3(14.0, 40.0, 40.0));
   n = normalize(n + 0.9 * (lie.x - 0.5) * normalize(cross(n, vec3(0.0, 1.0, 0.001))) + 0.9 * (lie.y - 0.5) * vec3(0.0, 1.0, 0.0));
@@ -180,7 +190,8 @@ void main() {
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   vec3 r2 = reflect(-toCamera, n);
   r2.y = abs(r2.y);
-  c += (0.04 + 0.5 * pow(1.0 - nv, 5.0)) * (1.0 - rough) * (1.0 - rough) * runnerLight(vWorld, normalize(r2 + n)) * occ / 3.14159;
+  // A dry coat has no gleam worth its light: only the wet and the horn are asked for one.
+  if (rough < 0.9) c += (0.04 + 0.5 * pow(1.0 - nv, 5.0)) * (1.0 - rough) * (1.0 - rough) * runnerLight(vWorld, normalize(r2 + n)) * occ / 3.14159;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -295,7 +306,7 @@ void main() {
   float singe = 1.0 - vInfo.w;
   vec3 albedo = uTone.rgb * pic / mean_ * 0.8 * (0.85 + 0.3 * fract(seed * 7.31));
   // Wet and dark toward the root, where the coat is matted.
-  albedo *= mix(0.55, 1.0, smoothstep(0.0, 0.5, t));
+  albedo *= mix(uLockKind > 0.5 ? 0.72 : 0.55, 1.0, smoothstep(0.0, 0.5, t));
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
   vec3 c = albedo * vLight;
   // Rime and packed snow: on the locks that look up it lies thick on the bright hairs, on the others it beads the ends.
