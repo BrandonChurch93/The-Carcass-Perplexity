@@ -32,6 +32,8 @@ uniform vec4 uRain;
 // The warm brine that breathes low steam: x, z of a patch, its radius, how thick its steam lies.
 uniform int uMistCount;
 uniform vec4 uMist[${MAX_MIST}];
+// Where no low steam lies, whatever the patches say: x, z, radius in metres (the wallow, where the animals are to be seen whole).
+uniform vec3 uClear;
 varying vec2 vUv;
 ${HASH_GLSL}
 ${RIG_GLSL}
@@ -158,6 +160,7 @@ void main() {
           vec2 d = (p.xz - uMist[m].xy - wind * y * 1.6) / (uMist[m].z * (1.0 + 0.3 * y));
           cover += uMist[m].w * exp(-dot(d, d));
         }
+        cover *= smoothstep(uClear.z, uClear.z + 7.0, length(p.xz - uClear.xy));
         if (cover < 0.004) continue;
         // Carried downwind at the pace of a walk, the upper sheets faster than the lower; pushed about by a second, slower field.
         vec2 at = p.xz - wind * uTime * (0.34 + 0.16 * fl);
@@ -221,18 +224,19 @@ void main() {
   // The shaft walks along the horizon with the wind, a degree in six seconds.
   // A shaft of rain is narrow at its foot and wide under its cloud, and the wind leans it.
   float elev = rd.y / max(length(rd.xz), 0.05);
-  float side = abs(az - uRain.x - 0.003 * uTime - 0.6 * elev) / (uRain.y * (0.45 + 4.5 * max(elev, 0.0)));
+  float side = abs(az - uRain.x - 0.003 * uTime - 0.55 * elev) / (uRain.y * (1.0 + 1.6 * max(elev, 0.0)));
   float rain = 0.0;
-  if (uShow.y > 0.5 && far > curtain && side < 1.9 && rd.y > -0.02 && rd.y < 0.4) {
-    float el = rd.y / max(length(rd.xz), 0.05);
-    // Streaks that lean with the wind, in sheets of unlike weight.
-    float lean = az * 40.0 + el * 9.0;
-    float sheets = textureLod(tNoise, vec3(az * 1.7 - uTime * 0.004, 0.2, 0.4 + uTime * 0.012), 0.0).g;
+  if (uShow.y > 0.5 && far > curtain && side < 2.6 && rd.y > -0.02 && rd.y < 0.5) {
+    float el = elev;
+    // It has no side: it thins away to either hand, and what is seen of it is slanting streaks in veils of unlike weight, each veil
+    // its own width and its own height.
+    float lean = az * 40.0 + el * 22.0;
+    float veils = textureLod(tNoise, vec3((az + 0.55 * el) * 2.3 - uTime * 0.004, el * 0.9, 0.4 + uTime * 0.012), 0.0).g;
+    float torn = textureLod(tNoise, vec3((az + 0.55 * el) * 7.0, el * 2.6 + 0.3, 0.8 + uTime * 0.02), 0.0).b;
     float streaks = textureLod(tNoise, vec3(lean * 0.33, el * 0.35 - uTime * 0.03, 0.7), 0.0).r * 0.55 + textureLod(tNoise, vec3(lean * 1.3, el * 0.8 - uTime * 0.07, 0.13), 0.0).b * 0.45;
-    float edge = smoothstep(1.7, 0.0, side + (sheets - 0.5) * 1.9);
-    edge *= edge * edge;
-    float base = smoothstep(0.3, 0.07 + 0.08 * sheets, el) * smoothstep(0.0, 0.06, el);
-    rain = uRain.w * edge * base * (0.35 + 1.3 * sheets) * (0.55 + 0.9 * streaks);
+    float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
+    float base = smoothstep(0.42, 0.1 + 0.1 * veils, el) * smoothstep(0.0, 0.07, el);
+    rain = uRain.w * body * base * (0.4 + 1.2 * streaks);
   }
   float show = uShow.x;
   // The haze lies in layers: thicker and thinner by the bearing and by how far off it is.
@@ -243,9 +247,9 @@ void main() {
 #ifdef SHEETS
   {
     float reach = min(far, 9000.0);
-    float mid = max(ro.y + rd.y * 0.5 * (reach + 120.0), 0.0);
+    float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
     float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
-    bank = 0.0011 * max(reach - 120.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    bank = 0.0019 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
   }
 #endif
   if (rain > 0.0) {

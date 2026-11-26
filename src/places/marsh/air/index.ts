@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { DEG, HERO_DOME, K1_AT, K1_DIR, POOL_R, TAU, VEIN, bearingDir } from '../shared/anchors';
+import { DEG, HERO_DOME, K1_AT, K1_DIR, POOL_R, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { bakeNoise } from './noise';
 import { createSky } from './sky';
@@ -14,7 +14,7 @@ export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   // The rain: middle bearing and half width in radians, distance in metres, thickness.
-  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 0.9);
+  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 0.6);
   const sky = createSky(ctx, noise, rain);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
@@ -43,9 +43,9 @@ export function create(ctx: Context): Piece {
     return [node[0], node[1]];
   };
   const mist: THREE.Vector4[] = [
-    new THREE.Vector4(0, 0, POOL_R * 1.15, 0.45),
+    new THREE.Vector4(-2, -1, POOL_R * 0.8, 0.4),
     new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 12 - 5, HERO_DOME[1] + K1_DIR[1] * 12, 7, 0.6),
-    new THREE.Vector4(-6, -5, 7, 0.7),
+    new THREE.Vector4(-6, -5, 7, 0.45),
     new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),
     new THREE.Vector4(vein(11)[0], vein(11)[1], 12, 0.5),
     new THREE.Vector4(main[0] * 16, main[1] * 16, 11, 0.5),
@@ -80,6 +80,7 @@ export function create(ctx: Context): Piece {
       uRain: { value: rain },
       uMistCount: { value: 6 },
       uMist: { value: mist },
+      uClear: { value: new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12) },
     },
     defines: SHEETS ? { SHEETS: 1 } : {},
     depthTest: false,
