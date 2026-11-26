@@ -491,7 +491,8 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const across = (-(p[0] - s.x) * uz + (p[1] - s.z) * ux) * Math.pow(long, -0.4);
       return [s.x + along * ux - across * uz, s.z + along * uz + across * ux];
     };
-    const count = s.far < 150 ? Math.round((s.tall ? 1.6 : 1) * many * Math.max(4, s.q * (40 - 30 * Math.min(1, s.far / 150)))) : 0;
+    // Fewer and stouter than a reed bed: a stand is counted in stalks, each with room for its head.
+    const count = s.far < 150 ? Math.round(0.62 * (s.tall ? 1.6 : 1) * many * Math.max(4, s.q * (40 - 30 * Math.min(1, s.far / 150)))) : 0;
     const cores: [number, number][] = [];
     for (let k = 0; k < 1 + rng.int(4); k++) cores.push(around(s, 0.45));
     const farFrom = farStems.length;
@@ -500,7 +501,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const loose = rng.next() < looseShare;
       // The loose ones trail off to one side more than to the others: a thin edge there, a clean one opposite.
       const a = loose && rng.next() < 0.65 ? tail + rng.normal() * 0.6 : rng.range(0, TAU);
-      const d = loose ? rng.range(0.5, 2.1) * s.r : rng.range(0.12, 0.9) * (0.7 + 0.55 * s.r);
+      const d = loose ? rng.range(0.5, 2.1) * s.r : rng.range(0.15, 1.25) * (0.7 + 0.55 * s.r);
       const at = drawn([core[0] + Math.cos(a) * d, core[1] + Math.sin(a) * d]);
       const x = at[0];
       const z = at[1];
@@ -511,7 +512,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const dead = cls === 4 || cls < 0;
       const shoot = cls === 3;
       const h = (dead ? rng.range(0.7, 2.6) : shoot ? rng.range(0.2, 0.95) : cls === 0 ? rng.range(3.1, 4.6) : cls === 1 ? rng.range(2, 3.1) : rng.range(0.95, 2)) * (s.tall ?? 1) * (shoot ? 1 : grows);
-      const R = shoot ? rng.range(0.016, 0.03) * (0.7 + 0.6 * h) : rng.range(0.03, 0.052) * Math.pow(Math.max(h, 0.8) / 2.4, 0.45);
+      const R = shoot ? rng.range(0.016, 0.03) * (0.7 + 0.6 * h) : rng.range(0.042, 0.075) * Math.pow(Math.max(h, 0.8) / 2.4, 0.45);
       const kinks = !shoot && rng.next() < habit.kink;
       const kind = dead ? 2 : shoot && rng.next() < 0.5 ? 1 : 0;
       // Which way it leans: out from the heart of the stand, or with the rest of the stand the way the wind has combed it.
@@ -532,7 +533,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       if (dead) continue;
       const roll = rng.next() * allStyles;
       const style = roll < (styles[0] as number) ? 0 : roll < (styles[0] as number) + (styles[1] as number) ? 1 : roll < (styles[0] as number) + (styles[1] as number) + (styles[2] as number) ? 2 : 3;
-      dress(w, shoot ? (kind === 1 ? 4 : 3) : style, (0.8 + 0.35 * rng.next()) * headFor(h) * (shoot ? 2 : crownK), s.far > 95);
+      dress(w, shoot ? (kind === 1 ? 4 : 3) : style, (0.8 + 0.35 * rng.next()) * headFor(h) * (shoot ? 2 : 1.5 * crownK), s.far > 95);
       if (!shoot && h > 1.2 && s.far < 125) hang(w, s.far < 95 ? Math.round((h > 2.4 ? 4 : 2) * leafy) : 0, s.far < 95 ? Math.max(1, Math.round((2 + rng.int(2)) * Math.min(1.3, 0.5 + 0.5 * leafy))) : 1);
     }
     // Far off a stand is told by its stems, pale lines with a small dark head each, not by a mass at their feet: each stem there has
