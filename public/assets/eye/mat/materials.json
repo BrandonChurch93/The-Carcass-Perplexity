@@ -168,6 +168,38 @@
       "width": 1024,
       "height": 1536,
       "relief": "drinker-quarter-h.png"
+    },
+    {
+      "name": "matfield",
+      "kind": "plate",
+      "metres": 240,
+      "width": 1671,
+      "height": 941,
+      "relief": "matfield-h.png"
+    },
+    {
+      "name": "matdark",
+      "kind": "plate",
+      "metres": 12,
+      "width": 1230,
+      "height": 1278,
+      "relief": "matdark-h.png"
+    },
+    {
+      "name": "shaftwall",
+      "kind": "plate",
+      "metres": 30,
+      "width": 1672,
+      "height": 941,
+      "relief": "shaftwall-h.png"
+    },
+    {
+      "name": "shoreplate",
+      "kind": "plate",
+      "metres": 8,
+      "width": 1672,
+      "height": 941,
+      "relief": "shoreplate-h.png"
     }
   ]
 }
