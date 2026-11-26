@@ -1,6 +1,6 @@
 {
   "kind": "compare",
-  "made": "2026-11-26T09:15:07Z",
+  "made": "2026-11-26T10:09:17Z",
   "key": "reveal-1",
   "approved": "references/approved/7-reveal/reveal-1-above-the-lake.jpg",
   "frame": "out/work/stills/key-reveal-1-uhd-final.png",
@@ -58,7 +58,7 @@
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "uhd",
       "tier": "final",
@@ -69,8 +69,8 @@
       "loop": null,
       "key": "reveal-1",
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:15:07Z",
-      "seconds": 39.529,
+      "made": "2026-11-26T10:09:17Z",
+      "seconds": 37.13,
       "portableOnly": false,
       "id": null
     }
@@ -78,6 +78,6 @@
   "keep": true,
   "phase": 4,
   "units": {
-    "reveal": "eb61d03606aca625"
+    "reveal": "102314aad6685a99"
   }
 }

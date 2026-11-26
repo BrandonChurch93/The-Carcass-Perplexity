@@ -78,3 +78,11 @@ Three lines in part, for the reason given in round 19. `R3-1` issue 3 (severe) a
 - Kept: the build of the unit's best judged round, with the later fixes while the machine checks and the measures stay green. Which round is the best is written in the unit's row of `kit/PROGRESS.md`.
 - Every open severe and major issue of this round is written under "Open items" in `kit/PROGRESS.md` with its frame, the critic's words, what was tried and what to try next. Open items are worked in the polish rounds of Phase 6, worst first.
 - An issue about shared code is an open item for Phase 5.
+
+## After the round
+
+- The cloud change (`e7991a3e`, `src/places/reveal/shared/weather.ts` and `src/places/reveal/sky/index.ts`): round 2's cloud look (the build round 19 judged, `9741a5fb`) is back inside the current build, with round 3's drift and its open west sea. The reason is in the jurors' own words: the cloud is named in 10 of 25 answers in this round against 3 of 25 in round 19, and the critics' cards drew 5 severe and 5 major issues on it against 1 severe and about 4 major. No critic was asked again, so no critic has judged this mix.
+- MEASURED on `e7991a3e` at the final tier in 4K on a render machine, 2026-11-26 10:12 UTC (`measures-reveal-after-e7991a3e.json`): M1 and M3 green, 12 of 12 lines (M1 on the four keys, the titan frame and the three handoff frames, M3 on the four keys). Fine detail against the round's measures: `reveal-1` 1.049 to 1.049, `reveal-2` 0.8727 to 1.8018, `reveal-3` 1.4142 to 4.4951, `reveal-4` 0.881 to 1.0579. Round 19's numbers were 2.1708, 1.8457, 2.7259 and 1.0895.
+- M3 has only a floor, so a high number is not a pass of anything. At `reveal-3` it is the cloud over the open west sea: many small hard-edged bright flecks where the approved picture has fewer, softer clumps, and the frame has none of the approved picture's long wispy streaks over the skull (seen in `compare-reveal-3.jpg` by the render machine and by the Builder). That is the Reveal's first open item (`cloud` under "Open items" in `kit/PROGRESS.md`).
+- The kept stills, comparison images and sheets of the Reveal were made anew from `e7991a3e`: four stills, four comparison images and the sheets of shots `reveal-01` and `reveal-02` (the second is the black at the end of the film and is the same bytes as before).
+

@@ -1,6 +1,6 @@
 {
   "kind": "sheet",
-  "made": "2026-11-26T09:17:49Z",
+  "made": "2026-11-26T10:11:42Z",
   "name": "shot-reveal-01",
   "title": "shot reveal-01 · frames 9541 to 11743 · 12 spread evenly",
   "tier": "review",
@@ -63,7 +63,7 @@
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -74,15 +74,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:33Z",
-      "seconds": 3.934,
+      "made": "2026-11-26T10:11:26Z",
+      "seconds": 3.7,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -93,15 +93,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:35Z",
-      "seconds": 2.261,
+      "made": "2026-11-26T10:11:28Z",
+      "seconds": 1.836,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -112,15 +112,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:37Z",
-      "seconds": 1.688,
+      "made": "2026-11-26T10:11:30Z",
+      "seconds": 1.692,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -131,15 +131,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:38Z",
-      "seconds": 0.988,
+      "made": "2026-11-26T10:11:32Z",
+      "seconds": 0.987,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -150,15 +150,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:40Z",
-      "seconds": 0.999,
+      "made": "2026-11-26T10:11:33Z",
+      "seconds": 0.988,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -169,15 +169,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:41Z",
-      "seconds": 1.023,
+      "made": "2026-11-26T10:11:34Z",
+      "seconds": 0.987,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -188,15 +188,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:42Z",
-      "seconds": 0.987,
+      "made": "2026-11-26T10:11:35Z",
+      "seconds": 0.984,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -207,15 +207,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:43Z",
-      "seconds": 1.044,
+      "made": "2026-11-26T10:11:36Z",
+      "seconds": 0.973,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -226,15 +226,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:45Z",
-      "seconds": 1.075,
+      "made": "2026-11-26T10:11:38Z",
+      "seconds": 1.025,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -245,15 +245,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:46Z",
-      "seconds": 1.051,
+      "made": "2026-11-26T10:11:39Z",
+      "seconds": 1.024,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -264,15 +264,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:47Z",
-      "seconds": 1.024,
+      "made": "2026-11-26T10:11:40Z",
+      "seconds": 0.993,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -283,8 +283,8 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:48Z",
-      "seconds": 1.075,
+      "made": "2026-11-26T10:11:41Z",
+      "seconds": 1.004,
       "portableOnly": false,
       "id": null
     }
@@ -292,6 +292,6 @@
   "keep": true,
   "phase": 4,
   "units": {
-    "reveal": "eb61d03606aca625"
+    "reveal": "102314aad6685a99"
   }
 }

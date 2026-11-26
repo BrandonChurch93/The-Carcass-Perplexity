@@ -1,6 +1,6 @@
 {
   "kind": "sheet",
-  "made": "2026-11-26T09:17:55Z",
+  "made": "2026-11-26T10:11:48Z",
   "name": "shot-reveal-02",
   "title": "shot reveal-02 · frames 11744 to 11860 · 12 spread evenly",
   "tier": "review",
@@ -63,7 +63,7 @@
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -74,15 +74,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:51Z",
-      "seconds": 0.325,
+      "made": "2026-11-26T10:11:44Z",
+      "seconds": 0.307,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -93,15 +93,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:52Z",
-      "seconds": 0.131,
+      "made": "2026-11-26T10:11:44Z",
+      "seconds": 0.12,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -112,15 +112,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:52Z",
-      "seconds": 0.156,
+      "made": "2026-11-26T10:11:45Z",
+      "seconds": 0.116,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -131,15 +131,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:52Z",
-      "seconds": 0.146,
+      "made": "2026-11-26T10:11:45Z",
+      "seconds": 0.116,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -150,15 +150,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:53Z",
-      "seconds": 0.123,
+      "made": "2026-11-26T10:11:46Z",
+      "seconds": 0.164,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -169,15 +169,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:53Z",
-      "seconds": 0.12,
+      "made": "2026-11-26T10:11:46Z",
+      "seconds": 0.176,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -188,15 +188,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:53Z",
-      "seconds": 0.127,
+      "made": "2026-11-26T10:11:46Z",
+      "seconds": 0.117,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -207,15 +207,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:54Z",
-      "seconds": 0.136,
+      "made": "2026-11-26T10:11:47Z",
+      "seconds": 0.116,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -226,15 +226,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:54Z",
-      "seconds": 0.123,
+      "made": "2026-11-26T10:11:47Z",
+      "seconds": 0.115,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -245,15 +245,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:54Z",
-      "seconds": 0.124,
+      "made": "2026-11-26T10:11:47Z",
+      "seconds": 0.161,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -264,15 +264,15 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:55Z",
-      "seconds": 0.124,
+      "made": "2026-11-26T10:11:48Z",
+      "seconds": 0.119,
       "portableOnly": false,
       "id": null
     },
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "preview",
       "tier": "review",
@@ -283,8 +283,8 @@
       "loop": null,
       "key": null,
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:17:55Z",
-      "seconds": 0.117,
+      "made": "2026-11-26T10:11:48Z",
+      "seconds": 0.124,
       "portableOnly": false,
       "id": null
     }
@@ -292,6 +292,6 @@
   "keep": true,
   "phase": 4,
   "units": {
-    "reveal": "eb61d03606aca625"
+    "reveal": "102314aad6685a99"
   }
 }

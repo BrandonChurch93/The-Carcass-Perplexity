@@ -1,6 +1,6 @@
 {
   "kind": "compare",
-  "made": "2026-11-26T09:16:48Z",
+  "made": "2026-11-26T10:10:41Z",
   "key": "reveal-3",
   "approved": "references/approved/7-reveal/reveal-3-head-and-shoulders.jpg",
   "frame": "out/work/stills/key-reveal-3-uhd-final.png",
@@ -58,7 +58,7 @@
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "uhd",
       "tier": "final",
@@ -69,8 +69,8 @@
       "loop": null,
       "key": "reveal-3",
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:16:48Z",
-      "seconds": 50.794,
+      "made": "2026-11-26T10:10:40Z",
+      "seconds": 37.174,
       "portableOnly": false,
       "id": null
     }
@@ -78,6 +78,6 @@
   "keep": true,
   "phase": 4,
   "units": {
-    "reveal": "eb61d03606aca625"
+    "reveal": "102314aad6685a99"
   }
 }

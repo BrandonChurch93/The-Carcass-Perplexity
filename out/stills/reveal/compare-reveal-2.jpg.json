@@ -1,6 +1,6 @@
 {
   "kind": "compare",
-  "made": "2026-11-26T09:15:51Z",
+  "made": "2026-11-26T10:09:58Z",
   "key": "reveal-2",
   "approved": "references/approved/7-reveal/reveal-2-skull-massif.jpg",
   "frame": "out/work/stills/key-reveal-2-uhd-final.png",
@@ -58,7 +58,7 @@
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "reveal": "eb61d03606aca625"
+        "reveal": "102314aad6685a99"
       },
       "format": "uhd",
       "tier": "final",
@@ -69,8 +69,8 @@
       "loop": null,
       "key": "reveal-2",
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:15:51Z",
-      "seconds": 37.759,
+      "made": "2026-11-26T10:09:57Z",
+      "seconds": 34.122,
       "portableOnly": false,
       "id": null
     }
@@ -78,6 +78,6 @@
   "keep": true,
   "phase": 4,
   "units": {
-    "reveal": "eb61d03606aca625"
+    "reveal": "102314aad6685a99"
   }
 }
