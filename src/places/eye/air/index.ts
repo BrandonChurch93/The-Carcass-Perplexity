@@ -151,7 +151,7 @@ void main() {
     float round2 = atan(hit.x - uPlateAt.x, hit.z - uPlateAt.z);
     float tall = 4.0 + 16.0 * vnoise(vec2(round2 * 23.0 + uTime * 0.012, 2.0)) + 5.0 * vnoise(vec2(round2 * 90.0 - uTime * 0.02, 7.0));
     float drift = 0.45 + 0.55 * vnoise(vec2(round2 * 47.0 - uTime * 0.016, hit.y / 9.0 + 4.0));
-    float a = 0.8 * lowEye * min(mistOn * 1.6, 1.0) * smoothstep(dp - 560.0, dp - 30.0, far) * exp(-max(hit.y, 0.0) / tall) * drift;
+    float a = 0.8 * lowEye * min(mistOn * 1.6, 1.0) * max(smoothstep(dp - 560.0, dp - 30.0, far) * exp(-max(hit.y, 0.0) / tall), (uPlateTone.w > 1.5 ? 0.0 : 0.9) * exp(-abs(rd.y) / 0.011) * smoothstep(250.0, 700.0, far)) * drift;
     vec3 lit = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.35 * low) / 3.14159 * 2.4;
     light = light * (1.0 - a) + a * lit;
     through *= 1.0 - a;

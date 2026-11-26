@@ -204,6 +204,10 @@ void main() {
   if (uPlateTone.w > 1.5) {
     vec3 still = reflect(-v, vec3(0.0, 1.0, 0.0));
     rd.y = max(mix(still.y, rd.y, 0.3), 0.003);
+  } else {
+    // A low eye that looks far along the water sees the far wall whole in it: the waves there are too small to deal it out.
+    float calm = smoothstep(120.0, 500.0, away) * smoothstep(12.0, 4.0, cameraPosition.y);
+    rd.y = max(mix(rd.y, v.y, 0.75 * calm), 0.003);
   }
   rd = normalize(rd);
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
