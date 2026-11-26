@@ -105,7 +105,8 @@ describe('the fixture plan', () => {
 
   it('takes text and unit of a line from the config', () => {
     const r = build((p) => setLine(p, 'n1-1', { text: 'Other words.', unit: 'eye' }));
-    expect(lineOf(r.cut, 'n1-1').text).toBe('Listen.');
+    expect(lineOf(r.cut, 'n1-1').text).toBe(cfg.narration.clips[0].lines[0]);
+    expect(lineOf(r.cut, 'n1-1').text).not.toBe('Other words.');
     expect(lineOf(r.cut, 'n1-1').unit).toBe('ribs');
   });
 
@@ -189,12 +190,14 @@ describe('positions', () => {
 
   it('resolves after and before a line', () => {
     const { cut } = build();
-    expect(lineOf(cut, 'n1-1')).toMatchObject({ first: 150, frames: 54, file: null, carried: false });
-    expect(lineOf(cut, 'n1-2').first).toBe(150 + 54 + 72);
-    expect(lineOf(cut, 'n1-4')).toMatchObject({ first: 1012 - 126, frames: 126 });
-    expect(titanAt({ after: 'n1-1', gap: 1.2 }).cut.titanFrame).toBe(276);
+    // The words are the config's, so the lengths are worked out from them: the test is of the positions.
+    const long = (id) => Math.ceil(core.estimateSeconds(lineOf(cut, id).text, trialPlan().estimate) * fps);
+    expect(lineOf(cut, 'n1-1')).toMatchObject({ first: 150, frames: long('n1-1'), file: null, carried: false });
+    expect(lineOf(cut, 'n1-2').first).toBe(150 + long('n1-1') + 72);
+    expect(lineOf(cut, 'n1-4')).toMatchObject({ first: 1012 - long('n1-4'), frames: long('n1-4') });
+    expect(titanAt({ after: 'n1-1', gap: 1.2 }).cut.titanFrame).toBe(150 + long('n1-1') + 72);
     const r = build((p) => setLine(p, 'n1-3', { at: { before: 'n1-4', gap: 1 } }));
-    expect(lineOf(r.cut, 'n1-3').first).toBe(886 - 60 - lineOf(r.cut, 'n1-3').frames);
+    expect(lineOf(r.cut, 'n1-3').first).toBe(lineOf(r.cut, 'n1-4').first - 60 - lineOf(r.cut, 'n1-3').frames);
   });
 
   it('stops on an unknown form and on things that do not exist', () => {
@@ -282,7 +285,10 @@ describe('the length of a line', () => {
     expect(core.estimateSeconds('I have walked it. End to end.')).toBeCloseTo(29 * 0.105 + 0.5, 9);
     expect(core.estimateSeconds('The great beasts wallow in it, and grow fat.')).toBeCloseTo(44 * 0.105 + 0.2, 9);
     expect(core.estimateSeconds('One. Two, three.', { secondsPerCharacter: 0.1, secondsPerStop: 1, secondsPerComma: 2, minSeconds: 0 })).toBeCloseTo(1.6 + 1 + 2, 9);
-    expect(lineOf(build().cut, 'n1-3').frames).toBe(Math.ceil((29 * 0.07 + 0.3) * fps));
+    // The plan's own estimate is used for a line of the config: 0.07 s a character, 0.3 s a stop inside the line, 0.15 s a comma.
+    expect(core.estimateSeconds('Nothing on it should be alive.', trialPlan().estimate)).toBeCloseTo(30 * 0.07, 9);
+    const third = cfg.narration.clips[0].lines[2];
+    expect(lineOf(build().cut, 'n1-3').frames).toBe(Math.ceil(core.estimateSeconds(third, trialPlan().estimate) * fps));
   });
 
   it('is the seconds of the plan when the plan gives them', () => {
@@ -343,6 +349,17 @@ describe('the rules', () => {
     expect(faultsOf((p) => setLine(p, 'n1-4', { at: { before: { hit: 17.368 }, gap: 0.1 } })).join('\n')).toMatch(/Line 4 of clip n1 .*lies over the strike firstHit/);
     expect(faultsOf((p) => setLine(p, 'n5-3', { at: { landmark: 'midHit', plus: 0.45 } })).join('\n')).toMatch(/Line 3 of clip n5 .*lies over the strike midHit/);
     expect(faultsOf((p) => setLine(p, 'n8-4', { at: { landmark: 'finalHit', plus: -1 } })).join('\n')).toMatch(/Line 4 of clip n8 .*lies over the strike finalHit/);
+    // The one exception is Brandon's: a line the plan places on a strike by name starts on it and is not faulted for lying over it.
+    const on = (fields) => faultsOf((p) => {
+      setLine(p, 'n8-1', { seconds: 0.9 });
+      setLine(p, 'n8-2', { at: { bar: 45, plus: 2.2 }, seconds: 0.7 });
+      setLine(p, 'n8-3', fields);
+      setLine(p, 'n8-4', { at: { after: 'n8-3', gap: 1 } });
+    }).join('\n');
+    expect(on({ at: { landmark: 'revealHit' } })).toMatch(/^Line 3 of clip n8 .*lies over the strike revealHit[^\n]*$/);
+    expect(on({ at: { landmark: 'revealHit' }, onStrike: 'revealHit' })).toBe('');
+    expect(on({ at: { landmark: 'revealHit', plus: 0.3 }, onStrike: 'revealHit' })).toMatch(/Line 3 of clip n8 is placed on the strike revealHit and starts at/);
+    expect(build((p) => setLine(p, 'n8-3', { onStrike: 'theHit' })).errors.join('\n')).toMatch(/onStrike names "theHit"/);
     expect(faultsOf((p) => setLine(p, 'n8-2', { at: { landmark: 'revealHit', plus: 0.51 } }))).toEqual([]);
     const spans = core.strikeSpans(build().cut, map);
     expect(spans.map((s) => s.name)).toEqual(core.STRIKES);
@@ -378,9 +395,13 @@ describe('the tables and the command', () => {
 
   it('gives each place, each line and each cut a row', () => {
     expect(t.places.length).toBe(cfg.film.order.length);
-    expect(t.places[0]).toEqual({ unit: 'ribs', first: 0, seconds: 45.38, spoken: 21.73 });
+    // The words are the config's: what is spoken and what is left are worked out from the lines of the cut.
+    const r2 = (x) => Math.round(x * 100) / 100;
+    const ribs = cut.lines.filter((l) => l.unit === 'ribs');
+    const one = cut.lines[0];
+    expect(t.places[0]).toEqual({ unit: 'ribs', first: 0, seconds: 45.38, spoken: r2(ribs.reduce((a, l) => a + l.frames, 0) / fps) });
     expect(t.lines.length).toBe(cut.lines.length);
-    expect(t.lines[0]).toEqual({ id: 'n1-1', first: 2.5, seconds: 0.9, kind: 'est', gap: null, left: 41.98 });
+    expect(t.lines[0]).toEqual({ id: 'n1-1', first: 2.5, seconds: r2(one.frames / fps), kind: 'est', gap: null, left: r2((cut.places[0].last + 1 - one.first - one.frames) / fps) });
     expect(t.lines[1].gap).toBe(1.2);
     expect(t.cuts.length).toBe(cut.shots.length - 1);
     expect(t.cuts[0]).toMatchObject({ shot: 'ribs-02', frame: 1042, kind: 'hit', accent: 17.368 });
