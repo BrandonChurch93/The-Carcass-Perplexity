@@ -149,7 +149,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float thin = smoothstep(uLipIn > 1.0 ? 1.0 : 4.0, uLipIn > 1.0 ? 14.0 : 46.0, inShore) * (1.0 - (uLipIn > 1.0 ? 0.2 : 0.8) * slabs * (1.0 - crust));
   float cover = smoothstep(0.2, 0.44, field + (uLipIn > 1.0 ? 0.3 : 0.0) + 0.16 * smoothstep(150.0, 10.0, w) + 0.1 * (vnoise(b / 11.0 + 6.0) - 0.5)) * thin;
   // The crust of the lip is bare but for a strand here and there.
-  cover *= mix(0.8, 1.0, smoothstep(2.6, 8.0, wLip + 2.0 * (vnoise(b / 2.3 + 1.0) - 0.5)));
+  cover = max(cover, 0.85 * thin * smoothstep(0.34, 0.5, field + 0.25) * smoothstep(9.0, 3.0, wLip) * smoothstep(-0.6, 0.6, wLip));
   // The mats keep to the lip: a band of them round the deep, torn at its outer edge, and wet sand and cobbles between it and the shore.
   cover *= 1.0 - 0.92 * smoothstep(190.0, 300.0, w + 60.0 * (blobs - 0.5));
   o.albedo = bare;
@@ -158,6 +158,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   o.glow = 0.0;
   o.depth = depth;
   o.dry = max(smoothstep(0.0, -0.035, depth), stands);
+  // How much of a strand of weed lies here: the strands go on over the crust of the lip.
+  float strand = 0.0;
   if (cover > 0.0) {
     // The mats themselves: one piece of the bed seen from above, laid 5 m wide so that its strands are as fine as weed is, its strands combed toward the top, laid round the lake so that the top is the centre.
     // It is turned over at each of its edges and swung a little from lock to lock, so that no edge and no repeat shows.
@@ -194,6 +196,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     o.dry = mix(o.dry, max(smoothstep(0.0, 0.03, up) * 0.92, afloat), cover);
     o.occ = mix(o.occ, 0.5 + 0.5 * smoothstep(0.1, 0.5, mh), cover);
     o.glow = 0.3 * cover * (1.0 - slab) * smoothstep(0.2, 0.5, mh);
+    strand = cover * (1.0 - slab) * smoothstep(0.22, 0.5, mh);
     if (away < 45.0) {
       vec2 e = vec2(0.0025, 0.0);
       vec2 g = vec2(texture2D(tMatH, q + e.xy).r - texture2D(tMatH, q - e.xy).r, texture2D(tMatH, q + e.yx).r - texture2D(tMatH, q - e.yx).r);
@@ -213,10 +216,12 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     vec2 g = vec2(texture2D(tLipPlateH, q + e.xy).r - texture2D(tLipPlateH, q - e.xy).r, texture2D(tLipPlateH, q + e.yx).r - texture2D(tLipPlateH, q - e.yx).r);
     vec2 around = lip.yz;
     vec2 inward = vec2(-lip.z, lip.y);
-    o.albedo = mix(o.albedo, mix(lp, vec3(dot(lp, vec3(0.33))), 0.35) * vec3(1.2, 1.24, 1.26), onLip);
-    o.tilt = mix(o.tilt, -(around * g.x + inward * g.y) * 3.2, onLip);
+    // The crust keeps its weed: rust-orange filaments lie over the pale sinter to the very edge, and the crust shows between them.
+    float bareLip = onLip * (1.0 - 0.9 * strand);
+    o.albedo = mix(o.albedo, mix(lp, vec3(dot(lp, vec3(0.33))), 0.35) * vec3(1.2, 1.24, 1.26), bareLip);
+    o.tilt = mix(o.tilt, -(around * g.x + inward * g.y) * 2.0, bareLip);
     o.occ = mix(o.occ, 0.35 + 0.65 * smoothstep(0.15, 0.6, lh), onLip);
-    o.glow *= 1.0 - onLip;
+    o.glow *= 1.0 - bareLip;
     // Its high rims are dry stone, its hollows hold a finger of water.
     o.dry = mix(o.dry, smoothstep(0.3, 0.46, lh), onLip);
     o.depth = mix(o.depth, (0.42 - lh) * 0.25, onLip);

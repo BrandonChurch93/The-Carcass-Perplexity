@@ -173,9 +173,9 @@ void main() {
   float mid = 1.0 - smoothstep(260.0, 900.0, away);
   if (mid > 0.0) slope += (0.0015 + 0.007 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
   float close = 1.0 - smoothstep(25.0, 110.0, away);
-  if (close > 0.0) slope += (0.0016 + 0.006 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.09);
+  if (close > 0.0) slope += (0.0016 + 0.006 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.06);
   float closer = 1.0 - smoothstep(4.0, 22.0, away);
-  if (closer > 0.0) slope += 0.0025 * closer * waves(p.xz / 0.61, wind * uTime * 0.21);
+  if (closer > 0.0) slope += 0.002 * closer * waves(p.xz / 0.61, wind * uTime * 0.12);
 
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float nv = clamp(dot(n, v), 0.0, 1.0);

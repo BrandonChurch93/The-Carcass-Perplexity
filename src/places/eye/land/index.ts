@@ -124,15 +124,17 @@ void main() {
   w /= w.x + w.y + w.z;
   // A block is a piece of the scree: the plate of the slope on its three faces, each block from another part of it.
   vec2 at = vTint.yz * 40.0;
-  vec2 ux = vWorld.zy + at;
-  vec2 uy = vWorld.xz + at.yx;
-  vec2 uz = vWorld.xy - at;
+  // The plate is a slope of many stones: a block shows a small piece of it large, so that it is one stone with its own cracks, not a heap.
+  float grain = mix(0.3, 1.0, smoothstep(12.0, 4.0, cameraPosition.y));
+  vec2 ux = vWorld.zy * grain + at;
+  vec2 uy = vWorld.xz * grain + at.yx;
+  vec2 uz = vWorld.xy * grain - at;
   vec4 col = screeAt(ux) * w.x + screeAt(uy) * w.y + screeAt(uz) * w.z;
   float e = 0.05;
   vec2 d = vec2(screeAt(ux + vec2(e, 0.0)).a - screeAt(ux - vec2(e, 0.0)).a, screeAt(ux + vec2(0.0, e)).a - screeAt(ux - vec2(0.0, e)).a) * w.x
     + vec2(screeAt(uy + vec2(e, 0.0)).a - screeAt(uy - vec2(e, 0.0)).a, screeAt(uy + vec2(0.0, e)).a - screeAt(uy - vec2(0.0, e)).a) * w.y
     + vec2(screeAt(uz + vec2(e, 0.0)).a - screeAt(uz - vec2(e, 0.0)).a, screeAt(uz + vec2(0.0, e)).a - screeAt(uz - vec2(0.0, e)).a) * w.z;
-  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.25) * vec3(1.4, 1.36, 1.28) * (0.8 + 0.4 * vTint.x);
+  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x);
   vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
@@ -300,7 +302,7 @@ export function create(ctx: Context): Piece {
   }
   // The fan under the spur: blocks of every size from a man's head to a hut, thick at its sides and thinner down its middle.
   for (let i = 0; i < 1500; i++) {
-    const along = rng.range(10, 122);
+    const along = rng.range(31, 122);
     const across = rng.range(PATCH.across0 + 6, PATCH.across1 - 6);
     const size = 0.45 + 4.2 * rng.next() ** 2.6;
     if (along > 84 && Math.abs(across) < 3.2 + size) continue;
@@ -377,7 +379,7 @@ export function create(ctx: Context): Piece {
 
   // The stream: a ribbon of water laid in the bed of the ravine.
   const STEP = 0.5;
-  const FROM = 9;
+  const FROM = 30;
   const TO = PATCH.along1 + 60;
   const ACROSS = 7;
   const count = Math.round((TO - FROM) / STEP) + 1;
@@ -385,7 +387,7 @@ export function create(ctx: Context): Piece {
   const flow = new Float32Array(count * ACROSS * 2);
   for (let i = 0; i < count; i++) {
     const along = FROM + i * STEP;
-    const half = (1.0 + 0.8 * vnoise(along / 9, 3.3)) * (1 + 0.9 * smooth(30, 9, along));
+    const half = (1.0 + 0.8 * vnoise(along / 9, 3.3)) * (1 - 0.6 * smooth(40, 30, along));
     const level = streamBed(along) + 0.3 - 0.05 * smooth(10, 40, along);
     for (let j = 0; j < ACROSS; j++) {
       const side = (j / (ACROSS - 1)) * 2 - 1;
