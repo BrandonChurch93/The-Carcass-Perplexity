@@ -1,7 +1,5 @@
 2026-11-26 03:25 UTC
 work at f8ef7ac on agent/eye-place-2
-version 2: eye-4, eye-0, eye-3, eye-2
-look-1.jpg = out/work/pics/eye-4.jpg
-look-2.jpg = out/work/pics/eye-0.jpg
-look-3.jpg = out/work/pics/eye-3.jpg
-look-4.jpg = out/work/pics/eye-2.jpg
+version 2: eye-1, end of eye-05
+look-1.jpg = out/work/pics/eye-1.jpg
+look-2.jpg = out/work/pics/end.jpg
