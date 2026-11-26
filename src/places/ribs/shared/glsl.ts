@@ -32,6 +32,7 @@ uniform sampler2D tBedFine;
 uniform sampler2D tCloudShade;
 uniform vec4 uCloudShade;
 uniform vec4 uCloudBreak;
+uniform vec4 uCloudBreak2;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
 uniform vec3 uSkyGround;
@@ -92,10 +93,11 @@ float bedFine(vec2 xz) {
 }
 
 // How open the cloud sheet is over q, a place on the ground as the sun would strike it: under 0.42 closed, over 0.62 open.
-// The broken sheet of the mask, and the one wide break that travels over the strait with the wind.
+// The broken sheet of the mask, the one wide break that travels over the strait with the wind, and the small one that stands on the first blade as the film opens.
 float cloudCover(vec2 q) {
   vec2 d = q - uCloudBreak.xy;
-  return texture2D(tCloudShade, q * uCloudShade.z - uCloudShade.xy).r * 0.62 + uCloudBreak.w * exp(-dot(d, d) * uCloudBreak.z);
+  vec2 e = q - uCloudBreak2.xy;
+  return texture2D(tCloudShade, q * uCloudShade.z - uCloudShade.xy).r * 0.62 + uCloudBreak.w * exp(-dot(d, d) * uCloudBreak.z) + uCloudBreak2.w * exp(-dot(e, e) * uCloudBreak2.z);
 }
 
 // The moving shadow of the broken cloud at a point: 1 in a gap, uCloudShade.w under cloud. One sheet for the whole place, drifting with the wind.
