@@ -13,7 +13,7 @@ import { DROP_FRAGMENT, DROP_VERTEX, STEM_FRAGMENT, STEM_VERTEX, THREAD_FRAGMENT
 export const PARTS: readonly string[] = ['gill-plumes'];
 
 /** Staged, metres: see where the bushes are placed. */
-const HERO_WEST = 3.6;
+const HERO_WEST = 4.6;
 
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
@@ -76,11 +76,12 @@ export function create(ctx: Context): Piece {
     const at = bushAt(i);
     // Staged: the two that the lens of key breath-3 stands by are rooted a stride further west of the lip than their anchors, so that
     // the nearer is cut by the left edge of that frame and the farther has its holdfast in the lower left of it, as in the picture.
+    // The farther stops short of the right third of that frame, which is the pit's and the steam's; the nearer is kept low beside it.
     // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted five metres to that lens's
     // left and behind it, out of its frame; what hangs into that frame is grown for that shot alone (HANG).
-    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
+    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] - 0.55, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, mound: i < 2 ? 0 : i === 5 ? 0.3 : 0.6, tidy: i === 5 });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.68 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, mound: i < 2 ? 0 : i === 5 ? 0.3 : 0.6, tidy: i === 5 });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
@@ -226,7 +227,7 @@ export function create(ctx: Context): Piece {
   };
   // Only the bushes a lens comes close to have drops that can be seen.
   const nearOnes = grown.filter((_g, i) => (bushes[i] as Bush).detail >= 1);
-  const dropGeometries = [dropsOf(nearOnes, 0.3), dropsOf([], 0), dropsOf(hangGrown, 0.3)];
+  const dropGeometries = [dropsOf(nearOnes, 0.5), dropsOf([], 0), dropsOf(hangGrown, 0.4)];
   const dropMaterial = new THREE.ShaderMaterial({
     vertexShader: DROP_VERTEX,
     fragmentShader: DROP_FRAGMENT,

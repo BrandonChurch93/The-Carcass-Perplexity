@@ -125,7 +125,7 @@ void main() {
   float open = vLight.y;
   // Wet flesh: wine at the limb, crimson along it, and at the very end bleached to a pale pink that the light goes through. A lock
   // here and there is browner or more purple than its neighbours.
-  vec3 wine = mix(vec3(0.075, 0.008, 0.022), vec3(0.25, 0.018, 0.05), tone * tone);
+  vec3 wine = mix(vec3(0.06, 0.006, 0.02), vec3(0.19, 0.013, 0.045), tone * tone);
   wine = mix(wine, wine.r * vec3(1.0, 0.3, 0.16), smoothstep(0.78, 0.95, own) * 0.7);
   wine = mix(wine, wine.r * vec3(0.85, 0.1, 0.3), smoothstep(0.2, 0.05, own) * 0.6);
   float end = smoothstep(0.6, 1.0, s) * (0.3 + 0.7 * smoothstep(0.7, 1.2, tone + 0.5 * own));
@@ -141,9 +141,9 @@ void main() {
   // at its edges and at its pale end. Deep in the bush nothing comes through and it stays near black.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = across * across;
-  float through = (0.1 + 0.9 * against * against * sqrt(against)) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
-  vec3 blood = mix(vec3(0.85, 0.04, 0.085), vec3(1.0, 0.4, 0.36), 0.4 * end);
-  colour += blood * uSunColour * (0.3 * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
+  float through = (0.05 + 0.95 * against * against * against) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
+  vec3 blood = mix(vec3(0.55, 0.022, 0.075), vec3(0.9, 0.34, 0.32), 0.4 * end);
+  colour += blood * uSunColour * (0.24 * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
