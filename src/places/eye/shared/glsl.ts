@@ -123,6 +123,11 @@ uniform vec4 uPlateLens;
 uniform vec4 uPlateTone;
 // x: how much the wide shot deepens the dark of its far picture, y: the brightness under which a part of it is rock in shade.
 uniform vec2 uPlateShade;
+// The air the picture's wall stands in, by shot. x: its contrast about the grey of y (1 as it is, above 1 the caves deepen). z: how far
+// the warm of the low slopes is taken back to the blue grey of shade, and w the height of the picture (in v above its waterline) under
+// which that is done: the last sun is on the upper ledges only. uPlateSoft: mip levels the picture is softened by.
+uniform vec4 uPlateAir;
+uniform float uPlateSoft;
 uniform vec4 uNear;
 uniform vec4 uShade;
 uniform sampler2D tUngrade;
@@ -131,10 +136,12 @@ uniform sampler2D tUngrade;
 // the wall, the metres before the wall over which the bank stands up. B: how thick the sheet is, how thick the bank, how far the sheet is
 // broken into tongues (0 whole, 1 torn), how much rises off the top in wisps. C: where along the far shore it lies, the metres of its
 // middle and of its half length (0 for the whole shore), how much of that length is clear of it, and how much of it a mirror holds. uMistOn is 0 where there is none.
+// D: x, how far the sheet's reach over the water differs along the shore (0 one even edge, 1 long tongues with clear water between).
 uniform highp sampler3D tMistNoise;
 uniform vec4 uMistA;
 uniform vec4 uMistB;
 uniform vec4 uMistC;
+uniform vec4 uMistD;
 uniform float uMistOn;`;
 
 export const RIG_GLSL = /* glsl */ `
@@ -212,11 +219,18 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   bool tall = uPlateTone.w > 1.5 && bias > 0.0;
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
-  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + 2.5 * over + (tall ? 2.0 : 0.0)).rgb) * uPlateTone.rgb;
+  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + uPlateSoft + 2.5 * over + (tall ? 2.0 : 0.0)).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
   if (tall) {
     plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005, clamp(vv + 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb)
       + ungrade(texture2D(tPlate, vec2(u - 0.005, clamp(vv - 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb));
+  }
+  if (uPlateAir.x != 1.0 || uPlateAir.z > 0.0) {
+    float grey = max(dot(plate, vec3(0.3, 0.5, 0.2)), 1e-4);
+    float lowDown = smoothstep(uPlateAir.w, 0.35 * uPlateAir.w, v - uPlateLens.w);
+    float warm = smoothstep(0.05, 0.28, (plate.r - plate.b) / max(plate.r + plate.b, 1e-3));
+    plate = mix(plate, grey * vec3(0.72, 0.78, 0.88), uPlateAir.z * lowDown * warm);
+    plate *= pow(grey / uPlateAir.y, uPlateAir.x - 1.0);
   }
   // Seen from high on the rim the sky of the picture is the pale sky of the hour, more silver than blue, in the air and in the water alike.
   if (uPlateTone.w < 1.5) {
