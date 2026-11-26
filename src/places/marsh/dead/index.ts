@@ -42,7 +42,12 @@ float carcass(vec2 q, out vec2 m) {
   float held = max(max(0.82 * exp(-e2 * e2), exp(-e3 * e3)), 0.6 * exp(-e4 * e4));
   float body = uBody.z * mix(1.0, 0.24 + 0.76 * held, uVar.x) * arch;
   float zone = smoothstep(-0.46, -0.28, u) * smoothstep(0.34, 0.2, u);
-  float crest = pow(abs(cos(3.14159 * (q.x / uVar.y + 0.45 * abs(a)))), 4.0);
+  // (No two ribs stand alike: they have slipped along the body, and here and there one has broken off short.)
+  float ph = q.x / uVar.y + 0.45 * abs(a) + 0.24 * sin(q.x * 5.1 + uLumps.x) + 0.13 * sin(q.y * 9.0 + uLumps.x * 1.7);
+  float crest = pow(abs(cos(3.14159 * ph)), 4.0);
+  float rib = floor(ph + 0.5);
+  float broken = step(0.62, fract(sin(rib * 12.9898 + uLumps.x) * 43758.5453));
+  crest *= 1.0 - broken * smoothstep(0.25, 0.4, abs(a) + 0.25 * sin(rib * 3.7));
   float flank = smoothstep(0.1, 0.35, abs(a)) * smoothstep(1.0, 0.8, abs(a));
   float ribs = zone * flank;
   body += uBody.z * arch * ribs * uVar.x * (0.13 * crest - 0.2);
@@ -75,11 +80,12 @@ float domeAt(vec2 xz, float level, out vec4 m) {
     float c = carcass(along, bm);
     float on = smoothstep(0.0, 0.07, c);
     float torn = smoothstep(0.46, 0.56, fine) * smoothstep(0.35, 0.7, bm.y) * on;
-    float grown = mix(1.0, smoothstep(0.4, 0.6, 0.5 * knobs + 0.5 * kn + uVar.z - 0.5 - 0.3 * bm.x - 0.5 * bm.y) * (1.0 - torn), on);
+    float grown = mix(1.0, smoothstep(0.4, 0.6, 0.5 * knobs + 0.5 * kn + uVar.z - 0.5 - 0.3 * bm.x - 0.95 * bm.y) * (1.0 - torn), on);
     h += c + on * (grown * (kn - 0.2) * 0.05 - torn * 0.05);
     m = vec4(bm * on, grown, torn);
   }
-  return h;
+  // (The grid's own border lies deep under the ground: no straight edge of it shows where the ground is low.)
+  return h - 0.3 * smoothstep(1.3, 1.5, r);
 }`;
 
 const DOME_VERTEX = /* glsl */ `
@@ -120,7 +126,7 @@ void main() {
   float nearBy = 1.0 - smoothstep(4.0, 12.0, length(cameraPosition - vWorld));
   vec4 kn2 = texture2D(tKnobN, uk * 6.1 + 0.23);
   float k2 = dot(texture2D(tKnob, uk * 6.1 + 0.23).rgb, THIRD) / 0.235;
-  vec2 lean = ((kn.rg - 0.5) * 2.4 + (kn2.rg - 0.5) * 0.9 * nearBy) * salt;
+  vec2 lean = ((kn.rg - 0.5) * 1.7 + (kn2.rg - 0.5) * 1.1 * nearBy) * salt;
   // The hide where it shows: dried hard, creased along the body, the rime's grain in it.
   vec2 uh = vec2(xz.x * uTurn.x + xz.y * uTurn.y, -xz.x * uTurn.y + xz.y * uTurn.x) * vec2(0.7, 2.6) + uLumps.x;
   vec3 hideN = texture2D(tSaltNh, uh).rgb;
@@ -129,11 +135,15 @@ void main() {
   vec3 n = normalize(vec3(-hx / (2.0 * e) + lean.x - (hl.x * uTurn.x - hl.y * uTurn.y), 1.0, -hz / (2.0 * e) + lean.y - (hl.x * uTurn.y + hl.y * uTurn.x)));
   vec3 v = normalize(cameraPosition - vWorld);
   // Salt: grey white on the knobs, the red of the brine dried in its hollows.
-  vec3 saltC = mix(vec3(dot(kc, THIRD)), kc, 0.3) * 1.15 * mix(1.0, 0.6 + 0.4 * k2, nearBy);
-  saltC *= mix(vec3(1.0), vec3(0.7, 0.5, 0.46), 0.45 * smoothstep(0.5, 0.26, kn.b));
-  vec3 hide = vec3(0.085, 0.06, 0.049) * (0.45 + 0.65 * crease) * (1.0 - 0.45 * m.y);
+  // (It is old salt, grown thick: dirty grey white all through, its hollows a shade darker and faintly pink, never the wet red of the bank.)
+  float kl = clamp(dot(kc, THIRD) / 0.235, 0.55, 1.35);
+  vec3 saltC = vec3(0.325, 0.295, 0.268) * (0.5 + 0.5 * kl) * mix(1.0, 0.62 + 0.38 * k2, nearBy);
+  saltC *= mix(vec3(1.0), vec3(0.8, 0.62, 0.56), 0.6 * smoothstep(0.5, 0.26, kn.b));
+  vec3 hide = vec3(0.085, 0.06, 0.049) * (0.45 + 0.65 * crease) * (1.0 - 0.6 * m.y);
+  // (Sunk between the ribs it is dark, damp and stained by what was under it.)
+  hide = mix(hide, vec3(0.045, 0.016, 0.012) * (0.6 + 0.4 * crease), 0.7 * smoothstep(0.3, 0.8, m.y));
   // (Bone, where a rib or a knuckle of the spine has come through.)
-  hide = mix(hide, vec3(0.36, 0.3, 0.23) * (0.75 + 0.25 * crease), 0.85 * smoothstep(0.6, 0.9, m.x));
+  hide = mix(hide, vec3(0.38, 0.32, 0.24) * (0.75 + 0.25 * crease), 0.9 * smoothstep(0.5, 0.85, m.x));
   // (Where the hide is torn through, what is under it: dark, wet and red.)
   hide = mix(hide, vec3(0.03, 0.009, 0.007), m.w);
   vec3 albedo = mix(hide, saltC, salt);
@@ -141,7 +151,7 @@ void main() {
   float above = vWorld.y - uGround;
   float stain = (1.0 - smoothstep(0.0, 0.22, above + 0.14 * (vnoise(xz * 3.0 + uLumps.x) - 0.5))) * (0.45 + 0.55 * vnoise(xz * 1.3 + uLumps.x * 2.0));
   albedo = mix(albedo, albedo * vec3(0.7, 0.4, 0.36), 0.75 * stain);
-  float occ = mix((1.0 - 0.5 * m.y) * (1.0 - 0.6 * m.w), 0.5 + 0.5 * smoothstep(0.2, 0.6, kn.b), salt) * (0.7 + 0.3 * smoothstep(0.0, 0.15, above));
+  float occ = mix((1.0 - 0.5 * m.y) * (1.0 - 0.6 * m.w), 0.68 + 0.32 * smoothstep(0.2, 0.6, kn.b), salt) * (0.7 + 0.3 * smoothstep(0.0, 0.15, above));
   vec3 c = rigShade(vWorld, n, v, albedo, mix(mix(0.78, 0.4, m.w), mix(0.96, 0.6, 0.5 * stain), salt), occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -171,8 +181,8 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   float fleck = vnoise(vec2(vAlong * 37.0, vWorld.x * 23.0 + vWorld.z * 31.0));
   // Yellowed horn, brown toward the point and in its cracks, crusted white where it comes out of the salt.
-  vec3 albedo = mix(vec3(0.34, 0.29, 0.21), vec3(0.13, 0.085, 0.06), clamp(0.75 * smoothstep(0.5, 1.0, vAlong) + 0.3 * fleck, 0.0, 1.0));
-  albedo = mix(albedo, vec3(0.42, 0.4, 0.385), 0.6 * smoothstep(0.34, 0.0, vAlong) * smoothstep(0.3, 0.55, fleck + 0.25));
+  vec3 albedo = mix(vec3(0.25, 0.205, 0.145), vec3(0.11, 0.075, 0.055), clamp(0.75 * smoothstep(0.5, 1.0, vAlong) + 0.3 * fleck, 0.0, 1.0));
+  albedo = mix(albedo, vec3(0.3, 0.28, 0.26), 0.5 * smoothstep(0.34, 0.0, vAlong) * smoothstep(0.3, 0.55, fleck + 0.25));
   if (uMirror > 0.5 && vWorld.y < -0.015) discard;
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, 0.62, 0.6 + 0.4 * smoothstep(0.0, 0.3, vAlong))), 1.0);
 }`;
