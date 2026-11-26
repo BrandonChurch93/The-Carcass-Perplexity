@@ -21,6 +21,8 @@ vec3 swayed(vec3 p, vec3 root, vec4 sway, float tall) {
   // The breath of the shaft comes up past the lip: the fronds are thrown up and outward and shake as it passes.
   float shake = 0.6 + 0.4 * sin(t * 6.3 - h * 7.0 + sway.y * 3.1);
   push += away * (0.2 * uSurge * shake * tall * a);
+  // And between its breaths the warm air still rises past the lip: the growth never hangs still.
+  push += away * (0.05 * sin(t * 2.3 - h * 3.0 + sway.y * 1.9) * tall * a);
   float lift = (0.11 * uSurge * shake - 0.02 * slow) * tall * a;
   // A barb on the stem: it follows late and trembles, more toward its tip.
   float u = sway.z;
@@ -56,11 +58,10 @@ const VANE_TEST = /* glsl */ `
   vec2 at = vVane.xy;
   // The cover is a distance to the edge of a thread (0.5 at the edge, a sixteenth to a pixel of the picture): the edge is smooth however close the lens.
   float cover = texture2D(tPlumeA, at).r;
-  // Deep in the growth the threads lie on one another and nothing shows between them: the heart is whole and dark.
-  float heart = smoothstep(0.525, 0.565, texture2D(tPlumeA, at, 4.0).r);
-  cover = max(cover, 0.75 * heart);
+  // Deep in the growth the threads lie on one another: the heart is dark.
+  float heart = smoothstep(0.5, 0.57, texture2D(tPlumeA, at, 5.0).r);
   // Far off the threads are thinner than a pixel and would go: there each is cut a little outside its edge, and the spray stays as full as it is near.
-  float cut = mix(0.5, 0.4, smoothstep(0.002, 0.012, px));
+  float cut = mix(0.5, 0.2, smoothstep(0.003, 0.02, px));
   // Low down a few sprays are dead: broken short.
   if (vVane.w > 0.5 && vnoise(at * vec2(9.0, 6.0) + vVane.z) > 0.55) discard;
   if (cover < cut) discard;
@@ -86,10 +87,10 @@ ${VANE_TEST}
   // The colour is bled outward under the cover (plumes/spray.jpg): a thread read at its edge is its own red.
   vec3 told = texture2D(tPlume, at).rgb;
   // Wet, it is darker than the picture of it and deeper in the red: the pale of the stem stays, the mid tones go to wine.
-  vec3 albedo = pow(told, vec3(1.3)) * vec3(1.3, 0.34, 0.36) * (0.65 + 0.5 * tone);
+  vec3 albedo = pow(told, vec3(1.3)) * vec3(1.25, 0.66, 0.66) * (0.65 + 0.5 * tone);
   // The drops that hang at the ends of the threads are water, not red.
   float most = max(told.r, max(told.g, told.b));
-  float drop = smoothstep(0.4, 0.2, (most - min(told.r, min(told.g, told.b))) / max(most, 0.01)) * smoothstep(0.3, 0.55, most);
+  float drop = smoothstep(0.25, 0.1, (most - min(told.r, min(told.g, told.b))) / max(most, 0.01)) * smoothstep(0.5, 0.75, most);
   albedo = mix(albedo, vec3(0.5, 0.47, 0.44), drop);
   // The dead ones are brown and dry.
   float dead = step(0.5, vVane.w);
@@ -111,12 +112,14 @@ ${VANE_TEST}
   float glow = (1.0 - 0.9 * heart) * (0.15 + 0.85 * thinness) * (0.15 + 0.85 * rim) * (0.25 + 0.75 * smoothstep(0.1, 0.6, reach)) * (0.25 + 0.75 * within) * (0.07 + 0.93 * against * against);
   // Far off a bush is one dark wine mass: the glow is in single threads, and none is seen there.
   float close = mix(0.25, 1.0, smoothstep(0.02, 0.004, px));
-  colour += vec3(1.0, 0.15, 0.045) * uSunColour * (0.85 * glow * lit * close * (1.0 - 0.8 * dead)) * (0.35 + 1.6 * dot(told, vec3(0.33)));
+  colour += vec3(1.0, 0.3, 0.24) * uSunColour * (1.3 * glow * lit * close * (1.0 - 0.8 * dead)) * (0.35 + 1.6 * dot(told, vec3(0.33)));
   // Wet: the drop at the end of a thread turns the sun to the lens, and here and there a thread does.
   float glint = smoothstep(0.95, 0.995, vnoise(at * vec2(700.0, 500.0) + vVane.z)) * smoothstep(0.003, 0.001, px);
   colour += uSunColour * vec3(1.0, 0.8, 0.6) * (glint * (0.02 + 0.4 * pow(against, 6.0)) + drop * (0.12 + 1.2 * pow(against, 3.0))) * lit;
   // The fog behind and round it is bright: it fills the red from every side, so the shade in the bush is wine and not black.
-  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(1.0, 0.45, 0.5) * (0.5 / 3.14159) * (0.12 + 0.88 * occ) * mix(0.45, 1.0, close);
+  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(1.0, 0.62, 0.66) * (0.5 / 3.14159) * (0.12 + 0.88 * occ) * mix(0.45, 1.0, close);
+  // Wet all over: every thread carries a film that gives back a little of the bright air round it, so its dark is wine and never black.
+  colour += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.022 / 3.14159);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
