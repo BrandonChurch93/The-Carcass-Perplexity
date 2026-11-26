@@ -74,7 +74,8 @@ void main() {
 }`;
 
 // Each tile takes the largest radius of the tiles whose blur can reach it, so a pixel beside a near thing gathers as widely as that thing spreads.
-// The distance is the least between two tiles, corner to corner for diagonal ones. The second number says whether anything the near layer holds can reach the tile.
+// The distance is the least between two tiles, corner to corner for diagonal ones.
+// The second number says whether anything the near layer holds can reach the tile or one beside it: where it is 0 the near layer is empty and is not fetched.
 const REACH_FRAGMENT = /* glsl */ `
 uniform sampler2D tSrc;
 uniform vec2 uSize;
@@ -84,24 +85,30 @@ void main() {
   ivec2 p = ivec2(gl_FragCoord.xy);
   ivec2 last = ivec2(uSize) - 1;
   float m = 0.0;
-  for (int j = -4; j <= 4; j++) {
-    for (int i = -4; i <= 4; i++) {
-      float r = texelFetch(tSrc, clamp(p + ivec2(i, j), ivec2(0), last), 0).r;
-      if (length(max(abs(vec2(i, j)) - 1.0, 0.0)) * uTile <= r) m = max(m, r);
+  float held = 0.0;
+  for (int j = -5; j <= 5; j++) {
+    for (int i = -5; i <= 5; i++) {
+      ivec2 q = p + ivec2(i, j);
+      if (q != clamp(q, ivec2(0), last)) continue;
+      float r = texelFetch(tSrc, q, 0).r;
+      vec2 d = abs(vec2(i, j));
+      if (length(max(d - 1.0, 0.0)) * uTile <= r) m = max(m, r);
+      if (r > uLow && length(max(d - 2.0, 0.0)) * uTile <= r) held = 1.0;
     }
   }
-  gl_FragColor = vec4(m, m > uLow ? 1.0 : 0.0, 0.0, 1.0);
+  gl_FragColor = vec4(m, held, 0.0, 1.0);
 }`;
 
 type Kind = 'fine' | 'field' | 'near';
 
 // One pass of a blur. `texel` is the width of a texel of the layer in pixels, and `grain` the blur the layer already is.
+// A pass whose taps would lie closer than `gate` texels is skipped.
 // On the fine blur and on the field a tap counts by whether a blur reaches this texel, and the sum is divided by what counted.
 // On the near layer it is the plain mean of the taps, which two passes compose exactly, and the radius comes from the tiles.
 // The last pass of the field leaves the colour multiplied by how blurred the texel is, with that in the alpha,
 // so that the fetch of the full-size pass takes blurred texels only.
 // The taps are written out one by one: an array of constants read in a loop costs this renderer several times the fetches themselves.
-function gatherFragment(taps: Tap[], spacing: number, kind: Kind, last: boolean, texel: number, grain: number): string {
+function gatherFragment(taps: Tap[], spacing: number, kind: Kind, last: boolean, texel: number, grain: number, gate = 0.35): string {
   const lines = taps
     .slice(1)
     .map(([x, y]) => `    tap(vec2(${x.toFixed(6)}, ${y.toFixed(6)}) * radius, ${Math.hypot(x, y).toFixed(6)} * radius);`)
@@ -123,7 +130,7 @@ function gatherFragment(taps: Tap[], spacing: number, kind: Kind, last: boolean,
   const radius = {
     fine: `  onset = clamp(abs(c.a) - ${SHARP_PX.toFixed(2)}, 0.0, 1.0);
   float radius = onset > 0.0 ? reach(c.a) : 0.0;
-  if (radius * ${spacing.toFixed(6)} >= 0.35 && texture2D(tRadius, vUv).a >= 0.5) radius = 0.0;`,
+  if (radius * ${spacing.toFixed(6)} >= ${gate.toFixed(2)} && texelFetch(tRadius, ivec2(gl_FragCoord.xy) >> 1, 0).a >= 0.6) radius = 0.0;`,
     field: `  float radius = reach(c.a);
   if (texture2D(tRadius, vUv).a >= 0.5) radius = 0.0;`,
     near: `  float radius = reach(texture2D(tRadius, vUv).r);`,
@@ -165,7 +172,7 @@ ${radius}
   sum = c;
   total = 1.0;
   centre = c.a;
-  bool gathered = radius * ${spacing.toFixed(6)} >= 0.35;
+  bool gathered = radius * ${spacing.toFixed(6)} >= ${gate.toFixed(2)};
   if (gathered) {
 ${kind === 'fine' ? '    sum.rgb = clean(c.rgb);\n' : ''}${lines}
   }
@@ -181,6 +188,9 @@ const FIELD_COUNTS: [number, number] = [2, 5];
 const QUARTER = { texel: 4, grain: layerGrain(4) };
 const HALF = { texel: 2, grain: layerGrain(2) };
 const FULL = { texel: 1, grain: 0 };
+// The wide pass of the fine blur alone fills a disc while its seven taps lie under 2 px apart. The first pass, which fills between them,
+// costs seven full-size fetches, so it starts only when its own taps are 0.7 px apart, at a radius of 2.6 px: most of the film's radii are under that.
+const FINE_GATE: [number, number] = [0.7, 0.35];
 
 // Full size. The fine blur; over it the field, by how far this pixel's own radius is past what the fine blur can fill, whatever lies around it;
 // over both the near layer by twice its cover: a near thing hides what is behind it up to its outline, so its soft edge is laid outside the outline.
@@ -217,7 +227,7 @@ void main() {
     vec4 f = spline(tField, uFieldSize);
     c = mix(c, f.rgb / max(f.a, 1.0e-6), part);
   }
-  if (texture2D(tReach, vUv).g > 0.0) {
+  if (texelFetch(tReach, ivec2(gl_FragCoord.xy) / ${TILE}, 0).g > 0.0) {
     vec4 n = spline(tNear, uNearSize);
     float cover = clamp(2.0 * n.a, 0.0, 1.0);
     if (cover > 0.0) c = mix(c, n.rgb / max(n.a, 0.0001), cover);
@@ -248,8 +258,8 @@ export class FocusBlur {
   private height = 0;
 
   constructor(private readonly renderer: THREE.WebGLRenderer) {
-    const make = (taps: Tap[], spacing: number, kind: Kind, last: boolean, layer: { texel: number; grain: number }): THREE.ShaderMaterial =>
-      plainPass(gatherFragment(taps, spacing, kind, last, layer.texel, layer.grain), {
+    const make = (taps: Tap[], spacing: number, kind: Kind, last: boolean, layer: { texel: number; grain: number }, gate = 0.35): THREE.ShaderMaterial =>
+      plainPass(gatherFragment(taps, spacing, kind, last, layer.texel, layer.grain, gate), {
         tSrc: { value: null },
         tRadius: { value: null },
         uTexel: { value: new THREE.Vector2() },
@@ -257,7 +267,7 @@ export class FocusBlur {
       });
     const taps = blurTaps();
     const fine = fineTaps();
-    this.finePasses = [0, 1].map((i) => make(fine[i] as Tap[], FINE_SPACING[i] as number, 'fine', i === 1, FULL));
+    this.finePasses = [0, 1].map((i) => make(fine[i] as Tap[], FINE_SPACING[i] as number, 'fine', i === 1, FULL, FINE_GATE[i]));
     this.fieldPasses = [0, 1, 2].map((i) => make(taps[i] as Tap[], BLUR_SPACING[i] as number, 'field', i === 2, QUARTER));
     this.nearPasses = [0, 1, 2].map((i) => make(taps[i] as Tap[], BLUR_SPACING[i] as number, 'near', i === 2, HALF));
   }
