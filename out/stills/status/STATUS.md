@@ -1,8 +1,8 @@
-# Status 123
+# Status 124
 
-2026-11-26 16:57 UTC. Phase 5, the whole film.
+2026-11-26 17:22 UTC. Phase 5, the whole film.
 
-- `01-s123-join.jpg`: The join from the lake into the rise, merged: frames 9541, 9546 and 9560 from top to bottom, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `02-s123-strike.jpg`: The Spine's first strike, merged: frame 7015 above and frame 7020 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `03-s123-open.jpg`: The opening, merged: frame 0 above and frame 120 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `04-s123-beasts.jpg`: The Marsh's beasts, version 1, merged: the key frame 6424 above and frame 6503 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `01-s124-kite.jpg`: The tether-kites, version 1, merged: frame 7015, before above and after below (draft tier, preview size, rendered on a render machine)
+- `02-s124-cloud.jpg`: The Spine's cloud sea, version 2, not merged: frame 7015, before above and after below (rendered by its builder in 1080p; the kites in it are the old ones)
+- `03-s124-plant.jpg`: The Marsh's plants, version 1, merged: frame 5618 above and the approved picture below (rendered by its builder)
+- `04-s124-bore.jpg`: The Ribs' bore, version 2, merged: the approved picture, frame 2401 before and frame 2401 after, from top to bottom (rendered by its builder)
