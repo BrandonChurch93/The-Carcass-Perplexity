@@ -32,14 +32,16 @@ export function create(ctx: Context): Piece {
     // One on a bank has sunk into it to the ankle and further: the mud is soft.
     const sunkIn = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.12) * b.k);
     // In shallows it goes in no deeper than the ankle.
-    const stand = sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1);
+    // STAGED for the lens of the wallowers: the great one has trodden itself a wallow and stands in it to the shins, its belly close over the mud.
+    const hero = herd.length === 0;
+    const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.24 * b.k : 0);
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.6 * b.k;
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.55 : 0.6) * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
     const near = herd.length < 3;
-    const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.6 * b.k, stand + 1.2 * b.k) * rng.range(0.9, 1.1);
+    const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0 }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: near ? 1.3 : 1 }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,

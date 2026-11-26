@@ -244,7 +244,7 @@ void main() {
   float kk = clamp(uK, 0.3, 1.0);
   ragged *= kk;
   float wet = 1.0 - smoothstep(uWet - 0.1 * kk + ragged, uWet + 0.06 * kk + ragged, vWorld.y);
-  float damp = 1.0 - smoothstep(uWet - 0.15 * kk + ragged, uWet + (0.5 + 0.3 * lane) * kk + ragged, vWorld.y);
+  float damp = 1.0 - smoothstep(uWet - 0.15 * kk + ragged, uWet + (0.34 + 0.26 * lane) * kk + ragged, vWorld.y);
   dust *= 1.0 - damp;
   albedo = mix(albedo, vec3(0.26, 0.225, 0.195) * (0.7 + 0.5 * grain), 0.5 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
@@ -279,11 +279,11 @@ void main() {
   // The claws: old ivory, grooved, stained at the root.
   vec3 ivory = vec3(0.15, 0.115, 0.08) * (0.7 + 0.5 * height) * mix(vec3(1.0), tone, 0.35);
   albedo = mix(albedo, mix(ivory, albedo * 1.3, 0.5 * side), horn);
-  albedo = mix(albedo, albedo * vec3(0.9, 0.6, 0.48), damp * (1.0 - wet) * (1.0 - uMudded));
+  albedo = mix(albedo, albedo * vec3(0.95, 0.68, 0.56), damp * (1.0 - wet) * (1.0 - uMudded));
   // The stuck one's head is the wettest of it: it has been under and come up again.
   float headWet = uMudded * smoothstep(0.5, 0.82, vRest.x / uPic.x) * (1.0 - horn);
   albedo = mix(albedo, vec3(0.15, 0.09, 0.07) * (0.5 + 0.8 * grain), 0.55 * headWet);
-  vec3 soaked = mix(albedo * vec3(0.62, 0.3, 0.23) + vec3(0.008, 0.002, 0.001), albedo * 0.55, uMudded);
+  vec3 soaked = mix(albedo * vec3(0.8, 0.43, 0.33) + vec3(0.008, 0.002, 0.001), albedo * 0.55, uMudded);
   albedo = mix(albedo, soaked, wet);
   albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3), 0.6 * thread * damp * (1.0 - wet));
   // Thick mud on whatever stands in it.
@@ -422,6 +422,8 @@ export interface Look {
   /** With tendrils: how far they hang, 1 straight down as a comb (the default), 0.3 a fan that rakes forward. And how thick, 1 as the comb. */
   hang?: number;
   thick?: number;
+  /** How long the hand of thick feelers is, 1 as built. */
+  reach?: number;
   /** How far the hide picture lifts the skin, metres. 0 for one seen from afar. */
   relief?: number;
 }
@@ -524,7 +526,7 @@ export class Beast {
       out.set(l.out, i * 3);
       const mid = 1 - Math.abs(i / (lip.length - 1) - 0.5) * 0.6;
       if (many) shape.set([rng.range(0.38, 1.05) * mid, (0.014 + 0.01 * rng.next()) * (look.thick ?? 1), rng.next(), rng.next()], i * 4);
-      else shape.set([rng.range(0.56, 0.86) * mid * (1 - 0.25 * b.young), (0.042 + 0.016 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
+      else shape.set([rng.range(0.56, 0.86) * mid * (1 - 0.25 * b.young) * (look.reach ?? 1), (0.042 + 0.016 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
     });
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.index = tube().index;

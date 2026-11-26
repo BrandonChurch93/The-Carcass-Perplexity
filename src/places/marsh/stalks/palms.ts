@@ -37,18 +37,19 @@ void main() {
     p = c + vRight * (position.x * 1.56 * D);
     vUv = vec4(position.x * 0.23, t * h / (10.2 * D), 0.0, t);
   } else {
+    // The fan at its top is the photograph of one: long wet straps that stand and arch over, a third as wide as the stalk is tall.
     float open = plumeOpen(kind, aKind.y, seed);
-    float k = clamp(h / (13.0 * D), 0.9, 1.7) * (kind > 2.5 ? 0.7 : 1.0) * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * (piece > 1.5 ? 0.8 : 1.0);
+    float wide = clamp(0.42 * h, 0.55, 1.5) * (0.8 + 0.5 * fract(seed * 57.3)) * (kind > 2.5 ? 0.75 : 1.0) * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * (piece > 1.5 ? 0.82 : 1.0);
     float flip = (fract(seed * 23.7) < 0.5 ? -1.0 : 1.0) * (piece > 1.5 ? -1.0 : 1.0);
-    vec2 q = vec2(mix(0.10, 0.94, position.x + 0.5), mix(0.50, 1.0, position.y));
-    vec3 upv = normalize(T + vec3(0.0, 0.6, 0.0));
+    vec2 q = position.xy;
+    vec3 upv = normalize(T + vec3(0.0, 0.2, 0.0));
     vRight = normalize(cross(upv, toCam));
-    float reach = clamp((q.y - 0.535) / 0.4, 0.0, 1.0);
-    reach *= reach;
-    p = c + vRight * ((q.x - 0.42) / 0.147 * D * k * flip * mix(0.3, 1.0, open)) + upv * ((q.y - 0.535) * 10.2 * D * k * mix(0.55, 1.0, open));
-    p += wind * (0.3 * D * k * reach * gust) + vRight * (0.12 * D * k * reach * sin(uSeconds * 2.6 + seed * 40.0 + q.x * 9.0));
+    float reach = q.y * q.y;
+    p = c + vRight * (q.x * wide * flip * mix(0.26, 1.0, open)) + upv * (q.y * 0.74 * wide * mix(0.8, 1.0, open) - 0.05 * wide);
+    p += wind * (0.07 * wide * reach * gust) + vRight * (0.03 * wide * reach * sin(uSeconds * 2.6 + seed * 40.0 + q.x * 9.0));
     p += toCam * (piece > 1.5 ? -0.03 : 0.012);
-    vUv = vec4(q, piece, flip);
+    // The middle of the photographed fan: fewer straps, each of them wide enough to be seen across the marsh.
+    vUv = vec4(0.5 + q.x * 0.9, 0.115 + q.y * 0.855, piece, flip);
   }
   vWorld = p;
   vKind = vec4(kind, h, D, seed);
@@ -71,8 +72,11 @@ const CUT = /* glsl */ `
   // Every read of a picture comes before any discard: the software renderer leaves the slopes of a dropped pixel's neighbours undefined.
   vec4 t = texture2D(tStalk, uv);
   float cover = texture2D(tStalkA, uv).r;
+  vec4 fan = texture2D(tLock, vUv.xy, -1.2);
   float away = smoothstep(6.0, 60.0, distance(cameraPosition, vWorld));
-  if (torn || cover < mix(0.5, 0.2, away)) discard;
+  float strand = max(fan.r, max(fan.g, fan.b));
+  // Far off a strap is thinner than a pixel: it is kept at a lower light, or the fan would thin to nothing.
+  if (vUv.z > 0.5 ? strand < mix(0.09, 0.05, away) : (torn || cover < mix(0.5, 0.2, away))) discard;
 `;
 
 export const PALM_FRAGMENT = /* glsl */ `
@@ -83,6 +87,7 @@ varying vec4 vUv;
 varying vec4 vKind;
 uniform sampler2D tStalk;
 uniform sampler2D tStalkA;
+uniform sampler2D tLock;
 ${RIG_GLSL}
 void main() {
 ${CUT}
@@ -94,7 +99,7 @@ ${CUT}
   // The hue is the photograph's; its light is taken out of it at an edge, where the black round it would draw an outline.
   vec3 hue = t.rgb / max(luma, 0.03);
   float red = smoothstep(0.25, 0.6, (t.r - t.g) / max(t.r, 0.03));
-  vec3 pale = mix(vec3(1.0), hue, 0.6) * (0.03 + 0.3 * smoothstep(0.02, 0.7, luma));
+  vec3 pale = mix(vec3(1.0), hue, 0.55) * (0.04 + 0.4 * smoothstep(0.02, 0.7, luma));
   vec3 crimson = mix(vec3(dot(hue, vec3(0.3, 0.5, 0.2))), hue, 0.9) * (0.03 + 0.2 * smoothstep(0.02, 0.5, luma));
   vec3 albedo = mix(pale, crimson, red);
   vec3 n;
@@ -109,9 +114,15 @@ ${CUT}
     albedo = mix(albedo, albedo * vec3(0.5, 0.2, 0.16) + vec3(0.03, 0.005, 0.004), wet);
     rough = mix(0.97, 0.5, wet);
   } else {
-    float out_ = (uv.x - 0.5) * 1.6 * vUv.w;
+    vec3 fhue = fan.rgb / max(strand, 0.02);
+    red = 1.0;
+    albedo = mix(vec3(dot(fhue, vec3(0.3, 0.5, 0.2))), fhue, 0.92) * (0.025 + 0.12 * mix(smoothstep(0.02, 0.5, strand), 0.8, away));
+    float up_ = (vUv.y - 0.115) / 0.855;
+    float out_ = (vUv.x - 0.5) * 1.6 * vUv.w;
     n = normalize(vRight * out_ + vec3(0.0, 0.5, 0.0) + v * 0.7);
-    occ = mix(0.5, 1.0, smoothstep(0.52, 0.8, uv.y)) * (vUv.z > 1.5 ? 0.7 : 1.0);
+    // Dark at the heart of it, where the straps stand close.
+    occ = mix(0.4, 1.0, smoothstep(0.05, 0.6, up_)) * (vUv.z > 1.5 ? 0.75 : 1.0);
+    rough = mix(0.9, 0.45, smoothstep(0.55, 0.9, min(fan.g, fan.b)));
   }
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   c += red * albedo * skyIrradiance(-n) / 3.14159 * 0.3 * occ * skyOpen(vWorld);
@@ -126,6 +137,7 @@ varying vec4 vUv;
 varying vec4 vKind;
 uniform sampler2D tStalk;
 uniform sampler2D tStalkA;
+uniform sampler2D tLock;
 void main() {
 ${CUT}
   gl_FragColor = vec4(0.0);

@@ -77,14 +77,16 @@ void main() {
     return;
   }
   // A ring on the brine: a crest that shows more of the sky and the trough inside it that shows less.
-  float w = vB.z;
-  float wob = 0.03 * (vnoise(vec2(atan(vAt.y, vAt.x) * 2.5, vB.w * 9.0)) - 0.5);
-  float crest = exp(-pow((r - 0.86 + wob) / w, 2.0));
-  float trough = exp(-pow((r - 0.86 + wob + 2.1 * w) / (1.3 * w), 2.0));
+  // The brine is thick as oil: its rings are broad and low, a swell and not a line, and uneven round their run.
+  float w = min(vB.z * 2.3, 0.085);
+  float round_ = vnoise(vec2(atan(vAt.y, vAt.x) * 1.6, vB.w * 9.0));
+  float wob = 0.07 * (round_ - 0.5);
+  float crest = exp(-pow((r - 0.8 + wob) / w, 2.0));
+  float trough = exp(-pow((r - 0.8 + wob + 2.0 * w) / (1.3 * w), 2.0));
   float skim = pow(1.0 - clamp(v.y, 0.0, 1.0), 3.0);
   vec3 sky = skyRadiance(normalize(vec3(-v.x, abs(v.y) + 0.25, -v.z))) * skyOpen(vWorld);
-  vec3 c = mix(vec3(0.04, 0.013, 0.011), sky * (0.14 + 0.3 * skim), crest / max(crest + trough, 1e-4));
-  float a = clamp(vB.y, 0.0, 1.0) * clamp(crest * 0.62 + trough * 0.22, 0.0, 1.0) * (1.0 - uSolo);
+  vec3 c = mix(vec3(0.04, 0.013, 0.011), sky * (0.05 + 0.13 * skim), crest / max(crest + trough, 1e-4));
+  float a = clamp(vB.y, 0.0, 1.0) * clamp(crest * 0.34 + trough * 0.3, 0.0, 1.0) * (0.45 + 0.75 * round_) * (1.0 - smoothstep(0.9, 1.0, r)) * (1.0 - uSolo);
   if (a < 0.004) discard;
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
 }`;

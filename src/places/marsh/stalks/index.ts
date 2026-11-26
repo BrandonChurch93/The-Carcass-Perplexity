@@ -91,7 +91,7 @@ export function create(ctx: Context): Piece {
         s.kind = 2;
         s.h *= clump.range(0.3, 0.7);
       }
-      if (clump.next() < 0.3) forks.push({ ...s, x: s.x + clump.range(-0.08, 0.08), z: s.z + clump.range(-0.08, 0.08), h: s.h * clump.range(0.45, 0.8), lean: s.lean + clump.range(0.25, 0.5), yaw: s.yaw + clump.range(1.3, 5), kind: clump.next() < 0.3 ? 2 : s.kind, size: s.size * 0.85, phase: clump.range(0, 6.28) });
+      if (clump.next() < 0.14) forks.push({ ...s, x: s.x + clump.range(-0.08, 0.08), z: s.z + clump.range(-0.08, 0.08), h: s.h * clump.range(0.45, 0.8), lean: s.lean + clump.range(0.25, 0.5), yaw: s.yaw + clump.range(1.3, 5), kind: clump.next() < 0.3 ? 2 : s.kind, size: s.size * 0.85, phase: clump.range(0, 6.28) });
     });
     stalks.push(...forks);
   }
@@ -136,7 +136,8 @@ export function create(ctx: Context): Piece {
     rest.forEach((s, i) => {
       const tall = s.h * (0.45 + 0.75 * rng.next());
       base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
-      axis.set([Math.cos(s.yaw), -Math.sin(s.yaw), s.lean * 1.5 + rng.range(0, 0.2), (s.h > 2.6 ? 0.09 : 0.07) * s.size * rng.range(0.9, 1.25)], i * 4);
+      // Slender: a stalk away from the lens of the colony is a wrist thick and three metres tall, as the approved pictures have them.
+      axis.set([Math.cos(s.yaw), -Math.sin(s.yaw), s.lean * 1.5 + rng.range(0, 0.2), (s.h > 2.6 ? 0.09 : 0.07) * s.size * rng.range(0.5, 0.72)], i * 4);
       kind.set([s.kind, s.phase, s.size, rng.next()], i * 4);
     });
     const palm = new THREE.BufferGeometry();
@@ -164,6 +165,7 @@ export function create(ctx: Context): Piece {
         uSeconds,
         tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) },
         tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) },
+        tLock: { value: ctx.assets.texture('mat/lock.jpg', { kind: 'colour', repeat: false }) },
       },
       vertexShader: PALM_VERTEX,
       fragmentShader: PALM_FRAGMENT,
