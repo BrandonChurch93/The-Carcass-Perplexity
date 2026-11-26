@@ -207,13 +207,26 @@ void main() {
   vec3 plate = mix(texture2D(tPlate, pq).rgb, texture2D(tPlate, pq, 5.0).rgb * 0.38, hang);
   vec4 a = texture2D(tRock, p.xz / 37.0);
   float near = smoothstep(26.0, 5.0, dist);
-  vec3 m0 = texture2D(tMat, p.xz / 1.5 + 0.57).rgb;
-  vec3 mn = texture2D(tMatN, p.xz / 1.5 + 0.57).rgb;
+  // Past where the grain shows it is not read at all (the wide frame is mostly such ground): the picture's mean stands for it.
+  vec2 dpx = dFdx(p.xz);
+  vec2 dpy = dFdy(p.xz);
+  vec3 m0 = uMean;
+  vec3 mn = vec3(0.5);
+  if (near > 0.0) {
+    m0 = textureGrad(tMat, p.xz / 1.5 + 0.57, dpx / 1.5, dpy / 1.5).rgb;
+    mn = textureGrad(tMatN, p.xz / 1.5 + 0.57, dpx / 1.5, dpy / 1.5).rgb;
+  }
   // And nearer still its pits and grit: the same grain a quarter the size, turned, so that the ground at the lens is not one even weave.
   vec2 pg = vec2(0.8 * p.x - 0.6 * p.z, 0.6 * p.x + 0.8 * p.z) / 0.41;
   float close = smoothstep(9.0, 1.5, dist);
-  vec3 m1 = texture2D(tMat, pg).rgb;
-  vec3 mf = texture2D(tMatN, pg).rgb;
+  vec3 m1 = uMean;
+  vec3 mf = vec3(0.5);
+  if (close > 0.0) {
+    vec2 gx = vec2(0.8 * dpx.x - 0.6 * dpx.y, 0.6 * dpx.x + 0.8 * dpx.y) / 0.41;
+    vec2 gy = vec2(0.8 * dpy.x - 0.6 * dpy.y, 0.6 * dpy.x + 0.8 * dpy.y) / 0.41;
+    m1 = textureGrad(tMat, pg, gx, gy).rgb;
+    mf = textureGrad(tMatN, pg, gx, gy).rgb;
+  }
   float pit = smoothstep(0.75, 0.4, dot(m1 / uMean, vec3(0.3333))) * smoothstep(0.45, 0.7, a.g + 0.3 * (m0.g / uMean.g - 1.0));
   float tone = mix(1.0, clamp(1.0 + 1.5 * (dot(m0 / uMean, vec3(0.3333)) - 1.0), 0.45, 1.7), near) * mix(1.0, clamp(dot(m1 / uMean, vec3(0.3333)), 0.5, 1.5) * (1.0 - 0.55 * pit), close);
   // Broad stains: the rock is not one colour for more than a few metres.
@@ -241,7 +254,12 @@ void main() {
   // The steep edge of a plate is broken rock: darker, rustier than its top.
   // It takes the grain of wet rock laid square on its own face (not the plate's picture pulled down it), in level bands as the beds lie.
   float wx = n.x * n.x / max(n.x * n.x + n.z * n.z, 1e-4);
-  vec3 side = mix(texture2D(tMat, vec2(p.x, p.y * 1.6) / 1.1).rgb, texture2D(tMat, vec2(p.z, p.y * 1.6) / 1.1).rgb, wx);
+  vec3 side = uMean;
+  if (steep > 0.0) {
+    vec3 ex = dFdx(p);
+    vec3 ey = dFdy(p);
+    side = mix(textureGrad(tMat, vec2(p.x, p.y * 1.6) / 1.1, vec2(ex.x, ex.y * 1.6) / 1.1, vec2(ey.x, ey.y * 1.6) / 1.1).rgb, textureGrad(tMat, vec2(p.z, p.y * 1.6) / 1.1, vec2(ex.z, ex.y * 1.6) / 1.1, vec2(ey.z, ey.y * 1.6) / 1.1).rgb, wx);
+  }
   vec3 face = texture2D(tPlate, pq, 4.0).rgb * vec3(0.62, 0.58, 0.52) * clamp(dot(side / uMean, vec3(0.3333)), 0.4, 1.7);
   rock = mix(rock, face, steep * (1.0 - stone));
   // A dark green-brown weed along the tide line and in the wet foot of the edges near it.
@@ -253,7 +271,8 @@ void main() {
   float stain = exp(-dot(p.xz - vec2(-27.3, 22.6), p.xz - vec2(-27.3, 22.6)) / 3.5) * smoothstep(0.25, 0.7, a.r + 0.5 * (1.0 - mn.b));
   albedo = mix(albedo, albedo * vec3(0.42, 0.26, 0.22), 0.8 * stain);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
-  float under = smoothstep(-0.03, -0.22, over);
+  // From the water's edge: an ankle's depth of bed with the rock's own sheen on it was a beach of wet sand along both banks.
+  float under = smoothstep(0.01, -0.05, over);
   albedo = mix(albedo, vec3(0.15, 0.27, 0.25) * clamp(tone * mark, 0.5, 1.4), 0.85 * under);
   // The pool is a hand deep over slime: dark, green, and a mirror.
   albedo = mix(albedo, vec3(0.035, 0.045, 0.03), 0.85 * film);
@@ -262,6 +281,8 @@ void main() {
   float occ = mix(0.4, 1.0, smoothstep(0.2, 0.52, field.b)) * vOcc;
   // The sun: every edge and every stone throws its own shadow down the shelf, baked in the map at its own fineness.
   float lit = mix(1.0, smoothstep(-0.07, -0.006, field.r - field.g), inNear) * sunSeen(land, p.y);
+  // The shade of the drifting fog banks dims the sun and its glare; it is not the land's shadow and does not move the shadow's height.
+  float cloud = sunCloud(p.xz);
   land.b = p.y + mix(0.35, 0.03, lit);
   vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ);
   // A broken edge in its own shade is lit by the wet rock and the water at its foot.
@@ -283,9 +304,9 @@ void main() {
   colour += skyRadiance(back) * (min(fres, mix(0.3, 1.0, film)) * sheen * gloss * (0.75 + 0.25 * film) * 1.1 * occ * land.g);
   // The low sun in the wet sheen: a broad gold glare down the shelf toward it, which is what the backlight of this place is made of.
   float glare = pow(max(dot(reflect(-v, normalize(n + vec3(0.0, 1.5, 0.0))), uSunDir), 0.0), 28.0);
-  colour += uSunColour * vec3(1.0, 0.8, 0.55) * (glare * sheen * (0.35 + 0.65 * gloss) * (0.12 + 0.88 * fres) * mix(0.3, 1.0, lit) * occ * 1.7);
+  colour += uSunColour * vec3(1.0, 0.8, 0.55) * (glare * sheen * (0.35 + 0.65 * gloss) * (0.12 + 0.88 * fres) * mix(0.3, 1.0, lit) * cloud * occ * 1.7);
   float tight = sunLobe(normalize(n + vec3(mn.r - 0.5, 0.0, mn.g - 0.5) * 0.5), v, 0.2) * fres * lit;
-  colour += uSunColour * (min(tight, 8.0) * damp * (1.0 - under) * smoothstep(0.4, 0.8, mn.b) * occ * 0.5);
+  colour += uSunColour * (min(tight, 8.0) * cloud * damp * (1.0 - under) * smoothstep(0.4, 0.8, mn.b) * occ * 0.5);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 

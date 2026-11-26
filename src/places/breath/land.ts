@@ -95,6 +95,10 @@ export function lipHeight(bearing: number, r: number): number {
   return north + south + west;
 }
 
+/** How far into the channel the last place asked of smoothGround lies: 0 on the shelf, 1 on the bed. Read at once after the call, by ground(). */
+let bankOut = 0;
+/** And how far from its bank: 0 at the bank, 1 nine metres and more out on the shelf. */
+let downOut = 1;
 /** The smooth ground under the plates: the shelf, the lips of the shaft, the flats, the tide channel with its shallows. */
 export function smoothGround(x: number, z: number): number {
   const xc = channelX(z);
@@ -120,10 +124,12 @@ export function smoothGround(x: number, z: number): number {
   const inside = half - 2 + ragged - Math.abs(x - xc);
   // The bank is a broken edge of plate, not a beach: the rock stands to the water and the bed begins a stride inside it.
   const bank = smooth(inside / lerp(2.4, 1.6, south) + 1);
+  bankOut = bank;
   const bedLevel = SEA - 0.06 - 0.16 * smooth(inside / 4) - 0.5 * smooth((inside - 9) / 6);
   // The shelf comes down to the tide: within a few metres of the bank its plates lie a hand or two over the water, not a wall's height.
   const down = smooth(-inside / 9);
   base = lerp(Math.min(base, SEA + 0.16 + 0.1 * broad), base, down);
+  downOut = down;
   let h = lerp(base, bedLevel, bank);
   return h;
 }
@@ -194,6 +200,8 @@ function slabOf(i: number, j: number): Slab {
   const x = (i + 0.12 + 0.76 * hash2(i * 3 + 1, j * 3 + 7)) * SLAB;
   const z = (j + 0.12 + 0.76 * hash2(i * 3 + 5, j * 3 + 2)) * SLAB;
   const base = smoothGround(x, z);
+  // By the channel a plate lies level: leaning with the bank it was a beach of smooth rock sloping into the water.
+  const lean = 0.7 * downOut * (1 - bankOut);
   const gx = (smoothGround(x + 1.5, z) - smoothGround(x - 1.5, z)) / 3;
   const gz = (smoothGround(x, z + 1.5) - smoothGround(x, z - 1.5)) / 3;
   // It lies at one of the levels, near the smooth ground under its middle; it leans most of the way with that ground and a degree or two
@@ -202,8 +210,8 @@ function slabOf(i: number, j: number): Slab {
     x,
     z,
     top: levelOf(base + 0.5 * (fbm2(x / 30 + 1.3, z / 30 + 4.1, 2) - 0.5) + 40 * RUN) - 40 * RUN + 0.1 + 0.07 * (hash2(i * 7 + 3, j * 5 + 11) - 0.5),
-    tx: 0.7 * Math.max(-0.25, Math.min(0.25, gx)) + 0.05 * (hash2(i * 5 + 9, j * 7 + 4) - 0.5),
-    tz: 0.7 * Math.max(-0.25, Math.min(0.25, gz)) + 0.05 * (hash2(i * 11 + 2, j * 3 + 13) - 0.5),
+    tx: lean * Math.max(-0.25, Math.min(0.25, gx)) + 0.05 * (hash2(i * 5 + 9, j * 7 + 4) - 0.5),
+    tz: lean * Math.max(-0.25, Math.min(0.25, gz)) + 0.05 * (hash2(i * 11 + 2, j * 3 + 13) - 0.5),
   };
   slabs.set(key, slab);
   return slab;
@@ -252,7 +260,7 @@ const BAR: [number, number] = [-50.2, -22.4];
 export function lumps(x: number, z: number): number {
   const dx = x - BAR[0];
   const dz = z - BAR[1];
-  const within = Math.exp(-(dx * dx * 0.35 + dz * dz) / 5.5);
+  const within = Math.exp(-(dx * dx * 0.12 + dz * dz) / 5.5);
   if (within < 0.03) return 0;
   const ci = Math.floor(x / 0.95);
   const cj = Math.floor(z / 0.95);
@@ -261,10 +269,10 @@ export function lumps(x: number, z: number): number {
     for (let b = -1; b <= 1; b++) {
       const i = ci + a;
       const j = cj + b;
-      if (hash2(i * 13 + 5, j * 7 + 1) < 0.22) continue;
+      if (hash2(i * 13 + 5, j * 7 + 1) < 0.42) continue;
       const rx = (i + 0.15 + 0.7 * hash2(i * 5 + 2, j * 3 + 9)) * 0.95;
       const rz = (j + 0.15 + 0.7 * hash2(i * 3 + 8, j * 11 + 4)) * 0.95;
-      const radius = 0.38 + 0.4 * hash2(i * 7 + 6, j * 5 + 3);
+      const radius = 0.3 + 0.75 * hash2(i * 7 + 6, j * 5 + 3) ** 2;
       const tall = 0.2 + 0.32 * hash2(i * 9 + 1, j * 13 + 7);
       const d = Math.hypot(x - rx, (z - rz) * (0.8 + 0.5 * hash2(i + 17, j + 5))) / radius + 0.25 * (noise2(x / 0.33 + 5.5, z / 0.33 + 1.5) - 0.5);
       if (d < 1) top = Math.max(top, tall * (1 - d * d) ** 0.6);
@@ -301,12 +309,15 @@ const padLevel = (): number => (padHeight ??= Math.max(SEA + 0.45, smoothGround(
  *  the mesh that draws them and the ground is the same land worn smooth. */
 export function ground(x: number, z: number): number {
   const base = smoothGround(x, z);
+  const bank = bankOut;
   const edge = Math.min(x - FINE.minX, FINE.minX + FINE.size - x, z - FINE.minZ, FINE.minZ + FINE.size - z);
   const fine = smooth((edge - 2) / 9);
   if (fine <= 0) return base;
   // The plates stand out of the tide and die away at its edge; the picture's own cracks are shallow grooves in their tops.
   // (The bed of the channel is never higher than 6 cm under the tide: it stays as it was laid, for the feet that stand on it.)
-  const shore = smooth((base - (SEA - 0.04)) / 0.08);
+  // The bank is the broken edge of whichever plates stand at the water: a plate whose middle lies on the bed is under the tide, the next one
+  // stands a hand over it, and the water's edge runs along the break between them. No beach of smooth ground lies between the two.
+  const shore = Math.min(1 - smooth((bank - 0.75) / 0.2), smooth((base - (SEA - 0.3)) / 0.1));
   const relief = lerp(base, lerp(base, bedded(x, z), shore) + RELIEF * (Math.max(plateAt(x, z), POOL) - 0.5), fine);
   const pad = padAt(x, z);
   if (pad <= 0) return relief + lumps(x, z);

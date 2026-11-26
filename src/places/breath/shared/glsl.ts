@@ -107,8 +107,17 @@ float contactAt(vec3 p) {
 float sunSeen(vec4 land, float y) {
   return smoothstep(-0.35, -0.03, y - land.b);
 }
+// The sun comes through banks of fog that drift on the wind: their shade crosses the land as long soft bars, drawn out along the sun's
+// bearing as any shadow of this low sun is, a hundred metres and fifty metres apart, moving west at a walk and a run. 0.5 to 1.
+float sunCloud(vec2 xz) {
+  vec2 s = normalize(uSunDir.xz);
+  float along = dot(xz, s);
+  float across = xz.x * s.y - xz.y * s.x;
+  float c = 0.5 + 0.27 * sin(across / 17.0 + along / 260.0 + 0.47 * uTime) + 0.2 * sin(across / 6.9 - along / 95.0 + 1.7 + 0.81 * uTime) + 0.1 * sin(across / 3.1 + along / 41.0 + 4.0 + 1.3 * uTime);
+  return mix(0.5, 1.0, smoothstep(0.22, 0.78, c));
+}
 float sunAt(vec3 p) {
-  return sunSeen(landAt(p.xz), p.y);
+  return sunSeen(landAt(p.xz), p.y) * sunCloud(p.xz);
 }
 
 // How much of the sky a point sees: the land's own horizon, opening with height above the ground, and whatever stands over it.
@@ -133,7 +142,7 @@ vec3 rigShadeOn(vec4 land, vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, flo
   float above = p.y - land.r;
   float contact = contactDrawn(p) * smoothstep(5.0, 0.0, above);
   float open = mix(land.g, 1.0, clamp(above / 30.0, 0.0, 1.0)) * (1.0 - 0.85 * contact) * occ;
-  float sun = sunSeen(land, p.y) * (1.0 - contact) * (0.4 + 0.6 * occ);
+  float sun = sunSeen(land, p.y) * sunCloud(p.xz) * (1.0 - contact) * (0.4 + 0.6 * occ);
   float nl = max(dot(n, uSunDir), 0.0);
   vec3 sky = skyIrradiance(n);
   vec3 e = sky * open + uSunColour * (3.14159 * nl * sun);
