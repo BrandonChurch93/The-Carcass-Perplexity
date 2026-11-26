@@ -1,7 +1,7 @@
-2026-11-26 03:45 UTC
-work at da67f73 on agent/marsh-life-2
-version 2: four keys at uhd draft, downscaled
-look-1.jpg = out/work/t/v2-marsh-3.jpg
-look-2.jpg = out/work/t/v2-marsh-4.jpg
-look-3.jpg = out/work/t/v2-marsh-2.jpg
-look-4.jpg = out/work/t/v2-marsh-0.jpg
+2026-11-26 04:09 UTC
+work at d80fed5 on agent/marsh-life-2
+toward v3: 4K draft of marsh-3, 4, 2, 0 at d80fed5 before the ground's 1118a11
+look-1.jpg = out/work/t/v3-marsh-3.jpg
+look-2.jpg = out/work/t/v3-marsh-4.jpg
+look-3.jpg = out/work/t/v3-marsh-2.jpg
+look-4.jpg = out/work/t/v3-marsh-0.jpg
