@@ -3,18 +3,6 @@
 // holes are raised out of the blade in the vertex shader, and the light falls on its slopes turned into the world by the ring's own
 // frame (aAlong, aAcross): no screen derivative, so nothing hatches at a distance. The bone tile only breaks it up close.
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { openingText } from '../shared/opening';
-
-// The beds of a blade at a place: which course, how far up it (0 at its foot, 1 under the ledge that ends it), and how strong the ledge is there.
-const BEDDING = /* glsl */ `
-vec3 bedding(vec3 p) {
-  float b = (p.y + 0.16 * p.x - 0.11 * p.z + 14.0 * sin(p.x * 0.004 + p.z * 0.006)) / 8.5;
-  float c = b + 0.3 * sin(b * 2.1) + 0.12 * sin(b * 5.3 + 1.0);
-  float k = floor(c);
-  float along = (p.x + p.z) * 0.021 + 0.013 * p.y;
-  float strong = 0.5 + 0.5 * sin(k * 12.9898 + along + 1.3 * sin(along * 2.7 + k));
-  return vec3(k, c - k, smoothstep(0.25, 0.6, strong));
-}`;
 
 export const FIN_VERTEX = /* glsl */ `
 varying vec3 vWorld;
@@ -24,32 +12,23 @@ varying vec3 vNb;
 varying vec2 vLay;
 varying vec3 vAlong;
 varying vec3 vAcross;
-varying vec3 vBase;
+varying vec3 vCrag;
 attribute vec4 aBlade;
 attribute vec3 aNb;
 attribute vec3 aAlong;
 attribute vec3 aAcross;
-uniform sampler2D tWideN;
-uniform float uLift;
-uniform float uTide;
-${BEDDING}
+attribute vec3 aCrag;
 void main() {
+  // The broken rock is in the mesh itself (blade.ts): nothing is raised here, so the normal is the rock's own.
   vLay = uv;
-  float proud = textureLod(tWideN, vec2(uv.x, 0.215 + 0.78 * uv.y), 2.0).z - 0.5;
-  // The blade is bedded across: courses some eight metres thick, each standing a little over the one under it and stepping back at its
-  // top, so that every course ends in a ledge. A ledge runs a way and dies out; no flute runs the length of the blade.
-  vec3 bed = bedding(position);
-  float lifted = proud * uLift * 0.55 + 1.7 * bed.z * (bed.y - 0.5);
-  // Under the weed line the stone never stands out of its own weed: there it is only cut back.
-  lifted = mix(min(lifted, 0.0), lifted, smoothstep(uTide + 6.0, uTide + 24.0, position.y));
-  vBase = position;
-  vec4 w = modelMatrix * vec4(position + normal * lifted, 1.0);
+  vec4 w = modelMatrix * vec4(position, 1.0);
   vWorld = w.xyz;
   vNormal = normalize(mat3(modelMatrix) * normal);
   vBlade = aBlade;
   vNb = aNb;
   vAlong = aAlong;
   vAcross = aAcross;
+  vCrag = aCrag;
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -62,7 +41,7 @@ varying vec3 vNb;
 varying vec2 vLay;
 varying vec3 vAlong;
 varying vec3 vAcross;
-varying vec3 vBase;
+varying vec3 vCrag;
 ${RIG_GLSL}
 ${NOISE_GLSL}
 uniform sampler2D tRock;
@@ -76,15 +55,18 @@ uniform float uGrain;
 uniform float uLift;
 uniform float uRock;
 uniform float uCap;
-${BEDDING}
-// The level of a picture for a pixel's foot, by its long side: a little soft at a slant, and it never crawls.
-float levelOf(sampler2D t, vec2 dx, vec2 dy) {
-  vec2 size = vec2(textureSize(t, 0));
-  return log2(max(max(length(dx * size), length(dy * size)), 1e-6));
+// The cliff's sheet on the upright plane a face looks along, to and fro up the blade so that it has no seam: (colour, height) and its slopes.
+// The sheet's foot is weed and its top a ledge: both are left out.
+void cliff(vec2 at, float size, float lod, out vec3 colour, out vec3 slopes) {
+  float up = at.y / (0.78 * size);
+  float fro = abs(fract(up * 0.5) * 2.0 - 1.0);
+  vec2 uc = vec2(at.x / size, 0.14 + 0.78 * fro);
+  colour = textureLod(tColony, uc, lod).rgb;
+  vec3 nh = textureLod(tColonyN, uc, lod).rgb;
+  float mirror = 1.0 - 2.0 * mod(floor(uc.x), 2.0);
+  float froSign = fract(up * 0.5) < 0.5 ? -1.0 : 1.0;
+  slopes = vec3((nh.xy - 0.5) * vec2(mirror, froSign), nh.z);
 }
-// How much of the rock's own marks the blades carry: faint, as asked. The wide view keeps its fine detail from the near ground, which the
-// camera's shutter no longer smears (film.maxSmearShare): 0.96 of the approved picture's at the final tier, against a floor of 0.75.
-const float BLADE_MARKS = 0.55;
 void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -95,36 +77,53 @@ void main() {
   // The metres one pixel covers here: every picture laid by the world takes its level from it.
   float foot = max(length(dFdx(vWorld)), length(dFdy(vWorld)));
   float macro = vnoise(vWorld.xz * 0.006 + vWorld.y * 0.004) * 0.6 + vnoise(vBlade.yx * vec2(0.06, 0.027) + 5.0) * 0.4;
+  float crack = vCrag.x;
+  float tone = vCrag.y;
+  float deep = vCrag.z;
 
-  // The rock itself is laid by the world, never along the blade: on the upright plane the face looks along (z, height where it looks
-  // along x; x, height where it looks along z) and on the level plane where it looks up or down. Its beds dip and wander, and the
-  // picture goes to and fro up the blade so that it has no seam.
+  // The rock is laid by the world, never along the blade: on the upright plane the face looks along. Twice: beds of a house's height,
+  // and the same sheet again a third the size, turned and shifted, for the breaks a man could climb.
   float h2 = n0.x * n0.x + n0.z * n0.z;
-  float facing = smoothstep(0.42, 0.58, n0.x * n0.x / (h2 + 1e-5));
-  float level0 = smoothstep(0.62, 0.76, abs(n0.y));
-  float bedY = vWorld.y + 0.16 * vWorld.x - 0.11 * vWorld.z + 22.0 * (macro - 0.5);
-  float up = bedY / (0.78 * uRock);
-  float fro = abs(fract(up * 0.5) * 2.0 - 1.0);
-  float vq = 0.14 + 0.78 * fro;
-  vec2 ucA = vec2(vWorld.z / uRock, vq);
-  vec2 ucB = vec2(vWorld.x / uRock + 0.5, vq);
-  vec2 ucT = vWorld.xz / uRock * vec2(1.0, 0.7) + vec2(0.0, 0.2);
-  float lr = log2(max(foot * 1254.0 / uRock, 1e-6));
-  vec3 rockA = vec3(0.3);
-  vec3 rockB = vec3(0.3);
-  vec3 rockT = vec3(0.3);
-  if (facing > 0.001 && level0 < 0.999) rockA = textureLod(tColony, ucA, lr).rgb;
-  if (facing < 0.999 && level0 < 0.999) rockB = textureLod(tColony, ucB, lr).rgb;
-  if (level0 > 0.001) rockT = textureLod(tColony, ucT, lr).rgb;
-  vec3 stone = mix(mix(rockB, rockA, facing), rockT, level0);
-  // The same rock again, four times the size and turned: no repeat of the first is seen from far off.
-  vec2 uf = (facing > 0.5 ? vWorld.zy : vWorld.xy) * mat2(0.83, 0.56, -0.56, 0.83) / 37.0 + 0.31;
-  float far2 = 0.55 + 0.9 * vnoise(uf);
-  vec2 uc = facing > 0.5 ? ucA : ucB;
-  vec3 nhR = textureLod(tColonyN, uc, lr).rgb;
-  float mirror = (1.0 - 2.0 * mod(floor(uc.x), 2.0));
-  float froSign = fract(up * 0.5) < 0.5 ? -1.0 : 1.0;
+  float facing = step(0.5, n0.x * n0.x / (h2 + 1e-5));
+  float level0 = smoothstep(0.62, 0.8, abs(n0.y));
+  vec2 plane = facing > 0.5 ? vWorld.zy : vWorld.xy + vec2(47.0, 0.0);
   vec3 level1 = facing > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+  // The beds of the blade lie along its spine, as a tusk's do: the wide sheet is laid by the blade's own metres (along, across on a broad
+  // face, through on a thin edge), its beds along the spine, and goes to and fro across so that it has no seam.
+  float thin = step(0.5, edge);
+  float bedY = mix(vBlade.y, vBlade.z + 31.0, thin) + 14.0 * (macro - 0.5);
+  vec2 wide = vec2(vBlade.x, bedY);
+  // The near cliff is a drum, not a blade: its beds lie level, by the world.
+  if (uCap > 0.5) wide = vec2(plane.x, vWorld.y + 0.16 * vWorld.x - 0.11 * vWorld.z + 14.0 * (macro - 0.5));
+  float lr = log2(max(foot * 1254.0 / uRock, 1e-6));
+  vec3 stone;
+  vec3 slopes;
+  cliff(wide, uRock, lr, stone, slopes);
+  vec3 alongW = normalize(vAlong);
+  vec3 acrossW = thin > 0.5 ? normalize(cross(vAlong, vAcross)) : normalize(vAcross);
+  if (uCap > 0.5) {
+    alongW = level1;
+    acrossW = vec3(0.0, 1.0, 0.0);
+  }
+  float fineSize = uRock * 0.29;
+  vec2 fine = plane * mat2(0.96, 0.28, -0.28, 0.96) + vec2(11.0, 0.0);
+  float lf = log2(max(foot * 1254.0 / fineSize, 1e-6));
+  vec3 stoneF = vec3(0.3);
+  vec3 slopesF = vec3(0.0, 0.0, 0.5);
+  float nearF = 1.0 - smoothstep(2.5, 4.5, lf);
+  if (nearF > 0.001) cliff(fine, fineSize, lf, stoneF, slopesF);
+  // A face that looks up or down has the sheet lying on it.
+  if (level0 > 0.001) {
+    vec2 ut = vWorld.xz / (uRock * 0.5) * vec2(1.0, 0.7) + vec2(0.0, 0.2);
+    stone = mix(stone, textureLod(tColony, ut, lr + 1.0).rgb, level0);
+  }
+  float lumW = dot(stone, vec3(0.333));
+  float lumF = dot(stoneF, vec3(0.333));
+  // The fine sheet carries its marks into the wide one: its darks are cracks, its lights the faces between.
+  stone *= mix(1.0, clamp(lumF / 0.2, 0.5, 1.6), 0.5 * nearF);
+  // The same rock again, four times the size and turned: no repeat of the first is seen from far off.
+  vec2 uf = plane * mat2(0.83, 0.56, -0.56, 0.83) / 37.0 + 0.31;
+  float far2 = 0.55 + 0.9 * vnoise(uf);
 
   // The bone tile, small, only where the lens is near enough to see it: on the broad face by (across, along), on the edge by (through, along).
   vec2 a1 = vBlade.yx / uGrain;
@@ -137,56 +136,62 @@ void main() {
   if (near > 0.001 && edge > 0.001) dB = textureLod(tRock, b1, la).rgb;
   float fineLum = mix(1.0, dot(mix(dA, dB, edge), vec3(0.333)) / 0.265, near);
 
-  // The slopes of the sheet, turned into the world: across the face is aAcross, along the spine aAlong. And the rock's own, on its plane.
-  vec2 gr = (nhR.xy - 0.5) * vec2(mirror, froSign) * (1.0 - level0);
-  // The ledge at the top of a course looks up; the foot of the next one is in its shade.
-  vec3 bed = bedding(vBase);
-  float shelf = bed.z * smoothstep(1.0, 0.9, bed.y) * smoothstep(0.72, 0.9, bed.y);
-  float shade = bed.z * smoothstep(0.16, 0.0, bed.y);
-  vec3 lean = -(level1 * gr.x + vec3(0.0, 1.0, 0.0) * gr.y) * 2.0 + vec3(0.0, 0.9, 0.0) * shelf;
+  // The slopes of both sheets turn the rock's own normal on the plane it is laid by.
+  vec2 gr = slopesF.xy * 1.6 * nearF * (1.0 - level0);
+  vec3 lean = -(level1 * gr.x + vec3(0.0, 1.0, 0.0) * gr.y) - (alongW * slopes.x + acrossW * slopes.y) * 2.0;
   lean -= n0 * dot(lean, n0);
   vec3 n = normalize(n0 + lean);
+  // A ledge is where the broken rock looks up; under an overhang it looks down.
+  float shelf = smoothstep(0.3, 0.7, n0.y);
+  float under = smoothstep(-0.15, -0.6, n0.y);
 
-  // Pale bone-stone: the rock's own marks, grey-ivory (its rust kept only where lichen grows), under the broad lights and darks of the sheet.
-  // The rock's marks are faint on the blades: the pale and the light carry them.
-  stone = max(mix(vec3(0.19), stone, BLADE_MARKS - 0.6 * uCap), vec3(0.0));
-  float stoneLum = dot(stone, vec3(0.333));
+  // Pale bone-stone: weathered limestone, grey-ivory, with the sheet's own marks at their full strength. Each plate has its own tone.
+  float stoneLum = lumW * mix(1.0, clamp(lumF / 0.2, 0.5, 1.6), 0.5 * nearF);
   float sunny = 0.5 + 0.5 * dot(n0, uSunDir);
   float field = vnoise(vWorld.xz * 0.019 + vWorld.y * 0.027 + 9.0) * 0.6 + vnoise(vWorld.xz * 0.11 + vWorld.y * 0.09) * 0.4;
-  float lichen = smoothstep(0.68, 0.86, field + 0.4 * n0.y + 0.2 * (sunny - 0.5) + 0.22 * shelf + 0.04 * uCap);
-  vec3 albedo = mix(vec3(stoneLum) * vec3(0.95, 1.0, 1.06), stone * vec3(1.15, 1.0, 0.85), 0.1 + 0.9 * lichen);
-  albedo *= mix(1.75, 2.5, uCap) * vec3(0.97, 1.0, 1.04) * mix(1.0, clamp(far2, 0.4, 1.8), 0.45) * fineLum * (0.82 + 0.36 * macro);
+  // Lichen: rust and ochre where a face sees the sky and the sun, in patches, thick on the ledges; the sheet's own rust shows through it.
+  float rusty = smoothstep(0.03, 0.14, stone.r - stone.b);
+  float lichen = smoothstep(0.7, 0.8, field + 0.35 * n0.y + 0.3 * (sunny - 0.5) + 0.25 * shelf + 0.12 * rusty + 0.04 * uCap - 0.3 * deep);
+  vec3 albedo = mix(vec3(mix(0.2, stoneLum, 0.62)) * vec3(1.03, 1.0, 0.95), stone * vec3(1.12, 1.0, 0.86), 0.08 + 0.12 * rusty);
+  albedo *= mix(3.1, 3.3, uCap) * mix(1.0, clamp(far2, 0.4, 1.8), 0.25) * fineLum * (0.82 + 0.36 * macro) * (1.0 + 0.2 * tone);
+  albedo = mix(albedo, vec3(0.62, 0.29, 0.045) * clamp(stoneLum / 0.22, 0.5, 1.6), 0.8 * lichen);
   // Over hundreds of metres the stone changes: cold grey here, warm ivory there.
-  albedo *= mix(vec3(0.94, 0.98, 1.04), vec3(1.07, 1.0, 0.9), smoothstep(0.3, 0.7, macro));
+  albedo *= mix(vec3(0.97, 0.99, 1.02), vec3(1.07, 1.0, 0.9), smoothstep(0.3, 0.7, macro));
   // The near cliff's cap: pale layered stone, cream more than grey, its lichen in patches.
   if (uCap > 0.0) {
-    vec3 cream = vec3(0.36, 0.34, 0.3) * clamp(stoneLum / 0.19, 0.55, 1.5) * fineLum * (0.85 + 0.3 * macro);
-    cream = mix(cream, vec3(0.36, 0.17, 0.035) * clamp(stoneLum / 0.19, 0.6, 1.4), 0.5 * smoothstep(0.6, 0.7, field + 0.2 * shelf));
+    vec3 cream = vec3(0.48, 0.455, 0.405) * clamp(stoneLum / 0.19, 0.45, 1.6) * fineLum * (0.85 + 0.3 * macro) * (1.0 + 0.2 * tone);
+    cream = mix(cream, vec3(0.42, 0.2, 0.04) * clamp(stoneLum / 0.19, 0.6, 1.4), 0.6 * smoothstep(0.56, 0.7, field + 0.25 * shelf));
     albedo = mix(albedo, cream, 0.85 * uCap);
   }
-  // White lies on the ledges and runs a little way down from them.
-  float white = max(0.75 * shelf, 0.4 * bed.z * smoothstep(0.55, 0.9, bed.y) * smoothstep(0.9, 1.2, far2)) * smoothstep(0.45, 0.62, field);
-  albedo = mix(albedo, vec3(0.62, 0.61, 0.58) * (0.7 + 0.5 * stoneLum / 0.19), white * (1.0 - 0.7 * lichen));
+  // What runs down a face runs by the level way across it and the height.
+  vec2 fall = vec2(mix(vBlade.w, vBlade.z, edge), vWorld.y);
+  // White lies on the ledges where things roost, and runs down from them in streaks.
+  float runs = smoothstep(0.55, 0.8, vnoise(vec2(fall.x * 0.55, fall.y * 0.035 + 3.0)) * 0.65 + 0.35 * vnoise(vec2(fall.x * 1.9, fall.y * 0.11)));
+  float white = max(0.7 * shelf, 0.55 * runs * (1.0 - under)) * smoothstep(0.4, 0.62, field + 0.1 * tone) * (1.0 - 0.6 * crack);
+  albedo = mix(albedo, vec3(0.66, 0.65, 0.62) * (0.7 + 0.5 * stoneLum / 0.19), white * (1.0 - 0.75 * lichen));
+  // A crack between two plates is black, and what lies deep among its neighbours is stained.
+  albedo *= mix(1.0, 0.8, crack * crack) * mix(1.0, 0.85, deep * deep);
 
   float y = vWorld.y;
   float tide = uTide - 4.0 + 7.0 * (far2 - 1.0) + 3.0 * (field - 0.5);
   float weed = smoothstep(tide + 0.5, tide - 0.5, y);
   float band = smoothstep(tide + 5.0, tide + 0.5, y);
-  float damp = smoothstep(tide + 40.0 + 30.0 * (macro - 0.5), tide + 2.0, y);
-  // What runs down a face runs by the level way across it and the height.
-  vec2 fall = vec2(mix(vBlade.w, vBlade.z, edge), y);
+  // The foot of a blade is wet and dark to well over a house's height, its upper line ragged and following the beds.
+  float wetTop = tide + 46.0 + 50.0 * (macro - 0.5) + 16.0 * (far2 - 1.0);
+  float damp = max(smoothstep(tide + 40.0 + 30.0 * (macro - 0.5), tide + 2.0, y), 1.3 * smoothstep(wetTop + 5.0, wetTop - 5.0, y));
   // Seep: dark wet bands that follow the beds, a few to a blade, each broken along its length.
   float seep = smoothstep(0.6, 0.8, vnoise(vec2(bedY * 0.021, 7.0 + fall.x * 0.004)) * 0.7 + 0.3 * macro) * smoothstep(0.35, 0.6, field);
   albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.62), 0.7 * seep);
-  albedo *= mix(1.0, 0.5, damp * (1.0 - 0.85 * uCap)) * mix(1.0, 0.14, band);
+  albedo *= mix(1.0, 0.42, min(damp, 1.3) * (1.0 - 0.85 * uCap)) * mix(1.0, 0.14, band);
   // The near cliff is one wet dark mass well above its weed: only its rim is pale.
   float wetWall = uCap * smoothstep(tide + 24.0 + 9.0 * (field - 0.5), tide + 13.0 + 9.0 * (field - 0.5), y);
   albedo = mix(albedo, vec3(0.036, 0.033, 0.026) * (0.5 + stoneLum / 0.19), 0.9 * wetWall);
   if (weed > 0.001) albedo = mix(albedo, texture2D(tWeed, fall / 7.0).rgb * 0.9, weed);
   float rough = mix(mix(0.92, 0.45, max(weed, band)), 0.72, wetWall * (1.0 - max(weed, band)));
-  // The grooves and holes of the sheet hold shade; what hangs over sees the wet floor and not the sky.
-  float occ = (0.8 + 0.2 * smoothstep(0.55, 1.0, fineLum)) * mix(1.0, 0.45, weed) * (1.0 - 0.5 * shade);
-  occ *= 0.6 + 0.4 * smoothstep(-0.55, 0.25, n0.y);
+  // The hollows of both sheets, the cracks and the gone plates hold shade; what hangs over sees the wet floor and not the sky.
+  float hollow = smoothstep(0.2, 0.55, slopes.z) * mix(1.0, smoothstep(0.15, 0.5, slopesF.z), 0.7 * nearF);
+  float occ = (0.78 + 0.22 * hollow) * (0.88 + 0.12 * smoothstep(0.55, 1.0, fineLum)) * mix(1.0, 0.45, weed);
+  occ *= (1.0 - 0.4 * crack * crack) * (1.0 - 0.4 * deep * deep) * (0.6 + 0.4 * smoothstep(-0.55, 0.25, n0.y));
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Against the light the edge of the stone burns.
   float rim = 1.0 - max(dot(n, v), 0.0);
@@ -257,78 +262,3 @@ void main() {
   lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
-
-/**
- * A blade in the approach, seen from a mile out in the cloud's shade: what breaks its face at that distance is drawn in. Slabs have come away
- * and left paler stone, water has run down from the ledges and stained it, and each blade has its own (uOpenStone.y).
- * It goes with the distance (nothing of it within 300 m of the lens, where the stone's own sheet is seen) and is gone before the approach ends.
- */
-/**
- * The approach: from a mile out the blade is not ruled in even courses. Most of its beds lie nearly flush and a few stand out as ledges
- * (uOpenStone.x, 1 as the film opens and nothing before the approach ends; uOpenStone.y, the blade's own number).
- */
-export const FIN_OPENING_VERTEX = openingText(FIN_VERTEX, [
-  ['uniform sampler2D tWideN;', 'uniform sampler2D tWideN;\nuniform vec2 uOpenStone;'],
-  [
-    '  float lifted = proud * uLift * 0.55 + 1.7 * bed.z * (bed.y - 0.5);',
-    `  float ledgePick = fract(sin(bed.x * 78.233 + uOpenStone.y * 41.0) * 43758.5453);
-  float ledge = mix(1.0, 0.05 + 2.1 * smoothstep(0.64, 0.9, ledgePick), uOpenStone.x);
-  float lifted = proud * uLift * 0.55 + 1.7 * bed.z * ledge * (bed.y - 0.5);`,
-  ],
-]);
-
-export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
-  ['uniform float uCap;', 'uniform float uCap;\nuniform vec2 uOpenStone;\nuniform vec2 uOpenLight;'],
-  [
-    '  vec3 bed = bedding(vBase);',
-    `  vec3 bed = bedding(vBase);
-  float openK = uOpenStone.x * smoothstep(300.0, 850.0, length(cameraPosition - vWorld));
-  if (openK > 0.0) {
-    // From a mile out the courses are not ruled up the whole blade: a stretch of ledges here, bare face there, each blade its own.
-    float kept = smoothstep(0.46, 0.7, vnoise(vec2(vWorld.y * 0.015 + uOpenStone.y * 3.0, mix(vBlade.w, vBlade.z, edge) * 0.012 + uOpenStone.y)));
-    // And not every course is a ledge: most are seams, a few stand out, at no even step up the blade.
-    float pick = fract(sin(bed.x * 78.233 + uOpenStone.y * 41.0) * 43758.5453);
-    bed.z *= mix(1.0, kept * (0.08 + 0.92 * smoothstep(0.55, 0.8, pick)), openK);
-  }`,
-  ],
-  // The first blade's pale cap is a thing of the near view. From a mile out it is rock like the rest, with the rock's own marks.
-  ['BLADE_MARKS - 0.6 * uCap)', 'BLADE_MARKS - 0.6 * uCap * (1.0 - openK) - 0.07 * uCap * openK)'],
-  ['albedo = mix(albedo, cream, 0.85 * uCap);', 'albedo = mix(albedo, cream, 0.85 * uCap * (1.0 - 0.9 * openK));'],
-  [
-    '  float y = vWorld.y;',
-    `  if (openK > 0.0) {
-    float sd = uOpenStone.y;
-    vec2 face = vec2(mix(vBlade.w, vBlade.z, edge), vWorld.y);
-    float slab = vnoise(face * vec2(0.012, 0.019) + sd * 3.7) * 0.62 + vnoise(face * vec2(0.04, 0.075) + sd * 9.1) * 0.38;
-    float cutAt = 0.5 + 0.09 * fract(sd * 7.31);
-    // A slab's edge is broken, never a drawn line: the finer field carries it in and out.
-    float broken = vnoise(face * vec2(0.19, 0.23) + sd) - 0.5;
-    float plate = smoothstep(cutAt - 0.05, cutAt + 0.07, slab + 0.11 * broken);
-    float run = vnoise(vec2(face.x * 0.06 + sd * 5.0, face.y * 0.0045)) * 0.7 + vnoise(vec2(face.x * 0.19, face.y * 0.012 + sd)) * 0.3;
-    float stain = smoothstep(0.5, 0.8, run + 0.2 * broken) * smoothstep(0.35, 0.6, vnoise(face * 0.006 + sd * 2.0));
-    albedo *= mix(1.0, mix(0.88, 1.2, plate), openK);
-    albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.65), 0.36 * openK * stain * (1.0 - 0.5 * plate));
-    // The wet foot: dark far above the weed where the swell throws its water, higher on the weather side.
-    albedo *= mix(1.0, 0.34, openK * smoothstep(125.0 + 70.0 * (slab - 0.5), 20.0, vWorld.y));
-    // The near blade stands dark against the break in the cloud.
-    albedo *= mix(1.0, 0.72, openK * uCap);
-  }
-  float y = vWorld.y;`,
-  ],
-  [
-    '  gl_FragColor = vec4(rigOut(lit), 1.0);',
-    `  if (openK > 0.0) {
-    // The break in the cloud stands behind the blades: the flank that turns from the lens toward it takes its light along the edge.
-    // (By the blade's own form, not by its grooves: the light lies along the edge as one line.)
-    float edge0 = 1.0 - max(dot(n0, v), 0.0);
-    float edge4 = edge0 * edge0 * edge0 * edge0;
-    // Only the edge on the break's side of the blade, as the lens sees them stand.
-    vec3 aside = uSkyBreak - v * dot(uSkyBreak, v);
-    float toBreak = smoothstep(-0.1, 0.6, dot(n0, normalize(aside)));
-    // As the film opens the near blade is a dark slate shape against the break (uOpenLight.x), and the break's light comes up along its edge (uOpenLight.y).
-    lit *= mix(1.0, mix(0.5, 0.14, uCap), uOpenLight.x);
-    lit += uSunColour * (0.24 * openK * (1.0 + 3.0 * uOpenLight.y) * edge4 * edge4 * edge0 * toBreak);
-  }
-  gl_FragColor = vec4(rigOut(lit), 1.0);`,
-  ],
-]);

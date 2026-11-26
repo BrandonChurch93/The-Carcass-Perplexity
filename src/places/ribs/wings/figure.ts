@@ -178,6 +178,10 @@ void main() {
   vLook = aLook;
   vBlur = aMove.xy;
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
+#ifdef SHADE
+  // One that is told to lay no shade (its shade given below zero): its shade is not drawn.
+  if (aLook.w < 0.0) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+#endif
 }`;
 
 const FRAGMENT = /* glsl */ `
@@ -228,7 +232,8 @@ void main() {
   vec3 n = normalize(face - vAcross * (hx * 0.9 + gx * 1.3) - vUp * (hy * 0.9 + gy * 1.3));
   // Where the picture is amber it is the skin of a sail, and light comes through it.
   float skin = smoothstep(0.4, 0.62, (pic.r - pic.b) / max(pic.r, 0.05));
-  vec3 albedo = pow(pic, vec3(0.92)) * vLook.z;
+  // Pale under the low key, as the wader's body is: the hide is lifted toward white and only the sails keep their amber.
+  vec3 albedo = mix(min(pow(pic, vec3(0.8)) * 1.2, vec3(0.94)), pow(pic, vec3(0.92)), skin) * vLook.z;
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.02, 0.98, 0.93), uGrey * (1.0 - skin * (1.0 - uGrey)));
   // Wet where it stands in the pool.
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.4, vWorld.y);
@@ -237,7 +242,8 @@ void main() {
   vec4 land = landAt(vWorld.xz);
   float soft = texture2D(tCover, uv, 3.5).r;
 #if defined(SHADE)
-  float dim = 0.7 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
+  // Light: it falls on whatever stands nearer than its plane, a rock before a hidden one too, and a heavy one there is a black blot.
+  float dim = 0.4 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(vec3(0.0)) * dim, dim);
 #elif defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
@@ -251,6 +257,8 @@ void main() {
 #else
   vec3 col = rigShade(vWorld, n, v, albedo, mix(0.6, 0.25, wet), occ);
   float sun = sunAt(vWorld, land);
+  // Its shade side takes the sky and the water's bounce.
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * (1.0 - 0.5 * skin);
   // Far off the air between takes the amber out of the lit skin.
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
   col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
@@ -259,7 +267,7 @@ void main() {
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04) * uSunColour * rim * pow(max(dot(-v, uSunDir), 0.0), 2.0) * 0.16 * sun;
   // One that stands in the shade of the rock over it.
-  col *= 1.0 - 0.6 * vLook.w;
+  col *= 1.0 - 0.6 * (vLook.w < 0.0 ? -vLook.w - 1.0 : vLook.w);
   col *= 1.0 - 0.3 * far;
 #ifdef SOFT
   float a = smoothstep(0.1, 0.6, cover) * (1.0 - uSolo);

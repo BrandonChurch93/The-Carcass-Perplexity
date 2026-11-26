@@ -39,8 +39,10 @@ uniform vec3 uSkyGround;
 uniform vec3 uSunDir;
 uniform vec3 uSunColour;
 uniform vec3 uHaze;
+uniform vec3 uBounce;
 uniform vec3 uSkyBreak;
 uniform sampler2D tSky;
+uniform sampler2D tSkyFine;
 uniform vec4 uSkyTurn;`;
 
 export const RIG_GLSL = /* glsl */ `
@@ -94,13 +96,27 @@ float bedFine(vec2 xz) {
 
 // How open the cloud sheet is over q, a place on the ground as the sun would strike it: under 0.42 closed, over 0.62 open.
 // The broken sheet of the mask, the one wide break that travels over the strait with the wind, and the small one that stands on the first blade as the film opens.
-float cloudCover(vec2 q) {
+float cloudBreaks(vec2 q) {
   vec2 d = q - uCloudBreak.xy;
   vec2 e = q - uCloudBreak2.xy;
-  return texture2D(tCloudShade, q * uCloudShade.z - uCloudShade.xy).r * 0.62 + uCloudBreak.w * exp(-dot(d, d) * uCloudBreak.z) + uCloudBreak2.w * exp(-dot(e, e) * uCloudBreak2.z);
+  // Each break is long the sun's way (the wide one two and a half times its width, the small one four): a low sun through a round hole
+  // would light a blade's foot or its head, never both.
+  float sun2 = 1.0 - uSunDir.y * uSunDir.y;
+  float along = dot(d, uSunDir.xz);
+  float along2 = dot(e, uSunDir.xz);
+  return uCloudBreak.w * exp(-(dot(d, d) - 0.84 * along * along / sun2) * uCloudBreak.z) + uCloudBreak2.w * exp(-(dot(e, e) - 0.94 * along2 * along2 / sun2) * uCloudBreak2.z);
+}
+float cloudCover(vec2 q) {
+  return texture2D(tCloudShade, q * uCloudShade.z - uCloudShade.xy).r * 0.62 + cloudBreaks(q);
 }
 
 // The moving shadow of the broken cloud at a point: 1 in a gap, uCloudShade.w under cloud. One sheet for the whole place, drifting with the wind.
+// The same inside a march of the air, where the places read jump from pixel to pixel: the level of the picture is named.
+float cloudShadeMarched(vec3 p) {
+  vec2 q = p.xz - uSunDir.xz * (p.y / uSunDir.y);
+  float c = textureLod(tCloudShade, q * uCloudShade.z - uCloudShade.xy, 1.5).r * 0.62 + cloudBreaks(q);
+  return mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, c));
+}
 float cloudShade(vec3 p) {
   // The sun is not overhead: the shadow of a cloud 1500 m up lies where the ray to the sun leaves the cloud sheet.
   float c = cloudCover(p.xz - uSunDir.xz * (p.y / uSunDir.y));
@@ -108,17 +124,28 @@ float cloudShade(vec3 p) {
 }
 
 // The sky with its cloud, toward d: what the dome draws, and what a mirror (a pool, the sea) should show. from is where it is seen from.
-// One picture of a storm sky laid round the dome and mirrored behind, turning slowly with the wind while its lumps work; two texture reads.
+// One picture of a storm sky laid round the dome and mirrored behind, turning slowly with the wind while its lumps work; three texture reads.
 // For light on a rough surface skyRadiance is enough.
 vec3 skyCloud(vec3 from, vec3 d) {
   float az = atan(d.x, -d.z);
   float el = asin(clamp(d.y, 0.0, 1.0));
-  vec2 uv = vec2(0.5 + (az - uSkyTurn.x) / 2.62, 1.0 - exp(-el / 0.3));
+  vec2 uv = vec2(0.5 + (az - uSkyTurn.x) / 2.62, 1.0 - exp(-el / 0.82));
   vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
   vec3 c = texture2D(tSky, uv + 0.022 * work).rgb * uSkyTurn.w;
-  // The break burns: where the picture is bright the cloud is lit through, far above the grey of the bases.
-  // The bases are heavy: what is dark in the picture is darker here, what is bright burns.
-  c *= 0.5 + 0.5 * smoothstep(0.08, 0.3, dot(c, vec3(0.333))) + 2.4 * smoothstep(0.3, 0.85, dot(c, vec3(0.333)));
+  // The picture has a sixth of a texel for a pixel of the widest lens: its own lumps, read four times smaller and against their own
+  // local mean, are laid into it as the fine structure a cloud has at every size.
+  vec2 fineAt = uv * 4.0 + vec2(0.31, 0.17) + 0.05 * work;
+  c *= mix(1.0, clamp(texture2D(tSkyFine, fineAt).r * 1.992, 0.6, 1.22), 0.7);
+  // The storm's cloud is slate: the brown of the picture's bases is taken out.
+  float grey = dot(c, vec3(0.3, 0.5, 0.2));
+  c = mix(c, grey * vec3(0.87, 0.98, 1.13), 0.55);
+  // The break is silver, not gold: what burns in the picture is cooled to the white of light through thin cloud; a little of its warmth stays.
+  float burning = dot(c, vec3(0.333));
+  c = mix(c, burning * vec3(0.93, 0.99, 1.08), 0.82 * smoothstep(0.12, 0.7, burning));
+  // The bases are heavy and the break burns: what is dark in the picture is darker here and what is bright is brighter, by one smooth
+  // curve, so that the break keeps the soft edge it has in the picture.
+  burning = dot(c, vec3(0.333));
+  c *= 0.55 + 1.9 * burning / (burning + 1.6);
   // Straight overhead the picture runs out: the slate of the cloud's base.
   c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
   // Toward the horizon the cloud is seen through more and more air.
@@ -129,10 +156,12 @@ vec3 skyCloud(vec3 from, vec3 d) {
 }
 
 // How much of the sun reaches p through the blades and the land (baked once) and the cloud (drifting).
-float sunAt(vec3 p, vec4 land) {
+float sunBaked(vec3 p, vec4 land) {
   float baked = mix(land.b, land.a, clamp((p.y - land.r) / 60.0, 0.0, 1.0));
-  baked = mix(baked, 1.0, clamp((p.y - land.r - 60.0) / 200.0, 0.0, 1.0));
-  return baked * cloudShade(p);
+  return mix(baked, 1.0, clamp((p.y - land.r - 60.0) / 200.0, 0.0, 1.0));
+}
+float sunAt(vec3 p, vec4 land) {
+  return sunBaked(p, land) * cloudShade(p);
 }
 
 // How much of the sky a point sees: the land's own horizon (the blades stand in it), opening with height above the ground, and whatever stands over it.
@@ -149,9 +178,13 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   vec4 land = landAt(p.xz + n.xz * 14.0);
   float above = p.y - land.r;
   float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above)) * occ;
-  float sun = sunAt(p, land) * occ;
+  float gap = cloudShade(p);
+  float sun = sunBaked(p, land) * gap * occ;
   float nl = max(dot(n, uSunDir), 0.0);
-  vec3 e = skyIrradiance(n) * open + uSunColour * (nl * sun);
+  // The lit flats throw the low sun back up: a face that looks down or stands upright over sunlit ground takes it warm, and the more of
+  // it the higher it stands over its own shadow. This is what keeps a lee face from going to the sky's cold grey alone.
+  vec3 bounce = uSunColour * uBounce * (uSunDir.y * (gap - uCloudShade.w) * (0.5 - 0.5 * n.y) * (0.3 + 0.7 * clamp(above / 90.0, 0.0, 1.0)));
+  vec3 e = (skyIrradiance(n) + bounce) * open + uSunColour * (nl * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
