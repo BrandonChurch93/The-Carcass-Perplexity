@@ -11,6 +11,7 @@ import { CARCASS, INSIDE_FROM, STRIKE_FOV, UNIT, strikeStand, strikeTip } from '
 import { bakeNoise } from './noise';
 import { seaUniforms } from './sea';
 import { createSky, skyPictures } from './sky';
+import { createStorm } from './storm';
 import { VOLUME_FRAGMENT } from './volume';
 
 export const PARTS: readonly string[] = ['sky', 'air', 'cloud-sea', 'cloud', 'spindrift'];
@@ -69,7 +70,8 @@ export function create(ctx: Context): Piece {
   const pictures = skyPictures(ctx);
   const skyStage = (pictures.uSkyStage as THREE.IUniform<THREE.Vector4>).value;
   const plate = (pictures.uPlate as THREE.IUniform<THREE.Vector4>).value;
-  const sky = createSky(ctx, noise, pictures);
+  const storm = createStorm(ctx, noise);
+  const sky = createSky(ctx, noise, { ...pictures, ...storm.uniforms });
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('cloud-sea', 'built');
@@ -162,12 +164,16 @@ export function create(ctx: Context): Piece {
       // Staged by shot: by the dead one (spine-03) the lens is opened for the dusk (the rig's sky light is opened by the same there).
       skyStage.y = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
     },
+    // The storm's body is marched for this sample's lens before the scene is drawn. The strike's long lens sees its picture instead.
+    beforeSample: (renderer, camera) => storm.render(renderer, camera, plate.w === 0),
+    resize: (width, height) => storm.resize(width, height),
     solo: (part) => {
       const only = (name: string): number => (part === null || !part.startsWith('spine/') || !PARTS.includes(part.slice(6)) || part === 'spine/sky' || part === `spine/${name}` ? 1 : 0);
       show.set(only('air'), only('cloud-sea'), only('cloud'), only('spindrift'));
     },
     dispose: () => {
       sky.dispose();
+      storm.dispose();
       volume.dispose();
       noise.dispose();
       sea.dispose();
