@@ -1,4 +1,7 @@
-2026-11-26 03:05 UTC
-work at c82d7b1 on agent/marsh-ground-2
-hb8: marsh-0 uhd (sky picture, salt rims, far specks gone), far crop, marsh-1
-look-1.jpg = out/work/a23.jpg
+2026-11-26 03:31 UTC
+work at f661856 on agent/marsh-ground-2
+version 2: brine by depth with far sheen, mud between crust, sky picture, level thin crust
+look-1.jpg = out/work/v2-marsh-0.jpg
+look-2.jpg = out/work/v2-marsh-1.jpg
+look-3.jpg = out/work/v2-marsh-3.jpg
+look-4.jpg = out/work/v2-marsh-4.jpg
