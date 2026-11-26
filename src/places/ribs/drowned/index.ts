@@ -16,7 +16,7 @@ const SIZE = 1.45;
 const STRANDS = 220;
 const CRABS = 16;
 /** The hung body as a plate: metres from the hook to the end of the tuft, how far the relief stands out, and its turn from square to the lens. */
-const PLATE = { high: 11.5, deep: 0.6, turn: 0.55 };
+const PLATE = { high: 10.5, deep: 0.6, turn: 0.25 };
 
 // The body is drawn in the plane of the weed's face: u along the face away from the establishing camera, d down it, o out of it.
 type Point = [number, number, number];
@@ -417,12 +417,12 @@ void main() {
   float hy = texture2D(tRelief, vUv + vec2(0.0, e.y), 1.5).r - texture2D(tRelief, vUv - vec2(0.0, e.y), 1.5).r;
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 face = normalize(uProud);
-  vec3 n = normalize(face - (normalize(uAxis) * hx - normalize(uDrop) * hy) * 1.3);
+  vec3 n = normalize(face - (normalize(uAxis) * hx - normalize(uDrop) * hy) * 0.8);
   if (dot(face, v) < 0.0) n = reflect(n, face) * -1.0;
   // Sodden: darker than the dry picture, and it shines where it is wet. The hollows between the ribs see little sky.
   vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))), pic, 0.7) * 1.3;
-  float occ = mix(0.35, 1.0, smoothstep(0.1, 0.7, h));
-  vec3 col = rigShade(vWorld, n, v, albedo, 0.4, occ);
+  float occ = mix(0.55, 1.0, smoothstep(0.1, 0.7, h));
+  vec3 col = rigShade(vWorld, n, v, albedo, 0.28, occ);
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (h < 0.045) discard;
 }`;
@@ -736,7 +736,7 @@ export function create(ctx: Context): Piece {
   const plate = new THREE.Mesh(plateGeometry, plateMaterial);
   plate.frustumCulled = false;
 
-  ctx.scene.add(ctx.parts.built('drowned', plate, strands, crabMesh, runs), strands, crabMesh, runs);
+  ctx.scene.add(ctx.parts.built('drowned', plate, strands, crabMesh), strands, crabMesh);
 
   return {
     dispose: () => {

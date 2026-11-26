@@ -43,6 +43,7 @@ varying vec3 vAcross;
 varying vec3 vFace;
 varying vec2 vSeed;
 varying float vUnder;
+varying float vPale;
 ${PUPPET_GLSL}
 vec2 turned(vec2 p, float a) {
   float c = cos(a);
@@ -107,6 +108,7 @@ void main() {
   vAcross = vec3(f.x, 0.0, f.y);
   vFace = vec3(-f.y, 0.0, f.x) * sgn;
   vSeed = vec2(aNeck.w, size);
+  vPale = aBody.z;
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
 }`;
 
@@ -123,6 +125,7 @@ varying vec3 vAcross;
 varying vec3 vFace;
 varying vec2 vSeed;
 varying float vUnder;
+varying float vPale;
 ${PUPPET_GLSL}
 const float PI = 3.14159265;
 void main() {
@@ -144,14 +147,22 @@ void main() {
   cover *= mine;
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 face = dot(vFace, v) < 0.0 ? -vFace : vFace;
-  vec3 n = normalize(face + (vAcross * -gx + vec3(0.0, 1.0, 0.0) * -gy) * 1.6);
+  // And the lie of the hide inside the outline, from the picture's own light and dark read soft.
+  float hx = texture2D(tSide, uv + vec2(e.x, 0.0), 2.0).g - texture2D(tSide, uv - vec2(e.x, 0.0), 2.0).g;
+  float hy = texture2D(tSide, uv + vec2(0.0, e.y), 2.0).g - texture2D(tSide, uv - vec2(0.0, e.y), 2.0).g;
+  vec3 n = normalize(face + (vAcross * -(gx * 1.6 + hx * 2.2) + vec3(0.0, 1.0, 0.0) * -(gy * 1.6 + hy * 2.2)));
   // The picture is lit soft from above; take that out to a hide of its own tone and light it here.
-  vec3 albedo = pow(pic, vec3(1.08)) * mix(0.82, 1.04, vSeed.x) * 1.12;
+  // Leather, grey brown: the picture's cream is its studio light, not its hide.
+  vec3 albedo = pow(pic, vec3(1.25)) * mix(0.78, 1.0, vSeed.x);
+  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.0, 0.9, 0.8), 0.45);
+  // The colony's sit hunched under their sails, dark with the wet.
+  albedo *= 1.0 - 0.45 * vPale;
   float leg = step(0.5, vPart) * step(vPart, 2.5);
   float wet = (1.0 - smoothstep(uPool + 0.03, uPool + 0.35, vWorld.y)) * leg;
   albedo *= 1.0 - 0.5 * wet;
   float rough = mix(0.55, 0.22, wet);
-  float occ = mix(0.6, 1.0, smoothstep(-0.6, 0.4, n.y));
+  // Darker underneath: the belly and the under side of the folded sails are turned from the sky.
+  float occ = mix(0.45, 1.0, smoothstep(-0.6, 0.4, n.y)) * mix(1.0, 0.6, step(vPart, 0.5) * smoothstep(250.0, 400.0, vPx.y));
   vec4 land = landAt(vWorld.xz);
 #ifdef MIRROR
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
@@ -165,7 +176,6 @@ void main() {
   vec3 col = rigShade(vWorld, n, v, albedo, rough, occ);
   // Against the light the thin wet skin lets a little through and the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
-  col += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.08 / PI;
   col += (albedo * 0.6 + 0.05) * uSunColour * rim * pow(max(dot(-v, uSunDir), 0.0), 2.0) * 0.16 * sunAt(vWorld, land);
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (cover < 0.5) discard;
@@ -294,9 +304,10 @@ export class Puppets {
     }
   }
 
-  put(i: number, p: Pose): void {
+  /** pale: 0 the hide as it wades, 1 the dark of an animal that sits hunched in the spray. */
+  put(i: number, p: Pose, pale = 0): void {
     this.place.setXYZW(i, p.x, p.y, p.z, p.yaw);
-    this.body.setXYZW(i, p.size, p.pitch * 0.8, 0, 0);
+    this.body.setXYZW(i, p.size, p.pitch * 0.8, pale, 0);
     // The picture's own neck leaves the body a little under the level and curls down: the pose is read against that.
     const [lift, arc] = neckOf(p);
     this.neck.setXYZW(i, lift, arc, 0.3 * p.sweep, p.seed);

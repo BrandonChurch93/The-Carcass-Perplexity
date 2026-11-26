@@ -439,6 +439,8 @@ export interface BoreSite {
   id: number;
   /** A cliff close to the last shot's lens: the burst there is the tallest thing in the frame. */
   near: boolean;
+  /** How hard it bursts there, 1 as a cliff of the gate. */
+  power?: number;
 }
 
 export interface Bore {
@@ -609,10 +611,11 @@ export function createBore(
         const z0 = boreFront(born) + lineAt(x, born) - H * (0.3 + 0.3 * rand(i, n + 14));
         const up = (6 + 12 * rand(i, n + 16)) * (0.6 + 0.8 * c);
         const y = H * (0.95 - 0.1 * c) + up * a - 3.2 * a * a;
-        const z = z0 + BORE_SPEED * a * (1 - 0.32 * a / life);
+        // The wind is behind the wall: what is torn off the crest is carried on ahead of it, toward the land.
+        const z = z0 + BORE_SPEED * a * (1 + 0.2 * a / life);
         const fade = Math.min(1, a / 0.15) * Math.pow(Math.max(0, 1 - a / life), 1.5);
-        const size = (0.9 + 1.7 * a) * (0.6 + 0.8 * rand(i, n + 17));
-        cards.put(x, y, z, size, 0.45 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.9, 1.3, 0.15 + 0.5 * rand(i, n + 20), 0.15 * a / life);
+        const size = (2.2 + 3.4 * a) * (0.6 + 0.8 * rand(i, n + 17));
+        cards.put(x, y, z, size, 0.5 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.9, 1.3, 0.1 + 0.3 * rand(i, n + 20), 0.3 * a / life);
       }
 
       // The lip: where it pitches, a ragged edge of water is thrown ahead of the face and falls; where it has fallen, white boils up from the pile.
@@ -664,7 +667,8 @@ export function createBore(
           const seed = 9000 + s.id * 977 + j;
           const a = since - 2.6 * rand(seed, 1) * rand(seed, 8);
           if (a < 0 || a > 5.5) continue;
-          const power = s.near ? 1 : 0.7;
+          const power = s.power ?? (s.near ? 1 : 0.7);
+          if (j > count * Math.min(1, power)) break;
           const up = (14 + 20 * rand(seed, 2)) * power;
           const y = 1 + up * a - 4.0 * a * a;
           if (y < 0) continue;
@@ -674,7 +678,7 @@ export function createBore(
           const x = s.x + Math.sin(ang) * (rr + out * 0.6);
           const z = s.z - Math.cos(ang) * rr * 0.9 + (10 + 16 * rand(seed, 10)) * a;
           const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / 5.2);
-          const size = (1.8 + 2.4 * a) * (0.6 + 0.9 * rand(seed, 5));
+          const size = (2.6 + 3.6 * a) * (0.6 + 0.9 * rand(seed, 5));
           cards.put(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.1 + 0.6 * rand(seed, 11), Math.min(0.5, 0.12 * a));
         }
       }
