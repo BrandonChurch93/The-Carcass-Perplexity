@@ -133,17 +133,7 @@ describe('the path of the rise in this film', () => {
     expect(Math.abs(step(start + 1) - step(start))).toBeLessThan(handoff.climbPerFrame * 0.01);
   });
 
-  it('starts with nothing in frame but the deep water and the rings', () => {
-    const halfH = path.at(start).w / aspect / 2;
-    const halfW = path.at(start).w / 2;
-    const [rx, ry] = tuning.lakeDeepPx;
-    expect((halfW / rx) ** 2 + (halfH / ry) ** 2).toBeLessThan(0.9);
-    const inFrame = handoff.ringRadii.filter((r: number) => r < Math.hypot(1, aspect));
-    expect(inFrame.length).toBeGreaterThanOrEqual(6);
-    const widest = Math.max(...handoff.ringRadii) * (1 + handoff.ringWidth / 2) * handoff.revealHalfHeightKm;
-    expect(widest).toBeLessThan(ry * km);
-    expect(widest * (handoff.eyeHalfHeightMetres / handoff.revealHalfHeightKm)).toBeLessThan(440);
-  });
+  // The join of the Eye and the rise was staged anew in the polish (banks of cloud over the lake, drawn by both places): what it must hold is tested in tests/rise-join.test.ts.
 
   it('never narrows and has no jump, from its first frame to the last frame of the hold', () => {
     const widths = [];
