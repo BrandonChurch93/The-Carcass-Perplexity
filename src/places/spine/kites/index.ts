@@ -57,14 +57,14 @@ vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   float p2 = k * 1.83 * (along - c * 1.17 * uTime) + shape.z * 2.7;
   float p3 = k * 4.1 * (along - c * 1.3 * uTime) + shape.z * 5.1;
   float grow = smoothstep(0.0, 1.0, u * 1.15) * (0.35 + 0.65 * u);
-  float amp = (0.02 + 0.014 * uStageMore.x + 0.012 * step(0.01, uStageMore.y)) * len * grow;
+  float amp = (0.02 + 0.017 * uStageMore.x + 0.012 * step(0.01, uStageMore.y)) * len * grow;
   // A gust lifts or drops the whole ribbon slowly.
-  float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4;
+  float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4 + 0.45 * uStageMore.x * sin(uTime * 2.9 + shape.z * 1.7);
   float fan = (fract(more.y * 13.7) - 0.5) * (more.w > 0.9 ? 0.4 : 0.12);
   // The stalk is a cord with weight and ice on it: it hangs between the rock and the skin it holds.
   float held = clamp(u / more.w, 0.0, 1.0);
   float hang = 0.3 * more.w * len * held * (1.0 - held);
-  float lift = fan * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.25 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + 0.03 * len * u * gust;
+  float lift = fan * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.25 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + (0.03 + 0.035 * uStageMore.x) * len * u * gust;
   float sway = 0.8 * amp * (sin(p1 * 0.77 + 1.9) + 0.4 * sin(p2 * 1.1 + 0.4)) + 0.3 * amp * u * u * sin(p3 * 1.3 + 2.0);
   // The cloth is as long as it is: where it climbs a wave it does not also run on down the wind.
   float drawn = along * (1.0 - 0.06 * grow);
@@ -522,6 +522,7 @@ export function create(ctx: Context): Piece {
   const stageMore = new THREE.Vector3(0, 0, 0);
   const wideShot = during('spine-01');
   const veil = { value: 0 };
+  const film = new THREE.Vector4(1.0, 0.05, 0.15, 0.9);
   const closeShot = during('spine-02');
   const struck = new THREE.Vector4(0, 0, 0, 0);
   const material = new THREE.ShaderMaterial({
@@ -536,7 +537,7 @@ export function create(ctx: Context): Piece {
       uStruck: { value: struck },
       uGlowTint: { value: new THREE.Vector3(1.0, 0.72, 2.8) },
       // How much the film gives back of the sky on it and of the dusk through it, how strong its colours, how strong its glints.
-      uFilm: { value: new THREE.Vector4(1.0, 0.05, 0.15, 0.9) },
+      uFilm: { value: film },
       uWrinkle: { value: new THREE.Vector2(0.5, 0.85) },
       // How much of the picture's own colour the film keeps, and how dark its drawn veins are.
       uTone: { value: new THREE.Vector2(0.85, 0.25) },
@@ -643,7 +644,9 @@ export function create(ctx: Context): Piece {
       else if (inClose) stage.set(0.36, 0.42, 4, 1);
       else if (inWide) stage.set(1, 2.1, 1, 1);
       else stage.set(1, 1, 1, 0);
-      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 0.8 : 0);
+      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 0.8 : inClose ? 0.5 : 0);
+      // Seen close the film shows its oil colours.
+      film.z = inClose ? 0.42 : 0.15;
       veil.value = inStrike ? 1 : 0;
       knobStage.set(inStrike ? 0.3 : 1, inStrike ? 3 : 0);
       const flash = flashAt(seconds);
