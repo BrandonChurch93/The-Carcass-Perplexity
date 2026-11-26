@@ -53,7 +53,10 @@ const WATCH: Pose = { roll: 0, pitch: 0.03, slack: 1, curl: 0.1, neck: [-0.2, 0.
 const SIT: Pose = { roll: 0.06, pitch: 0.62, slack: 1, curl: 0.15, neck: [-0.6, 0.1], head: [-0.75, 0.05], legs: [leg(-0.5, 0.06, -0.62, 0, 0.8), leg(-0.55, 0.06, -0.58, 0, 0.8), leg(0.75, 0.5, -1.9, 0.3, 0.9), leg(0.75, 0.5, -1.9, 0.3, 0.9)] };
 // Lying on its chest, curled, legs folded under, forepaws out before it, the head down on them.
 const LIE: Pose = { roll: 0.12, pitch: 0, slack: 0.95, curl: 0.7, neck: [-0.35, 0.5], head: [-0.4, 0.4], legs: [leg(1.1, 0.3, 1.45, 0.1, 1.5), leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(1.2, 0.5, -1.3, 0.3, 1.4), leg(1.25, 0.55, -1.2, 0.3, 1.4)] };
-const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [-0.15, -0.3], head: [-0.7, -0.2], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
+// Sitting with the head up and turned to the mouth.
+const SITUP: Pose = { roll: 0.06, pitch: 0.62, slack: 1, curl: 0.15, neck: [-0.1, 0.5], head: [-0.3, 0.4], legs: [leg(-0.5, 0.06, -0.62, 0, 0.8), leg(-0.55, 0.06, -0.58, 0, 0.8), leg(0.75, 0.5, -1.9, 0.3, 0.9), leg(0.75, 0.5, -1.9, 0.3, 0.9)] };
+// Lying the other way round, the head lifted off the paws.
+const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [0.25, -0.5], head: [-0.3, -0.4], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
 // The dead one: on its right side, stiff, the four legs straight out toward the lens, the upper pair held off the ground as it froze, the
 // neck stretched along the ground.
 const DEAD: Pose = {
@@ -136,7 +139,7 @@ export function create(ctx: Context): Piece {
       uGround: { value: ground },
       uDoor: { value: role.inside ? door : open },
       uDoorArea: { value: 420 },
-      uDoorGain: { value: 8 },
+      uDoorGain: { value: 9.5 },
       uCoat: { value: coatSet },
       tShag: { value: shagColour },
       tShagData: { value: shagData },
@@ -212,7 +215,7 @@ export function create(ctx: Context): Piece {
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
     { d: CANAL_KEY + 11.5, l: -0.2, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.15 },
     { d: CANAL_KEY + 3.8, l: -2.0, yaw: along + 2.4, act: 'lie', pose: LIE, size: 1.2 },
-    { d: CANAL_KEY + 6.4, l: -2.3, yaw: along + 1.9, act: 'sit', pose: SIT, size: 1.2 },
+    { d: CANAL_KEY + 6.4, l: -2.3, yaw: along + 1.9, act: 'sit', pose: SITUP, size: 1.2 },
     { d: CANAL_KEY + 8.6, l: -1.0, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
     { d: CANAL_KEY + 10.2, l: -2.5, yaw: along + 1.6, act: 'sit', pose: SIT, size: 1.1 },
     { d: CANAL_KEY + 12.5, l: -2.4, yaw: along + 0.6, act: 'lie', pose: LIE, size: 1.05 },

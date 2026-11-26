@@ -30,7 +30,7 @@ vec3 runnerLight(vec3 p, vec3 n) {
     seen = mix(seen, dot(seen, vec3(0.3, 0.5, 0.2)) * vec3(1.08, 1.0, 0.9), 0.6);
     // The mouth is broad and the ice and the pale wall give its light back: it wraps the body, and a share of it comes from all round.
     float facing = clamp((dot(n, way) + 0.7) / 1.7, 0.0, 1.0);
-    float fill = 0.3 + 0.12 * n.y;
+    float fill = 0.28 + 0.14 * n.y;
     e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * (facing * facing + fill);
     // Seen against the mouth, the light comes through the ends of the coat along its outline.
     vec3 toLens = normalize(cameraPosition - p);
@@ -218,7 +218,9 @@ void main() {
   vFrostLight = runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
   vAt = vec4(position.x, t, seed, aCard.z);
   // How much this lock is frosted: it looks up, and it is on the weather side.
-  float up = nb.y;
+  // Along the outline in the open the locks stand clear of the rime and dark against the snow behind them.
+  float outline = pow(1.0 - abs(dot(nb, toCamera)), 3.0) * (1.0 - uDoor.w);
+  float up = nb.y - 0.7 * outline;
   vInfo = vec4(aCard.x * size * 2.0, span, up, aCard.w);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
