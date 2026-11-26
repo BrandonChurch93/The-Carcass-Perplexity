@@ -386,7 +386,7 @@ void main() {
   env *= 1.0 + (0.5 * smoothstep(0.75, 0.99, toward) + 0.5 * smoothstep(0.972, 0.995, toward)) * (0.6 + 0.8 * run.g);
   float fres = min(1.0, (0.035 + 0.965 * pow(1.0 - nv, 5.0)) * 1.7);
   // (Where the skin runs out into the pool it mirrors no more than the pool does.)
-  fres *= mix(0.25, 1.0, smoothstep(0.03, 0.22, vLocal.y));
+  fres *= mix(0.1, 1.0, smoothstep(0.06, 0.32, vLocal.y));
 #ifdef DROP
   // (A bead of dark brine: one small window of the sky on its upper side and no pale limb.)
   fres = 0.03 + 0.45 * smoothstep(0.93, 0.99, toward);
