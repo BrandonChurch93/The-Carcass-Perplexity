@@ -1,7 +1,6 @@
-2026-11-26 06:19 UTC
-work at ab32309 on agent/breath-ground-3
-hb3 06:20: tent rib gone (first rib is a ledge under the brim), pit readable with veils, wall grain on three planes, pad pale and gritty, cliff snow toned, march cheaper
-look-1.jpg = out/work/hb3-breath-0.jpg
-look-2.jpg = out/work/hb3-breath-4.jpg
-look-3.jpg = out/work/hb3-breath-2.jpg
-look-4.jpg = out/work/hb3-breath-3.jpg
+2026-11-26 06:39 UTC
+work at 58f2c10 on agent/breath-ground-3
+hb4 06:42: breath-2 pit wall reads with pale rounded tiers, pad pale and gritty; breath-1 channel floor sunk; breath-3 veil at right still open
+look-1.jpg = out/work/hb4-breath-2.jpg
+look-2.jpg = out/work/hb4-breath-3.jpg
+look-3.jpg = out/work/hb4-breath-1.jpg
