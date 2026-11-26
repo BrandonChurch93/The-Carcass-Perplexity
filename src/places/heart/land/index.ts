@@ -90,7 +90,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '' } });
   const crackMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', CRACK: '' } });
   // The bank under the wide view: read at the scale of a hand, and at its rim handed over to the camera's bench.
-  const handMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', HAND: '' } });
+  const handMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', HAND: '', CORE: '' } });
   const rimMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', HAND: '' } });
   const lipMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: LIP_FRAGMENT, uniforms: shared });
   const butteMaterial = ground({ FAR_LIGHT: '', STAGED: '' });
@@ -148,7 +148,7 @@ export function create(ctx: HeartContext): HeartPiece {
   );
   const feetEdge = (x: number, z: number): number => Math.min(x - FEET.x0, FEET.x1 - x, z - FEET.z0, FEET.z1 - z);
   // Cut at 0.2 m only within 13 m of that lens's way, where a cell is tens of pixels; the rest of the bank at 0.5 m, where it is two or three.
-  // A sheet as fine over the whole bank cost a second and a half a sample in triangles smaller than a pixel.
+  // Cut at 0.15 m over the whole bank, the bench alone cost a second a sample more (frame 2507, uhd, draft): triangles smaller than a pixel.
   const FINE_CELL = 0.2;
   const fineDepth = (x: number, z: number): number => Math.min(13 - widePath(x, z)[0], feetEdge(x, z) - FEET_FADE - 0.5);
   /** What the fine sheet stands above the land: lumps of a forearm, none within 1.2 m of its border. */
@@ -229,7 +229,7 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0, 0, 0.04, [0.2, 0.6]), nearMaterial);
   rubble.renderOrder = -5;
-  const rocks = scatterRocks(ctx, shared, landHeight, feetLift);
+  const rocks = scatterRocks(ctx, shared, landHeight);
   // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
   for (const r of rocks.bench) r.renderOrder = -6;
   nearBench.renderOrder = -5;

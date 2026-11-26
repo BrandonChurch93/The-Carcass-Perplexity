@@ -114,31 +114,6 @@ uniform vec4 uSpur;
 // Every picture is read with slopes taken from the world position at the top of main: a read inside a branch that took its own slope
 // would take it from a neighbour that never computed the coordinate, and the frame would differ from one page load to the next.
 #define PICK(t, uv, gx, gy) textureGrad(t, uv, gx, gy)
-#ifdef HAND
-// Plates of cooled lava. x: how far p lies from the nearest gap between two plates, in cells. y: a number of the plate's own.
-vec2 plates(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = p - i;
-  float d1 = 8.0;
-  float d2 = 8.0;
-  float own = 0.0;
-  for (int b = -1; b <= 1; b++) {
-    for (int a = -1; a <= 1; a++) {
-      vec2 c = vec2(float(a), float(b));
-      vec2 h = hash22(i + c);
-      float d = length(c + 0.15 + 0.7 * h - f);
-      if (d < d1) {
-        d2 = d1;
-        d1 = d;
-        own = h.x;
-      } else if (d < d2) {
-        d2 = d;
-      }
-    }
-  }
-  return vec2(0.5 * (d2 - d1), own);
-}
-#endif
 const mat2 TURN = mat2(0.7986, -0.6018, 0.6018, 0.7986);
 
 void main() {
@@ -161,6 +136,8 @@ void main() {
   // The bank the wide view stands on and passes over. Its lens is 4 to 30 m from that ground and a pixel of the film is 2 to 10 mm of it,
   // where the pictures laid for the far views (5, 11 and 29 m a tile) give 1 to 3 cm a texel: there the rock is read again at the size it was taken at.
   // Only the sheets of that bank are built with HAND: every read below is paid by every pixel of a material, drawn on or not.
+  // Its middle is built with CORE as well, without what cannot reach it: the line view's rubble (58 m off), the sulphur of the cracks
+  // (12 m off, and it ends at 9) and the stained crag (70 m off).
   #ifdef HAND
   vec2 inFeet = min(vWorld.xz - vec2(${FEET.x0.toFixed(1)}, ${FEET.z0.toFixed(1)}), vec2(${FEET.x1.toFixed(1)}, ${FEET.z1.toFixed(1)}) - vWorld.xz);
   float hand = smoothstep(0.0, ${FEET_FADE.toFixed(1)}, min(inFeet.x, inFeet.y)) * smoothstep(64.0, 32.0, far);
@@ -505,61 +482,44 @@ void main() {
 
   #ifdef HAND
   {
-    // Laid on three planes by the land's smooth normal, so that nothing is drawn out down a face.
+    // Laid from above and only on what lies level: a slope keeps the grain it reads on three planes below, so nothing is drawn out down a face.
     vec3 tw = n0 * n0;
     tw *= tw;
-    tw /= tw.x + tw.y + tw.z;
-    // One read a picture, of its height and tilt only, over a round footprint of the pixel's own area: a third of the cost of a read
-    // drawn out along the view, and what it leaves unsmoothed the samples of a frame average.
+    float level = tw.y / (tw.x + tw.y + tw.z);
+    // One read a picture, of its height and tilt only, over a round footprint of the pixel's own area: a read drawn out along the view
+    // costs up to four times as much, and what a round one leaves unsmoothed the samples of a frame average.
     float foot = sqrt(length(cross(wx, wy)));
     // The skin of the rock, scoria at its true size: 2 mm a texel.
     const float SKIN = 1.9;
     vec2 fs = vec2(foot / SKIN, 0.0);
-    vec3 skinY = PICK(tBoulderNh, TURN * vWorld.xz / SKIN + 0.37, fs, fs.yx).rgb;
-    vec3 skinX = PICK(tBoulderNh, vWorld.zy / SKIN + vec2(0.11, 0.53), fs, fs.yx).rgb;
-    vec3 skinZ = PICK(tBoulderNh, vWorld.xy / SKIN + vec2(0.71, 0.29), fs, fs.yx).rgb;
-    float skinHigh = tw.y * skinY.b + tw.x * skinX.b + tw.z * skinZ.b;
-    vec2 ty = TURN * ((skinY.rg - 0.5) * vec2(1.0, -1.0));
-    vec3 skinTip = tw.y * vec3(ty.x, 0.0, ty.y)
-      + tw.x * (vec3(0.0, 0.0, 1.0) * (skinX.r - 0.5) - vec3(0.0, 1.0, 0.0) * (skinX.g - 0.5))
-      + tw.z * (vec3(1.0, 0.0, 0.0) * (skinZ.r - 0.5) - vec3(0.0, 1.0, 0.0) * (skinZ.g - 0.5));
-    // A ropy sheet close to: the ropes themselves, three to eight centimetres thick, in festoons a stride or two across with smooth skin between.
-    float festoon = smoothstep(0.38, 0.62, vnoise(vWorld.xz / 2.3 + 3.9));
-    float ropes = sheet * tw.y * festoon;
-    vec2 fr = vec2(foot / 3.3, 0.0);
-    vec3 rope = PICK(tLavaNh, vWorld.xz / 3.3 + vec2(0.23, 0.61), fr, fr.yx).rgb;
+    vec3 skin = PICK(tBoulderNh, TURN * vWorld.xz / SKIN + 0.37, fs, fs.yx).rgb;
+    vec2 skinTip = TURN * ((skin.rg - 0.5) * vec2(1.0, -1.0));
+    // A ropy sheet close to: the ropes themselves, three to eight centimetres thick, inside the billows the far views read.
+    const float ROPE = 3.3;
+    float ropes = sheet * level;
+    vec2 fr = vec2(foot / ROPE, 0.0);
+    vec3 rope = PICK(tLavaNh, vWorld.xz / ROPE + vec2(0.23, 0.61), fr, fr.yx).rgb;
     vec2 ropeTip = (rope.rg - 0.5) * vec2(1.0, -1.0);
     // Whatever else lies level is rubble at its true size: stones of a finger to a hand, bedded in grit.
-    float loose = (1.0 - sheet) * tw.y;
+    float loose = (1.0 - sheet) * level;
     vec2 fl = vec2(foot / 1.7, 0.0);
     vec3 bed = PICK(tTalusNh, TURN * vWorld.xz / 1.7 + vec2(0.57, 0.19), fl, fl.yx).rgb;
     vec2 looseTip = TURN * ((bed.rg - 0.5) * vec2(1.0, -1.0));
-    // Old lava cracked as it cooled: plates a stride or two across with a gap of a finger between them, each plate a tone of its own,
-    // and hairlines inside the plates. A gap narrower than a pixel is drawn a pixel wide and that much fainter.
-    vec2 bent = vWorld.xz + 0.55 * vec2(vnoise(vWorld.xz / 0.9 + 2.2), vnoise(vWorld.xz / 0.9 + 7.5)) + 0.12 * vec2(vnoise(vWorld.xz / 0.21 + 4.4), vnoise(vWorld.xz / 0.21 + 1.6));
-    vec2 plate = plates(bent / 1.7);
-    float gap = 0.004 + 0.012 * vnoise(vWorld.xz / 2.9 + 5.1);
-    float drawn = max(gap, 0.7 * px);
-    float crackA = (gap / drawn) * (1.0 - smoothstep(0.35 * drawn, drawn, plate.x * 1.7));
-    float hair = abs(vnoise(bent / 0.55 + 9.2) - 0.5) * 0.4;
-    float hairDrawn = max(0.002, 0.7 * px);
-    float crackB = (0.002 / hairDrawn) * (1.0 - smoothstep(0.35 * hairDrawn, hairDrawn, hair)) * smoothstep(0.4, 0.6, vnoise(vWorld.xz / 3.7 + 1.3));
-    float cracked = hand * tw.y * max(crackA, 0.7 * crackB);
-    albedo *= mix(1.0, 0.86 + 0.28 * plate.y, hand * tw.y);
-    // The grain is not even: bare, glassy skin in one place and crumbled clinker a stride away.
-    float skinOn = hand * mix(1.0, 0.6, sheet) * (0.55 + 0.75 * vnoise(vWorld.xz / 1.3 + 8.1));
-    albedo *= mix(1.0, 0.35 + 1.3 * skinHigh, 0.7 * skinOn) * mix(1.0, 0.5 + 1.0 * rope.b, 0.6 * hand * ropes) * mix(1.0, 0.4 + 1.2 * bed.b, 0.7 * hand * loose);
-    vec2 flatTip = ropeTip * 1.2 * ropes + looseTip * 1.4 * loose;
-    n = normalize(n + (skinTip * 1.1 * skinOn + vec3(flatTip.x, 0.0, flatTip.y) * hand));
-    float fine = mix(skinHigh, mix(bed.b, mix(0.5, rope.b, festoon), sheet), 0.65 * tw.y);
-    occ *= mix(1.0, 0.4 + 0.6 * smoothstep(0.15, 0.6, fine), hand) * (1.0 - 0.85 * cracked);
-    albedo *= 1.0 - 0.6 * cracked;
+    float skinOn = hand * level * mix(1.0, 0.6, sheet);
+    const float bare = 1.0;
+    albedo *= mix(1.0, 0.35 + 1.3 * skin.b, 0.7 * skinOn) * mix(1.0, 0.5 + 1.0 * rope.b, 0.6 * hand * ropes) * mix(1.0, 0.4 + 1.2 * bed.b, 0.7 * hand * loose * bare);
+    vec2 flatTip = skinTip * 1.1 * skinOn + (ropeTip * 1.2 * ropes + looseTip * 1.4 * loose * bare) * hand;
+    n = normalize(n + vec3(flatTip.x, 0.0, flatTip.y));
+    float fine = mix(skin.b, mix(bed.b, rope.b, sheet), 0.65);
+    float pits = hand * level * bare;
+    occ *= mix(1.0, 0.4 + 0.6 * smoothstep(0.15, 0.6, fine), pits);
     // Ash and grit lie in the pits and the creases, a finger wide.
-    albedo = mix(albedo, vec3(0.17, 0.16, 0.148), 0.4 * hand * tw.y * smoothstep(0.42, 0.18, fine) * mix(1.0, 0.6, sheet) * (1.0 - cracked));
-    height = mix(height, 0.5 * (height + fine), hand);
+    albedo = mix(albedo, vec3(0.17, 0.16, 0.148), 0.25 * pits * smoothstep(0.42, 0.18, fine) * mix(1.0, 0.6, sheet));
+    height = mix(height, 0.5 * (height + fine), pits);
   }
   #endif
   #ifdef BENCH
+  #ifndef CORE
   // The rubble under the line view's lens, measured against the picture: near black clinker and grit, with no drawn pattern on it.
   // Its grain is read on three planes and summed, so nothing is drawn out down a slope.
   if (byLens > 0.0) {
@@ -568,6 +528,7 @@ void main() {
     vec3 clinker = vec3(0.048, 0.042, 0.039) * (0.5 + 0.7 * grainA + 0.8 * (grainB - 0.5) * sharp);
     albedo = mix(albedo, clinker, byLens);
   }
+  #endif
   // A slope of the bench is broken rock, and no picture laid from above is drawn out down it: its grain is read on three planes,
   // lumps of a third of a metre and pits finer than that, and half of whatever was laid there gives way to it.
   float broken = smoothstep(0.22, 0.42, slope) * (1.0 - byLens);
@@ -582,6 +543,7 @@ void main() {
     float bedTone = smoothstep(0.25, 0.5, fract(bedAt)) * smoothstep(1.0, 0.8, fract(bedAt)) * (0.5 + vnoise(vec2(floor(bedAt) * 3.1, 7.7) + vWorld.xz / 3.3));
     albedo *= mix(1.0, 0.5 + 1.5 * bedTone, bank);
   }
+  #ifndef CORE
   // The sulphur of the crack: pale crystals on the lips and on what faces up, yellow round them, orange-brown stain fading out over metres.
   float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 4.2);
   if (dc < 9.0) {
@@ -603,6 +565,7 @@ void main() {
     albedo = mix(albedo, mix(sul * 1.4, yellow, 0.8) * (1.1 + 0.5 * grain) * mix(1.0, 2.0, byLens), crust);
     rough = mix(rough, 0.95, crust);
   }
+  #endif
   // By the line the rock is glazed black with spatter, and nothing pale survives.
   float rind = smoothstep(2.2, 0.2, land.b + 1.2 * (mid - 0.5));
   albedo *= mix(1.0, 0.85, rind);
@@ -612,6 +575,7 @@ void main() {
   float sd = length(toStain * vec3(1.0, 0.75, 1.0)) / uStain.w;
   float onCrag = smoothstep(3.4, 1.8, sd) * steep;
   albedo *= mix(1.0, 0.55, steep * smoothstep(8.0, 2.5, land.b + 3.0 * (mid - 0.5)) * (1.0 - onCrag));
+  #ifndef CORE
   // The crag itself, measured on the picture: weathered grey-brown rock that catches the sky, paler where a face has broken off lately.
   float broke = vnoise(vWorld.xz / 0.8 + vWorld.y * vec2(1.3, 0.7) + 3.1);
   albedo *= mix(vec3(1.0), vec3(1.0, 0.95, 0.93) * (0.9 + 0.6 * smoothstep(0.4, 0.62, broke)), onCrag);
@@ -631,6 +595,7 @@ void main() {
     albedo = mix(albedo, albedo * vec3(1.5, 1.25, 0.7) + vec3(0.012, 0.009, 0.002), 0.4 * on);
     albedo = mix(albedo, mix(vec3(0.72, 0.6, 0.18), vec3(0.84, 0.8, 0.6), smoothstep(0.5, 0.8, blot)) * (0.6 + 0.8 * height), 0.85 * on * smoothstep(0.38, 0.66, blot + 0.4 * (height - 0.5)));
   }
+  #endif
   #endif
 
   // Under an overhang of rock, or deep in a gap, less of everything arrives.
