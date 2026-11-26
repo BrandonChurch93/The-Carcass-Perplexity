@@ -172,7 +172,7 @@ void main() {
   // The skin is two photographs of dry hide, drawn at their own contrast: on the trunk a sheet of shrunken, cracked, peeling hide; on the legs
   // and the neck a sheet of dry cords and bark whose grain runs along the limb and winds round it a little as it goes down.
   float onLimb = 1.0 - max(body, rag);
-  vec2 uvS = mix(vUv / vec2(3.4, 3.0) + seed * 3.1, vec2(vUv.y + 0.22 * vUv.x, vUv.x) / vec2(1.25, 2.3) + seed * 1.7, onLimb);
+  vec2 uvS = mix(vUv.yx / vec2(3.0, 3.4) + seed * 3.1, vec2(vUv.y + 0.07 * vUv.x, vUv.x) / vec2(1.25, 2.3) + seed * 1.7, onLimb);
   vec2 sx = dFdx(uvS);
   vec2 sy = dFdy(uvS);
   vec2 bakeUv = vec2(vBake.x, (clamp(vBake.y, 0.003, 0.997) + floor(vBake.z + 0.5)) / 3.0);
@@ -183,15 +183,26 @@ void main() {
   vec3 nh;
   vec3 slopeW;
   float ao = 1.0;
+  float plate = 0.0;
   if (onLimb > 0.5) {
     skinC = textureGrad(tLimb, uvS, sx, sy).rgb;
     nh = textureGrad(tLimbNh, uvS, sx, sy).rgb;
     // Across the sheet is round the limb, down the sheet is along it.
     slopeW = (gv * (nh.r - 0.5) - gu * (nh.g - 0.5)) * 2.6 * fine;
+    // Over the cords what is left of the hide: plates with cracks between them, some lifted at an edge, the cords bare where a plate has gone.
+    vec2 uvP = vUv / vec2(1.9, 1.5) + seed * 5.3;
+    vec2 px = dFdx(uvP);
+    vec2 py = dFdy(uvP);
+    vec3 plateN = textureGrad(tTorsoNh, uvP, px, py).rgb;
+    vec3 plateC = textureGrad(tTorso, uvP, px, py).rgb;
+    plate = smoothstep(0.42, 0.58, plateN.b + 0.25 * (vnoise(vUv * vec2(0.5, 0.9) + seed * 3.0) - 0.5)) * (1.0 - tendril);
+    slopeW = mix(slopeW, slopeW * 0.35 + (gu * (plateN.r - 0.5) - gv * (plateN.g - 0.5)) * 3.0 * fine, plate);
+    skinC = mix(skinC * 0.72, plateC * 2.3, plate);
+    nh.b = mix(nh.b * 0.8, 0.25 + 0.75 * plateN.b, plate);
   } else {
     skinC = textureGrad(tTorso, uvS, sx, sy).rgb;
     nh = textureGrad(tTorsoNh, uvS, sx, sy).rgb;
-    slopeW = (gu * (nh.r - 0.5) - gv * (nh.g - 0.5)) * 2.2 * fine;
+    slopeW = (gv * (nh.r - 0.5) - gu * (nh.g - 0.5)) * 2.2 * fine;
     if (body > 0.5) {
       // The trunk's own fine surface, made outside the film: its ribs, its spine, its wrinkles and tears, and how far each place is shut in.
       vec3 tk = textureGrad(tTrunk, bakeUv, bx, by).rgb;
@@ -201,7 +212,7 @@ void main() {
   }
   float high = nh.b;
   // The sheets are browner than the animals of the pictures, which are the grey of old bone and ash with a little umber in it.
-  skinC = mix(vec3(dot(skinC, vec3(0.3, 0.55, 0.15))), skinC, mix(0.6, 0.4, onLimb));
+  skinC = mix(vec3(dot(skinC, vec3(0.3, 0.55, 0.15))), skinC, mix(0.6, 0.3, onLimb));
 
   // Rings round the neck, closer and deeper toward the crown; creases across a joint.
   float crown = smoothstep(0.62, 0.95, vLook.y) * neck;
@@ -219,7 +230,7 @@ void main() {
   float pale = vInfo.x;
   vec3 tone = mix(vec3(1.07, 1.0, 0.93), vec3(0.95, 1.0, 1.06), warm) * (0.78 + 0.5 * sooty);
   // The trunk is ash grey and umber; a leg is darker and browner (45 29 23 in its shade on the picture's hero, about 70 50 40 where the sky finds it).
-  vec3 albedo = skinC * tone * mix(vec3(1.25), vec3(0.5, 0.5, 0.5), onLimb) * (0.9 + 0.25 * (pale - 0.4));
+  vec3 albedo = skinC * tone * mix(vec3(1.0), vec3(0.38), onLimb) * (0.9 + 0.25 * (pale - 0.4));
   // What is shut in is dark with soot: the gaps between the ribs, the creases, the pits where the hide is torn.
   float shut = smoothstep(0.25, 0.85, ao);
   albedo *= mix(0.3, 1.0, shut);
@@ -252,9 +263,9 @@ void main() {
   float dust = smoothstep(2.6, 0.1, vWorld.y) * (0.25 + 0.5 * grit) * (1.0 - tendril);
   albedo = mix(albedo, vec3(0.146, 0.146, 0.15) * (0.7 + 0.3 * grit), 0.55 * ash * smoothstep(0.4, 3.0, vWorld.y));
   // The dust is the crust's own: a foot is as dark as what it stands on.
-  albedo = mix(albedo, vec3(0.085, 0.078, 0.074) * (0.7 + 0.5 * grit), 0.6 * dust);
+  albedo = mix(albedo, vec3(0.115, 0.108, 0.1) * (0.6 + 0.6 * grit), dust * (0.45 + 0.4 * (1.0 - pit)));
   // The foot itself is caked dark with what it treads in.
-  albedo = mix(albedo, vec3(0.058, 0.05, 0.045) * (0.6 + 0.6 * grit), 0.92 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
+  albedo = mix(albedo, vec3(0.058, 0.05, 0.045) * (0.6 + 0.6 * grit), 0.6 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
 
   float own = mix(1.0, 0.15 + 0.85 * ao * ao, body) * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
   float occ = vInfo.y * own;

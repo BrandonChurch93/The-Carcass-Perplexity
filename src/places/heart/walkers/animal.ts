@@ -149,7 +149,7 @@ const BODY_SIDES = TRUNK_SIDES;
 const NECK_RINGS = 46;
 const NECK_SIDES = 16;
 const NECK_END = 14;
-const LEG_SIDES = 16;
+const LEG_SIDES = 24;
 /** How high over the lake the end of the neck is held when the tuft is down, in lengths of a root. */
 export const TUFT_UP = 0.85;
 /** The same for the pose itself: the crown comes down to two thirds of a root's length over the melt, and the roots are cut to it. */
@@ -223,8 +223,8 @@ export class Animal {
     {
       const table = trunkTable(b.trunk);
       const sx = b.bodyLen / 4.9;
-      const st = b.bodyTop / 0.62;
-      const sk = b.bodyKeel / 0.64;
+      const st = b.bodyTop / 0.53;
+      const sk = b.bodyKeel / 0.54;
       const sz = b.bodyWide;
       for (let i = 0; i < BODY_RINGS; i++) {
         const u = i / (BODY_RINGS - 1);
@@ -559,7 +559,7 @@ export class Animal {
       // Thickness: a thigh with muscle on it, then shafts that taper, with a knob at each joint.
       let r: number;
       // A thigh twice as thick as the shin all the way to the knee, thickest where it leaves the shoulder.
-      if (s < S1) r = lerp(0.3, 0.14, smooth(0, 0.3, s / S1)) - 0.03 * smooth(0.3, 1, s / S1);
+      if (s < S1) r = lerp(0.28, 0.135, smooth(0, 0.3, s / S1)) - 0.03 * smooth(0.3, 1, s / S1);
       else if (s < S2) r = lerp(0.098, 0.08, (s - S1) / this.tibia);
       else r = lerp(0.078, 0.07, Math.min(1, (s - S2) / this.meta));
       // A bone widens toward its end before the knuckle itself.

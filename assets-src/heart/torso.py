@@ -54,8 +54,11 @@ def surface(nu, nv, v, fine=True):
     def n3(fa, fr, sd):
         return vnoise(t * LEN * fa + 31.7, c * fr + 17.3, s * fr + 9.1, seed * 13 + sd)
     sag = g((t - 0.5) / 0.2)
-    top = 0.56 * e * (1 - v['sway'] * sag + 0.55 * v['hump'] * g((t - T_SH + 0.03) / 0.1) + 0.22 * g((t - T_HIP) / 0.08))
-    keel = 0.6 * e * (0.5 + v['belly'] * g((t - 0.6) / 0.15) + 0.2 * g((t - T_HIP) / 0.1))
+    # the back is a hunched dome, highest a little ahead of the middle, that falls to the hips and to the root of the neck
+    dome = g((t - 0.56) / 0.42)
+    top = 0.6 * e * (0.7 + 0.8 * v['arch'] * dome - v['sway'] * sag + 0.3 * v['hump'] * g((t - T_SH + 0.03) / 0.1) + 0.12 * g((t - T_HIP) / 0.08))
+    # the belly hangs in one lobe under the middle, below the line of the hips
+    keel = 0.6 * e * (0.62 + v['belly'] * g((t - 0.52) / 0.2) + 0.1 * g((t - T_HIP) / 0.1))
     wide = 0.88 * e * (1 + 0.2 * g((t - T_SH) / 0.085) + 0.2 * g((t - T_HIP) / 0.08) - v['waist'] * sag)
     m = 1 + 0.2 * (n3(0.55, 0.9, 1) - 0.5) + 0.12 * (n3(1.2, 1.9, 2) - 0.5)
     mid = sm(0.03, 0.14, t) * sm(0.97, 0.88, t)
@@ -63,7 +66,7 @@ def surface(nu, nv, v, fine=True):
     nvb = v['vertebrae']
     vb = t * nvb + 0.35 * (n3(0.8, 0.2, 3) - 0.5)
     knob = np.power(0.5 + 0.5 * np.cos(2 * np.pi * vb), 1.3) * (0.55 + 0.9 * hash3(np.floor(vb + 0.5).astype(np.int64), 0, 0, seed + 5))
-    m += mid * g(phi / 0.17) * (0.12 + 0.1 * knob)
+    m += mid * g(phi / 0.17) * (0.07 + 0.04 * knob)
     m -= mid * 0.07 * g((phi - 0.36) / 0.13)
     # ribs: from the spine down and back, between the hips and the blades, the skin sunk between them
     ribs = v['ribs']
@@ -86,17 +89,18 @@ def surface(nu, nv, v, fine=True):
         # sinew: cords that run along under the skin, none straight
         q = phi * 7.0 + 2.2 * (n3(0.7, 1.4, 8) - 0.5) + 0.8 * (n3(2.6, 2.2, 9) - 0.5)
         cord = np.power(1 - np.abs(2 * (q - np.floor(q)) - 1), 2.0)
-        m += 0.035 * (cord - 0.4) * mid * (0.4 + 1.2 * n3(1.1, 1.0, 10))
+        m += 0.02 * (cord - 0.4) * mid * (0.4 + 1.2 * n3(1.1, 1.0, 10))
         # wrinkles: hide drawn tight, narrow valleys that wander, at three sizes
         for f, amp, sd in ((2.2, 0.075, 11), (5.0, 0.04, 12), (11.0, 0.02, 13)):
-            w = n3(f, f * 0.75, sd)
+            # they run round the trunk, as hide hangs from a spine
+            w = n3(f * 1.7, f * 0.5, sd)
             m -= amp * np.power(1 - np.abs(2 * w - 1), 5.0) * mid
         # lumps of dried flesh and the tooth of the surface
         m += 0.05 * (n3(3.5, 3.0, 14) - 0.5) + 0.022 * (n3(9.0, 8.0, 15) - 0.5) + 0.01 * (n3(24.0, 22.0, 16) - 0.5)
         # torn places: the hide has gone and the pit shows dark, a few on the flanks
         hole = sm(0.71, 0.76, n3(1.3, 1.5, 17)) * sm(0.5, 0.9, phi) * mid
         m -= 0.07 * hole * (0.6 + 0.8 * n3(6.0, 6.0, 18))
-    pinch = np.where(s < 0, 1 - 0.5 * s * s, 1.0)
+    pinch = np.where(s < 0, 1 - 0.28 * s * s, 1.0)
     y = s * np.where(s > 0, top, keel) * m
     # z as the film has it: the trunk's own left
     z = -c * wide * pinch * m
@@ -121,9 +125,9 @@ def bilinear(grid, uu, vv, wrap_v=True):
     return (grid[i0, j0] * (1 - a) + grid[i0 + 1, j0] * a) * (1 - b) + (grid[i0, j1] * (1 - a) + grid[i0 + 1, j1] * a) * b
 
 VARIANTS = [
-    dict(name='a', seed=3, hump=1.0, sway=0.16, belly=0.62, waist=0.22, vertebrae=19, ribs=9),
-    dict(name='b', seed=11, hump=1.7, sway=0.05, belly=0.95, waist=0.1, vertebrae=16, ribs=8),
-    dict(name='c', seed=23, hump=0.5, sway=0.3, belly=0.4, waist=0.3, vertebrae=22, ribs=11),
+    dict(name='a', seed=3, arch=1.0, hump=0.6, sway=0.0, belly=0.75, waist=0.22, vertebrae=19, ribs=9),
+    dict(name='b', seed=11, arch=1.25, hump=1.2, sway=0.0, belly=1.0, waist=0.1, vertebrae=16, ribs=8),
+    dict(name='c', seed=23, arch=0.55, hump=0.3, sway=0.12, belly=0.4, waist=0.3, vertebrae=22, ribs=11),
 ]
 
 def bake_ao(points, name):
