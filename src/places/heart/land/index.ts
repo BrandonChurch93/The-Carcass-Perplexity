@@ -1,12 +1,13 @@
 // The land of the Heart: the caldera wall, the buttress, the country outside, the bench the camera travels on, its loose rock, and the sulphur crack.
 // height.ts is the shape (one function of x and z, which the rig bakes), meshes.ts turns it into triangles, shaders.ts is the rock, rocks.ts scatters the loose blocks.
 import * as THREE from 'three';
-import { BUTTRESS, benchDistance, calderaDistance } from '../layout';
+import { BUTTRESS, MOUTH, benchDistance, calderaDistance } from '../layout';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { CRACK_FOOT, CRACK_TOP, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
 import { BUTTE, FLOWS, SPUR, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, widePath, type Crack } from './height';
+import { fracture, type Joints } from './fracture';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
 import { FEET, FEET_FADE, GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
@@ -104,13 +105,23 @@ export function create(ctx: HeartContext): HeartPiece {
   // The wall: ribs every 1.6 m where the long lens looks (round the mouth), 5 m along the rest of the north wall, coarser where it is far or behind the cameras.
   const spacing = (x: number, z: number): number => {
     if (z < -150 && Math.abs(x + 30) < 215) return 1.6;
-    if (z < 0 && x > -620 && x < 760) return 5;
+    // The stretch the wide lens sees against the sky: cut fine enough to carry the wall's blocks.
+    if (z < 0 && x > -700 && x < 330) return 2.5;
+    if (z < 0 && x < 760) return 5;
     if (x > 700 && z < 330) return 9;
     return 18;
   };
   const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip);
   // The wall stands whole over the mouth and is opened only inside the arch, a little wider than the arch itself: the fall's rim covers the edge.
   open(wallAll, (x, y, z) => inArch(x, y, z, 1.03));
+  // The wall is broken along its joints: blocks the size of a house stand back from the face and leave notches in the rim, smaller ones in them.
+  // Not beside the fall, whose channel and arch are built on the land as it is, nor on the aprons, nor where the mesh is too coarse to carry a block.
+  const unit01 = (v: number): number => Math.min(1, Math.max(0, v));
+  const WALL_JOINTS: Joints[] = [
+    { cell: [26, 40, 26], depth: 4.5, seed: 3 },
+    { cell: [10, 16, 10], depth: 2, seed: 11 },
+  ];
+  fracture(wallAll, WALL_JOINTS, (x, y, z) => unit01(-z / 40) * unit01((x + 700) / 40) * unit01((330 - x) / 40) * unit01((y - 45) / 30) * unit01((Math.abs(x - MOUTH.x) - 100) / 35));
   const wall = mesh(wallAll, wallMaterial);
 
   // The buttress: ribs across it, so its sheer faces get rows all the way up. The wall's ring is drawn without it, and it sinks under the ring where the wall is the higher.
@@ -120,7 +131,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const ax = (tx - rx) / len;
   const az = (tz - rz) / len;
   const across: Rib[] = [];
-  for (let s = -0.34 * len; s <= 1.2 * len; s += 3) {
+  for (let s = -0.34 * len; s <= 1.2 * len; s += 2) {
     const cx = rx + ax * s;
     const cz = rz + az * s;
     const reach = 150;
@@ -128,6 +139,8 @@ export function create(ctx: HeartContext): HeartPiece {
   }
   const buttressAll = ribs(buttressHeight, across, 230, 0.6, 0.2, [1.6, 5, 16]);
   trim(buttressAll, -1.2);
+  // Its cliffs and its table are broken as the wall's are; the talus against its foot is not.
+  fracture(buttressAll, WALL_JOINTS, (_x, y, _z, ny) => unit01((y - 20) / 25) * Math.max(unit01((0.75 - ny) / 0.25), unit01((y - 70) / 30)));
   const buttress = mesh(buttressAll, ground({ FAR_LIGHT: '', BUTTRESS: '' }));
 
   // The bench: 4 m where no camera goes, 1 m round the route, 0.35 m where the camera comes down to it.
@@ -248,6 +261,14 @@ export function create(ctx: HeartContext): HeartPiece {
   }
   const butteAll = ribs(stagedButteHeight, butteRibs, 170, 0.4, 0.25, [1.6, 5, 16]);
   trim(butteAll, -0.25);
+  fracture(
+    butteAll,
+    [
+      { cell: [7, 11, 7], depth: 1.6, seed: 5 },
+      { cell: [2.6, 4, 2.6], depth: 0.6, seed: 23 },
+    ],
+    (_x, y, _z, ny) => unit01((y - 12) / 6) * Math.max(unit01((0.75 - ny) / 0.25), unit01((y - 24) / 6)),
+  );
   const butte = mesh(butteAll, butteMaterial);
   butte.renderOrder = -1;
   butte.visible = false;
