@@ -70,7 +70,7 @@ vec3 windowLight(vec3 p, vec3 n) {
   vec3 w = dusk * (sE * (0.1 + 0.9 * max(dot(n, dE), 0.0))) + cold * (sM * (0.1 + 0.9 * max(dot(n, dM), 0.0)));
   // The flash of a stroke outside comes in by the far mouth as a narrow pulse: it reaches farther in than the daylight and lights only
   // what is turned to the mouth, a rim and never a fill.
-  if (uStrikeAt.w > 0.0) {
+  if (uStrikeTip.w > 0.0) {
     float turned = max(dot(n, dE), 0.0);
     w += vec3(0.76, 0.68, 1.0) * (uStrikeTip.w * 0.6 * turned * turned * turned * 2600.0 / (dot(toExit, toExit) * 3.14159 + 2600.0));
   }
@@ -801,6 +801,11 @@ void main() {
   vec3 wallSeen = vec3(0.3, 0.32, 0.36) * windowLight(vWorld + r * 9.0, -r) * 3.2 / 3.14159;
   vec3 seen = windowSky(r, 1.0 + 3.0 * snow) * open + wallSeen * (1.0 - open);
   c += seen * fres * (1.0 - 0.92 * snow) * (0.75 + 0.25 * smoothstep(0.2, 0.05, lum));
+  // The cloud a strike lights beyond the mouth is in the mirror too: a streak of its light on the ice, where the mouth lets it in.
+  if (uStrikeTop.w > 0.0 && open > 0.0) {
+    float toward = max(dot(r, normalize(0.5 * (uStrikeTip.xyz + uStrikeTop.xyz) - vWorld)), 0.0);
+    c += vec3(0.7, 0.56, 1.0) * (uStrikeTop.w * (0.14 * pow(toward, 50.0) + 0.012 * pow(toward, 8.0)) * open * fres * (1.0 - 0.92 * snow));
+  }
   if (uUnder < 1.5) {
     // From outside the canal is dark a few metres in: its floor with it.
     float shown = exp(-max(min(vAcross.y, EXIT_FAR - vAcross.y) - 1.0, 0.0) / 9.0);
