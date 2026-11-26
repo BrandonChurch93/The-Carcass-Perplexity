@@ -528,6 +528,8 @@ export interface CoatOptions {
   /** Clumps of locks, and locks in a clump. */
   clumps: number;
   locks: number;
+  /** How far the coat of the flanks hangs free, 0 to 1. */
+  hang?: number;
   /** 1 the usual length. */
   long: number;
   /** Where the coat is burned off, in the animal's metres, and how far (0 for none). */
@@ -565,7 +567,9 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
     const burned = o.burn[3] > 0 ? Math.hypot(at.p[0] - o.burn[0], at.p[1] - o.burn[1], at.p[2] - o.burn[2]) / o.burn[3] : 9;
     const singe = Math.min(1, Math.max(0, (burned - 0.75) / 0.8));
     if (burned < 0.75 || (burned < 1.0 && rng.next() < 0.5)) continue;
-    const long = base * o.long * rng.range(0.7, 1.35) * (0.12 + 0.88 * singe) * (1 + 0.5 * Math.max(0, -at.n[1]));
+    // On the flanks of one that rests the coat hangs in long matted curtains to the floor.
+    const flank = (o.hang ?? 0) * Math.max(0, 1 - 1.3 * Math.abs(at.n[1])) * (at.p[1] > 0.25 ? 1 : 0.4);
+    const long = base * o.long * rng.range(0.7, 1.35) * (0.12 + 0.88 * singe) * (1 + 0.5 * Math.max(0, -at.n[1])) * (1 + 1.6 * flank);
     // The way the clump lies: down the skin as gravity and the wind comb it, standing off it only a little, so the coat keeps the shape
     // of what is under it. Under the belly it hangs free.
     // Combed toward the tail, as any coat grows.
@@ -576,6 +580,7 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
     let fall = norm(add(add(slide, jitter), scale(at.n, 0.06)));
     // A coat never stands on end.
     if (fall[1] > 0.05) fall = norm([fall[0], 0.05, fall[2]]);
+    if (flank > 0) fall = norm([fall[0] * (1 - 0.75 * flank), fall[1] - 1.3 * flank, fall[2] * (1 - 0.75 * flank)]);
     // Round the burn the melted coat froze again as it stood: clotted spikes, white with ice, standing off the hide.
     const spike = burned >= 1.0 && burned < 1.55 && rng.next() < 0.55;
     if (spike) fall = norm(add(scale(fall, 0.8), scale(at.n, 0.55)));
@@ -595,7 +600,7 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
       const e: V3 = mixv(own, end, spike ? 0.97 : 0.55);
       // A lock lies on the coat: its end is never far out of the body.
       // (Far from the skin the field is not known: there the end is drawn back toward its root first.)
-      for (let tries = 0; tries < (spike ? 0 : 4); tries++) {
+      for (let tries = 0; tries < (spike || flank > 0.35 ? 0 : 4); tries++) {
         const f = body.field(e);
         if (f <= long * 0.2) break;
         if (f > 0.25) {

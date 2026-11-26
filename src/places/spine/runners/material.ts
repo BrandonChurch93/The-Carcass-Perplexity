@@ -27,10 +27,10 @@ vec3 runnerLight(vec3 p, vec3 n) {
     vec3 level = normalize(vec3(way.x, 0.12, way.z));
     vec3 seen = skyRadiance(level) + emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159);
     // The snow at the mouth and the pale wall give it back with little of the dusk's blue left in it.
-    seen = mix(seen, dot(seen, vec3(0.3, 0.5, 0.2)) * vec3(1.08, 1.0, 0.9), 0.6);
+    seen = mix(seen, dot(seen, vec3(0.3, 0.5, 0.2)) * vec3(1.08, 1.0, 0.9), 0.4);
     // The mouth is broad and the ice and the pale wall give its light back: it wraps the body, and a share of it comes from all round.
-    float facing = clamp((dot(n, way) + 0.7) / 1.7, 0.0, 1.0);
-    float fill = 0.3 + 0.12 * n.y;
+    float facing = clamp((dot(n, way) + 0.35) / 1.35, 0.0, 1.0);
+    float fill = 0.035 + 0.11 * clamp(n.y, 0.0, 1.0);
     e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * (facing * facing + fill);
     // Seen against the mouth, the light comes through the ends of the coat along its outline.
     vec3 toLens = normalize(cameraPosition - p);
@@ -147,6 +147,8 @@ void main() {
     vec3 r = vRest - uBurn.xyz;
     vec2 uv = 0.5 + vec2(dot(r, uBurnU), dot(r, uBurnV)) / (uBurn.w * 2.3);
     vec3 pic = texture2D(tBurn, uv).rgb;
+    // No bright flesh in it: the picture is taken down to char and a dark red-brown.
+    pic = min(mix(vec3(dot(pic, vec3(0.333))), pic, 0.5), vec3(0.22)) * vec3(1.0, 0.8, 0.7);
     vec2 edge = abs(uv - 0.5) * 2.0;
     float on = (1.0 - smoothstep(0.55, 0.9, max(edge.x, edge.y))) * smoothstep(0.02, 0.08, max(pic.r, max(pic.g, pic.b)));
     float raw = smoothstep(0.02, 0.1, pic.r - 1.25 * pic.g);
@@ -154,9 +156,9 @@ void main() {
     float char_ = 1.0 - smoothstep(0.35, 1.0, d + 0.3 * (fine - 0.5));
     albedo = mix(albedo, pic * mix(mix(0.55, 0.16, char_), 0.9, raw), on);
     // Raw at the heart of it, where the hide split open: wet red flesh inside the ring of char.
-    float heart = (1.0 - smoothstep(0.3, 0.62, d + 0.4 * (fine - 0.5))) * on;
+    float heart = (1.0 - smoothstep(0.2, 0.5, d + 0.4 * (fine - 0.5))) * on;
     albedo = mix(albedo, vec3(0.006, 0.005, 0.005), (1.0 - smoothstep(0.55, 1.15, d + 0.3 * (fine - 0.5))) * on * 0.9);
-    albedo = mix(albedo, vec3(0.15, 0.022, 0.014) * (0.35 + 1.2 * pic.r), heart);
+    albedo = mix(albedo, vec3(0.05, 0.016, 0.011) * (0.5 + 2.5 * pic.r), heart);
     raw = max(raw, heart);
     rough = mix(rough, mix(0.9, 0.55, raw), on);
     occ = mix(occ, 0.8, on);
@@ -218,7 +220,9 @@ void main() {
   vFrostLight = runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
   vAt = vec4(position.x, t, seed, aCard.z);
   // How much this lock is frosted: it looks up, and it is on the weather side.
-  float up = nb.y;
+  // Along the outline in the open the locks stand clear of the rime and dark against the snow behind them.
+  float outline = pow(1.0 - abs(dot(nb, toCamera)), 3.0) * (1.0 - uDoor.w);
+  float up = nb.y - 0.7 * outline;
   vInfo = vec4(aCard.x * size * 2.0, span, up, aCard.w);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;

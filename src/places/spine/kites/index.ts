@@ -109,7 +109,7 @@ void main() {
   // Its width: a cord for the stalk, widening to the blade, a slow taper, and a ragged tail.
   float blade = smoothstep(aMore.w, aMore.w + 0.09, u);
   float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
-  float halfW = 0.5 * aShape.y * blade * breadth * (1.0 - 0.4 * smoothstep(0.6, 1.0, u)) * (1.0 + 0.5 * stand);
+  float halfW = 0.5 * aShape.y * blade * breadth * mix(5.0, 0.7, smoothstep(aMore.w + 0.03, 0.8, u)) * (1.0 + 0.5 * stand);
   float far = length(cameraPosition - c);
   float cord = max(0.15, (0.9 + 0.8 * stand) * uPixel * far);
   // Along the stalk the strip is wider than the cord: room for the knots on it and for what hangs from it.
@@ -174,7 +174,11 @@ void main() {
   float reliefFine = texture2D(tMembraneH, uvFine).r;
   float tatter = smoothstep(0.6, 1.0, s) * smoothstep(0.5, 0.62, vnoise(vec2(metres / (2.5 * wide) + seed, vb * 2.2 + seed)));
   float slit = step(0.55, fract(seed * 0.61)) * smoothstep(0.3, 0.45, s) * (1.0 - smoothstep(0.0, 0.03, abs(vb - 0.5 * sin(metres / (4.0 * wide) + seed) - 0.1) - 0.02 - 0.08 * vnoise(vec2(metres / wide, seed))));
-  float cut = step(0.085, max(pic.r, max(pic.g, pic.b))) * step(abs(vb), 1.0) * (1.0 - step(0.5, tatter)) * (1.0 - step(0.5, slit));
+  // The tail is torn to threads: fewer and finer toward its end, each wandering its own way.
+  float torn = smoothstep(0.6, 1.0, s);
+  float thread = abs(fract(vb * (1.6 + 1.6 * fract(seed * 4.1)) + 0.45 * vnoise(vec2(metres / (1.5 * wide), seed * 7.0)) + seed) - 0.5) * 2.0;
+  float threads = step(thread, 1.0 - 0.86 * torn);
+  float cut = step(0.085, max(pic.r, max(pic.g, pic.b))) * step(abs(vb), 1.0) * (1.0 - step(0.5, tatter)) * (1.0 - step(0.5, slit)) * threads;
   float edge = 1.0 - abs(vb);
   // The stalk: a cord of wet sinew, knotted where the skin grows from it and here and there along it. Under the blade it runs on as a spine.
   float stalkAt = vMore.w * vShape.x;
@@ -209,7 +213,11 @@ void main() {
   vec3 stain = clamp(fine / vec3(0.202, 0.181, 0.217), 0.55, 1.5);
   vec3 c = (0.96 * behind + 0.3 * held) * mix(vec3(1.0), stain, 0.6) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
   c *= 1.0 - 0.5 * (1.0 - smoothstep(0.2, 0.55, tone));
-  // Wet glints on the folds, fine and few.
+  // Its veins: a dark line down the middle over the cord, and finer ones that leave it aslant and wander to the edge.
+  float vv = metres / (wide * 1.1) - 1.2 * abs(vb) + 0.4 * vnoise(vec2(metres / wide * 1.3, vb * 3.0 + seed));
+  float branch = (1.0 - smoothstep(0.02, 0.06, abs(fract(vv) - 0.5))) * (1.0 - 0.6 * abs(vb));
+  float rib = 1.0 - smoothstep(0.015, 0.05, abs(vb - 0.08 * sin(metres / wide + seed)));
+  c *= 1.0 - 0.55 * max(branch, rib) * blade * (1.0 - 0.7 * vFar);
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
@@ -219,7 +227,7 @@ void main() {
   c += mirror * (0.15 * fres + 0.5 * glint * (0.3 + 0.7 * fres));
   // When a strike is near the ribbon carries the charge along its length for a moment, violet.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.25;
-  c += uGlowTint * (uStruck.y * mine * (0.05 + 0.2 * fold + 0.25 * glint));
+  c += uGlowTint * (uStruck.y * mine * (0.35 + 0.4 * fold + 0.5 * glint));
   float alpha = skin;
   // The cord: dark wet sinew, its fibres twisted along it, round, rimed in beads on top.
   float x = clamp(v / max(girth, 1e-4), -1.0, 1.0);
@@ -369,7 +377,7 @@ export function create(ctx: Context): Piece {
   const out = new THREE.Vector3(WIND[0], 0.25, WIND[2]).normalize();
   ribbons.forEach((rb, r) => {
     for (let k = 0; k < KNOBS; k++) {
-      const girth = Math.min(rb.width, 4.2);
+      const girth = Math.min(rb.width * 1.4, 9);
       const size = girth * (k === 0 ? 0.34 : rng.range(0.13, 0.28));
       const off = k === 0 ? 0 : girth * rng.range(0.25, 0.7);
       const a = rng.range(0, Math.PI * 2);

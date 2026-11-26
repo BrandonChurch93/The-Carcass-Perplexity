@@ -11,7 +11,7 @@ export const PARTS: readonly string[] = STRIKES.map((s) => s.id);
 
 /** Scene-linear radiance of the channel's core at the peak of a stroke, and of the light it casts. */
 const CORE = 260;
-const CAST = 2600;
+const CAST = 6500;
 const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
 const CHANNEL = 0.2;
@@ -365,7 +365,7 @@ export function create(ctx: Context): Piece {
   });
 
   // Two lights of the rig: the channel over the struck tip, and the cloud lit from inside where the channel enters it.
-  const channelLight = { position: new THREE.Vector3(), radius: 70, radiance: new THREE.Vector3() };
+  const channelLight = { position: new THREE.Vector3(), radius: 160, radiance: new THREE.Vector3() };
   const cloudLight = { position: new THREE.Vector3(), radius: 260, radiance: new THREE.Vector3() };
   ctx.rig.emitters.push(channelLight, cloudLight);
 
