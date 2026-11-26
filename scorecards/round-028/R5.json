@@ -1,0 +1,56 @@
+{
+  "round": 28,
+  "unit": "film",
+  "pack": "R5",
+  "family": "claude",
+  "answered": "2026-11-26 18:33 UTC",
+  "answer": {
+    "critic": "R5",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "frame 10027, the last wide view of the planet",
+        "what": "none of the seven places can be found in the skeleton-continent. The arches, the lava field, the terraced mudflat, the red marsh, the ice ridge and the crater lake have no matching landmark in it. Only a red star at the chest and a white plume might stand for the lava and the fume. So the reveal says 'it was a body' but not 'it was these places'",
+        "fix": "put recognisable landmarks from each place on the body at their real positions: rib arches along the ribcage, the lava glow where the heart is, the crater lake as an eye socket, red marsh pools along the gut, ice on the high limb. Let the camera's pull-out pass over one or two of them so they can be followed"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "frame 10027, the skeleton against the ocean",
+        "what": "the bones read as a flat decal on top of the ocean. Wave texture and whitecaps run straight through the land, there is no coastline, relief or shadow at the edge, and the hurricane is pasted over the shoulder. It looks like an illustration laid on a globe, not terrain",
+        "fix": "model the body as land with a real shoreline, surf and relief shadows. Mask the ocean texture out of the landmass and make the clouds and storm sit above the terrain in depth"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "frame 7015, the ice ridge with lightning",
+        "what": "this place looks less finished than the others. The cloud sea is soft and lumpy like CG, the snow looks plastic, the lightning bolt is a bright vector stroke that lights nothing around it, and the far spires are cardboard cut-outs against an orange band",
+        "fix": "bring it up to the photoreal level of the crater lake. Give the lightning a scatter glow and a flash on the ridge, and add volume, detail and atmospheric depth to the cloud sea and the far peaks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "frame 9541, the transition between the crater lake and orbit",
+        "what": "the frame is a featureless grey-blue blur. Paused, it looks like a render failure, not a move through cloud",
+        "fix": "keep some structure and motion in the cloud pass: cloud edges, light shafts, a glimpse of the ground. Or shorten it so it never holds as an empty frame"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-09.png",
+        "where": "frame 1241 (arches) and frame 7234 (ice spire)",
+        "what": "both places are built around tall curved horn-like spires with a hole or arch. Their colour sets them apart, but in silhouette they rhyme closely",
+        "fix": "give the ice place a silhouette of its own (a cornice, a serac field), or make the rhyme deliberate by tying both to the same bone on the final body"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "frames 0 to 1262, the opening arches; frame 2271 carcass; frame 8832 skeleton",
+        "what": "the rib- and horn-shaped arches, plus repeated carcasses and skeletons, lean toward the body idea early, though they never state it outright",
+        "fix": "acceptable as foreshadowing. Make the carcass beats less frequent if the reveal is meant to land harder"
+      }
+    ]
+  }
+}
