@@ -237,6 +237,11 @@ void main() {
   vec3 lightUp = skyIrradiance(vec3(0.0, 1.0, 0.0));
 #ifdef CURTAIN
   float alpha = smoothstep(0.02, 0.22, lum) * (1.0 - smoothstep(0.6, 1.0, a)) * (1.0 - uSolo);
+  // Thrown water is lumps and holes: no sheet of it has an edge, least of all where it leaves the lip.
+  vec3 lumps = texture2D(tFoamPic, vec2(x / 13.0, a * 1.7 - uTime * 0.22)).rgb;
+  float lump = dot(lumps, vec3(0.3333));
+  alpha *= smoothstep(0.0, 0.3, a + 0.6 * (lump - 0.5)) * smoothstep(0.22 + 0.3 * a, 0.62 + 0.3 * a, lump + 0.25);
+  pic = mix(lumps * 1.15 + 0.1, pic, smoothstep(0.1, 0.4, a));
   vec3 col = pic * (lightUp * 0.9 + uSunColour * 0.45 * sun) / 3.14159;
   // Thrown water is thin at its top and the bright sky behind the wave shows in it.
   vec3 behind = skyRadiance(-v);
@@ -261,6 +266,11 @@ void main() {
   bool bare = a < 0.0 && apron < 0.3 && lifted <= 0.0;
   float foot = a < 0.0 ? 1.0 : smoothstep(0.1, 0.0, t);
   pic = mix(pic, max(churn, vec3(0.5) * step(a, 0.0) * 0.0) + 0.25 * apron * step(a, 0.0), foot);
+  // No wave has an outline: the top of the wall is churned white with holes in it, torn lower in one place than the next.
+  vec3 top = texture2D(tFoamPic, vec2(x / 9.0, t * 2.2 - uTime * 0.3)).rgb;
+  float torn = smoothstep(0.7, 1.0, t) * 1.3 - dot(top, vec3(0.3333)) - 0.25 * (tongue - 0.8);
+  pic = mix(pic, top * 1.1 + 0.12, smoothstep(0.72, 0.9, t) * step(0.0, a));
+  bare = bare || (a > 0.0 && torn > 0.32);
   lum = dot(pic, vec3(0.3, 0.5, 0.2));
   float foam = smoothstep(0.2, 0.6, lum);
   vec3 n = normalize(vNormalW);
