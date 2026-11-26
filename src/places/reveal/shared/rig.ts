@@ -54,12 +54,12 @@ export interface Dusk {
 
 /** The end of the day at a second of the place: a pure function of the time, and the day itself (dusk 0) up to DUSK_FROM. */
 export function dusk(seconds: number): Dusk {
-  const u = seconds - DUSK_FROM;
+  const u = (seconds - DUSK_FROM) / SET_SLOW;
   if (!(u > 0)) return { dusk: 0, sun: [...SUN], round: 0, moon: 0, gain: 1, strikes: 1, glintSlide: 0, glint: 1, working: 1, ember: 0 };
   const length = Math.hypot(...SUN);
   const height0 = Math.asin(SUN[1] / length);
   const turn0 = Math.atan2(SUN[0], -SUN[2]);
-  // The sun's height: it starts from rest, falls fastest as it sets (about 4.2 s in) and comes to rest well under the horizon.
+  // The sun's height: it starts from rest, falls fastest as it sets (about 4.6 s in) and comes to rest well under the horizon.
   const fallen = 1 - Math.exp(-((u / SET_TAU) * (u / SET_TAU)));
   const height = height0 - SET_DROP * fallen;
   // And it sets to the left of where it stood: the planet turns under it.
@@ -87,6 +87,8 @@ export function dusk(seconds: number): Dusk {
   };
 }
 const SET_TAU = 5.5;
+/** The whole of the dusk is this much slower than it was first timed: the night is come at about film frame 11300. */
+const SET_SLOW = 1.1;
 const SET_DROP = (72 * Math.PI) / 180;
 const SET_SWING = (30 * Math.PI) / 180;
 const NIGHT_GAIN = 9;

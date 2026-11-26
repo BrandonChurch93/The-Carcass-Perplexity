@@ -126,7 +126,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     vec3 sunLight = sunLightAt(sunH, day) * occ;
     vec3 eDusk = sunLight * max(dot(n, toSun), 0.0) + skyIrradiance(n) * (0.55 + 0.45 * occ) * skyLightAt(sunH, day);
     // (Under the moon the eye and the camera lose colour: the ground is read nearly grey.)
-    vec3 eMoon = uMoonColour * (max(dot(n, uMoonDir), 0.0) * (0.6 + 0.4 * occ) + 0.16);
+    vec3 eMoon = uMoonColour * (max(dot(n, uMoonDir), 0.0) * (0.6 + 0.4 * occ) + 0.24);
     vec3 hDusk = normalize(toSun + v);
     float aDusk = max(rough * rough, 0.002);
     float nhDusk = max(dot(n, hDusk), 0.0);

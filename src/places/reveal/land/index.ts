@@ -470,9 +470,7 @@ void main() {
     vec3 vent = VENTS[i];
     vec2 q = fromLava - vent.xy;
     float dd = dot(q, q);
-    // The height of the highest ground, km, as the shadows of dusk are thrown: drawn taller than it stands, as relief is on a map.
-const float RELIEF_KM = 16.0;
-// The lesser vents answer the beat a little late, each in its turn.
+    // The lesser vents answer the beat a little late, each in its turn.
     float answer = 0.75 + 0.5 * uBeat * (0.5 + 0.5 * sin(float(i) * 2.4));
     heat += exp(-dd / (11.0 * vent.z * seenFar)) * 2.2 * vent.z * answer;
     halo += exp(-dd / (260.0 * vent.z)) * 0.3 * vent.z * answer;
@@ -490,18 +488,20 @@ const float RELIEF_KM = 16.0;
   // flanks of the ribs that face it, falling off with distance, and veins of fire run out between the ribs.
   // (What the day drew of it was drawn for the day's exposure; and the day's swell lights the black crust as much as the bone,
   // which the night would show as a red disc: by night the fire's light is the ground's own colour, below.)
-  if (uDusk > 0.0) glow = (glowCore + (glowSwell - glowCore) * mix(1.0, 0.2, uEmber.x) + (glow - glowSwell)) * pow(uGain, -0.6);
+  if (uDusk > 0.0) glow = (glowCore + (glowSwell - glowCore) * mix(1.0, 0.2, uEmber.x) + (glow - glowSwell)) * pow(uGain, -1.0);
   if (uDusk > 0.0 && uEmber.x > 0.0) {
     float facing = clamp(0.35 + 3.0 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 2.0);
     float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 8000.0);
     glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.4 + 2.6 * uBeat) * reach * facing * uEmber.x * land);
-    // (The ember itself swells with the beat.)
-    glow += blackbody(1250.0) * 0.05 * uEmber.x * uBeat * exp(-d0 / (60.0 * seenFar * (1.0 + 2.0 * uBeat))) * land;
+    // (The ember itself: a dull lake of fire in the chest, and it swells with the beat.)
+    float lake = exp(-d0 * (0.55 + 0.9 * vnoise(xz / 11.0 + 2.0)) / (150.0 * seenFar * (1.0 + 1.5 * uBeat)));
+    glow += vec3(1.0, 0.3, 0.045) * (0.07 + 0.2 * uBeat) * uEmber.x * lake * land;
     if (d0 < 250000.0) {
-      // (The beat runs out along the veins, as a pulse does.)
-      float pulse = uEmber.y > 0.0 ? exp(-pow((sqrt(d0) - 380.0 * uEmber.y) / 80.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
-      float veins = cracks(xz / 26.0) * min(1.0, 1.6 * crust) * exp(-d0 / 50000.0) * (0.35 + 0.3 * uBeat + 1.2 * pulse);
-      glow += blackbody(1050.0 + 250.0 * clamp(veins, 0.0, 1.0)) * 0.03 * smoothstep(0.05, 0.5, veins) * uEmber.x;
+      // (Fire in the cracks of the crust round it, broken along its length; the beat runs out along it, as a pulse does.)
+      float pulse = uEmber.y > 0.0 ? exp(-pow((sqrt(d0) - 380.0 * uEmber.y) / 90.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
+      float broken = smoothstep(0.3, 0.75, vnoise(xz / 34.0 + 4.0));
+      float veins = cracks(xz / 44.0) * broken * min(1.0, 1.6 * crust) * exp(-d0 / 60000.0) * (0.3 + 0.3 * uBeat + 1.1 * pulse);
+      glow += blackbody(980.0 + 220.0 * clamp(veins, 0.0, 1.0)) * 0.03 * smoothstep(0.03, 0.55, veins) * uEmber.x;
     }
   }
 
@@ -617,6 +617,8 @@ const float RELIEF_KM = 16.0;
     vec2 fromSheen = xz - uTerm.xy - 1300.0 * normalize(uMoonDir.xz);
     vec3 sheen = uMoonColour * 0.012 * sparkle * (0.4 + 0.6 * shade) * (0.25 + exp(-dot(fromSheen, fromSheen) / 1.2e6));
     water = waterBed + (waterSky - waterBed) * skyLightAt(sunH, day) + (waterGlare - waterSky) + (water - waterGlare) * airLightAt(sunH) + sheen;
+    // (Under the moon the sea has almost no colour, and less light than the land.)
+    water = mix(water, vec3(dot(water, vec3(0.3, 0.55, 0.15))) * vec3(0.75, 0.95, 1.25), 0.55 * uEmber.x) * (1.0 - 0.3 * uEmber.x);
   }
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   vec3 colour = mix(water, earth + 0.4 * glare, land);

@@ -36,7 +36,7 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
     float sunH = sunHeight(xz) + uTerm.w * (0.05 + 0.08 * high);
     float low = mix(uSunDir.y, 0.22 + 0.6 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + uMoonColour * (0.12 + 0.16 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
+    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + uMoonColour * (0.1 + 0.14 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
     return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
   }
@@ -291,8 +291,8 @@ void main() {
       // and when that has gone a thin line of airglow all round. The stars come out as the exposure opens.
       float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.08;
       vec3 arc = mix(vec3(1.0), mix(vec3(1.5, 0.62, 0.2), vec3(0.7, 0.85, 1.2), smoothstep(0.0, 40.0, km)) * sunSeen(sunH - 0.05) + 0.05 * skySeen(sunH), uTerm.w);
-      float line = exp(-pow((km - 22.0) / 9.0, 2.0));
-      colour = (exposed(glow * arc + vec3(0.2, 0.75, 0.42) * 0.0035 * line * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45)) * a;
+      float line = exp(-pow((km - 22.0) / 12.0, 2.0));
+      colour = (exposed(glow * arc * pow(uGain, -0.7) + vec3(0.3, 0.62, 0.42) * 0.0028 * line * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45)) * a;
     }
     gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
     return;
@@ -304,7 +304,7 @@ void main() {
   if (uDusk > 0.0) {
     float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.05;
     vec3 arc = mix(vec3(1.0), mix(vec3(1.6, 0.6, 0.18), vec3(0.75, 0.85, 1.1), sunSeen(sunH - 0.12)) * sunSeen(sunH - 0.03) + 0.04 * skySeen(sunH), uTerm.w);
-    colour = exposed(colour * arc);
+    colour = exposed(colour * arc * pow(uGain, -0.7));
   }
   gl_FragColor = vec4(colour * (1.0 - uSolo), 0.0);
 }`;
