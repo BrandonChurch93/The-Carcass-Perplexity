@@ -141,12 +141,24 @@ function reliefAt(sheet: number, u: number, v: number): number {
 /** How far the relief of a spire's sheet stands out of its face, metres from furthest to nearest. */
 export const reliefDepth = (sp: Spire): number => 0.1 * sp.tip;
 
+const RING_LOW = 0.58;
+const RING_HIGH = 0.9;
+const RING_DENSE = 2.5;
+/** How high on the first spire a ring stands (0 the crest, 1 the tip) for how far up the count of rings it is: closest where the kites roost. */
+function ringAt(g: number): number {
+  const whole = RING_LOW + RING_DENSE * (RING_HIGH - RING_LOW) + (1 - RING_HIGH);
+  const w = g * whole;
+  if (w < RING_LOW) return w;
+  if (w < RING_LOW + RING_DENSE * (RING_HIGH - RING_LOW)) return RING_LOW + (w - RING_LOW) / RING_DENSE;
+  return RING_HIGH + (w - RING_LOW - RING_DENSE * (RING_HIGH - RING_LOW));
+}
+
 /** A spire: a leaning broken blade cut from its feature sheet (the outline and the relief are the sheet's), and its root down the flanks into the cloud. */
 // level: 2 the spire the lens comes close to, 1 one that is seen whole in a long lens, 0 one far down the ridge. The triangles are dear in a
 // software renderer whether or not they are seen large, so only the first spire has the finest mesh.
 export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeometry {
-  const UP = level > 1.5 ? 190 : level > 0.5 ? SPIRE_MID[0] : 48;
-  const DOWN = level > 1.5 ? 90 : level > 0.5 ? 18 : 8;
+  const UP = level > 1.5 ? 230 : level > 0.5 ? SPIRE_MID[0] : 48;
+  const DOWN = level > 1.5 ? 50 : level > 0.5 ? 18 : 8;
   const AROUND = level > 1.5 ? 400 : level > 0.5 ? SPIRE_MID[1] : 96;
   const m = finAxes(sp);
   const seed = Math.floor(rng.next() * 900);
@@ -163,30 +175,22 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
   for (let r = 0; r <= DOWN + UP + 1; r++) {
     const cap = r === DOWN + UP + 1;
     const k = Math.min(r, DOWN + UP);
-    const t = k < DOWN ? tLow + (t0 - tLow) * Math.pow(k / DOWN, 0.7) : t0 + (1 - t0) * ((k - DOWN) / UP);
+    // The rings stand closer where the lens of the kites is on the face (level 2 only): two and a half to one between h 0.58 and 0.9.
+    const g = (k - DOWN) / UP;
+    const h = level > 1.5 ? ringAt(g) : g;
+    const t = k < DOWN ? tLow + (t0 - tLow) * Math.pow(k / DOWN, 0.7) : t0 + (1 - t0) * h;
     const p = fin(sp, t);
     const u = t * tall;
     for (let a = 0; a < AROUND; a++) {
       // Round the blade: its two broad faces are laid out evenly across their breadth, so the sheet's relief has the same mesh everywhere
       // on them, and its two thin ends take the few that are left.
       const f = a / AROUND;
-      let ln: number;
-      let face: number;
-      if (f < 0.46) {
-        ln = 0.98 - 1.96 * (f / 0.46);
-        face = 1;
-      } else if (f < 0.5) {
-        const g = (f - 0.46) / 0.04;
-        ln = -(0.98 + 0.02 * Math.sin(Math.PI * g));
-        face = g < 0.5 ? 1 : -1;
-      } else if (f < 0.96) {
-        ln = -0.98 + 1.96 * ((f - 0.5) / 0.46);
-        face = -1;
-      } else {
-        const g = (f - 0.96) / 0.04;
-        ln = 0.98 + 0.02 * Math.sin(Math.PI * g);
-        face = g < 0.5 ? -1 : 1;
-      }
+      // (By the angle round its section, not by its breadth: its thin ends are as deep as its faces are broad where it is high, and the
+      // lens of the kites looks straight at one of them.)
+      const th = 2 * Math.PI * f;
+      const co = Math.cos(th);
+      const ln = Math.sign(co) * Math.pow(Math.abs(co), 2 / FIN_SECTION);
+      const face = Math.sin(th) >= 0 ? 1 : -1;
       const edge = Math.pow(Math.abs(ln), 12);
       const snap = cap ? 0.12 : 1;
       const l = p.centre + ln * p.half * snap;
@@ -194,6 +198,8 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       // Its faces stand in and out as the sheet's relief has them, with the small blocks of the rock on top.
       const [su, sv] = sheetAt(sp, l, y);
       let n = depth * (reliefAt(sp.sheet, su, sv) - 0.55) + 0.8 * slab(u - 0.2 * l, l + face * 700, 15, 5, seed + 7);
+      // The rock is jointed: great plates that stand up the face, each proud of or behind its neighbours, and the blocks they break into.
+      n += 7 * slab(u - 0.25 * l, l + face * 700 + 31, 64, 21, seed + 11) + 2.8 * slab(u + 0.15 * l, l + face * 700 + 57, 23, 8, seed + 3);
       n = Math.max(-0.5 * p.thick, Math.min(0.7 * p.thick + 4, n)) * (1 - 0.92 * edge);
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
       const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);
@@ -492,4 +498,45 @@ export function stones(
   }
   for (const d of drifts) tail(d.at[0], d.at[1], d.along[0], d.along[1], d.long, d.wide, d.high);
   return finish(pos, index, top, sl);
+}
+
+/**
+ * A crag: a lump of broken rock about a point, taller than it is broad, for the rock that stands near a lens. It is seen out of focus, so its
+ * form is a few sizes of lump and no more.
+ */
+export function crag(rng: Rng, at: readonly [number, number, number], wide: number, tall: number): THREE.BufferGeometry {
+  const RINGS = 40;
+  const SEG = 48;
+  const pos: number[] = [];
+  const index: number[] = [];
+  const lumps = Array.from({ length: 24 }, () => [rng.range(0, 6.283), rng.range(-1, 1), rng.range(0.25, 0.7), rng.range(-0.22, 0.3)] as const);
+  for (let j = 0; j <= RINGS; j++) {
+    const lat = (j / RINGS) * Math.PI;
+    for (let a = 0; a <= SEG; a++) {
+      const lon = (a / SEG) * Math.PI * 2;
+      const dx = Math.sin(lat) * Math.cos(lon);
+      const dy = Math.cos(lat);
+      const dz = Math.sin(lat) * Math.sin(lon);
+      let r = 1;
+      for (const [lo, hi, size, deep] of lumps) {
+        const cx = Math.sqrt(1 - hi * hi) * Math.cos(lo);
+        const cz = Math.sqrt(1 - hi * hi) * Math.sin(lo);
+        const d2 = (dx - cx) ** 2 + (dy - hi) ** 2 + (dz - cz) ** 2;
+        r += deep * Math.exp(-d2 / (size * size));
+      }
+      pos.push(at[0] + dx * wide * r, at[1] + dy * tall * r, at[2] + dz * wide * r);
+    }
+  }
+  for (let j = 0; j < RINGS; j++) {
+    for (let a = 0; a < SEG; a++) {
+      const p = j * (SEG + 1) + a;
+      index.push(p, p + SEG + 1, p + 1, p + 1, p + SEG + 1, p + SEG + 2);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  g.computeBoundingSphere();
+  return g;
 }

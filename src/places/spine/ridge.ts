@@ -38,10 +38,10 @@ const TABLE: [number, number, number, number, number, number, number, number][] 
   [-732, 451, 20, 230, 2, 0.9, 0.5, 18],
   [0, 0, 0, 300, 0, 0.62, 0.79, 21],
   [740, 184, -25, 168, 2, 1.25, 0.55, 12],
-  [1596, 426, -40, 292, 1, 0.85, 0.5, 20],
-  [2470, 745, -70, 128, 1, -1.4, 0.55, -10],
-  [3010, 968, -110, 236, 2, 0.7, 0.5, 26],
-  [3990, 1400, -150, 104, 1, 1.6, 0.6, 5],
+  [1596, 452, -40, 292, 0, 0.85, 0.62, 20],
+  [2470, 745, -70, 250, 1, 1.1, 0.55, -10],
+  [3010, 968, -110, 300, 2, 0.7, 0.5, 26],
+  [3990, 1400, -150, 250, 1, 1.0, 0.6, 5],
   [4540, 1676, -190, 232, 2, 1.1, 0.5, 16],
   [5246, 2052, -230, 82, 1, -1.8, 0.6, -14],
   [5939, 2452, -270, 188, 2, -0.75, 0.5, 22],
@@ -211,7 +211,8 @@ spires.forEach((sp, i) => {
     const [a, b] = outline(sh, sh.tip + sp.tip / sp.mv);
     sp.col0 = 0.5 * (a + b);
     sp.l0 = 0;
-    sp.shear = 0.12 * Math.sin(i * 2.7 + 1);
+    // The third (the one the long lens sees struck) stands more upright than its sheet: its steep side to the storm, its long shoulder to the lee.
+    sp.shear = i === FIRST + 2 ? -0.3 : 0.12 * Math.sin(i * 2.7 + 1);
   }
   const [a, b] = outline(sh, sh.tip + sp.tip / sp.mv);
   sp.half = 0.5 * (b - a) * sp.mh;
@@ -328,6 +329,30 @@ export const FIN_ROOT = 110;
 /** The power of a blade's section: 2 would be an ellipse, 1 a diamond. Between them: two faces that meet in an edge at each end and are full in the middle. */
 export const FIN_SECTION = 3;
 
+function notchHash(n: number, seed: number): number {
+  const v = Math.sin(n * 127.1 + seed * 311.7) * 43758.5453;
+  return v - Math.floor(v);
+}
+/** How far a blade's edge stands out at a height, metres: blocks in beds, each with its own stand and its own slope, in two sizes. */
+function notch(y: number, seed: number): number {
+  let sum = 0;
+  const sizes: [number, number][] = [
+    [31, 5.5],
+    [9, 1.8],
+  ];
+  for (const [bed, far] of sizes) {
+    const at = y / bed + 3 * notchHash(seed, bed);
+    const i = Math.floor(at);
+    // The beds are not all one height: every bed's top is thrown up or down within it.
+    const top = 0.25 + 0.5 * notchHash(i, seed + 3);
+    const f = at - i;
+    const cell = f < top ? i : i + 0.5;
+    const within = f < top ? f / top : (f - top) / (1 - top);
+    sum += far * (notchHash(cell, seed + 7) - 0.5 + 0.7 * (notchHash(cell, seed + 13) - 0.5) * (within - 0.5));
+  }
+  return sum;
+}
+
 export function fin(sp: Spire, t: number): FinPoint {
   // h is 0 where the blade leaves the crest and 1 at its top; under the crest it is negative, and the blade goes on down the flanks as a buttress on either hand.
   const t0 = FIN_ROOT / (sp.tip + FIN_ROOT);
@@ -343,10 +368,17 @@ export function fin(sp: Spire, t: number): FinPoint {
   const lean = sp.shear * Math.min(h, 1) * sp.tip;
   const l1 = sp.l0 + k * (a - sp.col0) * sp.mh - lean;
   const l2 = sp.l0 + k * (b - sp.col0) * sp.mh - lean;
-  const wide = Math.max(1.5, 0.5 * Math.abs(l2 - l1)) + 0.3 * (under - low);
+  // Its edges are broken rock, not a drawn line: each steps in and out as its blocks have fallen away, in beds of no two heights.
+  const full = Math.min(1, (0.5 * Math.abs(l2 - l1)) / 22) * (1 - smooth(0.9, 1, h));
+  const yy = sp.alt + h * sp.tip;
+  const nA = full * notch(yy, sp.x * 0.37 + 11);
+  const nB = full * notch(yy, sp.x * 0.37 + 57);
+  const lo = Math.min(l1, l2) - nA;
+  const hi = Math.max(l1, l2) + nB;
+  const wide = Math.max(1.5, 0.5 * (hi - lo)) + 0.3 * (under - low);
   const thin = Math.min(0.45 * wide + 2, sp.thick);
   const thick = thin + (sp.thick - thin) * Math.pow(q, 1.05) * (1 - 0.3 * smooth(0.3, 0.8, h)) + 0.2 * under;
-  return { centre: 0.5 * (l1 + l2), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t };
+  return { centre: 0.5 * (lo + hi), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t };
 }
 
 /** The two level axes of a blade: across it (toward the lee) and along it (down the ridge), each turned by the spire's yaw. */
