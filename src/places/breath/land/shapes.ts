@@ -41,10 +41,11 @@ export function talusHeight(x: number, z: number): number {
   const rim = rimRadius(b);
   let d = Math.abs(b - 112 * RAD);
   if (d > Math.PI) d = 2 * Math.PI - d;
-  const across = smooth((40 * RAD - d) / (18 * RAD));
+  const across = smooth((31 * RAD - d) / (15 * RAD));
   // The fan reaches a third of the way to the axis: beyond it the shaft is open and the mist fills it.
   const down = smooth((rim - r) / (rim - 9));
-  const top = ground(Math.sin(b) * rim * 1.002, -Math.cos(b) * rim * 1.002) - 1.2;
+  // Its head lies two tiers under the brim: the wall and its ribs stand over it, and no block stands at the level of a lens on the rim.
+  const top = ground(Math.sin(b) * rim * 1.002, -Math.cos(b) * rim * 1.002) - 11;
   return lerp(top, -30, down ** 0.8) - 44 * (1 - across) - 40 * smooth((11 - r) / 5) + 1.1 * drift(x * 0.33, 1, z * 0.33) + 0.5 * drift(x * 0.9, 4, z * 0.9);
 }
 

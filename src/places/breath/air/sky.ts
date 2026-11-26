@@ -54,8 +54,10 @@ vec4 farPicture(vec3 d) {
   vec3 seen = textureLod(tFar, clamp(uv, 0.002, 0.998), 0.0).rgb;
   // The picture's cliff holds snow in white patches. The place has none: they are toned down to pale rock faces in the haze.
   float lum = dot(seen, vec3(0.3333));
-  float pale = smoothstep(0.22, 0.34, lum) * smoothstep(0.1, 0.04, seen.r - seen.b) * smoothstep(0.22, 0.3, uv.x);
-  seen *= mix(vec3(1.0), vec3(1.07, 1.0, 0.89) * ((0.24 + 0.15 * (lum - 0.24)) / max(lum, 0.01)), pale);
+  float pale = smoothstep(0.15, 0.26, lum) * smoothstep(0.1, 0.04, seen.r - seen.b) * smoothstep(0.22, 0.3, uv.x);
+  seen *= mix(vec3(1.0), vec3(1.12, 1.0, 0.84) * ((0.17 + 0.14 * (lum - 0.15)) / max(lum, 0.01)), pale);
+  // The cliff stands kilometres off in the dawn haze: it is bare grey-brown strata, a little darker than it was painted (by number against the approved rim picture).
+  seen *= mix(1.0, 0.8, smoothstep(0.22, 0.3, uv.x));
   return vec4(untoned(seen), w);
 }`;
 

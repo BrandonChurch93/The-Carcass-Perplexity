@@ -17,6 +17,7 @@ uniform vec4 uBedFar;
 uniform sampler2D tWave;
 uniform sampler2D tRipple;
 uniform float uSea;
+uniform float uHigh;
 uniform sampler2D tMirror;
 uniform sampler2D tRings;
 uniform vec2 uFrame;
@@ -45,7 +46,7 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   vec3 v = toEye / far;
   // The rig's light at the water, from the land it has already read here (skyOpen and sunAt of the rig, without reading the land again).
   float above = uSea - land.r;
-  float open = mix(land.g, 1.0, clamp(above / 30.0, 0.0, 1.0)) * (1.0 - contactDrawn(vWorld) * smoothstep(4.0, 0.0, above));
+  float open = mix(land.g, 1.0, clamp(above / 30.0, 0.0, 1.0)) * (1.0 - (far < 60.0 ? contactDrawn(vWorld) * smoothstep(60.0, 45.0, far) : 0.0) * smoothstep(4.0, 0.0, above));
   float sunHere = sunSeen(land, uSea + 0.3) * sunCloud(xz);
 
   // Two sheets of small waves crossing, carried down the channel; a third, slow and large, so the far water is not one tone.
@@ -90,16 +91,23 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   vec3 mirror = 1.35 * skyRadiance(r) * open;
   // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
   float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
-  float drawn = 1.0 - 0.8 * tanh(3.4 * tip);
+  // To a low eye the sheet is a mirror first: its waves shade it in long soft bands, they do not cut it into grains.
+  float low = 1.0 - smoothstep(3.0, 7.0, cameraPosition.y - uSea);
+  float drawn = 1.0 - mix(0.8, 0.6, low) * tanh(mix(3.4, 1.7, low) * tip);
   mirror *= drawn;
   // Toward the sun the fog is a glare the water gives back broken: the troughs there stay dark.
   vec3 rFlat = reflect(-v, vec3(0.0, 1.0, 0.0));
   float sunFlat = max(dot(normalize(vec3(rFlat.x, abs(rFlat.y) + 0.02, rFlat.z)), uSunDir), 0.0);
   mirror *= 1.0 - 0.7 * pow(sunFlat, 8.0);
   // And the faces that turn the sun itself to the lens are the glints of its path: each a hard point or a short bright line on one wavelet.
-  float hard = pow(max(dot(r, uSunDir), 0.0), 700.0) * 2.4 * smoothstep(160.0, 10.0, far);
+  // An eye that stands high over the water sees it as a sheet: its own green through the mirror, and the sun's path as a broad field of glints that does not thin with the distance.
+  // Staged by shot: uHigh is 1 through the wide view from above (breath-01) and 0 elsewhere, so the colour of the channel holds while that
+  // lens comes down. The field of glints is the eye's own: it thins as the eye drops toward the water.
+  float high = uHigh * smoothstep(0.03, 0.08, v.y);
+  float glint = high * smoothstep(5.0, 9.0, cameraPosition.y - uSea);
+  float hard = pow(max(dot(r, uSunDir), 0.0), mix(700.0, 260.0, glint)) * 2.4 * max(smoothstep(160.0, 10.0, far), glint);
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
-  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.98, 1.0, 0.9), 0.1 + 0.3 * smoothstep(0.04, 0.22, v.y)) * mix(0.96, 0.8, smoothstep(0.06, 0.3, v.y)) * vec3(1.12, 0.94, 0.76);
+  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.98, 1.0, 0.9), 0.1 + 0.3 * smoothstep(0.04, 0.22, v.y)) * mix(0.96, 0.8, smoothstep(0.06, 0.3, v.y)) * mix(vec3(1.12, 0.94, 0.76), vec3(0.96, 1.0, 0.94), high);
   vec3 skyUp = skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159;
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
@@ -107,6 +115,7 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   float hit = 0.0;
   float reach = 2.4;
   for (int i = 0; i < 2; i++) {
+    if (far > 260.0) break;
     vec2 at2 = (xz + way * reach - uLandRect.xy) * uLandRect.zw;
     float over = texture2D(tLand, at2).r - (uSea + rise * reach);
     hit = max(hit, smoothstep(0.0, 0.5 + 0.03 * reach, over) * exp(-reach / 45.0));
@@ -122,7 +131,7 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   float crest = smoothstep(0.05, 0.4, -tip);
   // The sun is a broad glare in the fog: its glints reach far to either side of its path, fewer the farther.
   float sunPath = pow(rsun, 48.0);
-  float lobe = (0.7 + 0.3 * pow(rsun, 3.0) + 1.0 * sunPath) * (0.2 + 1.6 * crest) * (0.7 + 0.3 * gust) * (0.5 + 2.2 * rings.b);
+  float lobe = (0.7 + 0.3 * pow(rsun, 3.0) + 1.0 * sunPath + 3.0 * glint * pow(rsun, 6.0)) * (0.2 + 1.6 * crest) * (0.7 + 0.3 * gust) * (0.5 + 2.2 * rings.b);
   float sparks = 0.0;
   // A glint is a facet a few pixels wide wherever it is: near the lens a finger of water, far off a hand, then a wavelet. Two sizes
   // of them are laid at once and the nearer size gives way to the farther with the distance.
@@ -145,19 +154,19 @@ vec4 water(vec2 xz, float depth, vec4 land) {
       sparks += on * dot_ * life * share;
     }
   }
-  mirror += uSunColour * vec3(1.0, 0.88, 0.7) * sunHere * (sparks * seen * (2.2 + 1.0 * sunPath) + (1.0 - seen) * lobe * 0.003 + 0.02 * crest * crest * pow(rsun, 4.0) * smoothstep(60.0, 20.0, far));
+  mirror += uSunColour * vec3(1.0, 0.88, 0.7) * sunHere * (sparks * seen * (2.2 + 1.0 * sunPath) + (1.0 - seen) * lobe * 0.003 + 0.02 * crest * crest * pow(rsun, 4.0) * smoothstep(60.0, 20.0, far) + (glint + 0.4 * low) * pow(rsun, 8.0) * (0.08 + 0.7 * crest));
   // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
   vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.03 + (g1.x + g2.y) * 0.01, (slope.y + g1.y * 0.5) * 0.07) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
   vec4 image = texture2D(tMirror, at);
   // The image is of things in the shade of their own bodies, seen from below: darker than what stands over it.
-  mirror = mirror * (1.0 - 0.85 * image.a) + 0.4 * image.rgb;
+  mirror = mirror * (1.0 - mix(0.85, 0.96, low) * image.a) + mix(0.4, 0.26, low) * image.rgb;
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
   float path = depth / max(nv, 0.1);
   vec3 through = exp(-path * vec3(2.6, 1.9, 2.2));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
   // Warm grey silt in the shallows; where the channel has depth the silt has settled and it is green going to blue.
-  vec3 body = mix(vec3(0.52, 0.42, 0.31), vec3(0.25, 0.36, 0.31), smoothstep(0.25, 1.1, depth)) * (0.6 + 6.0 * v.y * v.y) * (0.7 + 0.3 * drawn) * skyUp * open;
+  vec3 body = mix(mix(vec3(0.52, 0.42, 0.31), vec3(0.6, 0.56, 0.46), high), mix(vec3(0.25, 0.36, 0.31), vec3(0.27, 0.4, 0.34), high), smoothstep(mix(0.25, 0.08, high), mix(1.1, 0.7, high), depth)) * (0.6 + 6.0 * v.y * v.y) * (0.7 + 0.3 * drawn) * skyUp * open;
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 
@@ -167,7 +176,7 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   float alpha = 1.0 - (1.0 - fresnel) * clear * (1.0 - 0.5 * rim);
   // Looked down on, the water mirrors little, and still the image of what stands in it is seen: the animal is between the sky and
   // the water under it, so the silt there is in its shade and the bed is hidden by it.
-  colour = mix(colour * (1.0 - 0.35 * image.a), 0.4 * image.rgb, 0.5 * image.a);
+  colour = mix(colour * (1.0 - 0.35 * image.a), mix(0.4, 0.26, low) * image.rgb, mix(0.5, 0.75, low) * image.a);
   alpha = mix(alpha, 1.0, 0.6 * image.a);
   // What the water leaves at its edge: a broken line of scum and small bubbles, pale, that rides the ragged line of the bank.
   float line = depth - ragged;

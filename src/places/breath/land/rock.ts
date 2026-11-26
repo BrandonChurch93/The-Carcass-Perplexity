@@ -362,9 +362,9 @@ void main() {
   // The dry ground is pale rough rock. Its picture is laid 12 m wide and is soft at the lens, so it gives only the broad lights and darks;
   // the grain of the rock at two sizes and grit a hand across (the shingle's tile, a third of its size) carry the rest.
   vec3 padSoft = mix(vec3(dot(padColour, vec3(0.3333))), padColour, 0.7);
-  padSoft = 1.3 * mix(vec3(0.47, 0.435, 0.385), padSoft * vec3(1.05, 1.0, 0.93) * (1.0 + 0.3 * padHigh), 0.4);
-  padSoft *= mix(1.0, clamp(tone, 0.7, 1.35), 0.4) * mix(1.0, clamp(dot(grit, vec3(0.3333)) / 0.53, 0.5, 1.5) * (0.75 + 0.5 * gritN.b), smoothstep(16.0, 4.0, dist));
-  padSoft *= mix(1.0, 0.4, padCrack) * mix(1.0, 0.66, padLow);
+  padSoft = 1.36 * mix(vec3(0.47, 0.435, 0.385), padSoft * vec3(1.05, 1.0, 0.93) * (1.0 + 0.3 * padHigh), 0.4);
+  padSoft *= mix(1.0, clamp(tone, 0.7, 1.35), 0.4) * mix(1.0, clamp(dot(grit, vec3(0.3333)) / 0.268, 0.4, 1.8) * (0.75 + 0.5 * gritN.b), smoothstep(16.0, 4.0, dist));
+  padSoft *= mix(1.0, 0.4, padCrack) * mix(1.0, 0.78, padLow);
   albedo = mix(albedo, padSoft, inPad);
   albedo = mix(albedo, pebColour, shingle);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
@@ -583,8 +583,16 @@ void main() {
   lum = dot(plate, vec3(0.3333));
   vec3 stoneCol = mix(plate, lum * vec3(1.05, 1.0, 0.93), 0.55);
   // Deep in the shaft the wall between the ribs is wet through and dark: the core of the shaft is the darkest thing in the place.
-  stoneCol *= mix(1.0, 0.55, (1.0 - rib) * smoothstep(-4.0, -20.0, p.y));
+  stoneCol *= mix(1.0, 0.5, (1.0 - rib) * smoothstep(-0.5, -6.0, p.y)) * mix(1.0, 0.6, (1.0 - rib) * smoothstep(-6.0, -22.0, p.y));
   vec3 albedo = (stoneCol * face * mix(vec3(0.62, 0.72, 0.72), vec3(2.2, 2.2, 2.2), rib) + onTop * top + below * under) * grain * uWall.y;
+  // Stains: rust runs down the wall and the faces of the ribs in streaks an arm to a pace wide, and the damp holds dark green in patches
+  // between the ribs. Both are laid by the bearing round the shaft and the depth (whole repeats round it: no seam), so they run true down.
+  float bear = atan(p.x, -p.z) / 6.28318;
+  float run = 0.6 * textureLod(tRock, vec2(bear * 61.0, p.y / 23.0), 0.0).r + 0.4 * textureLod(tRock, vec2(bear * 113.0 + 0.4, p.y / 9.0), 1.0).a;
+  float rust = smoothstep(0.5, 0.7, run) * (1.0 - 0.6 * top) * (1.0 - under);
+  albedo = mix(albedo, albedo * vec3(1.3, 0.72, 0.38), 0.7 * rust);
+  float mossy = smoothstep(0.56, 0.74, textureLod(tRock, vec2(bear * 37.0 + 0.61, p.y / 6.0 + 0.2), 0.0).r) * face * (1.0 - rib);
+  albedo = mix(albedo, albedo * vec3(0.5, 0.68, 0.42), 0.6 * mossy);
   float wet = clamp(smoothstep(0.14, 0.04, lum) * face + 0.6 * under, 0.0, 1.0) * smoothstep(-1.0, -5.0, p.y);
   float rough = mix(0.92, 0.5, wet);
 
