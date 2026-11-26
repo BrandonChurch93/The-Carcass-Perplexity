@@ -25,5 +25,231 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the uniformly striated snow-and-rock texture looks like a procedural material.",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "stretched, smeared procedural terrain textures and flat wispy cloud strokes look like a hobbyist/stock CG landscape render (Vue/Terragen-style), not film-grade.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 75,
+      "why": "the flat translucent ribbon-like wind streaks and visibly tiled low-poly cliff textures that look like real-time low-budget 3D rendering",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the foreground spire’s rock texture visibly stretches into long streaks along its geometry.",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "the rock and snow surfaces have stretched, smeared textures and the cloud wisps and lightning look pasted on, so it reads as a real-time game or demo scene and not a polished cinematic.",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 76,
+      "why": "the distant ice arch has a conspicuously faceted silhouette.",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "stretched low-detail cliff and snow textures with stiff fur cards on the carcass look like an ordinary hobbyist/stock 3D render, not film-grade or photographic.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "flat real-time lighting with no contact shadows where the creature meets the snow",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 96,
+      "why": "the foreground snow texture stretches into broad, blurry streaks across nearly flat terrain.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "The frosted fur and claw detail, with large-scale lighting and atmosphere, look like an AAA game engine render, though the muddy rock and snow textures pull it toward d.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the visibly stretched snow-and-rock texture on the foreground cliff.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the snowy trunk has a stretched, low-detail projected texture and the leaves look simple and flat, which reads like an ordinary hobbyist or stock CG render rather than film-grade work.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the stretched low-resolution terrain texture and flat real-time shading on the slope and translucent ribbons",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 96,
+      "why": "The foreground cliff looks like a blurry rock texture stretched across a flat slope.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 40,
+      "why": "The moody graded sky and atmospheric depth look cinematic and are not photographic, but the stretched, smeared bark texture on the left tempers my confidence.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 85,
+      "why": "the same hooked rock-spire silhouette repeats across the landscape.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "generic procedural-looking rock spires with flat, stretched textures and simple ribbon-like cloud wisps typical of a hobbyist/stock 3D render (e.g., Vue/Terragen style), not film-grade detail.",
+      "answered": "05:44 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 72,
+      "why": "the lightning strike is a flat glowing orb with simple straight-line sparks that casts no light onto the spire beneath it, characteristic of real-time web 3D or low-budget game effects",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 84,
+      "why": "The lightning ends in a flat white dot with a few straight spark streaks, like a simple game effect.",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "the rock spires have a smooth, procedurally textured look, and the glassy ribbon-like clouds and the odd lightning strike read as a generic CG fantasy scene. They lack the detail and lighting coherence of a top-budget production.",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "The icicles look like repeated straight-sided 3D cones.",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "stretched procedural cave textures and blobby fur-shell creatures with a pasted lightning bolt look like a hobbyist/stock 3D render rather than a film or game cinematic",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the low-poly cylindrical cave arch meeting a completely flat floor plane that terminates in a razor-straight edge with minimal contact shadows",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the rock texture stretches around the almost perfectly circular cave opening like a skin over a simple mesh.",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 60,
+      "why": "the cave wall textures are visibly stretched and smeared, and the fur-clump creatures and flat ice floor look like real-time game assets rather than top-budget cinematic work.",
+      "answered": "05:45 UTC"
+    }
+  ]
 }

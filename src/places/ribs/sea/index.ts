@@ -175,6 +175,17 @@ export function create(ctx: Context): Piece {
       surfAt.push({ x, z, lag: (k * (x * main[0] + z * main[1])) / w, power: rng.range(0.5, 1) * (1 - Math.abs(i - 4) * 0.12), id: n * 16 + i });
     }
   });
+  // The first blade stands at the edge of the flat: the swell breaks on the shore before its foot and is thrown up against it.
+  feet.forEach((foot, n) => {
+    if (rig.land.height(foot.x, foot.z) < -0.6 || foot.z < -100) return;
+    for (let i = 0; i < 12; i++) {
+      const x = foot.x + (i - 5.5) * 24 + rng.range(-8, 8);
+      let z = foot.z;
+      while (z < foot.z + 600 && rig.land.height(x, z) > -0.8) z += 4;
+      if (z >= foot.z + 600 || Math.abs(x - gate[0]) < 1 || x > -262) continue;
+      surfAt.push({ x, z: z + rng.range(0, 10), lag: (k * (x * main[0] + z * main[1])) / w + rng.range(0, 0.25) * period, power: rng.range(1.5, 2.3), id: n * 16 + i + 1000 });
+    }
+  });
   const PUFFS = 7;
   const surf = new Spray(surfAt.length * PUFFS, { ...rig.uniforms, ...shared });
   ctx.scene.add(ctx.parts.built('surf', surf.mesh));
@@ -236,7 +247,7 @@ export function create(ctx: Context): Piece {
           const x = e.x + side * (-main[1]) - main[0] * out * a + WIND.to[0] * drift;
           const z = e.z + side * main[0] - main[1] * out * a + WIND.to[1] * drift;
           const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / 3.4);
-          surf.put(x, y, z, (1.6 + 2.6 * a) * (0.7 + 0.6 * rand(seed, n + 4)), 0.75 * fade * power, rand(seed, n + 5), rand(seed, n + 6) * 6.28, 1.25);
+          surf.put(x, y, z, (1.6 + 2.6 * a) * (0.7 + 0.6 * rand(seed, n + 4)) * Math.max(1, e.power * 1.5), 0.75 * fade * Math.min(1.2, power), rand(seed, n + 5), rand(seed, n + 6) * 6.28, 1.25);
         }
       }
       surf.end();

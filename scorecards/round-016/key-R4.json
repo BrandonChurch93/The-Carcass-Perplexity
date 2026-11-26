@@ -1,0 +1,24 @@
+{
+  "round": "16",
+  "unit": "ribs",
+  "critic": "R4",
+  "packs": {
+    "R4-1": {
+      "set-A-01.png": "One sheet across the shot ribs-01, frames 0 to 1041",
+      "set-A-02.png": "One sheet across the shot ribs-02, frames 1042 to 1439",
+      "set-A-03.png": "One sheet across the shot ribs-03, frames 1440 to 1651",
+      "set-A-04.png": "One sheet across the shot ribs-04, frames 1652 to 1866",
+      "set-A-05.png": "One sheet across the shot ribs-05, frames 1867 to 2294",
+      "set-A-06.png": "One sheet across the shot ribs-06, frames 2295 to 2506",
+      "set-A-07.png": "Consecutive frames from the key frame of ribs-0, for what moves in that view",
+      "set-A-08.png": "Consecutive frames from the key frame of ribs-1, for what moves in that view",
+      "set-A-09.png": "Consecutive frames from the key frame of ribs-2, for what moves in that view",
+      "set-A-10.png": "Consecutive frames from the key frame of ribs-3, for what moves in that view"
+    },
+    "R4-2": {
+      "set-B-01.png": "Consecutive frames from the key frame of ribs-4, for what moves in that view",
+      "set-B-02.png": "Consecutive frames across the event bore at frame 2402",
+      "set-B-03.png": "One sheet across 6 seconds with the camera held still at the establishing key ribs-0, film frame 1241"
+    }
+  }
+}
