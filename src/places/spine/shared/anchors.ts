@@ -3,7 +3,7 @@
 // the cloud sea and the last light lie on +z (l > 0). Ridge coordinates: s metres along the crest from the first spire, l metres across it.
 import type { Vec3 } from '../../../core/cameras';
 import { cut, eventsOf, keyPart, secondsInPlace, shotById, shotLength } from '../../../film/cut';
-import { CANAL_L, EXIT, EXIT_FLARE, FIRST, FLOOR, MOUTH_S, canalL, finEdge, first, heightAbove, on, spires, tipOf, world, type Spire } from '../ridge';
+import { CANAL_L, EXIT, EXIT_FLARE, FIRST, FLOOR, MOUTH_S, canalL, finAxes, finEdge, first, heightAbove, on, spires, tipOf, world, type Spire } from '../ridge';
 
 export const UNIT = 'spine';
 export const RAD = Math.PI / 180;
@@ -52,14 +52,25 @@ export const kiteEdge = finEdge(first, 0.74, 1);
 
 /** The tip of the third spire: the strike of key spine-3. */
 export const strikeTip = tipOf(spire(3));
+/**
+ * The long lens of the strike (shot spine-04): it stands off the lee edge of the first spire, level with the kites' holdfasts, before the blade.
+ * `strikeView` is its heading at the key, degrees. `strikeCrag` is the rock that stands near it at the left of the frame (the land draws it).
+ */
+export const STRIKE_FOV = 5;
+const strikeAxes = finAxes(first);
+const strikeEdge = finEdge(first, 0.79, 1);
+export const strikeStand: Vec3 = [strikeEdge[0] + strikeAxes.bx * 26 + strikeAxes.ax * 7, strikeEdge[1], strikeEdge[2] + strikeAxes.bz * 26 + strikeAxes.az * 7];
+export const strikeView = heading(strikeStand, strikeTip) + 0.12 * STRIKE_FOV * (16 / 9);
+export const strikeCrag = step(strikeStand, strikeView - 10.6, 24.5, -9.6);
 
+/** The lightning walks the ridge: only the fourth strike lands on the third spire, and no two in a row land on one spire. */
 /** What each strike hits, in order of the events: the tip, how thick the stand-in bolt is, how high it starts, its lean, and a branch. */
 export const STRIKE_TARGETS: { to: Vec3; thick: number; rise: number; lean: Vec3 | null; branch: Vec3 | null }[] = [
   { to: tipOf(spire(2)), thick: 7, rise: 1150, lean: null, branch: null },
-  { to: tipOf(spire(3)), thick: 9, rise: 1150, lean: null, branch: null },
+  { to: tipOf(spire(4)), thick: 9, rise: 1150, lean: null, branch: null },
   { to: tipOf(spire(5)), thick: 9, rise: 1150, lean: null, branch: null },
   { to: strikeTip, thick: 2.6, rise: 420, lean: [120, 0, 60], branch: tipOf(spire(4)) },
-  { to: tipOf(spire(3)), thick: 8, rise: 1150, lean: null, branch: null },
+  { to: tipOf(spire(2)), thick: 8, rise: 1150, lean: null, branch: null },
   { to: tipOf(spire(4)), thick: 9, rise: 1150, lean: null, branch: null },
 ];
 
