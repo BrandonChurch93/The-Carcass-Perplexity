@@ -1,4 +1,5 @@
-2026-11-26 05:08 UTC
-work at 33f555d on agent/marsh-life-3
-min 25: dead rebuilt (domes, rime beast, pale heaps), stuck one recoloured
-look-1.jpg = out/work/cur-marsh-4.jpg
+2026-11-26 05:17 UTC
+work at 4a9dec9 on agent/marsh-life-3
+min 38: hero lower, soft rings, slender far stalks; new pictures merged, not yet used
+look-1.jpg = out/work/cur-marsh-3.jpg
+look-2.jpg = out/work/cur-marsh-0.jpg
