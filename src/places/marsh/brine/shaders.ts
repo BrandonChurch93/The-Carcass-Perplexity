@@ -221,7 +221,7 @@ void main() {
   float lip = smoothstep(8.5, 5.0, length(p.xz - vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
   want = max(want, lip * smoothstep(-0.9, -0.06, s) * smoothstep(0.6, 0.78, fleck.g * 0.4 + raft.g * 0.6 + 0.3 * smoothstep(-0.5, -0.04, s)));
   // What the flow carries off the banks goes down the channel in thin strings.
-  float strings = max(smoothstep(0.71, 0.8, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, speed) * 0.55, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
+  float strings = max(smoothstep(0.66, 0.76, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, speed) * 0.7, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
   // (And scum catches on whatever stands in it.)
   want = max(max(want, strings), max(min(boil * 0.8, 0.6), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
   // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
@@ -230,18 +230,28 @@ void main() {
   vec2 frothSlope = vec2(0.0);
   vec2 fdx = dFdx(p.xz) / 0.62;
   vec2 fdy = dFdy(p.xz) / 0.62;
+  float sill = 0.0;
   if (want > 1e-3) {
-    vec2 fuv = (p.xz - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 0.62;
+    // Froth stands a finger over the level: a lens low over it sees each clump's near face drawn short and its far side run on over the
+    // brine behind it, and looks into none of its pits.
+    float graze = 1.0 - smoothstep(0.1, 0.5, v.y);
+    vec2 stand = v.xz / max(v.y, 0.12) * 0.014 * smoothstep(0.1, 0.7, want);
+    vec2 fuv = (p.xz + stand - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 0.62;
     vec4 relief = textureGrad(tFrothN, fuv, fdx, fdy);
     vec4 clump = textureLod(tFrothN, fuv * 0.31 + 0.37, log2(max(px / 2.0 * float(textureSize(tFrothN, 0).x), 1.0)));
     vec3 scum = textureLod(tFroth, fuv, log2(max(px / 0.62 * float(textureSize(tFroth, 0).x), 2.0)) - 1.0).rgb;
     float high = relief.b * 0.62 + clump.b * 0.38;
     // (A clump is whole or it is not there: the froth's own gaps cut it, and only its edge thins to single bubbles.)
     float dense = smoothstep(0.2, 0.75, want);
-    foam = smoothstep(0.0, 0.1, high - 1.1 + dense * 1.12);
+    float over = high - 1.1 + dense * (1.12 + 0.22 * graze);
+    foam = smoothstep(0.0, 0.1, over);
+    // (Round every clump the brine is drawn up to it and lies in its shade: a dark wet line, which is what sets it on the surface.)
+    sill = smoothstep(-0.06, 0.0, over) * (1.0 - foam);
     // Its own colours, as the picture has them: cream where the bubbles are small and dry, red where the brine stands in them. Dark down
     // between the bubbles, where the sky does not reach.
-    float pit = smoothstep(0.25, 0.75, relief.b);
+    float pit = mix(smoothstep(0.25, 0.75, relief.b), 1.0, 0.45 * graze);
+    // (The side of a bubble that faces the lens has the bank or the brine behind it, not the sky: it is the darker side.)
+    pit *= 1.0 - 0.3 * graze * smoothstep(0.0, 0.3, dot((relief.rg - 0.5) * vec2(1.0, -1.0), normalize(v.xz + vec2(1e-5))));
     froth = vec4((scum * 1.25 + 0.02) * (0.4 + 0.6 * pit) * mix(vec3(1.0, 0.8, 0.74), vec3(1.0), smoothstep(0.5, 0.8, high)), foam * 0.95);
     frothSlope = (relief.rg - 0.5) * vec2(1.0, -1.0) * 2.6;
   }
@@ -257,7 +267,7 @@ void main() {
   if (depth < 0.6) bedTex = textureGrad(tBed, bedAt / 2.6, fdx * (0.62 / 2.6), fdy * (0.62 / 2.6)).rgb;
   // (Wet and stained: the bed under the shallows is darker than the dry crust beside it, never paler.)
   brineBed = bedTex * vec3(0.2, 0.1, 0.085) * (0.7 + 0.6 * fleck.b);
-  vec3 lit = brineShade(p, n, v, s, froth);
+  vec3 lit = brineShade(p, n, v, s, froth) * (1.0 - 0.3 * sill);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
