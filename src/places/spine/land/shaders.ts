@@ -56,14 +56,18 @@ float throughExit(vec3 p, vec3 d) {
 vec3 windowLight(vec3 p, vec3 n) {
   vec3 toExit = EXIT_AT - p;
   vec3 toMouth = MOUTH_AT - p;
-  float sE = 800.0 / (dot(toExit, toExit) * 3.14159 + 800.0);
-  float sM = 900.0 / (dot(toMouth, toMouth) * 3.14159 + 900.0);
+  float sE = 520.0 / (dot(toExit, toExit) * 3.14159 + 520.0);
+  float sM = 0.35 * 900.0 / (dot(toMouth, toMouth) * 3.14159 + 900.0);
   vec3 dE = normalize(toExit);
   vec3 dM = normalize(toMouth);
   vec3 cold = mix(uSkyHorizon, uSkyZenith, 0.4) * 3.14159;
+  // What comes in by a mouth has been thrown about by snow and pale rock: it is nearer white than the sky that sent it.
+  cold = mix(cold, dot(cold, vec3(0.33)) * vec3(1.06, 1.0, 0.94), 0.7) * 2.1;
+  // A flash outside comes in by the mouths and dies with the same fall as their daylight: the rock by a mouth jumps, the deep of the canal hardly.
+  cold += flashCast() * 0.9;
   // The far mouth holds the band of dusk: what it gives is warm; the near mouth gives the storm's cold.
   vec3 dusk = mix(cold, vec3(1.5, 0.82, 0.42) * dot(cold, vec3(0.3, 0.5, 0.2)), 0.2);
-  return dusk * (sE * (0.22 + 0.78 * max(dot(n, dE), 0.0))) + cold * (sM * (0.22 + 0.78 * max(dot(n, dM), 0.0)));
+  return dusk * (sE * (0.1 + 0.9 * max(dot(n, dE), 0.0))) + cold * (sM * (0.1 + 0.9 * max(dot(n, dM), 0.0)));
 }
 // The glaze of ice on a face: the far mouth seen in it.
 vec3 windowGlaze(vec3 p, vec3 n, vec3 v, float sharp) {
@@ -129,6 +133,7 @@ uniform sampler2D tCanalNh;
 uniform sampler2D tRime;
 uniform sampler2D tScorch;
 uniform sampler2D tScorchH;
+uniform sampler2D tScorchD;
 uniform vec4 uScorch;
 uniform vec4 uScorchAxes;
 uniform sampler2D tSheet;
@@ -301,27 +306,28 @@ void main() {
   if (inside) {
     float r = flareAt(dCanal);
     vec2 axis = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
-    // The rock of the canal by world position on three planes, at the picture's one real size (4 m): nothing is laid along or round the tube.
+    // The rock of the canal by world position on three planes, its beds 7 m to the picture so they read broad and water-worn: nothing is laid along or round the tube.
     vec3 tw = pow(abs(n0), vec3(4.0));
     tw /= tw.x + tw.y + tw.z;
-    vec2 pX = vWorld.zy / 4.0;
-    vec2 pY = vWorld.xz / 4.0 + 0.31;
-    vec2 pZ = vWorld.xy / 4.0 + 0.67;
+    vec2 pX = vWorld.zy / 7.0;
+    vec2 pY = vWorld.xz / 7.0 + 0.31;
+    vec2 pZ = vWorld.xy / 7.0 + 0.67;
     vec3 c1 = texture2D(tCanal, pX).rgb * tw.x + texture2D(tCanal, pY).rgb * tw.y + texture2D(tCanal, pZ).rgb * tw.z;
     vec3 n1 = texture2D(tCanalNh, pX).rgb * tw.x + texture2D(tCanalNh, pY).rgb * tw.y + texture2D(tCanalNh, pZ).rgb * tw.z;
     // Slabs: the same rock again at five times the size, turned, to break the wall into blocks larger than the picture.
     vec2 qX = vec2(vWorld.z + 0.35 * vWorld.y, vWorld.y - 0.35 * vWorld.z) / 19.0 + 0.13;
     vec2 qZ = vec2(vWorld.x + 0.35 * vWorld.y, vWorld.y - 0.35 * vWorld.x) / 19.0 + 0.53;
     vec3 n2 = texture2D(tCanalNh, qX).rgb * tw.x + texture2D(tCanalNh, pY * 0.21).rgb * tw.y + texture2D(tCanalNh, qZ).rgb * tw.z;
-    // Pale stone: the canal is ice-worn and the frost has bleached it.
-    rock = mix(c1 * 2.2, vec3(0.5, 0.48, 0.45) * (0.5 + 2.5 * dot(c1, vec3(0.33))), 0.6) * (0.6 + 0.8 * n2.b);
-    t = ((n1.rg - 0.5) * 0.3 + (n2.rg - 0.5) * 0.8) * vec2(1.0, -1.0);
+    // Water-worn stone in level beds, cream and brown as its picture has it; broad darker bands run through it, larger than the picture.
+    float band = vnoise(vec2(vWorld.y * 0.42 + 0.6 * n2.b, 0.035 * (vWorld.x + vWorld.z)));
+    rock = c1 * 1.9 * mix(vec3(1.04, 1.0, 0.93), vec3(0.5, 0.42, 0.36), smoothstep(0.42, 0.78, band)) * (0.62 + 0.76 * n2.b);
+    t = ((n1.rg - 0.5) * 0.22 + (n2.rg - 0.5) * 0.6) * vec2(1.0, -1.0);
     pit = 0.55 * n1.b + 0.45 * n2.b;
-    // Rime: the frost picture at its own 3 m, thick round each mouth where the gale reaches and thin on what stands proud farther in.
+    // Rime: the frost picture at its own 3 m, only round each mouth where the gale reaches; farther in the rock is bare and wet.
     vec3 rimeC = texture2D(tRime, vWorld.zy / 3.0).rgb * tw.x + texture2D(tRime, vWorld.xz / 3.0 + 0.4).rgb * tw.y + texture2D(tRime, vWorld.xy / 3.0 + 0.7).rgb * tw.z;
     float frost = smoothstep(0.32, 0.62, dot(rimeC, vec3(0.33)));
-    float lipW = exp(-max(min(dCanal, EXIT - dCanal) - 2.0, 0.0) / 17.0);
-    wallRime = clamp(frost * (0.75 + 1.6 * lipW) + 1.1 * lipW * lipW, 0.0, 1.0) * (0.45 + 0.55 * smoothstep(0.25, 0.55, pit + 0.7 * lipW));
+    float lipW = exp(-max(min(dCanal, EXIT - dCanal) - 2.0, 0.0) / 9.0);
+    wallRime = clamp(frost * 1.5 * lipW * lipW + 0.8 * lipW * lipW * lipW, 0.0, 1.0) * (0.45 + 0.55 * smoothstep(0.25, 0.55, pit + 0.7 * lipW));
     wallRimeC = rimeC;
     // Under frost the rock's grain is filled.
     t *= 1.0 - 0.9 * wallRime;
@@ -529,6 +535,8 @@ void main() {
     // Snow lies on every ledge of the rock: wherever the broken face itself turns up flatter than some forty degrees, and deeper low down
     // and to windward, so the spire stands out of the ridge's own snow.
     float low = smoothstep(280.0, 20.0, vWorld.y - landAt(vWorld.xz).r);
+    // (the lee faces keep their rock: the gale lays its snow on what looks into it)
+    low *= smoothstep(-0.25, 0.45, -dot(smoothN.xz, uWind.xz));
     snow = max(snow, smoothstep(0.5 - 0.3 * low, 0.7 - 0.3 * low, 0.7 * nRock.y + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
     // Under the lens snow lies only on what the rock itself turns up to the sky; a slab's side keeps none.
     snow *= mix(1.0, smoothstep(0.25, 0.6, 0.5 * (nRock.y + facet.y)), fineRock);
@@ -579,7 +587,7 @@ void main() {
   albedo = mix(albedo, vec3(0.62, 0.66, 0.72), 0.55 * rime);
   if (inside) {
     albedo = mix(albedo, min(wallRimeC * 1.25, vec3(0.9)) * vec3(0.94, 0.97, 1.05), wallRime);
-    rough = mix(0.5, 0.9, wallRime);
+    rough = mix(0.36, 0.9, wallRime);
   }
 
   // The snow's own surface: wind crust in long ripples, and the prints.
@@ -651,9 +659,12 @@ void main() {
     vec2 eS = abs(uvS - 0.5);
     if (max(eS.x, eS.y) < 0.5) {
       // Seen low across it, the plate's fine bright lines would lie down into ripples like water: it is read soft, and its contrast is held in.
-      vec3 sc = texture2D(tScorch, uvS, 0.6).rgb;
+      vec3 sc = texture2D(tScorch, uvS).rgb;
       float lum = dot(sc, vec3(0.3, 0.5, 0.2));
-      sc = clamp(sc * 5.0 + 0.1, vec3(0.17, 0.17, 0.185), vec3(0.6));
+      // Burned rock is dark and wet; under the lens the burn's own close picture (2.4 m) gives it its cracks and glass.
+      vec3 near_ = texture2D(tScorchD, dS / 2.4).rgb;
+      float close = smoothstep(0.02, 0.004, length(fwidth(vWorld.xz)));
+      sc = clamp(sc * 3.2 * mix(vec3(1.0), near_ / 0.16, 0.9 * close), vec3(0.018, 0.018, 0.02), vec3(0.6));
       // The plate's own snow goes into the snow of the place at its rim; its burn keeps to the middle, ragged by the picture's own dark.
       float out_ = length((uvS - 0.5) * vec2(1.0, 0.9)) / 0.26;
       // Tongues of new snow lie across it down the gale.
@@ -664,11 +675,11 @@ void main() {
       float du = (texture2D(tScorchH, uvS + vec2(px.x, 0.0)).r - h0) / (px.x * 7.0);
       float dv = (texture2D(tScorchH, uvS + vec2(0.0, px.y)).r - h0) / (px.y * 3.94);
       // Burned rock, wet but broken: it is rough, and only its hollows hold a little water. The relief is laid at a low strength.
-      vec3 nS = normalize(vec3(0.0, 1.0, 0.0) - 0.012 * (vec3(uScorchAxes.x, 0.0, uScorchAxes.y) * du + vec3(uScorchAxes.z, 0.0, uScorchAxes.w) * dv));
+      vec3 nS = normalize(vec3(0.0, 1.0, 0.0) - 0.022 * (vec3(uScorchAxes.x, 0.0, uScorchAxes.y) * du + vec3(uScorchAxes.z, 0.0, uScorchAxes.w) * dv));
       albedo = mix(albedo, sc, scorch);
       n = normalize(mix(n, nS, scorch));
       // Melt water stands in its hollows and glints; its heads are wet rock.
-      rough = mix(rough, 0.22 + 0.6 * smoothstep(0.25, 0.6, h0), scorch);
+      rough = mix(rough, 0.1 + 0.55 * smoothstep(0.25, 0.6, h0), scorch);
       occ = mix(occ, 0.6 + 0.4 * h0, scorch);
     }
   }
@@ -679,7 +690,7 @@ void main() {
   vec3 c = rigShade(lightAt, n, v, albedo, rough, occ);
   if (inside) if (uUnder > 1.5) {
     // Inside, the two mouths are the windows: cold light on what faces them, and the far mouth seen in the glaze of ice on the rock.
-    c += albedo * windowLight(vWorld, normalize(mix(n, normalize(EXIT_AT + vec3(0.0, 6.0, 0.0) - vWorld), 0.55 * wallRime))) * (0.45 + 0.55 * pit) * (4.5 + 2.5 * wallRime) / 3.14159 + windowGlaze(vWorld, n, v, 2.5) * (1.0 - wallRime) * 2.0;
+    c += albedo * windowLight(vWorld, normalize(mix(n, normalize(EXIT_AT + vec3(0.0, 6.0, 0.0) - vWorld), 0.55 * wallRime))) * (0.3 + 0.7 * pit) * (6.5 + 2.5 * wallRime) / 3.14159 + windowGlaze(vWorld, n, v, 2.5) * (1.0 - wallRime) * 1.6;
   }
   if (inside) if (uUnder < 1.5) {
     float shown = exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 9.0);
@@ -743,8 +754,13 @@ void main() {
   float wander = 2.2 * (vnoise(vec2(m.y * 0.11, 3.0)) - 0.5);
   float run = smoothstep(1.5, 0.6, abs(m.x - wander) + 0.6 * (vnoise(m * 0.9) - 0.5));
   float bank = max(smoothstep(0.34, 0.74, abs(m.x) / max(vHalf, 1.0) + 0.3 * (vnoise(m * 0.35) - 0.5)), smoothstep(3.3, 3.95, abs(m.x)));
+  // Where the floor stands over the ice it is the drift itself: its snow, and its own lean from the mesh.
+  float raised = smoothstep(0.03, 0.14, vWorld.y - CANAL_FLOOR - 0.03);
+  bank = max(bank * step(m.x, 0.0), raised);
+  run *= 1.0 - raised;
   snow = max(snow * (1.0 - run), bank);
-  vec3 n = normalize(vec3(0.0, 1.0, 0.0) - (side * du + along * dv) * mix(0.035, 0.12, snow) * (1.0 - 0.85 * run) * (1.0 - bank)
+  vec3 up = normalize(mix(vec3(0.0, 1.0, 0.0), normalize(vNormal), raised));
+  vec3 n = normalize(up - (side * du + along * dv) * mix(0.035, 0.12, snow) * (1.0 - 0.85 * run) * (1.0 - bank)
     - bank * 0.25 * vec3(vnoise(m * 1.3) - 0.5, 0.0, vnoise(m * 1.3 + 5.1) - 0.5));
   vec3 ice = min(plate * 4.2 + 0.26, vec3(0.7)) * mix(1.0, 0.3, run);
   vec3 albedo = mix(ice, mix(min(plate * 2.6, vec3(0.86)), vec3(0.78, 0.83, 0.9), bank), snow);
@@ -830,10 +846,15 @@ void main() {
   float broad = fbm(at * 1.7 + 4.0);
   float fine = fbm(at * 6.5 + 11.0);
   // Snow lies where the rock is level and in its hollows; the faces between are bare.
-  float snow = smoothstep(0.42, 0.5, 0.62 * broad + 0.38 * fine + 0.3 * n.y - 0.04);
-  vec3 rock = mix(vec3(0.028, 0.022, 0.02), vec3(0.2, 0.125, 0.085), smoothstep(0.3, 0.75, fine) * smoothstep(0.35, 0.6, broad + 0.2));
-  vec3 albedo = mix(rock, vec3(0.6, 0.63, 0.7), snow);
+  float snow = smoothstep(0.4, 0.48, 0.62 * broad + 0.38 * fine + 0.34 * n.y);
+  vec3 rock = mix(vec3(0.07, 0.052, 0.045), vec3(0.34, 0.23, 0.16), smoothstep(0.3, 0.75, fine) * smoothstep(0.35, 0.6, broad + 0.2));
+  vec3 albedo = mix(rock, vec3(0.66, 0.69, 0.76), snow);
   n = normalize(n + (1.0 - snow) * 0.9 * (vec3(fine, broad, 1.0 - fine) - 0.5));
-  vec3 c = rigShade(vWorld, n, v, albedo, 0.9, mix(0.5 + 0.5 * fine, 1.0, snow));
+  // It stands in the open off the spire's edge: the sky lights it whole (the land's own shelter is of the ground under it, far below),
+  // and the stroke lights the side that looks at it.
+  float occ = mix(0.55 + 0.45 * fine, 1.0, snow);
+  // Its tone is set by number against its picture, where it is lit brown stone and pale snow: the snow of the spire's shoulder under it
+  // throws the sky back up at it.
+  vec3 c = albedo * (skyIrradiance(n) * 3.6 + emitterIrradiance(vWorld, n)) * occ / 3.14159;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
