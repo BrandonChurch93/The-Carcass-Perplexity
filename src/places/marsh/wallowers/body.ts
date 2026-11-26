@@ -82,6 +82,9 @@ uniform float uDisp;
 uniform vec3 uShift;
 uniform sampler2D tPic;
 uniform sampler2D tPicA;
+#ifdef CRUSTED
+uniform sampler2D tRimeNh;
+#endif
 varying vec3 vRest;
 varying vec3 vRestN;
 varying vec3 vWorld;
@@ -92,6 +95,17 @@ varying vec3 vR2;
 ${PIC_GLSL}
 void main() {
   float lift = 0.0;
+  #ifdef CRUSTED
+  {
+    // Salt has grown on it in knobs: thick on what faces the sky, thin on the legs and the claws.
+    vec3 cq = (position * uK + uShift) * RIME_SCALE;
+    vec3 cw = pow(abs(normal), vec3(4.0));
+    cw /= cw.x + cw.y + cw.z;
+    float knob = cw.x * textureLod(tRimeNh, cq.zy, 1.0).b + cw.y * textureLod(tRimeNh, cq.xz, 1.0).b + cw.z * textureLod(tRimeNh, cq.xy, 1.0).b;
+    float wide = cw.x * textureLod(tRimeNh, cq.zy * 0.31, 2.0).b + cw.y * textureLod(tRimeNh, cq.xz * 0.31, 2.0).b + cw.z * textureLod(tRimeNh, cq.xy * 0.31, 2.0).b;
+    lift = ((knob - 0.35) * 0.05 + (wide - 0.4) * 0.11) * (1.0 - 0.6 * aInfo.z) * (1.0 - aInfo.y) / uK;
+  }
+  #endif
   if (uDisp > 0.0) {
     // The folds painted in the picture stand out of the skin where it is seen from the side: light is high, dark is the crease.
     vec2 uv = picAt(position, aInfo.z);
@@ -138,6 +152,11 @@ uniform float uCrust;
 uniform float uFloorY;
 uniform float uSeed;
 uniform float uNear;
+#ifdef CRUSTED
+uniform sampler2D tRime;
+uniform sampler2D tRimeNh;
+const vec3 RIME_MEAN = vec3(0.389, 0.306, 0.282);
+#endif
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${PIC_GLSL}
@@ -191,6 +210,20 @@ void main() {
   vec2 slope = vec2(lx - l0, ly - l0) / (l0 + 0.04);
   // In the picture u runs from the muzzle back and v up.
   bump += vec3(slope.x, -slope.y * (1.0 - top), slope.y * top * sign(vRest.z)) * 1.5 * side;
+  #ifdef CRUSTED
+  vec3 rq = q * RIME_SCALE;
+  vec3 rx = texture2D(tRimeNh, rq.zy).rgb;
+  vec3 ry = texture2D(tRimeNh, rq.xz).rgb;
+  vec3 rz = texture2D(tRimeNh, rq.xy).rgb;
+  float rimeH = w.x * rx.b + w.y * ry.b + w.z * rz.b;
+  vec3 rime = (w.x * texture2D(tRime, rq.zy).rgb + w.y * texture2D(tRime, rq.xz).rgb + w.z * texture2D(tRime, rq.xy).rgb) / RIME_MEAN;
+  // Where the salt has grown: over all that faces the sky, less on the legs, and broken away in places so that the dried hide shows.
+  float saltOn = smoothstep(0.3, 0.5, 0.45 * vnoise3(q * 2.1 + uSeed * 4.0) + 0.3 * rimeH + 0.4 * smoothstep(-0.5, 0.5, nr.y) + 0.12 - 0.3 * vInfo.z) * (1.0 - horn);
+  vec2 rsx = (rx.rg - 0.5) * 1.6 * saltOn;
+  vec2 rsy = (ry.rg - 0.5) * 1.6 * saltOn;
+  vec2 rsz = (rz.rg - 0.5) * 1.6 * saltOn;
+  bump = bump * (1.0 - 0.8 * saltOn) + w.x * vec3(0.0, rsx.y, rsx.x) + w.y * vec3(rsy.x, 0.0, rsy.y) + w.z * vec3(rsz.x, rsz.y, 0.0);
+  #endif
   vec3 nb = normalize(nr - (bump - nr * dot(bump, nr)) * (1.0 - 0.7 * horn));
   mat3 r = mat3(vR0, vR1, vR2);
   vec3 ng = normalize(r * nr);
@@ -216,11 +249,11 @@ void main() {
   albedo = mix(albedo, vec3(0.26, 0.225, 0.195) * (0.7 + 0.5 * grain), 0.5 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
   float smear = uMudded * smoothstep(0.3, 0.55, 0.55 * patchy + 0.45 * vnoise3(q * 5.3 + uSeed * 2.0) + 0.5 * damp + 0.25 * (1.0 - grain));
-  albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.135), vec3(0.075, 0.032, 0.026), damp) * mix(0.55, 1.25, smoothstep(0.25, 0.8, grain)), 0.72 * smear);
+  albedo = mix(albedo, mix(vec3(0.235, 0.165, 0.14), vec3(0.1, 0.045, 0.036), damp) * mix(0.5, 1.3, smoothstep(0.25, 0.8, grain)), 0.72 * smear);
   // Where it dried thickest it has caked into pale plates, each with a dark edge where it has lifted from the hide.
   float plate = vnoise3(q * 2.6 + uSeed * 5.0) + 0.25 * (vnoise3(q * 9.0 + uSeed) - 0.5);
   float cake = uMudded * (1.0 - damp) * smoothstep(0.4, 0.46, plate);
-  albedo = mix(albedo, vec3(0.25, 0.195, 0.16) * (0.55 + 0.7 * grain), 0.8 * cake);
+  albedo = mix(albedo, vec3(0.35, 0.275, 0.24) * (0.55 + 0.7 * grain), 0.85 * cake);
   // The edge of a plate shows only where it has lifted: here and there, never all the way round.
   albedo *= 1.0 - 0.65 * uMudded * (1.0 - damp) * smoothstep(0.36, 0.4, plate) * (1.0 - smoothstep(0.4, 0.44, plate)) * smoothstep(0.22, 0.55, vnoise3(q * 1.9 + uSeed * 11.0));
   // The cake has cracked as it dried: fine dark lines through each plate.
@@ -230,21 +263,26 @@ void main() {
   float daub = (1.0 - uMudded) * damp * (1.0 - wet) * (1.0 - horn) * smoothstep(0.42, 0.52, plate);
   albedo = mix(albedo, vec3(0.095, 0.052, 0.042) * (0.55 + 0.7 * grain), 0.7 * daub);
   // Mud lies in every crease of it.
-  albedo *= mix(1.0, mix(0.72, 1.06, smoothstep(0.2, 0.7, grain)), uMudded);
+  albedo *= mix(1.0, mix(0.5, 1.08, smoothstep(0.2, 0.7, grain)), uMudded);
   // And where the mud has dried the longest, on its back, the salt has come out of it white.
   albedo = mix(albedo, vec3(0.26, 0.24, 0.22) * (0.5 + 0.8 * grain), 0.5 * uMudded * (1.0 - damp) * smoothstep(0.2, 0.8, ng.y) * smoothstep(0.45, 0.7, vnoise3(q * 4.3 + uSeed * 3.0)));
   // A dead one: the hide has dried dark and tight, and salt has grown over most of it in clumps.
-  float grown = smoothstep(0.4, 0.52, vnoise3(q * 3.3 + uSeed * 4.0) + 0.4 * (grain - 0.5) + 0.2 * (ng.y - 0.2));
-  float clumps = vnoise3(q * 17.0 + uSeed) * 0.6 + vnoise3(q * 41.0 + uSeed * 2.0) * 0.4;
-  albedo = mix(albedo, mix(albedo * vec3(0.36, 0.29, 0.26), vec3(0.115, 0.104, 0.098) * (0.25 + 0.7 * grain + 1.0 * clumps), grown), uCrust);
-  albedo *= mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.5, vWorld.y - uFloorY), uCrust);
+  #ifdef CRUSTED
+  // The hide under it has dried to the colour of old bone and leather; the salt on it is dirty white, pink in its hollows.
+  vec3 dried = mix(vec3(0.2, 0.125, 0.085), vec3(0.085, 0.05, 0.036), smoothstep(0.55, 0.3, grain)) * (0.75 + 0.5 * patchy);
+  vec3 saltC = vec3(0.335, 0.292, 0.272) * mix(vec3(1.0), rime, 0.85) * (0.72 + 0.4 * rimeH);
+  albedo = mix(dried, saltC, saltOn);
+  // Where it meets the crust the brine wicks up into the salt: pink at the foot.
+  float foot = 1.0 - smoothstep(0.0, 0.3, vWorld.y - uFloorY + 0.12 * (patchy - 0.5));
+  albedo = mix(albedo, albedo * vec3(0.8, 0.5, 0.46), 0.7 * foot);
+  #endif
   // The claws: old ivory, grooved, stained at the root.
   vec3 ivory = vec3(0.15, 0.115, 0.08) * (0.7 + 0.5 * height) * mix(vec3(1.0), tone, 0.35);
   albedo = mix(albedo, mix(ivory, albedo * 1.3, 0.5 * side), horn);
   albedo = mix(albedo, albedo * vec3(0.9, 0.6, 0.48), damp * (1.0 - wet) * (1.0 - uMudded));
   // The stuck one's head is the wettest of it: it has been under and come up again.
   float headWet = uMudded * smoothstep(0.5, 0.82, vRest.x / uPic.x) * (1.0 - horn);
-  albedo = mix(albedo, vec3(0.034, 0.02, 0.016) * (0.55 + 0.7 * grain), 0.85 * headWet);
+  albedo = mix(albedo, vec3(0.15, 0.09, 0.07) * (0.5 + 0.8 * grain), 0.55 * headWet);
   vec3 soaked = mix(albedo * vec3(0.62, 0.3, 0.23) + vec3(0.008, 0.002, 0.001), albedo * 0.55, uMudded);
   albedo = mix(albedo, soaked, wet);
   albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3), 0.6 * thread * damp * (1.0 - wet));
@@ -255,12 +293,16 @@ void main() {
   // Wet hide does not shine all over under a white sky: it glistens on the tops of its folds.
   float glint = smoothstep(0.55, 0.95, grain);
   float rough = mix(0.93, mix(0.74, 0.44, glint), max(wet, 0.7 * thread * damp));
-  rough = mix(rough, 0.78, headWet * glint);
+  rough = mix(rough, 0.7, headWet * glint);
   rough = mix(rough, 0.34, deep);
   rough = mix(rough, 0.6, horn * (1.0 - deep));
   rough = mix(rough, 1.0, 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
   // What a fold hides from the sky, and what the body hides from it: the belly, the throat, the insides of the legs. The picture brings its own shade.
   float occ = (0.55 + 0.45 * smoothstep(0.0, 0.85, fold)) * (0.5 + 0.5 * smoothstep(-0.95, 0.25, ng.y)) * mix(crease, 1.0, side);
+  #ifdef CRUSTED
+  occ = mix(occ, (0.6 + 0.4 * smoothstep(0.15, 0.6, rimeH)) * (0.6 + 0.4 * smoothstep(-0.9, 0.2, ng.y)) * (0.55 + 0.45 * smoothstep(0.0, 0.25, vWorld.y - uFloorY)), saltOn);
+  rough = mix(rough, 0.97, saltOn);
+  #endif
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -313,6 +355,7 @@ varying vec3 vNormal;
 varying vec3 vLook;
 uniform float uWet;
 uniform float uHang;
+uniform float uSalted;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -332,6 +375,9 @@ void main() {
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
   albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.8 * wet);
   albedo = mix(albedo, vec3(0.03, 0.017, 0.012), 0.8 * smoothstep(0.8, 1.0, s));
+  // On a dead one they are bare bone-yellow with salt grown on the upper side in knobs.
+  float knobs = smoothstep(0.42, 0.6, vnoise(vec2(s * 14.0 + vLook.z * 50.0, vLook.y * 2.0)) + 0.25 * n.y);
+  albedo = mix(albedo, mix(vec3(0.26, 0.17, 0.105) * (0.6 + 0.5 * groove), vec3(0.33, 0.29, 0.27), knobs), uSalted);
   float rough = mix(0.95, 0.7, wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
@@ -373,6 +419,9 @@ export interface Look {
   crust?: number;
   /** How many thin feelers hang from its lip in place of the hand of thick ones. */
   tendrils?: number;
+  /** With tendrils: how far they hang, 1 straight down as a comb (the default), 0.3 a fan that rakes forward. And how thick, 1 as the comb. */
+  hang?: number;
+  thick?: number;
   /** How far the hide picture lifts the skin, metres. 0 for one seen from afar. */
   relief?: number;
 }
@@ -436,7 +485,14 @@ export class Beast {
         uFloorY: { value: look.wet + 5 },
         uSeed: { value: seed },
         uNear: { value: look.relief ? 1 : 0.4 },
+        ...(look.crust
+          ? {
+              tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', anisotropy: 4 }) },
+              tRimeNh: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', anisotropy: 4 }) },
+            }
+          : {}),
       },
+      defines: look.crust ? { CRUSTED: 1, RIME_SCALE: '1.3' } : {},
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
     });
@@ -467,7 +523,7 @@ export class Beast {
       at.set(l.at, i * 3);
       out.set(l.out, i * 3);
       const mid = 1 - Math.abs(i / (lip.length - 1) - 0.5) * 0.6;
-      if (many) shape.set([rng.range(0.38, 1.05) * mid, 0.014 + 0.01 * rng.next(), rng.next(), rng.next()], i * 4);
+      if (many) shape.set([rng.range(0.38, 1.05) * mid, (0.014 + 0.01 * rng.next()) * (look.thick ?? 1), rng.next(), rng.next()], i * 4);
       else shape.set([rng.range(0.56, 0.86) * mid * (1 - 0.25 * b.young), (0.042 + 0.016 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
     });
     const geometry = new THREE.InstancedBufferGeometry();
@@ -478,7 +534,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? 1 : 0 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uSalted: { value: look.crust ? 1 : 0 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
