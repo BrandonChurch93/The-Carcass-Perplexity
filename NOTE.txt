@@ -1,5 +1,7 @@
-2026-11-26 03:13 UTC
-work at 6140a7d on agent/ribs-sea-2
-03:15 ribs-4 near water holes closed (wet bars hold the sky), side-on dark fliers; determinism pass again
+2026-11-26 03:32 UTC
+work at 77f0f61 on agent/ribs-sea-2
+version 2: ribs-4, ribs-1, ribs-3, ribs-2
 look-1.jpg = out/work/s-ribs-4.jpg
-look-2.jpg = out/work/s-ribs-0.jpg
+look-2.jpg = out/work/s-ribs-1.jpg
+look-3.jpg = out/work/s-ribs-3.jpg
+look-4.jpg = out/work/s-ribs-2.jpg
