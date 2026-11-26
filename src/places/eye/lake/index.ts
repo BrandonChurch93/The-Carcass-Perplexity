@@ -3,6 +3,7 @@
 // the rings that leave the centre and every mouth and leg, the breath of air on it, and what rises at its centre.
 // There is no floor mesh under the shallows: the bed is worked out where the bent ray meets it, so there is one sheet of water and no box.
 import * as THREE from 'three';
+import { MIST_SUN_GLSL, mistSunTexture } from '../air/light';
 import { smooth } from '../layout';
 import { lipAt } from '../land/height';
 import { during } from '../shared/anchors';
@@ -87,6 +88,7 @@ uniform vec4 uLeave;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${BED_GLSL}
+${MIST_SUN_GLSL}
 
 // Metres in from the shore. Where the built land has given way to the picture of the far world the water runs on, shallow, to the picture's own shore.
 float shoreIn(vec2 xz) {
@@ -219,10 +221,11 @@ void main() {
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
   vec3 refl = farRadiance(p, rd, soft) * mix(vec3(0.78, 0.8, 0.84), vec3(0.8, 0.86, 0.95), smoothstep(8.0, 40.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
   // Far off the eye looks along the water: the mirror there is whole and as bright as what stands over it, and the mist that lies at the
-  // foot of the far wall lies on the water too, so that no line shows where the water ends.
+  // foot of the far wall lies on the water too, so that no line shows where the water ends. It takes its sun as the mist of the air does,
+  // from the soft map and not from the rig's shadow test: that test is a wall, and its foot showed on the far water as the start of a dark strip.
   if (uPlateTone.w > 0.5) {
     float toPlate = length(p.xz - uPlateAt.xz) / uPlateAt.w;
-    vec3 mistLight = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (0.13 * sunOver(land, p)) + 0.35 * skyRadiance(normalize(vec3(-v.x, 0.05, -v.z)))) * (2.4 / 3.14159);
+    vec3 mistLight = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (0.13 * mistSun(vec3(p.x, 10.0, p.z))) + 0.35 * skyRadiance(normalize(vec3(-v.x, 0.05, -v.z)))) * (2.4 / 3.14159);
     refl = mix(refl, mistLight, (uPlateTone.w > 1.5 ? 0.3 : 0.9) * smoothstep(0.72, 0.985, toPlate) * (1.0 - uSolo));
     // And the bank that stands at the foot of the far wall is in the mirror as it is in the air: a ray that leaves the water low finds it.
     refl = mix(refl, mistLight, 0.5 * uMirror.a * pow(smoothstep(0.03, 0.002, rd.y), 1.5) * (1.0 - uSolo));
@@ -499,6 +502,7 @@ function lipTexture(): THREE.DataTexture {
 export function create(ctx: Context): Piece {
   const rig = ctx.rig.uniforms;
   const mirror = createMirror();
+  const mistSun = mistSunTexture(ctx.rig.land.sunlit);
   const seed = ctx.rng('ripple');
   const ripple = rippleTexture(() => seed.next());
   const lip = lipTexture();
@@ -513,6 +517,7 @@ export function create(ctx: Context): Piece {
       ...bed,
       ...mirror.uniforms,
       tRipple: { value: ripple },
+      tMistSun: { value: mistSun },
       uMirrorOn: { value: 0 },
       uLens: { value: 1 },
       uLap: { value: laps },
@@ -601,6 +606,7 @@ void main() {
     resize: (width, height) => mirror.resize(width, height),
     dispose: () => {
       mirror.dispose();
+      mistSun.dispose();
       ripple.dispose();
       lip.dispose();
       surface.geometry.dispose();
