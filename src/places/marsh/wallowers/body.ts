@@ -146,6 +146,7 @@ uniform float uK;
 uniform vec3 uShift;
 uniform float uSeconds;
 uniform float uWet;
+uniform float uLine;
 uniform float uSalt;
 uniform float uMudded;
 uniform float uCrust;
@@ -380,6 +381,14 @@ void main() {
   // A film of brine stands on the middle of a wet scale and is a point of light.
   rough = mix(rough, 0.16, 0.85 * max(wet, 0.5 * damp) * (1.0 - horn) * smoothstep(0.45, 0.6, fract(fineCell.z * 7.3)) * (1.0 - smoothstep(0.12, 0.3, fineCell.y)));
   #endif
+  // Where it meets what it stands or lies in, the brine has climbed the hide a finger's width: a dark wet line, ragged, that shines.
+  float meet = (1.0 - smoothstep(0.012, 0.07 + 0.07 * lane, vWorld.y - uLine)) * smoothstep(-0.06, -0.01, vWorld.y - uLine);
+  albedo = mix(albedo, albedo * vec3(0.32, 0.2, 0.18) + vec3(0.012, 0.002, 0.002), 0.85 * meet);
+  rough = mix(rough, 0.22, 0.8 * meet);
+  // The stuck one is wet and dark with the slurry it lies in to a hand above it, and that shines.
+  float sunkIn = uMudded * (1.0 - smoothstep(0.0, 0.3 + 0.2 * lane, vWorld.y - uLine));
+  albedo *= 1.0 - 0.55 * sunkIn;
+  rough = mix(rough, 0.3, 0.6 * sunkIn);
   rough = mix(rough, 0.34, deep);
   rough = mix(rough, 0.6, horn * (1.0 - deep));
   rough = mix(rough, 1.0, 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
@@ -389,7 +398,13 @@ void main() {
   occ = mix(occ, (0.6 + 0.4 * smoothstep(0.15, 0.6, rimeH)) * (0.6 + 0.4 * smoothstep(-0.9, 0.2, ng.y)) * (0.55 + 0.45 * smoothstep(0.0, 0.25, vWorld.y - uFloorY)), saltOn);
   rough = mix(rough, 0.97, saltOn);
   #endif
+  #ifndef CRUSTED
+  // By number: the live hide before the lens of the wallowers is half as light again in the approved picture as it was drawn. Far off the haze does it.
+  albedo *= 1.0 + 0.5 * (1.0 - uMudded) * smoothstep(0.5, 0.9, uNear);
+  #endif
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
+  // What looks down is lit by the wet red ground under it: the belly and the insides of the legs are red brown, not black.
+  c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.72, 0.42, 0.34) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (1.0 - 0.6 * uMudded);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -454,7 +469,7 @@ void main() {
   // Old ivory: grooved along its length, ringed where it grew, stained dark at the root and red where it has been in the mud.
   float groove = vnoise(vec2(vLook.y * 3.0 + vLook.z * 9.0, s * 2.0));
   float ring = vnoise(vec2(s * 46.0 + vLook.z * 5.0, vLook.y * 0.7));
-  vec3 albedo = vec3(0.17, 0.12, 0.08) * (0.55 + 0.4 * groove + 0.25 * ring);
+  vec3 albedo = vec3(0.27, 0.2, 0.15) * (0.55 + 0.4 * groove + 0.25 * ring);
   albedo = mix(albedo, vec3(0.07, 0.042, 0.03), 0.75 * (1.0 - smoothstep(0.0, 0.14, s)));
   // Creased at its joints like a finger, and the mud it rakes dries on it.
   float crease = exp(-pow((s - 0.26) / 0.012, 2.0)) + exp(-pow((s - 0.34) / 0.012, 2.0)) + exp(-pow((s - 0.55) / 0.012, 2.0)) + exp(-pow((s - 0.62) / 0.012, 2.0));
@@ -462,10 +477,10 @@ void main() {
   albedo = mix(albedo, mix(vec3(0.13, 0.075, 0.05), vec3(0.27, 0.2, 0.135), smoothstep(0.05, 0.4, s)) * (0.7 + 0.5 * groove), 0.6 * uHang);
   albedo = mix(albedo, vec3(0.1, 0.075, 0.06), 0.5 * smoothstep(0.45, 0.7, vnoise(vec2(s * 9.0 + vLook.z * 30.0, vLook.y * 1.5))));
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
-  albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.8 * wet);
+  albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.45 * wet);
   // The mud they rake clings to them in clots, thickest toward the tips.
-  albedo = mix(albedo, vec3(0.055, 0.033, 0.026) * (0.6 + 0.8 * groove), wet * (1.0 - uHang) * smoothstep(0.3, 0.55, vnoise(vec2(s * 7.0 + vLook.z * 40.0, vLook.y * 1.2)) + 0.35 * s));
-  albedo = mix(albedo, vec3(0.03, 0.017, 0.012), 0.8 * smoothstep(0.8, 1.0, s));
+  albedo = mix(albedo, vec3(0.1, 0.064, 0.05) * (0.6 + 0.8 * groove), wet * (1.0 - uHang) * smoothstep(0.3, 0.55, vnoise(vec2(s * 7.0 + vLook.z * 40.0, vLook.y * 1.2)) + 0.35 * s));
+  albedo = mix(albedo, vec3(0.03, 0.017, 0.012), 0.45 * smoothstep(0.85, 1.0, s));
   // On a dead one they are bare bone-yellow with salt grown on the upper side in knobs.
   float knobs = smoothstep(0.42, 0.6, vnoise(vec2(s * 14.0 + vLook.z * 50.0, vLook.y * 2.0)) + 0.25 * n.y);
   albedo = mix(albedo, mix(vec3(0.26, 0.17, 0.105) * (0.6 + 0.5 * groove), vec3(0.33, 0.29, 0.27), knobs), uSalted);
@@ -519,6 +534,8 @@ export interface Look {
   reach?: number;
   /** How far the hand of thick feelers is turned down toward the ground, 0 as built. */
   droop?: number;
+  /** The height of what it stands or lies in, metres: the brine at 0 as built, or the mud of a pocket. */
+  line?: number;
   /** How far the hide picture lifts the skin, metres. 0 for one seen from afar. */
   relief?: number;
   /** A photographed tile over the whole of it in place of the flank picture: matted hair, or mud drying on the folds. And how much of it, 0 to 1. */
@@ -581,6 +598,7 @@ export class Beast {
         uShift: { value: new THREE.Vector3(seed * 0.37, seed * 0.19, seed * 0.53) },
         uSeconds: { value: 0 },
         uWet: { value: look.wet },
+        uLine: { value: look.line ?? 0 },
         uSalt: { value: b.salt },
         uMudded: { value: look.mudded ?? 0 },
         uCrust: { value: look.crust ?? 0 },

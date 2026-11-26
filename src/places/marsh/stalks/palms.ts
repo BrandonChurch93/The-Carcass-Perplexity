@@ -12,10 +12,12 @@ varying vec3 vWorld;
 varying vec3 vRight;
 varying vec4 vUv;
 varying vec4 vKind;
+uniform vec2 uGrove;
 ${OPEN_GLSL}
 void main() {
-  float h = aBase.w;
-  float D = 2.0 * aAxis.w;
+  // STAGED by shot: the groves the lens of the thin crust looks across stand low and thick in its shot (uGrove), and as the list has them in every other.
+  float h = aBase.w * mix(1.0, uGrove.x, aKind.z);
+  float D = 2.0 * aAxis.w * mix(1.0, uGrove.y, aKind.z);
   float kind = aKind.x;
   float seed = aKind.w;
   float lean = aAxis.z + 0.01 * sin(uSeconds * 0.7 + aKind.y);
@@ -41,7 +43,7 @@ void main() {
     // The fan at its top is the photograph of one, with the end of its stalk in it: that end is laid on the end of this stalk, as wide and
     // along its line, and the straps arch over to the side the stalk leans. A second, smaller, is behind it the other way round.
     float open = plumeOpen(kind, aKind.y, seed);
-    float wide = 19.0 * D * (0.85 + 0.4 * fract(seed * 57.3)) * (kind > 2.5 ? 0.8 : 1.0) * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * (piece > 1.5 ? 0.8 : 1.0);
+    float wide = 19.0 * D * mix(1.0, 0.5 / uGrove.y, aKind.z * (uGrove.y > 1.01 ? 1.0 : 0.0)) * (0.85 + 0.4 * fract(seed * 57.3)) * (kind > 2.5 ? 0.8 : 1.0) * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * (piece > 1.5 ? 0.8 : 1.0);
     vec3 er = normalize(cross(T, toCam));
     float flip = (dot(vec3(A.x, 0.0, A.z), er) + 0.2 * (fract(seed * 23.7) - 0.5) < 0.0 ? -1.0 : 1.0) * (piece > 1.5 ? -1.0 : 1.0);
     er *= flip;
@@ -119,7 +121,8 @@ ${CUT}
     n = normalize(vRight * x + v * sqrt(1.0 - x * x * 0.9));
     occ = 0.6 + 0.4 * smoothstep(0.0, 0.3, vWorld.y);
     // The foot stands in red brine and mud.
-    float wet = 1.0 - smoothstep(0.02, 0.22, vWorld.y);
+    // And the stain of it climbs the foot, higher on one than on the next, and ragged.
+    float wet = 1.0 - smoothstep(0.05, 0.45 + 0.9 * fract(vKind.w * 7.3), vUv.w * vKind.y + 0.09 * sin(vUv.x * 40.0 + vKind.w * 30.0) + 0.05 * sin(vWorld.y * 31.0 + vKind.w * 11.0));
     // The ones at the lip of the seep stand in what it throws: wet and red brown to the mouth, the salt left on them in patches.
     float thrown = 1.0 - smoothstep(4.0, 6.5, distance(vWorld.xz, vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
     wet = max(wet, thrown * (0.9 - 0.55 * smoothstep(0.5, 0.75, luma) * smoothstep(-0.2, 0.6, sin(vWorld.y * 5.3 + vUv.x * 30.0 + vKind.w * 40.0))));

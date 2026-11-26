@@ -1,12 +1,19 @@
 // The stalk colonies: salt-crusted tubes with crimson plumes round the seep pools, and the small winged insects that live in them.
 import * as THREE from 'three';
-import { K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, distToSegment, makePools, makeStalks, rel, type Stalk } from '../shared/anchors';
+import { K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, UNIT, distToSegment, makePools, makeStalks, rel, type Stalk } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
+import { secondsInPlace, shotsOf } from '../../../film/cut';
+import { stagedSeconds } from '../shared/stage';
 import { LOCK_DEPTH, LOCK_FRAGMENT, LOCK_VERTEX } from './locks';
 import { PALM_DEPTH, PALM_FRAGMENT, PALM_VERTEX } from './palms';
 import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX, STEM_FRAGMENT, STEM_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['stalks', 'insects'];
+
+// STAGED by shot: in the shot of the thin crust the groves its lens looks across stand low and thick in the haze, hardly above the wallowers' backs,
+// as the approved picture has them. In every other shot they stand as the list has them.
+const CRUST_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-05');
+const CRUST_SPAN: [number, number] = CRUST_SHOT ? [secondsInPlace(UNIT, CRUST_SHOT.first) - 0.004, secondsInPlace(UNIT, CRUST_SHOT.last) + 0.004] : [0, -1];
 
 /** Stalks nearer than this to where a camera stands are drawn in full. Metres. */
 const NEAR = 14;
@@ -95,19 +102,22 @@ export function create(ctx: Context): Piece {
     });
     stalks.push(...forks);
   }
-  // TEMPORARY, until the lead's list has them: the colonies go on out to the haze. Small clumps of two to five stand on the dry flats beyond the last of the list,
-  // thinner on the ground the further off, each clump its own height and lean.
+  // TEMPORARY, until the lead's list has them: the colonies go on out to the haze. A few groups stand at the water's edge beyond the last of the list,
+  // and the flats between are bare, as the approved wide picture has them: each group its own height and lean.
   {
     const far = ctx.rng('stalks-far');
-    for (let c = 0; c < 64; c++) {
+    let placed = 0;
+    for (let c = 0; c < 400 && placed < 22; c++) {
       const d = far.range(40, 150);
       const p = rel(d, far.range(-0.62, 0.62) * d);
       const h = far.range(1.9, 3.3);
-      const count = 2 + far.int(4);
-      if (ctx.rig.land.shore(p[0], p[1]) < 0.08) continue;
+      const count = 3 + far.int(5);
+      const edge = ctx.rig.land.shore(p[0], p[1]);
+      if (edge < 0.1 || edge > 2.5) continue;
+      placed++;
       for (let n = 0; n < count; n++) {
         const a = far.range(0, TAU);
-        const r = far.range(0.15, 1.3);
+        const r = far.range(0.15, 1.5);
         const roll = far.next();
         stalks.push({ x: p[0] + Math.cos(a) * r, z: p[1] + Math.sin(a) * r, h: h * far.range(0.55, 1.15), lean: far.range(0.02, 0.22), yaw: far.range(0, TAU), kind: roll < 0.62 ? 0 : roll < 0.76 ? 3 : roll < 0.88 ? 1 : 2, size: far.range(0.8, 1.15), phase: far.range(0, TAU) });
       }
@@ -121,6 +131,7 @@ export function create(ctx: Context): Piece {
     distToSegment(s.x, s.z, k2a, k2b) < NEAR || Math.hypot(s.x - K1_AT[0], s.z - K1_AT[1]) < NEAR || Math.hypot(s.x - k3[0], s.z - k3[1]) < NEAR || Math.hypot(s.x - k4[0], s.z - k4[1]) < NEAR;
 
   const uSeconds = { value: 0 };
+  const uGrove = { value: new THREE.Vector2(1, 1) };
   const salt = ctx.assets.texture('wallowers/salt.jpg', { kind: 'colour', anisotropy: 4 });
   const saltNh = ctx.assets.texture('wallowers/salt-nh.png', { kind: 'data', anisotropy: 4 });
   const stemMaterial = new THREE.ShaderMaterial({
@@ -151,16 +162,15 @@ export function create(ctx: Context): Piece {
     const base = new Float32Array(rest.length * 4);
     const axis = new Float32Array(rest.length * 4);
     const kind = new Float32Array(rest.length * 4);
-    // STAGED for the lens of the thin crust: the groves it looks across to stand lower and thinner than the list has them, a third the height of that frame
-    // and not half of it, as the approved picture has them.
+    // STAGED for the lens of the thin crust: the groves it looks across are marked, and stand low and thick in its shot.
+    const low = new Set<Stalk>();
     const k4to = rel(27.6, 10.07);
     const k4l = Math.hypot(k4to[0] - k4[0], k4to[1] - k4[1]);
     for (const s of rest) {
       const along = ((s.x - k4[0]) * (k4to[0] - k4[0]) + (s.z - k4[1]) * (k4to[1] - k4[1])) / k4l;
       const off = Math.hypot(s.x - k4[0], s.z - k4[1]);
-      if (along > 9 && off < 45 && along > 0.75 * off && Math.hypot(s.x - k3[0], s.z - k3[1]) > 7.5) {
-        s.h *= 0.62;
-        s.size *= 0.8;
+      if (along > 9 && off < 60 && along > 0.55 * off) {
+        low.add(s);
       }
     }
     rest.forEach((s, i) => {
@@ -168,7 +178,7 @@ export function create(ctx: Context): Piece {
       base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
       // Slender: a stalk away from the lens of the colony is a wrist thick and three metres tall, as the approved pictures have them.
       axis.set([Math.cos(s.yaw), -Math.sin(s.yaw), s.lean * 1.5 + rng.range(0, 0.2), (s.h > 2.6 ? 0.09 : 0.07) * s.size * rng.range(0.5, 0.72)], i * 4);
-      kind.set([s.kind, s.phase, s.size, rng.next()], i * 4);
+      kind.set([s.kind, s.phase, low.has(s) ? 1 : 0, rng.next()], i * 4);
     });
     const palm = new THREE.BufferGeometry();
     const pp: number[] = [];
@@ -193,6 +203,7 @@ export function create(ctx: Context): Piece {
       uniforms: {
         ...ctx.rig.uniforms,
         uSeconds,
+        uGrove,
         tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) },
         tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) },
         tFan: { value: ctx.assets.texture('mat/fan.jpg', { kind: 'colour', repeat: false }) },
@@ -355,6 +366,9 @@ export function create(ctx: Context): Piece {
   return {
     setTime: (seconds) => {
       uSeconds.value = seconds;
+      const staged = stagedSeconds();
+      if (staged >= CRUST_SPAN[0] && staged <= CRUST_SPAN[1]) uGrove.value.set(0.4, 1.2);
+      else uGrove.value.set(1, 1);
     },
   };
 }
