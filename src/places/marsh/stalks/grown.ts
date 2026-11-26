@@ -194,7 +194,7 @@ void main() {
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
   // Far off a stem is seen against pale ground and paler air: it is the horn colour of its tube, with its rings as bands, not chalk.
   float banded = 0.5 + 0.5 * sin(vUv.y * 44.0 + seed * 30.0);
-  vec3 horn = vec3(1.12, 1.05, 0.97) * (0.75 + 0.35 * banded) * mix(0.55, 1.08, smoothstep(0.0, 0.6, vUv.w)) * (0.7 + 0.5 * fract(seed * 17.3));
+  vec3 horn = vec3(1.12, 1.05, 0.97) * (0.9 + 0.12 * banded) * mix(0.55, 1.08, smoothstep(0.0, 0.6, vUv.w)) * (0.7 + 0.5 * fract(seed * 17.3));
   albedo = mix(albedo, mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))), 0.45) * horn, smoothstep(6.0, 28.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
   float above = vWorld.y - vLook.w;
@@ -395,7 +395,7 @@ void main() {
   float plant = fract(vG.y * 41.7);
   vec3 albedo = mix(vec3(0.04, 0.003, 0.009), vec3(0.15, 0.011, 0.026), clamp(0.55 * own + 0.45 * plant + 0.25 * (s - 0.5), 0.0, 1.0));
   // Far off a head is a few pixels of it against pale ground: there it is the red of the lit blade, not of the shade between blades.
-  albedo = mix(albedo, albedo * vec3(1.65, 1.05, 1.2), (1.0 - uLowly) * smoothstep(10.0, 34.0, distance(cameraPosition, vWorld)));
+  albedo = mix(albedo, albedo * vec3(1.25, 0.7, 0.8), (1.0 - uLowly) * smoothstep(10.0, 34.0, distance(cameraPosition, vWorld)));
   albedo = mix(albedo, vec3(0.2, 0.06, 0.06), 0.45 * smoothstep(0.55, 1.0, s) * fract(seed * 5.1));
   albedo = mix(albedo, vec3(0.2, 0.12, 0.075), 1.0 - smoothstep(0.02, 0.14, s));
   // The rib is darker than the blade, and the blade is ruled along its length.
@@ -458,7 +458,7 @@ const endOf = (w: Wild): { end: [number, number, number]; aim: [number, number, 
  * The head of a line, from the cards it was dressed with (index.ts and stands.ts): a card of the lock is a spray that stands up round the line,
  * a card of the fan is a fall of straps to one side. `fine` is how many straps a card is worth, by how near a lens ever comes.
  */
-export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: number, hung: boolean): void {
+export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: number, hung: boolean, swept = 0): void {
   if (w.cards.length === 0) return;
   const { end, aim } = endOf(w);
   const up = !w.bare && !hung;
@@ -483,6 +483,13 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
         leave = Math.max(0.04, Math.abs(rng.normal()) * 0.4 + 0.5 * droop * Math.cos(az - turn));
         length = 0.6 * wide * tall * rng.range(0.55, 1.05);
         fall = rng.range(1.1, 2.1) + 1.2 * leave;
+        if (rng.next() < swept) {
+          // A plume, not a star: most of a head leaves to the side the air has combed it, arches over and weeps.
+          az = turn + rng.normal() * 0.75;
+          leave = Math.min(2.2, 0.3 + Math.abs(rng.normal()) * 0.5 + 0.4 * droop);
+          length = 0.8 * wide * tall * rng.range(0.6, 1.1);
+          fall = rng.range(1.9, 3.1);
+        }
       } else {
         // The fall of a head: straps that leave to one side, arch over and hang by their ends.
         az = turn + rng.normal() * 0.6;

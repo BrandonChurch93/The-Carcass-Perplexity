@@ -458,7 +458,7 @@ export function create(ctx: Context): Piece {
       const low = new Fronds();
       const listOf = (d: number): Fronds => (d < 20 ? nearF : d < 38 ? midF : farF);
       const wideOf = lensOf['marsh-01'] ?? reach;
-      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false);
+      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
       for (const w of stands.leaves) if (seen(w.x, w.z) && wideOf(w) < 38) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)) * 0.35, broadOf(wideOf(w)) * 1.2, true);
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
