@@ -177,8 +177,8 @@ export function createRig(): Rig {
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
     // The dawn sky under fog, scene linear. Measured against the approved wide view: the sky away from the sun reads a cold grey,
     // and pale rock in open shade reads about 0.3.
-    uSkyZenith: { value: new THREE.Vector3(0.115, 0.112, 0.115) },
-    uSkyHorizon: { value: new THREE.Vector3(0.16, 0.156, 0.158) },
+    uSkyZenith: { value: new THREE.Vector3(0.15, 0.146, 0.146) },
+    uSkyHorizon: { value: new THREE.Vector3(0.2, 0.193, 0.19) },
     // What pale wet rock throws back up at the underside of things.
     uSkyGround: { value: new THREE.Vector3(0.06, 0.054, 0.048) },
     uSunDir: { value: sunDirection },

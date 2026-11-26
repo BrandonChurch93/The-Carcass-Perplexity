@@ -3,7 +3,7 @@
 // All three are lit by the rig alone.
 import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
-import { SEA } from '../land';
+import { PLATE, SEA } from '../land';
 import { RIG_GLSL } from '../shared/glsl';
 import type { NearMap } from './field';
 
@@ -162,14 +162,16 @@ vec3 raised(vec3 p, vec3 n, float h) {
   return normalize(abs(det) * n - g);
 }`;
 
-// The shelf: bedded rock broken back bed by bed, with the loose stone that lies on it. Its shape is the near map's (land/field.ts): the normal,
-// the shadow of every step and stone under the low sun, and the hollows are read from the map, so nothing here is drawn on a flat face.
-// High and dry it is pale and weathered; low it is dark with wet, and water stands in the hollows and mirrors the sky.
+// The shelf: a pavement of pale plates with stone in the gaps between them. Its colour is the plate's picture and its shape is the plate's
+// relief, baked with the land into the near map (land/field.ts): the normal, the shadow of every edge and stone under the low sun, and the
+// hollows are read from the map, so nothing here is drawn on a flat face. High and dry it is pale; low it is dark with wet; water stands
+// in the plate's hollows and mirrors the sky.
 export const SHELF_FRAGMENT = /* glsl */ `
 ${COMMON}
 uniform sampler2D tMat;
 uniform sampler2D tMatN;
 uniform vec3 uMean;
+uniform sampler2D tPlate;
 uniform sampler2D tNear;
 uniform sampler2D tNearS;
 uniform vec4 uNear;
@@ -184,55 +186,45 @@ void main() {
   vec2 border = min(q, 1.0 - q);
   float inNear = smoothstep(0.0, 0.03, min(border.x, border.y));
   vec4 field = mix(vec4(p.y, land.b, 0.5, 0.0), texture2D(tNear, q), inNear);
-  vec2 slope = texture2D(tNearS, q).rg * inNear;
+  vec3 slope = texture2D(tNearS, q).rgb * inNear;
   // The brim's own face hangs inside the rim, where the map holds no cliff: there the mesh's normal is the true one.
   float hang = smoothstep(0.35, 0.1, gn.y);
   vec3 n = normalize(mix(mix(gn, normalize(vec3(-slope.x, 1.0, -slope.y)), inNear), gn, hang));
 
+  // The plate, and near the lens the grain of wet rock too fine for the plate to hold (mat/wetrock, 1.5 m).
+  vec3 plate = texture2D(tPlate, vec2(p.x / ${PLATE.metres.toFixed(1)}, 1.0 - p.z / ${PLATE.depth.toFixed(4)})).rgb;
   vec4 a = texture2D(tRock, p.xz / 37.0);
-  // The courses of a riser: thin laminae that run level, drawn out along the face.
-  vec4 lam = texture2D(tRock, vec2(p.y * 2.7 + 0.2 * a.r, (p.x + p.z) * 0.031));
-  // The picture of the rock itself (mat/shelf) at two sizes, the larger turned so that no repeat lines up with the other.
-  vec3 m0 = texture2D(tMat, p.xz / 1.9 + 0.57).rgb;
-  vec3 m1 = texture2D(tMat, p.zx / 7.3 + 0.31).rgb;
-  vec3 mn = texture2D(tMatN, p.xz / 1.9 + 0.57).rgb;
-  float near = smoothstep(70.0, 10.0, dist);
-  vec3 grain = (0.5 * m0 + 0.5 * m1) / uMean;
-  float tone = clamp(1.0 + 1.9 * (dot(grain, vec3(0.3333)) - 1.0), 0.3, 1.9);
-  vec2 lean = (mn.rg - 0.5) * 0.9 * near;
+  float near = smoothstep(26.0, 5.0, dist);
+  vec3 m0 = texture2D(tMat, p.xz / 1.5 + 0.57).rgb;
+  vec3 mn = texture2D(tMatN, p.xz / 1.5 + 0.57).rgb;
+  float tone = mix(1.0, clamp(1.0 + 1.5 * (dot(m0 / uMean, vec3(0.3333)) - 1.0), 0.45, 1.7), near);
+  vec2 lean = (mn.rg - 0.5) * 1.3 * near;
 
-  float steep = smoothstep(0.22, 0.6, 1.0 - n.y);
+  float steep = smoothstep(0.3, 0.75, 1.0 - n.y);
   float stone = smoothstep(0.02, 0.2, field.a);
   float hollow = smoothstep(0.5, 0.3, field.b);
-  float crest = smoothstep(0.52, 0.72, field.b);
-  // Wet: everything near the tide, the foot of every step, and the low beds where the vapour's water runs to.
+  // Wet: everything near the tide and the foot of every edge near it; the pool, and a margin round it.
   float over = field.r - (${SEA.toFixed(3)});
-  float damp = clamp(1.0 - smoothstep(0.1, 0.95, over + 0.5 * (a.a - 0.5)) + 0.55 * hollow * smoothstep(0.35, 0.6, a.r) + 0.5 * land.a * hollow, 0.0, 1.0);
-  // Water stands where the ground is level and low for its neighbourhood: a film that mirrors the sky.
-  float level = smoothstep(0.12, 0.03, length(slope));
-  float film = level * smoothstep(0.47, 0.4, field.b) * smoothstep(0.42, 0.6, a.r + 0.6 * damp) * (1.0 - stone) * inNear;
+  float film = slope.b;
+  float damp = clamp(1.0 - smoothstep(0.06, 0.55, over + 0.3 * (a.a - 0.5)) + 0.5 * hollow * smoothstep(0.5, 0.75, a.r) + film, 0.0, 1.0);
   n = normalize(n - vec3(lean.x, 0.0, lean.y) * (1.0 - film));
-  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.94 * film));
+  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.97 * film));
 
-  // The rock: grey stone, weathered pale on the tops of the beds, darker where a bed has just broken away, each loose stone its own tone.
-  vec3 pale = vec3(0.47, 0.445, 0.4);
-  vec3 dark = vec3(0.2, 0.185, 0.165);
-  vec3 rock = mix(dark, pale, clamp(0.55 + 0.9 * (a.a - 0.5) + 0.5 * (crest - 0.3) - 0.35 * steep, 0.0, 1.0)) * tone;
-  rock = mix(rock, mix(dark, pale, field.a) * tone * vec3(1.03, 1.0, 0.95), stone);
-  // A riser shows the beds it is made of, some pale, some rusty, and the shade under each.
-  vec3 courses = mix(vec3(0.15, 0.125, 0.1), vec3(0.4, 0.36, 0.3), smoothstep(0.3, 0.7, lam.r)) * mix(vec3(1.0), vec3(1.0, 0.8, 0.6), smoothstep(0.55, 0.75, lam.a));
-  rock = mix(rock, courses * (0.6 + 0.4 * tone), steep * (1.0 - stone));
-  // Ochre where water has stood and dried; a dark green-brown weed along the tide line and in the wet foot of the steps near it.
-  float stain = smoothstep(0.5, 0.72, a.g + 0.4 * (m1.r / uMean.r - 1.0)) * (1.0 - steep);
-  rock = mix(rock, rock * vec3(1.02, 0.78, 0.52), 0.45 * stain);
-  float tide = smoothstep(0.55, 0.05, abs(over - 0.12)) * smoothstep(0.35, 0.6, a.b * 2.0 + 0.5 * (tone - 1.0)) + 0.5 * hollow * smoothstep(0.7, 0.2, over);
-  rock = mix(rock, vec3(0.05, 0.055, 0.03) * (0.6 + 0.8 * tone), 0.7 * clamp(tide, 0.0, 1.0));
-  vec3 albedo = rock * mix(1.0, 0.36, damp);
-  albedo = mix(albedo, albedo * vec3(0.5, 0.55, 0.55), film);
-  float rough = mix(mix(0.88, 0.34, damp), 0.05, film);
-  // The shade of a hollow, of the foot of a step, of the gap between two stones.
-  float occ = mix(0.42, 1.0, smoothstep(0.22, 0.52, field.b)) * vOcc;
-  // The sun: every step and every stone throws its own shadow down the shelf, baked in the map at its own fineness.
+  // The rock: the plate's own colour, cooled a little (it was painted under a warm lamp), each loose stone its own tone.
+  vec3 rock = plate * vec3(1.0, 1.05, 1.1) * tone;
+  rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
+  // The steep edge of a plate is broken rock: darker, rustier than its top.
+  rock = mix(rock, rock * vec3(0.62, 0.52, 0.42), steep * (1.0 - stone));
+  // A dark green-brown weed along the tide line and in the wet foot of the edges near it.
+  float tide = smoothstep(0.5, 0.05, abs(over - 0.1)) * smoothstep(0.3, 0.6, a.b * 2.0 + 0.5 * (tone - 1.0)) + 0.5 * hollow * smoothstep(0.6, 0.15, over);
+  rock = mix(rock, vec3(0.045, 0.05, 0.028) * (0.6 + 0.8 * tone), 0.7 * clamp(tide, 0.0, 1.0));
+  vec3 albedo = rock * mix(1.0, 0.4, damp);
+  // The pool is a hand deep over slime: dark, green, and a mirror.
+  albedo = mix(albedo, vec3(0.035, 0.045, 0.03), 0.85 * film);
+  float rough = mix(mix(0.9, 0.36, damp), 0.04, film);
+  // The shade of a hollow, of the gap between two plates, of the gap between two stones.
+  float occ = mix(0.4, 1.0, smoothstep(0.2, 0.52, field.b)) * vOcc;
+  // The sun: every edge and every stone throws its own shadow down the shelf, baked in the map at its own fineness.
   float lit = mix(1.0, smoothstep(-0.07, -0.006, field.r - field.g), inNear) * sunSeen(land, p.y);
   land.b = p.y + mix(0.35, 0.03, lit);
   vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ);
@@ -241,13 +233,16 @@ void main() {
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 5.0);
   vec3 back = reflect(-v, n);
   back.y = abs(back.y);
-  colour += skyRadiance(back) * (fres * damp * (0.5 + 0.5 * film) * 1.2 * occ * land.g);
+  colour += skyRadiance(back) * (fres * damp * (0.4 + 0.6 * film) * 1.1 * occ * land.g);
   float tight = sunLobe(normalize(n + vec3(mn.r - 0.5, 0.0, mn.g - 0.5) * 0.5), v, 0.2) * fres * lit;
-  colour += uSunColour * (min(tight, 8.0) * damp * smoothstep(0.45, 0.75, m0.g / uMean.g * 0.6) * occ * 0.5);
+  colour += uSunColour * (min(tight, 8.0) * damp * smoothstep(0.4, 0.8, mn.b) * occ * 0.5);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
-// The bone of the shaft: uBone 0 is the dark wet wall between the hoops, 1 the ivory cartilage of a hoop or a slab. Tea-brown stains run down it.
+// The bone of the shaft: uBone 0 is the dark wet wall between the ribs, 1 the ivory cartilage of a rib or a block that broke from one.
+// The stone's picture is laid in the world, on the two planes the face looks along, a metre to a metre on every face: it cannot stretch
+// and it has no seam. The stains are patches and runs. The light is the rig's: the land's own shadow, and of the sky what a point down
+// a shaft can see of it, plus what the lit mist and the far wall throw back.
 export const BONE_FRAGMENT = /* glsl */ `
 ${COMMON}
 uniform float uBone;
@@ -255,74 +250,78 @@ uniform vec3 uPale;
 uniform vec3 uDark;
 uniform sampler2D tMat;
 uniform sampler2D tMatN;
-// The mean colour of the picture, and x the metres of one repeat, y the metres its height stands for.
+// The mean colour of the picture, and x the metres of one repeat, y how strongly its slope turns the normal.
 uniform vec3 uMean;
 uniform vec2 uMat;
 void main() {
   vec3 p = vWorld;
   vec3 v = normalize(cameraPosition - p);
   vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
-  vec4 a = texture2D(tRock, vUv / 17.0);
-  vec4 b = texture2D(tRock, vUv / 3.1 + 0.23);
-  // Streaks that run down the face: the same tile, drawn out along the fall line.
-  vec4 run = texture2D(tRock, vec2(vUv.x / 19.0, vUv.y / 48.0) + 0.5);
-  float pit = smoothstep(0.55, 0.8, b.a) * 0.6;
-  // The drawn joints are for the wall: on a hoop or a slab the picture of the stone has its own.
-  float joint = smoothstep(0.1, 0.0, a.b) * smoothstep(0.45, 0.6, a.r) * 0.6 * (1.0 - 0.8 * smoothstep(0.4, 0.9, uBone));
-  // The picture of the surface (mat/hoop, mat/strata or mat/wall), x along the face and y up it, and again larger so that the repeat does not show.
-  vec3 m0 = texture2D(tMat, vUv / uMat.x).rgb;
-#ifdef FINE
-  vec3 m1 = texture2D(tMat, vUv / (uMat.x * 3.7) + 0.43).rgb;
-#else
-  vec3 m1 = m0;
-#endif
-  vec3 mn = texture2D(tMatN, vUv / uMat.x).rgb;
-  vec3 grain = (0.65 * m0 + 0.35 * m1) / uMean;
-  grain = clamp(1.0 + 1.7 * (grain - 1.0), 0.25, 2.2) * mix(vec3(1.0), uMean / dot(uMean, vec3(0.3333)), 0.45);
-  // On a hoop or the brim the bumps are small: where the low sun grazes a rounded face, large ones break it into spots.
-  float h = (0.22 * a.r + 0.03 * b.r - 0.03 * pit) * (1.0 - 0.75 * smoothstep(0.4, 0.9, uBone)) - 0.1 * joint;
-  n = raised(p, n, h);
-  // The slope the picture holds, laid along the face: x along it and y up it.
-  vec3 dpx = dFdx(p);
-  vec3 dpy = dFdy(p);
-  vec2 dux = dFdx(vUv);
-  vec2 duy = dFdy(vUv);
-  vec3 along = dpx * duy.y - dpy * dux.y;
-  vec3 across = dpy * dux.x - dpx * duy.x;
-  float fl = sign(dux.x * duy.y - dux.y * duy.x);
-  if (dot(along, along) > 1e-16 && dot(across, across) > 1e-16) n = normalize(n - fl * uMat.y * ((mn.r - 0.5) * normalize(along) + (mn.g - 0.5) * normalize(across)));
+  vec3 q = p / uMat.x;
+  vec3 dqx = dFdx(q);
+  vec3 dqy = dFdy(q);
+  vec3 an = abs(n);
+  ivec3 ma = (an.x > an.y && an.x > an.z) ? ivec3(0, 1, 2) : (an.y > an.z) ? ivec3(1, 2, 0) : ivec3(2, 0, 1);
+  ivec3 mi = (an.x < an.y && an.x < an.z) ? ivec3(0, 1, 2) : (an.y < an.z) ? ivec3(1, 2, 0) : ivec3(2, 0, 1);
+  ivec3 me = ivec3(3) - mi - ma;
+  vec2 ua = vec2(q[ma.y], q[ma.z]);
+  vec2 ub = vec2(q[me.y], q[me.z]);
+  vec2 uax = vec2(dqx[ma.y], dqx[ma.z]);
+  vec2 uay = vec2(dqy[ma.y], dqy[ma.z]);
+  vec2 ubx = vec2(dqx[me.y], dqx[me.z]);
+  vec2 uby = vec2(dqy[me.y], dqy[me.z]);
+  vec2 w = clamp((vec2(an[ma.x], an[me.x]) - 0.5773) / 0.4227, 0.0, 1.0) + 1e-4;
+  w /= w.x + w.y;
+  vec3 m0 = textureGrad(tMat, ua, uax, uay).rgb * w.x + textureGrad(tMat, ub, ubx, uby).rgb * w.y;
+  vec3 sa = textureGrad(tMatN, ua, uax, uay).rgb;
+  vec3 sb = textureGrad(tMatN, ub, ubx, uby).rgb;
+  vec3 ga = vec3(0.0);
+  ga[ma.y] = sa.r - 0.5;
+  ga[ma.z] = sa.g - 0.5;
+  vec3 gb = vec3(0.0);
+  gb[me.y] = sb.r - 0.5;
+  gb[me.z] = sb.g - 0.5;
+  vec3 lean = ga * w.x + gb * w.y;
+  n = normalize(n - uMat.y * (lean - n * dot(lean, n)));
+  float tone = clamp(1.0 + 1.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0), 0.35, 1.8);
+  float height = sa.b * w.x + sb.b * w.y;
+
+  // Patches and runs: the same tile of noise, laid by the shape's own metres (they are broad: nothing in them can show a stretch).
+  vec4 a = texture2D(tRock, vUv / 13.0);
+  vec4 run = texture2D(tRock, vec2(vUv.x / 7.0, p.y / 31.0) + 0.5);
   float up = clamp(n.y, 0.0, 1.0);
-  vec3 base = mix(uDark, uPale, clamp(0.5 + 1.5 * (a.r - 0.5) + 0.6 * (b.a - 0.5), 0.0, 1.0)) * grain;
-  // The top of the wall is the shelf's own pale beds, not yet wet through.
-  base *= mix(1.0, 2.4, smoothstep(-10.0, -1.5, p.y) * (1.0 - smoothstep(0.3, 0.45, uBone)));
-  // On the wall the stains run down in streaks; on a hoop or a slab they are patches, and the top is cleaner than the sides.
-  float stain = mix(smoothstep(0.45, 0.75, run.r + 0.35 * (a.a - 0.5)), smoothstep(0.4, 0.7, a.a + 0.45 * (b.r - 0.5) + 0.12 * (run.r - 0.5)), smoothstep(0.3, 0.5, uBone)) * (1.0 - 0.6 * up);
-  vec3 albedo = mix(base, base * vec3(0.5, 0.33, 0.19), 0.85 * stain * uBone + 0.3 * stain);
-  // A hoop's top is washed pale; its face is wet, darker, and streaked ochre and black where the water runs off it.
-  float face = smoothstep(0.75, 0.3, up) * smoothstep(0.4, 0.9, uBone);
-  float streak = smoothstep(0.35, 0.7, run.r + 0.3 * (run.a - 0.5));
-  albedo = mix(albedo, albedo * mix(vec3(0.62, 0.5, 0.36), vec3(0.2, 0.17, 0.14), streak), 0.2 * face);
-  // Under water level in the rock, and wherever the vapour condenses, it is dark and wet.
-  float wet = clamp(0.45 + 0.5 * smoothstep(-2.0, -14.0, p.y) + 0.3 * stain, 0.0, 1.0);
-  // Down the shaft the sky is a disc overhead and everything is wet: it goes to the dark.
-  float sunk = clamp(1.0 + min(p.y + 3.0, 0.0) / 52.0, 0.0, 1.0) * mix(1.0, 0.8, smoothstep(1.0, -2.5, p.y));
-  albedo *= (1.0 - 0.5 * joint - 0.35 * pit) * mix(1.0, mix(0.62, 0.85, smoothstep(0.4, 0.9, uBone)), wet);
-  // A ledge is lifted by the light that comes down the shaft, not by a mirror of the sky: left glossy, every rounded edge shows as a bright line.
-  float rough = mix(mix(0.85, 0.38, wet), 1.0, 0.85 * smoothstep(0.4, 0.9, uBone));
-  // The wall under a hoop is in its shade: black recesses between the ribs. The hoops stand every seven metres.
-  float under = mod(-(p.y + 3.6), 7.0);
-  float recess = smoothstep(7.0, 2.2, under) * smoothstep(-1.0, -4.0, p.y) * (1.0 - smoothstep(0.3, 0.45, uBone));
-  // The hoops stand out of the wall into what light comes down: they are the pale thing in the shaft.
-  // A ledge's top lies open to the disc of sky overhead, tier under tier, each dimmer than the one over it; its face and the wall get the square of that.
-  float ledge = smoothstep(0.4, 0.9, uBone);
-  float open = mix(sunk * sunk, sunk * mix(sunk, 1.0, 0.75 * up), ledge);
-  // A ledge's face that looks away from the sun looks into the lit mist and the far wall: it is not black.
-  float away = (1.0 - up) * (0.5 - 0.5 * dot(n, uSunDir));
-  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc * open * (1.0 - 0.86 * recess * mix(0.5, 1.0, smoothstep(-5.0, -24.0, p.y))) * mix(1.0, 2.3 + 1.6 * up + 2.2 * away, ledge * smoothstep(-0.5, -6.0, p.y));
-  // Nothing of the sun gets down there either: the shadow's top is lifted over whatever is deep.
+  float ivory = smoothstep(0.4, 0.9, uBone);
+  vec3 base = mix(uDark, uPale, clamp(0.55 + 1.3 * (a.r - 0.5) + 0.5 * (tone - 1.0), 0.0, 1.0)) * tone;
+  // The wall's top beds are the shelf's own stone, not yet wet through, and green slime grows where the seep keeps them damp.
+  float topBeds = smoothstep(-8.0, -1.0, p.y) * (1.0 - ivory);
+  base = mix(base, vec3(0.33, 0.3, 0.25) * tone, 0.75 * topBeds);
+  base = mix(base, vec3(0.07, 0.085, 0.045) * tone, 0.6 * (1.0 - ivory) * smoothstep(0.45, 0.7, run.a + 0.3 * (a.g - 0.5)));
+  // Rust: iron in the seep. On a rib it is broad ochre patches with dark hearts, heaviest on the flanks and where water runs off the underside.
+  float patch0 = smoothstep(0.4, 0.62, a.a + 0.35 * (run.r - 0.5) + 0.25 * (1.0 - up) - 0.2 * (height - 0.5));
+  float heart = smoothstep(0.62, 0.8, a.a + 0.3 * (run.g - 0.5));
+  vec3 rust = mix(vec3(0.5, 0.29, 0.1), vec3(0.2, 0.09, 0.035), heart);
+  vec3 albedo = mix(base, rust * (0.7 + 0.5 * tone), patch0 * mix(0.35, 0.8, ivory));
+  // Runs down the faces: thin dark streaks under every stained place.
+  float streak = smoothstep(0.55, 0.8, run.r + 0.25 * (run.b - 0.5)) * (1.0 - up);
+  albedo = mix(albedo, albedo * vec3(0.4, 0.33, 0.25), 0.6 * streak);
+  // Wet: the wall everywhere below the top beds; a rib only on its underside.
+  float wet = mix(clamp(0.35 + 0.65 * smoothstep(-3.0, -12.0, p.y), 0.0, 1.0), 0.35 * smoothstep(0.1, -0.5, n.y), ivory);
+  albedo *= mix(1.0, 0.55, wet);
+  float rough = mix(0.92, 0.5, wet);
+
+  // Down the shaft: the land map says where the pit is. A face there sees the sky as a disc overhead, smaller the deeper it is.
   vec4 land = landAt(p.xz);
-  land.b = mix(p.y + 1.0, land.b, sunk * sunk);
-  gl_FragColor = vec4(rigOut(rigShadeOn(land, p, n, v, albedo, rough, occ)), 1.0);
+  float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);
+  float depth = max(-p.y, 0.0);
+  float openUp = 1.0 / (1.0 + depth * depth / 700.0);
+  float openSide = 0.6 / (1.0 + depth * depth / 1500.0);
+  float open = mix(1.0, mix(openSide, openUp, up), pit);
+  float occ = vOcc * open * (0.75 + 0.5 * height);
+  vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ);
+  // What the shut-off part of the sky is replaced by: the far wall and the mist in the shaft, lit by the sky and by the sun on the south wall.
+  vec3 bounce = (0.55 * uSkyHorizon * uFill + 0.3 * uGlowColour) * (pit * (1.0 - open) * (0.55 + 0.45 * smoothstep(-0.2, 0.6, -n.y + 0.4)));
+  colour += albedo * bounce * vOcc;
+  gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
 // The far cliff: level strata of dark rock, pale ledges that hold scree, and the dark of the cave.
@@ -372,7 +371,7 @@ export interface RockKit {
   dispose(): void;
 }
 
-export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, shelf: Surface, cliff: Surface, near: NearMap): RockKit {
+export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, shelf: Surface, plate: THREE.Texture, cliff: Surface, near: NearMap): RockKit {
   const of = (s: Surface): Record<string, THREE.IUniform> => ({
     tMat: { value: s.colour },
     tMatN: { value: s.data },
@@ -387,7 +386,7 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
     return m;
   };
   return {
-    shelf: make(SHELF_FRAGMENT, { ...of(shelf), tNear: { value: near.texture }, tNearS: { value: near.slopes }, uNear: { value: near.rect } }),
+    shelf: make(SHELF_FRAGMENT, { ...of(shelf), tPlate: { value: plate }, tNear: { value: near.texture }, tNearS: { value: near.slopes }, uNear: { value: near.rect } }),
     cliff: make(CLIFF_FRAGMENT, of(cliff), THREE.DoubleSide),
     bone: (amount, pale, dark, surface, side) => make(BONE_FRAGMENT, { uBone: { value: amount }, uPale: { value: new THREE.Vector3(...pale) }, uDark: { value: new THREE.Vector3(...dark) }, ...of(surface) }, side),
     dispose: () => {

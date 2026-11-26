@@ -1,10 +1,10 @@
 // The near map of the Breath's shelf: the ground round the shaft and the channel baked once, 6 cm a cell, with the loose stones that lie on it.
 // The mesh is displaced from it and the shader takes the normal, the sun's shadow and the hollows from it, never from a flat face.
 // tNear: r height (metres), g the height above which the sun is seen there, b how hollow the place is (0.5 level, less in a hollow or at the
-// foot of a step, more on a crest), a the tone of a loose stone (0 where there is none).  tNearS: r, g the slope on x and z.
+// foot of a step, more on a crest), a the tone of a loose stone (0 where there is none).  tNearS: r, g the slope on x and z, b 1 where water stands.
 import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
-import { DEPTH, FINE, bearingOf, ground, inFine, noise2, rimRadius, smoothGround } from '../land';
+import { DEPTH, FINE, POOL, bearingOf, ground, inFine, noise2, plateAt, rimRadius, smoothGround } from '../land';
 import { SEA_LEVEL, SHADOW_RUN, SUN_DIR } from '../shared/anchors';
 
 export interface NearMap {
@@ -114,7 +114,7 @@ export function bakeNear(rng: Rng): NearMap {
       }
     }
   };
-  const count = 60000;
+  const count = 160000;
   for (let k = 0; k < count; k++) {
     const x = FINE.minX + rng.next() * FINE.size;
     const z = FINE.minZ + rng.next() * FINE.size;
@@ -127,11 +127,14 @@ export function bakeNear(rng: Rng): NearMap {
     // Along the brim of the shaft and the banks of the channel the beds are broken up and there is more of it.
     const r = Math.hypot(x, z);
     const brim = Math.exp(-Math.abs(r - rimRadius(bearingOf(x, z)) - 4) / 5);
-    if (drift + 0.2 * brim < 0.6) continue;
+    if (drift + 0.2 * brim < 0.42) continue;
     if (smoothGround(x, z) < SEA_LEVEL - 0.12) continue;
     if (!inFine(x, z, 6)) continue;
+    // The loose stone lies in the gaps between the plates, as the plate's own picture has it.
+    const gap = plateAt(x, z);
+    if (gap < POOL + 0.03 || (gap > 0.5 && size < 0.997)) continue;
     // A long tail: most are cobbles of a hand or two, one in sixty is a block of half a metre or more.
-    const radius = 0.06 + 0.1 * size * size + (size > 0.994 ? 0.3 + 0.8 * (size - 0.994) / 0.006 : 0) + (size > 0.93 ? 0.1 : 0);
+    const radius = 0.05 + 0.08 * size * size + (size > 0.997 ? 0.25 + 0.5 * (size - 0.997) / 0.003 : 0);
     stamp(x, z, radius, radius * (0.45 + 0.4 * squash), squash, turn, tone);
   }
 
@@ -188,6 +191,8 @@ export function bakeNear(rng: Rng): NearMap {
       a[k * 4 + 3] = stone[k] as number;
       b[k * 4] = (xr - xl) / (2 * cell);
       b[k * 4 + 1] = (zd - zu) / (2 * cell);
+      // The pool: where the plate's hollow holds water.
+      b[k * 4 + 2] = hole[k] || stone[k] ? 0 : plateAt(FINE.minX + (i + 0.5) * cell, FINE.minZ + (j + 0.5) * cell) < POOL + 0.012 ? 1 : 0;
     }
   }
   const texture = dataTexture(a, n);

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PLATE_DATA, PLATE_HEIGHT, PLATE_METRES, PLATE_WIDTH } from './land/plate';
 
 export const RAD = Math.PI / 180;
 export const SEA = -0.4;
@@ -88,17 +89,14 @@ export function lipHeight(bearing: number, r: number): number {
   return north + south + west;
 }
 
-/** The thickness of one bed of the shelf's rock, metres. */
-export const BED = 0.38;
-
-/** The smooth ground under the beds: the shelf, the lips of the shaft, the flats, the tide channel with its shallows. */
+/** The smooth ground under the plates: the shelf, the lips of the shaft, the flats, the tide channel with its shallows. */
 export function smoothGround(x: number, z: number): number {
   const xc = channelX(z);
   // The west bank comes in closer than the east one where the channel opens out to the north.
   const half = x < xc ? 5 + 6 * sat((z - 20) / 15) + 2.5 * sat((5 - z) / 15) + 8 * sat((-25 - z) / 50) + 140 * sat((z - 130) / 220) : channelHalf(z);
   const r = Math.hypot(x, z);
   const b = bearingOf(x, z);
-  const broad = fbm2(x / 23 + 3.1, z / 23 + 7.7, 3) - 0.5;
+  const broad = 0.6 * (fbm2(x / 23 + 3.1, z / 23 + 7.7, 3) - 0.5);
   let base: number;
   if (x < xc) {
     const flats = Math.max(smooth((-15 - z) / 60), smooth((xc - half - 45 - x) / 60));
@@ -128,25 +126,39 @@ export function smoothGround(x: number, z: number): number {
 export const FINE = { minX: -84, minZ: -70, size: 122.88, cells: 2048 };
 export const inFine = (x: number, z: number, margin = 0): boolean => x > FINE.minX + margin && x < FINE.minX + FINE.size - margin && z > FINE.minZ + margin && z < FINE.minZ + FINE.size - margin;
 
-/** The shelf is bedded rock, broken back bed by bed: every level line of the ground is the ragged edge of a bed, a hand high, and the top of
- *  each bed dips a little. This is the ground everything stands on. Outside the fine rectangle the steps are too small for the mesh that draws
- *  them and the ground is the same land worn smooth. */
+// The plate of the shelf (public/assets/breath/mat/shelfplate.jpg and its relief): 48 m by 27 m of the pavement seen from straight above,
+// laid over the whole shelf turn and turn about (each repeat is the mirror of the last, so no edge shows). Its relief is the shape of the
+// ground and its colour is the colour of the ground: the two are one picture, so every crack is dark and every plate has its own edge.
+const plateBytes = Uint8Array.from(atob(PLATE_DATA), (c) => c.charCodeAt(0));
+export const PLATE = { metres: PLATE_METRES, depth: (PLATE_METRES * PLATE_HEIGHT) / PLATE_WIDTH };
+/** The plate's relief is drawn as this many metres from black to white. */
+export const RELIEF = 0.9;
+/** Under this level of the plate's relief water stands: the pool in the plate's hollow. */
+export const POOL = 0.31;
+const mirror = (t: number): number => {
+  const m = t - 2 * Math.floor(t / 2);
+  return m > 1 ? 2 - m : m;
+};
+/** The plate's relief at a place on the ground: 0 to 1. */
+export function plateAt(x: number, z: number): number {
+  const fx = Math.min(PLATE_WIDTH - 1.001, Math.max(0, mirror(x / PLATE.metres) * PLATE_WIDTH - 0.5));
+  const fz = Math.min(PLATE_HEIGHT - 1.001, Math.max(0, mirror(z / PLATE.depth) * PLATE_HEIGHT - 0.5));
+  const i = Math.floor(fx);
+  const j = Math.floor(fz);
+  const u = fx - i;
+  const v = fz - j;
+  const k = j * PLATE_WIDTH + i;
+  return (((plateBytes[k] as number) * (1 - u) + (plateBytes[k + 1] as number) * u) * (1 - v) + ((plateBytes[k + PLATE_WIDTH] as number) * (1 - u) + (plateBytes[k + PLATE_WIDTH + 1] as number) * u) * v) / 255;
+}
+
+/** The ground everything stands on: the smooth land with the plate's relief on it. Outside the fine rectangle the plates are too small for
+ *  the mesh that draws them and the ground is the same land worn smooth. */
 export function ground(x: number, z: number): number {
   const base = smoothGround(x, z);
   const edge = Math.min(x - FINE.minX, FINE.minX + FINE.size - x, z - FINE.minZ, FINE.minZ + FINE.size - z);
   const fine = smooth((edge - 2) / 9);
-  // The edge of a bed wanders in lobes of six metres and scallops of two: it is never a level line of the smooth ground.
-  const g = base / BED + 1.5 * (noise2(x / 6.3 + 5.5, z / 6.3 + 1.5) - 0.5) + fine * (0.6 * (noise2(x / 1.9 + 9.2, z / 1.9 + 4.4) - 0.5) + 0.16 * (noise2(x / 0.43, z / 0.43 + 2.2) - 0.5));
-  if (fine <= 0) return BED * g;
-  const level = Math.floor(g);
-  const f = g - level;
-  // The riser is short and steep; the tread behind it dips back a little and is itself flaked in three thin leaves.
-  const rise = smooth((f - 0.87) / 0.13);
-  const tf = Math.min(1, f / 0.87);
-  const t3 = tf * 3 + 3.2 * tf * (1 - tf) * (noise2(x / 0.9 + 3.3, z / 0.9 + 8.1) - 0.5);
-  const leaf = Math.floor(t3);
-  const tread = sat((leaf + smooth((t3 - leaf - 0.78) / 0.22)) / 3);
-  return BED * lerp(g, level + 0.8 * rise + 0.2 * tread, fine);
+  if (fine <= 0) return base;
+  return base + fine * RELIEF * (Math.max(plateAt(x, z), POOL) - 0.56);
 }
 
 export function nearLand(cells: number): THREE.BufferGeometry {

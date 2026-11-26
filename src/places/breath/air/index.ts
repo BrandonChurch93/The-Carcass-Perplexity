@@ -157,7 +157,7 @@ export function create(ctx: Context): Piece {
       tNoise: { value: noise },
       uShow: { value: show },
       uBreath: { value: breath },
-      uHaze: { value: new THREE.Vector4(0.6e-4, 420, 1.5e-4, 60) },
+      uHaze: { value: new THREE.Vector4(0.42e-4, 420, 1.1e-4, 60) },
       uBodyCount: count,
       uBodyA: { value: bodyA },
       uBodyB: { value: bodyB },
