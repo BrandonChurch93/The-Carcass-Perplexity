@@ -124,21 +124,24 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     if ((0.56 * big - 0.06) * 1.6 + 0.5 <= open) continue;
     vec2 f = comb * q;
     float finest = vnoise(f * 113.0 + layer.x * 53.0 + d * 9.0);
+    // Close to the lens the cloud has grain the eye can still see: it is too fine to draw once the sheet is far below.
+    float close = 1.0 - smoothstep(0.1, 0.3, near);
+    if (close > 0.0) finest = mix(finest, 0.55 * finest + 0.45 * vnoise(f * 290.0 + layer.x * 71.0 - d * 14.0), close);
     float fine = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(f * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest;
     float h = 0.56 * big + 0.44 * fine;
     float n = clamp((h - 0.5) * 1.6 + 0.5, 0.0, 1.0);
     float cover = smoothstep(open, open + 0.38, n);
     if (cover <= 0.0) continue;
     float a = 1.0 - exp(-layer.z * thin * cover * sqrt(cover) * min(near / 0.02, 1.0) / down);
-    vec3 colour = within * (0.75 + 0.5 * fine);
+    vec3 colour = within * (0.62 + 0.76 * mix(fine, finest, close));
     if (above > 0.0) {
       // The low sun reaches a place on the sheet when the cloud toward it stands no higher: every lump has a lit side and a side in shade.
       vec2 toSun = q + sunSide * 0.03;
       vec2 fs = comb * toSun;
       float hs = 0.56 * lidBig(toSun) + 0.44 * (0.5 * vnoise(fs * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(fs * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest);
-      float lit = clamp(0.5 + 4.5 * (h - hs) + 0.5 * (cover - 0.75), 0.0, 1.0);
+      float lit = clamp(0.5 + 6.0 * (h - hs) + 0.5 * (cover - 0.75), 0.0, 1.0);
       lit = lit * lit * (3.0 - 2.0 * lit) * mix(0.4, 1.0, tr);
-      vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.6 + 0.8 * n);
+      vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.5 + 1.0 * n);
       colour = mix(colour, top, above);
     }
     sum += tr * a * colour;
