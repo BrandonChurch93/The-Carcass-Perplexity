@@ -74,6 +74,8 @@ float lipWander(vec2 xz) {
 vec3 lipHere(vec2 xz) {
   float e = 2.0;
   float m = length(xz) - lipRadius(xz);
+  // Far from the lip only the distance is asked for: its line is not traced there.
+  if (abs(m) > 140.0) return vec3(m, vec2(-xz.y, xz.x) / max(length(xz), 1.0));
   vec2 g = vec2((length(xz + vec2(e, 0.0)) - lipRadius(xz + vec2(e, 0.0))) - (length(xz - vec2(e, 0.0)) - lipRadius(xz - vec2(e, 0.0))),
     (length(xz + vec2(0.0, e)) - lipRadius(xz + vec2(0.0, e))) - (length(xz - vec2(0.0, e)) - lipRadius(xz - vec2(0.0, e)))) / (2.0 * e);
   float steep = max(length(g), 1.0);

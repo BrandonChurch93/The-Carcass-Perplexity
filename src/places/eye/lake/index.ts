@@ -9,6 +9,7 @@ import { during } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { BED_GLSL, bedUniforms } from './bed';
+import { createBefore } from './before';
 import { createMirror } from './water';
 import { WAVES_GLSL, WAVE_TILES, createWaves } from './waves';
 
@@ -170,7 +171,8 @@ void main() {
     vec3 breath = uBreath.xyz * alive;
     if (k0 > 0.02) slope += breath.x * waveRead(tWave0, p.xz, ${WAVE_TILES[0].toFixed(1)}, 2.0);
     if (k1 > 0.02) slope += breath.y * waveRead(tWave1, p.xz, ${WAVE_TILES[1].toFixed(1)}, 2.0);
-    slope += breath.z * waveRead(tWave2, p.xz, ${WAVE_TILES[2].toFixed(1)}, 2.0);
+    // The longest field is as wide as the lake: it is read once, there is no second tile of it to hide.
+    slope += breath.z * texture2D(tWave2, p.xz / ${WAVE_TILES[2].toFixed(1)}, 2.0).rg;
     lost += breath.x * breath.x * (1.0 - k0) + breath.y * breath.y * (1.0 - k1) + breath.z * breath.z * (1.0 - k2);
   }
   // Rings that leave the centre. Whatever heaves there sends out waves of four lengths, each at the speed water gives a wave of that length,
@@ -307,7 +309,7 @@ void main() {
   vec3 lip = lipHere(p.xz);
   float w = lip.x;
   // Seen from the rim the shelf does not end at its crust: it shoals away under deepening water over a hundred metres, in tongues.
-  float shoalAt = w + rimEye * (46.0 * (vnoise(p.xz / 57.0 + 6.0) - 0.5) + 18.0 * (vnoise(p.xz / 17.0) - 0.5));
+  float shoalAt = rimEye > 0.0 ? w + rimEye * (46.0 * (vnoise(p.xz / 57.0 + 6.0) - 0.5) + 18.0 * (vnoise(p.xz / 17.0) - 0.5)) : w;
   float shoal = rimEye * smoothstep(95.0, 0.0, shoalAt);
   float crusted = mix(lipCover(p.xz, lip), smoothstep(-14.0, 10.0, shoalAt), rimEye);
   // A low eye over the deep: the mirror is for the far water, where the look lies along it, and it is soft. Near, the eye goes into the dark.
@@ -402,7 +404,6 @@ void main() {
     float inside = max(-shoalAt, 0.0) + 0.2;
     float down = 0.3 + 3.2 * rimEye + mix(1.7, 0.22, rimEye) * inside + mix(0.16, 0.004, rimEye) * inside * inside;
     vec2 b = p.xz + rf.xz * (min(down, 12.0) / fall) * 0.4;
-    Bed bed = wallAt(b, down, inside);
     vec3 at = vec3(p.x, 0.0, p.z);
     // Out over the deep the whole sky is overhead: the land map's own count of it is coarse there and would draw its steps on the water.
     float open = mix(skyOpen(at), 0.92, smoothstep(4.0, 60.0, inside));
@@ -410,7 +411,12 @@ void main() {
     vec3 e = skyDown * open + uSunColour * 0.05;
     // Down to the rock from the sky overhead, and up again along the look.
     vec3 through = exp(-uAbsorb * mix(1.5, uClear, rimEye) * down * (1.0 + 1.0 / fall));
-    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through + uDeep * skyDown * open * (1.0 - through);
+    vec3 deep = uDeep * skyDown * open * (1.0 - through);
+    // Where no light comes back from the rock it is not looked for.
+    if (through.b > 0.015) {
+      Bed bed = wallAt(b, down, inside);
+      deep += bed.albedo * e * (bed.occ / 3.14159) * through;
+    }
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
@@ -422,7 +428,7 @@ void main() {
   f *= 1.0 - dry;
   f *= mix(1.0, mix(0.03, 1.0, smoothstep(28.0, 120.0, away)), lowDeep * (1.0 - step(1.5, uPlateTone.w)));
   // The last metres before the shore are a finger deep: the eye goes through to the wet stones, and the mirror comes on in tongues, never at a line.
-  float margin = smoothstep(0.0, mix(2.0, 11.0, rimEye), inShore + mix(1.0, 7.0, rimEye) * (vnoise(p.xz / 5.3) - 0.5) + mix(0.3, 4.0, rimEye) * (vnoise(p.xz / 1.4 + 3.0) - 0.5));
+  float margin = inShore > 18.0 ? 1.0 : smoothstep(0.0, mix(2.0, 11.0, rimEye), inShore + mix(1.0, 7.0, rimEye) * (vnoise(p.xz / 5.3) - 0.5) + mix(0.3, 4.0, rimEye) * (vnoise(p.xz / 1.4 + 3.0) - 0.5));
   f *= mix(0.12, 1.0, margin);
   vec3 c = mix(under, refl, f);
   // The churned water is white in flecks, no finer than the pixels can hold, each in its own time.
@@ -667,7 +673,14 @@ void main() {
 }`;
   const surface = new THREE.Mesh(surfaceGeometry(), material);
   surface.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('lake', surface));
+  // The climb out of the Eye is drawn with the water as it was: the same sheet, its old material, shown for that shot alone.
+  const before = createBefore(ctx, mirror.uniforms);
+  const surfaceBefore = new THREE.Mesh(surface.geometry, before.material);
+  surfaceBefore.frustumCulled = false;
+  surfaceBefore.visible = false;
+  const waters = new THREE.Group();
+  waters.add(surface, surfaceBefore);
+  ctx.scene.add(ctx.parts.built('lake', waters));
   for (const name of ['shallows', 'shaft', 'mats']) ctx.parts.effect(name, 'built');
 
   const spike = new THREE.CylinderGeometry(0.2, 0.42, 1, 7, 8, false);
@@ -693,6 +706,9 @@ void main() {
 
   return {
     setTime: (t) => {
+      before.setTime(t);
+      surfaceBefore.visible = during('eye-05');
+      surface.visible = !surfaceBefore.visible;
       waves.setTime(t);
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
@@ -726,8 +742,10 @@ void main() {
       const reflected = ctx.reflected;
       const on = reflected.length > 0 && camera.position.y < 60;
       (material.uniforms.uMirrorOn as THREE.IUniform<number>).value = on ? 1 : 0;
+      (before.material.uniforms.uMirrorOn as THREE.IUniform<number>).value = on ? 1 : 0;
       if (!on) return;
       (material.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
+      (before.material.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
       // Only what stands in or at the water is drawn into the mirror: the far world the water takes from the rig.
       hidden.length = 0;
       for (const o of ctx.scene.children) if (!reflected.includes(o)) hidden.push(o);
@@ -736,6 +754,7 @@ void main() {
     resize: (width, height) => mirror.resize(width, height),
     dispose: () => {
       mirror.dispose();
+      before.dispose();
       waves.dispose();
       ripple.dispose();
       lip.dispose();
