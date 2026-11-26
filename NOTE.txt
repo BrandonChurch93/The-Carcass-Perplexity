@@ -1,7 +1,5 @@
-2026-11-26 02:13 UTC
-work at e8325da on agent/breath-ground-2
-V1: compares of breath-0, breath-4, breath-3, breath-1
-look-1.jpg = out/work/looks-v1-breath-0.png
-look-2.jpg = out/work/looks-v1-breath-4.png
-look-3.jpg = out/work/looks-v1-breath-3.png
-look-4.jpg = out/work/looks-v1-breath-1.png
+2026-11-26 02:33 UTC
+work at a58d322 on agent/breath-ground-2
+hb3: far picture on sky and cliff, bedded shelf, darker wet rock, gold glare
+look-1.jpg = out/work/looks-hb3-breath-0.png
+look-2.jpg = out/work/looks-hb3-breath-2.png
