@@ -272,7 +272,9 @@ export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
   if (openK > 0.0) {
     // From a mile out the courses are not ruled up the whole blade: a stretch of ledges here, bare face there, each blade its own.
     float kept = smoothstep(0.46, 0.7, vnoise(vec2(vWorld.y * 0.015 + uOpenStone.y * 3.0, mix(vBlade.w, vBlade.z, edge) * 0.012 + uOpenStone.y)));
-    bed.z *= mix(1.0, 0.1 + 0.9 * kept, openK);
+    // And not every course is a ledge: most are seams, a few stand out, at no even step up the blade.
+    float pick = fract(sin(bed.x * 78.233 + uOpenStone.y * 41.0) * 43758.5453);
+    bed.z *= mix(1.0, kept * (0.08 + 0.92 * smoothstep(0.55, 0.8, pick)), openK);
   }`,
   ],
   // The first blade's pale cap is a thing of the near view. From a mile out it is rock like the rest, with the rock's own marks.

@@ -202,7 +202,7 @@ export function create(ctx: Context): Piece {
   const PUFFS = 7;
   const surf = new Spray(surfAt.length * PUFFS, { ...rig.uniforms, ...shared });
   // The breaker of the approach (below) is thrown water of the same part.
-  const breaker = new Spray(560, { ...rig.uniforms, ...shared }, SPRAY_OPENING_FRAGMENT);
+  const breaker = new Spray(780, { ...rig.uniforms, ...shared }, SPRAY_OPENING_FRAGMENT);
   breaker.mesh.visible = false;
   ctx.scene.add(ctx.parts.built('surf', surf.mesh, breaker.mesh), breaker.mesh);
   for (const e of surfAt) if (e.id % 3 === 0) ctx.sources.steam.push({ at: [e.x, 1, e.z], radius: 9, strength: 0.25 * e.power, rise: 14, kind: 'spray', lean: [WIND.to[0] * 0.8, WIND.to[1] * 0.8] });
@@ -229,7 +229,7 @@ export function create(ctx: Context): Piece {
   // The approach: one heavy swell of the set breaks on the shore before the first blade as the film opens. White water is thrown up the
   // height of a tower, hangs and comes down at the pace of its size (it falls as water falls: that is what says how big it is), and the wind
   // takes the top of it off down the shore. Drawn only while the camera stands in the approach.
-  const BREAKER = { x: -322, half: 70, cards: 560, strikes: -2.7, again: 2.2, speed: 42 };
+  const BREAKER = { x: -322, half: 70, cards: 780, strikes: -2.7, again: 2.2, speed: 40 };
   let breakerZ = 200;
   while (breakerZ < 420 && rig.land.height(BREAKER.x, breakerZ) > -0.8) breakerZ += 4;
   /** The approach: how much more of the sky's light the open water keeps than the ground under the shut cloud. */
@@ -238,8 +238,8 @@ export function create(ctx: Context): Piece {
   const breakerAt = (seconds: number): void => {
     breaker.begin();
     // What hangs of it is gone by the time the lens is at the blade's foot: the foot is seen dark through thin air.
-    const late = Math.min(1, Math.max(0, (seconds - 3.6) / 2.4));
-    const thin = 1 - 0.85 * late * late * (3 - 2 * late);
+    const late = Math.min(1, Math.max(0, (seconds - 3.0) / 2.4));
+    const thin = 1 - late * late * (3 - 2 * late);
     for (let j = 0; j < BREAKER.cards; j++) {
       const id = 90000 + j;
       // The water goes up in fingers: each card belongs to one, follows it up a little behind the last, and is thrown a little wide of it.
@@ -254,7 +254,8 @@ export function create(ctx: Context): Piece {
       const a = seconds - (BREAKER.strikes + (j % 2) * BREAKER.again + 0.9 * (along + 0.5) + 0.35 * rand(jet, 3) + 0.7 * rand(id, 3));
       if (a < 0) continue;
       const up = BREAKER.speed * power;
-      const side = (rand(jet, 4) - 0.5) * 11 + (rand(id, 13) - 0.5) * 2.5;
+      // It goes up as a fan: square over the place where the swell strikes, thrown outward along the shore to both sides of it.
+      const side = (rand(jet, 4) - 0.5) * 11 + (rand(id, 13) - 0.5) * 8 + 17 * (along + 0.08);
       const x0 = BREAKER.x + along * 2 * BREAKER.half;
       const z0 = breakerZ + 12 * rand(jet, 5);
       const torn = rand(id, 5) < 0.36;
@@ -268,8 +269,8 @@ export function create(ctx: Context): Piece {
         const out = (2 + 4 * rand(jet, 7)) * a;
         const fade = Math.min(1, a / 0.18) * (torn ? 1 : Math.min(1, Math.max(0, (y + 3) / 8)));
         // Water that is moving is drawn out along its way: strings going up, strings coming down, a head where it hangs.
-        const drawn = 1.9 + 2.6 * Math.min(1, Math.abs(vy) / 22);
-        breaker.put(x0 + side * a + WIND.to[0] * 0.6 * a * a, y, z0 + out + WIND.to[1] * 0.6 * a * a, (1.1 + 0.6 * a) * (0.55 + 0.9 * rand(id, 8)), 0.7 * fade * (vy < 0 ? thin : 1), rand(id, 9), -lean + (rand(id, 10) - 0.5) * 0.3, drawn);
+        const drawn = rand(id, 14) < 0.55 ? 1.9 + 2.6 * Math.min(1, Math.abs(vy) / 22) : 1.2 + 0.9 * Math.min(1, Math.abs(vy) / 22);
+        breaker.put(x0 + side * a + WIND.to[0] * 0.6 * a * a, y, z0 + out + WIND.to[1] * 0.6 * a * a, (1.45 + 0.7 * a) * (0.55 + 0.9 * rand(id, 8)), 0.7 * fade * thin, rand(id, 9), -lean + (rand(id, 10) - 0.5) * 0.3, drawn);
         continue;
       }
       const b = a - top;
@@ -281,7 +282,7 @@ export function create(ctx: Context): Piece {
       const y = y1 + vy * 0.9 * (1 - Math.exp(-b / 0.9)) - 1.3 * b;
       const gone = 14 * (b - 1.2 * (1 - Math.exp(-b / 1.2)));
       const out = (2 + 4 * rand(jet, 7)) * top;
-      breaker.put(x0 + side * top + WIND.to[0] * (0.6 * top * top + gone), y, z0 + out + WIND.to[1] * (0.6 * top * top + gone), (1.5 + 1.1 * top + 3.6 * b) * (0.55 + 0.9 * rand(id, 8)), 0.27 * Math.pow(1 - b / life, 1.5) * thin, rand(id, 9), (rand(id, 10) - 0.5) * 0.7 + 0.12 * b, 1.15 + 0.25 * b);
+      breaker.put(x0 + side * top + WIND.to[0] * (0.6 * top * top + gone), y, z0 + out + WIND.to[1] * (0.6 * top * top + gone), (1.5 + 1.1 * top + 2.4 * b) * (0.55 + 0.9 * rand(id, 8)), 0.2 * Math.pow(1 - b / life, 1.5) * thin, rand(id, 9), (rand(id, 10) - 0.5) * 0.7 + 0.12 * b, 1.15 + 0.25 * b);
     }
     breaker.end();
   };

@@ -233,7 +233,7 @@ export const SEA_OPENING_FRAGMENT = openingText(
     float lies = smoothstep(1560.0, 900.0, p.y + 520.0 * (wide - 0.5)) * (0.4 + 0.6 * smoothstep(0.3, 0.62, 0.55 * drift2 + 0.45 * wide));
     // The path of the eye through a layer on the water: its depth over the sine of the glance.
     float tau = 0.016 * lies * uOpenSea.y * dist / max(cameraPosition.y - vWorld.y, 2.0);
-    col = mix(col, uHaze * (0.27 + 0.05 * drift2), 1.0 - exp(-tau));
+    col = mix(col, uHaze * (0.38 + 0.05 * drift2), 1.0 - exp(-tau));
   }
   gl_FragColor = vec4(rigOut(col), 1.0);`,
     ],
