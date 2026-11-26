@@ -13,7 +13,7 @@ void main() {
   float far = length(toEye);
   vec3 across = normalize(cross(vec3(0.0, 1.0, 0.0), toEye));
   // A drop is a few millimetres: it is drawn no narrower than a pixel and dimmed by as much as it was widened.
-  float wide = max(0.0055, 0.75 * uPixel * far);
+  float wide = max(0.0024, 0.75 * uPixel * far);
   vec3 p = c + across * position.x * wide + vec3(0.0, position.y * max(aDrop.w, wide), 0.0);
   vAt = vec2(position.x, position.y);
   vWorld = p;
@@ -31,11 +31,13 @@ void main() {
   float far = length(toEye);
   vec3 v = toEye / far;
   float bead = max(0.0, 1.0 - dot(vAt, vAt));
-  float thin = min(1.0, 0.0055 / (0.75 * uPixel * far));
+  float thin = min(1.0, 0.0024 / (0.75 * uPixel * far));
   // Water against the light: it gathers the low sun and the bright fog behind it.
   float against = max(dot(-v, uSunDir), 0.0);
   vec3 lit = uSunColour * (0.35 + 1.5 * pow(against, 6.0)) * sunAt(vWorld) + 0.3 * skyRadiance(vec3(-v.x, 0.3, -v.z));
-  float alpha = bead * thin * 0.8 * (1.0 - uSolo);
+  float alpha = min(1.0, bead * 1.6) * thin * (1.0 - uSolo);
+  // A drop is where it is for the lens too: without a depth of its own it is blurred as the cliff behind it.
+  if (alpha < 0.2) discard;
   gl_FragColor = vec4(lit * alpha, alpha);
 }`;
 
@@ -61,7 +63,7 @@ export function makeDrips(max: number, uniforms: Record<string, THREE.IUniform>)
     fragmentShader: FRAGMENT,
     uniforms,
     transparent: true,
-    depthWrite: false,
+    depthWrite: true,
     blending: THREE.CustomBlending,
     blendEquation: THREE.AddEquation,
     blendSrc: THREE.OneFactor,

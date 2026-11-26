@@ -61,7 +61,9 @@ vec4 farPicture(vec3 d) {
   float cliff = smoothstep(0.22, 0.3, uv.x);
   float foot = smoothstep(0.2, 0.0, uv.y - ${FAR.horizon.toFixed(3)});
   vec3 air = skyRadiance(normalize(vec3(d.x, 0.03, d.z)));
-  lin = mix(lin, air, cliff * clamp(0.16 + 0.3 * foot + 1.6 * past, 0.0, 0.88));
+  // It runs away to the left: its far end is kilometres farther than its near end, and paler by that much.
+  float away = smoothstep(0.8, 0.28, uv.x);
+  lin = mix(lin, air, cliff * clamp(0.14 + 0.36 * away + 0.3 * foot + 1.6 * past, 0.0, 0.88));
   return vec4(lin, w);
 }`;
 

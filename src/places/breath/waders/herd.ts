@@ -69,7 +69,7 @@ const UP: [number, number][][] = [
   [[-5, 6.8]],
   [[-5, 2.4], [10, 15], [21, 30]],
   [[13, 18]],
-  [[-5, 30]],
+  [[-5, 14.4]],
 ];
 
 function planOf(a: Anchor, up: [number, number][], rng: Rng, slack = 0, reach = 1): Plan {
@@ -95,6 +95,11 @@ export function makeHerd(rng: Rng): Member[] {
     const way = WAYS[i] as [number, number, number, number, number];
     const plan: Plan = { ...planOf(a, UP[i] ?? [], rng), speed: way[0] * PACE, pauses: way[1], pauseMax: 2.6, carry: way[2], tuck: way[3], feedAt: way[4] };
     if (i === 1) plan.strideAt = STRIDE_AT;
+    // Staged: the one on the bank stands clear of the lens of the view in the channel, which drifts toward it.
+    if (i === 9) {
+      plan.x += 2.4;
+      plan.z += 0.65;
+    }
     herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false, i < 3 ? 0.0125 : 0.022, OWN[i] ?? {}), plan, near: true });
   });
   // The one at the rim: it stands with its weight on three legs and looks down the shaft, then lets its neck hang.
@@ -112,7 +117,7 @@ export function makeHerd(rng: Rng): Member[] {
     const up: [number, number][] = far.next() < 0.3 ? [[-5, 30]] : [[start, start + far.range(2.5, 6)], [start + far.range(11, 16), start + far.range(17, 22)]];
     // Some stand, one or two of them on three legs; the rest walk at their own pace and stop when they like.
     const lot = hash(i * 7.13 + 3);
-    const plan: Plan = { ...planOf(anchor, up, far), speed: lot < 0.3 ? 0 : anchor.speed * PACE, pauses: 0.1 + 0.4 * hash(i * 3.3 + 1), carry: 2 * hash(i * 5.7 + 2), tuck: lot < 0.12 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0, feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4) };
+    const plan: Plan = { ...planOf(anchor, up, far), speed: lot < 0.3 ? 0 : anchor.speed * PACE, pauses: 0.1 + 0.4 * hash(i * 3.3 + 1), carry: 2 * hash(i * 5.7 + 2), tuck: lot < 0.12 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0, feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4), reach: hash(i * 4.7 + 6) < 0.38 ? 0 : 1 };
     herd.push({ build: makeBuild(anchor.size * 1.06, 301 + i * 3.77, true), plan, near: false });
   }
   MORE.forEach((m, i) => {
