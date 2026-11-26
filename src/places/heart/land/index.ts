@@ -137,9 +137,24 @@ export function create(ctx: HeartContext): HeartPiece {
     sheet(-1140, -344, 220, 524, 4, landHeight, (x, z, y) => onBench(x, z, y) && !inside(MID, x, z, 4.5) && (x < -280 || z > 380)),
     benchMaterial,
   );
+  // The bank the wide view starts from lies outside the camera's bench: the first 15 m under that lens, and the stair of flows at its left.
+  // Cut at a hand and a half, with lumps the 1 m sheet round it cannot hold.
+  const FEET = { x0: -618, x1: -566, z0: 262, z1: 338 };
   const midBench = mesh(
-    sheet(MID.x0, MID.z0, MID.x1, MID.z1, 1, landHeight, (x, z, y) => onBench(x, z, y) && !inside(NEAR, x, z, 1.2)),
+    sheet(MID.x0, MID.z0, MID.x1, MID.z1, 1, landHeight, (x, z, y) => onBench(x, z, y) && !inside(NEAR, x, z, 1.2) && !inside(FEET, x, z, 1.2)),
     benchMaterial,
+  );
+  const FEET_CELL = 0.15;
+  const feetUnder = latticed(FEET.x0, FEET.z0, FEET.x1, FEET.z1, FEET_CELL, landHeight);
+  const feetHeight = (x: number, z: number): number => {
+    // At its border it sinks under the sheets it meets; where they end it is the land itself, and its lumps come in after that.
+    const d = Math.min(x - FEET.x0, FEET.x1 - x, z - FEET.z0, FEET.z1 - z, Math.max(NEAR.x0 + 1.2 - x, z - NEAR.z1 + 1.2));
+    const lumps = 0.07 * (noise(x / 0.55 + 7.3, z / 0.55 + 1.9) - 0.5) + 0.035 * (noise(x / 0.23 + 2.1, z / 0.23 + 8.4) - 0.5);
+    return feetUnder(x, z) - 0.05 * (1 - Math.min(1, Math.max(0, d / 1.2))) + Math.min(1, Math.max(0, (d - 1.2) / 1.5)) * lumps;
+  };
+  const feetBench = mesh(
+    sheet(FEET.x0, FEET.z0, FEET.x1, FEET.z1, FEET_CELL, feetHeight, (x, z, y) => onBench(x, z, y + 0.2) && !inside(NEAR, x, z, 1.2), 0, 0.1, [0.15, 0.45, 1.05]),
+    nearMaterial,
   );
   const nearBench = mesh(
     sheet(NEAR.x0, NEAR.z0, NEAR.x1, NEAR.z1, 0.35, landHeight, (x, z, y) => onBench(x, z, y) && !nearCrack(x, z, 1.7) && !inside(CRAG, x, z, 1.0), 0, 0.3),
@@ -198,6 +213,7 @@ export function create(ctx: HeartContext): HeartPiece {
   // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
   for (const r of rocks.bench) r.renderOrder = -6;
   nearBench.renderOrder = -5;
+  feetBench.renderOrder = -5;
   midBench.renderOrder = -4;
   farBench.renderOrder = -3;
   for (const r of rocks.land) r.renderOrder = -2;
@@ -220,7 +236,7 @@ export function create(ctx: HeartContext): HeartPiece {
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80, (x, z) => inPatch(x, z) > 0.6), lipMaterial);
   lip.renderOrder = -5;
-  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, cragFine, rubble, lip, ...rocks.bench), midBench, nearBench, cragFine, rubble, lip, ...rocks.bench);
+  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, feetBench, cragFine, rubble, lip, ...rocks.bench), midBench, nearBench, feetBench, cragFine, rubble, lip, ...rocks.bench);
 
   // The sulphur crack: the fissure itself, cut finer than the bench round it, with its lips. The stain and the crystals are in the bench's shader, so they fade out across both.
   const crackMeshes: THREE.Mesh[] = [];
@@ -271,6 +287,29 @@ export function create(ctx: HeartContext): HeartPiece {
       rocks.dispose();
       (shared.tStrata.value as THREE.Texture).dispose();
     },
+  };
+}
+
+// A height read once on a lattice and looked up between its points: the land's own function costs too much to ask twenty times a vertex.
+function latticed(x0: number, z0: number, x1: number, z1: number, cell: number, height: (x: number, z: number) => number): (x: number, z: number) => number {
+  const w = Math.round((x1 - x0) / cell) + 3;
+  const h = Math.round((z1 - z0) / cell) + 3;
+  const sx = (x1 - x0) / (w - 3);
+  const sz = (z1 - z0) / (h - 3);
+  const lattice = new Float32Array(w * h);
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) lattice[j * w + i] = height(x0 + (i - 1) * sx, z0 + (j - 1) * sz);
+  return (x, z) => {
+    const gx = Math.min(w - 1.001, Math.max(0, (x - x0) / sx + 1));
+    const gz = Math.min(h - 1.001, Math.max(0, (z - z0) / sz + 1));
+    const i = Math.floor(gx);
+    const j = Math.floor(gz);
+    const u = gx - i;
+    const v = gz - j;
+    const a = lattice[j * w + i] as number;
+    const b = lattice[j * w + i + 1] as number;
+    const c = lattice[(j + 1) * w + i] as number;
+    const d = lattice[(j + 1) * w + i + 1] as number;
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
   };
 }
 
