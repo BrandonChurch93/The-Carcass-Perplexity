@@ -8,7 +8,7 @@ Branch `agent/marsh-ground-3`. Folders: `src/places/marsh/shared/`, root `index.
 - **brine** (`brine/shaders.ts`, `shared/brine-glsl.ts`). Colour by depth: pale bed (0.27, 0.085, 0.07), body (0.07, 0.0125, 0.0095), pit almost black red. Silt drawn out in streaks down the current (two layers, 0.021 and 0.034 units a second). The sky lies on it in long wandering lanes that move with the wind (`gust`); mirror share 0.02 + 0.21 (1 - nv)^5, tinted (1, 0.7, 0.66). Froth is pink and only at lips and boils. `brineSlurry` turns it grey-brown within 1.8 to 4.2 m of the stuck one.
 - **domes**, **burst**. Dome: wet film, a wide soft window broken by runs, darker when seen across a pool. Burst: tear and crown are one event (0.256 s); the crown is a thrown sheet in fingers of two sizes, dark at the foot, with a rolled lip; drops fly ballistic arcs.
 - **sky**, **air**, **rain**, **steam** (`air/`): air density 0.00007 (half of what I received) and warm (0.51, 0.475, 0.48); far bank 0.00014 from 230 m plus 0.0005 past 700 m so the last of the land has no clean line; low sheets 0.05; seep steam 0.28; pool mist 0.05.
-- **cameras** (`index.ts`): K1 focus 3.8 aperture 0.0045; K2 focus 3.2 aperture 0.006; K3 aperture 0.007; K4 focus 5.7 aperture 0.011.
+- **cameras** (`index.ts`): K1 focus 3.8 aperture 0.0045; K2 focus 3.2 aperture 0.004 (0.006 gave M3 0.71 at the final tier); K3 aperture 0.007; K4 focus 5.7 aperture 0.011.
 
 ## Tried and dropped (do not try twice)
 
