@@ -198,13 +198,19 @@ void main() {
       bend -= (nC.rg - 0.5) * 1.5 * close;
     }
   }
-  vec3 colour = greyed(crust, 0.8) * (0.72 + 0.26 * wide.r);
+  vec3 colour = greyed(crust, 0.55) * (0.72 + 0.26 * wide.r);
   // Salt stands white on what is highest; the hollows between the plates are dark with old red.
   colour = mix(colour, vec3(0.42, 0.395, 0.375) * (0.75 + 0.5 * hgt), smoothstep(0.62, 0.88, hgt) * 0.3);
   colour = mix(colour, colour * vec3(0.62, 0.36, 0.32), smoothstep(0.42, 0.14, hgt) * (0.35 + 0.5 * stain));
   float occ = 1.0 - 0.4 * smoothstep(0.45, 0.1, hgt) * mix(0.5, 1.0, near);
   float rough = 1.0;
   float ground = 1.0;
+  // The crust lies ON grey brown mud, in patches: back from the rims the mud shows wet where no crust has grown, and in the seams between
+  // the plates.
+  float bare = smoothstep(0.44, 0.54, wide.g * 0.5 + mid.r * 0.5) * smoothstep(1.0, 3.0, t) * (1.0 - rock);
+  float mudShare = max(bare * 0.95, smoothstep(0.44, 0.2, hgt) * 0.7 * (1.0 - rock));
+  colour = mix(colour, vec3(0.12, 0.092, 0.08) * (0.7 + 0.6 * mid.b), mudShare);
+  rough = mix(rough, 0.5, mudShare);
 
   // Slopes of the ground from the plates' relief, in metres a metre, on top of the mesh's own.
   vec2 lean = vec2(0.0);
@@ -215,8 +221,7 @@ void main() {
 
   // Thin crust over mud: the plate of it, broken slabs lying on wet grey mud with red in the gaps. Far off the plate gives way to wet silt.
   float slab = 0.0;
-  // (Under a fiftieth it is not there to be seen, and most of the flats are spared its reads.)
-  if (thin > 0.02) {
+  {
     float k = smoothstep(0.0, 0.5, thin);
     // Where the two lays meet there is a gap of mud, as between any two rafts of crust.
     vec3 lay = thinLay(p.xz, uThinAt, mid, fine.g);
@@ -389,7 +394,7 @@ void main() {
   // What is under the level: a film of brine over the ground, clear where it is a hair deep and blood where it is a finger, and a mirror.
   if (flood > 0.0) {
     float deep = max(-over, 0.0) * mix(0.3, 0.1, smoothstep(0.0, 0.5, thin));
-    vec3 body = mix(vec3(0.2, 0.074, 0.05), vec3(0.082, 0.0125, 0.0105), 1.0 - exp(-deep * 26.0));
+    vec3 body = mix(vec3(0.2, 0.074, 0.05), vec3(0.085, 0.022, 0.018), 1.0 - exp(-deep * 26.0));
     body = mix(body, colour * 0.5, exp(-deep * mix(60.0, 25.0, smoothstep(0.0, 0.5, thin))));
     vec3 nf = normalize(vec3(bend.x * 0.03, 1.0, bend.y * 0.03));
     float share = mirrorShare(nf, v);
