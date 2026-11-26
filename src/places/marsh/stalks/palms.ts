@@ -37,19 +37,22 @@ void main() {
     p = c + vRight * (position.x * 1.56 * D);
     vUv = vec4(position.x * 0.23, t * h / (10.2 * D), 0.0, t);
   } else {
-    // The fan at its top is the photograph of one: long wet straps that stand and arch over, a third as wide as the stalk is tall.
+    // The fan at its top is the photograph of one, with the end of its stalk in it: that end is laid on the end of this stalk, as wide and
+    // along its line, and the straps arch over to the side the stalk leans. A second, smaller, is behind it the other way round.
     float open = plumeOpen(kind, aKind.y, seed);
-    float wide = clamp(0.42 * h, 0.55, 1.5) * (0.8 + 0.5 * fract(seed * 57.3)) * (kind > 2.5 ? 0.75 : 1.0) * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * (piece > 1.5 ? 0.82 : 1.0);
-    float flip = (fract(seed * 23.7) < 0.5 ? -1.0 : 1.0) * (piece > 1.5 ? -1.0 : 1.0);
-    vec2 q = position.xy;
-    vec3 upv = normalize(T + vec3(0.0, 0.2, 0.0));
-    vRight = normalize(cross(upv, toCam));
-    float reach = q.y * q.y;
-    p = c + vRight * (q.x * wide * flip * mix(0.26, 1.0, open)) + upv * (q.y * 0.74 * wide * mix(0.8, 1.0, open) - 0.05 * wide);
-    p += wind * (0.07 * wide * reach * gust) + vRight * (0.03 * wide * reach * sin(uSeconds * 2.6 + seed * 40.0 + q.x * 9.0));
+    float wide = 19.0 * D * (0.85 + 0.4 * fract(seed * 57.3)) * (kind > 2.5 ? 0.8 : 1.0) * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * (piece > 1.5 ? 0.8 : 1.0);
+    vec3 er = normalize(cross(T, toCam));
+    float flip = (dot(vec3(A.x, 0.0, A.z), er) + 0.2 * (fract(seed * 23.7) - 0.5) < 0.0 ? -1.0 : 1.0) * (piece > 1.5 ? -1.0 : 1.0);
+    er *= flip;
+    vec3 xw = 0.891 * er + 0.454 * T;
+    vec3 yw = -0.454 * er + 0.891 * T;
+    vec2 q = vec2(position.x + 0.5, position.y);
+    float reach = clamp((q.y - 0.15) / 0.8, 0.0, 1.0) * clamp(q.x * 1.6, 0.0, 1.0);
+    p = c + xw * ((q.x - 0.225) * wide * mix(0.45, 1.0, open)) + yw * ((q.y - 0.125) * wide * 0.667);
+    p += wind * (0.05 * wide * reach * gust) + er * (0.025 * wide * reach * sin(uSeconds * 2.6 + seed * 40.0 + q.x * 9.0));
     p += toCam * (piece > 1.5 ? -0.03 : 0.012);
-    // The middle of the photographed fan: fewer straps, each of them wide enough to be seen across the marsh.
-    vUv = vec4(0.5 + q.x * 0.9, 0.115 + q.y * 0.855, piece, flip);
+    vRight = er;
+    vUv = vec4(q, piece, flip);
   }
   vWorld = p;
   vKind = vec4(kind, h, D, seed);
@@ -72,11 +75,15 @@ const CUT = /* glsl */ `
   // Every read of a picture comes before any discard: the software renderer leaves the slopes of a dropped pixel's neighbours undefined.
   vec4 t = texture2D(tStalk, uv);
   float cover = texture2D(tStalkA, uv).r;
-  vec4 fan = texture2D(tLock, vUv.xy, -1.2);
+  vec4 fan = texture2D(tFan, vUv.xy);
+  float fanCover = texture2D(tFanA, vUv.xy).r;
   float away = smoothstep(6.0, 60.0, distance(cameraPosition, vWorld));
-  float strand = max(fan.r, max(fan.g, fan.b));
-  // Far off a strap is thinner than a pixel: it is kept at a lower light, or the fan would thin to nothing.
-  if (vUv.z > 0.5 ? strand < mix(0.09, 0.05, away) : (torn || cover < mix(0.5, 0.2, away))) discard;
+  bool mop = vUv.z > 0.5;
+  if (mop) t = fan;
+  // The fan is drawn larger than its stalk in the photograph: the stalk's end in it is left out below the collar.
+  fanCover *= smoothstep(0.1, 0.13, vUv.y);
+  // Far off a strap is thinner than a pixel: it is kept at a lower cover, or the fan would thin to nothing.
+  if (mop ? fanCover < mix(0.5, 0.22, away) : (torn || cover < mix(0.5, 0.2, away))) discard;
 `;
 
 export const PALM_FRAGMENT = /* glsl */ `
@@ -87,7 +94,8 @@ varying vec4 vUv;
 varying vec4 vKind;
 uniform sampler2D tStalk;
 uniform sampler2D tStalkA;
-uniform sampler2D tLock;
+uniform sampler2D tFan;
+uniform sampler2D tFanA;
 ${RIG_GLSL}
 void main() {
 ${CUT}
@@ -100,7 +108,7 @@ ${CUT}
   vec3 hue = t.rgb / max(luma, 0.03);
   float red = smoothstep(0.25, 0.6, (t.r - t.g) / max(t.r, 0.03));
   vec3 pale = mix(vec3(1.0), hue, 0.55) * (0.04 + 0.4 * smoothstep(0.02, 0.7, luma));
-  vec3 crimson = mix(vec3(dot(hue, vec3(0.3, 0.5, 0.2))), hue, 0.9) * (0.03 + 0.2 * smoothstep(0.02, 0.5, luma));
+  vec3 crimson = mix(vec3(dot(hue, vec3(0.3, 0.5, 0.2))), hue, 0.92) * (0.035 + 0.26 * smoothstep(0.02, 0.5, luma));
   vec3 albedo = mix(pale, crimson, red);
   vec3 n;
   float occ;
@@ -114,15 +122,11 @@ ${CUT}
     albedo = mix(albedo, albedo * vec3(0.5, 0.2, 0.16) + vec3(0.03, 0.005, 0.004), wet);
     rough = mix(0.97, 0.5, wet);
   } else {
-    vec3 fhue = fan.rgb / max(strand, 0.02);
-    red = 1.0;
-    albedo = mix(vec3(dot(fhue, vec3(0.3, 0.5, 0.2))), fhue, 0.92) * (0.025 + 0.12 * mix(smoothstep(0.02, 0.5, strand), 0.8, away));
-    float up_ = (vUv.y - 0.115) / 0.855;
-    float out_ = (vUv.x - 0.5) * 1.6 * vUv.w;
+    float out_ = (vUv.x - 0.3) * 1.4;
     n = normalize(vRight * out_ + vec3(0.0, 0.5, 0.0) + v * 0.7);
     // Dark at the heart of it, where the straps stand close.
-    occ = mix(0.4, 1.0, smoothstep(0.05, 0.6, up_)) * (vUv.z > 1.5 ? 0.75 : 1.0);
-    rough = mix(0.9, 0.45, smoothstep(0.55, 0.9, min(fan.g, fan.b)));
+    occ = mix(0.5, 1.0, smoothstep(0.15, 0.6, length(vUv.xy - vec2(0.3, 0.2)))) * (vUv.z > 1.5 ? 0.75 : 1.0);
+    rough = mix(0.92, 0.6, red);
   }
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   c += red * albedo * skyIrradiance(-n) / 3.14159 * 0.3 * occ * skyOpen(vWorld);
@@ -137,7 +141,8 @@ varying vec4 vUv;
 varying vec4 vKind;
 uniform sampler2D tStalk;
 uniform sampler2D tStalkA;
-uniform sampler2D tLock;
+uniform sampler2D tFan;
+uniform sampler2D tFanA;
 void main() {
 ${CUT}
   gl_FragColor = vec4(0.0);

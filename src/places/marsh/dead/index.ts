@@ -218,7 +218,14 @@ function grid(across: number, down: number): THREE.BufferGeometry {
 // 'kept' is the whole animal on its belly, back and head out, grown over with salt; 'heap' is one fallen in on itself, bone showing (the picture);
 // 'mound' is the oldest, only salt; 'fallen' lies on its side as it went down.
 type State = 'kept' | 'heap' | 'mound' | 'fallen';
-const STATES: State[] = ['heap', 'kept', 'heap', 'mound', 'fallen', 'heap'];
+const STATES: State[] = ['heap', 'heap', 'heap', 'mound', 'fallen', 'heap'];
+// The picture each heap is: the one fallen in with its bones out, the one whole under its salt with its feelers before it, the oldest and lowest.
+const HEAPS = [0, 1, 2, 0, 0, 1];
+const PICTURES = [
+  { name: 'deadone', aspect: 941 / 1672, long: 3.3, sunk: [0.22, 0.5] },
+  { name: 'deadone-b', aspect: 887 / 1774, long: 3.4, sunk: [0.24, 0.3] },
+  { name: 'deadone-c', aspect: 941 / 1672, long: 2.9, sunk: [0.34, 0.4] },
+] as const;
 const KINDS = [1, 0, 2];
 const FALLEN = DEAD[4] as (typeof DEAD)[number];
 
@@ -232,8 +239,8 @@ export function create(ctx: Context): Piece {
   const bodies: { mesh: THREE.Mesh; material: THREE.ShaderMaterial }[] = [];
   const kept: Beast[] = [];
   const nearest = DEAD.reduce((a, b) => (Math.hypot(a.d - STUCK[0], a.l - STUCK[1]) < Math.hypot(b.d - STUCK[0], b.l - STUCK[1]) ? a : b));
-  const tPic = ctx.assets.texture('mat/deadone.jpg', { kind: 'colour', repeat: false });
-  const tRelief = ctx.assets.texture('mat/deadone-h.png', { kind: 'data', repeat: false });
+  const tPics = PICTURES.map((p) => ctx.assets.texture(`mat/${p.name}.jpg`, { kind: 'colour', repeat: false }));
+  const tReliefs = PICTURES.map((p) => ctx.assets.texture(`mat/${p.name}-h.png`, { kind: 'data', repeat: false }));
   const tSalt = ctx.assets.texture('mat/rime.jpg', { kind: 'colour', anisotropy: 4 });
   const tSaltNh = ctx.assets.texture('mat/rime-nh.png', { kind: 'data', anisotropy: 4 });
   const cards: { mesh: THREE.Mesh; material: THREE.ShaderMaterial; x: number; z: number; yaw: number; size: number }[] = [];
@@ -303,19 +310,22 @@ export function create(ctx: Context): Piece {
     if (state !== 'heap') return;
     // The body: about three metres of it, sunk in its apron to a different depth each, the furthest gone the deepest.
     const under = d === nearest ? 1 : 0;
-    const kind = KINDS[bodies.length % KINDS.length] as number;
+    const which = HEAPS[index] ?? 0;
+    const picture = PICTURES[which] as (typeof PICTURES)[number];
+    // The first picture is also drawn slumped to an end and broken in two; the others are whole.
+    const kind = which === 0 ? (KINDS[bodies.length % KINDS.length] as number) : 0;
     const crop: [number, number] = kind === 1 ? [0, 0.72] : kind === 2 ? [0.22, 1] : [0, 1];
-    const wide = 3.3 * d.size * rng.range(0.75, 1.2) * (crop[1] - crop[0]) * (kind === 0 ? 1 : 1.15);
+    const wide = picture.long * d.size * rng.range(0.75, 1.2) * (crop[1] - crop[0]) * (kind === 0 ? 1 : 1.15);
     const bodyMaterial = new THREE.ShaderMaterial({
       uniforms: {
         ...ctx.rig.uniforms,
-        tPic: { value: tPic },
-        tRelief: { value: tRelief },
+        tPic: { value: tPics[which] },
+        tRelief: { value: tReliefs[which] },
         tSalt: { value: tSalt },
         uFlip: { value: rng.next() < 0.5 ? 1 : 0 },
         uAt: { value: new THREE.Vector4(p[0], ground + 0.04 + 0.5 * high, p[1], under ? 0 : (rng.next() < 0.5 ? -1 : 1) * rng.range(0.08, 0.3)) },
         uShape: { value: new THREE.Vector4(kind, crop[0], crop[1], rng.range(0, 6)) },
-        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672 / (crop[1] - crop[0]) / (kind === 0 ? 1 : 1.15), under ? 0.95 : rng.range(0.45, 0.85), under ? 0.6 : rng.range(0.22, 0.5)) },
+        uBody: { value: new THREE.Vector4(wide, (wide * picture.aspect) / (crop[1] - crop[0]) / (kind === 0 ? 1 : 1.15), under ? 0.95 : rng.range(0.45, 0.85), under ? 0.6 : rng.range(picture.sunk[0], picture.sunk[1])) },
         uSeed: { value: rng.range(1, 60) },
       },
       vertexShader: BODY_VERTEX,
