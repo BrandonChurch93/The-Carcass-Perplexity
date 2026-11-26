@@ -38,10 +38,10 @@ const TABLE: [number, number, number, number, number, number, number, number][] 
   [-732, 451, 20, 230, 2, 0.9, 0.5, 18],
   [0, 0, 0, 300, 0, 0.62, 0.79, 21],
   [740, 184, -25, 168, 2, 1.25, 0.55, 12],
-  [1596, 426, -40, 292, 1, 0.85, 0.5, 20],
-  [2470, 745, -70, 128, 1, -1.4, 0.55, -10],
-  [3010, 968, -110, 236, 2, 0.7, 0.5, 26],
-  [3990, 1400, -150, 104, 1, 1.6, 0.6, 5],
+  [1596, 426, -40, 292, 0, 0.85, 0.62, 20],
+  [2470, 745, -70, 250, 1, 1.1, 0.55, -10],
+  [3010, 968, -110, 300, 2, 0.7, 0.5, 26],
+  [3990, 1400, -150, 250, 1, 1.0, 0.6, 5],
   [4540, 1676, -190, 232, 2, 1.1, 0.5, 16],
   [5246, 2052, -230, 82, 1, -1.8, 0.6, -14],
   [5939, 2452, -270, 188, 2, -0.75, 0.5, 22],
@@ -211,7 +211,8 @@ spires.forEach((sp, i) => {
     const [a, b] = outline(sh, sh.tip + sp.tip / sp.mv);
     sp.col0 = 0.5 * (a + b);
     sp.l0 = 0;
-    sp.shear = 0.12 * Math.sin(i * 2.7 + 1);
+    // The third (the one the long lens sees struck) stands more upright than its sheet: its steep side to the storm, its long shoulder to the lee.
+    sp.shear = i === FIRST + 2 ? -0.3 : 0.12 * Math.sin(i * 2.7 + 1);
   }
   const [a, b] = outline(sh, sh.tip + sp.tip / sp.mv);
   sp.half = 0.5 * (b - a) * sp.mh;

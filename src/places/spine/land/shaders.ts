@@ -41,7 +41,7 @@ vec3 windowSky(vec3 d, float lod) {
   vec3 wall = textureLod(tStormWall, vec2(wMirror(0.5 + turned / 1.87), clamp(0.14 + el / 1.2, 0.004, 0.996)), lod).rgb;
   vec3 c = mix(dusk, wall, storm);
   float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
-  return c * mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * 0.2 + uFlash * (4.0 * storm);
+  return c * mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * 0.2 + flashCast() * (4.0 * storm);
 }
 // How much of a ray from p toward d leaves by the far mouth: 1 through its middle, 0 into the rock.
 float throughExit(vec3 p, vec3 d) {
@@ -682,5 +682,37 @@ void main() {
     c += windowSky(normalize(vec3(bent.x, abs(bent.y) + 0.03, bent.z)), 3.0) * throughExit(vWorld, bent) * 0.55;
     c += windowGlaze(vWorld, n, v, 6.0) * 3.0;
   }
+  gl_FragColor = vec4(rigOut(c), 1.0);
+}`;
+
+// The crag near the long lens of the strike: dark broken rock with snow lying on it in patches. It is seen far out of focus, so it is patches
+// of the two and their light, and nothing finer.
+export const CRAG_VERTEX = /* glsl */ `
+varying vec3 vWorld;
+varying vec3 vNormal;
+void main() {
+  vec4 w = modelMatrix * vec4(position, 1.0);
+  vWorld = w.xyz;
+  vNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+export const CRAG_FRAGMENT = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec3 vNormal;
+${RIG_GLSL}
+${NOISE_GLSL}
+void main() {
+  vec3 n = normalize(vNormal);
+  vec3 v = normalize(cameraPosition - vWorld);
+  vec2 at = vec2(vWorld.x * 0.8 + vWorld.z * 0.6, vWorld.y);
+  float broad = fbm(at * 1.7 + 4.0);
+  float fine = fbm(at * 6.5 + 11.0);
+  // Snow lies where the rock is level and in its hollows; the faces between are bare.
+  float snow = smoothstep(0.42, 0.5, 0.62 * broad + 0.38 * fine + 0.3 * n.y - 0.04);
+  vec3 rock = mix(vec3(0.028, 0.022, 0.02), vec3(0.2, 0.125, 0.085), smoothstep(0.3, 0.75, fine) * smoothstep(0.35, 0.6, broad + 0.2));
+  vec3 albedo = mix(rock, vec3(0.6, 0.63, 0.7), snow);
+  n = normalize(n + (1.0 - snow) * 0.9 * (vec3(fine, broad, 1.0 - fine) - 0.5));
+  vec3 c = rigShade(vWorld, n, v, albedo, 0.9, mix(0.5 + 0.5 * fine, 1.0, snow));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

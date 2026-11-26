@@ -4,10 +4,11 @@ import * as THREE from 'three';
 import { FIRST, finAxes, first, sheetMap, spires, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
 import type { Context, Piece } from '../shared/context';
-import { CARCASS, RAD, WIND, carcassAxis, carcassBody, carcassView, step } from '../shared/anchors';
-import { canalFloor, canalShell, crestStrip, flanks, hollow, icicles, reliefDepth, spireMesh, stones } from './meshes';
+import { CARCASS, INSIDE_FROM, RAD, STRIKE_FROM, WIND, carcassAxis, carcassBody, carcassView, step, strikeCrag } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
+import { canalFloor, canalShell, crag, crestStrip, flanks, hollow, icicles, reliefDepth, spireMesh, stones } from './meshes';
 import { height } from './height';
-import { ICE_FRAGMENT, ICE_VERTEX, ICICLE_FRAGMENT, ICICLE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
+import { CRAG_FRAGMENT, CRAG_VERTEX, ICE_FRAGMENT, ICE_VERTEX, ICICLE_FRAGMENT, ICICLE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['land'];
 
@@ -157,10 +158,22 @@ export function create(ctx: Context): Piece {
   add(canalShell(ctx.rng('land/canal-wall'), 0), wallMaterial);
   add(canalFloor(), iceMaterial);
   add(icicles(ctx.rng('land/icicles')), icicleMaterial);
+  // Staged by shot: the crag that stands near the long lens of the strike (spine-04), a rock of the first spire's lee edge. It is on the set
+  // for that shot alone.
+  const cragMaterial = new THREE.ShaderMaterial({ vertexShader: CRAG_VERTEX, fragmentShader: CRAG_FRAGMENT, uniforms: { ...ctx.rig.uniforms }, toneMapped: false });
+  const cragGeometry = crag(ctx.rng('land/crag'), strikeCrag, 5.2, 13);
+  made.push(cragGeometry);
+  const cragMesh = new THREE.Mesh(cragGeometry, cragMaterial);
+  cragMesh.frustumCulled = false;
+  land.add(cragMesh);
   ctx.scene.add(ctx.parts.built('land', land));
 
   return {
+    setTime: () => {
+      cragMesh.visible = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
+    },
     dispose: () => {
+      cragMaterial.dispose();
       for (const g of made) g.dispose();
       groundMaterial.dispose();
       for (const m of spireMaterials) m.dispose();

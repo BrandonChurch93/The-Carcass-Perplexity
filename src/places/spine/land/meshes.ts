@@ -493,3 +493,44 @@ export function stones(
   for (const d of drifts) tail(d.at[0], d.at[1], d.along[0], d.along[1], d.long, d.wide, d.high);
   return finish(pos, index, top, sl);
 }
+
+/**
+ * A crag: a lump of broken rock about a point, taller than it is broad, for the rock that stands near a lens. It is seen out of focus, so its
+ * form is a few sizes of lump and no more.
+ */
+export function crag(rng: Rng, at: readonly [number, number, number], wide: number, tall: number): THREE.BufferGeometry {
+  const RINGS = 40;
+  const SEG = 48;
+  const pos: number[] = [];
+  const index: number[] = [];
+  const lumps = Array.from({ length: 24 }, () => [rng.range(0, 6.283), rng.range(-1, 1), rng.range(0.25, 0.7), rng.range(-0.22, 0.3)] as const);
+  for (let j = 0; j <= RINGS; j++) {
+    const lat = (j / RINGS) * Math.PI;
+    for (let a = 0; a <= SEG; a++) {
+      const lon = (a / SEG) * Math.PI * 2;
+      const dx = Math.sin(lat) * Math.cos(lon);
+      const dy = Math.cos(lat);
+      const dz = Math.sin(lat) * Math.sin(lon);
+      let r = 1;
+      for (const [lo, hi, size, deep] of lumps) {
+        const cx = Math.sqrt(1 - hi * hi) * Math.cos(lo);
+        const cz = Math.sqrt(1 - hi * hi) * Math.sin(lo);
+        const d2 = (dx - cx) ** 2 + (dy - hi) ** 2 + (dz - cz) ** 2;
+        r += deep * Math.exp(-d2 / (size * size));
+      }
+      pos.push(at[0] + dx * wide * r, at[1] + dy * tall * r, at[2] + dz * wide * r);
+    }
+  }
+  for (let j = 0; j < RINGS; j++) {
+    for (let a = 0; a < SEG; a++) {
+      const p = j * (SEG + 1) + a;
+      index.push(p, p + SEG + 1, p + 1, p + 1, p + SEG + 1, p + SEG + 2);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  g.computeBoundingSphere();
+  return g;
+}

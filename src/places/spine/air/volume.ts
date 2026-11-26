@@ -70,6 +70,21 @@ vec3 strikeLight(vec3 p) {
   return e * (EMITTER_CAST * 3.14159);
 }
 
+// The air about a stroke, lit by it: the light a ray gathers in passing a round light, in closed form, no farther than what the ray meets.
+vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
+  vec3 g = vec3(0.0);
+  for (int i = 0; i < 8; i++) {
+    if (i >= uEmitterCount) break;
+    vec3 q = ro - uEmitters[i].xyz;
+    float r = uEmitters[i].w * (uSkyStage.z > 0.0 ? uSkyStage.z : 1.0);
+    float b = dot(rd, q);
+    float h = sqrt(max(dot(q, q) - b * b, 0.0) + 0.04 * r * r);
+    g += uEmitterRadiance[i] * (r * r * (atan((far + b) / h) - atan(b / h)) / h);
+  }
+  g *= 1.0e-7;
+  return g / (1.0 + dot(g, vec3(0.33)) / 0.5);
+}
+
 // The open sky as cloud takes it: the cold light from above, and the last band on what faces it.
 vec3 skyOn(float up, vec3 rd) {
   vec3 cold = mix(uSkyHorizon, uSkyZenith, 0.5) * (0.55 + 0.45 * up);
@@ -215,11 +230,12 @@ void main() {
     float az = atan(rd.z, rd.x);
     float dip = asin(clamp(-rd.y, 0.0, 1.0));
     // The picture's cloud runs from its horizon down 15 degrees; lower than that it is laid again, turned over, so nothing is pulled long.
-    float down = dip / 0.26;
+    float zoomF = uSkyStage.w > 0.0 ? uSkyStage.w : 1.0;
+    float down = dip * zoomF / 0.26;
     down = 1.0 - abs(1.0 - mod(down, 2.0));
-    vec2 uvF = vec2(0.86 + wrapPi(az - DUSK_AZ) / 1.55, 0.32 - 0.305 * down);
+    vec2 uvF = vec2(0.86 + wrapPi(az - DUSK_AZ) * zoomF / 1.55, 0.32 - 0.305 * down);
     // A long lens would draw the picture's own grain large: there it is read soft and gives the tone alone, and the billows below give the form.
-    float lodF = clamp(log2(0.6 / uInvProjection[1][1]), 0.0, 4.0);
+    float lodF = clamp(log2(0.6 / uInvProjection[1][1]) - log2(zoomF), 0.0, 4.0);
     vec3 sea = flowing(tFar, uvF, vec2(0.016, 0.0), 24.0, lodF) * SKY_GAIN;
     // The billows of the surface itself, broad and soft: their heads a little lighter, their hollows a little darker.
     float h0 = seaTop(p, true);
@@ -230,11 +246,11 @@ void main() {
     float lean = clamp((h0 - seaTop(p + toDusk * reachS, true)) / reachS * 2.2, -1.0, 1.0);
     sea *= (0.72 + 0.4 * head) * (1.0 + 0.45 * lean);
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
-    float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 30.0 * dot(uFlash, vec3(0.33)) * stormSide(rd), 0.0, 1.5);
+    float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * stormSide(rd), 0.0, 1.5);
     sea = sea * (1.0 - 0.35 * stormSide(rd)) * (1.0 + 1.6 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t / 30000.0);
-    sea = mix(sea, domeFar, max(gone * gone, smoothstep(0.035, 0.0, dip)));
+    sea = mix(sea, domeFar, max(gone * gone, smoothstep(0.035 / zoomF, 0.0, dip)));
     // Its edge against the land is soft: the cloud thins where it laps the rock.
     float lap = 0.9 * smoothstep(0.0, 1.0, (far - t) / (700.0 + 0.2 * t));
     light += through * sea * lap;
@@ -305,7 +321,8 @@ void main() {
 
   // What is seen of the dome through the air: its cloud, softened, toward a ray lifted to the horizon.
   vec3 toDome = normalize(vec3(rd.x, max(rd.y, 0.035), rd.z));
-  vec3 domeAir = skyCloud(ro, toDome, 5.0);
+  // Open sky is read sharp: the air before it is the same cloud, and a soft copy laid over it would wash its masses out.
+  vec3 domeAir = skyCloud(ro, toDome, far > 50000.0 ? 1.0 : 5.0);
   if (stormAir > 0.0) {
     light = light * (1.0 - stormAir) + domeAir * stormAir;
     through *= 1.0 - stormAir;
@@ -408,5 +425,6 @@ void main() {
   light = light * clear + haze * (1.0 - clear);
   through *= clear;
 
+  light += strikeGlow(ro, rd, min(far, 30000.0)) * uShow.x;
   gl_FragColor = vec4(light, through);
 }`;
