@@ -32,16 +32,6 @@
       ]
     },
     {
-      "name": "rock",
-      "kind": "tile",
-      "metres": 4,
-      "mean": [
-        0.439,
-        0.321,
-        0.279
-      ]
-    },
-    {
       "name": "hide",
       "kind": "tile",
       "metres": 1,
@@ -85,22 +75,6 @@
       "height": 941
     },
     {
-      "name": "ledge",
-      "kind": "plate",
-      "metres": 14,
-      "width": 1661,
-      "height": 947,
-      "relief": "ledge-h.png"
-    },
-    {
-      "name": "thincrust",
-      "kind": "plate",
-      "metres": 10,
-      "width": 1672,
-      "height": 941,
-      "relief": "thincrust-h.png"
-    },
-    {
       "name": "silt",
       "kind": "tile",
       "metres": 3,
@@ -119,14 +93,6 @@
         0.113,
         0.105
       ]
-    },
-    {
-      "name": "shore",
-      "kind": "plate",
-      "metres": 4,
-      "width": 1672,
-      "height": 941,
-      "relief": "shore-h.png"
     },
     {
       "name": "wallower",
@@ -245,14 +211,6 @@
       "width": 1024,
       "height": 1536,
       "cover": "stalk-c-a.png"
-    },
-    {
-      "name": "flatplate",
-      "kind": "plate",
-      "metres": 40,
-      "width": 1672,
-      "height": 941,
-      "relief": "flatplate-h.png"
     },
     {
       "name": "ripple",
