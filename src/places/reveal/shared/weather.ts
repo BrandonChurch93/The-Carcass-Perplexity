@@ -34,7 +34,7 @@ float seen(vec3 c, float least, float full) {
 }
 // A field that is only partly grown keeps the thickest of its cloud and loses the rest.
 float grown(float pic, float amount) {
-  return pic * smoothstep(-0.08, 0.42, pic - 1.1 * (1.0 - amount));
+  return pic * smoothstep(-0.14, 0.5, pic - 1.1 * (1.0 - amount));
 }
 
 vec2 cellHash(vec2 p) {
@@ -70,7 +70,7 @@ vec2 cellsOf(vec2 p) {
 vec3 lowCloud(vec2 at) {
   vec2 drift = uTime * vec2(1.3, -0.35);
   float px = fwidth(at.x) + fwidth(at.y);
-  float away = smoothstep(150.0, 700.0, uViewKm);
+  float away = smoothstep(150.0, 560.0, uViewKm);
   // The wind is not straight: the whole field is read through a slow bend, so its streets curve.
   vec2 bend = vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0)));
   vec2 xz = at + 130.0 * bend;
@@ -109,10 +109,10 @@ vec3 lowCloud(vec2 at) {
   body -= 0.6 * (1.0 - smoothstep(0.6, 1.5, length((at - STORM_AT) / vec2(340.0, 460.0))));
   if (away > 0.0) {
     vec2 w = xz - drift;
-    float c1 = seen(texture2D(uMatCells, mat2(0.8, 0.6, -0.6, 0.8) * w / 500.0 + vec2(0.13, 0.4)).rgb, 0.17, 0.78);
-    float c2 = seen(texture2D(uMatCells, mat2(-0.28, 0.96, -0.96, -0.28) * w / 690.0 + vec2(0.6, 0.21)).rgb, 0.17, 0.78);
-    float s1 = seen(texture2D(uMatStreets, mat2(0.92, -0.39, 0.39, 0.92) * w / 400.0 + vec2(0.3, 0.7)).rgb, 0.1, 0.78);
-    float s2 = seen(texture2D(uMatStreets, mat2(0.31, 0.95, -0.95, 0.31) * w / 560.0 + vec2(0.8, 0.1)).rgb, 0.1, 0.78);
+    float c1 = seen(texture2D(uMatCells, mat2(0.8, 0.6, -0.6, 0.8) * w / 500.0 + vec2(0.13, 0.4), 0.5).rgb, 0.2, 0.8);
+    float c2 = seen(texture2D(uMatCells, mat2(-0.28, 0.96, -0.96, -0.28) * w / 690.0 + vec2(0.6, 0.21), 0.5).rgb, 0.2, 0.8);
+    float s1 = seen(texture2D(uMatStreets, mat2(0.92, -0.39, 0.39, 0.92) * w / 400.0 + vec2(0.3, 0.7), 0.5).rgb, 0.13, 0.8);
+    float s2 = seen(texture2D(uMatStreets, mat2(0.31, 0.95, -0.95, 0.31) * w / 560.0 + vec2(0.8, 0.1), 0.5).rgb, 0.13, 0.8);
     float cellPic = mix(c1, c2, smoothstep(0.42, 0.58, wide.r));
     float region = smoothstep(-0.25, 0.25, sin(at.x / 1900.0 + 2.0 * sin(at.y / 1500.0)));
     float streetPic = mix(s1, s2, region);

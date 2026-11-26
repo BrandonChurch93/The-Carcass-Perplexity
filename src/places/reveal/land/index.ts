@@ -18,6 +18,11 @@ ${WEATHER_GLSL}
 uniform sampler2D uGroundWide;
 uniform sampler2D uShapeWide;
 uniform sampler2D uBones;
+uniform sampler2D uMatRange;
+uniform sampler2D uMatPlain;
+uniform sampler2D uMatBadland;
+uniform sampler2D uMatRangeNh;
+uniform sampler2D uMatBadlandNh;
 uniform vec4 uRectA;
 uniform vec4 uRectWide;
 uniform sampler2D uGroundClose;
@@ -41,6 +46,9 @@ uniform vec2 uShadeOff;
 varying vec3 vWorld;
 
 const vec3 DEEP = vec3(0.006, 0.017, 0.04);
+// The bay in the far leg, on the rectangle of the widest level: where, and its half size.
+const vec2 BAY_AT = vec2(0.79, 0.205);
+const vec2 BAY_SIZE = vec2(0.027, 0.108);
 // The lesser vents: x and z from the Heart, km, and their size beside it.
 const vec3 VENTS[6] = vec3[6](vec3(-42.0, -98.0, 0.5), vec3(76.0, -33.0, 0.55), vec3(170.0, -66.0, 0.45), vec3(124.0, 24.0, 0.4), vec3(-52.0, 50.0, 0.45), vec3(43.0, 79.0, 0.4));
 
@@ -81,6 +89,17 @@ void main() {
     ground = mix(ground, texture2D(uGroundClose, clamp(uvClose, 0.0, 1.0)).rgb, inClose);
     shape = mix(shape, texture2D(uShapeClose, clamp(uvClose, 0.0, 1.0)).rgb, inClose);
   }
+  // A bay breaks the outline of the far leg: the sea comes in from the north coast to the foot of the range. It is cut here, in the
+  // shader, and not in the pictures: the floor falls from the shore to the middle, and the colour of the water follows the floor.
+  vec2 inBay = mat2(0.94, 0.34, -0.34, 0.94) * (((read - uRectA.xy) * uRectA.zw - BAY_AT) / BAY_SIZE);
+  float bayEdge = length(inBay) + 0.36 * (vnoise(xz / 43.0 + 3.0) - 0.5) + 0.16 * (vnoise(xz / 13.0 + 8.0) - 0.5);
+  if (bayEdge < 1.3) {
+    float floorOf = mix(0.06, 0.58, smoothstep(0.3, 1.08, bayEdge));
+    float wet = 1.0 - smoothstep(0.42, 0.5, floorOf);
+    ground = mix(ground, mix(vec3(0.012, 0.04, 0.056), vec3(0.075, 0.16, 0.14), smoothstep(0.3, 0.48, floorOf)), wet * step(floorOf, shape.b));
+    shape.b = min(shape.b, floorOf);
+    shape.rg = mix(shape.rg, vec2(0.5), 1.0 - smoothstep(0.9, 1.25, bayEdge));
+  }
   float land = smoothstep(0.485, 0.515, shape.b);
   float height = clamp((shape.b - 0.56) / 0.44, 0.0, 1.0);
   float depth = clamp(1.0 - shape.b / 0.44, 0.0, 1.0);
@@ -98,6 +117,46 @@ void main() {
     float h2 = vnoise(g2);
     vec2 fine = vec2(vnoise(g1 + vec2(0.3, 0.0)) - h1, vnoise(g1 + vec2(0.0, 0.3)) - h1) * 1.3 + vec2(vnoise(g2 + vec2(0.3, 0.0)) - h2, vnoise(g2 + vec2(0.0, 0.3)) - h2) * 0.8;
     slope += fine * nearby * land * (0.25 + 0.75 * smoothstep(0.02, 0.3, length(slope)));
+  }
+  // Three kinds of country, from the photographs under mat: bare ranges on the high ground, braided plains on the low, canyon land on the
+  // uplands and in the dry provinces. Each is laid twice, at its real size and wider and turned, and the two are bent, so no repeat shows.
+  // They give the colour its grain and the relief its small shapes; the large shape stays the place's own.
+  vec3 country = vec3(1.0);
+  float tableland = 0.0;
+  float grain = (1.0 - smoothstep(560.0, 1050.0, uViewKm)) * land;
+  if (uViewKm < 1050.0) {
+    float high = smoothstep(0.2, 0.42, height);
+    float dry = smoothstep(0.4, 0.62, vnoise(xz / 173.0 + 41.0));
+    float low = (1.0 - smoothstep(0.03, 0.16, height)) * (1.0 - 0.85 * dry);
+    // In the dry provinces the ranges give way to tableland: the valleys of the large shape are laid almost flat and the canyons take over.
+    float mesa = dry * (1.0 - smoothstep(0.5, 0.74, height)) * smoothstep(0.1, 0.2, height) * grain;
+    slope *= 1.0 - 0.62 * mesa;
+    float inRange = high * (1.0 - mesa);
+    float inPlain = (1.0 - high) * low;
+    float inBadland = max((1.0 - high) * (1.0 - low), mesa);
+    vec2 bent = xz + 7.0 * vec2(vnoise(xz / 23.0 + 5.0), vnoise(xz / 23.0 + 15.0));
+    float wider = 0.25 + 0.5 * smoothstep(90.0, 450.0, uViewKm);
+    mat2 turnA = mat2(0.8, 0.6, -0.6, 0.8);
+    mat2 turnB = mat2(-0.28, 0.96, -0.96, -0.28);
+    vec2 r1 = turnA * bent / 40.0 + vec2(0.17, 0.52);
+    vec2 r2 = turnB * bent / 137.0 + vec2(0.61, 0.08);
+    vec2 p1 = turnB * bent / 60.0 + vec2(0.4, 0.33);
+    vec2 p2 = turnA * bent / 191.0 + vec2(0.72, 0.9);
+    vec2 b1 = turnA * bent / 30.0 + vec2(0.05, 0.77);
+    vec2 b2 = turnB * bent / 109.0 + vec2(0.48, 0.26);
+    vec3 ofRange = mix(texture2D(uMatRange, r1).rgb, texture2D(uMatRange, r2).rgb, wider) / vec3(0.122, 0.126, 0.125);
+    vec3 ofPlain = mix(texture2D(uMatPlain, p1).rgb, texture2D(uMatPlain, p2).rgb, wider) / vec3(0.182, 0.157, 0.12) * vec3(1.1, 1.0, 0.86);
+    vec3 ofBadland = mix(texture2D(uMatBadland, b1).rgb, texture2D(uMatBadland, b2).rgb, wider) / vec3(0.235, 0.199, 0.191) * vec3(1.1, 0.97, 0.9);
+    country = clamp(inRange * ofRange + inPlain * ofPlain + inBadland * ofBadland, 0.3, 2.6);
+    vec2 a1 = texture2D(uMatRangeNh, r1).rg * 2.0 - 1.0;
+    vec2 a2 = texture2D(uMatRangeNh, r2).rg * 2.0 - 1.0;
+    vec2 c1 = texture2D(uMatBadlandNh, b1).rg * 2.0 - 1.0;
+    vec2 c2 = texture2D(uMatBadlandNh, b2).rg * 2.0 - 1.0;
+    vec2 small = inRange * ((vec2(a1.x, -a1.y) * turnA) * (1.0 - wider) + (vec2(a2.x, -a2.y) * turnB) * wider)
+      + inBadland * ((vec2(c1.x, -c1.y) * turnA) * (1.0 - wider) + (vec2(c2.x, -c2.y) * turnB) * wider);
+    slope += small * (0.55 + 0.35 * mesa) * grain;
+    tableland = mesa;
+    slope *= min(1.0, 0.97 / max(length(slope), 1e-3));
   }
   vec3 n = normalize(vec3(slope.x, sqrt(max(1.0 - dot(slope, slope), 0.04)), slope.y));
   vec2 toSunUv = normalize(uSunDir.xz) * (9.0 / 4096.0) * uRectWide.zw / abs(uRectWide.z);
@@ -133,7 +192,7 @@ void main() {
   float skeleton = texture2D(uBones, clamp(uvA, 0.0, 1.0)).r * inside(uvA);
   float top = smoothstep(680.0, 1380.0, uViewKm) * land * (1.0 - salt) * smoothstep(70.0, 200.0, length((xz - uSalt) * vec2(0.8, 1.0)));
   ground = mix(ground, vec3(0.6, 0.555, 0.48), 0.42 * skeleton * top);
-  ground *= mix(1.0, 0.72, (1.0 - skeleton) * top) * mix(1.0, 0.86, top);
+  ground *= mix(1.0, 0.72, (1.0 - skeleton) * top) * mix(1.0, 0.8, top);
   // Bare rock is the colour of old bone, not of snow: the snow lies on the highest crests alone.
   float bare = smoothstep(0.1, 0.26, height) * (1.0 - smoothstep(0.58, 0.76, height));
   ground *= mix(vec3(1.0), vec3(0.84, 0.7, 0.54), bare * mix(0.5, 1.0, fromFar));
@@ -151,6 +210,8 @@ void main() {
       ground *= mix(vec3(1.0), soil, 0.8 * plain * (1.0 - salt));
     }
   }
+  ground *= mix(vec3(1.0), country, 0.8 * grain * (1.0 - salt));
+  ground = mix(ground, vec3(0.235, 0.165, 0.13) * country, 0.5 * tableland * (1.0 - salt));
   vec3 earth = rigShade(vWorld, n, view, ground, 0.92, shade);
   earth *= 1.0 + 0.6 * max(side, 0.0) + 0.55 * min(side, 0.0);
   // The light the sunlit slopes throw back into the shaded ones: without it every shadow is the blue of the sky.
@@ -210,7 +271,7 @@ void main() {
   water += uSkyColour * 0.22 * fresnel;
   water += uSunColour * vec3(1.0, 0.86, 0.66) * lobe * 0.0036 * shade * (0.6 + 0.4 * depth);
   // Round the glint the low sun lies on the sea as a broad warm glare.
-  water += uSunColour * vec3(1.0, 0.84, 0.62) * 0.0075 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
+  water += uSunColour * vec3(1.0, 0.84, 0.62) * 0.0064 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
   // Surf: a broken white line where the swell meets the coast.
   float surf = smoothstep(0.405, 0.47, shape.b) * (1.0 - land) * smoothstep(0.35, 0.75, ruffle + 0.4 * vnoise(xz * 1.7));
   water = mix(water, vec3(0.62) * light / 3.14159, 0.55 * surf);
@@ -219,8 +280,8 @@ void main() {
 
   // ---- the air between the surface and the eye: more of it toward the edge of the planet ----
   float path = 1.0 / max(mu, 0.12);
-  float air = 1.0 - exp(-0.015 * path * (1.0 - 0.45 * height * land));
-  colour = mix(colour, uAirColour * (0.55 + 0.45 * shade), air);
+  float air = 1.0 - exp(-0.0125 * path * (1.0 - 0.45 * height * land));
+  colour = mix(colour, uAirColour * (0.46 + 0.4 * shade), air);
   // Haze lies in the valleys and over the plains, and thins up the ranges.
   float low = land * (1.0 - smoothstep(0.0, 0.3, height)) * (0.6 + 0.8 * vnoise(xz / 70.0));
   colour = mix(colour, (uAirColour * 1.2 + vec3(0.03)) * (0.55 + 0.45 * shade), 0.012 * low * path);
@@ -266,6 +327,12 @@ export function create(ctx: Context): Piece {
     uShapeWide: { value: shapes[0] },
     uRectWide: { value: rects[0] },
     uBones: { value: ctx.assets.texture('land/bones.jpg', { kind: 'data', repeat: false }) },
+    // The Builder's photographs of ground (assets-src/reveal/mat/RECIPE.md): colour, and the slope of two of them.
+    uMatRange: { value: ctx.assets.texture('mat/range.jpg', { kind: 'colour', repeat: true }) },
+    uMatPlain: { value: ctx.assets.texture('mat/plain.jpg', { kind: 'colour', repeat: true }) },
+    uMatBadland: { value: ctx.assets.texture('mat/badland.jpg', { kind: 'colour', repeat: true }) },
+    uMatRangeNh: { value: ctx.assets.texture('mat/range-nh.png', { kind: 'data', repeat: true }) },
+    uMatBadlandNh: { value: ctx.assets.texture('mat/badland-nh.png', { kind: 'data', repeat: true }) },
     uRectA: { value: rects[0] },
     uGroundClose: { value: grounds[1] },
     uShapeClose: { value: shapes[1] },

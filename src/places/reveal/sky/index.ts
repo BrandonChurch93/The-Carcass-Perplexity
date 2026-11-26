@@ -24,9 +24,9 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-  vec3 c = 1.02 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
-  float air = 1.0 - exp(-0.015 * (1.0 - 0.6 * high) / max(mu, 0.12));
-  return mix(c, uAirColour, air);
+  vec3 c = 0.92 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
+  float air = 1.0 - exp(-0.0125 * (1.0 - 0.6 * high) / max(mu, 0.12));
+  return mix(c, uAirColour * 0.86, air);
 }`;
 
 const CLOUD_FRAGMENT = /* glsl */ `
@@ -35,6 +35,8 @@ ${NOISE_GLSL}
 ${WEATHER_GLSL}
 ${CLOUD_LIGHT_GLSL}
 varying vec3 vWorld;
+// The cheaper cloud: false leaves each cloud lit by its photograph alone (see HANDOVER.md for both costs).
+const bool SELF_SHADE = true;
 void main() {
   vec2 xz = vWorld.xz;
   vec3 low = lowCloud(xz);
@@ -48,8 +50,12 @@ void main() {
   float mid = midCloud(between);
   float overMid = ${FULL_SHADE ? 'midCloud(between + toSun * 2.9)' : 'mid'};
   // A cloud is lit on the side toward the sun and dark on the other: its own neighbour toward the sun shades it.
-  float sunward = lowCloud(xz + normalize(uSunDir.xz) * (0.9 + 0.012 * uViewKm)).x;
-  float self = clamp(0.5 + 1.4 * (low.x - sunward), 0.0, 1.0);
+  // (The dearer way reads the deck a second time towards the sun, for the lit and the shaded edge of each cloud: SELF_SHADE.)
+  float self = 0.5;
+  if (SELF_SHADE) {
+    float sunward = lowCloud(xz + normalize(uSunDir.xz) * (0.9 + 0.012 * uViewKm)).x;
+    self = clamp(0.5 + 1.4 * (low.x - sunward), 0.0, 1.0);
+  }
   vec3 lowColour = cloudLight(xz, 0.6 * low.y + 0.4 * self, low.x, 0.0) * (1.0 - 0.25 * over) * (1.0 - 0.35 * overMid);
   vec3 midColour = cloudLight(between, 0.45 + 0.25 * mid, 0.7, 0.5) * (1.0 - 0.2 * over) * 0.92;
   vec3 highColour = cloudLight(up, 0.62, 0.6, 1.0);
@@ -109,7 +115,12 @@ void main() {
   float seenLight = dot(t, vec3(0.3, 0.55, 0.15));
   float thick = smoothstep(0.04, 0.5, seenLight) * (1.0 - smoothstep(0.78, 1.0, length(vUv * 2.0 - 1.0)));
   // (The photograph's own tones are the build of its tops: dark between the towers, bright on them.)
-  vec3 colour = cloudLight(vWorld.xz, 0.62, 0.8, 0.6) * (0.16 + 1.05 * pow(seenLight, 2.2));
+  // This place's sun lights it: a tower stands bright on its sunward side and throws its shade down the far one.
+  vec2 sunUv = normalize(uSunDir.xz) * vec2(1.0 / 430.0, -1.0 / 330.0);
+  float sunward = dot(texture2D(uPicture, vUv + sunUv * 9.0, 1.0).rgb, vec3(0.3, 0.55, 0.15));
+  float lee = dot(texture2D(uPicture, vUv - sunUv * 22.0, 2.5).rgb, vec3(0.3, 0.55, 0.15));
+  float self = clamp(0.5 + 2.6 * (seenLight - sunward) - 0.9 * max(lee - seenLight, 0.0), 0.0, 1.0);
+  vec3 colour = cloudLight(vWorld.xz, 0.12 + 0.82 * self, 0.8, 0.6) * (0.3 + 0.82 * pow(seenLight, 1.7));
   // The light of the flashes comes through the cloud from inside: soft, blue white, brightest where the cloud is thin over it.
   vec3 glow = vec3(0.0);
   for (int i = 0; i < 4; i++) {
