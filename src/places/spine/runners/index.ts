@@ -10,7 +10,6 @@ import { stagedSeconds } from '../shared/stage';
 import { FLOOR, MOUTH_S, first, frameAt, world } from '../ridge';
 import { flashAt } from '../strikes/bolt';
 import { LOCK_FRAGMENT, LOCK_VERTEX, SKIN_FRAGMENT, SKIN_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
-import { scorch } from './scorch';
 import { BONES, claws, coat, lockGeometry, skin, tendrilGeometry, type Joints, type LegPose, type Pose, type Skin, type V3 } from './skin';
 
 export const PARTS: readonly string[] = ['ridge-runners'];
@@ -53,21 +52,24 @@ const WATCH: Pose = { roll: 0, pitch: 0.03, slack: 1, curl: 0.1, neck: [-0.2, 0.
 const SIT: Pose = { roll: 0.06, pitch: 0.62, slack: 1, curl: 0.15, neck: [-0.6, 0.1], head: [-0.75, 0.05], legs: [leg(-0.5, 0.06, -0.62, 0, 0.8), leg(-0.55, 0.06, -0.58, 0, 0.8), leg(0.75, 0.5, -1.9, 0.3, 0.9), leg(0.75, 0.5, -1.9, 0.3, 0.9)] };
 // Lying on its chest, curled, legs folded under, forepaws out before it, the head down on them.
 const LIE: Pose = { roll: 0.12, pitch: 0, slack: 0.95, curl: 0.7, neck: [-0.35, 0.5], head: [-0.4, 0.4], legs: [leg(1.1, 0.3, 1.45, 0.1, 1.5), leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(1.2, 0.5, -1.3, 0.3, 1.4), leg(1.25, 0.55, -1.2, 0.3, 1.4)] };
-const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [-0.15, -0.3], head: [-0.7, -0.2], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
-// The dead one: fallen on its right side, slack, its legs thrown out toward the lens with the paws on the ground, the neck fallen forward.
+// Sitting with the head up and turned to the mouth.
+const SITUP: Pose = { roll: 0.06, pitch: 0.62, slack: 1, curl: 0.15, neck: [-0.1, 0.5], head: [-0.3, 0.4], legs: [leg(-0.5, 0.06, -0.62, 0, 0.8), leg(-0.55, 0.06, -0.58, 0, 0.8), leg(0.75, 0.5, -1.9, 0.3, 0.9), leg(0.75, 0.5, -1.9, 0.3, 0.9)] };
+// Lying the other way round, the head lifted off the paws.
+const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [0.25, -0.5], head: [-0.3, -0.4], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
+// The dead one: on its right side, stiff, the four legs straight out toward the lens, the upper pair held off the ground as it froze, the
+// neck stretched along the ground.
 const DEAD: Pose = {
-  roll: 0.62,
-  pitch: -0.04,
-  slack: 0.8,
-  curl: -0.3,
-  neck: [-0.3, -0.5],
-  head: [-0.4, -0.3],
-  legs: [leg(1.0, 0.2, 1.3, 0.5, 1.4, 0.3), leg(0.5, 0.5, 1.0, 0.2, 1.3, 0), leg(0.7, 0.5, -0.2, 0.9, 1.0, 0.4), leg(-0.5, 0.3, -0.9, 0.0, 0.6, 0)],
+  roll: 1.32,
+  pitch: 0,
+  slack: 0.9,
+  curl: -0.12,
+  neck: [-0.15, -0.1],
+  head: [-0.2, -0.15],
+  legs: [leg(0.35, 0.22, 0.25, 0, 0.9, 0), leg(-0.25, 0.02, 0.45, 0, 0.8, 0), leg(-0.2, 0.28, -0.45, 0, 0.9, 0), leg(0.3, 0.02, -0.7, 0, 0.8, 0)],
 };
+/** How far the dead one is turned from square on to the lens, radians: enough that its legs are seen along their length. */
+const DEAD_TURN = 0.3;
 
-const BARE = false;
-// The ground owner now draws the burned rock under the dead one (scorchfield); this folder's own sheet is kept but not drawn.
-const SCORCH = false;
 /** Where the dead one lies: right of the middle of the key's frame and a little back from the lens, its head toward the wet rock. */
 const BODY_AT = step(step(carcassBody, carcassAxis, 0.35), carcassView, -0.1);
 const m2 = new THREE.Matrix4();
@@ -133,7 +135,7 @@ export function create(ctx: Context): Piece {
       uGround: { value: ground },
       uDoor: { value: role.inside ? door : open },
       uDoorArea: { value: 420 },
-      uDoorGain: { value: 3 },
+      uDoorGain: { value: 13 },
       uCoat: { value: coatSet },
       tShag: { value: shagColour },
       tShagData: { value: shagData },
@@ -157,7 +159,7 @@ export function create(ctx: Context): Piece {
     group.add(hornMesh);
 
     // The wind in the animal's own frame is set when it is placed; the coat is combed back along the body and a little down the gale.
-    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, burn: role.burn, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0] });
+    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, burn: role.burn, hang: role.inside && role.act !== 'stand' ? 0.9 : role.inside ? 0.35 : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0] });
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
@@ -170,11 +172,10 @@ export function create(ctx: Context): Piece {
     locks.boundingSphere = body.geometry.boundingSphere;
     const lockMesh = new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: LOCK_VERTEX, fragmentShader: LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide }));
     lockMesh.renderOrder = 1;
-    lockMesh.visible = !BARE;
     group.add(lockMesh);
 
     const count = role.tendrils;
-    const thin = role.act === 'dead' ? 1.1 : 1;
+    const thin = role.act === 'dead' ? 0.7 : 1;
     const hang = new Float32Array(count * 4);
     const limb = new Float32Array(count * 4);
     for (let i = 0; i < count; i++) {
@@ -201,34 +202,31 @@ export function create(ctx: Context): Piece {
   const cream = (): [number, number, number] => {
     const k = rng.range(0.85, 1.1);
     const warm = rng.range(0, 1);
-    return [0.84 * k, (0.71 - 0.03 * warm) * k, (0.5 - 0.07 * warm) * k];
+    return [0.86 * k, (0.8 - 0.02 * warm) * k, (0.7 - 0.05 * warm) * k];
   };
 
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
-    { d: CANAL_KEY + 7.5, l: -1.0, yaw: along - 0.3, act: 'stand', pose: WATCH, size: 1.15 },
-    { d: CANAL_KEY + 2.9, l: -1.75, yaw: along + 2.5, act: 'lie', pose: LIE, size: 1.2 },
-    { d: CANAL_KEY + 3.7, l: -2.15, yaw: along + 2.0, act: 'sit', pose: SIT, size: 1.2 },
-    { d: CANAL_KEY + 4.3, l: -1.5, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
-    { d: CANAL_KEY + 5.1, l: -2.1, yaw: along + 1.7, act: 'sit', pose: SIT, size: 1.1 },
-    { d: CANAL_KEY + 5.6, l: -1.45, yaw: along + 0.6, act: 'lie', pose: LIE, size: 1.05 },
+    { d: CANAL_KEY + 11.5, l: -0.2, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.15 },
+    { d: CANAL_KEY + 4.4, l: -2.1, yaw: along + 2.4, act: 'lie', pose: LIE, size: 1.2 },
+    { d: CANAL_KEY + 5.9, l: -2.5, yaw: along + 1.9, act: 'sit', pose: SITUP, size: 1.2 },
+    { d: CANAL_KEY + 7.3, l: -1.8, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
+    { d: CANAL_KEY + 8.5, l: -2.6, yaw: along + 1.6, act: 'sit', pose: SIT, size: 1.1 },
+    { d: CANAL_KEY + 9.7, l: -2.1, yaw: along + 0.6, act: 'lie', pose: LIE, size: 1.05 },
   ];
 
 
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 1000, long: 1, tone: cream(), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: 1, tone: cream(), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   const CROSSING = 4;
   const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', pose: STAND, size: rng.range(0.9, 1.15), cell: 0.04, clumps: 260, long: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false, burn: NONE, tendrils: 12 }));
   // The scorched one: on its side, the bolt's way burned into its upper flank behind the shoulder.
-  const deadSkin = skinOf(DEAD, 0.016).body;
+  const deadSkin = skinOf(DEAD, 0.022).body;
   const dj = deadSkin.joints;
-  const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.2 * (dj.fwd[d] as number) + 0.05 * (dj.up[d] as number) - 0.24 * (dj.right[d] as number);
-  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.3];
-  const dead = make({ act: 'dead', pose: DEAD, size: 1.05, cell: 0.016, clumps: 2400, long: 0.8, tone: [0.92, 0.77, 0.52], phase: 0, inside: false, burn: wound, tendrils: 110 });
+  const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.22 * (dj.fwd[d] as number) - 0.1 * (dj.up[d] as number) - 0.2 * (dj.right[d] as number);
+  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.4];
+  const dead = make({ act: 'dead', pose: DEAD, size: 1.05, cell: 0.022, clumps: 1700, long: 0.8, tone: [0.92, 0.77, 0.52], phase: 0, inside: false, burn: wound, tendrils: 110 });
 
-  const burned = scorch(ctx);
-  burned.drape();
-  if (SCORCH) part.add(burned.mesh);
   ctx.scene.add(ctx.parts.built('ridge-runners', part));
 
   const discs = ctx.rig.contactDiscs(HUDDLE.length + CROSSING + 1);
@@ -266,7 +264,7 @@ export function create(ctx: Context): Piece {
     about(a.bones[2] as THREE.Matrix4, j.chest, 0.06 * Math.sin(t * 0.6 + ph), ny, nz, [fore, settle, sway]);
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
-    a.coat.set(1, a.role.inside ? 0.12 : 0.5, shiver, a.role.inside ? 0.12 : 0.1);
+    a.coat.set(1, a.role.inside ? 0.12 : 0.5, shiver, a.role.inside ? 0.2 : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
@@ -374,7 +372,7 @@ export function create(ctx: Context): Piece {
       dead.ground.set(gy - sx * cx - sz * cz, sx, sz, 0);
       lie3.set(-sx, 1, -sz).normalize();
       tilt.setFromUnitVectors(UP, lie3);
-      q1.setFromEuler(e1.set(0, -(carcassAxis + 180) * RAD, 0, 'YXZ')).premultiply(tilt);
+      q1.setFromEuler(e1.set(0, -(carcassAxis + 180) * RAD + DEAD_TURN, 0, 'YXZ')).premultiply(tilt);
       dead.group.position.set(cx, gy, cz);
       dead.group.quaternion.copy(q1);
       dead.group.scale.setScalar(dead.role.size);

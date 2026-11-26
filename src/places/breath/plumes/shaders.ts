@@ -78,7 +78,7 @@ ${VANE_TEST}
   // The colour is bled outward under the cover (plumes/spray.jpg): a thread read at its edge is its own red.
   vec3 told = texture2D(tPlume, at).rgb;
   // Wet, it is darker than the picture of it and deeper in the red: the pale of the stem stays, the mid tones go to wine.
-  vec3 albedo = pow(told, vec3(1.15)) * vec3(1.45, 0.36, 0.44) * (0.65 + 0.5 * tone);
+  vec3 albedo = pow(told, vec3(1.3)) * vec3(1.5, 0.2, 0.3) * (0.65 + 0.5 * tone);
   // The drops that hang at the ends of the threads are water, not red.
   float most = max(told.r, max(told.g, told.b));
   float drop = smoothstep(0.4, 0.2, (most - min(told.r, min(told.g, told.b))) / max(most, 0.01)) * smoothstep(0.3, 0.55, most);
@@ -98,12 +98,14 @@ ${VANE_TEST}
   float thinness = 1.0 - body;
   float rim = smoothstep(0.95, cut, cover);
   float glow = (0.15 + 0.85 * thinness) * (0.35 + 0.65 * rim) * (0.25 + 0.75 * smoothstep(0.1, 0.6, reach)) * (0.25 + 0.75 * within) * (0.07 + 0.93 * against * against);
-  colour += vec3(1.0, 0.16, 0.035) * uSunColour * (0.6 * glow * lit) * (0.35 + 1.6 * dot(told, vec3(0.33)));
+  // Far off a bush is one dark wine mass: the glow is in single threads, and none is seen there.
+  float close = mix(0.25, 1.0, smoothstep(0.02, 0.004, px));
+  colour += vec3(1.0, 0.07, 0.015) * uSunColour * (0.85 * glow * lit * close) * (0.35 + 1.6 * dot(told, vec3(0.33)));
   // Wet: the drop at the end of a thread turns the sun to the lens, and here and there a thread does.
   float glint = smoothstep(0.95, 0.995, vnoise(at * vec2(700.0, 500.0) + vVane.z)) * smoothstep(0.003, 0.001, px);
   colour += uSunColour * vec3(1.0, 0.8, 0.6) * (glint * (0.02 + 0.4 * pow(against, 6.0)) + drop * (0.12 + 1.2 * pow(against, 3.0))) * lit;
   // The fog behind and round it is bright: it fills the red from every side, so the shade in the bush is wine and not black.
-  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.42 / 3.14159) * (0.25 + 0.75 * occ);
+  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(1.0, 0.45, 0.5) * (0.6 / 3.14159) * (0.25 + 0.75 * occ) * mix(0.45, 1.0, close);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 

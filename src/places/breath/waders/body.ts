@@ -237,7 +237,7 @@ export class Fields {
 
   neckRadius(u: number): number {
     const s = this.s;
-    return s.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.12 * smooth(0.88, 0.96, u) - 0.2 * smooth(0.97, 1, u)) * (1 + 0.85 * smooth(0.36, 0, u) ** 1.2);
+    return s.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.12 * smooth(0.88, 0.96, u) - 0.2 * smooth(0.97, 1, u)) * (1 + 1.0 * smooth(0.3, 0, u) ** 1.2);
   }
 
   neck(f: number, u: number, r: number): number {

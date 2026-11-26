@@ -2,7 +2,7 @@
 // Owned by the root. Folders read it and never change it, except through the calls below.
 import * as THREE from 'three';
 import { ground, locate } from '../ridge';
-import { DUSK, INSIDE_FROM, STRIKES, WIND, WIND_SPEED } from './anchors';
+import { CARCASS_FROM, DUSK, INSIDE_FROM, STRIKES, STRIKE_FROM, WIND, WIND_SPEED } from './anchors';
 import { stagedSeconds } from './stage';
 
 // The coarse map holds the first four spires and the ground every camera stands on; beyond it the land is taken as open.
@@ -258,10 +258,10 @@ export function createRig(): Rig {
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
     // The dusk above the cloud, set against the approved wide view: the open sky above the band, the first dark overhead, the cloud sea below, the storm.
-    uSkyZenith: { value: new THREE.Vector3(0.05, 0.062, 0.1) },
-    uSkyHorizon: { value: new THREE.Vector3(0.15, 0.17, 0.23) },
-    uSkyGround: { value: new THREE.Vector3(0.05, 0.056, 0.075) },
-    uSkyStorm: { value: new THREE.Vector3(0.02, 0.021, 0.03) },
+    uSkyZenith: { value: new THREE.Vector3(0.032, 0.035, 0.068) },
+    uSkyHorizon: { value: new THREE.Vector3(0.09, 0.097, 0.155) },
+    uSkyGround: { value: new THREE.Vector3(0.03, 0.033, 0.052) },
+    uSkyStorm: { value: new THREE.Vector3(0.012, 0.012, 0.022) },
     uStormDir: { value: new THREE.Vector3(-WIND[0], 0, -WIND[2]).normalize() },
     uWarmDir: { value: new THREE.Vector3(DUSK[0], 0.04, DUSK[2]).normalize() },
     uWarmColour: { value: new THREE.Vector3(1.5, 0.62, 0.2) },
@@ -367,8 +367,16 @@ export function createRig(): Rig {
     bake,
     setTime: (seconds) => {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
+      // Staged by shot: low by the dead one (spine-03) the lens is opened for the dusk on the snow, and the sky gives more.
+      const open = stagedSeconds() >= CARCASS_FROM && stagedSeconds() < STRIKE_FROM ? 2.3 : 1;
+      (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.032, 0.035, 0.068).multiplyScalar(open);
+      (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.09, 0.097, 0.155).multiplyScalar(open);
+      (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.03, 0.033, 0.052).multiplyScalar(open);
       // Staged by shot: from the cut into the canal the lens is exposed for the dark, and the light that reaches in counts for more.
       (uniforms.uUnder as THREE.IUniform<number>).value = stagedSeconds() >= INSIDE_FROM ? 40 : 1;
+      // Staged by shot: inside the canal the light is the cold of the mouths alone; the last warm band does not reach in. Low by the dead one
+      // (spine-03) the light is the storm's cold, and the band gives a third of itself.
+      (uniforms.uWarmColour as THREE.IUniform<THREE.Vector3>).value.set(1.5, 0.62, 0.2).multiplyScalar(stagedSeconds() >= INSIDE_FROM ? 0.08 : stagedSeconds() >= CARCASS_FROM && stagedSeconds() < STRIKE_FROM ? 0.3 : 0.75);
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();
