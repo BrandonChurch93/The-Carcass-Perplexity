@@ -8,9 +8,15 @@ from PIL import Image, ImageFilter
 im = Image.open('public/assets/breath/mat/shelfplate-h.png').convert('L')
 # The relief is a guess at form made from the picture's own light and dark: it reads as an evenly lit clay model more than as a height field.
 # So it is blurred (the folds go, the plates stay), and the tops of the plates are pressed nearly level: a plate is flat, its edge and the gap are not.
-im = im.filter(ImageFilter.GaussianBlur(5)).resize((480, 270), Image.LANCZOS)
+im = im.filter(ImageFilter.GaussianBlur(3.5)).resize((480, 270), Image.LANCZOS)
 f = np.asarray(im, dtype=np.float32) / 255
-f = np.where(f > 0.5, 0.5 + (f - 0.5) * 0.3, f)
+# Then it is cut into two levels with a steep broken riser between them: the top of a plate, nearly level, and the floor of the gap. Left
+# as it was blurred, the ground flowed in soft waves; a pavement of rock has edges.
+g = np.clip((f - 0.33) / 0.12, 0, 1)
+g = g * g * (3 - 2 * g)
+low = 0.24 + 0.5 * (np.minimum(f, 0.33) - 0.33)
+high = 0.5 + 0.3 * (np.maximum(f, 0.5) - 0.5) + 0.2 * (np.clip(f, 0.45, 0.5) - 0.5)
+f = low + (high - low) * g
 a = np.clip(np.round(f * 255), 0, 255).astype(np.uint8)
 print('mean', a.mean() / 255, 'p5', np.percentile(a, 5) / 255, 'p50', np.percentile(a, 50) / 255, 'p95', np.percentile(a, 95) / 255)
 text = base64.b64encode(a.tobytes()).decode('ascii')

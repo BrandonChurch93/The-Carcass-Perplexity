@@ -235,7 +235,9 @@ void main() {
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 5.0);
   vec3 back = reflect(-v, n);
   back.y = abs(back.y);
-  colour += skyRadiance(back) * (fres * damp * (0.4 + 0.6 * film) * 1.1 * occ * land.g);
+  // The whole shelf has a thin wet sheen at dawn: at a grazing angle even a dry plate mirrors the sky, and toward the sun that is the gold glare.
+  float sheen = max(damp, 0.38 * (1.0 - steep) * (1.0 - stone));
+  colour += skyRadiance(back) * (fres * sheen * (0.4 + 0.6 * film) * 1.1 * occ * land.g);
   float tight = sunLobe(normalize(n + vec3(mn.r - 0.5, 0.0, mn.g - 0.5) * 0.5), v, 0.2) * fres * lit;
   colour += uSunColour * (min(tight, 8.0) * damp * smoothstep(0.4, 0.8, mn.b) * occ * 0.5);
   gl_FragColor = vec4(rigOut(colour), 1.0);

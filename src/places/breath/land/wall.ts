@@ -53,7 +53,7 @@ export function wallPoint(b: number, depth: number): WallPoint {
   let deg = b / RAD;
   deg -= 360 * Math.floor((deg - (JOIN - 360)) / 360);
   const r0 = rimRadius(b);
-  const top = ground(Math.sin(b) * r0 * 1.002, -Math.cos(b) * r0 * 1.002) - 0.25;
+  const top = ground(Math.sin(b) * r0 * 1.002, -Math.cos(b) * r0 * 1.002) + 0.02;
   const u = ((deg - START) * RAD * 30) / WALL_METRES;
   // The ribs do not run level round the shaft: each side of every mirror line hangs its own way.
   const hang = smooth(depth / 7) * (1.7 * noise3(deg * 0.031, 4.4, 1.2) + 0.7 * noise3(deg * 0.09, 9.1, 3.3));
@@ -69,7 +69,7 @@ export function wallPoint(b: number, depth: number): WallPoint {
   const y = top - depth;
   const down = sat(depth / (top + DEPTH));
   const meet = smooth(depth / 0.9);
-  const r = r0 - 0.05 - meet * 0.6 - 12 * down - stand * meet;
+  const r = r0 + 0.03 - meet * 0.6 - 12 * down - stand * meet;
   // A rib is a ledge: what stands out is lifted a little, so its top lies nearly level and its underside is cut back.
   const lift = 0.13 * Math.max(0, stand) * meet;
   return { at: [Math.sin(b) * r, y + lift, -Math.cos(b) * r], u, v, relief: h, open: lerp(1, open, join) };

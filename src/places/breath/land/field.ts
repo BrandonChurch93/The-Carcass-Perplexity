@@ -194,7 +194,7 @@ export function bakeNear(rng: Rng): NearMap {
       b[k * 4] = (xr - xl) / (2 * cell);
       b[k * 4 + 1] = (zd - zu) / (2 * cell);
       // The pool: where the plate's hollow holds water.
-      b[k * 4 + 2] = hole[k] || stone[k] ? 0 : plateAt(FINE.minX + (i + 0.5) * cell, FINE.minZ + (j + 0.5) * cell) < POOL + 0.012 ? 1 : 0;
+      b[k * 4 + 2] = hole[k] || stone[k] || padAt(FINE.minX + (i + 0.5) * cell, FINE.minZ + (j + 0.5) * cell) > 0 ? 0 : plateAt(FINE.minX + (i + 0.5) * cell, FINE.minZ + (j + 0.5) * cell) < POOL + 0.012 ? 1 : 0;
     }
   }
   const texture = dataTexture(a, n);
@@ -243,7 +243,7 @@ export function bakeNear(rng: Rng): NearMap {
       const i0 = index.getX(t);
       const i1 = index.getX(t + 1);
       const i2 = index.getX(t + 2);
-      if (deep[i0] && deep[i1] && deep[i2]) continue;
+      if (deep[i0] || deep[i1] || deep[i2]) continue;
       kept.push(i0, i1, i2);
     }
     g.setIndex(kept);

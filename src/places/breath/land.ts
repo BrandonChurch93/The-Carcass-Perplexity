@@ -134,7 +134,7 @@ export const PLATE = { metres: PLATE_METRES, depth: (PLATE_METRES * PLATE_HEIGHT
 /** The plate's relief is drawn as this many metres from black to white. */
 export const RELIEF = 0.9;
 /** Under this level of the plate's relief water stands: the pool in the plate's hollow. */
-export const POOL = 0.31;
+export const POOL = 0.13;
 const mirror = (t: number): number => {
   const m = t - 2 * Math.floor(t / 2);
   return m > 1 ? 2 - m : m;
