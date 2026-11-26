@@ -90,15 +90,17 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   // The low sun is on one side of the frame: the cloud on that side is warm, on the other blue grey.
   vec2 sunSide = normalize(uLidSun.xz);
   float side = clamp(0.5 + 0.9 * dot(ld.xz, sunSide), 0.0, 1.0);
+  // The light that gets in from the side of the sun is not even, and it moves through the white as the lens climbs.
+  side = clamp(side + 0.5 * (vnoise(ld.xz * 1.4 + sunSide * camA * 34.0) - 0.5), 0.0, 1.0);
   vec3 within = mix(uLidInside, uLidWarm, side);
   // How far the lens has come out of the top: under it the cloud is lit by what gets in, over it by the sun and the sky.
-  float above = smoothstep(1.0, 1.07, camA);
+  float above = smoothstep(0.995, 1.03, camA);
   // As it breaks up the sheet thins too, and the last of it is gone before it stops being drawn.
   float thin = mix(1.0, 0.3, uLid.z) * (1.0 - smoothstep(0.88, 1.0, uLid.z));
   vec2 d = uLidDrift * uLid.y;
   // The fibres of the cloud lie along the wind.
   vec2 wind = normalize(uLidDrift);
-  mat2 comb = mat2(wind.x * 0.7, -wind.y, wind.y * 0.7, wind.x);
+  mat2 comb = mat2(wind.x * 0.92, -wind.y, wind.y * 0.92, wind.x);
   vec3 sum = vec3(0.0);
   float tr = 1.0;
   // The cloud the lens itself stands in: soft, uneven, and nearly all there is for the few frames either side of the cut.
@@ -130,10 +132,10 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     float fine = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(f * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest;
     float h = 0.56 * big + 0.44 * fine;
     float n = clamp((h - 0.5) * 1.6 + 0.5, 0.0, 1.0);
-    float cover = smoothstep(open, open + 0.38, n);
+    float cover = smoothstep(open - 0.07, open + 0.45, n);
     if (cover <= 0.0) continue;
-    float a = 1.0 - exp(-layer.z * thin * cover * sqrt(cover) * min(near / 0.02, 1.0) / down);
-    vec3 colour = within * (0.62 + 0.76 * mix(fine, finest, close));
+    float a = 1.0 - exp(-1.5 * layer.z * thin * cover * cover * min(near / 0.02, 1.0) / down);
+    vec3 colour = within * (0.62 + 0.76 * mix(fine, 0.6 * fine + 0.4 * finest, close));
     if (above > 0.0) {
       // The low sun reaches a place on the sheet when the cloud toward it stands no higher: every lump has a lit side and a side in shade.
       vec2 toSun = q + sunSide * 0.03;
