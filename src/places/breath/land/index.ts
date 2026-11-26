@@ -72,7 +72,7 @@ export function create(ctx: Context): Piece {
   const wall = rock.wall(mirrored('mat/shaftwall.jpg', 'colour'), mirrored('mat/shaftwall-h.png', 'data'), ivory, surface('wetrock', [0.153, 0.133, 0.107], 1.5, 1));
   const shaft = new THREE.Group();
   shaft.add(mesh(built.wall, wall));
-  const rubble = rock.bone(0.3, [0.34, 0.3, 0.25], [0.13, 0.115, 0.095], surface('scree', [0.287, 0.229, 0.184], 3, 1.2), THREE.DoubleSide);
+  const rubble = rock.bone(0.5, [0.47, 0.44, 0.4], [0.2, 0.185, 0.165], surface('scree', [0.287, 0.229, 0.184], 3, 1.2), THREE.DoubleSide);
   const pale = rock.bone(1, [0.6, 0.56, 0.49], [0.42, 0.385, 0.33], surface('shelf', [0.438, 0.363, 0.302], 6, 0.9), THREE.DoubleSide);
   for (const [x, z, r] of SMALLER) shaft.add(mesh(collar(x, z, r), pale));
   ctx.scene.add(ctx.parts.built('shaft', shaft));
@@ -113,9 +113,9 @@ export function create(ctx: Context): Piece {
     const [x, y, z] = ledge(bearing, nth);
     blocks.push(block(20 + bearing * 0.37, [w, 2.4, d], [x, y + 0.9, z], [lean, -b + yaw, lean * 0.6]));
   }
-  // The fallen slabs are the shelf's own stone, broken: its beds show on their sides, and they are wet and stained, not pale.
+  // The fallen slabs are the rim's own stone, broken: pale grey-cream like the tiers they fell from, their beds showing on their sides.
   const face = mirrored('land/slabface.jpg', 'colour');
-  const fallen = rock.bone(0.5, [0.36, 0.32, 0.27], [0.07, 0.06, 0.05], { colour: face, data: ctx.assets.texture('mat/shelf-nh.png', { kind: 'data', repeat: true, anisotropy: 1 }), mean: [0.42, 0.36, 0.3], metres: 5.5, relief: 1.6 }, THREE.DoubleSide);
+  const fallen = rock.bone(0.9, [0.57, 0.545, 0.5], [0.3, 0.28, 0.25], { colour: face, data: ctx.assets.texture('mat/shelf-nh.png', { kind: 'data', repeat: true, anisotropy: 1 }), mean: [0.42, 0.36, 0.3], metres: 5.5, relief: 1.6 }, THREE.DoubleSide);
   slabs.add(mesh(mergeGeometries(blocks), fallen));
   slabs.add(mesh(heap(), rubble));
 

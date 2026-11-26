@@ -12,7 +12,7 @@ import { SEA } from '../land';
 export const MAX_BODIES = 32;
 
 /** March steps of the vapour of the main shaft. The cost of the pass is close to linear in this wherever the vapour is in view. */
-export const STEPS = 24;
+export const STEPS = 18;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -120,6 +120,8 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float way = exp(-da * da / 0.4);
   float surge = uBreath.y * uShow.w;
   float apron = uBreath.z * uShow.w;
+  // Out on the shelf, away from the west lip, there is none: no noise is read there.
+  if (way < 0.02 && out0 > 0.6 + 5.0 * surge + 7.0 * way) return 0.0;
   // It climbs at a walk and drifts a little with the wind: heavy steam, whose small billows turn over only a little faster than its heaps.
   vec3 q = p - vec3(WINDV.x * 0.4, 0.85, WINDV.y * 0.4) * uTime;
   vec4 n0 = textureLod(tNoise, q.xzy / 27.0, 0.0);
@@ -129,12 +131,14 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float n = 0.45 * big + 0.55 * small;
 
   // The layer low in the shaft, heaped.
-  float top = uBreath.x - 12.0 + 9.0 * (big - 0.45) + 3.0 * (small - 0.5) + 7.0 * surge;
+  // It stands high on the west, where it wells up and spills over the low lip, and low in the middle and the east: the core stays dark.
+  float west = smoothstep(4.0, -20.0, p.x);
+  float top = uBreath.x + 2.5 - 15.0 * (1.0 - west) + 7.0 * (big - 0.45) + 2.5 * (small - 0.5) + 6.0 * surge;
   float under = top - p.y;
-  float rho = (0.012 + 0.05 * smoothstep(0.0, 14.0, under)) * smoothstep(0.0, 2.5 + 2.5 * n0.g, under);
+  float rho = (0.03 + 0.07 * smoothstep(0.0, 10.0, under)) * smoothstep(0.0, 2.0 + 3.0 * n0.g, under) * (0.55 + 0.9 * small);
   // The columns.
   float lift = 9.0 * surge;
-  float cols = column(p, vec2(-19.0, -9.0), 2.7, 9.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, 1.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -5.0 + 1.5 * lift, n);
+  float cols = column(p, vec2(-19.0, -9.0), 2.7, 6.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, 1.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -5.0 + 1.5 * lift, n);
   rho = max(rho, (0.11 + 0.1 * surge) * min(cols, 1.0));
   // Over the brim the columns' heads are torn: thinner the higher.
   rho *= mix(1.0, 0.6, smoothstep(1.0, 9.0, p.y));
@@ -144,11 +148,11 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   // On the rock by the west lip: a layer with its own top, thick at the brim and torn into shreds as it slides off down the wind.
   float foot = max(ground, SEA_Y);
   float gone = max(out0, 0.0) / (16.0 + 14.0 * apron + 8.0 * surge);
-  float tall = (2.3 + 1.6 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
+  float tall = (1.5 + 0.9 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
   float lies = smoothstep(0.0, 0.5 + 0.5 * tall, foot + tall - p.y) * smoothstep(-2.5, 0.5, out0) * step(foot - 0.3, p.y);
   float shred = smoothstep(0.54 + 0.1 * (1.0 - exp(-gone)), 0.68 + 0.12 * (1.0 - exp(-gone)), n);
   // Never a wash on the lens: within a few metres of the camera the layer on the rock is not there.
-  float pour = (0.05 + 0.03 * apron + 0.04 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
+  float pour = (0.04 + 0.02 * apron + 0.05 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
   return max(rho, pour) * uShow.z;
 }
 
@@ -209,7 +213,7 @@ void main() {
     float t1 = far;
     if (abs(rd.y) > 1e-5) {
       float ta = (roof - ro.y) / rd.y;
-      float tb = (-44.0 - ro.y) / rd.y;
+      float tb = (-30.0 - ro.y) / rd.y;
       t0 = max(t0, min(ta, tb));
       t1 = min(t1, max(ta, tb));
     } else if (ro.y > roof) {
@@ -245,7 +249,9 @@ void main() {
         float sun = sunSeen(land, p.y) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead.
         float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 34.0, 0.3, 1.0);
-        vec3 light = vec3(0.168, 0.158, 0.15) * sunk * sunk * (0.3 + 0.7 * roofed)
+        // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
+        float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
+        vec3 light = (vec3(0.265, 0.24, 0.212) * sunk * sunk * sunk + uSunColour * (0.045 * facing * sunk * sunk)) * (0.3 + 0.7 * roofed)
           + mix(uSunColour, vec3(2.2), 0.12) * (sun * (0.3 * min(phase, 1.4) * exp(-1.1 * shade) + 0.035 * exp(-0.2 * shade)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
@@ -277,12 +283,13 @@ void main() {
         vec4 land = landAt(p.xz);
         // It lies where the ground is low and wet, and not in the shaft.
         float lies = smoothstep(1.6, 0.2, land.r - (${SEA.toFixed(2)})) * smoothstep(-3.0, -1.0, land.r);
-        float rho = 0.02 * smoothstep(0.42, 0.72, 0.6 * bank + 0.4 * torn) * lies * smoothstep(7.0, 22.0, t) * smoothstep(700.0, 250.0, t) * smoothstep(yb, yb - 1.4, p.y);
+        float rho = 0.02 * smoothstep(0.42, 0.72, 0.6 * bank + 0.4 * torn) * lies * smoothstep(7.0, 22.0, t) * smoothstep(700.0, 250.0, t) * smoothstep(0.0, 1.1, ya + 0.5 + 2.0 * bank * (0.5 + torn) - p.y);
         tau += rho * (m1 - m0) / 4.0;
         sum += rho;
         sunny += rho * sunSeen(land, p.y) * sunCloud(p.xz);
       }
-      tau = min(tau, 0.6);
+      // Its top is heaped by the banks' own noise, not level: seen from a standing height it was a ruled band under the horizon.
+      tau = min(tau, 0.5);
       if (tau > 0.001) {
         float gone = exp(-tau);
         vec3 light = vec3(0.2, 0.205, 0.215) + mix(uSunColour, vec3(2.2), 0.6) * (0.1 * phase * sunny / max(sum, 1e-6));
