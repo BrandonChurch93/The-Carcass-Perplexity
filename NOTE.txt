@@ -1,5 +1,7 @@
-2026-11-26 01:48 UTC
-work at 71581a3 on agent/eye-place-2
-heartbeat 2, work in progress: eye-0 with the far plate, new water and mats, scree plate (still pulled long on the spur, animals too dark and small); eye-4 with the long plate and card animals (band of flat water under the wall, glint blob at the centre)
-look-1.jpg = out/work/compare/eye-0.png
-look-2.jpg = out/work/compare/eye-4.png
+2026-11-26 02:11 UTC
+work at add2e08 on agent/eye-place-2
+version 1 add2e08: eye-0, eye-1, eye-2, eye-4 compares
+look-1.jpg = out/work/pics/eye-0.jpg
+look-2.jpg = out/work/pics/eye-1.jpg
+look-3.jpg = out/work/pics/eye-2.jpg
+look-4.jpg = out/work/pics/eye-4.jpg
