@@ -1,7 +1,7 @@
-2026-11-26 16:46 UTC
-work at 44d0952 on agent/spine-cloud
-7015 uhd draft whole and right flank at full size, 7234 and 7418 before and after: heaps on both sides now, but a stipple stands in the near hollows, the far deck under the dusk band is flat orange, and 7418 was flatter than before in this pair (eased since)
-look-1.jpg = out/work/v2/hb-7015-uhd-draft.jpg
-look-2.jpg = out/work/v2/hb-7015-right-flank-full-size.jpg
-look-3.jpg = out/work/pair-7234.jpg
-look-4.jpg = out/work/pair-7418.jpg
+2026-11-26 17:05 UTC
+work at 4d47796 on agent/spine-cloud
+v2: sheet 7015 to 7135, 7015 before and after (review hd, main merged in), right flank at full size from the final uhd, 7234 before and after. Wrong: near heaps soft and low in contrast, far deck under the dusk band flat orange, roll hardly seen on the sheet, no torn scraps
+look-1.jpg = out/work/v2/3-sheet-first.jpg
+look-2.jpg = out/work/v2/1-7015-before-after-review-hd.jpg
+look-3.jpg = out/work/v2/2-7015-right-flank-full-size-before-after-final-uhd.jpg
+look-4.jpg = out/work/v2/4-7234-before-after.jpg
