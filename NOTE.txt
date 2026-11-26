@@ -1,7 +1,5 @@
-2026-11-26 03:31 UTC
-work at f661856 on agent/marsh-ground-2
-version 2: brine by depth with far sheen, mud between crust, sky picture, level thin crust
-look-1.jpg = out/work/v2-marsh-0.jpg
-look-2.jpg = out/work/v2-marsh-1.jpg
-look-3.jpg = out/work/v2-marsh-3.jpg
-look-4.jpg = out/work/v2-marsh-4.jpg
+2026-11-26 03:47 UTC
+work at 6166891 on agent/marsh-ground-2
+hb9: marsh-0, marsh-3 (lower lens), marsh-4 beside approved; marsh-2 and marsh-1
+look-1.jpg = out/work/hb9.jpg
+look-2.jpg = out/work/a33.jpg
