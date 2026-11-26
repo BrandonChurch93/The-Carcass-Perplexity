@@ -395,6 +395,10 @@ void main() {
   // Pearl: aslant the film gives the sky back tinted by its thickness, violet, then pink, then a pale green, and the tints slide as it
   // turns. Its rolled edge catches the light.
   shine += key * (pearl * (3.2 * uFilm.z * pow(1.0 - nv, 3.0) * (1.0 - 0.7 * gather) * (0.3 + 0.7 * litNear)) + vec3(0.95, 0.95, 1.1) * (0.55 * rim * (1.0 - 0.6 * uVeil))) * (1.0 - 0.8 * vFar);
+  // Seen close the film is mother of pearl on its whole face, not only aslant: the picture's own violets, pinks and pale greens, and its
+  // veins, as a sheen on a skin that is otherwise clear.
+  vec3 hue = clamp(mix(vec3(1.0), pic / max(lum, 0.02), 2.2), 0.0, 3.0) * mix(vec3(1.0), 1.5 * pearl, 0.4);
+  shine += key * hue * (0.85 * uFilm.z * (1.0 - vFar) * (1.0 - gather) * min(tone, 1.6) * mix(0.45, 1.1, litNear));
   // The brightest of the sky on a wet skin: a line of light down every fold that turns to it, which is what says the section is round.
   float ndh = clamp(dot(n, normalize(above + toCamera)), 0.0, 1.0);
   shine += key * (1.0 - 0.6 * uVeil) * (1.5 * pow(ndh, 70.0) + 0.1 * pow(ndh, 14.0)) * vec3(0.94, 0.94, 1.1);
@@ -403,7 +407,7 @@ void main() {
   vec2 off = vWorld.xz - uStruckAt.xz;
   float mine = max(abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.3, 1.0 / (1.0 + dot(off, off) / 250000.0));
   float aslant = 1.0 - smoothstep(0.1, 0.5, nv);
-  shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.55 * rim + 0.2 * aslant + 0.07 * belly, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim + 0.5 * aslant + 0.16 * belly, vFar));
+  shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.35 * rim + 0.2 * aslant + 0.07 * belly, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim + 0.5 * aslant + 0.16 * belly, vFar));
   // How much of what is behind it the skin hides. Far off it is more of a body: its lit face pale, its other face dark.
   float cover = clamp((1.0 - exp(-0.33 * path)) * (1.0 - 0.8 * clear) + 0.3 * vFar * (1.0 + 0.3 * vNear), 0.0, 0.95);
   // Lilac-grey, whatever the light: glass, not flesh.
@@ -777,6 +781,7 @@ export function create(ctx: Context): Piece {
       fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0);
       // Seen close the film shows its oil colours.
       film.z = inClose ? 0.42 : 0.15;
+      film.w = inClose ? 0.55 : 0.9;
       veil.value = inStrike ? 1 : 0;
       knobStage.set(inStrike ? 0.3 : 1, inStrike ? 3 : 0);
       const flash = flashAt(seconds);
