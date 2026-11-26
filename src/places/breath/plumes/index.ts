@@ -53,6 +53,14 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('gill-plumes');
   const floor = (x: number, z: number): number => rig.land.height(x, z);
   const bushes: Bush[] = [];
+  /** A place at the lip moved straight out from the shaft until it is on the brim and not on a ledge under it. */
+  const onBrim = (x: number, z: number): [number, number] => {
+    for (let k = 0; k < 40 && floor(x, z) < 0.2; k++) {
+      x *= 1.006;
+      z *= 1.006;
+    }
+    return [x, z];
+  };
   BUSHES.forEach(([, , tall], i) => {
     const at = bushAt(i);
     // Staged: the two that the lens of key breath-3 stands by are rooted a stride further west of the lip than their anchors, so that
@@ -60,11 +68,12 @@ export function create(ctx: Context): Piece {
     // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted two and a half metres to that
     // lens's left and two ahead of it, and a taller one stands on the lip beyond it: both weep, so that their sprays hang into the upper
     // left of that frame from outside it, as the picture has them.
-    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? [-10.6, 28.9] : at;
+    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? onBrim(-10.9, 29.0) : at;
     // Three stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : i === 5 ? tall * 1.1 : tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5, mound: i === 5 ? 0.15 : i < 2 ? 0 : 0.6, weep: i === 5 ? 1 : 0 });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : i === 5 ? tall * 1.1 : tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5, mound: i === 5 ? 0.15 : i < 2 ? 0 : 0.6, weep: i === 5 ? 1 : 0, tidy: i === 5 });
   });
-  bushes.push({ x: -12.5, y: floor(-12.5, 27.7), z: 27.7, tall: 5.6, lean: Math.atan2(12.5, 27.7), detail: 1, mound: 0.2, weep: 1 });
+  const [wx, wz] = onBrim(-12.5, 27.7);
+  bushes.push({ x: wx, y: floor(wx, wz), z: wz, tall: 5.6, lean: Math.atan2(-wx, wz), detail: 1, mound: 0.2, weep: 1, tidy: true });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
   const fill = ctx.rng('gill-plume-fill');
