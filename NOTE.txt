@@ -1,7 +1,5 @@
-2026-11-26 14:02 UTC
-work at b9332f9 on agent/breath-wall
-v1: sheet 4221-4341, 4221 hd review before/after whole and crop, key 4731 before/after. Flutes and round spots gone; wall dark and plain, ledges weak, sheet faint, cost over
-look-1.jpg = out/work/look/v1-sheet-first.jpg
-look-2.jpg = out/work/look/v1-whole-4221.jpg
-look-3.jpg = out/work/look/v1-crop-4221.png
-look-4.jpg = out/work/look/v1-key-4731.png
+2026-11-26 14:35 UTC
+work at 6971aa1 on agent/breath-wall
+5510 and 4973, main at left, mine at right: the mist behind the weed is as on main, only the wall differs; the wall is dark and plain
+look-1.jpg = out/work/look/pair-5510.png
+look-2.jpg = out/work/look/pair-4973.png
