@@ -3,7 +3,7 @@
 // cloud under the crest (the sea far below, the bank against the lee, the pour through the saddles) is a deck of heaps each ray walks to, the spindrift is a
 // column over the snow, and the haze of the height is worked out in one. All of it reads the rig, so the cloud takes the dusk and the lightning as the rock does.
 import { HASH_GLSL } from '../../../core/post';
-import { SEA_LEVEL } from '../shared/anchors';
+import { MOUTH, SEA_LEVEL } from '../shared/anchors';
 import { RIG_GLSL } from '../shared/glsl';
 import { SEA_GLSL, SEA_MARCH_GLSL, SEA_SHADE_GLSL } from './sea';
 import { SKY_GLSL } from './sky';
@@ -34,6 +34,8 @@ ${SKY_GLSL}
 
 const vec3 TO_SKY = vec3(0.12, 0.8, 0.59);
 const float SEA = ${SEA_LEVEL.toFixed(1)};
+// The cave mouth of the first spire: the storm's veil of snow starts beyond it.
+const vec3 VEIL_FROM = vec3(${MOUTH[0].toFixed(1)}, ${MOUTH[1].toFixed(1)}, ${MOUTH[2].toFixed(1)});
 
 vec4 noise(vec3 p) {
   return textureLod(tNoise, p, 0.0);
@@ -250,7 +252,7 @@ ${SEA_SHADE_GLSL}
   }
 
   // What is seen of the dome through the air: its cloud, softened, toward a ray lifted to the horizon.
-  vec3 toDome = normalize(vec3(rd.x, max(rd.y, 0.035), rd.z));
+  vec3 toDome = normalize(vec3(rd.x, max(rd.y, 0.075), rd.z));
   // Open sky is read sharp: the air before it is the same cloud, and a soft copy laid over it would wash its masses out.
   vec3 domeAir = skyCloud(ro, toDome, far > 50000.0 ? 1.0 : 5.0);
   // Where the strike's own sky stands, the air is that picture's: nothing is laid over the open sky, and the haze before a far spire is
@@ -276,7 +278,11 @@ ${SEA_SHADE_GLSL}
     float reachV = far > 50000.0 ? 2200.0 : min(far, 9000.0);
     float tall = 240.0;
     float fallV = max(rd.y, 0.0) / tall;
-    float depthV = exp(-max(ro.y - crestY, -60.0) / tall) * (abs(fallV) < 1e-5 ? reachV : (1.0 - exp(-fallV * reachV)) / fallV) / 850.0;
+    // It starts beyond the first spire: the spire, its cave mouth and the sea beside it stand in clear air, whatever the lens's distance.
+    // (Not from inside the canal: through its mouth the ridge beyond stands in the veil from the lens on.)
+    float startV = uStage.z < 0.75 ? 0.0 : length(VEIL_FROM.xz - ro.xz) + 140.0;
+    reachV = max(reachV - startV, 0.0);
+    float depthV = exp(-max(ro.y - crestY, -60.0) / tall - fallV * startV) * (abs(fallV) < 1e-5 ? reachV : (1.0 - exp(-fallV * reachV)) / fallV) / 850.0;
     float azV = atan(rd.z, rd.x);
     float bands = noise(vec3(azV * 0.9 - uTime * 0.013, rd.y * 2.6 + uTime * 0.004, 0.37)).g;
     depthV *= (0.65 + 0.7 * bands) * uShow.x * uStage.y;
@@ -286,7 +292,7 @@ ${SEA_SHADE_GLSL}
     // The sea of cloud is seen from above through thin air: it keeps its lumps and its lit edge.
     if (seaAt > 0.0 && far <= seaAt + 1.0) veiled = min(veiled, 0.3) * (1.0 - seaGone);
     // Blown snow is the storm's cold violet; the warm band stays on the horizon and does not stain the air.
-    vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.005, 0.011);
+    vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.006, 0.009);
     light = light * (1.0 - veiled) + snowAir * veiled;
     through *= 1.0 - veiled;
     // Scud: torn cloud that races low past the spires on the gale, paler than the storm behind it (staged by shot, uStage.w).
@@ -298,7 +304,7 @@ ${SEA_SHADE_GLSL}
     }
   }
 
-  // The snow before the lens: flecks in the gale, each a few times longer than it is wide, of many sizes, in gusts, at six depths. Each depth
+  // The snow before the lens: streaks in the gale, soft and few, each many times longer than it is wide, in gusts, at three depths. Each depth
   // is a plane across the lens; the flakes lie in cells of it, down the gale as the lens sees it, so every one is a pure function of time.
   // The planes turn against the camera's own turning, so a pan sweeps through the snow and does not carry it.
   if (uShow.w * uStage.z > 0.0) {
@@ -316,20 +322,21 @@ ${SEA_SHADE_GLSL}
     float hid = 1.0;
     // Staged by shot (uStage.z under 0.75): from inside the canal the snow flies only out beyond the far mouth, at the three depths past it.
     bool beyond = uStage.z < 0.75;
-    for (int j = 0; j < 6; j++) {
-      int k = beyond ? j + 5 : j;
-      if (beyond && j > 2) break;
-      float dist = 1.6 * pow(2.0, float(k)) * lens;
+    for (int j = 0; j < 3; j++) {
+      // On the ridge no flake is drawn: streaks at this size read as dashes laid on the lens. The snow there is the veil's.
+      if (!beyond) break;
+      int k = beyond ? j + 5 : 2 * j;
+      float dist = (beyond ? 1.6 : 1.1) * pow(2.0, float(k)) * lens;
       if (dist * 0.8 > far) break;
       vec2 pc = onLens * dist;
       // No two depths fly quite the same way: the gale is not one stream.
       float turn = 0.36 * (rnd(ivec2(k, 3), 5u) - 0.5);
       vec2 d1 = e1 * cos(turn) + e2 * sin(turn);
       vec2 d2 = vec2(-d1.y, d1.x);
-      float wideS = dist * 0.0021 / max(lens, 1.0);
-      float cellQ = wideS * 11.0;
-      // A fleck, not a line: a few times longer than it is wide, as the approved pictures draw their snow.
-      float cellA = wideS * 16.0;
+      float wideS = dist * (beyond ? 0.0021 : 0.0027) / max(lens, 1.0);
+      float cellQ = wideS * (beyond ? 11.0 : 14.0);
+      // Snow that crosses the lens in a gale is drawn out by the open shutter: a soft streak, not a fleck.
+      float cellA = wideS * (beyond ? 16.0 : 46.0);
       float along = dot(pc, d1);
       float q = (dot(pc, d2) + 2.5 * wideS * sin(along / (9.0 * cellA) + float(k) * 1.7)) / cellQ;
       float qc = floor(q);
@@ -338,24 +345,30 @@ ${SEA_SHADE_GLSL}
       ivec2 cell = ivec2(int(qc), int(ac));
       // They come in gusts: a clump of them, then none.
       float chance = rnd(cell, uint(23 + k));
-      if (chance > 0.42 - 0.04 * float(k)) continue;
+      if (chance > 0.46 - 0.04 * float(k)) continue;
       float gustL = noise(vec3(pc / (30.0 * cellQ) - d1 * (uTime * 0.6), float(k) * 0.31)).g;
-      if (chance > (0.42 - 0.04 * float(k)) * smoothstep(0.3, 0.7, gustL)) continue;
+      if (chance > (0.46 - 0.04 * float(k)) * smoothstep(0.3, 0.7, gustL)) continue;
       float dq = (q - qc - 0.25 - 0.5 * rnd(cell, uint(31 + k))) * cellQ;
       // Each is brightest in its middle and gone at its ends, and no two are one length.
       float lengthOf = 0.3 + 0.4 * rnd(cell, uint(41 + k));
       float fa = (a - ac - 0.02) / lengthOf;
       float lengthS = fa > 0.0 && fa < 1.0 ? 4.0 * fa * (1.0 - fa) : 0.0;
+      // A streak holds its breadth and its light along its length and fades only at its ends; a fleck (beyond the mouth) swells in its middle.
+      if (!beyond) {
+        lengthS = sqrt(sqrt(lengthS));
+        // No two fly quite level with each other: the gale tumbles.
+        dq += (rnd(cell, uint(83 + k)) - 0.5) * 0.16 * (fa - 0.5) * lengthOf * cellA;
+      }
       // No two are one size: most are small, a few are big and soft.
       float sizeOf = rnd(cell, uint(67 + k));
-      float thin = wideS * (0.35 + 1.5 * sizeOf * sizeOf) * (0.5 + 0.5 * lengthS);
-      float flake = exp(-dq * dq / (thin * thin)) * lengthS * lengthS * (0.04 + 0.2 * rnd(cell, uint(59 + k))) * (1.0 - 0.5 * sizeOf);
+      float thin = wideS * (beyond ? 0.35 + 1.5 * sizeOf * sizeOf : 0.65 + 1.7 * sizeOf * sizeOf) * (0.5 + 0.5 * lengthS);
+      float flake = exp(-dq * dq / (thin * thin)) * lengthS * lengthS * (beyond ? 0.04 + 0.2 * rnd(cell, uint(59 + k)) : 0.14 + 0.42 * rnd(cell, uint(59 + k))) * (1.0 - 0.4 * sizeOf);
       fly += hid * flake;
       hid *= 1.0 - flake;
     }
     // Against the open sky blown snow is the sky's own tone and is lost; it shows against the rock and the snow.
     fly *= uShow.w * (beyond ? 3.0 : uStage.z) * mix(1.0, beyond ? 0.45 : 0.2, smoothstep(120.0, 700.0, far));
-    vec3 flakes = 1.1 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
+    vec3 flakes = (beyond ? 1.1 : 2.1) * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
     light = light * (1.0 - fly) + flakes * fly;
     through *= 1.0 - fly;
   }
@@ -369,7 +382,8 @@ ${SEA_SHADE_GLSL}
   // The strike's own sky has its air in it: before it the haze is only of what stands nearer than the picture.
   if (plateOn > 0.0) length = min(length, mix(30000.0, 5000.0, plateOn));
   if (openSky) length = 0.0;
-  float depth = base * (abs(fall) < 1e-5 ? length : (1.0 - exp(-fall * length)) / fall) * uShow.x;
+  // Where the sea has gone into the dome's foot it is the open sky's, and takes no more haze than the sky over it: no line at the horizon.
+  float depth = base * (abs(fall) < 1e-5 ? length : (1.0 - exp(-fall * length)) / fall) * uShow.x * (1.0 - seaGone);
   float clear = exp(-depth);
   vec3 haze = mix(mix(uSkyHorizon, uSkyZenith, 0.35) * 0.6, domeAir, 0.7);
   light = light * clear + haze * (1.0 - clear);
