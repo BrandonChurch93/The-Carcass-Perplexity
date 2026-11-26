@@ -7,7 +7,11 @@ import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { breakdown, envelope, figure, restruck, strokeAt, timingOf, type Line } from './bolt';
 import { createChannel } from './channel';
 import { WIND, WIND_SPEED, strikeTip } from '../shared/anchors';
-import { STRIKES, type StrikeSite } from './where';
+import { STRIKES, during, type StrikeSite } from './where';
+
+/** The fifth strike falls on the last frame of the long lens's shot, close before that lens: there its channel would stand as a white bar
+ * across the frame for one frame. Until the cut only its light is seen; from inside the canal it is drawn. */
+const FIFTH_FROM = during('spine-05').from;
 
 export const PARTS: readonly string[] = STRIKES.map((s) => s.id);
 
@@ -375,6 +379,12 @@ export function create(ctx: Context): Piece {
         // The lit cloud is gone eight frames after its last stroke: its last third sinks faster than the sky's own glow does.
         b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky * Math.min(1, sky / 0.3), 0.3 * before));
         b.rootDie.set(before > 0 && sky <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - sky)), stroke);
+        if (index === 4 && seconds < FIFTH_FROM) {
+          b.firstGroup.visible = false;
+          b.againGroup.visible = false;
+          b.rootGlow.set(0, 0, 0);
+          b.spotGlow.set(0, 0, 0);
+        }
         if (within > 0 && hard <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
           // A cloud lit from inside: its own glow and what of it comes in by the canal's mouth. No light with a shadow.
           flashTip.set(INNER_AT.x - 0.4 * INNER_SPAN.x, INNER_AT.y - 0.4 * INNER_SPAN.y, INNER_AT.z - 0.4 * INNER_SPAN.z, FLASH * INNER_PULSE * within);
