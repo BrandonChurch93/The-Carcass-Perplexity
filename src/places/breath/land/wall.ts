@@ -3,7 +3,7 @@
 // thin fluted ledges on striped strata, three rounds running. The wall is the part `shaft`, the arches are the part `hoops`.
 import * as THREE from 'three';
 import { DEPTH, RAD, rimRadius, sat, smooth } from '../land';
-import { ARCHES, arch, archTop, archesOver, brim } from './arches';
+import { ARCHES, arch, archTop, archesOver, brim, cap } from './arches';
 import { noise3 } from './ribs';
 
 /** The join, degrees: where the mesh of the wall begins and ends, under the south rim. */
@@ -27,10 +27,10 @@ for (let k = 0, d = 0; d < 80; k++) {
 function courseBack(arc: number, depth: number): number {
   let k = 0;
   while (k + 1 < COURSES.length && (COURSES[k + 1] as number) <= depth) k++;
-  const wide = 1.4 + 3.2 * hash(k, 7);
-  const i = Math.floor((arc + hash(k, 13) * wide) / wide);
-  const lost = hash(k * 31 + 7, i * 17 + 3) < 0.22;
-  return 0.32 * hash(k, 39) + (lost ? 0.55 + 0.6 * hash(k * 5 + 1, i * 3 + 11) : 0.24 * hash(k * 11 + 2, i * 7 + 5));
+  // A course is eaten back along its length by the seep, in bays some metres long with no upright joints: jointed into blocks, with one
+  // in five gone, it was a wall of laid bricks.
+  const bay = noise3(arc * 0.085 + k * 3.1, k * 1.7, 2.2) + 0.35 * noise3(arc * 0.31, k * 5.3, 7.7);
+  return 0.3 * hash(k, 39) + (0.35 + 0.6 * hash(k, 5)) * smooth((bay - 0.1) / 0.55) + 0.07 * noise3(arc * 0.9, k * 2.9, 4.1);
 }
 
 export interface WallPoint {
@@ -60,7 +60,10 @@ export function wallPoint(b: number, depth: number): WallPoint {
   const back = smooth((depth - 0.25) / 0.5) * courseBack(deg * RAD * 30, depth + 0.6 * hang + 0.5 * noise3(deg * 0.11, 2.2, 8.1));
   // The wall is no cone: it has broad buttresses and hollows some metres across, and upright breaks where a sheet of it has come away.
   const broad = smooth(depth / 4) * (0.8 * noise3(deg * 0.06, y * 0.08, 3.3) + 0.45 * (1 - 2 * Math.abs(noise3(deg * 0.21 + 5, y * 0.11, 8.8))));
-  const r = r0 + 0.03 - inset * 0.6 - 12 * down + back * (1 - 0.5 * over.back) + 2.8 * over.back + broad;
+  // Flowstone: where water has run down the face it has left upright ribs a pace or two wide that drape over the courses.
+  const fold = 1 - Math.abs(noise3(deg * 0.42, y * 0.05, 5.5));
+  const drape = 0.55 * smooth(depth / 2.5) * fold * fold * fold * (0.55 + 0.45 * noise3(deg * 0.11, y * 0.09, 1.1));
+  const r = r0 + 0.03 - inset * 0.6 - 12 * down + back * (1 - 0.5 * over.back) * (1 - 0.6 * fold * fold) + 2.3 * over.back + broad - drape;
   return { at: [Math.sin(b) * r, y, -Math.cos(b) * r], u: deg * RAD * 30, v: y, relief: over.on, open: (1 - 0.88 * over.shut) * (1 - 0.3 * sat(back / 0.9)) };
 }
 
@@ -131,5 +134,6 @@ export function buildWall(): { ribs: THREE.BufferGeometry[]; wall: THREE.BufferG
   wall.computeBoundingSphere();
   // The arches: fine where a lens comes near, coarser down in the mist.
   const ribs = ARCHES.map((a) => arch(a, a.tier < 3 ? 0.15 : a.tier < 4 ? 0.22 : 0.34));
+  ribs.push(cap(0.2));
   return { ribs, wall };
 }

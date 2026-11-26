@@ -6,8 +6,6 @@ import * as THREE from 'three';
 import { DEPTH, RAD, ground, lerp, rimRadius, sat, smooth } from '../land';
 import { noise3, tube } from './ribs';
 
-export type End = 'point' | 'snap';
-
 export interface Arch {
   /** The tier it belongs to, 0 at the top. */
   tier: number;
@@ -18,31 +16,26 @@ export interface Arch {
   to: number;
   /** Half its height, metres. */
   thick: number;
-  ends: [End, End];
   /** Metres that the `to` end hangs lower than the `from` end, and metres that the middle sags. */
   drop: number;
   sag: number;
   seed: number;
+  /** How it wavers round the shaft: metres, how many times round, where it begins (radians). */
+  wave: [number, number, number];
+  /** Where it is broken through: the bearing of the middle of the break and half its width, degrees. */
+  gap?: [number, number];
 }
 
-/** The tiers, top down. The east-south-east side came down (bearing 112, land.ts): every arch that reached it is broken off there. No two
- *  tiers break at the same bearings, and none runs level. */
+/** The tiers, top down: each a hoop that goes round the whole shaft from one side of the fall to the other (the east-south-east side
+ *  came down, bearing 112, land.ts) and turns into the rock there. None runs level: each is tilted and wavers its own way, and three of
+ *  them are broken through at one place. Laid as fifteen shorter arches, each with two ends in sight, they read as loaves on a wall. */
 export const ARCHES: Arch[] = [
-  { tier: 0, y: -3.6, from: -58, to: 71, thick: 1.9, ends: ['point', 'snap'], drop: -3.4, sag: 1.6, seed: 1 },
-  { tier: 0, y: -5.2, from: -162, to: -70, thick: 1.6, ends: ['point', 'point'], drop: 3.6, sag: 1.0, seed: 2 },
-  { tier: 0, y: -4.6, from: 151, to: 216, thick: 1.65, ends: ['snap', 'point'], drop: 2.6, sag: 0.8, seed: 3 },
-  { tier: 1, y: -12.2, from: -104, to: 30, thick: 2.15, ends: ['point', 'point'], drop: 5.2, sag: 1.8, seed: 4 },
-  { tier: 1, y: -12.6, from: 22, to: 78, thick: 1.8, ends: ['point', 'snap'], drop: -3.2, sag: 0.9, seed: 5 },
-  { tier: 1, y: -11.4, from: 147, to: 254, thick: 1.85, ends: ['snap', 'point'], drop: 3.6, sag: 1.4, seed: 6 },
-  { tier: 2, y: -20.6, from: -132, to: -14, thick: 1.95, ends: ['point', 'point'], drop: -4.4, sag: 1.7, seed: 7 },
-  { tier: 2, y: -20.2, from: -26, to: 74, thick: 2.25, ends: ['point', 'snap'], drop: 4.6, sag: 2.0, seed: 8 },
-  { tier: 2, y: -19.4, from: 153, to: 228, thick: 1.85, ends: ['snap', 'point'], drop: 2.4, sag: 1.2, seed: 9 },
-  { tier: 3, y: -29.6, from: -78, to: 68, thick: 2.2, ends: ['point', 'snap'], drop: 5.6, sag: 1.8, seed: 10 },
-  { tier: 3, y: -28.4, from: 156, to: 278, thick: 1.95, ends: ['snap', 'point'], drop: -4.2, sag: 1.6, seed: 11 },
-  { tier: 4, y: -39.0, from: -122, to: 12, thick: 2.1, ends: ['point', 'point'], drop: -4.6, sag: 1.8, seed: 12 },
-  { tier: 4, y: -40.0, from: 4, to: 76, thick: 1.95, ends: ['point', 'snap'], drop: 3.4, sag: 1.0, seed: 13 },
-  { tier: 4, y: -38.0, from: 150, to: 238, thick: 1.85, ends: ['snap', 'point'], drop: 2.6, sag: 1.2, seed: 14 },
-  { tier: 5, y: -49.5, from: -150, to: 64, thick: 2.2, ends: ['point', 'snap'], drop: 5.0, sag: 2.2, seed: 15 },
+  { tier: 0, y: -4.4, from: 150, to: 431, thick: 2.25, drop: 1.6, sag: 0.6, seed: 1, wave: [1.3, 3, 0.4], gap: [318, 5] },
+  { tier: 1, y: -12.6, from: 147, to: 434, thick: 2.6, drop: -3.0, sag: 1.2, seed: 4, wave: [1.9, 2, 2.1] },
+  { tier: 2, y: -20.6, from: 152, to: 430, thick: 2.45, drop: 3.4, sag: 0.8, seed: 7, wave: [1.6, 3, 4.0], gap: [226, 4] },
+  { tier: 3, y: -29.4, from: 149, to: 433, thick: 2.65, drop: -2.4, sag: 1.4, seed: 10, wave: [2.0, 2, 5.2] },
+  { tier: 4, y: -38.6, from: 151, to: 429, thick: 2.5, drop: 2.8, sag: 1.0, seed: 12, wave: [1.7, 3, 1.3], gap: [372, 5] },
+  { tier: 5, y: -49.5, from: 148, to: 432, thick: 2.65, drop: -2.0, sag: 1.6, seed: 15, wave: [1.5, 2, 3.3] },
 ];
 
 // The height of the brim round the shaft, kept for every quarter of a degree: the ground is costly to ask and the wall asks it for every point.
@@ -88,6 +81,10 @@ interface Section {
   /** The middle of its section: radius from the axis and height. */
   centre: number;
   y: number;
+  /** How much of its section is left here: 1 along it, 0 where it has closed (at its two ends, inside the rock, and in a break). */
+  end: number;
+  /** Metres to the nearer face of its break, if it has one: 99 otherwise. */
+  broke: number;
 }
 
 const lengths = new Map<Arch, number>();
@@ -100,21 +97,27 @@ function sectionAt(a: Arch, deg: number): Section {
   }
   const s = u * length;
   const s0 = a.seed * 7.31;
-  const k0 = a.ends[0] === 'point' ? 0.4 : 1.05;
-  const k1 = a.ends[1] === 'point' ? 0.4 : 1.05;
-  const run = lerp(k0, k1, smooth(u)) * (1 + 0.13 * noise3(s * 0.09, s0, 1.5) + 0.06 * noise3(s * 0.31, s0, 4.5));
+  const run = (1 + 0.13 * noise3(s * 0.09, s0, 1.5) + 0.06 * noise3(s * 0.31, s0, 4.5));
   const bow = Math.sin(Math.PI * sat(u));
   // The upper tiers hang under the brim and rise and fall with it; the lower ones less.
-  const y = a.y + 0.75 * 0.6 ** a.tier * (brim(deg) - 0.5) + a.drop * (u - 0.5) - a.sag * bow + 0.45 * noise3(s * 0.05, s0, 9.5);
+  const y = a.y + 0.75 * 0.6 ** a.tier * (brim(deg) - 0.5) + a.drop * (u - 0.5) - a.sag * bow + a.wave[0] * Math.sin(a.wave[1] * deg * RAD + a.wave[2]) + 0.45 * noise3(s * 0.05, s0, 9.5);
   // It stands out of the wall in its middle and runs back into it toward a point.
-  const centre = shaftRadius(deg * RAD, y) + 0.4 - a.thick * (0.35 + 0.55 * bow * run) + 0.3 * noise3(s * 0.08, s0, 6.5);
-  // A pointed end runs back into the rock: it does not stand free of the wall.
-  const sunk = (a.ends[0] === 'point' ? 2.6 * (1 - sat(s / 10)) ** 1.6 : 0) + (a.ends[1] === 'point' ? 2.6 * (1 - sat((length - s) / 10)) ** 1.6 : 0);
-  return { s, length, run, near: s, far: length - s, centre: centre + sunk, y };
+  const centre = shaftRadius(deg * RAD, y) + 0.3 - a.thick * (0.08 + 0.3 * bow * run) + 0.3 * noise3(s * 0.08, s0, 6.5);
+  // It turns into the wall at its full section, as a rib does into a spine, and what closes it is inside the rock: an end that stood
+  // free was the end of a loaf, and cut square the end of a plank.
+  const into = (d: number): number => 4.2 * a.thick * (1 - sat(d / 18)) ** 1.5;
+  let end = Math.min(sat(s / 5), sat((length - s) / 5)) ** 0.6;
+  let broke = 99;
+  let lost = 0;
+  if (a.gap) {
+    broke = ((Math.abs(deg - a.gap[0]) - a.gap[1]) * length) / (a.to - a.from);
+    // A break is a blunt chipped face a stride deep; between its two faces nothing is left, and the thread of skin that joins them is
+    // deep in the rock.
+    end = Math.min(end, broke <= 0 ? 0 : Math.sqrt(1 - (1 - sat(broke / 1.7)) ** 2));
+    lost = broke < 0 ? 7 * smooth(-broke / 0.8) : 0;
+  }
+  return { s, length, run, near: s, far: length - s, centre: centre + into(s) + into(length - s) + lost, y, end, broke };
 }
-
-// A point runs out over some metres. A break is a face: nearly the whole section a hand from the end, ragged by a hand or two.
-const closing = (d: number, kind: End): number => (kind === 'point' ? sat(d / 7) ** 0.6 : sat(d / 0.55) ** 0.2);
 
 /** One arch as a closed skin. `fine` is the size of a cell along it, metres. */
 export function arch(a: Arch, fine: number): THREE.BufferGeometry {
@@ -122,36 +125,32 @@ export function arch(a: Arch, fine: number): THREE.BufferGeometry {
   const columns = Math.max(24, Math.round(whole / fine));
   const rows = Math.max(28, Math.round((2 * Math.PI * a.thick * 1.15) / (fine * 1.25)));
   const s0 = a.seed * 7.31;
-  // A broken end takes a twelfth of the columns for its last metre and a half: its face is steep and would be a few long triangles.
-  const cap = Math.min(0.2, 1.5 / whole);
-  const along = (t: number, kind: End): number => (kind === 'snap' ? (t < 1 / 12 ? t * 12 * cap : cap + ((t - 1 / 12) / (5 / 12)) * (0.5 - cap)) : t);
   return tube(columns, rows, (t, ang) => {
-    const u = t < 0.5 ? along(t, a.ends[0]) : 1 - along(1 - t, a.ends[1]);
-    const deg = lerp(a.from, a.to, u);
+    const deg = lerp(a.from, a.to, t);
     const b = deg * RAD;
     const q = sectionAt(a, deg);
     const ca = Math.cos(ang);
     const sa = Math.sin(ang);
     // A broken end is not cut square: it is ragged round the section.
-    const end = Math.min(closing(q.near, a.ends[0]), closing(q.far, a.ends[1]));
+    const end = q.end;
     const k = q.run * (0.01 + 0.99 * end);
-    // The section: wider than tall, its top flatter than its belly (dust and broken stone lie on it), a little square.
-    const cx = Math.sign(ca) * Math.abs(ca) ** 0.8;
-    const cy = Math.sign(sa) * Math.abs(sa) ** (sa > 0 ? 0.6 : 0.72);
-    const wide = a.thick * 1.6 * k;
-    const tall = a.thick * (sa > 0 ? 0.78 : 1.0) * k;
+    // The section: round, a little wider than tall. Wide and flat on top it read as a plank laid on the wall.
+    const cx = Math.sign(ca) * Math.abs(ca) ** 0.92;
+    const cy = Math.sign(sa) * Math.abs(sa) ** 0.92;
+    const wide = a.thick * 1.12 * k;
+    const tall = a.thick * (sa > 0 ? 0.94 : 1.0) * k;
     const px = Math.sin(b) * (q.centre - cx * wide);
     const pz = -Math.cos(b) * (q.centre - cx * wide);
     const py = q.y + cy * tall;
     // Lobes along it, and the breaks. Nothing is pushed where it has closed to a point.
     // It is smooth: long lobes and ridges that run along it, and only here and there a flake off it. A broken end is all breaks.
     const lobe = 0.09 * noise3(q.s * 0.11 + 2 * ca, s0 + 2 * sa, 5.5) + 0.05 * (1 - 2 * Math.abs(noise3(q.s * 0.05, s0 + 2.2 * ca, 2.2 * sa)));
-    const face = 1 - Math.min(1, Math.min(a.ends[0] === 'snap' ? q.near : 99, a.ends[1] === 'snap' ? q.far : 99) / 1.6);
-    const rough = ((0.1 + 0.3 * face) * broken(px, py, pz) + lobe * a.thick) * Math.min(1, k * 2.2);
+    const face = 1 - Math.min(1, Math.max(0, q.broke) / 1.6);
+    const rough = ((0.1 + 0.16 * face) * broken(px, py, pz) + lobe * a.thick) * Math.min(1, k * 2.2);
     const swell = 1 + rough / Math.max(0.3, a.thick);
     const rr = q.centre - cx * wide * swell;
     // The face of a break is not flat: its points stand in and out along the run by a hand or two.
-    const toward = q.near < q.far ? 1 : -1;
+    const toward = a.gap && deg > a.gap[0] ? 1 : -1;
     const b2 = b + (toward * face * (1 - end) * (0.3 + 0.5 * noise3(cx * a.thick * 0.9 + s0, cy * a.thick * 0.9, 7.7))) / q.centre;
     return {
       at: [Math.sin(b2) * rr, q.y + cy * tall * swell, -Math.cos(b2) * rr],
@@ -176,13 +175,13 @@ export function archesOver(deg: number, y: number): { back: number; shut: number
     while (d > a.to + 8) d -= 360;
     if (d < a.from - 8 || y > a.y + 13 || y < a.y - 20) continue;
     const q = sectionAt(a, Math.min(a.to, Math.max(a.from, d)));
-    const end = Math.min(closing(q.near + (d < a.from ? (d - a.from) * 0.5 : 0), a.ends[0]), closing(q.far + (d > a.to ? (a.to - d) * 0.5 : 0), a.ends[1])) * smooth((Math.min(d - a.from, a.to - d) + 8) / 8);
-    const k = q.run * end;
+    const k = q.run * q.end * smooth((Math.min(q.near, q.far) - 3) / 10);
     if (k <= 0.02) continue;
     const half = a.thick * k;
     const under = q.y - y;
     // The recess: deepest just under the arch, closing over three times its height.
     const recess = smooth((under + 0.3 * half) / (0.9 * half)) * (1 - smooth((under - 1.2 * half) / (3.6 * half)));
+    // No recess where it turns into the wall: eaten back there, the wall left its end standing free in the air.
     back = Math.max(back, k * recess);
     const shade = smooth((under + 0.6 * half) / (0.8 * half)) * (1 - smooth((under - 1.5 * half) / (5.5 * half)));
     shut = Math.max(shut, Math.min(1, k * 1.15) * shade);
@@ -198,10 +197,50 @@ export function archTop(deg: number, tier: number): [number, number, number] | n
     let d = deg;
     while (d < a.from) d += 360;
     while (d > a.to) d -= 360;
-    if (d < a.from + 4 || d > a.to - 2) continue;
+    if (d < a.from + 12 || d > a.to - 12) continue;
     const q = sectionAt(a, d);
+    if (q.end < 0.9) continue;
     const r = q.centre - 0.3 * a.thick;
-    return [Math.sin(d * RAD) * r, q.y + a.thick * 0.72 * q.run, -Math.cos(d * RAD) * r];
+    return [Math.sin(d * RAD) * r, q.y + a.thick * 0.9 * q.run, -Math.cos(d * RAD) * r];
   }
   return null;
+}
+
+/** The cap of the rim: the thick pale crust the shelf ends in, all round the shaft but where the east-south-east side fell. It lies on the
+ *  shelf for a stride, hangs over the wall by one to two metres and droops in lobes, as flowstone does. One closed skin. */
+export function cap(fine: number): THREE.BufferGeometry {
+  // Not along the south lip, where two lenses stand on it: there the shelf's own crust is the rim.
+  const from = 226;
+  const to = 436;
+  const columns = Math.round(((to - from) * RAD * 30) / fine);
+  return tube(columns, 22, (t, ang) => {
+    const deg = lerp(from, to, t);
+    const b = deg * RAD;
+    const arc = b * 30;
+    const end = sat(Math.min(deg - from, to - deg) / 9) ** 0.7;
+    const rim = rimRadius(b);
+    // How far it hangs over, and how thick it droops: lobes a pace to a few metres wide, never even.
+    const lobe = 1 - Math.abs(noise3(arc * 0.33, 3.3, 9.1));
+    const over = (1.3 + 0.8 * noise3(arc * 0.07, 6.1, 2.2) + 0.6 * lobe * lobe) * end;
+    const droop = (1.25 + 0.6 * noise3(arc * 0.05, 1.7, 5.5) + 1.3 * lobe ** 3 + 0.3 * noise3(arc * 0.9, 8.3, 4.4)) * end;
+    const ca = Math.cos(ang);
+    const sa = Math.sin(ang);
+    const across = 0.5 + 0.5 * Math.sign(ca) * Math.abs(ca) ** 0.8;
+    const r = rim + 1.1 * end - across * (1.1 * end + over);
+    const x = Math.sin(b) * r;
+    const z = -Math.cos(b) * r;
+    // On the shelf it follows the rock; past the brim it keeps the brim's height and sags a little to its lip.
+    const out = sat((r - rim) / 1.1);
+    const hung = sat((rim - r) / Math.max(over, 0.2));
+    const top = lerp(brim(deg), ground(x, z), smooth(out)) + (0.1 * smooth(1 - out) - 0.04) * end - 0.22 * hung * hung;
+    // Its underside: thickest a little back from the lip, running back up to the wall behind it.
+    const body = smooth(across / 0.45) * (1 - 0.35 * smooth((across - 0.8) / 0.2));
+    const chip = 0.2 * broken(x * 1.6, top * 1.6, z * 1.6) * end * smooth(across / 0.3);
+    const y = sa > 0 ? top + 0.5 * chip * sa : top - (0.06 + droop * body) * Math.abs(sa) ** 0.7 - chip;
+    return {
+      at: [x + Math.sin(b) * -chip * 0.6 * hung, y, z + Math.cos(b) * chip * 0.6 * hung],
+      uv: [arc + 40, ang * 1.6 + 7],
+      occ: lerp(0.4, 1, smooth(0.62 + 0.55 * sa + 0.2 * ca)) * lerp(0.75, 1.05, smooth(0.5 + 3 * chip)),
+    };
+  });
 }

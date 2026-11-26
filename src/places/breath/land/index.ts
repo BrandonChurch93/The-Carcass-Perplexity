@@ -2,8 +2,8 @@
 // rock.ts is the surfaces, shapes.ts is the shapes. This folder also tells the rig the true height of the land, so that the low sun's long shadows are baked from it.
 import * as THREE from 'three';
 import { terrain } from '../../../core/blockout';
-import { DEPTH, NEAR, RAD, SEA, bearingOf, farGround, ground, lerp, midGround, rimRadius, smooth } from '../land';
-import { SMALLER } from '../shared/anchors';
+import { DEPTH, FINE, NEAR, RAD, SEA, bearingOf, farGround, ground, lerp, midGround, rimRadius, smooth } from '../land';
+import { DEAD_WADER, SMALLER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { createCliff } from '../air/sky';
 import { bakeNear } from './field';
@@ -11,6 +11,7 @@ import { createRock, type Surface } from './rock';
 import { block } from './ribs';
 import { buildWall, ledge } from './wall';
 import { collar, heap, mergeGeometries, open, talusHeight } from './shapes';
+import { scatter } from './stones';
 
 export const PARTS: readonly string[] = ['land', 'shaft', 'hoops', 'slabs', 'cliff'];
 
@@ -31,6 +32,13 @@ export function create(ctx: Context): Piece {
     metres,
     relief,
   });
+  const tile = (name: string, mean: [number, number, number], metres: number): Surface => ({
+    colour: ctx.assets.texture(`land/${name}.jpg`, { kind: 'colour', repeat: true, anisotropy: 8 }),
+    data: ctx.assets.texture(`land/${name}-nh.png`, { kind: 'data', repeat: true, anisotropy: 4 }),
+    mean,
+    metres,
+    relief: 1,
+  });
   const ivory = surface('hoop', [0.493, 0.392, 0.288], 2.2, 1.0);
   const seep = surface('wall', [0.077, 0.061, 0.033], 4, 1.0);
   // The plate of the shelf, laid turn and turn about so that it has no edge (land.ts lays its relief the same way).
@@ -42,6 +50,8 @@ export function create(ctx: Context): Piece {
     pad: ctx.assets.texture('mat/drypad.jpg', { kind: 'colour', anisotropy: 4 }),
     padHeight: ctx.assets.texture('mat/drypad-h.png', { kind: 'data' }),
     pebbles: surface('pebbles', [0.31, 0.272, 0.234], 1.5, 1, 4),
+    crust: tile('crust', [0.307, 0.255, 0.218], 2.3),
+    gravel: tile('gravel', [0.316, 0.259, 0.215], 1.35),
   });
   const disposable: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
@@ -52,6 +62,25 @@ export function create(ctx: Context): Piece {
   // The shelf: fine round the shaft, coarse out to the haze.
   const land = new THREE.Group();
   land.add(mesh(open(nearMap.mesh(512)), rock.shelf));
+  // Loose chips of the crust where a lens comes near (land/stones.ts), each seated on the shelf as its mesh has it, each with its shadow.
+  const cell = FINE.size / 512;
+  const drawn = (x: number, z: number): number => {
+    const gx = (x - FINE.minX) / cell;
+    const gz = (z - FINE.minZ) / cell;
+    const ix = Math.floor(gx);
+    const iz = Math.floor(gz);
+    const fx = gx - ix;
+    const fz = gz - iz;
+    const h = (i: number, j: number): number => nearMap.heightAt(FINE.minX + i * cell, FINE.minZ + j * cell);
+    return fx + fz <= 1 ? h(ix, iz) + fx * (h(ix + 1, iz) - h(ix, iz)) + fz * (h(ix, iz + 1) - h(ix, iz)) : h(ix + 1, iz + 1) + (1 - fx) * (h(ix, iz + 1) - h(ix + 1, iz + 1)) + (1 - fz) * (h(ix + 1, iz) - h(ix + 1, iz + 1));
+  };
+  const loose = scatter(ctx.rng('land/stones'), drawn, [[DEAD_WADER.x, DEAD_WADER.z, 1.7]]);
+  const chips = rock.bone(1, [0.8, 0.76, 0.69], [0.56, 0.52, 0.45], { ...tile('crust', [0.307, 0.255, 0.218], 0.6) }, THREE.FrontSide);
+  land.add(mesh(loose.geometry, chips));
+  const thrown = ctx.rig.contactDiscs(loose.shades.length);
+  // The shadow begins at the chip's far edge: laid under the chip it shades the chip itself (the rig shades whatever stands in a disc).
+  const [wayX, wayZ] = ctx.rig.sun.shadowWay;
+  loose.shades.forEach(([x, z, radius, tall], i) => ctx.rig.setShadow(thrown, i, x + wayX * radius * 1.3, z + wayZ * radius * 1.3, radius * 0.8, tall, 0.85));
   const mid = terrain(NEAR, NEAR, 300, 300, midGround);
   mid.computeVertexNormals();
   land.add(mesh(open(mid), rock.shelf));
