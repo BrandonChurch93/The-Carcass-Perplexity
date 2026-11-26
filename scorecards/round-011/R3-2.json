@@ -1,0 +1,56 @@
+{
+  "round": 11,
+  "unit": "marsh",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-26 00:10 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the foreground animal’s legs and the smaller animals at right",
+        "what": "the stiff, similar poses and hard dark cuffs where the cylindrical legs join the bodies make the animals look assembled; the feet vanish into the surface without disturbing it",
+        "fix": "Blend the limb joints into the skin, vary the weight-bearing poses, and add displaced liquid and localized contact shadows around planted feet."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the gray liquid around the large central animal and foreground bank",
+        "what": "the surface looks like an opaque gray sheet: the body cuts straight into it without a meniscus, wake or wet edge, and the pale sky barely registers in its reflections",
+        "fix": "Give the shallows depth and sky reflection, and build a wet contact line and small ripples or foam where the body and banks displace the liquid."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "upper-right crop, the central animal’s hide and projecting strands",
+        "what": "large dark polygons look painted onto soft, stretched hide, while the projecting strands look like flat ribbons",
+        "fix": "Break up the crack scale, give the creases physical relief, and use tapered strands with individual shading."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "lower-right crop, the red liquid beside the animal’s snout",
+        "what": "the red surface resolves into flat, two-tone ripple shapes with no convincing reflected forms or depth variation",
+        "fix": "Use depth-dependent color and roughness, recognizable nearby reflections, and a local ripple response near the snout."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "left crop, the pale crust along the foreground rim; right crop, the shallow ridges",
+        "what": "the crust is covered in similarly shaped conical spikes and the soft surface behind it breaks into angular peaks",
+        "fix": "Vary crystal sizes and silhouettes, cluster them along natural growth lines, and remove the faceted peaks from the wet surface."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "left crop, below the animal’s belly",
+        "what": "long, straight blade-like bristles hang over a smeared shadow and a straight diagonal transition in the gray surface",
+        "fix": "Vary bristle taper and bend, resolve the nearby surface detail and replace the straight transition with a continuous material blend."
+      }
+    ]
+  }
+}

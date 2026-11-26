@@ -1,0 +1,255 @@
+{
+  "round": 11,
+  "unit": "marsh",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the visibly repeated rock meshes scattered across the terrain.",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "plausible but uniformly soft, slightly plasticky creatures and repeated plant assets on a fog-hazed salt flat read like a competent standalone CG paleo render, not film-grade detail or a real photo",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 65,
+      "why": "the flat overcast lighting and simplistic low-detail meshes and textures on the creatures, cracked ground, and geometric horizon mesas give it a distinctly low-budget 3D look.",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "the same rigid tufted stalk model repeats across the landscape.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "The creature and plant models are simple and repetitive, and the foreground rock texture is smeared, but the atmospheric haze, water and lighting are too polished for a web demo or mobile game. Fog and the red-water look suggest a competent standalone 3D render, not top-budget film. (d) is the runner-up.",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 77,
+      "why": "the unnaturally smooth hemispherical bubbles on the water.",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "simplistic procedural water with plain smooth dome bubbles and repetitive low-detail plant/rock assets typical of a hobbyist/stock 3D render",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the low-poly geometry and flat real-time shading on the glossy hemisphere bubbles, spiky splash mesh, and hard-intersecting tree trunks",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the foreground bubble looks like a solid shaded hemisphere intersecting the water.",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "the simple dome splashes, low-detail trunks with stretched or pixelated textures, and sparse repeated props show a small-scale production, though the water reflections are decent (c is the runner-up).",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the repeated stalks have visibly faceted tips and mechanically tiled bark textures.",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "stylized Blender-like render with visible hair-strand artifacts, plain fog and simple textures (an artistic CG scene, not film-grade polish)",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the crude low-poly tube rims and simple glossy half-sphere bubble against flat gray distance fog with almost no shadows.",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 99,
+      "why": "the foreground fronds look like repeated flat ribbons rather than individual leaves.",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "The hair-strand fronds and bark have good detail and the fog and motion blur look convincing. The simple blobby rocks, the moiré on the strands and the uniform water ripples read as an ordinary 3D render (probably a hobbyist or artist Blender scene) and not as a big-budget production. The alien design and the mood push it a little toward b.",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 81,
+      "why": "The detailed skin textures look draped over conspicuously simple, rounded creature meshes.",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "procedural-looking creature shapes with simple stretched fur/texture and flat, uniform lighting typical of a hobbyist/stock CG render (likely procedurally generated scene), not film-grade detail.",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the harsh unblended seams where the low-poly cylindrical legs intersect the creatures' bodies",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the animals’ cylindrical legs meet their bodies at hard seams, as if plugged into the mesh.",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "The image is clearly CG and the creature models are simple, with stretched textures and a flat fur look. The lighting and water are decent but not film quality, so it reads as an ordinary or hobbyist render rather than a big-budget frame.",
+      "answered": "00:11 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the centerpiece’s cracked surface looks like a texture mapped onto a smooth 3D mesh.",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "flat uniform lighting with stretched/smeared ground textures and simple repeated tree assets typical of an ordinary 3D render",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "low-poly geometry with stretched textures clipping directly into a flat ground plane under flat real-time lighting without contact shadows",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "The foreground boulder's angular outline contrasts sharply with the fine cracks painted onto its surface.",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "the smeared, stretched ground texture and shell-style fur on the foreground and creature, which look like real-time game rendering rather than a film-quality or stock render. (c) is the second choice.",
+      "answered": "00:12 UTC"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "round": 11,
+  "unit": "marsh",
+  "pack": "R1-2",
+  "family": "gemini",
+  "answered": "2026-11-26 00:11 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the red water across the foreground, midground, and right side",
+        "what": "the brine looks like a flat, matte pink-red procedural pattern with no sky reflections, ripples, or wet sheen",
+        "fix": "replace the matte surface with dark, glossy, reflective rust-red water with overcast sky speculars, surface ripples, and wet meniscus edges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the heavy animals' legs, bellies, and where they enter the water",
+        "what": "the legs meet the torso along sharp, dark intersecting seams like separate cylinders, lack wet mud staining and hanging drips, and enter the water with no displacement or ripples",
+        "fix": "blend the legs smoothly into the torso with continuous skin folds, coat the lower bodies and legs in wet glistening rust-red mud with hanging drips, and add water displacement and ripples around each leg"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the depth of field, horizon, and background flats",
+        "what": "everything from foreground to far horizon is uniformly sharp with a hard horizon line and distant hills, losing the shallow telephoto focus and thick overcast mist of -a",
+        "fix": "apply shallow optical depth of field blurring the near foreground and distant flats, and thicken the overcast atmospheric fog to obscure the horizon"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the lighting, contrast, and mud banks across the frame",
+        "what": "the scene is flatly lit and chalky pink-grey, missing deep contact shadows under the animals, wet specular highlights, and chunky salt-crusted mud banks",
+        "fix": "deepen ambient occlusion and contact shadows beneath the animals, restore wet specular highlights, and break up the smooth ground into textured wet mud with granular white salt crusts"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the native-size crops of the main animal's hide and the water behind the smaller animal",
+        "what": "the hide is smooth low-contrast noise with sparse black spikes instead of deep wet leathery wrinkles, and the water is a flat unreflective pink-brown pattern",
+        "fix": "sculpt fine wet hide folds, mud crusts, and organic micro-relief on the skin, and give the water real liquid reflections and surface breakup"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the foreground mud, water channels, and midground pools",
+        "what": "the wet glistening mud ledges and deep reflective rust-red brine pools of -a are replaced by a smooth, matte, uniform grey-brown surface with no red brine or reflections",
+        "fix": "rebuild the foreground with crisp wet mud crusts, shallow channels of glossy dark-red brine, and bright overcast specular reflections across wet mud and water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the foreground heavy animal's surface, tufts, and waterline",
+        "what": "the body has a harsh dark Voronoi crack pattern with stiff flat polygon hair strips and sits on the mud along a hard floating edge without ripples or wet mud contact",
+        "fix": "replace the Voronoi cracks and flat hair strips with organic wet wrinkled skin and mud caking, and sink the lower edge and tendrils into wet mud with meniscus and ripples"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the foreground salt mound and midground crusty mounds",
+        "what": "the foreground mound is covered in tiny uniform geometric spikes rather than granular salt, and the midground mounds look like blocky grey-white rocks with smooth cylinders protruding from them",
+        "fix": "replace the spiky needles and blocky rocks with irregular, crystalline white salt crusts and finely detailed mud-and-salt formations"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the camera focus and background atmosphere",
+        "what": "the foreground mound, background stalks, distant animals, and far hills are all in crisp focus with too little mist, flattening the depth of the shot",
+        "fix": "add strong shallow depth of field blurring both the near foreground mound and the background, and increase misty haze so the far horizon disappears"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "both native-size crops of the tendrils, waterline, and mud surface",
+        "what": "the mud and water are blurry, featureless CG shading with low-poly bumps, rectangular brown hair cards hang off the animal, and the foreground mound shows sharp polygonal spikes",
+        "fix": "add high-frequency wet mud texture, specular water ripples around the submerged tendrils, clean organic hide edges without flat hair cards, and granular salt crystals on the foreground mound"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the foreground animal at bottom center and the red-tufted stalks",
+        "what": "the foreground animal is covered in coarse spiky fur tufts, the left foreground stalk is a bare straight cylinder, and distant stalks are sparse tiny sticks",
+        "fix": "replace the coarse fur tufts with wet mud-streaked hide and match the gnarled stalks and drooping dark-crimson frond clusters of -a"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the background stalks and background animals",
+        "what": "the stalks form a sharp, rigid wall of straight poles with spiky tufts, and the background animal on the right shows blocky hard-edged legs and flat shading",
+        "fix": "soften the background stalks with organic curves, drooping crimson fronds, and misty bokeh, and blend the distant animals softly into the fog and reflective red water"
+      }
+    ]
+  }
+}
