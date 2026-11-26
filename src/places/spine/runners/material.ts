@@ -18,6 +18,8 @@ float runnerOpen(vec3 p) {
 vec3 runnerLight(vec3 p, vec3 n) {
   vec3 e = skyIrradiance(n) * runnerOpen(p) + emitterIrradiance(p, n) * min(1.0, 4.0 * skyOpen(p));
   if (uDoor.w > 0.5) {
+    // Under the roof no sky reaches it: what the walls give back is a trace.
+    e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.012;
     // Inside the canal the mouth is a window: what faces it takes the dusk and the storm seen through it, and the flash, as a rim.
     vec3 d = uDoor.xyz - p;
     float d2 = dot(d, d);
@@ -26,6 +28,10 @@ vec3 runnerLight(vec3 p, vec3 n) {
     vec3 seen = skyRadiance(level) + emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159);
     float facing = clamp((dot(n, way) + 0.2) / 1.2, 0.0, 1.0);
     e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * facing * facing;
+    // Seen against the mouth, the light comes through the ends of the coat along its outline.
+    vec3 toLens = normalize(cameraPosition - p);
+    float through = pow(1.0 - abs(dot(n, toLens)), 4.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
+    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * 0.7 * through;
   }
   return e;
 }`;
@@ -117,8 +123,8 @@ void main() {
   }
   if (vKind > 5.5) {
     // A claw: dark horn, ridged along its length, worn pale at the tip, wet.
-    albedo = mix(vec3(0.03, 0.026, 0.024), vec3(0.24, 0.2, 0.15), smoothstep(0.45, 0.9, grain) * 0.6);
-    rough = 0.35;
+    albedo = mix(vec3(0.03, 0.026, 0.024), vec3(0.12, 0.1, 0.08), smoothstep(0.45, 0.9, grain) * 0.6);
+    rough = 0.62;
     occ = 0.9;
   }
   if (vKind > 6.5) {

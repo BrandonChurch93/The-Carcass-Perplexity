@@ -116,20 +116,23 @@ export function talusHeight(x: number, z: number): number {
   const rim = rimRadius(b);
   let d = Math.abs(b - 112 * RAD);
   if (d > Math.PI) d = 2 * Math.PI - d;
-  const across = smooth((46 * RAD - d) / (22 * RAD));
-  const down = smooth((rim - r) / (rim + 6));
+  const across = smooth((40 * RAD - d) / (18 * RAD));
+  // The fan reaches a third of the way to the axis: beyond it the shaft is open and the mist fills it.
+  const down = smooth((rim - r) / (rim - 9));
   const top = ground(Math.sin(b) * rim * 1.002, -Math.cos(b) * rim * 1.002) - 1.2;
-  return lerp(top, -27, down ** 0.8) - 44 * (1 - across) + 1.1 * drift(x * 0.33, 1, z * 0.33) + 0.5 * drift(x * 0.9, 4, z * 0.9);
+  return lerp(top, -30, down ** 0.8) - 44 * (1 - across) - 40 * smooth((11 - r) / 5) + 1.1 * drift(x * 0.33, 1, z * 0.33) + 0.5 * drift(x * 0.9, 4, z * 0.9);
 }
 
 /** The rubble itself: a fan from the broken rim down into the shaft. */
 export function heap(): THREE.BufferGeometry {
-  return sheet(70, 36, (u, v) => {
-    const b = lerp(58, 166, u) * RAD;
-    const r = lerp(rimRadius(b) - 0.2, -8, v);
+  return sheet(260, 130, (u, v) => {
+    const b = lerp(66, 158, u) * RAD;
+    const r = lerp(rimRadius(b) - 0.2, 5, v);
     const x = Math.sin(b) * r;
     const z = -Math.cos(b) * r;
-    return { at: [x, talusHeight(x, z), z], uv: [b * 24, r], occ: lerp(0.95, 0.5, smooth(v * 1.3)) };
+    // Broken stone of every size, not a ramp: lumps a few metres across with ridges where two of them meet, and smaller ones on those.
+    const lumps = 0.9 * (1 - 2 * Math.abs(drift(x * 0.21, 2.5, z * 0.21))) + 0.45 * (1 - 2 * Math.abs(drift(x * 0.55, 6.5, z * 0.55))) + 0.2 * drift(x * 1.6, 8.5, z * 1.6);
+    return { at: [x, talusHeight(x, z) + lumps * smooth(v * 12), z], uv: [x, z], occ: lerp(0.95, 0.5, smooth(v * 1.3)) * lerp(0.6, 1, smooth(0.5 + 0.6 * lumps)) };
   });
 }
 

@@ -1401,5 +1401,59 @@
   "group": 5,
   "model": "gpt_image_2_6_flare",
   "date": "2026-11-26"
+ },
+ {
+  "place": "breath",
+  "name": "carcass-low",
+  "kind": "plate",
+  "prompt": "The carcass of a wader, an animal of an unknown world, long dead, alone on a pure black background. It is the carcass that lies on the rock in the foreground of the first reference image: make that same animal in the same pose, seen by the same low camera, about one metre above the ground and five metres away, looking only slightly down at it, so that it is seen from the side and a little from above and never from straight above. It lies collapsed on its side, about 4.5 metres from the end of its tendrils to its hooves: the sunken trunk in the middle of the frame, its pale skin split open over the ribs and the hip bones, which stand through it; the long neck lying along the ground to the left and ending in a fan of dull red dried tendrils spread flat; the four long thin legs stretched out to the right and toward the camera, each ending in a small dark hoof. Pale grey-pink dried hide, stained brown where it has split, a little grit lying on it. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole carcass lies inside the frame, with a margin of black on every side, and nothing touches the edge of the frame. Black means nothing is there: no ground, no rock, no shadow thrown on any ground, no mist, no plants, no other animal, no horizon, no sky. Soft even light from the front and from above, with no hard shadow and no bright side, so that the film can light it itself. Take the colours, the age and the character of the carcass from the first reference image. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people.",
+  "refs": [
+   "references/approved/3-breath/breath-2-the-rim.jpg",
+   "references/drafts/working/real/ref-hide-1.jpg"
+  ],
+  "why": "the dead one at the rim as the low lens of breath-2 sees it, because a picture taken from straight above cannot carry a view from one metre up",
+  "metres": 4.5,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "breath_life_owner_2",
+  "group": 5,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "eye",
+  "name": "drinker-quarter",
+  "kind": "plate",
+  "prompt": "One drinker, an animal of an unknown world, about 2 metres tall at the shoulder: a tall lean four-legged animal with long thin legs and small cloven hooves, a deep narrow chest, and a very long neck that tapers to a small blunt smooth muzzle. Its pale tan and sandy fawn hide has very short dense hair and fine creases, slightly darker along faint ridges where the ribs lie beneath. It is seen from behind and from above, at a three-quarter angle, as a person standing on a rock behind it would look down on it: the camera is higher than the animal's back, about 40 degrees above the horizontal, and about 35 degrees to the left of the line of its spine, looking down along the back. The top of the rump is nearest to the viewer and largest; the whole top of the back is seen from above and runs away from the viewer toward the upper right, with the spine a low knobbed ridge along its middle and the ribs faint on both sides of it; the near flank and both hind legs show below, foreshortened, and the far flank is hidden. The long neck rises from the far end of the back, held up and bent a little to one side, and ends in the small blunt muzzle, which points away from the viewer. The skin of the rump, the back and the neck is loose and wrinkled in fine cross folds, with darker creases along the spine, a few faint scratches and patches of dried mud low on the legs. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg",
+   "references/drafts/working/real/ref-hide-3.jpg"
+  ],
+  "why": "a drinker from behind at three-quarter and a little above, as the last detail sees the backs and necks in front of it: the square view from behind could only give a rump and a post",
+  "metres": 2.6,
+  "aspect": "1:1",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "eye_owner_2",
+  "group": 5,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "carcass-hung",
+  "kind": "plate",
+  "prompt": "The drowned carcass of a kite-wing, an animal of an unknown world, long dead, alone on a pure black background. It is the pale carcass that hangs against the wall of weed in the first reference image: make that same carcass in the same pose, seen square on by the same camera, about 3 metres from its top to the ends of its limbs, and leave out the wall, the weed and the water behind it. It hangs head down, caught by its hind end at the upper left, and its trunk slants down toward the right. The trunk is shrunken, with smooth pale hide drawn tight over it, every rib standing through the hide, the knobs of the spine along its upper edge and a sunken belly. A short bare stump of wing bone sticks out to the left near the top. Four long thin limbs hang straight down from the trunk side by side, the two legs and the two bare wing arms, each with its knobbly joints showing under the hide and each ending in a small pale foot or a bare bone tip, none of them the same length. At the lower right end of the trunk the neck hangs straight down and ends in a tuft of long pale wet tendrils. Smooth pale grey-pink hide, wet, with a few dark splits that show bone, brown stains where it has split, and three or four small pale crabs clinging to the spine. The hide is smooth and whole over most of the body: it is not stringy, not shredded and not hung with rags. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole carcass lies inside the frame, with a margin of black on every side, and nothing touches the edge of the frame. Black means nothing is there: no rock, no weed, no water, no shadow thrown on anything, no mist, no other animal, no horizon, no sky. Soft even light from the front and from above, with no hard shadow and no bright side, so that the film can light it itself. Take the colours, the age and the character of the carcass from the first reference image. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people.",
+  "refs": [
+   "references/approved/1-ribs/ribs-1-the-drowned-hanging-in-the-weed.jpg",
+   "references/drafts/working/real/ref-hide-1.jpg"
+  ],
+  "why": "the drowned one as the approved picture shows it, four limbs hanging with their joints and smooth pale hide: the first sheet came out stringy with one leg",
+  "metres": 3,
+  "aspect": "1:1",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_sea_owner_2",
+  "group": 5,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
  }
 ]

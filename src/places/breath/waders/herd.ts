@@ -7,6 +7,13 @@ const RAD = Math.PI / 180;
 /** Staged: the middle one of the three in the channel is this far ahead of its plan, so that it is at the end of a stride, a hind leg far back, at 17.0 s. */
 const AHEAD = 0.14;
 
+/** The three seen close in the channel are three animals: a deep-chested old one, a sway-backed one, a small one with a drawn-up belly. */
+const OWN: Partial<Build>[] = [
+  { chest: 1.14, belly: 0.85, sway: 0.5, gaunt: 1.1 },
+  { chest: 0.98, belly: 1.2, sway: -0.9, gaunt: 1.15 },
+  { chest: 0.9, belly: 1.3, sway: 0.2, gaunt: 0.95 },
+];
+
 export interface Member {
   build: Build;
   plan: Plan;
@@ -49,10 +56,10 @@ function planOf(a: Anchor, up: [number, number][], rng: Rng, slack = 0, reach = 
 export function makeHerd(rng: Rng): Member[] {
   const herd: Member[] = [];
   NEAR_WADERS.forEach((a, i) => {
-    herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false), plan: { ...planOf(a, UP[i] ?? [], rng), ahead: i === 1 ? AHEAD : 0 }, near: true });
+    herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false, i < 3 ? 0.0125 : 0.022, OWN[i] ?? {}), plan: { ...planOf(a, UP[i] ?? [], rng), ahead: i === 1 ? AHEAD : 0 }, near: true });
   });
   // The one at the rim: it stands with its weight on three legs and looks down the shaft, then lets its neck hang.
-  herd.push({ build: makeBuild(RIM_WADER.size * 1.06, 97.3, false), plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5]], rng, 1, 0.8), near: false });
+  herd.push({ build: makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.02, belly: 1.2, sway: -0.6, gaunt: 1.15 }), plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5]], rng, 1, 0.8), near: false });
   // The far flock: grains of rice on the shallows. No two do the same thing at the same time.
   const far = rng;
   for (let i = 0; i < FAR_FLOCK.count; i++) {

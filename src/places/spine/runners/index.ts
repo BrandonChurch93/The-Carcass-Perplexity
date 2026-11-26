@@ -207,12 +207,14 @@ export function create(ctx: Context): Piece {
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
-    { d: CANAL_KEY + 3.7, l: -0.7, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.1 },
-    { d: CANAL_KEY + 3.3, l: -2.2, yaw: along + 2.6, act: 'lie', pose: LIE, size: 1.1 },
-    { d: CANAL_KEY + 2.5, l: -2.5, yaw: along + 2.2, act: 'sit', pose: SIT, size: 1.25 },
-    { d: CANAL_KEY + 1.6, l: -2.3, yaw: along + 1.9, act: 'sit', pose: SIT, size: 1.4 },
-    { d: CANAL_KEY + 2.4, l: -1.5, yaw: along + 2.0, act: 'lie', pose: LIE2, size: 1.15 },
+    { d: CANAL_KEY + 7.5, l: -1.0, yaw: along - 0.3, act: 'stand', pose: WATCH, size: 1.15 },
+    { d: CANAL_KEY + 2.9, l: -1.75, yaw: along + 2.5, act: 'lie', pose: LIE, size: 1.2 },
+    { d: CANAL_KEY + 3.7, l: -2.15, yaw: along + 2.0, act: 'sit', pose: SIT, size: 1.2 },
+    { d: CANAL_KEY + 4.3, l: -1.5, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
+    { d: CANAL_KEY + 5.1, l: -2.1, yaw: along + 1.7, act: 'sit', pose: SIT, size: 1.1 },
+    { d: CANAL_KEY + 5.6, l: -1.45, yaw: along + 0.6, act: 'lie', pose: LIE, size: 1.05 },
   ];
+
 
   const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 1000, long: 1, tone: cream(), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   const CROSSING = 4;
@@ -264,7 +266,7 @@ export function create(ctx: Context): Piece {
     about(a.bones[2] as THREE.Matrix4, j.chest, 0.06 * Math.sin(t * 0.6 + ph), ny, nz, [fore, settle, sway]);
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
-    a.coat.set(1, a.role.inside ? 0.12 : 0.5, shiver, a.role.inside ? 0.0 : 0.1);
+    a.coat.set(1, a.role.inside ? 0.12 : 0.5, shiver, a.role.inside ? 0.12 : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 

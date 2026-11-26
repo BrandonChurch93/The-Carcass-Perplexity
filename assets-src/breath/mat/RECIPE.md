@@ -1,6 +1,6 @@
 # Material pictures of the Breath
 
-The working pictures of the Breath, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 14 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
+The working pictures of the Breath, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 15 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
 How to read them: the colour picture is sRGB. For a tile, in the data picture `<name>-nh.png` red and green are the slope on x and y (0.5 is level) and blue is height, taken from the picture's own light and dark. `metres` in `materials.json` is the real width one repeat of a tile, or the whole of a plate, stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
 
@@ -340,6 +340,26 @@ The reference image shows one subject on a black background. Make its relief map
 
 Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: one frond, for the strands of the plumes (asked for by `breath_life_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/carcass-low.jpg` and `public/assets/breath/mat/carcass-low-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/carcass-low.png`, the generated picture, and `assets-src/breath/mat/src/carcass-low-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-2-the-rim.jpg`, `references/drafts/working/real/ref-hide-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+The carcass of a wader, an animal of an unknown world, long dead, alone on a pure black background. It is the carcass that lies on the rock in the foreground of the first reference image: make that same animal in the same pose, seen by the same low camera, about one metre above the ground and five metres away, looking only slightly down at it, so that it is seen from the side and a little from above and never from straight above. It lies collapsed on its side, about 4.5 metres from the end of its tendrils to its hooves: the sunken trunk in the middle of the frame, its pale skin split open over the ribs and the hip bones, which stand through it; the long neck lying along the ground to the left and ending in a fan of dull red dried tendrils spread flat; the four long thin legs stretched out to the right and toward the camera, each ending in a small dark hoof. Pale grey-pink dried hide, stained brown where it has split, a little grit lying on it. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole carcass lies inside the frame, with a margin of black on every side, and nothing touches the edge of the frame. Black means nothing is there: no ground, no rock, no shadow thrown on any ground, no mist, no plants, no other animal, no horizon, no sky. Soft even light from the front and from above, with no hard shadow and no bright side, so that the film can light it itself. Take the colours, the age and the character of the carcass from the first reference image. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the dead one at the rim as the low lens of breath-2 sees it, because a picture taken from straight above cannot carry a view from one metre up (asked for by `breath_life_owner_2`).
 Date: 2026-11-26
 
 ## `public/assets/breath/mat/materials.json`

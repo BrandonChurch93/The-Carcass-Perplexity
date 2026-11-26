@@ -69,7 +69,15 @@ export function create(ctx: Context): Piece {
   const pixel = { value: 0.001 };
   const seconds = { value: 0 };
   const surge = { value: 0 };
-  const uniforms = { ...rig.uniforms, uPixel: pixel, uSeconds: seconds, uSurge: surge, uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) } };
+  const uniforms = {
+    ...rig.uniforms,
+    uPixel: pixel,
+    uSeconds: seconds,
+    uSurge: surge,
+    uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) },
+    tFrond: { value: ctx.assets.texture('mat/frond.jpg', { repeat: false }) },
+    tFrondH: { value: ctx.assets.texture('mat/frond-h.png', { kind: 'data', repeat: false }) },
+  };
   const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms, side: THREE.DoubleSide });
   const vaneMaterial = new THREE.ShaderMaterial({ vertexShader: VANE_VERTEX, fragmentShader: VANE_FRAGMENT, uniforms, side: THREE.DoubleSide });
   // The fog reads the depth laid before the picture: the vanes say there which of their pixels are barbs.

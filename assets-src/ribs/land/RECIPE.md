@@ -21,3 +21,29 @@ Recipe: `node assets-src/ribs/land/make-materials.mjs` makes `shingle.jpg` (seam
 Made by: `assets-src/ribs/land/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
 From: the takes kept in `assets-src/ribs/land/` (`shingle-take1.jpg`).
 Prompt or command: `node assets-src/ribs/land/make-materials.mjs`. It writes the colour and data pictures of each material and this list of them, with the mean colour of each.
+
+## public/assets/ribs/land/fin.jpg
+
+The Builder's `public/assets/ribs/mat/blade.jpg` rectified to one upright sheet of a whole blade, 512 by 1536, foot at the bottom: each row
+is stretched from the blade's own outline (`mat/blade-a.png`) to the full width, and the broad light above the weed line is flattened to a
+mean of 0.56 so that the film's one light shades it. Made by `python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/fin-nh.png
+
+The relief of the same sheet from `mat/blade-h.png`, rectified the same way: red is 0.5 less the rise to the right, green is 0.5 less the
+rise downward (both from a copy blurred 3.5 px, as the Builder's reliefs are lit clay more than height), blue is the height with its broad
+swell taken out. Made by `python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/plate-nh.png
+
+Slopes and height of `mat/plate-h.png` (the 48 m by 27 m ground plate), 1280 by 720, in the same convention. Made by
+`python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/wall-nh.png
+
+Slopes and height of `mat/wall-h.png` (the hanging weed wall), in the same convention. Made by `python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/colony-nh.png
+
+Slopes and height of `mat/colony-h.png` (the stepped roost cliff), 1024 square, in the same convention. Made by
+`python3 assets-src/ribs/land/make-sheets.py`.
