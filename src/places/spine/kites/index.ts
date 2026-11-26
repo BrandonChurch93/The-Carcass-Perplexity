@@ -109,7 +109,7 @@ void main() {
   // Its width: a cord for the stalk, widening to the blade, a slow taper, and a ragged tail.
   float blade = smoothstep(aMore.w, aMore.w + 0.09, u);
   float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
-  float halfW = 0.5 * aShape.y * blade * breadth * (1.0 - 0.4 * smoothstep(0.6, 1.0, u)) * (1.0 + 0.5 * stand);
+  float halfW = 0.5 * aShape.y * blade * breadth * mix(5.0, 0.7, smoothstep(aMore.w + 0.03, 0.8, u)) * (1.0 + 0.5 * stand);
   float far = length(cameraPosition - c);
   float cord = max(0.15, (0.9 + 0.8 * stand) * uPixel * far);
   // Along the stalk the strip is wider than the cord: room for the knots on it and for what hangs from it.
@@ -167,9 +167,18 @@ void main() {
   vec2 uv = vec2(mix(from, 0.99, pow(s, 0.8 + 0.5 * fract(seed * 2.9))), 0.472 + flip * 0.225 * (vb + warp));
   vec3 pic = texture2D(tMembrane, uv).rgb;
   float relief = texture2D(tMembraneH, uv).r;
+  // The veins and folds are read from the picture at their true size, turned back on itself along the ribbon so they are never drawn out.
+  float lap = metres / (wide * 5.0) + seed;
+  vec2 uvFine = vec2(0.12 + 0.76 * abs(fract(lap * 0.5) * 2.0 - 1.0), 0.472 + flip * 0.2 * (vb + warp));
+  vec3 fine = texture2D(tMembrane, uvFine).rgb;
+  float reliefFine = texture2D(tMembraneH, uvFine).r;
   float tatter = smoothstep(0.6, 1.0, s) * smoothstep(0.5, 0.62, vnoise(vec2(metres / (2.5 * wide) + seed, vb * 2.2 + seed)));
   float slit = step(0.55, fract(seed * 0.61)) * smoothstep(0.3, 0.45, s) * (1.0 - smoothstep(0.0, 0.03, abs(vb - 0.5 * sin(metres / (4.0 * wide) + seed) - 0.1) - 0.02 - 0.08 * vnoise(vec2(metres / wide, seed))));
-  float cut = step(0.085, max(pic.r, max(pic.g, pic.b))) * step(abs(vb), 1.0) * (1.0 - step(0.5, tatter)) * (1.0 - step(0.5, slit));
+  // The tail is torn to threads: fewer and finer toward its end, each wandering its own way.
+  float torn = smoothstep(0.6, 1.0, s);
+  float thread = abs(fract(vb * (1.6 + 1.6 * fract(seed * 4.1)) + 0.45 * vnoise(vec2(metres / (1.5 * wide), seed * 7.0)) + seed) - 0.5) * 2.0;
+  float threads = step(thread, 1.0 - 0.86 * torn);
+  float cut = step(0.085, max(pic.r, max(pic.g, pic.b))) * step(abs(vb), 1.0) * (1.0 - step(0.5, tatter)) * (1.0 - step(0.5, slit)) * threads;
   float edge = 1.0 - abs(vb);
   // The stalk: a cord of wet sinew, knotted where the skin grows from it and here and there along it. Under the blade it runs on as a spine.
   float stalkAt = vMore.w * vShape.x;
@@ -189,26 +198,36 @@ void main() {
   float skin = cut * blade;
   if (max(skin, max(cordHere, ice)) < 0.02) discard;
 
-  // Thin, dark and wet. What light it has comes through it from the sky behind and off its wet folds; the veins are the picture's dark lines.
-  float lum = dot(pic, vec3(0.333));
-  float vein = 1.0 - smoothstep(0.08, 0.3, lum);
-  float fold = smoothstep(0.45, 0.85, relief);
-  vec3 albedo = pic * (0.55 + 0.5 * fract(seed * 5.3)) * mix(vec3(1.0), vec3(0.85, 0.75, 1.1), fract(seed * 3.3));
-  vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + min(vec3(2.5), 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
-  vec3 c = albedo * e / 3.14159;
-  // What is behind it shows through where it is thin, stained by it.
-  c += albedo * skyRadiance(-toCamera) * 0.5 * (1.0 - 0.8 * vein) * (1.0 - 0.5 * fold);
-  // Wet glints on the folds, fine and few.
+  // A glassy film, paler than the cloud behind it: it passes what is behind and scatters the sky's light in itself. The picture gives it
+  // its veins and its folds, as dark lines and bright ones on the film.
+  float lum = max(dot(fine, vec3(0.333)), 0.6 * dot(pic, vec3(0.333)));
+  float tone = clamp(lum / 0.2, 0.0, 2.2);
+  float vein = 1.0 - smoothstep(0.25, 0.8, tone);
+  float fold = smoothstep(0.45, 0.85, max(relief, reliefFine));
+  vec3 behind = skyRadiance(-toCamera);
+  // Lilac-grey whatever is behind it: the film keeps the sky's brightness and little of its colour.
+  behind = mix(behind, dot(behind, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.65);
+  vec3 held = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) / 3.14159 + min(vec3(0.6), 0.2 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
+  vec3 lilac = mix(vec3(0.95, 0.9, 1.06), vec3(0.86, 0.82, 1.1), fract(seed * 3.3));
+  // The picture's own colour, about its mean: its wrinkles, its stains of violet and brown.
+  vec3 stain = clamp(fine / vec3(0.202, 0.181, 0.217), 0.55, 1.5);
+  vec3 c = (0.96 * behind + 0.3 * held) * mix(vec3(1.0), stain, 0.6) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
+  c *= 1.0 - 0.5 * (1.0 - smoothstep(0.2, 0.55, tone));
+  // Its veins: a dark line down the middle over the cord, and finer ones that leave it aslant and wander to the edge.
+  float vv = metres / (wide * 1.1) - 1.2 * abs(vb) + 0.4 * vnoise(vec2(metres / wide * 1.3, vb * 3.0 + seed));
+  float branch = (1.0 - smoothstep(0.02, 0.06, abs(fract(vv) - 0.5))) * (1.0 - 0.6 * abs(vb));
+  float rib = 1.0 - smoothstep(0.015, 0.05, abs(vb - 0.08 * sin(metres / wide + seed)));
+  c *= 1.0 - 0.55 * max(branch, rib) * blade * (1.0 - 0.7 * vFar);
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
   r.y = abs(r.y) + 0.05;
-  vec3 mirror = skyRadiance(normalize(r)) + emitterIrradiance(vWorld, n) * 0.08;
+  vec3 mirror = skyRadiance(normalize(r));
   float glint = smoothstep(0.75, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
-  c += mirror * (0.35 * fres + 1.6 * glint * (0.3 + 0.7 * fres));
-  // When its spire is struck the ribbon carries the charge for a moment along its folds.
-  float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.12;
-  c += uGlowTint * (uStruck.y * mine * 0.25 * glint);
+  c += mirror * (0.15 * fres + 0.5 * glint * (0.3 + 0.7 * fres));
+  // When a strike is near the ribbon carries the charge along its length for a moment, violet.
+  float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.25;
+  c += uGlowTint * (uStruck.y * mine * (0.35 + 0.4 * fold + 0.5 * glint));
   float alpha = skin;
   // The cord: dark wet sinew, its fibres twisted along it, round, rimed in beads on top.
   float x = clamp(v / max(girth, 1e-4), -1.0, 1.0);
@@ -267,9 +286,9 @@ void main() {
   vec3 n = normalize(vNormal - 0.35 * slope / e * 0.2);
   float crease = 1.0 - smoothstep(0.0, 0.1, abs(vnoise3(at * 1.9 + 7.0) - 0.5));
   float sinews = 0.5 + 0.5 * sin(vLocal.y * 16.0 + 5.0 * vnoise3(at * 1.3));
-  vec3 flesh = mix(vec3(0.15, 0.085, 0.06), vec3(0.075, 0.04, 0.036), 0.6 * crease + 0.3 * sinews) * (0.75 + 0.5 * f0 * 0.66);
+  vec3 flesh = mix(vec3(0.2, 0.045, 0.035), vec3(0.08, 0.022, 0.02), 0.6 * crease + 0.3 * sinews) * (0.75 + 0.5 * f0 * 0.66);
   // Rime on what looks up and into the wind, in soft drifts.
-  float rime = smoothstep(0.62, 0.92, n.y * 0.6 - dot(n, normalize(uWind.xyz)) * 0.45 + 0.55 * vnoise3(vWorld * 1.7) + 0.2 * (f0 - 0.75)) * (1.0 - 0.7 * crease);
+  float rime = smoothstep(0.8, 1.05, n.y * 0.6 - dot(n, normalize(uWind.xyz)) * 0.45 + 0.55 * vnoise3(vWorld * 1.7) + 0.2 * (f0 - 0.75)) * (1.0 - 0.7 * crease);
   vec3 albedo = mix(flesh, vec3(0.68, 0.72, 0.78), rime);
   vec3 c = rigShade(vWorld, n, toCamera, albedo, mix(0.36, 0.9, rime), 1.0 - 0.65 * crease);
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -286,11 +305,8 @@ export function create(ctx: Context): Piece {
       for (let i = 0; i < count; i++) {
         // A colony is a few ribbons of one holdfast: one long streamer, the rest shorter, none alike.
         const length = (i === 0 ? rng.range(190, 260) : rng.range(70, 170)) * reach;
-        // Over 0.86 of its height the lee prong of the split top stands lower than the storm's: the holdfast goes down with it.
         const at = t + (i - (count - 1) / 2) * 0.006;
-        const k = Math.max(0, (at - 0.86) / 0.14);
-        const anchor = finEdge(sp, at, 0.93, rng.range(-0.25, 0.25));
-        anchor[1] -= k * k * 0.04 * sp.tip + k * 4.5;
+        const anchor = finEdge(sp, at, 1.04, rng.range(-0.25, 0.25));
         ribbons.push({
           anchor,
           length,
@@ -361,7 +377,7 @@ export function create(ctx: Context): Piece {
   const out = new THREE.Vector3(WIND[0], 0.25, WIND[2]).normalize();
   ribbons.forEach((rb, r) => {
     for (let k = 0; k < KNOBS; k++) {
-      const girth = Math.min(rb.width, 4.2);
+      const girth = Math.min(rb.width * 1.4, 9);
       const size = girth * (k === 0 ? 0.34 : rng.range(0.13, 0.28));
       const off = k === 0 ? 0 : girth * rng.range(0.25, 0.7);
       const a = rng.range(0, Math.PI * 2);

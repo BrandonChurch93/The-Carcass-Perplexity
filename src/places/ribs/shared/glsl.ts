@@ -165,7 +165,9 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
 vec3 rigOut(vec3 c) {
-  return c * (1.0 - uSolo);
+  // Nothing below nothing and nothing that is not a number leaves a surface: one such value blackens its whole pixel at the lens.
+  vec3 safe = vec3(isnan(c.x) ? 0.0 : c.x, isnan(c.y) ? 0.0 : c.y, isnan(c.z) ? 0.0 : c.z);
+  return clamp(safe, 0.0, 4000.0) * (1.0 - uSolo);
 }`;
 
 // A plain vertex shader for a built mesh: world position and normal, with instancing.
