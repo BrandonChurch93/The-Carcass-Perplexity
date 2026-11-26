@@ -17,6 +17,8 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('wallowers');
   const skin = new Skin();
   const herd: { animal: Animal; plan: Plan; wet: number; onBank: boolean; floor: number }[] = [];
+  // When each has its head up. The first three are the ones by the lens of the wallowers: heads down in the mud at its key, as in the approved picture, and up before and after it.
+  const LOOKS = [10.4, 9.5, 11.3];
   const add = (x: number, z: number, when: number, dir: [number, number], size: number, sink: number, speed: number, root: number): void => {
     const young = size < 0.7 ? 1 - (size - 0.34) / 0.5 : 0;
     const b: Build = { k: size, young: Math.max(0, Math.min(1, young)), seed: rng.range(1, 60), bulk: rng.range(0.94, 1.08), salt: rng.range(0.25, 0.5) * (sink > 0.5 ? 0.3 : 1) };
@@ -35,7 +37,7 @@ export function create(ctx: Context): Piece {
     const hang = Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446;
     herd.push({
       animal,
-      plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang },
+      plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       floor: sink <= 0.15 ? ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k) + 0.3 : -1e9,
       wet: sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 1.04 * b.k) * rng.range(0.85, 1.1),
@@ -71,9 +73,9 @@ export function create(ctx: Context): Piece {
     herd.map((h, i) => {
       const k = 0.5 + 0.5 * h.animal.b.k;
       // The one the lens stands by is nearly bald, with what hair it has hanging wet from the flank; the one sunk to the back by it is the shaggiest; the young has down.
-      if (i === 0) return { animal: h.animal, locks: 420, length: 0.15, width: 0.002, wet: h.wet, stand: 0, tint: 1.0, bare: 1 };
+      if (i === 0) return { animal: h.animal, locks: 70, length: 0.1, width: 0.0016, wet: h.wet, stand: 0, tint: 1.0, bare: 1 };
       if (i === 1) return { animal: h.animal, locks: 300, length: 0.05, width: 0.0016, wet: h.wet, stand: 0.1, tint: 1.3, bare: 0.3 };
-      if (i === 2) return { animal: h.animal, locks: 1400, length: 0.26, width: 0.003, wet: h.wet, stand: 0, tint: 2.6, bare: 0 };
+      if (i === 2) return { animal: h.animal, locks: 1400, length: 0.22, width: 0.0022, wet: h.wet, stand: 0, tint: 2.6, bare: 0 };
       return { animal: h.animal, locks: 380, length: 0.2 * k, width: 0.01 * k, wet: h.wet + 0.25 * k, stand: 0.1, tint: 0.7, bare: rng.next() < 0.4 ? 0.7 : 0 };
     }),
     'wallowers-hair',

@@ -40,6 +40,10 @@ void main() {
   float closeBy = smoothstep(40.0, 6.0, dist);
   vec4 swell = texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime);
   vec2 slope = (swell.ba - 0.5) * 0.08 + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.02 * closeBy;
+  // Far off, what shows of the brine's slow drift down the channels is the sheen on it: two low swells that cross, so the glints break
+  // and gather again and do not slide.
+  float farOff = smoothstep(7.0, 28.0, dist);
+  slope += ((texture2D(tGrain, p.xz / 7.3 + vec2(0.034, 0.019) * uTime).ba - 0.5) * 0.06 + (texture2D(tGrain, p.xz / 4.1 - vec2(0.021, 0.05) * uTime).ba - 0.5) * 0.04) * farOff;
   // Close to, the thick brine shows a slow smooth chop: a few trains of ripples a hand to a forearm long, crossing, bent by the swell so
   // that no two crests run alike.
   if (dist < 26.0) {
@@ -132,7 +136,22 @@ void main() {
   vec4 g = texture2D(tGrain, vLocal.xz * 0.9 + vLife.y);
   float thin = clamp(top * (0.35 + 0.65 * vLife.x) + (g.r - 0.5) * 0.3, 0.0, 1.0);
   // What is seen is mostly the brine behind the skin; the thin crown lets the pale air inside show.
-  vec3 albedo = mix(vec3(0.045, 0.01, 0.0085), vec3(0.085, 0.036, 0.034), thin * thin);
+  vec3 albedo = mix(vec3(0.062, 0.014, 0.012), vec3(0.17, 0.092, 0.088), thin * thin);
+  // Grit and clots carried in the film, and the streaks of its draining.
+  vec4 grit = texture2D(tGrain, vLocal.xz * 3.3 + vLife.y * 7.0);
+  albedo *= 1.0 - 0.5 * smoothstep(0.6, 0.68, grit.g) - 0.3 * smoothstep(0.55, 0.75, g.g) * (1.0 - top);
+  // At its foot the skin is the pool itself, drawn up: no line where one ends and the other starts.
+  albedo = mix(albedo, vec3(0.058, 0.0095, 0.008), smoothstep(0.16, 0.0, vLocal.y));
+  // Torn: the skin opens from one point on its side, the hole's edge ragged and rolled thick, until nothing of it stands.
+  float rim = 0.0;
+  if (vLife.w > 0.0) {
+    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.6, 0.75, sin(vLife.y * 40.0) * 0.6));
+    float open = dot(normalize(vLocal), from) + (g.g - 0.5) * 0.22 + (grit.r - 0.5) * 0.08;
+    float gone = 1.0 - 2.3 * vLife.w * (0.6 + 0.4 * vLife.w);
+    if (open > gone) discard;
+    rim = smoothstep(gone - 0.1, gone, open);
+    albedo = mix(albedo, vec3(0.03, 0.006, 0.005), rim);
+  }
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.1);
   float foot = mix(0.5, 1.0, smoothstep(0.0, 0.35, vLocal.y));
   vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) * foot / 3.14159);
@@ -140,8 +159,8 @@ void main() {
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   // The overcast is not even: a brighter break in it shows on the skin as a soft window.
-  float window = 0.5 * pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 14.0) * (0.6 + 0.8 * g.g) + pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 90.0) + 0.5 * pow(max(dot(r, normalize(vec3(0.5, 0.6, -0.4))), 0.0), 200.0);
-  lit += skyRadiance(r) * ((0.03 + 0.7 * pow(1.0 - nv, 2.2)) * foot + window * 1.2);
+  float window = (0.12 * pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 10.0) + 0.7 * pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 120.0)) * (0.4 + 1.2 * g.r) + 0.4 * pow(max(dot(r, normalize(vec3(0.5, 0.6, -0.4))), 0.0), 200.0);
+  lit += skyRadiance(r) * ((0.03 + 0.34 * pow(1.0 - nv, 3.0)) * (0.6 + 0.8 * g.r) * foot + window * 1.2) * (1.0 - 0.7 * rim);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 

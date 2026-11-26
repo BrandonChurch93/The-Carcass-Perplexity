@@ -109,16 +109,16 @@ void main() {
   T /= tl;
   B /= bl;
 
-  vec2 uvH = vUv / 0.75 + seed * vec2(3.7, 1.9);
-  vec3 hide = texture2D(tHide, uvH).rgb / vec3(0.155, 0.097, 0.067);
+  vec2 uvH = vUv / 1.0 + seed * vec2(3.7, 1.9);
   vec3 nhH = texture2D(tHideNh, uvH).rgb;
+  vec3 hide = texture2D(tHide, uvH).rgb / vec3(0.165, 0.102, 0.072);
   // A second, wider reading under the first breaks the repeat and gives the hide its blotches.
-  vec3 wide = texture2D(tHide, uvH * 0.23 + 0.37).rgb / vec3(0.155, 0.097, 0.067);
-  hide = mix(vec3(1.0), hide, 0.25) * mix(vec3(1.0), wide, 0.5);
+  vec3 wide = texture2D(tHide, uvH * 0.23 + 0.37).rgb / vec3(0.165, 0.102, 0.072);
+  hide = mix(vec3(1.0), hide, 0.6) * mix(vec3(1.0), wide, 0.4) * (0.62 + 0.38 * smoothstep(0.15, 0.6, nhH.b));
 
   // The fine wrinkles between the folds of the shape.
   float neck = smoothstep(0.52, 0.66, vLook.y) * (1.0 - smoothstep(0.9, 0.99, vLook.y));
-  float deep = (trunk * (0.22 + 0.3 * neck) + leg * 0.3) * (1.0 + 1.3 * mudded);
+  float deep = (trunk * (0.22 + 0.3 * neck) + leg * 0.3) * (1.0 + 0.35 * mudded);
   float e = 0.008;
   float c0 = creases(vUv, seed, deep);
   float cx = creases(vUv + vec2(e, 0.0), seed, deep);
@@ -126,7 +126,7 @@ void main() {
   float e2 = 0.0015;
   float s0 = skinHeight(vUv, seed);
   vec2 skinSlope = vec2(skinHeight(vUv + vec2(e2, 0.0), seed) - s0, skinHeight(vUv + vec2(0.0, e2), seed) - s0) / e2 * 0.004 * (1.0 - feeler);
-  vec2 slope = vec2(cx - c0, cy - c0) / e * 0.02 + (nhH.rg - 0.5) * 0.22 + skinSlope;
+  vec2 slope = vec2(cx - c0, cy - c0) / e * 0.02 + (nhH.rg - 0.5) * 0.5 + skinSlope;
   // The crust of a dead one: crystals as big as a fist, grown into each other.
   // Far off the crystals are smaller than a pixel: what is left of them is their mean.
   float afar = smoothstep(9.0, 30.0, length(cameraPosition - vWorld));
@@ -141,8 +141,8 @@ void main() {
   float fold = smoothstep(0.3, 0.95, vInfo.y / (0.55 + 0.45 * smoothstep(-0.9, 0.1, ng.y)));
 
   // Salt: caked where the skin looks up and stays dry, thick along the back, flaking at its edges, lying in the creases lower down.
-  vec2 uvS = vUv / 0.8 + seed * vec2(1.3, 5.1);
-  vec3 salt = texture2D(tSalt, uvS).rgb / vec3(0.343, 0.286, 0.27);
+  vec2 uvS = vUv / 0.5 + seed * vec2(1.3, 5.1);
+  vec3 salt = texture2D(tSalt, uvS).rgb / vec3(0.389, 0.306, 0.282);
   vec3 nhS = texture2D(tSaltNh, uvS).rgb;
   float patchy = fbm(vUv * 2.1 + seed * 13.0);
   float flake = fbm(vUv * 9.0 + seed * 3.0);
@@ -164,7 +164,7 @@ void main() {
   cake *= 1.0 - damp;
   dust *= 1.0 - damp;
 
-  vec3 albedo = mix(vec3(0.088, 0.066, 0.05), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.5 + 0.5 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
+  vec3 albedo = mix(vec3(0.118, 0.083, 0.058), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.5 + 0.5 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
   albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.15);
   // Mud from the last wallow has dried on it in plates: pale where it is dry, and it has cracked off the tops of the folds.
   float caked = smoothstep(0.4, 0.58, fbm(vUv * vec2(2.3, 1.9) + seed * 7.0) + 0.12 * (1.0 - fold)) * (0.45 + 0.55 * smoothstep(0.25, 0.5, fbm(vUv * vec2(11.0, 9.0) + seed))) * (1.0 - mudded) * (1.0 - dead) * (1.0 - feeler) * (1.0 - damp);
@@ -197,10 +197,12 @@ void main() {
   if (mudded > 0.5) {
     vec2 slab = plates(vUv * vec2(6.5, 5.5) + seed * 5.0 + 0.25 * vec2(vnoise(vUv * 9.0), vnoise(vUv * 9.0 + 5.0)));
     vec2 chip = plates(vUv * vec2(19.0, 16.0) + seed * 9.0);
-    crack = max(1.0 - smoothstep(0.015, 0.085, slab.x), 0.55 * (1.0 - smoothstep(0.02, 0.14, chip.x)) * smoothstep(0.4, 0.6, fbm(vUv * 3.0 + seed)));
-    greyDry *= 0.78 + 0.45 * fract(slab.y * 7.31);
+    // Only where it has dried through and been flexed: in patches, never a net over the whole animal.
+    float flexed = smoothstep(0.46, 0.64, fbm(vUv * vec2(2.2, 1.8) + seed * 3.0));
+    crack = max((1.0 - smoothstep(0.008, 0.05, slab.x)) * flexed, 0.3 * (1.0 - smoothstep(0.015, 0.09, chip.x)) * smoothstep(0.5, 0.7, fbm(vUv * 3.0 + seed)));
+    greyDry *= 0.92 + 0.16 * fract(slab.y * 7.31);
   }
-  greyDry = mix(greyDry, vec3(0.05, 0.03, 0.024), crack);
+  greyDry = mix(greyDry, vec3(0.06, 0.04, 0.032), 0.28 * crack);
   albedo = mix(albedo, mix(greyDry, greyWet, wet), smear * 0.92 * (1.0 - 0.7 * feeler));
   float split = mudded * crack * smear * (1.0 - wet) * (1.0 - feeler);
   albedo = mix(albedo, mud, soaked * 0.85);
@@ -212,7 +214,7 @@ void main() {
   rough = mix(rough, 0.5, feeler * (1.0 - soaked));
   // At a grazing look a rough wet hide does not mirror the sky as a clean rim.
   rough = mix(rough, 1.0, 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
-  float occ = vInfo.y * (1.0 - 0.5 * split) * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
+  float occ = vInfo.y * (1.0 - 0.22 * split) * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
   occ *= 1.0 - 0.55 * pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), 3.0);
   occ = mix(occ, vInfo.y * (0.75 + 0.25 * nhS.b) * mix(1.0, 0.3 + 0.7 * knob, dead), cake);
   // The mouth: a dark pit in the end of the muzzle.
@@ -240,10 +242,10 @@ export function hideMaterial(ctx: Context): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     uniforms: {
       ...ctx.rig.uniforms,
-      tHide: { value: ctx.assets.texture('wallowers/hide.jpg', { kind: 'colour', anisotropy: 4 }) },
-      tHideNh: { value: ctx.assets.texture('wallowers/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
-      tSalt: { value: ctx.assets.texture('wallowers/salt.jpg', { kind: 'colour', anisotropy: 4 }) },
-      tSaltNh: { value: ctx.assets.texture('wallowers/salt-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tHide: { value: ctx.assets.texture('mat/hide.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tSalt: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tSaltNh: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', anisotropy: 4 }) },
       uSeconds: { value: 0 },
     },
     vertexShader: VERTEX,
