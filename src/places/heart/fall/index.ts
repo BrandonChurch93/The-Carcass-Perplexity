@@ -135,13 +135,13 @@ export function create(ctx: HeartContext): HeartPiece {
       phase: own.range(0, CYCLE),
       at: new THREE.Vector3(p.x - p.dz * side * p.half, river.height(p.x, p.z) + 0.3, p.z + p.dx * side * p.half),
       // Most rise a metre, one in a few three.
-      velocity: new THREE.Vector3(p.dx * out + own.range(-1.5, 1.5), own.range(2.5, 5.5) + 3 * Math.pow(own.next(), 3), p.dz * out + own.range(-1.5, 1.5)),
+      velocity: new THREE.Vector3(p.dx * out + own.range(-3.2, 3.2), own.range(2.5, 6) + 3 * Math.pow(own.next(), 3), p.dz * out + own.range(-3.2, 3.2)),
       size: 0.3 + 0.34 * Math.pow(own.next(), 2.5),
     };
   });
   // The fume of the fall itself: puffs from the foot of every drop and from the head of the fan. The air's smoke sources stand only at
   // the fan (one in the opening drew as a pale blob), so what rises along the cascade is drawn here.
-  const PUFFS_A_DROP = 11;
+  const PUFFS_A_DROP = 18;
   const leaves = [...course.falls.map((at) => at + 3), FAN_FROM + 6];
   const PUFFS = leaves.length * PUFFS_A_DROP;
   const fumeGeometry = new THREE.InstancedBufferGeometry();
@@ -160,7 +160,7 @@ export function create(ctx: HeartContext): HeartPiece {
     // Evenly through the cycle, so a drop is never without fume and never gives it off in a burst.
     const life = own.range(5, 8.5);
     puffLife.set([(((i % PUFFS_A_DROP) + own.next()) / PUFFS_A_DROP) * life, life, own.range(1.6, 3.2), own.next()], i * 4);
-    puffSeed.set([own.next(), own.next(), own.next(), own.range(0.07, 0.16)], i * 4);
+    puffSeed.set([own.next(), own.next(), own.next(), own.range(0.16, 0.34)], i * 4);
   }
   fumeGeometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(puffFrom, 4));
   fumeGeometry.setAttribute('aLife', new THREE.InstancedBufferAttribute(puffLife, 4));
@@ -192,7 +192,7 @@ export function create(ctx: HeartContext): HeartPiece {
       const p = course.at(Math.min(course.length - 10, Math.max(0, front + 6)));
       surgeLight.position.set(p.x, river.height(p.x, p.z) + 5, p.z);
       surgeLight.radius = 9 + 3 * Math.exp(-after / 0.5);
-      surgeLight.radiance.set(...blackbody(1470)).multiplyScalar(0.4 * smooth(-0.05, 0.4, since) * (0.9 + 0.3 * Math.exp(-after / 0.5)) * smooth(FAN_FROM + 34, FAN_FROM - 12, front));
+      surgeLight.radiance.set(...blackbody(1470)).multiplyScalar(0.8 * smooth(-0.05, 0.4, since) * (0.9 + 0.3 * Math.exp(-after / 0.5)) * smooth(FAN_FROM + 34, FAN_FROM - 12, front));
 
       for (let i = 0; i < GOBS; i++) {
         const t = throws[i] as (typeof throws)[number];

@@ -368,7 +368,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   front = max(front, uSurge.z * smoothstep(7.0, -5.0, len));
   // The front is a wave and outruns the lava: for some twenty metres behind it the melt runs bare and at its brightest, the skin it
   // broke thrown to its margins. Further back the fuller river carries the crust of the tube out with it in slabs.
-  float wake = behind * smoothstep(uSurge.x - 27.0, uSurge.x - 9.0, len);
+  float wake = behind * smoothstep(uSurge.x - 19.0, uSurge.x - 7.0, len);
   float full = behind - wake;
   float ragged = 0.66 + 0.5 * vnoise(vec2(len * 0.21, s > 0.0 ? 3.0 : 11.0)) + 0.22 * vnoise(vec2(len * 1.1, s > 0.0 ? 4.0 : 12.0));
   // The fan's edge is ragged where it lies, in lobes: on the lake the sheet itself gives it, on the shore this does.
@@ -462,7 +462,8 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     cell.y += 0.16 * (vnoise(rq * 3.7 + 9.0) - 0.5);
     float want = mix(0.22, 0.03, fast) + mix(0.5, 0.22, fast) * smoothstep(0.62, 0.95, u) + 0.4 * smoothstep(-14.0, -50.0, len) - 0.25 * smoothstep(-6.0, 4.0, len) * smoothstep(14.0, 6.0, len) - 0.25 * wake - 0.1 * full - 0.2 * pool * behind + 0.4 * dark - 0.12 * bright;
     raft = smoothstep(want + 0.03, want - 0.03, cell.y) * smoothstep(0.03, 0.1, cell.x) * (1.0 - lay);
-    float skin = mix(mix(880.0, 1095.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)), 1290.0, smoothstep(0.26, 0.08, cell.x));
+    // What skin the surge still carries is young: dull red, and never the black of old crust.
+    float skin = mix(mix(880.0, 1095.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)) + 170.0 * behind, 1290.0 + 90.0 * behind, smoothstep(0.26, 0.08, cell.x));
     kelvin = mix(kelvin, skin, raft);
     // Between the strands a tread is under its skin: dark crust that rides with the melt, orange where it meets a strand, with a
     // crack or two alight along the flow. A drop tears it up, the lip has none yet, and the surge breaks most of it.
@@ -490,17 +491,24 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
       bq += 0.7 * vec2(vnoise(bq * 0.6 + 23.0), vnoise(bq * 0.6 + 31.0)) + 0.2 * vec2(vnoise(bq * 2.3 + 5.0), vnoise(bq * 2.3 + 17.0));
       vec2 slabCell = plates(bq);
       slabCell.y += 0.14 * (vnoise(bq * 3.1 + 9.0) - 0.5);
-      float crowd = mix(0.64, 0.24, smoothstep(1.7, 3.3, speed)) * (1.0 - 0.9 * pool) + 0.16 * smoothstep(0.55, 0.95, u) - 0.3 * lipHotAt;
+      float crowd = mix(0.58, 0.34, smoothstep(1.7, 3.3, speed)) * (1.0 - 0.9 * pool) + 0.16 * smoothstep(0.55, 0.95, u) - 0.3 * lipHotAt;
       float slab = smoothstep(crowd + 0.03, crowd - 0.03, slabCell.y) * smoothstep(0.03, 0.11, slabCell.x) * full * smoothstep(-30.0, -10.0, len);
       // Where they crowd they buckle: a slab is cracked across and the melt shows in the crack.
       float buckle = smoothstep(0.05, 0.0, abs(vnoise(vec2(s * 0.5 + 3.0, ride * 2.6)) - 0.5)) * (1.0 - fast) * seenAt(0.5);
-      float slabK = mix(mix(800.0, 1000.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)), 1300.0, max(smoothstep(0.22, 0.06, slabCell.x), 0.7 * buckle));
+      // A slab is crust lying on the melt and not a hole in it: its face is a dull red that it keeps as it rides, darker in its
+      // middle where it is thickest, with its own net of cracks; its edge glows where the melt wells round it.
+      vec2 inner = plates(bq * 2.7 + 13.0);
+      float faceK = mix(1010.0, 1095.0, slabCell.y / max(crowd, 0.05)) - 50.0 * smoothstep(0.2, 0.5, slabCell.x) + 50.0 * (vnoise(bq * 4.0 + 3.0) - 0.5);
+      float crack = max(smoothstep(0.09, 0.02, inner.x) * seenAt(0.6), 0.8 * buckle);
+      float slabK = mix(mix(faceK, 1330.0, crack), 1400.0, smoothstep(0.17, 0.08, slabCell.x));
       kelvin = mix(kelvin, slabK, slab);
+      // The melt stands a shade paler in the seam round a slab.
+      kelvin = mix(kelvin, max(kelvin, 1545.0), 0.7 * full * (1.0 - slab) * smoothstep(crowd + 0.03, crowd - 0.03, slabCell.y) * smoothstep(-30.0, -10.0, len));
       raft = max(raft, slab);
     }
     // In the wake the skin the front broke rides the margins in torn pieces.
     float aside = wake * smoothstep(0.45, 0.8, u + 0.3 * (vnoise(vec2(ride * 1.5, s > 0.0 ? 2.0 : 9.0)) - 0.5)) * smoothstep(0.3, 0.55, vnoise(vec2(s * 0.8 + 6.0, ride * 1.3))) * smoothstep(-14.0, -4.0, len);
-    kelvin = mix(kelvin, mix(840.0, 1040.0, vnoise(vec2(s * 1.2 + 4.0, age * 3.0))), 0.85 * aside);
+    kelvin = mix(kelvin, mix(1040.0, 1170.0, vnoise(vec2(s * 1.2 + 4.0, ride * 2.0))), 0.85 * aside);
     raft = max(raft, 0.85 * aside);
   }
   // Where the slope eases the stream spreads into a fan and skins over. The fan is slabs of black crust with the melt alight in the seams
@@ -541,6 +549,8 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   // The surge: everything behind its front runs hotter and the front itself is the hottest thing in the frame.
   // The melt between the slabs is the brightest thing on the river; a slab keeps its own dark.
   kelvin = mix(kelvin, 1500.0, clamp((0.62 * behind + 0.18 * wake) * (0.45 + 0.6 * streak + 0.5 * thread), 0.0, 1.0) * (1.0 - mix(0.7, 0.96, full) * raft));
+  // The bare melt of the wake is not one colour: films of skin form on it at once, a shade darker, and ride down with it.
+  kelvin = mix(kelvin, 1340.0, 0.6 * wake * smoothstep(0.5, 0.68, vnoise(vec2(s * 0.8 + 13.0, (flow.x - uTime) * 0.9 + 0.4 * vnoise(vec2(s * 0.5, 7.0))))) * (1.0 - raft) * (1.0 - lay));
   if (behind > 0.0 && lay < 1.0) {
     // Down a drop the fuller sheet thins as it quickens and parts into strands: yellow ropes of melt, and between them a film so
     // thin that it has reddened and the rock shows dark through it.
@@ -554,7 +564,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float shove = smoothstep(uSurge.x + 13.0, uSurge.x + 4.5, len) * smoothstep(uSurge.x - 0.5, uSurge.x + 3.5, len) * uSurge.y * smoothstep(2.0, 9.0, len) * (1.0 - lay);
   if (shove > 0.0) {
     float jam = vnoise(vec2(s * 0.9 + 4.0, (len - uSurge.x) * 0.55));
-    kelvin = mix(kelvin, mix(820.0, 1010.0, jam) + 380.0 * smoothstep(0.07, 0.0, abs(jam - 0.5)), 0.9 * shove * smoothstep(0.1, 0.35, jam + 0.25 * (1.0 - u)));
+    kelvin = mix(kelvin, mix(1000.0, 1130.0, jam) + 300.0 * smoothstep(0.07, 0.0, abs(jam - 0.5)), 0.9 * shove * smoothstep(0.1, 0.35, jam + 0.25 * (1.0 - u)));
   }
   kelvin = mix(kelvin, 1560.0, front * front * (0.45 + 0.55 * smoothstep(0.25, 0.7, streak)) * (1.0 - 0.4 * raft));
   return vec2(cover, kelvin);
@@ -637,7 +647,14 @@ void main() {
     // their shade, so the lit bank is broken ground and no flat orange film.
     float lump = 0.45 * vnoise(vWorld.xz * 0.42 + vWorld.y * 0.3) + 0.35 * vnoise(vWorld.xz * 1.3 + 5.0) + 0.2 * plates(vWorld.xz / 2.6 + vWorld.y * 0.21).x;
     float bankOcc = mix(1.0, 0.16 + 0.84 * smoothstep(0.4, 0.52, lump), smoothstep(18.0, 6.0, side) * (1.0 - shelf) * (1.0 - vIn.x));
-    vec3 r = rockShade(vWorld, n, v, albedo, bankOcc, vec3(0.0), ${f(TUBE.lipZ)} - vWorld.z);
+    // The rig's strip of light along the course is the river of the picture and does not know the surge. The fuller river lights
+    // its banks more, the head most of all, and the light goes down the course with the front: nothing of it before the strike.
+    float fuller = (0.5 * smoothstep(uSurge.x + 2.0, uSurge.x - 8.0, vFlow.w) + 2.0 * exp(-abs(vFlow.w - uSurge.x) / 9.0)) * uSurge.y * smoothstep(0.0, 6.0, uSurge.x) * smoothstep(${f(FAN_FROM + 16)}, ${f(FAN_FROM)}, vFlow.w);
+    // It comes from the stream, low and from the side: a face that looks at the stream takes it and one that looks away does not,
+    // so the lit bank keeps its form.
+    float faces = clamp(dot(n, normalize(vec3(vBank.x, -0.3, vBank.y))) * 0.5 + 0.6, 0.0, 1.0);
+    vec3 answer = blackbody(1480.0) * 3.14159 * 0.2 * fuller * faces * exp(-max(side, 0.0) / 8.0) * (1.0 - shelf);
+    vec3 r = rockShade(vWorld, n, v, albedo, bankOcc, answer, ${f(TUBE.lipZ)} - vWorld.z);
     // The rock the lava touches is itself hot for a hand's breadth.
     // The hand's breadth is counted from where the lava ends, which is not everywhere the edge of its bed: counted from the bed, a
     // bed wider than its lava glowed as a flat panel.
@@ -782,7 +799,7 @@ void main() {
   float k = age / aLife.y;
   // It leaves fast over the melt and slows as it cools, and the wind has more of it the higher it stands.
   float rise = aLife.z * age * (1.0 - 0.4 * k);
-  float size = mix(1.1, 4.0 + 3.5 * aLife.w, pow(k, 0.75));
+  float size = mix(1.3, 5.0 + 4.5 * aLife.w, pow(k, 0.75));
   vec3 centre = aFrom.xyz + vec3(0.65 * rise * (0.35 + 0.65 * k), rise, 0.12 * rise) + vec3(sin(age * 0.9 + aSeed.x * 6.28), 0.0, cos(age * 0.7 + aSeed.y * 6.28)) * 0.5 * k * size;
   vec4 view = viewMatrix * vec4(centre, 1.0);
   view.xy += position.xy * 2.0 * size;
@@ -811,7 +828,7 @@ void main() {
   float wisp = 0.6 * vnoise(vDisc * 1.5 + vPuff.y * 17.0 + vec2(0.0, -0.25 * vPuff.w)) + 0.4 * vnoise(vDisc * 3.4 + vPuff.y * 31.0 + vec2(0.0, -0.4 * vPuff.w));
   float alpha = smoothstep(1.0, 0.15, r + 0.75 * (wisp - 0.5)) * vPuff.z;
   // Lit from below by the melt it leaves, and by the dusk above that: orange at its foot, grey-brown where it has risen.
-  vec3 c = vec3(0.5, 0.46, 0.43) * (blackbody(1400.0) * 0.016 * exp(-max(vHigh, 0.0) / 6.0) + skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.4 * skyOpen(vCentre));
+  vec3 c = vec3(0.5, 0.46, 0.43) * (blackbody(1400.0) * 0.026 * exp(-max(vHigh, 0.0) / 7.0) + skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.4 * skyOpen(vCentre));
   gl_FragColor = vec4(rigOut(c), alpha);
   if (alpha < 0.003) discard;
 }`;
