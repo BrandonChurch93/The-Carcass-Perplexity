@@ -240,13 +240,15 @@ void main() {
     vec2 b = p.xz + rf.xz * (min(down, 9.0) / fall) * 0.25;
     Bed bed = wallAt(b, down, inside);
     vec3 at = vec3(p.x, 0.0, p.z);
-    float open = skyOpen(at);
-    vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (0.12 * sunAt(at));
+    // Out over the deep the whole sky is overhead: the land map's own count of it is coarse there and would draw its steps on the water.
+    float open = mix(skyOpen(at), 0.92, smoothstep(4.0, 60.0, inside));
+    // The low sun hardly enters the deep: what little does is the same everywhere, so the shade of the rim draws no edge on it.
+    vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * 0.05;
     vec3 through = exp(-uAbsorb * down * (2.6 + 1.2 / fall));
     vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
-    float pale = clamp(uDome.x / 6.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
+    float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
     deep += vec3(0.05, 0.062, 0.06) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * pale * (0.4 + 0.6 * smoothstep(0.1, 0.6, v.y));
     under = mix(deep, shelf, crusted);
     // Under the lip the water lies in its lee, flat, and the eye goes down the wall.
@@ -258,7 +260,7 @@ void main() {
   // The swell at the centre is a hump of dark water: its near face looks at the eye, and the eye looks into it.
   if (r < uDome.y) {
     float du = r / uDome.y;
-    float hump = clamp(uDome.x / 2.5, 0.0, 1.0) * (1.0 - du * du) * smoothstep(-0.2, 0.5, dot(out2, normalize(v.xz)));
+    float hump = clamp(uDome.x / 2.5, 0.0, 1.0) * (1.0 - du * du) * smoothstep(-0.2, 0.5, dot(out2, normalize(v.xz))) * smoothstep(0.6, 0.25, v.y);
     f *= 1.0 - 0.92 * hump;
     under *= 1.0 - 0.75 * hump;
   }
@@ -453,7 +455,7 @@ void main() {
       // Staged for the wide shot: the lip is drawn 185 m nearer the centre, so that the dark of the deep is an oval the frame holds whole.
       (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 185 : 0;
       centre.x = t - rise;
-      centre.y = smooth(end - 1.0, end - 0.05, t);
+      centre.y = smooth(end - 0.45, end - 0.03, t);
       laps.forEach((lap, i) => {
         const from = ctx.laps[i];
         if (from) lap.set(from.x, from.z, from.offset, from.strength);

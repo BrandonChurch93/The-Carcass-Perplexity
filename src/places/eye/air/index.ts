@@ -68,9 +68,9 @@ float mistAt(vec3 p, vec4 land) {
     float d = length(p.xz - uPlateAt.xz);
     band = smoothstep(uPlateAt.w - 330.0, uPlateAt.w - 40.0, d) * step(d, uPlateAt.w);
     // At the foot of the far wall it stands up in a bank that hides the shoreline.
-    float lift = (2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012)) * (1.0 + 12.0 * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d) * (0.5 + vnoise(p.xz / 330.0 + 9.0 - uTime * 0.008)));
+    float lift = (2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012)) * (1.0 + (uPlateTone.w > 1.5 ? 1.5 : 8.0) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d) * (0.5 + vnoise(p.xz / 330.0 + 9.0 - uTime * 0.008)));
     float banks = smoothstep(0.15, 0.75, 0.6 * vnoise(p.xz / 260.0 + vec2(uTime * 0.03, -uTime * 0.017)) + 0.4 * vnoise(p.xz / 70.0 + uTime * 0.06) + 0.35 * band);
-    return (0.55 + 0.6 * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d)) * band * banks * exp(-max(p.y, 0.0) / lift) * smoothstep(TOP, TOP * 0.45, p.y);
+    return (0.55 + 0.45 * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d)) * band * banks * exp(-max(p.y, 0.0) / lift) * smoothstep(TOP, TOP * 0.45, p.y);
   }
   float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
   float lift = 1.6 + 3.6 * vnoise(p.xz / 210.0 + 3.0 + uTime * 0.01);
