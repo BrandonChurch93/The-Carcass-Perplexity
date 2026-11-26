@@ -586,7 +586,7 @@ void main() {
   vec2 pix = vec2(vUv.x * 1448.0, (1.0 - vUv.y) * 1086.0);
   vec2 spine = normalize(vec2(${glslNumber(HUNG.head[0] - HUNG.hip[0])}, ${glslNumber(HUNG.head[1] - HUNG.hip[1])}));
   float under = smoothstep(-50.0, 110.0, dot(pix - vec2(${HUNG.hip.map(glslNumber).join(', ')}), vec2(-spine.y, spine.x)));
-  albedo *= 1.0 - 0.22 * under * vTrunk;
+  albedo *= 1.12 * (1.0 - 0.14 * under * vTrunk);
   // The hide is lit where the picture lay, by the lie of the hide: asked from where it now hangs, a metre or two out, the land's coarse bake
   // answers for another place at every fold. The form under the hide then turns that light: what faces the sky and the sun is brighter, what
   // faces down or hangs close to the face and behind the trunk is darker.
