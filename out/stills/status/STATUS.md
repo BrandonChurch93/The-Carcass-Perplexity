@@ -1,8 +1,8 @@
-# Status 118
+# Status 119
 
-2026-11-26 15:00 UTC. Phase 5, the whole film.
+2026-11-26 15:25 UTC. Phase 5, the whole film.
 
-- `01-g-join-b.jpg`: The join, version 2, merged (draft tier, preview size, rendered on the Builder's machine): version 1 at left, version 2 at right. Top, frame 9563. Bottom, frame 9584. The lake shows through the lid of cloud
-- `02-g-strike-b.jpg`: The Spine's lightning, version 2, merged (draft tier, preview size, rendered on the Builder's machine): version 1 at left, version 2 at right. Top, frame 7668, key spine-3. Bottom, frame 8090, key spine-4: the sky through the mouth is dark at right, which goes back to its builder
-- `03-g-heart.jpg`: The Heart's near bank, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 2507, the jury's frame. Bottom, frame 2722, key heart-0
-- `04-g-eye.jpg`: The Eye's seam, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 8305, the Eye's first frame. Bottom, frame 9221, key eye-4
+- `01-h-breath-1.jpg`: The Breath's shaft wall, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 4221, the jury's frame. Bottom, frame 4409, key breath-0
+- `02-h-breath-2.jpg`: The Breath's shaft wall, version 2 (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 4590: the flat pale patch under the second ledge is still there and went back to its builder. Bottom, frame 4731, key breath-4
+- `03-h-breath-3.jpg`: The Breath's shaft wall, version 2 (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 5510, key breath-2. Bottom, frame 4973, key breath-3. The vapour behind the weed is kept
+- `04-h-marsh-2.jpg`: The Blood Marsh's stalks, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 5940, key marsh-2. Bottom, frame 6424, key marsh-3
