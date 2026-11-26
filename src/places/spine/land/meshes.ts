@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
 import { EXIT, FIN_DEEP, FIN_ROOT, FIN_SECTION, FLOOR, MOUTH_S, S_MAX, S_MIN, canalInFin, canalL, fin, finAxes, first, flare, frameAt, locate, sheetAt, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
-import { height, heightAt, landAt, slab } from './height';
+import { height, heightAt, landAt, slab, vnoise } from './height';
 
 interface Extra {
   normals?: number[];
@@ -279,7 +279,9 @@ export function canalShell(rng: Rng, grow: number): THREE.BufferGeometry {
       const ang = (a / SEG) * Math.PI * 2;
       const up = Math.max(Math.sin(ang), 0);
       const n = bump(a % SEG, k) - 0.5;
-      const rough = extra > 0 ? 3.2 * n + (5 + 0.1 * rise) * slab(d * 1.2, (a % SEG) * 4.2, 26, 13, seed) : n * Math.min(1.1, 0.16 * r0 + 0.25) + (r0 > 9 ? 0.13 * (r0 - 9) * slab(d * 1.2, (a % SEG) * 2.4, 9, 7, seed) : 0);
+      const rough = extra > 0 ? 3.2 * n + (5 + 0.1 * rise) * slab(d * 1.2, (a % SEG) * 4.2, 26, 13, seed) : n * Math.min(1.1, 0.16 * r0 + 0.25) + (r0 > 9 ? 0.13 * (r0 - 9) * slab(d * 1.2, (a % SEG) * 2.4, 9, 7, seed) : 0) + 0.22 * r0 * Math.max(0, Math.sin(ang) + 0.15) * slab(d * 1.2 + 40, (a % SEG) * 1.7, 11, 9, seed)
+        // The far mouth is not a drawn arch: its upper lip stands in and out in lobes, more toward the open.
+        + (extra > 0 ? 0 : r0 * Math.max(0, Math.sin(ang) + 0.1) * (0.13 * Math.sin(3 * ang + 1.3) + 0.08 * Math.sin(5 * ang + 0.4 + 0.05 * d)) * Math.min(1, Math.max(0, (d - (EXIT - 28)) / 20)));
       const r = r0 + extra + flank + rise * Math.pow(up, 1.5) + rough;
       const l = canalL(d) + Math.cos(ang) * r;
       pos.push(f.x + f.nx * l, cy + Math.sin(ang) * r, f.z + f.nz * l);
@@ -307,30 +309,59 @@ export function canalShell(rng: Rng, grow: number): THREE.BufferGeometry {
   return finish(pos, index, top, sl);
 }
 
-/** The ice on the canal floor. */
+/** How high the floor of the canal stands over its ice, l metres across from the canal's middle at d along it, where the floor is w wide to
+ * each side: snow banked against the right wall (the herd lies along the left, on the ice), drifts in the flare of the far mouth, and a
+ * lip of drift across the mouth itself, low where the one that stands walks out. */
+export function floorRise(l: number, d: number, w: number): number {
+  const u = Math.abs(l) / w;
+  const k = Math.min(1, Math.max(0, (u + 0.18 * (vnoise(d * 0.23, 1.7) - 0.5) - 0.42) / 0.58));
+  const right = l > 0 ? Math.pow(k * k * (3 - 2 * k), 1.3) * (0.7 + 0.6 * vnoise(d * 0.11, 5.2)) : 0;
+  const j = Math.min(1, Math.max(0, (Math.abs(l) - 3.3 - 0.8 * vnoise(d * 0.3, 8.4)) / 3.5));
+  const left = l < 0 ? j * j * (3 - 2 * j) * (0.5 + 0.7 * vnoise(d * 0.13, 3.9)) : 0;
+  const e = Math.min(1, Math.max(0, (d + 3 * (vnoise(l * 0.5, 9.1) - 0.5) - (EXIT - 10)) / 7));
+  const path = 0.2 + 0.8 * Math.min(1, Math.max(0, (Math.abs(l + 0.85) - 1.4) / 2.2));
+  const lip = e * e * (3 - 2 * e) * (0.2 + 0.75 * vnoise(l * 0.33, 2.2)) * path;
+  const snow = Math.min(1, (right + left + lip) / 0.12);
+  return right + left + lip + 0.07 * snow * (vnoise(l * 1.4, d * 1.4) - 0.5);
+}
+
+/** The floor of the canal: ice down its middle, and the snow that lies on it. */
 export function canalFloor(): THREE.BufferGeometry {
   const pos: number[] = [];
   const index: number[] = [];
-  D_LIST.forEach((d, i) => {
+  const uv: number[] = [];
+  const half: number[] = [];
+  const ACROSS = 20;
+  // A row every 0.62 m: the drifts have a shape of their own under a lens that stands 0.7 m over the ice.
+  const rows: number[] = [];
+  for (let d = D_LIST[0] as number; d <= (D_LIST[D_LIST.length - 1] as number) + 1e-6; d += 0.625) rows.push(d);
+  rows.forEach((d, i) => {
     const f = frameAt(MOUTH_S + d);
     const w = 0.79 * flare(d) + 0.6;
     const c = canalL(d);
-    pos.push(f.x + f.nx * (c - w), FLOOR + 0.03, f.z + f.nz * (c - w), f.x + f.nx * (c + w), FLOOR + 0.03, f.z + f.nz * (c + w));
-    if (i > 0) index.push(2 * i - 2, 2 * i - 1, 2 * i, 2 * i - 1, 2 * i + 1, 2 * i);
+    for (let a = 0; a <= ACROSS; a++) {
+      const x = (a / ACROSS) * 2 - 1;
+      // Closer rows of points toward the walls, where the banks are.
+      const l = w * Math.sign(x) * (1 - Math.pow(1 - Math.abs(x), 1.4));
+      pos.push(f.x + f.nx * (c + l), FLOOR + 0.03 + floorRise(l, d, w), f.z + f.nz * (c + l));
+      // Across the floor from wall to wall, -1 to 1, and metres along it.
+      uv.push(l / w, d);
+      half.push(w);
+    }
+    if (i > 0) {
+      for (let a = 0; a < ACROSS; a++) {
+        const p0 = (i - 1) * (ACROSS + 1) + a;
+        const p1 = i * (ACROSS + 1) + a;
+        index.push(p0, p0 + 1, p1, p0 + 1, p1 + 1, p1);
+      }
+    }
   });
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  // Across the floor from wall to wall, -1 to 1, and metres along it: the snow banks lie against the walls.
-  const uv: number[] = [];
-  D_LIST.forEach((d) => uv.push(-1, d, 1, d));
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  const half: number[] = [];
-  D_LIST.forEach((d) => half.push(0.79 * flare(d) + 0.6, 0.79 * flare(d) + 0.6));
   g.setAttribute('aHalf', new THREE.Float32BufferAttribute(half, 1));
-  const up: number[] = [];
-  for (let i = 0; i < pos.length / 3; i++) up.push(0, 1, 0);
-  g.setAttribute('normal', new THREE.Float32BufferAttribute(up, 3));
   g.setIndex(index);
+  g.computeVertexNormals();
   g.computeBoundingSphere();
   return g;
 }
