@@ -1,8 +1,8 @@
-# Status 92
+# Status 94
 
-2026-11-26 04:53 UTC. Phase 4, the other places and the rise.
+2026-11-26 05:34 UTC. Phase 4, the other places and the rise.
 
-- `01-reveal-v3-keys.jpg`: The Reveal, last version of wave 2: the approved pictures left, the built frames right, the four keys of the rise. More land lies round the bones now. The built bones are dimmer than approved and the glare at the right is a broad patch.
-- `02-v3-ribs-ground.jpg`: The Ribs, last version of wave 2: approved left, built right (the establishing frame, the colony, the bore, the hung one). The far blades and the arch are close. The near flat is an even field of dots, the colony reads as a pattern, the weed wall is grey where the picture's is gold.
-- `03-v3-breath-life.jpg`: The Breath, last version of wave 2: approved left, built right (the pit, the waders, the dead one, the red growth). The waders in the channel are the closest frame. The red plumes are round bushes where the picture has long drooping fronds.
-- `04-v3-spine-ground.jpg`: The Spine, last version of wave 2, built frames only: the dead one, the kites, a strike, the herd in the hollow. The strike does not yet light the cloud round it and the herd reads as mounds.
+- `01-reveal-orbit.jpg`: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows); the red plume and the sun's glint on the sea are still missing
+- `02-reveal-cyclone.jpg`: The Reveal's cyclone, approved left, built right: the land beside it is a step forward; the cloud is hard white flakes and half the size, told to the owner (thin graded filaments, dozens of bands, cloud streets)
+- `03-spine-3.jpg`: The Spine's strike, approved left, built right at 05:10: white disc at the bolt's foot, black near crag, a tower with level courses, thick white kites, a pale beam. Told to both owners; the storm owner has since removed the disc and thinned the bolt
+- `04-marsh.jpg`: The Marsh in wave 3, approved rows above built rows (wide view, the burst, two of the wallowers): the animals are the closest; the pools are opaque with a cut edge, the burst is a textbook crown, the ground is dry. Told to both owners

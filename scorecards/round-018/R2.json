@@ -1,0 +1,255 @@
+{
+  "round": 18,
+  "unit": "eye",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the shoreline animals look like repeated, untextured 3D models.",
+      "answered": "05:22 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the uniform, flat-shaded instanced animal models and repetitive procedural rock/water textures typical of a stock CG landscape render",
+      "answered": "05:23 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the stiff, pale, repeated animal models along the shoreline against a visibly seamed foreground",
+      "answered": "05:23 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 91,
+      "why": "The herd along the shore looks like the same flatly shaded animal model copied into clusters.",
+      "answered": "05:24 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "The water's streaky reflection pattern and concentric ripple ring look procedural, and the pale animals and smooth blobby foreground rocks look like mid-level CG assets. Together they read as a competent but ordinary 3D render, not a photo or a top-budget production.",
+      "answered": "05:24 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the animals’ uniformly sculpted, clay-like skin.",
+      "answered": "05:24 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the fantasy creatures have uniform, clay-like sculpted skin, and the scattered pebbles with hazy cliffs look like a typical hobbyist or stock CG render, not film-grade work.",
+      "answered": "05:25 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the visibly faceted foreground pebbles uniformly scattered on a flat shore alongside CG creature models",
+      "answered": "05:25 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the drinking animals’ necks intersect the water without visibly displacing it.",
+      "answered": "05:25 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the animals are unfinished-looking sculpts with odd anatomy and no fur or skin detail, and the scene (flat water horizon, repeated scattered pebbles, hazy cliff backdrop) looks like a polished but ordinary 3D artist render rather than film-grade work.",
+      "answered": "05:26 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "The foreground water has unnaturally uniform, repeated filament-like streaks that look like a procedural shader.",
+      "answered": "05:26 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the animals look like flat, untextured placeholder models dropped into a procedural terrain-and-water scene, which reads as an ordinary 3D render.",
+      "answered": "05:26 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the realistic 3D lighting and water reflections contrasted with stiff CGI creatures and a mirrored terrain seam on the far right edge",
+      "answered": "05:27 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 86,
+      "why": "the foreground water looks like a flat sheet covered in stretched, repeating gold squiggles.",
+      "answered": "05:27 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the animals are stiff, skeletal and anatomically odd, and the water's swirling streaks look procedural. The rock cliffs and lighting are good, but the image still reads as a stand-alone landscape render, not a film frame or a photograph.",
+      "answered": "05:27 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the foreground skeleton looks like a 3D asset laid on top of the shoreline, with very little contact shadow.",
+      "answered": "05:28 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the procedural-looking terrain and water with a skeleton that looks clean and pasted in, and a hard horizon seam where the backdrop meets the water, all typical of a standalone CG landscape render",
+      "answered": "05:29 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the sculpted CG skeleton resting on the procedural rocky terrace with weak contact shadows and a flat water-to-cliff seam indicates an ordinary 3D render rather than a real photo or AAA cinematic.",
+      "answered": "05:29 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 94,
+      "why": "the water meets the rocky shelf along a jagged cutout edge with no visible interaction.",
+      "answered": "05:30 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "The shoreline and water look procedurally generated and the skeleton is blobby and soft. The lighting and water are good but not film or game-cinematic quality.",
+      "answered": "05:31 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the water’s unnaturally uniform, parallel ripple bands.",
+      "answered": "05:31 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the clean but generic CG look: smooth creature skin with repeated stripe patterns, uniform fog layer, and evenly tiled cliff textures point to a competent ordinary 3D render rather than a top-tier cinematic.",
+      "answered": "05:31 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 65,
+      "why": "The mathematically uniform concentric water ripples and tiny spikes poking through the surface without any splash, foam, or contact interaction.",
+      "answered": "05:32 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "the water ripples repeat in evenly spaced horizontal bands across the scene.",
+      "answered": "05:32 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the water reflection is smeared and tiled and there is a hard flat band at the horizon, which reads as a competent but non-cinematic CG render (not big-budget film quality and not a photo).",
+      "answered": "05:32 UTC"
+    }
+  ]
+}

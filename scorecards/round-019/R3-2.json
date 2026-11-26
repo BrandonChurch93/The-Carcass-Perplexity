@@ -1,0 +1,56 @@
+{
+  "round": 19,
+  "unit": "reveal",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-26 05:11 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the central landmass, from the round basins at left through the paired mountain arcs to the pronged ends at right",
+        "what": "the land reads immediately as a skeleton with eye sockets, ribs, and fingers; the regularly spaced white ridges and circular basins look drawn into the map",
+        "fix": "Break the matching ridge arcs and pronged silhouettes with asymmetrical erosion, varied watersheds, irregular crater rims, and interrupted snowlines so the anatomy is suggested rather than outlined."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "almost the entire dark-blue field, confirmed in the native crops in set-B-08.png and set-B-09.png",
+        "what": "the apparent ocean is almost a single navy fill from edge to edge, with no legible surface variation, reflected light, or overlying air",
+        "fix": "Keep the shot dark but recover broad variation with faint grazing reflection, varied wave roughness, and a little atmospheric structure rather than raising the entire blue field."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "upper-right crop, the parallel snow-capped ridges",
+        "what": "the white crests have similar width and soft feathering, and the brown slopes below them look smeared rather than cut into distinct rocky faces",
+        "fix": "Vary snow cover by slope and exposure, sharpen selected ridge relief, and add irregular rock and drainage detail at the native scale."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "lower-left crop, where the long ridge and its peninsula meet the pale water",
+        "what": "a thin cyan contour traces the shore at nearly uniform width and separates large flat patches of color, making the shallows look like a mask",
+        "fix": "Replace the contour with a depth gradient that changes width with the bathymetry, and add broken shoals or localized surf rather than outlining every shore."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "left crop, the upper-right brown mountain mass and the blue basin below it",
+        "what": "the brown and white relief bends into broad, smooth, marbled streaks and the basin has a crisp blue perimeter with little interior depth",
+        "fix": "Break the streaks up with slope-specific erosion and distinct ridge geometry, and shade the basin with uneven shallows instead of a perimeter stroke."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "lower-right cyclone and the small crimson patch right of center",
+        "what": "the cyclone winds into a tight, evenly streaked pinwheel, while the crimson patch looks like flat color stamped across the white terrain or cloud",
+        "fix": "Vary the cyclone's cloud-band widths, height, and shadow; integrate the crimson feature with local terrain and, if it is emissive, give nearby ground and vapor corresponding illumination."
+      }
+    ]
+  }
+}

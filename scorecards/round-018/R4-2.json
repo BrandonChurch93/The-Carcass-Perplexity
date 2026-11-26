@@ -1,0 +1,28 @@
+{
+  "round": 18,
+  "unit": "eye",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-26 05:09 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the animals scattered across the lower foreground, 0.00–6.00 s",
+        "what": "The herd holds effectively the same silhouettes and ground positions throughout the locked shot. No clear weight transfer, step or head turn breaks the impression of posed models.",
+        "fix": "Give a few animals staggered, grounded actions such as a weight shift into a step, a head turn or a pause while others remain at rest."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the low mist along the far bank below the cliffs",
+        "what": "The mist varies subtly, but its main band keeps nearly the same outline and position, making it read more like a changing veil than air moving through the basin.",
+        "fix": "Let small banks travel along the shore and separate or pool against the terrain instead of keeping the whole band anchored."
+      }
+    ]
+  }
+}

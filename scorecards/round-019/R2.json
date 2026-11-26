@@ -1,0 +1,255 @@
+{
+  "round": 19,
+  "unit": "reveal",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 91,
+      "why": "the unnaturally uniform circular ridge enclosing the central lake.",
+      "answered": "05:32 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the uniform, repeated erosion-ridge patterns across the terrain look like procedural terrain generation (Gaea/World Machine style), not real satellite imagery",
+      "answered": "05:33 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 85,
+      "why": "the uniformly procedural hydraulic-erosion ridges and overly regular circular crater rim typical of heightfield terrain generators",
+      "answered": "05:33 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 77,
+      "why": "the same comb-like erosion pattern repeats across nearly every ridge around the lake.",
+      "answered": "05:33 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 40,
+      "why": "The terrain is highly detailed and photoreal, but the near-perfect circular lake and the repetitive, procedural-looking ridge patterns suggest a high-end generated planet or cinematic render rather than a real photograph.",
+      "answered": "05:34 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the same fine branching erosion texture repeats across nearly every ridge, giving the terrain a procedurally generated look.",
+      "answered": "05:34 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "uniform procedural erosion-noise ridges with flat shading and a perfectly circular crater look like a real-time shader/web terrain demo rather than a photo or high-end render",
+      "answered": "05:34 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the uniform procedural dendritic erosion and elevation-banded shoreline coloring",
+      "answered": "05:35 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 79,
+      "why": "The nearly circular central lake has a smooth gold rim that looks procedurally drawn.",
+      "answered": "05:35 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "The terrain looks procedurally generated, with uniformly self-similar erosion ridges, a perfectly circular crater lake and odd white speckle noise on the water. That reads as a procedural or web-demo planet render, not a satellite photo or a big-budget cinematic.",
+      "answered": "05:35 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the mountain ridges repeat in a regular, procedurally generated-looking pattern.",
+      "answered": "05:35 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "highly detailed, art-directed fictional orbital terrain (fish/skeleton-shaped ridges, crater \"eye\") with cinematic grading, which reads as high-end film/cinematic VFX work rather than a real photo or a cheap render",
+      "answered": "05:36 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 78,
+      "why": "the cinematic widescreen art direction of a continent-sized skeleton terrain with high-resolution procedural erosion, filmic color grading, and tiny glowing scale lights",
+      "answered": "05:36 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 76,
+      "why": "the right-hand mountain ridges repeat the same feather shape like a stamped terrain texture.",
+      "answered": "05:36 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "the repetitive, comb-like ridge patterns and the swirling terrain look like procedural noise or erosion, not real geology, yet the lighting, ocean and cloud detail are too polished for a low-budget demo.",
+      "answered": "05:37 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the mountain ridges form an unnaturally regular human rib cage.",
+      "answered": "05:37 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "a fantasy skeleton-shaped continent seen from orbit with procedural-looking eroded terrain and a pasted-in cloud swirl, which reads as a skilled hobbyist or stock CG render rather than a polished film frame.",
+      "answered": "05:37 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "The flat shadowless cloud layer and overly literal skeleton-shaped terrain heightmap look like a standard 3D render rather than a top-budget cinematic shot or real photograph.",
+      "answered": "05:38 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 84,
+      "why": "The mountain ridges trace a human skeleton with the uniform sharpness of a sculpted height map.",
+      "answered": "05:38 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "A skeleton-shaped continent on a planet, rendered with convincing atmospheric glow, cloud layers, a cyclone and detailed ridgelines, which looks like polished high-end CG. The fantastical subject and some repeated procedural texture leave c (a good ordinary render) as a close second.",
+      "answered": "05:38 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the unnaturally regular rib-shaped mountain ridges across the continent.",
+      "answered": "05:38 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "a fantastical skeleton-shaped continent seen from orbit with procedural-looking terrain and clouds, typical of a standalone CG art render rather than a photo or film frame",
+      "answered": "05:38 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 75,
+      "why": "cinematic widescreen orbital framing with film-grade atmospheric scattering, layered cloud shadows, and bespoke fantasy worldbuilding detail across the skeleton-shaped continent",
+      "answered": "05:39 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the evenly spaced mountain ridges form a giant rib cage, as if a skeleton-shaped height map had been wrapped around a planet.",
+      "answered": "05:38 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "the planet-scale terrain, clouds and atmosphere are detailed and filmic, but the skeleton-shaped continent is an obvious artistic concept, so c is a close second.",
+      "answered": "05:38 UTC"
+    }
+  ]
+}

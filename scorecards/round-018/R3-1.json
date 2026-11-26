@@ -1,0 +1,84 @@
+{
+  "round": 18,
+  "unit": "eye",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-26 05:09 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the foreground rocky shoreline across the bottom third of the frame (also at native size in set-A-05.png and set-A-06.png)",
+        "what": "the pebbles and stones are visibly low-poly, faceted, and soft like melted plastic or clay with blurry shading, no surface grain, and no wet edge or contact shadow where they meet the water",
+        "fix": "replace the foreground pebbles with high-resolution displaced meshes and crisp rock textures, add detail to the gravel bed, and add wet darkening, meniscus, and contact shadows at the waterline"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the foreground shoreline and rock ledge across the bottom of the frame",
+        "what": "a ruler-straight shoreline edge and a hard straight seam on the left separate a flat sandy patch and pale ribbon from a grey cracked slab, while the closest foreground rocks have stretched, blurry textures and soft faceted shapes",
+        "fix": "break up the straight shoreline and material seam with natural erosion and wet mud transitions, and replace the closest rocks with high-resolution geometry and crisp textures"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the far right edge of the grey talus slope and cliff in the upper right",
+        "what": "a vertical mirror seam reflects the cliff and scree texture symmetrically along the right edge of the frame",
+        "fix": "extend the terrain geometry and unique cliff textures past the camera frustum so no mirrored tiling or edge reflection appears"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the foreground shallow water and dark lakebed across the bottom half of the frame (also at native size in set-A-08.png and set-A-09.png)",
+        "what": "the submerged bed reads as a blurry, low-resolution procedural noise pattern covered by stretched, painterly orange filaments with no crisp sediment detail or real water microstructure",
+        "fix": "replace the low-frequency procedural lakebed noise with fine-grained silt, pebbles, and underwater refraction, and break up the uniform orange streaks with natural fluid turbulence"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the wide orange-streaked shallow water and the central dark blue pool (also in set-A-02.png and set-A-03.png)",
+        "what": "the orange flats look like a stretched, smeared procedural shader with no foam, crust, or wet transition at the edges, and the central blue pool has overly regular concentric ring ripples",
+        "fix": "add fine-scale ripple and mineral-crust detail to the shallow orange water, soften the pool boundary with natural sediment mixing, and replace the uniform concentric rings with irregular wind-driven waves"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the pale animals wading in the orange water (left crop, x 42 to 58%, y 58 to 75%) and near the bottom edge (right crop)",
+        "what": "the animals look like smooth, clay-like models whose feet clip into the water with no ripples, no contact shadows, and no wet darkening or mud on their lower legs",
+        "fix": "add skin and coat micro-detail, darken and wet the lower legs where they enter the water, and add small displacement ripples and contact shadows around each foot"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the animals' legs entering the water (top-left crop, x 0 to 17%, y 25 to 42%, and the drinking animals in set-A-04.png)",
+        "what": "the legs pierce the water plane cleanly with no wet line or darkened coat above the surface, no meniscus or foam, and no contact ripples around the legs in set-A-08.png",
+        "fix": "add a wet, darkened shader gradient up the lower legs and submerged neck, plus subtle meniscus and contact ripples where they break the surface"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the sunlit haze along the base of the far crater cliff (also in set-A-05.png and set-A-07.png)",
+        "what": "the volumetric mist shows heavy speckled render noise that reads as grainy dots rather than smooth illuminated vapour",
+        "fix": "increase volumetric sampling or apply temporal denoising to the atmospheric haze so the sunlit mist is smooth and continuous"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the cliff face with dark vertical streaks (top-right crop, x 42 to 58%, y 25 to 42%) and the shadowed cave overhang (bottom-left crop, x 83 to 100%, y 25 to 42%)",
+        "what": "the dark vertical stains look soft and airbrushed over a blurred rock texture, and the shadowed cave rock reads as mushy, clay-like blobs rather than fractured stone",
+        "fix": "sharpen the rock normal and displacement detail, align mineral staining with rock crevices, and add crisp fractured strata inside the cave overhang"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the grey rocky shore in the bottom center (around x 40 to 60%, y 82 to 90%)",
+        "what": "two grey animals standing on the rock slab have almost no shadow under their feet and blend flatly into the ground like floating models",
+        "fix": "add grounded contact shadows and ambient occlusion under the feet and separate the animals' lighting from the rock behind them"
+      }
+    ]
+  }
+}
