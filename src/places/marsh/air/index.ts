@@ -29,7 +29,7 @@ export function create(ctx: Context): Piece {
   // Narrow columns over the seeps, dense at the foot and thinning as they climb, each set where the three near lenses see it as a
   // column and none stands in it: by the west bank, over the left of the pool as the pool's lens sees it, and two lesser ones.
   own.push({ at: [-7.1, 0, -5.1], radius: 1.4, strength: 0.8, rise: 12, kind: 'steam', lean });
-  own.push({ at: [-2.5, 0, -6.5], radius: 1.3, strength: 0.7, rise: 10, kind: 'steam', lean });
+  own.push({ at: [-2.5, 0, -6.5], radius: 1.3, strength: 0.55, rise: 10, kind: 'steam', lean });
   own.push({ at: [-3.4, 0, -1.6], radius: 0.8, strength: 0.3, rise: 4.5, kind: 'steam', lean });
   own.push({ at: [0.5, 0, -7.5], radius: 0.9, strength: 0.35, rise: 6, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
