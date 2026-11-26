@@ -1,0 +1,22 @@
+{
+  "round": "24",
+  "unit": "eye",
+  "critic": "R4",
+  "packs": {
+    "R4-1": {
+      "set-A-01.png": "One sheet across the shot eye-01, frames 8305 to 8519",
+      "set-A-02.png": "One sheet across the shot eye-02, frames 8520 to 8680",
+      "set-A-03.png": "One sheet across the shot eye-03, frames 8681 to 8841",
+      "set-A-04.png": "One sheet across the shot eye-04, frames 8842 to 9164",
+      "set-A-05.png": "One sheet across the shot eye-05, frames 9165 to 9540",
+      "set-A-06.png": "Consecutive frames from the key frame of eye-0, for what moves in that view",
+      "set-A-07.png": "Consecutive frames from the key frame of eye-1, for what moves in that view",
+      "set-A-08.png": "Consecutive frames from the key frame of eye-2, for what moves in that view",
+      "set-A-09.png": "Consecutive frames from the key frame of eye-3, for what moves in that view",
+      "set-A-10.png": "Consecutive frames from the key frame of eye-4, for what moves in that view"
+    },
+    "R4-2": {
+      "set-B-01.png": "One sheet across 6 seconds with the camera held still at the establishing key eye-0, film frame 8412"
+    }
+  }
+}

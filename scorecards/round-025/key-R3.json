@@ -1,0 +1,37 @@
+{
+  "round": "25",
+  "unit": "reveal",
+  "critic": "R3",
+  "packs": {
+    "R3-1": {
+      "set-A-01.png": "The judged frame reveal-1, film frame 9627, resized to fit",
+      "set-A-02.png": "Native size crops of the judged frame reveal-1, film frame 9627, part 1 of 2",
+      "set-A-03.png": "Native size crops of the judged frame reveal-1, film frame 9627, part 2 of 2",
+      "set-A-04.png": "The judged frame reveal-2, film frame 9675, resized to fit",
+      "set-A-05.png": "Native size crops of the judged frame reveal-2, film frame 9675, part 1 of 2",
+      "set-A-06.png": "Native size crops of the judged frame reveal-2, film frame 9675, part 2 of 2",
+      "set-A-07.png": "The judged frame reveal-3, film frame 9756, resized to fit",
+      "set-A-08.png": "Native size crops of the judged frame reveal-3, film frame 9756, part 1 of 2",
+      "set-A-09.png": "Native size crops of the judged frame reveal-3, film frame 9756, part 2 of 2"
+    },
+    "R3-2": {
+      "set-B-01.png": "The judged frame reveal-4, film frame 10027, resized to fit",
+      "set-B-02.png": "Native size crops of the judged frame reveal-4, film frame 10027, part 1 of 2",
+      "set-B-03.png": "Native size crops of the judged frame reveal-4, film frame 10027, part 2 of 2",
+      "set-B-04.png": "The judged frame reveal-titan, film frame 10027, resized to fit",
+      "set-B-05.png": "Native size crops of the judged frame reveal-titan, film frame 10027, part 1 of 2",
+      "set-B-06.png": "Native size crops of the judged frame reveal-titan, film frame 10027, part 2 of 2",
+      "set-B-07.png": "The judged frame reveal-handoff-1, film frame 9563, resized to fit",
+      "set-B-08.png": "Native size crops of the judged frame reveal-handoff-1, film frame 9563, part 1 of 2",
+      "set-B-09.png": "Native size crops of the judged frame reveal-handoff-1, film frame 9563, part 2 of 2"
+    },
+    "R3-3": {
+      "set-C-01.png": "The judged frame reveal-handoff-2, film frame 9584, resized to fit",
+      "set-C-02.png": "Native size crops of the judged frame reveal-handoff-2, film frame 9584, part 1 of 2",
+      "set-C-03.png": "Native size crops of the judged frame reveal-handoff-2, film frame 9584, part 2 of 2",
+      "set-C-04.png": "The judged frame reveal-handoff-3, film frame 9606, resized to fit",
+      "set-C-05.png": "Native size crops of the judged frame reveal-handoff-3, film frame 9606, part 1 of 2",
+      "set-C-06.png": "Native size crops of the judged frame reveal-handoff-3, film frame 9606, part 2 of 2"
+    }
+  }
+}

@@ -7,20 +7,45 @@
       "viewer": "a",
       "model": "gpt_6_2_sol",
       "answer": "A satellite-style view shows a giant human skeleton-shaped landmass surrounded by ocean and clouds, with a swirling storm at the lower right.",
-      "answered": "09:25 UTC"
+      "answered": "09:25 UTC",
+      "counts": true
     },
     {
       "viewer": "b",
       "model": "claude_opus_5_5",
       "answer": "The image is an orbital view of Earth with a giant skeleton-shaped landmass (skull, ribcage, limbs) lying in the ocean among clouds, with a hurricane swirling in the lower right.",
-      "answered": "09:25 UTC"
+      "answered": "09:25 UTC",
+      "counts": true
     },
     {
       "viewer": "c",
       "model": "gemini_neon",
       "answer": "Viewed from space, a massive green landmass shaped like a giant human skeleton lies across a cloud-covered ocean beside a swirling hurricane.",
-      "answered": "09:25 UTC"
+      "answered": "09:25 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "An orbital view shows a giant human skeleton outlined by mountain ridges, with a smoking volcano in its pelvis and a cyclone swirling offshore.",
+      "answered": "09:25 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "The image shows a view of Earth from space in which a giant skeleton with a skull, ribcage and limbs is formed on the planet's surface among ocean clouds, with a hurricane swirling in the lower right.",
+      "answered": "09:25 UTC",
+      "counts": true
     }
   ],
-  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in."
+  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in.",
+  "counts": 5,
+  "share": 1.0,
+  "control": {
+    "file": "scorecards/controls/reveal-R8.json",
+    "share": 1.0
+  },
+  "passes": true,
+  "marked": "2026-11-26 09:28 UTC by the Builder: all five answers name a giant skeleton (four a giant human skeleton, one a giant skeleton with a skull, ribcage and limbs), so all five count by the rule of R8. Share 1.00 against a needed 0.80: R8 passes in this round, as it did in round 19 with five of five. In round 13 one of five counted."
 }

@@ -1,0 +1,34 @@
+{
+  "round": "25",
+  "unit": "reveal",
+  "critic": "R2",
+  "packs": {
+    "R2-1": {
+      "set-A-01.png": "Judged image: reveal-1, film frame 9627"
+    },
+    "R2-2": {
+      "set-B-01.png": "Judged image: reveal-2, film frame 9675"
+    },
+    "R2-3": {
+      "set-C-01.png": "Judged image: reveal-3, film frame 9756"
+    },
+    "R2-4": {
+      "set-D-01.png": "Judged image: reveal-4, film frame 10027"
+    },
+    "R2-5": {
+      "set-E-01.png": "Judged image: reveal-titan, film frame 10027"
+    },
+    "R2-6": {
+      "set-F-01.png": "Control: the approved picture of reveal-1, references/approved/7-reveal/reveal-1-above-the-lake.jpg, resized and encoded like the judged images"
+    },
+    "R2-7": {
+      "set-G-01.png": "Control: the approved picture of reveal-2, references/approved/7-reveal/reveal-2-skull-massif.jpg, resized and encoded like the judged images"
+    },
+    "R2-8": {
+      "set-H-01.png": "Control: the approved picture of reveal-3, references/approved/7-reveal/reveal-3-head-and-shoulders.jpg, resized and encoded like the judged images"
+    },
+    "R2-9": {
+      "set-I-01.png": "Control: the approved picture of reveal-4, references/approved/7-reveal/reveal-4-titan-from-orbit.jpg, resized and encoded like the judged images"
+    }
+  }
+}

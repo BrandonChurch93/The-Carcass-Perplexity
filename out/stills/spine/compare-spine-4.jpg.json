@@ -1,0 +1,83 @@
+{
+  "kind": "compare",
+  "made": "2026-11-26T09:21:49Z",
+  "key": "spine-4",
+  "approved": "references/approved/5-spine/spine-4-inside-the-canal.jpg",
+  "frame": "out/work/stills/key-spine-4-uhd-final.png",
+  "frameSize": {
+    "width": 3840,
+    "height": 2160
+  },
+  "approvedPart": {
+    "left": 0,
+    "top": 0,
+    "width": 1672,
+    "height": 941
+  },
+  "regions": [
+    {
+      "label": "detail 1",
+      "cx": 0.375,
+      "cy": 0.625,
+      "detail": 19.2,
+      "frame": {
+        "left": 1270,
+        "top": 1189,
+        "width": 340,
+        "height": 322
+      },
+      "approved": {
+        "left": 553,
+        "top": 518,
+        "width": 148,
+        "height": 140
+      },
+      "scale": 2.297
+    },
+    {
+      "label": "detail 2",
+      "cx": 0.375,
+      "cy": 0.375,
+      "detail": 17.59,
+      "frame": {
+        "left": 1270,
+        "top": 649,
+        "width": 340,
+        "height": 322
+      },
+      "approved": {
+        "left": 553,
+        "top": 283,
+        "width": 148,
+        "height": 140
+      },
+      "scale": 2.297
+    }
+  ],
+  "stills": [
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "spine": "ea8f780fc0fcf460"
+      },
+      "format": "uhd",
+      "tier": "final",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 8090,
+      "loop": null,
+      "key": "spine-4",
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:21:49Z",
+      "seconds": 87.129,
+      "portableOnly": false,
+      "id": null
+    }
+  ],
+  "keep": true,
+  "phase": 4,
+  "units": {
+    "spine": "ea8f780fc0fcf460"
+  }
+}

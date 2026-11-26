@@ -1,0 +1,13 @@
+{
+  "round": "25",
+  "unit": "reveal",
+  "critic": "R8",
+  "packs": {
+    "R8-1": {
+      "set-A-01.png": "The titan frame, film frame 10027, 400 px wide"
+    },
+    "R8-2": {
+      "set-B-01.png": "Control: the approved picture of reveal-4, references/approved/7-reveal/reveal-4-titan-from-orbit.jpg, 400 px wide"
+    }
+  }
+}

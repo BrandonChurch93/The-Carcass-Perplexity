@@ -1,0 +1,23 @@
+{
+  "round": "25",
+  "unit": "reveal",
+  "critic": "R1",
+  "packs": {
+    "R1-1": {
+      "set-A-01-a.png": "The key reveal-1: its approved picture references/approved/7-reveal/reveal-1-above-the-lake.jpg as -a and film frame 9627 as -b (the approved picture)",
+      "set-A-01-b.png": "The key reveal-1: its approved picture references/approved/7-reveal/reveal-1-above-the-lake.jpg as -a and film frame 9627 as -b (the frame)",
+      "set-A-02.png": "Matching crops of the key reveal-1: references/approved/7-reveal/reveal-1-above-the-lake.jpg beside film frame 9627 at native size",
+      "set-A-03-a.png": "The key reveal-2: its approved picture references/approved/7-reveal/reveal-2-skull-massif.jpg as -a and film frame 9675 as -b (the approved picture)",
+      "set-A-03-b.png": "The key reveal-2: its approved picture references/approved/7-reveal/reveal-2-skull-massif.jpg as -a and film frame 9675 as -b (the frame)",
+      "set-A-04.png": "Matching crops of the key reveal-2: references/approved/7-reveal/reveal-2-skull-massif.jpg beside film frame 9675 at native size",
+      "set-A-05-a.png": "The key reveal-3: its approved picture references/approved/7-reveal/reveal-3-head-and-shoulders.jpg as -a and film frame 9756 as -b (the approved picture)",
+      "set-A-05-b.png": "The key reveal-3: its approved picture references/approved/7-reveal/reveal-3-head-and-shoulders.jpg as -a and film frame 9756 as -b (the frame)",
+      "set-A-06.png": "Matching crops of the key reveal-3: references/approved/7-reveal/reveal-3-head-and-shoulders.jpg beside film frame 9756 at native size"
+    },
+    "R1-2": {
+      "set-B-01-a.png": "The key reveal-4: its approved picture references/approved/7-reveal/reveal-4-titan-from-orbit.jpg as -a and film frame 10027 as -b (the approved picture)",
+      "set-B-01-b.png": "The key reveal-4: its approved picture references/approved/7-reveal/reveal-4-titan-from-orbit.jpg as -a and film frame 10027 as -b (the frame)",
+      "set-B-02.png": "Matching crops of the key reveal-4: references/approved/7-reveal/reveal-4-titan-from-orbit.jpg beside film frame 10027 at native size"
+    }
+  }
+}

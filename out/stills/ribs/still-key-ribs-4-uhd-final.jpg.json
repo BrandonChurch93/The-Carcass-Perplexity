@@ -1,0 +1,21 @@
+{
+  "engine": "e35f4e2b11964eaf",
+  "units": {
+    "ribs": "8d03507eddfccbb5"
+  },
+  "format": "uhd",
+  "tier": "final",
+  "diag": null,
+  "part": null,
+  "browser": "147.0.7727.15",
+  "frame": 2401,
+  "loop": null,
+  "key": "ribs-4",
+  "machine": "space-sandbox",
+  "made": "2026-11-26T09:19:52Z",
+  "seconds": 69.386,
+  "portableOnly": false,
+  "id": null,
+  "keep": true,
+  "phase": 4
+}

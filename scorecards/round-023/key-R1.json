@@ -1,0 +1,26 @@
+{
+  "round": "23",
+  "unit": "marsh",
+  "critic": "R1",
+  "packs": {
+    "R1-1": {
+      "set-A-01-a.png": "The key marsh-0: its approved picture references/approved/4-marsh/marsh-0-establishing.jpg as -a and film frame 5725 as -b (the approved picture)",
+      "set-A-01-b.png": "The key marsh-0: its approved picture references/approved/4-marsh/marsh-0-establishing.jpg as -a and film frame 5725 as -b (the frame)",
+      "set-A-02.png": "Matching crops of the key marsh-0: references/approved/4-marsh/marsh-0-establishing.jpg beside film frame 5725 at native size",
+      "set-A-03-a.png": "The key marsh-1: its approved picture references/approved/4-marsh/marsh-1-the-bubbling-seep-pool.jpg as -a and film frame 6102 as -b (the approved picture)",
+      "set-A-03-b.png": "The key marsh-1: its approved picture references/approved/4-marsh/marsh-1-the-bubbling-seep-pool.jpg as -a and film frame 6102 as -b (the frame)",
+      "set-A-04.png": "Matching crops of the key marsh-1: references/approved/4-marsh/marsh-1-the-bubbling-seep-pool.jpg beside film frame 6102 at native size",
+      "set-A-05-a.png": "The key marsh-2: its approved picture references/approved/4-marsh/marsh-2-the-stalk-colony.jpg as -a and film frame 5940 as -b (the approved picture)",
+      "set-A-05-b.png": "The key marsh-2: its approved picture references/approved/4-marsh/marsh-2-the-stalk-colony.jpg as -a and film frame 5940 as -b (the frame)",
+      "set-A-06.png": "Matching crops of the key marsh-2: references/approved/4-marsh/marsh-2-the-stalk-colony.jpg beside film frame 5940 at native size"
+    },
+    "R1-2": {
+      "set-B-01-a.png": "The key marsh-3: its approved picture references/approved/4-marsh/marsh-3-mud-wallowers.jpg as -a and film frame 6424 as -b (the approved picture)",
+      "set-B-01-b.png": "The key marsh-3: its approved picture references/approved/4-marsh/marsh-3-mud-wallowers.jpg as -a and film frame 6424 as -b (the frame)",
+      "set-B-02.png": "Matching crops of the key marsh-3: references/approved/4-marsh/marsh-3-mud-wallowers.jpg beside film frame 6424 at native size",
+      "set-B-03-a.png": "The key marsh-4: its approved picture references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg as -a and film frame 6800 as -b (the approved picture)",
+      "set-B-03-b.png": "The key marsh-4: its approved picture references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg as -a and film frame 6800 as -b (the frame)",
+      "set-B-04.png": "Matching crops of the key marsh-4: references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg beside film frame 6800 at native size"
+    }
+  }
+}

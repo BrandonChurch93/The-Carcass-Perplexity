@@ -1,0 +1,83 @@
+{
+  "kind": "compare",
+  "made": "2026-11-26T09:17:38Z",
+  "key": "marsh-2",
+  "approved": "references/approved/4-marsh/marsh-2-the-stalk-colony.jpg",
+  "frame": "out/work/stills/key-marsh-2-uhd-final.png",
+  "frameSize": {
+    "width": 3840,
+    "height": 2160
+  },
+  "approvedPart": {
+    "left": 0,
+    "top": 0,
+    "width": 1672,
+    "height": 941
+  },
+  "regions": [
+    {
+      "label": "detail 1",
+      "cx": 0.375,
+      "cy": 0.125,
+      "detail": 25.08,
+      "frame": {
+        "left": 1270,
+        "top": 109,
+        "width": 340,
+        "height": 322
+      },
+      "approved": {
+        "left": 553,
+        "top": 47,
+        "width": 148,
+        "height": 140
+      },
+      "scale": 2.297
+    },
+    {
+      "label": "detail 2",
+      "cx": 0.375,
+      "cy": 0.375,
+      "detail": 16.57,
+      "frame": {
+        "left": 1270,
+        "top": 649,
+        "width": 340,
+        "height": 322
+      },
+      "approved": {
+        "left": 553,
+        "top": 283,
+        "width": 148,
+        "height": 140
+      },
+      "scale": 2.297
+    }
+  ],
+  "stills": [
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "marsh": "d1d2e245a4c91d47"
+      },
+      "format": "uhd",
+      "tier": "final",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 5940,
+      "loop": null,
+      "key": "marsh-2",
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:38Z",
+      "seconds": 57.178,
+      "portableOnly": false,
+      "id": null
+    }
+  ],
+  "keep": true,
+  "phase": 4,
+  "units": {
+    "marsh": "d1d2e245a4c91d47"
+  }
+}

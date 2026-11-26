@@ -1,0 +1,26 @@
+{
+  "round": "20",
+  "unit": "breath",
+  "critic": "R1",
+  "packs": {
+    "R1-1": {
+      "set-A-01-a.png": "The key breath-0: its approved picture references/approved/3-breath/breath-0-establishing.jpg as -a and film frame 4409 as -b (the approved picture)",
+      "set-A-01-b.png": "The key breath-0: its approved picture references/approved/3-breath/breath-0-establishing.jpg as -a and film frame 4409 as -b (the frame)",
+      "set-A-02.png": "Matching crops of the key breath-0: references/approved/3-breath/breath-0-establishing.jpg beside film frame 4409 at native size",
+      "set-A-03-a.png": "The key breath-1: its approved picture references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg as -a and film frame 5242 as -b (the approved picture)",
+      "set-A-03-b.png": "The key breath-1: its approved picture references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg as -a and film frame 5242 as -b (the frame)",
+      "set-A-04.png": "Matching crops of the key breath-1: references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg beside film frame 5242 at native size",
+      "set-A-05-a.png": "The key breath-2: its approved picture references/approved/3-breath/breath-2-the-rim.jpg as -a and film frame 5510 as -b (the approved picture)",
+      "set-A-05-b.png": "The key breath-2: its approved picture references/approved/3-breath/breath-2-the-rim.jpg as -a and film frame 5510 as -b (the frame)",
+      "set-A-06.png": "Matching crops of the key breath-2: references/approved/3-breath/breath-2-the-rim.jpg beside film frame 5510 at native size"
+    },
+    "R1-2": {
+      "set-B-01-a.png": "The key breath-3: its approved picture references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg as -a and film frame 4973 as -b (the approved picture)",
+      "set-B-01-b.png": "The key breath-3: its approved picture references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg as -a and film frame 4973 as -b (the frame)",
+      "set-B-02.png": "Matching crops of the key breath-3: references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg beside film frame 4973 at native size",
+      "set-B-03-a.png": "The key breath-4: its approved picture references/approved/3-breath/breath-4-down-the-shaft.jpg as -a and film frame 4731 as -b (the approved picture)",
+      "set-B-03-b.png": "The key breath-4: its approved picture references/approved/3-breath/breath-4-down-the-shaft.jpg as -a and film frame 4731 as -b (the frame)",
+      "set-B-04.png": "Matching crops of the key breath-4: references/approved/3-breath/breath-4-down-the-shaft.jpg beside film frame 4731 at native size"
+    }
+  }
+}
