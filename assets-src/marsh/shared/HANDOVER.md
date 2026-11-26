@@ -1,74 +1,64 @@
-# Blood Marsh, ground and weather: hand-over from marsh_ground_owner_2
+# Blood Marsh, ground and weather: hand-over from marsh_ground_owner_3 (the last owner)
 
-Branch `agent/marsh-ground-2`. Folders: `src/places/marsh/shared/`, root `index.ts`, `land/`, `brine/`, `air/`. Written at minute 196 of 240 of wave 2. The first owner's note is in the history of this file.
+Branch `agent/marsh-ground-3`. Folders: `src/places/marsh/shared/`, root `index.ts`, `land/`, `brine/`, `air/`. Written at minute 206 of 240 of wave 3. The notes of owners 1 and 2 are in the history of this file.
 
 ## How each part is drawn
 
-- **land**, **crust** (`land/field.ts`, `land/index.ts`, `land/shaders.ts`). One field of metres to the shore, made on the processor; one fragment shader. The ground is the Builder's pictures laid as plates with their reliefs (slopes from a blurred read, the sharp read as how closed a spot is): `mat/thincrust` in two lays with a gap of mud between (`thinLay`), `mat/shore` along every waterline, `mat/ledge` on the rock rise with the rock tile from the side on steep faces, crust tile as knobs on rims and on the bank of marsh-1, bedded section on sheer faces, a salt rim round every pool, bare mud patches and seams back from the rims. What lies under the brine's level is a red film with the mirror in it. Fine patches: crust round the stuck one (cell 4 cm, wallow hollow and tipped slabs in the mesh and in `vPaint`), bank (2 cm), rock (5 cm).
-- **brine** (`brine/index.ts`, `brine/shaders.ts`, `shared/brine-glsl.ts`). A level surface over a turbid body coloured by metres from the shore (pink shelf, maroon, brown black). It mirrors a picture of the scene drawn small from under its level before every sample (`tMirror`, half float, quarter size; three taps swung by the ripples; plain sky past 95 m). A ripple is drawn by its tilt to the lens: more sky on the far slope, more body on the near one. Rings from seeps, domes, drops and from whatever stands in it (contact map). Froth from `mat/froth` in a narrow line at the shore.
-- **domes**, **burst**. Clear blended film (premultiplied, no depth write): one window highlight, dark rim, pushed ring at the foot. It swells, sags, tears from one side; the crown is a thrown sheet with a rolled lip; drops fly ballistic arcs and ring the brine where they land.
-- **sky** (`air/sky.ts`): an overcast shaped by `mat/sky.jpg`, darker toward the top, rain cloud at bearing 61 degrees. **air**, **rain**, **steam** (`air/volume.ts`): one pass after the scene. Low steam in six drifting sheets met exactly by the view, shown over mist discs and cleared round two points (`uClear`); steam columns through `ctx.sources`; rain as slanting veils with no side; a far bank from 230 m and three standing banks (`uBanks`) at 78, 128 and 195 m.
-- **cameras** (`index.ts`): K2 focus 3.2 m, aperture 0.0035; K1 focus 4.6 m; K3 lowered to 1.5 m so the horizon is in frame.
+- **land**, **crust** (`land/field.ts`, `land/index.ts`, `land/shaders.ts`). One field of metres to the shore; one fragment shader. Plates from the Builder's pictures with their reliefs; rock from `mat/ledge`, darker now, red in its fractures, salt on what stands proud. Round the wallowers of marsh-3 (`churn`) the bank is wet brown mud in broad clods with brown-red brine standing in the prints and a sheen from a smoothed normal. On the thin crust and the bare mud the same sheen. Round the stuck one the film is grey-brown slurry. Far shores carry a wider dark wet band (`farBand`).
+- **brine** (`brine/shaders.ts`, `shared/brine-glsl.ts`). Colour by depth: pale bed (0.27, 0.085, 0.07), body (0.07, 0.0125, 0.0095), pit almost black red. Silt drawn out in streaks down the current (two layers, 0.021 and 0.034 units a second). The sky lies on it in long wandering lanes that move with the wind (`gust`); mirror share 0.02 + 0.21 (1 - nv)^5, tinted (1, 0.7, 0.66). Froth is pink and only at lips and boils. `brineSlurry` turns it grey-brown within 1.8 to 4.2 m of the stuck one.
+- **domes**, **burst**. Dome: wet film, a wide soft window broken by runs, darker when seen across a pool. Burst: tear and crown are one event (0.256 s); the crown is a thrown sheet in fingers of two sizes, dark at the foot, with a rolled lip; drops fly ballistic arcs.
+- **sky**, **air**, **rain**, **steam** (`air/`): air density 0.00007 (half of what I received) and warm (0.51, 0.475, 0.48); far bank 0.00014 from 230 m plus 0.0005 past 700 m so the last of the land has no clean line; low sheets 0.05; seep steam 0.28; pool mist 0.05.
+- **cameras** (`index.ts`): K1 focus 3.8 aperture 0.0045; K2 focus 3.2 aperture 0.004 (0.006 gave M3 0.71 at the final tier); K3 aperture 0.007; K4 focus 5.7 aperture 0.011.
 
 ## Tried and dropped (do not try twice)
 
-- A texture read with implicit lod after an early `discard`, or inside an `if` that differs between neighbours: two fresh pages differ and G10 fails. Read first, discard last. Anisotropy on a picture read that way does the same (the life owner's stalks).
-- An early `return` or an `if` round the thin crust to save cost: saves nothing on the software renderer and broke G10.
-- A mirror share that rises early (0.4 at power 4): the whole brine turns milky pink. Froth rafts on open brine: a white speckle. Rain at strength 0.95: straight diagonal hatching in the sky.
-- Steam as marched columns for the low mist (even grey screen): `SHEETS = false` keeps it.
-- Matching the flats and islands of marsh-0 by number through the ground's colour: a factor of 1.6 on `colour` past 14 m whitened only the rims; a lower level on the thin crust (0.34 for 0.41) and a clearer film moved the means by one or two levels. The plate interiors are not coloured where I looked: find what colours them (the film under `flood`, or the air over them) before another number is turned.
+- Everything in owner 2's list still holds: implicit-lod reads after a `discard` break G10; branches save no cost; rafts of froth speckle; rain at 0.95 hatches; marched columns for low mist are a grey screen.
+- Rings stamped round waders and on open brine (`WADER_RINGS = 0`, `RAFTS = 0`): the jury called them a graphic. No ring is drawn unless something moves there (the life owner's rings are its own).
+- Anisotropy 16 on the ground's colour pictures: cost, and a sharper far speckle. Now 1, `tFlat` 4.
+- A sheen on wet mud taken from the bumpy normal (0.2): salt-and-pepper glitter. It must come from the smoothed normal (0.11).
+- Sky lanes with a wander of 22 m: marbled paint in the pools. Straight lanes: ruled stripes. 9 m and strength 0.075 is the middle.
+- Wide lens openings to hide the ground (K1 0.011): measure M3 went red (0.60). Blur is the strongest lever on M3.
+- The silt picture's hue on the trodden mud: it turned the clods red and the film grey. Only its grain is used.
 
-## Round 11, each severe and major issue in my folders, and what I did
+## Round 17, each severe and major issue on my parts, and what I did
 
-- severe, marsh-0 "smooth, dimpled, melted-looking mesh with a blurry procedural texture": rock from `mat/ledge` with its relief, fractures dark with dried red. Still soft near the lens: open.
-- severe, marsh-0 "flat, matte maroon-brown with uniform ripples, harsh white-painted shorelines, and tiny pale dots": mirror brine by depth, shore plate, clear domes. Translucent shallows: only by colour.
-- severe, marsh-0 "uniform tile-like crack pattern ... smooth white snow": thin crust picture in two turned lays, mud patches, salt rims. Islands still read as pads: open.
-- severe, marsh-1 "opaque matte grey-lavender hemisphere with a plastic specular spot, and the foreground foam and small bubbles are missing": new technique, clear film. Foam only as the shore plate's froth; small bubbles missing: open.
-- severe, marsh-1 "smooth, glossy procedural shader with smeared reflections, no micro-ripples ... clunky flat splash crown": ripples by tilt, wavelets within 22 m, crown as thin film, smaller drops.
-- severe, marsh-1 "the crusty white-and-rust salt shoreline ... is missing, and the shallow photographic depth of field is absent": knobbed bank, lens opening. The bank is still paler than approved (154,136,132 against 136,103,96): open.
-- severe, marsh-1 and marsh-2 "rising steam" and "lacks steam", "flat geometric trapezoid", "lacks shallow depth": vent column, sheets, lens openings. The hummock behind marsh-2 is unchanged: open.
-- major, marsh-0 "sharp flat-topped geometric mesas and overly straight diagonal streaks in a flat grey sky ... uniform airbrushed": sky picture, veils, mist banks. Flat-topped hummocks still stand: open.
-- severe, marsh-3 "flat, matte pink-red procedural pattern with no sky reflections, ripples, or wet sheen" and "flat unreflective pink-brown pattern": mirror, tilt ripples; the big one stands ankle deep.
-- severe, marsh-3 "uniformly sharp with a hard horizon line": lower lens, opening 0.011, far bank. severe, "flatly lit and chalky pink-grey ... chunky salt-crusted mud banks": colours moved to the approved numbers; banks are not chunky: open.
-- severe, marsh-4 "smooth, matte, uniform grey-brown surface with no red brine or reflections": level plates on wet mud with red film and mirror between. severe, "tiny uniform geometric spikes" and major "similarly shaped conical spikes": no cones anywhere; knobs come from the crust picture.
-- severe, marsh-4 "all in crisp focus with too little mist": opening 0.007, banks. severe, "blurry, featureless CG shading with low-poly bumps": pictures on a 4 cm patch; a fine white stipple was cut back at the end, check it at full size.
-- severe, marsh-4 "an opaque gray sheet: the body cuts straight into it without a meniscus, wake or wet edge": wallow hollow of wet mud with tipped slabs; rings from the contact map. No meniscus: open.
-- severe, "polished solid half-sphere cut off at the waterline ... rigid triangular spikes": film, pushed ring, sheet crown.
-- major, "broad, soft, two-tone reflections that look painted on" and "flat, two-tone ripple shapes": true mirror of what stands there, colour by depth, wavelets.
-- major, "the rock is smeared into parallel grooves ... a thin white outline": rock picture; bank split into salt rim, wet margin, paler shallows.
-- major, "an even screen of gray grain": sheets torn into wisps, no grain, clear before each lens.
-- major, "moves like a sliding texture" and "like a scrolling noise texture, and does not react to the burst": the mottle is gone; the surface moves by rings and wavelets, and the burst's rings cross the foreground.
-- severe, "the full dome vanishes in a single frame" and major "gone within about a third of a second": swell, sag, tear, crown, drops, rings, over about a second.
-- major, "the ring set holds the same spacing and position": rings travel out and fade. major, "hang in the air like floating particles": ballistic arcs and landing rings.
-- severe, held marsh-0 "almost nothing changes": sheets drift, veils fall, seeps ring, banks drift; the Builder measured 15.6 percent of the picture moving (floor 8).
-- The life owner's: creatures, hide, bristles, fronds, insects, the finned one.
+- severe, marsh-0 "Uniform cool white fog nearly erases the mountain rim and distant salt flats": air halved and warmed, far bank only past 230 m, ridge and rain curtain read. The last line of the flats is softened, not layered: open.
+- severe, marsh-0 "The broad dark channel and bare central spit ... the water is too smooth and its uniform thin white edges look drawn on": colour by depth, current streaks, sky lanes, wet band at the shores, white edge cut. The channel's plan (narrow, winding, terraced) is unchanged: open.
+- severe, marsh-0 "A dense speckled white spray wall obscures the pool, with small regular ring marks": steam cut to a low veil, stamped rings off. Blister domes are few: open.
+- severe, marsh-1 "Broad dark mirror reflections and flat red water replace choppy overlapping waves. The splash looks like isolated solid pink prongs, and the bubble has a hard dark foot": chop to the lens, mirror share by angle, crown as a sheet with fingers, dome foot softened with lip froth. Waves are still lower than the picture's: open.
+- severe, marsh-1 "A broad chalk slope consumes the near water and the left trunk stays heavily defined": bank stained and lowered in tone, small bubble clusters at the lip. The Builder then called it "a blurred brown slope": lens opening down to 0.0045 and white salt on every knob within 1.4 m of the waterline (`rimK`), red wet between. It is paint on a height field, not a crust: open.
+- severe, marsh-2 "A bright grainy steam mass takes over the center": pool mist 0.05, no grain. The centre is still 16 levels paler than approved.
+- severe, marsh-3 "The opaque pink-red sheet and broad, pale concentric rings": dark rust brine, rings off, mirror. severe, marsh-3 left shore "Open water runs under the adult's raised muzzle": mud bank under the animals (`churn`), wet.
+- severe, marsh-4 "a continuous reddish pool with broad, flat patches of white crust" and "one bright white plume": grey-brown slurry pocket, mud between slabs, white only on high edges, plume cut. Plates have no thickness: open.
+- severe, R3 "the crown is a ring of flat pink cards ... the drops are opaque dark beads hanging in a neat arc" and "a perfect glass hemisphere with one round specular dot": sheet with fingers and a lip, dark liquid colour; dome with a broken wide window. No film colour, no wall thickness: open.
+- severe, R4 "the second bubble vanishes leaving a flat surface ring ... before a tall crown splash erupts late", "hang almost frozen", "uniformly fades out": tear and crown are one event, crown lasts 0.256 s, drops fall. "the red water shows no current": current streaks and moving lanes; held marsh-0 changes over 14 percent of the picture.
+- major, marsh-0 rock "smooth, marbled folds": darker, red fractures, salt on tops; still soft close to: open. major, "repetitive sprayed-on white pattern": far flats by number, anisotropy cut. major, marsh-1 air "even white background" and "field of discrete grey and pink dots": warm thin air, no grain.
+- major, crust "flat decal patches ... no thickness, no wet dark edge": wet band and mud between slabs; thickness open. major, marsh-4 rocks "one grey material": the pale mound in the corner is the life owner's. major, burst "papery fin-like peaks": partly (see crown).
+- Jury: stamped rings (off), faceted crown and glass dome (above), jagged edge where ground meets water (wet lip, froth, soaked band; the mesh edge still shows close to at marsh-1).
 
 ## Still wrong beside the approved pictures, worst first
 
-- marsh-0: islands are pads with a rim, no plates with seams at that distance, no small things by the hundred; flats darker than approved (146,129,126 against 159,137,134); the plume over the seep pool is faint.
-- Cost: 11.8 s a sample against 7 (see below).
-- marsh-1: bank too pale and even (152,135,131 against 136,103,96); no scum, no small bubbles; water has less ripple contrast than approved.
-- marsh-4: plate edges not curled or undercut (a height field cannot), no drag marks; marsh-3: no hoof pits, bank smooth.
-- Sky paler than approved at marsh-3 and marsh-4; near rock soft; hummocks flat-topped; `mat/far.jpg` unused.
+- marsh-1: the near bank's salt rim is colour on knobs, not a crust with an edge; a flat pale band of shallow water lies along it; water in front about 15 levels too pale; crown a thin sheet; dome without film colour.
+- marsh-0: channel plan and terraces; flats pinker and less white than approved; far band soft but not layered; near rock still soft.
+- marsh-2: centre pool pale and misty; marsh-3: far flats pale, distance empty of wet flats; marsh-4: plates without thickness or undercut.
+- No rain rings on the brine (a stamped ring was judged worse than none).
 
 ## Staged, by shot
 
-Nothing reads `stagedSeconds()`. The burst at 9.00 s (frame 6158) and the small burst 0.22 s before key marsh-1 are fixed times. Lens openings are the same through a shot.
+Nothing reads `stagedSeconds()`. The burst at frame 6158 and the small burst 0.15 s before key marsh-1 are fixed times. Lens openings are the same through a shot.
 
 ## Cost at 3840 x 2160, key marsh-0, draft
 
-Measured with `npm run -s cost -- --key marsh-0 --format uhd --tier draft --parts land crust sky brine`, minute 180:
-the whole frame 11.81 s a sample; an empty frame 2.65; land 5.40 above it; crust 1.29; sky 0.40; brine the cheapest. The ground owner's share is about 9 s against an aim of 4.5: not met.
-Cheaper constants (`RELIEF = false` in `land/shaders.ts`, `DATA_SHARP = 1` in `land/index.ts`, `SHEETS = false` in `air/volume.ts`): land alone 7.00 s against 8.05, the whole frame 11.80 s, so no gain on the whole frame. The cost is in the count of pixels the land and the mirror pass shade, not in these.
+Measured with `npm run -s cost -- --key marsh-0 --format uhd --tier draft --parts land brine air` at 08:07 on the last code: the whole frame 16.50 s a sample; an empty frame 4.25 s; land 7.54 s above it; brine the cheapest part. Received at 18.26 s; my first version was 20.30 s. The saving came from anisotropy 1 on the ground's colour pictures and thinner air. The aim of 7 s is not met.
 
 ## Checks at hand-over
 
-`npx tsc --noEmit -p .` clean; `npm run -s build` passes; `npm run -s determinism` prints `determinism: pass`; `npm run -s gate -- --phase 1 --only G10` passes twice running; the five keys render at 3840 x 2160 with no ERROR; all five shots watched as motion sheets (no lens under ground or through a solid).
+On the last code (commit 002f2b1): `npx tsc --noEmit -p .` clean; `npm run -s build` passes; `npm run -s determinism` prints `determinism: pass`; `npm run -s gate -- --phase 1 --only G10` passes. All five keys rendered at `--tier final --format uhd` with no ERROR; fine detail against the approved pictures at the final tier: marsh-0 1.10, marsh-1 1.30, marsh-2 1.22, marsh-3 1.13, marsh-4 1.15 (floor 0.75). `npm run measure -- --unit marsh --tier draft`: M1 green (no invalid pixel), M2 green (27, 55, 66, 55, 24 percent of the picture moves), M3 green (1.34, 1.78, 1.58, 1.42, 1.41). The draft tier overstates detail: always check M3 on final-tier frames. All five shots and the burst (frames 6154 to 6184) watched as sheets.
 
 ## What I would do next, in order
 
-1. Cost: the land shader is most of it. Halve its reads far off (the three crust sizes and the two thin lays past 60 m), then the mirror pass.
-2. marsh-0 islands: cut plates into the land's mesh on a mid-distance patch, with seams of mud, and scatter stubs and salt pebbles as instances.
-3. marsh-1 bank: instanced froth caps and small bubbles at the waterline; darker, redder clefts.
-4. marsh-3 and marsh-4: hoof pits and drag marks painted into `vPaint` on a patch under the animals; undercut plate edges need real slabs in the mesh.
-5. Hummocks as salt mounds from a picture; the far backplate.
+1. marsh-1 near bank: a real salt rim (instanced crust caps along the waterline, white above, red wet under), and less blur on it.
+2. Rain rings as relief: two layers of cells, one crest each, ages differing, read at cell centres with `textureLod`, within 25 m, dying in 0.7 s.
+3. Crown and dome: thickness by view angle and a thin-film tint; the crown's sheet needs a second, inner wall.
+4. marsh-0: cut the channel narrower with terraces in the field; plates with seams at mid distance.
+5. Cost: the land shader is still most of the frame.

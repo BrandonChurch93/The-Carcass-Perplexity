@@ -296,10 +296,12 @@ void main() {
     float grainR = dot(texture2D(tRock, p.xz / 1.3 + 0.2).rgb, vec3(0.333));
     float evenR = dot(texture2D(tRock, p.xz / 1.3 + 0.2, 5.0).rgb, vec3(0.333));
     stone *= mix(1.0, clamp(grainR / max(evenR, 0.05), 0.45, 1.6), 0.75 * seen);
-    stone *= vec3(1.0, 0.94, 0.84) * (0.5 + 0.2 * mid.g);
+    stone *= vec3(1.0, 0.94, 0.84) * (0.42 + 0.2 * mid.g);
     // The sharp relief is how closed a spot is: fractures are dark, and the red has dried in them.
-    float crack = smoothstep(0.38, 0.12, h0);
-    stone = mix(stone, stone * vec3(0.55, 0.3, 0.24), crack * 0.7);
+    float crack = smoothstep(0.5, 0.18, h0);
+    stone = mix(stone, stone * vec3(0.55, 0.3, 0.24), crack * 0.85);
+    // (And the salt has crusted on what stands proud: broken, never a coat.)
+    stone = mix(stone, vec3(0.46, 0.43, 0.41), smoothstep(0.6, 0.85, h0) * smoothstep(0.35, 0.6, fine.b) * 0.5);
     // The foot of the rise is wet and red where the brine has wicked up it.
     float wick = smoothstep(1.0, 0.3, vBase + (mid.r - 0.5) * 0.6);
     stone = mix(stone, stone * vec3(0.62, 0.34, 0.3), wick * 0.6);
@@ -439,6 +441,9 @@ void main() {
 
   // (The salt of the third lens's bank is wet with the pool's spray and stained by it.)
   colour *= mix(vec3(1.0), mix(vec3(0.84, 0.56, 0.49), vec3(0.44, 0.19, 0.155), smoothstep(0.6, 0.25, hgt)), bankDry);
+  // (Along that bank's waterline the salt has crusted white on every knob; under and between the knobs the bank stays red and wet.)
+  float rimK = bankDry * smoothstep(0.1, 0.3, t) * smoothstep(1.4, 0.7, t) * step(0.0, s) * (1.0 - rock) * (1.0 - flood);
+  colour = mix(colour, vec3(0.5, 0.445, 0.415) * (0.75 + 0.5 * hgt), rimK * smoothstep(0.42, 0.62, hgt) * 0.62);
   rough = mix(rough, 1.0, churn);
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
   vec3 lit = rigShade(p, n, v, colour, rough, occ);
