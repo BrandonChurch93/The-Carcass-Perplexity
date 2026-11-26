@@ -85,34 +85,6 @@ export function create(ctx: Context): Piece {
   // The land's own mesh lies a little under the fine patch, so the patch is what is seen there.
   const landHeight = (x: number, z: number): number =>
     field.height(x, z) - 0.3 * smooth(0.3, 0.7, Math.max(inPatch(x, z), inside(x, z, bankCentre, BANK.half, K1_DIR))) - 0.6 * smooth(0.3, 0.9, inside(x, z, rockCentre, ROCK.half));
-  // Round knobs packed side by side, 0 to 1: one to a cell, each a part of a ball.
-  const knobs = (x: number, z: number, cell: number): number => {
-    const gx = Math.floor(x / cell);
-    const gz = Math.floor(z / cell);
-    let best = 0;
-    for (let j = gz - 1; j <= gz + 1; j++) {
-      for (let i = gx - 1; i <= gx + 1; i++) {
-        const n1 = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
-        const n2 = Math.sin(i * 269.5 + j * 183.3) * 43758.5453;
-        const n3 = Math.sin(i * 419.2 + j * 371.9) * 43758.5453;
-        const fx = (i + 0.2 + 0.6 * (n1 - Math.floor(n1))) * cell;
-        const fz = (j + 0.2 + 0.6 * (n2 - Math.floor(n2))) * cell;
-        const size = 0.5 + 0.5 * (n3 - Math.floor(n3));
-        const d = Math.hypot(x - fx, z - fz) / (cell * 0.75 * size);
-        if (d < 1) best = Math.max(best, size * Math.sqrt(1 - d * d));
-      }
-    }
-    return best;
-  };
-  // The salt the brine leaves at its edge grows in lumps like a cauliflower's: only the fine patches are fine enough to carry them.
-  const frilled = (x: number, z: number): number => {
-    const base = field.height(x, z);
-    const s = field.shore(x, z);
-    if (s < 0.03 || s > 1.2) return base;
-    const env = smooth(0.03, 0.16, s) * smooth(0.8, 0.25, s + 0.5 * (fbm(x / 0.9 + 5, z / 0.9, 2) - 0.5));
-    const c = fbm(x / 0.37 + 2, z / 0.37, 2);
-    return base + env * (0.015 + (0.3 + 0.7 * smooth(0.35, 0.65, c)) * (0.06 * knobs(x, z, 0.11) + 0.035 * knobs(x + 3.3, z, 0.042)));
-  };
   // How deep a point sits among its neighbours, near and wide: clefts are dark because the sky does not reach into them.
   const hollowOf = (h: (x: number, z: number) => number, a: number, b: number, da: number, db: number) => (x: number, z: number): [number, number] => {
     const here = h(x, z);
@@ -145,7 +117,8 @@ export function create(ctx: Context): Piece {
       tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
       tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
       tRock: { value: ctx.assets.texture('mat/rock.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
-      uBank: { value: new THREE.Vector3(bankCentre[0], bankCentre[1], 3.6) },
+      tShore: { value: ctx.assets.texture('mat/shore.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tShoreH: { value: ctx.assets.texture('mat/shore-h.png', { kind: 'data', anisotropy: 4 }) },
     },
     toneMapped: false,
   });
@@ -160,11 +133,11 @@ export function create(ctx: Context): Piece {
   land.add(ground, far);
   const hollow = hollowOf(field.height, 0.16, 0.5, 0.07, 0.3);
   // A fine patch is raised by the pictures' heights in its vertices; the raising dies out toward its rim, where the plain ground takes over.
-  const raised = (c: [number, number], half: [number, number], cell: number): THREE.ShaderMaterial => {
+  const raised = (c: [number, number], half: [number, number], cell: number, along: [number, number] = F): THREE.ShaderMaterial => {
     const m = new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_FRAGMENT,
-      uniforms: { ...material.uniforms, uCell: { value: cell }, uPatch: { value: new THREE.Vector4(c[0], c[1], half[0], half[1]) }, uAlong: { value: new THREE.Vector2(F[0], F[1]) } },
+      uniforms: { ...material.uniforms, uCell: { value: cell }, uPatch: { value: new THREE.Vector4(c[0], c[1], half[0], half[1]) }, uAlong: { value: new THREE.Vector2(along[0], along[1]) } },
       defines: RELIEF ? { RELIEF: 1 } : {},
       toneMapped: false,
     });
@@ -173,10 +146,8 @@ export function create(ctx: Context): Piece {
   };
   const footMaterial = raised(rockCentre, ROCK.half, ROCK.cell);
   const foot = new THREE.Mesh(patchGeometry(field.height, rockCentre, F, ROCK.half[0] * 2, ROCK.half[1] * 2, ROCK.cell, hollow), footMaterial);
-  const bank = new THREE.Mesh(
-    patchGeometry(frilled, bankCentre, K1_DIR, BANK.half[0] * 2, BANK.half[1] * 2, BANK.cell, hollowOf(frilled, 0.02, 0.07, 0.01, 0.03)),
-    material,
-  );
+  const bankMaterial = raised(bankCentre, BANK.half, BANK.cell, K1_DIR);
+  const bank = new THREE.Mesh(patchGeometry(field.height, bankCentre, K1_DIR, BANK.half[0] * 2, BANK.half[1] * 2, BANK.cell, () => [0, 0]), bankMaterial);
   land.add(foot, bank);
   ctx.scene.add(ctx.parts.built('land', land));
 
@@ -193,6 +164,7 @@ export function create(ctx: Context): Piece {
       patch.geometry.dispose();
       material.dispose();
       footMaterial.dispose();
+      bankMaterial.dispose();
       crustMaterial.dispose();
       field.dispose();
       grain.dispose();

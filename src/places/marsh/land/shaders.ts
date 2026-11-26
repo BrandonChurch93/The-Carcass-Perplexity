@@ -16,6 +16,7 @@ const BED = '0.34';
 const PLATE_GLSL = /* glsl */ `
 uniform sampler2D tLedgeH;
 uniform sampler2D tThinH;
+uniform sampler2D tShoreH;
 // x, z of the plate's middle, then the unit vector its width runs along.
 uniform vec4 uLedgeAt;
 uniform vec4 uThinAt;
@@ -28,11 +29,25 @@ vec2 plateAt(vec2 xz, vec4 at, vec2 size) {
 const vec2 LEDGE = vec2(14.0, 7.98);
 const vec2 THIN = vec2(10.0, 5.63);
 const float LEDGE_RISE = 0.42;
-const float THIN_RISE = 0.09;`;
+const float THIN_RISE = 0.09;
+// The shore's plate is a strip across the waterline, 4 m of shore by 2.25 m: dry crust at its top, the rind of salt, the wet red mud, the
+// line of froth (0.6 of the way down), then brine. It is laid along every shore by the way to the brine.
+const vec2 SHORE = vec2(4.0, 2.25);
+const float SHORE_RISE = 0.1;
+float shoreRow(float s) { return clamp(0.6 - s / SHORE.y, 0.004, 0.996); }
+// No shore keeps one width: the band is a stride wide here and a hand there, and its line wanders. g is the grain at xz / 13 + 0.37.
+float shoreBand(float s, vec4 g) { return s * 1.35 / (0.45 + 1.5 * g.r) + (g.b - 0.5) * 0.4 * smoothstep(0.0, 0.3, s); }
+// Which way is inland, from the field's own slope; and how much the shore there runs along x (1) or along z (0).
+vec3 shoreWay(vec2 xz, float here) {
+  vec2 g = vec2(fieldAt(xz + vec2(0.4, 0.0)).r - here, fieldAt(xz + vec2(0.0, 0.4)).r - here);
+  g = g / max(length(g), 1e-4);
+  return vec3(g, g.y * g.y);
+}`;
 
 // The heights the fine patches are raised by, read at a vertex. y0 is the ground's own height there.
 const RELIEF_GLSL = /* glsl */ `
 uniform sampler2D tCrustN;
+uniform sampler2D tGrain;
 uniform float uCell;
 uniform vec4 uPatch;
 uniform vec2 uAlong;
@@ -42,6 +57,15 @@ float reliefAt(vec2 xz, float y0) {
   float lod = log2(uCell * 205.0);
   float up = (textureLod(tCrustN, xz / 5.0, lod).b - 0.5) * 0.085 * smoothstep(-0.05, 0.25, y0);
   if (thin > 0.0) up = mix(up, (textureLod(tThinH, turned(plateAt(xz, uThinAt, THIN)), lod + 0.8).r - 0.5) * THIN_RISE, thin);
+  float fr = fieldAt(xz).r;
+  float s = fr + (textureLod(tGrain, xz / 1.9, 0.0).r - 0.5) * 0.1;
+  if (s > -0.3 && s < 1.4) {
+    vec3 way = shoreWay(xz, fr);
+    float sb = shoreBand(s, textureLod(tGrain, xz / 13.0 + 0.37, 0.0));
+    float row = shoreRow(sb);
+    float h = mix(textureLod(tShoreH, vec2(turned(vec2(xz.y / SHORE.x + 0.37, 0.0)).x, row), lod + 2.0).r, textureLod(tShoreH, vec2(turned(vec2(xz.x / SHORE.x, 0.0)).x, row), lod + 2.0).r, way.z);
+    up = mix(up, (h - 0.1) * SHORE_RISE, smoothstep(0.95, 0.7, sb) * smoothstep(-0.3, 0.0, s));
+  }
   if (rock > 0.0) up = mix(up, (textureLod(tLedgeH, turned(plateAt(xz, uLedgeAt, LEDGE)), lod + 0.8).r - 0.45) * LEDGE_RISE, rock);
   return up;
 }`;
@@ -105,9 +129,8 @@ uniform sampler2D tSilt;
 uniform sampler2D tSiltN;
 uniform sampler2D tLedge;
 uniform sampler2D tThin;
+uniform sampler2D tShore;
 uniform sampler2D tGrain;
-// Where the bank under the close lens is built finely (x, z, reach in metres).
-uniform vec3 uBank;
 vec3 greyed(vec3 c, float keep) { return mix(vec3(dot(c, vec3(0.3, 0.5, 0.2))), c, keep); }
 ${RIG_GLSL}
 ${FIELD_GLSL}
@@ -127,7 +150,8 @@ void main() {
   if (dist < 420.0) fine = texture2D(tGrain, p.xz / 1.9);
   float s = f.r + (fine.r - 0.5) * 0.1;
   float t = max(s, 0.0);
-  float thin = f.g;
+  // Where the crust is thin, and along every shore a few strides back, it is broken slabs on wet mud.
+  float thin = max(f.g, 0.5 * exp(-t / 2.2) * step(0.0, s));
   float stain = f.b;
   float rock = smoothstep(0.28, 0.75, vBase);
   float near = smoothstep(90.0, 30.0, dist);
@@ -235,6 +259,27 @@ void main() {
     hgt = mix(hgt, 1.0, rock);
   }
 
+  // The shore: its plate laid across the waterline. The rind of salt, the wet red mud under it and the line of froth are the picture's.
+  float sb = shoreBand(s, textureLod(tGrain, p.xz / 13.0 + 0.37, 0.0));
+  float shoreW = smoothstep(0.95, 0.7, sb) * step(0.0, s) * (1.0 - rock) * smoothstep(70.0, 30.0, dist);
+  if (shoreW > 0.0) {
+    vec3 way = shoreWay(p.xz, f.r);
+    float row = shoreRow(sb);
+    float rowIn = shoreRow(sb + foot);
+    float ux = turned(vec2(p.x / SHORE.x, 0.0)).x;
+    float uz = turned(vec2(p.z / SHORE.x + 0.37, 0.0)).x;
+    vec3 sc = mix(texture2D(tShore, vec2(uz, row)).rgb, texture2D(tShore, vec2(ux, row)).rgb, way.z);
+    float sh = mix(texture2D(tShoreH, vec2(uz, row)).r, texture2D(tShoreH, vec2(ux, row)).r, way.z);
+    float h0 = mix(texture2D(tShoreH, vec2(uz, row), 2.0).r, texture2D(tShoreH, vec2(ux, row), 2.0).r, way.z);
+    float h1 = mix(texture2D(tShoreH, vec2(uz, rowIn), 2.0).r, texture2D(tShoreH, vec2(ux, rowIn), 2.0).r, way.z);
+    colour = mix(colour, sc * 0.62, shoreW);
+    hgt = mix(hgt, 0.25 + 0.75 * sh, shoreW);
+    bend *= 1.0 - shoreW;
+    lean = mix(lean, way.xy * (h1 - h0) * (SHORE_RISE * 1.6 / foot), shoreW);
+    occ = mix(occ, 1.0 - 0.5 * smoothstep(0.75, 0.3, sh) * smoothstep(0.2, 0.3, sh), shoreW);
+    slab = mix(slab, smoothstep(0.55, 0.75, sh), shoreW);
+  }
+
   // At the lens a plate is softer than the eye: the grain of a hand's breadth is laid over it, granular salt on what is dry and high, the
   // silt's pits and ripple marks on the mud.
   if (close > 0.0) {
@@ -259,9 +304,10 @@ void main() {
   // The brine's level against the heights. At the shore most of the relief is under it and only the plates' tops stand out; a stride back
   // only the cracks hold it; where the flats lie low it comes up again in sheets.
   float lowland = smoothstep(0.52, 0.72, wide.g * 0.55 + mid.g * 0.2 + 0.3 * stain + 0.25 * (wide.r - 0.5));
-  float level = 0.85 * exp(-t / 0.35) + 0.3 * exp(-t / (1.2 + 4.0 * wide.r)) + 0.3 * lowland * smoothstep(700.0, 150.0, dist);
+  float level = 0.85 * exp(-t / 0.35) + 0.5 * exp(-t / (2.5 + 5.0 * wide.r)) + 0.3 * lowland * smoothstep(700.0, 150.0, dist);
   level = min(level, 0.97) * (1.0 - rock);
   level = mix(level, 0.3 + 0.14 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
+  level = mix(level, 0.3, shoreW);
   float over = hgt - level;
   float aa = 0.02 + 0.1 * smoothstep(30.0, 200.0, dist);
   float flood = smoothstep(aa, -aa, over);
@@ -269,22 +315,6 @@ void main() {
   // Damp ground is darker and redder, and what the brine has soaked is stained by it.
   colour = mix(colour, colour * mix(vec3(0.6, 0.52, 0.5), vec3(0.5, 0.24, 0.2), clamp(stain * 0.8 + exp(-t / 1.5) * 0.7, 0.0, 1.0) * (1.0 - 0.6 * smoothstep(0.0, 0.5, thin))), damp);
   rough = mix(rough, 0.72, damp * (1.0 - rock));
-  // The rind: salt the brine left at its edge, on the rims that stand just clear of it and nowhere else.
-  float rim = smoothstep(0.08, 0.2, over) * smoothstep(0.55, 0.3, over) * exp(-t / 1.1) * (1.0 - rock) * smoothstep(60.0, 20.0, dist);
-  rim = max(rim, smoothstep(uBank.z, uBank.z * 0.7, length(p.xz - uBank.xy)) * smoothstep(0.03, 0.1, s) * smoothstep(0.62, 0.24, s + (mid.r - 0.5) * 0.6 + (fine.r - 0.5) * 0.3));
-  if (rim > 0.0) {
-    vec2 uI = p.xz / 0.5;
-    vec3 rind = texture2D(tRime, uI).rgb;
-    vec4 nI = texture2D(tRimeN, uI);
-    vec3 salt = greyed(rind, 0.5) * 1.15 * (0.7 + 0.5 * nI.b);
-    salt = mix(salt, vec3(0.2, 0.06, 0.045), smoothstep(0.4, 0.12, nI.b) * 0.5);
-    colour = mix(colour, salt, rim * 0.9);
-    bend = mix(bend, -(nI.rg - 0.5) * 2.4, rim * 0.8);
-    occ = mix(occ, 1.0 - 0.5 * smoothstep(0.45, 0.1, nI.b), rim);
-    rough = mix(rough, 1.0, rim);
-  }
-  
-
   // An overcast is not the same all round: the quarter away from the rain is the brighter, and every lump and lip shows it.
   vec2 bright = vec2(-0.86, 0.5);
   // The plates' slopes are real slopes: the mesh's normal leans by them.
@@ -313,7 +343,7 @@ void main() {
   float under = smoothstep(w, -w, s) * (1.0 - rock) * (1.0 - smoothstep(0.2, 0.6, thin));
   if (under > 0.0) {
     vec2 run = (texture2D(tGrain, p.xz / 7.3 + vec2(0.034, 0.019) * uTime).ba - 0.5) * 0.06 + (texture2D(tGrain, p.xz / 4.1 - vec2(0.021, 0.05) * uTime).ba - 0.5) * 0.04;
-    lit = mix(lit, brineShade(vec3(p.x, 0.0, p.z), normalize(vec3(run.x, 1.0, run.y)), v, s, 0.0), under);
+    lit = mix(lit, brineShade(vec3(p.x, 0.0, p.z), normalize(vec3(run.x, 1.0, run.y)), v, s, vec4(0.0)), under);
   }
   // In the brine's mirror the ground under the brine's level is not there: it would stand between the mirror's lens and the world.
   if (uMirror > 0.5 && p.y < -0.015) discard;
