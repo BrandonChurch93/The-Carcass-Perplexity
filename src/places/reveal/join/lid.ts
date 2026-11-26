@@ -64,9 +64,16 @@ const vec3 LID_LAYER[11] = vec3[11](
   vec3(0.934, 0.12, 1.8), vec3(0.905, 0.34, 1.2), vec3(0.872, 0.46, 0.9), vec3(0.838, 0.54, 0.7), vec3(0.803, 0.6, 0.55));
 
 // The large shape of the sheet: where it is thick and where it will open. One field for every layer, so a gap is a well through all of them.
+float lidMid(vec2 q) {
+  return 0.45 * vnoise(q * 6.7 + vec2(11.3, 2.4) + uLidDrift * uLid.y * 1.7);
+}
+
+float lidLow(vec2 q) {
+  return 0.55 * vnoise(q * 2.3 + vec2(3.1, 7.7) + uLidDrift * uLid.y);
+}
+
 float lidBig(vec2 q) {
-  vec2 d = uLidDrift * uLid.y;
-  return 0.55 * vnoise(q * 2.3 + vec2(3.1, 7.7) + d) + 0.45 * vnoise(q * 6.7 + vec2(11.3, 2.4) + d * 1.7);
+  return lidLow(q) + lidMid(q);
 }
 
 // How open the sheet is at a place: it breaks up with time, it thins toward its rim, and it opens first a little off the middle.
@@ -120,30 +127,48 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     vec2 q = (ro.xz + rd.xz * t - uLidFrame.xy) / uLidFrame.z;
     float open = layer.y + lidOpen(q);
     if (open >= 1.0) continue;
-    float big = lidBig(q);
+    float mid = lidMid(q);
+    float big = lidLow(q) + mid;
     open += lidWell(q, big);
     // No fine cloud can close what the large shape leaves this open.
     if ((0.56 * big - 0.06) * 1.6 + 0.5 <= open) continue;
     vec2 f = comb * q;
-    float finest = vnoise(f * 113.0 + layer.x * 53.0 + d * 9.0);
-    // Close to the lens the cloud has grain the eye can still see: it is too fine to draw once the sheet is far below.
+    // Each finer grain is turned against the last, so that none of them shows its rows.
+    vec2 f2 = vec2(0.8 * f.x - 0.6 * f.y, 0.6 * f.x + 0.8 * f.y);
+    vec2 f3 = vec2(0.33 * f.x - 0.94 * f.y, 0.94 * f.x + 0.33 * f.y);
+    float finest = vnoise(f3 * 113.0 + layer.x * 53.0 + d * 9.0);
+    // The nearer the cloud is to the lens the finer the grain the eye can still see in it: each is too fine to draw once the sheet is far below.
+    float c1 = 1.0 - smoothstep(0.5, 1.0, near);
+    if (c1 > 0.0) {
+      float more = vnoise(f * 290.0 + layer.x * 71.0 - d * 14.0);
+      float c2 = 1.0 - smoothstep(0.12, 0.3, near);
+      if (c2 > 0.0) {
+        more = mix(more, 0.6 * more + 0.4 * vnoise(f2 * 700.0 + layer.x * 29.0 + d * 30.0), c2);
+        float c3 = 1.0 - smoothstep(0.05, 0.12, near);
+        if (c3 > 0.0) more = mix(more, 0.7 * more + 0.3 * vnoise(f3 * 1700.0 + layer.x * 43.0 - d * 60.0), c3);
+      }
+      finest = mix(finest, 0.45 * finest + 0.55 * more, c1);
+    }
     float close = 1.0 - smoothstep(0.08, 0.22, near);
-    if (close > 0.0) finest = mix(finest, 0.55 * finest + 0.45 * vnoise(f * 290.0 + layer.x * 71.0 - d * 14.0), close);
-    float fine = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(f * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest;
+    float coarse = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0);
+    float middle = 0.3 * vnoise(f2 * 47.0 + layer.x * 91.0 - d * 5.0);
+    float fine = coarse + middle + 0.2 * finest;
     float h = 0.56 * big + 0.44 * fine;
     float n = clamp((h - 0.5) * 1.6 + 0.5, 0.0, 1.0);
     float cover = smoothstep(open - 0.07, open + 0.45, n);
+    // The grain eats into the cloud where it is thin: its edge is torn into threads and veils the eye sees through, and its body stays whole.
+    cover = clamp(cover - mix(0.75, 0.25, smoothstep(0.7, 0.95, uLid.z)) * (1.0 - finest) * (1.0 - cover), 0.0, 1.0);
     if (cover <= 0.0) continue;
     float a = 1.0 - exp(-1.5 * layer.z * thin * cover * cover * min(near / 0.02, 1.0) / down);
-    vec3 colour = within * (0.62 + 0.76 * mix(fine, 0.6 * fine + 0.4 * finest, close));
+    vec3 colour = within * (0.4 + 1.2 * mix(fine, 0.6 * fine + 0.4 * finest, close));
     if (above > 0.0) {
       // The low sun reaches a place on the sheet when the cloud toward it stands no higher: every lump has a lit side and a side in shade.
       vec2 toSun = q + sunSide * 0.03;
       vec2 fs = comb * toSun;
-      float hs = 0.56 * lidBig(toSun) + 0.44 * (0.5 * vnoise(fs * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(fs * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest);
+      float hs = 0.56 * (big - mid + lidMid(toSun)) + 0.44 * (0.5 * vnoise(fs * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(vec2(0.8 * fs.x - 0.6 * fs.y, 0.6 * fs.x + 0.8 * fs.y) * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest);
       float lit = clamp(0.5 + 6.0 * (h - hs) + 0.5 * (cover - 0.75), 0.0, 1.0);
       lit = lit * lit * (3.0 - 2.0 * lit) * mix(0.4, 1.0, tr);
-      vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.5 + 1.0 * n);
+      vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.5 + 1.0 * n) * (0.8 + 0.4 * finest);
       colour = mix(colour, top, above);
     }
     sum += tr * a * colour;
