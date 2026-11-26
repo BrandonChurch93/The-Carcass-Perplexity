@@ -16,7 +16,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     tMat: { value: mirrored(ctx.assets.texture('mat/matplate.jpg', { anisotropy: 8 })) },
     tMatH: { value: mirrored(ctx.assets.texture('mat/matplate-h.png', { kind: 'data', anisotropy: 4 })) },
     tMatTile: { value: mirrored(ctx.assets.texture('mat/matdark.jpg', { anisotropy: 8 })) },
-    tComb: { value: mirrored(ctx.assets.texture('lake/matcomb.jpg', { anisotropy: 8 })) },
+    tComb: { value: mirrored(ctx.assets.texture('lake/matcomb.jpg', { anisotropy: 4 })) },
     tLipPlate: { value: mirrored(ctx.assets.texture('mat/lip.jpg', { anisotropy: 8 })) },
     tLipPlateH: { value: mirrored(ctx.assets.texture('mat/lip-h.png', { kind: 'data', anisotropy: 4 })) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
@@ -59,7 +59,8 @@ struct Bed {
 float lipRadius(vec2 xz) {
   // Drawn in, the deep keeps its reach toward the wide camera and gives way at the sides: an oval lying along the look.
   float toward = dot(xz, vec2(-0.309, 0.951)) / max(length(xz), 1.0);
-  return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r - uLipIn * (1.0 - 0.95 * smoothstep(0.6, 1.0, toward));
+  vec2 lips = texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).rg;
+  return mix(lips.x, lips.y, min(uLipIn / 100.0, 1.0)) - uLipIn * (1.0 - 0.95 * smoothstep(0.6, 1.0, toward));
 }
 
 float lipWander(vec2 xz) {
@@ -230,12 +231,20 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     float fromRim = smoothstep(8.0, 40.0, cameraPosition.y);
     float combed = 0.5;
     if (fromRim > 0.0) {
-      vec3 ca = texture2D(tComb, vec2(pq.x / 66.0, pq.y / 44.0)).rgb;
-      vec3 cb = texture2D(tComb, vec2(pq.x / 228.0 + 0.37, pq.y / 152.0 + 0.11)).rgb;
+      // Laid by the way round and the way in, hardly bent, so that every tress runs to the centre. The picture turns over at each repeat
+      // and all three sizes start from the same line, so the place where the way round begins again shows no seam.
+      vec2 cq = vec2(a2 * 640.0 + bend.x * 9.0, r + bend.y * 16.0);
+      vec3 ca = texture2D(tComb, cq / vec2(66.0, 44.0)).rgb;
+      vec3 cb = texture2D(tComb, cq / vec2(228.0, 152.0)).rgb;
       float la = dot(ca, vec3(0.4, 0.5, 0.1));
       float lb = dot(cb, vec3(0.4, 0.5, 0.1));
-      combed = clamp(2.4 * la + 2.0 * lb - 0.14, 0.0, 1.0);
-      vec3 strands = ca * (0.45 + 2.9 * lb) * vec3(0.92, 1.25, 3.4);
+      // The finest size is hair on the tresses, told only as near as a pixel can hold it.
+      float hairy = smoothstep(0.5, 0.12, px);
+      vec3 cc = vec3(0.34, 0.105, 0.0065);
+      if (hairy > 0.0) cc = texture2D(tComb, cq / vec2(17.0, 11.3)).rgb;
+      float lc = dot(cc, vec3(0.4, 0.5, 0.1));
+      combed = clamp(2.4 * la + 2.0 * lb - 0.14 + hairy * 1.6 * (lc - 0.19), 0.0, 1.0);
+      vec3 strands = ca * (0.45 + 2.9 * lb) * mix(vec3(1.0), cc / vec3(0.34, 0.105, 0.0065) * vec3(1.0, 1.0, 0.25) + vec3(0.0, 0.0, 0.75), 0.6 * hairy) * vec3(0.92, 1.25, 3.4);
       far3 = mix(far3, mix(far3 * 0.7, strands, 0.8), fromRim);
     }
     vec3 weed = mix(far3 * (0.75 + 0.5 * mix(vnoise(pq / vec2(1.3, 19.0) + 2.0), vnoise(b / 3.1 + 2.0), rimEye)), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);

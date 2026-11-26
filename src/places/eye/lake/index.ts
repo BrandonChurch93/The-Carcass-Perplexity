@@ -4,8 +4,8 @@
 // There is no floor mesh under the shallows: the bed is worked out where the bent ray meets it, so there is one sheet of water and no box.
 import * as THREE from 'three';
 import { MIST_SUN_GLSL, mistSunTexture } from '../air/light';
-import { smooth } from '../layout';
-import { lipAt } from '../land/height';
+import { DEG, smooth } from '../layout';
+import { LIP_BAY, lipAt } from '../land/height';
 import { during } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
@@ -536,7 +536,13 @@ function rippleTexture(seed: () => number): THREE.DataTexture {
 function lipTexture(): THREE.DataTexture {
   const N = 4096;
   const data = new Uint16Array(N * 4);
-  for (let i = 0; i < N; i++) data[i * 4] = THREE.DataUtils.toHalfFloat(lipAt(((i + 0.5) / N) * Math.PI * 2));
+  for (let i = 0; i < N; i++) {
+    const a = ((i + 0.5) / N) * Math.PI * 2;
+    const b = a / DEG;
+    data[i * 4] = THREE.DataUtils.toHalfFloat(lipAt(a));
+    // The same lip without the tongue that stands out beside the edge shot: drawn in for the wide shot, that tongue would be a step in the pool.
+    data[i * 4 + 1] = THREE.DataUtils.toHalfFloat(lipAt(a) + 34 * smooth(LIP_BAY - 1.2, LIP_BAY + 2.6, b) * (1 - smooth(LIP_BAY + 5.5, LIP_BAY + 9.5, b)));
+  }
   const t = new THREE.DataTexture(data, N, 1, THREE.RGBAFormat, THREE.HalfFloatType);
   t.minFilter = THREE.LinearFilter;
   t.magFilter = THREE.LinearFilter;
