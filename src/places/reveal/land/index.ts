@@ -441,6 +441,8 @@ void main() {
       }
     }
   }
+  // (The shadows the cloud threw were the sun's: they go with it.)
+  if (uDusk > 0.0) shade = mix(shade, 1.0, min(1.0, 1.7 * uEmber.x));
   float mu = limbCos(xz);
   vec3 level = vec3(0.0, 1.0, 0.0);
   vec3 earth = rigShade(vWorld, mix(level, n, land), view, ground, 0.92, shade);
@@ -515,10 +517,12 @@ void main() {
       lakeNight = lake * uEmber.x * land;
       float net = sqrt(cracks(xz / 27.0));
       float skin = 0.25 + 0.75 * vnoise(xz / 6.0 + 9.0);
-      float hot = lake * (0.2 * skin + (0.45 + 0.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
+      // (After the beat it breathes, and never evenly: two slow swells that do not keep step.)
+      float breathe = mix(1.0, 0.62 + 0.5 * vnoise(vec2(uTime * 0.8, 5.0)) + 0.3 * vnoise(vec2(uTime * 2.1, 9.0)), smoothstep(1.4, 3.2, uEmber.y));
+      float hot = breathe * lake * (0.2 * skin + (0.45 + 0.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
       glow += vec3(1.0, 0.24, 0.025) * 0.3 * hot * uEmber.x * land;
       // (The fume that stands over it, lit red from under: a soft dome, uneven as smoke is.)
-      glow += vec3(1.0, 0.17, 0.035) * (0.012 + 0.07 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
+      glow += vec3(1.0, 0.17, 0.035) * breathe * (0.012 + 0.04 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
       // (Fire in the cracks of the crust round it, broken along its length; the beat runs out along it, as a pulse does.)
       float pulse = uEmber.y > 0.0 ? exp(-pow((far0 - 380.0 * uEmber.y) / 90.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
       float broken = smoothstep(0.3, 0.75, vnoise(xz / 34.0 + 4.0));
@@ -527,6 +531,8 @@ void main() {
     }
     // (Fire seen by an open camera goes to a deep orange, never to white: the red is held and the rest follows it.)
     glow *= mix(1.0, 1.0 / (1.0 + 1.4 * glow.r * uGain), uEmber.x);
+    glow.gb = mix(glow.gb, min(glow.gb, glow.r * vec2(0.5, 0.1)), uEmber.x);
+    glow *= uEmber.w;
   }
 
   // ---- the water ----

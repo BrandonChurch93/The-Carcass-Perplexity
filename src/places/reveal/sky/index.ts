@@ -306,7 +306,7 @@ void main() {
       vec3 layers = mix(mix(vec3(0.85, 0.13, 0.03), vec3(1.0, 0.46, 0.12), smoothstep(1.0, 12.0, km)), mix(vec3(0.8, 0.78, 0.7), vec3(0.2, 0.4, 0.95), smoothstep(22.0, 62.0, km)), smoothstep(9.0, 30.0, km));
       vec3 arc = mix(glow, layers * exp(-max(km, 0.0) / 34.0) * 0.5, lowSun) * mix(1.0, sunSeen(sunH - 0.05) + 0.03 * skySeen(sunH), uTerm.w);
       float airglow = exp(-pow((km - 16.0) / 20.0, 2.0));
-      colour = (exposed(arc * pow(uGain, -0.88) + vec3(0.3, 0.5, 0.5) * 0.0011 * airglow * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45)) * a;
+      colour = (exposed(arc * pow(uGain, -0.88) + vec3(0.2, 0.36, 0.8) * 0.0011 * airglow * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45) * (uEmber.y > 3.0 ? min(1.0, uGain / 5.0) : 1.0)) * a;
     }
     gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
     return;

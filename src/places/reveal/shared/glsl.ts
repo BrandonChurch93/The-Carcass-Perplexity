@@ -31,7 +31,7 @@ uniform vec3 uMoonDir;
 uniform vec3 uMoonColour;
 uniform float uGain;
 uniform vec4 uCalm;
-uniform vec3 uEmber;`;
+uniform vec4 uEmber;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}

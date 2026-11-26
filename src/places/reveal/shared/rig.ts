@@ -52,12 +52,14 @@ export interface Dusk {
   ember: number;
   /** How much more the night side is exposed than the frame is, while the day still stands in it (1 once it is night). */
   lift: number;
+  /** How much of the fire is kept over the last dark (1 until the picture begins to go). */
+  keep: number;
 }
 
 /** The end of the day at a second of the place: a pure function of the time, and the day itself (dusk 0) up to DUSK_FROM. */
 export function dusk(seconds: number): Dusk {
   const u = (seconds - DUSK_FROM) / SET_SLOW;
-  if (!(u > 0)) return { dusk: 0, sun: [...SUN], round: 0, moon: 0, gain: 1, strikes: 1, glintSlide: 0, glint: 1, working: 1, ember: 0, lift: 1 };
+  if (!(u > 0)) return { dusk: 0, sun: [...SUN], round: 0, moon: 0, gain: 1, strikes: 1, glintSlide: 0, glint: 1, working: 1, ember: 0, lift: 1, keep: 1 };
   const length = Math.hypot(...SUN);
   const height0 = Math.asin(SUN[1] / length);
   const turn0 = Math.atan2(SUN[0], -SUN[2]);
@@ -74,7 +76,10 @@ export function dusk(seconds: number): Dusk {
   const since = BEAT === null ? -10 : seconds - BEAT;
   // After the beat the night thins: the camera's eye closes a little, and the fire sinks back.
   const thin = ease(1.2, 6.8, since);
-  const gain = Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.18 * thin);
+  // And over the last seconds the dark comes over the whole picture, the ember the last thing to go.
+  const last = ease(3.2, 6.82, since);
+  const dark = 1 - 0.72 * last;
+  const gain = Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.18 * thin) * dark;
   return {
     dusk: Math.max(1e-4, ease(0, 7, u)),
     sun,
@@ -87,7 +92,8 @@ export function dusk(seconds: number): Dusk {
     glint: 1 - ease(2.6, 4.9, u),
     working: 1 - 0.85 * ease(2, 6.5, u),
     ember: night * (1 - 0.42 * thin),
-    lift: (NIGHT_GAIN * (1 - 0.18 * thin)) / gain,
+    lift: (NIGHT_GAIN * (1 - 0.18 * thin) * dark) / gain,
+    keep: (1 - 0.72 * last) / dark,
   };
 }
 const SET_TAU = 5.5;
@@ -129,7 +135,7 @@ export function createRig(): Rig {
     // x: the lightning of the storm (1 by day, 0 by night). y: how far the sun's image has slid off the sea, km. z: how much of it is left. w: the working of the lava (1 by day, less by night).
     uCalm: { value: new THREE.Vector4(1, 0, 1, 1) },
     // x: the fire of the Heart as the night sees it (0 by day, 1 at night, less as the film ends). y: seconds since the beat (negative before it).
-    uEmber: { value: new THREE.Vector3(0, -1, 1) },
+    uEmber: { value: new THREE.Vector4(0, -1, 1, 1) },
   };
   const sunDay = new THREE.Vector3(...SUN).normalize();
   let landHeight: Height = () => 0;
@@ -162,7 +168,7 @@ export function createRig(): Rig {
       (uniforms.uMoonColour as THREE.IUniform<THREE.Color>).value.setRGB(MOON_COLOUR[0] * d.moon, MOON_COLOUR[1] * d.moon, MOON_COLOUR[2] * d.moon);
       (uniforms.uGain as THREE.IUniform<number>).value = d.gain;
       (uniforms.uCalm as THREE.IUniform<THREE.Vector4>).value.set(d.strikes, d.glintSlide, d.glint, d.working);
-      (uniforms.uEmber as THREE.IUniform<THREE.Vector3>).value.set(d.ember, BEAT === null ? -1 : seconds - BEAT, d.lift);
+      (uniforms.uEmber as THREE.IUniform<THREE.Vector4>).value.set(d.ember, BEAT === null ? -1 : seconds - BEAT, d.lift, d.keep);
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       (uniforms.uBeat as THREE.IUniform<number>).value = beat(seconds);
       (uniforms.uViewKm as THREE.IUniform<number>).value = halfHeightAt(Math.max(0, seconds));
