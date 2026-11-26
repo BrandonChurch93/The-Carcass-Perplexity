@@ -1,6 +1,5 @@
-2026-11-26 03:41 UTC
-work at 6e3205b on agent/ribs-ground-2
-version 2: crag by world position, M1 green, cost 3.63 s
-look-1.jpg = out/work/compare/ribs-3.png
-look-2.jpg = out/work/compare/ribs-0.png
-look-3.jpg = out/work/v/v2b.jpg
+2026-11-26 04:07 UTC
+work at 2752cff on agent/ribs-ground-2
+heartbeat 5: pebble bar and water lane at ribs-0, crag of blocks at ribs-3
+look-1.jpg = out/work/v/r0.jpg
+look-2.jpg = out/work/v/r3.jpg
