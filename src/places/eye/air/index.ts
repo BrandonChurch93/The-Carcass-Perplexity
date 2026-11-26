@@ -21,13 +21,14 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 // The form of the mist by the key it is seen from. a: reach over the water, sheet height, bank height, depth of the bank (metres).
 // b: thickness of the sheet, of the bank, how torn the sheet is, how much leaves the top in threads.
 // c: the middle and the half length of the stretch of far shore it lies along (metres from north round the picture's cylinder, 0 for all of
-// it), how much of that stretch is clear, and how much of it the mirror holds.
+// it), how much of that stretch is clear, and how much of it the mirror holds. d: how far the sheet's edge goes out in tongues.
 type Four = [number, number, number, number];
-const MIST: Record<'wide' | 'low' | 'shore' | 'centre', { a: Four; b: Four; c: Four }> = {
+const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre', { a: Four; b: Four; c: Four; d?: Four }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1] },
-  low: { a: [600, 3.2, 50, 380], b: [1.0, 1.3, 0.7, 0.3], c: [0, 0, 0, 1] },
-  shore: { a: [520, 3.0, 30, 320], b: [0.8, 1.4, 0.8, 0.3], c: [0, 0, 0, 1] },
-  centre: { a: [300, 0.6, 24, 260], b: [0.1, 1.6, 1.0, 0.35], c: [0, 0, 0, 0.45] },
+  low: { a: [600, 3.0, 70, 420], b: [0.4, 0.6, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
+  edge: { a: [520, 2.0, 12, 300], b: [0.12, 0.6, 1.0, 0.3], c: [0, 0, 0.2, 0.6], d: [1, 0, 0, 0] },
+  shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
+  centre: { a: [520, 2.0, 10, 140], b: [0.75, 0.8, 1.0, 0.35], c: [0, 0, 0.3, 0.45], d: [0.8, 1, 1, 0] },
 };
 
 const SKY_VERTEX = /* glsl */ `
@@ -88,8 +89,17 @@ vec3 farShore() {
 // x: how thick the sheet on the water is there, y: the top of the bank there, z: how much of the place the mist covers there.
 // Two axes of the noise lie on the water and the third is time: a bank swells, thins and closes where it lies. Nothing slides.
 vec3 mistForm(vec3 q) {
-  float near = 1.0 - q.z / uMistA.x;
-  if (near <= 0.0 || q.z < 0.0) return vec3(0.0);
+  if (q.z > uMistA.x || q.z < 0.0) return vec3(0.0);
+  // The edge of the sheet on the water is not one line: it goes out in tongues, and the same tongue is one all the way from the wall.
+  float reach = uMistA.x;
+  float tongue = 1.0;
+  if (uMistD.x > 0.0) {
+    // uMistD.z draws the tongues closer together (a long lens holds only a short run of shore) and leaves the water bare between them.
+    tongue = smoothstep(0.3, 0.68, texture(tMistNoise, vec3(q.x / (520.0 / (1.0 + 2.0 * uMistD.z)) + 0.6, 0.21, 0.25 + uTime * 0.004)).b);
+    reach *= mix(1.0, 0.1 + 0.9 * tongue, uMistD.x);
+    tongue = mix(1.0, tongue, uMistD.z);
+  }
+  float near = 1.0 - q.z / reach;
   vec4 big = texture(tMistNoise, vec3(q.x / 1300.0, q.z / 1300.0, uTime * 0.0042));
   vec4 mid = texture(tMistNoise, vec3(q.x / 410.0 + 0.31, q.z / 900.0 + 0.17, 0.5 + uTime * 0.0085));
   float cover = smoothstep(0.0, 0.55, mix(-0.25, 1.0, near) - uMistC.z + uMistB.z * (2.6 * (big.g - 0.5) + 1.2 * (mid.a - 0.5)));
@@ -99,7 +109,9 @@ vec3 mistForm(vec3 q) {
   // The bank does not stand along the whole wall: here it is heaped, there the foot of the wall is clear down to the sheet on the water.
   float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
   float top = uMistA.z * ramp * stands * (0.35 + 1.5 * mid.r) + sheetTop;
-  return vec3(uMistB.x * cover * exp(-q.y / sheetTop), top, cover * ramp * stands);
+  // Where uMistD.y asks, the sheet thins all the way out from the wall, so that it has no outer edge to see from above.
+  float thins = mix(1.0, pow(clamp(near, 0.0, 1.0), 1.6), uMistD.y);
+  return vec3(uMistB.x * cover * thins * tongue * exp(-q.y / sheetTop), top, cover * ramp * stands);
 }
 
 // How thick the mist is at q. h is how high the point stands in the bank, 0 at the water and 1 at its top.
@@ -281,10 +293,11 @@ export function create(ctx: Context): Piece {
       lidState.set(high ? 1 : 0, now.tau, now.eroded, 0);
       // The mist as each key has it: a veil spreading out over the water from the rim, a broad soft bank from the shallows,
       // a thin ribbon tight to the lake under the long lens.
-      const form = MIST[during('eye-01') ? 'wide' : during('eye-04') ? 'shore' : during('eye-05') ? 'centre' : 'low'];
+      const form = MIST[during('eye-01') ? 'wide' : during('eye-03') ? 'edge' : during('eye-04') ? 'shore' : during('eye-05') ? 'centre' : 'low'];
       (rig.uMistA as THREE.IUniform<THREE.Vector4>).value.fromArray(form.a);
       (rig.uMistB as THREE.IUniform<THREE.Vector4>).value.fromArray(form.b);
       (rig.uMistC as THREE.IUniform<THREE.Vector4>).value.fromArray(form.c);
+      (rig.uMistD as THREE.IUniform<THREE.Vector4>).value.fromArray(form.d ?? [0, 0, 0, 0]);
       (rig.uMistOn as THREE.IUniform<number>).value = show.uThin.value;
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
       (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
@@ -302,6 +315,15 @@ export function create(ctx: Context): Piece {
         (rig.uPlateAt as THREE.IUniform<THREE.Vector4>).value.set(p.at[0], p.at[1], p.at[2], p.radius);
         (rig.uPlateLens as THREE.IUniform<THREE.Vector4>).value.set((p.bearing * Math.PI) / 180, p.tanAcross, p.tanUp, p.horizon);
         tone.set(p.tone[0], p.tone[1], p.tone[2], p.wall ? 2 : 1);
+        (rig.uPlateAir as THREE.IUniform<THREE.Vector4>).value.fromArray(p.air ?? [1, 0.3, 0, 0.1]);
+        (rig.uPlateSoft as THREE.IUniform<number>).value = p.soft ?? 0;
+        // The streaks are given in the picture's u and v and handed on in tan from its middle and its waterline.
+        const streaks = [rig.uCirrusA, rig.uCirrusB] as THREE.IUniform<THREE.Vector4>[];
+        const shown = (rig.uCirrus as THREE.IUniform<THREE.Vector2>).value.set(0, 0);
+        (p.cirrus ?? []).slice(0, 2).forEach((c, k) => {
+          (streaks[k] as THREE.IUniform<THREE.Vector4>).value.set((c[0] - 0.5) * 2 * p.tanAcross, (c[1] - p.horizon) * 2 * p.tanUp, c[2] * 2 * p.tanAcross, (c[3] * p.tanUp) / p.tanAcross);
+          shown.setComponent(k, c[4]);
+        });
         near.set(KEYS[p.key].position[0], KEYS[p.key].position[2], p.near, 1);
       }
     },
