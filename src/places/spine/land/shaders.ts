@@ -142,6 +142,7 @@ uniform vec4 uSheet;
 uniform vec4 uSheetMap;
 // The height of the frame in pixels, so that what is decided by the size of a pixel is decided the same at every format.
 uniform float uTall;
+uniform float uWet;
 uniform float uSheetDepth;
 uniform float uSheetShear;
 #ifndef KIND
@@ -377,7 +378,7 @@ void main() {
       float lodA = lodOf(tFace, gSx / 50.0, gSy / 50.0);
       // Far off its joints would be finer than a pixel and the face a smooth skin: there the same rock is laid three times larger, so a far
       // spire is cut by joints it can show.
-      float which = smoothstep(1.3, 2.5, lodA);
+      float which = smoothstep(1.6, 2.2, lodA);
       vec2 eps = vec2(max(0.004, exp2(lodA) / 1254.0), 0.0);
       vec3 cF = vec3(0.0);
       vec3 hF = vec3(0.0);
@@ -562,6 +563,12 @@ void main() {
   }
   if (!spire) snow *= 1.0 - sheet;
   snow *= 1.0 - burn;
+  if (spire) {
+    // Staged by shot (uWet): there the snow keeps to the lee ledges, and the bare rock is wet and near black.
+    snow *= mix(1.0, smoothstep(-0.15, 0.3, lee) * smoothstep(0.55, 0.8, n0.y + 0.25 * nRock.y), uWet);
+    albedo *= mix(1.0, 0.4, uWet);
+    rough = mix(rough, 0.3, uWet);
+  }
   float rime = smoothstep(0.15, 0.7, -lee) * smoothstep(0.35, 0.75, pit + 0.3 * vnoise(vWorld.xz * 0.6 + vWorld.y * 0.4)) * (1.0 - burn);
   if (inside) {
     snow = smoothstep(1.6, 0.2, vWorld.y - CANAL_FLOOR + 1.2 * (pit - 0.5)) * 0.85;
@@ -586,6 +593,8 @@ void main() {
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
     float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.3 * smoothstep(0.42, 0.2, pit) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
+    // Staged by shot (uWet): the struck spire in the long lens is wet black rock, with frost only in its cracks.
+    cover *= 1.0 - 0.85 * uWet;
     albedo = mix(albedo, min(frostC * 1.6, vec3(0.9)) * vec3(0.93, 0.97, 1.06), cover);
     // The feathers stand out of the rock: their own relief, from the frost picture's light and dark across the face.
     vec3 dPx = dFdx(vWorld);

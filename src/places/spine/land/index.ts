@@ -30,7 +30,9 @@ export function create(ctx: Context): Piece {
   // The height of the frame being drawn, in pixels: read from the renderer as each mesh is drawn.
   const tall = { value: 1080 };
   const size = new THREE.Vector2();
+  const wet = { value: 0 };
   const pictures = {
+    uWet: wet,
     tFace: picture('kiteface'),
     tFaceH: { value: ctx.assets.texture('mat/kiteface-h.png', { kind: 'data', anisotropy: ANISOTROPY }) },
     tCrust: picture('crustfield'),
@@ -185,6 +187,8 @@ export function create(ctx: Context): Piece {
         groundMaterial.needsUpdate = true;
       }
       cragMesh.visible = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
+      // Staged by shot: in the long lens of the strike (spine-04) the struck spire is wet black rock with snow on its lee ledges only.
+      wet.value = cragMesh.visible ? 1 : 0;
     },
     dispose: () => {
       cragMaterial.dispose();

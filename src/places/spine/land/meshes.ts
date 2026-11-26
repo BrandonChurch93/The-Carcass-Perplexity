@@ -193,7 +193,10 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const face = Math.sin(th) >= 0 ? 1 : -1;
       const edge = Math.pow(Math.abs(ln), 12);
       const snap = cap ? 0.12 : 1;
-      const l = p.centre + ln * p.half * snap;
+      // The windward edge of the blade is broken: bites and shoulders of some 15 and 5 m stand in and out of its line, so that no spire
+      // shows a ruled side against the sky. The lee edge keeps its line (the kites hold to it), and so does the tip.
+      const rag = ln < 0 ? ((vnoise(u / 15, 3.7 + seed) - 0.5) * 0.5 + (vnoise(u / 5, 8.1 + seed) - 0.5) * 0.2) * Math.pow(-ln, 3) * Math.min(1, Math.max(0, (tipY - p.y) / 30)) : 0;
+      const l = p.centre + ln * p.half * snap * (1 + rag);
       const y = p.y - (cap ? 1 : 0);
       // Its faces stand in and out as the sheet's relief has them, with the small blocks of the rock on top.
       const [su, sv] = sheetAt(sp, l, y);

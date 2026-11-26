@@ -90,7 +90,8 @@ vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
       small += power * (exp(-off * off / 90.0) + 0.3 * exp(-off / 11.0));
     }
   }
-  g *= 1.0e-7;
+  // Staged by shot: behind the long lens of the strike (spine-04) the cloud's glow is the strike picture's own; the air adds a fifth of its.
+  g *= 1.0e-7 * (uSkyStage.z > 0.0 ? 0.2 : 1.0);
   // A glow in the cloud about the stroke, not a lamp over the frame: it closes on a ceiling a little over the dusk sky's own tone.
   return g / (1.0 + dot(g, vec3(0.33)) / 0.07) + vec3(0.84, 0.76, 1.0) * (0.6 * small / (1.0 + small));
 }
@@ -375,8 +376,9 @@ void main() {
   float plateOn = uPlate.w > 0.0 ? plateAt(atan(rd.z, rd.x), asin(clamp(rd.y, -1.0, 1.0)), uvQ) : 0.0;
 #if PLATE == 1
   if (plateOn > 0.0) {
-    domeAir = mix(domeAir, skyCloud(ro, rd, 5.0), plateOn);
-    if (far > 50000.0) stormAir *= 1.0 - plateOn;
+    domeAir = mix(domeAir, skyCloud(ro, rd, 2.5), plateOn);
+    // Before the strike's sky the storm's near air is thin: the picture keeps its dark masses and its sea its billows.
+    stormAir *= far > 50000.0 ? 1.0 - plateOn : 1.0 - 0.75 * plateOn;
   }
 #endif
   if (stormAir > 0.0) {

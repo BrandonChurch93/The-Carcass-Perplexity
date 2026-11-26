@@ -138,7 +138,14 @@ export function create(ctx: Context): Piece {
       // the flakes do not fly inside the canal, only out beyond its far mouth (0.5), where the veil is thicker for the storm seen from shelter; by the dead one (spine-03) the running snow is held off 10 m round it and the veil is a fifth, so the spire behind keeps its rock.
       const inStrike = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
       const inCarcass = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4;
-      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 4 : inStrike ? 0.36 : inCarcass ? 0.22 : 1;
+      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 4 : inStrike ? 0.2 : inCarcass ? 0.22 : 1;
+      // Staged by shot: the strike's own sky and sea (the plate) are compiled into the air only for its shot (spine-04); a software renderer
+      // pays for them on every pixel otherwise.
+      const plateOn = inStrike ? 1 : 0;
+      if (volume.defines.PLATE !== plateOn) {
+        volume.defines.PLATE = plateOn;
+        volume.needsUpdate = true;
+      }
       stage.z = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.5 : 1;
       clear.z = inCarcass ? 3.5 : 0;
       // Staged by shot: by the dead one (spine-03) scud races low past the spires.
