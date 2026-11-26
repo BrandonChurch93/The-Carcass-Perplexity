@@ -51,8 +51,8 @@ float lowPicture(vec2 w) {
     pic += (1.0 - away) * puff * smoothstep(0.34, 0.62, street);
   }
   if (away > 0.0) {
-    float streak = seen(texture2D(uMatStreaks, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(1700.0, 1350.0) + vec2(0.3, 0.7)).rgb, 0.17, 0.85);
-    pic += away * streak * (0.4 + 0.6 * streak);
+    float streak = seen(texture2D(uMatStreaks, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(1250.0, 1000.0) + vec2(0.3, 0.7), 0.7).rgb, 0.16, 0.8);
+    pic += away * streak * (0.3 + 0.6 * streak);
   }
   return pic;
 }
@@ -69,7 +69,9 @@ vec2 lowField(vec2 at) {
   // The sky stands clear over the lake of the Eye, where the rise begins.
   float amount = coverAt(at).g * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
-  float field = amount * (0.26 + 0.74 * smoothstep(0.34, 0.72, slow + 0.2 * (amount - 0.6)));
+  // From orbit the field is seen whole: an even scatter over all the sea, a little thicker here and thinner there.
+  float even = smoothstep(650.0, 1200.0, uViewKm);
+  float field = amount * (mix(0.26, 0.5, even) + mix(0.74, 0.5, even) * smoothstep(0.34, 0.72, slow + 0.2 * (amount - 0.6)));
   float pic = lowPicture(w);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
   float thick = min(1.0, 1.1 * pic) * smoothstep(0.0, 0.5, field);
@@ -85,7 +87,7 @@ float cloudShade(vec2 xz) {
   vec2 under = xz + toSun * ${FRONT_KM.toFixed(1)} * lift;
   float front = coverAt(under - uTime * FRONT_DRIFT).r;
   float standing = coverAt(under).b;
-  return (1.0 - 0.72 * smoothstep(0.04, 0.6, low)) * (1.0 - 0.6 * front * uArrive) * (1.0 - 0.62 * standing * uArrive);
+  return (1.0 - 0.72 * smoothstep(0.04, 0.6, low)) * (1.0 - 0.3 * front * uArrive) * (1.0 - 0.62 * standing * uArrive);
 }`;
 
 /** The two fronts as GLSL: the plate read at a point of the world (km), x how thick, y its light. */

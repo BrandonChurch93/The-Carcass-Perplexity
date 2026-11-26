@@ -23,7 +23,7 @@ HIGH = WIDE * 9 / 16
 # The fronts: centre x and y (px of the master), half size (px), turn (degrees). weather.ts holds the same four numbers for each.
 FRONTS = [(4950.0, -180.0, 1250.0, 22.0), (500.0, 3750.0, 1150.0, -8.0)]
 # The cyclone and the storm: centre, half sizes (px of the master), as sky/index.ts places their sheets.
-CYCLONE = (5557.0, 3007.0, 1080.0, 1080.0)
+CYCLONE = (5557.0, 3007.0, 1250.0, 1250.0)
 STORM = (79.14 + 0.535 * 5872.86, 44.52 + 0.4563 * 3305.24, 215.0, 165.0)
 MAP_A = (2983.67, 1727.13, 5295.59)
 
@@ -85,7 +85,7 @@ west = np.exp(-(((px - 800.0) / 240.0) ** 2 + ((py - 1640.0) / 430.0) ** 2))
 green = np.maximum(green, np.minimum(1.0, 1.5 * west) * (0.6 + 0.4 * pattern))
 green *= 1.0 - 0.6 * ndimage.gaussian_filter(red, 6)
 rc = np.hypot((px - CYCLONE[0]) / CYCLONE[2], (py - CYCLONE[1]) / CYCLONE[3])
-green *= step(0.55, 1.05, rc)
+green *= step(0.5, 0.95, rc)
 
 out = np.stack([ndimage.gaussian_filter(red, 0.8), green, ndimage.gaussian_filter(blue, 1.2)], axis=-1)
 Image.fromarray((np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGB').save(os.path.join(PUB, 'sky', 'cover.png'), optimize=True)
