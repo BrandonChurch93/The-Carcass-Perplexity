@@ -28,7 +28,7 @@ vec3 sunGlitter(vec3 r, float far) {
   float rs2 = rs * rs;
   float rs8 = rs2 * rs2 * rs2 * rs2;
   float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
-  float broad = rs64 * rs64 * 0.05 + rs64 * 0.036 + rs8 * rs8 * 0.008 + rs2 * rs2 * 0.0008;
+  float broad = rs64 * rs64 * 0.03 + rs64 * 0.02 + rs8 * rs8 * 0.004 + rs2 * rs2 * 0.0004;
   float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
   // Through that much fog the sun is gold, and so is its path.
   return uSunColour * vec3(1.0, 0.74, 0.46) * (broad + spark);
@@ -78,7 +78,7 @@ void main() {
     vec2 rb = texture2D(tRipple, vec2(xz.x * 0.391 + xz.y * 0.92, -xz.x * 0.92 + xz.y * 0.391) * 0.113 + drift * uTime * 0.05).rg - 0.5;
     // Under the lens the short ones lead; farther off they are too small to see and the longer ones carry the picture.
     float off = smoothstep(5.0, 28.0, far);
-    slope = slope * (1.0 - 0.7 * smoothstep(24.0, 6.0, far)) * (1.0 + 0.9 * smoothstep(8.0, 22.0, far) * smoothstep(120.0, 40.0, far)) + (ra * mix(1.3, 0.7, off) + rb * mix(1.5, 2.8, off)) * close * (0.45 + 0.55 * deep) * (0.7 + 0.5 * gust);
+    slope = slope * (1.0 - 0.7 * smoothstep(24.0, 6.0, far)) + smoothstep(70.0, 26.0, far) * (ra * mix(1.9, 1.0, off) + rb * mix(2.1, 2.8, off)) * close * (0.45 + 0.55 * deep) * (0.7 + 0.5 * gust);
   }
   // A hand's depth of water over a plate cannot carry a wave: it lies nearly flat, and shows the sky whole.
   slope *= 0.6 + 0.4 * smoothstep(0.02, 0.1, depth);
@@ -100,7 +100,7 @@ void main() {
   float drawn = 1.0 - 0.85 * tanh(3.4 * tip);
   mirror *= drawn;
   // Toward the sun the fog is a glare the water gives back broken: the troughs there stay dark.
-  mirror *= 1.0 - 0.42 * pow(max(dot(r, uSunDir), 0.0), 3.0);
+  mirror *= 1.0 - 0.62 * pow(max(dot(r, uSunDir), 0.0), 2.0);
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.98, 1.0, 0.9), 0.1 + 0.3 * smoothstep(0.04, 0.22, v.y)) * mix(0.96, 0.8, smoothstep(0.06, 0.3, v.y)) * vec3(1.12, 0.94, 0.76);
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
@@ -120,7 +120,10 @@ void main() {
   mirror += sunGlitter(r, far) * sunHere;
   // Sparks: here and there a facet smaller than a ripple turns the sun to the lens for a moment, far outside its path. Each is a point that lives a tenth of a second.
   float px = far * 2.0 / (uFrame.y * 1.6);
-  float lobe = pow(max(dot(r, uSunDir), 0.0), 12.0) * (0.7 + 0.3 * gust) * (0.4 + 2.2 * rings.b);
+  float rsun = max(dot(normalize(vec3(r.x, abs(reflect(-v, vec3(0.0, 1.0, 0.0)).y), r.z)), uSunDir), 0.0);
+  // The faces tipped away from the lens are the ones that find the sun: the glints ride the crests of the wavelets.
+  float crest = smoothstep(0.05, 0.4, -tip);
+  float lobe = pow(rsun, 5.0) * (0.25 + 1.6 * crest) * (0.7 + 0.3 * gust) * (0.5 + 2.2 * rings.b);
   float sparks = 0.0;
   float seen = smoothstep(0.012, 0.004, px);
   if (seen > 0.0 && lobe > 0.002) {
@@ -131,12 +134,12 @@ void main() {
       vec2 cellAt = xz / 0.022 + float(o) * 17.3;
       vec2 id = floor(cellAt);
       vec2 rnd = hash22(id + slot * 7.13);
-      float on = step(1.0 - 0.14 * lobe * (0.7 + 0.3 * gust), hash12(id * 1.37 + slot * 3.1));
+      float on = step(1.0 - 0.3 * lobe, hash12(id * 1.37 + slot * 3.1));
       float dot_ = smoothstep(0.34, 0.1, length(fract(cellAt) - 0.5 - 0.3 * (rnd - 0.5)));
       sparks += on * dot_ * life;
     }
   }
-  mirror += uSunColour * vec3(1.0, 0.8, 0.55) * sunHere * (sparks * seen * 0.9 + (1.0 - seen) * lobe * 0.012);
+  mirror += uSunColour * vec3(1.0, 0.8, 0.55) * sunHere * (sparks * seen * 0.9 + (1.0 - seen) * lobe * 0.02 + 0.1 * crest * crest * pow(rsun, 4.0) * smoothstep(60.0, 20.0, far));
   // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
   vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.07 + (g1.x + g2.y) * 0.012, (slope.y + g1.y * 0.5) * 0.2) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
   vec4 image = texture2D(tMirror, at);

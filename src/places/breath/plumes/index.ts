@@ -54,9 +54,11 @@ export function create(ctx: Context): Piece {
     const at = bushAt(i);
     // Staged: the two that the lens of key breath-3 stands by are rooted a stride further west of the lip than their anchors, so that
     // the nearer is cut by the left edge of that frame and the farther has its holdfast in the lower left of it, as in the picture.
-    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] - 0.5] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : at;
+    // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted three metres to that lens's left
+    // and a stride ahead of it, so that its fronds hang into the upper left of that frame, as the picture has them.
+    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] - 0.5] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? [-11.5, 29.5] : at;
     // Three stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5 });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : i === 5 ? tall * 1.25 : tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5 });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
