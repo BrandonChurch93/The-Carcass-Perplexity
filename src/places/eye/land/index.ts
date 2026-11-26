@@ -124,6 +124,9 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 w = pow(abs(n), vec3(4.0));
   w /= w.x + w.y + w.z;
+  // A face that shows a tenth of itself is not read: the two that count share the stone.
+  w = max(w - 0.1, 0.0);
+  w /= w.x + w.y + w.z;
   // A block is a piece of the scree: the plate of the slope on its three faces, each block from another part of it.
   vec2 at = vTint.yz * 40.0;
   // The plate is a slope of many stones: a block shows a small piece of it large, so that it is one stone with its own cracks, not a heap.
@@ -135,17 +138,17 @@ void main() {
   float e = 0.1;
   vec2 d = vec2(0.0);
   vec4 col = vec4(0.0);
-  if (w.x > 0.03) {
+  if (w.x > 0.0) {
     vec4 k = screeAt(ux);
     col += k * w.x;
     d += vec2(texture2D(tScreeH, (ux + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (ux + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.x;
   }
-  if (w.y > 0.03) {
+  if (w.y > 0.0) {
     vec4 k = screeAt(uy);
     col += k * w.y;
     d += vec2(texture2D(tScreeH, (uy + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uy + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.y;
   }
-  if (w.z > 0.03) {
+  if (w.z > 0.0) {
     vec4 k = screeAt(uz);
     col += k * w.z;
     d += vec2(texture2D(tScreeH, (uz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.z;
