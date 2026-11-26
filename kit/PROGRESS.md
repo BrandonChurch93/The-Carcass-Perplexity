@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 107, 2026-11-26 10:38 UTC:
+Status 108, 2026-11-26 10:58 UTC:
 
-- `01-establishing.jpg`: The establishing frame of every place and the titan frame, side by side (review tier)
-- `02-hook.jpg`: The first three seconds: the blades come out of the fog bank (every 16th frame)
-- `03-around-ribs-heart.jpg`: The join from the Ribs to the Heart: the bore reaches the lens, the cut falls on the hit at 41.8 s
-- `04-ending.jpg`: The ending as it stands: daylight, a faint beat, then black. This is being rebuilt
+- `01-ribs0.jpg`: The Ribs, the frame the jurors chose for the card (final tier). The loop opens on it
+- `02-around-eye-reveal.jpg`: The join from the Eye into the rise: the rings pop in between frames 9508 and 9530. Being fixed
+- `03-heartbeat.jpg`: The last heartbeat as it stands (every 10th frame). Being rebuilt in the dark
+- `04-key-reveal-1-uhd-draft.jpg`: The frame that answers reveal-1, film frame 9627, uhd, draft tier
 
+Status 107, 2026-11-26 10:38 UTC, showed: The establishing frame of every place and the titan frame, side by side (review tier); The first three seconds: the blades come out of the...
 Status 106, 2026-11-26 10:15 UTC, showed: The Ribs, the hung carcass at native size: round 3 left, after the crab fix right (both at the final tier); The Blood Marsh in motion (shot...
 Status 105, 2026-11-26 09:56 UTC, showed: The Ribs, the hung carcass at native size: round 3 left (final tier), after the crab fix right (draft tier); The Reveal, the top of the...
-Status 104, 2026-11-26 09:35 UTC, showed: The Ribs, round 3: approved left, built right at final tier (all five keys); The Blood Marsh, round 3: approved left, built right at final...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T10:38:51Z
-phase 5: 0.38 h used of 6.00 h
-build: 34.79 h used of 72.00 h
+2026-11-26T10:58:37Z
+phase 5: 0.71 h used of 6.00 h
+build: 35.12 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 23
+minutes since the last status: 20
 ```
 
 ## Phases
