@@ -165,7 +165,9 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     float open = deck.w + loose;
     float tall = deck.y - deck.x;
     // The more the ray leans, the farther it slides across the lumps on its way down through the deck, and the more cuts it takes to find them.
-    int cuts = int(clamp(ceil(3.0 + 3.0 * length(lean) * (top - foot) * deck.z), 3.0, float(LID_CUTS)));
+    // Under a bank that already hides most of it a deck is found with fewer.
+    float least = tr < 0.5 ? 2.0 : 3.0;
+    int cuts = int(clamp(ceil(least + 3.0 * length(lean) * (top - foot) * deck.z), least, float(LID_CUTS)));
     float each = (top - foot) / float(cuts);
     float thick = 0.0;
     // Where the ray first meets the bank: between the last cut in the air and the first in the cloud, so the face it sees has no terraces.
@@ -210,14 +212,16 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     float high = smoothstep(0.0, 1.0, up);
     // The shade of a bank is not one blue: the light that comes through the cloud warms it where the bank is heaped.
     vec3 shade = mix(uLidShade, uLidInside * 1.25, 0.55 * smoothstep(0.35, 0.95, metH));
-    vec3 colour = mix(shade * (0.6 + 0.5 * high), uLidSunlit * (0.72 + 0.5 * high), lit * (0.3 + 0.7 * high));
+    vec3 colour = mix(shade * (0.5 + 0.7 * high), uLidSunlit * (0.72 + 0.5 * high), lit * (0.3 + 0.7 * high));
+    // A deck under another stands in its shade.
+    colour *= 0.72 + 0.28 * tr;
     // Where a bank is thin the light goes through it: a veil is pale, not a sheet of shade.
     colour = mix(colour, mix(uLidShade, uLidSunlit, 0.62), 0.7 * (1.0 - smoothstep(0.1, 0.9, alpha)));
     // Seen close, the cloud is paler and its lumps are soft.
     colour = mix(colour, mix(uLidInside, uLidWarm, lit) * 1.5, 0.35 * (1.0 - smoothstep(0.0, 0.12, camA - met)));
     sum += tr * alpha * colour;
     tr *= 1.0 - alpha;
-    if (tr < 0.02) break;
+    if (tr < 0.04) break;
   }
   // About the cut the air under the banks is thick: through the small holes between them the eye meets haze in shade, not the ground, which
   // is the Eye's on one side of the cut and the rise's on the other. Its edge lies outside all that the gap shows from the height of the cut.
@@ -233,14 +237,14 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   float shadeIn = uLidShadow * thin * smoothstep(LID_FOOT, 0.93, camA);
   vec2 g = from + lean * (floorA - camA);
   float lightLeft = 1.0;
-  if (shadeIn > 0.0 && tr > 0.02 && floorA < 0.45) {
+  if (shadeIn > 0.0 && tr > 0.06 && floorA < 0.45) {
     for (int i = 0; i < LID_DECKS; i++) {
       vec4 deck = LID_DECK[i];
       float a = deck.x + 0.3 * (deck.y - deck.x);
       vec2 q = g + sunSide * 0.42 * (a - floorA);
       float outside = lidOutside(q, a);
       if (outside <= 0.0) continue;
-      lightLeft *= 1.0 - 0.8 * smoothstep(0.05, 0.45, lidBank(q, deck, deck.w + loose - lidClose(q, a, outside), 1.0, true));
+      lightLeft *= 1.0 - 0.8 * smoothstep(0.0, 0.7, lidBank(q, deck, deck.w + loose - lidClose(q, a, outside), 1.0, true));
     }
     tr *= 1.0 - shadeIn * (1.0 - lightLeft);
   }
