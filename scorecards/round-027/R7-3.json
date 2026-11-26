@@ -1,0 +1,35 @@
+{
+  "round": 27,
+  "unit": "film",
+  "pack": "R7-3",
+  "family": "claude",
+  "answered": "2026-11-26 15:59 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 8,
+    "pass": true,
+    "issues": [
+      {
+        "severity": "minor",
+        "file": "set-C-03.png",
+        "where": "the red water surface in the mid-frame, under the dome and toward the right",
+        "what": "the fine ripple streaks and small bright foam flecks are slightly smeared and softer than before compression. The water still reads as rippled water, and I see no banding or blocks.",
+        "fix": "give the water a little more bitrate or keep a touch more grain there so the ripples keep their crispness"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-02.png",
+        "where": "the glassy dome's patchy highlights and the pale sky around the palm crowns",
+        "what": "the soft gradients are slightly smoothed and the thin palm fronds lose a little edge definition. There are no visible steps in the sky and the fronds still read as fronds.",
+        "fix": "keep the sky gradient dithered or grained so it stays smooth, and keep a little more bitrate around the thin fronds"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-04.png",
+        "where": "the smooth pink sand-bar and silt area in front of the foreground rocks",
+        "what": "the large soft area is a little flatter after compression, with a faint loss of tonal texture. No contour steps appear, so this shows only in the side-by-side crops.",
+        "fix": "add light grain or dither to the smooth gradient so it holds its tonal variation"
+      }
+    ]
+  }
+}
