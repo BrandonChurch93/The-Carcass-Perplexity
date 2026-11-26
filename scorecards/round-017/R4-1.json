@@ -1,0 +1,63 @@
+{
+  "round": 17,
+  "unit": "marsh",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-26 05:13 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the entire herd of creatures and the red water around them (frames 6263 to 6585, also seen in set-A-09.png)",
+        "what": "every animal in the foreground, midground, and background is completely frozen like a statue for over five seconds while the camera arcs around them, and the concentric water ripples around the submerged creature and the standing creature's legs stay locked in place",
+        "fix": "animate natural weight shifts, breathing, head turns, whisker movement, and staggered steps across the herd, and drive live expanding and dissipating water ripples around the bodies and legs"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "the two bursting bubbles in the red water (frames 6087 to 6204, also seen in set-A-07.png)",
+        "what": "the second bubble vanishes leaving a flat surface ring at frame 6165 before a tall crown splash erupts late at frame 6184, and the first bubble's crown and droplets hang almost frozen across twelve consecutive frames in set-A-07.png rather than breaking and falling under gravity",
+        "fix": "time the crown splash immediately to the dome rupture and simulate the film break, rim collapse, and falling droplets at real-time speed with realistic liquid weight"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-08.png",
+        "where": "the small dark flying specks around the stalks and mist (frames 5940 to 5951)",
+        "what": "the flying creatures pop in and out and jump erratic distances between consecutive frames instead of following continuous flight paths",
+        "fix": "animate the flying creatures along smooth, continuous 3D trajectories with consistent wingbeat cycles and motion blur"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the animals, red liquid channels, and foreground concentric ripples across the establishing push-in (frames 5618 to 5832, also seen in set-A-06.png)",
+        "what": "all the animals are motionless, the red water shows no current or surface agitation, and the concentric ripples around the bottom-center submerged animal remain frozen in shape and position across the entire shot",
+        "fix": "add subtle live motion to the animals, continuous drift and surface disturbance to the red liquid, and actively propagating ripples and billowing mist so the landscape reads as alive"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the foreground red fronds, the right-background creature, and the end of the camera track (frames 5833 to 6047)",
+        "what": "the red fronds on the stalks stay rigid with no wind sway, the background creature stands completely frozen for over two seconds, and the lateral track ends on a weak composition of mostly empty mist with the creature half-cropped at the right edge",
+        "fix": "add subtle wind sway to the fronds, give the background creature natural idle movement, and adjust the track framing so the shot lands on a strong subject"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the foreground creature lifting from the mud and the background scene (frames 6586 to 7014)",
+        "what": "the foreground creature pivots upward without disturbing or dripping any mud and water at its base, while all background animals, midground water, and mist remain completely frozen across the seven-second push-in",
+        "fix": "add secondary weight shift, whisker lag, and mud and water displacement where the creature lifts, and keep the background herd, water surface, and mist subtly alive"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the background creature across the water (frames 6048 to 6262)",
+        "what": "the creature stands completely motionless like a static model for the entire shot while the bubbles burst in front of it",
+        "fix": "give the creature subtle breathing, weight shift, or a head turn in response to the nearby bursts"
+      }
+    ]
+  }
+}

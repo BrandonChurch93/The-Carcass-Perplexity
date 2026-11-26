@@ -17,8 +17,8 @@ export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
     tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
     tTalus: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 8 }) },
     tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 4 }) },
-    tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
-    tSinterNh: { value: ctx.assets.texture('mat/sinter-nh.png', { kind: 'data' }) },
+    tShoreP: { value: mirrored(ctx.assets.texture('mat/shoreplate.jpg', { anisotropy: 8 })) },
+    tShorePH: { value: mirrored(ctx.assets.texture('mat/shoreplate-h.png', { kind: 'data', anisotropy: 4 })) },
     tScree: { value: mirrored(ctx.assets.texture('mat/screeplate.jpg', { anisotropy: 6 })) },
     tScreeH: { value: mirrored(ctx.assets.texture('mat/screeplate-h.png', { kind: 'data', anisotropy: 3 })) },
   };
@@ -29,8 +29,8 @@ uniform sampler2D tCliff;
 uniform sampler2D tCliffNh;
 uniform sampler2D tTalus;
 uniform sampler2D tTalusNh;
-uniform sampler2D tSinter;
-uniform sampler2D tSinterNh;
+uniform sampler2D tShoreP;
+uniform sampler2D tShorePH;
 uniform sampler2D tScree;
 uniform sampler2D tScreeH;
 
@@ -155,7 +155,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     w3 /= w3.x + w3.y + w3.z;
     vec4 a = screeAt(p.xz) * w3.y;
     // Under the feet of a low eye the same broken stone is small: cobbles and pebbles, the plate laid six times finer.
-    float fine = (1.0 - smoothstep(7.0, 22.0, length(cameraPosition - p))) * smoothstep(12.0, 4.0, cameraPosition.y);
+    float fine = (1.0 - smoothstep(16.0, 40.0, length(cameraPosition - p))) * smoothstep(12.0, 4.0, cameraPosition.y);
     if (w3.x > 0.02) a += screeAt(p.zy + 11.0) * w3.x;
     if (w3.z > 0.02) a += screeAt(p.xy + 23.0) * w3.z;
     vec2 qr = vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) * 0.31 + 7.3;
@@ -171,18 +171,17 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     float shingle = 0.0;
     vec3 pebbleBent = vec3(0.0);
     if (fine > 0.0) {
-      vec2 xs = p.xz / 0.11 + 2.0 * vec2(vnoise(p.xz * 1.3), vnoise(p.xz * 1.3 + 7.0));
-      // A stone smaller than the pixel that looks at it is not drawn: the shore keeps its tone and loses its grain.
-      float seen = fine * smoothstep(1.1, 0.35, 0.43 * length(fwidth(xs)));
-      if (seen > 0.0) {
-        vec2 lean;
-        float tall;
-        vec4 stones = shingleAt(p.xz, xs, lean, tall);
-        gravel = mix(gravel, stones.rgb, seen);
-        pebbleBent = vec3(lean.x, 0.0, lean.y) * seen;
-        a.a = mix(a.a, 0.15 + 0.85 * stones.a, seen);
-        shingle = seen;
-      }
+      // The picture of the shore itself, eight metres of it at its own size: stones of every size in wet grit, with weed dried on them.
+      vec2 su = p.xz / vec2(8.0, 4.5);
+      float seen = fine;
+      vec3 sc = texture2D(tShoreP, su).rgb;
+      float sh = texture2D(tShorePH, su).r;
+      float es = 0.012;
+      vec2 lean = vec2(texture2D(tShorePH, su + vec2(es / 8.0, 0.0)).r - texture2D(tShorePH, su - vec2(es / 8.0, 0.0)).r, texture2D(tShorePH, su + vec2(0.0, es / 4.5)).r - texture2D(tShorePH, su - vec2(0.0, es / 4.5)).r);
+      gravel = mix(gravel, sc * vec3(1.5, 1.56, 1.66), seen);
+      pebbleBent = vec3(-lean.x, 0.0, -lean.y) * 3.0 * seen;
+      a.a = mix(a.a, sh, seen);
+      shingle = seen;
     }
     stone = gravel;
     // The relief of the plate turns the faces of each stone.

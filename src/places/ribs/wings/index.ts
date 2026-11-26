@@ -1,5 +1,6 @@
 // The kite-wings: feeders wading the pools, the colony on the ledges of its rock, the flock round the rib tops, a skein coming in from the sea,
-// the ones that land and lift off, and the ones that run from the bore. Every pose is a function of the time of the place alone.
+// the ones that land, and the ones that run from the bore. Each is one of the Builder's pictures of the animal, stood in the place and bent
+// about its joints; every pose is a function of the time of the place alone.
 import * as THREE from 'three';
 import { resolve } from '../../../core/cameras';
 import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cut';
@@ -9,49 +10,37 @@ import type { Context, Piece } from '../shared/context';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { foamTexture } from '../sea/chop';
 import { Spray, rand } from '../sea/spray';
-import { RING_SOURCE, boreArrives } from '../sea/tide';
+import { RING_SOURCE } from '../sea/tide';
 import type { Ring } from '../sea/tide';
-import { FAR, Flock, NEAR, STAND, animalMaterial, blend, stand } from './animal';
-import type { Pose } from './animal';
-import { Puppets, puppetMaterials, sheetTip } from './puppet';
-import { Kites, kiteMaterial } from './kite';
+import { FEEDER_A, FEEDER_B, FEEDER_C, FLIERS, Figures, PERCHED, figureMaterials, figurePoint, placed } from './figure';
+import type { Placed } from './figure';
 
-/** The kite-wing of the approved pictures stands twice a man at the back: every free animal is this much larger than the animal of size 1. */
+/** The kite-wing of the approved pictures stands twice a man at the back: the old measure of its size, kept for the flock's scatter. */
 const GROW = 1.35;
 
 export const PARTS: readonly string[] = ['kite-wings'];
 
 const FEEDERS = 44;
-const FLIERS = 451;
+const FLIERS_N = 451;
 const SPECKS = 560;
 const PASSERS = 6;
-/** The run of the hero by the establishing camera: seconds it lasts, centred on the key, and its mean speed. */
-const RUN = { seconds: 9, speed: 3.7 };
 const LOW = 6;
 const FLEEING = 9;
 const COLONISTS = 150;
 const SKEIN = 22;
-const NECK = 1.5;
-/** How far the sails may be open before the picture of the standing animal gives way to the built one. */
-const OPEN = 0.6;
 /** Metres a flier keeps from every lens. */
 const CLEAR = 45;
+/** Seconds the shutter is open, for the softness of what crosses the lens fast. */
+const SHUTTER = 1 / 50;
 
 const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
 const smooth = (a: number, b: number, x: number): number => {
   const t = clamp01((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
-const ease = (x: number): number => x - Math.sin(2 * Math.PI * x) / (2 * Math.PI);
 const hash = (a: number, b: number): number => {
   const s = Math.sin(a * 127.1 + b * 311.7 + 1.3) * 43758.5453;
   return s - Math.floor(s);
-};
-const turnTo = (from: number, to: number, k: number): number => {
-  let d = (to - from) % (Math.PI * 2);
-  if (d > Math.PI) d -= Math.PI * 2;
-  if (d < -Math.PI) d += Math.PI * 2;
-  return from + d * k;
 };
 /** A value held, then changed: a new one every `every` seconds, moved to over `over` of the span. */
 const held = (t: number, every: number, key: number, over = 0.22): number => {
@@ -60,64 +49,38 @@ const held = (t: number, every: number, key: number, over = 0.22): number => {
   return hash(n, key) + (hash(n + 1, key) - hash(n, key)) * smooth(1 - over, 1, u - n);
 };
 
-/** How high the tip of the neck stands over the hip, and how far ahead, for a pose (the vertex shader's own sum). */
-function neckTip(p: Pose): [number, number] {
-  const pitch = 0.32 + p.pitch;
-  let y = Math.sin(pitch) * 0.36 + Math.cos(pitch) * 0.1;
-  let z = Math.cos(pitch) * 0.36 - Math.sin(pitch) * 0.1;
-  for (let i = 0; i < 8; i++) {
-    const s = (i + 0.5) / 8;
-    const th = p.rise + p.bend * (0.35 * s + 0.65 * s * s) + p.tuck * Math.cos(Math.PI * s);
-    y += (Math.sin(th) * NECK) / 8;
-    z += (Math.cos(th) * NECK) / 8;
-  }
-  return [y, z];
+interface Spot {
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+  roll: number;
 }
 
-/** The flying pose: stroke `amp` at phase `ph`. */
-function fly(p: Pose, amp: number, ph: number): Pose {
-  p.pitch = -0.3;
-  p.spread = 1;
-  p.flap = 0.1 + amp * Math.sin(ph);
-  p.lag = -0.45 * amp * Math.cos(ph);
-  p.rise = 0.12;
-  p.bend = 0.12;
-  p.sweep = 0;
-  p.tuck = 0.22;
-  p.leftZ = -1.5;
-  p.leftY = -0.14;
-  p.rightZ = -1.52;
-  p.rightY = -0.1;
-  // The body answers the stroke: it rises as the sails come down and its chest lifts after.
-  p.y += 0.22 * amp * Math.sin(ph - 1.3) * p.size;
-  p.pitch += 0.1 * amp * Math.sin(ph - 0.7);
-  return p;
-}
-
+/** What a feeder does: 0 feeds with its tuft in the pool and lifts its head between, 1 stands on one leg and shakes its tuft dry, 2 runs with its sails up. */
+type Habit = 0 | 1 | 2;
 interface Feeder {
-  x0: number;
-  z0: number;
+  x: number;
+  z: number;
   yaw: number;
   size: number;
-  stride: number;
-  cycles: number;
-  cycle: number;
+  habit: Habit;
+  seed: number;
   period: number;
   offset: number;
-  seed: number;
-  leave: number;
-  away: number;
-  /** What it does in its pauses: under 0.55 it feeds, under 0.75 it looks about, over that both. Under 0 it varies pause by pause. */
-  habit: number;
-  runs: boolean;
+  /** A runner is at its station at this second, and is in the place only for `span` seconds either side of it. */
+  at: number;
+  span: number;
 }
+const TIP_A: [number, number] = [1180, 884];
+const TIP_B: [number, number] = [1290, 250];
+const RUN_SPEED = 5.2;
 
 export function create(ctx: Context): Piece {
   const rig = ctx.rig;
   const scatter = ctx.rng('kite-wings');
   // What a foot stands on. Where the bed lies deep under a pool the water is murky and the wader keeps to what bears it a hand under the surface.
   const ground = (x: number, z: number): number => Math.max(rig.land.height(x, z), LEVELS.pool - 0.2);
-  const material = animalMaterial(ctx, LEVELS.pool);
 
   // Where the cameras go: nothing flies through a lens, nothing stands on a track.
   const eyes: { t: number; at: [number, number, number] }[] = [];
@@ -129,211 +92,124 @@ export function create(ctx: Context): Piece {
     }
   }
   const nearTrack = (x: number, z: number, reach: number): boolean => eyes.some((e) => Math.hypot(x - e.at[0], z - e.at[2]) < reach);
+  /** Where the lens is at t, to the tenth of a second: which side of itself a flier shows it. */
+  const eyeAt = (t: number): [number, number, number] => {
+    let best = eyes[0] as (typeof eyes)[number];
+    for (const e of eyes) {
+      if (e.t > t + 1e-6) break;
+      best = e;
+    }
+    return best.at;
+  };
 
   // ---- Feeders ----
   const feeders: Feeder[] = [];
-  const gait = (f: Feeder, t: number): number => {
-    if (f.runs) return f.cycles * smooth(T0 - RUN.seconds / 2, T0 + RUN.seconds / 2, t);
-    const u = (t + f.offset) / f.period;
-    const m = Math.floor(u);
-    const tau = (u - m) * f.period;
-    const walk = f.cycles * f.cycle;
-    return (m + (tau < walk ? ease(tau / walk) : 1)) * f.cycles;
-  };
-  const addFeeder = (x: number, z: number, yaw: number, small: number, stationed: boolean, habit = -1, at = T0, runs = false, striding = false): void => {
-    const size = small * GROW;
-    const f: Feeder = {
-      x0: x,
-      z0: z,
-      yaw,
-      size,
-      stride: scatter.range(0.75, 0.95) * size,
-      cycles: stationed ? 1 : 1 + scatter.int(3),
-      cycle: scatter.range(1.5, 2.1),
-      period: scatter.range(10, 17),
-      offset: scatter.range(0, 40),
-      seed: scatter.next(),
-      leave: boreArrives(z) - scatter.range(5, 13),
-      away: scatter.range(-0.5, 0.5),
-      habit,
-      runs,
-    };
-    if (runs) {
-      f.stride = 1.5 * size;
-      f.cycles = (RUN.speed * RUN.seconds) / f.stride;
-    }
-    // A stationed feeder is at its station on the establishing key, in the middle of a pause.
-    if (stationed) f.offset = f.period * (0.45 + 0.35 * f.seed) - at;
-    // One is caught in the middle of a step.
-    if (striding) f.offset = 0.55 * f.cycles * f.cycle - at;
-    const p = gait(f, at);
-    f.x0 = x - Math.sin(yaw) * f.stride * p;
-    f.z0 = z - Math.cos(yaw) * f.stride * p;
+  const addFeeder = (x: number, z: number, yaw: number, size: number, habit: Habit, at = -1, span = 1e9): void => {
+    const period = scatter.range(8, 13);
+    const f: Feeder = { x, z, yaw, size, habit, seed: scatter.next(), period, offset: scatter.range(0, 40), at, span };
+    // One stationed for a key has had its tuft in the water for half a second when the key comes.
+    if (at >= 0 && habit === 0) f.offset = period - ((at - 0.5) % period);
     feeders.push(f);
   };
-  // The stations: the eight of the wide picture stand tall more than they feed, and the nearest runs with its sails half up;
-  // the three before the feeding camera are at their stations on that key, the nearest with its tuft in the water.
-  const HABITS = [0.6, 0.62, 0.9, 0.64, 0.66, 0.3, 0.68, 0.9];
   const feedKey = keySeconds('ribs-2');
   const feedShot = shotById('ribs-04');
   const feedEye = resolve(shots['ribs-04'] as (typeof shots)[string], 0.5, feedShot.first).position;
-  // The three before the feeding camera show it their sides, heads to its left, each a little off the square.
+  // The three before the feeding camera show it their sides, each a little off the square.
   const sideOn = (x: number, z: number, off: number): number => Math.atan2(z - feedEye[2], -(x - feedEye[0])) + off;
+  // Staged for the establishing key: the eight of the wide picture stand off their stations, no two at one distance, so that they do not read as a row.
   STATIONS.feeders.forEach((s, i) => {
-    if (i === 0) addFeeder(s[0], s[1], Math.atan2(Math.cos(0.14), Math.sin(0.14)) + 0.25, s[3], true, 0.6, T0, true);
-    else if (i < 8) addFeeder(s[0], s[1], s[2], s[3], true, HABITS[i] as number, T0);
-    // No two in one pose: the nearest feeds, the next is caught mid step, the last looks about with its neck up and its head the other way.
-    else addFeeder(s[0], s[1], sideOn(s[0], s[1], i === 8 ? 0.2 : i === 9 ? -0.3 : 0.35 + Math.PI), s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey, false, i === 9);
+    if (i >= 8) return;
+    const x = s[0] + scatter.range(-9, 9);
+    const z = s[1] + scatter.range(-14, 14);
+    addFeeder(x, z, s[2] + scatter.range(-0.5, 0.5), scatter.range(0.82, 1.08), i % 3 === 1 ? 1 : 0, i % 3 === 1 ? -1 : T0 + scatter.range(-2, 2));
   });
   {
-    // The second hero of the wide picture: walking tall, right of centre, 47 m out.
     const from = STATIONS.establish;
-    const bearing = (24 * Math.PI) / 180;
-    addFeeder(from[0] + Math.sin(bearing) * 47, from[1] - Math.cos(bearing) * 47, -1.9, 1.12, true, 0.6, T0);
+    const out = (bearing: number, far: number): [number, number] => [from[0] + Math.sin((bearing * Math.PI) / 180) * far, from[1] - Math.cos((bearing * Math.PI) / 180) * far];
+    // The second hero of the wide picture: feeding, right of centre, 47 m out.
+    const hero = out(24, 47);
+    addFeeder(hero[0], hero[1], -1.9, 1.05, 0, T0);
+    // Staged for the establishing key: the far right one runs and lifts off with its sails spread. It is in the place for that shot alone.
+    const runner = out(40, 64);
+    addFeeder(runner[0], runner[1], 2.2, 1, 2, T0, 3.6);
   }
+  // Staged for the feeding key: the three stand nearer its lens than their stations. The first feeds, filling the right of the frame; the
+  // second shakes its tuft dry; the third runs off with its sails up, and is in the place for that shot alone.
+  const NEARER: [number, number][] = [[-54.4, -434.4], [-55.4, -455.2], [-61.5, -464]];
+  NEARER.forEach(([x, z], i) => {
+    if (i === 0) addFeeder(x, z, sideOn(x, z, 0.2), 1.02, 0, feedKey);
+    else if (i === 1) addFeeder(x, z, sideOn(x, z, -0.25), 1, 1);
+    else addFeeder(x, z, sideOn(x, z, 0.12), 0.95, 2, feedKey, 2.2);
+  });
   for (let tries = 0; feeders.length < FEEDERS && tries < 4000; tries++) {
     const x = scatter.range(-200, 300);
-    const z = scatter.range(-1250, 90);
+    const z = scatter.range(-1150, 90);
     const yaw = scatter.range(0, Math.PI * 2);
     const h = ground(x, z);
     if (nearTrack(x, z, 30) || h < 0.7 || h > 1.5 || Math.abs(ground(x + Math.sin(yaw) * 6, z + Math.cos(yaw) * 6) - h) > 0.5) continue;
-    addFeeder(x, z, yaw, scatter.range(0.95, 1.2), false);
+    addFeeder(x, z, yaw, scatter.range(0.8, 1.05), scatter.next() < 0.62 ? 0 : 1);
   }
-  const feederFlock = new Flock(NEAR, material, feeders.length);
-  const sheets = puppetMaterials(ctx, LEVELS.pool);
-  const feederSheets = new Puppets(sheets, feeders.length, true);
+  const feederSheets = [figureMaterials(ctx, FEEDER_A, LEVELS.pool, 0.5), figureMaterials(ctx, FEEDER_B, LEVELS.pool, 0.5), figureMaterials(ctx, FEEDER_C, LEVELS.pool, 0.4)];
+  const feederFigures = feederSheets.map((m) => new Figures(m, feeders.length, { mirror: true }));
   const discs = rig.contactDiscs(feeders.length + 4);
-  const runner = feeders.findIndex((f) => f.runs);
 
-  const pose = stand();
-  const foot = [0, 0, 0, 0, 0, 0];
-  const stance = [0, 0];
-  let feeding = 0;
-  let tuftX = 0;
-  let tuftZ = 0;
+  const fig = placed();
+  /** Where the end of the tuft is, and how far it is in the water (0 to 1); for a runner, how hard its feet strike. */
+  const tuft = { x: 0, y: 0, z: 0, wet: 0, shake: 0, here: true };
 
-  /** One feeder at t: its pose into `pose`, its feet (x, z, wet) into `foot`, how far it is feeding and where its tuft meets the water. */
+  /** One feeder at t: its figure into `fig`, its tuft into `tuft`. */
   const feederAt = (f: Feeder, t: number): void => {
-    const tg = Math.min(t, f.leave);
+    Object.assign(fig, placed());
+    fig.size = f.size;
+    fig.turn = f.yaw;
+    fig.x = f.x;
+    fig.z = f.z;
+    fig.tone = 0.92 + 0.16 * f.seed;
+    tuft.here = Math.abs(t - f.at) <= f.span;
+    tuft.wet = 0;
+    tuft.shake = 0;
     const fx = Math.sin(f.yaw);
     const fz = Math.cos(f.yaw);
-    const p = gait(f, tg);
-    const bx = f.x0 + fx * f.stride * p;
-    const bz = f.z0 + fz * f.stride * p;
-    const u = (tg + f.offset) / f.period;
-    const m = Math.floor(u);
-    const tau = (u - m) * f.period;
-    const walk = f.cycles * f.cycle;
-    const q = (tau - walk) / (f.period - walk);
-    const kind = f.habit >= 0 ? f.habit : hash(m, f.seed * 91);
-    const ru = clamp01((tg - T0) / RUN.seconds + 0.5);
-    const run = f.runs ? Math.min(1, 6 * ru * (1 - ru)) : 0;
-    const going = f.runs ? run : 1 - smooth(walk - 0.3, walk + 0.5, tau) + smooth(f.period - 0.6, f.period, tau);
-    let feed = 0;
-    let alert = 0;
-    if (f.runs) alert = 0.7 * (1 - run);
-    else if (q > 0) {
-      if (kind < 0.55) feed = smooth(0.06, 0.24, q) * (1 - smooth(0.74, 0.92, q));
-      else if (kind < 0.75) alert = smooth(0.05, 0.16, q) * (1 - smooth(0.7, 0.9, q));
-      else {
-        feed = smooth(0.05, 0.2, q) * (1 - smooth(0.42, 0.52, q));
-        alert = smooth(0.52, 0.6, q) * (1 - smooth(0.8, 0.93, q));
-      }
+    let tip: [number, number] = [0, 0];
+    if (f.habit === 0) {
+      // Probing, then the head comes up streaming, looks about, and goes back in.
+      const ph = (((t + f.offset) % f.period) + f.period) % f.period;
+      const up = smooth(f.period - 3.4, f.period - 2.5, ph) * (1 - smooth(f.period - 0.75, f.period - 0.1, ph));
+      fig.limbs[0] = -0.55 * up + (1 - up) * (0.04 * Math.sin(t * 1.7 + f.seed * 20) + 0.03 * Math.sin(t * 3.9 + f.seed * 7)) + up * 0.07 * Math.sin(t * 0.9 + f.seed * 3);
+      fig.limbs[1] = 0.1 * Math.sin(t * 2.1 + f.seed * 9) * (1 - up) + 0.22 * up + 0.12 * up * Math.sin(t * 5.1 + f.seed * 4);
+      fig.sway = 0.012 * Math.sin(t * 0.6 + f.seed * 5) - 0.03 * up;
+      tip = figurePoint(FEEDER_A, 0, TIP_A, fig.limbs);
+      tuft.wet = 1 - smooth(0.02, 0.3, up);
+      tuft.shake = smooth(f.period - 0.5, f.period - 0.1, ph) + (1 - smooth(0, 0.7, ph));
+    } else if (f.habit === 1) {
+      const bout = smooth(0.52, 0.66, held(t, 2.6, f.seed));
+      fig.limbs[0] = -0.08 + 0.1 * Math.sin(t * 0.5 + f.seed * 11) + 0.05 * bout * Math.sin(t * 15);
+      fig.limbs[1] = 0.16 * Math.sin(t * 0.8 + f.seed * 7) + 0.08 * Math.sin(t * 0.31 + f.seed * 3);
+      fig.limbs[2] = 0.05 * Math.sin(t * 1.3 + f.seed) + 0.24 * bout * Math.sin(t * 17 + f.seed * 5);
+      fig.sway = 0.015 * Math.sin(t * 0.7 + f.seed * 5);
+      tip = figurePoint(FEEDER_B, 0, TIP_B, fig.limbs);
+      tuft.shake = bout;
+    } else {
+      // Running: the legs scissor, the sails beat, the body rides up at each stride, and it goes.
+      const run = t - f.at;
+      const stride = run * 9.5 + f.seed * 6;
+      fig.x += fx * RUN_SPEED * run;
+      fig.z += fz * RUN_SPEED * run;
+      fig.limbs[0] = 0.12 + 0.34 * Math.sin(run * 13 + f.seed * 9);
+      fig.limbs[1] = 0.36 * Math.sin(stride);
+      fig.limbs[2] = -0.36 * Math.sin(stride);
+      fig.y = 0.14 * Math.abs(Math.sin(stride)) * f.size;
+      tuft.shake = Math.abs(Math.cos(stride));
     }
-    Object.assign(pose, stand(f.seed));
-    pose.size = f.size;
-    pose.yaw = f.yaw;
-    // Walking: the neck leads, the head nods with the stride.
-    blend(pose, { rise: 1.05, bend: -0.25 + 0.12 * Math.sin(p * Math.PI * 4), tuck: 0.34, pitch: -0.06 }, going);
-    const dip = 0.035 * Math.cos(p * Math.PI * 4) * going + 0.05 * smooth(f.period - 0.7, f.period - 0.1, tau);
-    let hip = STAND - 0.05 - dip;
-    if (feed > 0) {
-      // Reach for the water: tip the body, lower the hip, and bend the neck until the tuft trails in the pool.
-      const reach: Pose = { ...pose, pitch: -0.62, rise: -0.6, tuck: 0.0, bend: -0.6 };
-      const want = (LEVELS.pool - ground(bx, bz)) / f.size - (hip - 0.07) - 0.04;
-      let lo = -2.6;
-      let hi = 0.5;
-      for (let i = 0; i < 12; i++) {
-        reach.bend = (lo + hi) / 2;
-        if (sheetTip(reach)[0] > want) hi = reach.bend;
-        else lo = reach.bend;
-      }
-      reach.bend += 0.05 * Math.sin(t * 2.3 + f.seed * 30);
-      blend(pose, { pitch: reach.pitch, rise: reach.rise, tuck: reach.tuck, bend: reach.bend, sweep: 0.55 * Math.sin(t * 0.8 + f.seed * 50) }, feed);
-      hip -= 0.07 * feed;
-    }
-    // Running: body forward, sails half up and working, the stride long and high.
-    if (run > 0) blend(pose, { spread: 0.5, flap: 0.42 + 0.16 * Math.sin(p * Math.PI * 2 + 0.6), pitch: -0.24, rise: 0.82, bend: -0.1, tuck: 0.36, lag: -0.1 * Math.cos(p * Math.PI * 2 + 0.6) }, run);
-    if (alert > 0) blend(pose, { rise: 1.46, bend: -0.12, tuck: 0.12, pitch: 0.06, sweep: (held(t, 1.9, f.seed) - 0.5) * 2.2 }, alert);
-    feeding = feed;
-    const tip = sheetTip(pose);
-    tuftX = bx + fx * tip[1] * f.size;
-    tuftZ = bz + fz * tip[1] * f.size;
-    const bed = ground(bx, bz);
-    pose.x = bx;
-    pose.z = bz;
-    pose.y = bed + hip * f.size;
-    for (let k = 0; k < 2; k++) {
-      const pk = p + 0.5 * k;
-      const fr = pk - Math.floor(pk);
-      let rel = 0.3 - fr;
-      let lift = 0;
-      if (fr >= 0.6) {
-        const e = (fr - 0.6) / 0.4;
-        rel = -0.3 + 0.6 * (e * e * (3 - 2 * e));
-        lift = (0.24 + 0.3 * run) * Math.sin(Math.PI * e);
-      }
-      const side = (k === 0 ? -1 : 1) * 0.13 * f.size;
-      const wx = bx + fx * f.stride * rel + Math.cos(f.yaw) * side;
-      const wz = bz + fz * f.stride * rel - Math.sin(f.yaw) * side;
-      const under = ground(wx, wz);
-      const relY = (under + lift * f.size - pose.y) / f.size;
-      const relZ = (f.stride * rel) / f.size;
-      if (k === 0) {
-        pose.leftZ = relZ;
-        pose.leftY = relY;
-      } else {
-        pose.rightZ = relZ;
-        pose.rightY = relY;
-      }
-      foot[k * 3] = wx;
-      foot[k * 3 + 1] = wz;
-      foot[k * 3 + 2] = under < LEVELS.pool - 0.01 && lift < 0.05 ? 1 : 0;
-      stance[k] = fr < 0.6 ? fr / 0.6 : -1;
-    }
-    // The bore is coming: crouch, throw the sails open, go.
-    const tl = t - f.leave;
-    if (tl > -0.6) {
-      const crouch = smooth(-0.6, -0.05, tl) * (1 - smooth(0, 0.35, tl));
-      pose.y -= 0.28 * crouch * f.size;
-      pose.leftY += 0.28 * crouch;
-      pose.rightY += 0.28 * crouch;
-      blend(pose, { spread: 0.45, flap: 0.5, pitch: -0.25, rise: 0.9 }, smooth(-0.6, 0, tl));
-      if (tl > 0) {
-        const run = Math.min(tl, 2);
-        const dist = 3 * run * run + (tl > 2 ? 12 * (tl - 2) : 0);
-        const turn = smooth(0, 3, tl);
-        const yaw = turnTo(f.yaw, f.away, turn);
-        const high = Math.min(60, 2.4 * tl * (1 + 0.2 * tl));
-        const air = smooth(0, 0.7, tl);
-        const rate = 17 - 6 * smooth(0.5, 4, tl);
-        const flown: Pose = fly({ ...pose, y: pose.y }, 0.78 - 0.25 * smooth(1, 5, tl), tl * rate + f.seed * 6);
-        blend(pose, flown, air);
-        pose.pitch = -0.3 + 0.45 * (1 - smooth(0, 2.5, tl));
-        pose.x = bx + (Math.sin(f.yaw) * (1 - turn) + Math.sin(f.away) * turn) * dist;
-        pose.z = bz + (Math.cos(f.yaw) * (1 - turn) + Math.cos(f.away) * turn) * dist;
-        pose.y = bed + hip * f.size + high + 0.1 * Math.sin(tl * rate + f.seed * 6 - 1.3);
-        pose.yaw = yaw;
-        foot[2] = 0;
-        foot[5] = 0;
-        feeding = 0;
-      }
-    }
+    fig.y += ground(fig.x, fig.z);
+    tuft.x = fig.x + fx * tip[0] * f.size;
+    tuft.z = fig.z + fz * tip[0] * f.size;
+    tuft.y = fig.y + tip[1] * f.size;
   };
 
   // The pools ring the legs of the feeders nearest the feeding camera.
   const ringed = feeders
-    .map((f, i) => ({ i, d: Math.hypot(f.x0 - feedEye[0], f.z0 - feedEye[2] + 20) }))
+    .map((f, i) => ({ i, d: Math.hypot(f.x - feedEye[0], f.z - feedEye[2] + 20) + (f.habit === 2 ? 1e6 : 0) }))
     .sort((a, b) => a.d - b.d)
     .slice(0, 8)
     .map((e) => e.i);
@@ -342,12 +218,13 @@ export function create(ctx: Context): Piece {
     for (const i of ringed) {
       const f = feeders[i] as Feeder;
       feederAt(f, seconds);
-      for (let k = 0; k < 2; k++) {
+      const legs = f.habit === 0 ? [-0.5, 0.5] : [0];
+      for (const along of legs) {
         const ring = out[n++];
-        if (ring) Object.assign(ring, { x: foot[k * 3], z: foot[k * 3 + 1], phase: f.seed * 20 + k * 2.1, strength: (foot[k * 3 + 2] as number) * 0.7, stand: undefined });
+        if (ring) Object.assign(ring, { x: f.x + Math.sin(f.yaw) * along * f.size, z: f.z + Math.cos(f.yaw) * along * f.size, phase: f.seed * 20 + along * 4.2, strength: 0.3, stand: undefined });
       }
       const ring = out[n++];
-      if (ring) Object.assign(ring, { x: tuftX, z: tuftZ, phase: f.seed * 31, strength: feeding, stand: undefined });
+      if (ring) Object.assign(ring, { x: tuft.x, z: tuft.z, phase: f.seed * 31, strength: 0.75 * tuft.wet, stand: undefined });
     }
   };
 
@@ -405,52 +282,35 @@ export function create(ctx: Context): Piece {
     }
   }
   sitters.sort((a, b) => a.d - b.d);
-  // The few that stand with their sails held out to dry are the picture of the animal seen from ahead.
-  const kites = kiteMaterial(ctx);
-  const dryers = new Kites(kites, COLONISTS);
-  const colonySheets = new Puppets(sheets, COLONISTS, false, true);
+  const perchedSheet = figureMaterials(ctx, PERCHED, LEVELS.pool, 0.86);
+  const colonyFigures = new Figures(perchedSheet, COLONISTS, { shade: true });
+  /** Which of the six a sitter is: most sit hunched or crouched, some stand, a few hold a sail out or both open. */
+  const cellOf = (s: Sitter): number => {
+    const k = (s.seed * 977) % 1;
+    return k < 0.34 ? 5 : k < 0.62 ? 0 : k < 0.74 ? 4 : k < 0.84 ? 1 : k < 0.93 ? 2 : 3;
+  };
   const sitterAt = (s: Sitter, t: number): void => {
-    Object.assign(pose, stand(s.seed));
-    pose.size = s.size;
-    pose.yaw = s.yaw;
-    const up = s.stands ? 1 : smooth(0.86, 0.97, held(t, 7 + 6 * s.seed, s.seed + 0.5, 0.3));
-    const hip = 0.36 + (STAND - 0.42) * up;
-    pose.x = s.x;
-    pose.z = s.z;
-    pose.y = s.y + hip * s.size;
-    pose.leftZ = 0.14 * (1 - up);
-    pose.rightZ = 0.1 * (1 - up) - 0.05 * up;
-    pose.leftY = -hip;
-    pose.rightY = -hip;
-    // Perched it sits upright, the folded sails pointing up past its head.
-    // Never still: it rocks on its feet, shifts its weight along the ledge and works its neck, each in its own time.
-    const rock = Math.sin(t * (0.9 + 0.8 * s.seed) + s.seed * 50);
-    pose.pitch = s.stands ? 0 : 0.55 + 0.5 * s.seed + 0.07 * rock;
-    const shift = 0.12 * s.size * Math.sin(t * (0.45 + 0.4 * s.seed) + s.seed * 23);
-    pose.x += Math.sin(s.yaw) * shift;
-    pose.z += Math.cos(s.yaw) * shift;
-    const look = held(t, 2.1 + 2.5 * s.seed, s.seed);
-    const high = held(t, 5.3 + 3 * s.seed, s.seed + 0.25, 0.15);
-    const preen = Math.sin(t * (1.7 + 1.2 * s.seed) + s.seed * 31);
-    pose.sweep = (look - 0.5) * 2.4 + 0.3 * preen;
-    // Hunched under its sails with the tuft hanging, until it looks up.
-    pose.rise = 1.15 + 0.35 * high + 0.1 * rock;
-    pose.tuck = 0.45 - 0.3 * high;
-    pose.bend = -2.5 + 2.3 * high + 0.35 * preen;
-    // Now and then one opens its sails and shakes them.
-    const shake = smooth(0.78, 0.9, held(t, 3.2, s.seed + 0.75, 0.25));
-    // Perched, the sails hang round it as a tent; one that stands holds them half open to the wind and the light comes through.
-    if (s.stands) {
-      // No two alike: one holds its sails wide to dry, one half shut, one beats them at its neighbour.
-      const kind = Math.floor(s.seed * 97) % 3;
-      const row = smooth(0.7, 0.85, held(t, 3.1, s.seed + 0.6, 0.3));
-      pose.spread = (kind === 0 ? 0.85 : kind === 1 ? 0.45 : 0.62) + 0.14 * Math.sin(t * 0.7 + s.seed * 40);
-      pose.flap = (kind === 0 ? 0.12 : kind === 1 ? -0.35 : 0.3) + 0.1 * Math.sin(t * 1.9 + s.seed * 17) + (kind === 2 ? row * 0.5 * Math.sin(t * 11 + s.seed * 9) : 0);
-      pose.pitch = kind === 2 ? 0.25 * row : pose.pitch;
-    } else {
-      pose.spread = 2 - shake;
-      pose.flap = -1.0 + 0.09 * Math.sin(t * 2.1 + s.seed * 30) + shake * (1.2 + 0.35 * Math.sin(t * 15 + s.seed * 9));
-    }
+    Object.assign(fig, placed());
+    const cell = cellOf(s);
+    fig.cell = cell;
+    fig.size = s.size * 0.46;
+    // No two rows alike: half of them stand the other way round on their ledge.
+    fig.turn = s.yaw + (Math.floor(s.seed * 1000) % 2 === 1 ? Math.PI : 0);
+    // Never still: it shifts its weight along the ledge, rocks, and works its neck, each in its own time.
+    const shift = 0.14 * s.size * Math.sin(t * (0.45 + 0.4 * s.seed) + s.seed * 23);
+    fig.x = s.x + Math.sin(s.yaw) * shift;
+    fig.z = s.z + Math.cos(s.yaw) * shift;
+    fig.y = s.y - 0.04;
+    fig.sway = 0.035 * Math.sin(t * (0.9 + 0.8 * s.seed) + s.seed * 50);
+    const look = held(t, 1.6 + 2.2 * s.seed, s.seed, 0.3);
+    fig.limbs[0] = (look - 0.5) * 0.7 + 0.06 * Math.sin(t * (1.7 + 1.2 * s.seed) + s.seed * 31);
+    // A sail held out is flicked and beaten at a neighbour now and then.
+    const row = smooth(0.55, 0.75, held(t, 2.3, s.seed + 0.6, 0.3));
+    fig.limbs[1] = (cell === 3 ? -1 : 1) * (0.1 * Math.sin(t * 1.9 + s.seed * 17) + row * 0.3 * Math.sin(t * 9 + s.seed * 9));
+    fig.limbs[2] = 0.1 * Math.sin(t * 1.7 + s.seed * 12) + row * 0.3 * Math.sin(t * 9 + s.seed * 9 + 0.5);
+    // Weathered each to its own grey, and one in three in the shade of the rock over it.
+    fig.tone = 0.62 + 0.4 * ((s.seed * 13.7) % 1);
+    fig.shade = (s.seed * 7.3) % 1 < 0.36 ? 0.75 + 0.25 * ((s.seed * 3.1) % 1) : 0;
   };
 
   // ---- The flock in the air ----
@@ -468,7 +328,7 @@ export function create(ctx: Context): Piece {
   }
   const homes = ['R1', 'R1', 'R1', 'R2', 'L2', 'L1', 'L3', 'R3', 'OL', 'OR'];
   const fliers: Flier[] = [];
-  const flierPlace = (f: Flier, t: number, out: Pose): void => {
+  const flierPlace = (f: Flier, t: number, out: Spot): void => {
     const a = f.phase + f.rate * t;
     out.x = f.cx + Math.cos(a) * f.radius;
     out.y = f.y + 9 * Math.sin(a * 2.3 + f.phase);
@@ -478,11 +338,12 @@ export function create(ctx: Context): Piece {
     out.roll = -way * 0.32;
   };
   // A built animal is a shape against the sky and never more: none comes within this of a lens.
+  const probe: Spot = { x: 0, y: 0, z: 0, yaw: 0, roll: 0 };
   const clearOfLenses = (f: Flier, clear = CLEAR): void => {
     for (let tries = 0; tries < 24; tries++) {
       const hit = eyes.some((e) => {
-        flierPlace(f, e.t, pose);
-        return Math.hypot(pose.x - e.at[0], pose.y - e.at[1], pose.z - e.at[2]) < clear;
+        flierPlace(f, e.t, probe);
+        return Math.hypot(probe.x - e.at[0], probe.y - e.at[1], probe.z - e.at[2]) < clear;
       });
       if (!hit) return;
       f.phase += 0.7;
@@ -490,10 +351,10 @@ export function create(ctx: Context): Piece {
     }
     f.size = 0;
   };
-  for (let i = 0; i < FLIERS + SPECKS; i++) {
+  for (let i = 0; i < FLIERS_N + SPECKS; i++) {
     const rib = ribByName(homes[scatter.int(homes.length)] as string);
     const low = i < LOW;
-    if (i >= FLIERS) {
+    if (i >= FLIERS_N) {
       // The specks: the crowd that wheels tight round the head of every blade, and thickest over the colony.
       const colony = scatter.next() < 0.07;
       const top = RIBS[scatter.int(RIBS.length)] as (typeof RIBS)[number];
@@ -534,16 +395,38 @@ export function create(ctx: Context): Piece {
     clearOfLenses(f, low ? 60 : CLEAR);
     fliers.push(f);
   }
-  const lowFlock = new Kites(kites, LOW);
-  const highFlock = new Kites(kites, FLIERS + SPECKS - LOW);
-  const flierAt = (f: Flier, t: number): void => {
-    Object.assign(pose, stand(f.seed));
-    pose.size = f.size;
-    flierPlace(f, t, pose);
+  const airSheet = figureMaterials(ctx, FLIERS, LEVELS.pool, 0.1, true);
+  const flockFigures = new Figures(airSheet, FLIERS_N + SPECKS, {}, 6, 4);
+  const spot: Spot = { x: 0, y: 0, z: 0, yaw: 0, roll: 0 };
+  /** One in the air into `fig`: where it is, the way it goes (metres a second), how hard it strokes (0 a glide, 1 full), at its own phase. */
+  const airborne = (x: number, y: number, z: number, vx: number, vy: number, vz: number, size: number, seed: number, t: number, amp: number, eye: [number, number, number]): void => {
+    Object.assign(fig, placed());
+    const dx = x - eye[0];
+    const dz = z - eye[2];
+    const d = Math.hypot(dx, dz) || 1;
+    const across = (vx * -dz + vz * dx) / d;
+    const toward = (vx * dx + vz * dz) / d;
+    const speed = Math.hypot(vx, vz) || 1;
+    const sideways = Math.abs(across) > 0.5 * speed;
+    fig.cell = sideways ? (seed < 0.55 ? 0 : 1) : toward > 0 ? 2 : 3;
+    fig.turn = across < 0 ? -1 : 1;
+    const ph = t * (9.5 + 3.5 * seed) + seed * 40;
+    fig.stroke = sideways ? 1 - 0.44 * amp * (1 - Math.cos(ph)) : 1 - 0.27 * amp * (1 - Math.cos(ph));
+    fig.roll = (sideways ? Math.atan2(vy, Math.abs(across)) : 0) + 0.14 * Math.sin(t * 0.5 + seed * 11) + (seed - 0.5) * 0.3;
+    fig.size = size;
+    fig.x = x;
+    fig.y = y + 0.22 * amp * Math.sin(ph - 1.3) * size;
+    fig.z = z;
+    fig.tone = 0.86 + 0.24 * seed;
+    fig.blur = [Math.min(90, (Math.abs(across) * SHUTTER * FLIERS.unit) / size), 0];
+  };
+  const flierAt = (f: Flier, t: number, eye: [number, number, number]): void => {
+    flierPlace(f, t, spot);
+    const { x, y, z } = spot;
+    flierPlace(f, t + 0.05, spot);
     // Strokes in bouts, glides between.
     const bout = smooth(0.3, 0.5, held(t, 3.1 + 2 * f.seed, f.seed, 0.3));
-    fly(pose, 0.12 + 0.5 * bout, t * (10.5 + 3 * f.seed) + f.seed * 40);
-    pose.sweep = (held(t, 2.7, f.seed + 0.4) - 0.5) * 0.7;
+    airborne(x, y, z, (spot.x - x) / 0.05, (spot.y - y) / 0.05, (spot.z - z) / 0.05, f.size * 0.8, f.seed, t, 0.2 + 0.8 * bout, eye);
   };
 
   // ---- The skein that comes in from the sea with the camera ----
@@ -569,18 +452,20 @@ export function create(ctx: Context): Piece {
     const l = Math.hypot(dx, dz) || 1;
     const side = (scatter.next() < 0.5 ? -1 : 1) * scatter.range(40, 95);
     const speed = scatter.range(12, 16);
+    // They cross the camera's way as they go in, each a little off its line.
+    const off = scatter.range(-0.5, 0.5);
     skein.push({
       x: eye.position[0] + (-dz / l) * side,
       y: Math.max(4.5, eye.position[1] + scatter.range(9, 32)),
       z: eye.position[2] + (dx / l) * side,
-      vx: (dx / l) * speed,
-      vz: (dz / l) * speed,
+      vx: ((dx / l) * Math.cos(off) - (dz / l) * Math.sin(off)) * speed,
+      vz: ((dz / l) * Math.cos(off) + (dx / l) * Math.sin(off)) * speed,
       t: secondsInPlace(UNIT, frame),
-      size: scatter.range(0.95, 1.2) * GROW,
+      size: scatter.range(0.8, 1.05),
       seed: scatter.next(),
     });
   }
-  // And the ones that cross before the colony camera, far enough off to be shapes against the rock and the sky.
+  // And the ones that cross before the colony camera: one large and near, soft with its own speed, the light in its sails; two behind it; three far.
   {
     const shot = shotById('ribs-03');
     const key = keySeconds('ribs-3');
@@ -591,114 +476,80 @@ export function create(ctx: Context): Piece {
     const fx = dx / l;
     const fz = dz / l;
     // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
-    // The first hangs over the upper ledge, coming in to land; three cross close and fast, soft with their own motion; two are far.
-    const cross: [number, number, number, number, number][] = [[26, -9.4, 10.8, 0, 3], [20, -15, 5, 0.05, 19], [17, 10, 0.5, 0.1, -20], [34, -20, 12, -0.1, 17], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
+    const cross: [number, number, number, number, number][] = [[15, -4.6, 3.6, 0, 15], [38, 9, 9, 0.1, -17], [52, -16, 13, -0.1, 15], [84, 20, 22, 0.2, -14], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
     for (let i = 0; i < PASSERS; i++) {
       const c = cross[i] as [number, number, number, number, number];
-      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: (i === 0 ? 1.15 : i < 4 ? 1.15 : 1.0) * GROW, seed: scatter.next() });
+      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: i === 0 ? 1 : 0.9, seed: hash(i, 9) });
     }
   }
-  const skeinFlock = new Kites(kites, SKEIN + PASSERS);
-
-  // ---- The ones that run from the bore ----
-  const fleeFlock = new Puppets(sheets, FLEEING, false);
+  const skeinFigures = new Figures(airSheet, SKEIN + PASSERS + FLEEING + 2, {}, 6, 4);
   const flee = STATIONS.flee;
 
-  // ---- One that lands by the establishing camera, on the key ----
-  const landFlock = new Flock(NEAR, material, 4);
-  const landSheets = new Puppets(sheets, 4, false);
-  interface Lander {
-    x: number;
-    z: number;
-    y: number | null;
-    yaw: number;
-    t: number;
-    size: number;
-    seed: number;
-  }
+  // ---- Two that land by the establishing camera, about its key ----
+  const standers = new Figures(perchedSheet, 2);
   const est = resolve(shots['ribs-02'] as (typeof shots)[string], 0.5, shotById('ribs-02').first);
   const ex = est.aim[0] - est.position[0];
   const ez = est.aim[2] - est.position[2];
   const el = Math.hypot(ex, ez) || 1;
   const ahead = (d: number, right: number): [number, number] => [est.position[0] + (ex / el) * d + (-ez / el) * right, est.position[2] + (ez / el) * d + (ex / el) * right];
-  const landers: Lander[] = [];
-  {
-    const a = ahead(150, 34);
-    landers.push({ x: a[0], z: a[1], y: null, yaw: Math.atan2(-ez / el, ex / el) + 0.5, t: T0 + 0.42, size: 1.12 * GROW, seed: 0.37 });
-    const b = ahead(210, -40);
-    landers.push({ x: b[0], z: b[1], y: null, yaw: 2.2, t: T0 - 2.1, size: 1.05 * GROW, seed: 0.81 });
-  }
-  const landerAt = (l: Lander, t: number): void => {
-    Object.assign(pose, stand(l.seed));
-    pose.size = l.size;
-    pose.yaw = l.yaw;
-    const bed = l.y ?? ground(l.x, l.z);
-    const tau = t - l.t;
-    const low = STAND * 0.88;
-    if (tau < 0) {
-      const b = -tau;
-      const dist = b < 2 ? b * (1.2 + 2.95 * b) : 14.2 + 13 * (b - 2);
-      const high = 0.2 * dist + 0.3 * (1 - Math.exp(-b * 3));
-      pose.x = l.x - Math.sin(l.yaw) * dist;
-      pose.z = l.z - Math.cos(l.yaw) * dist;
-      pose.y = bed + low * l.size + high;
-      const flare = smooth(1.5, 0.15, b);
-      fly(pose, 0.45 + 0.35 * flare, t * (11 + 7 * flare) + l.seed * 9);
-      blend(pose, { pitch: 0.5, leftZ: 0.3, rightZ: 0.12, leftY: -low, rightY: -low, rise: 0.95, bend: -0.5, tuck: 0.3 }, flare);
-    } else {
-      const hip = STAND * (1 - 0.12 * Math.exp(-tau * 3) * Math.cos(tau * 5.5));
-      pose.x = l.x;
-      pose.z = l.z;
-      pose.y = bed + hip * l.size;
-      pose.leftZ = 0.3 * (1 - smooth(0, 1.2, tau)) + 0.06;
-      pose.rightZ = 0.12 * (1 - smooth(0, 1.2, tau)) - 0.08;
-      pose.leftY = -hip;
-      pose.rightY = -hip;
-      const shut = smooth(0.35, 1.7, tau);
-      pose.spread = 1 - shut;
-      pose.flap = 0.55 + (-1.25 - 0.55) * shut + 0.2 * Math.sin(tau * 14) * (1 - shut);
-      pose.pitch = 0.5 * (1 - smooth(0, 0.9, tau));
-      pose.rise = 0.95 + 0.4 * smooth(0, 1, tau);
-      pose.bend = -0.5 + 0.3 * smooth(0, 1, tau);
-      pose.sweep = (held(t, 1.6, l.seed) - 0.5) * 1.6 * smooth(0.6, 1.6, tau);
-    }
-  };
+  const landers = [
+    { at: ahead(150, 34), yaw: Math.atan2(-ez / el, ex / el) + 0.5, t: T0 + 0.42, size: 1, seed: 0.37 },
+    { at: ahead(210, -40), yaw: 2.2, t: T0 - 2.1, size: 0.94, seed: 0.81 },
+  ];
 
-  // Thrown water where a tuft works the pool and where the runner's feet come down.
-  const SPLASH = 90;
-  const splash = new Spray((ringed.length + 2) * SPLASH + 80, { ...rig.uniforms, tFoam: { value: foamTexture(ctx.rng('kite-wings-splash')) } });
-  const wet = [...new Set([...ringed, feeders.length - 1])];
+  // Thrown water: where a tuft works the pool, what streams from one lifted and flies from one shaken, and where a runner's feet come down.
+  const SPLASH = 70;
+  const wet = [...new Set([...ringed, ...feeders.map((f, i) => (f.habit === 2 ? i : -1)).filter((i) => i >= 0)])];
+  const splash = new Spray(wet.length * SPLASH, { ...rig.uniforms, tFoam: { value: foamTexture(ctx.rng('kite-wings-splash')) } });
   const splashAt = (seconds: number): void => {
     splash.begin();
     for (const i of wet) {
       const f = feeders[i] as Feeder;
       feederAt(f, seconds);
-      if (feeding < 0.3) continue;
+      if (!tuft.here) continue;
+      const fx = Math.sin(f.yaw);
+      const fz = Math.cos(f.yaw);
       for (let n = 0; n < SPLASH; n++) {
-        const every = 0.55 + 0.5 * rand(i * 31 + n, 1);
-        const u = seconds / every + rand(i * 31 + n, 2);
+        const key = i * 31 + n;
+        const every = 0.45 + 0.5 * rand(key, 1);
+        const u = seconds / every + rand(key, 2);
         const born = Math.floor(u);
         const a = u - born;
-        const dir = rand(i * 31 + n, born) * Math.PI * 2;
-        const out = (0.12 + 0.5 * rand(i * 31 + n, born + 7) * a) * f.size;
-        const up = (0.35 + 0.75 * rand(i * 31 + n, born + 3)) * f.size;
-        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.03 + 0.03 * rand(i * 31 + n, born + 5)) * f.size : (0.003 + 0.008 * rand(i * 31 + n, born + 5) * rand(i * 31 + n, born + 6)) * f.size, (n % 5 === 0 ? 0.12 : 1.0) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : 0.5 * (rand(i * 31 + n, born + 11) - 0.5), n % 5 === 0 ? 0.45 : 2.6);
-      }
-    }
-    if (runner >= 0) {
-      const f = feeders[runner] as Feeder;
-      feederAt(f, seconds);
-      const ru = clamp01((seconds - T0) / RUN.seconds + 0.5);
-      const run = Math.min(1, 6 * ru * (1 - ru));
-      for (let k = 0; k < 2; k++) {
-        const a = stance[k] as number;
-        if (a < 0 || run < 0.2) continue;
-        const stride = Math.floor(gait(f, seconds) + 0.5 * k);
-        for (let n = 0; n < 40; n++) {
-          const dir = f.yaw + Math.PI + (rand(stride * 2 + k, n) - 0.5) * 2.6;
-          const out = (0.2 + 1.5 * rand(stride * 2 + k, n + 40) * a) * f.size;
-          const up = (0.3 + 1.1 * rand(stride * 2 + k, n + 80)) * f.size;
-          splash.put((foot[k * 3] as number) + Math.sin(dir) * out, ground(foot[k * 3] as number, foot[k * 3 + 1] as number) + 0.05 + up * 2 * a * (1 - a), (foot[k * 3 + 1] as number) + Math.cos(dir) * out, (n % 5 === 0 ? 0.1 + 0.1 * rand(stride * 2 + k, n + 120) : 0.015 + 0.03 * rand(stride * 2 + k, n + 120)) * f.size * (0.6 + a), (n % 5 === 0 ? 0.5 : 1.5) * run * (1 - a), rand(stride * 2 + k, n + 160), dir, 1.4);
+        const age = a * every;
+        const dir = rand(key, born) * Math.PI * 2;
+        const big = n % 5 === 0;
+        if (f.habit === 0) {
+          if (tuft.wet > 0.5) {
+            // A crown where the strands go in and work: thrown up and out, falling back.
+            const power = 0.5 + 1.6 * tuft.shake;
+            const out = (0.1 + 0.55 * rand(key, born + 7) * a * power) * f.size;
+            const up = (0.25 + 0.8 * rand(key, born + 3)) * f.size * power;
+            splash.put(tuft.x + Math.cos(dir) * out, LEVELS.pool + 0.03 + up * 2 * a * (1 - a), tuft.z + Math.sin(dir) * out, (big ? 0.03 + 0.03 * rand(key, born + 5) : 0.008 + 0.014 * rand(key, born + 5)) * f.size * (1 + power * 0.4), (big ? 0.22 : 0.9) * (1 - a), rand(key, 9), dir);
+          } else {
+            // Lifted, the tuft streams: strings of drops fall from its strands to the pool.
+            const fall = 4.9 * age * age;
+            const from = tuft.y - 0.1 * f.size - fall;
+            if (from < LEVELS.pool) continue;
+            const off = (rand(key, 4) - 0.5) * 0.5 * f.size;
+            splash.put(tuft.x + fx * off + (rand(key, 6) - 0.5) * 0.1, from, tuft.z + fz * off + (rand(key, 8) - 0.5) * 0.1, (0.006 + 0.012 * rand(key, born + 5)) * f.size, 0.85, rand(key, 9), 0, 2.4);
+          }
+        } else if (f.habit === 1) {
+          // Shaken, the strands throw the water off in a fan.
+          if (tuft.shake < 0.15) continue;
+          const v = 2.2 + 3 * rand(key, born + 3);
+          const el = (rand(key, born + 11) - 0.3) * 1.6;
+          const along = Math.cos(el) * v * age;
+          const side = (rand(key, born + 13) - 0.5) * 0.8 * v * age;
+          const y = tuft.y + Math.sin(el) * v * age - 4.9 * age * age;
+          if (y < LEVELS.pool) continue;
+          splash.put(tuft.x + fx * along - fz * side, y, tuft.z + fz * along + fx * side, (big ? 0.03 : 0.006 + 0.012 * rand(key, born + 5)) * f.size, (big ? 0.35 : 0.85) * tuft.shake * (1 - a), rand(key, 9), dir, 1.6);
+        } else {
+          // Each foot of a runner throws a sheet back and up as it comes down.
+          const out = (0.3 + 1.6 * rand(key, born + 40) * a) * f.size;
+          const up = (0.4 + 1.3 * rand(key, born + 80)) * f.size;
+          const back = dir * 0.4 - 0.2;
+          const lag = RUN_SPEED * age * 0.8;
+          splash.put(fig.x - fx * (lag + Math.cos(back) * out) + fz * Math.sin(back) * out, ground(fig.x, fig.z) + 0.05 + up * 2 * a * (1 - a), fig.z - fz * (lag + Math.cos(back) * out) - fx * Math.sin(back) * out, (big ? 0.12 + 0.1 * rand(key, born + 5) : 0.015 + 0.03 * rand(key, born + 5)) * f.size, (big ? 0.4 : 0.85) * (1 - a), rand(key, 9), dir);
         }
       }
     }
@@ -706,122 +557,102 @@ export function create(ctx: Context): Piece {
   };
 
   const group = new THREE.Group();
-  group.add(feederSheets.mesh, colonySheets.mesh, landSheets.mesh);
-  if (colonySheets.shade) group.add(colonySheets.shade);
-  if (feederSheets.mirror) group.add(feederSheets.mirror);
-  group.add(feederFlock.mesh, dryers.mesh, lowFlock.mesh, highFlock.mesh, skeinFlock.mesh, fleeFlock.mesh, landFlock.mesh);
+  for (const figures of feederFigures) {
+    group.add(figures.mesh);
+    if (figures.mirror) group.add(figures.mirror);
+  }
+  group.add(colonyFigures.mesh, standers.mesh, flockFigures.mesh, skeinFigures.mesh);
+  if (colonyFigures.shade) group.add(colonyFigures.shade);
   ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh), splash.mesh);
 
   return {
     setTime: (seconds) => {
+      const eye = eyeAt(seconds);
       for (let i = 0; i < feeders.length; i++) {
         const f = feeders[i] as Feeder;
         feederAt(f, seconds);
-        // Standing and wading it is the picture; with its sails up it is the built animal.
-        if (pose.spread < OPEN) {
-          feederSheets.put(i, pose);
-          feederFlock.hide(i);
-        } else {
-          feederSheets.hide(i);
-          feederFlock.put(i, pose);
-        }
-        const down = seconds < f.leave ? 1 : 1 - smooth(0, 1.5, seconds - f.leave);
-        rig.setDisc(discs, i, pose.x, pose.z, 1.1 * f.size, 0.3 * down);
+        feederFigures.forEach((figures, habit) => {
+          if (habit === f.habit && tuft.here) figures.put(i, fig);
+          else figures.hide(i);
+        });
+        rig.setDisc(discs, i, fig.x, fig.z, 1.1 * f.size, tuft.here ? 0.3 : 0);
       }
-      feederFlock.commit();
-      feederSheets.commit();
+      for (const figures of feederFigures) figures.commit();
       splashAt(seconds);
       for (let i = 0; i < sitters.length; i++) {
-        const s = sitters[i] as Sitter;
-        colonySheets.hide(i);
-        dryers.hide(i);
-        if (s.size === 0) continue;
-        sitterAt(s, seconds);
-        if (s.stands && Math.floor(s.seed * 97) % 3 === 0) {
-          // The picture's legs are longer against its sails than the pose's: sized by the legs, stood on its feet.
-          pose.size = s.size * 0.43;
-          pose.y = s.y + 3.78 * pose.size;
-          pose.flap = -0.3 + 0.12 * Math.sin(seconds * 0.8 + s.seed * 40);
-          pose.lag = 0;
-          pose.roll = 0;
-          dryers.put(i, pose, -1, true);
+        sitterAt(sitters[i] as Sitter, seconds);
+        colonyFigures.put(i, fig);
+      }
+      colonyFigures.commit();
+      for (let i = 0; i < fliers.length; i++) {
+        const f = fliers[i] as Flier;
+        if (f.size === 0) {
+          flockFigures.hide(i);
           continue;
         }
-        // No two rows alike: half of them stand the other way round on their ledge.
-        if (Math.floor(s.seed * 1000) % 2 === 1) pose.yaw += Math.PI;
-        colonySheets.put(i, pose, 0.8 + 0.2 * s.seed);
+        flierAt(f, seconds, eye);
+        flockFigures.put(i, fig);
       }
-      colonySheets.commit();
-      dryers.commit();
-      for (let i = 0; i < fliers.length; i++) {
-        flierAt(fliers[i] as Flier, seconds);
-        if (i < LOW) lowFlock.put(i, pose, -0.6);
-        else highFlock.put(i - LOW, pose, (fliers[i] as Flier).dark);
-      }
-      lowFlock.commit();
-      highFlock.commit();
+      flockFigures.commit();
       for (let i = 0; i < skein.length; i++) {
         const s = skein[i] as Passer;
-        Object.assign(pose, stand(s.seed));
-        pose.size = s.size;
-        pose.x = s.x + s.vx * (seconds - s.t);
-        pose.z = s.z + s.vz * (seconds - s.t);
-        pose.y = s.y + 1.2 * Math.sin(seconds * 0.6 + s.seed * 20);
-        pose.yaw = Math.atan2(s.vx, s.vz);
-        pose.roll = 0.12 * Math.sin(seconds * 0.5 + s.seed * 11);
         const bout = smooth(0.25, 0.45, held(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
-        fly(pose, 0.14 + 0.5 * bout, seconds * (10 + 3 * s.seed) + s.seed * 40);
-        pose.sweep = (held(seconds, 2.3, s.seed + 0.4) - 0.5) * 0.8;
-        skeinFlock.put(i, pose, i < SKEIN ? 0.6 : -1);
+        const y = s.y + 1.2 * Math.sin(seconds * 0.6 + s.seed * 20);
+        airborne(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, i < SKEIN ? 0.25 + 0.75 * bout : 1, eye);
+        skeinFigures.put(i, fig);
       }
-      skeinFlock.commit();
       const lead = seconds - BORE;
       for (let i = 0; i < FLEEING; i++) {
         const side = (i - (FLEEING - 1) / 2) / FLEEING;
-        Object.assign(pose, stand(hash(i, 3)));
-        // Low over the water before the wall, a wing's length over it, pale against the dark of the stacks and the grey of the wall.
-        // Seen from the side as they cross: sails up, legs trailing, no two of a size.
-        pose.size = (0.8 + 0.75 * hash(i, 5)) * GROW;
-        pose.x = flee[0] + side * 42 - 14 * lead + 3 * Math.sin(i * 2.4);
-        pose.z = flee[1] - 22 - (24 * ((i * 5) % 7)) / 7 + 12 * lead;
-        pose.y = 2.0 + (2.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
-        pose.yaw = Math.atan2(-14, 12);
-        fly(pose, 0.7, seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9);
-        pose.rise = 0.95;
-        pose.bend = -0.6;
-        pose.sweep = -2.6;
-        pose.pitch = 0.1 + 0.12 * Math.sin(seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9 - 0.7);
-        fleeFlock.put(i, pose, 1, true);
+        // Low over the water before the wall, a wing's length over it, pale against the dark of the stacks and the green of the wall.
+        const x = flee[0] + side * 42 - 14 * lead + 3 * Math.sin(i * 2.4);
+        const z = flee[1] - 22 - (24 * ((i * 5) % 7)) / 7 + 12 * lead;
+        const y = 2.4 + (2.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
+        airborne(x, y, z, -14, 0.5, 12, 0.62 + 0.5 * hash(i, 5), hash(i, 7), seconds, 1, eye);
+        skeinFigures.put(SKEIN + PASSERS + i, fig);
       }
-      fleeFlock.commit();
-      for (let i = 0; i < landers.length; i++) {
-        const l = landers[i] as Lander;
-        landerAt(l, seconds);
-        if (pose.spread < OPEN) {
-          landSheets.put(i, pose, l.y === null ? 0 : 0.55);
-          landFlock.hide(i);
+      landers.forEach((l, i) => {
+        const tau = seconds - l.t;
+        const bed = ground(l.at[0], l.at[1]);
+        const slot = SKEIN + PASSERS + FLEEING + i;
+        if (tau < 0) {
+          // Coming down: the legs reach for the ground, the sails cup the air.
+          const b = -tau;
+          const dist = b < 2 ? b * (1.2 + 2.95 * b) : 14.2 + 13 * (b - 2);
+          const high = 0.2 * dist + 0.3 * (1 - Math.exp(-b * 3)) + 1.9 * l.size;
+          const speed = b < 2 ? 1.2 + 5.9 * b : 13;
+          airborne(l.at[0] - Math.sin(l.yaw) * dist, bed + high, l.at[1] - Math.cos(l.yaw) * dist, Math.sin(l.yaw) * speed, -0.2 * speed, Math.cos(l.yaw) * speed, l.size, l.seed, seconds, 1, eye);
+          if (b < 1.5) fig.cell = 3;
+          skeinFigures.put(slot, fig);
+          standers.hide(i);
         } else {
-          landSheets.hide(i);
-          landFlock.put(i, pose);
+          // Down: it stands with a sail still out, shuts it, and looks about.
+          Object.assign(fig, placed());
+          fig.cell = tau < 2.2 ? 2 : 1;
+          fig.size = l.size * 0.62;
+          fig.turn = l.yaw;
+          fig.x = l.at[0];
+          fig.z = l.at[1];
+          fig.y = bed;
+          fig.sway = 0.05 * Math.exp(-tau * 3) * Math.cos(tau * 5.5);
+          fig.limbs[0] = (held(seconds, 1.6, l.seed) - 0.5) * 0.6;
+          fig.limbs[1] = 0.25 * Math.sin(tau * 9) * Math.exp(-tau * 1.2);
+          standers.put(i, fig);
+          skeinFigures.hide(slot);
         }
-        rig.setDisc(discs, feeders.length + i, pose.x, pose.z, 1.2 * l.size, seconds > l.t - 0.5 && l.y === null ? 0.3 * smooth(-0.5, 0.2, seconds - l.t) : 0);
-      }
-      landFlock.commit();
-      landSheets.commit();
+        rig.setDisc(discs, feeders.length + i, l.at[0], l.at[1], 1.2 * l.size, 0.3 * smooth(-0.5, 0.2, tau));
+      });
+      skeinFigures.commit();
+      standers.commit();
     },
     dispose: () => {
-      material.dispose();
-      sheets.body.dispose();
-      sheets.mirror.dispose();
-      feederSheets.dispose();
-      colonySheets.dispose();
-      landSheets.dispose();
-      kites.dispose();
-      dryers.dispose();
-      lowFlock.dispose();
-      highFlock.dispose();
-      skeinFlock.dispose();
-      fleeFlock.dispose();
+      for (const m of [...feederSheets, perchedSheet, airSheet]) {
+        m.body.dispose();
+        m.mirror.dispose();
+        m.shade.dispose();
+      }
+      for (const figures of [...feederFigures, colonyFigures, standers, flockFigures, skeinFigures]) figures.dispose();
+      splash.dispose();
     },
   };
 }

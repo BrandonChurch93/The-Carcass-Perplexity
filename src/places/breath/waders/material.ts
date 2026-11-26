@@ -240,7 +240,7 @@ void main() {
     float own = hash12(vec2(seed, 9.0));
     vec3 flesh = mix(vec3(0.7, 0.5, 0.43), vec3(0.86, 0.69, 0.6), own);
     vec3 blood = mix(vec3(0.2, 0.05, 0.045), vec3(0.4, 0.14, 0.12), tone);
-    albedo = mix(flesh, blood, step(0.85, own) * smoothstep(0.0, 0.25, u) * 0.4);
+    albedo = mix(flesh, blood, smoothstep(0.0, 0.3, u) * (0.45 + 0.4 * step(0.45, own)));
     albedo = mix(albedo, vec3(0.62, 0.36, 0.33), smoothstep(0.2, 0.0, u));
     albedo = mix(albedo, vec3(0.2, 0.12, 0.08), smoothstep(0.4, 1.0, u) * (0.6 + 0.35 * tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
@@ -327,7 +327,7 @@ void main() {
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
-  float edge = pow(1.0 - nv, 1.6) + 4.2 * pow(1.0 - nv, 3.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
+  float edge = pow(1.0 - nv, 1.6) + (0.8 + 2.6 * smoothstep(0.3, 0.7, vnoise(vWorld.xy * 3.1 + vWorld.z * 2.3))) * pow(1.0 - nv, 3.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
   vec3 through = mix(vec3(1.0, 0.6, 0.45), vec3(0.45, 0.2, 0.15), tendril);
   colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 5.0 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * smoothstep(-0.5, 0.3, dot(n, uSunDir)));
   if (uMirror > 0.5) {

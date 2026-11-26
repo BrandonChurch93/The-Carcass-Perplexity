@@ -1,0 +1,84 @@
+{
+  "round": 19,
+  "unit": "reveal",
+  "pack": "R1-1",
+  "family": "gemini",
+  "answered": "2026-11-26 05:10 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the ocean below and above the skull landmass, and the bottom-center coast (also shown in set-A-06.png)",
+        "what": "large flat charcoal-grey blotches and muddy dark-teal shoals with sharp cyan outlines replace the open deep-blue sea and scattered white clouds, obscuring the coastline",
+        "fix": "restore clean deep-blue open ocean with natural coastlines matching set-A-05-a.png and remove the flat dark-grey smudges and artificial cyan borders"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the western ocean along the left third of the frame (also shown in set-A-04.png)",
+        "what": "flat dark-grey patches with cyan coastal outlines intrude into the open sea where set-A-03-a.png has uninterrupted deep-blue water, reading as murky land artifacts rather than sea or cloud shadow",
+        "fix": "keep the western sea deep, continuous blue-teal with soft natural cloud shadows tied to actual clouds instead of flat grey-cyan blotches"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the surrounding mountain ridges across the whole frame (also shown in set-A-02.png)",
+        "what": "lighting is flat and uniform with repetitive, high-contrast dark crevices everywhere, losing the directional warm sunlight on the right rim and the cool blue atmospheric haze in the left and lower-left valleys",
+        "fix": "restore directional sunlight from the right with softer, cool blue-hazed shadows in the lower-left and outer valleys to match the depth and mood of set-A-01-a.png"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the river entering the upper-left side of the crater lake (also shown in set-A-02.png)",
+        "what": "the river reads as an unnaturally smooth, uniform blue ribbon cutting straight across the ridges and abruptly turning blurry ochre at the rim, with the delicate branching sediment delta completely missing",
+        "fix": "carve an organic shadowed canyon around the river and restore a fine branching pale sediment delta where it enters the ochre shallows"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the upper-right sky above the skull landmass (also in set-A-05-b.png)",
+        "what": "the broad, translucent wispy vapor plume of -a is replaced by narrow, opaque, bright white streaky clumps that look pasted-on and sit in a different position",
+        "fix": "replace the harsh opaque white streaks with a wide, soft, translucent mist plume sweeping across the upper-right terrain as in set-A-03-a.png and set-A-05-a.png"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the scattered clouds over the western sea in set-A-03-b.png (and the left third of set-A-05-b.png)",
+        "what": "clouds break down into sharp, high-contrast, confetti-like white specks instead of soft, volumetric cumulus clusters",
+        "fix": "soften the cloud edges and group them into natural, slightly translucent cumulus puffs matching the scale and texture of -a"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the upper circular crater at top-center and the cluster of small lakes below it (also in set-A-05-b.png)",
+        "what": "the upper crater lake is reduced to a flat, featureless dark-grey smudge with no ochre mineral rim or defined walls, and the smaller nasal lakes are mostly lost",
+        "fix": "restore a defined crater basin with a dark water surface, warm ochre shoreline, and the smaller adjacent dark lakes seen in set-A-03-a.png"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the main crater rim, ochre shallows, and upper-right water surface",
+        "what": "the crater rim is overly circular and symmetrically beveled, the ochre shallows look smoothly airbrushed instead of showing crisp swirling sediment tongues, and the wispy white vapor plume over the upper-right water is missing",
+        "fix": "make the crater cliff edge more organically irregular with brighter sunlit rock on the right wall, add fine swirling ochre sediment eddies, and restore the faint white mist wisp over the upper-right water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the rust-red highland plateau on the right third of the frame (also behind the skull in set-A-05-b.png)",
+        "what": "the distinctive field of small dark oval craters is replaced by generic branching ridges",
+        "fix": "reintroduce the scattered dark oval craters across the reddish-brown plateau to match the terrain character of -a"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01-b.png",
+        "where": "the secondary lake at upper-right and the coastal water at bottom-right",
+        "what": "the upper-right lake lacks the ochre sediment plumes seen in -a, and the bottom-right sea shifts to a brighter green-teal inlet with no white cloud flecks",
+        "fix": "add warm ochre sediment trails inside the upper-right lake and deepen the bottom-right sea to dark navy blue with subtle coastal shallows and tiny white clouds"
+      }
+    ]
+  }
+}

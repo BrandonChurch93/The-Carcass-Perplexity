@@ -1,0 +1,23 @@
+{
+  "round": "17",
+  "unit": "marsh",
+  "critic": "R4",
+  "packs": {
+    "R4-1": {
+      "set-A-01.png": "One sheet across the shot marsh-01, frames 5618 to 5832",
+      "set-A-02.png": "One sheet across the shot marsh-02, frames 5833 to 6047",
+      "set-A-03.png": "One sheet across the shot marsh-03, frames 6048 to 6262",
+      "set-A-04.png": "One sheet across the shot marsh-04, frames 6263 to 6585",
+      "set-A-05.png": "One sheet across the shot marsh-05, frames 6586 to 7014",
+      "set-A-06.png": "Consecutive frames from the key frame of marsh-0, for what moves in that view",
+      "set-A-07.png": "Consecutive frames from the key frame of marsh-1, for what moves in that view",
+      "set-A-08.png": "Consecutive frames from the key frame of marsh-2, for what moves in that view",
+      "set-A-09.png": "Consecutive frames from the key frame of marsh-3, for what moves in that view",
+      "set-A-10.png": "Consecutive frames from the key frame of marsh-4, for what moves in that view"
+    },
+    "R4-2": {
+      "set-B-01.png": "Consecutive frames across the event burst at frame 6158",
+      "set-B-02.png": "One sheet across 6 seconds with the camera held still at the establishing key marsh-0, film frame 5725"
+    }
+  }
+}
