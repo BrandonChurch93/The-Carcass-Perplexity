@@ -273,12 +273,13 @@ export function create(ctx: Context): Piece {
   // The live one: sunk to the shoulders, head up, working to get out and getting nowhere.
   const at = rel(STUCK[0], STUCK[1]);
   const yaw = relYaw(-0.97, -0.03);
-  const ground = Math.min(0.1, ctx.rig.land.height(at[0], at[1]));
+  // The crust has given way under it: the land's hollow is 0.2 m deep here, and the rig's land height does not include it.
+  const ground = Math.min(0.1, ctx.rig.land.height(at[0], at[1])) - 0.2;
   const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.024, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 26 });
   const live = newDrive();
-  const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)]);
+  const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)], 0.5, [0.1, 0.072, 0.054], 'dead-mud', 0.6, 0.2);
   // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.
-  const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.2 * c.size, [0.06, 0.042, 0.036], 'dead-stain-' + i));
+  const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.14 * c.size, [0.045, 0.028, 0.024], 'dead-stain-' + i, 0.5));
   const meshes = [...cards.map((c) => c.mesh), ...bodies.map((b) => b.mesh), stuck.mesh, stuck.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
   ctx.parts.built('dead', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);

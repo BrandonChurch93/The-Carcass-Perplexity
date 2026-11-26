@@ -435,7 +435,7 @@ export class Beast {
       out.set(l.out, i * 3);
       const mid = 1 - Math.abs(i / (lip.length - 1) - 0.5) * 0.6;
       if (many) shape.set([rng.range(0.38, 1.05) * mid, 0.014 + 0.01 * rng.next(), rng.next(), rng.next()], i * 4);
-      else shape.set([rng.range(0.42, 0.66) * mid * (1 - 0.25 * b.young), (0.042 + 0.016 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
+      else shape.set([rng.range(0.56, 0.86) * mid * (1 - 0.25 * b.young), (0.042 + 0.016 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
     });
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.index = tube().index;

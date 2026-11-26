@@ -30,7 +30,7 @@ export function create(ctx: Context): Piece {
     const ground = sink > 0.15 ? Math.min(land, 0) - sink * b.k : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
     // A young one keeps to the shallows: its legs are too short for the bed.
     // One on a bank has sunk into it to the ankle and further: the mud is soft.
-    const stand = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.2) * b.k);
+    const stand = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.36) * b.k);
     // The head hangs to the mud that is under it, or to the top of the brine.
     const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.6 * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
@@ -79,7 +79,7 @@ export function create(ctx: Context): Piece {
         const driven = walk(h.plan, h.beast.b, seconds, drive);
         driven.floor = h.floor;
         // One that lies in the brine lies nose down: the back stands out of it and falls away to the head.
-        if (h.sunk) {
+        if (h.sunk && h.paw < 0) {
           driven.pitch += 0.11;
           driven.headPitch += 0.25;
         }
@@ -89,6 +89,9 @@ export function create(ctx: Context): Piece {
           foot[0] += (0.62 + 0.08 * Math.sin(seconds * 0.9)) * h.beast.b.k;
           foot[1] = -h.plan.ground - (0.1 + 0.03 * Math.sin(seconds * 0.9 + 1.2)) * h.beast.b.k;
           foot[2] *= 1.25;
+          // And it holds its head at the top of the brine, the feelers spread on it.
+          driven.pitch -= 0.05;
+          driven.headPitch -= 0.22;
         }
         const stood = h.beast.pose(driven, seconds);
         const k = h.beast.b.k;
