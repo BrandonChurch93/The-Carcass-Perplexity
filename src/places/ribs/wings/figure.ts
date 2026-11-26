@@ -242,7 +242,8 @@ void main() {
   vec4 land = landAt(vWorld.xz);
   float soft = texture2D(tCover, uv, 3.5).r;
 #if defined(SHADE)
-  float dim = 0.62 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
+  // Light: it falls on whatever stands nearer than its plane, a rock before a hidden one too, and a heavy one there is a black blot.
+  float dim = 0.4 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(vec3(0.0)) * dim, dim);
 #elif defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
