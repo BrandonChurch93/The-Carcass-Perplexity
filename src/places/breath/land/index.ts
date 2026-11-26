@@ -31,6 +31,13 @@ export function create(ctx: Context): Piece {
     metres,
     relief,
   });
+  const tile = (name: string, mean: [number, number, number], metres: number): Surface => ({
+    colour: ctx.assets.texture(`land/${name}.jpg`, { kind: 'colour', repeat: true, anisotropy: 8 }),
+    data: ctx.assets.texture(`land/${name}-nh.png`, { kind: 'data', repeat: true, anisotropy: 4 }),
+    mean,
+    metres,
+    relief: 1,
+  });
   const ivory = surface('hoop', [0.493, 0.392, 0.288], 2.2, 1.0);
   const seep = surface('wall', [0.077, 0.061, 0.033], 4, 1.0);
   // The plate of the shelf, laid turn and turn about so that it has no edge (land.ts lays its relief the same way).
@@ -42,6 +49,8 @@ export function create(ctx: Context): Piece {
     pad: ctx.assets.texture('mat/drypad.jpg', { kind: 'colour', anisotropy: 4 }),
     padHeight: ctx.assets.texture('mat/drypad-h.png', { kind: 'data' }),
     pebbles: surface('pebbles', [0.31, 0.272, 0.234], 1.5, 1, 4),
+    crust: tile('crust', [0.307, 0.255, 0.218], 2.3),
+    gravel: tile('gravel', [0.316, 0.259, 0.215], 1.35),
   });
   const disposable: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
