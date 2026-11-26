@@ -446,7 +446,8 @@ void main() {
   float panAt = dot(fromPan, fromPan) < 90000.0 ? (1.0 - smoothstep(0.6, 1.15, length(fromPan / vec2(175.0, 140.0)) + 0.5 * (texture2D(uCloudTile, xz / 420.0, 1.0).b - 0.5))) * land : 0.0;
   float brine = smoothstep(0.22, 0.48, rawBrine);
   float saltFlat = panAt * (1.0 - brine);
-  ground = mix(ground, vec3(0.8, 0.8, 0.78) * (0.8 + 0.5 * lum), 0.92 * saltFlat);
+  // (Salt in the air of the land round it: white where it is new, grey and tan where the crust is old or wet, never a blank.)
+  if (saltFlat > 0.0) ground = mix(ground, mix(vec3(0.5, 0.47, 0.41), vec3(0.7, 0.7, 0.67), smoothstep(0.3, 0.7, vnoise(xz / 31.0 + 6.0) + 0.5 * (vnoise(xz / 7.0 + 2.0) - 0.5))) * (0.78 + 0.5 * lum), 0.92 * saltFlat);
   ground = mix(ground, vec3(0.22, 0.02, 0.02), 0.9 * panAt * brine);
   vec2 run = vec2(0.965, 0.26);
   float alongRun = dot(fromPan, run) / 1150.0;
