@@ -97,9 +97,18 @@ def world():
     pad = 160
     small = cv2.copyMakeBorder(small, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=0)
     near = 0.6 * cv2.GaussianBlur(small, (0, 0), 45 / 4) + 0.8 * cv2.GaussianBlur(small, (0, 0), 110 / 4)
-    out = {'bone': cv2.GaussianBlur(b, (0, 0), 1.2), 'dist': dist, 'grey': grey * b, 'near': near, 'holes': cv2.GaussianBlur(holes.astype(np.float32) / 255, (0, 0), 2.0)}
+    far = cv2.GaussianBlur(small, (0, 0), 260 / 4)
+    out = {'bone': cv2.GaussianBlur(b, (0, 0), 1.2), 'dist': dist, 'grey': grey * b, 'near': near, 'far': far, 'holes': cv2.GaussianBlur(holes.astype(np.float32) / 255, (0, 0), 2.0)}
     np.savez(cache, **out)
     return out
+
+def outside(G):
+    """How far each px of the master is from the nearest bone, px. Kept beside the other fields of the world."""
+    cache = os.path.join(WORK, 'outside.npy')
+    if os.path.exists(cache): return np.load(cache)
+    d = cv2.distanceTransform((G['bone'] < 0.5).astype(np.uint8), cv2.DIST_L2, 5).astype(np.float32)
+    np.save(cache, d)
+    return d
 
 def sample(field, X, Y, scale=1.0, pad=0.0):
     return cv2.remap(field, ((X + pad) / scale - 0.5).astype(np.float32), ((Y + pad) / scale - 0.5).astype(np.float32), cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
@@ -132,37 +141,86 @@ def make(name):
     bone = np.clip(sample(G['bone'], X, Y), 0, 1)
     dist = np.maximum(sample(G['dist'], X, Y), 0)
     grey = np.clip(sample(G['grey'], X, Y), 0, 1)
-    near = np.maximum(sample(G['near'], X, Y, 4.0, 640.0), 0)
+    # the foreland does not follow the bones at one distance: it is read through a slow warp, so it is wide on one side of a range and narrow on the other
+    wx = 260 * fbm(X, Y, 1100, 81, max(texel, 60)) + 110 * fbm(X, Y, 300, 82, max(texel, 20))
+    wy = 260 * fbm(X, Y, 1100, 83, max(texel, 60)) + 110 * fbm(X, Y, 300, 84, max(texel, 20))
+    near = np.maximum(sample(G['near'], X + wx, Y + wy, 4.0, 640.0), 0)
+    far = np.maximum(sample(G['far'], X + 1.5 * wx, Y + 1.5 * wy, 4.0, 640.0), 0)
     holes = np.clip(sample(G['holes'], X, Y), 0, 1)
+    outd = np.where((X < 2) | (X > MW - 2) | (Y < 2) | (Y > MH - 2), 1e4, np.maximum(sample(outside(G), X, Y), 0))
 
     # ---- where the land is ----
+    # The coast carries the figure: each limb is its own long arm of land with its range down the middle, the skull, the cage and the hips are
+    # masses, and between them the sea is kept open. The widths are uneven, so no coast follows its bone at one distance.
     n_big = fbm(X, Y, 420, 11, max(texel, 40))
     n_mid = fbm(X, Y, 130, 12, max(texel, 6))
     n_fine = fbm(X, Y, 22, 13, texel, gain=0.55)
+    n_huge = fbm(X, Y, 900, 10, max(texel, 100))
     wob = 0.25 * fbm(X, Y, 60, 21, max(texel, 2))
-    lake_d = np.sqrt(((X - LAKE[0]) / LAKE[2]) ** 2 + ((Y - LAKE[1]) / LAKE[3]) ** 2) + 0.05 * fbm(X, Y, 30, 22, texel) + 0.02 * fbm(X, Y, 4, 23, texel)
+    lake_d = np.sqrt(((X - LAKE[0]) / LAKE[2]) ** 2 + ((Y - LAKE[1]) / LAKE[3]) ** 2) + 0.2 * fbm(X, Y, 70, 22, texel) + 0.03 * fbm(X, Y, 6, 23, texel)
     lake = lake_d < 1.0
+    FX = X + 0.45 * wx; FY = Y + 0.45 * wy
+    def arm(ax, ay, bx, by, ra, rb):
+        px = FX - ax; py = FY - ay; vx = bx - ax; vy = by - ay
+        t = np.clip((px * vx + py * vy) / (vx * vx + vy * vy), 0, 1)
+        return 1 - np.sqrt((px - t * vx) ** 2 + (py - t * vy) ** 2) / (ra + (rb - ra) * t)
+    def mass(cx, cy, rx, ry):
+        return 1 - np.sqrt(((FX - cx) / rx) ** 2 + ((FY - cy) / ry) ** 2)
+    figure = np.maximum.reduce([
+        arm(1900, 1110, 2080, 610, 150, 115), arm(2080, 590, 2620, 505, 115, 90),          # the raised arm
+        arm(2010, 2050, 2890, 2610, 180, 115),                                              # the lower arm
+        arm(3950, 1340, 4700, 1120, 200, 140), arm(4700, 1120, 5470, 1110, 130, 90), arm(5540, 1100, 5620, 900, 85, 65),   # the straight leg
+        arm(3950, 1840, 4690, 1760, 200, 145), arm(4690, 1760, 4520, 2530, 125, 90), arm(4500, 2590, 4820, 2640, 85, 60),  # the bent leg
+        arm(2850, 1545, 3520, 1545, 62, 62),                                                # the backbone
+        arm(1480, 1500, 1930, 1470, 215, 250),                                              # the neck
+        mass(1250, 1535, 315, 300), mass(2400, 1480, 540, 520), mass(3780, 1620, 410, 440), mass(1960, 1500, 240, 520),
+        0.8 * mass(4650, 930, 520, 190), 0.8 * mass(2250, 2480, 330, 190), 0.8 * mass(3650, 2110, 300, 170),              # plains on the outer sides
+    ])
+    skull = blob(X, Y, 1250, 1530, 225, 225, soft=0.3, warp=1.5 * wob + 0.3 * n_mid)
+    # the second socket and the hollow of the nose: lakes in the massif, as the Eye is
+    socket_d = np.minimum(np.sqrt(((X - 1325) / 50) ** 2 + ((Y - 1408) / 40) ** 2), np.sqrt(((X - 1352) / 30) ** 2 + ((Y - 1503) / 20) ** 2)) + 0.25 * fbm(X, Y, 50, 24, texel)
+    sockets = 1 - smooth(0.85, 1.05, socket_d)
+    holes = np.maximum(holes * (1 - skull), sockets)
+    bone = np.clip(np.maximum(bone, 0.9 * skull) * (1 - sockets), 0, 1)
     keep = np.maximum.reduce([
-        capsule(X, Y + 60 * wob, 2060, 1548, 2960, 1562, 46),
-        0.8 * blob(X, Y, 4560, 1500, 600, 150, soft=0.5, warp=wob),
-        0.9 * blob(X, Y, 3230, 1560, 330, 250, warp=wob),
+        blob(X, Y, 2520, 830, 400, 120, soft=0.5, warp=2.0 * wob),                          # the sound under the raised arm
+        capsule(X, Y + 60 * wob, 2500, 2190, 3050, 2440, 75),                               # the sound over the lower arm
+        1.2 * blob(X, Y, 4900, 1450, 760, 150, soft=0.5, warp=2.5 * wob),                   # the bay between the legs
+        blob(X, Y, 4280, 2150, 190, 250, soft=0.5, warp=2.5 * wob),                         # the water in the crook of the bent leg
+        0.8 * blob(X, Y, 3180, 1300, 230, 150, soft=0.5, warp=2.0 * wob), 0.8 * blob(X, Y, 3200, 1800, 230, 150, soft=0.5, warp=2.0 * wob),  # the waist
         holes,
     ])
-    chest = blob(X, Y, 2440, 1290, 400, 215, warp=wob)
+    chest = blob(X, Y, 2330, 1300, 250, 150, soft=0.5, warp=2.5 * wob + 0.9 * n_mid)
+    cage = blob(X, Y, 2420, 1530, 470, 480, soft=0.3, warp=wob)
     throat = blob(X, Y, THROAT[0] + 20, THROAT[1] + 10, 175, 140, warp=wob)
-    pan = blob(X, Y, SALT[0], SALT[1], 185, 215, soft=0.25, warp=wob)
-    n_huge = fbm(X, Y, 900, 10, max(texel, 100))
-    ribs_low = blob(X, Y, 2520, 1860, 430, 250, soft=0.5)
-    score = near * np.clip(1 + 2.2 * n_huge + 1.6 * n_big + 1.0 * n_mid, 0.05, 3) + 0.1 * n_big + 0.07 * n_mid + 0.035 * n_fine - THETA - 0.55 * keep + 0.18 * chest + 0.2 * throat - ribs_low * (0.05 + 0.25 * n_mid)
-    score = np.where(np.sqrt(near) < 0.12, np.minimum(score, -0.01), score)
-    land = ((score > 0) | (bone > 0.5)) & ~lake
+    pan = blob(X, Y, SALT[0], SALT[1], 185, 215, soft=0.25, warp=2.2 * wob + 0.6 * n_mid)
+    isles = fbm(X, Y, 150, 15, max(texel, 4), gain=0.55)
+    # the lower ribs run out into the sea as headlands: the land of the cage thins there
+    fjord = blob(X, Y, 2560, 1980, 420, 170, soft=0.6) * (0.25 + 0.5 * smooth(-0.1, 0.1, fbm(X, Y, 90, 19, max(texel, 3))))
+    uneven = 1.3 * n_big + 1.0 * n_huge + 0.45 * n_mid + 0.14 * n_fine
+    score = 0.45 * (figure + uneven * np.clip(1.2 - figure, 0.4, 1.5)) + 0.04 - 0.75 * keep - fjord
+    # every bone has a skirt of ground, wide here and narrow there, so the fingers and the ribs are headlands and not lines
+    skirt = 1 - outd / np.maximum(16 + 70 * (n_big + 0.5 * n_mid + 0.12), 5)
+    score = np.maximum(score, 0.3 * skirt - 0.6 * holes)
+    # islands off the coast, where the shelf is
+    shelf_zone = smooth(-1.1, -0.2, figure)
+    score = np.maximum(score, (isles - 0.24 + 0.1 * shelf_zone) * shelf_zone * (1 - np.clip(keep * 1.4, 0, 1)))
+    land = ((score > 0) | (bone > 0.5)) & ~lake & (sockets < 0.5)
     lowness = smooth(0.0, 0.22, score)
 
     # ---- the guide: which ground is pushed up ----
     crest = np.power(np.clip(dist / 14.0, 0, 1), 0.7)
-    guide = 0.02 + 0.09 * lowness + bone * (0.2 + 0.42 * crest + 0.5 * grey)
-    guide = guide * (1 - 0.9 * pan) + 0.03 * pan
-    guide = guide * (1 - 0.75 * chest * (1 - bone)) * (1 - 0.6 * throat * (1 - bone))
+    # the forelands have ranges of their own: lower than the bones, and not where the bones are, so the bones stay the high ground
+    inland = smooth(0.02, 0.45, score)
+    ranges = np.clip(fbm(X, Y, 340, 16, max(texel, 6), ridged=True) + 0.5 * fbm(X, Y, 90, 17, max(texel, 3), ridged=True) + 0.12, 0, 1)
+    # no ground is level: low hills over all the land, foothills round every bone, and the bones themselves in knots and saddles
+    hills = np.clip(fbm(X + 300 * wob, Y - 300 * wob, 120, 34, max(texel, 2), ridged=True) + 0.5, 0, 1)
+    foothill = smooth(0.0, 1.0, skirt) * (1 - bone)
+    knots = 0.72 + 0.56 * np.clip(fbm(X, Y, 70, 35, max(texel, 2)) + 0.5, 0, 1)
+    guide = 0.02 + 0.05 * lowness + 0.07 * hills * lowness + 0.16 * foothill * (0.4 + 0.6 * hills) + 0.95 * inland * ranges * ranges + bone * knots * (0.2 + 0.42 * crest + 0.5 * grey)
+    guide = guide * (1 - 0.9 * pan) + pan * (0.03 + 0.05 * (fbm(X, Y, 70, 18, max(texel, 2)) + 0.5))
+    guide = guide + 0.25 * skull * (1 - sockets)
+    guide = guide * (1 - np.maximum(0.8 * chest, 0.45 * cage) * (1 - bone)) * (1 - 0.6 * throat * (1 - bone))
     guide = np.where(land, guide, 0).astype(np.float32)
     fixed = ~land
 
@@ -220,26 +278,40 @@ def make(name):
     depth = 1 - np.exp(-to_land / np.maximum(shelf, 3))
     bars = smooth(0.1, 0.35, fbm(X, Y, 26, 41, texel, ridged=True)) * np.exp(-to_land / 9)
     depth = np.clip(depth - 0.25 * bars, 0, 1)
+    # the sockets and the hollows of the skull are deep: dark water inside pale rock
+    depth = np.maximum(depth, smooth(0.3, 0.9, holes) * (0.75 + 0.5 * n_mid))
+    depth = np.clip(depth, 0, 1)
     # the drowned backbone: a pale line along the floor of the strait
     depth = depth * (1 - 0.55 * capsule(X, Y + 10 * wob, 2080, 1552, 2990, 1560, 5, soft=0.9))
 
     # ---- colour of the ground ----
     tone = fbm(X, Y, 300, 51, max(texel, 4)); tone2 = fbm(X, Y, 36, 52, texel); grain = fbm(X, Y, 5, 53, texel, gain=0.6)
-    low = mixc(col(0.085, 0.066, 0.05), col(0.055, 0.068, 0.05), smooth(-0.15, 0.2, tone + 0.5 * tone2))
-    low = mixc(low, col(0.15, 0.085, 0.055), smooth(0.05, 0.3, tone2 - 0.4 * tone))
+    biome = fbm(X, Y, 800, 54, max(texel, 30))
+    low = mixc(col(0.075, 0.055, 0.04), col(0.03, 0.045, 0.028), smooth(-0.12, 0.12, biome + 0.4 * tone + 0.3 * tone2))
+    low = mixc(low, col(0.14, 0.08, 0.05), smooth(0.02, 0.2, tone2 - 0.5 * tone - 0.6 * biome))
+    low = mixc(low, col(0.15, 0.11, 0.075), smooth(0.14, 0.34, -biome + 0.3 * tone))
     low = mixc(low, col(0.035, 0.055, 0.04), 0.7 * moist)
-    foot = col(0.24, 0.185, 0.14)
-    pale = mixc(col(0.5, 0.445, 0.375), col(0.42, 0.40, 0.385), smooth(-0.2, 0.25, tone))
+    foot = col(0.17, 0.125, 0.095)
+    pale = mixc(col(0.4, 0.34, 0.275), col(0.33, 0.31, 0.29), smooth(-0.2, 0.25, tone))
     white = col(0.82, 0.8, 0.77)
     e = h / 1.3
     c = mixc(low, foot, smooth(0.05, 0.16, e))
-    c = mixc(c, pale, smooth(0.13, 0.33, e))
-    c = mixc(c, white, smooth(0.62, 0.9, e + 0.12 * tone2) * smooth(0.9, 0.3, slope))
+    c = mixc(c, pale, smooth(0.16, 0.42, e))
+    # the bones are bare pale rock over their whole width, not only along their crests: a massif, with its gullies darker
+    mass = cv2.GaussianBlur(bone, (0, 0), max(1.0, 6.0 / texel))
+    rock = smooth(0.2, 0.7, mass + 0.5 * n_fine + 0.35 * tone2)
+    stone = mixc(col(0.2, 0.16, 0.125), pale, smooth(0.06, 0.4, e))
+    c = mixc(c, stone, 0.92 * rock)
+    c = mixc(c, white, smooth(0.88, 1.12, e + 0.12 * tone2) * smooth(0.9, 0.3, slope))
     c = c * (0.62 + 0.62 * hollow)[..., None] * (1 + 0.22 * tone2 + 0.16 * grain)[..., None]
     c = mixc(c, c * col(0.62, 0.6, 0.62), smooth(0.35, 0.8, slope))
-    crust = mixc(col(0.02, 0.019, 0.02), col(0.045, 0.04, 0.038), smooth(-0.1, 0.25, tone2 + grain))
-    c = mixc(c, crust * (0.7 + 0.6 * hollow)[..., None], np.clip(chest * 1.3, 0, 1) * smooth(0.2, 0.1, e))
+    crust = mixc(col(0.013, 0.011, 0.011), col(0.034, 0.027, 0.023), smooth(-0.1, 0.25, tone2 + grain))
+    flows = smooth(0.4, 0.62, chest + 1.5 * fbm(X, Y, 170, 55, max(texel, 2)) + 0.5 * tone2)
+    crust = crust * (1 + 1.5 * smooth(0.0, 0.2, fbm(X + 0.6 * Y + 400 * wob, Y - 0.6 * X - 400 * wob, 60, 56, texel)))[..., None]
+    c = mixc(c, crust * (0.7 + 0.6 * hollow)[..., None], 0.93 * flows * smooth(0.24, 0.1, e))
     red = mixc(col(0.115, 0.045, 0.034), col(0.2, 0.075, 0.045), smooth(-0.1, 0.3, tone2))
+    # the valleys between the ribs: red-brown ground, darker toward the crust
+    c = mixc(c, mixc(red, col(0.09, 0.05, 0.04), smooth(-0.1, 0.2, tone)) * (0.7 + 0.6 * hollow)[..., None], 0.85 * np.clip(cage * 1.2, 0, 1) * smooth(0.26, 0.1, e) * (1 - flows))
     c = mixc(c, red * (0.7 + 0.6 * hollow)[..., None], np.clip(throat * 1.3, 0, 1) * smooth(0.22, 0.1, e))
     c = mixc(c, col(0.006, 0.008, 0.011), smooth(0.25, 0.7, pits))
     # the salt pan of the hips, with its red channels along the drainage of the pan
@@ -247,8 +319,12 @@ def make(name):
     salt = mixc(col(0.72, 0.7, 0.68), col(0.8, 0.74, 0.72), smooth(0, 0.25, tone2)) * (0.9 + 0.5 * cells)[..., None]
     in_pan = np.clip(pan * 1.25, 0, 1) * smooth(0.16, 0.08, e)
     c = mixc(c, salt, in_pan)
-    brine = np.clip(cv2.GaussianBlur((smooth(1.9, 3.1, np.log10(np.maximum(area_km, 1))) * land).astype(np.float32), (0, 0), max(1.2, 1.6 / texel)) * 2.2, 0, 1)
-    pools = smooth(0.12, 0.2, fbm(X, Y, 48, 62, texel)) * smooth(0.3, 0.8, pan)
+    # the brine: red water lying in the lowest lines of the pan, which wander as the lines of a noise do, widest where the pan is lowest
+    wander = np.abs(fbm(X + 40 * wob, Y, 190, 63, max(texel, 0.5), gain=0.45))
+    twig = np.abs(fbm(X, Y + 40 * wob, 70, 64, max(texel, 0.5), gain=0.45))
+    heart = smooth(0.25, 0.95, pan)
+    brine = np.maximum(smooth(0.012 + 0.028 * heart, 0.004, wander), 0.8 * smooth(0.02 * heart + 0.004, 0.002, twig) * smooth(0.12, 0.02, wander))
+    pools = smooth(0.17, 0.24, fbm(X, Y, 48, 62, texel)) * heart * smooth(0.1, 0.03, wander)
     c = mixc(c, mixc(col(0.36, 0.022, 0.03), col(0.2, 0.012, 0.02), smooth(0.4, 1, brine)), np.clip(np.maximum(brine, pools) * in_pan * 1.2, 0, 1))
     c = mixc(c, col(0.03, 0.075, 0.09), river * (1 - in_pan))
     c = mixc(c, col(0.42, 0.37, 0.29), 0.6 * np.exp(-to_sea / max(1.2, 1.5 * texel)) * smooth(0.6, 0.1, slope) * (1 - in_pan))
@@ -270,12 +346,12 @@ def make(name):
     w = mixc(w, col(0.05, 0.11, 0.07), 0.45 * bloom)
     # the lake of the Eye: black-blue water inside a narrow amber shelf
     shelf_w = (1 - lake_d) * LAKE[2]
-    amber = smooth(9.0, 1.0, shelf_w + 5 * fbm(swx, swy, 40, 77, texel, gain=0.6) + 2.0)
+    amber = smooth(15.0, 2.0, shelf_w + 16 * fbm(swx, swy, 46, 77, texel, gain=0.6) + 3.0)
     lw = mixc(col(0.0037, 0.0103, 0.0252), col(0.3, 0.165, 0.03), amber)
     lw = mixc(lw, col(0.42, 0.3, 0.12), smooth(1.6, 0.0, shelf_w))
     in_lake = (lake_d < 1.06).astype(np.float32)
     w = mixc(w, lw, in_lake)
-    depth = np.where(lake_d < 1.06, np.clip(smooth(0.0, 9.0, shelf_w) * 0.9 + 0.1, 0, 1), depth)
+    depth = np.where(lake_d < 1.06, np.clip(smooth(0.0, 14.0, shelf_w) * 0.9 + 0.1, 0, 1), depth)
     # far from the land the sea is one colour, so the picture can end anywhere
     fade = smooth(0.0, 0.04, np.minimum(np.minimum(X - xs[0], xs[-1] - X) / width, np.minimum(Y - ys[0], ys[-1] - Y) / height))
     w = mixc(np.broadcast_to(deep, w.shape), w, fade)

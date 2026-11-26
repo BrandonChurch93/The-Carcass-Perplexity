@@ -1,7 +1,8 @@
 // Makes the tiling material pictures of a place from its generated sheets, and its sky picture.
-// Run: node assets-src/materials/make-materials.mjs <place> [<place> ...]     (ribs, breath, marsh, spine, eye)
+// Run: node assets-src/materials/make-materials.mjs <place> [<place> ...]     (ribs, breath, marsh, spine, eye, reveal)
 // Reads assets-src/<place>/mat/src/<name>.png and assets-src/materials/spec.json.
 // Writes public/assets/<place>/mat/<name>.jpg (colour, sRGB), <name>-nh.png (red and green: the slope on x and y, 0.5 is level; blue: height), sky.jpg and materials.json.
+// A plate (one whole feature on black, such as a storm seen from orbit) is written as <name>.jpg at its own size and is not made to repeat.
 // The method is the Heart's (assets-src/heart/make-materials.mjs), unchanged, so a place can read these the way the Heart reads its own.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -124,10 +125,14 @@ for (const place of process.argv.slice(2)) {
       await sharp(src).removeAlpha().resize(Math.min(RECIPE.skyWidth, meta.width)).jpeg({ quality: RECIPE.skyQuality, chromaSubsampling: '4:4:4' }).toFile(path.join(out, 'sky.jpg'));
       const made = await sharp(path.join(out, 'sky.jpg')).metadata();
       rows.push({ name: 'sky', kind: 'sky', width: made.width, height: made.height });
+    } else if (row.kind === 'plate') {
+      await sharp(src).removeAlpha().jpeg({ quality: RECIPE.skyQuality, chromaSubsampling: '4:4:4' }).toFile(path.join(out, `${row.name}.jpg`));
+      const made = await sharp(path.join(out, `${row.name}.jpg`)).metadata();
+      rows.push({ name: row.name, kind: 'plate', metres: row.metres, width: made.width, height: made.height });
     } else {
       rows.push({ name: row.name, kind: 'tile', metres: row.metres, mean: await material(place, row.name, out) });
     }
   }
-  fs.writeFileSync(path.join(out, 'materials.json'), `${JSON.stringify({ recipe: RECIPE, note: 'mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for', materials: rows }, null, 2)}\n`);
-  for (const r of rows) console.log(place, r.name, r.kind === 'sky' ? `${r.width} x ${r.height}` : r.mean.join(' '));
+  fs.writeFileSync(path.join(out, 'materials.json'), `${JSON.stringify({ recipe: RECIPE, note: 'mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of a tile, or the whole of a plate, stands for', materials: rows }, null, 2)}\n`);
+  for (const r of rows) console.log(place, r.name, r.kind === 'tile' ? r.mean.join(' ') : `${r.width} x ${r.height}`);
 }

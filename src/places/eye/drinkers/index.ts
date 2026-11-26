@@ -49,10 +49,10 @@ void main() {
     vec3 pivot = vec3(${BODY.neckPivot.map((v) => v.toFixed(3)).join(', ')});
     if (part > 1.5) {
       // The head hangs from the end of the neck: level when the neck is up, turned down to the water when it is down.
-      turn(p, n, pivot + vec3(0.0, ${BODY.neckLength.toFixed(3)}, 0.0), -0.3 - 0.52 * smoothstep(0.5, 2.5, aPose.x));
+      turn(p, n, pivot + vec3(0.0, ${BODY.neckLength.toFixed(3)}, 0.0), -0.3 - 0.9 * smoothstep(0.5, 2.4, aPose.x));
     }
     float along = clamp((p.y - pivot.y) / ${BODY.neckLength.toFixed(3)}, 0.0, 1.0);
-    turn(p, n, pivot, aPose.x * mix(pow(along, 0.8), 1.0, step(1.5, part)));
+    turn(p, n, pivot, aPose.x * mix(smoothstep(-0.12, 0.34, along), 1.0, step(1.5, part)));
   } else if (part < 3.5) {
     float id = aBone.z;
     bool front = id < 1.5;
@@ -74,7 +74,7 @@ void main() {
     turn(p, n, hip, hipTurn * smoothstep(-0.1, 0.12, aBone.y));
     p.x += sign(p.x) * 0.1 * lie * smoothstep(0.1, 0.5, aBone.y);
   } else {
-    turn(p, n, vec3(0.0, 1.5, -1.1), 0.25 * aBone.y * sin(uTime * 1.9 + aLife.x * 40.0) * smoothstep(0.2, 0.9, sin(uTime * 0.37 + aLife.x * 17.0)));
+    turn(p, n, vec3(0.0, 1.5, -0.82), 0.25 * aBone.y * sin(uTime * 1.9 + aLife.x * 40.0) * smoothstep(0.2, 0.9, sin(uTime * 0.37 + aLife.x * 17.0)));
   }
   vRest = position;
   vRestNormal = normal;
@@ -107,10 +107,16 @@ void main() {
   vec3 col = texture2D(tHide, q.zy).rgb * w.x + texture2D(tHide, q.xz).rgb * w.y + texture2D(tHide, q.xy).rgb * w.z;
   vec3 nh = texture2D(tHideNh, q.zy).rgb * w.x + texture2D(tHideNh, q.xz).rgb * w.y + texture2D(tHideNh, q.xy).rgb * w.z;
   float lum = dot(col, vec3(0.33));
-  float ribs = smoothstep(-0.25, 0.75, vRest.z) * (1.0 - smoothstep(0.75, 0.95, vRest.z)) * step(vPart, 0.5) * smoothstep(1.75, 1.35, vRest.y);
+  float ribs = smoothstep(-0.18, 0.55, vRest.z) * (1.0 - smoothstep(0.55, 0.7, vRest.z)) * step(vPart, 0.5) * smoothstep(1.75, 1.35, vRest.y);
   float rib = sin(vRest.z * 46.0 + vRest.y * 9.0);
-  vec3 albedo = mix(vec3(0.6, 0.45, 0.37), vec3(0.83, 0.71, 0.61), smoothstep(0.03, 0.3, lum)) * (0.92 + 0.16 * vnoise(vRest.zy * 3.0 + vSeed * 20.0));
+  vec3 albedo = mix(vec3(0.42, 0.33, 0.27), vec3(0.8, 0.7, 0.6), smoothstep(0.03, 0.3, lum)) * (0.92 + 0.16 * vnoise(vRest.zy * 3.0 + vSeed * 20.0));
   albedo *= 1.0 - 0.07 * ribs * smoothstep(0.2, 0.9, rib);
+  // Old skin: stained in patches, darker along the back, grey with dust on the legs.
+  float stain = 0.6 * vnoise(vRest.zy * 2.1 + vSeed * 13.0) + 0.4 * vnoise(vRest.zy * 7.0 + vRest.x * 3.0 + vSeed * 3.0);
+  albedo *= mix(vec3(0.4, 0.42, 0.45), vec3(1.08), smoothstep(0.32, 0.6, stain));
+  float dirt = 0.6 * vnoise(vRest.zy * 0.9 + vSeed * 41.0) + 0.4 * vnoise(vRest.zy * 4.3 + vSeed * 7.0);
+  albedo *= mix(vec3(0.5, 0.47, 0.45), vec3(1.0), smoothstep(0.3, 0.55, dirt + 0.25 * smoothstep(0.7, 1.5, vRest.y)));
+  albedo *= mix(vec3(0.78, 0.74, 0.72), vec3(1.0), smoothstep(0.25, 0.9, vRest.y));
   // Dark and wet to the knee where it has stood in the lake; grey with dust above that.
   vec4 land = landAt(vWorld.xz);
   float wet = smoothstep(0.55, 0.1, vWorld.y) * smoothstep(1.5, -1.5, land.b);
@@ -118,9 +124,16 @@ void main() {
   vec2 d = nh.xy * 2.0 - 1.0;
   vec3 t = normalize(cross(n, vec3(0.2, 0.9, 0.35)));
   vec3 b = cross(n, t);
-  n = normalize(n + (t * d.x + b * d.y) * 0.45 + b * (0.22 * ribs * cos(vRest.z * 46.0 + vRest.y * 9.0)));
+  // The neck is creased across, deepest at its root and under the jaw; the skin hangs in folds at the elbow and the stifle.
+  float onNeck = step(0.5, vPart) * step(vPart, 1.5);
+  float crease = onNeck * cos(vRest.y * 38.0 + 3.0 * vnoise(vRest.xz * 9.0 + vSeed * 5.0)) * (0.5 + 0.5 * vnoise(vec2(vRest.y * 2.3, vSeed * 31.0)));
+  albedo *= 1.0 - 0.1 * onNeck * smoothstep(0.3, 1.0, -crease);
+  // A short pale coat: fine, lying one way, a little rough.
+  float coat = vnoise(vec2(vRest.z * 420.0 + vRest.x * 90.0, vRest.y * 60.0)) - 0.5;
+  albedo *= 1.0 + 0.22 * coat;
+  n = normalize(n + (t * d.x + b * d.y) * 0.65 + b * (0.12 * ribs * cos(vRest.z * 46.0 + vRest.y * 9.0) + 0.3 * crease) + t * (0.14 * coat));
   float under = smoothstep(0.2, -0.7, normalize(vNormal).y);
-  float occ = (0.55 + 0.45 * smoothstep(0.05, 0.55, nh.b)) * mix(1.0, 0.62, under * step(vPart, 0.5));
+  float occ = (0.55 + 0.45 * smoothstep(0.05, 0.55, nh.b)) * mix(1.0, 0.45, under);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.72, 0.3, wet), occ);
   // Thin skin: the low sun comes through the ears, the edges of the neck and the legs.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
@@ -154,8 +167,8 @@ export function create(ctx: Context): Piece {
   for (let i = 0; i < 12; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
 
   const dummy = new THREE.Object3D();
-  const NECK_UP = 24 * DEG;
-  const NECK_DOWN = 150 * DEG;
+  const NECK_UP = 30 * DEG;
+  const NECK_DOWN = 139 * DEG;
   const sun = ctx.rig.sun;
 
   return {

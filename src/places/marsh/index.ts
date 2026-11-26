@@ -34,7 +34,7 @@ const K2: Pose = {
 /** marsh-1, the seep pool, from a metre over its brine. */
 const K1: Pose = {
   position: [K1_AT[0], 0.95, K1_AT[1]],
-  aim: [K1_AT[0] + K1_DIR[0] * 10, 0.95 - 10 * Math.tan(8.9 * DEG), K1_AT[1] + K1_DIR[1] * 10],
+  aim: [K1_AT[0] + K1_DIR[0] * 10, 0.95 - 10 * Math.tan(12 * DEG), K1_AT[1] + K1_DIR[1] * 10],
   fov: 35,
 };
 

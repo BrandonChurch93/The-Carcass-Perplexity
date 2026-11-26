@@ -1,4 +1,5 @@
 # The list of material pictures of the six places after the Heart, with the prompt of each.
+# Kinds: tile (repeats both ways, colour and height data), sky (a sky picture), plate (one whole feature on black, not repeated).
 # Run: python3 assets-src/materials/spec.py   (writes assets-src/materials/spec.json, which the generation step and the recipe writer read)
 import json, os
 
@@ -16,7 +17,7 @@ A = 'references/approved/'
 R = 'references/drafts/working/real/'
 
 def ap(place, n):
-    d = {'ribs': '1-ribs', 'breath': '3-breath', 'marsh': '4-marsh', 'spine': '5-spine', 'eye': '6-eye'}[place]
+    d = {'ribs': '1-ribs', 'breath': '3-breath', 'marsh': '4-marsh', 'spine': '5-spine', 'eye': '6-eye', 'reveal': '7-reveal'}[place]
     f = [x for x in sorted(os.listdir(A + d)) if x.startswith(f'{place}-{n}-')][0]
     return A + d + '/' + f
 
@@ -70,8 +71,33 @@ tile('eye', 'sinter', DOWN + "pale mineral crust at the edge of a lake, about 3 
 tile('eye', 'hide', "A material texture, seen straight on: the hide of a tall lean grazing animal, about 0.6 metres across. Very short dense hair over thin skin, pale tan and sandy fawn, slightly darker along faint ridges where ribs lie beneath, with fine creases, small scars and dust.", 1, 'ref-hide-3.jpg', 'the drinkers, which read as bare models', 0.6)
 sky('eye', "A photograph of the sky only, on a clear still evening. A cloudless sky, pale warm gold and peach low down, deepening through soft blue to a deeper blue at the top, with two or three thin wisps of high cirrus that catch pink light.", 0, 'plate-crater-1.jpg', 'the clear evening over the lake')
 
+# The Reveal: cloud seen from orbit, and the ground of its provinces seen from orbit
+CLOUD = ("The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. "
+         "The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. "
+         "The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real fibrous and lumpy detail at every size and no painted or stylised look. "
+         "Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.")
+FIELD = "The field fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. "
+WHOLE = "The whole feature lies inside the frame with black sea on every side of it, and nothing touches the edge of the frame. "
+ORBIT = "A texture of the ground, seen straight down from orbit in an orthographic view: "
+def cloud(name, head, real, why, metres, whole=False):
+    rows.append(dict(place='reveal', name=name, kind='plate' if whole else 'tile', prompt='Cloud seen straight down from orbit in an orthographic view: ' + head + ' ' + (WHOLE if whole else FIELD) + CLOUD, refs=[A + '7-reveal/reveal-4-titan-from-orbit.jpg', R + real], why=why, metres=metres))
+cloud('cells', "a field of low cloud over open ocean, about 500 kilometres across. Closed cells packed like cobbles in part of the field, grading into open rings of cloud with clear centres elsewhere, each cell lumpy and soft at the edge, thin grey veil between some of them, small ragged scraps in the gaps.", 'orb-modis-popcorn.jpg', 'the low cell cloud over the cold sea, which the frames draw as hard white blocks', 500000)
+cloud('streets', "cloud streets over open ocean, about 400 kilometres across. Dozens of long parallel rows of small puffy cloud, the rows thin and separate at one side and thickening until they merge into a lumpy sheet at the other, every row ragged and beaded, never ruled straight.", 'orb-modis-streets.jpg', 'the cloud streets off the cold coasts', 400000)
+cloud('veil', "high thin ice cloud over open ocean, about 800 kilometres across. Translucent white veils and long fine fibres streaming roughly one way, feathered and combed, denser in a few soft bands and almost nothing between them, the black sea showing through most of it.", 'orb-apollo17-earth.jpg', 'the high veil that moves against the low deck', 800000)
+cloud('front', "one long weather front over open ocean, about 2,000 kilometres long, lying on a gentle curve from the lower left to the upper right. A broad band of thick layered cloud, smooth and bright along its spine, with a sharp ragged edge on one side and a wide fibrous veil thinning out on the other, lumpy convective towers embedded along it and scattered cells behind it.", 'orb-apollo17-earth.jpg', 'the long fronts, which the frames draw with hard lace at the edge', 2000000, True)
+cloud('storm', "one great cluster of thunderstorms over open ocean, about 400 kilometres across. Several merged anvils forming one thick bright shield, with boiling overshooting tops bulging through it near the middle, radial fibres and a soft thin fringe of ice cloud at its edge, and a few small young towers beside it.", 'orb-modis-tstorm-louisiana-crop.jpg', 'the storm over the ridge, which the frames draw as a small blocky patch', 400000, True)
+cloud('cyclone', "one great mature cyclone over open ocean, about 1,500 kilometres across. A dense central shield with a small clear eye, wrapped by two long spiral arms of lumpy convective cloud that tear into separate cells toward their ends, thin high outflow fibres fanning from the top, and clear black sea between the arms.", 'orb-apollo17-earth.jpg', 'the cyclone off the feet, which the frames draw as a smooth painted spiral', 1500000, True)
+GROUND = TILE.replace('real surface', 'real land surface from orbit')
+def ground(name, head, key, real, why, metres):
+    rows.append(dict(place='reveal', name=name, kind='tile', prompt=ORBIT + head + ' ' + GROUND, refs=[A + '7-reveal/' + key, R + real], why=why, metres=metres))
+ground('range', "the crest of a great mountain range, about 40 kilometres across. Sharp branching ridges of bare grey and tan rock, snow and small glaciers on the highest crests only, dark valleys with thin pale river threads, scree fans, and patches of dull green-brown growth low down. Ridges run in every direction, not all one way.", 'reveal-2-skull-massif.jpg', 'orb-iss13-oregon.jpg', 'the high ranges on the bone axes, which the frames draw with one erosion look', 40000)
+ground('plain', "a dry lowland plain, about 60 kilometres across. Tan, ochre and dull olive ground crossed by braided river channels with pale gravel bars, old abandoned channels, alluvial fans, dark patches of low growth along the water and pale dusty flats between.", 'reveal-3-head-and-shoulders.jpg', 'orb-iss35-nile-sinai.jpg', 'the plains between the ranges', 60000)
+ground('badland', "a high dry plateau cut by canyons, about 30 kilometres across. Buff, rust and grey layered rock, cut by branching canyons and gullies of many sizes, flat-topped mesas between them, pale dry washes on the canyon floors and darker rock on the rims.", 'reveal-2-skull-massif.jpg', 'orb-iss44-sinai.jpg', 'the eroded uplands, to break the single erosion look', 30000)
+ground('shelf', "a shallow sea shelf beside a coast, about 80 kilometres across, seen through clear water. Pale sand shoals and bars in turquoise and milky green, branching tidal channels of deeper blue between them, darker beds of growth, and the colour deepening to dark blue where the shelf ends.", 'reveal-3-head-and-shoulders.jpg', 'orb-modis-bahamas.jpg', 'the shelves and shallows round the coasts', 80000)
+ground('redflat', "a wide salt flat stained red, about 30 kilometres across. Crusted white and pink salt in broad pans, blood-red and rust-red shallow brine in branching pools and channels, dark mud at the edges, and pale dry ground around.", 'reveal-master.jpg', 'orb-natron.jpg', 'the red flats of the marsh province seen from orbit', 30000)
+
 for r in rows:
     for p in r['refs']:
         assert os.path.exists(p), p
 json.dump(rows, open('assets-src/materials/spec.json', 'w'), indent=1)
-print(len(rows), 'pictures;', {p: sum(1 for r in rows if r['place'] == p) for p in ['ribs', 'breath', 'marsh', 'spine', 'eye']})
+print(len(rows), 'pictures;', {p: sum(1 for r in rows if r['place'] == p) for p in ['ribs', 'breath', 'marsh', 'spine', 'eye', 'reveal']})
