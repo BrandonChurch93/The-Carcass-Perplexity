@@ -84,7 +84,7 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   // The slopes under the mouth fill the fall's lens: a slope got a row every five metres and showed its faces. There it gets three times its share.
   const underMouth = (x: number, z: number, y: number): number => 1 + 2.2 * unit01((250 - Math.abs(x - MOUTH.x)) / 50) * unit01(-(z + 150) / 40) * unit01((y - 0.5) / 2) * unit01((100 - y) / 15);
-  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 230, 0.8, 0.3, [1.6, 5, 16], flowDip, underMouth);
+  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip, underMouth);
   // The wall stands whole over the mouth and is opened only inside the arch, a little wider than the arch itself: the fall's rim covers the edge.
   open(wallAll, (x, y, z) => inArch(x, y, z, 1.03));
   // The wall is broken along its joints: blocks the size of a house stand back from the face and leave notches in the rim, smaller ones in them.
@@ -305,17 +305,15 @@ export function create(ctx: HeartContext): HeartPiece {
       const x = c.ax + (c.bx - c.ax) * t;
       const z = c.az + (c.bz - c.az) * t;
       const strong = 0.55 + 0.45 * Math.abs(Math.sin(i * 2.4 + c.seed));
-      // The middle of the long crack is the vent of the wide view's bank: one dense pale plume, standing well over a man, as in that picture.
-      // The short crack lies 7 m from the line view's lens, at the foot of its crag: it only smokes, thin enough that the crag shows through.
+      // Both cracks only smoke: a dense plume at the foot of the line view's crag hid the crag, and one on the wide view's bank stood as a white puff.
       const long = c.depth > 1;
-      const plume = long && i === (vents - 1) / 2;
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
-        radius: plume ? 0.38 : long ? 0.4 : 0.22,
-        strength: plume ? 0.5 : (long ? 0.45 : 0.2) * strong,
-        rise: plume ? 8 : (long ? 6 : 3) * (0.7 + 0.3 * strong),
+        radius: long ? 0.4 : 0.22,
+        strength: (long ? 0.45 : 0.2) * strong,
+        rise: (long ? 6 : 3) * (0.7 + 0.3 * strong),
         kind: 'steam',
-        lean: c.depth > 1 ? [-0.42, 0.2] : [-0.3, -0.35],
+        lean: long ? [-0.42, 0.2] : [-0.3, -0.35],
       });
     }
   }
