@@ -77,6 +77,12 @@ const float CANAL_FLOOR = ${FLOOR.toFixed(3)};
 // The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
 // ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
 const float EMITTER_CAST = 0.07;
+// What a strike casts closes on this, about as much again as the dusk gives level snow: the approved frames with a bolt in them keep the dusk's shade.
+const float EMITTER_CEILING = 0.12;
+// The storm lit from inside, as the land and the sky take it: it closes on a ceiling too.
+vec3 flashCast() {
+  return uFlash / (1.0 + dot(uFlash, vec3(0.33)) / 0.05);
+}
 // The key of the place: the last light comes over the cloud sea from the lee and a little from behind the lens of the wide shot, low. It
 // warms the rock that looks to the lee and leaves what looks to the storm in the storm's dark. The band the dome draws is where uWarmDir says.
 const vec3 KEY_DIR = normalize(vec3(-0.34, 0.16, 0.93));
@@ -92,7 +98,7 @@ vec3 skyRadiance(vec3 d) {
   float up = clamp(d.y, -1.0, 1.0);
   vec3 c = mix(uSkyHorizon, uSkyZenith, pow(clamp(up, 0.0, 1.0), 0.45));
   float storm = stormSide(d);
-  c = mix(c, uSkyStorm * 0.33, 0.9 * storm) + uFlash * storm;
+  c = mix(c, uSkyStorm * 0.33, 0.9 * storm) + flashCast() * storm;
   c = mix(c, uSkyGround, smoothstep(0.0, -0.25, up));
   float w = max(dot(d.xz, uWarmDir.xz) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)), 0.0);
   float band = (exp(-up * up / 0.00011) + 0.04 * exp(-up * up / 0.002)) * smoothstep(-0.02, 0.0, up);
@@ -112,7 +118,7 @@ vec3 skyIrradiance(vec3 n) {
   float s = clamp(0.5 + 0.5 * dot(n, uStormDir), 0.0, 1.0);
   float stormShare = s * s * (1.0 - 0.45 * max(n.y, 0.0));
   // The flash counts for more on what it lights than in the sky itself: the cloud is a wall of it for the land, and a glow for the lens.
-  open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * (2.6 * stormShare);
+  open = mix(open, uSkyStorm, 0.8 * stormShare) + flashCast() * (2.6 * stormShare);
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, KEY_DIR) + 0.12) / 1.12, 0.0, 1.0);
   return 3.14159 * (e + uWarmColour * (0.2 * w * w * w * seen));
@@ -158,7 +164,7 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   }
   // A strike lights the rock; it does not bleach it. However strong a light is made, what it casts closes on a ceiling.
   e *= EMITTER_CAST;
-  return e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / 0.8);
+  return e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / EMITTER_CEILING);
 }
 
 // For the owners: how much of the sky a face keeps when the land in front of it stands higher than it does. 1 in the open, toward 0 in a crack,
