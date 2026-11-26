@@ -2,7 +2,7 @@
 // ground close to a lens is raised by those heights in its mesh, and the brine's level stands against them. What lies under the level is
 // flooded and mirrors the sky; what lies a little over it is dark and wet; the rims over that carry the salt. One rule draws the shore, the
 // wet margin, the puddles of the mud and the red pooled in the lows.
-import { K1_AT, STUCK, rel } from '../shared/anchors';
+import { DEAD, K1_AT, K1_DIR, STUCK, rel } from '../shared/anchors';
 import { BRINE_GLSL } from '../shared/brine-glsl';
 import { RIG_GLSL } from '../shared/glsl';
 
@@ -73,6 +73,31 @@ uniform sampler2D tKnobN;
 const vec2 KNOB_A = vec2(0.8, 0.6);
 const vec2 KNOB_B = vec2(0.28, -0.96);
 const vec2 BANK_AT = vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)});
+// How much of a spot is the bank's knobs: all of it under the third lens, and outward in tongues and islands, never a ring.
+float bankAt(sampler2D grain, vec2 xz) {
+  float r = length(xz - BANK_AT);
+  float n = textureLod(grain, xz / 11.0 + 0.3, 2.0).r + 0.5 * textureLod(grain, xz / 4.3 + 0.7, 2.0).r - 0.75;
+  return smoothstep(8.5, 5.0, r + n * 9.0 * smoothstep(2.0, 5.0, r));
+}
+// How far a spot is from the strip of bank the third lens stands on and looks along (that strip is kept as it was approved).
+float bankFar(vec2 xz) {
+  vec2 d = xz - BANK_AT;
+  vec2 f = vec2(${K1_DIR[0].toFixed(4)}, ${K1_DIR[1].toFixed(4)});
+  float along = dot(d, f);
+  float side = abs(d.x * f.y - d.y * f.x);
+  return 1.0 - smoothstep(-0.9, -0.3, along) * smoothstep(1.9, 1.1, side);
+}
+// Where the knob bank has sunk: 1 in a hollow, 0 on the firm bed, and nothing at all on the strip before the third lens.
+float bankSunk(sampler2D grain, vec2 xz) {
+  float low = textureLod(grain, xz / 2.3 + 0.21, 2.0).r - textureLod(grain, xz / 3.1 + 0.67, 2.0).r;
+  return smoothstep(0.0, 0.08, low) * bankFar(xz);
+}
+// What has run out of the dead into the mud round them: 1 beside one, 0 three strides off.
+float deadSeep(vec2 xz) {
+  float s = 0.0;
+${DEAD.map((d) => `  s = max(s, 1.0 - smoothstep(${(0.8 * d.size).toFixed(2)}, ${(2.9 * d.size).toFixed(2)}, length(xz - vec2(${rel(d.d, d.l)[0].toFixed(3)}, ${rel(d.d, d.l)[1].toFixed(3)}))));`).join(' ')}
+  return s;
+}
 vec2 knobUv(vec2 xz, vec2 t, float size) { return vec2(t.x * xz.x - t.y * xz.y, t.y * xz.x + t.x * xz.y) / size; }
 vec2 panTilt(vec2 r) { return (fract(r * 7.13 + r.yx * 3.71) - 0.5) * 0.2; }
 // (A plate tipped far enough has its low edge under the mud: SUNK is the mud's level against the plates'.)
@@ -124,7 +149,7 @@ vec3 reliefAt(vec2 xz, float y0) {
     float curl = 0.014 * r.y * exp(-max(ep, 0.0) / 0.08);
     up = mix(up, mix(SUNK, max(SUNK, (sh - 0.45) * 0.008 + 0.004 * rim + curl + panLift(r, c + shift)), top), k);
   }
-  float bank = smoothstep(8.5, 5.0, length(xz - BANK_AT));
+  float bank = bankAt(tGrain, xz);
   if (bank > 0.0) {
     float lod = log2(uCell * 1024.0);
     float a = textureLod(tKnobN, knobUv(xz, KNOB_A, 1.0), lod).b;
@@ -132,6 +157,8 @@ vec3 reliefAt(vec2 xz, float y0) {
     float pick = smoothstep(-0.08, 0.08, b - a + (textureLod(tGrain, xz / 3.1 + 0.6, 3.0).r - 0.5) * 1.2);
     // (The knobs stand a hand high, in the brine as on the bank: the waterline is theirs.)
     up = mix(up, (mix(a, b, pick) - 0.45) * 0.1, bank);
+    // (Away from the third lens the bank is not one bed: it has sunk in places, and the brine stands in them and comes in from the shore.)
+    up -= bankSunk(tGrain, xz) * 0.2 * bank;
   }
   // (The rock's blocks are in the mesh's own heights: nothing is added to them here.)
   return vec3(shift.x, up, shift.y) * (1.0 - rock);
@@ -248,7 +275,8 @@ void main() {
   vec2 tilt = vec2(0.0);
   vec2 edgeDir = vec2(0.0);
   // (The seep pool's bank is all knobs: no pan is worked out under them.)
-  bool onBank = length(p.xz - BANK_AT) < 5.0;
+  float bankDry = bankAt(tGrain, p.xz);
+  bool onBank = bankDry >= 1.0;
   if (big < 1.0 && !onBank) {
     float e;
     vec2 pc;
@@ -349,6 +377,8 @@ void main() {
   vec2 lean = vec2(0.0);
   float foot = max(length(fwidth(p.xz)) * 1.5, 0.07);
 
+  float seep = 0.0;
+  float crack = 0.0;
   // Thin crust over mud: the same pans, loose. Each is a plate lying on wet mud, drawn back from its neighbours and tipped; the gaps
   // between them are a hand to a stride wide and brine stands in them. A lifted edge shows its broken section and throws its shade.
   if (k > 0.0) {
@@ -359,6 +389,8 @@ void main() {
     float tipped = vPaint.y * k;
     slab = max(slab, tipped);
     // (Rust under the plates; grey where the stuck one has stirred it.)
+    seep = deadSeep(p.xz + (nS.rg - 0.5) * 2.2) * k;
+    crack = smoothstep(-0.22, -0.03, ep) * (1.0 - slab) * k;
     float stirred = 1.0 - smoothstep(2.0, 5.5, length(p.xz - vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)})));
     vec3 mudCol = silt * mix(vec3(0.27, 0.15, 0.12), vec3(0.27, 0.205, 0.18), stirred) * mix(vec3(1.0), vec3(0.5, 0.42, 0.38), sunk);
     vec2 grain = -(nS.rg - 0.5) * 0.8;
@@ -368,11 +400,12 @@ void main() {
       mudCol *= mix(vec3(1.0), 0.6 + 0.4 * texture2D(tSilt, p.xz / 0.7 + 0.31).rgb / vec3(0.32, 0.281, 0.257), close);
       grain -= (nS2.rg - 0.5) * 0.5 * close;
     }
+    mudCol *= mix(vec3(1.0), vec3(0.42, 0.2, 0.17), seep);
     float shade = smoothstep(-(0.03 + max(lift, 0.0) * 1.6), 0.0, ep) * (1.0 - big);
     mudCol *= 1.0 - 0.65 * shade;
     float section = smoothstep(-0.03 - ea, -0.03 + ea, ep) * (0.35 + 0.65 * smoothstep(0.005, 0.035, lift)) * (1.0 - big);
     mudCol = mix(mudCol, mix(vec3(0.15, 0.07, 0.055), vec3(0.44, 0.4, 0.37), smoothstep(-0.014, -0.004, ep)) * (0.75 + 0.5 * sh), section);
-    colour = mix(colour, mix(mudCol, mix(colour * vec3(0.66, 0.59, 0.55), colour, rim * 0.45), slab), k);
+    colour = mix(colour, mix(mudCol, mix(colour * vec3(0.66, 0.59, 0.55), colour, rim * 0.45) * mix(vec3(1.0), vec3(0.72, 0.5, 0.45), 0.6 * seep * smoothstep(0.6, 0.35, sh)), slab), k);
     hgt = mix(hgt, mix(0.08 + 0.3 * nS.b, max(hgt, 0.5), slab), k);
     bend = mix(bend, mix(grain, bend - tilt * 4.0, slab), k);
     occ = mix(occ, mix(0.72 - 0.3 * shade, occ, slab), k);
@@ -462,7 +495,6 @@ void main() {
     hgt = mix(hgt, 1.0, cut);
   }
   // The bank the third lens lies on is salt thrown up by the pool: it stands dry over the level and is knobbed all over.
-  float bankDry = smoothstep(8.5, 5.0, length(p.xz - vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
   vec3 knobCol = vec3(0.0);
   float knobH = 0.5;
   if (bankDry > 0.0) {
@@ -609,6 +641,11 @@ void main() {
   float wetK = 0.0;
   if (bankDry > 0.0) {
     wetK = max(smoothstep(0.5, 0.26, knobH), smoothstep(0.07, 0.0, p.y) * smoothstep(0.75, 0.45, knobH));
+    // (Away from the lens it is stained in patches where the brine has stood on it, and wet for a stride in from every shore.)
+    float sunkK = bankSunk(tGrain, p.xz);
+    float stood = smoothstep(0.0, 0.5, sunkK) * smoothstep(0.95, 0.5, knobH);
+    wetK = max(wetK, max(0.9 * stood, smoothstep(0.16, 0.02, p.y) * smoothstep(0.95, 0.5, knobH)));
+    knobCol *= 0.82 + 0.36 * wide.r;
     vec3 kc = knobCol * 0.8 * mix(vec3(1.0), vec3(0.52, 0.3, 0.27), wetK);
     kc *= 1.0 + clamp(0.3 * dot(bend, bright), -0.35, 0.3);
     colour = mix(colour, kc, bankDry * (1.0 - rock));
@@ -641,6 +678,9 @@ void main() {
     body = mix(body, colour * mix(vec3(0.46, 0.36, 0.34), vec3(0.5), slurry), exp(-deep * mix(60.0, 25.0, slurry)));
     // (Round the stuck one the film is its own slurry: grey brown, the mud of its pocket stirred into it.)
     body = mix(body, vec3(0.125, 0.092, 0.078), 0.85 * (1.0 - smoothstep(1.8, 4.2, length(p.xz - vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)})))));
+    // (Along a plate's broken edge and in every narrow crack the brine itself stands, red; and what has run out of the dead is darker.)
+    body = mix(body, mix(vec3(0.115, 0.022, 0.016), vec3(0.085, 0.012, 0.009), 1.0 - exp(-deep * 40.0)), crack * (1.0 - 0.5 * slurry * step(length(p.xz - HOLE), 3.0)));
+    body = mix(body, vec3(0.05, 0.011, 0.009), 0.8 * seep);
     // (In the trodden mud what stands in the prints is the brine with the mud in it: brown red, never a bright sheet.)
     body = mix(body, mix(vec3(0.1, 0.035, 0.028), vec3(0.085, 0.016, 0.012), 1.0 - exp(-deep * 30.0)), churn);
     // Right at a pool's edge the film is the pool itself, come a hand's breadth over the shelf.
