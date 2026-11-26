@@ -165,7 +165,7 @@ void main() {
   if (west > 0.0) {
     float stand = 0.3 * height + broad;
     // (Only the lowest of it: the higher ground is left as islands off the coast, each with its own shore.)
-    float flood = 1.0 - smoothstep(1.5 * west - 0.1, 1.5 * west - 0.04, stand);
+    float flood = 1.0 - smoothstep(0.55 * west - 0.1, 0.55 * west - 0.04, stand);
     drowned = flood;
     coastKm = mix(coastKm, min(coastKm, -45.0 * west), flood);
     land *= 1.0 - flood;
@@ -318,7 +318,7 @@ void main() {
   float darkLum = dot(ground, vec3(0.3, 0.55, 0.15));
   float darkCountry = (1.0 - smoothstep(0.03, 0.13, darkLum)) * smoothstep(240.0, 520.0, uViewKm) * (1.0 - smoothstep(900.0, 1380.0, uViewKm)) * land * (1.0 - min(1.0, 1.4 * rust));
   ground = mix(ground, darkLum * vec3(0.3, 1.0, 1.3), 0.65 * darkCountry);
-  float top = smoothstep(680.0, 1380.0, uViewKm) * land;
+  float top = smoothstep(940.0, 1380.0, uViewKm) * land;
   float crest = smoothstep(0.3, 0.62, height);
   // (From orbit the dry plains are dark rust, never tan: the pale is the bone's alone.)
   float topLum = dot(ground, vec3(0.3, 0.55, 0.15));
@@ -370,7 +370,7 @@ void main() {
   // province (dark growth, olive plain, ochre dry ground), darker and lower in contrast than the ranges that stand out of it.
   // Below the top of the rise the body has not come together: the ranges are rock, grey brown, with snow on the highest crests
   // only, and the country between them is as light as they are, so what is seen is a land of ranges and plains and no figure.
-  float unjoined = smoothstep(150.0, 320.0, uViewKm) * (1.0 - smoothstep(820.0, 1300.0, uViewKm)) * land * (1.0 - min(1.0, 1.4 * rust));
+  float unjoined = smoothstep(150.0, 320.0, uViewKm) * (1.0 - smoothstep(980.0, 1340.0, uViewKm)) * land * (1.0 - min(1.0, 1.4 * rust));
   if (unjoined > 0.0) {
     float naturalLum = dot(natural, vec3(0.3, 0.55, 0.15));
     vec3 rock = vec3(0.3, 0.27, 0.235) * (0.45 + 1.1 * naturalLum);
