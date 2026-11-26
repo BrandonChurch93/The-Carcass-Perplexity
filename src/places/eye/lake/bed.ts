@@ -118,11 +118,12 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float r = length(b);
   // The angle is nothing in the south, where the cameras stand: its seam lies in the north, two kilometres off.
   float a2 = atan(b.x, b.y);
-  vec3 sinter = texture2D(tSinter, b / 3.0).rgb;
   // The same crust again, larger and turned, in patches: no row of it comes round twice.
   vec2 turned = vec2(b.x * 0.74 - b.y * 0.67, b.x * 0.67 + b.y * 0.74) / 5.3 + 0.41;
   float patchy = smoothstep(0.35, 0.65, vnoise(b / 2.9 + 11.0));
-  sinter = mix(sinter, texture2D(tSinter, turned).rgb, patchy);
+  // From the rim one read of the crust is all that can be told apart.
+  vec3 sinter = texture2D(tSinter, turned).rgb;
+  if (cameraPosition.y < 20.0) sinter = mix(texture2D(tSinter, b / 3.0).rgb, sinter, patchy);
   vec3 sinterFar = texture2D(tSinter, b / 17.0 + 0.37).rgb;
   // The lie of the crust is read from its own picture: its pale tops stand, its dark seams lie low.
   vec3 snh = vec3(0.5, 0.5, clamp(dot(sinter, vec3(0.5, 0.9, 0.6)) * 1.1, 0.0, 1.0));
@@ -161,7 +162,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float lanes = smoothstep(0.035, 0.008, abs(vnoise(vec2(pq.x / 13.0, pq.y / 330.0) + 9.0) - 0.5)) * smoothstep(8.0, 50.0, w);
   if (rimEye > 0.0) {
     float channels = smoothstep(0.045, 0.012, abs(0.6 * vnoise(b / 31.0 + 9.0) + 0.4 * vnoise(b / 11.0 + 4.0) - 0.5)) * smoothstep(8.0, 50.0, w);
-    float pools = smoothstep(0.68, 0.76, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
+    float pools = smoothstep(0.66, 0.84, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
     lanes = mix(lanes, max(0.7 * channels * smoothstep(0.35, 0.6, vnoise(b / 57.0 + 13.0)), pools), rimEye);
   }
   float toLip = smoothstep(MAT_REACH + uLipIn, 30.0, w);

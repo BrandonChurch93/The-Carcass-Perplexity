@@ -346,11 +346,14 @@ export function create(ctx: Context): Piece {
     for (let i = 0; i < 13000; i++) {
       const ahead = 2 + 26 * rng.next() ** 1.5;
       const aside = rng.range(-1, 1) * (3.5 + 0.42 * ahead);
-      const size = 0.03 + 0.2 * rng.next() ** 3.2;
+      // Mostly small, a cobble here and there, and now and then a stone the size of a head.
+      const size = 0.03 + 0.2 * rng.next() ** 3.2 + 0.3 * (((i * 2654435761) >>> 0) / 4294967296) ** 14;
       const x = from[0] + fx * ahead - fz * aside;
       const z = from[2] + fz * ahead + fx * aside;
       if (landHeight(x, z) < -0.1 - 0.4 * size) continue;
+      // They lie in drifts: bare grit between, where only the larger ones stand.
       if (vnoise(x / 1.7 + 5, z / 1.7 + 2) < 0.3 && size < 0.09) continue;
+      if (vnoise(x / 3.4 + 11, z / 3.4 + 7) < 0.46 && size < 0.14) continue;
       put(x, z, size);
     }
   }

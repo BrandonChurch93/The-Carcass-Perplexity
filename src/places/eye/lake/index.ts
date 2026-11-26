@@ -185,7 +185,9 @@ void main() {
   // A breath of air: a long slow heave everywhere, wavelets nearer, and lanes where a cat's paw has roughened the mirror.
   vec2 wind = vec2(0.8, 0.6);
   float gust = smoothstep(0.38, 0.75, vnoise(vec2(dot(p.xz, wind), dot(p.xz, vec2(-wind.y, wind.x)) * 2.4) / 170.0 - vec2(uTime * 0.06, 0.0)));
-  slope += 0.0035 * waves(p.xz / 71.0, wind * uTime * 0.011);
+  // From the rim the long heave is too small to tell from any other: it is made of numbers there and costs no reads.
+  if (cameraPosition.y > 20.0 && uPlateTone.w < 1.5) slope += 0.008 * (vec2(vnoise(p.xz / 9.0 + wind * uTime * 0.09), vnoise(p.zx / 7.3 + 4.0 - wind.yx * uTime * 0.11)) - 0.5);
+  else slope += 0.0035 * waves(p.xz / 71.0, wind * uTime * 0.011);
   float mid = 1.0 - smoothstep(260.0, 900.0, away);
   if (mid > 0.0) slope += (0.0015 + 0.007 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
   float close = 1.0 - smoothstep(25.0, 110.0, away);
@@ -341,7 +343,7 @@ void main() {
     f = mix(f, 0.9, 0.45 * thread * smoothstep(0.15, 0.6, du));
   }
   // From the rim the water over the mats is the colour of the mats: the pale of the sky lies only on the deep.
-  float onMats = smoothstep(8.0, 40.0, cameraPosition.y) * crusted * (1.0 - smoothstep(0.68, 0.76, 0.7 * vnoise(p.xz / 19.0 + 31.0) + 0.3 * vnoise(p.xz / 6.0 + 2.0)));
+  float onMats = smoothstep(8.0, 40.0, cameraPosition.y) * crusted * (1.0 - 0.75 * smoothstep(0.66, 0.84, 0.7 * vnoise(p.xz / 19.0 + 31.0) + 0.3 * vnoise(p.xz / 6.0 + 2.0)));
   refl *= mix(vec3(1.0), vec3(0.74, 0.6, 0.46), onMats);
   under *= mix(vec3(1.0), vec3(0.94, 0.84, 0.72), onMats);
   vec3 c = mix(under, refl, f);
