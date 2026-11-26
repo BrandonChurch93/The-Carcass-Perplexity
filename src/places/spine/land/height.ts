@@ -66,7 +66,8 @@ function trodden(s: number, l: number): number {
   let c = 1e4;
   if (d < 0.5) c = Math.max(Math.abs(l - trail(s)), first.s - 790 - s);
   // The apron before the near mouth, between the trail and the rock, is drifted snow and nothing else: the mouth is seen from far up the trail.
-  if (d > -175 && d < 0.5 && l > trail(s) && l < Math.min(CANAL_L + MOUTH_R + 4, 66 * Math.exp(-(((d + 20) / 85) ** 2)) + 12)) c = 0;
+  // Its edge is a distance, not a line: the rock comes up out of the drift over some metres, so the lattice of the mesh does not cut it in teeth.
+  if (d > -215 && d < 0.5 && l > trail(s)) c = Math.min(c, Math.max(0, l - Math.min(CANAL_L + MOUTH_R + 4, 66 * Math.exp(-(((d + 20) / 85) ** 2)) + 12), -175 - d));
   // Where the lightning came to ground the snow is open: the carcass lies on a bare saddle, with the band beyond it.
   c = Math.min(c, Math.max(0, Math.hypot(s - CARCASS_S - 14, l - 16) - 36));
   if ((d > -60 && d < 2) || (d > EXIT - 2 && d < EXIT + 90)) c = Math.min(c, Math.max(0, Math.abs(l - canalL(Math.max(0, d))) - flare(d) - 6));

@@ -41,6 +41,7 @@ const float MOUTH_S = ${MOUTH_S.toFixed(3)};
 const float CANAL_L = ${CANAL_L.toFixed(3)};
 const float TRAIL_FROM = ${(first.s - 660).toFixed(3)};
 const vec3 SPIRE_MEAN = vec3(0.232, 0.201, 0.191);
+const vec3 RUBBLE_MEAN = vec3(0.288, 0.299, 0.345);
 const vec3 CANAL_MEAN = vec3(0.288, 0.276, 0.289);
 const vec3 SNOW_MEAN = vec3(0.33, 0.372, 0.456);
 const vec3 CANAL_ALONG = vec3(${frameAt(first.s).tx.toFixed(4)}, 0.0, ${frameAt(first.s).tz.toFixed(4)});
@@ -132,18 +133,20 @@ void main() {
   if (inside) {
     float r = flareAt(dCanal);
     vec2 ax = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
-    // Up the wall from the floor to the crown and along the canal: the flutes of the picture go round the canal as ribs, ring after ring.
-    vec2 at = vec2((3.14159 - abs(atan(ax.x, ax.y))) * max(r, 4.0), dCanal);
-    vec3 c1 = texture2D(tCanal, at / 4.0).rgb;
-    vec3 n1 = texture2D(tCanalNh, at / 4.0).rgb;
-    vec3 c2 = texture2D(tCanal, at / 13.0 + 0.37).rgb;
-    vec3 n2 = texture2D(tCanalNh, at / 13.0 + 0.37).rgb;
-    rock = c1 * (0.45 + 0.55 * c2 / CANAL_MEAN) * 1.25;
-    t = ((n1.rg - 0.5) * 1.3 + (n2.rg - 0.5) * 0.9) * vec2(1.0, -1.0);
+    // Along the canal and up the wall from the floor to the crown, as the picture was made: its beds run along the canal, tipped a little, and
+    // its ice hangs down the wall.
+    vec2 at = vec2(dCanal + 0.6 * vWorld.y, (3.14159 - abs(atan(ax.x, ax.y))) * max(r, 4.0));
+    // Broad beds first (a repeat is 17 m, more than the canal is high), the picture's own size under them for what the lens is close to.
+    vec3 c1 = texture2D(tCanal, at / 6.0).rgb;
+    vec3 n1 = texture2D(tCanalNh, at / 6.0).rgb;
+    vec3 c2 = texture2D(tCanal, at * vec2(0.6, 1.0) / 21.0 + 0.37).rgb;
+    vec3 n2 = texture2D(tCanalNh, at * vec2(0.6, 1.0) / 21.0 + 0.37).rgb;
+    rock = mix(CANAL_MEAN, c2, 0.85) * (0.78 + 0.22 * c1 / CANAL_MEAN) * 1.5;
+    t = ((n1.rg - 0.5) * 0.35 + (n2.rg - 0.5) * 1.7) * vec2(1.0, -1.0);
     pit = 0.6 * n1.b + 0.4 * n2.b;
-    upAlong = CANAL_ALONG;
-    across = normalize(cross(CANAL_ALONG, n0));
-    if (ax.x < 0.0) across = -across;
+    upAlong = normalize(cross(CANAL_ALONG, n0));
+    if (ax.x < 0.0) upAlong = -upAlong;
+    across = CANAL_ALONG;
   } else {
     vec3 side = vec3(0.0);
     vec3 level = vec3(0.0);
@@ -154,14 +157,25 @@ void main() {
     if (top < 0.999) {
       vec2 at = vec2((w.x > w.z ? vWorld.z : vWorld.x) + 0.35 * vWorld.y, vWorld.y);
       // The ground's own cliffs are bedded the other way: ledges that run along the face, tipped a little, with the snow on them.
-      if (!spire) at = vec2(at.y + 0.3 * at.x, at.x);
-      vec3 c1 = texture2D(tSpire, at / 30.0).rgb;
-      vec3 n1 = texture2D(tSpireNh, at / 30.0).rgb;
-      vec3 c2 = texture2D(tSpire, at / 103.0 + 0.37).rgb;
-      side = c1 * (0.4 + 0.6 * c2 / SPIRE_MEAN);
+      vec3 c1 = vec3(0.0);
+      vec3 n1 = vec3(0.5);
+      if (spire) {
+        c1 = texture2D(tSpire, at / 30.0).rgb;
+        n1 = texture2D(tSpireNh, at / 30.0).rgb;
+        vec3 c2 = texture2D(tSpire, at / 103.0 + 0.37).rgb;
+        side = c1 * (0.4 + 0.6 * c2 / SPIRE_MEAN);
+      } else {
+        // The ground's own cliffs are broken rock, not jointed plates: the picture of blocks half in snow, which has no grain to be pulled
+        // long down a slope, laid on the face as it stands and measured along the slope, not along its shadow on a wall.
+        at = vec2(at.x - 0.35 * at.y, at.y / max(sqrt(1.0 - w.y), 0.5));
+        c1 = texture2D(tRubble, at / 23.0).rgb;
+        n1 = texture2D(tRubbleNh, at / 23.0).rgb;
+        vec3 c2 = texture2D(tRubble, at.yx / 67.0 + 0.37).rgb;
+        side = c1 * (0.45 + 0.55 * c2 / RUBBLE_MEAN) * 0.55;
+      }
       tSide = (n1.rg - 0.5) * vec2(1.0, -1.0) * 1.2;
       pSide = n1.b;
-      if (close > 0.0) {
+      if (close > 0.0 && spire) {
         vec3 c3 = texture2D(tSpire, at / 8.3 + 0.13).rgb;
         vec3 n3 = texture2D(tSpireNh, at / 8.3 + 0.13).rgb;
         side = mix(side, side * c3 / SPIRE_MEAN, 0.6 * close);
@@ -231,7 +245,8 @@ void main() {
 
   // The burn: the top of a spire is black glass where the lightning has come to it, time after time, and streaked below.
   float burn = 0.0;
-  if (spire && !inside) {
+  // Only a spire is burnt: the rock over the mouth of the canal is drawn with the spires but was never struck.
+  if (spire && !inside && vSL.y > 5000.0) {
     float ragged = vnoise(vWorld.xz * 0.21 + vWorld.y * 0.05) * 14.0 + vnoise(vec2(dot(vWorld.xz, vec2(0.7, 0.7)) * 0.9, vWorld.y * 0.06)) * 22.0;
     burn = smoothstep(52.0, 16.0, vTop + ragged - 12.0);
     albedo = mix(albedo, vec3(0.011, 0.011, 0.013) * (0.6 + 0.8 * pit), burn);
@@ -243,7 +258,7 @@ void main() {
   float lie = mix(smoothN.y, n0.y, spire ? 1.0 : 0.35) + (spire ? 0.1 : 0.14) * (pit - 0.5) + 0.12 * lee + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5);
   // Rock that stands out of the snow keeps it only on its level tops.
   float bare = spire ? 0.0 : clamp(vTop, 0.0, 1.0);
-  float snow = smoothstep(0.42, 0.62, lie - 0.42 * bare);
+  float snow = smoothstep(0.36, 0.56, lie - 0.42 * bare);
   if (spire) {
     // On a spire the snow keeps to the ledges and the gullies: where the body of the rock leans back, and where a slab stands in from its neighbours.
     float held = 0.55 * smoothN.y + 0.45 * n0.y + 0.2 * smoothstep(1.0, -7.0, vSL.x) + 0.1 * (pit - 0.5) + 0.1 * lee;
@@ -270,7 +285,7 @@ void main() {
     snow = smoothstep(1.6, 0.2, vWorld.y - CANAL_FLOOR + 1.2 * (pit - 0.5)) * 0.85;
     rime = 0.5 * smoothstep(0.45, 0.8, pit);
     // The canal is black from outside: what the sky gives its walls is gone a few metres in.
-    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 2.2);
+    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 7.0);
     snow *= lit;
     rime *= lit;
     occ *= 0.04 + 0.96 * lit;
@@ -313,28 +328,61 @@ void main() {
 
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // Seen from outside the canal is black; the shot inside it is exposed for it (uUnder is staged up from that cut).
-  if (inside && uUnder < 1.5) c *= 0.012 + 0.988 * exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 2.2);
+  if (inside && uUnder < 1.5) c *= 0.03 + 0.97 * exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 7.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
-// The ice on the floor of the canal: dark, wet and level, a mirror for the mouth.
+// The floor of the canal: dark wet ice down the middle, a mirror for the mouth, with wind-packed snow banked against the walls and lying
+// on it in tongues. The snow is the snow picture of the place; the ice heaves gently, with no small ripple to ring the mouth's light.
+export const ICE_VERTEX = /* glsl */ `
+varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec2 vAcross;
+void main() {
+  vec4 w = modelMatrix * vec4(position, 1.0);
+  vWorld = w.xyz;
+  vNormal = normalize(mat3(modelMatrix) * normal);
+  vAcross = uv;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+
 export const ICE_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
 varying vec3 vNormal;
+varying vec2 vAcross;
+uniform sampler2D tSnow;
+uniform sampler2D tSnowNh;
 ${RIG_GLSL}
 ${NOISE_GLSL}
+
+float heave(vec2 p) {
+  return vnoise(p * 0.31) + 0.35 * vnoise(p * 0.9 + 4.1);
+}
 
 void main() {
   vec3 toCamera = cameraPosition - vWorld;
   vec3 v = normalize(toCamera);
-  float e = 0.05;
-  float h0 = vnoise(vWorld.xz * 1.7) + 0.5 * vnoise(vWorld.xz * 6.1);
-  float hx = vnoise((vWorld.xz + vec2(e, 0.0)) * 1.7) + 0.5 * vnoise((vWorld.xz + vec2(e, 0.0)) * 6.1);
-  float hz = vnoise((vWorld.xz + vec2(0.0, e)) * 1.7) + 0.5 * vnoise((vWorld.xz + vec2(0.0, e)) * 6.1);
-  vec3 n = normalize(vec3((h0 - hx) / e * 0.05, 1.0, (h0 - hz) / e * 0.05));
-  float frost = smoothstep(0.45, 0.8, vnoise(vWorld.xz * 0.9 + 3.3));
-  vec3 albedo = mix(vec3(0.06, 0.075, 0.1), vec3(0.6, 0.64, 0.7), 0.6 * frost);
-  vec3 c = rigShade(vWorld, n, v, albedo, mix(0.12, 0.7, frost), 1.0);
+  float e = 0.3;
+  float h0 = heave(vWorld.xz);
+  vec3 nIce = normalize(vec3((h0 - heave(vWorld.xz + vec2(e, 0.0))) / e * 0.22, 1.0, (h0 - heave(vWorld.xz + vec2(0.0, e))) / e * 0.22));
+  // The snow: against each wall, in from it by a bank's breadth that comes and goes, and in tongues across the ice.
+  vec2 q = vec2(vAcross.y, vAcross.x * 6.0);
+  vec3 sC = texture2D(tSnow, q / 4.0).rgb;
+  vec3 sN = texture2D(tSnowNh, q / 4.0).rgb;
+  vec3 sB = texture2D(tSnowNh, q / 13.0 + 0.3).rgb;
+  float bank = abs(vAcross.x) + 0.45 * (vnoise(vec2(vAcross.y * 0.21, vAcross.x > 0.0 ? 3.7 : 9.2)) - 0.5) + 0.3 * (sB.b - 0.5);
+  float tongue = smoothstep(0.62, 0.8, vnoise(vec2(vAcross.y * 0.13 + vAcross.x * 0.7, 5.5)) + 0.25 * (sB.b - 0.5));
+  float snow = max(smoothstep(0.5, 0.68, bank + 0.1 * (sN.b - 0.5)), 0.85 * tongue);
+  // Frost on the ice between: where the picture's small ridges stand, in patches.
+  float frost = smoothstep(0.5, 0.8, vnoise(vWorld.xz * 0.45 + 3.3)) * smoothstep(0.35, 0.7, sN.b);
+  vec3 nSnow = normalize(vec3((sN.r - 0.5) * 1.6 + (sB.r - 0.5), 1.0, -(sN.g - 0.5) * 1.6 - (sB.g - 0.5)));
+  vec3 n = normalize(mix(nIce, nSnow, max(snow, 0.5 * frost)));
+  vec3 albedo = mix(vec3(0.05, 0.065, 0.09), vec3(0.5, 0.55, 0.62), 0.5 * frost);
+  albedo = mix(albedo, vec3(0.8, 0.84, 0.9) * clamp(sC / vec3(0.33, 0.372, 0.456), 0.5, 1.1), snow);
+  float rough = mix(mix(0.1, 0.6, frost), 0.8, snow);
+  // Snow under the wall stands in its shade.
+  float occ = 1.0 - 0.45 * snow * smoothstep(0.6, 1.0, abs(vAcross.x));
+  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

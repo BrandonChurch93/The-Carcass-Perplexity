@@ -92,9 +92,12 @@ float stormIn(vec3 p, bool fine) {
   // Metres, near enough: where its face lies back the field across it is steep, and is scaled to the distance.
   float d0 = (into - face) * mix(mix(1.0, 0.7, smoothstep(150.0, 350.0, h)), 0.2, smoothstep(shelf - 80.0, shelf + 250.0, h));
   if (d0 < -1800.0) return d0 + 1150.0;
-  vec3 q = p - uWind.xyz * (uTime * 7.0);
+  // It moves: the whole mass comes on down the gale and along the ridge, and the smaller the billow the faster it rolls, so that the face
+  // boils as it comes. The speeds are those the lens can see across a shot of a few seconds at this distance.
+  vec3 drift = uWind.xyz + vec3(0.6, 0.0, 0.0);
+  vec3 q = p - drift * (uTime * 16.0);
   vec4 big = noise(q / 5200.0);
-  vec4 mid = noise(q / 1700.0 + vec3(big.ga, 0.0) * 0.2);
+  vec4 mid = noise((p - drift * (uTime * 34.0)) / 1700.0 + vec3(big.ga, 0.0) * 0.2 + vec3(0.0, uTime * 0.006, 0.0));
   // Billows are domes with creases between them: the lumps of the noise, rounded over.
   float bigR = big.r * (2.0 - big.r);
   float midR = mid.r * (2.0 - mid.r);
@@ -105,6 +108,7 @@ float stormIn(vec3 p, bool fine) {
   // Its top: towers and the gaps between them.
   d = min(d, (2700.0 + 1300.0 * (big.a - 0.5) - h) * 1.2 + lumps);
   if (fine) {
+    q = p - drift * (uTime * 52.0) + vec3(0.0, uTime * 9.0, 0.0);
     vec4 f = noise(q / 520.0);
     float fineR = f.r * (2.0 - f.r);
     // The smallest: the cauliflower on each billow, and the torn edge the wind takes off it.
@@ -162,12 +166,14 @@ const float CLOUD_UNDER = 300.0;
 const vec3 SEA_MEAN = vec3(0.113, 0.127, 0.201);
 float seaLod = 1.0;
 float seaTop(vec3 p, bool fine) {
-  vec3 q = p - uWind.xyz * (uTime * uWind.w * 0.6);
+  vec3 q = p - uWind.xyz * (uTime * 38.0);
+  vec3 q2 = p - vec3(0.62, 0.0, 0.78) * (uTime * 74.0);
   // Its lumps are those of the picture of a cloud deck seen from above (mat/cloudsea, 10 km a repeat), laid twice at two sizes so no repeat shows.
   float deck = textureLod(tSeaNh, q.xz / 10000.0, seaLod).b;
-  float lumps = textureLod(tSeaNh, q.zx / 2900.0 + 0.37, seaLod + 1.0).b;
+  // The smaller lumps run faster and a little across the larger: the deck rolls.
+  float lumps = textureLod(tSeaNh, q2.zx / 2900.0 + 0.37, seaLod + 1.0).b;
   float n = 0.62 * deck + 0.38 * lumps;
-  if (fine) n += 0.12 * (noise(vec3(q.xz / 210.0, 0.43)).r - 0.5);
+  if (fine) n += 0.12 * (noise(vec3(q2.xz / 210.0, 0.43 + uTime * 0.02)).r - 0.5);
   vec3 ridge = ridgeAt(p.x);
   float lee = p.z - ridge.x;
   // The sea lies close under the crest on both hands, level to the horizon, and stands a little higher against the rock:
@@ -293,9 +299,9 @@ void main() {
       float body = clamp((reach - t) / 220.0, 0.0, 1.0) * (0.45 + 0.55 * smoothstep(-40.0, 260.0, deep));
       light += through * stormFace(ro + rd * t, t, rd) * body;
       through *= 1.0 - body;
-    } else if (nearest > -220.0) {
+    } else if (nearest > -420.0) {
       // A ray that only grazes it passes through its ragged edge.
-      float thin = 0.45 * smoothstep(-220.0, 0.0, nearest);
+      float thin = 0.6 * smoothstep(-420.0, 0.0, nearest);
       light += through * thin * mix(uSkyStorm * 0.38, mix(uSkyHorizon, uSkyZenith, 0.45) * 0.3, 0.3);
       through *= 1.0 - thin;
     }
@@ -317,7 +323,7 @@ void main() {
     float wn = clamp((w + 0.25) / 1.25, 0.0, 1.0);
     vec3 sea = 0.5 * ((skyIrradiance(n) / 3.14159 - uWarmColour * (0.19 * wn * wn)) * (1.0 - 0.82 * hollowed) + uFlash * 0.25 * stormSide(rd) + strikeLight(p) * 0.15);
     // The deck's own tone: pale on the heads of its lumps, blue-grey between them.
-    vec3 qs = p - uWind.xyz * (uTime * uWind.w * 0.6);
+    vec3 qs = p - uWind.xyz * (uTime * 38.0);
     vec3 tint = clamp(textureLod(tDeck, qs.xz / 10000.0, seaLod).rgb / SEA_MEAN, 0.45, 1.9);
     // Cloud is not snow: it is the greyer and the bluer of the two, and only the heads of its billows come near the snow's value.
     sea *= mix(vec3(1.0), tint, 0.75) * vec3(0.6, 0.68, 0.86) * (0.75 + 0.5 * smoothstep(-0.1, 0.5, n.y - 0.75 + 0.6 * w));

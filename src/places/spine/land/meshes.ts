@@ -244,6 +244,10 @@ export function canalFloor(): THREE.BufferGeometry {
   });
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  // Across the floor from wall to wall, -1 to 1, and metres along it: the snow banks lie against the walls.
+  const uv: number[] = [];
+  D_LIST.forEach((d) => uv.push(-1, d, 1, d));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   const up: number[] = [];
   for (let i = 0; i < pos.length / 3; i++) up.push(0, 1, 0);
   g.setAttribute('normal', new THREE.Float32BufferAttribute(up, 3));

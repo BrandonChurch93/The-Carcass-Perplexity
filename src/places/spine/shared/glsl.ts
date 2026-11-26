@@ -76,7 +76,7 @@ ${RIG_UNIFORMS_GLSL}
 const float CANAL_FLOOR = ${FLOOR.toFixed(3)};
 // The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
 // ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
-const float EMITTER_CAST = 0.04;
+const float EMITTER_CAST = 0.11;
 
 // How far a direction looks into the storm: 1 level into it, 0 away from it and overhead.
 float stormSide(vec3 d) {

@@ -5,8 +5,7 @@ import { FIRST, spires } from '../ridge';
 import type { Context, Piece } from '../shared/context';
 import { canalFloor, canalShell, crestStrip, flanks, hollow, spireMesh } from './meshes';
 import { height } from './height';
-import { ICE_FRAGMENT, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
-import { RIG_VERTEX } from '../shared/glsl';
+import { ICE_FRAGMENT, ICE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['land'];
 
@@ -55,9 +54,9 @@ export function create(ctx: Context): Piece {
   const spireMaterial = material(1, THREE.DoubleSide);
   const wallMaterial = material(2, THREE.DoubleSide);
   const iceMaterial = new THREE.ShaderMaterial({
-    vertexShader: RIG_VERTEX,
+    vertexShader: ICE_VERTEX,
     fragmentShader: ICE_FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms },
+    uniforms: { ...ctx.rig.uniforms, tSnow: pictures.tSnow, tSnowNh: pictures.tSnowNh },
     toneMapped: false,
   });
 
