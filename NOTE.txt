@@ -1,7 +1,7 @@
-2026-11-26 05:48 UTC
-work at 00e1fc9 on agent/breath-ground-3
-hb2 05:50: vapour in columns over a low layer, drypad and shingle on the shelf, ribs thicker, rim shot tilted down; near rim rib still a stretched tent (next)
-look-1.jpg = out/work/hb2-breath-0.jpg
-look-2.jpg = out/work/hb2-breath-4.jpg
-look-3.jpg = out/work/s02.jpg
-look-4.jpg = out/work/s01.jpg
+2026-11-26 06:19 UTC
+work at ab32309 on agent/breath-ground-3
+hb3 06:20: tent rib gone (first rib is a ledge under the brim), pit readable with veils, wall grain on three planes, pad pale and gritty, cliff snow toned, march cheaper
+look-1.jpg = out/work/hb3-breath-0.jpg
+look-2.jpg = out/work/hb3-breath-4.jpg
+look-3.jpg = out/work/hb3-breath-2.jpg
+look-4.jpg = out/work/hb3-breath-3.jpg
