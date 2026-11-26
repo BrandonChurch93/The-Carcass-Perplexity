@@ -803,8 +803,9 @@ void main() {
     vec2 onRing = mat2(cos(turned), sin(turned), -sin(turned), cos(turned)) * (lakeAt / max(lakeR, 0.05));
     float threadAt = vnoise(onRing * 2.6 + 1.3 * inFrom + 0.35 * swirl + 4.0);
     float broken = vnoise(lakeAt * 9.0 + 2.0 * swirl + 5.0);
-    float thread = (1.0 - smoothstep(0.0, (0.005 + 0.04 * smoothstep(0.7, 0.96, inFrom)) * (0.3 + 1.4 * broken * broken), abs(threadAt - 0.5))) * smoothstep(0.6, 0.8, inFrom) * (1.0 - smoothstep(0.95, 1.0, inFrom)) * smoothstep(0.35, 0.6, vnoise(onRing * 1.1 + 9.0));
-    amber = max(amber, 0.7 * thread * (0.2 + 0.8 * smoothstep(0.66, 0.94, inFrom)) * smoothstep(0.25, 0.6, broken));
+    float thread = (1.0 - smoothstep(0.0, (0.011 + 0.05 * smoothstep(0.7, 0.96, inFrom)) * (0.3 + 1.4 * broken * broken), abs(threadAt - 0.5))) * smoothstep(0.6, 0.8, inFrom) * (1.0 - smoothstep(0.95, 1.0, inFrom)) * smoothstep(0.35, 0.6, vnoise(onRing * 1.1 + 9.0));
+    // (They are seen from some height only: near the water a thread is a mark on it.)
+    amber = max(amber, 0.5 * thread * (0.2 + 0.8 * smoothstep(0.66, 0.94, inFrom)) * smoothstep(0.25, 0.6, broken) * smoothstep(40.0, 90.0, uViewKm));
     float paler = smoothstep(0.35, 1.0, 0.25 * shallow + smoothstep(0.9, 1.0, shoreR + 0.07) + 0.3 * (drawn - 0.5));
     vec3 eye = mix(vec3(0.002, 0.0065, 0.017), mix(vec3(0.15, 0.07, 0.007), vec3(0.34, 0.185, 0.028), paler) * (0.55 + 0.9 * drawn) * (0.75 + 0.5 * swirl), amber * (0.55 + 0.45 * smoothstep(0.3, 0.6, swirl)));
     bed = mix(bed, eye, max(1.0 - smoothstep(1.03, 1.1, shoreR + 0.07), 1.0 - smoothstep(1.12, 1.3, lakeR)) * (1.0 - stream * smoothstep(0.98, 1.06, lakeR)));
