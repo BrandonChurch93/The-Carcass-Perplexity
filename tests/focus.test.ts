@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BLUR_SPACING, MAX_COC_FRACTION, WIDE_SPACING, blurShare, blurTaps, clampCoc, cocPixels, focalPixels, lensPoints, lensSpread, maxCoc } from '../src/core/focus';
+import { BLUR_SPACING, FINE_HANDOVER, FINE_SPACING, MAX_COC_FRACTION, SHARP_PX, WIDE_SPACING, blurShare, blurTaps, clampCoc, cocPixels, fieldPart, fineOnset, fineTaps, focalPixels, layerGrain, lensPoints, lensSpread, maxCoc } from '../src/core/focus';
 
 const COUNTS = [1, 2, 4, 8, 16, 64];
 
@@ -111,5 +111,75 @@ describe('the taps of the blur', () => {
     const mx = all.reduce((a, p) => a + p[0], 0) / all.length;
     const my = all.reduce((a, p) => a + p[1], 0) / all.length;
     expect(Math.hypot(mx, my)).toBeLessThan(1e-9);
+  });
+});
+
+describe('the taps of the full-size blur', () => {
+  const [fine, wide] = fineTaps();
+  const all: [number, number][] = [];
+  for (const a of fine) for (const b of wide) all.push([a[0] + b[0], a[1] + b[1]]);
+
+  it('has 7 and 7 taps, each pass starting at its own pixel', () => {
+    expect([fine.length, wide.length]).toEqual([7, 7]);
+    for (const pass of [fine, wide]) expect(Math.hypot(...(pass[0] as [number, number]))).toBe(0);
+    expect(FINE_SPACING[1] / FINE_SPACING[0]).toBeCloseTo(Math.sqrt(7), 12);
+  });
+
+  it('lays 49 points on one even lattice, none twice, centred, none outside the disc', () => {
+    expect(all.length).toBe(49);
+    const seen = new Set<string>();
+    for (const [x, y] of all) seen.add(`${Math.round((x / FINE_SPACING[0]) * 4)},${Math.round((y / FINE_SPACING[0]) * 4)}`);
+    expect(seen.size).toBe(49);
+    let nearest = Infinity;
+    for (let i = 0; i < all.length; i++) for (let j = 0; j < i; j++) nearest = Math.min(nearest, Math.hypot((all[i] as [number, number])[0] - (all[j] as [number, number])[0], (all[i] as [number, number])[1] - (all[j] as [number, number])[1]));
+    expect(nearest).toBeCloseTo(FINE_SPACING[0], 9);
+    expect(Math.hypot(all.reduce((a, p) => a + p[0], 0), all.reduce((a, p) => a + p[1], 0))).toBeLessThan(1e-9);
+    for (const [x, y] of all) expect(Math.hypot(x, y)).toBeLessThanOrEqual(1);
+  });
+
+  it('has the second moment of the disc of radius 1', () => {
+    expect(all.reduce((a, [x, y]) => a + x * x + y * y, 0) / all.length).toBeCloseTo(0.5, 12);
+  });
+
+  it('leaves no gap wider than a filtered fetch up to the radius where the field starts to take over', () => {
+    expect(FINE_SPACING[0] * FINE_HANDOVER[0]).toBeLessThan(2);
+  });
+});
+
+describe('which layer draws which radius', () => {
+  it('gives a reduced layer the grain of its texel and of the spline that lays it', () => {
+    // A box of 4 px has a variance of 16/12 on each axis, a quadratic spline on a 4 px grid 16/4, and a disc of radius R has R squared over 4.
+    expect(layerGrain(4)).toBeCloseTo(2 * Math.sqrt(16 / 12 + 16 / 4), 12);
+    expect(layerGrain(2)).toBeCloseTo(layerGrain(4) / 2, 12);
+  });
+
+  it('never asks the quarter-size field for a radius under its grain', () => {
+    expect(FINE_HANDOVER[0]).toBeGreaterThan(layerGrain(4));
+    expect(FINE_HANDOVER[1]).toBeGreaterThan(FINE_HANDOVER[0]);
+    expect(fieldPart(layerGrain(4))).toBe(0);
+  });
+
+  it('hands a pixel over to the field by its own radius alone, smoothly and in full', () => {
+    expect(fieldPart(0)).toBe(0);
+    expect(fieldPart(FINE_HANDOVER[0])).toBe(0);
+    expect(fieldPart(FINE_HANDOVER[1])).toBe(1);
+    expect(fieldPart(60)).toBe(1);
+    expect(fieldPart((FINE_HANDOVER[0] + FINE_HANDOVER[1]) / 2)).toBeCloseTo(0.5, 12);
+    let before = 0;
+    for (let r = FINE_HANDOVER[0]; r <= FINE_HANDOVER[1]; r += 0.05) {
+      const now = fieldPart(r);
+      expect(now).toBeGreaterThanOrEqual(before);
+      expect(now - before).toBeLessThan(0.03);
+      before = now;
+    }
+  });
+
+  it('leaves a pixel in focus alone and starts the blur from nothing', () => {
+    expect(fineOnset(0)).toBe(0);
+    expect(fineOnset(SHARP_PX)).toBe(0);
+    expect(fineOnset(-SHARP_PX)).toBe(0);
+    expect(fineOnset(SHARP_PX + 0.01)).toBeCloseTo(0.01, 12);
+    expect(fineOnset(-(SHARP_PX + 1))).toBe(1);
+    expect(fineOnset(40)).toBe(1);
   });
 });

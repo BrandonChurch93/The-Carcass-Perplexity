@@ -107,3 +107,48 @@ export function blurTaps(): [Tap[], Tap[], Tap[]] {
 
 /** The spacing of the taps of each pass, finest first, for a blur of radius 1. A pass whose spacing is under a third of a texel is skipped. */
 export const BLUR_SPACING: [number, number, number] = [WIDE_SPACING / 7, WIDE_SPACING / ROOT7, WIDE_SPACING];
+
+/**
+ * The radius in pixels of the disc that a layer of texels `texel` pixels wide already is when it is laid over the full-size picture:
+ * the box of the reduction and the quadratic spline of the fetch have together the second moment of a disc of this radius.
+ * A layer cannot draw a blur smaller than its own grain, so a radius under it belongs to a finer layer.
+ */
+export function layerGrain(texel: number): number {
+  return 2 * texel * Math.sqrt(1 / 12 + 1 / 4);
+}
+
+/**
+ * Where the blur of what lies at or behind the focus passes from the full-size passes to the quarter-size field, as radii in pixels
+ * after the lens points took their share. Under the first the full-size passes draw all of it, over the second the field does.
+ * The first is above the grain of the quarter-size layer, so the field is never asked for a blur it cannot draw.
+ */
+export const FINE_HANDOVER: [number, number] = [6, 10];
+
+/** The part of the quarter-size field in a pixel whose radius is `radius` pixels: a smooth step across `FINE_HANDOVER`. */
+export function fieldPart(radius: number): number {
+  const t = Math.min(1, Math.max(0, (radius - FINE_HANDOVER[0]) / (FINE_HANDOVER[1] - FINE_HANDOVER[0])));
+  return t * t * (3 - 2 * t);
+}
+
+/**
+ * How much of its blur a pixel of the circle of confusion `coc` (pixels, before the share) is given by the full-size passes:
+ * nothing up to `SHARP_PX`, so a pixel in focus stays the pixel it was, and all of it one pixel further, so the blur starts from nothing.
+ */
+export function fineOnset(coc: number): number {
+  return Math.min(1, Math.max(0, Math.abs(coc) - SHARP_PX));
+}
+
+const FINE = Math.sqrt(7 / 96);
+
+/** The spacing of the taps of the two full-size passes, finest first, for a blur of radius 1. */
+export const FINE_SPACING: [number, number] = [FINE, FINE * ROOT7];
+
+/**
+ * The taps of the two full-size passes, finest first, for a blur of radius 1: a point and its six neighbours, and the same
+ * the square root of 7 times as large and turned, so the 49 points of the two together lie on one even lattice.
+ * The spacing gives them the second moment of the disc exactly. Up to the first radius of `FINE_HANDOVER` the points lie
+ * less than 2 pixels apart, the width of a filtered fetch, so they fill the disc without gaps; past it the field takes over.
+ */
+export function fineTaps(): [Tap[], Tap[]] {
+  return [SEVEN.map((p) => turned(p, 0, FINE_SPACING[0])), SEVEN.map((p) => turned(p, TURN, FINE_SPACING[1]))];
+}
