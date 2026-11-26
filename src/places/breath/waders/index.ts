@@ -41,6 +41,8 @@ export function create(ctx: Context): Piece {
   const pictures = {
     tHide: { value: ctx.assets.texture('mat/skin.jpg') },
     tHideNh: { value: ctx.assets.texture('mat/skin-nh.png', { kind: 'data' }) },
+    tWader: { value: ctx.assets.texture('mat/wader.jpg', { repeat: false }) },
+    tWaderA: { value: ctx.assets.texture('mat/wader-a.png', { kind: 'data', repeat: false }) },
   };
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
@@ -133,6 +135,20 @@ export function create(ctx: Context): Piece {
           if (stood.tuft.y < sea + 0.35 && footing(stood.tuft.x, stood.tuft.z) < sea) {
             // The tuft is worked through the water: the water round it is never still.
             ripples.add(stood.tuft.x, stood.tuft.z, 2.0, 0.75, 0.4, seed * 2.3, 21, 0.42);
+            // And it throws water: small drops in short arcs, a few at any moment, each where the time since it was thrown puts it.
+            for (let d = 0; d < 26; d++) {
+              const period = 0.3 + 0.45 * hash(seed + d * 4.7);
+              const turn = seconds / period + hash(seed + d * 2.1);
+              const n = Math.floor(turn);
+              if (hash(seed + d * 1.9 + n * 6.3) > 0.55) continue;
+              const since = (turn - n) * period;
+              const way = hash(seed + d * 8.3 + n * 3.7) * Math.PI * 2;
+              const outward = 0.15 + 0.7 * hash(seed + d * 5.9 + n * 1.3);
+              const upward = 0.7 + 1.5 * hash(seed + d * 3.1 + n * 7.9);
+              const from = 0.04 + 0.1 * hash(seed + d * 6.1 + n * 2.9);
+              const y = sea + upward * since - 4.9 * since * since;
+              if (y > sea) drips.add(stood.tuft.x + Math.cos(way) * (from + outward * since), y, stood.tuft.z + Math.sin(way) * (from + outward * since), 0.006 + 0.006 * Math.abs(upward - 9.8 * since));
+            }
           } else if (stood.sinceLift < 9 && footing(stood.tuft.x, stood.tuft.z) < sea) {
             // Lifted: it streams, then drips, for some seconds. Every drop is where the time since the lift puts it.
             const pour = Math.exp(-stood.sinceLift / 3.2);
@@ -140,7 +156,7 @@ export function create(ctx: Context): Piece {
             const count = Math.min(DROPS, tips.length / 3);
             for (let d = 0; d < count; d++) {
               const tip = Math.floor(hash(seed + d * 3.3) * (tips.length / 3)) * 3;
-              const period = 0.34 + 0.5 * hash(seed + d * 7.7);
+              const period = 0.22 + 0.26 * hash(seed + d * 7.7);
               const turn = (stood.sinceLift + 3 * hash(seed + d * 1.3)) / period;
               const n = Math.floor(turn);
               if (hash(seed + d * 5.1 + n * 9.7) > 0.25 + 0.75 * pour) continue;
@@ -148,7 +164,7 @@ export function create(ctx: Context): Piece {
               const x = tips[tip] as number;
               const z = tips[tip + 2] as number;
               const y = (tips[tip + 1] as number) - 4.9 * fall * fall;
-              if (y > sea) drips.add(x, y, z, 0.012 + 9.8 * fall * 0.011);
+              if (y > sea) drips.add(x, y, z, 0.008 + 9.8 * fall * 0.006);
               else if (d % 4 === 0) ripples.add(x, z, 0.55, 0.5 * pour + 0.12, (sea - y) / 3, seed + d, 48, 0.24);
             }
             ripples.add(stood.tuft.x, stood.tuft.z, 0.9, 0.2 + 0.45 * pour, 5, seed, 40, 0.26);

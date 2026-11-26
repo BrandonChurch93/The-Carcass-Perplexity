@@ -254,8 +254,8 @@ export function block(seed: number, size: [number, number, number], at: [number,
   const m = new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(turn[0], turn[1], turn[2], 'YXZ')), new THREE.Vector3(1, 1, 1));
   const p = new THREE.Vector3();
   const longest = Math.max(size[0], size[2]);
-  const columns = Math.max(40, Math.round((longest * 3.4) / 0.2));
-  const rows = Math.max(24, Math.round((Math.max(size[1], Math.min(size[0], size[2])) * 3) / 0.22));
+  const columns = Math.max(28, Math.round((longest * 3.4) / 0.36));
+  const rows = Math.max(18, Math.round((Math.max(size[1], Math.min(size[0], size[2])) * 3) / 0.4));
   const g = tube(columns, rows, (u, a) => {
     // A direction on the ball: u runs pole to pole along the block's long side, a goes round it.
     const e = (u - 0.5) * Math.PI;

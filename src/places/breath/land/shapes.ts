@@ -125,7 +125,7 @@ export function talusHeight(x: number, z: number): number {
 
 /** The rubble itself: a fan from the broken rim down into the shaft. */
 export function heap(): THREE.BufferGeometry {
-  return sheet(260, 130, (u, v) => {
+  return sheet(170, 86, (u, v) => {
     const b = lerp(66, 158, u) * RAD;
     const r = lerp(rimRadius(b) - 0.2, 5, v);
     const x = Math.sin(b) * r;

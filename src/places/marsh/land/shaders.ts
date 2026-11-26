@@ -239,7 +239,7 @@ void main() {
     vec4 nS = texture2D(tSiltN, p.xz / 3.0);
     vec3 mudCol = mix(silt, pc, plateSeen);
     // Close to the lens the silt's own grain is on the plate's mud, which is soft in the picture.
-    slab = smoothstep(0.5, 0.62, h0 + (mid.b - 0.5) * 0.2) * plateSeen;
+    slab = smoothstep(0.55, 0.67, h0 + (mid.b - 0.5) * 0.2) * plateSeen;
     // The wallow (painted into the fine patch): its mud is lower, wetter and darker than any other, and the slabs tipped round it are whole.
     float inCrust = smoothstep(0.0, 0.5, f.g);
     float sunk = vPaint.x * inCrust;
@@ -253,7 +253,7 @@ void main() {
       grad -= (nS2.rg - 0.5) * 0.5 * close * (1.0 - slab);
     }
     // The slabs keep their salt; the mud between them is wet, and dark with it.
-    colour = mix(colour, mudCol * mix(vec3(0.3, 0.225, 0.205), vec3(0.72), slab), k);
+    colour = mix(colour, mudCol * mix(vec3(0.3, 0.245, 0.225), vec3(0.6, 0.57, 0.54), slab), k);
     hgt = mix(hgt, mix(nS.b * 0.6, h0, plateSeen), k);
     bend = mix(bend, -(nS.rg - 0.5) * 0.8 * (1.0 - plateSeen), k);
     lean += grad * k;
@@ -374,7 +374,7 @@ void main() {
   float flood = smoothstep(aa, -aa, over);
   float damp = smoothstep(0.34, 0.03, over);
   // Damp ground is darker and redder, and what the brine has soaked is stained by it.
-  colour = mix(colour, colour * mix(vec3(0.6, 0.52, 0.5), vec3(0.5, 0.24, 0.2), clamp(stain * 0.8 + exp(-t / 1.5) * 0.7, 0.0, 1.0) * (1.0 - 0.6 * smoothstep(0.0, 0.5, thin))), damp);
+  colour = mix(colour, colour * mix(vec3(0.6, 0.52, 0.5), vec3(0.5, 0.33, 0.29), clamp(stain * 0.8 + exp(-t / 1.5) * 0.7, 0.0, 1.0) * (1.0 - 0.6 * smoothstep(0.0, 0.5, thin))), damp);
   rough = mix(rough, mix(0.72, 0.42, smoothstep(0.0, 0.5, thin) * (1.0 - slab)), damp * (1.0 - rock));
   // Round every pool, a stride back from its wet margin, the brine has left its salt: a pale rim, broken, wider here and narrower there.
   float rimAt = 0.45 + 0.5 * mid.r;
@@ -394,7 +394,7 @@ void main() {
   // What is under the level: a film of brine over the ground, clear where it is a hair deep and blood where it is a finger, and a mirror.
   if (flood > 0.0) {
     float deep = max(-over, 0.0) * mix(0.3, 0.1, smoothstep(0.0, 0.5, thin));
-    vec3 body = mix(vec3(0.2, 0.074, 0.05), vec3(0.085, 0.022, 0.018), 1.0 - exp(-deep * 26.0));
+    vec3 body = mix(vec3(0.13, 0.07, 0.055), vec3(0.085, 0.022, 0.018), 1.0 - exp(-deep * 26.0));
     body = mix(body, colour * 0.5, exp(-deep * mix(60.0, 25.0, smoothstep(0.0, 0.5, thin))));
     vec3 nf = normalize(vec3(bend.x * 0.03, 1.0, bend.y * 0.03));
     float share = mirrorShare(nf, v);

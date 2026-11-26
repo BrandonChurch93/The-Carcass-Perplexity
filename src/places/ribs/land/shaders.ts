@@ -18,6 +18,14 @@ void main() {
 
 // A slope read from a data picture (x, y) laid on a surface along its u and v.
 const BUMP_GLSL = /* glsl */ `
+// The level of a picture to read for a pixel whose foot on it is (dx, dy): by the long side of the foot, cut to most times the short
+// one. Read so, a picture costs the software renderer a seventh of what a read by its two slopes costs, and it does not smear at a slant.
+float footLevel(sampler2D t, vec2 dx, vec2 dy, float most) {
+  vec2 size = vec2(textureSize(t, 0));
+  float lx = length(dx * size);
+  float ly = length(dy * size);
+  return log2(max(min(max(lx, ly), most * min(lx, ly)), 1e-6));
+}
 vec3 bump(vec3 n, vec3 p, vec2 uv, vec2 g) {
   vec3 dp1 = dFdx(p);
   vec3 dp2 = dFdy(p);
@@ -120,12 +128,12 @@ void main() {
   vec3 detB = vec3(0.0);
   vec3 nhB = vec3(0.5);
   if (kB < 0.999) {
-    detA = textureGrad(tRock, a1, gax, gay).rgb;
-    nhA = textureGrad(tRockN, a1, gax, gay).rgb;
+    detA = textureLod(tRock, a1, footLevel(tRock, gax, gay, 2.0)).rgb;
+    nhA = textureLod(tRockN, a1, footLevel(tRockN, gax, gay, 2.0)).rgb;
   }
   if (kB > 0.001) {
-    detB = textureGrad(tRock, b1, gbx, gby).rgb;
-    nhB = textureGrad(tRockN, b1, gbx, gby).rgb;
+    detB = textureLod(tRock, b1, footLevel(tRock, gbx, gby, 2.0)).rgb;
+    nhB = textureLod(tRockN, b1, footLevel(tRockN, gbx, gby, 2.0)).rgb;
   }
   // The wide laying, sheared so that its grooves do not line up with the small one's.
   vec2 uvW = mix(uvA, uvB, step(0.5, kB));
@@ -136,8 +144,8 @@ void main() {
   vec2 wx = mix(mix(gax, gbx, step(0.5, kB)) * sc, dFdx(lay), uFin);
   vec2 wy = mix(mix(gay, gby, step(0.5, kB)) * sc, dFdy(lay), uFin);
   a2 = mix(a2, lay, uFin);
-  vec3 big = textureGrad(tWide, a2, wx, wy).rgb;
-  vec3 nhW = textureGrad(tWideN, a2, wx, wy).rgb;
+  vec3 big = textureLod(tWide, a2, footLevel(tWide, wx, wy, 2.0)).rgb;
+  vec3 nhW = textureLod(tWideN, a2, footLevel(tWideN, wx, wy, 2.0)).rgb;
   vec3 det = mix(detA, detB, kB);
   vec3 nh = mix(nhA, nhB, kB);
   // The colony's sheet is mirrored where it meets itself: its slopes turn with it.
@@ -192,7 +200,8 @@ void main() {
     // White runs hang down the cliff from where the colony stands; the ledges themselves are white.
     float runs = smoothstep(0.5, 0.72, run * (0.5 + roost) + 0.2 * (nhW.z - 0.5)) * (1.0 - smoothstep(0.3, 0.8, n0.y));
     white = max(0.6 * runs, 0.8 * smoothstep(0.5, 0.9, n0.y) * smoothstep(0.3, 0.55, roost + 0.3 * (nhW.z - 0.5))) * (1.0 - band);
-    albedo = mix(albedo, vec3(0.66, 0.33, 0.06) * (0.6 + 0.8 * nhW.z), 0.7 * lichen * (1.0 - 0.7 * white));
+    float crust = smoothstep(0.3, 0.6, vnoise(vec2(vBlade.y, vWorld.y) * 0.7) * 0.6 + vnoise(vec2(vBlade.y, vWorld.y) * 2.3) * 0.4);
+    albedo = mix(albedo, vec3(0.6, 0.31, 0.07) * (0.6 + 0.8 * nhW.z), 0.6 * lichen * crust * (1.0 - 0.7 * white));
     albedo = mix(albedo, vec3(0.8, 0.79, 0.75) * (0.75 + 0.5 * nhW.z), 0.6 * white);
   } else {
     albedo = mix(albedo, vec3(0.62, 0.34, 0.09) * (0.5 + 1.6 * det.r), 0.75 * lichen * (1.0 - 0.25 * uFin));
@@ -211,6 +220,105 @@ void main() {
   float edge = 1.0 - max(dot(n, v), 0.0);
   float back = max(dot(-v, uSunDir), 0.0);
   lit += albedo * uSunColour * (0.3 * edge * edge * edge * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
+  gl_FragColor = vec4(rigOut(lit), 1.0);
+}`;
+
+// The colony's crag. Its two stones are laid by the world's own position on three axes at one size each (ten metres for the bedded
+// ledge stone, three for the shore rock over it), so that no picture is drawn out down a face. Mid grey-brown, wet and darker low
+// down, rust lichen in patches on what leans to the sky and the sun, thin white runs down the faces under the perches. What hangs
+// over is never black: it takes the sky and the floor's bounce, a quarter of the lit rock.
+export const COLONY_FRAGMENT = /* glsl */ `
+${HEAD}
+varying vec4 vBlade;
+varying vec3 vNb;
+varying vec2 vLay;
+varying float vShade;
+uniform sampler2D tRock;
+uniform sampler2D tLedge;
+uniform sampler2D tLedgeN;
+uniform sampler2D tWeed;
+uniform float uTide;
+void main() {
+  vec3 n0 = normalize(vNormal);
+  vec3 v = normalize(cameraPosition - vWorld);
+  // A ledge is narrow: its top and its riser are told apart by the face itself, not by the rounded normal between them.
+  vec3 ng = normalize(cross(dFdx(vWorld), dFdy(vWorld)) + vec3(0.0, 1e-9, 0.0));
+  ng *= sign(dot(ng, v) + 1e-6);
+  vec3 nf = normalize(mix(n0, ng, 0.5) + vec3(0.0, 1e-6, 0.0));
+  vec3 w = nf * nf;
+  w = w * w;
+  w /= w.x + w.y + w.z;
+  vec3 pl = vWorld / 10.0;
+  vec3 pr = vWorld / 3.0 + 0.37;
+  vec3 lx = dFdx(pl);
+  vec3 ly = dFdy(pl);
+  vec3 rx = dFdx(pr);
+  vec3 ry = dFdy(pr);
+  // Only the planes that show are read.
+  vec3 cx = vec3(0.0);
+  vec3 cy = vec3(0.0);
+  vec3 cz = vec3(0.0);
+  vec3 hx = vec3(0.5);
+  vec3 hy = vec3(0.5);
+  vec3 hz = vec3(0.5);
+  vec3 dx = vec3(0.0);
+  vec3 dy = vec3(0.0);
+  vec3 dz = vec3(0.0);
+  if (w.x > 0.02) {
+    cx = textureLod(tLedge, pl.zy, footLevel(tLedge, lx.zy, ly.zy, 2.0)).rgb;
+    hx = textureLod(tLedgeN, pl.zy, footLevel(tLedgeN, lx.zy, ly.zy, 2.0)).rgb;
+    dx = textureLod(tRock, pr.zy, footLevel(tRock, rx.zy, ry.zy, 2.0)).rgb;
+  }
+  if (w.y > 0.02) {
+    cy = textureLod(tLedge, pl.xz, footLevel(tLedge, lx.xz, ly.xz, 2.0)).rgb;
+    hy = textureLod(tLedgeN, pl.xz, footLevel(tLedgeN, lx.xz, ly.xz, 2.0)).rgb;
+    dy = textureLod(tRock, pr.xz, footLevel(tRock, rx.xz, ry.xz, 2.0)).rgb;
+  }
+  if (w.z > 0.02) {
+    cz = textureLod(tLedge, pl.xy, footLevel(tLedge, lx.xy, ly.xy, 2.0)).rgb;
+    hz = textureLod(tLedgeN, pl.xy, footLevel(tLedgeN, lx.xy, ly.xy, 2.0)).rgb;
+    dz = textureLod(tRock, pr.xy, footLevel(tRock, rx.xy, ry.xy, 2.0)).rgb;
+  }
+  vec3 ws = w * step(vec3(0.02), w);
+  ws /= ws.x + ws.y + ws.z;
+  vec3 led = cx * ws.x + cy * ws.y + cz * ws.z;
+  vec3 det = dx * ws.x + dy * ws.y + dz * ws.z;
+  float hgt = hx.z * ws.x + hy.z * ws.y + hz.z * ws.z;
+  // The pictures' slopes are a clay model's more than a height field's: taken at a low strength.
+  vec3 n = normalize(bump(n0, vWorld, pl.zy, (hx.xy - 0.5) * 0.7) * ws.x + bump(n0, vWorld, pl.xz, (hy.xy - 0.5) * 0.7) * ws.y + bump(n0, vWorld, pl.xy, (hz.xy - 0.5) * 0.7) * ws.z);
+  float y = vWorld.y;
+  float arc = vBlade.y;
+  float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
+  // Mid grey-brown rock: the ledge stone gives its beds and its marks, the shore rock its grain.
+  vec3 albedo = vec3(0.04, 0.041, 0.042) * mix(vec3(1.0), led / vec3(0.229, 0.21, 0.177), 0.75) * mix(vec3(1.0), det / vec3(0.111, 0.088, 0.061), 0.5) * (0.85 + 0.3 * macro);
+  albedo *= 0.8 + 0.4 * smoothstep(0.25, 0.65, hgt);
+  float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (hgt - 0.5);
+  float weed = smoothstep(tide + 0.5, tide - 0.5, y);
+  float band = smoothstep(tide + 5.0, tide + 0.5, y);
+  // Wet and darker low down: the spray of every tide stands in it.
+  float low = smoothstep(tide + 30.0 + 14.0 * (macro - 0.5), tide + 4.0, y);
+  float face = 1.0 - smoothstep(0.35, 0.75, nf.y);
+  // Thin white runs down a face, under where the colony stands; a splash of white on the tops.
+  float perch = vnoise(vec2(arc * 0.11, y * 0.12) + 2.0);
+  float thin = vnoise(vec2(arc * 4.3, y * 0.09) + 11.0) * 0.55 + vnoise(vec2(arc * 11.7, y * 0.31)) * 0.45;
+  float runs = smoothstep(0.66, 0.74, thin + 0.3 * (perch - 0.5) + 0.1 * (hgt - 0.5)) * face;
+  float splash = (1.0 - face) * smoothstep(0.56, 0.68, vnoise(vWorld.xz * 0.45 + 3.0) * 0.6 + vnoise(vWorld.xz * 1.7) * 0.4 + 0.3 * (hgt - 0.5));
+  float white = max(0.7 * runs, 0.55 * splash) * (1.0 - band) * (1.0 - 0.5 * low);
+  // Rust lichen: patches a stride or two across with broken edges, on the tops and on what faces the sun, never in the wet.
+  float sunny = 0.5 + 0.5 * dot(nf, uSunDir);
+  float field = vnoise(vWorld.xz * 0.13 + y * 0.11 + 9.0) * 0.45 + vnoise(vWorld.xy * 0.41 + vWorld.z * 0.33) * 0.3 + vnoise(vWorld.zy * 1.4 + vWorld.x * 1.2 + 4.0) * 0.25;
+  float lichen = smoothstep(0.64, 0.67, field + 0.12 * nf.y + 0.2 * (sunny - 0.5) + 0.35 * (hgt - 0.5) + 0.1 * (dot(det, vec3(3.8)) - 1.0)) * (1.0 - smoothstep(0.2, 0.7, low)) * (1.0 - white);
+  albedo = mix(albedo, vec3(0.115, 0.047, 0.006) * (0.5 + 1.0 * hgt), 0.9 * lichen);
+  albedo = mix(albedo, vec3(0.3, 0.3, 0.285) * (0.7 + 0.6 * hgt), white);
+  albedo *= mix(1.0, 0.5, low) * mix(1.0, 0.3, band);
+  vec3 wc = texture2D(tWeed, vec2(arc, y) / 7.0).rgb;
+  albedo = mix(albedo, wc * 0.9, weed);
+  float rough = mix(0.92, 0.45, max(weed, max(band, 0.7 * low)));
+  float occ = (0.6 + 0.4 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.45, weed) * max(vShade, 0.4);
+  vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
+  // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
+  vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * uSunColour * cloudShade(vWorld)) * (0.24 / 3.14159) * (0.75 + 0.25 * occ);
+  lit = max(lit, fill);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -306,20 +414,13 @@ uniform float uPool;
 // A floor seen along itself: the picture is read by the short side of the pixel's foot (to most times it), not by the long one, so that
 // stones stay stones at a low lens; the film's many samples a frame take up what that leaves.
 vec3 skimmed(sampler2D t, vec2 uv, float most) {
-  vec2 dx = dFdx(uv);
-  vec2 dy = dFdy(uv);
-  float lx = length(dx);
-  float ly = length(dy);
-  float least = most * min(lx, ly);
-  dx *= min(1.0, least / max(lx, 1e-9));
-  dy *= min(1.0, least / max(ly, 1e-9));
-  return textureGrad(t, uv, dx, dy).rgb;
+  return textureLod(t, uv, footLevel(t, dFdx(uv), dFdy(uv), most)).rgb;
 }
 void plateAt(vec2 xz, vec2 cs, vec2 size, vec2 shift, out vec3 colour, out vec3 slope) {
   vec2 uv = vec2(xz.x * cs.x + xz.y * cs.y, xz.y * cs.x - xz.x * cs.y) / size + shift;
   vec2 m = 1.0 - 2.0 * mod(floor(uv), 2.0);
-  colour = skimmed(tPlate, uv, 5.0);
-  vec3 nh = skimmed(tPlateN, uv, 5.0);
+  colour = skimmed(tPlate, uv, 3.0);
+  vec3 nh = skimmed(tPlateN, uv, 3.0);
   vec2 g = (nh.xy - 0.5) * m;
   slope = vec3(g.x * cs.x + g.y * cs.y, g.x * cs.y - g.y * cs.x, nh.z);
 }
@@ -340,9 +441,21 @@ void main() {
   // Under the plate's reach (a thumb to the pixel) the stones and the sand are their own pictures.
   vec2 ud = xz / 2.0;
   float close0 = smoothstep(70.0, 8.0, length(cameraPosition - vWorld));
-  vec3 det = mix(vec3(0.122), skimmed(tShingle, ud, 3.0), 0.35 + 0.65 * close0);
-  vec3 nh = mix(vec3(0.5), skimmed(tShingleN, ud, 3.0), 0.35 + 0.65 * close0);
-  vec3 sand = skimmed(tSand, vec2(xz.y, -xz.x) / 4.0 + 0.37, 3.0);
+  // Past a hundred metres a stone is far under a pixel: there the pictures are not read at all, and their mean stands for them.
+  float reach = smoothstep(110.0, 80.0, length(cameraPosition - vWorld));
+  vec2 us = vec2(xz.y, -xz.x) / 4.0 + 0.37;
+  vec2 udx = dFdx(ud);
+  vec2 udy = dFdy(ud);
+  vec2 usx = dFdx(us);
+  vec2 usy = dFdy(us);
+  vec3 det = vec3(0.122);
+  vec3 nh = vec3(0.5);
+  vec3 sand = vec3(0.128);
+  if (reach > 0.0) {
+    det = mix(det, textureLod(tShingle, ud, footLevel(tShingle, udx, udy, 2.0)).rgb, (0.35 + 0.65 * close0) * reach);
+    nh = mix(nh, textureLod(tShingleN, ud, footLevel(tShingleN, udx, udy, 2.0)).rgb, (0.35 + 0.65 * close0) * reach);
+    sand = mix(sand, textureLod(tSand, us, footLevel(tSand, usx, usy, 2.0)).rgb, reach);
+  }
   float fine = bedFine(xz);
   // The bed is the rig's: the same one the sheets of water are laid on. The plate's own relief stands on it.
   float h = landAt(xz).r + fine + 0.2 * (ps.z - 0.35) + 0.03 * (nh.z - 0.5);
@@ -351,7 +464,7 @@ void main() {
   // the floor is dark and a mirror; dry, it is pale and matt.
   vec2 sq = vec2(xz.x + 0.3 * xz.y, xz.y * 0.4);
   float soak = vnoise(sq / 13.0 + 11.0) * 0.5 + vnoise(sq / 4.7 + 4.0) * 0.32 + vnoise(xz / 1.9) * 0.18;
-  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 0.12 * clamp(over, 0.0, 0.5) + 0.05 * (nh.z - 0.5) * close0 + 0.11);
+  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 0.12 * clamp(over, 0.0, 0.5) + 0.05 * (nh.z - 0.5) * close0 + 0.17);
   // Stones where the floor stands proud, rippled sand where it lies low.
   float bar = smoothstep(0.3, 0.52, ps.z + 0.5 * clamp(over, -0.2, 0.3) + 0.1 * (nh.z - 0.5) + 0.12 * close0);
   bar *= 1.0 - 0.8 * soaked;
@@ -385,7 +498,7 @@ void main() {
     r.y = abs(r.y) + 0.06;
     r = normalize(r);
     float f = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
-    c += film * f * (skyCloud(vWorld, r) - skyRadiance(r)) * skyOpen(vWorld);
+    c = max(c + film * f * (skyCloud(vWorld, r) - skyRadiance(r)) * skyOpen(vWorld), vec3(0.0));
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

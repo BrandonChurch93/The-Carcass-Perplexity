@@ -1,15 +1,13 @@
 // The gill-plumes: crimson feathered growths on the lip of the shaft and a few seedlings away from it.
-// Every bush is grown once from the seeded stream (bush.ts): its stems are ribbons (ribbons.ts), its barbs are drawn on vanes (vanes.ts),
-// and it stands on a holdfast. The sway is in the vertex shader.
+// Every bush is grown once from the seeded stream (cards.ts): a fan of sprays cut from the plume picture, standing on a holdfast.
+// The sway is in the vertex shader.
 import * as THREE from 'three';
 import { BUSHES, SEEDLINGS, WIND, bushAt } from '../shared/anchors';
 import { surgeAt } from '../shared/blockout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
-import { growBush, type Bush } from './bush';
-import { Ribbons } from './ribbons';
-import { STEM_FRAGMENT, STEM_VERTEX, VANE_DEPTH, VANE_FRAGMENT, VANE_VERTEX } from './shaders';
-import { Vanes } from './vanes';
+import { Cards, type Bush } from './cards';
+import { VANE_DEPTH, VANE_FRAGMENT, VANE_VERTEX } from './shaders';
 import { makeDrips } from '../waders/drips';
 
 export const PARTS: readonly string[] = ['gill-plumes'];
@@ -43,27 +41,25 @@ export function create(ctx: Context): Piece {
   });
   for (const [x, z, tall] of SEEDLINGS) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
 
-  const stems = new Ribbons();
-  const vanes = new Vanes();
-  // The wet tips drip: the ends of the barbs of the bushes that a camera comes close to, each with its own slow beat.
+  const vanes = new Cards();
+  // The wet tips drip: the ends of the threads of the bushes that a camera comes close to, each with its own slow beat.
   interface Tip { x: number; y: number; z: number; h: number; phase: number; tall: number; ax: number; az: number; every: number; offset: number; ground: number }
   const tips: Tip[] = [];
   const drops = ctx.rng('gill-plume-drops');
   for (const bush of bushes) {
     const before = vanes.ends.length;
-    growBush(stems, vanes, bush, rng, floor);
+    vanes.grow(bush, rng, floor);
     if (bush.detail < 1) continue;
     for (let e = before; e < vanes.ends.length; e++) {
       const end = vanes.ends[e] as (typeof vanes.ends)[number];
-      const keep = drops.next() < 0.12;
-      const every = drops.range(2.6, 9);
+      const keep = drops.next() < 0.5;
+      const every = drops.range(1.6, 5);
       const offset = drops.range(0, 9);
       if (!keep) continue;
       const rl = Math.hypot(end.root[0], end.root[2]) || 1;
       tips.push({ x: end.at[0], y: end.at[1], z: end.at[2], h: end.stemAt, phase: end.phase, tall: end.tall, ax: end.root[0] / rl, az: end.root[2] / rl, every, offset, ground: floor(end.at[0], end.at[2]) });
     }
   }
-  const stemGeometry = stems.build();
   const vaneGeometry = vanes.build();
 
   const pixel = { value: 0.001 };
@@ -75,16 +71,13 @@ export function create(ctx: Context): Piece {
     uSeconds: seconds,
     uSurge: surge,
     uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) },
-    tFrond: { value: ctx.assets.texture('mat/frond.jpg', { repeat: false }) },
-    tFrondH: { value: ctx.assets.texture('mat/frond-h.png', { kind: 'data', repeat: false }) },
+    tPlume: { value: ctx.assets.texture('plumes/spray.jpg', { repeat: false }) },
+    tPlumeA: { value: ctx.assets.texture('plumes/spray-a.png', { kind: 'data', repeat: false }) },
   };
-  const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms, side: THREE.DoubleSide });
   const vaneMaterial = new THREE.ShaderMaterial({ vertexShader: VANE_VERTEX, fragmentShader: VANE_FRAGMENT, uniforms, side: THREE.DoubleSide });
-  // The fog reads the depth laid before the picture: the vanes say there which of their pixels are barbs.
+  // The fog reads the depth laid before the picture: the sprays say there which of their pixels are threads.
   vaneMaterial.userData.depthFragment = VANE_DEPTH;
-  const stemMesh = new THREE.Mesh(stemGeometry, stemMaterial);
   const vaneMesh = new THREE.Mesh(vaneGeometry, vaneMaterial);
-  stemMesh.frustumCulled = false;
   vaneMesh.frustumCulled = false;
 
   // The holdfasts: a knotted lump in the rock under every bush, lumpier than round, half sunk.
@@ -92,7 +85,7 @@ export function create(ctx: Context): Piece {
   const lumps: THREE.BufferGeometry[] = [];
   const holdfastMaterial = new THREE.ShaderMaterial({ vertexShader: RIG_VERTEX, fragmentShader: HOLDFAST_FRAGMENT, uniforms: { ...rig.uniforms } });
   const group = new THREE.Group();
-  group.add(stemMesh, vaneMesh);
+  group.add(vaneMesh);
   for (const b of bushes) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
@@ -102,7 +95,7 @@ export function create(ctx: Context): Piece {
       const y = at.getY(i);
       const z = at.getZ(i);
       const swell = 1 + 0.28 * Math.sin(x * 5 + seed) * Math.sin(z * 4.3 + seed * 1.3) + 0.2 * Math.sin(y * 7 + x * 3 + seed * 2.1) + 0.12 * Math.sin(x * 11 + z * 9 + seed);
-      const r = 0.09 * b.tall * swell;
+      const r = 0.05 * b.tall * swell;
       at.setXYZ(i, b.x + x * r * 1.25, b.y + y * r * 0.62 + 0.01 * b.tall, b.z + z * r * 1.25);
     }
     g.computeVertexNormals();
@@ -158,9 +151,7 @@ export function create(ctx: Context): Piece {
       height = h;
     },
     dispose: () => {
-      stemGeometry.dispose();
       vaneGeometry.dispose();
-      stemMaterial.dispose();
       vaneMaterial.dispose();
       holdfastMaterial.dispose();
       drips.dispose();

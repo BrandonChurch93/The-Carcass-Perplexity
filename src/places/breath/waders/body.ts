@@ -52,6 +52,8 @@ export interface Body {
   cage: Float32Array;
   shade: Float32Array;
   radius: Float32Array;
+  /** Where the vertex is in the side view picture of a wader (mat/wader.jpg): as part of the trunk (2), as part of the limb it is on (2), and how much it is of that limb (1). */
+  pic: Float32Array;
 }
 
 const sat = (v: number): number => Math.min(1, Math.max(0, v));
@@ -90,12 +92,25 @@ const WIDTH: [number, number][] = [[0, 0.09], [0.1, 0.2], [0.25, 0.24], [0.42, 0
 
 // A leg from above the hip (t below 0, inside the trunk: the haunch on the pelvis, the blade on the ribs) to the ground (1):
 // half thickness fore and aft, half thickness across, and how far the middle of the section stands aft (-) or fore (+) of the bone. For a leg whose joint is at 0.47.
-const HIND_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.17], [0.05, 0.185], [0.16, 0.13], [0.3, 0.07], [0.41, 0.043], [0.47, 0.05], [0.53, 0.031], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
-const HIND_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.07], [0.05, 0.078], [0.16, 0.066], [0.3, 0.045], [0.41, 0.034], [0.47, 0.039], [0.53, 0.027], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
+const HIND_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.17], [0.05, 0.185], [0.16, 0.13], [0.3, 0.07], [0.41, 0.04], [0.47, 0.064], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
+const HIND_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.07], [0.05, 0.078], [0.16, 0.066], [0.3, 0.045], [0.41, 0.032], [0.47, 0.05], [0.53, 0.026], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
 const HIND_C: [number, number][] = [[-0.16, -0.05], [0.05, -0.035], [0.3, -0.006], [0.41, 0], [0.47, -0.02], [0.53, -0.004], [0.9, 0], [0.97, 0.008], [1, 0.022]];
-const FORE_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.14], [0.05, 0.15], [0.16, 0.115], [0.3, 0.068], [0.41, 0.043], [0.47, 0.052], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
-const FORE_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.062], [0.05, 0.07], [0.16, 0.062], [0.3, 0.045], [0.41, 0.034], [0.47, 0.042], [0.53, 0.027], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
+const FORE_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.14], [0.05, 0.15], [0.16, 0.115], [0.3, 0.068], [0.41, 0.04], [0.47, 0.064], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
+const FORE_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.062], [0.05, 0.07], [0.16, 0.062], [0.3, 0.045], [0.41, 0.032], [0.47, 0.05], [0.53, 0.026], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
 const FORE_C: [number, number][] = [[-0.16, 0.02], [0.05, 0.01], [0.3, 0], [0.41, 0.004], [0.47, 0.016], [0.53, 0.004], [0.9, 0], [0.97, 0.008], [1, 0.022]];
+
+// The side view picture of a wader (1536 x 1024, head to the right): the box of its trunk (left, top, right, bottom), the line of each leg
+// (top inside the trunk, joint, hoof; hind far, hind near, fore far, fore near), half the width of a leg down its length, and the arc of
+// the neck with half its width, all in pixels.
+const PIC_TRUNK: [number, number, number, number] = [350, 112, 835, 368];
+const PIC_LEGS: [number, number][][] = [
+  [[405, 250], [320, 560], [296, 975]],
+  [[515, 250], [482, 540], [498, 975]],
+  [[700, 280], [649, 553], [637, 975]],
+  [[748, 270], [756, 567], [795, 975]],
+];
+const PIC_LEG_HALF: [number, number][] = [[-0.1, 60], [0.1, 52], [0.3, 30], [0.41, 20], [0.47, 25], [0.53, 15], [0.85, 13], [0.94, 18], [1, 22]];
+const PIC_NECK: [number, number, number][] = [[800, 255, 62], [905, 245, 44], [1000, 187, 32], [1080, 100, 26], [1133, 55, 22], [1172, 58, 20]];
 
 /** The fields of one animal at rest. Each is a distance in metres, near enough for a surface and a blend. */
 export class Fields {
@@ -179,20 +194,20 @@ export class Fields {
     // The points of the hips, the pins beside the tail, the hollow of the flank behind the last rib, the blades of the shoulders.
     const fh = (0.25 - 0.5) * this.L;
     const hipTop = this.top(0.25);
-    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.82) - 0.05 * k * g, 0.08 * k);
+    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.74) - 0.034 * k * g, 0.11 * k);
     const fp = (0.035 - 0.5) * this.L;
     d = smin(d, Math.hypot(f - fp, u - (this.top(0.035) - 0.035 * k), ar - 0.075 * k) - 0.036 * k * g, 0.06 * k);
     const fo = (0.37 - 0.5) * this.L;
     const hollow = Math.hypot((f - fo) / (0.13 * k), (u - (u0 + 0.3 * a)) / (0.16 * k), (ar - (w + 0.035 * k)) / (0.085 * k));
     d = smax(d, -(hollow - 1) * 0.085 * k, 0.06 * k);
     const fb = (0.82 - 0.5) * this.L;
-    d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.62) / (0.04 * k)) - 1) * 0.04 * k, 0.05 * k);
+    d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.56) / (0.04 * k)) - 1) * 0.03 * k, 0.09 * k);
     // The ribs.
     const [phase, cage] = this.ribs(f, u, r);
     if (cage > 0) {
       const rib = (0.5 + 0.5 * Math.cos(phase * Math.PI * 2)) ** 1.4;
       const each = 0.45 + 0.55 * hash(Math.round(phase) * 3.7 + s.seed);
-      d -= (0.0045 * rib * each - 0.0015) * cage * k * g;
+      d -= (0.003 * rib * each - 0.001) * cage * k * g;
     }
     return d;
   }
@@ -222,7 +237,7 @@ export class Fields {
 
   neckRadius(u: number): number {
     const s = this.s;
-    return s.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.12 * smooth(0.88, 0.96, u) - 0.2 * smooth(0.97, 1, u)) * (1 + 0.85 * smooth(0.36, 0, u) ** 1.2);
+    return s.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.12 * smooth(0.88, 0.96, u) - 0.2 * smooth(0.97, 1, u)) * (1 + 1.0 * smooth(0.3, 0, u) ** 1.2);
   }
 
   neck(f: number, u: number, r: number): number {
@@ -417,7 +432,23 @@ export function buildBody(s: Shape, cell: number): Body {
     cage: new Float32Array(count),
     shade: new Float32Array(count),
     radius: new Float32Array(count),
+    pic: new Float32Array(count * 5),
   };
+  // The trunk at rest, end to end and top to bottom: laid over the trunk of the picture.
+  let f0 = 1e9;
+  let f1 = -1e9;
+  let u0 = 1e9;
+  let u1 = -1e9;
+  for (let v = 0; v < count; v++) {
+    const f = rest[v * 3] as number;
+    const u = rest[v * 3 + 1] as number;
+    const r = rest[v * 3 + 2] as number;
+    if (fields.trunk(f, u, r) > 0.03 * k) continue;
+    f0 = Math.min(f0, f);
+    f1 = Math.max(f1, f);
+    u0 = Math.min(u0, u);
+    u1 = Math.max(u1, u);
+  }
   const seg = s.neckLen / NECK_BONES;
   const l1 = s.legLen * s.knee;
   const l2 = s.legLen * (FETLOCK - s.knee);
@@ -534,6 +565,48 @@ export function buildBody(s: Shape, cell: number): Body {
         body.localN[at + 2] = nxr * third[0] + nyr * third[1];
       }
     }
+    // The picture: the trunk's box, the leg's own line from hip to hoof, the neck's own arc.
+    const ax = PIC_TRUNK[0] + ((f - f0) / (f1 - f0)) * (PIC_TRUNK[2] - PIC_TRUNK[0]);
+    const ay = PIC_TRUNK[1] + ((u1 - u) / (u1 - u0)) * (PIC_TRUNK[3] - PIC_TRUNK[1]);
+    let bx = ax;
+    let by = ay;
+    let limb = 0;
+    if (wLeg > 0 && wLeg >= wNeck) {
+      const line = PIC_LEGS[(LEG_FORE[j] as number) > 0 ? ((LEG_SIDE[j] as number) > 0 ? 3 : 2) : (LEG_SIDE[j] as number) > 0 ? 1 : 0] as [number, number][];
+      const tc = Math.min(1.02, Math.max(-0.1, t));
+      const tt = tc < s.knee ? (tc / s.knee) * 0.47 : 0.47 + ((tc - s.knee) / (1 - s.knee)) * 0.53;
+      const fore = (LEG_FORE[j] as number) > 0;
+      const rf = curve(fore ? FORE_F : HIND_F, tt) * k;
+      const cf = curve(fore ? FORE_C : HIND_C, tt) * k;
+      const [top, knee, hoof] = line as [[number, number], [number, number], [number, number]];
+      const g = tt < 0.47 ? tt / 0.47 : (tt - 0.47) / 0.53;
+      const from = tt < 0.47 ? top : knee;
+      const to = tt < 0.47 ? knee : hoof;
+      bx = from[0] + (to[0] - from[0]) * g + ((f - hip[0] - cf) / rf) * curve(PIC_LEG_HALF, tt);
+      by = from[1] + (to[1] - from[1]) * g;
+      limb = wLeg;
+    } else if (wNeck > 0) {
+      const along = sat(un) * (PIC_NECK.length - 1);
+      const i = Math.min(PIC_NECK.length - 2, Math.floor(along));
+      const g = along - i;
+      const a = PIC_NECK[i] as [number, number, number];
+      const b = PIC_NECK[i + 1] as [number, number, number];
+      let dx = b[0] - a[0];
+      let dy = b[1] - a[1];
+      const dl = Math.hypot(dx, dy) || 1;
+      dx /= dl;
+      dy /= dl;
+      const under = ((f - nb[0]) * third[0] + (u - nb[1]) * third[1]) / fields.neckRadius(sat(un));
+      const half = a[2] + (b[2] - a[2]) * g;
+      bx = a[0] + (b[0] - a[0]) * g - dy * under * half;
+      by = a[1] + (b[1] - a[1]) * g + dx * under * half;
+      limb = wNeck;
+    }
+    body.pic[v * 5] = ax / 1536;
+    body.pic[v * 5 + 1] = 1 - ay / 1024;
+    body.pic[v * 5 + 2] = bx / 1536;
+    body.pic[v * 5 + 3] = 1 - by / 1024;
+    body.pic[v * 5 + 4] = limb;
     const [phase, cage] = fields.ribs(f, u, r);
     body.ribS[v] = phase;
     body.cage[v] = cage * (1 - wLeg) * (1 - wNeck);
