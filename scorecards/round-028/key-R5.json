@@ -1,0 +1,18 @@
+{
+  "round": "28",
+  "unit": "film",
+  "critic": "R5",
+  "packs": {
+    "R5": {
+      "set-A-01.png": "Whole film sheet 1 of 4, frames 0 to 2776",
+      "set-A-02.png": "Whole film sheet 2 of 4, frames 3028 to 5804",
+      "set-A-03.png": "Whole film sheet 3 of 4, frames 6056 to 8832",
+      "set-A-04.png": "Whole film sheet 4 of 4, frames 9084 to 11860",
+      "set-A-05.png": "The judged frames of the film in order, part 1 of 4: film-first at frame 0, film-hook at frame 120, film-open-heart at frame 2507, film-open-breath at frame 4221",
+      "set-A-06.png": "The judged frames of the film in order, part 2 of 4: film-open-marsh at frame 5618, film-open-spine at frame 7015, film-open-eye at frame 8305, film-open-reveal at frame 9541",
+      "set-A-07.png": "The judged frames of the film in order, part 3 of 4: film-titan at frame 10027, film-last at frame 11743, loop-0 at loop frame 0, loop-1 at loop frame 120",
+      "set-A-08.png": "The judged frames of the film in order, part 4 of 4: loop-2 at loop frame 240, loop-3 at loop frame 360",
+      "set-A-09.png": "The establishing frame of ribs, heart, breath, marsh, spine, eye, then the titan frame 10027"
+    }
+  }
+}

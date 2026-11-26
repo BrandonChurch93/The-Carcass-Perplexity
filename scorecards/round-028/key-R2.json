@@ -1,0 +1,43 @@
+{
+  "round": "28",
+  "unit": "film",
+  "critic": "R2",
+  "packs": {
+    "R2-1": {
+      "set-A-01.png": "Judged image: film-first, film frame 0"
+    },
+    "R2-2": {
+      "set-B-01.png": "Judged image: film-hook, film frame 120"
+    },
+    "R2-3": {
+      "set-C-01.png": "Judged image: film-open-heart, film frame 2507"
+    },
+    "R2-4": {
+      "set-D-01.png": "Judged image: film-open-breath, film frame 4221"
+    },
+    "R2-5": {
+      "set-E-01.png": "Judged image: film-open-marsh, film frame 5618"
+    },
+    "R2-6": {
+      "set-F-01.png": "Control: the approved picture of ribs-0, references/approved/1-ribs/ribs-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-7": {
+      "set-G-01.png": "Control: the approved picture of heart-0, references/approved/2-heart/heart-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-8": {
+      "set-H-01.png": "Control: the approved picture of breath-0, references/approved/3-breath/breath-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-9": {
+      "set-I-01.png": "Control: the approved picture of marsh-0, references/approved/4-marsh/marsh-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-10": {
+      "set-J-01.png": "Control: the approved picture of spine-0, references/approved/5-spine/spine-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-11": {
+      "set-K-01.png": "Control: the approved picture of eye-0, references/approved/6-eye/eye-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-12": {
+      "set-L-01.png": "Control: the approved picture of reveal-4, references/approved/7-reveal/reveal-4-titan-from-orbit.jpg, resized and encoded like the judged images"
+    }
+  }
+}

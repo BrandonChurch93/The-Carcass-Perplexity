@@ -1,0 +1,19 @@
+{
+  "round": "28",
+  "unit": "film",
+  "critic": "R6",
+  "packs": {
+    "R6": {
+      "set-A-01.png": "Film frame 0, 400 px wide",
+      "set-A-02.png": "Film frame 13, 400 px wide",
+      "set-A-03.png": "Film frame 27, 400 px wide",
+      "set-A-04.png": "Film frame 40, 400 px wide",
+      "set-A-05.png": "Film frame 53, 400 px wide",
+      "set-A-06.png": "Film frame 67, 400 px wide",
+      "set-A-07.png": "Film frame 80, 400 px wide",
+      "set-A-08.png": "Film frame 93, 400 px wide",
+      "set-A-09.png": "Film frame 107, 400 px wide",
+      "set-A-10.png": "Film frame 120, 400 px wide"
+    }
+  }
+}
