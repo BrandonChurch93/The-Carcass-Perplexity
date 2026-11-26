@@ -1,8 +1,8 @@
-# Status 104
+# Status 105
 
-2026-11-26 09:35 UTC. Phase 4, the other places and the rise.
+2026-11-26 09:56 UTC. Phase 4, the other places and the rise.
 
-- `01-ribs.jpg`: The Ribs, round 3: approved left, built right at final tier (all five keys)
-- `02-marsh.jpg`: The Blood Marsh, round 3: approved left, built right at final tier (all five keys)
-- `03-spine.jpg`: The Spine, round 3: approved left, built right at final tier (all five keys)
-- `04-ribs-06.jpg`: The Ribs in motion: the sea returns (shot ribs-06, twelve frames, review tier)
+- `01-crab.jpg`: The Ribs, the hung carcass at native size: round 3 left (final tier), after the crab fix right (draft tier)
+- `02-cloud.jpg`: The Reveal, the top of the rise: round 3's cloud left, the new build right (draft tier); below, the west sea at native size
+- `03-breath-03.jpg`: The Breath in motion (shot breath-03, twelve frames, review tier)
+- `04-eye-04.jpg`: The Eye in motion (shot eye-04, twelve frames, review tier)

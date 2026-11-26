@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 104, 2026-11-26 09:35 UTC:
+Status 105, 2026-11-26 09:56 UTC:
 
-- `01-ribs.jpg`: The Ribs, round 3: approved left, built right at final tier (all five keys)
-- `02-marsh.jpg`: The Blood Marsh, round 3: approved left, built right at final tier (all five keys)
-- `03-spine.jpg`: The Spine, round 3: approved left, built right at final tier (all five keys)
-- `04-ribs-06.jpg`: The Ribs in motion: the sea returns (shot ribs-06, twelve frames, review tier)
+- `01-crab.jpg`: The Ribs, the hung carcass at native size: round 3 left (final tier), after the crab fix right (draft tier)
+- `02-cloud.jpg`: The Reveal, the top of the rise: round 3's cloud left, the new build right (draft tier); below, the west sea at native size
+- `03-breath-03.jpg`: The Breath in motion (shot breath-03, twelve frames, review tier)
+- `04-eye-04.jpg`: The Eye in motion (shot eye-04, twelve frames, review tier)
 
+Status 104, 2026-11-26 09:35 UTC, showed: The Ribs, round 3: approved left, built right at final tier (all five keys); The Blood Marsh, round 3: approved left, built right at final...
 Status 103, 2026-11-26 09:19 UTC, showed: The Reveal, round 3: approved left, built right at final tier (the lake, the skull massif, head and shoulders, the whole titan from orbit)...
 Status 102, 2026-11-26 08:57 UTC, showed: The Ribs, the wide view: approved left, built right at final tier in 4K, with the tighter shutter limit and the blades faint again; The...
-Status 101, 2026-11-26 08:30 UTC, showed: The Blood Marsh, version 3: approved left, built right at final tier (the wide view, the wallowers, the one on the thin crust); The Spine...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T09:35:14Z
-phase 4: 13.41 h used of 17.00 h
-build: 33.73 h used of 72.00 h
+2026-11-26T09:56:19Z
+phase 4: 13.76 h used of 17.00 h
+build: 34.08 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 15
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -1374,6 +1374,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. - 2026-11-26 09:04 UTC. The cost measure on the merged tree, run alone on the Builder's machine between 08:51 and 09:02 UTC (4K, draft tier, one sample, two runs a key; the status tool and one unpack ran beside the Breath, the Marsh and the Eye for some seconds): ribs-0 19.12 s, spine-0 33.46 s, breath-0 46.94 s, marsh-0 23.49 s, eye-0 21.06 s, reveal-4 16.75 s a frame. MEASURED: this machine has 2 cores; the owners' figures (10.91 to 11.21, 16.94, 23.47, 16.50 to 17.44, 15.11 to 15.46 and 8.50 s) and the budget table are from machines with 4, and the ratio between the two is not one number (1.4 to 2.0 across the six keys). So these six are this machine's own baseline for later changes and say nothing about whether the Ribs and the Spine went up: that is read from the render agents' times of round 3, which run the final tier in 4K on machines with 4 cores (the Reveal's measure of round 25: 8 judged frames, M1 and M3, in 479 s). The render budget of the film is worked out again from those times before Phase 5's first whole-film render.
 - 2026-11-26. - 2026-11-26 09:06 UTC. Disk. 3.41 GB were free by the render tools' measure with six packs of round 3 still to come (about 0.1 GB each), close to the 3 GB of `sandbox.minFreeDiskGb`, under which a render command deletes `out/work/gate/` and other old output before it starts. Removed, all outside the repo: `~/.cache/puccinialin` (0.79 GB, a Rust toolchain that a Python package's install had fetched; nothing in the build uses it) and the six tars of round 25's pack after they were unpacked. The tars of each pack are removed the same way once unpacked.
 - 2026-11-26. - 2026-11-26 09:14 UTC. The closing pictures of the Ribs, the Blood Marsh, the Eye and the Reveal are made on the four render machines that measured them, while their judges answer: `npm run compare` at the final tier for every key, `npm run sheet` for every shot and `npm run keep` for the unit, from `b902c2ec`, which is the build those units keep whatever round 3 scores, because their measures are green on it and the rule keeps later fixes while checks and measures stay green. Why not here: this machine has 2 cores and runs the Phase 4 gate; a frame is byte equal on every machine (MEASURED in Phase 0). The Reveal's machine also makes a sheet of the hold after the titan frame (10027 to 11743), which the round's pack does not cover. The Breath and the Spine follow when their measures are in. Judges run 8 at a time while those four machines work
+- 2026-11-26. 09:59 UTC. The Reveal's cloud goes back to round 19's look inside the current build. MEASURED from the cards: round 19 (the look of wave 2) had 1 severe and about 4 major issues on the cloud and the cyclone, round 25 (wave 3) has 5 severe and 5 major on them, and the jury went from 6 to 1 of 25. A render machine made `reveal-4` and `reveal-3` at the final tier from `b902c2ec` (round 25's build) and from `9741a5fb` (round 19's). A third build, wave 3's land with wave 2's sky files as they stood, did not compile: wave 3's land calls `westSea` and wave 2's `weather.ts` has none. Seen by the Builder at native size: at `reveal-4` wave 3's cloud is smeared slabs with polygonal shadow blocks and a milky cyclone, wave 2's is small crisp cells in rows and a cyclone with open beaded arms, which is what the approved picture shows. At `reveal-3` neither is good, smeared streaks against specks. So `src/places/reveal/shared/weather.ts` is wave 2's file with wave 3's `westSea`, wave 3's `lowGround` (the drift while the view is held, which answered round 19's severe issue that the world is frozen) and wave 3's amount line, and `src/places/reveal/sky/index.ts` is wave 3's file with the lit side of the low cloud read as in wave 2 and wave 2's cyclone. Kept from wave 3: the Heart's beat on the cloud, the day's light, the cloud dark against the sun's image, the veil, the storm's glimmer, the vapour. Draft stills of the four keys, made once each, show round 19's look with the west sea open water. 914 tests pass and the build is clean. The Reveal's measures, G12 and G15 are run on the new commit by a render machine before the unit is marked. If one is red the two files go back to `b902c2ec`. `mat/specks.jpg` is still loaded and no longer read by a shader, and `mat/cyclone-wide.jpg` is not loaded. Both are left for the Reveal's polish, where the cloud is the first item: the specks at `reveal-2` and `reveal-3` are what round 19's critics called confetti.
 
 ## Notes from Brandon
 
@@ -2040,3 +2041,4 @@ What happens next is yours:
 - 2026-11-26 05:22 UTC. - 2026-11-26 05:06 UTC. The gate of Phase 4 on the judged commit `9741a5fb`: pass. 20 of 21 passed, 0 failed, 0 not built, 1 sound check open (A1: the transcript of clip n8 reads "neverland"; the clip is remade from the new script when it is final). G1 to G13, G15, G16 and A2 to A6 pass.
 - 2026-11-26 05:22 UTC. - 2026-11-26 05:21 UTC. Round 2, the critics (36, all answered between 05:08 and 05:21 UTC; two sent their answer to the Builder instead of the clerk and were saved word for word). Scores of 10, round 1 in brackets, every place still a fail against 9: Breath match 5 and 4 (2), filmed 4 and 4 (4), motion 5 and 5 (4); Spine 2 and 2 (3), 3 and 3 (2), 6 and 6 (4); Ribs 2 and 3 (2), 5 and 4 (3), 5 and 3 (5); Marsh 4 and 5 (2), 3 and 4 (4), 4 and 4 (4); Eye 3 and 3 (3), 4 and 4 (2), 6 and 6 (2); Reveal 5 and 6 (2), 5, 4 and 5 (2), 3 (5). The cards are in `scorecards/round-014/` to `round-019/`. Packs: rendered on six machines from `9741a5fb` in 21 (`breath`), 16 (`spine`), 15.8 (`ribs`), 15 (`marsh`), 11.9 (`eye`) and 6 (`reveal`) minutes. The measures of five places went to five renderers at 05:21 UTC; the Reveal's runs on the Builder's machine since 05:06 UTC.
 - 2026-11-26 05:22 UTC. - 2026-11-26 05:19 UTC. Status 93 shown (the Heart unchanged, the wave 3 source pictures of three owners). `main` is `f1beec9a`; pushes work.
+- 2026-11-26 09:58 UTC. Status 105 shown at 09:57 UTC: the crab fix at the Ribs, the Reveal's cloud (round 3 beside the new build), the Breath and the Eye in motion.
