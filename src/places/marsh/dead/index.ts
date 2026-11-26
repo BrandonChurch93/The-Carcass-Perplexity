@@ -109,22 +109,36 @@ const BODY_GLSL = /* glsl */ `
 uniform sampler2D tPic;
 uniform sampler2D tRelief;
 uniform float uFlip;
+uniform vec4 uBody;
+uniform vec4 uShape;
 varying vec2 vUv;
+varying vec2 vCard;
 varying vec3 vWorld;
 varying vec3 vRight;
 varying vec3 vUp;
 float bodyCover(vec2 uv) {
   vec3 pic = texture2D(tPic, uv).rgb;
   return max(smoothstep(0.03, 0.07, max(pic.r, max(pic.g, pic.b))), smoothstep(0.05, 0.1, textureLod(tRelief, uv, 2.0).r));
+}
+// What is left of each is a different heap: one whole, one slumped to an end, one broken in the middle into two.
+float bodyTop(vec2 c) {
+  float f = 1.0;
+  if (uShape.x > 1.5) f = 0.3 + 0.7 * pow(abs(cos(3.14159 * (c.x * 1.05 + 0.12))), 0.8);
+  else if (uShape.x > 0.5) f = mix(0.26, 1.0, smoothstep(0.08, 0.72, c.x));
+  if (uShape.x > 0.5) {
+    f *= smoothstep(0.0, 0.12, c.x) * (1.0 - smoothstep(0.88, 1.0, c.x));
+    f += 0.035 * sin(c.x * 31.0 + uShape.w) + 0.02 * sin(c.x * 83.0 + uShape.w * 1.7);
+  }
+  return uBody.w + (1.0 - uBody.w) * f;
 }`;
 
 const BODY_VERTEX = /* glsl */ `
 uniform vec4 uAt;
-uniform vec4 uBody;
 ${BODY_GLSL}
 void main() {
   vec2 uv = vec2(position.x + 0.5, 0.5 - position.z);
-  vUv = vec2(mix(uv.x, 1.0 - uv.x, uFlip), uv.y);
+  vCard = uv;
+  vUv = vec2(mix(uShape.y, uShape.z, mix(uv.x, 1.0 - uv.x, uFlip)), uv.y);
   vec2 tc = normalize(cameraPosition.xz - uAt.xz);
   vec3 toLens = vec3(tc.x, 0.0, tc.y);
   vRight = vec3(tc.y, 0.0, -tc.x);
@@ -144,7 +158,6 @@ void main() {
 const BODY_FRAGMENT = /* glsl */ `
 precision highp float;
 uniform vec4 uAt;
-uniform vec4 uBody;
 uniform sampler2D tSalt;
 uniform float uSeed;
 ${NOISE_GLSL}
@@ -153,7 +166,9 @@ ${BODY_GLSL}
 const vec3 LUMA = vec3(0.3, 0.5, 0.2);
 const vec3 RIME_MEAN = vec3(0.389, 0.306, 0.282);
 void main() {
-  float covered = bodyCover(vUv);
+  float top = bodyTop(vCard);
+  float covered = bodyCover(vUv) * (1.0 - step(top, vCard.y));
+  float lip = smoothstep(top - 0.12, top, vCard.y) * step(0.5, uShape.x);
   vec3 pic = texture2D(tPic, vUv).rgb;
   float l0 = dot(pic, LUMA);
   // Its form from the relief, blurred; its ribs and knobs from the light and dark of the picture.
@@ -171,7 +186,7 @@ void main() {
   vec2 cs = vec2(dot(texture2D(tSalt, cq + vec2(0.004, 0.0)).rgb / RIME_MEAN, LUMA) - cl, dot(texture2D(tSalt, cq + vec2(0.0, 0.004)).rgb / RIME_MEAN, LUMA) - cl);
   float crusted = smoothstep(0.25, 0.6, vnoise(vUv * vec2(9.0, 5.0) + uSeed) * 0.6 + 0.4 * cl);
   vec3 face = normalize(cross(vRight, vUp));
-  vec3 n = normalize(face - vRight * (hx * 9.0 + lx * 0.7 / (l0 + 0.1) + cs.x * 5.0) - vUp * (hy * 9.0 + ly * 0.7 / (l0 + 0.1) + cs.y * 5.0) + vec3(0.0, 0.35, 0.0));
+  vec3 n = normalize(face - vRight * (hx * 9.0 + lx * 0.7 / (l0 + 0.1) + cs.x * 5.0) - vUp * (hy * 9.0 + ly * 0.7 / (l0 + 0.1) + cs.y * 5.0) + vec3(0.0, 0.35, 0.0) + vUp * (1.6 * lip));
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 rime = texture2D(tSalt, vWorld.xz * 2.0 + vWorld.y * 1.3 + uSeed).rgb / RIME_MEAN;
   // Every read of a picture comes before any discard: the software renderer leaves the slopes of a dropped pixel's neighbours undefined.
@@ -181,8 +196,11 @@ void main() {
   vec3 albedo = pic * 0.62 * mix(vec3(1.0), rime, 0.2);
   float hollow = smoothstep(0.05, 0.38, l0);
   // The bars of the ribs are all but grown over: what is left of the animal is its shape and the dark of its deepest hollows.
-  vec3 crust = vec3(0.3, 0.287, 0.28) * (0.55 + 0.6 * cl);
+  vec3 crust = vec3(0.26, 0.246, 0.238) * (0.5 + 0.62 * cl);
   albedo = mix(albedo, crust, (0.5 + 0.38 * crusted) * (0.35 + 0.65 * hollow));
+  // In places the crust has broken away and the hide under it shows, dark and drawn tight over what is left.
+  float bare = smoothstep(0.5, 0.62, vnoise(vCard * vec2(5.0, 3.0) + uSeed * 1.3) + 0.22 * (cl - 1.0));
+  albedo = mix(albedo, vec3(0.085, 0.066, 0.058) * (0.45 + 1.5 * l0), 0.88 * bare);
   hollow = mix(hollow, 1.0, 0.45);
   float above = vWorld.y - uAt.y;
   float stain = (1.0 - smoothstep(0.0, 0.16, above + 0.12 * (vnoise(vWorld.xz * 3.0 + uSeed) - 0.5)));
@@ -197,7 +215,7 @@ const BODY_DEPTH = /* glsl */ `
 precision highp float;
 ${BODY_GLSL}
 void main() {
-  if (bodyCover(vUv) < 0.5) discard;
+  if (bodyCover(vUv) * (1.0 - step(bodyTop(vCard), vCard.y)) < 0.5) discard;
   gl_FragColor = vec4(0.0);
 }`;
 
@@ -219,6 +237,9 @@ function grid(across: number, down: number): THREE.BufferGeometry {
   g.setIndex(new THREE.BufferAttribute(index, 1));
   return g;
 }
+
+// Which heap each dead one is, in the order of the anchors: the three the lens of the thin crust sees are all different.
+const KINDS = [1, 0, 2, 2, 0, 1];
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('dead');
@@ -268,7 +289,9 @@ export function create(ctx: Context): Piece {
     mesh.updateMatrixWorld();
     cards.push({ mesh, material, x: p[0], z: p[1], yaw: d.yaw, size });
     // The body: about three metres of it, sunk in its apron to a different depth each, the furthest gone the deepest.
-    const wide = 3.3 * d.size * rng.range(0.75, 1.2);
+    const kind = KINDS[bodies.length % KINDS.length] as number;
+    const crop: [number, number] = kind === 1 ? [0, 0.72] : kind === 2 ? [0.22, 1] : [0, 1];
+    const wide = 3.3 * d.size * rng.range(0.75, 1.2) * (crop[1] - crop[0]) * (kind === 0 ? 1 : 1.15);
     const bodyMaterial = new THREE.ShaderMaterial({
       uniforms: {
         ...ctx.rig.uniforms,
@@ -277,7 +300,8 @@ export function create(ctx: Context): Piece {
         tSalt: { value: tSalt },
         uFlip: { value: rng.next() < 0.5 ? 1 : 0 },
         uAt: { value: new THREE.Vector4(p[0], ground + 0.04, p[1], under ? 0 : (rng.next() < 0.5 ? -1 : 1) * rng.range(0.12, 0.42)) },
-        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672, under ? 0.95 : rng.range(0.45, 0.85), under ? 0.6 : rng.range(0.22, 0.5)) },
+        uShape: { value: new THREE.Vector4(kind, crop[0], crop[1], rng.range(0, 6)) },
+        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672 / (crop[1] - crop[0]) / (kind === 0 ? 1 : 1.15), under ? 0.95 : rng.range(0.45, 0.85), under ? 0.6 : rng.range(0.22, 0.5)) },
         uSeed: { value: rng.range(1, 60) },
       },
       vertexShader: BODY_VERTEX,

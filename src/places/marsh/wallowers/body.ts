@@ -156,7 +156,8 @@ void main() {
   float cover = smoothstep(0.45, 0.85, textureLod(tPicA, uv, 1.5).r);
   float top = smoothstep(0.25, 0.6, nr.y) * smoothstep(1.2, 1.6, vRest.y) * (1.0 - vInfo.z);
   float side = max(smoothstep(0.06, 0.3, abs(nr.z)), top) * cover;
-  vec3 pic = texture2D(tPic, uv).rgb;
+  // On a young one the plate is a third the size: its pores would read as down, so it is taken softer and the folds are left.
+  vec3 pic = texture2D(tPic, uv, 1.7 * (1.0 - smoothstep(0.4, 0.8, uK))).rgb;
   vec2 e = vec2(3.0 / 1774.0, 3.0 / 887.0);
   float l0 = dot(textureLod(tPic, uv, 1.6).rgb, LUMA);
   float lx = dot(textureLod(tPic, uv + vec2(e.x, 0.0), 1.6).rgb, LUMA);
@@ -210,12 +211,18 @@ void main() {
   albedo = mix(albedo, vec3(0.25, 0.23, 0.21) * (0.7 + 0.5 * grain), 0.5 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
   float smear = uMudded * smoothstep(0.3, 0.55, 0.55 * patchy + 0.45 * vnoise3(q * 5.3 + uSeed * 2.0) + 0.5 * damp + 0.25 * (1.0 - grain));
-  albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.135), vec3(0.075, 0.032, 0.026), damp) * mix(0.55, 1.25, smoothstep(0.25, 0.8, grain)), 0.5 * smear);
+  albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.135), vec3(0.075, 0.032, 0.026), damp) * mix(0.55, 1.25, smoothstep(0.25, 0.8, grain)), 0.72 * smear);
   // Where it dried thickest it has caked into pale plates, each with a dark edge where it has lifted from the hide.
   float plate = vnoise3(q * 2.6 + uSeed * 5.0) + 0.25 * (vnoise3(q * 9.0 + uSeed) - 0.5);
-  float cake = uMudded * (1.0 - damp) * smoothstep(0.5, 0.56, plate);
-  albedo = mix(albedo, vec3(0.27, 0.225, 0.195) * (0.6 + 0.6 * grain), 0.6 * cake);
-  albedo *= 1.0 - 0.6 * uMudded * (1.0 - damp) * smoothstep(0.46, 0.5, plate) * (1.0 - smoothstep(0.5, 0.54, plate));
+  float cake = uMudded * (1.0 - damp) * smoothstep(0.4, 0.46, plate);
+  albedo = mix(albedo, vec3(0.25, 0.195, 0.16) * (0.55 + 0.7 * grain), 0.8 * cake);
+  albedo *= 1.0 - 0.7 * uMudded * (1.0 - damp) * smoothstep(0.36, 0.4, plate) * (1.0 - smoothstep(0.4, 0.44, plate));
+  // The cake has cracked as it dried: fine dark lines through each plate.
+  float crack = abs(vnoise3(q * 11.0 + uSeed * 7.0) - 0.5);
+  albedo *= 1.0 - 0.55 * cake * (1.0 - smoothstep(0.0, 0.035, crack));
+  // On the ones that feed, mud is daubed and clotted on the lower third, where they have lain in it.
+  float daub = (1.0 - uMudded) * damp * (1.0 - wet) * (1.0 - horn) * smoothstep(0.42, 0.52, plate);
+  albedo = mix(albedo, vec3(0.095, 0.052, 0.042) * (0.55 + 0.7 * grain), 0.7 * daub);
   // Mud lies in every crease of it.
   albedo *= mix(1.0, mix(0.72, 1.06, smoothstep(0.2, 0.7, grain)), uMudded);
   // And where the mud has dried the longest, on its back, the salt has come out of it white.
