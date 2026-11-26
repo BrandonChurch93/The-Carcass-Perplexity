@@ -44,6 +44,7 @@ export function createRig(): Rig {
     uCover: { value: null },
     uMatPopcorn: { value: null },
     uMatStreaks: { value: null },
+    uMatSpecks: { value: null },
     uCoverRect: { value: new THREE.Vector4(...COVER_RECT) },
   };
   let landHeight: Height = () => 0;

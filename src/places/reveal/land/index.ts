@@ -45,7 +45,6 @@ uniform vec2 uLava;
 uniform vec2 uThroat;
 uniform vec2 uSalt;
 uniform vec2 uGlint;
-uniform float uPlanetKm;
 varying vec3 vWorld;
 
 // The deep sea under the sky of this planet: what comes back from the water itself, as a reflectance.
@@ -372,20 +371,18 @@ void main() {
   }
   // The sky on the surface, and the sun on its waves: the glint lies where the surface of the planet leans half way to the sun.
   float calm = texture2D(uCloudTile, xz / 1900.0 + vec2(0.5, 0.2), 2.0).b;
-  float rough = mix(0.07, 0.125, clamp(0.25 + 0.5 * (calm - 0.5) + 0.3 * (sparkle - 1.0), 0.0, 1.0));
-  // (The glint slides as the planet turns under the sun.)
-  float lean = length(xz - uGlint - max(uTime - 20.0, 0.0) * vec2(4.0, 3.0)) / uPlanetKm;
-  // (As the eye draws away the glint is seen smaller: a warm soft patch at the right, never a disc that fills the sea.)
-  float drawIn = mix(1.0, 0.6, smoothstep(22.0, 60.0, uTime));
-  rough *= drawIn;
-  float t2 = lean * lean / (rough * rough);
-  float lobe = drawIn * drawIn * exp(-t2) / (3.14159 * rough * rough);
+  // The image of the sun on the sea: a small hot core, silver round it, falling away softly with no edge. It slides west along the
+  // coast as the planet turns under the sun (uGlint is where it lies on the titan frame).
+  // (It is drawn out toward the edge of the planet, as the sun's image is on a curved sea.)
+  float glintFar = length((xz - uGlint - (uTime - 8.1) * vec2(-12.0, 2.5)) * vec2(0.62, 1.0));
+  float glintCore = exp(-glintFar * glintFar / 14000.0);
+  float glintSkirt = pow(1.0 + glintFar * glintFar / 70000.0, -1.3);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   water += uSkyColour * (0.003 + 0.028 * fresnel) * sparkle * (0.4 + 0.6 * shade);
   // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
   water += uSkyColour * 0.012 * (sparkle - 0.8) * inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm));
-  water += uSunColour * vec3(1.0, 0.86, 0.66) * lobe * 0.0026 * shade * (0.8 + 0.2 * sparkle);
-  water += uSunColour * vec3(1.0, 0.84, 0.62) * 0.0098 * exp(-lean * lean / mix(0.0023, 0.0012, smoothstep(22.0, 60.0, uTime))) * (0.78 + 0.22 * shade) * (0.62 + 0.38 * sparkle) * (0.85 + 0.3 * calm);
+  // (In the core the sea is one sheet of light; out in the skirt the wind lanes and slicks of the surface show in it.)
+  water += uSunColour * mix(vec3(0.84, 0.92, 1.0), vec3(1.0, 0.93, 0.82), glintCore) * (0.11 * glintCore + 0.085 * glintSkirt) * (0.35 + 0.65 * shade) * mix(0.4 + 0.6 * sparkle, 0.75 + 0.25 * sparkle, glintCore) * (0.9 + 0.2 * calm);
 
   // (From orbit the sea is seen through the blue of the air over it.)
   water += vec3(0.003, 0.007, 0.011) * smoothstep(700.0, 1300.0, uViewKm) * (0.5 + 0.5 * shade);
@@ -485,9 +482,8 @@ export function create(ctx: Context): Piece {
     uLava: { value: new THREE.Vector2(X(AT.lava.x), Z(AT.lava.y)) },
     uThroat: { value: new THREE.Vector2(X(AT.throat.x), Z(AT.throat.y)) },
     uSalt: { value: new THREE.Vector2(X(AT.salt.x), Z(AT.salt.y) + 10 * KM) },
-    // Where on the sea the sun's own image lies, and the radius of the planet, km.
-    uGlint: { value: new THREE.Vector2(X(6350), Z(1050)) },
-    uPlanetKm: { value: 10183 * KM },
+    // Where on the sea the sun's own image lies on the titan frame.
+    uGlint: { value: new THREE.Vector2(X(6480), Z(1010)) },
   };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT });
   const sheet = new THREE.Mesh(new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2), material);
