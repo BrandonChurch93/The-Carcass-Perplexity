@@ -27,6 +27,9 @@ export function create(ctx: Context): Piece {
 
   const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY }) });
   const data = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}-nh.png`, { kind: 'data', anisotropy: ANISOTROPY }) });
+  // The generated sheets of the open land (assets-src/spine/land/make-tiles.py): each read with four taps where a face is seen aslant.
+  const sheet = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`land/${name}.jpg`, { anisotropy: 4 }) });
+  const sheetData = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`land/${name}-nh.jpg`, { kind: 'data', anisotropy: 4 }) });
   // The height of the frame being drawn, in pixels: read from the renderer as each mesh is drawn.
   const tall = { value: 1080 };
   const size = new THREE.Vector2();
@@ -48,6 +51,14 @@ export function create(ctx: Context): Piece {
     tCanal: picture('canal'),
     tCanalNh: data('canal'),
     tRime: picture('rime'),
+    tGran: sheet('granite'),
+    tGranNh: sheetData('granite'),
+    tPack: sheet('snowpack'),
+    tPackNh: sheetData('snowpack'),
+    tCrop: sheet('outcrop'),
+    tCropNh: sheetData('outcrop'),
+    tFrost: sheet('rimeface'),
+    tFrostNh: sheetData('rimeface'),
     // The dome's own pictures, for what is seen of the sky from inside the canal: in the ice of the floor, in the glaze on the rock.
     tSkyDusk: { value: ctx.assets.texture('mat/sky.jpg', { repeat: false }) },
     tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
