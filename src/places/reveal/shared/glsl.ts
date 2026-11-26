@@ -24,7 +24,14 @@ uniform vec3 uSkyColour;
 uniform vec3 uAirColour;
 uniform vec4 uLimb;
 uniform float uViewKm;
-uniform float uArrive;`;
+uniform float uArrive;
+uniform float uDusk;
+uniform vec4 uTerm;
+uniform vec3 uMoonDir;
+uniform vec3 uMoonColour;
+uniform float uGain;
+uniform vec4 uCalm;
+uniform vec2 uEmber;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -55,6 +62,48 @@ float dayAt(vec2 xz) {
   return 1.0 - 0.6 * smoothstep(edge - 250.0, edge + 450.0, along);
 }
 
+// ---- the end of the day. Nothing below is reached while uDusk is 0: every caller branches on it. ----
+// The sine of the sun's height over the ground at a point: the planet is round, so the sun stands lower the farther a place lies from it.
+float sunHeight(vec2 xz) {
+  vec2 q = (xz - uTerm.xy) * uTerm.z;
+  return mix(uSunDir.y, uSunDir.y * sqrt(1.0 - min(dot(q, q), 0.96)) + dot(uSunDir.xz, q), uTerm.w);
+}
+// How much of the sun's disc stands over the horizon there: the terminator is a band, not a line.
+float sunSeen(float h) {
+  return smoothstep(-0.04, 0.1, h);
+}
+// The colour the air leaves the sun's light at that height: white, gold, then red.
+vec3 sunTint(float h) {
+  return exp(-vec3(0.015, 0.05, 0.12) * max(1.0 / (max(h, 0.0) + 0.045) - 1.746, 0.0));
+}
+// The light of the sky there: it outlasts the sun, and is gone a little way into the night.
+float skySeen(float h) {
+  float s = smoothstep(-0.17, 0.1, h);
+  return s * s;
+}
+// Toward the sun as a place at that height sees it.
+vec3 sunToward(float h) {
+  float m = max(h, 0.03);
+  vec2 along = normalize(uSunDir.xz);
+  return normalize(mix(uSunDir, vec3(along.x * sqrt(1.0 - m * m), m, along.y * sqrt(1.0 - m * m)), uTerm.w));
+}
+// The sun's light on a place: its colour and how much of it is left, by the height of the sun there. day is the flat day's own figure.
+vec3 sunLightAt(float h, float day) {
+  return uSunColour * mix(mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * day, sunTint(h) * sunSeen(h), uTerm.w);
+}
+// The sky's light on a place, as a share of the day's, and bluer as the sun goes.
+vec3 skyLightAt(float h, float day) {
+  return mix(vec3(0.5 + 0.5 * day), mix(vec3(0.5, 0.68, 1.1), vec3(1.0), sunSeen(h)) * skySeen(h), uTerm.w);
+}
+// The light the air itself throws back toward the eye there, as a share of the day's: it goes with the sun, a little after the ground.
+vec3 airLightAt(float h) {
+  return mix(vec3(1.0), 0.75 * sunTint(h + 0.03) * sunSeen(h + 0.05) + 0.25 * vec3(0.5, 0.68, 1.1) * skySeen(h) + 0.3 * uMoonColour, uTerm.w);
+}
+// The exposure of the camera, on the radiance a surface writes.
+vec3 exposed(vec3 c) {
+  return c * uGain;
+}
+
 // Irradiance of the blue sky on a face: the air's scattered light, from above.
 vec3 skyIrradiance(vec3 n) {
   return uSkyColour * (0.45 + 0.4 * n.y);
@@ -71,6 +120,18 @@ float contactAt(vec3 p) {
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the share of the sun that reaches the point (cloud shade, relief shade).
 vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float day = dayAt(p.xz);
+  if (uDusk > 0.0) {
+    float sunH = sunHeight(p.xz);
+    vec3 toSun = sunToward(sunH);
+    vec3 sunLight = sunLightAt(sunH, day) * occ;
+    vec3 eDusk = sunLight * max(dot(n, toSun), 0.0) + skyIrradiance(n) * (0.55 + 0.45 * occ) * skyLightAt(sunH, day) + uMoonColour * max(dot(n, uMoonDir), 0.0) * (0.6 + 0.4 * occ);
+    vec3 hDusk = normalize(toSun + v);
+    float aDusk = max(rough * rough, 0.002);
+    float nhDusk = max(dot(n, hDusk), 0.0);
+    float dDusk = aDusk * aDusk / (3.14159 * pow(nhDusk * nhDusk * (aDusk * aDusk - 1.0) + 1.0, 2.0));
+    float fDusk = 0.02 + 0.98 * pow(1.0 - max(dot(v, hDusk), 0.0), 5.0);
+    return albedo * eDusk / 3.14159 + sunLight * (dDusk * fDusk * 0.25 * step(0.0, dot(n, toSun)));
+  }
   float sun = max(dot(n, uSunDir), 0.0) * occ * day;
   vec3 e = uSunColour * mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * sun + skyIrradiance(n) * (0.55 + 0.45 * occ) * (0.5 + 0.5 * day);
   vec3 c = albedo * e / 3.14159;
@@ -84,6 +145,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
 vec3 rigOut(vec3 c) {
+  if (uDusk > 0.0) return c * uGain * (1.0 - uSolo);
   return c * (1.0 - uSolo);
 }`;
 

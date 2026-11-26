@@ -103,6 +103,9 @@ export function poseAt(frame: number): Pose {
 /** Seconds of the place at which the Heart's glow beats once on the body. */
 export const BEAT = eventSeconds(UNIT, 'heartbeat');
 
+/** Seconds of the place at which the day begins to end: one whole frame after film frame 10880, so that no sample of that frame's shutter sees any of it. */
+export const DUSK_FROM = (10881 - RISE_FIRST) / FPS;
+
 /** The rings on the lake that the Eye hands over fade out between these widths of the view, in units of the width at the first frame. */
 export const RING_FADE: [number, number] = [1.0, 1.9];
 export { handoff, traced, tuning };

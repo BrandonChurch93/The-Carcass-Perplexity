@@ -24,11 +24,22 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 // The beat of the Heart on the underside of the cloud that stands over the chest: a dull red, small, come and gone in a second.
 vec3 beatOnCloud(vec2 xz) {
   vec2 fromHeart = xz - vec2(${X(AT.lava.x).toFixed(1)}, ${Z(AT.lava.y).toFixed(1)});
+  // (By night the fire is on the underside of the cloud all the time, dull, and the beat swells it.)
+  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.02 * (0.4 + 1.6 * uBeat)) * exp(-dot(fromHeart, fromHeart) / 90000.0);
   return vec3(1.0, 0.2, 0.04) * 0.3 * max(uBeat - 0.12, 0.0) * exp(-dot(fromHeart, fromHeart) / 90000.0);
 }
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float day = dayAt(xz);
+  if (uDusk > 0.0) {
+    // Cloud stands over the ground: it keeps the sun a moment after the ground under it has lost it, the high cloud longest.
+    float sunH = sunHeight(xz) + uTerm.w * (0.05 + 0.08 * high);
+    float low = mix(uSunDir.y, 0.22 + 0.6 * max(sunH, 0.0), uTerm.w);
+    vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
+    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + uMoonColour * (0.2 + 0.25 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
+    float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
+    return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
+  }
   float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick) * day;
   vec3 c = 0.72 * (uSunColour * mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * sun + uSkyColour * 0.9 * (0.5 + 0.5 * day)) / 3.14159;
   float air = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
@@ -70,6 +81,7 @@ void main() {
   float a = low.x * 0.94;
   float b = high * mix(0.09, 0.11, smoothstep(700.0, 1300.0, uViewKm));
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
+  if (uDusk > 0.0) colour = lowColour * a * (1.0 - b) + highColour * b + exposed(beatOnCloud(xz)) * a;
   float alpha = 1.0 - (1.0 - a) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
@@ -214,6 +226,8 @@ void main() {
   vec2 d2 = p - vec2(0.62, -0.06);
   float glimmer = (0.14 + 0.16 * vnoise(vec2(uTime * 0.9, 3.0))) * exp(-dot(d1, d1) * 40.0) + (0.1 + 0.16 * vnoise(vec2(uTime * 1.3, 11.0))) * exp(-dot(d2, d2) * 55.0);
   glow += vec3(0.55, 0.42, 1.0) * glimmer * thick;
+  if (uDusk > 0.0) glow *= uCalm.x;
+  if (uDusk > 0.0) colour += exposed(beatOnCloud(vWorld.xz)) - beatOnCloud(vWorld.xz);
   colour += glow * 1.6 + beatOnCloud(vWorld.xz);
   float alpha = clamp(thick, 0.0, 0.98);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
@@ -270,6 +284,14 @@ void main() {
     vec2 off = vec2(hash12(cell + 7.3), hash12(cell + 19.1)) - 0.5;
     float star = step(0.94, pick) * exp(-dot(within - 0.6 * off, within - 0.6 * off) * 520.0) * (0.25 + 0.75 * hash12(cell + 3.7)) * smoothstep(20.0, 90.0, km);
     vec3 colour = (glow + vec3(0.85, 0.9, 1.0) * star * 0.3) * a;
+    if (uDusk > 0.0) {
+      // The air at the edge keeps the sun longest, on the side the sun went: a twilight arc, warm against the planet and blue above,
+      // and when that has gone a thin line of airglow all round. The stars come out as the exposure opens.
+      float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.16;
+      vec3 arc = mix(vec3(1.0), mix(vec3(1.5, 0.62, 0.2), vec3(0.7, 0.85, 1.2), smoothstep(0.0, 40.0, km)) * sunSeen(sunH - 0.05) + 0.05 * skySeen(sunH), uTerm.w);
+      float line = exp(-pow((km - 22.0) / 9.0, 2.0));
+      colour = (exposed(glow * arc + vec3(0.2, 0.75, 0.42) * 0.0035 * line * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45)) * a;
+    }
     gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
     return;
   }
@@ -277,6 +299,11 @@ void main() {
   float band = km < 0.0 ? inner : 0.0;
   vec3 blue = mix(vec3(0.06, 0.2, 0.62), vec3(0.42, 0.66, 1.0), band * band);
   vec3 colour = blue * band * 0.5;
+  if (uDusk > 0.0) {
+    float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.12;
+    vec3 arc = mix(vec3(1.0), mix(vec3(1.6, 0.6, 0.18), vec3(0.75, 0.85, 1.1), sunSeen(sunH - 0.12)) * sunSeen(sunH - 0.03) + 0.04 * skySeen(sunH), uTerm.w);
+    colour = exposed(colour * arc);
+  }
   gl_FragColor = vec4(colour * (1.0 - uSolo), 0.0);
 }`;
 
