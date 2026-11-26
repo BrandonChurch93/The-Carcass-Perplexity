@@ -142,6 +142,8 @@ float hazeBetween(vec3 ro, vec3 rd, float a, float b) {
 }
 
 // The steam of source i at p: a column that widens and thins as it rises, torn into lumps that climb.
+float steamShade;
+float steamSide;
 float steamAt(vec3 p, int i) {
   vec4 A = uSteamA[i];
   vec4 B = uSteamB[i];
@@ -167,7 +169,11 @@ float steamAt(vec3 p, int i) {
   float lumps = textureLod(tNoise, q, 0.0).r * 0.55 + textureLod(tNoise, q * 3.1 + 0.31, 0.0).b * 0.45;
   // Torn: there is clear air between the strands, more of it the higher they are.
   // (Soft strands: a hard edge on them is cut into dots by the few steps a view takes through a column.)
-  float shape = smoothstep(0.3 + 0.2 * h, 0.95, lumps * (0.75 + 0.6 * body));
+  float shape = smoothstep(0.2 + 0.24 * h, 0.9, lumps * (0.75 + 0.6 * body));
+  // How deep in the column's heart this is: low and on the axis is deep, the top and the rim are not.
+  steamShade = body * (1.0 - h) * (0.45 + 0.55 * shape);
+  // The rim toward the brighter side of the overcast is the lit one.
+  steamSide = dot(d, RIG_KEY) * (1.0 - body);
   return B.w * shape * body * pow(1.0 - h, 1.2) * smoothstep(-0.02, 0.1, h + 0.02);
 }
 
@@ -216,8 +222,8 @@ void main() {
         float sigma = steamAt(ro + rd * (t0 + (float(k) + jitter) * dt), i);
         if (sigma <= 0.0) continue;
         float a = 1.0 - exp(-sigma * dt);
-        // Thick steam is a little darker in its heart than at its lit edge.
-        sum += trans * a * steamLit * mix(1.0, 0.86, clamp(sigma * 1.5, 0.0, 1.0));
+        // Steam is white where the sky reaches it, on its top and its rim, and grey in its heart, where its own body stands over it.
+        sum += trans * a * steamLit * (mix(1.07, 0.7, smoothstep(0.05, 0.75, steamShade)) + 0.1 * steamSide);
         trans *= 1.0 - a;
       }
     }
@@ -293,7 +299,7 @@ void main() {
         }
         if (sigma <= 0.0) continue;
         float a = 1.0 - exp(-sigma * dt);
-        sum += trans * a * steamLit * mix(1.0, 0.86, clamp(sigma * 1.5, 0.0, 1.0));
+        sum += trans * a * steamLit * (mix(1.07, 0.7, smoothstep(0.05, 0.75, steamShade)) + 0.1 * steamSide);
         trans *= 1.0 - a;
         if (trans < 0.02) break;
       }
@@ -381,6 +387,7 @@ void main() {
     trans *= 1.0 - r;
   }
   // What the nearness of things takes from a surface's light is taken before the air lies over it.
-  if (open < 0.5) trans *= closedIn(2 * here);
+  // So is the slow shade of the cloud that crosses the flats.
+  if (open < 0.5) trans *= closedIn(2 * here) * mix(rigCloud((ro + rd * far).xz), 1.0, smoothstep(2000.0, 6000.0, far));
   gl_FragColor = vec4(sum, trans);
 }`;
