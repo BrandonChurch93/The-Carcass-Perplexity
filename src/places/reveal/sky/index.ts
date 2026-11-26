@@ -38,7 +38,7 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
     float sunH = sunHeight(xz) + uTerm.w * (0.03 + 0.03 * high);
     float low = mix(uSunDir.y, 0.2 + 0.62 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.07 + 0.19 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
+    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.1 + 0.26 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
     return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
   }
@@ -78,9 +78,6 @@ void main() {
   float bankA = (1.0 - exp(-1.3 * bankIs)) * uArrive;
   float fogA = 0.5 * (1.0 - exp(-1.2 * max(fogDepth(fogAt), 0.0))) * uArrive;
   float under = highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
-  vec2 hv = up + uTime * vec2(6.5, -3.8);
-  if (uLive > 0.0) hv += uWx * vec2(36.0, -21.0);
-  float ice = 0.25 + 0.5 * high;
 
   vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
   vec3 highColour = cloudLight(up, 0.5 + 0.45 * highFlank, 0.5 + 0.5 * high, 1.0);
@@ -104,14 +101,12 @@ void main() {
     // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
     // take too little light to show over the ground.)
     float gone = uTerm.w * (1.0 - smoothstep(-0.1, 0.34, sunHeight(xz)));
-    // (From this height, by night, cloud is sheets, bands and a few great cells, dim under the moon; the small bright bodies of the day are not seen.)
+    // (By night the low field is seen by the moon, dimmer and thinner than by day: its bodies stay, its thin is lost.)
     float sunk = 1.0 - smoothstep(-0.34, -0.06, sunHeight(xz));
-    float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone) * (1.0 - 0.88 * sunk);
-    float sheets = smoothstep(0.56, 0.78, 0.58 * vnoise(hv / 1500.0 + 7.0) + 0.3 * vnoise(hv / 560.0 + 3.0) + 0.12 * vnoise(hv / 210.0 + 11.0)) * (0.55 + 0.45 * ice);
-    vec2 bv = mat2(0.94, 0.34, -0.34, 0.94) * (hv + uWx * vec2(-14.0, 5.0));
-    float bands = smoothstep(0.6, 0.82, 0.7 * vnoise(bv / vec2(3400.0, 620.0) + 5.0) + 0.3 * vnoise(bv / vec2(1100.0, 260.0) + 9.0)) * (0.6 + 0.4 * ice);
-    // (The thin ice far above is lost against the day; with the camera's eye open it is seen, soft sheets that catch the moon.)
-    float bNight = min(0.8, b * (1.0 - 0.5 * gone + 1.5 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))) + sunk * (0.3 * sheets + 0.24 * bands));
+    float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone) * (1.0 - 0.35 * sunk);
+    // (The thin ice far above is lost against the day; with the camera's eye open it is seen, a veil of fibres that catches the
+    // moon and crosses the land on its own wind. It is the same ice as by day, the photograph's own, and it never hides the ground.)
+    float bNight = min(0.45, b * (1.0 - 0.5 * gone + 0.7 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))));
     // (What the land holds goes the way of the low field: only its body is left to the moon.)
     float heldNight = mix(1.0, 0.5, gone) * (1.0 - 0.8 * sunk);
     bankA *= heldNight;

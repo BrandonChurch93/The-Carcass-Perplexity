@@ -85,7 +85,7 @@ export function dusk(seconds: number): Dusk {
   const thin = ease(1.2, 6.8, since);
   // And over the last seconds the dark comes over the whole picture, the ember the last thing to go.
   const last = ease(4.4, 6.82, since);
-  const dark = 1 - 0.31 * last;
+  const dark = 1 - 0.12 * last;
   const gain = Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.05 * thin) * dark;
   return {
     dusk: Math.max(1e-4, ease(0, 7, u)),

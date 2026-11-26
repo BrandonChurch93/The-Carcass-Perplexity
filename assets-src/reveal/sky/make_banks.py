@@ -57,6 +57,11 @@ lifted = gx * WIND[0] + gy * WIND[1]
 # (The cloud forms a little up the wind of the slope that makes it, and is carried a little way over.)
 lifted = ndimage.shift(lifted, (-WIND[1] * 6, -WIND[0] * 6), order=1, mode='nearest')
 bank = step(0.0012, 0.006, lifted) * step(0.03, 0.16, smooth)
+# (A bank needs land up the wind of it. A lone range that stands in the sea across the wind, a shin, an upper arm, the rim of the
+# skull, would hold one long bank on its seaward side, a white bar that doubles the limb: there the wind comes off open water and
+# the range is too narrow to pile it. So a bank is kept only where the ground 130 km up the wind is land as well.)
+fetch = ndimage.shift(ndimage.gaussian_filter(land, 9), (WIND[1] * 31, WIND[0] * 31), order=1, mode='nearest')
+bank = bank * step(0.62, 0.95, fetch)
 bank = ndimage.gaussian_filter(bank, 6)
 
 # Fog: the wide basins that lie well under the ground round them (not the narrow valleys between two ridges).

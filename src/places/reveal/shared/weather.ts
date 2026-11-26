@@ -96,6 +96,14 @@ float lowDepth(vec2 at) {
   vec2 w = lowGround(at);
   // The sky stands clear over the lake of the Eye, where the rise begins.
   float amount = max(coverAt(at).g, 0.6 * westSea(at)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+  // (Held, the weather is seen to pass: where cloud stands at all is carried by the wind too. The painted cover, which stands on
+  // the ground, gives way through the hold to systems that travel, and only its wide clearing over the land and round the
+  // cyclone stays where it is.)
+  if (uLive > 0.0) {
+    float open = smoothstep(0.12, 0.4, texture2D(uCover, clamp((at - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0), 5.0).g);
+    float travels = texture2D(uCloudTile, mat2(0.88, 0.47, -0.47, 0.88) * (w + uWx * vec2(6.0, -9.0)) / 3300.0 + vec2(0.37, 0.81), 3.0).b;
+    amount = mix(amount, open * (0.2 + 0.8 * smoothstep(0.36, 0.62, travels)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))}))), smoothstep(0.0, 22.0, uWx));
+  }
   // (Where it is thick and where torn is carried by winds of its own, a little off the wind of the field: the banks change as they go.)
   vec2 wSlow = w;
   vec2 wLane = w;
@@ -213,7 +221,10 @@ float bankDepth(vec2 bankAt) {
   float today = smoothstep(0.32, 0.6, texture2D(uCloudTile, bankAt / 2600.0 + vec2(0.21, 0.67), 3.0).b);
   // (The sky stands clear over the lake of the Eye, where the rise begins.)
   float clear = smoothstep(100.0, 230.0, length(bankAt - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
-  return pow(body * mix(1.0, fine, 0.6), 0.6) * held * today * clear * 1.85 - 0.75;
+  // (A bank is the wind's own cloud, caught: it is drawn out along the wind in streaks as the low field is, torn where the streak
+  // photograph is clear and thin round its clusters, so no bank has the outline of the range that holds it.)
+  float drawn = cloudIn(uMatStreaks, LOW_A * w / vec2(560.0, 300.0) + vec2(0.71, 0.36), 0.31);
+  return (0.3 * drawn + pow(drawn * body * mix(1.0, fine, 0.6), 0.6)) * held * today * clear * 1.5 - 0.6;
 }
 float fogDepth(vec2 fogAt) {
   float held = texture2D(uBanks, clamp((fogAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).g;
