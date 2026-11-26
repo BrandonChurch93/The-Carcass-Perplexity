@@ -212,7 +212,7 @@ export function create(ctx: Context): Piece {
   const spindrift = new Spindrift(3600, { ...rig.uniforms, ...shared, uOpenSea: { value: openSea } });
   spindrift.mesh.visible = false;
   ctx.scene.add(ctx.parts.built('surf', surf.mesh, breaker.mesh, spindrift.mesh), breaker.mesh, spindrift.mesh);
-  for (const e of surfAt) if (e.id % 3 === 0) ctx.sources.steam.push({ at: [e.x, 1, e.z], radius: 9, strength: 0.25 * e.power, rise: 14, kind: 'spray', lean: [WIND.to[0] * 0.8, WIND.to[1] * 0.8] });
+  // The surf's own haze is not handed to the air: at a blade's foot it stood as a grey column with straight sides.
 
   // Where the bore breaks on a blade or a stack it bursts up white; the two cliffs of the gate stand close to the last shot's lens.
   const sites: BoreSite[] = feet
