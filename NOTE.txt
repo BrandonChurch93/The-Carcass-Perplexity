@@ -1,5 +1,4 @@
-2026-11-26 02:36 UTC
-work at e04ba5b on agent/breath-life-2
-minute 88: dead wader rebuilt from carcass-low.jpg on rays from the rim lens (breath-2); gold glare and paler skin at breath-1; plumes as threads next
-look-1.jpg = out/work/hb3-breath-2.png
-look-2.jpg = out/work/hb3-breath-1.png
+2026-11-26 02:46 UTC
+work at 2a63c59 on agent/breath-life-2
+minute 96: plumes rebuilt as fanned sprays of fine drooping threads from mat/plume.jpg (breath-3); still too big and blobby at the cut, next smaller sprays and edge glow
+look-1.jpg = out/work/hb4-breath-3.png
