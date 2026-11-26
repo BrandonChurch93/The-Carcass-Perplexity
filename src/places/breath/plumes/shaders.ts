@@ -1,4 +1,4 @@
-// The gill-plumes in the light of the rig: wine-red wet barbs on dark stems, near black in the heart of the bush, blood red where the low sun comes through.
+// The gill-plumes in the light of the rig: wine-red wet threads on dark stems, near black in the heart of the bush, blood red where the low sun comes through.
 // The sway is in the vertex shader and is a function of the time alone: it travels from the root to the tip, and the breath of the shaft lifts it.
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
@@ -28,69 +28,6 @@ vec3 swayed(vec3 p, vec3 root, vec4 sway, float tall) {
   return p + vec3(push.x + trail.x, lift + bob, push.y + trail.y);
 }`;
 
-export const STEM_VERTEX = /* glsl */ `
-attribute vec3 aTangent;
-attribute vec4 aSide;
-attribute vec4 aSway;
-attribute vec4 aTint;
-attribute vec3 aRoot;
-uniform float uPixel;
-varying vec3 vWorld;
-varying vec3 vAxis;
-varying vec3 vAcross;
-varying vec4 vSide;
-varying vec4 vTint;
-${SWAY_GLSL}
-void main() {
-  float tall = aTint.w;
-  vec3 p = swayed(position, aRoot, aSway, tall);
-  vec3 ahead = swayed(position + aTangent * 0.02 * tall, aRoot, aSway, tall);
-  vec3 axis = normalize(ahead - p);
-  vec3 toEye = cameraPosition - p;
-  float far = length(toEye);
-  vec3 across = normalize(cross(axis, toEye));
-  // Never thinner than a pixel: a stem too fine to draw would flicker.
-  float wide = max(aSide.y, 0.6 * uPixel * far);
-  p += across * aSide.x * wide;
-  vWorld = p;
-  vAxis = axis;
-  vAcross = across;
-  vSide = aSide;
-  vTint = aTint;
-  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
-}`;
-
-export const STEM_FRAGMENT = /* glsl */ `
-precision highp float;
-varying vec3 vWorld;
-varying vec3 vAxis;
-varying vec3 vAcross;
-varying vec4 vSide;
-varying vec4 vTint;
-${NOISE_GLSL}
-${RIG_GLSL}
-void main() {
-  vec3 v = normalize(cameraPosition - vWorld);
-  float e = clamp(vSide.x, -1.0, 1.0);
-  // A round rod seen from the side: the normal turns from one edge to the other.
-  vec3 facing = normalize(cross(vAcross, vAxis));
-  if (dot(facing, v) < 0.0) facing = -facing;
-  vec3 n = normalize(vAcross * e * 0.92 + facing * sqrt(max(1.0 - e * e * 0.85, 0.0)));
-  float u = vSide.z;
-  float reach = vTint.z;
-  float tone = vTint.y;
-  // Pale wet flesh, knotted, where it leaves the holdfast; wine-dark along its length.
-  float mottle = vnoise(vec2(u * 46.0 + tone * 31.0, e * 2.0 + tone * 7.0));
-  vec3 flesh = mix(vec3(0.34, 0.2, 0.19), vec3(0.5, 0.36, 0.33), mottle);
-  vec3 albedo = mix(flesh, vec3(0.2, 0.035, 0.04), smoothstep(0.04, 0.3, reach + 0.1 * (mottle - 0.5)));
-  float occ = mix(0.6, 1.0, vTint.x) * mix(0.5, 1.0, smoothstep(0.0, 0.5, reach));
-  vec3 colour = rigShade(vWorld, n, v, albedo, 0.35, occ);
-  // Wet and round against the bright fog: a thin warm edge on the side of the sun, and the fog's own light in the shade.
-  float edge_ = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0) * clamp(0.3 + dot(n, uSunDir), 0.0, 1.0);
-  colour += uSunColour * vec3(0.9, 0.35, 0.28) * (0.5 * edge_ * sunAt(vWorld)) + albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 / 3.14159) * occ;
-  gl_FragColor = vec4(rigOut(colour), 1.0);
-}`;
-
 export const VANE_VERTEX = /* glsl */ `
 attribute vec4 aVane;
 attribute vec4 aSway;
@@ -108,18 +45,19 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
-// Which pixels of a vane are barb: read from the picture of a frond (its relief stands on black), the same in the picture and in the depth the fog reads.
+// Which pixels of a spray are thread: read from the cover of the picture, the same in the picture and in the depth the fog reads.
 const VANE_TEST = /* glsl */ `
   vec3 toEye = cameraPosition - vWorld;
   float far = length(toEye);
   vec3 v = toEye / far;
   float px = uPixel * far;
-  // Along the stem from the root to the tip; across it from the stem out to the ends of the barbs, on the side this vane is.
-  vec2 at = vec2(0.035 + 0.945 * vVane.x, 0.5 + 0.475 * vVane.y * vVane.w);
-  float relief = texture2D(tFrondH, at).r;
-  // Far off the finest barbs are thinner than a pixel and would go: the frond is kept as full as it is near.
-  float cut = mix(0.3, 0.05, smoothstep(0.001, 0.01, px));
-  if (relief < cut) discard;
+  vec2 at = vVane.xy;
+  vec3 told = texture2D(tPlume, at).rgb;
+  // The picture stands on black: between its threads it is dark, and there the spray is open.
+  float cover = texture2D(tPlumeA, at).r * smoothstep(0.035, 0.12, told.r);
+  // Far off the threads are thinner than a pixel and would go: the spray is kept as full as it is near.
+  float cut = mix(0.5, 0.2, smoothstep(0.002, 0.012, px));
+  if (cover < cut) discard;
 `;
 
 export const VANE_FRAGMENT = /* glsl */ `
@@ -128,8 +66,8 @@ varying vec3 vWorld;
 varying vec4 vVane;
 varying vec4 vTint;
 uniform float uPixel;
-uniform sampler2D tFrond;
-uniform sampler2D tFrondH;
+uniform sampler2D tPlume;
+uniform sampler2D tPlumeA;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -139,40 +77,43 @@ ${VANE_TEST}
   float tone = vTint.y;
   float reach = vTint.z;
   float within = vTint.x;
-  // The colour is the picture's: wet wine-red barbs, pale and fleshy at the stem, each frond a little darker or lighter than the next.
-  vec3 told = texture2D(tFrond, at).rgb;
   // Wet, it is darker than the picture of it and deeper in the red: the pale of the stem stays, the mid tones go to wine.
-  vec3 albedo = told * sqrt(told) * vec3(1.15, 0.36, 0.42) * (0.6 + 0.5 * tone);
-  // How thick the frond is here: its heart is many barbs deep, its edge is single hairs.
-  float body = smoothstep(cut, 0.7, relief);
-  // The heart of the bush is near black: the barbs shade each other where they are thick, at the stem and inside.
-  float occ = mix(0.9, 0.3, body) * mix(0.15, 1.0, within * within) * mix(0.4, 1.0, smoothstep(0.0, 0.5, reach));
-  // The relief of the picture turns the light a little: a lock is strands and not a blade.
-  float lift = (texture2D(tFrondH, at + vec2(0.0015, 0.0)).r - relief) + (texture2D(tFrondH, at + vec2(0.0, 0.004)).r - relief);
-  n = normalize(n + 1.6 * lift * normalize(vec3(uSunDir.x, 0.4, uSunDir.z)));
+  vec3 albedo = pow(told, vec3(1.2)) * vec3(1.3, 0.52, 0.58) * (0.6 + 0.5 * tone);
+  // The drops that hang at the ends of the threads are water, not red.
+  float most = max(told.r, max(told.g, told.b));
+  float drop = smoothstep(0.4, 0.2, (most - min(told.r, min(told.g, told.b))) / max(most, 0.01)) * smoothstep(0.3, 0.55, most);
+  albedo = mix(albedo, vec3(0.5, 0.47, 0.44), drop);
+  // How thick the spray is here: its heart is many threads deep, its edge is single ones.
+  float body = smoothstep(0.25, 0.85, texture2D(tPlumeA, at, 4.0).r);
+  // The heart of the bush is near black: the threads shade each other where they are thick, at the stem and inside.
+  float occ = mix(1.0, 0.45, body) * mix(0.22, 1.0, within) * mix(0.45, 1.0, smoothstep(0.05, 0.5, reach));
+  // A thread is round and hangs: what light it turns is from above and from the side of the sun, not from the face of the sheet.
+  float fine = dot(told, vec3(0.5, 0.3, 0.2));
+  n = normalize(n * 0.5 + vec3(0.0, 0.55, 0.0) + (fine - 0.25) * 1.4 * normalize(vec3(uSunDir.x, 0.3, uSunDir.z)));
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.3, occ);
-  // Thin and wet against the low sun: the light comes through blood red, most through the single hairs at the edge and looking toward the sun.
+  // Thin and wet against the low sun: the light comes through blood red, most through the single threads at the edge and looking toward the sun.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
-  float thin = (1.0 - 0.75 * body) * (0.15 + 0.85 * within);
   float lit = sunAt(vWorld);
   float hair = (1.0 - body) * (1.0 - body);
-  colour += mix(vec3(0.8, 0.05, 0.03), vec3(1.0, 0.24, 0.1), hair * against) * uSunColour * (thin * (0.04 + 0.96 * against * against) * 0.24 * lit) * (0.25 + 0.75 * hair) * (0.3 + 2.0 * dot(told, vec3(0.33)));
-  // Wet: here and there a barb turns the sun to the lens.
-  float glint = smoothstep(0.93, 0.99, vnoise(at * vec2(300.0, 110.0) + vVane.z)) * smoothstep(0.003, 0.001, px) * (1.0 - body);
-  colour += uSunColour * glint * (0.03 + 0.5 * pow(against, 6.0)) * lit;
+  float thin = (0.12 + 0.88 * hair) * (0.25 + 0.75 * within);
+  colour += mix(vec3(0.8, 0.05, 0.03), vec3(1.0, 0.24, 0.1), hair * against) * uSunColour * (thin * (0.05 + 0.95 * against * against) * 0.22 * lit) * (0.3 + 2.0 * dot(told, vec3(0.33)));
+  // Wet: here and there a thread turns the sun to the lens.
+  float glint = smoothstep(0.95, 0.995, vnoise(at * vec2(700.0, 500.0) + vVane.z)) * smoothstep(0.003, 0.001, px);
+  colour += uSunColour * glint * (0.02 + 0.4 * pow(against, 6.0)) * lit * (0.3 + 0.7 * within);
   // The fog behind and round it is bright: it fills the red from every side, so the shade in the bush is wine and not black.
-  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.1 / 3.14159) * (0.35 + 0.65 * occ);
+  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.3 / 3.14159) * (0.2 + 0.8 * occ);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
-/** The vanes cut holes: this is all the engine needs to lay their depth before the picture. */
+/** The sprays cut holes: this is all the engine needs to lay their depth before the picture. */
 export const VANE_DEPTH = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
 varying vec4 vVane;
 varying vec4 vTint;
 uniform float uPixel;
-uniform sampler2D tFrondH;
+uniform sampler2D tPlume;
+uniform sampler2D tPlumeA;
 void main() {
 ${VANE_TEST}  gl_FragColor = vec4(0.0);
 }`;

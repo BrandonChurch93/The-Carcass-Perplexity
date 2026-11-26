@@ -90,11 +90,11 @@ const WIDTH: [number, number][] = [[0, 0.09], [0.1, 0.2], [0.25, 0.24], [0.42, 0
 
 // A leg from above the hip (t below 0, inside the trunk: the haunch on the pelvis, the blade on the ribs) to the ground (1):
 // half thickness fore and aft, half thickness across, and how far the middle of the section stands aft (-) or fore (+) of the bone. For a leg whose joint is at 0.47.
-const HIND_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.17], [0.05, 0.185], [0.16, 0.13], [0.3, 0.07], [0.41, 0.043], [0.47, 0.05], [0.53, 0.031], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
-const HIND_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.07], [0.05, 0.078], [0.16, 0.066], [0.3, 0.045], [0.41, 0.034], [0.47, 0.039], [0.53, 0.027], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
+const HIND_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.17], [0.05, 0.185], [0.16, 0.13], [0.3, 0.07], [0.41, 0.04], [0.47, 0.064], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
+const HIND_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.07], [0.05, 0.078], [0.16, 0.066], [0.3, 0.045], [0.41, 0.032], [0.47, 0.05], [0.53, 0.026], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
 const HIND_C: [number, number][] = [[-0.16, -0.05], [0.05, -0.035], [0.3, -0.006], [0.41, 0], [0.47, -0.02], [0.53, -0.004], [0.9, 0], [0.97, 0.008], [1, 0.022]];
-const FORE_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.14], [0.05, 0.15], [0.16, 0.115], [0.3, 0.068], [0.41, 0.043], [0.47, 0.052], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
-const FORE_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.062], [0.05, 0.07], [0.16, 0.062], [0.3, 0.045], [0.41, 0.034], [0.47, 0.042], [0.53, 0.027], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
+const FORE_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.14], [0.05, 0.15], [0.16, 0.115], [0.3, 0.068], [0.41, 0.04], [0.47, 0.064], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
+const FORE_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.062], [0.05, 0.07], [0.16, 0.062], [0.3, 0.045], [0.41, 0.032], [0.47, 0.05], [0.53, 0.026], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
 const FORE_C: [number, number][] = [[-0.16, 0.02], [0.05, 0.01], [0.3, 0], [0.41, 0.004], [0.47, 0.016], [0.53, 0.004], [0.9, 0], [0.97, 0.008], [1, 0.022]];
 
 /** The fields of one animal at rest. Each is a distance in metres, near enough for a surface and a blend. */
@@ -179,20 +179,20 @@ export class Fields {
     // The points of the hips, the pins beside the tail, the hollow of the flank behind the last rib, the blades of the shoulders.
     const fh = (0.25 - 0.5) * this.L;
     const hipTop = this.top(0.25);
-    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.82) - 0.05 * k * g, 0.08 * k);
+    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.74) - 0.034 * k * g, 0.11 * k);
     const fp = (0.035 - 0.5) * this.L;
     d = smin(d, Math.hypot(f - fp, u - (this.top(0.035) - 0.035 * k), ar - 0.075 * k) - 0.036 * k * g, 0.06 * k);
     const fo = (0.37 - 0.5) * this.L;
     const hollow = Math.hypot((f - fo) / (0.13 * k), (u - (u0 + 0.3 * a)) / (0.16 * k), (ar - (w + 0.035 * k)) / (0.085 * k));
     d = smax(d, -(hollow - 1) * 0.085 * k, 0.06 * k);
     const fb = (0.82 - 0.5) * this.L;
-    d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.62) / (0.04 * k)) - 1) * 0.04 * k, 0.05 * k);
+    d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.56) / (0.04 * k)) - 1) * 0.03 * k, 0.09 * k);
     // The ribs.
     const [phase, cage] = this.ribs(f, u, r);
     if (cage > 0) {
       const rib = (0.5 + 0.5 * Math.cos(phase * Math.PI * 2)) ** 1.4;
       const each = 0.45 + 0.55 * hash(Math.round(phase) * 3.7 + s.seed);
-      d -= (0.0045 * rib * each - 0.0015) * cage * k * g;
+      d -= (0.003 * rib * each - 0.001) * cage * k * g;
     }
     return d;
   }
