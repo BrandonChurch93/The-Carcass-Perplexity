@@ -266,10 +266,10 @@ export function create(ctx: Context): Piece {
     if (forLens && !(toward > 0.2 * far && Math.abs(seen.x) < 0.95 && seen.y > -0.92 && seen.y < 0.85 && seen.z < 1)) continue;
     if (inFrame) {
       // No two knots within a fifth of the frame of each other: whole faces of the cliff stay bare.
-      if (taken.some((t) => Math.hypot((t[0] - seen.x) * 1.78, t[1] - seen.y) < 0.42)) continue;
+      if (taken.some((t) => Math.hypot((t[0] - seen.x) * 1.78, t[1] - seen.y) < 0.58)) continue;
       taken.push([seen.x, seen.y]);
     }
-    const knot = scatter.next() < 0.3 ? 2 : 1;
+    const knot = scatter.next() < 0.22 ? 2 : 1;
     let along = 0;
     for (let k = 0; k < knot && sitters.length < COLONISTS; k++) {
       const size = scatter.range(0.7, 1.3) * GROW;
@@ -314,8 +314,8 @@ export function create(ctx: Context): Piece {
     fig.limbs[1] = (cell === 3 ? -1 : 1) * (0.1 * Math.sin(t * 1.9 + s.seed * 17) + row * 0.3 * Math.sin(t * 9 + s.seed * 9));
     fig.limbs[2] = 0.1 * Math.sin(t * 1.7 + s.seed * 12) + row * 0.3 * Math.sin(t * 9 + s.seed * 9 + 0.5);
     // Weathered each to its own grey, and one in three in the shade of the rock over it.
-    fig.tone = 0.5 + 0.6 * ((s.seed * 13.7) % 1);
-    fig.shade = (s.seed * 7.3) % 1 < 0.36 ? 0.75 + 0.25 * ((s.seed * 3.1) % 1) : 0;
+    fig.tone = 0.74 + 0.36 * ((s.seed * 13.7) % 1);
+    fig.shade = (s.seed * 7.3) % 1 < 0.3 ? 0.4 + 0.25 * ((s.seed * 3.1) % 1) : 0;
   };
 
   // ---- The flock in the air ----

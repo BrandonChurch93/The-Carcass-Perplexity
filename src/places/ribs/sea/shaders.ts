@@ -361,6 +361,13 @@ void main() {
   vec3 body = vec3(0.125, 0.11, 0.085) * e / 3.14159;
   // The meniscus: where the water climbs a stone it turns up to the sky, a bright thread along the line.
   float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
+  // A ruffled stretch throws the bright sky wide of the lens and reads dark; near the lens the eye looks down into the water and the bed shows.
+  refl *= 1.0 - 0.4 * paw * (1.0 - lip);
+  // Under the wall the flat lies in its shade, dark slate, and only long slack bands across it still hold the sky.
+  float under = smoothstep(430.0, 160.0, p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3));
+  float slack = smoothstep(0.5, 0.85, 0.5 + 0.5 * sin(p.y * 0.33 + 5.0 * barB.a + 2.0 * sin(p.x * 0.017)));
+  refl *= 1.0 - 0.62 * under * (1.0 - 0.8 * slack);
+  fres *= mix(0.55, 1.0, smoothstep(8.0, 34.0, distance(cameraPosition, vWorld)));
   fres = mix(fres, 0.8, 0.18 * lip);
   col = fres * refl + (1.0 - fres) * murk * body;
   alpha = fres + (1.0 - fres) * murk;
