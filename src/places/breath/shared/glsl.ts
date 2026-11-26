@@ -58,7 +58,7 @@ ${RIG_UNIFORMS_GLSL}
 // approved wide view. The dome, the air and every mirror read this one function. sunGlow is its brightness alone.
 vec3 sunHalo(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
-  return uGlowColour * (vec3(0.54, 0.5, 0.4) * exp(-a / 0.7) + vec3(1.35, 0.66, 0.17) * exp(-a / 0.34) + vec3(7.0, 1.8, 0.15) * exp(-a / 0.1));
+  return uGlowColour * (vec3(0.56, 0.48, 0.34) * exp(-a / 0.7) + vec3(1.4, 0.62, 0.1) * exp(-a / 0.34) + vec3(7.0, 1.8, 0.15) * exp(-a / 0.1));
 }
 float sunGlow(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));

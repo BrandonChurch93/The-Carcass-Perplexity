@@ -34,8 +34,14 @@ export const onRim = (bearingDeg: number, out = 0): [number, number] => {
 };
 
 const soft = (v: number): number => 0.5 * (v + Math.sqrt(v * v + 64));
-export const channelX = (z: number): number => -50 + 0.4 * soft(z - 5) - 0.3 * soft(-z - 10);
-export const channelHalf = (z: number): number => 5 + 2.5 * sat((5 - z) / 15) + 14 * sat((-5 - z) / 40) + 140 * sat((z - 130) / 220);
+/** The channel winds: it swings a few metres either way to the south and a dozen to the north, and it narrows and widens as it goes. Not
+ *  between z -40 and -16, where the waders feed under the low lens: there it runs as it was laid out. */
+const reach = (z: number): number => smooth((Math.abs(z + 28) - 12) / 25);
+const wind = (z: number): number => Math.sin((z + 28) / 22) * (z < -28 ? 11 : 4.5) * reach(z);
+/** How wide the channel is at z against its plan: 0.6 to 1.4. */
+export const channelWidth = (z: number): number => 1 + reach(z) * (0.8 * Math.sin(z / 17 + 0.6) * Math.sin(z / 41 + 2.2) - 0.1);
+export const channelX = (z: number): number => -50 + 0.4 * soft(z - 5) - 0.3 * soft(-z - 10) + wind(z);
+export const channelHalf = (z: number): number => (5 + 2.5 * sat((5 - z) / 15) + 14 * sat((-5 - z) / 40)) * channelWidth(z) + 140 * sat((z - 130) / 220);
 
 // A lattice noise that is the same wherever and whenever it is asked: 0 to 1.
 const hash2 = (ix: number, iz: number): number => {
@@ -93,7 +99,7 @@ export function lipHeight(bearing: number, r: number): number {
 export function smoothGround(x: number, z: number): number {
   const xc = channelX(z);
   // The west bank comes in closer than the east one where the channel opens out to the north.
-  const half = x < xc ? 5 - 1.2 * sat((z - 12) / 12) + 2.5 * sat((5 - z) / 15) + 8 * sat((-25 - z) / 50) + 140 * sat((z - 130) / 220) : channelHalf(z);
+  const half = x < xc ? (5 - 1.2 * sat((z - 12) / 12) + 2.5 * sat((5 - z) / 15) + 8 * sat((-25 - z) / 50)) * channelWidth(z) + 140 * sat((z - 130) / 220) : channelHalf(z);
   const r = Math.hypot(x, z);
   const b = bearingOf(x, z);
   const broad = 0.6 * (fbm2(x / 23 + 3.1, z / 23 + 7.7, 3) - 0.5);
@@ -112,7 +118,8 @@ export function smoothGround(x: number, z: number): number {
     south * (x < xc ? 1.7 * Math.sin(z * 0.19 + 0.6) + 1.1 * Math.sin(z * 0.43 + 2.2) : 1.5 * Math.sin(z * 0.23 + 3.1) + 1.2 * Math.sin(z * 0.51 + 0.4)) + 5 * (noise2(z / 9 + (x < xc ? 40 : 0), 0.5) - 0.5) + 2.2 * (noise2(z / 2.7 + (x < xc ? 11 : 0), 3.5) - 0.5);
   // Metres inside the bank: the bed shelves gently, ankle deep for a long way, and only the middle of the wide reach is deeper.
   const inside = half - 2 + ragged - Math.abs(x - xc);
-  const bank = smooth(inside / lerp(4.5, 2.6, south) + 1);
+  // The bank is a broken edge of plate, not a beach: the rock stands to the water and the bed begins a stride inside it.
+  const bank = smooth(inside / lerp(2.4, 1.6, south) + 1);
   const bedLevel = SEA - 0.06 - 0.16 * smooth(inside / 4) - 0.5 * smooth((inside - 9) / 6);
   let h = lerp(base, bedLevel, bank);
   // A bar of rock in the shallows, just awash: it lies under the lens of the picture of the waders feeding.
@@ -131,6 +138,9 @@ export const inFine = (x: number, z: number, margin = 0): boolean => x > FINE.mi
 // ground and its colour is the colour of the ground: the two are one picture, so every crack is dark and every plate has its own edge.
 const plateBytes = Uint8Array.from(atob(PLATE_DATA), (c) => c.charCodeAt(0));
 export const PLATE = { metres: PLATE_METRES, depth: (PLATE_METRES * PLATE_HEIGHT) / PLATE_WIDTH };
+// The plate's beds run across its picture. Every lens of this place looks north, so laid square they ran across every frame, and a low
+// lens drew them out into long parallel streaks like the grain of a plank. The plate is laid turned, its beds running nearly away from the lens.
+export const PLATE_TURN = { cos: Math.cos(1.25), sin: Math.sin(1.25) };
 /** The plate's relief is drawn as this many metres from black to white. */
 export const RELIEF = 0.08;
 /** Under this level of the plate's relief water stands: the pool in the plate's hollow. */
@@ -140,7 +150,9 @@ const mirror = (t: number): number => {
   return m > 1 ? 2 - m : m;
 };
 /** The plate's relief at a place on the ground: 0 to 1. */
-export function plateAt(x: number, z: number): number {
+export function plateAt(wx: number, wz: number): number {
+  const x = PLATE_TURN.cos * wx + PLATE_TURN.sin * wz;
+  const z = PLATE_TURN.cos * wz - PLATE_TURN.sin * wx;
   const fx = Math.min(PLATE_WIDTH - 1.001, Math.max(0, mirror(x / PLATE.metres) * PLATE_WIDTH - 0.5));
   const fz = Math.min(PLATE_HEIGHT - 1.001, Math.max(0, mirror(z / PLATE.depth) * PLATE_HEIGHT - 0.5));
   const i = Math.floor(fx);
@@ -203,8 +215,8 @@ function slabOf(i: number, j: number): Slab {
 export function bedded(x: number, z: number): number {
   // Where a place looks for its plate is pushed about: broadly, by the plate picture's own relief (so an edge runs along a crack of the
   // picture), and finely (so an edge is snapped into pieces of a metre or two).
-  const wx = x + 4.2 * (fbm2(x / 11 + 7.1, z / 11 + 2.3, 2) - 0.5) + 1.3 * (plateAt(x + 1.7, z - 0.9) - 0.5) + 0.7 * (noise2(x / 1.7 + 3.3, z / 1.7 + 9.1) - 0.5);
-  const wz = z + 4.2 * (fbm2(x / 11 + 31.4, z / 11 + 18.6, 2) - 0.5) + 1.3 * (plateAt(x - 1.1, z + 2.3) - 0.5) + 0.7 * (noise2(x / 1.7 + 14.7, z / 1.7 + 5.2) - 0.5);
+  const wx = x + 4.2 * (fbm2(x / 11 + 7.1, z / 11 + 2.3, 2) - 0.5) + 1.3 * (plateAt(x + 1.7, z - 0.9) - 0.5) + 0.7 * (noise2(x / 1.7 + 3.3, z / 1.7 + 9.1) - 0.5) + 0.32 * (noise2(x / 0.5 + 6.1, z / 0.5 + 1.4) - 0.5);
+  const wz = z + 4.2 * (fbm2(x / 11 + 31.4, z / 11 + 18.6, 2) - 0.5) + 1.3 * (plateAt(x - 1.1, z + 2.3) - 0.5) + 0.7 * (noise2(x / 1.7 + 14.7, z / 1.7 + 5.2) - 0.5) + 0.32 * (noise2(x / 0.5 + 2.9, z / 0.5 + 8.3) - 0.5);
   const ci = Math.floor(wx / SLAB);
   const cj = Math.floor(wz / SLAB);
   let d1 = 1e9;
@@ -252,7 +264,8 @@ export function ground(x: number, z: number): number {
   const fine = smooth((edge - 2) / 9);
   if (fine <= 0) return base;
   // The plates stand out of the tide and die away at its edge; the picture's own cracks are shallow grooves in their tops.
-  const shore = smooth((base - (SEA - 0.05)) / 0.25);
+  // (The bed of the channel is never higher than 6 cm under the tide: it stays as it was laid, for the feet that stand on it.)
+  const shore = smooth((base - (SEA - 0.04)) / 0.08);
   const relief = lerp(base, lerp(base, bedded(x, z), shore) + RELIEF * (Math.max(plateAt(x, z), POOL) - 0.5), fine);
   const pad = padAt(x, z);
   return pad > 0 ? lerp(relief, padLevel() - 0.03 * sat(Math.hypot(x - PAD[0], z - PAD[1]) / 3.2) ** 2, pad) : relief;
