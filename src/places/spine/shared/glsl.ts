@@ -158,7 +158,7 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   }
   // A strike lights the rock; it does not bleach it. However strong a light is made, what it casts closes on a ceiling.
   e *= EMITTER_CAST;
-  return e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / 1.2);
+  return e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / 0.8);
 }
 
 // For the owners: how much of the sky a face keeps when the land in front of it stands higher than it does. 1 in the open, toward 0 in a crack,

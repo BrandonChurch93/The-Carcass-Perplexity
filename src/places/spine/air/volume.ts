@@ -254,6 +254,11 @@ void main() {
       float n = 0.6 * noise(vec3(a.x / 90.0, a.y / 13.0, 0.3)).g + 0.4 * noise(vec3(a.x / 21.0, a.y / 3.7, 0.7)).a;
       float column = smoothstep(0.5, 0.78, n) * 3.2 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 2.5);
       column *= uClear.z > 0.0 ? smoothstep(0.4 * uClear.z, uClear.z, length(hit.xz - uClear.xy)) : 1.0;
+      // Close to the lens the same snow is seen as it is: snakes a hand deep and a pace wide, running fast along the ground.
+      if (far < 90.0) {
+        float snake = 0.6 * noise(vec3(a.x / 9.0, a.y / 1.1, 0.5)).r + 0.4 * noise(vec3(a.x / 2.6, a.y / 0.33, 0.9)).b;
+        column += smoothstep(0.47, 0.7, snake) * (0.5 + n) * 2.6 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 0.5) * smoothstep(90.0, 25.0, far) * (uClear.z > 0.0 ? smoothstep(0.8, 2.0, length(hit.xz - uClear.xy)) : 1.0);
+      }
       float kept = exp(-0.11 * column * smoothstep(1400.0, 500.0, far) * uShow.w * uStage.x);
       vec3 snow = 0.9 * (skyOn(1.0, rd) + min(strikeLight(hit) * 0.2, vec3(0.1, 0.085, 0.17)));
       light = light + through * (1.0 - kept) * snow;
@@ -326,6 +331,13 @@ void main() {
     vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.005, 0.011);
     light = light * (1.0 - veiled) + snowAir * veiled;
     through *= 1.0 - veiled;
+    // Scud: torn cloud that races low past the spires on the gale, paler than the storm behind it (staged by shot, uStage.w).
+    if (uStage.w > 0.0 && far > 120.0) {
+      float scud = 0.7 * noise(vec3(azV * 0.8 - uTime * 0.05, rd.y * 5.0 + uTime * 0.006, 0.61)).r + 0.3 * noise(vec3(azV * 2.6 - uTime * 0.14, rd.y * 15.0, 0.2)).b;
+      float wisp = uStage.w * uShow.x * smoothstep(350.0, 1500.0, far) * smoothstep(0.5, 0.85, scud) * 0.32;
+      light = light * (1.0 - wisp) + (snowAir * 1.5 + vec3(0.008, 0.008, 0.012)) * wisp;
+      through *= 1.0 - wisp;
+    }
   }
 
   // The snow before the lens: flecks in the gale, each a few times longer than it is wide, of many sizes, in gusts, at six depths. Each depth
