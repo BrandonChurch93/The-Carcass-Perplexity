@@ -1,7 +1,6 @@
-2026-11-26 17:17 UTC
-work at 1fa86b3 on agent/ribs-drowned
-v2 at 1fa86b3: hung pose from the hook, stain, weed bands, wet run; main merged in; guards 4409 10027 1759 equal
-look-1.jpg = out/work/v2-wide.jpg
-look-2.jpg = out/work/sheet-drowned.jpg
-look-3.jpg = out/work/v2-2081-crop.jpg
-look-4.jpg = out/work/v2-crops-final.jpg
+2026-11-26 17:39 UTC
+work at f162299 on agent/ribs-drowned
+v3 at f162299: pose kept, bands off, hide pale again; guards 4409 10027 1759 equal
+look-1.jpg = out/work/v3-2081.jpg
+look-2.jpg = out/work/v3-wide.jpg
+look-3.jpg = out/work/v3-2081-crop.jpg
