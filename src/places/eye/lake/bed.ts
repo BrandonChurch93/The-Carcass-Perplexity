@@ -16,6 +16,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     tMat: { value: mirrored(ctx.assets.texture('mat/matplate.jpg', { anisotropy: 8 })) },
     tMatH: { value: mirrored(ctx.assets.texture('mat/matplate-h.png', { kind: 'data', anisotropy: 4 })) },
     tMatTile: { value: mirrored(ctx.assets.texture('mat/matdark.jpg', { anisotropy: 8 })) },
+    tComb: { value: mirrored(ctx.assets.texture('lake/matcomb.jpg', { anisotropy: 4 })) },
     tLipPlate: { value: mirrored(ctx.assets.texture('mat/lip.jpg', { anisotropy: 8 })) },
     tLipPlateH: { value: mirrored(ctx.assets.texture('mat/lip-h.png', { kind: 'data', anisotropy: 4 })) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
@@ -34,6 +35,7 @@ uniform float uLipIn;
 uniform sampler2D tMat;
 uniform sampler2D tMatH;
 uniform sampler2D tMatTile;
+uniform sampler2D tComb;
 uniform sampler2D tLipPlate;
 uniform sampler2D tLipPlateH;
 uniform sampler2D tSinter;
@@ -57,7 +59,8 @@ struct Bed {
 float lipRadius(vec2 xz) {
   // Drawn in, the deep keeps its reach toward the wide camera and gives way at the sides: an oval lying along the look.
   float toward = dot(xz, vec2(-0.309, 0.951)) / max(length(xz), 1.0);
-  return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r - uLipIn * (1.0 - 0.95 * smoothstep(0.6, 1.0, toward));
+  vec2 lips = texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).rg;
+  return mix(lips.x, lips.y, min(uLipIn / 100.0, 1.0)) - uLipIn * (1.0 - 0.95 * smoothstep(0.6, 1.0, toward));
 }
 
 float lipWander(vec2 xz) {
@@ -71,6 +74,8 @@ float lipWander(vec2 xz) {
 vec3 lipHere(vec2 xz) {
   float e = 2.0;
   float m = length(xz) - lipRadius(xz);
+  // Far from the lip only the distance is asked for: its line is not traced there.
+  if (abs(m) > 140.0) return vec3(m, vec2(-xz.y, xz.x) / max(length(xz), 1.0));
   vec2 g = vec2((length(xz + vec2(e, 0.0)) - lipRadius(xz + vec2(e, 0.0))) - (length(xz - vec2(e, 0.0)) - lipRadius(xz - vec2(e, 0.0))),
     (length(xz + vec2(0.0, e)) - lipRadius(xz + vec2(0.0, e))) - (length(xz - vec2(0.0, e)) - lipRadius(xz - vec2(0.0, e)))) / (2.0 * e);
   float steep = max(length(g), 1.0);
@@ -168,8 +173,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float toLip = smoothstep(MAT_REACH + uLipIn, 30.0, w);
   float thin = smoothstep(4.0, 46.0, inShore + 30.0 * (blobs - 0.5)) * (1.0 - 0.8 * slabs * (1.0 - crust));
   // And they lie thick toward the pool and thin away to bare grey silt at the shore.
-  thin = mix(thin, smoothstep(6.0, 120.0, inShore + 70.0 * (blobs - 0.5)), rimEye);
-  float edge = mix(0.53, 0.35, toLip) - 0.06 * smoothstep(8.0, 40.0, cameraPosition.y);
+  thin = mix(thin, smoothstep(8.0, 60.0, inShore + 44.0 * (blobs - 0.5)), rimEye);
+  float edge = mix(0.53, 0.35, toLip) - 0.2 * smoothstep(8.0, 40.0, cameraPosition.y);
   float cover = smoothstep(edge - 0.02, edge + 0.07, field) * thin * (1.0 - 0.92 * lanes);
   // Toward the lip the weed thins to loose strands over the pale crust.
   // An eye that stands on the lip sees them run over the whole of it to the edge.
@@ -223,24 +228,43 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     far3 *= mix(vec3(0.5, 0.42, 0.38), vec3(1.0), smoothstep(4.0, 60.0, w));
     // Far off no strand is told: the patch has its own tone and the streaks of its lie.
     float told = smoothstep(0.25, 0.03, px);
-    // From the rim the mats are rust and orange, deep in colour whatever the sky: the light in them is the amber of the water.
+    // From the rim the mats are seen whole: tresses of fine strands combed toward the centre, gold in the heart of a tress and rust at its
+    // edge, with dark clear water between them. The picture of them is laid along the way in, twice, tresses within tresses.
     float fromRim = smoothstep(8.0, 40.0, cameraPosition.y);
-    far3 *= mix(vec3(1.0), vec3(1.0, 0.7, 0.4), fromRim);
-    // And they are not one sheet: orange where the strands lie thick in the surface, dark brown water between them, in streaks and clouds.
-    float thick = 0.55 * vnoise(b / 13.0 + 11.0) + 0.45 * vnoise(b / 5.0 + 4.0);
-    far3 = mix(far3, mix(vec3(0.05, 0.036, 0.026), far3 * 1.3, smoothstep(0.28, 0.66, thick)), fromRim);
+    float combed = 0.5;
+    if (fromRim > 0.0) {
+      // Laid by the way round and the way in, hardly bent, so that every tress runs to the centre. The picture turns over at each repeat
+      // and all three sizes start from the same line, so the place where the way round begins again shows no seam.
+      vec2 cq = vec2(a2 * 640.0 + bend.x * 9.0, r + bend.y * 16.0);
+      vec3 ca = texture2D(tComb, cq / vec2(66.0, 44.0)).rgb;
+      vec3 cb = texture2D(tComb, cq / vec2(228.0, 152.0)).rgb;
+      float la = dot(ca, vec3(0.4, 0.5, 0.1));
+      float lb = dot(cb, vec3(0.4, 0.5, 0.1));
+      // The finest size is hair on the tresses, told only as near as a pixel can hold it.
+      float hairy = smoothstep(0.5, 0.12, px);
+      vec3 cc = vec3(0.34, 0.105, 0.0065);
+      if (hairy > 0.0) cc = texture2D(tComb, cq / vec2(17.0, 11.3)).rgb;
+      float lc = dot(cc, vec3(0.4, 0.5, 0.1));
+      combed = clamp(2.4 * la + 2.0 * lb - 0.14 + hairy * 1.6 * (lc - 0.19), 0.0, 1.0);
+      vec3 strands = ca * (0.45 + 2.9 * lb) * mix(vec3(1.0), cc / vec3(0.34, 0.105, 0.0065) * vec3(1.0, 1.0, 0.25) + vec3(0.0, 0.0, 0.75), 0.6 * hairy) * vec3(0.92, 1.25, 3.4);
+      far3 = mix(far3, mix(far3 * 0.7, strands, 0.8), fromRim);
+    }
     vec3 weed = mix(far3 * (0.75 + 0.5 * mix(vnoise(pq / vec2(1.3, 19.0) + 2.0), vnoise(b / 3.1 + 2.0), rimEye)), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
-    float high = mix(0.5, mh, told);
+    float high = mix(mix(0.5, combed, fromRim), mh, told);
     // The strands that stand highest are the palest: gold where the low sun finds them.
     weed *= mix(vec3(1.0), vec3(1.5, 1.38, 0.95), told * smoothstep(0.42, 0.85, mh));
     // At the torn edge of a patch only the strands that stand highest are left: wisps, not a line.
     float lies = smoothstep(0.0, 0.22, cover * 1.25 - (1.0 - high) * 0.7 * told * smoothstep(0.95, 0.5, cover) - 0.12 * (1.0 - told));
+    // From the rim it is the tresses that say where the weed is: the water between them is open even in the thick of a bed.
+    lies = mix(lies, smoothstep(0.0, 0.2, cover * 1.15 - (1.0 - combed) * 0.95), fromRim * (1.0 - told));
     o.albedo = mix(bare, weed, lies);
     // Its relief says what lies where: the strands that stand highest lie in the surface, the gaps between are a hand deeper.
     float up = (high - 0.62) * 0.34;
     o.depth = mix(depth, max(-up, 0.0) + 0.015, lies);
     // From far off and low, the tops of the mats that lie in the surface take the mirror from the water.
     float afloat = mix(0.2, mix(0.08, 0.95, smoothstep(6.0, 30.0, cameraPosition.y)), smoothstep(0.03, 0.4, px)) * smoothstep(0.3, 0.6, high);
+    // Seen whole from the rim, a tress that lies in the surface is wet weed and no mirror, whatever the size of the picture.
+    afloat = mix(afloat, 0.92 * smoothstep(0.22, 0.6, combed), fromRim);
     o.dry = mix(o.dry, max(smoothstep(0.0, 0.035, up) * 0.9, afloat), lies);
     o.occ = mix(o.occ, 0.45 + 0.55 * smoothstep(0.1, 0.5, high), lies);
     // The low sun comes through the strands that stand up into it.
@@ -275,8 +299,14 @@ Bed wallAt(vec2 b, float down, float inside) {
   Bed o;
   float along = atan(b.x, b.y) * 480.0;
   // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip: ledge under ledge, lost in the dark at its foot.
-  vec2 uv = vec2(along / 19.0, 1.0 - clamp(down / 17.0, 0.02, 0.98));
-  vec3 c = texture2D(tWall, uv).rgb;
+  // The ledges do not keep to one depth all the way round: they step up and down along the wall.
+  float jog = down < 17.0 ? smoothstep(0.3, 2.5, down) * 3.0 * (vnoise(b / 3.1 + 2.0) - 0.5) : 0.0;
+  vec2 uv = vec2(along / 19.0, 1.0 - clamp((down + jog) / 17.0, 0.02, 0.98));
+  // The way round begins again in the north: the fineness of the picture is told from the ground, which has no such place, so no line is drawn there.
+  float r2 = max(dot(b, b), 1.0);
+  vec2 bx = dFdx(b);
+  vec2 by = dFdy(b);
+  vec3 c = textureGrad(tWall, uv, vec2(480.0 / 19.0 * (b.y * bx.x - b.x * bx.y) / r2, dFdx(uv.y)), vec2(480.0 / 19.0 * (b.y * by.x - b.x * by.y) / r2, dFdy(uv.y))).rgb;
   float ledge = 0.55 + 0.45 * smoothstep(0.05, 0.3, dot(c, vec3(0.33)));
   o.albedo = clamp(c * 1.3, 0.0, 0.95) * vec3(0.62, 0.86, 0.9);
   o.occ = ledge;
