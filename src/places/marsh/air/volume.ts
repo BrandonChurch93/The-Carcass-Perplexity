@@ -12,17 +12,17 @@ export const MAX_MIST = 8;
 export const SHEETS: boolean = true;
 /** The ground mist: the stretches a view is cut into, where it starts and ends (metres along the view), how high it is read (metres),
  *  how deep a bank stands (metres) and how much of a surface's light a metre of it takes at the ground. */
-export const MIST = { steps: 10, near: 5, far: 2400, top: 26, deep: 1.6, thick: 0.0075 };
+export const MIST = { steps: 10, near: 5, far: 2400, top: 26, deep: 1.6, thick: 0.0045 };
 /** The shade of what stands close: reads of the frame's depth round each texel, the reach as a share of the distance, how far off it
  *  ends (metres) and how deep it goes. */
 export const OCC = { ways: 4, taps: 3, reach: 0.12, far: 420, depth: 2.3 };
 /** How far the near air is counted over the sky, metres. */
 // How fast the rain walks along the horizon, in radians a second. The sky's raining cloud keeps the same pace.
-export const RAIN_WALK = 0.012;
-// The place's second (uTime is 0 at the place's first frame) at which a shaft stands on the rain's bearing. Set so that one hangs right of
-// the middle of the first lens as the place opens.
-export const RAIN_AT = 11.5;
-export const HAZE_OVER_SKY = 1100;
+export const RAIN_WALK = 0.016;
+// The place's second (uTime is 0 at the place's first frame) at which a shaft stands on the rain's bearing. Set so that one hangs over the
+// middle of the first lens as the place opens and behind the wallowers when the fourth comes to them.
+export const RAIN_AT = -2.3;
+export const HAZE_OVER_SKY = 500;
 // The shafts of rain stand this far apart along the horizon, in radians: wherever a lens looks, one is in its view or near it.
 export const RAIN_APART = 0.84;
 // The overcast thickens as the rain comes on: between these two seconds of the place the sky and the far air lose this share of their light.
@@ -176,7 +176,7 @@ float closedIn(ivec2 pixel) {
 
 // How much of the haze counts at t metres: the near air is clear and the far closes, as over a salt flat on a still wet day.
 float nearThin(float t) {
-  return mix(0.45, 1.0, smoothstep(80.0, 1400.0, t));
+  return mix(0.45, 0.8, smoothstep(80.0, 1400.0, t));
 }
 
 // Thickness of the haze along the view from a to b metres: it thins with height, so the sum has a closed form.
@@ -371,7 +371,7 @@ void main() {
   // The haze, and the rain inside it at its own distance.
   float curtain = uRain.z / max(length(rd.xz), 0.05);
   float az = atan(rd.x, -rd.z);
-  // The shaft walks along the horizon with the wind, two degrees in three seconds, and the sky's raining cloud walks with it.
+  // The shaft walks along the horizon with the wind, a degree a second, and the sky's raining cloud walks with it.
   // A shaft of rain is narrow at its foot and wide under its cloud, and the wind leans it.
   float elev = rd.y / max(length(rd.xz), 0.05);
   float walk = az - uRain.x + RAIN_WALK * (uTime - RAIN_AT);
@@ -380,7 +380,7 @@ void main() {
   walk -= shaft * RAIN_APART;
   float own = fract(sin(shaft * 12.9898 + 4.1) * 43758.5453);
   // The foot of a shaft trails behind its cloud: every streak leans the same way.
-  float lean = walk + 0.55 * elev;
+  float lean = walk + 0.25 * elev;
   float side = abs(lean) / (uRain.y * (0.8 + 0.5 * own) * (1.0 + 1.6 * max(elev, 0.0)));
   float rain = 0.0;
   if (uShow.y > 0.5 && far > curtain && side < 2.6 && rd.y > -0.02 && rd.y < 0.5) {
@@ -392,10 +392,10 @@ void main() {
     // The trails: broad ones a degree or two across, which a small screen still shows, and fine ones inside them.
     float broad = textureLod(tNoise, vec3(lean * 5.5 + own * 3.0, el * 0.22 + uTime * 0.02, 0.7 + uTime * 0.01), 0.0).g;
     float fine = textureLod(tNoise, vec3(lean * 17.0, el * 0.5 + uTime * 0.045, 0.13), 0.0).b;
-    float streaks = smoothstep(0.42, 0.72, broad * 0.6 + fine * 0.4);
+    float streaks = smoothstep(0.4, 0.7, broad * 0.65 + fine * 0.35);
     float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
-    float base = smoothstep(0.42, 0.1 + 0.1 * veils, el) * smoothstep(-0.004, 0.05, el);
-    rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.45 + 1.2 * streaks);
+    float base = smoothstep(0.5, 0.22 + 0.1 * veils, el) * smoothstep(-0.004, 0.04, el);
+    rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.4 + 1.3 * streaks);
   }
   float show = uShow.x;
   // Where the view ends on the sky only the near air lies over it (the far picture has its own), but for its foot: there the air closes
@@ -451,7 +451,7 @@ void main() {
   if (rain > 0.0) {
     // The veil hangs far off in the air and is seen through it. Falling rain under an overcast is darker than whatever is behind it,
     // the sky or the far flats: it takes their light and gives little of its own.
-    float r = 0.45 * (1.0 - exp(-rain)) * exp(-0.3 * hazeBetween(ro, rd, 0.0, curtain) * show);
+    float r = 0.62 * (1.0 - exp(-rain)) * exp(-0.3 * hazeBetween(ro, rd, 0.0, curtain) * show);
     sum *= 1.0 - 0.8 * r;
     trans *= 1.0 - r;
   }

@@ -48,7 +48,7 @@ void main() {
   float side = abs(walk) / uRain.y;
   float el = d.y / max(length(d.xz), 0.05);
   float belly = smoothstep(2.4, 0.3, side + (big - 0.5) * 1.6) * smoothstep(0.02, 0.14, el) * smoothstep(0.75, 0.3, el);
-  c *= 1.0 - 0.3 * belly;
+  c *= 1.0 - 0.42 * belly;
   // The overcast's own picture, laid round the horizon (its painted rain taken out: the air pass draws the rain, moving): it gives the sheet its soft lumps and its
   // weight. It is turned over at each end so that it has no seam, it climbs to forty degrees, and it drifts with the wind.
   float span = 1.9;
