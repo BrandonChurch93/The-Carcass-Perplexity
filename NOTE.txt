@@ -1,4 +1,5 @@
-2026-11-26 02:40 UTC
-work at aaac56c on agent/marsh-ground-2
-hb6: marsh-0 hd, marsh-4, marsh-1 crop: crown as film, knobbed bank, thin crust in two lays
-look-1.jpg = out/work/a16.jpg
+2026-11-26 02:49 UTC
+work at deecc39 on agent/marsh-ground-2
+hb7: marsh-4 wallow hollow with tipped slabs, marsh-3 clear of steam, marsh-0 rain as veils and far mist pulled back
+look-1.jpg = out/work/a17.jpg
+look-2.jpg = out/work/a18.jpg
