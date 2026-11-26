@@ -37,6 +37,16 @@ const VERTS = 2 * WING_VERTS + SPINE_VERTS + 2 * LEG_VERTS;
 /** Metres from the middle of the back to the tip of a sail at size 1. */
 export const SAIL_LONG = (OUT[OUT.length - 1] as number) / PX;
 
+/** Where a foot is with the legs let down by `legs`: [metres ahead of the shoulders, metres up] at size 1. */
+export const footOf = (legs: number): [number, number] => {
+  const hip = LEG[0] as [number, number, number];
+  const toe = LEG[LEG.length - 1] as [number, number, number];
+  const back = toe[0] - hip[0];
+  const low = toe[1] - hip[1];
+  const swing = 1.25 * legs;
+  return [hip[0] + back * Math.cos(swing) - low * Math.sin(swing), hip[1] + low * Math.cos(swing) + back * Math.sin(swing)];
+};
+
 const edge = (line: [number, number][], out: number): number => {
   for (let i = 0; i + 1 < line.length; i++) {
     const a = line[i] as [number, number];
@@ -74,12 +84,14 @@ export const flying = (): Flying => ({ x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll:
 /** Many fliers, each set anew from a pose. */
 export class Flight {
   readonly mesh: THREE.Mesh;
+  /** The same bodies turned over on standing water, for those that fly low over a wet flat. */
+  readonly mirror: THREE.Mesh | null;
   private readonly at: Float32Array;
   private readonly way: Float32Array;
   private readonly mix: Float32Array;
   private readonly attributes: THREE.BufferAttribute[];
 
-  constructor(materials: BodyMaterials, readonly count: number) {
+  constructor(materials: BodyMaterials, readonly count: number, mirrored = false) {
     const total = count * VERTS;
     this.at = new Float32Array(total * 3);
     this.way = new Float32Array(total * 3);
@@ -155,6 +167,11 @@ export class Flight {
     geometry.setIndex(index);
     this.mesh = new THREE.Mesh(geometry, materials.body);
     this.mesh.frustumCulled = false;
+    this.mirror = mirrored ? new THREE.Mesh(geometry, materials.mirror) : null;
+    if (this.mirror) {
+      this.mirror.frustumCulled = false;
+      this.mirror.renderOrder = 3;
+    }
   }
 
   hide(i: number): void {
