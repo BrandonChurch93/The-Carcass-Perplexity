@@ -151,7 +151,7 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
     neckR: 0.082 * k,
-    tendrils: far ? 6 : 120,
+    tendrils: far ? 6 : 190,
     tendrilLen: 0.62 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
   };
@@ -204,8 +204,9 @@ export class Wader {
       // The rings stand closer at the two ends, where the trunk rounds off.
       const t = 0.5 - 0.5 * Math.cos((Math.PI * i) / (bodyRings - 1));
       this.bodyT[i] = t;
-      const a = bodyHalfH(t) * k;
-      const w = bodyHalfW(t) * k;
+      const lean = (1 - 0.34 * smooth(0.62, 1, t)) * (1 - 0.22 * smooth(0.3, 0, t));
+      const a = bodyHalfH(t) * k * lean;
+      const w = bodyHalfW(t) * k * lean;
       for (let s = 0; s < bodySides; s++) {
         const phi = (s / bodySides) * Math.PI * 2;
         const c = Math.cos(phi);
@@ -238,7 +239,7 @@ export class Wader {
     for (let i = 0; i < neckRings; i++) {
       const u = i / (neckRings - 1);
       // Thick where it leaves the chest, thin along its length, a small swelling at the end where the tendrils root.
-      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 0.5 * smooth(0.3, 0, u) ** 1.3);
+      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 1.0 * smooth(0.34, 0, u) ** 1.2);
       for (let s = 0; s < neckSides; s++) {
         const phi = (s / neckSides) * Math.PI * 2;
         // The windpipe and the cords stand a little off the round.
@@ -259,11 +260,13 @@ export class Wader {
       const knuckle = 1.7 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.0 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       // The head of the thigh is inside the trunk: it narrows to the hip, so no end of it shows.
-      const r = b.legR * (0.9 + thigh + knuckle + foot) * (0.4 + 0.6 * smooth(0, 0.1, u));
+      const r = b.legR * (0.9 + thigh + knuckle + foot);
+      // The haunch: muscle on the bone where it leaves the trunk, wide fore and aft and flat from side to side, gone by the knee.
+      const haunch = 3.3 * (1 - smooth(0.08, b.knee - 0.04, u)) ** 1.4 * smooth(-0.12, 0.1, u);
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
-        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.15 * Math.min(1, thigh / 2.4));
-        this.legLocal[(i * legSides + s) * 2 + 1] = r * Math.sin(phi);
+        this.legLocal[(i * legSides + s) * 2] = (r + 0.3 * b.legR * haunch) * Math.cos(phi) * (1 - 0.15 * Math.min(1, thigh / 2.4));
+        this.legLocal[(i * legSides + s) * 2 + 1] = (r + b.legR * haunch) * Math.sin(phi);
       }
     }
     for (let j = 0; j < 4; j++) {
@@ -300,7 +303,7 @@ export class Wader {
         phase: hash(seed + n * 4.3) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
         root: 1 - 0.24 * hash(seed + n * 8.9) ** 1.5,
-        thick: far ? 1 : 0.6 + 1.7 * hash(seed + n * 12.7) ** 3.0,
+        thick: far ? 1 : 0.32 + 1.5 * hash(seed + n * 12.7) ** 3.0,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
