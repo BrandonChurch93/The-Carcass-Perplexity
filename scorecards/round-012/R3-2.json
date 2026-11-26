@@ -1,0 +1,91 @@
+{
+  "round": 12,
+  "unit": "eye",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-26 00:08 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the pool on the right where it meets the sand bench",
+        "what": "the water is a cut box: a flat vertical wall of blue-white texture and a hard rectangular blue volume with a straight vertical edge, no shore, no wet edge, no meniscus",
+        "fix": "give the water a real shoreline that meets the sand at its surface, with darkened wet sand, and remove the visible volume walls"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the left water sheet and the far lake",
+        "what": "two reflection planes at different heights overlap; the left sheet floats above the sand showing an inverted cliff and a sky band with a straight horizontal cutoff, so the water has no depth and the cliff reflection is doubled",
+        "fix": "use one water surface at one height, reflecting once, with the bed fading into depth beneath it"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the ring ripples and dome in the mid water",
+        "what": "the ripples are thin perfect white concentric lines with tiny pins standing on them, and the centre is a smooth dome with orange-brown stripes; it reads as a CG primitive, not disturbed water",
+        "fix": "replace with a real displacement of the surface, soft ripple troughs that bend the reflection, and drop the line rings and pins"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the two long-necked animals in the foreground",
+        "what": "smooth untextured clay model look, same pose and same model duplicated, no wet, dust or salt on them, no contact or shadow on the water or ground",
+        "fix": "vary pose and scale, add skin detail and wet or dusty legs, and ground them with contact shadow and ripples where they stand"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the skeleton and loose bones on the sand",
+        "what": "bones are smooth glossy orange cylinders and spheres, uniform in colour, sitting on the sand with no burial, shadow or weathering",
+        "fix": "model bones with bleached, cracked, part-buried surfaces and contact shadow"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the near sand and lake bed, left and centre foreground (crops x0-17 y58-75, x42-58 y58-75)",
+        "what": "texture is stretched into long orange streaks and smeared, with a blurred noisy grain at close range; it reads as a projected map, not sand",
+        "fix": "use a close-range sand material with proper scale ripples and grains, no projection stretch"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the cliff reflection in the lower right water (crop x83-100 y58-75)",
+        "what": "the reflected rock is smeared into horizontal stretched bands with repeating streaks, like a stretched wood texture",
+        "fix": "render a true reflection with ripple distortion instead of a stretched texture"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the upper frame, the far cliff behind the haze",
+        "what": "the far wall is a flat noisy textured plane with a hard straight horizon line under it, no sky and no aerial depth; the haze is a flat grainy tint",
+        "fix": "give the far wall form and distance falloff, a soft horizon, and haze with light in it"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the far shore band across the frame (crops y25-42)",
+        "what": "the far land is a flat strip with straight hard parallel edges top and bottom, like a stacked set of planes; the water below it is a flat brown with no reflection",
+        "fix": "break the shoreline into a natural irregular edge and let the water reflect the far shore and sky"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the cliff reflection on the right (crop x83-100 y25-42)",
+        "what": "the shadowed areas of the reflection are pure black, with no sky fill",
+        "fix": "lift the shadows with sky light and water colour"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the cliffs at the top",
+        "what": "dark round arch holes repeat at similar size across the wall, and the strata are one material everywhere",
+        "fix": "vary the cave openings and the rock material"
+      }
+    ]
+  }
+}

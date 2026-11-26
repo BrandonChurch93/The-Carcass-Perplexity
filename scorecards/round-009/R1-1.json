@@ -1,0 +1,112 @@
+{
+  "round": 9,
+  "unit": "spine",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-26 00:05 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the receding ridge, right-hand basin and horizon",
+        "what": "Repeated evenly exposed fins sit above a flat-looking gray basin and a straight orange horizon. The target has an irregular connected ridge descending into rolling clouds, with progressively less detail and contrast in the far peaks.",
+        "fix": "Vary and connect the ridge profiles, bury their lower slopes in deep rolling cloud, and let the far silhouettes and broken sunset band fade into layered haze."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the lightning, strike peak and surrounding storm",
+        "what": "The bolt is a large near-white graphic from high in frame with a bright impact spark, rather than a finer violet discharge emerging from a locally lit cloud and casting violet light down the peak. The surrounding clouds have smeared, hard-edged masses rather than layered volume.",
+        "fix": "Make the bolt finer and cooler, light the cloud from inside and the strike rock and nearby streamers with restrained violet spill, and build softer layered storm volume around it."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the ground from the left approach to the bottom edge",
+        "what": "A nearly level sheet with horizontal bands and a weak, dull dark patch replaces the descending trail, deep prints, rough wet rock and crystalline glaze. The animal has a broad smooth ground shadow instead of localized contact with uneven ice and snow.",
+        "fix": "Restore the slope, trail impressions, buried ledges and wet dark stone with broken specular ice, and seat the animal in localized compressed snow and contact shadows."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the animal across the center foreground",
+        "what": "The body sits wholly in frame as rounded dry-looking tufts, with little sense of weight or frozen buildup. The target fills the right edge and shows a grounded drape, clumped ice-laden fibers, patches of snow and subdued wet dark staining rather than a broad flat russet patch.",
+        "fix": "Keep the alien anatomy, but reframe the body toward the right edge, spread its weight into the snow, and shade the coat with irregular wet clumps, hoarfrost, granular buildup and a more localized dark stain."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the cave ridge, the two rear fins and the storm sky",
+        "what": "The cave massif and distant fins remain hard and strongly textured; rear fins are too isolated and large at right, and the lavender lightning glow and windblown snow are absent. The target recedes into a soft storm behind the animal.",
+        "fix": "Scale the farther peaks down and draw them into a continuous ridge, soften them with distance and the close shot's focus falloff, and reintroduce crosswind spindrift and a small diffuse violet discharge behind them."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the left-hand rock wall",
+        "what": "The close wall reads as one dark copper-mottled plane with repeated narrow streaks or sheets on top. The target is a deeply broken wall of pale angled slabs with warm directional highlights, dark clefts, and thick windpacked white rime on ledges.",
+        "fix": "Break the plane into deep angular strata and sharply defined ledges, shift lighting to pale directional faces and dark recesses, and build uneven rime accretions that follow the rock."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "beyond the streamers, from middle right to the horizon",
+        "what": "Tiny detached pinnacles and a flat gray floor replace a prominent receding mountain chain and deep cloud sea. The storm has dark cutout masses, broad streaks and a ruler-straight sunset, without the violet lightning or fine airborne snow in the target.",
+        "fix": "Raise and connect the nearer background pinnacles, let successive slopes disappear into rolling mist with appropriate focus falloff, and restore layered dusk clouds, a broken orange band, subtle purple lightning and crosswind snow."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the main summit, cave wall and left shoulder",
+        "what": "The summit is a comparatively smooth slender blade on a rounded shoulder rather than a heavy jagged buttress with benches. Across the wall, repeated fine dark grooves replace large pale fractured planes and the cool shadows on the snow-caked flank.",
+        "fix": "Give the summit a heavier broken profile and benching, replace the repetitive grooves with varied large fractures, and restore warm-lit planes against cooler shadowed snow."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the cave mouth and threshold",
+        "what": "A flat wide black cutout with a hard lower lip and conspicuous arch line replaces an irregular recessed opening with shadow gradation and a snowy floor that leads into it.",
+        "fix": "Model an uneven rock throat and snowy entrance ramp, letting the near walls and floor take a little bounced light before falling into deep shadow."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the foreground ridge path and right lip",
+        "what": "The path is narrow, striated and sparsely marked with tiny impressions; exposed rocks form a row of sharp fins on the right. The target has a wider drifted perch with bulky broken boulders and deep distinct steps winding toward the opening.",
+        "fix": "Broaden the near bench, use broken rocks of varied bulk, give the snow natural drifts and ripples, and give the winding tracks credible depth and raised rims."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the upper streamers and left ridge air",
+        "what": "Dense, parallel nearly uniform lilac ribbon stacks dominate the main summit and far peaks, while the target has sparser translucent strips with muted glints, plus visible blowing snow along the shoulders.",
+        "fix": "Space and vary the ribbons, reduce their uniform lavender brightness, give them changing transmitted highlights, and add fine spindrift spilling from exposed crest edges."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the animal's lower edges and exposed tips",
+        "what": "At delivery size flat opaque spike and plaque-like shapes interrupt the coat, and the fiber ends read as dense uniform strips rather than fibers and frost grains catching separate highlights.",
+        "fix": "Blend tips and exposed surfaces into the coat with natural shading, and give the coat irregular strand breakup and individual ice highlights without changing the intended species design."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the streamer anchor points along the left center",
+        "what": "Most lines disappear behind the wall edge, with only small rounded bumps visible where the target has recognizable dark, frost-crusted attachment forms set in clefts and lit along their upper edges.",
+        "fix": "Expose the attachment clusters on the rock face, seat them in fissures, and show the dark textured forms, knot or tie transitions, rim frost and varied icicle buildup."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the streamers spanning the upper and right frame",
+        "what": "The membranes are crowded, evenly lavender and visibly grid-like with regular tears; the target has distinct separated depths, irregular vein texture, muted grey-pink translucence and small angle-dependent wet glints.",
+        "fix": "Separate the layers, taper and vary the tears and grain, and use more nuanced transmission, vein-like detail and local icy edge highlights while retaining the settled movement."
+      }
+    ]
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "round": 11,
+  "unit": "marsh",
+  "pack": "R1-1",
+  "family": "gemini",
+  "answered": "2026-11-26 00:11 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "foreground rock ledge at bottom left (also in set-A-01-b.png)",
+        "what": "the craggy, fractured mineral rock in -a is replaced by a smooth, dimpled, melted-looking mesh with a blurry procedural texture",
+        "fix": "rebuild the ledge with sharp-edged fractured rock geometry, crisp mineral grit, warm rust staining, and grounded ambient occlusion"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "left brine pool, central winding channel, and pool bubbles",
+        "what": "the water is flat, matte maroon-brown with uniform ripples, harsh white-painted shorelines, and tiny pale dots instead of the reflective translucent rust-red brine and large pinkish bubble domes in -a",
+        "fix": "restore translucent rust-red brine shading with overcast sky reflections, fine wind ripples, wet salt-crusted margins, and large translucent reddish bubble domes"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "wading creatures in the central channel and resting creatures on the right salt flat",
+        "what": "the wading animals look like smooth, blobby segmented lumps and the right-bank creatures look like low-poly pale sculptures with stick legs and an unexplained ribbed dome, lacking wet hide, salt-crust detail, and contact shadows",
+        "fix": "model realistic wrinkled wading quadrupeds and naturally encrusted bank creatures with fine wet skin or crust texture and grounded water and ground contact shadows"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "salt flats and mud cracks across the right foreground and midground",
+        "what": "the right foreground shows an artificial, uniform tile-like crack pattern and the midground flats look like smooth white snow instead of layered mineral salt crust",
+        "fix": "replace with irregular, multi-scale fractured salt-crust geometry, natural brine seepage in the cracks, and varied wet-to-dry mineral shading"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "red-plumed stalks around the pool and midground (also in set-A-01-b.png)",
+        "what": "the organically curved, salt-crusted stalks with lush feathery crimson crowns in -a become rigid straight sticks with sparse dark tufts and an oversized thick foreground stalk on the far left",
+        "fix": "give the stalks natural curvature, encrusted bark, denser feathery crimson plumes, and organic clustering around the pool and mounds"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "large bubble dome at right-center and smaller bubbles across the pool",
+        "what": "the thin, glossy, grit-flecked translucent bubble in -a is rendered as an opaque matte grey-lavender hemisphere with a plastic specular spot, and the foreground foam and small bubbles are missing",
+        "fix": "shade the bubbles as thin, glossy translucent membranes revealing the reddish brine and suspended grit beneath, and restore the frothy clusters and small bubbles in the lower left"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "brine pool surface and bursting splash (also in set-A-03-b.png)",
+        "what": "the turbulent, frothy, insect-dotted brine in -a becomes a smooth, glossy procedural shader with smeared reflections, no micro-ripples or insects, and a clunky flat splash crown with oversized dark glassy droplets",
+        "fix": "add fine multi-scale water turbulence, wet foam, suspended grit, skimming insects, and a thin jagged liquid splash crown with delicate droplets"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "bottom foreground edge and overall depth of field",
+        "what": "the crusty white-and-rust salt shoreline framing the bottom of -a is missing, and the shallow photographic depth of field is absent, leaving the background sharply cut out",
+        "fix": "restore the detailed mineral crust ledge along the bottom foreground and match the shallow depth of field that softly blurs both the near foreground and the distant background"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "background wading creature, stalks, far-left foreground stalk, and mist",
+        "what": "the softly blurred quadruped in -a is replaced by a dark, blocky, indistinct grey silhouette; the stalks are sparse straight sticks with a blurry cylinder at far left; and the rising steam over the left pool is gone",
+        "fix": "restore accurate quadruped anatomy, denser feathery crimson stalks, realistic encrusted bark on the foreground stalk, and layered steam rising on the left"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "crimson frond plumes on the foreground stalks (also in set-A-05-b.png)",
+        "what": "the glistening, wet, finely separated red filaments in -a are rendered as flat dark-maroon clumps with hard polygonal cutout edges, no clinging water droplets, and dark stray streaks hanging from the collar",
+        "fix": "replace with finely resolved individual wet filaments, translucent rim highlights, clinging water droplets, and clean silhouette edges without polygonal clipping"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "foreground stalk shafts, collars, buds, and broken stem at bottom right",
+        "what": "the encrusted organic stems and frayed hollow tip in -a become smooth segmented cylinders with a blurry repeating grid-like texture, paper-thin jagged collars, smooth shiny acorn-like buds, and a crude low-poly V-notched tip",
+        "fix": "add irregular flaking salt-crust geometry, organic ridged bark, layered fibrous buds, and a finely frayed hollow broken stem"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "midground pool, wading creature on the right, distant mound, and sky",
+        "what": "the wading creature is replaced by a featureless dark grey lump, the mineral mound is a flat geometric trapezoid, the water has opaque grey bubbles and lacks steam, the background lacks shallow depth of field, and the distant rain curtains are missing",
+        "fix": "restore the softly out-of-focus wading quadruped, craggy salt-and-rust mound, translucent bubbling brine with low steam, shallow background blur, and overcast rain curtains"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "distant horizon, sky, and steam over the left pool",
+        "what": "the continuous hazy mountain ridge and soft rain curtains in -a are replaced by sharp flat-topped geometric mesas and overly straight diagonal streaks in a flat grey sky, while the pool steam looks like a uniform airbrushed puff",
+        "fix": "replace the mesas with soft, continuous hazy hills, add overcast cloud variation with natural rain shafts, and give the steam wispy, multi-layered vertical structure"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "small insects perched on the fronds and around the stalks (also in set-A-05-b.png)",
+        "what": "the delicate, translucent-winged insects perched on and hovering near the fronds in -a appear as pale grey spiky or bristled blobs and odd floating shapes in front of the stalks",
+        "fix": "model delicate winged insects with slender bodies and translucent wings perched naturally on and hovering around the crimson fronds"
+      }
+    ]
+  }
+}

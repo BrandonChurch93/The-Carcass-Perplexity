@@ -1,0 +1,63 @@
+{
+  "round": 11,
+  "unit": "marsh",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-26 00:11 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "large foreground bubble and splash to its left",
+        "what": "The bubble looks like a polished solid half-sphere cut off at the waterline, and the splash has rigid triangular spikes and separate bead-like droplets.",
+        "fix": "Use an irregular translucent film, a wet meniscus, and a thin splash sheet that breaks into varied droplets and foam."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "large red foreground fronds and drifting spray, confirmed in set-A-08.png and set-A-09.png",
+        "what": "The fronds have multiple translucent outlines and the spray is drawn as strings of equally spaced rings, so the motion reads as copies rather than blur.",
+        "fix": "Use continuous shutter blur on fronds and droplets and vary the droplet sizes and trajectories."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop, pale animals and their feet",
+        "what": "The animals have flattened, near-identical splayed silhouettes and a dry, uniform crust right to the feet. The feet disappear into or hover over the shallows with weak contact shadows and little local disturbance.",
+        "fix": "Vary the poses, seat each foot at the actual bed height, and add contact shadow, wetting, and displaced water at the planted feet."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "lower-right crop, foot of the foreground stalk",
+        "what": "The stalk ends in a visible rounded bottom above the red water, with offset outlines and no convincing meniscus around it.",
+        "fix": "Make the stalk penetrate the water or bed, remove the duplicate outlines, and let the waterline and local ripples wrap around it."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "both foreground water crops",
+        "what": "The muted red surface is broken up by broad, soft, two-tone reflections that look painted on; the close water gives little sense of depth.",
+        "fix": "Vary absorption with depth, add fine wave detail, and carry identifiable reflections into the foreground."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "left foreground rock and right channel bank, with the bank visible in set-A-02.png",
+        "what": "The rock is smeared into parallel grooves, and the bank and shallows share a soft marbled finish separated mainly by a thin white outline.",
+        "fix": "Give the rock distinct fractures and granular detail, then separate the bank into dry crust, saturated sediment, and wash that follows the terrain."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "mist over the pool in both crops",
+        "what": "The vapor looks like an even screen of gray grain across the stalk and water rather than a volume that thickens and thins with distance.",
+        "fix": "Use depth-dependent scattering and localized plumes, with density and light varying across the pool."
+      }
+    ]
+  }
+}

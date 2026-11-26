@@ -1,0 +1,42 @@
+{
+  "round": 12,
+  "unit": "eye",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-26 00:09 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the entire frame from 0.00 s to 6.00 s",
+        "what": "the scene is completely frozen over all six seconds with no visible motion in the water, air, light, or foreground, reading as a still picture rather than a living place",
+        "fix": "drive continuous ambient motion across the held shot so water, mist, clouds, light, and wildlife visibly evolve while the camera is still"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the lake surface, cliff reflections, and foreground braided water channels",
+        "what": "the water and its reflections stay locked to the exact same pattern across all twelve frames with no ripples, drift, or surface movement",
+        "fix": "animate natural wind ripples, slow current drift, and subtle reflection breakup across the lake and shallow foreground channels"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the pale mist band along the waterline inside the dark right-hand cavern and the thin cloud streak in the upper-right sky",
+        "what": "both the low vapour layer and the high cloud streak remain completely motionless for the full six seconds",
+        "fix": "give the heavy cavern mist a slow, pooling drift along the water and let the high cloud streak travel gradually at its own altitude"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the small pale figures scattered across the foreground mudflat between the two rock outcrops",
+        "what": "every figure stays in the exact same position and pose from 0.00 s to 6.00 s, reading as static models rather than living animals",
+        "fix": "give the figures independent, staggered motion with weight shifts, steps, pauses, and turns"
+      }
+    ]
+  }
+}
