@@ -1,7 +1,6 @@
-2026-11-26 02:11 UTC
-work at add2e08 on agent/eye-place-2
-version 1 add2e08: eye-0, eye-1, eye-2, eye-4 compares
-look-1.jpg = out/work/pics/eye-0.jpg
-look-2.jpg = out/work/pics/eye-1.jpg
-look-3.jpg = out/work/pics/eye-2.jpg
-look-4.jpg = out/work/pics/eye-4.jpg
+2026-11-26 02:38 UTC
+work at eec0cca on agent/eye-place-2
+heartbeat 3: swell and level reflections at eye-4, amber mats at eye-2, eye-0 after spur blocks
+look-1.jpg = out/work/pics/eye-4.jpg
+look-2.jpg = out/work/pics/eye-2.jpg
+look-3.jpg = out/work/pics/eye-0.jpg
