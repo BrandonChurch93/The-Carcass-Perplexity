@@ -207,12 +207,14 @@ export function create(ctx: Context): Piece {
     mesh.frustumCulled = false;
     group.add(mesh);
   }
+  // The ones the lens of the colony stands among draw from their own stream: nothing done to the far ones changes them.
+  const own = ctx.rng('stalks-close');
   sets.forEach((set, which) => {
     const base = new Float32Array(set.length * 4);
     const axis = new Float32Array(set.length * 4);
     const kind = new Float32Array(set.length * 4);
     set.forEach((s, i) => {
-      let seed = rng.next();
+      let seed = own.next();
       const close = closeOf(s);
       // Away from the lens of the colony they are slender, of every height, and lean as they please.
       // Those the lens of the colony looks through keep the place the approved picture gives them: they bow least.
@@ -223,9 +225,9 @@ export function create(ctx: Context): Piece {
         const off = Math.abs(((Math.fround(v) * 40 - want) % TAU + TAU + Math.PI) % TAU - Math.PI);
         return off < 0.45;
       };
-      if (close) for (let n = 0; n < 4000 && ((seed * 91.3) % 1 > 0.12 || (seed * 13.7) % 1 < 0.36 || !combed(seed)); n++) seed = rng.next();
-      const tall = close ? s.h : s.h * (0.45 + 0.75 * rng.next());
-      const lean = close ? s.lean : s.lean * 1.5 + rng.range(0, 0.2);
+      if (close) for (let n = 0; n < 4000 && ((seed * 91.3) % 1 > 0.12 || (seed * 13.7) % 1 < 0.36 || !combed(seed)); n++) seed = own.next();
+      const tall = close ? s.h : s.h * (0.45 + 0.75 * own.next());
+      const lean = close ? s.lean : s.lean * 1.5 + own.range(0, 0.2);
       const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 0.85 : 0.72);
       const dx = Math.cos(s.yaw);
       const dz = -Math.sin(s.yaw);
@@ -256,14 +258,14 @@ export function create(ctx: Context): Piece {
       const bud = s.kind === 1;
       const through = which === 0 ? (close ? (bud ? 5 : 3) : bud ? 3 : 3) : bud ? 0 : 2;
       const leaning = close && !bud ? 2 : 0;
-      const turn = rng.range(0, Math.PI);
+      const turn = own.range(0, Math.PI);
       for (let c = 0; c < through + leaning; c++) {
         const out = c >= through;
-        const angle = out ? turn + ((c - through + rng.range(-0.2, 0.2)) / leaning) * TAU : turn + ((c + rng.range(-0.25, 0.25)) / through) * Math.PI;
-        fils[0].push(top[0], top[1], top[2], (length / 0.8) * rng.range(0.82, 1.15) * (out ? 0.8 : 1));
+        const angle = out ? turn + ((c - through + own.range(-0.2, 0.2)) / leaning) * TAU : turn + ((c + own.range(-0.25, 0.25)) / through) * Math.PI;
+        fils[0].push(top[0], top[1], top[2], (length / 0.8) * own.range(0.82, 1.15) * (out ? 0.8 : 1));
         fils[1].push(ax[0], ax[1], ax[2], s.phase);
-        fils[2].push(angle, out ? rng.range(0.45, 0.85) : rng.range(-0.12, 0.12), s.kind, seed);
-        fils[3].push(rng.next() < 0.5 ? -1 : 1, (close ? 1.5 : 0.8) * rng.range(0.85, 1.15), close ? rng.range(0.45, 0.7) : rng.range(0.2, 0.5), rng.next());
+        fils[2].push(angle, out ? own.range(0.45, 0.85) : own.range(-0.12, 0.12), s.kind, seed);
+        fils[3].push(own.next() < 0.5 ? -1 : 1, (close ? 1.5 : 0.8) * own.range(0.85, 1.15), close ? own.range(0.45, 0.7) : own.range(0.2, 0.5), own.next());
       }
     });
     const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 18 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });
