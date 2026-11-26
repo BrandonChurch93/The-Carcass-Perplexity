@@ -1,0 +1,77 @@
+{
+  "round": 13,
+  "unit": "reveal",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-26 00:20 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "across the entire frame (also in crops set-B-08.png and set-B-09.png)",
+        "what": "flat, perfectly geometric concentric blue-grey rings with uniform colour and crisp vector edges sit over a nearly featureless dark navy ocean, reading as a 2D graphic or debug overlay rather than real footage",
+        "fix": "remove the concentric ring graphic or shader artifact and render a natural ocean surface with realistic wave detail, reflections, and atmospheric depth"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "bottom-right corner (also in duplicate set-B-04.png)",
+        "what": "the cyclone is an overly tight, uniform mathematical spiral with a sharp black circular eye and noisy arms, reading as a painted swirl rather than a real storm system",
+        "fix": "replace the procedural swirl with layered, asymmetric cloud bands, volumetric depth, and cast shadows consistent with the rest of the cloud deck"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "coastlines across all islands and continents, especially top-right crop x 42 to 58% y 25 to 42% (also in set-B-01.png, set-B-03.png, set-B-04.png, set-B-05.png, set-B-06.png)",
+        "what": "every shoreline is traced by a uniform glowing cyan outline regardless of terrain slope, water depth, or sun angle, with visible dotted aliasing along the edge in set-B-03.png bottom-left",
+        "fix": "replace the uniform coastal stroke with physically varied bathymetry gradients, breaking surf only where scale permits, and natural water-to-land transitions"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "bottom-left crop x 83 to 100% y 25 to 42% (also in set-B-01.png, set-B-04.png, set-B-05.png)",
+        "what": "the sunlit ocean on the right reads as flat matte beige-tan with no specular wave texture or depth, filling enclosed bays with solid flat tan up to a hard grey shoreline",
+        "fix": "add directional micro-wave roughness and realistic sun-glint falloff across the water surface and vary shallow-bay shading"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "bottom-right crop x 0 to 17% y 58 to 75% and top-left crop (also in set-B-03.png, set-B-05.png, set-B-06.png)",
+        "what": "clouds read as flat, blurry noise-stamped cotton blotches with no volumetric self-shadowing and no cast shadows on the ocean or land beneath them",
+        "fix": "render clouds with sunlit tops, shadowed undersides, varied altitudes, and matching offset shadows cast onto the surface below"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "bottom-left crop x 83 to 100% y 25 to 42% and top-right crop x 42 to 58% y 25 to 42% (also in set-B-01.png, set-B-03.png, set-B-04.png, set-B-05.png, set-B-06.png)",
+        "what": "mountain ridges form overly regular comb-like ribs resembling a procedural heightmap, while smaller offshore islands are smooth, featureless dark brown clay-like shapes with no atmospheric haze across the landmass",
+        "fix": "break up ridge regularity with varied geological erosion and rock/vegetation materials, add surface detail to smaller islands, and apply physically based aerial scattering across the planet"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "upper-middle of the left continent (also in set-B-04.png)",
+        "what": "the orange volcanic glow appears as an airbrushed radial spot that does not realistically illuminate surrounding terrain or nearby vapour",
+        "fix": "ground the emission in terrain fissures or caldera geometry and let the light scatter through nearby smoke and atmosphere"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "right crop x 83 to 100% y 58 to 75% (also in set-B-06.png)",
+        "what": "the open ocean shows stretched diagonal noise streaks rather than coherent ocean swell or sun-glint variation",
+        "fix": "replace the stretched noise texture with isotropic multi-scale wave normals and natural atmospheric haze"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-08.png",
+        "where": "top-left and bottom-right crops (also in set-B-07.png and set-B-09.png)",
+        "what": "the water background is a flat dark navy tint with a few isolated soft cloud smudges and faint warm edge smears that lack depth, reflection, or shadow",
+        "fix": "give the ocean surface realistic specular response, depth variation, and coherent cloud-to-water lighting"
+      }
+    ]
+  }
+}

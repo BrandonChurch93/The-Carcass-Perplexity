@@ -1,0 +1,37 @@
+{
+  "round": "11",
+  "unit": "marsh",
+  "critic": "R2",
+  "packs": {
+    "R2-1": {
+      "set-A-01.png": "Judged image: marsh-0, film frame 5725"
+    },
+    "R2-2": {
+      "set-B-01.png": "Judged image: marsh-1, film frame 6102"
+    },
+    "R2-3": {
+      "set-C-01.png": "Judged image: marsh-2, film frame 5940"
+    },
+    "R2-4": {
+      "set-D-01.png": "Judged image: marsh-3, film frame 6424"
+    },
+    "R2-5": {
+      "set-E-01.png": "Judged image: marsh-4, film frame 6800"
+    },
+    "R2-6": {
+      "set-F-01.png": "Control: the approved picture of marsh-0, references/approved/4-marsh/marsh-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-7": {
+      "set-G-01.png": "Control: the approved picture of marsh-1, references/approved/4-marsh/marsh-1-the-bubbling-seep-pool.jpg, resized and encoded like the judged images"
+    },
+    "R2-8": {
+      "set-H-01.png": "Control: the approved picture of marsh-2, references/approved/4-marsh/marsh-2-the-stalk-colony.jpg, resized and encoded like the judged images"
+    },
+    "R2-9": {
+      "set-I-01.png": "Control: the approved picture of marsh-3, references/approved/4-marsh/marsh-3-mud-wallowers.jpg, resized and encoded like the judged images"
+    },
+    "R2-10": {
+      "set-J-01.png": "Control: the approved picture of marsh-4, references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg, resized and encoded like the judged images"
+    }
+  }
+}
