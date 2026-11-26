@@ -36,8 +36,8 @@ function rest(out: Drive, plan: Plan, b: Build): void {
   out.cave = 0;
   out.acted = 1;
   out.under = 0;
-  // index.ts stands one on a bank in its mud to above the ankle.
-  out.mud = plan.ground + 0.2 * b.k;
+  // One on a bank stands in its mud to the shin.
+  out.mud = plan.ground + 0.36 * b.k;
   for (let l = 0; l < 4; l++) out.toe[l] = 0;
   for (let l = 0; l < 4; l++) {
     const [lx, side] = LEG_AT[l] as [number, number];

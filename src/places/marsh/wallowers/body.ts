@@ -404,8 +404,13 @@ void main() {
   albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3), 0.6 * thread * damp * (1.0 - wet));
   // Thick mud on whatever stands in it.
   float deep = 1.0 - smoothstep(0.02, 0.2 + 0.25 * lane, wy);
-  // A leg that is dragged up out of the mud wears it to the line it stood in to. Only a leg that is lifted by one that is acted has a vRaise above 0.
-  if (vRaise > 0.0) deep = max(deep, smoothstep(0.0, 0.03 * kk, vRaise) * (1.0 - smoothstep(uMud - 0.04 * kk + 0.25 * ragged, uMud + 0.1 * kk + 0.25 * ragged, wy)));
+  // A leg that is dragged up out of the mud wears it to the line it stood in to: dark, and dull beside the wet hide, which shows the white of the sky.
+  // Only a leg that is lifted by one that is acted has a vRaise above 0.
+  float carried = 0.0;
+  if (vRaise > 0.0) {
+    carried = smoothstep(0.0, 0.03 * kk, vRaise) * (1.0 - smoothstep(uMud - 0.06 * kk + 0.25 * ragged, uMud + 0.12 * kk + 0.25 * ragged, wy));
+    albedo = mix(albedo, vec3(0.03, 0.012, 0.009) * (0.6 + 0.8 * grain), 0.85 * carried);
+  }
   // And it is dark with the red mud of the brine it lay in, thickest low on it.
   if (uTurned.x > 0.0) albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3) + vec3(0.008, 0.002, 0.002), was * (0.6 + 0.3 * (1.0 - smoothstep(uTurned.y - 0.4, uTurned.y, vRest.y))));
   albedo = mix(albedo, mix(vec3(0.05, 0.014, 0.01), vec3(0.05, 0.022, 0.018), uMudded) * (0.7 + 0.6 * grain), 0.8 * deep);
@@ -441,6 +446,7 @@ void main() {
   // And it is wet skin, not dry hair: it holds a dull light from the sky on every fold.
   rough = mix(rough, min(rough, 0.6), 0.8 * near1 * (1.0 - 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0)));
   #endif
+  if (vRaise > 0.0) rough = mix(rough, 0.95, carried);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it: the belly and the insides of the legs are red brown, not black.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.72, 0.42, 0.34) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (1.0 - 0.6 * uMudded);
