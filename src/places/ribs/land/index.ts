@@ -11,7 +11,7 @@ import { RIG_VERTEX } from '../shared/glsl';
 import { LAND } from '../shared/rig';
 import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
-import { bladeShape, worldSpace } from './blade';
+import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
@@ -173,7 +173,7 @@ export function create(ctx: Context): Piece {
     material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uProud: { value: proud } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
-  const weedNear = hangs(1.7);
+  const weedNear = hangs(0.9);
   const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, uWeedy: { value: 1 } });
   const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, uWeedy: { value: 0 } });
 
@@ -216,7 +216,7 @@ export function create(ctx: Context): Piece {
 
   // The two stacks of the gate, and the arch rock.
   for (const post of STATIONS.posts) {
-    const s: Stack = { x: post[0], z: post[1], foot: 25, top: 10, height: 66 };
+    const s: Stack = { x: post[0], z: post[1], foot: 27, top: 15, height: 150 };
     add(blades, worldSpace(stackRock(s)), rock);
     add(skirts, stackWeed(s.x, s.z, (y) => s.foot + (s.top - s.foot) * smooth(-10, s.height, y), 160), weed);
   }
@@ -226,7 +226,7 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('ribs', blades));
 
   // The colony's rock: ledges above the tide line, weed below.
-  const ledges = new THREE.Mesh(worldSpace(colonyRock()), roostRock);
+  const ledges = new THREE.Mesh(roundSpace(colonyRock(), COLONY.x, COLONY.z, 60, Math.atan2(COLONY.side[1], COLONY.side[0]) + Math.PI), roostRock);
   ctx.scene.add(ctx.parts.built('ledges', ledges));
   add(skirts, stackWeed(COLONY.x, COLONY.z, (y) => COLONY.radiusAt(y), 420), weed);
   ctx.scene.add(ctx.parts.built('weed', skirts));
@@ -253,7 +253,7 @@ export function create(ctx: Context): Piece {
       placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.25, 0.25), kind: scatter.int(KINDS), sink: scatter.range(0.2, 0.5) });
     }
   };
-  for (const rib of RIBS as Rib[]) ribFeet(rib, rib.name === 'L1' ? 190 : 150, 0.6, rib.name === 'L1' ? 5.5 : 13, rib.name === 'L1' ? 60 : 70);
+  for (const rib of RIBS as Rib[]) ribFeet(rib, rib.name === 'L1' ? 90 : 50, 0.5, rib.name === 'L1' ? 5 : 8, rib.name === 'L1' ? 60 : 70);
   // The mound of fallen rock at the foot of the first left rib, on the side the strait sees.
   const first = RIBS[0] as Rib;
   for (let i = 0; i < 90; i++) {

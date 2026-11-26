@@ -90,6 +90,12 @@ void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 w = abs(normalize(vNb));
+  // A ledge is narrow: its top and its riser are told apart by the face itself, not by the rounded normal between them.
+  vec3 ng = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  ng *= sign(dot(ng, v) + 1e-6);
+  float tier = step(0.5, uTier);
+  w = mix(w, vec3(abs(ng.y), 0.0, length(ng.xz)), tier);
+  n0 = normalize(mix(n0, ng, 0.3 * tier));
   w = w * w;
   w = w * w;
   // The broad face is laid by (across, along); the second plane is the edge (through, along) or a ledge's top (across, through).
@@ -149,11 +155,11 @@ void main() {
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (nh.z - 0.5);
   float weed = smoothstep(tide + 0.5, tide - 0.5, y);
   float band = smoothstep(tide + 5.0, tide + 0.5, y);
-  float damp = smoothstep(tide + 26.0, tide + 2.0, y);
+  float damp = smoothstep(tide + 40.0 + 30.0 * (macro - 0.5), tide + 2.0, y);
   // The run of water and of white down a face: by the level way across it and the height, whichever plane it is laid on.
   vec2 fall = vec2(mix(vBlade.w, vBlade.z, kB * (1.0 - top)), y);
   float stain = smoothstep(0.42, 0.7, vnoise(fall * vec2(0.23, 0.021)) * 0.6 + vnoise(fall * vec2(0.9, 0.06) + 7.0) * 0.4);
-  albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.6), stain * 0.7);
+  albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.6), stain * 0.7 * (1.0 - step(0.5, uTier)));
   float roost = vnoise(fall * vec2(0.031, 0.045) + 2.0) * 0.65 + vnoise(fall * vec2(0.11, 0.13)) * 0.35;
   float run = vnoise(fall * vec2(1.3, 0.05) + 11.0) * 0.6 + vnoise(fall * vec2(4.1, 0.16)) * 0.4;
   float white = smoothstep(0.45, 0.75, run * (0.35 + 1.1 * roost) + 0.25 * (nh.z - 0.5)) * smoothstep(0.3, 0.55, roost);
@@ -169,13 +175,14 @@ void main() {
     // The coursed tile is laid small over it for what the lens sees at arm's length.
     albedo = det * mix(vec3(1.0), big / vec3(0.229, 0.21, 0.178), 0.6) * (0.9 + 0.2 * macro) * uRockTint;
     damp *= 0.4;
+    white = 0.7 * smoothstep(0.5, 0.9, n0.y) * smoothstep(0.35, 0.6, roost + 0.3 * (nhW.z - 0.5)) * (1.0 - band);
     albedo = mix(albedo, vec3(0.62, 0.3, 0.06) * (0.6 + 0.8 * nhW.z), 0.25 * lichen * (1.0 - 0.7 * white));
     albedo = mix(albedo, vec3(0.8, 0.79, 0.75) * (0.75 + 0.5 * nhW.z), 0.35 * white);
   } else {
     albedo = mix(albedo, vec3(0.62, 0.34, 0.09) * (0.5 + 1.6 * det.r), 0.75 * lichen * (1.0 - 0.6 * uFin));
     albedo = mix(albedo, vec3(0.8, 0.79, 0.76) * (0.6 + 1.3 * det.g), 0.6 * white);
   }
-  albedo *= mix(1.0, 0.72, damp) * mix(1.0, 0.14, band);
+  albedo *= mix(1.0, 0.5, damp) * mix(1.0, 0.14, band);
   vec3 wc = texture2D(tWeed, fall / 7.0).rgb;
   albedo = mix(albedo, wc * 0.9, weed);
   float rough = mix(0.92, 0.45, max(weed, band));
@@ -293,7 +300,13 @@ void main() {
   // Stones where the floor stands proud, rippled sand where it lies low.
   float bar = smoothstep(0.3, 0.52, ps.z + 0.5 * clamp(over, -0.2, 0.3) + 0.1 * (nh.z - 0.5));
   vec3 grain = mix(sand / 0.128, det / 0.122, bar);
-  vec3 albedo = plate * mix(vec3(1.0), grain, 0.7) * 1.15;
+  grain = mix(vec3(dot(grain, vec3(0.333))), grain, 0.5);
+  // Close under the lens the plate is a smear: there the stones and the sand carry the floor.
+  float close = smoothstep(70.0, 8.0, length(cameraPosition - vWorld));
+  vec3 albedo = mix(plate, vec3(dot(plate, vec3(0.333))), 0.5 * close) * mix(vec3(1.0), grain, mix(0.7, 1.0, close)) * 0.74;
+  // Cast weed lies in dark patches on the bars and at the edge of the pools.
+  float castWeed = smoothstep(0.6, 0.7, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * nh.z + 0.1 * bar);
+  albedo = mix(albedo, vec3(0.035, 0.028, 0.014) * (0.5 + nh.z), 0.85 * castWeed);
   // What lies under the sheets is dark drowned sand; the plate's hollows hold a film that shows the sky; every stone above is wet.
   float under = smoothstep(0.01, -0.05, over);
   float low = smoothstep(0.24, 0.12, ps.z + 0.08 * (nh.z - 0.5));
@@ -303,7 +316,7 @@ void main() {
   float rough = mix(mix(0.5, 0.34, damp), 0.06, film);
   rough = mix(rough, 0.9, under);
   albedo *= mix(1.0, 0.72, damp) * mix(1.0, 0.55, under);
-  vec2 g = (nh.xy - 0.5) * 3.5 * bar;
+  vec2 g = (nh.xy - 0.5) * mix(3.5, 5.0, close) * max(bar, 0.6 * close);
   vec3 n = normalize(vNormal + vec3(ps.x, 0.0, ps.y) * 2.6 * (1.0 - 0.85 * film) + vec3(g.x, 0.0, -g.y) * mix(1.0, 0.05, wet));
   float cavity = 0.55 + 0.45 * smoothstep(0.08, 0.4, ps.z);
   float occ = mix(cavity * (0.5 + 0.5 * smoothstep(0.1, 0.55, nh.z)), 1.0, wet);
@@ -381,7 +394,8 @@ void main() {
   cover *= uWeedy;
   // A stone on the floor has its own tone: some slate, some nearly black, a few pale.
   float tone = vnoise(vWorld.xz * 2.3 + 0.5);
-  vec3 albedo = mix(side * mix(0.7 + 0.9 * tone, 0.6, uWeedy), wc * 0.55, 0.75 * cover);
+  side = mix(vec3(dot(side, vec3(0.333))), side, 0.45);
+  vec3 albedo = mix(side * mix(0.4 + 0.6 * tone, 0.55, uWeedy), wc * 0.5, 0.8 * cover);
   float rough = mix(mix(0.3, 0.45, uWeedy), 0.35, cover);
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);

@@ -46,8 +46,8 @@ export const AT = {
 /** The edge of the planet as the master draws it: a circle, px of the master. */
 export const LIMB = traced.limb;
 
-/** The sun stands low to the right of the picture and a little toward its top: the glint lies on the sea at the right edge. Toward the sun, unit. */
-export const SUN: [number, number, number] = [0.78, 0.5, -0.38];
+/** The sun stands low toward the top of the picture and a little to its left, the side the maps of the ground are lit from. Toward the sun. */
+export const SUN: [number, number, number] = [-0.2, 0.5, -0.78];
 
 function keysOfRise(): { frames: number[]; windows: RiseWindow[] } {
   const frames: number[] = [];
@@ -104,5 +104,5 @@ export function poseAt(frame: number): Pose {
 export const BEAT = eventSeconds(UNIT, 'heartbeat');
 
 /** The rings on the lake that the Eye hands over fade out between these widths of the view, in units of the width at the first frame. */
-export const RING_FADE: [number, number] = [1.2, 1.9];
+export const RING_FADE: [number, number] = [1.0, 1.13];
 export { handoff, traced, tuning };

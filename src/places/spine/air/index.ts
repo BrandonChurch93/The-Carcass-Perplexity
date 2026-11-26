@@ -6,9 +6,10 @@ import { QUAD_VERTEX } from '../../../core/post';
 import { FIRST, crest, frameAt, spires, type Spire } from '../ridge';
 import type { Context, Piece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
-import { INSIDE_FROM } from '../shared/anchors';
+import { secondsInPlace, shotById } from '../../../film/cut';
+import { INSIDE_FROM, UNIT } from '../shared/anchors';
 import { bakeNoise } from './noise';
-import { createSky } from './sky';
+import { createSky, skyPictures } from './sky';
 import { VOLUME_FRAGMENT } from './volume';
 
 export const PARTS: readonly string[] = ['sky', 'air', 'cloud-sea', 'cloud', 'spindrift'];
@@ -58,9 +59,13 @@ function ridgeTexture(): THREE.DataTexture {
   return t;
 }
 
+const STRIKE_FROM = secondsInPlace(UNIT, shotById('spine-04').first);
+
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
-  const sky = createSky(ctx, noise);
+  const pictures = skyPictures(ctx);
+  const skyStage = (pictures.uSkyStage as THREE.IUniform<THREE.Vector4>).value;
+  const sky = createSky(ctx, noise, pictures);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('cloud-sea', 'built');
@@ -80,9 +85,11 @@ export function create(ctx: Context): Piece {
     uniforms: {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
+      ...pictures,
       tNoise: { value: noise },
       tRidge: { value: ridge },
       tDeck: { value: ctx.assets.texture('mat/cloudsea.jpg') },
+      tFar: { value: ctx.assets.texture('mat/far.jpg', { repeat: false }) },
       tSeaNh: { value: ctx.assets.texture('mat/cloudsea-nh.png', { kind: 'data' }) },
       uSteam: { value: steam },
       uSteamMore: { value: steamMore },
@@ -112,6 +119,8 @@ export function create(ctx: Context): Piece {
       (volume.uniforms.uSteamCount as THREE.IUniform<number>).value = count;
       // Staged by shot: inside the canal the gale does not reach, so no spindrift runs over its floor.
       stage.x = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0 : 1;
+      // Staged by shot: in the long lens of the strike (spine-04) the storm wall stands 44 degrees further round, behind the struck spire.
+      skyStage.x = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4 ? 0.77 : 0;
     },
     solo: (part) => {
       const only = (name: string): number => (part === null || !part.startsWith('spine/') || !PARTS.includes(part.slice(6)) || part === 'spine/sky' || part === `spine/${name}` ? 1 : 0);
