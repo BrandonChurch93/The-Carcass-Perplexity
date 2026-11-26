@@ -35,6 +35,14 @@ void turn(inout vec3 p, inout vec3 n, vec3 pivot, float a) {
   n = vec3(n.x, n.y * c - n.z * s, n.y * s + n.z * c);
 }
 
+void lean(inout vec3 p, inout vec3 n, vec3 pivot, float a) {
+  float c = cos(a);
+  float s = sin(a);
+  vec3 d = p - pivot;
+  p = pivot + vec3(d.x * c - d.y * s, d.x * s + d.y * c, d.z);
+  n = vec3(n.x * c - n.y * s, n.x * s + n.y * c, n.z);
+}
+
 void main() {
   vec3 p = position;
   vec3 n = normal;
@@ -43,8 +51,8 @@ void main() {
   if (part < 0.5) {
     // The chest fills and empties.
     float chest = smoothstep(0.35, 0.75, aBone.y) * (1.0 - smoothstep(0.85, 1.0, aBone.y));
-    p.x *= 1.0 + 0.022 * chest * aLife.y;
-    p.y += 0.012 * chest * aLife.y * step(1.4, p.y);
+    p.x *= 1.0 + 0.05 * chest * aLife.y;
+    p.y += 0.02 * chest * aLife.y * step(1.4, p.y);
   } else if (part < 2.5) {
     vec3 pivot = vec3(${BODY.neckPivot.map((v) => v.toFixed(3)).join(', ')});
     if (part > 1.5) {
@@ -52,6 +60,8 @@ void main() {
       turn(p, n, pivot + vec3(0.0, ${BODY.neckLength.toFixed(3)}, 0.0), -0.3 - 0.9 * smoothstep(0.5, 2.4, aPose.x));
     }
     float along = clamp((p.y - pivot.y) / ${BODY.neckLength.toFixed(3)}, 0.0, 1.0);
+    // It looks about, or moves its mouth along the water: the neck bends to one side, most at the head.
+    lean(p, n, pivot, aLife.z * mix(along, 1.0, step(1.5, part)));
     turn(p, n, pivot, aPose.x * mix(smoothstep(-0.12, 0.34, along), 1.0, step(1.5, part)));
   } else if (part < 3.5) {
     float id = aBone.z;
@@ -74,7 +84,7 @@ void main() {
     turn(p, n, hip, hipTurn * smoothstep(-0.1, 0.12, aBone.y));
     p.x += sign(p.x) * 0.1 * lie * smoothstep(0.1, 0.5, aBone.y);
   } else {
-    turn(p, n, vec3(0.0, 1.5, -0.82), 0.25 * aBone.y * sin(uTime * 1.9 + aLife.x * 40.0) * smoothstep(0.2, 0.9, sin(uTime * 0.37 + aLife.x * 17.0)));
+    turn(p, n, vec3(0.0, 1.5, -0.82), 0.25 * aBone.y * sin(uTime * 1.9 + aLife.x * 40.0) * smoothstep(-0.5, 0.4, sin(uTime * 0.37 + aLife.x * 17.0)));
   }
   vRest = position;
   vRestNormal = normal;
@@ -166,7 +176,7 @@ export function create(ctx: Context): Piece {
   mesh.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('drinkers', mesh));
   const shade = ctx.rig.contactDiscs(count);
-  for (let i = 0; i < 12; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
+  for (let i = 0; i < 22; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
 
   const dummy = new THREE.Object3D();
   const NECK_UP = 30 * DEG;
@@ -200,16 +210,19 @@ export function create(ctx: Context): Piece {
         const ground = Math.max(-0.45, landHeight(x, z));
         const lie = d.lies ? 1 : 0;
         const facing = d.walk > 0 ? Math.atan2(-x, z) / DEG : d.facing;
-        const sway = 0.012 * size * Math.sin(t * 0.6 + i * 1.7);
+        const sway = 0.006 * size * Math.sin(t * 0.6 + i * 1.7);
         dummy.position.set(x + sway * Math.cos(facing * DEG), ground - 0.02 * size - lie * 0.86 * size + walking * 0.018 * size * Math.sin(cycle * Math.PI * 4), z + sway * Math.sin(facing * DEG));
-        dummy.rotation.set(0, Math.PI - facing * DEG, lie * 0.1);
+        // Its weight goes from one side to the other over feet that stay where they are.
+        const shift = (1 - lie) * (0.024 * Math.sin(t * 0.83 + i * 1.7) + 0.012 * Math.sin(t * 0.31 + i * 0.9));
+        dummy.rotation.set((1 - lie) * 0.012 * Math.sin(t * 0.47 + i * 2.9), Math.PI - facing * DEG, lie * 0.1 + shift);
         dummy.scale.setScalar(size);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
         const down = Math.min(1, Math.max(0, d.down(t)));
         const neck = NECK_UP + (NECK_DOWN - NECK_UP) * down + 0.03 * Math.sin(t * 0.7 + i * 2.3) * (1 - down);
         pose.setXYZW(i, neck, lie, cycle, walking);
-        life.setXYZW(i, (i * 0.618034) % 1, Math.sin(t * (1.25 + 0.3 * ((i * 0.37) % 1)) + i * 1.3), 0, 0);
+        const look = (0.05 + 0.3 * (1 - down)) * (Math.sin(t * 0.43 + i * 2.1) + 0.5 * Math.sin(t * 1.1 + i * 0.7)) / 1.5;
+        life.setXYZW(i, (i * 0.618034) % 1, Math.sin(t * (1.25 + 0.3 * ((i * 0.37) % 1)) + i * 1.3), look, 0);
         // The shade under it, laid along the ground away from the sun.
         const long = 2.6;
         const off = size * 0.9 * (long - 1) * 0.5;
@@ -226,6 +239,20 @@ export function create(ctx: Context): Piece {
             slot.z = mz;
             slot.strength = drinks;
           }
+        }
+      });
+      // Rings from the legs of the ones the close shots are about, where they stand in the water.
+      animals.forEach((d, i) => {
+        if (i >= 9 || lap >= ctx.laps.length) return;
+        const size = d.size * SCALE;
+        const fx = d.x + Math.sin(d.facing * DEG) * 0.75 * size;
+        const fz = d.z - Math.cos(d.facing * DEG) * 0.75 * size;
+        if (landHeight(fx, fz) > -0.03) return;
+        const slot = ctx.laps[lap++];
+        if (slot) {
+          slot.x = fx;
+          slot.z = fz;
+          slot.strength = 0.3 + 0.2 * Math.sin(t * 0.83 + i * 1.7);
         }
       });
       for (; lap < ctx.laps.length; lap++) {

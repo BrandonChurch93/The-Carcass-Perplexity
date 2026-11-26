@@ -13,7 +13,7 @@ import { WATER_GLSL, createMirror, waterUniforms } from './water';
 export const PARTS: readonly string[] = ['lake', 'shallows', 'shaft', 'mats', 'riser'];
 
 const RINGS = 21;
-const LAPS = 12;
+const LAPS = 22;
 
 const FLOOR_VERTEX = /* glsl */ `
 uniform float uLift;
@@ -267,6 +267,10 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 ${WATER_GLSL}
 ${MATS_GLSL}
+// The slope of a field of noise: what a slow swell does to a mirror.
+vec2 heave(vec2 q) {
+  return vec2(vnoise(q + vec2(0.35, 0.0)) - vnoise(q - vec2(0.35, 0.0)), vnoise(q + vec2(0.0, 0.35)) - vnoise(q - vec2(0.0, 0.35)));
+}
 void main() {
   vec3 p = vWorld;
   float r = length(p.xz);
@@ -289,13 +293,23 @@ void main() {
     vec2 d = p.xz - l.xy;
     float m = length(d);
     if (l.w > 0.0 && m < 14.0) {
-      float ph = m * 7.0 - (uTime + l.z) * 6.2;
-      float env = l.w * 0.0045 * exp(-m / 2.6) * smoothstep(0.05, 0.5, m);
-      slope += d / max(m, 1e-3) * (env * 7.0 * cos(ph));
+      // Rings that leave where it touches the water: two trains of unlike length, so no ring comes round to where the last one stood.
+      float ph = m * 6.3 - (uTime + l.z) * 4.37;
+      float ph2 = m * 10.9 - (uTime + l.z * 2.3) * 7.9;
+      float pack = 0.6 + 0.4 * sin(m * 0.8 - uTime * 1.13 + l.z * 5.0);
+      float env = l.w * 0.0036 * exp(-m / 2.6) * smoothstep(0.05, 0.5, m) * pack;
+      slope += d / max(m, 1e-3) * (env * (6.3 * cos(ph) + 4.0 * cos(ph2)));
     }
   }
-  vec2 q = p.xz * 0.045 + vec2(uTime * 0.02, uTime * 0.013);
-  slope += 0.0016 * vec2(vnoise(q) - vnoise(q + vec2(0.7, 0.0)), vnoise(q + vec2(3.1, 1.7)) - vnoise(q + vec2(3.1, 2.4)));
+  // A breath of wind: a long slow heave, wavelets that travel with it, and lanes where a gust has roughened the mirror.
+  float away = length(cameraPosition - p);
+  vec2 wind = vec2(0.8, 0.6);
+  float gust = smoothstep(0.42, 0.78, vnoise(vec2(dot(p.xz, wind), dot(p.xz, vec2(-wind.y, wind.x)) * 2.6) / 150.0 - vec2(uTime * 0.07, 0.0)));
+  slope += 0.011 * heave(p.xz / 46.0 - wind * uTime * 0.14);
+  float mid = 1.0 - smoothstep(250.0, 700.0, away);
+  if (mid > 0.0) slope += (0.006 + 0.012 * gust) * mid * heave(p.xz / 9.0 - wind * uTime * 0.12 + 7.0);
+  float close = 1.0 - smoothstep(40.0, 140.0, away);
+  if (close > 0.0) slope += (0.004 + 0.014 * gust) * close * heave(p.xz / 1.9 - wind * uTime * 0.3 + 3.0);
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   vec3 v = normalize(cameraPosition - p);
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -310,6 +324,8 @@ void main() {
   // The land stands in the water darker than it stands in the air.
   vec3 refl = seen.rgb * vec3(0.44, 0.48, 0.55) + (1.0 - seen.a) * sky;
   refl = mix(refl, sky, smoothstep(0.75, 0.95, v.y));
+  // Where a gust has passed, the mirror is broken and the water gives back the pale of the sky.
+  refl = mix(refl, refl * 0.3 + sky * 0.5, 0.55 * gust * (1.0 - smoothstep(0.3, 0.8, v.y)));
   // The dome is no flat mirror: its slopes throw back the dim upper sky, and it stands dark on the bright water.
   float du = clamp(r / uDome.y, 0.0, 1.0);
   float swell = (1.0 - du * du) * clamp(uDome.x / 2.0, 0.0, 1.0);

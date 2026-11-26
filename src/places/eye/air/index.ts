@@ -30,8 +30,8 @@ void main() {
   float along = (az - 0.42) / 0.5;
   float lane = el - 0.2 - 0.03 * along - 0.012 * sin(along * 5.0);
   if (abs(lane) < 0.02 && abs(along) < 1.8) {
-    float wisp = fbm(vec2(az * 26.0 - uTime * 0.004, lane * 240.0));
-    float fine = fbm(vec2(az * 90.0 - uTime * 0.006, lane * 520.0) + 4.0);
+    float wisp = fbm(vec2(az * 26.0 - uTime * 0.014, lane * 240.0));
+    float fine = fbm(vec2(az * 90.0 - uTime * 0.03, lane * 520.0) + 4.0);
     float streak = exp(-along * along * 1.6) * exp(-pow(lane / 0.006, 2.0)) * smoothstep(0.25, 0.7, 0.6 * wisp + 0.4 * fine);
     c += (uSunColour * 0.085 + uSkyHorizon * 0.25) * streak * 0.45;
   }
@@ -60,8 +60,8 @@ float mistAt(vec3 p, vec4 land) {
   float lift = 3.0 + 6.0 * vnoise(p.xz / 210.0 + 3.0);
   float thick = band * far * exp(-max(p.y, 0.0) / lift);
   if (thick < 0.004) return 0.0;
-  vec2 q = p.xz / 150.0 + vec2(uTime * 0.012, -uTime * 0.007);
-  float banks = smoothstep(0.3, 0.72, 0.55 * vnoise(q) + 0.3 * vnoise(q * 2.3 + 5.0) + 0.15 * vnoise(q * 6.1) + 0.18 * vnoise(p.xz / 23.0 + uTime * 0.03));
+  vec2 q = p.xz / 150.0 + vec2(uTime * 0.05, -uTime * 0.028);
+  float banks = smoothstep(0.3, 0.72, 0.55 * vnoise(q) + 0.3 * vnoise(q * 2.3 + 5.0) + 0.15 * vnoise(q * 6.1) + 0.18 * vnoise(p.xz / 23.0 + uTime * 0.11));
   return thick * banks;
 }
 

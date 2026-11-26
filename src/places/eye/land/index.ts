@@ -40,7 +40,7 @@ void main() {
   vec4 land = landAt(vWorld.xz);
   float damp = smoothstep(1.9, 0.5, vWorld.y + 0.5 * vnoise(vWorld.xz * 0.7)) * (1.0 - face);
   k.albedo *= mix(1.0, 0.3, damp) * mix(1.0, 0.28, smoothstep(0.03, -0.12, vWorld.y) * (1.0 - face));
-  k.rough = mix(k.rough, 0.35, damp * 0.8);
+  k.rough = mix(k.rough, 0.8, damp);
   // Under the brow the wall and the scree stand in a cave: the further back from the water, the less of the sky they see.
   float bearing = degrees(atan(vWorld.x, -vWorld.z));
   float roofed = smoothstep(26.0, 52.0, bearing) * (1.0 - smoothstep(116.0, 142.0, bearing));
