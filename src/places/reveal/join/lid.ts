@@ -145,6 +145,8 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     float wisp = 1.0;
     float shadeBy = 1.0;
     float knotLit = 0.5;
+    // The top of the sheet is lit by the sun and the sky whether the lens is over it yet or not: nothing changes when the lens comes out.
+    float above = max(over, smoothstep(0.95, 1.02, layer.x));
     if (c1 > 0.0) {
       float g1 = vnoise(f * 290.0 + layer.x * 71.0 - d * 14.0);
       float g2 = 0.5;
@@ -169,10 +171,24 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
         float w0 = x0 < 0.0 ? max(1.0 + x0 / 1.5, 0.0) : max(1.0 - x0 / 3.5, 0.0);
         float total = max(w0 + w.x + w.y + w.z + w.w, 1e-3);
         float knots = (w0 * m47 + w.x * finest + w.y * g1 + w.z * g2 + w.w * g3) / total;
-        knots = clamp(0.5 + 0.6 * (knots - 0.5) * total / max(sqrt(w0 * w0 + dot(w, w)), 1e-3), 0.0, 1.0);
+        float gain = 0.6 * total / max(sqrt(w0 * w0 + dot(w, w)), 1e-3);
+        knots = clamp(0.5 + gain * (knots - 0.5), 0.0, 1.0);
         wisp = mix(1.0, smoothstep(0.34, 0.66, knots), nearby);
         shadeBy = mix(1.0, 0.6 + 0.8 * knots, nearby);
         knotLit = knots;
+        if (above > 0.0) {
+          // One sun: a knot is lit where the cloud a little way toward the dusk stands no higher, and in shade on its other side.
+          vec2 fo = comb * (q + sunSide * 0.1 * near);
+          vec2 fo2 = vec2(0.8 * fo.x - 0.6 * fo.y, 0.6 * fo.x + 0.8 * fo.y);
+          vec2 fo3 = vec2(0.33 * fo.x - 0.94 * fo.y, 0.94 * fo.x + 0.33 * fo.y);
+          float toward = 0.0;
+          if (w0 > 0.0) toward += w0 * vnoise(fo2 * 47.0 + layer.x * 91.0 - d * 5.0);
+          if (w.x > 0.0) toward += w.x * vnoise(fo3 * 113.0 + layer.x * 53.0 + d * 9.0);
+          if (w.y > 0.0) toward += w.y * vnoise(fo * 290.0 + layer.x * 71.0 - d * 14.0);
+          if (w.z > 0.0) toward += w.z * vnoise(fo2 * 700.0 + layer.x * 29.0 + d * 30.0);
+          if (w.w > 0.0) toward += w.w * vnoise(fo3 * 1700.0 + layer.x * 43.0 - d * 60.0);
+          knotLit = clamp(0.5 + 5.0 * (knots - 0.5 - gain * (toward / total - 0.5)), 0.0, 1.0);
+        }
       }
       finest = mix(finest, 0.45 * finest + 0.55 * more, c1);
     }
@@ -191,8 +207,6 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     vec3 colour = within * (0.4 + 1.2 * mix(fine, 0.6 * fine + 0.4 * finest, close)) * mix(0.7, 1.25, smoothstep(0.86, 1.0, layer.x)) * shadeBy;
     // While the lens is in the cloud what is close under it is bright and what lies deeper is dim: the eye reads the depth it climbs out of.
     float dim = mix(1.0, mix(1.22, 0.6, smoothstep(0.004, 0.09, near)), inCloud);
-    // The top of the sheet is lit by the sun and the sky whether the lens is over it yet or not: nothing changes when the lens comes out.
-    float above = max(over, smoothstep(0.95, 1.02, layer.x));
     if (above > 0.0) {
       // The low sun reaches a place on the sheet when the cloud toward it stands no higher: every lump has a lit side and a side in shade.
       vec2 toSun = q + sunSide * 0.03;
@@ -201,7 +215,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       float lit = clamp(0.5 + 6.0 * (h - hs) + 0.5 * (cover - 0.75), 0.0, 1.0);
       lit = lit * lit * (3.0 - 2.0 * lit) * mix(0.4, 1.0, tr);
       // Close under the lens the lumps are too large to have a lit side and a side in shade.
-      lit = mix(clamp(1.6 * knotLit - 0.3, 0.0, 1.0), lit, smoothstep(0.015, 0.1, near));
+      lit = mix(knotLit, lit, smoothstep(0.05, 0.1, near));
       vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.5 + 1.0 * n) * (0.8 + 0.4 * finest);
       colour = mix(colour, top, above);
     }
