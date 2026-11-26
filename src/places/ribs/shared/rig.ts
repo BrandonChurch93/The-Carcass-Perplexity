@@ -42,7 +42,7 @@ export const BREAK2 = { x: -200, z: 530, radius: 170, gain: 0.9 };
  * the right of the first frame, over the far row; `burn` is what it is given over its own brightness.
  */
 export const STORM = { gain: -0.25, dim: 0.42, holds: 4.5, ends: 14, turn: -0.4, burn: 0.5 };
-const SKY_GAIN = 1.1;
+const SKY_GAIN = 2.3;
 /** What the lit flats and sea throw back up of the sun's light, by colour: wet sand and shingle, warm. */
 const BOUNCE = [0.2, 0.185, 0.16] as const;
 /** The colour a depth of air goes to: the horizon's pale slate. */
@@ -428,10 +428,10 @@ export function createRig(): Rig {
     return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0 };
   };
   const breakToward = (seconds: number, drifted = seconds): void => {
-    // The break drifts with the cloud: six tenths of a degree a second, to the right. In the picture it lies 0.786 radians right of the middle.
+    // The break drifts with the cloud: six tenths of a degree a second, to the right. In the picture it lies 0.715 radians right of the middle.
     const own = stagedBreak();
     const yaw = ((own.yaw + 0.6 * (drifted - own.at)) * Math.PI) / 180;
-    skyTurn.x = yaw - 0.93;
+    skyTurn.x = yaw - 0.715;
     // The lumps of the cloud work as it goes: fast enough that six seconds of a held lens show it.
     skyTurn.y = 0.021 * seconds;
     skyTurn.z = 0.027 * seconds;
