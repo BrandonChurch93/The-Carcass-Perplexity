@@ -78,12 +78,21 @@ void main() {
   vec3 c = skyRadiance(d);
   // The fog overhead is not even: slow banks of it, long and level, a little brighter where they are thin. They close up toward the horizon.
   vec2 q = d.xz / (max(d.y, 0.0) + 0.16);
-  q += vec2(uTime * 0.0016, uTime * 0.0005);
-  float a = textureLod(tNoise, vec3(q.x * 0.05, q.y * 0.11, 0.21), 0.0).g;
-  float b = textureLod(tNoise, vec3(q.x * 0.17 + 0.4, q.y * 0.4, 0.57), 0.0).a;
+  // They go down the wind, each at the pace of its own height: the low deck a walk across the sky in a held shot, the high one half of
+  // that, so the two slide over one another; and each turns over slowly as it goes (the third reading of the block).
+  vec2 wind = vec2(-0.94, 0.34);
+  vec2 qa = q - wind * (uTime * 0.011);
+  vec2 qb = q - wind * (uTime * 0.0055);
+  float a = textureLod(tNoise, vec3(qa.x * 0.05, qa.y * 0.11, 0.21 + uTime * 0.0012), 0.0).g;
+  float b = textureLod(tNoise, vec3(qb.x * 0.17 + 0.4, qb.y * 0.4, 0.57 + uTime * 0.0021), 0.0).a;
   float n = a * 0.65 + b * 0.35;
   float high = smoothstep(0.02, 0.3, d.y);
   c *= 1.0 + high * 0.34 * (n - 0.5);
+  // Under them the haze over the flats lies in long level streaks that creep the same way, nearer and so faster across the eye.
+  float bearing = atan(d.x, -d.z);
+  float low = smoothstep(0.0, 0.03, d.y) * smoothstep(0.2, 0.05, d.y);
+  float streak = textureLod(tNoise, vec3(bearing * 0.42 + uTime * 0.0045, d.y * 3.4, 0.83 + uTime * 0.002), 0.0).g;
+  c *= 1.0 + low * 0.2 * (streak - 0.5);
   // The sun: a pale hot heart with no edge, inside the glare that the fog spreads and turns deep gold.
   float s = dot(d, uSunDir);
   c += uSunColour * (vec3(1.0, 0.88, 0.62) * (5.0 * smoothstep(0.9995, 0.99997, s)) + vec3(1.0, 0.42, 0.1) * (0.8 * pow(max(s, 0.0), 500.0) + 0.25 * pow(max(s, 0.0), 60.0)));
