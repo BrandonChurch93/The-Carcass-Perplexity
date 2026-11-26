@@ -57,7 +57,7 @@ vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   float p2 = k * 1.83 * (along - c * 1.17 * uTime) + shape.z * 2.7;
   float p3 = k * 4.1 * (along - c * 1.3 * uTime) + shape.z * 5.1;
   float grow = smoothstep(0.0, 1.0, u * 1.15) * (0.35 + 0.65 * u);
-  float amp = 0.02 * len * grow;
+  float amp = (0.02 + 0.014 * uStageMore.x + 0.012 * step(0.01, uStageMore.y)) * len * grow;
   // A gust lifts or drops the whole ribbon slowly.
   float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4;
   float fan = (fract(more.y * 13.7) - 0.5) * (more.w > 0.9 ? 0.4 : 0.12);
@@ -79,7 +79,7 @@ attribute vec2 aAt;
 uniform float uPixel;
 uniform float uReach;
 uniform vec4 uStage;
-uniform vec2 uStageMore;
+uniform vec3 uStageMore;
 ${SHAPE_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormal;
@@ -103,8 +103,20 @@ void main() {
         return;
       }
     } else {
-      shape.x *= uStage.x;
-      shape.w *= uStage.x;
+      // In the long lens one veil of each spire is long and the rest are short, and half of the bare threads are gone.
+      float lead = uStageMore.x > 0.5 ? mix(0.5, 1.7, step(350.0, aShape.x)) : 1.0;
+      // In the wide lens fewer of the short ribbons fly, so that each is seen apart from the next.
+      if (uStageMore.z > 0.7 && more.w < 0.9 && aShape.x < 180.0 && fract(more.y * 17.7) < 0.45) {
+        gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+        return;
+      }
+      // uStageMore.z: the share of the bare threads that are not drawn.
+      if (more.w > 0.9 && fract(more.y * 11.3) < uStageMore.z) {
+        gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+        return;
+      }
+      shape.x *= uStage.x * lead;
+      shape.w *= uStage.x * lead;
       shape.y *= uStage.y;
       more.w = more.w > 0.9 ? more.w : min(more.w * uStage.z, 0.45);
       // uStageMore.y: how much the staged ribbons climb the wind, as a slope.
@@ -137,11 +149,8 @@ void main() {
   vec3 normal_ = cross(tangent, across);
   // Its width: a cord for the stalk, widening to the blade, a slow taper, and a ragged tail.
   float blade = smoothstep(more.w, more.w + 0.09, u);
-  float breadth = 0.75 + 0.25 * sin(u * 9.0 + more.y * 40.0) * sin(u * 23.0 + more.y * 11.0);
-  // Long and narrow: widest a third of the way out, drawn down from there to a thread.
-  float bu = clamp((u - more.w) / (1.0 - more.w), 0.0, 1.0);
-  float profile = pow(smoothstep(0.0, 0.25, bu), 0.8) * mix(1.0, mix(0.4, 0.1, stand), smoothstep(0.45, 1.0, bu));
-  float halfW = 0.5 * shape.y * blade * breadth * 2.0 * profile;
+  // The strip is as wide as the picture laid on it: the picture's own outline is the ribbon's.
+  float halfW = shape.y * blade;
   float far = length(cameraPosition - c);
   float cord = max(0.15, (1.25 + 0.6 * stand) * uPixel * far);
   // Along the stalk the strip is wider than the cord: room for the knots on it and for what hangs from it.
@@ -169,8 +178,13 @@ uniform vec3 uGlowTint;
 uniform vec4 uFilm;
 uniform vec2 uWrinkle;
 uniform vec2 uTone;
-uniform sampler2D tMembrane;
-uniform sampler2D tMembraneH;
+uniform sampler2D tFilmA;
+uniform sampler2D tFilmAA;
+uniform sampler2D tFilmAH;
+uniform sampler2D tFilmB;
+uniform sampler2D tFilmBA;
+uniform sampler2D tFilmBH;
+uniform float uVeil;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vAt;
@@ -192,30 +206,33 @@ void main() {
   if (dot(n, toCamera) < 0.0) n = -n;
   float blade = smoothstep(vMore.w, vMore.w + 0.07, u);
 
-  // The skin is the picture of a membrane, laid once down the blade: its torn edge, its hole and its tail are the picture's own. Each
-  // ribbon takes its own length of it, either way up, and is pulled about across its width, so no two are cut alike.
+  // The skin is the photograph of one whole ribbon, laid once down the blade: its outline, its holes, its veins and its colours are the
+  // picture's own. There are two pictures, and each ribbon wears one of them either way up.
   float s = clamp((u - vMore.w) / (1.0 - vMore.w), 0.0, 1.0);
   float vb = v / max(vThin, 0.05);
   float flip = fract(seed * 0.37) < 0.5 ? -1.0 : 1.0;
-  float from = 0.04 + 0.3 * fract(seed * 1.7);
-  float warp = 0.3 * (vnoise(vec2(metres / (2.0 * wide), seed)) - 0.5) * s;
-  vec2 uv = vec2(mix(from, 0.99, pow(s, 0.8 + 0.5 * fract(seed * 2.9))), 0.472 + flip * 0.225 * (vb + warp));
-  vec3 pic = texture2D(tMembrane, uv).rgb;
-  float relief = texture2D(tMembraneH, uv).r;
-  // The veins and folds are read from the picture at their true size, turned back on itself along the ribbon so they are never drawn out.
-  float lap = metres / (wide * 5.0) + seed;
-  vec2 uvFine = vec2(0.2 + 0.66 * abs(fract(lap * 0.5) * 2.0 - 1.0), 0.472 + flip * 0.2 * (vb + warp));
-  vec3 fine = texture2D(tMembrane, uvFine).rgb;
-  float reliefFine = texture2D(tMembraneH, uvFine).r;
-  float tatter = smoothstep(0.6, 1.0, s) * smoothstep(0.5, 0.62, vnoise(vec2(metres / (2.5 * wide) + seed, vb * 2.2 + seed)));
-  float slit = step(0.55, fract(seed * 0.61)) * smoothstep(0.3, 0.45, s) * (1.0 - smoothstep(0.0, 0.03, abs(vb - 0.5 * sin(metres / (4.0 * wide) + seed) - 0.1) - 0.02 - 0.08 * vnoise(vec2(metres / wide, seed))));
-  // The tail is torn to threads: fewer and finer toward its end, each wandering its own way.
+  float vf = vb * flip;
+  vec3 pic;
+  float body;
+  float relief;
+  if (fract(seed * 0.83) < 0.5) {
+    vec2 uv = vec2(mix(0.004, 0.97, s), 1.0 - (0.461 + 0.2 * vf));
+    pic = texture2D(tFilmA, uv).rgb;
+    body = texture2D(tFilmAA, uv).r;
+    relief = texture2D(tFilmAH, uv).r;
+  } else {
+    // This one hangs a torn strip below itself: the picture's window is wider below, and is slid so that its tip meets the cord.
+    vec2 uv = vec2(mix(0.006, 0.992, s), 1.0 - mix(0.378 + 0.2 * vf, 0.525 + 0.275 * vf, smoothstep(0.0, 0.2, s)));
+    pic = texture2D(tFilmB, uv).rgb;
+    body = texture2D(tFilmBA, uv).r;
+    relief = texture2D(tFilmBH, uv).r;
+  }
   float torn = smoothstep(0.6, 1.0, s);
-  float thread = abs(fract(vb * (1.6 + 1.6 * fract(seed * 4.1)) + 0.45 * vnoise(vec2(metres / (1.5 * wide), seed * 7.0)) + seed) - 0.5) * 2.0;
-  float threads = step(thread, 1.0 - 0.86 * torn);
-  // Where the picture ends the skin ends: read from its relief, soft, so that the picture's grain does not pepper the film with holes.
-  float body = texture2D(tMembraneH, uv, 1.5).r;
-  float cut = step(0.09, body) * step(abs(vb), 1.0) * (1.0 - step(0.5, tatter)) * (1.0 - step(0.5, slit)) * threads;
+  // The tail sheds: wisps of it part from the body, run on down the wind, thin and are gone at its end.
+  float run = metres - 0.4 * uWind.w * uTime;
+  float wisp = vnoise(vec2(run / (3.0 * wide) + seed * 9.0, vb * 1.7 + seed * 5.0)) + 0.35 * (vnoise(vec2(run / (0.8 * wide) + seed, vb * 5.0)) - 0.5);
+  float shed = smoothstep(-0.03, 0.05, wisp - mix(-0.3, 0.74, torn * torn));
+  float cut = smoothstep(0.35, 0.65, body) * step(abs(vb), 1.0) * shed;
   float edge = 1.0 - abs(vb);
   // The stalk: a cord of wet sinew, knotted where the skin grows from it and here and there along it. Under the blade it runs on as a spine.
   float stalkAt = vMore.w * vShape.x;
@@ -233,39 +250,34 @@ void main() {
   float spike = step(abs(fx), 0.05 * pow(clamp(1.0 - below / lengthOf, 0.0, 1.0), 0.7)) * step(0.0, below) * step(below, lengthOf);
   float bead = 1.0 - smoothstep(0.035, 0.05, length(vec2(fx, below - lengthOf)));
   float ice = max(spike, bead) * step(0.78, h) * (1.0 - blade) * smoothstep(0.6, 1.0, vCord) * smoothstep(0.02, 0.06, u);
-  float skin = cut * blade;
+  float skin = cut * smoothstep(vMore.w, vMore.w + 0.012, u);
   if (max(skin, max(cordHere, ice)) < 0.02) discard;
 
   // A glassy film: what is behind it shows through, and it adds the light it scatters and the sky it mirrors. The picture gives it its
   // veins and its folds: thicker there, so less shows through.
-  float lum = max(dot(fine, vec3(0.333)), 0.6 * dot(pic, vec3(0.333)));
+  float lum = dot(pic, vec3(0.333));
   float tone = clamp(lum / 0.2, 0.0, 2.2);
-  float fold = smoothstep(0.4, 0.85, max(relief, reliefFine));
+  float fold = smoothstep(0.55, 0.9, relief);
   float crease = 1.0 - smoothstep(0.2, 0.6, tone);
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
-  // Its veins: a line down the middle over the cord, and finer ones that leave it aslant and wander to the edge.
-  float vv = metres / (wide * 1.1) - 1.2 * abs(vb) + 0.4 * vnoise(vec2(metres / wide * 1.3, vb * 3.0 + seed));
-  float branch = (1.0 - smoothstep(0.008, 0.03, abs(fract(vv) - 0.5))) * (1.0 - 0.6 * abs(vb));
-  float rib = 1.0 - smoothstep(0.008, 0.025, abs(vb - 0.08 * sin(metres / wide + seed)));
-  float veins = max(branch, rib) * blade * (1.0 - 0.7 * vFar);
-  // Its edge is rolled: a pale line wherever the skin ends, the picture's own edge or the strip's.
-  float rim = max(smoothstep(0.93, 1.0, abs(vb)), 1.0 - smoothstep(0.09, 0.2, body));
+  // Its edge is rolled: a pale line wherever the skin ends, at the picture's own edge and round its holes.
+  float rim = (1.0 - smoothstep(0.55, 0.98, body)) * cut + (1.0 - smoothstep(0.0, 0.12, wisp - mix(-0.3, 0.74, torn * torn))) * torn;
   // Its wrinkles catch the sky: the bright lines of the picture's relief.
-  float wrinkle = smoothstep(uWrinkle.x, uWrinkle.y, reliefFine);
+  float wrinkle = smoothstep(uWrinkle.x, uWrinkle.y, relief);
   // The light in it: the sky on both its faces, the last band through it where the lens looks toward the dusk, the strike.
-  vec3 held = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) / 3.14159 + min(vec3(0.6), 0.2 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
+  vec3 held = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) / 3.14159;
+  if (uStruck.y > 0.0) held += min(vec3(0.6), 0.2 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
   float toDusk = pow(clamp(dot(-toCamera, uWarmDir), 0.0, 1.0), 3.0);
   vec3 lilac = mix(vec3(0.95, 0.9, 1.06), vec3(0.86, 0.82, 1.1), fract(seed * 3.3));
   // The picture's own colour about its mean: lilac, its stains of violet and gold, its veins dark.
-  vec3 stain = clamp(fine / vec3(0.2), 0.35, 1.7);
+  vec3 stain = clamp(pic / vec3(0.22, 0.2, 0.24), 0.3, 2.0);
   // Lilac-grey whatever lights it: the film keeps the light's brightness and little of its colour.
   held = mix(held, dot(held, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.7);
   vec3 c = (uFilm.x * held + uFilm.y * uWarmColour * toDusk) * mix(vec3(1.0), stain, uTone.x) * lilac * (0.8 + 0.4 * fract(seed * 5.3));
   // Thin as a soap film: where it is stretched it takes colours by its thickness and the angle it is seen at.
-  float thick = 1.2 + 2.2 * reliefFine + 1.4 * vnoise(vec2(metres / (1.7 * wide) + seed, vb * 1.3)) + 0.8 * (1.0 - nv);
+  float thick = 1.2 + 2.2 * relief + 1.4 * vnoise(vec2(metres / (1.7 * wide) + seed, vb * 1.3)) + 0.8 * (1.0 - nv);
   vec3 sheen = 0.5 + 0.5 * cos(6.2832 * thick * vec3(1.0, 1.17, 1.4));
   c *= mix(vec3(1.0), 0.55 + 0.9 * sheen, uFilm.z * (1.0 - 0.6 * fold));
-  c *= 1.0 - uTone.y * veins;
   // The side away from the sky is darker.
   c *= mix(0.6, 1.08, 0.5 + 0.5 * n.y);
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
@@ -275,17 +287,16 @@ void main() {
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.5, 0.2)) * vec3(0.92, 0.94, 1.15), 0.6);
   float glint = smoothstep(0.7, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
   // A wet sheen along the edge that leads, and on every fold that faces the sky.
-  float lead = smoothstep(0.72, 0.93, vb * flip) * (1.0 - torn);
-  vec3 shine = mirror * (0.5 * fres + uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) + 0.5 * lead + 0.6 * rim);
+  vec3 shine = mirror * (0.5 * fres + uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) + 0.6 * rim) * (1.0 - 0.55 * uVeil);
   // When a strike is near the ribbon carries the charge along its edges for a moment, violet white.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.25;
   // Seen close the film stays glass: violet in its body, and only its folds and its rolled edge take the white of the stroke.
   shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.4 * rim, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim, vFar));
   // How much of what is behind it the film hides: little where it is stretched, more at a fold, a vein, its rolled edge, and where it is
   // seen aslant. Far off it is a pale streak.
-  float cover = clamp(0.3 + 0.25 * fold + 0.2 * crease + 0.2 * veins + 0.45 * rim + 0.35 * (1.0 - smoothstep(0.1, 0.55, nv)) + 0.4 * vFar, 0.0, 0.94);
+  float cover = clamp(0.3 + 0.25 * fold + 0.35 * crease + 0.45 * rim + 0.35 * (1.0 - smoothstep(0.1, 0.55, nv)) + 0.4 * vFar, 0.0, 0.94);
   // Lilac-grey, whatever the light: glass, not flesh.
-  c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.97, 1.16), 0.6);
+  c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.97, 1.16), mix(0.2, 0.6, vFar));
   // The shine is on the film, not in it: it shows at its full strength however thin the film.
   c = (c * cover + shine) / max(cover, 0.05);
   float alpha = skin * cover;
@@ -359,9 +370,71 @@ void main() {
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
+// The holdfast as it was photographed: a cluster of frosted husks with its stalks leaving down the wind. A card that turns about the wind's
+// line to face the lens, laid over the edge of the rock where the ribbons are held.
+const HOLD_VERTEX = /* glsl */ `
+attribute vec4 aHold;
+attribute vec4 aSeed;
+uniform vec2 uKnobStage;
+uniform vec3 uGale;
+varying vec3 vWorld;
+varying vec2 vUv;
+varying vec3 vN;
+varying vec3 vT;
+varying vec3 vB;
+void main() {
+  vec3 wind = normalize(vec3(uGale.x, 0.0, uGale.z));
+  vec3 toLens = cameraPosition - aHold.xyz;
+  vec3 n = normalize(toLens - wind * dot(toLens, wind));
+  vec3 up = cross(n, wind);
+  if (up.y < 0.0) up = -up;
+  // Tilted a little, each its own way, so that the stalks leave up or down the sky.
+  float tilt = (aSeed.z - 0.5) * 0.7;
+  vec3 along = normalize(wind * cos(tilt) + up * sin(tilt));
+  vec3 rise = normalize(cross(along, n)) * sign(dot(cross(along, n), up));
+  float size = aSeed.x * uKnobStage.x;
+  vec3 p = aHold.xyz + along * ((position.x - 0.3) * size) + rise * ((position.y - 0.5) * aSeed.y * size / 1.5) + n * (0.12 * size);
+  if (uKnobStage.y > 0.0 && abs(aHold.w - uKnobStage.y) > 0.5) p = vec3(0.0, -90000.0, 0.0);
+  vWorld = p;
+  vUv = position.xy;
+  vN = n;
+  vT = along;
+  vB = rise * aSeed.y;
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`;
+
+const HOLD_FRAGMENT = /* glsl */ `
+${RIG_GLSL}
+uniform sampler2D tHold;
+uniform sampler2D tHoldH;
+varying vec3 vWorld;
+varying vec2 vUv;
+varying vec3 vN;
+varying vec3 vT;
+varying vec3 vB;
+void main() {
+  float h = texture2D(tHoldH, vUv).r;
+  float a = smoothstep(0.03, 0.1, h);
+  if (a < 0.03) discard;
+  vec3 pic = texture2D(tHold, vUv).rgb;
+  vec2 e = vec2(1.5 / 1536.0, 1.5 / 1024.0);
+  float hx = texture2D(tHoldH, vUv + vec2(e.x, 0.0)).r - texture2D(tHoldH, vUv - vec2(e.x, 0.0)).r;
+  float hy = texture2D(tHoldH, vUv + vec2(0.0, e.y)).r - texture2D(tHoldH, vUv - vec2(0.0, e.y)).r;
+  vec3 n = normalize(vN - (vT * hx + vB * hy) * 5.0);
+  vec3 toCamera = normalize(cameraPosition - vWorld);
+  // The picture was lit flat from the front: it is the husks' own colour, and their rime where it is pale.
+  float pale = smoothstep(0.12, 0.4, dot(pic, vec3(0.333)));
+  vec3 c = rigShade(vWorld, n, toCamera, pic * 1.5, mix(0.45, 0.9, pale), mix(0.45, 1.0, smoothstep(0.1, 0.6, h)));
+  gl_FragColor = vec4(rigOut(c), a * (1.0 - uSolo));
+}`;
+
+/** The knobs of flesh the second owner modelled at each holdfast. Off: the photographed cluster stands there instead. */
+const KNOBS_ON = false;
+
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('kites');
   const ribbons: Ribbon[] = [];
+  const holdfasts: { anchor: Vec3; spire: number; count: number }[] = [];
   // The face of the first spire that the lens of key spine-2 stands before: its holdfasts sit on that face, by the edge.
   const stand = step(kiteEdge, heading(tipOf(spires[FIRST + 1] as (typeof spires)[number]), kiteEdge) - 16, 78);
   const axes = finAxes(spires[FIRST] as (typeof spires)[number]);
@@ -371,11 +444,14 @@ export function create(ctx: Context): Piece {
     const reach = near ? 1 : n === FIRST + 2 ? 1.9 : n === FIRST + 1 ? 0.6 : 0.85;
     for (const [share, count] of colonies(n)) {
       const t = share + rng.range(-0.008, 0.008);
+      let held = false;
       for (let i = 0; i < count; i++) {
         // A colony is a few ribbons of one holdfast: one long streamer, the rest shorter, none alike.
         const length = (i === 0 ? rng.range(190, 260) : rng.range(70, 170)) * reach;
         const at = t + (i - (count - 1) / 2) * 0.006;
         const anchor = finEdge(sp, at, near ? 1.02 : 1.04, near ? lensSide * rng.range(0.5, 0.57) : rng.range(-0.25, 0.25));
+        if (!held) holdfasts.push({ anchor, spire: n - FIRST + 1, count });
+        held = true;
         ribbons.push({
           anchor,
           length,
@@ -443,7 +519,9 @@ export function create(ctx: Context): Piece {
   // and the one spire that flies ribbons.
   const reach = { value: 1 };
   const stage = new THREE.Vector4(1, 1, 1, 0);
-  const stageMore = new THREE.Vector2(0, 0);
+  const stageMore = new THREE.Vector3(0, 0, 0);
+  const wideShot = during('spine-01');
+  const veil = { value: 0 };
   const closeShot = during('spine-02');
   const struck = new THREE.Vector4(0, 0, 0, 0);
   const material = new THREE.ShaderMaterial({
@@ -462,8 +540,13 @@ export function create(ctx: Context): Piece {
       uWrinkle: { value: new THREE.Vector2(0.5, 0.85) },
       // How much of the picture's own colour the film keeps, and how dark its drawn veins are.
       uTone: { value: new THREE.Vector2(0.85, 0.25) },
-      tMembrane: { value: ctx.assets.texture('mat/membrane.jpg', { kind: 'colour', repeat: false, anisotropy: 8 }) },
-      tMembraneH: { value: ctx.assets.texture('mat/membrane-h.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+      uVeil: veil,
+      tFilmA: { value: ctx.assets.texture('mat/kitefilm-a.jpg', { kind: 'colour', repeat: false, anisotropy: 8 }) },
+      tFilmAA: { value: ctx.assets.texture('mat/kitefilm-a-a.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+      tFilmAH: { value: ctx.assets.texture('mat/kitefilm-a-h.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+      tFilmB: { value: ctx.assets.texture('mat/kitefilm-b.jpg', { kind: 'colour', repeat: false, anisotropy: 8 }) },
+      tFilmBA: { value: ctx.assets.texture('mat/kitefilm-b-a.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+      tFilmBH: { value: ctx.assets.texture('mat/kitefilm-b-h.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
     },
     side: THREE.DoubleSide,
     transparent: true,
@@ -504,8 +587,47 @@ export function create(ctx: Context): Piece {
   knobs.instanceMatrix.needsUpdate = true;
   knobs.frustumCulled = false;
 
-  ctx.scene.add(ctx.parts.built('tether-kites', kites, knobs));
+  // One photographed cluster for each colony, and a second, smaller and the other way up, where the colony is large.
+  const clusters: number[] = [];
+  const clusterSeeds: number[] = [];
+  const cards = ctx.rng('kites/holdfasts');
+  for (const hold of holdfasts) {
+    const size = (hold.spire === 1 ? 19 : 30) * cards.range(0.85, 1.2);
+    clusters.push(hold.anchor[0], hold.anchor[1], hold.anchor[2], hold.spire);
+    clusterSeeds.push(size, cards.next() < 0.5 ? -1 : 1, cards.next(), 0);
+    if (hold.count >= 3) {
+      clusters.push(hold.anchor[0], hold.anchor[1] - 0.3 * size, hold.anchor[2], hold.spire);
+      clusterSeeds.push(size * 0.7, cards.next() < 0.5 ? -1 : 1, cards.next(), 0);
+    }
+  }
+  const cardGeometry = new THREE.InstancedBufferGeometry();
+  cardGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]), 3));
+  cardGeometry.setIndex([0, 1, 2, 0, 2, 3]);
+  cardGeometry.setAttribute('aHold', new THREE.InstancedBufferAttribute(new Float32Array(clusters), 4));
+  cardGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(new Float32Array(clusterSeeds), 4));
+  cardGeometry.instanceCount = clusters.length / 4;
+  const holdMaterial = new THREE.ShaderMaterial({
+    vertexShader: HOLD_VERTEX,
+    fragmentShader: HOLD_FRAGMENT,
+    uniforms: {
+      ...ctx.rig.uniforms,
+      uKnobStage: { value: knobStage },
+      uGale: { value: new THREE.Vector3(WIND[0], WIND[1], WIND[2]) },
+      tHold: { value: ctx.assets.texture('mat/holdfast.jpg', { kind: 'colour', repeat: false, anisotropy: 8 }) },
+      tHoldH: { value: ctx.assets.texture('mat/holdfast-h.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+    },
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: true,
+  });
+  const husks = new THREE.Mesh(cardGeometry, holdMaterial);
+  husks.frustumCulled = false;
+  husks.renderOrder = 11;
+  knobs.visible = KNOBS_ON;
+
+  ctx.scene.add(ctx.parts.built('tether-kites', kites, knobs, husks));
   ctx.scene.add(knobs);
+  ctx.scene.add(husks);
 
   const size = new THREE.Vector2();
   let height = 0;
@@ -515,10 +637,14 @@ export function create(ctx: Context): Piece {
       // Staged by shot. spine-04, the long lens: the struck spire's ribbons at the size that lens needs, no other spire flies any.
       // spine-02, the close lens on the first spire: its ribbons short enough to be whole in the frame, on long ropes, climbing the wind.
       const inClose = stagedSeconds() >= closeShot.from && stagedSeconds() <= closeShot.to;
+      // spine-01, the wide lens from far down the ridge: the first spire's ribbons twice as broad, most of its bare threads not drawn.
+      const inWide = stagedSeconds() >= wideShot.from && stagedSeconds() <= wideShot.to;
       if (inStrike) stage.set(0.17, 0.32, 2.6, 3);
-      else if (inClose) stage.set(0.38, 0.62, 4, 1);
+      else if (inClose) stage.set(0.36, 0.42, 4, 1);
+      else if (inWide) stage.set(1, 2.1, 1, 1);
       else stage.set(1, 1, 1, 0);
-      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0);
+      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 0.8 : 0);
+      veil.value = inStrike ? 1 : 0;
       knobStage.set(inStrike ? 0.3 : 1, inStrike ? 3 : 0);
       const flash = flashAt(seconds);
       // The charge lingers in the ribbons a little after the stroke.
