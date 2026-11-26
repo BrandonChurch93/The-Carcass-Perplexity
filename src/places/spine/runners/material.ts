@@ -501,10 +501,18 @@ void main() {
     float fine = vnoise(vWorld.xz * 9.0);
     a = vLook.x * (1.0 - vUv.x * vUv.x) * (1.0 - vUv.x * vUv.x) * smoothstep(0.0, 0.04, along) * pow(1.0 - along, 1.6) * (0.75 + 0.5 * fine);
   } else {
-    // A print: the rime trodden through to the dark ice, and what was trodden pushed up pale behind it.
-    float rr = r + 0.35 * (grain - 0.5);
-    float pressed = 0.6 * (1.0 - smoothstep(0.25, 0.62, rr)) * vLook.x;
-    float rim = smoothstep(0.42, 0.62, rr) * (1.0 - smoothstep(0.7, 1.0, rr)) * (0.45 + 0.55 * smoothstep(0.5, -0.6, vUv.x)) * (0.45 + 0.55 * grain) * vLook.x;
+    // A print: the rime trodden down under the pad and the four toes ahead of it, not through to the ice, and what was trodden pushed up
+    // pale behind it. Its outline is the paw's, broken by the grain of the rime.
+    vec2 q = vUv + 0.14 * (vec2(grain, vnoise(vUv * 3.0 + vLook.w * 17.0)) - 0.5);
+    float pad = 1.0 - smoothstep(0.6, 1.0, length((q - vec2(-0.2, 0.0)) / vec2(0.4, 0.5)));
+    float toes = 1.0 - smoothstep(0.5, 1.0, length((q - vec2(0.42, 0.17)) / 0.19));
+    toes = max(toes, 1.0 - smoothstep(0.5, 1.0, length((q - vec2(0.42, -0.17)) / 0.19)));
+    toes = max(toes, 1.0 - smoothstep(0.5, 1.0, length((q - vec2(0.22, 0.47)) / 0.17)));
+    toes = max(toes, 1.0 - smoothstep(0.5, 1.0, length((q - vec2(0.22, -0.47)) / 0.17)));
+    float trod = max(pad, 0.85 * toes);
+    float pressed = 0.42 * trod * (0.7 + 0.3 * grain) * vLook.x;
+    float heap = 1.0 - smoothstep(0.75, 1.0, length((q - vec2(-0.25, 0.0)) / vec2(0.62, 0.7)));
+    float rim = (1.0 - trod) * heap * (0.2 + 0.8 * smoothstep(0.1, -0.7, vUv.x)) * (0.45 + 0.55 * grain) * 0.75 * vLook.x;
     a = 1.0 - (1.0 - pressed) * (1.0 - rim);
     c = rim * rigShade(vWorld, vec3(0.0, 1.0, 0.0), normalize(cameraPosition - vWorld), vec3(0.8, 0.84, 0.9), 1.0, 1.0);
   }

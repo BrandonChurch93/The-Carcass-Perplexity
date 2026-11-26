@@ -66,7 +66,7 @@ const DEAD: Pose = {
   curl: -0.16,
   neck: [-0.1, -0.3],
   head: [-0.15, -0.45],
-  legs: [leg(0.7, -0.78, 0.95, -0.85, 1.3, -0.3), leg(0.15, 0.02, 0.7, 0, 1.0, 0), leg(-0.55, -0.78, -0.95, -0.85, 0.3, -0.3), leg(0.0, 0.02, -0.85, 0, 0.4, 0)],
+  legs: [leg(0.95, -0.55, 0.85, -0.6, 1.3, -0.3), leg(0.15, 0.02, 0.7, 0, 1.0, 0), leg(-1.05, -0.5, -0.95, -0.55, 0.3, -0.3), leg(-0.25, 0.02, -1.0, 0, 0.4, 0)],
 };
 /** How far the dead one is turned from square on to the lens, radians: enough that its legs are seen along their length. */
 const DEAD_TURN = 0.3;
