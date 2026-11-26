@@ -90,7 +90,9 @@ void main() {
   float seen = smoothstep(70.0, 20.0, dist);
   float hug = smoothstep(-0.3 - 0.9 * smoothstep(0.42, 0.7, raft.r), -0.03, s);
   // The froth is its picture: bubbles and pink scum on black, shown where the froth gathers, and thickest where it gathers most.
-  float want = max(hug, 0.75 * smoothstep(0.6, 0.72, fleck.g * 0.45 + raft.g * 0.55) * smoothstep(-3.5, -0.3, s)) * seen;
+  // Close to a lens the rafts of scum are seen for what they are; far off only the line at the shore is.
+  float rafts = smoothstep(20.0, 8.0, dist);
+  float want = max(hug, mix(0.6, 0.8, rafts) * smoothstep(0.66 - 0.07 * rafts, 0.76 - 0.05 * rafts, fleck.g * 0.45 + raft.g * 0.55) * smoothstep(-2.2 - 2.0 * rafts, -0.3, s)) * seen;
   vec3 scum = texture2D(tFroth, p.xz / 1.5 + drift * 3.0).rgb;
   float foam = want * smoothstep(0.03, 0.16, dot(scum, vec3(0.333)) - 0.2 * (1.0 - want) + (bubble.r - 0.5) * 0.06);
   vec4 froth = vec4(scum * 1.5 + 0.05, foam);

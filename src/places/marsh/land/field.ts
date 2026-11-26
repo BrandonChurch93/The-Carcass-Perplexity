@@ -230,7 +230,8 @@ export function createField(): Field {
           const pond = (0.63 + 0.3 * smooth(110, 60, r) - fbm(x / 70 + 9, z / 70, 3)) * 150;
           if (pond < d) d = pond;
           if (fine && d > 0.5 && r < 230 && Math.hypot(x - crustAt[0], z - crustAt[1]) > 11) {
-            const th = 0.7 - 0.13 * Math.exp(-d / 5) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5);
+            // Far from the pool the puddles give out: at a distance they would be a pattern of dashes, and the flats there are whole crust.
+            const th = 0.7 - 0.13 * Math.exp(-d / 5) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5) + 0.2 * smooth(70, 130, r);
             const puddle = (th - fbm(x / 3.7 + 11, z / 3.7 + 5, 3)) * 9;
             if (puddle < d) d = puddle;
           }

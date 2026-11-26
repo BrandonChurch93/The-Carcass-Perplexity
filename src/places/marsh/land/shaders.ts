@@ -38,7 +38,7 @@ vec3 thinLay(vec2 xz, vec4 at, vec4 mid, float fineG) {
   return vec3(c, pick);
 }
 const float LEDGE_RISE = 0.42;
-const float THIN_RISE = 0.09;
+const float THIN_RISE = 0.035;
 // The shore's plate is a strip across the waterline, 4 m of shore by 2.25 m: dry crust at its top, the rind of salt, the wet red mud, the
 // line of froth (0.6 of the way down), then brine. It is laid along every shore by the way to the brine.
 const vec2 SHORE = vec2(2.6, 1.46);
@@ -247,7 +247,7 @@ void main() {
       grad -= (nS2.rg - 0.5) * 0.5 * close * (1.0 - slab);
     }
     // The slabs keep their salt; the mud between them is wet, and dark with it.
-    colour = mix(colour, mudCol * mix(vec3(0.44, 0.36, 0.34), vec3(0.72), slab), k);
+    colour = mix(colour, mudCol * mix(vec3(0.3, 0.225, 0.205), vec3(0.72), slab), k);
     hgt = mix(hgt, mix(nS.b * 0.6, h0, plateSeen), k);
     bend = mix(bend, -(nS.rg - 0.5) * 0.8 * (1.0 - plateSeen), k);
     lean += grad * k;
@@ -359,17 +359,21 @@ void main() {
   // The brine's level against the heights. At the shore most of the relief is under it and only the plates' tops stand out; a stride back
   // only the cracks hold it; where the flats lie low it comes up again in sheets.
   float lowland = smoothstep(0.52, 0.72, wide.g * 0.55 + mid.g * 0.2 + 0.3 * stain + 0.25 * (wide.r - 0.5));
-  float level = 0.85 * exp(-t / 0.35) + 0.5 * exp(-t / (2.5 + 5.0 * wide.r)) + 0.3 * lowland * smoothstep(700.0, 150.0, dist);
+  float level = 0.85 * exp(-t / 0.35) + 0.5 * exp(-t / (2.5 + 5.0 * wide.r)) + lowland * mix(0.2, 0.3, smoothstep(140.0, 50.0, dist)) * smoothstep(700.0, 150.0, dist);
   level = min(level, 0.97) * (1.0 - rock);
-  level = mix(level, 0.37 + 0.14 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
-  level = mix(level, 0.3, shoreW) * (1.0 - 0.55 * bankDry);
+  level = mix(level, 0.41 + 0.14 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
+  level = mix(level, 0.3, shoreW) * (1.0 - 0.9 * bankDry);
   float over = hgt - level;
   float aa = 0.02 + 0.1 * smoothstep(30.0, 200.0, dist);
   float flood = smoothstep(aa, -aa, over);
   float damp = smoothstep(0.34, 0.03, over);
   // Damp ground is darker and redder, and what the brine has soaked is stained by it.
   colour = mix(colour, colour * mix(vec3(0.6, 0.52, 0.5), vec3(0.5, 0.24, 0.2), clamp(stain * 0.8 + exp(-t / 1.5) * 0.7, 0.0, 1.0) * (1.0 - 0.6 * smoothstep(0.0, 0.5, thin))), damp);
-  rough = mix(rough, 0.72, damp * (1.0 - rock));
+  rough = mix(rough, mix(0.72, 0.42, smoothstep(0.0, 0.5, thin) * (1.0 - slab)), damp * (1.0 - rock));
+  // Round every pool, a stride back from its wet margin, the brine has left its salt: a pale rim, broken, wider here and narrower there.
+  float rimAt = 0.45 + 0.5 * mid.r;
+  float salted = smoothstep(0.12, 0.3, t) * smoothstep(rimAt + 0.9, rimAt, t) * smoothstep(0.3, 0.55, mid.b * 0.6 + fine.b * 0.4) * (1.0 - rock) * step(0.0, s) * (1.0 - flood);
+  colour = mix(colour, vec3(0.6, 0.57, 0.545) * (0.8 + 0.4 * hgt), salted * 0.7);
   // An overcast is not the same all round: the quarter away from the rain is the brighter, and every lump and lip shows it.
   vec2 bright = vec2(-0.86, 0.5);
   // The plates' slopes are real slopes: the mesh's normal leans by them.
@@ -377,7 +381,7 @@ void main() {
   ng = normalize(vec3(ng.x / max(ng.y, 0.2) - lean.x, 1.0, ng.z / max(ng.y, 0.2) - lean.y));
   colour *= 1.0 + clamp(0.22 * dot(bend, bright) + mix(0.25, 0.32, rock) * dot(ng.xz, bright), -0.45, 0.35);
   // Far off, the red of stalks and growth too small to draw lies on the flats as a haze of colour.
-  colour = mix(colour, vec3(0.16, 0.06, 0.055), smoothstep(0.44, 0.6, wide.g * 0.5 + mid.g * 0.5) * smoothstep(150.0, 500.0, dist) * 0.5 * (1.0 - rock));
+  colour = mix(colour, vec3(0.16, 0.06, 0.055), smoothstep(0.44, 0.6, wide.g * 0.5 + mid.g * 0.5) * smoothstep(150.0, 500.0, dist) * 0.22 * (1.0 - rock));
 
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
   vec3 lit = rigShade(p, n, v, colour, rough, occ);

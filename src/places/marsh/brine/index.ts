@@ -51,6 +51,9 @@ export function create(ctx: Context): Piece {
   const seepRng = ctx.rng('brine/seeps');
   const seeps = Array.from({ length: MAX_SEEPS }, (_, i) => {
     if (i === 0) return new THREE.Vector4(-3.4, -1.6, 0.31, 0.06);
+    // Gas comes up under each of the two great domes before and after it stands: their rings never stop.
+    if (i === 1) return new THREE.Vector4(HERO_DOME[0], HERO_DOME[1], 0.67, 0.075);
+    if (i === 2) return new THREE.Vector4(SMALL_DOME[0], SMALL_DOME[1], 0.13, 0.06);
     const a = seepRng.range(0, TAU);
     const r = seepRng.range(1.5, POOL_R * 0.8);
     return new THREE.Vector4(Math.sin(a) * r, Math.cos(a) * r, seepRng.next(), seepRng.range(0.015, 0.04));
@@ -212,6 +215,20 @@ export function create(ctx: Context): Piece {
         dropLife.setXYZW(drop, 0.5, thrown[drop * 5 + 4] as number, size, 0);
       }
 
+      // Where each of the larger drops comes down it leaves a ring of its own.
+      if (flung > 0 && i < 2) {
+        const first = drop - d.drops;
+        for (let k = 0; k < 7 && ring < MAX_RINGS; k++) {
+          const a = thrown[(first + k * 5) * 5] as number;
+          const out = (thrown[(first + k * 5) * 5 + 1] as number) * Math.sqrt(d.size / 0.4);
+          const rise = (thrown[(first + k * 5) * 5 + 2] as number) * Math.sqrt(d.size / 0.4);
+          const lands = (rise + Math.sqrt(rise * rise + 4.905 * d.size)) / 9.81;
+          const since = flung - lands;
+          if (since <= 0 || since > 1.6) continue;
+          const reach = d.size * 0.8 + out * lands;
+          (rings[ring++] as THREE.Vector4).set(d.x + Math.cos(a) * reach, d.z + Math.sin(a) * reach, 0.04 + 0.55 * since, 0.5 * Math.min(1, since * 10) * Math.pow(1 - since / 1.6, 1.5));
+        }
+      }
       // Rings: one from the tear, a second and a third from the skin and the drops falling back.
       if (age >= 0) {
         for (let k = 0; k < 3 && ring < MAX_RINGS; k++) {

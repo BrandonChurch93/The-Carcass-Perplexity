@@ -191,7 +191,7 @@ export function createRig(t0: number): Rig {
     uSkyGround: { value: new THREE.Vector3(0.3, 0.27, 0.265) },
     uFill: { value: new THREE.Vector3(1, 1, 1) },
     // The air pales the distance toward this, the horizon's white.
-    uAirColour: { value: new THREE.Vector3(0.76, 0.76, 0.79) },
+    uAirColour: { value: new THREE.Vector3(0.7, 0.695, 0.725) },
     uAir: { value: new THREE.Vector4(AIR.density, AIR.thin, 0, 0) },
     uMirror: { value: 0 },
     tMirror: { value: blank },
