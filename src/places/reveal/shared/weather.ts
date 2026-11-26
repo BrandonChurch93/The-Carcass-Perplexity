@@ -57,7 +57,26 @@ vec2 lowSlope = vec2(0.0);
 vec2 highSlope = vec2(0.0);
 
 // The ground of the low field: the world, read through a slow bend so the streets curve, and drifting.
+// The image of the sun on the sea, 0 to 1 (the land draws it: the same place, the same slide). Over it the sky stands open: the
+// sheet of light is seen on open water, and what cloud is left there is seen against it.
+float sunImage(vec2 xz) {
+  vec2 from = xz - vec2(${f(X(5875))}, ${f(Z(703))}) - (uTime - 8.1) * vec2(-9.0, -8.0);
+  if (uDusk > 0.0) from -= uCalm.y * normalize(uSunDir.xz);
+  if (uLive > 0.0) from -= uLive * vec2(-20.0, 0.0);
+  from *= vec2(1.0, 0.48);
+  return exp(-pow(dot(from, from) / 55000.0, 0.463));
+}
+
+// The wind round the cyclone: the field is drawn round its eye, most near it and less with every thousand kilometres, so the
+// streaks of the low field curve into its arms.
+vec2 roundStorm(vec2 at) {
+  vec2 from = at - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))});
+  float turned = 1.1 * exp(-length(from) / ${f(1100 * KM)});
+  return vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))}) + mat2(cos(turned), sin(turned), -sin(turned), cos(turned)) * from;
+}
+
 vec2 lowGround(vec2 at) {
+  at = roundStorm(at);
   // (From orbit the drift of the field is seen: it gathers way as the rise ends, and the whole field is carried on while the frame is held.)
   float held = uTime < 8.0 ? 0.125 * max(uTime - 4.0, 0.0) * max(uTime - 4.0, 0.0) : uTime - 6.0;
   vec2 carried = at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(24.0, 8.0);
@@ -104,6 +123,10 @@ float lowDepth(vec2 at) {
     float travels = texture2D(uCloudTile, mat2(0.88, 0.47, -0.47, 0.88) * (w + uWx * vec2(6.0, -9.0)) / 3300.0 + vec2(0.37, 0.81), 3.0).b;
     amount = mix(amount, open * (0.2 + 0.8 * smoothstep(0.36, 0.62, travels)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))}))), smoothstep(0.0, 22.0, uWx));
   }
+  // (The field runs in under the outer arms of the cyclone: the painted cover leaves a round hole there, wider than the storm.)
+  float nearStorm = length(at - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
+  amount = max(amount, 0.75 * smoothstep(0.3, 0.55, nearStorm) * (1.0 - smoothstep(0.7, 1.1, nearStorm)));
+  amount *= 1.0 - 0.92 * smoothstep(0.1, 0.45, sunImage(at));
   // (Where the sky stands clear nothing more is read: most of the cost of the field is its photographs.)
   lowWeigh = vec3(0.0);
   lowNear = vec2(0.0);
@@ -196,9 +219,14 @@ float highDepth(vec2 at) {
   }
   highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
   highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1250.0, 900.0) + vec2(0.7, 0.2);
-  // (Where the ice stands at all: the weather's own soft pattern, carried with it. A pattern of squares, as a noise of cells is,
-  // shows its corners when the last sun reddens the ice.)
-  float where = 0.55 * smoothstep(0.5, 1.0, texture2D(uCloudTile, mat2(0.78, -0.62, 0.62, 0.78) * hv / 3900.0 + vec2(0.58, 0.14), 4.0).b);
+  // (Where the ice stands at all: two soft swells that cross, carried with it. They are waves and not a picture or a noise of
+  // cells, so the pattern has no corner, no step and no flat for the last sun to redden: the fibre of the photographs is all the
+  // outline the ice has.)
+  vec2 g = mat2(0.78, -0.62, 0.62, 0.78) * hv + vec2(1300.0, 600.0);
+  vec2 h = mat2(0.5, 0.87, -0.87, 0.5) * hv;
+  float wide = 0.5 + 0.5 * sin(g.x / 480.0 + 1.7 * sin(g.y / 620.0 + 0.4)) * sin(g.y / 530.0 + 1.3 * sin(g.x / 700.0 + 1.9));
+  float fine = 0.5 + 0.5 * sin(h.x / 205.0 + 1.5 * sin(h.y / 260.0)) * sin(h.y / 225.0 + 1.2 * sin(h.x / 310.0 + 0.8));
+  float where = 0.8 * smoothstep(0.56, 0.96, 0.6 * wide + 0.4 * fine) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
   if (where <= 0.0) return 0.0;
   float sheet = cloudIn(uMatVeil, highUvSheet, 0.27);
   float thread = cloudIn(uMatStreaks, highUvThread, 0.31);
