@@ -14,6 +14,7 @@ import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
+import { FIN_FRAGMENT, FIN_VERTEX } from './fin';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
@@ -181,19 +182,21 @@ export function create(ctx: Context): Piece {
     (ground.uniforms.uPath as THREE.IUniform).value.set(pose.position[0], pose.position[2], dx / l, dz / l);
   }
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
-    material(ROCK_VERTEX, ROCK_FRAGMENT, {
-      tRock: { value: rockC },
-      tRockN: { value: rockN },
-      tWide: { value: grain > 0 ? finC : rockC },
-      tWideN: { value: grain > 0 ? finN : rockN },
-      uFin: { value: grain > 0 ? 1 : 0 },
-      uLift: { value: lift },
-      tWeed: { value: weedC },
-      uTide: { value: LEVELS.tide },
-      uTier: { value: 0 },
-      uGrain: { value: new THREE.Vector2(Math.abs(grain), Math.abs(grain) * 4.7) },
-      uRockTint: { value: grain > 0 ? new THREE.Vector3(1.35, 1.33, 1.3) : new THREE.Vector3(1.75, 1.72, 1.66) },
-    });
+    grain > 0
+      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift } })
+      : material(ROCK_VERTEX, ROCK_FRAGMENT, {
+          tRock: { value: rockC },
+          tRockN: { value: rockN },
+          tWide: { value: rockC },
+          tWideN: { value: rockN },
+          uFin: { value: 0 },
+          uLift: { value: lift },
+          tWeed: { value: weedC },
+          uTide: { value: LEVELS.tide },
+          uTier: { value: 0 },
+          uGrain: { value: new THREE.Vector2(Math.abs(grain), Math.abs(grain) * 4.7) },
+          uRockTint: { value: new THREE.Vector3(1.75, 1.72, 1.66) },
+        });
   const stones = new Map<number, THREE.ShaderMaterial>();
   const stoneOf = (grain: number, lift = 4): THREE.ShaderMaterial => {
     const key = grain * 64 + lift;
@@ -249,7 +252,7 @@ export function create(ctx: Context): Piece {
   };
   for (const rib of RIBS as Rib[]) {
     const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
-    add(blades, bladeShape(rib, cut), stoneOf(cut.grain, Math.min(8, 0.11 * rib.b + 0.02 * rib.a)));
+    add(blades, bladeShape(rib, cut), stoneOf(cut.grain, Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
     add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }

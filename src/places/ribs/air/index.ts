@@ -3,7 +3,7 @@
 // and the cloud's light in that air (shafts: the sun reaches the haze only through the gaps of the cloud and between the blades).
 import * as THREE from 'three';
 import { QUAD_VERTEX, volumeUniforms } from '../../../core/engine';
-import { shotSpan } from '../shared/anchors';
+import { WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { stagedSeconds } from '../shared/stage';
@@ -13,6 +13,7 @@ export const PARTS = ['sky', 'air', 'cloud'] as const;
 
 const MAX_SOURCES = 20;
 const STEPS = 8;
+const BANK_STEPS = 14;
 
 const SKY_VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -51,7 +52,23 @@ uniform int uSourceCount;
 uniform vec4 uSourceA[${MAX_SOURCES}];
 uniform vec4 uSourceB[${MAX_SOURCES}];
 uniform vec4 uSourceC[${MAX_SOURCES}];
+// The fog bank of the opening: thickness in a metre, how far it has torn (0 whole, 1 in shreds), and how far the wind has carried it, metres.
+uniform vec4 uBank;
 ${RIG_GLSL}
+
+// The bank lies across the way in, in front of the two outer blades: a body with a ragged top, hills and houses of it, and a lane that
+// opens along the camera's way and widens until the first blade stands clear. x is the fog in a metre, y how far under the top.
+vec2 bankAt(vec3 p) {
+  vec2 q = p.xz - uBank.zw;
+  float big = texture2D(tCloudShade, q / 2900.0).r;
+  float lump = texture2D(tCloudShade, q / 1300.0 + 0.37 + p.y * vec2(0.0011, 0.0005)).g;
+  float lane = (p.x + 325.0 - 0.104 * (1504.0 - p.z) + 260.0 * (big - 0.5)) / (40.0 + 520.0 * uBank.y);
+  float open = exp(-lane * lane) * smoothstep(0.0, 0.12, uBank.y);
+  float top = (70.0 + 170.0 * smoothstep(0.2, 0.75, big)) * (1.0 - open) * (1.0 - 0.3 * uBank.y);
+  float under = top - p.y + 120.0 * (lump - 0.5);
+  float inside = smoothstep(1270.0, 1150.0, p.z) * smoothstep(560.0, 760.0, p.z);
+  return vec2(uBank.x * inside * smoothstep(0.0, 30.0, under) * (0.55 + 0.9 * lump), under);
+}
 
 void viewRay(out vec3 ro, out vec3 rd, out float reach) {
   ivec2 pixel = 2 * ivec2(gl_FragCoord.xy);
@@ -127,6 +144,34 @@ void main() {
     sum = sum * (1.0 - cover * near) + light * (cover * near);
     trans *= 1.0 - cover;
   }
+  // The bank of the opening stands nearer than the haze: it is marched on its own, only while it is up.
+  if (uBank.x > 0.0) {
+    float ta = (1270.0 - ro.z) / rd.z;
+    float tb = (560.0 - ro.z) / rd.z;
+    float from = max(min(ta, tb), 0.0);
+    float to = min(min(max(ta, tb), reach), 2600.0);
+    if (rd.y > 0.0) to = min(to, (400.0 - ro.y) / rd.y);
+    if (to > from) {
+      vec3 bankSum = vec3(0.0);
+      float bankTrans = 1.0;
+      float len = (to - from) / float(${BANK_STEPS});
+      for (int i = 0; i < ${BANK_STEPS}; i++) {
+        float tm = from + (float(i) + jitter) * len;
+        vec3 p = ro + rd * tm;
+        vec2 fog = bankAt(p);
+        float a = 1.0 - exp(-fog.x * len * smoothstep(30.0, 260.0, tm));
+        if (a > 0.0005) {
+          float lit = sunAt(p, landAt(p.xz));
+          // Deep in the bank the light is the bank's own grey; its top and its torn edges take the sky and the sun.
+          float deep = 0.42 + 0.58 * smoothstep(150.0, 10.0, fog.y);
+          bankSum += bankTrans * a * (uHaze * (0.7 * deep) + uSunColour * (0.13 * phase * lit * deep)) * uShowAir;
+          bankTrans *= 1.0 - a;
+        }
+      }
+      sum = bankSum + bankTrans * sum;
+      trans *= bankTrans;
+    }
+  }
   gl_FragColor = vec4(sum * uScatter.z, trans);
 }`;
 
@@ -160,6 +205,9 @@ export function create(ctx: Context): Piece {
     sourceC.push(new THREE.Vector4());
   }
   const count = { value: 0 };
+  // Staged for the opening shot only: a bank of sea fog lies across the way in, tears open in the first two seconds and is flown through in shreds.
+  const bank = new THREE.Vector4(0, 0, 0, 0);
+  const openingShot = shotSpan('ribs-01');
   const volume = new THREE.ShaderMaterial({
     vertexShader: QUAD_VERTEX,
     fragmentShader: VOLUME_FRAGMENT,
@@ -172,6 +220,7 @@ export function create(ctx: Context): Piece {
       uScatter: { value: new THREE.Vector3(0.8, 0.085, 1) },
       uShowAir: showAir,
       uShowCloud: showCloud,
+      uBank: { value: bank },
       uSourceCount: count,
       uSourceA: { value: sourceA },
       uSourceB: { value: sourceB },
@@ -196,6 +245,11 @@ export function create(ctx: Context): Piece {
     volume,
     setTime: (seconds) => {
       const staged = stagedSeconds();
+      const up = staged >= openingShot.from && staged < openingShot.to;
+      const since = seconds - openingShot.from;
+      const fade = Math.min(1, Math.max(0, (12 - since) / 5));
+      const torn = Math.min(1, Math.max(0, (since - 0.15) / 2.4));
+      bank.set(up ? 0.0055 * fade : 0, torn * torn * (3 - 2 * torn) * 0.7 + 0.3 * Math.min(1, since / 8), WIND.to[0] * 34 * since, WIND.to[1] * 34 * since);
       const steam = staged >= colonyShot.from && staged <= colonyShot.to ? [...ctx.sources.steam, veil] : ctx.sources.steam;
       // The heaviest columns first: there is room for MAX_SOURCES of them.
       const list = steam.map((s, i) => ({ s, i })).sort((p, q) => q.s.strength * q.s.radius * q.s.radius - p.s.strength * p.s.radius * p.s.radius || p.i - q.i).map((p) => p.s);

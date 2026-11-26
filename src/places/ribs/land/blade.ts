@@ -16,20 +16,16 @@ export interface BladeOptions {
 }
 
 /** How far the rock stands out from the smooth blade, metres. q runs round the section in metres, s along the spine in metres; x, y, z are the world. */
-export function bladeRelief(q: number, s: number, x: number, y: number, z: number): number {
-  // Masses the size of a hall and of a house.
-  let d = 10 * (noise3(x / 80, y / 95, z / 80) - 0.5) + 3 * (noise3(x / 29, y / 33, z / 29) - 0.5);
-  // Flutes that run the length of the blade: wide ones a house across, narrow ones a stride or two, both wandering a little.
-  const wander = 5 * (noise2(s / 60, q / 40) - 0.5);
-  const wide = Math.abs(noise2((q + wander) / 9.5, s / 140) - 0.5);
-  const narrow = Math.abs(noise2((q + 0.6 * wander) / 21 + 7.7, s / 190) - 0.5);
-  d += 0.6 * (wide - 0.25) + 0.9 * (narrow - 0.25);
-  // Bites out of the blade the size of a house, where a block has gone.
-  d -= 6 * smooth(0.62, 0.8, noise3(x / 36 + 5.1, y / 30, z / 36));
-  // Broken at the size of a boat and of a man.
-  d += 0.6 * (noise3(x / 11, y / 8, z / 11) - 0.5);
-  // Joints: cracks across the blade where it will break next.
-  d -= 0.3 * (1 - smooth(0, 0.05, Math.abs(noise2(s / 23 + 0.02 * q, q / 90 + 4.1) - 0.5)));
+export function bladeRelief(_q: number, s: number, x: number, y: number, z: number): number {
+  // Masses the size of a hall and of a house. The ledges, flutes and holes are the fin sheet's own heights, raised in the vertex shader:
+  // pits cut here stood on every blade as dark crescents.
+  let d = 7 * (noise3(x / 80, y / 95, z / 80) - 0.5) + 2.4 * (noise3(x / 29, y / 33, z / 29) - 0.5);
+  // Broken at the size of a boat.
+  d += 0.5 * (noise3(x / 11, y / 8, z / 11) - 0.5);
+  // A few breaks across the blade where a slab has gone: a step, sharp on its upper side.
+  const cell = s / 46 + 3.1 * noise2(s / 150, 2.5);
+  const f = cell - Math.floor(cell);
+  d -= 2.6 * noise2(Math.floor(cell) * 1.7 + 0.5, 8.5) * smooth(0.0, 0.08, f) * (1 - smooth(0.25, 1.0, f));
   return d;
 }
 
@@ -87,7 +83,7 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
     const tr = ts[r] as number;
     const [a0r, b0r] = radii(rib, tr);
     // Notched along its length: where a block has gone the blade is thinner, by a quarter and more.
-    const notch = 1 + smooth(0.06, 0.2, tr) * (0.3 * (noise2(tr * 8 + rib.x * 0.013, 1.5) - 0.5) + 0.2 * (noise2(tr * 23 + rib.z * 0.01, 4.5) - 0.5));
+    const notch = 1 + smooth(0.06, 0.2, tr) * (0.12 * (noise2(tr * 8 + rib.x * 0.013, 1.5) - 0.5) + 0.1 * (noise2(tr * 23 + rib.z * 0.01, 4.5) - 0.5));
     const a = a0r * notch;
     const b = b0r * (1 + 0.3 * (notch - 1));
     const shrink = j - 1 < body ? 1 : (cap[j - 1 - body] as number);
@@ -105,12 +101,15 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
     const d = bladeRelief(q + rib.x * 0.37, (along[r] as number) + rib.z * 0.11, base.x, base.y, base.z) * slim * low * (shrink < 1 ? 0.5 + 0.5 * shrink : 1);
     p.copy(base).addScaledVector(out, d);
     // Where the fin's sheet lies on it: the part across the broad face, the part along the spine.
-    return [0.5 + 0.5 * Math.cos(phi), (along[r] as number) / run, 0.55 + 0.45 * smooth(-10 * slim, -1 * slim, d)];
+    return [0.5 + 0.5 * Math.cos(phi), (along[r] as number) / run, 1];
   });
   const position = g.getAttribute('position') as THREE.BufferAttribute;
   const normal = g.getAttribute('normal') as THREE.BufferAttribute;
   const blade = new Float32Array(position.count * 4);
   const nb = new Float32Array(position.count * 3);
+  // The frame of the ring in the world: the fin sheet's slopes are turned into the world by it, with no screen derivative.
+  const along3 = new Float32Array(position.count * 3);
+  const across3 = new Float32Array(position.count * 3);
   const rel = new THREE.Vector3();
   const n = new THREE.Vector3();
   const cs = Math.cos(rib.yaw);
@@ -131,10 +130,14 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
       nb[k * 3] = n.dot(T);
       nb[k * 3 + 1] = n.dot(N);
       nb[k * 3 + 2] = n.dot(B);
+      T.toArray(along3, k * 3);
+      N.toArray(across3, k * 3);
     }
   }
   g.setAttribute('aBlade', new THREE.BufferAttribute(blade, 4));
   g.setAttribute('aNb', new THREE.BufferAttribute(nb, 3));
+  g.setAttribute('aAlong', new THREE.BufferAttribute(along3, 3));
+  g.setAttribute('aAcross', new THREE.BufferAttribute(across3, 3));
   return g;
 }
 
