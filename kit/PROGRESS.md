@@ -24,29 +24,29 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 130, 2026-11-26 20:17 UTC:
+Status 131, 2026-11-26 20:49 UTC:
 
-- `01-s130-spine-mats.jpg`: The Spine: four material pictures made by its ground builder for the rock and the snow: a granite face, an outcrop under snow, rime on rock and wind-packed snow. Not film frames: they feed the build as colour and height
-- `02-s130-heart-eye-mats.jpg`: The Heart and the Eye: material pictures made by their builders: ropy lava crust, melt under broken crust and massive cliff rock for the Heart, and the Eye's shore mats seen from above. Not film frames: they feed the build as colour and height
-- `03-frame-9797-preview-draft.jpg`: Film frame 9797, preview, draft tier
-- `04-frame-9751-preview-draft.jpg`: Film frame 9751, preview, draft tier
+- `01-s131-ribs-titan.jpg`: Above: the Ribs, frame 0, before at left and after at right on its team's branch: the near blade stands at 85 percent of the frame's height under a storm sky. Below: the Reveal, the titan frame 10027, before and after: cloud at the coasts, greener land. The leads' own review renders at 1080p, not judged, not in main
+- `02-s131-reveal-skull.jpg`: The Reveal on the climb: the skull at frame 9675 above and the head and shoulder at frame 9756 below, before at left and after at right. Not judged, not in main
+- `03-s131-heart.jpg`: The Heart: above, frame 3477, the ropy crust in place of the striped sheet; below, frame 2722, the far wall fractured and the butte set back in haze. Before at left, after at right. Not judged, not in main
+- `04-s131-marsh-eye.jpg`: Above: the Blood Marsh, frame 6102, the brine with depth and a mirror. Below: the Eye, frame 8412, broken stones on the near shore. Before at left, after at right. Not judged, not in main
 
+Status 130, 2026-11-26 20:17 UTC, showed: The Spine: four material pictures made by its ground builder for the rock and the snow: a granite face, an outcrop under snow, rime on rock...
 Status 129, 2026-11-26 19:37 UTC, showed: The Heart's lava fall, last version, not merged: frames 4173, 4217 and 4220 from top to bottom, before at left and after at right.
 Status 128, 2026-11-26 19:05 UTC, showed: The opening view of each of the six places and the last wide view, as the critic of the whole film saw them in round 3: the Ribs, the...
-Status 127, 2026-11-26 18:38 UTC, showed: The five frames the jury saw in round 3 of the film: frame 0 and the frame at two seconds above, the first frames of the Heart and of the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T20:17:23Z
-phase 5: 10.02 h used of 6.00 h
-build: 44.43 h used of 72.00 h
+2026-11-26T20:49:36Z
+phase 5: 10.56 h used of 6.00 h
+build: 44.97 h used of 72.00 h
 extra rounds: yes
 half point: reached
 box end: reached
-minutes since the last status: 40, status overdue
+minutes since the last status: 32, status overdue
 ```
 
 ## Phases
@@ -1547,6 +1547,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 20:13 UTC. Kit re-read after the eleventh compaction (about 19:37 UTC): `kit/PROGRESS.md` lines 1 to 118, `kit/addenda/001-private-repo-and-music.md`, `kit/07-QUALITY-BAR.md` lines 83 to 128 and 319 to 440, and `kit/08-BUILD-ORDER.md` lines 223 to 290, read in full between 20:12 and 20:13 UTC. A slip, said plainly: the re-read came after two notes to leads, not before them. At 19:38 UTC, with status 129 two minutes late, `spine_lead` and `marsh_lead` were each told to work with bundles (they had written that their machines cannot push), and the decision about bundles was logged and pushed (`72be5fb0`), before the kit was read again. Nothing else went out in that gap: no merge, no spawn, no order to a builder. Read against the kit now, the two notes stand: they change no rule, no scope and no branch, only the way a branch travels. What the re-read confirms for the work at hand: Phase 5's gate is the machine checks with G13 on every part, the film's limit reached, D4 and the film and loop playing from the published address; Phase 6 step 1 is fix a batch, then run the measures and the critics that raised those issues on the frames they touch; a round is counted when it starts, its number and commit written and pushed first; critics are fresh in every round, packs go as attachments only, briefs word for word; approved pictures and Brandon's choices outrank critics; a change to shared code is checked on each finished unit, one fix per unit per change; nothing under `tests/` is changed to make a check pass that guards a kit rule.
 - 2026-11-26. 20:20 UTC. A question from Partner, answered. At about 20:18 UTC a session message came from Partner, Brandon's setup teammate, with Brandon's words: he does not want the agents to rush or stop, and would love a list of everything active and when the agents estimate completion. MEASURED by reading the two sessions' records: Partner's session and this one have the same owner. It is a question only and changes no plan, scope, bar or budget. Answered by session message by 20:20 UTC in seven lines, as asked: where the work is; what is left; the estimate (BUILD COMPLETE on Friday 27 November between about 5 PM and midnight Mountain Time if the polish ends after the kit's three rounds; the time at which the film reaches the bar cannot be estimated before the first judged round of the wide polish); its basis (a wave 4 h, STATED; judging about 45 minutes once its frames exist, MEASURED from the scorecards' commit times of rounds 27 and 28; merges and guards about 1.5 h, STATED; delivery 9 to 16 h, STATED from the kit's limits; whether three rounds reach the bar, UNKNOWN); what waits on Brandon (the final size; after the first judged round, whether to go on below the bar); the hours (44.4 of 72). Note 18's line about not replying to Partner was about that note; this message asked for a reply. The rows of wave 1's 36 agents are now under Running agents.
 - 2026-11-26. 20:38 UTC. The repo and the day it turns private (note 20). What depends on its being public, MEASURED today: the 36 agents of wave 1 and the 16 render machines clone and fetch it from their own machines without a sign-in; five of the seven leads' machines had no GitHub login at their start, logins come and go, and no login can be given to a machine. A private repo cuts every machine without a login off from the branches it works from, in the middle of its work. Nothing else depends on it: the site is on the workspace's app hosting and not served from the repo; no page, tool or status uses a raw file address (searched `src`, `public`, `tools`, the pages, the README and the config: only `repo.url`); the sound files are in the repo since note 3, so none is held back. Decided: the repo stays public while agents on other machines build from it, and turns private at the freeze of the build (Phase 6 step 2), once every render machine holds the frozen commit; from then on a fix reaches a render machine as a bundle file, as addendum 001 orders for a private repo. The Builder sets it to private itself then if its access allows, and tells Partner; if it does not, it tells Partner it is safe. Partner is answered in one line: not before the freeze, with the reason and the estimate.
+- 2026-11-26. 20:44 UTC. Twelfth compaction of the Builder's context (about 20:42 UTC). Re-read before any further order, merge, spawn or note to a builder or lead: kit/PROGRESS.md lines 1 to 118, kit/addenda/001-private-repo-and-music.md, kit/07-QUALITY-BAR.md (Freshness, Judged frames, Packs, The critics, The pass bar, What to do with a critic's issues, Rounds and their limits, The plateau rule, The record round) and kit/08-BUILD-ORDER.md (Phase 5 and Phase 6). Nothing went out to a builder or a lead between the compaction and this line: the only work in between was reading two lead reports and five timing reports as they arrived, and one path check on the Reveal's branch.
 
 ## Notes from Brandon
 
