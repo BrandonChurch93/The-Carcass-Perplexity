@@ -32,6 +32,12 @@ def proc(src, dst):
     lum = rgb @ np.array([0.3, 0.5, 0.2], np.float32)
     calm = np.clip((lum - 0.2) / 0.3, 0, 1) * (1 - inside)
     rgb = rgb * (1 - 0.3 * calm)[..., None]
+    # A thin bright line (the generator's rim light on a head) is taken down to the cloud about it: broad pale bellies stay, drawn lines go.
+    lum = rgb @ np.array([0.3, 0.5, 0.2], np.float32)
+    li = Image.fromarray((np.clip(lum, 0, 1) * 255).astype(np.uint8))
+    opened = np.asarray(li.filter(ImageFilter.MinFilter(9)).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(2))).astype(np.float32) / 255
+    excess = np.maximum(lum - opened, 0)
+    rgb = rgb * ((lum - 0.75 * excess) / np.maximum(lum, 1e-3))[..., None]
     out = np.dstack([np.clip(rgb, 0, 1), soft])
     Image.fromarray((out * 255 + 0.5).astype(np.uint8), 'RGBA').save(dst, optimize=True)
     print(dst, os.path.getsize(dst) // 1024, 'KB', Image.open(dst).size)

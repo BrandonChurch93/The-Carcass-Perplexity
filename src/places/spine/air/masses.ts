@@ -102,19 +102,22 @@ vec3 massOver(vec3 c, sampler2D picture, vec3 at, vec4 seat, float dots, float f
   if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0) return c;
   // The heads lean and close: the picture is read through eddies that turn slowly and never return.
   vec3 eddyAt = vec3(uv * vec2(2.3, 1.1) + seat.y * 0.0007, 0.41 + 0.011 * uTime);
-  vec2 eddy = textureLod(tNoise, eddyAt, 0.0).rg - 0.5 + 0.4 * (textureLod(tNoise, eddyAt * vec3(2.9, 2.9, 1.7) + 0.37, 0.0).ba - 0.5);
-  uv += eddy * vec2(0.006, 0.011) * smoothstep(0.0, 0.12, min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y)));
+  vec2 eddy = textureLod(tNoise, eddyAt, 0.0).rg - 0.5 + 0.12 * (textureLod(tNoise, eddyAt * vec3(2.9, 2.9, 1.7) + 0.37, 0.0).ba - 0.5);
+  uv += eddy * vec2(0.005, 0.008) * smoothstep(0.0, 0.12, min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y)));
   // No finer than the frame's own dots.
   // The file holds the colour in its upper half and the cut in its lower.
   float lod = max(log2(foot * dots / (2.0 * seat.z)), 0.0);
   uv.y = clamp(uv.y, 0.012, 0.988);
   vec4 m = vec4(textureLod(picture, vec2(uv.x, 0.5 + 0.5 * uv.y), lod).rgb, textureLod(picture, vec2(uv.x, 0.5 * uv.y), lod).g);
+  // A cloud's edge is vapour over a hundred metres, not a cut: the cut is read broad as well, and the mass thins toward it.
+  float broad = textureLod(picture, vec2(uv.x, 0.5 * uv.y), lod + 3.5).g;
+  m.a *= smoothstep(0.12, 0.8, broad) * smoothstep(0.0, 0.2, min(uv.x, 1.0 - uv.x));
   // The pictures' lit rims are those of a brighter hour: at this dusk a head's edge is a little paler than the head, never a white line.
   float pale = dot(m.rgb, vec3(0.3, 0.5, 0.2));
   m.rgb *= mix(1.0, 0.5, smoothstep(0.1, 0.42, pale));
   // And its darks are cloud in the dusk's air, not holes: slate, never black.
   m.rgb = m.rgb * 0.88 + vec3(0.017, 0.02, 0.03);
-  massCover = 1.0 - (1.0 - massCover) * (1.0 - m.a * show);
+  massCover = 1.0 - (1.0 - massCover) * (1.0 - m.a * m.a * show);
   return mix(c, mix(m.rgb, c, air), m.a * show);
 }
 vec3 stormMasses(vec3 c, vec3 from, vec3 d, float foot) {

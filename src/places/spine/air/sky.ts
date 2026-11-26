@@ -236,7 +236,7 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   c *= mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN;
   if (uStrikeTop.w > 0.0) {
     vec3 struck = strikeCloud(c, from, d);
-    c = ${MASSES_DRAWN ? 'mix(struck, c + 0.3 * (struck - c), massCover)' : 'struck'};
+    c = ${MASSES_DRAWN ? 'mix(struck, c + 0.45 * (struck - c), massCover)' : 'struck'};
   }
   return c;
 }
@@ -272,7 +272,13 @@ void main() {
     // The far sea's tops are lumps, not a level: the air stands higher here and lower there along the horizon, and under the band it is low.
     float lumps = textureLod(tNoise, vec3(az * 3.1 + uTime * 0.0006, 0.31, 0.57), 0.0).g + 0.5 * textureLod(tNoise, vec3(az * 9.7 - uTime * 0.0011, 0.63, 0.19), 0.0).r;
     float tallAir = mix(0.02, 0.011, pow(toLast, 3.0)) * (0.2 + 1.2 * lumps);
-    c = mix(c, seaAir, 0.92 * exp(-max(d.y, 0.0) / tallAir));
+    c = mix(c, seaAir, 0.92 * exp(-max(d.y, 0.0) / tallAir) * (1.0 - 0.8 * smoothstep(0.55, 0.85, toLast)));
+    // The last band of orange: a thin bright line low on the horizon toward the last light, broken along its length by the far cloud that
+    // stands before it, with a little of its glow in the air over it. It is the one warm thing in the frame, in a flash too.
+    // It is short: a stretch of the horizon about the last light, not a ring round it.
+    float side = smoothstep(0.84, 0.985, toLast);
+    float line = exp(-pow((d.y - 0.0075) / 0.0065, 2.0)) + 0.2 * exp(-max(d.y, 0.0) / 0.035) * smoothstep(-0.004, 0.004, d.y);
+    c += vec3(0.62, 0.21, 0.045) * (side * line * (0.25 + 0.95 * smoothstep(0.3, 1.0, lumps))) * (1.0 - plateOn);
   }
   if (plateOn > 0.0) {
     vec3 held = strikeCloud(plateCloud(uvQ, 0.0), cameraPosition, d);
@@ -286,6 +292,9 @@ void main() {
       held *= mix(1.0, clamp(fine / max(broad, 0.01), 0.6, 1.5), 0.85 * smoothstep(0.0009, 0.0002, foot));
     }
     c = mix(c, held, plateOn);
+    // Behind the long lens the band is the picture's own: what is orange in it is the last light, and is as bright as on the open ridge.
+    float heatP = clamp((held.r - held.b) * 9.0, 0.0, 1.0);
+    c = mix(c, c * vec3(2.9, 1.75, 0.9) + vec3(0.05, 0.014, 0.0) * heatP, plateOn * heatP);
   }
   // The ridge runs on beyond what is built: a row of far spires stands out of the sea toward the last light, each smaller and bluer than
   // the one before it. They are too far to shift with the lens, so they are of the dome.

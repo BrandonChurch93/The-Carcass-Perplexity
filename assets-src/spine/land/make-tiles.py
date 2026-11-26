@@ -56,4 +56,5 @@ for name, src, wide, strength, soft in TILES:
     nh = np.stack([np.clip(0.5 + 0.5 * dx, 0, 1), np.clip(0.5 + 0.5 * dy, 0, 1), hgt], -1)
     Image.fromarray((nh * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, name + '-nh.jpg'), quality=93)
     print(name, wide, tall, means[name], 'slope std', float(dx.std()))
-json.dump(means, open(os.path.join(OUT, 'tiles.json'), 'w'), indent=1)
+# (The mean colour of each sheet, for the constants of open.ts: printed, not written, since no page loads it.)
+print(json.dumps(means))
