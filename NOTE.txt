@@ -1,5 +1,7 @@
-2026-11-26 01:56 UTC
-work at 0b0d281 on agent/breath-ground-2
-hb2: shaft wall and ribs built from the wall plate relief, shelf from the shelf plate
-look-1.jpg = out/work/looks-hb2-breath-4.png
-look-2.jpg = out/work/looks-hb2-breath-0.png
+2026-11-26 02:13 UTC
+work at e8325da on agent/breath-ground-2
+V1: compares of breath-0, breath-4, breath-3, breath-1
+look-1.jpg = out/work/looks-v1-breath-0.png
+look-2.jpg = out/work/looks-v1-breath-4.png
+look-3.jpg = out/work/looks-v1-breath-3.png
+look-4.jpg = out/work/looks-v1-breath-1.png
