@@ -237,26 +237,25 @@ void main() {
     albedo *= 1.0 + 0.22 * fold * (1.0 - 0.45 * smoothstep(0.0, 0.4, u)) * mid;
     thin = 0.7;
   } else if (kind < 2.5) {
-    // A tendril: a thread of the same bare flesh as the neck, pale pink, blood-red in some, and the ends dark with what they have dragged through.
+    // A tendril: a cord of the same bare flesh as the neck, wet and pink, rosier down its length, and from the middle down coated dark with the
+    // weed it is dragged through.
     float finger = step(1.5, vInfo.x);
     float tone = fract(vInfo.x);
     float own = hash12(vec2(seed, 9.0));
-    vec3 flesh = mix(vec3(0.7, 0.5, 0.43), vec3(0.86, 0.69, 0.6), own);
-    vec3 blood = mix(vec3(0.2, 0.05, 0.045), vec3(0.4, 0.14, 0.12), tone);
-    albedo = mix(flesh, blood, smoothstep(0.0, 0.3, u) * (0.45 + 0.4 * step(0.45, own)));
-    albedo = mix(albedo, vec3(0.62, 0.36, 0.33), smoothstep(0.2, 0.0, u));
-    albedo = mix(albedo, vec3(0.2, 0.12, 0.08), smoothstep(0.4, 1.0, u) * (0.6 + 0.35 * tone));
-    // Some of what hangs there is weed it has dragged up: dark, olive.
-    albedo = mix(albedo, vec3(0.1, 0.095, 0.045), step(0.93, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));
+    vec3 flesh = mix(vec3(0.8, 0.5, 0.46), vec3(0.94, 0.68, 0.63), own);
+    vec3 rose = mix(vec3(0.55, 0.19, 0.2), vec3(0.78, 0.36, 0.37), tone);
+    albedo = mix(flesh, rose, smoothstep(0.0, 0.5, u) * (0.45 + 0.4 * step(0.45, own)));
+    float weed = smoothstep(0.3, 0.78, u + 0.4 * (vnoise(vec2(u * 2.2, seed * 13.0 + tone * 40.0)) - 0.5)) * (0.5 + 0.5 * step(0.3, tone));
+    albedo = mix(albedo, mix(vec3(0.06, 0.07, 0.03), vec3(0.14, 0.13, 0.06), own), 0.88 * weed);
     // A finger: the neck's own pale flesh, pinker down its length, raw and dark at the very end.
     vec3 fleshy = mix(vec3(0.86, 0.68, 0.63), vec3(0.72, 0.4, 0.37), smoothstep(0.1, 0.75, u)) * (0.85 + 0.3 * tone);
     albedo = mix(albedo, mix(fleshy, vec3(0.3, 0.1, 0.08), smoothstep(0.75, 1.0, u)), finger);
     // Far off the mop is one mass: no strand of it is seen for itself.
-    albedo = mix(vec3(0.5, 0.27, 0.24), albedo, smoothstep(0.03, 0.008, px));
+    albedo = mix(vec3(0.6, 0.3, 0.29), albedo, smoothstep(0.03, 0.008, px));
     wet = 0.6 + 0.4 * vWet;
     occ *= 0.7 + 0.3 * u;
-    // The threads are dark and wet: little of the sun comes through them. The fingers are flesh, and it does.
-    thin = 0.22;
+    // Where it is flesh the low sun comes through it; where it is coated it does not.
+    thin = mix(0.55, 0.14, weed);
   } else {
     // A leg: the thigh is the skin of the trunk; below the joint it is hard, scaled and grey with dried silt, the joints knotted and raw.
     float shank = smoothstep(0.36, 0.5, u + 0.08 * (blotch - 0.5));
