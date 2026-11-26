@@ -105,7 +105,7 @@ export const LAND_DEPTH_FRAGMENT = /* glsl */ `${LAND_PRELUDE}
 void main() {
   // The mouths of the canal: the rock wall over each stands across it, and is open where the canal passes through.
   float dCanal = vSL.x - MOUTH_S;
-  if (uKind < 1.5 && dCanal > (uKind > 0.5 ? -14.0 : -1.0) && dCanal < EXIT + (uKind > 0.5 ? 14.0 : 1.0) && vWorld.y > CANAL_FLOOR - 0.2) {
+  if (uKind < 1.5 && dCanal > (uKind > 0.5 ? -42.0 : -1.0) && dCanal < EXIT + (uKind > 0.5 ? 42.0 : 1.0) && vWorld.y > CANAL_FLOOR - 0.2) {
     float r = flareAt(dCanal);
     // The opening is broken rock, not a drawn circle: its edge stands in and out with the beds.
     vec2 across = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
@@ -163,19 +163,23 @@ void main() {
   if (inside) {
     float r = flareAt(dCanal);
     vec2 axis = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
-    // Along the canal and up the wall from the floor to the crown, as the picture was made: its beds run along the canal, tipped a little, and
-    // its ice hangs down the wall.
-    vec2 at = vec2(dCanal + 0.6 * vWorld.y, (3.14159 - abs(atan(axis.x, axis.y))) * max(r, 4.0));
-    vec3 c1 = texture2D(tCanal, at / 6.0).rgb;
-    vec3 n1 = texture2D(tCanalNh, at / 6.0).rgb;
-    vec3 c2 = texture2D(tCanal, at * vec2(0.6, 1.0) / 21.0 + 0.37).rgb;
-    vec3 n2 = texture2D(tCanalNh, at * vec2(0.6, 1.0) / 21.0 + 0.37).rgb;
-    rock = mix(CANAL_MEAN, c2, 0.85) * (0.78 + 0.22 * c1 / CANAL_MEAN) * 1.5;
-    t = ((n1.rg - 0.5) * 0.35 + (n2.rg - 0.5) * 1.7) * vec2(1.0, -1.0);
-    pit = 0.6 * n1.b + 0.4 * n2.b;
-    upAlong = normalize(cross(CANAL_ALONG, n0));
-    if (axis.x < 0.0) upAlong = -upAlong;
-    across = CANAL_ALONG;
+    // The rock of the canal by world position on three planes, at the picture's one real size (4 m): nothing is laid along or round the tube.
+    vec3 tw = pow(abs(n0), vec3(4.0));
+    tw /= tw.x + tw.y + tw.z;
+    vec2 pX = vWorld.zy / 4.0;
+    vec2 pY = vWorld.xz / 4.0 + 0.31;
+    vec2 pZ = vWorld.xy / 4.0 + 0.67;
+    vec3 c1 = texture2D(tCanal, pX).rgb * tw.x + texture2D(tCanal, pY).rgb * tw.y + texture2D(tCanal, pZ).rgb * tw.z;
+    vec3 n1 = texture2D(tCanalNh, pX).rgb * tw.x + texture2D(tCanalNh, pY).rgb * tw.y + texture2D(tCanalNh, pZ).rgb * tw.z;
+    // Slabs: the same rock again at five times the size, turned, to break the wall into blocks larger than the picture.
+    vec2 qX = vec2(vWorld.z + 0.35 * vWorld.y, vWorld.y - 0.35 * vWorld.z) / 19.0 + 0.13;
+    vec2 qZ = vec2(vWorld.x + 0.35 * vWorld.y, vWorld.y - 0.35 * vWorld.x) / 19.0 + 0.53;
+    vec3 n2 = texture2D(tCanalNh, qX).rgb * tw.x + texture2D(tCanalNh, pY * 0.21).rgb * tw.y + texture2D(tCanalNh, qZ).rgb * tw.z;
+    rock = c1 * (0.55 + 0.9 * n2.b) * 1.2;
+    t = ((n1.rg - 0.5) * 1.3 + (n2.rg - 0.5) * 1.6) * vec2(1.0, -1.0);
+    pit = 0.55 * n1.b + 0.45 * n2.b;
+    upAlong = tw.y > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+    across = tw.x > max(tw.y, tw.z) ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
   } else {
     vec3 side = vec3(0.0);
     vec3 level = vec3(0.0);
@@ -328,7 +332,9 @@ void main() {
   float rime = smoothstep(0.15, 0.7, -lee) * smoothstep(0.35, 0.75, pit + 0.3 * vnoise(vWorld.xz * 0.6 + vWorld.y * 0.4)) * (1.0 - burn);
   if (inside) {
     snow = smoothstep(1.6, 0.2, vWorld.y - CANAL_FLOOR + 1.2 * (pit - 0.5)) * 0.85;
-    rime = 0.5 * smoothstep(0.45, 0.8, pit);
+    // Rime: thick on the lip of each mouth where the gale reaches, thinner on what stands proud farther in.
+    float lip = exp(-max(min(dCanal, EXIT - dCanal), 0.0) / 9.0);
+    rime = smoothstep(0.62 - 0.4 * lip, 0.85 - 0.3 * lip, pit) * (0.45 + 0.55 * lip);
     // The canal is black from outside: what the sky gives its walls is gone a few metres in.
     float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 7.0);
     snow *= lit;
@@ -369,7 +375,7 @@ void main() {
   vec3 n = normalize(mix(nRock, nSnow, snow));
   // Packed by the wind in long plates, the snow is glazed and blue-grey; between them it lies soft and white.
   float plate = smoothstep(0.4, 0.62, vnoise(vec2(dot(vWorld.xz, vec2(0.98, -0.2)) * 0.19, dot(vWorld.xz, vec2(0.2, 0.98)) * 0.045)));
-  albedo = mix(albedo, mix(vec3(0.84, 0.87, 0.91), vec3(0.6, 0.66, 0.76), 0.55 * plate) * clamp(snowTint, 0.4, 1.1), snow);
+  albedo = mix(albedo, mix(vec3(0.78, 0.84, 0.93), vec3(0.56, 0.64, 0.78), 0.55 * plate) * clamp(snowTint, 0.4, 1.1), snow);
   rough = mix(rough, 0.7 - 0.3 * plate, snow);
   occ = mix(occ, snowOcc, snow);
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
@@ -377,6 +383,18 @@ void main() {
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
   vec3 lightAt = !inside && dCanal > 0.0 && dCanal < EXIT && abs(vSL.y - canalAt(dCanal)) < 60.0 ? vWorld + vec3(0.0, 16.0, 0.0) : vWorld;
   vec3 c = rigShade(lightAt, n, v, albedo, rough, occ);
+  if (inside && uUnder > 1.5) {
+    // Inside, the two mouths are the windows: each lights the rock that faces it by the share of the sky it holds from there.
+    vec3 lift = vec3(0.0, CANAL_FLOOR + 9.0 - vWorld.y, 0.0);
+    vec3 toMouth = -CANAL_ALONG * max(dCanal, 1.0) + lift;
+    vec3 toExit = CANAL_ALONG * max(EXIT - dCanal, 1.0) + lift;
+    float sM = 900.0 / (dot(toMouth, toMouth) * 3.14159 + 900.0);
+    float sE = 700.0 / (dot(toExit, toExit) * 3.14159 + 700.0) * exp(-max(EXIT - dCanal, 0.0) / 70.0);
+    vec3 dM = normalize(toMouth);
+    vec3 dE = normalize(toExit);
+    vec3 window = skyIrradiance(dM) * sM * (0.2 + 0.8 * max(dot(n, dM), 0.0)) + skyIrradiance(dE) * sE * (0.2 + 0.8 * max(dot(n, dE), 0.0));
+    c += albedo * window * (0.35 + 0.65 * pit) * 2.2;
+  }
   // Seen from outside the canal is black; the shot inside it is exposed for it (uUnder is staged up from that cut).
   if (inside && uUnder < 1.5) c *= 0.03 + 0.97 * exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 7.0);
   gl_FragColor = vec4(rigOut(c), 1.0);

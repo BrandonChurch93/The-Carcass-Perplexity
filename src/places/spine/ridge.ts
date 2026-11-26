@@ -254,7 +254,8 @@ export function ground(s: number, l: number): number {
   const width = (l > 0 ? 3 + 66 * shelf + 80 * exitShelf : 3 + 14 * shelf) + stand;
   const al = Math.max(0, Math.abs(l) - width);
   // The lee side is the steeper: it falls to the cloud in walls.
-  let fall = ((1.15 + (l > 0 ? 0.6 * smooth(60, 220, al) : 0.5 * smooth(30, 160, al))) * al * al) / (al + 10);
+  // Under the crest the flanks are shoulders of snow with the rock standing out of them; they steepen as they go down to the cloud.
+  let fall = ((l > 0 ? 0.42 + 0.95 * smooth(40, 210, al) : 0.6 + 0.9 * smooth(30, 170, al)) * al * al) / (al + 10);
   fall *= 1 + 0.16 * Math.sin(s * 0.023 + (l > 0 ? 2.1 : -2.1)) * smooth(20, 220, al);
   let y = crest(s) - fall;
   y += 40 * Math.exp(-(((s - MOUTH_S - EXIT + 12) / 26) ** 2) - ((l - canalL(EXIT)) / 34) ** 2);

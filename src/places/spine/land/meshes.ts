@@ -195,7 +195,8 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const [su, sv] = sheetAt(sp, l, y);
       let n = depth * (reliefAt(sp.sheet, su, sv) - 0.55) + 0.8 * slab(u - 0.2 * l, l + face * 700, 15, 5, seed + 7);
       n = Math.max(-0.5 * p.thick, Math.min(0.7 * p.thick + 4, n)) * (1 - 0.92 * edge);
-      const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick;
+      // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
+      const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);
       let along = face * Math.max(0.3 * body, body + n) * snap;
       // About the mouth and the way out the face stands just outside the canal's end, so the canal is cut through a wall; the relief
       // only stands out of that wall, never in.
@@ -203,8 +204,13 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
         const end = face < 0 ? ends.mouth : ends.exit;
         const near = Math.hypot(l - end[0], y - (FLOOR + 12));
         const w = 1 - Math.min(1, Math.max(0, (near - 60) / 45));
-        const want = end[1] + face * (2 + 0.6 * Math.max(n, 0));
-        along += (want - along) * w * w * (3 - 2 * w);
+        if (w > 0) {
+          // The canal's end is square to the ridge there, not to the blade: the wall is laid on that plane, a little outside it.
+          const target = (face < 0 ? MOUTH_S : MOUTH_S + EXIT) + face * (1.5 + 0.6 * Math.max(n, 0));
+          let want = end[1];
+          for (let i = 0; i < 5; i++) want += (target - locate(sp.x + m.ax * l + m.bx * want, sp.z + m.az * l + m.bz * want).s) / 0.9;
+          along += (want - along) * w * w * (3 - 2 * w);
+        }
       }
       const x = sp.x + m.ax * l + m.bx * along;
       const z = sp.z + m.az * l + m.bz * along;

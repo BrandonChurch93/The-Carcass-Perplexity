@@ -115,7 +115,7 @@ vec3 skyIrradiance(vec3 n) {
   open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * (2.6 * stormShare);
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, KEY_DIR) + 0.12) / 1.12, 0.0, 1.0);
-  return 3.14159 * (e + uWarmColour * (0.26 * w * w * w * seen));
+  return 3.14159 * (e + uWarmColour * (0.2 * w * w * w * seen));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it
