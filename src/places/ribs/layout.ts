@@ -36,8 +36,9 @@ export const RIBS: Rib[] = [
   { name: 'R1', x: 405, z: -430, yaw: RIGHT, height: 520, lean: 520, a: 122, b: 60, flare: 20, flareTop: 60, ctrl: [0.42, 0.55], taper: 0.9 },
   // The arch of the left row: it rises, hooks over the strait and its tip comes down again.
   { name: 'L2', x: -311, z: -817, yaw: LEFT, height: 308, lean: 275, a: 42, b: 30, flare: 14, flareTop: 50, bend: [40, 480, 275, 212], taper: 1.3, keep: 0.24 },
-  // The sunlit fin of the right row: the colony's rock is its foot.
-  { name: 'R2', x: 250, z: -571, yaw: RIGHT, height: 236, lean: 238, a: 140, b: 46, flare: 14, flareTop: 50, ctrl: [0.42, 0.62], taper: 0.95 },
+  // The sunlit fin of the right row. From the establishing camera the colony's rock stands before its foot; from the colony's camera it
+  // is the leaning shape in the haze behind the rock.
+  { name: 'R2', x: 508, z: -980, yaw: RIGHT, height: 378, lean: 381, a: 224, b: 70, flare: 14, flareTop: 50, ctrl: [0.42, 0.62], taper: 0.95 },
   // The blade behind the near cliff, hooked toward the strait.
   { name: 'L3', x: -297, z: -532, yaw: LEFT, height: 250, lean: 95, a: 46, b: 34, flare: 14, flareTop: 50, bend: [-6, 235, 95, 250], taper: 1.1 },
   // The small fin in the middle distance.
@@ -121,7 +122,8 @@ export function radii(rib: Rib, t: number): [number, number] {
 
 export function skirtPad(y: number): number {
   const k = Math.min(1, Math.max(0, 1 - y / TIDE));
-  return 4 + 10 * k * k;
+  // Steep: the weed hangs down a face, it does not lie along a slope.
+  return 3 + 5 * k * k;
 }
 
 export function surface(rib: Rib, t: number, phi: number, ra: number, rb: number): THREE.Vector3 {
