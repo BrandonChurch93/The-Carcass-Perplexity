@@ -106,22 +106,30 @@ export const OPEN = {
   /** The point on the strait floor the lens is held on through the arc: under the gap between the tips of L1 and R1. */
   target: [-149, -193] as [number, number],
   /**
+   * The slew: as the film opens the lens looks this many degrees to the right of that point (the right row's blade and the far cage stand
+   * well inside the frame, the strike a fifth in from the left) and is already coming round onto it, fastest in the first frame and at
+   * rest after this many seconds, as a hull does that is thrown across a crest. It is what slides the whole view through the second in
+   * which the lens sits high on the swell.
+   */
+  slews: 5,
+  slewing: 2.4,
+  /**
    * Degrees over the level as the film opens, how far it tilts up and between which seconds; the lens as the film opens, how far it widens
    * and between which seconds. It widens late and tilts little: the near blade outgrows the frame, its tip gone through the top inside two
    * seconds and ever farther out, while the tip of the right row's blade (6 degrees lower) is held inside the top by a clear margin.
    */
   pitch: 12.2,
-  tilt: 2,
+  tilt: 1.6,
   tilting: [2.6, 5] as [number, number],
   /**
    * Off the first crest the nose comes down with the fall and stays down: degrees, and the seconds between which it does. It is what
    * throws the near blade's tip through the top of the frame in one move, and brings the sea up into the frame as the lens drops to it.
    */
-  nods: 1.8,
+  nods: 1.2,
   nodding: [0.6, 1.45] as [number, number],
-  fov: 31,
-  widens: 15,
-  widening: [4, 10] as [number, number],
+  fov: 29.5,
+  widens: 16.5,
+  widening: [3, 10] as [number, number],
   /** The seconds from which the look eases into the old move's. */
   eases: 6,
   /** Degrees the lens rolls with the swell. */
@@ -280,7 +288,7 @@ export function openingCamera(seconds: number): Pose {
   const climbs = (openingHeight(mid + 0.02) - openingHeight(mid - 0.02)) / 0.04;
   const ease = smoother(OPEN.eases, J, seconds);
   const held = Math.atan2(OPEN.target[0] - x, z - OPEN.target[1]) / RAD;
-  const yaw = held + (old.yaw - held) * ease;
+  const yaw = held + (old.yaw - held) * ease + OPEN.slews * Math.pow(Math.max(0, 1 - seconds / OPEN.slewing), 3);
   const pitch = OPEN.pitch + OPEN.tilt * smoothed(OPEN.tilting[0], OPEN.tilting[1], seconds) + OPEN.noses * climbs * own - OPEN.nods * smoothed(OPEN.nodding[0], OPEN.nodding[1], seconds) * own;
   const fov = OPEN.fov + OPEN.widens * smoothed(OPEN.widening[0], OPEN.widening[1], seconds);
   return { ...looking(position, yaw, pitch + (old.pitch - pitch) * ease, fov + (old.fov - fov) * ease), roll: OPEN.roll * roll * own };
