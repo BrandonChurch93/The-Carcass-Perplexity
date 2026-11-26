@@ -1,7 +1,7 @@
-2026-11-26 15:47 UTC
-work at 10edbbb on agent/film-opening
-Version 3 (10edbbb): first two seconds at review, the approach at draft, frames 0 and 120 at 400 px, frame 120 final uhd at native size at the near foot. Wrong: first blade still shows even courses, breaker lumpy at frame 0, bank left of the blade one smooth arc
-look-1.jpg = out/work/v3/pics/first-two-seconds.png
-look-2.jpg = out/work/v3/pics/approach.png
-look-3.jpg = out/work/v3/pics/phone-0-120.png
-look-4.jpg = out/work/v3/pics/native-120-foot.png
+2026-11-26 16:36 UTC
+work at 1cf7358 on agent/film-opening
+Last version (1cf7358): sheets from 08fbc68 (one bank edge differs), frames 0 and 120 final uhd at 400 px beside the approved picture, frame 120 at native size at the foot. Wrong: breaker still a row of white bushes at native, pale wavering rim round the near blade, sky pale not slate
+look-1.jpg = out/work/v4/pics/first-two-seconds.png
+look-2.jpg = out/work/v4/pics/approach.png
+look-3.jpg = out/work/v5/pics/phone-final-0-120-approved.png
+look-4.jpg = out/work/v5/pics/native-120-foot.png
