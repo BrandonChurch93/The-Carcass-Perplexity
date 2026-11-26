@@ -118,11 +118,13 @@ vec3 skyIrradiance(vec3 n) {
   float s = clamp(0.5 + 0.5 * dot(n, uStormDir), 0.0, 1.0);
   float stormShare = s * s * (1.0 - 0.45 * max(n.y, 0.0));
   // The flash counts for more on what it lights than in the sky itself: the cloud is a wall of it for the land, and a glow for the lens.
-  open = mix(open, uSkyStorm, 0.8 * stormShare) + flashCast() * (2.6 * stormShare);
+  // Under the rock (the lens exposed for the dark there) the flash does not come by the sky's share: it comes in by the mouths alone,
+  // and the canal's own shader gives it from them.
+  open = mix(open, uSkyStorm, 0.8 * stormShare) + flashCast() * (2.6 * stormShare * (uUnder > 1.5 ? 0.12 : 1.0));
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, KEY_DIR) + 0.12) / 1.12, 0.0, 1.0);
   // One low source: what looks to it is lit warm, by the square, and what looks away keeps the cold of the sky alone.
-  return 3.14159 * (e * (0.72 + 0.28 * (1.0 - w)) + uWarmColour * (0.34 * w * w * seen));
+  return 3.14159 * (e * (0.72 + 0.28 * (1.0 - w)) + uWarmColour * (0.26 * w * w * seen));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it
@@ -130,19 +132,19 @@ vec3 skyIrradiance(vec3 n) {
 vec4 landAt(vec2 xz) {
   vec2 c = (xz - uLandRect.xy) * uLandRect.zw;
   vec2 ce = min(c, 1.0 - c);
-  vec4 coarse = mix(vec4(-3000.0, 1.0, 0.0, 0.0), texture2D(tLand, c), smoothstep(0.0, 0.02, min(ce.x, ce.y)));
+  vec4 coarse = mix(vec4(-3000.0, 1.0, 0.0, 0.0), textureLod(tLand, c, 0.0), smoothstep(0.0, 0.02, min(ce.x, ce.y)));
   vec2 f = (xz - uLandFineRect.xy) * uLandFineRect.zw;
   vec2 e = min(f, 1.0 - f);
   float k = smoothstep(0.0, 0.06, min(e.x, e.y));
   if (k <= 0.0) return coarse;
-  return mix(coarse, texture2D(tLandFine, f), k);
+  return mix(coarse, textureLod(tLandFine, f, 0.0), k);
 }
 
 // What stands on the ground, as drawn in the contact map.
 float contactDrawn(vec3 p) {
   vec2 uv = (p.xz - uContactRect.xy) * uContactRect.zw;
   vec2 e = min(uv, 1.0 - uv);
-  return texture2D(tContact, uv).r * smoothstep(0.0, 0.03, min(e.x, e.y));
+  return textureLod(tContact, uv, 0.0).r * smoothstep(0.0, 0.03, min(e.x, e.y));
 }
 
 // 0 open, 1 covered: how much of the sky is hidden at the ground by something standing over it. Drawn by whoever stands there.
@@ -199,13 +201,14 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float sky = skyOpen(p);
   float open = sky * occ;
   // The lightning reaches a hollow as the sky does: under a roof it comes in by the mouths and no other way.
-  vec3 e = skyIrradiance(n) * open + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
+  vec3 skyE = skyIrradiance(n);
+  vec3 e = skyE * open + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  vec3 env = mix(skyRadiance(r), skyIrradiance(n) / 3.14159, rough * rough);
+  vec3 env = mix(skyRadiance(r), skyE / 3.14159, rough * rough);
   return c + f * env * open;
 }
 

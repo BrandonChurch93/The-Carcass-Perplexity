@@ -369,13 +369,15 @@ export function createRig(): Rig {
       if (!grid) bake();
       camera.getWorldDirection(forward);
       // The map follows the view: it is centred where the lower part of the frame meets the ground, and sized to that distance.
-      const height = Math.max(1, camera.position.y - Math.max(0, landHeight(camera.position.x, camera.position.z)));
+      // An eye on the rim looks down on the shore: its height is taken over the water there, not over the ledge it stands on.
+      const high = camera.position.y > 20;
+      const height = high ? camera.position.y : Math.max(1, camera.position.y - Math.max(0, landHeight(camera.position.x, camera.position.z)));
       const half = Math.atan(1 / (camera.projectionMatrix.elements[5] as number));
       const long = smooth(0.26, 0.16, half);
       const pitch = Math.max(Math.asin(Math.min(1, Math.max(-1, -forward.y))) + (long * half) / 3, 0.026);
       const reach = Math.min(900, height / Math.tan(pitch));
       const radius = Math.min(CONTACT.maxRadius, Math.max(CONTACT.minRadius, reach * 0.6));
-      const ahead = Math.max(reach * 0.75, radius * 0.72);
+      const ahead = Math.max(reach * (high ? 0.45 : 0.75), radius * 0.72);
       const flat = Math.hypot(forward.x, forward.z) || 1;
       const texel = (radius * 2) / CONTACT.size;
       centre.set(camera.position.x + (forward.x / flat) * ahead, 0, camera.position.z + (forward.z / flat) * ahead);

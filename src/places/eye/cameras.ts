@@ -73,8 +73,8 @@ function leave(frame: number): Pose {
   const f = flight(frame, FLIGHT);
   const reach = 100;
   return {
-    // A long lens held on the centre of the lake: the two that stand under it are soft.
-    aperture: 0.015,
+    // A long lens held on the centre of the lake: the two that stand under it are a little soft, and their coats still read.
+    aperture: 0.005,
     focus: Math.max(30, Math.hypot(f.y, f.z)),
     position: [0, f.y, f.z],
     aim: [0, f.y - f.sin * reach, f.z - f.cos * reach],

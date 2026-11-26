@@ -18,7 +18,7 @@ const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.02 };
 const ROCK = { at: [10.5, -8.5] as [number, number], half: [9.5, 7.5] as [number, number], cell: 0.05 };
 
 /** How many reads across a slanting pixel the pictures of heights and slopes get: 4 as the colours do, or 1, which is cheaper and softer far off. */
-const DATA_SHARP: number = 4;
+const DATA_SHARP: number = 1;
 
 let shared: { field: Field; grain: THREE.DataTexture; plates: THREE.DataTexture } | null = null;
 /** What the land knows, for the brine: the same field and the same grain. Made by the land's `create`. */
@@ -147,23 +147,23 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       tFieldNear: { value: field.near },
       tFieldFar: { value: field.far },
-      tSilt: { value: ctx.assets.texture('mat/silt.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tSilt: { value: ctx.assets.texture('mat/silt.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tSiltN: { value: ctx.assets.texture('mat/silt-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
-      tLedge: { value: ctx.assets.texture('mat/ledge.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tLedge: { value: ctx.assets.texture('mat/ledge.jpg', { kind: 'colour', anisotropy: 1 }) },
       tLedgeH: { value: ctx.assets.texture('mat/ledge-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
       tFlat: { value: ctx.assets.texture('mat/flatplate.jpg', { kind: 'colour', anisotropy: 4 }) },
       tFlatH: { value: ctx.assets.texture('mat/flatplate-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
-      tThin: { value: ctx.assets.texture('mat/thincrust.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tThin: { value: ctx.assets.texture('mat/thincrust.jpg', { kind: 'colour', anisotropy: 1 }) },
       tThinH: { value: ctx.assets.texture('mat/thincrust-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
       uLedgeAt: { value: new THREE.Vector4(rockCentre[0], rockCentre[1], -F[1], F[0]) },
       uThinAt: { value: new THREE.Vector4(centre[0], centre[1], -F[1], F[0]) },
-      tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tRimeN: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tGrain: { value: grain },
-      tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
-      tRock: { value: ctx.assets.texture('mat/rock.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
-      tShore: { value: ctx.assets.texture('mat/shore.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tRock: { value: ctx.assets.texture('mat/rock.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
+      tShore: { value: ctx.assets.texture('mat/shore.jpg', { kind: 'colour', anisotropy: 1 }) },
       tShoreH: { value: ctx.assets.texture('mat/shore-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
     },
     toneMapped: false,

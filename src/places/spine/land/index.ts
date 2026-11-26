@@ -4,11 +4,14 @@ import * as THREE from 'three';
 import { FIRST, finAxes, first, sheetMap, spires, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
 import type { Context, Piece } from '../shared/context';
-import { CARCASS, INSIDE_FROM, RAD, STRIKE_FROM, WIND, carcassAxis, carcassBody, carcassView, step, strikeCrag } from '../shared/anchors';
+import { CARCASS, INSIDE_FROM, RAD, STRIKE_FROM, UNIT, WIND, carcassAxis, carcassBody, carcassView, step, strikeCrag } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
+import { secondsInPlace, shotById } from '../../../film/cut';
 import { canalFloor, canalShell, crag, crestStrip, flanks, hollow, icicles, reliefDepth, spireMesh, stones } from './meshes';
 import { height } from './height';
 import { CRAG_FRAGMENT, CRAG_VERTEX, ICE_FRAGMENT, ICE_VERTEX, ICICLE_FRAGMENT, ICICLE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
+
+const CARCASS_FROM = secondsInPlace(UNIT, shotById('spine-03').first);
 
 export const PARTS: readonly string[] = ['land'];
 
@@ -30,6 +33,8 @@ export function create(ctx: Context): Piece {
   const pictures = {
     tFace: picture('kiteface'),
     tFaceH: { value: ctx.assets.texture('mat/kiteface-h.png', { kind: 'data', anisotropy: ANISOTROPY }) },
+    tCrust: picture('crustfield'),
+    tCrustH: { value: ctx.assets.texture('mat/crustfield-h.png', { kind: 'data', anisotropy: ANISOTROPY }) },
     tSpire: picture('spire'),
     tSpireNh: data('spire'),
     tLedge: picture('ledge'),
@@ -46,6 +51,7 @@ export function create(ctx: Context): Piece {
     tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
     tScorch: { value: ctx.assets.texture('mat/scorchfield.jpg', { anisotropy: ANISOTROPY, repeat: false }) },
     tScorchH: { value: ctx.assets.texture('mat/scorchfield-h.png', { kind: 'data', anisotropy: ANISOTROPY, repeat: false }) },
+    tScorchD: { value: ctx.assets.texture('mat/scorch.jpg', { anisotropy: ANISOTROPY }) },
     uTall: tall,
     uScorch: { value: new THREE.Vector4(scorchAt[0], scorchAt[2], 0, 0) },
     uScorchAxes: { value: new THREE.Vector4(Math.cos(carcassAxis * RAD), Math.sin(carcassAxis * RAD), Math.cos(carcassView * RAD), Math.sin(carcassView * RAD)) },
@@ -67,7 +73,7 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_FRAGMENT,
-      defines: { KIND: kind },
+      defines: { KIND: kind, SCORCH: 0 },
       uniforms: { ...ctx.rig.uniforms, ...pictures, ...sheetOf(sp) },
       side,
       toneMapped: false,
@@ -172,6 +178,12 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: () => {
+      // Staged by shot: the burned ground under the dead one is compiled into the ground only for its own shot (spine-03).
+      const scorch = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1 : 0;
+      if (groundMaterial.defines.SCORCH !== scorch) {
+        groundMaterial.defines.SCORCH = scorch;
+        groundMaterial.needsUpdate = true;
+      }
       cragMesh.visible = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
     },
     dispose: () => {
