@@ -26,7 +26,7 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('air/steam');
   const lean: [number, number] = [-0.5, -0.12];
   const main = bearingDir(300);
-  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.8, strength: 0.42, rise: 13, kind: 'steam', lean });
+  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.8, strength: 0.28, rise: 13, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
   own.push({ at: [-1, 0, -4], radius: 5, strength: 0.012, rise: 5, kind: 'steam', lean });
   // The low steam that drifts off the warm brine. With SHEETS it lies in sheets over these patches (x, z, radius, thickness); without, it
@@ -43,7 +43,7 @@ export function create(ctx: Context): Piece {
     return [node[0], node[1]];
   };
   const mist: THREE.Vector4[] = [
-    new THREE.Vector4(-1, -3, POOL_R * 0.6, 0.07),
+    new THREE.Vector4(-1, -3, POOL_R * 0.6, 0.05),
     new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 12 - 5, HERO_DOME[1] + K1_DIR[1] * 12, 7, 0.6),
     new THREE.Vector4(-3, -9, 7, 0.3),
     new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),

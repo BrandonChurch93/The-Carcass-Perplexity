@@ -27,9 +27,9 @@ const COLONY_SIDE: [number, number] = [-0.8, 0.6];
 const COLONY_HEIGHT = 45.2;
 const colonyReach = buttressRadius(COLONY_HEIGHT) + 22;
 // The four close keys are seen through a lens of a real width: the focus in metres, the radius of the lens in metres.
-const colony: Pose = { ...looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36), focus: 30, aperture: 0.04 };
+const colony: Pose = { ...looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36), focus: 30, aperture: 0.09 };
 const FEEDING_YAW = 10;
-const feeding: Pose = { ...looking(onGround(-60, -420, 1.5), FEEDING_YAW, -3, 20), focus: 22, aperture: 0.02 };
+const feeding: Pose = { ...looking(onGround(-60, -420, 1.5), FEEDING_YAW, -3, 20), focus: 22, aperture: 0.035 };
 const gate: Pose = { ...looking(onGround(GATE_X, GATE_Z + 170, 0.9), 0, 5, 40, 170), focus: 60, aperture: 0.04 };
 
 function drownedPose(): Pose {
@@ -42,7 +42,7 @@ function drownedPose(): Pose {
   const target: Vec3 = [hang.x, hang.y - 3.5, hang.z];
   const position = add(add(target, scale(north, -15)), scale(out, 10));
   const aim = add(add(position, scale(north, 52)), add(scale(out, -19), [0, 1.8, 0]));
-  return { position, aim, fov: 35, focus: 18, aperture: 0.03 };
+  return { position, aim, fov: 35, focus: 18, aperture: 0.07 };
 }
 
 const drowned = drownedPose();
@@ -97,7 +97,7 @@ export const shots: Record<string, CameraPath> = {
   'ribs-03': through(colony, key('ribs-03'), { right: 12, forward: -14, up: -2 }, { right: -16, forward: 10, up: 4 }),
   'ribs-04': through(feeding, key('ribs-04'), { forward: -24, up: 0.6 }, { forward: 5, up: -0.2 }),
   'ribs-05': through(drowned, key('ribs-05'), { forward: -30, up: -1.6, right: 9 }, { forward: 4, up: 1.2, right: 1 }),
-  'ribs-06': through(gate, key('ribs-06'), { forward: 7, right: -3 }, { forward: -5, up: 1.1, right: 2 }),
+  'ribs-06': through(gate, key('ribs-06'), { forward: 7 }, { forward: -5, up: 1.1, right: 2 }),
 };
 
 const feedingAt = feeding.position;
@@ -111,7 +111,7 @@ export const STATIONS = {
   establish: [establish.position[0], establish.position[2]] as [number, number],
   arch: [150, -345] as [number, number],
   gateZ: gate.position[2] - 120,
-  posts: [[gate.position[0] - 56, gate.position[2] - 74], [gate.position[0] + 66, gate.position[2] - 104]] as [number, number][],
+  posts: [[gate.position[0] - 64, gate.position[2] - 74], [gate.position[0] + 78, gate.position[2] - 104]] as [number, number][],
   colonySide: COLONY_SIDE,
   drownedPhi: DROWNED_PHI,
   drownedHeight: DROWNED_HEIGHT,
@@ -127,6 +127,6 @@ export const STATIONS = {
   flee: [gate.position[0] + 4, gate.position[2] - 34] as [number, number],
   foreground: [
     ...ahead(feedingAt, FEEDING_YAW, [[9, -2.1, 1.8], [13.5, -3.9, 1.3], [8.2, -0.2, 0.55], [17, -5.2, 1.6]]),
-    ...ahead(gate.position, 0, [[12.5, -6.6, 3.0], [13.2, -2.4, 1.4], [18, -9.5, 2.2], [12.4, 7.2, 1.3], [19, 5.5, 0.8]]),
+    ...ahead(gate.position, 0, [[6.0, -4.4, 3.2], [13.2, -5.4, 1.4], [18, -9.5, 2.2], [12.4, 7.2, 1.3], [19, 5.5, 0.8]]),
   ] as [number, number, number][],
 };

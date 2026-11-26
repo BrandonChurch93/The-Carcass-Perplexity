@@ -196,10 +196,10 @@ export function create(ctx: Context): Piece {
     .map((foot, n) => ({ x: foot.x, z: foot.z, reach: Math.max(foot.a, foot.b), id: n, near: Math.hypot(foot.x - gate[0], foot.z - gate[2]) < 130 }))
     .filter((b) => b.z > -2400 && b.z < 400);
   // And the two stacks the last shot looks between: the burst up the nearer one is the tallest thing in its frame.
-  STATIONS.posts.forEach((post, n) => sites.push({ x: post[0], z: post[1], reach: 25, id: feet.length + n, near: true, power: n === 0 ? 1.2 : 0.55 }));
+  STATIONS.posts.forEach((post, n) => sites.push({ x: post[0], z: post[1], reach: n === 0 ? 34 : 37, id: feet.length + n, near: true, power: n === 0 ? 1.2 : 0.55 }));
   const bore = createBore(rig.uniforms, foamMap, front, LEVELS.pool, [gate[0], gate[2]], sites, {
     wallA: ctx.assets.texture('mat/borewall-a.jpg', { kind: 'colour', repeat: false }),
-    wallB: ctx.assets.texture('mat/borewall-b.jpg', { kind: 'colour', repeat: false }),
+    wallB: ctx.assets.texture('mat/borewall-c.jpg', { kind: 'colour', repeat: false }),
     foam: foamPicture,
     spray: ctx.assets.texture('mat/spray.jpg', { kind: 'colour', repeat: false }),
   });

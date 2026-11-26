@@ -250,7 +250,7 @@ void main() {
   float s = position.y;
   float len = aShape.x;
   float wide = aShape.y * (0.35 + 0.65 * sin(3.14159 * pow(s, 0.6))) * (1.0 + 0.3 * sin(s * 23.0 + aShape.z * 9.0));
-  float sway = sin(uTime * 1.3 + aShape.z * 30.0 + s * 3.0) * 0.05 * s * s * len;
+  float sway = sin(uTime * 1.3 + aShape.z * 30.0 + s * 3.0) * 0.09 * s * s * len;
   float curl = sin(s * 9.0 + aShape.z * 50.0) * 0.07;
   vec3 across = normalize(uAcross + uOut * (0.6 * sin(s * 5.0 + aShape.z * 17.0)));
   vec3 root = aRoot.xyz;
@@ -325,7 +325,7 @@ void main() {
   vec3 n = normalize(vNormal);
   float shell = 1.0 - smoothstep(0.5, 0.75, length(vCrab.xy));
   float speck = fract(sin(dot(floor(vCrab.xy * 14.0), vec2(12.9898, 78.233)) + vCrab.z * 9.0) * 43758.5453);
-  vec3 albedo = mix(vec3(0.42, 0.3, 0.2), vec3(0.56, 0.43, 0.3) * (0.75 + 0.35 * speck), shell);
+  vec3 albedo = mix(vec3(0.5, 0.4, 0.3), vec3(0.74, 0.66, 0.54) * (0.75 + 0.35 * speck), shell);
   vec3 col = rigShade(vWorld, n, v, albedo, 0.35, 0.7 + 0.3 * shell);
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
@@ -395,7 +395,7 @@ void main() {
   float h = textureLod(tRelief, uv, 3.0).r;
   // What hangs free of it stirs a little: the ends of the legs and the tuft most.
   float loose = smoothstep(0.5, 1.0, position.y);
-  float sway = loose * loose * 0.014 * sin(uTime * 1.3 + position.x * 23.0);
+  float sway = loose * loose * 0.03 * sin(uTime * 1.3 + position.x * 23.0);
 #ifdef SHADE
   // Its shade on the weed behind it: the same sheet a hand behind, fallen a little down the face.
   vec3 w = uOrigin + uAxis * (position.x - 0.12 + sway) + uDrop * (position.y + 0.012) + uProud * 0.04;
@@ -434,12 +434,16 @@ void main() {
   if (dot(face, v) < 0.0) n = reflect(n, face) * -1.0;
   // Sodden hide: a little greyer than the dry picture, and it shines where the water runs off it. The hollows between the ribs see little sky.
   // It hangs in the rock's own shade, no brighter than the weed's highlights: grey pink, stained down its length by what runs off it, green brown toward the weed it lies in.
-  vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))) * vec3(1.0, 0.9, 0.88), pic, 0.5) * 0.92;
+  vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))) * vec3(1.0, 0.9, 0.86), pic, 0.5) * 1.12;
   float streak = 0.5 + 0.5 * sin(vUv.x * 150.0 + 4.0 * sin(vUv.x * 31.0) + 2.0 * pic.g);
   albedo *= mix(0.72, 1.0, smoothstep(0.25, 0.7, streak));
-  albedo = mix(albedo, albedo * vec3(0.55, 0.6, 0.38), 0.7 * smoothstep(0.6, 0.15, vUv.y));
+  albedo = mix(albedo, albedo * vec3(0.55, 0.6, 0.38), 0.4 * smoothstep(0.6, 0.15, vUv.y));
   float occ = mix(0.4, 0.85, smoothstep(0.1, 0.7, h));
   vec3 col = rigShade(vWorld, n, v, albedo, 0.26, occ);
+  // Water still runs off it: threads of it slide down the hide, bead after bead, and each bead holds the sky.
+  float thread = smoothstep(0.8, 0.97, 0.5 + 0.5 * sin(vUv.x * 210.0 + 5.0 * sin(vUv.x * 47.0)));
+  float bead = smoothstep(0.6, 0.92, 0.5 + 0.5 * sin(vUv.y * 46.0 + uTime * 5.0 + 9.0 * sin(vUv.x * 63.0)));
+  col += skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.07 * thread * bead * smoothstep(0.1, 0.5, h);
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (h < 0.045) discard;
 #endif

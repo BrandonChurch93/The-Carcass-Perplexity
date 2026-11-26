@@ -30,7 +30,7 @@ const K2: Pose = {
   aim: [K2_AT[0] + K2_DIR[0] * 20, 2.7 - 20 * Math.tan(7.6 * DEG), K2_AT[1] + K2_DIR[1] * 20],
   fov: 30,
   focus: 3.2,
-  aperture: 0.0035,
+  aperture: 0.006,
 };
 
 /** marsh-1, the seep pool, from half a metre over its brine at the lip of the bank. */
@@ -46,7 +46,7 @@ const K1: Pose = {
 /** marsh-3, the wallowers in the vein. */
 const K3: Pose = { position: at(27.7, 3, 1.5), aim: at(37.7, 3.2, 0.2), fov: 30, aperture: 0.007 };
 /** marsh-4, the one on the thin crust. */
-const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), fov: 35, aperture: 0.007 };
+const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), fov: 35, focus: 5.7, aperture: 0.011 };
 
 // The five shots are one walk: each starts near where the last ended, on a heading close to it, with its subject already small in the last frames
 // of the shot before. Thick stalks stand close to two of the paths, so those paths turn to keep them at the edge of the frame.

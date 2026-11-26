@@ -68,10 +68,11 @@ void main() {
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
 }`;
 
-export function mudWallow(ctx: Context, x: number, z: number, dir: [number, number], size = 1, tone: [number, number, number] = [0.1, 0.072, 0.054], name = 'dead-mud', wetness = 0, hollow = 0): { mesh: THREE.Mesh; set(heave: number, seconds: number): void; dispose(): void } {
+export function mudWallow(ctx: Context, x: number, z: number, dir: [number, number], size = 1, tone: [number, number, number] = [0.1, 0.072, 0.054], name = 'dead-mud', wetness = 0, hollow = 0, fine = true): { mesh: THREE.Mesh; set(heave: number, seconds: number): void; dispose(): void } {
   const rng = ctx.rng(name);
-  const RINGS = 40;
-  const SIDES = 120;
+  // A stain round one of the dead is a low dark patch: it wants a tenth of the points the mud a live one treads does.
+  const RINGS = fine ? 40 : 14;
+  const SIDES = fine ? 120 : 40;
   const position: number[] = [];
   const edge: number[] = [];
   const index: number[] = [];
