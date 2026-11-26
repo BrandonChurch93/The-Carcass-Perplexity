@@ -766,6 +766,14 @@ void main() {
     float drawn = 0.6 * vnoise(tw * vec2(2.2, 5.5) + 7.0 + 0.5 * swirl) + 0.4 * vnoise(tw * vec2(4.5, 11.0) + 19.0);
     float toNE = dot(lakeAt / max(lakeR, 0.05), vec2(0.7, -0.7));
     float amber = max(pow(smoothstep(min(0.56 + 0.4 * drawn + 0.24 * toNE + 0.16 * (vnoise(lakeAt / max(lakeR, 0.05) * 1.4 + 9.0) - 0.5), 0.94), 1.0, shoreR + 0.07), 1.9) * (0.5 + 0.5 * smoothstep(0.25, 0.6, vnoise(lakeAt / max(lakeR, 0.05) * 2.3 + 3.0))), 0.45 * smoothstep(0.08, 0.55, shallow) * smoothstep(0.6, 0.9, lakeR)) * (1.0 - 0.8 * smoothstep(0.1, 0.8, toNE));
+    // (Threads of the ochre leave the shallows and trail round into the dark, each curling the way the water turns.)
+    float inFrom = shoreR + 0.07;
+    float turned = 7.5 * (1.0 - inFrom) + 0.03 * uTime;
+    vec2 onRing = mat2(cos(turned), sin(turned), -sin(turned), cos(turned)) * (lakeAt / max(lakeR, 0.05));
+    float threadAt = vnoise(onRing * 2.6 + 1.3 * inFrom + 0.35 * swirl + 4.0);
+    float broken = vnoise(lakeAt * 9.0 + 2.0 * swirl + 5.0);
+    float thread = (1.0 - smoothstep(0.0, (0.012 + 0.11 * smoothstep(0.62, 0.95, inFrom)) * (0.4 + 1.2 * broken), abs(threadAt - 0.5))) * smoothstep(0.6, 0.8, inFrom) * (1.0 - smoothstep(0.95, 1.0, inFrom)) * smoothstep(0.35, 0.6, vnoise(onRing * 1.1 + 9.0));
+    amber = max(amber, thread * (0.25 + 0.75 * smoothstep(0.62, 0.92, inFrom)) * (0.55 + 0.45 * broken));
     float paler = smoothstep(0.35, 1.0, 0.25 * shallow + smoothstep(0.9, 1.0, shoreR + 0.07) + 0.3 * (drawn - 0.5));
     vec3 eye = mix(vec3(0.002, 0.0065, 0.017), mix(vec3(0.15, 0.07, 0.007), vec3(0.34, 0.185, 0.028), paler) * (0.55 + 0.9 * drawn) * (0.75 + 0.5 * swirl), amber * (0.55 + 0.45 * smoothstep(0.3, 0.6, swirl)));
     bed = mix(bed, eye, max(1.0 - smoothstep(1.03, 1.1, shoreR + 0.07), 1.0 - smoothstep(1.12, 1.3, lakeR)) * (1.0 - stream * smoothstep(0.98, 1.06, lakeR)));
