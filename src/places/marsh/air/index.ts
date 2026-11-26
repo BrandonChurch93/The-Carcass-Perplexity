@@ -80,7 +80,7 @@ export function create(ctx: Context): Piece {
       uRain: { value: rain },
       uMistCount: { value: 6 },
       uMist: { value: mist },
-      uBanks: { value: [78, 128, 195].map((d, k) => new THREE.Vector4(rel(1, 0)[0] - rel(0, 0)[0], rel(1, 0)[1] - rel(0, 0)[1], rel(d, 0)[0] * (rel(1, 0)[0] - rel(0, 0)[0]) + rel(d, 0)[1] * (rel(1, 0)[1] - rel(0, 0)[1]), [0.3, 0.36, 0.45][k] as number)) },
+      uBanks: { value: [78, 128, 195].map((d, k) => new THREE.Vector4(rel(1, 0)[0] - rel(0, 0)[0], rel(1, 0)[1] - rel(0, 0)[1], rel(d, 0)[0] * (rel(1, 0)[0] - rel(0, 0)[0]) + rel(d, 0)[1] * (rel(1, 0)[1] - rel(0, 0)[1]), [0.16, 0.2, 0.28][k] as number)) },
       // No low steam stands between a lens and what it is set on: round the wallowers, and in front of the lens of the colony.
       uClear: { value: [new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12), new THREE.Vector3(K2_AT[0] + K2_DIR[0] * 6, K2_AT[1] + K2_DIR[1] * 6, 8)] },
     },

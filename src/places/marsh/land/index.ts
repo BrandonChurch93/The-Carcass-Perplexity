@@ -27,6 +27,9 @@ export function landShared(): { field: Field; grain: THREE.DataTexture; plates: 
   return shared;
 }
 
+/** True: the escarpment is a built ring of cliff (wave 2). False: it is the far picture on the sky, and the ring is level flats. */
+const SCARP_BUILT: boolean = false;
+
 // The escarpment: a ring of cliff round the basin, six kilometres out, with the flats running up to its foot.
 function scarp(): THREE.BufferGeometry {
   const seg = 720;
@@ -41,7 +44,8 @@ function scarp(): THREE.BufferGeometry {
     for (let j = 0; j < radii.length; j++) {
       const r = (radii[j] as number) * (j < 2 ? 1 : wob);
       const gully = j > 2 && j < 10 ? 1 + 0.35 * (fbm(Math.sin(a) * 60 + j * 0.7, Math.cos(a) * 60, 3) - 0.5) : 1;
-      pos.push(Math.sin(a) * r, (lift[j] as number) * (j < 3 ? 1 : tall * gully), -Math.cos(a) * r);
+      // (The cliff itself is the far picture on the sky, air/sky.ts: this ring is the level flats running out under it to the haze.)
+      pos.push(Math.sin(a) * r, SCARP_BUILT ? (lift[j] as number) * (j < 3 ? 1 : tall * gully) : -0.6, -Math.cos(a) * r);
     }
     if (i < seg) {
       for (let j = 0; j < radii.length - 1; j++) {
