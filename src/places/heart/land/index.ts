@@ -229,7 +229,7 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0, 0, 0.04, [0.2, 0.6]), nearMaterial);
   rubble.renderOrder = -5;
-  const rocks = scatterRocks(ctx, shared, landHeight);
+  const rocks = scatterRocks(ctx, shared, landHeight, feetLift);
   // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
   for (const r of rocks.bench) r.renderOrder = -6;
   nearBench.renderOrder = -5;
