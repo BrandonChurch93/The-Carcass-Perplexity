@@ -243,6 +243,41 @@ export interface Stands {
   shade: THREE.InstancedMesh;
 }
 
+/**
+ * What makes one stand unlike the next: how many stems, the share of tall, middling, low, young and dead among them, how tall they grow,
+ * how long the stand is drawn out, whether its stems fan out or lean one way, how much they lean and break, which crowns they carry
+ * (full, ragged, spent, tight), how big, how much leaf hangs, and how many stand loose of the mass.
+ */
+interface Habit {
+  many: number;
+  shares: [number, number, number, number, number];
+  height: number;
+  long: number;
+  comb: number;
+  lean: number;
+  kink: number;
+  styles: [number, number, number, number];
+  crown: number;
+  leafy: number;
+  loose: number;
+}
+const HABITS: Habit[] = [
+  // An old thicket of every age.
+  { many: 1.25, shares: [0.18, 0.28, 0.24, 0.2, 0.1], height: 1, long: 1.2, comb: 0.2, lean: 1, kink: 0.3, styles: [0.5, 0.25, 0.13, 0.12], crown: 1, leafy: 1.2, loose: 0.3 },
+  // A few tall ones over their own young.
+  { many: 0.55, shares: [0.3, 0.05, 0.1, 0.5, 0.05], height: 1.2, long: 1, comb: 0.1, lean: 0.6, kink: 0.15, styles: [0.7, 0.2, 0.05, 0.05], crown: 1.02, leafy: 1.1, loose: 0.2 },
+  // Low scrub, none above a man's waist.
+  { many: 1.5, shares: [0, 0.06, 0.6, 0.3, 0.04], height: 0.8, long: 1.6, comb: 0.3, lean: 1.2, kink: 0.3, styles: [0.25, 0.35, 0.1, 0.3], crown: 0.85, leafy: 0.6, loose: 0.45 },
+  // A stand that has died back: canes, breaks and spent crowns.
+  { many: 0.75, shares: [0.08, 0.17, 0.15, 0.08, 0.52], height: 0.95, long: 1.3, comb: 0.5, lean: 1.5, kink: 0.7, styles: [0.1, 0.3, 0.55, 0.05], crown: 0.8, leafy: 1.4, loose: 0.3 },
+  // A line along the wet, combed one way by the wind.
+  { many: 0.9, shares: [0.1, 0.4, 0.3, 0.12, 0.08], height: 1, long: 3, comb: 0.9, lean: 1.3, kink: 0.25, styles: [0.45, 0.3, 0.15, 0.1], crown: 0.95, leafy: 1, loose: 0.15 },
+  // Young growth, tight heads and buds.
+  { many: 1, shares: [0.02, 0.12, 0.2, 0.63, 0.03], height: 0.9, long: 1.3, comb: 0.1, lean: 0.8, kink: 0.1, styles: [0.3, 0.1, 0.02, 0.58], crown: 1.05, leafy: 0.4, loose: 0.4 },
+  // An open stand, stems apart.
+  { many: 0.45, shares: [0.2, 0.3, 0.25, 0.1, 0.15], height: 1.1, long: 1.8, comb: 0.4, lean: 1.1, kink: 0.4, styles: [0.4, 0.3, 0.2, 0.1], crown: 1.1, leafy: 1, loose: 0.6 },
+];
+
 interface Stand {
   x: number; z: number; r: number;
   /** 0 to 1, how rich. */
@@ -308,6 +343,21 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       // A stand the lens passes close to is a thicket, never a few sticks.
       stands.push({ x: p[0], z: p[1], r: rng.range(1.1, 2.8) * (1 + far / 260), q: Math.max(far < 75 ? 0.8 : 0, rng.range(0.35, 1) * Math.min(1, rich + 0.2)), far });
     }
+    // Stands keep company: beside some a smaller one, beside a few two, a stride or three off, and the rest alone.
+    const kin: Stand[] = [];
+    for (const s of stands) {
+      if (s.far > 170 || s.tall) continue;
+      const roll = rng.next();
+      for (let k = 0; k < (roll < 0.14 ? 2 : roll < 0.5 ? 1 : 0); k++) {
+        const a = rng.range(0, TAU);
+        const d = s.r * rng.range(1.5, 2.6);
+        const x = s.x + Math.cos(a) * d;
+        const z = s.z + Math.sin(a) * d;
+        if (land.height(x, z) < 0.02 || !clear(x, z, 1.5)) continue;
+        kin.push({ x, z, r: s.r * rng.range(0.3, 0.62), q: rng.range(0.45, 0.95), far: farOf(x, z) });
+      }
+    }
+    for (const k of kin) stands.push(k);
   }
 
   const stems: Wild[] = [];
@@ -401,39 +451,76 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     // The shade a stand lays on its ground is seen as far as the stand is seen as stems: beyond that the brush is its own dark.
     if (s.far < 90) shades.push([s.x, s.z, s.r * 1.25, 0.5, 1, 0]);
     // Stems, where a stem can still be told from the next: tens in a near stand, a few in one far off, none beyond that.
-    const count = s.far < 150 ? Math.round((s.tall ? 1.6 : 1) * Math.max(4, s.q * (40 - 30 * Math.min(1, s.far / 150)))) : 0;
+    // No two stands are grown to one pattern: each has its habit, and its own measure of every part of it.
+    const habit = HABITS[s.tall ? 0 : rng.int(HABITS.length)] as Habit;
+    const sizeK = Math.min(1.6, 0.5 + 0.5 * Math.pow(s.r / 1.9, 1.5));
+    // A stand the lens passes close to stays a thicket whatever its habit.
+    const many = Math.max(s.r > 1 ? (s.far < 50 ? 0.9 : s.far < 75 ? 0.55 : 0) : 0, habit.many * rng.range(0.7, 1.3)) * sizeK;
+    const shares = habit.shares.map((v) => v * rng.range(0.55, 1.5));
+    const whole = shares.reduce((a, v) => a + v, 0);
+    const upTo = shares.map((_, i) => shares.slice(0, i + 1).reduce((a, v) => a + v, 0) / whole);
+    const styles = habit.styles.map((v) => v * rng.range(0.5, 1.6));
+    const allStyles = styles.reduce((a, v) => a + v, 0);
+    const grows = habit.height * rng.range(0.82, 1.22);
+    const long = s.tall ? 1.2 : 1 + (habit.long - 1) * rng.range(0.3, 1.5);
+    const axis = rng.range(0, TAU);
+    const wind = rng.range(0, TAU);
+    const comb = Math.min(1, habit.comb * rng.range(0.5, 1.6));
+    const leans = habit.lean * rng.range(0.6, 1.4);
+    const crownK = habit.crown * rng.range(0.8, 1.25);
+    const leafy = habit.leafy * rng.range(0.6, 1.4);
+    const looseShare = habit.loose * rng.range(0.5, 1.5);
+    const tail = rng.range(0, TAU);
+    // The stand is drawn out along its own line: a round clump, an oval, a strip.
+    const drawn = (p: [number, number]): [number, number] => {
+      const ux = Math.cos(axis);
+      const uz = Math.sin(axis);
+      const along = ((p[0] - s.x) * ux + (p[1] - s.z) * uz) * Math.pow(long, 0.6);
+      const across = (-(p[0] - s.x) * uz + (p[1] - s.z) * ux) * Math.pow(long, -0.4);
+      return [s.x + along * ux - across * uz, s.z + along * uz + across * ux];
+    };
+    const count = s.far < 150 ? Math.round((s.tall ? 1.6 : 1) * many * Math.max(4, s.q * (40 - 30 * Math.min(1, s.far / 150)))) : 0;
     const cores: [number, number][] = [];
-    for (let k = 0; k < 2 + rng.int(3); k++) cores.push(around(s, 0.45));
+    for (let k = 0; k < 1 + rng.int(4); k++) cores.push(around(s, 0.45));
     for (let k = 0; k < count; k++) {
       const core = cores[rng.int(cores.length)] as [number, number];
-      const loose = rng.next() < 0.35;
-      const a = rng.range(0, TAU);
-      const d = loose ? rng.range(0.5, 1.2) * s.r : rng.range(0.08, 0.75);
-      const x = core[0] + Math.cos(a) * d;
-      const z = core[1] + Math.sin(a) * d;
+      const loose = rng.next() < looseShare;
+      // The loose ones trail off to one side more than to the others: a thin edge there, a clean one opposite.
+      const a = loose && rng.next() < 0.65 ? tail + rng.normal() * 0.6 : rng.range(0, TAU);
+      const d = loose ? rng.range(0.5, 2.1) * s.r : rng.range(0.08, 0.75);
+      const at = drawn([core[0] + Math.cos(a) * d, core[1] + Math.sin(a) * d]);
+      const x = at[0];
+      const z = at[1];
       const ground = land.height(x, z);
       if (ground < -0.3 || !clear(x, z)) continue;
-      const cls = rng.next();
-      const dead = cls > 0.88;
-      const shoot = !dead && cls > 0.66;
-      const h = (dead ? rng.range(0.7, 2.6) : shoot ? rng.range(0.2, 0.95) : cls < 0.16 ? rng.range(3.1, 4.6) : cls < 0.42 ? rng.range(2, 3.1) : rng.range(0.95, 2)) * (s.tall ?? 1);
+      const roll0 = rng.next();
+      const cls = upTo.findIndex((v) => roll0 <= v);
+      const dead = cls === 4 || cls < 0;
+      const shoot = cls === 3;
+      const h = (dead ? rng.range(0.7, 2.6) : shoot ? rng.range(0.2, 0.95) : cls === 0 ? rng.range(3.1, 4.6) : cls === 1 ? rng.range(2, 3.1) : rng.range(0.95, 2)) * (s.tall ?? 1) * (shoot ? 1 : grows);
       const R = shoot ? rng.range(0.016, 0.03) * (0.7 + 0.6 * h) : rng.range(0.03, 0.052) * Math.pow(Math.max(h, 0.8) / 2.4, 0.45);
-      const kinks = !shoot && rng.next() < 0.34;
+      const kinks = !shoot && rng.next() < habit.kink;
       const kind = dead ? 2 : shoot && rng.next() < 0.5 ? 1 : 0;
+      // Which way it leans: out from the heart of the stand, or with the rest of the stand the way the wind has combed it.
+      const bx = (1 - comb) * Math.cos(a) + comb * Math.cos(wind + rng.range(-0.35, 0.35));
+      const bz = (1 - comb) * Math.sin(a) + comb * Math.sin(wind + rng.range(-0.35, 0.35));
+      const bl = Math.max(1e-3, Math.hypot(bx, bz));
+      const bend: [number, number] = [bx / bl, bz / bl];
       const w: Wild = {
-        x, y: ground - 0.05, z, h, dx: Math.cos(a), dz: Math.sin(a), lean: dead ? rng.range(0.1, 0.9) : loose ? rng.range(0.02, 0.3) : rng.range(0.04, 0.42), R,
+        x, y: ground - 0.05, z, h, dx: bend[0], dz: bend[1], lean: Math.min(dead ? 0.95 : 0.6, (dead ? rng.range(0.1, 0.9) : loose ? rng.range(0.02, 0.3) : rng.range(0.04, 0.42)) * leans), R,
         kind, phase: rng.range(0, TAU), low: 0, seed: rng.next(),
         bowA: rng.range(0, TAU), bowM: rng.range(0.03, 0.24), kinkT: kinks ? rng.range(0.25, 0.8) : 2, kinkM: kinks ? rng.range(0.12, 0.5) : 0,
         swayA: rng.range(0, TAU), swayM: rng.next() < 0.5 ? rng.range(0.02, 0.085) : rng.range(0, 0.02), kinkA: rng.range(0, TAU), rate: rng.range(0.7, 1.6) / Math.sqrt(Math.max(h, 0.6) / 2.5),
-        age: dead ? 2 : shoot ? rng.range(0, 0.25) : cls < 0.16 ? rng.range(0.6, 1) : rng.range(0, 0.7), stain: rng.range(0.12, 1.1), uvo: rng.range(0, 2), quiver: shoot ? 1.6 : 1,
+        age: dead ? 2 : shoot ? rng.range(0, 0.25) : cls === 0 ? rng.range(0.6, 1) : rng.range(0, 0.7), stain: rng.range(0.12, 1.1), uvo: rng.range(0, 2), quiver: shoot ? 1.6 : 1,
         fork: [0, 0, 0], collar: rng.range(0.6, 1.5), cards: [], foot: true,
       };
       (s.far < 48 ? stems : farStems).push(w);
       if (s.far < 40) shades.push([x, z, Math.max(0.14, R * 6.5), 0.7, 1, 0]);
       if (dead) continue;
-      const roll = rng.next();
-      dress(w, shoot ? (kind === 1 ? 4 : 3) : roll < 0.5 ? 0 : roll < 0.75 ? 1 : roll < 0.88 ? 2 : 3, (0.8 + 0.35 * rng.next()) * headFor(h) * (shoot ? 2 : 1), s.far > 95);
-      if (!shoot && h > 1.2 && s.far < 125) hang(w, s.far < 95 ? (h > 2.4 ? 4 : 2) : 0, s.far < 95 ? 2 + rng.int(2) : 1);
+      const roll = rng.next() * allStyles;
+      const style = roll < (styles[0] as number) ? 0 : roll < (styles[0] as number) + (styles[1] as number) ? 1 : roll < (styles[0] as number) + (styles[1] as number) + (styles[2] as number) ? 2 : 3;
+      dress(w, shoot ? (kind === 1 ? 4 : 3) : style, (0.8 + 0.35 * rng.next()) * headFor(h) * (shoot ? 2 : crownK), s.far > 95);
+      if (!shoot && h > 1.2 && s.far < 125) hang(w, s.far < 95 ? Math.round((h > 2.4 ? 4 : 2) * leafy) : 0, s.far < 95 ? Math.max(1, Math.round((2 + rng.int(2)) * Math.min(1.3, 0.5 + 0.5 * leafy))) : 1);
     }
     // Dead canes lie where they fell, half in the brine.
     for (let k = 0; k < (s.far < 110 ? 1 + rng.int(4) : 0); k++) {
@@ -455,9 +542,9 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     // The understorey: tufts thick at the feet of the stems and thinning out onto the salt.
     // Far off two of them are a pixel or two apart: fewer stand there, each wider.
     const thin = s.far > 110 ? 0.4 : s.far > 32 ? 0.65 : 1;
-    const tufts = s.far < 220 ? Math.round(thin * s.q * (90 - 70 * Math.min(1, s.far / 220))) : 0;
+    const tufts = s.far < 220 ? Math.round(thin * sizeK * rng.range(0.5, 1.4) * s.q * (90 - 70 * Math.min(1, s.far / 220))) : 0;
     for (let k = 0; k < tufts; k++) {
-      const p = around(s, 0.5);
+      const p = drawn(around(s, 0.5));
       if (land.height(p[0], p[1]) < -0.08 || !clear(p[0], p[1])) continue;
       const big = rng.next() < 0.2;
       const h = big ? rng.range(0.55, 1.1) : rng.range(0.16, 0.55);
@@ -472,9 +559,9 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       addTuft(p[0], p[1], h, h * rng.range(1.2, 2.8), rng.range(0, 0.7), rng.next() < 0.3 ? rng.range(0.5, 0.95) : rng.range(0, 0.25), 1, true);
     }
     // The mat on the wet ground at their feet, and far off the stain of it on the humps.
-    const mats = s.far < 260 ? 3 + rng.int(4) : 2 + rng.int(2);
+    const mats = s.far < 260 ? Math.round((3 + rng.int(4)) * Math.min(1, sizeK + 0.2)) : 2 + rng.int(2);
     for (let k = 0; k < mats; k++) {
-      const p = around(s, s.far < 260 ? 0.7 : 0.5);
+      const p = drawn(around(s, s.far < 260 ? 0.7 : 0.5));
       if (land.height(p[0], p[1]) < 0.01 || !clear(p[0], p[1])) continue;
       const r = (s.far < 260 ? rng.range(0.5, 1.8) : rng.range(1.5, 3)) * (0.6 + 0.4 * s.r);
       addMat(p[0], p[1], r, rng.range(0.1, 0.26) * Math.min(1.5, 0.6 + 0.5 * r), rng.next() < 0.3 ? rng.range(0.4, 1) : rng.range(0, 0.2));
