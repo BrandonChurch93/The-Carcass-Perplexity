@@ -88,10 +88,8 @@ float bankFar(vec2 xz) {
   return 1.0 - smoothstep(-0.9, -0.3, along) * smoothstep(1.9, 1.1, side);
 }
 // Where the knob bank has sunk: 1 in a hollow, 0 on the firm bed, and nothing at all on the strip before the third lens.
-float bankSunk(sampler2D grain, vec2 xz) {
-  float low = textureLod(grain, xz / 2.3 + 0.21, 2.0).r - textureLod(grain, xz / 3.1 + 0.67, 2.0).r;
-  return smoothstep(0.0, 0.08, low) * bankFar(xz);
-}
+float bankLow(sampler2D grain, vec2 xz) { return textureLod(grain, xz / 2.3 + 0.21, 2.0).r - textureLod(grain, xz / 3.1 + 0.67, 2.0).r; }
+float bankSunk(sampler2D grain, vec2 xz) { return smoothstep(0.0, 0.08, bankLow(grain, xz)) * bankFar(xz); }
 // What has run out of the dead into the mud round them: 1 beside one, 0 three strides off.
 float deadSeep(vec2 xz) {
   float s = 0.0;
@@ -324,7 +322,7 @@ void main() {
     rim = smoothstep(rimW + ea, rimW * 0.5 - ea, ep) * slab;
     prof = (1.0 - smoothstep(0.0, rimW * 1.6, ep)) * slab;
     footM = smoothstep(rimW * 3.0 + ea, rimW * 1.3, ep) * (1.0 - rim) * slab;
-    bend -= pdir * prof * (1.0 - prof) * 5.0;
+    bend -= pdir * prof * (1.0 - prof) * mix(2.0, 5.0, k);
     tone = 0.88 + 0.24 * pr.y;
     tilt = panTilt(pr);
     edgeDir = pdir;
@@ -363,7 +361,7 @@ void main() {
   vec3 colour = greyed(sheet, 0.7) * vec3(0.3, 0.287, 0.275) * (0.86 + 0.28 * wide.r) * tone;
   // Salt stands white and crystalline on the rims; at a rim's foot the damp lies dark, and here and there the red has dried in it.
   colour = mix(colour, vec3(0.53, 0.515, 0.5) * (0.82 + 0.3 * sh), rim * 0.9);
-  colour = mix(colour, vec3(0.11, 0.05, 0.04), max(footM * (0.2 + 0.5 * stain), smoothstep(0.3, 0.1, hgt) * (0.2 + 0.4 * stain) * (1.0 - big)));
+  colour = mix(colour, vec3(0.11, 0.05, 0.04), max(footM * mix(0.1 + 0.3 * stain, 0.2 + 0.5 * stain, smoothstep(0.0, 0.5, thin)), smoothstep(0.3, 0.1, hgt) * (0.2 + 0.4 * stain) * (1.0 - big)));
   float occ = 1.0 - (0.3 * footM + 0.3 * smoothstep(0.4, 0.1, hgt)) * mix(0.5, 1.0, near);
   float rough = 1.0;
   float ground = 1.0;
@@ -405,7 +403,7 @@ void main() {
     mudCol *= 1.0 - 0.65 * shade;
     float section = smoothstep(-0.03 - ea, -0.03 + ea, ep) * (0.35 + 0.65 * smoothstep(0.005, 0.035, lift)) * (1.0 - big);
     mudCol = mix(mudCol, mix(vec3(0.15, 0.07, 0.055), vec3(0.44, 0.4, 0.37), smoothstep(-0.014, -0.004, ep)) * (0.75 + 0.5 * sh), section);
-    colour = mix(colour, mix(mudCol, mix(colour * vec3(0.66, 0.59, 0.55), colour, rim * 0.45) * mix(vec3(1.0), vec3(0.72, 0.5, 0.45), 0.6 * seep * smoothstep(0.6, 0.35, sh)), slab), k);
+    colour = mix(colour, mix(mudCol, mix(colour * vec3(0.66, 0.59, 0.55), colour, rim * 0.45) * mix(vec3(1.0), vec3(0.6, 0.36, 0.31), 0.9 * seep * smoothstep(0.7, 0.35, sh + (nS.b - 0.5) * 0.5)), slab), k);
     hgt = mix(hgt, mix(0.08 + 0.3 * nS.b, max(hgt, 0.5), slab), k);
     bend = mix(bend, mix(grain, bend - tilt * 4.0, slab), k);
     occ = mix(occ, mix(0.72 - 0.3 * shade, occ, slab), k);
@@ -561,6 +559,8 @@ void main() {
   // Where the big ones wade the banks are trodden mud: clods and prints, wet, with the red standing in every print.
   float churn = smoothstep(9.5, 6.0, length(p.xz - vec2(${rel(34.3, 3)[0].toFixed(3)}, ${rel(34.3, 3)[1].toFixed(3)}))) * (1.0 - rock) * step(0.0, s);
   if (churn > 0.0) {
+    // (Where the brine lies against the trodden bank the ground is soaked dark for a foot or two back from it, unevenly.)
+    colour *= mix(vec3(1.0), vec3(0.42, 0.3, 0.27), churn * smoothstep(0.6, 0.05, t + (mid.g - 0.5) * 0.5));
     // The slick mud's sheet (mat/slick, a stride and a half across), laid twice and turned unlike ways as the bank's knobs are: at a spot
     // the lay that stands higher is the one seen. Under it the treading itself: hollows a foot across, from the grain's pits.
     vec2 uA = knobUv(p.xz, KNOB_A, 1.5);
@@ -639,14 +639,19 @@ void main() {
   // The seep pool's bank: the knobs' own picture. Their tops are dry white salt; the hollows between them, and all of it for a hand
   // over the brine, are wet and red with it.
   float wetK = 0.0;
+  float bay = 0.0;
   if (bankDry > 0.0) {
     wetK = max(smoothstep(0.5, 0.26, knobH), smoothstep(0.07, 0.0, p.y) * smoothstep(0.75, 0.45, knobH));
     // (Away from the lens it is stained in patches where the brine has stood on it, and wet for a stride in from every shore.)
-    float sunkK = bankSunk(tGrain, p.xz);
-    float stood = smoothstep(0.0, 0.5, sunkK) * smoothstep(0.95, 0.5, knobH);
+    // (More of it lies low toward the shore, so the brine comes in there in bays and stands further in as pools: no clean outline.)
+    float lowK = bankLow(tGrain, p.xz) + 0.09 * smoothstep(1.8, 0.0, t);
+    float away = bankFar(p.xz);
+    float sunkK = smoothstep(-0.05, 0.06, lowK) * away;
+    bay = smoothstep(0.07, 0.09, lowK + (0.5 - knobH) * 0.07) * away * bankDry * (1.0 - rock);
+    float stood = sunkK * smoothstep(0.95, 0.5, knobH);
     wetK = max(wetK, max(0.9 * stood, smoothstep(0.16, 0.02, p.y) * smoothstep(0.95, 0.5, knobH)));
     knobCol *= 0.82 + 0.36 * wide.r;
-    vec3 kc = knobCol * 0.8 * mix(vec3(1.0), vec3(0.52, 0.3, 0.27), wetK);
+    vec3 kc = knobCol * 0.8 * mix(vec3(1.0), vec3(0.52, 0.3, 0.27) * (1.0 - 0.35 * stood), wetK);
     kc *= 1.0 + clamp(0.3 * dot(bend, bright), -0.35, 0.3);
     colour = mix(colour, kc, bankDry * (1.0 - rock));
     rough = mix(rough, mix(1.0, 0.55, wetK), bankDry);
@@ -695,9 +700,11 @@ void main() {
   // The brine, where this ground is under it: the far channels are drawn here, the near ones are covered by the brine's own surface.
   float w = max(fwidth(f.r) * 0.75, 0.015);
   float under = smoothstep(w, -w, s) * (1.0 - rock) * (1.0 - smoothstep(0.2, 0.6, thin)) * mix(smoothstep(0.04, 0.0, p.y), 1.0, smoothstep(20.0, 40.0, dist));
+  // (And where the knob bank lies under the level, in its bays and pools: a hand of brine over the knobs.)
+  under = max(under, bay);
   if (under > 0.0) {
     vec2 run = (texture2D(tGrain, p.xz / 7.3 + vec2(0.034, 0.019) * uTime).ba - 0.5) * 0.06 + (texture2D(tGrain, p.xz / 4.1 - vec2(0.021, 0.05) * uTime).ba - 0.5) * 0.04;
-    lit = mix(lit, brineShade(vec3(p.x, 0.0, p.z), normalize(vec3(run.x, 1.0, run.y)), v, s, vec4(0.0)), under);
+    lit = mix(lit, brineShade(vec3(p.x, 0.0, p.z), normalize(vec3(run.x, 1.0, run.y)), v, mix(s, -0.1, bay), vec4(0.0)), under);
   }
   // In the brine's mirror the ground under the brine's level is not there: it would stand between the mirror's lens and the world.
   if (uMirror > 0.5 && p.y < -0.015) discard;
