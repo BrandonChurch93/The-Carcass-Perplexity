@@ -57,9 +57,10 @@ export function lidUniforms(n: LidNumbers, centre: [number, number], unit: numbe
  * least half width, which it has from the foot up. widen: how much wider it is for each unit of height under the foot. least: the least
  * the bend of its edge can shrink a distance. long: how much longer than wide it is. ragged: how far past its edge the lumps of the
  * banks can still leave air. off: where its middle lies. lowest: the foot of the
- * highest deck, the edge through which the water is seen from the cut.
+ * highest deck, the edge through which the water is seen from the cut. lean: how far its middle moves for each unit of height under the
+ * foot, so the rims of the decks do not lie one inside the other like rings.
  */
-export const LID_GAP = { foot: 0.79, narrow: 0.04, widen: 2.4, least: 0.8, long: 1.15, ragged: 0.055, off: [0.012, -0.01], lowest: 0.835 };
+export const LID_GAP = { foot: 0.79, narrow: 0.04, widen: 2.7, least: 0.8, long: 1.15, ragged: 0.055, off: [0.012, -0.01], lowest: 0.835, lean: [-0.5, 0.33] };
 
 /** The farthest from the middle of the frame, in halves of its height, that anything under the banks is seen through the gap from the height of the cut. */
 export function lidGapSeen(): number {
@@ -102,7 +103,7 @@ float lidWider() {
 }
 
 float lidOutside(vec2 q, float a) {
-  vec2 w = q - vec2(${G(LID_GAP.off[0] as number)}, ${G(LID_GAP.off[1] as number)});
+  vec2 w = q - vec2(${G(LID_GAP.off[0] as number)}, ${G(LID_GAP.off[1] as number)}) - vec2(${G(LID_GAP.lean[0] as number)}, ${G(LID_GAP.lean[1] as number)}) * max(LID_FOOT - a, 0.0);
   w = vec2(0.8 * w.x + 0.6 * w.y, -0.6 * w.x + 0.8 * w.y);
   w.x /= ${G(LID_GAP.long)};
   float r = length(w);
@@ -113,14 +114,19 @@ float lidOutside(vec2 q, float a) {
   float least = ${G(LID_GAP.least)};
   if (least * r - gap >= LID_RAGGED * (1.0 + 8.0 * wider)) return least * r - gap;
   // The wider the gap, the longer the bends of its rim.
-  return r * (least + (1.0 - least) * vnoise(q * 9.0 / (1.0 + 4.0 * wider) + vec2(3.7, 8.2))) - gap;
+  return r * (least + (1.0 - least) * vnoise(q * 9.0 / (1.0 + 4.0 * wider) + vec2(3.7, 8.2) + a * vec2(5.0, 3.0))) - gap;
 }
 
 // How much less open air a deck has at a place. Over the lake the banks stand closest, a cap of cloud with the gap in it, as much of each deck
 // as the lens sees from the height of the cut; farther out they stand apart. At the edge of the gap the air opens lump by lump.
 float lidClose(vec2 q, float a, float outside) {
   float reach = 2.2 * (1.0 - a);
-  return 0.25 * (1.0 - smoothstep(reach, reach + 0.3, length(q))) - 0.75 * (1.0 - smoothstep(0.0, LID_RAGGED * (1.0 + 8.0 * lidWider() * (LID_OVER - a)), outside));
+  float cap = 0.25 * (1.0 - smoothstep(reach, reach + 0.3, length(q)));
+  float ragged = 1.9 * LID_RAGGED * (1.0 + 8.0 * lidWider() * (LID_OVER - a));
+  if (outside >= ragged) return cap;
+  // The open edge is not one band round the gap: here it is a bay, there the bank stands to the rim.
+  ragged *= 0.12 + 0.88 * vnoise(q * 5.0 + vec2(8.4, 2.6) + a * vec2(3.0, 5.0));
+  return cap - 0.75 * (1.0 - smoothstep(0.0, ragged, outside));
 }
 
 // How high the bank stands over a place, 0 to 1 of the deck: lumps drawn out along the wind, steep at their sides and heaped on top, with air
@@ -143,7 +149,7 @@ float lidBank(vec2 q, vec4 deck, float open, float near, bool rough) {
       if (near < 0.14) n += 0.06 * (1.0 - near / 0.14) * (vnoise(f2 * 43.0 + 2.3) - 0.5);
     }
   }
-  return smoothstep(open, open + 0.3, n) * clamp(0.25 + 1.5 * (n - 0.25), 0.2, 1.0);
+  return smoothstep(open, open + 0.3, n) * clamp(0.25 + 1.5 * (n - 0.25), 0.2, 1.3);
 }
 
 // How far inside a bank a point is, by the height of the bank over it and its own height in the deck: a bank is widest at its foot.
@@ -215,15 +221,18 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     vec2 toSun = q + sunSide * 0.4 / deck.z;
     float outSun = lidOutside(toSun, met);
     float hs = outSun > 0.0 ? lidBank(toSun, deck, open - lidClose(toSun, met, outSun), camA - met, true) : 0.0;
-    float lit = clamp(0.5 + 5.0 * (metH - hs), 0.0, 1.0);
+    float lit = clamp(0.5 + 3.5 * (metH - hs), 0.0, 1.0);
     lit = lit * lit * (3.0 - 2.0 * lit);
-    // The heads stand in the light and the feet in the shade of the bank over them.
-    float high = smoothstep(0.0, 1.0, up);
+    // The heads stand in the light and the feet in the shade of the bank over them. A head is as high as the bank heaps it, past the last
+    // cut that met it, so the top of a bank is modelled and not one flat sheet.
+    float crest = pow(max(metH - 0.07, 0.0) / 0.85, 0.667);
+    float high = clamp(0.25 * up + 0.6 * min(crest, 1.25), 0.0, 1.0);
+    high = high * high * (3.0 - 2.0 * high);
     // The shade of a bank is not one blue: the light that comes through the cloud warms it where the bank is heaped.
     vec3 shade = mix(uLidShade, uLidInside * 1.25, 0.55 * smoothstep(0.35, 0.95, metH));
     vec3 colour = mix(shade * (0.5 + 0.7 * high), uLidSunlit * (0.72 + 0.5 * high), lit * (0.3 + 0.7 * high));
-    // A deck under another stands in its shade.
-    colour *= 0.72 + 0.28 * tr;
+    // A deck under another stands in its shade, and the folds between the heads are darker than the heads.
+    colour *= (0.72 + 0.28 * tr) * (0.84 + 0.16 * smoothstep(0.3, 0.8, metH));
     // Where a bank is thin the light goes through it: a veil is pale, not a sheet of shade.
     colour = mix(colour, mix(uLidShade, uLidSunlit, 0.62), 0.7 * (1.0 - smoothstep(0.1, 0.9, alpha)));
     // Seen close, the cloud is paler and its lumps are soft.
@@ -253,7 +262,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       vec2 q = g + sunSide * 0.42 * (a - floorA);
       float outside = lidOutside(q, a);
       if (outside <= 0.0) continue;
-      lightLeft *= 1.0 - 0.8 * smoothstep(0.0, 0.7, lidBank(q, deck, deck.w + loose - lidClose(q, a, outside), 1.0, true));
+      lightLeft *= 1.0 - 0.45 * smoothstep(0.0, 0.7, lidBank(q, deck, deck.w + loose - lidClose(q, a, outside), 1.0, true));
     }
     tr *= 1.0 - shadeIn * (1.0 - lightLeft);
   }
