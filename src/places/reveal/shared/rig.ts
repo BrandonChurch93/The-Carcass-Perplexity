@@ -41,10 +41,9 @@ export function createRig(): Rig {
     uArrive: { value: 0 },
     // The cloud of the world (shared/weather.ts): the sky folder gives the pictures.
     uCloudTile: { value: null },
-    uCloudCover: { value: null },
-    uMatCells: { value: null },
-    uMatStreets: { value: null },
-    uMatVeil: { value: null },
+    uCover: { value: null },
+    uMatPopcorn: { value: null },
+    uMatStreaks: { value: null },
     uCoverRect: { value: new THREE.Vector4(...COVER_RECT) },
   };
   let landHeight: Height = () => 0;

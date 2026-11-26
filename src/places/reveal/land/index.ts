@@ -150,10 +150,18 @@ void main() {
   ground = mix(ground, lum * vec3(0.42, 0.68, 0.78), 0.85 * growth);
   ground = mix(ground, mix(vec3(lum), ground, 0.8) * vec3(0.92, 0.99, 1.09), land);
   // Only near the top of the rise does the body come together: the great ranges stand pale as old bone, the country between them falls dark and cold.
+  // From the height at which country is seen and no longer ground, the low country lies dark: wet, grown over, teal and slate.
+  float wide = smoothstep(60.0, 260.0, uViewKm) * land;
+  float lowness = 1.0 - smoothstep(0.12, 0.5, height);
+  ground = mix(ground, lum * vec3(0.27, 0.56, 0.6), 0.72 * lowness * wide);
+  ground *= mix(1.0, 0.34, lowness * wide) * (1.0 + 0.3 * smoothstep(0.45, 0.8, height) * wide);
+  slope *= mix(1.0, 0.55, lowness * wide);
   float top = smoothstep(680.0, 1380.0, uViewKm) * land;
   float crest = smoothstep(0.3, 0.62, height);
-  ground *= mix(1.0, mix(0.5, 1.12, crest), top);
+  ground *= mix(1.0, mix(0.72, 1.12, crest), top);
   ground = mix(ground, vec3(0.74, 0.72, 0.66), 0.3 * top * smoothstep(0.5, 0.85, height));
+  // The high ground is old bone: its pale is warm, never the white of snow.
+  ground *= mix(vec3(1.0), vec3(1.0, 0.9, 0.76), land * smoothstep(0.3, 0.75, height) * smoothstep(0.3, 0.6, lum));
 
   // ---- the light ----
   // The maps hold soft light from the upper left, and the place's sun stands on that side: the relief is lit from the slope, on top of it.
@@ -220,7 +228,7 @@ void main() {
   // ---- the air between the surface and the eye: more of it toward the edge of the planet, less over the high ground ----
   float path = 1.0 / max(mu, 0.12);
   float far = smoothstep(120.0, 900.0, uViewKm);
-  float air = 1.0 - exp(-mix(0.075, 0.03, far) * path * (1.0 - 0.5 * height * land));
+  float air = 1.0 - exp(-mix(0.04, 0.02, far) * path * (1.0 - 0.5 * height * land));
   colour = mix(colour, uAirColour * (0.4 + 0.6 * shade), air);
   colour += glow * (1.0 - 0.5 * air);
 
