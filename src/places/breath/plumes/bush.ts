@@ -96,10 +96,10 @@ export function growBush(stems: Ribbons, vanes: Vanes, bush: Bush, rng: Rng, flo
     const rise = rng.range(0.75, 1.2) - 0.45 * Math.abs(k);
     const out = 0.07 * tall * rng.range(0.2, 1);
     const base: V3 = [bush.x + Math.sin(yaw) * out, bush.y + 0.02 * tall, bush.z - Math.cos(yaw) * out];
-    const points = grow(base, yaw, rise, rng.range(0.9, 1.9), length, lean, 0.3, 20, () => [rng.range(-0.09, 0.09), rng.range(-0.08, 0.08)]);
+    const points = grow(base, yaw, rise, rng.range(0.35, 1.1), length, lean, 0.42, 20, () => [rng.range(-0.09, 0.09), rng.range(-0.08, 0.08)]);
     const phase = rng.range(0, 6.28);
     const open = 1 - 0.55 * (1 - 2 * Math.abs(k));
-    frond(points, phase, 0, barbMax * rng.range(0.85, 1.15), 0.0065 * tall * rng.range(0.8, 1.2), open, rng.range(0.9, 1.35));
+    frond(points, phase, 0, barbMax * rng.range(0.85, 1.15), 0.0065 * tall * rng.range(0.8, 1.2), open, rng.range(0.35, 0.7));
     const branches = Math.round(rng.range(6, 10.4) * (0.4 + 0.6 * detail));
     for (let b = 0; b < branches; b++) {
       const s = 0.22 + 0.7 * ((b + rng.next()) / branches);
@@ -110,8 +110,8 @@ export function growBush(stems: Ribbons, vanes: Vanes, bush: Bush, rng: Rng, flo
       const elevation = Math.asin(Math.max(-1, Math.min(1, (next[1] - from[1]) / Math.hypot(next[0] - from[0], next[1] - from[1], next[2] - from[2]))));
       const side = (b % 2 === 0 ? 1 : -1) * rng.range(0.3, 1.1);
       const l = length * (1 - s) * rng.range(0.5, 1.1) + 0.14 * tall;
-      const pts = grow([from[0], from[1], from[2]], heading + side, elevation + rng.range(-0.1, 0.5), rng.range(0.7, 1.4), l, lean, 0.25, 11, () => [rng.range(-0.11, 0.11), rng.range(-0.1, 0.1)]);
-      frond(pts, phase + rng.range(-0.5, 0.5), s, barbMax * rng.range(0.6, 0.9), 0.0035 * tall, Math.min(1, open + 0.25), rng.range(1.0, 1.4));
+      const pts = grow([from[0], from[1], from[2]], heading + side, elevation + rng.range(-0.1, 0.5), rng.range(0.3, 0.9), l, lean, 0.35, 11, () => [rng.range(-0.11, 0.11), rng.range(-0.1, 0.1)]);
+      frond(pts, phase + rng.range(-0.5, 0.5), s, barbMax * rng.range(0.6, 0.9), 0.0035 * tall, Math.min(1, open + 0.25), rng.range(0.4, 0.8));
     }
   }
 }

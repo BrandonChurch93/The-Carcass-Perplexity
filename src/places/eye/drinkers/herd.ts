@@ -1,6 +1,6 @@
 // Who stands where: the animals the close shots are about, placed from the cameras of those shots, and the herd along the south shore.
 // Every animal is a pure function of time: where it stands, how far its neck is down, whether it walks or lies.
-import { KEYS, SHORE_HEADING, SHORE_SWING, SHORE_TURN, onShore } from '../cameras';
+import { KEYS, SHORE_HEADING } from '../cameras';
 import { DEG, at, shoreAt, smooth } from '../layout';
 import type { Rng } from '../../../core/rng';
 
@@ -12,85 +12,74 @@ export interface Drinker {
   size: number;
   /** 0 neck up, 1 mouth in the water. */
   down: (t: number) => number;
-  /** Metres a second toward the water; 0 stands. */
-  walk: number;
-  /** Lies on the gravel. */
-  lies: boolean;
+  /** The picture it is taken from. */
+  sheet: 'down' | 'up' | 'back' | 'calf';
+  /** 1 or -1: which way along its bearing the sheet is laid. */
+  flip: number;
+  /** One of the animals a close shot is about: it has rings round its legs. */
+  close: boolean;
+  /** The level its feet stand at, where that is not the ground under it. */
+  level?: number;
 }
-
-/** Every animal is this much larger than the blockout's, which the critics found half the size of the picture's. */
-export const SCALE = 1.75;
 
 /** Seconds into the place at the keys of the shore shot (frame 9003) and of the mats shot (frame 8600), at 60 frames a second. */
 const SHORE_KEY = (9003 - 8305) / 60;
 const MATS_KEY = (8600 - 8305) / 60;
 
 export function herd(rng: Rng, riseAt: number): Drinker[] {
-  const steady = (v: number, phase: number) => (t: number) => v + 0.035 * Math.sin(t * 0.9 + phase) + 0.02 * Math.sin(t * 2.3 + phase * 3);
   // One that drinks: its mouth is in the water, and once in every period it lifts its head, swallows and goes down again.
   // `at` is where in the period it is at the key of its shot, so the key is drawn as the approved picture has it.
   const sips = (period: number, keyTime: number, at: number) => (t: number) => {
     const u = ((((t - keyTime) / period + at) % 1) + 1) % 1;
     const lift = smooth(0.6, 0.72, u) * (1 - smooth(0.86, 0.98, u));
-    return 0.97 - 0.42 * lift + 0.012 * Math.sin(t * 2.3 + at * 9);
+    return 1 - 0.42 * lift + 0.012 * Math.sin(t * 2.3 + at * 9);
   };
-  const near = (x: number, out: number, facing: number, size: number, down: (t: number) => number): Drinker => {
-    const p = onShore(x, out, 0);
-    const eye = KEYS.shore.position;
-    const c = Math.cos(SHORE_SWING * DEG);
-    const s = Math.sin(SHORE_SWING * DEG);
-    const east = p[0] - eye[0];
-    const north = eye[2] - p[2];
-    return { x: eye[0] + east * c + north * s, z: eye[2] - (north * c - east * s), facing: facing + SHORE_TURN + SHORE_SWING, size, down, walk: 0, lies: false };
-  };
-  const beside = (right: number, ahead: number, turned: number, size: number, down: (t: number) => number): Drinker => {
-    const eye = KEYS.shore.position;
-    const c = Math.cos(SHORE_HEADING * DEG);
-    const s = Math.sin(SHORE_HEADING * DEG);
-    return { x: eye[0] + right * c + ahead * s, z: eye[2] + right * s - ahead * c, facing: SHORE_HEADING + turned, size, down, walk: 0, lies: false };
-  };
-  const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, down: (t: number) => number): Drinker => ({
+  const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, sheet: Drinker['sheet'], down: (t: number) => number): Drinker => ({
     x: key.position[0] + Math.sin(bearing * DEG) * distance,
     z: key.position[2] - Math.cos(bearing * DEG) * distance,
     facing,
     size,
     down,
-    walk: 0,
-    lies: false,
+    sheet,
+    flip: 1,
+    close: true,
   });
+  const up = (phase: number) => (t: number) => 0.3 + 0.07 * Math.sin(t * 0.61 + phase) + 0.03 * Math.sin(t * 1.7 + phase);
   const centre = KEYS.centre.position;
+  const H = SHORE_HEADING;
   const list: Drinker[] = [
-    // The four of the shore shot: one with its head up, a calf, and two that drink.
-    near(-86.5, -9.5, 82, 1, (t) => 0.2 + 0.07 * Math.sin(t * 0.61 + 0.3) + 0.03 * Math.sin(t * 1.7)),
-    near(-83.6, -7.6, 78, 0.52, sips(4.5, SHORE_KEY, 0.12)),
-    near(-79.8, -6.6, 76, 1, sips(6, SHORE_KEY, 0.3)),
-    // The near one stands off the right edge of the shore shot: only its neck comes into the frame, down to the water.
-    beside(5.1, 9.2, -120, 1, sips(7, SHORE_KEY, 0.12)),
-    // The two of the last shot, on the brow of the bluff below the camera with their backs to it: they lift their heads as the centre swells.
-    { x: centre[0] - 2.43, z: centre[2] - 29.5, facing: 7, size: 0.61, down: (t) => 0.02 + 0.3 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0, lies: false },
-    { x: centre[0] - 0.5, z: centre[2] - 28.7, facing: 351, size: 0.47, down: (t) => 0.03 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0, lies: false },
-    // The one of the mats shot, in the shallows at its left third.
-    from(KEYS.mats, -12, 17, 86, 1, sips(5, MATS_KEY, 0.45)),
-    from(KEYS.mats, -22, 64, 250, 1, sips(4, MATS_KEY, 0.3)),
-    from(KEYS.mats, -19, 71, 110, 0.9, sips(6, MATS_KEY, 0.05)),
+    // The four of the shore shot, restaged: they stand off in the shallows, side on, the low sun behind them. One has its head up, a calf beside it, two drink.
+    from(KEYS.shore, H - 7.5, 31, H + 84, 1, 'up', up(0.3)),
+    from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, 'calf', sips(4.5, SHORE_KEY, 0.12)),
+    from(KEYS.shore, H - 1.5, 27, H + 92, 1, 'down', sips(6, SHORE_KEY, 0.3)),
+    from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, 'down', sips(7, SHORE_KEY, 0.12)),
+    // The two of the last shot, on the brow of the bluff below the camera with their backs to it, cut by the foot of the frame.
+    { x: centre[0] - 1.05, z: centre[2] - 13.5, level: centre[1] - 1.01 - 2.45 * 0.85, facing: 0, size: 0.85, down: (t) => 0.02 + 0.3 * (1 - smooth(riseAt, riseAt + 0.9, t)), sheet: 'back', flip: 1, close: false },
+    { x: centre[0] + 0.82, z: centre[2] - 16.5, level: centre[1] - 1.42 - 2.45 * 0.8, facing: 0, size: 0.8, down: (t) => 0.03 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), sheet: 'back', flip: 1, close: false },
+    // The ones of the mats shot, restaged: out on the shelf beyond the mats, small, side on.
+    from(KEYS.mats, -13, 31, 80, 1, 'down', sips(5, MATS_KEY, 0.45)),
+    from(KEYS.mats, -21, 44, 262, 1, 'up', up(1.4)),
+    from(KEYS.mats, -17.5, 52, 96, 0.9, 'down', sips(6, MATS_KEY, 0.05)),
   ];
+  // The herd along the south shore, as the wide shot sees it: side on to that camera or with their backs to it, in the shallows and on the gravel.
   for (let i = 0; i < 30; i++) {
-    const bearing = rng.range(187, 207);
-    const walker = i % 4 === 0;
-    const lies = !walker && i % 7 === 3;
-    const r = shoreAt(bearing) + (walker ? rng.range(16, 34) : lies ? rng.range(5, 16) : rng.range(-15, -4));
+    const bearing = rng.range(186, 208);
+    const dry = i % 4 === 0;
+    const r = shoreAt(bearing) + (dry ? rng.range(4, 26) : rng.range(-17, -3));
     const [x, z] = at(bearing, r);
     const period = rng.range(9, 17);
     const phase = rng.next();
-    const calf = i % 9 === 4;
+    const kind = i % 9 === 4 ? 'calf' : i % 5 === 1 ? 'back' : dry || i % 3 === 2 ? 'up' : 'down';
+    const way = rng.next() < 0.5 ? 1 : -1;
     list.push({
       x,
       z,
-      facing: bearing + 180 + rng.range(-50, 50) + (lies ? 90 : 0),
-      size: calf ? 0.52 : rng.range(0.9, 1.08),
-      down: walker ? (t) => 0.1 + 0.25 * smooth(14, 18, t + phase * 4) : lies ? steady(0.08, phase * 6) : (t) => smooth(-0.35, 0.35, Math.sin((t / period + phase) * Math.PI * 2)),
-      walk: walker ? rng.range(0.7, 1.0) : 0,
-      lies,
+      facing: kind === 'back' ? 18 : 18 + 90 * way + rng.range(-28, 28),
+      size: rng.range(1.75, 2.05) * (kind === 'calf' ? 1.15 : 1),
+      down: kind === 'up' || kind === 'back' ? up(phase * 6) : (t) => 0.55 + 0.45 * smooth(-0.35, 0.35, Math.sin((t / period + phase) * Math.PI * 2)),
+      sheet: kind,
+      flip: 1,
+      close: false,
     });
   }
   return list;

@@ -4,6 +4,9 @@ import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
 import { smooth } from '../layout';
+import { KEYS } from '../cameras';
+import { during } from '../shared/anchors';
+import { PLATES, plateFor } from './plates';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
@@ -23,6 +26,10 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
   vec3 d = normalize(vDir);
+  if (uPlateTone.w > 0.5) {
+    gl_FragColor = vec4(rigOut(farRadiance(cameraPosition, d, 0.0)), 1.0);
+    return;
+  }
   vec3 c = skyRadiance(d);
   // One thin streak of high cloud, lit from under by the sun that has left the ground.
   float az = atan(d.x, -d.z);
@@ -56,6 +63,14 @@ const float TOP = 30.0;
 // How thick the mist is at a point: it lies where the water meets the far walls, in banks, and thins upward.
 float mistAt(vec3 p, vec4 land) {
   float band = smoothstep(-200.0, -30.0, land.b) * (1.0 - smoothstep(30.0, 170.0, land.b));
+  // With a picture of the far world hung, the mist lies on the water in front of it and thickens toward its foot.
+  if (uPlateTone.w > 0.5) {
+    float d = length(p.xz - uPlateAt.xz);
+    band = smoothstep(uPlateAt.w - 330.0, uPlateAt.w - 40.0, d) * step(d, uPlateAt.w);
+    float lift = 2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012);
+    float banks = smoothstep(0.15, 0.75, 0.6 * vnoise(p.xz / 260.0 + vec2(uTime * 0.03, -uTime * 0.017)) + 0.4 * vnoise(p.xz / 70.0 + uTime * 0.06) + 0.35 * band);
+    return 0.55 * band * banks * exp(-max(p.y, 0.0) / lift) * smoothstep(TOP, TOP * 0.45, p.y);
+  }
   float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
   float lift = 1.6 + 3.6 * vnoise(p.xz / 210.0 + 3.0 + uTime * 0.01);
   float thick = band * far * exp(-max(p.y, 0.0) / lift);
@@ -75,8 +90,8 @@ void main() {
   vec3 rd = world - ro;
   float far = length(rd);
   rd /= far;
-  if (depth >= 1.0) far = 20000.0;
-  far = min(far, 20000.0);
+  // The far world is a picture with its own air in it: the air of the place is laid over it only as far as its cylinder stands.
+  far = min(far, uPlateTone.w > 0.5 ? plateDistance(ro, rd) : 20000.0);
 
   // The clear air: thickest at the water, gone by the top of the walls. Its light is the low sky it is seen against.
   float k0 = 0.000042 * uHaze * uThin;
@@ -113,7 +128,7 @@ void main() {
         if (d > 0.0) {
           float a = 1.0 - exp(-d * dt);
           float open = mix(land.g, 1.0, 0.5);
-          vec3 lit = 0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (0.13 * sunOver(land, p.y)) + 0.35 * low;
+          vec3 lit = 0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (0.13 * sunOver(land, p)) + 0.35 * low;
           sum += tr * a * lit / 3.14159 * 2.4;
           tr *= 1.0 - a;
         }
@@ -130,7 +145,6 @@ export function create(ctx: Context): Piece {
   const sky = new THREE.Mesh(new THREE.SphereGeometry(20000, 64, 32), skyMaterial);
   sky.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('sky', sky));
-  ctx.unmirrored.push(sky);
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('mist', 'built');
 
@@ -145,12 +159,31 @@ export function create(ctx: Context): Piece {
     toneMapped: false,
   });
   const end = ctx.events.end;
+  const pictures = PLATES.map((p) => ctx.assets.texture(p.file, { repeat: false, anisotropy: 2 }));
+  const rig = ctx.rig.uniforms;
 
   return {
     volume,
     setTime: (t) => {
       // The air clears as the camera leaves: the last frames are the flat picture the rise begins with.
       show.uThin.value = 1 - smooth(end - 3, end - 1.3, t);
+      // The evening shade over the south shore and the spur is laid for the wide shot alone.
+      (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
+      // The far world of the shot the camera stands in.
+      const i = plateFor();
+      const tone = (rig.uPlateTone as THREE.IUniform<THREE.Vector4>).value;
+      const near = (rig.uNear as THREE.IUniform<THREE.Vector4>).value;
+      if (i < 0) {
+        tone.w = 0;
+        near.w = 0;
+      } else {
+        const p = PLATES[i] as (typeof PLATES)[number];
+        (rig.tPlate as THREE.IUniform).value = pictures[i];
+        (rig.uPlateAt as THREE.IUniform<THREE.Vector4>).value.set(p.at[0], p.at[1], p.at[2], p.radius);
+        (rig.uPlateLens as THREE.IUniform<THREE.Vector4>).value.set((p.bearing * Math.PI) / 180, p.tanAcross, p.tanUp, p.horizon);
+        tone.set(p.tone[0], p.tone[1], p.tone[2], p.wall ? 2 : 1);
+        near.set(KEYS[p.key].position[0], KEYS[p.key].position[2], p.near, 1);
+      }
     },
     beforeSample: (_renderer, camera) => {
       sky.position.copy(camera.position);

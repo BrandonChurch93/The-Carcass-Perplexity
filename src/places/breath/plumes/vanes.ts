@@ -38,6 +38,14 @@ export class Vanes {
   add(f: Frond): void {
     const n = f.points.length;
     let along = 0;
+    let total = 1e-6;
+    for (let i = 1; i < n; i++) {
+      const p = f.points[i] as V3;
+      const a = f.points[i - 1] as V3;
+      total += Math.hypot(p[0] - a[0], p[1] - a[1], p[2] - a[2]);
+    }
+    // The picture of a frond is laid along the stem, one half of it on each side; no two fronds show the same half the same way up.
+    const flip = Math.sin(f.seed * 12.9898) > 0 ? 1 : -1;
     // Four vanes: one to each side that hangs, and over each a shorter one that leaves the stem higher and falls sooner, so the frond is full from every side.
     for (const [side, layer] of [[-1, 0], [1, 0], [-1, 1], [1, 1]] as const) {
       along = 0;
@@ -86,7 +94,7 @@ export class Vanes {
             z += (sz * Math.cos(sweep) + tz * Math.sin(sweep)) * c * ds;
           }
           this.position.push(x, y, z);
-          this.vane.push(along, v, f.seed + side * 0.37 + layer * 1.91, length);
+          this.vane.push(along / total, v, f.seed + side * 0.37 + layer * 1.91, side * flip * (layer === 0 ? 1 : 0.78));
           this.sway.push(f.at[i] as number, f.phase, v * Math.min(1, (length / f.tall) * 6), f.seed * 6.283);
           this.tint.push(f.open, f.tone, f.reach[i] as number, f.tall);
           this.root.push(f.root[0], f.root[1], f.root[2]);
