@@ -280,9 +280,13 @@ void main() {
       lit += vec3(0.0085, 0.01, 0.016) * (0.7 + 0.6 * thin) * open * (1.4 - 0.8 * up);
       // The storm lit from inside: violet, most where the cloud is thick about the light.
       vec3 inner = vec3(0.62, 0.36, 1.0) * strokeLight(q) * 1.1 + roundLights(q) * 0.5 + sheetLight(q, sheets) * 0.11;
-      lit += (inner + flash * 0.045) * (0.3 + 0.7 * dens) * (0.25 + 0.75 * open);
+      // A flash lights the cloud about the stroke and falls off with the kilometres: the far wall takes little of it, and cold.
+      vec3 offS = q - uStrikeTip.xyz * 0.001;
+      float nearS = 0.22 + 0.78 / (1.0 + dot(offS, offS) / 14.0);
+      lit += (inner + flash * vec3(0.03, 0.035, 0.052) * nearS) * (0.3 + 0.7 * dens) * (0.45 + 0.55 * open);
       // Air between the lens and the cloud: far cloud goes to the colour of the sky at its foot.
-      float air = exp(-t * 0.022);
+      // And the foot of the storm stands in the blown snow and the vapour of the cloud sea: at the lens's own height and under it the air is thick.
+      float air = exp(-t * (0.022 + 0.11 * (1.0 - smoothstep(-0.25, 0.9, q.y - ro.y))));
       lit = mix(farAir, lit, air);
       // No step takes more than a third of the light, however long it is: far cloud ends softly and never in slices.
       float a = max(1.0 - exp(-dens * min(ds * 8.0, 0.6)), hard);
