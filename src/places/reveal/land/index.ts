@@ -4,7 +4,7 @@
 // public/assets/reveal/mat are laid under it by world position. The light is the rig's: one sun, the air, the shade of the cloud.
 import * as THREE from 'three';
 import { FPS } from '../../../config';
-import { AT, FILM_ASPECT, KM, RING_FADE, RISE_FIRST, X, Z, handoff, rise } from '../shared/anchors';
+import { AT, FILM_ASPECT, KM, RISE_FIRST, X, Z, handoff, rise } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
@@ -34,9 +34,6 @@ uniform sampler2D uMatGlitter;
 uniform sampler2D uMatLakewater;
 uniform float uOnly;
 uniform vec3 uHandWater;
-uniform vec3 uHandRing;
-uniform vec3 uRingShape;
-uniform float uBreak;
 uniform vec2 uHand;
 uniform vec2 uLake;
 uniform vec2 uLakeSize;
@@ -669,27 +666,9 @@ void main() {
   if (uDusk > 0.0) colour *= 1.0 - 0.85 * lakeNight;
   colour += glow * (1.0 - 0.5 * air);
 
-  // ---- the handoff: on its first frame the rise draws what the Eye last drew, deep water and rings ----
-  if (uHand.x > 0.0 || uHand.y > 0.0) {
-    vec2 fromLake = real - uLake;
-    float r = length(fromLake);
-    float k = clamp(floor(log(max(r, 1e-4) / uRingShape.x) / log(1.5) + 0.5), 0.0, 8.0);
-    float ringAt = uRingShape.x * pow(1.5, k);
-    // On the first frame (uBreak 0) the rings are the rest picture agreed with the Eye: soft bands, each stronger on one side.
-    // Once the rise begins they are water and no drawn thing: each one bent out of round, broken into arcs of uneven strength,
-    // wider and weaker the further out, and the whole of it soon gone.
-    vec2 outward = fromLake / max(r, 1e-4);
-    float theta = atan(fromLake.x, -fromLake.y);
-    float bentBy = vnoise(outward * 2.3 + k * 3.7) + 0.5 * vnoise(outward * 6.1 + k * 9.1) - 0.75;
-    float rr = r * (1.0 + uBreak * 0.11 * bentBy);
-    float across = (rr - ringAt) / (0.5 * uRingShape.y * ringAt * (1.0 + 1.5 * uBreak));
-    float ring = exp(-across * across) * (0.35 + 0.3 * (0.5 + 0.5 * sin(2.0 * theta + 2.4 * k)));
-    float arcs = smoothstep(0.3, 0.8, vnoise(outward * 3.4 + k * 5.3 + 2.0) + 0.35 * (vnoise(real * 0.9 / max(ringAt, 1e-3) * 9.0) - 0.5));
-    ring *= mix(1.0, arcs * exp(-0.3 * k), uBreak);
-    // (The flat water of the first frame is the lake's own once the rise begins: the wind on it shows at once.)
-    vec3 hand = mix(uHandWater * mix(1.0, 0.62 + 0.5 * sparkle, uBreak), uHandRing, ring * uHand.y);
-    colour = mix(colour, hand, max(uHand.x, ring * uHand.y * (1.0 - land)));
-  }
+  // ---- the handoff: the rise begins inside the cloud that lies over the lake (join/). Under it, until the maps of the lake are near
+  // enough to their own size to be water, the lake is its own deep colour with the wind on it ----
+  if (uHand.x > 0.0) colour = mix(colour, uHandWater * (0.62 + 0.5 * sparkle), uHand.x);
 
   // ---- one part drawn alone ----
   vec2 inLake = (xz - uLakeMid) / uLakeSize;
@@ -740,12 +719,8 @@ export function create(ctx: Context): Piece {
     uMatLakewater: { value: ctx.assets.texture('mat/lakewater.jpg', { kind: 'colour', repeat: true }) },
     uOnly: { value: 0 },
     uHandWater: { value: new THREE.Color(handoff.water) },
-    uHandRing: { value: new THREE.Color(handoff.ring) },
-    // The first ring's radius, km, and the width of a ring as a share of its radius.
-    uBreak: { value: 0 },
-    uRingShape: { value: new THREE.Vector3((handoff.ringRadii[0] as number) * handoff.revealHalfHeightKm, handoff.ringWidth, 0) },
-    // x: how much of the flat water of the handoff is left. y: how much of the rings.
-    uHand: { value: new THREE.Vector2(1, 1) },
+    // x: how much of the deep water of the handoff is left.
+    uHand: { value: new THREE.Vector2(1, 0) },
     uLake: { value: new THREE.Vector2(X(AT.lake.x), Z(AT.lake.y)) },
     // The lake as map-d draws it (make_relief.py prints these): its middle, and its half axes.
     uLakeMid: { value: new THREE.Vector2(X(AT.lake.x - 5.9), Z(AT.lake.y + 5.6)) },
@@ -784,8 +759,7 @@ export function create(ctx: Context): Piece {
       (uniforms.uClose as THREE.IUniform<number>).value = pair.mix;
       (uniforms.uTexelKm as THREE.IUniform<THREE.Vector3>).value.set(texelKm(pair.coarse), texelKm(pair.fine), texelKm(0));
       const wide = width / startWidth;
-      (uniforms.uBreak as THREE.IUniform<number>).value = ease(1, 1.09, wide);
-      (uniforms.uHand as THREE.IUniform<THREE.Vector2>).value.set(1 - ease(1, 1.7, wide), 1 - ease(RING_FADE[0], RING_FADE[1], wide));
+      (uniforms.uHand as THREE.IUniform<THREE.Vector2>).value.set(1 - ease(1, 1.7, wide), 0);
     },
     solo: (part) => {
       const mine = part !== null && part in ONLY;
