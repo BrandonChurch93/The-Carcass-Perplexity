@@ -46,7 +46,7 @@ export const PLATES: Plate[] = [
   // The same rim for the shore shot, hung round its own camera and half the size: a long lens far from the wall sees it low, with the sky over it.
   { file: 'mat/far-low.jpg', shots: ['eye-04'], at: [shore[0], 0, shore[2]], radius: 1500, bearing: SHORE_HEADING - 360, tanAcross: tan(22.5) * (16 / 9) * 1.14 * 0.54, tanUp: tan(22.5) * 0.54, horizon: 0.545, tone: [1, 1, 1], air: [1, 0.3, 0.5, 0.2], soft: 0.9, key: 'shore', near: 420 },
   // The north wall with its cave, for the last shot: hung on the far shore itself, round the centre of the lake, so that it stays a shore as the camera climbs.
-  { file: 'mat/far-long.jpg', shots: ['eye-05'], at: [0, 0, 0], radius: 1000, bearing: 0, tanAcross: 0.215, tanUp: 0.215 * (9 / 16), horizon: 0.45, tone: [0.8, 0.8, 0.82], wall: true, key: 'centre', near: 420 },
+  { file: 'mat/far-long3.jpg', shots: ['eye-05'], at: [0, 0, 0], radius: 1000, bearing: 0, tanAcross: 0.426, tanUp: 0.426 * (941 / 5016), horizon: 0.34, tone: [0.85, 0.85, 0.87], wall: true, key: 'centre', near: 420 },
 ];
 
 /** The index of the picture hung for the shot the camera stands in, or -1. */
