@@ -1,0 +1,7 @@
+2026-11-26 13:59 UTC
+work at 08080b8 on agent/eye-seam
+v1: the mist's sun no longer ends on a line at the foot of the right cliff (8305 hd review before and after, crop 1:1, sheet 8305 to 8425, key 8761). Still wrong: the mist does not visibly drift yet; the scree line of the far picture itself remains; a dark band on the water starts hard under the old edge (the lake's).
+look-1.jpg = out/work/sheets/first.png
+look-2.jpg = out/work/v1-8305-pair.png
+look-3.jpg = out/work/v1-8305-crop.png
+look-4.jpg = out/work/v1-8761-pair.png
