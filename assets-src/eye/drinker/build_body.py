@@ -241,6 +241,8 @@ def main():
     views(d, f'{out}/smooth.png')
     d = folds(d)
     views(d, f'{out}/folded.png')
+    # The outline from the side, for build_coat.py to lay the picture of the hide on.
+    np.save(f'{out}/side.npy', (d < 0).any(axis=0))
     verts, faces, _, _ = measure.marching_cubes(d, 0.0)
     p = LO + verts * H
     faces = faces[:, ::-1]

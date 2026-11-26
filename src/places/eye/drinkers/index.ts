@@ -46,6 +46,8 @@ const FRAGMENT = /* glsl */ `
 uniform vec4 uOwn;
 // The hide sheet: rgb its colour, a its relief.
 uniform sampler2D tHide;
+// The picture of the whole animal from the side.
+uniform sampler2D tCoat;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
@@ -63,47 +65,60 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float own = uOwn.x;
-  vec3 rn = abs(normalize(vRestNormal));
-  ivec3 ma = (rn.x > rn.y && rn.x > rn.z) ? ivec3(0, 1, 2) : (rn.y > rn.z) ? ivec3(1, 2, 0) : ivec3(2, 0, 1);
-  ivec3 mi = (rn.x < rn.y && rn.x < rn.z) ? ivec3(0, 1, 2) : (rn.y < rn.z) ? ivec3(1, 2, 0) : ivec3(2, 0, 1);
-  ivec3 me = ivec3(3) - mi - ma;
-  vec2 w = clamp((vec2(rn[ma.x], rn[me.x]) - 0.5773) / 0.4227, 0.0, 1.0);
-  w = (w + 1e-4) / (w.x + w.y + 2e-4);
-  // Twice: the creases, and the skin itself.
-  vec3 at = vRest + own * vec3(3.7, 9.1, 5.3);
-  vec3 dx = dFdx(vRest) * 0.6;
-  vec3 dy = dFdy(vRest) * 0.6;
-  vec4 broad = hideAt(at * 1.5, dx * 1.5, dy * 1.5, ma, me, w);
-  vec4 fine = hideAt(at.yzx * 4.7, dx.yzx * 4.7, dy.yzx * 4.7, ma.yzx, me.yzx, w);
-  // The wrinkles turn the light: the relief's slope across the screen leans the normal.
-  vec3 dpx = dFdx(vWorld);
-  vec3 dpy = dFdy(vWorld);
-  float px = length(dpx) + length(dpy);
-  vec3 r1 = cross(dpy, n);
-  vec3 r2 = cross(n, dpx);
-  float det = dot(dpx, r1);
-  float relief = 0.002 * broad.a + 0.0005 * fine.a;
-  vec3 lean = sign(det) * (dFdx(relief) * r1 + dFdy(relief) * r2) * (1.0 - smoothstep(0.004, 0.02, px));
-  n = normalize(abs(det) * n - lean / max(1.0, length(lean) / (0.4 * abs(det) + 1e-12)));
-  // A pale naked hide: each animal a tone of its own and marks of its own, dustier and darker along the back, paler under the belly.
+  // Seen in the lake it is its tone and no more: the water breaks up the rest.
+  bool mirrored = cameraPosition.y < 0.0;
+  // The coat: the picture of the whole animal from the side, laid on the body as it was made. It gives the tone everywhere, and on the flanks the hide itself:
+  // the ribs, the folds at the shoulder and the hip, the dust along the back.
+  vec2 cu = vec2(0.57 - 0.1842 * vRest.z, 0.12 + 0.2594 * vRest.y);
+  vec3 tone = texture2D(tCoat, cu, 5.0).rgb;
+  vec3 skin = tone;
   vec2 side = vRest.zy * vec2(1.0, 1.4) + own * 37.0;
   float blotch = 0.6 * vnoise(side * 1.7) + 0.4 * vnoise(side * 5.0 + 5.0);
-  float mark = smoothstep(0.56, 0.7, 0.65 * vnoise(side * 1.1 + 11.0) + 0.35 * vnoise(side * 6.0 + vRest.x * 3.0));
-  vec3 skin = mix(vec3(0.46, 0.38, 0.33), vec3(0.7, 0.6, 0.53), blotch);
+  if (!mirrored) {
+    vec3 rn = abs(normalize(vRestNormal));
+    ivec3 ma = (rn.x > rn.y && rn.x > rn.z) ? ivec3(0, 1, 2) : (rn.y > rn.z) ? ivec3(1, 2, 0) : ivec3(2, 0, 1);
+    ivec3 mi = (rn.x < rn.y && rn.x < rn.z) ? ivec3(0, 1, 2) : (rn.y < rn.z) ? ivec3(1, 2, 0) : ivec3(2, 0, 1);
+    ivec3 me = ivec3(3) - mi - ma;
+    vec2 w = clamp((vec2(rn[ma.x], rn[me.x]) - 0.5773) / 0.4227, 0.0, 1.0);
+    w = (w + 1e-4) / (w.x + w.y + 2e-4);
+    vec3 dpx = dFdx(vWorld);
+    vec3 dpy = dFdy(vWorld);
+    float px = length(dpx) + length(dpy);
+    // The repeating hide, twice: the creases, and close to, the skin itself.
+    vec3 at = vRest + own * vec3(3.7, 9.1, 5.3);
+    vec3 dx = dFdx(vRest) * 0.6;
+    vec3 dy = dFdy(vRest) * 0.6;
+    vec4 broad = hideAt(at * 1.5, dx * 1.5, dy * 1.5, ma, me, w);
+    vec4 fine = vec4(0.69, 0.41, 0.32, 0.5);
+    if (px < 0.004) fine = hideAt(at.yzx * 4.7, dx.yzx * 4.7, dy.yzx * 4.7, ma.yzx, me.yzx, w);
+    float flank = smoothstep(0.25, 0.6, rn.x) * smoothstep(1.15, 1.45, vRest.y) * (1.0 - smoothstep(2.4, 2.65, vRest.y));
+    vec3 coat = texture2D(tCoat, cu).rgb;
+    float grain = dot(coat, vec3(0.3, 0.5, 0.2));
+    vec3 tiled = sqrt(broad.rgb * fine.rgb) / vec3(0.69, 0.41, 0.32);
+    tiled *= mix(0.8, 1.0, smoothstep(0.22, 0.52, broad.a)) * (0.9 + 0.2 * fine.a);
+    skin = mix(tone * mix(vec3(1.0), tiled, 0.8), coat, flank);
+    // The wrinkles turn the light: the relief's slope across the screen leans the normal.
+    vec3 r1 = cross(dpy, n);
+    vec3 r2 = cross(n, dpx);
+    float det = dot(dpx, r1);
+    float relief = 0.012 * grain * flank + 0.002 * broad.a + 0.0005 * fine.a;
+    vec3 lean = sign(det) * (dFdx(relief) * r1 + dFdy(relief) * r2) * (1.0 - smoothstep(0.004, 0.02, px));
+    n = normalize(abs(det) * n - lean / max(1.0, length(lean) / (0.4 * abs(det) + 1e-12)));
+    // Each animal has marks of its own.
+    float mark = smoothstep(0.56, 0.7, 0.65 * vnoise(side * 1.1 + 11.0) + 0.35 * vnoise(side * 6.0 + vRest.x * 3.0));
+    skin = mix(skin, skin * vec3(0.62, 0.58, 0.57), mark * (0.2 + 0.4 * fract(own * 13.7)));
+  }
+  // Each a tone of its own.
   skin *= mix(vec3(0.86, 0.85, 0.84), vec3(1.08, 1.04, 1.0), fract(own * 7.3));
-  skin = mix(skin, skin * vec3(0.62, 0.58, 0.57), mark * (0.3 + 0.5 * fract(own * 13.7)));
-  skin *= mix(vec3(1.0), sqrt(broad.rgb * fine.rgb) / vec3(0.69, 0.41, 0.32), 0.7);
-  // Creases hold the dirt.
-  skin *= mix(0.8, 1.0, smoothstep(0.22, 0.52, broad.a)) * (0.9 + 0.2 * fine.a);
   // In the shade of the evening the hide is tan going to brown, as the herd beside it is.
-  if (uShade.w > 0.1) skin = mix(skin, vec3(0.335, 0.222, 0.152) * (0.45 + 1.0 * dot(skin, vec3(0.3, 0.5, 0.2))), 0.9);
+  if (uShade.w > 0.1) skin = mix(skin, vec3(0.41, 0.31, 0.235) * (0.5 + 1.25 * dot(skin, vec3(0.3, 0.5, 0.2))), 0.9);
   skin *= mix(vec3(0.8, 0.75, 0.71), vec3(1.0), vShade.y);
   // The sky lights its back and leaves its belly and the inside of its legs in its own shade.
   skin *= mix(0.62, 1.06, smoothstep(-0.55, 0.75, n.y + 0.25 * (blotch - 0.5)));
   float above = (vWorld.y - max(uOwn.z, 0.0)) / uOwn.y;
   float ragged = vnoise(vRest.xy * 9.0 + vRest.z * 5.0);
   // Wet and dark below, where it has stood in the lake, and flecked with the mud it kicked up; dry above. The horn of the hoof is dark.
-  skin *= mix(0.5, 1.08, smoothstep(1.15, 2.2, above + 0.3 * (blotch - 0.5)));
+  skin *= mix(0.8, 1.05, smoothstep(1.15, 2.2, above + 0.3 * (blotch - 0.5)));
   float wet = 1.0 - smoothstep(0.3, 0.8, above + 0.3 * ragged);
   // Its legs are dark with the mud and the water of the shore, to above the knee.
   skin *= mix(0.45, 1.0, smoothstep(0.5, 1.0, above + 0.3 * ragged));
@@ -178,17 +193,19 @@ export function create(ctx: Context): Piece {
   const near = bodyGeometry(NEAR_DATA, LEVELS.near);
   const mid = bodyGeometry(MID_DATA, LEVELS.mid);
   const tHide = { value: ctx.assets.texture('drinker/hide.png', { repeat: true, anisotropy: 4 }) };
+  const tCoat = { value: ctx.assets.texture('drinker/coat.jpg', { repeat: false, anisotropy: 4 }) };
   const drawn: Drawn[] = animals.map((animal, i) => {
     const bones = new Float32Array(BONES * 12);
     const own = new THREE.Vector4(animal.own, animal.build.size, 0, 0);
     const material = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, tHide },
+      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, tHide, tCoat },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
-      side: THREE.DoubleSide,
+      // The surface is wound with its outside as its back: only that side is drawn.
+      side: THREE.BackSide,
     });
     // The whole surface for the one the lens comes closest to, a lighter one for the three behind it.
-    const mesh = new THREE.Mesh(i === 3 ? near : mid, material);
+    const mesh = new THREE.Mesh(mid, material);
     mesh.frustumCulled = false;
     mesh.visible = false;
     ctx.scene.add(mesh);
