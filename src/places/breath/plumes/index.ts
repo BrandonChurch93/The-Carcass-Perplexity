@@ -1,19 +1,19 @@
 // The gill-plumes: crimson feathered growths on the lip of the shaft and a few seedlings away from it.
-// Every bush is grown once from the seeded stream (fronds.ts): stems that arch from one holdfast, each carrying a frond of the frond picture.
-// The sway and the drops are in the vertex shaders (shaders.ts).
+// Every bush is grown once from the seeded stream (fronds.ts): limbs that lean from one holdfast and fork, hung with wet threads in locks.
+// Each bush is its own two meshes, so one that is out of the frame costs nothing. The sway and the drops are in the vertex shaders (shaders.ts).
 import * as THREE from 'three';
 import { BUSHES, SEA_LEVEL, SEEDLINGS, WIND, bushAt, onRim, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { surgeAt } from '../shared/blockout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
-import { Fronds, type Bush } from './fronds';
-import { DROP_FRAGMENT, DROP_VERTEX, STEM_FRAGMENT, STEM_VERTEX, VANE_DEPTH, VANE_FRAGMENT, VANE_VERTEX } from './shaders';
+import { grow, type Bush, type Grown, type Tip } from './fronds';
+import { DROP_FRAGMENT, DROP_VERTEX, STEM_FRAGMENT, STEM_VERTEX, THREAD_FRAGMENT, THREAD_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['gill-plumes'];
 
 /** Staged, metres: see where the bushes are placed. */
-const HERO_WEST = 3.6;
+const HERO_WEST = 4.6;
 
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
@@ -44,13 +44,18 @@ ${RIG_GLSL}
 void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
-  // Knotted wet flesh, the colour of a root: pale and pink where it swells, wine-dark in its folds, with cords that run down it to the rock.
-  float knot = fbm(vWorld.xz * 9.0 + vWorld.y * 5.0);
-  float cords = vnoise(vec2(atan(n.z, n.x) * 9.0 + 2.0 * knot, vWorld.y * 3.0));
-  float fold = smoothstep(0.3, 0.6, 0.6 * knot + 0.4 * cords);
-  vec3 albedo = mix(vec3(0.16, 0.05, 0.05), vec3(0.6, 0.43, 0.38), fold) * (0.8 + 0.4 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0));
-  n = normalize(n + 0.35 * (cords - 0.5) * cross(n, vec3(0.0, 1.0, 0.0)));
-  vec3 colour = rigShade(vWorld, n, v, albedo, 0.4, 0.35 + 0.5 * fold);
+  // Wet flesh, the colour of the limbs that leave it: pale and pink where it swells, wine-dark in its folds.
+  float knot = fbm(vWorld.xz * 7.0 + vWorld.y * 4.0);
+  float fold = smoothstep(0.25, 0.6, knot);
+  // It is wrinkled as a root is: creases cross it, dark at the bottom of each, and the light picks out their edges.
+  vec2 q = vWorld.xz * 23.0 + vWorld.y * vec2(15.0, -11.0);
+  float w0 = fbm(q);
+  n = normalize(n + 1.6 * vec3(w0 - fbm(q + vec2(0.3, 0.0)), 0.0, w0 - fbm(q + vec2(0.0, 0.3))));
+  float crease = smoothstep(0.3, 0.55, w0);
+  vec3 albedo = mix(vec3(0.11, 0.04, 0.045), vec3(0.42, 0.21, 0.2), fold) * (0.8 + 0.4 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0)) * (0.4 + 0.6 * crease);
+  vec3 colour = rigShade(vWorld, n, v, albedo, 0.28, 0.3 + 0.7 * fold);
+  // Under the bush the lit rock throws its warm light back up into it.
+  colour += albedo * uSunColour * (0.07 * sunAt(vec3(vWorld.x, vWorld.y + 4.0, vWorld.z)) * (0.6 - 0.4 * n.y));
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
@@ -71,11 +76,12 @@ export function create(ctx: Context): Piece {
     const at = bushAt(i);
     // Staged: the two that the lens of key breath-3 stands by are rooted a stride further west of the lip than their anchors, so that
     // the nearer is cut by the left edge of that frame and the farther has its holdfast in the lower left of it, as in the picture.
+    // The farther stops short of the right third of that frame, which is the pit's and the steam's; the nearer is kept low beside it.
     // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted five metres to that lens's
     // left and behind it, out of its frame; what hangs into that frame is grown for that shot alone (HANG).
-    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
+    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] - 0.55, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, mound: i < 2 ? 0 : i === 5 ? 0.3 : 0.6, tidy: i === 5 });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.68 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, mound: i < 2 ? 0 : i === 5 ? 0.3 : 0.6, tidy: i === 5 });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
@@ -96,27 +102,27 @@ export function create(ctx: Context): Piece {
     if (y < SEA_LEVEL + 0.12) continue;
     bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, mound: 0.7 });
   }
-  for (const [x, z, tall] of SEEDLINGS) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
+  // A seedling whose anchor is under the water is not grown: nothing of this kind roots in the channel.
+  for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
 
-  const grown = new Fronds();
-  for (const bush of bushes) grown.grow(bush, rng, floor);
-  const { fronds: vaneGeometry, stems: stemGeometry } = grown.build();
+  const grown: Grown[] = bushes.map((bush) => grow(bush, rng, floor));
 
   const rimRng = ctx.rng('gill-plume-rim');
   const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, mound: 1 }));
-  const rimGrown = new Fronds();
-  for (const bush of rimBushes) rimGrown.grow(bush, rimRng, floor);
-  const rimBuilt = rimGrown.build();
+  // In that shot the two tall ones by the lens of breath-03 are low domes too (see setTime).
+  for (let i = 0; i < 2; i++) {
+    const b = bushes[i] as Bush;
+    rimBushes.push({ x: b.x, y: b.y, z: b.z, tall: i === 0 ? 3.0 : 3.4, lean: b.lean, detail: 0.5, mound: 1 });
+  }
+  const rimGrown: Grown[] = rimBushes.map((bush) => grow(bush, rimRng, floor));
   // Staged by shot (breath-02): two tall weeping ones on the south-west lip, rooted to the left of that lens and leaning across its upper left
-  // corner, so that their sprays hang into the frame from above and from the left, as the picture has them. No other shot has them.
+  // corner, so that their locks hang into the frame from above and from the left, as the picture has them. No other shot has them.
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
     return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, mound: 0, weep: 1, tidy: true };
   });
-  const hangGrown = new Fronds();
-  for (const bush of hangBushes) hangGrown.grow(bush, hangRng, floor);
-  const hangBuilt = hangGrown.build();
+  const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 
   const pixel = { value: 0.001 };
   const seconds = { value: 0 };
@@ -127,102 +133,106 @@ export function create(ctx: Context): Piece {
     uSeconds: seconds,
     uSurge: surge,
     uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) },
-    tFrond: { value: ctx.assets.texture('plumes/frond.jpg', { repeat: false }) },
-    tFrondA: { value: ctx.assets.texture('plumes/frond-a.png', { kind: 'data', repeat: false }) },
-    tFrondB: { value: ctx.assets.texture('plumes/frond-b.jpg', { repeat: false }) },
-    tFrondBA: { value: ctx.assets.texture('plumes/frond-b-a.png', { kind: 'data', repeat: false }) },
   };
-  const vaneMaterial = new THREE.ShaderMaterial({ vertexShader: VANE_VERTEX, fragmentShader: VANE_FRAGMENT, uniforms, side: THREE.DoubleSide });
-  // The fog reads the depth laid before the picture: the ribbons say there which of their pixels are threads.
-  vaneMaterial.userData.depthFragment = VANE_DEPTH;
-  const vaneMesh = new THREE.Mesh(vaneGeometry, vaneMaterial);
-  vaneMesh.frustumCulled = false;
+  // Opaque and whole: the engine lays their depth first, and a thread behind another costs only that.
+  const threadMaterial = new THREE.ShaderMaterial({ vertexShader: THREAD_VERTEX, fragmentShader: THREAD_FRAGMENT, uniforms, side: THREE.DoubleSide });
   const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms });
-  const stemMesh = new THREE.Mesh(stemGeometry, stemMaterial);
-  stemMesh.frustumCulled = false;
+  const meshes = (g: Grown, into: THREE.Group): void => {
+    into.add(new THREE.Mesh(g.threads, threadMaterial), new THREE.Mesh(g.stems, stemMaterial));
+  };
 
   // The holdfasts: a knotted lump in the rock under every bush, lumpier than round, half sunk.
   const lump = new THREE.IcosahedronGeometry(1, 4);
   const lumps: THREE.BufferGeometry[] = [];
   const holdfastMaterial = new THREE.ShaderMaterial({ vertexShader: RIG_VERTEX, fragmentShader: HOLDFAST_FRAGMENT, uniforms: { ...rig.uniforms } });
   const group = new THREE.Group();
-  group.add(vaneMesh, stemMesh);
   const rimGroup = new THREE.Group();
-  const rimVanes = new THREE.Mesh(rimBuilt.fronds, vaneMaterial);
-  rimVanes.frustumCulled = false;
-  const rimStems = new THREE.Mesh(rimBuilt.stems, stemMaterial);
-  rimStems.frustumCulled = false;
-  rimGroup.add(rimVanes, rimStems);
-  group.add(rimGroup);
   const hangGroup = new THREE.Group();
-  const hangVanes = new THREE.Mesh(hangBuilt.fronds, vaneMaterial);
-  hangVanes.frustumCulled = false;
-  const hangStems = new THREE.Mesh(hangBuilt.stems, stemMaterial);
-  hangStems.frustumCulled = false;
-  hangGroup.add(hangVanes, hangStems);
-  group.add(hangGroup);
+  const heroGroup = new THREE.Group();
+  const domeGroup = new THREE.Group();
+  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : group));
+  rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
+  for (const g of hangGrown) meshes(g, hangGroup);
+  group.add(rimGroup, hangGroup, heroGroup, domeGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
     const seed = rng.range(0, 50);
+    let low = b.y;
+    for (let k = 0; k < 8; k++) low = Math.min(low, floor(b.x + Math.cos(k * 0.785) * 0.08 * b.tall, b.z + Math.sin(k * 0.785) * 0.08 * b.tall));
     for (let i = 0; i < at.count; i++) {
       const x = at.getX(i);
       const y = at.getY(i);
       const z = at.getZ(i);
-      const swell = 1 + 0.28 * Math.sin(x * 5 + seed) * Math.sin(z * 4.3 + seed * 1.3) + 0.2 * Math.sin(y * 7 + x * 3 + seed * 2.1) + 0.12 * Math.sin(x * 11 + z * 9 + seed);
-      const r = 0.05 * b.tall * swell;
-      at.setXYZ(i, b.x + x * r * 1.25, b.y + y * r * 0.8 + 0.02 * b.tall, b.z + z * r * 1.25);
+      // It grips with roots: ridges run out from under the limbs and die into the rock, no two of a length.
+      const round = Math.atan2(z, x);
+      const roots = Math.pow(0.5 + 0.5 * Math.sin(round * 5 + seed + 1.3 * Math.sin(round * 2 + seed * 0.7)), 2);
+      const swell = 0.8 + 0.6 * roots * (1 - 0.6 * Math.max(y, 0)) + 0.12 * Math.sin(y * 4 + x * 2 + seed * 2.1);
+      const r = 0.055 * b.tall * swell;
+      // A foot spread on the rock: wide, low, and set as low as the lowest rock under it, so that it never hangs over a hollow.
+      at.setXYZ(i, b.x + x * r * 1.9, low - 0.004 * b.tall + y * r * 0.75, b.z + z * r * 1.9);
+      // The lump is smooth: its normal is the ball's, flattened as the lump is.
+      const nl = Math.hypot(x / 1.7, y / 0.75, z / 1.7) || 1;
+      (g.getAttribute('normal') as THREE.BufferAttribute).setXYZ(i, x / 1.7 / nl, y / 0.75 / nl, z / 1.7 / nl);
     }
-    g.computeVertexNormals();
     lumps.push(g);
     const m = new THREE.Mesh(g, holdfastMaterial);
     m.frustumCulled = false;
-    (rimBushes.includes(b) ? rimGroup : group).add(m);
+    (rimBushes.includes(b) ? (rimBushes.indexOf(b) >= RIM_GROWTH.length ? domeGroup : rimGroup) : bushes.indexOf(b) < 2 ? heroGroup : group).add(m);
   }
   lump.dispose();
 
-  // The wet ends drip: at the end of a barb a drop hangs and swells, lets go and falls, each on its own slow beat.
+  // The wet ends drip: at the point of a lock a drop hangs and swells, lets go and falls, each on its own slow beat. One set of them for
+  // the bushes that are always there and one each for the staged ones, shown with them.
   const drops = ctx.rng('gill-plume-drops');
-  const dropGeometry = new THREE.BufferGeometry();
-  {
+  const dropsOf = (all: Grown[], share: number): THREE.BufferGeometry => {
+    const geometry = new THREE.BufferGeometry();
+    const fields: Record<'aA' | 'aB' | 'aC' | 'aSway' | 'aTint' | 'aDrop', number[]> = { aA: [], aB: [], aC: [], aSway: [], aTint: [], aDrop: [] };
     const position: number[] = [];
-    const sway: number[] = [];
-    const tint: number[] = [];
-    const root: number[] = [];
-    const drop: number[] = [];
     const corner: number[] = [];
     const index: number[] = [];
     let count = 0;
-    const quad = (end: (typeof grown.ends)[number], every: number, offset: number, size: number, falls: number, ground: number): void => {
+    const quad = (tip: Tip, every: number, offset: number, size: number, falls: number, ground: number): void => {
       for (const [cx, cy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]] as const) {
-        position.push(end.at[0], end.at[1], end.at[2]);
-        sway.push(...end.sway);
-        tint.push(0, 0, end.reach, end.tall);
-        root.push(end.root[0], end.root[1], end.root[2]);
-        drop.push(every, offset, size, falls);
+        position.push(tip.a[0], tip.a[1], tip.a[2]);
+        fields.aA.push(...tip.a);
+        fields.aB.push(...tip.b);
+        fields.aC.push(...tip.c);
+        fields.aSway.push(...tip.sway);
+        fields.aTint.push(...tip.tint);
+        fields.aDrop.push(every, offset, size, falls);
         corner.push(cx, cy, ground);
       }
       index.push(count, count + 1, count + 2, count, count + 2, count + 3);
       count += 4;
     };
-    for (const end of grown.ends) {
-      if (drops.next() < 0.3) continue;
-      const every = drops.range(1.3, 5.5);
-      const offset = drops.range(0, 9);
-      const size = drops.range(0.0045, 0.0085);
-      const ground = floor(end.at[0], end.at[2]);
-      quad(end, every, offset, size, 0, ground);
-      quad(end, every, offset, size, 1, ground);
+    for (const g of all) {
+      for (const tip of g.tips) {
+        // Only a point with open air under it drips where it can be seen: the others drip into the bush.
+        if (tip.under < 0.8 || drops.next() > share) continue;
+        const every = drops.range(2.2, 8);
+        const offset = drops.range(0, 11);
+        const size = drops.range(0.009, 0.02);
+        const x = tip.a[0] + tip.b[0] + tip.c[0];
+        const z = tip.a[2] + tip.b[2] + tip.c[2];
+        const ground = floor(x, z);
+        quad(tip, every, offset, size, 0, ground);
+        quad(tip, every, offset, size, 1, ground);
+        // A drop seldom falls alone: a smaller one follows it off the same point.
+        quad(tip, every, offset - 0.17, size * 0.7, 1, ground);
+        quad(tip, every, offset - 0.36, size * 0.55, 1, ground);
+      }
     }
-    dropGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-    dropGeometry.setAttribute('aSway', new THREE.Float32BufferAttribute(sway, 4));
-    dropGeometry.setAttribute('aTint', new THREE.Float32BufferAttribute(tint, 4));
-    dropGeometry.setAttribute('aRoot', new THREE.Float32BufferAttribute(root, 3));
-    dropGeometry.setAttribute('aDrop', new THREE.Float32BufferAttribute(drop, 4));
-    dropGeometry.setAttribute('aCorner', new THREE.Float32BufferAttribute(corner, 3));
-    dropGeometry.setIndex(index);
-    dropGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
-  }
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+    for (const [name, values] of Object.entries(fields)) geometry.setAttribute(name, new THREE.Float32BufferAttribute(values, 4));
+    geometry.setAttribute('aCorner', new THREE.Float32BufferAttribute(corner, 3));
+    geometry.setIndex(index);
+    geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
+    return geometry;
+  };
+  // Only the bushes a lens comes close to have drops that can be seen.
+  const nearOnes = grown.filter((_g, i) => (bushes[i] as Bush).detail >= 1);
+  const dropGeometries = [dropsOf(nearOnes, 0.16), dropsOf([], 0), dropsOf(hangGrown, 0.2)];
   const dropMaterial = new THREE.ShaderMaterial({
     vertexShader: DROP_VERTEX,
     fragmentShader: DROP_FRAGMENT,
@@ -236,10 +246,12 @@ export function create(ctx: Context): Piece {
     blendSrcAlpha: THREE.OneFactor,
     blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
   });
-  const dropMesh = new THREE.Mesh(dropGeometry, dropMaterial);
-  dropMesh.frustumCulled = false;
-  dropMesh.renderOrder = 20;
-  group.add(dropMesh);
+  [heroGroup, rimGroup, hangGroup].forEach((into, i) => {
+    const dropMesh = new THREE.Mesh(dropGeometries[i] as THREE.BufferGeometry, dropMaterial);
+    dropMesh.frustumCulled = false;
+    dropMesh.renderOrder = 20;
+    into.add(dropMesh);
+  });
   ctx.scene.add(ctx.parts.built('gill-plumes', group));
 
   // Each bush stands in its own shade on the rock, and throws a long one away from the sun.
@@ -251,6 +263,7 @@ export function create(ctx: Context): Piece {
 
   const rimDiscs = rig.contactDiscs(rimBushes.length * 2);
   const rimSpan = shotSpan('breath-05');
+  const wideSpan = shotSpan('breath-01');
   const hangDiscs = rig.contactDiscs(hangBushes.length);
   const hangSpan = shotSpan('breath-02');
 
@@ -264,12 +277,24 @@ export function create(ctx: Context): Piece {
       const at = stagedSeconds();
       const shown = at >= rimSpan[0] && at <= rimSpan[1];
       rimGroup.visible = shown;
+      // The two tall ones are grown for the lens that stands among them (breath-03). From the rim's lens they stood over the wader as
+      // two trees, and from the wide lens they were two dark lumps on the lip, where the pictures have low spreading brush: in those
+      // two shots low domes stand in their place (the last two of the rim's bushes).
+      const low = shown || (at >= wideSpan[0] && at <= wideSpan[1]);
+      heroGroup.visible = !low;
+      domeGroup.visible = low;
+      for (let i = 0; i < 2; i++) {
+        const b = bushes[i] as Bush;
+        rig.setDisc(discs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, low ? 0 : 0.7);
+        rig.setShadow(discs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, low ? 0 : 0.5);
+      }
       const hung = at >= hangSpan[0] && at <= hangSpan[1];
       hangGroup.visible = hung;
       hangBushes.forEach((b, i) => rig.setShadow(hangDiscs, i, b.x, b.z, 0.2 * b.tall, 0.4 * b.tall, hung ? 0.5 : 0));
       rimBushes.forEach((b, i) => {
-        rig.setDisc(rimDiscs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, shown ? 0.7 : 0);
-        rig.setShadow(rimDiscs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, shown ? 0.5 : 0);
+        const here = i >= RIM_GROWTH.length ? low : shown;
+        rig.setDisc(rimDiscs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, here ? 0.7 : 0);
+        rig.setShadow(rimDiscs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, here ? 0.5 : 0);
       });
     },
     beforeSample: (renderer, camera) => {
@@ -280,15 +305,13 @@ export function create(ctx: Context): Piece {
       height = h;
     },
     dispose: () => {
-      vaneGeometry.dispose();
-      vaneMaterial.dispose();
-      stemGeometry.dispose();
-      rimBuilt.fronds.dispose();
-      rimBuilt.stems.dispose();
-      hangBuilt.fronds.dispose();
-      hangBuilt.stems.dispose();
+      for (const g of [...grown, ...rimGrown, ...hangGrown]) {
+        g.threads.dispose();
+        g.stems.dispose();
+      }
+      threadMaterial.dispose();
       stemMaterial.dispose();
-      dropGeometry.dispose();
+      for (const g of dropGeometries) g.dispose();
       dropMaterial.dispose();
       holdfastMaterial.dispose();
       for (const g of lumps) g.dispose();

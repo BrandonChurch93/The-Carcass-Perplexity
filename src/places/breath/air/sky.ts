@@ -49,16 +49,25 @@ vec4 farPicture(vec3 d) {
   float z = dot(d, ahead);
   vec2 q = vec2(dot(d, right), d.y) / max(z, 0.05);
   vec2 uv = vec2(0.5 + q.x / ${(2 * FAR.wide).toFixed(4)}, ${FAR.horizon.toFixed(3)} + q.y / ${(2 * FAR.tall).toFixed(4)});
-  float w = step(0.05, z) * smoothstep(0.02, 0.3, uv.x) * smoothstep(1.0, 0.9, uv.x) * smoothstep(1.0, 0.9, uv.y);
+  // Past its right edge the cliff does not stop: its last strata run on, drawn out, and thin into the haze a long way on.
+  float past = max(uv.x - 0.94, 0.0);
+  uv.x = min(uv.x, 0.94) + 0.055 * (1.0 - exp(-past / 0.11));
+  float w = step(0.05, z) * smoothstep(0.02, 0.3, uv.x) * smoothstep(0.7, 0.2, past) * smoothstep(1.0, 0.9, uv.y);
   uv.y = max(uv.y, ${(FAR.horizon + 0.006).toFixed(3)});
   vec3 seen = textureLod(tFar, clamp(uv, 0.002, 0.998), 0.0).rgb;
-  // The picture's cliff holds snow in white patches. The place has none: they are toned down to pale rock faces in the haze.
-  float lum = dot(seen, vec3(0.3333));
-  float pale = smoothstep(0.15, 0.26, lum) * smoothstep(0.1, 0.04, seen.r - seen.b) * smoothstep(0.22, 0.3, uv.x);
-  seen *= mix(vec3(1.0), vec3(1.12, 1.0, 0.84) * ((0.17 + 0.14 * (lum - 0.15)) / max(lum, 0.01)), pale);
-  // The cliff stands kilometres off in the dawn haze: it is bare grey-brown strata, a little darker than it was painted (by number against the approved rim picture).
-  seen *= mix(1.0, 0.8, smoothstep(0.22, 0.3, uv.x));
-  return vec4(untoned(seen), w);
+  // The cliff stands kilometres off in the dawn haze, snow on its ledges as the approved pictures have it: the air between pales it
+  // toward the sky's own colour, more at its foot and where it is read back past the picture's edge.
+  vec3 lin = untoned(seen);
+  float cliff = smoothstep(0.22, 0.3, uv.x);
+  float foot = smoothstep(0.2, 0.0, uv.y - ${FAR.horizon.toFixed(3)});
+  vec3 air = skyRadiance(normalize(vec3(d.x, 0.03, d.z)));
+  // It runs away to the left: its far end is kilometres farther than its near end, and paler by that much.
+  float away = smoothstep(0.8, 0.28, uv.x);
+  // Its rock is dark and its snow white: the picture's own shade is kept deep, so the haze is what pales it and it does not stand flat.
+  float bright = dot(lin, vec3(0.2126, 0.7152, 0.0722));
+  lin *= mix(1.0, mix(0.66, 1.06, smoothstep(0.08, 0.5, bright)), cliff);
+  lin = mix(lin, air, cliff * clamp(0.07 + 0.36 * away + 0.22 * foot + 1.6 * past, 0.0, 0.88));
+  return vec4(lin, w);
 }`;
 
 const FRAGMENT = /* glsl */ `
@@ -74,15 +83,24 @@ void main() {
   vec3 c = skyRadiance(d);
   // The fog overhead is not even: slow banks of it, long and level, a little brighter where they are thin. They close up toward the horizon.
   vec2 q = d.xz / (max(d.y, 0.0) + 0.16);
-  q += vec2(uTime * 0.0016, uTime * 0.0005);
-  float a = textureLod(tNoise, vec3(q.x * 0.05, q.y * 0.11, 0.21), 0.0).g;
-  float b = textureLod(tNoise, vec3(q.x * 0.17 + 0.4, q.y * 0.4, 0.57), 0.0).a;
+  // They go down the wind, each at the pace of its own height: the low deck a walk across the sky in a held shot, the high one half of
+  // that, so the two slide over one another; and each turns over slowly as it goes (the third reading of the block).
+  vec2 wind = vec2(-0.94, 0.34);
+  vec2 qa = q - wind * (uTime * 0.011);
+  vec2 qb = q - wind * (uTime * 0.0055);
+  float a = textureLod(tNoise, vec3(qa.x * 0.05, qa.y * 0.11, 0.21 + uTime * 0.0012), 0.0).g;
+  float b = textureLod(tNoise, vec3(qb.x * 0.17 + 0.4, qb.y * 0.4, 0.57 + uTime * 0.0021), 0.0).a;
   float n = a * 0.65 + b * 0.35;
   float high = smoothstep(0.02, 0.3, d.y);
   c *= 1.0 + high * 0.34 * (n - 0.5);
-  // The sun: no disc with an edge, a glare that the fog spreads and turns deep gold.
+  // Under them the haze over the flats lies in long level streaks that creep the same way, nearer and so faster across the eye.
+  float bearing = atan(d.x, -d.z);
+  float low = smoothstep(0.0, 0.03, d.y) * smoothstep(0.2, 0.05, d.y);
+  float streak = textureLod(tNoise, vec3(bearing * 0.42 + uTime * 0.0045, d.y * 3.4, 0.83 + uTime * 0.002), 0.0).g;
+  c *= 1.0 + low * 0.2 * (streak - 0.5);
+  // The sun: a pale hot heart with no edge, inside the glare that the fog spreads and turns deep gold.
   float s = dot(d, uSunDir);
-  c += uSunColour * vec3(1.0, 0.42, 0.1) * (1.0 * smoothstep(0.9988, 0.99995, s) + 0.8 * pow(max(s, 0.0), 500.0) + 0.25 * pow(max(s, 0.0), 60.0));
+  c += uSunColour * (vec3(1.0, 0.88, 0.62) * (5.0 * smoothstep(0.9995, 0.99997, s)) + vec3(1.0, 0.42, 0.1) * (0.8 * pow(max(s, 0.0), 500.0) + 0.25 * pow(max(s, 0.0), 60.0)));
   vec4 far = farPicture(d);
   c = mix(c, far.rgb, far.a);
   gl_FragColor = vec4(rigOut(c), 1.0);

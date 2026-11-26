@@ -1,7 +1,7 @@
 // The waders: the herd in the tide channel, the far flock on the shallows, and the one that stands over the drop at the rim.
 // Each animal is a skin of tubes posed on the processor from the time alone (animal.ts); who each one is and what it does is in herd.ts.
 import * as THREE from 'three';
-import { MIST_WADER, NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, shotSpan } from '../shared/anchors';
+import { NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
 import { Wader, type Env } from './animal';
@@ -17,7 +17,7 @@ export const PARTS: readonly string[] = ['waders'];
 /** Discs of contact shade for an animal that stands on rock: four feet. Its long shadow is one more. */
 const DISCS = 5;
 /** Drops in the air under one lifted tuft, at most. */
-const DROPS = 26;
+const DROPS = 104;
 /** Metres of water a wader stands in at most. */
 const WADE = 0.14;
 const hash = (n: number): number => {
@@ -39,8 +39,8 @@ export function create(ctx: Context): Piece {
 
   const pixel = { value: 0.001 };
   const pictures = {
-    tHide: { value: ctx.assets.texture('mat/skin.jpg') },
-    tHideNh: { value: ctx.assets.texture('mat/skin-nh.png', { kind: 'data' }) },
+    tHide: { value: ctx.assets.texture('waders/hide.jpg') },
+    tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
     tWader: { value: ctx.assets.texture('mat/wader.jpg', { repeat: false }) },
     tWaderA: { value: ctx.assets.texture('mat/wader-a.png', { kind: 'data', repeat: false }) },
   };
@@ -52,12 +52,12 @@ export function create(ctx: Context): Piece {
   material.userData.depthFragment = DEPTH_FRAGMENT;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  const drips = makeDrips(DROPS * 12, { ...rig.uniforms, uPixel: pixel });
+  const drips = makeDrips(DROPS * 10, { ...rig.uniforms, uPixel: pixel });
   const group = new THREE.Group();
   group.add(mesh, drips.mesh);
   ctx.scene.add(ctx.parts.built('waders', group));
 
-  const ripples = makeRipples(96, SEA_LEVEL, rig.uniforms.uSolo as THREE.IUniform);
+  const ripples = makeRipples(144, SEA_LEVEL, rig.uniforms.uSolo as THREE.IUniform);
   const rings = new THREE.WebGLRenderTarget(8, 8, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false });
   rings.texture.generateMipmaps = false;
   RIPPLES.texture.value = rings.texture;
@@ -90,6 +90,11 @@ export function create(ctx: Context): Piece {
   // stands in the lit mist behind the first of them, neck up.
   const rim = herd[NEAR_WADERS.length] as Wader;
   const AWAY = { x: -58, z: -98 };
+  // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
+  const MIST = { x: -34.4, z: -8.4, heading: -100 };
+  const rimUp = rim.plan.up;
+  const rimCarry = rim.plan.carry;
+  const MIST_UP: [number, number][] = [[-5, 60]];
   const RAD = Math.PI / 180;
   const shaft = shotSpan('breath-02');
   const mist = shotSpan('breath-03');
@@ -99,9 +104,11 @@ export function create(ctx: Context): Piece {
       const at = stagedSeconds();
       const away = at >= shaft[0] && at <= shaft[1];
       const misted = at >= mist[0] && at <= mist[1];
-      rim.plan.x = away ? AWAY.x : misted ? MIST_WADER.x : RIM_WADER.x;
-      rim.plan.z = away ? AWAY.z : misted ? MIST_WADER.z : RIM_WADER.z;
-      rim.plan.heading = (misted ? MIST_WADER.heading : RIM_WADER.heading) * RAD;
+      rim.plan.x = away ? AWAY.x : misted ? MIST.x : RIM_WADER.x;
+      rim.plan.z = away ? AWAY.z : misted ? MIST.z : RIM_WADER.z;
+      rim.plan.heading = (misted ? MIST.heading : RIM_WADER.heading) * RAD;
+      rim.plan.up = misted ? MIST_UP : rimUp;
+      rim.plan.carry = misted ? 1 : rimCarry;
       ripples.begin();
       drips.begin();
       herd.forEach((animal, i) => {
@@ -155,16 +162,20 @@ export function create(ctx: Context): Piece {
             const tips = stood.tips;
             const count = Math.min(DROPS, tips.length / 3);
             for (let d = 0; d < count; d++) {
-              const tip = Math.floor(hash(seed + d * 3.3) * (tips.length / 3)) * 3;
-              const period = 0.22 + 0.26 * hash(seed + d * 7.7);
-              const turn = (stood.sinceLift + 3 * hash(seed + d * 1.3)) / period;
+              // Ten of the tips run in streams, a bead after a bead down one line; the rest drip singly.
+              const stream = d % 10;
+              const run = d < 80;
+              const tipAt = run ? stream : d;
+              const period = run ? 0.4 + 0.1 * hash(seed + stream * 7.7) : 0.22 + 0.26 * hash(seed + d * 7.7);
+              const turn = (stood.sinceLift + (run ? (Math.floor(d / 10) / 8 + 0.03 * hash(seed + d * 1.3)) * period : 3 * hash(seed + d * 1.3))) / period;
+              const tip = Math.floor(hash(seed + tipAt * 3.3) * (tips.length / 3)) * 3;
               const n = Math.floor(turn);
               if (hash(seed + d * 5.1 + n * 9.7) > 0.25 + 0.75 * pour) continue;
               const fall = (turn - n) * period;
               const x = tips[tip] as number;
               const z = tips[tip + 2] as number;
               const y = (tips[tip + 1] as number) - 4.9 * fall * fall;
-              if (y > sea) drips.add(x, y, z, 0.008 + 9.8 * fall * 0.006);
+              if (y > sea) drips.add(x, y, z, 0.012 + 9.8 * fall * (run ? 0.021 : 0.012));
               else if (d % 4 === 0) ripples.add(x, z, 0.55, 0.5 * pour + 0.12, (sea - y) / 3, seed + d, 48, 0.24);
             }
             ripples.add(stood.tuft.x, stood.tuft.z, 0.9, 0.2 + 0.45 * pour, 5, seed, 40, 0.26);
@@ -179,8 +190,8 @@ export function create(ctx: Context): Piece {
           const off = Math.min(1, foot.lift / (0.5 * k));
           rig.setDisc(discs, slot * DISCS + j, foot.x, foot.z, 0.16 * k * (1 + 1.5 * off), 0.85 * dry * (1 - 0.7 * off));
         });
-        const wet = (stood.feet[0]!.wet + stood.feet[2]!.wet) / 2 > 0.02 ? 0.35 : 1;
-        rig.setShadow(discs, slot * DISCS + 4, stood.body.x, stood.body.z, 0.55 * k, 2.6 * k, 0.55 * wet);
+        const wet = (stood.feet[0]!.wet + stood.feet[2]!.wet) / 2 > 0.02 ? 0.24 : 1;
+        rig.setShadow(discs, slot * DISCS + 4, stood.body.x, stood.body.z, 0.55 * k, 2.6 * k, 0.8 * wet);
       });
       skin.touch();
       ripples.end(seconds);

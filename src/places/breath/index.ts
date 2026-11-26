@@ -107,7 +107,7 @@ async function create(): Promise<Place> {
     unit: UNIT,
     scene,
     camera,
-    look: { ...neutralLook(), bloom: 0.02, vignette: 0.08, grain: 0.006 },
+    look: { ...neutralLook(), bloom: 0.06, vignette: 0.1, grain: 0.006, contrast: 1.06 },
     volume,
     parts,
     resize: (width, height) => {

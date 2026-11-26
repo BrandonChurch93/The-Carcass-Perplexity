@@ -58,7 +58,8 @@ ${RIG_UNIFORMS_GLSL}
 // approved wide view. The dome, the air and every mirror read this one function. sunGlow is its brightness alone.
 vec3 sunHalo(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
-  return uGlowColour * (vec3(0.56, 0.48, 0.34) * exp(-a / 0.7) + vec3(1.4, 0.62, 0.1) * exp(-a / 0.34) + vec3(7.0, 1.8, 0.15) * exp(-a / 0.1));
+  // The innermost term is the sun's own aureole in the fog: pale gold and far over white, so the lens blooms on it as it does in the pictures.
+  return uGlowColour * (vec3(1.0, 0.84, 0.6) * exp(-a / 0.75) + vec3(1.4, 0.62, 0.1) * exp(-a / 0.34) + vec3(7.0, 2.6, 0.5) * exp(-a / 0.1) + vec3(26.0, 17.0, 7.5) * exp(-a / 0.035));
 }
 float sunGlow(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
@@ -108,13 +109,14 @@ float sunSeen(vec4 land, float y) {
   return smoothstep(-0.35, -0.03, y - land.b);
 }
 // The sun comes through banks of fog that drift on the wind: their shade crosses the land as long soft bars, drawn out along the sun's
-// bearing as any shadow of this low sun is, a hundred metres and fifty metres apart, moving west at a walk and a run. 0.5 to 1.
+// bearing as any shadow of this low sun is, a hundred metres and fifty metres apart, moving west at a walk and a run. 0.74 to 1: a bank
+// thins the sun by a quarter and never halves it, or the place has no key light where a bank lies.
 float sunCloud(vec2 xz) {
   vec2 s = normalize(uSunDir.xz);
   float along = dot(xz, s);
   float across = xz.x * s.y - xz.y * s.x;
   float c = 0.5 + 0.27 * sin(across / 17.0 + along / 260.0 + 0.47 * uTime) + 0.2 * sin(across / 6.9 - along / 95.0 + 1.7 + 0.81 * uTime) + 0.1 * sin(across / 3.1 + along / 41.0 + 4.0 + 1.3 * uTime);
-  return mix(0.5, 1.0, smoothstep(0.22, 0.78, c));
+  return mix(0.74, 1.0, smoothstep(0.22, 0.78, c));
 }
 float sunAt(vec3 p) {
   return sunSeen(landAt(p.xz), p.y) * sunCloud(p.xz);
