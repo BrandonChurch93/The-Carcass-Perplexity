@@ -117,7 +117,7 @@ export class Wet {
     this.drops = new Float32Array(count * DROPS * 6);
     for (let i = 0; i < count * DROPS; i++) {
       const chin = i % DROPS >= DROPS - 4 ? 1 : 0;
-      this.drops.set([rng.range(-1, 1), rng.range(-1, 1), rng.range(1.5, 4.2), rng.next(), rng.range(0.018, 0.03), chin], i * 6);
+      this.drops.set([rng.range(-1, 1), rng.range(-1, 1), rng.range(1.5, 4.2), rng.next(), rng.range(0.012, 0.02), chin], i * 6);
     }
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0]), 3));
