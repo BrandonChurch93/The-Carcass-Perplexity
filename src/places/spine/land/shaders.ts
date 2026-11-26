@@ -859,7 +859,7 @@ ${SCORCH_BLOCK}
     // No sky stands over the canal's rock, so the rig gives it nothing: what lights the funnel from outside is the sky that looks in at the
     // mouth, strongest on what faces it and on the wall the low light comes to, less in the pits of the rock. It reaches a few metres.
     vec3 toMouth = normalize((dCanal < 0.5 * EXIT ? -CANAL_ALONG : CANAL_ALONG) + vec3(0.0, 0.3, 0.0));
-    c += albedo * skyIrradiance(normalize(n + 1.5 * toMouth)) * ((0.25 + 0.75 * smoothstep(-0.2, 0.7, dot(n, toMouth))) * (0.3 + 0.7 * pit) * mix(0.12, 1.5, smoothstep(-0.5, 0.8, (vSL.y - canalAt(dCanal)) / flareAt(dCanal))) * 0.8 / 3.14159);
+    c += albedo * skyIrradiance(normalize(n + 1.5 * toMouth)) * ((0.25 + 0.75 * smoothstep(-0.2, 0.7, dot(n, toMouth))) * (0.3 + 0.7 * pit) * mix(0.2, 1.0, smoothstep(-0.5, 0.8, (vSL.y - canalAt(dCanal)) / flareAt(dCanal))) * 0.8 / 3.14159);
     float shown = exp(-max(min(dCanal, EXIT - dCanal) - 4.0, 0.0) / 7.0);
     c = c * (0.03 + 0.97 * shown) + vec3(0.0035, 0.0045, 0.0085) * (1.0 - shown);
   }
