@@ -194,6 +194,8 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       // Its faces stand in and out as the sheet's relief has them, with the small blocks of the rock on top.
       const [su, sv] = sheetAt(sp, l, y);
       let n = depth * (reliefAt(sp.sheet, su, sv) - 0.55) + 0.8 * slab(u - 0.2 * l, l + face * 700, 15, 5, seed + 7);
+      // The rock is jointed: great plates that stand up the face, each proud of or behind its neighbours, and the blocks they break into.
+      n += 7 * slab(u - 0.25 * l, l + face * 700 + 31, 64, 21, seed + 11) + 2.8 * slab(u + 0.15 * l, l + face * 700 + 57, 23, 8, seed + 3);
       n = Math.max(-0.5 * p.thick, Math.min(0.7 * p.thick + 4, n)) * (1 - 0.92 * edge);
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
       const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);

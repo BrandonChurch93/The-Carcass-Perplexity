@@ -7,7 +7,7 @@ import { FIRST, crest, finEdge, frameAt, spires, tipOf, type Spire } from '../ri
 import type { Context, Piece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
 import { secondsInPlace, shotById } from '../../../film/cut';
-import { CARCASS, INSIDE_FROM, UNIT } from '../shared/anchors';
+import { CARCASS, INSIDE_FROM, STRIKE_FOV, UNIT, strikeStand, strikeTip } from '../shared/anchors';
 import { bakeNoise } from './noise';
 import { createSky, skyPictures } from './sky';
 import { VOLUME_FRAGMENT } from './volume';
@@ -66,6 +66,7 @@ export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   const pictures = skyPictures(ctx);
   const skyStage = (pictures.uSkyStage as THREE.IUniform<THREE.Vector4>).value;
+  const plate = (pictures.uPlate as THREE.IUniform<THREE.Vector4>).value;
   const sky = createSky(ctx, noise, pictures);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
@@ -146,7 +147,9 @@ export function create(ctx: Context): Piece {
       // Staged by shot: in the long lens of the strike (spine-04) the bloom about the stroke is a sixth of the lights' own size, as its picture has it.
       skyStage.z = inStrike ? 0.085 : 0;
       // Staged by shot: for that lens the dome's pictures are laid four times smaller, so that its cloud has masses and edges at the size the lens sees.
-      skyStage.w = inStrike ? 6 : 0;
+      skyStage.w = 0;
+      // The strike's own sky stands behind its long lens: its lit cloud behind the struck tip, its horizon on the sea's.
+      plate.set(Math.atan2(strikeTip[2] - strikeStand[2], strikeTip[0] - strikeStand[0]), -0.009, ((STRIKE_FOV * 16) / 9) * 1.2 * (Math.PI / 180), inStrike ? 1 : 0);
       // Staged by shot: by the dead one (spine-03) the lens is opened for the dusk (the rig's sky light is opened by the same there).
       skyStage.y = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
     },
