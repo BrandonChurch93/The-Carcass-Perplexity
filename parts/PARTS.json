@@ -1565,7 +1565,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/land.png",
@@ -1587,7 +1587,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/brow.png",
@@ -1609,7 +1609,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/scree.png",
@@ -1631,7 +1631,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": null,
@@ -1652,7 +1652,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/drinkers.png",
@@ -1674,7 +1674,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/skeleton.png",
@@ -1683,94 +1683,6 @@
         "tier": "draft",
         "shown": 0.0316,
         "made": "2026-11-25T04:02:29Z"
-      }
-    },
-    {
-      "id": "eye/shallows",
-      "unit": "eye",
-      "name": "shallows",
-      "kind": "solid",
-      "state": "built",
-      "fallbackStep": null,
-      "files": [
-        "public/assets/eye",
-        "src/places/eye"
-      ],
-      "hash": "537e3edad6749f39",
-      "standIn": {
-        "hash": "896e9e2d5eb42cac",
-        "picture": "out/stills/parts/eye/shallows.png",
-        "frame": 8412,
-        "format": "preview",
-        "tier": "draft",
-        "shown": 0.2699,
-        "made": "2026-11-25T04:01:49Z"
-      }
-    },
-    {
-      "id": "eye/mats",
-      "unit": "eye",
-      "name": "mats",
-      "kind": "solid",
-      "state": "built",
-      "fallbackStep": null,
-      "files": [
-        "public/assets/eye",
-        "src/places/eye"
-      ],
-      "hash": "537e3edad6749f39",
-      "standIn": {
-        "hash": "896e9e2d5eb42cac",
-        "picture": "out/stills/parts/eye/mats.png",
-        "frame": 8600,
-        "format": "preview",
-        "tier": "draft",
-        "shown": 0.5178,
-        "made": "2026-11-25T04:02:26Z"
-      }
-    },
-    {
-      "id": "eye/shaft",
-      "unit": "eye",
-      "name": "shaft",
-      "kind": "solid",
-      "state": "built",
-      "fallbackStep": null,
-      "files": [
-        "public/assets/eye",
-        "src/places/eye"
-      ],
-      "hash": "537e3edad6749f39",
-      "standIn": {
-        "hash": "896e9e2d5eb42cac",
-        "picture": "out/stills/parts/eye/shaft.png",
-        "frame": 8761,
-        "format": "preview",
-        "tier": "draft",
-        "shown": 0.2955,
-        "made": "2026-11-25T04:01:52Z"
-      }
-    },
-    {
-      "id": "eye/riser",
-      "unit": "eye",
-      "name": "riser",
-      "kind": "solid",
-      "state": "built",
-      "fallbackStep": null,
-      "files": [
-        "public/assets/eye",
-        "src/places/eye"
-      ],
-      "hash": "537e3edad6749f39",
-      "standIn": {
-        "hash": "896e9e2d5eb42cac",
-        "picture": "out/stills/parts/eye/riser.png",
-        "frame": 9221,
-        "format": "preview",
-        "tier": "draft",
-        "shown": 0.0389,
-        "made": "2026-11-25T04:02:35Z"
       }
     },
     {
@@ -1784,7 +1696,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/lake.png",
@@ -1793,6 +1705,94 @@
         "tier": "draft",
         "shown": 0.248,
         "made": "2026-11-25T04:01:46Z"
+      }
+    },
+    {
+      "id": "eye/shallows",
+      "unit": "eye",
+      "name": "shallows",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/eye",
+        "src/places/eye"
+      ],
+      "hash": "c871aef45d7bb181",
+      "standIn": {
+        "hash": "896e9e2d5eb42cac",
+        "picture": "out/stills/parts/eye/shallows.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2699,
+        "made": "2026-11-25T04:01:49Z"
+      }
+    },
+    {
+      "id": "eye/shaft",
+      "unit": "eye",
+      "name": "shaft",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/eye",
+        "src/places/eye"
+      ],
+      "hash": "c871aef45d7bb181",
+      "standIn": {
+        "hash": "896e9e2d5eb42cac",
+        "picture": "out/stills/parts/eye/shaft.png",
+        "frame": 8761,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2955,
+        "made": "2026-11-25T04:01:52Z"
+      }
+    },
+    {
+      "id": "eye/mats",
+      "unit": "eye",
+      "name": "mats",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/eye",
+        "src/places/eye"
+      ],
+      "hash": "c871aef45d7bb181",
+      "standIn": {
+        "hash": "896e9e2d5eb42cac",
+        "picture": "out/stills/parts/eye/mats.png",
+        "frame": 8600,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5178,
+        "made": "2026-11-25T04:02:26Z"
+      }
+    },
+    {
+      "id": "eye/riser",
+      "unit": "eye",
+      "name": "riser",
+      "kind": "solid",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/eye",
+        "src/places/eye"
+      ],
+      "hash": "c871aef45d7bb181",
+      "standIn": {
+        "hash": "896e9e2d5eb42cac",
+        "picture": "out/stills/parts/eye/riser.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0389,
+        "made": "2026-11-25T04:02:35Z"
       }
     },
     {
@@ -1806,7 +1806,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/sky.png",
@@ -1828,7 +1828,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/air.png",
@@ -1850,7 +1850,7 @@
         "public/assets/eye",
         "src/places/eye"
       ],
-      "hash": "537e3edad6749f39",
+      "hash": "c871aef45d7bb181",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
         "picture": "out/stills/parts/eye/mist.png",
@@ -2102,6 +2102,34 @@
         "shown": 0.0048,
         "made": "2026-11-25T04:03:18Z"
       }
+    },
+    {
+      "id": "film/opening",
+      "unit": "film",
+      "name": "opening",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "src/film/cut.ts",
+        "src/film/film.ts",
+        "src/film/parts.ts"
+      ],
+      "hash": "3e13a2de132926e9"
+    },
+    {
+      "id": "film/handoff",
+      "unit": "film",
+      "name": "handoff",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "src/film/cut.ts",
+        "src/film/film.ts",
+        "src/film/parts.ts"
+      ],
+      "hash": "3e13a2de132926e9"
     }
   ]
 }

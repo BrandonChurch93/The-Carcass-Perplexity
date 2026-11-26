@@ -78,7 +78,8 @@ export async function runG13(ctx, deps = {}) {
   const parts = core.coveredParts(register, cover);
   const head = core.coverageLine(cover, parts.length);
   if (!cover.units.length) return { ok: true, lines: [head], skipped: [] };
-  const empty = cover.units.filter((u) => cfg.film.order.includes(u) && !parts.some((p) => p.unit === u));
+  // Every covered place has parts, and so has the whole film once it is covered: its opening, its ending, its loop and any transition that draws something of its own.
+  const empty = cover.units.filter((u) => (cfg.film.order.includes(u) || u === cover.film) && !parts.some((p) => p.unit === u));
   if (empty.length) return red(`${REGISTER} lists no part of ${empty.join(', ')}. Run npm run parts.`);
 
   const { renderer, error } = await loadRenderer(ctx);

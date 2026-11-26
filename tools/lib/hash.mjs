@@ -74,7 +74,14 @@ export function engineFiles() {
   ].filter((f) => fs.existsSync(f));
 }
 
-export const unitFiles = (id) => [...walk(rel('src', 'places', id)), ...walk(rel('public', 'assets', id))];
+// The last entry of `units` is the whole film. It has no folder among the places: its parts (the opening, the ending,
+// the loop and a transition that draws something of its own) are declared in src/film/parts.ts and drawn by the places
+// named there, so the files of that unit are the film's own code.
+export const filmUnitId = () => {
+  const units = config().units;
+  return units[units.length - 1].id;
+};
+export const unitFiles = (id) => (id === filmUnitId() ? walk(rel('src', 'film')) : [...walk(rel('src', 'places', id)), ...walk(rel('public', 'assets', id))]);
 export const engineHash = () => digest(engineFiles());
 export const unitHash = (id) => digest(unitFiles(id));
 export const unitHashes = () => Object.fromEntries(unitIds().map((id) => [id, unitHash(id)]));

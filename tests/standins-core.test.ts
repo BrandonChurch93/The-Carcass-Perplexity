@@ -346,6 +346,27 @@ describe('G13 on a page', () => {
     expect(none.lines).toEqual([`${REGISTER} lists no part of heart. Run npm run parts.`]);
   });
 
+  it('asks for the parts of the whole film once the film is covered, and passes one that the page lists as built', async () => {
+    const opening = { id: `${film}/opening`, unit: film, name: 'opening', kind: 'effect', state: 'built', fallbackStep: null, files: [], hash: 'now' };
+    const withFilm = (list) => {
+      const fake = page();
+      const places = fake.unitParts;
+      return { ...fake, unitParts: async (u) => (u === film ? list : places(u)) };
+    };
+    const none = await runG13(ctx(await root(both().slice(0, 2)), withFilm([]), { phase: 5, units: [film] }), { hashOf: () => 'now' });
+    expect(none.ok).toBe(false);
+    expect(none.lines).toEqual([`${REGISTER} lists no part of ${film}. Run npm run parts.`]);
+    const listed = await runG13(ctx(await root([...both().slice(0, 2), opening]), withFilm([live(opening)]), { phase: 5, units: [film] }), { hashOf: () => 'now' });
+    expect(listed.lines[0]).toContain('every part there is, 3 of them');
+    expect(listed.ok).toBe(true);
+    const gone = await runG13(ctx(await root([...both().slice(0, 2), opening]), withFilm([]), { phase: 5, units: [film] }), { hashOf: () => 'now' });
+    expect(gone.ok).toBe(false);
+    expect(gone.lines[0]).toBe(`${film}/opening fails test 3: the register lists it and the page does not draw it, so its pixels cannot be judged. Nothing leaves the register but a transition that ends as a plain cut.`);
+    const standIn = await runG13(ctx(await root([...both().slice(0, 2), opening]), withFilm([live(opening, 'stand-in')]), { phase: 5, units: [film] }), { hashOf: () => 'now' });
+    expect(standIn.ok).toBe(false);
+    expect(standIn.lines[0]).toContain(`${film}/opening fails test 3: the page draws it through its stand-in code`);
+  });
+
   it('covers nothing before Phase 3 names a unit, and says which unit it does not know', async () => {
     const dir = await root(both());
     const early = await runG13(ctx(dir, page(), { phase: 2, units: [] }));

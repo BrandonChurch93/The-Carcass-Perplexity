@@ -33,7 +33,8 @@ async function keepPicture(renderer, part, frame) {
 export async function partsCommand(a, deps = {}) {
   const print = deps.print ?? ((l) => console.log(l));
   const cfg = deps.cfg ?? config();
-  const order = cfg.film.order;
+  // The places in the order of the film, then the unit of the whole film, whose parts no single place owns (src/film/parts.ts).
+  const order = [...cfg.film.order, core.filmUnit(cfg)].filter((u, i, all) => all.indexOf(u) === i);
   const units = list(a.unit).length ? list(a.unit) : order;
   const renderer = deps.renderer ?? (await import('./lib/render.mjs'));
   let held = false;

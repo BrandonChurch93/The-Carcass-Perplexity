@@ -6,6 +6,9 @@ export const WIDER_STEP = 30;
 
 const unique = (list) => [...new Set(list)].sort((a, b) => a - b);
 
+// The unit of the whole film is the last entry of `units` in the config.
+export const filmUnit = (cfg) => cfg.units[cfg.units.length - 1].id;
+
 export function spanOf(cut, unit) {
   const place = cut.places.find((p) => p.unit === unit);
   if (!place) throw new Error(`The cut list has no place for the unit ${unit}`);

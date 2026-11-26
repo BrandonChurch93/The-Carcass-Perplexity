@@ -1,5 +1,6 @@
 export function unitIds(): string[];
 export function engineFiles(): string[];
+export function filmUnitId(): string;
 export function unitFiles(id: string): string[];
 export function engineHash(): string;
 export function unitHash(id: string): string;

@@ -6,6 +6,7 @@ import type { Parts, Place, PlaceModule } from '../core/place';
 import { neutralLook, type CameraState, type Lens, type Look, type Stage } from '../core/stage';
 import { places } from '../places';
 import { cut, partOfFrame, placeOf, type CutShot } from './cut';
+import { FILM_UNIT, filmParts } from './parts';
 
 export interface Shot {
   id: string;
@@ -233,6 +234,7 @@ export function createFilm(): Film {
       return stage;
     },
     partsOf: async (unit) => {
+      if (unit === FILM_UNIT) return filmParts();
       const stage = await ensure(unit);
       return stage.parts.all().map((p) => ({ id: p.id, unit: p.unit, name: p.name, kind: p.kind, state: p.state }));
     },
