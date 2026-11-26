@@ -8,4 +8,4 @@ The colour of the plume picture, carried outward from every thread into the blac
 
 ## public/assets/breath/plumes/spray-a.png
 
-The cover the sprays are cut by: where the picture is not dark and is brighter than what lies round it (92 percent of its own mean over 7 pixels), inside the given cover, softened by 0.6 of a pixel. It follows the single threads and leaves the gaps between them open, which the given cover does not. 1536 x 1024, one channel.
+The cover the sprays are cut by: where the picture is not dark and is brighter than what lies round it (92 percent of its own mean over 7 pixels), inside the given cover, softened by 0.6 of a pixel. It follows the single threads and leaves the gaps between them open, which the given cover does not. It is stored as a distance to the edge of the thread: 128 at the edge, 16 to a pixel of the picture, more inside. 1536 x 1024, one channel.

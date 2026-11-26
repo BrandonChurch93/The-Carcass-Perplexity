@@ -59,7 +59,7 @@ void main() {
 
   // Two sheets of small waves crossing, carried down the channel; a third, slow and large, so the far water is not one tone.
   vec2 drift = vec2(0.25, 0.97);
-  vec2 g1 = texture2D(tWave, xz * 0.21 + drift * uTime * 0.085).rg - 0.5;
+  vec2 g1 = texture2D(tWave, xz * 0.21 + drift * uTime * 0.17).rg - 0.5;
   vec2 g2 = texture2D(tWave, vec2(xz.y, -xz.x) * 0.067 + vec2(0.31, -0.17) * uTime * 0.05).rg - 0.5;
   vec3 g3 = texture2D(tWave, xz * 0.0113 + drift * uTime * 0.006).rgb - 0.5;
   // Shallow water over a bed is nearly still: the waves grow with the depth.
@@ -68,12 +68,15 @@ void main() {
   // Near the lens the small ripples show one by one.
   float close = smoothstep(120.0, 8.0, far);
   // The wind does not lie evenly on it: it is ruffled in patches that drift, and between them it is nearly glass.
-  float gust = smoothstep(0.3, 0.72, 0.65 * vnoise(xz * 0.13 + vec2(uTime * 0.035, uTime * 0.011)) + 0.35 * vnoise(xz * 0.61 - vec2(uTime * 0.05, 0.0)));
+  // A cat's paw crosses the water at the pace of the wind, some metres in a second: the held frame is never still.
+  float airs = 0.58 * vnoise(xz * 0.13 + vec2(uTime * 0.5, uTime * 0.24)) + 0.42 * vnoise(xz * 0.47 + vec2(uTime * 1.1, uTime * 0.5));
+  float gust = smoothstep(0.45, 0.8, airs);
+  float ruffle = smoothstep(0.25, 0.75, airs);
   if (close > 0.0) {
     // Two sheets of them of unlike size and bearing, so no square of either shows.
     vec2 ra = texture2D(tRipple, vec2(xz.x * 0.829 - xz.y * 0.559, xz.x * 0.559 + xz.y * 0.829) * 0.37 + drift.yx * uTime * 0.07).rg - 0.5;
     vec2 rb = texture2D(tRipple, vec2(xz.x * 0.391 + xz.y * 0.92, -xz.x * 0.92 + xz.y * 0.391) * 0.113 + drift * uTime * 0.031).rg - 0.5;
-    slope = slope * (1.0 - 0.6 * close) + (ra * 0.55 + rb * 1.15) * close * (0.45 + 0.55 * deep) * (0.22 + 1.0 * gust);
+    slope = slope * (1.0 - 0.75 * close) + (ra * 0.4 + rb * 1.15) * close * (0.45 + 0.55 * deep) * (0.05 + 1.1 * gust);
   }
   // A hand's depth of water over a plate cannot carry a wave: it lies nearly flat, and shows the sky whole.
   slope *= 0.5 + 0.5 * smoothstep(0.02, 0.2, depth);
@@ -84,18 +87,18 @@ void main() {
 
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // Water with small waves on it never mirrors whole, however low the eye: seen far off it shows the tilted faces, and they show more of the water's own colour.
-  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.2, smoothstep(10.0, 90.0, far)));
+  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.45, smoothstep(10.0, 90.0, far)));
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02 + 0.3 * smoothstep(8.0, 100.0, far);
   r = normalize(r);
   // Under a haze the water gives back less than the sky it faces: every small wave face shows some of the dark bed.
-  vec3 mirror = 0.6 * skyRadiance(r) * skyOpen(vWorld);
+  vec3 mirror = 0.7 * skyRadiance(r) * skyOpen(vWorld);
   // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
   float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
   float drawn = 1.0 - 0.85 * tanh(3.4 * tip);
   mirror *= drawn;
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
-  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.92, 1.0, 0.93), 0.75 * smoothstep(0.04, 0.22, v.y)) * mix(0.72, 0.62, smoothstep(0.06, 0.3, v.y));
+  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.92, 1.0, 0.93), 0.4 + 0.35 * smoothstep(0.04, 0.22, v.y)) * mix(0.9, 0.66, smoothstep(0.06, 0.3, v.y));
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
   float rise = r.y / max(length(r.xz), 1e-4);
@@ -112,7 +115,7 @@ void main() {
   mirror += sunGlitter(r, far) * sunHere;
   // Sparks: here and there a facet smaller than a ripple turns the sun to the lens for a moment, far outside its path. Each is a point that lives a tenth of a second.
   float px = far * 2.0 / (uFrame.y * 1.6);
-  float lobe = pow(max(dot(r, uSunDir), 0.0), 5.0) * (0.3 + 0.7 * gust) * (0.4 + 2.2 * rings.b);
+  float lobe = pow(max(dot(r, uSunDir), 0.0), 22.0) * (0.3 + 0.7 * gust) * (0.4 + 2.2 * rings.b);
   float sparks = 0.0;
   float seen = smoothstep(0.012, 0.004, px);
   if (seen > 0.0 && lobe > 0.002) {
@@ -123,7 +126,7 @@ void main() {
       vec2 cellAt = xz / 0.022 + float(o) * 17.3;
       vec2 id = floor(cellAt);
       vec2 rnd = hash22(id + slot * 7.13);
-      float on = step(1.0 - 0.24 * lobe, hash12(id * 1.37 + slot * 3.1));
+      float on = step(1.0 - 0.14 * lobe * (0.25 + 0.75 * gust), hash12(id * 1.37 + slot * 3.1));
       float dot_ = smoothstep(0.34, 0.1, length(fract(cellAt) - 0.5 - 0.3 * (rnd - 0.5)));
       sparks += on * dot_ * life;
     }
@@ -136,14 +139,16 @@ void main() {
   mirror = mirror * (1.0 - 0.8 * image.a) + 0.2 * image.rgb;
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
-  float path = depth / max(nv, 0.25);
-  vec3 through = exp(-path * vec3(3.0, 1.15, 1.45));
+  float path = depth / max(nv, 0.1);
+  vec3 through = exp(-path * vec3(2.6, 1.9, 2.2));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = mix(vec3(0.16, 0.21, 0.18), vec3(0.15, 0.33, 0.28), smoothstep(0.08, 0.3, v.y)) * (0.45 + 7.0 * v.y * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = mix(vec3(0.3, 0.29, 0.255), vec3(0.31, 0.295, 0.26), smoothstep(0.08, 0.3, v.y)) * (0.6 + 6.0 * v.y * v.y) * (0.7 + 0.3 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 
   vec3 colour = fresnel * mirror + (1.0 - fresnel) * (1.0 - clear) * body;
+  // Ruffled water turns many small faces up to the dimmer sky overhead and hides the bed: the patch under a gust is darker than the glass beside it.
+  colour *= 1.0 - 0.36 * ruffle;
   float alpha = 1.0 - (1.0 - fresnel) * clear * (1.0 - 0.5 * rim);
   // Looked down on, the water mirrors little, and still the image of what stands in it is seen: the animal is between the sky and
   // the water under it, so the silt there is in its shade and the bed is hidden by it.

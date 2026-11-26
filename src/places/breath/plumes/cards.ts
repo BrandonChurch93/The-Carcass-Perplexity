@@ -68,7 +68,7 @@ export class Cards {
     const heart: V3 = [Math.sin(lean) * 0.3 * tall, 0.45 * tall, -Math.cos(lean) * 0.3 * tall];
     const heartLength = Math.hypot(heart[0], heart[1], heart[2]);
     /** One spray: rooted at a point, its sheet along a heading, leaning out of plumb by a tilt, bowed. Returns where a place of its picture is. */
-    const spray = (bx: number, by: number, bz: number, heading: number, wide: number, tilt: number, bend: number, mirror: boolean): void => {
+    const spray = (bx: number, by: number, bz: number, heading: number, wide: number, tilt: number, bend: number, mirror: boolean, droop: number, dead: boolean): void => {
       const dx = Math.sin(heading) * (mirror ? -1 : 1);
       const dz = -Math.cos(heading) * (mirror ? -1 : 1);
       const nx = Math.cos(heading);
@@ -78,7 +78,8 @@ export class Cards {
       const seed = rng.range(1, 90);
       const place = (s: number, t: number): V3 => {
         const a = (s - ROOT_S) * wide;
-        const b = (t - ROOT_T) * wide * ASPECT;
+        // One that droops hangs lower the further out it reaches.
+        const b = (t - ROOT_T) * wide * ASPECT - (droop * a * a) / wide;
         const off = (bend * a * a) / wide + Math.tan(tilt) * b;
         const x = bx + dx * a + nx * off;
         const z = bz + dz * a + nz * off;
@@ -98,7 +99,7 @@ export class Cards {
           const along = Math.min(1, Math.max(0, (rx * heart[0] + ry * heart[1] + rz * heart[2]) / (heartLength * heartLength)));
           const far = Math.hypot(rx - heart[0] * along, ry - heart[1] * along, rz - heart[2] * along) / (0.5 * tall);
           this.position.push(p[0], p[1], p[2]);
-          this.vane.push(s, t, seed, 0);
+          this.vane.push(s, t, seed, dead ? 1 : 0);
           this.sway.push(h, phase, Math.min(1, Math.abs(s - ROOT_S) * 1.2 * (wide / tall)), seed * 6.283);
           this.tint.push(smooth(0.1, 0.9, far), tone, Math.min(1, Math.hypot(rx, ry, rz) / tall), tall);
           this.root.push(root[0], root[1], root[2]);
@@ -117,18 +118,21 @@ export class Cards {
         this.ends.push({ at: p, stemAt: Math.min(1, Math.max(0, (p[1] - bush.y) / tall)), phase, tall, root });
       }
     };
-    // Three or four sprays that cross at the root, each a whole arching growth: sky is seen between them.
-    const sprays = bush.detail >= 1 ? 4 : 3;
+    // A few sprays that cross at the root, each a whole arching growth and no two alike: one or two long, the rest shorter on a long tail,
+    // some hanging low, and low down a dead one or two, brown and broken. Sky is seen between them.
+    const sprays = bush.detail >= 1 ? 5 : 3;
     for (let c = 0; c < sprays; c++) {
-      const k = (c + rng.range(0.3, 0.7)) / sprays - 0.5;
+      const k = (c + rng.range(0.25, 0.75)) / sprays - 0.5;
       // Combed toward the shaft by its breath: the widest spray lies along the lean, the others stand out to its sides.
-      const heading = lean + 2.7 * k + rng.range(-0.1, 0.1);
-      const wide = tall * rng.range(0.72, 0.95) * (1 - 0.4 * Math.abs(k));
+      const heading = lean + 2.9 * k + rng.range(-0.25, 0.25);
+      const long = 0.42 + 0.75 * rng.next() ** 2.2;
+      const wide = tall * long * (1 - 0.4 * Math.abs(k));
       const out = 0.03 * tall * rng.next();
       const about = rng.range(0, 6.283);
       const bx = bush.x + Math.sin(about) * out;
       const bz = bush.z + Math.cos(about) * out;
-      spray(bx, Math.max(bush.y, floor(bx, bz)) - 0.02 * tall, bz, heading, wide, 0.5 * k + rng.range(-0.12, 0.12), rng.range(-0.2, 0.2), c % 2 === 1);
+      const dead = bush.detail >= 1 && c === 1;
+      spray(bx, Math.max(bush.y, floor(bx, bz)) - 0.02 * tall, bz, heading, dead ? 0.45 * tall : wide, dead ? rng.range(0.9, 1.1) * (k < 0 ? -1 : 1) : 0.5 * k + rng.range(-0.25, 0.25), rng.range(-0.3, 0.3), c % 2 === 1, dead ? 0.5 : rng.next() ** 2 * 0.9, dead);
     }
   }
 
