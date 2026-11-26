@@ -50,7 +50,9 @@ export function wallPoint(b: number, depth: number): WallPoint {
   let deg = b / RAD;
   deg -= 360 * Math.floor((deg - (JOIN - 360)) / 360);
   const r0 = rimRadius(b);
-  const top = brim(deg) + 0.02;
+  // The wall starts a hand under the brim. Starting a finger over it, its dark back stood up past the shelf's edge as a black line along
+  // the rim from a lens that stands low beside it.
+  const top = brim(deg) - 0.12;
   const y = top - depth;
   const over = archesOver(deg, y);
   // The courses dip a little and wander.
