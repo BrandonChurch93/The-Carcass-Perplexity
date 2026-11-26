@@ -3,10 +3,11 @@ import { BEASTS, F, K1_AT, K1_DIR, R, T0, UNIT, WALLOW_TIME, bearingDir, keyTime
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
-import { great, lying, young } from './act';
+import { great, lying, trod, young } from './act';
 import { newDrive, walk, type Build, type Plan } from './animal';
 import { Beast } from './body';
 import { mudWallow } from '../dead/mud';
+import { Tread } from './tread';
 import { Wet } from './wet';
 
 export const PARTS: readonly string[] = ['wallowers'];
@@ -91,11 +92,12 @@ export function create(ctx: Context): Piece {
   const seepWader = herd.length - 1;
 
   const wet = new Wet(ctx, herd.length);
+  const tread = new Tread(ctx, 2);
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
   const wallows = herd
     .filter((h) => h.onBank && ctx.rig.land.shore(h.plan.at[0], h.plan.at[1]) > -0.02)
     .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.beast.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.beast.b.k, h.plan.dir, 1.05 * h.beast.b.k, [0.08, 0.052, 0.042], 'wallowers-mud-' + i, 1));
-  const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh)];
+  const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh), tread.mesh];
   ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
 
@@ -158,12 +160,18 @@ export function create(ctx: Context): Piece {
         }
         ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, on ? (ctx.rig.land.shore(stood.x, stood.z) > 0.05 ? 0.6 : 0.3) : 0, 1.9, stood.yaw);
         wet.set(i, stood, k, seconds, on ? 1 : 0);
+        if (i < 2) {
+          if (acted) tread.set(i, h.plan, h.beast.b, (trod[i] as (typeof trod)[number]).s, (trod[i] as (typeof trod)[number]).pace, on ? 1 : 0);
+          else tread.hide(i);
+        }
       });
       wet.touch();
+      tread.touch();
     },
     dispose: () => {
       for (const h of herd) h.beast.dispose();
       wet.dispose();
+      tread.dispose();
       for (const w of wallows) w.dispose();
     },
   };
