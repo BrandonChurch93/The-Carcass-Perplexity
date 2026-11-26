@@ -7,7 +7,7 @@ import type { Context, Piece } from '../shared/context';
 import { CARCASS, INSIDE_FROM, RAD, STRIKE_FROM, UNIT, WIND, carcassAxis, carcassBody, carcassView, step, strikeCrag } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { secondsInPlace, shotById } from '../../../film/cut';
-import { canalFloor, canalShell, crag, crestStrip, flanks, heroSpire, hollow, icicles, reliefDepth, spireMesh, stones } from './meshes';
+import { canalFloor, canalShell, crag, crestStrip, flanks, heroSlabs, hollow, icicles, reliefDepth, spireMesh, stones } from './meshes';
 import { height } from './height';
 import { CRAG_FRAGMENT, CRAG_VERTEX, ICE_FRAGMENT, ICE_VERTEX, ICICLE_FRAGMENT, ICICLE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
 
@@ -59,7 +59,6 @@ export function create(ctx: Context): Piece {
     tCropNh: sheetData('outcrop'),
     tFrost: sheet('rimeface'),
     tFrostNh: sheetData('rimeface'),
-    tHeroN: { value: ctx.assets.texture('land/hero-n.jpg', { kind: 'data', anisotropy: 4 }) },
     tHeroAo: { value: ctx.assets.texture('land/hero-ao.jpg', { kind: 'data', anisotropy: 4 }) },
     // The dome's own pictures, for what is seen of the sky from inside the canal: in the ice of the floor, in the glaze on the rock.
     tSkyDusk: { value: ctx.assets.texture('mat/sky.jpg', { repeat: false }) },
@@ -88,7 +87,7 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_FRAGMENT,
-      // (The first spire is a hero object: its baked occlusion and normals lie on it, see `heroSpire`.)
+      // (The first spire is a hero object: its baked occlusion and normals lie on it, see `heroSlabs`.)
       defines: kind === 1 && sp === first ? { KIND: kind, SCORCH: 0, HERO_MAPS: 1 } : { KIND: kind, SCORCH: 0 },
       uniforms: { ...ctx.rig.uniforms, ...pictures, ...sheetOf(sp) },
       side,
@@ -158,7 +157,7 @@ export function create(ctx: Context): Piece {
   }
   add(crestStrip(), groundMaterial);
   add(flanks(), groundMaterial);
-  spires.forEach((sp, i) => add(i === FIRST ? heroSpire(sp, ctx.rng(`land/spire-${i}`)) : spireMesh(sp, ctx.rng(`land/spire-${i}`), i >= FIRST - 1 && i <= FIRST + 3 ? 1 : 0), spireMaterials[i] as THREE.ShaderMaterial));
+  spires.forEach((sp, i) => add(i === FIRST ? heroSlabs(sp, ctx.rng(`land/spire-${i}`)) : spireMesh(sp, ctx.rng(`land/spire-${i}`), i >= FIRST - 1 && i <= FIRST + 3 ? 1 : 0), spireMaterials[i] as THREE.ShaderMaterial));
   // The stones about the dead one, each with its tail of drift; the body lies in a bank drifted against its windward side, with a
   // longer tail in its lee. The lens of that shot and the body itself are kept clear.
   const lens = step(carcassBody, carcassView + 180, 3.1);

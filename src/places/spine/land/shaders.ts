@@ -689,8 +689,8 @@ void main() {
   if (inside) {
     snow = smoothstep(1.6, 0.2, vWorld.y - CANAL_FLOOR + 1.2 * (pit - 0.5)) * 0.85;
     rime = 0.0;
-    // The canal is black from outside: what the sky gives its walls is gone a few metres in.
-    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 7.0);
+    // The canal goes to black from outside, wall by wall: what the sky gives it falls by half in some ten metres, so the mouth has a depth.
+    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 3.0, 0.0) / 15.0);
     snow *= lit;
     rime *= lit;
     occ *= 0.04 + 0.96 * lit;
