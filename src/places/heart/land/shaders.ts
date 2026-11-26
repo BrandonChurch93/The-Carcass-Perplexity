@@ -173,7 +173,8 @@ void main() {
   // so no picture laid from above is drawn out down a wall.
   vec3 ng = normalize(cross(wx, wy));
   ng *= sign(dot(ng, n0) + 1e-5);
-  float slope = max(1.0 - n0.y, 0.88 - abs(ng.y));
+  // Not on the heap under the line view's lens: its lumps are a few faces each, and a steepness told face by face showed every one of them.
+  float slope = max(1.0 - n0.y, (0.88 - abs(ng.y)) * (1.0 - byLens));
   #ifdef BENCH
   float steep = smoothstep(0.25, 0.39, slope + 0.1 * (mid - 0.5));
   #else
@@ -408,6 +409,8 @@ void main() {
   #endif
   #ifdef BENCH
   const float TIP = 1.0;
+  // Nothing laid from above bends the light on the heap under the line view's lens: on the side of a lump it is drawn out into fibres.
+  tip *= 1.0 - byLens;
   #else
   const float TIP = 0.55;
   #endif
@@ -449,19 +452,12 @@ void main() {
     }
     // The skin of a ropy sheet is smooth: it is not read again as clinker.
     close *= 1.0 - 0.8 * sheet;
-    albedo *= mix(vec3(1.0), fine * 20.0, (steep > 0.5 ? 0.22 : 0.5) * close);
+    // Not on the heap under the line view's lens: a picture laid from above is drawn out down the side of every lump there.
+    float laid = close * (1.0 - byLens);
+    albedo *= mix(vec3(1.0), fine * 20.0, (steep > 0.5 ? 0.22 : 0.5) * laid);
     vec2 t2 = TURN * ((fineNh.rg - 0.5) * vec2(1.0, -1.0));
-    n = normalize(n + vec3(t2.x, 0.0, t2.y) * 0.7 * close * (1.0 - steep));
-    occ *= mix(1.0, 0.6 + 0.4 * smoothstep(0.2, 0.6, fineNh.b), close);
-    // Clinker by the lens is rough at the scale of a finger as well: brown, pitted, with black between its crumbs.
-    float grit = close * byLens * (1.0 - steep);
-    vec3 gritNh = PICK(tBoulderNh, TURN * ws.xz * 4.3 + 0.37, TURN * gx.xz * 4.3, TURN * gy.xz * 4.3).rgb;
-    vec2 t3 = (gritNh.rg - 0.5) * vec2(1.0, -1.0);
-    n = normalize(n + vec3(t3.x, 0.0, t3.y) * 0.9 * grit);
-    occ *= mix(1.0, 0.45 + 0.55 * smoothstep(0.2, 0.6, gritNh.b), close * byLens);
-    albedo *= mix(vec3(1.0), vec3(1.36, 1.2, 1.08) * (0.75 + 0.5 * gritNh.b), close * byLens);
-    // Ash and dust on the crowns of the clinker by the lens: small pale tops.
-    albedo = mix(albedo, vec3(0.2, 0.186, 0.172), 0.3 * close * byLens * smoothstep(0.5, 0.8, fineNh.b) * (1.0 - steep));
+    n = normalize(n + vec3(t2.x, 0.0, t2.y) * 0.7 * laid * (1.0 - steep));
+    occ *= mix(1.0, 0.6 + 0.4 * smoothstep(0.2, 0.6, fineNh.b), laid);
   }
   #endif
 
@@ -524,10 +520,48 @@ void main() {
   // The rubble under the line view's lens, measured against the picture: near black clinker and grit, with no drawn pattern on it.
   // Its grain is read on three planes and summed, so nothing is drawn out down a slope.
   if (byLens > 0.0) {
-    float grainA = (vnoise(vWorld.xz / 0.3 + 1.7) + vnoise(vWorld.xy / 0.3 + 5.3) + vnoise(vWorld.zy / 0.3)) / 3.0;
-    float grainB = (vnoise(vWorld.xz / 0.045) + vnoise(vWorld.xy / 0.045 + 3.1) + vnoise(vWorld.zy / 0.045 + 7.7)) / 3.0;
-    vec3 clinker = vec3(0.048, 0.042, 0.039) * (0.5 + 0.7 * grainA + 0.8 * (grainB - 0.5) * sharp);
+    // The heap is read as its stones are: the scoria's picture on three planes, at the size of a stone and again at the size of a finger,
+    // so every lump carries pits and broken faces on its sides as on its top.
+    vec3 tw = n0 * n0;
+    tw *= tw;
+    tw /= tw.x + tw.y + tw.z;
+    vec3 tone = vec3(0.0);
+    vec3 bent = vec3(0.0);
+    float relief = 0.0;
+    float pits = 0.0;
+    const float LUMP = 0.9;
+    const float PIT = 0.21;
+    if (tw.x > 0.02) {
+      vec3 r = PICK(tBoulderNh, vWorld.zy / LUMP + 0.31, wx.zy / LUMP, wy.zy / LUMP).rgb;
+      vec3 f = PICK(tBoulderNh, vWorld.zy / PIT + 0.67, wx.zy / PIT, wy.zy / PIT).rgb;
+      tone += tw.x * PICK(tBoulder, vWorld.zy / PIT + 0.67, wx.zy / PIT, wy.zy / PIT).rgb;
+      relief += tw.x * r.b;
+      pits += tw.x * f.b;
+      bent += tw.x * (vec3(0.0, -1.0, 0.0) * (r.g - 0.5 + 0.8 * sharp * (f.g - 0.5)) + vec3(0.0, 0.0, 1.0) * (r.r - 0.5 + 0.8 * sharp * (f.r - 0.5)));
+    }
+    if (tw.y > 0.02) {
+      vec3 r = PICK(tBoulderNh, vWorld.xz / LUMP + 0.53, wx.xz / LUMP, wy.xz / LUMP).rgb;
+      vec3 f = PICK(tBoulderNh, vWorld.xz / PIT + 0.19, wx.xz / PIT, wy.xz / PIT).rgb;
+      tone += tw.y * PICK(tBoulder, vWorld.xz / PIT + 0.19, wx.xz / PIT, wy.xz / PIT).rgb;
+      relief += tw.y * r.b;
+      pits += tw.y * f.b;
+      bent += tw.y * (vec3(0.0, 0.0, -1.0) * (r.g - 0.5 + 0.8 * sharp * (f.g - 0.5)) + vec3(1.0, 0.0, 0.0) * (r.r - 0.5 + 0.8 * sharp * (f.r - 0.5)));
+    }
+    if (tw.z > 0.02) {
+      vec3 r = PICK(tBoulderNh, vWorld.xy / LUMP + 0.77, wx.xy / LUMP, wy.xy / LUMP).rgb;
+      vec3 f = PICK(tBoulderNh, vWorld.xy / PIT + 0.41, wx.xy / PIT, wy.xy / PIT).rgb;
+      tone += tw.z * PICK(tBoulder, vWorld.xy / PIT + 0.41, wx.xy / PIT, wy.xy / PIT).rgb;
+      relief += tw.z * r.b;
+      pits += tw.z * f.b;
+      bent += tw.z * (vec3(0.0, -1.0, 0.0) * (r.g - 0.5 + 0.8 * sharp * (f.g - 0.5)) + vec3(1.0, 0.0, 0.0) * (r.r - 0.5 + 0.8 * sharp * (f.r - 0.5)));
+    }
+    float grain = mix(relief, 0.5 * (relief + pits), sharp);
+    // Near black clinker, measured against the picture, a little brown, black in its pits.
+    vec3 clinker = vec3(0.06, 0.052, 0.047) * (0.35 + 1.1 * smoothstep(0.1, 0.75, grain)) * (0.6 + 8.0 * dot(tone, vec3(0.3333)));
     albedo = mix(albedo, clinker, byLens);
+    n = normalize(n + bent * 2.4 * byLens);
+    occ *= mix(1.0, 0.3 + 0.7 * smoothstep(0.15, 0.6, grain), byLens);
+    height = mix(height, grain, byLens);
   }
   #endif
   // A slope of the bench is broken rock, and no picture laid from above is drawn out down it: its grain is read on three planes,
@@ -553,14 +587,14 @@ void main() {
     float up = smoothstep(0.45, 0.12, 1.0 - n0.y);
     // A thin crust of crumbs a finger across, within arm's reach of the lips: the dark rock shows through it wherever the lens is near enough to tell.
     float crumb = mix(1.0, (0.25 + 0.75 * smoothstep(0.35, 0.6, vnoise(sp / 0.021 + 3.9))) * smoothstep(0.3, 0.55, vnoise(sp / 0.14 + 8.1) + 0.5 * (0.5 - height)), sharp);
-    float crust = smoothstep(2.6, 0.3, dc + 3.4 * (clump - 0.45) + 1.6 * (grain - 0.5) - 1.2 * (height - 0.5)) * (0.2 + 0.8 * up) * crumb;
+    float crust = smoothstep(2.0, 0.3, dc + 3.4 * (clump - 0.45) + 1.6 * (grain - 0.5) - 1.2 * (height - 0.5)) * (0.2 + 0.8 * up) * crumb;
     // Under the line view's lens the stain is thin: the picture's rubble there is dark clinker with one bright crust, not olive ground.
     float stain = smoothstep(8.0, 1.0, dc + 9.0 * (mid - 0.5) + 4.0 * (clump - 0.5)) * (0.2 + 0.3 * up) * (1.0 - 0.92 * byLens);
     // Olive where the crystals are thin, lemon where they are thick: no cream, which read as pale slabs.
-    vec3 yellow = mix(vec3(0.55, 0.4, 0.06), vec3(0.95, 0.7, 0.1), smoothstep(3.4, 0.9, dc + grain + clump));
+    vec3 yellow = mix(vec3(0.5, 0.4, 0.08), vec3(0.9, 0.78, 0.22), smoothstep(3.4, 0.9, dc + grain + clump));
     albedo = mix(albedo, albedo * vec3(1.55, 1.4, 0.7) + vec3(0.025, 0.022, 0.005), stain);
     // Crystals stand on the crust: pale points a finger across.
-    yellow = mix(yellow, vec3(1.0, 0.84, 0.3), smoothstep(0.62, 0.82, vnoise(sp / 0.045 + 7.3)) * sharp);
+    yellow = mix(yellow, vec3(1.0, 0.92, 0.5), smoothstep(0.62, 0.82, vnoise(sp / 0.045 + 7.3)) * sharp);
     albedo = mix(albedo, mix(sul * 1.4, yellow, 0.85) * (1.1 + 0.5 * grain) * mix(1.0, 1.7, byLens), crust);
     rough = mix(rough, 0.95, crust);
   }
@@ -587,8 +621,8 @@ void main() {
   float gap = smoothstep(0.38, 0.56, vnoise(vWorld.xz / 0.33 + vWorld.y * vec2(1.1, 0.8) + 6.4));
   // A heap of crumbs, whole within a forearm of the crack and ragged at its edge: each crumb its own tone, a dark one here and there.
   float crumbTone = vnoise(vWorld.xz / 0.021 + vWorld.y * vec2(31.0, 23.0) + 3.9);
-  float mound = smoothstep(0.55, 0.3, segmentDistance(vWorld.xz, uCrackB) + 0.2 * (knob - 0.5) + 0.25 * (1.0 - gap)) * (0.55 + 0.45 * smoothstep(0.25, 0.45, crumbTone));
-  albedo = mix(albedo, mix(vec3(0.6, 0.42, 0.06), vec3(1.0, 0.74, 0.1), smoothstep(0.35, 0.8, knob)) * (0.45 + 0.9 * crumbTone), mound);
+  float mound = smoothstep(0.42, 0.2, segmentDistance(vWorld.xz, uCrackB) + 0.2 * (knob - 0.5) + 0.25 * (1.0 - gap)) * (0.55 + 0.45 * smoothstep(0.25, 0.45, crumbTone));
+  albedo = mix(albedo, mix(vec3(0.6, 0.48, 0.1), vec3(1.0, 0.88, 0.36), smoothstep(0.35, 0.8, knob)) * (0.45 + 0.9 * crumbTone), mound);
   rough = mix(rough, 0.95, mound);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));

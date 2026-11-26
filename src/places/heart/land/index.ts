@@ -223,8 +223,18 @@ export function create(ctx: HeartContext): HeartPiece {
     const spill = -0.07 + 0.27 * Math.sqrt(t) + rubbleAt(x, z) * (0.5 + 0.5 * t);
     return Math.max(onBench, base - 0.06 + inside * unit(t / 0.12) * (spill - base + 0.06));
   };
-  const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0, 0, 0.04, [0.2, 0.6]), nearMaterial);
+  // Where that lens rides and looks, a stone of the heap is hundreds of pixels across and a cell of 7.5 cm was a sliver of a face a finger thick,
+  // each shaded on its own: the heap read as fibres. There it is cut at 3.5 cm, and the coarse sheet keeps a hand's width under its border.
+  const FINE = { back: -3.8, front: 9.5, left: -5, right: 2 };
+  const inFine = (x: number, z: number): number => {
+    const s = (x + 510.5) * AHEAD[0] + (z - 215.5) * AHEAD[1];
+    const t = -(x + 510.5) * AHEAD[1] + (z - 215.5) * AHEAD[0];
+    return Math.min(s - FINE.back, FINE.front - s, t - FINE.left, FINE.right - t);
+  };
+  const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0 && inFine(x, z) < 0.16, 0, 0.04, [0.2, 0.6]), nearMaterial);
   rubble.renderOrder = -5;
+  const rubbleFine = mesh(sheet(-516.6, 205.7, -501.7, 219.5, 0.035, rubbleHeight, (x, z) => inFine(x, z) > 0, 0, 0.03, [0.2, 0.6]), nearMaterial);
+  rubbleFine.renderOrder = -5;
   const rocks = scatterRocks(ctx, shared, landHeight, feetLift);
   // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
   for (const r of rocks.bench) r.renderOrder = -6;
@@ -262,7 +272,7 @@ export function create(ctx: HeartContext): HeartPiece {
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80, (x, z) => inPatch(x, z) > 0.6), lipMaterial);
   lip.renderOrder = -5;
-  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, lip, ...rocks.bench), midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, lip, ...rocks.bench);
+  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, rubbleFine, lip, ...rocks.bench), midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, rubbleFine, lip, ...rocks.bench);
 
   // The sulphur crack: the fissure itself, cut finer than the bench round it, with its lips. The stain and the crystals are in the bench's shader, so they fade out across both.
   const crackMeshes: THREE.Mesh[] = [];
@@ -286,13 +296,14 @@ export function create(ctx: HeartContext): HeartPiece {
       const z = c.az + (c.bz - c.az) * t;
       const strong = 0.55 + 0.45 * Math.abs(Math.sin(i * 2.4 + c.seed));
       // The middle of the short crack is the vent at the foot of the line view's crag, and the middle of the long one the vent of the wide view's
-      // bank: one dense pale plume each, standing well over a man, as in both pictures. Three such side by side hid the crag. The rest only smokes.
+      // bank: one dense pale plume each, standing well over a man, as in both pictures. Three such side by side hid the crag,
+      // and so did one as dense as the bank's, 7 m from the lens: the short crack's is the thinner. The rest only smokes.
       const plume = i === (vents - 1) / 2;
       const weak = c.depth > 1 ? 1 : 0.6;
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
-        radius: plume ? 0.38 : 0.4 * weak,
-        strength: plume ? 0.5 : 0.45 * weak * strong,
+        radius: plume ? (c.depth > 1 ? 0.38 : 0.3) : 0.4 * weak,
+        strength: plume ? (c.depth > 1 ? 0.5 : 0.34) : 0.45 * weak * strong,
         rise: plume ? 8 : 6 * weak * (0.7 + 0.3 * strong),
         kind: 'steam',
         lean: c.depth > 1 ? [-0.42, 0.2] : [-0.3, -0.35],

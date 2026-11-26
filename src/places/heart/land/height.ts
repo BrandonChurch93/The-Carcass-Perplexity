@@ -301,7 +301,11 @@ function lineCrag(x: number, z: number): number {
   if (v < -1.2 || v > 27) return 0;
   // The face is fractured into masses of rock that stand a little forward or back of each other, and the top is broken, never level.
   const column = noise(u / 1.15 + 3.3, 7.7);
-  const vj = v - 0.9 * (column - 0.5) - 0.3 * (noise(u / 0.4, v / 0.4) - 0.5);
+  // Each two or three metres of the ridge is a block that stands half a metre forward or back of the next and a fifth taller or shorter,
+  // with a sheer side between them: seen along the ridge, the outline goes down in steps and not along one line.
+  const proud = smooth(0.42, 0.58, noise(u / 2.1 + 0.7, 9.9)) - 0.5;
+  const tall = 0.8 + 0.38 * smooth(0.42, 0.58, noise(u / 1.7 + 6.6, 2.2));
+  const vj = v - 1.1 * proud - 0.5 * (column - 0.5) - 0.3 * (noise(u / 0.4, v / 0.4) - 0.5);
   const uj = u + 0.9 * (noise(v / 1.3 + 1.7, 2.9) - 0.5);
   const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
   // Its far end comes down as a weathered ridge does, in lumps a stride across: not in steps and not in a ruled ramp.
@@ -323,12 +327,12 @@ function lineCrag(x: number, z: number): number {
   // one on the other, not one sheer face: the lens sees every block's edge, so the outline is broken and no ruled line.
   const slab = 2.2 * (smooth(0.2, 0.8, noise(u / 2.6 + 3.7, 1.9)) - 0.65);
   const upper = 1.8 * (smooth(0.2, 0.8, noise(u / 1.9 + 8.2, 5.1)) - 0.6);
-  const p = (vj + 1.1) / 2.0 + 0.34 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5) + 0.3 * slab;
+  const p = (vj + 1.1) / 2.0 + 0.2 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5) + 0.3 * slab;
   const knob = noise(u / 0.75 + 0.4, v / 0.6 + 8.8);
   const rise = Math.min(1, Math.max(0, 0.3 * smooth(0, 0.15, p) + 0.11 * smooth(0.12, 0.6, p + 0.16 * (knob - 0.5)) + 0.26 * smooth(0.58, 0.72, p + 0.1 * (knob - 0.5)) + 0.33 * smooth(0.88, 1.04, p + 0.36 * upper) + 0.06 * smooth(0.05, 0.3, p) * (knob - 0.5)));
   // Between two blocks the crest is notched a third of its height.
-  const notch = 1 - 0.3 * smooth(0.56, 0.74, noise(u / 2.2 + 1.3, 4.4));
-  return top * rise * back * start * notch;
+  const notch = 1 - 0.42 * smooth(0.56, 0.7, noise(u / 2.2 + 1.3, 4.4));
+  return top * tall * rise * back * start * notch;
 }
 
 /** Metres from (x, z) to the cameras' route on the bench. */
