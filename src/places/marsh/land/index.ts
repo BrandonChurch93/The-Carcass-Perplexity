@@ -17,6 +17,9 @@ const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [numbe
 const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.02 };
 const ROCK = { at: [10.5, -8.5] as [number, number], half: [9.5, 7.5] as [number, number], cell: 0.05 };
 
+/** How many reads across a slanting pixel the pictures of heights and slopes get: 4 as the colours do, or 1, which is cheaper and softer far off. */
+const DATA_SHARP: number = 4;
+
 let shared: { field: Field; grain: THREE.DataTexture; plates: THREE.DataTexture } | null = null;
 /** What the land knows, for the brine: the same field and the same grain. Made by the land's `create`. */
 export function landShared(): { field: Field; grain: THREE.DataTexture; plates: THREE.DataTexture } {
@@ -81,7 +84,7 @@ export function create(ctx: Context): Piece {
     const wide = slabRng.range(0.42, 0.95);
     const r0 = slabRng.range(-0.05, 0.3);
     const back = slabRng.next() < 0.25;
-    slabs.push({ a0: a, a1: Math.min(a + wide, TAU - 0.04), r0, r1: r0 + slabRng.range(0.65, 1.35), tip: back ? -slabRng.range(0.08, 0.2) : slabRng.range(0.12, 0.34), roll: slabRng.range(-0.14, 0.14) });
+    slabs.push({ a0: a, a1: Math.min(a + wide, TAU - 0.04), r0, r1: r0 + slabRng.range(0.5, 1.0), tip: back ? -slabRng.range(0.03, 0.07) : slabRng.range(0.04, 0.11), roll: slabRng.range(-0.05, 0.05) });
     a += wide + slabRng.range(0.04, 0.12);
   }
   /** What the wallow does to a spot of the crust: metres it is moved up, how much of it is the hollow's mud, how much a tipped slab. */
@@ -104,7 +107,7 @@ export function create(ctx: Context): Piece {
       slab = smooth(0, 0.05, edge);
       const pivot = inner + 0.4 * (s.r1 - s.r0);
       const across = (a - (s.a0 + s.a1) / 2) * hole;
-      up = Math.max(up, -0.06) * (1 - slab) + slab * ((hole - pivot) * s.tip + across * s.roll + 0.02);
+      up = Math.max(up, -0.06) * (1 - slab) + slab * ((hole - pivot) * s.tip + across * s.roll - 0.005);
       break;
     }
     // Between the slabs and for a hand round them the mud shows.
@@ -141,21 +144,21 @@ export function create(ctx: Context): Piece {
       tFieldNear: { value: field.near },
       tFieldFar: { value: field.far },
       tSilt: { value: ctx.assets.texture('mat/silt.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
-      tSiltN: { value: ctx.assets.texture('mat/silt-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
+      tSiltN: { value: ctx.assets.texture('mat/silt-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tLedge: { value: ctx.assets.texture('mat/ledge.jpg', { kind: 'colour', anisotropy: 4 }) },
-      tLedgeH: { value: ctx.assets.texture('mat/ledge-h.png', { kind: 'data', anisotropy: 4 }) },
+      tLedgeH: { value: ctx.assets.texture('mat/ledge-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
       tThin: { value: ctx.assets.texture('mat/thincrust.jpg', { kind: 'colour', anisotropy: 4 }) },
-      tThinH: { value: ctx.assets.texture('mat/thincrust-h.png', { kind: 'data', anisotropy: 4 }) },
+      tThinH: { value: ctx.assets.texture('mat/thincrust-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
       uLedgeAt: { value: new THREE.Vector4(rockCentre[0], rockCentre[1], -F[1], F[0]) },
       uThinAt: { value: new THREE.Vector4(centre[0], centre[1], -F[1], F[0]) },
       tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
-      tRimeN: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
+      tRimeN: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tGrain: { value: grain },
       tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
-      tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
+      tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tRock: { value: ctx.assets.texture('mat/rock.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
       tShore: { value: ctx.assets.texture('mat/shore.jpg', { kind: 'colour', anisotropy: 4 }) },
-      tShoreH: { value: ctx.assets.texture('mat/shore-h.png', { kind: 'data', anisotropy: 4 }) },
+      tShoreH: { value: ctx.assets.texture('mat/shore-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
     },
     toneMapped: false,
   });

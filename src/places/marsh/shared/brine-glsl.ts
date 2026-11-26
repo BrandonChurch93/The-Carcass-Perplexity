@@ -16,7 +16,12 @@ vec3 mirrorAt(vec3 p, vec3 n) {
   float away = length(cameraPosition - p);
   vec2 swing = n.xz * 2.0 * clamp(away * 0.22, 0.2, 14.0);
   vec4 q = uMirrorMatrix * vec4(p.x + swing.x, p.y, p.z + swing.y, 1.0);
-  return textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), 0.0).rgb * vec3(1.0, 0.8, 0.79);
+  vec3 seen = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), 0.0).rgb;
+  // Far off, what stands in the mirror is smaller than the mirror's picture can hold (a bird there is one dark square): the mirror
+  // gives way to the sky alone.
+  vec3 d = (p - cameraPosition) / away;
+  seen = mix(seen, skyRadiance(normalize(vec3(d.x + swing.x * 0.02, abs(d.y), d.z + swing.y * 0.02))) * 0.82, smoothstep(40.0, 95.0, away));
+  return seen * vec3(1.0, 0.8, 0.79);
 }
 // s: metres to the shore, negative in the brine. n: the surface's normal (ripples and rings laid in by the caller). froth: the colour of the
 // scum on top and how much of it there is.
@@ -27,10 +32,10 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   float silt = texture2D(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006)).r;
   float d2 = max(deep + (silt - 0.5) * 0.25, 0.0);
   // A finger of it over the shelf at the shore lets the bed show, rust and pale; a stride out it is blood; in the pits near black.
-  vec3 bed = vec3(0.17, 0.05, 0.034);
+  vec3 bed = vec3(0.25, 0.1, 0.08);
   vec3 body = vec3(0.065, 0.007, 0.006);
   vec3 pit = vec3(0.028, 0.004, 0.004);
-  vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 4.5));
+  vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 2.2));
   albedo = mix(albedo, pit, smoothstep(0.7, 4.0, d2));
   albedo *= 0.8 + 0.4 * silt;
   albedo = mix(albedo, froth.rgb, foam);
