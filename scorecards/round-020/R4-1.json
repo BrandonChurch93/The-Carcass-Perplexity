@@ -1,0 +1,56 @@
+{
+  "round": 20,
+  "unit": "breath",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-26 09:16 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the red fronds that fill the frame from 1:22.43 to the end of the shot (also set-A-09.png, frames 4973-4984)",
+        "what": "the plant is posed in a hard wind-swept lean, yet from frame to frame the fronds keep the same shape. Only the camera moves, so the plant reads as a rigid model with nothing passing through it",
+        "fix": "add a wind response: the frond tips flutter and the stems sway out of phase, in gusts rather than an even pulse, to match the lean"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the end of the push into the pit, 1:19.28 to 1:21.05",
+        "what": "the push ends on a frame that is mostly a flat wall of brown vapour with a sliver of strata on the right. That is a weak final picture, and for its last two seconds the move gives the viewer nothing new",
+        "fix": "stop the push earlier, or frame it so the vapour pours over the lip and pools against readable rock, and land on a composed frame"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the small white plume at the vent beside the red plant, frames 4409-4420, and across all of set-A-01.png",
+        "what": "through the whole shot the plume stays nearly the same size and shape in the same spot. It does not rise, drift or thin, so it reads as a sprite stuck to the scene",
+        "fix": "run the vent as a simulated plume that rises, bends with the wind that is pushing the fronds, and breaks up as it travels"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the grazing animals in the shallows, 1:24.41 to 1:30.02 (also set-A-07.png, frames 5242-5253)",
+        "what": "the feet stay planted and almost unchanged through the shot. The lowered heads of the two grazers hold one pose, and only the middle animal lifts its head. Neither body shifts its weight, so the group reads as near-static models while the camera drifts past",
+        "fix": "give each animal its own timing: weight moving between legs, a step or a foot being repositioned, a head that dips and lifts, and ripples where the legs meet the water"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "the band of sea fog and the distant herd under the cliff",
+        "what": "the fog bank and the far herd stay fixed for the whole push-in, with no drift in the fog and no movement in the herd",
+        "fix": "let the fog bank creep slowly along the shore and give the far animals small, staggered motion"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05.png",
+        "where": "the standing animal among the fronds behind the carcass",
+        "what": "the animal only lowers its head slowly, and its body sits inside the fronds without moving them",
+        "fix": "let the fronds move where the body touches them, and add a small weight shift or tail and ear motion"
+      }
+    ]
+  }
+}

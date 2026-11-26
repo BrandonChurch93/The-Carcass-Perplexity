@@ -1,0 +1,70 @@
+{
+  "round": 20,
+  "unit": "breath",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-26 09:17 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the three foreground animals where their feet and feeding filaments meet the water",
+        "what": "the feet end abruptly or disappear into the surface without a visible local disturbance, and the submerged-looking filaments spread flat across the water without displacing it",
+        "fix": "Anchor each planted foot at the waterline with contact darkening and local ripples, then give the immersed filaments wet clumping, refraction, and a small wake."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the lower-left crop above the crater lip",
+        "what": "the flats resolve into long parallel smears with little crosswise detail, like a texture stretched away from the camera",
+        "fix": "Add depth-scaled ripples and break up the long streaks with irregular crosswise detail."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the dark shelf meeting the blue water in the left crop",
+        "what": "the broad glossy shelf has rounded clay-like lumps, and the water stops at its outline without a distinct wet margin",
+        "fix": "Add mineral grain and broken layers to the shelf, and vary the wetting and ripple breakup along the waterline."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the central animal's legs and ribcage in the upper-right crop",
+        "what": "a near-continuous bright rim traces the silhouette while the hide stays similarly dry and waxy across ribs and joints",
+        "fix": "Break up the rim with the surface normals and vary the hide roughness and color locally, including wetting toward the waterline."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the crater lip and plants in the upper-right crop",
+        "what": "the cream vapor reads as a soft overlay across plants and rock instead of pockets of mist wrapping around the ledges",
+        "fix": "Give the mist uneven volumetric density, clear rock occlusion, and lighting that changes with its depth."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the diagonal foreground ledge in the right crop",
+        "what": "a largely straight knife-edge exposes a narrow, nearly constant-width tan strip against the drop, making the ledge read as a cut mesh",
+        "fix": "Break the outline with layered chips and recession and carry the mineral texture over a visibly irregular edge."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the red plants around the animal and ledge",
+        "what": "the same arched comb-like fronds recur with near-identical spacing and silhouette",
+        "fix": "Introduce distinct branch silhouettes, growth directions, and damaged or sparse fronds."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the open water in the right crop",
+        "what": "the highlights resolve into many similarly sized isolated gold dashes over a nearly uniform base rather than part of a varied wave field",
+        "fix": "Vary ripple scale and group glints into wavelets that follow the lighting angle, with quieter areas between them."
+      }
+    ]
+  }
+}

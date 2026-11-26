@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 102, 2026-11-26 08:57 UTC:
+Status 103, 2026-11-26 09:19 UTC:
 
-- `01-ribs0.jpg`: The Ribs, the wide view: approved left, built right at final tier in 4K, with the tighter shutter limit and the blades faint again
-- `02-smear.jpg`: The shutter fix at native size, before left and after right: the Ribs' near ground, a blade of the Ribs (marks strong, then faint), the Spine's rock at frame 7418
-- `03-ribs413.jpg`: The Ribs' other keys, version 3, before the shutter change: approved left, built right (the bore arrives, the drowned one in the weed, the colony)
-- `04-key-ribs-0-uhd-final.jpg`: The frame that answers ribs-0, film frame 1241, uhd, final tier
+- `01-reveal.jpg`: The Reveal, round 3: approved left, built right at final tier (the lake, the skull massif, head and shoulders, the whole titan from orbit)
+- `02-eye.jpg`: The Eye, round 3: approved left, built right at final tier (all five keys)
+- `03-breath.jpg`: The Breath, round 3: approved left, built right at final tier (all five keys)
+- `04-frame-7418-hd-final.jpg`: Film frame 7418, hd, final tier
 
+Status 102, 2026-11-26 08:57 UTC, showed: The Ribs, the wide view: approved left, built right at final tier in 4K, with the tighter shutter limit and the blades faint again; The...
 Status 101, 2026-11-26 08:30 UTC, showed: The Blood Marsh, version 3: approved left, built right at final tier (the wide view, the wallowers, the one on the thin crust); The Spine...
 Status 100, 2026-11-26 08:15 UTC, showed: The Reveal from orbit, version 3: approved left, built right (draft tier); The Eye, heartbeat of 08:05: approved left, built right; the...
-Status 99, 2026-11-26 07:52 UTC, showed: The Reveal from orbit: approved left, built right (the owner's heartbeat of 07:44, draft tier); The establishing frame of every place and...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T08:57:19Z
-phase 4: 12.78 h used of 17.00 h
-build: 33.10 h used of 72.00 h
+2026-11-26T09:19:55Z
+phase 4: 13.15 h used of 17.00 h
+build: 33.48 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 26
+minutes since the last status: 23
 ```
 
 ## Phases

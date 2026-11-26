@@ -25,5 +25,231 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the repeated near-identical poses of the long-necked creatures look like duplicated 3D assets.",
+      "answered": "09:16 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "alien creatures in a fantasy landscape where the rock textures look stretched and smeared and the ground looks flat, like a standalone environment-art render rather than a film-grade frame",
+      "answered": "09:16 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the stretched sinkhole rock textures and flat water-to-shore intersections around the alien creatures look like an ordinary 3D render rather than a top-budget cinematic",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 79,
+      "why": "the foreground crater walls have visibly stretched rock textures.",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 45,
+      "why": "the rock and cliff textures are smeared and stretched with blobby geometry and the creatures are simple, which reads as a real-time or indie engine despite the good fog and lighting.",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "The creatures share the same uniformly waxy skin texture.",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "surreal creature render with good but not film-grade detail (simple fur cards, slightly plasticky skin, tilt-shift DOF) reads as an individual artist's CG render rather than a top-budget film frame.",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the creatures' legs and tendrils clip cleanly into the water plane with no contact ripples, splashes, or wet lines despite the polished cinematic lighting",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 83,
+      "why": "The same ribbed creature model is visibly reused across the herd.",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 62,
+      "why": "the polished cinematic look (convincing wet-sand reflections, atmospheric haze, depth of field and detailed creature skin) on an invented creature design, though a high-end personal or concept-art render (c) is a close alternative.",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the same rigid fern shape repeats conspicuously across the scene.",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "The creatures look CG and sit unconvincingly in what seems to be a photo-composited background (cliffs, fog), with flat, smooth ground texture and weak contact shadows. That reads like a hobbyist or stock render or matte composite, not a top-budget film frame.",
+      "answered": "09:17 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the contrast between the detailed foreground creature sculpt and the visibly stretched, low-resolution cliff textures and weak contact shadows on the standing creature",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the red ferns repeat the same arching silhouette like duplicated 3D assets.",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the creature design and the layered atmospheric haze, lighting and detailed rock textures look like a high-end game or film cinematic. The creatures are too stylized for a photo, and the fidelity is above stock or low-budget 3D.",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "The foreground grass clumps repeat the same sharply arched frond shapes, suggesting reused 3D assets.",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the grass plumes look like repeated CG cards and the rock is smooth and soft with simple fog, like an ordinary standalone 3D render, not film-grade or photographic.",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the low-poly segmented plant stems and flat alpha-cutout foliage cards clipping into a blurry, low-resolution rock mesh",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 86,
+      "why": "the foreground plants have visibly flat, repeating fronds that look like cutout textures.",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "the dense, finely detailed grass with volumetric fog, depth of field and floating particles looks like a high-end real-time game or cinematic, but the repetitive rock texture and the uniform, slightly smeared grass shading keep it from being clearly film-grade.",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the visibly stretched, repetitive texture on the cliff walls.",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "stretched/smeared procedural rock textures and simple boulder meshes with flat fog, typical of an ordinary 3D render (e.g., terrain-generator scene) rather than film-quality or photographic detail",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the vertically stretched low-resolution terrain textures on the crater walls",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "The foreground fronds look like flat cutout textures rather than individual leaves.",
+      "answered": "09:18 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "the rock cliff textures look stretched and repeated with blobby geometry, and the palm fronds are flat and spiky. Together these read as real-time game or demo rendering, not a cinematic. The fog is fairly good, which is why I'm only at 50.",
+      "answered": "09:19 UTC"
+    }
+  ]
 }

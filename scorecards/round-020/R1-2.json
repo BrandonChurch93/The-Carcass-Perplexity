@@ -1,0 +1,98 @@
+{
+  "round": 20,
+  "unit": "breath",
+  "pack": "R1-2",
+  "family": "gemini",
+  "answered": "2026-11-26 09:17 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the foreground red growth",
+        "what": "the fleshy, wet, glossy crimson kelp-like organism with a thick holdfast in -a is replaced by dry, feathery, matte rust-brown pampas-like plumes on thin dark stems",
+        "fix": "replace the dry feathery plumes with wet, fleshy, branching crimson fronds anchored by a thick root-like holdfast and lit with translucent ruby backlighting"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the upper-left background flats",
+        "what": "the tall, slender, four-legged pale creature standing in the sunlit mist in -a is completely missing",
+        "fix": "restore the slender long-legged creature standing on the sunlit wet flats in the background haze"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the lighting and colour across the frame",
+        "what": "the warm golden low-sun backlighting, bright water reflections, and rich ruby-and-amber contrast of -a are flattened into dull, cool, muddy grey-beige light",
+        "fix": "add strong warm golden-hour backlighting from the upper-left, bright specular reflections on the wet flats and fronds, and deeper contrast"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the interior walls of the chasm",
+        "what": "the smooth, pale, curved rib-like bone/mineral arches with deep recessed vertical walls in -a are replaced by jagged, dark grey-brown rocky strata and blocky rectangular boulders",
+        "fix": "rebuild the pit interior with smooth, pale, curving rib-like arches stained with wet rust and moss, separated by deep recessed dark walls"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the upper-left horizon and sky",
+        "what": "the bright golden-hour sunlit wet flats with multiple wading long-legged creatures and warm rim light on the pit lip in -a are pushed nearly out of frame and dimmed to flat grey-pink",
+        "fix": "lower the horizon slightly to show the glowing sunlit flats and silhouetted creatures, and cast warm golden rim light across the upper lip of the pit"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the overhanging red growth on the left and top-center",
+        "what": "the lush, wet, dripping crimson tendrils framing the left in -a are reduced to sparse, dry, flat rust-brown fronds with an intrusive tuft hanging from the top-center",
+        "fix": "replace the sparse dry fronds with dense, wet, dripping crimson tendrils overhanging the left edge and remove the distracting top-center tuft"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the full-size frond crops",
+        "what": "the foliage reads as thin, flat, matte alpha-cutout cards with dark spline stems and aliased edges rather than wet, glossy, translucent organic tendrils",
+        "fix": "give the fronds volumetric, wet, glossy geometry with fine translucent filaments and specular rim highlights instead of flat cutout cards"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the full-size pit rim and wall crops",
+        "what": "the rock surfaces look stretched, blurry, and matte with smeared procedural noise, lacking the crisp, wet, pitted mineral/bone texture, sheen, and dripping water threads of -a",
+        "fix": "increase geometric and texture detail on the pit walls and rim, and add wet specular sheen, mineral staining, moss, and fine dripping water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the foreground rock ledge and plant base",
+        "what": "the craggy, wet layered stone with scattered pebbles and a small bleached bone in -a is replaced by a smooth, lumpy, low-detail grey surface with a sharp polygonal rim edge",
+        "fix": "add detailed craggy rock geometry, wet sheen, loose pebbles, grit, and the small bone around the holdfast"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "water droplets around the foreground fronds",
+        "what": "instead of delicate glistening drops hanging from frond tips as in -a, small white-grey streaks float scattered over the lower stems and rock",
+        "fix": "remove the floating white streaks and attach realistic glistening water droplets hanging and dripping from the frond tips"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the upper-right distant cliff and chasm rim",
+        "what": "the distant cliff is too dark, close, and cuts off along a flat horizontal fog line, while the curved pale pit overhang on the right of -a is missing",
+        "fix": "push the distant cliff further into soft atmospheric haze with a natural mist transition, and restore the curved pale chasm rim on the right"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the vapour in the chasm and the bottom foreground corners",
+        "what": "the steam is a uniform murky brownish cloud lacking -a's soft backlit layers, and an unrelated flat grey-striped rock lip intrudes at the bottom-right while -a's soft rocky ledge at bottom-left is missing",
+        "fix": "soften and layer the rising vapour with warm backlit depth falloff, remove the intrusive bottom-right rock lip, and frame the bottom-left with a soft-focus rocky edge"
+      }
+    ]
+  }
+}

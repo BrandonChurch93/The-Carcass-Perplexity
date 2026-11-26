@@ -1,0 +1,56 @@
+{
+  "round": 20,
+  "unit": "breath",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-26 09:16 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the creature lying on the pale slab in the foreground right",
+        "what": "it swaps between a pale form (0.00, 0.55, 2.18, 2.73, 4.36, 4.91 s) and a red form (1.09, 1.64, 3.27, 3.82, 5.46 s) with no motion in between; it pops instead of moving",
+        "fix": "use one consistent model and animate it with continuous motion such as breathing, a head turn or a shift of weight"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the steam over the terraces and the shore, 4.91 to 6.00 s",
+        "what": "after almost five seconds of small, even puffing, a large bank of vapour appears within about a second and fills the middle ground; it reads as a spawned effect, not as an event that builds",
+        "fix": "build the venting over time with a clear source and a rising, spreading plume, and give the earlier puffs varied timing so they don't pulse"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the pale animals at the steam vent and the herd figures on the far flats",
+        "what": "they keep the same pose across six seconds: no weight shift, no step, no turn; they read as placed models",
+        "fix": "give each animal its own offset idle and walk cycles, with pauses, head turns and small changes of position"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the blue pool in the foreground left, the sea and the cloud bank over the cliff",
+        "what": "the water's surface and the haze barely change over six seconds; there's no ripple, swell or drift, so with the camera held the place reads close to a still picture",
+        "fix": "add wind ripple and slow surface movement to the pool, small swells on the sea, and slow drift to the cloud and haze at their own heights"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the whole frame, 4650 to 4661",
+        "what": "over twelve consecutive frames the camera hardly moves and nothing in the scene changes: the steam in the pit, the red fronds and the light stay frozen, so the shot reads as a held still",
+        "fix": "let the steam in the pit roll and rise, let the fronds stir in the wind, and give the move enough travel to bring out parallax between the fronds, the terraces and the sea"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the fine banding on the terrace walls and the grain of the foreground rock",
+        "what": "the fine strata lines and the rock speckle seem to shift slightly from frame to frame, a possible low-level shimmer",
+        "fix": "stabilise the texture filtering and the sampling on the fine terrace detail"
+      }
+    ]
+  }
+}

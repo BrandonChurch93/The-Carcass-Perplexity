@@ -25,5 +25,213 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 91,
+      "why": "the visibly reused creature models in nearly identical poses.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the stand-alone fantasy landscape: procedurally textured rock arches, repeated identical creatures and flat ground shading look like a hobbyist or stock CG render (e.g. Vue/Terragen), not like a frame from a film.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "flat normal-mapped ground plane and unblended contact between the repeated creature models, glossy cliff, and water surface typical of a standard PBR 3D render rather than film-grade VFX or a low-poly real-time demo.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 79,
+      "why": "The nearly identical winged creatures repeat across the shallows like copies of one game asset.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the alien arch landscape with its detailed rock textures, volumetric haze and sky looks like polished high-end concept art or cinematic environment work, though the repetitive, slightly mushy ground texture and copy-pasted creatures leave real room for c.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the foreground rocks have a conspicuously repeated bump texture.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "a detailed but obviously CG fantasy scene (a carcass on a kelp-covered spire, curved rock horns, a pterosaur) with smooth, simple water and rocks, which reads like a skilled artist's standalone render rather than a film frame or a photo.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the rough polygonal rocks and flat water-plane intersection in the lower right despite the detailed foreground sculpt",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the water cuts across the foreground rocks in a hard, flat seam.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "The image is a surreal alien scene (skeletal creature draped on a huge textured wall, giant horn-like spires) with high-quality detail, believable depth of field, atmospheric haze and cohesive grading, which looks like film-grade or cinematic CG.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the creatures’ uniformly lit, sculpted-looking skin.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "fantasy creatures rendered in fine detail but in a plain, static, single-artist showcase setup (soft overcast lighting, slightly painted-in rocks and rippled water), more like a standalone CG artwork than a film or cinematic frame",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 72,
+      "why": "the cinematic overcast lighting and detailed creature surfacing with realistic subsurface scattering on the wings",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 86,
+      "why": "The foreground creature’s skin and wing membranes share the same pale, clay-like finish.",
+      "answered": "09:19 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the creatures' wrinkled skin, wing membranes and fine tentacle-like filaments, together with the layered atmospheric haze, shallow depth of field and detailed water reflections, look like high-end film-quality CG. The odd anatomy rules out a photograph. A top-tier personal or portfolio render (c) is the main alternative.",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the glossy rock texture visibly stretches over the blocky cliff geometry.",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "smeared, swirly rock textures and stiff, repeated creature models with flat lighting look like an ordinary CG render, not the polish of a big-budget film.",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the stretched displacement rock textures and repetitive stone-textured creature models under flat lighting look like an ordinary 3D render rather than a top-budget cinematic.",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the foreground cliff texture stretches into long smears across the angular ledges.",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "the rock textures are smeared and swirled, especially at the bottom, which looks procedural and not hand-finished, though the creature design, depth haze and motion blur are fairly elaborate (b or d are the next most likely).",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the foreground creatures look like repeated copies of the same stiff 3D model.",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the near-identical winged creatures look like copies of a single 3D model posed across the beach.",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the pterosaurs are flat, simple models with no scale or lighting integration, and the rocks look like repeated generic assets. The wave spray and atmosphere are good, but the scene reads as an ordinary solo 3D render rather than a big-budget film frame.",
+      "answered": "09:20 UTC"
+    }
+  ]
 }

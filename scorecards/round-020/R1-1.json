@@ -1,0 +1,140 @@
+{
+  "round": 20,
+  "unit": "breath",
+  "pack": "R1-1",
+  "family": "gemini",
+  "answered": "2026-11-26 09:18 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the three wading creatures across the foreground and midground",
+        "what": "their bodies are boxy, gaunt, and squared-off at the hips and shoulders with stick-thin legs, rigid necks, and dry broom-like brown-pink hair tufts instead of rounded fleshy bodies, sturdy knobby-jointed legs, and wet pink tendrils coated in dark algae",
+        "fix": "reshape the creatures to match the rounded organic torsos, thicker articulated leg joints, and fleshy algae-draped pink tendrils of set-A-03-a.png"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the water around the center creature's lifted head, lifted leg, and the dipped heads of the outer creatures",
+        "what": "there is no dripping water, no splash under the lifted head, and no concentric ripples where legs and tendrils meet the water, leaving static intersections (confirmed at full size in set-A-04.png)",
+        "fix": "add dripping water streams and droplets falling from the center tendrils into an active splash, plus concentric ripples around every wading leg and submerged tendril"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the water surface across the pool",
+        "what": "the water is flat and muddy-brown with uniform bright pinpoint specular dots and harsh crinkled reflections instead of cohesive wind-rippled water with warm golden wave-crest highlights (confirmed at full size in set-A-04.png)",
+        "fix": "replace the speckled dot highlights with continuous small wind ripples, softer natural reflections, and warm golden specular glints on the sunlit left water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the large sinkhole on the right midground",
+        "what": "the pit walls have dark, vertically striated craggy ledges with no curved pale bone-like arches and almost no steam, exposing the dark bottom instead of a mist-filled chasm",
+        "fix": "restore the massive curved pale rib-like arches along the pit walls and fill the pit with dense, billowing volumetric steam rising over the rim"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the sinkhole wall on the right",
+        "what": "the massive curved pale rib-like arches and thick billowing steam are replaced by dark vertically streaked rock ledges with minimal vapour",
+        "fix": "sculpt the curved pale bone-like arches into the pit rim and shroud the pit interior in thick rising steam"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the ground beneath the dead creature and the bottom-left foreground",
+        "what": "the dead creature rests on a flat, smooth dark-grey concrete-like slab with a sharp edge and no gravel, reddish stain, or out-of-focus foreground rock ledge, instead of uneven fractured pale travertine crust",
+        "fix": "replace the flat grey slab with rugged, fractured pale mineral rock, loose gravel, and dark ground staining around the carcass, and restore the blurred foreground rock ridge at bottom-left"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the standing creature near the pit rim",
+        "what": "the creature has a boxy squared-off torso, overly thin spindly legs, a stiff straight neck, and a blunt flat-cut broom-like head tuft instead of a rounded body, sturdy hooved legs, and wispy pink tendrils",
+        "fix": "give the standing creature a rounded organic back, thicker jointed legs with hooves grounded by clear shadows, and soft tapering pink tendrils"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the red vegetation along the left bank and behind the standing creature",
+        "what": "dense, fine-textured crimson brambles are replaced by tall, oversized, sweeping brownish-red fern-like fronds that dominate the left side and crowd the water's edge (confirmed at full size in set-A-06.png)",
+        "fix": "replace the tall fern fronds with lower, denser, fine-branched crimson brush clustered behind the standing creature and small sparse red tufts along the wet rock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the winding stream, foreground water, and left mineral shelves",
+        "what": "the water is covered in artificial speckled dot highlights with an unnatural powdery cyan-white patch in the foreground, and the wet fractured travertine shelves on the left are replaced by smooth, blobby, hard-edged ledges (confirmed at full size in set-A-02.png)",
+        "fix": "restore detailed, wet, layered pale mineral shelves with strong golden specular glare on the left and a cohesive, softly rippling teal-tinted stream without speckled dot artifacts"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the flat slab under the dead creature on the right foreground",
+        "what": "the dead creature lies on an isolated, smooth, rectangular sandy slab rather than broken natural travertine rock continuous with the rim",
+        "fix": "blend the surface under the dead creature into irregular, fractured pale rock matching the surrounding pit rim"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the wading and standing creatures across the left flats and pit rim",
+        "what": "the creatures have boxy emaciated torsos, needle-thin legs, and limp brown-pink hair tufts instead of rounded flamingo-like bodies and fluffy pink-tendril heads, and the left midground flock is sparser and oversized (confirmed at full size in set-A-02.png)",
+        "fix": "match the rounded organic creature proportions, articulated legs, and airy pink-tendril plumes of set-A-01-a.png, and populate the distant sunlit flats with more small wading figures"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the dead creature in the foreground",
+        "what": "the carcass sits stiffly on top of the surface with an overly hollow skeletal ribcage, differently crossed stiff legs, and dry dark-brown twig-like tendrils instead of a partially embedded fleshy desiccated body with soft pale-pinkish branching filaments (confirmed at full size in set-A-06.png)",
+        "fix": "seat the body more organically into loose grit and rock crevices, soften the ribcage flesh, and make the tendrils paler, softer, and more organically branched"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the red bush behind the pit rim and small foreground tufts",
+        "what": "the dense crimson bramble veiled in steam is replaced by sparse, curved brownish-red fern fronds with no steam softening them",
+        "fix": "replace the fern fronds with a denser, darker crimson bramble mass partially veiled by rising pit steam"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the distant steam plumes, midground flats, and right cliff edge",
+        "what": "the bright vertical geyser plume on the far left and low steam wisps across the midground flats are missing, a uniform horizontal fog band cuts across the cliff base, and the far-right cliff is washed out in grey haze",
+        "fix": "restore the distinct rising geyser plume on the far left, add scattered low steam wisps over the midground flats and cavern mouth, and keep the right cliff face crisp and rocky"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the midground shoreline, steam, and background creatures",
+        "what": "the misty rocky ledges with dark-red brush and low drifting steam behind the creatures are replaced by a bare grey-brown flat with two tiny dead twigs, an extra creature is cropped at the far-left edge, and the submerged background creature is replaced by a stiff standing one",
+        "fix": "add low rocky travertine ledges, dark-red plant clumps, and drifting ground mist behind the waders, remove the cropped far-left creature, and match the low-profile misty background figure"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the lighting on the creatures' backs and the foreground rocks",
+        "what": "the creatures carry harsh, chalky white rim highlights that look detached from the warm golden sun, the bright golden water gleam on the left is muted, and the foreground blurred rocks are overly smooth and lack the dark-red plant accent at bottom-right",
+        "fix": "warm and soften the sunlight rim on the creatures to match the golden low sun, boost the bright sunlit water highlights on the left, and add rougher texture and a red plant tuft to the foreground rocks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "overall sunlight and shadows on the left flats and pit rim",
+        "what": "the low-angle sunlight feels flatter and more diffuse, missing the brilliant wet-surface specular gleam on the left crust and the crisp long shadows cast to the right by the standing creature and rocks",
+        "fix": "increase directional low-sun intensity from top-left to restore bright golden specular reflections on the wet flats and sharper elongated shadows"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the sunlit left flats, distant geyser plume, and overall colour mood",
+        "what": "the wet gleaming pale rock shelves on the left are replaced by open water right up to the ferns, the bright golden specular reflection and left geyser plume are dimmed, and the palette is cooler and flatter than set-A-05-a.png",
+        "fix": "restore the wet sunlit rock crust and bright golden glare along the left edge, bring back the luminous rising steam plume on the left, and warm the overall atmospheric lighting"
+      }
+    ]
+  }
+}

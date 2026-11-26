@@ -1,0 +1,49 @@
+{
+  "round": 20,
+  "unit": "breath",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-26 09:16 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the broad far crater wall from the upper rim down the right side",
+        "what": "the ledges repeat the same scalloped shelves, dark undercuts and vertically smeared grooves over much of the shot, so the wall reads like a molded surface rather than broken strata",
+        "fix": "vary the fracture patterns and shelf spacing, break up the continuous undercuts and replace the stretched wall detail with scale-correct rock texture"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "top-left and top-right crops, along the backlit rust-colored fronds",
+        "what": "the finest strands resolve into stepped cutouts and rectangular clumps; several smooth, dark stem strips end abruptly above them",
+        "fix": "use actual strands at the hero distance and improve coverage filtering on finer strands; taper and join the stems naturally"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "right crop, where the pale stones sit against the darker slope",
+        "what": "the stones have faceted contours and abruptly intersect the slope without a readable contact shadow or sediment around the edges",
+        "fix": "seat the stones into the slope, break up the intersection with small scree and add localized contact shading"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the right half of the ravine, just under the distant wall",
+        "what": "a broad beige band has a conspicuously straight top and flattens everything beneath it into a similar tint",
+        "fix": "break the top edge into drifting volumes at different depths, with light and density varying around the terrain"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "bottom-right crop, around the base of the left-hand foliage",
+        "what": "many bright spray flecks are near-identical squares or short dashes, with little variation in translucency or softness",
+        "fix": "vary droplet size, focus and streak length by depth and motion, and tie the denser spray to a visible source"
+      }
+    ]
+  }
+}
