@@ -1,7 +1,7 @@
-2026-11-26 02:13 UTC
-work at 7e43b4b on agent/marsh-life-2
-v1: K3 wallowers on legs with wet line, lying one half sunk, K4 dead as relief cards
-look-1.jpg = out/work/t/v1-marsh-3-compare.jpg
-look-2.jpg = out/work/t/v1-marsh-3-hero.jpg
-look-3.jpg = out/work/t/v1-marsh-3-young.jpg
-look-4.jpg = out/work/t/v1-marsh-4.jpg
+2026-11-26 02:38 UTC
+work at 77409c6 on agent/marsh-life-2
+heartbeat 3: palms from stalk.jpg, dead as standing cards, thick pale feelers, wet mud
+look-1.jpg = out/work/t/hb3-marsh-4.jpg
+look-2.jpg = out/work/t/hb3-marsh-0.jpg
+look-3.jpg = out/work/t/hb3-marsh-3.jpg
+look-4.jpg = out/work/t/hb3-marsh-2.jpg
