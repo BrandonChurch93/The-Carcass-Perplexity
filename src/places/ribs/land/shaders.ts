@@ -183,10 +183,15 @@ void main() {
     // One sheet of a real stepped cliff, 40 m by 40 m: its own white and its own lichen; a little more of each is laid over it.
     // The coursed tile is laid small over it for what the lens sees at arm's length.
     albedo = det * mix(vec3(1.0), big / vec3(0.229, 0.21, 0.178), 0.35) * (0.9 + 0.2 * macro) * uRockTint;
-    damp *= 0.4;
-    white = 0.7 * smoothstep(0.5, 0.9, n0.y) * smoothstep(0.35, 0.6, roost + 0.3 * (nhW.z - 0.5)) * (1.0 - band);
-    albedo = mix(albedo, vec3(0.62, 0.3, 0.06) * (0.6 + 0.8 * nhW.z), 0.25 * lichen * (1.0 - 0.7 * white));
-    albedo = mix(albedo, vec3(0.8, 0.79, 0.75) * (0.75 + 0.5 * nhW.z), 0.35 * white);
+    // Pale grey rock: the sheet gives its marks, not its darkness.
+    float mark = dot(albedo, vec3(0.333));
+    albedo = mix(albedo, vec3(0.4, 0.4, 0.39) * (0.45 + 0.55 * smoothstep(0.0, 0.5, mark)), 0.6);
+    damp *= 0.3;
+    // White runs hang down the cliff from where the colony stands; the ledges themselves are white.
+    float runs = smoothstep(0.5, 0.72, run * (0.5 + roost) + 0.2 * (nhW.z - 0.5)) * (1.0 - smoothstep(0.3, 0.8, n0.y));
+    white = max(0.6 * runs, 0.8 * smoothstep(0.5, 0.9, n0.y) * smoothstep(0.3, 0.55, roost + 0.3 * (nhW.z - 0.5))) * (1.0 - band);
+    albedo = mix(albedo, vec3(0.66, 0.33, 0.06) * (0.6 + 0.8 * nhW.z), 0.7 * lichen * (1.0 - 0.7 * white));
+    albedo = mix(albedo, vec3(0.8, 0.79, 0.75) * (0.75 + 0.5 * nhW.z), 0.6 * white);
   } else {
     albedo = mix(albedo, vec3(0.62, 0.34, 0.09) * (0.5 + 1.6 * det.r), 0.75 * lichen * (1.0 - 0.25 * uFin));
     albedo = mix(albedo, vec3(0.8, 0.79, 0.76) * (0.6 + 1.3 * det.g), 0.6 * white);
@@ -340,29 +345,33 @@ void main() {
   // The bed is the rig's: the same one the sheets of water are laid on. The plate's own relief stands on it.
   float h = landAt(xz).r + fine + 0.2 * (ps.z - 0.35) + 0.03 * (nh.z - 0.5);
   float over = h - uPool;
+  // The map of the wet comes first: sheets of soaked sand drawn out toward the sea, with hard edges, between the bars of gravel. Soaked,
+  // the floor is dark and a mirror; dry, it is pale and matt.
+  vec2 sq = vec2(xz.x + 0.3 * xz.y, xz.y * 0.4);
+  float soak = vnoise(sq / 31.0 + 11.0) * 0.5 + vnoise(sq / 11.0 + 4.0) * 0.32 + vnoise(xz / 3.7) * 0.18;
+  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 0.12 * clamp(over, 0.0, 0.5) + 0.05 * (nh.z - 0.5) * close0 + 0.07);
   // Stones where the floor stands proud, rippled sand where it lies low.
   float bar = smoothstep(0.3, 0.52, ps.z + 0.5 * clamp(over, -0.2, 0.3) + 0.1 * (nh.z - 0.5) + 0.12 * close0);
+  bar *= 1.0 - 0.8 * soaked;
   vec3 grain = mix(sand / 0.128, det / 0.122, bar);
   grain = mix(vec3(dot(grain, vec3(0.333))), grain, 0.5);
-  // Close under the lens the plate is a smear: there the stones and the sand carry the floor.
+  // Close under the lens the plate is a smear: there it gives only its broad tone, and the stones and the sand carry the floor.
   float close = smoothstep(70.0, 8.0, length(cameraPosition - vWorld));
-  vec3 albedo = mix(plate, vec3(dot(plate, vec3(0.333))), 0.5 * close) * mix(vec3(1.0), grain, mix(0.7, 1.0, close)) * 0.52;
+  vec3 broad = mix(plate, vec3(0.123, 0.13, 0.136), 0.8 * close);
+  vec3 albedo = mix(broad, vec3(dot(broad, vec3(0.333))), 0.35) * mix(vec3(1.0), grain, mix(0.7, 1.0, close)) * 0.52;
   // Cast weed lies in dark patches on the bars and at the edge of the pools.
-  float castWeed = smoothstep(0.66, 0.74, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * nh.z + 0.1 * bar);
-  albedo = mix(albedo, vec3(0.035, 0.028, 0.014) * (0.5 + nh.z), 0.85 * castWeed);
+  float castWeed = smoothstep(0.6, 0.66, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * nh.z + 0.1 * bar);
+  albedo = mix(albedo, vec3(0.04, 0.03, 0.012) * (0.5 + nh.z), 0.9 * castWeed);
   // What lies under the sheets is dark drowned sand; the plate's hollows hold a film that shows the sky; every stone above is wet.
   float under = smoothstep(0.01, -0.05, over);
   float low = smoothstep(0.24, 0.12, ps.z + 0.08 * (nh.z - 0.5));
   float wet = max(smoothstep(0.08, 0.01, over), 0.7 * low);
-  // The map of the wet: broad sheets of soaked sand with hard edges between the bars; soaked, the floor is dark and a mirror; dry, pale and matt.
-  float soak = vnoise(xz / 37.0 + 11.0) * 0.55 + vnoise(xz / 13.0 + 4.0) * 0.3 + vnoise(xz / 4.3) * 0.15;
-  float soaked = smoothstep(0.47, 0.52, soak - 0.35 * (ps.z - 0.35) - 0.6 * clamp(over, 0.0, 0.25) + 0.08);
-  wet = max(wet, soaked * (1.0 - 0.9 * bar));
+  wet = max(wet, soaked * (1.0 - castWeed));
   float film = wet * (1.0 - under);
   float damp = smoothstep(0.4, 0.1, over);
   float rough = mix(mix(0.6, 0.45, damp), 0.06, film);
   rough = mix(rough, 0.9, under);
-  albedo *= mix(1.45, 0.7, max(wet, 0.5 * damp)) * mix(1.0, 0.55, under);
+  albedo *= mix(1.6, 0.5, max(wet, 0.35 * damp)) * mix(1.0, 0.55, under);
   vec2 g = (nh.xy - 0.5) * 2.2 * max(bar, 0.5 * close);
   vec3 n = normalize(vNormal + vec3(ps.x, 0.0, ps.y) * 2.6 * (1.0 - 0.85 * film) + vec3(g.x, 0.0, -g.y) * mix(1.0, 0.05, wet));
   float cavity = 0.55 + 0.45 * smoothstep(0.08, 0.4, ps.z);

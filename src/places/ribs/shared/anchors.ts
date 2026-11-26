@@ -3,6 +3,7 @@
 // the bore comes from), east is +x, sea level is y = 0. Both owners read this file; only the lead changes it, and says so when an anchor moves.
 import { cut, eventSeconds, secondsInPlace, shotById } from '../../../film/cut';
 import { STATIONS } from '../cameras';
+import { cragPerch, cragRadius } from './crag';
 import { BUTTRESS, FLOOR, POOL, RIBS, SEA, TIDE, buttressRadius, ribByName, weedPoint } from '../layout';
 
 export const UNIT = 'ribs';
@@ -64,7 +65,10 @@ export const DROWNED = {
   },
 };
 
-/** The colony's rock: a stepped mound, ledges every `step` metres from the tide line to its top. */
-export const COLONY = { ...BUTTRESS, radiusAt: buttressRadius, side: STATIONS.colonySide };
+/**
+ * The colony's rock: a crag. `radiusAt` is the mean cone it is cut from; `cragAt(angle, y)` is the rock itself, and
+ * `perch(angle, height, across)` gives [radius, y] of the ledge nearest a height at an angle, where what nests there stands.
+ */
+export const COLONY = { ...BUTTRESS, radiusAt: buttressRadius, cragAt: cragRadius, perch: cragPerch, side: STATIONS.colonySide };
 
 export { FLOOR, RIBS, STATIONS };
