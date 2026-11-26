@@ -544,7 +544,7 @@ void main() {
     glow *= mix(1.0, 0.5 + 0.5 * clamp(1.4 * hit, 0.0, 1.0), uEmber.x);
     glow *= 0.5 + 0.5 * uEmber.w;
     // (Held down as it is for the open camera, the fire would lie flat: its swell is laid on after, on the lake and on the rock it lights.)
-    glow *= mix(0.55 + 0.6 * work, 1.0, aside);
+    glow *= mix(0.45 + 1.1 * work, 1.0, aside);
   }
 
   // ---- the water ----

@@ -26,7 +26,7 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 beatOnCloud(vec2 xz) {
   vec2 fromHeart = xz - vec2(${X(AT.lava.x).toFixed(1)}, ${Z(AT.lava.y).toFixed(1)});
   // (By night the fire is on the underside of the cloud all the time, dull, and the beat swells it.)
-  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.012 * (0.4 + 1.6 * uBeat) * (0.5 + 1.3 * emberWork())) * exp(-dot(fromHeart, fromHeart) / 90000.0);
+  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.012 * (0.4 + 1.6 * uBeat) * (0.3 + 1.7 * emberWork())) * exp(-dot(fromHeart, fromHeart) / 90000.0);
   return vec3(1.0, 0.2, 0.04) * 0.3 * max(uBeat - 0.12, 0.0) * exp(-dot(fromHeart, fromHeart) / 90000.0);
 }
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {

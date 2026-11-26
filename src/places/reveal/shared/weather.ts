@@ -95,7 +95,7 @@ float lowPicture(vec2 w) {
     float wideLay = seen(texture2D(uMatStreaks, sw / vec2(840.0, 620.0) + vec2(0.3, 0.7)).rgb, 0.3 + 0.12 * hard, 0.8 - 0.1 * hard);
     // (The finer streaks ride another wind than the wide ones: the two slide past each other, so a bank grows here and tears there and is never carried as one stiff sheet.)
     vec2 fw = w;
-    if (uLive > 0.0) fw += uWx * vec2(5.0, -7.5);
+    if (uLive > 0.0) fw += uWx * vec2(2.5, -3.5);
     float fineLay = seen(texture2D(uMatStreaks, mat2(0.84, 0.54, -0.54, 0.84) * fw / vec2(430.0, 300.0) + vec2(0.7, 0.2)).rgb, 0.36, 0.85);
     // (Here and there a large soft mass: a field of cells grown together, a few hundred kilometres across.)
     // (They stand higher and are carried by another wind: they cross the streaks as the frame is held.)
@@ -103,14 +103,10 @@ float lowPicture(vec2 w) {
     if (uLive > 0.0) mw += uWx * vec2(30.0, -9.0);
     float massWhere = texture2D(uCloudTile, mw / 2300.0 + vec2(0.33, 0.61), 2.0).b;
     vec3 massCells = texture2D(uMatPopcorn, mw / 300.0 + 0.2, 1.5).rgb;
-    float massy = smoothstep(0.6, 0.82, massWhere) * seen(massCells, 0.1, 0.7);
-    float massShare = 0.34;
-    if (uLive > 0.0) {
-      // (Through the hours the masses build: more of them, and whiter. They are the cloud the eye can follow across the streaks.)
-      float built = smoothstep(0.0, 14.0, uWx);
-      massy = smoothstep(0.6 - 0.1 * built, 0.82 - 0.1 * built, massWhere) * seen(massCells, 0.1, 0.7);
-      massShare = 0.34 + 0.4 * built;
-    }
+    // (Through the hours the masses build a little: they are the cloud the eye can follow across the streaks.)
+    float built = uLive > 0.0 ? smoothstep(0.0, 14.0, uWx) : 0.0;
+    float massy = smoothstep(0.6 - 0.05 * built, 0.82 - 0.05 * built, massWhere) * seen(massCells, 0.1, 0.7);
+    float massShare = 0.34 + 0.14 * built;
     pic += sqrt(away) * mix(1.5, 1.0, smoothstep(700.0, 1300.0, uViewKm)) * (0.6 * wideLay + 0.75 * fineLay * (0.25 + 0.75 * wideLay)) + massShare * away * massy;
   }
   return pic;
@@ -136,8 +132,8 @@ vec2 lowField(vec2 at) {
   vec2 wSlow = w;
   vec2 wLane = w;
   if (uLive > 0.0) {
-    wSlow += uWx * vec2(-8.0, 10.0);
-    wLane += uWx * vec2(7.0, -12.0);
+    wSlow += uWx * vec2(-3.0, 4.0);
+    wLane += uWx * vec2(3.0, -5.0);
   }
   float torn = texture2D(uCloudTile, wSlow / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * torn;
