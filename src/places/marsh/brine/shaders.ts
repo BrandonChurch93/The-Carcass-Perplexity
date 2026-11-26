@@ -250,7 +250,7 @@ void main() {
   // The sheet leaves the rim at near 5 m/s and leans outward as it climbs. It is a film: its own tension, not its weight, stops it within
   // an eighth of a second and pulls it back, torn.
   float up = sqrt(size / 0.4) * (4.6 * age - 18.0 * age * age) * (0.34 + 0.66 * finger);
-  float out_ = size * (0.85 + (2.6 + 4.4 * finger) * age * (0.25 + 0.75 * h * h));
+  float out_ = size * (0.85 + (2.6 + 3.0 * finger) * age * (0.45 + 0.55 * h));
   float wob = 1.0 + 0.08 * sin(a * 7.0 + k * 5.0) + 0.05 * sin(a * 13.0 - k * 2.0);
   vec3 q = vec3(position.x * out_ * wob, max(up, 0.0) * h, position.z * out_ * wob);
   vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
@@ -291,7 +291,7 @@ void main() {
   r.y = abs(r.y);
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
   float window = 0.3 * smoothstep(0.99, 0.998, toward) * lip + 0.03 * pow(toward, 30.0);
-  vec3 mirrored = skyRadiance(r) * (0.02 + 0.24 * pow(1.0 - nv, 4.0) + 0.5 * window);
+  vec3 mirrored = skyRadiance(r) * vec3(1.0, 0.6, 0.54) * (0.02 + 0.1 * pow(1.0 - nv, 4.0) + 0.5 * window);
   float cover = clamp(0.86 + 0.2 * thick + 0.3 * lip + 0.2 * pow(1.0 - nv, 2.0) + (g.g - 0.5) * 0.2, 0.0, 0.98);
   gl_FragColor = vec4((lit * cover + mirrored) * (1.0 - uSolo), cover);
 }`;
