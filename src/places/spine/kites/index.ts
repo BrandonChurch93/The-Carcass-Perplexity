@@ -376,8 +376,13 @@ void main() {
   c *= mix(vec3(1.0), stain, uTone.x) * lilac * (0.8 + 0.4 * fract(seed * 5.3)) * (1.0 - 0.25 * vFar) * (1.0 - 0.8 * clear) * (1.0 + 0.25 * vNear);
   // Before the long lens the veils are violet grey, darker than the lit cloud: what is bright on them is the charge.
   c *= mix(vec3(1.0), vec3(0.6, 0.54, 0.82), uVeil);
-  float film = 0.5 * relief + 1.5 * vnoise(vec2(metres / (2.4 * wide) + seed * 3.0, vb * 1.1 + seed)) + 1.4 * (1.0 - nv) + seed;
+  // The film's colour is its thickness and the angle it is seen at, as on a soap film: the picture's relief and a slow drift along it
+  // are the thickness, and the tint runs through violet, pink and pale green across a fold as the skin turns from the lens.
+  float drift = vnoise(vec2(metres / (2.4 * wide) + seed * 3.0, vb * 1.1 + seed));
+  float film = 0.9 * relief + 1.3 * drift + 2.2 * (1.0 - nv) + seed;
   vec3 tints = pow(0.5 + 0.5 * cos(6.2832 * (film + vec3(0.0, 0.3333, 0.6667))), vec3(3.0));
+  // (Violet is the widest of its three bands and green the narrowest.)
+  tints *= vec3(1.9, 1.0, 0.6);
   vec3 pearl = (vec3(0.56, 0.4, 1.0) * tints.x + vec3(1.0, 0.5, 0.8) * tints.y + vec3(0.6, 1.0, 0.76) * tints.z) / (tints.x + tints.y + tints.z);
   c *= mix(vec3(1.0), 1.6 * pearl, 1.6 * uFilm.z * (1.0 - vFar) * (1.0 - gather));
   // Thin as a soap film: where it is stretched it takes colours by its thickness and the angle it is seen at.
@@ -390,15 +395,18 @@ void main() {
   vec3 mirror = skyRadiance(normalize(r));
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.5, 0.2)) * vec3(0.92, 0.94, 1.15), 0.6);
   float glint = smoothstep(0.7, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
+  // The edge is not lit along its whole length: the line comes and goes with the film's thickness, and seen close it is thin.
+  float lineHere = mix(mix(0.25, 1.0, smoothstep(0.35, 0.65, drift)), 1.0, vFar);
+  rim *= lineHere;
   // A wet sheen on the face that looks up, on every fold, and along the rolled edge.
   vec3 shine = mirror * (0.5 * fres * litNear + uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) * (0.35 + 0.65 * litNear) * (1.0 - 0.5 * clear) + 0.6 * rim * (1.0 - 0.6 * uVeil)) * (1.0 - 0.55 * uVeil);
   // Pearl: aslant the film gives the sky back tinted by its thickness, violet, then pink, then a pale green, and the tints slide as it
   // turns. Its rolled edge catches the light.
   shine += key * (pearl * (3.2 * uFilm.z * pow(1.0 - nv, 3.0) * (1.0 - 0.7 * gather) * (0.3 + 0.7 * litNear)) + vec3(0.95, 0.95, 1.1) * (0.55 * rim * (1.0 - 0.6 * uVeil))) * (1.0 - 0.8 * vFar);
-  // Seen close the film is mother of pearl on its whole face, not only aslant: the picture's own violets, pinks and pale greens, and its
-  // veins, as a sheen on a skin that is otherwise clear.
-  vec3 hue = clamp(mix(vec3(1.0), pic / max(lum, 0.02), 2.2), 0.0, 3.0) * mix(vec3(1.0), 1.5 * pearl, 0.4);
-  shine += key * hue * (0.85 * uFilm.z * (1.0 - vFar) * (1.0 - gather) * min(tone, 1.6) * mix(0.45, 1.1, litNear));
+  // Seen close the film is mother of pearl on the whole of a face that looks at the sky, not only aslant: a sheen on a skin that is
+  // otherwise clear, brighter on its veins. None of its colour is the picture's.
+  float skyward = smoothstep(-0.3, 0.7, dot(n, above));
+  shine += key * mix(vec3(1.0), 1.5 * pearl, 0.8) * (uFilm.z * (1.0 - vFar) * (1.0 - gather) * min(tone, 1.6) * mix(0.2, 1.25, skyward));
   // The brightest of the sky on a wet skin: a line of light down every fold that turns to it, which is what says the section is round.
   float ndh = clamp(dot(n, normalize(above + toCamera)), 0.0, 1.0);
   shine += key * (1.0 - 0.6 * uVeil) * (1.5 * pow(ndh, 70.0) + 0.1 * pow(ndh, 14.0)) * vec3(0.94, 0.94, 1.1);
@@ -407,9 +415,14 @@ void main() {
   vec2 off = vWorld.xz - uStruckAt.xz;
   float mine = max(abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.3, 1.0 / (1.0 + dot(off, off) / 250000.0));
   float aslant = 1.0 - smoothstep(0.1, 0.5, nv);
-  shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.35 * rim + 0.2 * aslant + 0.07 * belly, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim + 0.5 * aslant + 0.16 * belly, vFar));
+  shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.35 * rim * lineHere + 0.2 * aslant + 0.07 * belly, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim + 0.5 * aslant + 0.16 * belly, vFar));
   // How much of what is behind it the skin hides. Far off it is more of a body: its lit face pale, its other face dark.
-  float cover = clamp((1.0 - exp(-0.33 * path)) * (1.0 - 0.8 * clear) + 0.3 * vFar * (1.0 + 0.3 * vNear), 0.0, 0.95);
+  // Far off each is a darker body where it is gathered, along its middle and at its wrung places, and thin toward its two ends and its
+  // edges, where the sky shows through it.
+  float mid = smoothstep(0.03, 0.28, s) * (1.0 - smoothstep(0.4, 0.9, s));
+  float core = vFar * max(mid * (1.0 - smoothstep(0.1, 0.6, abs(vb))), gather);
+  float cover = clamp((1.0 - exp(-0.33 * path)) * (1.0 - 0.8 * clear) * mix(1.0, 0.3 + 0.55 * mid, vFar) + vFar * (0.03 + 0.2 * mid + 0.3 * core) * (1.0 + 0.3 * vNear), 0.0, 0.95);
+  c *= 1.0 - 0.7 * core;
   // Lilac-grey, whatever the light: glass, not flesh.
   c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.97, 1.16), mix(0.2, 0.6, vFar));
   // The shine is on the film, not in it: it shows at its full strength however thin the film.
@@ -422,7 +435,8 @@ void main() {
   float rimed = smoothstep(0.2, 0.8, x) * smoothstep(0.35, 0.75, 0.6 * vnoise(vec2(metres * 0.9, seed)) + 0.4 * vnoise(vec2(metres * 4.5, seed + 3.0)));
   vec3 sinew = mix(vec3(0.1, 0.055, 0.045), vec3(0.035, 0.022, 0.022), fibre) * (1.0 + 0.8 * min(knots, 1.0));
   rimed *= 1.0 - vFar;
-  float corded = cordHere * (1.0 - 0.75 * blade) * mix(0.3, 1.0, max(vCord, vFar));
+  // Seen close the cord does not run on under the skin as a ruled line: it ends a little way into the blade.
+  float corded = cordHere * (1.0 - 0.75 * blade) * mix(0.3, 1.0, max(vCord, vFar)) * mix(1.0 - smoothstep(0.02, 0.2, s), 1.0, vFar);
   // Most of a veil is neither cord nor ice, and the rig's shading is the dearest thing here: it is paid only where one of them is.
   if (corded > 0.0) {
     vec3 cord = rigShade(vWorld, round_, toCamera, mix(sinew, vec3(0.6, 0.64, 0.7), rimed), mix(0.28, 0.8, rimed), 1.0) * (1.0 - 0.5 * vFar);
