@@ -185,8 +185,9 @@ void main() {
   albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.6), max(stain * 0.7, 0.5 * streak) * (1.0 - step(0.5, uTier)));
   float roost = vnoise(fall * vec2(0.031, 0.045) + 2.0) * 0.65 + vnoise(fall * vec2(0.11, 0.13)) * 0.35;
   float run = vnoise(fall * vec2(1.3, 0.05) + 11.0) * 0.6 + vnoise(fall * vec2(4.1, 0.16)) * 0.4;
+  // On a blade the runs are wide and few: a fine one over the whole face is a hatch.
+  run = mix(run, vnoise(fall * vec2(0.37, 0.016) + 11.0) * 0.65 + vnoise(fall * vec2(0.11, 0.006)) * 0.35, uFin);
   // Fine upright fractures and runs of water down a blade's face.
-  albedo *= mix(1.0, 0.95 + 0.1 * run, uFin);
   float white = smoothstep(0.45, 0.75, run * (0.35 + 1.1 * roost) + 0.25 * (nh.z - 0.5)) * smoothstep(0.3, 0.55, roost);
   white = max(white, 0.8 * smoothstep(0.55, 0.9, n0.y) * smoothstep(0.3, 0.6, roost + 0.3 * (nh.z - 0.5)));
   white *= (1.0 - band) * smoothstep(tide + 4.0, tide + 30.0, y);
@@ -218,10 +219,10 @@ void main() {
   vec3 wc = texture2D(tWeed, fall / 7.0).rgb;
   albedo = mix(albedo, wc * 0.9, weed);
   float rough = mix(0.92, 0.45, max(weed, band));
-  float occ = (0.45 + 0.55 * smoothstep(0.2, 0.6, nh.z)) * (mix(0.55, 0.72, uFin) + mix(0.45, 0.28, uFin) * smoothstep(0.25, 0.6, nhW.z)) * mix(1.0, 0.45, weed) * vShade * (1.0 - 0.3 * soft);
+  float occ = (0.45 + 0.55 * smoothstep(0.2, 0.6, nh.z)) * (mix(0.55, 0.72, uFin) + mix(0.45, 0.28, uFin) * smoothstep(0.25, 0.6, nhW.z)) * mix(1.0, 0.45, weed) * vShade * (1.0 - 0.3 * soft * (1.0 - uFin));
   occ = mix(occ, 0.5 + 0.5 * occ, step(0.5, uTier));
   // What hangs over is dark: the under side of a leaning blade sees the wet floor, not the sky.
-  occ *= 0.45 + 0.55 * smoothstep(-0.55, 0.25, n0.y);
+  occ *= mix(0.45, 0.64, uFin) + mix(0.55, 0.36, uFin) * smoothstep(-0.55, 0.25, n0.y);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Against the light the edge of the stone burns: the sun grazes round the rough rim toward the lens.
   float edge = 1.0 - max(dot(n, v), 0.0);

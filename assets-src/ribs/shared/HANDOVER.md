@@ -1,7 +1,7 @@
 # Hand-over of the Ribs: shared, root, land, air
 
 Owner in wave 2 until version 3: `ribs_ground_owner_2`, branch `agent/ribs-ground-2`. Partner: `ribs_sea_owner_2` (`sea/`, `wings/`, `drowned/`).
-Written before the last checks of version 3. Numbers are measured unless a line says otherwise; hd draft looks, not final uhd, unless said.
+Written with version 3. Numbers are measured unless a line says otherwise; hd draft looks, not final uhd, unless said.
 
 ## How each part is drawn
 
@@ -19,7 +19,7 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 - Reading pictures with `textureGrad` (two slopes): right, but the software renderer takes about seven times a `textureLod` read. All reads now go by `footLevel` (long side of the pixel's foot, cut to a few times the short one): land 5.3 s to 1.05 s.
 - The colony as coursed bands with level ledges (`CRAG.band`): judged a staircase, then masonry. Blocks in thrown cells are better; joints still read too level.
 - The colony's sheet `mat/colony.jpg` laid round the rock (`roundSpace`): pulled long down every face. Dropped for tiles on three axes.
-- The fin sheet at 32 percent and flutes of 2 to 3 m: every blade banded like wood grain. Both cut.
+- The fin sheet at 32 percent and flutes of 2 to 3 m: every blade banded like wood grain. Both cut. The bands also came through the shade: the sheet's heights (`nh.z`) and the `beds` noise both fed `occ`. Both are now off for `uFin`. A thin water streak at 0.8 m spacing made a hatch of its own: streaks are now wide, few and grouped.
 - Camera drift to pass M2: not done, by order. M2 is measured with the camera held.
 - Sun low from the right (wave 1): the lens side of everything in shade.
 - Software renderer ignores anisotropy at grazing angles: `skimmed` and `footLevel` do it by hand.
@@ -27,9 +27,9 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 ## Still wrong beside the approved pictures, worst first
 
 - ribs-3: joints between blocks still run nearly level; no overhangs, no rounded noses, no cracks through several beds; white runs are even threads; the bench top nearest the lens is a flat picture seen along itself.
-- Blades: flat grey with little modelling by light; lichen sparse; no pitting; bites read as dark crescents. No arch through the middle blade (only the first owner's standing arch).
+- Blades: a faint fine slanted hatch is still on the near blade at ribs-3 at uhd and I did not find its last source (suspects: `mat/bone.jpg` at 25 percent in the fin albedo, the wide relief read `nhW`). Dark crescents stand on every blade: I took them for the upper rims of the bites in `bladeRelief` and eased the shade under overhangs, and they stayed, so look at `aShade`. Flat grey, lichen sparse, no pitting. No arch through the middle blade (only the first owner's standing arch).
 - ribs-0 flat: stones on the bar are one size class and ringed pale; the lane is brighter but does not hold the blades upside down near the lens (the decal fades out there); the left foreground lacks the dark weed rocks.
-- ribs-4: the stacks are pillars with clumped weed, not a weed-hung wall and a buttress; stones are low loaves.
+- ribs-4: the stacks are pillars, near black on the lens side, with clumped weed that reads grey, not gold; stones are low loaves; nothing dark and out of focus lies before the lens.
 - ribs-1: wall weed is still one sheet; no straps standing free.
 - ribs-1 and ribs-2 fine detail is 2.5 and 2.9 times the picture's: an even stipple on weed and water (the water is the partner's).
 
@@ -64,4 +64,4 @@ Placed by a key camera's pose and kept for the whole film: stones strewn before 
 
 ## Cost, seconds a sample at 3840 x 2160, key ribs-0, draft tier
 
-See the version 3 message for the last measure. At 03:31 UTC: whole 10.58, empty 2.01, ribs 1.85, land 1.05, weed 0.31, sky 0.22, rocks 0.20, ledges 0.
+At 04:41 UTC, version 3, `npm run -s cost -- --key ribs-0 --format uhd --tier draft --parts land ribs weed rocks ledges sky cloud air`: whole 10.85, empty 2.12, ribs 1.74, rocks 1.00 (the pebbles), land 0.84, weed 0.19, sky 0.06, ledges 0. Mine 3.83 against a share of 4.5. The whole is over 7: the rest is the partner's water and animals and the engine's empty frame.

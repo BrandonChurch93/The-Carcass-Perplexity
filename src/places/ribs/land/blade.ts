@@ -29,7 +29,7 @@ export function bladeRelief(q: number, s: number, x: number, y: number, z: numbe
   // Broken at the size of a boat and of a man.
   d += 0.6 * (noise3(x / 11, y / 8, z / 11) - 0.5);
   // Joints: cracks across the blade where it will break next.
-  d -= 0.9 * (1 - smooth(0, 0.05, Math.abs(noise2(s / 23 + 0.02 * q, q / 90 + 4.1) - 0.5)));
+  d -= 0.3 * (1 - smooth(0, 0.05, Math.abs(noise2(s / 23 + 0.02 * q, q / 90 + 4.1) - 0.5)));
   return d;
 }
 
