@@ -5,7 +5,7 @@ import { F, K1_AT, K1_DIR, R, STUCK, TAU, rel, smooth } from '../shared/anchors'
 import type { Context, Piece } from '../shared/context';
 import { createField, fbm, type Field } from './field';
 import { patchGeometry, ringsGeometry } from './mesh';
-import { LAND_FRAGMENT, LAND_VERTEX } from './shaders';
+import { LAND_FRAGMENT, LAND_VERTEX, RELIEF } from './shaders';
 import { bakeGrain, bakePlates } from './tiles';
 
 export const PARTS = ['land', 'crust'] as const;
@@ -15,7 +15,7 @@ const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [numbe
 /** The foot of the rock rise the first lens looks down on, built finely for the same reason. */
 /** The bank the third lens lies on, a hand above the salt. */
 const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.02 };
-const ROCK = { at: [10.5, -8.5] as [number, number], half: [9.5, 7.5] as [number, number], cell: 0.07 };
+const ROCK = { at: [10.5, -8.5] as [number, number], half: [9.5, 7.5] as [number, number], cell: 0.05 };
 
 let shared: { field: Field; grain: THREE.DataTexture; plates: THREE.DataTexture } | null = null;
 /** What the land knows, for the brine: the same field and the same grain. Made by the land's `create`. */
@@ -73,96 +73,18 @@ export function create(ctx: Context): Piece {
   };
   const inPatch = (x: number, z: number): number => inside(x, z, centre, PATCH.half);
   const stuck = rel(STUCK[0], STUCK[1]);
-  // The thin crust's own relief: what is left of it lies on the mud as slabs a stride across, each sagged and tilted its own way; between
-  // them the mud is lower, and lowest where the stuck one has trodden it.
-  const SLAB = 0.46;
-  const hash = (i: number, j: number, k: number): number => {
-    const n = Math.sin(i * 127.1 + j * 311.7 + k * 74.7) * 43758.5453;
-    return n - Math.floor(n);
-  };
-  /** The slab a point is on: metres inside its edge, whether it is still there, its own shade, and its top above the mud's mean. */
-  const slabAt = (x0: number, z0: number): { edge: number; kept: boolean; shade: number; top: number } => {
-    // Broken crust has no straight edges and no one size.
-    const x = x0 + 0.34 * (fbm(x0 / 0.7 + 3, z0 / 0.7, 3) - 0.5) + 0.07 * (fbm(x0 / 0.13, z0 / 0.13 + 8, 2) - 0.5);
-    const z = z0 + 0.34 * (fbm(x0 / 0.7, z0 / 0.7 + 6, 3) - 0.5) + 0.07 * (fbm(x0 / 0.13 + 5, z0 / 0.13, 2) - 0.5);
-    const gx = Math.floor(x / SLAB);
-    const gz = Math.floor(z / SLAB);
-    let d1 = 9;
-    let d2 = 9;
-    let bi = 0;
-    let bj = 0;
-    let bx = 0;
-    let bz = 0;
-    for (let j = gz - 1; j <= gz + 1; j++) {
-      for (let i = gx - 1; i <= gx + 1; i++) {
-        const fx = (i + 0.15 + 0.7 * hash(i, j, 1)) * SLAB;
-        const fz = (j + 0.15 + 0.7 * hash(i, j, 2)) * SLAB;
-        const d = Math.hypot(x - fx, z - fz);
-        if (d < d1) {
-          d2 = d1;
-          d1 = d;
-          bi = i;
-          bj = j;
-          bx = fx;
-          bz = fz;
-        } else if (d < d2) d2 = d;
-      }
-    }
-    const hole = Math.hypot(bx - stuck[0], bz - stuck[1]);
-    // Whole away from the stuck one, where nothing has trodden it: hairline cracks, no gaps, hardly a tilt.
-    const whole = smooth(3.6, 6.5, hole + 2.5 * (fbm(bx / 3.1, bz / 3.1 + 2, 2) - 0.5));
-    const chance = 0.02 + 0.85 * fbm(bx / 2.3 + 4, bz / 2.3, 2) + whole;
-    const kept = hash(bi, bj, 3) < chance;
-    const lean = 0.12 * (1 - 0.85 * whole);
-    const tiltX = (hash(bi, bj, 4) - 0.5) * lean;
-    const tiltZ = (hash(bi, bj, 5) - 0.5) * lean;
-    return { edge: (d2 - d1) * 0.5 - 0.012 + 0.06 * whole, kept, shade: hash(bi, bj, 6) * (1 - 0.7 * whole) + 0.35 * whole, top: (0.006 + 0.022 * hash(bi, bj, 7)) * (1 - 0.6 * whole) + tiltX * (x - bx) + tiltZ * (z - bz) };
-  };
+  // Round the stuck one the mud is trodden into a wallow with a pushed-up lip; the slabs and the lumps of the mud are the plate's.
   const crustHeight = (x: number, z: number): number => {
     const base = field.height(x, z);
     const thin = field.thin(x, z);
     if (thin <= 0) return base;
     const hole = Math.hypot(x - stuck[0], z - stuck[1]);
-    const mud = -0.012 + 0.03 * (fbm(x / 0.9, z / 0.9, 3) - 0.5) + 0.016 * (fbm(x / 0.17, z / 0.17, 2) - 0.5) - 0.12 * smooth(2.3, 0.6, hole) + 0.04 * Math.exp(-(((hole - 2.4) / 0.5) ** 2));
-    const slab = slabAt(x, z);
-    const on = slab.kept ? smooth(0, 0.035, slab.edge) : 0;
-    return base + thin * (mud * (1 - on) + slab.top * on) * smooth(0, 1, inPatch(x, z));
-  };
-  const crustPaint = (x: number, z: number): [number, number] => {
-    const slab = slabAt(x, z);
-    return [slab.kept ? Math.min(0.12, slab.edge) : -0.05, slab.shade];
+    const mud = 0.02 * (fbm(x / 0.9, z / 0.9, 3) - 0.5) - 0.12 * smooth(2.3, 0.6, hole) + 0.04 * Math.exp(-(((hole - 2.4) / 0.5) ** 2));
+    return base + thin * mud * smooth(0, 1, inPatch(x, z));
   };
   // The land's own mesh lies a little under the fine patch, so the patch is what is seen there.
   const landHeight = (x: number, z: number): number =>
-    field.height(x, z) - 0.3 * smooth(0.3, 0.7, Math.max(inPatch(x, z), inside(x, z, rockCentre, ROCK.half), inside(x, z, bankCentre, BANK.half, K1_DIR)));
-  // Round knobs packed side by side, 0 to 1: one to a cell, each a part of a ball.
-  const knobs = (x: number, z: number, cell: number): number => {
-    const gx = Math.floor(x / cell);
-    const gz = Math.floor(z / cell);
-    let best = 0;
-    for (let j = gz - 1; j <= gz + 1; j++) {
-      for (let i = gx - 1; i <= gx + 1; i++) {
-        const n1 = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
-        const n2 = Math.sin(i * 269.5 + j * 183.3) * 43758.5453;
-        const n3 = Math.sin(i * 419.2 + j * 371.9) * 43758.5453;
-        const fx = (i + 0.2 + 0.6 * (n1 - Math.floor(n1))) * cell;
-        const fz = (j + 0.2 + 0.6 * (n2 - Math.floor(n2))) * cell;
-        const size = 0.5 + 0.5 * (n3 - Math.floor(n3));
-        const d = Math.hypot(x - fx, z - fz) / (cell * 0.75 * size);
-        if (d < 1) best = Math.max(best, size * Math.sqrt(1 - d * d));
-      }
-    }
-    return best;
-  };
-  // The salt the brine leaves at its edge grows in lumps like a cauliflower's: only the fine patches are fine enough to carry them.
-  const frilled = (x: number, z: number): number => {
-    const base = field.height(x, z);
-    const s = field.shore(x, z);
-    if (s < 0.03 || s > 1.2) return base;
-    const env = smooth(0.03, 0.16, s) * smooth(0.8, 0.25, s + 0.5 * (fbm(x / 0.9 + 5, z / 0.9, 2) - 0.5));
-    const c = fbm(x / 0.37 + 2, z / 0.37, 2);
-    return base + env * (0.015 + (0.3 + 0.7 * smooth(0.35, 0.65, c)) * (0.06 * knobs(x, z, 0.11) + 0.035 * knobs(x + 3.3, z, 0.042)));
-  };
+    field.height(x, z) - 0.3 * smooth(0.3, 0.7, Math.max(inPatch(x, z), inside(x, z, bankCentre, BANK.half, K1_DIR))) - 0.6 * smooth(0.3, 0.9, inside(x, z, rockCentre, ROCK.half));
   // How deep a point sits among its neighbours, near and wide: clefts are dark because the sky does not reach into them.
   const hollowOf = (h: (x: number, z: number) => number, a: number, b: number, da: number, db: number) => (x: number, z: number): [number, number] => {
     const here = h(x, z);
@@ -181,15 +103,22 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       tFieldNear: { value: field.near },
       tFieldFar: { value: field.far },
-      tPlates: { value: plates },
+      tSilt: { value: ctx.assets.texture('mat/silt.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tSiltN: { value: ctx.assets.texture('mat/silt-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
+      tLedge: { value: ctx.assets.texture('mat/ledge.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tLedgeH: { value: ctx.assets.texture('mat/ledge-h.png', { kind: 'data', anisotropy: 4 }) },
+      tThin: { value: ctx.assets.texture('mat/thincrust.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tThinH: { value: ctx.assets.texture('mat/thincrust-h.png', { kind: 'data', anisotropy: 4 }) },
+      uLedgeAt: { value: new THREE.Vector4(rockCentre[0], rockCentre[1], -F[1], F[0]) },
+      uThinAt: { value: new THREE.Vector4(centre[0], centre[1], -F[1], F[0]) },
+      tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tRimeN: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
       tGrain: { value: grain },
       tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
       tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
-      tMud: { value: ctx.assets.texture('mat/mud.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
-      tMudN: { value: ctx.assets.texture('mat/mud-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
       tRock: { value: ctx.assets.texture('mat/rock.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
-      tRockN: { value: ctx.assets.texture('mat/rock-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
-      uBank: { value: new THREE.Vector3(bankCentre[0], bankCentre[1], 3.6) },
+      tShore: { value: ctx.assets.texture('mat/shore.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tShoreH: { value: ctx.assets.texture('mat/shore-h.png', { kind: 'data', anisotropy: 4 }) },
     },
     toneMapped: false,
   });
@@ -203,23 +132,27 @@ export function create(ctx: Context): Piece {
   const land = new THREE.Group();
   land.add(ground, far);
   const hollow = hollowOf(field.height, 0.16, 0.5, 0.07, 0.3);
-  const foot = new THREE.Mesh(patchGeometry(field.height, rockCentre, F, ROCK.half[0] * 2, ROCK.half[1] * 2, ROCK.cell, hollow), material);
-  const bank = new THREE.Mesh(
-    patchGeometry(frilled, bankCentre, K1_DIR, BANK.half[0] * 2, BANK.half[1] * 2, BANK.cell, hollowOf(frilled, 0.02, 0.07, 0.01, 0.03)),
-    material,
-  );
+  // A fine patch is raised by the pictures' heights in its vertices; the raising dies out toward its rim, where the plain ground takes over.
+  const raised = (c: [number, number], half: [number, number], cell: number, along: [number, number] = F): THREE.ShaderMaterial => {
+    const m = new THREE.ShaderMaterial({
+      vertexShader: LAND_VERTEX,
+      fragmentShader: LAND_FRAGMENT,
+      uniforms: { ...material.uniforms, uCell: { value: cell }, uPatch: { value: new THREE.Vector4(c[0], c[1], half[0], half[1]) }, uAlong: { value: new THREE.Vector2(along[0], along[1]) } },
+      defines: RELIEF ? { RELIEF: 1 } : {},
+      toneMapped: false,
+    });
+    m.userData.depthFragment = material.userData.depthFragment;
+    return m;
+  };
+  const footMaterial = raised(rockCentre, ROCK.half, ROCK.cell);
+  const foot = new THREE.Mesh(patchGeometry(field.height, rockCentre, F, ROCK.half[0] * 2, ROCK.half[1] * 2, ROCK.cell, hollow), footMaterial);
+  const bankMaterial = raised(bankCentre, BANK.half, BANK.cell, K1_DIR);
+  const bank = new THREE.Mesh(patchGeometry(field.height, bankCentre, K1_DIR, BANK.half[0] * 2, BANK.half[1] * 2, BANK.cell, () => [0, 0]), bankMaterial);
   land.add(foot, bank);
   ctx.scene.add(ctx.parts.built('land', land));
 
-  const crustMaterial = new THREE.ShaderMaterial({
-    vertexShader: LAND_VERTEX,
-    fragmentShader: LAND_FRAGMENT,
-    uniforms: material.uniforms,
-    defines: { CRUST: 1 },
-    toneMapped: false,
-  });
-  crustMaterial.userData.depthFragment = material.userData.depthFragment;
-  const patch = new THREE.Mesh(patchGeometry((x, z) => crustHeight(x, z) + 0.012, centre, F, PATCH.half[0] * 2, PATCH.half[1] * 2, PATCH.cell, crustPaint), crustMaterial);
+  const crustMaterial = raised(centre, PATCH.half, PATCH.cell);
+  const patch = new THREE.Mesh(patchGeometry((x, z) => crustHeight(x, z) + 0.012, centre, F, PATCH.half[0] * 2, PATCH.half[1] * 2, PATCH.cell, () => [0, 0]), crustMaterial);
   ctx.scene.add(ctx.parts.built('crust', patch));
 
   return {
@@ -230,6 +163,8 @@ export function create(ctx: Context): Piece {
       bank.geometry.dispose();
       patch.geometry.dispose();
       material.dispose();
+      footMaterial.dispose();
+      bankMaterial.dispose();
       crustMaterial.dispose();
       field.dispose();
       grain.dispose();

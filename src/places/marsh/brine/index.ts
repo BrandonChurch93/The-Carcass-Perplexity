@@ -70,7 +70,7 @@ export function create(ctx: Context): Piece {
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps } },
+    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;
@@ -112,7 +112,12 @@ export function create(ctx: Context): Piece {
   water.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('brine', water));
 
-  const skin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, toneMapped: false });
+  // The skin of a dome is a film: drawn over what is behind it, premultiplied, after everything solid.
+  const skin = new THREE.ShaderMaterial({
+    vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, toneMapped: false, transparent: true, depthWrite: false,
+    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+  });
+  const dropSkin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, defines: { DROP: 1 }, toneMapped: false });
   const ball = new THREE.SphereGeometry(1, 40, 16, 0, TAU, 0, Math.PI / 2);
   const domeLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
   ball.setAttribute('aLife', domeLife);
@@ -124,7 +129,7 @@ export function create(ctx: Context): Piece {
   const bead = new THREE.SphereGeometry(1, 12, 8);
   const dropLife = new THREE.InstancedBufferAttribute(new Float32Array(dropCount * 4), 4);
   bead.setAttribute('aLife', dropLife);
-  const dropMesh = new THREE.InstancedMesh(bead, skin, dropCount);
+  const dropMesh = new THREE.InstancedMesh(bead, dropSkin, dropCount);
   dropMesh.frustumCulled = false;
   // What each drop is thrown with: direction round the dome, speed out, speed up, size. Fixed at creation.
   const throwRng = ctx.rng('brine/drops');
@@ -267,6 +272,7 @@ export function create(ctx: Context): Piece {
       tube.dispose();
       surface.dispose();
       skin.dispose();
+      dropSkin.dispose();
       crownMaterial.dispose();
     },
   };
