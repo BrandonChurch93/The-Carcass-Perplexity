@@ -21,7 +21,7 @@ uniform vec4 uRain;
 uniform sampler2D tSky;
 uniform sampler2D tFar;
 // What the far picture's white comes to in the rig's light.
-const float FAR_GAIN = 1.5;
+const float FAR_GAIN = 1.2;
 ${RIG_GLSL}
 
 void main() {
@@ -70,7 +70,7 @@ void main() {
   // Over the far picture the sheet is heavier than at the horizon's pale band: a lens that looks level sees its grey weight.
   c *= mix(1.0, 0.72, smoothstep(0.16, 0.42, el));
   // The sheet is brightest overhead, as an overcast is, and greys toward the far picture.
-  c *= mix(1.8, 2.8, smoothstep(0.1, 0.5, el));
+  c *= mix(1.4, 2.0, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
   gl_FragColor = vec4(rigPlain(c), 1.0);
 }`;

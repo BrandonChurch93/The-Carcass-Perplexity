@@ -76,18 +76,18 @@ void viewRay(out vec3 ro, out vec3 rd, out float far, out float open) {
 }
 
 // The place at a full-size pixel, as the camera sees it (x right, y up, the view down -z).
+vec2 occTexel;
+vec2 occLens;
 vec3 seenAt(ivec2 px) {
-  ivec2 size = textureSize(tDepth, 0);
-  px = clamp(px, ivec2(0), size - 1);
-  vec2 uv = (vec2(px) + 0.5) / vec2(size);
-  vec4 v = uInvProjection * vec4(uv * 2.0 - 1.0, texelFetch(tDepth, px, 0).r * 2.0 - 1.0, 1.0);
-  return v.xyz / v.w;
+  // (The lens is taken as square on its axis, which spares a whole matrix for each read.)
+  px = clamp(px, ivec2(0), textureSize(tDepth, 0) - 1);
+  vec2 ndc = (vec2(px) + 0.5) * occTexel * 2.0 - 1.0;
+  float w = uInvProjection[2][3] * (texelFetch(tDepth, px, 0).r * 2.0 - 1.0) + uInvProjection[3][3];
+  return vec3(ndc * occLens, uInvProjection[3][2]) / w;
 }
-
-// How much of the overcast a surface loses to what stands close round it: the crease, the foot of a thing on the ground, the underside
-// of a body. Read from the depth of the frame itself, so it holds for every surface of every folder with no call from any of them.
-// 1 open, less where closed in.
 float closedIn(ivec2 pixel) {
+  occTexel = 1.0 / vec2(textureSize(tDepth, 0));
+  occLens = vec2(uInvProjection[0][0], uInvProjection[1][1]);
   vec3 P = seenAt(pixel);
   float dist = -P.z;
   if (dist > OCC_FAR) return 1.0;
