@@ -161,7 +161,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
    *  `bare`: the part of it at the root that carries none. `long`: the length of a thread in metres. `thick`: the limb's own girth at its root. */
   const locks = (c: Curve, bare: number, phase: number, from: number, long: number, thick: number, upTo: number, dead = false): void => {
     // A lock every few centimetres of limb, of seven to ten threads. Far off: fewer locks, and each thread stands for several.
-    const spacing = (close ? 0.027 : 0.034) * coarse * (0.75 + 0.25 * tall / 3.4);
+    const spacing = (close ? 0.037 : 0.034) * coarse * (0.75 + 0.25 * tall / 3.4);
     const n = Math.max(3, Math.round((c.length * (1 - bare)) / spacing));
     const width = (close ? 0.0019 : 0.0026) * Math.sqrt(coarse) * (0.8 + 0.2 * tall / 3.4);
     for (let i = 0; i < n; i++) {
@@ -173,7 +173,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       const cp = Math.cos(psi);
       const sp = Math.sin(psi);
       let rx = g.s[0] * cp + g.o[0] * sp + 0.3 * WIND[0];
-      let ry = g.s[1] * cp + g.o[1] * sp - 0.35 - 0.3 * hung;
+      let ry = g.s[1] * cp + g.o[1] * sp - 0.6 - 0.3 * hung;
       let rz = g.s[2] * cp + g.o[2] * sp + 0.3 * WIND[1];
       const rl = Math.hypot(rx, ry, rz) || 1;
       rx /= rl;
@@ -181,12 +181,13 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       rz /= rl;
       // Short at the root of the limb, longest past its middle, and a tassel at its end.
       const L = long * rng.range(0.45, 1.35) * (0.45 + 0.55 * smooth(bare, bare + 0.3 * (1 - bare), u)) * (1 + 0.2 * hung) * (dead ? 0.5 : 1);
-      const theta = (rng.range(0.16, 0.55) + 0.3 * hung) * (1 - 0.6 * smooth(0.8, 1, u));
+      const theta = (rng.range(0.12, 0.45) + 0.3 * hung) * (1 - 0.6 * smooth(0.8, 1, u));
       const ct = Math.cos(theta);
       const st = Math.sin(theta);
       const dir: V3 = [g.t[0] * ct + rx * st, g.t[1] * ct + ry * st, g.t[2] * ct + rz * st];
-      const sag = rng.range(0.02, 0.26) + 0.18 * smooth(0.6, 1, u) + 0.5 * hung;
-      const far = 0.72 - 0.3 * hung;
+      // Wet, a lock has no stiffness: it leaves along its limb and then hangs, and its point is well under where it left.
+      const sag = rng.range(0.24, 0.62) + 0.18 * smooth(0.6, 1, u) + 0.5 * hung;
+      const far = 0.62 - 0.3 * hung;
       const point: V3 = [g.p[0] + dir[0] * L * far + WIND[0] * L * 0.26, g.p[1] + dir[1] * L * far - L * sag, g.p[2] + dir[2] * L * far + WIND[1] * L * 0.26];
       if (weep > 0) {
         // A hanging mass is not combed: every lock ends a little aside of where it would hang.
@@ -197,7 +198,9 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       if (point[1] < f) point[1] = f;
       const lockPhase = rng.range(0, 6.283);
       const tone = rng.next();
-      const members = Math.max(2, Math.round(rng.range(8, 13) / Math.sqrt(coarse)));
+      const members = Math.max(2, Math.round((close ? rng.range(11, 18) : rng.range(8, 13)) / Math.sqrt(coarse)));
+      // The lock's own line from the limb to its point, at its middle: the wet draws its threads onto that line well before they end.
+      const half: V3 = [0.75 * g.p[0] + 0.225 * dir[0] * L + 0.25 * point[0], 0.75 * g.p[1] + 0.225 * dir[1] * L + 0.25 * point[1], 0.75 * g.p[2] + 0.225 * dir[2] * L + 0.25 * point[2]];
       const reach = reachOf(g.p);
       for (let m = 0; m < members; m++) {
         const um = Math.min(1, Math.max(bare * 0.8, u + (rng.range(-1, 1) * spacing * 0.9) / c.length));
@@ -216,8 +219,15 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
         const j = stray ? 0.3 * L : 0.035 * L + 0.004;
         const end: V3 = m === 0 ? point : [point[0] + rng.range(-1, 1) * j, Math.max(f, point[1] + rng.range(-1, 1) * j), point[2] + rng.range(-1, 1) * j];
         const tm = theta + rng.range(-0.25, 0.25);
-        const d1: V3 = [(h.t[0] * Math.cos(tm) + (0.6 * ox + 0.4 * rx) * Math.sin(tm)) * Lm * 0.9, (h.t[1] * Math.cos(tm) + (0.6 * oy + 0.4 * ry) * Math.sin(tm)) * Lm * 0.9, (h.t[2] * Math.cos(tm) + (0.6 * oz + 0.4 * rz) * Math.sin(tm)) * Lm * 0.9];
-        const d2: V3 = [end[0] - a[0] - d1[0], end[1] - a[1] - d1[1], end[2] - a[2] - d1[2]];
+        let d1: V3 = [(h.t[0] * Math.cos(tm) + (0.6 * ox + 0.4 * rx) * Math.sin(tm)) * Lm * 0.9, (h.t[1] * Math.cos(tm) + (0.6 * oy + 0.4 * ry) * Math.sin(tm)) * Lm * 0.9, (h.t[2] * Math.cos(tm) + (0.6 * oz + 0.4 * rz) * Math.sin(tm)) * Lm * 0.9];
+        let d2: V3 = [end[0] - a[0] - d1[0], end[1] - a[1] - d1[1], end[2] - a[2] - d1[2]];
+        if (!stray && close) {
+          // Its curve goes through the lock's line at its middle (a + d1 s + d2 s s is there at s = 0.5) and ends at the point.
+          const q = 0.05 * L;
+          const mid: V3 = [half[0] + rng.range(-1, 1) * q, half[1] + rng.range(-1, 1) * q, half[2] + rng.range(-1, 1) * q];
+          d1 = [4 * mid[0] - 3 * a[0] - end[0], 4 * mid[1] - 3 * a[1] - end[1], 4 * mid[2] - 3 * a[2] - end[2]];
+          d2 = [2 * end[0] + 2 * a[0] - 4 * mid[0], 2 * end[1] + 2 * a[1] - 4 * mid[1], 2 * end[2] + 2 * a[2] - 4 * mid[2]];
+        }
         const w = width * rng.range(0.75, 1.3);
         const tn = Math.min(0.999, Math.max(0, tone + rng.range(-0.12, 0.12)));
         const A: Tip['a'] = [a[0], a[1], a[2], w];
@@ -276,14 +286,14 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
 
   /** A limb forks, and its forks fork: lesser ones leave it part way up, to one side and the other, each hung with its own locks. */
   const sprout = (c: Curve, thick: number, upTo: number, level: number, phase: number, from: number, long: number, whole: number): void => {
-    const n = level === 1 ? (close ? 3 + Math.floor(rng.next() * 2) : 2) + Math.round(weep) : close ? Math.floor(rng.next() * 2) + Math.round(weep) : bush.detail >= 0.5 ? 1 : 0;
+    const n = level === 1 ? (close ? 3 + Math.floor(rng.next() * 2) : 2) + Math.round(2 * weep) : close ? Math.floor(rng.next() * 2) + Math.round(3 * weep) : bush.detail >= 0.5 ? 1 : 0;
     for (let s = 0; s < n; s++) {
       const at = Math.round(rng.range(level === 1 ? 0.16 : 0.12, 0.9) * ALONG);
       const p = c.points[at] as V3;
       const way = (s % 2 === 0 ? -1 : 1) * rng.range(0.15, 0.5 + 0.4 * mound);
       const length = (level === 1 ? whole * rng.range(0.3, 0.55) * (1 - (0.4 * at) / ALONG) : c.length * rng.range(0.3, 0.6)) * (1 - 0.2 * weep);
       const azimuth = (c.azimuth[at] as number) + way;
-      const child = curve(p, azimuth, (c.elevation[at] as number) + rng.range(-0.35, 0.4) - 0.5 * weep, level === 1 ? lean + way * (1 - comb) : azimuth - 0.5 * way, rng.range(-0.9, 0.05) * (1 - weep) + rng.range(-1.5, -1.1) * weep, length, rng.range(1.0, 1.7) - 0.4 * weep);
+      const child = curve(p, azimuth, (c.elevation[at] as number) + rng.range(-0.35, 0.4) - 0.5 * weep, level === 1 ? lean + way * (1 - comb) : azimuth - 0.5 * way, rng.range(-1.0, -0.15) * (1 - weep) + rng.range(-1.5, -1.1) * weep, length, rng.range(1.0, 1.7) - 0.4 * weep);
       const childThick = Math.max(girth(thick, at / ALONG, upTo) * 0.7, 0.0035 * tall);
       const childFrom = from + ((1 - from) * at) / ALONG;
       tube(child, childThick, 0.9, 0, phase, childFrom, 1, level === 1 ? 1 : 3, level === 1 ? SIDES : 5);
@@ -311,12 +321,13 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     const from: V3 = [bush.x + Math.sin(about) * out, bush.y + 0.03 * tall, bush.z + Math.cos(about) * out];
     const spread = (1.9 + 3.4 * mound) * fan;
     const azimuth = lean + (back ? Math.PI + 1.2 * k : spread * k) + rng.range(-0.25, 0.25);
-    const elevation = (back ? 1.2 : 1.32 + upright - 0.85 * rank - 0.3 * mound) + rng.range(-0.12, 0.1);
-    const c = curve(from, azimuth, elevation, lean + (back ? 1.6 * k : (1 - comb * (1 - 0.7 * mound)) * spread * k) + rng.range(-0.2, 0.2), 0.05 - 0.75 * mound - 0.8 * rank ** 0.8 + rng.range(-0.3, 0.15) - 0.6 * weep, length, rng.range(1.6, 2.6) - 0.6 * mound);
+    const elevation = (back ? 1.2 : (close && weep === 0 ? 1.42 - 0.75 * rank : 1.32 - 0.85 * rank) + upright - 0.3 * mound) + rng.range(-0.12, 0.1);
+    const c = curve(from, azimuth, elevation, lean + (back ? 1.6 * k : (1 - comb * (1 - 0.7 * mound)) * spread * k) + rng.range(-0.2, 0.2), -0.12 - 0.7 * mound - 0.75 * rank ** 0.8 + rng.range(-0.3, 0.15) - 0.6 * weep, length, rng.range(1.6, 2.6) - 0.6 * mound);
     const phase = rng.range(0, 6.283);
     const thick = tall * 0.02 * (0.7 + 0.5 * longer) * (1 - 0.3 * mound) * (1 - 0.2 * weep);
     const bare = rng.range(0.08, 0.18) * (1 - 0.5 * mound);
-    const long = tall * 0.15 * shag * (1 - 0.3 * mound);
+    // A hanging mass is a spray of many short sprays, not long hair.
+    const long = tall * 0.175 * shag * (1 - 0.3 * mound) * (1 - 0.55 * weep);
     tube(c, thick, 0.94, 1, phase, 0, 1, 1, close ? 10 : SIDES);
     locks(c, bare, phase, 0, long, thick, 0.94);
     sprout(c, thick, 0.94, 1, phase, 0, long, length);

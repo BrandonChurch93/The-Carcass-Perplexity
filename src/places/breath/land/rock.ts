@@ -371,10 +371,13 @@ void main() {
     lean = mix(lean, 0.3 * lean + fall * 1.2 + (joint.rg - 0.5) * 0.8 * smoothstep(0.55, 0.2, joint.b) + (gritN.rg - 0.5) * (0.9 * smoothstep(16.0, 4.0, dist)), inPad);
     damp = mix(damp, 0.85 * padLow, inPad);
   }
+  // On the plate the dead one lies on it is laid whatever the distance. Laid only within twenty metres of the lens, it came up dark over
+  // the pale plate as the far lens neared the body, and the ground under it went from pale to dark and red within half a second: the pop
+  // of the held frame. (Laid to seventy metres everywhere it was a brown stretched band across the first frame.)
   // Shingle: rounded pale stones a thumb to a fist through, lying in patches on the dry rock, along the border of the dry ground, and
   // nowhere near the tide. Past thirty metres it is not read.
   float ring = 0.0;
-  float shingle = max(ring * smoothstep(0.4, 0.6, a.a), smoothstep(0.61, 0.71, a.r + 0.15 * hollow) * (1.0 - 0.4 * smoothstep(0.0, 0.1, sq))) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * smoothstep(34.0, 20.0, dist);
+  float shingle = max(ring * smoothstep(0.4, 0.6, a.a), smoothstep(0.61, 0.71, a.r + 0.15 * hollow) * (1.0 - 0.4 * smoothstep(0.0, 0.1, sq))) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * max(smoothstep(34.0, 20.0, dist), smoothstep(11.0, 7.0, length(p.xz - vec2(-27.3, 22.6))));
   vec3 pebColour = vec3(0.0);
   if (shingle > 0.0) {
     vec4 pn = textureGrad(tPebN, p.xz / 1.5 + 0.21, dpx / 1.5, dpy / 1.5);
@@ -437,8 +440,8 @@ void main() {
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.55 * dryPad * smoothstep(0.5, 0.22, mn.b) * near);
   // It has run down the shelf from it and lies in the lows of the crust, darkest under the trunk.
   vec2 fromBody = fromPad - vec2(0.3, 0.7);
-  float stain = exp(-dot(fromBody, fromBody) / 2.4) * smoothstep(0.15, 0.6, a.r + 0.7 * (1.0 - crustHigh)) + 0.6 * exp(-dot(fromBody, fromBody) / 0.5);
-  albedo = mix(albedo, albedo * vec3(0.42, 0.2, 0.15), 0.8 * clamp(stain, 0.0, 1.0));
+  float stain = exp(-dot(fromBody, fromBody) / 2.4) * smoothstep(0.15, 0.6, a.r + 0.7 * (1.0 - crustHigh)) + exp(-dot(fromBody, fromBody) / 0.9);
+  albedo = mix(albedo, albedo * vec3(0.3, 0.14, 0.11), 0.88 * clamp(stain, 0.0, 1.0));
   // The dry ground is pale rough rock. Its picture is laid 12 m wide and is soft at the lens, so it gives only the broad lights and darks;
   // the grain of the rock at two sizes and grit a hand across (the shingle's tile, a third of its size) carry the rest.
   vec3 padSoft = mix(vec3(dot(padColour, vec3(0.3333))), padColour, 0.7);
