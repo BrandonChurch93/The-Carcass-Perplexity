@@ -1,0 +1,98 @@
+{
+  "round": 10,
+  "unit": "ribs",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-26 00:14 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "midground white-and-green ridge across the center",
+        "what": "the ridge has sharp low-poly triangular facets along its crest (also clear in set-B-05.png) and vertically stretched green streaks that read as smeared noise rather than real rock or trees",
+        "fix": "replace the midground ridge with high-resolution displaced rock geometry and distinct, multi-scale foliage or strata"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "terraced rocky slope across the foreground and midground",
+        "what": "the rock steps have heavily blurred, stretched, low-resolution textures and a uniform extruded noise pattern that looks synthetic rather than real fractured stone (confirmed at native size in set-B-02.png and set-B-03.png)",
+        "fix": "rebuild the terraces with varied rock materials, crisp micro-displacement, and sharp fractured edges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "water surface in the lower half and around the boulders",
+        "what": "the water looks like smooth gray plastic with no depth, no foam, no meniscus or wet darkened edge where it meets the boulders and cliffs, and scattered dark pebble-like blobs sitting on the surface without ripples (confirmed in set-B-06.png)",
+        "fix": "add realistic water refraction and depth, wet darkened rock edges, subtle foam and meniscus along contacts, and natural ripples around emerging stones"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "creature tassels and brown folded wings in both crops",
+        "what": "the tassels and wing edges break into discrete stepped ghost copies and stippled dotted lines instead of continuous strands or smooth motion blur, and the brown wings clip straight through the solid rock ledges",
+        "fix": "increase motion-blur substeps and anti-aliasing on fine geometry, and add collision constraints so wings rest on rather than intersect the rock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "perched creatures across the rock terraces",
+        "what": "the creatures have smooth, featureless plastic-looking bodies, repeated stiff poses, no contact shadows grounding them to the ledges, and no dust or weathering from the environment",
+        "fix": "add surface micro-detail and environmental dust to the bodies, vary poses, and render proper ambient occlusion and contact shadows on the rock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "flying creature wing in the center of the left crop",
+        "what": "the creature's wing clips directly through the flat water plane with no reflection, shadow, or surface disturbance",
+        "fix": "keep the wing clear of the water or add contact ripples, spray, reflections, and cast shadows on the water surface"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "left and right cliff faces (x 0 to 17% and x 83 to 100%, y 25 to 42%)",
+        "what": "both cliffs use the same vertically stretched, glossy procedural texture that looks like matted fibers rather than layered rock",
+        "fix": "use varied, unstretched tri-planar rock shaders with realistic roughness variation and distinct geological strata"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "clouds and mist behind the midground ridge",
+        "what": "the clouds read as repetitive soft gray puffs and flat cards with uniform shading and no internal directional lighting (including a dark oval card visible in the upper left of set-B-06.png)",
+        "fix": "replace card-like puffs with true volumetric clouds lit by the sky and sun with varied density and crisp edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "flying creature in the right crop (x 83 to 100%, y 58 to 75%)",
+        "what": "the wing edges show coarse stair-stepped aliasing and the head tassels read as rigid, uniform sticks",
+        "fix": "increase geometric resolution and anti-aliasing on the wings and give the tassels natural taper, translucency, and organic variation"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "distant rock spire edge in the upper-left crop (x 0 to 17%, y 25 to 42%)",
+        "what": "the spire silhouette shows straight polygonal facets against the sky and sits in a flat gray tint with no realistic atmospheric depth",
+        "fix": "subdivide the distant spire silhouette and apply depth-graded atmospheric scattering"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "foreground dark boulder in the lower-right crop (x 0 to 17%, y 58 to 75%)",
+        "what": "the boulder has a stretched, glossy bumpy displacement and crushed near-black shadow crevices that do not pick up bounce light from the sky or water",
+        "fix": "break up the rock roughness, remove texture stretching, and lift shadows with sky and water bounce light"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "sky and cloud background in the left crops",
+        "what": "a faint uniform dither or grid pattern is visible across the gray sky at native size",
+        "fix": "increase render sampling and use higher bit-depth output to eliminate sky dither and noise patterns"
+      }
+    ]
+  }
+}

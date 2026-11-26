@@ -1,0 +1,63 @@
+{
+  "round": 11,
+  "unit": "marsh",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-26 00:10 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the large dome bubble at centre, frames 6157 to 6158",
+        "what": "the full dome vanishes in a single frame with no rupture, film tear, rim or splash; it is simply swapped for a scatter of small droplets, so the burst reads as a pop-out rather than an event that lands",
+        "fix": "give the burst 3-5 frames: the cap thins and tears from one point, the skin retracts and breaks into droplets that fly out along the rim, and a ring wave and dimple push out across the surface"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the whole held frame across 6 s: the red channels, pools, sky and vegetation",
+        "what": "with the camera held, almost nothing changes; the channel surfaces, the shoreline foam, the plants and the rain curtain in the sky are effectively identical from 0.00 s to 6.00 s, so the place reads as a still picture",
+        "fix": "put visible flow on the channels (moving glints, ripples drifting downstream, foam travelling along the banks), let the rain curtain drift and change density, move the plants in the wind, and add a clear sign of life"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the concentric ripple rings at left, frames 6156 to 6167",
+        "what": "the ring set holds the same spacing and position across all twelve frames and does not spread or fade, so it reads as a texture painted on the surface rather than waves moving out",
+        "fix": "let the rings travel outward and lose amplitude over time, and interact with the burst's own wave"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the droplets after the burst, frames 6158 to 6167",
+        "what": "the droplets spread upward and sideways at an even rate and hang in the air like floating particles; none arc back down or splash into the surface",
+        "fix": "give the droplets ballistic arcs under gravity, with size-varied speeds and small splash rings where they fall back"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the finned creature surfacing behind the burst, frames 6159 to 6167",
+        "what": "the creature fades in where the bubble was and glides sideways at a constant height with no body flex, bow wave or wake, so it reads as a model sliding across the plane",
+        "fix": "have it break the surface with a wake and spray, and show tail and body undulation and a change of depth as it swims"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the red water surface in the foreground",
+        "what": "the dark mottled pattern shifts only a little and evenly from frame to frame, like a scrolling noise texture, and does not react to the burst",
+        "fix": "drive the surface with a wave simulation so the burst's ring wave passes through the foreground and the highlights break and re-form"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "the steam plume above the left pool",
+        "what": "the plume only slightly changes brightness and stays in place; there is little rolling or drifting with the wind",
+        "fix": "let the vapour billow, roll and drift downwind, with puffs that detach and thin out"
+      }
+    ]
+  }
+}
