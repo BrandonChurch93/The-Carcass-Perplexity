@@ -1,7 +1,6 @@
-2026-11-26 06:10 UTC
-work at 94349a9 on agent/breath-life-3
-v1 06:10: breath-1, breath-2, breath-3, breath-4 beside the approved pictures
-look-1.jpg = out/work/v1-breath-1.jpg
-look-2.jpg = out/work/v1-breath-2.jpg
-look-3.jpg = out/work/v1-breath-3.jpg
-look-4.jpg = out/work/v1-breath-4.jpg
+2026-11-26 07:07 UTC
+work at e66d073 on agent/breath-life-3
+hb5 07:09: breath-1 sun path as separate glints, breath-3 and breath-2 plumes
+look-1.jpg = out/work/hb5-breath-1.jpg
+look-2.jpg = out/work/hb5-breath-3.jpg
+look-3.jpg = out/work/hb5-breath-2.jpg
