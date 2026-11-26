@@ -141,9 +141,11 @@ void main() {
   // at its edges and at its pale end. Deep in the bush nothing comes through and it stays near black.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = across * across;
-  float through = (0.05 + 0.95 * against * against * against) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
-  vec3 blood = mix(vec3(0.55, 0.022, 0.075), vec3(0.9, 0.34, 0.32), 0.4 * end);
-  colour += blood * uSunColour * (0.24 * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
+  float through = (0.06 + 0.94 * against * against) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
+  // Toward its end a lock is thin and the sun is through all of it: there it glows orange red.
+  float thin = smoothstep(0.3, 1.0, s);
+  vec3 blood = mix(mix(vec3(0.55, 0.022, 0.075), vec3(0.85, 0.2, 0.05), thin), vec3(0.9, 0.34, 0.32), 0.3 * end);
+  colour += blood * uSunColour * (0.24 * (1.0 + 1.6 * thin) * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
@@ -243,7 +245,7 @@ void main() {
   vec3 c = threadAt(aA.xyz, aB.xyz, aC.xyz, aSway, aTint.z, aTint.w, 1.0, then, uSurge, tangent);
   float size = aDrop.z * mix(0.45 + 0.55 * smoothstep(0.0, aDrop.x, since), 0.9, falls);
   c.y -= size * 0.8 + falls * 4.9 * since * since;
-  vShow = mix(1.0, step(since, 0.62) * step(aCorner.z, c.y), falls);
+  vShow = mix(1.0, step(since, 0.85) * step(aCorner.z, c.y), falls);
   vec3 toEye = cameraPosition - c;
   float far = length(toEye);
   vec3 across = normalize(cross(vec3(0.0, 1.0, 0.0), toEye));
@@ -278,7 +280,7 @@ void main() {
   float lit = sunAt(vWorld);
   vec3 through = skyRadiance(normalize(vec3(-v.x, 0.25 + 0.5 * vAt.y, -v.z))) * mix(0.3, 1.1, smoothstep(0.5, -0.7, vAt.y)) * (1.0 - 0.5 * smoothstep(0.5, 1.0, d));
   vec2 hot = vAt - vec2(0.28, -0.35);
-  vec3 colour = min(through, vec3(1.6)) + uSunColour * (0.8 + 3.0 * pow(against, 4.0)) * lit * smoothstep(0.16, 0.0, dot(hot, hot));
+  vec3 colour = min(through, vec3(1.6)) * 0.7 + uSunColour * (0.8 + 3.0 * pow(against, 4.0)) * lit * smoothstep(0.16, 0.0, dot(hot, hot));
   float alpha = bead * min(1.0, vKind) * 0.9 * (1.0 - uSolo);
   gl_FragColor = vec4(colour * alpha, alpha);
 }`;

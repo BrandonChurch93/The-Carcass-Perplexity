@@ -64,14 +64,24 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   // The stream: the channel runs out to the sea, slowly.
   vec2 stream = vec2(0.03, 0.12);
 
+  // The stream is seen: it draws what floats on it into lanes that lie along it and go down with it, slicks of still water between
+  // ruffled water, a metre or less across and many metres long. They wander, and where the water is a film there are none.
+  vec2 sdir = normalize(stream);
+  vec2 carried = xz - stream * uTime;
+  float sAlong = dot(carried, sdir);
+  float sAcross = dot(xz, vec2(-sdir.y, sdir.x)) + 2.4 * vnoise(vec2(sAlong * 0.13, 3.0) + 0.05 * xz) + 0.6 * vnoise(vec2(sAlong * 0.5, 9.0) + 0.21 * xz);
+  float lanes = 0.62 * vnoise(vec2(sAcross * 1.25, sAlong * 0.06)) + 0.38 * vnoise(vec2(sAcross * 3.4 + 5.0, sAlong * 0.17));
+  float inStream = smoothstep(0.06, 0.3, depth) * (1.0 - smoothstep(70.0, 140.0, far));
+  float slick = smoothstep(0.5, 0.62, lanes) * inStream;
+
   // Five bands, from a swell five metres long to ripples a hand long. Each is read only where a pixel can show it. [length, root mean square of its slope]
   vec2 slope = vec2(0.0);
   float lost = 0.0;
   float a5 = 0.022 + 0.02 * broad;
-  float a1 = (0.028 + 0.018 * gust) * deep;
-  float a04 = (0.03 + 0.06 * gust) * deep;
-  float a016 = (0.012 + 0.13 * gust) * deep;
-  float a008 = (0.004 + 0.12 * gust) * deep;
+  float a1 = (0.028 + 0.018 * gust) * deep * (1.0 - 0.3 * slick);
+  float a04 = (0.03 + 0.06 * gust) * deep * (1.0 - 0.65 * slick);
+  float a016 = (0.012 + 0.13 * gust) * deep * (1.0 - 0.75 * slick);
+  float a008 = (0.004 + 0.12 * gust) * deep * (1.0 - 0.85 * slick);
   float k5 = 1.0 - smoothstep(1.3, 5.3, foot);
   float k1 = 1.0 - smoothstep(0.36, 1.42, foot);
   float k04 = 1.0 - smoothstep(0.1, 0.42, foot);
@@ -138,6 +148,8 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   float clear = exp(-path * 4.5);
   vec3 tone = mix(vec3(0.13, 0.18, 0.18), mix(vec3(0.07, 0.175, 0.2), vec3(0.04, 0.125, 0.165), smoothstep(0.25, 0.9, depth)), smoothstep(0.03, 0.25, depth));
   // The low sun goes into the water as well and lights the silt in it.
+  // The silt goes down in the same lanes: the water's colour is streaked along the stream, milkier and clearer by turns.
+  tone *= 1.0 + 0.45 * inStream * (lanes - 0.5);
   vec3 body = tone * (skyUp * open + uSunColour * (0.06 * sunHere));
 
   vec3 colour = fresnel * mirror + (1.0 - fresnel) * (1.0 - clear) * body;
