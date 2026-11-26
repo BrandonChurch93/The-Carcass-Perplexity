@@ -428,7 +428,7 @@ void main() {
 #if defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
   vec3 col = rigShade(up, n, v, albedo, 0.6, occ);
-  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 1.0 + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   // Only standing water holds a mirror, and the water takes most of the light of what it shows.
   float water = smoothstep(0.0, 0.03, uPool - land.r) * smoothstep(-0.02, 0.05, vUnder);
   float glance = 1.0 - max(v.y, 0.0);
@@ -442,7 +442,7 @@ void main() {
   float sun = sunAt(vWorld, land);
   col -= albedo * uSunColour * (max(dot(n, uSunDir), 0.0) * sunAt(vWorld, before) * occ * (own - 1.0)) / 3.14159;
   // The wet flat and the pool send the sky back up at what stands over them.
-  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 1.0 + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
   col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
   // The light that comes through a sail from the sun and the sky behind it.

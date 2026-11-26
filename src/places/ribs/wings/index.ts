@@ -899,7 +899,7 @@ export function create(ctx: Context): Piece {
     const fx = dx / l;
     const fz = dz / l;
     // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
-    const cross: [number, number, number, number, number][] = [[15, -4.6, 3.6, 0, 15], [38, 9, 9, 0.1, -17], [52, -16, 13, -0.1, 15], [84, 20, 22, 0.2, -14], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
+    const cross: [number, number, number, number, number][] = [[24, -6.5, 4.6, 0, 15], [38, 9, 9, 0.1, -17], [52, -16, 13, -0.1, 15], [84, 20, 22, 0.2, -14], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
     for (let i = 0; i < PASSERS; i++) {
       const c = cross[i] as [number, number, number, number, number];
       skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: i === 0 ? 1 : 0.9, seed: hash(i, 9) });
@@ -1180,8 +1180,44 @@ export function create(ctx: Context): Piece {
     F.legs = 0;
   };
 
+  // ---- In the film the skein, those that cross before the colony's lens and the low ones round the colony are bodies, and a crowd wheels over the colony ----
+  const ROOK = 150;
+  const escort = new Flight(airBodies, SKEIN + PASSERS + LOW + ROOK);
+  const crowd = ctx.rng('kite-wings-crowd');
+  const rooks: Flier[] = [];
+  for (let i = 0; i < ROOK; i++) {
+    const radius = 45 + 190 * crowd.next() ** 2;
+    rooks.push({
+      cx: COLONY.x + crowd.normal() * 35,
+      cz: COLONY.z + crowd.normal() * 35,
+      radius,
+      y: COLONY.top - 12 + 120 * crowd.next() ** 1.5,
+      rate: ((crowd.next() < 0.5 ? 1 : -1) * crowd.range(11, 17)) / radius,
+      phase: crowd.range(0, Math.PI * 2),
+      squash: crowd.range(0.55, 1),
+      size: crowd.range(0.85, 1.25),
+      seed: crowd.next(),
+      dark: 0,
+    });
+  }
+  /** A body on a straight way into `F`: where it is, the way it goes, how hard it strokes. */
+  const straight = (x: number, y: number, z: number, vx: number, vy: number, vz: number, size: number, seed: number, t: number, amp: number): void => {
+    F.x = x;
+    F.y = y;
+    F.z = z;
+    F.yaw = Math.atan2(vx, vz);
+    F.pitch = Math.atan2(vy, Math.hypot(vx, vz) || 1) + 0.05 * amp;
+    F.roll = 0.14 * Math.sin(t * (0.5 + 0.4 * seed) + seed * 11) + (seed - 0.5) * 0.3;
+    F.size = size;
+    F.tone = 0.86 + 0.24 * seed;
+    F.stroke = t * (7.2 + 3 * seed) + seed * 40;
+    F.deep = 0.12 + 0.88 * amp;
+    F.drawn = 0;
+    F.legs = 0;
+  };
+
   const group = new THREE.Group();
-  group.add(flight.mesh, fleet.mesh);
+  group.add(flight.mesh, fleet.mesh, escort.mesh);
   if (fleet.mirror) group.add(fleet.mirror);
   group.add(bodies.mesh, bodies.mirror, runners.mesh);
   if (runners.mirror) group.add(runners.mirror);
@@ -1291,6 +1327,15 @@ export function create(ctx: Context): Piece {
           flockFigures.hide(i);
           continue;
         }
+        if (lp === null && i < LOW) {
+          flierPlace(f, seconds - 0.05, was);
+          flierPlace(f, seconds + 0.05, next);
+          flierPlace(f, seconds, spot);
+          borne(f.size * 0.8, f.seed, seconds, 0);
+          escort.put(SKEIN + PASSERS + i, F);
+          flockFigures.hide(i);
+          continue;
+        }
         flierAt(f, seconds, eye);
         if (lifting) {
           // Those whose way lies near the ledge start on it: they leave it one after another and are on their own way seconds later.
@@ -1315,13 +1360,19 @@ export function create(ctx: Context): Piece {
         const s = skein[i] as Passer;
         if (approaching && i < SKEIN) {
           skeinFigures.hide(i);
+          escort.hide(i);
           continue;
         }
         const bout = smooth(0.25, 0.45, heldAt(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
         const y = s.y + 1.2 * Math.sin(at * 0.6 + s.seed * 20);
         const amp = i < SKEIN ? 0.25 + 0.75 * bout : 1;
-        if (lp === null) airborne(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp, eye);
-        else circuit(s.x + s.vx * (at - s.t), y, s.z + s.vz * (at - s.t), s.vx, 0.72 * Math.cos(at * 0.6 + s.seed * 20), s.vz, s.seed < 0.5 ? 1 : -1, s.size, s.seed, amp, eye);
+        if (lp === null) {
+          straight(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp);
+          escort.put(i, F);
+          skeinFigures.hide(i);
+          continue;
+        }
+        circuit(s.x + s.vx * (at - s.t), y, s.z + s.vz * (at - s.t), s.vx, 0.72 * Math.cos(at * 0.6 + s.seed * 20), s.vz, s.seed < 0.5 ? 1 : -1, s.size, s.seed, amp, eye);
         far();
         skeinFigures.put(i, fig);
       }
@@ -1364,6 +1415,18 @@ export function create(ctx: Context): Piece {
         skeinFigures.put(SKEIN + PASSERS + i, fig);
       }
       if (lp === null) fleet.commit();
+      escort.mesh.visible = lp === null;
+      if (lp === null) {
+        for (let i = 0; i < ROOK; i++) {
+          const f = rooks[i] as Flier;
+          flierPlace(f, seconds - 0.05, was);
+          flierPlace(f, seconds + 0.05, next);
+          flierPlace(f, seconds, spot);
+          borne(f.size, f.seed, seconds, 0);
+          escort.put(SKEIN + PASSERS + LOW + i, F);
+        }
+        escort.commit();
+      }
       landers.forEach((l, i) => {
         // In the loop both are down: the one the key has a moment from the ground has landed, and neither is seen to come in twice.
         const tau = lp === null ? seconds - l.t : Math.max(0.8, T0 - l.t);
@@ -1419,6 +1482,7 @@ export function create(ctx: Context): Piece {
       airBodies.mirror.dispose();
       flight.dispose();
       fleet.dispose();
+      escort.dispose();
       bodySheet.mirror.dispose();
       bodies.dispose();
       for (const figures of [runners, colonyFigures, standers, flockFigures, skeinFigures, swoopFigures]) figures.dispose();
