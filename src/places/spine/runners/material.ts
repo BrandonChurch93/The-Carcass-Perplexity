@@ -19,19 +19,23 @@ vec3 runnerLight(vec3 p, vec3 n) {
   vec3 e = skyIrradiance(n) * runnerOpen(p) + emitterIrradiance(p, n) * min(1.0, 4.0 * skyOpen(p));
   if (uDoor.w > 0.5) {
     // Under the roof no sky reaches it: what the walls give back is a trace.
-    e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.012;
+    e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.03 * (0.6 + 0.4 * n.y);
     // Inside the canal the mouth is a window: what faces it takes the dusk and the storm seen through it, and the flash, as a rim.
     vec3 d = uDoor.xyz - p;
     float d2 = dot(d, d);
     vec3 way = d * inversesqrt(d2);
     vec3 level = normalize(vec3(way.x, 0.12, way.z));
     vec3 seen = skyRadiance(level) + emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159);
-    float facing = clamp((dot(n, way) + 0.2) / 1.2, 0.0, 1.0);
-    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * facing * facing;
+    // The snow at the mouth and the pale wall give it back with little of the dusk's blue left in it.
+    seen = mix(seen, dot(seen, vec3(0.3, 0.5, 0.2)) * vec3(1.08, 1.0, 0.9), 0.4);
+    // The mouth is broad and the ice and the pale wall give its light back: it wraps the body, and a share of it comes from all round.
+    float facing = clamp((dot(n, way) + 0.35) / 1.35, 0.0, 1.0);
+    float fill = 0.035 + 0.11 * clamp(n.y, 0.0, 1.0);
+    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * (facing * facing + fill);
     // Seen against the mouth, the light comes through the ends of the coat along its outline.
     vec3 toLens = normalize(cameraPosition - p);
-    float through = pow(1.0 - abs(dot(n, toLens)), 4.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
-    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * 0.7 * through;
+    float through = pow(1.0 - abs(dot(n, toLens)), 5.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
+    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * 2.2 * through;
   }
   return e;
 }`;
@@ -118,7 +122,7 @@ void main() {
   float occ = 0.55;
   if (vKind > 4.5) {
     // The paw: a short close coat, wet and dark toward the pads.
-    albedo = uTone.rgb * shag * mix(0.4, 0.85, smoothstep(0.0, 0.07, vWorld.y - groundY(vWorld)));
+    albedo = mix(vec3(0.035, 0.03, 0.028), uTone.rgb * shag * 0.5, 0.25 + 0.3 * fine);
     occ = 0.75;
   }
   if (vKind > 5.5) {
@@ -143,12 +147,19 @@ void main() {
     vec3 r = vRest - uBurn.xyz;
     vec2 uv = 0.5 + vec2(dot(r, uBurnU), dot(r, uBurnV)) / (uBurn.w * 2.3);
     vec3 pic = texture2D(tBurn, uv).rgb;
+    // No bright flesh in it: the picture is taken down to char and a dark red-brown.
+    pic = min(mix(vec3(dot(pic, vec3(0.333))), pic, 0.5), vec3(0.22)) * vec3(1.0, 0.8, 0.7);
     vec2 edge = abs(uv - 0.5) * 2.0;
     float on = (1.0 - smoothstep(0.55, 0.9, max(edge.x, edge.y))) * smoothstep(0.02, 0.08, max(pic.r, max(pic.g, pic.b)));
     float raw = smoothstep(0.02, 0.1, pic.r - 1.25 * pic.g);
     // Charred black at the middle, whatever the picture has there.
     float char_ = 1.0 - smoothstep(0.35, 1.0, d + 0.3 * (fine - 0.5));
     albedo = mix(albedo, pic * mix(mix(0.55, 0.16, char_), 0.9, raw), on);
+    // Raw at the heart of it, where the hide split open: wet red flesh inside the ring of char.
+    float heart = (1.0 - smoothstep(0.2, 0.5, d + 0.4 * (fine - 0.5))) * on;
+    albedo = mix(albedo, vec3(0.006, 0.005, 0.005), (1.0 - smoothstep(0.55, 1.15, d + 0.3 * (fine - 0.5))) * on * 0.9);
+    albedo = mix(albedo, vec3(0.05, 0.016, 0.011) * (0.5 + 2.5 * pic.r), heart);
+    raw = max(raw, heart);
     rough = mix(rough, mix(0.9, 0.55, raw), on);
     occ = mix(occ, 0.8, on);
   }
@@ -204,12 +215,14 @@ void main() {
   // Hair takes light from all round: the lock is lit as something between its own way out of the body and the open sky.
   vec3 n = normalize(nb + vec3(0.0, 0.3, 0.0) + side * (0.35 * position.x) + toCamera * 0.2);
   // Roots stand in each other's shade.
-  float occ = mix(0.12, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
+  float occ = mix(0.12 + 0.33 * uDoor.w, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
   vLight = runnerLight(p, n) * occ / 3.14159;
   vFrostLight = runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
   vAt = vec4(position.x, t, seed, aCard.z);
   // How much this lock is frosted: it looks up, and it is on the weather side.
-  float up = nb.y;
+  // Along the outline in the open the locks stand clear of the rime and dark against the snow behind them.
+  float outline = pow(1.0 - abs(dot(nb, toCamera)), 3.0) * (1.0 - uDoor.w);
+  float up = nb.y - 0.7 * outline;
   vInfo = vec4(aCard.x * size * 2.0, span, up, aCard.w);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
@@ -246,7 +259,7 @@ void main() {
   float frost = smoothstep(0.7, 1.2, vInfo.z + uCoat.w + 0.7 * (vAt.w - 0.5));
   float lies = frost * smoothstep(0.1, 0.5, t) * smoothstep(0.9, 1.7, lum + 0.35 * frost);
   float bead = smoothstep(0.75, 1.0, t) * smoothstep(1.0, 1.6, lum) * (0.3 + 0.5 * vAt.w);
-  float white = clamp(max(lies, bead) * (1.0 - singe), 0.0, 1.0);
+  float white = clamp(max(max(lies, bead) * (1.0 - singe), smoothstep(1.5, 2.0, vAt.w) * smoothstep(0.15, 0.6, t) * smoothstep(0.6, 1.3, lum)), 0.0, 1.0);
   c = mix(c, vec3(0.86, 0.89, 0.94) * vFrostLight, white);
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
@@ -341,8 +354,8 @@ void main() {
   float crystals = vnoise3(vWorld * 520.0);
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
-  albedo = mix(albedo, vec3(0.075, 0.062, 0.062) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
-  rime = max(rime, uWrithe.y * smoothstep(0.75, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5)) * 0.8);
+  albedo = mix(albedo, vec3(0.04, 0.03, 0.032) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
+  rime = mix(rime, 0.3 * smoothstep(0.8, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5)), uWrithe.y);
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, max(rime, 0.6 * uWrithe.y));
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);
