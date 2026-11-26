@@ -316,12 +316,14 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float inside = (1.0 - smoothstep(0.55, 0.9, length(off) / tower)) * (1.0 - smoothstep(0.75 * top, 0.97 * top, h));
     float dens = body * puff * inside * mix(0.03 + 2.2 * wisps * wisps, 4.0 * wisps, kind);
     if (dens <= 0.0) continue;
-    float sigma = dens * B.w;
     // A fountain, a pool or a crack lights the vapour that is close over it; the rest is lit by the sky, like any smoke.
     // The top of a smoke is thin and open to the sky: it is paler than its foot.
     // A vapour that stands over open melt is seen against its fire: what the sky gives it is the lesser part, and it is orange and not pale.
     vec3 below = lakeGlow(p.xz, max(1.2 * h, 2.5));
-    float hot = smoothstep(0.03, 0.3, below.r);
+    float hot = smoothstep(0.012, 0.15, below.r);
+    // Steam off a vent in cold rock is white and thick where it leaves the vent, and a veil the rock is seen through above that. Over melt it is thin and the fire shows through it.
+    float vent = 1.0 + 2.2 * pow(1.0 - u, 3.0);
+    float sigma = dens * B.w * mix(mix(vent, 1.0, hot), 1.0, kind);
     vec3 light = mix(1.05, mix(0.8, 1.5, u), kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0)) * (1.0 - 0.5 * hot);
     float near = max(lit * exp(-h / fall) - 0.03, 0.0);
     if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + roundLights(p));

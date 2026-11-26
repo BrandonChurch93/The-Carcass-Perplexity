@@ -18,7 +18,7 @@ import { MAX_HEAT, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
 export const PARTS: readonly string[] = ['sky', 'air', 'fume', 'ash'];
 
 /** The open lava under the fume, as one round light of the rig: where it is, how wide, and what part of its face is open at 1400 K. */
-const FUME_LIGHT = { at: [960, 20, 0] as const, radius: 200, open: 0.35 };
+const FUME_LIGHT = { at: [960, 20, 0] as const, radius: 200, open: 0.6 };
 
 /** A body of smoke: a leaning dome of lumps that stands on a level base. Lengths in metres, densities for a metre of path. */
 interface Body {
@@ -96,7 +96,7 @@ const BODIES: readonly Body[] = [
   { at: [-397, 181], radius: 11, height: 6.5, lean: BANK_LEAN, dense: 0.035, repeat: 9, hard: 2.6, climb: 1.6, colour: SOOT, foot: 0.1, lake: [1.1, 3], floor: [1.6, 3], lights: 0.6, tops: 0.7, solid: 0.4, shots: { 'heart-02': 1, rest: 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
   // It is thin enough to see into and lit through its own foot: orange at its base, dark smoke above, in lumps. As one thick mass lit by one read of the floor it stood as a flat pink block.
-  { at: [1200, 5], base: -25, radius: 185, height: 240, lean: [0.08, 0.1], dense: 0.016, widen: 0.25, repeat: 110, hard: 1.8, climb: 5, colour: AMBER, foot: 0.06, lake: [3.5, 60], floor: [13.0, 80], lights: 1.3, tops: 0.15, solid: 0.3, streak: 1.9, taper: 0.9, sparse: 0.03, through: 0.6 },
+  { at: [1200, 5], base: -25, radius: 185, height: 400, lean: [0.08, 0.1], dense: 0.016, widen: 0.25, repeat: 110, hard: 1.8, climb: 5, colour: AMBER, foot: 0.06, lake: [4.5, 60], floor: [19.0, 70], lights: 0.5, tops: 0.15, solid: 0.3, streak: 1.9, taper: 0.9, sparse: 0.03, through: 0.6 },
 ];
 
 /** Until the other folders push their own, the vapours and the hot air the pictures show. Used only when the lists are empty. */

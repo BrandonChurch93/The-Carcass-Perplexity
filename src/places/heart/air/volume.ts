@@ -70,6 +70,8 @@ uniform float uFumeShare;
 // The air of a caldera at dusk carries smoke: it is a little rose, never neutral.
 const vec3 AIR_ALBEDO = vec3(0.95, 0.89, 0.87);
 // The heavy air low over the lake is half smoke: it is darker than the clear air and warmer.
+// High over the lake the smoke is thin and the air is the dusk's own: cooler than the rose of the low air.
+const vec3 HIGH_AIR = vec3(0.7, 0.95, 1.4);
 const vec3 HEAVY_ALBEDO = vec3(0.72, 0.64, 0.6);
 const vec3 HANG_ALBEDO = vec3(0.4, 0.33, 0.3);
 const float LAKE_WIDE = 0.75;
@@ -171,7 +173,7 @@ void airAt(vec3 p, float part, float ya, float yb, vec3 glow, out float sigma, o
   sigma = haze;
   // The lake and the warm side of the sky light the low air; the high air has the colour of the sky it is seen against.
   float low = exp(-y / 250.0);
-  emit = thin * AIR_ALBEDO * ((sky + airWarm * low) * open + 0.25 * lights + 0.6 * under)
+  emit = thin * AIR_ALBEDO * mix(HIGH_AIR, vec3(1.0), low) * ((sky + airWarm * low) * open + 0.25 * lights + 0.6 * under)
        + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + 0.6 * under * low)
        + hang * HANG_ALBEDO * (sky * open + 1.3 * under)
        + fume * FUME_ALBEDO * (uSkyMean * FUME_SKY * (0.6 + 0.4 * smoothstep(0.0, 220.0, y)) * (0.35 + 0.65 * open) + FUME_FIRE * fire + 0.3 * lights + 0.1 * under);
