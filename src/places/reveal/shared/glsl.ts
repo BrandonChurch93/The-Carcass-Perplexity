@@ -51,7 +51,7 @@ float limbCos(vec2 xz) {
 // side away from the sun as the rise ends, and creeps in while the titan is held: the planet turns.
 float dayAt(vec2 xz) {
   float along = dot(xz, -normalize(uSunDir.xz));
-  float edge = 2100.0 - 16.0 * max(uTime - 8.0, 0.0);
+  float edge = 2100.0 - 24.0 * max(uTime - 8.0, 0.0);
   return 1.0 - 0.6 * smoothstep(edge - 250.0, edge + 450.0, along);
 }
 
