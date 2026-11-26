@@ -1,8 +1,8 @@
-# Status 111
+# Status 112
 
-2026-11-26 12:04 UTC. Phase 5, the whole film.
+2026-11-26 12:30 UTC. Phase 5, the whole film.
 
-- `01-lines-n8.jpg`: The cut check, the Reveal: each line of the narration on its picture, a at a fifth of the line and b at seven tenths (draft tier)
-- `02-beat.jpg`: The ending, version 1: the Heart's beat at a step of ten frames, 11322 to 11432 (the builder's sheet)
-- `03-frame-10788-preview-draft.jpg`: Film frame 10788, preview, draft tier
-- `04-frame-10668-preview-draft.jpg`: Film frame 10668, preview, draft tier
+- `01-set-a-10.jpg`: Round 26, the join from the lake into the rise: twelve consecutive frames, 9535 to 9546 (review tier). Three of the round's seven severe issues are about these rings
+- `02-set-a-04.jpg`: Round 26, the whole film, sheet 4 of 4: frames 9084 to 11860 (review tier), the rise, the view from orbit and version 1 of the ending
+- `03-set-b-01.jpg`: Round 26, the first two seconds: frames 0 to 120 (review tier)
+- `04-spine-hd-final-side-by-side.jpg`: Stress encode, the Spine's third strike (final tier, 1080p): as delivered at left, at 10 Mb/s at right, with the part that changed most below

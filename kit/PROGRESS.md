@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 111, 2026-11-26 12:04 UTC:
+Status 112, 2026-11-26 12:30 UTC:
 
-- `01-lines-n8.jpg`: The cut check, the Reveal: each line of the narration on its picture, a at a fifth of the line and b at seven tenths (draft tier)
-- `02-beat.jpg`: The ending, version 1: the Heart's beat at a step of ten frames, 11322 to 11432 (the builder's sheet)
-- `03-frame-10788-preview-draft.jpg`: Film frame 10788, preview, draft tier
-- `04-frame-10668-preview-draft.jpg`: Film frame 10668, preview, draft tier
+- `01-set-a-10.jpg`: Round 26, the join from the lake into the rise: twelve consecutive frames, 9535 to 9546 (review tier). Three of the round's seven severe issues are about these rings
+- `02-set-a-04.jpg`: Round 26, the whole film, sheet 4 of 4: frames 9084 to 11860 (review tier), the rise, the view from orbit and version 1 of the ending
+- `03-set-b-01.jpg`: Round 26, the first two seconds: frames 0 to 120 (review tier)
+- `04-spine-hd-final-side-by-side.jpg`: Stress encode, the Spine's third strike (final tier, 1080p): as delivered at left, at 10 Mb/s at right, with the part that changed most below
 
+Status 111, 2026-11-26 12:04 UTC, showed: The cut check, the Reveal: each line of the narration on its picture, a at a fifth of the line and b at seven tenths (draft tier); The...
 Status 110, 2026-11-26 11:42 UTC, showed: The ending, version 1: the day leaves the body and the Heart beats in the dark (draft tier, the builder's sheet); The ending, version 1...
 Status 109, 2026-11-26 11:19 UTC, showed: The join into the rise after the fix: the rings spread from the centre (draft tier); The cut check: the lines of the Eye on their pictures...
-Status 108, 2026-11-26 10:58 UTC, showed: The Ribs, the frame the jurors chose for the card (final tier).
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T12:04:06Z
-phase 5: 1.80 h used of 6.00 h
-build: 36.21 h used of 72.00 h
+2026-11-26T12:30:45Z
+phase 5: 2.25 h used of 6.00 h
+build: 36.66 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 21
+minutes since the last status: 27
 ```
 
 ## Phases
