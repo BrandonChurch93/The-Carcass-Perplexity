@@ -1,6 +1,6 @@
 # Recipes, the storm masses of the Spine (spine_sky_builder)
 
-Each is one storm cloud mass cut out on a clear ground, drawn by `src/places/spine/air/masses.ts` on two rings about the ridge, before the dome. The loaded file is made from its source by `assets-src/spine/air/massproc.py`, run from the root of the repo: the colour is carried out into the clear so no fringe shows, the cut is softened, nothing is left at the border, and the JPEG holds the colour in its upper half and the cut in its lower.
+Each is one storm cloud mass cut out on a clear ground, drawn by `src/places/spine/air/masses.ts` on two rings about the ridge, before the dome. The loaded file is made from its source by `assets-src/spine/air/massproc.py`, run from the root of the repo: the colour is carried out into the clear so no fringe shows, the cut is softened, thin bright rim lines are taken down to the cloud about them, nothing is left at the border, and the JPEG holds the colour in its upper half and the cut in its lower.
 
 ## `public/assets/spine/mat/mass-a.jpg`
 Made by: `generate_image` (default model, transparent ground, 16:9, one reference picture), then `assets-src/spine/air/massproc.py` (Python 3 with Pillow and numpy)
