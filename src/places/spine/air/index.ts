@@ -139,6 +139,8 @@ export function create(ctx: Context): Piece {
       stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.6 : inStrike ? 0.45 : 1;
       stage.z = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0 : 1;
       clear.z = inCarcass ? 3.5 : 0;
+      // Staged by shot: by the dead one (spine-03) scud races low past the spires.
+      stage.w = inCarcass ? 1 : 0;
       // Staged by shot: in the long lens of the strike (spine-04) the storm wall stands 44 degrees further round, behind the struck spire.
       skyStage.x = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4 ? 0.77 : 0;
       // Staged by shot: by the dead one (spine-03) the lens is opened for the dusk (the rig's sky light is opened by the same there).
