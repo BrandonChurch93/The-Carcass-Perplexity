@@ -27,7 +27,12 @@ export const cragPhase = (angle: number): number => {
   const [cell, across] = column(angle);
   const jump = 4.4 * (noise3(cell * 3.1 + 0.5, 0.5, 0.5) - 0.5);
   const tilt = 2.2 * (noise3(cell * 1.7 + 0.5, 5.5, 2.5) - 0.5) * (across - 0.5);
-  return 10 * noise3(c * 1.9 + 3.1, s * 1.9, 0.5) + jump + tilt;
+  // No ledge line runs straight for more than a few strides: it steps at every break in the rock and wanders between them.
+  const run = angle * 45;
+  const piece = Math.floor(run / 2.7 + 0.4 * noise3(run / 9, 1.5, 7.5));
+  const stepped = 0.9 * (noise3(piece * 2.9 + 0.5, 6.5, 3.5) - 0.5);
+  const wander = 0.7 * (noise3(run / 1.6, 4.5, 9.5) - 0.5);
+  return 10 * noise3(c * 1.9 + 3.1, s * 1.9, 0.5) + jump + tilt + stepped + wander;
 };
 
 const benchPhase = (angle: number): number => {
@@ -40,7 +45,9 @@ const benchPhase = (angle: number): number => {
 export const ledgeWidth = (angle: number, k: number): number => {
   const c = Math.cos(angle);
   const s = Math.sin(angle);
-  return 2.6 * smooth(0.36, 0.58, noise3(c * 6.1 + k * 3.7, s * 6.1, k * 1.3 + 0.5));
+  // Its lip is crumbled: bitten back and standing out by turns, every stride or two.
+  const crumble = 0.55 + 0.9 * noise3(angle * 45 / 1.9, k * 2.3 + 0.5, 1.5);
+  return 2.6 * smooth(0.36, 0.58, noise3(c * 6.1 + k * 3.7, s * 6.1, k * 1.3 + 0.5)) * crumble;
 };
 
 /** The radius of the crag at an angle round its axis and a height, metres. */
