@@ -340,7 +340,8 @@ void main() {
   #ifdef FINE
   // And single grains of it stand all over the dry hide, thickest on the back: one in every few scales, white on the dark of the crease it sits in.
   float sown = smoothstep(0.35, 0.95, ng.y) * 0.2 + 0.025;
-  float grainOn = (1.0 - uMudded) * (1.0 - horn) * (1.0 - damp) * step(1.0 - sown, fineCell.z) * (1.0 - smoothstep(0.1, 0.26, fineCell.y));
+  // On the stuck one the salt has come out on the caked plates of its back, and nowhere else.
+  float grainOn = mix(1.0, min(1.0, 1.6 * cake), uMudded) * (1.0 - horn) * (1.0 - damp) * step(1.0 - sown * (1.0 + 1.5 * uMudded), fineCell.z) * (1.0 - smoothstep(0.1, 0.26, fineCell.y));
   albedo = mix(albedo, vec3(0.56, 0.53, 0.5), 0.92 * grainOn);
   #endif
   // Mud lies in every crease of it.

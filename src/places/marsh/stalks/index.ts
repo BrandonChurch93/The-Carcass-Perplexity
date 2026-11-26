@@ -95,15 +95,15 @@ export function create(ctx: Context): Piece {
     });
     stalks.push(...forks);
   }
-  // TEMPORARY, until the lead's list has them: the colonies go on out to the haze. Small clumps of three to six stand on the dry flats beyond the last of the list,
+  // TEMPORARY, until the lead's list has them: the colonies go on out to the haze. Small clumps of two to five stand on the dry flats beyond the last of the list,
   // thinner on the ground the further off, each clump its own height and lean.
   {
     const far = ctx.rng('stalks-far');
-    for (let c = 0; c < 90; c++) {
+    for (let c = 0; c < 64; c++) {
       const d = far.range(40, 150);
       const p = rel(d, far.range(-0.62, 0.62) * d);
       const h = far.range(1.9, 3.3);
-      const count = 3 + far.int(4);
+      const count = 2 + far.int(4);
       if (ctx.rig.land.shore(p[0], p[1]) < 0.08) continue;
       for (let n = 0; n < count; n++) {
         const a = far.range(0, TAU);
