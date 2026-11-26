@@ -94,7 +94,7 @@ export function install(canvas: HTMLCanvasElement, formatId = 'hd'): { engine: E
       await film.readyLoop();
       const stage = film.loopStage();
       note(stage);
-      engine.render(stage, frame, frame % count, t);
+      engine.render(stage, frame, frame % count, t, film.loopEarlier(frame));
     },
     grab: async (url) => {
       const { width, height } = engine.format;

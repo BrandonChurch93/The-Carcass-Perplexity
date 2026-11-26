@@ -90,7 +90,7 @@ export function createPlayer(span: (frameCount: number, loopCount: number, shots
           step %= length;
         }
         const frame = range.first + step;
-        if (range.loop) e.render(film.loopStage(), frame, frame, 'draft');
+        if (range.loop) e.render(film.loopStage(), frame, frame, 'draft', film.loopEarlier(frame));
         else e.render(film.stageAt(frame), frame, frame, 'draft');
         requestAnimationFrame(tick);
       };

@@ -725,7 +725,7 @@
       "seconds": 8,
       "minSeconds": 6,
       "maxSeconds": 9,
-      "unit": "heart",
+      "unit": "ribs",
       "pickJurors": 5,
       "seamMaxRatio": 2,
       "stillMinPsnr": 35,

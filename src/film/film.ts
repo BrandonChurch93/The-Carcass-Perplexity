@@ -43,6 +43,8 @@ export interface Film {
   readyAll(): Promise<void>;
   stageAt(frame: number): Stage;
   loopStage(): Stage;
+  /** The cross-fade that closes the loop: the frame one loop length earlier and its share of this frame's picture, or null where the frame is drawn once. */
+  loopEarlier(frame: number): { frame: number; weight: number } | null;
   state(frame: number): FilmState;
   partsOf(unit: string): Promise<PartInfo[]>;
 }
@@ -59,6 +61,8 @@ const BLACK = 'black';
 const ASPECT = config.formats.master.width / config.formats.master.height;
 const LOOP_FRAMES = config.deliver.cardLoop.seconds * FPS;
 const LOOP_UNIT = config.deliver.cardLoop.unit;
+/** The last frames of the loop, over which the world one loop length earlier is faded in. The judged frames of the loop lie before them. */
+const LOOP_FADE_FRAMES = 90;
 
 const REST: Pose = { position: [0, 0, 0], aim: [0, 0, -1], fov: 40 };
 
@@ -143,7 +147,12 @@ class UnitStage implements Stage {
     const world = this.shot ? seconds - this.first / FPS : (this.module.loop?.timeOffset ?? 0) + seconds;
     // Staging by shot follows the camera: a held camera keeps the staging of its frame while the world runs on, the loop that of the moment its place names.
     const staged = this.shot ? world : (this.module.loop?.staged ?? world);
-    this.place.setTime(world + worldShift, staged);
+    if (this.shot) this.place.setTime(world + worldShift, staged);
+    else {
+      // The loop's own phase, 0 to 1, the same for a frame and for the frame one loop length earlier: what must repeat is set from it.
+      const part = ((seconds + worldShift) * FPS) / LOOP_FRAMES;
+      this.place.setTime(world + worldShift, staged, part - Math.floor(part));
+    }
   }
 
   cameraAt(seconds: number): CameraState {
@@ -231,6 +240,13 @@ export function createFilm(): Film {
       const stage = built(LOOP_UNIT);
       stage.shot = null;
       return stage;
+    },
+    loopEarlier: (frame) => {
+      const t = (frame - (LOOP_FRAMES - LOOP_FADE_FRAMES)) / LOOP_FADE_FRAMES;
+      if (!(t > 0)) return null;
+      const u = Math.min(1, t);
+      // The time of the earlier frame is asked for as a frame, never as seconds less the loop's length: the last frame is then drawn by the very calls that draw frame 0.
+      return { frame: frame - LOOP_FRAMES, weight: u * u * (3 - 2 * u) };
     },
     partsOf: async (unit) => {
       const stage = await ensure(unit);

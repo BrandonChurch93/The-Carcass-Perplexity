@@ -2,11 +2,13 @@
 // the ones that land, and the ones that run from the bore. Each is one of the Builder's pictures of the animal, stood in the place and bent
 // about its joints; every pose is a function of the time of the place alone.
 import * as THREE from 'three';
+import { config } from '../../../config';
 import { resolve } from '../../../core/cameras';
 import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cut';
 import { shots } from '../cameras';
 import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
+import { loopPhase } from '../shared/stage';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { foamTexture } from '../sea/chop';
 import { Spray, rand } from '../sea/spray';
@@ -35,6 +37,20 @@ const CLEAR = 45;
 /** Seconds the shutter is open, for the softness of what crosses the lens fast. */
 const SHUTTER = 1 / 50;
 
+const TAU = Math.PI * 2;
+const LOOP_SECONDS = config.deliver.cardLoop.seconds;
+
+// The card loop. In the film `lp` is null and every animal is a function of the seconds of the place, as it always was.
+// In the loop it is the loop's phase, 0 to 1, and every animal is a function of it alone: at phase 0 it is what the film has at the establishing key,
+// and every cycle is fitted to a whole number of turns to the loop. So the world of a frame and the world one loop length earlier hold the same
+// animal in the same pose, and the engine's cross-fade never shows one twice.
+let lp: number | null = null;
+
+/** The angle t * rate + shift (+ more) of a cycle. In the loop: the angle the film has at the key, and a whole number of turns round the loop. */
+const turns = (t: number, rate: number, shift: number, more = 0): number =>
+  lp === null ? t * rate + shift + more : T0 * rate + shift + more + Math.max(1, Math.round((Math.abs(rate) * LOOP_SECONDS) / TAU)) * Math.sign(rate) * TAU * lp;
+const wave = (t: number, rate: number, shift: number, more = 0): number => Math.sin(turns(t, rate, shift, more));
+
 const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
 const smooth = (a: number, b: number, x: number): number => {
   const t = clamp01((x - a) / (b - a));
@@ -49,6 +65,17 @@ const held = (t: number, every: number, key: number, over = 0.22): number => {
   const u = t / every + key * 17.3;
   const n = Math.floor(u);
   return hash(n, key) + (hash(n + 1, key) - hash(n, key)) * smooth(1 - over, 1, u - n);
+};
+/** `held`, and in the loop the same run of values begun where the film is at the key and brought round after a whole number of them. */
+const heldAt = (t: number, every: number, key: number, over = 0.22): number => {
+  if (lp === null) return held(t, every, key, over);
+  const count = Math.max(1, Math.round(LOOP_SECONDS / every));
+  const u0 = T0 / every + key * 17.3;
+  const n0 = Math.floor(u0);
+  const u = u0 - n0 + lp * count;
+  const k = Math.floor(u);
+  const a = hash(n0 + (k % count), key);
+  return a + (hash(n0 + ((k + 1) % count), key) - a) * smooth(1 - over, 1, u - k);
 };
 
 interface Spot {
@@ -70,6 +97,8 @@ interface Feeder {
   seed: number;
   period: number;
   offset: number;
+  /** In the card loop a feeder's cycle is the loop's length: where in it the feeder is at the loop's start. */
+  loopStart: number;
   /** A runner is at its station at this second, and is in the place only for `span` seconds either side of it. */
   at: number;
   span: number;
@@ -108,9 +137,13 @@ export function create(ctx: Context): Piece {
   const feeders: Feeder[] = [];
   const addFeeder = (x: number, z: number, yaw: number, size: number, habit: Habit, at = -1, span = 1e9): void => {
     const period = scatter.range(8, 13);
-    const f: Feeder = { x, z, yaw, size, habit, seed: scatter.next(), period, offset: scatter.range(0, 40), at, span };
+    const f: Feeder = { x, z, yaw, size, habit, seed: scatter.next(), period, offset: scatter.range(0, 40), loopStart: 0, at, span };
     // One stationed for a key has had its tuft in the water for half a second when the key comes.
     if (at >= 0 && habit === 0) f.offset = period - ((at - 0.5) % period);
+    // The loop's cycle ends as the film's does (the head up, then down again), so a feeder is at the loop's start what it is at the key.
+    // One that the film has more than a loop's length from lifting its head probes, as there, and lifts it later in the loop.
+    const left = period - ((((T0 + f.offset) % period) + period) % period);
+    f.loopStart = left <= LOOP_SECONDS ? LOOP_SECONDS - left : (left - LOOP_SECONDS) % (LOOP_SECONDS - 3.4);
     feeders.push(f);
   };
   const feedKey = keySeconds('ribs-2');
@@ -167,7 +200,7 @@ export function create(ctx: Context): Piece {
     fig.x = f.x;
     fig.z = f.z;
     fig.tone = 0.92 + 0.16 * f.seed;
-    tuft.here = Math.abs(t - f.at) <= f.span;
+    tuft.here = Math.abs((lp === null ? t : T0) - f.at) <= f.span;
     tuft.wet = 0;
     tuft.shake = 0;
     const fx = Math.sin(f.yaw);
@@ -175,29 +208,31 @@ export function create(ctx: Context): Piece {
     let tip: [number, number] = [0, 0];
     if (f.habit === 0) {
       // Probing, then the head comes up streaming, looks about, and goes back in.
-      const ph = (((t + f.offset) % f.period) + f.period) % f.period;
-      const up = smooth(f.period - 3.4, f.period - 2.5, ph) * (1 - smooth(f.period - 0.75, f.period - 0.1, ph));
-      fig.limbs[0] = -0.55 * up + (1 - up) * (0.04 * Math.sin(t * 1.7 + f.seed * 20) + 0.03 * Math.sin(t * 3.9 + f.seed * 7)) + up * 0.07 * Math.sin(t * 0.9 + f.seed * 3);
-      fig.limbs[1] = 0.1 * Math.sin(t * 2.1 + f.seed * 9) * (1 - up) + 0.22 * up + 0.12 * up * Math.sin(t * 5.1 + f.seed * 4);
-      fig.sway = 0.012 * Math.sin(t * 0.6 + f.seed * 5) - 0.03 * up;
+      const period = lp === null ? f.period : LOOP_SECONDS;
+      const ph = lp === null ? (((t + f.offset) % f.period) + f.period) % f.period : (f.loopStart + LOOP_SECONDS * lp) % LOOP_SECONDS;
+      const up = smooth(period - 3.4, period - 2.5, ph) * (1 - smooth(period - 0.75, period - 0.1, ph));
+      fig.limbs[0] = -0.55 * up + (1 - up) * (0.04 * wave(t, 1.7, f.seed * 20) + 0.03 * wave(t, 3.9, f.seed * 7)) + up * 0.07 * wave(t, 0.9, f.seed * 3);
+      fig.limbs[1] = 0.1 * wave(t, 2.1, f.seed * 9) * (1 - up) + 0.22 * up + 0.12 * up * wave(t, 5.1, f.seed * 4);
+      fig.sway = 0.012 * wave(t, 0.6, f.seed * 5) - 0.03 * up;
       tip = figurePoint(FEEDER_A, 0, TIP_A, fig.limbs);
       tuft.wet = 1 - smooth(0.02, 0.3, up);
-      tuft.shake = smooth(f.period - 0.5, f.period - 0.1, ph) + (1 - smooth(0, 0.7, ph));
+      tuft.shake = smooth(period - 0.5, period - 0.1, ph) + (1 - smooth(0, 0.7, ph));
     } else if (f.habit === 1) {
-      const bout = smooth(0.52, 0.66, held(t, 2.6, f.seed));
-      fig.limbs[0] = -0.08 + 0.1 * Math.sin(t * 0.5 + f.seed * 11) + 0.05 * bout * Math.sin(t * 15);
-      fig.limbs[1] = 0.16 * Math.sin(t * 0.8 + f.seed * 7) + 0.08 * Math.sin(t * 0.31 + f.seed * 3);
-      fig.limbs[2] = 0.05 * Math.sin(t * 1.3 + f.seed) + 0.24 * bout * Math.sin(t * 17 + f.seed * 5);
-      fig.sway = 0.015 * Math.sin(t * 0.7 + f.seed * 5);
+      const bout = smooth(0.52, 0.66, heldAt(t, 2.6, f.seed));
+      fig.limbs[0] = -0.08 + 0.1 * wave(t, 0.5, f.seed * 11) + 0.05 * bout * wave(t, 15, 0);
+      fig.limbs[1] = 0.16 * wave(t, 0.8, f.seed * 7) + 0.08 * wave(t, 0.31, f.seed * 3);
+      fig.limbs[2] = 0.05 * wave(t, 1.3, f.seed) + 0.24 * bout * wave(t, 17, f.seed * 5);
+      fig.sway = 0.015 * wave(t, 0.7, f.seed * 5);
       tip = figurePoint(FEEDER_B, 0, TIP_B, fig.limbs);
       tuft.shake = bout;
     } else {
       // Running: the legs scissor, the sails beat, the body rides up at each stride, and it goes.
-      const run = t - f.at;
-      const stride = run * 9.5 + f.seed * 6;
+      // In the loop it cannot run off: it stays where the key has it, in the stride of the key, and stamps and beats its sails in the pool.
+      const run = lp === null ? t - f.at : T0 - f.at;
+      const stride = run * 9.5 + f.seed * 6 + (lp === null ? 0 : 0.55 * Math.sin(3 * TAU * lp));
       fig.x += fx * RUN_SPEED * run;
       fig.z += fz * RUN_SPEED * run;
-      fig.limbs[0] = 0.12 + 0.34 * Math.sin(run * 13 + f.seed * 9);
+      fig.limbs[0] = 0.12 + 0.34 * Math.sin(run * 13 + f.seed * 9 + (lp === null ? 0 : 8 * TAU * lp));
       fig.limbs[1] = 0.36 * Math.sin(stride);
       fig.limbs[2] = -0.36 * Math.sin(stride);
       fig.y = 0.14 * Math.abs(Math.sin(stride)) * f.size;
@@ -216,6 +251,7 @@ export function create(ctx: Context): Piece {
     .slice(0, 8)
     .map((e) => e.i);
   RING_SOURCE.at = (seconds: number, out: Ring[]): void => {
+    lp = loopPhase();
     let n = 0;
     for (const i of ringed) {
       const f = feeders[i] as Feeder;
@@ -302,17 +338,17 @@ export function create(ctx: Context): Piece {
     // No two rows alike: half of them stand the other way round on their ledge.
     fig.turn = s.yaw + (Math.floor(s.seed * 1000) % 2 === 1 ? Math.PI : 0);
     // Never still: it shifts its weight along the ledge, rocks, and works its neck, each in its own time.
-    const shift = 0.14 * s.size * Math.sin(t * (0.45 + 0.4 * s.seed) + s.seed * 23);
+    const shift = 0.14 * s.size * wave(t, 0.45 + 0.4 * s.seed, s.seed * 23);
     fig.x = s.x + Math.sin(s.yaw) * shift;
     fig.z = s.z + Math.cos(s.yaw) * shift;
     fig.y = s.y - 0.04;
-    fig.sway = 0.035 * Math.sin(t * (0.9 + 0.8 * s.seed) + s.seed * 50);
-    const look = held(t, 1.6 + 2.2 * s.seed, s.seed, 0.3);
-    fig.limbs[0] = (s.seed - 0.5) * 0.7 + (look - 0.5) * 0.6 + 0.06 * Math.sin(t * (1.7 + 1.2 * s.seed) + s.seed * 31);
+    fig.sway = 0.035 * wave(t, 0.9 + 0.8 * s.seed, s.seed * 50);
+    const look = heldAt(t, 1.6 + 2.2 * s.seed, s.seed, 0.3);
+    fig.limbs[0] = (s.seed - 0.5) * 0.7 + (look - 0.5) * 0.6 + 0.06 * wave(t, 1.7 + 1.2 * s.seed, s.seed * 31);
     // A sail held out is flicked and beaten at a neighbour now and then.
-    const row = smooth(0.55, 0.75, held(t, 2.3, s.seed + 0.6, 0.3));
-    fig.limbs[1] = (cell === 3 ? -1 : 1) * (0.1 * Math.sin(t * 1.9 + s.seed * 17) + row * 0.3 * Math.sin(t * 9 + s.seed * 9));
-    fig.limbs[2] = 0.1 * Math.sin(t * 1.7 + s.seed * 12) + row * 0.3 * Math.sin(t * 9 + s.seed * 9 + 0.5);
+    const row = smooth(0.55, 0.75, heldAt(t, 2.3, s.seed + 0.6, 0.3));
+    fig.limbs[1] = (cell === 3 ? -1 : 1) * (0.1 * wave(t, 1.9, s.seed * 17) + row * 0.3 * wave(t, 9, s.seed * 9));
+    fig.limbs[2] = 0.1 * wave(t, 1.7, s.seed * 12) + row * 0.3 * wave(t, 9, s.seed * 9, 0.5);
     // Weathered each to its own grey, and one in three in the shade of the rock over it.
     fig.tone = 0.74 + 0.36 * ((s.seed * 13.7) % 1);
     fig.shade = (s.seed * 7.3) % 1 < 0.3 ? 0.4 + 0.25 * ((s.seed * 3.1) % 1) : 0;
@@ -415,9 +451,9 @@ export function create(ctx: Context): Piece {
     const sideways = Math.abs(across) > 0.5 * speed;
     fig.cell = sideways ? (seed < 0.55 ? 0 : 1) : toward > 0 ? 2 : 3;
     fig.turn = across < 0 ? -1 : 1;
-    const ph = t * (9.5 + 3.5 * seed) + seed * 40;
+    const ph = turns(t, 9.5 + 3.5 * seed, seed * 40);
     fig.stroke = sideways ? 1 - 0.44 * amp * (1 - Math.cos(ph)) : 1 - 0.27 * amp * (1 - Math.cos(ph));
-    fig.roll = (sideways ? Math.atan2(vy, Math.abs(across)) : 0) + 0.14 * Math.sin(t * 0.5 + seed * 11) + (seed - 0.5) * 0.3;
+    fig.roll = (sideways ? Math.atan2(vy, Math.abs(across)) : 0) + 0.14 * wave(t, 0.5, seed * 11) + (seed - 0.5) * 0.3;
     fig.size = size;
     fig.x = x;
     fig.y = y + 0.22 * amp * Math.sin(ph - 1.3) * size;
@@ -425,13 +461,33 @@ export function create(ctx: Context): Piece {
     fig.tone = 0.86 + 0.24 * seed;
     fig.blur = [Math.min(90, (Math.abs(across) * SHUTTER * FLIERS.unit) / size), 0];
   };
+  /**
+   * The card loop's flight: what is in the air at the key at (x, y, z) going (vx, vy, vz) flies one closed turn to the loop, a circle that
+   * touches its way at the key and is as long as its speed takes it in the loop's length, to the side given (1 or -1). Into `fig`, as `airborne`.
+   */
+  const circuit = (x: number, y: number, z: number, vx: number, vy: number, vz: number, side: number, size: number, seed: number, amp: number, eye: [number, number, number]): void => {
+    const speed = Math.hypot(vx, vz) || 1;
+    const radius = (speed * LOOP_SECONDS) / TAU;
+    const hx = vx / speed;
+    const hz = vz / speed;
+    const nx = -hz * side;
+    const nz = hx * side;
+    const a = TAU * (lp ?? 0);
+    const round = Math.sin(a);
+    const out = 1 - Math.cos(a);
+    // The climb of the key carries on as a rise and fall, once round.
+    const high = (vy * LOOP_SECONDS) / TAU;
+    airborne(x + radius * (hx * round + nx * out), y + high * round, z + radius * (hz * round + nz * out), speed * (hx * Math.cos(a) + nx * round), vy * Math.cos(a), speed * (hz * Math.cos(a) + nz * round), size, seed, T0, amp, eye);
+  };
   const flierAt = (f: Flier, t: number, eye: [number, number, number]): void => {
-    flierPlace(f, t, spot);
+    const at = lp === null ? t : T0;
+    flierPlace(f, at, spot);
     const { x, y, z } = spot;
-    flierPlace(f, t + 0.05, spot);
+    flierPlace(f, at + 0.05, spot);
     // Strokes in bouts, glides between.
-    const bout = smooth(0.3, 0.5, held(t, 3.1 + 2 * f.seed, f.seed, 0.3));
-    airborne(x, y, z, (spot.x - x) / 0.05, (spot.y - y) / 0.05, (spot.z - z) / 0.05, f.size * 0.8, f.seed, t, 0.2 + 0.8 * bout, eye);
+    const bout = smooth(0.3, 0.5, heldAt(t, 3.1 + 2 * f.seed, f.seed, 0.3));
+    if (lp === null) airborne(x, y, z, (spot.x - x) / 0.05, (spot.y - y) / 0.05, (spot.z - z) / 0.05, f.size * 0.8, f.seed, t, 0.2 + 0.8 * bout, eye);
+    else circuit(x, y, z, (spot.x - x) / 0.05, (spot.y - y) / 0.05, (spot.z - z) / 0.05, Math.sign(f.rate), f.size * 0.8, f.seed, 0.2 + 0.8 * bout, eye);
   };
 
   // ---- The skein that comes in from the sea with the camera ----
@@ -521,10 +577,12 @@ export function create(ctx: Context): Piece {
       const fz = Math.cos(f.yaw);
       for (let n = 0; n < SPLASH; n++) {
         const key = i * 31 + n;
-        const every = 0.45 + 0.5 * rand(key, 1);
-        const u = seconds / every + rand(key, 2);
-        const born = Math.floor(u);
-        const a = u - born;
+        // In the loop a whole number of drops are born to the loop, and the run of them comes round.
+        const drops = Math.max(1, Math.round(LOOP_SECONDS / (0.45 + 0.5 * rand(key, 1))));
+        const every = lp === null ? 0.45 + 0.5 * rand(key, 1) : LOOP_SECONDS / drops;
+        const u = lp === null ? seconds / every + rand(key, 2) : lp * drops + rand(key, 2);
+        const born = lp === null ? Math.floor(u) : Math.floor(u) % drops;
+        const a = u - Math.floor(u);
         const age = a * every;
         const dir = rand(key, born) * Math.PI * 2;
         const big = n % 5 === 0;
@@ -562,7 +620,7 @@ export function create(ctx: Context): Piece {
           const out = (0.3 + 1.6 * rand(key, born + 40) * a) * f.size;
           const up = (0.4 + 1.3 * rand(key, born + 80)) * f.size;
           const back = dir * 0.4 - 0.2;
-          const lag = RUN_SPEED * age * 0.8;
+          const lag = RUN_SPEED * age * 0.8 * (lp === null ? 1 : 0.15);
           splash.put(fig.x - fx * (lag + Math.cos(back) * out) + fz * Math.sin(back) * out, ground(fig.x, fig.z) + 0.05 + up * 2 * a * (1 - a), fig.z - fz * (lag + Math.cos(back) * out) - fx * Math.sin(back) * out, (big ? 0.07 + 0.06 * rand(key, born + 5) : 0.008 + 0.012 * rand(key, born + 5)) * f.size, (big ? 0.3 : 0.9) * (1 - a), rand(key, 9), big ? dir : 0, big ? 1.4 : -(1.6 + 2 * Math.abs(1 - 2 * a)));
         }
       }
@@ -581,7 +639,10 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: (seconds) => {
-      const eye = eyeAt(seconds);
+      lp = loopPhase();
+      const eye = eyeAt(lp === null ? seconds : T0);
+      // In the loop what flies straight through the film is where the key has it, and from there flies its closed turn.
+      const at = lp === null ? seconds : T0;
       for (let i = 0; i < feeders.length; i++) {
         const f = feeders[i] as Feeder;
         feederAt(f, seconds);
@@ -610,12 +671,14 @@ export function create(ctx: Context): Piece {
       flockFigures.commit();
       for (let i = 0; i < skein.length; i++) {
         const s = skein[i] as Passer;
-        const bout = smooth(0.25, 0.45, held(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
-        const y = s.y + 1.2 * Math.sin(seconds * 0.6 + s.seed * 20);
-        airborne(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, i < SKEIN ? 0.25 + 0.75 * bout : 1, eye);
+        const bout = smooth(0.25, 0.45, heldAt(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
+        const y = s.y + 1.2 * Math.sin(at * 0.6 + s.seed * 20);
+        const amp = i < SKEIN ? 0.25 + 0.75 * bout : 1;
+        if (lp === null) airborne(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp, eye);
+        else circuit(s.x + s.vx * (at - s.t), y, s.z + s.vz * (at - s.t), s.vx, 0.72 * Math.cos(at * 0.6 + s.seed * 20), s.vz, s.seed < 0.5 ? 1 : -1, s.size, s.seed, amp, eye);
         skeinFigures.put(i, fig);
       }
-      const lead = seconds - BORE;
+      const lead = at - BORE;
       for (let i = 0; i < FLEEING; i++) {
         const side = (i - (FLEEING - 1) / 2) / FLEEING;
         // Low over the water before the wall, a wing's length over it, pale against the dark of the stacks and the green of the wall.
@@ -627,20 +690,23 @@ export function create(ctx: Context): Piece {
           const vz = -gateRight[1] * 10 - gateAhead[1] * 12;
           const x = gateEye[0] + gateAhead[0] * far + gateRight[0] * off + vx * lead;
           const z = gateEye[2] + gateAhead[1] * far + gateRight[1] * off + vz * lead;
-          const y = 2.5 + (1.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
-          airborne(x, y, z, vx, 0.5, vz, 1.15 + 0.3 * hash(i, 5), hash(i, 7), seconds, 1, eye);
+          const y = 2.5 + (1.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(at * 1.3 + i);
+          if (lp === null) airborne(x, y, z, vx, 0.5, vz, 1.15 + 0.3 * hash(i, 5), hash(i, 7), seconds, 1, eye);
+          else circuit(x, y, z, vx, 0.5, vz, i % 2 === 0 ? 1 : -1, 1.15 + 0.3 * hash(i, 5), hash(i, 7), 1, eye);
           fig.tone = 0.42 + 0.16 * hash(i, 9);
           skeinFigures.put(SKEIN + PASSERS + i, fig);
           continue;
         }
         const x = flee[0] + side * 42 - 14 * lead + 3 * Math.sin(i * 2.4);
         const z = flee[1] - 22 - (24 * ((i * 5) % 7)) / 7 + 12 * lead;
-        const y = 2.4 + (2.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
-        airborne(x, y, z, -14, 0.5, 12, 0.62 + 0.5 * hash(i, 5), hash(i, 7), seconds, 1, eye);
+        const y = 2.4 + (2.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(at * 1.3 + i);
+        if (lp === null) airborne(x, y, z, -14, 0.5, 12, 0.62 + 0.5 * hash(i, 5), hash(i, 7), seconds, 1, eye);
+        else circuit(x, y, z, -14, 0.5, 12, i % 2 === 0 ? 1 : -1, 0.62 + 0.5 * hash(i, 5), hash(i, 7), 1, eye);
         skeinFigures.put(SKEIN + PASSERS + i, fig);
       }
       landers.forEach((l, i) => {
-        const tau = seconds - l.t;
+        // In the loop both are down: the one the key has a moment from the ground has landed, and neither is seen to come in twice.
+        const tau = lp === null ? seconds - l.t : Math.max(0.8, T0 - l.t);
         const bed = ground(l.at[0], l.at[1]);
         const slot = SKEIN + PASSERS + FLEEING + i;
         if (tau < 0) {
@@ -663,8 +729,8 @@ export function create(ctx: Context): Piece {
           fig.z = l.at[1];
           fig.y = bed;
           fig.sway = 0.05 * Math.exp(-tau * 3) * Math.cos(tau * 5.5);
-          fig.limbs[0] = (held(seconds, 1.6, l.seed) - 0.5) * 0.6;
-          fig.limbs[1] = 0.25 * Math.sin(tau * 9) * Math.exp(-tau * 1.2);
+          fig.limbs[0] = (heldAt(seconds, 1.6, l.seed) - 0.5) * 0.6;
+          fig.limbs[1] = 0.25 * Math.sin(tau * 9) * Math.exp(-tau * 1.2) + (lp === null ? 0 : 0.07 * Math.sin(2 * TAU * lp + l.seed * 9));
           standers.put(i, fig);
           skeinFigures.hide(slot);
         }

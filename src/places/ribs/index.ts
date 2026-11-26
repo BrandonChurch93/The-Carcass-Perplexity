@@ -10,12 +10,12 @@ import * as drowned from './drowned';
 import * as land from './land';
 import * as sea from './sea';
 import * as wings from './wings';
-import { shots } from './cameras';
-import { BORE, UNIT } from './shared/anchors';
+import { loopPath, shots } from './cameras';
+import { BORE, T0, UNIT } from './shared/anchors';
 import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
 import { createRig } from './shared/rig';
-import { setStaged } from './shared/stage';
+import { setLoopPhase, setStaged } from './shared/stage';
 
 // The order matters: the land tells the rig its shape before anything reads it, and the air comes last because it draws over everything.
 const FOLDERS: Folder[] = [land, sea, drowned, wings, air];
@@ -90,8 +90,9 @@ async function create(): Promise<Place> {
     resize: (width, height) => {
       for (const p of pieces) p.resize?.(width, height);
     },
-    setTime: (seconds, staged) => {
+    setTime: (seconds, staged, loop) => {
       setStaged(staged ?? seconds);
+      setLoopPhase(loop ?? null);
       rig.setTime(seconds);
       for (const p of pieces) p.setTime?.(seconds);
       standIns.setTime(seconds);
@@ -118,6 +119,8 @@ async function create(): Promise<Place> {
 const place: PlaceModule = {
   unit: UNIT,
   shots,
+  // The card loop opens on the establishing key: its camera, its world and its staging.
+  loop: { path: loopPath, timeOffset: T0, staged: T0 },
   heightOf: (pose) => pose.position[1] - Math.max(0, land.bed(pose.position[0], pose.position[2])),
   create,
 };
