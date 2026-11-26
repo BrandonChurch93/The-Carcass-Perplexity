@@ -126,7 +126,7 @@ float lowDepth(vec2 at) {
   // (The field runs in under the outer arms of the cyclone: the painted cover leaves a round hole there, wider than the storm.)
   float nearStorm = length(at - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
   amount = max(amount, 0.75 * smoothstep(0.3, 0.55, nearStorm) * (1.0 - smoothstep(0.7, 1.1, nearStorm)));
-  amount *= 1.0 - 0.92 * smoothstep(0.1, 0.45, sunImage(at));
+  amount *= 1.0 - 0.94 * smoothstep(0.03, 0.3, sunImage(at));
   // (Where the sky stands clear nothing more is read: most of the cost of the field is its photographs.)
   lowWeigh = vec3(0.0);
   lowNear = vec2(0.0);

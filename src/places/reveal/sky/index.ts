@@ -89,7 +89,7 @@ void main() {
   // (Against the sun's image on the sea a cloud is seen dark: its lit top is dimmer than the sheet of light under it.)
   vec2 sunOnSea = (xz - vec2(${X(5875).toFixed(1)}, ${Z(703).toFixed(1)}) - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
-  lowColour *= 1.0 - 0.6 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
+  lowColour *= 1.0 - 0.4 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
   float b = high * 0.4;
   // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
@@ -177,7 +177,7 @@ float storm(vec2 p, float turn, float lopsided) {
   // arms part from it farther out, and only out there does the cloud break into cumulus with sea between.)
   float shield = exp(-pow(r / 0.24, 2.0));
   float broken = smoothstep(0.16, 0.6, r);
-  float gathered = mix(1.0, 0.3 + 1.45 * arm, smoothstep(0.1, 0.5, r));
+  float gathered = mix(1.0, 0.3 + 1.45 * arm, smoothstep(0.02, 0.22, r));
   float body = 0.3 * band + pow(band * mix(1.0, cells, max(broken, 0.4)) * mix(1.0, puffs, 0.5 * max(broken, 0.4)), 0.6);
   return max(body * gathered * stands * (1.0 + 0.25 * shield) - mix(0.36, 0.62, smoothstep(0.06, 0.45, r)), 0.0);
 }
@@ -208,8 +208,8 @@ void main() {
   float self = clamp(0.5 + 1.6 * dot(vec2(fall.x, -fall.y), sunStep), 0.0, 1.0);
   // (Round the eye the bands are fused: thin cloud lies between the fibres of the shield, and the sea is not seen through it.)
   float veil = 0.42 * exp(-pow(r / 0.21, 2.0)) * (0.45 + 0.55 * smoothstep(0.006, 0.05, r));
-  float tall = 1.0 - smoothstep(0.02, 0.2, r);
-  vec3 colour = cloudLight(vWorld.xz, 0.12 + 0.95 * self, 0.35 + 0.65 * thick, 0.3 * tall) * (0.72 + 0.5 * clamp(depth / 3.5, 0.0, 1.0)) * (1.0 + 0.2 * tall);
+  float tall = 1.0 - smoothstep(0.05, 0.45, r);
+  vec3 colour = cloudLight(vWorld.xz, 0.12 + 0.95 * self, 0.35 + 0.65 * thick, 0.3 * tall) * (0.72 + 0.5 * clamp(depth / 3.5, 0.0, 1.0)) * (1.0 + 0.3 * tall);
   // (By night the cyclone is a dim wheel, no brighter than the bone.)
   if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
   float alpha = 1.0 - (1.0 - 0.96 * thick) * (1.0 - veil);
