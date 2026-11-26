@@ -1,6 +1,7 @@
-2026-11-26 04:04 UTC
-work at 811a6ae on agent/reveal-place-2
-heartbeat 7: cyclone cells, skull sockets, lake
-look-1.jpg = out/work/looks/h7-keys.png
-look-2.jpg = out/work/looks/h7-400px.png
-look-3.jpg = out/work/looks/h7-cyclone.png
+2026-11-26 04:34 UTC
+work at 0578d47 on agent/reveal-place-2
+version 3: keys, last frame at 400 px, hold, 9627 native
+look-1.jpg = out/work/looks/v3-keys.png
+look-2.jpg = out/work/looks/v3-last.png
+look-3.jpg = out/work/looks/v3-hold.png
+look-4.jpg = out/work/looks/v3-9627-native.png
