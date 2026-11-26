@@ -30,7 +30,7 @@ export function noise3(x: number, y: number, z: number): number {
 const chipped = (x: number, y: number, z: number): number => 0.6 * noise3(x * 0.55, y * 0.55, z * 0.55) + 0.3 * (1 - 2 * Math.abs(noise3(x * 1.4 + 7, y * 1.4, z * 1.4))) + 0.12 * noise3(x * 4.1, y * 4.1 + 3, z * 4.1);
 
 /** A grid of columns by rows whose rows close on themselves (the last row is the first): smooth normals across the seam, so no line shows. */
-function tube(columns: number, rows: number, point: (u: number, a: number) => { at: [number, number, number]; uv: [number, number]; occ: number }): THREE.BufferGeometry {
+export function tube(columns: number, rows: number, point: (u: number, a: number) => { at: [number, number, number]; uv: [number, number]; occ: number }): THREE.BufferGeometry {
   const count = (columns + 1) * (rows + 1);
   const position = new Float32Array(count * 3);
   const uv = new Float32Array(count * 2);
@@ -231,7 +231,7 @@ export function block(seed: number, size: [number, number, number], at: [number,
   const h = (k: number): number => hash3(Math.floor(seed * 131), k, 5);
   // The six sides, each leaning well off square (no face of a fallen block is true), and ten more that take a corner or an edge off:
   // a block that fell and broke has no two faces parallel and no corner whole.
-  for (let k = 0; k < 16; k++) {
+  for (let k = 0; k < 11; k++) {
     let nx: number;
     let ny: number;
     let nz: number;
@@ -255,35 +255,52 @@ export function block(seed: number, size: [number, number, number], at: [number,
   const m = new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(turn[0], turn[1], turn[2], 'YXZ')), new THREE.Vector3(1, 1, 1));
   const p = new THREE.Vector3();
   const longest = Math.max(size[0], size[2]);
-  const columns = Math.max(28, Math.round((longest * 3.4) / 0.36));
-  const rows = Math.max(18, Math.round((Math.max(size[1], Math.min(size[0], size[2])) * 3) / 0.4));
+  const columns = Math.max(36, Math.round((longest * 3.4) / 0.22));
+  const rows = Math.max(28, Math.round((Math.max(size[1], Math.min(size[0], size[2])) * 3) / 0.24));
+  // The normal of the face each point lies on: the edges of a broken block are sharp, and a mesh smoothed across them is a boulder.
+  const faces: number[] = [];
+  const turned = new THREE.Matrix3().setFromMatrix4(m);
+  const fn = new THREE.Vector3();
   const g = tube(columns, rows, (u, a) => {
     // A direction on the ball: u runs pole to pole along the block's long side, a goes round it.
     const e = (u - 0.5) * Math.PI;
     const dx = Math.sin(e);
     const dy = Math.cos(e) * Math.sin(a);
     const dz = Math.cos(e) * Math.cos(a);
-    // Out along it to the nearest of the planes: that is the block. The meeting of two planes is an edge, softened a little.
+    // Out along it to the nearest of the planes: that is the block. The meeting of two planes is an edge, a finger wide.
     let reach = 0;
     let soft = 0;
+    fn.set(0, 0, 0);
     for (const [nx, ny, nz, d] of planes) {
       const along = nx * dx + ny * dy + nz * dz;
       if (along <= 0.02) continue;
-      const w = (along / d) ** 9;
+      const w = (along / d) ** 30;
       reach += w * (along / d);
       soft += w;
+      fn.x += (w * nx) / size[0];
+      fn.y += (w * ny) / size[1];
+      fn.z += (w * nz) / size[2];
     }
     const t = soft > 0 ? soft / reach : 1;
     p.set(dx * t * size[0] * 0.5, dy * t * size[1] * 0.5, dz * t * size[2] * 0.5);
     const lx = p.x;
     const ly = p.y;
     const lz = p.z;
-    // Worn and chipped by the solid noise, and its beds stand out in steps on its sides.
-    const bed = ly * 2.3 + 0.7 * noise3(lx * 0.6 + seed, ly * 0.6, lz * 0.6);
-    const rough = 0.34 * chipped(lx + seed * 9, ly, lz - seed * 5) + 0.09 * (Math.abs(bed - Math.floor(bed) - 0.5) * 2 - 0.5);
+    // Its faces are breaks: nearly flat, a little hollowed and chipped, and its beds stand out in steps on its sides.
+    const bed = ly * 2.6 + 0.5 * noise3(lx * 0.4 + seed, ly * 0.4, lz * 0.4);
+    const stepped = Math.floor(bed) + smooth((bed - Math.floor(bed) - 0.8) / 0.2);
+    const sides = 1 - Math.abs(fn.y) / (fn.length() || 1);
+    const rough = 0.07 * chipped(lx + seed * 9, ly, lz - seed * 5) + 0.07 * sides * (hash3(Math.floor(seed * 17), Math.floor(bed), 3) - 0.5 + 0.4 * (stepped - bed));
     p.multiplyScalar(1 + rough / Math.max(0.6, p.length()));
     p.applyMatrix4(m);
+    fn.normalize().applyMatrix3(turned);
+    faces.push(fn.x, fn.y, fn.z);
     return { at: [p.x, p.y, p.z], uv: [lx + seed * 13, ly + lz], occ: lerp(0.2, 1, smooth(dy * 1.1 + 0.72)) };
   });
+  const n = g.getAttribute('normal') as THREE.BufferAttribute;
+  for (let k = 0; k < n.count; k++) {
+    fn.set((faces[k * 3] as number) + 0.35 * n.getX(k), (faces[k * 3 + 1] as number) + 0.35 * n.getY(k), (faces[k * 3 + 2] as number) + 0.35 * n.getZ(k)).normalize();
+    n.setXYZ(k, fn.x, fn.y, fn.z);
+  }
   return g;
 }
