@@ -229,7 +229,7 @@ export function createRig(): Rig {
 
   const sunDirection = new THREE.Vector3(...SUN_DIR);
   // The glow of the low sky stands to the north of the sun, where the establishing picture has it: on the left of a camera that looks north.
-  const glowBearing = (312 * Math.PI) / 180;
+  const glowBearing = (324 * Math.PI) / 180;
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
     uSolo: { value: 0 },
@@ -238,13 +238,13 @@ export function createRig(): Rig {
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
     uSkyZenith: { value: new THREE.Vector3(0.1, 0.18, 0.36) },
-    uSkyHorizon: { value: new THREE.Vector3(0.5, 0.53, 0.58) },
+    uSkyHorizon: { value: new THREE.Vector3(0.52, 0.52, 0.56) },
     uSkyGround: { value: new THREE.Vector3(0.1, 0.09, 0.085) },
     uSunDir: { value: sunDirection },
-    uSunColour: { value: new THREE.Vector3(7.6, 4.4, 2.0) },
+    uSunColour: { value: new THREE.Vector3(9.0, 4.3, 1.5) },
     uGlowDir: { value: new THREE.Vector3(Math.sin(glowBearing), 0, -Math.cos(glowBearing)) },
-    uGlowColour: { value: new THREE.Vector3(2.3, 1.55, 0.75) },
-    uFill: { value: new THREE.Vector3(1, 1, 1) },
+    uGlowColour: { value: new THREE.Vector3(3.2, 1.9, 0.8) },
+    uFill: { value: new THREE.Vector3(0.58, 0.66, 0.82) },
   };
 
   const bake = (): void => {

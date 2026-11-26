@@ -1,7 +1,7 @@
 // The land of the Eye: the socket of pale cliffs with its aprons of scree, the brow that hangs over the east shore, the loose stone,
 // and the stream that leaves the lake through the rim beside the wide camera.
 import * as THREE from 'three';
-import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeVertices, toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { DEG, shoreAt, smooth } from '../layout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
@@ -39,8 +39,14 @@ void main() {
   // The damp line at the water, and the stone that the lake has wetted darker.
   vec4 land = landAt(vWorld.xz);
   float damp = smoothstep(0.42, 0.03, vWorld.y + 0.1 * vnoise(vWorld.xz * 0.7)) * (1.0 - face);
-  k.albedo *= mix(1.0, 0.5, damp);
+  k.albedo *= mix(1.0, 0.5, damp) * mix(1.0, 0.55, smoothstep(0.0, -0.12, vWorld.y) * (1.0 - face));
   k.rough = mix(k.rough, 0.35, damp * 0.8);
+  // Under the brow the wall and the scree stand in a cave: the further back from the water, the less of the sky they see.
+  float bearing = degrees(atan(vWorld.x, -vWorld.z));
+  float roofed = smoothstep(26.0, 52.0, bearing) * (1.0 - smoothstep(116.0, 142.0, bearing));
+  float cave = roofed * smoothstep(40.0, 150.0, land.b) * smoothstep(176.0, 130.0, vWorld.y);
+  k.occ *= 1.0 - 0.93 * cave;
+  k.albedo *= 1.0 - 0.6 * cave;
   vec3 c = rigShade(vWorld, k.normal, v, k.albedo, k.rough, k.occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -65,7 +71,7 @@ void main() {
   Rock k = rockAt(vWorld, n, 1.0);
   // The under side holds its own dark: the roof sees the ground and not the sky.
   float under = smoothstep(0.1, -0.5, n.y);
-  vec3 c = rigShade(vWorld, k.normal, v, k.albedo * mix(1.0, 0.72, under), k.rough, k.occ * mix(1.0, 0.6, under));
+  vec3 c = rigShade(vWorld, k.normal, v, k.albedo * mix(1.0, 0.5, under), k.rough, k.occ * mix(1.0, 0.3, under));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -105,7 +111,7 @@ void main() {
   vec2 uz = vLocal.xy / size;
   vec3 col = texture2D(tBoulder, ux).rgb * w.x + texture2D(tBoulder, uy).rgb * w.y + texture2D(tBoulder, uz).rgb * w.z;
   vec3 nh = texture2D(tBoulderNh, ux).rgb * w.x + texture2D(tBoulderNh, uy).rgb * w.y + texture2D(tBoulderNh, uz).rgb * w.z;
-  vec3 albedo = vec3(0.56, 0.52, 0.46) * (0.35 + 9.5 * dot(col, vec3(0.33))) * (0.72 + 0.5 * vTint.x) * mix(vec3(0.92, 0.95, 1.0), vec3(1.08, 1.0, 0.9), vTint.y);
+  vec3 albedo = vec3(0.4, 0.375, 0.34) * (0.35 + 9.5 * dot(col, vec3(0.33))) * (0.72 + 0.5 * vTint.x) * mix(vec3(0.92, 0.95, 1.0), vec3(1.08, 1.0, 0.9), vTint.y);
   vec2 d = nh.xy * 2.0 - 1.0;
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
@@ -139,11 +145,13 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
-  float run = 0.0;
-  for (int i = 0; i < 3; i++) run += smoothstep(7.0, 0.0, abs(vFlow.x - uFall[i]));
+  // It runs toward the lake: fast and white on the steps and down the face of the spur, slow in the pools between.
+  float run = smoothstep(108.0, 98.0, vFlow.x) * smoothstep(14.0, 24.0, vFlow.x);
+  for (int i = 0; i < 3; i++) run += smoothstep(3.0, 0.0, abs(vFlow.x - uFall[i]));
+  run = min(run, 1.0);
   float speed = 0.9 + 2.6 * run;
-  vec2 q = vec2(vFlow.x - uTime * speed, vFlow.y * 2.2);
-  vec2 q2 = vec2(vFlow.x - uTime * speed * 0.6, vFlow.y * 2.2);
+  vec2 q = vec2(vFlow.x + uTime * speed, vFlow.y * 2.2);
+  vec2 q2 = vec2(vFlow.x + uTime * speed * 0.6, vFlow.y * 2.2);
   float a = fbm(q * vec2(1.3, 2.0));
   float b = fbm(q2 * vec2(3.1, 5.0) + 7.0);
   float e = 0.12;
@@ -214,9 +222,29 @@ export function create(ctx: Context): Piece {
     const across = rng.range(PATCH.across0 + 3, PATCH.across1 - 3);
     const size = 0.22 + 3.4 * rng.next() ** 4;
     // The path of the wide camera is kept clear of anything it could pass through.
-    if (Math.abs(across) < 5.5 + size && size > 0.45) continue;
+    if (Math.abs(across) < 3.2 + size && size > 0.45) continue;
+    if (Math.abs(across - streamAcross(along)) < 1.6 + size) continue;
     const clump = vnoise(along / 14 + 3, across / 14 + 8);
     if (clump < 0.42 && size < 1.2) continue;
+    const [x, z] = onAxis(along, across);
+    put(x, z, size);
+  }
+  // The blocks the wide shot looks past, at the foot of its frame.
+  const near: [number, number, number][] = [
+    [128, 17, 4.6],
+    [121, 22, 5.6],
+    [133, 12.5, 2.6],
+    [114, 15, 3.2],
+    [109, 25, 4.2],
+    [126, -19, 4.4],
+    [119, -27, 5.2],
+    [132, -8, 2.2],
+    [113, -17, 3],
+    [107, -31, 4],
+    [137, 9, 1.5],
+    [138, -6.5, 1.3],
+  ];
+  for (const [along, across, size] of near) {
     const [x, z] = onAxis(along, across);
     put(x, z, size);
   }
@@ -225,7 +253,7 @@ export function create(ctx: Context): Piece {
     const out = -0.6 + 26 * rng.next() ** 1.7;
     const r = shoreAt(b) + out;
     const a = b * DEG;
-    put(Math.sin(a) * r, -Math.cos(a) * r, 0.07 + 0.5 * rng.next() ** 3);
+    put(Math.sin(a) * r, -Math.cos(a) * r, 0.06 + 0.42 * rng.next() ** 4);
   }
 
   const boulder = { tBoulder: { value: ctx.assets.texture('land/boulder.jpg', { anisotropy: 2 }) }, tBoulderNh: { value: ctx.assets.texture('land/boulder-nh.png', { kind: 'data', anisotropy: 2 }) } };
@@ -238,8 +266,10 @@ export function create(ctx: Context): Piece {
     for (let k = 0; k < VARIANTS; k++) {
       const mine = list.filter((_, i) => i % VARIANTS === k);
       if (mine.length === 0) continue;
-      const geometry = mergeVertices(stoneGeometry(tier * 3 + k + 1, tier === 0 ? 3 : tier === 1 ? 2 : 1).deleteAttribute('uv').deleteAttribute('normal'));
-      geometry.computeVertexNormals();
+      const merged = mergeVertices(stoneGeometry(tier * 3 + k + 1, tier === 0 ? 3 : tier === 1 ? 2 : 1).deleteAttribute('uv').deleteAttribute('normal'));
+      merged.computeVertexNormals();
+      // The blocks are broken stone: their faces meet in edges.
+      const geometry = tier < 2 ? toCreasedNormals(merged, 0.5) : merged;
       const tints = new Float32Array(mine.length * 3);
       const mesh = new THREE.InstancedMesh(geometry, stoneMaterial, mine.length);
       mine.forEach((s, i) => {
@@ -281,8 +311,8 @@ export function create(ctx: Context): Piece {
   const flow = new Float32Array(count * ACROSS * 2);
   for (let i = 0; i < count; i++) {
     const along = FROM + i * STEP;
-    const half = (2.2 + 1.6 * vnoise(along / 9, 3.3)) * (1 + 1.5 * smooth(18, -10, along));
-    const level = streamBed(along) + 0.36 - 0.05 * smooth(10, 40, along);
+    const half = (1.0 + 0.8 * vnoise(along / 9, 3.3)) * (1 + 2.5 * smooth(18, -10, along));
+    const level = streamBed(along) + 0.3 - 0.05 * smooth(10, 40, along);
     for (let j = 0; j < ACROSS; j++) {
       const side = (j / (ACROSS - 1)) * 2 - 1;
       const [x, z] = onAxis(along, streamAcross(along) + side * half);
@@ -307,7 +337,7 @@ export function create(ctx: Context): Piece {
   streamGeometry.setAttribute('aFlow', new THREE.BufferAttribute(flow, 2));
   streamGeometry.setIndex(index);
   const streamMaterial = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, uFall: { value: [56, 101, 156] } },
+    uniforms: { ...ctx.rig.uniforms, uFall: { value: [114, 128.5, 143] } },
     vertexShader: STREAM_VERTEX,
     fragmentShader: STREAM_FRAGMENT,
     side: THREE.DoubleSide,

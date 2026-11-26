@@ -66,7 +66,7 @@ export function landHeight(x: number, z: number): number {
   y += 8.5 * Math.exp(-((Math.hypot(x - LEDGE[0], z - LEDGE[1]) / 21) ** 2));
   const ds = r - shoreOf(x, z);
   if (ds < FAN + 60) {
-    const bluff = BLUFF * smooth(6, 56, ds) * (1 - smooth(95, 150, ds)) * Math.exp(-((x / 44) ** 2)) * (z > 0 ? 1 : 0);
+    const bluff = BLUFF * smooth(6, 70, ds) * (1 - smooth(95, 150, ds)) * Math.exp(-((x / 44) ** 2)) * (z > 0 ? 1 : 0);
     y = Math.max(y, Math.min(0.03 * ds, 3 + 0.012 * ds)) + bluff;
   }
   const px = x - GAP_FROM[0];

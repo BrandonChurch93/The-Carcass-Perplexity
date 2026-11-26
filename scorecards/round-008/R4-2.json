@@ -1,0 +1,63 @@
+{
+  "round": 8,
+  "unit": "breath",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-25 23:55 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the vapour cloud over the pit, from 4.36 s to 6.00 s",
+        "what": "after four seconds of almost no change, the oval cloud suddenly grows into a big pale disc with a hard, soft-edged sprite outline, and a bright translucent band appears under it at 4.91 s. It pops instead of welling up, and it hangs in the air instead of pouring or pooling in the pit",
+        "fix": "run the fume as a continuous simulation that rises from the vents, rolls over the terraces and sinks into the bowl. Don't let it scale up as a billboard."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the oval vapour cloud over the pit, 0.00 s to 3.82 s",
+        "what": "the cloud reads as one flat oval card. Its shape and position barely change over nearly 4 s, and it doesn't drift, curl or thin. With the camera still, the centre of the frame looks like a still picture",
+        "fix": "give the cloud volume and internal turbulence, with slow drift and breakup that you can see from second to second"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the distant steam plumes on the far shore and the left plume",
+        "what": "over 6 s the plumes hold nearly the same silhouette. They read as fixed shapes, not rising, wind-sheared columns",
+        "fix": "animate the plumes so they rise and shear in the wind, with the tops breaking off and dispersing"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the animals on the far flats and on the rim",
+        "what": "the small figures hardly change position or pose across 6 s, and the ones near the rim read as placed models. There's no milling, turning or staggered walking",
+        "fix": "give the herd staggered, varied movement: grazing heads, turns, a few walkers with weight shifting between steps"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the vapour bank above the pit rim, across frames 4650 to 4661",
+        "what": "the bank is the same soft blob from frame to frame and moves only with the slight camera drift. It doesn't evolve, so it sits like a sprite pasted over the rocks",
+        "fix": "make it a volumetric fume that changes between frames and lies against the terraces instead of floating over them"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "the water surface at the lower left",
+        "what": "the sparkle bands look like a repeating glint texture that shimmers in place. There's no wave train moving across the water",
+        "fix": "use wind-driven waves that travel across the surface, with glints that follow the wave facets"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the red plants at the upper left and near the rim",
+        "what": "the fronds are almost static between frames, with no sign of wind even though the vapour is moving",
+        "fix": "add a light wind sway that varies from plant to plant"
+      }
+    ]
+  }
+}

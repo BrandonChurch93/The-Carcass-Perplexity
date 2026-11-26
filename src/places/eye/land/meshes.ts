@@ -164,7 +164,7 @@ export function browGeometry(): THREE.BufferGeometry {
     const wall = shoreAt(b) + wallAt(a).foot;
     const reach = BROW.reach * e * (0.82 + 0.36 * vnoise(b / 5.5, 1.7));
     const thick = BROW.thick * (0.35 + 0.65 * e) * (0.8 + 0.4 * vnoise(b / 7.3, 9.2));
-    const level = BROW.lipLevel * (0.55 + 0.45 * e) + 9 * (vnoise(b / 9, 4.4) - 0.5);
+    const level = BROW.lipLevel * (0.55 + 0.45 * e) + 34 * (vnoise(b / 9, 4.4) - 0.5) + 16 * (vnoise(b / 2.6, 1.4) - 0.5);
     for (let j = 0; j < P; j++) {
       const [out, up, lift] = profile[j] as [number, number, number];
       const rough = 5 * (vnoise(b / 1.7 + j * 3.1, j * 1.3) - 0.5) + 2.2 * (vnoise(b / 0.5 + j, j * 2.7) - 0.5);
@@ -207,17 +207,18 @@ export function stoneGeometry(seed: number, detail = 2): THREE.BufferGeometry {
     const z = p.getZ(i);
     const a = vnoise(x * 1.3 + seed * 7.1, z * 1.3 + y * 1.7 + seed * 3.3);
     const b = vnoise(x * 3.1 + y * 2.3 + seed, z * 3.1 + seed * 5.7);
-    // Planes cut into the ball make the corners of a broken block.
-    let k = 0.74 + 0.36 * a + 0.14 * b;
-    for (let c = 0; c < 5; c++) {
+    // Planes cut into the ball make the faces and the corners of a broken block.
+    let k = 0.96 + 0.1 * a + 0.05 * b;
+    for (let c = 0; c < 9; c++) {
       const cx = Math.sin(seed * 12.9 + c * 4.1);
-      const cy = Math.sin(seed * 7.3 + c * 2.7) * 0.8;
+      const cy = Math.sin(seed * 7.3 + c * 2.7) * 0.9;
       const cz = Math.cos(seed * 5.1 + c * 3.3);
       const l = Math.hypot(cx, cy, cz);
       const d = (x * cx + y * cy + z * cz) / l;
-      const cutAt = 0.62 + 0.2 * Math.sin(seed * 3.7 + c);
+      const cutAt = 0.5 + 0.22 * Math.sin(seed * 3.7 + c * 1.9);
       if (d * k > cutAt) k = cutAt / d;
     }
+    k *= 1 + 0.035 * (b - 0.5);
     p.setXYZ(i, x * k, y * k * 0.72, z * k);
   }
   g.computeVertexNormals();
