@@ -20,6 +20,7 @@ varying vec3 vWorld;
 varying vec2 vAt;
 varying vec4 vB;
 varying float vRise;
+varying vec2 vC;
 ${NOISE_GLSL}
 // The mud a pad has pushed out, in radii of the patch: thrown up in two or three lumps to the sides and behind, never a ring. It slumps once the foot has gone.
 float collar(vec2 q, vec4 b) {
@@ -33,6 +34,7 @@ void main() {
   // x of the patch runs the way the animal walks.
   vAt = position.xz;
   vB = iB;
+  vC = iC;
   float rise = collar(vAt, iB);
   vRise = rise;
   float r = length(vAt);
@@ -48,6 +50,7 @@ varying vec3 vWorld;
 varying vec2 vAt;
 varying vec4 vB;
 varying float vRise;
+varying vec2 vC;
 uniform sampler2D tMud;
 uniform sampler2D tMudNh;
 ${NOISE_GLSL}
@@ -69,36 +72,50 @@ void main() {
     float f = (float(c) - 1.5) / 1.5;
     claws = min(claws, length((q - vec2(0.5 - 0.1 * f * f, 0.3 * f)) / vec2(0.16, 0.085)));
   }
-  float hole = 1.0 - smoothstep(0.78, 1.08, min(pad, claws + 0.25 * old));
+  float sunk = min(pad, claws + 0.25 * old) + 0.35 * (fine.b - 0.5);
+  float hole = 1.0 - smoothstep(0.6, 1.1, sunk);
   float churn = 1.0 - smoothstep(0.45, 1.0, r + 0.5 * (fine.b - 0.5));
   // Seen: the print, the lumps thrown up round it, and a wet stain of the mud between that thins out into the ground.
   float shown = vB.w * max(max(hole, smoothstep(0.12, 0.3, vRise)), 0.55 * churn);
   if (shown < 0.004) discard;
-  vec3 tone = texture2D(tMud, p / 1.1).rgb / MUD_MEAN;
-  tone = mix(vec3(1.0), mix(vec3(dot(tone, vec3(0.3, 0.5, 0.2))), tone, 0.5), 0.75) * (0.7 + 0.6 * fine.b);
+  // The mud itself is drawn as the wallow it lies in is drawn (dead/mud.ts), so that only what the foot has done to it shows.
+  vec3 mw = texture2D(tMudNh, p / 2.0).rgb;
+  vec3 mf = texture2D(tMudNh, vec2(p.x * 0.8 - p.y * 0.6, p.x * 0.6 + p.y * 0.8) / 1.37 + 0.3).rgb;
+  vec3 tone = texture2D(tMud, p / 2.0).rgb / MUD_MEAN;
+  tone = mix(vec3(1.0), mix(vec3(dot(tone, vec3(0.3, 0.5, 0.2))), tone, 0.5), 0.6) * (0.9 + 0.2 * mf.b);
+  float h0 = 0.62 * mw.b + 0.38 * mf.b;
+  vec2 slope = (textureLod(tMudNh, p / 2.0, 2.5).rg - 0.5) * 0.9 + (mw.rg - 0.5) * 0.25 + (mf.rg - 0.5) * 0.1;
+  float low = smoothstep(0.5, 0.34, h0);
+  slope *= 1.0 - 0.85 * low;
   vec3 dx = dFdx(vWorld);
   vec3 dz = dFdy(vWorld);
   vec3 flat_ = normalize(cross(dx, dz));
   if (flat_.y < 0.0) flat_ = -flat_;
-  vec2 slope = (wide.rg - 0.5) * 0.9 + (fine.rg - 0.5) * 0.6;
   vec3 n = normalize(flat_ + vec3(-slope.x, 0.0, slope.y));
   vec3 v = normalize(cameraPosition - vWorld);
-  vec3 albedo = vec3(0.06, 0.03, 0.025) * tone;
-  // Fresh mud turned up from under is red and wet.
-  albedo = mix(albedo, vec3(0.075, 0.024, 0.018) * tone, 0.6 * smoothstep(0.2, 0.7, vRise));
-  float rough = mix(0.95, 0.7, smoothstep(0.2, 0.9, vRise) * fine.b);
-  // The floor of the print is the wet mud the pad pressed: darker, smeared flat, and the brine comes up into the low side of it only.
-  albedo = mix(albedo, vec3(0.036, 0.016, 0.013) * tone, 0.85 * hole);
-  float low = vnoise(vAt * 2.1 + vB.z * 11.0) + 0.35 * (wide.b - 0.5) - 0.5 * length(q - vec2(0.12, 0.1 * sin(vB.z * 40.0)));
-  float pool = hole * smoothstep(0.1, 0.6, old) * smoothstep(0.28, 0.4, low);
-  albedo = mix(albedo, vec3(0.085, 0.014, 0.01), 0.9 * pool);
-  rough = mix(rough, 0.82, 0.6 * hole * (1.0 - pool));
-  rough = mix(rough, 0.55, pool);
-  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.25 * hole + 0.6 * pool));
-  // Dark under the leg that stands in it, and under the wall of the print on the side the light does not come from.
+  vec3 albedo = vec3(0.08, 0.052, 0.042) * tone * 0.65;
+  albedo = mix(albedo, vec3(0.07, 0.022, 0.016) * tone, 0.5 * smoothstep(0.35, 0.6, fbm(p * 2.3 + 7.0)));
+  float stand = smoothstep(0.64, 0.52, h0);
+  // Fresh mud turned up from under is redder, and shut off from the sky at the foot of each lump.
+  float up = smoothstep(0.15, 0.7, vRise);
+  albedo = mix(albedo, vec3(0.075, 0.024, 0.018) * tone, 0.55 * up);
+  stand *= 1.0 - up;
+  // The floor of the print is the mud the pad pressed: dark, smeared flat, and the brine comes up into the low side of it only.
+  float lowSide = vnoise(vAt * 2.1 + vB.z * 11.0) + 0.35 * (wide.b - 0.5) - 0.5 * length(q - vec2(0.12, 0.1 * sin(vB.z * 40.0)));
+  float pool = max(stand * (1.0 - hole), hole * smoothstep(0.1, 0.6, old) * smoothstep(0.28, 0.4, lowSide));
+  albedo = mix(albedo, albedo * 0.62, hole);
+  // Its wall leans in: the far side of it is turned to the lens and the sky, the near side is hidden.
+  float lip = smoothstep(0.55, 0.85, sunk) * (1.0 - smoothstep(0.85, 1.2, sunk));
+  vec2 inward = -normalize(q + 0.0001);
+  n = normalize(n + 1.1 * lip * vec3(inward.x * vC.x - inward.y * vC.y, 0.0, inward.x * vC.y + inward.y * vC.x));
+  albedo = mix(albedo, vec3(0.085, 0.012, 0.01), 0.9 * pool);
+  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), max(0.9 * pool, 0.4 * hole)));
+  albedo = mix(albedo, albedo * vec3(0.55, 0.36, 0.32), low * (1.0 - hole));
+  float rough = mix(mix(1.0, 0.97, low), 0.96, pool);
+  // Dark under the leg that stands in it, inside the wall of the print, and between the lumps.
   float wall = hole * (1.0 - smoothstep(0.55, 0.95, min(pad, claws)));
-  float occ = 1.0 - 0.55 * (1.0 - old) * (1.0 - smoothstep(0.35, 0.7, r)) - 0.4 * (hole - wall) * (1.0 - pool);
-  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ * (0.7 + 0.3 * fine.b));
+  float occ = (0.6 + 0.4 * smoothstep(0.3, 0.6, h0)) * (1.0 - 0.5 * (1.0 - old) * (1.0 - smoothstep(0.35, 0.7, r)) - 0.3 * (hole - wall)) * (1.0 - 0.35 * smoothstep(0.05, 0.2, vRise) * (1.0 - up));
+  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ) * 0.75;
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), shown * (1.0 - uSolo));
 }`;
 

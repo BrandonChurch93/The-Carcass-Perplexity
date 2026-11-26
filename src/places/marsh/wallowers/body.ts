@@ -208,6 +208,8 @@ void main() {
   float side = max(smoothstep(0.25, 0.55, abs(nr.z)), top) * cover * (1.0 - uTile);
   // The head wears the tile: the picture's brow has a dark fold that reads as an eye, and it has none.
   side *= 1.0 - 0.9 * smoothstep(0.6, 0.76, vRest.x / uPic.x) * (1.0 - vInfo.z);
+  // Under the trunk the picture is pulled out into streaks: the tile takes over there.
+  side *= mix(smoothstep(0.6, 0.95, vRest.y), 1.0, max(vInfo.z, uMudded));
   // On a young one the plate is a third the size: its pores would read as down, so it is taken softer and the folds are left.
   vec3 pic = texture2D(tPic, uv, 1.7 * (1.0 - smoothstep(0.4, 0.8, uK))).rgb;
   vec2 e = vec2(3.0 / 1774.0, 3.0 / 887.0);
@@ -363,13 +365,13 @@ void main() {
   float carried = 0.0;
   if (vRaise > 0.0) {
     carried = smoothstep(0.0, 0.03 * kk, vRaise) * (1.0 - smoothstep(uMud + 0.1 * kk + 0.25 * ragged, uMud + 0.34 * kk + 0.25 * ragged, wy));
-    albedo = mix(albedo, vec3(0.03, 0.012, 0.009) * (0.6 + 0.8 * grain), 0.85 * carried);
+    albedo = mix(albedo, vec3(0.017, 0.008, 0.006) * (0.6 + 0.8 * grain), 0.9 * carried);
   }
   // And it is dark with the red mud of the brine it lay in, thickest low on it.
   if (uTurned.x > 0.0) albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3) + vec3(0.008, 0.002, 0.002), was * (0.6 + 0.3 * (1.0 - smoothstep(uTurned.y - 0.4, uTurned.y, vRest.y))));
   // Clotted: it hangs on the foot in lumps, dull where it is thick and wet in the hollows between.
   float clod = vnoise3(q * 9.0 + uSeed * 5.0);
-  albedo = mix(albedo, mix(vec3(0.04, 0.016, 0.012), vec3(0.05, 0.022, 0.018), uMudded) * (0.55 + 0.5 * grain + 0.5 * clod), 0.88 * deep);
+  albedo = mix(albedo, mix(vec3(0.022, 0.01, 0.008), vec3(0.05, 0.022, 0.018), uMudded) * (0.55 + 0.5 * grain + 0.5 * clod), 0.88 * deep);
 
   // Wet hide does not shine all over under a white sky: it glistens on the tops of its folds.
   float glint = smoothstep(0.55, 0.95, grain);
@@ -398,7 +400,7 @@ void main() {
   // And it is wet skin, not dry hair: it holds a dull light from the sky on every fold.
   rough = mix(rough, min(rough, 0.6), 0.8 * near1 * (1.0 - 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0)));
   #endif
-  if (vRaise > 0.0) rough = mix(rough, mix(0.5, 0.95, smoothstep(0.3, 0.7, clod)), carried);
+  if (vRaise > 0.0) rough = mix(max(rough, 0.5), mix(0.72, 0.96, smoothstep(0.3, 0.7, clod)), carried);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it: the belly and the insides of the legs are red brown, not black.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.72, 0.42, 0.34) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (1.0 - 0.6 * uMudded);
@@ -439,7 +441,7 @@ void main() {
   vec3 n2 = cross(tangent, n1);
   // Thick where it leaves the lip, a long taper, a blunt tip.
   float knuckle = exp(-pow((s - 0.3) / 0.05, 2.0)) + 0.7 * exp(-pow((s - 0.58) / 0.045, 2.0));
-  float radius = iShape.y * (0.1 + 0.9 * pow(1.0 - s, mix(1.15, 0.7, uHang))) * (1.0 + 0.06 * sin(s * 23.0 + a) + 0.16 * knuckle * (1.0 - uHang) + uHang * (0.22 * sin(s * 11.0 + a * 5.0) + 0.14 * sin(s * 29.0 + a * 2.0)));
+  float radius = iShape.y * (mix(0.035, 0.1, uHang) + 0.9 * pow(1.0 - s, mix(1.15, 0.7, uHang))) * (1.0 + 0.06 * sin(s * 23.0 + a) + 0.16 * knuckle * (1.0 - uHang) + uHang * (0.22 * sin(s * 11.0 + a * 5.0) + 0.14 * sin(s * 29.0 + a * 2.0)));
   vec3 rim = n1 * position.y + n2 * position.z;
   vec4 world = uHead * vec4(centre + rim * radius, 1.0);
   world.y = max(world.y, uFloor + 0.004 * position.y);
@@ -481,7 +483,10 @@ void main() {
   // On a dead one they are bare bone-yellow with salt grown on the upper side in knobs.
   float knobs = smoothstep(0.42, 0.6, vnoise(vec2(s * 14.0 + vLook.z * 50.0, vLook.y * 2.0)) + 0.25 * n.y);
   albedo = mix(albedo, mix(vec3(0.26, 0.17, 0.105) * (0.6 + 0.5 * groove), vec3(0.33, 0.29, 0.27), knobs), uSalted);
-  float rough = mix(0.95, 0.7, wet);
+  // No two alike: each its own tone, and the grooves and rings break the light along it.
+  albedo *= 0.78 + 0.44 * fract(vLook.z * 7.31 + 0.2);
+  n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
+  float rough = mix(0.95, mix(0.9, 0.58, groove * ring * 2.0), wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);

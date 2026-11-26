@@ -47,7 +47,7 @@ function rake(out: Drive, b: Build, seconds: number, base: number): void {
 export function great(plan: Plan, b: Build, seconds: number, t: number, near: number, out: Drive): Drive {
   const { k } = b;
   rest(out, plan, b);
-  const pace: Stride = { length: 0.92 * k, duty: 0.8, lift: 0.3 * k, phase: 0.025, lead: near > 0 ? 1 : -1 };
+  const pace: Stride = { length: 0.92 * k, duty: 0.8, lift: 0.2 * k, phase: 0.025, lead: near > 0 ? 1 : -1 };
   const cycle = 3.4;
   // A cycle and a quarter to the stand, from one moment with all four feet down to another; then on.
   const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.55 - 0.9 - 1.25 * cycle, -0.55, 0.9) - 1.25 * cycle + runUp(v, 0.5, 0.9));
@@ -78,7 +78,7 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
 export function young(plan: Plan, b: Build, seconds: number, t: number, toward: number, out: Drive): Drive {
   const { k } = b;
   rest(out, plan, b);
-  const pace: Stride = { length: 0.8 * k, duty: 0.8, lift: 0.34 * k, phase: 0.275, lead: 1 };
+  const pace: Stride = { length: 0.8 * k, duty: 0.8, lift: 0.26 * k, phase: 0.275, lead: 1 };
   const cycle = 1.45;
   // It walks on again once it has looked: a cycle and more, from a stand.
   const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.6 - 0.5 - 1.25 * cycle, -0.6, 0.5) - 1.25 * cycle + runUp(v, 1.5, 0.5));
