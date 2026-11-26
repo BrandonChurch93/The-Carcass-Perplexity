@@ -145,7 +145,7 @@ ${VANE_TEST}
   float glint = smoothstep(0.972, 0.995, vnoise(at * vec2(700.0, 260.0) + vVane.z)) * smoothstep(0.004, 0.0012, px) * rim;
   colour += uSunColour * vec3(1.0, 0.8, 0.6) * glint * (1.6 * pow(against, 5.0)) * lit * (0.3 + 0.7 * within);
   // The film of water on every thread gives back a little of the bright air round it, so its dark is wine and never black.
-  colour += skyIrradiance(vec3(0.0, 1.0, 0.0)) * ((0.02 + 0.02 * farLift) / 3.14159) * open;
+  colour += skyIrradiance(vec3(0.0, 1.0, 0.0)) * ((0.04 + 0.02 * farLift) / 3.14159) * open;
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
