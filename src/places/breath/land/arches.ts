@@ -105,7 +105,8 @@ function sectionAt(a: Arch, deg: number): Section {
   const centre = shaftRadius(deg * RAD, y) + 0.3 - a.thick * (0.08 + 0.3 * bow * run) + 0.3 * noise3(s * 0.08, s0, 6.5);
   // It turns into the wall at its full section, as a rib does into a spine, and what closes it is inside the rock: an end that stood
   // free was the end of a loaf, and cut square the end of a plank.
-  const into = (d: number): number => 4.2 * a.thick * (1 - sat(d / 18)) ** 1.5;
+  // It goes in over forty metres of its run, slowly: gone in within three, where it met the wall was a blunt end.
+  const into = (d: number): number => 2.3 * a.thick * (1 - sat(d / 40)) ** 2;
   let end = Math.min(sat(s / 5), sat((length - s) / 5)) ** 0.6;
   let broke = 99;
   let lost = 0;
@@ -209,9 +210,12 @@ export function archTop(deg: number, tier: number): [number, number, number] | n
 /** The cap of the rim: the thick pale crust the shelf ends in, all round the shaft but where the east-south-east side fell. It lies on the
  *  shelf for a stride, hangs over the wall by one to two metres and droops in lobes, as flowstone does. One closed skin. */
 export function cap(fine: number): THREE.BufferGeometry {
-  // Not along the south lip, where two lenses stand on it: there the shelf's own crust is the rim.
-  const from = 226;
+  // Not along the south and west lip, where three lenses stand on it: there the shelf's own crust is the rim. Tried there: laid a stride
+  // back and raised it was a blank dome under the lens, as hanging plates alone a pale ribbon along the bottom of the frame, and at the
+  // west lens its top, seen along itself from two strides, was a dark plate with a knife edge.
+  const from = 283;
   const to = 436;
+  const back = 1.1;
   const columns = Math.round(((to - from) * RAD * 30) / fine);
   return tube(columns, 22, (t, ang) => {
     const deg = lerp(from, to, t);
@@ -221,16 +225,28 @@ export function cap(fine: number): THREE.BufferGeometry {
     const rim = rimRadius(b);
     // How far it hangs over, and how thick it droops: lobes a pace to a few metres wide, never even.
     const lobe = 1 - Math.abs(noise3(arc * 0.33, 3.3, 9.1));
-    const over = (1.3 + 0.8 * noise3(arc * 0.07, 6.1, 2.2) + 0.6 * lobe * lobe) * end;
-    const droop = (1.25 + 0.6 * noise3(arc * 0.05, 1.7, 5.5) + 1.3 * lobe ** 3 + 0.3 * noise3(arc * 0.9, 8.3, 4.4)) * end;
+    // It is a crust, and broken: plates a pace to four long, each standing out over the shaft by its own amount, some of them fallen,
+    // with a crack between every two. As one even skin it was a lip of putty.
+    const along = arc * 0.42 + 1.1 * noise3(arc * 0.21, 4.4, 7.7);
+    const plate = Math.floor(along);
+    const inPlate = along - plate;
+    const dice = (n: number): number => {
+      const h = Math.sin(plate * 127.1 + n * 311.7) * 43758.5453;
+      return h - Math.floor(h);
+    };
+    const crack = smooth(Math.min(inPlate, 1 - inPlate) / 0.07);
+    const fallen = dice(1) < 0.22 ? 0.12 : 1;
+    // No plate stands out further than it is thick and half again: a thin one a stride out was a knife edge from the low lens.
+    const over = (0.3 + 0.75 * dice(2) + 0.25 * lobe * lobe) * fallen * (0.3 + 0.7 * crack) * end;
+    const droop = (0.55 + 0.5 * dice(3) + 0.5 * lobe ** 3 * dice(4)) * (0.5 + 0.5 * fallen) * (0.45 + 0.55 * crack) * end;
     const ca = Math.cos(ang);
     const sa = Math.sin(ang);
     const across = 0.5 + 0.5 * Math.sign(ca) * Math.abs(ca) ** 0.8;
-    const r = rim + 1.1 * end - across * (1.1 * end + over);
+    const r = rim + back * end - across * (back * end + over);
     const x = Math.sin(b) * r;
     const z = -Math.cos(b) * r;
     // On the shelf it follows the rock; past the brim it keeps the brim's height and sags a little to its lip.
-    const out = sat((r - rim) / 1.1);
+    const out = sat((r - rim) / back);
     const hung = sat((rim - r) / Math.max(over, 0.2));
     const top = lerp(brim(deg), ground(x, z), smooth(out)) + (0.1 * smooth(1 - out) - 0.04) * end - 0.22 * hung * hung;
     // Its underside: thickest a little back from the lip, running back up to the wall behind it.
