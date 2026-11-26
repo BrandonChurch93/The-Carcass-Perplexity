@@ -177,11 +177,11 @@ void main() {
   vec2 q = vec2(along + 0.02, across + 0.5) + flow * vec2(0.012, 0.05) * smoothstep(0.02, 0.5, along);
   float seenLight = dot(texture2D(uPicture, clamp(q, 0.0, 1.0)).rgb, vec3(0.3, 0.55, 0.15));
   // Puffs leave the throat one after another and thin as they go.
-  float puff = 0.62 + 0.38 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
+  float puff = 0.78 + 0.22 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
   float inside = smoothstep(0.0, 0.02, q.x) * (1.0 - smoothstep(0.55, 0.98, q.x)) * smoothstep(0.0, 0.08, q.y) * (1.0 - smoothstep(0.92, 1.0, q.y));
-  float thick = smoothstep(0.05, 0.7, seenLight) * inside * puff;
+  float thick = smoothstep(0.04, 0.5, seenLight) * inside * puff;
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.7, 0.3);
-  float alpha = clamp(thick * 0.8, 0.0, 1.0);
+  float alpha = clamp(thick * 0.92, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 

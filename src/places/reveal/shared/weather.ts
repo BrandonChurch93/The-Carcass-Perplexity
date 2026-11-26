@@ -40,13 +40,13 @@ float seen(vec3 c, float least, float full) {
 }
 
 // The photograph of the low field at a point of its own drifting ground: from near a field of small cumulus at its real size
-// (250 km a repeat), from orbit the fine wind-drawn streaks that cover the sea (laid at 900 km a repeat). One read, two while they change over.
+// (laid at 150 km a repeat), from orbit the fine wind-drawn streaks that cover the sea (laid at 900 km a repeat). One read, two while they change over.
 float lowPicture(vec2 w) {
   float away = smoothstep(650.0, 1200.0, uViewKm);
   float pic = 0.0;
   if (away < 1.0) {
     // Small cumulus stand in streets along the wind, with clear lanes between: the photograph's puffs, kept where a street runs.
-    float puff = seen(texture2D(uMatPopcorn, mat2(0.8, 0.6, -0.6, 0.8) * w / 250.0 + vec2(0.13, 0.4)).rgb, 0.2, 0.8);
+    float puff = seen(texture2D(uMatPopcorn, mat2(0.8, 0.6, -0.6, 0.8) * w / 150.0 + vec2(0.13, 0.4)).rgb, 0.2, 0.8);
     float street = texture2D(uCloudTile, mat2(0.9, 0.44, -0.44, 0.9) * w / vec2(330.0, 170.0) + vec2(0.4, 0.1), 1.0).b;
     pic += (1.0 - away) * puff * smoothstep(0.34, 0.62, street);
   }

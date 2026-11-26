@@ -243,7 +243,7 @@ void main() {
   // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
   water += uSkyColour * 0.006 * (sparkle - 0.85) * inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm));
   water += uSunColour * vec3(0.9, 0.95, 1.0) * lobe * 0.004 * shade * (0.55 + 0.45 * sparkle);
-  water += uSunColour * vec3(0.88, 0.94, 1.0) * 0.0085 * exp(-lean * lean / 0.0036) * (0.5 + 0.5 * shade) * (0.25 + 0.75 * sparkle) * (0.6 + 0.8 * calm);
+  water += uSunColour * vec3(0.88, 0.94, 1.0) * 0.0085 * exp(-lean * lean / 0.0036) * (0.78 + 0.22 * shade) * (0.25 + 0.75 * sparkle) * (0.6 + 0.8 * calm);
 
   vec3 colour = mix(water, earth, land);
 

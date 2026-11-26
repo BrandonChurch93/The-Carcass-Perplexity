@@ -81,8 +81,8 @@ for sigma, share in ((90, 0.55), (34, 0.3), (12, 0.15)):
 pattern = step(-1.1, 1.3, pattern / pattern.std())
 green = (0.2 + 0.8 * sea) * (0.3 + 0.7 * pattern)
 # West of the skull a field of small cumulus stands over the shoals and islands, as in the approved second key: land shows through its gaps.
-west = np.exp(-(((px - 760.0) / 260.0) ** 2 + ((py - 1640.0) / 430.0) ** 2))
-green = np.maximum(green, 0.9 * west * (0.45 + 0.55 * pattern))
+west = np.exp(-(((px - 800.0) / 240.0) ** 2 + ((py - 1640.0) / 430.0) ** 2))
+green = np.maximum(green, np.minimum(1.0, 1.5 * west) * (0.6 + 0.4 * pattern))
 green *= 1.0 - 0.6 * ndimage.gaussian_filter(red, 6)
 rc = np.hypot((px - CYCLONE[0]) / CYCLONE[2], (py - CYCLONE[1]) / CYCLONE[3])
 green *= step(0.55, 1.05, rc)
