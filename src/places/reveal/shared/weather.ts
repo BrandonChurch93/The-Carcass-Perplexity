@@ -117,9 +117,9 @@ float lowPicture(vec2 w, float shadow) {
     float haze = 0.0;
     // (From orbit the cloud of the first lay stands in streets: the photograph of wind-drawn streaks, carried with it, says where a
     // street runs. Its dots are beads along the streets and its thin cloud the streaks themselves; between the streets the sea is open.)
-    float streets = smoothstep(900.0, 1300.0, uViewKm) * (1.0 - shadow);
+    float streets = smoothstep(450.0, 700.0, uViewKm) * (1.0 - shadow);
     float streak = 0.0;
-    if (streets > 0.0) streak = seen(texture2D(uMatStreaks, sw / vec2(2300.0, 840.0) + vec2(0.37, 0.52), 0.3).rgb, 0.13, 0.62);
+    if (streets > 0.0) streak = seen(texture2D(uMatStreaks, sw / vec2(2300.0, 840.0) + vec2(0.37, 0.52), 0.5).rgb, 0.13, 0.64);
     for (int i = 0; i < 2; i++) {
       float part = i == 0 ? 1.0 - share : share;
       if (part <= 0.0) continue;
@@ -157,8 +157,8 @@ float lowPicture(vec2 w, float shadow) {
     // (One long band of it lies in a curve north of the skull.)
     vec2 fromArc = (w - vec2(${f(X(1350))}, ${f(Z(1566))}) - vec2(260.0, 520.0)) / vec2(1.0, 0.8);
     float arc = exp(-pow((length(fromArc) - 900.0) / 60.0, 2.0)) * smoothstep(0.2, 0.75, -fromArc.y / max(length(fromArc), 1.0));
-    float wisp = streets * streak * min(1.0, 0.46 + 2.0 * haze + arc);
-    pic += away * max(max(dots * (1.0 - shadow), mix(0.36, 0.8, shadow) * haze), 0.84 * wisp);
+    float wisp = streets * streak * min(1.0, 0.56 + 2.0 * haze + arc);
+    pic += away * max(max(dots * (1.0 - shadow), mix(0.36, 0.8, shadow) * haze), 0.76 * wisp);
   }
   return pic;
 }
@@ -167,7 +167,7 @@ float lowPicture(vec2 w, float shadow) {
 vec2 lowGround(vec2 at) {
   // (From orbit the drift of the field is seen: it gathers way as the rise ends, and the whole field is carried on while the frame is held.)
   float held = uTime < 8.0 ? 0.125 * max(uTime - 4.0, 0.0) * max(uTime - 4.0, 0.0) : uTime - 6.0;
-  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(15.0, 5.5);
+  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(24.0, 8.0);
 }
 
 // The low cloud: x how thick (0 to 1), y the photograph's own light there (the build of its tops).
@@ -188,7 +188,7 @@ vec2 lowFieldOf(vec2 at, float shadow) {
   if (field < 0.004) return vec2(0.0);
   float pic = lowPicture(w, shadow);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
-  float thick = min(1.0, mix(1.0, 1.25, even) * smoothstep(mix(0.03, 0.0, even), mix(1.2, 0.85, even), pic)) * smoothstep(0.0, 0.5, field);
+  float thick = min(1.0, mix(1.0, 1.25, even) * smoothstep(mix(0.03, 0.0, even), mix(1.2, 0.85, even), pic)) * smoothstep(mix(0.0, 0.09, even), mix(0.5, 0.36, even), field);
   return vec2(thick, pic);
 }
 

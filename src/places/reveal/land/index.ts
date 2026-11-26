@@ -118,7 +118,7 @@ void main() {
   }
   // Between the ground and orbit the country is seen through air: the map's own hard light and dark, crest by crest, is drawn
   // toward the light of the country round it, so a range is one soft pale body with fine lines in it and no etched thing.
-  float soften = mix(0.04, 0.48, smoothstep(90.0, 240.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm)) * inWide;
+  float soften = mix(0.04, 0.57, smoothstep(90.0, 240.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm)) * inWide;
   if (soften > 0.0) {
     vec3 around = texture2D(uMapWide, clamp(uvWide, 0.0, 1.0), 4.5).rgb;
     if (inClose > 0.0) around = mix(around, texture2D(uMapClose, clamp(uvClose, 0.0, 1.0), 4.5).rgb, inClose);
@@ -188,7 +188,8 @@ void main() {
   vec2 slope = relief.rg * 2.0 - 1.0;
   // How many pixels of the frame one texel of the map covers: past one, the map is soft and the ground photographs carry the detail.
   float enlarged = texel / max(pixelKm, 1e-5);
-  float detail = smoothstep(0.9, 2.0, enlarged);
+  // (A worn province has lost the map's relief: the ground photographs give it its own, finer and of another kind.)
+  float detail = max(smoothstep(0.9, 2.0, enlarged), worn);
 
   // ---- the ground photographs under the map ----
   // Each is laid by world position at the size at which one of its texels is about a pixel, in octaves of its real size and cross-faded
@@ -221,7 +222,7 @@ void main() {
       vec2 a1 = texture2D(uMatRangeNh, pa).rg * 2.0 - 1.0;
       vec2 a2 = texture2D(uMatRangeNh, pb).rg * 2.0 - 1.0;
       vec2 small = mix(vec2(a1.x, a1.y) * turnA, vec2(a2.x, a2.y) * turnB, share);
-      slope += small * 0.62 * detail * land * (0.4 + 0.6 * high);
+      slope += small * mix(0.62, 1.5, smoothstep(150.0, 260.0, uViewKm) * (1.0 - smoothstep(600.0, 900.0, uViewKm))) * detail * land * (0.4 + 0.6 * high);
     } else {
       // Under shallow water: bars, channels and silt.
       vec3 ofShelf = mix(texture2D(uMatShelf, pa * 0.5).rgb, texture2D(uMatShelf, pb * 0.5).rgb, share) / vec3(0.055, 0.159, 0.148);
@@ -370,7 +371,7 @@ void main() {
   // Near the ground the relief is gentle, as low sun on old worn country; from orbit it is drawn stronger, as relief is on a map.
   slope *= mix(0.25, 0.4, smoothstep(300.0, 1200.0, uViewKm)) * (1.0 - 0.5 * smoothstep(110.0, 240.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm))) * (1.0 - 0.6 * smoothstep(0.3, 0.62, height));
   // (Kind by kind: worn or cut, and darker or paler rock.)
-  float cut = mix(1.0, mix(0.45, 1.2, smoothstep(0.25, 0.75, kind.r)), land * (1.0 - smoothstep(900.0, 1380.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm));
+  float cut = mix(1.0, mix(0.22, 1.2, smoothstep(0.25, 0.75, kind.r)), land * (1.0 - smoothstep(900.0, 1380.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm));
   slope *= cut;
   ground *= mix(vec3(1.0), mix(vec3(0.8, 0.86, 0.95), vec3(1.1, 1.04, 0.95), smoothstep(0.25, 0.75, kind.g)), land * smoothstep(30.0, 60.0, uViewKm) * (1.0 - smoothstep(600.0, 1300.0, uViewKm)));
   // Near the ground the country is seen in its great forms: whole mountainsides stand in the sun, warm, and whole valleys lie in
@@ -465,6 +466,8 @@ void main() {
     float shoalAt = texture2D(uCloudTile, xz / 330.0 + vec2(0.45, 0.25), 1.0).g;
     bed = mix(bed, mix(vec3(0.008, 0.05, 0.062), vec3(0.03, 0.115, 0.11), shelfWide * smoothstep(0.4, 0.7, shoalAt)), 0.6 * shelfWide * (0.4 + 0.6 * smoothstep(0.3, 0.6, shoalAt)));
   }
+  // (From orbit the waters inside the skull lie dark: its sockets.)
+  bed = mix(bed, DEEP, 0.8 * (1.0 - smoothstep(0.85, 1.15, length(inSkull))) * smoothstep(600.0, 1100.0, uViewKm));
   // (The drowned shelf west of the skull: teal over pale ground, deepening away from the coast.)
   bed = mix(bed, vec3(0.01, 0.06, 0.07) * (0.5 + 1.2 * lum), 0.88 * shelf);
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
@@ -490,8 +493,8 @@ void main() {
     float toNE = dot(lakeAt / max(lakeR, 0.05), vec2(0.7, -0.7));
     float amber = max(pow(smoothstep(min(0.56 + 0.4 * drawn + 0.24 * toNE + 0.16 * (vnoise(lakeAt / max(lakeR, 0.05) * 1.4 + 9.0) - 0.5), 0.94), 1.0, shoreR + 0.07), 1.9) * (0.5 + 0.5 * smoothstep(0.25, 0.6, vnoise(lakeAt / max(lakeR, 0.05) * 2.3 + 3.0))), 0.45 * smoothstep(0.08, 0.55, shallow) * smoothstep(0.6, 0.9, lakeR)) * (1.0 - 0.8 * smoothstep(0.1, 0.8, toNE));
     float paler = smoothstep(0.35, 1.0, 0.25 * shallow + smoothstep(0.9, 1.0, shoreR + 0.07) + 0.3 * (drawn - 0.5));
-    vec3 eye = mix(vec3(0.002, 0.0065, 0.017), mix(vec3(0.11, 0.05, 0.005), vec3(0.28, 0.15, 0.022), paler), amber);
-    bed = mix(bed, eye, (1.0 - smoothstep(1.03, 1.1, shoreR + 0.07)) * (1.0 - stream * smoothstep(0.98, 1.06, lakeR)));
+    vec3 eye = mix(vec3(0.002, 0.0065, 0.017), mix(vec3(0.15, 0.07, 0.007), vec3(0.34, 0.185, 0.028), paler) * (0.55 + 0.9 * drawn) * (0.75 + 0.5 * swirl), amber * (0.55 + 0.45 * smoothstep(0.3, 0.6, swirl)));
+    bed = mix(bed, eye, max(1.0 - smoothstep(1.03, 1.1, shoreR + 0.07), 1.0 - smoothstep(1.12, 1.3, lakeR)) * (1.0 - stream * smoothstep(0.98, 1.06, lakeR)));
   }
   // (The crater lake north of it: its shallows amber on one side, thin on the other.)
   bed = mix(bed, mix(vec3(0.11, 0.05, 0.005), vec3(0.3, 0.17, 0.03), smoothstep(0.8, 0.98, upperR)), upper * smoothstep(0.5 + 0.3 * vnoise(inUpper * 2.3 + 7.0), 0.98, upperR) * (0.35 + 0.65 * smoothstep(-0.6, 0.6, inUpper.x + inUpper.y)));
