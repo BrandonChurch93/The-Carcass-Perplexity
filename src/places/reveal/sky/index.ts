@@ -25,7 +25,7 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 beatOnCloud(vec2 xz) {
   vec2 fromHeart = xz - vec2(${X(AT.lava.x).toFixed(1)}, ${Z(AT.lava.y).toFixed(1)});
   // (By night the fire is on the underside of the cloud all the time, dull, and the beat swells it.)
-  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.02 * (0.4 + 1.6 * uBeat)) * exp(-dot(fromHeart, fromHeart) / 90000.0);
+  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.012 * (0.4 + 1.6 * uBeat)) * exp(-dot(fromHeart, fromHeart) / 90000.0);
   return vec3(1.0, 0.2, 0.04) * 0.3 * max(uBeat - 0.12, 0.0) * exp(-dot(fromHeart, fromHeart) / 90000.0);
 }
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
@@ -36,7 +36,7 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
     float sunH = sunHeight(xz) + uTerm.w * (0.09 + 0.1 * high);
     float low = mix(uSunDir.y, 0.42 + 0.22 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.06 + 0.13 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
+    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.035 + 0.085 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
     return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
   }

@@ -81,7 +81,7 @@ vec3 moonAt(float h) {
 float moonShade = 1.0;
 // The colour the air leaves the sun's light at that height: white, gold, then red.
 vec3 sunTint(float h) {
-  return exp(-vec3(0.008, 0.06, 0.16) * max(1.0 / (max(h, 0.0) + 0.06) - 1.702, 0.0));
+  return exp(-vec3(0.009, 0.08, 0.23) * max(1.0 / (max(h, 0.0) + 0.06) - 1.702, 0.0));
 }
 // The light of the sky there: it outlasts the sun, and is gone a little way into the night.
 float skySeen(float h) {
@@ -97,7 +97,7 @@ vec3 sunToward(float h) {
 // The sun's light on a place: its colour and how much of it is left, by the height of the sun there. day is the flat day's own figure.
 vec3 sunLightAt(float h, float day) {
   // (Once the camera has opened for the night, what the sun still lights is held down as a highlight is, not blown.)
-  return uSunColour * mix(mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * day, sunTint(h) * sunSeen(h), uTerm.w) * pow(max(uGain / 1.3, 1.0), -1.25);
+  return uSunColour * mix(mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * day, sunTint(h) * sunSeen(h), uTerm.w) * pow(max(uGain / 1.3, 1.0), -0.85);
 }
 // The sky's light on a place, as a share of the day's, and bluer as the sun goes.
 vec3 skyLightAt(float h, float day) {
@@ -105,7 +105,7 @@ vec3 skyLightAt(float h, float day) {
 }
 // The light the air itself throws back toward the eye there, as a share of the day's: it goes with the sun, a little after the ground.
 vec3 airLightAt(float h) {
-  return mix(vec3(1.0), 0.75 * sunTint(h + 0.03) * sunSeen(h + 0.05) * pow(max(uGain / 1.3, 1.0), -1.25) + 0.25 * vec3(0.5, 0.68, 1.1) * skySeen(h) + 0.22 * moonAt(h), uTerm.w);
+  return mix(vec3(1.0), 0.75 * sunTint(h + 0.03) * sunSeen(h + 0.05) * pow(max(uGain / 1.3, 1.0), -0.85) + 0.25 * vec3(0.5, 0.68, 1.1) * skySeen(h) + 0.22 * moonAt(h), uTerm.w);
 }
 // The exposure of the camera, on the radiance a surface writes.
 vec3 exposed(vec3 c) {

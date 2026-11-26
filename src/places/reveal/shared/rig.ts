@@ -30,7 +30,7 @@ export interface Rig {
 const TERM = { x: 300, z: -100, radius: 5200 };
 /** The moon the film never shows stands low in the lower right, across the body from where the sun went. Toward the moon. */
 const MOON: [number, number, number] = [0.66, 0.38, 0.62];
-const MOON_COLOUR: [number, number, number] = [0.078, 0.114, 0.175];
+const MOON_COLOUR: [number, number, number] = [0.092, 0.116, 0.158];
 
 const ease = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -61,7 +61,7 @@ export function dusk(seconds: number): Dusk {
   const length = Math.hypot(...SUN);
   const height0 = Math.asin(SUN[1] / length);
   const turn0 = Math.atan2(SUN[0], -SUN[2]);
-  // The sun's height: it starts from rest, falls fastest as it sets (about 5.1 s in) and comes to rest well under the horizon.
+  // The sun's height: it starts from rest, falls fastest as it sets (about 5.4 s in) and comes to rest well under the horizon.
   const fallen = 1 - Math.exp(-((u / SET_TAU) * (u / SET_TAU)));
   const height = height0 - SET_DROP * fallen;
   // And it sets to the left of where it stood: the planet turns under it.
@@ -92,10 +92,10 @@ export function dusk(seconds: number): Dusk {
 }
 const SET_TAU = 5.5;
 /** The whole of the dusk is this much slower than it was first timed: the night is come at about film frame 11300. */
-const SET_SLOW = 1.22;
-const SET_DROP = (72 * Math.PI) / 180;
+const SET_SLOW = 1.3;
+const SET_DROP = (76 * Math.PI) / 180;
 const SET_SWING = (30 * Math.PI) / 180;
-const NIGHT_GAIN = 9;
+const NIGHT_GAIN = 12;
 
 export function createRig(): Rig {
   const uniforms: Record<string, THREE.IUniform> = {

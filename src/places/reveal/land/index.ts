@@ -643,7 +643,7 @@ void main() {
     // (The moon does not reach the bed of the sea: by night only the surface is seen.)
     water = waterBed * (1.0 - 0.9 * uEmber.x) + (waterSky - waterBed) * skyLightAt(sunH, day) + (waterGlare - waterSky) + (water - waterGlare) * airLightAt(sunH) + sheen;
     // (Under the moon the sea has almost no colour.)
-    water = mix(water, vec3(dot(water, vec3(0.3, 0.55, 0.15))) * vec3(0.75, 0.95, 1.25), 0.55 * uEmber.x);
+    water = mix(water, vec3(dot(water, vec3(0.3, 0.55, 0.15))) * vec3(0.8, 0.96, 1.2), 0.8 * uEmber.x);
   }
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   vec3 colour = mix(water, earth + 0.4 * glare, land);
