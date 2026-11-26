@@ -19,9 +19,10 @@ Owner: spine_ground_owner_2. Folders: `src/places/spine/` root, `shared/`, `land
 - The relief pictures (`-h.png`) at full strength on a spire: a clay model. They are at 0.2 far off and the tiles' own normals close to.
 - One unconditional lay in place of three gated ones: dearer (5.18 against 4.80 s at hd). A ternary with a texture read on each side pays both.
 - Emitter light without a ceiling: with four emitters a strike the struck spire is white plaster.
+- A soft edge on the sea of cloud against the sky, by looking a little further down the ray: it cures the stepped edge in the long lens and opens holes in the sea in the wide. Taken out.
 - Scud as small pale blotches over everything past 120 m: a dirty screen. It is long bands past 350 m now.
 - A warm share of 0.6 in the far mouth's light: the whole canal goes brown. It is 0.2.
-- A snow shoulder 17 m high beyond the far mouth: it fills the mouth. It is 10 m and still hides the far spire.
+- A snow shoulder 17 m high beyond the far mouth: it fills the mouth. It is 5 m, and the far spire's head shows over it.
 
 ## Round 9, the order given, each issue in the critics' words, and what was done
 
@@ -34,7 +35,7 @@ Owner: spine_ground_owner_2. Folders: `src/places/spine/` root, `shared/`, `land
 ## Still wrong beside the approved pictures, worst first
 
 - **spine-3**: the struck spire is still paler than the dark fractured rock of the picture; no near crag at the left edge; the sea of cloud has a stepped edge behind the spires (half-size pass).
-- **spine-4**: walls are mottled rock with rime specks, not rime in fibres; the shoulder outside hides the far spire; no boulder on the floor.
+- **spine-4**: walls are mottled rock with rime specks, not rime in fibres; the shoulder outside is a rocky ridge more than a snow slope and hides the foot of the far spire; no boulder on the floor.
 - **spine-1**: no trail of prints leading in; the snakes of snow cross the near paw.
 - **spine-2**: no far spires standing out of the cloud beyond the face.
 - **spine-0**: grooves down the hero face; the mouth is a dark arch.
