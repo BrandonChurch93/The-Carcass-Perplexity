@@ -13,11 +13,17 @@ const a2 = await tool('checks/a2');
 const repo = await tool('checks/repo');
 const { config, rel } = await tool('lib/paths');
 
-const cfg = config();
-const rate = cfg.audio.sampleRate;
-const clip = cfg.narration.clips.find((c) => c.id === 'n8');
 const FIX = rel('tests', 'fixtures', 'voice');
 const fix = (name) => path.join(FIX, name);
+// The saved take is the n8 of the first script (made 2026-11-24). The tests are about the tool, not about the script,
+// so they run on a copy of the config whose n8 holds the words that take was made from, whatever the script says today.
+const FIXTURE_LINES = JSON.parse(fs.readFileSync(fix('take-1.request.json'), 'utf8'))
+  .text.replace(/^\[[^\]]*\]\s*/, '')
+  .split(/\n\s*\n/);
+const cfg = structuredClone(config());
+cfg.narration.clips.find((c) => c.id === 'n8').lines = FIXTURE_LINES;
+const rate = cfg.audio.sampleRate;
+const clip = cfg.narration.clips.find((c) => c.id === 'n8');
 const pairs = JSON.parse(fs.readFileSync(rel('tools', 'voice', 'sound-alikes.json'), 'utf8'));
 const savedWords = JSON.parse(fs.readFileSync(fix('take-1.words.json'), 'utf8'));
 const heard = { ran: true, model: core.VOICE.transcriber, text: savedWords.text, words: savedWords.words };

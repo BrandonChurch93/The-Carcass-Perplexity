@@ -66,11 +66,21 @@ describe('the draft of the script', () => {
       }
   });
 
-  it('is not in the config: narration.clips keeps the approved script until the script is final', () => {
+  it('is in the config since the script is final (note 17): each line as drafted, and each marked line as the replacement that stands', () => {
     expect(cfg.narration.clips).toHaveLength(8);
-    expect(cfg.narration.clips[0].lines[0]).toBe('Listen.');
-    expect(cfg.narration.clips[7].lines).toEqual(['Now you see it.', 'This was never land.', 'It was a god.', 'Gods die slow. This one is not finished.']);
-    for (const [id, lines] of NOTE) expect(cfg.narration.clips.find((c: any) => c.id === id).lines).not.toEqual([...lines]);
+    let marked = 0;
+    for (const c of draft.clips) {
+      const stands = c.lines.map((l: any) => {
+        if (!l.mark) return l.text;
+        marked += 1;
+        expect(['A', 'B'], `${c.id}: ${l.text}`).toContain(l.mark.stands);
+        return l.mark.replace['AB'.indexOf(l.mark.stands)].text;
+      });
+      expect(cfg.narration.clips.find((x: any) => x.id === c.id).lines).toEqual(stands);
+    }
+    expect(marked).toBe(11);
+    expect(cfg.narration.clips[0].lines[0]).toBe('Past the last calm water, there is a shore.');
+    expect(cfg.narration.clips[7].lines).toEqual(['The land has a shape.', 'None of it was ever land.', 'It was a titan.', 'Everything here feeds on it. And it is not finished.']);
   });
 });
 
@@ -161,15 +171,25 @@ describe('the script sheet', () => {
 });
 
 describe('the sheet that is committed', () => {
+  // The committed sheet is the record of the draft stage (2026-11-25). Its "approved" lengths are those of the script the
+  // config held then, the one the draft replaced, so they are left out of the comparison with what the tool makes today:
+  // the config now holds the final script. The one rule line that quotes that length is left out with them.
+  const noApproved = (o: any) => ({ ...o, approvedCharacters: undefined, approvedSeconds: undefined });
+  const quotesApproved = (line: string) => /approved script is [\d.]+ s/.test(line);
   const bare = (s: any) => ({
     ...s,
     sheets: undefined,
+    clips: s.clips.map(noApproved),
+    totals: noApproved(s.totals),
+    rules: s.rules.filter((x: any) => !quotesApproved(typeof x === 'string' ? x : JSON.stringify(x))),
     rows: s.rows.map((r: any) => ({ ...r, pictures: undefined })),
     unnamed: s.unnamed.map((u: any) => ({ ...u, thumb: undefined }))
   });
 
-  it('is what the tool makes from the draft and the cut list today', () => {
+  it('is what the tool makes from the draft and the cut list today, but for the lengths of the script the draft replaced', () => {
     expect(JSON.parse(JSON.stringify(bare(saved)))).toEqual(JSON.parse(JSON.stringify(bare(sheet))));
+    expect(saved.rules.filter((x: any) => quotesApproved(typeof x === 'string' ? x : JSON.stringify(x)))).toHaveLength(1);
+    expect(saved.totals.approvedSeconds).toBe(126.1);
   });
 
   it('carries a picture for every line and every unnamed thing, and the files are there', () => {

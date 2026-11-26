@@ -131,6 +131,8 @@ describe('the review page with content', () => {
     fs.utimesSync(path.join(r, 'out', 'clips', 'heart.mp4'), new Date('2026-11-25T07:00:00Z'), new Date('2026-11-25T07:00:00Z'));
     const clip = cfg.narration.clips[0];
     put(path.join(r, 'audio', 'kept', 'narration', `${clip.id}.mp3`), 'x');
+    // Its record quotes other words than the script holds: the clip was made before the script changed.
+    put(path.join(r, 'audio', 'records', `${clip.id}.md`), `## ${clip.id}\nText or description: ${JSON.stringify('[slowly, gravely] An older first line.\n\nAn older second line.')}\nSettings: none\n`);
     put(path.join(r, 'audio', 'kept', 'sounds', cfg.units[0].id, 'low-churn.wav'), 'x');
     put(path.join(r, 'audio', 'records', 'low-churn.md'), '## low-churn\nMade by: a tool\nText or description: A slow churn under a crust.\nSettings: none\n');
     put(path.join(r, 'audio', 'kept', 'sounds', cfg.units[0].id, 'crack.wav'), 'x');
@@ -264,11 +266,33 @@ describe('the review page with content', () => {
     expect(review.counts(out.model).listen).toBe(1 + 3 + 4 + 1);
   });
 
-  it('marks a kept narration clip whose words the draft changes', () => {
+  it('marks a kept narration clip that was made from other words than the script holds', () => {
     const part = html.split('<section id="listen">')[1].split('</section>')[0];
     const clip = part.split('<article class="clip">')[1].split('</article>')[0];
-    expect(clip).toContain('Made from the approved script.');
-    expect(clip.indexOf('Made from the approved script.')).toBeLessThan(clip.indexOf('<audio'));
+    expect(clip).toContain('Made before the script changed.');
+    expect(clip.indexOf('Made before the script changed.')).toBeLessThan(clip.indexOf('<audio'));
+  });
+
+  it('reads the words a clip was made from out of its record, and marks no clip made from the script as it stands', () => {
+    const lines = cfg.narration.clips[1].lines;
+    const record = `## n2\nMade by: a tool\nText or description: ${JSON.stringify(`[slowly, gravely] ${lines.join('\n\n')}`)}\nSettings: none\n`;
+    expect(review.madeFrom(record)).toEqual(lines);
+    expect(review.madeFrom('## x\nText or description: A slow churn under a crust.\n')).toEqual([]);
+    expect(review.madeFrom('## x\nSettings: none\n')).toEqual([]);
+    // The kept clips of the repo are made from the script the config holds.
+    const model = review.collect();
+    expect(model.listen.narration.map((c: any) => c.id)).toEqual(cfg.narration.clips.map((c: any) => c.id));
+    for (const c of model.listen.narration) expect(c.replaced, c.id).toBe(false);
+  });
+
+  it('says the script is final once the config holds the draft as it was settled, and not before', () => {
+    const sheet = out.model.script.sheet;
+    expect(out.model.script.final).toBe(true);
+    expect(review.scriptIsFinal(sheet, cfg.narration.clips)).toBe(true);
+    const before = cfg.narration.clips.map((c: any, i: number) => (i === 0 ? { ...c, lines: ['Another line.', ...c.lines.slice(1)] } : c));
+    expect(review.scriptIsFinal(sheet, before)).toBe(false);
+    expect(review.scriptIsFinal(sheet, cfg.narration.clips.slice(1))).toBe(false);
+    expect(review.scriptIsFinal(null, cfg.narration.clips)).toBe(false);
   });
 
   it('lays the script sheet out clip by clip, with the lengths, the marks and the two closing lists', () => {
@@ -285,7 +309,9 @@ describe('the review page with content', () => {
     expect(part).toContain(`<tr class="all"><td>all</td><td></td><td></td><td>${sheet.totals.seconds.toFixed(1)} s</td>`);
     expect(part).toContain('<h3>Shown and not named</h3>');
     expect(part).toContain('<h3>The rules of the note, checked on the draft</h3>');
-    expect(part).toContain('No narration is made from this draft');
+    expect(part).toContain('The script is final.');
+    expect(part).toContain('<th>The script before</th>');
+    expect(part).not.toContain('No narration is made from this draft');
     expect(part).not.toContain('<section');
     expect(review.counts(out.model).script).toBe(32);
   });
