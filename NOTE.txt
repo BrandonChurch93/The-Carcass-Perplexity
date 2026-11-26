@@ -1,4 +1,7 @@
-2026-11-26 08:03 UTC
-work at 2348646 on agent/ribs-sea-3
-heartbeat 6: ribs-4 at final tier on the merged tree, with two native crops
-look-1.jpg = out/work/hb6-2401-final.jpg
+2026-11-26 08:14 UTC
+work at 9fcc503 on agent/ribs-sea-3
+version 3: compares of ribs-2 and ribs-4, native crops at final tier, motion sheet of ribs-06
+look-1.jpg = out/work/c-ribs-2.jpg
+look-2.jpg = out/work/c-ribs-4.jpg
+look-3.jpg = out/work/v3-native.jpg
+look-4.jpg = out/work/s-shot-ribs-06.jpg
