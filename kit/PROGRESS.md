@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 94, 2026-11-26 05:34 UTC:
+Status 95, 2026-11-26 05:51 UTC:
 
-- `01-reveal-orbit.jpg`: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows); the red plume and the sun's glint on the sea are still missing
-- `02-reveal-cyclone.jpg`: The Reveal's cyclone, approved left, built right: the land beside it is a step forward; the cloud is hard white flakes and half the size, told to the owner (thin graded filaments, dozens of bands, cloud streets)
-- `03-spine-3.jpg`: The Spine's strike, approved left, built right at 05:10: white disc at the bolt's foot, black near crag, a tower with level courses, thick white kites, a pale beam. Told to both owners; the storm owner has since removed the disc and thinned the bolt
-- `04-marsh.jpg`: The Marsh in wave 3, approved rows above built rows (wide view, the burst, two of the wallowers): the animals are the closest; the pools are opaque with a cut edge, the burst is a textbook crown, the ground is dry. Told to both owners
+- `01-s95-far.jpg`: The Eye's far wall, the same crop: the old picture left, the remade one at double size right. Bedding, joints, scree and seepage that follows the cracks; nothing moved
+- `02-spine-hb3-2.jpg`: The Spine's first spire, approved left, wave 3's look at 05:44 right. This key failed the detail measure (0.33 against 0.75): the rock is a photograph pulled into brown smears, the rime ice and the far spires are missing, the kites are empty sheets. Told to both owners
+- `03-marsh3-r17.jpg`: The Marsh's wallowers, approved left, the judged frame of round 2 right. It failed the detail measure (0.40 against 0.75): the hide is close, but the pool is an opaque pink sheet with drawn rings and the mud bank is gone. Told to both owners
+- `04-eye-hb43.jpg`: The Eye in wave 3 at 05:34, approved left, built right, four keys: the shore, the mats and the far wall hold; the animals are pale clay, the swell is a grey disc, the skeleton lies on a zigzag ribbon. Told to the owner
 
+Status 94, 2026-11-26 05:34 UTC, showed: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows)...
 Status 93, 2026-11-26 05:16 UTC, showed: The Heart, kept picture beside the new render of the same frame: identical (0 difference in every pixel once saved the same way); Wave 3...
 Status 92, 2026-11-26 04:53 UTC, showed: The Reveal, last version of wave 2: the approved pictures left, the built frames right, the four keys of the rise.
-Status 91, 2026-11-26 04:35 UTC, showed: The shutter finding, frame 9627 of the rise at the final tier in 4K: whole frame above, a crop at full size below.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T05:34:19Z
-phase 4: 9.39 h used of 17.00 h
-build: 29.72 h used of 72.00 h
+2026-11-26T05:50:55Z
+phase 4: 9.67 h used of 17.00 h
+build: 29.99 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 18
+minutes since the last status: 17
 ```
 
 ## Phases
