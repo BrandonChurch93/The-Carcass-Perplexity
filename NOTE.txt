@@ -1,7 +1,5 @@
-2026-11-26 05:56 UTC
-work at e03becf on agent/ribs-ground-3
-V1 e03becf: ribs-0 near bar floor, ribs-3 crag from colony picture, ribs-4 gate stacks from stack pictures + lens, opening frame 60 final
-look-1.jpg = out/work/v1/ribs-0.jpg
-look-2.jpg = out/work/v1/ribs-3.jpg
-look-3.jpg = out/work/v1/ribs-4.jpg
-look-4.jpg = out/work/v1/open-60-final.jpg
+2026-11-26 06:24 UTC
+work at 217756b on agent/ribs-ground-3
+ribs-0 and ribs-1 at 06:24: weed wall olive, blades bedded, floor wetter
+look-1.jpg = out/work/r0.jpg
+look-2.jpg = out/work/r1.jpg
