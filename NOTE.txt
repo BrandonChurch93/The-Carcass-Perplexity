@@ -1,7 +1,5 @@
-2026-11-26 15:02 UTC
-work at 5b0b027 on agent/breath-wall
-v2 at 5b0b027: sheet first; 4221 main left mine right; shaft of 4221 uhd final at full size; key 4731 main left mine right. Wrong: pale upright piers low on the wall, sheet's motion too small to read on the sheet, cost about 1.2 s over main
-look-1.jpg = out/work/look/v2-sheet-first.jpg
-look-2.jpg = out/work/look/v2-whole-4221.jpg
-look-3.jpg = out/work/look/v2-uhd-final-shaft.png
-look-4.jpg = out/work/look/v2-key-4731.png
+2026-11-26 15:31 UTC
+work at 72142f1 on agent/breath-wall
+4500 and 4590 at 72142f1: the pale slab under the second ledge is still there (north-west column seen side on). Second picture: a tried removal for west lenses, slab gone above, but 5510 loses mist at its right edge (red), so not kept
+look-1.jpg = out/work/look/p-pair.png
+look-2.jpg = out/work/look/q-all.jpg
