@@ -230,8 +230,9 @@ void main() {
   vec3 grain = pow(mix(vec3(rockLuma), rock, ground ? 0.25 : 0.6), vec3(0.85));
   // (The sheet's own darks are soot at this size: half of them. The darks of the rock are its cracks and the faces turned from the light.)
   if (spire) grain = mix(grain, max(grain, vec3(0.92)), 0.6);
-  // (The bedrock of the ground is darker than the faces of the spires: it is wet with melt and in the snow's shadow.)
-  vec3 albedo = min((ground ? vec3(0.13, 0.135, 0.15) : vec3(0.6, 0.56, 0.505)) * grain * tone, vec3(0.85));
+  // (The bedrock of the ground is darker than the faces of the spires: it is wet with melt and in the snow's shadow. A wall of it stands
+  // clear of both and is paler.)
+  vec3 albedo = min((ground ? mix(vec3(0.13, 0.135, 0.15), vec3(0.33, 0.315, 0.3), steep) : vec3(0.6, 0.56, 0.505)) * grain * tone, vec3(0.85));
   float rough = 0.9;
   // Its cracks are dark: the sky does not reach into them.
   float occ = 0.55 + 0.45 * smoothstep(0.1, 0.55, pit);
@@ -256,9 +257,10 @@ void main() {
   // own relief cuts its edge, so the line where snow meets stone is broken at the size of the stone.
   float drift = vnoise(vWorld.xz / 47.0 + 7.3);
   float lie = nRock.y * 0.3 + mix(n0.y, nFace.y, 0.8) * 0.7 + 0.2 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
-  if (ground) lie -= 0.3 * rockness;
+  // (On the ground the snow is deep: it leaves bare only what stands well out of it, and its edge on the stone is hard.)
+  if (ground) lie += 0.1 - 0.3 * rockness;
   float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
-  float snow = show > 0.01 ? smoothstep(hold, hold + 0.1, lie) : 1.0;
+  float snow = show > 0.01 ? smoothstep(hold, hold + (ground ? 0.035 : 0.1), lie) : 1.0;
   snow *= 1.0 - burn;
   if (spire) snow *= mix(1.0, smoothstep(-0.15, 0.3, lee), uWet);
   // Just above the snow the rock is wet and dark, and frost stands in its cracks.
@@ -274,7 +276,7 @@ void main() {
   float rime = 0.0;
   if (show > 0.01) {
     float leeFace = mix(lee, dot(nFace.xz, uWind.xz), 0.75);
-    float expose = clamp(0.36 - 1.0 * leeFace + 0.3 * nFace.y + 0.55 * windward, 0.0, 1.0) * (ground ? 0.75 * steep : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet) * stripped;
+    float expose = clamp(0.36 - 1.0 * leeFace + 0.3 * nFace.y + 0.55 * windward, 0.0, 1.0) * (ground ? 0.45 * steep : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet) * stripped;
     if (expose > 0.1) {
       vec2 rp = w.x >= w.z && w.x >= w.y ? P.zy : w.z >= w.y ? P.xy : P.xz;
       vec2 rx = w.x >= w.z && w.x >= w.y ? Px.zy : w.z >= w.y ? Px.xy : Px.xz;

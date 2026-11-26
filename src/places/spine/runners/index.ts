@@ -57,8 +57,8 @@ const LIE: Pose = { roll: 0.12, pitch: 0, slack: 0.95, curl: 0.7, neck: [-0.35, 
 const SITUP: Pose = { roll: 0.06, pitch: 0.62, slack: 1, curl: 0.15, neck: [-0.1, 0.5], head: [-0.3, 0.4], legs: [leg(-0.5, 0.06, -0.62, 0, 0.8), leg(-0.55, 0.06, -0.58, 0, 0.8), leg(0.75, 0.5, -1.9, 0.3, 0.9), leg(0.75, 0.5, -1.9, 0.3, 0.9)] };
 // Lying the other way round, the head lifted off the paws.
 const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [0.25, -0.5], head: [-0.3, -0.4], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
-// The dead one: flat on its right side and sunk in, long dead: the trunk fallen, the upper legs dropped across the under ones onto the
-// ground, the neck stretched along it and the head turned down into the snow.
+// The dead one: flat on its right side and sunk in, long dead: the trunk fallen, the legs slid out along the ground, fore toward the head and hind
+// behind, the upper ones dropped across the under ones, the neck stretched along it and the head turned down into the snow.
 const DEAD: Pose = {
   roll: 1.47,
   pitch: 0,
@@ -66,7 +66,7 @@ const DEAD: Pose = {
   curl: -0.16,
   neck: [-0.1, -0.3],
   head: [-0.15, -0.45],
-  legs: [leg(0.5, -0.85, 0.75, -0.9, 1.1, -0.3), leg(-0.25, 0.02, 0.45, 0, 0.8, 0), leg(-0.35, -0.8, -0.75, -0.9, 0.9, -0.3), leg(0.3, 0.02, -0.7, 0, 0.8, 0)],
+  legs: [leg(0.7, -0.78, 0.95, -0.85, 1.3, -0.3), leg(0.15, 0.02, 0.7, 0, 1.0, 0), leg(-0.55, -0.78, -0.95, -0.85, 0.3, -0.3), leg(0.0, 0.02, -0.85, 0, 0.4, 0)],
 };
 /** How far the dead one is turned from square on to the lens, radians: enough that its legs are seen along their length. */
 const DEAD_TURN = 0.3;
