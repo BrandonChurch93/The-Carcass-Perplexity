@@ -19,7 +19,10 @@ float airAt(vec2 xz, float t) {
   float a = sin(along * 0.085 - t * 0.62 + 0.9 * sin(across * 0.031 + t * 0.07));
   float b = sin(along * 0.23 - t * 1.31 + across * 0.11 + 2.0);
   float lull = 0.55 + 0.45 * sin(along * 0.019 - t * 0.17 + 1.3);
-  return (0.65 * a + 0.35 * b) * lull;
+  // Gusts: fronts some twelve metres apart that cross the marsh at walking pace times three, rising fast and ebbing slowly, with lulls between.
+  float g = 0.5 + 0.5 * sin(along * 0.5 - t * 2.3 + 1.6 * sin(across * 0.19 + t * 0.11));
+  float calm = 0.5 + 0.5 * sin(along * 0.045 - t * 0.37 + across * 0.06 + 1.3);
+  return (0.65 * a + 0.35 * b) * lull * 0.6 + 0.9 * (g * g * (0.3 + 0.7 * calm) - 0.25);
 }
 // How far the air carries a point of a stalk: t is how far up its line the point is, h the height of the line.
 vec3 swayOf(vec2 xz, float h, float t, float quiver, float rate, float phase) {
@@ -108,12 +111,20 @@ void main() {
   float r = R * girth * (1.0 + 0.05 * lobes(a + y * 2.0, seed) + 0.06 * sin(y * 3.1 / D * 0.2 + seed * 31.0));
   // The picture of the bark goes once round the trunk, seven ledges to a tile. By the lens its ledges and its crust stand out of the trunk
   // as far as the picture says they are high: the ragged lips are the mesh, not paint.
-  vec2 barkUv = vec2(a / 6.28318, y / (3.4 * D)) + seed * vec2(3.1, 7.7);
+  // No two ledges the same distance apart, and none level all the way round.
+  float vy = y / (3.4 * D);
+  vy += 0.05 * sin(vy * 5.3 + seed * 20.0) + 0.022 * sin(vy * 13.7 + a + seed * 7.0);
+  vec2 barkUv = vec2(a / 6.28318, vy) + seed * vec2(3.1, 7.7);
   float ledge = 0.0;
   if (close > 0.5) {
-    float high = textureLod(tBarkNh, barkUv, 3.0).b;
-    ledge = smoothstep(0.45, 0.9, high);
-    r += R * (0.3 * (high - 0.42) + 0.1 * ledge) * (1.0 - 0.5 * dead);
+    float fineH = textureLod(tBarkNh, barkUv, 2.0).b;
+    float broadH = textureLod(tBarkNh, barkUv, 5.0).b;
+    // A ledge does not run all the way round: stretches of it have broken off, and what is left stands out further under its crust, in lumps.
+    float kept = smoothstep(-0.25, 0.25, sin(a + vy * 9.0 + seed * 13.0) + 0.6 * sin(a * 3.0 - vy * 17.0 + seed * 29.0));
+    float lip = max(fineH - broadH, 0.0);
+    ledge = smoothstep(0.03, 0.2, lip) * kept;
+    float lump = 0.5 + 0.5 * sin(a * 9.0 + vy * 40.0 + seed * 50.0) * sin(a * 4.0 - vy * 71.0);
+    r += R * ((0.55 * lip + 0.08 * lump * ledge) * (0.2 + 0.8 * kept) + 0.25 * min(fineH - broadH, 0.0) + 0.08 * (broadH - 0.5)) * (1.0 - 0.5 * dead);
   }
   // The mouth flares a little, and its wall has a thickness.
   r *= 1.0 + 0.16 * smoothstep(1.0 - 1.2 * R / h, 1.0, t) * (1.0 - dead);
@@ -141,6 +152,7 @@ varying vec4 vLook;
 uniform sampler2D tBark;
 uniform sampler2D tBarkNh;
 uniform float uCrowned;
+uniform float uLedgeF;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${KEY_GLSL}
@@ -162,7 +174,10 @@ void main() {
   float patchy = fbm(vec2(vUv.x * 5.0, vUv.y * 2.2) + seed * 11.0);
   float grain = fbm(vUv.xy * vec2(90.0, 60.0));
   float crust = smoothstep(0.5, 0.78, nh.b + 0.3 * (patchy - 0.5) + 0.12 * (grain - 0.5));
-  albedo = mix(albedo, vec3(0.8, 0.79, 0.76) * (0.9 + 0.2 * grain), 0.75 * crust);
+  // Far off the salt is not seen as white: a stem there is the cream of its bark.
+  float crustNear = 1.0 - 0.8 * smoothstep(4.0, 30.0, distance(cameraPosition, vWorld));
+  crust = max(crust, 0.8 * vLook.z);
+  albedo = mix(albedo, vec3(0.8, 0.79, 0.76) * (0.9 + 0.2 * grain), 0.75 * crust * crustNear);
   // No two the same age: a young one is clean and warm, an old one grey with what has run down it, a dead one has lost its salt.
   albedo *= mix(vec3(1.06, 1.0, 0.95), vec3(0.8, 0.76, 0.74), smoothstep(0.2, 0.9, min(age, 1.0))) * (0.88 + 0.24 * fract(seed * 41.7));
   // Rust gathers where the picture is lowest: under the lips of the ledges and in the cracks, more on one side of a trunk than the other.
@@ -177,6 +192,10 @@ void main() {
   albedo = mix(albedo, vec3(0.5, 0.19, 0.06), 0.8 * run * (1.0 - away));
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
+  // Far off a stem is seen against pale ground and paler air: it is the horn colour of its tube, with its rings as bands, not chalk.
+  float banded = 0.5 + 0.5 * sin(vUv.y * 44.0 + seed * 30.0);
+  vec3 horn = vec3(0.88, 0.8, 0.72) * (0.75 + 0.35 * banded) * mix(0.55, 1.08, smoothstep(0.0, 0.6, vUv.w)) * (0.7 + 0.5 * fract(seed * 17.3));
+  albedo = mix(albedo, albedo * horn, smoothstep(6.0, 28.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
   float above = vWorld.y - vLook.w;
   // The foot stands in red brine and mud, and the stain of it climbs the foot, higher on one than on the next, and ragged.
@@ -190,12 +209,16 @@ void main() {
   vec3 up = vec3(0.0, 1.0, 0.0);
   vec3 tx = normalize(cross(up, n) + 1e-5);
   vec3 bx = cross(n, tx);
-  n = normalize(n - (tx * (nh.r - 0.5) + bx * (nh.g - 0.5)) * 2.2 * (1.0 - away));
+  n = normalize(n - (tx * (nh.r - 0.5) + bx * (nh.g - 0.5)) * 2.2 * (1.0 - away) + (tx * (grain - 0.5) + bx * (patchy - 0.5)) * 0.7 * crust * crustNear);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, above)) * (0.72 + 0.28 * smoothstep(0.0, 1.5, above)) * mix(0.5 + 0.5 * smoothstep(0.08, 0.5, nh.b), 0.94, away);
   // Under its head a stem stands in the head's shade.
   float below = (1.0 - vUv.w) * vKind.y;
   occ *= mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.1 * vKind.y + 0.12, below), uCrowned * (1.0 - deadStem));
-  vec3 c = rigShade(vWorld, n, v, albedo * keyLight(n), mix(0.96, 0.45, wet), occ);
+  // A stem a few pixels wide is all edge: far off, the sky's glance off its sides is all that would be seen of it, so there it is shaded as
+  // the flat thing the lens sees, and keeps its own colour.
+  float thin = smoothstep(6.0, 22.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF));
+  vec3 nl = normalize(mix(n, v + vec3(0.0, 0.35, 0.0), 0.75 * thin));
+  vec3 c = rigShade(vWorld, nl, v, albedo * keyLight(n), mix(mix(0.96, 0.45, wet), 0.97, thin), occ);
   // The hollow of the mouth is dark.
   c *= 1.0 - 0.85 * smoothstep(0.2, 0.9, vUv.z);
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -287,11 +310,15 @@ void main() {
   // The air leans on it, most at its end; each strap also swings by itself, slowly, because it is wet, and the swing runs out along it to the end.
   float own = seed * 40.0;
   float rate = 1.5 + 1.7 * fract(seed * 7.7);
-  float air = airAt(aRoot.xz, uSeconds);
+  // A gust reaches every head a little after its neighbour, and the end of a strap a little after its root; while it blows the ends flutter.
+  float air = airAt(aRoot.xz + 1.5 * vec2(cos(aAim.w), sin(aAim.w)), uSeconds - 0.12 * s);
   float give = len * s * s * aFr3.z;
-  p += WIND * (give * (0.09 * air + 0.03 * sin(uSeconds * rate * 0.6 + own * 1.3 - 2.0 * s)));
-  p += b * (give * 0.035 * sin(uSeconds * rate * 0.83 + own * 1.7 - 2.5 * s));
-  p += n * (give * 0.03 * sin(uSeconds * rate + own - 3.0 * s));
+  p += WIND * (give * 0.15 * air);
+  if (uDry < 0.5) {
+    p += WIND * (give * 0.03 * sin(uSeconds * rate * 0.6 + own * 1.3 - 2.0 * s));
+    p += b * (give * 0.035 * sin(uSeconds * rate * 0.83 + own * 1.7 - 2.5 * s));
+    p += n * (give * (0.03 * sin(uSeconds * rate + own - 3.0 * s) + 0.05 * max(air, 0.0) * sin(uSeconds * (7.0 + 5.0 * fract(seed * 3.3)) + own - 5.0 * s)));
+  }
 #ifdef DROP
   // A bead gathers at the end of a strap, swells, lets go and falls; the next gathers. Most only hang.
   float period = 4.0 + 7.0 * fract(seed * 3.1);
@@ -365,7 +392,7 @@ void main() {
   // Wine red, each strap and each plant its own; paler and drier toward the end, tan where it leaves the sheath.
   float own = fract(seed * 13.3);
   float plant = fract(vG.y * 41.7);
-  vec3 albedo = mix(vec3(0.065, 0.005, 0.015), vec3(0.15, 0.014, 0.034), 0.35 * own + 0.65 * plant);
+  vec3 albedo = mix(vec3(0.055, 0.004, 0.013), vec3(0.125, 0.012, 0.03), 0.35 * own + 0.65 * plant);
   albedo = mix(albedo, vec3(0.2, 0.06, 0.06), 0.45 * smoothstep(0.55, 1.0, s) * fract(seed * 5.1));
   albedo = mix(albedo, vec3(0.2, 0.12, 0.075), 1.0 - smoothstep(0.02, 0.14, s));
   // The rib is darker than the blade, and the blade is ruled along its length.
@@ -432,7 +459,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
   for (const c of w.cards) {
     const turn = c[0] as number;
     const droop = c[1] as number;
-    const wide = 19 * 2 * w.R * (c[2] as number);
+    const wide = Math.min(1.5, 19 * 2 * w.R * (c[2] as number));
     const lock = (c[3] as number) >= 1 && !hung;
     const tall = 0.72 + ((((c[3] as number) % 1) / 0.45) * 0.58);
     const ragged = c[5] as number;
@@ -459,7 +486,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
       length *= 1 - ragged * rng.range(0, 0.6);
       const sp = spent > 0.5 ? spent : rng.next() < spent ? 1 : 0;
       // The first strap of a head is the last to go when the head is thinned for distance: no head thins to nothing.
-      list.add(w, end, aim, az, leave + 0.35 * sp, length, Math.max(0.006, length * rng.range(0.028, 0.048)) * broad, rng.next(), fall, sp, first ? 0 : rng.next(), up, w.seed);
+      list.add(w, end, aim, az, leave + 0.35 * sp, length, Math.min(0.02, Math.max(0.006, length * rng.range(0.028, 0.048))) * broad, rng.next(), fall, sp, first ? 0 : rng.next(), up, w.seed);
       first = false;
     }
   }
@@ -659,7 +686,7 @@ export function dropMesh(ctx: Context, u: GrowthUniforms, list: Fronds): THREE.M
 export function stemMesh(ctx: Context, u: GrowthUniforms, count: number, lines: Record<string, Float32Array>, rings: number, sides: number, ledges: number, small = false): THREE.Mesh {
   const material = new THREE.ShaderMaterial({
     uniforms: {
-      ...ctx.rig.uniforms, ...u, uLedge: { value: ledges }, uCrowned: { value: 1 },
+      ...ctx.rig.uniforms, ...u, uLedge: { value: ledges }, uLedgeF: { value: ledges }, uCrowned: { value: 1 },
       tBark: { value: ctx.assets.texture('mat/bark.jpg', { kind: 'colour', anisotropy: 4 }) },
       tBarkNh: { value: ctx.assets.texture('mat/bark-nh.png', { kind: 'data', anisotropy: 4 }) },
     },

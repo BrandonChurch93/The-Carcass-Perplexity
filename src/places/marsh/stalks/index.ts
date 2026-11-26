@@ -138,6 +138,7 @@ export function create(ctx: Context): Piece {
   const sets = [stalks.filter(closeOf)];
   const fils: number[][] = [[], [], [], []];
   const perches: [number, number, number][] = [];
+  const clings: Wild[] = [];
   // TEMPORARY, until the lead's list does it: the open flats are bare. A stalk of the list that stands more than two metres from a water's edge is not drawn,
   // but for those a lens stands among: the approved wide picture has a few loose clumps by the seep and by the vein, and almost none on the flats.
   const kept = (s: Stalk): boolean =>
@@ -372,7 +373,7 @@ export function create(ctx: Context): Piece {
       'marsh-04': (w) => Math.hypot(w.x - k3[0], w.z - k3[1]),
       'marsh-05': (w) => Math.hypot(w.x - k4[0], w.z - k4[1]),
     };
-    const fineOf = (d: number): number => (d < 9 ? 40 : d < 18 ? 28 : d < 36 ? 13 : d < 80 ? 6 : 3);
+    const fineOf = (d: number): number => (d < 9 ? 40 : d < 18 ? 28 : d < 36 ? 13 : d < 80 ? 5 : 3);
     const broadOf = (d: number): number => (d < 18 ? 0.62 : d < 36 ? 1.1 : d < 80 ? 1.9 : 3);
     {
       const footed = wilds.filter((w) => w.foot && !w.bare);
@@ -425,7 +426,7 @@ export function create(ctx: Context): Piece {
         const farW = wilds.filter((w) => from(w) >= 22);
         const meshes = [
           frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 3, { small: true }),
-          stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 8, 6, 0, true),
+          stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 6, 5, 0, true),
         ];
         crowns[which] = meshes;
         group.add(...meshes);
@@ -442,7 +443,7 @@ export function create(ctx: Context): Piece {
       };
       const nearS = stands.stems.slice(0, stands.near).filter((w) => seen(w.x, w.z));
       const farS = stands.stems.slice(stands.near).filter((w) => seen(w.x, w.z));
-      wide.add(stemMesh(ctx, growth, nearS.length, lines(nearS), 10, 6, 0, true), stemMesh(ctx, growth, farS.length, lines(farS), 4, 5, 0, true));
+      wide.add(stemMesh(ctx, growth, nearS.length, lines(nearS), 8, 5, 0, true), stemMesh(ctx, growth, farS.length, lines(farS), 4, 5, 0, true));
       const nearF = new Fronds();
       const midF = new Fronds();
       const farF = new Fronds();
@@ -450,7 +451,7 @@ export function create(ctx: Context): Piece {
       const listOf = (d: number): Fronds => (d < 20 ? nearF : d < 38 ? midF : farF);
       const wideOf = lensOf['marsh-01'] ?? reach;
       for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false);
-      for (const w of stands.leaves) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)) * 0.35, broadOf(wideOf(w)) * 1.2, true);
+      for (const w of stands.leaves) if (seen(w.x, w.z) && wideOf(w) < 38) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)) * 0.35, broadOf(wideOf(w)) * 1.2, true);
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
       const t1 = stands.tufts[1] as number[];
@@ -460,7 +461,7 @@ export function create(ctx: Context): Piece {
         const z = t0[i * 4 + 2] as number;
         const d = Math.hypot(x - eyeB[0], z - eyeB[1]);
         if (!seen(x, z)) continue;
-        tuftOf(low, fronds, x, t0[i * 4 + 1] as number, z, t0[i * 4 + 3] as number, t1[i * 4] as number, t2[i * 4 + 1] as number, d < 14 ? 14 : d < 30 ? 9 : 6);
+        tuftOf(low, fronds, x, t0[i * 4 + 1] as number, z, t0[i * 4 + 3] as number, t1[i * 4] as number, t2[i * 4 + 1] as number, d < 14 ? 10 : d < 30 ? 7 : 4);
       }
       // The mat near the lens: leaves on the ground, not a picture of them.
       const m0 = stands.mats[0] as number[];
@@ -471,7 +472,7 @@ export function create(ctx: Context): Piece {
         const z = m0[i * 4 + 2] as number;
         const d = distToSegment(x, z, eyeA, eyeB);
         if (d > 60 || !seen(x, z)) continue;
-        matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 55 : d < 40 ? 15 : 6, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3.6 : 5.5);
+        matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 42 : d < 40 ? 15 : 6, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3.6 : 5.5);
       }
       wide.add(frondMesh(ctx, growth, creep, 2, { dry: true, small: true }));
       wide.add(frondMesh(ctx, growth, nearF, 4), frondMesh(ctx, growth, midF, 3, { small: true }), frondMesh(ctx, growth, farF, 2, { dry: true, small: true }), frondMesh(ctx, growth, low, 2, { dry: true, small: true }), stands.group);
@@ -506,6 +507,7 @@ export function create(ctx: Context): Piece {
       closeW.push(w);
       if (s.kind === 2) continue;
       if (s.kind !== 1) perches.push(lineAt(w, 1));
+      clings.push(w);
       plumeOf(blades, beads, w, own, (s.kind === 0 ? 0.4 : s.kind === 3 ? 0.4 : 0.6) * s.size, want + own.range(-0.3, 0.3));
     }
     closeSet.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 28, 2), frondMesh(ctx, growth, blades, 14, { wet: 1 }), dropMesh(ctx, growth, beads));
@@ -520,7 +522,7 @@ export function create(ctx: Context): Piece {
 
   // The insects: most round the plumes the camera of the colony looks through, some round the one that is stuck, some over the pool.
   const swarm = ctx.rng('insects');
-  const COUNT = 130;
+  const COUNT = 156;
   const home = new Float32Array(COUNT * 4);
   const rate = new Float32Array(COUNT * 4);
   const phase = new Float32Array(COUNT * 4);
@@ -528,9 +530,29 @@ export function create(ctx: Context): Piece {
   const ahead = (u: [number, number, number]): number => (u[0] - K2_AT[0]) * K2_DIR[0] + (u[2] - K2_AT[1]) * K2_DIR[1];
   const aside = (u: [number, number, number]): number => Math.abs((u[0] - K2_AT[0]) * K2_RIGHT[0] + (u[2] - K2_AT[1]) * K2_RIGHT[1]);
   const nearPerches = perches.filter((u) => ahead(u) > 0.8 && ahead(u) < 4 && aside(u) < 0.45 * ahead(u)).sort((u, w) => ahead(u) - ahead(w)).slice(0, 3);
+  const nearClings = clings.filter((w) => ahead([w.x, 0, w.z]) > 0.8 && ahead([w.x, 0, w.z]) < 4.5 && aside([w.x, 0, w.z]) < 0.6 * ahead([w.x, 0, w.z])).sort((u, w) => ahead([u.x, 0, u.z]) - ahead([w.x, 0, w.z])).slice(0, 4);
   for (let i = 0; i < COUNT; i++) {
     let p: [number, number, number];
-    if (i < 12 && nearPerches.length > 0) {
+    if (i < 12 && nearClings.length > 0) {
+      // Some have settled: they cling to the bark under a head, head up, on the side the lens sees, wings held up and closed over the back.
+      const w = nearClings[i % nearClings.length] as Wild;
+      const t = swarm.range(0.72, 0.985);
+      const at = lineAt(w, t);
+      const next = lineAt(w, t + 0.01);
+      const face = Math.atan2(K2_AT[1] - at[2], K2_AT[0] - at[0]) + swarm.range(-1.25, 1.25);
+      const out = [Math.cos(face), 0, Math.sin(face)];
+      const along = [next[0] - at[0], next[1] - at[1], next[2] - at[2]];
+      const dot = (out[0] as number) * (along[0] as number) + (out[2] as number) * (along[2] as number);
+      const len = Math.hypot(along[0] as number, along[1] as number, along[2] as number);
+      const o = [(out[0] as number) - (dot * (along[0] as number)) / (len * len), -(dot * (along[1] as number)) / (len * len), (out[2] as number) - (dot * (along[2] as number)) / (len * len)];
+      const ol = Math.hypot(o[0] as number, o[1] as number, o[2] as number);
+      const off = w.R * 1.02 + 0.008;
+      home.set([at[0] + ((o[0] as number) / ol) * off, at[1] + ((o[1] as number) / ol) * off, at[2] + ((o[2] as number) / ol) * off, 0], i * 4);
+      rate.set([(o[0] as number) / ol, (o[1] as number) / ol, (o[2] as number) / ol, 1], i * 4);
+      phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1.2, 1.7)], i * 4);
+      continue;
+    }
+    if (i < 38 && nearPerches.length > 0) {
       // STAGED for the lens of the colony: a dozen keep to the two plumes nearest it, close in among the strands.
       const perch = nearPerches[i % nearPerches.length] as [number, number, number];
       p = [perch[0] + swarm.range(-0.45, 0.45), perch[1] + swarm.range(0.1, 0.6), perch[2] + swarm.range(-0.45, 0.45)];
@@ -539,15 +561,15 @@ export function create(ctx: Context): Piece {
       phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1.3, 1.9)], i * 4);
       continue;
     }
-    if (i < 80 && perches.length > 0) {
+    if (i < 106 && perches.length > 0) {
       // They live in the plumes: each keeps to the one it was hatched in.
       const perch = perches[swarm.int(perches.length)] as [number, number, number];
       p = [perch[0] + swarm.range(-0.55, 0.55), perch[1] + swarm.range(-0.1, 0.6), perch[2] + swarm.range(-0.55, 0.55)];
-    } else if (i < 120) p = [stuck[0] + swarm.range(-1.7, 1.7), swarm.range(0.1, 0.7), stuck[1] + swarm.range(-1.7, 1.7)];
+    } else if (i < 146) p = [stuck[0] + swarm.range(-1.7, 1.7), swarm.range(0.1, 0.7), stuck[1] + swarm.range(-1.7, 1.7)];
     else p = [swarm.range(-6, 6), swarm.range(0.4, 1.6), swarm.range(-6, 9)];
     home.set([p[0], p[1], p[2], swarm.range(0.2, 0.7)], i * 4);
     rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
-    phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), i >= 80 && i < 120 ? swarm.range(0.45, 0.8) : swarm.range(1.3, 2.1)], i * 4);
+    phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), i >= 106 && i < 146 ? swarm.range(0.45, 0.8) : swarm.range(1.3, 2.1)], i * 4);
   }
   // One insect: the photograph cut in three, the body and the wings of each side, hinged along the body.
   const bug = new THREE.BufferGeometry();
