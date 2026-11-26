@@ -58,7 +58,7 @@ float cloudLit(vec3 from, vec3 d) {
     vec3 q = uEmitters[i].xyz - from;
     float along = dot(d, q);
     if (along <= 0.0) continue;
-    float r = uEmitters[i].w * (uSkyStage.z > 0.0 ? uSkyStage.z : 1.0);
+    float r = uEmitters[i].w * (uEmitters[i].w > 20.0 && uSkyStage.z > 0.0 ? uSkyStage.z : 1.0);
     // By metres, not by angle: how far the ray passes from the light, in the light's own radii. A long lens and a wide one see the same bloom.
     float off = sqrt(max(dot(q, q) - along * along, 0.0)) / r;
     float power = dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) * uEmitters[i].w * uEmitters[i].w;

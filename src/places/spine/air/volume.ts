@@ -76,13 +76,15 @@ vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 q = ro - uEmitters[i].xyz;
-    float r = uEmitters[i].w * (uSkyStage.z > 0.0 ? uSkyStage.z : 1.0);
+    // The staged size is for the great lights of a stroke; a small light (the one at the struck tip) keeps its own.
+    float r = uEmitters[i].w * (uEmitters[i].w > 20.0 && uSkyStage.z > 0.0 ? uSkyStage.z : 1.0);
     float b = dot(rd, q);
     float h = sqrt(max(dot(q, q) - b * b, 0.0) + 0.04 * r * r);
     g += uEmitterRadiance[i] * (r * r * (atan((far + b) / h) - atan(b / h)) / h);
   }
   g *= 1.0e-7;
-  return g / (1.0 + dot(g, vec3(0.33)) / 0.5);
+  // A glow in the cloud about the stroke, not a lamp over the frame: it closes on a ceiling a little over the dusk sky's own tone.
+  return g / (1.0 + dot(g, vec3(0.33)) / 0.07);
 }
 
 // The open sky as cloud takes it: the cold light from above, and the last band on what faces it.
@@ -118,7 +120,7 @@ float stormDepth(vec3 ro, vec3 rd, float reach) {
 
 // The top of the cloud under the crest: far out the sea itself, billowed; against the lee of the ridge a bank some hundreds of metres under the crest,
 // so that the flank goes down into cloud; and in the saddles the storm's cloud, which comes over the crest and falls down the lee into the bank.
-const float CLOUD_UNDER = 190.0;
+const float CLOUD_UNDER = 130.0;
 const vec3 SEA_MEAN = vec3(0.113, 0.127, 0.201);
 float seaLod = 1.0;
 float seaTop(vec3 p, bool fine) {
@@ -218,7 +220,10 @@ void main() {
   float stormAir = 0.0;
   if (uShow.z > 0.0) stormAir = 1.0 - exp(-stormDepth(ro, rd, seaAt > 0.0 ? min(seaAt, far) : far));
   // Open sky keeps the dome's own masses: the near air softens them and does not wash them out.
-  if (seaAt <= 0.0 && far > 50000.0) stormAir = min(stormAir, mix(1.0, 0.3, smoothstep(0.0, 0.1, rd.y)));
+  // The open sky is the dome's own picture, masses and all: no air is laid over it. The air is of what stands in it.
+  bool openSky = seaAt <= 0.0 && far > 50000.0;
+  if (openSky) stormAir = 0.0;
+  stormAir *= 0.6;
 
   if (seaAt > 0.0 && through > 0.01) {
     float t = seaAt;
@@ -260,8 +265,10 @@ void main() {
       gone = mix(gone, smoothstep(2500.0, 7000.0, t), plate);
     }
     sea = mix(sea, domeFar, max(gone * gone, smoothstep(0.035 / zoomF, 0.0, dip) * (1.0 - plate)));
+    // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
+    sea = mix(sea, domeFar, stormSide(rd) * smoothstep(0.14, 0.0, dip));
     // Its edge against the land is soft: the cloud thins where it laps the rock.
-    float lap = 0.9 * smoothstep(0.0, 1.0, (far - t) / (700.0 + 0.2 * t));
+    float lap = 0.94 * smoothstep(0.0, 1.0, (far - t) / (140.0 + 0.05 * t));
     light += through * sea * lap;
     through *= 1.0 - lap;
     far = min(far, t);
@@ -360,7 +367,7 @@ void main() {
     depthV *= (0.65 + 0.7 * bands) * uShow.x * uStage.y;
     float veiled = 1.0 - exp(-depthV);
     // Open sky and the sea of cloud keep their own masses: the veil is of the ridge's air.
-    if (far > 50000.0) veiled = min(veiled, 0.25) * (1.0 - plateOn);
+    if (far > 50000.0) veiled = 0.0;
     // The sea of cloud is seen from above through thin air: it keeps its lumps and its lit edge.
     if (seaAt > 0.0 && far <= seaAt + 1.0) veiled = min(veiled, 0.3);
     // Blown snow is the storm's cold violet; the warm band stays on the horizon and does not stain the air.
@@ -439,7 +446,8 @@ void main() {
   // Down to the top of the cloud and no farther: what lies under it is the cloud's own.
   float length = min(seaAt > 0.0 ? min(far, seaAt) : far, 30000.0);
   // The strike's own sky has its air in it: before it the haze is only of what stands nearer than the picture.
-  if (plateOn > 0.0) length = far > 50000.0 ? length * (1.0 - plateOn) : min(length, mix(30000.0, 5000.0, plateOn));
+  if (plateOn > 0.0) length = min(length, mix(30000.0, 5000.0, plateOn));
+  if (openSky) length = 0.0;
   float depth = base * (abs(fall) < 1e-5 ? length : (1.0 - exp(-fall * length)) / fall) * uShow.x;
   float clear = exp(-depth);
   vec3 haze = mix(mix(uSkyHorizon, uSkyZenith, 0.35) * 0.6, domeAir, 0.7);

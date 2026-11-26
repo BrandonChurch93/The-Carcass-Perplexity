@@ -85,7 +85,7 @@ vec3 flashCast() {
 }
 // The key of the place: the last light comes over the cloud sea from the lee and a little from behind the lens of the wide shot, low. It
 // warms the rock that looks to the lee and leaves what looks to the storm in the storm's dark. The band the dome draws is where uWarmDir says.
-const vec3 KEY_DIR = normalize(vec3(-0.34, 0.16, 0.93));
+const vec3 KEY_DIR = normalize(vec3(-0.6, 0.18, 0.78));
 
 // How far a direction looks into the storm: 1 level into it, 0 away from it and overhead.
 float stormSide(vec3 d) {
@@ -121,7 +121,8 @@ vec3 skyIrradiance(vec3 n) {
   open = mix(open, uSkyStorm, 0.8 * stormShare) + flashCast() * (2.6 * stormShare);
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, KEY_DIR) + 0.12) / 1.12, 0.0, 1.0);
-  return 3.14159 * (e + uWarmColour * (0.2 * w * w * w * seen));
+  // One low source: what looks to it is lit warm, by the square, and what looks away keeps the cold of the sky alone.
+  return 3.14159 * (e * (0.72 + 0.28 * (1.0 - w)) + uWarmColour * (0.34 * w * w * seen));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it
@@ -154,6 +155,7 @@ float contactAt(vec3 p) {
 // kilometres. A light wraps a quarter round a face, so that a spire lit from behind keeps a rim. No read of any map.
 vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec3 e = vec3(0.0);
+  float lift = 0.0;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 d = uEmitters[i].xyz - p;
@@ -161,10 +163,12 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     float d2 = dot(d, d) + r * r;
     float c = clamp((dot(n, d) * inversesqrt(d2) + 0.25) / 1.25, 0.0, 1.0);
     e += uEmitterRadiance[i] * (3.14159 * r * r / d2 * c);
+    // A small light close by (the one at a struck tip) lifts the ceiling for the rock right under it.
+    lift += r < 20.0 ? r * r / d2 : 0.0;
   }
   // A strike lights the rock; it does not bleach it. However strong a light is made, what it casts closes on a ceiling.
   e *= EMITTER_CAST;
-  return e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / EMITTER_CEILING);
+  return e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / (EMITTER_CEILING * (1.0 + 12.0 * lift)));
 }
 
 // For the owners: how much of the sky a face keeps when the land in front of it stands higher than it does. 1 in the open, toward 0 in a crack,

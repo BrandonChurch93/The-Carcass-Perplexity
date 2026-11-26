@@ -109,6 +109,10 @@ varying float vRelief;
 varying vec3 vUp;
 uniform sampler2D tSpire;
 uniform sampler2D tSpireNh;
+uniform sampler2D tFace;
+uniform sampler2D tFaceH;
+// The part of the face photograph that is laid: its bare jointed rock, right of its rimed edge and under its burned top.
+const vec4 FACE_RECT = vec4(0.3, 0.0, 0.7, 0.68);
 uniform sampler2D tLedge;
 uniform sampler2D tLedgeNh;
 uniform sampler2D tRubble;
@@ -239,7 +243,8 @@ void main() {
   // Broken rock is flat faces that meet in edges: a little of the face of the triangle itself with the round of the mesh.
   vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   if (dot(facet, smoothN) < 0.0) facet = -facet;
-  vec3 n0 = inside ? smoothN : normalize(mix(smoothN, facet, spire ? 0.35 : 0.15 + 0.3 * clamp(vTop, 0.0, 1.0)));
+  // (Only a little: the two triangles of every quad of the mesh lean two ways, and more of the facet would comb the face along their diagonals.)
+  vec3 n0 = inside ? smoothN : normalize(mix(smoothN, facet, spire ? 0.08 : 0.25 * clamp(vTop, 0.0, 1.0)));
 
   // The rock is read from the material pictures of the place, each at one size in metres whatever way the face looks: a picture is laid
   // on the two upright planes it can lie flat on and on the level one, and each face takes them by how squarely it looks at each. Nothing
@@ -323,23 +328,61 @@ void main() {
     vec2 atS = onA ? vec2(pb, pu) : vec2(pa, pu) + 17.3;
     vec2 gSx = onA ? vec2(dFdx(pb), dFdx(pu)) : vec2(dFdx(pa), dFdx(pu));
     vec2 gSy = onA ? vec2(dFdy(pb), dFdy(pu)) : vec2(dFdy(pa), dFdy(pu));
+    if (spire) {
+      // A spire's slabs stand metres out of its face, and the side of a slab looks another way than the face it stands on: each flat
+      // of the rock takes the plane it is itself most square to, the level one too, so no slab's side is a picture pulled long.
+      vec3 nc = normalize(mix(smoothN, facet, 0.75));
+      vec3 wc = abs(vec3(dot(nc, ax), dot(nc, up), dot(nc, bx)));
+      if (wc.y > max(wc.x, wc.z)) {
+        atS = vec2(pa, pb) + 41.7;
+        gSx = vec2(dFdx(pa), dFdx(pb));
+        gSy = vec2(dFdy(pa), dFdy(pb));
+      } else if (wc.x > wc.z) {
+        atS = vec2(pb, pu);
+        gSx = vec2(dFdx(pb), dFdx(pu));
+        gSy = vec2(dFdy(pb), dFdy(pu));
+      } else {
+        atS = vec2(pa, pu) + 17.3;
+        gSx = vec2(dFdx(pa), dFdx(pu));
+        gSy = vec2(dFdy(pa), dFdy(pu));
+      }
+    }
 #if KIND == 1
-    if (sheet < 0.98 || near > 0.0) {
-      // A spire: its jointed rock at its real 30 m, broken close to by the blocks of the rubble picture at their real 5 m.
-      Lay a = lay(tSpire, tSpireNh, atS / 30.0, gSx / 30.0, gSy / 30.0);
-      // Its beds: the picture of stepped ledges at its real 40 m, across the lean. It breaks the face into ribs and steps, dark under
-      // each overhang, and its own snow lies on each step.
-      Lay g = lay(tLedge, tLedgeNh, atS / 40.0 + 0.37, gSx / 40.0, gSy / 40.0);
-      float bedL = dot(g.c, vec3(0.33));
-      ledgeSnow = smoothstep(0.27, 0.46, bedL);
-      Lay f = lay(tRubble, tRubbleNh, atS / 5.0 + 0.13, gSx / 5.0, gSy / 5.0);
-      float fineK = max(close, near);
-      rock = 2.7 * a.c * clamp(bedL / 0.08, 0.5, 1.6) * (1.0 + 0.6 * fineK * (dot(f.c, vec3(0.33)) / dot(RUBBLE_MEAN, vec3(0.33)) - 1.0));
-      t = a.t * 1.0 + 1.5 * g.t + fineK * 1.2 * f.t;
-      pit = mix(a.pit * (0.4 + 1.2 * g.pit), a.pit * (0.4 + 1.2 * g.pit) * (0.5 + f.pit), fineK);
-    } else {
-      // Far off and under its sheet a spire needs none of its tiles.
-      rock = 2.7 * SPIRE_MEAN;
+    {
+      // A spire's rock is a photograph of a frost-shattered face (mat/kiteface, 50 m square, its burned top and its rimed edge left out), laid
+      // on the upright plane the face looks at most squarely, at its real size where the lens is near. It turns over at its edges and has no seam.
+      vec2 atA = atS / 35.0;
+      vec2 atB = vec2(atS.x + 0.21 * atS.y, atS.y - 0.21 * atS.x) / 112.0 + vec2(0.37, 0.61);
+      float lodA = lodOf(tFace, gSx / 50.0, gSy / 50.0);
+      // Far off its joints would be finer than a pixel and the face a smooth skin: there the same rock is laid three times larger, so a far
+      // spire is cut by joints it can show.
+      float which = smoothstep(1.3, 2.5, lodA);
+      vec2 eps = vec2(max(0.004, exp2(lodA) / 1254.0), 0.0);
+      vec3 cF = vec3(0.0);
+      vec3 hF = vec3(0.0);
+      if (which < 0.99) {
+        vec2 q = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atA.x), wMirror(atA.y));
+        vec2 qx = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atA.x + eps.x / FACE_RECT.z), wMirror(atA.y));
+        vec2 qy = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atA.x), wMirror(atA.y + eps.x / FACE_RECT.w));
+        cF += (1.0 - which) * textureLod(tFace, q, lodA).rgb;
+        hF += (1.0 - which) * vec3(textureLod(tFaceH, q, lodA).r, textureLod(tFaceH, qx, lodA).r, textureLod(tFaceH, qy, lodA).r);
+      }
+      if (which > 0.01) {
+        float lodB = lodA - 1.68;
+        vec2 q = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atB.x), wMirror(atB.y));
+        vec2 qx = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atB.x + eps.x / FACE_RECT.z), wMirror(atB.y));
+        vec2 qy = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atB.x), wMirror(atB.y + eps.x / FACE_RECT.w));
+        cF += which * textureLod(tFace, q, lodB).rgb;
+        hF += which * vec3(textureLod(tFaceH, q, lodB).r, textureLod(tFaceH, qx, lodB).r, textureLod(tFaceH, qy, lodB).r);
+      }
+      // The photograph's own snow lies on its ledges: pale and without colour.
+      float paleF = dot(cF, vec3(0.3, 0.5, 0.2));
+      ledgeSnow = smoothstep(0.42, 0.62, paleF) * smoothstep(0.16, 0.05, max(cF.r, max(cF.g, cF.b)) - min(cF.r, min(cF.g, cF.b)));
+      rock = cF * 1.05;
+      // Its relief, from the photograph's height: the joints are cut a hand deep at this size, the plates between them stand flat.
+      t = vec2(hF.y - hF.x, hF.z - hF.x) * (-0.55 / (eps.x * 50.0));
+      t = clamp(t, vec2(-1.6), vec2(1.6));
+      pit = hF.x;
     }
 #elif KIND == 0
     // The ground's own cliffs are broken rock, not jointed plates: the picture of blocks half in snow, which has no grain.
@@ -390,14 +433,13 @@ void main() {
       float h0 = texture2D(tSheetH, uv).r;
       float da = (texture2D(tSheetH, uv + vec2(px.x, 0.0)).r - h0) / px.x * uSheetMap.x;
       float dy = (texture2D(tSheetH, uv + vec2(0.0, px.y)).r - h0) / px.y * uSheetMap.z;
-      float grain = dot(rock, vec3(0.33)) / (2.7 * dot(SPIRE_MEAN, vec3(0.33)));
       // Far off the sheet is the rock, whole. Close to it would be a picture pulled large and soft: there it gives only the broad tone
       // of its masses, and the rock's own tiles, at their true size, are the crag, in colour and in relief.
       // Far off the rock of the sheet is dark and its snow is pale: the rock is let down, the snow kept.
-      vec3 massed = sc * 1.5 * (0.8 + 0.2 * grain) * mix(0.58, 1.0, smoothstep(0.07, 0.3, dot(sc, vec3(0.33))));
-      vec3 crag = rock * clamp(0.45 + 0.55 * dot(sc, vec3(0.33)) / 0.16, 0.6, 1.5);
-      rock = mix(rock, mix(massed, crag, near), sheet);
-      nRock = normalize(mix(nRock, normalize(n0 + mix(0.35, 1.6, near) * (across * t.x + upAlong * t.y)), sheet) - sheet * uSheetDepth * mix(0.2, 0.12, near) * (sa * da + vec3(0.0, dy, 0.0)));
+      // The sheet says where the spire's great masses are dark and where pale; the rock itself is the photograph, at every distance.
+      float mass = clamp(0.5 + 0.5 * dot(sc, vec3(0.33)) / 0.16, 0.62, 1.3);
+      rock = mix(rock, rock * mass, sheet);
+      nRock = normalize(nRock - sheet * uSheetDepth * mix(0.2, 0.08, near) * (sa * da + vec3(0.0, dy, 0.0)));
       pit = mix(pit, mix(0.25 + 0.6 * h0, pit, 0.8 * near), 0.6 * sheet);
     }
   }
@@ -407,11 +449,10 @@ void main() {
   float blotch = vnoise(vWorld.xz * 0.021 + vWorld.y * 0.013);
   vec3 tone = mix(vec3(0.82, 0.79, 0.78), vec3(1.06, 1.0, 0.93), smoothstep(0.3, 0.7, 0.6 * bed + 0.4 * blotch));
   // The plates of a spire are grey rock: their picture's brown is taken half out, and the sheet keeps its own colour.
-  if (plates) rock = mix(rock, vec3(dot(rock, vec3(0.3, 0.5, 0.2))) * vec3(0.96, 0.98, 1.06), 0.55 * (1.0 - sheet));
+  if (plates && !spire) rock = mix(rock, vec3(dot(rock, vec3(0.3, 0.5, 0.2))) * vec3(0.96, 0.98, 1.06), 0.55 * (1.0 - sheet));
   tone = mix(tone, vec3(1.0), sheet);
   vec3 albedo = min(rock * (inside ? vec3(1.0) : tone), vec3(0.9));
   // A spire's rock is tan where the dusk lights it: a quarter of its pictures' brown is taken out, no more.
-  if (spire) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(0.94, 0.97, 1.06), 0.25);
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
   // Close to, the cracks of a spire are dark.
@@ -476,7 +517,7 @@ void main() {
     vec2 atR = rX ? vWorld.zy / 3.0 : rY ? vWorld.xz / 3.0 + 0.4 : vWorld.xy / 3.0 + 0.7;
     vec3 frostC = textureLod(tRime, atR, lodOf(tRime, rX ? gx.zy : rY ? gx.xz : gx.xy, rX ? gy.zy : rY ? gy.xz : gy.xy)).rgb;
     float crystals = smoothstep(0.15, 0.38, dot(frostC, vec3(0.33)) * (0.55 + 0.9 * pit));
-    float cover = clamp(0.45 * rime + 0.14 * (1.0 - burn), 0.0, 0.8) * crystals;
+    float cover = clamp(0.45 * rime + 0.04 * (1.0 - burn), 0.0, 0.8) * crystals;
     albedo = mix(albedo, min(frostC * 1.5, vec3(0.88)) * vec3(0.95, 0.98, 1.05), 0.85 * cover);
     rime = 0.0;
   }

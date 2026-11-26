@@ -141,12 +141,24 @@ function reliefAt(sheet: number, u: number, v: number): number {
 /** How far the relief of a spire's sheet stands out of its face, metres from furthest to nearest. */
 export const reliefDepth = (sp: Spire): number => 0.1 * sp.tip;
 
+const RING_LOW = 0.58;
+const RING_HIGH = 0.9;
+const RING_DENSE = 2.5;
+/** How high on the first spire a ring stands (0 the crest, 1 the tip) for how far up the count of rings it is: closest where the kites roost. */
+function ringAt(g: number): number {
+  const whole = RING_LOW + RING_DENSE * (RING_HIGH - RING_LOW) + (1 - RING_HIGH);
+  const w = g * whole;
+  if (w < RING_LOW) return w;
+  if (w < RING_LOW + RING_DENSE * (RING_HIGH - RING_LOW)) return RING_LOW + (w - RING_LOW) / RING_DENSE;
+  return RING_HIGH + (w - RING_LOW - RING_DENSE * (RING_HIGH - RING_LOW));
+}
+
 /** A spire: a leaning broken blade cut from its feature sheet (the outline and the relief are the sheet's), and its root down the flanks into the cloud. */
 // level: 2 the spire the lens comes close to, 1 one that is seen whole in a long lens, 0 one far down the ridge. The triangles are dear in a
 // software renderer whether or not they are seen large, so only the first spire has the finest mesh.
 export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeometry {
-  const UP = level > 1.5 ? 190 : level > 0.5 ? SPIRE_MID[0] : 48;
-  const DOWN = level > 1.5 ? 90 : level > 0.5 ? 18 : 8;
+  const UP = level > 1.5 ? 230 : level > 0.5 ? SPIRE_MID[0] : 48;
+  const DOWN = level > 1.5 ? 50 : level > 0.5 ? 18 : 8;
   const AROUND = level > 1.5 ? 400 : level > 0.5 ? SPIRE_MID[1] : 96;
   const m = finAxes(sp);
   const seed = Math.floor(rng.next() * 900);
@@ -163,30 +175,22 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
   for (let r = 0; r <= DOWN + UP + 1; r++) {
     const cap = r === DOWN + UP + 1;
     const k = Math.min(r, DOWN + UP);
-    const t = k < DOWN ? tLow + (t0 - tLow) * Math.pow(k / DOWN, 0.7) : t0 + (1 - t0) * ((k - DOWN) / UP);
+    // The rings stand closer where the lens of the kites is on the face (level 2 only): two and a half to one between h 0.58 and 0.9.
+    const g = (k - DOWN) / UP;
+    const h = level > 1.5 ? ringAt(g) : g;
+    const t = k < DOWN ? tLow + (t0 - tLow) * Math.pow(k / DOWN, 0.7) : t0 + (1 - t0) * h;
     const p = fin(sp, t);
     const u = t * tall;
     for (let a = 0; a < AROUND; a++) {
       // Round the blade: its two broad faces are laid out evenly across their breadth, so the sheet's relief has the same mesh everywhere
       // on them, and its two thin ends take the few that are left.
       const f = a / AROUND;
-      let ln: number;
-      let face: number;
-      if (f < 0.46) {
-        ln = 0.98 - 1.96 * (f / 0.46);
-        face = 1;
-      } else if (f < 0.5) {
-        const g = (f - 0.46) / 0.04;
-        ln = -(0.98 + 0.02 * Math.sin(Math.PI * g));
-        face = g < 0.5 ? 1 : -1;
-      } else if (f < 0.96) {
-        ln = -0.98 + 1.96 * ((f - 0.5) / 0.46);
-        face = -1;
-      } else {
-        const g = (f - 0.96) / 0.04;
-        ln = 0.98 + 0.02 * Math.sin(Math.PI * g);
-        face = g < 0.5 ? -1 : 1;
-      }
+      // (By the angle round its section, not by its breadth: its thin ends are as deep as its faces are broad where it is high, and the
+      // lens of the kites looks straight at one of them.)
+      const th = 2 * Math.PI * f;
+      const co = Math.cos(th);
+      const ln = Math.sign(co) * Math.pow(Math.abs(co), 2 / FIN_SECTION);
+      const face = Math.sin(th) >= 0 ? 1 : -1;
       const edge = Math.pow(Math.abs(ln), 12);
       const snap = cap ? 0.12 : 1;
       const l = p.centre + ln * p.half * snap;
