@@ -235,7 +235,7 @@ float levelOf(sampler2D t, float metres) {
 // Ripples seen at a glance keep their crests: read by the long side they went to glass a stone's throw out. Between the long side and the short.
 float rippleLevel(sampler2D t, float metres) {
   float size = float(textureSize(t, 0).x) / metres;
-  return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size) + 0.7;
+  return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size) + 0.4;
 }
 // The rig's sky, cloud shadow and contact, word for word (shared/glsl.ts: skyCloud, cloudShade, contactDrawn), but each picture read at a
 // stated level: over the rippled sheet a read by its own slopes is several times the cost for the same picture. Keep in step with the rig.
