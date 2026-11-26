@@ -1,7 +1,7 @@
-2026-11-26 17:13 UTC
-work at a961763 on agent/heart-lava
-v1 before the second merge of main (code on branch agent/heart-lava-e: the name agent/heart-lava is taken on the remote by an older round). Sheet 4037 to 4217, the fall before above after at 4037 4127 4217, 4006 beside approved, 4217 hd review. Wrong: no fume to be seen along the cascade, the lowest reach above the fan is one bare bright smear, the banks hardly answer the surge, slabs read a little as black holes.
-look-1.jpg = out/work/v1/fall-sheet.png
-look-2.jpg = out/work/v1/fall-before-above-after.png
-look-3.jpg = out/work/v1/4006-approved-beside-frame.png
-look-4.jpg = out/work/v1/f-4217-hd-review.png
+2026-11-26 17:44 UTC
+work at dc7ff61 on agent/heart-lava
+v2 test renders (code on agent/heart-lava-e). The fall at 4097, 4157, 4217, v1-with-fume above, v2 below; 4217 hd review v1 left, v2 slabs right; 3900 and 3930 before the surge; 4217 whole at preview. Wrong: bank light on the bed's own banks is faint, the surge lights the smoke at the fan as a soft round glow, slabs at preview read as mottle more than as separate rafts, spatter hardly seen.
+look-1.jpg = out/work/v2g/look.png
+look-2.jpg = out/work/v2c/hd-ba.png
+look-3.jpg = out/work/v2g/pre.png
+look-4.jpg = out/work/v2g/f-4217.png
