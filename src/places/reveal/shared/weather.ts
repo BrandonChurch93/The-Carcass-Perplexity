@@ -85,8 +85,10 @@ float lowPicture(vec2 w) {
     vec2 sw = mat2(0.97, -0.24, 0.24, 0.97) * w;
     float hard = 1.0 - smoothstep(700.0, 1300.0, uViewKm);
     float wideLay = seen(texture2D(uMatStreaks, sw / vec2(840.0, 620.0) + vec2(0.3, 0.7)).rgb, 0.3 + 0.12 * hard, 0.8 - 0.1 * hard);
-    float fineLay = seen(texture2D(uMatStreaks, sw / vec2(430.0, 300.0) + vec2(0.7, 0.2)).rgb, 0.36, 0.85);
-    pic += sqrt(away) * mix(1.5, 1.0, smoothstep(700.0, 1300.0, uViewKm)) * (0.6 * wideLay + 0.75 * fineLay * (0.25 + 0.75 * wideLay));
+    float fineLay = seen(texture2D(uMatStreaks, mat2(0.84, 0.54, -0.54, 0.84) * w / vec2(430.0, 300.0) + vec2(0.7, 0.2)).rgb, 0.36, 0.85);
+    // (Here and there a large soft mass: a field of cells grown together, a few hundred kilometres across.)
+    float massy = smoothstep(0.6, 0.82, texture2D(uCloudTile, sw / 2300.0 + vec2(0.33, 0.61), 2.0).b) * seen(texture2D(uMatPopcorn, sw / 300.0 + 0.2, 1.5).rgb, 0.1, 0.7);
+    pic += sqrt(away) * mix(1.5, 1.0, smoothstep(700.0, 1300.0, uViewKm)) * (0.6 * wideLay + 0.75 * fineLay * (0.25 + 0.75 * wideLay)) + 0.34 * away * massy;
   }
   return pic;
 }
@@ -105,7 +107,7 @@ vec2 lowField(vec2 at) {
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   // From orbit the field is seen whole: an even scatter over all the sea, a little thicker here and thinner there.
   float even = smoothstep(330.0, 760.0, uViewKm);
-  float field = amount * (mix(0.45, 0.5, even) + mix(0.55, 0.5, even) * smoothstep(0.34, 0.72, slow + 0.2 * (amount - 0.6)));
+  float field = amount * (mix(0.45, 0.16, even) + mix(0.55, 0.84, even) * smoothstep(mix(0.34, 0.3, even), mix(0.72, 0.6, even), slow + 0.2 * (amount - 0.6)));
   float pic = lowPicture(w);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
   float thick = min(1.0, 1.1 * pic) * smoothstep(0.0, 0.5, field);
@@ -121,6 +123,6 @@ float cloudShade(vec2 xz) {
   float standing = coverAt(xz + toSun * 6.5 * lift).b;
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
-  float stormShade = pow(1.0 - smoothstep(0.02, 0.62, fromStorm), 1.3) * uArrive;
-  return (1.0 - mix(0.4, 0.72, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.34 * stormShade);
+  float stormShade = pow(1.0 - smoothstep(0.02, 0.48, fromStorm), 1.3) * uArrive;
+  return (1.0 - mix(0.4, 0.72, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
 }`;

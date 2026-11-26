@@ -55,10 +55,10 @@ void main() {
   float where = texture2D(uCloudTile, hv / 5200.0 + vec2(0.61, 0.27)).b;
   float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.42, 0.75, where) * smoothstep(500.0, 1500.0, length(up - vec2(${X(AT.lake.x).toFixed(1)}, ${Z(AT.lake.y).toFixed(1)})));
 
-  vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.86 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 + 0.25 * smoothstep(300.0, 600.0, uViewKm) * (1.0 - smoothstep(700.0, 1300.0, uViewKm))) * (1.0 - 0.15 * high);
+  vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.86 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 + 0.5 * smoothstep(300.0, 600.0, uViewKm) * (1.0 - smoothstep(700.0, 1300.0, uViewKm))) * (1.0 - 0.15 * high);
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
   float a = low.x * 0.94;
-  float b = high * 0.05;
+  float b = high * 0.13;
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b;
   float alpha = 1.0 - (1.0 - a) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
@@ -70,6 +70,7 @@ ${NOISE_GLSL}
 ${CLOUD_LIGHT_GLSL}
 uniform sampler2D uPicture;
 uniform sampler2D uStreaks;
+uniform sampler2D uMatPopcorn;
 uniform sampler2D uCloudTile;
 varying vec3 vWorld;
 varying vec2 vUv;
@@ -82,8 +83,8 @@ float fibre(vec2 p, float turn) {
   vec2 uv = vec2(3.0 * around + 0.318 * lr, 1.432 * lr - 6.0 * around);
   uv += 0.014 * (texture2D(uCloudTile, p * 0.22 + 0.3, 3.0).rg - 0.5);
   float grain = 0.75 / max(r, 0.05);
-  vec2 gx = dFdx(vUv) * grain * 2.6;
-  vec2 gy = dFdy(vUv) * grain * 2.6;
+  vec2 gx = dFdx(vUv) * grain * 3.3;
+  vec2 gy = dFdy(vUv) * grain * 3.3;
   // (Read five times along the band: the wind draws the cloud out.)
   vec3 c = textureGrad(uStreaks, uv, gx, gy).rgb * 0.3;
   c += (textureGrad(uStreaks, uv + vec2(0.012, 0.0), gx, gy).rgb + textureGrad(uStreaks, uv - vec2(0.012, 0.0), gx, gy).rgb) * 0.2;
@@ -99,16 +100,20 @@ float storm(vec2 p, float turn) {
   float around = atan(p.y, p.x) / 6.28318 - turn;
   float lr = log(r);
   float wander = vnoise(p * 2.6 + 4.0) + 0.5 * vnoise(p * 6.1 + 9.0) - 0.75;
-  float arm = (0.5 + 0.5 * cos(6.28318 * 5.0 * (around - 0.239 * lr) + 3.2 * wander)) * (0.55 + 0.45 * cos(6.28318 * 2.0 * (around - 0.239 * lr) + 1.0));
-  float mass = pow(1.0 - smoothstep(0.01, 0.15, r), 1.3);
-  arm = pow(arm, 1.7);
-  float cover = clamp(0.45 * mass + (0.05 + 1.1 * arm) * (1.0 - smoothstep(0.12, 0.86, r)), 0.0, 1.0);
+  float arm = (0.5 + 0.5 * cos(6.28318 * 5.0 * (around - 0.239 * lr) + 3.2 * wander)) * (0.78 + 0.22 * cos(6.28318 * 2.0 * (around - 0.239 * lr) + 1.0));
+  float mass = pow(1.0 - smoothstep(0.01, 0.06, r), 1.3);
+  arm = pow(arm, 1.25);
+  float cover = clamp(0.45 * mass + (0.24 + 0.8 * arm) * pow(1.0 - smoothstep(0.08, 0.9, r), 1.25), 0.0, 1.0);
   float f = fibre(p, turn);
   // Near the eye the bands are fine lines in a white mass; toward the rim only the fibres themselves are left.
   float torn = smoothstep(0.01, 0.2, r);
-  float least = mix(0.02, 0.2, torn);
-  float lines = smoothstep(least, least + mix(0.4, 0.3, torn), f);
-  return max(cover * lines, 0.62 * mass * (0.15 + 0.85 * smoothstep(0.05, 0.42, f))) * smoothstep(0.004, 0.016, r);
+  float least = mix(0.02, 0.17, torn);
+  float lines = smoothstep(least, least + mix(0.42, 0.4, torn), f);
+  // (The bands are strings of cells, clump after clump with gaps between: the photograph of a field of small cumulus, wound the same way.)
+  vec2 cu = vec2(3.0 * around + 0.318 * lr, 1.432 * lr - 6.0 * around) * 2.0 + 0.045 * (texture2D(uCloudTile, p * 0.9 + 0.6, 2.0).rg - 0.5);
+  float cells = smoothstep(0.1, 0.42, dot(textureGrad(uMatPopcorn, cu, dFdx(vUv) * 9.0 / max(r, 0.05), dFdy(vUv) * 9.0 / max(r, 0.05)).rgb, vec3(0.3, 0.55, 0.15)));
+  lines = mix(lines, 1.35 * sqrt(lines) * cells, 0.5 * torn);
+  return max(cover * lines, 0.5 * mass * (0.15 + 0.85 * smoothstep(0.05, 0.42, f))) * smoothstep(0.004, 0.016, r);
 }
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
@@ -126,15 +131,15 @@ void main() {
   vec2 fall = abs(det) > 1e-12 ? vec2(sy.y * across.x - sx.y * across.y, sx.x * across.y - sy.x * across.x) / det : vec2(0.0);
   float self = clamp(0.62 - 0.6 * clamp(0.014 * dot(fall, sunStep), -0.6, 0.6), 0.0, 1.0);
   float tall = 1.0 - smoothstep(0.02, 0.2, r);
-  vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (1.08 + 0.12 * thick);
+  vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (0.86 + 0.1 * thick);
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
   // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
   float side = smoothstep(-0.2, 0.9, dot(p / max(r, 1e-3), vec2(-0.5, -0.86)));
-  float threads = smoothstep(0.1, 0.5, fibre(p * 0.8 + 0.07, turn * 0.5));
-  float veil = 0.035 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.1) + 0.3 * side * threads * smoothstep(0.1, 0.4, r) * (1.0 - smoothstep(0.45, 1.0, r));
-  float bands = clamp(thick * 1.6, 0.0, 0.92);
+  float threads = smoothstep(0.05, 0.75, fibre(p * 0.8 + 0.07, turn * 0.5));
+  float veil = 0.012 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.1) + 0.1 * side * side * threads * smoothstep(0.25, 0.5, r) * (1.0 - smoothstep(0.55, 1.0, r));
+  float bands = 0.93 * smoothstep(0.03, 0.62, thick);
   float alpha = bands + veil * (1.0 - bands);
-  colour = mix(dot(colour, vec3(0.3, 0.55, 0.15)) * vec3(0.3, 0.5, 0.9), colour, bands / max(alpha, 1e-3));
+  colour = mix(dot(colour, vec3(0.3, 0.55, 0.15)) * vec3(0.6, 0.74, 0.98), colour, bands / max(alpha, 1e-3));
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
