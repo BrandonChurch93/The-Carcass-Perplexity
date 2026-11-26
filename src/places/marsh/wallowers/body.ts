@@ -208,7 +208,12 @@ void main() {
   albedo = mix(albedo, vec3(0.21, 0.18, 0.155) * (0.7 + 0.5 * grain), 0.28 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
   float smear = uMudded * smoothstep(0.3, 0.55, 0.55 * patchy + 0.45 * vnoise3(q * 5.3 + uSeed * 2.0) + 0.5 * damp + 0.25 * (1.0 - grain));
-  albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.135), vec3(0.06, 0.047, 0.04), damp) * mix(0.65, 1.2, smoothstep(0.25, 0.8, grain)), 0.7 * smear);
+  albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.135), vec3(0.075, 0.032, 0.026), damp) * mix(0.65, 1.2, smoothstep(0.25, 0.8, grain)), 0.7 * smear);
+  // Where it dried thickest it has caked into pale plates, each with a dark edge where it has lifted from the hide.
+  float plate = vnoise3(q * 2.6 + uSeed * 5.0) + 0.25 * (vnoise3(q * 9.0 + uSeed) - 0.5);
+  float cake = uMudded * (1.0 - damp) * smoothstep(0.5, 0.56, plate);
+  albedo = mix(albedo, vec3(0.27, 0.225, 0.195) * (0.6 + 0.6 * grain), 0.6 * cake);
+  albedo *= 1.0 - 0.4 * uMudded * (1.0 - damp) * smoothstep(0.44, 0.5, plate) * (1.0 - smoothstep(0.5, 0.57, plate));
   // Mud lies in every crease of it.
   albedo *= mix(1.0, mix(0.72, 1.06, smoothstep(0.2, 0.7, grain)), uMudded);
   // And where the mud has dried the longest, on its back, the salt has come out of it white.
@@ -222,7 +227,7 @@ void main() {
   albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3), 0.6 * thread * damp * (1.0 - wet));
   // Thick mud on whatever stands in it.
   float deep = 1.0 - smoothstep(0.02, 0.2 + 0.25 * lane, vWorld.y);
-  albedo = mix(albedo, mix(vec3(0.05, 0.014, 0.01), vec3(0.05, 0.043, 0.038), uMudded) * (0.7 + 0.6 * grain), 0.8 * deep);
+  albedo = mix(albedo, mix(vec3(0.05, 0.014, 0.01), vec3(0.05, 0.022, 0.018), uMudded) * (0.7 + 0.6 * grain), 0.8 * deep);
 
   // Wet hide does not shine all over under a white sky: it glistens on the tops of its folds.
   float glint = smoothstep(0.55, 0.95, grain);
