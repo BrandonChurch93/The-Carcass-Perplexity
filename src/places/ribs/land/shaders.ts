@@ -287,7 +287,7 @@ void main() {
   float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
   // The stone is a mid grey: the sheet's own rust is taken out of it, and its lichen is laid again below, in patches.
   float picLum = dot(pic, vec3(0.333));
-  pic = mix(vec3(mix(0.26, max(picLum, 0.11), 0.62)) * vec3(0.97, 1.0, 1.03), max(pic, vec3(0.09)), 0.22);
+  pic = mix(vec3(mix(0.26, max(picLum, 0.16), 0.62)) * vec3(1.02, 1.0, 0.96), max(pic, vec3(0.13)), 0.22);
   vec3 albedo = pic * 1.05 * mix(1.0, grain, 0.5) * (0.88 + 0.24 * macro);
   // A top is no face: it takes the broad colour of the stone under it, with white where the colony stands and lichen in crusts.
   vec3 broad = textureLod(tColony, uc, lv + 4.0).rgb;
@@ -298,14 +298,14 @@ void main() {
   topC = mix(topC, vec3(0.6, 0.6, 0.57) * (0.75 + 0.3 * grain), 0.7 * splash);
   albedo = mix(albedo, topC, 0.8 * top);
   // The white runs only under a shelf deep enough to hold a roost: in drips from its lip, a stride or two down the face, none on a bare face.
-  float drip = smoothstep(0.8, 1.3, vLay.y) * smoothstep(0.3, 0.6, vLay.x) * exp(-vLay.x / (2.6 + 4.5 * vnoise(vec2(arc * 0.9, 3.5)))) * smoothstep(0.12, 0.42, vnoise(vec2(arc * 2.6, y * 0.22 + 7.0)) + 0.25 * (hgt - 0.5)) * (1.0 - top);
+  float drip = smoothstep(0.65, 0.9, vLay.y) * smoothstep(0.05, 0.25, vLay.x) * exp(-vLay.x / (0.8 + 3.2 * vnoise(vec2(arc * 0.9, 3.5)))) * smoothstep(0.38, 0.6, vnoise(vec2(arc * 5.0, y * 0.25 + 7.0)) * 0.6 + vnoise(vec2(arc * 14.0, y * 0.6)) * 0.4 + 0.25 * (hgt - 0.5)) * smoothstep(0.44, 0.6, vnoise(vec2(arc * 0.3, y * 0.11) + 17.0)) * (1.0 - top);
   albedo = mix(albedo, vec3(0.66, 0.655, 0.62) * (0.6 + 0.45 * grain), 0.9 * drip);
   // And white runs down the open faces from the roosts above them: thin, in fields, broken by the stone's own relief.
   float runs = smoothstep(0.52, 0.66, vnoise(vec2(arc * 2.3, y * 0.09 + 2.0)) * 0.65 + vnoise(vec2(arc * 6.0, y * 0.35)) * 0.35 + 0.2 * (hgt - 0.5)) * smoothstep(0.36, 0.52, vnoise(vec2(arc, y) * 0.07 + 21.0)) * (1.0 - top);
   albedo = mix(albedo, vec3(0.62, 0.62, 0.59) * (0.6 + 0.45 * grain), 0.75 * runs);
   drip = max(drip, runs);
   // Orange lichen in patches some strides across, on the faces that take the weather, never under the white.
-  float patchL = smoothstep(0.6, 0.68, vnoise(vec2(arc, y) * 0.16 + 13.0) * 0.7 + vnoise(vec2(arc, y) * 0.9 + 4.0) * 0.3 + 0.12 * (grain - 1.0));
+  float patchL = smoothstep(0.64, 0.72, vnoise(vec2(arc, y) * 0.16 + 13.0) * 0.7 + vnoise(vec2(arc, y) * 0.9 + 4.0) * 0.3 + 0.12 * (grain - 1.0));
   albedo = mix(albedo, vec3(0.52, 0.2, 0.022) * (0.55 + 0.6 * grain), 0.85 * patchL * (1.0 - drip) * (1.0 - 0.6 * top));
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (hgt - 0.5);
   float band = smoothstep(tide + 5.0, tide + 0.5, y);
