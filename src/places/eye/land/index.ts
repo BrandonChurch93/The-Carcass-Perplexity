@@ -95,6 +95,8 @@ varying vec3 vLocal;
 varying vec3 vTint;
 void main() {
   vec4 p = instanceMatrix * vec4(position, 1.0);
+  // From the rim a chip the size of a hand is not a stone: the ground's own picture holds those.
+  if (cameraPosition.y > 20.0 && length(instanceMatrix[0].xyz) < 0.75) p = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
   vec4 w = modelMatrix * p;
   vWorld = w.xyz;
   vLocal = position * vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz)) + aTint.z * 37.0;
@@ -125,16 +127,30 @@ void main() {
   // A block is a piece of the scree: the plate of the slope on its three faces, each block from another part of it.
   vec2 at = vTint.yz * 40.0;
   // The plate is a slope of many stones: a block shows a small piece of it large, so that it is one stone with its own cracks, not a heap.
-  float grain = mix(0.3, 1.0, smoothstep(12.0, 4.0, cameraPosition.y));
+  float grain = mix(0.5, 1.0, smoothstep(12.0, 4.0, cameraPosition.y));
   vec2 ux = vWorld.zy * grain + at;
   vec2 uy = vWorld.xz * grain + at.yx;
   vec2 uz = vWorld.xy * grain - at;
-  vec4 col = screeAt(ux) * w.x + screeAt(uy) * w.y + screeAt(uz) * w.z;
-  float e = 0.05;
-  vec2 d = vec2(screeAt(ux + vec2(e, 0.0)).a - screeAt(ux - vec2(e, 0.0)).a, screeAt(ux + vec2(0.0, e)).a - screeAt(ux - vec2(0.0, e)).a) * w.x
-    + vec2(screeAt(uy + vec2(e, 0.0)).a - screeAt(uy - vec2(e, 0.0)).a, screeAt(uy + vec2(0.0, e)).a - screeAt(uy - vec2(0.0, e)).a) * w.y
-    + vec2(screeAt(uz + vec2(e, 0.0)).a - screeAt(uz - vec2(e, 0.0)).a, screeAt(uz + vec2(0.0, e)).a - screeAt(uz - vec2(0.0, e)).a) * w.z;
-  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x);
+  // The lie of the relief, from one step each way on each face: the height at the point itself is already known.
+  float e = 0.1;
+  vec2 d = vec2(0.0);
+  vec4 col = vec4(0.0);
+  if (w.x > 0.03) {
+    vec4 k = screeAt(ux);
+    col += k * w.x;
+    d += vec2(texture2D(tScreeH, (ux + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (ux + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.x;
+  }
+  if (w.y > 0.03) {
+    vec4 k = screeAt(uy);
+    col += k * w.y;
+    d += vec2(texture2D(tScreeH, (uy + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uy + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.y;
+  }
+  if (w.z > 0.03) {
+    vec4 k = screeAt(uz);
+    col += k * w.z;
+    d += vec2(texture2D(tScreeH, (uz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.z;
+  }
+  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x) * mix(vec3(1.2, 1.15, 1.04), vec3(1.0), smoothstep(12.0, 4.0, cameraPosition.y));
   vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);

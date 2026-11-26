@@ -57,7 +57,8 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   vec2 ub = vec2(around, p.y + 26.0 * vnoise(vec2(around / 130.0, 1.0))) / 41.0 + vec2(0.37, 0.43);
   // The spur in the south is no wall of the socket: its rock is grey, and lies as the rock itself lies.
   float bearing = degrees(atan(p.x, -p.z));
-  float wall = 1.0 - smoothstep(150.0, 165.0, abs(bearing)) * step(length(p.xz), 1100.0);
+  // Where the grey of the spur gives way to the talus of the socket is no line: it wanders, far from any camera.
+  float wall = 1.0 - smoothstep(128.0, 143.0, abs(bearing) + 14.0 * (vnoise(p.xz / 45.0) - 0.5)) * step(length(p.xz), 1100.0);
   if (wall < 0.5) {
     // By the axis the rock faces most, at one scale each way, so that nothing is pulled long over a slope.
     vec3 an = abs(n);
@@ -155,7 +156,8 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     w3 /= w3.x + w3.y + w3.z;
     vec4 a = screeAt(p.xz) * w3.y;
     // Under the feet of a low eye the same broken stone is small: cobbles and pebbles, the plate laid six times finer.
-    float fine = (1.0 - smoothstep(16.0, 40.0, length(cameraPosition - p))) * smoothstep(12.0, 4.0, cameraPosition.y);
+    float lowEye = smoothstep(12.0, 4.0, cameraPosition.y);
+    float fine = mix(1.0, 1.0 - smoothstep(16.0, 40.0, length(cameraPosition - p)), lowEye) * w3.y * w3.y;
     if (w3.x > 0.02) a += screeAt(p.zy + 11.0) * w3.x;
     if (w3.z > 0.02) a += screeAt(p.xy + 23.0) * w3.z;
     vec2 qr = vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) * 0.31 + 7.3;
@@ -172,22 +174,30 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     vec3 pebbleBent = vec3(0.0);
     if (fine > 0.0) {
       // The picture of the shore itself, eight metres of it at its own size: stones of every size in wet grit, with weed dried on them.
-      vec2 su = p.xz / vec2(8.0, 4.5);
+      // From the rim the same picture is laid two and a half times larger and turned: cobbles are boulders there, in beds of gravel.
+      vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6, p.xz, lowEye) / vec2(8.0, 4.5);
       float seen = fine;
       vec3 sc = texture2D(tShoreP, su).rgb;
       float sh = texture2D(tShorePH, su).r;
       float es = 0.012;
       vec2 lean = vec2(texture2D(tShorePH, su + vec2(es / 8.0, 0.0)).r - texture2D(tShorePH, su - vec2(es / 8.0, 0.0)).r, texture2D(tShorePH, su + vec2(0.0, es / 4.5)).r - texture2D(tShorePH, su - vec2(0.0, es / 4.5)).r);
-      gravel = mix(gravel, sc * vec3(1.5, 1.56, 1.66), seen);
+      // Its grit is finer gravel of the same stone, read from the picture again at its own size.
+      vec3 grit = texture2D(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37).rgb;
+      sc = mix(sc * (0.55 + 0.45 * grit / vec3(0.222, 0.161, 0.119)), sc, lowEye);
+      sc = mix(sc, vec3(dot(sc, vec3(0.333))), 0.45 * (1.0 - lowEye));
+      // Dry gravel in the last light is pale: its grit is hardly darker than its stones.
+      sc = mix(sc * 0.6 + 0.16, sc, lowEye);
+      gravel = mix(gravel, sc * mix(vec3(2.1, 2.1, 2.14), vec3(1.5, 1.56, 1.66), lowEye), seen);
       pebbleBent = vec3(-lean.x, 0.0, -lean.y) * 3.0 * seen;
       a.a = mix(a.a, sh, seen);
       shingle = seen;
     }
     stone = gravel;
     // The relief of the plate turns the faces of each stone.
-    float e = 0.04;
-    float hx = screeAt(p.xz + vec2(e, 0.0)).a - screeAt(p.xz - vec2(e, 0.0)).a;
-    float hz = screeAt(p.xz + vec2(0.0, e)).a - screeAt(p.xz - vec2(0.0, e)).a;
+    float e = 0.08;
+    float h0 = texture2D(tScreeH, p.xz / vec2(24.0, 13.51)).r;
+    float hx = texture2D(tScreeH, (p.xz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - h0;
+    float hz = texture2D(tScreeH, (p.xz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - h0;
     bentFlat = pebbleBent + vec3(-hx, 0.0, -hz) * 5.0 * (1.0 - shingle) * (1.0 - 0.85 * beds) * (1.0 - smoothstep(120.0, 260.0, length(cameraPosition - p)));
     bentFace = bentFlat;
     gh = mix(a.a, b.a, 0.35);

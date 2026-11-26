@@ -69,8 +69,8 @@ float mistAt(vec3 p, vec4 land) {
     float d = length(p.xz - uPlateAt.xz);
     band = smoothstep(uPlateAt.w - 330.0, uPlateAt.w - 40.0, d) * step(d, uPlateAt.w);
     // At the foot of the far wall it stands up in a bank that hides the shoreline.
-    float lift = (2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012)) * (1.0 + (uPlateTone.w > 1.5 ? 1.5 : mix(4.0, 5.0, smoothstep(5.0, 40.0, cameraPosition.y))) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d) * (0.5 + vnoise(p.xz / 330.0 + 9.0 - uTime * 0.008)));
-    float banks = smoothstep(0.15, 0.75, 0.6 * vnoise(p.xz / 260.0 + vec2(uTime * 0.03, -uTime * 0.017)) + 0.4 * vnoise(p.xz / 70.0 + uTime * 0.06) + 0.35 * band);
+    float lift = (uPlateTone.w > 1.5 ? 0.6 + 9.0 * pow(vnoise(p.xz / 75.0 + 3.0 + uTime * 0.02), 2.0) : 2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012)) * (1.0 + (uPlateTone.w > 1.5 ? 1.5 : mix(4.0, 5.0, smoothstep(5.0, 40.0, cameraPosition.y))) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d) * (0.5 + vnoise(p.xz / 330.0 + 9.0 - uTime * 0.008)));
+    float banks = smoothstep(0.3, 0.72, 0.6 * vnoise(p.xz / 210.0 + vec2(uTime * 0.045, -uTime * 0.025)) + 0.4 * vnoise(p.xz / 60.0 + uTime * 0.08) + 0.3 * band);
     return (0.55 + mix(0.7, 0.45, smoothstep(5.0, 40.0, cameraPosition.y)) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d)) * band * banks * exp(-max(p.y, 0.0) / lift) * smoothstep(TOP, TOP * 0.45, p.y);
   }
   float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
@@ -143,6 +143,18 @@ void main() {
       through *= tr;
     }
   }
+  // Under the long lens the foot of the far wall stands in drifts of mist: taller here, lower there, thinning upward, and the last water before it goes pale with it.
+  if (uPlateTone.w > 1.5 && mistOn > 0.0) {
+    float dp = plateDistance(ro, rd);
+    vec3 hit = ro + rd * far;
+    float round2 = atan(hit.x - uPlateAt.x, hit.z - uPlateAt.z);
+    float tall = 4.0 + 16.0 * vnoise(vec2(round2 * 23.0 + uTime * 0.012, 2.0)) + 5.0 * vnoise(vec2(round2 * 90.0 - uTime * 0.02, 7.0));
+    float drift = 0.45 + 0.55 * vnoise(vec2(round2 * 47.0 - uTime * 0.016, hit.y / 9.0 + 4.0));
+    float a = 0.8 * smoothstep(dp - 560.0, dp - 30.0, far) * exp(-max(hit.y, 0.0) / tall) * drift;
+    vec3 lit = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.35 * low) / 3.14159 * 2.4;
+    light = light * (1.0 - a) + a * lit;
+    through *= 1.0 - a;
+  }
   gl_FragColor = vec4(light, through);
 }`;
 
@@ -174,7 +186,7 @@ export function create(ctx: Context): Piece {
       // The air clears as the camera leaves: the last frames are the flat picture the rise begins with.
       show.uThin.value = 1 - smooth(end - 3, end - 1.3, t);
       // The mist is a veil at the foot of the far wall: thinnest for the long lens of the shore shot, which looks straight through it.
-      show.uVeil.value = during('eye-04') ? 0.22 : during('eye-01') ? 0.5 : 0.6;
+      show.uVeil.value = during('eye-04') ? 0.22 : during('eye-01') ? 0.5 : during('eye-05') ? 0.8 : 0.6;
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
       (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
       // The far world of the shot the camera stands in.

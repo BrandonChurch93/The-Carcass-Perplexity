@@ -11,7 +11,7 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 export const PARTS: readonly string[] = ['skeleton'];
 
 /** Where it lies: on the lip, ahead and to the right of the camera of the edge shot. Its length in metres, how far its bones stand off its sheet, and how far the sheet is tipped up off the ground toward that camera, in degrees. */
-export const BONES = { ahead: 6.4, right: 21, back: 0.9, length: 3.6, stand: 0.3, tip: 38, along: 112 };
+export const BONES = { ahead: 6.4, right: 21, back: 1.5, length: 3.3, stand: 0.15, tip: 24, along: 112 };
 
 const VERTEX = /* glsl */ `
 uniform sampler2D tBoneH;
@@ -53,9 +53,15 @@ void main() {
   // Old bone: ivory where the air has had it, stained amber where it lies in the weed.
   vec3 picture = texture2D(tBone, vUv).rgb;
   float grey = dot(picture, vec3(0.3, 0.5, 0.2));
-  vec3 bone = mix(picture, vec3(grey) * vec3(0.84, 0.96, 1.0), 0.92) * 1.8;
-  float low = smoothstep(0.34, 0.04, vWorld.y + 0.12 * (vnoise(vWorld.xz * 5.0) - 0.5));
-  vec3 albedo = mix(bone, bone * vec3(0.62, 0.36, 0.14), 0.8 * low);
+  vec3 bone = mix(picture, vec3(grey) * vec3(0.92, 0.93, 0.84), 0.85) * 2.3;
+  // Weathered: each bone has its stains, dark in its hollows and its ends.
+  bone *= (0.62 + 0.5 * vnoise(vUv * vec2(60.0, 20.0))) * (0.55 + 0.45 * smoothstep(0.08, 0.45, h));
+  float low = smoothstep(0.14, 0.0, vWorld.y + 0.1 * (vnoise(vWorld.xz * 5.0) - 0.5));
+  vec3 albedo = mix(bone, bone * vec3(0.62, 0.36, 0.14), 0.6 * low);
+  // The weed of the shelf has grown over it: strands lie across the low bones and hang from the ribs.
+  float lie = vnoise(vec2(dot(vWorld.xz, vec2(0.82, 0.57)) * 26.0, dot(vWorld.xz, vec2(-0.57, 0.82)) * 2.2 + 3.0 * vnoise(vWorld.xz * 1.7)));
+  float grown = smoothstep(0.6, 0.72, lie) * smoothstep(0.3, 0.05, vWorld.y + 0.2 * (vnoise(vWorld.xz * 2.3 + 9.0) - 0.5));
+  albedo = mix(albedo, vec3(0.3, 0.13, 0.035) * (0.6 + 0.8 * vnoise(vWorld.xz * 40.0)), 0.85 * grown);
   vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.92), 0.75, 0.35 + 0.65 * smoothstep(0.1, 0.55, h));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -97,11 +103,11 @@ export function create(ctx: Context): Piece {
   const up = toCamera.clone().multiplyScalar(-Math.cos(BONES.tip * DEG)).add(new THREE.Vector3(0, Math.sin(BONES.tip * DEG), 0));
   const out = new THREE.Vector3().crossVectors(along, up);
   mesh.matrixAutoUpdate = false;
-  mesh.matrix.makeBasis(along, up, out).setPosition(x + toCamera.x * 0.5 - along.x * 0.9, -0.03, z + toCamera.z * 0.5 - along.z * 0.9);
+  mesh.matrix.makeBasis(along, up, out).setPosition(x + toCamera.x * 0.5 - along.x * 0.9, -0.06, z + toCamera.z * 0.5 - along.z * 0.9);
   mesh.matrixWorldNeedsUpdate = true;
   ctx.scene.add(ctx.parts.built('skeleton', mesh));
   const shade = ctx.rig.contactDiscs(1);
-  ctx.rig.setDisc(shade, 0, x, z, 1.6, 0.35, 1.0, ctx.rig.sun.shadowYaw);
+  ctx.rig.setDisc(shade, 0, x + toCamera.x * 1.2 - along.x * 0.9, z + toCamera.z * 1.2 - along.z * 0.9, 1.9, 0.5, 1.0, ctx.rig.sun.shadowYaw);
   return {
     dispose: () => {
       geometry.dispose();
