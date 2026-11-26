@@ -1,7 +1,5 @@
-2026-11-26 16:05 UTC
-work at e710ebe on agent/spine-cloud
-v1: 7015 review hd before/after, right flank at full size, sheet 7015-7135, 7234 pair. Wrong: grey and low contrast, pale land floes in hollows on the storm side, horizon still a line on the left
-look-1.jpg = out/work/v1/1-7015-before-after-review-hd.jpg
-look-2.jpg = out/work/v1/2-7015-right-flank-full-size-before-after.jpg
-look-3.jpg = out/work/v1/3-sheet-first.jpg
-look-4.jpg = out/work/v1/4-7234-before-after.jpg
+2026-11-26 16:24 UTC
+work at 49fab6d on agent/spine-cloud
+toward v2, 7015 hd draft: storm side heaped and heads break the horizon there; still grey, stair steps on far heads, cost not yet inside budget
+look-1.jpg = out/work/look.jpg
+look-2.jpg = out/work/lookcrop.jpg
