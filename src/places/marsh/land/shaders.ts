@@ -75,7 +75,13 @@ const vec2 KNOB_B = vec2(0.28, -0.96);
 const vec2 BANK_AT = vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)});
 vec2 knobUv(vec2 xz, vec2 t, float size) { return vec2(t.x * xz.x - t.y * xz.y, t.y * xz.x + t.x * xz.y) / size; }
 vec2 panTilt(vec2 r) { return (fract(r * 7.13 + r.yx * 3.71) - 0.5) * 0.2; }
-float panLift(vec2 r, vec2 c) { return clamp(dot(panTilt(r), c), -0.015, 0.045) + 0.012; }
+// (A plate tipped far enough has its low edge under the mud: SUNK is the mud's level against the plates'.)
+const float SUNK = -0.02;
+float panLift(vec2 r, vec2 c) { return clamp(dot(panTilt(r), c) * 1.5, -0.05, 0.03) + 0.008; }
+// How far a broken plate's edge wanders from its pan's line, in metres: a wide wander and a chipping the mesh can still follow.
+float panRag(sampler2D grain, vec2 xz) {
+  return (textureLod(grain, xz / 2.5 + 0.23, 3.0).r - 0.5) * 0.3 + (textureLod(grain, xz / 1.4 + 0.61, 3.0).r - 0.5) * 0.13;
+}
 `;
 
 // The heights the fine patches are raised by, read at a vertex. y0 is the ground's own height there.
@@ -99,7 +105,7 @@ vec3 reliefAt(vec2 xz, float y0) {
   float k = smoothstep(0.0, 0.5, thin);
   // (The mesh takes the edge without the sheet's grain: a grain finer than the mesh would comb it.)
   float ep = e + (sh - 0.5) * 0.06 * (1.0 - k) - panGap(thin, r, w - c);
-  if (k > 0.0) ep += (textureLod(tGrain, xz / 2.5 + 0.23, 3.0).r - 0.5) * 0.16 * k;
+  if (k > 0.0) ep += panRag(tGrain, xz) * k;
   // A pan's rim stands two fingers over it.
   float rim = 1.0 - smoothstep(0.0, (0.03 + 0.04 * r.x) * 1.6, ep);
   float up = ((sh - 0.45) * 0.02 + 0.022 * rim) * smoothstep(-0.05, 0.25, y0);
@@ -114,7 +120,9 @@ vec3 reliefAt(vec2 xz, float y0) {
     float reach = uCell * 1.8;
     shift = dir * ep * step(abs(ep), reach) * loose;
     float top = mix(smoothstep(-0.05, 0.02, ep), step(0.0, ep), loose);
-    up = mix(up, mix(-0.024, (sh - 0.45) * 0.003 + 0.006 * rim + panLift(r, c + shift), top), k);
+    // (Its edges have curled up as it dried, each plate by its own measure; its low edge goes down under the mud.)
+    float curl = 0.014 * r.y * exp(-max(ep, 0.0) / 0.08);
+    up = mix(up, mix(SUNK, max(SUNK, (sh - 0.45) * 0.008 + 0.004 * rim + curl + panLift(r, c + shift)), top), k);
   }
   float bank = smoothstep(8.5, 5.0, length(xz - BANK_AT));
   if (bank > 0.0) {
@@ -238,7 +246,10 @@ void main() {
   float ea = 0.01;
   float lift = 0.0;
   vec2 tilt = vec2(0.0);
-  if (big < 1.0) {
+  vec2 edgeDir = vec2(0.0);
+  // (The seep pool's bank is all knobs: no pan is worked out under them.)
+  bool onBank = length(p.xz - BANK_AT) < 5.0;
+  if (big < 1.0 && !onBank) {
     float e;
     vec2 pc;
     vec2 pdir;
@@ -274,9 +285,13 @@ void main() {
     // (The rim is knobbed: its edge follows the lumps of the crust.)
     ep = e + (sh - 0.5) * 0.06 * (1.0 - 0.75 * k) - panGap(thin, pr, pw - pc);
     // (A broken plate's edge is ragged.)
-    if (k > 0.0) ep += (textureLod(tGrain, p.xz / 2.5 + 0.23, 3.0).r - 0.5) * 0.16 * k;
+    float rv = texture2D(tGrain, p.xz / 0.9 + 0.13).r;
+    float rv2 = textureLod(tGrain, p.xz / 2.3 + 0.5, 2.0).r;
+    // (And chipped: here and there the top has flaked off the edge, and what shows is what the plate lies on.)
+    if (k > 0.0) ep += (panRag(tGrain, p.xz) - 0.05 * smoothstep(0.5, 0.68, rv)) * k;
     ea = max(abs(dot(pdir, px)) + abs(dot(pdir, py)), 0.002);
-    float rimW = (0.03 + 0.04 * pr.x) * (1.0 - 0.45 * k);
+    // (No rim is one width all the way round: it swells, thins and gives out.)
+    float rimW = (0.03 + 0.04 * pr.x) * (1.0 - 0.45 * k) * mix(0.45 + 1.1 * rv2, 0.2 + 1.9 * smoothstep(0.3, 0.7, rv2), k);
     slab = smoothstep(-ea, ea, ep);
     rim = smoothstep(rimW + ea, rimW * 0.5 - ea, ep) * slab;
     prof = (1.0 - smoothstep(0.0, rimW * 1.6, ep)) * slab;
@@ -284,7 +299,15 @@ void main() {
     bend -= pdir * prof * (1.0 - prof) * 5.0;
     tone = 0.88 + 0.24 * pr.y;
     tilt = panTilt(pr);
+    edgeDir = pdir;
     lift = panLift(pr, pc);
+    rim *= mix(0.55 + 0.45 * smoothstep(0.35, 0.6, rv), smoothstep(0.42, 0.6, rv * 0.5 + rv2 * 0.5), k);
+    // (The low edge of a tipped plate is under the mud.)
+    float drowned = smoothstep(SUNK + 0.008, SUNK - 0.002, lift + (sh - 0.5) * 0.014 + 0.014 * pr.y * exp(-max(ep, 0.0) / 0.08)) * k;
+    slab *= 1.0 - drowned;
+    rim *= 1.0 - drowned;
+    prof *= 1.0 - drowned;
+    footM *= 1.0 - drowned;
   }
   if (big > 0.0) {
     float e;
@@ -433,7 +456,7 @@ void main() {
     vec3 sect = mix(vec3(0.15, 0.07, 0.055), vec3(0.47, 0.44, 0.41), smoothstep(lift - 0.014, lift - 0.006, rise));
     // (Its beds lie level: the sheet laid from above would run down it in stripes.)
     sect *= 0.8 + 0.4 * texture2D(tGrain, vec2(dot(p.xz, vec2(0.7, 0.71)) / 0.6, p.y / 0.07)).r;
-    sect *= 0.5 + 0.5 * smoothstep(-0.022, lift, rise);
+    sect *= 0.5 + 0.5 * smoothstep(SUNK, lift, rise);
     colour = mix(colour, sect, cut);
     bend *= 1.0 - cut;
     hgt = mix(hgt, 1.0, cut);
@@ -586,6 +609,8 @@ void main() {
   }
   rough = mix(rough, 1.0, churn);
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
+  // (A broken edge is lit as one face along its plate's side, not facet by facet of the mesh that follows it.)
+  if (cut > 0.0) n = normalize(mix(n, vec3(edgeDir.x, 0.3, edgeDir.y), 0.8 * cut));
   // (Rock keeps the lie of its own faces: a riser stays upright under its grain.)
   if (rock > 0.0) n = normalize(mix(n, normalize(normalize(vNormal) + rockBend), rock));
   vec3 lit = rigShade(p, n, v, colour, rough, occ);

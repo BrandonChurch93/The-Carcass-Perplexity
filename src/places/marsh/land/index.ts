@@ -14,7 +14,7 @@ export const PARTS = ['land', 'crust'] as const;
 const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [number, number], cell: 0.03 };
 /** The foot of the rock rise the first lens looks down on, built finely for the same reason. */
 /** The bank the third lens lies on, a hand above the salt. */
-const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.0125 };
+const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.018 };
 const ROCK = { at: [9.25, -8.5] as [number, number], half: [10.75, 8.0] as [number, number], cell: 0.05 };
 
 /** How many reads across a slanting pixel the pictures of heights and slopes get: 4 as the colours do, or 1, which is cheaper and softer far off. */
