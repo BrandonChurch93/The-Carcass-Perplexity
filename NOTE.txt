@@ -1,5 +1,7 @@
-2026-11-26 07:25 UTC
-work at ca8d3ae on agent/breath-life-3
-v2 ca8d3ae: breath-2 plumes red, breath-4 rod out and fronds from the left
-look-1.jpg = out/work/c2.jpg
-look-2.jpg = out/work/c4.jpg
+2026-11-26 07:57 UTC
+work at 2ba1191 on agent/breath-life-3
+hb 2ba1191: breath-0 green channel, breath-1 mirror, breath-4 fronds from top left, dropout ended
+look-1.jpg = out/work/c0.jpg
+look-2.jpg = out/work/c1.jpg
+look-3.jpg = out/work/c4.jpg
+look-4.jpg = out/work/z2.jpg
