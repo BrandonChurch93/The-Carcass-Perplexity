@@ -152,6 +152,8 @@ uniform float uCrust;
 uniform float uFloorY;
 uniform float uSeed;
 uniform float uNear;
+uniform float uTile;
+uniform float uTileGain;
 #ifdef CRUSTED
 uniform sampler2D tRime;
 uniform sampler2D tRimeNh;
@@ -161,6 +163,35 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 ${PIC_GLSL}
 const vec3 HIDE_MEAN = vec3(0.165, 0.102, 0.072);
+#ifdef FINE
+vec2 cellAt(vec2 p) {
+  p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+  return fract(sin(p) * 43758.5453);
+}
+// How near the edge of its cell a point of the hide is: the net of fine creases that cuts a thick dry hide into scales.
+vec3 creaseNet(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = p - i;
+  float d1 = 8.0;
+  float d2 = 8.0;
+  float who = 0.0;
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 g = vec2(float(x), float(y));
+      vec2 h = cellAt(i + g);
+      vec2 o = g + h - f;
+      float d = dot(o, o);
+      if (d < d1) {
+        d2 = d1;
+        d1 = d;
+        who = h.x;
+      } else if (d < d2) d2 = d;
+    }
+  }
+  // The way to the edge of the cell, the way to its middle, and a number of its own.
+  return vec3(sqrt(d2) - sqrt(d1), sqrt(d1), fract(who * 17.3));
+}
+#endif
 const vec3 LUMA = vec3(0.3, 0.5, 0.2);
 
 void main() {
@@ -176,7 +207,8 @@ void main() {
   vec2 uv = picAt(vRest, vInfo.z);
   float cover = smoothstep(0.45, 0.85, textureLod(tPicA, uv, 1.5).r);
   float top = smoothstep(0.25, 0.6, nr.y) * smoothstep(1.2, 1.6, vRest.y) * (1.0 - vInfo.z);
-  float side = max(smoothstep(0.06, 0.3, abs(nr.z)), top) * cover;
+  // One that wears a photographed tile (matted hair, drying mud) wears it everywhere: the flank picture gives way to it.
+  float side = max(smoothstep(0.06, 0.3, abs(nr.z)), top) * cover * (1.0 - uTile);
   // On a young one the plate is a third the size: its pores would read as down, so it is taken softer and the folds are left.
   vec3 pic = texture2D(tPic, uv, 1.7 * (1.0 - smoothstep(0.4, 0.8, uK))).rgb;
   vec2 e = vec2(3.0 / 1774.0, 3.0 / 887.0);
@@ -196,13 +228,34 @@ void main() {
   vec3 tone = hide / HIDE_MEAN;
   tone = mix(vec3(1.0), mix(vec3(dot(tone, LUMA)), tone, 0.4), 0.6);
   float crease = 0.75 + 0.25 * smoothstep(0.15, 0.62, height);
-  vec3 tiled = wash * tone * crease;
+  vec3 tiled = mix(wash * tone * crease, hide * uTileGain * 1.25, uTile);
   vec3 albedo = mix(tiled, pic, side) * 0.8;
+  // The grain of the hide itself, which the flank picture is too coarse to carry by the lens: every crease of the tile is dark and every ridge between two is pale.
+  float ridge = smoothstep(0.22, 0.7, height);
+  float creased = uNear * (1.0 - horn) * mix(0.9, 0.5, uTile);
+  albedo *= mix(1.0, mix(0.62, 1.2, ridge), creased);
+  #ifdef FINE
+  // The net of creases, on the face of the hide that looks most squarely out: long scales down the flank, and a finer net inside each.
+  vec2 plane = w.z > max(w.x, w.y) ? vec2(q.x, q.y * 0.42) : (w.y > w.x ? vec2(q.x * 0.5, q.z) : vec2(q.z, q.y * 0.42));
+  float square = smoothstep(0.42, 0.7, max(w.x, max(w.y, w.z)));
+  plane += 0.035 * vec2(vnoise3(q * 9.0), vnoise3(q * 9.0 + 5.0));
+  float wideNet = creaseNet(plane * 17.0).x;
+  vec3 fineCell = creaseNet(plane * 52.0 + 3.7);
+  float fineNet = fineCell.x;
+  float cut = max(1.0 - smoothstep(0.03, 0.2, wideNet), 0.8 * (1.0 - smoothstep(0.05, 0.16, fineNet)));
+  albedo *= 1.0 - 0.72 * cut * square * (1.0 - horn);
+  // The ridge beside a crease stands to the light.
+  albedo *= 1.0 + 0.22 * square * (1.0 - horn) * smoothstep(0.2, 0.34, wideNet) * (1.0 - smoothstep(0.34, 0.6, wideNet));
+  // Each scale has its own tone: some dry and pale, some dark with old mud.
+  albedo *= 1.0 + 0.16 * square * (1.0 - horn) * (cellAt(floor(plane * 17.0)).x - 0.5);
+  #endif
+  // And the picture's own creases are drawn harder than it has them.
+  albedo *= mix(1.0, clamp(1.0 + 2.2 * (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0), 0.45, 1.5), 0.7 * side * uNear);
   // A warm tan with pink in it; the deep red is the mud's, lower down.
   albedo = mix(vec3(dot(albedo, LUMA)) * vec3(1.14, 0.95, 0.82), albedo, 0.5);
 
   // The slope of the skin: from the light and dark of the picture on the flanks (a crease is dark), from the tile elsewhere, and the tile's grain over all near the lens.
-  float tile = mix(1.2, 0.45 * uNear, side);
+  float tile = mix(1.2 + 0.6 * uTile, 1.1 * uNear, side);
   vec2 sx = (hx.rg - 0.5) * tile;
   vec2 sy = (hy.rg - 0.5) * tile;
   vec2 sz = (hz.rg - 0.5) * tile;
@@ -248,11 +301,11 @@ void main() {
   dust *= 1.0 - damp;
   albedo = mix(albedo, vec3(0.26, 0.225, 0.195) * (0.7 + 0.5 * grain), 0.5 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
-  float smear = uMudded * smoothstep(0.3, 0.55, 0.55 * patchy + 0.45 * vnoise3(q * 5.3 + uSeed * 2.0) + 0.5 * damp + 0.25 * (1.0 - grain));
+  float smear = uMudded * (1.0 - 0.6 * uTile) * smoothstep(0.3, 0.55, 0.55 * patchy + 0.45 * vnoise3(q * 5.3 + uSeed * 2.0) + 0.5 * damp + 0.25 * (1.0 - grain));
   albedo = mix(albedo, mix(vec3(0.235, 0.165, 0.14), vec3(0.1, 0.045, 0.036), damp) * mix(0.5, 1.3, smoothstep(0.25, 0.8, grain)), 0.72 * smear);
   // Where it dried thickest it has caked into pale plates, each with a dark edge where it has lifted from the hide.
   float plate = vnoise3(q * 2.6 + uSeed * 5.0) + 0.25 * (vnoise3(q * 9.0 + uSeed) - 0.5);
-  float cake = uMudded * (1.0 - damp) * smoothstep(0.4, 0.46, plate);
+  float cake = uMudded * (1.0 - 0.8 * uTile) * (1.0 - damp) * smoothstep(0.4, 0.46, plate);
   albedo = mix(albedo, vec3(0.35, 0.275, 0.24) * (0.55 + 0.7 * grain), 0.85 * cake);
   // The edge of a plate shows only where it has lifted: here and there, never all the way round.
   albedo *= 1.0 - 0.65 * uMudded * (1.0 - damp) * smoothstep(0.36, 0.4, plate) * (1.0 - smoothstep(0.4, 0.44, plate)) * smoothstep(0.22, 0.55, vnoise3(q * 1.9 + uSeed * 11.0));
@@ -262,6 +315,22 @@ void main() {
   // On the ones that feed, mud is daubed and clotted on the lower third, where they have lain in it.
   float daub = (1.0 - uMudded) * damp * (1.0 - wet) * (1.0 - horn) * smoothstep(0.42, 0.52, plate);
   albedo = mix(albedo, vec3(0.095, 0.052, 0.042) * (0.55 + 0.7 * grain), 0.7 * daub);
+  // Mud thrown up the flank as it roots: flecks and clots, thick by the wet line and thinning up to the back, and dried paler than the wet below.
+  float rise = clamp((vWorld.y - uWet) / (1.1 * kk), 0.0, 1.0);
+  float thrown = (1.0 - uMudded) * (1.0 - horn) * (1.0 - rise) * (1.0 - rise);
+  float fleck = smoothstep(0.6, 0.68, vnoise3(q * 21.0 + uSeed * 3.0)) * smoothstep(0.35, 0.6, vnoise3(q * 3.3 + uSeed * 8.0) + 0.45 * (1.0 - rise) - 0.2);
+  float clot = smoothstep(0.56, 0.62, vnoise3(q * 7.5 + uSeed * 6.0) + 0.25 * (vnoise3(q * 19.0 + uSeed) - 0.5));
+  albedo = mix(albedo, mix(vec3(0.17, 0.115, 0.09), vec3(0.06, 0.03, 0.024), damp) * (0.6 + 0.6 * grain), thrown * max(0.8 * fleck, 0.7 * clot) * (1.0 - wet));
+  // Salt has dried out of the brine along the spine: white grains and small plates in the folds of the back, never a wash.
+  float grains = (1.0 - uMudded) * (1.0 - horn) * smoothstep(0.45, 0.9, ng.y) * (1.0 - damp) * clamp(uSalt, 0.0, 1.0);
+  float flake = smoothstep(0.63, 0.7, vnoise3(q * 27.0 + uSeed * 2.0)) * smoothstep(0.4, 0.62, vnoise3(q * 2.7 + uSeed * 12.0));
+  albedo = mix(albedo, vec3(0.42, 0.39, 0.37), 0.8 * grains * flake);
+  #ifdef FINE
+  // And single grains of it stand all over the dry hide, thickest on the back: one in every few scales, white on the dark of the crease it sits in.
+  float sown = smoothstep(0.1, 0.9, ng.y) * 0.24 + 0.1;
+  float grainOn = (1.0 - uMudded) * (1.0 - horn) * (1.0 - damp) * step(1.0 - sown, fineCell.z) * (1.0 - smoothstep(0.1, 0.26, fineCell.y));
+  albedo = mix(albedo, vec3(0.56, 0.53, 0.5), 0.92 * grainOn);
+  #endif
   // Mud lies in every crease of it.
   albedo *= mix(1.0, mix(0.5, 1.08, smoothstep(0.2, 0.7, grain)), uMudded);
   // And where the mud has dried the longest, on its back, the salt has come out of it white.
@@ -426,6 +495,9 @@ export interface Look {
   reach?: number;
   /** How far the hide picture lifts the skin, metres. 0 for one seen from afar. */
   relief?: number;
+  /** A photographed tile over the whole of it in place of the flank picture: matted hair, or mud drying on the folds. And how much of it, 0 to 1. */
+  tile?: 'hair' | 'mud';
+  cover?: number;
 }
 
 const m = new THREE.Matrix4();
@@ -471,8 +543,10 @@ export class Beast {
         ...ctx.rig.uniforms,
         tPic: { value: ctx.assets.texture('mat/wallower.jpg', { kind: 'colour', repeat: false, anisotropy: 4 }) },
         tPicA: { value: ctx.assets.texture('mat/wallower-a.png', { kind: 'data', repeat: false }) },
-        tHide: { value: ctx.assets.texture('mat/hide.jpg', { kind: 'colour', anisotropy: 4 }) },
-        tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
+        tHide: { value: ctx.assets.texture(look.tile === 'hair' ? 'mat/hairhide.jpg' : look.tile === 'mud' ? 'mat/mudhide.jpg' : 'mat/hide.jpg', { kind: 'colour', anisotropy: 4 }) },
+        tHideNh: { value: ctx.assets.texture(look.tile === 'hair' ? 'mat/hairhide-nh.png' : look.tile === 'mud' ? 'mat/mudhide-nh.png' : 'mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
+        uTile: { value: look.tile ? (look.cover ?? 0.8) : 0 },
+        uTileGain: { value: look.tile === 'mud' ? 0.8 : 1.0 },
         uPic: { value: new THREE.Vector4(2.5 * lx, -2.14 * lx, 0.76 * lx, -1.24 * lx) },
         uBones: { value: this.bones },
         uK: { value: b.k },
@@ -494,7 +568,7 @@ export class Beast {
             }
           : {}),
       },
-      defines: look.crust ? { CRUSTED: 1, RIME_SCALE: '1.3' } : {},
+      defines: look.crust ? { CRUSTED: 1, RIME_SCALE: '1.3' } : look.relief ? { FINE: 1 } : {},
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
     });
