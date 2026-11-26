@@ -104,6 +104,10 @@ float lowDepth(vec2 at) {
     float travels = texture2D(uCloudTile, mat2(0.88, 0.47, -0.47, 0.88) * (w + uWx * vec2(6.0, -9.0)) / 3300.0 + vec2(0.37, 0.81), 3.0).b;
     amount = mix(amount, open * (0.2 + 0.8 * smoothstep(0.36, 0.62, travels)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))}))), smoothstep(0.0, 22.0, uWx));
   }
+  // (Where the sky stands clear nothing more is read: most of the cost of the field is its photographs.)
+  lowWeigh = vec3(0.0);
+  lowNear = vec2(0.0);
+  if (amount <= 0.0) return 0.0;
   // (Where it is thick and where torn is carried by winds of its own, a little off the wind of the field: the banks change as they go.)
   vec2 wSlow = w;
   vec2 wLane = w;
@@ -123,6 +127,7 @@ float lowDepth(vec2 at) {
   if (uLive > 0.0) banked = mix(banked, (0.05 + 1.1 * smoothstep(0.34, 0.6, lane)) * (0.1 + 1.3 * smoothstep(0.36, 0.62, torn)), 0.3 * smoothstep(0.0, 14.0, uWx));
   float share = amount * (0.34 + 0.66 * smoothstep(0.3, 0.66, slow + 0.2 * (amount - 0.6))) * banked * (0.45 + 0.55 * smoothstep(0.12, 0.45, limbCos(at)));
 
+  if (share <= 0.02) return 0.0;
   lowUvA = LOW_A * wLane / vec2(820.0, 470.0) + vec2(0.3, 0.7);
   lowUvB = LOW_B * wCell / 340.0 + vec2(0.13, 0.4);
   lowUvC = LOW_C * wPuff / 150.0 + vec2(0.61, 0.27);
@@ -158,6 +163,9 @@ float lowDepth(vec2 at) {
 // through as water lets light through (the law of Beer), so nothing has a cut edge.
 vec2 lowField(vec2 at) {
   float depth = lowDepth(at);
+  lowSlope = vec2(0.0);
+  // (The fall of the tops is read only where there is cloud to light.)
+  if (depth <= 0.0) return vec2(0.0);
   vec3 a = texture2D(uMatStreaksNh, lowUvA).rgb;
   vec3 b = texture2D(uMatPopcornNh, lowUvB).rgb;
   vec3 c = texture2D(uMatSpecksNh, lowUvC).rgb;
@@ -178,6 +186,8 @@ vec2 highUvSheet = vec2(0.0);
 vec2 highUvThread = vec2(0.0);
 // The ice without the fall of its tops (what a shadow needs).
 float highDepth(vec2 at) {
+  float far = smoothstep(300.0, 1100.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+  if (far <= 0.0) return 0.0;
   vec2 hv = at + uTime * vec2(6.5, -3.8);
   vec2 hs = hv;
   if (uLive > 0.0) {
@@ -186,15 +196,20 @@ float highDepth(vec2 at) {
   }
   highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
   highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1250.0, 900.0) + vec2(0.7, 0.2);
+  // (Where the ice stands at all: the weather's own soft pattern, carried with it. A pattern of squares, as a noise of cells is,
+  // shows its corners when the last sun reddens the ice.)
+  float where = 0.55 * smoothstep(0.5, 1.0, texture2D(uCloudTile, mat2(0.78, -0.62, 0.62, 0.78) * hv / 3900.0 + vec2(0.58, 0.14), 4.0).b);
+  if (where <= 0.0) return 0.0;
   float sheet = cloudIn(uMatVeil, highUvSheet, 0.27);
   float thread = cloudIn(uMatStreaks, highUvThread, 0.31);
-  float where = smoothstep(0.5, 0.85, 0.6 * vnoise(hv / 1500.0 + 3.0) + 0.4 * vnoise(hv / 640.0 + 11.0));
   float depth = sheet * mix(1.0, thread, 0.55) * where * 1.7 - 0.85;
-  return (1.0 - exp(-1.1 * max(depth, 0.0))) * smoothstep(300.0, 1100.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+  return (1.0 - exp(-1.1 * max(depth, 0.0))) * far;
 }
 
 float highField(vec2 at) {
   float thick = highDepth(at);
+  highSlope = vec2(0.0);
+  if (thick <= 0.0) return 0.0;
   highSlope = 0.6 * (texture2D(uMatVeilNh, highUvSheet).rg * 2.0 - 1.0) * mat2(0.9, 0.44, -0.44, 0.9) + 0.8 * (texture2D(uMatStreaksNh, highUvThread).rg * 2.0 - 1.0) * mat2(0.84, 0.54, -0.54, 0.84);
   return thick;
 }
@@ -210,6 +225,10 @@ const mat2 BANK_A = mat2(0.6, 0.8, -0.8, 0.6);
 const mat2 BANK_B = mat2(0.94, 0.34, -0.34, 0.94);
 float bankDepth(vec2 bankAt) {
   float held = texture2D(uBanks, clamp((bankAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).r;
+  // (The sky stands clear over the lake of the Eye, where the rise begins.)
+  float clear = smoothstep(100.0, 230.0, length(bankAt - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+  bankNear = 0.0;
+  if (held * clear <= 0.004) return -0.6;
   vec2 w = bankAt - uTime * 1.5 * LOW_DRIFT;
   if (uLive > 0.0) w -= uWx * vec2(27.0, 8.0);
   bankUvA = BANK_A * w / 420.0 + vec2(0.47, 0.11);
@@ -219,8 +238,6 @@ float bankDepth(vec2 bankAt) {
   bankNear = 1.0 - smoothstep(420.0, 600.0, uViewKm);
   if (bankNear > 0.0) fine = mix(1.0, cloudIn(uMatSpecks, bankUvB, 0.2), bankNear);
   float today = smoothstep(0.32, 0.6, texture2D(uCloudTile, bankAt / 2600.0 + vec2(0.21, 0.67), 3.0).b);
-  // (The sky stands clear over the lake of the Eye, where the rise begins.)
-  float clear = smoothstep(100.0, 230.0, length(bankAt - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   // (A bank is the wind's own cloud, caught: it is drawn out along the wind in streaks as the low field is, torn where the streak
   // photograph is clear and thin round its clusters, so no bank has the outline of the range that holds it.)
   float drawn = cloudIn(uMatStreaks, LOW_A * w / vec2(560.0, 300.0) + vec2(0.71, 0.36), 0.31);
@@ -228,12 +245,13 @@ float bankDepth(vec2 bankAt) {
 }
 float fogDepth(vec2 fogAt) {
   float held = texture2D(uBanks, clamp((fogAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).g;
+  float clear = smoothstep(100.0, 230.0, length(fogAt - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+  if (held * clear <= 0.004) return -0.5;
   vec2 w = fogAt - uTime * vec2(0.9, -0.5);
   if (uLive > 0.0) w -= uWx * vec2(3.0, -2.0);
   // (Fog lies level: its top has the soft fibre of a veil and no lumps, and it thins up the slopes through that fibre.)
   float veil = cloudIn(uMatVeil, mat2(0.5, 0.87, -0.87, 0.5) * w / 520.0 + vec2(0.4, 0.9), 0.27);
   float today = smoothstep(0.34, 0.62, texture2D(uCloudTile, fogAt / 1900.0 + vec2(0.83, 0.37), 3.0).b);
-  float clear = smoothstep(100.0, 230.0, length(fogAt - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   return held * today * clear * (0.3 + 0.9 * veil) * 1.5 - 0.5;
 }
 
