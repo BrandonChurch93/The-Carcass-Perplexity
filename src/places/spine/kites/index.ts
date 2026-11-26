@@ -304,7 +304,7 @@ void main() {
   vec3 r2 = cross(n, px);
   float det = dot(px, r1);
   vec3 slope = (r1 * dFdx(relief) + r2 * dFdy(relief)) * (sign(det) / max(abs(det), 1e-7));
-  n = normalize(n - (1.0 - far) * 0.12 * slope / (1.0 + 0.5 * length(slope)));
+  n = normalize(n - (1.0 - far) * 0.26 * slope / (1.0 + 0.5 * length(slope)));
   // It is wrinkled down its length: broad folds, a few across its width, that wander and run into each other.
   float wob = vnoise(vec2(metres * 0.22 + seed, lie * 1.3));
   float phase = lie * (7.0 + 5.0 * fract(seed * 0.173)) + 5.0 * wob + metres * 0.15;
@@ -312,7 +312,7 @@ void main() {
   // And between them narrower ones, seen only close.
   float phase2 = lie * (15.0 + 6.0 * fract(seed * 0.411)) + 7.0 * vnoise(vec2(metres * 0.35 + seed * 2.0, lie * 2.0)) - metres * 0.1;
   float fold2 = sin(phase2) * (1.0 - far);
-  n = normalize(n + normalize(vAcross) * (0.32 * cos(phase) * (1.0 - 0.6 * far) + 0.18 * cos(phase2) * (1.0 - far)));
+  n = normalize(n + normalize(vAcross) * (0.5 * cos(phase) * (1.0 - 0.6 * far) + 0.34 * cos(phase2) * (1.0 - far)));
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
 
   // How many skins thick it is: thin where it is stretched over a belly, a body where it is gathered at the knot, at its lip, along a
@@ -321,7 +321,7 @@ void main() {
   float knot = 1.0 - smoothstep(0.0, 0.22, s);
   float crease = smoothstep(0.03, 0.12, relief - 0.33);
   float belly = smoothstep(0.2, 1.0, abs(vSkin.x)) * (1.0 - lie * lie);
-  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease + 0.75 * smoothstep(0.2, 1.0, fold) + 0.4 * smoothstep(0.3, 1.0, fold2) - 0.2 * belly + 0.35 * far;
+  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease + 1.0 * smoothstep(0.2, 1.0, fold) + 0.75 * smoothstep(0.3, 1.0, fold2) - 0.2 * belly + 0.35 * far;
   float path = thick / max(nv, 0.3);
   float cover = (1.0 - exp(-uFilm.y * path)) * cut;
 
@@ -338,14 +338,16 @@ void main() {
   }
   // The film's own colour: lilac grey, with the sheet's stains of rose, violet and gold about its mean.
   vec3 stain = mix(vec3(1.0), clamp(pic / SKIN_MEAN, 0.5, 1.8), uFilm.z);
-  vec3 body = vec3(0.7, 0.74, 1.0) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
+  vec3 body = mix(vec3(0.7, 0.74, 1.0), vec3(1.0, 0.8, 0.98), 1.0 - far) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
   // What it scatters: a pale haze of the light on its two faces, a little even where it is thinnest, so that it stands pale before a
   // dark sky and the sky is still seen through it.
   float thin = 0.8 * uFilm.y;
   float haze = cut * (thin + (1.0 - thin) * (1.0 - exp(-0.8 * path)));
   vec3 above = normalize(vec3(-0.45, 0.72, 0.5));
   vec3 key = skyIrradiance(above) / 3.14159;
-  vec3 c = body * (uFilm.x * (0.55 * onNear + 0.75 * onFar) * haze + 0.25 * key * lip * cut);
+  // Between two folds the skin lies in their shade.
+  float trough = 1.0 - (1.0 - far) * (0.3 * smoothstep(0.1, -0.9, fold) + 0.25 * smoothstep(0.0, -0.9, fold2));
+  vec3 c = body * (uFilm.x * (0.55 * onNear + 0.75 * onFar) * haze * trough + 0.25 * key * lip * cut);
 
   // Wet: it gives the sky back, more aslant, and the colours of a thin film slide over it as it turns.
   float fres = 0.07 + 0.93 * pow(1.0 - nv, 4.0);
