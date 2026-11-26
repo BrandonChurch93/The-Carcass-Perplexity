@@ -207,6 +207,35 @@ const smooth = (lo: number, hi: number, v: number): number => {
   return t * t * (3 - 2 * t);
 };
 
+/** The film's tone curve, backward: for the level a picture shows (to the power 1 / 2.2), the radiance the film would have to be given to show it. */
+function ungradeTexture(): THREE.DataTexture {
+  const curve = (x: number): number => {
+    const x2 = x * x;
+    const x4 = x2 * x2;
+    return 15.5 * x4 * x2 - 40.14 * x4 * x + 31.96 * x4 - 6.868 * x2 * x + 0.4298 * x2 + 0.1191 * x - 0.00232;
+  };
+  const N = 256;
+  const data = new Uint16Array(N * 4);
+  let u = 0;
+  for (let i = 0; i < N; i++) {
+    const want = Math.min(0.975, i / (N - 1));
+    while (u < 1 && curve(u) < want) u += 1 / 8192;
+    const v = THREE.DataUtils.toHalfFloat(2 ** (u * 16.5 - 12.47393));
+    data[i * 4] = v;
+    data[i * 4 + 1] = v;
+    data[i * 4 + 2] = v;
+    data[i * 4 + 3] = THREE.DataUtils.toHalfFloat(1);
+  }
+  const t = new THREE.DataTexture(data, N, 1, THREE.RGBAFormat, THREE.HalfFloatType);
+  t.minFilter = THREE.LinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.wrapS = THREE.ClampToEdgeWrapping;
+  t.wrapT = THREE.ClampToEdgeWrapping;
+  t.colorSpace = THREE.NoColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
+
 export function createRig(): Rig {
   const contactTarget = new THREE.WebGLRenderTarget(CONTACT.size, CONTACT.size, {
     type: THREE.UnsignedByteType,
@@ -245,6 +274,19 @@ export function createRig(): Rig {
     uGlowDir: { value: new THREE.Vector3(Math.sin(glowBearing), 0, -Math.cos(glowBearing)) },
     uGlowColour: { value: new THREE.Vector3(3.2, 1.9, 0.8) },
     uFill: { value: new THREE.Vector3(0.58, 0.66, 0.82) },
+    // The far world: one picture of the rim and the sky beyond the lake, hung on a cylinder round the camera of the shot it belongs to.
+    // The air folder sets it by shot. uPlateAt: the middle of the cylinder (y is the level of the picture's horizon) and its radius.
+    // uPlateLens: the bearing of the picture's middle (radians), tan of half its field across, tan of half its field up, v of its horizon row.
+    // uPlateTone: gain on the picture, and in w whether a picture is hung at all.
+    tPlate: { value: null },
+    tUngrade: { value: ungradeTexture() },
+    uPlateAt: { value: new THREE.Vector4(0, 0, 0, 1800) },
+    uPlateLens: { value: new THREE.Vector4(0, 0.65, 0.364, 0.5) },
+    uPlateTone: { value: new THREE.Vector4(1, 1, 1, 0) },
+    // While a picture is hung: the built land is drawn only within this many metres (z) of this point (xy are x and z); beyond it the picture is the land.
+    uNear: { value: new THREE.Vector4(0, 0, 400, 0) },
+    // The evening shade over the south shore: unit way it deepens (x, z), metres along it where it starts, climb of its top per metre.
+    uShade: { value: new THREE.Vector4(Math.sin((198 * Math.PI) / 180), -Math.cos((198 * Math.PI) / 180), 652, 0.55) },
   };
 
   const bake = (): void => {

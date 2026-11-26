@@ -31,7 +31,7 @@ ${RIG_GLSL}
 ${ROCK_GLSL}
 ${CUT_GLSL}
 void main() {
-  if (inPatch(vWorld)) discard;
+  if (inPatch(vWorld) || beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float face = smoothstep(0.8, 0.52, n.y);
@@ -53,9 +53,18 @@ void main() {
 
 const LAND_DEPTH = /* glsl */ `
 varying vec3 vWorld;
+uniform vec4 uNear;
 ${CUT_GLSL}
 void main() {
-  if (inPatch(vWorld)) discard;
+  if (inPatch(vWorld) || (uNear.w > 0.5 && length(vWorld.xz - uNear.xy) > uNear.z)) discard;
+  gl_FragColor = vec4(0.0);
+}`;
+
+const NEAR_DEPTH = /* glsl */ `
+varying vec3 vWorld;
+uniform vec4 uNear;
+void main() {
+  if (uNear.w > 0.5 && length(vWorld.xz - uNear.xy) > uNear.z) discard;
   gl_FragColor = vec4(0.0);
 }`;
 
@@ -85,7 +94,7 @@ void main() {
   vec4 p = instanceMatrix * vec4(position, 1.0);
   vec4 w = modelMatrix * p;
   vWorld = w.xyz;
-  vLocal = position * length(instanceMatrix[0].xyz) + aTint.z * 37.0;
+  vLocal = position * vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz)) + aTint.z * 37.0;
   vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
   vTint = aTint;
   gl_Position = projectionMatrix * viewMatrix * w;
@@ -96,27 +105,35 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLocal;
 varying vec3 vTint;
-uniform sampler2D tBoulder;
-uniform sampler2D tBoulderNh;
+uniform sampler2D tScree;
+uniform sampler2D tScreeH;
+vec4 screeAt(vec2 xz) {
+  vec2 uv = xz / vec2(24.0, 13.51);
+  return vec4(texture2D(tScree, uv).rgb, texture2D(tScreeH, uv).r);
+}
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
+  if (beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 w = pow(abs(n), vec3(4.0));
   w /= w.x + w.y + w.z;
-  // A block is a piece of the wall: the cliff picture, small, from the part of it that is clean stone.
-  float size = 9.0;
-  vec2 ux = vLocal.zy / size + vec2(0.0, 0.62);
-  vec2 uy = vLocal.xz / size + vec2(0.3, 0.62);
-  vec2 uz = vLocal.xy / size + vec2(0.6, 0.62);
-  vec3 col = texture2D(tBoulder, ux).rgb * w.x + texture2D(tBoulder, uy).rgb * w.y + texture2D(tBoulder, uz).rgb * w.z;
-  vec3 nh = texture2D(tBoulderNh, ux).rgb * w.x + texture2D(tBoulderNh, uy).rgb * w.y + texture2D(tBoulderNh, uz).rgb * w.z;
-  vec3 albedo = mix(col, vec3(dot(col, vec3(0.33))), 0.6) * vec3(0.78, 0.85, 0.96) * (0.72 + 0.5 * vTint.x) * mix(vec3(0.92, 0.95, 1.0), vec3(1.08, 1.0, 0.9), vTint.y);
-  vec2 d = nh.xy * 2.0 - 1.0;
+  // A block is a piece of the scree: the plate of the slope on its three faces, each block from another part of it.
+  vec2 at = vTint.yz * 40.0;
+  vec2 ux = vWorld.zy + at;
+  vec2 uy = vWorld.xz + at.yx;
+  vec2 uz = vWorld.xy - at;
+  vec4 col = screeAt(ux) * w.x + screeAt(uy) * w.y + screeAt(uz) * w.z;
+  float e = 0.05;
+  vec2 d = vec2(screeAt(ux + vec2(e, 0.0)).a - screeAt(ux - vec2(e, 0.0)).a, screeAt(ux + vec2(0.0, e)).a - screeAt(ux - vec2(0.0, e)).a) * w.x
+    + vec2(screeAt(uy + vec2(e, 0.0)).a - screeAt(uy - vec2(e, 0.0)).a, screeAt(uy + vec2(0.0, e)).a - screeAt(uy - vec2(0.0, e)).a) * w.y
+    + vec2(screeAt(uz + vec2(e, 0.0)).a - screeAt(uz - vec2(e, 0.0)).a, screeAt(uz + vec2(0.0, e)).a - screeAt(uz - vec2(0.0, e)).a) * w.z;
+  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.25) * vec3(1.75, 1.66, 1.5) * (0.85 + 0.3 * vTint.x);
+  vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
-  n = normalize(n + (t * d.x + b * d.y) * 1.1);
+  n = normalize(n - (t * d.x + b * d.y) * 3.0);
   // Where the stone meets the ground it is in its own shade, and wet where the ground is.
   vec4 land = landAt(vWorld.xz);
   float foot = smoothstep(0.0, 0.35, vWorld.y - max(land.r, 0.0) + 0.08);
@@ -230,6 +247,17 @@ export function create(ctx: Context): Piece {
     const [x, z] = onAxis(along, across);
     put(x, z, size);
   }
+  // The shoulders of the spur are piles of fallen blocks, each its own stone.
+  for (let i = 0; i < 900; i++) {
+    const along = rng.range(40, 215);
+    const side = rng.next() < 0.5 ? -1 : 1;
+    const across = side * (9 + 62 * rng.next() ** 1.4);
+    const size = 0.7 + 3.6 * rng.next() ** 2.2;
+    if (Math.abs(across - streamAcross(along)) < 1.4 + size * 0.7) continue;
+    if (vnoise(along / 23 + 9, across / 23 + 2) < 0.34) continue;
+    const [x, z] = onAxis(along, across);
+    put(x, z, size);
+  }
   // The blocks the wide shot looks past, at the foot of its frame.
   const near: [number, number, number][] = [
     [128, 17, 4.6],
@@ -257,8 +285,9 @@ export function create(ctx: Context): Piece {
     put(Math.sin(a) * r, -Math.cos(a) * r, 0.06 + 0.42 * rng.next() ** 4);
   }
 
-  const boulder = { tBoulder: { value: ctx.assets.texture('mat/cliff.jpg', { anisotropy: 2 }) }, tBoulderNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) } };
+  const boulder = { tScree: rock.tScree as THREE.IUniform, tScreeH: rock.tScreeH as THREE.IUniform };
   const stoneMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...boulder }, vertexShader: STONE_VERTEX, fragmentShader: STONE_FRAGMENT });
+  stoneMaterial.userData.depthFragment = NEAR_DEPTH;
   const dummy = new THREE.Object3D();
   const scree: THREE.InstancedMesh[] = [];
   const discs: { x: number; z: number; size: number }[] = [];
@@ -348,6 +377,10 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('stream', stream));
 
   return {
+    beforeSample: () => {
+      // While a picture of the far world is hung, the brow is in the picture.
+      brow.visible = (ctx.rig.uniforms.uNear as THREE.IUniform<THREE.Vector4>).value.w < 0.5;
+    },
     dispose: () => {
       for (const m of [socket, patch, brow, stream, ...scree]) m.geometry.dispose();
       for (const m of [socketMaterial, patchMaterial, browMaterial, stoneMaterial, streamMaterial]) m.dispose();

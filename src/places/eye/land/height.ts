@@ -152,7 +152,7 @@ export function landHeight(x: number, z: number): number {
     const ledge = 3.2;
     const t = spur / ledge + 0.8 * vnoise(x / 15, z / 15);
     const whole = Math.floor(t);
-    spur += ((whole + smooth(0.3, 0.7, t - whole) - (t - spur / ledge)) * ledge - spur) * 0.6;
+    spur += ((whole + smooth(0.3, 0.7, t - whole) - (t - spur / ledge)) * ledge - spur) * 0.12;
     if (spur > y) y += (spur - y) * lateral * smooth(10, 40, along);
 
     // The gully of the stream.
