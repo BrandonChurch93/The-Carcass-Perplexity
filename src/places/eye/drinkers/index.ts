@@ -175,7 +175,7 @@ void main() {
   float occ = (0.5 + 0.5 * smoothstep(0.15, 0.75, soft)) * fold;
   // Far off in the shade of the evening the herd is pale: tan going to grey.
   if (uShade.w > 0.1) {
-    albedo = mix(albedo, vec3(0.4, 0.31, 0.24), 0.6);
+    albedo = mix(albedo, vec3(0.3, 0.22, 0.17), 0.75);
     // The sky lights its back and leaves its belly in its own shade: a small solid thing, told by that alone.
     albedo *= mix(0.45, 1.1, smoothstep(0.5, 0.95, above / (2.4 * vSize)));
   }
