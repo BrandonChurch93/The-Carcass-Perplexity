@@ -44,6 +44,7 @@ attribute vec4 aTuft;
 attribute vec4 aTuft2;
 attribute vec4 aTuft3;
 uniform float uSeconds;
+uniform float uMirror;
 varying vec3 vWorld;
 varying vec3 vSide;
 varying vec4 vUv;
@@ -53,6 +54,13 @@ void main() {
   float ang = aTuft2.y + card * 1.0472;
   vec3 side = vec3(cos(ang), 0.0, sin(ang));
   vec3 across = vec3(-sin(ang), 0.0, cos(ang));
+  // Far off a tuft is one card that stands square to the lens and turns with it: it has no edge to show.
+  bool one = aTuft2.z < 0.0;
+  if (one) {
+    vec2 to = normalize(cameraPosition.xz - aTuft.xz);
+    side = vec3(-to.y, 0.0, to.x);
+    across = vec3(to.x, 0.0, to.y);
+  }
   vec2 q = vec2(position.x + 0.5, position.y);
   float tilt = abs(aTuft2.z) * (card - 1.0);
   vec3 rise = normalize(vec3(0.0, 1.0, 0.0) + across * tilt);
@@ -60,14 +68,15 @@ void main() {
   vec3 p = aTuft.xyz + side * ((q.x - 0.5) * aTuft2.x) + rise * ((q.y - 0.1) * aTuft.w);
   float gust = sin(uSeconds * 1.3 + aTuft3.w + dot(aTuft.xz, vec2(0.21, 0.17))) + 0.5 * sin(uSeconds * 2.7 + aTuft3.w * 1.7);
   p += vec3(0.8, 0.0, 0.6) * (0.035 * aTuft.w * reach * reach * gust) + side * (0.012 * aTuft.w * reach * sin(uSeconds * 2.2 + aTuft2.w * 40.0 + q.x * 9.0));
-  // Far off two cards are a tuft: the third is folded away to nothing.
-  if (aTuft2.z < 0.0 && card > 1.5) p = aTuft.xyz;
+  if (one && card > 0.5) p = aTuft.xyz;
   vWorld = p;
   vSide = side;
   float flip = fract(aTuft2.w * 7.3 + card * 0.37) > 0.5 ? 1.0 : 0.0;
   vUv = vec4(mix(q.x, 1.0 - q.x, flip), q.y, q.x - 0.5, aTuft2.w + card * 0.31);
   vTone = vec4(aTuft3.x, aTuft3.y, aTuft3.z, aTuft.y);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+  // The brine is rippled: a tuft is not told in it, and is not drawn there.
+  if (uMirror > 0.5) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
 }`;
 
 const TUFT_CUT = /* glsl */ `
@@ -133,6 +142,7 @@ attribute vec4 aMat;
 attribute vec4 aMat2;
 uniform sampler2D tLand;
 uniform vec4 uLandRect;
+uniform float uMirror;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec4 vMat;
@@ -156,6 +166,7 @@ void main() {
   vMat = vec4(r + 2.0 * (1.0 - smoothstep(-0.035, -0.005, ground)), s, aMat2.z, aMat2.w);
   vAt = vec2(a, aMat.w);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+  if (uMirror > 0.5) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
 }`;
 
 const MAT_CUT = /* glsl */ `
@@ -319,7 +330,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     if (style === 0) {
       // Far off one spray is the crown: a second behind it is not seen.
       const n = few ? 1 : 2;
-      for (let k = 0; k < n; k++) card(k, n, rng.range(-0.45, 0.45), rng.range(0.85, 1.2), 1, 0, 0);
+      for (let k = 0; k < n; k++) card(k, n, rng.range(-0.45, 0.45), rng.range(0.8, 1.1), 1, 0, 0);
       const m = few ? rng.int(2) : 1 + rng.int(2);
       for (let k = 0; k < m; k++) card(k + 0.5, m, rng.range(0.8, 1.5), rng.range(0.45, 0.8), 0, rng.next() < 0.3 ? rng.range(0.2, 0.5) : 0, rng.next() < 0.2 ? rng.range(0.6, 1) : 0);
     } else if (style === 1) {
@@ -380,7 +391,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
   for (const s of stands) {
     shades.push([s.x, s.z, s.r * 1.25, 0.5, 1, 0]);
     // Stems, where a stem can still be told from the next: tens in a near stand, a few in one far off, none beyond that.
-    const count = s.far < 120 ? Math.round((s.tall ? 1.6 : 1) * Math.max(4, s.q * (36 - 31 * Math.min(1, s.far / 120)))) : 0;
+    const count = s.far < 120 ? Math.round((s.tall ? 1.6 : 1) * Math.max(4, s.q * (31 - 26 * Math.min(1, s.far / 120)))) : 0;
     const cores: [number, number][] = [];
     for (let k = 0; k < 2 + rng.int(3); k++) cores.push(around(s, 0.45));
     for (let k = 0; k < count; k++) {
@@ -432,7 +443,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       shades.push([p[0] + Math.cos(yaw) * h * 0.5, p[1] + Math.sin(yaw) * h * 0.5, rr * 3.5, 0.6, (h * 0.5) / (rr * 3.5), Math.atan2(-Math.sin(yaw), Math.cos(yaw))]);
     }
     // The understorey: tufts thick at the feet of the stems and thinning out onto the salt.
-    const tufts = s.far < 50 ? Math.round(s.q * 38) : s.far < 105 ? Math.round(s.q * (4 + 24 * (1 - (s.far - 50) / 55))) : 0;
+    const tufts = s.far < 50 ? Math.round(s.q * 30) : s.far < 105 ? Math.round(s.q * (4 + 24 * (1 - (s.far - 50) / 55))) : 0;
     for (let k = 0; k < tufts; k++) {
       const p = around(s, 0.5);
       if (land.height(p[0], p[1]) < -0.08 || !clear(p[0], p[1])) continue;
@@ -445,8 +456,8 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     for (let k = 0; k < brush; k++) {
       const p = around(s, 0.5);
       if (land.height(p[0], p[1]) < -0.1 || !clear(p[0], p[1])) continue;
-      const h = (0.4 + 1.9 * Math.pow(rng.next(), 1.8)) * (0.75 + 0.5 * s.q);
-      addTuft(p[0], p[1], h, h * rng.range(1.1, 3), rng.range(0, 0.7), rng.next() < 0.3 ? rng.range(0.5, 0.95) : rng.range(0, 0.25), 1, true);
+      const h = (0.35 + 1.5 * Math.pow(rng.next(), 1.8)) * (0.75 + 0.5 * s.q);
+      addTuft(p[0], p[1], h, h * rng.range(1.1, 2.6), rng.range(0, 0.7), rng.next() < 0.3 ? rng.range(0.5, 0.95) : rng.range(0, 0.25), 1, true);
     }
     // The mat on the wet ground at their feet, and far off the stain of it on the humps.
     const mats = s.far < 260 ? 2 + rng.int(3) : 1 + rng.int(2);
