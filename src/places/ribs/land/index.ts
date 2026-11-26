@@ -15,8 +15,8 @@ import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
-import { FIN_FRAGMENT, FIN_OPENING_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
-import { inOpening, openingWeight } from '../shared/opening';
+import { FIN_FRAGMENT, FIN_OPENING_FRAGMENT, FIN_OPENING_VERTEX, FIN_VERTEX, STACK_FRAGMENT } from './fin';
+import { inOpening, openingDark, openingLight, openingWeight } from '../shared/opening';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
@@ -273,7 +273,7 @@ export function create(ctx: Context): Piece {
     // The approach draws a blade with its own text (fin.ts) and its own seed: the film's material is the one above, for every other frame.
     const film = blade.material as THREE.ShaderMaterial;
     if (film.fragmentShader === FIN_FRAGMENT) {
-      const staged = new THREE.ShaderMaterial({ vertexShader: FIN_VERTEX, fragmentShader: FIN_OPENING_FRAGMENT, uniforms: { ...film.uniforms, uOpenStone: { value: new THREE.Vector2(0, 0.137 + 0.618 * openBlades.length) } } });
+      const staged = new THREE.ShaderMaterial({ vertexShader: FIN_OPENING_VERTEX, fragmentShader: FIN_OPENING_FRAGMENT, uniforms: { ...film.uniforms, uOpenStone: { value: new THREE.Vector2(0, 0.137 + 0.618 * openBlades.length) }, uOpenLight: { value: new THREE.Vector2(0, 0) } } });
       openBlades.push({ mesh: blade, film, staged });
     }
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
@@ -521,6 +521,7 @@ export function create(ctx: Context): Piece {
       for (const b of openBlades) {
         b.mesh.material = opening > 0 ? b.staged : b.film;
         (b.staged.uniforms.uOpenStone as THREE.IUniform<THREE.Vector2>).value.x = Math.min(1, opening * 2.5);
+        (b.staged.uniforms.uOpenLight as THREE.IUniform<THREE.Vector2>).value.set(openingDark(seconds), openingLight(seconds));
       }
       const staged = stagedSeconds();
       const atGate = staged >= gateShot.from && staged <= gateShot.to;
