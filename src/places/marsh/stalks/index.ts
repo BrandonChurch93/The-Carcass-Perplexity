@@ -257,7 +257,7 @@ export function create(ctx: Context): Piece {
         for (let k = 0; k < n; k++) card(k, n, wild.range(0, 1.1), wild.range(0.6, 1.1), 0, wild.range(0.5, 1), wild.next() < 0.4 ? wild.range(0.3, 0.8) : 0);
       } else if (style === 2) {
         const n = 2 + wild.int(2);
-        for (let k = 0; k < n; k++) card(k, n, wild.range(1.6, 2.3), wild.range(0.4, 0.75), 0, wild.range(0.2, 0.8), wild.range(0.75, 1));
+        for (let k = 0; k < n; k++) card(k, n, wild.range(1.7, 2.4), wild.range(0.4, 0.7), 0, wild.range(0.5, 0.95), wild.range(0.8, 1));
       } else if (style === 3) {
         const n = 1 + wild.int(2);
         for (let k = 0; k < n; k++) card(k, n, wild.range(-0.25, 0.25), wild.range(0.5, 0.85), 1, 0, 0);
