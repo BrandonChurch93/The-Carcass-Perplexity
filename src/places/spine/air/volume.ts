@@ -160,11 +160,13 @@ void main() {
     float wide = uSteam[i].w + 0.2 * x;
     vec3 c = at - uWind.xyz * (uTime * uWind.w * 0.5);
     // A torn puff, not a fan: one size of tear for the whole of it, holes where the noise is low, and its light the sky's and the flash's.
-    float tear = uSteam[i].w * 4.0 + 18.0;
+    // A breath is a small source (under 1 m): its tears are of its own size, and it has no holes.
+    bool breath = uSteam[i].w < 1.0;
+    float tear = breath ? 0.9 : uSteam[i].w * 4.0 + 18.0;
     float curl = noise(vec3(dot(c, uWind.xyz) / (2.5 * tear), c.y / tear, (c.x - c.z) / tear)).r;
     float fine = noise(c / (0.37 * tear) + 0.3).g;
     float body = exp(-dot(off, off) / (wide * wide)) * (1.0 - x / rise) * (1.0 - x / rise) * smoothstep(0.0, 0.06, x / rise + 0.02);
-    float thick = clamp(strength * body * smoothstep(0.3, 0.72, 0.7 * curl + 0.3 * fine) * 1.6, 0.0, 0.5) * uShow.x;
+    float thick = clamp(strength * body * (breath ? 0.35 + 0.65 * smoothstep(0.2, 0.7, 0.7 * curl + 0.3 * fine) : smoothstep(0.3, 0.72, 0.7 * curl + 0.3 * fine)) * 1.6, 0.0, breath ? 0.3 : 0.5) * uShow.x;
     // The flash lights it violet and no brighter than a cloud: it is vapour, not a lamp.
     vec3 pale = (smoke ? 0.25 : 0.6) * (skyOn(1.0, rd) + min(strikeLight(at) * 0.6, vec3(0.2, 0.17, 0.32)));
     light += through * thick * pale;
@@ -253,7 +255,7 @@ void main() {
       float column = smoothstep(0.5, 0.78, n) * 3.2 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 2.5);
       column *= uClear.z > 0.0 ? smoothstep(0.4 * uClear.z, uClear.z, length(hit.xz - uClear.xy)) : 1.0;
       float kept = exp(-0.11 * column * smoothstep(1400.0, 500.0, far) * uShow.w * uStage.x);
-      vec3 snow = 0.9 * (skyOn(1.0, rd) + strikeLight(hit) * 0.2);
+      vec3 snow = 0.9 * (skyOn(1.0, rd) + min(strikeLight(hit) * 0.2, vec3(0.1, 0.085, 0.17)));
       light = light + through * (1.0 - kept) * snow;
       through *= kept;
     }
@@ -377,7 +379,7 @@ void main() {
     }
     // Against the open sky blown snow is the sky's own tone and is lost; it shows against the rock and the snow.
     fly *= uShow.w * uStage.z * mix(1.0, 0.2, smoothstep(120.0, 700.0, far));
-    vec3 flakes = 1.1 * (skyOn(1.0, rd) + strikeLight(ro + rd * 6.0) * 0.2);
+    vec3 flakes = 1.1 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
     light = light * (1.0 - fly) + flakes * fly;
     through *= 1.0 - fly;
   }

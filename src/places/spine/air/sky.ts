@@ -56,10 +56,11 @@ float cloudLit(vec3 from, vec3 d) {
     float power = dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) * uEmitters[i].w * uEmitters[i].w;
     // The glow is wide and soft, and wider and stronger about a light that stands high: that one is in the cloud.
     float high = smoothstep(150.0, 900.0, uEmitters[i].y);
-    float wide = mix(0.02, 0.09, high);
-    lit += power * (0.25 + 0.75 * high) * (exp(-(1.0 - c) / wide) + 0.25 * exp(-(1.0 - c) / (6.0 * wide)));
+    float wide = mix(0.006, 0.02, high);
+    // However strong the light is made, the cloud about it is lit to a bloom and no further: a core tens of metres wide, and a faint breadth.
+    lit += (1.0 - exp(-power * (0.25 + 0.75 * high) / 8.0e6)) * (exp(-(1.0 - c) / wide) + 0.22 * exp(-(1.0 - c) / (5.0 * wide)));
   }
-  return lit / 8.0e6;
+  return lit;
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   float el = asin(clamp(d.y, -1.0, 1.0));
