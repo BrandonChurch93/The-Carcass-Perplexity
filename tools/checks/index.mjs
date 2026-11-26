@@ -14,6 +14,7 @@ import { runG16 } from './g16.mjs';
 import { runD1 } from './d1.mjs';
 import { runD2 } from './d2.mjs';
 import { runD3 } from './d3.mjs';
+import { runD4 } from './d4.mjs';
 import { runD7 } from './d7.mjs';
 import { runA1 } from './a1.mjs';
 import { runA2 } from './a2.mjs';
@@ -47,6 +48,7 @@ const BUILT = {
   D1: (ctx) => runD1(ctx),
   D2: (ctx) => runD2(ctx),
   D3: (ctx) => runD3(ctx),
+  D4: (ctx) => runD4(ctx),
   D7: (ctx) => runD7(ctx),
   A1: runA1,
   A2: runA2,

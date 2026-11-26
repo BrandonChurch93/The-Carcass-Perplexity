@@ -98,7 +98,7 @@ describe('the registry', () => {
   });
 
   it('has code for the checks of this task and for no other', () => {
-    expect(gate.REGISTRY.filter((c) => typeof c.run === 'function').map((c) => c.id)).toEqual(['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'G13', 'G14', 'G15', 'G16', 'D1', 'D2', 'D3', 'D7', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6']);
+    expect(gate.REGISTRY.filter((c) => typeof c.run === 'function').map((c) => c.id)).toEqual(['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'G13', 'G14', 'G15', 'G16', 'D1', 'D2', 'D3', 'D4', 'D7', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6']);
   });
 
   it('picks the checks of a phase', () => {

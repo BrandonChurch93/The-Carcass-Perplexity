@@ -8,6 +8,7 @@ const tool = (name) => import(new URL(`../tools/${name}.mjs`, import.meta.url).h
 const g5 = await tool('checks/g5');
 const d2 = await tool('checks/d2');
 const d3 = await tool('checks/d3');
+const d4 = await tool('checks/d4');
 const d7 = await tool('checks/d7');
 const { config, ROOT } = await tool('lib/paths');
 
@@ -208,6 +209,82 @@ describe('D3, the Heart review clip', () => {
     const first = await d3.runD3(ctx, () => good, () => state);
     expect(first.ok).toBe(false);
     expect(first.lines.join(' ')).toContain('deliver/film');
+  });
+});
+
+describe('D4, the preview film with the mix', () => {
+  const file = `deliver/film/${cfg.export.files.preview}`;
+  const mixFile = 'audio/mix/mix.flac';
+  const rate = d4.LISTEN_RATE;
+  // A sound that never repeats: a slow sweep with a second voice, so every window has its own wave.
+  const wave = (seconds, voice = 1) => {
+    const out = new Float32Array(Math.round(seconds * rate));
+    for (let i = 0; i < out.length; i += 1) {
+      const t = i / rate;
+      out[i] = 0.3 * Math.sin(2 * Math.PI * (180 + 40 * t) * t) + 0.2 * voice * Math.sin(2 * Math.PI * (97 + 13 * Math.sin(t)) * t);
+    }
+    return out;
+  };
+  const mix = wave(12);
+  const moved = (by) => {
+    const out = new Float32Array(mix.length);
+    for (let i = 0; i < out.length; i += 1) out[i] = i - by >= 0 && i - by < mix.length ? mix[i - by] : 0;
+    return out;
+  };
+  const record = { built: now, sound: mixFile };
+  const faults = (o = {}) => d4.soundFaults({ file, probe: goodPreview, record, mixExists: true, heard: d4.heardBeside(mix, mix), ...o }).faults;
+
+  it('passes a film whose sound is the mix, also when the encoder moved it a little', () => {
+    expect(faults()).toEqual([]);
+    const near = d4.heardBeside(mix, moved(Math.round(0.02 * rate)));
+    expect(near.shift).toBe(Math.round(0.02 * rate));
+    expect(near.lowest).toBeGreaterThan(0.99);
+    expect(faults({ heard: near })).toEqual([]);
+  });
+
+  it('fails a film with no sound stream, with no mix, or whose record names no mix or another sound', () => {
+    expect(faults({ probe: { ...goodPreview, sound: false } })).toEqual([`${file} has no sound stream, so it does not carry the mix.`]);
+    expect(faults({ mixExists: false, heard: null })[0]).toContain(`There is no ${mixFile}`);
+    expect(faults({ record: { built: now } })[0]).toContain('names no sound');
+    expect(faults({ record: null })[0]).toContain('names no sound');
+    expect(faults({ record: { built: now, sound: 'audio/mix/old.flac' } })[0]).toContain('audio/mix/old.flac');
+  });
+
+  it('fails a sound that is not the mix: one changed second, another length, a shift past the limit, a silent mix', () => {
+    const changed = Float32Array.from(mix);
+    const other = wave(12, -1);
+    for (let i = 5 * rate; i < 6 * rate; i += 1) changed[i] = other[i];
+    const one = d4.heardBeside(mix, changed);
+    expect(one.lowestAt).toBe(5);
+    expect(one.lowest).toBeLessThan(d4.SAME);
+    expect(faults({ heard: one })[0]).toContain('is not the mix');
+    expect(faults({ heard: d4.heardBeside(mix, mix.slice(0, 10 * rate)) }).join(' ')).toContain('10 s long');
+    expect(faults({ heard: d4.heardBeside(mix, moved(Math.round(0.5 * rate))) }).join(' ')).toContain('is not the mix');
+    expect(faults({ heard: d4.heardBeside(new Float32Array(mix.length), mix) })[0]).toContain('silent from end to end');
+  });
+
+  it('reads the film in deliver/film or out/work/film beside the mix in the repo', async () => {
+    const root = path.join(tmp, 'd4');
+    const ctx = { root, config: cfg, phase: 5 };
+    const heard = (full) => (full.endsWith('.flac') ? mix : moved(3));
+    const none = await d4.runD4(ctx, () => goodPreview, () => now, heard);
+    expect(none.ok).toBe(false);
+    expect(none.lines[0]).toContain(cfg.export.files.preview);
+    put(root, 'cut/CUTLIST.json', cut);
+    put(root, file, 'x');
+    put(root, `${file}.json`, record);
+    const noMix = await d4.runD4(ctx, () => goodPreview, () => now, heard);
+    expect(noMix.ok).toBe(false);
+    expect(noMix.lines[0]).toContain(`There is no ${mixFile}`);
+    put(root, mixFile, 'x');
+    const good = await d4.runD4(ctx, () => goodPreview, () => now, heard);
+    expect(good.ok).toBe(true);
+    expect(good.lines.join(' ')).toContain('is the mix');
+    expect((await d4.runD4(ctx, () => goodPreview, () => ({ ...now, engine: 'e2' }), heard)).ok).toBe(false);
+    expect((await d4.runD4(ctx, () => ({ ...goodPreview, sound: false }), () => now, heard)).ok).toBe(false);
+    expect((await d4.runD4(ctx, () => goodPreview, () => now, (full) => (full.endsWith('.flac') ? mix : wave(12, -1)))).ok).toBe(false);
+    put(root, `${file}.json`, { built: now });
+    expect((await d4.runD4(ctx, () => goodPreview, () => now, heard)).ok).toBe(false);
   });
 });
 
