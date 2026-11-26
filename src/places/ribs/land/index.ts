@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { resolve } from '../../../core/cameras';
 import { keyPart, shotById } from '../../../film/cut';
 import { shots } from '../cameras';
-import { RIBS, weedPoint, type Rib } from '../layout';
+import { RIBS, ribByName, weedPoint, type Rib } from '../layout';
 import { COLONY, DROWNED, LEVELS, STATIONS } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { RIG_VERTEX } from '../shared/glsl';
@@ -102,22 +102,25 @@ function colonyRock(): THREE.BufferGeometry {
 export function create(ctx: Context): Piece {
   ctx.rig.setLand(bed);
   const tex = ctx.assets.texture;
-  const rockC = tex('land/rock.jpg');
-  const rockN = tex('land/rock-nh.jpg', { kind: 'data' });
-  const weedC = tex('land/weed.jpg');
-  const weedN = tex('land/weed-nh.png', { kind: 'data' });
-  const sandC = tex('land/sand.jpg');
+  // The Builder's material pictures of the place: bone-stone for the blades, coursed ledge for the colony, hanging weed, the wet flat, shore rock.
+  const rockC = tex('mat/bone.jpg');
+  const rockN = tex('mat/bone-nh.png', { kind: 'data' });
+  const ledgeC = tex('mat/ledge.jpg');
+  const ledgeN = tex('mat/ledge-nh.png', { kind: 'data' });
+  const weedC = tex('mat/weed.jpg');
+  const weedN = tex('mat/weed-nh.png', { kind: 'data' });
+  const sandC = tex('mat/flat.jpg', { anisotropy: 2 });
   const shingleC = tex('land/shingle.jpg', { anisotropy: 2 });
   const shingleN = tex('land/shingle-nh.jpg', { kind: 'data', anisotropy: 2 });
-  const boulderC = tex('land/boulder.jpg');
-  const boulderN = tex('land/boulder-nh.png', { kind: 'data' });
+  const boulderC = tex('mat/rock.jpg');
+  const boulderN = tex('mat/rock-nh.png', { kind: 'data' });
 
   const material = (vertexShader: string, fragmentShader: string, own: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
   const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tWeed: { value: weedC }, uPool: { value: LEVELS.pool } });
   const rock = material(UV_VERTEX, ROCK_FRAGMENT, { tRock: { value: rockC }, tRockN: { value: rockN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: 0 } });
-  const roostRock = material(UV_VERTEX, ROCK_FRAGMENT, { tRock: { value: rockC }, tRockN: { value: rockN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: COLONY.step } });
+  const roostRock = material(UV_VERTEX, ROCK_FRAGMENT, { tRock: { value: ledgeC }, tRockN: { value: ledgeN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: COLONY.step } });
   const weed = material(WEED_VERTEX, WEED_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN } });
   const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, uWeedy: { value: 1 } });
   const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, uWeedy: { value: 0 } });
@@ -249,7 +252,32 @@ export function create(ctx: Context): Piece {
   strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 4500, 1.5, 40, 0.62);
   strew(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 1200, 5, 110, 0.3);
   strew(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 1500, 2, 60, 0.55);
-  const kept = placed.filter((p) => !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
+  // At the foot of every blade what has fallen from it: weed-grown blocks against the wall, smaller ones out on the flat.
+  const wide = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0).position;
+  const hung = weedPoint(ribByName(DROWNED.rib), DROWNED.phi, 2);
+  for (const rib of RIBS) {
+    for (let i = 0; i < 26; i++) {
+      const out = 12 * Math.pow(scatter.next(), 1.6);
+      const at = weedPoint(rib, scatter.range(0, 6.283), 2, out - 0.5);
+      const size = (1 + 4.5 * Math.pow(scatter.next(), 2.2)) * (1 - 0.045 * out);
+      const rock = { x: at.x, z: at.z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.4, 0.4), kind: scatter.int(KINDS), sink: scatter.range(0.3, 0.5) };
+      if (Math.hypot(at.x - wide[0], at.z - wide[2]) > 16 && Math.hypot(at.x - hung.x, at.z - hung.z) > 18) placed.push(rock);
+    }
+  }
+  // Heaps of cast weed lying in the standing water before the wide lens: low, dark, half drowned.
+  {
+    const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
+    const yaw = yawOf(pose.aim, pose.position);
+    for (let i = 0; i < 120; i++) {
+      const r = 7 + 130 * Math.pow(scatter.next(), 1.5);
+      const a = yaw + scatter.range(-0.62, 0.5);
+      const x = pose.position[0] + Math.sin(a) * r;
+      const z = pose.position[2] - Math.cos(a) * r;
+      const size = (0.5 + 1.6 * Math.pow(scatter.next(), 2)) * (0.7 + r / 120);
+      if (bed(x, z) < LEVELS.pool + 0.05) placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.12, 0.12), kind: scatter.int(KINDS), sink: scatter.range(0.6, 0.74) });
+    }
+  }
+  const kept = placed.filter((p) => !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : p.sink > 0.555 ? 1.5 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
   STATIONS.foreground.forEach(([x, z, size], i) => {
     kept.push({ x, z, size, yaw: 1.3 + i * 2.4, tilt: 0.1, kind: i % KINDS, sink: 0.55 });
     // A heap, not one stone: smaller rock against its sides.
@@ -277,10 +305,12 @@ export function create(ctx: Context): Piece {
     mine.forEach((p, i) => {
       dummy.position.set(p.x, ground0(p.x, p.z) + p.size * (squat[kind % KINDS] as number) * (1 - 2 * p.sink) * 0.5, p.z);
       dummy.rotation.set(p.tilt, p.yaw, p.tilt * 0.6);
-      dummy.scale.setScalar(p.size);
+      // A heap of weed lies lower and wider than a stone.
+      if (p.sink > 0.555) dummy.scale.set(p.size * 1.25, p.size * 0.6, p.size);
+      else dummy.scale.setScalar(p.size);
       dummy.updateMatrix();
       herd.setMatrixAt(i, dummy.matrix);
-      if (p.size > 0.3) ctx.rig.setDisc(shades, shade++, p.x, p.z, p.size * 1.7, 0.75);
+      if (p.size > 0.3) ctx.rig.setDisc(shades, shade++, p.x, p.z, p.size * 1.5, 0.5);
     });
     herd.instanceMatrix.needsUpdate = true;
     rocks.add(herd);

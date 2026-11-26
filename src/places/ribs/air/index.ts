@@ -75,7 +75,7 @@ void main() {
   float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   float mu = max(dot(rd, uSunDir), 0.0);
   float mu2 = mu * mu;
-  float phase = 0.45 + 1.1 * mu2 * mu2 + 2.2 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
+  float phase = 0.45 + 0.6 * mu2 * mu2 + 0.8 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
   vec3 ambient = uHaze * uScatter.x * uShowAir;
   vec3 sunlit = uSunColour * (uScatter.y * phase) * uShowCloud;
   vec3 sum = vec3(0.0);
@@ -84,7 +84,7 @@ void main() {
   for (int i = 0; i < ${STEPS}; i++) {
     float f = (float(i) + 1.0) / float(${STEPS});
     float t1 = span * f * f;
-    vec3 p = ro + rd * mix(t0, t1, jitter);
+    vec3 p = ro + rd * mix(t0, t1, 0.25 + 0.5 * jitter);
     float a = 1.0 - exp(-thickness(p.y) * (t1 - t0));
     float lit = sunAt(p, landAt(p.xz));
     sum += trans * a * (ambient + sunlit * lit);
@@ -118,7 +118,7 @@ void main() {
 }`;
 
 export function create(ctx: Context): Piece {
-  const storm = ctx.assets.texture('air/storm.jpg');
+  const storm = ctx.assets.texture('mat/sky.jpg');
   storm.wrapS = THREE.MirroredRepeatWrapping;
   storm.wrapT = THREE.ClampToEdgeWrapping;
   storm.needsUpdate = true;
