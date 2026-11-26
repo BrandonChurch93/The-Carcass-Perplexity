@@ -149,13 +149,13 @@ export function create(ctx: HeartContext): HeartPiece {
       ...rig.uniforms,
       uPixel: pixel,
       tTorso: { value: ctx.assets.texture('mat/torso.jpg', { anisotropy: 4 }) },
-      tTorsoNh: { value: ctx.assets.texture('mat/torso-nh.jpg', { kind: 'data', anisotropy: 4 }) },
+      tTorsoNh: { value: ctx.assets.texture('mat/torso-nh.jpg', { kind: 'data', anisotropy: 2 }) },
       tLimb: { value: ctx.assets.texture('mat/limb.jpg', { anisotropy: 4 }) },
-      tLimbNh: { value: ctx.assets.texture('mat/limb-nh.jpg', { kind: 'data', anisotropy: 4 }) },
-      tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 4 }) },
-      tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
-      tFlake: { value: ctx.assets.texture('mat/flake.jpg', { anisotropy: 4 }) },
-      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tLimbNh: { value: ctx.assets.texture('mat/limb-nh.jpg', { kind: 'data', anisotropy: 2 }) },
+      tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 2 }) },
+      tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 2 }) },
+      tFlake: { value: ctx.assets.texture('mat/flake.jpg', { anisotropy: 2 }) },
+      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 2 }) },
       uPools: { value: pools },
       uFeet: { value: feet },
       tGround: { value: ground.texture },
@@ -233,9 +233,9 @@ export function create(ctx: HeartContext): HeartPiece {
           const life = foot.age / PUFF_LIFE;
           const thick = life < 1 ? here * foot.hard * smooth(0, 0.07, life) * (1 - life) * (1 - life) : 0;
           (puffs[i * 4 + j] as THREE.Vector4).set(foot.x, 0.12, foot.z, Math.min(1, life));
-          (puffSize[i * 4 + j] as THREE.Vector4).set(b.padR * (1.5 + 2.6 * Math.sqrt(Math.min(1, life))), b.padR * (1.3 + 2.0 * Math.min(1, life)), 1.2 * thick * PUFF_SHOWN, i * 4 + j);
+          (puffSize[i * 4 + j] as THREE.Vector4).set(b.padR * (1.5 + 2.6 * Math.sqrt(Math.min(1, life))), b.padR * (1.3 + 2.0 * Math.min(1, life)), 2.2 * thick * PUFF_SHOWN, i * 4 + j);
           const off = Math.min(1, foot.lift / (1.2 * b.k));
-          rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (2.0 + 1.6 * off), here * 0.9 * (1 - 0.75 * off));
+          rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (1.7 + 1.9 * off), here * (1 - 0.75 * off));
         });
         rig.setDisc(discs, i * DISCS + 4, stood.body.x, stood.body.z, 3.4 * b.k, here * 0.35, 1.5, -stood.body.yaw + Math.PI / 2);
         const low = Math.min(1, Math.max(0, 1 - (stood.tuft.y - TUFT_UP * b.tendrilLen) / (2 * b.k)));
