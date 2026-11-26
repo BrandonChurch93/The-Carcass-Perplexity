@@ -1,57 +1,61 @@
 {
- "note": "masterRect is px of references/approved/7-reveal/reveal-master.jpg (centre x, centre y, width; every map is 16:9), the units of src/places/reveal/land/levels.ts. The colour pictures hold soft light from the upper left. Heights are greyscale: black is sea and lake, white the highest crests; each is the image tool reading its colour picture, not a survey, and it is not in metres.",
+ "note": "masterRect is px of references/approved/7-reveal/reveal-master.jpg (centre x, centre y, width; every map is 16:9), the units of src/places/reveal/land/levels.ts. The colour pictures hold soft light from the upper left. Heights are greyscale: black is sea and lake, white the highest crests; each is the image tool reading its colour picture, not a survey, and it is not in metres. The maps differ in size: read width and height from each row. sizes: a map marked madeFrom was joined from nine windows and written 4096 px wide; the others are 1672 x 941.",
  "maps": [
   {
    "name": "map-a",
    "colour": "map-a.jpg",
-   "width": 1672,
-   "height": 941,
+   "width": 4096,
+   "height": 2305,
    "masterRect": {
     "cx": 2983.67,
     "cy": 1727.13,
     "width": 5295.59
    },
    "kmWide": 4536,
-   "heights": "map-a-h.png"
+   "heights": "map-a-h.png",
+   "madeFrom": "nine windows made again at 2.5 times and joined (assets-src/reveal/maps/enlarge-maps.py)"
   },
   {
    "name": "map-b",
    "colour": "map-b.jpg",
-   "width": 1672,
-   "height": 941,
+   "width": 4096,
+   "height": 2305,
    "masterRect": {
     "cx": 1554.0,
     "cy": 1581.0,
     "width": 2620.0
    },
    "kmWide": 2244,
-   "heights": "map-b-h.png"
+   "heights": "map-b-h.png",
+   "madeFrom": "nine windows made again at 2.5 times and joined (assets-src/reveal/maps/enlarge-maps.py)"
   },
   {
    "name": "map-c",
    "colour": "map-c.jpg",
-   "width": 1672,
-   "height": 941,
+   "width": 4096,
+   "height": 2305,
    "masterRect": {
     "cx": 1272.85,
     "cy": 1580.8,
     "width": 1130.0
    },
    "kmWide": 968,
-   "heights": "map-c-h.png"
+   "heights": "map-c-h.png",
+   "madeFrom": "nine windows made again at 2.5 times and joined (assets-src/reveal/maps/enlarge-maps.py)"
   },
   {
    "name": "map-d",
    "colour": "map-d.jpg",
-   "width": 1672,
-   "height": 941,
+   "width": 4096,
+   "height": 2305,
    "masterRect": {
     "cx": 1272.85,
     "cy": 1580.8,
     "width": 320.0
    },
    "kmWide": 274,
-   "heights": "map-d-h.png"
+   "heights": "map-d-h.png",
+   "madeFrom": "nine windows made again at 2.5 times and joined (assets-src/reveal/maps/enlarge-maps.py)"
   }
  ]
 }
