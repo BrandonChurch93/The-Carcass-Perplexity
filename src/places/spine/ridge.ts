@@ -275,11 +275,14 @@ export function ground(s: number, l: number): number {
     // Beyond the far mouth the floor does not go on as a plain: it breaks into a gully of snow that falls away to the cloud, veering to
     // the lee, so that from inside the mouth holds a slope going down, the far spires and the sea of cloud.
     const run = d - EXIT - 6;
-    const off = l - canalL(EXIT + 6) - 0.3 * run;
-    const w = (1 - smooth(EXIT + 170, EXIT + 300, d)) * (1 - smooth(EXIT_R * 0.7 + 0.2 * run, EXIT_R * 1.9 + 0.75 * run, Math.abs(off)));
+    // The mouth looks out along the canal's own bend, which carries the eye to the lee at about half a metre a metre.
+    const off = l - canalL(EXIT + 6) - 0.46 * run;
+    const lee = off - 8 - 0.22 * run;
+    const w = (1 - smooth(EXIT + 170, EXIT + 300, d)) * (1 - smooth(EXIT_R * 0.7 + 0.1 * run, EXIT_R * 1.9 + 0.6 * run, Math.abs(lee)));
     y += (Math.min(y, FLOOR - 0.4 - (0.55 * run * run) / (run + 22)) - y) * w;
     // On the windward hand of it a shoulder of drifted snow stands up and goes down across the mouth's view into the gully.
-    y += 15 * Math.exp(-(((run - 75) / 45) ** 2)) * smooth(6, -34, off) * (1 - smooth(-60, -120, off));
+    const shoulder = FLOOR - 0.4 + 12 * Math.exp(-(((run - 62) / 40) ** 2));
+    y += (Math.max(y, shoulder) - y) * smooth(-10, -38, off) * (1 - smooth(-60, -110, off)) * smooth(0, 14, run);
   }
   // Over the canal the rock is the foot of the spire's own face: the near mouth is a few metres before that face and the ground carries
   // a lip of rock over it, which goes up into the blade behind it (the mouth is a hole in the ground's mesh and in the blade's).
