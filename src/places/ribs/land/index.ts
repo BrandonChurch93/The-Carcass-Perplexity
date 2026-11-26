@@ -6,7 +6,7 @@ import { keyPart, shotById } from '../../../film/cut';
 import { shots } from '../cameras';
 import { RIBS, ribByName, weedPoint, type Rib } from '../layout';
 import { COLONY, DROWNED, LEVELS, STATIONS } from '../shared/anchors';
-import { CRAG, cragPhase } from '../shared/crag';
+import { CRAG } from '../shared/crag';
 import type { Context, Piece } from '../shared/context';
 import { RIG_VERTEX } from '../shared/glsl';
 import { LAND } from '../shared/rig';
@@ -103,23 +103,41 @@ function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) 
 
 function colonyRock(): THREE.BufferGeometry {
   const { x, z, top } = COLONY;
-  // The rows follow the ledge lines: each band of cliff is a dozen rows, close together at its lip and across its ledge.
-  const within = [0, 0.04, 0.14, 0.26, 0.4, 0.54, 0.66, 0.76, 0.82, 0.84, 0.88, 0.92, 0.96];
+  // Level rows a hand apart: the blocks of the crag are cut by them, and what nests on it stands on these same rows.
   const profile: [number, number][] = [];
-  for (let k = Math.floor(-16 / CRAG.band); k * CRAG.band < top + 14; k++) for (const f of within) profile.push([(k + f) * CRAG.band - CRAG.mean, 10]);
-  return lathe(x, z, profile, 720, (run, _r, angle) => {
-    const y = run + CRAG.mean - cragPhase(angle);
-    if (y > top + 2.9) return [top + 2.9, 0.01];
+  for (let j = Math.floor(-16 / CRAG.row); j * CRAG.row < top + 3; j++) profile.push([j * CRAG.row, 10]);
+  const around = 900;
+  const g = lathe(x, z, profile, around, (y, _r, angle) => {
     const r = COLONY.cragAt(angle, y);
+    if (r <= 1) return [y, r];
     const px = x + Math.cos(angle) * r;
     const pz = z + Math.sin(angle) * r;
-    const t = (y + cragPhase(angle)) / CRAG.band;
-    const f = t - Math.floor(t);
-    // The face is rough rock; the ledge is left as it is, so that what nests on it stands on it.
-    const face = smooth(0.84, 0.74, f) * smooth(0, 0.05, f);
-    const d = face * (0.35 * relief(px * 1.3, y * 1.3, pz * 1.3) + 1.1 * (fbm3(px / 7, y / 9, pz / 7, 2) - 0.5));
-    return [y, Math.max(0.01, r + (r > 1 ? d : 0))];
+    // The faces are rough rock; a block's top is left nearly as it is, so that what nests on it stands on it.
+    const d = 0.12 * relief(px * 1.3, y * 1.3, pz * 1.3) + 0.25 * (fbm3(px / 5, y / 5, pz / 5, 2) - 0.5);
+    return [y, Math.max(0.01, r + d)];
   });
+  // What hangs from a ledge is drawn by how far under its lip a place is: each point carries the metres down from the lip over it,
+  // and how deep that ledge is (a deep one holds a crowd).
+  const position = g.getAttribute('position') as THREE.BufferAttribute;
+  const uv = g.getAttribute('uv') as THREE.BufferAttribute;
+  const cols = around + 1;
+  const rows = profile.length;
+  const reach = (k: number): number => Math.hypot(position.getX(k) - x, position.getZ(k) - z);
+  for (let i = 0; i < cols; i++) {
+    let lip = 1e3;
+    let deep = 0;
+    for (let j = rows - 2; j >= 0; j--) {
+      const k = j * cols + i;
+      const out = reach(k) - reach(k + cols);
+      if (out > 0.7) {
+        lip = position.getY(k);
+        deep = out;
+      }
+      uv.setXY(k, Math.min(30, lip - position.getY(k)), deep);
+    }
+    uv.setXY((rows - 1) * cols + i, 30, 0);
+  }
+  return g;
 }
 
 export function create(ctx: Context): Piece {

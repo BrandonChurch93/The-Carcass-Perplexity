@@ -301,7 +301,14 @@ void main() {
   // Thin white runs down a face, under where the colony stands; a splash of white on the tops.
   float perch = vnoise(vec2(arc * 0.11, y * 0.12) + 2.0);
   float thin = vnoise(vec2(arc * 4.3, y * 0.09) + 11.0) * 0.55 + vnoise(vec2(arc * 11.7, y * 0.31)) * 0.45;
-  float runs = smoothstep(0.66, 0.74, thin + 0.3 * (perch - 0.5) + 0.1 * (hgt - 0.5)) * face;
+  // The white hangs from the lip of a ledge: broad and run together just under it, in threads lower down, long under a deep
+  // crowded ledge and missing under an empty one.
+  float crowd = smoothstep(0.6, 2.0, vLay.y) * smoothstep(0.3, 0.55, perch + 0.25 * (vnoise(vec2(arc * 0.9, 3.0)) - 0.5));
+  float hang = crowd * exp(-vLay.x / (0.8 + 3.5 * vnoise(vec2(arc * 1.3, 17.0))));
+  float runs = smoothstep(0.72 - 0.45 * hang, 0.8 - 0.4 * hang, thin + 0.2 * (perch - 0.5) + 0.1 * (hgt - 0.5)) * face;
+  // Water runs down the faces too, dark and bright by turns as it goes.
+  float seep = vnoise(vec2(arc * 1.7, y * 0.05) + 31.0) * 0.6 + vnoise(vec2(arc * 5.1, y * 0.2)) * 0.4;
+  float wetRun = smoothstep(0.5, 0.58, seep + 0.1 * (0.5 - hgt)) * face * (1.0 - runs);
   float splash = (1.0 - face) * smoothstep(0.56, 0.68, vnoise(vWorld.xz * 0.45 + 3.0) * 0.6 + vnoise(vWorld.xz * 1.7) * 0.4 + 0.3 * (hgt - 0.5));
   float white = max(0.7 * runs, 0.55 * splash) * (1.0 - band) * (1.0 - 0.5 * low);
   // Rust lichen: patches a stride or two across with broken edges, on the tops and on what faces the sun, never in the wet.
@@ -310,15 +317,20 @@ void main() {
   float lichen = smoothstep(0.64, 0.67, field + 0.12 * nf.y + 0.2 * (sunny - 0.5) + 0.35 * (hgt - 0.5) + 0.1 * (dot(det, vec3(3.8)) - 1.0)) * (1.0 - smoothstep(0.2, 0.7, low)) * (1.0 - white);
   albedo = mix(albedo, vec3(0.115, 0.047, 0.006) * (0.5 + 1.0 * hgt), 0.9 * lichen);
   albedo = mix(albedo, vec3(0.3, 0.3, 0.285) * (0.7 + 0.6 * hgt), white);
-  albedo *= mix(1.0, 0.5, low) * mix(1.0, 0.3, band);
+  albedo *= mix(1.0, 0.5, low) * mix(1.0, 0.3, band) * mix(1.0, 0.62, wetRun);
   vec3 wc = texture2D(tWeed, vec2(arc, y) / 7.0).rgb;
   albedo = mix(albedo, wc * 0.9, weed);
-  float rough = mix(0.92, 0.45, max(weed, max(band, 0.7 * low)));
+  float rough = mix(0.92, 0.45, max(weed, max(max(band, 0.7 * low), wetRun)));
   float occ = (0.6 + 0.4 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.45, weed) * max(vShade, 0.4);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
   vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * uSunColour * cloudShade(vWorld)) * (0.24 / 3.14159) * (0.75 + 0.25 * occ);
   lit = max(lit, fill);
+  // The running water carries the sky down the face in beads: they slide, and the wet white under a ledge glistens with them.
+  float bead = vnoise(vec2(arc * 7.0, y * 1.6 + uTime * 2.3)) * 0.6 + vnoise(vec2(arc * 17.0, y * 3.3 + uTime * 3.7)) * 0.4;
+  vec3 up = reflect(-v, n);
+  up.y = abs(up.y) + 0.1;
+  lit += skyRadiance(normalize(up)) * skyOpen(vWorld) * (0.035 * smoothstep(0.52, 0.7, bead) * max(wetRun, 0.6 * runs));
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
