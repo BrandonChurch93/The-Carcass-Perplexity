@@ -109,7 +109,7 @@ void main() {
   // Its width: a cord for the stalk, widening to the blade, a slow taper, and a ragged tail.
   float blade = smoothstep(aMore.w, aMore.w + 0.09, u);
   float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
-  float halfW = 0.5 * aShape.y * blade * breadth * mix(1.7, 0.6, smoothstep(aMore.w + 0.05, 0.95, u)) * (1.0 + 0.5 * stand);
+  float halfW = 0.5 * aShape.y * blade * breadth * mix(5.0, 0.7, smoothstep(aMore.w + 0.03, 0.8, u)) * (1.0 + 0.5 * stand);
   float far = length(cameraPosition - c);
   float cord = max(0.15, (0.9 + 0.8 * stand) * uPixel * far);
   // Along the stalk the strip is wider than the cord: room for the knots on it and for what hangs from it.
@@ -227,7 +227,7 @@ void main() {
   c += mirror * (0.15 * fres + 0.5 * glint * (0.3 + 0.7 * fres));
   // When a strike is near the ribbon carries the charge along its length for a moment, violet.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.25;
-  c += uGlowTint * (uStruck.y * mine * (0.05 + 0.2 * fold + 0.25 * glint));
+  c += uGlowTint * (uStruck.y * mine * (0.35 + 0.4 * fold + 0.5 * glint));
   float alpha = skin;
   // The cord: dark wet sinew, its fibres twisted along it, round, rimed in beads on top.
   float x = clamp(v / max(girth, 1e-4), -1.0, 1.0);
@@ -377,7 +377,7 @@ export function create(ctx: Context): Piece {
   const out = new THREE.Vector3(WIND[0], 0.25, WIND[2]).normalize();
   ribbons.forEach((rb, r) => {
     for (let k = 0; k < KNOBS; k++) {
-      const girth = Math.min(rb.width, 4.2);
+      const girth = Math.min(rb.width * 1.4, 9);
       const size = girth * (k === 0 ? 0.34 : rng.range(0.13, 0.28));
       const off = k === 0 ? 0 : girth * rng.range(0.25, 0.7);
       const a = rng.range(0, Math.PI * 2);
