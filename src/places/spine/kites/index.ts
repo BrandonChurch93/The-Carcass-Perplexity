@@ -169,15 +169,16 @@ varying vec3 vNormal;
 varying vec4 vAt;
 varying vec4 vKite;
 varying vec3 vSkin;
-// The outline: how wide the blade is at s of its length, as a share of its widest. It leaves the knot gathered, is widest a third of the
-// way down and runs out to a tail. Its two edges are not alike.
+varying vec3 vAcross;
+// The outline: how wide the blade is at s of its length, as a share of its widest. A ribbon: it leaves the knot gathered, keeps much of
+// a width all its length, wandering, and runs out to a tail. Its two edges are not alike.
 float outline(float s, float sd) {
   float h1 = fract(sd * 3.7);
   float h2 = fract(sd * 5.9);
   float h3 = fract(sd * 8.3);
-  float rise = smoothstep(0.0, 0.07 + 0.08 * h1, s);
-  float tail = pow(1.0 - smoothstep(0.3 + 0.25 * h2, 1.0, s), 0.7 + 0.7 * h3);
-  float wander = 1.0 + 0.12 * sin(s * 8.0 + sd * 30.0) + 0.06 * sin(s * 21.0 + sd * 70.0);
+  float rise = smoothstep(0.0, 0.05 + 0.06 * h1, s);
+  float tail = pow(1.0 - smoothstep(0.62 + 0.2 * h2, 1.0, s), 0.6 + 0.6 * h3);
+  float wander = 0.72 + 0.2 * sin(s * 7.0 + sd * 30.0) + 0.1 * sin(s * 19.0 + sd * 70.0);
   return max(0.03, (0.07 + 0.93 * rise) * tail * wander);
 }
 void main() {
@@ -207,7 +208,9 @@ void main() {
   vec3 across = flat_ * cos(roll) + upward * sin(roll);
   vec3 normal_ = cross(tangent, across);
   float far = length(cameraPosition - c);
-  float wide = kHalf * outline(s, kSeed + (v > 0.0 ? 0.37 : 0.0));
+  // Where it has wound on itself it is gathered to a rope, and opens again.
+  float neck = 1.0 - 0.78 * step(0.3, fract(kSeed * 6.1)) * exp(-pow((s - 0.22 - 0.5 * fract(kSeed * 4.7)) / 0.04, 2.0));
+  float wide = kHalf * neck * outline(s, kSeed + (v > 0.0 ? 0.37 : 0.0));
   // Far off a blade is never thinner than a pixel and a half: it does not come and go between the pixels.
   float half_ = max(wide, 0.75 * uPixel * far);
   // The section: an arc the wind fills and empties as the waves pass (curl is half the angle the arc turns through), and two edges that
@@ -225,6 +228,7 @@ void main() {
   vec3 p = c + (across * sx + normal_ * sy) * half_;
   vWorld = p;
   vNormal = normalize(normal_ * dx - across * dy);
+  vAcross = normalize(across * dx + normal_ * dy);
   vAt = vec4(s, v, x, half_);
   vKite = vec4(kSeed, aSeed.z, smoothstep(200.0, 450.0, length(cameraPosition - aAnchor) * uReach), wide / half_);
   vSkin = vec3(curl, kHalf, kBlade);
@@ -246,6 +250,7 @@ varying vec3 vNormal;
 varying vec4 vAt;
 varying vec4 vKite;
 varying vec3 vSkin;
+varying vec3 vAcross;
 const vec3 SKIN_MEAN = vec3(0.321, 0.267, 0.355);
 void main() {
   float s = vAt.x;
@@ -261,12 +266,15 @@ void main() {
   // Where the skin is: inside its outline, less the holes the wind has worked open, the rents in from its edges and the split of its tail.
   // inside is in shares of the half width, 0 at an edge.
   float lie = v;
-  float ragged = 0.05 * (vnoise(vec2(metres * 0.9 + seed, 3.0 * sign(v))) - 0.5) + 0.03 * (vnoise(vec2(metres * 3.1, seed + sign(v))) - 0.5);
-  float inside = 1.0 - abs(lie) + ragged * smoothstep(0.1, 0.3, s);
-  for (int i = 0; i < 2; i++) {
+  float edge = sign(v);
+  float ragged = 0.2 * (vnoise(vec2(metres * 0.6 + seed, 3.0 * edge)) - 0.5) + 0.08 * (vnoise(vec2(metres * 2.3, seed + edge)) - 0.5);
+  // Rents: what the gale has torn in from an edge, some of them deep.
+  float rent = smoothstep(0.6, 0.78, vnoise(vec2(metres * 0.33 + seed * 1.7, 7.0 * edge + 2.0))) * (0.35 + 0.5 * vnoise(vec2(metres * 0.11 + seed, edge)));
+  float inside = 1.0 - abs(lie) + (ragged - rent) * smoothstep(0.05, 0.25, s) * (1.0 - 0.65 * far);
+  for (int i = 0; i < 3; i++) {
     float fi = float(i);
     float h = fract(seed * (0.731 + 0.417 * fi));
-    if (h > 0.6) continue;
+    if (h > 0.8) continue;
     vec2 at = vec2(0.26 + 0.5 * fract(h * 7.7 + 0.3 * fi), (fract(h * 13.3) - 0.5) * 1.1);
     vec2 size = vec2(2.2 + 4.5 * fract(h * 29.1), 0.22 + 0.3 * fract(h * 17.9));
     vec2 q = vec2((s - at.x) * vSkin.z / (size.x * vSkin.y), (lie - at.y) / size.y);
@@ -296,7 +304,15 @@ void main() {
   vec3 r2 = cross(n, px);
   float det = dot(px, r1);
   vec3 slope = (r1 * dFdx(relief) + r2 * dFdy(relief)) * (sign(det) / max(abs(det), 1e-7));
-  n = normalize(n - (1.0 - far) * 0.12 * slope / (1.0 + 0.5 * length(slope)));
+  n = normalize(n - (1.0 - far) * 0.26 * slope / (1.0 + 0.5 * length(slope)));
+  // It is wrinkled down its length: broad folds, a few across its width, that wander and run into each other.
+  float wob = vnoise(vec2(metres * 0.22 + seed, lie * 1.3));
+  float phase = lie * (7.0 + 5.0 * fract(seed * 0.173)) + 5.0 * wob + metres * 0.15;
+  float fold = sin(phase);
+  // And between them narrower ones, seen only close.
+  float phase2 = lie * (15.0 + 6.0 * fract(seed * 0.411)) + 7.0 * vnoise(vec2(metres * 0.35 + seed * 2.0, lie * 2.0)) - metres * 0.1;
+  float fold2 = sin(phase2) * (1.0 - far);
+  n = normalize(n + normalize(vAcross) * (0.5 * cos(phase) * (1.0 - 0.6 * far) + 0.34 * cos(phase2) * (1.0 - far)));
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
 
   // How many skins thick it is: thin where it is stretched over a belly, a body where it is gathered at the knot, at its lip, along a
@@ -305,7 +321,7 @@ void main() {
   float knot = 1.0 - smoothstep(0.0, 0.22, s);
   float crease = smoothstep(0.03, 0.12, relief - 0.33);
   float belly = smoothstep(0.2, 1.0, abs(vSkin.x)) * (1.0 - lie * lie);
-  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease - 0.2 * belly + 0.35 * far;
+  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease + 1.0 * smoothstep(0.2, 1.0, fold) + 0.75 * smoothstep(0.3, 1.0, fold2) - 0.2 * belly + 0.35 * far;
   float path = thick / max(nv, 0.3);
   float cover = (1.0 - exp(-uFilm.y * path)) * cut;
 
@@ -322,14 +338,16 @@ void main() {
   }
   // The film's own colour: lilac grey, with the sheet's stains of rose, violet and gold about its mean.
   vec3 stain = mix(vec3(1.0), clamp(pic / SKIN_MEAN, 0.5, 1.8), uFilm.z);
-  vec3 body = vec3(0.7, 0.74, 1.0) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
+  vec3 body = mix(vec3(0.7, 0.74, 1.0), vec3(1.0, 0.8, 0.98), 1.0 - far) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
   // What it scatters: a pale haze of the light on its two faces, a little even where it is thinnest, so that it stands pale before a
   // dark sky and the sky is still seen through it.
   float thin = 0.8 * uFilm.y;
   float haze = cut * (thin + (1.0 - thin) * (1.0 - exp(-0.8 * path)));
   vec3 above = normalize(vec3(-0.45, 0.72, 0.5));
   vec3 key = skyIrradiance(above) / 3.14159;
-  vec3 c = body * (uFilm.x * (0.55 * onNear + 0.75 * onFar) * haze + 0.25 * key * lip * cut);
+  // Between two folds the skin lies in their shade.
+  float trough = 1.0 - (1.0 - far) * (0.3 * smoothstep(0.1, -0.9, fold) + 0.25 * smoothstep(0.0, -0.9, fold2));
+  vec3 c = body * (uFilm.x * (0.55 * onNear + 0.75 * onFar) * haze * trough + 0.25 * key * lip * cut);
 
   // Wet: it gives the sky back, more aslant, and the colours of a thin film slide over it as it turns.
   float fres = 0.07 + 0.93 * pow(1.0 - nv, 4.0);
@@ -369,14 +387,14 @@ void main() {
   vec3 u = normalize(cross(tangent, vec3(0.0, 1.0, 0.0)));
   vec3 w = cross(u, tangent);
   float far = length(cameraPosition - c);
-  // Sinew as thick as an arm, lumped with ice, knotted where the skin grows from it.
+  // Sinew as thick as a wrist, lumped with ice, knotted where the skin grows from it.
   float lumps = 0.5 * smoothstep(0.45, 0.85, vnoise(vec2(d * 0.55, kSeed * 31.0))) + 0.22 * vnoise(vec2(d * 2.3, kSeed * 17.0));
   float knot = (1.0 - kThread) * exp(-pow((d - kCord) / 0.6, 2.0));
-  float r = mix(0.06, 0.04, kThread) * (1.0 + lumps + 2.2 * knot);
+  float r = mix(0.03, 0.02, kThread) * (1.0 + lumps + 2.6 * knot);
   r *= kThread > 0.5 ? 1.0 - 0.85 * clamp(d / whole, 0.0, 1.0) : 1.0 - 0.9 * smoothstep(kCord + 0.4, whole, d);
   // The holdfast: the cord's own root, swollen where it grips the rock, knuckled, and a little of it inside the stone.
   float root = exp(-max(d, 0.0) / (0.9 + 0.8 * fract(kSeed * 3.1)));
-  r += root * (0.3 + 0.25 * fract(kSeed * 6.7)) * (0.55 + 0.9 * vnoise(vec2(aAt.y * 1.3 + kSeed * 50.0, d * 1.9)));
+  r += root * (0.17 + 0.14 * fract(kSeed * 6.7)) * (0.55 + 0.9 * vnoise(vec2(aAt.y * 1.3 + kSeed * 50.0, d * 1.9)));
   // Far off it is a line a pixel and a third wide and no thinner.
   float least = 0.65 * uPixel * far;
   float thin = min(1.0, r / least);
@@ -522,9 +540,11 @@ void main() {
   float seed = vPod.z * 97.0;
   float rows = smoothstep(-0.2, 0.9, sin(vPod.x * 9.0 + 1.2 * sin(vPod.y * 5.0 + seed)));
   float grain = vnoise(vec2(vPod.y * 4.0 + seed, vPod.x * 9.0));
-  vec3 husk = mix(vec3(0.012, 0.009, 0.009), vec3(0.06, 0.042, 0.036), grain * (0.55 + 0.45 * rows));
-  float rime = smoothstep(0.55, 0.9, 0.7 * n.y - 0.3 * dot(n, normalize(uWind.xyz)) + 0.5 * grain + 0.15 * rows);
-  vec3 c = rigShade(vWorld, n, toCamera, mix(husk, vec3(0.62, 0.66, 0.74), rime), mix(0.85, 0.95, rime), 0.6 + 0.4 * rows);
+  // Brown as old kelp, each husk its own shade, and frost on what looks up, in the rows and on the tip.
+  vec3 husk = mix(vec3(0.05, 0.028, 0.018), vec3(0.24, 0.13, 0.07), grain * (0.5 + 0.5 * rows)) * (0.55 + 0.9 * fract(seed * 0.37));
+  float frost = vnoise(vec2(vPod.y * 9.0 + seed, vPod.x * 17.0));
+  float rime = smoothstep(0.5, 0.85, 0.55 * n.y - 0.25 * dot(n, normalize(uWind.xyz)) + 0.55 * frost + 0.2 * smoothstep(0.3, 1.0, vPod.x)) * 0.8;
+  vec3 c = rigShade(vWorld, n, toCamera, mix(husk, vec3(0.62, 0.66, 0.74), rime), 1.0, 0.45 + 0.55 * rows);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -761,14 +781,14 @@ export function create(ctx: Context): Piece {
       // spine-01, the wide lens from far down the ridge: the first spire's kites broader, its bare threads not drawn.
       const inWide = stagedSeconds() >= wideShot.from && stagedSeconds() <= wideShot.to;
       if (inStrike) stage.set(0.17, 0.32, 0.45, 3);
-      else if (inClose) stage.set(0.46, 0.34, 2.2, 1);
+      else if (inClose) stage.set(0.46, 0.4, 1.6, 1);
       else if (inWide) stage.set(1.25, 1.15, 1, 1);
       else stage.set(1, 1, 1, 0);
       stageMore.set(inStrike ? 1 : 0, inClose ? 0.1 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0, inStrike ? 1.5 : 1);
       fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0);
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
       if (inStrike) film.set(0.3, 0.4, 0.5, 1.4);
-      else if (inClose) film.set(0.2, 0.13, 0.9, 0.6);
+      else if (inClose) film.set(0.34, 0.3, 0.95, 0.75);
       else film.set(0.5, 0.5, 0.4, 1.0);
       veil.value = inStrike ? 1 : 0;
       const flash = flashAt(seconds);

@@ -258,9 +258,9 @@ export function createRig(): Rig {
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
     // The dusk above the cloud, set against the approved wide view: the open sky above the band, the first dark overhead, the cloud sea below, the storm.
-    uSkyZenith: { value: new THREE.Vector3(0.032, 0.035, 0.068) },
-    uSkyHorizon: { value: new THREE.Vector3(0.09, 0.097, 0.155) },
-    uSkyGround: { value: new THREE.Vector3(0.03, 0.033, 0.052) },
+    uSkyZenith: { value: new THREE.Vector3(0.034, 0.038, 0.062) },
+    uSkyHorizon: { value: new THREE.Vector3(0.108, 0.114, 0.144) },
+    uSkyGround: { value: new THREE.Vector3(0.03, 0.034, 0.048) },
     uSkyStorm: { value: new THREE.Vector3(0.012, 0.012, 0.022) },
     uStormDir: { value: new THREE.Vector3(-WIND[0], 0, -WIND[2]).normalize() },
     uWarmDir: { value: new THREE.Vector3(DUSK[0], 0.04, DUSK[2]).normalize() },
@@ -381,9 +381,9 @@ export function createRig(): Rig {
         (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.36, 0.345, 0.42);
         (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.12, 0.115, 0.14);
       } else {
-        (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.032, 0.035, 0.068);
-        (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.09, 0.097, 0.155);
-        (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.03, 0.033, 0.052);
+        (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.034, 0.038, 0.062);
+        (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.108, 0.114, 0.144);
+        (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.03, 0.034, 0.048);
       }
       // Staged by shot: from the cut into the canal the lens is exposed for the dark, and the light that reaches in counts for more.
       (uniforms.uUnder as THREE.IUniform<number>).value = stagedSeconds() >= INSIDE_FROM ? 40 : 1;
