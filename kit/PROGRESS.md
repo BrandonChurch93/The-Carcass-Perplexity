@@ -1625,7 +1625,7 @@ none
 ## Animals kept at a distance
 
 - Open, `ribs-3`, on `main` since 2026-11-26 02:09 UTC (6b36521e): the kite-wings that pass close to the lens at the colony are moved 40 to 60 m off by the sea's owner (`ribs_sea_owner_2`, version 1 of wave 2), after the fliers and the colony drew severe issues in round 10 (R1 pack B, R3 pack B). The detail is carried by the colony on its ledges. The settled sentence is in `settled["ribs-3"]` of `config/showcase.json`, word for word.
-- Open, ordered 2026-11-26 01:10 UTC and not yet in the frames: the drinkers of the Eye (`eye-1`, and the same animals where `eye-2` and `eye-4` show them). The owner `eye_owner_2` restages them under `kit/03-METHOD.md` section 4. The settled sentence is added to each key when its restaged frame is on `main`, and the key is named in the next report block.
+- Open, `eye-1`, `eye-2`, `eye-4`, on `main` since 2026-11-26 02:14 UTC (ecb3bc47): the drinkers of the Eye are restaged by `eye_owner_2` (version 1 of wave 2), ordered 01:10 UTC after they drew severe issues in round 12. `eye-1`: four animals side on in the shallows, 21 to 31 m off, the camera 6.5 m back on the gravel with the foreground soft. `eye-2`: three small animals 31 to 52 m out beyond the mats, in silhouette. `eye-4`: two from behind, cropped by the foot of the frame and out of focus. The detail is carried by the place: the shallows, the mats, the dark water. The settled sentence is in `settled` of `config/showcase.json` for each of the three keys, word for word.
 
 ## For Brandon to decide
 
