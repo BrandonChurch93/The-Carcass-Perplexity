@@ -423,7 +423,7 @@ void main() {
     // Rime: the frost picture at its own 3 m, only round each mouth where the gale reaches; farther in the rock is bare and wet.
     vec3 rimeC = texture2D(tRime, vWorld.zy / 3.0).rgb * tw.x + texture2D(tRime, vWorld.xz / 3.0 + 0.4).rgb * tw.y + texture2D(tRime, vWorld.xy / 3.0 + 0.7).rgb * tw.z;
     float frost = smoothstep(0.32, 0.62, dot(rimeC, vec3(0.33)));
-    float lipW = exp(-max(min(dCanal, EXIT - dCanal) - 2.0, 0.0) / (uUnder > 1.5 ? 9.0 : 13.0));
+    float lipW = exp(-max(min(dCanal, EXIT - dCanal) - 2.0, 0.0) / 9.0);
     wallRime = clamp(frost * 1.5 * lipW * lipW + 0.8 * lipW * lipW * lipW, 0.0, 1.0) * (0.45 + 0.55 * smoothstep(0.25, 0.55, pit + 0.7 * lipW));
     wallRimeC = rimeC;
     // Under frost the rock's grain is filled.
@@ -857,9 +857,10 @@ ${SCORCH_BLOCK}
   }
   if (inside) if (uUnder < 1.5) {
     // No sky stands over the canal's rock, so the rig gives it nothing: what lights the funnel from outside is the sky that looks in at the
-    // mouth, strongest on what faces it and on the wall the low light comes to, less in the pits of the rock. It reaches a few metres.
+    // mouth, on the one wall the low light comes to and not on the roof (lit all round, the mouth reads as a pale ball), less in the pits of
+    // the rock. It reaches a few metres.
     vec3 toMouth = normalize((dCanal < 0.5 * EXIT ? -CANAL_ALONG : CANAL_ALONG) + vec3(0.0, 0.3, 0.0));
-    c += albedo * skyIrradiance(normalize(n + 1.5 * toMouth)) * ((0.25 + 0.75 * smoothstep(-0.2, 0.7, dot(n, toMouth))) * (0.3 + 0.7 * pit) * mix(0.2, 1.0, smoothstep(-0.5, 0.8, (vSL.y - canalAt(dCanal)) / flareAt(dCanal))) * 0.8 / 3.14159);
+    c += albedo * skyIrradiance(normalize(n + 1.5 * toMouth)) * ((0.25 + 0.75 * smoothstep(-0.2, 0.7, dot(n, toMouth))) * (0.3 + 0.7 * pit) * mix(0.04, 1.0, smoothstep(-0.2, 0.9, (canalAt(dCanal) - vSL.y) / flareAt(dCanal))) * mix(0.1, 1.0, smoothstep(0.7, -0.4, (vWorld.y - CANAL_FLOOR) / flareAt(dCanal) - 0.62)) * 0.9 / 3.14159);
     float shown = exp(-max(min(dCanal, EXIT - dCanal) - 4.0, 0.0) / 7.0);
     c = c * (0.03 + 0.97 * shown) + vec3(0.0035, 0.0045, 0.0085) * (1.0 - shown);
   }
