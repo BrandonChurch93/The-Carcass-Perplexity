@@ -1,6 +1,7 @@
 // The shaders of the fall's folder.
 import { WALL_ROCK_GLSL } from '../land/rock';
 import { MOUTH } from '../layout';
+import { MELT_GLSL, SHEET_GLSL } from '../lake/sheet';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { FAN_FROM, FAN_HEAD, TUBE } from './path';
 import { COLLAR } from './shape';
@@ -287,7 +288,8 @@ void main() {
   float head = max(exp(-max(uSurge.x - aFlow.w, 0.0) / 7.0) * smoothstep(uSurge.x + 3.0, uSurge.x, aFlow.w) * uSurge.y, uSurge.z * smoothstep(7.0, -5.0, aFlow.w));
   float across = aIn.y / max(aFlow.z * (1.0 + 0.4 * full + 0.9 * head), 0.1);
   vec3 p = position;
-  p.y += (0.45 * full + 1.5 * head) * sqrt(max(1.0 - across * across, 0.0)) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, aFlow.w)) * (1.0 - aIn.z);
+  // The stream has a body: it stands a forearm proud of its bed at any time.
+  p.y += (0.32 * smoothstep(1.0, 6.0, aFlow.w) + 0.45 * full + 1.5 * head) * sqrt(max(1.0 - across * across, 0.0)) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, aFlow.w)) * (1.0 - aIn.z);
   vWorld = p;
   vNormal = normal;
   vFlow = aFlow;
@@ -301,6 +303,9 @@ void main() {
 // Everything on the surface is drawn in the stream's own coordinates: metres across it and the second at which that lava left the lip,
 // so a mark keeps its place in the lava, rides down at the speed of the flow and is drawn out where the flow quickens.
 const STREAM_GLSL = /* glsl */ `
+// Metres a second the sheet of the stream is read at, and the creep of the delta.
+const float STREAM_RIDE = 2.4;
+const float DELTA_CREEP = 0.3;
 uniform vec4 uSurge;
 // Metres from the lip of the middle of each drop of the main stream, and 1e4 for the rest.
 uniform float uFalls[12];
@@ -310,6 +315,9 @@ float gPx = 0.3;
 float gHalf = 0.0;
 // The lobe of fan crust this is on: x how far it is from the lobe's edge (in lobes), y the lobe's own number.
 vec2 gCell = vec2(0.5, 0.0);
+// What a pixel spans of the stream's own coordinates (the surface sets them; the glow map does not read the sheet).
+vec4 gFlowDx = vec4(0.0);
+vec4 gFlowDy = vec4(0.0);
 float seenAt(float metres) {
   return smoothstep(1.0, 2.6, metres / gPx);
 }
@@ -399,8 +407,9 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   // The fan's edge is ragged where it lies, in lobes: on the lake the sheet itself gives it, on the shore this does.
   ragged = mix(ragged, 0.8 + 0.45 * vnoise(at / 11.0 + 2.0) + 0.14 * vnoise(at / 3.1), smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 14)}, len));
   // The fuller stream does not widen evenly: lobes of it ride down each edge with the lava and fold over the bank.
-  float lobe = vnoise(vec2(age * 1.1 + 3.0, s > 0.0 ? 5.0 : 13.0)) + 0.5 * vnoise(vec2(age * 3.1, s > 0.0 ? 7.0 : 17.0)) - 0.25;
-  float half_ = flow.z * ragged * (1.0 + behind * (0.3 + 0.7 * lobe) * (1.0 - 0.8 * smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, len)) + front * (0.6 + 0.6 * lobe));
+  float lobe = vnoise(vec2(age * 1.1 + 3.0, s > 0.0 ? 5.0 : 13.0)) + 0.7 * vnoise(vec2(age * 4.5, s > 0.0 ? 7.0 : 17.0)) - 0.35;
+  // Its edge is never still: lobes of melt ride down each margin with the lava, swell over the bank and draw back.
+  float half_ = flow.z * ragged * (1.0 + 0.55 * (lobe - 0.5) * smoothstep(2.0, 8.0, len) * (1.0 - smoothstep(${f(FAN_FROM - 4)}, ${f(FAN_FROM + 6)}, len)) + behind * (0.3 + 0.7 * lobe) * (1.0 - 0.8 * smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, len)) + front * (0.6 + 0.6 * lobe));
   // At a drop the stream necks as it quickens.
   half_ *= 1.0 - 0.12 * smoothstep(2.4, 5.2, speed) * (1.0 - smoothstep(${f(FAN_FROM - 4)}, ${f(FAN_FROM + 6)}, len));
   gHalf = half_;
@@ -576,6 +585,19 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     float fed = vnoise(at / 13.0 + 21.0) + 0.45 * gCell.y + 0.25 * behind;
     float joint = smoothstep(0.11, 0.035, gCell.x) * smoothstep(0.42, 0.62, fed) * seenAt(0.9) * calm;
     kelvin = mix(kelvin, max(kelvin, mix(1030.0, 1330.0, smoothstep(0.55, 0.95, fed) * vnoise(at / 3.3 + 7.0))), fan * joint);
+#ifdef STREAM_SHEET
+    // The delta as it was photographed: a wide sheet of melt under plates of dark skin, torn, with the melt alight between them.
+    // It creeps out from the head, most open along the lanes that feed it and at its head, skinned over toward its rim.
+    // Its plates are longer down the fall line than across it.
+    vec2 fp = vec2(1.6 * fs, fl - DELTA_CREEP * uTime);
+    float rr = max(r * r, 1.0);
+    vec2 fx = vec2(72.0 * (out_.y * gDx.x - out_.x * gDx.z) / rr, dot(out_, gDx.xz) / max(r, 1.0));
+    vec2 fy = vec2(72.0 * (out_.y * gDy.x - out_.x * gDy.z) / rr, dot(out_, gDy.xz) / max(r, 1.0));
+    vec3 fm = meltAt(fp, 32.0, fx, fy, 21.0);
+    float fz = clamp(fm.z + 0.5 * smoothstep(0.1, 0.7, lane) * (1.0 - 0.6 * crusted) - 0.03 + 0.22 * behind + 0.25 * smoothstep(26.0, 8.0, r) - 0.3 * smoothstep(40.0, 95.0, r), 0.0, 1.0);
+    float fheat = max(1.0 - pow(1.0 - fz, 2.0), 0.08);
+    kelvin = mix(kelvin, 780.0 + 760.0 * fheat, fan * calm);
+#endif
   }
   // The surge: everything behind its front runs hotter and the front itself is the hottest thing in the frame.
   // The melt between the slabs is the brightest thing on the river; a slab keeps its own dark.
@@ -591,6 +613,29 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     float churn = vnoise(vec2(s * 0.9 + 1.0, age * 5.0)) ;
     kelvin = mix(kelvin, 1505.0 + 55.0 * churn, pool * behind * (1.0 - drop) * (1.0 - raft) * (1.0 - 0.6 * smoothstep(0.5, 0.95, u)));
   }
+#ifdef STREAM_SHEET
+  // The stream as it was photographed: a thick sheet of melt that carries plates of dark skin a third of its width across. The
+  // sheet is read in what the lava carries (metres across, the second it left the lip), so a plate rides down whole, is drawn
+  // out and torn where a drop quickens the melt, and bunches where the melt slows at the foot. Against the rock a rind has frozen.
+  float sheetOn = (1.0 - lay) * smoothstep(-3.0, 3.0, len);
+  if (sheetOn > 0.0) {
+    vec2 mp = vec2(s, STREAM_RIDE * (flow.x - uTime));
+    vec3 m = meltAt(mp, 10.0, vec2(gFlowDx.y, STREAM_RIDE * gFlowDx.x), vec2(gFlowDy.y, STREAM_RIDE * gFlowDy.x), 3.0);
+    float rindAt = u + 0.16 * (vnoise(vec2(len * 0.5, s > 0.0 ? 2.0 : 9.0)) - 0.5) + 0.07 * (vnoise(vec2(len * 1.9, s * 1.3)) - 0.5);
+    float rind = smoothstep(0.66, 0.84, rindAt) * (1.0 - 0.5 * fast) * smoothstep(1.0, 6.0, len);
+    // The body of the stream is bare melt, orange at its margins and yellow-white down its middle, its folds those of the sheet.
+    float body = clamp(0.46 + 0.5 * m.z + 0.3 * (1.0 - u) * (1.0 - u) + 0.14 * core + 0.1 * fast + 0.08 * behind, 0.0, 1.0);
+    // The plates come down in packs: whole reaches carry them and others run bare, they crowd the margins, and a drop tears
+    // most of them up. A plate stays dark however the melt round it runs.
+    float packed = smoothstep(0.35, 0.6, vnoise(mp / 4.5 + 7.0) + 0.5 * dark - 0.3 * bright + 0.35 * smoothstep(0.5, 0.95, u) - 0.3 * fast - 0.1 * behind);
+    float plate = (1.0 - smoothstep(0.04, 0.16, m.z)) * packed;
+    float heat = mix(body, 0.13 + 0.08 * behind, plate);
+    heat *= 1.0 - 0.85 * rind;
+    // The rind glows where the melt runs against it.
+    heat = max(heat, 0.55 * smoothstep(0.07, 0.0, abs(rindAt - 0.68)) * (1.0 - 0.5 * rind));
+    kelvin = mix(kelvin, 780.0 + 780.0 * heat, sheetOn);
+  }
+#endif
   // The front shoves the skin of the reach it runs into before it: a dark collar of jammed plates that goes down with the head.
   float shove = smoothstep(uSurge.x + 13.0, uSurge.x + 4.5, len) * smoothstep(uSurge.x - 0.5, uSurge.x + 3.5, len) * uSurge.y * smoothstep(2.0, 9.0, len) * (1.0 - lay);
   if (shove > 0.0) {
@@ -612,10 +657,13 @@ varying float vApron;
 uniform sampler2D tCliff;
 uniform sampler2D tCrust;
 uniform sampler2D tCrustNh;
+#define STREAM_SHEET
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${WINDOW_FRAGMENT}
 ${TUBE_GLSL}
+${SHEET_GLSL}
+${MELT_GLSL}
 ${STREAM_GLSL}
 void main() {
   // The true lie of the surface, for the sheer drop under the sill where the sheet is drawn out and its own normals streak.
@@ -625,6 +673,8 @@ void main() {
   vec4 fDy = dFdy(vFlow);
   vec3 flat_ = normalize(cross(gDx, gDy));
   gPx = max(max(length(gDx), length(gDy)), 0.01);
+  gFlowDx = fDx;
+  gFlowDy = fDy;
   vec2 lava = stream(vFlow, vBank.w, vIn.yz, vWorld.xz);
   // Where the toe of the fan goes under the lake its skin is broken by the lake's heave, and the edge glows.
   // There the melt pools behind its own crust in a ragged band, near white where it breaks out, and small flames stand along it.

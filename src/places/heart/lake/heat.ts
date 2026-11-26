@@ -254,7 +254,7 @@ void plateAt(vec2 q, float moves) {
     vec2 rest = (c + 0.5 + 0.56 * (h - 0.5)) * PLATE;
     // The melt under the crust turns in slow cells a few plates wide; a plate goes with the cell under it, more or less.
     float way = 6.2832 * vnoise(rest / 330.0 + 9.0) + 1.2 * (k.x - 0.5);
-    vel[n] = (0.2 + 0.4 * k.y) * vec2(cos(way), sin(way));
+    vel[n] = (0.3 + 0.6 * k.y) * vec2(cos(way), sin(way));
     at[n] = rest + vel[n] * dt;
     vec2 r = at[n] - p;
     float d = dot(r, r);
