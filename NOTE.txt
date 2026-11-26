@@ -1,5 +1,7 @@
-2026-11-26 15:14 UTC
-work at 84a491a on agent/spine-strike
-Round 3: pairs of 7234, 7668, 8090 (mine left, approved right) and the sheet 8085 to 8096. 8090 now has one cloud lit violet from inside at the upper right of the mouth; wrong: no cool rim on the standing animal's back, the floor's streak of that light is faint, the cloud is paler and softer than the approved one
-look-1.jpg = out/work/keys-pairs.jpg
-look-2.jpg = out/work/sheets/strike-6.png
+2026-11-26 15:34 UTC
+work at c33cddd on agent/spine-strike
+Round 3 at c33cddd: pairs (mine left, approved right) of 8090, 7234, 7668 and the sheet 8085 to 8096. 8090 has one cloud lit violet from inside at the upper right of the mouth and a cool cast on the standing coat; wrong: the cast is on the whole coat more than its rim, the floor's streak is faint, the cloud is paler than the approved one
+look-1.jpg = out/work/pair-8090.jpg
+look-2.jpg = out/work/pair-7234.jpg
+look-3.jpg = out/work/pair-7668.jpg
+look-4.jpg = out/work/sheets/strike-6.png
