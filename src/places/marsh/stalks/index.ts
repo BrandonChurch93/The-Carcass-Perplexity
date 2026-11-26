@@ -490,9 +490,11 @@ export function create(ctx: Context): Piece {
     group.add(heads);
     // The stands of the wide shot: more stems and their heads, the leaf that hangs down the stems, and the growth at their feet.
     const stands = growStands(ctx, wilds, uSeconds);
-    const more = new THREE.Mesh(instanced(sheet(1, 12), stands.stems.length, lines(stands.stems)), palmMaterial);
+    const more = new THREE.Mesh(instanced(sheet(1, 12), stands.near, lines(stands.stems.slice(0, stands.near))), palmMaterial);
     more.frustumCulled = false;
-    wide.add(more);
+    const moreFar = new THREE.Mesh(instanced(sheet(1, 4), stands.stems.length - stands.near, lines(stands.stems.slice(stands.near))), palmMaterial);
+    moreFar.frustumCulled = false;
+    wide.add(more, moreFar);
     const hung: Wild[] = [];
     const h1: number[] = [];
     const h2: number[] = [];
@@ -503,7 +505,7 @@ export function create(ctx: Context): Piece {
         h2.push(c[4] as number, c[5] as number, c[6] as number, (c[7] as number) + 1);
       }
     }
-    const leaf = new THREE.Mesh(instanced(sheet(2, 2), hung.length, { ...lines(hung), aCard: new Float32Array(h1), aCard2: new Float32Array(h2) }), headMaterial);
+    const leaf = new THREE.Mesh(instanced(sheet(1, 1), hung.length, { ...lines(hung), aCard: new Float32Array(h1), aCard2: new Float32Array(h2) }), headMaterial);
     leaf.frustumCulled = false;
     wide.add(leaf, stands.group);
     wideShade = stands.shade;
