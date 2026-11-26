@@ -1,5 +1,6 @@
 // The drowned one: a kite-wing the last bore left in the weed of the first rib, head down, sodden, with the weed grown through it and crabs on it.
 import * as THREE from 'three';
+import { FPS } from '../../../config';
 import { resolve } from '../../../core/cameras';
 import { shotById } from '../../../film/cut';
 import { shots } from '../cameras';
@@ -17,8 +18,8 @@ export const PARTS: readonly string[] = ['drowned'];
 const SIZE = 1.45;
 const STRANDS = 220;
 const CRABS = 16;
-/** In the card loop a gust sets the hung body swinging on its hook and it settles again: radians either way at the most. */
-const SWING = 0.06;
+/** In the card loop the hung body swings on its hook as a pendulum: radians, the size of its first turn. */
+const SWING = 0.07;
 /** The picture of the hung body (1448 by 1086 px) is the plan of a body with depth: metres from the hook to the end of the tuft, and its turn from square to the lens. */
 const PLATE = { high: 9.5, turn: 0.2 };
 /** Where the body lies in its picture (1448 by 1086): from, to across it. */
@@ -34,6 +35,8 @@ const HUNG = {
   head: [960, 520],
   trunk: [1.3, 1.9],
   girth: 0.8,
+  /** Where the weed caught on it hangs, behind every limb. */
+  strands: 0.95,
   limbs: [
     { at: 480, top: 330, out: 1.2, plumb: 0 },
     { at: 625, top: 400, out: 2.1, plumb: 0.1 },
@@ -50,7 +53,7 @@ const HUNG = {
   ],
 } as const;
 /** How far the body turns on its hook in the wind of the film, radians either way, and each limb about its own root. */
-const SWAY = { body: 0.004, limb: 0.011 };
+const SWAY = { body: 0.004, limb: 0.011, loop: 0.05 };
 
 // The body is drawn in the plane of the weed's face: u along the face away from the establishing camera, d down it, o out of it.
 type Point = [number, number, number];
@@ -427,10 +430,12 @@ uniform vec3 uProud;
 uniform vec3 uKeyEye;
 uniform vec3 uSkyWay;
 uniform float uTime;
+uniform vec4 uSwing;
 varying vec3 vWorld;
 varying vec2 vUv;
 varying vec3 vShape;
 varying vec3 vLay;
+const float LAY = 0.3;
 const float METRE = ${glslNumber(1086 / PLATE.high)};
 const vec2 HIP = vec2(${HUNG.hip.map(glslNumber).join(', ')});
 const vec2 HEAD = vec2(${HUNG.head.map(glslNumber).join(', ')});
@@ -475,13 +480,16 @@ void main() {
   float number = floor(l.x / 140.0);
   float hangs = (1.0 - here.x) * max(pix.y - l.y, 0.0) / METRE;
   float loose = l.x > 990.0 ? 2.6 : 1.0;
-  float swing = ${glslNumber(SWAY.limb)} * loose * (sin(uTime * 1.1 + number * 1.9) + 0.5 * sin(uTime * 1.9 + number * 4.1));
-  float nod = ${glslNumber(SWAY.limb)} * loose * sin(uTime * 0.8 + number * 2.7);
+  // uSwing: the angle each of the three turns stands at in the key (there every limb hangs as the picture has it), and how far a limb swings.
+  float swing = uSwing.w * loose * (cos(number * 1.9) * sin(uTime * 1.1 - uSwing.x) + 0.5 * cos(number * 4.1) * sin(uTime * 1.9 - uSwing.y));
+  float nod = uSwing.w * loose * cos(number * 2.7) * sin(uTime * 0.8 - uSwing.z);
   vec3 flat_ = uOrigin + uAxis * (at.x - 0.12) + uDrop * at.y + normalize(uAxis) * (hangs * swing);
   // Out of the plane along the line of sight of the key: there the picture keeps its outline, everywhere else it is seen to have depth.
-  vec3 ray = uKeyEye - flat_;
+  // The flat picture lay LAY out of the plane (the middle of its old relief): from there, so the body keeps its place in the key.
+  vec3 lay = flat_ + uProud * LAY;
+  vec3 ray = uKeyEye - lay;
   float depth = here.y + hangs * nod;
-  vec3 w = flat_ + ray * (depth / dot(ray, uProud));
+  vec3 w = lay + ray * ((depth - LAY) / dot(ray, uProud));
   vShape = vec3(dx, dy, depth);
 #ifdef SHADE
   float fall = (depth - 0.7) / dot(uSkyWay, uProud);
@@ -489,7 +497,7 @@ void main() {
   vShape.z = fall;
 #endif
   vWorld = w;
-  vLay = flat_ + uProud * 0.3;
+  vLay = lay;
   vUv = uv;
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
 }`;
@@ -511,7 +519,7 @@ void main() {
   // The farther the part hangs from the face the wider and the fainter what it hides of the sky.
   float far = max(vShape.z, 0.0);
   float hidden = textureLod(tRelief, vUv, 2.5 + 0.9 * far).r;
-  float dark = clamp(hidden * 2.0, 0.0, 1.0) * (0.45 + 0.4 * exp(-0.7 * far)) * (1.0 - uSolo);
+  float dark = clamp(hidden * 2.4, 0.0, 1.0) * (0.6 + 0.3 * exp(-0.7 * far)) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(vec3(0.0)) * dark, dark);
 #else
   vec3 pic = texture2D(tCarcass, vUv).rgb;
@@ -549,8 +557,9 @@ void main() {
   vec3 grey = vec3(0.3, 0.5, 0.2);
   float lit = dot(skyIrradiance(n), grey) + dot(uSunColour, grey) * max(dot(n, uSunDir), 0.0) * sunHere;
   float flat_ = dot(skyIrradiance(wet), grey) + dot(uSunColour, grey) * max(dot(wet, uSunDir), 0.0) * sunHere;
-  float form = clamp(lit / max(flat_, 1e-4), 0.45, 1.5);
-  float occ = form * mix(0.84, 1.0, smoothstep(1.2, 2.2, vShape.z)) * (1.0 - 0.3 * smoothstep(0.8, 3.0, -vShape.y));
+  // A limb is a hand wide in the frame: turned all the way, its far half is the colour of the weed behind it and the limb is lost.
+  float form = clamp(mix(1.0, lit / max(flat_, 1e-4), 0.5), 0.88, 1.3);
+  float occ = form * mix(0.92, 1.0, smoothstep(1.2, 2.2, vShape.z)) * (1.0 - 0.15 * smoothstep(0.8, 3.0, -vShape.y));
   col *= occ;
   // Water still runs off it: threads of it slide down the hide, bead after bead, and each bead holds the sky.
   float thread = smoothstep(0.8, 0.97, 0.5 + 0.5 * sin(vUv.x * 210.0 + 5.0 * sin(vUv.x * 47.0)));
@@ -866,9 +875,11 @@ export function create(ctx: Context): Piece {
       .clone()
       .addScaledVector(axis, plateWide * (scatter.range(0.22, 0.86) - 0.12))
       .addScaledVector(down, PLATE.high * scatter.range(0.42, 0.8));
-    // Caught on the near limbs, or hanging between them from the trunk: at the depth of what holds it.
+    // They hang between the face and the limbs, as they did behind the picture: a strand is as wide as half a limb, and one hung before a
+    // far limb hides it.
+    flat.addScaledVector(proudWay, 0.3);
     const ray = keyEye.clone().sub(flat);
-    const root = flat.addScaledVector(ray, HUNG.limbs[1 + 2 * (i % 2)].out / ray.dot(proudWay));
+    const root = flat.addScaledVector(ray, (HUNG.strands - 0.3) / ray.dot(proudWay));
     const fall = down.clone().addScaledVector(axis, scatter.range(-0.15, 0.15)).normalize();
     falls.set([fall.x, fall.y, fall.z], i * 3);
     roots.set([root.x, root.y, root.z, 0.06], i * 4);
@@ -883,6 +894,8 @@ export function create(ctx: Context): Piece {
   const swungOrigin = plateOrigin.clone();
   const swungAxis = plateAxis.clone();
   const swungDrop = plateDrop.clone();
+  const keySeconds = keyFrame / FPS;
+  const swingAt = new THREE.Vector4();
   const plateMaterial = new THREE.ShaderMaterial({
     vertexShader: PLATE_VERTEX,
     fragmentShader: PLATE_FRAGMENT,
@@ -896,6 +909,7 @@ export function create(ctx: Context): Piece {
       uProud: { value: proudWay },
       uKeyEye: { value: keyEye },
       uSkyWay: { value: skyWay },
+      uSwing: { value: swingAt },
     },
     side: THREE.DoubleSide,
   });
@@ -933,17 +947,19 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('drowned', plate, shade, strands, crabMesh), shade, strands, crabMesh);
 
   return {
-    // In the film it hangs still. In the card loop a gust swings it on its hook, about the middle of the plate's top, at the pace of a
-    // weight of that length, and it hangs still again before the loop comes round.
+    // It turns on its hook, about the middle of the picture's top.
     setTime: (seconds: number) => {
       const lp = loopPhase();
       strands.material = lp === null ? weedMaterial : weedLoop;
       plate.material = lp === null ? plateMaterial : plateLoop;
       shade.material = lp === null ? shadeMaterial : shadeLoop;
-      const u = lp === null ? 0 : Math.min(1, Math.max(0, (lp - 0.05) / 0.9));
-      const gust = Math.sin(Math.PI * u) ** 2;
-      // In the film the wind only stirs it: two slow turns that never meet the same way twice in the shot.
-      const swing = lp === null ? SWAY.body * (Math.sin(seconds * 0.83 + 1.2) + 0.6 * Math.sin(seconds * 1.37)) : SWING * gust * Math.sin(3 * Math.PI * u);
+      // A dead weight on its hook: in the film the wind only stirs it, two slow turns that meet in the key, where it hangs as the picture has
+      // it. In the card loop it swings as a pendulum of its length, one turn a loop and a second of two, and each limb on turns of its own.
+      const since = seconds - keySeconds;
+      const turn = lp === null ? 0 : lp * Math.PI * 2;
+      const swing = lp === null ? SWAY.body * (Math.sin(since * 0.83) + 0.6 * Math.sin(since * 1.37)) : SWING * (Math.sin(turn + 0.6) + 0.35 * Math.sin(2 * turn + 2.1));
+      if (lp === null) swingAt.set(keySeconds * 1.1, keySeconds * 1.9, keySeconds * 0.8, SWAY.limb);
+      else swingAt.set(0, 0, 0, SWAY.loop);
       if (swing === 0) {
         swungOrigin.copy(plateOrigin);
         swungAxis.copy(plateAxis);
