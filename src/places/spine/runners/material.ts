@@ -428,7 +428,7 @@ void main() {
   float crystals = vnoise3(vWorld * 520.0);
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
-  albedo = mix(albedo, vec3(0.04, 0.03, 0.032) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
+  albedo = mix(albedo, vec3(0.13, 0.105, 0.1) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
   rime = mix(rime, 0.7 * smoothstep(0.55, 0.9, n.y * 0.5 + 0.5 + 0.45 * (crystals - 0.5) + 0.25 * (vnoise3(vWorld * 45.0) - 0.5)), uWrithe.y);
   // On a living one in the cold its own breath has frozen on them: they hang frosted, pale as the coat.
   rime = max(rime, (1.0 - uWrithe.y) * (0.45 + 0.4 * crystals));
