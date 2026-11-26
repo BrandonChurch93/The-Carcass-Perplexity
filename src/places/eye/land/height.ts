@@ -219,10 +219,11 @@ export function streamFloor(along: number): number {
   return filled * (1 - back) + cutFloor(along) * back;
 }
 
+const BAY = { x: -19.277, z: 638.209, fx: 0.087155, fz: -0.996195 };
 const HEAPS: [number, number, number, number][] = [
-  [135, 8.8, 3.2, 2.4],
+  [135, 8.8, 3.2, 3.0],
   [129, 14, 4.5, 1.7],
-  [134.5, -6.6, 2.6, 2.3],
+  [131, -7.6, 3.8, 6.0],
   [131, -20, 4.6, 1.8],
 ];
 
@@ -230,11 +231,6 @@ export function landHeight(x: number, z: number): number {
   let y = landBase(x, z);
   if (Math.hypot(x, z) - shoreAt(Math.atan2(x, -z) / DEG) < -1) return y;
   const [along, across] = axisOf(x, z);
-  // Two heaps of fallen rock stand at the corners of the wide picture, right and left of the camera's way, and the blocks lie on them.
-  for (const [a, c, wide, tall] of HEAPS) {
-    const d = Math.hypot(along - a, across - c) / wide;
-    if (d < 2.5) y += tall * Math.exp(-d * d) * (0.8 + 0.4 * vnoise(x / 3.1 + 7, z / 3.1));
-  }
   if (along > -6 && along < 2600 && Math.abs(across) < 400) {
     const off = Math.abs(across - streamAcross(along));
     const reach = 7 + 5 * vnoise(along / 31, 7.7);
@@ -251,6 +247,22 @@ export function landHeight(x: number, z: number): number {
       const bank = floor + 0.6 * smooth(1.5, 3.2, off) * (1 - smooth(4.6, reach, off)) * smooth(26, 40, along) * (1 - smooth(130, 140, along));
       if (y < bank) y = bank;
     }
+  }
+  // Heaps of fallen rock stand at the corners of the wide picture, right and left of the camera's way, and the blocks lie on them.
+  // They are laid after the stream has cut its bed, and keep clear of the water itself.
+  const clear = smooth(2.6, 4.6, Math.abs(across - streamAcross(along)));
+  for (const [a, c, wide, tall] of HEAPS) {
+    const d = Math.hypot(along - a, across - c) / wide;
+    if (d < 2.5) y += clear * tall * Math.exp(-d * d) * (0.8 + 0.4 * vnoise(x / 3.1 + 7, z / 3.1));
+  }
+  // Before the shore camera the lake has flooded the beach: a rocky lip stays at the lower left of its picture, the rest lies a hand deep.
+  const ahead = (x - BAY.x) * BAY.fx + (z - BAY.z) * BAY.fz;
+  const aside = (z - BAY.z) * BAY.fx - (x - BAY.x) * BAY.fz;
+  if (ahead > -3 && ahead < 13 && Math.abs(aside) < 9) {
+    const edge = -0.5 - 0.45 * (ahead - 5.5) + 0.9 * (vnoise(ahead / 1.1 + 3, 1.7) - 0.5) + 0.3 * (vnoise(ahead / 0.3, 5.1) - 0.5);
+    const w = smooth(0, 1.1, aside - edge) * smooth(8.5, 6, aside) * smooth(-3, 0.5, ahead);
+    const floor = -0.12 + 0.08 * vnoise(x / 0.8, z / 0.8);
+    if (floor < y) y += (floor - y) * w;
   }
   return y;
 }
