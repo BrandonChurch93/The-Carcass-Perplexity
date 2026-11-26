@@ -57,7 +57,7 @@ export function create(ctx: Context): Piece {
   const stalks = makeStalks(makePools());
   // TEMPORARY, until the lead moves them in the anchors: the four stalks by the hero wallower stand between the lens of marsh-3 and its head.
   // They go behind and to the left of the muzzle, where the approved picture has them.
-  const moved: [number, number][] = [[35.4, 0.1], [35.9, -0.4], [35.2, -0.9], [34.6, -1.6]];
+  const moved: [number, number][] = [[37.0, -0.3], [37.6, -0.9], [36.8, -1.5], [36.2, -2.2]];
   moved.forEach((m, i) => {
     const s = stalks[stalks.length - 4 + i];
     const p = rel(m[0], m[1]);

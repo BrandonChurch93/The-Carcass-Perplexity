@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { DEG, HERO_DOME, K1_AT, K1_DIR, POOL_R, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
+import { DEG, HERO_DOME, K1_AT, K1_DIR, K2_AT, K2_DIR, POOL_R, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { bakeNoise } from './noise';
 import { createSky } from './sky';
@@ -14,7 +14,7 @@ export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   // The rain: middle bearing and half width in radians, distance in metres, thickness.
-  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 0.6);
+  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 0.7);
   const sky = createSky(ctx, noise, rain);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
@@ -26,9 +26,9 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('air/steam');
   const lean: [number, number] = [-0.5, -0.12];
   const main = bearingDir(300);
-  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.4, strength: 0.34, rise: 16, kind: 'steam', lean });
+  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.8, strength: 0.8, rise: 16, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
-  own.push({ at: [-4, 0, -1], radius: 6, strength: 0.022, rise: 5, kind: 'steam', lean });
+  own.push({ at: [-1, 0, -4], radius: 5, strength: 0.012, rise: 5, kind: 'steam', lean });
   // The low steam that drifts off the warm brine. With SHEETS it lies in sheets over these patches (x, z, radius, thickness); without, it
   // is four wide low columns.
   const drift: [number, number] = [-0.9, -0.25];
@@ -43,9 +43,9 @@ export function create(ctx: Context): Piece {
     return [node[0], node[1]];
   };
   const mist: THREE.Vector4[] = [
-    new THREE.Vector4(-2, -1, POOL_R * 0.8, 0.26),
+    new THREE.Vector4(-1, -3, POOL_R * 0.6, 0.16),
     new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 12 - 5, HERO_DOME[1] + K1_DIR[1] * 12, 7, 0.6),
-    new THREE.Vector4(-6, -5, 7, 0.3),
+    new THREE.Vector4(-3, -9, 7, 0.3),
     new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),
     new THREE.Vector4(vein(11)[0], vein(11)[1], 12, 0.5),
     new THREE.Vector4(main[0] * 16, main[1] * 16, 11, 0.5),
@@ -80,7 +80,9 @@ export function create(ctx: Context): Piece {
       uRain: { value: rain },
       uMistCount: { value: 6 },
       uMist: { value: mist },
-      uClear: { value: new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12) },
+      uBanks: { value: [78, 128, 195].map((d, k) => new THREE.Vector4(rel(1, 0)[0] - rel(0, 0)[0], rel(1, 0)[1] - rel(0, 0)[1], rel(d, 0)[0] * (rel(1, 0)[0] - rel(0, 0)[0]) + rel(d, 0)[1] * (rel(1, 0)[1] - rel(0, 0)[1]), [0.3, 0.36, 0.45][k] as number)) },
+      // No low steam stands between a lens and what it is set on: round the wallowers, and in front of the lens of the colony.
+      uClear: { value: [new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12), new THREE.Vector3(K2_AT[0] + K2_DIR[0] * 6, K2_AT[1] + K2_DIR[1] * 6, 8)] },
     },
     defines: SHEETS ? { SHEETS: 1 } : {},
     depthTest: false,

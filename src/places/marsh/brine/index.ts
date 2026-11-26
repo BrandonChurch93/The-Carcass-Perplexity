@@ -2,7 +2,7 @@
 // seep pool (part `domes`), and the tearing of a dome into a crown and drops, with the rings it leaves (part `burst`).
 // All of it is a function of the place's seconds: every dome has a period and a moment in it, and nothing is remembered between frames.
 import * as THREE from 'three';
-import { BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract } from '../shared/anchors';
+import { BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, rel } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { landShared } from '../land';
 import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS } from './shaders';
@@ -73,7 +73,7 @@ export function create(ctx: Context): Piece {
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
+    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;

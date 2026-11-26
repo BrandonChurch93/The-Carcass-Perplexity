@@ -33,7 +33,8 @@ uniform vec4 uRain;
 uniform int uMistCount;
 uniform vec4 uMist[${MAX_MIST}];
 // Where no low steam lies, whatever the patches say: x, z, radius in metres (the wallow, where the animals are to be seen whole).
-uniform vec3 uClear;
+uniform vec3 uClear[2];
+uniform vec4 uBanks[3];
 varying vec2 vUv;
 ${HASH_GLSL}
 ${RIG_GLSL}
@@ -160,7 +161,7 @@ void main() {
           vec2 d = (p.xz - uMist[m].xy - wind * y * 1.6) / (uMist[m].z * (1.0 + 0.3 * y));
           cover += uMist[m].w * exp(-dot(d, d));
         }
-        cover *= smoothstep(uClear.z, uClear.z + 7.0, length(p.xz - uClear.xy));
+        cover *= smoothstep(uClear[0].z, uClear[0].z + 7.0, length(p.xz - uClear[0].xy)) * smoothstep(uClear[1].z, uClear[1].z + 7.0, length(p.xz - uClear[1].xy));
         if (cover < 0.004) continue;
         // Carried downwind at the pace of a walk, the upper sheets faster than the lower; pushed about by a second, slower field.
         vec2 at = p.xz - wind * uTime * (0.34 + 0.16 * fl);
@@ -236,7 +237,7 @@ void main() {
     float streaks = textureLod(tNoise, vec3(lean * 0.33, el * 0.35 - uTime * 0.03, 0.7), 0.0).r * 0.55 + textureLod(tNoise, vec3(lean * 1.3, el * 0.8 - uTime * 0.07, 0.13), 0.0).b * 0.45;
     float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
     float base = smoothstep(0.42, 0.1 + 0.1 * veils, el) * smoothstep(0.0, 0.07, el);
-    rain = uRain.w * body * base * (0.4 + 1.2 * streaks);
+    rain = uRain.w * body * base * (0.75 + 0.5 * streaks);
   }
   float show = uShow.x;
   // The haze lies in layers: thicker and thinner by the bearing and by how far off it is.
@@ -250,6 +251,20 @@ void main() {
     float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
     float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
     bank = 0.0019 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    // Nearer than that, banks of mist stand over the far pools, each a wall a few strides high, broken along its length and drifting, so
+    // the flats go off in steps and not in one grade. (x, z: the way they face; then how far along it; then how thick.)
+    for (int k = 0; k < 3; k++) {
+      vec4 B = uBanks[k];
+      float along = dot(rd.xz, B.xy);
+      if (abs(along) < 1e-3) continue;
+      float t = (B.z - dot(ro.xz, B.xy)) / along;
+      if (t <= 0.0 || t >= far) continue;
+      vec3 p = ro + rd * t;
+      float lateral = p.x * B.y - p.z * B.x + uTime * 0.35;
+      vec4 lay = textureLod(tNoise, vec3(lateral / 120.0 + float(k) * 0.37, 0.31 + float(k) * 0.23, 0.2 + uTime * 0.003), 0.0);
+      float top = 2.5 + 7.0 * lay.b;
+      bank += B.w * smoothstep(0.42, 0.7, lay.g) * exp(-max(p.y, 0.0) / top) * min(1.0 / abs(along), 4.0) * smoothstep(0.0, 14.0, far - t) * show;
+    }
   }
 #endif
   if (rain > 0.0) {

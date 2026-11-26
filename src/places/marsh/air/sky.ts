@@ -49,7 +49,7 @@ void main() {
   vec3 pic = texture2D(tSky, vec2(uv.x, 1.0 - uv.y), -1.0).rgb / (vec3(0.99, 0.98, 1.03) * mix(0.6, 0.83, smoothstep(0.35, 0.8, uv.y)));
   // Its lumps, deepened: an overcast seen over a pale flat has more shape than a camera gives it.
   pic = pow(pic, vec3(3.6));
-  c *= mix(vec3(1.0), pic, smoothstep(-0.01, 0.05, d.y)) * mix(0.86, 0.66, smoothstep(0.03, 0.5, el));
+  c *= mix(vec3(1.0), pic, smoothstep(-0.01, 0.05, d.y)) * mix(0.62, 0.46, smoothstep(0.02, 0.3, el));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

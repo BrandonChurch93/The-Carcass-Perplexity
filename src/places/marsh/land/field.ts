@@ -259,7 +259,7 @@ export function createField(): Field {
       near.d[k] = (near.d[k] as number) * (1 - w) + Math.max(-3, Math.min(3, want)) * w;
     }
   }
-  // Where the largest of them stands the ground is trodden down to the brine's level: wet mud, not crust.
+  // Where the largest of them stands the ground is trodden down under the brine: it stands ankle deep, in a hand of it over mud.
   const trod = rel(34.3, 3);
   for (let j = 0; j < near.n; j++) {
     const z = -near.half + (j + 0.5) * near.cell;
@@ -268,7 +268,7 @@ export function createField(): Field {
       const x = -near.half + (i + 0.5) * near.cell;
       if (Math.abs(x - trod[0]) > 5) continue;
       const k = j * near.n + i;
-      const cap = 0.36 + Math.max(0, Math.hypot(x - trod[0], z - trod[1]) - 2.4) * 0.9 + 0.12 * (fbm(x / 0.9 + 3, z / 0.9, 2) - 0.5);
+      const cap = -0.15 + Math.max(0, Math.hypot(x - trod[0], z - trod[1]) - 2.6) * 0.43 + 0.06 * (fbm(x / 0.9 + 3, z / 0.9, 2) - 0.5);
       if ((near.d[k] as number) > cap) near.d[k] = cap;
     }
   }

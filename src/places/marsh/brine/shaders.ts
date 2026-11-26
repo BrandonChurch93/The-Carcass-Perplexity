@@ -19,6 +19,7 @@ precision highp float;
 varying vec3 vWorld;
 uniform sampler2D tGrain;
 uniform sampler2D tFroth;
+uniform vec2 uWade;
 uniform int uRingCount;
 // x, z of the middle, radius of the front in metres, strength.
 uniform vec4 uRings[${MAX_RINGS}];
@@ -52,6 +53,8 @@ void main() {
     slope += vec2(0.83, 0.56) * cos(dot(bent, vec2(0.83, 0.56)) * 23.0 - uTime * 11.0 + ph) * 0.012 * chop;
     slope += vec2(-0.37, 0.93) * cos(dot(bent, vec2(-0.37, 0.93)) * 37.0 - uTime * 14.0 - ph * 1.7) * 0.009 * chop;
     slope += vec2(0.26, -0.97) * cos(dot(bent, vec2(0.26, -0.97)) * 13.0 - uTime * 8.3 + ph * 0.6) * 0.014 * chop;
+    // And the wavelets a hand to a stride long that every ring leaves behind it, crossing and never still.
+    slope += ((texture2D(tGrain, p.xz / 0.83 + vec2(0.05, 0.031) * uTime).ba - 0.5) + (texture2D(tGrain, p.xz / 1.37 - vec2(0.043, 0.06) * uTime).ba - 0.5)) * 0.05 * chop;
   }
   float pool = length(p.xz);
   if (pool < 16.0) {
@@ -88,11 +91,14 @@ void main() {
   vec4 fleck = texture2D(tGrain, p.xz / 0.57 + drift * 9.0);
   vec4 bubble = texture2D(tGrain, p.xz / 0.17 + drift * 30.0);
   float seen = smoothstep(70.0, 20.0, dist);
-  float hug = smoothstep(-0.3 - 0.9 * smoothstep(0.42, 0.7, raft.r), -0.03, s);
+  // Where the big ones wade the bed lies a hand under the brine for metres: that is not a bank, and no scum gathers on it.
+  float wade = smoothstep(4.0, 6.5, length(p.xz - uWade));
+  float hug = smoothstep(-0.1 - 0.4 * smoothstep(0.42, 0.7, raft.r), -0.02, s) * mix(0.25, 1.0, wade);
   // The froth is its picture: bubbles and pink scum on black, shown where the froth gathers, and thickest where it gathers most.
   // Close to a lens the rafts of scum are seen for what they are; far off only the line at the shore is.
   float rafts = smoothstep(20.0, 8.0, dist);
-  float want = max(hug, mix(0.6, 0.8, rafts) * smoothstep(0.66 - 0.07 * rafts, 0.76 - 0.05 * rafts, fleck.g * 0.45 + raft.g * 0.55) * smoothstep(-2.2 - 2.0 * rafts, -0.3, s)) * seen;
+  // (The rafts keep to the bank: out on the open brine they read as a speckle of noise.)
+  float want = max(hug, mix(0.6, 0.8, rafts) * smoothstep(0.66 - 0.07 * rafts, 0.76 - 0.05 * rafts, fleck.g * 0.45 + raft.g * 0.55) * smoothstep(-1.1 - 0.5 * rafts, -0.2, s) * wade) * seen;
   vec3 scum = texture2D(tFroth, p.xz / 1.5 + drift * 3.0).rgb;
   float foam = want * smoothstep(0.03, 0.16, dot(scum, vec3(0.333)) - 0.2 * (1.0 - want) + (bubble.r - 0.5) * 0.06);
   vec4 froth = vec4(scum * 1.5 + 0.05, foam);

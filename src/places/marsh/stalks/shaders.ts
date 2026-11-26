@@ -111,13 +111,14 @@ void main() {
   float seed = vKind.w;
   float skin = vCoord.z;
   vec3 c;
+  // Both pictures are read before any branch: inside one the software renderer has no slopes to choose a level by.
+  vec2 uv = vec2(vCoord.x * 0.16, vCoord.y) / 0.42 + seed * vec2(3.1, 7.7);
+  vec3 salt = texture2D(tSalt, uv).rgb;
+  vec3 nh = texture2D(tSaltNh, uv).rgb;
   if (skin < 0.5) {
     float y = vCoord.y;
     float sp = 0.14 * vKind.z;
     float q = fract((y + 0.045 * sin(y * 6.1 + seed * 20.0) + 0.02 * sin(y * 15.7 + seed * 50.0)) / sp + seed);
-    vec2 uv = vec2(vCoord.x * 0.16, y) / 0.42 + seed * vec2(3.1, 7.7);
-    vec3 salt = texture2D(tSalt, uv).rgb;
-    vec3 nh = texture2D(tSaltNh, uv).rgb;
     float patchy = fbm(vec2(vCoord.x * 1.3, y * 3.0) + seed * 11.0);
     // Under the salt the tube is horn brown; it shows where the crust has flaked and under each lip, where the brine has run and left rust.
     float bare = smoothstep(0.42, 0.62, patchy + 0.3 * (0.5 - nh.b));
@@ -143,14 +144,32 @@ void main() {
     under *= 1.0 - 0.85 * away;
     albedo = mix(albedo, rust, clamp(under * (0.25 + 0.75 * smoothstep(0.35, 0.7, fbm(vec2(vCoord.x * 2.0, y * 9.0) + seed))), 0.0, 0.6));
     albedo = mix(albedo, albedo * vec3(0.8, 0.66, 0.56), away * smoothstep(0.35, 0.65, fbm(vec2(vCoord.x * 0.7, y * 1.3) + seed * 5.0)));
+    // Between the rings it is clad in scales that lap like a palm's: each is palest at its free lower lip, where the salt has grown, and dark up under the one above.
+    float sy = y / (0.5 * sp) + seed * 3.0;
+    float r0 = floor(sy);
+    float f = sy - r0;
+    float sx = vCoord.x * 1.90986;
+    float fx = fract(sx + 0.5 * mod(r0, 2.0)) * 2.0 - 1.0;
+    float t = f - 0.42 * fx * fx;
+    if (t < 0.0) {
+      fx = fract(sx + 0.5 * mod(r0 + 1.0, 2.0)) * 2.0 - 1.0;
+      t = f + 1.0 - 0.42 * fx * fx;
+    }
+    // Not everywhere: in places the scales have worn down to bare fibre that runs up the trunk.
+    float worn = (1.0 - away) * mix(0.15, 0.8, smoothstep(0.38, 0.62, fbm(vec2(vCoord.x * 0.9, y * 2.3) + seed * 17.0)));
+    albedo *= mix(0.82 + 0.36 * fibre, 1.0, worn / 0.8);
+    float lipLight = (1.0 - smoothstep(0.0, 0.2, t)) * worn;
+    float tuck = smoothstep(0.35, 1.25, t) * worn;
+    albedo = mix(albedo * (1.0 - 0.42 * tuck), albedo * 1.25 + 0.03, 0.7 * lipLight);
+    albedo = mix(albedo, rust * 0.8, 0.3 * tuck * smoothstep(0.4, 0.7, patchy));
     // The foot stands in red brine and mud.
-    float wet = 1.0 - smoothstep(0.1, 0.45 + 0.3 * patchy, vWorld.y);
-    albedo = mix(albedo, albedo * vec3(0.5, 0.2, 0.16) + vec3(0.03, 0.005, 0.004), wet);
+    float wet = 1.0 - smoothstep(0.1, 0.7 + 0.6 * patchy, vWorld.y);
+    albedo = mix(albedo, albedo * vec3(0.6, 0.22, 0.17) + vec3(0.03, 0.005, 0.004), wet);
     vec3 up = vec3(0.0, 1.0, 0.0);
     vec3 T = normalize(cross(up, n) + 1e-5);
     vec3 B = cross(n, T);
-    n = normalize(n - (T * (nh.r - 0.5) + B * (nh.g - 0.5)) * 1.6);
-    float occ = mix(0.55 + 0.45 * smoothstep(0.0, 0.35, q), 0.9, away) * (0.75 + 0.25 * nh.b) * (0.6 + 0.4 * smoothstep(0.0, 0.25, y));
+    n = normalize(n - (T * (nh.r - 0.5) + B * (nh.g - 0.5)) * 1.6 + up * (0.55 * lipLight - 0.3 * tuck));
+    float occ = (1.0 - 0.35 * tuck) * mix(0.55 + 0.45 * smoothstep(0.0, 0.35, q), 0.9, away) * (0.75 + 0.25 * nh.b) * (0.6 + 0.4 * smoothstep(0.0, 0.25, y));
     // Seen from inside, through a broken mouth: the dark of the tube.
     c = rigShade(vWorld, n, v, albedo, mix(0.95, 0.4, wet), occ);
     if (!gl_FrontFacing) c = vec3(0.05, 0.028, 0.022) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.25 * skyOpen(vWorld);
