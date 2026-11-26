@@ -27,6 +27,14 @@ vec3 coverAt(vec2 xz) {
   return texture2D(uCover, clamp((xz - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).rgb;
 }
 
+// The open sea west and south of the skull, where the map's low islands lie under the water: 0 on the body's side, 1 well out.
+float westSea(vec2 xz) {
+  vec2 fromSkull = (xz - vec2(${f(X(1350))}, ${f(Z(1566))})) / vec2(${f(330 * KM)}, ${f(270 * KM)});
+  // (Its edge runs south from the skull and then south east, along the outside of the arm.)
+  float limit = ${f(X(1700))} + 0.6 * max(xz.y - ${f(Z(1700))}, 0.0);
+  return smoothstep(1.08, 1.6, length(fromSkull)) * (1.0 - smoothstep(limit - 130.0, limit + 130.0, xz.x));
+}
+
 // How much cloud a photograph shows at a point: its light, once the dark floor of the sea under it is taken off.
 float seen(vec3 c, float least, float full) {
   return smoothstep(least, full, dot(c, vec3(0.3, 0.55, 0.15)));
@@ -53,9 +61,9 @@ float puffs(vec2 w, float cell, float share) {
 // The photograph of the low field at a point of its own drifting ground: from near a field of small cumulus at its real size
 // (laid at 150 km a repeat), from orbit the fine wind-drawn streaks that cover the sea (laid at 900 km a repeat). One read, two while they change over.
 float lowPicture(vec2 w) {
-  float away = smoothstep(450.0, 900.0, uViewKm);
+  float away = smoothstep(330.0, 620.0, uViewKm);
   // (The puffs are seen as specks until well up the rise; the streaks take the sea over above them.)
-  float specks = 1.0 - smoothstep(600.0, 1000.0, uViewKm);
+  float specks = 1.0 - smoothstep(330.0, 620.0, uViewKm);
   float pic = 0.0;
   if (specks > 0.0) {
     // Small cumulus stand in streets along the wind, with clear sea between: thousands of separate puffs, each a few kilometres
@@ -68,7 +76,7 @@ float lowPicture(vec2 w) {
     float gap = smoothstep(0.3, 0.55, vnoise(pw / 23.0 + 5.0));
     float knot = smoothstep(0.62, 0.8, vnoise(pw / 31.0 + 40.0));
     float share = 0.008 + 0.98 * smoothstep(0.25, 0.36, street) * (0.65 + 0.35 * smoothstep(0.06, 0.26, full)) * (0.3 + 0.7 * gap);
-    float puff = max(max(puffs(pw, 2.6, share), puffs(mat2(0.6, 0.8, -0.8, 0.6) * w + 31.0, 3.8, share)), puffs(mat2(0.96, -0.28, 0.28, 0.96) * w + 77.0, 1.8, share));
+    float puff = max(max(puffs(pw, 3.3, share), puffs(mat2(0.6, 0.8, -0.8, 0.6) * w + 31.0, 4.8, share)), puffs(mat2(0.96, -0.28, 0.28, 0.96) * w + 77.0, 2.2, share));
     puff = max(puff, puffs(mat2(0.28, 0.96, -0.96, 0.28) * w + 13.0, 5.4, max(knot * min(1.0, 2.0 * share), 0.9 * smoothstep(0.36, 0.5, street) * (0.3 + 0.7 * gap))) * 1.15);
     // (Higher up only the cells are left to see: fused clusters, ten kilometres across, where the streets are fullest.)
     puff = max(puff, puffs(mat2(0.7, -0.71, 0.71, 0.7) * w + 51.0, 9.5, smoothstep(300.0, 520.0, uViewKm) * max(knot, 0.8 * smoothstep(0.3, 0.44, street)) * (0.3 + 0.7 * gap)) * 1.3);
@@ -82,24 +90,45 @@ float lowPicture(vec2 w) {
     pic += specks * puff;
   }
   if (away > 0.0) {
-    // From orbit: the Builder's photograph of fields of very small cumulus (mat/specks.jpg) a little under its real size, so
-    // one of its texels is under a pixel: each cloud a dot, gathered in ragged clusters and beaded streets along the wind, clear sea
-    // between. It is laid twice, turned against itself, each lay in its own wide fields, so no repeat shows.
+    // From high up: the Builder's photograph of fields of very small cumulus (mat/specks.jpg), laid so that one of its texels is
+    // about a pixel: each cloud a dot, gathered in ragged clusters and beaded streets along the wind, clear sea between. As the eye
+    // rises it is laid again at twice the size, and the two lays change over. It is laid twice, turned against itself, each lay
+    // in its own wide fields, so no repeat shows.
+    // (Until well up the rise a cloud keeps its size on the sea, a few kilometres: a soft round top, larger than a pixel.)
+    float octave = log2(uViewKm / 1415.0) + 0.15 + 1.0 * (1.0 - smoothstep(330.0, 620.0, uViewKm)) + 0.5 * (1.0 - smoothstep(500.0, 1100.0, uViewKm));
+    float lower = floor(octave);
+    float share = smoothstep(0.3, 0.9, octave - lower);
+    float size = exp2(lower);
     vec2 sw = mat2(0.97, -0.24, 0.24, 0.97) * w;
     vec2 tw = mat2(0.64, 0.77, -0.77, 0.64) * w;
-    vec3 fields = texture2D(uCloudTile, sw / 3100.0 + vec2(0.33, 0.61), 2.0).rgb;
-    // (Carried by another wind, the second lay crosses the first as the frame is held.)
-    vec2 mw = tw + uTime * vec2(4.5, -7.5);
-    float layA = seen(texture2D(uMatSpecks, sw / 1050.0 + vec2(0.3, 0.7), -0.5).rgb, 0.3, 0.7) * smoothstep(0.24, 0.56, fields.b);
-    float layB = seen(texture2D(uMatSpecks, mw / 820.0 + vec2(0.7, 0.2), -0.5).rgb, 0.32, 0.72) * smoothstep(0.66, 0.4, fields.b) * smoothstep(0.25, 0.55, texture2D(uCloudTile, mw / 2300.0 + 0.4, 2.0).g);
-    pic += away * max(layA, 0.9 * layB);
+    // (Carried by another wind, the second lay crosses the first while the frame is held.)
+    float held = uTime < 8.0 ? 0.125 * max(uTime - 4.0, 0.0) * max(uTime - 4.0, 0.0) : uTime - 6.0;
+    vec2 mw = tw + held * vec2(9.0, -19.0);
+    float dots = 0.0;
+    float haze = 0.0;
+    for (int i = 0; i < 2; i++) {
+      float part = i == 0 ? 1.0 - share : share;
+      if (part <= 0.0) continue;
+      float lay = size * (i == 0 ? 1.0 : 2.0);
+      // (Each lay stands in its own fields, a third of the sea, with open water between them.)
+      float inA = smoothstep(0.44, 0.64, texture2D(uCloudTile, sw / (2600.0 * lay) + vec2(0.33, 0.61) * lay, 2.0).b);
+      float inB = smoothstep(0.47, 0.66, texture2D(uCloudTile, mw / (1900.0 * lay) + 0.4 * lay, 2.0).g);
+      vec2 ua = sw / (1050.0 * lay) + vec2(0.3, 0.7) * lay;
+      vec2 ub = mw / (820.0 * lay) + vec2(0.7, 0.2) * lay;
+      dots += part * max(seen(texture2D(uMatSpecks, ua, 0.2).rgb, 0.2, 0.8) * inA, 0.9 * seen(texture2D(uMatSpecks, ub, 0.2).rgb, 0.22, 0.82) * inB);
+      // (Between the dots of a cluster hangs the thin haze of the same cloud: the same photograph, out of focus.)
+      haze += part * max(seen(texture2D(uMatSpecks, ua, 3.2).rgb, 0.1, 0.5) * inA, seen(texture2D(uMatSpecks, ub, 3.2).rgb, 0.1, 0.5) * inB);
+    }
+    pic += away * max(dots, 0.36 * haze);
   }
   return pic;
 }
 
 // The ground of the low field: the world, read through a slow bend so the streets curve, and drifting.
 vec2 lowGround(vec2 at) {
-  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT;
+  // (From orbit the drift of the field is seen: it gathers way as the rise ends, and the whole field is carried on while the frame is held.)
+  float held = uTime < 8.0 ? 0.125 * max(uTime - 4.0, 0.0) * max(uTime - 4.0, 0.0) : uTime - 6.0;
+  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(7.0, 2.5);
 }
 
 // The low cloud: x how thick (0 to 1), y the photograph's own light there (the build of its tops).
@@ -107,7 +136,7 @@ vec2 lowGround(vec2 at) {
 vec2 lowField(vec2 at) {
   vec2 w = lowGround(at);
   // The sky stands clear over the lake of the Eye, where the rise begins.
-  float amount = coverAt(at).g * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+  float amount = max(coverAt(at).g, 0.6 * westSea(at)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   // From orbit the field is seen whole: an even scatter over all the sea, a little thicker here and thinner there.
   float even = smoothstep(330.0, 760.0, uViewKm);
@@ -131,5 +160,5 @@ float cloudShade(vec2 xz) {
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
   float stormShade = pow(1.0 - smoothstep(0.02, 0.48, fromStorm), 1.3) * uArrive;
-  return (1.0 - mix(0.4, 0.6, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
+  return (1.0 - mix(0.4, 0.5, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.8, low)) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
 }`;

@@ -51,7 +51,8 @@ export function createRig(): Rig {
   const disc = new THREE.CircleGeometry(1, 8);
   const none = new THREE.MeshBasicMaterial({ visible: false });
   const beat = (seconds: number): number => {
-    const breath = 0.5 + 0.5 * Math.sin((2 * Math.PI * seconds) / 2.6);
+    // (The glow is never still and never a loop: two slow swells that do not keep step.)
+    const breath = 0.5 + 0.3 * Math.sin((2 * Math.PI * seconds) / 3.7) + 0.2 * Math.sin((2 * Math.PI * seconds) / 5.9 + 1.3);
     const since = BEAT === null ? -1 : seconds - BEAT;
     // The beat: up in a tenth of a second, down over a second and a half, with a second, smaller throb after it as a heart has.
     const hit = since < 0 ? 0 : (1 - Math.exp(-since / 0.04)) * Math.exp(-since / 0.55) + 0.45 * Math.exp(-((since - 0.42) * (since - 0.42)) / 0.012);

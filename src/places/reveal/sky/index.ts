@@ -21,10 +21,16 @@ void main() {
 
 // The light on a cloud top: the sun on the faces turned to it, the sky on all of it, and the air between it and the eye.
 const CLOUD_LIGHT_GLSL = /* glsl */ `
+// The beat of the Heart on the underside of the cloud that stands over the chest: a dull red, small, come and gone in a second.
+vec3 beatOnCloud(vec2 xz) {
+  vec2 fromHeart = xz - vec2(${X(AT.lava.x).toFixed(1)}, ${Z(AT.lava.y).toFixed(1)});
+  return vec3(1.0, 0.2, 0.04) * 0.3 * max(uBeat - 0.12, 0.0) * exp(-dot(fromHeart, fromHeart) / 90000.0);
+}
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
-  float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-  vec3 c = 0.72 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
+  float day = dayAt(xz);
+  float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick) * day;
+  vec3 c = 0.72 * (uSunColour * mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * sun + uSkyColour * 0.9 * (0.5 + 0.5 * day)) / 3.14159;
   float air = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
   return mix(c, uAirColour * 0.7, air);
 }`;
@@ -61,7 +67,7 @@ void main() {
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
   float a = low.x * 0.94;
   float b = high * mix(0.09, 0.07, smoothstep(700.0, 1300.0, uViewKm));
-  vec3 colour = lowColour * a * (1.0 - b) + highColour * b;
+  vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
   float alpha = 1.0 - (1.0 - a) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
@@ -79,14 +85,14 @@ varying vec2 vUv;
 const vec3 LUMA = vec3(0.3, 0.55, 0.15);
 // The eye of the photograph, and the width of the photograph in units of the sheet's half width.
 const vec2 EYE = vec2(0.5088, 0.4896);
-const float PLATE = 1.5;
+const float PLATE = 2.3;
 void main() {
   // q: the sheet as the picture lies, x right and y down, 1 at its edge (1,070 km).
   vec2 q = vec2(vUv.x, 1.0 - vUv.y) * 2.0 - 1.0;
   float r = max(length(q), 1e-3);
-  // It turns against the clock, its arms trailing: a tenth of a turn while the frame is held, the middle ahead of the rim. The
+  // It turns against the clock, its arms trailing: an eighth of a turn at its rim while the frame is held and a quarter by the eye. The
   // photograph stands unwound in the middle of the hold.
-  float turn = (uTime - 22.0) * (0.01 + 0.02 / (1.0 + 5.0 * r));
+  float turn = (uTime - 22.0) * 0.02 + (uTime + 46.0) * 0.05 / (1.0 + 5.0 * r);
   float c = cos(turn);
   float s = sin(turn);
   vec2 qt = vec2(c * q.x - s * q.y, s * q.x + c * q.y);
@@ -96,18 +102,29 @@ void main() {
   vec2 px = dFdx(q) / PLATE;
   vec2 py = dFdy(q) / PLATE;
   float plate = dot(textureGrad(uPlate, clamp(pu, 0.0, 1.0), px, py).rgb, LUMA);
+  // (The wind combs each band along itself: the photograph is read again a little up and down the spiral, and the reads are laid together.)
+  vec2 along = vec2(-qt.y, qt.x) - 0.35 * qt;
+  float combed = 0.5 * (dot(textureGrad(uPlate, clamp(pu + 0.03 * along / PLATE, 0.0, 1.0), px, py).rgb, LUMA) + dot(textureGrad(uPlate, clamp(pu - 0.03 * along / PLATE, 0.0, 1.0), px, py).rgb, LUMA));
+  plate = 0.55 * plate + 0.45 * combed;
+  // (And between its bands lie finer ones: the same photograph, smaller and turned, so the storm is many thin bands wound round and round.)
+  vec2 qf = mat2(-0.36, 0.93, -0.93, -0.36) * qt;
+  vec2 pf = EYE + qf / (PLATE * 0.6);
+  float fine = dot(textureGrad(uPlate, clamp(pf, 0.0, 1.0), px / 0.6, py / 0.6).rgb, LUMA);
+  vec2 edgeF = min(pf, 1.0 - pf);
+  plate = max(plate, 0.7 * fine * smoothstep(0.0, 0.15, min(edgeF.x, edgeF.y)) * smoothstep(0.04, 0.12, r));
   // (Its bands run off the photograph on every side: there they thin to scraps of the same cloud, into the streets of the sea.)
   vec2 edge = min(pu, 1.0 - pu);
-  float within = smoothstep(0.0, 0.1, min(edge.x, edge.y)) * (1.0 - smoothstep(0.62, 1.0, r + 0.1 * bend.y));
-  float thick = smoothstep(0.24, 0.58, plate) * within;
+  float within = smoothstep(0.0, 0.1, min(edge.x, edge.y)) * (1.0 - smoothstep(0.45, 0.95, r + 0.1 * bend.y));
+  // The photograph's light is how much cloud there is: read through one wide soft curve, thin cloud stays thin and the sea shows through it.
+  float thick = min(1.0, 2.8 * pow(max(plate - 0.15, 0.0), 1.5)) * within * mix(1.0, 0.65, smoothstep(0.3, 0.9, r));
   // Lit by this place's sun: a band stands bright on its side toward the sun and shades its lee.
   vec2 sunQ = normalize(uSunDir.xz);
   float sunward = dot(textureGrad(uPlate, clamp(pu + vec2(c * sunQ.x - s * sunQ.y, s * sunQ.x + c * sunQ.y) * 0.006, 0.0, 1.0), px, py).rgb, LUMA);
   float self = clamp(0.5 + 2.2 * (plate - sunward), 0.0, 1.0);
   float tall = 1.0 - smoothstep(0.03, 0.3, r);
-  float tone = 0.4 + 0.8 * plate;
+  float tone = 0.62 + 0.6 * plate;
   vec3 colour = cloudLight(vWorld.xz, 0.3 + 0.35 * tone + 0.5 * self, 0.85 + 0.15 * tall, 0.5 * tall) * tone;
-  float alpha = 0.96 * thick;
+  float alpha = 0.94 * thick;
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -169,9 +186,9 @@ void main() {
   }
   vec2 d1 = p - vec2(-0.2, 0.05);
   vec2 d2 = p - vec2(0.62, -0.06);
-  float glimmer = (0.2 + 0.1 * sin(uTime * 1.7)) * exp(-dot(d1, d1) * 40.0) + (0.16 + 0.1 * sin(uTime * 2.3 + 1.0)) * exp(-dot(d2, d2) * 55.0);
+  float glimmer = (0.14 + 0.16 * vnoise(vec2(uTime * 0.9, 3.0))) * exp(-dot(d1, d1) * 40.0) + (0.1 + 0.16 * vnoise(vec2(uTime * 1.3, 11.0))) * exp(-dot(d2, d2) * 55.0);
   glow += vec3(0.55, 0.42, 1.0) * glimmer * thick;
-  colour += glow * 1.6;
+  colour += glow * 1.6 + beatOnCloud(vWorld.xz);
   float alpha = clamp(thick, 0.0, 0.98);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
