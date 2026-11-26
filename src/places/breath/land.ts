@@ -151,6 +151,13 @@ export function plateAt(x: number, z: number): number {
   return (((plateBytes[k] as number) * (1 - u) + (plateBytes[k + 1] as number) * u) * (1 - v) + ((plateBytes[k + PLATE_WIDTH] as number) * (1 - u) + (plateBytes[k + PLATE_WIDTH + 1] as number) * u) * v) / 255;
 }
 
+/** Where the dead wader lies (DEAD_WADER of shared/anchors.ts) the rock is one dry plate, level to a few centimetres for 3.2 m round, standing
+ *  clear of the tide: 1 on it, 0 off it. */
+const PAD: [number, number] = [-27.3, 22.6];
+export const padAt = (x: number, z: number): number => 1 - smooth((Math.hypot(x - PAD[0], z - PAD[1]) - 3.2) / 1.5);
+let padHeight: number | null = null;
+const padLevel = (): number => (padHeight ??= Math.max(SEA + 0.45, smoothGround(PAD[0], PAD[1]) - 0.1));
+
 /** The ground everything stands on: the smooth land with the plate's relief on it. Outside the fine rectangle the plates are too small for
  *  the mesh that draws them and the ground is the same land worn smooth. */
 export function ground(x: number, z: number): number {
@@ -158,7 +165,9 @@ export function ground(x: number, z: number): number {
   const edge = Math.min(x - FINE.minX, FINE.minX + FINE.size - x, z - FINE.minZ, FINE.minZ + FINE.size - z);
   const fine = smooth((edge - 2) / 9);
   if (fine <= 0) return base;
-  return base + fine * RELIEF * (Math.max(plateAt(x, z), POOL) - 0.56);
+  const relief = base + fine * RELIEF * (Math.max(plateAt(x, z), POOL) - 0.56);
+  const pad = padAt(x, z);
+  return pad > 0 ? lerp(relief, padLevel() - 0.03 * sat(Math.hypot(x - PAD[0], z - PAD[1]) / 3.2) ** 2, pad) : relief;
 }
 
 export function nearLand(cells: number): THREE.BufferGeometry {

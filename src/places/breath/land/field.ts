@@ -4,7 +4,7 @@
 // foot of a step, more on a crest), a the tone of a loose stone (0 where there is none).  tNearS: r, g the slope on x and z, b 1 where water stands.
 import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
-import { DEPTH, FINE, POOL, bearingOf, ground, inFine, noise2, plateAt, rimRadius, smoothGround } from '../land';
+import { DEPTH, FINE, POOL, bearingOf, ground, inFine, noise2, plateAt, rimRadius, smoothGround, padAt } from '../land';
 import { SEA_LEVEL, SHADOW_RUN, SUN_DIR } from '../shared/anchors';
 
 export interface NearMap {
@@ -130,6 +130,8 @@ export function bakeNear(rng: Rng): NearMap {
     if (drift + 0.2 * brim < 0.42) continue;
     if (smoothGround(x, z) < SEA_LEVEL - 0.12) continue;
     if (!inFine(x, z, 6)) continue;
+    // None on the plate the dead wader lies on.
+    if (padAt(x, z) > 0) continue;
     // The loose stone lies in the gaps between the plates, as the plate's own picture has it.
     const gap = plateAt(x, z);
     if (gap < POOL + 0.03 || (gap > 0.5 && size < 0.997)) continue;
@@ -229,7 +231,7 @@ export function bakeNear(rng: Rng): NearMap {
       const k = r > 0.001 ? rim / r : 0;
       const top = heightAt(x * k * 1.001, z * k * 1.001);
       if (r > rim - step * 1.05) p.setXYZ(i, x * k, top, z * k);
-      else if (r > rim - step * 2.1) p.setXYZ(i, x * k * 0.996, top - 1.6, z * k * 0.996);
+      else if (r > rim - step * 2.1) p.setXYZ(i, x * k * 0.997, top - 0.5, z * k * 0.997);
       else {
         p.setXYZ(i, x * k * 0.99, top - 1.7, z * k * 0.99);
         deep[i] = 1;
