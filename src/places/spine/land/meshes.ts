@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
 import { EXIT, FIN_DEEP, FIN_ROOT, FIN_SECTION, FLOOR, MOUTH_S, S_MAX, S_MIN, canalInFin, canalL, fin, finAxes, first, flare, frameAt, locate, sheetAt, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
-import { heightAt, landAt, slab } from './height';
+import { height, heightAt, landAt, slab } from './height';
 
 interface Extra {
   normals?: number[];
@@ -406,3 +406,90 @@ export function hollow(x: number, z: number): { roof: number; light: number } | 
 }
 
 
+
+/**
+ * Stones about a place, each half sunk in the ground with snow on its top, and behind each a tail of snow drifted down the gale. `drifts`
+ * are larger banks of the same kind, each from a point, along a heading. Seen low across the ground, a picture of stones lies down flat
+ * and is lost; these stand up.
+ */
+export function stones(
+  rng: Rng,
+  centre: readonly [number, number],
+  keep: readonly (readonly [number, number, number])[],
+  wind: readonly [number, number],
+  drifts: readonly { at: readonly [number, number]; along: readonly [number, number]; long: number; wide: number; high: number }[],
+): THREE.BufferGeometry {
+  const pos: number[] = [];
+  const index: number[] = [];
+  const top: number[] = [];
+  const sl: number[] = [];
+  const SEG = 9;
+  const RINGS = 5;
+  const tail = (x: number, z: number, ax: number, az: number, long: number, wide: number, high: number): void => {
+    const base = pos.length / 3;
+    const T = 7;
+    const A = 6;
+    for (let i = 0; i <= T; i++) {
+      const t = i / T;
+      for (let a = 0; a <= A; a++) {
+        const k = (a / A) * 2 - 1;
+        const w = wide * (1 - 0.7 * t) * k;
+        const px = x + ax * long * t - az * w;
+        const pz = z + az * long * t + ax * w;
+        const h = high * Math.min(1, t / 0.18) * Math.pow(1 - t, 1.4) * Math.pow(Math.cos((k * Math.PI) / 2), 2) * 1.35;
+        pos.push(px, height(px, pz) - 0.02 + h, pz);
+        top.push(0);
+        sl.push(FAR, FAR);
+      }
+    }
+    for (let i = 0; i < T; i++) {
+      for (let a = 0; a < A; a++) {
+        const p = base + i * (A + 1) + a;
+        index.push(p, p + 1, p + A + 1, p + 1, p + A + 2, p + A + 1);
+      }
+    }
+  };
+  for (let n = 0; n < 90; n++) {
+    const u = rng.next();
+    const far = 1.2 + 24 * u * u;
+    const turn = rng.next() * Math.PI * 2;
+    const r = 0.06 + 0.42 * Math.pow(rng.next(), 3);
+    const x = centre[0] + Math.cos(turn) * far;
+    const z = centre[1] + Math.sin(turn) * far;
+    const spin = rng.next() * Math.PI;
+    const squash = rng.range(0.45, 0.8);
+    const lumps = Array.from({ length: (RINGS - 1) * SEG + 2 }, () => rng.range(0.78, 1.22));
+    if (keep.some((k) => Math.hypot(x - k[0], z - k[1]) < k[2] + r)) continue;
+    const y = height(x, z) + r * squash * 0.3;
+    const base = pos.length / 3;
+    const put = (dx: number, dy: number, dz: number, lump: number): void => {
+      const lx = dx * r * lump;
+      const lz = dz * r * 0.8 * lump;
+      pos.push(x + Math.cos(spin) * lx - Math.sin(spin) * lz, y + dy * r * squash * lump, z + Math.sin(spin) * lx + Math.cos(spin) * lz);
+      top.push(1);
+      sl.push(FAR, FAR);
+    };
+    put(0, 1, 0, lumps[0] as number);
+    for (let j = 1; j < RINGS; j++) {
+      const lat = (j / RINGS) * Math.PI;
+      for (let a = 0; a < SEG; a++) {
+        const lon = (a / SEG) * Math.PI * 2;
+        put(Math.sin(lat) * Math.cos(lon), Math.cos(lat), Math.sin(lat) * Math.sin(lon), lumps[1 + (j - 1) * SEG + a] as number);
+      }
+    }
+    put(0, -1, 0, lumps[lumps.length - 1] as number);
+    const last = base + (RINGS - 1) * SEG + 1;
+    for (let a = 0; a < SEG; a++) {
+      const b = (a + 1) % SEG;
+      index.push(base, base + 1 + b, base + 1 + a);
+      for (let j = 0; j < RINGS - 2; j++) {
+        const p = base + 1 + j * SEG;
+        index.push(p + a, p + b, p + SEG + a, p + b, p + SEG + b, p + SEG + a);
+      }
+      index.push(last, last - SEG + a, last - SEG + b);
+    }
+    tail(x + wind[0] * r * 0.3, z + wind[1] * r * 0.3, wind[0], wind[1], r * rng.range(5, 9), r * 0.95, r * squash * 0.75);
+  }
+  for (const d of drifts) tail(d.at[0], d.at[1], d.along[0], d.along[1], d.long, d.wide, d.high);
+  return finish(pos, index, top, sl);
+}

@@ -271,9 +271,18 @@ export function ground(s: number, l: number): number {
     y += along * (9 * Math.exp(-(((l - CANAL_L - 15) / 12) ** 2)) + 5.5 * Math.exp(-(((l - CANAL_L + 19) / 8) ** 2)));
   }
   if (d > EXIT - 0.6 && d < EXIT + 6 && Math.abs(l - canalL(d)) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
-  if (d >= EXIT + 6 && d < EXIT + 70) {
-    const w = (1 - smooth(EXIT + 6, EXIT + 70, d)) * (1 - smooth(EXIT_R * 0.7, EXIT_R * 1.9, Math.abs(l - canalL(d))));
-    y += (Math.min(y, FLOOR - 0.4) - y) * w;
+  if (d >= EXIT + 6 && d < EXIT + 300) {
+    // Beyond the far mouth the floor does not go on as a plain: it breaks into a gully of snow that falls away to the cloud, veering to
+    // the lee, so that from inside the mouth holds a slope going down, the far spires and the sea of cloud.
+    const run = d - EXIT - 6;
+    // The mouth looks out along the canal's own bend, which carries the eye to the lee at about half a metre a metre.
+    const off = l - canalL(EXIT + 6) - 0.46 * run;
+    const lee = off - 8 - 0.22 * run;
+    const w = (1 - smooth(EXIT + 170, EXIT + 300, d)) * (1 - smooth(EXIT_R * 0.7 + 0.1 * run, EXIT_R * 1.9 + 0.6 * run, Math.abs(lee)));
+    y += (Math.min(y, FLOOR - 0.4 - (0.55 * run * run) / (run + 22)) - y) * w;
+    // On the windward hand of it a shoulder of drifted snow stands up and goes down across the mouth's view into the gully.
+    const shoulder = FLOOR - 0.4 + 10 * Math.exp(-(((run - 50) / 30) ** 2));
+    y += (Math.max(y, shoulder) - y) * smooth(-16, -40, off) * (1 - smooth(-60, -110, off)) * smooth(0, 14, run);
   }
   // Over the canal the rock is the foot of the spire's own face: the near mouth is a few metres before that face and the ground carries
   // a lip of rock over it, which goes up into the blade behind it (the mouth is a hole in the ground's mesh and in the blade's).
