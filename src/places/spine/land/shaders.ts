@@ -147,6 +147,9 @@ uniform float uSheetShear;
 #ifndef KIND
 #define KIND 0
 #endif
+#ifndef SCORCH
+#define SCORCH 0
+#endif
 // The kind is fixed when the shader is built, one build for each: what a kind never draws is not in its shader, and costs nothing.
 const float uKind = float(KIND);
 const bool ground = KIND == 0;
@@ -238,6 +241,10 @@ Lay lay(sampler2D colour, sampler2D nh, vec2 at, vec2 gx, vec2 gy) {
 }
 
 void main() {
+#ifdef PROFILE_FLAT
+  gl_FragColor = vec4(rigOut(vec3(0.1) * (0.5 + 0.5 * normalize(vNormal).y)), 1.0);
+  return;
+#endif
   float dCanal = vSL.x - MOUTH_S;
   vec3 smoothN = normalize(vNormal);
   if (!gl_FrontFacing) smoothN = -smoothN;
@@ -295,7 +302,7 @@ void main() {
   vec3 sheetC = vec3(0.0);
   float sheet = 0.0;
   if (!inside) if (spire || porch > 0.0) {
-    sheetC = texture2D(tSheet, sheetUv).rgb;
+    sheetC = textureLod(tSheet, sheetUv, lodOf(tSheet, dFdx(sheetUv), dFdy(sheetUv))).rgb;
     float facing = abs(dot(smoothN, vec3(-sheetAx.z, 0.0, sheetAx.x)));
     sheet = smoothstep(0.035, 0.1, max(sheetC.r, max(sheetC.g, sheetC.b))) * smoothstep(0.26, 0.55, facing) * smoothstep(0.0, 0.06, sheetUv.y) * (spire ? 1.0 : porch);
   }
@@ -461,6 +468,10 @@ void main() {
 #endif
   }
   vec3 nRock = normalize(n0 + mix(across * t.x + upAlong * t.y, vec3(t.x, 0.0, t.y), top));
+#ifdef PROFILE_A
+  gl_FragColor = vec4(rigOut(rock * 0.3 * (0.5 + 0.5 * nRock.y) * pit), 1.0);
+  return;
+#endif
   // A spire is cut from its feature sheet: the sheet lies on its two broad faces, square on, and gives them their rock, their joints and
   // their snow, whole, at the size of the spire. The tiles stay under it as its grain, and take over on the thin ends where the sheet
   // would be seen edge on. The rock over the mouth takes the first spire's sheet too, so the mouth stands in one face.
@@ -470,9 +481,10 @@ void main() {
     vec3 sc = sheetC;
     if (sheet > 0.0) {
       vec2 px = 3.0 / vec2(textureSize(tSheetH, 0));
-      float h0 = texture2D(tSheetH, uv).r;
-      float da = (texture2D(tSheetH, uv + vec2(px.x, 0.0)).r - h0) / px.x * uSheetMap.x;
-      float dy = (texture2D(tSheetH, uv + vec2(0.0, px.y)).r - h0) / px.y * uSheetMap.z;
+      float lodH = lodOf(tSheetH, dFdx(uv), dFdy(uv));
+      float h0 = textureLod(tSheetH, uv, lodH).r;
+      float da = (textureLod(tSheetH, uv + vec2(px.x, 0.0), lodH).r - h0) / px.x * uSheetMap.x;
+      float dy = (textureLod(tSheetH, uv + vec2(0.0, px.y), lodH).r - h0) / px.y * uSheetMap.z;
       // Far off the sheet is the rock, whole. Close to it would be a picture pulled large and soft: there it gives only the broad tone
       // of its masses, and the rock's own tiles, at their true size, are the crag, in colour and in relief.
       // Far off the rock of the sheet is dark and its snow is pale: the rock is let down, the snow kept.
@@ -534,14 +546,14 @@ void main() {
     snow = max(snow, ledgeSnow * (1.0 - sheet));
     // Snow lies on every ledge of the rock: wherever the broken face itself turns up flatter than some forty degrees, and deeper low down
     // and to windward, so the spire stands out of the ridge's own snow.
-    float low = smoothstep(280.0, 20.0, vWorld.y - landAt(vWorld.xz).r);
+    float above = vWorld.y - landAt(vWorld.xz).r;
+    float low = smoothstep(280.0, 20.0, above);
     // (the lee faces keep their rock: the gale lays its snow on what looks into it)
     low *= smoothstep(-0.25, 0.45, -dot(smoothN.xz, uWind.xz));
     snow = max(snow, smoothstep(0.5 - 0.3 * low, 0.7 - 0.3 * low, 0.7 * nRock.y + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
     // Under the lens snow lies only on what the rock itself turns up to the sky; a slab's side keeps none.
     snow *= mix(1.0, smoothstep(0.25, 0.6, 0.5 * (nRock.y + facet.y)), fineRock);
     // A spire stands in the drift at its foot.
-    float above = vWorld.y - landAt(vWorld.xz).r;
     snow = max(snow, smoothstep(5.0, 0.5, above + 3.0 * (pit - 0.5)));
     occ *= 0.55 + 0.45 * smoothstep(0.0, 14.0, above);
     float proud = smoothstep(-9.0, 5.0, vRelief);
@@ -653,6 +665,9 @@ void main() {
   occ = mix(occ, snowOcc, snow);
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
   // Where the bolt came to ground: the burned wet rock under the dead one, a plate 14 m across laid square to the lens of that shot.
+// Staged by shot: the burn is compiled in only for the shot by the dead one (spine-03). No other lens sees it, and a software renderer pays
+// for it on every pixel of the ground otherwise.
+#if SCORCH == 1
   if (uKind < 0.5) {
     vec2 dS = vWorld.xz - uScorch.xy;
     vec2 uvS = vec2(dot(dS, uScorchAxes.xy) / 7.0, dot(dS, uScorchAxes.zw) / 3.94) + 0.5;
@@ -683,10 +698,15 @@ void main() {
       occ = mix(occ, 0.6 + 0.4 * h0, scorch);
     }
   }
+#endif
 
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
   vec3 lightAt = vWorld;
   if (!inside) if (dCanal > 0.0 && dCanal < EXIT && abs(vSL.y - canalAt(dCanal)) < 60.0) lightAt.y += 16.0;
+#ifdef PROFILE_B
+  gl_FragColor = vec4(rigOut(albedo * 0.3 * (0.5 + 0.5 * n.y) * occ * rough), 1.0);
+  return;
+#endif
   vec3 c = rigShade(lightAt, n, v, albedo, rough, occ);
   if (inside) if (uUnder > 1.5) {
     // Inside, the two mouths are the windows: cold light on what faces them, and the far mouth seen in the glaze of ice on the rock.

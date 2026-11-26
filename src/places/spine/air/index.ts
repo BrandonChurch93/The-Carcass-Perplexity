@@ -94,6 +94,7 @@ export function create(ctx: Context): Piece {
   const volume = new THREE.ShaderMaterial({
     vertexShader: QUAD_VERTEX,
     fragmentShader: VOLUME_FRAGMENT,
+    defines: { PLATE: 0 },
     uniforms: {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
