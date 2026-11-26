@@ -149,8 +149,9 @@ ${CUT}
   gl_FragColor = vec4(0.0);
 }`;
 
-// One card of a head. aCard: its turn about the stalk's line, its droop, its size, which photograph (0 the fan, 1 the lock).
-// aCard2: its own seed, how ragged, how spent, its place toward the lens among the cards of its head.
+// One card of a head. aCard: its turn about the stalk's line, its droop, its size, which photograph (0 the fan, 1 the lock) and, in the
+// fraction of that, how long its straps are for their width.
+// aCard2: its own seed, how ragged, how spent, its place toward the lens among the cards of its head (plus 1 if the head turns up to the light).
 export const HEAD_VERTEX = /* glsl */ `
 ${SPINE}
 attribute vec4 aCard;
@@ -164,13 +165,17 @@ void main() {
   float D = 2.0 * aAxis.w * mix(1.0, uGrove.y, aKind.z);
   vec3 T;
   vec3 c = spine(1.0, T);
+  // A head turns up to the light whichever way its trunk leans: without this a clump that splays one way wears all its heads tipped that way.
+  float up = aCard2.w > 0.5 ? 1.0 : 0.0;
+  T = normalize(mix(T, vec3(0.0, 1.0, 0.0), 0.55 * up));
   vec3 toCam = normalize(cameraPosition - c);
   // A card stands out from the line to its own side. One that points at the lens is seen narrow, and comes round as the lens does: it never jumps.
   vec3 out0 = vec3(cos(aCard.x), 0.0, sin(aCard.x));
   out0 = normalize(out0 - T * dot(out0, T) + vec3(1e-4, 0.0, 0.0));
   vec3 er = normalize(out0 - toCam * (0.85 * dot(out0, toCam)));
   float open = plumeOpen(aKind.x, aKind.y, aKind.w);
-  float lock = aCard.w;
+  float lock = aCard.w > 0.5 ? 1.0 : 0.0;
+  float tall = mix(0.72, 1.3, fract(aCard.w) / 0.45);
   float wide = 19.0 * D * uHead * mix(1.0, 0.5 / uGrove.y, aKind.z * (uGrove.y > 1.01 ? 1.0 : 0.0)) * aCard.z;
   // The fan is the photograph of one with the end of its stalk in it, a quarter turn off upright: that end is laid along this stalk's line.
   float turn = mix(0.4712, 0.0, lock) - aCard.y - 0.35 * (1.0 - open) * (1.0 - lock);
@@ -179,10 +184,10 @@ void main() {
   vec2 q = vec2(position.x + 0.5, position.y);
   vec2 pivot = mix(vec2(0.225, 0.125), vec2(0.5, 0.115), lock);
   float reach = clamp((q.y - 0.15) / 0.8, 0.0, 1.0) * mix(clamp(q.x * 1.6, 0.0, 1.0), 1.0, lock);
-  vec3 p = c + xw * ((q.x - pivot.x) * wide * mix(0.45, 1.0, open)) + yw * ((q.y - pivot.y) * wide * 0.667);
+  vec3 p = c + xw * ((q.x - pivot.x) * wide * mix(0.45, 1.0, open)) + yw * ((q.y - pivot.y) * wide * 0.667 * tall);
   float own = aCard2.x * 40.0;
   p += WIND * (0.05 * wide * reach * stalkGust()) + er * (0.025 * wide * reach * sin(uSeconds * (2.0 + 1.2 * fract(aCard2.x * 7.7)) + own + q.x * 9.0));
-  p += toCam * aCard2.w;
+  p += toCam * (aCard2.w - up);
   vRight = er;
   vWorld = p;
   vUv = vec4(q, lock, aCard2.x);
@@ -232,7 +237,7 @@ ${HEAD_CUT}
   float own = fract(vUv.w * 13.3);
   albedo *= mix(vec3(0.78, 0.8, 0.86), vec3(1.2, 1.0, 0.92), own);
   float spent = vHead.y;
-  albedo = mix(albedo, mix(vec3(0.12, 0.06, 0.048), vec3(0.19, 0.125, 0.09), own) * (0.25 + 1.1 * smoothstep(0.02, 0.6, luma)), spent);
+  albedo = mix(albedo, mix(vec3(0.075, 0.036, 0.03), vec3(0.125, 0.07, 0.052), own) * (0.25 + 1.1 * smoothstep(0.02, 0.6, luma)), spent);
   float out_ = (vUv.x - mix(0.3, 0.5, vUv.z)) * 1.4;
   vec3 n = normalize(vRight * out_ + vec3(0.0, 0.5, 0.0) + v * 0.7);
   // Dark at the heart of it, where the straps stand close.
@@ -255,4 +260,71 @@ uniform sampler2D tLock;
 void main() {
 ${HEAD_CUT}
   gl_FragColor = vec4(0.0);
+}`;
+
+// Where a stalk meets the ground: a low collar of the salt that has grown round its foot, lumpy, stained where the brine wicks into it.
+// Where it stands in the brine the collar ends at the water and a ring lies on the water round it: dark and wet, with a ragged line of froth at its edge.
+// aFoot: x, the level it stands at, z, its radius. aFoot2: its height, its seed, 1 in the brine. The last quarter of the sheet is the ring.
+const COLLAR_SHAPE = /* glsl */ `
+attribute vec4 aFoot;
+attribute vec4 aFoot2;
+vec3 collarAt(float a, float v) {
+  float s = aFoot2.y;
+  float lobe = 1.0 + 0.28 * sin(a * 2.0 + s * 9.0) + 0.18 * sin(a * 3.0 + s * 23.0) + 0.1 * sin(a * 5.0 + s * 41.0);
+  float u = min(v / 0.75, 1.0);
+  float k = max(v - 0.75, 0.0) / 0.25;
+  float r = aFoot.w * lobe * (u + k * aFoot2.z * (0.45 + 0.5 * fract(s * 13.7)));
+  float y = aFoot.y + mix(-0.04, 0.004, aFoot2.z) + (aFoot2.x + 0.04) * pow(1.0 - u, 1.5) * (0.82 + 0.18 * sin(a * 4.0 + s * 17.0));
+  return vec3(aFoot.x + cos(a) * r, y, aFoot.z + sin(a) * r);
+}`;
+
+export const COLLAR_VERTEX = /* glsl */ `
+${COLLAR_SHAPE}
+varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec4 vFoot;
+varying vec2 vRing;
+void main() {
+  float a = position.x;
+  float v = position.y;
+  vec3 p = collarAt(a, v);
+  vec3 da = collarAt(a + 0.2, max(v, 0.05)) - collarAt(a, max(v, 0.05));
+  vec3 dv = collarAt(a, v + 0.05) - p;
+  vNormal = normalize(cross(da, dv) + vec3(0.0, 1e-4, 0.0));
+  if (vNormal.y < 0.0) vNormal = -vNormal;
+  vWorld = p;
+  vFoot = vec4(v, aFoot2.y, aFoot2.z, p.y - aFoot.y);
+  vRing = vec2(max(v - 0.75, 0.0) / 0.25, a);
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`;
+
+export const COLLAR_FRAGMENT = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec4 vFoot;
+varying vec2 vRing;
+uniform sampler2D tSalt;
+${RIG_GLSL}
+void main() {
+  vec3 salt = texture2D(tSalt, vWorld.xz * 2.3 + vFoot.y * vec2(3.1, 7.7)).rgb;
+  if (uMirror > 0.5 && vWorld.y < -0.015) discard;
+  // The ring's edge is ragged: it reaches further on one side than on the next.
+  float reach = 0.55 + 0.25 * sin(vRing.y * 3.0 + vFoot.y * 20.0) + 0.2 * sin(vRing.y * 7.0 + vFoot.y * 50.0);
+  if (vRing.x > reach) discard;
+  vec3 n = normalize(vNormal);
+  vec3 v = normalize(cameraPosition - vWorld);
+  vec3 albedo = (salt * 1.05 + 0.03) * vec3(1.0, 0.9, 0.8) * (0.85 + 0.3 * fract(vFoot.y * 41.7));
+  // The brine wicks up into it from below, and the rust it carries stays.
+  float wick = 1.0 - smoothstep(0.0, 0.035 + 0.05 * fract(vFoot.y * 7.3), vFoot.w + 0.012 * sin(vWorld.x * 60.0 + vFoot.y * 30.0) + 0.012 * sin(vWorld.z * 47.0));
+  albedo = mix(albedo, albedo * vec3(0.62, 0.36, 0.3), 0.75 * wick);
+  float wet = wick * vFoot.z;
+  albedo = mix(albedo, albedo * vec3(0.6, 0.38, 0.33) + vec3(0.02, 0.004, 0.003), wet);
+  // Dark in under the trunk.
+  float occ = 0.6 + 0.4 * smoothstep(0.0, 0.5, vFoot.x);
+  float ring = vRing.x > 0.001 ? 1.0 : 0.0;
+  float froth = smoothstep(0.55, 0.8, salt.r) * smoothstep(reach - 0.2, reach - 0.04, vRing.x);
+  albedo = mix(albedo, mix(vec3(0.12, 0.036, 0.03), vec3(0.72, 0.64, 0.6), froth), ring);
+  vec3 c = rigShade(vWorld, n, v, albedo, mix(mix(0.96, 0.45, wet), mix(0.6, 0.92, froth), ring), occ);
+  gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

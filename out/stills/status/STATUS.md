@@ -1,8 +1,8 @@
-# Status 117
+# Status 118
 
-2026-11-26 14:42 UTC. Phase 5, the whole film.
+2026-11-26 15:00 UTC. Phase 5, the whole film.
 
-- `01-s117-marsh.jpg`: The Blood Marsh's stalks, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 5618, the jury's frame. Bottom, frame 6424, key marsh-3: no crown stands over the hero's back
-- `02-s117-ending.jpg`: The ending's last version, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 11340, six frames after the beat. Bottom, the last frame, 11743
-- `03-s117-breath-held.jpg`: Held back, the Breath's wall version 1 (draft tier, preview size, rendered on the Builder's machine): main at left, with the wall at right. Top, frame 5510, key breath-2. Bottom, frame 4973, key breath-3. The vapour behind the weed is gone at right
-- `04-s117-opening.jpg`: The first seconds, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 0. Bottom, frame 120, the frame at the hook
+- `01-g-join-b.jpg`: The join, version 2, merged (draft tier, preview size, rendered on the Builder's machine): version 1 at left, version 2 at right. Top, frame 9563. Bottom, frame 9584. The lake shows through the lid of cloud
+- `02-g-strike-b.jpg`: The Spine's lightning, version 2, merged (draft tier, preview size, rendered on the Builder's machine): version 1 at left, version 2 at right. Top, frame 7668, key spine-3. Bottom, frame 8090, key spine-4: the sky through the mouth is dark at right, which goes back to its builder
+- `03-g-heart.jpg`: The Heart's near bank, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 2507, the jury's frame. Bottom, frame 2722, key heart-0
+- `04-g-eye.jpg`: The Eye's seam, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 8305, the Eye's first frame. Bottom, frame 9221, key eye-4

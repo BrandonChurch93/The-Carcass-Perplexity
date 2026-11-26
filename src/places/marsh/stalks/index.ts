@@ -5,7 +5,7 @@ import type { Context, Piece } from '../shared/context';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
 import { LOCK_DEPTH, LOCK_FRAGMENT, LOCK_VERTEX } from './locks';
-import { HEAD_DEPTH, HEAD_FRAGMENT, HEAD_VERTEX, PALM_DEPTH, PALM_FRAGMENT, PALM_VERTEX } from './palms';
+import { COLLAR_FRAGMENT, COLLAR_VERTEX, HEAD_DEPTH, HEAD_FRAGMENT, HEAD_VERTEX, PALM_DEPTH, PALM_FRAGMENT, PALM_VERTEX } from './palms';
 import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX, STEM_FRAGMENT, STEM_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['stalks', 'insects'];
@@ -65,7 +65,7 @@ interface Wild {
   age: number; stain: number; uvo: number;
   /** How much the air moves it: 0 for one that lies. */
   quiver: number;
-  fork: [number, number, number]; collar: number;
+  fork: [number, number, number]; collar: number; bare?: boolean;
   cards: number[][];
   foot: boolean;
 }
@@ -239,12 +239,15 @@ export function create(ctx: Context): Piece {
     const wild = ctx.rng('stalks-wild');
     const wilds: Wild[] = [];
     const lee = [0.8, 0.6];
-    const levelAt = (x: number, z: number): number => Math.min(0, ctx.rig.land.height(x, z)) - 0.05;
+    // The foot of a line: the bed where it stands in the brine, the ground where it does not.
+    const levelAt = (x: number, z: number): number => ctx.rig.land.height(x, z) - 0.05;
+    // Its own stream: what `wild` gives each stalk stays what it gave before the cards had a shape of their own.
+    const shapes = ctx.rng('stalks-cards');
     const dress = (w: Wild, style: number, scale: number): void => {
       // style: 0 a full mop, 1 ragged, 2 spent and hanging, 3 young and tight, 4 a bud, 5 half out.
       const turn = wild.range(0, TAU);
       const card = (k: number, n: number, droop: number, size: number, lock: number, ragged: number, spent: number): void => {
-        w.cards.push([turn + ((k + wild.range(-0.3, 0.3)) / n) * TAU, droop, size * scale, lock, wild.next(), ragged, spent, wild.range(-0.035, 0.035)]);
+        w.cards.push([turn + ((k + wild.range(-0.3, 0.3)) / n) * TAU, droop, size * scale, lock + shapes.range(0, 0.45), wild.next(), ragged, spent, wild.range(-0.035, 0.035)]);
       };
       if (style === 0) {
         const n = 4 + wild.int(3);
@@ -256,7 +259,7 @@ export function create(ctx: Context): Piece {
         for (let k = 0; k < n; k++) card(k, n, wild.range(0, 1.1), wild.range(0.6, 1.1), 0, wild.range(0.5, 1), wild.next() < 0.4 ? wild.range(0.3, 0.8) : 0);
       } else if (style === 2) {
         const n = 2 + wild.int(2);
-        for (let k = 0; k < n; k++) card(k, n, wild.range(1.6, 2.3), wild.range(0.4, 0.75), 0, wild.range(0.2, 0.8), wild.range(0.75, 1));
+        for (let k = 0; k < n; k++) card(k, n, wild.range(1.7, 2.4), wild.range(0.4, 0.7), 0, wild.range(0.5, 0.95), wild.range(0.8, 1));
       } else if (style === 3) {
         const n = 1 + wild.int(2);
         for (let k = 0; k < n; k++) card(k, n, wild.range(-0.25, 0.25), wild.range(0.5, 0.85), 1, 0, 0);
@@ -302,7 +305,7 @@ export function create(ctx: Context): Piece {
       const kinked = wild.next() < 0.34;
       const old = grow > 1.25 || wild.next() < 0.2;
       const w: Wild = {
-        x: s.x, y: levelAt(s.x, s.z), z: s.z, h: tall + 0.05, dx: Math.cos(s.yaw), dz: -Math.sin(s.yaw), lean: s.lean * 1.5 + r2 + leaner, R,
+        x: s.x, y: anchored || backdrop ? Math.min(0, levelAt(s.x, s.z) + 0.05) - 0.05 : levelAt(s.x, s.z), z: s.z, h: tall + 0.05, dx: Math.cos(s.yaw), dz: -Math.sin(s.yaw), lean: s.lean * 1.5 + r2 + leaner, R,
         kind: s.kind, phase: s.phase, low: lowly ? 1 : 0, seed,
         bowA: wild.range(0, TAU), bowM: wild.range(0.03, 0.22), kinkT: kinked ? wild.range(0.25, 0.8) : 2, kinkM: kinked ? wild.range(0.12, 0.5) : 0,
         swayA: wild.range(0, TAU), swayM: wild.next() < 0.5 ? wild.range(0.02, 0.085) : wild.range(0, 0.02), kinkA: wild.range(0, TAU), rate: wild.range(0.7, 1.6) / Math.sqrt(Math.max(tall, 0.6) / 2.5),
@@ -318,8 +321,10 @@ export function create(ctx: Context): Piece {
         w.swayM = Math.min(w.swayM, 0.012);
         w.collar = 0.5 * w.collar;
       }
+      // The ones the lens of the wallowers looks past stay exactly as its picture has them: no collar, and a head on its trunk's line.
+      w.bare = staged4.has(s) || Math.hypot(s.x - k3[0], s.z - k3[1]) < NEAR;
       wilds.push(w);
-      // And a head a key's picture shows keeps its size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
+      // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
       if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
       // A fork: a second trunk that leaves this one part of the way up, goes out and turns up.
       if (!lowly && tall > 1.5 && wild.next() < 0.2 && !anchored) {
@@ -373,7 +378,7 @@ export function create(ctx: Context): Piece {
           // None where the brine is deep: a seedling stands on the crust or in the shallows.
           if (ctx.rig.land.height(x, z) < -0.12) continue;
           const y: Wild = {
-            x, y: Math.max(levelAt(x, z), ctx.rig.land.height(x, z) - 0.03), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: wild.range(0, 0.28), R: wild.range(0.016, 0.03) * (0.7 + 0.6 * h),
+            x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: wild.range(0, 0.28), R: wild.range(0.016, 0.03) * (0.7 + 0.6 * h),
             kind, phase: wild.range(0, TAU), low: lowly ? 1 : 0, seed: wild.next(),
             bowA: wild.range(0, TAU), bowM: wild.range(0.03, 0.3), kinkT: 2, kinkM: 0, swayA: wild.range(0, TAU), swayM: wild.range(0, 0.06), kinkA: 0, rate: wild.range(1.5, 2.6),
             age: wild.range(0, 0.25), stain: wild.range(0.04, 0.2), uvo: wild.range(0, 2), quiver: 1.6, fork: [0, 0, 0], collar: wild.range(0.4, 1), cards: [], foot: true,
@@ -451,6 +456,41 @@ export function create(ctx: Context): Piece {
     const trunks = new THREE.Mesh(instanced(sheet(1, 16), wilds.length, lines(wilds)), palmMaterial);
     trunks.frustumCulled = false;
     group.add(trunks);
+    {
+      const footed = wilds.filter((w) => w.foot && !w.bare);
+      const foot = new Float32Array(footed.length * 4);
+      const foot2 = new Float32Array(footed.length * 4);
+      const collars = ctx.rng('stalks-collars');
+      footed.forEach((w, i) => {
+        const ground = ctx.rig.land.height(w.x, w.z);
+        const thick = w.R * (w.low ? 1.2 : 1);
+        foot.set([w.x, Math.max(0, ground), w.z, thick * collars.range(2.3, 4.2) + 0.015], i * 4);
+        foot2.set([thick * collars.range(0.8, 2.1), collars.next(), ground < 0 ? 1 : 0, 0], i * 4);
+      });
+      const ring = new THREE.BufferGeometry();
+      const rp: number[] = [];
+      const ri: number[] = [];
+      const SIDES = 10;
+      const RINGS = 4;
+      for (let j = 0; j <= RINGS; j++) for (let i = 0; i <= SIDES; i++) rp.push((i / SIDES) * TAU, j / RINGS, 0);
+      for (let j = 0; j < RINGS; j++) {
+        for (let i = 0; i < SIDES; i++) {
+          const a = j * (SIDES + 1) + i;
+          ri.push(a, a + 1, a + SIDES + 1, a + 1, a + SIDES + 2, a + SIDES + 1);
+        }
+      }
+      ring.setAttribute('position', new THREE.Float32BufferAttribute(rp, 3));
+      ring.setIndex(ri);
+      const collarMaterial = new THREE.ShaderMaterial({
+        uniforms: { ...ctx.rig.uniforms, tSalt: { value: salt } },
+        vertexShader: COLLAR_VERTEX,
+        fragmentShader: COLLAR_FRAGMENT,
+        side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(instanced(ring, footed.length, { aFoot: foot, aFoot2: foot2 }), collarMaterial);
+      mesh.frustumCulled = false;
+      group.add(mesh);
+    }
     const carded: Wild[] = [];
     const c1: number[] = [];
     const c2: number[] = [];
@@ -458,7 +498,8 @@ export function create(ctx: Context): Piece {
       for (const c of w.cards) {
         carded.push(w);
         c1.push(c[0], c[1], c[2], c[3]);
-        c2.push(c[4], c[5], c[6], c[7]);
+        // A whole number on the last says the head turns up to the light.
+        c2.push(c[4], c[5], c[6], c[7] + (w.bare ? 0 : 1));
       }
     }
     const headMaterial = new THREE.ShaderMaterial({
