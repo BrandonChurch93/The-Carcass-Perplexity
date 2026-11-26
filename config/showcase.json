@@ -17,6 +17,8 @@
     "maxSeconds": 215,
     "hookSeconds": 2,
     "shutterDegrees": 180,
+    "maxSmearShare": 0.0002,
+    "fullShutterUnits": ["heart"],
     "cutToleranceFrames": 3,
     "riseWindowTolerance": 0.1,
     "minPlaceSeconds": 16,

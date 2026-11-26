@@ -16,6 +16,8 @@
   "film.maxSeconds": "number",
   "film.hookSeconds": "number",
   "film.shutterDegrees": "number",
+  "film.maxSmearShare": "number",
+  "film.fullShutterUnits": "array",
   "film.cutToleranceFrames": "number",
   "film.riseWindowTolerance": "number",
   "film.minPlaceSeconds": "number",

@@ -8,6 +8,7 @@ import { DIAGNOSTICS, Post, QUAD_VERTEX, additivePass, halfFloatTarget, type Dia
 import { frameSamples, type Sample } from './sampler';
 import { partOf, type LivePart } from './place';
 import type { Stage } from './stage';
+import { shutterShare } from './shutter';
 import { SHUTTER } from './time';
 
 const RESOLVE_FRAGMENT = /* glsl */ `
@@ -328,6 +329,8 @@ export class Engine {
     const accum = this.accumTarget as THREE.WebGLRenderTarget;
     const count = samples.length;
     const points = lensPoints(count);
+    // The world keeps the whole shutter. The camera's own shutter closes early on a fast move (film.maxSmearShare), and the world runs on by the rest.
+    const share = shutterShare(stage, frame, this.format.width / this.format.height);
     this.open = false;
     this.shares = count;
     stage.resize(this.format.width, this.format.height);
@@ -338,7 +341,8 @@ export class Engine {
     (v.uHalf!.value as THREE.Vector2).set(volume.width, volume.height);
     for (let i = 0; i < count; i++) {
       const s = samples[i] as Sample;
-      stage.setTime((frame + s.shutter * SHUTTER) / FPS, worldShift);
+      if (share === 1) stage.setTime((frame + s.shutter * SHUTTER) / FPS, worldShift);
+      else stage.setTime((frame + s.shutter * SHUTTER * share) / FPS, worldShift + (s.shutter * SHUTTER * (1 - share)) / FPS);
       this.aim(stage, s, points[i] as [number, number]);
       const lens = this.lensOf(stage);
       if (lens.aperture > 0) this.open = true;
