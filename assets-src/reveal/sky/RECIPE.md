@@ -22,8 +22,8 @@ field of cloud has grown, how the sea is ruffled, how a trail of vapour bends) a
 Made by `make_cover.py`. 2048 x 1152, on the rectangle `COVER_RECT` of `src/places/reveal/shared/weather.ts` (px of the master: x -900 to 7600,
 y -820 to 3961.25). Where the weather stands:
 
-- red: the two fronts as they stand at second 0 (the plate `mat/front.jpg` at the placements `FRONTS`, the same numbers as in `weather.ts`),
-  blurred a little, so the ground can take their shade with one read.
+- red: two fronts from the plate `mat/front.jpg`. The place no longer reads this channel (the fronts were taken off the cloud sheet at
+  version 3 of the second owner: they smeared the body); it is kept so the file keeps its form.
 - green: how much of the low field of small cloud has grown at a point: full over the open sea, thin over the land, clumped, cleared round the cyclone.
 - blue: the cyclone and the storm on the spine (`mat/cyclone.jpg`, `mat/storm.jpg` laid on the rectangles where `sky/index.ts` draws their sheets:
   the storm's is 512 x 160 px of the master, 40 px west of its mark), which do not drift. It is the shade they throw, read soft.

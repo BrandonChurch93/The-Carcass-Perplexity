@@ -9,7 +9,7 @@ export const COVER_RECT: [number, number, number, number] = [X(-900), Z(-820), 1
 export const LOW_KM = 2.6;
 export const HIGH_KM = 10.5;
 /** Km a second: staged far faster than weather, so the held frame is seen to live. */
-export const LOW_DRIFT: [number, number] = [3.6, 1.0];
+export const LOW_DRIFT: [number, number] = [5.4, 1.5];
 
 const f = (n: number): string => n.toFixed(4);
 
@@ -87,7 +87,9 @@ float lowPicture(vec2 w) {
     float wideLay = seen(texture2D(uMatStreaks, sw / vec2(840.0, 620.0) + vec2(0.3, 0.7)).rgb, 0.3 + 0.12 * hard, 0.8 - 0.1 * hard);
     float fineLay = seen(texture2D(uMatStreaks, mat2(0.84, 0.54, -0.54, 0.84) * w / vec2(430.0, 300.0) + vec2(0.7, 0.2)).rgb, 0.36, 0.85);
     // (Here and there a large soft mass: a field of cells grown together, a few hundred kilometres across.)
-    float massy = smoothstep(0.6, 0.82, texture2D(uCloudTile, sw / 2300.0 + vec2(0.33, 0.61), 2.0).b) * seen(texture2D(uMatPopcorn, sw / 300.0 + 0.2, 1.5).rgb, 0.1, 0.7);
+    // (They stand higher and are carried by another wind: they cross the streaks as the frame is held.)
+    vec2 mw = sw + uTime * vec2(8.5, -2.5);
+    float massy = smoothstep(0.6, 0.82, texture2D(uCloudTile, mw / 2300.0 + vec2(0.33, 0.61), 2.0).b) * seen(texture2D(uMatPopcorn, mw / 300.0 + 0.2, 1.5).rgb, 0.1, 0.7);
     pic += sqrt(away) * mix(1.5, 1.0, smoothstep(700.0, 1300.0, uViewKm)) * (0.6 * wideLay + 0.75 * fineLay * (0.25 + 0.75 * wideLay)) + 0.34 * away * massy;
   }
   return pic;
@@ -108,9 +110,12 @@ vec2 lowField(vec2 at) {
   // From orbit the field is seen whole: an even scatter over all the sea, a little thicker here and thinner there.
   float even = smoothstep(330.0, 760.0, uViewKm);
   float field = amount * (mix(0.45, 0.16, even) + mix(0.55, 0.84, even) * smoothstep(mix(0.34, 0.3, even), mix(0.72, 0.6, even), slow + 0.2 * (amount - 0.6)));
+  // (And from there it lies in bands along the wind with long clear lanes of sea between, and thins toward the edge of the planet.)
+  float lane = texture2D(uCloudTile, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(4200.0, 1150.0) + vec2(0.52, 0.18), 2.0).b;
+  field *= mix(1.0, (0.3 + 0.7 * smoothstep(0.3, 0.52, lane)) * (0.45 + 0.55 * smoothstep(0.12, 0.45, limbCos(at))), even);
   float pic = lowPicture(w);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
-  float thick = min(1.0, 1.1 * pic) * smoothstep(0.0, 0.5, field);
+  float thick = min(1.0, 1.25 * smoothstep(0.05, 0.85, pic)) * smoothstep(0.0, 0.5, field);
   return vec2(thick, pic);
 }
 

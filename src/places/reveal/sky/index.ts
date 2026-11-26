@@ -50,7 +50,7 @@ void main() {
   float self = clamp(0.5 + 1.1 * (low.x - sunward), 0.0, 1.0);
 
   // The veil: thin ice, far above, drifting the other way.
-  vec2 hv = up + uTime * vec2(2.2, -1.3);
+  vec2 hv = up + uTime * vec2(6.5, -3.8);
   float ice = dot(texture2D(uVeil, mat2(0.9, 0.44, -0.44, 0.9) * hv / 800.0).rgb, vec3(0.3, 0.55, 0.15));
   float where = texture2D(uCloudTile, hv / 5200.0 + vec2(0.61, 0.27)).b;
   float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.42, 0.75, where) * smoothstep(500.0, 1500.0, length(up - vec2(${X(AT.lake.x).toFixed(1)}, ${Z(AT.lake.y).toFixed(1)})));
@@ -58,7 +58,7 @@ void main() {
   vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.86 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 + 0.5 * smoothstep(300.0, 600.0, uViewKm) * (1.0 - smoothstep(700.0, 1300.0, uViewKm))) * (1.0 - 0.15 * high);
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
   float a = low.x * 0.94;
-  float b = high * 0.13;
+  float b = high * mix(0.09, 0.16, smoothstep(700.0, 1300.0, uViewKm));
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b;
   float alpha = 1.0 - (1.0 - a) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
@@ -68,7 +68,6 @@ const CYCLONE_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
 ${CLOUD_LIGHT_GLSL}
-uniform sampler2D uPicture;
 uniform sampler2D uStreaks;
 uniform sampler2D uMatPopcorn;
 uniform sampler2D uCloudTile;
@@ -112,14 +111,14 @@ float storm(vec2 p, float turn) {
   // (The bands are strings of cells, clump after clump with gaps between: the photograph of a field of small cumulus, wound the same way.)
   vec2 cu = vec2(3.0 * around + 0.318 * lr, 1.432 * lr - 6.0 * around) * 2.0 + 0.045 * (texture2D(uCloudTile, p * 0.9 + 0.6, 2.0).rg - 0.5);
   float cells = smoothstep(0.1, 0.42, dot(textureGrad(uMatPopcorn, cu, dFdx(vUv) * 9.0 / max(r, 0.05), dFdy(vUv) * 9.0 / max(r, 0.05)).rgb, vec3(0.3, 0.55, 0.15)));
-  lines = mix(lines, 1.35 * sqrt(lines) * cells, 0.5 * torn);
+  lines = mix(lines, 1.35 * sqrt(lines) * cells, 0.8 * torn);
   return max(cover * lines, 0.5 * mass * (0.15 + 0.85 * smoothstep(0.05, 0.42, f))) * smoothstep(0.004, 0.016, r);
 }
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
   float r = length(p);
   // The whole storm turns, the middle faster than the rim, so its arms wind as the frame is held.
-  float turn = uTime * (0.006 + 0.034 / (1.0 + 14.0 * r)) / 6.28318;
+  float turn = uTime * (0.009 + 0.05 / (1.0 + 14.0 * r)) / 6.28318;
   vec2 sunStep = normalize(uSunDir.xz);
   float thick = storm(p, turn);
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
@@ -230,9 +229,9 @@ void main() {
   // Puffs leave the throat one after another and thin as they go.
   float puff = 0.78 + 0.22 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
   float inside = smoothstep(0.0, 0.02, q.x) * (1.0 - smoothstep(0.55, 0.98, q.x)) * smoothstep(0.0, 0.08, q.y) * (1.0 - smoothstep(0.92, 1.0, q.y));
-  float thick = smoothstep(0.08, 0.6, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
+  float thick = smoothstep(0.1, 0.9, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.7, 0.3);
-  float alpha = clamp(thick * 0.85, 0.0, 1.0);
+  float alpha = clamp(thick * 0.7, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -318,7 +317,7 @@ export function create(ctx: Context): Piece {
     uVeil: { value: data('mat/veil.jpg', true) },
   });
   sheet('storm', quad({ x: AT.storm.x - 40, y: AT.storm.y }, 256, 80, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
-  sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uPicture: { value: data('mat/cyclone.jpg', false) }, uStreaks: { value: data('mat/streaks.jpg', true) } });
+  sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uStreaks: { value: data('mat/streaks.jpg', true) } });
   const centre = { x: LIMB.cx, y: LIMB.cy };
   const ring = (inner: number, outer: number): THREE.BufferGeometry =>
     new THREE.RingGeometry(inner * LIMB.r * KM, outer * LIMB.r * KM, 720, 1).rotateX(-Math.PI / 2).translate(X(centre.x), 12, Z(centre.y));

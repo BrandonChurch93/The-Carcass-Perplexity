@@ -1,79 +1,78 @@
-# The Reveal: hand-over (reveal_owner, version 3)
+# The Reveal: hand-over (reveal_owner_2, version 3)
 
-Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/places/reveal/`, pictures in `public/assets/reveal/land/` and `sky/`, the Builder's in `mat/`.
+Unit `reveal`, shot `reveal-01`, frames 9541 to 11860, keys `reveal-1` to `reveal-4`. Code in `src/places/reveal/`, pictures in `public/assets/reveal/land/` and `sky/`, the Builder's in `maps/` and `mat/`. Recipes in `assets-src/reveal/land/RECIPE.md` and `sky/RECIPE.md`.
 
 ## How each part is drawn
 
-- `continent` (`land/index.ts`, one sheet, one shader): four levels of two pictures each, `ground-a..d.jpg` (colour) and `shape-a..d.jpg` (slope in red and green, height in blue), swapped by pairs as the eye rises (`land/levels.ts`). They come from `assets-src/reveal/land/make_land.py` and `erode.c`: the traced outline in `continent.json`, grown to land, then worn by water.
-  Lit by the rig. From orbit the range tile is laid wide on the bones (`ORBIT_GRAIN`). Fine grain and small relief from `mat/range`, `mat/plain`, `mat/badland` (colour, and `-nh` of two), each laid twice, turned and bent, mixed by height and by dry province; they fade out above 1,050 km.
-- `sea`: the same shader, where the shape is under the shore. Colour from the ground picture by depth, blooms by noise, a glint lobe at `uGlint`, a broad warm glare round it, surf at the coast. No picture of its own.
-- `salt`: the pale pan in the ground picture, kept white in the shader (no growth, no bone tint), with its own edge in `inPan`.
-- `lake`: the lake of the Eye. The pictures are read through a small bend so the shore has bays; black middle, amber shelf by noise.
-- `lava`: six vents and cracks in the shader, blackbody colour, swelling with `uBeat`; a glow added after the air.
-- `cloud` (`sky/index.ts`, `shared/weather.ts`): one sheet at the low height. Where weather stands comes from `sky/cloud-cover.jpg` and slow noise; what it looks like from far comes from `mat/cells.jpg`, `mat/streets.jpg` (low deck, each read twice, turned) and `mat/veil.jpg` (high ice, drifting against the deck).
-  From near (under 560 km) the older look from `sky/cloud-tile.jpg` takes over. The shade of the deck on the ground is the same function read once, offset along the sun (`cloudShade`).
-- `cyclone`: `mat/cyclone.jpg` on a quad 1,440 km wide, turning slowly, the middle faster; lit by the place's sun through its own brightness.
-- `storm`: `mat/storm.jpg` on a quad 430 by 330 km over the spine; lit side and lee from the picture read towards and away from the sun; four flashes on a clock.
-- `vapour`: a noise plume from the throat, in the shader alone.
-- `space`, `atmosphere`: a ring past the limb and the air term by the cosine at the limb (`limbCos`), in shaders alone.
-- The body: `land/bones.jpg` (from `make_bones.py`, the traced ranges only) tints the great ranges pale and darkens the land between, only between 680 and 1,380 km of height. Below that the place is only land.
+- `continent` (`land/index.ts`, one sheet, one shader): the Builder's four nested satellite maps (`maps/map-a..d.jpg`), read two at a time (wide and close), and my `land/relief-a..d.png` (`make_relief.py`: slope in red and green, height in blue, from the maps' heights). Nothing of the first owner's eroded land is left.
+  Under the maps, where one map texel covers more than a pixel, the ground photographs (`mat/range`, `plain`, `badland`, `shelf`) are laid by world position in octaves and cross-faded, light and dark only.
+  The colour is graded by height of the eye (`uViewKm`): `near` (under 300 km) warm tan; `midway` (90 to 1,300) teal lowland, red-brown pans and flanks, pale crests; `wide` and `top` (from 240 and 680) dark lowland, pale ranges, rust round the throat. The words `lowMid`, `flank`, `crestHi`, `offBone`, `dome`, `socket` in the shader each do one of these.
+- `sea`: same shader where the relief's blue is under the shore. Deep colour, shoals from the map (clear teal from far), `mat/glitter.jpg` for how each patch throws the sky back, one warm glint at `uGlint` that slides during the hold.
+- `lake`: black-blue middle, a graded gold margin with swirls drawn round into the dark (noise on a twisted ground), a pale crust at the foot of the rim, `mat/lakewater.jpg` read large and soft for the wind. The map's spits into the lake are drowned. The stream of the Eye leaves at the upper left (drawn in the shader: `stream`, `banks`).
+- `salt`: the pan of the pelvis: white where the map is pale, dark red where the map itself is red (`rawBrine`, taken before any grading), and a red run east to the sea (`plume`).
+- `lava`: six vents and cracks, swelling with `uBeat` (the heartbeat at frame 11334); loops gated by distance so they cost nothing elsewhere.
+- `cloud` (`sky/index.ts`, `shared/weather.ts`): one sheet at 2.6 km. Near: thousands of separate puffs (`puffs`: hashed cells, sizes on a long tail, lumpy, soft) in streets taken from `mat/streaks.jpg`, fullness from `mat/popcorn.jpg`, fused masses in street cores, 10 km cells from 300 km up. From 450 km: the streaks photograph at two lays, turned against each other, with a few large soft masses; clear lanes and thinning toward the limb from `lowField`. A thin veil (`mat/veil.jpg`) drifts the other way above. `cloudShade` is the same field read once toward the sun.
+- `cyclone`: no picture of a cyclone. `mat/streaks.jpg` and `mat/popcorn.jpg` wound on a log spiral (`fibre`, `storm`): a small grey-white core round a clear eye, arms of cells with sea in the gaps, threads of veil off one side, a soft shadow on the sea. It turns, the middle faster.
+- `storm`: five reads of `mat/storm.jpg` in a row along the backbone (`tower`), lit from the sun side, violet glimmer and four strikes on a clock from inside.
+- `vapour`: `mat/wisps.jpg` carried down the wind from the throat through a travelling bend.
+- `space`, `atmosphere`: a ring past the limb and the air by `limbCos`, shaders alone.
+- The body: there is no bones picture any more. The figure is the maps' own ranges; the grade by height makes crests pale and the country dark only from about 600 km up. From 680 km the skull is one pale dome and the basin beside the lake of the Eye is a second dark socket (from 140 km).
 
 ## Tried, and not worth trying again
 
-- Bones mask taken from the blue of `cloud-cover.jpg`: patchy, the ribs broke up. The traced picture is the answer.
-- Cloud cells from Worley noise and streets from stretched noise: read as one stamp with hard lace at every edge. Photographs inside large masks read far better.
-- A log spiral cyclone in the shader: read as painted at any setting.
-- Pale ranges drawn as colour without relief: chalk lines. The pale tint must follow the slope light.
-- Thresholding a cloud photograph hard (`grown` with a narrow step): flecks and blocks of the JPEG show. Wide step, floor taken off, half a mip of blur.
-- Rendering at 3840 x 2160 while `make_land.py` runs: out of memory on 7.9 GB. Run it alone (15 minutes). A seventh take of `cyclone` and `cloud-cover` was made by mistake at version 2 and thrown away.
+- A grey veil over the whole cyclone to soften it: read as a grey disc on the sea. The gaps must be sea.
+- The cyclone as streaks alone, however fine: combed hair. Cells along the arms (the popcorn photograph on the same spiral) are what break it.
+- Two fronts from `mat/front.jpg` on the cloud sheet: large smears across the body at orbit. Removed; the red of `sky/cover.png` is no longer read.
+- Puffs taken straight from the popcorn tile: soft patches at reveal-2, the dark sea floor of the tile shows. Placed puffs with the photographs as placement only.
+- Relief light on top of the map colour between 110 and 900 km: reads as snow and as etched lines. The map's contrast is drawn toward its own blurred copy there instead (`soften`).
+- Softening at reveal-1 by 0.45: M3 fell from 2.78 to 1.02 at draft. It is 0.14 there now.
+- A lobed amber margin from one noise: reads drawn. The twisted, graded one is the answer.
+- Uhd renders while python makes pictures: out of memory. One at a time.
 
 ## Still wrong beside the approved pictures, worst first
 
-1. `reveal-4`: the bones carry the grain of rock now, but it is the range tile laid 8 and 15 times its real size, not relief of their own; the pale band under it keeps a soft edge and a dark surround that reads as tinted at native size.
-2. `reveal-4`: the top of the frame is brighter than approved (the front there), and approved has many small scattered clouds toward the limb where this has a few large systems. Means are near (see the hand-back).
-3. `reveal-4`, `reveal-3`: cloud scraps keep hard edges at native size, and the low deck has no depth of its own (one height). No picture of a front is used: `mat/front.jpg` is not placed.
-4. `reveal-2`, `reveal-3`: one family of dendritic valleys still carries the head. The three kinds of country change grain and colour, the tableland only a little of the large shape.
-5. `reveal-1`, `reveal-2`: near cloud is the old tile, soft and without structure.
-6. `reveal-4`: the storm is better lit but still one bright mass; its right edge fades by a circle, not by its own shape.
-7. `reveal-4`: the bay in the far leg is cut in the shader as an ellipse with a noisy edge. It has no river mouth, no shoals; its water is the grey of the glare.
-8. `reveal-4`: a few islands west of the pelvis read dark as the sea with a thin shore line.
-9. `mat/shelf` and `mat/redflat` are not used: the shelves and the salt pan have no fine detail.
+1. `reveal-4`: the inner turns of the cyclone are still a little combed, and it is darker in the gaps than approved, whose arms are softer and more numerous.
+2. `reveal-4`: the land round the bones is wider and busier than approved (the maps hold a whole continent, approved has little land beyond the bones); the lowland east of the pelvis is still brown where approved is dark green.
+3. `reveal-4`, `reveal-3`: small cloud over the sea is sparser and more dashed than approved's ragged white fields; it has one height and a faint veil.
+4. `reveal-2`: the bone is etched by the map's fine valleys where approved is smoother with broad basins; puffs are smaller and more even than approved's bright knots.
+5. `reveal-1`: the margin of the lake is close; the land is greyer and its valleys more regular than approved; the stream is short.
+6. `reveal-3`: the vapour is a short trail where approved has long curling threads over the skull.
+7. Glint: warm and at the right, but broader and flatter than approved.
+8. Frames 9565 to 9581: the lake fills the frame as flat blue-black water with only faint lanes.
 
-## Round 13 (judged on version 2), in the order given: closed, tried, not reached
+## Round 13 (judged on the first owner's version 2): what I did
 
-1. Body at the top: tried, and by my own look at 400 px closed (skull, ribs, pelvis, legs told apart): `bones.jpg` turns the crests of the great ranges ivory and the land between dark slate, above 680 km only. Not shown to fresh viewers. The gaps between the ribs are still dark land, not sea.
-2. Rings in the basin: closed. From the second frame they bend, break into arcs, soften, weaken outward, and are gone by frame 9578 (`uBreak`, `RING_FADE`). Frame 9541 is unchanged against the Eye.
-3. Cyan shore line: tried. Shallows are darkened where the ground is steep or a noise says no shoal, silted ochre in the shoals, surf on the windward side only. The pale rim is in `ground-*.jpg` itself: weaker and uneven now, not gone. The cure is land take 6.
-4. One procedural terrain: tried (three `mat` tiles near, the range tile on the bones from orbit). The valleys of `erode.c` still carry the head; near, the pictures are read through a small bend, which hides the straight grid valleys at `reveal-1`. The banding at `reveal-1` (8 bit height in `shape-d.jpg`) and the master as colour and height source: not reached.
-5. Weather that moves: the spiral is closed (the cyclone is the photograph, turning 2.2 times faster); deck and veil drift about twice as fast, against each other. A fine field of small cumulus over the open sea: tried twice (`FINE_FIELD` in `shared/weather.ts`, the cells photograph laid 240 km), left off: the deck cuts its edge hard in `sky`, so it reads as flecks and lifts the mean to 52/63/74.
-6. Cold light: tried. Rock is grey blue, the green soil province is gone, the glare is silver. Olive lowland baked in `ground-b.jpg` stays at `reveal-2`.
-7. Water: not reached, but for the glare and the shoals. Lakes are still flat. 8. Vapour: not reached. Lava: points small, the halo a third and only on slopes facing the vent.
+1. Body at the top by value: closed by my look at 400 px (skeleton on a continent, two sockets, jaw). Whole figure first reads at about frame 9860; ribs at 9756 as in approved.
+2. Rings 9563 to 9606: closed. Soft rest rings at 9541 agreed with the Eye, gone by 9565, amber margin in from 9581.
+3. Cyan shore outline: closed. The land is the maps; shoals are the maps' own, teal only from far.
+4. Procedural terrain and banding: closed. Maps and photographs; slope stored, never differenced from 8 bit height.
+5. Weather that moves, cyclone loosened, held frame alive: cloud drifts at two heights with travelling shadows, cyclone turns and is built of cells, storm flickers, vapour trails, glint slides, lava beats. Camera drift is the Builder's `holdPerFrame`.
+6. Cold blue-grey colour and silver glare: tried. Teal and rust lowland, ivory crests, warm small glint. Sea a shade darker than approved in the lower frame.
+7. Water with depth, glint, wet edge, no flecks: lake and sea rebuilt on photographs; wet edge only at the lake (crust) and the shoals.
+8. Vapour thin wisps: tried (photograph, thin). Lava small points: kept small, gated; ridges are not lit by it.
+9. Salt flat with red veins and plume: closed at 9860 and at orbit.
+10. Cumulus field over the sea at reveal-2: closed in place and cover, smaller in the knots.
 
 ## Staged, by shot (`reveal-01`)
 
-- The relief is drawn up with distance (slope times up to 1.6, a side light across whole ranges from the height read 9 texels each way).
-- Cloud shadows are drawn up to three times their true length from far. Cloud drifts at 3 km a second and the cyclone turns in minutes: both far faster than weather.
-- The body is brought in by the height of the eye (680 to 1,380 km), not by anything in the world. It is not drawn near the salt pan.
-- The front is cleared round the storm (`STORM_AT`) and the low deck thinned over the body (to 15 and 40 percent) so the figure shows.
-- The glint and glare sit at `uGlint`, placed for the last frame; the lake shore is bent by noise only near the lake.
-- The bay (`BAY_AT`, `BAY_SIZE`) is in the shader and not in the pictures or in `bones.jpg`.
-- Fine country tiles are laid 1 and about 3.4 times their real size; the larger lay takes over with distance.
-- From orbit (above 1,050 km) the range tile is laid 330 and 610 km a repeat, 8 and 15 times its real size, most of all on the bones.
-- Level swaps of the pictures fall near frames 9675 and 9756 (largest step about 3 percent of mean).
+- Grade by height of the eye: the body is brought in by `uViewKm`, not by anything in the world. Skull dome from 680 km, second socket from 140 km, both drawn in the shader, not in the maps.
+- The country west of the skull is darkened to navy (`offBone`) so the skull stands out of it. The chest round the Heart is darkened to teal black (`crust`).
+- The stream of the Eye, the drowned spits and the crust at the lake are shader, not map.
+- Cloud shadows are drawn up to three times their length from far; cloud drifts at 3.6 km a second; the cyclone turns in minutes.
+- The sky is clear over the lake at the start; the low field is thinned over land by `sky/cover.png` green.
+- The cyclone's shadow is thrown 110 km; the glint is placed at `uGlint` for the last frame and slides 5 km a second after second 20 and draws in.
+- The sea is lifted in blue from 700 km up; limb haze is thinner than physical.
+- Rust plain round the throat, red flanks on the ranges from 300 km, the salt white and brine red are tints over the maps.
 
-## Cost, seconds a sample at 3840 x 2160, key `reveal-4`, draft, 4 cores (`npm run -s cost`)
+## Cost, seconds a sample at 3840 x 2160, key `reveal-4`, draft (`npm run -s cost`)
 
-- As handed in (`ORBIT_GRAIN` and `SELF_SHADE` on): whole frame 7.91; an empty frame 1.68 (7.79 before the round 13 shore work). Runs of the same code differ by about 0.3.
-- `continent` with `sea`, `salt`, `lake`, `lava`: 4.33 above empty (3.84 before the shore work). `cloud`: 2.14. `vapour`, `storm`, `cyclone`, `space`, `atmosphere`: each under 0.15.
-- Cheaper land: `ORBIT_GRAIN = false` in `land/index.ts` (the great ranges smooth from orbit): about 0.4 less (7.40 against 7.79, measured before round 13).
-- Cheaper cloud: `SELF_SHADE = false` in `sky/index.ts` (cloud lit by its photograph alone): 0.28 less (6.98 against 6.70, measured before the bay and the grain).
-- Dearer shade: `FULL_SHADE = true` in `shared/weather.ts` (three reads of the deck for the ground shade): about 0.95 more (measured at version 2).
-- So the aim of 7 is missed by about 0.9 as handed in, and by about 0.2 with both cheaper settings.
+- Whole frame COSTWHOLE; an empty frame COSTEMPTY. `continent` COSTLAND above empty, `cloud` COSTCLOUD, `cyclone` COSTCYC, `vapour` COSTVAP, `storm` COSTSTORM, `space` and `atmosphere` under 0.05.
+- The aim of 7 is missed by COSTMISS. Cheapest cuts: the 9.5 km cell layer and the masses in `lowPicture` (about 0.2), the second read of `lowField` for self shade in `sky` (about 0.3).
 
 ## Next, in order
 
-1. Give the bones relief of their own in the heights (with land take 6) in place of the wide lay of the range tile, and break the edge of the pale band by slope and snow line.
-2. Scatter small cloud toward the limb in place of the upper front, and bring the sea up in blue, to the approved means.
-3. Place `mat/front.jpg` for the two fronts and give the deck a second height with its own shadow.
-4. In that same land take 6 (the last allowed): the bay, a river mouth, and two more provinces in the heights themselves.
-5. Use `mat/shelf` on the shelves and `mat/redflat` on the pan; replace the near cloud tile with the photographs at a smaller lay.
+1. Cyclone: more and thinner arms, softer cells, less dark between them.
+2. Small cloud from orbit: ragged white fields in place of dashes; a second height with its own shadow.
+3. reveal-2: smooth the bone at that height (broad basins), brighter knots of cloud.
+4. Lowland east of the pelvis to dark green; less land beyond the bones if the maps can be cut.
+5. Long vapour threads over the skull at reveal-3; lake water at 9565 to 9581.

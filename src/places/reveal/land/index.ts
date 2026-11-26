@@ -220,6 +220,7 @@ void main() {
   float bright = dot(ground, vec3(0.3, 0.55, 0.15));
   ground = mix(ground, (0.007 + 0.034 * bright) * mix(vec3(0.05, 0.42, 0.9), ground / max(bright, 0.02), 0.1), 0.95 * offBone);
   slope *= 1.0 - 0.7 * offBone;
+  lum = mix(lum, 2.2 * dot(ground, vec3(0.3, 0.55, 0.15)), offBone);
   // From the height at which country is seen and no longer ground, the low country lies dark: wet, grown over, teal and slate.
   float wide = smoothstep(240.0, 640.0, uViewKm) * land;
   float lowness = (1.0 - smoothstep(0.12, 0.5, height)) * (1.0 - 0.85 * min(1.0, 1.4 * rust));
@@ -258,6 +259,9 @@ void main() {
   float lateLum = dot(ground, vec3(0.3, 0.55, 0.15));
   ground = mix(ground, mix(lateLum * vec3(1.05, 0.6, 0.44), min(lateLum, 0.025 + 0.42 * lateLum) * vec3(1.0, 0.62, 0.47), top), mix(0.7, 0.9, top) * flank);
   ground = mix(ground, min(lateLum, 0.02 + 0.6 * lateLum) * vec3(1.9, 0.62, 0.4), 0.75 * min(1.0, 1.4 * rust) * smoothstep(200.0, 420.0, uViewKm));
+  // (The crests of the great ranges are pale rock, and snow on the highest: they carry the figure, the land round them dark.)
+  float crestHi = smoothstep(0.02, 0.15, height - broad) * (1.0 - lowMid) * wide * (1.0 - offBone);
+  ground = mix(ground, vec3(0.7, 0.65, 0.56) * (0.42 + 1.1 * lateLum), 0.45 * crestHi);
   // From orbit the skull is one pale dome of old bone, its valleys gone into it, and the basin beside the lake of the Eye lies in
   // shade: the second socket. (Only from that height: lower down it is a massif like any other.)
   vec2 inSkull = (xz - vec2(-1474.2, -106.2)) / vec2(231.3, 201.3);
@@ -323,7 +327,9 @@ void main() {
   // What comes back from under the surface: the map's own shallows, bars and silt over the deep, lit by the sun and the sky.
   vec3 light = uSunColour * uSunDir.y * shade + skyIrradiance(level);
   float pale = pow(shallow, 1.3) * (1.0 - 0.6 * west);
-  vec3 bed = mix(DEEP, max(ground * 0.34, vec3(0.006, 0.035, 0.04)), pale);
+  // (From far the shallows along the coasts are a clear teal.)
+  vec3 shoal = mix(max(ground * 0.34, vec3(0.006, 0.035, 0.04)), vec3(0.011, 0.075, 0.085) * (0.5 + 0.9 * pale * (1.0 - 0.45 * pale)), 0.6 * smoothstep(240.0, 640.0, uViewKm));
+  vec3 bed = mix(DEEP, shoal, pale);
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
   bed = mix(bed, vec3(0.2, 0.045, 0.016), 0.75 * plume * (1.0 - land));
   // The lake of the Eye: black in the middle, and round it a margin of amber shallows, uneven, with tongues of it curling in.
@@ -336,9 +342,9 @@ void main() {
     float twist = 2.6 * lakeR + 0.3;
     vec2 tw = mat2(cos(twist), sin(twist), -sin(twist), cos(twist)) * lakeAt;
     float drawn = 0.6 * vnoise(tw * vec2(2.2, 5.5) + 7.0 + 0.5 * swirl) + 0.4 * vnoise(tw * vec2(4.5, 11.0) + 19.0);
-    float amber = max(pow(smoothstep(0.46 + 0.34 * drawn + 0.14 * dot(lakeAt / max(lakeR, 0.05), vec2(0.7, -0.7)), 1.02, lakeR), 1.5), 0.45 * smoothstep(0.08, 0.55, shallow) * smoothstep(0.6, 0.9, lakeR));
+    float amber = max(pow(smoothstep(0.5 + 0.46 * drawn + 0.12 * dot(lakeAt / max(lakeR, 0.05), vec2(0.7, -0.7)), 1.02, lakeR), 1.9), 0.45 * smoothstep(0.08, 0.55, shallow) * smoothstep(0.6, 0.9, lakeR));
     float paler = smoothstep(0.35, 1.0, 0.6 * shallow + smoothstep(0.86, 1.02, lakeR) + 0.4 * (drawn - 0.5));
-    vec3 eye = mix(vec3(0.0015, 0.0035, 0.009), mix(vec3(0.085, 0.036, 0.004), vec3(0.3, 0.15, 0.022), paler), amber);
+    vec3 eye = mix(vec3(0.002, 0.0065, 0.017), mix(vec3(0.12, 0.058, 0.006), vec3(0.4, 0.23, 0.04), paler), amber);
     bed = mix(bed, eye, (1.0 - smoothstep(1.12, 1.3, lakeR)) * (1.0 - stream * smoothstep(0.98, 1.06, lakeR)));
   }
   // (The stream runs clear and cold out of the lake: blue green over its bed.)
@@ -368,16 +374,21 @@ void main() {
   float calm = texture2D(uCloudTile, xz / 1900.0 + vec2(0.5, 0.2), 2.0).b;
   float rough = mix(0.07, 0.125, clamp(0.25 + 0.5 * (calm - 0.5) + 0.3 * (sparkle - 1.0), 0.0, 1.0));
   // (The glint slides as the planet turns under the sun.)
-  float lean = length(xz - uGlint - max(uTime - 20.0, 0.0) * vec2(-3.0, 11.0)) / uPlanetKm;
+  float lean = length(xz - uGlint - max(uTime - 20.0, 0.0) * vec2(4.0, 3.0)) / uPlanetKm;
+  // (As the eye draws away the glint is seen smaller: a warm soft patch at the right, never a disc that fills the sea.)
+  float drawIn = mix(1.0, 0.6, smoothstep(22.0, 60.0, uTime));
+  rough *= drawIn;
   float t2 = lean * lean / (rough * rough);
-  float lobe = exp(-t2) / (3.14159 * rough * rough);
+  float lobe = drawIn * drawIn * exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   water += uSkyColour * (0.003 + 0.028 * fresnel) * sparkle * (0.4 + 0.6 * shade);
   // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
   water += uSkyColour * 0.012 * (sparkle - 0.8) * inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm));
   water += uSunColour * vec3(1.0, 0.86, 0.66) * lobe * 0.0026 * shade * (0.8 + 0.2 * sparkle);
-  water += uSunColour * vec3(1.0, 0.84, 0.62) * 0.0098 * exp(-lean * lean / 0.0023) * (0.78 + 0.22 * shade) * (0.62 + 0.38 * sparkle) * (0.85 + 0.3 * calm);
+  water += uSunColour * vec3(1.0, 0.84, 0.62) * 0.0098 * exp(-lean * lean / mix(0.0023, 0.0012, smoothstep(22.0, 60.0, uTime))) * (0.78 + 0.22 * shade) * (0.62 + 0.38 * sparkle) * (0.85 + 0.3 * calm);
 
+  // (From orbit the sea is seen through the blue of the air over it.)
+  water += vec3(0.003, 0.007, 0.011) * smoothstep(700.0, 1300.0, uViewKm) * (0.5 + 0.5 * shade);
   vec3 colour = mix(water, earth, land);
   // (A pale crust lies at the foot of the lake's rim, where the water has stood higher.)
   colour *= 1.0 + 0.45 * (1.0 - smoothstep(0.0, 0.07, abs(lakeR - 1.05))) * land * (1.0 - smoothstep(150.0, 400.0, uViewKm));
@@ -387,7 +398,7 @@ void main() {
   float far = smoothstep(120.0, 900.0, uViewKm);
   // From orbit the haze is thin straight down and grows toward the edge of the planet, where it lifts the darks to blue grey.
   float beyond = max(path - 1.5, 0.0);
-  float air = 1.0 - exp(-(mix(0.014, 0.015, far) * path + 0.001 * far * beyond * beyond) * (1.0 - 0.5 * height * land));
+  float air = 1.0 - exp(-(mix(0.014, 0.011, far) * path + 0.0005 * far * beyond * beyond) * (1.0 - 0.5 * height * land));
   colour = mix(colour, mix(uAirColour, vec3(0.08, 0.19, 0.27), 0.6 * far) * (0.4 + 0.6 * shade), air);
   colour += glow * (1.0 - 0.5 * air);
 
@@ -400,13 +411,13 @@ void main() {
     // On the first frame (uBreak 0) the rings are the rest picture agreed with the Eye: soft bands, each stronger on one side.
     // Once the rise begins they are water and no drawn thing: each one bent out of round, broken into arcs of uneven strength,
     // wider and weaker the further out, and the whole of it soon gone.
-    vec2 round = fromLake / max(r, 1e-4);
+    vec2 outward = fromLake / max(r, 1e-4);
     float theta = atan(fromLake.x, -fromLake.y);
-    float bentBy = vnoise(round * 2.3 + k * 3.7) + 0.5 * vnoise(round * 6.1 + k * 9.1) - 0.75;
+    float bentBy = vnoise(outward * 2.3 + k * 3.7) + 0.5 * vnoise(outward * 6.1 + k * 9.1) - 0.75;
     float rr = r * (1.0 + uBreak * 0.11 * bentBy);
     float across = (rr - ringAt) / (0.5 * uRingShape.y * ringAt * (1.0 + 0.7 * uBreak));
     float ring = exp(-across * across) * (0.35 + 0.3 * (0.5 + 0.5 * sin(2.0 * theta + 2.4 * k)));
-    float arcs = smoothstep(0.38, 0.7, vnoise(round * 3.4 + k * 5.3 + 2.0) + 0.35 * (vnoise(xz * 0.9 / max(ringAt, 1e-3) * 9.0) - 0.5));
+    float arcs = smoothstep(0.38, 0.7, vnoise(outward * 3.4 + k * 5.3 + 2.0) + 0.35 * (vnoise(xz * 0.9 / max(ringAt, 1e-3) * 9.0) - 0.5));
     ring *= mix(1.0, arcs * exp(-0.3 * k), uBreak);
     vec3 hand = mix(uHandWater, uHandRing, ring * uHand.y);
     colour = mix(colour, hand, max(uHand.x, ring * uHand.y * (1.0 - land)));
