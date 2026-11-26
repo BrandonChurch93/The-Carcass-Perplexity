@@ -269,7 +269,7 @@ void main() {
     vec3 fleshy = mix(vec3(0.86, 0.68, 0.63), vec3(0.72, 0.4, 0.37), smoothstep(0.1, 0.75, u)) * (0.85 + 0.3 * tone);
     albedo = mix(albedo, mix(fleshy * (1.0 - 0.5 * soaked), vec3(0.2, 0.08, 0.07), smoothstep(0.4, 1.0, u)), finger);
     // Far off the mop is one mass: no strand of it is seen for itself.
-    albedo = mix(vec3(0.6, 0.3, 0.29), albedo, smoothstep(0.03, 0.008, px));
+    albedo = mix(mix(vec3(0.42, 0.17, 0.16), vec3(0.2, 0.13, 0.115), soaked), albedo, smoothstep(0.03, 0.008, px));
     wet = 0.6 + 0.4 * under;
     occ *= 0.7 + 0.3 * u;
     // Where it is flesh the low sun comes through it; where it is coated it does not.
