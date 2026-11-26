@@ -4,9 +4,9 @@ import { K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, UNIT, distToSegment, makePo
 import type { Context, Piece } from '../shared/context';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
-import { LOCK_DEPTH, LOCK_FRAGMENT, LOCK_VERTEX } from './locks';
-import { COLLAR_FRAGMENT, COLLAR_VERTEX, HEAD_DEPTH, HEAD_FRAGMENT, HEAD_VERTEX, PALM_DEPTH, PALM_FRAGMENT, PALM_VERTEX } from './palms';
-import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX, STEM_FRAGMENT, STEM_VERTEX } from './shaders';
+import { Fronds, crownOf, dropMesh, frondMesh, matOf, plumeOf, stemMesh, tuftOf, type GrowthUniforms } from './grown';
+import { COLLAR_FRAGMENT, COLLAR_VERTEX } from './palms';
+import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX } from './shaders';
 import { growStands, lineAt, type Wild } from './stands';
 
 export const PARTS: readonly string[] = ['stalks', 'insects'];
@@ -18,43 +18,14 @@ const CRUST_SPAN: [number, number] = CRUST_SHOT ? [secondsInPlace(UNIT, CRUST_SH
 
 // STAGED by shot: in the wide shot the heads of the stalks seen far off are small drooping tufts on thin stems, six tenths of what they are from near,
 // as the approved wide picture has them.
+const SHOTS = shotsOf(UNIT);
+const SPANS = SHOTS.map((s) => [secondsInPlace(UNIT, s.first) - 0.004, secondsInPlace(UNIT, s.last) + 0.004] as [number, number]);
 const WIDE_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-01');
 const WIDE_SPAN: [number, number] = WIDE_SHOT ? [secondsInPlace(UNIT, WIDE_SHOT.first) - 0.004, secondsInPlace(UNIT, WIDE_SHOT.last) + 0.004] : [0, -1];
 // STAGED by shot: the stands of the wide shot (stands.ts) are drawn in that shot only.
 
 /** Stalks nearer than this to where a camera stands are drawn in full. Metres. */
 const NEAR = 14;
-
-/** A tube in (angle, along) with its mouth and the body of the plume: the vertex shader gives it its shape. */
-
-function stemGeometry(rings: number, sides: number): THREE.BufferGeometry {
-  const position: number[] = [];
-  const skin: number[] = [];
-  const index: number[] = [];
-  const sheet = (which: number, n: number, bias: (v: number) => number): void => {
-    const start = position.length / 3;
-    for (let i = 0; i <= n; i++) {
-      for (let j = 0; j <= sides; j++) {
-        position.push((j / sides) * TAU, bias(i / n), 0);
-        skin.push(which);
-      }
-    }
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < sides; j++) {
-        const a = start + i * (sides + 1) + j;
-        index.push(a, a + sides + 1, a + 1, a + 1, a + sides + 1, a + sides + 2);
-      }
-    }
-  };
-  sheet(0, rings, (v) => v);
-  sheet(1, 4, (v) => v);
-  sheet(2, 12, (v) => v);
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-  g.setAttribute('aSkin', new THREE.Float32BufferAttribute(skin, 1));
-  g.setIndex(index);
-  return g;
-}
 
 function instanced(base: THREE.BufferGeometry, count: number, attributes: Record<string, Float32Array>): THREE.InstancedBufferGeometry {
   const g = new THREE.InstancedBufferGeometry();
@@ -156,23 +127,9 @@ export function create(ctx: Context): Piece {
   const uSeconds = { value: 0 };
   const uGrove = { value: new THREE.Vector2(1, 1) };
   const uHead = { value: 1 };
-  const uDeep = { value: 0 };
+  const uViewH = { value: 2160 };
+  const crowns: THREE.Mesh[][] = [];
   const salt = ctx.assets.texture('wallowers/salt.jpg', { kind: 'colour', anisotropy: 4 });
-  const saltNh = ctx.assets.texture('wallowers/salt-nh.png', { kind: 'data', anisotropy: 4 });
-  const stemMaterial = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, uSeconds, tSalt: { value: salt }, tSaltNh: { value: saltNh } },
-    vertexShader: STEM_VERTEX,
-    fragmentShader: STEM_FRAGMENT,
-    side: THREE.DoubleSide,
-  });
-  const plumeMaterial = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, uSeconds, tLock: { value: ctx.assets.texture('mat/lock.jpg', { kind: 'colour', repeat: false }) } },
-    vertexShader: LOCK_VERTEX,
-    fragmentShader: LOCK_FRAGMENT,
-    side: THREE.DoubleSide,
-  });
-  plumeMaterial.userData.depthFragment = LOCK_DEPTH;
-
   // Those the lens of the colony stands among are built whole; every other one is the photograph of a stalk, on cards.
   const group = new THREE.Group();
   const wide = new THREE.Group();
@@ -185,6 +142,20 @@ export function create(ctx: Context): Piece {
   // but for those a lens stands among: the approved wide picture has a few loose clumps by the seep and by the vein, and almost none on the flats.
   const kept = (s: Stalk): boolean =>
     ctx.rig.land.shore(s.x, s.z) < 2 || Math.hypot(s.x - K1_AT[0], s.z - K1_AT[1]) < 9 || Math.hypot(s.x - K2_AT[0], s.z - K2_AT[1]) < 12 || Math.hypot(s.x - k3[0], s.z - k3[1]) < 13 || staged4.has(s);
+  const lines = (list: Wild[]): Record<string, Float32Array> => {
+    const o = { aBase: new Float32Array(list.length * 4), aAxis: new Float32Array(list.length * 4), aKind: new Float32Array(list.length * 4), aBend: new Float32Array(list.length * 4), aMore: new Float32Array(list.length * 4), aLook: new Float32Array(list.length * 4), aFork: new Float32Array(list.length * 4) };
+    list.forEach((w, i) => {
+      o.aBase.set([w.x, w.y, w.z, w.h], i * 4);
+      o.aAxis.set([w.dx, w.dz, w.lean, w.R], i * 4);
+      o.aKind.set([w.kind, w.phase, w.low, w.seed], i * 4);
+      o.aBend.set([w.bowA, w.bowM, w.kinkT, w.kinkM], i * 4);
+      o.aMore.set([w.swayA, w.swayM, w.kinkA, w.rate], i * 4);
+      o.aLook.set([w.age, w.stain, w.uvo, w.quiver], i * 4);
+      o.aFork.set([w.fork[0], w.fork[1], w.fork[2], w.collar], i * 4);
+    });
+    return o;
+  };
+  const growth: GrowthUniforms = { uSeconds, uGrove, uHead, uViewH };
   // The ones the lens of the colony stands among shade the ground as they did. Every other one that is drawn does it below, where it is made.
   const stood = stalks.filter((s) => closeOf(s));
   const discs = ctx.rig.contactDiscs(stood.length);
@@ -388,50 +359,26 @@ export function create(ctx: Context): Piece {
       if (w.foot) ctx.rig.setDisc(shade, i, w.x, w.z, Math.max(0.12, w.R * 6.5), 0.7);
       else ctx.rig.setDisc(shade, i, w.x + w.dx * w.h * 0.5, w.z + w.dz * w.h * 0.5, w.R * 3.5, 0.6, (w.h * 0.5) / (w.R * 3.5), Math.atan2(-w.dz, w.dx));
     });
-    const sheet = (nx: number, ny: number): THREE.BufferGeometry => {
-      const g = new THREE.BufferGeometry();
-      const pp: number[] = [];
-      const pi: number[] = [];
-      for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) pp.push(i / nx - 0.5, j / ny, 0);
-      for (let j = 0; j < ny; j++) {
-        for (let i = 0; i < nx; i++) {
-          const a = j * (nx + 1) + i;
-          pi.push(a, a + 1, a + nx + 1, a + 1, a + nx + 2, a + nx + 1);
-        }
-      }
-      g.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
-      g.setIndex(pi);
-      return g;
+    // Every stalk no lens stands among is a tube about its own line, and its head is straps (grown.ts). How fine each is made goes by how near
+    // a lens ever comes to it.
+    const eyeA = rel(-6, 3);
+    const eyeB = rel(12, -3);
+    const reach = (w: Wild): number =>
+      Math.min(distToSegment(w.x, w.z, eyeA, eyeB), distToSegment(w.x, w.z, k2a, k2b), Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]), Math.hypot(w.x - k3[0], w.z - k3[1]), Math.hypot(w.x - k4[0], w.z - k4[1]));
+    const lensOf: Record<string, (w: Wild) => number> = {
+      'marsh-01': (w) => distToSegment(w.x, w.z, eyeA, eyeB),
+      'marsh-02': (w) => distToSegment(w.x, w.z, k2a, k2b),
+      'marsh-03': (w) => Math.max(0, Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) - 8),
+      'marsh-04': (w) => Math.hypot(w.x - k3[0], w.z - k3[1]),
+      'marsh-05': (w) => Math.hypot(w.x - k4[0], w.z - k4[1]),
     };
-    const lines = (list: Wild[]): Record<string, Float32Array> => {
-      const o = { aBase: new Float32Array(list.length * 4), aAxis: new Float32Array(list.length * 4), aKind: new Float32Array(list.length * 4), aBend: new Float32Array(list.length * 4), aMore: new Float32Array(list.length * 4), aLook: new Float32Array(list.length * 4), aFork: new Float32Array(list.length * 4) };
-      list.forEach((w, i) => {
-        o.aBase.set([w.x, w.y, w.z, w.h], i * 4);
-        o.aAxis.set([w.dx, w.dz, w.lean, w.R], i * 4);
-        o.aKind.set([w.kind, w.phase, w.low, w.seed], i * 4);
-        o.aBend.set([w.bowA, w.bowM, w.kinkT, w.kinkM], i * 4);
-        o.aMore.set([w.swayA, w.swayM, w.kinkA, w.rate], i * 4);
-        o.aLook.set([w.age, w.stain, w.uvo, w.quiver], i * 4);
-        o.aFork.set([w.fork[0], w.fork[1], w.fork[2], w.collar], i * 4);
-      });
-      return o;
-    };
-    // No anisotropy on a picture whose cover is tested: the cut would then depend on an extension the film may not have.
-    const tStalk = { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) };
-    const tStalkA = { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) };
-    const tFan = { value: ctx.assets.texture('mat/fan.jpg', { kind: 'colour', repeat: false }) };
-    const tFanA = { value: ctx.assets.texture('mat/fan-a.png', { kind: 'data', repeat: false }) };
-    const tLock = { value: ctx.assets.texture('mat/lock.jpg', { kind: 'colour', repeat: false }) };
-    const palmMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uSeconds, uGrove, tStalk, tStalkA },
-      vertexShader: PALM_VERTEX,
-      fragmentShader: PALM_FRAGMENT,
-      side: THREE.DoubleSide,
-    });
-    palmMaterial.userData.depthFragment = PALM_DEPTH;
-    const trunks = new THREE.Mesh(instanced(sheet(1, 16), wilds.length, lines(wilds)), palmMaterial);
-    trunks.frustumCulled = false;
-    group.add(trunks);
+    const fineOf = (d: number): number => (d < 9 ? 30 : d < 18 ? 20 : d < 36 ? 12 : d < 80 ? 7 : 4);
+    const broadOf = (d: number): number => (d < 18 ? 1 : d < 36 ? 1.3 : d < 80 ? 1.9 : 3);
+    {
+      const nearW = wilds.filter((w) => reach(w) < 22);
+      const farW = wilds.filter((w) => reach(w) >= 22);
+      group.add(stemMesh(ctx, growth, nearW.length, lines(nearW), 30, 10, 1), stemMesh(ctx, growth, farW.length, lines(farW), 10, 6, 0));
+    }
     {
       const footed = wilds.filter((w) => w.foot && !w.bare);
       const foot = new Float32Array(footed.length * 4);
@@ -467,138 +414,95 @@ export function create(ctx: Context): Piece {
       mesh.frustumCulled = false;
       group.add(mesh);
     }
-    const carded: Wild[] = [];
-    const c1: number[] = [];
-    const c2: number[] = [];
-    for (const w of wilds) {
-      for (const c of w.cards) {
-        carded.push(w);
-        c1.push(c[0], c[1], c[2], c[3]);
-        // A whole number on the last says the head turns up to the light.
-        c2.push(c[4], c[5], c[6], c[7] + (w.bare ? 0 : 1));
-      }
+    const fronds = ctx.rng('stalks-fronds');
+    {
+      // STAGED by shot: a head is made as fine as the lens of the shot needs it, and no finer. Each shot has the heads made for its own lens;
+      // the others are not drawn. The stalks, their lines and the size of their heads are the same in every shot.
+      SHOTS.forEach((shot, which) => {
+        const from = lensOf[shot.id] ?? reach;
+        const nearF = new Fronds();
+        const farF = new Fronds();
+        const own = ctx.rng('stalks-fronds-' + shot.id);
+        for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineOf(from(w)), broadOf(from(w)), false);
+        const meshes = [frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 4)];
+        crowns[which] = meshes;
+        group.add(...meshes);
+      });
     }
-    const headMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uSeconds, uGrove, uHead, uDeep, tFan, tFanA, tLock },
-      vertexShader: HEAD_VERTEX,
-      fragmentShader: HEAD_FRAGMENT,
-      side: THREE.DoubleSide,
-    });
-    headMaterial.userData.depthFragment = HEAD_DEPTH;
-    const heads = new THREE.Mesh(instanced(sheet(4, 4), carded.length, { ...lines(carded), aCard: new Float32Array(c1), aCard2: new Float32Array(c2) }), headMaterial);
-    heads.frustumCulled = false;
-    group.add(heads);
     // The stands of the wide shot: more stems and their heads, the leaf that hangs down the stems, and the growth at their feet.
     const stands = growStands(ctx, wilds, uSeconds);
-    const more = new THREE.Mesh(instanced(sheet(1, 12), stands.near, lines(stands.stems.slice(0, stands.near))), palmMaterial);
-    more.frustumCulled = false;
-    const moreFar = new THREE.Mesh(instanced(sheet(1, 4), stands.stems.length - stands.near, lines(stands.stems.slice(stands.near))), palmMaterial);
-    moreFar.frustumCulled = false;
-    wide.add(more, moreFar);
-    const hung: Wild[] = [];
-    const h1: number[] = [];
-    const h2: number[] = [];
-    for (const w of [...stands.stems, ...stands.leaves]) {
-      for (const c of w.cards) {
-        hung.push(w);
-        h1.push(c[0] as number, c[1] as number, c[2] as number, c[3] as number);
-        h2.push(c[4] as number, c[5] as number, c[6] as number, (c[7] as number) + 1);
+    {
+      const nearS = stands.stems.slice(0, stands.near);
+      const farS = stands.stems.slice(stands.near);
+      wide.add(stemMesh(ctx, growth, nearS.length, lines(nearS), 12, 6, 0), stemMesh(ctx, growth, farS.length, lines(farS), 5, 5, 0));
+      const nearF = new Fronds();
+      const farF = new Fronds();
+      const low = new Fronds();
+      const wideOf = lensOf['marsh-01'] ?? reach;
+      for (const w of stands.stems) crownOf(wideOf(w) < 40 ? nearF : farF, w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false);
+      for (const w of stands.leaves) crownOf(wideOf(w) < 40 ? nearF : farF, w, fronds, fineOf(wideOf(w)) * 0.5, broadOf(wideOf(w)), true);
+      // The understorey near the lens: each tuft a few straps from one foot.
+      const t0 = stands.tufts[0] as number[];
+      const t1 = stands.tufts[1] as number[];
+      const t2 = stands.tufts[2] as number[];
+      for (let i = 0; i < t0.length / 4; i++) {
+        const x = t0[i * 4] as number;
+        const z = t0[i * 4 + 2] as number;
+        const d = Math.hypot(x - eyeB[0], z - eyeB[1]);
+        tuftOf(low, fronds, x, t0[i * 4 + 1] as number, z, t0[i * 4 + 3] as number, t1[i * 4] as number, t2[i * 4 + 1] as number, d < 14 ? 14 : d < 30 ? 9 : 6);
       }
+      // The mat near the lens: leaves on the ground, not a picture of them.
+      const m0 = stands.mats[0] as number[];
+      const m1 = stands.mats[1] as number[];
+      const creep = new Fronds();
+      for (let i = 0; i < m0.length / 4; i++) {
+        const x = m0[i * 4] as number;
+        const z = m0[i * 4 + 2] as number;
+        const d = distToSegment(x, z, eyeA, eyeB);
+        if (d > 60) continue;
+        matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 55 : d < 40 ? 22 : 9, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3 : 4.5);
+      }
+      wide.add(frondMesh(ctx, growth, creep, 2, { dry: true }));
+      wide.add(frondMesh(ctx, growth, nearF, 4), frondMesh(ctx, growth, farF, 2, { dry: true }), frondMesh(ctx, growth, low, 2, { dry: true }), stands.group);
     }
-    const leaf = new THREE.Mesh(instanced(sheet(1, 1), hung.length, { ...lines(hung), aCard: new Float32Array(h1), aCard2: new Float32Array(h2) }), headMaterial);
-    leaf.frustumCulled = false;
-    wide.add(leaf, stands.group);
     wideShade = stands.shade;
     group.add(wide);
   }
   // The ones the lens of the colony stands among draw from their own stream: nothing done to the far ones changes them.
   const own = ctx.rng('stalks-close');
-  sets.forEach((set, which) => {
-    const base = new Float32Array(set.length * 4);
-    const axis = new Float32Array(set.length * 4);
-    const kind = new Float32Array(set.length * 4);
-    set.forEach((s, i) => {
+  const closeSet = new THREE.Group();
+  const closeFar = new THREE.Group();
+  // They are built whole: a trunk fine enough to carry its ledges and its crust in relief, and a plume of blades, each one a mesh.
+  {
+    const closeW: Wild[] = [];
+    const blades = new Fronds();
+    const beads = new Fronds();
+    // The air has combed their plumes the way the approved picture has them: across the lens to its right, a little away from it.
+    const want = Math.atan2(K2_RIGHT[1] + 0.3 * K2_DIR[1], K2_RIGHT[0] + 0.3 * K2_DIR[0]);
+    for (const s of sets[0] as Stalk[]) {
       let seed = own.next();
-      const close = closeOf(s);
-      // Away from the lens of the colony they are slender, of every height, and lean as they please.
-      // Those the lens of the colony looks through keep the place the approved picture gives them: they bow least.
       // Those the lens stands among bow least, and none of them is shut when it looks: the open ones are open.
-      // And the air has combed their plumes the way the approved picture has them: across the lens to its right, a little away from it.
-      const combed = (v: number): boolean => {
-        const want = Math.atan2(K2_RIGHT[1] + 0.3 * K2_DIR[1], K2_RIGHT[0] + 0.3 * K2_DIR[0]);
-        const off = Math.abs(((Math.fround(v) * 40 - want) % TAU + TAU + Math.PI) % TAU - Math.PI);
-        return off < 0.45;
+      for (let n = 0; n < 4000 && ((seed * 91.3) % 1 > 0.12 || (seed * 13.7) % 1 < 0.36); n++) seed = own.next();
+      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * 0.85;
+      const w: Wild = {
+        x: s.x, y: Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, z: s.z, h: s.h + 0.05, dx: Math.cos(s.yaw), dz: -Math.sin(s.yaw), lean: s.lean, R,
+        kind: s.kind, phase: s.phase, low: 0, seed,
+        bowA: seed * 37, bowM: 0.03 + 0.17 * ((seed * 91.3) % 1), kinkT: 2, kinkM: 0, swayA: 0, swayM: 0, kinkA: 0, rate: own.range(0.8, 1.3),
+        age: s.kind === 2 ? 2 : own.range(0.1, 0.5), stain: own.range(0.15, 0.4), uvo: 0, quiver: 0.6, fork: [0, 0, 0], collar: 0.5, cards: [], foot: true,
       };
-      if (close) for (let n = 0; n < 4000 && ((seed * 91.3) % 1 > 0.12 || (seed * 13.7) % 1 < 0.36 || !combed(seed)); n++) seed = own.next();
-      const tall = close ? s.h : s.h * (0.45 + 0.75 * own.next());
-      const lean = close ? s.lean : s.lean * 1.5 + own.range(0, 0.2);
-      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 0.85 : 0.72);
-      const dx = Math.cos(s.yaw);
-      const dz = -Math.sin(s.yaw);
-      base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
-      axis.set([dx, dz, lean, R], i * 4);
-      kind.set([s.kind, s.phase, s.size, seed], i * 4);
-      if (s.kind === 2) return;
-      // The plume: filaments in rings round the mouth, the inner ones standing and the outer ones hanging.
-      const A = [dx * Math.sin(lean), Math.cos(lean), dz * Math.sin(lean)];
-      const U = [dx * Math.cos(lean), -Math.sin(lean), dz * Math.cos(lean)];
-      const W = [-dz, 0, dx];
-      // The bow of the stem, as the vertex shader makes it: the plume sits on its end and stands along it.
-      const ba = seed * 37;
-      const hh = tall + 0.05;
-      const h = tall + 0.02;
-      const t = h / hh;
-      const bow = (0.03 + 0.17 * ((seed * 91.3) % 1)) * hh;
-      const B = [0, 1, 2].map((c) => ((U[c] as number) * Math.cos(ba) + (W[c] as number) * Math.sin(ba)) * bow);
-      const top = [s.x + (A[0] as number) * h + (B[0] as number) * t * t, base[i * 4 + 1] + (A[1] as number) * h + (B[1] as number) * t * t, s.z + (A[2] as number) * h + (B[2] as number) * t * t];
-      const axl = [0, 1, 2].map((c) => (A[c] as number) * hh + 2 * (B[c] as number) * t);
-      const an = Math.hypot(axl[0] as number, axl[1] as number, axl[2] as number);
-      const ax = axl.map((c) => c / an);
-      // A bud keeps its filaments inside its sheath and a broken one has none: neither is given any to draw.
-      if (close && s.kind !== 1) perches.push([top[0], top[1], top[2]]);
-      // The ones the lens of the colony looks through are a hand's length away: theirs are drawn at their true size. Further off a plume is a mop as long as an arm.
-      const length = (s.kind === 0 ? (close ? 0.38 : 0.31) : s.kind === 3 ? 0.24 : 0.25) * s.size * (close ? 1 : which === 0 ? 1.6 : 2.1);
-      // The plume: cards of the photographed lock that stand round the mouth, most through its axis and a few leaning out, so that it is a tuft from every side.
-      const bud = s.kind === 1;
-      const through = which === 0 ? (close ? (bud ? 5 : 3) : bud ? 3 : 3) : bud ? 0 : 2;
-      const leaning = close && !bud ? 2 : 0;
-      const turn = own.range(0, Math.PI);
-      for (let c = 0; c < through + leaning; c++) {
-        const out = c >= through;
-        const angle = out ? turn + ((c - through + own.range(-0.2, 0.2)) / leaning) * TAU : turn + ((c + own.range(-0.25, 0.25)) / through) * Math.PI;
-        fils[0].push(top[0], top[1], top[2], (length / 0.8) * own.range(0.82, 1.15) * (out ? 0.8 : 1));
-        fils[1].push(ax[0], ax[1], ax[2], s.phase);
-        fils[2].push(angle, out ? own.range(0.45, 0.85) : own.range(-0.12, 0.12), s.kind, seed);
-        fils[3].push(own.next() < 0.5 ? -1 : 1, (close ? 1.5 : 0.8) * own.range(0.85, 1.15), close ? own.range(0.45, 0.7) : own.range(0.2, 0.5), own.next());
-      }
-    });
-    const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 18 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });
-    const mesh = new THREE.Mesh(g, stemMaterial);
-    mesh.frustumCulled = false;
-    group.add(mesh);
-  });
-
-  // One card of the lock: a grid the vertex shader bends.
-  const card = new THREE.BufferGeometry();
-  const cp: number[] = [];
-  const ci: number[] = [];
-  const CX = 6;
-  const CY = 5;
-  for (let j = 0; j <= CY; j++) for (let i = 0; i <= CX; i++) cp.push(i / CX - 0.5, j / CY, 0);
-  for (let j = 0; j < CY; j++) {
-    for (let i = 0; i < CX; i++) {
-      const a = j * (CX + 1) + i;
-      ci.push(a, a + 1, a + CX + 1, a + 1, a + CX + 2, a + CX + 1);
+      closeW.push(w);
+      if (s.kind === 2) continue;
+      if (s.kind !== 1) perches.push(lineAt(w, 1));
+      plumeOf(blades, beads, w, own, (s.kind === 0 ? 0.4 : s.kind === 3 ? 0.4 : 0.6) * s.size, want + own.range(-0.3, 0.3));
     }
+    closeSet.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 28, 2), frondMesh(ctx, growth, blades, 14, { wet: 1 }), dropMesh(ctx, growth, beads));
+    // Seen from the other shots they are far off, and are made as the far ones are.
+    const plain = new Fronds();
+    const less = ctx.rng('stalks-close-far');
+    for (const w of closeW) if (w.kind !== 2) crownOf(plain, w, less, 12, 1.3, false);
+    closeFar.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 14, 8, 1), frondMesh(ctx, growth, plain, 5));
+    group.add(closeSet, closeFar);
   }
-  card.setAttribute('position', new THREE.Float32BufferAttribute(cp, 3));
-  card.setIndex(ci);
-  const plumes = new THREE.Mesh(
-    instanced(card, fils[0].length / 4, { aTop: new Float32Array(fils[0]), aAx: new Float32Array(fils[1]), aLay: new Float32Array(fils[2]), aVar: new Float32Array(fils[3]) }),
-    plumeMaterial,
-  );
-  plumes.frustumCulled = false;
-  group.add(plumes);
   ctx.scene.add(ctx.parts.built('stalks', group));
 
   // The insects: most round the plumes the camera of the colony looks through, some round the one that is stuck, some over the pool.
@@ -664,9 +568,27 @@ export function create(ctx: Context): Piece {
       else uGrove.value.set(1, 1);
       const inWide = staged >= WIDE_SPAN[0] && staged <= WIDE_SPAN[1];
       uHead.value = inWide ? 0.6 : 1;
-      uDeep.value = inWide ? 1 : 0;
       wide.visible = inWide;
+      // The heads made for the shot that is on: between shots, those of the one that is nearest in time.
+      let on = 0;
+      let off = Infinity;
+      SPANS.forEach((span, i) => {
+        const d = staged < span[0] ? span[0] - staged : staged > span[1] ? staged - span[1] : 0;
+        if (d < off) {
+          off = d;
+          on = i;
+        }
+      });
+      crowns.forEach((meshes, i) => {
+        for (const m of meshes) m.visible = i === on;
+      });
       if (wideShade) wideShade.visible = inWide;
+      const among = SHOTS[on]?.id === 'marsh-02';
+      closeSet.visible = among;
+      closeFar.visible = !among;
+    },
+    resize: (_width, height) => {
+      uViewH.value = height;
     },
   };
 }
