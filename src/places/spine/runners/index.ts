@@ -4,8 +4,8 @@
 // tendrils in the vertex shader.
 import * as THREE from 'three';
 import type { Vec3 } from '../../../core/cameras';
-import type { Context, Piece } from '../shared/context';
-import { CANAL_KEY, CANAL_KEY_AT, INSIDE_FROM, RAD, canalFar, carcassAxis, carcassBody, carcassView, step, trail, tube } from '../shared/anchors';
+import type { Context, Piece, SteamSource } from '../shared/context';
+import { CANAL_KEY, CANAL_KEY_AT, INSIDE_FROM, MOUTH, RAD, WIND, canalFar, carcassAxis, carcassBody, carcassView, step, trail, tube } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { FLOOR, MOUTH_S, first, frameAt, world } from '../ridge';
 import { flashAt } from '../strikes/bolt';
@@ -108,6 +108,7 @@ export function create(ctx: Context): Piece {
   const burnPicture = ctx.assets.texture('mat/burn.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
   const door = new THREE.Vector4(canalFar[0], canalFar[1], canalFar[2], 1);
   const open = new THREE.Vector4(0, 0, 0, 0);
+  const near = new THREE.Vector3(MOUTH[0], MOUTH[1], MOUTH[2]);
   const part = new THREE.Group();
   const skins = new Map<string, { body: Skin; claws: THREE.BufferGeometry }>();
   const skinOf = (pose: Pose, cell: number): { body: Skin; claws: THREE.BufferGeometry } => {
@@ -135,7 +136,8 @@ export function create(ctx: Context): Piece {
       uGround: { value: ground },
       uDoor: { value: role.inside ? door : open },
       uDoorArea: { value: 420 },
-      uDoorGain: { value: 13 },
+      uDoorGain: { value: 20 },
+      uDoorNear: { value: near },
       uCoat: { value: coatSet },
       tShag: { value: shagColour },
       tShagData: { value: shagData },
@@ -159,7 +161,7 @@ export function create(ctx: Context): Piece {
     group.add(hornMesh);
 
     // The wind in the animal's own frame is set when it is placed; the coat is combed back along the body and a little down the gale.
-    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, burn: role.burn, hang: role.inside && role.act !== 'stand' ? 0.9 : role.inside ? 0.35 : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0] });
+    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, burn: role.burn, hang: role.inside && role.act !== 'stand' ? 0.9 : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0] });
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
@@ -175,7 +177,7 @@ export function create(ctx: Context): Piece {
     group.add(lockMesh);
 
     const count = role.tendrils;
-    const thin = role.act === 'dead' ? 0.7 : 1;
+    const thin = role.act === 'dead' ? 0.36 : 1;
     const hang = new Float32Array(count * 4);
     const limb = new Float32Array(count * 4);
     for (let i = 0; i < count; i++) {
@@ -310,6 +312,13 @@ export function create(ctx: Context): Piece {
     a.writhe.set(1, 0, 0, 0);
   };
 
+  // Breath: three of the herd breathe out vapour. The air folder draws it; an animal only says where and how much.
+  const BREATHERS = [0, 2, 3];
+  const breaths: SteamSource[] = BREATHERS.map(() => ({ at: [0, 0, 0], radius: 0.2, strength: 0, rise: 2.4, kind: 'steam', lean: [0, 0] }));
+  for (const b of breaths) ctx.sources.steam.push(b);
+  const muzzle = new THREE.Vector3();
+  const facing = new THREE.Vector3();
+
   still(dead);
   dead.coat.set(1, 0.35, 0.0, 0.12);
   dead.writhe.set(0, 1, 0, 0);
@@ -341,7 +350,21 @@ export function create(ctx: Context): Piece {
           walk(a, gone, u < 0.4 ? 1.58 * (u + 0.8) : 1.9);
         } else idle(a, seconds, 0.3 * start * (i % 2 ? 1 : -1), 0.012 * start);
         ctx.rig.setDisc(discs, i, at[0], at[2], 1.1 * a.role.size, 0.75);
+        const n = BREATHERS.indexOf(i);
+        const b = breaths[n];
+        if (!b) return;
+        const j = a.joints;
+        const head = a.bones[3] as THREE.Matrix4;
+        muzzle.set(j.face[0] + 0.06 * j.lead[0], j.face[1] + 0.06 * j.lead[1], j.face[2] + 0.06 * j.lead[2]).applyMatrix4(head).applyMatrix4(a.group.matrixWorld);
+        facing.set(j.lead[0], j.lead[1], j.lead[2]).transformDirection(head).transformDirection(a.group.matrixWorld);
+        b.at = [muzzle.x, muzzle.y, muzzle.z];
+        // It goes out the way the face looks and rises: the gale does not reach in here to carry it.
+        const k = 0.2 / 0.55;
+        b.lean = [facing.x * 0.8 * k - WIND[0], facing.z * 0.8 * k - WIND[2]];
+        const out = Math.max(0, Math.sin(seconds * 2.5 + a.role.phase + 1.9));
+        b.strength = 0.75 * out * out;
       });
+      if (!inCanal) for (const b of breaths) b.strength = 0;
 
       crossing.forEach((a, i) => {
         a.group.visible = !inCanal;

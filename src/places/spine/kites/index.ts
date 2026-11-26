@@ -55,14 +55,14 @@ vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   float p2 = k * 1.83 * (along - c * 1.17 * uTime) + shape.z * 2.7;
   float p3 = k * 4.1 * (along - c * 1.3 * uTime) + shape.z * 5.1;
   float grow = smoothstep(0.0, 1.0, u * 1.15) * (0.35 + 0.65 * u);
-  float amp = 0.03 * len * grow;
+  float amp = 0.02 * len * grow;
   // A gust lifts or drops the whole ribbon slowly.
   float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4;
-  float fan = (fract(more.y * 13.7) - 0.5) * 0.3;
+  float fan = (fract(more.y * 13.7) - 0.5) * 0.12;
   // The stalk is a cord with weight and ice on it: it hangs between the rock and the skin it holds.
   float held = clamp(u / more.w, 0.0, 1.0);
   float hang = 0.3 * more.w * len * held * (1.0 - held);
-  float lift = fan * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.45 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + 0.03 * len * u * gust;
+  float lift = fan * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.25 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + 0.03 * len * u * gust;
   float sway = 0.8 * amp * (sin(p1 * 0.77 + 1.9) + 0.4 * sin(p2 * 1.1 + 0.4)) + 0.3 * amp * u * u * sin(p3 * 1.3 + 2.0);
   // The cloth is as long as it is: where it climbs a wave it does not also run on down the wind.
   float drawn = along * (1.0 - 0.06 * grow);
@@ -98,10 +98,10 @@ void main() {
   flat_ = cross(upward, tangent);
   // The ribbon rolls about its own length as the waves pass, and the roll travels with them.
   float k = 6.2832 / aShape.w;
-  float roll = 0.7 * sin(k * 0.61 * (u * aShape.x - uWind.w * 0.7 * uTime) + aShape.z * 2.0) + 0.8 * (fract(aMore.y * 3.1) - 0.5) + 0.6 * sin(k * 1.9 * (u * aShape.x - uWind.w * 0.8 * uTime) + aShape.z) * u * u;
+  float roll = 0.3 * sin(k * 0.61 * (u * aShape.x - uWind.w * 0.7 * uTime) + aShape.z * 2.0) + 0.4 * (fract(aMore.y * 3.1) - 0.5) + 0.35 * sin(k * 1.9 * (u * aShape.x - uWind.w * 0.8 * uTime) + aShape.z) * u * u;
   // Seen from far along the ridge, a sheet that lay flat on the wind would be a line: the far ones stand more on edge, as a flag does.
   float stand = smoothstep(200.0, 450.0, length(cameraPosition - aAnchor));
-  roll = mix(roll, (fract(aMore.y * 5.3) < 0.5 ? -1.1 : 1.1) + 0.45 * roll, stand);
+  roll = mix(roll, (fract(aMore.y * 5.3) < 0.5 ? -0.8 : 0.8) + 0.45 * roll, stand);
   vFar = stand;
   roll = mix(1.5708, roll, smoothstep(aMore.w, aMore.w + 0.1, u));
   vec3 across = flat_ * cos(roll) + upward * sin(roll);
@@ -109,13 +109,16 @@ void main() {
   // Its width: a cord for the stalk, widening to the blade, a slow taper, and a ragged tail.
   float blade = smoothstep(aMore.w, aMore.w + 0.09, u);
   float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
-  float halfW = 0.5 * aShape.y * blade * breadth * mix(5.0, 0.7, smoothstep(aMore.w + 0.03, 0.8, u)) * (1.0 + 0.5 * stand);
+  // Long and narrow: widest a third of the way out, drawn down from there to a thread.
+  float bu = clamp((u - aMore.w) / (1.0 - aMore.w), 0.0, 1.0);
+  float profile = pow(smoothstep(0.0, 0.33, bu), 0.8) * mix(1.0, 0.1, smoothstep(0.33, 1.0, bu));
+  float halfW = 0.5 * aShape.y * blade * breadth * 2.0 * profile;
   float far = length(cameraPosition - c);
   float cord = max(0.15, (0.9 + 0.8 * stand) * uPixel * far);
   // Along the stalk the strip is wider than the cord: room for the knots on it and for what hangs from it.
   float thin = max(halfW, cord + 0.95 * (1.0 - smoothstep(aMore.w + 0.02, aMore.w + 0.09, u)));
   // The blade cups across its width: its edges lift off the plane.
-  float cup = 0.22 * aShape.y * blade * sin(u * 14.0 + aMore.y * 20.0 - uTime * 2.0);
+  float cup = 0.09 * aShape.y * blade * sin(u * 14.0 + aMore.y * 20.0 - uTime * 2.0);
   vec3 p = c + across * (aAt.y * thin) + normal_ * (cup * aAt.y * aAt.y);
   vWorld = p;
   vNormal = normalize(normal_ - across * (2.0 * cup * aAt.y / max(thin, 0.05)) * 0.5);
@@ -219,15 +222,21 @@ void main() {
   float rib = 1.0 - smoothstep(0.015, 0.05, abs(vb - 0.08 * sin(metres / wide + seed)));
   c *= 1.0 - 0.55 * max(branch, rib) * blade * (1.0 - 0.7 * vFar);
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
+  // The side away from the sky is darker, and where it turns edge on to the lens it lies over itself and is darker again.
+  c *= mix(0.5, 1.08, 0.5 + 0.5 * n.y) * mix(0.6, 1.0, smoothstep(0.1, 0.6, nv));
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
   r.y = abs(r.y) + 0.05;
   vec3 mirror = skyRadiance(normalize(r));
   float glint = smoothstep(0.75, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
   c += mirror * (0.15 * fres + 0.5 * glint * (0.3 + 0.7 * fres));
-  // When a strike is near the ribbon carries the charge along its length for a moment, violet.
+  // A wet sheen along the edge that leads.
+  float lead = smoothstep(0.72, 0.93, vb * flip) * (1.0 - torn);
+  c += mirror * 0.3 * lead;
+  float rim = smoothstep(0.7, 0.95, abs(vb));
+  // When a strike is near the ribbon carries the charge along its edges for a moment, violet white.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.25;
-  c += uGlowTint * (uStruck.y * mine * (0.35 + 0.4 * fold + 0.5 * glint));
+  c += uGlowTint * (uStruck.y * mine * (0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim));
   float alpha = skin;
   // The cord: dark wet sinew, its fibres twisted along it, round, rimed in beads on top.
   float x = clamp(v / max(girth, 1e-4), -1.0, 1.0);
