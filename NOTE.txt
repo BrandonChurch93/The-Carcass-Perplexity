@@ -1,6 +1,7 @@
-2026-11-25 23:57 UTC
-work at ffbfe7c on agent/breath-life
-hb min 157: skin from mat/skin, trunk winding fixed, finer glare, dead wader darker with hooves
-look-1.jpg = out/work/compare/breath-1.png
-look-2.jpg = out/work/compare/breath-2.png
-look-3.jpg = out/work/compare/breath-0.png
+2026-11-26 00:37 UTC
+work at b85eeba on agent/breath-life
+V3: waders with haunches and a stride, splash crowns, plumes lower and darker, dead wader jointed with flies
+look-1.jpg = out/work/compare/v3-breath-1.jpg
+look-2.jpg = out/work/compare/v3-breath-3.jpg
+look-3.jpg = out/work/compare/v3-breath-2.jpg
+look-4.jpg = out/work/compare/v3-breath-0.jpg
