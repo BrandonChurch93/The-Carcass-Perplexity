@@ -1,7 +1,6 @@
-2026-11-26 15:34 UTC
-work at c33cddd on agent/spine-strike
-Round 3 at c33cddd: pairs (mine left, approved right) of 8090, 7234, 7668 and the sheet 8085 to 8096. 8090 has one cloud lit violet from inside at the upper right of the mouth and a cool cast on the standing coat; wrong: the cast is on the whole coat more than its rim, the floor's streak is faint, the cloud is paler than the approved one
-look-1.jpg = out/work/pair-8090.jpg
-look-2.jpg = out/work/pair-7234.jpg
-look-3.jpg = out/work/pair-7668.jpg
-look-4.jpg = out/work/sheets/strike-6.png
+2026-11-26 16:07 UTC
+work at 2897ddb on agent/spine-strike
+Cut sheet 7009 to 7020 before and after, and frame 7015 whole: the sky and sea now lift on the stroke and stay lit between strokes; the near spire has no hard rim and the channel is absent between strokes
+look-1.jpg = out/work/cut-before.png
+look-2.jpg = out/work/cut-after.png
+look-3.jpg = out/work/frame-7015.jpg
