@@ -75,7 +75,7 @@ const float RIG_KEY_SHARE = 0.26;
 const float RIG_CLOUD_SHARE = 0.11;
 // The grade: the light that stays where it is, and how much steeper the darks fall away under it.
 const float RIG_PIVOT = 0.4;
-const float RIG_CONTRAST = 0.9;
+const float RIG_CONTRAST = 0.95;
 
 // Radiance of the overcast toward d, for lighting and for what a wet surface mirrors. An overcast is brightest overhead and a third as bright
 // at the horizon; this one keeps more at the horizon, where the haze over the salt is lit from below by the flats.
@@ -205,6 +205,9 @@ vec3 rigGrade(vec3 c) {
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   if (l <= 1e-5) return c;
   float m = RIG_PIVOT * pow(l / RIG_PIVOT, RIG_CONTRAST);
+  // The whites are held under the sky's: salt in an overcast is pale, not lit.
+  float over = max(m - 0.4, 0.0);
+  m -= 0.3 * over * over / (over + 0.15);
   c *= m / l;
   float pale = smoothstep(0.1, 0.48, m);
   c = mix(vec3(m), c, mix(1.0, 0.58, pale));

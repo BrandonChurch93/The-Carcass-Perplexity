@@ -14,7 +14,7 @@ export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   // The rain: middle bearing and half width in radians, distance in metres, thickness.
-  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 0.7);
+  const rain = new THREE.Vector4(4 * DEG, 6.5 * DEG, 2600, 1.3);
   const sky = createSky(ctx, noise, rain);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
