@@ -1,7 +1,5 @@
-2026-11-26 14:26 UTC
-work at 3f4d10d on agent/spine-strike
-v2 state on 3f4d10d: strikes 1, 2, 6 every frame, and keys 7234, 7668, 8090 as mine, kept still, approved. Wrong: 7015 lit ground still pale and broad, far cloud sea not dark; 8090 and 8091 lift the near wall and coats as a fill; 7234 channel thinner than approved; 8090 cloud light left of centre, not upper right
-look-1.jpg = out/work/sheets/strike-1.png
-look-2.jpg = out/work/sheets/strike-2.png
-look-3.jpg = out/work/sheets/strike-6.png
-look-4.jpg = out/work/keys-three.jpg
+2026-11-26 15:14 UTC
+work at 84a491a on agent/spine-strike
+Round 3: pairs of 7234, 7668, 8090 (mine left, approved right) and the sheet 8085 to 8096. 8090 now has one cloud lit violet from inside at the upper right of the mouth; wrong: no cool rim on the standing animal's back, the floor's streak of that light is faint, the cloud is paler and softer than the approved one
+look-1.jpg = out/work/keys-pairs.jpg
+look-2.jpg = out/work/sheets/strike-6.png
