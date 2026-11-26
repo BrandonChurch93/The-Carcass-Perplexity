@@ -399,16 +399,17 @@ export function createRig(): Rig {
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 1.1);
-  const breakToward = (seconds: number): void => {
+  const breakToward = (seconds: number, drifted = seconds): void => {
     // The break drifts with the cloud: six tenths of a degree a second, to the right. In the picture it lies 0.786 radians right of the middle; it is laid a little left of the sun so that it shows between the blades.
-    const yaw = ((36 + 0.6 * (seconds - T0)) * Math.PI) / 180;
+    const yaw = ((36 + 0.6 * (drifted - T0)) * Math.PI) / 180;
     skyTurn.x = yaw - 0.93;
     // The lumps of the cloud work as it goes: fast enough that six seconds of a held lens show it.
     skyTurn.y = 0.021 * seconds;
     skyTurn.z = 0.027 * seconds;
     const phase = loopPhase();
     if (phase !== null) {
-      // In the card loop the sheet of cloud stands and its lumps work round a closed path: they leave as in the film and come back.
+      // In the card loop the picture of the sky drifts on as in the film, and the loop's cross-fade brings it round: cloud is soft and
+      // fades without a double edge. Its lumps work round a closed path: they leave as in the film and come back.
       const a = phase * Math.PI * 2;
       const r = config.deliver.cardLoop.seconds / (Math.PI * 2);
       skyTurn.y = 0.021 * T0 + r * (0.021 * Math.sin(a) - 0.027 * (1 - Math.cos(a)));
@@ -494,7 +495,7 @@ export function createRig(): Rig {
   const tint = new THREE.Color();
   const centre = new THREE.Vector3();
   const forward = new THREE.Vector3();
-  // The card loop is eight seconds of one light: a sheet of cloud that went on would have to come back.
+  // The card loop is eight seconds of one light on the ground: a shadow that went on over the flats would have to come back.
   const skySeconds = (seconds: number): number => (loopPhase() === null ? seconds : T0);
   const drift = (seconds: number): [number, number] => [(WIND.to[0] * WIND.cloud * seconds) / CLOUD.repeat, (WIND.to[1] * WIND.cloud * seconds) / CLOUD.repeat];
 
@@ -562,7 +563,7 @@ export function createRig(): Rig {
       const d = drift(sky);
       cloudShade.x = d[0];
       cloudShade.y = d[1];
-      breakToward(sky);
+      breakToward(sky, seconds);
       breakAt.x = BREAK.x + WIND.to[0] * WIND.cloud * (sky - T0);
       breakAt.y = BREAK.z + WIND.to[1] * WIND.cloud * (sky - T0);
       break2At.x = BREAK2.x + WIND.to[0] * WIND.cloud * sky;
