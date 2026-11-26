@@ -72,13 +72,13 @@ const float TOP = 110.0;
 // look through the depth of the bank finds one streamer and not a stipple of many.
 float streamers(vec3 p, float lift) {
   float y = max(p.y, 0.0);
-  float torn = smoothstep(0.3, 1.8, y / lift);
+  float torn = smoothstep(0.0, 1.3, y / lift);
   if (torn <= 0.0) return 1.0;
   // The bearing from the middle of the far shore, in metres along it. Its cut lies due south, behind every camera that sees the mist.
   float arc = atan(p.x - uPlateAt.x, uPlateAt.z - p.z) * uPlateAt.w;
-  float slow = vnoise(vec2((arc + uTime * 2.0) / 60.0, y / 5.5 - uTime * 0.03));
-  float quick = vnoise(vec2((arc + uTime * 3.4) / 22.0 + 5.0, y / 2.4 - uTime * 0.07 + 3.0));
-  return mix(1.0, 2.0 * smoothstep(0.2, 0.85, 0.62 * slow + 0.38 * quick), 0.62 * torn);
+  float slow = vnoise(vec2((arc + uTime * 5.0) / 60.0, y / 5.5 - uTime * 0.03));
+  float quick = vnoise(vec2((arc + uTime * 8.0) / 22.0 + 5.0, y / 2.4 - uTime * 0.07 + 3.0));
+  return mix(1.0, 2.0 * smoothstep(0.2, 0.85, 0.62 * slow + 0.38 * quick), 0.85 * torn);
 }
 
 // How thick the mist is at a point: it lies where the water meets the far walls, in banks, and thins upward.
