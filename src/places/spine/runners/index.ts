@@ -96,7 +96,7 @@ export function create(ctx: Context): Piece {
       uBones: { value: bones },
       uBurn: { value: burn },
       uGround: { value: ground },
-      uAnkle: { value: role.act === 'dead' ? -Math.PI / 2 : 0 },
+      uAnkle: { value: role.act === 'dead' ? -Math.PI / 2 : role.act === 'lie' ? 1.42 : 0 },
       uDoor: { value: role.inside ? door : open },
       uDoorArea: { value: 420 },
       uPixel: pixel,
@@ -187,12 +187,12 @@ export function create(ctx: Context): Piece {
   /** Standing: it breathes, shifts its weight from side to side over planted feet, and its neck swings slowly. `look` turns the neck (radians). */
   const stand = (a: Animal, t: number, look: number, shiver: number): void => {
     const ph = a.role.phase;
-    const breath = Math.sin(t * 1.9 + ph);
-    const sway = 0.04 * Math.sin(t * 0.52 + ph * 3) + 0.012 * Math.sin(t * 1.3 + ph);
-    const fore = 0.02 * Math.sin(t * 0.33 + ph * 2);
-    (a.bones[0] as THREE.Matrix4).compose(v1.set(fore, -0.006 * breath, sway), q1.setFromEuler(e1.set(sway * 0.5, 0, 0.012 * breath, 'YXZ')), new THREE.Vector3(1, 1 + 0.018 * breath, 1 + 0.03 * breath));
+    const breath = Math.sin(t * 2.6 + ph);
+    const sway = 0.065 * Math.sin(t * 1.05 + ph * 3) + 0.02 * Math.sin(t * 2.3 + ph);
+    const fore = 0.035 * Math.sin(t * 0.7 + ph * 2);
+    (a.bones[0] as THREE.Matrix4).compose(v1.set(fore, -0.012 * breath, sway), q1.setFromEuler(e1.set(sway * 0.6, 0, 0.02 * breath, 'YXZ')), new THREE.Vector3(1, 1 + 0.04 * breath, 1 + 0.07 * breath));
     HIPS.forEach((hip, i) => leg(a.bones[i + 1] as THREE.Matrix4, hip, 0, 0, 0, fore, 0, sway));
-    about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.2 * Math.sin(t * 0.31 + ph), 0.28 * Math.sin(t * 0.41 + ph * 2) + look, 0.1 * Math.sin(t * 0.63 + ph) - 0.05, [fore, 0, sway]);
+    about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(t * 0.83 + ph), 0.2 * Math.sin(t * 1.07 + ph * 2) + look, 0.14 * Math.sin(t * 1.4 + ph) - 0.05, [fore, 0, sway]);
     a.coat.set(a.role.inside ? 0.8 * a.role.skirt + 0.3 : 1.2, a.role.inside ? 0.05 : 0.5, 0.012 + shiver, a.role.inside ? 0.24 : 0.2);
     a.writhe.set(1, 0, 0, 0);
   };
@@ -200,9 +200,9 @@ export function create(ctx: Context): Piece {
   /** Lying on its chest with its legs folded under it and its neck down. */
   const lie = (a: Animal, t: number, shiver: number): void => {
     const ph = a.role.phase;
-    const breath = Math.sin(t * 1.5 + ph);
+    const breath = Math.sin(t * 2.2 + ph);
     const down = -0.4;
-    (a.bones[0] as THREE.Matrix4).compose(v1.set(0, down - 0.004 * breath, 0), q1.setFromEuler(e1.set(0.14 * Math.sin(ph * 5), 0, -0.04, 'YXZ')), new THREE.Vector3(1, 1 + 0.02 * breath, 1.06 + 0.035 * breath));
+    (a.bones[0] as THREE.Matrix4).compose(v1.set(0, down - 0.004 * breath, 0), q1.setFromEuler(e1.set(0.14 * Math.sin(ph * 5) + 0.03 * Math.sin(t * 0.9 + ph * 2), 0, -0.04, 'YXZ')), new THREE.Vector3(1, 1 + 0.05 * breath, 1.06 + 0.08 * breath));
     HIPS.forEach((hip, i) => {
       const m = a.bones[i + 1] as THREE.Matrix4;
       // Folded: the leg is a third of its height. A foreleg lies out ahead of the chest with its paw flat on the ground; a hind foot
@@ -210,10 +210,10 @@ export function create(ctx: Context): Piece {
       const out = i < 2 ? 0.62 : 0.12;
       const slope = i < 2 ? -0.62 : 0;
       const side = hip[2] > 0 ? 1 : -1;
-      if (i < 2) about(m, hip, -0.2 * side, 0, 1.3 + 0.08 * Math.sin(ph * 9 + i), [0.02, down, 0.06 * side]);
+      if (i < 2) about(m, hip, -0.2 * side, 0, 1.42, [0.02, down - 0.004 * breath, 0.06 * side]);
       else m.set(1, slope, 0, out, 0, 0.36, 0, 0.0, 0, 0, 1, side * 0.06, 0, 0, 0, 1);
     });
-    about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(ph * 3) + 0.06 * Math.sin(t * 0.37 + ph), 0.5 * Math.sin(ph * 7) + 0.1 * Math.sin(t * 0.29 + ph), -0.35 + 0.05 * Math.sin(t * 0.5 + ph), [0, down, 0]);
+    about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(ph * 3) + 0.2 * Math.sin(t * 0.93 + ph), 0.5 * Math.sin(ph * 7) + 0.32 * Math.sin(t * 0.71 + ph * 4), -0.3 + 0.14 * Math.sin(t * 1.2 + ph), [0, down, 0]);
     a.coat.set(0.8, 0.04, 0.012 + shiver, 0.3);
     a.writhe.set(0.6, 0, 0, 0);
   };

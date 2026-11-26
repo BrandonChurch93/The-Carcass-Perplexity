@@ -97,7 +97,7 @@ export function strokes(rng: Rng): Strokes {
   const at = [0];
   const share = [1];
   for (let i = 1; i < count; i++) {
-    at.push((at[i - 1] as number) + rng.range(0.035, 0.075));
+    at.push((at[i - 1] as number) + rng.range(0.03, 0.06));
     share.push(rng.range(0.3, 0.7));
   }
   return { at, share };
@@ -112,8 +112,10 @@ export function envelope(s: Strokes, age: number): { main: number; branch: numbe
   const t = age + 0.004;
   let main = 0;
   for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(t - (s.at[i] as number));
-  const last = s.at[s.at.length - 1] as number;
-  const after = t <= 0 ? 0 : 0.008 * Math.exp(-Math.max(0, t - last) / 0.03) * (1 - Math.exp(-t / 0.01));
+  // The channel does not hang between the strokes: what is left of each dies within a frame of it.
+  let since = Math.max(t, 0);
+  for (let i = 0; i < s.at.length; i++) if (t >= (s.at[i] as number)) since = Math.min(since, t - (s.at[i] as number));
+  const after = t <= 0 ? 0 : 0.008 * Math.exp(-since / 0.012) * (1 - Math.exp(-t / 0.01));
   // The leader finds its way down in the twentieth of a second before the stroke: 0 at the cloud to 1 at the ground.
   const leader = t < 0 ? Math.max(0, 1 + t / 0.05) : 1;
   return { main, branch: pulse(t), after, leader };

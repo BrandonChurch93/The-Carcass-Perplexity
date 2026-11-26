@@ -41,6 +41,14 @@ uniform float uAnkle;
 // turns about its own cross axis, so the paw comes down on its pad. v is a place on the leg (w 1) or a direction (w 0), at rest.
 vec3 hockAt(vec4 v, float y, float which) {
   if (uAnkle == 0.0 || which < 0.5 || which > 4.5) return v.xyz;
+  if (uAnkle > 0.0) {
+    // A living one lying down: its forelegs lie out ahead, and the paws turn down at the hock to lie flat, claws forward.
+    if (which > 2.5) return v.xyz;
+    float b = -uAnkle * (1.0 - smoothstep(0.14, 0.26, y));
+    vec2 o = v.w * vec2(0.4, 0.2);
+    vec2 f = v.xy - o;
+    return vec3(o + vec2(f.x * cos(b) - f.y * sin(b), f.x * sin(b) + f.y * cos(b)), v.z);
+  }
   float a = uAnkle * (1.0 - smoothstep(0.14, 0.26, y));
   float z0 = (which < 1.5 || (which > 2.5 && which < 3.5)) ? -0.24 : 0.24;
   vec2 d = v.yz - v.w * vec2(0.2, z0);
@@ -238,10 +246,10 @@ void main() {
   len *= mix(1.0, 0.5, square);
   if (fract(seed * 77.7) < 0.4 * square) len = 0.0;
   // The dead one's legs and feet show: the coat on the legs is shorter, and close below the hock.
-  if (uAnkle != 0.0 && which > 0 && which < 5) len *= aRoot.y < 0.2 ? 0.3 : 0.55;
+  if (uAnkle < 0.0 && which > 0 && which < 5) len *= aRoot.y < 0.2 ? 0.3 : 0.55;
   // One lock in seven is a long guard lock: it breaks the outline and carries the rime on its end.
-  float guard = step(0.86, fract(seed * 53.3));
-  len *= 1.0 + 1.1 * guard;
+  float guard = which == 5 ? 0.0 : step(0.86, fract(seed * 53.3));
+  len *= 1.0 + 0.9 * guard;
   float wide = aLock.w * size * (1.0 + 0.6 * guard);
 
   // The burn: locks inside it are gone, locks at its edge are singed to black stubs.
