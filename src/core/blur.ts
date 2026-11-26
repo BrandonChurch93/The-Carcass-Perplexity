@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
-import { BLUR_SPACING, FINE_HANDOVER, FINE_SPACING, SHARP_PX, blurTaps, fineTaps, layerGrain, type Tap } from './focus';
+import { BLUR_SPACING, FINE_GATE, FINE_HANDOVER, FINE_SPACING, SHARP_PX, blurTaps, fineTaps, layerGrain, type Tap } from './focus';
 import { halfFloatTarget, plainPass } from './post';
 
 // The blur by depth, laid once over the averaged samples in linear light. The alpha of the picture it is given holds the signed
@@ -137,7 +137,8 @@ function gatherFragment(taps: Tap[], spacing: number, kind: Kind, last: boolean,
   }[kind];
   const out = {
     // A pixel that gathers nothing is written as it came, to the last bit: what is in focus stays the pixel it was.
-    fine: `  gl_FragColor = gathered ? vec4(sum.rgb / total, c.a) : c;`,
+    fine: last ? `  vec4 px = gathered ? vec4(sum.rgb / total, c.a) : c;
+${LAY_BODY}` : `  gl_FragColor = gathered ? vec4(sum.rgb / total, c.a) : c;`,
     field: last
       ? `  float m = smoothstep(${FIELD_COUNTS[0].toFixed(1)}, ${FIELD_COUNTS[1].toFixed(1)}, abs(c.a) * uShare);
   gl_FragColor = vec4(sum.rgb / total * m, m);`
@@ -152,7 +153,7 @@ uniform sampler2D tRadius;
 uniform vec2 uTexel;
 uniform float uShare;
 varying vec2 vUv;
-${CLEAN}
+${CLEAN}${kind === 'fine' && last ? LAY_HEAD : ''}
 vec4 sum;
 float centre;
 float onset;
@@ -188,23 +189,18 @@ const FIELD_COUNTS: [number, number] = [2, 5];
 const QUARTER = { texel: 4, grain: layerGrain(4) };
 const HALF = { texel: 2, grain: layerGrain(2) };
 const FULL = { texel: 1, grain: 0 };
-// The wide pass of the fine blur alone fills a disc while its seven taps lie under 2 px apart. The first pass, which fills between them,
-// costs seven full-size fetches, so it starts only when its own taps are 0.7 px apart, at a radius of 2.6 px: most of the film's radii are under that.
-const FINE_GATE: [number, number] = [0.7, 0.35];
 
-// Full size. The fine blur; over it the field, by how far this pixel's own radius is past what the fine blur can fill, whatever lies around it;
-// over both the near layer by twice its cover: a near thing hides what is behind it up to its outline, so its soft edge is laid outside the outline.
+// The laying, done by the last pass of the fine blur on what it has just gathered: the field over it, by how far this pixel's own radius is past
+// what the fine blur can fill, whatever lies around it; over both the near layer (`tRadius` in that pass) by twice its cover:
+// a near thing hides what is behind it up to its outline, so its soft edge is laid outside the outline.
 // A reduced layer is fetched as a quadratic spline over 3 by 3 texels, in four filtered fetches. One filtered fetch has a crease at every texel,
 // and where neighbours differ the creases show as a lattice at the pitch of the layer.
-const LAY_FRAGMENT = /* glsl */ `
-uniform sampler2D tFine;
+// The laying is not a pass of its own: a full-size pass costs a fetch and a write of every pixel before it gathers anything.
+const LAY_HEAD = /* glsl */ `
 uniform sampler2D tField;
-uniform sampler2D tNear;
 uniform sampler2D tReach;
 uniform vec2 uFieldSize;
 uniform vec2 uNearSize;
-uniform float uShare;
-varying vec2 vUv;
 vec4 spline(sampler2D t, vec2 size) {
   vec2 x = vUv * size - 0.5;
   vec2 i = floor(x + 0.5);
@@ -218,22 +214,27 @@ vec4 spline(sampler2D t, vec2 size) {
   vec2 b = (i + 0.5 + hi / gb) / size;
   return textureLod(t, a, 0.0) * (ga.x * ga.y) + textureLod(t, vec2(b.x, a.y), 0.0) * (gb.x * ga.y)
     + textureLod(t, vec2(a.x, b.y), 0.0) * (ga.x * gb.y) + textureLod(t, b, 0.0) * (gb.x * gb.y);
-}
-void main() {
-  vec4 s = texelFetch(tFine, ivec2(gl_FragCoord.xy), 0);
-  vec3 c = s.rgb;
-  float part = smoothstep(${FINE_HANDOVER[0].toFixed(1)}, ${FINE_HANDOVER[1].toFixed(1)}, abs(s.a) * uShare);
-  if (part > 0.0) {
-    vec4 f = spline(tField, uFieldSize);
-    c = mix(c, f.rgb / max(f.a, 1.0e-6), part);
-  }
-  if (texelFetch(tReach, ivec2(gl_FragCoord.xy) / ${TILE}, 0).g > 0.0) {
-    vec4 n = spline(tNear, uNearSize);
-    float cover = clamp(2.0 * n.a, 0.0, 1.0);
-    if (cover > 0.0) c = mix(c, n.rgb / max(n.a, 0.0001), cover);
-  }
-  gl_FragColor = vec4(c, 1.0);
 }`;
+// `px` is the pixel of the fine blur. Where the near layer covers in full the field is not fetched.
+const LAY_BODY = /* glsl */ `
+  vec3 laid = px.rgb;
+  float cover = 0.0;
+  vec4 nr = vec4(0.0);
+  if (texelFetch(tReach, ivec2(gl_FragCoord.xy) / ${TILE}, 0).g > 0.0) {
+    nr = spline(tRadius, uNearSize);
+    cover = clamp(2.0 * nr.a, 0.0, 1.0);
+  }
+  if (cover < 1.0) {
+    float part = smoothstep(${FINE_HANDOVER[0].toFixed(1)}, ${FINE_HANDOVER[1].toFixed(1)}, abs(px.a) * uShare);
+    if (part > 0.0) {
+      vec4 fd = spline(tField, uFieldSize);
+      laid = mix(laid, fd.rgb / max(fd.a, 1.0e-6), part);
+    }
+    if (cover > 0.0) laid = mix(laid, nr.rgb / max(nr.a, 0.0001), cover);
+  } else {
+    laid = nr.rgb / nr.a;
+  }
+  gl_FragColor = vec4(laid, 1.0);`;
 
 export class FocusBlur {
   private readonly quad = new FullScreenQuad();
@@ -241,15 +242,6 @@ export class FocusBlur {
   private readonly near = plainPass(NEAR_FRAGMENT, { tSrc: { value: null }, uSize: { value: new THREE.Vector2() }, uRamp: { value: new THREE.Vector2() } });
   private readonly tile = plainPass(TILE_FRAGMENT, { tSrc: { value: null }, uSize: { value: new THREE.Vector2() } });
   private readonly reach = plainPass(REACH_FRAGMENT, { tSrc: { value: null }, uSize: { value: new THREE.Vector2() }, uTile: { value: TILE }, uLow: { value: NEAR_RAMP[0] } });
-  private readonly lay = plainPass(LAY_FRAGMENT, {
-    tFine: { value: null },
-    tField: { value: null },
-    tNear: { value: null },
-    tReach: { value: null },
-    uFieldSize: { value: new THREE.Vector2() },
-    uNearSize: { value: new THREE.Vector2() },
-    uShare: { value: 1 },
-  });
   private readonly finePasses: THREE.ShaderMaterial[];
   private readonly fieldPasses: THREE.ShaderMaterial[];
   private readonly nearPasses: THREE.ShaderMaterial[];
@@ -264,6 +256,9 @@ export class FocusBlur {
         tRadius: { value: null },
         uTexel: { value: new THREE.Vector2() },
         uShare: { value: 1 },
+        ...(kind === 'fine' && last
+          ? { tField: { value: null }, tReach: { value: null }, uFieldSize: { value: new THREE.Vector2() }, uNearSize: { value: new THREE.Vector2() } }
+          : {}),
       });
     const taps = blurTaps();
     const fine = fineTaps();
@@ -355,18 +350,11 @@ export class FocusBlur {
     };
     const nearOut = run(this.nearPasses, na.texture, nb, na, tb.texture);
     const fieldOut = run(this.fieldPasses, fa.texture, fb, fa, nearOut.texture);
-    const fineOut = run(this.finePasses, accum, out, other, nearOut.texture);
-    const laid = fineOut === out ? other : out;
-
-    const u = this.lay.uniforms;
-    u.tFine!.value = fineOut.texture;
+    const u = (this.finePasses[1] as THREE.ShaderMaterial).uniforms;
     u.tField!.value = fieldOut.texture;
-    u.tNear!.value = nearOut.texture;
     u.tReach!.value = tb.texture;
     (u.uFieldSize!.value as THREE.Vector2).set(fieldOut.width, fieldOut.height);
     (u.uNearSize!.value as THREE.Vector2).set(nearOut.width, nearOut.height);
-    u.uShare!.value = share;
-    this.draw(this.lay, laid);
-    return laid.texture;
+    return run(this.finePasses, accum, out, other, nearOut.texture).texture;
   }
 }

@@ -144,6 +144,14 @@ const FINE = Math.sqrt(7 / 96);
 export const FINE_SPACING: [number, number] = [FINE, FINE * ROOT7];
 
 /**
+ * A full-size pass is skipped under this spacing of its taps, in pixels, finest pass first. The first pass fills between the seven taps
+ * of the wide pass and costs seven full-size fetches, so it starts only when its own taps are 0.85 px apart: at a radius of 3.15 px,
+ * where the taps of the wide pass are 2.25 px apart, a quarter of a pixel past where their filtered fetches, 2 px wide, stop meeting.
+ * Much of the film lies just under that: the far side of frame 9003 is at 2.8 px over a third of the frame.
+ */
+export const FINE_GATE: [number, number] = [0.85, 0.35];
+
+/**
  * The taps of the two full-size passes, finest first, for a blur of radius 1: a point and its six neighbours, and the same
  * the square root of 7 times as large and turned, so the 49 points of the two together lie on one even lattice.
  * The spacing gives them the second moment of the disc exactly. Up to the first radius of `FINE_HANDOVER` the points lie

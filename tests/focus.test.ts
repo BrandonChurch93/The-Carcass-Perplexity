@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BLUR_SPACING, FINE_HANDOVER, FINE_SPACING, MAX_COC_FRACTION, SHARP_PX, WIDE_SPACING, blurShare, blurTaps, clampCoc, cocPixels, fieldPart, fineOnset, fineTaps, focalPixels, layerGrain, lensPoints, lensSpread, maxCoc } from '../src/core/focus';
+import { BLUR_SPACING, FINE_GATE, FINE_HANDOVER, FINE_SPACING, MAX_COC_FRACTION, SHARP_PX, WIDE_SPACING, blurShare, blurTaps, clampCoc, cocPixels, fieldPart, fineOnset, fineTaps, focalPixels, layerGrain, lensPoints, lensSpread, maxCoc } from '../src/core/focus';
 
 const COUNTS = [1, 2, 4, 8, 16, 64];
 
@@ -143,6 +143,15 @@ describe('the taps of the full-size blur', () => {
 
   it('leaves no gap wider than a filtered fetch up to the radius where the field starts to take over', () => {
     expect(FINE_SPACING[0] * FINE_HANDOVER[0]).toBeLessThan(2);
+  });
+
+  it('starts the wide pass with the blur, and the pass that fills between its taps before they are more than 2.25 px apart', () => {
+    // The wide pass gathers for every radius past the sharp one, so no blurred pixel is left as it came.
+    expect(FINE_GATE[1] / FINE_SPACING[1]).toBeLessThanOrEqual(SHARP_PX);
+    // The first pass is the dear one: it is not asked for while the wide pass alone nearly fills the disc, and it is there before the taps part further.
+    const first = FINE_GATE[0] / FINE_SPACING[0];
+    expect(FINE_SPACING[1] * first).toBeGreaterThan(2);
+    expect(FINE_SPACING[1] * first).toBeLessThanOrEqual(2.25 + 1e-9);
   });
 });
 
