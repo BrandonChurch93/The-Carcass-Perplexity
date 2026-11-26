@@ -114,9 +114,10 @@ vec3 skyCloud(vec3 from, vec3 d, float lod) {
   }
   if (storm > 0.001) {
     vec3 dark = flowing(tStormWall, uvS, vec2(0.02, 0.004), 22.0, lod);
-    vec3 bright = flowing(tStormLit, uvS, vec2(0.02, 0.004), 22.0, lod);
     float k = clamp(lit, 0.0, 1.0);
-    c += storm * mix(dark, bright * (1.0 + 0.8 * k), k);
+    // The lit picture is read only where a light reaches.
+    if (k > 0.002) dark = mix(dark, flowing(tStormLit, uvS, vec2(0.02, 0.004), 22.0, lod) * (1.0 + 0.8 * k), k);
+    c += storm * dark;
   }
   // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
   float glow = clamp(near, 0.0, 3.0);
@@ -150,9 +151,42 @@ void main() {
   float el = asin(clamp(d.y, -1.0, 1.0));
   vec2 uvT = vec2(az, el) * 2.3 + vec2(uTime * 0.0012, 0.0);
   uvT = vec2(mirrored(uvT.x), mirrored(uvT.y + 0.2));
-  float fine = dot(textureLod(tStormWall, uvT, 0.0).rgb, vec3(0.33));
-  float broad = dot(textureLod(tStormWall, uvT, 4.5).rgb, vec3(0.33));
-  c *= mix(1.0, clamp(fine / max(broad, 0.01), 0.6, 1.5), 0.85 * smoothstep(0.0009, 0.0002, foot));
+  if (foot < 0.0009) {
+    float fine = dot(textureLod(tStormWall, uvT, 0.0).rgb, vec3(0.33));
+    float broad = dot(textureLod(tStormWall, uvT, 4.5).rgb, vec3(0.33));
+    c *= mix(1.0, clamp(fine / max(broad, 0.01), 0.6, 1.5), 0.85 * smoothstep(0.0009, 0.0002, foot));
+  }
+  // The ridge runs on beyond what is built: a row of far spires stands out of the sea toward the last light, each smaller and bluer than
+  // the one before it. They are too far to shift with the lens, so they are of the dome.
+  // Behind the strike's long lens they are three, placed where its picture has them: right of the struck spire, against the band.
+  bool pl = uPlate.w > 0.0;
+  float hf = uPlate.z / 1.2;
+  float elS = el - (pl ? uPlate.y : 0.0);
+  if (elS > -0.02 && elS < 0.09) {
+    for (int i = 0; i < 6; i++) {
+      if (pl && i > 2) break;
+      float k = float(i);
+      float size = pl ? 1.0 : 1.0 / (1.0 + 0.3 * k);
+      float azS = pl ? uPlate.x + hf * (i == 0 ? 0.29 : i == 1 ? 0.42 : 0.49) : DUSK_AZ - 0.5 + 0.14 * k + 0.05 * sin(k * 2.7 + 0.4);
+      float tall = pl ? hf * 0.5625 * (i == 0 ? 0.11 : i == 1 ? 0.07 : 0.05) : 0.075 * size * (0.8 + 0.4 * fract(sin(k * 12.9898) * 43758.5453));
+      float unit = pl ? tall / 0.075 : 1.0;
+      if (abs(wrapPi(az - azS)) > tall || elS > tall + 0.004) continue;
+      float h = clamp((elS + 0.012 * unit) / (tall + 0.012 * unit), 0.0, 1.0);
+      // A leaning blade: broad at the sea, a knife at the top, broken along both edges.
+      float lean = (pl ? -0.4 : mod(k, 2.0) < 0.5 ? -0.35 : 0.28) * tall * h * h;
+      float half_ = tall * ((pl ? 0.55 : 0.34) * pow(1.0 - h, 1.3) + 0.012) * (1.0 + 0.5 * (texture(tNoise, vec3(h * 3.0 + k, k * 0.37, 0.2)).r - 0.5));
+      float off = wrapPi(az - azS) - lean;
+      float inSpire = (1.0 - smoothstep(half_ - 1.5 * foot, half_ + 1.5 * foot, abs(off) + 0.004 * size * unit * (texture(tNoise, vec3(elS / unit * 90.0, off / unit * 60.0 + k, 0.7)).r - 0.5))) * (1.0 - smoothstep(tall - 2.0 * foot, tall + 2.0 * foot, elS));
+      if (inSpire > 0.0) {
+        // Rock in the far air: dark toward the storm, the dusk on its lee face, and paler the farther off; its foot is in the cloud.
+        float lee = smoothstep(-0.3, 0.6, off / max(half_, 1e-4));
+        vec3 rockFar = mix(vec3(0.02, 0.022, 0.034), vec3(0.075, 0.05, 0.04), lee * 0.6) * (0.7 + 0.6 * texture(tNoise, vec3(elS / unit * 70.0 + k, off / unit * 45.0, 0.31)).r);
+        float air = 1.0 - exp(-(0.3 + 0.2 * k));
+        float foot_ = smoothstep(0.012 * unit, -0.006 * unit, elS - 0.004 * size * unit);
+        c = mix(c, mix(rockFar, c, clamp(air * (pl ? 0.35 : 0.6) + foot_, 0.0, 1.0)), inSpire);
+      }
+    }
+  }
   // Under the horizon there is only the cloud sea, which the air pass draws.
   vec2 uvP = vec2(0.0);
   c = mix(c, uSkyGround, smoothstep(0.0, -0.06, d.y) * (1.0 - (uPlate.w > 0.0 ? plateAt(az, el, uvP) : 0.0)));

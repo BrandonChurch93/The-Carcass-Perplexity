@@ -9,7 +9,7 @@ const hash = (x: number, y: number): number => {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
 };
 
-function vnoise(x: number, y: number): number {
+export function vnoise(x: number, y: number): number {
   const xi = Math.floor(x);
   const yi = Math.floor(y);
   const fx = x - xi;

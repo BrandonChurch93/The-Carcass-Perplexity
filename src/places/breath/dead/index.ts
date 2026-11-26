@@ -40,6 +40,9 @@ void main() {
   float lift = texture2D(tLift, vAt).r * 0.5;
   // Across the lens's line of sight, and away from the lens along the rock: the higher a thing stands, the nearer it is on its ray.
   float across = (position.x - uSheet.x) * uSheet.z;
+  // The tendrils dried where they fell, each in its own slack curve: none of them lies straight.
+  float fan = smoothstep(0.31, 0.12, position.x);
+  across += fan * (0.06 * sin(position.x * 29.0 + position.y * 43.0) + 0.028 * sin(position.x * 71.0 - position.y * 57.0 + 1.3));
   float away = ((position.y - uSheet.y) * uSheet.w - lift * uLie.y) / uLie.x - uLie.z;
   // The wind still moves the ends of the tendrils where they lie loose on the rock: nothing else of it stirs.
   float loose = smoothstep(0.27, 0.06, position.x);

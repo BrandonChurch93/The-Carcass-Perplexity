@@ -16,7 +16,7 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 const SPARKS = 260;
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
 const TIP_RADIUS = 8;
-const TIP_CAST = 150000;
+const TIP_CAST = 300000;
 /** Half the breadth of the card the white-hot spot at the tip is drawn on, metres. */
 const SPOT = 1.5;
 /** The air round the arc is violet; its heart is white with a breath of it. */
@@ -133,7 +133,7 @@ varying float vHeat;
 void main() {
   // A fragment of rock thrown from the tip: it flies, falls, is carried by the gale, and cools.
   // It leaves fast and the air stops it within a few tens of metres; then it only falls and drifts.
-  float life = 0.35 + 1.3 * aSeed.x * aSeed.x;
+  float life = 0.45 + 2.0 * aSeed.x * aSeed.x;
   float t = max(uAge - 0.22 * aSeed.y * aSeed.y, 0.0);
   float drag = 1.0 - exp(-t * 13.0);
   vec3 p = uAt + aGo * (drag / 13.0) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 6.0);
@@ -147,7 +147,7 @@ void main() {
   float reach = max(size, min(length(along.xy) * 0.0025, size * 3.5));
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
-  vHeat = (uAge <= 0.0 || t <= 0.0) ? 0.0 : exp(-t / (0.35 * life)) * (1.0 - smoothstep(life * 0.8, life, t)) * (0.4 + 0.6 * aSeed.w) * min(1.0, 0.5 / (reach / size) + 0.5);
+  vHeat = (uAge <= 0.0 || t <= 0.0) ? 0.0 : exp(-t / (0.5 * life)) * (1.0 - smoothstep(life * 0.8, life, t)) * (0.4 + 0.6 * aSeed.w) * min(1.0, 0.5 / (reach / size) + 0.5);
   gl_Position = projectionMatrix * c;
 }`;
 
@@ -291,8 +291,8 @@ export function create(ctx: Context): Piece {
     setTime: (seconds) => {
       for (const p of puffs) {
         let most = 0;
-        // It bursts out in a fifth of a second and thins over the next six.
-        for (const at of p.strikes) if (seconds > at) most = Math.max(most, (1 - Math.exp(-(seconds - at) / 0.2)) * Math.exp(-(seconds - at) / 6));
+        // It bursts out with the stroke and thins over the next six seconds.
+        for (const at of p.strikes) if (seconds > at) most = Math.max(most, (1 - Math.exp(-(seconds - at) / 0.04)) * Math.exp(-(seconds - at) / 6));
         p.source.strength = most;
       }
       channelLight.radiance.set(0, 0, 0);
