@@ -41,11 +41,12 @@ void main() {
   Rock k = rockAt(vWorld, n, face);
   // The damp line at the water, and the stone that the lake has wetted darker.
   vec4 land = landAt(vWorld.xz);
-  float damp = smoothstep(1.2, 0.3, vWorld.y + 0.45 * vnoise(vWorld.xz * 0.5) + 0.1 * vnoise(vWorld.xz * 3.1)) * (1.0 - face);
+  float damp = smoothstep(1.35, 0.7, vWorld.y + 0.7 * vnoise(vWorld.xz * 0.11) + 0.12 * vnoise(vWorld.xz * 1.3)) * (1.0 - face);
   // Under a low eye the wet is a thin dark band above the water and the stones beyond it are dry.
   damp = mix(damp, smoothstep(0.2, 0.05, vWorld.y + 0.12 * vnoise(vWorld.xz * 2.1)) * (1.0 - face), smoothstep(12.0, 4.0, cameraPosition.y));
-  k.albedo *= mix(1.0, 0.3, damp) * mix(1.0, 0.28, smoothstep(0.03, -0.12, vWorld.y) * (1.0 - face));
-  k.rough = mix(k.rough, 0.8, damp);
+  k.albedo *= mix(1.0, 0.36, damp) * mix(1.0, 0.28, smoothstep(0.03, -0.12, vWorld.y) * (1.0 - face));
+  // Damp gravel is dark, not glossy: only under the low eye does the wet band take a sheen.
+  k.rough = mix(k.rough, 0.8, damp * smoothstep(12.0, 4.0, cameraPosition.y));
   // Under the brow the wall and the scree stand in a cave: the further back from the water, the less of the sky they see.
   float bearing = degrees(atan(vWorld.x, -vWorld.z));
   float roofed = smoothstep(26.0, 52.0, bearing) * (1.0 - smoothstep(116.0, 142.0, bearing));
@@ -269,7 +270,7 @@ export function create(ctx: Context): Piece {
   ];
   // The corners of the wide picture are piles of blocks, none larger than the atlas can hold sharp at that nearness: on the right
   // against the frame, on the left beyond the stream.
-  near.push([139.5, 11.5, 3.4], [134.5, 16, 4.4], [141, 8.4, 2.3], [137.5, 14.5, 3.1], [143, 12.5, 2.6], [139, -21, 3.6], [135, -24, 4.6], [141.5, -19.5, 2.5], [131, -25.5, 4], [137.5, -26.5, 3]);
+  near.push([135, 9.2, 3.6], [132.5, 10.5, 2.8], [129.5, 14, 4.4], [134.5, -8.3, 3.4], [131, -8.0, 4.6], [134.6, -6.4, 2.6], [128.2, -5.4, 2.2], [131.5, -20.5, 4.4], [139.5, 11.5, 3.4], [134.5, 16, 4.4], [141, 8.4, 2.3], [137.5, 14.5, 3.1], [143, 12.5, 2.6], [139, -21, 3.6], [135, -24, 4.6], [141.5, -19.5, 2.5], [131, -25.5, 4], [137.5, -26.5, 3]);
   for (const [along, across, size] of near) {
     // None stands in the water: one that would is set on the bank on its own side.
     const mid = streamAcross(along);
@@ -315,7 +316,11 @@ export function create(ctx: Context): Piece {
     const out = -0.6 + 26 * rng.next() ** 1.7;
     const r = shoreAt(b) + out;
     const a = b * DEG;
-    put(Math.sin(a) * r, -Math.cos(a) * r, 0.06 + 0.42 * rng.next() ** 4);
+    const size = 0.06 + 0.42 * rng.next() ** 4;
+    // They lie gathered, in heaps and strings with bare gravel between, and only a stone here and there alone.
+    const heap = 0.65 * vnoise(Math.sin(a) * r / 8 + 21, -Math.cos(a) * r / 8 + 5) + 0.35 * vnoise(Math.sin(a) * r / 2.7, -Math.cos(a) * r / 2.7 + 9);
+    if (heap < 0.56 && (((i * 2654435761) >>> 0) / 4294967296) > 0.06) continue;
+    put(Math.sin(a) * r, -Math.cos(a) * r, size * (1 + 1.4 * smooth(0.56, 0.75, heap)));
   }
   // The fan under the spur: blocks of every size from a man's head to a hut, thick at its sides and thinner down its middle.
   for (let i = 0; i < 1500; i++) {
@@ -343,7 +348,10 @@ export function create(ctx: Context): Piece {
       const size = 0.03 + 0.2 * rng.next() ** 3.2 + 0.3 * (((i * 2654435761) >>> 0) / 4294967296) ** 14;
       const x = from[0] + fx * ahead - fz * aside;
       const z = from[2] + fz * ahead + fx * aside;
-      if (landHeight(x, z) < -0.1 - 0.4 * size) continue;
+      const ground = landHeight(x, z);
+      if (ground < -0.1 - 0.4 * size) continue;
+      // In the flooded shallows only the stones that stand out of the water are kept, and fewer of them.
+      if (ground < 0.0 && (size < 0.07 || vnoise(x / 0.9 + 3, z / 0.9 + 8) < 0.55)) continue;
       // They lie in drifts: bare grit between, where only the larger ones stand.
       if (vnoise(x / 1.7 + 5, z / 1.7 + 2) < 0.3 && size < 0.09) continue;
       if (vnoise(x / 3.4 + 11, z / 3.4 + 7) < 0.46 && size < 0.14) continue;
@@ -378,11 +386,12 @@ export function create(ctx: Context): Piece {
   // The pebbles of the shore keep their own small shapes.
   {
     const list = stones[2] as Stone[];
-    const VARIANTS = 3;
+    const VARIANTS = 7;
     for (let k = 0; k < VARIANTS; k++) {
-      const mine = list.filter((_, i) => i % VARIANTS === k);
+      // The larger ones are cut finer: their outlines are seen. Seven shapes, so that no two neighbours are the same stone.
+      const mine = list.filter((s, i) => (s.size > 0.1 ? i % 3 : 3 + (i % 4)) === k);
       if (mine.length === 0) continue;
-      const geometry = mergeVertices(stoneGeometry(6 + k + 1, 1).deleteAttribute('uv').deleteAttribute('normal'));
+      const geometry = mergeVertices(stoneGeometry(6 + k + 1, k < 3 ? 2 : 1).deleteAttribute('uv').deleteAttribute('normal'));
       geometry.computeVertexNormals();
       const tints = new Float32Array(mine.length * 3);
       const mesh = new THREE.InstancedMesh(geometry, stoneMaterial, mine.length);
