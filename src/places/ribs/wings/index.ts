@@ -40,6 +40,8 @@ const SHUTTER = 1 / 50;
 /** The approach: no flier is near enough to be read as a model. The widest a wing stands at the lens as the film opens (radians), the metres of wing to a unit of size, and the seconds between which that limit grows away (by e to the `grow`). */
 const FAR = { wing: 0.0017, span: 4.5, from: 4.5, to: 10.5, grow: 7 };
 
+/** The approach: a colony lifts off a ledge of the first blade. Where the ledge is, the metres round it from which its fliers come, when the first leaves, over how many seconds they leave, and how long each takes to be on its own way. */
+const LIFT = { at: [-236, 236, 34] as const, within: 320, from: 0.4, spread: 3, takes: 8 };
 const TAU = Math.PI * 2;
 const LOOP_SECONDS = config.deliver.cardLoop.seconds;
 
@@ -708,6 +710,7 @@ export function create(ctx: Context): Piece {
       // The widest a wing may stand at the lens, radians: a few pixels of the full frame as the film opens, and it grows past any flier's
       // real size before FAR.to, from where every flier is its own size again.
       const widest = FAR.wing * Math.exp(FAR.grow * smooth(FAR.from, FAR.to, seconds));
+      const lifting = approaching && seconds < LIFT.from + LIFT.spread + LIFT.takes;
       const far = (): void => {
         if (!lens) return;
         const away = Math.hypot(fig.x - lens[0], fig.y - lens[1], fig.z - lens[2]);
@@ -720,6 +723,21 @@ export function create(ctx: Context): Piece {
           continue;
         }
         flierAt(f, seconds, eye);
+        if (lifting) {
+          // Those whose way lies near the ledge start on it: they leave it one after another and are on their own way seconds later.
+          const dx = fig.x - LIFT.at[0];
+          const dy = fig.y - LIFT.at[1];
+          const dz = fig.z - LIFT.at[2];
+          const near = smooth(LIFT.within, 0.7 * LIFT.within, Math.hypot(dx, dy, dz));
+          if (near > 0) {
+            const gone = smooth(0, 1, (seconds - LIFT.from - LIFT.spread * hash(i, 31)) / LIFT.takes);
+            const held = (1 - gone) * near;
+            fig.x -= dx * held;
+            fig.y -= dy * held;
+            fig.z -= dz * held;
+            fig.size *= 1 - near * (1 - smooth(0, 0.06, gone));
+          }
+        }
         far();
         flockFigures.put(i, fig);
       }

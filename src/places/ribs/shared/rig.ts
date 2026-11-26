@@ -22,8 +22,8 @@ export const BREAK = { x: 200, z: -500, radius: 420, gain: 0.8, cover: 0.62 };
 export const BREAK2 = { x: -200, z: 530, radius: 170, gain: 0.9 };
 /** The approach: the wide break over the strait is shut as the film opens (the blades stand in the cloud's shade) and thins back into itself. Where the shut cloud lies thickest, its radius, what it takes from the cover, and what the small break is given to stay open under it. */
 export const SHUT = { x: -40, z: -420, radius: 2400, gain: -0.6, lift: 0.55 };
-/** The approach: the small break lies off its own place, over the foot of the first blade as the film opens, and walks back to it: metres. */
-export const SHAFT = { x: -120, z: -230 };
+/** The approach: the small break's shaft of sun starts on the open water before the lens, walks to the foot of the first blade in `walks` seconds, stands there until `stays`, and is at its own place by the fifteenth second: metres. */
+export const SHAFT = { fromX: -280, fromZ: 1130, footX: -318, footZ: 350, walks: 3.4, stays: 7 };
 /** The approach: radians the sky's picture is turned so that its brightest break stands behind the first blades; how much of the sky's light and of the sun's the shut cloud keeps from the ground. */
 export const OPEN_SKY = { turn: -0.25, dim: 0.8, shade: 0.8 };
 const SKY_LIGHT = { zenith: [0.115, 0.14, 0.185], horizon: [0.33, 0.38, 0.45], ground: [0.08, 0.088, 0.097] } as const;
@@ -425,7 +425,14 @@ export function createRig(): Rig {
     const z = BREAK2.z + WIND.to[1] * WIND.cloud * seconds;
     const weight = openingWeight(world);
     if (weight === 0) return [x, z];
-    return [x + SHAFT.x * weight, z + SHAFT.z * weight];
+    // It comes over the open water from behind the lens, reaches the foot of the first blade, stands there, and then goes to its own place.
+    const walk = Math.min(1, Math.max(0, world / SHAFT.walks));
+    const there = 1 - (1 - walk) * (1 - walk);
+    const stay = 1 - Math.min(1, Math.max(0, (world - SHAFT.stays) / (15 - SHAFT.stays)));
+    const held = stay * stay * (3 - 2 * stay);
+    const ax = SHAFT.fromX + (SHAFT.footX - SHAFT.fromX) * there;
+    const az = SHAFT.fromZ + (SHAFT.footZ - SHAFT.fromZ) * there;
+    return [x + (ax - x) * held, z + (az - z) * held];
   };
 
   const loopAt = new THREE.Vector2(T0, 0);

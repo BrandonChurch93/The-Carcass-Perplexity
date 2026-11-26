@@ -74,14 +74,18 @@ vec2 bankAt(vec3 p) {
   float under = top - p.y + 46.0 * (lump - 0.5) + 26.0 * (fine - 0.5);
   float pz = p.z + 170.0 * (big - 0.5);
   float inside = smoothstep(790.0, 660.0, pz) * smoothstep(300.0, 430.0, pz);
-  float body = inside * smoothstep(0.0, 16.0, under) * (0.55 + 0.9 * lump);
+  float body = inside * smoothstep(0.0, 16.0, under) * (0.3 + 1.4 * lump);
   // Its seaward face is not a wall: tongues of it stand out over the water, lower the further out. (The mist that lies on the water
   // itself before the bank, through which the far sea pales into it, is the sea's: sea/shaders.ts.)
   float tongue = smoothstep(0.34, 0.66, 0.6 * fine + 0.4 * lump);
-  float near = smoothstep(1010.0, 760.0, pz + 160.0 * (lump - 0.5));
-  float lid = (3.0 + 40.0 * tongue * near) * (1.0 - 0.7 * open);
-  float foot = near * smoothstep(300.0, 430.0, pz) * smoothstep(lid, 0.3 * lid, p.y) * (0.12 + 0.88 * tongue) * (1.0 - open);
-  return vec2(uBank.x * max(body, 0.7 * foot), under);
+  // Some of them reach a long way out and some places stay clear to the bank's face: the water is seen to go into it at no one distance.
+  float reach = 460.0 * smoothstep(0.3, 0.7, texture2D(tCloudShade, q / 1500.0 + 0.61).r);
+  float near = smoothstep(1010.0 + reach, 900.0 + reach, pz + 160.0 * (lump - 0.5));
+  // Far out they lie lower than a lens nine metres up; against the bank they stand up into it.
+  // And none has a level top: each thins upward from the water, and between them there is none.
+  float lid = (1.0 + 7.0 * tongue + 40.0 * tongue * smoothstep(1010.0, 760.0, pz + 160.0 * (lump - 0.5))) * (1.0 - 0.7 * open);
+  float foot = near * smoothstep(300.0, 430.0, pz) * smoothstep(lid, 0.0, p.y) * tongue * (1.0 - open);
+  return vec2(uBank.x * max(body, foot), under);
 }
 
 void viewRay(out vec3 ro, out vec3 rd, out float reach) {
@@ -164,7 +168,7 @@ void main() {
   }
   // The bank of the opening stands nearer than the haze: it is marched on its own, only while it is up.
   if (uBank.x > 0.0) {
-    float ta = (1100.0 - ro.z) / rd.z;
+    float ta = (1480.0 - ro.z) / rd.z;
     float tb = (210.0 - ro.z) / rd.z;
     float from = max(min(ta, tb), 0.0);
     float to = min(min(max(ta, tb), reach), 2600.0);
@@ -177,12 +181,14 @@ void main() {
         float tm = from + (float(i) + jitter) * len;
         vec3 p = ro + rd * tm;
         vec2 fog = bankAt(p);
-        float a = 1.0 - exp(-fog.x * len * smoothstep(30.0, 260.0, tm));
+        float a = 1.0 - exp(-fog.x * len * smoothstep(30.0, 200.0, tm));
         if (a > 0.0005) {
-          float lit = sunAt(p, landAt(p.xz));
+          // The shaft of sun that walks over the water stands in the bank as a pool of light with no drawn edge.
+          vec2 fromShaft = p.xz - uCloudBreak2.xy;
+          float lit = exp(-1.7 * dot(fromShaft, fromShaft) * uCloudBreak2.z) * cloudShade(vec3(uCloudBreak2.x, 0.0, uCloudBreak2.y));
           // Deep in the bank the light is the bank's own grey; its top and its torn edges take the sky and the sun.
           float deep = 0.42 + 0.58 * smoothstep(60.0, 4.0, fog.y);
-          bankSum += bankTrans * a * (uHaze * (0.7 * deep) + uSunColour * (0.13 * phase * lit * deep)) * uShowAir;
+          bankSum += bankTrans * a * (uHaze * (0.7 * deep) + uSunColour * (0.26 * phase * lit * deep)) * uShowAir;
           bankTrans *= 1.0 - a;
         }
       }

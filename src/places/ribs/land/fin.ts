@@ -281,8 +281,19 @@ export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
     albedo *= mix(1.0, mix(0.88, 1.2, plate), openK);
     albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.65), 0.5 * openK * stain * (1.0 - 0.5 * plate));
     // The wet foot: dark far above the weed where the swell throws its water, higher on the weather side.
-    albedo *= mix(1.0, 0.5, openK * smoothstep(95.0 + 70.0 * (slab - 0.5), 20.0, vWorld.y));
+    albedo *= mix(1.0, 0.34, openK * smoothstep(80.0 + 60.0 * (slab - 0.5), 14.0, vWorld.y));
   }
   float y = vWorld.y;`,
+  ],
+  [
+    '  gl_FragColor = vec4(rigOut(lit), 1.0);',
+    `  if (openK > 0.0) {
+    // The break in the cloud stands behind the blades: the flank that turns from the lens toward it takes its light along the edge.
+    // (By the blade's own form, not by its grooves: the light lies along the edge as one line.)
+    float edge0 = 1.0 - max(dot(n0, v), 0.0);
+    float toBreak = clamp(dot(n0, uSkyBreak) + 0.3, 0.0, 1.0);
+    lit += uSunColour * (0.2 * openK * edge0 * edge0 * edge0 * edge0 * toBreak);
+  }
+  gl_FragColor = vec4(rigOut(lit), 1.0);`,
   ],
 ]);
