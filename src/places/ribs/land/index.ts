@@ -170,7 +170,15 @@ export function create(ctx: Context): Piece {
   const material = (vertexShader: string, fragmentShader: string, own: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, uPool: { value: LEVELS.pool } });
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) } });
+  {
+    // A lane of standing water runs down the middle of the strait toward the gap, from where the wide lens stands: it holds the sky.
+    const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
+    const dx = (pose.aim[0] as number) - (pose.position[0] as number);
+    const dz = (pose.aim[2] as number) - (pose.position[2] as number);
+    const l = Math.hypot(dx, dz) || 1;
+    (ground.uniforms.uPath as THREE.IUniform).value.set(pose.position[0], pose.position[2], dx / l, dz / l);
+  }
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
     material(ROCK_VERTEX, ROCK_FRAGMENT, {
       tRock: { value: rockC },
@@ -328,7 +336,7 @@ export function create(ctx: Context): Piece {
       const a = yaw + scatter.range(-half, half);
       const x = pose.position[0] + Math.sin(a) * r;
       const z = pose.position[2] - Math.cos(a) * r;
-      const size = 0.012 + 0.03 * scatter.next() + 0.1 * Math.pow(scatter.next(), 12);
+      const size = 0.02 + 0.045 * scatter.next() + 0.22 * Math.pow(scatter.next(), 9);
       const yaw2 = scatter.range(0, 6.283);
       const tilt = scatter.range(-0.3, 0.3);
       const kind = scatter.int(KINDS);
@@ -337,7 +345,7 @@ export function create(ctx: Context): Piece {
       if (drift > 0.4 + 0.35 * scatter.next()) placed.push({ x, z, size, yaw: yaw2, tilt, kind, sink });
     }
   };
-  strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 4500, 1.5, 40, 0.62);
+  strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 16000, 1.2, 48, 0.62);
   strew(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 1200, 5, 110, 0.3);
   strew(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 1500, 2, 60, 0.55);
   // At the foot of every blade what has fallen from it: weed-grown blocks against the wall, smaller ones out on the flat.

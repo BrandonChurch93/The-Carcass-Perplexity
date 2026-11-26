@@ -308,7 +308,7 @@ void main() {
   float runs = smoothstep(0.72 - 0.45 * hang, 0.8 - 0.4 * hang, thin + 0.2 * (perch - 0.5) + 0.1 * (hgt - 0.5)) * face;
   // Water runs down the faces too, dark and bright by turns as it goes.
   float seep = vnoise(vec2(arc * 1.7, y * 0.05) + 31.0) * 0.6 + vnoise(vec2(arc * 5.1, y * 0.2)) * 0.4;
-  float wetRun = smoothstep(0.5, 0.58, seep + 0.1 * (0.5 - hgt)) * face * (1.0 - runs);
+  float wetRun = smoothstep(0.44, 0.52, seep + 0.1 * (0.5 - hgt)) * face * (1.0 - runs);
   float splash = (1.0 - face) * smoothstep(0.56, 0.68, vnoise(vWorld.xz * 0.45 + 3.0) * 0.6 + vnoise(vWorld.xz * 1.7) * 0.4 + 0.3 * (hgt - 0.5));
   float white = max(0.7 * runs, 0.55 * splash) * (1.0 - band) * (1.0 - 0.5 * low);
   // Rust lichen: patches a stride or two across with broken edges, on the tops and on what faces the sun, never in the wet.
@@ -330,7 +330,7 @@ void main() {
   float bead = vnoise(vec2(arc * 7.0, y * 1.6 + uTime * 2.3)) * 0.6 + vnoise(vec2(arc * 17.0, y * 3.3 + uTime * 3.7)) * 0.4;
   vec3 up = reflect(-v, n);
   up.y = abs(up.y) + 0.1;
-  lit += skyRadiance(normalize(up)) * skyOpen(vWorld) * (0.035 * smoothstep(0.52, 0.7, bead) * max(wetRun, 0.6 * runs));
+  lit += skyRadiance(normalize(up)) * skyOpen(vWorld) * (0.09 * smoothstep(0.5, 0.66, bead) * max(wetRun, 0.6 * runs));
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -387,6 +387,9 @@ void main() {
   float fine = dot(det, vec3(0.333)) / 0.039;
   // Wet weed: dark olive and brown, its own colour where a hem turns to the light.
   vec3 albedo = mix(vec3(dot(wall, vec3(0.333))), wall, 0.85) * mix(1.0, fine, 0.45) * 0.6;
+  // The hanks that stand proud are olive and gold brown, and wet.
+  float hem = smoothstep(0.5, 0.8, wn.z + 0.25 * (fine - 1.0));
+  albedo = mix(albedo, vec3(0.105, 0.078, 0.026) * (0.5 + 0.6 * fine), 0.55 * hem);
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
   float rough = mix(0.38 + 0.3 * (1.0 - wn.z), 0.12, thread);
@@ -408,6 +411,10 @@ void main() {
   occ = mix(occ, (0.45 + 0.55 * smoothstep(0.15, 0.6, rn.z)) * (0.55 + 0.45 * smoothstep(1.0, 0.6, under)), bare);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   c += thread * 0.035 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * skyOpen(vWorld);
+  // No shade here is black: what faces away still takes the sky and the bounce of the wet floor. The wet hems hold a glint of the sky.
+  vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
+  c = max(c, albedo * above * (0.2 / 3.14159) * (0.6 + 0.4 * occ));
+  c += above * (0.012 * hem * (1.0 - bare) * smoothstep(0.55, 0.9, nh.z + 0.3 * vnoise(vUv * 3.0 + uTime * 0.25)));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -421,6 +428,7 @@ uniform sampler2D tShingle;
 uniform sampler2D tShingleN;
 uniform sampler2D tSand;
 uniform float uPool;
+uniform vec4 uPath;
 // One laying of the ground plate (a real stretch of tide flat, 48 m by 27 m, mirrored where it meets itself): turned by cs, its colour,
 // and its slope in the world (x, z) with its height.
 // A floor seen along itself: the picture is read by the short side of the pixel's foot (to most times it), not by the long one, so that
@@ -464,8 +472,8 @@ void main() {
   vec3 nh = vec3(0.5);
   vec3 sand = vec3(0.128);
   if (reach > 0.0) {
-    det = mix(det, textureLod(tShingle, ud, footLevel(tShingle, udx, udy, 2.0)).rgb, (0.35 + 0.65 * close0) * reach);
-    nh = mix(nh, textureLod(tShingleN, ud, footLevel(tShingleN, udx, udy, 2.0)).rgb, (0.35 + 0.65 * close0) * reach);
+    det = mix(det, textureLod(tShingle, ud, footLevel(tShingle, udx, udy, 4.0)).rgb, (0.35 + 0.65 * close0) * reach);
+    nh = mix(nh, textureLod(tShingleN, ud, footLevel(tShingleN, udx, udy, 4.0)).rgb, (0.35 + 0.65 * close0) * reach);
     sand = mix(sand, textureLod(tSand, us, footLevel(tSand, usx, usy, 2.0)).rgb, reach);
   }
   float fine = bedFine(xz);
@@ -476,16 +484,22 @@ void main() {
   // the floor is dark and a mirror; dry, it is pale and matt.
   vec2 sq = vec2(xz.x + 0.3 * xz.y, xz.y * 0.4);
   float soak = vnoise(sq / 13.0 + 11.0) * 0.5 + vnoise(sq / 4.7 + 4.0) * 0.32 + vnoise(xz / 1.9) * 0.18;
-  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 0.12 * clamp(over, 0.0, 0.5) + 0.05 * (nh.z - 0.5) * close0 + 0.17);
+  // The lane of standing water down the middle of the strait: it widens and wanders as it goes.
+  vec2 rel = xz - uPath.xy;
+  float along = dot(rel, uPath.zw);
+  float across = dot(rel, vec2(-uPath.w, uPath.z)) + (7.0 + 0.08 * along) * (vnoise(vec2(along / 37.0, 2.5)) - 0.5) + 2.0 * (vnoise(xz / 3.1 + 8.0) - 0.5);
+  float lane = smoothstep(1.0, 0.35, abs(across) / (3.5 + 0.075 * max(along, 0.0))) * smoothstep(-4.0, 12.0, along);
+  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 0.12 * clamp(over, 0.0, 0.5) + 0.05 * (nh.z - 0.5) * close0 + 0.1 + 0.3 * lane);
   // Stones where the floor stands proud, rippled sand where it lies low.
-  float bar = smoothstep(0.3, 0.52, ps.z + 0.5 * clamp(over, -0.2, 0.3) + 0.1 * (nh.z - 0.5) + 0.12 * close0);
+  float bar = smoothstep(0.3, 0.52, ps.z + 0.5 * clamp(over, -0.2, 0.3) + 0.1 * (nh.z - 0.5) + 0.3 * close0);
   bar *= 1.0 - 0.8 * soaked;
   vec3 grain = mix(sand / 0.128, det / 0.122, bar);
-  grain = mix(vec3(dot(grain, vec3(0.333))), grain, 0.5);
+  // Wet grey shingle: slate more than sand.
+  grain = mix(vec3(dot(grain, vec3(0.333))), grain, 0.22) * vec3(0.84, 0.97, 1.12);
   // Close under the lens the plate is a smear: there it gives only its broad tone, and the stones and the sand carry the floor.
   float close = smoothstep(70.0, 8.0, length(cameraPosition - vWorld));
   vec3 broad = mix(plate, vec3(0.123, 0.13, 0.136), 0.8 * close);
-  vec3 albedo = mix(broad, vec3(dot(broad, vec3(0.333))), 0.35) * mix(vec3(1.0), grain, mix(0.7, 1.0, close)) * 0.52;
+  vec3 albedo = mix(broad, vec3(dot(broad, vec3(0.333))), 0.7) * mix(vec3(1.0), grain, mix(0.7, 1.0, close)) * 0.52;
   // Cast weed lies in dark patches on the bars and at the edge of the pools.
   float castWeed = smoothstep(0.6, 0.66, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * nh.z + 0.1 * bar);
   albedo = mix(albedo, vec3(0.04, 0.03, 0.012) * (0.5 + nh.z), 0.9 * castWeed);
@@ -498,7 +512,8 @@ void main() {
   float damp = smoothstep(0.4, 0.1, over);
   float rough = mix(mix(0.6, 0.45, damp), 0.06, film);
   rough = mix(rough, 0.9, under);
-  albedo *= mix(1.6, 0.5, max(wet, 0.35 * damp)) * mix(1.0, 0.55, under);
+  // Dry shingle under a break in the cloud stays slate: the sun's warmth is taken out of it.
+  albedo *= mix(1.25, 0.5, max(wet, 0.35 * damp)) * mix(1.0, 0.55, under) * mix(vec3(0.8, 0.94, 1.1), vec3(1.0), max(wet, under));
   vec2 g = (nh.xy - 0.5) * 2.2 * max(bar, 0.5 * close);
   vec3 n = normalize(vNormal + vec3(ps.x, 0.0, ps.y) * 2.6 * (1.0 - 0.85 * film) * (1.0 - 0.7 * close) * (1.0 - 0.8 * under) + vec3(g.x, 0.0, -g.y) * mix(1.0, 0.05, wet));
   float cavity = 0.55 + 0.45 * smoothstep(0.08, 0.4, ps.z);
@@ -581,11 +596,15 @@ void main() {
   // A stone on the floor has its own tone: some slate, some nearly black, a few pale.
   float tone = vnoise(vWorld.xz * 2.3 + 0.5);
   side = mix(vec3(dot(side, vec3(0.333))), side, 0.45);
-  vec3 albedo = mix(side * mix(0.4 + 0.6 * tone, 0.55, uWeedy), wc * 0.5, 0.8 * cover);
-  float rough = mix(mix(0.3, 0.45, uWeedy), 0.35, cover);
+  // Cast weed on a rock: olive and gold brown where its straps turn up, wet. Under it barnacles in pale crusts on the bare stone.
+  vec3 gold = mix(wc * 0.5, vec3(0.105, 0.07, 0.022) * (0.4 + 2.2 * wc.g / 0.04 * 0.5), smoothstep(0.035, 0.07, wc.g) * 0.7);
+  float crust = smoothstep(0.55, 0.7, vnoise(flat2 * 3.1 + 2.0) * 0.5 + vnoise(flat2 * 23.0) * 0.5 + 0.3 * (nh.z - 0.5)) * (1.0 - cover) * uWeedy;
+  vec3 albedo = mix(side * mix(0.4 + 0.6 * tone, 0.6, uWeedy), gold, 0.85 * cover);
+  albedo = mix(albedo, vec3(0.3, 0.29, 0.26), 0.6 * crust);
+  float rough = mix(mix(0.3, 0.45, uWeedy), 0.22, cover);
   // What stands in the pool or just out of it is soaked: near black and bright where it turns to the sky.
   float soak = smoothstep(uPool + 0.75, uPool + 0.15, vWorld.y + 0.3 * (vnoise(vWorld.xz * 1.7) - 0.5));
-  albedo *= mix(1.0, 0.42, soak);
+  albedo *= mix(1.0, mix(0.42, 0.7, uWeedy), soak);
   rough = mix(rough, 0.16, soak);
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);
