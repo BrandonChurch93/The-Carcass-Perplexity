@@ -32,6 +32,8 @@ const SHEET = 100;
 const SLIDE_A = 0.37;
 /** The built lip stands this far under the crest of the picture, so that nothing of the picture's sky is ever drawn on the wall. */
 const UNDER = 0.95;
+/** The height on both sheets, as a part of foot to crest, of the lower edge of the white that falls from the lip. */
+const PIC_EDGE = 0.45;
 /** The curtain of thrown water over the crest: its height as a part of the wall's. */
 const CURTAIN = 0.36;
 /** The sea ahead of the wall lifts to meet it: the height of that swell at the foot as a part of the lip's, and the metres over which it dies out ahead. */
@@ -204,7 +206,20 @@ varying vec3 vRide;
 varying float vLift;
 // The breaking wave as the two sheets show it, at x and at the height t (0 the foot, 1 the crest, more is the thrown water over it).
 // The white water in it works: two readings slide past each other down the face, each fading in as the other fades out.
-vec3 wallAt(float x, float t) {
+// The same clock as the built lip (boreCurl): 0 the wall stands clean, 1 its lip has fallen.
+float curlAt(float x) {
+  float ph = 6.2832 * uTime / ${f(BREAK_PERIOD)} + 2.1 * sin(x * 0.031 + 0.7) + 1.7 * sin(x * 0.0573 + 2.1) + 1.2 * sin(x * 0.113 + 4.0);
+  return smoothstep(0.15, 0.85, 0.5 + 0.5 * sin(ph));
+}
+// The height on the face down to which the white of the lip has fallen at x: high while the wall stands, at the foot when it has broken.
+float fallenTo(float x) {
+  float rag = texture2D(tFoam, vec2(x / 41.0, uTime * 0.07)).r - 0.5;
+  return clamp(mix(0.84, 0.16, curlAt(x)) + 0.2 * rag, 0.08, 0.9);
+}
+vec3 wallAt(float x, float t0) {
+  // The sheets hold the white's lower edge at one height (${f(PIC_EDGE)}): the face is read through that edge moved to where the white has fallen to.
+  float e = fallenTo(x);
+  float t = t0 > 1.0 ? t0 : (t0 < e ? t0 * ${f(PIC_EDGE)} / e : ${f(PIC_EDGE)} + (t0 - e) * ${f(1 - PIC_EDGE)} / (1.0 - e));
   float w = smoothstep(0.4, 0.6, 0.5 + 0.5 * cos(6.2832 * (x - uFocus) / ${f(4 * SHEET)}) + 0.12 * (vnoise(vec2(x * 0.05, t * 3.0)) - 0.5));
   float ua = x / ${f(SHEET)} + ${f(SLIDE_A)};
   float ub = (x - uFocus) / ${f(SHEET)} + 0.5;
@@ -238,6 +253,14 @@ void main() {
   // A wall of water: its face is dark and green under the lip, and only the far sheet's flat light is lifted a little.
   pic = mix(vec3(0.16, 0.2, 0.19), pic, smoothstep(0.0, 0.3, dot(pic, vec3(0.3, 0.5, 0.2))));
   float lum = dot(pic, vec3(0.3, 0.5, 0.2));
+#ifndef CURTAIN
+  // The white on the face is falling water: its grain runs down the face at the pace water falls, and the water under it is dark.
+  float white = smoothstep(0.3, 0.62, lum);
+  float falls = dot(texture2D(tFoamPic, vec2(x / 7.3, t * 2.6 + uTime * 0.9)).rgb, vec3(0.3333));
+  float slow = dot(texture2D(tFoamPic, vec2(x / 19.0 + 0.4, t * 1.1 + uTime * 0.33)).rgb, vec3(0.3333));
+  pic *= mix(0.62, 0.74 + 0.5 * falls * (0.6 + 0.8 * slow), white);
+  lum = dot(pic, vec3(0.3, 0.5, 0.2));
+#endif
   vec4 land = landAt(vWorld.xz);
   // The wall stands over the blades' shade: half of it is always in the sun.
   float sun = mix(sunAt(vWorld + vec3(0.0, 30.0, 0.0), land), 1.0, 0.5);
@@ -286,7 +309,8 @@ void main() {
   vec3 nf = normalize(mix(n, vec3(0.0, 0.45, 0.89), 0.6 + 0.3 * foam));
   // Under the falling lip the face is in its shade: a dark trough before the white of the run-out.
   float trough = smoothstep(0.02, 0.16, t) * (1.0 - smoothstep(0.3, 0.62, t)) * step(0.0, a);
-  vec3 col = rigShade(vWorld, nf, v, pic * 0.8 * (1.0 - 0.22 * trough), mix(0.3, 1.0, foam), 1.0 - 0.3 * trough);
+  // The dark water is torn and aerated, not glass: the sun lies on it as a broad sheen, never as bright threads.
+  vec3 col = rigShade(vWorld, nf, v, pic * 0.8 * (1.0 - 0.22 * trough), mix(0.58, 1.0, foam), 1.0 - 0.3 * trough);
   col += pic * (uSunColour * 0.12 * sun + lightUp * 0.1) / 3.14159;
   if (a < 0.0) {
     vec3 nw = normalize(n + vec3(texture2D(tFoam, g / 7.1 + vec2(0.0, uTime * 0.2)).rg + texture2D(tFoam, g.yx / 2.9 - vec2(uTime * 0.3, 0.0)).gr - 1.0, 0.0).xzy * 0.2);
@@ -367,6 +391,9 @@ void main() {
   vec3 pic = texture2D(tAtlas, (cell + clamp(vUv * vec2(0.5, 0.5) + 0.5, 0.03, 0.97)) / 4.0).rgb;
   float lum = dot(pic, vec3(0.333));
   float cut = smoothstep(0.03, 0.4, lum) * (1.0 - smoothstep(0.6, 0.98, max(abs(vUv.x), abs(vUv.y))));
+  // Thrown water thins: with its age the strings and the single drops go first and only the heart of the clot is left, and then that goes.
+  float age = vMore.w;
+  cut *= smoothstep(0.55 * age, 0.25 + 0.7 * age, lum);
   dens = mix(mix(dens, cut, uAtlas), dens, mist);
   float alpha = clamp(dens * vLook.x, 0.0, 1.0) * (1.0 - uSolo);
   // Lit through, not on a skin: the side toward the sun a little brighter, the heart of a mass grey, the thin rim against the sun burning.
@@ -422,11 +449,11 @@ class Cards {
   }
 
   /** deep: 0 at the lit skin of a mass of spray, 1 in its core. mist: 0 thrown water, 1 hanging mist. */
-  put(x: number, y: number, z: number, size: number, alpha: number, seed: number, turn: number, stretch: number, deep: number, mist: number): void {
+  put(x: number, y: number, z: number, size: number, alpha: number, seed: number, turn: number, stretch: number, deep: number, mist: number, age = 0): void {
     if (this.used >= this.count || alpha <= 0.003) return;
     this.at.setXYZW(this.used, x, y, z, size);
     this.look.setXYZW(this.used, alpha, seed, turn, stretch);
-    this.more.setXYZW(this.used, deep, mist, Math.floor(seed * 16), 0);
+    this.more.setXYZW(this.used, deep, mist, Math.floor(seed * 16), Math.min(1, Math.max(0, age)));
     this.used++;
   }
 
@@ -508,7 +535,9 @@ export interface Bore {
 const DEBUG_NO_CARDS = false;
 const LIPS = 1100;
 const PLUME = 520;
-const FOOT = 380;
+const FOOT = 720;
+/** The foot's thrown water leaves it in this many bursts at a time. */
+const FOOT_BURSTS = 48;
 const VEIL = 150;
 const BURST_NEAR = 300;
 const BURST_FAR = 40;
@@ -643,10 +672,12 @@ export function createBore(
         }
         return deep;
       };
-      const thrown = (x: number, y: number, z: number, size: number, alpha: number, seed: number, turn: number, stretch: number, deep: number, mist: number): void => {
+      const thrown = (x: number, y: number, z: number, size: number, alpha: number, seed: number, turn: number, stretch: number, deep: number, mist: number, age = 0): void => {
         const hid = lee(x, z, size);
-        if (hid < size) cards.put(x, y, z, size, alpha * (1 - Math.max(0, hid) / size), seed, turn, stretch, deep, mist);
+        if (hid < size) cards.put(x, y, z, size, alpha * (1 - Math.max(0, hid) / size), seed, turn, stretch, deep, mist, age);
       };
+      // The wave's own clock at x, in turns: a whole number is the moment the lip there begins to pitch (see curlAt).
+      const turns = (x: number): number => seconds / BREAK_PERIOD + (2.1 * Math.sin(x * 0.031 + 0.7) + 1.7 * Math.sin(x * 0.0573 + 2.1) + 1.2 * Math.sin(x * 0.113 + 4.0)) / 6.2832 + 0.123;
       const frontNow = boreFront(front);
       // Nothing of the thrown water is seen from more than three kilometres.
       if (Math.abs(frontNow - focus[1]) > 3000) {
@@ -673,67 +704,84 @@ export function createBore(
         thrown(x, y, z, (rolls ? 7 + 6 * rand(i, n + 28) : 11 + 9 * rand(i, n + 28)) * (1 + 0.05 * a), (rolls ? 0.05 : 0.1) * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.8, 0.5, 1);
       }
 
-      // Water torn off the crest and blown up: it is born on the top of the wall, climbs, and is left behind as the wall runs on.
+      // Water thrown off the crest as the lip pitches and falls: it leaves the lip with the wall's speed, climbs, hangs, comes down as water
+      // comes down, and the air holds it back, so the wall runs on from under it and it is seen over the crest and never before the face.
       for (let i = 0; i < PLUME; i++) {
-        const x = i % 4 < 3 ? across(i, 11, 260) : across(i, 11, 700);
-        const life = 1.6 + 1.8 * rand(i, 12);
-        const beat = seconds / life + rand(i, 13);
+        const x0 = i % 4 < 3 ? across(i, 11, 260) : across(i, 11, 700);
+        const life = 1.3 + 1.5 * rand(i, 12);
+        const beat = turns(x0) - (0.05 + 0.95 * rand(i, 13)) / BREAK_PERIOD;
         const n = Math.floor(beat);
-        const a = (beat - n) * life;
+        const a = (beat - n) * BREAK_PERIOD;
+        if (a > life) continue;
         const born = seconds - a;
-        const H = high(x);
-        const c = curlAt(x, born);
-        const z0 = boreFront(born) + lineAt(x, born) - H * (0.3 + 0.3 * rand(i, n + 14));
-        const g = gust(x);
-        const up = (6 + 12 * rand(i, n + 16)) * (0.6 + 0.8 * c) * (0.45 + 1.3 * g);
-        const y = H * (0.95 - 0.1 * c) + up * a - 3.2 * a * a;
-        // The wind is behind the wall: what is torn off the crest is carried on ahead of it, toward the land.
-        const z = z0 + BORE_SPEED * a * (1 + 0.2 * a / life);
-        const fade = Math.min(1, a / 0.15) * Math.pow(Math.max(0, 1 - a / life), 1.5);
-        const size = (2.2 + 3.4 * a) * (0.6 + 0.8 * rand(i, n + 17)) * (0.65 + 0.8 * g);
-        thrown(x, y, z, size, 0.5 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.9, 1.3, 0.1 + 0.3 * rand(i, n + 20), 0.3 * a / life);
+        const H = high(x0);
+        const lip = tip(x0, born);
+        const g = gust(x0);
+        const up = (6 + 9 * rand(i, n + 16)) * (0.5 + 1.0 * g);
+        const y = lip[1] * 0.97 + up * a - 4.9 * a * a;
+        if (y < 0.55 * H) continue;
+        const z = boreFront(born) + lineAt(x0, born) + lip[0] + BORE_SPEED * a + (1 + 4 * rand(i, n + 14)) * a - 5.5 * a * a;
+        const x = x0 + 1.5 * a * a + 2.5 * (rand(i, n + 15) - 0.5) * a;
+        const old = a / life;
+        const fade = Math.min(1, a / 0.12) * Math.pow(1 - old, 1.2);
+        const size = (1.3 + 1.7 * a) * (0.6 + 0.8 * rand(i, n + 17)) * (0.65 + 0.8 * g);
+        thrown(x, y, z, size, 0.75 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.7 + 0.25 * a, 1.3, 0.1 + 0.3 * rand(i, n + 20), 0.35 * old, old);
       }
 
-      // The lip: where it pitches, a ragged edge of water is thrown ahead of the face and falls; where it has fallen, white boils up from the pile.
+      // The lip: as it pitches, a ragged edge of water is thrown ahead of the face and falls down it; where it has fallen, white boils up from the pile.
       for (let i = 0; i < LIPS; i++) {
         const x = i % 5 < 4 ? across(i, 51, 230) : across(i, 51, 640);
-        const life = 0.7 + 0.7 * rand(i, 52);
-        const beat = seconds / life + rand(i, 53);
+        const low = i % 6 === 0;
+        const life = 0.8 + 0.8 * rand(i, 52);
+        // The boil follows the fall of the lip by most of a second.
+        const beat = turns(x) - ((low ? 0.7 : 0) + 0.8 * rand(i, 53)) / BREAK_PERIOD;
         const n = Math.floor(beat);
-        const a = (beat - n) * life;
+        const a = (beat - n) * BREAK_PERIOD;
+        if (a > life) continue;
         const born = seconds - a;
-        const c = curlAt(x, born);
         const lip = tip(x, born);
         const H = high(x);
-        const low = i % 6 === 0;
-        // A third of them boil on the fallen pile, low on the face.
-        const f0 = low ? H * (0.15 + 0.3 * c) * rand(i, n + 54) : lip[0] - 0.5 + 1.5 * rand(i, n + 54);
-        const y0 = low ? H * (0.1 + 0.45 * rand(i, n + 55)) * (0.4 + 0.6 * c) : lip[1] + 0.8 * (rand(i, n + 55) - 0.4);
-        const vf = low ? 3 + 5 * rand(i, n + 56) : 2 + 7 * rand(i, n + 56) * (0.5 + c);
+        const f0 = low ? H * 0.3 * rand(i, n + 54) : lip[0] - 0.5 + 1.5 * rand(i, n + 54);
+        const y0 = low ? H * (0.1 + 0.4 * rand(i, n + 55)) : lip[1] + 0.8 * (rand(i, n + 55) - 0.4);
+        const vf = low ? 3 + 5 * rand(i, n + 56) : 2 + 6 * rand(i, n + 56);
         const g = gust(x);
         const vy = (low ? 3 + 6 * rand(i, n + 57) : 1 + 5 * rand(i, n + 57)) * (0.55 + 0.95 * g);
         const z = boreFront(born) + lineAt(x, born) + f0 + (BORE_SPEED + vf) * a;
         const y = y0 + vy * a - 4.9 * a * a;
         if (y < 0.3) continue;
-        const fade = Math.min(1, a / 0.08) * Math.min(1, (life - a) / 0.3) * (low ? 0.4 + 0.6 * c : 1);
-        const size = (low ? 1.0 + 1.2 * rand(i, n + 58) : 0.6 + 1.0 * rand(i, n + 58)) * (1 + 0.9 * a) * (0.55 + 1.0 * g);
-        thrown(x, y, z, size, (low ? 0.5 : 0.8) * fade, rand(i, n + 59), rand(i, n + 60) * 6.28, 1.2, low ? 0.45 : 0.1, 0);
+        const old = a / life;
+        const fade = Math.min(1, a / 0.08) * Math.min(1, (life - a) / 0.3);
+        const size = (low ? 0.8 + 0.9 * rand(i, n + 58) : 0.6 + 0.9 * rand(i, n + 58)) * (1 + 0.7 * a) * (0.6 + 0.7 * g);
+        thrown(x, y, z, size, (low ? 0.5 : 0.8) * fade, rand(i, n + 59), rand(i, n + 60) * 6.28 + (rand(i, n + 61) - 0.5) * 2.4 * a, 1.2, low ? 0.45 : 0.1, 0, 0.8 * old);
       }
 
-      // The foot: the run-out is flung ahead over the flat, low and fast.
+      // The foot: where the pile lands on the flat it is flung ahead in bursts, low and fast. A burst is many small clots that leave one place
+      // on one beat, each on its own throw, so it opens, hangs and comes down and is never one picture. Most of them stand where the lens looks.
       for (let i = 0; i < FOOT; i++) {
-        const x = i % 4 < 3 ? across(i, 71, 240) : across(i, 71, 600);
-        const life = 0.6 + 0.8 * rand(i, 72);
-        const beat = seconds / life + rand(i, 73);
+        const b = i % FOOT_BURSTS;
+        const cycle = 1.2 + 0.7 * rand(b, 72);
+        const beat = seconds / cycle + rand(b, 73);
         const n = Math.floor(beat);
-        const a = (beat - n) * life;
-        const born = seconds - a;
-        const z = boreFront(born) + lineAt(x, born) + 1 + 6 * rand(i, n + 74) + (BORE_SPEED + 4 + 9 * rand(i, n + 75)) * a;
-        const rise = 0.7 + (3 + 6 * rand(i, n + 76)) * a - 4.9 * a * a;
-        if (rise < 0.2) continue;
+        const a = (beat - n) * cycle - 0.3 * rand(i, 81);
+        const life = 0.6 + 0.7 * rand(i, 82);
+        if (a < 0 || a > life) continue;
+        const born = (n - rand(b, 73)) * cycle;
+        const span = b % 4 < 3 ? Math.min(240, Math.max(60, 1.6 * (focus[1] - boreFront(born)))) : 600;
+        const x0 = X + span * (rand(b, n + 71) - 0.5);
+        // One burst in three is a heavy one: the pile comes down whole there.
+        const heavy = b % 3 === 0 ? 1.8 : 1;
+        const power = (0.5 + 0.9 * rand(b, n + 76) * (0.4 + 1.2 * gust(x0))) * (heavy > 1 ? 1.5 : 1);
+        const since = seconds - born;
+        const z0 = boreFront(born) + lineAt(x0, born) + 1 + 6 * rand(b, n + 74) + BORE_SPEED * since;
+        const wide = (1.5 + 2.5 * rand(b, n + 83)) * heavy;
+        const x = x0 + wide * (rand(i, n + 84) - 0.5) * (1 + 1.6 * a);
+        const z = z0 + (3 + 10 * rand(i, n + 75)) * a + 2 * (rand(i, n + 85) - 0.5);
+        const rise = 0.5 + (2 + 9 * rand(i, n + 86) * rand(i, n + 87)) * power * a - 4.9 * a * a;
+        if (rise < 0.15) continue;
         const y = rise + swellAt(z - frontNow - lineAt(x, seconds), high(x) * UNDER);
-        const fade = Math.min(1, a / 0.06) * Math.min(1, (life - a) / 0.3);
-        thrown(x, y, z, (0.6 + 1.1 * rand(i, n + 77)) * (1 + 1.2 * a), 0.7 * fade, rand(i, n + 78), rand(i, n + 79) * 6.28, 1.3, 0.25, 0);
+        const old = a / life;
+        const fade = Math.min(1, a / 0.05) * Math.min(1, (life - a) / 0.25);
+        thrown(x, y, z, (0.35 + 0.6 * rand(i, n + 77)) * (1 + 1.1 * a) * (0.7 + 0.5 * power) * heavy, 0.8 * fade, rand(i, n + 78), (rand(i, n + 79) - 0.5) * 1.2 + (rand(i, n + 80) - 0.5) * 2 * a, 1.25, 0.25, 0, 0.7 * old);
       }
 
       // Where the wall strikes a blade or a cliff the water has nowhere to go but up. The surge ahead of the wall strikes first.
@@ -757,7 +805,7 @@ export function createBore(
           const z = s.z - Math.cos(ang) * rr * 0.9 + (10 + 16 * rand(seed, 10)) * a;
           const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / 5.2);
           const size = (2.6 + 3.6 * a) * (0.6 + 0.9 * rand(seed, 5));
-          thrown(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.1 + 0.6 * rand(seed, 11), Math.min(0.5, 0.12 * a));
+          thrown(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.1 + 0.6 * rand(seed, 11), Math.min(0.5, 0.12 * a), 0.8 * a / 5.2);
         }
       }
       cards.end();
