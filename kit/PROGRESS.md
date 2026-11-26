@@ -24,27 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 91, 2026-11-26 04:35 UTC:
+Status 92, 2026-11-26 04:53 UTC:
 
-- `01-shutter-9627.jpg`: The shutter finding, frame 9627 of the rise at the final tier in 4K: whole frame above, a crop at full size below. Left, the full shutter with 4 samples: four copies of every ridge. Right, the camera's shutter closed: the land as the draft tier shows it
-- `02-v3-marsh-ground.jpg`: The Marsh, version 3 of both owners: marsh-0, the burst (marsh-1), the heavy one (marsh-3), the stuck one (marsh-4). Still wrong: the sky is a blank bright grey, the ground is pale speckle where the picture is dark red-brown, the heavy one has no hair, the stuck one's crust is lumps and not curled plates
-- `03-v3-spine-storm.jpg`: The Spine, version 3 of both owners: the dead one (spine-1), the face with its kites (spine-2), the strike (spine-3), the hollow (spine-4). Still wrong: no glow in the cloud round the stroke, the snow at the dead one is a smooth sheet with no prints, the hollow's wall carries a stretched grain, the lying ones are mounds
-- `04-v3-eye.jpg`: The Eye, version 3, approved left and built right with crops: eye-0, eye-1, eye-2, eye-3. Still wrong: the mats are orange stripes round a pool that is too small, the strands at eye-2 are pale thin swirls and not the tangle, the water beyond the lip is a flat dark sheet, the drinkers are smooth as models
+- `01-reveal-v3-keys.jpg`: The Reveal, last version of wave 2: the approved pictures left, the built frames right, the four keys of the rise. More land lies round the bones now. The built bones are dimmer than approved and the glare at the right is a broad patch.
+- `02-v3-ribs-ground.jpg`: The Ribs, last version of wave 2: approved left, built right (the establishing frame, the colony, the bore, the hung one). The far blades and the arch are close. The near flat is an even field of dots, the colony reads as a pattern, the weed wall is grey where the picture's is gold.
+- `03-v3-breath-life.jpg`: The Breath, last version of wave 2: approved left, built right (the pit, the waders, the dead one, the red growth). The waders in the channel are the closest frame. The red plumes are round bushes where the picture has long drooping fronds.
+- `04-v3-spine-ground.jpg`: The Spine, last version of wave 2, built frames only: the dead one, the kites, a strike, the herd in the hollow. The strike does not yet light the cloud round it and the herd reads as mounds.
 
+Status 91, 2026-11-26 04:35 UTC, showed: The shutter finding, frame 9627 of the rise at the final tier in 4K: whole frame above, a crop at full size below.
 Status 90, 2026-11-26 04:08 UTC, showed: The Reveal at 04:07 UTC, approved left and built right: the lake, the skull massif, head and shoulders, the whole titan from orbit.
 Status 89, 2026-11-26 03:45 UTC, showed: The Breath, version 2 (merged 03:41 UTC), approved left and built right with crops: breath-0, breath-1, breath-2, breath-3.
-Status 88, 2026-11-26 03:32 UTC, showed: All seven places on main at 03:24 UTC, draft tier (version 1 of wave 2): the establishing frame of each place, then the titan frame; The...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T04:35:23Z
-phase 4: 8.41 h used of 17.00 h
-build: 28.73 h used of 72.00 h
+2026-11-26T04:53:27Z
+phase 4: 8.71 h used of 17.00 h
+build: 29.04 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 27
+half point: reached
+minutes since the last status: 18
 ```
 
 ## Phases
