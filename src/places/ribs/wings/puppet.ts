@@ -193,11 +193,12 @@ void main() {
   // And the lie of the hide inside the outline, from the picture's own light and dark read soft.
   float hx = texture2D(tSide, uv + vec2(e.x, 0.0), 2.0).g - texture2D(tSide, uv - vec2(e.x, 0.0), 2.0).g;
   float hy = texture2D(tSide, uv + vec2(0.0, e.y), 2.0).g - texture2D(tSide, uv - vec2(0.0, e.y), 2.0).g;
-  vec3 n = normalize(face + (vAcross * -(gx * 1.6 + hx * 2.2) + vec3(0.0, 1.0, 0.0) * -(gy * 1.6 + hy * 2.2)) * (1.0 - sail));
+  vec3 n = normalize(face + (vAcross * -(gx * 1.6 + hx * 1.1) + vec3(0.0, 1.0, 0.0) * -(gy * 1.6 + hy * 1.1)) * (1.0 - sail));
   // The picture is lit soft from above; take that out to a hide of its own tone and light it here.
   // Leather, grey brown: the picture's cream is its studio light, not its hide.
-  vec3 albedo = pow(pic, vec3(1.25)) * mix(0.78, 1.0, vSeed.x);
-  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.0, 0.9, 0.8), 0.45);
+  // Skin over bone, ivory with the blood showing pink through it: pale against the wet dark of the flat.
+  vec3 albedo = pow(pic, vec3(0.85)) * mix(0.96, 1.12, vSeed.x);
+  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.06, 0.95, 0.88), 0.4);
   // The colony's are cream, the picture's light and dark kept as their folds: the back a shade darker than the belly and the neck, so that a body parts from its ledge.
   float under = max(step(2.5, vPart) * (1.0 - sail), step(vPart, 0.5) * max(smoothstep(230.0, 320.0, vPx.y) * smoothstep(540.0, 600.0, vPx.x), smoothstep(800.0, 880.0, vPx.x)));
   float pale = clamp(vPale, 0.0, 1.0);

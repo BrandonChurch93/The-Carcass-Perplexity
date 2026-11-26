@@ -11,13 +11,18 @@ export const boreFront = (seconds: number): number => BORE_FRONT.gateZ + (second
 /** Seconds of the place at which the front reaches z. */
 export const boreArrives = (z: number): number => BORE + (z - BORE_FRONT.gateZ) / BORE_SPEED;
 
-/** The swell: where it runs to (x, z), wavelength in metres, amplitude in metres. It comes in from the open sea at the south and runs up the strait. */
+/**
+ * The swell: where it runs to (x, z), wavelength in metres, amplitude in metres. Two long swells come in from the open sea at the south and run up
+ * the strait; the wind sea (the entries that run to +z, with the wind) comes out of the strait against them, short and steep, and it is what whitecaps.
+ * The first entry times the surf at the feet of the blades.
+ */
 export const SWELL: [number, number, number, number][] = [
-  [0.24, -0.97, 68, 0.8],
-  [-0.1, -0.995, 41, 0.42],
-  [0.5, -0.866, 27, 0.26],
-  [0.05, -0.999, 17, 0.15],
-  [-0.35, -0.937, 11, 0.08],
+  [0.24, -0.97, 96, 1.3],
+  [-0.12, -0.993, 171, 1.45],
+  [0.5, 0.866, 44, 0.62],
+  [0.19, 0.982, 27, 0.36],
+  [0.78, 0.626, 17, 0.2],
+  [0.05, -0.999, 11, 0.08],
 ];
 
 export const WIND_TO = WIND.to;

@@ -179,11 +179,16 @@ export function create(ctx: Context): Piece {
   const feedEye = resolve(shots['ribs-04'] as (typeof shots)[string], 0.5, feedShot.first).position;
   // The three before the feeding camera show it their sides, heads to its left, each a little off the square.
   const sideOn = (x: number, z: number, off: number): number => Math.atan2(z - feedEye[2], -(x - feedEye[0])) + off;
+  const NEARER: [number, number][] = [[-55.9, -432.7], [-59.0, -441.1], [-61.0, -456.7]];
   STATIONS.feeders.forEach((s, i) => {
     if (i === 0) addFeeder(s[0], s[1], Math.atan2(Math.cos(0.14), Math.sin(0.14)) + 0.25, s[3], true, 0.6, T0, true);
     else if (i < 8) addFeeder(s[0], s[1], s[2], s[3], true, HABITS[i] as number, T0);
     // No two in one pose: the nearest feeds, the next is caught mid step, the last looks about with its neck up and its head the other way.
-    else addFeeder(s[0], s[1], sideOn(s[0], s[1], i === 8 ? 0.2 : i === 9 ? -0.3 : 0.35 + Math.PI), s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey, false, i === 9);
+    else {
+      // Staged for the feeding key: the three stand nearer its lens than their stations, the first filling the right of the frame.
+      const [fx, fz] = NEARER[i - 8] ?? [s[0], s[1]];
+      addFeeder(fx, fz, sideOn(fx, fz, i === 8 ? 0.2 : i === 9 ? -0.3 : 0.35 + Math.PI), s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey, false, i === 9);
+    }
   });
   {
     // The second hero of the wide picture: walking tall, right of centre, 47 m out.
