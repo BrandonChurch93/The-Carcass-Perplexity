@@ -41,10 +41,10 @@ void main() {
   Rock k = rockAt(vWorld, n, face);
   // The damp line at the water, and the stone that the lake has wetted darker.
   vec4 land = landAt(vWorld.xz);
-  float damp = smoothstep(1.2, 0.3, vWorld.y + 0.45 * vnoise(vWorld.xz * 0.5) + 0.1 * vnoise(vWorld.xz * 3.1)) * (1.0 - face);
+  float damp = smoothstep(0.82, 0.56, vWorld.y + 0.4 * vnoise(vWorld.xz * 0.19) + 0.1 * vnoise(vWorld.xz * 1.3)) * (1.0 - face);
   // Under a low eye the wet is a thin dark band above the water and the stones beyond it are dry.
   damp = mix(damp, smoothstep(0.2, 0.05, vWorld.y + 0.12 * vnoise(vWorld.xz * 2.1)) * (1.0 - face), smoothstep(12.0, 4.0, cameraPosition.y));
-  k.albedo *= mix(1.0, 0.3, damp) * mix(1.0, 0.28, smoothstep(0.03, -0.12, vWorld.y) * (1.0 - face));
+  k.albedo *= mix(1.0, 0.34, damp) * mix(1.0, 0.28, smoothstep(0.03, -0.12, vWorld.y) * (1.0 - face));
   k.rough = mix(k.rough, 0.8, damp);
   // Under the brow the wall and the scree stand in a cave: the further back from the water, the less of the sky they see.
   float bearing = degrees(atan(vWorld.x, -vWorld.z));
@@ -269,7 +269,7 @@ export function create(ctx: Context): Piece {
   ];
   // The corners of the wide picture are piles of blocks, none larger than the atlas can hold sharp at that nearness: on the right
   // against the frame, on the left beyond the stream.
-  near.push([139.5, 11.5, 3.4], [134.5, 16, 4.4], [141, 8.4, 2.3], [137.5, 14.5, 3.1], [143, 12.5, 2.6], [139, -21, 3.6], [135, -24, 4.6], [141.5, -19.5, 2.5], [131, -25.5, 4], [137.5, -26.5, 3]);
+  near.push([135, 9.2, 3.6], [132.5, 10.5, 2.8], [129.5, 14, 4.4], [134.5, -8.3, 3.4], [135.6, -6.3, 2.6], [133, -6.7, 3.0], [131.5, -20.5, 4.4], [139.5, 11.5, 3.4], [134.5, 16, 4.4], [141, 8.4, 2.3], [137.5, 14.5, 3.1], [143, 12.5, 2.6], [139, -21, 3.6], [135, -24, 4.6], [141.5, -19.5, 2.5], [131, -25.5, 4], [137.5, -26.5, 3]);
   for (const [along, across, size] of near) {
     // None stands in the water: one that would is set on the bank on its own side.
     const mid = streamAcross(along);
@@ -315,7 +315,11 @@ export function create(ctx: Context): Piece {
     const out = -0.6 + 26 * rng.next() ** 1.7;
     const r = shoreAt(b) + out;
     const a = b * DEG;
-    put(Math.sin(a) * r, -Math.cos(a) * r, 0.06 + 0.42 * rng.next() ** 4);
+    const size = 0.06 + 0.42 * rng.next() ** 4;
+    // They lie gathered, in heaps and strings with bare gravel between, and only a stone here and there alone.
+    const heap = 0.65 * vnoise(Math.sin(a) * r / 8 + 21, -Math.cos(a) * r / 8 + 5) + 0.35 * vnoise(Math.sin(a) * r / 2.7, -Math.cos(a) * r / 2.7 + 9);
+    if (heap < 0.56 && (((i * 2654435761) >>> 0) / 4294967296) > 0.06) continue;
+    put(Math.sin(a) * r, -Math.cos(a) * r, size * (1 + 1.4 * smooth(0.56, 0.75, heap)));
   }
   // The fan under the spur: blocks of every size from a man's head to a hut, thick at its sides and thinner down its middle.
   for (let i = 0; i < 1500; i++) {

@@ -219,10 +219,22 @@ export function streamFloor(along: number): number {
   return filled * (1 - back) + cutFloor(along) * back;
 }
 
+const HEAPS: [number, number, number, number][] = [
+  [135, 8.8, 3.2, 2.4],
+  [129, 14, 4.5, 1.7],
+  [134.5, -6.6, 2.6, 2.3],
+  [131, -20, 4.6, 1.8],
+];
+
 export function landHeight(x: number, z: number): number {
   let y = landBase(x, z);
   if (Math.hypot(x, z) - shoreAt(Math.atan2(x, -z) / DEG) < -1) return y;
   const [along, across] = axisOf(x, z);
+  // Two heaps of fallen rock stand at the corners of the wide picture, right and left of the camera's way, and the blocks lie on them.
+  for (const [a, c, wide, tall] of HEAPS) {
+    const d = Math.hypot(along - a, across - c) / wide;
+    if (d < 2.5) y += tall * Math.exp(-d * d) * (0.8 + 0.4 * vnoise(x / 3.1 + 7, z / 3.1));
+  }
   if (along > -6 && along < 2600 && Math.abs(across) < 400) {
     const off = Math.abs(across - streamAcross(along));
     const reach = 7 + 5 * vnoise(along / 31, 7.7);
