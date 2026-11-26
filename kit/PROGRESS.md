@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 97, 2026-11-26 07:07 UTC:
+Status 98, 2026-11-26 07:29 UTC:
 
-- `01-c-ribs0.jpg`: The Ribs, wide view, approved left, heartbeat of 06:50 right: the flat is wet now with bands that mirror the sky, the blades are bedded rock in courses, the face in the backdrop is gone. Still off: the stones lie evenly like dropped pebbles, the blades are darker and more ribbed than the picture's pale smooth stone, the feeders are bright pink where the picture has thin dark ones
-- `02-c-marsh3.jpg`: The Marsh's wallowers, approved left, version 2 right: the great one stands on a mud bank with a creased hide, the brine is red. Still off: sky and far flats are white where the picture is a warm wet haze, the stalks read as clean palm trunks, the brine is flat paint without mirror, the one in the water has a cut-out edge
-- `03-c-spine0.jpg`: The Spine, wide view, approved left, heartbeat of 06:47 right: there is a sea of cloud now, a snowed ridge, a rock spire with its cave, far spires, a strike. Still off: the spire is a twisted cone with a combed pattern, the snow reads as creased cloth, the kites are a tangle of hair where the picture has a few long ribbons
-- `04-c-reveal4.jpg`: The Reveal from orbit, approved left, heartbeat of 06:57 right: more land round the bones as you asked, in kinds of country (forest, scree, red flanks, green plain), sea cloud in groups, the body still reads at once. Still off: the ranges repeat one ridge pattern, the limbs are thicker than the picture's, the glint is weak
+- `01-s98-breath2.jpg`: The Breath, the rim: approved left, built right (version 2, draft tier)
+- `02-s98-eye3.jpg`: The Eye, the edge where the floor stops: approved left, built right (version 2, draft tier)
+- `03-s98-ribs2.jpg`: The Ribs, tide pool feeders: approved left, built right (version 2, draft tier)
+- `04-s98-marsh2.jpg`: The Blood Marsh, the stalk colony: approved left, built right (version 2, draft tier)
 
+Status 97, 2026-11-26 07:07 UTC, showed: The Ribs, wide view, approved left, heartbeat of 06:50 right: the flat is wet now with bands that mirror the sky, the blades are bedded...
 Status 96, 2026-11-26 06:10 UTC, showed: The Eye's drinkers, approved left, wave 3 version 1 right: coats, weight on the legs, mirrored in the water.
 Status 95, 2026-11-26 05:51 UTC, showed: The Eye's far wall, the same crop: the old picture left, the remade one at double size right.
-Status 94, 2026-11-26 05:34 UTC, showed: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows)...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T07:07:32Z
-phase 4: 10.95 h used of 17.00 h
-build: 31.27 h used of 72.00 h
+2026-11-26T07:29:39Z
+phase 4: 11.32 h used of 17.00 h
+build: 31.64 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 57, status overdue
+minutes since the last status: 22
 ```
 
 ## Phases
