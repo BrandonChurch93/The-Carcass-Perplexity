@@ -48,6 +48,10 @@ const vec2 SKY_SIDE = vec2(-0.895, -0.446);
 vec4 noise(vec3 p) {
   return textureLod(tNoise, p, 0.0);
 }
+// The fire's light as smoke hands it on (the same as the air's, volume.ts): orange, not the pink of pure red over a blue dusk.
+vec3 fireOnSmoke(vec3 g) {
+  return vec3(g.r, max(g.g, 0.36 * g.r), max(g.b, 0.16 * g.r)) * 0.85;
+}
 
 vec3 sumN = vec3(0.0);
 float transN = 1.0;
@@ -192,6 +196,7 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   float probe = D.z * 0.09;
   float through = 1.0;
   vec3 wide = F.x > 0.0 ? 4.0 * lakeGlow(A.xy + B.xy * 0.4 * A.w, 450.0) : vec3(0.0);
+  vec4 G = uBodyG[i];
   for (int k = 0; k < ${SMOKE_STEPS.most}; k++) {
     if (float(k) >= count) break;
     float t = t0 + (float(k) + jitter) * dt;
@@ -216,8 +221,12 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float rise = 1.0 - 0.95 * exp(-up / min(10.0, F.y)) * smoothstep(8.0, 20.0, A.w);
     // What of the body stands under the point is guessed from how it thickens downward: the underside of a billow takes the fire, its top is shaded from it by its own mass.
     float under = mix(1.35, 0.3, clamp(2.0 * dens - skyward, 0.0, 1.0));
-    light += under * rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));
-    light += under * F.x * rise * exp(-up / F.y) * (0.35 + 0.65 * (1.0 - skyT)) * wide;
+    vec3 fire = under * rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));
+    fire += under * F.x * rise * exp(-up / F.y) * (0.35 + 0.65 * (1.0 - skyT)) * wide;
+    // G.w: a body that stands over open lava is lit through its own foot. Each metre of it takes its share of the fire on the way up, so that its
+    // base burns orange and its upper smoke is dark against it, lump by lump, and it is never one flat colour.
+    if (G.w > 0.0) fire *= exp(-G.w * B.w * up * (0.4 + 1.2 * dens));
+    light += fireOnSmoke(fire);
     if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
     float a = 1.0 - exp(-dens * B.w * dt);
     lay(close, t, mid, E.rgb * light, a);
@@ -312,7 +321,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     // The top of a smoke is thin and open to the sky: it is paler than its foot.
     vec3 light = mix(1.05, mix(0.8, 1.5, u), kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0));
     float near = max(lit * exp(-h / fall) - 0.03, 0.0);
-    if (near > 0.0) light += near * (mix(0.45, 0.17, kind) * lakeGlow(p.xz, max(1.5 * h, 4.0)) + roundLights(p));
+    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * lakeGlow(p.xz, max(1.5 * h, 4.0)) + roundLights(p));
     float a = 1.0 - exp(-sigma * dt);
     lay(close, t, mid, albedo * light, a);
   }
