@@ -237,6 +237,8 @@ void main() {
   float square = smoothstep(0.05, 0.6, dot(n, normalize(cameraPosition - root)));
   len *= mix(1.0, 0.5, square);
   if (fract(seed * 77.7) < 0.4 * square) len = 0.0;
+  // The dead one's legs and feet show: the coat on the legs is shorter, and close below the hock.
+  if (uAnkle != 0.0 && which > 0 && which < 5) len *= aRoot.y < 0.2 ? 0.3 : 0.55;
   float wide = aLock.w * size;
 
   // The burn: locks inside it are gone, locks at its edge are singed to black stubs.

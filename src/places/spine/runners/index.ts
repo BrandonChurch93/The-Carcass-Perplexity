@@ -266,12 +266,12 @@ export function create(ctx: Context): Piece {
   };
   (dead.bones[0] as THREE.Matrix4).makeScale(1.1, SLACK, 1.15);
   const SUNK = -LEG_TOP * (1 - SLACK);
-  thrown(1, 0.5, -0.2, 1.15, 0.2, [0.02, SUNK, 0.05]);
-  thrown(2, 0.9, 0.1, 1.2, 0.2, [0.1, SUNK, -0.2]);
+  thrown(1, 0.25, -0.2, 1.2, 0.2, [0.02, SUNK, 0.05]);
+  thrown(2, 1.0, 0.1, 1.25, 0.2, [0.1, SUNK, -0.2]);
   thrown(3, 0.25, 0, 1.1, 0.2, [0, SUNK, 0.05]);
   thrown(4, 0.7, 0, 0.9, 0.2, [0, SUNK, -0.1]);
   about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0.2, 0.3, -0.12, [0.04, -NECK_AT[1] * (1 - SLACK), 0]);
-  dead.coat.set(0.66, 0.45, 0.0, 0.1);
+  dead.coat.set(0.88, 0.65, 0.0, 0.1);
   dead.writhe.set(0, 1, 0, 0);
   const UP = new THREE.Vector3(0, 1, 0);
   const lie3 = new THREE.Vector3();
