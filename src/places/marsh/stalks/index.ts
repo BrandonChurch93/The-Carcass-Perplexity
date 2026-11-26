@@ -287,11 +287,11 @@ export function create(ctx: Context): Piece {
       // They live in the plumes: each keeps to the one it was hatched in.
       const perch = perches[swarm.int(perches.length)] as [number, number, number];
       p = [perch[0] + swarm.range(-0.55, 0.55), perch[1] + swarm.range(-0.1, 0.6), perch[2] + swarm.range(-0.55, 0.55)];
-    } else if (i < 120) p = [stuck[0] + swarm.range(-2.5, 2.5), swarm.range(0.6, 2), stuck[1] + swarm.range(-2.5, 2.5)];
+    } else if (i < 120) p = [stuck[0] + swarm.range(-1.7, 1.7), swarm.range(0.1, 0.7), stuck[1] + swarm.range(-1.7, 1.7)];
     else p = [swarm.range(-6, 6), swarm.range(0.4, 1.6), swarm.range(-6, 9)];
     home.set([p[0], p[1], p[2], swarm.range(0.2, 0.7)], i * 4);
     rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
-    phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1.3, 2.1)], i * 4);
+    phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), i >= 80 && i < 120 ? swarm.range(0.45, 0.8) : swarm.range(1.3, 2.1)], i * 4);
   }
   // One insect: the photograph cut in three, the body and the wings of each side, hinged along the body.
   const bug = new THREE.BufferGeometry();
