@@ -399,13 +399,15 @@ export function create(ctx: Context): Piece {
         if (s.size > 0.4) discs.push(s);
       });
       geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(tints, 3));
-      mesh.frustumCulled = false;
+      // They lie in one drift before the shore camera: a lens that does not hold the drift does not draw them.
+      mesh.computeBoundingSphere();
       scree.push(mesh);
       ctx.scene.add(mesh);
     }
   }
   // The blocks: each a broken stone raised from the atlas. How finely one is cut goes by how near a camera ever comes to it.
   const blockMaterials: THREE.ShaderMaterial[] = [];
+  const balls: THREE.BufferGeometry[] = [];
   const block = blockUniforms(ctx);
   {
     const eyes = [KEYS.wide.position, KEYS.mats.position, KEYS.edge.position, KEYS.shore.position, KEYS.centre.position];
@@ -428,13 +430,13 @@ export function create(ctx: Context): Piece {
     }
     for (const c of classes) {
       if (c.list.length === 0) continue;
-      const geometry = ballGeometry(c.detail);
+      const ball = ballGeometry(c.detail);
       const tints = new Float32Array(c.list.length * 3);
       const seats = new Float32Array(c.list.length * 4);
+      const placed = new Float32Array(c.list.length * 16);
       const material = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...block, uSmooth: { value: c.smoothing } }, vertexShader: BLOCK_VERTEX, fragmentShader: BLOCK_FRAGMENT });
       material.userData.depthFragment = NEAR_DEPTH;
       blockMaterials.push(material);
-      const mesh = new THREE.InstancedMesh(geometry, material, c.list.length);
       c.list.forEach((s, i) => {
         // A stone of the atlas is about 0.8 from its middle to its faces.
         const half = s.size * 0.58;
@@ -449,7 +451,7 @@ export function create(ctx: Context): Piece {
         dummy.rotation.set(rng.range(-0.4, 0.4), rng.range(0, Math.PI * 2), rng.range(-0.4, 0.4));
         dummy.scale.set(half * rng.range(0.8, 1.3), sy, half * rng.range(0.8, 1.3));
         dummy.updateMatrix();
-        mesh.setMatrixAt(i, dummy.matrix);
+        dummy.matrix.toArray(placed, i * 16);
         tints[i * 3] = rng.next();
         tints[i * 3 + 1] = rng.next();
         tints[i * 3 + 2] = rng.next();
@@ -459,11 +461,41 @@ export function create(ctx: Context): Piece {
         seats[i * 4 + 2] = gx;
         seats[i * 4 + 3] = gz;
       });
-      geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(tints, 3));
-      geometry.setAttribute('aSeat', new THREE.InstancedBufferAttribute(seats, 4));
-      mesh.frustumCulled = false;
-      scree.push(mesh);
-      ctx.scene.add(mesh);
+      // The stones go to the lens in lots, each lot the stones of one stretch of ground: a lot the lens does not hold is not drawn, and
+      // raising a stone is where its cost lies. The crater is cut in sectors of 20 degrees about the lake, the spur in lengths of 40 m.
+      const lots = new Map<number, number[]>();
+      c.list.forEach((s, i) => {
+        const [along, across] = axisOf(s.x, s.z);
+        const onSpur = along > -10 && along < 340 && Math.abs(across) < 130;
+        const lot = onSpur ? 100 + Math.floor((along + 10) / 40) : Math.floor(((Math.atan2(s.x, -s.z) / DEG + 360) % 360) / 20);
+        const list = lots.get(lot);
+        if (list) list.push(i);
+        else lots.set(lot, [i]);
+      });
+      for (const key of [...lots.keys()].sort((a, b) => a - b)) {
+        const lot = lots.get(key) as number[];
+        const geometry = new THREE.BufferGeometry();
+        geometry.setIndex(ball.getIndex());
+        geometry.setAttribute('position', ball.getAttribute('position'));
+        const lotTints = new Float32Array(lot.length * 3);
+        const lotSeats = new Float32Array(lot.length * 4);
+        const mesh = new THREE.InstancedMesh(geometry, material, lot.length);
+        let largest = 0;
+        lot.forEach((i, k) => {
+          mesh.setMatrixAt(k, dummy.matrix.fromArray(placed, i * 16));
+          lotTints.set(tints.subarray(i * 3, i * 3 + 3), k * 3);
+          lotSeats.set(seats.subarray(i * 4, i * 4 + 4), k * 4);
+          largest = Math.max(largest, (c.list[i] as Stone).size);
+        });
+        geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(lotTints, 3));
+        geometry.setAttribute('aSeat', new THREE.InstancedBufferAttribute(lotSeats, 4));
+        // The ball is raised into a stone past its own round: the lot's bound is let out by as much.
+        mesh.computeBoundingSphere();
+        (mesh.boundingSphere as THREE.Sphere).radius += largest;
+        scree.push(mesh);
+        ctx.scene.add(mesh);
+      }
+      balls.push(ball);
     }
   }
   ctx.parts.built('scree', scree[0] as THREE.InstancedMesh, ...scree.slice(1));
@@ -491,6 +523,7 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       for (const m of [socket, patch, brow, ...scree]) m.geometry.dispose();
+      for (const b of balls) b.dispose();
       for (const m of [socketMaterial, patchMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
       stream.dispose();
     },
