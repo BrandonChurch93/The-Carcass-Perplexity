@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 92, 2026-11-26 04:53 UTC:
+Status 93, 2026-11-26 05:16 UTC:
 
-- `01-reveal-v3-keys.jpg`: The Reveal, last version of wave 2: the approved pictures left, the built frames right, the four keys of the rise. More land lies round the bones now. The built bones are dimmer than approved and the glare at the right is a broad patch.
-- `02-v3-ribs-ground.jpg`: The Ribs, last version of wave 2: approved left, built right (the establishing frame, the colony, the bore, the hung one). The far blades and the arch are close. The near flat is an even field of dots, the colony reads as a pattern, the weed wall is grey where the picture's is gold.
-- `03-v3-breath-life.jpg`: The Breath, last version of wave 2: approved left, built right (the pit, the waders, the dead one, the red growth). The waders in the channel are the closest frame. The red plumes are round bushes where the picture has long drooping fronds.
-- `04-v3-spine-ground.jpg`: The Spine, last version of wave 2, built frames only: the dead one, the kites, a strike, the herd in the hollow. The strike does not yet light the cloud round it and the herd reads as mounds.
+- `01-heart-freshness-compare.jpg`: The Heart, kept picture beside the new render of the same frame: identical (0 difference in every pixel once saved the same way)
+- `02-eye.jpg`: Wave 3 source pictures made for the Eye's owner: mat field, dark mat, shaft wall, shore plate, each with its relief
+- `03-spine.jpg`: Wave 3 source pictures made for the Spine's two owners: the strike sky, saddle, crust, kite face, kite films lit from behind, bolts, locks
+- `04-ribs-ground.jpg`: Wave 3 source pictures made for the Ribs' ground owner: two blades, two stacks, the near bar, the weed rock, with reliefs
 
+Status 92, 2026-11-26 04:53 UTC, showed: The Reveal, last version of wave 2: the approved pictures left, the built frames right, the four keys of the rise.
 Status 91, 2026-11-26 04:35 UTC, showed: The shutter finding, frame 9627 of the rise at the final tier in 4K: whole frame above, a crop at full size below.
 Status 90, 2026-11-26 04:08 UTC, showed: The Reveal at 04:07 UTC, approved left and built right: the lake, the skull massif, head and shoulders, the whole titan from orbit.
-Status 89, 2026-11-26 03:45 UTC, showed: The Breath, version 2 (merged 03:41 UTC), approved left and built right with crops: breath-0, breath-1, breath-2, breath-3.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T04:53:27Z
-phase 4: 8.71 h used of 17.00 h
-build: 29.04 h used of 72.00 h
+2026-11-26T05:16:40Z
+phase 4: 9.10 h used of 17.00 h
+build: 29.42 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 18
+minutes since the last status: 23
 ```
 
 ## Phases
