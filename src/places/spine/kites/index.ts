@@ -51,6 +51,9 @@ function colonies(n: number): [number, number][] {
 const SHAPE_GLSL = /* glsl */ `
 uniform float uTime;
 uniform vec4 uWind;
+// Set for the skin in hand before its centre line is asked for: how far it heads off the wind's line to the side and up, as slopes.
+float gYaw = 0.0;
+float gClimb = 0.0;
 vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   float len = shape.x;
   float along = u * len;
@@ -72,11 +75,11 @@ vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   // The stalk is a cord with weight and ice on it: it hangs between the rock and the skin it holds.
   float held = clamp(u / more.w, 0.0, 1.0);
   float hang = 0.3 * more.w * len * held * (1.0 - held);
-  float lift = fan * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.25 * sin(p2)) + 0.35 * whip * amp * u * u * sin(p3) + (0.03 + 0.035 * uStageMore.x) * len * u * gust;
+  float lift = (fan + gClimb) * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.25 * sin(p2)) + 0.35 * whip * amp * u * u * sin(p3) + (0.03 + 0.035 * uStageMore.x) * len * u * gust;
   float sway = 0.8 * amp * (sin(p1 * 0.77 + 1.9) + 0.4 * sin(p2 * 1.1 + 0.4)) + 0.3 * whip * amp * u * u * sin(p3 * 1.3 + 2.0);
   // The cloth is as long as it is: where it climbs a wave it does not also run on down the wind.
   float drawn = along * (1.0 - 0.06 * grow);
-  return anchor + wind * drawn + side * sway + vec3(0.0, lift, 0.0);
+  return anchor + wind * drawn + side * (sway + gYaw * along) + vec3(0.0, lift, 0.0);
 }`;
 
 const VERTEX = /* glsl */ `
@@ -88,6 +91,7 @@ uniform float uPixel;
 uniform float uReach;
 uniform vec4 uStage;
 uniform vec3 uStageMore;
+uniform vec2 uFly;
 ${SHAPE_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormal;
@@ -100,7 +104,9 @@ varying float vSpine;
 varying float vHalf;
 varying float vFar;
 varying vec3 vSkin;
+varying float vNear;
 void main() {
+  vNear = 0.0;
   // Staged by shot: before the long lens of spine-04 the struck spire's ribbons are the size the lens needs, and no other spire flies any.
   vec4 shape = aShape;
   vec4 more = aMore;
@@ -123,6 +129,22 @@ void main() {
       if (more.w > 0.9 && fract(more.y * 11.3) < uStageMore.z) {
         gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
         return;
+      }
+      // uFly.x: the wide lens sees the first spire's kites from the side, all in one sheet of air. There fewer fly, and each heads a
+      // little off the wind's line, toward the lens or away and up or down, so that sky stands between them: the ones that come toward
+      // the lens are the larger and the clearer, the ones that go from it the smaller and the dimmer.
+      if (uFly.x > 0.5 && more.w < 0.9) {
+        if (fract(more.y * 31.7) < 0.3 || (aShape.x < 180.0 && fract(more.y * 17.7) < 0.88)) {
+          gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+          return;
+        }
+        float rank = 2.0 * fract(more.y * 23.1) - 1.0;
+        vec3 beside = normalize(cross(vec3(0.0, 1.0, 0.0), normalize(uWind.xyz)));
+        gYaw = 0.3 * rank * sign(dot(cameraPosition - aAnchor, beside));
+        gClimb = 0.34 * (fract(more.y * 13.7) - 0.5);
+        shape.x *= 1.0 + 0.22 * rank;
+        shape.y *= 1.0 + 0.3 * rank;
+        vNear = rank;
       }
       shape.x *= uStage.x * lead;
       shape.w *= uStage.x * lead;
@@ -156,7 +178,8 @@ void main() {
   float way = fract(more.y * 5.3) < 0.5 ? -1.0 : 1.0;
   float at1 = 0.2 + 0.3 * fract(more.y * 2.3) + 0.05 * sin(uTime * 0.9 + shape.z) + 0.02 * sin(uTime * 2.6 + shape.z * 3.0);
   float at2 = at1 + 0.24 + 0.2 * fract(more.y * 4.7) + 0.04 * sin(uTime * 1.1 + shape.z * 2.0);
-  float second = step(0.35, fract(more.y * 8.9));
+  // uFly.y: before the close lens a kite turns over once at the most.
+  float second = step(0.35, fract(more.y * 8.9)) * (1.0 - uFly.y);
   float turn = 3.14159 * (smoothstep(at1 - 0.05, at1 + 0.05, s) - second * smoothstep(at2 - 0.05, at2 + 0.05, s));
   float gather = max(1.0 - smoothstep(0.0, 0.085, abs(s - at1)), second * (1.0 - smoothstep(0.0, 0.085, abs(s - at2))));
   gather = gather * gather * (3.0 - 2.0 * gather) * blade;
@@ -209,7 +232,7 @@ ${RIG_GLSL}
 ${NOISE_GLSL}
 uniform vec4 uStruck;
 uniform vec3 uStruckAt;
-uniform vec2 uBody;
+uniform vec3 uBody;
 uniform vec3 uGlowTint;
 uniform vec4 uFilm;
 uniform vec2 uWrinkle;
@@ -232,6 +255,7 @@ varying float vSpine;
 varying float vHalf;
 varying float vFar;
 varying vec3 vSkin;
+varying float vNear;
 void main() {
   float u = vAt.x;
   float v = vAt.y;
@@ -299,6 +323,14 @@ void main() {
   float tone = clamp(lum / 0.2, 0.0, 2.2);
   float fold = smoothstep(0.55, 0.9, relief);
   float crease = 1.0 - smoothstep(0.2, 0.6, tone);
+  // Its small wrinkles are in its surface, not painted on it: the picture's relief turns the normal, so each takes the light its own way.
+  vec3 px = dFdx(vWorld);
+  vec3 py = dFdy(vWorld);
+  vec3 r1 = cross(py, n);
+  vec3 r2 = cross(n, px);
+  float det = dot(px, r1);
+  vec3 slope = (r1 * dFdx(relief) + r2 * dFdy(relief)) * (sign(det) / max(abs(det), 1e-7));
+  n = normalize(n - uBody.z * slope / (1.0 + uBody.z * length(slope)) * 1.6);
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   float gather = vSkin.x;
   // The lens looks into the trough of the section, or at its back.
@@ -313,7 +345,7 @@ void main() {
   // How many skins thick it is here: one where it is stretched over a belly, more at a vein, a fold or its rolled edge, several where it
   // is wrung. The lens looks through more of it where it is seen aslant.
   float thick = 0.5 + 0.8 * fold + 0.7 * crease + 2.4 * gather + 1.1 * rim - 0.3 * belly;
-  float path = thick / max(nv, 0.2);
+  float path = thick / max(nv, 0.28);
   float through = exp(-0.45 * path) * (1.0 - 0.5 * vFar);
   // The light on the face the lens sees and on the one it does not. Most of it comes from overhead and from the lee, where the dusk is: a face
   // turned from it is in its own shade, and the inside of a trough is shaded by its walls.
@@ -334,14 +366,24 @@ void main() {
   // The picture's own colour about its mean: lilac, its stains of violet and gold, its veins dark.
   vec3 stain = clamp(pic / vec3(0.22, 0.2, 0.24), 0.3, 2.0);
   // What the near face scatters back, and what comes through from the far one: violet, and strongest through a single stretched skin.
-  vec3 c = uFilm.x * (uBody.x * onNear * mix(0.12, 1.3, litNear) + uBody.y * onFar * mix(0.12, 1.3, litFar) * through * vec3(0.84, 0.76, 1.22)) + 2.0 * uFilm.y * uWarmColour * toDusk * through;
-  c *= mix(vec3(1.0), stain, uTone.x) * lilac * (0.8 + 0.4 * fract(seed * 5.3)) * (1.0 - 0.25 * vFar);
+  // A single stretched skin scatters little and is nearly clear; a fold of several is a body, and grey.
+  float dense = mix(mix(0.2, 1.0, 1.0 - exp(-0.7 * (path - 0.5))), 0.75, vFar);
+  // Seen close, where a single skin faces the lens it is clear as glass: what is behind it shows, and it is bright only at its folds, its
+  // edges and where it is seen aslant.
+  float clear = (1.0 - vFar) * smoothstep(0.15, 0.6, nv) * exp(-1.2 * max(thick - 0.5, 0.0));
+  vec3 key = dot(skyIrradiance(above), vec3(0.3, 0.5, 0.2)) * 0.3183 * vec3(0.9, 0.86, 1.16);
+  vec3 c = uFilm.x * (uBody.x * dense * (1.0 - 0.35 * gather) * onNear * mix(0.12, 1.3, litNear) + uBody.y * onFar * mix(0.12, 1.3, litFar) * through * vec3(0.8, 0.68, 1.3)) + 2.0 * uFilm.y * uWarmColour * toDusk * through;
+  c *= mix(vec3(1.0), stain, uTone.x) * lilac * (0.8 + 0.4 * fract(seed * 5.3)) * (1.0 - 0.25 * vFar) * (1.0 - 0.8 * clear) * (1.0 + 0.25 * vNear);
   // Before the long lens the veils are violet grey, darker than the lit cloud: what is bright on them is the charge.
   c *= mix(vec3(1.0), vec3(0.6, 0.54, 0.82), uVeil);
+  float film = 0.5 * relief + 1.5 * vnoise(vec2(metres / (2.4 * wide) + seed * 3.0, vb * 1.1 + seed)) + 1.4 * (1.0 - nv) + seed;
+  vec3 tints = pow(0.5 + 0.5 * cos(6.2832 * (film + vec3(0.0, 0.3333, 0.6667))), vec3(3.0));
+  vec3 pearl = (vec3(0.56, 0.4, 1.0) * tints.x + vec3(1.0, 0.5, 0.8) * tints.y + vec3(0.6, 1.0, 0.76) * tints.z) / (tints.x + tints.y + tints.z);
+  c *= mix(vec3(1.0), 1.6 * pearl, 1.6 * uFilm.z * (1.0 - vFar) * (1.0 - gather));
   // Thin as a soap film: where it is stretched it takes colours by its thickness and the angle it is seen at.
   float oil = 1.2 + 2.2 * relief + 1.4 * vnoise(vec2(metres / (1.7 * wide) + seed, vb * 1.3)) + 0.8 * (1.0 - nv);
   vec3 sheen = 0.5 + 0.5 * cos(6.2832 * oil * vec3(1.0, 1.17, 1.4));
-  c *= mix(vec3(1.0), 0.55 + 0.9 * sheen, uFilm.z * (1.0 - 0.6 * fold) * (1.0 - gather));
+  c *= mix(vec3(1.0), 0.55 + 0.9 * sheen, 0.5 * uFilm.z * (1.0 - 0.6 * fold) * (1.0 - gather));
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
   r.y = abs(r.y) + 0.05;
@@ -349,7 +391,13 @@ void main() {
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.5, 0.2)) * vec3(0.92, 0.94, 1.15), 0.6);
   float glint = smoothstep(0.7, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
   // A wet sheen on the face that looks up, on every fold, and along the rolled edge.
-  vec3 shine = mirror * (0.5 * fres * litNear + uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) * (0.35 + 0.65 * litNear) + 0.6 * rim * (1.0 - 0.6 * uVeil)) * (1.0 - 0.55 * uVeil);
+  vec3 shine = mirror * (0.5 * fres * litNear + uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) * (0.35 + 0.65 * litNear) * (1.0 - 0.5 * clear) + 0.6 * rim * (1.0 - 0.6 * uVeil)) * (1.0 - 0.55 * uVeil);
+  // Pearl: aslant the film gives the sky back tinted by its thickness, violet, then pink, then a pale green, and the tints slide as it
+  // turns. Its rolled edge catches the light.
+  shine += key * (pearl * (3.2 * uFilm.z * pow(1.0 - nv, 3.0) * (1.0 - 0.7 * gather) * (0.3 + 0.7 * litNear)) + vec3(0.95, 0.95, 1.1) * (0.55 * rim * (1.0 - 0.6 * uVeil))) * (1.0 - 0.8 * vFar);
+  // The brightest of the sky on a wet skin: a line of light down every fold that turns to it, which is what says the section is round.
+  float ndh = clamp(dot(n, normalize(above + toCamera)), 0.0, 1.0);
+  shine += key * (1.0 - 0.6 * uVeil) * (1.5 * pow(ndh, 70.0) + 0.1 * pow(ndh, 14.0)) * vec3(0.94, 0.94, 1.1);
   // A stroke lights the kites near it for the frames it burns: their edges, their strings and the thin of their bellies flare violet
   // white, and are dark again between the return strokes.
   vec2 off = vWorld.xz - uStruckAt.xz;
@@ -357,7 +405,7 @@ void main() {
   float aslant = 1.0 - smoothstep(0.1, 0.5, nv);
   shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.55 * rim + 0.2 * aslant + 0.07 * belly, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim + 0.5 * aslant + 0.16 * belly, vFar));
   // How much of what is behind it the skin hides. Far off it is more of a body: its lit face pale, its other face dark.
-  float cover = clamp(1.0 - exp(-0.5 * path) + 0.22 * vFar, 0.0, 0.95);
+  float cover = clamp((1.0 - exp(-0.33 * path)) * (1.0 - 0.8 * clear) + 0.3 * vFar * (1.0 + 0.3 * vNear), 0.0, 0.95);
   // Lilac-grey, whatever the light: glass, not flesh.
   c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.97, 1.16), mix(0.2, 0.6, vFar));
   // The shine is on the film, not in it: it shows at its full strength however thin the film.
@@ -588,6 +636,7 @@ export function create(ctx: Context): Piece {
   const reach = { value: 1 };
   const stage = new THREE.Vector4(1, 1, 1, 0);
   const stageMore = new THREE.Vector3(0, 0, 0);
+  const fly = new THREE.Vector2(0, 0);
   const wideShot = during('spine-01');
   const veil = { value: 0 };
   const film = new THREE.Vector4(1.0, 0.05, 0.15, 0.9);
@@ -603,10 +652,13 @@ export function create(ctx: Context): Piece {
       uReach: reach,
       uStage: { value: stage },
       uStageMore: { value: stageMore },
+      // 1 in the wide shot, where the first spire's kites are staggered; 1 in the close shot, where a kite turns over once at the most.
+      uFly: { value: fly },
       uStruck: { value: struck },
       uStruckAt: { value: struckAt },
-      // How much of the light on its near face the skin scatters back, and how much of the light on its far face comes through.
-      uBody: { value: new THREE.Vector2(0.75, 1.1) },
+      // How much of the light on its near face the skin scatters back, how much of the light on its far face comes through, and the depth
+      // of its small wrinkles in metres.
+      uBody: { value: new THREE.Vector3(0.6, 1.2, 0.035) },
       uGlowTint: { value: new THREE.Vector3(1.0, 0.72, 2.8) },
       // How much the film gives back of the sky on it and of the dusk through it, how strong its colours, how strong its glints.
       uFilm: { value: film },
@@ -713,10 +765,11 @@ export function create(ctx: Context): Piece {
       // spine-01, the wide lens from far down the ridge: the first spire's ribbons twice as broad, most of its bare threads not drawn.
       const inWide = stagedSeconds() >= wideShot.from && stagedSeconds() <= wideShot.to;
       if (inStrike) stage.set(0.17, 0.32, 2.6, 3);
-      else if (inClose) stage.set(1.0, 0.62, 0.3, 1);
+      else if (inClose) stage.set(1.0, 1.15, 0.3, 1);
       else if (inWide) stage.set(1, 1.6, 1, 1);
       else stage.set(1, 1, 1, 0);
       stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0);
+      fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0);
       // Seen close the film shows its oil colours.
       film.z = inClose ? 0.42 : 0.15;
       veil.value = inStrike ? 1 : 0;
