@@ -15,6 +15,10 @@ export interface Rib {
   cut?: number;
   bend?: [number, number, number, number];
   ctrl?: [number, number];
+  /** How the blade thins toward its tip: its width is a * (1 - (1 - keep) * t ^ taper). Set on a fin; the near cliff and the stump keep the old girth. */
+  taper?: number;
+  /** The part of its width a blade keeps at its tip. */
+  keep?: number;
 }
 
 export const TIDE = 30;
@@ -26,19 +30,29 @@ const LEFT = 0;
 const RIGHT = Math.PI;
 
 export const RIBS: Rib[] = [
+  // The near cliff of the left row: the drowned one hangs in its weed. Its foot is the anchor of two cameras and does not move.
   { name: 'L1', x: -330, z: 0, yaw: LEFT, height: 430, lean: 190, a: 100, b: 95, flare: 20, flareTop: 120 },
-  { name: 'R1', x: 425, z: -559, yaw: RIGHT, height: 520, lean: 380, a: 125, b: 95, flare: 50, flareTop: 150, ctrl: [0.55, 0.7] },
-  { name: 'L2', x: -390, z: -850, yaw: LEFT + 0.15, height: 370, lean: 115, a: 80, b: 60, flare: 30, flareTop: 60 },
-  { name: 'R2', x: 393, z: -1054, yaw: RIGHT - 0.1, height: 405, lean: 277, a: 130, b: 70, flare: 50, flareTop: 50 },
-  { name: 'L3', x: -434, z: -1348, yaw: LEFT, height: 473, lean: 410, a: 50, b: 42, flare: 30, flareTop: 60, bend: [100, 740, 410, 350] },
-  { name: 'R3', x: 280, z: -1545, yaw: RIGHT, height: 340, lean: 160, a: 60, b: 48, flare: 25, flareTop: 50 },
-  { name: 'S', x: -80, z: -1500, yaw: LEFT, height: 420, lean: 150, a: 75, b: 62, flare: 20, flareTop: 60, cut: 135 },
-  { name: 'L4', x: -295, z: -2068, yaw: LEFT - 0.1, height: 300, lean: 150, a: 70, b: 50 },
-  { name: 'R4', x: 222, z: -2061, yaw: RIGHT + 0.1, height: 310, lean: 140, a: 70, b: 50 },
-  { name: 'L5', x: -330, z: -2620, yaw: LEFT, height: 290, lean: 130, a: 65, b: 50 },
-  { name: 'R5', x: 270, z: -2700, yaw: RIGHT, height: 280, lean: 130, a: 65, b: 50 },
-  { name: 'OL', x: -560, z: 780, yaw: LEFT + 0.2, height: 410, lean: 180, a: 95, b: 70, flare: 20, flareTop: 60 },
-  { name: 'OR', x: 620, z: 560, yaw: RIGHT - 0.2, height: 470, lean: 240, a: 115, b: 80, flare: 20, flareTop: 60 },
+  // The great fin of the right row, nearest the establishing camera: it leaves the frame at the top.
+  { name: 'R1', x: 405, z: -430, yaw: RIGHT, height: 520, lean: 520, a: 122, b: 60, flare: 20, flareTop: 60, ctrl: [0.42, 0.55], taper: 0.9 },
+  // The arch of the left row: it rises, hooks over the strait and its tip comes down again.
+  { name: 'L2', x: -311, z: -817, yaw: LEFT, height: 308, lean: 275, a: 42, b: 30, flare: 14, flareTop: 50, bend: [40, 480, 275, 212], taper: 1.3, keep: 0.24 },
+  // The sunlit fin of the right row. From the establishing camera the colony's rock stands before its foot; from the colony's camera it
+  // is the leaning shape in the haze behind the rock.
+  { name: 'R2', x: 508, z: -980, yaw: RIGHT, height: 378, lean: 381, a: 224, b: 70, flare: 14, flareTop: 50, ctrl: [0.42, 0.62], taper: 0.95 },
+  // The blade behind the near cliff, hooked toward the strait.
+  { name: 'L3', x: -297, z: -532, yaw: LEFT, height: 250, lean: 95, a: 46, b: 34, flare: 14, flareTop: 50, bend: [-6, 235, 95, 250], taper: 1.1 },
+  // The small fin in the middle distance.
+  { name: 'R3', x: 120, z: -1008, yaw: RIGHT, height: 236, lean: 142, a: 47, b: 28, flare: 12, flareTop: 40, ctrl: [0.4, 0.66], taper: 1.0 },
+  // The one broken off at a third of its height.
+  { name: 'S', x: -380, z: -1150, yaw: LEFT, height: 420, lean: 150, a: 75, b: 62, flare: 20, flareTop: 60, cut: 128 },
+  { name: 'L4', x: -295, z: -2068, yaw: LEFT - 0.1, height: 300, lean: 190, a: 70, b: 40, ctrl: [0.4, 0.7], taper: 1.0 },
+  { name: 'R4', x: 222, z: -2061, yaw: RIGHT + 0.1, height: 310, lean: 200, a: 78, b: 40, ctrl: [0.42, 0.66], taper: 0.95 },
+  { name: 'L5', x: -330, z: -2620, yaw: LEFT, height: 290, lean: 240, a: 60, b: 36, bend: [40, 420, 240, 210], taper: 1.25, keep: 0.25 },
+  { name: 'R5', x: 270, z: -2700, yaw: RIGHT, height: 280, lean: 170, a: 80, b: 40, ctrl: [0.4, 0.68], taper: 1.0 },
+  { name: 'L6', x: -420, z: -1480, yaw: LEFT + 0.05, height: 330, lean: 210, a: 85, b: 42, ctrl: [0.38, 0.7], taper: 1.0 },
+  { name: 'R6', x: 560, z: -1540, yaw: RIGHT - 0.05, height: 360, lean: 250, a: 95, b: 44, ctrl: [0.4, 0.68], taper: 1.0 },
+  { name: 'OL', x: -560, z: 780, yaw: LEFT + 0.2, height: 410, lean: 230, a: 120, b: 60, flare: 20, flareTop: 60, ctrl: [0.36, 0.7], taper: 1.0 },
+  { name: 'OR', x: 620, z: 560, yaw: RIGHT - 0.2, height: 470, lean: 290, a: 140, b: 66, flare: 20, flareTop: 60, ctrl: [0.36, 0.7], taper: 1.0 },
 ];
 
 export const ribByName = (name: string): Rib => {
@@ -59,8 +73,9 @@ function centre(rib: Rib, t: number): { u: number; y: number; nu: number; ny: nu
   const y = k * y1 + t * t * y2;
   const du = 2 * (1 - 2 * t) * u1 + 2 * t * u2;
   const dy = 2 * (1 - 2 * t) * y1 + 2 * t * y2;
-  if (!rib.bend) return { u, y, nu: 1, ny: 0 };
+  if (!rib.bend && rib.taper === undefined) return { u, y, nu: 1, ny: 0 };
   const l = Math.hypot(du, dy) || 1;
+  // The foot is cut level (the sea, the weed and the rocks stand round it); above it each section lies square to the spine.
   const turn = Math.min(1, Math.max(0, (t - 0.04) / 0.2));
   return { u, y, nu: 1 + (dy / l - 1) * turn, ny: (-du / l) * turn };
 }
@@ -95,6 +110,11 @@ export function radii(rib: Rib, t: number): [number, number] {
   const flare = (rib.flare ?? 0) * Math.pow(Math.max(0, 1 - Math.max(0, y) / top), 1.5);
   // Above its foot a blade thins fast: a thin tall arc, not a horn. The near cliff and the colony's stack keep their girth (things stand on them).
   const slim = rib.name === 'L1' || rib.name === 'S' ? 0 : Math.min(1, Math.max(0, (t - 0.06) / 0.25));
+  if (rib.taper !== undefined) {
+    const keep = rib.keep ?? 0.035;
+    const k = 1 - (1 - keep) * Math.pow(t, rib.taper);
+    return [rib.a * k + flare, rib.b * (0.3 + 0.7 * k) * (1 - 0.35 * t) + flare];
+  }
   const ka = 1 - 0.9 * Math.pow(t, 1.4);
   const kb = 1 - 0.85 * t;
   return [rib.a * ka * (1 - 0.34 * slim) + flare, rib.b * kb * (1 - 0.28 * slim) + flare];
@@ -102,7 +122,8 @@ export function radii(rib: Rib, t: number): [number, number] {
 
 export function skirtPad(y: number): number {
   const k = Math.min(1, Math.max(0, 1 - y / TIDE));
-  return 4 + 10 * k * k;
+  // Steep: the weed hangs down a face, it does not lie along a slope.
+  return 3 + 5 * k * k;
 }
 
 export function surface(rib: Rib, t: number, phi: number, ra: number, rb: number): THREE.Vector3 {

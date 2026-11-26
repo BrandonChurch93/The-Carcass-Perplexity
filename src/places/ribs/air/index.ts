@@ -23,8 +23,16 @@ const SKY_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vDir;
 ${RIG_GLSL}
+uniform sampler2D tFar;
 void main() {
-  gl_FragColor = vec4(rigOut(skyCloud(cameraPosition, normalize(vDir))), 1.0);
+  vec3 d = normalize(vDir);
+  vec3 c = skyCloud(cameraPosition, d);
+  // Beyond the last blades that are built, down the strait: the far pairs and the light at the end of them, a picture on the dome.
+  float az = atan(d.x, -d.z);
+  vec2 fu = vec2(0.5 + az / 0.41, 0.455 + asin(clamp(d.y, -1.0, 1.0)) / 0.2307);
+  float on = smoothstep(0.25, 0.34, fu.x) * smoothstep(0.75, 0.66, fu.x) * smoothstep(0.44, 0.47, fu.y) * smoothstep(0.82, 0.6, fu.y);
+  c = mix(c, texture2D(tFar, clamp(fu, 0.0, 1.0)).rgb * 1.1, on);
+  gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
 const VOLUME_FRAGMENT = /* glsl */ `
@@ -126,7 +134,7 @@ export function create(ctx: Context): Piece {
   const sky = new THREE.ShaderMaterial({
     vertexShader: SKY_VERTEX,
     fragmentShader: SKY_FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms },
+    uniforms: { ...ctx.rig.uniforms, tFar: { value: ctx.assets.texture('mat/far.jpg', { repeat: false }) } },
     side: THREE.BackSide,
     depthTest: false,
     depthWrite: false,
@@ -154,7 +162,7 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
       // Haze in a metre at sea level and the height it thins over; spray haze in a metre at sea level and the height it hangs to.
-      uAir: { value: new THREE.Vector4(0.0004, 150, 0.00022, 12) },
+      uAir: { value: new THREE.Vector4(0.0009, 170, 0.0003, 12) },
       // How much of the horizon's colour a metre of air gives back, how much of the sun, and the whole.
       uScatter: { value: new THREE.Vector3(0.8, 0.085, 1) },
       uShowAir: showAir,
