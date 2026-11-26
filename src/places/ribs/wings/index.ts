@@ -27,7 +27,7 @@ const SPECKS = 560;
 const PASSERS = 6;
 /** The run of the hero by the establishing camera: seconds it lasts, centred on the key, and its mean speed. */
 const RUN = { seconds: 9, speed: 3.7 };
-const LOW = 14;
+const LOW = 6;
 const FLEEING = 9;
 const COLONISTS = 150;
 const SKEIN = 22;
@@ -377,11 +377,11 @@ export function create(ctx: Context): Piece {
     let tier = 0;
     let a0 = 0;
     for (let tries = 0; tries < 60; tries++) {
-      tier = Math.floor(scatter.range(LEVELS.tide + 2, COLONY.top - 6) / COLONY.step) * COLONY.step;
+      tier = scatter.range(LEVELS.tide + 2, COLONY.top - 6);
       a0 = sitters.length < COLONISTS * 0.75 ? scatter.range(0, Math.PI * 2) : facing + scatter.normal() * 0.8;
       if (sitters.length >= COLONISTS * 0.75) break;
-      const r0 = COLONY.radiusAt(tier + COLONY.step) + 1;
-      seen.set(COLONY.x + Math.cos(a0) * r0, tier + 1.5, COLONY.z + Math.sin(a0) * r0);
+      const [r0, y0] = COLONY.perch(a0, tier, 0.5);
+      seen.set(COLONY.x + Math.cos(a0) * r0, y0 + 1.5, COLONY.z + Math.sin(a0) * r0);
       const toward = (colonyEye[0] - seen.x) * Math.cos(a0) + (colonyEye[2] - seen.z) * Math.sin(a0);
       const far = Math.hypot(colonyEye[0] - seen.x, colonyEye[2] - seen.z);
       seen.project(colonyLens);
@@ -391,15 +391,15 @@ export function create(ctx: Context): Piece {
     let along = 0;
     for (let k = 0; k < knot && sitters.length < COLONISTS; k++) {
       const size = scatter.range(0.72, 1.25) * GROW;
-      // Most sit back against the riser, where the lip of the tread below hides half of them from a lens that looks up.
-      const r = COLONY.radiusAt(tier + COLONY.step) + (scatter.next() < 0.6 ? scatter.range(0.35, 1.0) : scatter.range(0.9, COLONY.step * COLONY.slope - 0.5));
-      const a = a0 + along / r;
+      // The crag's own standing places: most sit back against the cliff behind, where the lip hides half of them from a lens that looks up.
+      const a = a0 + along / COLONY.radiusAt(tier);
+      const [r, perchY] = COLONY.perch(a, tier, scatter.next() < 0.6 ? scatter.range(0.1, 0.5) : scatter.range(0.4, 0.95));
       along += scatter.range(0.8, 1.9) * size;
       const x = COLONY.x + Math.cos(a) * r;
       const z = COLONY.z + Math.sin(a) * r;
       const out = Math.atan2(Math.cos(a), Math.sin(a));
       const stands = scatter.next() < 0.22;
-      sitters.push({ x, y: tier, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], tier - colonyEye[1], z - colonyEye[2]) });
+      sitters.push({ x, y: perchY, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], perchY - colonyEye[1], z - colonyEye[2]) });
     }
   }
   sitters.sort((a, b) => a.d - b.d);
@@ -507,7 +507,7 @@ export function create(ctx: Context): Piece {
       clearOfLenses(fliers[fliers.length - 1] as Flier, colony ? 110 : CLEAR);
       continue;
     }
-    const radius = low ? scatter.range(90, 170) : 50 + 190 * scatter.next() ** 2;
+    const radius = low ? scatter.range(120, 200) : 50 + 190 * scatter.next() ** 2;
     const up = low ? scatter.range(38, 80) : rib.height * scatter.range(0.3, 1.05);
     const mid = low ? { x: COLONY.x, z: COLONY.z } : surface(rib, partAtHeight(rib, Math.min(up, rib.height)), 0, 0, 0);
     const f: Flier = {
@@ -776,7 +776,7 @@ export function create(ctx: Context): Piece {
         Object.assign(pose, stand(hash(i, 3)));
         // Low over the water before the wall, far enough from the last lens to be shapes against the white.
         // Seen from the side as they cross: sails up, legs trailing, no two of a size.
-        pose.size = (0.6 + 0.6 * hash(i, 5)) * GROW;
+        pose.size = (0.8 + 0.75 * hash(i, 5)) * GROW;
         pose.x = flee[0] + side * 50 - 14 * lead + 3 * Math.sin(i * 2.4);
         pose.z = flee[1] - 22 - (24 * ((i * 5) % 7)) / 7 + 12 * lead;
         pose.y = 3.0 + (3.4 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
