@@ -60,6 +60,8 @@ const bool GROUND_DETAIL = true;
 const float RELIEF_KM = 16.0;
 // How much taller than that the land throws its day shadows, so a range is read as a range from orbit.
 const float RELIEF_DRAWN = 1.5;
+// How tall the relief of a ground photograph stands, as a share of its width.
+const float TILE_RELIEF = 0.085;
 // The lesser vents: x and z from the Heart, km, and their size beside it.
 const vec3 VENTS[6] = vec3[6](vec3(-42.0, -98.0, 0.5), vec3(76.0, -33.0, 0.55), vec3(170.0, -66.0, 0.45), vec3(124.0, 24.0, 0.4), vec3(-52.0, 50.0, 0.45), vec3(43.0, 79.0, 0.4));
 
@@ -245,6 +247,7 @@ void main() {
   // Each is laid by world position at the size at which one of its texels is about a pixel, in octaves of its real size and cross-faded
   // between two octaves, each octave turned against the last, so no repeat shows and the detail keeps arriving as the eye rises.
   float lum = dot(ground, vec3(0.3, 0.55, 0.15));
+  float tileLit = 1.0;
   if (GROUND_DETAIL && detail > 0.0) {
     float octave = log2(max(pixelKm * 1024.0 * 1.3 / 40.0, 0.25));
     float lower = floor(octave);
@@ -269,8 +272,27 @@ void main() {
       // (Only the light and dark of the photograph: the colour of the ground stays the map's.)
       float tone = dot(country, vec3(0.3, 0.55, 0.15));
       ground *= mix(vec3(1.0), mix(vec3(tone), country, 0.35), 0.88 * detail * land);
-      vec2 a1 = texture2D(uMatRangeNh, pa).rg * 2.0 - 1.0;
-      vec2 a2 = texture2D(uMatRangeNh, pb).rg * 2.0 - 1.0;
+      vec3 nhA = texture2D(uMatRangeNh, pa).rgb;
+      vec3 nhB = texture2D(uMatRangeNh, pb).rgb;
+      vec2 a1 = nhA.rg * 2.0 - 1.0;
+      vec2 a2 = nhB.rg * 2.0 - 1.0;
+      // Near the ground the relief of the photographs is marched toward the sun: a ridge of it throws its shadow on the ground
+      // behind it, and the edge of that shadow is the broken line of the ridge.
+      float marched = 1.0 - smoothstep(100.0, 150.0, uViewKm);
+      if (marched > 0.0) {
+        vec2 sunWay = normalize(uSunDir.xz);
+        float climb = uSunDir.y / max(length(uSunDir.xz), 1e-3) / TILE_RELIEF;
+        vec2 wayA = turnA * sunWay;
+        vec2 wayB = turnB * sunWay;
+        float litA = 1.0;
+        float litB = 1.0;
+        for (int i = 0; i < 3; i++) {
+          float reach = i == 0 ? 0.004 : i == 1 ? 0.011 : 0.026;
+          litA = min(litA, 1.0 - smoothstep(0.0, 0.06, texture2D(uMatRangeNh, pa + wayA * reach).b - nhA.b - reach * climb));
+          litB = min(litB, 1.0 - smoothstep(0.0, 0.06, texture2D(uMatRangeNh, pb + wayB * reach).b - nhB.b - reach * climb));
+        }
+        tileLit = mix(1.0, mix(litA, litB, share), marched * detail * land * (0.5 + 0.5 * high));
+      }
       vec2 small = mix(vec2(a1.x, a1.y) * turnA, vec2(a2.x, a2.y) * turnB, share);
       slope += small * mix(0.62, 1.5, smoothstep(150.0, 260.0, uViewKm) * (1.0 - smoothstep(600.0, 900.0, uViewKm))) * detail * land * (0.4 + 0.6 * high);
     } else {
@@ -393,8 +415,9 @@ void main() {
   float unjoined = smoothstep(150.0, 320.0, uViewKm) * (1.0 - smoothstep(980.0, 1340.0, uViewKm)) * land * (1.0 - min(1.0, 1.4 * rust));
   if (unjoined > 0.0) {
     float naturalLum = dot(natural, vec3(0.3, 0.55, 0.15));
-    vec3 rock = vec3(0.3, 0.27, 0.235) * (0.45 + 1.1 * naturalLum);
-    vec3 plain = mix(vec3(naturalLum), natural, 0.85) * vec3(0.92, 1.0, 0.96);
+    vec3 rock = vec3(0.3, 0.27, 0.235) * (0.62 + 0.55 * naturalLum);
+    // (The low country is no darker than the rock that stands in it: olive and tan, lit as the ranges are.)
+    vec3 plain = mix(vec3(naturalLum), natural, 0.85) * vec3(0.92, 1.0, 0.96) * 0.7 + vec3(0.1, 0.105, 0.07);
     vec3 unjoinedColour = mix(plain, rock, 0.85 * smoothstep(0.28, 0.6, height) * (1.0 - smoothstep(0.82, 0.95, height)));
     ground = mix(ground, 0.62 * unjoinedColour, 0.85 * unjoined);
   }
@@ -474,6 +497,8 @@ void main() {
   }
   // The throat: dark round mouths in the ground, each in its own steps of pale terrace that go down to it.
   float mouths = 0.0;
+  vec3 mouthTone = vec3(0.0);
+  float mouthLit = 0.0;
   vec2 atThroat = xz - uThroat;
   if (dot(atThroat, atThroat) < 90.0 * 90.0 && land > 0.0) {
     vec2 toSun = normalize(uSunDir.xz);
@@ -495,11 +520,26 @@ void main() {
         vec3 stone = mix(ground * 1.15, vec3(0.46, 0.4, 0.3), 0.7) * (0.5 + 0.6 * (floor(down * 4.0) + 0.5) / 4.0) * (0.8 + 0.4 * vnoise(q / 1.7));
         stone *= mix(1.0, mix(0.3, 1.7, facing), riser);
         ground = mix(ground, stone, 0.92 * around);
-        float pit = 1.0 - smoothstep(0.9, 1.02, d);
-        // (The mouth itself: no bottom to be seen, and the wall that faces the sun lit a little way down.)
-        vec3 dark = vec3(0.012, 0.012, 0.014) + vec3(0.1, 0.085, 0.065) * smoothstep(0.62, 1.0, d) * smoothstep(0.55, 0.95, facing);
-        ground = mix(ground, dark, pit);
-        mouths = max(mouths, pit * (1.0 - 0.8 * smoothstep(0.62, 1.0, d) * smoothstep(0.55, 0.95, facing)));
+        // (The lip stands a little over the ground: its outer slope is lit on the side of the sun and shaded on the other.)
+        float lip = smoothstep(0.94, 1.03, d) * (1.0 - smoothstep(1.06, 1.34, d));
+        ground *= mix(1.0, mix(1.55, 0.5, smoothstep(0.2, 0.8, facing)), lip);
+        float pit = 1.0 - smoothstep(0.95, 1.02, d);
+        if (pit > 0.0) {
+          // The mouth: a wall that goes down in three steps to a floor. The rim on the side of the sun throws its shadow down the
+          // near wall and over the near part of the floor; the far wall and the rest of the floor stand in the light.
+          float sink = clamp((1.0 - d) / 0.5, 0.0, 1.0);
+          float tread3 = fract(sink * 3.0);
+          float onFloor = step(1.0, sink);
+          float stepped = mix((floor(sink * 3.0) + smoothstep(0.5, 1.0, tread3)) / 3.0, 1.0, onFloor);
+          float fall = 0.62 * stepped * mouth.z / max(uSunDir.y / max(length(uSunDir.xz), 1e-3), 0.2);
+          float seesSun = 1.0 - smoothstep(0.86, 1.04, length(drawnOut + mat2(cos(lean), sin(lean), -sin(lean), cos(lean)) * toSun * vec2(0.78, 1.22) * fall) / (mouth.z * wobble));
+          float riser3 = smoothstep(0.5, 0.7, tread3) * (1.0 - onFloor);
+          vec3 wall = mix(vec3(0.42, 0.36, 0.28), vec3(0.24, 0.2, 0.17), stepped) * (0.75 + 0.5 * vnoise(q / 1.3 + 4.0));
+          vec3 tone = mix(wall, vec3(0.14, 0.12, 0.105) * (0.7 + 0.6 * vnoise(q / 2.1 + 8.0)), onFloor);
+          mouthTone = mix(mouthTone, tone, pit);
+          mouthLit = mix(mouthLit, seesSun * mix(1.0, mix(0.3, 1.5, smoothstep(0.3, 0.8, facing)), riser3), pit);
+          mouths = max(mouths, pit);
+        }
       }
     }
   }
@@ -559,6 +599,7 @@ void main() {
   shade *= mix(1.0, thrown, smoothstep(60.0, 160.0, uViewKm) * mix(0.62, 0.85, smoothstep(700.0, 1300.0, uViewKm)) * (1.0 - 0.5 * dome));
   // (The shadow of the ice ridge is the darkest thing on the spine, and nothing softens it.)
   shade *= mix(1.0, thrown, 0.85 * spineBand * (1.0 - ice));
+  shade *= mix(1.0, tileLit, 0.8);
   // (The shadows the cloud threw were the sun's: they go with it.)
   if (uDusk > 0.0) shade = mix(shade, 1.0, min(1.0, 1.7 * uEmber.x));
   float mu = limbCos(xz);
@@ -802,7 +843,7 @@ void main() {
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   // (A hollow is darker than a crest: less of the sky reaches it.)
   earth *= mix(1.0, 0.62 + 0.76 * skyShare, smoothstep(60.0, 160.0, uViewKm));
-  earth *= 1.0 - 0.97 * mouths;
+  if (mouths > 0.0) earth = mix(earth, mouthTone * light / 3.14159 * (0.1 + 0.9 * mouthLit), mouths);
   // The shore: a pale line of beach on the land's side, broken where the coast is rock, and surf on the water's side, broken too.
   float lineKm = max(1.1 * pixelKm, 0.25);
   float coastSeen = smoothstep(60.0, 160.0, uViewKm) * (1.0 - uEmber.x);
@@ -814,7 +855,7 @@ void main() {
   // (Surf stands where the open sea meets the coast, on some reaches of it and not on others, and never up a river.)
   float surfAt = 0.0;
   if (shoreNear) surfAt = smoothstep(0.45, 0.7, texture2D(uCloudTile, xz / 230.0 + vec2(0.63, 0.21) + uTime * vec2(0.0004, 0.0003), 0.0).b) * smoothstep(0.35, 0.6, vnoise(xz / 9.0 + uTime * 0.05));
-  float surf = (1.0 - smoothstep(0.15 * lineKm, 0.8 * lineKm, -coastKm)) * step(coastKm, 0.0) * (1.0 - land) * (1.0 - river) * (1.0 - drowned) * (0.25 + 0.75 * surfAt) * coastSeen * (1.0 - shut);
+  float surf = (1.0 - smoothstep(0.15 * lineKm, 0.8 * lineKm, -coastKm)) * step(coastKm, 0.0) * (1.0 - land) * (1.0 - river) * (1.0 - drowned) * surfAt * coastSeen * (1.0 - shut);
   water = mix(water, vec3(0.62, 0.66, 0.68) * light / 3.14159, 0.7 * surf);
   vec3 colour = mix(water, earth + 0.4 * glare, land);
   // (By night the low coast has no line: the wet plain is a shade over the sea beside it and the land rises out of that into the moon's light.)
