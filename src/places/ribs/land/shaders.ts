@@ -287,7 +287,7 @@ void main() {
   float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
   // The stone is a mid grey: the sheet's own rust is taken out of it, and its lichen is laid again below, in patches.
   float picLum = dot(pic, vec3(0.333));
-  pic = mix(vec3(mix(0.26, picLum, 0.7)) * vec3(0.97, 1.0, 1.03), pic, 0.22);
+  pic = mix(vec3(mix(0.26, max(picLum, 0.11), 0.62)) * vec3(0.97, 1.0, 1.03), max(pic, vec3(0.09)), 0.22);
   vec3 albedo = pic * 1.05 * mix(1.0, grain, 0.5) * (0.88 + 0.24 * macro);
   // A top is no face: it takes the broad colour of the stone under it, with white where the colony stands and lichen in crusts.
   vec3 broad = textureLod(tColony, uc, lv + 4.0).rgb;
@@ -320,14 +320,23 @@ void main() {
   vec3 wk = texture2D(tWeed, mix(vec2(arc / 2.6, y / 5.5), vWorld.xz / 3.0, step(0.5, top))).rgb;
   // On a face it hangs: dark strands, drawn down, a few of them amber. The sheet's own weed is a black glass at this size and is not used.
   float aw = arc + 0.5 * (vnoise(vec2(arc * 0.8, y * 0.6)) - 0.5);
-  float strand = vnoise(vec2(aw * 6.0, y * 0.8 + 3.0)) * 0.6 + vnoise(vec2(aw * 17.0, y * 2.0)) * 0.4;
-  vec3 hank = mix(vec3(0.034, 0.029, 0.014), vec3(0.12, 0.068, 0.017), smoothstep(0.52, 0.8, strand)) * (0.5 + vnoise(vec2(aw * 23.0, y * 3.0)));
+  float strand = vnoise(vec2(aw * 7.0, y * 2.2 + 3.0)) * 0.6 + vnoise(vec2(aw * 19.0, y * 5.0)) * 0.4;
+  vec3 hank = mix(vec3(0.075, 0.066, 0.032), vec3(0.15, 0.09, 0.026), smoothstep(0.6, 0.85, strand)) * (0.7 + 0.6 * vnoise(vec2(aw * 23.0, y * 6.0)));
   vec3 kelp = top < 0.5 ? hank : wk * 2.0 + vec3(0.07, 0.048, 0.014) * smoothstep(0.02, 0.07, wk.g);
   float weed = smoothstep(-0.2, 0.5, down + 1.5 * (strand - 0.5));
   albedo = mix(albedo, kelp, weed);
   // The weed is no mirror: it keeps its own olive, and the rock's slopes are not its slopes.
   n = normalize(mix(n, n0 + 0.6 * round0 * (vnoise(vec2(aw * 17.0 + 0.4, y * 2.0)) - vnoise(vec2(aw * 17.0 - 0.4, y * 2.0))), weed));
-  float rough = mix(mix(0.9, 0.5, max(band, 0.7 * low)), 0.5, weed);
+  // Close, the sheet is a smear: there the stone takes its own pits and grit, a thumb across, in colour and in slope.
+  float closeC = smoothstep(45.0, 12.0, length(cameraPosition - vWorld)) * (1.0 - weed);
+  if (closeC > 0.01) {
+    vec2 up2 = vec2(arc, y) * 11.0;
+    float pit = vnoise(up2);
+    vec2 slopeP = vec2(vnoise(up2 + vec2(0.35, 0.0)), vnoise(up2 + vec2(0.0, 0.35))) - pit;
+    n = normalize(n - (round0 * slopeP.x + rise * slopeP.y) * 1.1 * closeC);
+    albedo *= mix(1.0, 0.72 + 0.56 * pit, closeC);
+  }
+  float rough = mix(mix(0.9, 0.5, max(band, 0.7 * low)), 0.4, weed);
   float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
@@ -408,7 +417,7 @@ void main() {
     float tone = dot(textureLod(tWall, uw, 5.0).rgb, vec3(0.333)) / 0.1;
     vec3 strap = w1 * vec3(0.45, 0.38, 0.26) * (0.6 + 0.4 * tone) * (0.6 + 0.4 * dot(texture2D(tWeed, u3).rgb, vec3(0.333)) / 0.039);
     albedo = mix(albedo, strap, closeW);
-    nc = normalize(n0 + 0.12 * (n - n0) + (bump(n0, vWorld, u1, (n1.xy - 0.5) * 2.6) - n0) + (bump(n0, vWorld, u3, (n3.xy - 0.5) * 1.4) - n0));
+    nc = normalize(n0 + 0.12 * (n - n0) + (bump(n0, vWorld, u1, (n1.xy - 0.5) * 1.5) - n0) + (bump(n0, vWorld, u3, (n3.xy - 0.5) * 0.7) - n0));
     n = normalize(mix(n, nc, closeW));
     fine = mix(fine, dot(w1, vec3(0.333)) / 0.039, closeW);
     wn.z = mix(wn.z, 0.25 + 0.5 * n1.z, closeW);
