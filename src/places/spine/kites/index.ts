@@ -309,7 +309,10 @@ void main() {
   float wob = vnoise(vec2(metres * 0.22 + seed, lie * 1.3));
   float phase = lie * (7.0 + 5.0 * fract(seed * 0.173)) + 5.0 * wob + metres * 0.15;
   float fold = sin(phase);
-  n = normalize(n + normalize(vAcross) * (0.32 * cos(phase) * (1.0 - 0.6 * far)));
+  // And between them narrower ones, seen only close.
+  float phase2 = lie * (15.0 + 6.0 * fract(seed * 0.411)) + 7.0 * vnoise(vec2(metres * 0.35 + seed * 2.0, lie * 2.0)) - metres * 0.1;
+  float fold2 = sin(phase2) * (1.0 - far);
+  n = normalize(n + normalize(vAcross) * (0.32 * cos(phase) * (1.0 - 0.6 * far) + 0.18 * cos(phase2) * (1.0 - far)));
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
 
   // How many skins thick it is: thin where it is stretched over a belly, a body where it is gathered at the knot, at its lip, along a
@@ -318,7 +321,7 @@ void main() {
   float knot = 1.0 - smoothstep(0.0, 0.22, s);
   float crease = smoothstep(0.03, 0.12, relief - 0.33);
   float belly = smoothstep(0.2, 1.0, abs(vSkin.x)) * (1.0 - lie * lie);
-  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease + 0.75 * smoothstep(0.2, 1.0, fold) - 0.2 * belly + 0.35 * far;
+  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease + 0.75 * smoothstep(0.2, 1.0, fold) + 0.4 * smoothstep(0.3, 1.0, fold2) - 0.2 * belly + 0.35 * far;
   float path = thick / max(nv, 0.3);
   float cover = (1.0 - exp(-uFilm.y * path)) * cut;
 
@@ -783,7 +786,7 @@ export function create(ctx: Context): Piece {
       fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0);
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
       if (inStrike) film.set(0.3, 0.4, 0.5, 1.4);
-      else if (inClose) film.set(0.24, 0.22, 0.9, 0.6);
+      else if (inClose) film.set(0.34, 0.3, 0.95, 0.75);
       else film.set(0.5, 0.5, 0.4, 1.0);
       veil.value = inStrike ? 1 : 0;
       const flash = flashAt(seconds);
