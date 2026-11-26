@@ -146,9 +146,12 @@ float lowDepth(vec2 at) {
     wPuff += uWx * vec2(-1.6, 2.4);
   }
   vec2 wFlow = wSlow + 380.0 * vec2(sin(wSlow.y / 1250.0 + 0.9 * sin(wSlow.x / 2100.0)), sin(wSlow.x / 1650.0 + 1.3 * sin(wSlow.y / 2600.0)));
-  lowUvA = LOW_A * wLane / vec2(1200.0, 680.0) + vec2(0.3, 0.7);
-  lowUvB = LOW_B * wCell / 340.0 + vec2(0.13, 0.4);
-  lowUvC = LOW_C * wPuff / 150.0 + vec2(0.61, 0.27);
+  // (From orbit a puff of cumulus must still be wider than a pixel, or the photographs of puffs fall to their mean and only the
+  // stretched streak is left to give the field its shape, which then reads as brush strokes at one angle. The clusters and the
+  // specks are laid so a puff is five to eight kilometres, two sizes on two winds; the finer lays come in below, as before.)
+  lowUvA = LOW_A * wLane / vec2(1050.0, 760.0) + vec2(0.3, 0.7);
+  lowUvB = LOW_B * wCell / 540.0 + vec2(0.13, 0.4);
+  lowUvC = LOW_C * wPuff / 700.0 + vec2(0.61, 0.27);
   lowUvD = LOW_D * wCell / 64.0 + vec2(0.83, 0.52);
   lowUvE = LOW_E * w / 22.0 + vec2(0.37, 0.91);
   // (Every place a picture is read at is worked out here, before the first way out of this function, in every pixel: a picture
@@ -191,8 +194,8 @@ float lowDepth(vec2 at) {
   if (lowNear.y > 0.0) grain = mix(1.0, cloudIn(uMatSpecks, lowUvE, 0.2), lowNear.y);
   // (A field is not one kind of cloud: here it is all fine specks along the wind, there the clusters have grown.)
   float grown = smoothstep(0.35, 0.65, texture2D(uCloudTile, uvGrown, 3.0).b);
-  float byCluster = mix(0.45, 1.0, grown);
-  float byPuff = mix(0.9, 0.5, grown);
+  float byCluster = mix(0.35, 0.9, grown);
+  float byPuff = mix(1.0, 0.7, grown);
   float knots = mix(1.0, cluster, byCluster) * mix(1.0, puff, byPuff);
   float fine = mix(1.0, lump, 0.55) * mix(1.0, grain, 0.4);
   lowWeigh = vec3(byCluster, byPuff, share);
@@ -204,8 +207,9 @@ float lowDepth(vec2 at) {
   // them, and the thin veil the wind draws along the streak, which the sea shows through. The knots keep the contrast the
   // photograph of them has; nothing is pressed flat into a raft.)
   float level = mix(0.56, 0.9, share);
-  float dense = max(pow(streak, 0.7) * pow(knots * fine, 1.5) * level - 1.15, 0.0);
-  float drawn = 0.32 * max(streak * level - 0.85, 0.0) * mix(1.0, lump, 0.4);
+  // (The knots take their shape from the puffs, not from the streak: the streak only says where they gather.)
+  float dense = max(pow(streak, 0.35) * pow(knots * fine, 1.5) * level - 1.2, 0.0);
+  float drawn = 0.17 * max(streak * level - 0.85, 0.0) * mix(1.0, lump, 0.4);
   return (dense + drawn) * smoothstep(0.02, 0.3, share);
 }
 
@@ -303,19 +307,27 @@ float bankDepth(vec2 bankAt) {
   // the edge of its hold, and the thin veil of the streak among them. What the range holds is how many knots stand, never
   // how bright one soft mass is: a bank has no outline to be a lump by.)
   float gather = held * today * clear;
-  float dense = max(pow(drawn, 0.6) * pow(body * mix(1.0, fine, 0.6), 1.5) * (0.35 + 1.5 * gather) - 1.0, 0.0);
+  // (Where the range holds it hardest the bank is one body, as cloud piled on a windward slope is: the knots have closed up,
+  // and what is left of them is the lumped top of the bank, which the sun models. Out from there the body opens into knots
+  // again, so the bank has a torn edge and no outline. Knots alone, all the way in, read as specks of snow on the range.)
+  float core = smoothstep(0.25, 0.8, gather);
+  float lumps = pow(body * mix(1.0, fine, 0.6), mix(1.5, 0.7, core));
+  float dense = max(pow(drawn, mix(0.6, 0.25, core)) * lumps * (0.35 + 1.5 * gather) - mix(1.0, 0.48, core), 0.0);
   float thin = 0.3 * max(drawn * 1.6 * gather - 0.5, 0.0);
   return (dense + thin) * smoothstep(0.02, 0.2, gather) - 0.001;
 }
 float fogDepth(vec2 fogAt) {
   float held = texture2D(uBanks, clamp((fogAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).g;
   float clear = smoothstep(100.0, 230.0, length(fogAt - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
-  if (held * clear <= 0.004) return -0.5;
+  // (The places the pictures are read at, before the way out: see lowDepth.)
   vec2 w = fogAt - uTime * vec2(0.9, -0.5);
   if (uLive > 0.0) w -= uWx * vec2(3.0, -2.0);
+  vec2 uvVeil = mat2(0.5, 0.87, -0.87, 0.5) * w / 520.0 + vec2(0.4, 0.9);
+  vec2 uvToday = fogAt / 1900.0 + vec2(0.83, 0.37);
+  if (held * clear <= 0.004) return -0.5;
   // (Fog lies level: its top has the soft fibre of a veil and no lumps, and it thins up the slopes through that fibre.)
-  float veil = cloudIn(uMatVeil, mat2(0.5, 0.87, -0.87, 0.5) * w / 520.0 + vec2(0.4, 0.9), 0.27);
-  float today = smoothstep(0.34, 0.62, texture2D(uCloudTile, fogAt / 1900.0 + vec2(0.83, 0.37), 3.0).b);
+  float veil = cloudIn(uMatVeil, uvVeil, 0.27);
+  float today = smoothstep(0.34, 0.62, texture2D(uCloudTile, uvToday, 3.0).b);
   return held * today * clear * (0.3 + 0.9 * veil) * 1.5 - 0.5;
 }
 
