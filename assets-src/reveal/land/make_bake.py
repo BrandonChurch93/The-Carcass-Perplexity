@@ -11,6 +11,7 @@ light:
   red    the horizon toward the day's sun: the tangent of the highest thing that stands between a place and the sun, for a land
          RELIEF_KM high at its highest crest, encoded as sqrt(tan / 2).
   green  how open a place is to the sky: 0.5 on level ground, under it in a valley, over it on a crest.
+  blue   1 on the waters the land shuts in (lakes), 0 on the sea and on the land away from them.
 Run: python3 assets-src/reveal/land/make_bake.py   (Python 3 with numpy, scipy and Pillow)
 """
 import heapq
@@ -124,7 +125,8 @@ def rivers(up, land):
             p[:, 0] += -ty / norm * wind
             p[:, 1] += tx / norm * wind
             p[:, :2] *= f
-            lines.append(p)
+            last = divmod(i, m) if i >= 0 else (0, 0)
+            lines.append((p, bool(i >= 0 and wet[last[0], last[1]]), phase))
     return lines, n * m
 
 
@@ -133,10 +135,36 @@ def draw_rivers(lines, cells, size, scale, offset):
     ss = 3
     im = Image.new('L', (size[0] * ss, size[1] * ss), 0)
     d = ImageDraw.Draw(im)
-    for p in lines:
-        for a, b in zip(p[:-1], p[1:]):
+    fan = Image.new('L', im.size, 0)
+    df = ImageDraw.Draw(fan)
+    for p, to_water, phase in lines:
+        share = p[-1][2] / 700.0
+        if to_water and share >= 1.6 and len(p) > 8:
+            # A delta: the river builds a fan of low ground out into the water and crosses it in a few arms.
+            mouth = p[-1][:2]
+            way = p[-1][:2] - p[-7][:2]
+            way = way / max(np.hypot(*way), 1e-6)
+            turn = math.atan2(way[1], way[0])
+            reach = min(7.0 + 5.0 * math.log2(share), 26.0)
+            apex = mouth - 0.35 * reach * way
+            pts = [((apex[0] - offset[0]) * scale * ss, (apex[1] - offset[1]) * scale * ss)]
+            for k in range(-4, 5):
+                ang = turn + math.radians(11.0 * k)
+                rad = reach * 1.35 * (0.8 + 0.22 * math.sin(2.3 * k + phase) + 0.1 * math.sin(5.1 * k + 2.0 * phase)) * (1.0 - 0.25 * abs(k) / 4.0)
+                pts.append(((apex[0] + rad * math.cos(ang) - offset[0]) * scale * ss, (apex[1] + rad * math.sin(ang) - offset[1]) * scale * ss))
+            df.polygon(pts, fill=255)
+            w = max(1, int(round(min(0.6 + 0.3 * math.log2(share), 1.6) * scale ** 0.6 * ss)))
+            for k, lean in enumerate((-27.0, -6.0, 19.0, 34.0)[: 3 if share < 4 else 4]):
+                at = apex.copy()
+                ang = turn + math.radians(lean)
+                for j in range(int(reach * 1.5)):
+                    nxt = at + np.array([math.cos(ang + 0.35 * math.sin(0.5 * j + phase + k)), math.sin(ang + 0.35 * math.sin(0.5 * j + phase + k))])
+                    d.line([((at[0] - offset[0]) * scale * ss, (at[1] - offset[1]) * scale * ss), ((nxt[0] - offset[0]) * scale * ss, (nxt[1] - offset[1]) * scale * ss)], fill=255, width=w)
+                    at = nxt
+        for j, (a, b) in enumerate(zip(p[:-1], p[1:])):
             share = b[2] / 700.0
-            wide = min(0.7 + 0.5 * math.log2(max(share, 1.0)), 3.0) * scale ** 0.6
+            # (No river keeps one width: it narrows in a gorge and spreads on a flat.)
+            wide = min(0.7 + 0.5 * math.log2(max(share, 1.0)), 3.0) * scale ** 0.6 * (1.0 + 0.4 * math.sin(0.55 * j + phase) + 0.25 * math.sin(1.9 * j + 3.0 * phase))
             x0, y0 = (a[0] - offset[0]) * scale * ss, (a[1] - offset[1]) * scale * ss
             x1, y1 = (b[0] - offset[0]) * scale * ss, (b[1] - offset[1]) * scale * ss
             if max(x0, x1) < -50 or max(y0, y1) < -50 or min(x0, x1) > im.size[0] + 50 or min(y0, y1) > im.size[1] + 50:
@@ -144,7 +172,7 @@ def draw_rivers(lines, cells, size, scale, offset):
             w = max(1, int(round(wide * ss)))
             d.line([(x0, y0), (x1, y1)], fill=255, width=w)
             d.ellipse([x1 - w / 2, y1 - w / 2, x1 + w / 2, y1 + w / 2], fill=255)
-    return np.asarray(im.resize(size, Image.LANCZOS), dtype=np.float32) / 255.0
+    return np.asarray(im.resize(size, Image.LANCZOS), dtype=np.float32) / 255.0, np.asarray(fan.resize(size, Image.LANCZOS), dtype=np.float32) / 255.0
 
 
 def horizon(up, km_px):
@@ -172,8 +200,8 @@ def main():
             scale = ra['width'] / rect['width']
             off = ((rect['cx'] - rect['width'] / 2 - (ra['cx'] - ra['width'] / 2)) / ra['width'] * h_a.shape[1],
                    (rect['cy'] - rect['width'] * 9 / 32 - (ra['cy'] - ra['width'] * 9 / 32)) / ra['width'] * h_a.shape[1])
-            river = draw_rivers(lines, cells, (W, H), scale, off)
-            solid = land & (river < 0.5)
+            river, fan = draw_rivers(lines, cells, (W, H), scale, off)
+            solid = (land | (fan > 0.5)) & (river < 0.5)
         else:
             solid = land
         inside = ndimage.distance_transform_edt(solid)
@@ -195,7 +223,13 @@ def main():
             shore = shore.resize((OUT_W[level], round(H * s)), Image.LANCZOS)
         path = os.path.join(OUT, f'shore-{level}.png')
         shore.save(path, optimize=True)
-        im = Image.fromarray(np.round(np.stack([g, b, np.zeros_like(g)], axis=-1) * 255.0).astype(np.uint8), 'RGB')
+        # Blue: the waters that the land shuts in (lakes), which have no surf and no pale shelf.
+        marks, count = ndimage.label(~land)
+        rim = np.unique(np.concatenate([marks[0], marks[-1], marks[:, 0], marks[:, -1]]))
+        shut = (marks > 0) & (~np.isin(marks, rim) if level != 'd' else True)
+        shut = ndimage.gaussian_filter(ndimage.binary_dilation(shut, iterations=3).astype(np.float32), 1.5)
+        shut = np.asarray(Image.fromarray(shut).resize((W // 2, H // 2), Image.BOX), dtype=np.float32)
+        im = Image.fromarray(np.round(np.stack([g, b, shut], axis=-1) * 255.0).astype(np.uint8), 'RGB')
         if level != 'a':
             im = im.resize((W // 3, H // 3), Image.LANCZOS)
         light = os.path.join(OUT, f'light-{level}.jpg')
