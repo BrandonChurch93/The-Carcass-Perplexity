@@ -1,0 +1,119 @@
+{
+  "round": 17,
+  "unit": "marsh",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-26 05:13 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "sky and far basin",
+        "what": "Uniform cool white fog nearly erases the mountain rim and distant salt flats; the target shows a legible low ridgeline, layered gray cloud and a localized rain curtain right of center.",
+        "fix": "Thin the blanket haze, recover the far relief and horizontal salt beds, and put the darker rain shafts under the right-hand cloud bank."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "main channel and its banks",
+        "what": "The broad dark channel and bare central spit replace the target's narrower, winding flow through staggered terraced shelves; the water is too smooth and its uniform thin white edges look drawn on.",
+        "fix": "Break up and narrow the channel with irregular stepped mineral shelves, warm rusty seams and continuous small-scale surface currents."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "left steaming pool",
+        "what": "A dense speckled white spray wall obscures the pool, with small regular ring marks in place of clearly readable blister domes and broad rings.",
+        "fix": "Use a low local veil of translucent steam, return the large and small wet domes, and spread irregular overlapping ripples across the basin."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "animals along the channel and on the right shelf",
+        "what": "The large adults bunch in a line toward the back of the channel, their raised rounded bodies look more uniform, and the chalk-encrusted animals on the right are scarcely readable as creatures.",
+        "fix": "Spread the herd across the foreground, bank and shallows, distinguish standing adults from calves and partly submerged bodies, and give the right-shelf animals visible feelers and limbs with soft contact shade."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "pool surface, central splash and right-hand bubble",
+        "what": "Broad dark mirror reflections and flat red water replace choppy overlapping waves. The splash looks like isolated solid pink prongs, and the bubble has a hard dark foot and plain pinpoint reflection instead of emerging wetly from the ripples.",
+        "fix": "Break up mirror reflections with finer irregular waves, connect splash sheets and varied beads to the disturbed surface, and blend a reddish translucent dome into the surrounding water with a broader upper-right glint and small foamy ripples."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "far bank and animal behind the pool",
+        "what": "The animal is much larger, closer and more sharply defined behind sparse towering trunks, with a heavy reflection pulling focus from the pool; the target has a small soft animal farther back among fine growth.",
+        "fix": "Move or scale the animal back, restore optical distance falloff, reduce its mirror image, and rebuild the lower, denser far-bank growth."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "near bank and left foreground",
+        "what": "A broad chalk slope consumes the near water and the left trunk stays heavily defined; the target is a lower waterline view with an uneven wet salt lip, little bubble clusters and softly out-of-focus foreground stalks.",
+        "fix": "Lower and break up the near bank, keep more water in frame, recover damp crust and little edge bubbles, and restore shallow depth of field on the nearest stalks."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "center pool, background animal and horizon",
+        "what": "A bright grainy steam mass takes over the center and the animal is raised, oversize and close against it. The target has a thinner vapor layer, a smaller low animal in the right pool and readable flats and storm bands behind it.",
+        "fix": "Keep the steam low and translucent, move the animal back and reduce its scale and reflection, and recover the low mineral mound, receding flats and darker cloud with distant rain streaks."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "main red growth at upper left",
+        "what": "The hero crown is so enlarged and displaced left that it merges with the near edge fronds and loses the open silhouette around which the swarm gathers.",
+        "fix": "Frame the main crown slightly farther away and inward, keep the nearest left fronds optically soft, and retain clear separation between them without changing the settled stalk design."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "bottom-left foreground rock and mineral flats",
+        "what": "The close rock has smooth, marbled folds and broad dark red crevices, while distant surfaces have a repetitive sprayed-on white pattern rather than granular gray-beige stone with mineral buildup.",
+        "fix": "Use rougher fractured relief with fine pitting, localized rusty stains and raised pale encrustation that continues into the banks."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "left shore and midground islands",
+        "what": "Growth comes in sparse, repetitive clusters with conspicuous bare truncated trunks; the target has more varied sizes and denser rusty-red growth crossing several depths.",
+        "fix": "Vary stalk spacing, height and lean, put more fine shoots along the far pool bank and center islands, and soften their contrast with distance."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "left-center horizon",
+        "what": "The string of distant flying silhouettes is absent.",
+        "fix": "Restore a small dispersed line of flyers softened by the distant air."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "upper-left air and water just right of the splash",
+        "what": "The air reads as an even white background rather than a warm low veil of steam and suspended fine spray, and the small surface insects and damp detritus are missing.",
+        "fix": "Add a thin local veil that follows the pool with fine catchlit spray, and scatter a few tiny insect and debris accents near the surface and right rim."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "fliers around the main crown",
+        "what": "The fliers read as dark specks or silhouettes spread down over the pond, rather than the target's close grouping of amber-bodied, pale translucent-winged insects around the upper sprays.",
+        "fix": "Concentrate more insects at several depths around the crown and give their wings pale transmitted light while preserving the intended motion blur."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "near stems, buds and dripping tips",
+        "what": "Dry mottled bark, uniformly dark strands and a flat dark opening lack the target's pale salt flakes, wet warm ribs, bright clear drops and jagged fibrous break.",
+        "fix": "Build raised mineral flakes and warm wet highlights, use smaller brighter transparent beads on the tips, and texture the broken stem rim and interior."
+      }
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "round": 16,
+  "unit": "ribs",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-26 05:16 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the giant pale arches and the spire cropped at upper right",
+        "what": "The same stretched gray striations run over broad, smooth faces. The arch tips have blunt, faceted ends and the dark bands on the right read as soft marks painted onto the rock.",
+        "fix": "Break up the silhouettes with fractured bedding and add rock texture at several scales that does not stretch around the bends."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the center wader's feet and the water around the nearest wader and foreground boulders",
+        "what": "The long, nearly intact mirror images sit on parallel water stripes. The nearest wader makes a set of very even concentric rings, while the center wader's feet barely disturb the surface. The surfaces look composited rather than connected.",
+        "fix": "Break up the reflections with irregular cross-ripples, make wakes respond to individual feet and rock edges, and vary refraction and bottom visibility with depth."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "upper-right crop, the flock against the clouds",
+        "what": "The same few rigid wing silhouettes repeat at different scales, often with almost the same roll and posture, so the flock reads as a scatter of stamps.",
+        "fix": "Vary wing shapes, bank angles and wingbeat phases, and give farther fliers lower contrast."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop, the foreground cobble bed",
+        "what": "The stones share the same stretched fine grooves and lacquer-like glints. A continuous pale ripple pattern crosses the stones and the channels between them, making the bed look as if it is covered in mesh.",
+        "fix": "Vary cobble shape, grain and roughness; separate submerged ripples from rock texture on exposed surfaces and add a variable wet edge."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "left crops and lower-right crop, the strands hanging down the close cliff",
+        "what": "The strands are smooth flattened tubes with uniform highlights and blunt cut ends. The cliff behind them has smeared directional grain and black grooves with very little bounce light.",
+        "fix": "Taper and fray the strands, vary wetness and thickness, and give the rock broken mineral detail and a little sky fill in the grooves."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "right crop, the pair of dark rocks between the waders",
+        "what": "The water slices across the rocks in hard, clean outlines. There is little meniscus or flow deflection, and the reflections below read as detached patches.",
+        "fix": "Give each rock an irregular wet line and local surface deformation that also breaks up the reflection at contact."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the nearest wader on the right, from its back folds to its ankles",
+        "what": "The back reads as stacked molded folds, and the body and lower legs have nearly the same dry material even at the waterline. The spray below the head reads as isolated bright beads.",
+        "fix": "Break the folds into irregular skin and filament detail, darken and gloss the legs where wet, and attach the falling droplets to a short draining sheet at the head."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top-right and lower-left crops behind the waders",
+        "what": "Several distant rock masses turn the same gray at once. The haze barely changes between their faces and the gaps between them, so they flatten into cutouts.",
+        "fix": "Vary extinction by depth and height, and let low mist gather in the gaps and at the bases without uniformly tinting the faces."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the submerged stones in both crops, especially the upper-right stone",
+        "what": "The stones read as pale translucent outlines with scattered white pinpricks rather than solid shapes under water.",
+        "fix": "Render depth-dependent refraction and attenuation, keep a solid stone silhouette underneath, and reserve the strongest surface glints for the ripple crests."
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "round": 19,
+  "unit": "reveal",
+  "pack": "R4",
+  "family": "claude",
+  "answered": "2026-11-26 05:11 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "start of the climb, frames 9541 to 9583",
+        "what": "the climb starts on a flat graphic of perfectly even concentric rings, then cuts to an empty solid navy frame (9562), and only then does the crater lake come in. The opening is a swap of pictures, not one continuous rise from the ground",
+        "fix": "start the rise on the real lake surface with real ripples and detail, and pull back from it in one move with no plain fill frame"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "join between part 1 frame 9773 and part 2 frame 9795",
+        "what": "the landmass jumps in orientation and framing. The ribs go from diagonal to near horizontal, and the plume goes from a diagonal streak at top centre to a horizontal streak at mid right with a red star mark, all within 22 frames, while the rest of the rise changes gradually. This reads as a pop or a picture swap",
+        "fix": "carry the same camera path across the join, and ease any roll over the whole climb"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "whole frame with the camera held for 6 s",
+        "what": "the world is frozen. Cloud specks, the cyclone at lower right, the plume and the light are the same on every frame, so the planet reads as a still picture",
+        "fix": "make the cyclone turn slowly, let cloud fields drift and change shape, let the plume billow and drift, and let the terminator light shift slightly"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the land seen from high altitude, frames 9879 to 10027",
+        "what": "from orbital height the ground stops looking like a real view. A continent-sized skeleton with crisp ridge detail at every scale has almost no atmospheric haze. The ocean is covered in even white speckle instead of real cloud systems, so the scale reads as a texture",
+        "fix": "add haze that builds with altitude, organised cloud systems in place of noise speckle, and soften the ridge detail as the view widens"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the lake surface, frames 9578 to 9589",
+        "what": "the water is a flat, featureless navy fill with no waves, glints or depth. Only the shoreline changes from frame to frame, so the fluid is not alive",
+        "fix": "give the lake surface moving ripples, sky reflection and depth colour that change frame to frame"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "rate of climb, frames 9541 to 9647 against 9668 to 9773",
+        "what": "the pull back sweeps through scales very fast in the first frames and then flattens out abruptly instead of easing, so the climb changes speed",
+        "fix": "use one smooth eased altitude curve over the whole rise"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the red star mark at the end of the plume",
+        "what": "a hard graphic-looking red shape that holds steady and does not read as fire or lava",
+        "fix": "make it a glowing, flickering vent that lights the plume above it"
+      }
+    ]
+  }
+}

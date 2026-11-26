@@ -1,0 +1,56 @@
+{
+  "round": 19,
+  "unit": "reveal",
+  "pack": "R1-2",
+  "family": "gemini",
+  "answered": "2026-11-26 05:10 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the sea east of the pelvis between the two legs",
+        "what": "the long rusty-red sediment plume streaming out of the pelvis into the ocean and the warm ochre currents around the lower leg are completely missing",
+        "fix": "restore the red plume trailing eastward from the pelvis basin into the sea between the legs and bring back the warm ochre currents around the lower body"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the rib and limb mountain ridges in the bottom crop and across the continent",
+        "what": "the warm sandy-tan and rust-brown rock ridges with bright turquoise coastal shallows in -a are replaced by stark white snow-capped peaks over dark chocolate-brown slopes and muted dark teal water",
+        "fix": "reduce the heavy white snow caps on the ribs and limbs to warm tan and terracotta rock with snow limited to major peaks, and brighten the turquoise coastal shallows"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the ocean along the right edge from the upper foot down toward the cyclone",
+        "what": "the localized pale-gold sun glint in the upper-right corner of -a becomes a broad, flat, muddy tan-grey swath extending down the entire right edge with an abrupt transition into the dark sea",
+        "fix": "confine the sun glint to a brighter, smoother specular highlight in the upper-right corner and soften its falloff into the dark blue ocean"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the cyclone in the lower-right corner (top crop)",
+        "what": "the spiral cloud bands are thin, harsh, fibrous white streaks over sparser dark ocean with a tiny pinched eye instead of the thick, soft, billowy cloud bands and broader eye in -a",
+        "fix": "soften and thicken the cyclone's spiral cloud bands with fuller cloud cover and subtle shadow depth, and widen the eye slightly to match -a"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "just above and right of the skull between the head and upper shoulder",
+        "what": "the soft, wispy pale mist plumes curving off the skull and neck in -a are missing, replaced by two small sharp white streaks",
+        "fix": "replace the two sharp streaks with soft, wispy pale cloud plumes trailing gently back from the upper skull and neck"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "inside the upper ribcage between the third and fourth ribs",
+        "what": "the bright glowing orange volcanic spot visible in -a is dimmed to a barely visible faint speck",
+        "fix": "restore the bright orange volcanic glow in the upper ribcage so it reads clearly against the surrounding dark terrain"
+      }
+    ]
+  }
+}
