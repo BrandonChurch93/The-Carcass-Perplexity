@@ -88,10 +88,11 @@ void main() {
   float way = mix(vMore.x, vMore.y, h);
   float out_ = smoothstep(0.0, uGain.w, way);
   float x = d / max(r, 1e-9);
-  float heart = 1.0 - smoothstep(0.45, 1.0, x);
-  float air = exp(-0.4 * x * x) * (1.0 - smoothstep(0.6 * ${SHEATH_REACH.toFixed(1)}, ${SHEATH_REACH.toFixed(1)}, x));
+  float heart = 1.0 - smoothstep(0.3, 1.15, x);
+  // The air close about the heart burns nearly as bright and falls away fast: no ruled edge between the white and the violet.
   // A weak current does not burn white: it is a violet thread.
   float hot = smoothstep(0.25, 0.8, gain);
+  float air = (exp(-0.4 * x * x) + 5.0 * hot * exp(-1.6 * x * x)) * (1.0 - smoothstep(0.6 * ${SHEATH_REACH.toFixed(1)}, ${SHEATH_REACH.toFixed(1)}, x));
   vec3 c = uHeart * (uGain.x * heart * hot * hot * out_) + uSheath * (uGain.y * air * gain * (0.25 + 0.75 * out_));
   if (max(c.r, max(c.g, c.b)) < 0.003) discard;
   gl_FragColor = vec4(c * (1.0 - uSolo), 0.0);
@@ -129,40 +130,45 @@ export interface Channel {
 }
 
 /** The spans of a figure as the two layers read them. `lens` is what one pixel of a 4K frame is wide at one metre. */
-export function createChannel(lines: Line[], rigUniforms: Record<string, THREE.IUniform>, lens: { value: number }, heart: THREE.Vector3, core: number): Channel {
-  let count = 0;
-  for (const l of lines) count += l.points.length - 1;
-  const from = new Float32Array(count * 3);
-  const to = new Float32Array(count * 3);
-  const shape = new Float32Array(count * 4);
-  const way = new Float32Array(count * 3);
-  let i = 0;
-  for (const l of lines) {
-    const n = l.points.length - 1;
-    for (let k = 0; k < n; k++) {
-      const a = l.points[k] as [number, number, number];
-      const b = l.points[k + 1] as [number, number, number];
-      from.set(a, i * 3);
-      to.set(b, i * 3);
-      const ka = k / n;
-      const kb = (k + 1) / n;
-      // A branch thins to a hair and dims toward its end; the main channel keeps its breadth and is a little broader where it lands.
-      const taper = (t: number): number => (l.branch ? 1 - 0.75 * t : 1 + 0.5 * Math.max(0, (t - 0.96) / 0.04));
-      const dim = (t: number): number => (l.branch ? 1 - 0.8 * t * t : 1);
-      shape.set([l.width * taper(ka), l.width * taper(kb), l.gain * dim(ka), l.gain * dim(kb)], i * 4);
-      way.set([l.from + (l.to - l.from) * ka, l.from + (l.to - l.from) * kb, l.branch], i * 3);
-      i++;
-    }
-  }
+export function createChannel(lines: Line[], rigUniforms: Record<string, THREE.IUniform>, lens: { value: number }, heart: THREE.Vector3, core: number, coarse = 1): Channel {
   const quad = new THREE.PlaneGeometry(2, 2);
-  const geometry = new THREE.InstancedBufferGeometry();
-  geometry.index = quad.index;
-  geometry.setAttribute('position', quad.getAttribute('position'));
-  geometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(from, 3));
-  geometry.setAttribute('aTo', new THREE.InstancedBufferAttribute(to, 3));
-  geometry.setAttribute('aShape', new THREE.InstancedBufferAttribute(shape, 4));
-  geometry.setAttribute('aWay', new THREE.InstancedBufferAttribute(way, 3));
-  geometry.instanceCount = count;
+  // The spans of every line, taking each `every`-th point of it. The heart reads them all; the glow, which is metres wide and is paid
+  // for by the pixel, reads a line that keeps only the kinks it could show.
+  const spans = (every: number): THREE.InstancedBufferGeometry => {
+    const from: number[] = [];
+    const to: number[] = [];
+    const shape: number[] = [];
+    const way: number[] = [];
+    lines.forEach((l, which) => {
+      const n = l.points.length - 1;
+      const stride = Math.max(1, Math.min(every, n >> 2));
+      // The channel is not one breadth all the way: it swells and thins by a third over tens of spans, each line by its own measure.
+      const bead = (k: number): number => 1 + 0.2 * Math.sin(k * 0.37 + which * 2.1) + 0.14 * Math.sin(k * 1.31 + which * 0.7);
+      for (let k = 0; k < n; k += stride) {
+        const k2 = Math.min(n, k + stride);
+        from.push(...(l.points[k] as [number, number, number]));
+        to.push(...(l.points[k2] as [number, number, number]));
+        const ka = k / n;
+        const kb = k2 / n;
+        // A branch thins to a hair and dims toward its end; the main channel keeps its breadth and is a little broader where it lands.
+        const taper = (t: number): number => (l.branch ? 1 - 0.75 * t : 1 + 0.5 * Math.max(0, (t - 0.96) / 0.04));
+        const dim = (t: number): number => (l.branch ? 1 - 0.8 * t * t : 1);
+        shape.push(l.width * taper(ka) * bead(k), l.width * taper(kb) * bead(k2), l.gain * dim(ka), l.gain * dim(kb));
+        way.push(l.from + (l.to - l.from) * ka, l.from + (l.to - l.from) * kb, l.branch);
+      }
+    });
+    const g = new THREE.InstancedBufferGeometry();
+    g.index = quad.index;
+    g.setAttribute('position', quad.getAttribute('position'));
+    g.setAttribute('aFrom', new THREE.InstancedBufferAttribute(new Float32Array(from), 3));
+    g.setAttribute('aTo', new THREE.InstancedBufferAttribute(new Float32Array(to), 3));
+    g.setAttribute('aShape', new THREE.InstancedBufferAttribute(new Float32Array(shape), 4));
+    g.setAttribute('aWay', new THREE.InstancedBufferAttribute(new Float32Array(way), 3));
+    g.instanceCount = from.length / 3;
+    return g;
+  };
+  const geometry = spans(1);
+  const wide = coarse > 1 ? spans(coarse) : geometry;
 
   const env = new THREE.Vector4(0, 0, 0, 0);
   const sheath = new THREE.Vector3(0.56, 0.3, 1.0);
@@ -171,7 +177,7 @@ export function createChannel(lines: Line[], rigUniforms: Record<string, THREE.I
   const shared = { ...rigUniforms, uLens: lens, uEnv: { value: env }, uHeart: { value: heart }, uSheath: { value: sheath }, uGain: { value: gain } };
   const group = new THREE.Group();
   const glow = new THREE.Mesh(
-    geometry,
+    wide,
     new THREE.ShaderMaterial({
       vertexShader: VERTEX,
       fragmentShader: GLOW_FRAGMENT,

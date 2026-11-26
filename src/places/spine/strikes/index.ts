@@ -24,7 +24,7 @@ const FLASH_OF = [2.4, 0.8, 0.9, 3.2, 0.6, 0.15];
  * the lift would fill the animals and the pulse is the picture. */
 const CLOUD_OF = [1.6, 0.5, 0.8, 0.75, 0.45, 0.85];
 const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 1.2];
-const ROUND_OF = [0.02, 0.2, 0.4, 0.7, 0.02, 0.15];
+const ROUND_OF = [0.02, 0.2, 0.2, 0.7, 0.02, 0.15];
 /** Each strike's share of the light in the cloud about its root. */
 const ROOT_OF = [1, 0.8, 0.9, 0.8, 0.7, 0.8];
 /** The glow in the cloud before the first stroke, as a share of the breakdown. */
@@ -40,7 +40,7 @@ const INNER_CLOUD = 0.5;
 const INNER_PULSE = 1.1;
 /** What stays between the strokes, as shares of the last stroke's light: on the land and in the cloud, which glows along the line the
  * channel took. The channel itself is not drawn between them: at a share of its light it shows as a broken thread. */
-const HOLD_LAND = 0.35;
+const HOLD_LAND = 0.6;
 const HOLD_CLOUD = 0.55;
 const SPARKS = 16;
 /** The least height over the struck tip from which each strike's flash is cast, metres. */
@@ -211,8 +211,8 @@ export function create(ctx: Context): Piece {
     const mid = new THREE.Vector3(midAt[0], midAt[1], midAt[2]);
     const tip = new THREE.Vector3(site.to[0], site.to[1], site.to[2]);
 
-    const firstChannel = createChannel(lines, ctx.rig.uniforms, lens, HEART, CORE);
-    const againChannel = createChannel(linesAgain, ctx.rig.uniforms, lens, HEART, CORE);
+    const firstChannel = createChannel(lines, ctx.rig.uniforms, lens, HEART, CORE, site.rise < 500 ? 8 : 1);
+    const againChannel = createChannel(linesAgain, ctx.rig.uniforms, lens, HEART, CORE, site.rise < 500 ? 8 : 1);
     group.add(firstChannel.group, againChannel.group);
 
     // The cloud about the root. It stands a little under the channel's top, where the channel comes out of the cloud.
