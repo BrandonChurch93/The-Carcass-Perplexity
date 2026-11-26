@@ -112,7 +112,7 @@ export function create(ctx: Context): Piece {
   // In that shot the two tall ones by the lens of breath-03 are low domes too (see setTime).
   for (let i = 0; i < 2; i++) {
     const b = bushes[i] as Bush;
-    rimBushes.push({ x: b.x, y: b.y, z: b.z, tall: i === 0 ? 2.6 : 3.0, lean: b.lean, detail: 0.5, mound: 1 });
+    rimBushes.push({ x: b.x, y: b.y, z: b.z, tall: i === 0 ? 3.0 : 3.4, lean: b.lean, detail: 0.5, mound: 1 });
   }
   const rimGrown: Grown[] = rimBushes.map((bush) => grow(bush, rimRng, floor));
   // Staged by shot (breath-02): two tall weeping ones on the south-west lip, rooted to the left of that lens and leaning across its upper left
@@ -149,10 +149,11 @@ export function create(ctx: Context): Piece {
   const rimGroup = new THREE.Group();
   const hangGroup = new THREE.Group();
   const heroGroup = new THREE.Group();
+  const domeGroup = new THREE.Group();
   grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : group));
-  for (const g of rimGrown) meshes(g, rimGroup);
+  rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
   for (const g of hangGrown) meshes(g, hangGroup);
-  group.add(rimGroup, hangGroup, heroGroup);
+  group.add(rimGroup, hangGroup, heroGroup, domeGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
@@ -177,7 +178,7 @@ export function create(ctx: Context): Piece {
     lumps.push(g);
     const m = new THREE.Mesh(g, holdfastMaterial);
     m.frustumCulled = false;
-    (rimBushes.includes(b) ? rimGroup : bushes.indexOf(b) < 2 && bushes.includes(b) ? heroGroup : group).add(m);
+    (rimBushes.includes(b) ? (rimBushes.indexOf(b) >= RIM_GROWTH.length ? domeGroup : rimGroup) : bushes.indexOf(b) < 2 ? heroGroup : group).add(m);
   }
   lump.dispose();
 
@@ -207,8 +208,9 @@ export function create(ctx: Context): Piece {
     };
     for (const g of all) {
       for (const tip of g.tips) {
-        if (tip.tint[1] < 0.3 || drops.next() > share) continue;
-        const every = drops.range(3, 11);
+        // Only a point with open air under it drips where it can be seen: the others drip into the bush.
+        if (tip.under < 0.8 || drops.next() > share) continue;
+        const every = drops.range(2.2, 8);
         const offset = drops.range(0, 11);
         const size = drops.range(0.009, 0.02);
         const x = tip.a[0] + tip.b[0] + tip.c[0];
@@ -216,6 +218,9 @@ export function create(ctx: Context): Piece {
         const ground = floor(x, z);
         quad(tip, every, offset, size, 0, ground);
         quad(tip, every, offset, size, 1, ground);
+        // A drop seldom falls alone: a smaller one follows it off the same point.
+        quad(tip, every, offset - 0.17, size * 0.7, 1, ground);
+        quad(tip, every, offset - 0.36, size * 0.55, 1, ground);
       }
     }
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
@@ -227,7 +232,7 @@ export function create(ctx: Context): Piece {
   };
   // Only the bushes a lens comes close to have drops that can be seen.
   const nearOnes = grown.filter((_g, i) => (bushes[i] as Bush).detail >= 1);
-  const dropGeometries = [dropsOf(nearOnes, 0.5), dropsOf([], 0), dropsOf(hangGrown, 0.4)];
+  const dropGeometries = [dropsOf(nearOnes, 0.16), dropsOf([], 0), dropsOf(hangGrown, 0.2)];
   const dropMaterial = new THREE.ShaderMaterial({
     vertexShader: DROP_VERTEX,
     fragmentShader: DROP_FRAGMENT,
@@ -258,6 +263,7 @@ export function create(ctx: Context): Piece {
 
   const rimDiscs = rig.contactDiscs(rimBushes.length * 2);
   const rimSpan = shotSpan('breath-05');
+  const wideSpan = shotSpan('breath-01');
   const hangDiscs = rig.contactDiscs(hangBushes.length);
   const hangSpan = shotSpan('breath-02');
 
@@ -272,19 +278,23 @@ export function create(ctx: Context): Piece {
       const shown = at >= rimSpan[0] && at <= rimSpan[1];
       rimGroup.visible = shown;
       // The two tall ones are grown for the lens that stands among them (breath-03). From the rim's lens they stood over the wader as
-      // two trees, where the picture has low domes of brush: for that shot low ones stand in their place (the last two of RIM_GROWTH).
-      heroGroup.visible = !shown;
+      // two trees, and from the wide lens they were two dark lumps on the lip, where the pictures have low spreading brush: in those
+      // two shots low domes stand in their place (the last two of the rim's bushes).
+      const low = shown || (at >= wideSpan[0] && at <= wideSpan[1]);
+      heroGroup.visible = !low;
+      domeGroup.visible = low;
       for (let i = 0; i < 2; i++) {
         const b = bushes[i] as Bush;
-        rig.setDisc(discs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, shown ? 0 : 0.7);
-        rig.setShadow(discs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, shown ? 0 : 0.5);
+        rig.setDisc(discs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, low ? 0 : 0.7);
+        rig.setShadow(discs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, low ? 0 : 0.5);
       }
       const hung = at >= hangSpan[0] && at <= hangSpan[1];
       hangGroup.visible = hung;
       hangBushes.forEach((b, i) => rig.setShadow(hangDiscs, i, b.x, b.z, 0.2 * b.tall, 0.4 * b.tall, hung ? 0.5 : 0));
       rimBushes.forEach((b, i) => {
-        rig.setDisc(rimDiscs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, shown ? 0.7 : 0);
-        rig.setShadow(rimDiscs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, shown ? 0.5 : 0);
+        const here = i >= RIM_GROWTH.length ? low : shown;
+        rig.setDisc(rimDiscs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, here ? 0.7 : 0);
+        rig.setShadow(rimDiscs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, here ? 0.5 : 0);
       });
     },
     beforeSample: (renderer, camera) => {

@@ -243,7 +243,7 @@ void main() {
   vec3 c = threadAt(aA.xyz, aB.xyz, aC.xyz, aSway, aTint.z, aTint.w, 1.0, then, uSurge, tangent);
   float size = aDrop.z * mix(0.45 + 0.55 * smoothstep(0.0, aDrop.x, since), 0.9, falls);
   c.y -= size * 0.8 + falls * 4.9 * since * since;
-  vShow = mix(1.0, step(since, 0.62) * step(aCorner.z, c.y), falls);
+  vShow = mix(1.0, step(since, 0.85) * step(aCorner.z, c.y), falls);
   vec3 toEye = cameraPosition - c;
   float far = length(toEye);
   vec3 across = normalize(cross(vec3(0.0, 1.0, 0.0), toEye));
@@ -278,7 +278,7 @@ void main() {
   float lit = sunAt(vWorld);
   vec3 through = skyRadiance(normalize(vec3(-v.x, 0.25 + 0.5 * vAt.y, -v.z))) * mix(0.3, 1.1, smoothstep(0.5, -0.7, vAt.y)) * (1.0 - 0.5 * smoothstep(0.5, 1.0, d));
   vec2 hot = vAt - vec2(0.28, -0.35);
-  vec3 colour = min(through, vec3(1.6)) + uSunColour * (0.8 + 3.0 * pow(against, 4.0)) * lit * smoothstep(0.16, 0.0, dot(hot, hot));
+  vec3 colour = min(through, vec3(1.6)) * 0.7 + uSunColour * (0.8 + 3.0 * pow(against, 4.0)) * lit * smoothstep(0.16, 0.0, dot(hot, hot));
   float alpha = bead * min(1.0, vKind) * 0.9 * (1.0 - uSolo);
   gl_FragColor = vec4(colour * alpha, alpha);
 }`;
