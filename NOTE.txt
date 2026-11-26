@@ -1,0 +1,4 @@
+2026-11-26 01:23 UTC
+work at c101b77 on agent/marsh-ground-2
+hb1: brine as a mirror over red body (marsh-0, 1, 3 approved left, frame right)
+look-1.jpg = out/work/hb1-brine-mirror.jpg
