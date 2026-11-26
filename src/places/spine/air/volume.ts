@@ -286,7 +286,7 @@ ${SEA_SHADE_GLSL}
     // The sea of cloud is seen from above through thin air: it keeps its lumps and its lit edge.
     if (seaAt > 0.0 && far <= seaAt + 1.0) veiled = min(veiled, 0.3) * (1.0 - seaGone);
     // Blown snow is the storm's cold violet; the warm band stays on the horizon and does not stain the air.
-    vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.005, 0.011);
+    vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.006, 0.009);
     light = light * (1.0 - veiled) + snowAir * veiled;
     through *= 1.0 - veiled;
     // Scud: torn cloud that races low past the spires on the gale, paler than the storm behind it (staged by shot, uStage.w).
