@@ -251,7 +251,7 @@ export function bedded(x: number, z: number): number {
   // Metres to the edge of the plate, about. The riser is two thirds of a metre through: the mesh that draws it has cells of 24 cm, and a
   // riser thinner than three of them, or an edge that jogs in less than four, is drawn as saw teeth. A crack runs along its foot.
   const edge = 0.5 * (d2 - d1);
-  const k = 1 - smooth(edge / 0.34);
+  const k = 1 - smooth(edge / 0.5);
   return h1 + 0.5 * (h2 - h1) * k - 0.05 * (1 - smooth(edge / 0.09)) * (h1 < h2 + 0.03 ? 1 : 0.2);
 }
 
@@ -301,7 +301,7 @@ export const padAt = (x: number, z: number): number => {
   // A plate has straight broken sides and corners: it is the ground inside six lines, each pushed about a little.
   let out = -1e9;
   for (const [turn, far] of PAD_EDGES) out = Math.max(out, dx * Math.cos(turn) + dz * Math.sin(turn) - far);
-  return 1 - smooth((out - 0.9 * (fbm2(x / 3.1 + 9.3, z / 3.1 + 2.8, 2) - 0.5) - 0.4 * (noise2(x / 0.8 + 4.4, z / 0.8 + 7.7) - 0.5)) / 0.35);
+  return 1 - smooth((out - 0.9 * (fbm2(x / 3.1 + 9.3, z / 3.1 + 2.8, 2) - 0.5) - 0.4 * (noise2(x / 0.8 + 4.4, z / 0.8 + 7.7) - 0.5)) / 0.75);
 };
 let padHeight: number | null = null;
 const padLevel = (): number => (padHeight ??= Math.max(SEA + 0.45, smoothGround(PAD[0], PAD[1]) - 0.1));
@@ -320,8 +320,12 @@ export function ground(x: number, z: number): number {
   // stands a hand over it, and the water's edge runs along the break between them. No beach of smooth ground lies between the two.
   const shore = Math.min(1 - smooth((bank - 0.75) / 0.2), smooth((base - (SEA - 0.3)) / 0.1));
   const relief = lerp(base, lerp(base, bedded(x, z), shore) + RELIEF * (Math.max(plateAt(x, z), POOL) - 0.5), fine);
+  // Where the waders feed (shot breath-04) the floor of the channel lies a hand and more under the tide all the way across: a plate that
+  // stood at the tide there was a patch of dry rock in the middle of the water, and the waders on it stood dry.
+  const feed = smooth((x + 58.5) / 3) * smooth((-38.5 - x) / 3) * smooth((-19.5 - z) / 3) * smooth((z + 44.5) / 3);
+  const floor = feed > 0 ? lerp(relief, Math.min(relief, SEA - 0.22 - 0.05 * plateAt(x, z)), feed) : relief;
   const pad = padAt(x, z);
-  if (pad <= 0) return relief + lumps(x, z);
+  if (pad <= 0) return floor + lumps(x, z);
   return pad > 0 ? lerp(relief, padLevel() - 0.03 * sat(Math.hypot(x - PAD[0], z - PAD[1]) / 3.2) ** 2, pad) : relief;
 }
 

@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { cliffHeight, cliffPoint, smooth } from '../land';
+import { smooth } from '../land';
 import { EXHALE, SMALLER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { bakeNoise } from './noise';
@@ -46,44 +46,6 @@ export function breathAt(seconds: number): [number, number, number, number] {
   const apron = smooth((u - 2.2) / 2.0) * (0.2 + 0.8 * Math.exp(-Math.max(0, u - 3.4) / 2.4));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
-}
-
-/** The breath itself: billows that well up in the west half of the shaft one after the other, stand over the lip and slide off it with the wind,
- *  spreading and thinning as they go. Each is a function of the time alone. */
-const BILLOWS: readonly (readonly [number, number, number, number, number, number, number])[] = [
-  // delay s, x, z, half width, half height, half depth, thickness
-  [0.0, -13, -9, 13, 7.5, 12, 0.05],
-  [0.25, -19, 1, 11, 6.5, 10, 0.045],
-  [0.5, -7, -17, 10, 6, 11, 0.04],
-  [0.8, -19, -18, 11, 7, 9, 0.045],
-  [1.1, -9, -1, 9, 5.5, 9, 0.035],
-  [1.5, -23, -8, 10, 6, 10, 0.04],
-];
-export function exhaleBodies(seconds: number): Body[] {
-  const out: Body[] = [];
-  for (const [delay, x, z, rx, ry, rz, dense] of BILLOWS) {
-    const a = seconds - EXHALE - delay;
-    if (a <= 0.05) continue;
-    const up = smooth((a + 0.3) / 3.2);
-    const slide = Math.max(0, a - 2.6);
-    const grow = 0.55 + 0.45 * smooth(a / 1.6) + 0.07 * slide;
-    // It sinks back on the rock as it slides: heavier than the air it came into.
-    const y = -11 + 14.5 * up - 0.35 * Math.min(slide, 4);
-    const thin = smooth(a / 0.8) * Math.exp(-Math.max(0, a - 3.2) / 0.9);
-    if (thin < 0.02) continue;
-    out.push({
-      part: 'exhale',
-      at: [x - 0.55 * 2.6 * slide, y, z - 0.83 * 2.6 * slide],
-      size: [rx * grow * (1 + 0.1 * slide), ry * (0.7 + 0.3 * up) * (1 - 0.06 * Math.min(slide, 5)), rz * grow * (1 + 0.06 * slide)],
-      lean: [-0.25 * up, 0.09 * up],
-      dense: (0.8 * dense * thin) / (grow * grow),
-      repeat: 17,
-      open: 0.42,
-      climb: 1.4,
-      sun: 0.6,
-    });
-  }
-  return out;
 }
 
 export function create(ctx: Context): Piece {

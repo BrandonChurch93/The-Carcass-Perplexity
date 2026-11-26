@@ -18,10 +18,11 @@ const HERO_WEST = 3.6;
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
 const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
-  [-28.6, 10.6, 4.6, 1],
-  [-30.4, 8.2, 4.2, 1],
-  [-31.6, 12.9, 2.6, 1],
-  [-33.6, 10.4, 3.2, 0.5],
+  [-28.3, 11.5, 4.6, 1],
+  [-27.2, 13.2, 3.4, 1],
+  [-31.0, 12.5, 3.4, 1],
+  [-32.8, 14.4, 2.6, 1],
+  [-30.6, 18.0, 2.2, 1],
   [-32.4, 19.3, 1.0, 0.5],
   [-30.8, 21.6, 0.75, 0.5],
   [-33.6, 16.6, 1.2, 0.5],
@@ -37,10 +38,12 @@ ${RIG_GLSL}
 void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
-  // Knotted wet flesh, the colour of a root: pale where it swells, wine-dark in its folds.
+  // Knotted wet flesh, the colour of a root: pale and pink where it swells, wine-dark in its folds, with cords that run down it to the rock.
   float knot = fbm(vWorld.xz * 9.0 + vWorld.y * 5.0);
-  float fold = smoothstep(0.35, 0.6, knot);
-  vec3 albedo = mix(vec3(0.1, 0.02, 0.025), vec3(0.36, 0.22, 0.2), fold);
+  float cords = vnoise(vec2(atan(n.z, n.x) * 9.0 + 2.0 * knot, vWorld.y * 3.0));
+  float fold = smoothstep(0.3, 0.6, 0.6 * knot + 0.4 * cords);
+  vec3 albedo = mix(vec3(0.16, 0.05, 0.05), vec3(0.6, 0.43, 0.38), fold) * (0.8 + 0.4 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0));
+  n = normalize(n + 0.35 * (cords - 0.5) * cross(n, vec3(0.0, 1.0, 0.0)));
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.4, 0.35 + 0.5 * fold);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
@@ -54,19 +57,21 @@ export function create(ctx: Context): Piece {
     const at = bushAt(i);
     // Staged: the two that the lens of key breath-3 stands by are rooted a stride further west of the lip than their anchors, so that
     // the nearer is cut by the left edge of that frame and the farther has its holdfast in the lower left of it, as in the picture.
-    // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted three metres to that lens's left
-    // and a stride ahead of it, so that its fronds hang into the upper left of that frame, as the picture has them.
-    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] - 0.5] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? [-11.5, 29.5] : at;
+    // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted two and a half metres to that
+    // lens's left and two ahead of it, and a taller one stands on the lip beyond it: both weep, so that their sprays hang into the upper
+    // left of that frame from outside it, as the picture has them.
+    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? [-10.6, 28.9] : at;
     // Three stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : i === 5 ? tall * 1.25 : tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5 });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : i === 5 ? tall * 1.1 : tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5, mound: i === 5 ? 0.15 : i < 2 ? 0 : 0.6, weep: i === 5 ? 1 : 0 });
   });
+  bushes.push({ x: -12.5, y: floor(-12.5, 27.7), z: 27.7, tall: 5.6, lean: Math.atan2(12.5, 27.7), detail: 1, mound: 0.2, weep: 1 });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
   const fill = ctx.rng('gill-plume-fill');
   for (let j = 0; j < 16; j++) {
     const bearing = -72 + (j + fill.next()) * (50 / 16);
     const [x, z] = onRim(bearing, fill.range(0.8, 5.5));
-    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4 });
+    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4, mound: 0.7 });
   }
   // And on the lip west of the first tall one, toward the channel: the low end of the crescent, left of every lens that stands at the lip
   // (the breath-03 lens at x -32.5 looks north past it; from the rim's lens it is small red tufts at the left).
@@ -77,7 +82,7 @@ export function create(ctx: Context): Piece {
     const tall = fill.range(0.9, 1.9);
     const y = floor(x, z);
     if (y < SEA_LEVEL + 0.12) continue;
-    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
+    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, mound: 0.7 });
   }
   for (const [x, z, tall] of SEEDLINGS) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
 

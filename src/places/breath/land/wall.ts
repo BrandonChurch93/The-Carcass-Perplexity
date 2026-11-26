@@ -78,15 +78,20 @@ export function wallPoint(b: number, depth: number): WallPoint {
   // Where the east-south-east side came down the ribs went with it: they end ragged either side of the fall.
   const torn = smooth((36 - Math.abs(deg - 112) + 5 * noise3(deg * 0.2, depth * 0.3, 7.7)) / 12);
   h = lerp(LEVEL, h, join);
-  const stand = (h - LEVEL) * WALL_REACH * (h > LEVEL ? (1 - 0.85 * torn) * (1 + 0.35 * smooth((h - RIB) / 0.25)) : 1);
+  // No two tiers are one wall: how far a rib stands out changes along it and from tier to tier, from nearly flush to half as far again.
+  const own = 0.5 + 0.95 * noise3(deg * 0.043 + 3.1, depth / 6.5, 5.7) + 0.25 * noise3(deg * 0.17, depth / 3.1, 1.9);
+  const stand = (h - LEVEL) * WALL_REACH * (h > LEVEL ? (1 - 0.85 * torn) * (1 + 0.35 * smooth((h - RIB) / 0.25)) * own : 1);
   const y = top - depth;
   const down = sat(depth / (top + DEPTH));
-  const meet = smooth(depth / 0.9);
-  const r = r0 + 0.03 - meet * 0.6 - 12 * down - stand * meet;
+  const inset = smooth(depth / 0.9);
+  // The brim is a plain broken face for a man's height: the first rib stands out under it as a ledge of its own. Standing out from the
+  // brim itself, its top was a pale sheet level with the ground beside every lens on the rim.
+  const meet = smooth((depth - 1.7) / 1.0);
+  const r = r0 + 0.03 - inset * 0.6 - 12 * down - stand * meet;
   // A rib is a ledge: what stands out is lifted a little, so its top lies nearly level and its underside is cut back.
   // It never stands over the ground of the brim: lifted past it, the lip of the shaft was a row of tents in front of the lens on the rim.
   const lift = 0.13 * Math.max(0, stand) * meet;
-  return { at: [Math.sin(b) * r, Math.min(y + lift, top - 0.1 * meet - 0.035 * Math.max(0, stand) * meet), -Math.cos(b) * r], u, v, relief: h, open: lerp(1, open, join) };
+  return { at: [Math.sin(b) * r, Math.min(y + lift, top - 1.6 * meet - 0.035 * Math.max(0, stand) * meet), -Math.cos(b) * r], u, v, relief: h, open: lerp(1, open, join) };
 }
 
 /** The top of the nth rib down from the brim at a bearing (degrees): where a fallen block can lie. */
