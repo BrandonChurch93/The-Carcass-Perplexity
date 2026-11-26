@@ -160,13 +160,13 @@ export function create(ctx: HeartContext): HeartPiece {
     // Evenly through the cycle, so a drop is never without fume and never gives it off in a burst.
     const life = own.range(5, 8.5);
     puffLife.set([(((i % PUFFS_A_DROP) + own.next()) / PUFFS_A_DROP) * life, life, own.range(1.6, 3.2), own.next()], i * 4);
-    puffSeed.set([own.next(), own.next(), own.next(), own.range(0.16, 0.34)], i * 4);
+    puffSeed.set([own.next(), own.next(), own.next(), own.range(0.12, 0.26)], i * 4);
   }
   fumeGeometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(puffFrom, 4));
   fumeGeometry.setAttribute('aLife', new THREE.InstancedBufferAttribute(puffLife, 4));
   fumeGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(puffSeed, 4));
   fumeGeometry.instanceCount = PUFFS;
-  const fumeMaterial = new THREE.ShaderMaterial({ vertexShader: FUME_VERTEX, fragmentShader: FUME_FRAGMENT, uniforms: shared, transparent: true, depthWrite: false });
+  const fumeMaterial = new THREE.ShaderMaterial({ vertexShader: FUME_VERTEX, fragmentShader: FUME_FRAGMENT, uniforms: shared, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
   const fume = new THREE.Mesh(fumeGeometry, fumeMaterial);
   fume.frustumCulled = false;
   ctx.scene.add(fume);

@@ -485,7 +485,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     rq += 0.8 * vec2(vnoise(rq * 0.6 + 3.0), vnoise(rq * 0.6 + 11.0)) + 0.22 * vec2(vnoise(rq * 2.3 + 5.0), vnoise(rq * 2.3 + 17.0));
     vec2 cell = plates(rq);
     cell.y += 0.16 * (vnoise(rq * 3.7 + 9.0) - 0.5);
-    float want = mix(0.22, 0.03, fast) + mix(0.5, 0.22, fast) * smoothstep(0.62, 0.95, u) + 0.4 * smoothstep(-14.0, -50.0, len) - 0.25 * smoothstep(-6.0, 4.0, len) * smoothstep(14.0, 6.0, len) - 0.25 * wake - 0.1 * full - 0.2 * pool * behind + 0.4 * dark - 0.12 * bright;
+    float want = mix(0.22, 0.03, fast) + mix(0.5, 0.22, fast) * smoothstep(0.62, 0.95, u) + 0.4 * smoothstep(-14.0, -50.0, len) - 0.25 * smoothstep(-6.0, 4.0, len) * smoothstep(14.0, 6.0, len) - 0.25 * wake - 0.24 * full - 0.2 * pool * behind + 0.4 * dark - 0.12 * bright;
     raft = smoothstep(want + 0.03, want - 0.03, cell.y) * smoothstep(0.03, 0.1, cell.x) * (1.0 - lay);
     // What skin the surge still carries is young: dull red, and never the black of old crust.
     float skin = mix(mix(880.0, 1095.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)) + 170.0 * behind, 1290.0 + 90.0 * behind, smoothstep(0.26, 0.08, cell.x));
@@ -512,26 +512,26 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     // marks in the lava and ride at its speed: on a tread they crowd until only seams of melt are left between them, a drop draws
     // them out and tears most of them up, and the pool under it has none.
     if (full > 0.001) {
-      vec2 bq = vec2(s / 3.3 + 0.5 * vnoise(vec2(ride * 0.7, 5.0)), ride / 1.7);
+      vec2 bq = vec2(s / 3.8 + 0.5 * vnoise(vec2(ride * 0.3, 5.0)), ride / 6.5);
       bq += 0.7 * vec2(vnoise(bq * 0.6 + 23.0), vnoise(bq * 0.6 + 31.0)) + 0.2 * vec2(vnoise(bq * 2.3 + 5.0), vnoise(bq * 2.3 + 17.0));
       vec3 slabCell = slabs(bq);
       slabCell.y += 0.14 * (vnoise(bq * 3.1 + 9.0) - 0.5);
-      float crowd = mix(0.58, 0.34, smoothstep(1.7, 3.3, speed)) * (1.0 - 0.9 * pool) + 0.16 * smoothstep(0.55, 0.95, u) - 0.3 * lipHotAt;
+      float crowd = mix(0.46, 0.27, smoothstep(1.7, 3.3, speed)) * (1.0 - 0.9 * pool) + 0.16 * smoothstep(0.55, 0.95, u) - 0.3 * lipHotAt;
       float slab = smoothstep(crowd + 0.03, crowd - 0.03, slabCell.y) * smoothstep(0.03, 0.11, slabCell.x) * full * smoothstep(-30.0, -10.0, len);
       // Where they crowd they buckle: a slab is cracked across and the melt shows in the crack.
       float buckle = smoothstep(0.05, 0.0, abs(vnoise(vec2(s * 0.5 + 3.0, ride * 2.6)) - 0.5)) * (1.0 - fast) * seenAt(0.5);
       // A slab is crust lying on the melt and not a hole in it: its face is a dull red that it keeps as it rides, darker in its
       // middle where it is thickest, with its own net of cracks; its edge glows where the melt wells round it.
-      vec2 inner = plates(bq * 2.7 + 13.0);
-      float faceK = mix(1010.0, 1095.0, slabCell.y / max(crowd, 0.05)) - 50.0 * smoothstep(0.2, 0.5, slabCell.x) + 50.0 * (vnoise(bq * 4.0 + 3.0) - 0.5);
-      float crack = max(smoothstep(0.09, 0.02, inner.x) * seenAt(0.6), 0.8 * buckle);
+      vec2 inner = plates(bq * 2.1 + 13.0);
+      float faceK = mix(900.0, 1010.0, slabCell.y / max(crowd, 0.05)) - 50.0 * smoothstep(0.2, 0.5, slabCell.x) + 50.0 * (vnoise(bq * 4.0 + 3.0) - 0.5);
+      float crack = max(smoothstep(0.06, 0.02, inner.x) * seenAt(0.6), 0.8 * buckle);
       // It has height: the melt banks up pale against the edge that meets the flow, and the edge that looks down the stream, which
       // is the one the lake sees, stands a hand proud of the melt and is in its own shade.
       float lee = smoothstep(0.1, -0.2, slabCell.z);
       float slabK = mix(faceK, 1330.0, crack);
-      slabK = mix(slabK, 930.0, 0.8 * lee * smoothstep(0.36, 0.2, slabCell.x));
+      slabK = mix(slabK, 840.0, 0.8 * lee * smoothstep(0.36, 0.2, slabCell.x));
       slabK = mix(slabK, 1440.0, (1.0 - lee) * smoothstep(0.3, 0.12, slabCell.x));
-      slabK = mix(slabK, 1400.0, smoothstep(0.13, 0.07, slabCell.x));
+      slabK = mix(slabK, 1440.0, smoothstep(0.15, 0.08, slabCell.x));
       kelvin = mix(kelvin, slabK, slab);
       // The melt stands a shade paler in the seam round a slab.
       kelvin = mix(kelvin, max(kelvin, 1545.0), 0.7 * full * (1.0 - slab) * smoothstep(crowd + 0.03, crowd - 0.03, slabCell.y) * smoothstep(-30.0, -10.0, len));
@@ -680,7 +680,7 @@ void main() {
     float bankOcc = mix(1.0, 0.16 + 0.84 * smoothstep(0.4, 0.52, lump), smoothstep(18.0, 6.0, side) * (1.0 - shelf) * (1.0 - vIn.x));
     // The rig's strip of light along the course is the river of the picture and does not know the surge. The fuller river lights
     // its banks more, the head most of all, and the light goes down the course with the front: nothing of it before the strike.
-    float fuller = (0.5 * smoothstep(uSurge.x + 2.0, uSurge.x - 8.0, vFlow.w) + 2.0 * exp(-abs(vFlow.w - uSurge.x) / 9.0)) * uSurge.y * smoothstep(0.0, 6.0, uSurge.x) * smoothstep(${f(FAN_FROM + 16)}, ${f(FAN_FROM)}, vFlow.w);
+    float fuller = (0.8 * smoothstep(uSurge.x + 2.0, uSurge.x - 8.0, vFlow.w) + 2.2 * exp(-abs(vFlow.w - uSurge.x) / 9.0)) * uSurge.y * smoothstep(0.0, 6.0, uSurge.x) * smoothstep(${f(FAN_FROM + 16)}, ${f(FAN_FROM)}, vFlow.w);
     // It comes from the stream, low and from the side: a face that looks at the stream takes it and one that looks away does not,
     // so the lit bank keeps its form.
     float faces = clamp(dot(n, normalize(vec3(vBank.x, -0.3, vBank.y))) * 0.5 + 0.6, 0.0, 1.0);
@@ -859,7 +859,8 @@ void main() {
   float wisp = 0.6 * vnoise(vDisc * 1.5 + vPuff.y * 17.0 + vec2(0.0, -0.25 * vPuff.w)) + 0.4 * vnoise(vDisc * 3.4 + vPuff.y * 31.0 + vec2(0.0, -0.4 * vPuff.w));
   float alpha = smoothstep(1.0, 0.15, r + 0.75 * (wisp - 0.5)) * vPuff.z;
   // Lit from below by the melt it leaves, and by the dusk above that: orange at its foot, grey-brown where it has risen.
-  vec3 c = vec3(0.5, 0.46, 0.43) * (blackbody(1400.0) * 0.026 * exp(-max(vHigh, 0.0) / 7.0) + skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.4 * skyOpen(vCentre));
-  gl_FragColor = vec4(rigOut(c), alpha);
+  vec3 c = vec3(0.62, 0.57, 0.52) * (blackbody(1400.0) * 0.05 * exp(-max(vHigh, 0.0) / 6.0) + skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.6 * skyOpen(vCentre));
+  // Fume this thin scatters more light than it stops: it is laid over the picture as a veil and takes little from what is under it.
+  gl_FragColor = vec4(rigOut(c) * alpha, 0.3 * alpha);
   if (alpha < 0.003) discard;
 }`;
