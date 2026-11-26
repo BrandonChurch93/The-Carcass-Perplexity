@@ -1,0 +1,255 @@
+{
+  "round": 8,
+  "unit": "breath",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 82,
+      "why": "The nearly identical creature models scattered across the flats look like reused game assets.",
+      "answered": "23:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 70,
+      "why": "simple blocky rock geometry with tiled textures and sparse low-detail creatures, like an indie/low-budget game scene",
+      "answered": "23:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the crude real-time shading with hard unblended water-to-terrain intersections and low-poly rock geometry",
+      "answered": "23:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 96,
+      "why": "the crater wall looks assembled from flat polygonal ledges suspended in a black void.",
+      "answered": "23:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 60,
+      "why": "simple low-detail geometry and repeated sprite-like assets (smeared stone textures, blocky rocks, flat steam sprites, crude creature models) read as an indie or mobile game, not a big-budget cinematic.",
+      "answered": "23:56 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the visibly faceted shoreline terrain.",
+      "answered": "23:56 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "simple untextured-looking creature models and smooth procedural terrain/water typical of an ordinary hobbyist 3D render rather than film-grade detail",
+      "answered": "23:56 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 75,
+      "why": "the visibly unblended seams where the low-poly creature limbs attach to the torso alongside the smooth low-detail terrain and basic procedural water",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 92,
+      "why": "the shoreline breaks into conspicuously large, flat polygons.",
+      "answered": "23:56 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "The creature models and terrain are simple, with smooth low-detail geometry, plain stretched textures and a tiling water-ripple shader. The atmosphere and lighting are good, but the asset quality looks like a real-time or indie game rather than a big-budget cinematic.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the cliff edges have conspicuously faceted geometry beneath their detailed textures.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 70,
+      "why": "simple blocky low-poly rock slabs and flat, smeared ground textures typical of a real-time indie/low-budget game engine",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 75,
+      "why": "the low-poly faceted creature limbs and blocky cliff edges with simple real-time particle fog and lighting",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 96,
+      "why": "The chasm walls are visibly built from flat-sided polygonal slabs.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "the flat, stretched ground textures, blocky rock geometry and stiff creature models read as an indie or low-budget game, though the moody fog and lighting are polished.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "The foreground cliffs look like beveled 3D blocks with visibly stretched textures.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 70,
+      "why": "simple low-poly rock geometry with stretched textures and basic fog, typical of an indie/real-time engine demo rather than a high-end cinematic",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the low-poly faceted cliff geometry with stretched vertical textures and crude polygon intersections",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "the foreground cliff faces have visibly stretched textures across blocky polygonal slabs.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "the rocks are blobby, low-detail and stretched-texture, and the red fronds look like flat alpha-card foliage. Fog hides the lack of detail, so it reads as real-time indie game or engine demo rather than top-budget (b) or a photo.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 86,
+      "why": "the conspicuously angular rock ledges with stretched, repetitive textures.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "simple stylized rock shapes with plain beveled edges and a flat sprite-like fog card look like an ordinary render, not film-quality work.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 82,
+      "why": "low-poly faceted rock ledges with visibly stretched textures along the foreground cliff edge",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the cliff walls look like stacks of coarse polygon slabs with textures visibly stretched over their edges.",
+      "answered": "23:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "The thing that most influenced me was the flat, blobby fog sprite and the simplified, hand-painted-looking rock slabs. The foliage and lighting are good, but those two details read as real-time game assets, not a big-budget cinematic.",
+      "answered": "23:57 UTC"
+    }
+  ]
+}

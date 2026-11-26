@@ -40,8 +40,7 @@ uniform vec3 uSunColour;
 uniform vec3 uHaze;
 uniform vec3 uSkyBreak;
 uniform sampler2D tSky;
-uniform vec3 uSkyMean;
-uniform float uCloudHeight;`;
+uniform vec4 uSkyTurn;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -63,8 +62,8 @@ vec3 skyIrradiance(vec3 n) {
   float lean = 1.0 + min(n.y, 0.0);
   float seen = lean * lean * lean;
   float up = n.y >= 0.0 ? 0.5 + 0.5 * n.y : 0.5 * seen;
-  // The bright side of the overcast is the sun's: a face turned to it takes a fifth more of the sky, one turned away a fifth less.
-  float side = 1.0 + 0.45 * dot(n.xz, uSunDir.xz);
+  // The bright side of the overcast is the sun's: a face turned to it takes a sixth more of the sky, one turned away a sixth less.
+  float side = 1.0 + 0.2 * dot(n.xz, uSunDir.xz);
   return 3.14159 * side * mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.6 * max(n.y, 0.0)), up);
 }
 
@@ -106,29 +105,21 @@ float cloudShade(vec3 p) {
   return mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, c));
 }
 
-// The sky with its cloud, as seen from a place toward d: what the dome draws, and what a mirror (a pool, the sea) should show.
-// Three texture reads. For light on a rough surface skyRadiance is enough.
+// The sky with its cloud, toward d: what the dome draws, and what a mirror (a pool, the sea) should show. from is where it is seen from.
+// One picture of a storm sky laid round the dome and mirrored behind, turning slowly with the wind while its lumps work; two texture reads.
+// For light on a rough surface skyRadiance is enough.
 vec3 skyCloud(vec3 from, vec3 d) {
-  vec3 c = skyRadiance(d);
-  // The cloud is one sheet at one height: the same sheet that shades the ground, seen from below.
-  float up = max(d.y, 0.0);
-  vec2 at = from.xz + d.xz * (uCloudHeight / (up + 0.12)) - uSunDir.xz * (uCloudHeight / uSunDir.y);
-  vec2 m = at * uCloudShade.z - uCloudShade.xy;
-  float gap = smoothstep(0.42, 0.62, cloudCover(at));
-  vec3 wide = texture2D(tSky, m * vec2(0.45, 0.9)).rgb / uSkyMean;
-  vec3 fine = texture2D(tSky, m * vec2(1.3, 2.6) + vec2(0.31, 0.57)).rgb / uSkyMean;
-  vec3 shape = wide * mix(vec3(1.0), fine, 0.4);
+  float az = atan(d.x, -d.z);
+  float el = asin(clamp(d.y, 0.0, 1.0));
+  vec2 uv = vec2(0.5 + (az - uSkyTurn.x) / 2.62, 1.0 - exp(-el / 0.45));
+  vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
+  vec3 c = texture2D(tSky, uv + 0.016 * work).rgb * uSkyTurn.w;
+  // Straight overhead the picture runs out: the slate of the cloud's base.
+  c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
+  // Toward the horizon the cloud is seen through more and more air.
   float s = max(dot(d, uSkyBreak), 0.0);
   float s2 = s * s;
-  // Cloud bases are dark slate. In the one break the lit tops of the cloud stand white against pale sky, and the edges round it burn.
-  float lum = dot(shape, vec3(0.3, 0.5, 0.2));
-  vec3 body = c * pow(shape, vec3(1.5)) * mix(0.42, 0.75, gap);
-  float open = smoothstep(0.9, 0.985, s + 0.04 * (lum - 1.0));
-  float edge = smoothstep(0.7, 1.7, lum);
-  vec3 lit = uSunColour * ((0.03 + 0.12 * s2 * s2) * edge * (0.3 + 0.7 * gap) + open * (0.14 + 0.5 * edge));
-  c = body * (1.0 - 0.6 * open) + lit;
-  // Toward the horizon the sheet is seen through more and more air.
-  float low = smoothstep(0.2, 0.0, d.y);
+  float low = 0.7 * smoothstep(0.07, 0.0, d.y);
   return mix(c, uHaze * (1.0 + 0.5 * s2 * s2), low);
 }
 

@@ -1,0 +1,70 @@
+{
+  "round": 8,
+  "unit": "breath",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-25 23:56 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the steam cloud hanging over the stepped pit, through the whole shot (frames 4221-4596)",
+        "what": "the cloud keeps one soft, blobby outline for six seconds and slides with the camera like a flat card. It does not rise, curl or thin, so the pit reads as a still set with a sprite laid on top",
+        "fix": "make it a volumetric plume that rises out of the pit and breaks up in the wind, with its edges changing frame to frame"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the dark fume band along the pit rim on the right, frames 5510-5521",
+        "what": "a smeared, hard-edged dark band that keeps the same shape from frame to frame and has no drift or depth. It reads as a texture stuck to the rock, not as vapour",
+        "fix": "replace it with real fume that moves and lifts, or drop it"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the end of the push into the red plant, frames 5022-5080",
+        "what": "the move ends with the frame half-filled by dark, out-of-focus foliage over a flat wash of fog. It is a weak picture to end on, and the camera move has no clear target",
+        "fix": "stop the push earlier, or settle the camera so the plant frames a clear subject on the shore beyond it"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the move past the plant and down the pit steps, frames 4719-4865",
+        "what": "the camera passes very close through the foliage, then drifts across the steps and ends on an empty ledge with the creature small and soft in the distance. The path feels floaty and the move ends without a subject",
+        "fix": "use a heavier, eased crane descent past the plant that settles on the creature or the depth of the pit"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the three wading creatures, frames 5081-5169",
+        "what": "all three are locked in the same head-down feeding pose at once and barely change. The far ones are almost static for seconds, so the group reads as in step and as models",
+        "fix": "offset their timing so one lifts its head, one steps and one shifts its weight, and give the distant ones small motion too"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the creature lying on the rock in the foreground, frames 5403-5617",
+        "what": "it stays perfectly rigid while the camera pushes in. If it is alive it reads as a placed model. If it is dead, nothing around it (scavengers, flies, wet sheen, wind on its fronds) tells us so",
+        "fix": "give it breathing, a twitch or wind moving its fronds, or make its death clear and let the standing creature react to it"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-06.png",
+        "where": "the specular highlights on the shallow water on the left, frames 4409-4420",
+        "what": "the fine glints jump around from frame to frame like noise instead of moving with the ripples, and shimmer slightly",
+        "fix": "stabilise the water speculars (temporal AA or denoise) so the glints follow the wave motion"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-09.png",
+        "where": "the far fog bank and the water behind the plant, frames 4973-4984",
+        "what": "the fog layer is a flat, evenly lit band that hardly changes, so the shore reads as a backdrop",
+        "fix": "add slow drift and changes in density to the fog, at its own height"
+      }
+    ]
+  }
+}
