@@ -172,8 +172,8 @@ export function wallowerBody(young: number, seed: number): Body {
     for (let c = 0; c < 4; c++) {
       const f = (c - 1.5) / 1.5;
       const a: V3 = [ankle[0] + 0.26 * fat - 0.05 * f * f, 0.085, ankle[2] + f * 0.19 * fat];
-      const b: V3 = [a[0] + 0.2 - 0.05 * f * f, 0.035, a[2] + f * 0.1 + side * 0.02];
-      limb(bone + 2, a, b, 0.062, 0.03, 0.035, 1, 1);
+      const b: V3 = [a[0] + 0.25 - 0.06 * f * f, 0.03, a[2] + f * 0.13 + side * 0.02];
+      limb(bone + 2, a, b, 0.074, 0.03, 0.03, 1, 1);
     }
   });
 
@@ -285,7 +285,7 @@ export function wallowerBody(young: number, seed: number): Body {
       const d = Math.hypot(x - h[0], (y - h[1] - 0.1) * 0.9, (z - h[2]) * 0.8);
       const near = Math.exp(-(d * d) / 0.34);
       const r = ridge(d / (0.19 * space) + 0.9 * w2 + 0.4 * w1, 0.55);
-      sleeve += 0.016 * near * (r - 0.62);
+      sleeve += 0.034 * near * (r - 0.62);
       r3 = Math.min(r3, 1 - near * (1 - r));
     }
     const r4 = ridge(y / (0.125 * space) + 1.5 * w2 + 0.7 * w3 + 0.3 * Math.sin(x * 9 + z * 7), 0.55);
@@ -293,10 +293,10 @@ export function wallowerBody(young: number, seed: number): Body {
     // Not everywhere: a slack patch here, a tight one there.
     const gate = 0.25 + 0.75 * smooth(0.35, 0.6, noise3(x * 0.9 + 7, y * 0.9, z * 0.9 + 3, sd + 9));
     let h = 0;
-    h += 0.012 * gate * trunk * flank * (0.45 + 0.55 * side) * (1 - 0.6 * top) * (r1 - 0.62);
-    h += 0.016 * (0.5 + 0.5 * gate) * trunk * neck * (1 - 0.35 * top) * (r2 - 0.62);
+    h += 0.03 * gate * trunk * flank * (0.45 + 0.55 * side) * (1 - 0.6 * top) * (r1 - 0.62);
+    h += 0.04 * (0.5 + 0.5 * gate) * trunk * neck * (1 - 0.35 * top) * (r2 - 0.62);
     h += sleeve * (1 - horn) * (1 - 0.7 * legness * smooth(0.6, 0.3, y));
-    h += 0.012 * shin * (r4 - 0.62);
+    h += 0.026 * shin * (r4 - 0.62);
     // Slow lumps: nothing on it is a clean ellipsoid.
     h += (0.09 * w1 + 0.04 * w2 + 0.012 * w3) * (1 - horn) * (1 - 0.6 * legness);
     // The belly hangs lower behind the middle.
