@@ -1,0 +1,35 @@
+{
+  "round": 15,
+  "unit": "spine",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-26 05:15 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "the locked-off ridge, especially the summit streamers and the cloud banks left and below, 0.55–6.00 s",
+        "what": "Between electrical flashes, the cloud banks barely change shape or position and the long summit streamers retain essentially the same silhouettes. The storm reads as a frozen landscape with a lighting effect over it.",
+        "fix": "Let the low banks roll across and around the terrain, drift the higher cloud separately, and have the summit plumes shed and reform downwind between flashes."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "above the central pinnacle, frames 7664–7672",
+        "what": "The strike repeats the same short on-off cadence seen in the earlier ridge shot, and its illuminated patch lingers broadly between re-strikes. The light feels timed to an effect rather than to this particular impact.",
+        "fix": "Give this strike a distinct return-stroke rhythm, with a sharp first ridge-wide flash and faster falloff between the weaker re-strikes."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the standing animal in front of the cave mouth and the huddled group to the left, frames 8089–8100",
+        "what": "Their poses and silhouettes barely change through the flash; the visible change is mostly camera drift and illumination. The huddle reads as fixed forms rather than animals sharing a space.",
+        "fix": "Keep the resting bodies grounded, but add a small independent ear, head, or shoulder response, and let the standing animal settle its weight onto a planted foot."
+      }
+    ]
+  }
+}

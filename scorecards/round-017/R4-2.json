@@ -1,0 +1,42 @@
+{
+  "round": 17,
+  "unit": "marsh",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-26 05:13 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the two large quadrupeds on the right-center bank and the creature in the lower-center pool across 0.00 s to 6.00 s",
+        "what": "the animals hold completely frozen, identical poses for all 6 seconds with no weight shift, head turn, breathing, or step, reading as static models",
+        "fix": "add natural idle motion, weight shifts, and uncoordinated pauses or steps so each animal reads as alive"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the large bubble dome in the center of the red pool (frames 6158 to 6161)",
+        "what": "instead of rupturing from a point and retracting with surface tension, the entire dome uniformly fades out in opacity while keeping an intact semicircular outline",
+        "fix": "break the film from a rupture point and retract the membrane rapidly into droplets and a collapsing rim rather than fading the dome out"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the red liquid channels, flora, and overcast sky across 0.00 s to 6.00 s",
+        "what": "aside from shifting mist on the left and faint rings around the lower-center mound, the liquid surface, plants, and sky remain static over 6 seconds, making the world read largely as a still picture",
+        "fix": "give the liquid ongoing flow and surface motion, add subtle wind sway to the tall flora, and let the cloud layer drift"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the splash rim and droplets after the burst (frames 6163 to 6167)",
+        "what": "droplets pop up above a flat surface before the splash forms, and the rising crown in frames 6166 to 6167 breaks into sharp, angular, papery fin-like peaks rather than viscous liquid with weight",
+        "fix": "couple droplet ejection to a cohesive, thick liquid rim that rises and folds back with fluid weight"
+      }
+    ]
+  }
+}
