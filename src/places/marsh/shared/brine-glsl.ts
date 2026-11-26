@@ -1,42 +1,34 @@
 // The look of the brine, shared by the brine's own surface and by the land, which draws the far channels itself (a channel three metres wide
 // two kilometres out is thinner than the land's mesh can cut). Needs RIG_GLSL and a sampler `tGrain` (see land/tiles.ts) above it.
+// The brine is a level mirror over a turbid red body. What it mirrors is a picture of the scene drawn small from under its own level before
+// every sample (tMirror, brine/index.ts), so the sky, the stalks and the animals stand in it; how much of that picture shows is Fresnel's.
 export const BRINE_GLSL = /* glsl */ `
 // s: metres to the shore, negative in the brine. n: the surface's normal (ripples and rings laid in by the caller). foam: 0 to 1 scum on top.
 vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, float foam) {
   float deep = clamp(-s, 0.0, 6.0);
-  // Thick with iron and salt: nothing shows through it past a hand's depth.
-  vec3 shallow = vec3(0.1, 0.027, 0.018);
-  vec3 body = vec3(0.058, 0.0095, 0.008);
-  vec3 pit = vec3(0.032, 0.005, 0.0045);
   // Slow clouds of paler silt carried in it.
   float silt = texture2D(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006)).r;
-  // Thin and rust-coloured over the shelf at the shore, blood red past it, near black where it is deep.
-  float d2 = max(deep + (silt - 0.5) * 0.3, 0.0);
-  vec3 albedo = mix(shallow, body, smoothstep(0.0, 0.35, d2));
-  albedo = mix(albedo, pit, smoothstep(0.8, 4.5, d2));
-  albedo *= 0.82 + 0.36 * silt;
-  // Scum gathers along the shore.
-  float edge = smoothstep(-0.07, -0.01, s) * smoothstep(0.45, 0.62, texture2D(tGrain, p.xz / 1.9).g);
-  foam = max(foam, edge * 0.8);
-  albedo = mix(albedo, vec3(0.17, 0.1, 0.085), foam);
-  // It is thick and dull: a skin of iron and salt lies on it, and it gives back the sky only as a grey sheen where the view skims it.
+  float d2 = max(deep + (silt - 0.5) * 0.25, 0.0);
+  // A finger of it over the shelf at the shore lets the bed show, rust and pale; a stride out it is blood; in the pits near black.
+  vec3 bed = vec3(0.2, 0.074, 0.05);
+  vec3 body = vec3(0.082, 0.0125, 0.0105);
+  vec3 pit = vec3(0.04, 0.0055, 0.005);
+  vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 4.5));
+  albedo = mix(albedo, pit, smoothstep(0.7, 4.0, d2));
+  albedo *= 0.8 + 0.4 * silt;
+  albedo = mix(albedo, vec3(0.3, 0.205, 0.18), foam);
   float open = skyOpen(p);
-  vec3 lit = albedo * skyIrradiance(n) * (open / 3.14159);
+  // The body is lit from inside the liquid: the ripples do not shade it.
+  vec3 lit = albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  vec3 r = reflect(-v, n);
-  r.y = abs(r.y);
-  // Seen from above it is red; seen low, where the view skims it, it is a pale glare. The turn from one to the other is quick, so every
-  // ripple that leans away from the lens shows as a line of light.
-  // The sky it gives back is an overcast with lumps in it, so the sheen lies on the brine in patches.
-  // How wide a pixel lies on the brine is taken from the place itself, not from the mirrored ray: where a neighbour in the renderer's block
-  // of four is cut away at a shore, the ray there is not worked out, and a read sized by it is not the same on every load of the page.
-  // The lumps are far up, so a ripple bends their picture only a little.
-  vec3 calm = reflect(-v, normalize(mix(vec3(0.0, 1.0, 0.0), n, 0.3)));
-  calm.y = abs(calm.y);
-  vec2 cloudAt = (p.xz + calm.xz / max(calm.y, 0.12) * 40.0) / 230.0;
-  float cloud = textureGrad(tGrain, cloudAt, dFdx(p.xz) / 230.0, dFdy(p.xz) / 230.0).g;
-  float mirror = (0.012 + 0.42 * pow(1.0 - nv, 16.0)) * (0.8 + 0.4 * smoothstep(0.25, 0.75, cloud)) * (1.0 - 0.8 * foam);
-  // The brine climbs a finger's breadth up whatever it wets: along every shore a thin bright line of sky.
-  mirror += 0.14 * smoothstep(-0.045, -0.012, s) * smoothstep(0.0, -0.01, s) * (1.0 - foam);
-  return lit + skyRadiance(r) * (open * mirror);
+  // The surface is never still at the scale of a hair: the mirror is a soft one and never the whole of the light, and the red film on it stains it.
+  float fres = (0.025 + 0.5 * pow(1.0 - nv, 3.6)) * (1.0 - 0.75 * foam);
+  // Where the mirrored ray lands in the picture of the scene under the brine: a ripple swings it by twice its lean times the way to what
+  // it mirrors, which is not known, so a share of the way to the lens stands for it.
+  float away = length(cameraPosition - p);
+  vec2 swing = n.xz * 2.0 * clamp(away * 0.22, 0.2, 14.0);
+  vec4 q = uMirrorMatrix * vec4(p.x + swing.x, 0.0, p.z + swing.y, 1.0);
+  vec3 mirrored = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), 0.0).rgb;
+  // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
+  return lit * (1.0 - fres) + mirrored * vec3(1.0, 0.8, 0.79) * fres * mix(1.0, open, 0.5);
 }`;

@@ -57,6 +57,8 @@ ${BRINE_GLSL}
 
 void main() {
   vec3 p = vWorld;
+  // In the brine's mirror the ground under the brine's level is not there: it would stand between the mirror's lens and the world.
+  if (uMirror > 0.5 && p.y < -0.015) discard;
   vec3 toEye = cameraPosition - p;
   float dist = length(toEye);
   vec3 v = toEye / dist;
