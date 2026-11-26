@@ -1,4 +1,7 @@
-2026-11-26 18:07 UTC
-work at 451d0a1 on agent/marsh-plants
-5618 hd draft, version 3 in work: crowns with leaf under them, field back to first density; cost 15.79 s, still 0.5 s over the line, right far field thin
-look-1.jpg = out/work/v3-wip-5618.png
+2026-11-26 18:45 UTC
+work at 71601ca on agent/marsh-plants
+5618 at 7d4d0e5, each stand to its own habit: outlines differ, but every crown is the same red spray, so far off the plants still read as one kind; cost 1.7 s over base, 0.7 over the line
+look-1.jpg = out/work/v3a/1-5618-beside-approved.jpg
+look-2.jpg = out/work/v3a/2-400px-before-after.png
+look-3.jpg = out/work/v3a/3-nearest-stand-before-after.jpg
+look-4.jpg = out/work/v3a/4-sheet-plants.png
