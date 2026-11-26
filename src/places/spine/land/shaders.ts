@@ -245,27 +245,16 @@ vec2 shardHash(vec2 p) {
   return fract((q.xx + q.yz) * q.zy);
 }
 vec3 shards(vec2 p) {
-  vec2 c = floor(p);
-  vec2 f = p - c;
-  float d1 = 8.0;
-  float d2 = 8.0;
-  vec2 id = vec2(0.0);
-  for (int j = -1; j <= 1; j++) {
-    for (int i = -1; i <= 1; i++) {
-      vec2 g = vec2(float(i), float(j));
-      vec2 h = shardHash(c + g);
-      vec2 r = abs(g + 0.1 + 0.8 * h - f);
-      float d = max(r.x, r.y) + 0.3 * min(r.x, r.y);
-      if (d < d1) {
-        d2 = d1;
-        d1 = d;
-        id = h;
-      } else if (d < d2) {
-        d2 = d;
-      }
-    }
-  }
-  return vec3(d2 - d1, id);
+  // Upright joints first, a little wavy and of no two widths; then each pillar's own beds, of its own height and dip, so no bed runs on
+  // across a joint. (Worked straight from the place, with two hashes: a search of the neighbouring pieces cost a second a frame.)
+  float x = p.x + 0.3 * sin(p.x * 2.4 + 1.3) + 0.14 * sin(p.y * 1.7 + 0.8 * sin(p.y * 0.43));
+  float c = floor(x);
+  float fx = x - c;
+  vec2 h = shardHash(vec2(c, 17.0));
+  float y = p.y * (0.75 + 0.5 * h.x) + 31.0 * h.y + 0.9 * (h.x - 0.5) * (fx - 0.5);
+  float r = floor(y);
+  float fy = y - r;
+  return vec3(2.0 * min(min(fx, 1.0 - fx), min(fy, 1.0 - fy)), shardHash(vec2(c, r)));
 }
 struct Lay { vec3 c; vec2 t; float pit; };
 // The level of detail is worked once from the gradients and both pictures are read at it: a read by level costs far less than a read by gradient.
@@ -323,6 +312,7 @@ void main() {
   // The pieces the rock is shattered into under the lens: how open the crack is here, and how much frost this piece keeps.
   float gripCrack = 0.0;
   float gripFrost = 1.0;
+  float gripHand = 0.0;
   float crustRock = 0.0;
   vec3 crustTint = vec3(1.0);
   float wallRime = 0.0;
@@ -476,7 +466,7 @@ void main() {
         float hand = grip * smoothstep(0.07, 0.03, span);
         vec3 small = hand > 0.01 ? shards(atG / vec2(0.21, 0.34) + 7.7 + 3.0 * big.yz) : vec3(1.0, 0.5, 0.5);
         // (Not every side of a piece is an open crack: most are closed, and a crack that runs on from piece to piece is rare.)
-        float open = smoothstep(0.35, 0.75, vnoise(atG * 0.9 + 4.3));
+        float open = smoothstep(0.35, 0.75, fract(big.y * 7.0 + big.z * 3.0));
         float crack = max(smoothstep(0.02 + 1.6 * span / 0.9, 0.6 * span / 0.9, big.x) * grip * (0.25 + 0.75 * open), 0.8 * smoothstep(0.035 + 1.6 * span / 0.21, 0.6 * span / 0.21, small.x) * hand * (1.0 - 0.5 * open) * step(0.4, small.y));
         t += grip * (big.yz - 0.5) * 1.0 + hand * (small.yz - 0.5) * 0.7;
         // So near, the photograph's own light and dark are blots many pixels wide: they are drawn toward their mean, and the pieces carry the face.
@@ -485,11 +475,13 @@ void main() {
         float shade = mix(1.0, (0.78 + 0.44 * big.y) * (0.86 + 0.28 * small.z), grip) * (1.0 - 0.62 * crack);
         rock *= shade;
         gripCrack = crack;
+        gripHand = hand;
         gripFrost = mix(1.0, 0.4 + 1.2 * big.z, grip);
         float skin = grip * smoothstep(0.035, 0.012, span);
         if (skin > 0.01) {
-          t += skin * 0.8 * (vec2(vnoise(atS * 19.0), vnoise(atS * 19.0 + 31.7)) - 0.5);
-          rock *= 1.0 + skin * 0.6 * (vnoise(atS * 37.0 + 3.1) - 0.5);
+          float pits = vnoise(atS * 31.0 + 3.1) - 0.5;
+          t += skin * 0.8 * vec2(pits, (small.z - 0.5) * pits * 2.0);
+          rock *= 1.0 + skin * 0.6 * pits;
         }
       }
     }
@@ -610,8 +602,13 @@ void main() {
   if (spire) {
     // On a spire the snow keeps to the ledges and the gullies: where the body of the rock leans back, and where a slab stands in from its neighbours.
     // Under the lens it is decided pixel by pixel and never face by face: by how the round of the rock and its own small relief look up,
-    // with an edge that two sizes of noise break, so the snow has no side of a triangle for its edge.
-    float upPix = smoothN.y + (nRock.y - n0.y) + 0.24 * (vnoise(vWorld.xz * 1.7 + vWorld.y * 0.9) - 0.5) + 0.14 * (vnoise(vWorld.xz * 6.1 + vWorld.y * 3.3) - 0.5);
+    // with an edge that a noise and the rock's own pits break, so the snow has no side of a triangle for its edge.
+    float lip = 0.26 * (vnoise(vWorld.xz * 1.7 + vWorld.y * 0.9) - 0.5) + 0.12 * (pit - 0.5);
+    float upPix = smoothN.y + (nRock.y - n0.y) + lip;
+    // (So near that a hand could lie on it, the photograph's own relief is blots many pixels wide and no measure of a ledge: there the
+    // snow asks the body of the rock and the block's own face, and keeps the same broken lip.)
+    float upLens = 0.5 * smoothN.y + 0.5 * n0.y + 0.15 * (nRock.y - n0.y) + lip;
+    upPix = mix(upPix, upLens, gripHand);
     float upFace = mix(n0.y, upPix, fineRock);
     float upRock = mix(nRock.y, upPix, fineRock);
     float held = 0.55 * smoothN.y + 0.45 * upFace + 0.2 * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
@@ -627,7 +624,7 @@ void main() {
     low *= smoothstep(-0.25, 0.45, -dot(smoothN.xz, uWind.xz));
     snow = max(snow, smoothstep(0.5 - 0.3 * low, 0.7 - 0.3 * low, 0.7 * upRock + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
     // Under the lens snow lies only on what the rock itself turns up to the sky; a slab's side keeps none.
-    snow *= mix(1.0, smoothstep(0.3, 0.55, upPix), fineRock) * (1.0 - 0.8 * gripCrack);
+    snow *= mix(1.0, smoothstep(0.3 + 0.18 * gripHand, 0.55 + 0.12 * gripHand, upPix), fineRock) * (1.0 - 0.8 * gripCrack);
     // A spire stands in the drift at its foot.
     snow = max(snow, smoothstep(5.0, 0.5, above + 3.0 * (pit - 0.5)));
     occ *= 0.55 + 0.45 * smoothstep(0.0, 14.0, above);
@@ -669,7 +666,7 @@ void main() {
     float crystals = smoothstep(0.15, 0.38, frostL * (0.55 + 0.9 * pit));
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
-    float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.42 * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
+    float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.42 * (1.0 - 0.6 * gripHand) * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
     // Staged by shot (uWet): the struck spire in the long lens is wet black rock, with frost only in its cracks.
     cover *= 1.0 - 0.85 * uWet;
     // Under the lens the frost lies piece by piece, more on one than on the next, and an open crack is a dark line through it.
