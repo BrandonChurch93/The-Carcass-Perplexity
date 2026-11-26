@@ -9,7 +9,7 @@
     "skyWidth": 2048,
     "skyQuality": 94
   },
-  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of a tile, or the whole of a plate, stands for (0 for a far backplate); relief names the grey height picture of a plate, cover the grey picture of where its subject is",
   "materials": [
     {
       "name": "shelf",
@@ -76,6 +76,125 @@
       "kind": "sky",
       "width": 1536,
       "height": 1024
+    },
+    {
+      "name": "far",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "shaftwall",
+      "kind": "plate",
+      "metres": 60,
+      "width": 1672,
+      "height": 941,
+      "relief": "shaftwall-h.png"
+    },
+    {
+      "name": "shelfplate",
+      "kind": "plate",
+      "metres": 48,
+      "width": 1672,
+      "height": 941,
+      "relief": "shelfplate-h.png"
+    },
+    {
+      "name": "ribarch",
+      "kind": "plate",
+      "metres": 24,
+      "width": 2172,
+      "height": 724,
+      "relief": "ribarch-h.png"
+    },
+    {
+      "name": "slab",
+      "kind": "plate",
+      "metres": 9,
+      "width": 1681,
+      "height": 935,
+      "relief": "slab-h.png"
+    },
+    {
+      "name": "scree",
+      "kind": "tile",
+      "metres": 3,
+      "mean": [
+        0.291,
+        0.232,
+        0.185
+      ]
+    },
+    {
+      "name": "wetrock",
+      "kind": "tile",
+      "metres": 1.5,
+      "mean": [
+        0.153,
+        0.133,
+        0.107
+      ]
+    },
+    {
+      "name": "wader",
+      "kind": "plate",
+      "metres": 3.2,
+      "width": 1536,
+      "height": 1024,
+      "cover": "wader-a.png"
+    },
+    {
+      "name": "plume",
+      "kind": "plate",
+      "metres": 2,
+      "width": 1536,
+      "height": 1024,
+      "cover": "plume-a.png"
+    },
+    {
+      "name": "bed",
+      "kind": "tile",
+      "metres": 3,
+      "mean": [
+        0.325,
+        0.248,
+        0.128
+      ]
+    },
+    {
+      "name": "scum",
+      "kind": "tile",
+      "metres": 1.5,
+      "mean": [
+        0.13,
+        0.1,
+        0.08
+      ]
+    },
+    {
+      "name": "carcass",
+      "kind": "plate",
+      "metres": 4.5,
+      "width": 1854,
+      "height": 848,
+      "relief": "carcass-h.png"
+    },
+    {
+      "name": "flank",
+      "kind": "plate",
+      "metres": 1.4,
+      "width": 1672,
+      "height": 941,
+      "relief": "flank-h.png"
+    },
+    {
+      "name": "frond",
+      "kind": "plate",
+      "metres": 1.5,
+      "width": 2048,
+      "height": 768,
+      "relief": "frond-h.png"
     }
   ]
 }
