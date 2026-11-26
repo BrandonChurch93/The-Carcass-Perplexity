@@ -1,7 +1,7 @@
-2026-11-26 13:31 UTC
-work at 8d554e4 on agent/film-ending
-V3: hold one frame a second and 12 consecutive from 10400; ending, beat, last2s sheets; final uhd crops 10454 and 11743; hd 11340 and 11743. Wrong: last two seconds move only a few px, coasts by night hard in places, clouds by night are specks
-look-1.jpg = out/work/v3-hold.jpg
-look-2.jpg = out/work/v3-ending.jpg
-look-3.jpg = out/work/v3-crops.jpg
-look-4.jpg = out/work/v3-hd.jpg
+2026-11-26 14:08 UTC
+work at 9718b1b on agent/film-ending
+Last version: ending, beat, last2s sheets; 11743 at 1080p; hold sheet with 12 consecutive and 400 px pair; native crops of 10454 and 11743 at final uhd. Wrong: cloud sheets soft smears with a diagonal grain, drift after 10880 slow, ember small in last frame
+look-1.jpg = out/work/v4-ending.jpg
+look-2.jpg = out/work/v4-11743-1080p.png
+look-3.jpg = out/work/v4-hold.jpg
+look-4.jpg = out/work/v4-crops.jpg
