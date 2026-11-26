@@ -13,6 +13,7 @@ export const PARTS: readonly string[] = ['sea'];
 /** The bed beyond the shelf, to the horizon. On the shelf the water reads the rig's own land. */
 const FAR = { x: 0, z: 0, half: 6000, cells: 512 };
 const WORLD = 16000;
+const GRID = 200;
 
 export function create(ctx: Context): Piece {
   const height = (x: number, z: number): number => ctx.rig.land.height(x, z);
@@ -45,7 +46,13 @@ export function create(ctx: Context): Piece {
     blendSrcAlpha: THREE.OneFactor,
     blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
   });
-  const geometry = new THREE.PlaneGeometry(WORLD, WORLD, 1, 1).rotateX(-Math.PI / 2);
+  // The sheet is a grid, fine at the shaft and coarse far out. As one quad sixteen kilometres wide its depth was worked out across the whole
+  // of it, and at some places of a travelling lens it came out a hand deeper than it is: the bed then stood through it for a frame.
+  const geometry = new THREE.PlaneGeometry(2, 2, GRID, GRID).rotateX(-Math.PI / 2);
+  const at = geometry.getAttribute('position') as THREE.BufferAttribute;
+  const spread = (u: number): number => 0.5 * WORLD * (0.02 * u + 0.98 * u * u * u);
+  for (let i = 0; i < at.count; i++) at.setXYZ(i, spread(at.getX(i)), 0, spread(at.getZ(i)));
+  at.needsUpdate = true;
   const sheet = new THREE.Mesh(geometry, material);
   sheet.position.y = SEA_LEVEL;
   sheet.frustumCulled = false;

@@ -62,7 +62,10 @@ export function makeHerd(rng: Rng): Member[] {
     herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false, i < 3 ? 0.0125 : 0.022, OWN[i] ?? {}), plan: { ...planOf(a, UP[i] ?? [], rng), ahead: i === 1 ? AHEAD : 0 }, near: true });
   });
   // The one at the rim: it stands with its weight on three legs and looks down the shaft, then lets its neck hang.
-  herd.push({ build: makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.02, belly: 1.2, sway: -0.6, gaunt: 1.15 }), plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5], [RIM_LIFTS, RIM_LIFTS + 60]], rng, 1, 0.8), near: false });
+  // It is the stocky one of the herd: short in the leg, deep in the barrel, its back arched, and when its neck is down the tuft lies on the rock.
+  const lank = makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.14, belly: 0.9, sway: 0.7, gaunt: 1.15 });
+  const stocky: Build = { ...lank, standH: lank.standH * 0.8, legLen: lank.legLen * 0.806, legR: lank.legR * 1.35, neckR: lank.neckR * 1.18, bodyLen: lank.bodyLen * 1.08 };
+  herd.push({ build: stocky, plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5], [RIM_LIFTS, RIM_LIFTS + 60]], rng, 1, 1), near: false });
   // The far flock: grains of rice on the shallows. No two do the same thing at the same time.
   const far = rng;
   for (let i = 0; i < FAR_FLOCK.count; i++) {
