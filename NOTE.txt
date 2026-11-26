@@ -1,7 +1,5 @@
 2026-11-26 14:40 UTC
 work at 0bec949 on agent/film-opening
-Version 2 at final uhd, native crops of frames 0 and 120: hatch in the fog, fat rim, breaker a puff, straight fog base. All being reworked for version 3
-look-1.jpg = out/work/v2/pics/crop-0-1.png
-look-2.jpg = out/work/v2/pics/crop-0-2.png
-look-3.jpg = out/work/v2/pics/crop-120-1.png
-look-4.jpg = out/work/v2/pics/crop-120-2.png
+Version 3 in work, drafts 0 30 60 240 and frame 120 final uhd at native size: hatch gone from the fog, breaker still spikes, sea meets fog in a straight line, first blade brick-like
+look-1.jpg = out/work/try/f.png
+look-2.jpg = out/work/try/f-native.png
