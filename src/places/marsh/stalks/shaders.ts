@@ -352,25 +352,25 @@ uniform float uSeconds;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
+varying float vWing;
 float hashOf(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
-vec3 hop(float i) {
-  return aHome.w * (vec3(hashOf(vec2(i, aPhase.x)), hashOf(vec2(i + 17.3, aPhase.y)), hashOf(vec2(i + 41.7, aPhase.z))) - 0.5) * vec3(2.0, 1.0, 2.0);
+vec3 pathAt(float t) {
+  // It hangs and drifts about its plume on one unbroken path: slow loops, each with its own three rates, and a small quick tremble over them.
+  vec3 w = vec3(0.9 + 0.5 * fract(aPhase.x * 0.37), 0.7 + 0.5 * fract(aPhase.y * 0.61), 0.8 + 0.5 * fract(aPhase.z * 0.43));
+  vec3 p = vec3(
+    sin(t * w.x + aPhase.x) + 0.35 * sin(t * w.x * 2.3 + aPhase.y),
+    0.5 * sin(t * w.y + aPhase.y) + 0.2 * sin(t * w.y * 1.9 + aPhase.z),
+    sin(t * w.z + aPhase.z) + 0.35 * cos(t * w.z * 2.1 + aPhase.x));
+  return aHome.xyz + aHome.w * 0.8 * p + 0.008 * vec3(sin(t * 7.3 + aPhase.z), sin(t * 9.1 + aPhase.x), cos(t * 6.7 + aPhase.y));
 }
 void main() {
-  float period = 0.7 + 0.9 * fract(aPhase.x * 0.37);
-  float s = uSeconds / period + aPhase.y;
-  float i = floor(s);
-  float f = fract(s);
-  vec3 a = hop(i);
-  vec3 b = hop(i + 1.0);
-  float dart = smoothstep(0.0, 0.32, f);
-  vec3 at = aHome.xyz + mix(a, b, dart) + 0.012 * vec3(sin(uSeconds * 7.3 + aPhase.z), sin(uSeconds * 9.1 + aPhase.x), cos(uSeconds * 6.7 + aPhase.y));
-  // It turns to where it is going as it leaves, and hangs tail down, the way a mayfly does.
-  vec3 heading = mix(a - hop(i - 1.0), b - a, smoothstep(0.0, 0.1, f));
+  vec3 at = pathAt(uSeconds);
+  // It heads the way it goes, and hangs tail down, the way a mayfly does.
+  vec3 heading = pathAt(uSeconds + 0.06) - pathAt(uSeconds - 0.06);
   vec3 fwd = normalize(vec3(heading.x, 0.0, heading.z) + vec3(1e-4, 0.0, 0.0));
-  fwd = normalize(fwd + vec3(0.0, 0.55 - 0.35 * sin(3.14159 * dart), 0.0));
+  fwd = normalize(fwd + vec3(0.0, 0.35, 0.0));
   vec3 right = normalize(cross(fwd, vec3(0.0, 1.0, 0.0)));
   vec3 up = cross(right, fwd);
   // position: x across the picture, y along it, z which piece (0 the body, 1 and -1 the wings).
@@ -382,6 +382,7 @@ void main() {
   vWorld = at + local * aPhase.w;
   vNormal = normalize(up * cos(ang) - right * (sign(position.x) * sin(ang)));
   vUv = vec2(position.x + 0.5, position.y + 0.57);
+  vWing = abs(side);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
@@ -398,14 +399,19 @@ precision highp float;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
+varying float vWing;
 uniform sampler2D tInsect;
 ${RIG_GLSL}
 void main() {
 ${INSECT_CUT}
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal) * sign(dot(vNormal, v) + 1e-5);
-  // Dark against the white air, as a small thing with the sky behind it is.
-  vec3 c = rigShade(vWorld, n, v, t * vec3(0.11, 0.08, 0.06) + 0.004, 0.96, 1.0);
+  // An amber body, and wings that are a clear skin on pale veins: the sky comes through them, so they are lit from both sides.
+  float pale = max(t.r, max(t.g, t.b));
+  vec3 body = t * vec3(0.5, 0.27, 0.09) + 0.004;
+  vec3 wing = vec3(0.2, 0.16, 0.115) * (0.35 + 0.65 * pale);
+  vec3 c = rigShade(vWorld, n, v, mix(body, wing, vWing), mix(0.6, 0.45, vWing), 1.0);
+  c += vWing * 0.5 * rigShade(vWorld, -n, v, wing, 0.9, 1.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

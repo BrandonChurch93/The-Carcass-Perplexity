@@ -1,5 +1,5 @@
 // The mud-wallowers: heavy eyeless animals that root in the red brine of the vein with a fringe of tusk-like feelers.
-import { BEASTS, F, R, WALLOW_TIME, bearingDir, keyTime, rel } from '../shared/anchors';
+import { BEASTS, F, R, T0, WALLOW_TIME, bearingDir, keyTime, rel } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { newDrive, walk, type Build, type Plan } from './animal';
 import { Beast } from './body';
@@ -24,7 +24,7 @@ export function create(ctx: Context): Piece {
     const young = size < 0.7 ? 1 - (size - 0.34) / 0.5 : 0;
     const b: Build = { k: size, young: Math.max(0, Math.min(1, young)), seed: rng.range(1, 60), bulk: rng.range(0.94, 1.08), salt: rng.range(0.5, 1) * (sink > 0.5 ? 0.3 : 1) };
     // The slower it goes the longer its cycle: a walk of about one length of the trunk in three cycles, and never two alike.
-    const cycle = rng.range(3.4, 4.6) * (0.75 + 0.25 * size);
+    const cycle = rng.range(3.4, 4.6) * (0.75 + 0.25 * size) * (speed > 0.24 ? 0.72 : 1);
     // One that wades stands on the bed it has trodden down; one on a bank stands on the bank.
     const land = ctx.rig.land.height(x, z);
     const ground = sink > 0.15 ? Math.min(land, 0) - sink * b.k : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
@@ -36,7 +36,7 @@ export function create(ctx: Context): Piece {
     const hero = herd.length === 0;
     const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.24 * b.k : 0);
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.55 : 0.6) * b.k;
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.62 : 0.6) * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
     const near = herd.length < 3;
     const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
@@ -58,14 +58,16 @@ export function create(ctx: Context): Piece {
     const size = b.d < 26 ? b.size * 0.6 : b.size;
     // STAGED for the wide key: the two that lie in the brine nearest its lens lie across its view, as the approved picture has them, and not tail on.
     const dir: [number, number] = b.d < 26 ? [0.25 * F[0] - 0.97 * R[0], 0.25 * F[1] - 0.97 * R[1]] : [F[0] * hd + R[0] * hl, F[1] * hd + R[1] * hl];
-    add(p[0], p[1], WALLOW_TIME, dir, size, b.sink, b.speed, b.root);
+    // STAGED by distance: the ones that wade away from the lens of the wallowers go at a walk that is seen from far off, and are where the anchors put them half way between the wide key and the key of the wallowers.
+    const far = herd.length >= 3 && b.sink < 0.75;
+    add(p[0], p[1], far ? 0.5 * (T0 + WALLOW_TIME) : WALLOW_TIME, dir, size, b.sink, far ? b.speed * 1.5 + 0.06 : b.speed, b.root);
   }
   // STAGED for the lens of the colony: one wades the far shallows of the pool, side on, right of the middle of that view.
   const bank = bearingDir(37);
   const bl = Math.hypot(1, 0.12);
-  add(bank[0] * 8.6, bank[1] * 8.6, keyTime('marsh-2'), [-1 / bl, -0.12 / bl], 1, 0.12, 0.2, 0.05);
-  // It keeps to a shoal: the brine is to its shins and its belly is clear of it.
-  (herd[herd.length - 1] as (typeof herd)[number]).plan.ground = -0.06;
+  add(bank[0] * 9.0, bank[1] * 9.0, keyTime('marsh-2'), [-1 / bl, -0.12 / bl], 0.84, 0.12, 0.2, 0.05);
+  // It wades: the brine is over its knees and its belly is just clear of it.
+  (herd[herd.length - 1] as (typeof herd)[number]).plan.ground = -0.15;
 
   const wet = new Wet(ctx, herd.length);
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
@@ -86,18 +88,22 @@ export function create(ctx: Context): Piece {
         driven.floor = h.floor;
         // One that lies in the brine lies nose down: the back stands out of it and falls away to the head.
         if (h.sunk && h.paw < 0) {
-          driven.pitch += 0.11;
+          // It wallows: it rolls a little to one side and the other, comes up as it fills its chest and settles as it empties it.
+          const seed = h.beast.b.seed;
+          driven.pitch += 0.11 + 0.035 * Math.sin(seconds * 1.3 + seed * 3);
           driven.headPitch += 0.25;
+          driven.roll += 0.09 * Math.sin(seconds * 1.05 + seed * 7) + 0.04 * Math.sin(seconds * 2.3 + seed);
+          driven.bob += h.beast.b.k * (0.045 * Math.sin(seconds * 1.6 + seed * 9) + 0.02 * Math.sin(seconds * 2.9 + seed * 2));
         }
         if (h.paw >= 0) {
-          // STAGED for the lens of the wallowers: the one that lies in the brine before it rests a forefoot on the top of it and paddles.
-          const foot = driven.feet[h.paw] as [number, number, number];
-          foot[0] += (0.62 + 0.08 * Math.sin(seconds * 0.9)) * h.beast.b.k;
-          foot[1] = -h.plan.ground - (0.1 + 0.03 * Math.sin(seconds * 0.9 + 1.2)) * h.beast.b.k;
-          foot[2] *= 1.25;
-          // And it holds its head at the top of the brine, the feelers spread on it.
-          driven.pitch -= 0.05;
-          driven.headPitch -= 0.22;
+          // STAGED for the lens of the wallowers: the one that lies in the brine before it.
+          // It is a low wet hump: it rolls and breathes, and holds its head at the top of the brine, the feelers spread on it.
+          const seed = h.beast.b.seed;
+          driven.roll += 0.07 * Math.sin(seconds * 1.05 + seed * 7) + 0.03 * Math.sin(seconds * 2.3 + seed);
+          driven.bob += h.beast.b.k * (0.04 * Math.sin(seconds * 1.6 + seed * 9) + 0.02 * Math.sin(seconds * 2.9 + seed * 2));
+          driven.pitch += 0.02;
+          driven.headPitch -= 0.1 + 0.06 * Math.sin(seconds * 1.4 + seed);
+          driven.splay += 0.25;
         }
         const stood = h.beast.pose(driven, seconds);
         const k = h.beast.b.k;

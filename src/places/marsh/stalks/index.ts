@@ -280,8 +280,8 @@ export function create(ctx: Context): Piece {
     if (i < 12 && nearPerches.length > 0) {
       // STAGED for the lens of the colony: a dozen keep to the two plumes nearest it, close in among the strands.
       const perch = nearPerches[i % nearPerches.length] as [number, number, number];
-      p = [perch[0] + swarm.range(-0.3, 0.3), perch[1] + swarm.range(-0.05, 0.3), perch[2] + swarm.range(-0.3, 0.3)];
-      home.set([p[0], p[1], p[2], swarm.range(0.12, 0.3)], i * 4);
+      p = [perch[0] + swarm.range(-0.45, 0.45), perch[1] + swarm.range(0.1, 0.6), perch[2] + swarm.range(-0.45, 0.45)];
+      home.set([p[0], p[1], p[2], swarm.range(0.16, 0.34)], i * 4);
       rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
       phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0.7, 1.1)], i * 4);
       continue;

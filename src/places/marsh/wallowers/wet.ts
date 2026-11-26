@@ -85,8 +85,11 @@ void main() {
   float trough = exp(-pow((r - 0.8 + wob + 2.0 * w) / (1.3 * w), 2.0));
   float skim = pow(1.0 - clamp(v.y, 0.0, 1.0), 3.0);
   vec3 sky = skyRadiance(normalize(vec3(-v.x, abs(v.y) + 0.25, -v.z))) * skyOpen(vWorld);
-  vec3 c = mix(vec3(0.04, 0.013, 0.011), sky * (0.05 + 0.13 * skim), crest / max(crest + trough, 1e-4));
-  float a = clamp(vB.y, 0.0, 1.0) * clamp(crest * 0.34 + trough * 0.3, 0.0, 1.0) * (0.45 + 0.75 * round_) * (1.0 - smoothstep(0.9, 1.0, r)) * (1.0 - uSolo);
+  // A dark wet edge, not a white one: the trough shows the dark of the brine, and the crest only a little more of the sky than the brine about it does.
+  vec3 c = mix(vec3(0.028, 0.008, 0.007), vec3(0.05, 0.016, 0.013) + sky * (0.012 + 0.03 * skim), crest / max(crest + trough, 1e-4));
+  // Broken arcs, never a whole ring: the brine carries a swell only where the body pushed it, and loses it within a turn.
+  float arc = smoothstep(0.42, 0.68, vnoise(vec2(atan(vAt.y, vAt.x) * 1.1 + vB.w * 3.7, vB.w * 5.0 + 2.0)));
+  float a = clamp(vB.y, 0.0, 1.0) * clamp(crest * 0.3 + trough * 0.42, 0.0, 1.0) * (0.35 + 0.75 * round_) * arc * (1.0 - smoothstep(0.9, 1.0, r)) * (1.0 - uSolo);
   if (a < 0.004) discard;
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
 }`;
@@ -204,11 +207,14 @@ export class Wet {
       const wade = alive > 0.5 && land.shore(foot.x, foot.z) < -0.02;
       for (let r = 0; r < FOOT_RINGS; r++) {
         if (!wade) this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
-        else if (r === 0) this.put(o, foot.x, 0.005, foot.z, 0.42 * k, 1, 1.0, 0.11, l + 0.5);
+        else if (r === 0) this.put(o, foot.x, 0.005, foot.z, (0.4 + 0.05 * Math.sin(seconds * 2.1 + l * 1.9 + i)) * k, 1, 0.7 + 0.3 * Math.sin(seconds * 1.7 + l * 2.3 + i * 1.3), 0.11, l + 0.5);
         else if (r === 3) this.put(o, foot.x + fx * 0.1 * k, 0.003, foot.z + fz * 0.1 * k, 0.8 * k, 2, 0.62, 0, l * 3.1 + i * 1.7);
         else {
-          const age = fract(seconds / 2.9 + r * 0.5 + l * 0.27 + i * 0.37);
-          this.put(o, foot.x, 0.004, foot.z, (0.4 + 1.15 * age) * k, 1, 0.95 * (1 - age) * Math.sqrt(1 - age), 0.07 / (0.4 + 1.15 * age), l + r * 7);
+          // Each goes out in its own time and dies before it has gone a pace: no two rings of a leg keep step.
+          const every = 1.9 + 0.5 * r + 0.23 * l;
+          const turn = seconds / every + r * 0.41 + l * 0.27 + i * 0.37;
+          const age = fract(turn);
+          this.put(o, foot.x, 0.004, foot.z, (0.4 + 1.25 * age) * k, 1, 0.95 * (1 - age) * (1 - age), 0.07 / (0.4 + 1.25 * age), l + r * 7 + Math.floor(turn) * 0.37);
         }
         o += 4;
       }
@@ -217,17 +223,20 @@ export class Wet {
     for (let r = 0; r < 2; r++) {
       const m = stood.muzzle;
       const near = alive > 0.5 && land.shore(m.x, m.z) < -0.02 && m.y < 0.45 * k;
-      const age = fract(seconds / 2.1 + r * 0.5 + i * 0.61);
-      if (near) this.put(o, m.x + fx * 0.2 * k, 0.004, m.z + fz * 0.2 * k, (0.3 + 0.9 * age) * k, 1, 0.5 * (1 - age) * (1 - age), 0.05 / (0.3 + 0.9 * age), 40 + r);
+      const turn = seconds / (1.6 + 0.5 * r) + r * 0.5 + i * 0.61;
+      const age = fract(turn);
+      if (near) this.put(o, m.x + fx * 0.2 * k, 0.004, m.z + fz * 0.2 * k, (0.3 + 1.0 * age) * k, 1, 0.5 * (1 - age) * (1 - age), 0.05 / (0.3 + 1.0 * age), 40 + r + Math.floor(turn) * 0.41);
       else this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       o += 4;
     }
     // One that lies in the brine to the back: the swell it makes as it breathes and shifts goes out from the whole of it.
     const sunk = alive > 0.5 && land.shore(stood.x, stood.z) < -0.05 && stood.belly.y < -0.12 * k;
     for (let r = 0; r < BODY_RINGS_OUT; r++) {
-      const age = fract(seconds / 4.3 + r / BODY_RINGS_OUT + i * 0.23);
-      const size = (1.5 + 1.7 * age) * k;
-      if (sunk) this.put(o, stood.x, 0.004, stood.z, size, 1, 1.0 * (1 - age) * (1 - age * 0.6), 0.07 / (1.5 + 1.7 * age), 60 + r);
+      // The swell leaves it as it rolls: one every three seconds or so, each to its own time, gone within a length of it.
+      const turn = seconds / (2.6 + 0.6 * r) + r * 0.37 + i * 0.23;
+      const age = fract(turn);
+      const size = (1.3 + 1.9 * age) * k;
+      if (sunk) this.put(o, stood.x, 0.004, stood.z, size, 1, 0.9 * (1 - age) * (1 - age), 0.07 / (1.3 + 1.9 * age), 60 + r + Math.floor(turn) * 0.53);
       else this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       o += 4;
     }
