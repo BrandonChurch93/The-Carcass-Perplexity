@@ -109,22 +109,36 @@ const BODY_GLSL = /* glsl */ `
 uniform sampler2D tPic;
 uniform sampler2D tRelief;
 uniform float uFlip;
+uniform vec4 uBody;
+uniform vec4 uShape;
 varying vec2 vUv;
+varying vec2 vCard;
 varying vec3 vWorld;
 varying vec3 vRight;
 varying vec3 vUp;
 float bodyCover(vec2 uv) {
   vec3 pic = texture2D(tPic, uv).rgb;
   return max(smoothstep(0.03, 0.07, max(pic.r, max(pic.g, pic.b))), smoothstep(0.05, 0.1, textureLod(tRelief, uv, 2.0).r));
+}
+// What is left of each is a different heap: one whole, one slumped to an end, one broken in the middle into two.
+float bodyTop(vec2 c) {
+  float f = 1.0;
+  if (uShape.x > 1.5) f = 0.3 + 0.7 * pow(abs(cos(3.14159 * (c.x * 1.05 + 0.12))), 0.8);
+  else if (uShape.x > 0.5) f = mix(0.26, 1.0, smoothstep(0.08, 0.72, c.x));
+  if (uShape.x > 0.5) {
+    f *= smoothstep(0.0, 0.12, c.x) * (1.0 - smoothstep(0.88, 1.0, c.x));
+    f += 0.035 * sin(c.x * 31.0 + uShape.w) + 0.02 * sin(c.x * 83.0 + uShape.w * 1.7);
+  }
+  return uBody.w + (1.0 - uBody.w) * f;
 }`;
 
 const BODY_VERTEX = /* glsl */ `
 uniform vec4 uAt;
-uniform vec4 uBody;
 ${BODY_GLSL}
 void main() {
   vec2 uv = vec2(position.x + 0.5, 0.5 - position.z);
-  vUv = vec2(mix(uv.x, 1.0 - uv.x, uFlip), uv.y);
+  vCard = uv;
+  vUv = vec2(mix(uShape.y, uShape.z, mix(uv.x, 1.0 - uv.x, uFlip)), uv.y);
   vec2 tc = normalize(cameraPosition.xz - uAt.xz);
   vec3 toLens = vec3(tc.x, 0.0, tc.y);
   vRight = vec3(tc.y, 0.0, -tc.x);
@@ -144,7 +158,6 @@ void main() {
 const BODY_FRAGMENT = /* glsl */ `
 precision highp float;
 uniform vec4 uAt;
-uniform vec4 uBody;
 uniform sampler2D tSalt;
 uniform float uSeed;
 ${NOISE_GLSL}
@@ -153,7 +166,9 @@ ${BODY_GLSL}
 const vec3 LUMA = vec3(0.3, 0.5, 0.2);
 const vec3 RIME_MEAN = vec3(0.389, 0.306, 0.282);
 void main() {
-  float covered = bodyCover(vUv);
+  float top = bodyTop(vCard);
+  float covered = bodyCover(vUv) * (1.0 - step(top, vCard.y));
+  float lip = smoothstep(top - 0.12, top, vCard.y) * step(0.5, uShape.x);
   vec3 pic = texture2D(tPic, vUv).rgb;
   float l0 = dot(pic, LUMA);
   // Its form from the relief, blurred; its ribs and knobs from the light and dark of the picture.
@@ -171,7 +186,7 @@ void main() {
   vec2 cs = vec2(dot(texture2D(tSalt, cq + vec2(0.004, 0.0)).rgb / RIME_MEAN, LUMA) - cl, dot(texture2D(tSalt, cq + vec2(0.0, 0.004)).rgb / RIME_MEAN, LUMA) - cl);
   float crusted = smoothstep(0.25, 0.6, vnoise(vUv * vec2(9.0, 5.0) + uSeed) * 0.6 + 0.4 * cl);
   vec3 face = normalize(cross(vRight, vUp));
-  vec3 n = normalize(face - vRight * (hx * 9.0 + lx * 0.7 / (l0 + 0.1) + cs.x * 5.0) - vUp * (hy * 9.0 + ly * 0.7 / (l0 + 0.1) + cs.y * 5.0) + vec3(0.0, 0.35, 0.0));
+  vec3 n = normalize(face - vRight * (hx * 9.0 + lx * 0.7 / (l0 + 0.1) + cs.x * 5.0) - vUp * (hy * 9.0 + ly * 0.7 / (l0 + 0.1) + cs.y * 5.0) + vec3(0.0, 0.35, 0.0) + vUp * (1.6 * lip));
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 rime = texture2D(tSalt, vWorld.xz * 2.0 + vWorld.y * 1.3 + uSeed).rgb / RIME_MEAN;
   // Every read of a picture comes before any discard: the software renderer leaves the slopes of a dropped pixel's neighbours undefined.
@@ -181,8 +196,11 @@ void main() {
   vec3 albedo = pic * 0.62 * mix(vec3(1.0), rime, 0.2);
   float hollow = smoothstep(0.05, 0.38, l0);
   // The bars of the ribs are all but grown over: what is left of the animal is its shape and the dark of its deepest hollows.
-  vec3 crust = vec3(0.3, 0.287, 0.28) * (0.55 + 0.6 * cl);
+  vec3 crust = vec3(0.26, 0.246, 0.238) * (0.5 + 0.62 * cl);
   albedo = mix(albedo, crust, (0.5 + 0.38 * crusted) * (0.35 + 0.65 * hollow));
+  // In places the crust has broken away and the hide under it shows, dark and drawn tight over what is left.
+  float bare = smoothstep(0.5, 0.62, vnoise(vCard * vec2(5.0, 3.0) + uSeed * 1.3) + 0.22 * (cl - 1.0));
+  albedo = mix(albedo, vec3(0.085, 0.066, 0.058) * (0.45 + 1.5 * l0), 0.88 * bare);
   hollow = mix(hollow, 1.0, 0.45);
   float above = vWorld.y - uAt.y;
   float stain = (1.0 - smoothstep(0.0, 0.16, above + 0.12 * (vnoise(vWorld.xz * 3.0 + uSeed) - 0.5)));
@@ -197,7 +215,7 @@ const BODY_DEPTH = /* glsl */ `
 precision highp float;
 ${BODY_GLSL}
 void main() {
-  if (bodyCover(vUv) < 0.5) discard;
+  if (bodyCover(vUv) * (1.0 - step(bodyTop(vCard), vCard.y)) < 0.5) discard;
   gl_FragColor = vec4(0.0);
 }`;
 
@@ -219,6 +237,10 @@ function grid(across: number, down: number): THREE.BufferGeometry {
   g.setIndex(new THREE.BufferAttribute(index, 1));
   return g;
 }
+
+// Which heap each dead one is, in the order of the anchors: the three the lens of the thin crust sees are all different.
+const KINDS = [1, 0, 2, 2, 0, 1];
+const FALLEN = DEAD[4] as (typeof DEAD)[number];
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('dead');
@@ -267,8 +289,11 @@ export function create(ctx: Context): Piece {
     mesh.frustumCulled = false;
     mesh.updateMatrixWorld();
     cards.push({ mesh, material, x: p[0], z: p[1], yaw: d.yaw, size });
+    if (d === FALLEN) continue;
     // The body: about three metres of it, sunk in its apron to a different depth each, the furthest gone the deepest.
-    const wide = 3.3 * d.size * rng.range(0.75, 1.2);
+    const kind = KINDS[bodies.length % KINDS.length] as number;
+    const crop: [number, number] = kind === 1 ? [0, 0.72] : kind === 2 ? [0.22, 1] : [0, 1];
+    const wide = 3.3 * d.size * rng.range(0.75, 1.2) * (crop[1] - crop[0]) * (kind === 0 ? 1 : 1.15);
     const bodyMaterial = new THREE.ShaderMaterial({
       uniforms: {
         ...ctx.rig.uniforms,
@@ -277,7 +302,8 @@ export function create(ctx: Context): Piece {
         tSalt: { value: tSalt },
         uFlip: { value: rng.next() < 0.5 ? 1 : 0 },
         uAt: { value: new THREE.Vector4(p[0], ground + 0.04, p[1], under ? 0 : (rng.next() < 0.5 ? -1 : 1) * rng.range(0.12, 0.42)) },
-        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672, under ? 0.95 : rng.range(0.45, 0.85), under ? 0.6 : rng.range(0.22, 0.5)) },
+        uShape: { value: new THREE.Vector4(kind, crop[0], crop[1], rng.range(0, 6)) },
+        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672 / (crop[1] - crop[0]) / (kind === 0 ? 1 : 1.15), under ? 0.95 : rng.range(0.45, 0.85), under ? 0.6 : rng.range(0.22, 0.5)) },
         uSeed: { value: rng.range(1, 60) },
       },
       vertexShader: BODY_VERTEX,
@@ -297,9 +323,46 @@ export function create(ctx: Context): Piece {
   const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.024, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 26 });
   const live = newDrive();
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)], 0.5, [0.1, 0.072, 0.054], 'dead-mud', 0.6, 0.2);
+  // One of the dead is not yet a heap: it lies on its side as it fell, half under, caked and salted, the upper legs stiff in the air.
+  const fa = rel(FALLEN.d, FALLEN.l);
+  const fl = Math.hypot(lens[0] - fa[0], lens[1] - fa[1]);
+  // STAGED for the lens of the thin crust: it lies a stride and a half to the left of its anchor as that lens sees it, whole in the frame.
+  const fp: [number, number] = [fa[0] - ((lens[1] - fa[1]) / fl) * 1.7, fa[1] + ((lens[0] - fa[0]) / fl) * 1.7];
+  const fGround = Math.min(0.1, ctx.rig.land.height(fp[0], fp[1]));
+  const fallen = new Beast(ctx, { k: 0.85, young: 0, seed: 41.3, bulk: 0.86, salt: 0.3 }, { cell: 0.03, wet: fGround - 5, mudded: 0.5, crust: 1, relief: 0, tendrils: 12 });
+  const lie = newDrive();
+  {
+    const k = 0.85;
+    const across: [number, number] = [-(lens[1] - fp[1]), lens[0] - fp[0]];
+    const al = Math.hypot(across[0], across[1]);
+    lie.dir = [across[0] / al, across[1] / al];
+    // Its legs lie toward the lens of the thin crust.
+    if (lie.dir[1] * (lens[0] - fp[0]) - lie.dir[0] * (lens[1] - fp[1]) < 0) lie.dir = [-lie.dir[0], -lie.dir[1]];
+    lie.ox = fp[0];
+    lie.oz = fp[1];
+    lie.oy = fGround - 0.42 * k;
+    lie.roll = 1.32;
+    lie.shift = -1.12 * k;
+    lie.pitch = 0.06;
+    lie.bend = 0.12;
+    lie.headPitch = 0.3;
+    lie.headYaw = -0.25;
+    lie.breath = -1;
+    lie.splay = 0.12;
+    lie.floor = -1e9;
+    lie.curl.fill(0.9);
+    lie.feet.forEach((foot, l) => {
+      const upper = l < 2;
+      const fore = l % 2 === 1;
+      foot[0] = (fore ? 1.05 : -1.5) * k;
+      foot[1] = (upper ? (fore ? 0.48 : 0.3) : -0.6) * k;
+      foot[2] = (upper ? -1.25 : -0.9) * k * 0.86;
+    });
+    fallen.pose(lie, 0);
+  }
   // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.
   const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.14 * c.size, [0.05, 0.022, 0.017], 'dead-stain-' + i, 1));
-  const meshes = [...cards.map((c) => c.mesh), ...bodies.map((b) => b.mesh), stuck.mesh, stuck.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
+  const meshes = [...cards.map((c) => c.mesh), ...bodies.map((b) => b.mesh), stuck.mesh, stuck.feelers, fallen.mesh, fallen.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
   ctx.parts.built('dead', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
 
@@ -348,6 +411,7 @@ export function create(ctx: Context): Piece {
       for (const b of bodies) b.material.dispose();
       bodyGrid.dispose();
       stuck.dispose();
+      fallen.dispose();
       mud.dispose();
       for (const w of stains) w.dispose();
     },

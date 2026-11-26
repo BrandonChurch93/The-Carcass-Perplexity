@@ -30,7 +30,9 @@ export function create(ctx: Context): Piece {
     const ground = sink > 0.15 ? Math.min(land, 0) - sink * b.k : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
     // A young one keeps to the shallows: its legs are too short for the bed.
     // One on a bank has sunk into it to the ankle and further: the mud is soft.
-    const stand = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.12) * b.k);
+    const sunkIn = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.12) * b.k);
+    // In shallows it goes in no deeper than the ankle.
+    const stand = sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1);
     // The head hangs to the mud that is under it, or to the top of the brine.
     const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.6 * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
@@ -41,7 +43,7 @@ export function create(ctx: Context): Piece {
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
-      floor: sink <= 0.15 ? ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k) + 0.03 : -1e9,
+      floor: sink <= 0.15 ? Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), 0) + 0.03 : -1e9,
       paw: herd.length === 2 ? ((lens[0] - x) * -dir[1] + (lens[1] - z) * dir[0] > 0 ? 3 : 1) : -1,
     });
   };
@@ -56,10 +58,12 @@ export function create(ctx: Context): Piece {
     const dir: [number, number] = b.d < 26 ? [0.25 * F[0] - 0.97 * R[0], 0.25 * F[1] - 0.97 * R[1]] : [F[0] * hd + R[0] * hl, F[1] * hd + R[1] * hl];
     add(p[0], p[1], WALLOW_TIME, dir, size, b.sink, b.speed, b.root);
   }
-  // The one on the bank of the pool, seen through the stalks.
+  // STAGED for the lens of the colony: one wades the far shallows of the pool, side on, right of the middle of that view.
   const bank = bearingDir(37);
   const bl = Math.hypot(1, 0.12);
-  add(bank[0] * 13.8, bank[1] * 13.8, keyTime('marsh-2'), [-1 / bl, -0.12 / bl], 1, 0.12, 0.2, 0.05);
+  add(bank[0] * 8.6, bank[1] * 8.6, keyTime('marsh-2'), [-1 / bl, -0.12 / bl], 1, 0.12, 0.2, 0.05);
+  // It keeps to a shoal: the brine is to its shins and its belly is clear of it.
+  (herd[herd.length - 1] as (typeof herd)[number]).plan.ground = -0.06;
 
   const wet = new Wet(ctx, herd.length);
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
