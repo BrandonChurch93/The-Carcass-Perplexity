@@ -308,11 +308,14 @@ void main() {
   // It is wrinkled down its length: broad folds, a few across its width, that wander and run into each other.
   float wob = vnoise(vec2(metres * 0.22 + seed, lie * 1.3));
   float phase = lie * (7.0 + 5.0 * fract(seed * 0.173)) + 5.0 * wob + metres * 0.15;
-  float fold = sin(phase);
+  // Not everywhere: a stretch of it is pulled smooth, the next is gathered.
+  float gathered = mix(0.2, 1.0, smoothstep(0.3, 0.7, vnoise(vec2(metres * 0.06 + seed * 5.0, lie * 0.7 + seed))));
+  float fold = sin(phase) * gathered;
   // And between them narrower ones, seen only close.
   float phase2 = lie * (15.0 + 6.0 * fract(seed * 0.411)) + 7.0 * vnoise(vec2(metres * 0.35 + seed * 2.0, lie * 2.0)) - metres * 0.1;
-  float fold2 = sin(phase2) * (1.0 - far);
-  n = normalize(n + normalize(vAcross) * (0.5 * cos(phase) * (1.0 - 0.6 * far) + 0.34 * cos(phase2) * (1.0 - far)));
+  float gathered2 = smoothstep(0.4, 0.75, vnoise(vec2(metres * 0.11 - seed * 3.0, lie * 1.1 - seed)));
+  float fold2 = sin(phase2) * (1.0 - far) * gathered2;
+  n = normalize(n + normalize(vAcross) * (0.5 * cos(phase) * gathered * (1.0 - 0.6 * far) + 0.34 * cos(phase2) * gathered2 * (1.0 - far)));
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
 
   // How many skins thick it is: thin where it is stretched over a belly, a body where it is gathered at the knot, at its lip, along a
@@ -338,7 +341,9 @@ void main() {
   }
   // The film's own colour: lilac grey, with the sheet's stains of rose, violet and gold about its mean.
   vec3 stain = mix(vec3(1.0), clamp(pic / SKIN_MEAN, 0.5, 1.8), uFilm.z);
-  vec3 body = mix(vec3(0.7, 0.74, 1.0), vec3(1.0, 0.8, 0.98), 1.0 - far) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
+  // Close, its hue wanders in broad patches: violet, a cold green, a little gold.
+  vec3 patches = 0.5 + 0.5 * cos(6.2832 * (1.4 * drift + 0.35 * wob + seed + vec3(0.0, 0.3333, 0.6667)));
+  vec3 body = mix(vec3(0.7, 0.74, 1.0), vec3(1.0, 0.8, 0.98) * (0.78 + 0.4 * patches), 1.0 - far) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
   // What it scatters: a pale haze of the light on its two faces, a little even where it is thinnest, so that it stands pale before a
   // dark sky and the sky is still seen through it.
   float thin = 0.8 * uFilm.y;
