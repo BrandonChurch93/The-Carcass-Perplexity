@@ -25,5 +25,231 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the nearly identical concentric ripple patterns stamped around separate objects in the water.",
+      "answered": "05:39 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "alien-landscape render with repeated procedural plants and simple uniform ripple rings on the water, which looks like a standalone CG scene rather than a photo or high-end film frame",
+      "answered": "05:39 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the simplistic concentric water ripples around the wading creatures",
+      "answered": "05:39 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 94,
+      "why": "The same thin concentric ripple rings appear stamped onto the water around each creature.",
+      "answered": "05:39 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the alien landscape looks like a procedurally generated 3D scene with repeated plant and rock assets, simple tiled textures and uniform fog. It is too polished for a web demo or mobile game, but it lacks the detail and art direction of a big-budget film or cinematic. (d) is the runner-up.",
+      "answered": "05:39 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 93,
+      "why": "The foreground splash has rigid, faceted edges that look like a 3D mesh.",
+      "answered": "05:39 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "The splash crown and bubble dome are clean but simplistic CG simulations, and the creature has a soft, generic look, which reads as an ordinary hobbyist or stock 3D render rather than film-grade work.",
+      "answered": "05:41 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the unpolished and repetitive CG bubble and crown-splash meshes paired with offline path-traced lighting and water reflections",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 92,
+      "why": "the foreground splash is a stiff ring of sharply faceted polygons rather than a thin sheet of water.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "The image is a clearly CG alien swamp scene with decent water, fog and texture work, but the stylized splash crown, the glassy bubble and the soft, slightly generic creature look like an individual artist's render (Blender-style), not a film or game cinematic.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 89,
+      "why": "the repeated segmented trunks with unnaturally sharp, hollow rims.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the creature is a smooth, featureless, low-detail blob, and the trunk tops are cut off like hollow tubes. That looks like a hobbyist or stock-style render (Blender-like fog and foliage), not film-grade work.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the paper-thin polygonal rims with flat brown interiors on the foreground stalks despite otherwise decent offline lighting and reflections",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 86,
+      "why": "the foreground trunks end in conspicuously angular rims with flat, untextured interiors.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "The image is a clearly CG alien scene, but the dense detail, volumetric fog and water reflections look like high-end cinematic work, not a stock or low-budget render.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the water ripples look like repeated concentric-ring decals.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the image looks like a detailed standalone creature render in the style of speculative-biology art: the skin is finely sculpted, but the water ripples are simple and stylized and the background is sparse and hazy, which suggests a personal or artist render rather than a film frame.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the painted-looking concentric white ripple rings and flat water intersections paired with sculpted creature skin shading that look like an ordinary offline 3D render rather than a top-budget film or real-time mobile engine",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 83,
+      "why": "The water ripples look like identical blurred rings stamped onto a flat surface.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "the skin has film-quality detail (wrinkles, subsurface shading, wet claws) and the ripples and atmospheric haze are very polished, but it reads as a single artist's showcase render of a giant tardigrade-like creature, so c is close.",
+      "answered": "05:42 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 85,
+      "why": "the conspicuously repeated palm-like tree models across the scene.",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "Detailed but plainly CG speculative-creature scene (Blender-style instanced trees, uniform soft fog lighting, procedural ground textures): good hobbyist/stock render quality, not film-grade.",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the jagged polygon clipping where the displaced terrain meets the flat water plane",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 89,
+      "why": "The foreground creature’s whiskers look like smooth, uniformly tapered rods rather than organic growths.",
+      "answered": "05:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the high-detail offline render of invented walrus-like creatures and alien palms in haze looks like a solo artist's Blender-style scene, with noise-displaced rocks and blobby, uneven creature modeling that falls short of top-budget film polish.",
+      "answered": "05:43 UTC"
+    }
+  ]
 }
