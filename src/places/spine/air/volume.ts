@@ -87,7 +87,7 @@ vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
     if (uEmitters[i].w < 20.0 && -b > 0.0 && -b < far + 20.0) {
       float off = sqrt(max(dot(q, q) - b * b, 0.0));
       float power = 1.0 - exp(-dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) / 60000.0);
-      small += power * (exp(-off * off / 90.0) + 0.3 * exp(-off / 11.0));
+      small += power * (exp(-off * off / 20.0) + 0.12 * exp(-off / 6.0));
     }
   }
   // Staged by shot: behind the long lens of the strike (spine-04) the cloud's glow is the strike picture's own; the air adds a fifth of its.

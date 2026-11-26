@@ -13,12 +13,16 @@ export const PARTS: readonly string[] = STRIKES.map((s) => s.id);
 const CORE = 1500;
 const CAST = 4600;
 const TINT = new THREE.Vector3(0.62, 0.5, 1);
-const SPARKS = 260;
+/** What the flash of a first stroke gives a face that looks at the channel from close by, as irradiance: the dusk gives level snow about 0.25. */
+const FLASH = 3.2;
+/** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
+const FLASH_OF = [1, 0.7, 0.8, 0.75, 0.6, 0.85];
+const SPARKS = 90;
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
 const TIP_RADIUS = 8;
 const TIP_CAST = 300000;
 /** Half the breadth of the card the white-hot spot at the tip is drawn on, metres. */
-const SPOT = 1.5;
+const SPOT = 0.9;
 /** The air round the arc is violet; its heart is white with a breath of it. */
 const HEART = new THREE.Vector3(0.78, 0.66, 1);
 /** The photographs of a stroke, and for each where its channel leaves the top and meets the foot (shares of its width) and where its foot is. */
@@ -54,7 +58,7 @@ void main() {
   float v = 0.5 + 0.5 * position.y;
   // The picture's stroke leaves its top and reaches its foot a little off the middle; it is brought back onto the line.
   float lean = mix(uLean.x, uLean.y, v) - 0.5;
-  float wander = (0.004 * sin(v * 23.0 + n * 2.1) + 0.006 * sin(v * 7.7 + n * 4.3)) * sin(v * 3.14159) * min(n, 1.0);
+  float wander = (0.006 * sin(v * 23.0 + n * 2.1) + 0.011 * sin(v * 7.7 + n * 4.3) + 0.004 * sin(v * 51.0 + n * 5.7)) * sin(v * 3.14159) * min(n, 1.0);
   vUv = vec2(0.5 + flip * (0.5 * position.x) + lean + wander, mix(uLean.z, 1.0, v));
   vWay = 1.0 - v;
   vFoot = v * len;
@@ -95,7 +99,7 @@ void main() {
   float broad = 0.25 * (texture2D(tBolt, vUv + vec2(5.0 * px, 0.0)).g + texture2D(tBolt, vUv - vec2(5.0 * px, 0.0)).g + texture2D(tBolt, vUv + vec2(0.0, 5.0 * px)).g + texture2D(tBolt, vUv - vec2(0.0, 5.0 * px)).g);
   // The branches burn with the first stroke and are half found again by the later ones; the main channel carries them all.
   float thin = 1.0 - smoothstep(0.06, 0.22, broad);
-  float lit = mix(uEnv.x, uEnv.y + 0.45 * uEnv.x, thin) + uEnv.z;
+  float lit = mix(uEnv.x, uEnv.y + 0.12 * uEnv.x, thin);
   float lead = 0.06 * (1.0 - smoothstep(uEnv.w - 0.04, uEnv.w, vWay)) * step(uEnv.w, 0.999);
   float strength = min(lit + lead, 1.5);
   float need = max(mix(0.13, 0.5, 1.0 - thin), 0.033 / max(strength, 1e-3));
@@ -138,18 +142,19 @@ varying float vHeat;
 void main() {
   // A fragment of rock thrown from the tip: it flies, falls, is carried by the gale, and cools.
   // It leaves fast and the air stops it within a few tens of metres; then it only falls and drifts.
-  float life = 0.45 + 2.0 * aSeed.x * aSeed.x;
-  float t = max(uAge - 0.22 * aSeed.y * aSeed.y, 0.0);
-  float drag = 1.0 - exp(-t * 13.0);
-  vec3 p = uAt + aGo * (drag / 13.0) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 6.0);
-  vec3 v = aGo * exp(-t * 13.0) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 12.0);
+  // It is seen for a few frames and no longer: under a sixth of a second.
+  float life = 0.05 + 0.1 * aSeed.x;
+  float t = max(uAge - 0.01 * aSeed.y, 0.0);
+  float drag = 1.0 - exp(-t * 6.0);
+  vec3 p = uAt + aGo * (drag / 6.0) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 6.0);
+  vec3 v = aGo * exp(-t * 6.0) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 12.0);
   vec4 c = viewMatrix * vec4(p, 1.0);
   vec3 along = (viewMatrix * vec4(v, 0.0)).xyz;
   float far = -c.z;
   float size = max(0.05 + 0.09 * aSeed.z, (0.7 + 0.7 * aSeed.z) * uPixel * far);
   // A streak as long as the fragment flies while the shutter is open.
   vec2 dir = normalize(along.xy + vec2(1e-4));
-  float reach = max(size, min(length(along.xy) * 0.0025, size * 3.5));
+  float reach = max(size, min(length(along.xy) * 0.0042, size * 9.0));
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
   vHeat = (uAge <= 0.0 || t <= 0.0) ? 0.0 : exp(-t / (0.5 * life)) * (1.0 - smoothstep(life * 0.8, life, t)) * (0.4 + 0.6 * aSeed.w) * min(1.0, 0.5 / (reach / size) + 0.5);
@@ -172,8 +177,8 @@ void main() {
 }`;
 
 /** The bloom at the struck tip: its radius in pixels of a 4K frame, and the glare's radiance as a share of the hot spot's. */
-const BLOOM_PIXELS = 380;
-const BLOOM_GLARE = 0.012;
+const BLOOM_PIXELS = 150;
+const BLOOM_GLARE = 0.006;
 const HALO_VERTEX = /* glsl */ `
 #define BLOOM_PIXELS ${BLOOM_PIXELS.toFixed(1)}
 uniform vec3 uAt;
@@ -219,6 +224,8 @@ interface Bolt {
   age: { value: number };
   spotGlow: THREE.Vector3;
   top: THREE.Vector3;
+  /** Where the flash is cast from: a point low on the channel. */
+  cast: THREE.Vector3;
   mid: THREE.Vector3;
   tip: THREE.Vector3;
 }
@@ -261,7 +268,7 @@ export function create(ctx: Context): Piece {
       seeds.set([rng.next(), rng.next(), rng.next(), rng.next()], i * 4);
       const az = rng.range(0, Math.PI * 2);
       const up = rng.range(-0.35, 1);
-      const speed = rng.range(50, 330) * (rng.next() < 0.2 ? 1.8 : 1);
+      const speed = rng.range(40, 160) * (rng.next() < 0.2 ? 1.8 : 1);
       const flat = Math.sqrt(Math.max(0, 1 - up * up));
       go.set([Math.cos(az) * flat * speed, up * speed, Math.sin(az) * flat * speed], i * 3);
     }
@@ -277,7 +284,8 @@ export function create(ctx: Context): Piece {
 
     group.visible = false;
     ctx.scene.add(ctx.parts.built(site.id, group));
-    return { site, group, env, shift, age, spotGlow, top, mid, tip };
+    const cast = new THREE.Vector3().lerpVectors(tip, top, 0.28);
+    return { site, group, env, shift, age, spotGlow, top, cast, mid, tip };
   });
 
   // Two lights of the rig: the channel over the struck tip, and the cloud lit from inside where the channel enters it.
@@ -289,6 +297,10 @@ export function create(ctx: Context): Piece {
   // ribbons close to it.
   const tipLight = { position: new THREE.Vector3(), radius: TIP_RADIUS, radiance: new THREE.Vector3() };
   ctx.rig.emitters.push(channelLight, cloudLight, ...alongLights, tipLight);
+  // And the flash itself: the one light with direction and shadow (shared/glsl.ts), from a point low on the channel.
+  const flashAt = (ctx.rig.uniforms.uStrikeAt as THREE.IUniform<THREE.Vector4>).value;
+  const flashTip = (ctx.rig.uniforms.uStrikeTip as THREE.IUniform<THREE.Vector4>).value;
+  const flashTop = (ctx.rig.uniforms.uStrikeTop as THREE.IUniform<THREE.Vector4>).value;
 
   // What a strike leaves on a tip: the rime flashes to steam and the gale carries it off. The air folder draws it; a strike only says how much.
   const puffs: { source: SteamSource; strikes: number[] }[] = [];
@@ -320,35 +332,41 @@ export function create(ctx: Context): Piece {
       cloudLight.radiance.set(0, 0, 0);
       tipLight.radiance.set(0, 0, 0);
       for (const l of alongLights) l.radiance.set(0, 0, 0);
-      for (const b of bolts) {
+      flashAt.set(0, 0, 0, 0);
+      bolts.forEach((b, index) => {
         const age = seconds - b.site.seconds;
         const live = age > -0.3 && age < 1.2;
         b.group.visible = live;
-        if (!live) continue;
+        if (!live) return;
         const e = envelope(timingOf(b.site.id), age);
         b.env.set(e.main, e.branch, e.after, e.leader);
         b.shift.x = strokeAt(timingOf(b.site.id), age);
         b.age.value = age;
         // Light inside the cloud before the stroke, then the stroke itself.
         const before = breakdown(age);
-        // After the last stroke the light does not cut off: the channel cools and the cloud holds it for half a second.
-        const tail = age > 0 ? 0.1 * Math.exp(-age / 0.25) * (1 - Math.exp(-age / 0.02)) : 0;
-        const power = e.main + e.after;
-        b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(power, 1) * 220 + e.after * 400);
+        // Between the strokes the channel, the tip and the land are dark: only the cloud keeps a dull glow.
+        const tail = e.after;
+        const power = e.main;
+        b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(power, 1) * 120);
+        if (power > 0) {
+          flashAt.set(b.cast.x, b.cast.y, b.cast.z, FLASH * (FLASH_OF[index % FLASH_OF.length] as number) * power);
+          flashTip.set(b.tip.x, b.tip.y, b.tip.z, 0);
+          flashTop.set(b.top.x, b.top.y, b.top.z, 0);
+        }
         if (power + before + tail > 1e-4) {
           channelLight.position.copy(b.mid);
-          channelLight.radiance.copy(TINT).multiplyScalar(CAST * (power + tail));
+          channelLight.radiance.copy(TINT).multiplyScalar(CAST * power);
           alongLights.forEach((l, n) => {
             l.position.lerpVectors(b.top, b.mid, n === 0 ? 0.3 : 0.65);
-            l.radiance.copy(TINT).multiplyScalar(CAST * 0.5 * (power + tail));
+            l.radiance.copy(TINT).multiplyScalar(CAST * 0.5 * power);
           });
           tipLight.position.copy(b.tip);
           tipLight.position.y += 2;
-          tipLight.radiance.copy(TINT).multiplyScalar(TIP_CAST * (power + tail * 0.3));
+          tipLight.radiance.copy(TINT).multiplyScalar(TIP_CAST * power);
           cloudLight.position.copy(b.top);
           cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (power + tail * 2 + before * 3));
         }
-      }
+      });
     },
     beforeSample: (renderer, camera) => {
       renderer.getDrawingBufferSize(size);

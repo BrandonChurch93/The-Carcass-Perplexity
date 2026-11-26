@@ -69,7 +69,10 @@ uniform vec3 uFlash;
 uniform vec4 uWind;
 uniform int uEmitterCount;
 uniform vec4 uEmitters[8];
-uniform vec3 uEmitterRadiance[8];`;
+uniform vec3 uEmitterRadiance[8];
+uniform vec4 uStrikeAt;
+uniform vec4 uStrikeTip;
+uniform vec4 uStrikeTop;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -152,6 +155,32 @@ float contactAt(vec3 p) {
   return contactDrawn(p);
 }
 
+// The flash of a stroke on a face: one light from the channel, by direction, with the land's own shadow. It is what a camera sees of a
+// strike: for a frame the faces that see the channel are lit blue-white and the rest keep the dusk. Nothing when no stroke burns.
+const vec3 STRIKE_COLOUR = vec3(0.74, 0.8, 1.0);
+// The light falls off with the square of the distance past this many metres: the channel is a kilometre tall and lights the ridge as a line does.
+const float STRIKE_REACH = 1500.0;
+vec3 strikeIrradiance(vec3 p, vec3 n) {
+  if (uStrikeAt.w <= 0.0) return vec3(0.0);
+  vec3 d = uStrikeAt.xyz - p;
+  float dist = length(d);
+  vec3 l = d / dist;
+  // Hard, with the least wrap: snow turned from the channel stays in the dusk.
+  float facing = clamp((dot(n, l) + 0.06) / 1.06, 0.0, 1.0);
+  if (facing <= 0.0) return vec3(0.0);
+  // The land between the face and the channel: the ray is walked toward the light and is shaded wherever the ground stands over it.
+  float lit = 1.0;
+  float reach = min(dist * 0.9, 1400.0);
+  for (int i = 0; i < 7; i++) {
+    float f = (float(i) + 1.0) / 7.0;
+    float t = reach * f * f;
+    vec3 q = p + l * t;
+    lit = min(lit, smoothstep(-1.5 - 0.04 * t, 0.5 + 0.01 * t, q.y - landAt(q.xz).r + 1.0 + 0.02 * t));
+    if (lit <= 0.0) return vec3(0.0);
+  }
+  return STRIKE_COLOUR * (uStrikeAt.w * facing * lit / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
+}
+
 // Irradiance from the round lights: the lightning. Each is a ball of real size (a bolt a kilometre long is a row of them, or one tall one) and falls
 // off with the square of the distance, as light does, and with nothing else: the air above the cloud is clear and a strike lights the ridge for
 // kilometres. A light wraps a quarter round a face, so that a spire lit from behind keeps a rim. No read of any map.
@@ -170,7 +199,10 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   }
   // A strike lights the rock; it does not bleach it. However strong a light is made, what it casts closes on a ceiling.
   e *= EMITTER_CAST;
-  return e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / (EMITTER_CEILING * (1.0 + 12.0 * lift)));
+  e = e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / (EMITTER_CEILING * (1.0 + 12.0 * lift)));
+  // The stroke's own flash is not held under the ceiling: it has direction and shadow, and what it does not reach stays dark.
+  if (uStrikeAt.w > 0.0) e += strikeIrradiance(p, n);
+  return e;
 }
 
 // For the owners: how much of the sky a face keeps when the land in front of it stands higher than it does. 1 in the open, toward 0 in a crack,

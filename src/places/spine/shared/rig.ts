@@ -273,6 +273,11 @@ export function createRig(): Rig {
     uEmitterCount: { value: 0 },
     uEmitters: { value: emitterPlaces },
     uEmitterRadiance: { value: emitterRadiance },
+    // The stroke that burns now, set by the strikes: where its light comes from (a point on the channel) and its power, exactly 0 when
+    // none burns; the tip it lands on, and where it enters the cloud.
+    uStrikeAt: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uStrikeTip: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uStrikeTop: { value: new THREE.Vector4(0, 0, 0, 0) },
   };
 
   let landHeight: Height = (x, z) => {

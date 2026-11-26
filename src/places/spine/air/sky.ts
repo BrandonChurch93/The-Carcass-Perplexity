@@ -86,7 +86,7 @@ vec3 plateCloud(vec2 uv, float lod) {
   float lit = clamp(ember + 1.5 * dot(uFlash, vec3(0.33)), 0.0, 1.0);
   return c * mix(mix(1.0, 0.3, glowing), 1.0 + 0.2 * glowing, lit) * SKY_GAIN * 1.0;
 }
-vec3 skyCloud(vec3 from, vec3 d, float lod) {
+vec3 skyAtRest(vec3 from, vec3 d, float lod) {
   float el = asin(clamp(d.y, -1.0, 1.0));
   float az = atan(d.z, d.x);
   vec2 uvP = vec2(0.0);
@@ -133,6 +133,36 @@ vec3 skyCloud(vec3 from, vec3 d, float lod) {
   float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
   c *= mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN * (1.0 + uSkyStage.y);
   return plate > 0.0 ? mix(c, plateCloud(uvP, lod), plate) : c;
+}
+// How much of a stroke's light the cloud toward d holds: the channel is a line of light from the tip up into the cloud, and the cloud
+// about it is lit through, by metres from the line as the lens sees it, far wider where the channel is inside the cloud.
+float strikeReach(vec3 from, vec3 d) {
+  float lit = 0.0;
+  for (int i = 0; i < 5; i++) {
+    // From a little over the tip to well inside the cloud over the channel's top.
+    float f = 0.15 + 0.3 * float(i);
+    vec3 q = mix(uStrikeTip.xyz, uStrikeTop.xyz, f) - from;
+    float along = dot(d, q);
+    if (along <= 0.0) continue;
+    float r = mix(140.0, 620.0, clamp(f, 0.0, 1.0));
+    float off2 = max(dot(q, q) - along * along, 0.0) / (r * r);
+    lit += (0.07 + 0.17 * f) * (1.0 / (1.0 + off2 * off2) + 0.1 / (1.0 + 0.3 * off2));
+  }
+  return lit;
+}
+// The cloud in the flash of a stroke: what stands round the channel is lit from inside, its pale bodies far more than its dark ones, so
+// that the cloud's own shapes stand in the light; the last band keeps its orange.
+vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
+  float lit = uStrikeAt.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y);
+  float body = dot(c, vec3(0.3, 0.5, 0.2));
+  float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
+  float shape = smoothstep(0.004, 0.05, body);
+  return c * (1.0 + 7.0 * lit * (1.0 - 0.8 * warm)) + vec3(0.6, 0.62, 1.0) * (lit * (0.01 + 0.1 * shape) * (1.0 - warm));
+}
+vec3 skyCloud(vec3 from, vec3 d, float lod) {
+  vec3 c = skyAtRest(from, d, lod);
+  if (uStrikeAt.w > 0.0) c = strikeCloud(c, from, d);
+  return c;
 }`;
 
 const FRAGMENT = /* glsl */ `

@@ -67,7 +67,14 @@ vec3 windowLight(vec3 p, vec3 n) {
   cold += flashCast() * 0.9;
   // The far mouth holds the band of dusk: what it gives is warm; the near mouth gives the storm's cold.
   vec3 dusk = mix(cold, vec3(1.5, 0.82, 0.42) * dot(cold, vec3(0.3, 0.5, 0.2)), 0.2);
-  return dusk * (sE * (0.1 + 0.9 * max(dot(n, dE), 0.0))) + cold * (sM * (0.1 + 0.9 * max(dot(n, dM), 0.0)));
+  vec3 w = dusk * (sE * (0.1 + 0.9 * max(dot(n, dE), 0.0))) + cold * (sM * (0.1 + 0.9 * max(dot(n, dM), 0.0)));
+  // The flash of a stroke outside comes in by the far mouth as a narrow pulse: it reaches farther in than the daylight and lights only
+  // what is turned to the mouth, a rim and never a fill.
+  if (uStrikeAt.w > 0.0) {
+    float turned = max(dot(n, dE), 0.0);
+    w += STRIKE_COLOUR * (uStrikeAt.w * 0.6 * turned * turned * turned * 2600.0 / (dot(toExit, toExit) * 3.14159 + 2600.0));
+  }
+  return w;
 }
 // The glaze of ice on a face: the far mouth seen in it.
 vec3 windowGlaze(vec3 p, vec3 n, vec3 v, float sharp) {

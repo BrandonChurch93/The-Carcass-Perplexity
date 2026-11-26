@@ -90,55 +90,67 @@ export interface Strokes {
   share: number[];
 }
 
-export function strokes(rng: Rng): Strokes {
-  // No two strikes keep the same time: two to five strokes, the first the brightest by far, the gaps between them uneven (a quick pair,
-  // then a wait), each restrike weaker than the one before it.
-  const count = 2 + rng.int(4);
+/** The frames after a strike's own on which it strikes again, by which strike it is: no two keep the same time. The gaps are uneven and
+ * never under two frames, so that a dark frame stands between any two strokes, and all of it is over inside a quarter of a second. */
+const RESTRIKES: readonly (readonly number[])[] = [
+  [3, 5, 10],
+  [3, 7],
+  [2, 4, 7, 10],
+  [3, 5, 9],
+  [4, 6],
+  [2, 6, 8],
+];
+
+export function strokes(rng: Rng, which = 0): Strokes {
+  // The first stroke is the flash; each restrike is weaker than the one before it, by an uneven share.
+  const frames = RESTRIKES[which % RESTRIKES.length] as readonly number[];
   const at = [0];
-  const share = [1.3];
-  const waitAt = 1 + rng.int(Math.max(1, count - 1));
-  let last = rng.range(0.45, 0.7);
-  for (let i = 1; i < count; i++) {
-    // Each falls on the first instant of a frame, so that the open shutter sees it.
-    at.push((at[i - 1] as number) + Math.round((i === waitAt ? rng.range(0.11, 0.19) : rng.range(0.03, 0.07)) * 60) / 60);
+  const share = [1];
+  let last = rng.range(0.5, 0.62);
+  for (const f of frames) {
+    at.push(f / 60);
     share.push(last);
-    last *= rng.range(0.45, 0.8);
+    last *= rng.range(0.5, 0.72);
   }
   return { at, share };
 }
 
-/** One return stroke: it rises in 3 ms, falls to a third in a frame, and a continuing current holds the channel lit, dimmer, for three
- * frames more. Smooth, so the four samples of a frame blur it and none of them pops. */
-const pulse = (age: number): number => (age <= 0 ? 0 : (1 - Math.exp(-age / 0.003)) * (0.75 * Math.exp(-age / 0.012) + 0.25 * Math.exp(-age / 0.05)));
-/** A restrike: as sharp, and gone sooner, with little current after it: the dark between the strokes is dark. */
-const repulse = (age: number): number => (age <= 0 ? 0 : (1 - Math.exp(-age / 0.003)) * (0.9 * Math.exp(-age / 0.011) + 0.1 * Math.exp(-age / 0.03)));
+const ramp = (a: number, b: number, v: number): number => {
+  const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+/** One return stroke as a camera at 60 frames a second takes it: full for the whole of the open shutter of its frame (the half frame from
+ * its instant), gone before the next frame opens. Smooth, and exactly nothing 14 ms after it. */
+const pulse = (age: number): number => ramp(-0.0016, -0.0002, age) * (1 - ramp(0.0092, 0.014, age));
+/** The current that goes on in the channel after the first stroke: a dim frame and a dimmer one, then nothing. */
+const current = (age: number): number => (age < 0.012 || age > 0.06 ? 0 : 0.085 * ramp(0.012, 0.016, age) * Math.exp(-(age - 0.016) / 0.013) * (1 - ramp(0.04, 0.06, age)));
 
 /** The light inside the cloud in the tenth of a second before the first stroke: the breakdown that sends the leader down. It flickers and grows. */
 export const breakdown = (age: number): number => {
   if (age >= 0 || age < -0.3) return 0;
   const k = Math.min(1, Math.max(0, (age + 0.11) / 0.09));
   const early = 0.05 * Math.max(0, Math.sin((age + 0.3) * 31) * Math.sin((age + 0.3) * 10.5)) * (1 + age / 0.3);
-  return early + 0.3 * k * k * (0.7 + 0.3 * Math.sin(age * 190));
+  return (early + 0.3 * k * k * (0.7 + 0.3 * Math.sin(age * 190))) * (1 - ramp(-0.004, -0.0016, age));
 };
 
-/** How bright the main channel is, the branches are, and the glow left in the channel, at seconds since the strike's frame. */
+/** How bright the main channel is, the branches are, and the glow the cloud keeps, at seconds since the strike's frame. `leader` is 1: a
+ * camera does not see the leader, and nothing is drawn of the channel before its first stroke. */
 export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number } {
-  // The engine's samples of the strike's own frame start at its first instant: the first stroke is lit from just before it.
-  const t = age + 0.004;
-  let main = 0;
-  for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * (i === 0 ? pulse(t) : repulse(t - (s.at[i] as number)));
-  // What is left in the channel after the last stroke: a dull thread that cools in a tenth of a second.
-  const last = s.at[s.at.length - 1] as number;
-  const after = t <= last ? 0 : 0.02 * Math.exp(-(t - last) / 0.1) * (1 - Math.exp(-(t - last) / 0.02));
-  // The leader finds its way down in the twentieth of a second before the stroke: 0 at the cloud to 1 at the ground.
-  const leader = t < 0 ? Math.max(0, 1 + t / 0.05) : 1;
-  return { main, branch: pulse(t), after, leader };
+  let main = current(age);
+  for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(age - (s.at[i] as number));
+  // What the cloud holds after each stroke: a dull glow that sinks in a fifth of a second. Nothing of it is in the channel.
+  let after = 0;
+  for (let i = 0; i < s.at.length; i++) {
+    const t = age - (s.at[i] as number);
+    if (t > 0) after += 0.05 * (s.share[i] as number) * (1 - Math.exp(-t / 0.004)) * Math.exp(-t / 0.2);
+  }
+  return { main, branch: pulse(age) + current(age), after, leader: 1 };
 }
 
 /** Which return stroke the channel last carried at these seconds since the strike's frame: each takes a way of its own. */
 export function strokeAt(s: Strokes, age: number): number {
   let n = 0;
-  for (let i = 1; i < s.at.length; i++) if (age + 0.004 >= (s.at[i] as number) - 0.002) n = i;
+  for (let i = 1; i < s.at.length; i++) if (age >= (s.at[i] as number) - 0.002) n = i;
   return n;
 }
 
@@ -158,7 +170,7 @@ const TIMING = new Map<string, Strokes>();
 export function timingOf(id: string): Strokes {
   let t = TIMING.get(id);
   if (!t) {
-    t = strokes(stream(`spine/strokes/${id}`));
+    t = strokes(stream(`spine/strokes/${id}`), Math.max(0, STRIKES.findIndex((s) => s.id === id)));
     // A frame the film is judged on that falls inside the flicker of a strike has a stroke of its own: the stroke nearest to it burns on that frame.
     const site = STRIKES.find((s) => s.id === id);
     for (const frame of Object.values(cut.keyFrames)) {
@@ -167,9 +179,10 @@ export function timingOf(id: string): Strokes {
       let near = 1;
       for (let i = 1; i < t.at.length; i++) if (Math.abs((t.at[i] as number) - age) < Math.abs((t.at[near] as number) - age)) near = i;
       t.at[near] = age;
-      t.share[near] = 1;
-      for (let i = near + 1; i < t.at.length; i++) t.at[i] = Math.max(t.at[i] as number, (t.at[i - 1] as number) + 0.05);
-      for (let i = near - 1; i >= 1; i--) t.at[i] = Math.min(t.at[i] as number, (t.at[i + 1] as number) - 0.03);
+      // It is a restrike: bright enough to be the picture of a strike, and under the flash of the first.
+      t.share[near] = Math.max(t.share[near] as number, 0.62);
+      for (let i = near + 1; i < t.at.length; i++) t.at[i] = Math.max(t.at[i] as number, (t.at[i - 1] as number) + 2 / 60);
+      for (let i = near - 1; i >= 1; i--) t.at[i] = Math.min(t.at[i] as number, (t.at[i + 1] as number) - 2 / 60);
     }
     TIMING.set(id, t);
   }
