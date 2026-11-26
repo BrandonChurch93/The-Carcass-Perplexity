@@ -161,3 +161,30 @@ export function worldSpace(g: THREE.BufferGeometry, turn = 0): THREE.BufferGeome
   g.setAttribute('aNb', new THREE.BufferAttribute(nb, 3));
   return g;
 }
+
+/**
+ * The space of a turned rock (the colony's mound): the stone is laid round it like a band, (way round at `reach` metres from its axis,
+ * height) on its risers and (way round, way out) on its ledges, so that no picture is pulled down a face. The seam is at `seam` radians.
+ */
+export function roundSpace(g: THREE.BufferGeometry, cx: number, cz: number, reach: number, seam: number): THREE.BufferGeometry {
+  const position = g.getAttribute('position') as THREE.BufferAttribute;
+  const normal = g.getAttribute('normal') as THREE.BufferAttribute;
+  const blade = new Float32Array(position.count * 4);
+  const nb = new Float32Array(position.count * 3);
+  for (let k = 0; k < position.count; k++) {
+    const dx = position.getX(k) - cx;
+    const dz = position.getZ(k) - cz;
+    let angle = Math.atan2(dz, dx) - seam;
+    angle -= Math.PI * 2 * Math.floor(angle / (Math.PI * 2));
+    blade[k * 4] = position.getY(k);
+    blade[k * 4 + 1] = angle * reach;
+    blade[k * 4 + 2] = Math.hypot(dx, dz);
+    blade[k * 4 + 3] = angle * reach;
+    nb[k * 3] = normal.getY(k);
+    nb[k * 3 + 1] = 0;
+    nb[k * 3 + 2] = Math.hypot(normal.getX(k), normal.getZ(k));
+  }
+  g.setAttribute('aBlade', new THREE.BufferAttribute(blade, 4));
+  g.setAttribute('aNb', new THREE.BufferAttribute(nb, 3));
+  return g;
+}

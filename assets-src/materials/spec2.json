@@ -1401,5 +1401,23 @@
   "group": 5,
   "model": "gpt_image_2_6_flare",
   "date": "2026-11-26"
+ },
+ {
+  "place": "breath",
+  "name": "carcass-low",
+  "kind": "plate",
+  "prompt": "The carcass of a wader, an animal of an unknown world, long dead, alone on a pure black background. It is the carcass that lies on the rock in the foreground of the first reference image: make that same animal in the same pose, seen by the same low camera, about one metre above the ground and five metres away, looking only slightly down at it, so that it is seen from the side and a little from above and never from straight above. It lies collapsed on its side, about 4.5 metres from the end of its tendrils to its hooves: the sunken trunk in the middle of the frame, its pale skin split open over the ribs and the hip bones, which stand through it; the long neck lying along the ground to the left and ending in a fan of dull red dried tendrils spread flat; the four long thin legs stretched out to the right and toward the camera, each ending in a small dark hoof. Pale grey-pink dried hide, stained brown where it has split, a little grit lying on it. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole carcass lies inside the frame, with a margin of black on every side, and nothing touches the edge of the frame. Black means nothing is there: no ground, no rock, no shadow thrown on any ground, no mist, no plants, no other animal, no horizon, no sky. Soft even light from the front and from above, with no hard shadow and no bright side, so that the film can light it itself. Take the colours, the age and the character of the carcass from the first reference image. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people.",
+  "refs": [
+   "references/approved/3-breath/breath-2-the-rim.jpg",
+   "references/drafts/working/real/ref-hide-1.jpg"
+  ],
+  "why": "the dead one at the rim as the low lens of breath-2 sees it, because a picture taken from straight above cannot carry a view from one metre up",
+  "metres": 4.5,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "breath_life_owner_2",
+  "group": 5,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
  }
 ]
