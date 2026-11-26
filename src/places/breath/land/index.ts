@@ -8,7 +8,7 @@ import type { Context, Piece } from '../shared/context';
 import { createCliff } from '../air/sky';
 import { bakeNear } from './field';
 import { createRock, type Surface } from './rock';
-import { block, rib, type Rib } from './ribs';
+import { block } from './ribs';
 import { buildWall, ledge } from './wall';
 import { collar, heap, mergeGeometries, open, talusHeight } from './shapes';
 
@@ -31,7 +31,6 @@ export function create(ctx: Context): Piece {
     metres,
     relief,
   });
-  const strata = surface('strata', [0.298, 0.223, 0.16], 2.5, 1.1);
   const ivory = surface('hoop', [0.493, 0.392, 0.288], 2.2, 1.0);
   const seep = surface('wall', [0.077, 0.061, 0.033], 4, 1.0);
   // The plate of the shelf, laid turn and turn about so that it has no edge (land.ts lays its relief the same way).
@@ -61,7 +60,7 @@ export function create(ctx: Context): Piece {
   land.add(mesh(open(far), rock.shelf));
   ctx.scene.add(ctx.parts.built('land', land));
 
-  // The main shaft's wall and its ribs: one mesh shaped by the wall plate's relief and coloured by its picture (land/wall.ts).
+  // The main shaft: the dark bedded wall, and the pale arches that stand out of it (land/wall.ts, land/arches.ts).
   const mirrored = (name: string, kind: 'colour' | 'data'): THREE.Texture => {
     const t = ctx.assets.texture(name, { kind, repeat: true, anisotropy: 2 });
     t.wrapS = THREE.MirroredRepeatWrapping;
@@ -69,7 +68,8 @@ export function create(ctx: Context): Piece {
     return t;
   };
   const built = buildWall();
-  const wall = rock.wall(mirrored('mat/shaftwall.jpg', 'colour'), mirrored('mat/shaftwall-h.png', 'data'), ivory, surface('wetrock', [0.153, 0.133, 0.107], 1.5, 1), strata);
+  const wall = rock.pit(0, seep);
+  const arches = rock.pit(1, ivory);
   const shaft = new THREE.Group();
   shaft.add(mesh(built.wall, wall));
   const rubble = rock.bone(0.5, [0.47, 0.44, 0.4], [0.2, 0.185, 0.165], surface('scree', [0.287, 0.229, 0.184], 3, 1.2), THREE.DoubleSide);
@@ -77,9 +77,9 @@ export function create(ctx: Context): Piece {
   for (const [x, z, r] of SMALLER) shaft.add(mesh(collar(x, z, r), pale));
   ctx.scene.add(ctx.parts.built('shaft', shaft));
 
-  // The ribs: the cells of the same mesh that stand out of the wall.
+  // The arches.
   const hoops = new THREE.Group();
-  hoops.add(mesh(built.ribs, wall));
+  for (const g of built.ribs) hoops.add(mesh(g, arches));
   ctx.scene.add(ctx.parts.built('hoops', hoops));
 
   // The slabs: what the east-south-east side became. They lie from the lip down a heap of rubble to the middle of the shaft.
