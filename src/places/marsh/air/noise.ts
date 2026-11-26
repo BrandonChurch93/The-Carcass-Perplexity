@@ -106,7 +106,7 @@ export function bakeNoise(rng: Rng): THREE.Data3DTexture {
   t.format = THREE.RGBAFormat;
   t.type = THREE.UnsignedByteType;
   // Smaller copies too: the ground mist reads them where a stretch of the view is long (volume.ts).
-  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.minFilter = THREE.LinearMipmapNearestFilter;
   t.generateMipmaps = true;
   t.magFilter = THREE.LinearFilter;
   t.wrapS = THREE.RepeatWrapping;
