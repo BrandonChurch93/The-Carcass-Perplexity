@@ -187,6 +187,69 @@
       "confidence": 72,
       "why": "detailed procedural terrain ridges paired with flat stretched ocean clouds and artificial-looking spine cloud puffs that lack cinematic atmospheric depth",
       "answered": "09:07 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the cloud bands look like a flat texture wrapped around the planet.",
+      "answered": "09:25 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 40,
+      "why": "the bespoke skeleton-shaped continent with detailed terrain, atmospheric limb glow and a convincing cyclone reads as high-end art-directed CGI, though the stretched, streaky cloud texture keeps me unsure and (c) is the close second.",
+      "answered": "09:25 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 85,
+      "why": "the mountain ridges are patterned into a conspicuously regular skeleton-shaped rib cage.",
+      "answered": "09:25 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "a skeleton-shaped continent with procedural terrain erosion and repetitive tiled cloud textures, like a hobbyist or stock CG planet render",
+      "answered": "09:25 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the high-detail sculpted skeleton landmass paired with flat, non-volumetric clouds lacking realistic shadows on the surface",
+      "answered": "09:25 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 84,
+      "why": "the cloud layer breaks into visibly repeated rectangular tiles over the ocean.",
+      "answered": "09:25 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "the planet is a clearly rendered, stylized skeleton-shaped continent with polished terrain, but the streaky, repetitive cloud texture and the generic atmosphere look like a good ordinary 3D or procedural render rather than a film or game cinematic.",
+      "answered": "09:25 UTC"
     }
   ]
 }

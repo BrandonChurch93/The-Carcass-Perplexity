@@ -2,6 +2,25 @@
   "round": 25,
   "unit": "reveal",
   "question": "kit/07-QUALITY-BAR.md, R8, word for word",
-  "viewers": [],
+  "viewers": [
+    {
+      "viewer": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "A satellite-style view shows a giant human skeleton-shaped landmass surrounded by ocean and clouds, with a swirling storm at the lower right.",
+      "answered": "09:25 UTC"
+    },
+    {
+      "viewer": "b",
+      "model": "claude_opus_5_5",
+      "answer": "The image is an orbital view of Earth with a giant skeleton-shaped landmass (skull, ribcage, limbs) lying in the ocean among clouds, with a hurricane swirling in the lower right.",
+      "answered": "09:25 UTC"
+    },
+    {
+      "viewer": "c",
+      "model": "gemini_neon",
+      "answer": "Viewed from space, a massive green landmass shaped like a giant human skeleton lies across a cloud-covered ocean beside a swirling hurricane.",
+      "answered": "09:25 UTC"
+    }
+  ],
   "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in."
 }

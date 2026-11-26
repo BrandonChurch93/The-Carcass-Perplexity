@@ -1,0 +1,21 @@
+{
+  "engine": "e35f4e2b11964eaf",
+  "units": {
+    "reveal": "eb61d03606aca625"
+  },
+  "format": "uhd",
+  "tier": "final",
+  "diag": null,
+  "part": null,
+  "browser": "159.0.8154.6",
+  "frame": 9675,
+  "loop": null,
+  "key": "reveal-2",
+  "machine": "space-sandbox",
+  "made": "2026-11-26T09:15:51Z",
+  "seconds": 37.759,
+  "portableOnly": false,
+  "id": null,
+  "keep": true,
+  "phase": 4
+}

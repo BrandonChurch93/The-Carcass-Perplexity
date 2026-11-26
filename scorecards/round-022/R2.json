@@ -217,6 +217,24 @@
     },
     {
       "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the rocks and pterosaurs have a smooth, procedural look with flat lighting and repeated shapes, like a skilled hobbyist render (e.g., Blender) rather than a polished film frame",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the flat sprite-like wave spray and visibly reused pterosaur models paired with standard offline-render lighting and depth of field",
+      "answered": "09:20 UTC"
+    },
+    {
+      "image": "R2-5",
       "juror": "d",
       "model": "gpt_6_2_astra",
       "answer": "c",

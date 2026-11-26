@@ -1,0 +1,297 @@
+{
+  "kind": "sheet",
+  "made": "2026-11-26T09:17:55Z",
+  "name": "shot-reveal-02",
+  "title": "shot reveal-02 · frames 11744 to 11860 · 12 spread evenly",
+  "tier": "review",
+  "format": "preview",
+  "cell": {
+    "width": 340,
+    "height": 191
+  },
+  "frames": [
+    {
+      "frame": 11744,
+      "time": "3:15.44"
+    },
+    {
+      "frame": 11755,
+      "time": "3:15.55"
+    },
+    {
+      "frame": 11765,
+      "time": "3:16.05"
+    },
+    {
+      "frame": 11776,
+      "time": "3:16.16"
+    },
+    {
+      "frame": 11786,
+      "time": "3:16.26"
+    },
+    {
+      "frame": 11797,
+      "time": "3:16.37"
+    },
+    {
+      "frame": 11807,
+      "time": "3:16.47"
+    },
+    {
+      "frame": 11818,
+      "time": "3:16.58"
+    },
+    {
+      "frame": 11828,
+      "time": "3:17.08"
+    },
+    {
+      "frame": 11839,
+      "time": "3:17.19"
+    },
+    {
+      "frame": 11849,
+      "time": "3:17.29"
+    },
+    {
+      "frame": 11860,
+      "time": "3:17.40"
+    }
+  ],
+  "stills": [
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11744,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:51Z",
+      "seconds": 0.325,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11755,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:52Z",
+      "seconds": 0.131,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11765,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:52Z",
+      "seconds": 0.156,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11776,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:52Z",
+      "seconds": 0.146,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11786,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:53Z",
+      "seconds": 0.123,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11797,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:53Z",
+      "seconds": 0.12,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11807,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:53Z",
+      "seconds": 0.127,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11818,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:54Z",
+      "seconds": 0.136,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11828,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:54Z",
+      "seconds": 0.123,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11839,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:54Z",
+      "seconds": 0.124,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11849,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:55Z",
+      "seconds": 0.124,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "e35f4e2b11964eaf",
+      "units": {
+        "reveal": "eb61d03606aca625"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "159.0.8154.6",
+      "frame": 11860,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-26T09:17:55Z",
+      "seconds": 0.117,
+      "portableOnly": false,
+      "id": null
+    }
+  ],
+  "keep": true,
+  "phase": 4,
+  "units": {
+    "reveal": "eb61d03606aca625"
+  }
+}

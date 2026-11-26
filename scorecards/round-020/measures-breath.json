@@ -1,0 +1,229 @@
+{
+  "unit": "breath",
+  "tier": "final",
+  "format": "uhd",
+  "measures": [
+    "M1",
+    "M2",
+    "M3"
+  ],
+  "colour": {
+    "M1": "green",
+    "M2": "green",
+    "M3": "green"
+  },
+  "missing": [],
+  "frames": [
+    {
+      "id": "breath-0",
+      "frame": 4409,
+      "key": true
+    },
+    {
+      "id": "breath-1",
+      "frame": 5242,
+      "key": true
+    },
+    {
+      "id": "breath-2",
+      "frame": 5510,
+      "key": true
+    },
+    {
+      "id": "breath-3",
+      "frame": 4973,
+      "key": true
+    },
+    {
+      "id": "breath-4",
+      "frame": 4731,
+      "key": true
+    }
+  ],
+  "results": [
+    {
+      "measure": "M1",
+      "id": "breath-0",
+      "frame": 4409,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "breath-1",
+      "frame": 5242,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "breath-2",
+      "frame": 5510,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "breath-3",
+      "frame": 4973,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "breath-4",
+      "frame": 4731,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "breath-0",
+      "frame": 4409,
+      "status": "pass",
+      "share": 0.222562,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "breath-1",
+      "frame": 5242,
+      "status": "pass",
+      "share": 0.490297,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "breath-2",
+      "frame": 5510,
+      "status": "pass",
+      "share": 0.268362,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "breath-3",
+      "frame": 4973,
+      "status": "pass",
+      "share": 0.585227,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "breath-4",
+      "frame": 4731,
+      "status": "pass",
+      "share": 0.702111,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M3",
+      "id": "breath-0",
+      "frame": 4409,
+      "status": "pass",
+      "ratio": 1.0252,
+      "floor": 0.75,
+      "frameEnergy": 366.4514,
+      "approvedEnergy": 357.4548,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/3-breath/breath-0-establishing.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "breath-1",
+      "frame": 5242,
+      "status": "pass",
+      "ratio": 1.0216,
+      "floor": 0.75,
+      "frameEnergy": 148.0257,
+      "approvedEnergy": 144.8915,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "breath-2",
+      "frame": 5510,
+      "status": "pass",
+      "ratio": 1.5016,
+      "floor": 0.75,
+      "frameEnergy": 638.2254,
+      "approvedEnergy": 425.0222,
+      "size": {
+        "width": 1671,
+        "height": 940
+      },
+      "approved": "references/approved/3-breath/breath-2-the-rim.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "breath-3",
+      "frame": 4973,
+      "status": "pass",
+      "ratio": 1.3816,
+      "floor": 0.75,
+      "frameEnergy": 581.0981,
+      "approvedEnergy": 420.5888,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "breath-4",
+      "frame": 4731,
+      "status": "pass",
+      "ratio": 2.6844,
+      "floor": 0.75,
+      "frameEnergy": 388.6715,
+      "approvedEnergy": 144.7891,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/3-breath/breath-4-down-the-shaft.jpg"
+    }
+  ],
+  "usual": {
+    "tier": "final",
+    "format": "uhd"
+  },
+  "thresholds": {
+    "pixelThreshold": 4,
+    "checkGapSeconds": 1,
+    "minSharpnessRatio": 0.75
+  },
+  "sharpness": "The mean squared response of a four neighbour Laplacian on the Rec. 709 luminance of the 8 bit picture, over every pixel that is not on the border. The approved picture is cropped at its centre to the shape of the frame, and both pictures go through the same lanczos3 resize to the size of that crop.",
+  "state": {
+    "engine": "e35f4e2b11964eaf",
+    "units": {
+      "heart": "c555aa9c875af518",
+      "ribs": "8d03507eddfccbb5",
+      "breath": "8db376fbac2c1bd5",
+      "marsh": "d1d2e245a4c91d47",
+      "spine": "ea8f780fc0fcf460",
+      "eye": "61d3287a3dda1632",
+      "reveal": "eb61d03606aca625",
+      "film": "e3b0c44298fc1c14"
+    },
+    "browser": "147.0.7727.15"
+  }
+}
