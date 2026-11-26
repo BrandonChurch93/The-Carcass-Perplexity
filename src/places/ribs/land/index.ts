@@ -188,7 +188,7 @@ export function create(ctx: Context): Piece {
   for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
     grain > 0
-      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 } })
+      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 }, uCap: { value: grain === 5 ? 1 : 0 } })
       : material(ROCK_VERTEX, ROCK_FRAGMENT, {
           tRock: { value: rockC },
           tRockN: { value: rockN },
@@ -215,12 +215,12 @@ export function create(ctx: Context): Piece {
   // A grain below zero is stone that is no blade: it has no sheet of its own.
   const rock = stoneOf(-12);
   // Staged: on the colony's rock the weed line stands at the foot of the colony's frame, where the picture of it has its weed.
-  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 47.5 } });
+  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 46.3 } });
   const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
     material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
-  const weedNear = hangs(0.9);
+  const weedNear = hangs(0.6);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.5, 1);
   const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool } });
@@ -331,10 +331,11 @@ export function create(ctx: Context): Piece {
   for (let i = 0; i < 700; i++) {
     const x = scatter.range(-300, 380);
     const z = scatter.range(-1500, 260);
-    const size = 0.18 + 1.1 * Math.pow(scatter.next(), 3);
+    const size = 0.12 + 1.7 * Math.pow(scatter.next(), 3.5);
     const rock = { x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.6) };
     // In groups, bare flat between them: a strewing at even spacing reads as one.
-    if (fbm3(x / 37, 1.5, z / 37, 2) > 0.56) placed.push(rock);
+    // The groups are drawn out across the strait, as the tide leaves them.
+    if (fbm3(x / 70, 1.5, z / 17, 2) > 0.58) placed.push(rock);
   }
   // Cobbles and half sunk stones, in drifts: thick where the floor stands proud, thin in the pools.
   for (let i = 0; i < 3000; i++) {
@@ -342,12 +343,12 @@ export function create(ctx: Context): Piece {
     const x = near ? STATIONS.establish[0] + scatter.range(-170, 330) : scatter.range(-300, 380);
     const z = near ? STATIONS.establish[1] - 420 * Math.pow(scatter.next(), 1.6) + 30 : scatter.range(-1500, 200);
     const size = 0.05 + 0.3 * Math.pow(scatter.next(), 4);
-    const drift = fbm3(x / 23, 0.5, z / 23, 2);
+    const drift = fbm3(x / 48, 0.5, z / 12, 2);
     const yaw = scatter.range(0, 6.283);
     const tilt = scatter.range(-0.3, 0.3);
     const kind = scatter.int(KINDS);
     const sink = scatter.range(0.2, 0.55);
-    if (drift > 0.52 + 0.1 * scatter.next()) placed.push({ x, z, size, yaw, tilt, kind, sink });
+    if (drift > 0.56 + 0.1 * scatter.next()) placed.push({ x, z, size, yaw, tilt, kind, sink });
   }
   const ground0 = ctx.rig.land.height;
   // Stones of a fist's to a head's size close under the lens of each key on the floor: thick on the bars, a few in the films of water.
@@ -360,14 +361,14 @@ export function create(ctx: Context): Piece {
       const a = yaw + scatter.range(-half, half);
       const x = pose.position[0] + Math.sin(a) * r;
       const z = pose.position[2] - Math.cos(a) * r;
-      const size = 0.02 + 0.045 * scatter.next() + 0.22 * Math.pow(scatter.next(), 9);
+      const size = 0.02 + 0.045 * scatter.next() + 0.34 * Math.pow(scatter.next(), 7);
       const yaw2 = scatter.range(0, 6.283);
       const tilt = scatter.range(-0.3, 0.3);
       const kind = scatter.int(KINDS);
       const sink = scatter.range(0.4, 0.7);
-      const drift = noise3(x / 4.1, 0.5, z / 4.1) * 0.6 + noise3(x / 1.3, 2.5, z / 1.3) * 0.4;
+      const drift = noise3(x / 9, 0.5, z / 2.6) * 0.65 + noise3(x / 1.3, 2.5, z / 1.3) * 0.35;
       // Thick on the bars that stand out of the water, a few in the sheets.
-      if (drift + 0.9 * Math.min(0.3, Math.max(0, bed(x, z) - LEVELS.pool - 0.05)) > 0.4 + 0.35 * scatter.next()) placed.push({ x, z, size, yaw: yaw2, tilt, kind, sink });
+      if (drift + 0.9 * Math.min(0.3, Math.max(0, bed(x, z) - LEVELS.pool - 0.05)) > 0.5 + 0.3 * scatter.next()) placed.push({ x, z, size, yaw: yaw2, tilt, kind, sink });
     }
   };
   strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 2600, 1.2, 40, 0.62);
