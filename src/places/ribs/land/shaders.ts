@@ -378,7 +378,7 @@ void main() {
   n = normalize(n + (bump(n0, vWorld, ud, (nh.xy - 0.5) * 1.1) - n0));
   float fine = dot(det, vec3(0.333)) / 0.039;
   // Wet weed: dark olive and brown, its own colour where a hem turns to the light.
-  vec3 albedo = mix(vec3(dot(wall, vec3(0.333))), wall, 0.85) * mix(1.0, fine, 0.45) * 0.31 * vec3(1.08, 1.0, 0.78);
+  vec3 albedo = mix(vec3(dot(wall, vec3(0.333))), wall, 0.85) * mix(1.0, fine, 0.45) * 0.11 * vec3(1.08, 1.0, 0.78);
   // Close under a lens the weed is the strap weed itself at its true size (a frond a stride long), laid twice at unlike sizes so that
   // no hank comes round again; the wall's sheet gives only where it is thick and where thin.
   float closeW = smoothstep(90.0, 30.0, length(cameraPosition - vWorld));
@@ -394,7 +394,7 @@ void main() {
     vec3 n3 = texture2D(tWeedN, u3).rgb;
     // The sheet gives only the broad tone here, read soft: its hanks a stride wide are not this weed's.
     float tone = dot(textureLod(tWall, uw, 5.0).rgb, vec3(0.333)) / 0.1;
-    vec3 strap = w1 * vec3(1.3, 1.08, 0.72) * (0.6 + 0.4 * tone) * (0.6 + 0.4 * dot(texture2D(tWeed, u3).rgb, vec3(0.333)) / 0.039);
+    vec3 strap = w1 * vec3(0.45, 0.38, 0.26) * (0.6 + 0.4 * tone) * (0.6 + 0.4 * dot(texture2D(tWeed, u3).rgb, vec3(0.333)) / 0.039);
     albedo = mix(albedo, strap, closeW);
     nc = normalize(n0 + 0.12 * (n - n0) + (bump(n0, vWorld, u1, (n1.xy - 0.5) * 2.6) - n0) + (bump(n0, vWorld, u3, (n3.xy - 0.5) * 1.4) - n0));
     n = normalize(mix(n, nc, closeW));
@@ -403,10 +403,10 @@ void main() {
   }
   // The hanks that stand proud are olive and gold brown, and wet.
   float hem = smoothstep(0.42, 0.72, wn.z + 0.25 * (fine - 1.0));
-  albedo = mix(albedo, vec3(0.1, 0.082, 0.034) * (0.5 + 0.6 * fine), 0.45 * hem);
+  albedo = mix(albedo, vec3(0.06, 0.046, 0.018) * (0.5 + 0.6 * fine), 0.45 * hem);
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
-  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), 1.0, closeW), 0.12, thread * (1.0 - closeW));
+  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), 0.55, closeW), 0.12, thread * (1.0 - closeW));
   float occ = (0.25 + 0.75 * smoothstep(0.08, 0.5, wn.z)) * (0.6 + 0.4 * smoothstep(0.2, 0.7, nh.z)) * (0.6 + 0.4 * vShade);
   // On a wall of beds the weed hangs in clumps from each ledge and thins toward the next one down: between the clumps the wall is bare
   // wet rock with its barnacles, dark under the ledge it hangs from.

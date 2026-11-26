@@ -16,6 +16,7 @@ import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
+import { CURTAIN_FRAGMENT, CURTAIN_VERTEX, curtainShape } from './curtain';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
@@ -272,6 +273,14 @@ export function create(ctx: Context): Piece {
     add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }
 
+  // The near cliff's curtain: real fronds over the sheet, on the side the lenses see.
+  const fronds = material(CURTAIN_VERTEX, CURTAIN_FRAGMENT, {});
+  fronds.side = THREE.DoubleSide;
+  {
+    const hang = ctx.rng('curtain');
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 9000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
+  }
+
   // The two stacks of the gate, and the arch rock.
   // The two are unlike: on the left a wall that leaves the frame, on the right a sloping buttress standing further back.
   // Staged for the gate's shot only: from the strait the left one stands in the middle of the way out as a tower, which the picture of the
@@ -518,7 +527,7 @@ export function create(ctx: Context): Piece {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of [ground, roostRock, weed, weedNear, boulder, pebble, glass, glassLoop, ...stones.values()]) m.dispose();
+      for (const m of [ground, roostRock, weed, weedNear, fronds, boulder, pebble, glass, glassLoop, ...stones.values()]) m.dispose();
     },
   };
 }
