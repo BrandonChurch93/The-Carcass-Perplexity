@@ -74,7 +74,7 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float speck = vnoise(vWorld.xz * 160.0 + vWorld.y * 90.0);
-  vec3 albedo = mix(vec3(0.16, 0.14, 0.125), vec3(0.36, 0.33, 0.3), vTone) * (0.8 + 0.4 * speck);
+  vec3 albedo = mix(vec3(0.24, 0.215, 0.19), vec3(0.46, 0.42, 0.37), vTone) * (0.8 + 0.4 * speck);
   // Salt has dried on what faces up.
   albedo = mix(albedo, vec3(0.74, 0.72, 0.68), 0.5 * smoothstep(0.5, 0.95, n.y) * smoothstep(0.35, 0.7, speck + 0.3 * vTone));
   float occ = 0.5 + 0.5 * smoothstep(-0.4, 0.5, n.y);
@@ -105,7 +105,7 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
     for (let i = 0; i <= nx; i++) {
       const x = x0 + ((x1 - x0) * i) / nx;
       const z = z0 + ((z1 - z0) * j) / nz;
-      const w = world([x, 0.075 / k, z]);
+      const w = world([x, 0.02 / k, z]);
       const o = j * (nx + 1) + i;
       positions.set(w, o * 3);
       // Nothing of it at the edge of the sheet.
@@ -163,12 +163,12 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
       const b = line[i + 1] as V3;
       const f = at - i;
       const angle = rng.range(0, Math.PI * 2);
-      const out = 0.12 + 1.5 * rng.next() ** 2.2;
+      const out = 0.04 + 0.9 * rng.next() ** 2.4;
       x = a[0] + (b[0] - a[0]) * f + Math.cos(angle) * out;
-      z = a[2] + (b[2] - a[2]) * f + Math.sin(angle) * out;
-      if (toLine(x, z, trunk) > 0.4) break;
+      z = a[2] + (b[2] - a[2]) * f - Math.abs(Math.sin(angle)) * out;
+      break;
     }
-    const size = (0.006 + 0.02 * rng.next() ** 3) * k;
+    const size = (0.004 + 0.012 * rng.next() ** 3) * k;
     const sx = size * rng.range(0.7, 1.5);
     const sy = size * rng.range(0.3, 0.7);
     const sz = size * rng.range(0.7, 1.5);
@@ -190,7 +190,7 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
       const lz = pz * sz * bump;
       const o = (n * each + v) * 3;
       gritPositions[o] = centre[0] + lx * c + lz * s;
-      gritPositions[o + 1] = centre[1] + ly + 0.022;
+      gritPositions[o + 1] = centre[1] + ly + 0.004;
       gritPositions[o + 2] = centre[2] - lx * s + lz * c;
       const ax = px / sx;
       const ay = py / sy;

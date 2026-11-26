@@ -164,12 +164,12 @@ export function create(ctx: Context): Piece {
   const geometry = new THREE.PlaneGeometry(1, 0.5, 420, 150).translate(0.5, 0.47, 0);
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  const trunkLine: V3[] = [from(0.45, 0.6), from(0.58, 0.63), from(0.72, 0.62)];
-  const neckLine: V3[] = [from(0.44, 0.56), from(0.36, 0.5), from(0.29, 0.5), from(0.25, 0.6), from(0.14, 0.7)];
+  // Where it meets the rock, as the lens sees it: the lower edge of the trunk, of the neck and the mop, of the legs.
+  const trunkLine: V3[] = [from(0.43, 0.5), from(0.5, 0.565), from(0.62, 0.56), from(0.76, 0.56)];
+  const neckLine: V3[] = [from(0.43, 0.49), from(0.36, 0.455), from(0.3, 0.48), from(0.27, 0.55), from(0.15, 0.62)];
   const legLines: V3[][] = [
-    [from(0.48, 0.62), from(0.52, 0.7), from(0.62, 0.66)],
-    [from(0.7, 0.58), from(0.66, 0.76), from(0.8, 0.7), from(0.93, 0.88)],
-    [from(0.76, 0.66), from(0.96, 0.75)],
+    [from(0.5, 0.57), from(0.64, 0.62), from(0.8, 0.6), from(0.97, 0.6)],
+    [from(0.78, 0.55), from(0.86, 0.6), from(0.93, 0.7)],
   ];
   // What it has left on the rock: the stain it lies in, a line of salt where that dried, and the grit that has gathered against it.
   const lines: V3[][] = [trunkLine, neckLine, ...legLines];
@@ -184,16 +184,16 @@ export function create(ctx: Context): Piece {
 
   // It has lain here: the rock under it is in its shade and damp.
   const spots: [V3, number, number][] = [
-    [from(0.52, 0.56), 0.6, 0.9],
-    [from(0.62, 0.58), 0.6, 0.9],
-    [from(0.72, 0.58), 0.5, 0.8],
-    [from(0.38, 0.5), 0.3, 0.7],
-    [from(0.28, 0.52), 0.3, 0.6],
-    [from(0.16, 0.66), 0.5, 0.45],
-    [from(0.56, 0.68), 0.4, 0.55],
-    [from(0.7, 0.72), 0.45, 0.55],
-    [from(0.84, 0.72), 0.4, 0.5],
-    [from(0.94, 0.8), 0.3, 0.4],
+    [from(0.5, 0.56), 0.55, 0.95],
+    [from(0.6, 0.56), 0.6, 0.95],
+    [from(0.7, 0.56), 0.6, 0.95],
+    [from(0.78, 0.58), 0.45, 0.8],
+    [from(0.38, 0.47), 0.3, 0.8],
+    [from(0.3, 0.5), 0.3, 0.7],
+    [from(0.2, 0.6), 0.5, 0.5],
+    [from(0.66, 0.62), 0.3, 0.7],
+    [from(0.86, 0.6), 0.35, 0.65],
+    [from(0.93, 0.68), 0.25, 0.6],
   ];
   const discs = rig.contactDiscs(spots.length);
   spots.forEach(([p, radius, strength], i) => {

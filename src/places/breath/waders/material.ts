@@ -9,6 +9,10 @@ attribute float aHeat;
 attribute float aWho;
 attribute vec3 aRest;
 attribute vec3 aRestN;
+attribute vec4 aPic;
+attribute float aLimb;
+varying vec4 vPic;
+varying float vLimb;
 varying vec3 vRest;
 varying vec3 vRestN;
 uniform float uPixel;
@@ -36,6 +40,8 @@ void main() {
   vWet = aHeat;
   vRest = aRest;
   vRestN = aRestN;
+  vPic = aPic;
+  vLimb = aLimb;
   // The mirror image: the same animal upside down under the level of the water.
   if (uMirror > 0.5) p.y = 2.0 * uSea - p.y;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
@@ -62,6 +68,10 @@ uniform float uDead;
 uniform float uMirror;
 uniform sampler2D tHide;
 uniform sampler2D tHideNh;
+uniform sampler2D tWader;
+uniform sampler2D tWaderA;
+varying vec4 vPic;
+varying float vLimb;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 // A relief given as a height in metres turns the face: the slope is taken on the screen.
@@ -171,6 +181,14 @@ void main() {
     float horn = smoothstep(0.955, 0.972, legT + 0.01 * (mottle - 0.5));
     albedo = mix(albedo, vec3(0.07, 0.055, 0.05) * (0.7 + 0.6 * crack), horn);
     rough = mix(rough, 0.45, horn);
+    // The side view picture of a living one, laid on the skin where it is at rest: the trunk in its box, each leg down its own line,
+    // the neck along its arc. It gives the skin its wrinkles, its ribs as soft shadows, its knees and its hooves.
+    float limb = smoothstep(0.2, 0.8, vLimb);
+    vec3 shot = mix(texture2D(tWader, vPic.xy).rgb, texture2D(tWader, vPic.zw).rgb, limb);
+    float cover = mix(texture2D(tWaderA, vPic.xy).r, texture2D(tWaderA, vPic.zw).r, limb);
+    float shown = smoothstep(0.5, 0.95, cover) * smoothstep(0.02, 0.06, dot(shot, vec3(0.333))) * mid * (1.0 - uDead);
+    albedo = mix(albedo, shot * 2.3 * (0.92 + 0.16 * mottle), 0.88 * shown);
+    height = height * (1.0 - 0.75 * shown) + 0.0035 * (dot(shot, vec3(0.333)) - 0.3) * shown * fine;
     // Wet from the water up to where it last stood deeper, and dark with it.
     wet = smoothstep(0.3, 0.42, legT) * smoothstep(uSea + 0.55, uSea + 0.12, vWorld.y + 0.25 * (blotch - 0.5));
     thin = mix(0.5, 0.75, smoothstep(0.1, 0.5, neckU)) * (1.0 - 0.3 * shank);

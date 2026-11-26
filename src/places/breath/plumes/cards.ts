@@ -1,4 +1,4 @@
-// How a gill-plume is built: a fan of sheets that all leave the holdfast, each a whole spray of the plume picture
+// How a gill-plume is built: three or four sheets that cross at the holdfast, each a whole spray of the plume picture
 // (mat/plume.jpg: arching stems hung with fine drooping threads, drops at their tips). Every sheet stands on edge, turned its own way
 // round the root and leaning out of plumb, and is bowed: seen from anywhere the sprays cross and hide each other as a bush does.
 import * as THREE from 'three';
@@ -34,8 +34,8 @@ const TIPS: readonly [number, number][] = [
   [0.86, 0.52],
   [0.3, 0.5],
 ];
-const NX = 12;
-const NY = 8;
+const NX = 16;
+const NY = 10;
 
 const smooth = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -64,24 +64,13 @@ export class Cards {
   grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => number): void {
     const { tall, lean } = bush;
     const root: V3 = [bush.x, bush.y, bush.z];
-    const sprays = Math.round(5 + 6 * bush.detail);
     // The heart of the bush: a line from the root up and over toward the lean. What is near it is in the shade of the rest.
     const heart: V3 = [Math.sin(lean) * 0.3 * tall, 0.45 * tall, -Math.cos(lean) * 0.3 * tall];
     const heartLength = Math.hypot(heart[0], heart[1], heart[2]);
-    for (let c = 0; c < sprays; c++) {
-      const k = ((c + rng.range(0.2, 0.8)) / sprays - 0.5) * 2;
-      // Combed toward the shaft by its breath: the widest sprays lie along the lean, the short ones stand out to the sides.
-      const heading = lean + 1.25 * k + rng.range(-0.12, 0.12);
-      const wide = tall * 1.3 * rng.range(0.6, 1.05) * (1 - 0.3 * Math.abs(k));
-      const tilt = 0.6 * k + rng.range(-0.3, 0.3);
-      const bend = rng.range(-0.28, 0.28);
-      const out = 0.05 * tall * rng.next();
-      const about = rng.range(0, 6.283);
-      const bx = bush.x + Math.sin(about) * out;
-      const bz = bush.z + Math.cos(about) * out;
-      const by = Math.max(bush.y, floor(bx, bz));
-      const dx = Math.sin(heading);
-      const dz = -Math.cos(heading);
+    /** One spray: rooted at a point, its sheet along a heading, leaning out of plumb by a tilt, bowed. Returns where a place of its picture is. */
+    const spray = (bx: number, by: number, bz: number, heading: number, wide: number, tilt: number, bend: number, mirror: boolean): void => {
+      const dx = Math.sin(heading) * (mirror ? -1 : 1);
+      const dz = -Math.cos(heading) * (mirror ? -1 : 1);
       const nx = Math.cos(heading);
       const nz = Math.sin(heading);
       const phase = rng.range(0, 6.283);
@@ -107,10 +96,10 @@ export class Cards {
           const ry = p[1] - bush.y;
           const rz = p[2] - bush.z;
           const along = Math.min(1, Math.max(0, (rx * heart[0] + ry * heart[1] + rz * heart[2]) / (heartLength * heartLength)));
-          const far = Math.hypot(rx - heart[0] * along, ry - heart[1] * along, rz - heart[2] * along) / (0.55 * tall);
+          const far = Math.hypot(rx - heart[0] * along, ry - heart[1] * along, rz - heart[2] * along) / (0.5 * tall);
           this.position.push(p[0], p[1], p[2]);
           this.vane.push(s, t, seed, 0);
-          this.sway.push(h, phase, Math.min(1, Math.abs(s - ROOT_S) * 1.2), seed * 6.283);
+          this.sway.push(h, phase, Math.min(1, Math.abs(s - ROOT_S) * 1.2 * (wide / tall)), seed * 6.283);
           this.tint.push(smooth(0.1, 0.9, far), tone, Math.min(1, Math.hypot(rx, ry, rz) / tall), tall);
           this.root.push(root[0], root[1], root[2]);
         }
@@ -127,6 +116,19 @@ export class Cards {
         const p = place(s, 1 - down);
         this.ends.push({ at: p, stemAt: Math.min(1, Math.max(0, (p[1] - bush.y) / tall)), phase, tall, root });
       }
+    };
+    // Three or four sprays that cross at the root, each a whole arching growth: sky is seen between them.
+    const sprays = bush.detail >= 1 ? 4 : 3;
+    for (let c = 0; c < sprays; c++) {
+      const k = (c + rng.range(0.3, 0.7)) / sprays - 0.5;
+      // Combed toward the shaft by its breath: the widest spray lies along the lean, the others stand out to its sides.
+      const heading = lean + 2.7 * k + rng.range(-0.1, 0.1);
+      const wide = tall * rng.range(0.72, 0.95) * (1 - 0.4 * Math.abs(k));
+      const out = 0.03 * tall * rng.next();
+      const about = rng.range(0, 6.283);
+      const bx = bush.x + Math.sin(about) * out;
+      const bz = bush.z + Math.cos(about) * out;
+      spray(bx, Math.max(bush.y, floor(bx, bz)) - 0.02 * tall, bz, heading, wide, 0.5 * k + rng.range(-0.12, 0.12), rng.range(-0.2, 0.2), c % 2 === 1);
     }
   }
 

@@ -137,14 +137,18 @@ void main() {
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
   float path = depth / max(nv, 0.25);
-  vec3 through = exp(-path * vec3(4.2, 1.9, 2.2));
+  vec3 through = exp(-path * vec3(3.0, 1.15, 1.45));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = mix(vec3(0.21, 0.18, 0.145), vec3(0.21, 0.225, 0.18), smoothstep(0.28, 0.6, v.y)) * (0.3 + 5.7 * v.y * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = mix(vec3(0.17, 0.195, 0.165), vec3(0.14, 0.27, 0.23), smoothstep(0.1, 0.4, v.y)) * (0.3 + 5.7 * v.y * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 
   vec3 colour = fresnel * mirror + (1.0 - fresnel) * (1.0 - clear) * body;
   float alpha = 1.0 - (1.0 - fresnel) * clear * (1.0 - 0.5 * rim);
+  // Looked down on, the water mirrors little, and still the image of what stands in it is seen: the animal is between the sky and
+  // the water under it, so the silt there is in its shade and the bed is hidden by it.
+  colour *= 1.0 - 0.5 * image.a;
+  alpha = mix(alpha, 1.0, 0.6 * image.a);
   // What the water leaves at its edge: a broken line of scum and small bubbles, pale, that rides the ragged line of the bank.
   float line = depth - ragged;
   float scum = smoothstep(0.045, 0.07, line) * smoothstep(0.15, 0.085, line) * smoothstep(0.42, 0.62, vnoise(xz * 3.1 + 0.2 * uTime * drift) + 0.25 * vnoise(xz * 17.0)) * smoothstep(60.0, 20.0, far);
