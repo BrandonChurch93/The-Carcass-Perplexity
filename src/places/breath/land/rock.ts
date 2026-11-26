@@ -276,6 +276,8 @@ void main() {
   float sq = min(pb.x, pb.y) + 0.1 * (a.r - 0.5);
   float inPad = smoothstep(0.0, 0.16, sq) * smoothstep(0.15, 0.4, over) * (1.0 - steep) * (1.0 - film);
   vec3 padColour = vec3(0.0);
+  vec3 grit = vec3(0.53);
+  vec3 gritN = vec3(0.5, 0.5, 1.0);
   float padHigh = 0.5;
   if (inPad > 0.0) {
     padColour = texture2D(tPad, pu).rgb;
@@ -284,13 +286,17 @@ void main() {
     float e = 1.0 / 130.0;
     float soft = texture2D(tPadH, pu, 2.0).r;
     vec2 fall = vec2(texture2D(tPadH, pu + vec2(e, 0.0), 2.0).r, texture2D(tPadH, pu + vec2(0.0, e), 2.0).r) - soft;
-    lean = mix(lean, 0.35 * lean + fall * 4.5, inPad);
+    // Grit a hand across (the shingle's tile at a third of its size) gives the fine relief: the broad one, under a sun this low, was
+    // bands of light and dark like a dune's.
+    gritN = textureGrad(tPebN, p.xz / 0.52 + 0.4, dpx / 0.52, dpy / 0.52).rgb;
+    grit = textureGrad(tPeb, p.xz / 0.52 + 0.4, dpx / 0.52, dpy / 0.52).rgb;
+    lean = mix(lean, 0.3 * lean + fall * 1.2 + (gritN.rg - 0.5) * (0.9 * smoothstep(16.0, 4.0, dist)), inPad);
     damp *= 1.0 - inPad;
   }
   // Shingle: rounded pale stones a thumb to a fist through, lying in patches on the dry rock, along the border of the dry ground, and
   // nowhere near the tide. Past thirty metres it is not read.
   float ring = smoothstep(-0.1, -0.02, sq) * smoothstep(0.1, 0.03, sq);
-  float shingle = max(ring * smoothstep(0.4, 0.6, a.a), smoothstep(0.68, 0.78, a.r + 0.15 * hollow) * (1.0 - 0.7 * smoothstep(0.0, 0.1, sq))) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * smoothstep(34.0, 20.0, dist);
+  float shingle = max(ring * smoothstep(0.4, 0.6, a.a), smoothstep(0.68, 0.78, a.r + 0.15 * hollow) * (1.0 - 0.4 * smoothstep(0.0, 0.1, sq))) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * smoothstep(34.0, 20.0, dist);
   vec3 pebColour = vec3(0.0);
   if (shingle > 0.0) {
     vec4 pn = textureGrad(tPebN, p.xz / 1.5 + 0.21, dpx / 1.5, dpy / 1.5);
@@ -344,12 +350,17 @@ void main() {
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.55 * dryPad * smoothstep(0.5, 0.22, mn.b) * near);
   float stain = exp(-dot(fromPad - vec2(0.3, 0.7), fromPad - vec2(0.3, 0.7)) / 1.1) * smoothstep(0.2, 0.75, a.r + 0.6 * (1.0 - mn.b));
   albedo = mix(albedo, albedo * vec3(0.5, 0.33, 0.28), 0.6 * stain * (1.0 - 0.5 * inPad));
-  albedo = mix(albedo, padColour * vec3(1.05, 1.0, 0.93) * (1.1 + 0.35 * padHigh), inPad);
+  // The dry ground is pale rough rock. Its picture is laid 12 m wide and is soft at the lens, so it gives only the broad lights and darks;
+  // the grain of the rock at two sizes and grit a hand across (the shingle's tile, a third of its size) carry the rest.
+  vec3 padSoft = mix(vec3(dot(padColour, vec3(0.3333))), padColour, 0.7);
+  padSoft = 1.3 * mix(vec3(0.47, 0.435, 0.385), padSoft * vec3(1.05, 1.0, 0.93) * (1.0 + 0.3 * padHigh), 0.4);
+  padSoft *= mix(1.0, clamp(tone, 0.7, 1.35), 0.4) * mix(1.0, clamp(dot(grit, vec3(0.3333)) / 0.53, 0.5, 1.5) * (0.75 + 0.5 * gritN.b), smoothstep(16.0, 4.0, dist));
+  albedo = mix(albedo, padSoft, inPad);
   albedo = mix(albedo, pebColour, shingle);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
   // From the water's edge: an ankle's depth of bed with the rock's own sheen on it was a beach of wet sand along both banks.
   float under = smoothstep(0.01, -0.05, over);
-  albedo = mix(albedo, vec3(0.13, 0.19, 0.17) * clamp(tone * mark, 0.5, 1.4), 0.85 * under);
+  albedo = mix(albedo, vec3(0.17, 0.26, 0.24) * clamp(tone * mark, 0.5, 1.4), 0.85 * under);
   // The pool is a hand deep over slime: dark, green, and a mirror.
   albedo = mix(albedo, vec3(0.035, 0.045, 0.03), 0.85 * film);
   float rough = mix(mix(mix(0.9, 0.36, damp), 0.04, film), 0.95, under);
@@ -521,10 +532,20 @@ void main() {
   float face = 1.0 - top - under;
   float near = smoothstep(46.0, 9.0, dist);
   // The grain of wet rock, by the wall's own metres on a face (it cannot stretch there), flat in the world on a top.
-  vec2 gq = mix(vUv * vec2(40.0, 22.5), p.xz / 1.5, step(0.5, top));
-  vec3 g0 = texture2D(tGrain, gq).rgb;
-  vec3 gs = texture2D(tGrainN, gq).rgb;
-  float grain = mix(1.0, clamp(1.0 + 1.3 * (dot(g0 / uGrainMean, vec3(0.3333)) - 1.0), 0.5, 1.6), near);
+  // It is laid by the place in the world on three planes, each face taking the plane it most nearly lies in: laid by the wall's own
+  // picture it was drawn out along every face that stands out of the wall.
+  float wx = gn.x * gn.x / max(gn.x * gn.x + gn.z * gn.z, 1e-4);
+  wx = smoothstep(0.25, 0.75, wx);
+  vec2 gq = p.xz / 1.5;
+  vec2 gqx = vec2(p.z, p.y * 1.25) / 1.5;
+  vec2 gqz = vec2(p.x, p.y * 1.25) / 1.5;
+  float flat0 = max(top, under);
+  vec3 g0 = mix(mix(texture2D(tGrain, gqz).rgb, texture2D(tGrain, gqx).rgb, wx), texture2D(tGrain, gq).rgb, flat0);
+  vec3 gs = mix(mix(texture2D(tGrainN, gqz).rgb, texture2D(tGrainN, gqx).rgb, wx), texture2D(tGrainN, gq).rgb, flat0);
+  // And a fifth the size under it near the lens, where a texel of the first is many pixels wide.
+  float close = smoothstep(14.0, 3.0, dist);
+  vec3 g1 = mix(mix(texture2D(tGrain, gqz * 4.7 + 0.3).rgb, texture2D(tGrain, gqx * 4.7 + 0.3).rgb, wx), texture2D(tGrain, gq * 4.7 + 0.3).rgb, flat0);
+  float grain = mix(1.0, clamp(1.0 + 1.3 * (dot(g0 / uGrainMean, vec3(0.3333)) - 1.0), 0.5, 1.6), max(near, 0.45)) * mix(1.0, clamp(dot(g1 / uGrainMean, vec3(0.3333)), 0.6, 1.45), close);
   vec3 t0 = texture2D(tMat, p.xz / 4.0 + 0.37).rgb;
   vec3 ts = texture2D(tMatN, p.xz / 4.0 + 0.37).rgb;
   float tone = clamp(1.0 + 1.2 * (dot(t0 / uMean, vec3(0.3333)) - 1.0), 0.5, 1.6);
@@ -545,7 +566,14 @@ void main() {
   // Between the ribs the wall is dark wet stone, grey-green; the ribs are pale.
   // The plate was painted brown under a warm lamp: the stone is cream-grey, and keeps only thin bands of the plate's tan.
   float lum = dot(plate, vec3(0.3333));
+  // On a face that stands out of the wall the picture is drawn out: there its soft colour stays and the grain carries the pattern.
+  float pulled = smoothstep(0.12, 0.4, abs(gn.y));
+  vec3 softer = texture2D(tWall, vUv, 2.5).rgb;
+  plate = mix(plate, softer, pulled);
+  lum = dot(plate, vec3(0.3333));
   vec3 stoneCol = mix(plate, lum * vec3(1.05, 1.0, 0.93), 0.55);
+  // Deep in the shaft the wall between the ribs is wet through and dark: the core of the shaft is the darkest thing in the place.
+  stoneCol *= mix(1.0, 0.55, (1.0 - rib) * smoothstep(-4.0, -20.0, p.y));
   vec3 albedo = (stoneCol * face * mix(vec3(0.62, 0.72, 0.72), vec3(2.2, 2.2, 2.2), rib) + onTop * top + below * under) * grain * uWall.y;
   float wet = clamp(smoothstep(0.14, 0.04, lum) * face + 0.6 * under, 0.0, 1.0) * smoothstep(-1.0, -5.0, p.y);
   float rough = mix(0.92, 0.5, wet);

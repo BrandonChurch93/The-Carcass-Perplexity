@@ -51,7 +51,12 @@ vec4 farPicture(vec3 d) {
   vec2 uv = vec2(0.5 + q.x / ${(2 * FAR.wide).toFixed(4)}, ${FAR.horizon.toFixed(3)} + q.y / ${(2 * FAR.tall).toFixed(4)});
   float w = step(0.05, z) * smoothstep(0.02, 0.3, uv.x) * smoothstep(1.0, 0.9, uv.x) * smoothstep(1.0, 0.9, uv.y);
   uv.y = max(uv.y, ${(FAR.horizon + 0.006).toFixed(3)});
-  return vec4(untoned(textureLod(tFar, clamp(uv, 0.002, 0.998), 0.0).rgb), w);
+  vec3 seen = textureLod(tFar, clamp(uv, 0.002, 0.998), 0.0).rgb;
+  // The picture's cliff holds snow in white patches. The place has none: they are toned down to pale rock faces in the haze.
+  float lum = dot(seen, vec3(0.3333));
+  float pale = smoothstep(0.44, 0.52, lum) * smoothstep(0.1, 0.04, seen.r - seen.b) * smoothstep(0.22, 0.3, uv.x);
+  seen *= mix(vec3(1.0), vec3(1.03, 1.0, 0.94) * ((0.44 + 0.12 * (lum - 0.44)) / max(lum, 0.01)), pale);
+  return vec4(untoned(seen), w);
 }`;
 
 const FRAGMENT = /* glsl */ `
