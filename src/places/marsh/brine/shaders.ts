@@ -72,7 +72,7 @@ void main() {
       float wide = 0.16 + 0.05 * ring.z;
       float env = exp(-q * q / (wide * wide)) * ring.w;
       if (env < 0.003) continue;
-      slope += d / max(r, 0.01) * env * sin(q * 14.0) * 0.14;
+      slope += d / max(r, 0.01) * env * sin(q * 14.0) * 0.26;
     }
   }
   // Whatever stands in the brine (the contact map has it) is ringed: the rings leave it slowly and die within a stride.
@@ -147,15 +147,11 @@ void main() {
   float top = smoothstep(0.1, 1.0, vLocal.y);
   vec4 g = texture2D(tGrain, vLocal.xz * 0.9 + vLife.y);
   float thin = clamp(top * (0.35 + 0.65 * vLife.x) + (g.r - 0.5) * 0.3, 0.0, 1.0);
-  // The skin is a film: what is behind it shows through it, most where it is thinnest. Its own colour is the brine's, a stain and no more
-  // at the crown, blood at the foot where it is the pool drawn up.
-  vec3 albedo = mix(vec3(0.075, 0.012, 0.01), vec3(0.13, 0.03, 0.026), thin);
-  // Grit and clots carried in the film, and the streaks of its draining: these are solid, and dark.
+  // The skin is a clear film of thick liquid: what is behind it shows through it, stained. It is thick and dark only where it is seen
+  // edge on and where it meets the pool.
+  vec3 albedo = mix(vec3(0.045, 0.006, 0.005), vec3(0.11, 0.022, 0.018), thin);
   vec4 grit = texture2D(tGrain, vLocal.xz * 3.3 + vLife.y * 7.0);
-  vec4 speck = texture2D(tGrain, vLocal.xz * 9.0 + vLife.y * 3.0);
-  float solid = max(smoothstep(0.83, 0.86, grit.g), smoothstep(0.88, 0.9, speck.r) * 0.8) + 0.3 * smoothstep(0.55, 0.8, g.g) * (1.0 - top);
-  solid = clamp(solid, 0.0, 1.0);
-  albedo = mix(albedo, vec3(0.03, 0.008, 0.006), solid);
+  float solid = 0.0;
   // Torn: the skin opens from one point on its side, the hole's edge ragged and rolled thick, until nothing of it stands.
   float rim = 0.0;
   if (vLife.w > 0.0) {
@@ -166,20 +162,22 @@ void main() {
     rim = smoothstep(gone - 0.1, gone, open);
     albedo = mix(albedo, vec3(0.03, 0.006, 0.005), rim);
   }
-  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.07);
+  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.035);
   float foot = mix(0.5, 1.0, smoothstep(0.0, 0.35, vLocal.y));
   vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) * foot / 3.14159);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  // The overcast is not even: the brighter quarter of it shows on the wet skin as one soft window.
+  // The overcast is not even: the brighter quarter of it shows on the wet skin as one sharp window, and a second, faint, from the far wall.
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
-  float window = 0.025 * pow(toward, 6.0) + 0.8 * pow(toward, 110.0) * (0.5 + g.r);
-  float sheen = (0.015 + 0.24 * pow(1.0 - nv, 5.0)) * foot;
-  vec3 mirrored = skyRadiance(r) * (sheen + window) * (1.0 - 0.7 * max(rim, solid));
-  // How much of what is behind the film is hidden: little at the crown, all of it at the foot, the rolled rim and the grit.
-  float cover = clamp(mix(0.96, 0.2, thin * smoothstep(0.05, 0.4, vLocal.y)) + 0.45 * pow(1.0 - nv, 2.0), 0.0, 1.0);
-  cover = max(cover, max(rim, solid));
+  float window = 1.6 * smoothstep(0.985, 0.996, toward) + 0.12 * pow(toward, 40.0);
+  float sheen = (0.012 + 0.2 * pow(1.0 - nv, 5.0)) * foot;
+  vec3 mirrored = skyRadiance(r) * (sheen + window) * (1.0 - 0.7 * rim);
+  // How much of what is behind the film is hidden: next to nothing through its face, most at its edge (the film seen along itself) and
+  // at its foot, where it is the pool drawn up, and all of it at a torn hole's rolled rim.
+  float along = pow(1.0 - nv, 2.2);
+  float cover = clamp(0.1 + 0.2 * (1.0 - thin) + 0.75 * along + 0.8 * smoothstep(0.2, 0.02, vLocal.y), 0.0, 0.97);
+  cover = max(cover, rim);
 #ifdef DROP
   cover = 1.0;
 #endif

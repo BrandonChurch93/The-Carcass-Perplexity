@@ -14,7 +14,7 @@ export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   // The rain: middle bearing and half width in radians, distance in metres, thickness.
-  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 1.5);
+  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 0.9);
   const sky = createSky(ctx, noise, rain);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
@@ -43,11 +43,11 @@ export function create(ctx: Context): Piece {
     return [node[0], node[1]];
   };
   const mist: THREE.Vector4[] = [
-    new THREE.Vector4(0, 0, POOL_R * 1.15, 0.6),
-    new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 9 - 4, HERO_DOME[1] + K1_DIR[1] * 9, 6.5, 0.7),
+    new THREE.Vector4(0, 0, POOL_R * 1.15, 0.45),
+    new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 12 - 5, HERO_DOME[1] + K1_DIR[1] * 12, 7, 0.6),
     new THREE.Vector4(-6, -5, 7, 0.7),
-    new THREE.Vector4(vein(7)[0], vein(7)[1], 7, 0.5),
-    new THREE.Vector4(vein(9)[0], vein(9)[1], 8, 0.45),
+    new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),
+    new THREE.Vector4(vein(11)[0], vein(11)[1], 12, 0.5),
     new THREE.Vector4(main[0] * 16, main[1] * 16, 11, 0.5),
   ];
   while (mist.length < MAX_MIST) mist.push(new THREE.Vector4(0, 0, 1, 0));
