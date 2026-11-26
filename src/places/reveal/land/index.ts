@@ -106,8 +106,8 @@ void main() {
   float inClose = inside(uvClose, 0.1) * uClose;
   vec3 ground = texture2D(uMapWide, clamp(uvWide, 0.0, 1.0)).rgb;
   vec3 relief = texture2D(uReliefWide, clamp(uvWide, 0.0, 1.0)).rgb;
-  // (Below 60 km the baked light, the surf, the shelf and the places are not in the picture: they are not read.)
-  bool high = uViewKm > 60.0;
+  // (Below 100 km the baked light, the surf, the shelf and the places are not in the picture: they are not read.)
+  bool high = uViewKm > 100.0;
   vec3 bake = vec3(0.0, 0.5, 0.0);
   if (high) bake = texture2D(uLightWide, clamp(uvWide, 0.0, 1.0)).rgb;
   float coastKm = shoreKm(texture2D(uShoreWide, clamp(uvWide, 0.0, 1.0)).r, uBakeKm.x);
@@ -155,11 +155,11 @@ void main() {
   // The strait of the Ribs: the sea stands in the valley under the spine here and runs up between the ribs, so their arches stand
   // with their feet in it and the surf breaks along them.
   vec2 fromStrait = (xz - vec2(${X(AT.strait.x).toFixed(1)}, ${Z(AT.strait.y).toFixed(1)})) / vec2(200.0, 85.0);
-  float strait = exp(-dot(fromStrait, fromStrait)) * smoothstep(60.0, 160.0, uViewKm);
+  float strait = exp(-dot(fromStrait, fromStrait)) * smoothstep(100.0, 200.0, uViewKm);
   if (strait > 0.002) {
     coastKm -= 7.0 * strait * (0.15 + 1.5 * vnoise(xz / 46.0 + 3.0)) * (0.7 + 0.6 * vnoise(xz / 9.0 + 1.0));
     // (It fills the low ground: where the country lies in a hollow the water stands, and its shore is the foot of the slopes.)
-    coastKm = min(coastKm, mix(coastKm, (bake.g - 0.5 + 0.2 * strait - 0.06 * relief.b) * 70.0, smoothstep(0.08, 0.3, strait)));
+    coastKm = min(coastKm, mix(coastKm, (relief.b - 0.36 - 0.09 * strait) * 260.0 + (bake.g - 0.45) * 12.0, smoothstep(0.08, 0.3, strait)));
   }
   float shoreEdge = max(0.75 * pixelKm, 0.02);
   float land = smoothstep(-shoreEdge, shoreEdge, coastKm);
@@ -242,7 +242,7 @@ void main() {
   float enlarged = texel / max(pixelKm, 1e-5);
   // (A worn province has lost the map's relief: the ground photographs give it its own, finer and of another kind.)
   // (And near the ground the photographs are laid wherever the camera looks: the map is soft at its own size.)
-  float detail = max(max(smoothstep(0.9, 2.0, enlarged), worn), 0.8 * (1.0 - smoothstep(200.0, 450.0, uViewKm)));
+  float detail = max(max(smoothstep(0.9, 2.0, enlarged), worn), 0.8 * (1.0 - smoothstep(110.0, 200.0, uViewKm)));
 
   // ---- the ground photographs under the map ----
   // Each is laid by world position at the size at which one of its texels is about a pixel, in octaves of its real size and cross-faded
@@ -287,8 +287,8 @@ void main() {
         vec2 wayB = turnB * sunWay;
         float litA = 1.0;
         float litB = 1.0;
-        for (int i = 0; i < 3; i++) {
-          float reach = i == 0 ? 0.004 : i == 1 ? 0.011 : 0.026;
+        for (int i = 0; i < 2; i++) {
+          float reach = i == 0 ? 0.006 : 0.02;
           litA = min(litA, 1.0 - smoothstep(0.0, 0.06, texture2D(uMatRangeNh, pa + wayA * reach).b - nhA.b - reach * climb));
           litB = min(litB, 1.0 - smoothstep(0.0, 0.06, texture2D(uMatRangeNh, pb + wayB * reach).b - nhB.b - reach * climb));
         }
@@ -552,7 +552,7 @@ void main() {
   if (ice > 0.0) ground = mix(ground, vec3(0.6, 0.7, 0.82) * (0.7 + 0.5 * vnoise(xz / 2.3 + 5.0)), 0.9 * ice);
   vec3 n = normalize(vec3(-slope.x, 0.8, -slope.y));
   // (The cloud's shadow comes in with the height: there is no cloud over the lake where the rise begins, and it is not read there.)
-  float shadeIn = smoothstep(60.0, 110.0, uViewKm);
+  float shadeIn = smoothstep(100.0, 160.0, uViewKm);
   float shade = 1.0;
   if (shadeIn > 0.0) shade = mix(1.0, cloudShade(real), shadeIn);
   // The ranges throw their shadows on the country and on the sea beside it: the baked horizon toward the sun is read against the
@@ -597,7 +597,7 @@ void main() {
   }
   if (uDusk > 0.0) sunTan = max(sunH, 0.0) / sqrt(max(1.0 - sunH * sunH, 1e-3));
   float thrown = smoothstep(castKm - 0.08 - 0.3 * sunTan, castKm + 0.04 + 0.2 * sunTan, sunTan);
-  shade *= mix(1.0, thrown, smoothstep(60.0, 160.0, uViewKm) * mix(0.62, 0.85, smoothstep(700.0, 1300.0, uViewKm)) * (1.0 - 0.5 * dome));
+  shade *= mix(1.0, thrown, smoothstep(100.0, 200.0, uViewKm) * mix(0.62, 0.85, smoothstep(700.0, 1300.0, uViewKm)) * (1.0 - 0.5 * dome));
   // (The shadow of the ice ridge is the darkest thing on the spine, and nothing softens it.)
   shade *= mix(1.0, thrown, 0.85 * spineBand * (1.0 - ice));
   shade *= mix(1.0, tileLit, 0.8);
@@ -725,14 +725,14 @@ void main() {
   float shelfLen = 6.0;
   if (high && land < 1.0) shelfLen = mix(6.0, 55.0, smoothstep(0.25, 0.75, texture2D(uCloudTile, xz / 620.0 + vec2(0.71, 0.13), 2.0).r));
   // (Not over the drowned ground west of the skull, which has its own shelf below: its low islands would show as spots.)
-  float onShelf = exp(min(coastKm, 0.0) / shelfLen) * (1.0 - land) * smoothstep(60.0, 160.0, uViewKm) * (1.0 - smoothstep(0.0, 0.22, west)) * (1.0 - shut) * (1.0 - 0.55 * smoothstep(0.05, 0.3, strait));
+  float onShelf = exp(min(coastKm, 0.0) / shelfLen) * (1.0 - land) * smoothstep(100.0, 200.0, uViewKm) * (1.0 - smoothstep(0.0, 0.22, west)) * (1.0 - shut) * (1.0 - 0.55 * smoothstep(0.05, 0.3, strait));
   bed = mix(bed, mix(vec3(0.006, 0.04, 0.052), vec3(0.03, 0.105, 0.1), onShelf * onShelf), 0.75 * onShelf);
   // (A river carries the country's silt: brown green water, dark beside its banks, paler where it runs wide toward its mouth.)
   if (river > 0.0) bed = mix(bed, mix(vec3(0.012, 0.026, 0.024), vec3(0.06, 0.05, 0.026), smoothstep(-0.2, -2.5, coastKm) * (0.4 + 0.6 * vnoise(xz / 14.0))), 0.9 * river);
   // (The strait is deep down its middle.)
   bed *= mix(1.0, 0.4, strait * smoothstep(0.8, 6.0, -coastKm));
   // (A lake the land shuts in is pale at its edge only and dark over its deep.)
-  bed *= mix(1.0, mix(0.85, 0.3, smoothstep(0.5, 9.0, -coastKm)), shut * smoothstep(60.0, 160.0, uViewKm) * smoothstep(1.3, 1.8, lakeFar));
+  bed *= mix(1.0, mix(0.85, 0.3, smoothstep(0.5, 9.0, -coastKm)), shut * smoothstep(100.0, 200.0, uViewKm) * smoothstep(1.3, 1.8, lakeFar));
   // (From orbit the coasts stand on wide shelves: the water pales to teal over them by depth, broken by shoals and channels, no line.)
   float shelfWide = (1.0 - land) * smoothstep(0.1, 0.34, mix(0.0, broadB, inWide)) * smoothstep(600.0, 1100.0, uViewKm) * (1.0 - smoothstep(0.0, 0.35, west)) * smoothstep(0.95, 1.3, length(inSkull));
   if (shelfWide > 0.0) {
@@ -852,15 +852,15 @@ void main() {
   }
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   // (A hollow is darker than a crest: less of the sky reaches it.)
-  earth *= mix(1.0, 0.62 + 0.76 * skyShare, smoothstep(60.0, 160.0, uViewKm));
+  earth *= mix(1.0, 0.62 + 0.76 * skyShare, smoothstep(100.0, 200.0, uViewKm));
   if (mouths > 0.0) earth = mix(earth, mouthTone * light / 3.14159 * (0.1 + 0.9 * mouthLit), mouths);
   // The shore: a pale line of beach on the land's side, broken where the coast is rock, and surf on the water's side, broken too.
   float lineKm = max(1.1 * pixelKm, 0.25);
-  float coastSeen = smoothstep(60.0, 160.0, uViewKm) * (1.0 - uEmber.x);
+  float coastSeen = smoothstep(100.0, 200.0, uViewKm) * (1.0 - uEmber.x);
   bool shoreNear = high && abs(coastKm) < lineKm;
   float beachAt = 0.0;
   if (shoreNear) beachAt = smoothstep(0.35, 0.6, texture2D(uCloudTile, xz / 310.0 + vec2(0.11, 0.57), 1.0).g);
-  float beach = (1.0 - smoothstep(0.2 * lineKm, 0.9 * lineKm, coastKm)) * land * beachAt * coastSeen * smoothstep(1.3, 1.8, lakeFar);
+  float beach = (1.0 - smoothstep(0.2 * lineKm, 0.9 * lineKm, coastKm)) * land * beachAt * coastSeen * smoothstep(1.3, 1.8, lakeFar) * (1.0 - smoothstep(0.05, 0.25, strait));
   earth = mix(earth, vec3(0.42, 0.38, 0.3) * light / 3.14159, 0.5 * beach);
   // (Surf stands where the open sea meets the coast, on some reaches of it and not on others, and never up a river.)
   float surfAt = 0.0;
