@@ -15,7 +15,7 @@ vec3 swayed(vec3 p, vec3 root, vec4 sway, float tall) {
   // The stem: a slow lean and return on the wind, a quicker shiver after it, both later the higher up the stem.
   float slow = sin(t * 1.25 - h * 2.6 + sway.y) + 0.45 * sin(t * 0.53 + sway.y * 1.7);
   float quick = sin(t * 3.1 - h * 5.0 + sway.y * 2.3);
-  vec2 push = uWind * (0.035 * slow + 0.012 * quick) * tall * a;
+  vec2 push = uWind * (0.07 * slow + 0.024 * quick) * tall * a;
   // The breath of the shaft comes up past the lip: the fronds are thrown up and outward and shake as it passes.
   float shake = 0.6 + 0.4 * sin(t * 6.3 - h * 7.0 + sway.y * 3.1);
   push += away * (0.2 * uSurge * shake * tall * a);
@@ -23,7 +23,7 @@ vec3 swayed(vec3 p, vec3 root, vec4 sway, float tall) {
   // A barb on the stem: it follows late and trembles, more toward its tip.
   float u = sway.z;
   float own = u * u * tall;
-  vec2 trail = uWind * own * (0.014 * sin(t * 2.2 - u * 3.0 + sway.w) + 0.006 * sin(t * 5.1 - u * 6.0 + sway.w * 1.9)) + away * (0.05 * uSurge * shake * own);
+  vec2 trail = uWind * own * (0.03 * sin(t * 2.2 - u * 3.0 + sway.w) + 0.012 * sin(t * 5.1 - u * 6.0 + sway.w * 1.9)) + away * (0.05 * uSurge * shake * own);
   float bob = own * (0.008 * sin(t * 2.9 - u * 3.5 + sway.w * 1.3) + 0.03 * uSurge * shake);
   return p + vec3(push.x + trail.x, lift + bob, push.y + trail.y);
 }`;
@@ -129,19 +129,19 @@ const VANE_TEST = /* glsl */ `
   float t = b / lockLen;
   // A bead of water at the point of a lock, on most of them.
   float bead = length(vec2(a - centre, (b - lockLen) * len + 0.004));
-  bool drop = h1 > 0.72 && bead < 0.0036 + 0.5 * px && vTint.z > 0.3 && px < 0.004;
+  bool drop = h1 > 0.72 && bead < 0.0036 + 0.5 * px && vTint.z > 0.3 && px < 0.0016;
   float gather = (0.45 + 0.3 * h1) * smoothstep(0.05, 1.0, t);
   float fan = 1.0 - gather;
   float rootAt = centre + (a - centre) / fan;
   float spacing = 0.0045;
   float id = floor(rootAt / spacing);
   // Barbs finer than a pixel are not told apart: there the lock has one length and one colour.
-  float whole = smoothstep(3.5 * px, 1.5 * px, spacing * fan);
-  float hb = mix(hash12(vec2(id, seed)), 0.55, smoothstep(1.6 * px, 0.6 * px, spacing * fan));
+  float whole = smoothstep(6.0 * px, 2.5 * px, spacing * fan);
+  float hb = mix(0.65 * vnoise(vec2(id * 0.22, seed)) + 0.35 * hash12(vec2(id, seed)), 0.55, smoothstep(1.6 * px, 0.6 * px, spacing * fan));
   float line = abs(fract(rootAt / spacing) - 0.5) * spacing * fan;
-  float thick = max(0.0013 * (1.0 - 0.45 * t), 0.75 * px);
+  float thick = max(0.0013 * (1.0 - 0.45 * t), 1.1 * px);
   // A gap between two barbs narrower than a pixel is not a gap the lens can see: there the lock is drawn whole.
-  thick = max(thick, 0.5 * spacing * fan - 0.5 * px + 1.6 * px * whole);
+  thick = max(thick, 0.5 * spacing * fan - 0.5 * px + 2.4 * px * whole);
   bool barb = t <= 1.0 && rootAt > cell * wide && rootAt < (cell + 1.0) * wide && t < 0.4 + 0.6 * hb + 0.3 * step(abs(rootAt - centre), spacing) && line < thick;
   if (!barb && !drop) discard;
 `;
@@ -170,12 +170,12 @@ ${VANE_TEST}
   float across = clamp(line / max(0.5 * spacing * fan, 1e-5), 0.0, 1.0);
   float strand = mix(1.0, 0.25 + 0.75 * sqrt(1.0 - across * across), smoothstep(0.7 * px, 2.2 * px, spacing * fan));
   occ *= strand;
-  albedo *= 0.75 + 0.5 * hb;
-  vec3 colour = rigShade(vWorld, n, v, albedo, 0.55, occ);
+  albedo *= 0.58 + 0.34 * hb;
+  vec3 colour = rigShade(vWorld, n, v, albedo, 0.34, occ);
   // Thin and wet against the low sun: the light comes through blood red, most at the thin edge of the vane and looking toward the sun.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float thin = smoothstep(0.35, 1.0, t) * (0.15 + 0.85 * within);
-  colour += vec3(1.0, 0.07, 0.05) * uSunColour * (thin * (0.14 + 0.86 * against * against) * 0.62 * sunAt(vWorld));
+  colour += vec3(1.0, 0.07, 0.05) * uSunColour * (thin * (0.14 + 0.86 * against * against) * 0.44 * sunAt(vWorld));
   // The fog behind and round it is bright: it fills the red from every side, so the shade in the bush is wine and not black.
   colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 / 3.14159) * (0.35 + 0.65 * occ);
   if (drop && (!barb || bead < 0.0028 + 0.35 * px)) {

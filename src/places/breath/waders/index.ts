@@ -91,6 +91,24 @@ export function create(ctx: Context): Piece {
             if (foot.wet < 0.02) return;
             // A leg that stands sends a faint ring as the animal shifts; one that has just come down or is drawn through the water sends strong ones.
             ripples.add(foot.x, foot.z, 1.5, 0.3 + 0.5 * foot.carried, foot.since, seed + j * 1.9);
+            // A foot that has just come down throws a crown of drops; each is where the time since it landed puts it.
+            if (foot.since < 0.6) {
+              for (let d = 0; d < 18; d++) {
+                const turn = hash(seed + j * 3.1 + d * 1.7) * Math.PI * 2;
+                const outward = 0.25 + 0.9 * hash(seed + j * 5.3 + d * 2.9);
+                const upward = 0.9 + 1.7 * hash(seed + j * 7.7 + d * 0.61);
+                const y = SEA_LEVEL + upward * foot.since - 4.9 * foot.since * foot.since;
+                if (y > SEA_LEVEL) drips.add(foot.x + Math.cos(turn) * (0.03 + outward * foot.since), y, foot.z + Math.sin(turn) * (0.03 + outward * foot.since), 0.008 + 0.012 * Math.abs(upward - 9.8 * foot.since) * 0.5);
+              }
+            }
+            // A foot carried through the air streams what it lifted.
+            if (foot.lift > 0.04) {
+              for (let d = 0; d < 6; d++) {
+                const fall = (((seconds * 1.3 + hash(seed + j * 2.3 + d * 4.1)) % 1) + 1) % 1 * 0.3;
+                const y = foot.y - 4.9 * fall * fall;
+                if (y > SEA_LEVEL) drips.add(foot.x + 0.02 * (hash(seed + d * 9.1) - 0.5), y, foot.z + 0.02 * (hash(seed + d * 6.7) - 0.5), 0.01 + 9.8 * fall * 0.01);
+              }
+            }
           });
           const sea = SEA_LEVEL;
           if (stood.tuft.y < sea + 0.35 && footing(stood.tuft.x, stood.tuft.z) < sea) {

@@ -49,6 +49,8 @@ export interface Plan {
   slack: number;
   /** How far down the neck goes when it is down: 1 into the water, 0.8 hangs clear of the ground. */
   reach: number;
+  /** Metres it is ahead of its plan: staged, so that a named one is mid-step in the picture of it. */
+  ahead?: number;
 }
 
 export interface Env {
@@ -257,12 +259,12 @@ export class Wader {
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
       const thigh = 1.1 * (1 - smooth(-0.1, 0.2, u)) ** 1.3 + 1.5 * (1 - smooth(0.0, 0.46, u)) ** 0.7 + 0.35 * Math.exp(-(((u - b.knee + 0.07) / 0.045) ** 2));
-      const knuckle = 1.7 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.0 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
+      const knuckle = 2.4 * Math.exp(-(((u - b.knee) / 0.028) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.7 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       // The head of the thigh is inside the trunk: it narrows to the hip, so no end of it shows.
       const r = b.legR * (0.9 + thigh + knuckle + foot);
       // The haunch: muscle on the bone where it leaves the trunk, wide fore and aft and flat from side to side, gone by the knee.
-      const haunch = 3.3 * (1 - smooth(0.08, b.knee - 0.04, u)) ** 1.4 * smooth(-0.12, 0.1, u);
+      const haunch = 2.3 * (1 - smooth(0.08, b.knee - 0.04, u)) ** 1.4 * smooth(-0.12, 0.1, u);
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
         this.legLocal[(i * legSides + s) * 2] = (r + 0.3 * b.legR * haunch) * Math.cos(phi) * (1 - 0.15 * Math.min(1, thigh / 2.4));
@@ -303,7 +305,7 @@ export class Wader {
         phase: hash(seed + n * 4.3) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
         root: 1 - 0.24 * hash(seed + n * 8.9) ** 1.5,
-        thick: far ? 1 : 0.32 + 1.5 * hash(seed + n * 12.7) ** 3.0,
+        thick: far ? 1 : 0.26 + 0.75 * hash(seed + n * 12.7) ** 3.0,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
@@ -339,7 +341,7 @@ export class Wader {
     const tau = seconds - plan.when;
     const w = (Math.PI * 2) / plan.fitPeriod;
     // It goes in fits: the metres walked are the mean speed with a slow come and go on it, never backward.
-    const walked = plan.speed * (tau + (plan.fits / w) * (Math.sin(w * tau + plan.phase * 6.28) - Math.sin(plan.phase * 6.28)));
+    const walked = plan.speed * (tau + (plan.fits / w) * (Math.sin(w * tau + plan.phase * 6.28) - Math.sin(plan.phase * 6.28))) + (plan.ahead ?? 0);
     const fx = Math.sin(plan.heading);
     const fz = -Math.cos(plan.heading);
     const rx = -fz;

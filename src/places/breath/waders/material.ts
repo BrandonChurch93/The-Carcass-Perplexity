@@ -108,7 +108,7 @@ void main() {
   told = mix(vec3(dot(told, vec3(0.333))), told, 1.1);
   float crack = clamp(dot(told, vec3(0.333)), 0.0, 2.0);
 
-  vec3 pale = mix(vec3(0.5, 0.39, 0.36), vec3(0.74, 0.66, 0.6), smoothstep(0.25, 0.7, blotch)) * (0.78 + 0.44 * mottle) * clamp(mix(vec3(1.0), told, kind > 2.5 ? 0.45 : 1.0), 0.0, 2.0);
+  vec3 pale = mix(vec3(0.55, 0.38, 0.35), vec3(0.8, 0.65, 0.59), smoothstep(0.25, 0.7, blotch)) * (0.78 + 0.44 * mottle) * clamp(mix(vec3(1.0), told, kind > 2.5 ? 0.45 : 1.0), 0.0, 2.0);
   vec3 raw = vec3(0.58, 0.34, 0.3);
   vec3 albedo;
   float rough = 0.7;
@@ -158,14 +158,14 @@ void main() {
   } else if (kind < 2.5) {
     // A tendril: raw pink where it roots, dark wine-red along it, and the ends darker still with what they have dragged through.
     float tone = vInfo.x;
-    albedo = mix(vec3(0.5, 0.25, 0.24), mix(vec3(0.07, 0.018, 0.02), vec3(0.22, 0.06, 0.055), tone), smoothstep(0.0, 0.3, u));
+    albedo = mix(vec3(0.5, 0.25, 0.24), mix(vec3(0.15, 0.045, 0.045), vec3(0.4, 0.17, 0.155), tone), smoothstep(0.0, 0.3, u));
     // A few are pale and fleshy, the pink of the neck's end carried down them.
-    albedo = mix(albedo, vec3(0.56, 0.3, 0.27), step(0.84, hash12(vec2(seed, 9.0))) * 0.7);
+    albedo = mix(albedo, vec3(0.56, 0.3, 0.27), step(0.62, hash12(vec2(seed, 9.0))) * 0.75);
     albedo = mix(albedo, vec3(0.09, 0.075, 0.04), smoothstep(0.55, 1.0, u) * smoothstep(0.35, 0.8, tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
     albedo = mix(albedo, vec3(0.07, 0.065, 0.035), step(0.82, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));
     // Far off the mop is one dark red mass: no strand of it is seen for itself.
-    albedo = mix(vec3(0.15, 0.04, 0.04), albedo, smoothstep(0.03, 0.008, px));
+    albedo = mix(vec3(0.42, 0.2, 0.19), albedo, smoothstep(0.03, 0.008, px));
     wet = 0.6 + 0.4 * vWet;
     occ *= 0.7 + 0.3 * u;
     thin = 1.0;
