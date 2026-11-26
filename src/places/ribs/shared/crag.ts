@@ -70,18 +70,23 @@ const blockAt = (angle: number, y: number, wide: number, high: number, seed: num
   const u = (turn - Math.floor(turn)) * columns;
   // The beds are not level: they dip and climb round the rock, a few degrees, each size of block its own way.
   const lean = 6 * noise3(Math.cos(angle) * 2.6 + seed, Math.sin(angle) * 2.6, 0.5) + 1.6 * noise3(angle * 9 + seed, 3.5, 1.5);
-  const v = (y + lean) / high;
+  // And they are faulted: every few strides round the rock the courses step up or down by a part of their height.
+  const fault = Math.floor(u * 0.7 + 0.3 * Math.sin(angle * 23 + seed));
+  const v = (y + lean) / high + 0.5 * hash(fault, 3, seed);
   const j = Math.floor(v);
   const along = u + 0.5 * hash(j, 7, seed);
   const wrap = (i: number): number => ((i % columns) + columns) % columns;
   // The joint on the left of block i of this course: thrown off its place by up to a third of a block.
-  const jointAt = (i: number): number => i + 0.66 * (hash(wrap(i), j, seed) - 0.5);
+  const jointAt = (i: number): number => i + 0.66 * (hash(wrap(i), j, seed) - 0.5) + 0.5 * (hash(wrap(i), j, seed + 5) - 0.5) * (v - j - 0.5);
   let i = Math.floor(along);
   if (along < jointAt(i)) i -= 1;
   else if (along >= jointAt(i + 1)) i += 1;
   const left = jointAt(i);
   const right = jointAt(i + 1);
-  const proud = hash(wrap(i), j, seed + 3) - 0.5;
+  // No face stands square to the wall: each block is turned a little, and one in five is fallen out or stands far proud.
+  const h3 = hash(wrap(i), j, seed + 3) - 0.5;
+  const turned = 0.7 * (hash(wrap(i), j, seed + 4) - 0.5) * ((along - left) / Math.max(0.2, right - left) - 0.5);
+  const proud = h3 * (Math.abs(h3) > 0.4 ? 1.7 : 1) + turned;
   const edge = Math.min(along - left, right - along, (Math.min(v - j, j + 1 - v) * high) / wide);
   return { middle: (j + 0.5) * high - lean, proud, edge: Math.max(0, edge) };
 };
