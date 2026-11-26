@@ -224,7 +224,11 @@ export function wallAt(x: number, z: number, d: number): number {
   // The rim and the country outside: broken crags, then long low hills.
   // The rim is a table of flows broken at its edge into blocks: a level skyline with notches, and nothing behind it stands higher.
   // Its top is the top of one flow: level for some tens of metres, then a sheer step to the next block. No dome stands on the skyline.
-  const table = 50 + 238 * rimScale(x, z) + 7 * (tables(x / 47 + 0.2 * (z / 47) + 1.3, z / 59 - 0.15 * (x / 59) + 6.1) - 0.5) + 2.6 * (tables(x / 13 + 4.4, z / 17 + 0.9) - 0.5) + 2.2 * (noise(x / 210 + 3, z / 210) - 0.5);
+  let table = 50 + 238 * rimScale(x, z) + 7 * (tables(x / 47 + 0.2 * (z / 47) + 1.3, z / 59 - 0.15 * (x / 59) + 6.1) - 0.5) + 2.6 * (tables(x / 13 + 4.4, z / 17 + 0.9) - 0.5) + 2.2 * (noise(x / 210 + 3, z / 210) - 0.5);
+  // The rim is not one line: whole lengths of it, a hundred metres and more, stand a flow higher or lower than their neighbours,
+  // and where a gully heads the rim is notched to a third of the gully's width. Not over the mouth, whose arch is built on the rim as it was.
+  const notch = ridge(x / 71 + 9.3, z / 71 + 2.7);
+  table += free * (13 * (tables(x / 139 + 0.3 * (z / 139) + 2.2, z / 163 - 0.2 * (x / 163) + 4.8) - 0.5) - 15 * notch * notch * notch * notch - 6 * g * g * g);
   return Math.min(h, table);
 }
 

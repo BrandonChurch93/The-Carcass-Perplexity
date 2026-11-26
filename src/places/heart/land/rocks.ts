@@ -596,8 +596,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       }
       return false;
     };
-    // One stone in five is pale and dusty.
-    const paled = (tone: number): number => (rng.next() < 0.2 ? rng.range(1.35, 1.9) : tone);
+    // One stone in three is pale and dusty.
+    const paled = (tone: number): number => (rng.next() < 0.35 ? rng.range(1.35, 1.9) : tone);
     const fallen = (x: number, z: number, size: number, tone: number, a: number, long = 1, sink = rng.range(0.36, 0.5)): boolean =>
       !(chute(x, z) && height(x, z) > 5) &&
       put(kinds.crag, x, z, size, { shade: false, sink, flat: rng.range(0.45, 0.9), tone: paled(tone), yaw: -a, long, lean: [Math.cos(a), Math.sin(a), rng.range(-0.3, 0.3)] });
@@ -625,7 +625,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
         const tx = (-gz / gl) * way;
         const tz = (gx / gl) * way;
         // On the long lens a pixel is 8 cm there. The picture's slope is fine scree, a grain of 4 to 12 pixels, with a block of
-        // 2 to 3 m here and there sunk to its middle: one stone in forty.
+        // 2 to 3 m here and there sunk to its middle: one stone in forty. (Stones of 0.5 to 2.2 m read better as stones at viewing size
+        // and cost half a second a sample more at that lens: not taken.)
         const block = rng.next() < 0.025;
         const size = block ? rng.range(2.2, 3.4) : sized(0.3, 1.4, 2.4);
         if (fallen(x, z, size, tone * rng.range(0.7, 1.3), Math.atan2(tz, tx), rng.range(1.0, 1.35), block ? 0.5 : undefined)) {
