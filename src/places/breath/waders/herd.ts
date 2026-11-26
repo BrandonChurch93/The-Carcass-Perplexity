@@ -4,6 +4,8 @@ import { FAR_FLOCK, FEED_AT, NEAR_WADERS, RIM_WADER, RIM_WADER_DOWN_FROM, type W
 import { makeBuild, type Build, type Plan } from './animal';
 
 const RAD = Math.PI / 180;
+/** Staged: the middle one of the three in the channel is this far ahead of its plan, so that it is at the end of a stride, a hind leg far back, at 17.0 s. */
+const AHEAD = 0.14;
 
 export interface Member {
   build: Build;
@@ -47,7 +49,7 @@ function planOf(a: Anchor, up: [number, number][], rng: Rng, slack = 0, reach = 
 export function makeHerd(rng: Rng): Member[] {
   const herd: Member[] = [];
   NEAR_WADERS.forEach((a, i) => {
-    herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false), plan: planOf(a, UP[i] ?? [], rng), near: true });
+    herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false), plan: { ...planOf(a, UP[i] ?? [], rng), ahead: i === 1 ? AHEAD : 0 }, near: true });
   });
   // The one at the rim: it stands with its weight on three legs and looks down the shaft, then lets its neck hang.
   herd.push({ build: makeBuild(RIM_WADER.size * 1.06, 97.3, false), plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5]], rng, 1, 0.8), near: false });

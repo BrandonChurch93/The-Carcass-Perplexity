@@ -49,6 +49,8 @@ export interface Plan {
   slack: number;
   /** How far down the neck goes when it is down: 1 into the water, 0.8 hangs clear of the ground. */
   reach: number;
+  /** Metres it is ahead of its plan: staged, so that a named one is mid-step in the picture of it. */
+  ahead?: number;
 }
 
 export interface Env {
@@ -339,7 +341,7 @@ export class Wader {
     const tau = seconds - plan.when;
     const w = (Math.PI * 2) / plan.fitPeriod;
     // It goes in fits: the metres walked are the mean speed with a slow come and go on it, never backward.
-    const walked = plan.speed * (tau + (plan.fits / w) * (Math.sin(w * tau + plan.phase * 6.28) - Math.sin(plan.phase * 6.28)));
+    const walked = plan.speed * (tau + (plan.fits / w) * (Math.sin(w * tau + plan.phase * 6.28) - Math.sin(plan.phase * 6.28))) + (plan.ahead ?? 0);
     const fx = Math.sin(plan.heading);
     const fz = -Math.cos(plan.heading);
     const rx = -fz;
