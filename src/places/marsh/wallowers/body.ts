@@ -308,7 +308,8 @@ void main() {
   albedo = mix(albedo, vec3(0.26, 0.225, 0.195) * (0.7 + 0.5 * grain), 0.5 * dust);
   // The stuck one's hide is bare where it has heaved: pink brown, and folded deep round the neck and down the flank, each fold dark at its foot.
   float wrinkle = sin(vRest.x * 27.0 / max(uK, 0.3) + 5.0 * vnoise3(q * 1.6 + uSeed * 4.0) + 2.5 * vnoise3(q * 5.0));
-  float folded = uMudded * (1.0 - horn) * smoothstep(0.35, 0.95, wrinkle) * (0.4 + 0.6 * smoothstep(0.3, 0.6, vnoise3(q * 0.9 + uSeed * 13.0)));
+  float near1 = smoothstep(0.5, 0.9, uNear) * (1.0 - uMudded) * (1.0 - uTile);
+  float folded = (uMudded + 0.6 * near1) * (1.0 - horn) * smoothstep(0.35, 0.95, wrinkle) * (0.4 + 0.6 * smoothstep(0.3, 0.6, vnoise3(q * 0.9 + uSeed * 13.0)));
   albedo = mix(albedo, vec3(dot(albedo, LUMA)) * vec3(1.3, 0.8, 0.62), 0.75 * uMudded * (1.0 - horn));
   albedo *= 1.0 + 0.2 * uMudded * (1.0 - horn) * smoothstep(-0.2, -0.8, wrinkle);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
@@ -400,7 +401,9 @@ void main() {
   #endif
   #ifndef CRUSTED
   // By number: the live hide before the lens of the wallowers is half as light again in the approved picture as it was drawn. Far off the haze does it.
-  albedo *= 1.0 + 0.5 * (1.0 - uMudded) * smoothstep(0.5, 0.9, uNear);
+  albedo *= 1.0 + 0.32 * (1.0 - uMudded) * smoothstep(0.5, 0.9, uNear);
+  // And it is wet skin, not dry hair: it holds a dull light from the sky on every fold.
+  rough = mix(rough, min(rough, 0.6), 0.8 * near1 * (1.0 - 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0)));
   #endif
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it: the belly and the insides of the legs are red brown, not black.

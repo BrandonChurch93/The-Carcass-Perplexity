@@ -13,6 +13,7 @@ varying vec3 vRight;
 varying vec4 vUv;
 varying vec4 vKind;
 uniform vec2 uGrove;
+uniform float uHead;
 ${OPEN_GLSL}
 void main() {
   // STAGED by shot: the groves the lens of the thin crust looks across stand low and thick in its shot (uGrove), and as the list has them in every other.
@@ -43,7 +44,7 @@ void main() {
     // The fan at its top is the photograph of one, with the end of its stalk in it: that end is laid on the end of this stalk, as wide and
     // along its line, and the straps arch over to the side the stalk leans. A second, smaller, is behind it the other way round.
     float open = plumeOpen(kind, aKind.y, seed);
-    float wide = 19.0 * D * mix(1.0, 0.5 / uGrove.y, aKind.z * (uGrove.y > 1.01 ? 1.0 : 0.0)) * (0.85 + 0.4 * fract(seed * 57.3)) * (kind > 2.5 ? 0.8 : 1.0) * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * (piece > 1.5 ? 0.8 : 1.0);
+    float wide = 19.0 * D * uHead * mix(1.0, 0.5 / uGrove.y, aKind.z * (uGrove.y > 1.01 ? 1.0 : 0.0)) * (0.85 + 0.4 * fract(seed * 57.3)) * (kind > 2.5 ? 0.8 : 1.0) * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * (piece > 1.5 ? 0.8 : 1.0);
     vec3 er = normalize(cross(T, toCam));
     float flip = (dot(vec3(A.x, 0.0, A.z), er) + 0.2 * (fract(seed * 23.7) - 0.5) < 0.0 ? -1.0 : 1.0) * (piece > 1.5 ? -1.0 : 1.0);
     er *= flip;

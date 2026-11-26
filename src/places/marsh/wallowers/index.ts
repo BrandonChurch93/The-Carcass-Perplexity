@@ -14,10 +14,10 @@ const DISCS = 5;
 /** The size of a cell of the skin's grid, metres at size 1: the three by the lens of the wallowers, and the rest. */
 const CELL_NEAR = 0.03;
 const CELL_FAR = 0.065;
-// STAGED by shot: the two that lie in the vein to the right of the lens of the wallowers are off the set for its shot. The approved picture has one animal behind the three, far and soft, and these two stood large and cropped at its edge.
+// STAGED by shot: the four that lie and wade in the vein to the right of the lens of the wallowers are off the set for its shot. The approved picture has one animal behind the three, far and soft, and these two stood large and cropped at its edge.
 const WALLOW_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-04');
 const WALLOW_SPAN: [number, number] = WALLOW_SHOT ? [secondsInPlace(UNIT, WALLOW_SHOT.first) - 0.004, secondsInPlace(UNIT, WALLOW_SHOT.last) + 0.004] : [0, -1];
-const OFF_SET = [6, 9];
+const OFF_SET = [6, 7, 8, 9];
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('wallowers');

@@ -15,6 +15,11 @@ export const PARTS: readonly string[] = ['stalks', 'insects'];
 const CRUST_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-05');
 const CRUST_SPAN: [number, number] = CRUST_SHOT ? [secondsInPlace(UNIT, CRUST_SHOT.first) - 0.004, secondsInPlace(UNIT, CRUST_SHOT.last) + 0.004] : [0, -1];
 
+// STAGED by shot: in the wide shot the heads of the stalks seen far off are small drooping tufts on thin stems, six tenths of what they are from near,
+// as the approved wide picture has them.
+const WIDE_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-01');
+const WIDE_SPAN: [number, number] = WIDE_SHOT ? [secondsInPlace(UNIT, WIDE_SHOT.first) - 0.004, secondsInPlace(UNIT, WIDE_SHOT.last) + 0.004] : [0, -1];
+
 /** Stalks nearer than this to where a camera stands are drawn in full. Metres. */
 const NEAR = 14;
 
@@ -107,7 +112,7 @@ export function create(ctx: Context): Piece {
   {
     const far = ctx.rng('stalks-far');
     let placed = 0;
-    for (let c = 0; c < 400 && placed < 22; c++) {
+    for (let c = 0; c < 400 && placed < 9; c++) {
       const d = far.range(40, 150);
       const p = rel(d, far.range(-0.62, 0.62) * d);
       const h = far.range(1.9, 3.3);
@@ -123,6 +128,20 @@ export function create(ctx: Context): Piece {
       }
     }
   }
+  // STAGED for the lens of the wallowers: three groups stand in the haze behind the great one, on the banks of the vein, fading out as the approved picture has them.
+  {
+    const back = ctx.rng('stalks-back');
+    for (const g of [[50, 5.2], [57.5, 0.6], [66, 8.5]] as [number, number][]) {
+      const p = rel(g[0], g[1]);
+      const h = back.range(2.4, 3.3);
+      for (let n = 0; n < 5; n++) {
+        const a = back.range(0, TAU);
+        const r = back.range(0.2, 1.6);
+        const roll = back.next();
+        stalks.push({ x: p[0] + Math.cos(a) * r, z: p[1] + Math.sin(a) * r, h: h * back.range(0.55, 1.15), lean: back.range(0.05, 0.25), yaw: back.range(0, TAU), kind: roll < 0.7 ? 0 : roll < 0.85 ? 3 : 2, size: back.range(0.85, 1.15), phase: back.range(0, TAU) });
+      }
+    }
+  }
   const k3 = rel(27.7, 3);
   const k4 = rel(24.6, 19.6);
   const k2a: [number, number] = [K2_AT[0] - K2_RIGHT[0] * 3.2, K2_AT[1] - K2_RIGHT[1] * 3.2];
@@ -132,6 +151,7 @@ export function create(ctx: Context): Piece {
 
   const uSeconds = { value: 0 };
   const uGrove = { value: new THREE.Vector2(1, 1) };
+  const uHead = { value: 1 };
   const salt = ctx.assets.texture('wallowers/salt.jpg', { kind: 'colour', anisotropy: 4 });
   const saltNh = ctx.assets.texture('wallowers/salt-nh.png', { kind: 'data', anisotropy: 4 });
   const stemMaterial = new THREE.ShaderMaterial({
@@ -173,6 +193,13 @@ export function create(ctx: Context): Piece {
         low.add(s);
       }
     }
+    // TEMPORARY, until the lead's list does it: a tall stalk that is shut stood as a bare pole with a bud on it. The tall ones are half open, and the shut ones are the young: short.
+    // Those at the lip of the seep keep what the list gives them.
+    for (const s of rest) {
+      if (s.kind !== 1 || Math.hypot(s.x - K1_AT[0], s.z - K1_AT[1]) < 8) continue;
+      if (s.h > 3.2) s.kind = 3;
+      else s.h *= 0.6;
+    }
     rest.forEach((s, i) => {
       const tall = s.h * (0.45 + 0.75 * rng.next());
       base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
@@ -204,6 +231,7 @@ export function create(ctx: Context): Piece {
         ...ctx.rig.uniforms,
         uSeconds,
         uGrove,
+        uHead,
         tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) },
         tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) },
         tFan: { value: ctx.assets.texture('mat/fan.jpg', { kind: 'colour', repeat: false }) },
@@ -369,6 +397,7 @@ export function create(ctx: Context): Piece {
       const staged = stagedSeconds();
       if (staged >= CRUST_SPAN[0] && staged <= CRUST_SPAN[1]) uGrove.value.set(0.4, 1.2);
       else uGrove.value.set(1, 1);
+      uHead.value = staged >= WIDE_SPAN[0] && staged <= WIDE_SPAN[1] ? 0.6 : 1;
     },
   };
 }
