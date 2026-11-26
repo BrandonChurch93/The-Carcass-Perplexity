@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
-import { RAIN_AT, RAIN_WALK } from './volume';
+import { DUSK, RAIN_APART, RAIN_AT, RAIN_WALK } from './volume';
 
 const VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -25,6 +25,7 @@ uniform sampler2D tFar;
 const float FAR_GAIN = 1.05;
 const float RAIN_WALK = ${RAIN_WALK.toFixed(4)};
 const float RAIN_AT = ${RAIN_AT.toFixed(1)};
+const float RAIN_APART = ${RAIN_APART.toFixed(4)};
 ${RIG_GLSL}
 
 void main() {
@@ -42,7 +43,9 @@ void main() {
   c *= 1.0 + (n - 0.5) * 0.9 * seen;
   // The raining cloud: a darker belly over the curtain.
   float az = atan(d.x, -d.z);
-  float side = abs(az - uRain.x + RAIN_WALK * (uTime - RAIN_AT)) / uRain.y;
+  float walk = az - uRain.x + RAIN_WALK * (uTime - RAIN_AT);
+  walk -= floor(walk / RAIN_APART + 0.5) * RAIN_APART;
+  float side = abs(walk) / uRain.y;
   float el = d.y / max(length(d.xz), 0.05);
   float belly = smoothstep(2.4, 0.3, side + (big - 0.5) * 1.6) * smoothstep(0.02, 0.14, el) * smoothstep(0.75, 0.3, el);
   c *= 1.0 - 0.3 * belly;
@@ -75,6 +78,8 @@ void main() {
   // The sheet is brightest overhead, as an overcast is, and greys toward the far picture.
   c *= mix(1.25, 1.7, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
+  // The overcast thickens as the rain comes on (the air pass greys the far air with it).
+  c *= mix(1.0, ${DUSK.share.toFixed(3)}, smoothstep(${DUSK.from.toFixed(1)}, ${DUSK.to.toFixed(1)}, uTime));
   gl_FragColor = vec4(rigPlain(c), 1.0);
 }`;
 
