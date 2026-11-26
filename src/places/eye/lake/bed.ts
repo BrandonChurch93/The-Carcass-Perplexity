@@ -118,11 +118,12 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float r = length(b);
   // The angle is nothing in the south, where the cameras stand: its seam lies in the north, two kilometres off.
   float a2 = atan(b.x, b.y);
-  vec3 sinter = texture2D(tSinter, b / 3.0).rgb;
   // The same crust again, larger and turned, in patches: no row of it comes round twice.
   vec2 turned = vec2(b.x * 0.74 - b.y * 0.67, b.x * 0.67 + b.y * 0.74) / 5.3 + 0.41;
   float patchy = smoothstep(0.35, 0.65, vnoise(b / 2.9 + 11.0));
-  sinter = mix(sinter, texture2D(tSinter, turned).rgb, patchy);
+  // From the rim one read of the crust is all that can be told apart.
+  vec3 sinter = texture2D(tSinter, turned).rgb;
+  if (cameraPosition.y < 20.0) sinter = mix(texture2D(tSinter, b / 3.0).rgb, sinter, patchy);
   vec3 sinterFar = texture2D(tSinter, b / 17.0 + 0.37).rgb;
   // The lie of the crust is read from its own picture: its pale tops stand, its dark seams lie low.
   vec3 snh = vec3(0.5, 0.5, clamp(dot(sinter, vec3(0.5, 0.9, 0.6)) * 1.1, 0.0, 1.0));
@@ -154,16 +155,28 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   vec2 pq = vec2(a2 * 640.0 + bend.x * 26.0, r + bend.y * 60.0);
   float blobs = 0.6 * vnoise(b / 48.0) + 0.4 * vnoise(b / 13.0 + 3.0);
   float drawn = 0.55 * vnoise(pq / vec2(38.0, 190.0)) + 0.3 * vnoise(pq / vec2(12.0, 70.0) + 3.0) + 0.15 * vnoise(pq / vec2(3.5, 24.0) + 7.0);
+  // From the rim the mats have no lie: they are mottled, patch by patch, with dark wet channels between and small pale pools.
+  float rimEye = smoothstep(8.0, 40.0, cameraPosition.y);
+  if (rimEye > 0.0) drawn = mix(drawn, 0.5 * vnoise(b / 44.0 + 2.0) + 0.3 * vnoise(b / 17.0 + 3.0) + 0.2 * vnoise(b / 6.5 + 7.0), rimEye);
   float field = 0.62 * drawn + 0.38 * blobs;
   float lanes = smoothstep(0.035, 0.008, abs(vnoise(vec2(pq.x / 13.0, pq.y / 330.0) + 9.0) - 0.5)) * smoothstep(8.0, 50.0, w);
+  if (rimEye > 0.0) {
+    float channels = smoothstep(0.045, 0.012, abs(0.6 * vnoise(b / 31.0 + 9.0) + 0.4 * vnoise(b / 11.0 + 4.0) - 0.5)) * smoothstep(8.0, 50.0, w);
+    float pools = smoothstep(0.66, 0.84, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
+    lanes = mix(lanes, max(0.7 * channels * smoothstep(0.35, 0.6, vnoise(b / 57.0 + 13.0)), pools), rimEye);
+  }
   float toLip = smoothstep(MAT_REACH + uLipIn, 30.0, w);
   float thin = smoothstep(4.0, 46.0, inShore + 30.0 * (blobs - 0.5)) * (1.0 - 0.8 * slabs * (1.0 - crust));
+  // And they lie thick toward the pool and thin away to bare grey silt at the shore.
+  thin = mix(thin, smoothstep(6.0, 120.0, inShore + 70.0 * (blobs - 0.5)), rimEye);
   float edge = mix(0.53, 0.35, toLip) - 0.06 * smoothstep(8.0, 40.0, cameraPosition.y);
   float cover = smoothstep(edge - 0.02, edge + 0.07, field) * thin * (1.0 - 0.92 * lanes);
   // Toward the lip the weed thins to loose strands over the pale crust.
-  cover *= mix(0.3, 1.0, smoothstep(1.0, 20.0, wLip + 14.0 * (blobs - 0.5)));
+  // An eye that stands on the lip sees them run over the whole of it to the edge.
+  float onFoot = smoothstep(12.0, 4.0, cameraPosition.y);
+  cover *= mix(mix(0.3, 0.5, onFoot), 1.0, smoothstep(1.0, 20.0, wLip + 14.0 * (blobs - 0.5)));
   // The crust of the lip keeps a strand here and there.
-  cover = max(cover, 0.8 * thin * smoothstep(0.42, 0.56, field) * smoothstep(9.0, 3.0, wLip) * smoothstep(-0.6, 0.6, wLip));
+  cover = max(cover, mix(0.8, 1.0, onFoot) * thin * smoothstep(mix(0.42, 0.4, onFoot), mix(0.56, 0.54, onFoot), field) * smoothstep(9.0, 3.0, wLip) * smoothstep(-0.6, 0.6, wLip));
   o.albedo = bare;
   o.tilt = (snh.xy * 2.0 - 1.0) * 0.5;
   o.occ = 0.55 + 0.45 * smoothstep(0.1, 0.6, snh.b);
@@ -181,23 +194,28 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     vec2 sway = (b / max(r, 1.0)) * (0.022 * sin(uTime * 0.9 + 6.28 * vnoise(b / 2.3)) + 0.008 * sin(uTime * 2.1 + 6.28 * vnoise(b / 0.5 + 4.0)));
     vec2 qa = vec2(b.x * 0.951 + b.y * 0.309, -b.x * 0.309 + b.y * 0.951) / MAT_A + sway / MAT_A;
     vec2 qb = vec2(b.x * 0.999 - b.y * 0.035, b.x * 0.035 + b.y * 0.999) / MAT_B + 0.37 + sway * 1.4 / MAT_B;
-    float ha = texture2D(tMatH, qa).r;
-    float hb = texture2D(tMatH, qb).r;
-    float pick = smoothstep(-0.12, 0.12, hb - ha + 0.5 * (vnoise(b / 3.7 + 21.0) - 0.5));
-    // Closer than the picture is fine it is let go soft, and the finer tile of the same weed lies over it as hair: every tuft is made of strands.
-    float fine = smoothstep(0.012, 0.004, px);
-    vec3 near3 = mix(texture2D(tMat, qa, 1.2 * fine).rgb, texture2D(tMat, qb, 1.2 * fine).rgb, pick);
-    float mh = mix(ha, hb, pick);
-    if (fine > 0.0) {
-      vec3 tile = texture2D(tMatTile, vec2(qa.y, qa.x) * (MAT_A / 2.6) + sway * 0.4).rgb;
-      float hair = smoothstep(0.06, 0.3, dot(tile, vec3(0.4, 0.5, 0.1)));
-      // The hair lies on the weed, not on the bare slab.
-      float weedy = fine * smoothstep(0.75, 0.5, mh) * 0.85;
-      near3 = mix(near3, mix(near3 * 0.55, tile * 1.3, hair), weedy);
-      mh += weedy * 0.2 * (hair - 0.45);
+    // Further off than a strand can be told, the picture of the mats is not read at all: the patch has its tone and that is the whole of it.
+    float mh = 0.5;
+    vec3 near3 = vec3(0.27, 0.125, 0.035);
+    if (px < 0.25) {
+      float ha = texture2D(tMatH, qa).r;
+      float hb = texture2D(tMatH, qb).r;
+      float pick = smoothstep(-0.12, 0.12, hb - ha + 0.5 * (vnoise(b / 3.7 + 21.0) - 0.5));
+      // Closer than the picture is fine it is let go soft, and the finer tile of the same weed lies over it as hair: every tuft is made of strands.
+      float fine = smoothstep(0.012, 0.004, px);
+      near3 = mix(texture2D(tMat, qa, 1.2 * fine).rgb, texture2D(tMat, qb, 1.2 * fine).rgb, pick);
+      mh = mix(ha, hb, pick);
+      if (fine > 0.0) {
+        vec3 tile = texture2D(tMatTile, vec2(qa.y, qa.x) * (MAT_A / 2.6) + sway * 0.4).rgb;
+        float hair = smoothstep(0.06, 0.3, dot(tile, vec3(0.4, 0.5, 0.1)));
+        // The hair lies on the weed, not on the bare slab.
+        float weedy = fine * smoothstep(0.75, 0.5, mh) * 0.85;
+        near3 = mix(near3, mix(near3 * 0.55, tile * 1.3, hair), weedy);
+        mh += weedy * 0.2 * (hair - 0.45);
+      }
     }
     // Rust in one bed, gold in the next; gold in the heart of a patch, rust at its torn edge.
-    float tone = 0.5 * vnoise(pq / vec2(9.0, 110.0) + 5.0) + 0.3 * vnoise(pq / vec2(2.6, 40.0)) + 0.2 * vnoise(b / 6.0);
+    float tone = mix(0.5 * vnoise(pq / vec2(9.0, 110.0) + 5.0) + 0.3 * vnoise(pq / vec2(2.6, 40.0)), 0.5 * vnoise(b / 27.0 + 5.0) + 0.3 * vnoise(b / 9.0), rimEye) + 0.2 * vnoise(b / 6.0);
     float heart = smoothstep(edge, edge + 0.28, field);
     vec3 far3 = mix(vec3(0.17, 0.06, 0.02), vec3(0.31, 0.14, 0.035), smoothstep(0.3, 0.55, tone));
     far3 = mix(far3, vec3(0.46, 0.29, 0.065), smoothstep(0.5, 0.75, tone) * (0.35 + 0.65 * heart));
@@ -207,11 +225,11 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     float told = smoothstep(0.25, 0.03, px);
     // From the rim the mats are rust and orange, deep in colour whatever the sky: the light in them is the amber of the water.
     float fromRim = smoothstep(8.0, 40.0, cameraPosition.y);
-    far3 *= mix(vec3(1.0), vec3(1.1, 0.66, 0.3), fromRim);
+    far3 *= mix(vec3(1.0), vec3(1.0, 0.7, 0.4), fromRim);
     // And they are not one sheet: orange where the strands lie thick in the surface, dark brown water between them, in streaks and clouds.
-    float thick = 0.55 * vnoise(pq / vec2(2.4, 33.0) + 11.0) + 0.45 * vnoise(b / 6.0 + 4.0);
+    float thick = 0.55 * vnoise(b / 13.0 + 11.0) + 0.45 * vnoise(b / 5.0 + 4.0);
     far3 = mix(far3, mix(vec3(0.05, 0.036, 0.026), far3 * 1.3, smoothstep(0.28, 0.66, thick)), fromRim);
-    vec3 weed = mix(far3 * (0.75 + 0.5 * vnoise(pq / vec2(1.3, 19.0) + 2.0)), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
+    vec3 weed = mix(far3 * (0.75 + 0.5 * mix(vnoise(pq / vec2(1.3, 19.0) + 2.0), vnoise(b / 3.1 + 2.0), rimEye)), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
     float high = mix(0.5, mh, told);
     // The strands that stand highest are the palest: gold where the low sun finds them.
     weed *= mix(vec3(1.0), vec3(1.5, 1.38, 0.95), told * smoothstep(0.42, 0.85, mh));
@@ -236,7 +254,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     vec3 lp = texture2D(tLipPlate, q).rgb;
     float lh = texture2D(tLipPlateH, q).r;
     vec2 e = vec2(0.004, 0.0);
-    vec2 g = vec2(texture2D(tLipPlateH, q + e.xy).r - texture2D(tLipPlateH, q - e.xy).r, texture2D(tLipPlateH, q + e.yx).r - texture2D(tLipPlateH, q - e.yx).r);
+    vec2 g = 2.0 * vec2(texture2D(tLipPlateH, q + e.xy).r - lh, texture2D(tLipPlateH, q + e.yx).r - lh);
     vec2 around = lip.yz;
     vec2 inward = vec2(-lip.z, lip.y);
     // The crust keeps its weed: rust-orange filaments lie over the pale sinter to the very edge, and the crust shows between them.

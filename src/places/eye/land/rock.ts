@@ -193,7 +193,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
       sc = mix(sc, vec3(dot(sc, vec3(0.333))), 0.45 * (1.0 - lowEye));
       // Dry gravel in the last light is pale: its grit is hardly darker than its stones.
       sc = mix(sc * 0.6 + 0.16, sc, lowEye);
-      gravel = mix(gravel, sc * mix(vec3(2.1, 2.1, 2.14), vec3(1.5, 1.56, 1.66), lowEye), seen);
+      gravel = mix(gravel, sc * mix(vec3(2.3, 2.14, 1.96), vec3(1.5, 1.56, 1.66), lowEye), seen);
       pebbleBent = vec3(-lean.x, 0.0, -lean.y) * 3.0 * seen;
       a.a = mix(a.a, sh, seen);
       shingle = seen;

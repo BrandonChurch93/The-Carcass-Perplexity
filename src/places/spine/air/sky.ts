@@ -40,6 +40,8 @@ float mirrored(float u) {
 }
 // A picture at uv, flowing: two copies half a period apart, each carried along the eddies from where it started.
 vec3 flowing(sampler2D picture, vec2 uv, vec2 drift, float period, float lod) {
+  // Read very soft (as the colour of haze), the picture's flow is under the size of what is read: one read, where it stands.
+  if (lod > 3.5) return textureLod(picture, vec2(mirrored(uv.x), clamp(uv.y, 0.004, 0.996)), lod).rgb;
   vec2 eddy = textureLod(tNoise, vec3(uv * vec2(1.3, 0.9), 0.31), 0.0).rg - 0.5 + 0.5 * (textureLod(tNoise, vec3(uv * vec2(3.7, 2.9) + 0.4, 0.67), 0.0).ba - 0.5);
   vec2 flow = drift + 0.035 * eddy;
   float a = fract(uTime / period);
@@ -181,6 +183,8 @@ void main() {
         // Rock in the far air: dark toward the storm, the dusk on its lee face, and paler the farther off; its foot is in the cloud.
         float lee = smoothstep(-0.3, 0.6, off / max(half_, 1e-4));
         vec3 rockFar = mix(vec3(0.02, 0.022, 0.034), vec3(0.075, 0.05, 0.04), lee * 0.6) * (0.7 + 0.6 * texture(tNoise, vec3(elS / unit * 70.0 + k, off / unit * 45.0, 0.31)).r);
+        // Against the strike's dark cloud a far spire is a darker shape still, never a pale one.
+        if (pl) rockFar = min(rockFar, c * 0.4);
         float air = 1.0 - exp(-(0.3 + 0.2 * k));
         float foot_ = smoothstep(0.012 * unit, -0.006 * unit, elS - 0.004 * size * unit);
         c = mix(c, mix(rockFar, c, clamp(air * (pl ? 0.35 : 0.6) + foot_, 0.0, 1.0)), inSpire);

@@ -17,8 +17,10 @@ float runnerOpen(vec3 p) {
   return mix(vis, min(land.b * uUnder, 1.0), under);
 }
 vec3 runnerLight(vec3 p, vec3 n) {
-  vec3 e = skyIrradiance(n) * runnerOpen(p) + emitterIrradiance(p, n) * min(1.0, 4.0 * skyOpen(p));
-  if (uDoor.w > 0.5) {
+  vec3 e;
+  if (uDoor.w < 0.5) {
+    e = skyIrradiance(n) * runnerOpen(p) + emitterIrradiance(p, n) * min(1.0, 4.0 * skyOpen(p));
+  } else {
     // Inside the canal the two mouths are the windows, as they are for the rock about it: cold light on what faces them, by the share
     // of the sky each holds from there, and a part of it from all round off the ice and the rimed wall.
     vec3 d = uDoor.xyz - p;
@@ -107,6 +109,7 @@ uniform sampler2D tShag;
 uniform sampler2D tShagData;
 uniform sampler2D tBurn;
 uniform vec3 uBurnV;
+uniform float uLockKind;
 float groundY(vec3 p) {
   return uGround.x + dot(uGround.yz, p.xz);
 }
@@ -124,8 +127,17 @@ void main() {
   w /= w.x + w.y + w.z;
   float s = vKind > 3.5 ? 0.3 : 0.55;
   vec3 q = vRest / s + uTone.w * 5.0;
-  vec3 shag = (texture2D(tShag, q.zy).rgb * w.x + texture2D(tShag, q.xz).rgb * w.y + texture2D(tShag, q.xy).rgb * w.z) / SHAG_MEAN;
-  vec3 lie = texture2D(tShagData, q.zy).rgb * w.x + texture2D(tShagData, q.xz).rgb * w.y + texture2D(tShagData, q.xy).rgb * w.z;
+  vec3 shag;
+  vec3 lie;
+  if (uLockKind > 0.5) {
+    // The herd's hide is under its locks and seen from metres away: one laying of the picture, on the axis it faces most.
+    vec2 one = w.x > max(w.y, w.z) ? q.zy : (w.y > w.z ? q.xz : q.xy);
+    shag = texture2D(tShag, one).rgb / SHAG_MEAN;
+    lie = texture2D(tShagData, one).rgb;
+  } else {
+    shag = (texture2D(tShag, q.zy).rgb * w.x + texture2D(tShag, q.xz).rgb * w.y + texture2D(tShag, q.xy).rgb * w.z) / SHAG_MEAN;
+    lie = texture2D(tShagData, q.zy).rgb * w.x + texture2D(tShagData, q.xz).rgb * w.y + texture2D(tShagData, q.xy).rgb * w.z;
+  }
   float fine = vnoise3(vRest * 90.0);
   float grain = vnoise3(vRest * vec3(14.0, 40.0, 40.0));
   n = normalize(n + 0.9 * (lie.x - 0.5) * normalize(cross(n, vec3(0.0, 1.0, 0.001))) + 0.9 * (lie.y - 0.5) * vec3(0.0, 1.0, 0.0));
@@ -178,7 +190,8 @@ void main() {
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   vec3 r2 = reflect(-toCamera, n);
   r2.y = abs(r2.y);
-  c += (0.04 + 0.5 * pow(1.0 - nv, 5.0)) * (1.0 - rough) * (1.0 - rough) * runnerLight(vWorld, normalize(r2 + n)) * occ / 3.14159;
+  // A dry coat has no gleam worth its light: only the wet and the horn are asked for one.
+  if (rough < 0.9) c += (0.04 + 0.5 * pow(1.0 - nv, 5.0)) * (1.0 - rough) * (1.0 - rough) * runnerLight(vWorld, normalize(r2 + n)) * occ / 3.14159;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -225,12 +238,19 @@ void main() {
   p += side * (position.x * w);
   // It is lit as the body under it is, and a little as itself: the coat reads as the body's shape, with each lock catching its own light.
   vec3 nb = normalize(c - mix(r, e, 0.45) + vec3(0.0, 1e-4, 0.0));
+  // A lock of the herd on the side of the body turned from the lens is behind the body: it is not drawn.
+  if (uLockKind > 0.5 && dot(nb, normalize(cameraPosition - r)) < -0.25) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
   // Hair takes light from all round: the lock is lit as something between its own way out of the body and the open sky.
   vec3 n = normalize(nb + vec3(0.0, 0.3, 0.0) + side * (0.35 * position.x) + toCamera * 0.2);
   // Roots stand in each other's shade.
   float occ = mix(0.12 + 0.43 * uDoor.w, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
-  vLight = runnerLight(p, n) * occ / 3.14159;
-  vFrostLight = runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
+  vec3 lit = runnerLight(p, n) / 3.14159;
+  vLight = lit * occ;
+  // Inside the canal the light is the mouth's whichever way a hair looks: the rime on a lock takes the lock's own light.
+  vFrostLight = uLockKind > 0.5 ? lit * 1.1 : runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
   vAt = vec4(position.x, t, seed, aCard.z);
   // How much this lock is frosted: it looks up, and it is on the weather side.
   // Along the outline in the open the locks stand clear of the rime and dark against the snow behind them.
@@ -268,9 +288,10 @@ void main() {
     vec2 uv = vec2(0.114 + 0.155 * col + 0.07 * u * flip, 1.0 - y);
     // Its outline is frayed by its own strands: the cut wanders with the hair's brightness, and the black the picture stands on is taken out of its edge.
     float cut = texture2D(tLockBA, uv).r;
+    if (cut < 0.5) discard;
     pic = texture2D(tLockB, uv).rgb;
     float strand = max(pic.r, max(pic.g, pic.b));
-    if (cut < 0.5 || strand < 0.1 + 0.14 * t * t) discard;
+    if (strand < 0.1 + 0.14 * t * t) discard;
     pic /= max(cut, 0.5);
     mean_ = vec3(0.217, 0.204, 0.21);
   } else {
@@ -285,7 +306,7 @@ void main() {
   float singe = 1.0 - vInfo.w;
   vec3 albedo = uTone.rgb * pic / mean_ * 0.8 * (0.85 + 0.3 * fract(seed * 7.31));
   // Wet and dark toward the root, where the coat is matted.
-  albedo *= mix(0.55, 1.0, smoothstep(0.0, 0.5, t));
+  albedo *= mix(uLockKind > 0.5 ? 0.72 : 0.55, 1.0, smoothstep(0.0, 0.5, t));
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
   vec3 c = albedo * vLight;
   // Rime and packed snow: on the locks that look up it lies thick on the bright hairs, on the others it beads the ends.

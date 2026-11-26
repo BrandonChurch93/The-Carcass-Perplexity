@@ -153,7 +153,7 @@ void main() {
     float drift = 0.45 + 0.55 * vnoise(vec2(round2 * 47.0 - uTime * 0.016, hit.y / 9.0 + 4.0));
     float a = 0.8 * lowEye * min(mistOn * 1.6, 1.0) * max(smoothstep(dp - 560.0, dp - 30.0, far) * exp(-max(hit.y, 0.0) / tall), (uPlateTone.w > 1.5 ? 0.0 : 0.9) * exp(-abs(rd.y) / 0.011) * smoothstep(250.0, 700.0, far)) * drift;
     // Under the long lens the mist lies in the shade of the wall: grey, not lit.
-    vec3 lit = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.35 * low) / 3.14159 * (uPlateTone.w > 1.5 ? 1.45 : 2.4);
+    vec3 lit = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.35 * low) / 3.14159 * (uPlateTone.w > 1.5 ? 1.15 : 2.4);
     light = light * (1.0 - a) + a * lit;
     through *= 1.0 - a;
   }
@@ -191,6 +191,7 @@ export function create(ctx: Context): Piece {
       show.uVeil.value = during('eye-04') ? 0.22 : during('eye-01') ? 0.5 : during('eye-05') ? 0.8 : 0.6;
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
       (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
+      (rig.uPlateShade as THREE.IUniform<THREE.Vector2>).value.x = during('eye-01') ? 1 : 0;
       // The far world of the shot the camera stands in.
       const i = plateFor();
       const tone = (rig.uPlateTone as THREE.IUniform<THREE.Vector4>).value;

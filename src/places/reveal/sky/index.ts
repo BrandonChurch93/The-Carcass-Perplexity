@@ -60,13 +60,17 @@ void main() {
   // The veil: thin ice, far above, drifting the other way.
   vec2 hv = up + uTime * vec2(6.5, -3.8);
   float ice = dot(texture2D(uVeil, mat2(0.9, 0.44, -0.44, 0.9) * hv / 800.0).rgb, vec3(0.3, 0.55, 0.15));
-  float where = 0.6 * vnoise(hv / 1500.0 + 3.0) + 0.4 * vnoise(hv / 640.0 + 11.0);
+  float where = vnoise(hv / 1500.0 + 3.0);
+  if (uViewKm < 900.0) where = 0.6 * where + 0.4 * vnoise(hv / 640.0 + 11.0);
   float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.38, 0.8, where) * smoothstep(500.0, 1500.0, length(up - vec2(${X(AT.lake.x).toFixed(1)}, ${Z(AT.lake.y).toFixed(1)})));
 
   vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.86 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 + 0.5 * smoothstep(300.0, 600.0, uViewKm) * (1.0 - smoothstep(700.0, 1300.0, uViewKm))) * (1.0 - 0.15 * high);
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
+  // (Against the sun's image on the sea a cloud is seen dark: its lit top is dimmer than the sheet of light under it.)
+  vec2 sunOnSea = (xz - vec2(${X(5875).toFixed(1)}, ${Z(703).toFixed(1)}) - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
+  lowColour *= 1.0 - 0.6 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.94;
-  float b = high * mix(0.09, 0.07, smoothstep(700.0, 1300.0, uViewKm));
+  float b = high * mix(0.09, 0.11, smoothstep(700.0, 1300.0, uViewKm));
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
   float alpha = 1.0 - (1.0 - a) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;

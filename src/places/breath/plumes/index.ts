@@ -29,6 +29,12 @@ const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
   [-34.9, 20.4, 0.8, 0.5],
 ];
 
+/** Staged for shot breath-02: where each hanging one is rooted (x, z), how tall, and the point on the ground it leans over (x, z). */
+const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
+  [-13.1, 30.4, 7.6, -11.4, 28.3],
+  [-14.5, 28.4, 6.6, -12.5, 26.2],
+];
+
 const HOLDFAST_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
@@ -65,15 +71,12 @@ export function create(ctx: Context): Piece {
     const at = bushAt(i);
     // Staged: the two that the lens of key breath-3 stands by are rooted a stride further west of the lip than their anchors, so that
     // the nearer is cut by the left edge of that frame and the farther has its holdfast in the lower left of it, as in the picture.
-    // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted two and a half metres to that
-    // lens's left and two ahead of it, and a taller one stands on the lip beyond it: both weep, so that their sprays hang into the upper
-    // left of that frame from outside it, as the picture has them.
-    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? onBrim(-10.9, 29.0) : at;
-    // Three stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : i === 5 ? tall * 1.1 : tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5, mound: i === 5 ? 0.15 : i < 2 ? 0 : 0.6, weep: i === 5 ? 1 : 0, tidy: i === 5 });
+    // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted five metres to that lens's
+    // left and behind it, out of its frame; what hangs into that frame is grown for that shot alone (HANG).
+    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] + 0.1, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
+    // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
+    bushes.push({ x, y: floor(x, z), z, tall: i === 0 ? tall * 1.2 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, mound: i < 2 ? 0 : i === 5 ? 0.3 : 0.6, tidy: i === 5 });
   });
-  const [wx, wz] = onBrim(-12.5, 27.7);
-  bushes.push({ x: wx, y: floor(wx, wz), z: wz, tall: 5.6, lean: Math.atan2(-wx, wz), detail: 1, mound: 0.2, weep: 1, tidy: true });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
   const fill = ctx.rng('gill-plume-fill');
@@ -104,6 +107,16 @@ export function create(ctx: Context): Piece {
   const rimGrown = new Fronds();
   for (const bush of rimBushes) rimGrown.grow(bush, rimRng, floor);
   const rimBuilt = rimGrown.build();
+  // Staged by shot (breath-02): two tall weeping ones on the south-west lip, rooted to the left of that lens and leaning across its upper left
+  // corner, so that their sprays hang into the frame from above and from the left, as the picture has them. No other shot has them.
+  const hangRng = ctx.rng('gill-plume-hang');
+  const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
+    const [x, z] = onBrim(hx, hz);
+    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, mound: 0, weep: 1, tidy: true };
+  });
+  const hangGrown = new Fronds();
+  for (const bush of hangBushes) hangGrown.grow(bush, hangRng, floor);
+  const hangBuilt = hangGrown.build();
 
   const pixel = { value: 0.001 };
   const seconds = { value: 0 };
@@ -141,6 +154,13 @@ export function create(ctx: Context): Piece {
   rimStems.frustumCulled = false;
   rimGroup.add(rimVanes, rimStems);
   group.add(rimGroup);
+  const hangGroup = new THREE.Group();
+  const hangVanes = new THREE.Mesh(hangBuilt.fronds, vaneMaterial);
+  hangVanes.frustumCulled = false;
+  const hangStems = new THREE.Mesh(hangBuilt.stems, stemMaterial);
+  hangStems.frustumCulled = false;
+  hangGroup.add(hangVanes, hangStems);
+  group.add(hangGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
@@ -231,6 +251,8 @@ export function create(ctx: Context): Piece {
 
   const rimDiscs = rig.contactDiscs(rimBushes.length * 2);
   const rimSpan = shotSpan('breath-05');
+  const hangDiscs = rig.contactDiscs(hangBushes.length);
+  const hangSpan = shotSpan('breath-02');
 
   let height = 0;
   const size = new THREE.Vector2();
@@ -242,6 +264,9 @@ export function create(ctx: Context): Piece {
       const at = stagedSeconds();
       const shown = at >= rimSpan[0] && at <= rimSpan[1];
       rimGroup.visible = shown;
+      const hung = at >= hangSpan[0] && at <= hangSpan[1];
+      hangGroup.visible = hung;
+      hangBushes.forEach((b, i) => rig.setShadow(hangDiscs, i, b.x, b.z, 0.2 * b.tall, 0.4 * b.tall, hung ? 0.5 : 0));
       rimBushes.forEach((b, i) => {
         rig.setDisc(rimDiscs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, shown ? 0.7 : 0);
         rig.setShadow(rimDiscs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, shown ? 0.5 : 0);
@@ -260,6 +285,8 @@ export function create(ctx: Context): Piece {
       stemGeometry.dispose();
       rimBuilt.fronds.dispose();
       rimBuilt.stems.dispose();
+      hangBuilt.fronds.dispose();
+      hangBuilt.stems.dispose();
       stemMaterial.dispose();
       dropGeometry.dispose();
       dropMaterial.dispose();

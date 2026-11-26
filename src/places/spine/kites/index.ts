@@ -108,7 +108,7 @@ void main() {
       // In the long lens one veil of each spire is long and the rest are short, and half of the bare threads are gone.
       float lead = uStageMore.x > 0.5 ? mix(0.5, 1.7, step(350.0, aShape.x)) : 1.0;
       // In the wide lens fewer of the short ribbons fly, so that each is seen apart from the next.
-      if (uStageMore.z > 0.7 && more.w < 0.9 && aShape.x < 180.0 && fract(more.y * 17.7) < 0.45) {
+      if (uStage.y > 1.5 && more.w < 0.9 && aShape.x < 180.0 && fract(more.y * 17.7) < 0.7) {
         gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
         return;
       }
@@ -276,6 +276,8 @@ void main() {
   // Lilac-grey whatever lights it: the film keeps the light's brightness and little of its colour.
   held = mix(held, dot(held, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.7);
   vec3 c = (uFilm.x * held + uFilm.y * uWarmColour * toDusk) * mix(vec3(1.0), stain, uTone.x) * lilac * (0.8 + 0.4 * fract(seed * 5.3));
+  // Before the long lens the veils are violet grey, darker than the lit cloud: what is bright on them is the charge.
+  c *= mix(vec3(1.0), vec3(0.6, 0.54, 0.82), uVeil);
   // Thin as a soap film: where it is stretched it takes colours by its thickness and the angle it is seen at.
   float thick = 1.2 + 2.2 * relief + 1.4 * vnoise(vec2(metres / (1.7 * wide) + seed, vb * 1.3)) + 0.8 * (1.0 - nv);
   vec3 sheen = 0.5 + 0.5 * cos(6.2832 * thick * vec3(1.0, 1.17, 1.4));
@@ -416,7 +418,8 @@ varying vec3 vT;
 varying vec3 vB;
 void main() {
   float h = texture2D(tHoldH, vUv).r;
-  float a = smoothstep(0.03, 0.1, h);
+  // The picture's own stalks end in nothing: they are left out past their first length, and the cords that hold the ribbons stand for them.
+  float a = smoothstep(0.03, 0.1, h) * (1.0 - smoothstep(0.5, 0.6, vUv.x));
   if (a < 0.03) discard;
   vec3 pic = texture2D(tHold, vUv).rgb;
   vec2 e = vec2(1.5 / 1536.0, 1.5 / 1024.0);
@@ -643,10 +646,10 @@ export function create(ctx: Context): Piece {
       // spine-01, the wide lens from far down the ridge: the first spire's ribbons twice as broad, most of its bare threads not drawn.
       const inWide = stagedSeconds() >= wideShot.from && stagedSeconds() <= wideShot.to;
       if (inStrike) stage.set(0.17, 0.32, 2.6, 3);
-      else if (inClose) stage.set(0.36, 0.42, 4, 1);
-      else if (inWide) stage.set(1, 2.1, 1, 1);
+      else if (inClose) stage.set(1.0, 0.62, 0.3, 1);
+      else if (inWide) stage.set(1, 1.6, 1, 1);
       else stage.set(1, 1, 1, 0);
-      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 0.8 : inClose ? 0.5 : 0);
+      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0);
       // Seen close the film shows its oil colours.
       film.z = inClose ? 0.42 : 0.15;
       veil.value = inStrike ? 1 : 0;
