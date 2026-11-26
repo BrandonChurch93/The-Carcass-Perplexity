@@ -5,6 +5,7 @@ import { shotById } from '../../../film/cut';
 import { shots } from '../cameras';
 import { DROWNED, LEVELS, WIND } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
+import { loopPhase } from '../shared/stage';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { partAtHeight, radii, ribByName, surface, weedPoint } from '../layout';
 import { weedLump } from '../land/shapes';
@@ -15,6 +16,8 @@ export const PARTS: readonly string[] = ['drowned'];
 const SIZE = 1.45;
 const STRANDS = 220;
 const CRABS = 16;
+/** In the card loop a gust sets the hung body swinging on its hook and it settles again: radians either way at the most. */
+const SWING = 0.06;
 /** The hung body as a plate: metres from the hook to the end of the tuft, how far the relief stands out, and its turn from square to the lens. */
 const PLATE = { high: 9.5, deep: 0.5, turn: 0.2 };
 /** Where the body lies in its picture (1448 by 1086): from, to across it. */
@@ -751,6 +754,11 @@ export function create(ctx: Context): Piece {
     shapes.set([scatter.range(1.2, 2.8), scatter.range(0.07, 0.16), scatter.next() + 1, scatter.range(-0.08, 0.08)], i * 4);
   }
   const plateGeometry = new THREE.PlaneGeometry(1, 1, 96, 144).translate(0.5, 0.5, 0);
+  const plateAxis = axis.clone().multiplyScalar(plateWide);
+  const plateDrop = down.clone().multiplyScalar(PLATE.high);
+  const swungOrigin = plateOrigin.clone();
+  const swungAxis = plateAxis.clone();
+  const swungDrop = plateDrop.clone();
   const plateMaterial = new THREE.ShaderMaterial({
     vertexShader: PLATE_VERTEX,
     fragmentShader: PLATE_FRAGMENT,
@@ -758,9 +766,9 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       tCarcass: { value: ctx.assets.texture('mat/carcass-hung.jpg', { kind: 'colour', repeat: false }) },
       tRelief: { value: ctx.assets.texture('mat/carcass-hung-h.png', { kind: 'data', repeat: false }) },
-      uOrigin: { value: plateOrigin },
-      uAxis: { value: axis.clone().multiplyScalar(plateWide) },
-      uDrop: { value: down.clone().multiplyScalar(PLATE.high) },
+      uOrigin: { value: swungOrigin },
+      uAxis: { value: swungAxis },
+      uDrop: { value: swungDrop },
       uProud: { value: proudWay.clone().multiplyScalar(PLATE.deep) },
     },
     side: THREE.DoubleSide,
@@ -786,6 +794,29 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('drowned', plate, shade, strands, crabMesh), shade, strands, crabMesh);
 
   return {
+    // In the film it hangs still. In the card loop a gust swings it on its hook, about the middle of the plate's top, at the pace of a
+    // weight of that length, and it hangs still again before the loop comes round.
+    setTime: () => {
+      const lp = loopPhase();
+      if (lp === null) {
+        swungOrigin.copy(plateOrigin);
+        swungAxis.copy(plateAxis);
+        swungDrop.copy(plateDrop);
+        return;
+      }
+      const u = Math.min(1, Math.max(0, (lp - 0.05) / 0.9));
+      const gust = Math.sin(Math.PI * u) ** 2;
+      const swing = SWING * gust * Math.sin(3 * Math.PI * u);
+      if (swing === 0) {
+        swungOrigin.copy(plateOrigin);
+        swungAxis.copy(plateAxis);
+        swungDrop.copy(plateDrop);
+        return;
+      }
+      swungAxis.copy(plateAxis).applyAxisAngle(proudWay, swing);
+      swungDrop.copy(plateDrop).applyAxisAngle(proudWay, swing);
+      swungOrigin.copy(plateOrigin).addScaledVector(plateAxis, 0.38).addScaledVector(swungAxis, -0.38);
+    },
     dispose: () => {
       material.dispose();
       clothMaterial.dispose();

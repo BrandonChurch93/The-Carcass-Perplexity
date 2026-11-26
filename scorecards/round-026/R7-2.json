@@ -1,0 +1,35 @@
+{
+  "round": 26,
+  "unit": "film",
+  "pack": "R7-2",
+  "family": "gpt",
+  "answered": "2026-11-26 12:55 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "Lower crop, in the violet sky to the right of the lightning tip and beneath the diagonal ribbons",
+        "what": "The smooth falloff of the lightning glow breaks into rectangular patches with visible vertical seams.",
+        "fix": "Lower quantization in the low-contrast sky until the glow fades continuously."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "Lower right, in the spray below the pink horizon",
+        "what": "The stippled edge of the spray merges into broad soft clumps; nearby water ripples flatten into strips.",
+        "fix": "Give the spray and water more encoding bits so the clusters of droplets and gaps between ripples remain distinct."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "Lower crop, at the translucent curling strands extending right from the dark growth",
+        "what": "The narrow loops lose their separate outlines and merge into a gray smear against the sunset.",
+        "fix": "Reduce quantization around the low-contrast strands so the loops retain their contours."
+      }
+    ]
+  }
+}

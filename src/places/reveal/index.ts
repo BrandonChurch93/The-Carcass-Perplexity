@@ -6,6 +6,7 @@ import { Parts, type Place, type PlaceModule } from '../../core/place';
 import { stream } from '../../core/rng';
 import { neutralLook } from '../../core/stage';
 import { BEAT, FILM_ASPECT, FOV, KM, MASTER_H, MASTER_W, UNIT, poseAt, riseShots } from './shared/anchors';
+import * as join from './join';
 import * as land from './land';
 import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
@@ -17,7 +18,7 @@ import * as sky from './sky';
 const shots: Record<string, CameraPath> = {};
 for (const s of riseShots) shots[s.id] = (_part, frame) => poseAt(frame);
 
-const FOLDERS: Folder[] = [land, sky];
+const FOLDERS: Folder[] = [land, sky, join];
 
 async function create(): Promise<Place> {
   const parts = new Parts(UNIT);

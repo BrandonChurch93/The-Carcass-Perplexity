@@ -27,9 +27,9 @@ const COLONY_SIDE: [number, number] = [-0.8, 0.6];
 const COLONY_HEIGHT = 45.2;
 const colonyReach = buttressRadius(COLONY_HEIGHT) + 22;
 // The four close keys are seen through a lens of a real width: the focus in metres, the radius of the lens in metres.
-const colony: Pose = { ...looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36), focus: 27, aperture: 0.035 };
+const colony: Pose = { ...looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36), focus: 27, aperture: 0.021 };
 const FEEDING_YAW = 10;
-const feeding: Pose = { ...looking(onGround(-60, -420, 1.5), FEEDING_YAW, -3, 20), focus: 17, aperture: 0.02 };
+const feeding: Pose = { ...looking(onGround(-60, -420, 1.5), FEEDING_YAW, -3, 20), focus: 17, aperture: 0.014 };
 const gate: Pose = { ...looking(onGround(GATE_X, GATE_Z + 170, 0.9), 0, 5, 40, 170), focus: 60, aperture: 0.03 };
 
 function drownedPose(): Pose {
@@ -42,7 +42,7 @@ function drownedPose(): Pose {
   const target: Vec3 = [hang.x, hang.y - 3.5, hang.z];
   const position = add(add(target, scale(north, -15)), scale(out, 10));
   const aim = add(add(position, scale(north, 52)), add(scale(out, -19), [0, 1.8, 0]));
-  return { position, aim, fov: 35, focus: 18, aperture: 0.07 };
+  return { position, aim, fov: 35, focus: 18, aperture: 0.049 };
 }
 
 const drowned = drownedPose();
@@ -74,7 +74,17 @@ function travelled(seconds: number): number {
 const TO_KEY = travelled(ARRIVAL.keySeconds);
 const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 
-function arrival(seconds: number): Pose {
+// The approach opens on a wider and higher lens than the move it joins, so that the first frame holds two blades whole against the sky:
+// how much wider, how many degrees higher, and the seconds over which both ease back into the move. From OPEN.seconds on the move is its own,
+// to the bit: the staging is exactly nothing there (the strait's shot runs on in the same move).
+const OPEN = { seconds: 11, wide: 0.32, pitch: 3.5, yaw: 7.5 };
+/** 1 at the first frame of the film, 0 from OPEN.seconds on, level at both ends. */
+export function openingLens(seconds: number): number {
+  const q = Math.min(1, Math.max(0, 1 - seconds / OPEN.seconds));
+  return q * q * (3 - 2 * q);
+}
+
+function arrival(seconds: number, staged = 0): Pose {
   const left = TO_KEY - travelled(seconds);
   const out = Math.max(0, left) / ARRIVAL.far;
   const past = Math.max(0, -left) / PAST_KEY;
@@ -83,10 +93,16 @@ function arrival(seconds: number): Pose {
   const side = ARRIVAL.offset * out * out + ARRIVAL.drift * past * past;
   const position = add(add(establish.position, scale(along, -left)), add(scale(across, side), [0, ARRIVAL.rise * Math.pow(out, 1.5), 0]));
   const lens = Math.tan((establish.fov * RAD) / 2) * Math.pow(ARRIVAL.archAhead / (ARRIVAL.archAhead + left), ARRIVAL.hold);
+  if (staged > 0) return looking(position, ARRIVAL.yaw + ARRIVAL.turn * out * out + OPEN.yaw * staged, ARRIVAL.pitch + ARRIVAL.tilt * Math.pow(out, 1.5) + OPEN.pitch * staged, (2 * Math.atan(lens * (1 + OPEN.wide * staged))) / RAD);
   return looking(position, ARRIVAL.yaw + ARRIVAL.turn * out * out, ARRIVAL.pitch + ARRIVAL.tilt * Math.pow(out, 1.5), (2 * Math.atan(lens)) / RAD);
 }
 
-const approach: CameraPath = (part) => arrival((part * shotLength(opening)) / cut.fps);
+const approach: CameraPath = (part) => {
+  const seconds = (part * shotLength(opening)) / cut.fps;
+  return arrival(seconds, openingLens(seconds));
+};
+/** The approach as it was before it was restaged: what was scattered along it once (the fliers' clearances, the skein) stays where it was, so that no later frame moves. */
+export const approachAsScattered: CameraPath = (part) => arrival((part * shotLength(opening)) / cut.fps);
 const intoStrait: CameraPath = (part) => arrival((shotLength(opening) + part * shotLength(strait)) / cut.fps);
 
 const key = (id: string): number => keyPart(shotById(id));

@@ -1,0 +1,28 @@
+{
+  "round": 26,
+  "unit": "film",
+  "pack": "R7-3",
+  "family": "gpt",
+  "answered": "2026-11-26 12:55 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-C-04.png",
+        "where": "Red water directly below the dome in the upper comparison",
+        "what": "Separate ripple reflections merge into short rectangular streaks; the softer water below them breaks into patches instead of fading smoothly.",
+        "fix": "Give the moving water more bits and lower quantization until the individual ripple highlights and their soft falloff survive."
+      },
+      {
+        "severity": "major",
+        "file": "set-C-02.png",
+        "where": "Lower comparison, across the curved left shoulder and crown of the transparent dome",
+        "what": "Thin reflected contours disappear in stretches, leaving a mottled smear where the original has distinct, continuous outlines.",
+        "fix": "Reduce quantization around the dome reflections to retain the faint boundaries between highlights."
+      }
+    ]
+  }
+}

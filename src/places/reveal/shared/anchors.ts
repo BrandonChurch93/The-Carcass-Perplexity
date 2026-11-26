@@ -97,7 +97,36 @@ export function poseAt(frame: number): Pose {
   const x = X(v.cx);
   const z = Z(v.cy);
   const height = (v.w * KM) / FILM_ASPECT / 2 / HALF_TAN;
+  if (frame > DRIFT_FROM) {
+    const [driftX, driftZ] = driftAt(frame);
+    const dx = x + driftX;
+    const dz = z + driftZ;
+    // (And the camera turns a little about its own eye as it rides the orbit: the edge of the planet swings, slow, one way.)
+    const turned = ROLL_PER_KM * Math.hypot(driftX, driftZ);
+    return { position: [dx, height, dz], aim: [dx, 0, dz], fov: FOV, up: [Math.sin(turned), 0, -Math.cos(turned)] };
+  }
   return { position: [x, height, z], aim: [x, 0, z], fov: FOV, up: [0, 0, -1] };
+}
+/** The drift of the hold and the ending: the film frame it starts after, km a second once it runs, the seconds it takes to come up, and its way on the ground. */
+const DRIFT_FROM = 10028;
+const DRIFT_SPEED = 32;
+const DRIFT_EASE = 6;
+const DRIFT_TOWARD: [number, number] = [-0.97, -0.24];
+/** The turn of the camera about its own eye, radians for each km of the drift: about ten degrees by the last frame. */
+const ROLL_PER_KM = ((10 * Math.PI) / 180) / 740;
+/** How much of the camera's drift the edge of the planet makes with it: the camera rides its orbit, so the ground slides under it faster than the edge turns. */
+export const LIMB_FOLLOW = 0.7;
+/**
+ * The camera never comes to a dead stop: as the day ends the rise eases into a slow drift along the orbit, one direction to the
+ * last frame. How far it has gone at a frame of the film, km on the ground (x, z); nothing up to DRIFT_FROM. Its speed comes up
+ * from rest over DRIFT_EASE seconds and holds.
+ */
+export function driftAt(frame: number): [number, number] {
+  if (!(frame > DRIFT_FROM)) return [0, 0];
+  const t = (frame - DRIFT_FROM) / FPS;
+  const u = Math.min(t, DRIFT_EASE) / DRIFT_EASE;
+  const km = DRIFT_SPEED * (DRIFT_EASE * (u * u * u - (u * u * u * u) / 2) + Math.max(t - DRIFT_EASE, 0));
+  return [DRIFT_TOWARD[0] * km, DRIFT_TOWARD[1] * km];
 }
 
 /** Seconds of the place at which the Heart's glow beats once on the body. */
@@ -105,6 +134,16 @@ export const BEAT = eventSeconds(UNIT, 'heartbeat');
 
 /** Seconds of the place at which the day begins to end: one whole frame after film frame 10880, so that no sample of that frame's shutter sees any of it. */
 export const DUSK_FROM = (10881 - RISE_FIRST) / FPS;
+
+/** Seconds of the place from which the planet is seen to live while the frame is held: one whole frame after film frame 10027, the last frame that is kept as it was. */
+export const LIVE_FROM = (10028 - RISE_FIRST) / FPS;
+/** The seconds the planet has lived at a second of the place: nothing up to LIVE_FROM, then it gathers way from rest over three seconds and runs with the clock. */
+export function liveAt(seconds: number): number {
+  const t = seconds - LIVE_FROM;
+  if (!(t > 0)) return 0;
+  const u = Math.min(t, 3) / 3;
+  return 3 * (u * u * u - (u * u * u * u) / 2) + Math.max(t - 3, 0);
+}
 
 /** The rings on the lake that the Eye hands over fade out between these widths of the view, in units of the width at the first frame. */
 export const RING_FADE: [number, number] = [1.0, 1.9];

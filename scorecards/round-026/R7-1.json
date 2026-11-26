@@ -1,0 +1,28 @@
+{
+  "round": 26,
+  "unit": "film",
+  "pack": "R7-1",
+  "family": "gpt",
+  "answered": "2026-11-26 12:55 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "upper pair, dark foreground below the rocky shore",
+        "what": "The smooth fade into shadow becomes a stack of broad horizontal bands with faint rectangular patches in the darkest area.",
+        "fix": "Reduce quantization in the shadows and retain dither through the final encode."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "orange vapour above and to the right of the taller creature",
+        "what": "The gradual change in the lava-lit haze breaks into flat patches with visible boundaries. Both creatures still read clearly.",
+        "fix": "Give the low-contrast vapour more bits so its orange tones blend smoothly."
+      }
+    ]
+  }
+}
