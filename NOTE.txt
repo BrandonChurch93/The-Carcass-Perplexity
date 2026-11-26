@@ -1,7 +1,4 @@
-2026-11-26 12:40 UTC
-work at 24b5e47 on agent/film-ending
-V2: ending sheet, last two seconds sheet (drift and the dark), 11340 over 11743 hd, beat sheet. Wrong: a pale blocky patch round the body at night, last frame very dark, drift is a pan
-look-1.jpg = out/work/sheets/ending.png
-look-2.jpg = out/work/sheets/last.png
-look-3.jpg = out/work/pair.png
-look-4.jpg = out/work/sheets/beat.png
+2026-11-26 12:53 UTC
+work at 43d6a89 on agent/film-ending
+10027 (kept), 10028, 10088, 10454, 10880, 11290, 11743: the hold now drifts and its weather runs; wrong: 11743 too dark, body ends right of centre, night still thin
+look-1.jpg = out/work/hold1.png
