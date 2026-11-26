@@ -8,9 +8,10 @@ import type { Context, Piece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { CARCASS, INSIDE_FROM, STRIKE_FOV, UNIT, strikeStand, strikeTip } from '../shared/anchors';
-import { bakeHeaps } from './heaps';
 import { bakeNoise } from './noise';
+import { seaUniforms } from './sea';
 import { createSky, skyPictures } from './sky';
+import { createStorm } from './storm';
 import { VOLUME_FRAGMENT } from './volume';
 
 export const PARTS: readonly string[] = ['sky', 'air', 'cloud-sea', 'cloud', 'spindrift'];
@@ -61,15 +62,18 @@ function ridgeTexture(): THREE.DataTexture {
 }
 
 const STRIKE_FROM = secondsInPlace(UNIT, shotById('spine-04').first);
+// The storm as a marched body of cloud (storm.ts), or as the dome's pictures: the pictures stand until the marched storm has their mass.
+const STORM_MARCHED: boolean = false;
 const CARCASS_FROM = secondsInPlace(UNIT, shotById('spine-03').first);
 
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
-  const heaps = bakeHeaps(ctx.rng('air/heaps'));
+  const sea = seaUniforms(ctx);
   const pictures = skyPictures(ctx);
   const skyStage = (pictures.uSkyStage as THREE.IUniform<THREE.Vector4>).value;
   const plate = (pictures.uPlate as THREE.IUniform<THREE.Vector4>).value;
-  const sky = createSky(ctx, noise, pictures);
+  const storm = createStorm(ctx, noise);
+  const sky = createSky(ctx, noise, { ...pictures, ...storm.uniforms });
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('cloud-sea', 'built');
@@ -103,10 +107,8 @@ export function create(ctx: Context): Piece {
       ...pictures,
       tNoise: { value: noise },
       tRidge: { value: ridge },
-      tDeck: { value: ctx.assets.texture('mat/cloudsea.jpg') },
+      ...sea.uniforms,
       tFar: { value: ctx.assets.texture('mat/far.jpg', { repeat: false }) },
-      tSeaNh: { value: ctx.assets.texture('mat/cloudsea-nh.png', { kind: 'data' }) },
-      tHeaps: { value: heaps },
       uSteam: { value: steam },
       uSteamMore: { value: steamMore },
       uSteamCount: { value: 0 },
@@ -162,17 +164,22 @@ export function create(ctx: Context): Piece {
       // The strike's own sky stands behind its long lens: its lit cloud behind the struck tip, its horizon on the sea's.
       plate.set(Math.atan2(strikeTip[2] - strikeStand[2], strikeTip[0] - strikeStand[0]), -0.009, ((STRIKE_FOV * 16) / 9) * 1.2 * (Math.PI / 180), inStrike ? 1 : 0);
       // Staged by shot: by the dead one (spine-03) the lens is opened for the dusk (the rig's sky light is opened by the same there).
-      skyStage.y = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
+      // Inside the canal (spine-05) the lens is opened for the dark of the rock: the sky in the mouth is the brightest thing in the frame.
+      skyStage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 1.9 : stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
     },
+    // The storm's body is marched for this sample's lens before the scene is drawn. The strike's long lens sees its picture instead.
+    beforeSample: (renderer, camera) => storm.render(renderer, camera, STORM_MARCHED && plate.w === 0),
+    resize: (width, height) => storm.resize(width, height),
     solo: (part) => {
       const only = (name: string): number => (part === null || !part.startsWith('spine/') || !PARTS.includes(part.slice(6)) || part === 'spine/sky' || part === `spine/${name}` ? 1 : 0);
       show.set(only('air'), only('cloud-sea'), only('cloud'), only('spindrift'));
     },
     dispose: () => {
       sky.dispose();
+      storm.dispose();
       volume.dispose();
       noise.dispose();
-      heaps.dispose();
+      sea.dispose();
       ridge.dispose();
     },
   };

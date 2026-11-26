@@ -552,7 +552,7 @@ export interface Coat {
   count: number;
 }
 
-const LENGTH = [0.2, 0.18, 0.1, 0.14, 0.06, 0, 0, 0];
+const LENGTH = [0.2, 0.18, 0.15, 0.14, 0.06, 0, 0, 0.09];
 
 /** The coat: locks in clumps. The locks of a clump are rooted round one place and their ends are drawn together to one point, as wet hair
  * mats. Each hangs: it leaves the skin along its normal, is laid back by the wind, and falls. */

@@ -1,4 +1,5 @@
 import { FLOOR } from '../ridge';
+import { MOUTH, canalFar } from './anchors';
 // The one light model of the Spine. Every built surface includes RIG_GLSL in its fragment shader and reads its light from these functions,
 // so that the rock, the snow, the animals and the kites sit in the same light. Radiance is scene linear; the grade and the exposure come after, in the post.
 // The light: dusk above the cloud. No sun. Cold blue-grey from above, a last band of orange low on the open side (uWarmDir), the storm standing dark
@@ -77,6 +78,9 @@ uniform vec4 uStrikeTop;`;
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 const float CANAL_FLOOR = ${FLOOR.toFixed(3)};
+// The two mouths of the canal: inside it they are the light.
+const vec3 CANAL_NEAR = vec3(${MOUTH[0].toFixed(1)}, ${MOUTH[1].toFixed(1)}, ${MOUTH[2].toFixed(1)});
+const vec3 CANAL_FAR = vec3(${canalFar[0].toFixed(1)}, ${canalFar[1].toFixed(1)}, ${canalFar[2].toFixed(1)});
 // The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
 // ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
 const float EMITTER_CAST = 0.07;
@@ -237,9 +241,9 @@ float landHollow(vec3 p, vec3 n, float reach) {
 }
 
 // How much of the sky a point sees: the land's own horizon, opening with height above the ground, and whatever stands over it.
-float skyOpen(vec3 p) {
+float skyOpenOver(vec3 p, out float above) {
   vec4 land = landAt(p.xz);
-  float above = p.y - land.r;
+  above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 80.0, 0.0, 1.0));
   // Inside the canal the sky is the two mouths.
   float roof = CANAL_FLOOR + land.a;
@@ -247,21 +251,51 @@ float skyOpen(vec3 p) {
   vis = mix(vis, min(land.b * uUnder, 1.0), under);
   return vis * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above));
 }
+float skyOpen(vec3 p) {
+  float above = 0.0;
+  return skyOpenOver(p, above);
+}
 
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the surface's own small-scale occlusion, 1 for none.
 vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
-  float sky = skyOpen(p);
+  float above = 0.0;
+  float sky = skyOpenOver(p, above);
   float open = sky * occ;
+  // A crease is darker than the sky it has lost: what light does reach into it has come off dark rock on the way.
+  float shut = open * (0.4 + 0.6 * open);
   // The lightning reaches a hollow as the sky does: under a roof it comes in by the mouths and no other way.
   vec3 skyE = skyIrradiance(n);
-  vec3 e = skyE * open + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
+  bool outside = uUnder < 1.5;
+  // Outside, what looks down from high on a spire sees the dark of the sea of cloud and little else; what leans over the snow near the
+  // ground takes the sky's light thrown back up by it, cold.
+  float down = clamp(-n.y, 0.0, 1.0);
+  float lean = clamp(0.4 - 0.6 * n.y, 0.0, 1.0);
+  float near = 1.0 - smoothstep(1.0, 22.0, above);
+  if (outside) skyE = skyE * (1.0 - 0.45 * down * (1.0 - near)) + skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(0.8, 0.86, 1.0) * (0.3 * lean * near);
+  // The last light itself, low out of the dusk: it rims what looks to it, warm, and reaches no face that looks elsewhere.
+  vec3 toDusk = normalize(vec3(uWarmDir.x, 0.07, uWarmDir.z));
+  float rim = clamp((dot(n, toDusk) - 0.1) / 0.9, 0.0, 1.0);
+  // It shows on what is pale: snow, rime, weathered rock. A small dark thing (a husk on a line) takes almost none, or it reads as rust.
+  float paleOf = smoothstep(0.1, 0.4, dot(albedo, vec3(0.3, 0.5, 0.2)));
+  // Inside the canal the mouths are the light: what faces the nearer mouth takes it, what is turned from it stands in the dark of the
+  // rock and is seen against the mouth, not lit like the open ridge.
+  if (!outside) {
+    vec3 toFar = CANAL_FAR - p;
+    vec3 toNear = CANAL_NEAR - p;
+    vec3 toLight = normalize(normalize(toFar) / (dot(toFar, toFar) + 400.0) + 0.35 * normalize(toNear) / (dot(toNear, toNear) + 400.0));
+    skyE *= mix(0.3, 1.3, smoothstep(-0.35, 0.85, dot(n, toLight)));
+  }
+  vec3 warm = uWarmColour * (outside ? 0.4 * rim * rim * sqrt(sky) * mix(0.15, 1.0, paleOf) : 0.0);
+  vec3 e = skyE * shut + warm * (0.35 + 0.65 * occ) + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
+  // Only what is smooth shines: ice and wet. Snow and weathered rock scatter the sky and show no sheen at any angle.
+  float smoothness = 1.0 - rough;
+  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * min(1.5 * smoothness * smoothness, 1.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   vec3 env = mix(skyRadiance(r), skyE / 3.14159, rough * rough);
-  return c + f * env * open;
+  return c + f * env * shut;
 }
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
