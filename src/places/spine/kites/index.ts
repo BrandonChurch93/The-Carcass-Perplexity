@@ -416,7 +416,8 @@ varying vec3 vT;
 varying vec3 vB;
 void main() {
   float h = texture2D(tHoldH, vUv).r;
-  float a = smoothstep(0.03, 0.1, h);
+  // The picture's own stalks end in nothing: they are left out past their first length, and the cords that hold the ribbons stand for them.
+  float a = smoothstep(0.03, 0.1, h) * (1.0 - smoothstep(0.5, 0.6, vUv.x));
   if (a < 0.03) discard;
   vec3 pic = texture2D(tHold, vUv).rgb;
   vec2 e = vec2(1.5 / 1536.0, 1.5 / 1024.0);

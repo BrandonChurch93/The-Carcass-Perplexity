@@ -293,7 +293,7 @@ export function create(ctx: Context): Piece {
       if (!puff) {
         // The tip the long lens watches is seen from 1650 m in a field 250 m wide: its fume is small and dense, a torn puff that leaves the tip.
         const close = Math.hypot(tip[0] - strikeTip[0], tip[2] - strikeTip[2]) < 1;
-        puff = { source: { at: [tip[0], tip[1] + 1.5, tip[2]], radius: close ? 5 : 12, strength: 0, rise: close ? 95 : 260, kind: 'steam' }, strikes: [] };
+        puff = { source: { at: [tip[0], tip[1] + 1.5, tip[2]], radius: close ? 4 : 12, strength: 0, rise: close ? 34 : 260, kind: 'steam' }, strikes: [] };
         puffs.push(puff);
         ctx.sources.steam.push(puff.source);
       }
