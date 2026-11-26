@@ -108,7 +108,8 @@ vec3 skyIrradiance(vec3 n) {
   vec3 open = mix(uSkyHorizon, uSkyZenith, 0.55 * max(n.y, 0.0));
   float s = clamp(0.5 + 0.5 * dot(n, uStormDir), 0.0, 1.0);
   float stormShare = s * s * (1.0 - 0.45 * max(n.y, 0.0));
-  open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * stormShare;
+  // The flash counts for more on what it lights than in the sky itself: the cloud is a wall of it for the land, and a glow for the lens.
+  open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * (2.6 * stormShare);
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, uWarmDir) + 0.25) / 1.25, 0.0, 1.0);
   return 3.14159 * (e + uWarmColour * (0.24 * w * w * seen));

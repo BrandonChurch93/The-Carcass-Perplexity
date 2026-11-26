@@ -159,7 +159,9 @@ void main() {
       // The ground's own cliffs are bedded the other way: ledges that run along the face, tipped a little, with the snow on them.
       vec3 c1 = vec3(0.0);
       vec3 n1 = vec3(0.5);
-      if (spire) {
+      // The rock over the mouth is the ridge's own rock, not a spire's plates.
+      bool plates = spire && vSL.y > 5000.0;
+      if (plates) {
         c1 = texture2D(tSpire, at / 30.0).rgb;
         n1 = texture2D(tSpireNh, at / 30.0).rgb;
         vec3 c2 = texture2D(tSpire, at / 103.0 + 0.37).rgb;
@@ -175,7 +177,7 @@ void main() {
       }
       tSide = (n1.rg - 0.5) * vec2(1.0, -1.0) * 1.2;
       pSide = n1.b;
-      if (close > 0.0 && spire) {
+      if (close > 0.0 && plates) {
         vec3 c3 = texture2D(tSpire, at / 8.3 + 0.13).rgb;
         vec3 n3 = texture2D(tSpireNh, at / 8.3 + 0.13).rgb;
         side = mix(side, side * c3 / SPIRE_MEAN, 0.6 * close);
@@ -326,7 +328,9 @@ void main() {
   occ = mix(occ, snowOcc, snow);
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
 
-  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
+  // The rock that stands over the mouth is in the open, though the canal's roof is behind it: it is lit as from above that roof.
+  vec3 lightAt = spire && !inside && vSL.y < 5000.0 ? vWorld + vec3(0.0, 16.0, 0.0) : vWorld;
+  vec3 c = rigShade(lightAt, n, v, albedo, rough, occ);
   // Seen from outside the canal is black; the shot inside it is exposed for it (uUnder is staged up from that cut).
   if (inside && uUnder < 1.5) c *= 0.03 + 0.97 * exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 7.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
