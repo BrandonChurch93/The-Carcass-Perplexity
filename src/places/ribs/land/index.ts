@@ -414,6 +414,18 @@ export function create(ctx: Context): Piece {
       if (Math.hypot(at.x - wide[0], at.z - wide[2]) > 16 && Math.hypot(at.x - hung.x, at.z - hung.z) > 18) placed.push(rock);
     }
   }
+  // The near cliff stands on its own rubble: blocks of a stride or two heaped against its foot all the way round, thinning within a few
+  // metres of it. Its own stream of numbers, so that nothing else on the flat moves.
+  {
+    const foot = ctx.rng('foot');
+    for (let i = 0; i < 90; i++) {
+      const out = 6 * Math.pow(foot.next(), 1.8);
+      const at = weedPoint(first, foot.range(0, 6.283), 2, out - 0.3);
+      const size = (0.5 + 1.9 * Math.pow(foot.next(), 2)) * (1 - 0.08 * out);
+      const rock = { x: at.x, z: at.z, size, yaw: foot.range(0, 6.283), tilt: foot.range(-0.35, 0.35), kind: foot.int(KINDS), sink: foot.range(0.3, 0.5) };
+      if (Math.hypot(at.x - wide[0], at.z - wide[2]) > 16 && Math.hypot(at.x - hung.x, at.z - hung.z) > 11) placed.push(rock);
+    }
+  }
   // Weed-grown rock close under the gate's lens, left and right of its way: dark, out of focus, the flat between them clear.
   {
     const pose = resolve(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 0);
