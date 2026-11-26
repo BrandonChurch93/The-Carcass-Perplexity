@@ -290,7 +290,7 @@ void main() {
   float arc = vBlade.y;
   float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
   // Mid grey-brown rock: the ledge stone gives its beds and its marks, the shore rock its grain.
-  vec3 albedo = vec3(0.059, 0.06, 0.061) * mix(vec3(1.0), led / vec3(0.229, 0.21, 0.177), 0.75) * mix(vec3(1.0), det / vec3(0.111, 0.088, 0.061), 0.5) * (0.85 + 0.3 * macro);
+  vec3 albedo = vec3(0.04, 0.041, 0.042) * mix(vec3(1.0), led / vec3(0.229, 0.21, 0.177), 0.75) * mix(vec3(1.0), det / vec3(0.111, 0.088, 0.061), 0.5) * (0.85 + 0.3 * macro);
   albedo *= 0.8 + 0.4 * smoothstep(0.25, 0.65, hgt);
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (hgt - 0.5);
   float weed = smoothstep(tide + 0.5, tide - 0.5, y);
@@ -300,14 +300,14 @@ void main() {
   float face = 1.0 - smoothstep(0.35, 0.75, nf.y);
   // Thin white runs down a face, under where the colony stands; a splash of white on the tops.
   float perch = vnoise(vec2(arc * 0.11, y * 0.12) + 2.0);
-  float thin = vnoise(vec2(arc * 2.3, y * 0.08) + 11.0) * 0.6 + vnoise(vec2(arc * 6.7, y * 0.27)) * 0.4;
-  float runs = smoothstep(0.67, 0.75, thin + 0.3 * (perch - 0.5) + 0.1 * (hgt - 0.5)) * face;
+  float thin = vnoise(vec2(arc * 4.3, y * 0.09) + 11.0) * 0.55 + vnoise(vec2(arc * 11.7, y * 0.31)) * 0.45;
+  float runs = smoothstep(0.66, 0.74, thin + 0.3 * (perch - 0.5) + 0.1 * (hgt - 0.5)) * face;
   float splash = (1.0 - face) * smoothstep(0.56, 0.68, vnoise(vWorld.xz * 0.45 + 3.0) * 0.6 + vnoise(vWorld.xz * 1.7) * 0.4 + 0.3 * (hgt - 0.5));
   float white = max(0.7 * runs, 0.55 * splash) * (1.0 - band) * (1.0 - 0.5 * low);
   // Rust lichen: patches a stride or two across with broken edges, on the tops and on what faces the sun, never in the wet.
   float sunny = 0.5 + 0.5 * dot(nf, uSunDir);
   float field = vnoise(vWorld.xz * 0.13 + y * 0.11 + 9.0) * 0.45 + vnoise(vWorld.xy * 0.41 + vWorld.z * 0.33) * 0.3 + vnoise(vWorld.zy * 1.4 + vWorld.x * 1.2 + 4.0) * 0.25;
-  float lichen = smoothstep(0.615, 0.645, field + 0.12 * nf.y + 0.2 * (sunny - 0.5) + 0.35 * (hgt - 0.5) + 0.1 * (dot(det, vec3(3.8)) - 1.0)) * (1.0 - smoothstep(0.2, 0.7, low)) * (1.0 - white);
+  float lichen = smoothstep(0.64, 0.67, field + 0.12 * nf.y + 0.2 * (sunny - 0.5) + 0.35 * (hgt - 0.5) + 0.1 * (dot(det, vec3(3.8)) - 1.0)) * (1.0 - smoothstep(0.2, 0.7, low)) * (1.0 - white);
   albedo = mix(albedo, vec3(0.115, 0.047, 0.006) * (0.5 + 1.0 * hgt), 0.9 * lichen);
   albedo = mix(albedo, vec3(0.3, 0.3, 0.285) * (0.7 + 0.6 * hgt), white);
   albedo *= mix(1.0, 0.5, low) * mix(1.0, 0.3, band);
