@@ -71,7 +71,7 @@ export function create(ctx: Context): Piece {
     herd.map((h, i) => {
       const k = 0.5 + 0.5 * h.animal.b.k;
       // The one the lens stands by is nearly bald, with what hair it has hanging wet from the flank; the one sunk to the back by it is the shaggiest; the young has down.
-      if (i === 0) return { animal: h.animal, locks: 420, length: 0.15, width: 0.002, wet: h.wet, stand: 0, tint: 1.0, bare: 1 };
+      if (i === 0) return { animal: h.animal, locks: 170, length: 0.15, width: 0.002, wet: h.wet, stand: 0, tint: 1.0, bare: 1 };
       if (i === 1) return { animal: h.animal, locks: 300, length: 0.05, width: 0.0016, wet: h.wet, stand: 0.1, tint: 1.3, bare: 0.3 };
       if (i === 2) return { animal: h.animal, locks: 1400, length: 0.26, width: 0.003, wet: h.wet, stand: 0, tint: 2.6, bare: 0 };
       return { animal: h.animal, locks: 380, length: 0.2 * k, width: 0.01 * k, wet: h.wet + 0.25 * k, stand: 0.1, tint: 0.7, bare: rng.next() < 0.4 ? 0.7 : 0 };

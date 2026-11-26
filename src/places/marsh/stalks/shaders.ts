@@ -185,8 +185,8 @@ vec3 filamentPoint(float u, float open, vec3 axis, vec3 radial, vec3 radialBase)
   float sa = aMore.y * 40.0;
   vec3 sweep = vec3(cos(sa), 0.0, sin(sa));
   // Out: it leaves the mouth along the tube in a bunch, goes over as its own weight takes it, and its wet end hangs. In: it lies along the bud.
-  vec3 d0 = normalize(axis + radial * (0.12 + 0.42 * spread) + sweep * 0.38);
-  vec3 outward = normalize(radial * (0.2 + 0.5 * spread) + sweep * 1.0);
+  vec3 d0 = normalize(axis + radial * (0.16 + 0.7 * spread) + sweep * 0.16);
+  vec3 outward = normalize(radial * (0.45 + 0.6 * spread) + sweep * 0.5);
   float heavy = 0.75 + 0.5 * fract(seed * 5.3);
   float u2 = u * u;
   // One in eight has died: it hangs brown down the stem.
@@ -196,8 +196,8 @@ vec3 filamentPoint(float u, float open, vec3 axis, vec3 radial, vec3 radialBase)
     + d0 * L * (0.86 - 0.3 * spread) * (2.0 * u - u2)
     + outward * L * (0.2 + 0.4 * spread) * u2
     - vec3(0.0, 1.0, 0.0) * L * (0.05 + 0.42 * spread * spread) * heavy * u2 * u2
-    + cross(axis, radial) * L * 0.05 * sin(u * 5.0 + seed * 31.0) * u
-    + radial * L * 0.035 * sin(u * 9.0 + seed * 50.0) * u;
+    + cross(axis, radial) * L * (0.05 + 0.07 * fract(seed * 11.3)) * sin(u * (3.0 + 5.0 * fract(seed * 7.9)) + seed * 31.0) * u
+    + radial * L * (0.03 + 0.05 * fract(seed * 17.1)) * sin(u * (6.0 + 6.0 * fract(seed * 3.7)) + seed * 50.0) * u;
   float bulge = sin(3.14159 * pow(mix(0.12, 1.0, u), 0.8));
   vec3 inP = axis * (0.2 * aMore.z * u - 0.05) + radialBase * R * 0.78 * bulge;
   outP = mix(outP, hung, gone);
@@ -258,7 +258,7 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   float u = vLook.x;
   float tone = fract(vLook.y * 7.7);
-  vec3 albedo = mix(vec3(0.045, 0.005, 0.009), vec3(0.17, 0.011, 0.024), smoothstep(0.0, 0.8, u) * (0.3 + 0.7 * tone));
+  vec3 albedo = mix(vec3(0.045, 0.005, 0.009), vec3(0.25, 0.016, 0.034), smoothstep(0.0, 0.8, u) * (0.3 + 0.7 * tone));
   // The ends dry paler between two wettings.
   albedo = mix(albedo, vec3(0.3, 0.13, 0.12), 0.5 * smoothstep(0.55, 1.0, u) * step(0.4, tone));
   // Pale where it leaves the mouth.

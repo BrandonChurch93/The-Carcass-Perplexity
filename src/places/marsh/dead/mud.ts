@@ -45,7 +45,7 @@ void main() {
   albedo = mix(albedo, uMud * 1.5 + 0.012, dry);
   albedo = mix(albedo, vec3(0.05, 0.015, 0.012), low * 0.6);
   float rough = mix(0.97, 1.0, dry);
-  rough = mix(rough, 0.35, low);
+  rough = mix(rough, 0.62, low);
   float occ = 0.75 + 0.25 * smoothstep(0.35, 0.6, h0);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // Wet mud drinks the light: it does not hold the sky as the crust does.
