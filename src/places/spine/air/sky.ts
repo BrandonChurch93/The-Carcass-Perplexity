@@ -9,7 +9,7 @@ import { MASSES_GLSL, massPictures } from './masses';
 import { STORM_SHAPE_GLSL } from './storm';
 
 // The storm's masses before the dome's pictures (masses.ts).
-const MASSES_DRAWN: boolean = false;
+const MASSES_DRAWN: boolean = true;
 
 const VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -224,7 +224,7 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   // Before the pictures of the dome stand the storm's masses, on their two rings (masses.ts).
   ${MASSES_DRAWN ? 'c = stormMasses(c, from, d, foot);' : ''}
   // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
-  float glow = clamp(near, 0.0, 3.0);
+  float glow = clamp(near, 0.0, 3.0)${MASSES_DRAWN ? ' * (1.0 - 0.8 * massCover)' : ''};
   c += vec3(0.42, 0.33, 0.8) * glow * (0.03 + 1.3 * dot(c, vec3(0.33)));
   // The storm is of masses: the pictures' own darks are pressed down and their pale bellies kept, and it is darkest overhead.
   float mass = dot(c, vec3(0.3, 0.5, 0.2));
@@ -234,7 +234,10 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   // The storm's light is violet; only the last band keeps its orange.
   float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
   c *= mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN;
-  if (uStrikeTop.w > 0.0) c = strikeCloud(c, from, d);
+  if (uStrikeTop.w > 0.0) {
+    vec3 struck = strikeCloud(c, from, d);
+    c = ${MASSES_DRAWN ? 'mix(struck, c + 0.3 * (struck - c), massCover)' : 'struck'};
+  }
   return c;
 }
 
