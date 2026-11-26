@@ -85,6 +85,12 @@ export function volumeUniforms(): Record<string, THREE.IUniform> {
 
 export { QUAD_VERTEX };
 
+/** For the card loop alone: the frame one loop length earlier and its share, 0 to 1, of the picture of the frame that is asked for. */
+export interface Earlier {
+  frame: number;
+  weight: number;
+}
+
 const right = new THREE.Vector3();
 const up = new THREE.Vector3();
 
@@ -169,6 +175,7 @@ export class Engine {
   private lens: { aperture: number | null; focus: number | null } = { aperture: null, focus: null };
   private open = false;
   private shares = 1;
+  private earlier: Earlier | null = null;
   private readonly quad = new FullScreenQuad();
   private readonly resolve = additivePass(RESOLVE_FRAGMENT, {
     tScene: { value: null },
@@ -329,8 +336,10 @@ export class Engine {
     const accum = this.accumTarget as THREE.WebGLRenderTarget;
     const count = samples.length;
     const points = lensPoints(count);
-    // The world keeps the whole shutter. The camera's own shutter closes early on a fast move (film.maxSmearShare), and the world runs on by the rest.
-    const share = shutterShare(stage, frame, this.format.width / this.format.height);
+    // The card loop's cross-fade: the samples are drawn for this frame and again for the frame one loop length earlier, each world by its share.
+    // A share of 0 is not drawn, so a frame outside the fade costs what it did and the loop's last frame is drawn by the calls that draw its first.
+    const fade = this.earlier;
+    const worlds: [number, number][] = !fade || fade.weight <= 0 ? [[frame, 1]] : fade.weight >= 1 ? [[fade.frame, 1]] : [[frame, 1 - fade.weight], [fade.frame, fade.weight]];
     this.open = false;
     this.shares = count;
     stage.resize(this.format.width, this.format.height);
@@ -339,10 +348,14 @@ export class Engine {
     const v = this.resolve.uniforms;
     (v.uSize!.value as THREE.Vector2).set(scene.width, scene.height);
     (v.uHalf!.value as THREE.Vector2).set(volume.width, volume.height);
-    for (let i = 0; i < count; i++) {
+    for (let n = 0; n < worlds.length * count; n++) {
+      const i = n % count;
+      const [at, part] = worlds[(n - i) / count] as [number, number];
+      // The world keeps the whole shutter. The camera's own shutter closes early on a fast move (film.maxSmearShare), and the world runs on by the rest.
+      const share = shutterShare(stage, at, this.format.width / this.format.height);
       const s = samples[i] as Sample;
-      if (share === 1) stage.setTime((frame + s.shutter * SHUTTER) / FPS, worldShift);
-      else stage.setTime((frame + s.shutter * SHUTTER * share) / FPS, worldShift + (s.shutter * SHUTTER * (1 - share)) / FPS);
+      if (share === 1) stage.setTime((at + s.shutter * SHUTTER) / FPS, worldShift);
+      else stage.setTime((at + s.shutter * SHUTTER * share) / FPS, worldShift + (s.shutter * SHUTTER * (1 - share)) / FPS);
       this.aim(stage, s, points[i] as [number, number]);
       const lens = this.lensOf(stage);
       if (lens.aperture > 0) this.open = true;
@@ -377,7 +390,7 @@ export class Engine {
       v.tVolume!.value = volume.texture;
       v.tWarp!.value = warpTarget.texture;
       v.tDepth!.value = scene.depthTexture;
-      v.uWeight!.value = 1 / count;
+      v.uWeight!.value = part / count;
       v.uHasVolume!.value = fume ? 1 : 0;
       v.uHasWarp!.value = warp ? 1 : 0;
       v.uNear!.value = stage.camera.near;
@@ -476,8 +489,9 @@ export class Engine {
     this.post.difference(a.texture, b.texture);
   }
 
-  render(stage: Stage, frame: number, seq: number, tier: string): void {
+  render(stage: Stage, frame: number, seq: number, tier: string, earlier: Earlier | null = null): void {
     const samples = frameSamples(seq, samplesOf(tier));
+    this.earlier = earlier;
     if (this.diagnostic === 'standins') this.renderStandIns(stage, frame, seq);
     else if (this.diagnostic === 'solo') this.renderSolo(stage, frame, seq, samples);
     else if (this.diagnostic === 'motion') this.renderMotion(stage, frame, seq, samples);

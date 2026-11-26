@@ -13,3 +13,15 @@ export function setStaged(seconds: number): void {
 export function stagedSeconds(): number {
   return staged;
 }
+
+let loop: number | null = null;
+
+/** Set by the place before its pieces take the time: the phase of the card loop, 0 to 1, or null in the film. */
+export function setLoopPhase(phase: number | null): void {
+  loop = phase;
+}
+
+/** Null in the film. In the card loop, its phase: the same number for a frame and for the frame one loop length earlier, so what is set from it comes round. */
+export function loopPhase(): number | null {
+  return loop;
+}

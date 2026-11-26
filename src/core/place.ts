@@ -74,7 +74,8 @@ export interface Place {
   readonly depthFirst?: boolean;
   readonly parts: Parts;
   /** `staged` is the seconds of the place the camera stands at, where that is not the world's clock (a held camera, the loop); a place that stages by shot tests its shots against it. */
-  setTime(seconds: number, staged?: number): void;
+  /** `loop` is given by the card loop alone, never by the film: the phase of the loop, 0 to 1. What must come round with the loop is set from it and not from the seconds. */
+  setTime(seconds: number, staged?: number, loop?: number): void;
   resize?(width: number, height: number): void;
   beforeSample?(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera): void;
   solo?(part: string | null): void;

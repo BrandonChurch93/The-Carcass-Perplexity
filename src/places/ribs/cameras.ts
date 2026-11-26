@@ -100,6 +100,23 @@ export const shots: Record<string, CameraPath> = {
   'ribs-06': through(gate, key('ribs-06'), { forward: 7 }, { forward: -5, up: 1.1, right: 2 }),
 };
 
+// The card loop: a crane's slow closed ellipse, begun and ended on the establishing pose, with the lens held on the far cage.
+// Metres to the right, up and ahead of that pose. The part is folded into 0 to 1 first, so that a whole number of turns gives the numbers of the start exactly.
+const LOOP_SWING = { right: 0.9, up: 0.28, ahead: 0.35 };
+const LOOP_REACH = 500;
+export const loopPath: CameraPath = (part) => {
+  const a = 2 * Math.PI * (part - Math.floor(part));
+  const round = Math.sin(a);
+  const out = 1 - Math.cos(a);
+  const along = heading(ARRIVAL_YAW, 0);
+  const across: Vec3 = [-along[2], 0, along[0]];
+  const position = add(add(establish.position, scale(across, LOOP_SWING.right * round)), add(scale(along, LOOP_SWING.ahead * out), [0, LOOP_SWING.up * out, 0]));
+  const far = add(establish.position, scale(heading(ARRIVAL_YAW, ARRIVAL_PITCH), LOOP_REACH));
+  const d: Vec3 = [far[0] - position[0], far[1] - position[1], far[2] - position[2]];
+  const l = Math.hypot(d[0], d[1], d[2]);
+  return { position, aim: add(position, scale(d, 200 / l)), fov: establish.fov };
+};
+
 const feedingAt = feeding.position;
 // Dark rock close under the lens of the two low keys: metres ahead of the camera at the key, metres to its right, and the size.
 const ahead = (from: Vec3, yaw: number, list: [number, number, number][]): [number, number, number][] =>
