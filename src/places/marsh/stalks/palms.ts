@@ -87,6 +87,8 @@ ${CUT}
   if (uMirror > 0.5 && vWorld.y < -0.015) discard;
   vec3 v = normalize(cameraPosition - vWorld);
   float luma = max(t.r, max(t.g, t.b));
+  // Far off the photograph is a few texels and the black round it is mixed into them: its hue holds, its light is given back.
+  luma = mix(luma, max(luma, 0.42), smoothstep(0.15, 0.7, away));
   // The hue is the photograph's; its light is taken out of it at an edge, where the black round it would draw an outline.
   vec3 hue = t.rgb / max(luma, 0.03);
   float red = smoothstep(0.25, 0.6, (t.r - t.g) / max(t.r, 0.03));

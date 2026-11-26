@@ -378,6 +378,6 @@ void main() {
   if (a < 0.02) discard;
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal) * sign(dot(vNormal, v) + 1e-5);
-  vec3 c = rigShade(vWorld, n, v, t * 1.6 + 0.012, 0.55, 1.0);
+  vec3 c = rigShade(vWorld, n, v, t * vec3(0.3, 0.24, 0.18) + 0.01, 0.6, 1.0);
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a * (1.0 - uSolo));
 }`;
