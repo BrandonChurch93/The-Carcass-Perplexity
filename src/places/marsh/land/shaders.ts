@@ -2,7 +2,7 @@
 // ground close to a lens is raised by those heights in its mesh, and the brine's level stands against them. What lies under the level is
 // flooded and mirrors the sky; what lies a little over it is dark and wet; the rims over that carry the salt. One rule draws the shore, the
 // wet margin, the puddles of the mud and the red pooled in the lows.
-import { K1_AT, rel } from '../shared/anchors';
+import { K1_AT, STUCK, rel } from '../shared/anchors';
 import { BRINE_GLSL } from '../shared/brine-glsl';
 import { RIG_GLSL } from '../shared/glsl';
 
@@ -266,7 +266,8 @@ void main() {
       grad -= (nS2.rg - 0.5) * 0.5 * close * (1.0 - slab);
     }
     // The slabs keep their salt; the mud between them is wet, and dark with it.
-    colour = mix(colour, mudCol * mix(vec3(0.29, 0.225, 0.2), vec3(0.43, 0.37, 0.335), slab) * mix(1.0, 1.16, smoothstep(5.0, 16.0, dist)), k);
+    // (Salt stands white only on the slabs' high edges.)
+    colour = mix(colour, mudCol * mix(vec3(0.27, 0.205, 0.18), mix(vec3(0.4, 0.34, 0.305), vec3(0.6, 0.56, 0.54), smoothstep(0.76, 0.9, h0) * plateSeen), slab) * mix(1.0, 1.16, smoothstep(5.0, 16.0, dist)), k);
     hgt = mix(hgt, mix(nS.b * 0.6, mix(h0, hm * (1.0 - 0.6 * gap), smoothstep(10.0, 28.0, dist)), plateSeen), k);
     bend = mix(bend, -(nS.rg - 0.5) * 0.8 * (1.0 - plateSeen), k);
     lean += grad * k;
@@ -387,10 +388,13 @@ void main() {
     vec4 nM = texture2D(tSiltN, uM);
     vec3 cM = texture2D(tSilt, uM).rgb / vec3(0.32, 0.281, 0.257);
     vec4 nP = texture2D(tGrain, p.xz / 0.83 + 0.4);
-    float clod = nM.b * 0.5 + nP.g * 0.5;
-    colour = mix(colour, vec3(0.047, 0.029, 0.023) * cM * (0.55 + 0.9 * clod), churn);
+    // (Broad prints and clods, not a grain: a bank that flecks pixel by pixel is gravel, not mud.)
+    float clod = nM.b * 0.4 + texture2D(tGrain, p.xz / 3.7 + 0.21).g * 0.6;
+    // (The mud's own colour, wet: brown with the brine in it. The silt's picture gives it its grain, not its hue.)
+    cM = mix(vec3(dot(cM, vec3(0.3333))), cM, 0.3);
+    colour = mix(colour, vec3(0.092, 0.05, 0.039) * cM * (0.5 + 0.8 * clod), churn);
     hgt = mix(hgt, clod, churn);
-    bend = mix(bend, -(nM.rg - 0.5) * 2.2 - (nP.ba - 0.5) * 1.1, churn);
+    bend = mix(bend, -(nM.rg - 0.5) * 1.2 - (nP.ba - 0.5) * 0.25, churn);
     occ = mix(occ, 1.0 - 0.55 * smoothstep(0.55, 0.25, clod), churn);
     rough = mix(rough, 0.97, churn);
   }
@@ -402,9 +406,9 @@ void main() {
   level = min(level, 0.97) * (1.0 - rock);
   level = mix(level, mix(0.35, 0.24, smoothstep(12.0, 40.0, dist)) + 0.12 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
   level = mix(level, 0.3, shoreW) * (1.0 - 0.25 * bankDry);
-  level = mix(level, 0.31, churn);
+  level = mix(level, 0.27, churn);
   float over = hgt - level;
-  float aa = max(0.02 + 0.1 * smoothstep(30.0, 200.0, dist), fwidth(over) * 1.3);
+  float aa = max(0.02 + 0.1 * smoothstep(30.0, 200.0, dist) + 0.07 * churn, fwidth(over) * 1.3);
   float flood = smoothstep(aa, -aa, over);
   // At a shore the brine does not stand on ground that is over its level: there the ground is wet, not under.
   flood *= mix(1.0, smoothstep(0.05, 0.005, p.y), smoothstep(0.6, 0.2, t) * (1.0 - smoothstep(0.0, 0.5, f.g)) * (1.0 - churn)) * (1.0 - bankDry);
@@ -413,11 +417,13 @@ void main() {
   colour = mix(colour, colour * mix(vec3(0.6, 0.52, 0.5), vec3(0.5, 0.33, 0.29), clamp(stain * 0.8 + exp(-t / 1.5) * 0.7, 0.0, 1.0) * (1.0 - 0.6 * smoothstep(0.0, 0.5, thin))), damp * (1.0 - 0.8 * churn));
   rough = mix(rough, mix(0.95, 0.86, smoothstep(0.0, 0.5, thin) * (1.0 - slab)), damp * (1.0 - rock));
   // The last hand's breadths before the brine are soaked with it: dark, red and shining.
-  float soaked = smoothstep(0.45 + 1.6 * bankDry, 0.05, t) * step(0.0, s) * (1.0 - rock);
+  // (Seen from far the band is wider than a hand: the wet margin of a channel is strides of dark mud, and no shore is a cut line.)
+  float farBand = 1.5 * smoothstep(15.0, 80.0, dist);
+  float soaked = smoothstep(0.45 + 1.6 * bankDry + farBand, 0.05, t) * step(0.0, s) * (1.0 - rock);
   colour *= mix(vec3(1.0), vec3(0.5, 0.3, 0.26), soaked * (1.0 - 0.75 * churn));
   rough = mix(rough, 0.82, soaked);
   // Round every pool, a stride back from its wet margin, the brine has left its salt: a pale rim, broken, wider here and narrower there.
-  float rimAt = 0.45 + 0.5 * mid.r;
+  float rimAt = 0.45 + 0.5 * mid.r + 0.8 * farBand;
   float salted = smoothstep(0.12, 0.3, t) * smoothstep(rimAt + 0.9, rimAt, t) * smoothstep(0.3, 0.55, mid.b * 0.6 + fine.b * 0.4) * (1.0 - rock) * step(0.0, s) * (1.0 - flood) * (1.0 - churn);
   colour = mix(colour, vec3(0.5, 0.43, 0.375) * (0.8 + 0.4 * hgt), salted * mix(0.45, 0.3, close));
   // An overcast is not the same all round: the quarter away from the rain is the brighter, and every lump and lip shows it.
@@ -436,13 +442,27 @@ void main() {
   rough = mix(rough, 1.0, churn);
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
   vec3 lit = rigShade(p, n, v, colour, rough, occ);
+  // (The trodden mud is wet: every clod that leans from the lens shows a little of the sky, sharp and small, never a sheet of it.)
+  // (So is the mud between the slabs of the thin crust, and the bare mud back from the rims.)
+  float wetMud = max(churn, max(smoothstep(0.0, 0.5, thin) * (1.0 - slab) * 0.85, mudShare * 0.5)) * (1.0 - rock) * step(0.0, s);
+  {
+    // (The sheen is the mud's broad lie, not its grain: a grain that winks pixel by pixel is salt, not wet.)
+    vec3 nw = normalize(ng + vec3(bend.x, 0.0, bend.y) * 0.3);
+    vec3 rm = reflect(-v, nw);
+    rm.y = abs(rm.y);
+    lit += skyRadiance(rm) * vec3(1.0, 0.8, 0.76) * wetMud * occ * (0.01 + 0.11 * pow(1.0 - clamp(dot(nw, v), 0.0, 1.0), 4.0)) * (1.0 - 0.45 * churn);
+  }
   // What is under the level: a film of brine over the ground, clear where it is a hair deep and blood where it is a finger, and a mirror.
   if (flood > 0.0) {
     float deep = max(-over, 0.0) * mix(0.3, 0.1, smoothstep(0.0, 0.5, f.g));
     // On the thin crust what stands in the lows is slurry, grey brown with the mud in it; the red is only where it is deepest.
-    float slurry = smoothstep(0.0, 0.5, f.g);
-    vec3 body = mix(mix(vec3(0.12, 0.045, 0.036), vec3(0.13, 0.092, 0.078), slurry), mix(vec3(0.085, 0.014, 0.011), vec3(0.1, 0.04, 0.032), slurry), 1.0 - exp(-deep * mix(26.0, 60.0, slurry)));
+    float slurry = smoothstep(0.0, 0.5, f.g) * (1.0 - churn);
+    vec3 body = mix(mix(vec3(0.12, 0.045, 0.036), vec3(0.13, 0.078, 0.064), slurry), mix(vec3(0.085, 0.014, 0.011), vec3(0.095, 0.027, 0.021), slurry), 1.0 - exp(-deep * mix(26.0, 60.0, slurry)));
     body = mix(body, colour * mix(vec3(0.34, 0.2, 0.18), vec3(0.5), slurry), exp(-deep * mix(60.0, 25.0, slurry)));
+    // (Round the stuck one the film is its own slurry: grey brown, the mud of its pocket stirred into it.)
+    body = mix(body, vec3(0.125, 0.092, 0.078), 0.85 * (1.0 - smoothstep(1.8, 4.2, length(p.xz - vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)})))));
+    // (In the trodden mud what stands in the prints is the brine with the mud in it: brown red, never a bright sheet.)
+    body = mix(body, mix(vec3(0.075, 0.035, 0.028), vec3(0.05, 0.014, 0.011), 1.0 - exp(-deep * 30.0)), churn);
     // Right at a pool's edge the film is the pool itself, come a hand's breadth over the shelf.
     body = mix(body, vec3(0.13, 0.03, 0.024), smoothstep(0.5, 0.1, t) * (1.0 - slurry));
     vec3 nf = normalize(vec3(bend.x * 0.03 + (fine.b - 0.5) * 0.3 * close, 1.0, bend.y * 0.03 + (fine.a - 0.5) * 0.3 * close));
