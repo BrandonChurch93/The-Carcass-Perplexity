@@ -221,9 +221,11 @@ export function streamFloor(along: number): number {
 
 const BAY = { x: -19.277, z: 638.209, fx: 0.087155, fz: -0.996195 };
 const HEAPS: [number, number, number, number][] = [
-  [135, 8.8, 3.2, 3.0],
-  [129, 14, 4.5, 1.7],
-  [131, -7.8, 4.4, 2.6],
+  [135, 8.8, 3.4, 3.8],
+  [129.5, 13.5, 4.5, 2.8],
+  [131, -8.4, 4.8, 5.6],
+  // Its back, toward the spur: the mass is a ridge of rubble, not a cone.
+  [136.8, -8.2, 4.4, 3.4],
   [131, -20, 4.6, 1.8],
 ];
 

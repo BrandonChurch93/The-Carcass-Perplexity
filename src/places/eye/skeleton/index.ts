@@ -6,6 +6,7 @@ import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferG
 import { KEYS } from '../cameras';
 import { DEG } from '../layout';
 import { lipAt } from '../land/height';
+import { vnoise } from '../shared/noise';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
@@ -15,7 +16,7 @@ export const PARTS: readonly string[] = ['skeleton'];
 export const BONES = { ahead: 6.4, right: 16, along: 112 };
 
 const VERTEX = /* glsl */ `
-// aBone: the tone of the bone (below nothing: a strand of weed), how near its end the point is, and how much of the sky it sees.
+// aBone: the tone of the bone (below nothing: a strand of weed; two: the rag of hide), how near its end the point is, and how much of the sky it sees.
 attribute vec3 aBone;
 varying vec3 vWorld;
 varying vec3 vLocal;
@@ -55,6 +56,30 @@ void main() {
     n = normalize(n + vec3(0.0, 2.0, 0.0));
     vec3 c = rigShade(vWorld, n, v, weed * mix(1.0, 0.8, wet), mix(0.7, 0.3, wet), 0.85 + 0.15 * smoothstep(0.0, 0.1, lift));
     c += wet * 0.5 * rigGlint(vWorld, n, v, 0.2);
+    gl_FragColor = vec4(rigOut(c), 1.0);
+    return;
+  }
+  if (vBone.x > 1.5) {
+    // The rag of hide: dried hard and dark, drawn tight over what is left of the cage, with mats of pale hair on it yet and a rim of
+    // salt where it lies on the floor.
+    // On its flanks it hangs straight down: its marks are laid by a co-ordinate that runs down it too.
+    vec2 u = vec2(q.x + 0.37 * q.y, q.z + 1.4 * q.y);
+    float crease = 0.5 * vnoise(vec2(u.x * 38.0 + 3.0 * vnoise(u * 15.0), u.y * 24.0 + 4.0 * vnoise(u * 9.0 + 5.0))) + 0.5 * vnoise(u * 70.0 + 2.0);
+    vec3 dx = dFdx(vWorld);
+    vec3 dy = dFdy(vWorld);
+    vec3 r1 = cross(dy, n);
+    vec3 r2 = cross(n, dx);
+    float det = dot(dx, r1);
+    n = normalize(abs(det) * n - 0.008 * sign(det) * (dFdx(crease) * r1 + dFdy(crease) * r2));
+    vec3 skin = mix(vec3(0.13, 0.095, 0.07), vec3(0.3, 0.21, 0.14), vnoise(u * 17.0 + 3.0));
+    float hair = smoothstep(0.46, 0.66, vnoise(u * 11.0 + 21.0)) * (0.5 + 0.5 * vnoise(vec2(u.x * 420.0 + 30.0 * vnoise(u * 40.0), u.y * 55.0)));
+    skin = mix(skin, vec3(0.5, 0.4, 0.27), 0.75 * hair);
+    skin *= 0.55 + 0.8 * crease;
+    float salt = smoothstep(0.05, 0.012, lift + 0.03 * (vnoise(u * 31.0) - 0.5)) * smoothstep(0.3, 0.6, vnoise(u * 90.0 + 4.0));
+    skin = mix(skin, vec3(0.66, 0.63, 0.56), 0.7 * salt);
+    float wetted = smoothstep(0.026, 0.01, lift);
+    skin *= mix(1.0, 0.55, wetted);
+    vec3 c = rigShade(vWorld, n, v, clamp(skin, 0.0, 0.9), mix(0.7, 0.4, wetted), vBone.z * (0.55 + 0.45 * smoothstep(0.0, 0.08, lift)));
     gl_FragColor = vec4(rigOut(c), 1.0);
     return;
   }
@@ -415,24 +440,32 @@ function bones(next: () => number): THREE.BufferGeometry[] {
   for (let i = 0; i < RIBS; i++) {
     const x = ribX(i);
     const s = full(i);
-    const up = stands[i] as number;
+    // Each rib has its own length, height and twist: no two of a carcass that has lain a season keep step.
+    const own = (k: number): number => {
+      const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const up = (stands[i] as number) * (0.72 + 0.33 * own(1));
     const [, sy, sz] = spine(x);
     // The vertebra it hangs from, and the blade that stands off its back.
     out.push(lump([x, sy, sz], [0.026, 0.027, 0.03], [range(-0.3, 0.3), range(-0.2, 0.2), range(-0.3, 0.3)], i + 1));
     out.push(bent([[x, sy + 0.01, sz - 0.02], [x + 0.012, sy + 0.03, sz - 0.07], [x + 0.03, sy + 0.035 * range(0.4, 1), sz - 0.085 - 0.05 * s]], 0.0075, i + 31, 1));
     if (up < 0) continue;
     // They have slumped together toward the hips, each a little out of step with the next.
-    const lean = 0.05 + 0.04 * Math.sin(i * 0.9 + 1) + range(-0.025, 0.025);
+    const lean = 0.05 + 0.04 * Math.sin(i * 0.9 + 1) + range(-0.025, 0.025) + 0.13 * (own(2) - 0.42);
+    const w = 0.8 + 0.3 * own(3);
+    const tw = 0.05 * (own(4) - 0.5);
     const short = next() < 0.25 ? range(0.55, 0.8) : 1;
     const pts: V3[] = [
       [x, sy + 0.012, sz + 0.015],
       [x + lean * 0.3, sy + 0.14 * s * up + 0.02, sz + 0.035],
-      [x + lean * 0.7, 0.05 + 0.31 * s * up, sz + 0.15 * s],
-      [x + lean, 0.045 + 0.29 * s * up, sz + 0.29 * s],
-      [x + lean * 1.25, 0.035 + 0.15 * s * up, sz + 0.39 * s],
-      [x + lean * 1.4, 0.02 + 0.04 * s * up, sz + 0.44 * s],
+      [x + lean * 0.7 + tw, 0.05 + 0.31 * s * up, sz + 0.15 * s * w],
+      [x + lean - tw, 0.045 + 0.29 * s * up, sz + 0.29 * s * w],
+      [x + lean * 1.25 - 2 * tw, 0.035 + 0.15 * s * up, sz + 0.39 * s * w],
+      [x + lean * 1.4 - tw, 0.02 + 0.04 * s * up, sz + 0.44 * s * w],
     ];
-    const kept = short < 1 ? pts.slice(0, 4 + (short > 0.68 ? 1 : 0)) : pts;
+    const snapped = own(5) < 0.3;
+    const kept = short < 1 ? pts.slice(0, 4 + (short > 0.68 ? 1 : 0)) : snapped ? pts.slice(0, 5) : pts;
     out.push(bent(kept, 0.012 + 0.002 * s, i + 51, 0.85));
     // The rib of the side it lies on shows only where it comes out from under.
     if (next() < 0.35) out.push(bent([[x + 0.01, 0.04, sz + 0.1], [x + 0.04, 0.048, sz + 0.26 * s], [x + 0.1, 0.044, sz + 0.4 * s], [x + 0.18, 0.03, sz + 0.47 * s]], 0.012, i + 71, 0.9));
@@ -500,7 +533,7 @@ function bones(next: () => number): THREE.BufferGeometry[] {
     return w < 0 || w > 1 ? 0 : 0.27 * full(i) * up * Math.sin(Math.PI * Math.min(1, w * 1.15)) ** 0.7;
   };
   let lock = 0;
-  for (let k = 0; k < 20; k++) {
+  for (let k = 0; k < 44; k++) {
     // They lie in locks of a few strands each.
     if (k % 4 === 0) lock = range(-1.0, 1.5);
     const x0 = lock + range(-0.06, 0.06);
@@ -515,9 +548,64 @@ function bones(next: () => number): THREE.BufferGeometry[] {
       const z = z0 + (z1 - z0) * t;
       const x = x0 + drift * t * t + 0.07 * Math.sin(t * 5 + wave);
       // It lies on the floor and over the low bones; where the cage stands it hangs on a rib or two and no higher.
-      pts.push([x, 0.008 + 0.006 * hash(k, i, 3) + Math.min(0.05, 0.3 * cage(x, z)) * (k % 4 === 0 ? 1 : 0), z]);
+      pts.push([x, 0.008 + 0.006 * hash(k, i, 3) + Math.min(0.11, 0.55 * cage(x, z)) * (k % 2 === 0 ? 1 : 0), z]);
     }
-    out.push(strand(pts, range(0.004, 0.008), k));
+    out.push(strand(pts, range(0.006, 0.012), k));
+  }
+  // The rag of hide: what is left of the flank lies over the hind ribs and the loins and trails on the floor toward the hips. It is a
+  // sheet laid over the cage and let sag between the ribs; its outline and its holes are torn by a noise, cell by cell.
+  {
+    const CELL = 0.009;
+    const x0 = 0.1;
+    const z0 = -0.27;
+    const NX = 72;
+    const NZ = 66;
+    const over = (x: number, z: number): number => {
+      const f = (x + 0.31) / 0.066;
+      const i = Math.floor(f);
+      const t = f - i;
+      const a = cage(ribX(Math.max(0, Math.min(RIBS - 1, i))), z);
+      const b = i + 1 > RIBS - 1 ? 0 : cage(ribX(i + 1), z);
+      const ribs = a + (b - a) * t - 0.02 * Math.sin(Math.PI * t) * Math.min(1, (a + b) * 6);
+      const hips = 0.1 * Math.exp(-(((x - hip - 0.07) / 0.13) ** 2) - ((z + 0.1) / 0.1) ** 2);
+      const back = 0.07 * Math.exp(-(((z + 0.17) / 0.05) ** 2)) * (x < hip + 0.05 ? 1 : 0);
+      return 0.014 + Math.max(1.12 * ribs + (ribs > 0.01 ? 0.016 : 0), hips, back) + 0.014 * vnoise(x * 13 + 2, z * 13);
+    };
+    const kept = (x: number, z: number): boolean => {
+      const d = Math.hypot((x - 0.42) / 0.3, (z + 0.02) / 0.26);
+      const torn = 0.55 * vnoise(x * 7 + 3, z * 7 + 9) + 0.3 * vnoise(x * 19, z * 19 + 4) + 0.15 * vnoise(x * 53 + 8, z * 53);
+      return torn + 0.62 - d * 0.75 > 0.6 && vnoise(x * 13 + 31, z * 13 + 17) + 0.3 * vnoise(x * 41, z * 41 + 3) > 0.42;
+    };
+    const flat: number[] = [];
+    const corner = (i: number, j: number): V3 => {
+      const x = x0 + i * CELL;
+      const z = z0 + j * CELL;
+      return [x, over(x, z), z];
+    };
+    for (let i = 0; i < NX; i++) {
+      for (let j = 0; j < NZ; j++) {
+        if (!kept(x0 + (i + 0.5) * CELL, z0 + (j + 0.5) * CELL)) continue;
+        const a = corner(i, j);
+        const b = corner(i + 1, j);
+        const c = corner(i + 1, j + 1);
+        const d = corner(i, j + 1);
+        flat.push(...a, ...d, ...c, ...a, ...c, ...b);
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(flat), 3));
+    const welded = mergeVertices(g, 1e-5);
+    welded.computeVertexNormals();
+    const rag = welded.toNonIndexed();
+    const count = (rag.getAttribute('position') as THREE.BufferAttribute).count;
+    const tag = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      tag[i * 3] = 2;
+      tag[i * 3 + 1] = 0;
+      tag[i * 3 + 2] = 0.9;
+    }
+    rag.setAttribute('aBone', new THREE.BufferAttribute(tag, 3));
+    out.push(rag);
   }
   return out;
 }

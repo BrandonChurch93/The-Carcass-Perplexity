@@ -8,7 +8,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { vnoise } from '../shared/noise';
 import { KEYS } from '../cameras';
 import { AXIS, axisOf, browCover, landHeight, onAxis, streamAcross, wallAt } from './height';
-import { PATCH, browGeometry, patchGeometry, socketGeometry, stoneGeometry } from './meshes';
+import { PATCH, browGeometry, patchGeometry, pebbleGeometry, socketGeometry, stoneGeometry } from './meshes';
 import { BLOCK_FRAGMENT, BLOCK_VERTEX, ballGeometry, blockUniforms } from './blocks';
 import { ROCK_GLSL, rockUniforms } from './rock';
 import { createStream, standingStones } from './stream';
@@ -141,17 +141,21 @@ void main() {
   float e = 0.1;
   vec2 d = vec2(0.0);
   vec4 col = vec4(0.0);
-  if (w.x > 0.0) {
+  // Under a low eye every stone is a pebble of one tone: the plate is not read at all there, which is most of what a pebble costs.
+  float lowEye = smoothstep(12.0, 4.0, cameraPosition.y);
+  bool plate = lowEye < 0.99;
+  if (!plate) col = vec4(vec3(0.3), 0.3 + 0.5 * vnoise(vLocal.xz * 9.0 + vLocal.y * 13.0));
+  if (plate && w.x > 0.0) {
     vec4 k = screeAt(ux);
     col += k * w.x;
     d += vec2(texture2D(tScreeH, (ux + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (ux + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.x;
   }
-  if (w.y > 0.0) {
+  if (plate && w.y > 0.0) {
     vec4 k = screeAt(uy);
     col += k * w.y;
     d += vec2(texture2D(tScreeH, (uy + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uy + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.y;
   }
-  if (w.z > 0.0) {
+  if (plate && w.z > 0.0) {
     vec4 k = screeAt(uz);
     col += k * w.z;
     d += vec2(texture2D(tScreeH, (uz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.z;
@@ -160,20 +164,33 @@ void main() {
   vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
-  n = normalize(n - (t * d.x + b * d.y) * 3.0);
+  // A pebble is worn smooth: the plate's cracks are not raised on it.
+  n = normalize(n - (t * d.x + b * d.y) * mix(3.0, 0.5, smoothstep(12.0, 4.0, cameraPosition.y)));
   // Where the stone meets the ground it is in its own shade, and wet where the ground is.
   vec4 land = landAt(vWorld.xz);
   float foot = smoothstep(0.0, 0.35, vWorld.y - max(land.r, 0.0) + 0.08);
   // Under a low eye the stones are pebbles: the top of each is in the light whatever its height, only its foot is wet, and each has a tone of its own.
-  float lowEye = smoothstep(12.0, 4.0, cameraPosition.y);
   // A pebble is one stone of one tone: the plate of the scree, made for blocks, would blotch it.
-  albedo = mix(albedo, vec3(0.4, 0.31, 0.22) * (0.85 + 0.3 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0)), 0.8 * lowEye);
+  // Three kinds of stone lie mixed on the shore: pale limestone of the wall, dark chert, and stone the lake has stained with rust.
+  // Each has its grain; some are banded and some carry a white vein.
+  float kind = vTint.z;
+  float mott = vnoise(vLocal.xz * 9.0 + vLocal.y * 13.0);
+  float speck = vnoise(vLocal.xz * 110.0 + vLocal.y * 83.0);
+  vec3 pebble = kind < 0.45 ? vec3(0.5, 0.47, 0.42) : (kind < 0.76 ? vec3(0.15, 0.15, 0.16) : vec3(0.4, 0.25, 0.14));
+  pebble *= 0.72 + 0.4 * mott + 0.2 * (speck - 0.5);
+  float band = smoothstep(0.3, 0.5, abs(fract(dot(vLocal, vec3(0.3, 1.0, 0.2)) * 17.0 + 2.0 * mott) - 0.5));
+  pebble *= mix(1.0, 0.78 + 0.4 * band, step(0.5, fract(kind * 7.0)));
+  float vein = smoothstep(0.035, 0.0, abs(dot(vLocal, vec3(0.6, 0.5, -0.62)) + 0.12 * mott - 0.3 * (fract(kind * 29.0) - 0.5))) * step(0.8, fract(kind * 13.0));
+  pebble = mix(pebble, vec3(0.7, 0.68, 0.63), 0.6 * vein);
+  albedo = mix(albedo, pebble * (0.8 + 0.4 * vTint.y), lowEye);
   foot = max(foot, lowEye * smoothstep(-0.1, 0.6, normalize(vNormal).y));
-  float damp = smoothstep(mix(0.3, 0.07, lowEye), 0.01, vWorld.y);
+  float damp = smoothstep(mix(0.3, 0.1 + 0.06 * vnoise(vWorld.xz * 3.0), lowEye), 0.01, vWorld.y);
   // The last half metre of shore before the water is wet: its stones are dark.
   damp = max(damp, 0.75 * lowEye * smoothstep(0.1, 0.03, max(land.r, 0.0)));
-  albedo *= mix(1.0, 0.55, damp) * mix(vec3(1.0), mix(vec3(0.5, 0.5, 0.52), vec3(1.5, 1.44, 1.3), vTint.y * vTint.y) * mix(vec3(1.0), vec3(1.15, 0.9, 0.68), step(0.8, vTint.z)), lowEye);
+  albedo *= mix(1.0, 0.5, damp);
   vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.9, 0.4, damp), (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
+  // A wet pebble carries the low sun on its crown.
+  if (lowEye * damp > 0.02) c += lowEye * damp * 0.5 * rigGlint(vWorld, n, v, 0.35);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -270,7 +287,7 @@ export function create(ctx: Context): Piece {
   ];
   // The corners of the wide picture are piles of blocks, none larger than the atlas can hold sharp at that nearness: on the right
   // against the frame, on the left beyond the stream.
-  near.push([135, 9.2, 3.6], [132.5, 10.5, 2.8], [129.5, 14, 4.4], [134.5, -8.3, 3.4], [131, -8.0, 4.6], [134.6, -6.4, 2.6], [128.2, -5.4, 2.2], [131.5, -20.5, 4.4], [139.5, 11.5, 3.4], [134.5, 16, 4.4], [141, 8.4, 2.3], [137.5, 14.5, 3.1], [143, 12.5, 2.6], [139, -21, 3.6], [135, -24, 4.6], [141.5, -19.5, 2.5], [131, -25.5, 4], [137.5, -26.5, 3]);
+  near.push([135, 9.2, 3.6], [132.5, 10.5, 2.8], [129.5, 14, 4.4], [134.5, -8.3, 3.4], [131, -7.8, 4.6], [133.7, -5.9, 3.6], [128.5, -6.1, 3.4], [130.2, -10.6, 3.2], [133.5, -9.7, 3.0], [135.9, -7.4, 2.4], [127.1, -8.7, 2.2], [138.2, -9.4, 2.6], [139.4, -6.9, 1.9], [137.3, -11.2, 2.1], [136.6, 6.7, 3.0], [131.5, -20.5, 4.4], [139.5, 11.5, 3.4], [134.5, 16, 4.4], [141, 8.4, 2.3], [137.5, 14.5, 3.1], [143, 12.5, 2.6], [139, -21, 3.6], [135, -24, 4.6], [141.5, -19.5, 2.5], [131, -25.5, 4], [137.5, -26.5, 3]);
   for (const [along, across, size] of near) {
     // None stands in the water: one that would is set on the bank on its own side.
     const mid = streamAcross(along);
@@ -305,7 +322,7 @@ export function create(ctx: Context): Piece {
       const along = kin.range(34, 222);
       const across = kin.range(-52, 52);
       const size = 0.3 + 1.1 * kin.next() ** 3;
-      if (vnoise(along / 9 + 13, across / 9 + 4) < 0.5 || !clear(along, across, size)) continue;
+      if (vnoise(along / 9 + 13, across / 9 + 4) < 0.58 || !clear(along, across, size)) continue;
       const [x, z] = onAxis(along, across);
       small.push({ x, z, size });
     }
@@ -351,10 +368,11 @@ export function create(ctx: Context): Piece {
       const ground = landHeight(x, z);
       if (ground < -0.1 - 0.4 * size) continue;
       // In the flooded shallows only the stones that stand out of the water are kept, and fewer of them.
-      if (ground < 0.0 && (size < 0.07 || vnoise(x / 0.9 + 3, z / 0.9 + 8) < 0.55)) continue;
+      if (ground < 0.0 && (size < 0.05 || vnoise(x / 0.9 + 3, z / 0.9 + 8) < (ahead < 13 ? 0.3 : 0.55))) continue;
+      const flooded = ground < 0.0 && ahead < 13;
       // They lie in drifts: bare grit between, where only the larger ones stand.
       if (vnoise(x / 1.7 + 5, z / 1.7 + 2) < 0.3 && size < 0.09) continue;
-      if (vnoise(x / 3.4 + 11, z / 3.4 + 7) < 0.46 && size < 0.14) continue;
+      if (!flooded && vnoise(x / 3.4 + 11, z / 3.4 + 7) < 0.46 && size < 0.14) continue;
       put(x, z, size);
     }
   }
@@ -389,9 +407,14 @@ export function create(ctx: Context): Piece {
     const VARIANTS = 7;
     for (let k = 0; k < VARIANTS; k++) {
       // The larger ones are cut finer: their outlines are seen. Seven shapes, so that no two neighbours are the same stone.
-      const mine = list.filter((s, i) => (s.size > 0.1 ? i % 3 : 3 + (i % 4)) === k);
+      const mine = list.filter((s, i) => (s.size > 0.17 ? i % 3 : 3 + (i % 4)) === k);
       if (mine.length === 0) continue;
-      const geometry = mergeVertices(stoneGeometry(6 + k + 1, k < 3 ? 2 : 1).deleteAttribute('uv').deleteAttribute('normal'));
+      // Nearest the shore camera first: a stone behind another is then not shaded twice.
+      const eye = KEYS.shore.position;
+      mine.sort((a, b) => Math.hypot(a.x - eye[0], a.z - eye[2]) - Math.hypot(b.x - eye[0], b.z - eye[2]));
+      // Most are worn round by the lake; two shapes in seven are broken pieces that have come down the fan since.
+      const fine = k < 3 ? 2 : 1;
+      const geometry = mergeVertices((k === 2 || k === 6 ? stoneGeometry(6 + k + 1, fine) : pebbleGeometry(6 + k + 1, fine)).deleteAttribute('uv').deleteAttribute('normal'));
       geometry.computeVertexNormals();
       const tints = new Float32Array(mine.length * 3);
       const mesh = new THREE.InstancedMesh(geometry, stoneMaterial, mine.length);
