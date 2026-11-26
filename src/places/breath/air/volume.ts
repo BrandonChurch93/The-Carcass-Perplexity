@@ -182,7 +182,9 @@ vec2 pourAt(vec3 p, float way, float out0) {
   float n = 0.45 * big + 0.55 * small;
   float tall = (1.7 + 0.9 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
   float shred = smoothstep(0.34 + 0.24 * far0, 0.5 + 0.26 * far0, n);
-  float rho = (0.085 + 0.02 * apron + 0.05 * surge) * smoothstep(0.15, 0.9, tall) * shred * smoothstep(-2.5, 0.5, out0) * (0.6 + 0.8 * small);
+  float rho = (0.085 + 0.02 * apron + 0.05 * surge) * smoothstep(0.25, 1.0, tall) * shred * smoothstep(-2.5, 0.5, out0) * (0.6 + 0.8 * small);
+  // It does not reach the herds' water: thirty metres from the lip there is none, a little farther when the shaft breathes out.
+  rho *= smoothstep(30.0 + 20.0 * surge, 14.0 + 10.0 * surge, out0);
   return vec2(tall, rho);
 }
 
@@ -269,8 +271,10 @@ void main() {
     if (met && lay.x > 0.05 && lay.y > 0.0004) {
       float top = max((foot + lay.x - ro.y) / rd.y, 0.0);
       float bottom = min((foot - ro.y) / rd.y, far);
-      // Never a wash on the lens: within a few metres of the camera it is not there. And never a wall of it along a level ray.
-      float path = min(bottom - top, 30.0) * smoothstep(3.0, 11.0, t);
+      // Never a wall of it along a level ray.
+      // It is a thing seen from across the shelf. From a lens that stands in it (the weed at the rim, the herds in the channel) it was a
+      // pale slab with a ruled top between the lens and whatever stood on the rock, so near a lens it is not drawn.
+      float path = min(bottom - top, 14.0) * smoothstep(16.0, 40.0, t);
       if (path > 0.0) {
         float own = lay.x * lay.y;
         // The heap next toward the sun shades this one: a heap has a lit side and a dark one.
