@@ -80,9 +80,9 @@ void main() {
   float n = a * 0.65 + b * 0.35;
   float high = smoothstep(0.02, 0.3, d.y);
   c *= 1.0 + high * 0.34 * (n - 0.5);
-  // The sun: no disc with an edge, a glare that the fog spreads and turns deep gold.
+  // The sun: a pale hot heart with no edge, inside the glare that the fog spreads and turns deep gold.
   float s = dot(d, uSunDir);
-  c += uSunColour * vec3(1.0, 0.42, 0.1) * (1.0 * smoothstep(0.9988, 0.99995, s) + 0.8 * pow(max(s, 0.0), 500.0) + 0.25 * pow(max(s, 0.0), 60.0));
+  c += uSunColour * (vec3(1.0, 0.88, 0.62) * (5.0 * smoothstep(0.9995, 0.99997, s)) + vec3(1.0, 0.42, 0.1) * (0.8 * pow(max(s, 0.0), 500.0) + 0.25 * pow(max(s, 0.0), 60.0)));
   vec4 far = farPicture(d);
   c = mix(c, far.rgb, far.a);
   gl_FragColor = vec4(rigOut(c), 1.0);
