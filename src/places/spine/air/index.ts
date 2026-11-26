@@ -3,11 +3,11 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { FIRST, crest, frameAt, spires, type Spire } from '../ridge';
+import { FIRST, crest, finEdge, frameAt, spires, tipOf, type Spire } from '../ridge';
 import type { Context, Piece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
 import { secondsInPlace, shotById } from '../../../film/cut';
-import { INSIDE_FROM, UNIT } from '../shared/anchors';
+import { CARCASS, INSIDE_FROM, UNIT } from '../shared/anchors';
 import { bakeNoise } from './noise';
 import { createSky, skyPictures } from './sky';
 import { VOLUME_FRAGMENT } from './volume';
@@ -60,6 +60,7 @@ function ridgeTexture(): THREE.DataTexture {
 }
 
 const STRIKE_FROM = secondsInPlace(UNIT, shotById('spine-04').first);
+const CARCASS_FROM = secondsInPlace(UNIT, shotById('spine-03').first);
 
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
@@ -75,7 +76,17 @@ export function create(ctx: Context): Piece {
   const ridge = ridgeTexture();
   // What is drawn when one effect is shown alone: the haze, the sea, the storm and its pour, the spindrift.
   const show = new THREE.Vector4(1, 1, 1, 1);
-  const stage = new THREE.Vector4(1, 0, 0, 0);
+  const stage = new THREE.Vector4(1, 1, 1, 0);
+  // Where the snow is torn off: the tip of each spire and the shoulder of its lee edge, with the size of the plume by the spire's height.
+  const crests = Array.from({ length: 24 }, () => new THREE.Vector4());
+  spires.slice(0, 12).forEach((sp, i) => {
+    const tip = tipOf(sp);
+    const shoulder = finEdge(sp, 0.7, 1);
+    const size = Math.min(1, Math.max(0.3, sp.tip / 300));
+    (crests[2 * i] as THREE.Vector4).set(tip[0], tip[1] - 2, tip[2], size);
+    (crests[2 * i + 1] as THREE.Vector4).set(shoulder[0], shoulder[1], shoulder[2], 0.7 * size);
+  });
+  const clear = new THREE.Vector3(CARCASS[0], CARCASS[2], 0);
   // The sources of steam and smoke the other folders have named (ctx.sources.steam): at most eight are drawn, the first eight.
   const steam = Array.from({ length: 8 }, () => new THREE.Vector4());
   const steamMore = Array.from({ length: 8 }, () => new THREE.Vector4());
@@ -97,6 +108,8 @@ export function create(ctx: Context): Piece {
       uRidgeSpan: { value: new THREE.Vector2(RIDGE.from, 1 / (RIDGE.to - RIDGE.from)) },
       uShow: { value: show },
       uStage: { value: stage },
+      uCrest: { value: crests },
+      uClear: { value: clear },
     },
     depthTest: false,
     depthWrite: false,
@@ -119,8 +132,17 @@ export function create(ctx: Context): Piece {
       (volume.uniforms.uSteamCount as THREE.IUniform<number>).value = count;
       // Staged by shot: inside the canal the gale does not reach, so no spindrift runs over its floor.
       stage.x = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0 : 1;
+      // Staged by shot: the veil is thinner for the long lens of the strike (spine-04), which looks through 900 m of it, and inside the canal;
+      // the flakes before the lens do not fly inside the canal; by the dead one (spine-03) the running snow is held off 10 m round it.
+      const inStrike = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
+      const inCarcass = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4;
+      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.6 : inStrike ? 0.45 : 1;
+      stage.z = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0 : 1;
+      clear.z = inCarcass ? 10 : 0;
       // Staged by shot: in the long lens of the strike (spine-04) the storm wall stands 44 degrees further round, behind the struck spire.
       skyStage.x = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4 ? 0.77 : 0;
+      // Staged by shot: by the dead one (spine-03) the lens is opened for the dusk (the rig's sky light is opened by the same there).
+      skyStage.y = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
     },
     solo: (part) => {
       const only = (name: string): number => (part === null || !part.startsWith('spine/') || !PARTS.includes(part.slice(6)) || part === 'spine/sky' || part === `spine/${name}` ? 1 : 0);

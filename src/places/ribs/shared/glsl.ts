@@ -115,7 +115,8 @@ vec3 skyCloud(vec3 from, vec3 d) {
   vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
   vec3 c = texture2D(tSky, uv + 0.022 * work).rgb * uSkyTurn.w;
   // The break burns: where the picture is bright the cloud is lit through, far above the grey of the bases.
-  c *= 0.8 + 2.2 * smoothstep(0.3, 0.85, dot(c, vec3(0.333)));
+  // The bases are heavy: what is dark in the picture is darker here, what is bright burns.
+  c *= 0.5 + 0.5 * smoothstep(0.08, 0.3, dot(c, vec3(0.333))) + 2.4 * smoothstep(0.3, 0.85, dot(c, vec3(0.333)));
   // Straight overhead the picture runs out: the slate of the cloud's base.
   c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
   // Toward the horizon the cloud is seen through more and more air.
@@ -164,7 +165,9 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
 vec3 rigOut(vec3 c) {
-  return c * (1.0 - uSolo);
+  // Nothing below nothing and nothing that is not a number leaves a surface: one such value blackens its whole pixel at the lens.
+  vec3 safe = vec3(isnan(c.x) ? 0.0 : c.x, isnan(c.y) ? 0.0 : c.y, isnan(c.z) ? 0.0 : c.z);
+  return clamp(safe, 0.0, 4000.0) * (1.0 - uSolo);
 }`;
 
 // A plain vertex shader for a built mesh: world position and normal, with instancing.

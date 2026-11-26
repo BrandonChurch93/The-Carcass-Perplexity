@@ -3,6 +3,7 @@
 // the bore comes from), east is +x, sea level is y = 0. Both owners read this file; only the lead changes it, and says so when an anchor moves.
 import { cut, eventSeconds, secondsInPlace, shotById } from '../../../film/cut';
 import { STATIONS } from '../cameras';
+import { cragPerch, cragRadius } from './crag';
 import { BUTTRESS, FLOOR, POOL, RIBS, SEA, TIDE, buttressRadius, ribByName, weedPoint } from '../layout';
 
 export const UNIT = 'ribs';
@@ -27,9 +28,9 @@ export const LEVELS = { sea: SEA, pool: POOL, tide: TIDE };
 
 /** The sun. It does not move in the 42 seconds of the place. `toward` points from the ground to the sun. */
 export const SUN = {
-  // From behind the cameras of the strait and to their right (154 degrees right of north, 37 up): the broad faces the lens sees are lit, the
-  // edges turned to the left row are not, and the broken cloud lays the shade. The bright break stays ahead and right (the rig's skyBreak).
-  toward: [0.35, 0.6, 0.72] as [number, number, number],
+  // High, from the left of the cameras of the strait and a little behind them: a blade's left face and its top are lit hard, its right
+  // face and what hangs over are in shade, as the approved pictures have them. The bright break stays ahead and right (the rig's skyBreak).
+  toward: [-0.55, 0.7, 0.25] as [number, number, number],
   /** Radiance times solid angle of the sun through thin cloud, scene linear: what a face turned to it takes over and above the sky. */
   colour: [7.0, 6.0, 4.7] as [number, number, number],
 };
@@ -64,7 +65,10 @@ export const DROWNED = {
   },
 };
 
-/** The colony's rock: a stepped mound, ledges every `step` metres from the tide line to its top. */
-export const COLONY = { ...BUTTRESS, radiusAt: buttressRadius, side: STATIONS.colonySide };
+/**
+ * The colony's rock: a crag. `radiusAt` is the mean cone it is cut from; `cragAt(angle, y)` is the rock itself, and
+ * `perch(angle, height, across)` gives [radius, y] of the ledge nearest a height at an angle, where what nests there stands.
+ */
+export const COLONY = { ...BUTTRESS, radiusAt: buttressRadius, cragAt: cragRadius, perch: cragPerch, side: STATIONS.colonySide };
 
 export { FLOOR, RIBS, STATIONS };

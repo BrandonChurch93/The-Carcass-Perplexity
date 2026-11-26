@@ -129,7 +129,7 @@ const SPINE: [number, number][] = [[0, -0.1], [0.2, 0.05], [0.45, 0.09], [0.8, 0
 // The neck's pitch along its length, degrees above level: carried up (it stands off the shoulders, arches and hooks over at the end so the tuft
 // hangs), and down (it leaves the chest level and goes down into the water).
 const NECK_UP: [number, number][] = [[0, 38], [0.22, 74], [0.52, 86], [0.72, 58], [0.87, 0], [1, -74]];
-const NECK_DOWN: [number, number][] = [[0, 4], [0.14, -30], [0.4, -62], [0.75, -60], [1, -38]];
+const NECK_DOWN: [number, number][] = [[0, 8], [0.14, -26], [0.4, -60], [0.75, -60], [1, -38]];
 
 // The legs: left hind, left fore, right hind, right fore, and where in the cycle each one steps. A slow walk: one foot at a time.
 const LEGS: { side: number; fore: number; at: number }[] = [
@@ -160,7 +160,7 @@ export function makeBuild(k: number, seed: number, far: boolean, cell = 0.02, ow
     stride,
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
-    neckR: (far ? 0.082 : 0.092) * k,
+    neckR: (far ? 0.082 : 0.078) * k,
     tendrils: far ? 6 : 260,
     tendrilLen: 0.62 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),

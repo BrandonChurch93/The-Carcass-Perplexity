@@ -111,7 +111,7 @@ export interface Beast {
 export const BEASTS: Beast[] = [
   { d: 34.3, l: 3, head: [0, -1], size: 1, sink: 0.05, speed: 0.22, root: 0.07 },
   { d: 33, l: 5, head: [-0.3, -0.95], size: 0.34, sink: 0.1, speed: 0.1, root: 0.09 },
-  { d: 32.3, l: 3.4, head: [-0.2, -1], size: 0.62, sink: 1.0, speed: 0.12, root: 0.03 },
+  { d: 32.3, l: 3.4, head: [-0.2, -1], size: 0.5, sink: 1.0, speed: 0.12, root: 0.03 },
   { d: 44, l: 7.9, head: [0.3, 1], size: 1.05, sink: 0.45, speed: 0.15, root: 0.04 },
   { d: 29.4, l: 6.4, head: [0.8, 0.5], size: 0.5, sink: 0.4, speed: 0.2, root: 0.06 },
   { d: 18.6, l: -3.4, head: [0.9, 0.3], size: 1, sink: 0.95, speed: 0.1, root: 0.03 },

@@ -1,6 +1,6 @@
-// The fliers: a loose flight of long four-winged animals crossing the flats far out, low under the overcast.
+// The fliers: long four-winged insects the length of a hand, hanging and darting over the tops of the stalk colonies.
 import * as THREE from 'three';
-import { R, TAU, rel } from '../shared/anchors';
+import { R, TAU, makePools, makeStalks } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
 
@@ -16,9 +16,9 @@ varying vec3 vNormal;
 varying float vTone;
 vec3 flierAt(float t) {
   // Straight on at its own speed, weaving a little and rising and sinking on the air.
-  float weave = 6.0 * sin(t * 0.21 + aWay.x) + 2.0 * sin(t * 0.53 + aWay.y);
+  float weave = 0.9 * sin(t * 0.61 + aWay.x) + 0.35 * sin(t * 1.53 + aWay.y);
   vec2 side = vec2(-uHeading.y, uHeading.x);
-  return vec3(aStart.x, aStart.y, aStart.z) + vec3(uHeading.x, 0.0, uHeading.y) * (aStart.w * t) + vec3(side.x, 0.0, side.y) * weave + vec3(0.0, 1.6 * sin(t * 0.33 + aWay.y), 0.0);
+  return vec3(aStart.x, aStart.y, aStart.z) + vec3(uHeading.x, 0.0, uHeading.y) * (aStart.w * sin(t * 0.47 + aWay.w)) + vec3(side.x, 0.0, side.y) * weave + vec3(0.0, 0.3 * sin(t * 0.83 + aWay.y), 0.0);
 }
 void main() {
   float t = uSeconds;
@@ -26,14 +26,14 @@ void main() {
   vec3 fwd = normalize(flierAt(t + 0.2) - flierAt(t - 0.2));
   vec3 right = normalize(cross(fwd, vec3(0.0, 1.0, 0.0)));
   // It banks into its weave.
-  float bank = 0.35 * cos(t * 0.21 + aWay.x);
+  float bank = 0.35 * cos(t * 0.61 + aWay.x);
   vec3 up = cross(right, fwd);
   vec3 r2 = right * cos(bank) + up * sin(bank);
   vec3 u2 = up * cos(bank) - right * sin(bank);
   // position: x along the body, y up, z out along the wing. uv.x: 0 the body, 1 the fore wings, 2 the hind wings.
   float pair = uv.x;
   float span = abs(position.z);
-  float rate = TAU_F / aWay.z;
+  float rate = 9.0 / aWay.z;
   // Bursts of beats and glides between them. The stroke runs out along the wing, and the hind pair comes a quarter beat after the fore pair.
   float work = 0.55 + 0.45 * sin(t * 0.37 + aWay.w);
   float ph = t * rate + aWay.w - (pair - 1.0) * 1.57;
@@ -70,7 +70,8 @@ void main() {
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('fliers');
-  const COUNT = 16;
+  const COUNT = 28;
+  const tall = makeStalks(makePools()).filter((st) => st.kind !== 2 && st.h > 1.2 && Math.hypot(st.x, st.z) < 45);
   const position: number[] = [];
   const normal: number[] = [];
   const uv: number[] = [];
@@ -127,10 +128,11 @@ export function create(ctx: Context): Piece {
   const start = new Float32Array(COUNT * 4);
   const way = new Float32Array(COUNT * 4);
   for (let i = 0; i < COUNT; i++) {
-    const p = rel(190 + rng.range(-35, 35), -70 + rng.range(-40, 40));
-    start.set([p[0], rng.range(16, 30), p[1], rng.range(12.5, 15.5)], i * 4);
+    // Each keeps to the top of one stalk of the colonies by the pool and the vein.
+    const perch = tall[rng.int(tall.length)] as (typeof tall)[number];
+    start.set([perch.x + rng.range(-0.8, 0.8), perch.h + rng.range(0.3, 1.2), perch.z + rng.range(-0.8, 0.8), rng.range(0.6, 1.6)], i * 4);
     // The larger the slower its beat.
-    const size = rng.range(0.8, 1.3);
+    const size = rng.range(0.05, 0.085);
     way.set([rng.range(0, TAU), rng.range(0, TAU), size, rng.range(0, TAU)], i * 4);
   }
   const g = new THREE.InstancedBufferGeometry();
