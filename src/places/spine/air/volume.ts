@@ -274,8 +274,8 @@ void main() {
     // The picture gives its grain; the tone is the deck's own: cold from the sky on its heads, deep blue-violet in its hollows, and the
     // dusk on what faces it.
     float grainS = clamp(dot(sea, vec3(0.33)) / dot(SEA_MEAN, vec3(0.33)), 0.7, 1.4);
-    vec3 cold = SEA_COLD * (0.1 + 0.6 * head * head) * (1.0 + 0.6 * lean);
-    vec3 warm = 0.6 * SEA_WARM * smoothstep(0.0, 0.8, lean) * (0.25 + 0.75 * head) * (1.0 - 0.7 * stormSide(rd));
+    vec3 cold = SEA_COLD * (0.09 + 0.42 * head * head) * (1.0 + 0.6 * lean);
+    vec3 warm = 0.34 * SEA_WARM * smoothstep(0.0, 0.8, lean) * (0.25 + 0.75 * head) * (1.0 - 0.7 * stormSide(rd));
     sea = (cold + warm) * grainS;
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * stormSide(rd), 0.0, 1.5);
@@ -357,10 +357,10 @@ void main() {
       float gust = noise(vec3(along / 260.0, float(i) * 0.37, 0.11)).g;
       float k = x / reach;
       float body = exp(-d2) * (1.0 - k) * (1.0 - k) * smoothstep(0.0, 0.05, k + 0.01);
-      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 2.4, 0.0, 0.9) * uShow.w * uStage.x * clearOf;
+      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 2.4, 0.0, 0.6) * uShow.w * uStage.x * clearOf;
       // Staged by shot: before the long lens of the strike a plume is a thin smoke of snow, not a bank.
       thick *= 1.0 - 0.75 * uPlate.w;
-      vec3 pale = 1.7 * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
+      vec3 pale = 1.15 * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
       light += through * thick * pale;
       through *= 1.0 - thick;
     }

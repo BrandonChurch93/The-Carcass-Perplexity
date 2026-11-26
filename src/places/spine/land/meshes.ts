@@ -202,7 +202,10 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const [su, sv] = sheetAt(sp, l, y);
       let n = depth * (reliefAt(sp.sheet, su, sv) - 0.55) + 0.8 * slab(u - 0.2 * l, l + face * 700, 15, 5, seed + 7);
       // The rock is jointed: great plates that stand up the face, each proud of or behind its neighbours, and the blocks they break into.
-      n += 7 * slab(u - 0.25 * l, l + face * 700 + 31, 64, 21, seed + 11) + 2.8 * slab(u + 0.15 * l, l + face * 700 + 57, 23, 8, seed + 3);
+      // (The plates are of no one breadth, and beds cross them: level ledges some 14 m apart that break each plate into blocks and
+      // give the snow somewhere to lie. Plates alone, all of a breadth, stood on the face like a curtain.)
+      const lw = l + 16 * (vnoise(u / 37 + seed, l / 55 + 2.3) - 0.5) + face * 700;
+      n += 4 * slab(u - 0.25 * l, lw + 31, 64, 21, seed + 11) + 4.5 * slab(l + 0.22 * u + face * 300, u + 9 * (vnoise(l / 30 + 5.1, u / 60 + seed) - 0.5), 52, 14, seed + 19) + 2.8 * slab(u + 0.15 * l, l + face * 700 + 57, 23, 8, seed + 3);
       n = Math.max(-0.5 * p.thick, Math.min(0.7 * p.thick + 4, n)) * (1 - 0.92 * edge);
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
       const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);
