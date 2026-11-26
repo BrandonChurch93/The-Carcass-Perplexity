@@ -24,29 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 131, 2026-11-26 20:49 UTC:
+Status 132, 2026-11-26 21:20 UTC:
 
-- `01-s131-ribs-titan.jpg`: Above: the Ribs, frame 0, before at left and after at right on its team's branch: the near blade stands at 85 percent of the frame's height under a storm sky. Below: the Reveal, the titan frame 10027, before and after: cloud at the coasts, greener land. The leads' own review renders at 1080p, not judged, not in main
-- `02-s131-reveal-skull.jpg`: The Reveal on the climb: the skull at frame 9675 above and the head and shoulder at frame 9756 below, before at left and after at right. Not judged, not in main
-- `03-s131-heart.jpg`: The Heart: above, frame 3477, the ropy crust in place of the striped sheet; below, frame 2722, the far wall fractured and the butte set back in haze. Before at left, after at right. Not judged, not in main
-- `04-s131-marsh-eye.jpg`: Above: the Blood Marsh, frame 6102, the brine with depth and a mirror. Below: the Eye, frame 8412, broken stones on the near shore. Before at left, after at right. Not judged, not in main
+- `01-s132-breath.jpg`: The Breath on its team's branch, before at left and after at right. Above: the pit from the flat, rebuilt as pale arches over dark recesses, the waders behind it. Below: the view down into the pit. Its lead's own review renders, not judged, not in main
+- `02-s132-spine.jpg`: The Spine on its team's branch. Above: frame 7015, before at left and after at right: the bolt as a violet channel that lights the cloud at its root. Below: every frame from 7015 to 7026 after the change: the strike, a restrike by a new path at 7019, the glow dying away. Not judged, not in main
+- `03-s132-ribs-open.jpg`: The Ribs, the restaged opening on its team's branch: frames 0 to 110, every eleventh frame. The swell falls away and a burst stands at the near foot. Its lead says frames 33 to 110 are still nearly one picture. Not judged, not in main
+- `04-s132-marsh-walk.jpg`: The Blood Marsh, the wallowers' walk on its team's branch: frames 6300 to 6520, every twentieth frame. The feet plant and the stance changes; its lead says the hide is still a noisy mottle. Not judged, not in main
 
+Status 131, 2026-11-26 20:49 UTC, showed: Above: the Ribs, frame 0, before at left and after at right on its team's branch: the near blade stands at 85 percent of the frame's height...
 Status 130, 2026-11-26 20:17 UTC, showed: The Spine: four material pictures made by its ground builder for the rock and the snow: a granite face, an outcrop under snow, rime on rock...
 Status 129, 2026-11-26 19:37 UTC, showed: The Heart's lava fall, last version, not merged: frames 4173, 4217 and 4220 from top to bottom, before at left and after at right.
-Status 128, 2026-11-26 19:05 UTC, showed: The opening view of each of the six places and the last wide view, as the critic of the whole film saw them in round 3: the Ribs, the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T20:49:36Z
-phase 5: 10.56 h used of 6.00 h
-build: 44.97 h used of 72.00 h
+2026-11-26T21:20:49Z
+phase 6: 0.52 h used of 24.00 h
+build: 45.49 h used of 72.00 h
 extra rounds: yes
-half point: reached
-box end: reached
-minutes since the last status: 32, status overdue
+minutes since the last status: 31, status overdue
 ```
 
 ## Phases
@@ -1554,6 +1552,7 @@ Bundles pushed for teams that could not push, 20:50 UTC: agent/p6-marsh-polish a
 The Phase 5 gate ended at 20:51 UTC with 22 of 23 passed, none failed and one not built: D4, the preview film with the mix. Its check had never been written (tools/checks held d1, d2, d3 and d7). Written now as tools/checks/d4.mjs with its tests in tests/film-checks.test.ts: the picture as D2 reads it (size, rate, frame count, the build), and the sound three ways: the film has a sound stream, its record names audio/mix/mix.flac, and the stream heard beside that mix in windows of one second is the same wave (least alike window at least 0.9, the encoder allowed 50 ms of shift, lengths within 0.1 s). On the kept preview film it passes with the least alike of 197 windows at 1.000; the cleaned music alone beside the mix reads minus 0.243 and fails, as it should. The hash of the build does not read tools/checks, so no render is made stale. G2 and D4 are run once more with it; the other 21 checks stand from the run of 19:43 to 20:51 UTC, since no file under src, public, config, cut or parts has changed since ea988b50.
 - 2026-11-26. 21:03 UTC. Thirteenth compaction of this task (about 21:00 UTC). Re-read before any further order, merge, spawn or note to a builder or lead: kit/PROGRESS.md lines 1 to 118, kit/addenda/001-private-repo-and-music.md, kit/07-QUALITY-BAR.md (Freshness, Judged frames, Packs, The critics; the pick, the pass bar, what to do with a critic's issues, rounds and their limits, the plateau rule, the record round) and kit/08-BUILD-ORDER.md (Phase 5 and Phase 6 with their gates). Between the compaction and this re-read nothing went out to a builder or a lead: the Builder only read the gate log, looked at four of the leads' pictures, measured the disk and started the unit tests once more with a reporter that can print the failing test. What the re-read confirms for the work at hand: the Phase 5 gate needs the machine checks met, the limit reached for film, D4 met and the film and loop playing from the published address; an attempt to fix one machine check is counted against quality.gateFixMaxAttempts per phase outside a round; polish rounds in Phase 6 are extra rounds, up to quality.polishMaxRounds per pass, each fixing a batch and then running the measures and the critics that raised those issues on the frames they touch; a round is counted when it starts, number and commit written and pushed first; nothing under src, public or config changes after the freeze except to fix a machine check or a failed QA item.
 - 2026-11-26. 21:20 UTC. Phase 5 closed and Phase 6 started at 21:20 UTC. What was done after the re-read of 21:03 UTC, in order. (1) The gate's second run of G2 and D4 (started 20:59 UTC) ended with D4 passing and G2 failing on one test of 937: the registry test in tests/gate.test.ts lists which checks have code, and D4 was not on its list. The list now names D4, which is the record of the check being written and changes no threshold. G2 and D4 run a third time: both pass at 21:08 UTC (out/work/gate/phase-5-only-2108.json). This was one attempt to fix one machine check, of the three quality.gateFixMaxAttempts allows. (2) The gate also asks that the film plays in autopilot and the loop in loop from the published address. No publish was on record since 10:28 UTC, although the review page was built at 19:24 UTC with the preview film of this build: step 10's publish had not been done or not been written down. Published at 21:12 UTC (dist 734 MB in 557 files, accepted in 79 s; a second publish at 21:13 UTC only to learn the test address, the content the same). npm run flows on it from 21:13 to 21:19 UTC: 7 of 7 pass, the film draws in autopilot and the card loop in loop (out/work/gate/phase-5-flows-2119.txt). (3) The Phases table has the evidence: 23 of 23, 21 from the run of 19:43 to 20:51 UTC and G2 and D4 run after the check was written; the film ended by its limit and not by the bar. (4) Phase 6 on the clock from 21:20 UTC: 24 hours allowed, build 45.48 h used of 72. The first polish pass is note 19's wide polish, wave 1, already running since 19:31 UTC on branches; its merges into main start now that Phase 5 is closed, each unit as one commit behind its guard, at the wave's end. Polish round 1 of this pass is round 29 and is counted when its judging starts. Disk on the Builder's machine read 2.9 GB free at 21:01 UTC; five folders of old working pictures under /tmp were removed and git prune-packed run, 3.0 GB free after.
+- 2026-11-26. 21:21 UTC. After the commit of the D4 check (805ae2bf), G1, G8 and G9 were run once more, since a new file under tools and two changed test files could touch the build, the written-down files and the file checks: 3 of 3 pass at 21:21 UTC (out/work/gate/phase-6-only.json). Status 132 written at 21:20 UTC with four pictures from the leads' first reports that status 131 did not show: the Breath's pit, the Spine's bolt, the Ribs' opening and the Blood Marsh's walk.
 
 ## Notes from Brandon
 

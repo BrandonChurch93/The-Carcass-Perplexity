@@ -1,8 +1,8 @@
-# Status 131
+# Status 132
 
-2026-11-26 20:49 UTC. Phase 5, the whole film.
+2026-11-26 21:20 UTC. Phase 6, polish and deliver.
 
-- `01-s131-ribs-titan.jpg`: Above: the Ribs, frame 0, before at left and after at right on its team's branch: the near blade stands at 85 percent of the frame's height under a storm sky. Below: the Reveal, the titan frame 10027, before and after: cloud at the coasts, greener land. The leads' own review renders at 1080p, not judged, not in main
-- `02-s131-reveal-skull.jpg`: The Reveal on the climb: the skull at frame 9675 above and the head and shoulder at frame 9756 below, before at left and after at right. Not judged, not in main
-- `03-s131-heart.jpg`: The Heart: above, frame 3477, the ropy crust in place of the striped sheet; below, frame 2722, the far wall fractured and the butte set back in haze. Before at left, after at right. Not judged, not in main
-- `04-s131-marsh-eye.jpg`: Above: the Blood Marsh, frame 6102, the brine with depth and a mirror. Below: the Eye, frame 8412, broken stones on the near shore. Before at left, after at right. Not judged, not in main
+- `01-s132-breath.jpg`: The Breath on its team's branch, before at left and after at right. Above: the pit from the flat, rebuilt as pale arches over dark recesses, the waders behind it. Below: the view down into the pit. Its lead's own review renders, not judged, not in main
+- `02-s132-spine.jpg`: The Spine on its team's branch. Above: frame 7015, before at left and after at right: the bolt as a violet channel that lights the cloud at its root. Below: every frame from 7015 to 7026 after the change: the strike, a restrike by a new path at 7019, the glow dying away. Not judged, not in main
+- `03-s132-ribs-open.jpg`: The Ribs, the restaged opening on its team's branch: frames 0 to 110, every eleventh frame. The swell falls away and a burst stands at the near foot. Its lead says frames 33 to 110 are still nearly one picture. Not judged, not in main
+- `04-s132-marsh-walk.jpg`: The Blood Marsh, the wallowers' walk on its team's branch: frames 6300 to 6520, every twentieth frame. The feet plant and the stance changes; its lead says the hide is still a noisy mottle. Not judged, not in main
