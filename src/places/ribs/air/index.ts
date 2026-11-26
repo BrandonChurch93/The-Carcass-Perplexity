@@ -177,8 +177,9 @@ void main() {
     float bank = smoothstep(0.3, 0.8, banks + 0.4 * (lumps - 0.5));
     // A bank has a top, low where it is thin and some forty metres where it is thick, and the haze over it stands thicker too.
     // Between the banks a thin breath of it lies on the wet floor: the far flats go into the air as the blades do, not black to the horizon.
-    float mist = (0.0034 * bank + 0.0008) * exp(-max(p.y, 0.0) / (9.0 + 34.0 * bank));
-    float a = 1.0 - exp(-(thickness(p.y) * (0.6 + 0.9 * bank) + mist) * (t1 - t0) * smoothstep(130.0, 600.0, tm));
+    float mist = 0.0034 * bank * exp(-max(p.y, 0.0) / (9.0 + 34.0 * bank));
+    float breath = 0.0022 * exp(-max(p.y, 0.0) / 6.0);
+    float a = 1.0 - exp(-((thickness(p.y) * (0.45 + 0.55 * bank) + mist) * smoothstep(130.0, 600.0, tm) + breath * smoothstep(90.0, 420.0, tm)) * (t1 - t0));
     // Under the shut cloud the air is the storm's slate; where the break stands over it, it takes the sky's light and the sun.
     float gap = cloudShadeMarched(p);
     // A long stride crosses many shadows of the blades: it takes their mean, not the one it happens to stand in, which would lay the
