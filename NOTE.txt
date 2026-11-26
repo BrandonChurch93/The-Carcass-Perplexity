@@ -1,7 +1,5 @@
-2026-11-26 02:10 UTC
-work at 9355ad2 on agent/marsh-ground-2
-v1: dark brine with sheen, froth and shore plate, domes as film, low wisps; uhd draft keys 0,1,3,4
-look-1.jpg = out/work/v1-marsh-0.jpg
-look-2.jpg = out/work/v1-marsh-1.jpg
-look-3.jpg = out/work/v1-marsh-3.jpg
-look-4.jpg = out/work/v1-marsh-4.jpg
+2026-11-26 02:22 UTC
+work at f3b0924 on agent/marsh-ground-2
+hb4: low steam as drifting sheets, far mist bank, shore rind in stretches; uhd draft marsh-0, marsh-1
+look-1.jpg = out/work/hb4-marsh-0.jpg
+look-2.jpg = out/work/hb4-marsh-1.jpg
