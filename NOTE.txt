@@ -1,7 +1,7 @@
-2026-11-26 07:45 UTC
-work at 57125cc on agent/ribs-ground-3
-heartbeat 6: opening sheet, ribs-0, ribs-3, ribs-4 after the Builder's V2 list
-look-1.jpg = out/work/s01.jpg
-look-2.jpg = out/work/r0.jpg
-look-3.jpg = out/work/r3.jpg
-look-4.jpg = out/work/r4.jpg
+2026-11-26 08:32 UTC
+work at 231b4d8 on agent/ribs-ground-3
+version 3: final tier ribs-0, ribs-1, ribs-3, ribs-4
+look-1.jpg = out/work/f0.jpg
+look-2.jpg = out/work/f1.jpg
+look-3.jpg = out/work/f3.jpg
+look-4.jpg = out/work/f4.jpg
