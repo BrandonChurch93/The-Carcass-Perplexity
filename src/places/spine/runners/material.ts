@@ -19,7 +19,7 @@ vec3 runnerLight(vec3 p, vec3 n) {
   vec3 e = skyIrradiance(n) * runnerOpen(p) + emitterIrradiance(p, n) * min(1.0, 4.0 * skyOpen(p));
   if (uDoor.w > 0.5) {
     // Under the roof no sky reaches it: what the walls give back is a trace.
-    e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.012;
+    e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.03 * (0.6 + 0.4 * n.y);
     // Inside the canal the mouth is a window: what faces it takes the dusk and the storm seen through it, and the flash, as a rim.
     vec3 d = uDoor.xyz - p;
     float d2 = dot(d, d);
@@ -30,8 +30,8 @@ vec3 runnerLight(vec3 p, vec3 n) {
     e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * facing * facing;
     // Seen against the mouth, the light comes through the ends of the coat along its outline.
     vec3 toLens = normalize(cameraPosition - p);
-    float through = pow(1.0 - abs(dot(n, toLens)), 4.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
-    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * 0.7 * through;
+    float through = pow(1.0 - abs(dot(n, toLens)), 5.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
+    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * 2.2 * through;
   }
   return e;
 }`;
@@ -118,7 +118,7 @@ void main() {
   float occ = 0.55;
   if (vKind > 4.5) {
     // The paw: a short close coat, wet and dark toward the pads.
-    albedo = uTone.rgb * shag * mix(0.4, 0.85, smoothstep(0.0, 0.07, vWorld.y - groundY(vWorld)));
+    albedo = mix(vec3(0.035, 0.03, 0.028), uTone.rgb * shag * 0.5, 0.25 + 0.3 * fine);
     occ = 0.75;
   }
   if (vKind > 5.5) {
@@ -149,6 +149,10 @@ void main() {
     // Charred black at the middle, whatever the picture has there.
     float char_ = 1.0 - smoothstep(0.35, 1.0, d + 0.3 * (fine - 0.5));
     albedo = mix(albedo, pic * mix(mix(0.55, 0.16, char_), 0.9, raw), on);
+    // Raw at the heart of it, where the hide split open: wet red flesh inside the ring of char.
+    float heart = (1.0 - smoothstep(0.12, 0.5, d + 0.4 * (fine - 0.5))) * on;
+    albedo = mix(albedo, vec3(0.34, 0.028, 0.02) * (0.45 + 1.1 * pic.r), heart);
+    raw = max(raw, heart);
     rough = mix(rough, mix(0.9, 0.55, raw), on);
     occ = mix(occ, 0.8, on);
   }

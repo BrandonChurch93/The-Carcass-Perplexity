@@ -15,7 +15,7 @@ const CAST = 2600;
 const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
 const CHANNEL = 0.2;
-const SPARKS = 180;
+const SPARKS = 70;
 
 const CHANNEL_VERTEX = /* glsl */ `
 attribute vec3 aPrev;
@@ -99,6 +99,58 @@ void main() {
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
 
+// The stroke itself is a photograph of one, stood between the cloud and the tip and turned to the lens. Each return stroke takes the
+// picture another way round, so the channel changes its path between them.
+const CARD_VERTEX = /* glsl */ `
+uniform vec3 uTop;
+uniform vec3 uTip;
+uniform vec4 uShift;
+varying vec2 vUv;
+varying float vWay;
+void main() {
+  vec3 a = uTip - uTop;
+  float len = length(a);
+  vec3 mid = 0.5 * (uTip + uTop);
+  vec3 side = normalize(cross(a, cameraPosition - mid));
+  // uShift.x: which return stroke; uShift.w: which strike. No two take the picture the same way.
+  float n = uShift.x + uShift.w;
+  float flip = mod(n, 2.0) < 0.5 ? 1.0 : -1.0;
+  float v = 0.5 + 0.5 * position.y;
+  // The picture's stroke leaves its top and reaches its foot a little off the middle; it is brought back onto the line.
+  float lean = mix(0.537, 0.466, v) - 0.5;
+  float wander = (0.03 * sin(v * 9.0 + n * 2.1) + 0.05 * sin(v * 3.7 + n * 4.3)) * sin(v * 3.14159) * min(n, 1.0);
+  vUv = vec2(0.5 + flip * (0.5 * position.x) + lean + wander, v);
+  vWay = 1.0 - v;
+  vec3 p = mix(uTip, uTop, v) + side * (position.x * 0.5 * len * 0.5628);
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`;
+
+const CARD_FRAGMENT = /* glsl */ `
+${RIG_UNIFORMS_GLSL}
+uniform sampler2D tBolt;
+uniform vec4 uEnv;
+uniform vec3 uTint;
+uniform float uCore;
+varying vec2 vUv;
+varying float vWay;
+void main() {
+  if (vUv.x < 0.0 || vUv.x > 1.0) discard;
+  vec3 pic = texture2D(tBolt, vUv).rgb;
+  float lum = max(pic.r, max(pic.g, pic.b));
+  // The stroke lights the whole figure, its fine branches too; as it dies the branches go first and the core thins, and before it the
+  // leader is a dim thread on its way down. The picture's glow is left out: only the channel is drawn, thin, and what is round it is
+  // lit by the rig. Where the picture is bright over a breadth (the main channel) only its heart is kept; a branch is kept whole.
+  float px = 1.0 / 941.0;
+  float broad = 0.25 * (texture2D(tBolt, vUv + vec2(5.0 * px, 0.0)).g + texture2D(tBolt, vUv - vec2(5.0 * px, 0.0)).g + texture2D(tBolt, vUv + vec2(0.0, 5.0 * px)).g + texture2D(tBolt, vUv - vec2(0.0, 5.0 * px)).g);
+  float lit = uEnv.x + uEnv.z;
+  float lead = 0.06 * (1.0 - smoothstep(uEnv.w - 0.04, uEnv.w, vWay)) * step(uEnv.w, 0.999);
+  float strength = min(lit + lead, 1.5);
+  float need = max(mix(0.13, 0.93, smoothstep(0.06, 0.22, broad)), 0.033 / max(strength, 1e-3));
+  if (lum < need || strength < 0.002) discard;
+  vec3 c = mix(uTint, vec3(1.0), smoothstep(need, min(need + 0.3, 1.0), lum)) * uCore * (0.15 + 0.85 * lum * lum) * min(strength * 3.0, 1.0);
+  gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
+}`;
+
 const SPOT_VERTEX = /* glsl */ `
 attribute vec4 aSeed;
 attribute vec3 aGo;
@@ -122,7 +174,7 @@ void main() {
   float size = max(0.035 + 0.05 * aSeed.z, 0.7 * uPixel * far);
   // A streak as long as the fragment flies while the shutter is open.
   vec2 dir = normalize(along.xy + vec2(1e-4));
-  float reach = max(size, length(along.xy) * 0.012);
+  float reach = max(size, length(along.xy) * 0.005);
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
   vHeat = (uAge <= 0.0 || t <= 0.0) ? 0.0 : exp(-t / (0.35 * life)) * (1.0 - smoothstep(life * 0.8, life, t)) * (0.4 + 0.6 * aSeed.w) * min(1.0, 0.3 / (reach / size) + 0.4);
@@ -244,12 +296,13 @@ export function create(ctx: Context): Piece {
   const additive = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide } as const;
   const wind = new THREE.Vector3(WIND[0], WIND[1], WIND[2]).multiplyScalar(WIND_SPEED / 26);
 
-  const bolts: Bolt[] = STRIKES.map((site) => {
+  const boltPicture = ctx.assets.texture('mat/bolt.jpg', { kind: 'colour', repeat: false, anisotropy: 8 });
+  const bolts: Bolt[] = STRIKES.map((site, index) => {
     const rng = ctx.rng(`strikes/${site.id}`);
     const lines = figure(rng, site);
     const group = new THREE.Group();
     const env = new THREE.Vector4(0, 0, 0, 0);
-    const shift = new THREE.Vector4(0, site.to[1], site.rise * 0.02, 0);
+    const shift = new THREE.Vector4(0, site.to[1], site.rise * 0.02, index);
     const channelUniforms = { ...ctx.rig.uniforms, uShift: { value: shift }, uPixel: pixel, uDither: dither, uEnv: { value: env }, uTint: { value: TINT }, uCore: { value: CORE } };
     const strip = channelGeometry(lines);
     const channel = new THREE.Mesh(strip, new THREE.ShaderMaterial({ vertexShader: CHANNEL_VERTEX, fragmentShader: SHEATH_FRAGMENT, uniforms: channelUniforms, ...additive }));
@@ -257,6 +310,9 @@ export function create(ctx: Context): Piece {
     channel.renderOrder = 6;
     const arc = new THREE.Mesh(strip, new THREE.ShaderMaterial({ vertexShader: CHANNEL_VERTEX, fragmentShader: CORE_FRAGMENT, uniforms: channelUniforms, side: THREE.DoubleSide }));
     arc.frustumCulled = false;
+    // The computed channel is kept for the way it lights the air about it; the photograph is the stroke that is seen.
+    channel.visible = false;
+    arc.visible = false;
     group.add(channel, arc);
 
     const main = (lines[0] as Line).points;
@@ -277,6 +333,9 @@ export function create(ctx: Context): Piece {
     // The glow of the cloud round the channel is drawn by the air folder from the rig's lights; this one stays off.
     cloud.visible = false;
     group.add(cloud, spot);
+    const card = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: CARD_VERTEX, fragmentShader: CARD_FRAGMENT, uniforms: { ...ctx.rig.uniforms, tBolt: { value: boltPicture }, uTop: { value: top }, uTip: { value: tip }, uShift: { value: shift }, uEnv: { value: env }, uTint: { value: TINT }, uCore: { value: CORE } }, side: THREE.DoubleSide }));
+    card.frustumCulled = false;
+    group.add(card);
 
     // The spray of glowing fragments.
     const age = { value: -1 };
