@@ -1,7 +1,4 @@
-2026-11-26 01:14 UTC
-work at a50c94e on agent/breath-ground-2
-Start of wave 2: the five keys as main stands, beside the approved pictures. Pink beige mid tone, smooth shelf, tube hoops, card vapour.
-look-1.jpg = out/work/compare/breath-0.png
-look-2.jpg = out/work/compare/breath-4.png
-look-3.jpg = out/work/compare/breath-2.png
-look-4.jpg = out/work/compare/breath-3.png
+2026-11-26 01:25 UTC
+work at 7332b30 on agent/breath-ground-2
+hb1 minute 29: shelf rebuilt from a baked 6 cm height map (ledges, stones, baked sun shadow); halo de-pinked; hoops, vapour, cameras not yet touched
+look-1.jpg = out/work/looks-hb1-breath-0.png
