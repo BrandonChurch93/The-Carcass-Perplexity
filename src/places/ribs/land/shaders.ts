@@ -295,13 +295,16 @@ void main() {
   topC = mix(topC, vec3(0.3, 0.3, 0.285) * (0.75 + 0.3 * grain), 0.6 * splash);
   albedo = mix(albedo, topC, 0.8 * top);
   // The white runs only under a shelf deep enough to hold a roost: in drips from its lip, a stride or two down the face, none on a bare face.
-  float drip = smoothstep(0.8, 1.4, vLay.y) * exp(-vLay.x / (1.2 + 2.2 * vnoise(vec2(arc * 0.9, 3.5)))) * smoothstep(0.3, 0.62, vnoise(vec2(arc * 2.6, y * 0.22 + 7.0)) + 0.25 * (hgt - 0.5)) * (1.0 - top);
-  albedo = mix(albedo, vec3(0.34, 0.335, 0.32) * (0.75 + 0.3 * grain), 0.8 * drip);
+  float drip = smoothstep(0.8, 1.3, vLay.y) * smoothstep(0.3, 0.6, vLay.x) * exp(-vLay.x / (1.8 + 3.0 * vnoise(vec2(arc * 0.9, 3.5)))) * smoothstep(0.22, 0.5, vnoise(vec2(arc * 2.6, y * 0.22 + 7.0)) + 0.25 * (hgt - 0.5)) * (1.0 - top);
+  albedo = mix(albedo, vec3(0.36, 0.355, 0.34) * (0.75 + 0.3 * grain), 0.9 * drip);
+  // Orange lichen in patches some strides across, on the faces that take the weather, never under the white.
+  float patchL = smoothstep(0.65, 0.74, vnoise(vec2(arc, y) * 0.16 + 13.0) * 0.7 + vnoise(vec2(arc, y) * 0.9 + 4.0) * 0.3 + 0.12 * (grain - 1.0));
+  albedo = mix(albedo, vec3(0.3, 0.135, 0.028) * (0.55 + 0.6 * grain), 0.6 * patchL * (1.0 - drip) * (1.0 - 0.6 * top));
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (hgt - 0.5);
   float band = smoothstep(tide + 5.0, tide + 0.5, y);
   // Wet and darker low down: the spray of every tide stands in it.
   float low = smoothstep(uKelp + 5.0 + 4.0 * (macro - 0.5), uKelp - 1.5, y);
-  albedo *= mix(1.0, 0.55, low) * mix(1.0, 0.3, band);
+  albedo *= mix(1.0, 0.36, low) * mix(1.0, 0.3, band);
   // The weed: the picture's own hanks hang from the weed line, and under them the dark weed of the shore.
   float line = uKelp + 3.6 * (vnoise(vec2(arc / 6.0, 4.5)) - 0.5) + 1.6 * (vnoise(vec2(arc / 1.3, 9.5)) - 0.5);
   float down = line - y;
@@ -429,7 +432,10 @@ void main() {
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
   c = max(c, albedo * above * (0.36 / 3.14159) * (0.6 + 0.4 * occ));
   // Close, the wet shows as small glints on the blades of weed that turn to the sky, not as a sheen over the whole wall.
-  c += above * (0.06 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 60.0) * (0.4 + 0.6 * occ));
+  c += above * (0.13 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 40.0) * (0.4 + 0.6 * occ));
+  // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
+  float run = smoothstep(0.8, 0.96, vnoise(vec2(vUv.x * 9.0, vUv.y * 0.3 + uTime * 1.6))) * smoothstep(0.55, 0.8, vnoise(vec2(vUv.x * 1.1, vUv.y * 0.13 - uTime * 0.07) + 3.0));
+  c += above * (0.05 * closeW * run * (0.4 + 0.6 * occ));
   c += above * ((1.0 - 0.7 * closeW) * 0.028 * hem * (1.0 - bare) * smoothstep(0.55, 0.9, nh.z + 0.3 * vnoise(vUv * 3.0 + uTime * 0.25)));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -528,7 +534,7 @@ void main() {
   float along = dot(rel, uPath.zw);
   float across = dot(rel, vec2(-uPath.w, uPath.z)) + (7.0 + 0.08 * along) * (vnoise(vec2(along / 37.0, 2.5)) - 0.5) + 2.0 * (vnoise(xz / 3.1 + 8.0) - 0.5);
   float lane = smoothstep(1.0, 0.35, abs(across) / (3.5 + 0.075 * max(along, 0.0))) * smoothstep(-4.0, 12.0, along);
-  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 1.5 * clamp(over - 0.06, 0.0, 0.25) + 0.05 * (nh.z - 0.5) * close0 + 0.27 + 0.45 * lane - 0.25 * driftN);
+  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 1.5 * clamp(over - 0.06, 0.0, 0.25) + 0.05 * (nh.z - 0.5) * close0 + 0.34 + 0.45 * lane - 0.25 * driftN);
   // Stones where the floor stands proud, rippled sand where it lies low.
   float bar = smoothstep(0.3, 0.52, ps.z + 0.5 * clamp(over, -0.2, 0.3) + 0.1 * (nh.z - 0.5) + 0.3 * close0);
   bar *= 1.0 - 0.8 * soaked;

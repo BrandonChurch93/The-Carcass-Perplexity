@@ -255,7 +255,8 @@ void main() {
     float reach = min(far, mix(9000.0, 1100.0, open));
     float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
     float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
-    bank = 0.00014 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    // (The last of the land is taken by it: past seven hundred strides it thickens fast, so the flats have no clean last line.)
+    bank = (0.00014 * max(reach - 230.0, 0.0) + 0.0005 * max(reach - 700.0, 0.0)) * exp(-mid / (55.0 * steps)) * steps * show;
     // Over the sky the bank is only the foot of the far picture: it hides the picture's own ground and lets its hills stand.
     bank = mix(bank, 1.5 * exp(-max(elev, 0.0) / 0.007) * show, open);
     // Nearer than that, banks of mist stand over the far pools, each a wall a few strides high, broken along its length and drifting, so

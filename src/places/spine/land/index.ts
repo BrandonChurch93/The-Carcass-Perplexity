@@ -4,11 +4,14 @@ import * as THREE from 'three';
 import { FIRST, finAxes, first, sheetMap, spires, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
 import type { Context, Piece } from '../shared/context';
-import { CARCASS, INSIDE_FROM, RAD, STRIKE_FROM, WIND, carcassAxis, carcassBody, carcassView, step, strikeCrag } from '../shared/anchors';
+import { CARCASS, INSIDE_FROM, RAD, STRIKE_FROM, UNIT, WIND, carcassAxis, carcassBody, carcassView, step, strikeCrag } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
+import { secondsInPlace, shotById } from '../../../film/cut';
 import { canalFloor, canalShell, crag, crestStrip, flanks, hollow, icicles, reliefDepth, spireMesh, stones } from './meshes';
 import { height } from './height';
 import { CRAG_FRAGMENT, CRAG_VERTEX, ICE_FRAGMENT, ICE_VERTEX, ICICLE_FRAGMENT, ICICLE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
+
+const CARCASS_FROM = secondsInPlace(UNIT, shotById('spine-03').first);
 
 export const PARTS: readonly string[] = ['land'];
 
@@ -27,7 +30,9 @@ export function create(ctx: Context): Piece {
   // The height of the frame being drawn, in pixels: read from the renderer as each mesh is drawn.
   const tall = { value: 1080 };
   const size = new THREE.Vector2();
+  const wet = { value: 0 };
   const pictures = {
+    uWet: wet,
     tFace: picture('kiteface'),
     tFaceH: { value: ctx.assets.texture('mat/kiteface-h.png', { kind: 'data', anisotropy: ANISOTROPY }) },
     tCrust: picture('crustfield'),
@@ -70,7 +75,7 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_FRAGMENT,
-      defines: { KIND: kind },
+      defines: { KIND: kind, SCORCH: 0 },
       uniforms: { ...ctx.rig.uniforms, ...pictures, ...sheetOf(sp) },
       side,
       toneMapped: false,
@@ -175,7 +180,15 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: () => {
+      // Staged by shot: the burned ground under the dead one is compiled into the ground only for its own shot (spine-03).
+      const scorch = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1 : 0;
+      if (groundMaterial.defines.SCORCH !== scorch) {
+        groundMaterial.defines.SCORCH = scorch;
+        groundMaterial.needsUpdate = true;
+      }
       cragMesh.visible = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
+      // Staged by shot: in the long lens of the strike (spine-04) the struck spire is wet black rock with snow on its lee ledges only.
+      wet.value = cragMesh.visible ? 1 : 0;
     },
     dispose: () => {
       cragMaterial.dispose();

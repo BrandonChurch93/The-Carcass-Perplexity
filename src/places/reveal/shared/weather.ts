@@ -92,9 +92,9 @@ float lowPicture(vec2 w, float shadow) {
     if (mass > 0.02) {
       float billow = 0.5 * vnoise(pw / 11.0 + 7.0) + 0.3 * vnoise(pw / 4.7 + 19.0) + 0.2 * vnoise(pw / 2.1 + 31.0);
       float body = mass * smoothstep(0.37, 0.82, billow);
-      puff = max(puff * (0.5 + 0.5 * body), 0.85 * body * (0.5 + 0.5 * smoothstep(0.5, 0.8, billow)));
+      puff = max(puff * (0.95 + 0.05 * body), 0.85 * body * (0.5 + 0.5 * smoothstep(0.5, 0.8, billow)));
     } else {
-      puff *= 0.55;
+      puff *= 0.95;
     }
     pic += specks * puff;
   }
@@ -115,16 +115,23 @@ float lowPicture(vec2 w, float shadow) {
     vec2 mw = tw + held * vec2(12.0, -24.0);
     float dots = 0.0;
     float haze = 0.0;
+    // (From orbit the cloud of the first lay stands in streets: the photograph of wind-drawn streaks, carried with it, says where a
+    // street runs. Its dots are beads along the streets and its thin cloud the streaks themselves; between the streets the sea is open.)
+    float streets = smoothstep(450.0, 700.0, uViewKm) * (1.0 - shadow);
+    float streak = 0.0;
+    if (streets > 0.0) streak = seen(texture2D(uMatStreaks, sw / vec2(2300.0, 840.0) + vec2(0.37, 0.52), 0.5).rgb, 0.13, 0.64);
     for (int i = 0; i < 2; i++) {
       float part = i == 0 ? 1.0 - share : share;
       if (part <= 0.0) continue;
       float lay = size * (i == 0 ? 1.0 : 2.0);
       // (Each lay stands in its own fields, a third of the sea, with open water between them.)
       float inA = smoothstep(0.4, 0.6, texture2D(uCloudTile, sw / (2600.0 * lay) + vec2(0.33, 0.61) * lay, 2.0).b);
-      float inB = smoothstep(0.43, 0.62, texture2D(uCloudTile, mw / (1900.0 * lay) + 0.4 * lay, 2.0).g);
+      // (For the shadow only the first lay is read: the second is thin and its shadow is not seen.)
+      float inB = shadow < 1.0 ? smoothstep(0.43, 0.62, texture2D(uCloudTile, mw / (1900.0 * lay) + 0.4 * lay, 2.0).g) : 0.0;
       // (Within a field the cloud stands in ragged groups drawn out along the wind, a hundred kilometres and more, with clear sea between.)
-      inA *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, sw / (vec2(1400.0, 760.0) * lay) + vec2(0.17, 0.71) * lay, 3.5).g);
-      inB *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, mw / (vec2(1150.0, 640.0) * lay) + vec2(0.53, 0.09) * lay, 3.5).b);
+      if (shadow < 1.0 && streets < 1.0) inA *= mix(0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, sw / (vec2(1400.0, 760.0) * lay) + vec2(0.17, 0.71) * lay, 3.5).g), 1.0, streets);
+      float along = mix(1.0, 0.3 + 0.7 * smoothstep(0.04, 0.3, streak), streets);
+      if (shadow < 1.0) inB *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, mw / (vec2(1150.0, 640.0) * lay) + vec2(0.53, 0.09) * lay, 3.5).b);
       vec2 ua = sw / (1050.0 * lay) + vec2(0.3, 0.7) * lay;
       vec2 ub = mw / (820.0 * lay) + vec2(0.7, 0.2) * lay;
       // (The photograph is read only where a field stands.)
@@ -133,7 +140,7 @@ float lowPicture(vec2 w, float shadow) {
       float hazeA = 0.0;
       float hazeB = 0.0;
       if (inA > 0.004) {
-        if (shadow < 1.0) dotA = seen(texture2D(uMatSpecks, ua, 0.2).rgb, 0.2, 0.8) * inA;
+        if (shadow < 1.0) dotA = seen(texture2D(uMatSpecks, ua, 0.2).rgb, 0.2, 0.8) * inA * along;
         // (Between the dots of a cluster hangs the thin haze of the same cloud: the same photograph, out of focus.)
         hazeA = seen(texture2D(uMatSpecks, ua, 3.2).rgb, 0.1, 0.5) * inA;
       }
@@ -147,11 +154,11 @@ float lowPicture(vec2 w, float shadow) {
     // (For the shadow it throws, from orbit, only the body of a cluster counts: a dot is too small for its shadow to be seen.)
     // (And here and there long thin wisps run with the wind: the photograph of wind-drawn streaks, soft, in a few wide fields of their own,
     // carried by a third wind.)
-    vec2 ww = mat2(0.94, -0.34, 0.34, 0.94) * w + held * vec2(-22.0, -9.0);
-    float wispField = 0.0;
-    if (shadow < 1.0 && uViewKm > 800.0) wispField = (1.0 - shadow) * smoothstep(800.0, 1300.0, uViewKm) * smoothstep(0.3, 0.55, texture2D(uCloudTile, ww / vec2(3900.0, 2100.0) + vec2(0.81, 0.27), 2.5).r);
-    float wisp = wispField > 0.0 ? wispField * seen(texture2D(uMatStreaks, ww / vec2(2500.0, 900.0) + vec2(0.37, 0.52), 0.3).rgb, 0.22, 0.85) : 0.0;
-    pic += away * max(max(dots * (1.0 - shadow), mix(0.36, 0.8, shadow) * haze), 0.62 * wisp);
+    // (One long band of it lies in a curve north of the skull.)
+    vec2 fromArc = (w - vec2(${f(X(1350))}, ${f(Z(1566))}) - vec2(260.0, 520.0)) / vec2(1.0, 0.8);
+    float arc = exp(-pow((length(fromArc) - 900.0) / 60.0, 2.0)) * smoothstep(0.2, 0.75, -fromArc.y / max(length(fromArc), 1.0));
+    float wisp = streets * streak * min(1.0, 0.56 + 2.0 * haze + arc);
+    pic += away * max(max(dots * (1.0 - shadow), mix(0.36, 0.8, shadow) * haze), 0.76 * wisp);
   }
   return pic;
 }
@@ -160,7 +167,7 @@ float lowPicture(vec2 w, float shadow) {
 vec2 lowGround(vec2 at) {
   // (From orbit the drift of the field is seen: it gathers way as the rise ends, and the whole field is carried on while the frame is held.)
   float held = uTime < 8.0 ? 0.125 * max(uTime - 4.0, 0.0) * max(uTime - 4.0, 0.0) : uTime - 6.0;
-  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(15.0, 5.5);
+  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(24.0, 8.0);
 }
 
 // The low cloud: x how thick (0 to 1), y the photograph's own light there (the build of its tops).
@@ -169,16 +176,19 @@ vec2 lowFieldOf(vec2 at, float shadow) {
   vec2 w = lowGround(at);
   // The sky stands clear over the lake of the Eye, where the rise begins.
   float amount = max(coverAt(at).g, 0.6 * westSea(at)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
-  float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   // From orbit the field is seen whole: an even scatter over all the sea, a little thicker here and thinner there.
   float even = smoothstep(330.0, 760.0, uViewKm);
+  float slow = shadow < 1.0 ? texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b : 0.55;
+  if (even < 1.0) slow = 0.6 * slow + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   float field = amount * (mix(0.45, 0.16, even) + mix(0.55, 0.84, even) * smoothstep(mix(0.34, 0.3, even), mix(0.72, 0.6, even), slow + 0.2 * (amount - 0.6)));
   // (And from there it lies in bands along the wind with long clear lanes of sea between, and thins toward the edge of the planet.)
   float lane = texture2D(uCloudTile, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(4200.0, 1150.0) + vec2(0.52, 0.18), 2.0).b;
   field *= mix(1.0, (0.3 + 0.7 * smoothstep(0.3, 0.52, lane)) * (0.7 + 0.3 * smoothstep(0.12, 0.45, limbCos(at))), even);
+  // (Where the field has no share of the sky nothing is read.)
+  if (field < 0.004) return vec2(0.0);
   float pic = lowPicture(w, shadow);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
-  float thick = min(1.0, mix(1.0, 1.25, even) * smoothstep(mix(0.03, 0.0, even), mix(1.2, 0.85, even), pic)) * smoothstep(0.0, 0.5, field);
+  float thick = min(1.0, mix(1.0, 1.25, even) * smoothstep(mix(0.03, 0.0, even), mix(1.2, 0.85, even), pic)) * smoothstep(mix(0.0, 0.09, even), mix(0.5, 0.36, even), field);
   return vec2(thick, pic);
 }
 

@@ -60,8 +60,9 @@ const hash = (i: number, j: number, k: number): number => {
 };
 
 /**
- * The face is broken into blocks with no two alike: cells `wide` metres across and `high` tall, thrown off their grid, each row
- * shifted along from the one under it. No joint runs level or upright for longer than one block.
+ * The face is built in courses, as bedded rock is: each course `high` metres tall and dipping a few degrees round the rock, cut by
+ * upright joints into blocks of unlike width, each course shifted along from the one under it. A block's top is level along its
+ * course, so it is a ledge and not a stair; no upright joint runs on through two courses.
  */
 const blockAt = (angle: number, y: number, wide: number, high: number, seed: number): Block => {
   const columns = Math.max(3, Math.round((Math.PI * 2 * 45) / wide));
@@ -69,33 +70,25 @@ const blockAt = (angle: number, y: number, wide: number, high: number, seed: num
   const u = (turn - Math.floor(turn)) * columns;
   // The beds are not level: they dip and climb round the rock, a few degrees, each size of block its own way.
   const lean = 6 * noise3(Math.cos(angle) * 2.6 + seed, Math.sin(angle) * 2.6, 0.5) + 1.6 * noise3(angle * 9 + seed, 3.5, 1.5);
-  const v = (y + lean) / high;
-  const j0 = Math.floor(v);
-  let best = 1e9;
-  let next = 1e9;
-  let middle = y;
-  let proud = 0;
-  for (let dj = -1; dj <= 1; dj++) {
-    const j = j0 + dj;
-    const along = u + 0.5 * hash(j, 7, seed);
-    const i0 = Math.floor(along);
-    for (let di = -1; di <= 1; di++) {
-      const i = i0 + di;
-      const w = ((i % columns) + columns) % columns;
-      const cu = i + 0.5 + 0.8 * (hash(w, j, seed) - 0.5);
-      const cv = j + 0.5 + 0.8 * (hash(w, j, seed + 1) - 0.5);
-      // A block is wider than it is tall, and some are far bigger than their neighbours.
-      const size = 0.7 + 0.9 * hash(w, j, seed + 2);
-      const d = Math.hypot(along - cu, (v - cv) * 1.15) / size;
-      if (d < best) {
-        next = best;
-        best = d;
-        middle = cv * high - lean;
-        proud = hash(w, j, seed + 3) - 0.5;
-      } else if (d < next) next = d;
-    }
-  }
-  return { middle, proud, edge: next - best };
+  // And they are faulted: every few strides round the rock the courses step up or down by a part of their height.
+  const fault = Math.floor(u * 0.7 + 0.3 * Math.sin(angle * 23 + seed));
+  const v = (y + lean) / high + 0.5 * hash(fault, 3, seed);
+  const j = Math.floor(v);
+  const along = u + 0.5 * hash(j, 7, seed);
+  const wrap = (i: number): number => ((i % columns) + columns) % columns;
+  // The joint on the left of block i of this course: thrown off its place by up to a third of a block.
+  const jointAt = (i: number): number => i + 0.66 * (hash(wrap(i), j, seed) - 0.5) + 0.5 * (hash(wrap(i), j, seed + 5) - 0.5) * (v - j - 0.5);
+  let i = Math.floor(along);
+  if (along < jointAt(i)) i -= 1;
+  else if (along >= jointAt(i + 1)) i += 1;
+  const left = jointAt(i);
+  const right = jointAt(i + 1);
+  // No face stands square to the wall: each block is turned a little, and one in five is fallen out or stands far proud.
+  const h3 = hash(wrap(i), j, seed + 3) - 0.5;
+  const turned = 0.7 * (hash(wrap(i), j, seed + 4) - 0.5) * ((along - left) / Math.max(0.2, right - left) - 0.5);
+  const proud = h3 * (Math.abs(h3) > 0.4 ? 1.7 : 1) + turned;
+  const edge = Math.min(along - left, right - along, (Math.min(v - j, j + 1 - v) * high) / wide);
+  return { middle: (j + 0.5) * high - lean, proud, edge: Math.max(0, edge) };
 };
 
 /** The crag without its blocks: the cone, its buttresses and gullies, its benches and its standing columns. */

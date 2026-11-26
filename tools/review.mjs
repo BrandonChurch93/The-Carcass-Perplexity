@@ -154,6 +154,36 @@ export function description(text) {
   return m ? m[1].trim() : '';
 }
 
+// The lines a narration clip was made from, as its record quotes the request: the delivery tag taken off, a line a paragraph.
+// Empty when the record has no quoted text.
+export function madeFrom(text) {
+  const d = description(text);
+  if (!d.startsWith('"')) return [];
+  let said;
+  try {
+    said = JSON.parse(d);
+  } catch {
+    return [];
+  }
+  return String(said)
+    .replace(/^\s*\[[^\]]*\]\s*/, '')
+    .split(/\n\s*\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
+
+// Whether the config's script is the draft of the sheet as it was settled: every line the sheet's own line or one of its replacements.
+export function scriptIsFinal(sheet, clips) {
+  if (!sheet?.rows?.length) return false;
+  for (const c of sheet.clips ?? []) {
+    const rows = sheet.rows.filter((x) => x.clip === c.id);
+    const lines = clips.find((x) => x.id === c.id)?.lines ?? [];
+    if (rows.length !== lines.length) return false;
+    for (let i = 0; i < rows.length; i++) if (![rows[i].text, ...(rows[i].mark?.replace ?? []).map((a) => a.text)].includes(lines[i])) return false;
+  }
+  return true;
+}
+
 // What a sound's record says of its takes: how many were made, which was kept, and the fault it was kept with.
 export function takes(text) {
   const m = text.match(/^Takes:\s*(\d+) made, take (\d+) kept( with a fault)?\.?\s*(.*)$/m);
@@ -294,12 +324,16 @@ export function collect(root = ROOT, cfg = config()) {
     if (!byId.has(c.id)) continue;
     const n = byId.get(c.id);
     byId.delete(c.id);
+    const rec = r('audio', 'records', `${c.id}.md`);
+    const said = fs.existsSync(rec) ? madeFrom(fs.readFileSync(rec, 'utf8')) : [];
     narration.push({
       ...item(path.join(narrDir, n), `narration/${n}`),
       id: c.id,
       title: c.name ?? '',
       place: cfg.units.find((u) => u.id === c.unit)?.name ?? c.unit ?? '',
-      lines: c.lines ?? []
+      lines: c.lines ?? [],
+      // A kept clip whose record quotes other words than the script holds was made before the script changed.
+      replaced: said.length > 0 && (c.lines ?? []).length > 0 && said.join('\n') !== (c.lines ?? []).join('\n')
     });
   }
   for (const [id, n] of byId) narration.push({ ...item(path.join(narrDir, n), `narration/${n}`), id, title: '', place: '', lines: [] });
@@ -342,13 +376,9 @@ export function collect(root = ROOT, cfg = config()) {
     still: fs.existsSync(still) ? item(still, `card/${path.basename(still)}`) : null
   };
 
-  // A kept clip whose words the draft of the script changes is marked: it was made from the script before the draft.
+  // The sheet of the draft stage. Once the config holds the draft as it was settled, the page says the script is final.
   const script = scriptSheet(root);
-  if (script)
-    for (const c of narration) {
-      const draft = script.sheet.rows.filter((x) => x.clip === c.id).map((x) => x.text);
-      c.replaced = draft.length > 0 && c.lines.length > 0 && draft.join('\n') !== c.lines.join('\n');
-    }
+  if (script) script.final = scriptIsFinal(script.sheet, cfg.narration.clips);
 
   const progress = r('kit', 'PROGRESS.md');
   const clock = r('kit', 'CLOCK.json');
@@ -489,7 +519,7 @@ function musicHtml(music) {
     .join('\n');
 }
 
-function scriptHtml(sheet) {
+function scriptHtml(sheet, final = false) {
   const src = (p) => `review/script/${url(path.basename(p.file))}`;
   const [first, second] = intro(sheet);
   const row = (c) =>
@@ -497,10 +527,14 @@ function scriptHtml(sheet) {
   return [
     '<div class="script-sheet">',
     `<p class="lede">${esc(first)}</p>`,
-    `<p class="lede">${esc(second)} Every marked line has two replacement lines under it, A and B. No narration is made from this draft: the config keeps the approved script until the script is final.</p>`,
+    `<p class="lede">${esc(second)} Every marked line has two replacement lines under it, A and B. ${
+      final
+        ? 'The script is final. The config holds these lines, each marked line as one of its replacements, and the clips under Listen are made from them and show the words as spoken. This sheet is the draft as it was laid out, kept as the record: its lengths are the worked out ones, and its last column is the script the draft replaced.'
+        : 'No narration is made from this draft: the config keeps the approved script until the script is final.'
+    }</p>`,
     '<div class="scroll">',
     '<table class="lengths">',
-    '  <thead><tr><th>Clip</th><th>Place</th><th>In the film</th><th>Draft</th><th>With every A</th><th>Approved script</th><th>Marked</th></tr></thead>',
+    `  <thead><tr><th>Clip</th><th>Place</th><th>In the film</th><th>Draft</th><th>With every A</th><th>${final ? 'The script before' : 'Approved script'}</th><th>Marked</th></tr></thead>`,
     '  <tbody>',
     ...sheet.clips.map(row),
     `    <tr class="all"><td>all</td><td></td><td></td><td>${sheet.totals.seconds.toFixed(1)} s</td><td>${repaired(sheet).toFixed(1)} s</td><td>${sheet.totals.approvedSeconds.toFixed(1)} s</td><td>${sheet.totals.marked} of ${sheet.totals.lines}</td></tr>`,
@@ -568,7 +602,7 @@ export function render(model, { date = utc(), total = 0 } = {}) {
             '<article class="clip">',
             `  <header><span class="id">${esc(c.id)}</span><span class="title">${esc(c.title || c.name)}</span>${c.place ? `<span class="place">${esc(c.place)}</span>` : ''}</header>`,
             c.lines.length ? `  <ol class="lines">\n${c.lines.map((l) => `    <li>${esc(l)}</li>`).join('\n')}\n  </ol>` : '  <p class="words">No words for this clip in the script.</p>',
-            ...(c.replaced ? ['  <p class="take"><span>Made from the approved script. The draft in Script changes these words, and this clip is made again when the script is final.</span></p>'] : []),
+            ...(c.replaced ? ['  <p class="take"><span>Made before the script changed. The lines above are the script as it stands, and this clip still speaks the older words.</span></p>'] : []),
             `  ${audio(c)}`,
             '</article>'
           ].join('\n')
@@ -602,7 +636,7 @@ export function render(model, { date = utc(), total = 0 } = {}) {
     : none('mix');
   body.listen = ['<h3>Narration</h3>', narration, sounds, musicHtml(model.listen.music), '<h3>The mix alone</h3>', mix].filter(Boolean).join('\n');
 
-  body.script = model.script ? scriptHtml(model.script.sheet) : none('script');
+  body.script = model.script ? scriptHtml(model.script.sheet, model.script.final === true) : none('script');
 
   const { loop, still } = model.card;
   body.card =

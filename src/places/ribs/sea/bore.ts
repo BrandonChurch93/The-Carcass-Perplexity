@@ -7,7 +7,14 @@ import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { WALL_A } from './crest';
 
 /** The sheet that stands before the last shot's lens: mat/borewall-c.jpg, a dark standing face under a pitching lip. Its crest is level in the picture: the heads along it are given here. */
-const WALL_B = { foot: 0.185, crest: 0.8, aspect: 2048 / 768, profile: Array.from({ length: WALL_A.profile.length }, (_, i) => 0.95 + 0.028 * Math.sin(i * 0.19) + 0.014 * Math.sin(i * 0.53 + 1)) };
+const WALL_B = { foot: 0.185, crest: 0.8, aspect: 2048 / 768, profile: Array.from({ length: WALL_A.profile.length }, (_, i) => {
+    // Not one height along it: left of the lens it is already down, in the middle it stands and curls, toward the right stack it rears.
+    const u = i / (WALL_A.profile.length - 1);
+    const down = 1 - Math.min(1, Math.max(0, (u - 0.1) / 0.3));
+    const rears = Math.min(1, Math.max(0, (u - 0.62) / 0.25));
+    return 0.95 - 0.24 * down * down * (3 - 2 * down) + 0.09 * rears * rears * (3 - 2 * rears) + 0.028 * Math.sin(i * 0.19) + 0.014 * Math.sin(i * 0.53 + 1);
+  }),
+};
 import { BORE_SPEED, boreArrives, boreFront } from './tide';
 
 const rand = (a: number, b: number): number => hash2(a, b) / 4294967296;
@@ -237,6 +244,11 @@ void main() {
   vec3 lightUp = skyIrradiance(vec3(0.0, 1.0, 0.0));
 #ifdef CURTAIN
   float alpha = smoothstep(0.02, 0.22, lum) * (1.0 - smoothstep(0.6, 1.0, a)) * (1.0 - uSolo);
+  // Thrown water is lumps and holes: no sheet of it has an edge, least of all where it leaves the lip.
+  vec3 lumps = texture2D(tFoamPic, vec2(x / 13.0, a * 1.7 - uTime * 0.22)).rgb;
+  float lump = dot(lumps, vec3(0.3333));
+  alpha *= smoothstep(0.0, 0.3, a + 0.6 * (lump - 0.5)) * smoothstep(0.22 + 0.3 * a, 0.62 + 0.3 * a, lump + 0.25);
+  pic = mix(lumps * 1.15 + 0.1, pic, smoothstep(0.1, 0.4, a));
   vec3 col = pic * (lightUp * 0.9 + uSunColour * 0.45 * sun) / 3.14159;
   // Thrown water is thin at its top and the bright sky behind the wave shows in it.
   vec3 behind = skyRadiance(-v);
@@ -261,6 +273,11 @@ void main() {
   bool bare = a < 0.0 && apron < 0.3 && lifted <= 0.0;
   float foot = a < 0.0 ? 1.0 : smoothstep(0.1, 0.0, t);
   pic = mix(pic, max(churn, vec3(0.5) * step(a, 0.0) * 0.0) + 0.25 * apron * step(a, 0.0), foot);
+  // No wave has an outline: the top of the wall is churned white with holes in it, torn lower in one place than the next.
+  vec3 top = texture2D(tFoamPic, vec2(x / 9.0, t * 2.2 - uTime * 0.3)).rgb;
+  float torn = smoothstep(0.7, 1.0, t) * 1.3 - dot(top, vec3(0.3333)) - 0.25 * (tongue - 0.8);
+  pic = mix(pic, top * 1.1 + 0.12, smoothstep(0.72, 0.9, t) * step(0.0, a));
+  bare = bare || (a > 0.0 && torn > 0.32);
   lum = dot(pic, vec3(0.3, 0.5, 0.2));
   float foam = smoothstep(0.2, 0.6, lum);
   vec3 n = normalize(vNormalW);
@@ -636,6 +653,8 @@ export function createBore(
         return;
       }
       const across = (i: number, salt: number, span: number): number => X + span * (rand(i, salt) - 0.5);
+      // The wall does not throw evenly: along it there are stretches that explode and stretches already spent.
+      const gust = (x: number): number => 0.5 + 0.3 * Math.sin(x * 0.043 + 0.7) + 0.2 * Math.sin(x * 0.117 + 2.1);
 
       // The veil: water too fine to fall, hanging over and behind the crest. It hides the feet of the far blades and the white stands against it.
       for (let i = 0; i < VEIL; i++) {
@@ -664,12 +683,13 @@ export function createBore(
         const H = high(x);
         const c = curlAt(x, born);
         const z0 = boreFront(born) + lineAt(x, born) - H * (0.3 + 0.3 * rand(i, n + 14));
-        const up = (6 + 12 * rand(i, n + 16)) * (0.6 + 0.8 * c);
+        const g = gust(x);
+        const up = (6 + 12 * rand(i, n + 16)) * (0.6 + 0.8 * c) * (0.45 + 1.3 * g);
         const y = H * (0.95 - 0.1 * c) + up * a - 3.2 * a * a;
         // The wind is behind the wall: what is torn off the crest is carried on ahead of it, toward the land.
         const z = z0 + BORE_SPEED * a * (1 + 0.2 * a / life);
         const fade = Math.min(1, a / 0.15) * Math.pow(Math.max(0, 1 - a / life), 1.5);
-        const size = (2.2 + 3.4 * a) * (0.6 + 0.8 * rand(i, n + 17));
+        const size = (2.2 + 3.4 * a) * (0.6 + 0.8 * rand(i, n + 17)) * (0.65 + 0.8 * g);
         thrown(x, y, z, size, 0.5 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.9, 1.3, 0.1 + 0.3 * rand(i, n + 20), 0.3 * a / life);
       }
 
@@ -689,12 +709,13 @@ export function createBore(
         const f0 = low ? H * (0.15 + 0.3 * c) * rand(i, n + 54) : lip[0] - 0.5 + 1.5 * rand(i, n + 54);
         const y0 = low ? H * (0.1 + 0.45 * rand(i, n + 55)) * (0.4 + 0.6 * c) : lip[1] + 0.8 * (rand(i, n + 55) - 0.4);
         const vf = low ? 3 + 5 * rand(i, n + 56) : 2 + 7 * rand(i, n + 56) * (0.5 + c);
-        const vy = low ? 3 + 6 * rand(i, n + 57) : 1 + 5 * rand(i, n + 57);
+        const g = gust(x);
+        const vy = (low ? 3 + 6 * rand(i, n + 57) : 1 + 5 * rand(i, n + 57)) * (0.55 + 0.95 * g);
         const z = boreFront(born) + lineAt(x, born) + f0 + (BORE_SPEED + vf) * a;
         const y = y0 + vy * a - 4.9 * a * a;
         if (y < 0.3) continue;
         const fade = Math.min(1, a / 0.08) * Math.min(1, (life - a) / 0.3) * (low ? 0.4 + 0.6 * c : 1);
-        const size = (low ? 1.0 + 1.2 * rand(i, n + 58) : 0.6 + 1.0 * rand(i, n + 58)) * (1 + 0.9 * a);
+        const size = (low ? 1.0 + 1.2 * rand(i, n + 58) : 0.6 + 1.0 * rand(i, n + 58)) * (1 + 0.9 * a) * (0.55 + 1.0 * g);
         thrown(x, y, z, size, (low ? 0.5 : 0.8) * fade, rand(i, n + 59), rand(i, n + 60) * 6.28, 1.2, low ? 0.45 : 0.1, 0);
       }
 

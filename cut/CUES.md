@@ -68,38 +68,38 @@ Written by `npm run cut` from `cut/PLAN.json`. Do not edit by hand. Frames count
 
 | clip | line | words | first frame | time code | length s | file | starts on shot | music second |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| n1 | 1 | Listen. | 84 | 0:01.24 | 0.9 | not made yet | ribs-01 | 1.4 |
-| n1 | 2 | There is a land the maps leave empty. | 240 | 0:04.00 | 3.9 | not made yet | ribs-01 | 4 |
-| n1 | 3 | I have walked it. End to end. | 546 | 0:09.06 | 3.55 | not made yet | ribs-01 | 9.1 |
-| n1 | 4 | I will tell you what is there. | 825 | 0:13.45 | 3.15 | not made yet | ribs-01 | 13.75 |
-| n2 | 1 | The strait. | 1077 | 0:17.57 | 1.17 | not made yet | ribs-02 | 17.95 |
-| n2 | 2 | Stone ribs. Taller than any wall men have built. | 1194 | 0:19.54 | 5.55 | not made yet | ribs-02 | 19.9 |
-| n2 | 3 | At low tide, the winged things come down to feed. | 1572 | 0:26.12 | 5.35 | not made yet | ribs-03 | 26.2 |
-| n2 | 4 | Look up. The drowned hang in the weed. That is how high the sea returns. | 1938 | 0:32.18 | 8.57 | not made yet | ribs-05 | 32.3 |
-| n3 | 1 | The fire. | 2550 | 0:42.30 | 0.95 | not made yet | heart-01 | 42.5 |
-| n3 | 2 | A lake of it, under a black skin. | 2658 | 0:44.18 | 3.67 | not made yet | heart-01 | 44.3 |
-| n3 | 3 | The tall ones walk the skin, and drink from the cracks. | 2964 | 0:49.24 | 5.98 | not made yet | heart-02 | 49.4 |
-| n3 | 4 | It burned before there were men. It will burn after. | 3420 | 0:57.00 | 5.97 | not made yet | heart-03 | 57 |
-| n4 | 1 | The pits. | 4257 | 1:10.57 | 0.95 | not made yet | breath-01 | 70.95 |
-| n4 | 2 | The land breathes here. Slow. From far below. | 4368 | 1:12.48 | 5.73 | not made yet | breath-01 | 72.8 |
-| n4 | 3 | Nothing grows near them but the red weed. | 4758 | 1:19.18 | 4.32 | not made yet | breath-02 | 79.3 |
-| n4 | 4 | The pale herds feed, and keep their distance. They are wiser than men. | 5070 | 1:24.30 | 8.05 | not made yet | breath-03 | 84.5 |
-| n5 | 1 | The red flats. | 5676 | 1:34.36 | 1.48 | not made yet | marsh-01 | 94.6 |
-| n5 | 2 | It was blood once. It still seeps. | 5892 | 1:38.12 | 4.08 | not made yet | marsh-02 | 98.2 |
-| n5 | 3 | The great beasts wallow in it, and grow fat. | 6285 | 1:44.45 | 4.83 | not made yet | marsh-04 | 104.75 |
-| n5 | 4 | The salt keeps what it catches. Forever. | 6636 | 1:50.36 | 4.7 | not made yet | marsh-05 | 110.6 |
-| n6 | 1 | The ridge. | 7056 | 1:57.36 | 1.05 | not made yet | spine-01 | 117.6 |
-| n6 | 2 | Above the clouds. Above the storm. | 7164 | 1:59.24 | 4.08 | not made yet | spine-01 | 119.4 |
-| n6 | 3 | Lightning walks it every night. Spire to spire. | 7458 | 2:04.18 | 5.45 | not made yet | spine-02 | 124.3 |
-| n6 | 4 | The beasts sleep inside the bone, and wait for morning. | 7896 | 2:11.36 | 5.98 | not made yet | spine-05 | 131.6 |
-| n7 | 1 | The lake. | 8337 | 2:18.57 | 0.95 | not made yet | eye-01 | 138.95 |
-| n7 | 2 | Still. Gold at the edge. Black at the center. | 8466 | 2:21.06 | 5.73 | not made yet | eye-01 | 141.1 |
-| n7 | 3 | The herds drink there. They do not look down. | 8847 | 2:27.27 | 5.23 | not made yet | eye-04 | 147.45 |
-| n7 | 4 | The center has no bottom. I did not find one. | 9204 | 2:33.24 | 5.23 | not made yet | eye-05 | 153.4 |
-| n8 | 1 | Now you see it. | 9741 | 2:42.21 | 2.02 | audio/kept/lines/n8-1.wav | reveal-01 | 162.35 |
-| n8 | 2 | This was never land. | 9900 | 2:45.00 | 1.85 | audio/kept/lines/n8-2.wav | reveal-01 | 165 |
-| n8 | 3 | It was a god. | 10075 | 2:47.55 | 1.25 | audio/kept/lines/n8-3.wav | reveal-01 | 167.92 |
-| n8 | 4 | Gods die slow. This one is not finished. | 10620 | 2:57.00 | 4.5 | audio/kept/lines/n8-4.wav | reveal-01 | 212.82 |
+| n1 | 1 | Past the last calm water, there is a shore. | 84 | 0:01.24 | 4.1 | audio/kept/lines/n1-1.wav | ribs-01 | 1.4 |
+| n1 | 2 | Nothing on it has a name. | 432 | 0:07.12 | 2.03 | audio/kept/lines/n1-2.wav | ribs-01 | 7.2 |
+| n1 | 3 | Nothing on it should be alive. | 654 | 0:10.54 | 2.4 | audio/kept/lines/n1-3.wav | ribs-01 | 10.9 |
+| n1 | 4 | All of it is. | 930 | 0:15.30 | 1.45 | audio/kept/lines/n1-4.wav | ribs-01 | 15.5 |
+| n2 | 1 | The strait. | 1074 | 0:17.54 | 1.18 | audio/kept/lines/n2-1.wav | ribs-02 | 17.9 |
+| n2 | 2 | Stone blades, taller than the storms. | 1188 | 0:19.48 | 3.62 | audio/kept/lines/n2-2.wav | ribs-02 | 19.8 |
+| n2 | 3 | At low tide the winged ones feed. They do not have long. | 1533 | 0:25.33 | 5.03 | audio/kept/lines/n2-3.wav | ribs-03 | 25.55 |
+| n2 | 4 | High in the weed hangs one that stayed. Then the sea returns. All at once. | 2016 | 0:33.36 | 6.38 | audio/kept/lines/n2-4.wav | ribs-05 | 33.6 |
+| n3 | 1 | The fire. | 2550 | 0:42.30 | 1.12 | audio/kept/lines/n3-1.wav | heart-01 | 42.5 |
+| n3 | 2 | A lake of it, under a black skin. | 2658 | 0:44.18 | 3.33 | audio/kept/lines/n3-2.wav | heart-01 | 44.3 |
+| n3 | 3 | The tall ones walk the skin, and drink from the cracks. | 2964 | 0:49.24 | 4.48 | audio/kept/lines/n3-3.wav | heart-02 | 49.4 |
+| n3 | 4 | The fire has never cooled. Sometimes the skin gives way. | 3414 | 0:56.54 | 5.05 | audio/kept/lines/n3-4.wav | heart-03 | 56.9 |
+| n4 | 1 | The pits. | 4257 | 1:10.57 | 1.33 | audio/kept/lines/n4-1.wav | breath-01 | 70.95 |
+| n4 | 2 | The ground breathes here. Slow. From far below. | 4374 | 1:12.54 | 5.23 | audio/kept/lines/n4-2.wav | breath-01 | 72.9 |
+| n4 | 3 | Red growth feeds on the breath. | 4890 | 1:21.30 | 2.5 | audio/kept/lines/n4-3.wav | breath-03 | 81.5 |
+| n4 | 4 | The pale herds graze the channel, not the rim. One did. One will. | 5178 | 1:26.18 | 6.33 | audio/kept/lines/n4-4.wav | breath-04 | 86.3 |
+| n5 | 1 | The red flats. | 5655 | 1:34.15 | 1.6 | audio/kept/lines/n5-1.wav | marsh-01 | 94.25 |
+| n5 | 2 | Stalks root in the red. The ground still bleeds. | 5832 | 1:37.12 | 5 | audio/kept/lines/n5-2.wav | marsh-01 | 97.2 |
+| n5 | 3 | The heavy ones wallow in it, and grow fat. | 6288 | 1:44.48 | 3.8 | audio/kept/lines/n5-3.wav | marsh-04 | 104.8 |
+| n5 | 4 | The salt keeps whatever it catches. Forever. | 6636 | 1:50.36 | 3.58 | audio/kept/lines/n5-4.wav | marsh-05 | 110.6 |
+| n6 | 1 | The ridge. | 7035 | 1:57.15 | 1.08 | audio/kept/lines/n6-1.wav | spine-01 | 117.25 |
+| n6 | 2 | Above the cloud. Under the storm. | 7137 | 1:58.57 | 3.45 | audio/kept/lines/n6-2.wav | spine-01 | 118.95 |
+| n6 | 3 | Every night the lightning walks it. Spire to spire. | 7500 | 2:05.00 | 4.47 | audio/kept/lines/n6-3.wav | spine-03 | 125 |
+| n6 | 4 | The herds shelter in the hollow beneath, until morning. | 7908 | 2:11.48 | 3.83 | audio/kept/lines/n6-4.wav | spine-05 | 131.8 |
+| n7 | 1 | The lake. | 8337 | 2:18.57 | 1 | audio/kept/lines/n7-1.wav | eye-01 | 138.95 |
+| n7 | 2 | Still. Gold at the edge. Black at the center. | 8478 | 2:21.18 | 5.1 | audio/kept/lines/n7-2.wav | eye-01 | 141.3 |
+| n7 | 3 | The herds drink. None of them looks down. | 8874 | 2:27.54 | 3.45 | audio/kept/lines/n7-3.wav | eye-04 | 147.9 |
+| n7 | 4 | The center has no floor. Something looks back. | 9192 | 2:33.12 | 4.05 | audio/kept/lines/n7-4.wav | eye-05 | 153.2 |
+| n8 | 1 | The land has a shape. | 9630 | 2:40.30 | 2.53 | audio/kept/lines/n8-1.wav | reveal-01 | 160.5 |
+| n8 | 2 | None of it was ever land. | 9846 | 2:44.06 | 2 | audio/kept/lines/n8-2.wav | reveal-01 | 164.1 |
+| n8 | 3 | It was a titan. | 10027 | 2:47.07 | 1.68 | audio/kept/lines/n8-3.wav | reveal-01 | 167.12 |
+| n8 | 4 | Everything here feeds on it. And it is not finished. | 10620 | 2:57.00 | 4 | audio/kept/lines/n8-4.wav | reveal-01 | 212.82 |
 
 ## Events
 

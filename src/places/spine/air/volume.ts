@@ -73,6 +73,7 @@ vec3 strikeLight(vec3 p) {
 // The air about a stroke, lit by it: the light a ray gathers in passing a round light, in closed form, no farther than what the ray meets.
 vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
   vec3 g = vec3(0.0);
+  float small = 0.0;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 q = ro - uEmitters[i].xyz;
@@ -81,10 +82,18 @@ vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
     float b = dot(rd, q);
     float h = sqrt(max(dot(q, q) - b * b, 0.0) + 0.04 * r * r);
     g += uEmitterRadiance[i] * (r * r * (atan((far + b) / h) - atan(b / h)) / h);
+    // A small light (the one at a struck tip) blooms in the lens: violet white, gone within some 25 m of it, and hidden by what stands
+    // before it. It is summed apart from the great lights and closes on its own, higher ceiling.
+    if (uEmitters[i].w < 20.0 && -b > 0.0 && -b < far + 20.0) {
+      float off = sqrt(max(dot(q, q) - b * b, 0.0));
+      float power = 1.0 - exp(-dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) / 60000.0);
+      small += power * (exp(-off * off / 90.0) + 0.3 * exp(-off / 11.0));
+    }
   }
-  g *= 1.0e-7;
+  // Staged by shot: behind the long lens of the strike (spine-04) the cloud's glow is the strike picture's own; the air adds a fifth of its.
+  g *= 1.0e-7 * (uSkyStage.z > 0.0 ? 0.2 : 1.0);
   // A glow in the cloud about the stroke, not a lamp over the frame: it closes on a ceiling a little over the dusk sky's own tone.
-  return g / (1.0 + dot(g, vec3(0.33)) / 0.07);
+  return g / (1.0 + dot(g, vec3(0.33)) / 0.07) + vec3(0.84, 0.76, 1.0) * (0.6 * small / (1.0 + small));
 }
 
 // The open sky as cloud takes it: the cold light from above, and the last band on what faces it.
@@ -150,6 +159,9 @@ float seaTop(vec3 p, bool fine) {
   // the ridge is a knife out of cloud, and its flanks go down into it.
   float bank = smoothstep(900.0, 120.0, abs(lee));
   float top = ridge.y - CLOUD_UNDER + 360.0 * (n - 0.5) + 70.0 * bank;
+  // Beside the ridge no billow stands over the crest: a head that rolled up there stood as a dark hill before the spires for a quarter
+  // of a second. Farther out the deck may heap as it likes.
+  top = min(top, ridge.y - 28.0 + 0.2 * max(abs(lee) - 200.0, 0.0));
   if (ridge.z > 0.01 && lee > -700.0 && lee < 1500.0) {
     vec3 c = p - uWind.xyz * (uTime * uWind.w);
     float m = 0.45 * noise(vec3(c.xz / 520.0, 0.37)).r + 0.2 * noise(vec3(c.xz / 140.0, 0.81)).b + 0.35 * textureLod(tSeaNh, c.xz / 1300.0 + 0.11, seaLod).b;
@@ -265,8 +277,8 @@ void main() {
     // The picture gives its grain; the tone is the deck's own: cold from the sky on its heads, deep blue-violet in its hollows, and the
     // dusk on what faces it.
     float grainS = clamp(dot(sea, vec3(0.33)) / dot(SEA_MEAN, vec3(0.33)), 0.7, 1.4);
-    vec3 cold = SEA_COLD * (0.1 + 0.6 * head * head) * (1.0 + 0.6 * lean);
-    vec3 warm = 0.6 * SEA_WARM * smoothstep(0.0, 0.8, lean) * (0.25 + 0.75 * head) * (1.0 - 0.7 * stormSide(rd));
+    vec3 cold = SEA_COLD * (0.09 + 0.42 * head * head) * (1.0 + 0.6 * lean);
+    vec3 warm = 0.34 * SEA_WARM * smoothstep(0.0, 0.8, lean) * (0.25 + 0.75 * head) * (1.0 - 0.7 * stormSide(rd));
     sea = (cold + warm) * grainS;
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * stormSide(rd), 0.0, 1.5);
@@ -276,12 +288,14 @@ void main() {
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.
     vec2 uvP = vec2(0.0);
     float plate = uPlate.w > 0.0 ? plateAt(az, -dip, uvP) : 0.0;
+#if PLATE == 1
     if (plate > 0.0) {
       vec3 seaP = skyCloud(ro, rd, 0.0);
       sea = mix(sea, seaP * (0.55 + 0.9 * head * head) * (1.0 + 0.5 * lean), plate);
       domeFar = mix(domeFar, seaP, plate);
       gone = mix(gone, smoothstep(2500.0, 7000.0, t), plate);
     }
+#endif
     sea = mix(sea, domeFar, max(gone * gone, smoothstep(0.035 / zoomF, 0.0, dip) * (1.0 - plate)));
     // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
     sea = mix(sea, domeFar, stormSide(rd) * smoothstep(0.14, 0.0, dip));
@@ -346,10 +360,10 @@ void main() {
       float gust = noise(vec3(along / 260.0, float(i) * 0.37, 0.11)).g;
       float k = x / reach;
       float body = exp(-d2) * (1.0 - k) * (1.0 - k) * smoothstep(0.0, 0.05, k + 0.01);
-      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 2.4, 0.0, 0.9) * uShow.w * uStage.x * clearOf;
+      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 1.6, 0.0, 0.32) * uShow.w * uStage.x * clearOf;
       // Staged by shot: before the long lens of the strike a plume is a thin smoke of snow, not a bank.
       thick *= 1.0 - 0.75 * uPlate.w;
-      vec3 pale = 1.7 * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
+      vec3 pale = 0.95 * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
       light += through * thick * pale;
       through *= 1.0 - thick;
     }
@@ -363,10 +377,13 @@ void main() {
   // the cloud behind it, read soft.
   vec2 uvQ = vec2(0.0);
   float plateOn = uPlate.w > 0.0 ? plateAt(atan(rd.z, rd.x), asin(clamp(rd.y, -1.0, 1.0)), uvQ) : 0.0;
+#if PLATE == 1
   if (plateOn > 0.0) {
-    domeAir = mix(domeAir, skyCloud(ro, rd, 5.0), plateOn);
-    if (far > 50000.0) stormAir *= 1.0 - plateOn;
+    domeAir = mix(domeAir, skyCloud(ro, rd, 2.5), plateOn);
+    // Before the strike's sky the storm's near air is thin: the picture keeps its dark masses and its sea its billows.
+    stormAir *= far > 50000.0 ? 1.0 - plateOn : 1.0 - 0.75 * plateOn;
   }
+#endif
   if (stormAir > 0.0) {
     light = light * (1.0 - stormAir) + domeAir * stormAir;
     through *= 1.0 - stormAir;

@@ -124,6 +124,9 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 w = pow(abs(n), vec3(4.0));
   w /= w.x + w.y + w.z;
+  // A face that shows a tenth of itself is not read: the two that count share the stone.
+  w = max(w - 0.1, 0.0);
+  w /= w.x + w.y + w.z;
   // A block is a piece of the scree: the plate of the slope on its three faces, each block from another part of it.
   vec2 at = vTint.yz * 40.0;
   // The plate is a slope of many stones: a block shows a small piece of it large, so that it is one stone with its own cracks, not a heap.
@@ -135,22 +138,22 @@ void main() {
   float e = 0.1;
   vec2 d = vec2(0.0);
   vec4 col = vec4(0.0);
-  if (w.x > 0.03) {
+  if (w.x > 0.0) {
     vec4 k = screeAt(ux);
     col += k * w.x;
     d += vec2(texture2D(tScreeH, (ux + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (ux + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.x;
   }
-  if (w.y > 0.03) {
+  if (w.y > 0.0) {
     vec4 k = screeAt(uy);
     col += k * w.y;
     d += vec2(texture2D(tScreeH, (uy + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uy + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.y;
   }
-  if (w.z > 0.03) {
+  if (w.z > 0.0) {
     vec4 k = screeAt(uz);
     col += k * w.z;
     d += vec2(texture2D(tScreeH, (uz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.z;
   }
-  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x) * mix(vec3(1.2, 1.15, 1.04), vec3(1.0), smoothstep(12.0, 4.0, cameraPosition.y));
+  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x) * mix(vec3(1.32, 1.18, 0.98), vec3(1.0), smoothstep(12.0, 4.0, cameraPosition.y));
   vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
@@ -343,11 +346,14 @@ export function create(ctx: Context): Piece {
     for (let i = 0; i < 13000; i++) {
       const ahead = 2 + 26 * rng.next() ** 1.5;
       const aside = rng.range(-1, 1) * (3.5 + 0.42 * ahead);
-      const size = 0.03 + 0.2 * rng.next() ** 3.2;
+      // Mostly small, a cobble here and there, and now and then a stone the size of a head.
+      const size = 0.03 + 0.2 * rng.next() ** 3.2 + 0.3 * (((i * 2654435761) >>> 0) / 4294967296) ** 14;
       const x = from[0] + fx * ahead - fz * aside;
       const z = from[2] + fz * ahead + fx * aside;
       if (landHeight(x, z) < -0.1 - 0.4 * size) continue;
+      // They lie in drifts: bare grit between, where only the larger ones stand.
       if (vnoise(x / 1.7 + 5, z / 1.7 + 2) < 0.3 && size < 0.09) continue;
+      if (vnoise(x / 3.4 + 11, z / 3.4 + 7) < 0.46 && size < 0.14) continue;
       put(x, z, size);
     }
   }

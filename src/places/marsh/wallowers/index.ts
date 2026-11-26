@@ -1,5 +1,5 @@
 // The mud-wallowers: heavy eyeless animals that root in the red brine of the vein with a fringe of tusk-like feelers.
-import { BEASTS, F, R, T0, UNIT, WALLOW_TIME, bearingDir, keyTime, rel } from '../shared/anchors';
+import { BEASTS, F, K1_AT, K1_DIR, R, T0, UNIT, WALLOW_TIME, bearingDir, keyTime, rel } from '../shared/anchors';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
@@ -14,10 +14,14 @@ const DISCS = 5;
 /** The size of a cell of the skin's grid, metres at size 1: the three by the lens of the wallowers, and the rest. */
 const CELL_NEAR = 0.03;
 const CELL_FAR = 0.065;
-// STAGED by shot: the two that lie in the vein to the right of the lens of the wallowers are off the set for its shot. The approved picture has one animal behind the three, far and soft, and these two stood large and cropped at its edge.
+// STAGED by shot: the four that lie and wade in the vein to the right of the lens of the wallowers are off the set for its shot. The approved picture has one animal behind the three, far and soft, and these two stood large and cropped at its edge.
 const WALLOW_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-04');
 const WALLOW_SPAN: [number, number] = WALLOW_SHOT ? [secondsInPlace(UNIT, WALLOW_SHOT.first) - 0.004, secondsInPlace(UNIT, WALLOW_SHOT.last) + 0.004] : [0, -1];
-const OFF_SET = [6, 9];
+const OFF_SET = [6, 7, 8, 9];
+// STAGED by shot: in the shot of the seep the ones that stand within 17 m of it are off the set, where one stood large and pale on its far bank,
+// and one small one wades far behind its mist, as the approved picture has it. That one is on the set for that shot only.
+const SEEP_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-03');
+const SEEP_SPAN: [number, number] = SEEP_SHOT ? [secondsInPlace(UNIT, SEEP_SHOT.first) - 0.004, secondsInPlace(UNIT, SEEP_SHOT.last) + 0.004] : [0, -1];
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('wallowers');
@@ -42,13 +46,13 @@ export function create(ctx: Context): Piece {
     const hero = herd.length === 0;
     const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.05 * b.k : 0);
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.72 : 0.6) * b.k;
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.95 : 0.6) * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
     const near = herd.length < 3;
     const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is shaggy: the photographed matted hair is its hide.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.45 : near ? 1.3 : 1, ...(hero ? { droop: 2.0 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}) }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
@@ -62,7 +66,7 @@ export function create(ctx: Context): Piece {
     const hl = b.head[1] / n;
     // STAGED for the lens of the wallowers: the young one stands on the bank a stride behind where the anchors have it, whole in that frame beside the great one's rump,
     // and the one behind the three is five metres further off and to the right, small and in the haze, as the approved picture has them.
-    const p = herd.length === 1 ? rel(34.0, 5.6) : herd.length === 3 ? rel(49, 9.5) : rel(b.d, b.l);
+    const p = herd.length === 1 ? rel(34.25, 5.25) : herd.length === 3 ? rel(49, 9.5) : rel(b.d, b.l);
     // TEMPORARY, until the lead sets it in the anchors: the ones that wade nearest the lens of the wide key stand larger in it than anything in the approved picture.
     // STAGED for the lens of the wallowers: the great one is a tenth smaller than the anchors have it, and fills as much of that frame as the approved picture gives it.
     const size = b.d < 26 ? b.size * 0.6 : herd.length === 0 ? b.size * 0.9 : b.size;
@@ -76,9 +80,14 @@ export function create(ctx: Context): Piece {
   // STAGED for the lens of the colony: one wades the far shallows of the pool, side on, right of the middle of that view.
   const bank = bearingDir(37);
   const bl = Math.hypot(1, 0.12);
-  add(bank[0] * 9.0, bank[1] * 9.0, keyTime('marsh-2'), [-1 / bl, -0.12 / bl], 0.84, 0.12, 0.2, 0.05);
+  add(bank[0] * 11.5, bank[1] * 11.5, keyTime('marsh-2'), [-1 / bl, -0.12 / bl], 0.74, 0.12, 0.2, 0.05);
   // It wades: the brine is over its knees and its belly is just clear of it.
   (herd[herd.length - 1] as (typeof herd)[number]).plan.ground = -0.15;
+  // STAGED for the lens of the seep: the small one far behind its mist, side on.
+  // The colony's wader stands in that view too, large and close: it is off the set for that shot with the ones near the seep.
+  const bySeep = herd.map((h, i) => i === herd.length - 1 || Math.hypot(h.plan.at[0] - K1_AT[0], h.plan.at[1] - K1_AT[1]) < 17);
+  add(K1_AT[0] + K1_DIR[0] * 33 - K1_DIR[1] * 5.6, K1_AT[1] + K1_DIR[1] * 33 + K1_DIR[0] * 5.6, keyTime('marsh-1'), [K1_DIR[1], -K1_DIR[0]], 0.6, 0.3, 0.16, 0.05);
+  const seepWader = herd.length - 1;
 
   const wet = new Wet(ctx, herd.length);
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
@@ -96,8 +105,9 @@ export function create(ctx: Context): Piece {
     setTime: (seconds) => {
       const staged = stagedSeconds();
       const cleared = staged >= WALLOW_SPAN[0] && staged <= WALLOW_SPAN[1];
+      const seep = staged >= SEEP_SPAN[0] && staged <= SEEP_SPAN[1];
       herd.forEach((h, i) => {
-        const on = !(cleared && OFF_SET.includes(i));
+        const on = !(cleared && OFF_SET.includes(i)) && !(seep && bySeep[i]) && (i !== seepWader || seep);
         h.beast.mesh.visible = on;
         h.beast.feelers.visible = on;
         const driven = walk(h.plan, h.beast.b, seconds, drive);

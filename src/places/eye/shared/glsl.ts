@@ -121,6 +121,8 @@ uniform sampler2D tPlate;
 uniform vec4 uPlateAt;
 uniform vec4 uPlateLens;
 uniform vec4 uPlateTone;
+// x: how much the wide shot deepens the dark of its far picture, y: the brightness under which a part of it is rock in shade.
+uniform vec2 uPlateShade;
 uniform vec4 uNear;
 uniform vec4 uShade;
 uniform sampler2D tUngrade;`;
@@ -183,6 +185,12 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   if (uPlateTone.w < 1.5) {
     float paler = smoothstep(0.0, 0.25, (plate.b - plate.r) / max(plate.b, 1e-3)) * smoothstep(8.0, 40.0, cameraPosition.y);
     plate = mix(plate, dot(plate, vec3(0.3, 0.5, 0.2)) * vec3(1.04, 1.05, 1.1), 0.6 * paler);
+    // And the wall stands in the last light with its caves deep: what is dark in the picture is darker, and the east end under the brow is in shade.
+    float fromHigh = smoothstep(8.0, 40.0, cameraPosition.y);
+    float lum = dot(plate, vec3(0.3, 0.5, 0.2));
+    float rockish = smoothstep(uPlateShade.y * 1.5, uPlateShade.y, lum);
+    plate *= mix(1.0, clamp(pow(max(lum, 1e-4) / uPlateShade.y, 0.45), 0.5, 1.0), fromHigh * rockish * uPlateShade.x);
+    plate *= mix(1.0, 0.62, fromHigh * rockish * uPlateShade.x * smoothstep(0.42, 0.72, atan(q.x, -q.z)));
   }
   // The sky of the picture itself, in a mirror, is the low warm sky: water that is never quite still gives back less of the blue overhead.
   if (bias > 0.0) {

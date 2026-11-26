@@ -46,13 +46,16 @@ interface Stack {
 // A stack of the gate is rock first: a pillar broken into flat faces, built of beds a few metres thick; each bed stands out or back from
 // the one under it, so that there are ledges for weed to hang from and overhangs with bare wet rock under them.
 const BED = 6.5;
+// How far a face of a stack leans in and out with height. At 0.3 the right stack's outline before the bore was a head in profile
+// (brow, nose, mouth); at 0.1 the faces stand nearly straight.
+const STACK_SWAY = 0.1;
 function stackRadius(s: Stack, y: number, angle: number): number {
   const base = s.foot + (s.top - s.foot) * smooth(-10, s.height, y);
   const seed = s.x * 0.013 + s.z * 0.007;
   let r = base * 1.15;
   for (let k = 0; k < 7; k++) {
     const a = k * 0.8976 + 1.3 * noise3(k * 1.7 + 0.5, seed, 0.5);
-    const d = base * (0.74 + 0.36 * noise3(k * 2.3 + 0.5, seed, 5.5)) * (1 + 0.3 * (noise3(k * 1.1 + 0.5, y / 45, seed) - 0.5));
+    const d = base * (0.74 + 0.36 * noise3(k * 2.3 + 0.5, seed, 5.5)) * (1 + STACK_SWAY * (noise3(k * 1.1 + 0.5, y / 45, seed) - 0.5));
     const c = Math.cos(angle - a);
     if (c > 0.2) r = Math.min(r, d / c);
   }
@@ -81,7 +84,7 @@ function stackRock(s: Stack): THREE.BufferGeometry {
   });
 }
 
-function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) => number, around: number, proud = 2.2, lower = 0, lumps = 1): THREE.BufferGeometry {
+function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) => number, around: number, proud = 2.2, lower = 0, lumps = 1, level = 0): THREE.BufferGeometry {
   const rows = 30;
   const span = LEVELS.tide + 5;
   const profile: [number, number][] = [];
@@ -90,7 +93,9 @@ function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) 
   const g = lathe(x0, z0, profile, around, (run, _r, angle) => {
     const f = run / span;
     const far = radiusAt(LEVELS.tide, angle);
-    const top = weedTop(x0 + Math.cos(angle) * far, z0 + Math.sin(angle) * far) - lower;
+    const ragged = weedTop(x0 + Math.cos(angle) * far, z0 + Math.sin(angle) * far);
+    // A stack with a weed line of its own keeps the same ragged hem, an eighth as deep.
+    const top = level > 0 ? level + 0.12 * (ragged - LEVELS.tide + 2) : ragged - lower;
     const y = -5 + (top + 5) * f;
     const tuck = smooth(0.9, 1, f);
     const base = radiusAt(Math.max(0, y), angle);
@@ -292,8 +297,14 @@ export function create(ctx: Context): Piece {
   // The colony's rock: ledges above the tide line, weed below.
   const ledges = new THREE.Mesh(roundSpace(colonyRock(), COLONY.x, COLONY.z, 60, Math.atan2(COLONY.side[1], COLONY.side[0]) + Math.PI), roostRock);
   ctx.scene.add(ctx.parts.built('ledges', ledges));
-  // The crag draws its own weed line; the skirt hangs under it, so that no hem of it cuts the crag's blocks before the colony's lens.
-  add(skirts, stackWeed(COLONY.x, COLONY.z, (y, angle) => COLONY.cragAt(angle, y), 420, 1.2, 9), weed);
+  // The crag draws its own weed line; the skirt hangs under it, out of the colony's frame.
+  // It hangs clear of every ledge and block: a curtain over the widest the rock stands within a few metres of a place, not a skin on it.
+  const curtain = (y: number, angle: number): number => {
+    let r = 0;
+    for (const dy of [-3, -1.5, 0, 1.5, 3]) for (const da of [-0.03, 0, 0.03]) r = Math.max(r, COLONY.cragAt(angle + da, Math.max(0, y + dy)));
+    return r;
+  };
+  add(skirts, stackWeed(COLONY.x, COLONY.z, curtain, 420, 0.5, 9), weed);
   ctx.scene.add(ctx.parts.built('weed', skirts));
 
   // Loose rock: fallen from the blades round their feet, and smaller pieces out on the floor. None on the paths of the cameras.
@@ -442,7 +453,18 @@ export function create(ctx: Context): Piece {
       }
     }
   }
-  const kept = placed.filter((p) => !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : p.sink > 0.555 ? 1.5 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
+  // What lies on the flat is gathered: long patches drawn out along the strait with bare wet sand between them, the rubble under the
+  // near cliff, and what each low lens has close under it. Three stones in four of an even strewing are taken away.
+  const gateAt0 = resolve(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 0).position;
+  const feedAt0 = resolve(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 0).position;
+  const cliff = RIBS[0] as Rib;
+  const gathered = (x: number, z: number, size: number): boolean => {
+    if (Math.hypot(x - cliff.x, z - cliff.z) < 150) return true;
+    if (Math.hypot(x - (gateAt0[0] as number), z - (gateAt0[2] as number)) < 70 || Math.hypot(x - (feedAt0[0] as number), z - (feedAt0[2] as number)) < 60) return true;
+    const patch0 = fbm3(x / 42 + 7.3, 3.5, z / 130, 2) + 0.12 * noise3(x / 6, 8.5, z / 6);
+    return patch0 > (size < 0.09 ? 0.55 : 0.57);
+  };
+  const kept = placed.filter((p) => gathered(p.x, p.z, p.size) && !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : p.sink > 0.555 ? 1.5 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
   STATIONS.foreground.forEach(([x, z, size], i) => {
     kept.push({ x, z, size, yaw: 1.3 + i * 2.4, tilt: 0.1, kind: i % KINDS, sink: 0.55 });
     // A heap, not one stone: smaller rock against its sides.

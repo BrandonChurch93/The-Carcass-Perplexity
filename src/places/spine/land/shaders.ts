@@ -142,10 +142,14 @@ uniform vec4 uSheet;
 uniform vec4 uSheetMap;
 // The height of the frame in pixels, so that what is decided by the size of a pixel is decided the same at every format.
 uniform float uTall;
+uniform float uWet;
 uniform float uSheetDepth;
 uniform float uSheetShear;
 #ifndef KIND
 #define KIND 0
+#endif
+#ifndef SCORCH
+#define SCORCH 0
 #endif
 // The kind is fixed when the shader is built, one build for each: what a kind never draws is not in its shader, and costs nothing.
 const float uKind = float(KIND);
@@ -295,7 +299,7 @@ void main() {
   vec3 sheetC = vec3(0.0);
   float sheet = 0.0;
   if (!inside) if (spire || porch > 0.0) {
-    sheetC = texture2D(tSheet, sheetUv).rgb;
+    sheetC = textureLod(tSheet, sheetUv, lodOf(tSheet, dFdx(sheetUv), dFdy(sheetUv))).rgb;
     float facing = abs(dot(smoothN, vec3(-sheetAx.z, 0.0, sheetAx.x)));
     sheet = smoothstep(0.035, 0.1, max(sheetC.r, max(sheetC.g, sheetC.b))) * smoothstep(0.26, 0.55, facing) * smoothstep(0.0, 0.06, sheetUv.y) * (spire ? 1.0 : porch);
   }
@@ -370,7 +374,7 @@ void main() {
       float lodA = lodOf(tFace, gSx / 50.0, gSy / 50.0);
       // Far off its joints would be finer than a pixel and the face a smooth skin: there the same rock is laid three times larger, so a far
       // spire is cut by joints it can show.
-      float which = smoothstep(1.3, 2.5, lodA);
+      float which = smoothstep(1.6, 2.2, lodA);
       vec2 eps = vec2(max(0.004, exp2(lodA) / 1254.0), 0.0);
       vec3 cF = vec3(0.0);
       vec3 hF = vec3(0.0);
@@ -470,9 +474,10 @@ void main() {
     vec3 sc = sheetC;
     if (sheet > 0.0) {
       vec2 px = 3.0 / vec2(textureSize(tSheetH, 0));
-      float h0 = texture2D(tSheetH, uv).r;
-      float da = (texture2D(tSheetH, uv + vec2(px.x, 0.0)).r - h0) / px.x * uSheetMap.x;
-      float dy = (texture2D(tSheetH, uv + vec2(0.0, px.y)).r - h0) / px.y * uSheetMap.z;
+      float lodH = lodOf(tSheetH, dFdx(uv), dFdy(uv));
+      float h0 = textureLod(tSheetH, uv, lodH).r;
+      float da = (textureLod(tSheetH, uv + vec2(px.x, 0.0), lodH).r - h0) / px.x * uSheetMap.x;
+      float dy = (textureLod(tSheetH, uv + vec2(0.0, px.y), lodH).r - h0) / px.y * uSheetMap.z;
       // Far off the sheet is the rock, whole. Close to it would be a picture pulled large and soft: there it gives only the broad tone
       // of its masses, and the rock's own tiles, at their true size, are the crag, in colour and in relief.
       // Far off the rock of the sheet is dark and its snow is pale: the rock is let down, the snow kept.
@@ -534,14 +539,14 @@ void main() {
     snow = max(snow, ledgeSnow * (1.0 - sheet));
     // Snow lies on every ledge of the rock: wherever the broken face itself turns up flatter than some forty degrees, and deeper low down
     // and to windward, so the spire stands out of the ridge's own snow.
-    float low = smoothstep(280.0, 20.0, vWorld.y - landAt(vWorld.xz).r);
+    float above = vWorld.y - landAt(vWorld.xz).r;
+    float low = smoothstep(280.0, 20.0, above);
     // (the lee faces keep their rock: the gale lays its snow on what looks into it)
     low *= smoothstep(-0.25, 0.45, -dot(smoothN.xz, uWind.xz));
     snow = max(snow, smoothstep(0.5 - 0.3 * low, 0.7 - 0.3 * low, 0.7 * nRock.y + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
     // Under the lens snow lies only on what the rock itself turns up to the sky; a slab's side keeps none.
     snow *= mix(1.0, smoothstep(0.25, 0.6, 0.5 * (nRock.y + facet.y)), fineRock);
     // A spire stands in the drift at its foot.
-    float above = vWorld.y - landAt(vWorld.xz).r;
     snow = max(snow, smoothstep(5.0, 0.5, above + 3.0 * (pit - 0.5)));
     occ *= 0.55 + 0.45 * smoothstep(0.0, 14.0, above);
     float proud = smoothstep(-9.0, 5.0, vRelief);
@@ -550,6 +555,12 @@ void main() {
   }
   if (!spire) snow *= 1.0 - sheet;
   snow *= 1.0 - burn;
+  if (spire) {
+    // Staged by shot (uWet): there the snow keeps to the lee ledges, and the bare rock is wet and near black.
+    snow *= mix(1.0, smoothstep(-0.15, 0.3, lee) * smoothstep(0.55, 0.8, n0.y + 0.25 * nRock.y), uWet);
+    albedo *= mix(1.0, 0.3, uWet);
+    rough = mix(rough, 0.3, uWet);
+  }
   float rime = smoothstep(0.15, 0.7, -lee) * smoothstep(0.35, 0.75, pit + 0.3 * vnoise(vWorld.xz * 0.6 + vWorld.y * 0.4)) * (1.0 - burn);
   if (inside) {
     snow = smoothstep(1.6, 0.2, vWorld.y - CANAL_FLOOR + 1.2 * (pit - 0.5)) * 0.85;
@@ -573,7 +584,9 @@ void main() {
     float crystals = smoothstep(0.15, 0.38, frostL * (0.55 + 0.9 * pit));
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
-    float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.3 * smoothstep(0.42, 0.2, pit) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
+    float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.42 * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
+    // Staged by shot (uWet): the struck spire in the long lens is wet black rock, with frost only in its cracks.
+    cover *= 1.0 - 0.85 * uWet;
     albedo = mix(albedo, min(frostC * 1.6, vec3(0.9)) * vec3(0.93, 0.97, 1.06), cover);
     // The feathers stand out of the rock: their own relief, from the frost picture's light and dark across the face.
     vec3 dPx = dFdx(vWorld);
@@ -653,6 +666,9 @@ void main() {
   occ = mix(occ, snowOcc, snow);
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
   // Where the bolt came to ground: the burned wet rock under the dead one, a plate 14 m across laid square to the lens of that shot.
+// Staged by shot: the burn is compiled in only for the shot by the dead one (spine-03). No other lens sees it, and a software renderer pays
+// for it on every pixel of the ground otherwise.
+#if SCORCH == 1
   if (uKind < 0.5) {
     vec2 dS = vWorld.xz - uScorch.xy;
     vec2 uvS = vec2(dot(dS, uScorchAxes.xy) / 7.0, dot(dS, uScorchAxes.zw) / 3.94) + 0.5;
@@ -683,6 +699,7 @@ void main() {
       occ = mix(occ, 0.6 + 0.4 * h0, scorch);
     }
   }
+#endif
 
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
   vec3 lightAt = vWorld;
@@ -846,9 +863,11 @@ void main() {
   float broad = fbm(at * 1.7 + 4.0);
   float fine = fbm(at * 6.5 + 11.0);
   // Snow lies where the rock is level and in its hollows; the faces between are bare.
-  float snow = smoothstep(0.4, 0.48, 0.62 * broad + 0.38 * fine + 0.34 * n.y);
+  // (In its hollows: the rock's edges stand dark out of it, as veins between the drifts, and it is thin old snow, not white.)
+  float veins = smoothstep(0.07, 0.025, abs(fine - 0.5)) + smoothstep(0.05, 0.02, abs(broad - 0.52));
+  float snow = smoothstep(0.5, 0.42, 0.55 * broad + 0.45 * fbm(at * 3.4 + 7.0)) * smoothstep(-0.25, 0.25, n.y) * (1.0 - min(veins, 1.0)) * 0.75;
   vec3 rock = mix(vec3(0.07, 0.052, 0.045), vec3(0.34, 0.23, 0.16), smoothstep(0.3, 0.75, fine) * smoothstep(0.35, 0.6, broad + 0.2));
-  vec3 albedo = mix(rock, vec3(0.66, 0.69, 0.76), snow);
+  vec3 albedo = mix(rock, vec3(0.5, 0.53, 0.6), snow);
   n = normalize(n + (1.0 - snow) * 0.9 * (vec3(fine, broad, 1.0 - fine) - 0.5));
   // It stands in the open off the spire's edge: the sky lights it whole (the land's own shelter is of the ground under it, far below),
   // and the stroke lights the side that looks at it.
