@@ -9,7 +9,7 @@
     "skyWidth": 2048,
     "skyQuality": 94
   },
-  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of a tile, or the whole of a plate, stands for (0 for a far backplate); relief names the grey height picture of a plate, cover the grey picture of where its subject is",
   "materials": [
     {
       "name": "spire",
@@ -76,6 +76,145 @@
       "kind": "sky",
       "width": 1536,
       "height": 1024
+    },
+    {
+      "name": "far",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "tower",
+      "kind": "plate",
+      "metres": 500,
+      "width": 1536,
+      "height": 1024,
+      "cover": "tower-a.png",
+      "relief": "tower-h.png"
+    },
+    {
+      "name": "runner",
+      "kind": "plate",
+      "metres": 2.6,
+      "width": 1536,
+      "height": 1024,
+      "cover": "runner-a.png"
+    },
+    {
+      "name": "lock",
+      "kind": "plate",
+      "metres": 0.35,
+      "width": 1536,
+      "height": 1024,
+      "relief": "lock-h.png"
+    },
+    {
+      "name": "scorchfield",
+      "kind": "plate",
+      "metres": 14,
+      "width": 1672,
+      "height": 941,
+      "relief": "scorchfield-h.png"
+    },
+    {
+      "name": "burn",
+      "kind": "plate",
+      "metres": 1,
+      "width": 1265,
+      "height": 1244
+    },
+    {
+      "name": "membrane",
+      "kind": "plate",
+      "metres": 14,
+      "width": 2172,
+      "height": 724,
+      "relief": "membrane-h.png"
+    },
+    {
+      "name": "holdfast",
+      "kind": "plate",
+      "metres": 1.5,
+      "width": 1536,
+      "height": 1024,
+      "relief": "holdfast-h.png"
+    },
+    {
+      "name": "tendril",
+      "kind": "tile",
+      "metres": 0.3,
+      "mean": [
+        0.072,
+        0.067,
+        0.072
+      ]
+    },
+    {
+      "name": "stump",
+      "kind": "plate",
+      "metres": 250,
+      "width": 1024,
+      "height": 1536,
+      "relief": "stump-h.png"
+    },
+    {
+      "name": "horn",
+      "kind": "plate",
+      "metres": 250,
+      "width": 1024,
+      "height": 1536,
+      "relief": "horn-h.png"
+    },
+    {
+      "name": "stormwall",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "icefloor",
+      "kind": "plate",
+      "metres": 8,
+      "width": 1044,
+      "height": 1507,
+      "relief": "icefloor-h.png"
+    },
+    {
+      "name": "ledge",
+      "kind": "tile",
+      "metres": 40,
+      "mean": [
+        0.17,
+        0.18,
+        0.235
+      ]
+    },
+    {
+      "name": "rime",
+      "kind": "tile",
+      "metres": 3,
+      "mean": [
+        0.327,
+        0.327,
+        0.363
+      ]
+    },
+    {
+      "name": "stormwall-lit",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "scorch",
+      "kind": "plate",
+      "metres": 6,
+      "width": 1671,
+      "height": 941,
+      "relief": "scorch-h.png"
     }
   ]
 }

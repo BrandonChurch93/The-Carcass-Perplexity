@@ -1,8 +1,9 @@
 // Makes the tiling material pictures of a place from its generated sheets, and its sky picture.
 // Run: node assets-src/materials/make-materials.mjs <place> [<place> ...]     (ribs, breath, marsh, spine, eye, reveal)
-// Reads assets-src/<place>/mat/src/<name>.png and assets-src/materials/spec.json.
+// Reads assets-src/<place>/mat/src/<name>.png, assets-src/materials/spec.json and assets-src/materials/spec2.json.
 // Writes public/assets/<place>/mat/<name>.jpg (colour, sRGB), <name>-nh.png (red and green: the slope on x and y, 0.5 is level; blue: height), sky.jpg and materials.json.
-// A plate (one whole feature on black, such as a storm seen from orbit) is written as <name>.jpg at its own size and is not made to repeat.
+// A plate (one whole picture: a feature on black, a far backplate, a ground plate) is written as <name>.jpg at its own size and is not made to repeat.
+// Where assets-src/<place>/mat/src/<name>-h.png exists, the plate's relief is written beside it as <name>-h.png (grey: white high or near, black low or far).
 // The method is the Heart's (assets-src/heart/make-materials.mjs), unchanged, so a place can read these the way the Heart reads its own.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,7 +11,12 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const SPEC = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets-src', 'materials', 'spec.json'), 'utf8'));
+const readSpec = (name) => {
+  const file = path.join(ROOT, 'assets-src', 'materials', name);
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
+};
+// spec.json is the first list (2026-11-25), spec2.json the second (2026-11-26: backplates, feature sheets, ground plates, more tiles).
+const SPEC = [...readSpec('spec.json'), ...readSpec('spec2.json')];
 
 export const RECIPE = { size: 1024, band: 0.14, heightBlur: 0.05, heightSpread: 0.2, normalStrength: 2.2, jpegQuality: 92, skyWidth: 2048, skyQuality: 94 };
 
@@ -63,7 +69,7 @@ function blurWrap(src, n, radius) {
 
 async function material(place, name, out) {
   const n = RECIPE.size;
-  const { data } = await sharp(path.join(ROOT, 'assets-src', place, 'mat', 'src', `${name}.png`)).removeAlpha().resize(n, n, { kernel: 'lanczos3', fit: 'cover' }).raw().toBuffer({ resolveWithObject: true });
+  const { data } = await sharp(path.join(ROOT, 'assets-src', place, 'mat', 'src', `${name}.png`)).flatten({ background: '#000000' }).resize(n, n, { kernel: 'lanczos3', fit: 'cover' }).raw().toBuffer({ resolveWithObject: true });
   let f = Float32Array.from(data);
   f = wrapAxis(f, n, 0, RECIPE.band);
   f = wrapAxis(f, n, 1, RECIPE.band);
@@ -126,13 +132,31 @@ for (const place of process.argv.slice(2)) {
       const made = await sharp(path.join(out, 'sky.jpg')).metadata();
       rows.push({ name: 'sky', kind: 'sky', width: made.width, height: made.height });
     } else if (row.kind === 'plate') {
-      await sharp(src).removeAlpha().jpeg({ quality: RECIPE.skyQuality, chromaSubsampling: '4:4:4' }).toFile(path.join(out, `${row.name}.jpg`));
+      // A source with a clear background is laid on black, and its cover is written beside it as <name>-a.png (grey: white is the subject).
+      const meta = await sharp(src).metadata();
+      await sharp(src).flatten({ background: '#000000' }).jpeg({ quality: RECIPE.skyQuality, chromaSubsampling: '4:4:4' }).toFile(path.join(out, `${row.name}.jpg`));
       const made = await sharp(path.join(out, `${row.name}.jpg`)).metadata();
-      rows.push({ name: row.name, kind: 'plate', metres: row.metres, width: made.width, height: made.height });
+      const entry = { name: row.name, kind: 'plate', metres: row.metres, width: made.width, height: made.height };
+      if (meta.hasAlpha) {
+        const cover = await sharp(src).extractChannel(3).raw().toBuffer();
+        let clear = 0;
+        for (let i = 0; i < cover.length; i++) if (cover[i] < 128) clear++;
+        if (clear > cover.length * 0.02) {
+          await sharp(src).extractChannel(3).png({ compressionLevel: 9 }).toFile(path.join(out, `${row.name}-a.png`));
+          entry.cover = `${row.name}-a.png`;
+        }
+      }
+      // A plate may have a relief picture beside it: grey, the size of the colour picture, white high or near, black low or far.
+      const relief = path.join(ROOT, 'assets-src', place, 'mat', 'src', `${row.name}-h.png`);
+      if (fs.existsSync(relief)) {
+        await sharp(relief).removeAlpha().resize(made.width, made.height, { kernel: 'lanczos3', fit: 'fill' }).greyscale().png({ compressionLevel: 9 }).toFile(path.join(out, `${row.name}-h.png`));
+        entry.relief = `${row.name}-h.png`;
+      }
+      rows.push(entry);
     } else {
       rows.push({ name: row.name, kind: 'tile', metres: row.metres, mean: await material(place, row.name, out) });
     }
   }
-  fs.writeFileSync(path.join(out, 'materials.json'), `${JSON.stringify({ recipe: RECIPE, note: 'mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of a tile, or the whole of a plate, stands for', materials: rows }, null, 2)}\n`);
+  fs.writeFileSync(path.join(out, 'materials.json'), `${JSON.stringify({ recipe: RECIPE, note: 'mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of a tile, or the whole of a plate, stands for (0 for a far backplate); relief names the grey height picture of a plate, cover the grey picture of where its subject is', materials: rows }, null, 2)}\n`);
   for (const r of rows) console.log(place, r.name, r.kind === 'tile' ? r.mean.join(' ') : `${r.width} x ${r.height}`);
 }
