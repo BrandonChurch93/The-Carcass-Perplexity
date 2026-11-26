@@ -198,6 +198,31 @@ export function browGeometry(): THREE.BufferGeometry {
 }
 
 /** A stone: a ball pushed about by noise, flattened, with corners. `seed` picks which. */
+/** A pebble that water has worn: an egg with a flat or two and no edge, lower than it is wide. */
+export function pebbleGeometry(seed: number, detail = 2): THREE.BufferGeometry {
+  const g = new THREE.IcosahedronGeometry(1, detail);
+  const p = g.getAttribute('position') as THREE.BufferAttribute;
+  const long = 0.75 + 0.5 * vnoise(seed * 3.7, 1.1);
+  const low = 0.42 + 0.3 * vnoise(seed * 5.3, 7.7);
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i);
+    const y = p.getY(i);
+    const z = p.getZ(i);
+    let k = 0.9 + 0.22 * vnoise(x * 0.9 + seed * 7.1, z * 0.9 + y * 1.1 + seed * 3.3) + 0.06 * vnoise(x * 2.7 + y * 2.1 + seed, z * 2.7 + seed * 5.7);
+    // A worn flat: the plane takes the crown off softly, it leaves no arris.
+    for (let c = 0; c < 3; c++) {
+      const cx = Math.sin(seed * 12.9 + c * 4.1);
+      const cy = Math.sin(seed * 7.3 + c * 2.7) * 0.9;
+      const cz = Math.cos(seed * 5.1 + c * 3.3);
+      const d = (x * cx + y * cy + z * cz) / Math.hypot(cx, cy, cz);
+      const cutAt = 0.74 + 0.14 * Math.sin(seed * 3.7 + c * 1.9);
+      if (d * k > cutAt) k = (cutAt + 0.35 * (d * k - cutAt)) / d;
+    }
+    p.setXYZ(i, x * k * long, y * k * low, z * k / long);
+  }
+  return g;
+}
+
 export function stoneGeometry(seed: number, detail = 2): THREE.BufferGeometry {
   const g = new THREE.IcosahedronGeometry(1, detail);
   const p = g.getAttribute('position') as THREE.BufferAttribute;

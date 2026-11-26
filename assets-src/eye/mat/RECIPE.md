@@ -432,3 +432,43 @@ Prompt or command: `node assets-src/materials/make-materials.mjs eye`.
 
 What it holds: the settings of the script, and for each tile its name, the real width of one repeat in metres and its mean colour in linear light, so a place can tint or blend by number; for each plate its size in pixels, the real width it stands for and the name of its relief picture where it has one.
 Date: 2026-11-26
+
+## `public/assets/eye/mat/far-edge.jpg`
+
+Made by: the image model behind `generate_image` (default model, through Perplexity), then `assets-src/eye/mat/make-plates.py` on Python 3.14 with Pillow 13.0 and NumPy 2.5.
+From: `assets-src/eye/mat/far-edge-t1.png`, the generated picture. Picture passed to the model with the prompt: `public/assets/eye/mat/far-low.jpg`.
+Prompt or command: the prompt below, then `python3 assets-src/eye/mat/make-plates.py`.
+
+```
+Photographic wide panorama for a film backplate: the far rim of a vast limestone sinkhole lake seen from water level across two kilometres of still water. The cliff is a thin band running the whole width of the frame, only about one eighth of the picture's height, sitting just above the middle of the picture. The rim has an irregular skyline of ledges and notches, unbroken from the left edge to the right edge of the picture. Low evening sun from the left: yellow-gold light only on the upper left-facing ledges, cool blue-grey shaded recesses and a few shallow dark caves at the cliff foot, pale scree fans. Low contrast, seen through hazy evening air, a thin pale mist lying at the foot of the cliff along the water. Above the cliff, filling the upper part of the picture: a clear still evening sky, lilac-blue shading to soft peach toward the left, with two thin faint cirrus streaks. Below the cliff: flat still dark water with a soft reflection. Same rock, same light and same colours as the reference picture, but seen from much farther away with a wider lens. No animals, no people, no birds, no text, no buildings, no trees.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the whole north rim from far off with its skyline and a strip of the evening sky over it, which the shot at the lake's edge lost with the low rim picture (asked for by `eye_sky_builder`).
+Date: 2026-11-26
+
+## `public/assets/eye/mat/far-long3.jpg`
+
+Made by: the image model behind `generate_image` (default model, through Perplexity) for the four pictures at the sides, then `assets-src/eye/mat/make-plates.py` on Python 3.14 with Pillow 13.0 and NumPy 2.5.
+From: `public/assets/eye/mat/far-long.jpg`, the middle, as it stood; `assets-src/eye/mat/far-long3-left-t1.jpg` and `assets-src/eye/mat/far-long3-left2-t1.jpg`, the wall carried on to the left; `assets-src/eye/mat/far-long3-right-t1.jpg` and `assets-src/eye/mat/far-long3-right2-t1.jpg`, the wall carried on to the right (the four stored as JPEG quality 95 as they came). Picture passed to the model with each prompt: a grey canvas of 1672 by 941 with the nearer half of the neighbouring picture on the half to be kept (the left half of `far-long.jpg` for left, the left half of left for left2, the right half of `far-long.jpg` for right, the right half of right for right2).
+Prompt or command: the four prompts below in the order left, left2, right, right2, then `python3 assets-src/eye/mat/make-plates.py`, which takes the new half of each, fades each seam over 80 columns and turns the orange of the sunlit rock toward yellow-gold.
+
+```
+Complete this picture to the left. The right half is a telephoto photograph of a high limestone cliff at evening, its blocky buttresses lit yellow-gold by the low sun, with grey scree slopes and low scrub below; the flat grey area at the left is missing and must be filled. Keep the right half exactly as it is. In the grey area the same cliff continues to the left without a break: more blocky ledged buttresses and beds lit the same yellow-gold, with cool grey shaded clefts between them, the cliff top out of the frame, and below them the same grey scree slope with a little low scrub running on to the left edge at the same level. No sky anywhere, no cave, no people, no animals, no text, no water. Same sharpness, same grain, same telephoto look through evening air; the new part must not be a mirror image of the right half.
+```
+
+```
+Complete this picture to the left. The right half is a telephoto photograph of a limestone cliff at evening, its blocky ledged buttresses lit yellow-gold by the low sun, above a grey scree slope with boulders; the flat grey area at the left is missing and must be filled. Keep the right half exactly as it is. In the grey area the same cliff continues to the left without a break: more blocky ledged buttresses lit the same yellow-gold with cool grey shaded clefts, the cliff top out of the frame, and below them the same grey scree slope with boulders running on level to the left edge. No sky anywhere, no cave, no people, no animals, no text, no water. Same sharpness, same grain, same telephoto look through evening air; the new part must not be a mirror image of the right half.
+```
+
+```
+Complete this picture to the right. The left half is a telephoto photograph of a high limestone cliff at evening with a cave mouth in pale rock, dark vertical stains on the wall, and a grey scree slope with low scrub rising toward the right; the flat grey area at the right is missing and must be filled. Keep the left half exactly as it is. In the grey area the same shaded pale grey limestone wall with dark vertical stains continues to the right without a break, its top out of the frame, and the scree slope with boulders and a little low scrub goes on rising gently to the right edge, covering the lower two thirds there. No sky anywhere, no second cave, no people, no animals, no text, no water. Same sharpness, same grain, same telephoto look through evening air; the new part must not be a mirror image of the left half.
+```
+
+```
+Complete this picture to the right. The left half is a telephoto photograph at evening of a shaded pale grey limestone wall with dark vertical stains above a grey scree slope with boulders and low scrub that rises toward the right; the flat grey area at the right is missing and must be filled. Keep the left half exactly as it is. In the grey area the scree slope reaches a rounded crest just right of the join and then falls away gently to the right edge, where it lies low in the frame; above it the same shaded pale grey limestone wall with dark vertical stains continues to the right edge, its top out of the frame. No sky anywhere, no cave, no people, no animals, no text, no water. Same sharpness, same grain, same telephoto look through evening air; the new part must not be a mirror image of the left half.
+```
+
+Takes: 1 made of each of the four, take 1 kept.
+Why this one: the north wall of the last shot three times as wide, so that it can hang at two thirds of its size as in approved eye-4 (gold across the left half, the cave small, scree at the right) and never repeats as the camera climbs (asked for by `eye_sky_builder`).
+Date: 2026-11-26

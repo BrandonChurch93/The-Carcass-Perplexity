@@ -3,32 +3,57 @@
 // the rings that leave the centre and every mouth and leg, the breath of air on it, and what rises at its centre.
 // There is no floor mesh under the shallows: the bed is worked out where the bent ray meets it, so there is one sheet of water and no box.
 import * as THREE from 'three';
-import { MIST_SUN_GLSL, mistSunTexture } from '../air/light';
-import { smooth } from '../layout';
-import { lipAt } from '../land/height';
+import { DEG, smooth } from '../layout';
+import { LIP_BAY, lipAt } from '../land/height';
 import { during } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { BED_GLSL, bedUniforms } from './bed';
+import { createBefore } from './before';
 import { createMirror } from './water';
+import { WAVES_GLSL, WAVE_TILES, createWaves } from './waves';
 
 export const PARTS: readonly string[] = ['lake', 'shallows', 'shaft', 'mats', 'riser'];
 
 /** Seconds after the crest of the dome at which the view from over the lake begins to come in: film frame 9330. */
 const LEAVE_FROM = (9330 - 9221) / 60;
-// Seconds after the rise at which the rings of the Eye begin to die away: by then the lens looks straight down on them.
-const RINGS_DIE = (9416 - 9221) / 60;
 
 const LAPS = 22;
+// While the swell is reworked the climb can be drawn with the water as it was.
+const CLIMB_AS_BEFORE = false;
+
+// The water the centre lifts. x: its height, y: its reach, z: the time, w: how hard the water round it is churned.
+// It is no solid of revolution: its foot wanders in and out, and its back is a slow boil of swellings that come up and go down in place.
+const DOME_GLSL = /* glsl */ `
+uniform vec4 uDome;
+// Its own smooth noise, so that the corners of the water and its pixels read the same height.
+float domeHash(vec2 q) {
+  return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453);
+}
+float domeNoise(vec2 q) {
+  vec2 i = floor(q);
+  vec2 f = fract(q);
+  f = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  return mix(mix(domeHash(i), domeHash(i + vec2(1.0, 0.0)), f.x), mix(domeHash(i + vec2(0.0, 1.0)), domeHash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+float domeAt(vec2 xz) {
+  float r = length(xz);
+  if (r > uDome.y * 1.3) return 0.0;
+  float reach = uDome.y * (0.84 + 0.42 * domeNoise(xz / 41.0 + 3.7));
+  float u = clamp(r / reach, 0.0, 1.0);
+  float k = 1.0 - u * u;
+  float t = uDome.z;
+  float boil = (domeNoise(xz / 14.0 + 9.0) - 0.5) * sin(t * 0.9 + 1.0) + (domeNoise(xz / 14.0 + 31.0) - 0.5) * cos(t * 0.9 + 1.0)
+    + 0.5 * ((domeNoise(xz / 6.0 + 2.0) - 0.5) * sin(t * 1.7) + (domeNoise(xz / 6.0 + 17.0) - 0.5) * cos(t * 1.7));
+  return uDome.x * k * k * (0.74 + 0.26 * k + 0.3 * boil);
+}`;
 
 const WATER_VERTEX = /* glsl */ `
-uniform vec4 uDome;
+${DOME_GLSL}
 varying vec3 vWorld;
 void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
-  float u = clamp(length(w.xz) / uDome.y, 0.0, 1.0);
-  float k = 1.0 - u * u;
-  w.y += uDome.x * k * k * k;
+  w.y += domeAt(w.xz);
   vWorld = w.xyz;
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
@@ -81,16 +106,29 @@ uniform float uLens;
 uniform vec4 uLap[${LAPS}];
 uniform int uLapCount;
 uniform vec4 uMirror;
-uniform vec4 uDome;
 // x: seconds since the centre rose (negative before).
 uniform vec4 uCentre;
+// Where rings of what drinks can be: the middle of them all (x, z), how far from it the farthest reaches, and how near the centre of the lake the nearest comes.
+uniform vec4 uLapZone;
 // The view from over the centre as the camera leaves. x: how far it has come in (0 until the camera begins to look down: nothing below reads it).
 // y: seconds since the dome began to sink. z: how far the rings of the Eye have died away under a lens that looks straight down (at 1 nothing reads them).
 uniform vec4 uLeave;
+// The breathing of the mirror: the slope of the three fields of long waves.
+uniform vec4 uBreath;
+// Each length of ring: x its turns a metre, y its turns a second, z the speed it travels at, w its slope.
+uniform vec4 uRing[6];
+uniform vec4 uRiserRing[3];
+uniform vec4 uLapRing[3];
+uniform float uRise;
+uniform float uRingsOn;
+// How clear the water of the shaft is beside the amber water of the shelf.
+uniform float uClear;
+uniform vec3 uDeepTone;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${BED_GLSL}
-${MIST_SUN_GLSL}
+${WAVES_GLSL}
+${DOME_GLSL}
 
 // Metres in from the shore. Where the built land has given way to the picture of the far world the water runs on, shallow, to the picture's own shore.
 float shoreIn(vec2 xz) {
@@ -116,137 +154,260 @@ void main() {
   vec4 land = landAt(p.xz);
   float inShore = shoreIn(p.xz);
 
-  // The slope of the surface.
+  // The surface. The lake is still: what moves on it is the long breathing of a mirror, and the rings of whatever has touched it.
+  // Each wave is drawn as a slope only where the pixels can hold it. What they cannot hold is not thrown away: it is counted in lost
+  // and comes back as a mirror that is drawn out up and down, which is what water too fine to be seen does to what it mirrors.
+  vec2 fx = dFdx(p.xz);
+  vec2 fy = dFdy(p.xz);
+  float covers = max(length(fx), length(fy));
+  vec2 level = normalize(-v.xz + vec2(1e-5, 0.0));
   vec2 slope = vec2(0.0);
-  // The slow rings alone, kept apart: seen low, a face of a ring that leans to the eye is dark and one that leans away is bright.
-  vec2 heave = vec2(0.0);
   // The rings of what drinks, kept apart: they are read on the whole of the water, the mirror and what lies under it.
   vec2 lapped = vec2(0.0);
-  // Rings that leave the centre, always: low and long, stronger on one side, and a train of higher ones thrown by what rises.
-  if (r < 700.0 && uLeave.z < 1.0) {
-    float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
-    float quiet = 0.012 * (uPlateTone.w > 1.5 ? 0.3 : 1.0) * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
-    // What heaves at the centre sends out wide slow rings, heavy water, one every five seconds.
-    quiet += 0.2 * exp(-r / 170.0) * smoothstep(20.0, 60.0, r) * cos(r * 0.135 - uTime * 1.15 + 2.5 * vnoise(out2 * 2.0) + 7.0 * vnoise(p.xz / 83.0 + 5.0) + 2.4 * vnoise(p.xz / 21.0 + 1.7)) * (0.12 + 1.7 * pow(vnoise(p.xz / 37.0 + vec2(0.0, uTime * 0.02)), 1.6));
-    // A second train comes back off the south shore across the first, so that no ring runs whole from side to side.
-    quiet += 0.07 * exp(-r / 240.0) * smoothstep(40.0, 120.0, r) * cos(dot(p.xz, vec2(0.071, 0.118)) + uTime * 0.9 + 5.0 * vnoise(p.xz / 61.0 + 9.0)) * vnoise(p.xz / 44.0 + 3.0);
-    // From high up the lake is a mirror first: the rings are there, slow and low, and the wall stands whole in them.
-    quiet *= mix(1.0, 0.3, smoothstep(8.0, 30.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
-    // Round what heaves the rings stand close and high, each broken along its length, and they thin as they go out over a third of the lake.
-    float nearDome = uDome.x * exp(-r / 120.0) * smoothstep(uDome.y * 0.35, uDome.y * 0.9, r);
-    quiet += 0.075 * nearDome * cos(r * 0.17 - uTime * 1.5 + 2.6 * vnoise(p.xz / 47.0 + 2.0)) * (0.1 + 1.6 * pow(vnoise(vec2(atan(p.x, p.z) * 4.0, r / 53.0 - uTime * 0.05)), 1.5));
+  float lost = 0.0;
+  float churn = 0.0;
+  float lifted = 0.0;
+  float skirt = 0.0;
+  float alive = 1.0 - uLeave.z;
+  if (alive > 0.0) {
+    // A wave is drawn as a slope only if it is some pixels long: shorter, it would move what it mirrors by more than its own length, in steps.
+    float k0 = waveKept(covers * 4.0, ${WAVE_TILES[0].toFixed(1)});
+    float k1 = waveKept(covers * 4.0, ${WAVE_TILES[1].toFixed(1)});
+    float k2 = waveKept(covers * 4.0, ${WAVE_TILES[2].toFixed(1)});
+    vec3 breath = uBreath.xyz * alive;
+    if (k0 > 0.02) slope += breath.x * waveRead(tWave0, p.xz, ${WAVE_TILES[0].toFixed(1)}, 2.0);
+    if (k1 > 0.02) slope += breath.y * waveRead(tWave1, p.xz, ${WAVE_TILES[1].toFixed(1)}, 2.0);
+    // The longest field is as wide as the lake: it is read once, there is no second tile of it to hide.
+    slope += breath.z * texture2D(tWave2, p.xz / ${WAVE_TILES[2].toFixed(1)}, 2.0).rg;
+    lost += breath.x * breath.x * (1.0 - k0) + breath.y * breath.y * (1.0 - k1) + breath.z * breath.z * (1.0 - k2);
+  }
+  // Rings that leave the centre. Whatever heaves there sends out waves of four lengths, each at the speed water gives a wave of that length,
+  // so that the long ones run ahead and the train never repeats. Each length is sent in its own uneven bursts and is stronger on one bearing
+  // than the next, and its crests are bent by the ground they cross: no ring is whole, no two are the same way apart.
+  if (r < 1500.0 && alive > 0.0) {
+    float rim = uDome.y;
+    float from = max(r - rim * 0.7, 0.0);
     float since = uCentre.x;
-    float front = 70.0 + 40.0 * max(since, 0.0);
-    float thrown = since > -1.5 ? 0.05 * smoothstep(-1.5, 0.3, since) * exp(-max(since, 0.0) / 3.5) * smoothstep(front + 30.0, front - 40.0, r) * exp(-r / 220.0) * cos(r * 0.3 - uTime * 2.6) : 0.0;
-    // Chop on and round the swell: short waves that cross.
-    float du = clamp(r / uDome.y, 0.0, 1.0);
-    float dr = (quiet + thrown) * broken + uDome.x * 3.0 * (1.0 - du * du) * (1.0 - du * du) * (-2.0 * du / uDome.y);
+    float dr = 0.0;
+    float fp = max(abs(dot(out2, fx)), abs(dot(out2, fy)));
+    // The bend of the crests and the bearing a train is strong on are told once and shared out among the lengths.
+    float bentA = vnoise(p.xz / 70.0 + 13.0);
+    float bentB = vnoise(p.xz / 160.0 + 31.0);
+    float bearA = vnoise(out2 * 2.4 + vec2(5.0, uTime * 0.05));
+    float bearB = vnoise(out2 * 5.1 + vec2(23.0, -uTime * 0.04));
+    for (int j = 0; j < 6; j++) {
+      vec4 ring = uRing[j];
+      float fj = float(j);
+      // The long ones, as long as the swell that makes them is wide, cross the whole lake.
+      float reach = j < 4 ? 40.0 + 45.0 * fj : 350.0 + 550.0 * (fj - 4.0);
+      // A length that has died on the way here is not counted.
+      if (from > 3.2 * reach) continue;
+      // Nor one too short for the pixels here: it would be no more than a softer mirror.
+      float told = smoothstep(1.2, 0.45, ring.x * fp);
+      if (told <= 0.0) continue;
+      // When the water here was sent: the train travels at the speed of its waves.
+      float sent = uTime - from / ring.z;
+      float bursts = 0.25 + 1.5 * vnoise(vec2(sent * 0.23 + fj * 7.3, fj * 3.1));
+      // What rose at the crest of the place threw a train of its own: it is there before the dome stands, and dies in ten seconds.
+      float thrownAt = sent - (uRise - 1.6);
+      float thrown = thrownAt > 0.0 ? 5.0 * smoothstep(0.0, 1.2, thrownAt) * exp(-thrownAt / 4.5) : 0.0;
+      // And what went down again threw another, the larger of the two.
+      float fellAt = sent - (uRise + 2.0);
+      if (fellAt > 0.0) thrown += 6.0 * smoothstep(0.0, 1.5, fellAt) * exp(-fellAt / 7.0);
+      thrown *= 1.0 - 0.3 * uLeave.x;
+      float turn = fract(fj * 0.37 + 0.2);
+      float bearing = 0.2 + 1.6 * mix(bearA, 1.0 - bearB, turn);
+      // From over it the trains are seen for what they are: each leaves on a bearing or two of its own, none goes all the way round.
+      if (uLeave.x > 0.0) bearing *= mix(1.0, 2.4 * smoothstep(0.4, 0.62, mix(bearB, 1.0 - bearA, turn)), uLeave.x);
+      float bent = (2.2 + 9.0 * uLeave.x) * mix(bentA, bentB, fj / 5.0) + fj * 2.4;
+      float amp = ring.w * (bursts * uCentre.y * (1.0 + uCentre.w * exp(-from / 90.0)) + thrown) * bearing * inversesqrt(max(r, rim) / rim) * exp(-from / reach);
+      // No ring goes all the way round: each is a run of arcs, and where an arc ends changes as the ring travels.
+      amp *= mix(smoothstep(0.3, 0.62, vnoise(out2 * (3.0 + 1.3 * fj) + vec2(fj * 11.0, sent * 0.35))), 1.0, uCentre.z);
+      float turns = ring.x * r - ring.y * uTime + bent;
+      // Round the swell the rings are steep: a narrow crest and a long trough, so each is a thin line of light.
+      float crest = uCentre.w > 0.0 ? sin(turns) * exp(1.6 * (cos(turns) - 1.0)) * 1.6 : sin(turns);
+      dr += amp * told * crest;
+      lost += 0.5 * amp * amp * (1.0 - told * told);
+    }
+    // From over it the still water in the middle is no disc: its edge is torn.
+    float middle = uLeave.x > 0.0 ? r - uLeave.x * rim * (0.3 + 0.9 * vnoise(p.xz / 47.0 + 8.0)) : r;
+    dr *= smoothstep(rim * 0.25, rim * 0.8, middle) * alive * uRingsOn;
     slope += out2 * dr;
-    heave += out2 * (quiet + thrown) * broken;
-    float chop = clamp(uDome.x / 2.0, 0.0, 1.0) * smoothstep(210.0, 40.0, r) * (0.5 + vnoise(p.xz / 17.0 + uTime * 0.05));
-    // The breath of the evening lays patches of small waves on the open water between the rings.
-    float gust = smoothstep(0.5, 0.72, vnoise(p.xz / 95.0 + vec2(uTime * 0.035, 3.0))) * smoothstep(1500.0, 500.0, away) * smoothstep(40.0, 120.0, away);
-    if (gust > 0.0) slope += gust * 0.022 * waves(p.xz / 4.6, vec2(uTime * 0.07, -uTime * 0.04));
-    if (chop > 0.0) slope += chop * (0.05 * waves(p.xz / 13.0, vec2(uTime * 0.05, uTime * 0.03)) + 0.04 * waves(p.xz / 3.7, vec2(-uTime * 0.11, uTime * 0.08)));
-    // Seen from straight over them these rings die away: the swell that comes in from one side is all that is left on the water.
-    if (uLeave.z > 0.0) {
-      slope *= 1.0 - uLeave.z;
-      heave *= 1.0 - uLeave.z;
+    // Round the foot of the swell the faces of its rings lean to the eye as its own face does, and are as dark: it has no edge.
+    skirt = smoothstep(1.8, 4.5, uDome.x) * smoothstep(2.6, 1.0, r / rim) * (1.0 - uLeave.x);
+    // The swell itself, by its own lie.
+    if (r < rim * 1.6) {
+      float h0 = domeAt(p.xz);
+      vec2 lie = vec2(domeAt(p.xz + vec2(0.75, 0.0)) - h0, domeAt(p.xz + vec2(0.0, 0.75)) - h0) / 0.75;
+      slope += lie;
+      // The water it lifted runs off it. The small waves that lie on the swell are carried down its fall, wherever that leads: they are read
+      // at two moments half a beat apart and passed from one to the other, so they travel and never come round again.
+      lifted = smoothstep(1.8, 4.5, uDome.x) * smoothstep(0.0, 2.6, h0);
+      if (lifted > 0.0) {
+        float steepness = length(lie);
+        vec2 way = steepness > 0.004 ? -lie / steepness : vec2(0.0);
+        float carry = 7.0 * min(steepness * 6.0, 1.0);
+        float beatA = fract(uTime / 2.3);
+        float beatB = fract(uTime / 2.3 + 0.5);
+        float share = 1.0 - abs(2.0 * beatA - 1.0);
+        vec2 runA = waveRead(tWave1, (p.xz - way * carry * beatA), ${WAVE_TILES[1].toFixed(1)}, 0.0);
+        vec2 runB = waveRead(tWave1, (p.xz - way * carry * beatB) + 19.0, ${WAVE_TILES[1].toFixed(1)}, 0.0);
+        slope += mix(runB, runA, share) * (lifted * (0.07 + 0.1 * min(uDome.w, 1.0)) * inversesqrt(share * share + (1.0 - share) * (1.0 - share)));
+      }
+      // Where the water it has lifted runs off it and meets the lake, the lake is churned: a torn band of short steep water round its foot,
+      // heavier on one side than the next, that comes and goes.
+      float du = r / rim;
+      float torn = vnoise(p.xz / 11.0 + 5.0) * (0.5 + 0.5 * sin(uTime * 0.7 + 6.28 * vnoise(p.xz / 23.0 + 1.0)));
+      churn = uDome.w * smoothstep(0.35, 0.95, du + 0.3 * (torn - 0.25)) * smoothstep(1.6, 1.05, du) * (0.25 + 1.5 * torn);
+      // From over it there is no band round a centre: the water is troubled in a few torn patches, wherever the fall left them.
+      if (uLeave.x > 0.0) {
+        float blotch = smoothstep(0.52, 0.8, vnoise(p.xz / 46.0 + vec2(17.0, uTime * 0.03)) + 0.25 * (vnoise(p.xz / 15.0 + 2.0) - 0.5)) * smoothstep(1.9, 0.9, length((p.xz - vec2(22.0, -14.0)) * vec2(0.8, 1.25)) / rim);
+        churn = mix(churn, uDome.w * blotch * (0.3 + 1.2 * torn), uLeave.x);
+      }
+      if (churn > 0.0) {
+        slope += churn * 0.1 * waveRead(tWave0, p.xz * 2.25, ${WAVE_TILES[0].toFixed(1)}, 0.0);
+        lost += churn * churn * 0.01 * (1.0 - waveKept(covers, ${(WAVE_TILES[0] / 2.25).toFixed(1)}));
+      }
     }
   }
-  // Each small thing that breaks the surface round the swell throws its own ring, one at a time, that widens and dies.
+  // Each small thing that breaks the surface round the swell sends out its own rings, which cross those of the centre.
   float splash = 0.0;
-  if (r < 300.0) {
+  if (r < 320.0 && alive > 0.0) {
     for (int i = 0; i < 9; i++) {
       vec3 at = uRiser[i];
       vec2 d = p.xz - at.xy;
       float m = length(d);
-      if (m < 50.0) {
-        float age = fract(uTime / 7.0 + at.z * 0.37);
-        float wide = 4.0 + 30.0 * age;
-        float x = (m - wide) / 4.0;
-        vec2 ring = d / max(m, 1e-3) * (0.035 * (1.0 - age) * x * exp(-x * x));
-        slope += ring;
-        heave += ring;
+      if (m < 60.0) {
+        vec2 dir = d / max(m, 1e-3);
+        float fp = max(abs(dot(dir, fx)), abs(dot(dir, fy)));
+        float dm = 0.0;
+        for (int j = 0; j < 3; j++) {
+          vec4 ring = uRiserRing[j];
+          float sent = uTime - m / ring.z;
+          float bursts = smoothstep(0.35, 0.8, vnoise(vec2(sent * 0.45 + at.z * 3.7, at.z * 9.1 + float(j) * 2.3)));
+          float amp = ring.w * bursts * exp(-m / (9.0 + 7.0 * float(j))) * inversesqrt(m + 0.6) * smoothstep(0.2, 1.2, m);
+          float told = smoothstep(2.4, 0.9, ring.x * fp);
+          dm += amp * told * sin(ring.x * m - ring.y * uTime + at.z * 5.0);
+          lost += 0.5 * amp * amp * (1.0 - told * told);
+        }
+        slope += dir * dm * alive;
         // Where it breaks the surface the water is white with it, most as it comes up.
         if (m < 9.0) splash += smoothstep(8.0, 1.0, m + 4.0 * vnoise(p.xz * 0.9 + uTime * vec2(0.7, 0.4) + at.z)) * (0.55 + 0.45 * cos(uTime * 0.7 + at.z * 3.0));
       }
     }
   }
-  // Rings where something drinks or stands: two trains of unlike length that leave it and die within a few metres.
+  // Rings where something drinks or stands: three lengths of small wave that leave it in the beat of its lapping, each at its own speed, and die within a few metres.
+  // Not looked for where no ring can be: away from all that drinks, or where a pixel is wider than the longest of them.
+  bool lapsNear = uLapCount > 0 && length(p.xz - uLapZone.xy) < uLapZone.z && r > uLapZone.w && min(length(fx), length(fy)) < 0.45;
   for (int i = 0; i < ${LAPS}; i++) {
-    if (i >= uLapCount) break;
+    if (!lapsNear || i >= uLapCount) break;
     vec4 l = uLap[i];
     vec2 d = p.xz - l.xy;
     float m = length(d);
-    if (l.w > 0.0 && m < 11.0) {
-      // Seen low and from a way off, only a long ring reads: two metres from crest to crest, and a shorter train inside it.
-      float ph = m * 3.2 - (uTime + l.z) * 2.7;
-      float ph2 = m * 10.0 - (uTime + l.z * 2.3) * 5.2;
-      // The short train is drawn only where the eye can tell one crest from the next.
-      float told = smoothstep(2.4, 0.9, fwidth(m * 10.0));
-      float pack = 0.6 + 0.4 * sin(m * 0.5 - uTime * 0.7 + l.z * 5.0);
-      float env = l.w * 0.055 * exp(-m / 3.2) * smoothstep(0.03, 0.4, m) * pack;
-      vec2 ring = d / max(m, 1e-3) * (env * (0.5 * cos(ph) + 0.9 * told * cos(ph2)));
-      slope += ring;
-      lapped += ring;
+    if (l.w > 0.0 && m < 14.0) {
+      vec2 dir = d / max(m, 1e-3);
+      float fp = max(abs(dot(dir, fx)), abs(dot(dir, fy)));
+      float dm = 0.0;
+      for (int j = 0; j < 3; j++) {
+        vec4 ring = uLapRing[j];
+        float sent = uTime + l.z - m / ring.z;
+        float bursts = 0.3 + 1.1 * vnoise(vec2(sent * 1.1 + l.z * 5.3, l.z * 3.3 + float(j) * 4.1));
+        float amp = l.w * ring.w * bursts * exp(-m / (2.6 + 1.6 * float(j))) * inversesqrt(m + 0.25) * smoothstep(0.03, 0.3, m);
+        float told = smoothstep(2.4, 0.9, ring.x * fp);
+        dm += amp * told * sin(ring.x * m - ring.y * (uTime + l.z));
+        lost += 0.5 * amp * amp * (1.0 - told * told);
+      }
+      slope += dir * dm;
+      lapped += dir * dm;
     }
   }
-  // A breath of air: a long slow heave everywhere, wavelets nearer, and lanes where a cat's paw has roughened the mirror.
-  vec2 wind = vec2(0.8, 0.6);
-  float gust = uLeave.z < 1.0 ? smoothstep(0.38, 0.75, vnoise(vec2(dot(p.xz, wind), dot(p.xz, vec2(-wind.y, wind.x)) * 2.4) / 170.0 - vec2(uTime * 0.06, 0.0))) : 0.0;
-  if (uLeave.z > 0.0) gust *= 1.0 - uLeave.z;
-  // From the rim the long heave is too small to tell from any other: it is made of numbers there and costs no reads.
-  float mid = 1.0 - smoothstep(260.0, 900.0, away);
-  if (uLeave.z < 1.0) {
-    vec2 calm2 = slope;
-    if (cameraPosition.y > 20.0 && uPlateTone.w < 1.5) slope += 0.008 * (vec2(vnoise(p.xz / 9.0 + wind * uTime * 0.09), vnoise(p.zx / 7.3 + 4.0 - wind.yx * uTime * 0.11)) - 0.5);
-    else slope += 0.0035 * waves(p.xz / 71.0, wind * uTime * 0.011);
-    if (mid > 0.0) slope += (0.0015 + 0.007 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
-    if (uLeave.z > 0.0) slope = mix(calm2, slope, 1.0 - uLeave.z);
-  }
   float close = 1.0 - smoothstep(25.0, 110.0, away);
-  if (close > 0.0) slope += (0.0016 + 0.006 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.06);
-  float closer = 1.0 - smoothstep(4.0, 22.0, away);
-  if (closer > 0.0) slope += 0.002 * closer * waves(p.xz / 0.61, wind * uTime * 0.12);
 
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
 
-  // What the water mirrors: the far world, softer the further off and where the air has roughened it.
+  float rimEye = smoothstep(8.0, 40.0, cameraPosition.y);
+  // The line of the lip wanders, and its edge is the broken edge of its crust.
+  vec3 lip = lipHere(p.xz);
+  float w = lip.x;
+  // Seen from the rim the shelf does not end at its crust: it shoals away under deepening water over a hundred metres, in tongues.
+  float shoalAt = rimEye > 0.0 ? w + rimEye * (46.0 * (vnoise(p.xz / 57.0 + 6.0) - 0.5) + 18.0 * (vnoise(p.xz / 17.0) - 0.5)) : w;
+  float shoal = rimEye * smoothstep(95.0, 0.0, shoalAt);
+  float crusted = mix(lipCover(p.xz, lip), smoothstep(-14.0, 10.0, shoalAt), rimEye);
+  // From straight over it the pale water inside the lip is no even band round the deep: it lies in runs of its own length, wide here and gone there.
+  float runs = 1.0;
+  if (uLeave.x > 0.0) {
+    runs = mix(1.0, smoothstep(0.46, 0.68, vnoise(p.xz / 110.0 + 4.0) + 0.4 * (vnoise(p.xz / 31.0 + 9.0) - 0.5)), uLeave.x);
+    crusted *= mix(runs, 1.0, smoothstep(-6.0, 8.0, shoalAt));
+  }
+  float noRock = 0.0;
+  // A low eye over the deep: the mirror is for the far water, where the look lies along it, and it is soft. Near, the eye goes into the dark.
+  float lowDeep = (1.0 - crusted) * (1.0 - rimEye) * (1.0 - uLeave.x);
+
+  // What the water mirrors: the far world. Where waves too fine for the pixels lie on it, the mirror is read three times, one above another:
+  // a wave tips what it mirrors up and down and hardly at all to the side, so the wall in the water is drawn out in soft upright shapes.
+  float lowEye = (1.0 - rimEye) * (1.0 - uLeave.x);
+  float spread = max(sqrt(0.5 * lost), 0.012 * lowDeep);
+  float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.7 * lowEye + 1.5 * uLeave.x;
   vec3 rd = reflect(-v, n);
-  rd.y = abs(rd.y) + 0.003;
-  // Seen low across water, a wave moves what it mirrors up and down and hardly at all to the side: the mirrored wall breaks into level bars.
-  vec2 level = normalize(-v.xz);
-  rd.xz = mix(level * length(rd.xz), rd.xz, 0.15 + 0.85 * smoothstep(0.12, 0.5, v.y));
-  // Through a long lens the wall in the water is one picture, pulled long and only shaken by the ripples: a wave moves it a little, it does not deal it out in pieces.
-  if (uPlateTone.w > 1.5) {
-    vec3 still = reflect(-v, vec3(0.0, 1.0, 0.0));
-    rd.y = max(mix(still.y, rd.y, 0.3), 0.003);
-  } else {
-    // A low eye that looks far along the water sees the far wall whole in it: the waves there are too small to deal it out.
-    float calm = smoothstep(120.0, 500.0, away) * smoothstep(12.0, 4.0, cameraPosition.y);
-    rd.y = max(mix(rd.y, v.y, 0.75 * calm), 0.003);
-  }
+  rd.y = max(abs(rd.y), 0.003);
   rd = normalize(rd);
-  float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
-  vec3 refl = farRadiance(p, rd, soft) * mix(vec3(0.78, 0.8, 0.84), vec3(0.8, 0.86, 0.95), smoothstep(8.0, 40.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
-  // Far off the eye looks along the water: the mirror there is whole and as bright as what stands over it, and the mist that lies at the
-  // foot of the far wall lies on the water too, so that no line shows where the water ends. It takes its sun as the mist of the air does,
-  // from the soft map and not from the rig's shadow test: that test is a wall, and its foot showed on the far water as the start of a dark strip.
-  if (uPlateTone.w > 0.5) {
-    float toPlate = length(p.xz - uPlateAt.xz) / uPlateAt.w;
-    vec3 mistLight = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (0.13 * mistSun(vec3(p.x, 10.0, p.z))) + 0.35 * skyRadiance(normalize(vec3(-v.x, 0.05, -v.z)))) * (2.4 / 3.14159);
-    refl = mix(refl, mistLight, (uPlateTone.w > 1.5 ? 0.3 : 0.9) * smoothstep(0.72, 0.985, toPlate) * (1.0 - uSolo));
-    // And the bank that stands at the foot of the far wall is in the mirror as it is in the air: a ray that leaves the water low finds it.
-    refl = mix(refl, mistLight, 0.5 * uMirror.a * pow(smoothstep(0.03, 0.002, rd.y), 1.5) * (1.0 - uSolo));
+  vec3 refl;
+  // Three looks are for the wall. Where the lowest of them still passes over its top all three find the sky, which one look tells as well.
+  bool drawnOut = spread > 0.0045 && uPlateTone.w < 1.5;
+  // Seen from the rim, the deep water inside the ring of mats: it comes in over the drop-off, in tongues, and has no edge.
+  float pool = rimEye * (1.0 - uLeave.x) * smoothstep(215.0, 130.0, shoalAt);
+  // From the rim the mirror reads over the deep and the drop-off; over the mats beyond, one look tells it.
+  if (rimEye >= 0.5) drawnOut = false;
+  if (drawnOut && uPlateTone.w > 0.5) {
+    vec2 o = p.xz - uPlateAt.xz;
+    float qa = max(dot(rd.xz, rd.xz), 1e-6);
+    float qb = dot(o, rd.xz);
+    float reachTo = (-qb + sqrt(max(qb * qb - qa * (dot(o, o) - uPlateAt.w * uPlateAt.w), 0.0))) / qa;
+    float lowest = p.y + (rd.y - 3.2 * spread) * reachTo - uPlateAt.y;
+    if (uPlateLens.w + 0.5 * (lowest / uPlateAt.w) / uPlateLens.z > 1.02) drawnOut = false;
   }
+  if (drawnOut) {
+    // Under the long lens of the climb, as from the rim, the two outer looks tell the wall in the water.
+    bool twoLooks = rimEye >= 0.5 || uCentre.w > 0.0 || uLeave.x > 0.0;
+    soft += log2(1.0 + spread * 420.0) + (twoLooks ? 0.6 : 0.0);
+    vec2 tip = level * (1.3 * spread);
+    vec3 nUp = normalize(vec3(-slope.x - tip.x, 1.0, -slope.y - tip.y));
+    vec3 nDown = normalize(vec3(-slope.x + tip.x, 1.0, -slope.y + tip.y));
+    // A face that leans to the eye is seen more of than one that leans away.
+    float wUp = 0.3 * max(dot(nUp, v), 0.0);
+    float wMid = 0.4 * nv;
+    float wDown = 0.3 * max(dot(nDown, v), 0.0);
+    vec3 rUp = reflect(-v, nUp);
+    rUp.y = max(abs(rUp.y), 0.003);
+    vec3 rDown = reflect(-v, nDown);
+    rDown.y = max(abs(rDown.y), 0.003);
+    refl = wUp * farRadiance(p, normalize(rUp), soft) + wDown * farRadiance(p, normalize(rDown), soft);
+    // From the rim the wall in the water is small: the two outer looks, each softer, tell it.
+    if (!twoLooks) refl += wMid * farRadiance(p, rd, soft);
+    else wMid = 0.0;
+    refl /= max(wUp + wMid + wDown, 1e-4);
+  } else {
+    // A little of it is no more than a softer mirror.
+    refl = farRadiance(p, rd, soft + log2(1.0 + spread * 420.0));
+  }
+  // Deep water gives back the high sky, not the glow along the rim: under the wall it mirrors, the pool is the blue of the sky overhead and of its own depth.
+  if (pool > 0.0) {
+    // What it holds of the wall stays the wall's. Past the top of the wall the look goes up into the sky, and there the deep shows its own blue.
+    vec3 high = skyRadiance(normalize(vec3(rd.x, 0.85, rd.z))) * vec3(0.3, 0.41, 0.62);
+    float skyInIt = smoothstep(0.118, 0.15, rd.y / max(length(rd.xz), 1e-4));
+    refl = mix(refl, high, pool * mix(0.2, 0.95, skyInIt));
+  }
+  // The face of the swell leans to the eye and looks up past the wall: it holds the open sky of the hour, and every small wave on it holds another part of it.
+  if (skirt > 0.0) refl = mix(refl, skyRadiance(rd) * vec3(0.2, 0.24, 0.31), max(lifted, 0.85 * skirt) * smoothstep(0.06, 0.3, rd.y));
+  // From over the water the mirror looks up past the top of the wall: what it holds there is the sky, not the wall drawn out in straight lines.
+  if (uLeave.x > 0.0) refl = mix(refl, skyRadiance(rd), uLeave.x * smoothstep(0.04, 0.14, rd.y));
+  refl *= mix(vec3(0.78, 0.8, 0.84), vec3(0.8, 0.86, 0.95), smoothstep(8.0, 40.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
   // Staged by shot: the far water of the shore shot lies under the shaded wall and the high sky, and is the colour of them.
   refl *= mix(vec3(1.0), uMirror.rgb, smoothstep(12.0, 90.0, away));
   // Under the long lens the wall's gold lies on the water in long broken streaks, and the water between them is dark.
   if (uPlateTone.w > 1.5) refl *= clamp(pow(max(dot(refl, vec3(0.3, 0.5, 0.2)), 1e-4) / 0.2, 0.7), 0.4, 1.5);
-  refl *= 1.0 + 0.42 * tanh(0.33 * dot(heave, normalize(v.xz)) / max(v.y, 0.03)) * smoothstep(0.5, 0.12, v.y);
   // Whatever stands in the water or at its edge, drawn once more from under it.
   if (uMirrorOn > 0.5) {
     vec4 m4 = uMirrorMatrix * vec4(p.x, 0.0, p.z, 1.0);
@@ -259,19 +420,14 @@ void main() {
     refl = mix(refl, seen.rgb * 0.82, seen.a);
   }
 
-  // What lies under it.
+  // What lies under it. One water from the shore to the middle: a bed that lies knee-deep under the shelf, comes up to the crust of the lip
+  // and falls away under it, lit from above through the water over it and seen through the water between it and the eye. The colour and the
+  // dark of the lake are what that water takes from the light on the way, nowhere a second surface.
   vec3 rf = refract(-v, n, 0.752);
-  float fall = max(-rf.y, 0.12);
-  // The line of the lip wanders, and its edge is the broken edge of its crust.
-  vec3 lip = lipHere(p.xz);
-  float w = lip.x;
-  float crusted = lipCover(p.xz, lip);
-  float crustLine = crusted;
-  // From the rim the mats do not stop at a line: they thin toward the lip in tongues, and the dark of the deep begins among them.
-  crusted *= mix(1.0, smoothstep(0.0, 20.0, w + 16.0 * (vnoise(p.xz / 21.0 + 6.0) - 0.5) + 7.0 * (vnoise(p.xz / 5.1) - 0.5)), smoothstep(8.0, 40.0, cameraPosition.y));
-  vec3 under;
+  float fall = max(-rf.y, 0.3);
+  vec3 skyDown = skyIrradiance(vec3(0.0, 1.0, 0.0));
+  vec3 under = vec3(0.0);
   float dry = 0.0;
-  vec3 shelf = vec3(0.0);
   if (crusted > 0.0) {
     float depth = shelfDepthAt(p.xz, inShore, w);
     vec2 b = p.xz + rf.xz * (max(depth, 0.0) / fall);
@@ -279,100 +435,88 @@ void main() {
     float w2 = lip2.x;
     float in2 = shoreIn(b);
     Bed bed = bedAt(b, lip2, in2, shelfDepthAt(b, in2, max(w2, 0.0)), away);
-    float depth2 = bed.depth;
+    // The shoal: the same bed, sunk. Its mats no longer lie in the surface, and the amber water over them takes their colour down to brown.
+    float sunk = 3.2 * shoal * shoal + 0.9 * shoal;
+    float depth2 = bed.depth + sunk;
     vec3 at = vec3(b.x, 0.0, b.y);
     float sun = sunAt(at);
     float open = skyOpen(at);
     vec3 bn = normalize(vec3(bed.tilt.x, 1.0, bed.tilt.y));
-    vec3 e = skyIrradiance(bn) * open + uSunColour * (sun * (max(dot(bn, normalize(vec3(uSunDir.x, uSunDir.y + 0.35, uSunDir.z))), 0.0) * 0.8 + bed.glow));
+    vec3 e = skyDown * open + uSunColour * (sun * (max(dot(bn, normalize(vec3(uSunDir.x, uSunDir.y + 0.35, uSunDir.z))), 0.0) * 0.8 + bed.glow));
     // The light that reaches the bed has come through amber water: it is warm, whatever the sky.
     e = mix(e, dot(e, vec3(0.3, 0.5, 0.2)) * vec3(1.2, 1.0, 0.74), 0.65);
-    // The light of the low sky comes into the water far more easily than the sun does: the bed is lit from above.
     vec3 lit = bed.albedo * e * (bed.occ / 3.14159);
     float d = max(depth2, 0.0);
     vec3 through = exp(-uAbsorb * d * (1.0 + 1.0 / fall));
-    shelf = lit * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * 0.7 * (1.0 - through);
-    under = shelf;
+    vec3 shelf = lit * through + uDeep * skyDown * open * 0.7 * (1.0 - through);
+    under = shelf * crusted;
     // Where a slab, the crust of the lip or the top of a mat stands out of the water it is wet stone and weed, not a mirror.
-    dry = bed.dry * crusted;
+    dry = bed.dry * crusted * exp(-sunk * 5.0);
     // A low eye that looks a long way along the water finds only the mirror: what stands a finger out of it far off is lost in the glance.
     dry *= mix(1.0, smoothstep(520.0, 220.0, away), smoothstep(12.0, 4.0, cameraPosition.y));
     dry *= 1.0 - smoothstep(600.0, 1000.0, away) * (1.0 - smoothstep(0.03, 0.07, v.y));
   }
   if (crusted < 1.0) {
-    // Over the shaft: the wall goes down pale and green under the lip and is lost in a few metres; then only the dark of the water.
-    float inside = max(-w, 0.0) + 0.2;
-    float down = 0.3 + 0.75 * inside + 0.05 * inside * inside;
-    vec2 b = p.xz + rf.xz * (min(down, 9.0) / fall) * 0.25;
-    Bed bed = wallAt(b, down, inside);
-    // The wall under a lip looks toward the middle of the shaft: an eye on the shelf sees it only across a bay, where the lip turns to face it.
-    // Under the lip at its own feet the floor stops and there is the dark of the water.
-    vec2 lipOut = vec2(dFdx(w), dFdy(w)) * inverse(mat2(dFdx(p.xz), dFdy(p.xz)));
-    float facing = smoothstep(-0.2, 0.4, dot(-normalize(lipOut + vec2(1e-6, 0.0)), normalize(cameraPosition.xz - p.xz)));
-    facing = mix(facing, 1.0, smoothstep(6.0, 20.0, cameraPosition.y));
-    bed.albedo *= mix(0.16, 1.0, facing);
+    // Under the lip the bed falls away, steep and then steeper, ledge under ledge: pale rock, seen for as far down as the water lets the light go and come back.
+    float inside = max(-shoalAt, 0.0) + 0.2;
+    float down = 0.3 + 3.2 * rimEye + mix(1.7, 0.22, rimEye) * inside + mix(0.16, 0.004, rimEye) * inside * inside;
+    vec2 b = p.xz + rf.xz * (min(down, 12.0) / fall) * 0.4;
     vec3 at = vec3(p.x, 0.0, p.z);
     // Out over the deep the whole sky is overhead: the land map's own count of it is coarse there and would draw its steps on the water.
     float open = mix(skyOpen(at), 0.92, smoothstep(4.0, 60.0, inside));
     // The low sun hardly enters the deep: what little does is the same everywhere, so the shade of the rim draws no edge on it.
-    vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * 0.05;
-    vec3 through = exp(-uAbsorb * down * (2.6 + 1.2 / fall));
-    // The wall is seen for some metres down from the lip: its picture carries the water's own tint, so the water here only takes it away with depth.
-    float seen = exp(-down * 0.34);
-    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * seen * exp(-uAbsorb * down * 0.9) * 1.1 + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
+    vec3 e = skyDown * open + uSunColour * 0.05;
+    // Down to the rock from the sky overhead, and up again along the look.
+    vec3 through = exp(-uAbsorb * mix(1.5, uClear, rimEye) * down * (1.0 + 1.0 / fall));
+    vec3 deep = uDeep * skyDown * open * (1.0 - through);
+    noRock = 1.0 - smoothstep(0.08, 0.6, through.b);
+    // Where no light comes back from the rock it is not looked for.
+    if (through.b > 0.015) {
+      Bed bed = wallAt(b, down, inside);
+      deep += bed.albedo * e * (bed.occ / 3.14159) * through * runs;
+    }
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
-    deep += vec3(0.05, 0.062, 0.06) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * pale * (0.4 + 0.6 * smoothstep(0.1, 0.6, v.y));
+    deep += vec3(0.11, 0.12, 0.115) * skyDown * pale * (0.5 + 0.5 * smoothstep(0.1, 0.6, v.y));
     // Seen low, what comes up out of the shaft is green and blue: the warm of the evening does not go down there.
     deep *= mix(vec3(1.0), vec3(0.55, 0.84, 0.98), smoothstep(12.0, 4.0, cameraPosition.y));
-    under = mix(deep, shelf, crusted);
-    // Under the lip the water lies in its lee, flat, and the eye goes down the wall.
-    f *= mix(0.3, 1.0, smoothstep(0.5, 14.0, inside));
-    // An eye that looks down into the deep finds the dark of it, and the mirror only further out where it looks along the water.
-    f *= mix(1.0, mix(1.0, 0.3, smoothstep(0.07, 0.28, v.y)), (1.0 - crusted) * smoothstep(12.0, 3.0, cameraPosition.y));
+    under += deep * (1.0 - crusted);
   }
   f *= 1.0 - dry;
+  f *= mix(1.0, mix(0.03, 1.0, smoothstep(28.0, 120.0, away)), lowDeep * (1.0 - step(1.5, uPlateTone.w)));
   // The last metres before the shore are a finger deep: the eye goes through to the wet stones, and the mirror comes on in tongues, never at a line.
-  float high2 = smoothstep(8.0, 40.0, cameraPosition.y);
-  float margin = smoothstep(0.0, mix(2.0, 11.0, high2), inShore + mix(1.0, 7.0, high2) * (vnoise(p.xz / 5.3) - 0.5) + mix(0.3, 4.0, high2) * (vnoise(p.xz / 1.4 + 3.0) - 0.5));
+  float margin = inShore > 18.0 ? 1.0 : smoothstep(0.0, mix(2.0, 11.0, rimEye), inShore + mix(1.0, 7.0, rimEye) * (vnoise(p.xz / 5.3) - 0.5) + mix(0.3, 4.0, rimEye) * (vnoise(p.xz / 1.4 + 3.0) - 0.5));
   f *= mix(0.12, 1.0, margin);
-  // From the rim the floor is seen to fall away: a band of green water over the pale wall, before the dark.
-  if (crusted < 1.0) {
-    float inside = max(-w, 0.0);
-    float band = high2 * exp(-inside / 16.0) * (1.0 - crustLine) * smoothstep(0.0, 5.0, inside);
-    f *= 1.0 - 0.3 * band;
-    under += vec3(0.02, 0.035, 0.034) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * band;
-  }
-  // The swell at the centre is a hump of dark water: its near face looks at the eye, and the eye looks into it.
-  if (r < uDome.y) {
-    float du = r / uDome.y;
-    float hump = clamp(uDome.x / 2.5, 0.0, 1.0) * smoothstep(0.05, 0.3, du) * (1.0 - du * du) * (1.0 - du * du) * 1.6 * smoothstep(-0.2, 0.5, dot(out2, normalize(v.xz))) * smoothstep(0.6, 0.25, v.y);
-    // Its crown lies open to the sky and is pale with it.
-    float crown = clamp((uDome.x - 1.5) / 3.0, 0.0, 1.0) * smoothstep(0.5, 0.05, du) * smoothstep(0.6, 0.25, v.y);
-    refl = mix(refl, skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.8, 0.55 * crown);
-    f *= 1.0 - 0.45 * hump;
-    under *= 1.0 - 0.4 * hump;
-    // The water it has lifted runs off it in threads that catch the sky.
-    float round2 = atan(p.x, p.z);
-    float thread = smoothstep(0.62, 0.8, vnoise(vec2(round2 * 43.0, r / 9.0 - uTime * 1.2)) * (0.5 + 0.5 * vnoise(vec2(round2 * 9.0, 3.0))) + 0.25) * clamp((uDome.x - 1.2) / 2.0, 0.0, 1.0) * (1.0 - du * du);
-    f = mix(f, 0.9, 0.45 * thread * smoothstep(0.15, 0.6, du));
-  }
-  // From the rim the water over the mats is the colour of the mats: the pale of the sky lies only on the deep.
-  float onMats = smoothstep(8.0, 40.0, cameraPosition.y) * crusted * (1.0 - 0.75 * smoothstep(0.66, 0.84, 0.7 * vnoise(p.xz / 19.0 + 31.0) + 0.3 * vnoise(p.xz / 6.0 + 2.0)));
-  refl *= mix(vec3(1.0), vec3(0.74, 0.6, 0.46), onMats);
-  under *= mix(vec3(1.0), vec3(0.94, 0.84, 0.72), onMats);
   vec3 c = mix(under, refl, f);
+  // Past the pale wall the deep goes down out of the light: dark blue-green, then black.
+  // Only its own blue is taken down: what it mirrors of the wall keeps its colour.
+  float blueOfIt = (1.0 - crusted) * noRock * smoothstep(1.3, 2.6, c.b / max(c.r, 1e-4)) * uDeepTone.x;
+  c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.6, 0.95, 0.95) * uDeepTone.y, blueOfIt);
+  // The churned water is white in flecks, no finer than the pixels can hold, each in its own time.
+  if (churn > 0.0) {
+    float grain = max(0.5, 2.5 * covers);
+    // Rafts of froth some metres long with lace in them, not a scatter of points.
+    float raft = 0.6 * vnoise(p.xz / (9.0 * grain) + 40.0) + 0.4 * vnoise(p.xz / (3.2 * grain) + 7.0);
+    raft *= 0.6 + 0.4 * sin(uTime * 0.9 + 6.28 * vnoise(p.xz / (14.0 * grain) + 3.0));
+    float lace = 0.45 + 0.55 * smoothstep(0.3, 0.7, vnoise(p.xz / grain + 21.0));
+    float foam = smoothstep(0.5, 0.78, raft + 0.3 * churn - 0.12) * lace * min(churn * 1.4, 1.0);
+    c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.8 / 3.14159), 0.75 * smoothstep(0.03, 0.4, v.y) * foam * (1.0 - uLeave.x));
+  }
+  // The swell is wet in the last sun.
+  if (lifted > 0.0) c += lifted * rigGlint(p, n, v, 0.12);
   // A low sun on moving water: a hard glitter where a wavelet turns its face to it.
   vec3 hv = normalize(uSunDir + v);
   float sharp = 1400.0 / (1.0 + away * away / 3600.0) + 60.0;
-  float glint = pow(max(dot(n, hv), 0.0), sharp) * (sharp / 1400.0) * sunAt(vec3(p.x, 0.5, p.z));
-  c += uSunColour * glint * 0.6 * (close + 0.3);
+  float glint = pow(max(dot(n, hv), 0.0), sharp) * (sharp / 1400.0);
+  if (glint > 1e-4) c += uSunColour * (glint * sunAt(vec3(p.x, 0.5, p.z)) * 0.6 * (close + 0.3));
   // Seen from over it the white is a fleck, not a flower.
-  c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.8 / 3.14159), 0.9 * min(splash, 1.0) * mix(0.2, 1.0, smoothstep(0.6, 0.2, v.y)) * (1.0 - uLeave.x));
+  if (splash > 0.0) c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.8 / 3.14159), 0.6 * min(splash, 1.0) * smoothstep(0.35, 0.7, vnoise(p.xz / max(0.9, covers * 1.4) + vec2(uTime * 0.23, 7.0))) * mix(0.2, 1.0, smoothstep(0.6, 0.2, v.y)) * (1.0 - uLeave.x) * (1.0 - lifted));
   // A ring round a muzzle or a leg, seen low: the face that leans to the eye shows the dark under the water, the face that leans away the bright of the sky.
-  float lap = tanh(22.0 * dot(lapped, normalize(v.xz)) * 0.08 / max(v.y, 0.04));
-  c = c * (1.0 - 0.45 * max(lap, 0.0)) + skyRadiance(vec3(-v.x, 0.12, -v.z)) * (0.3 * max(-lap, 0.0));
+  if (lapsNear) {
+    float lap = tanh(22.0 * dot(lapped, normalize(v.xz)) * 0.08 / max(v.y, 0.04));
+    c = c * (1.0 - 0.45 * max(lap, 0.0)) + skyRadiance(vec3(-v.x, 0.12, -v.z)) * (0.3 * max(-lap, 0.0));
+  }
 
   // The water from over its centre as the camera leaves. Straight down the mirror is almost gone and the eye is in the deep: the surface shows only by its light.
   if (uLeave.x > 0.0) {
@@ -381,30 +525,21 @@ void main() {
     float along = vnoise(p.xz / 37.0 + 4.0);
     // How much water one pixel covers, in metres: no wave shorter than a few of them is drawn, so none can beat against the pixels.
     float covers = max(length(dFdx(p.xz)), length(dFdy(p.xz)));
-    // A swell comes in from one side, two trains of unlike length that cross at a small angle: where one gives way to the other a crest ends or forks,
-    // and no two crests lie the same way apart.
-    vec2 from1 = vec2(0.82, 0.57);
-    vec2 from2 = vec2(0.97, 0.24);
-    float give = vnoise(vec2(dot(p.xz, vec2(-0.57, 0.82)) / 26.0, dot(p.xz, from1) / 75.0 - uTime * 0.03) + 17.0);
-    float ph1 = dot(p.xz, from1) * 0.27 - 1.6 * uTime + 9.0 * lanes + 4.0 * along;
-    float ph2 = dot(p.xz, from2) * 0.41 - 2.0 * uTime + 6.0 * lanes - 5.0 * along;
-    vec2 swell = (0.15 + 1.7 * lanes * along) * 0.2 * (from1 * (-sin(ph1) * exp(4.0 * (cos(ph1) - 1.0)) * smoothstep(0.5, 0.74, give)) + from2 * (-0.8 * sin(ph2) * exp(4.0 * (cos(ph2) - 1.0)) * smoothstep(0.46, 0.24, give)));
     // Over the place where it went down the water lies smooth, a slick with a torn edge: the wind has no hold on it yet.
     float slick = smoothstep(0.0, 9.0, length((p.xz - vec2(9.0, -6.0)) * vec2(1.0, 1.5)) - 13.0 - 22.0 * along);
     // The wind lays a fine ripple on the rest, in patches. Two reads of the field of small waves, the second turned against the first, so that no row of them shows.
     float patches = smoothstep(0.3, 0.78, lanes + 0.5 * (along - 0.5)) * slick;
     float keepFine = smoothstep(4.0, 8.0, 1.15 / covers);
     float keepMid = smoothstep(4.0, 8.0, 2.1 / covers);
-    vec2 second = texture2D(tRipple, vec2(0.53 * p.x - 0.85 * p.z, 0.85 * p.x + 0.53 * p.z) / 27.0 - vec2(uTime * 0.011, uTime * 0.017)).rg;
-    vec2 ripple = keepMid * vec2(0.53 * second.x + 0.85 * second.y, -0.85 * second.x + 0.53 * second.y);
-    if (keepFine > 0.0) ripple += keepFine * texture2D(tRipple, p.xz / 15.0 + vec2(uTime * 0.03, uTime * 0.019)).rg;
+    vec2 ripple = keepMid * 0.6 * waveRead(tWave1, p.xz * 2.6, ${WAVE_TILES[1].toFixed(1)}, 0.0);
+    if (keepFine > 0.0) ripple += keepFine * 0.6 * waveRead(tWave0, p.xz * 0.6, ${WAVE_TILES[0].toFixed(1)}, 0.0);
     ripple *= 0.075 * (0.12 + 0.88 * patches);
     // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east:
     // a crest is a bright line toward the sun with a dark one behind it.
     vec2 toSun = vec2(-0.9, 0.44);
-    float crestLit = dot(swell, toSun);
+    float crestLit = dot(slope, toSun);
     float rippleLit = dot(ripple, toSun);
-    float face = clamp(30.0 * crestLit + 4.0 * rippleLit, -1.0, 1.0);
+    float face = clamp(20.0 * crestLit + 4.0 * rippleLit, -1.0, 1.0);
     c += uSunColour * vec3(0.0026, 0.0026, 0.003) * max(face, 0.0) * downward;
     c *= 1.0 - 0.4 * max(-face, 0.0) * downward;
     vec3 pale = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.8 / 3.14159);
@@ -526,7 +661,13 @@ function rippleTexture(seed: () => number): THREE.DataTexture {
 function lipTexture(): THREE.DataTexture {
   const N = 4096;
   const data = new Uint16Array(N * 4);
-  for (let i = 0; i < N; i++) data[i * 4] = THREE.DataUtils.toHalfFloat(lipAt(((i + 0.5) / N) * Math.PI * 2));
+  for (let i = 0; i < N; i++) {
+    const a = ((i + 0.5) / N) * Math.PI * 2;
+    const b = a / DEG;
+    data[i * 4] = THREE.DataUtils.toHalfFloat(lipAt(a));
+    // The same lip without the tongue that stands out beside the edge shot: drawn in for the wide shot, that tongue would be a step in the pool.
+    data[i * 4 + 1] = THREE.DataUtils.toHalfFloat(lipAt(a) + 34 * smooth(LIP_BAY - 1.2, LIP_BAY + 2.6, b) * (1 - smooth(LIP_BAY + 5.5, LIP_BAY + 9.5, b)));
+  }
   const t = new THREE.DataTexture(data, N, 1, THREE.RGBAFormat, THREE.HalfFloatType);
   t.minFilter = THREE.LinearFilter;
   t.magFilter = THREE.LinearFilter;
@@ -537,25 +678,38 @@ function lipTexture(): THREE.DataTexture {
   return t;
 }
 
+/** Waves of these lengths (metres) as the shader wants them: turns a metre, turns a second, the speed the train travels at, the slope. */
+function ringsOf(lengths: number[], slopes: number[], pace: number): THREE.Vector4[] {
+  return lengths.map((length, i) => {
+    const k = (2 * Math.PI) / length;
+    const omega = Math.sqrt(9.81 * k + 7.4e-5 * k * k * k);
+    return new THREE.Vector4(k, omega, (omega / k) * pace, slopes[i] as number);
+  });
+}
+
 export function create(ctx: Context): Piece {
   const rig = ctx.rig.uniforms;
   const mirror = createMirror();
-  const mistSun = mistSunTexture(ctx.rig.land.sunlit);
   const seed = ctx.rng('ripple');
   const ripple = rippleTexture(() => seed.next());
   const lip = lipTexture();
+  const waveSeed = ctx.rng('waves');
+  const waves = createWaves(() => waveSeed.next());
   const bed = bedUniforms(ctx, lip);
   const laps = Array.from({ length: LAPS }, () => new THREE.Vector4(0, 0, 0, 0));
   const dome = new THREE.Vector4(0, 60, 0, 0);
   const centre = new THREE.Vector4(-100, 0, 0, 0);
+  const lapZone = new THREE.Vector4();
   const leave = new THREE.Vector4(0, 0, 0, 0);
+  const ringsLake = ringsOf([3.2, 6, 11, 21, 48, 97], [0.013, 0.012, 0.011, 0.011, 0.012, 0.012], 1);
+  // Under the long lens of the climb the short lengths are finer than its pixels: the train is of longer ones.
+  const ringsClimb = ringsOf([9, 15, 24, 36, 52, 97], [0.011, 0.011, 0.012, 0.012, 0.011, 0.01], 1);
   const material = new THREE.ShaderMaterial({
     uniforms: {
       ...rig,
       ...bed,
       ...mirror.uniforms,
       tRipple: { value: ripple },
-      tMistSun: { value: mistSun },
       uMirrorOn: { value: 0 },
       uLens: { value: 1 },
       uLap: { value: laps },
@@ -564,7 +718,17 @@ export function create(ctx: Context): Piece {
       uDome: { value: dome },
       uRiser: { value: RISERS.map((q) => new THREE.Vector3(q[0], q[1], q[3])) },
       uCentre: { value: centre },
+      uLapZone: { value: lapZone },
       uLeave: { value: leave },
+      ...waves.uniforms,
+      uBreath: { value: new THREE.Vector4(0.0012, 0.0022, 0.004, 0) },
+      uRing: { value: ringsLake },
+      uRiserRing: { value: ringsOf([1.1, 2.0, 3.6], [0.03, 0.03, 0.025], 0.8) },
+      uLapRing: { value: ringsOf([0.28, 0.5, 0.9], [0.03, 0.035, 0.03], 0.75) },
+      uRise: { value: ctx.events.rise },
+      uRingsOn: { value: 1 },
+      uClear: { value: 0.55 },
+      uDeepTone: { value: new THREE.Vector3(0, 1, 0) },
     },
     vertexShader: WATER_VERTEX,
     fragmentShader: WATER_FRAGMENT,
@@ -579,6 +743,8 @@ void main() {
 }`;
   const surface = new THREE.Mesh(surfaceGeometry(), material);
   surface.frustumCulled = false;
+  // The climb out of the Eye is drawn with the water as it was: the same sheet takes its old material for that shot alone.
+  const before = createBefore(ctx, mirror.uniforms);
   ctx.scene.add(ctx.parts.built('lake', surface));
   for (const name of ['shallows', 'shaft', 'mats']) ctx.parts.effect(name, 'built');
 
@@ -605,9 +771,16 @@ void main() {
 
   return {
     setTime: (t) => {
+      before.setTime(t);
+      surface.material = CLIMB_AS_BEFORE && during('eye-05') ? before.material : material;
+      waves.setTime(t);
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
-      dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 8.5 * swell * (1 + 0.05 * Math.sin(t * 2.3));
+      const overIt = during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0;
+      dome.x = (1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1)) * (1 - 0.8 * overIt) + 8.5 * swell * (1 + 0.05 * Math.sin(t * 2.3));
+      dome.z = t;
+      // The water round it is churned as it comes up, while it stands, and most as it goes down; then that dies in a few seconds.
+      dome.w = Math.max(0.12, smooth(rise - 1.9, rise - 0.6, t) * (0.7 + 0.5 * smooth(rise + 1.0, rise + 2.2, t)) * (1 - smooth(rise + 3.0, rise + 7.5, t)));
       // Staged for the wide shot: the lip is drawn 270 m nearer the centre at the sides, so that the dark of the deep is an oval the frame holds whole.
       (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
       const mirrorTone = material.uniforms.uMirror as THREE.IUniform<THREE.Vector4>;
@@ -615,9 +788,17 @@ void main() {
       else if (during('eye-05')) mirrorTone.value.set(0.76, 0.78, 0.8, 1);
       else if (during('eye-03')) mirrorTone.value.set(1.4, 1.26, 1.12, 1);
       else mirrorTone.value.set(1, 1, 1, 1);
+      if (during('eye-03')) (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0.95, 0.55, 0);
+      else (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0, 1, 0);
       centre.x = t - rise;
+      // Under the long lens the water round the swell is ringed by its breathing, as far as the eye goes; from over it the rings are few and broken.
+      const over = during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0;
+      centre.y = during('eye-05') ? 3.2 - 2.7 * over : 1;
+      centre.z = during('eye-05') ? 0.55 * (1 - over) : 0;
+      centre.w = during('eye-05') ? 1.6 * (1 - over) : 0;
+      (material.uniforms.uRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-05') ? ringsClimb : ringsLake;
       // The camera leaves: from the frame it begins to look down, the water is drawn as it is from over it.
-      leave.set(during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0, t - (rise + 1.0), during('eye-05') ? smooth(rise + RINGS_DIE, rise + RINGS_DIE + 0.4, t) : 0, 0);
+      leave.set(during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0, t - (rise + 1.0), during('eye-05') ? 0 : 0, 0);
       laps.forEach((lap, i) => {
         const from = ctx.laps[i];
         if (from) lap.set(from.x, from.z, from.offset, from.strength);
@@ -629,13 +810,34 @@ void main() {
         if (lap.w > 0) count = i + 1;
       });
       (material.uniforms.uLapCount as THREE.IUniform<number>).value = count;
+      let midX = 0;
+      let midZ = 0;
+      let live = 0;
+      for (const lap of laps) {
+        if (lap.w <= 0) continue;
+        midX += lap.x;
+        midZ += lap.y;
+        live++;
+      }
+      midX /= Math.max(live, 1);
+      midZ /= Math.max(live, 1);
+      let far = 0;
+      let nearest = 1e6;
+      for (const lap of laps) {
+        if (lap.w <= 0) continue;
+        far = Math.max(far, Math.hypot(lap.x - midX, lap.y - midZ));
+        nearest = Math.min(nearest, Math.hypot(lap.x, lap.y));
+      }
+      lapZone.set(midX, midZ, far + 14, nearest - 14);
     },
     beforeSample: (renderer, camera) => {
       const reflected = ctx.reflected;
       const on = reflected.length > 0 && camera.position.y < 60;
       (material.uniforms.uMirrorOn as THREE.IUniform<number>).value = on ? 1 : 0;
+      (before.material.uniforms.uMirrorOn as THREE.IUniform<number>).value = on ? 1 : 0;
       if (!on) return;
       (material.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
+      (before.material.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
       // Only what stands in or at the water is drawn into the mirror: the far world the water takes from the rig.
       hidden.length = 0;
       for (const o of ctx.scene.children) if (!reflected.includes(o)) hidden.push(o);
@@ -644,7 +846,8 @@ void main() {
     resize: (width, height) => mirror.resize(width, height),
     dispose: () => {
       mirror.dispose();
-      mistSun.dispose();
+      before.dispose();
+      waves.dispose();
       ripple.dispose();
       lip.dispose();
       surface.geometry.dispose();
