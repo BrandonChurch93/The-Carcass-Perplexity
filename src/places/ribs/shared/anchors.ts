@@ -46,6 +46,22 @@ export const DROWNED = {
   phi: STATIONS.drownedPhi,
   height: STATIONS.drownedHeight,
   at: (out = 0): [number, number, number] => weedPoint(ribByName('L1'), STATIONS.drownedPhi, STATIONS.drownedHeight, out).toArray() as [number, number, number],
+  /** The way down the weed's face from the point, over the 4 m below it: a unit vector. */
+  down: (): [number, number, number] => {
+    const rib = ribByName('L1');
+    const high = weedPoint(rib, STATIONS.drownedPhi, STATIONS.drownedHeight);
+    const low = weedPoint(rib, STATIONS.drownedPhi, STATIONS.drownedHeight - 4);
+    return low.sub(high).normalize().toArray() as [number, number, number];
+  },
+  /** Straight out of the weed's face at the point, square to `down`: a unit vector. */
+  normal: (): [number, number, number] => {
+    const rib = ribByName('L1');
+    const high = weedPoint(rib, STATIONS.drownedPhi, STATIONS.drownedHeight);
+    const low = weedPoint(rib, STATIONS.drownedPhi, STATIONS.drownedHeight - 4);
+    const along = low.sub(high).normalize();
+    const out = weedPoint(rib, STATIONS.drownedPhi, STATIONS.drownedHeight - 2, 1).sub(weedPoint(rib, STATIONS.drownedPhi, STATIONS.drownedHeight - 2));
+    return out.addScaledVector(along, -out.dot(along)).normalize().toArray() as [number, number, number];
+  },
 };
 
 /** The colony's rock: a stepped mound, ledges every `step` metres from the tide line to its top. */

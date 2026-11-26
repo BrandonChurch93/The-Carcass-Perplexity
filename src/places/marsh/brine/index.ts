@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { landShared } from '../land';
-import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS } from './shaders';
+import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS } from './shaders';
 
 export const PARTS = ['brine', 'domes', 'burst'] as const;
 
@@ -47,11 +47,30 @@ export function create(ctx: Context): Piece {
   const uniforms = { ...ctx.rig.uniforms, tGrain: { value: grain }, tPlates: { value: plates } };
   const rings = Array.from({ length: MAX_RINGS }, () => new THREE.Vector4());
   const ringCount = { value: 0 };
+  // Where gas comes up all the time: the main seep under the steam, and lesser ones over the pool's floor.
+  const seepRng = ctx.rng('brine/seeps');
+  const seeps = Array.from({ length: MAX_SEEPS }, (_, i) => {
+    if (i === 0) return new THREE.Vector4(-3.4, -1.6, 0.31, 0.06);
+    const a = seepRng.range(0, TAU);
+    const r = seepRng.range(1.5, POOL_R * 0.8);
+    return new THREE.Vector4(Math.sin(a) * r, Math.cos(a) * r, seepRng.next(), seepRng.range(0.015, 0.04));
+  });
+
+  // The mirror: the scene as the level brine sees it, drawn a quarter of the frame's size before every sample.
+  const MIRROR_SHARE = 4;
+  const mirror = new THREE.WebGLRenderTarget(480, 270, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
+  mirror.texture.generateMipmaps = false;
+  const under = new THREE.PerspectiveCamera();
+  const blank = (ctx.rig.uniforms.tMirror as THREE.IUniform<THREE.Texture>).value;
+  const bias = new THREE.Matrix4().set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
+  const eye = new THREE.Vector3();
+  const ahead = new THREE.Vector3();
+  const upward = new THREE.Vector3();
 
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeep: { value: new THREE.Vector2(-3.4, -1.6) } },
+    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;
@@ -93,7 +112,12 @@ export function create(ctx: Context): Piece {
   water.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('brine', water));
 
-  const skin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, toneMapped: false });
+  // The skin of a dome is a film: drawn over what is behind it, premultiplied, after everything solid.
+  const skin = new THREE.ShaderMaterial({
+    vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, toneMapped: false, transparent: true, depthWrite: false,
+    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+  });
+  const dropSkin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, defines: { DROP: 1 }, toneMapped: false });
   const ball = new THREE.SphereGeometry(1, 40, 16, 0, TAU, 0, Math.PI / 2);
   const domeLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
   ball.setAttribute('aLife', domeLife);
@@ -105,7 +129,7 @@ export function create(ctx: Context): Piece {
   const bead = new THREE.SphereGeometry(1, 12, 8);
   const dropLife = new THREE.InstancedBufferAttribute(new Float32Array(dropCount * 4), 4);
   bead.setAttribute('aLife', dropLife);
-  const dropMesh = new THREE.InstancedMesh(bead, skin, dropCount);
+  const dropMesh = new THREE.InstancedMesh(bead, dropSkin, dropCount);
   dropMesh.frustumCulled = false;
   // What each drop is thrown with: direction round the dome, speed out, speed up, size. Fixed at creation.
   const throwRng = ctx.rng('brine/drops');
@@ -211,13 +235,44 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime,
+    resize: (width, height) => {
+      mirror.setSize(Math.max(8, Math.round(width / MIRROR_SHARE)), Math.max(8, Math.round(height / MIRROR_SHARE)));
+    },
+    beforeSample: (renderer, camera) => {
+      const u = ctx.rig.uniforms;
+      // The lens, put as far under the brine's level as it stands over it, looking up at the same things.
+      eye.setFromMatrixPosition(camera.matrixWorld);
+      ahead.set(0, 0, -1).transformDirection(camera.matrixWorld);
+      upward.set(0, 1, 0).transformDirection(camera.matrixWorld);
+      under.position.set(eye.x, -eye.y, eye.z);
+      under.up.set(upward.x, -upward.y, upward.z);
+      under.lookAt(eye.x + ahead.x, -eye.y - ahead.y, eye.z + ahead.z);
+      under.near = camera.near;
+      under.far = camera.far;
+      under.projectionMatrix.copy(camera.projectionMatrix);
+      under.projectionMatrixInverse.copy(camera.projectionMatrixInverse);
+      under.updateMatrixWorld(true);
+      (u.uMirrorMatrix as THREE.IUniform<THREE.Matrix4>).value.copy(bias).multiply(under.projectionMatrix).multiply(under.matrixWorldInverse);
+      (u.tMirror as THREE.IUniform<THREE.Texture>).value = blank;
+      (u.uMirror as THREE.IUniform<number>).value = 1;
+      water.visible = false;
+      renderer.setRenderTarget(mirror);
+      renderer.clear(true, true, false);
+      renderer.render(ctx.scene, under);
+      renderer.setRenderTarget(null);
+      water.visible = true;
+      (u.uMirror as THREE.IUniform<number>).value = 0;
+      (u.tMirror as THREE.IUniform<THREE.Texture>).value = mirror.texture;
+    },
     dispose: () => {
+      mirror.dispose();
       plane.dispose();
       ball.dispose();
       bead.dispose();
       tube.dispose();
       surface.dispose();
       skin.dispose();
+      dropSkin.dispose();
       crownMaterial.dispose();
     },
   };

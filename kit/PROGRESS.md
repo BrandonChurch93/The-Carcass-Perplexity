@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 84, 2026-11-26 01:50 UTC:
+Status 85, 2026-11-26 02:18 UTC:
 
-- `01-a-seam1.jpg`: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right
-- `02-a-joined-small.jpg`: 2 · The larger map of the whole body, reduced (4096 x 2305, joined from nine windows)
-- `03-look-1.jpg`: 3 · The Blood Marsh, wave 2 at minute 33: the wallower as one skin beside the approved picture (head, young ones and wet line still open)
-- `04-look-1.jpg`: 4 · The Reveal, wave 2: the last frame on the first maps beside the approved picture (lowlands too dark, bones too white, both sent back)
+- `01-reveal-4.jpg`: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below
+- `02-eye-1.jpg`: The Eye, the drinkers, restaged further off. Approved left, the build right
+- `03-ribs-2.jpg`: The Ribs, the kite-wings feeding. Approved left, the build right
+- `04-marsh-3.jpg`: The Blood Marsh, the wallowers. Approved left, the build right, crops below
 
+Status 84, 2026-11-26 01:50 UTC, showed: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right; 2 · The...
 Status 83, 2026-11-26 01:34 UTC, showed: Working pictures for the owners, first sheet: far backplates, scenery and animals on black.
 Status 82, 2026-11-26 01:11 UTC, showed: The Reveal's new ground, kept set.
-Status 81, 2026-11-26 00:51 UTC, showed: The Reveal's new ground. Top: the new satellite map with the bones traced from the approved picture drawn on it in magenta.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T01:50:38Z
-phase 4: 5.67 h used of 17.00 h
-build: 25.99 h used of 72.00 h
+2026-11-26T02:18:00Z
+phase 4: 6.12 h used of 17.00 h
+build: 26.44 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 27
 ```
 
 ## Phases
@@ -1315,6 +1315,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 01:48 UTC: the Reveal's maps are made again larger. The Reveal's owner MEASURED that at the wide key one texel of a 1672 px map covers 2.1 px of the frame, and the image tool returns no picture wider than 1672 px. So each of the four maps is cut into 3 x 3 windows, each window is made again at full resolution by the same image model from its enlarged crop with a real satellite photograph as the standard, its height from the new window, and the nine are laid on the parent by a fitted affine, tone-matched below 48 px and joined by a multi-band blend (`assets-src/reveal/maps/enlarge-maps.py`, the method that built the approved master). Why 2.5 times: three windows across with a quarter of a window shared give 4180 px, just over the 4096 px that every target device takes as a texture, so the maps are written 4096 x 2305 and one texel covers under 1 px of the frame at the wide key. One take a window (36 colour, 36 heights), inside `assets.maxTakesPerAsset`. MEASURED: all 36 windows fitted; moved at the corners by 0.85 to 4.56 px of a window (one px of a window is 0.4 px of the parent), except the lower left window of `map-a`, most of it open water, 11.38 px; heights within 1.61 px of their windows; seams checked at native size on every map, no ghost edge and no island added in open water. The window pictures are kept as JPEG at quality 95 (65 MB) and not as PNG (about 190 MB), because the tracked files take about 1.6 GB of the 2 GB `repo.maxTreeGb` allows; the parents stay as they were. On `main` at ff4ca279; the owner was told at 01:47 UTC.
 - 2026-11-26. 01:48 UTC: the islands west of the skull stay. The Reveal's owner flagged that `map-b` draws islands in the sea left of the skull where the approved `reveal-2` has open water with cumulus. They stay because Brandon's note 10 asks for "More land around the bones, less bare figure on open water" and his settled line on `reveal-1` to `reveal-4` says `-b` may read more as a continent and less as a figure than `-a`. So that the key stays near its approved picture, the owner puts the approved picture's cumulus field over that sea at `reveal-2`, at its place and cover, with land showing through the gaps. No approved picture is changed.
 - 2026-11-26. 02:03 UTC: two more pictures for owners, by the decision of 23:35 UTC. (1) The Eye's far wall for the low cameras (`eye/mat/far-low.jpg`) is made again at twice the size, 3344 x 1882, by the method of the Reveal's larger maps (`assets-src/materials/enlarge-plate.py`): nine windows, 1 take each. The six that hold the wall, the sky and the reflections by the shore are used (MEASURED: all six fitted within 2.37 px). The three of open water are set aside, because the model drew a rocky shore across the top of each though the prompt forbade it; there the plate is the first picture enlarged, and the owner was told not to show that part close. Seen at native size before it went to `main` (ec53bfd7). (2) A lightning stroke on black for the Spine (`spine/mat/bolt.jpg`, 941 x 1672, 1 take), which the storm's owner found missing after the Builder had named it in a note; on `main` at 53262848. The second list now holds 78 colour pictures.
+- 2026-11-26. 02:10 UTC: disk. 2.58 GB were free, under the 3 GB of `sandbox.minFreeDiskGb`. Removed, all harness output under `out/work/` that is either kept elsewhere or made again by its command: the window PNGs of the larger maps and the Eye's far wall in `out/work/tmp/` (kept as JPEG under `assets-src/.../src/big/`), the two hand-over copies of films already in the thread (`out/work/handover/*.mp4`), the build copy of the gate (`out/work/gate/dist`, made again by G1), the jury packs as sent in rounds 8 to 13 (`out/work/jury/send/r*`; the answers and manifests are in `scorecards/`), the draft preview film of 25 Nov 02:46 (`out/work/film/the-carcass-preview.mp4`, older than every place after the Heart), and the npm and pip caches. 3.42 GB free after it.
+- 2026-11-26. 02:27 UTC: one more picture for an owner, by the decision of 23:35 UTC. The Breath's dead wader as the low lens of `breath-2` sees it (`breath/mat/carcass-low.jpg` with its relief, 1672 x 941, 1 take each), because the life's owner found that the picture taken from straight above cannot carry a view from one metre up. It holds the approved pose: the neck along the ground to the left with its fan of tendrils, the legs toward the lens. On `main` at f974b895. The second list now holds 79 colour pictures and 39 reliefs.
 
 ## Notes from Brandon
 
@@ -1624,7 +1626,9 @@ none
 
 ## Animals kept at a distance
 
-- Open, ordered 2026-11-26 01:10 UTC and not yet in the frames: the drinkers of the Eye (`eye-1`, and the same animals where `eye-2` and `eye-4` show them). The owner `eye_owner_2` restages them under `kit/03-METHOD.md` section 4. The settled sentence is added to each key when its restaged frame is on `main`, and the key is named in the next report block.
+- Open, `ribs-3`, on `main` since 2026-11-26 02:09 UTC (6b36521e): the kite-wings that pass close to the lens at the colony are moved 40 to 60 m off by the sea's owner (`ribs_sea_owner_2`, version 1 of wave 2), after the fliers and the colony drew severe issues in round 10 (R1 pack B, R3 pack B). The detail is carried by the colony on its ledges. The settled sentence is in `settled["ribs-3"]` of `config/showcase.json`, word for word.
+- Open, `spine-4`, on `main` since 2026-11-26 02:21 UTC (d7c67ab1): the herd in the hollow is restaged by `spine_storm_owner_2` (version 1 of wave 2), after the ridge-runners drew severe issues in round 9. The six animals sit further in, five grouped at the left wall and one standing against the mouth, lit only from the mouth behind them as near silhouettes. The detail is carried by the place: the rimed mouth, the ice floor, the storm outside. The settled sentence is in `settled["spine-4"]` of `config/showcase.json`, word for word.
+- Open, `eye-1`, `eye-2`, `eye-4`, on `main` since 2026-11-26 02:14 UTC (ecb3bc47): the drinkers of the Eye are restaged by `eye_owner_2` (version 1 of wave 2), ordered 01:10 UTC after they drew severe issues in round 12. `eye-1`: four animals side on in the shallows, 21 to 31 m off, the camera 6.5 m back on the gravel with the foreground soft. `eye-2`: three small animals 31 to 52 m out beyond the mats, in silhouette. `eye-4`: two from behind, cropped by the foot of the frame and out of focus. The detail is carried by the place: the shallows, the mats, the dark water. The settled sentence is in `settled` of `config/showcase.json` for each of the three keys, word for word.
 
 ## For Brandon to decide
 
@@ -1654,6 +1658,8 @@ Each reports by message to the Builder.
 | `spine_storm_owner_2` | build, own machine | The Spine, second owner of the storm: the scorched one, the herd as one skin under the coat (one rebuild, then a distance), cloud lit from within, kites that tear, sparks | `agent/spine-storm-2`, looks on `agent/spine-storm-2-looks` | 2026-11-26 01:10 UTC | 4 h, to 05:10 UTC |
 | `eye_owner_2` | build, own machine | The Eye, second owner of the whole place: the drinkers to a distance at once, the establishing frame fitted to its picture, the rim, the mats, the shaft, the last shot's handoff | `agent/eye-place-2`, looks on `agent/eye-place-2-looks` | 2026-11-26 01:10 UTC | 4 h, to 05:10 UTC |
 | `reveal_owner_2` | build, own machine | The Reveal, second owner: the ground from the four satellite maps and their heights, detail under them, cloud at several heights with shadows, the sea, a continent first and a body at the top | `agent/reveal-place-2`, looks on `agent/reveal-place-2-looks` | 2026-11-26 01:10 UTC | 4 h, to 05:10 UTC |
+
+Hand-backs of wave 2, each merged into `main` after a check of trailers, files touched, types, the build, G8 and G9, and seen by the Builder beside the approved pictures before its owner got a note: version 1 of all ten, handed in between 02:07 and 02:22 UTC on 2026-11-26 (due 02:30). `ribs_sea_owner_2` `2267eb7` (merged 02:09, `6b36521e`), `marsh_ground_owner_2` `9355ad2`, `eye_owner_2` `add2e08`, `breath_ground_owner_2` `e8325da`, `marsh_life_owner_2` `7e43b4b` (all four on `main` at `ecb3bc47`, 02:14), `reveal_owner_2` `487f1eb` (`39d3c6d5`, 02:17), `spine_storm_owner_2` `ba1efe3`, `breath_life_owner_2` `dab6475`, `ribs_ground_owner_2` `7f534bb` (`2c24486d`, 02:20), `spine_ground_owner_2` `566781d` (`3666d640`, 02:23). Restaged with the animals further off in this version: `ribs-3`, `eye-1`, `eye-2`, `eye-4`, `spine-4` (see "Animals kept at a distance"). The notes of 02:23 to 02:31 UTC, worst first for each owner: the Ribs (the kite-wings come out as white paper on `main`, the colony mound is a staircase, the bore is a hazy band), the Breath (no darks under the marched vapour, the shelf in smooth dunes with a wood grain, the plume in broad blades), the Blood Marsh (a white veil from 20 m on, the dome an opaque speckled ball, thin stalks), the Spine (clear air where the approved has a storm, the herd straw yellow under the canal light, the dead one still a mound), the Eye (the last shot has no swell and no rings, sawtooth reflections, the lake a straight band), the Reveal (cloud puffs as big as ranges, land too tan, the storm on the backbone a flat pad).
 
 Wave 2 of Phase 4: ten build agents, each on its own machine, all six units at once, each the second owner of a wave 1 owner's folders and each starting from `main` (`c57513ed` or later), which holds version 3 of all ten. Their briefs are `out/work/briefs/p4b/PLACE-OWNERS-2.md` (one sheet for all), `out/work/briefs/p4b/<agent>.md` (written by `out/work/briefs/p4b/make.py` from wave 1's generator and the Builder's notes in `out/work/briefs/p4b/notes/`) and the round's words on the owner's parts (`out/work/tmp/msgs/r<N>-<wave 1 owner>.txt`). Each sends its own list and its requests for pictures within 25 minutes, pushes its branch and its looks every 30 minutes, hands back three versions by minutes 80, 160 and 225, and from minute 150 sends a bundle with every heartbeat.
 
