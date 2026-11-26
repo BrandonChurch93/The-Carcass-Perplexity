@@ -11,8 +11,8 @@ import { flashAt } from '../strikes/bolt';
 
 export const PARTS: readonly string[] = ['tether-kites'];
 
-const ALONG = 80;
-const ACROSS = 4;
+const ALONG = 96;
+const ACROSS = 6;
 
 interface Ribbon {
   anchor: Vec3;
@@ -31,7 +31,7 @@ interface Ribbon {
 /** Where the colonies of a spire hold on, as shares of its height, and how many ribbons each has. Few and near the top: the lee of the tip is where the gale is cleanest. */
 function colonies(n: number): [number, number][] {
   // The first spire is seen close, at two thirds of its height: three colonies there and one at its tip.
-  if (n === FIRST) return [[0.955, 3], [0.845, 2], [0.795, 3], [0.752, 2], [0.705, 3]];
+  if (n === FIRST) return [[0.955, 3], [0.865, 2], [0.83, 2], [0.795, 3], [0.765, 2], [0.735, 2], [0.705, 3]];
   if (n === FIRST + 2) return [[0.965, 3], [0.9, 1]];
   if (n === FIRST + 1) return [[0.95, 2]];
   if (n === FIRST + 3) return [[0.96, 1], [0.87, 1]];
@@ -101,7 +101,12 @@ void main() {
   float roll = 0.3 * sin(k * 0.61 * (u * aShape.x - uWind.w * 0.7 * uTime) + aShape.z * 2.0) + 0.4 * (fract(aMore.y * 3.1) - 0.5) + 0.35 * sin(k * 1.9 * (u * aShape.x - uWind.w * 0.8 * uTime) + aShape.z) * u * u;
   // Seen from far along the ridge, a sheet that lay flat on the wind would be a line: the far ones stand more on edge, as a flag does.
   float stand = smoothstep(200.0, 450.0, length(cameraPosition - aAnchor));
-  roll = mix(roll, (fract(aMore.y * 5.3) < 0.5 ? -0.8 : 0.8) + 0.45 * roll, stand);
+  // Near, a sheet stands on its edge in the gale as a flag does, and shows its face; somewhere down its length it turns over, half a turn in
+  // a few metres, and the turn creeps along it. Far along the ridge a sheet that lay flat on the wind would be a line: they stand on edge too.
+  float way = fract(aMore.y * 5.3) < 0.5 ? -1.0 : 1.0;
+  float turnAt = 0.3 + 0.45 * fract(aMore.y * 2.3) + 0.04 * sin(uTime * 0.7 + aShape.z);
+  float turn = fract(aMore.y * 8.9) < 0.65 ? 3.14159 * smoothstep(turnAt - 0.05, turnAt + 0.05, u) : 0.0;
+  roll = mix(way * (1.0 + 0.4 * fract(aMore.y * 9.1)) + 0.8 * roll + turn, way * 0.8 + 0.45 * roll, stand);
   vFar = stand;
   roll = mix(1.5708, roll, smoothstep(aMore.w, aMore.w + 0.1, u));
   vec3 across = flat_ * cos(roll) + upward * sin(roll);
@@ -111,7 +116,7 @@ void main() {
   float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
   // Long and narrow: widest a third of the way out, drawn down from there to a thread.
   float bu = clamp((u - aMore.w) / (1.0 - aMore.w), 0.0, 1.0);
-  float profile = pow(smoothstep(0.0, 0.33, bu), 0.8) * mix(1.0, 0.1, smoothstep(0.33, 1.0, bu));
+  float profile = pow(smoothstep(0.0, 0.25, bu), 0.8) * mix(1.0, mix(0.4, 0.1, stand), smoothstep(0.45, 1.0, bu));
   float halfW = 0.5 * aShape.y * blade * breadth * 2.0 * profile;
   float far = length(cameraPosition - c);
   float cord = max(0.15, (0.9 + 0.8 * stand) * uPixel * far);
@@ -137,6 +142,7 @@ ${RIG_GLSL}
 ${NOISE_GLSL}
 uniform vec4 uStruck;
 uniform vec3 uGlowTint;
+uniform vec4 uFilm;
 uniform sampler2D tMembrane;
 uniform sampler2D tMembraneH;
 varying vec3 vWorld;
@@ -201,43 +207,51 @@ void main() {
   float skin = cut * blade;
   if (max(skin, max(cordHere, ice)) < 0.02) discard;
 
-  // A glassy film, paler than the cloud behind it: it passes what is behind and scatters the sky's light in itself. The picture gives it
-  // its veins and its folds, as dark lines and bright ones on the film.
+  // A glassy film: what is behind it shows through, and it adds the light it scatters and the sky it mirrors. The picture gives it its
+  // veins and its folds: thicker there, so less shows through.
   float lum = max(dot(fine, vec3(0.333)), 0.6 * dot(pic, vec3(0.333)));
   float tone = clamp(lum / 0.2, 0.0, 2.2);
-  float vein = 1.0 - smoothstep(0.25, 0.8, tone);
-  float fold = smoothstep(0.45, 0.85, max(relief, reliefFine));
-  vec3 behind = skyRadiance(-toCamera);
-  // Lilac-grey whatever is behind it: the film keeps the sky's brightness and little of its colour.
-  behind = mix(behind, dot(behind, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.65);
-  vec3 held = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) / 3.14159 + min(vec3(0.6), 0.2 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
-  vec3 lilac = mix(vec3(0.95, 0.9, 1.06), vec3(0.86, 0.82, 1.1), fract(seed * 3.3));
-  // The picture's own colour, about its mean: its wrinkles, its stains of violet and brown.
-  vec3 stain = clamp(fine / vec3(0.202, 0.181, 0.217), 0.55, 1.5);
-  vec3 c = (1.0 * behind + 0.6 * held) * mix(vec3(1.0), stain, 0.2) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
-  c *= 1.0 - 0.25 * (1.0 - smoothstep(0.2, 0.55, tone));
-  // Its veins: a dark line down the middle over the cord, and finer ones that leave it aslant and wander to the edge.
+  float fold = smoothstep(0.4, 0.85, max(relief, reliefFine));
+  float crease = 1.0 - smoothstep(0.2, 0.6, tone);
+  float nv = clamp(dot(n, toCamera), 0.0, 1.0);
+  // Its veins: a line down the middle over the cord, and finer ones that leave it aslant and wander to the edge.
   float vv = metres / (wide * 1.1) - 1.2 * abs(vb) + 0.4 * vnoise(vec2(metres / wide * 1.3, vb * 3.0 + seed));
   float branch = (1.0 - smoothstep(0.02, 0.06, abs(fract(vv) - 0.5))) * (1.0 - 0.6 * abs(vb));
   float rib = 1.0 - smoothstep(0.015, 0.05, abs(vb - 0.08 * sin(metres / wide + seed)));
-  c *= 1.0 - 0.55 * max(branch, rib) * blade * (1.0 - 0.7 * vFar);
-  float nv = clamp(dot(n, toCamera), 0.0, 1.0);
-  // The side away from the sky is darker, and where it turns edge on to the lens it lies over itself and is darker again.
-  c *= mix(0.5, 1.08, 0.5 + 0.5 * n.y) * mix(0.6, 1.0, smoothstep(0.1, 0.6, nv));
+  float veins = max(branch, rib) * blade * (1.0 - 0.7 * vFar);
+  float rim = smoothstep(0.78, 0.97, abs(vb));
+  // The light in it: the sky on both its faces, the last band through it where the lens looks toward the dusk, the strike.
+  vec3 held = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) / 3.14159 + min(vec3(0.6), 0.2 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
+  float toDusk = pow(clamp(dot(-toCamera, uWarmDir), 0.0, 1.0), 3.0);
+  vec3 lilac = mix(vec3(0.95, 0.9, 1.06), vec3(0.86, 0.82, 1.1), fract(seed * 3.3));
+  vec3 stain = clamp(fine / vec3(0.202, 0.181, 0.217), 0.55, 1.5);
+  // Lilac-grey whatever lights it: the film keeps the light's brightness and little of its colour.
+  held = mix(held, dot(held, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.7);
+  vec3 c = (uFilm.x * held + uFilm.y * uWarmColour * toDusk) * mix(vec3(1.0), stain, 0.3) * lilac * (0.8 + 0.4 * fract(seed * 5.3));
+  // Thin as a soap film: where it is stretched it takes colours by its thickness and the angle it is seen at.
+  float thick = 1.2 + 2.2 * reliefFine + 1.4 * vnoise(vec2(metres / (1.7 * wide) + seed, vb * 1.3)) + 0.8 * (1.0 - nv);
+  vec3 sheen = 0.5 + 0.5 * cos(6.2832 * thick * vec3(1.0, 1.17, 1.4));
+  c *= mix(vec3(1.0), 0.55 + 0.9 * sheen, uFilm.z * (1.0 - 0.6 * fold));
+  c *= 1.0 - 0.5 * veins - 0.3 * crease;
+  // The side away from the sky is darker.
+  c *= mix(0.6, 1.08, 0.5 + 0.5 * n.y);
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
   r.y = abs(r.y) + 0.05;
   vec3 mirror = skyRadiance(normalize(r));
-  float glint = smoothstep(0.75, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
-  c += mirror * (0.15 * fres + 0.2 * glint * (0.3 + 0.7 * fres));
-  // A wet sheen along the edge that leads.
+  float glint = smoothstep(0.7, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
+  // A wet sheen along the edge that leads, and on every fold that faces the sky.
   float lead = smoothstep(0.72, 0.93, vb * flip) * (1.0 - torn);
-  c += mirror * 0.3 * lead;
-  float rim = smoothstep(0.7, 0.95, abs(vb));
+  vec3 shine = mirror * (0.5 * fres + uFilm.w * glint * (0.3 + 0.7 * fres) + 0.5 * lead);
   // When a strike is near the ribbon carries the charge along its edges for a moment, violet white.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.25;
-  c += uGlowTint * (uStruck.y * mine * (0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim));
-  float alpha = skin;
+  shine += uGlowTint * (uStruck.y * mine * (0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim));
+  // How much of what is behind it the film hides: little where it is stretched, more at a fold, a vein, its rolled edge, and where it is
+  // seen aslant. Far off it is a pale streak.
+  float cover = clamp(0.2 + 0.3 * fold + 0.25 * crease + 0.35 * veins + 0.45 * rim + 0.35 * (1.0 - smoothstep(0.1, 0.55, nv)) + 0.4 * vFar, 0.0, 0.94);
+  // The shine is on the film, not in it: it shows at its full strength however thin the film.
+  c = (c * cover + shine) / max(cover, 0.05);
+  float alpha = skin * cover;
   // The cord: dark wet sinew, its fibres twisted along it, round, rimed in beads on top.
   float x = clamp(v / max(girth, 1e-4), -1.0, 1.0);
   vec3 round_ = normalize(n * sqrt(1.0 - x * x) + vec3(0.0, 1.0, 0.0) * x);
@@ -253,9 +267,9 @@ void main() {
   vec3 hung = rigShade(vWorld, normalize(n + vec3(fx * 14.0, 0.3, 0.0)), toCamera, vec3(0.5, 0.56, 0.64), 0.12, 1.0) + 0.35 * skyRadiance(-toCamera);
   c = mix(c, hung, ice * (1.0 - corded));
   alpha = max(alpha, ice);
-  // Every pixel it keeps is whole: no pattern, no grain.
-  if (alpha < 0.5) discard;
-  gl_FragColor = vec4(rigOut(c), 1.0);
+  // The film is laid over what is behind it; the cord and the ice hide it.
+  if (alpha < 0.02) discard;
+  gl_FragColor = vec4(rigOut(c), alpha * (1.0 - uSolo));
 }`;
 
 const KNOB_VERTEX = /* glsl */ `
@@ -335,6 +349,10 @@ export function create(ctx: Context): Piece {
     }
   });
 
+  // The film is laid over what is behind it, so the ribbons are drawn the farthest first, as the lens of key spine-2 sees them.
+  const farness = (rb: Ribbon): number => Math.hypot(rb.anchor[0] + WIND[0] * rb.length * 0.4 - stand[0], rb.anchor[1] - stand[1], rb.anchor[2] + WIND[2] * rb.length * 0.4 - stand[2]);
+  ribbons.sort((a, b) => farness(b) - farness(a));
+
   const per = (ALONG + 1) * (ACROSS + 1);
   const anchor = new Float32Array(ribbons.length * per * 3);
   const shape = new Float32Array(ribbons.length * per * 4);
@@ -371,14 +389,19 @@ export function create(ctx: Context): Piece {
       uPixel: pixel,
       uStruck: { value: struck },
       uGlowTint: { value: new THREE.Vector3(1.3, 1.05, 2.8) },
+      // How much the film gives back of the sky on it and of the dusk through it, how strong its colours, how strong its glints.
+      uFilm: { value: new THREE.Vector4(0.8, 0.1, 0.3, 0.6) },
       tMembrane: { value: ctx.assets.texture('mat/membrane.jpg', { kind: 'colour', repeat: false, anisotropy: 8 }) },
       tMembraneH: { value: ctx.assets.texture('mat/membrane-h.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
     },
     side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: true,
   });
   const kites = new THREE.Mesh(geometry, material);
   kites.frustumCulled = false;
-  kites.renderOrder = 4;
+  // Drawn after the dome, so that the sky is behind the film when it is laid over.
+  kites.renderOrder = 12;
 
   // The holdfasts: a cluster of leathery knobs in the crack each stalk comes from.
   const KNOBS = 9;
