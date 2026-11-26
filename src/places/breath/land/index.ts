@@ -80,7 +80,7 @@ export function create(ctx: Context): Piece {
   const thrown = ctx.rig.contactDiscs(loose.shades.length);
   // The shadow begins at the chip's far edge: laid under the chip it shades the chip itself (the rig shades whatever stands in a disc).
   const [wayX, wayZ] = ctx.rig.sun.shadowWay;
-  loose.shades.forEach(([x, z, radius, tall], i) => ctx.rig.setShadow(thrown, i, x + wayX * radius * 1.3, z + wayZ * radius * 1.3, radius * 0.8, tall, 0.85));
+  loose.shades.forEach(([x, z, radius, tall], i) => ctx.rig.setShadow(thrown, i, x + wayX * radius * 0.9, z + wayZ * radius * 0.9, radius * 0.5, tall * 0.6, 0.6));
   const mid = terrain(NEAR, NEAR, 300, 300, midGround);
   mid.computeVertexNormals();
   land.add(mesh(open(mid), rock.shelf));
