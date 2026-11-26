@@ -1,9 +1,11 @@
-// The dead wader at the rim: the same animal as the living ones, the same skin of tubes, laid down once on its side where it fell.
-// Collapsed: the trunk has sunk on its ribs, the neck and the legs lie along the rock, the tendrils are flat and matted.
+// The dead wader at the rim: the same animal as the living ones, the same one skin on the same bones, laid down once on its side where it fell.
+// Collapsed: the trunk has gone flat and sunk between its ribs, the legs lie where they folded, the neck lies along the rock in a slack
+// curve, the tendrils are flat and matted.
 import * as THREE from 'three';
 import { DEAD_WADER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { bodyHalfH, bodyHalfW, makeBuild } from '../waders/animal';
+import { makeBuild } from '../waders/animal';
+import { BONES, FETLOCK, Fields, NECK_BONES, buildBody } from '../waders/body';
 import { makeFlies } from './flies';
 import { makeGround } from './ground';
 import { DEPTH_FRAGMENT, FRAGMENT, VERTEX } from '../waders/material';
@@ -44,7 +46,7 @@ export function create(ctx: Context): Piece {
   const k = DEAD_WADER.size;
   const rng = ctx.rng('dead-wader');
   const seed = 41.7;
-  const b = makeBuild(k, seed, false);
+  const b = makeBuild(k, seed, false, 0.0135, { chest: 1.05, belly: 1.25, sway: -0.5, gaunt: 1.35 });
   const skin = new Skin();
   // The anchor's turn is that of the stand-in, whose length lay across the animal's own axis here: the spine lies across the view from the rim.
   const turn = DEAD_WADER.turn - 1.07;
@@ -70,124 +72,113 @@ export function create(ctx: Context): Piece {
   }
   const laid: Laid[] = [];
 
-  // The trunk on its side, some days dead: what was round has gone flat, the skin has sunk between the ribs and into the pit of the flank
-  // behind them, and the hip and the spine stand out of it.
-  const bodyRings = 96;
-  const bodySides = 30;
-  const body = skin.tube(bodyRings, bodySides);
-  const bodyLocal = new Float32Array(bodyRings * bodySides * 2);
-  const RIBS = 6;
-  const ROLL = 0.42;
-  /** The skin at a place on the trunk: how far up from the axis and how far out toward the spine, metres, and how much of the sky it sees. */
-  const flank = (t: number, phi: number): [number, number, number] => {
-    const c = Math.cos(phi);
-    const sn = Math.sin(phi);
-    const tall = bodyHalfW(t) * k;
-    const deep = bodyHalfH(t) * k;
-    const top = Math.max(c, 0);
-    // The cage: nine ribs that lean back as they go down from the spine; nothing of them toward the belly or near the two ends.
-    const cage = smooth(0.42, 0.5, t) * smooth(0.95, 0.86, t) * smooth(0.05, 0.4, top) * smooth(-0.75, -0.2, sn) * smooth(1, 0.8, sn);
-    const at = ((t - 0.44 + 0.09 * (1 - sn) * 0.5 + 0.012 * Math.sin(t * 47 + sn * 5)) / 0.5) * RIBS;
-    const rib = (0.5 + 0.5 * Math.cos(at * Math.PI * 2)) ** 3;
-    // The pit between the last rib and the hip, where there is nothing under the skin at all.
-    const pit = Math.exp(-(((t - 0.31) / 0.1) ** 2)) * smooth(0, 0.5, top) * smooth(0.95, 0.3, Math.abs(sn));
-    // The hip: a blade of bone under the skin, and the head of the thigh below it.
-    const hip = Math.exp(-(((t - 0.17) / 0.045) ** 2)) * Math.exp(-(((sn - 0.25) / 0.45) ** 2)) * smooth(0, 0.4, top);
-    const blade = Math.exp(-(((t - 0.86) / 0.05) ** 2)) * Math.exp(-(((sn - 0.3) / 0.4) ** 2)) * smooth(0, 0.4, top);
-    // The spine: a row of knuckles along the edge that is away from the legs.
-    const spine = smooth(0.72, 0.97, sn) * smooth(0.06, 0.18, t) * smooth(0.97, 0.85, t);
-    const knuckle = spine * (0.5 + 0.5 * Math.cos(t * 26 * Math.PI * 2)) ** 2;
-    const slack = (0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) + 0.03 * k * Math.sin(t * 19 + 3 * Math.sin(phi * 2 + t * 7) + sn * 4)) * (1 - 0.45 * cage);
-    let up: number;
-    if (c > 0) {
-      up = tall * 2.0 * c ** 0.7 * (1 - 0.75 * pit) * (0.86 + 0.14 * Math.sin(t * 9.0 + 1.0) + 0.08 * Math.sin(t * 23.0 + sn * 3.0)) + cage * k * (0.022 * rib - 0.01) * (0.5 + 0.5 * Math.sin(t * 23 + 1.3) ** 2) * (0.6 + 0.4 * Math.sin(sn * 7 + t * 31)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
-    } else {
-      // What lies on the rock is flat on it.
-      up = -tall * 0.42 * (-c) ** 0.45;
-    }
-    const drawn = sn > 0 ? 1 : 1 - 0.3 * smooth(0.6, 0.25, t) * -sn;
-    const out = 1.25 * deep * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9)) * drawn * (1 + 0.1 * smooth(0.3, -0.6, c)) + 0.014 * k * knuckle;
-    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.34 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
-    // It lies rolled a little onto its belly's edge, so the spine is the high line of it and the flank faces away from the legs' side less.
-    const rolled = up * Math.cos(ROLL) + out * Math.sin(ROLL);
-    return [Math.max(rolled, -tall * 0.42), out * Math.cos(ROLL) - Math.max(up, 0) * Math.sin(ROLL), seen];
+  // The animal, as the living ones are built, and its bones laid down. Its own metres here: x toward its legs, y up from the rock, z toward
+  // its neck. It lies on its right side: its back is toward -x, its right side is on the rock.
+  const body = buildBody(b, b.cell * k);
+  const fields = new Fields(b);
+  const blob = skin.blob(body.count, body.index);
+  for (let v = 0; v < body.count; v++) {
+    skin.describeAt(
+      blob.start + v,
+      [body.rest[v * 3] as number, body.rest[v * 3 + 1] as number, body.rest[v * 3 + 2] as number],
+      [body.restN[v * 3] as number, body.restN[v * 3 + 1] as number, body.restN[v * 3 + 2] as number],
+      [body.ribS[v] as number, body.cage[v] as number],
+      [body.legT[v] as number, body.shade[v] as number, body.radius[v] as number, seed],
+      [4, body.neckU[v] as number],
+    );
+  }
+  const O = new Float32Array(BONES * 3);
+  const E = new Float32Array(BONES * 9);
+  const bone = (i: number, o: V3, e1: V3, e2: V3, e3: V3): void => {
+    O.set(o, i * 3);
+    E.set(e1, i * 9);
+    E.set(e2, i * 9 + 3);
+    E.set(e3, i * 9 + 6);
   };
-  const along = (i: number): number => i / (bodyRings - 1);
-  for (let i = 0; i < bodyRings; i++) {
-    // Closed and round at both ends, the rings even between.
-    const t = 0.004 + 0.992 * along(i);
-    for (let s = 0; s < bodySides; s++) {
-      const [up, out] = flank(t, (s / bodySides) * Math.PI * 2);
-      bodyLocal[(i * bodySides + s) * 2] = up;
-      bodyLocal[(i * bodySides + s) * 2 + 1] = out;
-    }
-    for (let s = 0; s <= bodySides; s++) {
-      const phi = (s / bodySides) * Math.PI * 2;
-      const seen = flank(t, phi)[2];
-      skin.describe(body, i, s, t * b.bodyLen, phi * 0.32, 0.5, seen, bodyHalfW(t) * k, seed, 0, t);
-    }
-  }
-  const half = 0.64 * (b.bodyLen / k);
-  const lie = (u: number): number => bodyHalfW(u) * 0.42 - 0.012;
-  laid.push({ tube: body, centre: (u) => world([0, lie(0.004 + 0.992 * u), -half + 2 * half * u]), local: bodyLocal, sides: bodySides, rings: bodyRings, first: [0, 1, 0] });
+  const unit = (a: V3): V3 => {
+    const l = Math.hypot(a[0], a[1], a[2]) || 1;
+    return [a[0] / l, a[1] / l, a[2] / l];
+  };
+  const cross = (a: V3, c: V3): V3 => [a[1] * c[2] - a[2] * c[1], a[2] * c[0] - a[0] * c[2], a[0] * c[1] - a[1] * c[0]];
+  // The trunk: what was round has gone flat under its own weight. Its middle is this high off the rock; it is rolled a little toward its belly.
+  const FLAT = 0.6;
+  const MID = 0.105 * k;
+  const ROLL = 0.22;
+  const F: V3 = [0, 0, 1];
+  const U: V3 = [-Math.cos(ROLL), Math.sin(ROLL), 0];
+  const R: V3 = [-Math.sin(ROLL), -Math.cos(ROLL), 0];
+  bone(0, [0, MID, 0], F, U, [R[0] * FLAT, R[1] * FLAT, R[2] * FLAT]);
+  /** A place on the animal at rest (fore, up, right), where the trunk's bone puts it. */
+  const onTrunk = (f: number, u: number, r: number): V3 => [U[0] * u + R[0] * FLAT * r, MID + U[1] * u + R[1] * FLAT * r, f];
 
-  // The neck: off the chest and along the rock in a slack curve, a little flattened by its own weight.
-  const neckRings = 40;
-  const neckSides = 9;
-  const neck = skin.tube(neckRings, neckSides);
-  const neckLocal = new Float32Array(neckRings * neckSides * 2);
-  const neckLine: V3[] = [[-0.02, 0.15, half - 0.14], [-0.3, 0.11, half + 0.26], [-0.36, 0.095, half + 0.7], [-0.1, 0.085, half + 1.04], [0.24, 0.075, half + 1.32], [0.36, 0.065, half + 1.64], [0.3, 0.055, half + 1.94]];
-  for (let i = 0; i < neckRings; i++) {
-    const u = i / (neckRings - 1);
-    // The skin of the neck has dried in rings on the cords inside it.
-    const r = b.neckR * 2.0 * (0.5 + 0.5 * (1 - u) ** 1.6 + 0.16 * smooth(0.86, 0.97, u) - 0.5 * smooth(0.97, 1, u)) * (1 + 0.6 * smooth(0.12, 0, u)) * (1 + 0.07 * Math.sin(u * 150 + 2 * Math.sin(u * 23)));
-    for (let s = 0; s < neckSides; s++) {
-      const phi = (s / neckSides) * Math.PI * 2;
-      const rr = r * (1 + 0.1 * Math.cos(phi * 2) + 0.07 * Math.sin(phi * 3 + u * 14 + seed));
-      neckLocal[(i * neckSides + s) * 2] = rr * Math.cos(phi) * (Math.cos(phi) > 0 ? 0.62 : 0.4);
-      neckLocal[(i * neckSides + s) * 2 + 1] = rr * Math.sin(phi) * 1.2;
-    }
-    for (let s = 0; s <= neckSides; s++) skin.describe(neck, i, s, u * b.neckLen, (s / neckSides) * 2 * Math.PI * r, 0.5 + 0.3 * u, 0.6 + 0.4 * smooth(-0.5, 0.5, Math.cos((s / neckSides) * Math.PI * 2)), r, seed, 1, u);
-  }
-  laid.push({ tube: neck, centre: (u) => world(through(neckLine, u)), local: neckLocal, sides: neckSides, rings: neckRings, first: [0, 1, 0] });
-
-  // The legs: folded where they gave way, one pair across the other, the feet knobbed and stiff.
-  const legRings = 25;
-  const legSides = 8;
-  const legLocal = new Float32Array(legRings * legSides * 2);
-  const legRadius: number[] = [];
-  for (let i = 0; i < legRings; i++) {
-    const u = i / (legRings - 1);
-    const thigh = 2.2 * (1 - smooth(0, 0.48, u)) ** 0.8;
-    const knuckle = 0.75 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.4 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
-    const foot = 0.8 * smooth(0.95, 1, u);
-    const r = 0.04 * k * (1.0 + thigh * 0.85 + knuckle * 1.1 + foot * 1.2) * (1 + 0.08 * Math.sin(u * 40)) * (1 - 0.6 * smooth(0.985, 1, u)) * (0.45 + 0.55 * smooth(0, 0.08, u));
-    legRadius.push(r);
-    for (let s = 0; s < legSides; s++) {
-      const phi = (s / legSides) * Math.PI * 2;
-      legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * 0.85;
-      legLocal[(i * legSides + s) * 2 + 1] = r * Math.sin(phi);
-    }
-  }
-  // Each leg is two straight bones: hip, joint, foot. The line through them turns sharply at the joint.
-  const bones: [V3, V3, V3][] = [
-    // Hind, upper: off the hip, the joint out on the rock toward the lens, the shank back along it; hind, under: beneath it.
-    [[-0.02, 0.2, -0.4], [0.66, 0.5, -0.16], [1.3, 0.06, -0.78]],
-    [[0.0, 0.07, -0.46], [0.74, 0.075, -0.06], [1.2, 0.05, -1.0]],
-    // Fore, upper: folded at the joint, the shank back under itself; fore, under: bent beneath the chest.
-    [[-0.02, 0.17, 0.42], [0.9, 0.12, 0.06], [0.4, 0.055, -0.6]],
-    [[0.0, 0.07, 0.48], [0.78, 0.075, 0.5], [0.94, 0.05, -0.3]],
+  // The legs: each is where it folded. A limb is given by the bearing of its two bones on the rock (radians from +x toward +z) and by how
+  // high its joint stands; the feet lie on the rock.
+  const l1 = b.legLen * b.knee;
+  const l2 = b.legLen * (FETLOCK - b.knee);
+  const l3 = b.legLen * (1 - FETLOCK);
+  // Left hind (uppermost): its joint stands up, tented. Left fore: across the other. Right hind and right fore: flat under them.
+  const LIMBS: { thigh: number; shank: number; joint: number; hoof: number }[] = [
+    { thigh: 0.42, shank: -0.78, joint: 0.3, hoof: -0.5 },
+    { thigh: -0.5, shank: -1.02, joint: 0.1, hoof: -1.3 },
+    { thigh: -0.12, shank: -0.52, joint: 0.045, hoof: -0.3 },
+    { thigh: 0.3, shank: -0.74, joint: 0.045, hoof: -1.0 },
   ];
-  const mixed = (a: V3, c: V3, t: number): V3 => [a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t, a[2] + (c[2] - a[2]) * t];
-  const legLines: V3[][] = bones.map(([hip, joint, foot]) => [hip, mixed(hip, joint, 0.5), mixed(hip, joint, 0.82), mixed(joint, foot, 0.18), mixed(joint, foot, 0.5), foot]);
-  legLines.forEach((line, j) => {
-    const tube = skin.tube(legRings, legSides);
-    for (let i = 0; i < legRings; i++) {
-      const u = i / (legRings - 1);
-      for (let s = 0; s <= legSides; s++) skin.describe(tube, i, s, u * b.legLen, (s / legSides) * 2 * Math.PI * (legRadius[i] as number), 0.5, 0.7 + 0.3 * smooth(0.1, 0.4, u), legRadius[i] as number, seed + j, 3, u);
-    }
-    laid.push({ tube, centre: (u) => world(through(line, u)), local: legLocal, sides: legSides, rings: legRings, first: [0, 1, 0] });
+  const legLines: V3[][] = [];
+  LIMBS.forEach((limb, j) => {
+    const h = fields.hips[j] as V3;
+    const hip = onTrunk(h[0], h[1], h[2]);
+    const span = (from: V3, to: number, bearing: number, length: number): V3 => {
+      const fall = Math.max(-0.95, Math.min(0.95, (to - from[1]) / length));
+      const flat = Math.sqrt(1 - fall * fall);
+      return [Math.cos(bearing) * flat, fall, Math.sin(bearing) * flat];
+    };
+    const d1 = span(hip, limb.joint * k, limb.thigh, l1);
+    const joint: V3 = [hip[0] + d1[0] * l1, hip[1] + d1[1] * l1, hip[2] + d1[2] * l1];
+    const d2 = span(joint, 0.03 * k, limb.shank, l2);
+    const fet: V3 = [joint[0] + d2[0] * l2, joint[1] + d2[1] * l2, joint[2] + d2[2] * l2];
+    const d3: V3 = unit([Math.cos(limb.hoof), -0.08, Math.sin(limb.hoof)]);
+    const frame = (at: number, o: V3, a: V3): void => {
+      const dt = R[0] * a[0] + R[1] * a[1] + R[2] * a[2];
+      const across = unit([R[0] - dt * a[0], R[1] - dt * a[1], R[2] - dt * a[2]]);
+      const third = cross(a, across);
+      bone(at, o, across, a, [-third[0], -third[1], -third[2]]);
+    };
+    frame(1 + j, hip, d1);
+    frame(5 + j, joint, d2);
+    frame(9 + j, fet, d3);
+    const end: V3 = [fet[0] + d3[0] * l3, fet[1] + d3[1] * l3, fet[2] + d3[2] * l3];
+    const inK = (p: V3): V3 => [p[0] / k, p[1] / k, p[2] / k];
+    legLines.push([inK(hip), inK(joint), inK(fet), inK(end)]);
   });
+
+  // The neck: off the chest, down onto the rock, and along it in a slack curve; a little flattened by its own weight.
+  const seg = b.neckLen / NECK_BONES;
+  const nb = fields.neckBase;
+  let at = onTrunk(nb[0], nb[1], nb[2]);
+  const neckLine: V3[] = [];
+  const neckAt: V3[] = [];
+  let endDir: V3 = [0, 0, 1];
+  for (let i = 0; i < NECK_BONES; i++) {
+    const u = (i + 0.5) / NECK_BONES;
+    // The bearing of the neck on the rock, radians from +z toward -x: it leaves toward the back, swings across and ends toward the legs.
+    const bearing = 0.8 * Math.cos(u * 3.5) + 0.12 * Math.sin(u * 9 + 1);
+    const lie = Math.max(0.5 * fields.neckRadius((i + 1) / NECK_BONES), 0.022 * k);
+    const fall = Math.max(-0.6, Math.min(0.2, (lie - at[1]) / seg));
+    const flat = Math.sqrt(1 - fall * fall);
+    const a: V3 = [-Math.sin(bearing) * flat, fall, Math.cos(bearing) * flat];
+    // Across the neck is the animal's right, which is down here: the neck is flattened on that axis.
+    const dt = R[0] * a[0] + R[1] * a[1] + R[2] * a[2];
+    const across = unit([R[0] - dt * a[0], R[1] - dt * a[1], R[2] - dt * a[2]]);
+    const third = cross(a, across);
+    const press = 0.62 + 0.3 * (1 - smooth(0, 0.3, u));
+    bone(13 + i, at, [across[0] * press, across[1] * press, across[2] * press], a, [third[0] * 1.12, third[1] * 1.12, third[2] * 1.12]);
+    neckAt.push(at);
+    neckLine.push([at[0] / k, at[1] / k, at[2] / k]);
+    at = [at[0] + a[0] * seg, at[1] + a[1] * seg, at[2] + a[2] * seg];
+    endDir = a;
+  }
+  neckLine.push([at[0] / k, at[1] / k, at[2] / k]);
+  const half = 0.5 * (b.bodyLen / k);
 
   // The tendrils: stuck to the rock in a matted fan, in clumps, some crossed over others.
   const tRings = 10;
@@ -231,40 +222,86 @@ export function create(ctx: Context): Piece {
     laid.push({ tube, centre: (u) => world(through(line, u)), local: tendrilLocal, sides: tSides, rings: tRings, first: [0, 1, 0] });
   }
 
-  // Weed the tide left on it: dark strands over the flank and the neck, their ends on the rock.
-  const weedLocal = new Float32Array(tRings * tSides * 2);
-  for (let i = 0; i < tRings; i++) {
-    for (let s = 0; s < tSides; s++) {
-      const phi = (s / tSides) * Math.PI * 2;
-      weedLocal[(i * tSides + s) * 2] = 0.003 * k * Math.cos(phi);
-      weedLocal[(i * tSides + s) * 2 + 1] = 0.007 * k * Math.sin(phi);
-    }
-  }
-  for (let n = 0; n < 3; n++) {
-    const tube = skin.tube(tRings, tSides);
-    const t0 = rng.range(0.14, 0.9);
-    const slant = rng.range(-0.16, 0.16);
-    const from = rng.range(-1.3, -0.7);
-    const to = rng.range(0.6, 1.3);
-    const tail = rng.range(0.1, 0.45);
-    const line: V3[] = [];
-    for (let q = 0; q <= 6; q++) {
-      const phi = from + ((to - from) * q) / 6;
-      const t = Math.min(0.97, Math.max(0.03, t0 + slant * phi));
-      const [up, out] = flank(t, phi);
-      // Past the edge of the trunk it lies on the rock.
-      const off = Math.max(0, Math.abs(phi) - 1.45);
-      line.push([-(out / k) * (1 + 1.4 * off) - Math.sign(phi) * tail * off, Math.max(0.012, lie(t) + up / k + 0.012 - 0.5 * off), -half + 2 * half * t]);
-    }
-    for (let i = 0; i < tRings; i++) {
-      const u = i / (tRings - 1);
-      // A tone of 2 and over is weed to the skin's shader.
-      for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u, (s / tSides) * 0.1, 2, 0.8, 0.012 * k, seed + 100 + n, 2, u);
-    }
-    laid.push({ tube, centre: (u) => world(through(line, u)), local: weedLocal, sides: tSides, rings: tRings, first: [0, 1, 0] });
-  }
-
   const geometry = skin.build();
+  // The one skin follows its bones, as a living one's does; then it gives way: it sinks between the ribs and into the pit of the flank,
+  // hangs in slack folds, and whatever of it reaches the rock lies flat on it.
+  {
+    const own = new Float32Array(body.count * 3);
+    const { weight, local, cage, ribS, rest } = body;
+    for (let v = 0; v < body.count; v++) {
+      let x = 0;
+      let y = 0;
+      let z = 0;
+      let wT = 0;
+      for (let n = 0; n < 3; n++) {
+        const w = weight[v * 3 + n] as number;
+        if (w === 0) continue;
+        const id = body.bone[v * 3 + n] as number;
+        if (id === 0) wT += w;
+        const i = id * 9;
+        const j = id * 3;
+        const q = v * 9 + n * 3;
+        const a = local[q] as number;
+        const c = local[q + 1] as number;
+        const d = local[q + 2] as number;
+        x += w * ((O[j] as number) + (E[i] as number) * a + (E[i + 3] as number) * c + (E[i + 6] as number) * d);
+        y += w * ((O[j + 1] as number) + (E[i + 1] as number) * a + (E[i + 4] as number) * c + (E[i + 7] as number) * d);
+        z += w * ((O[j + 2] as number) + (E[i + 2] as number) * a + (E[i + 5] as number) * c + (E[i + 8] as number) * d);
+      }
+      // The side of the trunk that faces up is its left: negative on the animal's right axis.
+      const f = (rest[v * 3] as number) / k;
+      const u = (rest[v * 3 + 1] as number) / k;
+      const top = smooth(0.0, 0.1, -(rest[v * 3 + 2] as number) / k) * wT;
+      const rib = (0.5 + 0.5 * Math.cos((ribS[v] as number) * Math.PI * 2)) ** 1.4;
+      const ribbed = cage[v] as number;
+      const pit = Math.exp(-(((f + 0.12) / 0.16) ** 2)) * smooth(-0.3, 0.02, u) * smooth(0.2, 0.08, u);
+      const belly = smooth(0.0, -0.22, u) * smooth(0.3, -0.1, f);
+      const fold = Math.sin(f * 31 + 3 * Math.sin(u * 17 + f * 5) + seed) * 0.5 + Math.sin(f * 67 + u * 41) * 0.25;
+      y -= top * k * (0.02 * ribbed * (1 - rib) + 0.05 * pit + 0.04 * belly * (1 - ribbed) - 0.008 * fold * (1 - 0.6 * ribbed));
+      const floor = 0.012 * k;
+      if (y < floor) y = floor - (floor - y) * 0.04;
+      own[v * 3] = x;
+      own[v * 3 + 1] = y;
+      own[v * 3 + 2] = z;
+    }
+    const p = skin.position;
+    const nrm = skin.normal;
+    const start = blob.start * 3;
+    for (let v = 0; v < body.count; v++) {
+      const w = world([(own[v * 3] as number) / k, (own[v * 3 + 1] as number) / k, (own[v * 3 + 2] as number) / k]);
+      p.set(w, start + v * 3);
+      nrm[start + v * 3] = 0;
+      nrm[start + v * 3 + 1] = 0;
+      nrm[start + v * 3 + 2] = 0;
+    }
+    const ix = body.index;
+    for (let t = 0; t < ix.length; t += 3) {
+      const a = start + (ix[t] as number) * 3;
+      const c = start + (ix[t + 1] as number) * 3;
+      const d = start + (ix[t + 2] as number) * 3;
+      const e1x = (p[c] as number) - (p[a] as number);
+      const e1y = (p[c + 1] as number) - (p[a + 1] as number);
+      const e1z = (p[c + 2] as number) - (p[a + 2] as number);
+      const e2x = (p[d] as number) - (p[a] as number);
+      const e2y = (p[d + 1] as number) - (p[a + 1] as number);
+      const e2z = (p[d + 2] as number) - (p[a + 2] as number);
+      const fx = e1y * e2z - e1z * e2y;
+      const fy = e1z * e2x - e1x * e2z;
+      const fz = e1x * e2y - e1y * e2x;
+      for (const o of [a, c, d]) {
+        nrm[o] = (nrm[o] as number) + fx;
+        nrm[o + 1] = (nrm[o + 1] as number) + fy;
+        nrm[o + 2] = (nrm[o + 2] as number) + fz;
+      }
+    }
+    for (let v = 0; v < body.count; v++) {
+      const o = start + v * 3;
+      const l = Math.hypot(nrm[o] as number, nrm[o + 1] as number, nrm[o + 2] as number) || 1;
+      nrm[o] = (nrm[o] as number) / l;
+      nrm[o + 1] = (nrm[o + 1] as number) / l;
+      nrm[o + 2] = (nrm[o + 2] as number) / l;
+    }
+  }
   for (const l of laid) {
     for (let i = 0; i < l.rings; i++) {
       const u = i / (l.rings - 1);

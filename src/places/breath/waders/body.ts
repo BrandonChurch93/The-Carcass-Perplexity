@@ -84,17 +84,17 @@ const smax = (a: number, b: number, k: number): number => -smin(-a, -b, k);
 
 // The trunk in side view, rump (0) to chest (1), for a size of 1: the line of the back, the line of the belly, the half width.
 // A starved runner's: high bony rump, deep narrow chest, the belly drawn up hard to the hind legs.
-const TOP: [number, number][] = [[0, 0.17], [0.1, 0.3], [0.26, 0.315], [0.5, 0.275], [0.75, 0.275], [0.9, 0.27], [1, 0.22]];
-const BOTTOM: [number, number][] = [[0, 0.04], [0.1, -0.07], [0.3, -0.13], [0.5, -0.25], [0.72, -0.37], [0.9, -0.31], [1, -0.12]];
-const WIDTH: [number, number][] = [[0, 0.07], [0.1, 0.165], [0.25, 0.195], [0.42, 0.165], [0.7, 0.205], [0.9, 0.165], [1, 0.115]];
+const TOP: [number, number][] = [[0, 0.2], [0.1, 0.34], [0.26, 0.36], [0.5, 0.315], [0.75, 0.31], [0.9, 0.3], [1, 0.25]];
+const BOTTOM: [number, number][] = [[0, 0.02], [0.1, -0.12], [0.3, -0.2], [0.5, -0.33], [0.72, -0.45], [0.9, -0.38], [1, -0.16]];
+const WIDTH: [number, number][] = [[0, 0.09], [0.1, 0.2], [0.25, 0.24], [0.42, 0.21], [0.7, 0.255], [0.9, 0.2], [1, 0.14]];
 
 // A leg from above the hip (t below 0, inside the trunk: the haunch on the pelvis, the blade on the ribs) to the ground (1):
 // half thickness fore and aft, half thickness across, and how far the middle of the section stands aft (-) or fore (+) of the bone. For a leg whose joint is at 0.47.
 const HIND_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.17], [0.05, 0.185], [0.16, 0.13], [0.3, 0.07], [0.41, 0.043], [0.47, 0.05], [0.53, 0.031], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
 const HIND_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.07], [0.05, 0.078], [0.16, 0.066], [0.3, 0.045], [0.41, 0.034], [0.47, 0.039], [0.53, 0.027], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
 const HIND_C: [number, number][] = [[-0.16, -0.05], [0.05, -0.035], [0.3, -0.006], [0.41, 0], [0.47, -0.02], [0.53, -0.004], [0.9, 0], [0.97, 0.008], [1, 0.022]];
-const FORE_F: [number, number][] = [[-0.16, 0.06], [-0.06, 0.12], [0.05, 0.125], [0.16, 0.09], [0.3, 0.055], [0.41, 0.04], [0.47, 0.052], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
-const FORE_S: [number, number][] = [[-0.16, 0.03], [-0.06, 0.055], [0.05, 0.062], [0.16, 0.055], [0.3, 0.04], [0.41, 0.033], [0.47, 0.042], [0.53, 0.027], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
+const FORE_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.14], [0.05, 0.15], [0.16, 0.115], [0.3, 0.068], [0.41, 0.043], [0.47, 0.052], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
+const FORE_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.062], [0.05, 0.07], [0.16, 0.062], [0.3, 0.045], [0.41, 0.034], [0.47, 0.042], [0.53, 0.027], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
 const FORE_C: [number, number][] = [[-0.16, 0.02], [0.05, 0.01], [0.3, 0], [0.41, 0.004], [0.47, 0.016], [0.53, 0.004], [0.9, 0], [0.97, 0.008], [1, 0.022]];
 
 /** The fields of one animal at rest. Each is a distance in metres, near enough for a surface and a blend. */
@@ -102,6 +102,10 @@ export class Fields {
   readonly L: number;
   readonly hips: [number, number, number][] = [];
   readonly neckBase: [number, number, number];
+  /** How strongly each rib shows, by its number: none is like the next. */
+  ribEach(phase: number): number {
+    return 0.45 + 0.55 * hash(Math.round(phase) * 3.7 + this.s.seed);
+  }
   readonly neckDir: [number, number, number] = [Math.cos(NECK_REST), Math.sin(NECK_REST), 0];
   readonly ribGap: number;
   private readonly kneeWarp: number;
@@ -187,7 +191,8 @@ export class Fields {
     const [phase, cage] = this.ribs(f, u, r);
     if (cage > 0) {
       const rib = (0.5 + 0.5 * Math.cos(phase * Math.PI * 2)) ** 1.4;
-      d -= (0.013 * rib - 0.004) * cage * k * g;
+      const each = 0.45 + 0.55 * hash(Math.round(phase) * 3.7 + s.seed);
+      d -= (0.0065 * rib * each - 0.002) * cage * k * g;
     }
     return d;
   }
@@ -317,8 +322,8 @@ export function buildBody(s: Shape, cell: number): Body {
   const x0 = -0.5 * L - 0.12 * k - pad;
   const x1 = nb[0] + d0[0] * s.neckLen + 0.12 * k + pad;
   const y0 = -0.02 * k - s.legLen - pad;
-  const y1 = Math.max(0.36 * k, nb[1] + d0[1] * s.neckLen + 0.1 * k) + pad;
-  const z1 = 0.34 * k + pad;
+  const y1 = Math.max(0.42 * k, nb[1] + d0[1] * s.neckLen + 0.1 * k) + pad;
+  const z1 = 0.36 * k + pad;
   const nx = Math.ceil((x1 - x0) / cell) + 1;
   const ny = Math.ceil((y1 - y0) / cell) + 1;
   const nz = Math.ceil((2 * z1) / cell) + 1;
@@ -338,7 +343,7 @@ export function buildBody(s: Shape, cell: number): Body {
     }
   };
   const m = 0.14 * k;
-  fill([-0.5 * L - m, 0.5 * L + m], [-0.42 * k * Math.max(1, s.chest) - m, 0.36 * k + m], [-0.3 * k, 0.3 * k], (f, u, r) => fields.trunk(f, u, r), 0.01);
+  fill([-0.5 * L - m, 0.5 * L + m], [-0.5 * k * Math.max(1, s.chest) - m, 0.4 * k + m], [-0.34 * k, 0.34 * k], (f, u, r) => fields.trunk(f, u, r), 0.01);
   for (let j = 0; j < 4; j++) {
     const h = fields.hips[j] as [number, number, number];
     fill([h[0] - 0.28 * k, h[0] + 0.24 * k], [h[1] - s.legLen - 0.02, h[1] + 0.2 * s.legLen], [h[2] - 0.2 * k, h[2] + 0.2 * k], (f, u, r) => fields.leg(j, f, u, r), 0.07 * k);

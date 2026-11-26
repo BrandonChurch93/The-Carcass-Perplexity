@@ -1,7 +1,8 @@
 // The waders: the herd in the tide channel, the far flock on the shallows, and the one that stands over the drop at the rim.
 // Each animal is a skin of tubes posed on the processor from the time alone (animal.ts); who each one is and what it does is in herd.ts.
 import * as THREE from 'three';
-import { SEA_LEVEL, footing } from '../shared/anchors';
+import { NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, shotSpan } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
 import { Wader, type Env } from './animal';
 import { makeHerd } from './herd';
@@ -82,8 +83,18 @@ export function create(ctx: Context): Piece {
   let height = 0;
   const size = new THREE.Vector2();
 
+  // Staged: the one at the rim stands there in the wide view and in the two views of the rim; in the views down the shaft and of the plumes
+  // (breath-02, breath-03), where it would stand large in the lens, it is out on the flats with the others.
+  const rim = herd[NEAR_WADERS.length] as Wader;
+  const AWAY = { x: -58, z: -98 };
+  const spans = [shotSpan('breath-02'), shotSpan('breath-03')];
+
   return {
     setTime: (seconds) => {
+      const at = stagedSeconds();
+      const away = spans.some(([from, to]) => at >= from && at <= to);
+      rim.plan.x = away ? AWAY.x : RIM_WADER.x;
+      rim.plan.z = away ? AWAY.z : RIM_WADER.z;
       ripples.begin();
       drips.begin();
       herd.forEach((animal, i) => {

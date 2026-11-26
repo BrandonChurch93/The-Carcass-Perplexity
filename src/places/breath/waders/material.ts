@@ -142,24 +142,24 @@ void main() {
     float legT = vInfo.x;
     float neckU = vLook.y;
     float cage = vUv.y;
-    float rib = pow(0.5 + 0.5 * cos(vUv.x * 6.2832), 1.6);
-    float between = cage * (1.0 - rib);
+    float each = 0.45 + 0.55 * hash12(vec2(floor(vUv.x + 0.5) * 3.7, seed));
+    float rib = pow(0.5 + 0.5 * cos(vUv.x * 6.2832), 1.6) * each;
+    float between = cage * (each - rib);
     float drape = fbm(q * vec2(5.0, 7.0) + 9.0) - 0.5;
     float crease = fbm(q * vec2(23.0, 31.0) + 3.0) - 0.5;
     // Slack skin in folds across the neck where it leaves the chest, and round every joint.
     float joint = exp(-pow((legT - 0.47) / 0.05, 2.0)) + exp(-pow((legT - 0.94) / 0.03, 2.0));
     float shank = smoothstep(0.42, 0.52, legT);
     float fold = (vnoise(vec2(dot(vRest.xy, vec2(0.89, 0.45)) * 46.0 + 3.0 * vnoise(q * 7.0), vRest.z * 9.0 + dot(vRest.xy, vec2(-0.45, 0.89)) * 7.0) + seed) - 0.5) * smoothstep(0.02, 0.12, neckU);
-    height = (0.006 * rib * cage + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.002 * crease + 0.004 * fold) * mid;
-    pale = mix(vec3(0.6, 0.43, 0.39), vec3(0.86, 0.73, 0.66), smoothstep(0.25, 0.7, blotch)) * (0.8 + 0.4 * mottle) * clamp(told, 0.0, 2.0);
+    height = (0.003 * rib * cage + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.002 * crease + 0.004 * fold) * mid;
+    pale = mix(vec3(0.66, 0.5, 0.46), vec3(0.9, 0.79, 0.72), smoothstep(0.2, 0.65, blotch)) * (0.84 + 0.32 * mottle) * clamp(told, 0.0, 2.0);
     albedo = pale * (0.84 + 0.16 * crack) * (1.0 + (0.3 * drape + 0.1 * crease + 0.2 * fold) * mid);
-    occ *= 1.0 - 0.34 * between * mid;
-    albedo *= 1.0 - 0.1 * between;
+    occ *= 1.0 - 0.07 * between * mid;
     albedo = mix(albedo, vec3(0.42, 0.44, 0.54), 0.2 * vein * mid * (1.0 - shank));
     // Raw where bone rubs the skin from inside: the points of the hips, the spine, the joints, the end of the neck.
     float bony = smoothstep(0.55, 0.95, rn.y) * (1.0 - step(0.01, legT)) * (1.0 - smoothstep(0.0, 0.1, neckU));
     float sore = smoothstep(0.42, 0.66, mottle) * (0.25 + 0.45 * smoothstep(0.4, 0.65, blotch)) + 0.5 * smoothstep(0.52, 0.7, fbm(q * vec2(1.3, 1.9) + 3.0)) + 0.3 * bony + 0.75 * joint + smoothstep(0.62, 1.0, neckU) * (0.5 + 0.4 * blotch);
-    albedo = mix(albedo, raw, 0.6 * clamp(sore, 0.0, 0.9));
+    albedo = mix(albedo, raw, 0.5 * clamp(sore, 0.0, 0.9));
     albedo = mix(albedo, vec3(0.62, 0.3, 0.28), 0.35 * pimple * smoothstep(0.4, 0.7, mottle));
     // The belly and the legs are splashed grey with silt; the foot is dark horn.
     float belly = smoothstep(-0.3, -0.9, rn.y) * (1.0 - step(0.01, legT)) * (1.0 - step(0.02, neckU));
@@ -211,16 +211,18 @@ void main() {
     albedo *= 1.0 + 0.22 * fold * (1.0 - 0.45 * smoothstep(0.0, 0.4, u)) * mid;
     thin = 0.7;
   } else if (kind < 2.5) {
-    // A tendril: raw pink where it roots, dark wine-red along it, and the ends darker still with what they have dragged through.
+    // A tendril: a thread of the same bare flesh as the neck, pale pink, blood-red in some, and the ends dark with what they have dragged through.
     float tone = vInfo.x;
-    albedo = mix(vec3(0.5, 0.25, 0.24), mix(vec3(0.15, 0.045, 0.045), vec3(0.4, 0.17, 0.155), tone), smoothstep(0.0, 0.3, u));
-    // A few are pale and fleshy, the pink of the neck's end carried down them.
-    albedo = mix(albedo, vec3(0.56, 0.3, 0.27), step(0.62, hash12(vec2(seed, 9.0))) * 0.75);
-    albedo = mix(albedo, vec3(0.09, 0.075, 0.04), smoothstep(0.55, 1.0, u) * smoothstep(0.35, 0.8, tone));
+    float own = hash12(vec2(seed, 9.0));
+    vec3 flesh = mix(vec3(0.66, 0.4, 0.36), vec3(0.8, 0.6, 0.54), own);
+    vec3 blood = mix(vec3(0.3, 0.08, 0.07), vec3(0.52, 0.2, 0.17), tone);
+    albedo = mix(flesh, blood, step(0.5, own) * smoothstep(0.0, 0.25, u) * 0.85);
+    albedo = mix(albedo, vec3(0.62, 0.36, 0.33), smoothstep(0.2, 0.0, u));
+    albedo = mix(albedo, vec3(0.16, 0.1, 0.06), smoothstep(0.6, 1.0, u) * (0.35 + 0.5 * tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
-    albedo = mix(albedo, vec3(0.07, 0.065, 0.035), step(0.82, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));
-    // Far off the mop is one dark red mass: no strand of it is seen for itself.
-    albedo = mix(vec3(0.42, 0.2, 0.19), albedo, smoothstep(0.03, 0.008, px));
+    albedo = mix(albedo, vec3(0.1, 0.095, 0.045), step(0.86, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));
+    // Far off the mop is one mass: no strand of it is seen for itself.
+    albedo = mix(vec3(0.5, 0.27, 0.24), albedo, smoothstep(0.03, 0.008, px));
     wet = 0.6 + 0.4 * vWet;
     occ *= 0.7 + 0.3 * u;
     thin = 1.0;
@@ -249,23 +251,26 @@ void main() {
       albedo = vInfo.x > 1.5 ? mix(vec3(0.13, 0.11, 0.06), vec3(0.22, 0.18, 0.1), hash12(vec2(seed, 2.0))) : mix(albedo * 0.8, vec3(0.2, 0.1, 0.085), 0.45 + 0.4 * hash12(vec2(seed, 4.0)));
     } else {
       float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
-      albedo = mix(albedo, grey * vec3(0.98, 0.9, 0.78), 0.8) * 0.56;
+      albedo = mix(albedo, grey * vec3(0.98, 0.9, 0.78), 0.8) * mix(0.56, 0.8, whole);
       float grime = fbm(vWorld.xz * 5.0 + vWorld.y * 7.0 + seed);
       albedo *= 0.5 + 0.85 * grime;
-      float scale_ = kind > 0.5 && kind < 1.5 ? smoothstep(0.25, 0.6, vnoise(vUv * vec2(120.0, 90.0) + seed)) : 0.5;
+      // One skin has no seam: what dries on it is laid by where the skin is on the animal.
+      vec2 duv = whole > 0.5 ? q : vUv;
+      float scale_ = kind > 0.5 && kind < 1.5 ? smoothstep(0.25, 0.6, vnoise(duv * vec2(120.0, 90.0) + seed)) : 0.5;
       albedo *= 0.8 + 0.4 * scale_;
-      float wrinkle = kind < 0.5 ? fbm(vUv * 26.0 + seed) - 0.5 : vnoise(vec2(vUv.x * 70.0 + 3.0 * vnoise(vUv * 9.0), vUv.y * 16.0) + seed) - 0.5;
-      float crease = vnoise(vUv * vec2(21.0, 57.0) + seed) - 0.5;
+      float neckD = whole * smoothstep(0.05, 0.2, vLook.y);
+      float wrinkle = kind < 0.5 || (whole > 0.5 && neckD < 0.5) ? fbm(duv * 26.0 + seed) - 0.5 : vnoise(vec2(dot(vRest.xy, vec2(0.89, 0.45)) * 70.0 + 3.0 * vnoise(duv * 9.0), duv.y * 16.0) + seed) - 0.5;
+      float crease = vnoise(duv * vec2(21.0, 57.0) + seed) - 0.5;
       // On the trunk the skin hangs in folds from the spine; on the neck it has dried in rings; the legs are bone with a little skin on.
-      float drape = kind < 0.5 ? fbm(vUv * vec2(7.0, 9.0) + seed + 5.0) - 0.5 : 0.0;
-      float ringed = kind < 0.5 ? 0.9 : kind < 1.5 ? 0.4 : 0.2;
-      height += (0.007 * ringed * wrinkle + 0.004 * crease + 0.03 * drape + 0.004 * (swell - 0.5)) * mid;
+      float drape = kind < 0.5 || whole > 0.5 ? fbm(duv * vec2(7.0, 9.0) + seed + 5.0) - 0.5 : 0.0;
+      float ringed = kind < 0.5 || whole > 0.5 ? 0.9 : kind < 1.5 ? 0.4 : 0.2;
+      height += (0.007 * ringed * wrinkle + 0.004 * crease + 0.03 * drape * (1.0 - 0.6 * whole) + 0.004 * (swell - 0.5)) * mid;
       albedo *= 1.0 + (0.4 * ringed * wrinkle + 0.35 * drape) * mid;
       float hollow = 1.0 - vInfo.y;
       float rot = smoothstep(0.42, 0.68, fbm(q * vec2(3.1, 2.3) + 11.0) + 0.3 * hollow);
       albedo = mix(albedo, vec3(0.17, 0.08, 0.06), 0.8 * rot);
       // The shanks and the feet have gone dark and hard.
-      if (kind > 2.5) albedo = mix(albedo, vec3(0.13, 0.1, 0.085), 0.35 + 0.5 * smoothstep(0.4, 0.6, u));
+      if (kind > 2.5) albedo = mix(albedo, vec3(0.13, 0.1, 0.085), whole > 0.5 ? 0.6 * smoothstep(0.42, 0.56, vInfo.x) : 0.35 + 0.5 * smoothstep(0.4, 0.6, u));
       // Where it lies on the rock it is dark with what ran out of it and with the damp.
       albedo *= 0.45 + 0.55 * smoothstep(0.02, 0.2, vWorld.y - landAt(vWorld.xz).r);
       albedo = mix(albedo, vec3(0.3, 0.2, 0.15), 0.5 * hollow);
@@ -275,7 +280,7 @@ void main() {
     rough = 0.92;
     thin *= 0.3;
   }
-  albedo *= 1.0 - 0.62 * wet;
+  albedo *= 1.0 - (0.62 - 0.3 * tendril) * wet;
   rough = mix(rough, 0.22, wet);
   if (mid > 0.01 && tendril < 0.5) n = relief(vWorld, n, height);
 
@@ -295,7 +300,7 @@ void main() {
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = pow(1.0 - nv, 1.6) + 2.6 * pow(1.0 - nv, 4.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
-  vec3 through = mix(vec3(1.0, 0.6, 0.45), vec3(0.45, 0.1, 0.07), tendril);
+  vec3 through = mix(vec3(1.0, 0.6, 0.45), vec3(0.45, 0.2, 0.15), tendril);
   colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 5.0 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * smoothstep(-0.5, 0.3, dot(n, uSunDir)));
   if (uMirror > 0.5) {
     gl_FragColor = vec4(colour * (1.0 - uSolo), 1.0);

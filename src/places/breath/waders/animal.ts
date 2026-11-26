@@ -160,8 +160,8 @@ export function makeBuild(k: number, seed: number, far: boolean, cell = 0.02, ow
     stride,
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
-    neckR: 0.082 * k,
-    tendrils: far ? 6 : 190,
+    neckR: (far ? 0.082 : 0.092) * k,
+    tendrils: far ? 6 : 320,
     tendrilLen: 0.62 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
     chest: j(10, 0.9, 1.14),
@@ -322,7 +322,7 @@ export class Wader {
 
     // The tendrils: wet strands of unlike length that root round the end of the neck, in clumps.
     this.tendrilLocal = new Float32Array(tRings * tSides * 2);
-    const tr = (far ? 0.012 : 0.0095) * k;
+    const tr = (far ? 0.012 : 0.0075) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
       const r = tr * (1 - 0.6 * u ** 1.6);
@@ -337,7 +337,7 @@ export class Wader {
       this.tendrils.push(tube);
       const clump = Math.floor(hash(seed * 3.1 + n * 0.37) * 7);
       const strand = {
-        angle: (clump / 7) * Math.PI * 2 + (hash(seed + n * 1.7) - 0.5) * 1.1,
+        angle: (clump / 7) * Math.PI * 2 + (hash(seed + n * 1.7) - 0.5) * 0.8,
         out: 0.15 + 0.85 * hash(seed + n * 2.9),
         len: b.tendrilLen * (0.3 + 0.95 * hash(seed * 1.3 + n * 5.1) ** 1.4),
         stiff: 0.3 + 0.7 * hash(seed + n * 9.7),
@@ -816,7 +816,7 @@ export class Wader {
       let x = (pts[r0 * 3] as number) * (1 - rf) + (pts[r0 * 3 + 3] as number) * rf + ox * rad;
       let y = (pts[r0 * 3 + 1] as number) * (1 - rf) + (pts[r0 * 3 + 4] as number) * rf + oy * rad;
       let z = (pts[r0 * 3 + 2] as number) * (1 - rf) + (pts[r0 * 3 + 5] as number) * rf + oz * rad;
-      const splay = 1.1 * st.out + 1.3 * back;
+      const splay = 0.5 * st.out + 0.7 * back;
       const each = st.len / (tube.rings - 1);
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.phase) + 0.04 * Math.sin(seconds * 3.7 + st.phase * 2.3);
       let px = x;
@@ -841,7 +841,7 @@ export class Wader {
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
         // No strand hangs straight: each is kinked and curled its own way, more toward its end.
-        const curl = (0.2 + 0.8 * u) * (0.5 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.3 * Math.sin(u * 17 + st.phase * 11));
+        const curl = (0.15 + 0.6 * u) * (0.34 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.26 * Math.sin(u * 19 + st.phase * 11) + 0.14 * Math.sin(u * 41 + st.phase * 17));
         dx += Math.cos(st.phase * 3) * curl;
         dz += Math.sin(st.phase * 3) * curl;
         dy += 0.35 * curl * Math.sin(st.phase * 7);
