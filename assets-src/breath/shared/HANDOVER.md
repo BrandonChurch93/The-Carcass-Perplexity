@@ -48,11 +48,11 @@ From `breath_ground_owner_3`, branch `agent/breath-ground-3`, at version 3 (Phas
 
 ## Checks at version 3, staging, cost
 
-- At the handed-back commit: `npx tsc --noEmit -p .` clean, `npm run -s build` passes, `npm run -s determinism` prints `determinism: pass`, `npm run -s gate -- --phase 1 --only G10` passes.
+- The measure and the first cost ran on my code at 85f8e24; after merging main and life 711997f these ran again: `npx tsc --noEmit -p .` clean, `npm run -s build` passes, `npm run -s determinism` prints `determinism: pass`, `npm run -s gate -- --phase 1 --only G10` passes.
 - `npm run measure -- --unit breath --tier draft` (uhd), keys 0 to 4: M1 0 invalid pixels; M2 22.4, 52.4, 28.0, 59.2, 68.1 percent (floor 8); M3 1.11, 1.43, 1.79, 2.03, 3.25 (breath-4 is over 3: the fog's grain at draft adds to it) (floor 0.75).
 - Every key rendered once at `--tier final`, hd (50 to 63 s each): no difference in kind from draft.
 - Staged by shot: nothing. `stagedSeconds()` is not used in my folders.
-- Cost, `npm run -s cost -- --key breath-0 --format uhd --tier draft --parts land shaft slabs hoops`, one sample: whole frame 23.71 s, empty frame 3.47 s; above the empty frame `land` 8.34, `shaft` 1.75, `hoops` 0.90, `slabs` 0.00. Received at 24.76 s whole. Saved: the march (32 steps to 16, early-out before the land is read, a lower roof), the cliff mesh, dead bodies of the old exhale. The land shader is the dearest part and was not cut: its three-plane grain costs what the march saved. The aim of 5 s for my share is not met.
+- Cost, `npm run -s cost -- --key breath-0 --format uhd --tier draft --parts land shaft slabs hoops`, one sample: whole frame 23.71 s, empty frame 3.47 s; above the empty frame `land` 8.34, `shaft` 1.75, `hoops` 0.90, `slabs` 0.00; 23.47 s whole on the merged tree. Received at 24.76 s whole. Saved: the march (32 steps to 16, early-out before the land is read, a lower roof), the cliff mesh, dead bodies of the old exhale. The land shader is the dearest part and was not cut: its three-plane grain costs what the march saved. The aim of 5 s for my share is not met.
 
 ## What I would do next, in order
 
