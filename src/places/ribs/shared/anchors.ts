@@ -28,11 +28,12 @@ export const LEVELS = { sea: SEA, pool: POOL, tide: TIDE };
 
 /** The sun. It does not move in the 42 seconds of the place. `toward` points from the ground to the sun. */
 export const SUN = {
-  // High, from the left of the cameras of the strait and a little behind them: a blade's left face and its top are lit hard, its right
-  // face and what hangs over are in shade, as the approved pictures have them. The bright break stays ahead and right (the rig's skyBreak).
-  toward: [0.0, 0.62, 0.78] as [number, number, number],
-  /** Radiance times solid angle of the sun through thin cloud, scene linear: what a face turned to it takes over and above the sky. */
-  colour: [7.0, 6.0, 4.7] as [number, number, number],
+  // Low and to the right of the cameras of the strait, a little ahead of them (70 degrees right of north, 24 up), through the break of the
+  // storm sky: what faces east is lit warm and hard, what faces west stands in the sky's cool fill with a burning edge, and the right row
+  // lays its shadows across the flats between the drowned one's cliff and the feeders' pools.
+  toward: [0.8585, 0.4067, -0.3125] as [number, number, number],
+  /** Radiance times solid angle of the low sun through the break, scene linear: what a face turned to it takes over and above the sky. */
+  colour: [7.0, 4.9, 2.9] as [number, number, number],
 };
 
 /** The wind: where it blows to (x, z), unit length, and metres a second low over the water. Cloud shadow, spray and weed lean with it. */
