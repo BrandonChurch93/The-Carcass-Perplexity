@@ -1383,5 +1383,23 @@
   "group": 2,
   "model": "gpt_image_2_6_flare",
   "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "bolt",
+  "kind": "plate",
+  "prompt": "A photograph of one lightning stroke at night on a pure black background, taken with a short exposure: a single cloud-to-ground channel that enters at the top centre of the frame and runs down to the bottom centre, crooked and kinked the whole way as real lightning is and never a regular zigzag, thin and blinding white at its core with a narrow violet-blue edge. Eight or ten fine side branches leave it at shallow angles, each fainter and thinner than the channel, forking again and ending in nothing. Black means nothing is there: no glow fog, no cloud, no rain, no ground, no horizon, no stars. The first reference image is the storm this stroke belongs to: take the violet of its lightning from there, and nothing of its composition. The second reference image is a real photograph of a storm: it is the standard for how a camera records the real thing, with no painted, drawn or stylised look. Output one tall portrait image, nine units wide and sixteen tall. Photographic, sharp, no text, no logo, no border, no people.",
+  "refs": [
+   "references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg",
+   "references/drafts/working/real/plate-storm-1.jpg"
+  ],
+  "why": "the core of the strike, so that the bolt is a photographed channel and not a drawn zigzag; it lies on black, so its brightness is its cover",
+  "metres": 340,
+  "aspect": "9:16",
+  "height": null,
+  "asked": "spine_storm_owner_2",
+  "group": 5,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
  }
 ]

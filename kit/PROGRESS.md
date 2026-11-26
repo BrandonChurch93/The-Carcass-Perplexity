@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 83, 2026-11-26 01:34 UTC:
+Status 84, 2026-11-26 01:50 UTC:
 
-- `01-g1.jpg`: Working pictures for the owners, first sheet: far backplates, scenery and animals on black. No animal has eyes or ears.
-- `02-g2a.jpg`: Second sheet: the Ribs and the Breath. Ground plates, the bore wall, an open wing, the one that stayed, the rib arch.
-- `03-g2b.jpg`: Third sheet: the Marsh, the Spine and the Eye. Crust and shore plates, hair locks, the scorch field, the storm wall, the drinkers.
-- `04-h1.jpg`: Reliefs made by a second call from each colour picture: form for lighting the plates and cards.
+- `01-a-seam1.jpg`: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right
+- `02-a-joined-small.jpg`: 2 · The larger map of the whole body, reduced (4096 x 2305, joined from nine windows)
+- `03-look-1.jpg`: 3 · The Blood Marsh, wave 2 at minute 33: the wallower as one skin beside the approved picture (head, young ones and wet line still open)
+- `04-look-1.jpg`: 4 · The Reveal, wave 2: the last frame on the first maps beside the approved picture (lowlands too dark, bones too white, both sent back)
 
+Status 83, 2026-11-26 01:34 UTC, showed: Working pictures for the owners, first sheet: far backplates, scenery and animals on black.
 Status 82, 2026-11-26 01:11 UTC, showed: The Reveal's new ground, kept set.
 Status 81, 2026-11-26 00:51 UTC, showed: The Reveal's new ground. Top: the new satellite map with the bones traced from the approved picture drawn on it in magenta.
-Status 80, 2026-11-26 00:32 UTC, showed: The Reveal as judged in round 13 (version 2, final tier, top row) above its approved pictures: match 2, reads as filmed 2, motion 5, jury 0...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T01:34:44Z
-phase 4: 5.40 h used of 17.00 h
-build: 25.72 h used of 72.00 h
+2026-11-26T01:50:38Z
+phase 4: 5.67 h used of 17.00 h
+build: 25.99 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 23
+minutes since the last status: 16
 ```
 
 ## Phases
@@ -1312,6 +1312,9 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 01:36 UTC: the second list of working pictures. All ten second owners asked for pictures in their first messages (01:14 to 01:27 UTC) and the Builder made them, as the decision of 23:35 UTC says: 77 colour pictures (far backplates, feature sheets of scenery and animals on black, ground plates and rock faces seen square on, atlases of spray and insects, more tiles) and 38 reliefs, one take each. Asked by: `ribs_ground_owner_2` 4, `ribs_sea_owner_2` 8, `breath_ground_owner_2` 5, `breath_life_owner_2` 5, `marsh_ground_owner_2` 5, `marsh_life_owner_2` 5, `spine_ground_owner_2` 7, `spine_storm_owner_2` 6, both owners of the Spine 1, `eye_owner_2` 9, `reveal_owner_2` 5; the other 17 the Builder added unasked (a far backplate for each place and plates the issues of rounds 8 to 12 call for). The list and every prompt are in `assets-src/materials/spec2.py`, the recipes under `assets-src/<place>/mat/RECIPE.md`, the files under `public/assets/<place>/mat/` (`main` d700a8a9, the last two reliefs in the commit after it). Two image models: the colour picture by one, from the approved picture of the view and a real photograph as the standard; its relief by the other, from the colour picture alone. MEASURED: each relief lies on its colour picture within 1.8 px (phase correlation of gradients). MEASURED by eye on the contact sheets: the reliefs read as an evenly lit clay model more than as a strict height field, so the owners were told to use them for form at a low strength and not for exact slopes. MEASURED: a colour call took 10 to 55 s and a relief call 27 to 148 s with 14 calls at once; 2 calls failed once with a protocol error and passed on the one retry. The sizes returned vary (1672 x 941, 1536 x 1024, 1024 x 1536, 1254 square, 2172 x 724 and others) and are read from the files. Checked on contact sheets and on crops of every head: no person, no text, no logo, and no animal has eyes or ears. They are working pictures under kit/06, not approved art, and the approved keys stay the target of every place.
 - 2026-11-26. 01:36 UTC: the disk. 2.0 GB were free, under `sandbox.minFreeDiskGb` (3). Removed, all of it outside the repo: 113 copies of generated pictures in the workspace root, each compared by hash with its copy under `assets-src` before it went (287 MB), and the older intermediate masters of the Reveal from the reference rounds in `r3/pull` (about 890 MB; the last two, `master-x6.png` and `master-x6w.png`, stay, and the approved master under `references/approved/7-reveal/` is untouched). `git prune-packed` was run in the repo. Free now: 3.2 GB. No tracked file was removed. The tracked files take about 1.5 GB of the 2 GB `repo.maxTreeGb` allows, so the larger maps of the Reveal keep their window sources as JPEG at quality 95 and grey PNG, not as the PNG the tool returns, and the joined maps are built from those stored files.
 - 2026-11-26. 01:36 UTC: the gate of Phase 4, first run on `main` (9e1df1bd): 19 of 21 passed. G13 failed, word for word: "reveal/space fails test 4: it covers no pixel at frame 11379, in the reference or now" and "parts/PARTS.json was written from other files of reveal than today's. Run npm run parts -- --unit reveal --write". This is fix attempt 1 of the 5 that `quality.gateFixMaxAttempts` allows: the two sentences went to `reveal_owner_2` at 01:32 UTC, who rebuilds the Reveal's parts list in this wave, and the gate is run again on its next merged version. A1 is open and not a failure: the transcript of clip n8 reads "neverland"; that clip is made again from the final script with the other seven.
+- 2026-11-26. 01:48 UTC: the Reveal's maps are made again larger. The Reveal's owner MEASURED that at the wide key one texel of a 1672 px map covers 2.1 px of the frame, and the image tool returns no picture wider than 1672 px. So each of the four maps is cut into 3 x 3 windows, each window is made again at full resolution by the same image model from its enlarged crop with a real satellite photograph as the standard, its height from the new window, and the nine are laid on the parent by a fitted affine, tone-matched below 48 px and joined by a multi-band blend (`assets-src/reveal/maps/enlarge-maps.py`, the method that built the approved master). Why 2.5 times: three windows across with a quarter of a window shared give 4180 px, just over the 4096 px that every target device takes as a texture, so the maps are written 4096 x 2305 and one texel covers under 1 px of the frame at the wide key. One take a window (36 colour, 36 heights), inside `assets.maxTakesPerAsset`. MEASURED: all 36 windows fitted; moved at the corners by 0.85 to 4.56 px of a window (one px of a window is 0.4 px of the parent), except the lower left window of `map-a`, most of it open water, 11.38 px; heights within 1.61 px of their windows; seams checked at native size on every map, no ghost edge and no island added in open water. The window pictures are kept as JPEG at quality 95 (65 MB) and not as PNG (about 190 MB), because the tracked files take about 1.6 GB of the 2 GB `repo.maxTreeGb` allows; the parents stay as they were. On `main` at ff4ca279; the owner was told at 01:47 UTC.
+- 2026-11-26. 01:48 UTC: the islands west of the skull stay. The Reveal's owner flagged that `map-b` draws islands in the sea left of the skull where the approved `reveal-2` has open water with cumulus. They stay because Brandon's note 10 asks for "More land around the bones, less bare figure on open water" and his settled line on `reveal-1` to `reveal-4` says `-b` may read more as a continent and less as a figure than `-a`. So that the key stays near its approved picture, the owner puts the approved picture's cumulus field over that sea at `reveal-2`, at its place and cover, with land showing through the gaps. No approved picture is changed.
+- 2026-11-26. 02:03 UTC: two more pictures for owners, by the decision of 23:35 UTC. (1) The Eye's far wall for the low cameras (`eye/mat/far-low.jpg`) is made again at twice the size, 3344 x 1882, by the method of the Reveal's larger maps (`assets-src/materials/enlarge-plate.py`): nine windows, 1 take each. The six that hold the wall, the sky and the reflections by the shore are used (MEASURED: all six fitted within 2.37 px). The three of open water are set aside, because the model drew a rocky shore across the top of each though the prompt forbade it; there the plate is the first picture enlarged, and the owner was told not to show that part close. Seen at native size before it went to `main` (ec53bfd7). (2) A lightning stroke on black for the Spine (`spine/mat/bolt.jpg`, 941 x 1672, 1 take), which the storm's owner found missing after the Builder had named it in a note; on `main` at 53262848. The second list now holds 78 colour pictures.
 
 ## Notes from Brandon
 
@@ -1621,7 +1624,8 @@ none
 
 ## Animals kept at a distance
 
-- Open, ordered 2026-11-26 01:10 UTC and not yet in the frames: the drinkers of the Eye (`eye-1`, and the same animals where `eye-2` and `eye-4` show them). The owner `eye_owner_2` restages them under `kit/03-METHOD.md` section 4. The settled sentence is added to each key when its restaged frame is on `main`, and the key is named in the next report block.
+- Open, `ribs-3`, on `main` since 2026-11-26 02:09 UTC (6b36521e): the kite-wings that pass close to the lens at the colony are moved 40 to 60 m off by the sea's owner (`ribs_sea_owner_2`, version 1 of wave 2), after the fliers and the colony drew severe issues in round 10 (R1 pack B, R3 pack B). The detail is carried by the colony on its ledges. The settled sentence is in `settled["ribs-3"]` of `config/showcase.json`, word for word.
+- Open, `eye-1`, `eye-2`, `eye-4`, on `main` since 2026-11-26 02:14 UTC (ecb3bc47): the drinkers of the Eye are restaged by `eye_owner_2` (version 1 of wave 2), ordered 01:10 UTC after they drew severe issues in round 12. `eye-1`: four animals side on in the shallows, 21 to 31 m off, the camera 6.5 m back on the gravel with the foreground soft. `eye-2`: three small animals 31 to 52 m out beyond the mats, in silhouette. `eye-4`: two from behind, cropped by the foot of the frame and out of focus. The detail is carried by the place: the shallows, the mats, the dark water. The settled sentence is in `settled` of `config/showcase.json` for each of the three keys, word for word.
 
 ## For Brandon to decide
 

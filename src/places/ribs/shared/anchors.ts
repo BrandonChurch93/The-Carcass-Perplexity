@@ -25,10 +25,11 @@ export function shotSpan(id: string): { from: number; to: number } {
 /** Sea level, the level the pools and runnels stand at on the floor, and the tide line on the blades (the top of the weed), metres. */
 export const LEVELS = { sea: SEA, pool: POOL, tide: TIDE };
 
-/** The sun. It does not move in the 42 seconds of the place. `toward` points from the ground to the sun: ahead and right of the establishing view, 40 degrees up. */
+/** The sun. It does not move in the 42 seconds of the place. `toward` points from the ground to the sun. */
 export const SUN = {
-  // Low, from the right and a little ahead of the cameras of the strait (58 degrees right of north, 20 up): it rakes the right flank of every blade.
-  toward: [0.797, 0.342, -0.498] as [number, number, number],
+  // From behind the cameras of the strait and to their right (154 degrees right of north, 37 up): the broad faces the lens sees are lit, the
+  // edges turned to the left row are not, and the broken cloud lays the shade. The bright break stays ahead and right (the rig's skyBreak).
+  toward: [0.35, 0.6, 0.72] as [number, number, number],
   /** Radiance times solid angle of the sun through thin cloud, scene linear: what a face turned to it takes over and above the sky. */
   colour: [7.0, 6.0, 4.7] as [number, number, number],
 };

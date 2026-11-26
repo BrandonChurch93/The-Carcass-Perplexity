@@ -98,8 +98,8 @@ export function create(ctx: Context): Piece {
     // A column that climbs, leans with the wind as it climbs and opens into a plume that trails off down the wind.
     const rise = r * (3.5 + 6 * tall);
     const lean: [number, number] = [-0.4, 0.14];
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.5 + 0.8 * tall), rise * 0.58, r * (1.5 + 0.8 * tall)], lean, dense: 0.3 / r, repeat: r * 3.4, open: 0.34, climb: 4.5 + r * 0.2, sun: 1.5 });
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (3.2 + 2.6 * tall), rise * 0.36, r * (2.2 + 1.6 * tall)], lean: [-1.1, 0.4], dense: 0.11 / r, repeat: r * 5.5, open: 0.44, climb: 2.4, sun: 1.5 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.5 + 0.8 * tall), rise * 0.58, r * (1.5 + 0.8 * tall)], lean, dense: 0.13 / r, repeat: r * 3.4, open: 0.5, climb: 4.5 + r * 0.2, sun: 0.5 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (3.2 + 2.6 * tall), rise * 0.36, r * (2.2 + 1.6 * tall)], lean: [-1.1, 0.4], dense: 0.045 / r, repeat: r * 5.5, open: 0.56, climb: 2.4, sun: 0.5 });
   }
   // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
   for (const [x, y, z, rx, ry, rz, dense] of [
@@ -177,7 +177,8 @@ export function create(ctx: Context): Piece {
     volume,
     setTime: (seconds) => {
       breath.set(...breathAt(seconds));
-      breathing = exhaleBodies(seconds);
+      // The breath is the marched vapour's own dome now (volume.ts): no separate bodies are laid for it.
+      breathing = [];
     },
     beforeSample: (_renderer, camera) => {
       // The bodies are read every sample, since a folder may push its own sources, and laid nearest first.

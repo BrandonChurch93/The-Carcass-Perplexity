@@ -1,8 +1,15 @@
 // The stone of the Eye: pale bedded limestone on the faces, grey gravel and talus on the flats. One chunk of GLSL, used by the land, the brow,
 // the scree and the wall of the shaft, so that all the rock is the same rock.
 //   tCliff, tCliffNh (cliff, 120 m a repeat, beds level, rubble at its foot), tTalus, tTalusNh (shore, 4 m), tSinter, tSinterNh (sinter, 3 m): the pictures in public/assets/eye/mat/.
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import type { Context } from '../shared/context';
+
+/** A plate is one piece of ground and does not repeat: laid end to end it is turned over at every edge, so no seam shows. */
+export function mirrored(t: THREE.Texture): THREE.Texture {
+  t.wrapS = THREE.MirroredRepeatWrapping;
+  t.wrapT = THREE.MirroredRepeatWrapping;
+  return t;
+}
 
 export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
   return {
@@ -12,6 +19,8 @@ export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
     tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 4 }) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
     tSinterNh: { value: ctx.assets.texture('mat/sinter-nh.png', { kind: 'data' }) },
+    tScree: { value: mirrored(ctx.assets.texture('mat/screeplate.jpg', { anisotropy: 6 })) },
+    tScreeH: { value: mirrored(ctx.assets.texture('mat/screeplate-h.png', { kind: 'data', anisotropy: 3 })) },
   };
 }
 
@@ -22,6 +31,14 @@ uniform sampler2D tTalus;
 uniform sampler2D tTalusNh;
 uniform sampler2D tSinter;
 uniform sampler2D tSinterNh;
+uniform sampler2D tScree;
+uniform sampler2D tScreeH;
+
+// The plate of the scree slope, 24 m by 13.5 m of broken grey stone seen from above, laid on the ground as it lies. Returns colour and, in a, its height.
+vec4 screeAt(vec2 xz) {
+  vec2 uv = xz / vec2(24.0, 13.51);
+  return vec4(texture2D(tScree, uv).rgb, texture2D(tScreeH, uv).r);
+}
 
 struct Rock {
   vec3 albedo;
@@ -54,7 +71,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   vec3 bentFace = vec3(0.0);
   float fh = 0.5;
   float arch = 0.0;
-  if (face > 0.01) {
+  if (face > 0.01 && wall >= 0.5) {
     vec3 ca = texture2D(tCliff, ua).rgb;
     vec3 cb = texture2D(tCliff, ub).rgb;
     vec3 nb = texture2D(tCliffNh, ua).rgb;
@@ -107,7 +124,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   vec3 gravel = vec3(0.0);
   vec3 bentFlat = vec3(0.0);
   float gh = 0.5;
-  if (face < 0.99) {
+  if (face < 0.99 && wall >= 0.5) {
     vec3 ta = texture2D(tTalus, ga).rgb;
     vec3 tb = texture2D(tTalus, gb).rgb;
     vec3 ha = texture2D(tTalusNh, ga).rgb;
@@ -129,9 +146,35 @@ Rock rockAt(vec3 p, vec3 n, float face) {
       gh = mix(gh, hc.b, close);
     }
   }
+  if (wall < 0.5) {
+    // The spur and the beach under it are one slope of broken grey stone: the plate of the scree, laid on the ground at its own size,
+    // and again larger and turned so that the eye finds no repeat. Its relief gives every stone its faces.
+    // Which way each face of the ground truly looks, from the ground itself, so that no face has the plate pulled long over it.
+    vec3 gn = normalize(cross(dFdx(p), dFdy(p)));
+    vec3 w3 = pow(abs(gn), vec3(4.0));
+    w3 /= w3.x + w3.y + w3.z;
+    vec4 a = screeAt(p.xz) * w3.y;
+    if (w3.x > 0.02) a += screeAt(p.zy + 11.0) * w3.x;
+    if (w3.z > 0.02) a += screeAt(p.xy + 23.0) * w3.z;
+    vec2 qr = vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) * 0.31 + 7.3;
+    vec4 b = screeAt(qr);
+    // The larger copy is laid from above: on a steep face it would be pulled long, so it fades there.
+    vec3 grey = a.rgb * mix(vec3(1.0), 0.55 + 0.9 * b.rgb / vec3(0.33, 0.32, 0.31) * 0.5, w3.y * w3.y);
+    gravel = grey * vec3(1.5, 1.42, 1.3);
+    stone = gravel;
+    // The relief of the plate turns the faces of each stone.
+    float e = 0.04;
+    float hx = screeAt(p.xz + vec2(e, 0.0)).a - screeAt(p.xz - vec2(e, 0.0)).a;
+    float hz = screeAt(p.xz + vec2(0.0, e)).a - screeAt(p.xz - vec2(0.0, e)).a;
+    bentFlat = vec3(-hx, 0.0, -hz) * 5.0 * (1.0 - smoothstep(120.0, 260.0, length(cameraPosition - p)));
+    bentFace = bentFlat;
+    gh = mix(a.a, b.a, 0.35);
+    fh = gh;
+    arch = 0.0;
+  }
   k.albedo = clamp(mix(gravel, stone, face), 0.0, 0.92);
   vec3 bent = mix(bentFlat, bentFace, face);
-  k.normal = normalize(n + bent - n * dot(bent, n) * 0.5);
+  k.normal = wall < 0.5 ? normalize(n + bent) : normalize(n + bent - n * dot(bent, n) * 0.5);
   float h = mix(gh, fh, face);
   k.occ = (0.5 + 0.5 * smoothstep(0.05, 0.55, h)) * (1.0 - 0.85 * arch * face);
   k.rough = 0.92;

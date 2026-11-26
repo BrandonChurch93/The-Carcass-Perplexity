@@ -268,7 +268,7 @@ export function block(seed: number, size: [number, number, number], at: [number,
     for (const [nx, ny, nz, d] of planes) {
       const along = nx * dx + ny * dy + nz * dz;
       if (along <= 0.02) continue;
-      const w = (along / d) ** 14;
+      const w = (along / d) ** 9;
       reach += w * (along / d);
       soft += w;
     }
@@ -277,7 +277,7 @@ export function block(seed: number, size: [number, number, number], at: [number,
     const lx = p.x;
     const ly = p.y;
     const lz = p.z;
-    const rough = 0.1 * chipped(lx + seed * 9, ly, lz - seed * 5);
+    const rough = 0.22 * chipped(lx + seed * 9, ly, lz - seed * 5);
     p.multiplyScalar(1 + rough / Math.max(0.6, p.length()));
     p.applyMatrix4(m);
     return { at: [p.x, p.y, p.z], uv: [lx + seed * 13, ly + lz], occ: lerp(0.55, 1, smooth(dy * 0.8 + 0.75)) };
