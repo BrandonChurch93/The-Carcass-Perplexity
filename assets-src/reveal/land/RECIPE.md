@@ -29,3 +29,16 @@ Four nested rectangles of the world, each 4096 x 2304: `a` the whole body, `b` t
 3. Each closer level takes the heights of its parent, adds finer ground, and is eroded again at its own scale.
 4. The colour is chosen by height, slope, hollows and wetness: dark lowland, tan foothills, pale rock, bone white only on the highest crests. The chest is a black crust, the throat red rock, the hips a salt pan with red brine in its channels.
 5. The water is coloured by its depth over the shelf, by the silt of the rivers, by the stains that leave the salt pan, and by the lake of the Eye, which is black blue inside an amber shelf.
+
+## `public/assets/reveal/land/bones.jpg`
+
+One grey picture, 2048 x 1152, on the rectangle of level `a`: white where a great range (a bone) stands, black elsewhere. First take.
+
+```
+python3 assets-src/reveal/land/make_bones.py
+```
+
+It reads `src/places/reveal/continent.json` only (the traced outline of the bone ranges), fills the shapes, cuts their holes, closes the massif round the lake of the Eye as `make_land.py` does, and blurs the edge by 1.6 px. It takes a second. Nothing is read from a picture.
+
+The place uses it only near the top of the rise (view wider than about 520 km): there the ranges under it are shown as bare pale rock and the land between them darker, so that the bones come together into the body in the last frames and not before.
+
