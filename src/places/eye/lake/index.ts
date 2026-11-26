@@ -83,7 +83,7 @@ uniform vec4 uDome;
 // x: seconds since the centre rose (negative before).
 uniform vec4 uCentre;
 // The view from over the centre as the camera leaves. x: how far it has come in (0 until the camera begins to look down: nothing below reads it).
-// y: seconds since the dome began to sink. z: metres under the water of what went down with it.
+// y: seconds since the dome began to sink.
 uniform vec4 uLeave;
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -357,7 +357,7 @@ void main() {
   float glint = pow(max(dot(n, hv), 0.0), sharp) * (sharp / 1400.0) * sunAt(vec3(p.x, 0.5, p.z));
   c += uSunColour * glint * 0.6 * (close + 0.3);
   // Seen from over it the white is a fleck, not a flower.
-  c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.8 / 3.14159), 0.9 * min(splash, 1.0) * mix(0.2, 1.0, smoothstep(0.6, 0.2, v.y)));
+  c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.8 / 3.14159), 0.9 * min(splash, 1.0) * mix(0.2, 1.0, smoothstep(0.6, 0.2, v.y)) * (1.0 - uLeave.x));
   // A ring round a muzzle or a leg, seen low: the face that leans to the eye shows the dark under the water, the face that leans away the bright of the sky.
   float lap = tanh(22.0 * dot(lapped, normalize(v.xz)) * 0.08 / max(v.y, 0.04));
   c = c * (1.0 - 0.45 * max(lap, 0.0)) + skyRadiance(vec3(-v.x, 0.12, -v.z)) * (0.3 * max(-lap, 0.0));
@@ -365,41 +365,43 @@ void main() {
   // The water from over its centre as the camera leaves. Straight down the mirror is almost gone and the eye is in the deep: the surface shows only by its light.
   if (uLeave.x > 0.0) {
     float downward = uLeave.x * smoothstep(0.3, 0.8, v.y);
-    // The dome has sunk and its waves go out: long ones first and far, short ones after and near, each broken along its length, all of them dying.
+    // The dome has sunk and its waves go out: each a thin crest, broken along its length, all of them dying.
     float since = max(uLeave.y, 0.05);
-    float phase = 132.0 * since * since / max(r, 8.0);
-    float wavenumber = phase / max(r, 8.0);
-    float train = 0.1 * exp(-r / 190.0) * exp(-since / 5.5) * smoothstep(1.7, 0.6, wavenumber) * smoothstep(0.0, 1.2, uLeave.y) * cos(phase + 1.3 * vnoise(p.xz / 90.0 + 9.0));
-    train *= 0.25 + 1.5 * vnoise(out2 * 1.7 + r / 160.0 + 4.0);
-    vec2 leaning = heave + out2 * train;
+    float lanes = vnoise(p.xz / 90.0 + 9.0);
+    float phase = 0.78 * r * (1.0 - 0.0011 * r) - 2.7 * since + 1.3 * lanes;
+    float front = 30.0 + 72.0 * since;
+    float broken = smoothstep(0.3, 0.62, vnoise(out2 * 2.3 + r / 130.0 + 4.0)) * (0.5 + lanes);
+    float train = -0.2 * sin(phase) * exp(3.0 * (cos(phase) - 1.0)) * exp(-r / 210.0) * exp(-since / 6.5) * smoothstep(front, front - 70.0, r) * smoothstep(4.0, 26.0, r) * smoothstep(0.0, 1.2, uLeave.y) * broken;
+    // The wind lays a fine ripple on the water, in patches.
+    float patches = smoothstep(0.36, 0.66, lanes);
+    vec2 ripple = 0.075 * waves(p.xz / 15.0, vec2(uTime * 0.03, uTime * 0.019)) * (0.25 + 0.75 * patches);
+    vec2 leaning = heave + out2 * train + ripple;
     // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east.
     float toLit = -dot(leaning, vec2(0.9, -0.44));
-    float face = clamp(4.0 * toLit, -1.0, 1.0);
-    c += uSunColour * vec3(0.0017, 0.002, 0.0027) * max(face, 0.0) * downward;
-    c *= 1.0 - 0.28 * max(-face, 0.0) * downward;
-    // Lanes where the air has roughened the water are a little paler: they take more of the sky.
-    c += skyRadiance(vec3(0.0, 1.0, 0.0)) * 0.035 * gust * downward;
-    // What rose is going down the shaft: pale, long, wider than the frame, lost in the blue as it sinks.
-    float sunkBy = uLeave.z;
-    vec2 pp = (p.xz - vec2(-46.0, 28.0)) * (1.0 + sunkBy / 420.0);
-    vec2 along = vec2(dot(pp, vec2(0.86, -0.5)), dot(pp, vec2(0.5, 0.86)));
-    along.y += 34.0 * sin(along.x / 41.0 + 0.6) + 56.0 * (vnoise(pp / 58.0 + 2.0) - 0.5);
-    float soft = 0.12 + sunkBy / 110.0;
-    float girth = 50.0 * (1.0 - 0.5 * smoothstep(-80.0, 380.0, along.x)) * (0.65 + 0.7 * vnoise(vec2(along.x / 61.0, 3.0)));
-    float body = exp(-1.4 * pow(abs(along.y) / girth, 2.0 + 0.5 / (soft + 0.3))) * smoothstep(-470.0, -300.0, along.x) * (1.0 - smoothstep(240.0, 480.0, along.x));
-    float folds = 0.5 + 0.5 * vnoise(vec2(along.x / 13.0 + 2.0 * vnoise(pp / 21.0), along.y / 34.0)) * (0.6 + 0.4 * vnoise(pp / 5.0));
-    float rounded = exp(-1.2 * pow(along.y / girth, 2.0));
-    vec3 paleLight = vec3(0.62, 0.6, 0.52) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.12 / 3.14159) * exp(-uAbsorb * sunkBy * 1.2);
-    c += paleLight * body * (0.35 + 0.65 * rounded) * (0.45 + 0.55 * folds) * downward;
-    // Its air comes up after it: small white flecks that open on the surface over where it went and are gone.
-    vec2 cellAt = p.xz / 6.0;
-    vec2 cell = floor(cellAt);
-    vec2 rnd = hash22(cell);
-    float age = fract(uTime * (0.22 + 0.3 * rnd.x) + rnd.y * 9.0);
-    float m = length(cellAt - cell - 0.25 - 0.5 * rnd) * 6.0;
-    float over = smoothstep(1.5, 0.6, abs(along.y) / girth) * smoothstep(-470.0, -380.0, along.x) * (1.0 - smoothstep(330.0, 480.0, along.x));
-    float fleck = step(0.8, hash12(cell + 5.1)) * smoothstep(0.52, 0.72, vnoise(p.xz / 38.0 + vec2(1.7, uTime * 0.05))) * over * smoothstep(0.5 + 1.6 * age, 0.15, m) * (1.0 - age) * smoothstep(0.0, 0.08, age);
-    c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.7 / 3.14159), 0.8 * fleck * downward);
+    float face = clamp(5.0 * toLit, -1.0, 1.0);
+    c += uSunColour * vec3(0.0026, 0.0026, 0.003) * max(face, 0.0) * downward;
+    c *= 1.0 - 0.4 * max(-face, 0.0) * downward;
+    // And the steepest of those faces throws the low sun itself: a small hard glint.
+    c += uSunColour * 0.03 * smoothstep(0.112, 0.14, -dot(ripple + 0.3 * out2 * train, vec2(0.9, -0.44))) * downward;
+    // Air comes up from what went down: a tight knot of small bubbles that opens on the surface into one thin ring and is gone.
+    vec2 knotAt = p.xz / 34.0;
+    vec2 knot = floor(knotAt);
+    vec2 rnd = hash22(knot);
+    if (rnd.x < 0.45 && r < 190.0) {
+      float age = fract(uTime * (0.16 + 0.1 * rnd.y) + rnd.x * 17.0);
+      vec2 dk = (knotAt - knot - 0.3 - 0.4 * rnd) * 34.0;
+      float m = length(dk);
+      if (m < 14.0) {
+        vec2 bubbleAt = p.xz / 0.9;
+        vec2 bubble = floor(bubbleAt);
+        vec2 jitter = hash22(bubble + knot);
+        float dot2 = smoothstep(0.34, 0.2, length(bubbleAt - bubble - 0.3 - 0.4 * jitter)) * floor(jitter.x + 0.4);
+        float boil = dot2 * smoothstep(1.0 + 3.0 * age, 0.4, m) * smoothstep(0.0, 0.1, age) * (1.0 - smoothstep(0.35, 0.5, age));
+        float wide = 1.5 + 11.0 * max(age - 0.35, 0.0);
+        float thin = exp(-pow((m - wide) / 0.45, 2.0)) * smoothstep(0.35, 0.42, age) * (1.0 - age) * (1.0 - age) * smoothstep(0.25, 0.6, vnoise(dk * 0.9 + rnd * 40.0));
+        c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.7 / 3.14159), min(0.85 * boil + 0.22 * thin, 1.0) * downward);
+      }
+    }
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -579,7 +581,7 @@ void main() {
       else mirrorTone.value.set(1, 1, 1, 1);
       centre.x = t - rise;
       // The camera leaves: from the frame it begins to look down, the water is drawn as it is from over it.
-      leave.set(during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0, t - (rise + 1.0), 6 + 62 * smooth(rise + 1.6, end, t), 0);
+      leave.set(during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0, t - (rise + 1.0), 0, 0);
       laps.forEach((lap, i) => {
         const from = ctx.laps[i];
         if (from) lap.set(from.x, from.z, from.offset, from.strength);
