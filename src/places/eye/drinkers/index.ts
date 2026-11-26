@@ -105,6 +105,8 @@ void main() {
     float grain = dot(coat, vec3(0.3, 0.5, 0.2));
     vec3 tiled = sqrt(broad.rgb * fine.rgb) / vec3(0.69, 0.41, 0.32);
     tiled *= mix(0.8, 1.0, smoothstep(0.22, 0.52, broad.a)) * (0.9 + 0.2 * fine.a);
+    // Below the belly the legs are one even dark wet hide: the picture's own legs are not laid on them.
+    flank *= smoothstep(0.95, 1.4, vRest.y);
     skin = mix(tone * mix(vec3(1.0), tiled, 0.8), coat, flank);
     // The wrinkles turn the light: the relief's slope across the screen leans the normal.
     vec3 r1 = cross(dpy, n);
@@ -127,10 +129,10 @@ void main() {
   skin *= mix(0.9, 1.03, smoothstep(1.15, 2.2, above + 0.3 * (blotch - 0.5)));
   float wet = 1.0 - smoothstep(0.3, 0.8, above + 0.3 * ragged);
   // Its legs are dark with the mud and the water of the shore, to above the knee.
-  skin *= mix(0.3, 1.0, smoothstep(0.7, 1.45, above + 0.3 * ragged));
-  float fleck = smoothstep(0.6, 0.68, vnoise(vRest.zy * 46.0 + vRest.x * 31.0)) * (1.0 - smoothstep(0.5, 1.5, above + 0.5 * ragged)) * (1.0 - smoothstep(1.2, 1.6, vRest.y));
+  skin *= mix(0.5, 1.0, smoothstep(0.8, 1.5, above + 0.12 * ragged));
+  float fleck = smoothstep(0.6, 0.68, vnoise(vRest.zy * 46.0 + vRest.x * vec2(31.0, 17.0))) * (1.0 - smoothstep(0.5, 1.5, above + 0.5 * ragged)) * (1.0 - smoothstep(1.2, 1.6, vRest.y));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
-  vec3 albedo = mix(skin * mix(1.0, 0.45, wet), vec3(0.11, 0.085, 0.065), 0.8 * fleck);
+  vec3 albedo = mix(skin * mix(1.0, 0.7, wet), vec3(0.11, 0.085, 0.065), 0.3 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.7, 1.0, vShade.x);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
