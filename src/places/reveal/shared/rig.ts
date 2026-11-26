@@ -85,7 +85,7 @@ export function dusk(seconds: number): Dusk {
   const thin = ease(1.2, 6.8, since);
   // And over the last seconds the dark comes over the whole picture, the ember the last thing to go.
   const last = ease(4.4, 6.82, since);
-  const dark = 1 - 0.31 * last;
+  const dark = 1 - 0.12 * last;
   const gain = Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.05 * thin) * dark;
   return {
     dusk: Math.max(1e-4, ease(0, 7, u)),
@@ -133,6 +133,15 @@ export function createRig(): Rig {
     uMatPopcorn: { value: null },
     uMatStreaks: { value: null },
     uMatSpecks: { value: null },
+    uMatVeil: { value: null },
+    // Where the land holds cloud (sky/banks.png, on the rectangle of the cover): the sky folder gives it.
+    uBanks: { value: null },
+    // The relief of the cloud photographs (slope in red and green, height in blue): the sky folder gives them.
+    uMatCellsNh: { value: null },
+    uMatPopcornNh: { value: null },
+    uMatSpecksNh: { value: null },
+    uMatStreaksNh: { value: null },
+    uMatVeilNh: { value: null },
     uCoverRect: { value: new THREE.Vector4(...COVER_RECT) },
     // The end of the day (see dusk() below). Every one of these is at its day value, and uDusk exactly 0, up to DUSK_FROM:
     // every shader branches on uDusk > 0.0 and leaves the arithmetic of the day untouched.

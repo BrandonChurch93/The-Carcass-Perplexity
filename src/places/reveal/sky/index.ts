@@ -6,7 +6,7 @@ import { AT, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, X, Z, driftAt } from 
 import { FPS } from '../../../config';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
+import { BANK_KM, FOG_KM, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
 
 export const PARTS = ['cloud', 'cyclone', 'storm', 'vapour', 'space', 'atmosphere'] as const;
 
@@ -34,10 +34,11 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float day = dayAt(xz);
   if (uDusk > 0.0) {
     // Cloud stands over the ground: it keeps the sun a moment after the ground under it has lost it, the high cloud longest.
-    float sunH = sunHeight(xz) + uTerm.w * (0.09 + 0.1 * high);
-    float low = mix(uSunDir.y, 0.42 + 0.22 * max(sunH, 0.0), uTerm.w);
+    // (A top 2.6 km up sees over the curve of the planet by the sine of 1.6 degrees, the ice at 10.5 km by the sine of 3.3.)
+    float sunH = sunHeight(xz) + uTerm.w * (0.03 + 0.03 * high);
+    float low = mix(uSunDir.y, 0.2 + 0.62 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.07 + 0.19 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
+    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.1 + 0.26 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
     return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
   }
@@ -52,57 +53,72 @@ ${RIG_GLSL}
 ${NOISE_GLSL}
 ${WEATHER_GLSL}
 ${CLOUD_LIGHT_GLSL}
-uniform sampler2D uVeil;
 varying vec3 vWorld;
 void main() {
   vec2 xz = vWorld.xz;
   vec2 toSun = normalize(uSunDir.xz);
-  // What one ray meets on its way down: the veil of ice, then the low field, each at its own height.
+  // What one ray meets on its way down: the ice, then the low field, each at its own height.
   vec2 lean = (cameraPosition.xz - xz) / max(cameraPosition.y - ${LOW_KM.toFixed(1)}, 1.0);
   vec2 up = xz + lean * ${(HIGH_KM - LOW_KM).toFixed(1)};
 
-  // The low field. Each cloud is lit on its side toward the sun and dark on the other: its neighbour toward the sun shades it.
+  // The low field. Its tops are relief: a flank that falls toward the sun is lit, the flank behind it is in its own shade, and the
+  // ice above throws its shadow down on it.
   vec2 low = lowField(xz);
-  float reach = mix(1.3, 0.9 + 0.02 * uViewKm, smoothstep(330.0, 760.0, uViewKm));
-  float sunward = lowField(xz + toSun * reach).x;
-  float self = clamp(0.5 + 1.1 * (low.x - sunward), 0.0, 1.0);
+  float flank = dot(lowSlope, toSun);
+  float self = clamp(0.5 + 1.25 * flank, 0.0, 1.0);
+  float high = highField(up);
+  float highFlank = clamp(0.5 + 0.9 * dot(highSlope, toSun), 0.0, 1.0);
+  // What the land holds: the banks on the ranges, above the low field, and the fog on the valley floors, under it.
+  vec2 bankAt = xz + lean * ${(BANK_KM - LOW_KM).toFixed(1)};
+  vec2 fogAt = xz - lean * ${(LOW_KM - FOG_KM).toFixed(1)};
+  float bankIs = max(bankDepth(bankAt), 0.0);
+  vec2 bankSlope = 0.8 * (texture2D(uMatPopcornNh, bankUvA).rg * 2.0 - 1.0) * BANK_A;
+  if (bankNear > 0.0) bankSlope += bankNear * 0.7 * (texture2D(uMatSpecksNh, bankUvB).rg * 2.0 - 1.0) * BANK_B;
+  float bankSelf = clamp(0.5 + 1.25 * dot(bankSlope, toSun), 0.0, 1.0);
+  float bankA = (1.0 - exp(-1.3 * bankIs)) * uArrive;
+  float fogA = 0.5 * (1.0 - exp(-1.2 * max(fogDepth(fogAt), 0.0))) * uArrive;
+  float under = highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
 
-  // The veil: thin ice, far above, drifting the other way.
-  vec2 hv = up + uTime * vec2(6.5, -3.8);
-  if (uLive > 0.0) hv += uWx * vec2(36.0, -21.0);
-  float ice = dot(texture2D(uVeil, mat2(0.9, 0.44, -0.44, 0.9) * hv / 800.0).rgb, vec3(0.3, 0.55, 0.15));
-  float where = vnoise(hv / 1500.0 + 3.0);
-  if (uViewKm < 900.0) where = 0.6 * where + 0.4 * vnoise(hv / 640.0 + 11.0);
-  float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.38, 0.8, where) * smoothstep(500.0, 1500.0, length(up - vec2(${X(AT.lake.x).toFixed(1)}, ${Z(AT.lake.y).toFixed(1)})));
-
-  vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.86 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 + 0.5 * smoothstep(300.0, 600.0, uViewKm) * (1.0 - smoothstep(700.0, 1300.0, uViewKm))) * (1.0 - 0.15 * high);
-  vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
+  vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
+  vec3 highColour = cloudLight(up, 0.5 + 0.45 * highFlank, 0.5 + 0.5 * high, 1.0);
+  vec3 bankColour = cloudLight(bankAt, 0.12 + 0.95 * bankSelf, 0.35 + 0.65 * bankA, 0.25) * (0.72 + 0.5 * clamp(bankIs / 3.5, 0.0, 1.0));
+  // (Fog is seen from above as a level pale floor, a little blue, with no relief of its own.)
+  vec3 fogColour = cloudLight(fogAt, 0.5, 0.5, 0.0) * vec3(0.84, 0.9, 0.98);
   // (Against the sun's image on the sea a cloud is seen dark: its lit top is dimmer than the sheet of light under it.)
   vec2 sunOnSea = (xz - vec2(${X(5875).toFixed(1)}, ${Z(703).toFixed(1)}) - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   lowColour *= 1.0 - 0.6 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
-  float a = low.x * 0.94;
-  float b = high * mix(0.09, 0.11, smoothstep(700.0, 1300.0, uViewKm));
+  float a = low.x * 0.96;
+  float b = high * 0.4;
   // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
   if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
-  vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
+  // From the ground up: the fog, the low field, the banks, the ice.
+  vec3 colour = fogColour * fogA * (1.0 - a);
+  colour = (colour + lowColour * a + beatOnCloud(xz) * a) * (1.0 - bankA) + bankColour * bankA;
+  colour = colour * (1.0 - b) + highColour * b;
+  float heldA = 1.0 - (1.0 - fogA) * (1.0 - bankA);
   if (uDusk > 0.0) {
     // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
     // take too little light to show over the ground.)
     float gone = uTerm.w * (1.0 - smoothstep(-0.1, 0.34, sunHeight(xz)));
-    // (From this height, by night, cloud is sheets, bands and a few great cells, dim under the moon; the small bright bodies of the day are not seen.)
+    // (By night the low field is seen by the moon, dimmer and thinner than by day: its bodies stay, its thin is lost.)
     float sunk = 1.0 - smoothstep(-0.34, -0.06, sunHeight(xz));
-    float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone) * (1.0 - 0.88 * sunk);
-    float sheets = smoothstep(0.56, 0.78, 0.58 * vnoise(hv / 1500.0 + 7.0) + 0.3 * vnoise(hv / 560.0 + 3.0) + 0.12 * vnoise(hv / 210.0 + 11.0)) * (0.55 + 0.45 * ice);
-    vec2 bv = mat2(0.94, 0.34, -0.34, 0.94) * (hv + uWx * vec2(-14.0, 5.0));
-    float bands = smoothstep(0.6, 0.82, 0.7 * vnoise(bv / vec2(3400.0, 620.0) + 5.0) + 0.3 * vnoise(bv / vec2(1100.0, 260.0) + 9.0)) * (0.6 + 0.4 * ice);
-    // (The thin ice far above is lost against the day; with the camera's eye open it is seen, soft sheets that catch the moon.)
-    float bNight = min(0.8, b * (1.0 - 0.5 * gone + 1.5 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))) + sunk * (0.3 * sheets + 0.24 * bands));
-    colour = lowColour * aNight * (1.0 - bNight) + highColour * bNight + exposed(beatOnCloud(xz)) * a;
+    float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone) * (1.0 - 0.35 * sunk);
+    // (The thin ice far above is lost against the day; with the camera's eye open it is seen, a veil of fibres that catches the
+    // moon and crosses the land on its own wind. It is the same ice as by day, the photograph's own, and it never hides the ground.)
+    float bNight = min(0.45, b * (1.0 - 0.5 * gone + 0.7 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))));
+    // (What the land holds goes the way of the low field: only its body is left to the moon.)
+    float heldNight = mix(1.0, 0.5, gone) * (1.0 - 0.8 * sunk);
+    bankA *= heldNight;
+    fogA *= heldNight;
+    colour = fogColour * fogA * (1.0 - aNight);
+    colour = (colour + lowColour * aNight + exposed(beatOnCloud(xz)) * a) * (1.0 - bankA) + bankColour * bankA;
+    colour = colour * (1.0 - bNight) + highColour * bNight;
+    heldA = 1.0 - (1.0 - fogA) * (1.0 - bankA);
     a = aNight;
     b = bNight;
   }
-  float alpha = 1.0 - (1.0 - a) * (1.0 - b);
+  float alpha = 1.0 - (1.0 - a) * (1.0 - b) * (1.0 - heldA);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -369,7 +385,7 @@ export function create(ctx: Context): Piece {
   const data = (file: string, repeat: boolean): THREE.Texture => ctx.assets.texture(file, { kind: 'data', repeat });
   const tile = data('sky/cloud-tile.jpg', true);
   // Where the weather stands (assets-src/reveal/sky/make_cover.py), and the Builder's photographs of cloud from orbit (assets-src/reveal/mat/RECIPE.md).
-  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true]];
+  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true], ['uMatCellsNh', 'mat/cells-nh.png', true], ['uMatPopcornNh', 'mat/popcorn-nh.png', true], ['uMatSpecksNh', 'mat/specks-nh.png', true], ['uMatStreaksNh', 'mat/streaks-nh.png', true], ['uMatVeilNh', 'mat/veil-nh.png', true], ['uMatVeil', 'mat/veil.jpg', true], ['uBanks', 'sky/banks.png', false]];
   (ctx.rig.uniforms.uCloudTile as THREE.IUniform).value = tile;
   for (const [uniform, file, repeat] of shared) (ctx.rig.uniforms[uniform] as THREE.IUniform).value = data(file, repeat);
 
@@ -413,7 +429,6 @@ export function create(ctx: Context): Piece {
     uWind: { value: wind },
   });
   sheet('cloud', new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2).translate(0, LOW_KM, 0), CLOUD_FRAGMENT, {
-    uVeil: { value: data('mat/veil.jpg', true) },
   });
   sheet('storm', quad({ x: AT.storm.x - 40, y: AT.storm.y }, 256, 80, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
   sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uStreaks: { value: data('mat/streaks.jpg', true) } });
