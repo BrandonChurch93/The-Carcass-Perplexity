@@ -610,7 +610,7 @@ export function create(ctx: Context): Piece {
       if (staged >= CRUST_SPAN[0] && staged <= CRUST_SPAN[1]) uGrove.value.set(0.4, 1.2);
       else uGrove.value.set(1, 1);
       const inWide = staged >= WIDE_SPAN[0] && staged <= WIDE_SPAN[1];
-      uHead.value = inWide ? 0.8 : 1;
+      uHead.value = inWide ? 1.15 : 1;
       wide.visible = inWide;
       // The heads made for the shot that is on: between shots, those of the one that is nearest in time.
       let on = 0;

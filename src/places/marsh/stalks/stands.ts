@@ -533,7 +533,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       if (dead) continue;
       const roll = rng.next() * allStyles;
       const style = roll < (styles[0] as number) ? 0 : roll < (styles[0] as number) + (styles[1] as number) ? 1 : roll < (styles[0] as number) + (styles[1] as number) + (styles[2] as number) ? 2 : 3;
-      dress(w, shoot ? (kind === 1 ? 4 : 3) : style, (0.8 + 0.35 * rng.next()) * headFor(h) * (shoot ? 2 : 1.5 * crownK), s.far > 95);
+      dress(w, shoot ? (kind === 1 ? 4 : 3) : style, (0.5 + 0.75 * rng.next()) * headFor(h) * (shoot ? 2 : 1.5 * crownK), s.far > 95);
       if (!shoot && h > 1.2 && s.far < 125) hang(w, s.far < 95 ? Math.round((h > 2.4 ? 4 : 2) * leafy) : 0, s.far < 95 ? Math.max(1, Math.round((2 + rng.int(2)) * Math.min(1.3, 0.5 + 0.5 * leafy))) : 1);
     }
     // Far off a stand is told by its stems, pale lines with a small dark head each, not by a mass at their feet: each stem there has

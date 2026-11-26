@@ -213,7 +213,7 @@ void main() {
   vec3 tx = normalize(cross(up, n) + 1e-5);
   vec3 bx = cross(n, tx);
   n = normalize(n - (tx * (nh.r - 0.5) + bx * (nh.g - 0.5)) * 2.2 * (1.0 - away) + (tx * (grain - 0.5) + bx * (patchy - 0.5)) * 0.7 * crust * crustNear);
-  float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, above)) * (0.72 + 0.28 * smoothstep(0.0, 1.5, above)) * mix(0.5 + 0.5 * smoothstep(0.08, 0.5, nh.b), 0.94, away);
+  float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, above)) * mix(0.5 + 0.5 * smoothstep(0.08, 0.5, nh.b), 0.94, away);
   // Under its head a stem stands in the head's shade.
   float below = (1.0 - vUv.w) * vKind.y;
   occ *= mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.1 * vKind.y + 0.12, below), uCrowned * (1.0 - deadStem));
