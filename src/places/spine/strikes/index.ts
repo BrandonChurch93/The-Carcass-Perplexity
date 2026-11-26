@@ -369,7 +369,8 @@ export function create(ctx: Context): Piece {
         const land = Math.max(hard, HOLD_LAND * e.held);
         const sky = Math.max(hard, HOLD_CLOUD * e.glow);
         // The cloud about the root: full on a stroke, and it dies after the last one over some eight frames. Before the first stroke it flickers.
-        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky, 0.5 * before));
+        // The lit cloud is gone eight frames after its last stroke: its last third sinks faster than the sky's own glow does.
+        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky * Math.min(1, sky / 0.3), 0.5 * before));
         b.rootDie.set(before > 0 && sky <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - sky)), stroke);
         if (within > 0 && hard <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
           // A cloud lit from inside: its own glow and what of it comes in by the canal's mouth. No light with a shadow.

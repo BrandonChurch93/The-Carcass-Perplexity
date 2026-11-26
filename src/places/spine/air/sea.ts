@@ -36,8 +36,10 @@ const vec3 SEA_WARM = vec3(0.16, 0.085, 0.045);
 const float HEAP_SPAN = 2300.0;
 const float HEAP_TALL = 180.0;
 // How far the grain of the real deck turns a face of a heap, and how far it moves a place between hollow and crown.
-const float GRAIN_TILT = 0.55;
-const float GRAIN_HEAD = 0.6;
+const float GRAIN_TILT = 0.9;
+const float GRAIN_HEAD = 0.9;
+// Metres of the mist over the tops that hide two thirds of what lies behind.
+const float MIST_LONG = 240.0;
 float seaLod = 1.0;
 // Laid a little turned from the ridge, so that no row of heads runs along it or straight away from the lens.
 vec2 heapUv(vec2 at) {
@@ -61,6 +63,10 @@ float seaLevel = 0.0;
 float seaGone = 0.0;
 float seaPix = 0.00035;
 float seaLens = 1.0;
+// Left by the march: how much of the mist that lies over the tops the ray went through on its way (metres of it), and the same weighted
+// by the distance, so that the place of it can be found.
+float seaMist = 0.0;
+float seaMistAt = 0.0;
 float seaLift(vec3 p, int detail, bool swell) {
   // Its long swell is that of the picture of a cloud deck seen from above (mat/cloudsea, 10 km a repeat), read soft: where it stands
   // high the heaps are tall, where it lies low they are small, so no two kilometres of the deck are alike.
@@ -118,6 +124,14 @@ float seaTop(vec3 p, bool swell) {
   seaLevel = top - seaTall * n;
   return top;
 }
+// How much of what lies behind the mist it hides, and its place along the ray. The grain of the real deck tears it.
+float seaVeil(vec3 ro, vec3 rd, out float at) {
+  at = seaMistAt / max(seaMist, 1e-3);
+  vec3 pm = ro + rd * at;
+  vec2 gm = (pm.xz - vec2(0.2, 0.98) * (uTime * 39.0)) / 1700.0;
+  float torn = textureLod(tSeaNh, vec2(0.629 * gm.x - 0.777 * gm.y, 0.777 * gm.x + 0.629 * gm.y) + 0.61, max(log2(max(at, 30.0) * seaPix) + 2.6, 1.0)).b;
+  return 1.0 - exp(-seaMist * (0.08 + 2.2 * smoothstep(0.3, 0.8, torn)) / MIST_LONG);
+}
 `;
 
 /** In main, first: the march of the view ray to the deck. It leaves seaAt, the distance to it, or under zero. */
@@ -170,7 +184,14 @@ export const SEA_MARCH_GLSL = /* glsl */ `
       }
       before = t;
       over = d;
-      t += max(0.9 * d, 4.0 + 0.022 * t) / fall;
+      float stride = max(0.9 * d, 4.0 + 0.022 * t) / fall;
+      // Over every top lies mist, thinning upward: a ray that passes low over a head goes a long way through it and a ray that falls
+      // steeply into one hardly any. The march's own strides add it up, so a head has no cut edge against what stands behind it.
+      float soft = 18.0 + 0.02 * t;
+      float w = max(1.0 - d / soft, 0.0) * min(stride, 2.0 * soft);
+      seaMist += w;
+      seaMistAt += w * t;
+      t += stride;
       p = ro + rd * t;
       if (t > far || (rd.y > 0.0 && p.y > BANK_TOP)) {
         out_ = true;
@@ -303,6 +324,12 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     }
     float feather = smoothstep(0.1, 1.5, thick + 1.1 * grain + 0.25);
     sea = mix(SEA_COLD * (1.0 + 0.9 * dusk) * vec3(0.95, 1.0, 1.1) + SEA_WARM * dusk * (0.5 - 0.35 * stormSide(rd)), sea, 0.35 + 0.65 * feather);
+    // The mist the ray came through over the heads before this one.
+    vec3 mistTone = (SEA_COLD * vec3(1.55, 1.65, 1.95) + 0.5 * SEA_WARM * (1.0 - stormSide(rd)));
+    if (seaMist > 0.0) {
+      float mistAt;
+      sea = mix(sea, mistTone, 0.85 * seaVeil(ro, rd, mistAt));
+    }
     // The air over the deck is thick with its own vapour: row behind row the heads go paler and bluer and their hollows fill.
     // (The vapour takes the contrast of a far bank and leaves its form: the banks of the real deck are read large there, lit on top.)
     float farBank = 0.62 + 0.76 * grainA.b;
@@ -341,7 +368,8 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // sliver under the horizon is it the sky's foot. Given the foot's colour two degrees deep it lay there as a level of bright water.
     if (needFoot) {
       sea = mix(sea, mix(SEA_COLD * vec3(1.2, 1.25, 1.4), domeFar, 0.42) * shape * mix(farBank, 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens))), gone);
-      sea = mix(sea, domeFar, plate > 0.0 ? gone : 1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)));
+      // (Under the storm the foot is the dark wall's and the deck goes into it whole: kept pale there it stood as a ruled line against it.)
+      sea = mix(sea, domeFar, plate > 0.0 ? gone : mix(1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)), gone, stormSide(rd)));
     }
     stormAir *= 1.0 - gone;
     seaGone = gone;
@@ -352,5 +380,12 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     light += through * sea * lap;
     through *= 1.0 - lap;
     far = min(far, t);
+  } else if (seaMist > 0.0 && through > 0.01) {
+    // A ray that passed low over a head and went on to the rock or the sky: the mist over that head lies before what it met.
+    float mistAt;
+    float veil = 0.85 * seaVeil(ro, rd, mistAt) * exp(-mistAt * mistAt / (1.1e8 * seaLens * seaLens * seaLens));
+    vec3 mist = (SEA_COLD * vec3(1.55, 1.65, 1.95) + 0.5 * SEA_WARM * (1.0 - stormSide(rd))) * (1.0 - 0.5 * stormSide(rd)) * mix(vec3(1.0), vec3(0.8, 0.88, 1.06), stormSide(rd));
+    light += through * mist * veil;
+    through *= 1.0 - veil;
   }
 `;
