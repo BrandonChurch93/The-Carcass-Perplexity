@@ -4,7 +4,11 @@ import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
 import { smooth } from '../layout';
-import { KEYS } from '../cameras';
+import { FPS } from '../../../config';
+import { LID_GLSL, lidAt, lidUniforms } from '../../reveal/join/lid';
+import { FLIGHT, KEYS } from '../cameras';
+import { flight } from '../flight';
+import handoff from '../handoff.json';
 import { during } from '../shared/anchors';
 import { PLATES, plateFor } from './plates';
 import type { Context, Piece } from '../shared/context';
@@ -58,6 +62,7 @@ uniform float uVeil;
 varying vec2 vUv;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${LID_GLSL}
 
 const float TOP = 110.0;
 
@@ -157,6 +162,12 @@ void main() {
     light = light * (1.0 - a) + a * lit;
     through *= 1.0 - a;
   }
+  // The lid of cloud over the socket, once the lens has climbed into it: it is nearer than everything else in the air.
+  if (uLid.x > 0.0 && rd.y < 0.0) {
+    vec4 lid = lidOver(ro, rd, length(world - ro));
+    light = light * lid.a + lid.rgb * (1.0 - uSolo);
+    through *= lid.a;
+  }
   gl_FragColor = vec4(light, through);
 }`;
 
@@ -169,10 +180,14 @@ export function create(ctx: Context): Piece {
   ctx.parts.effect('mist', 'built');
 
   const show = { uHaze: { value: 1 }, uMist: { value: 1 }, uThin: { value: 1 }, uVeil: { value: 1 } };
+  // The lid is measured from the camera of the last frame of the place: straight over the centre, the view on the water 424 m high.
+  const lid = lidUniforms(handoff.lid, [0, 0], handoff.eyeHalfHeightMetres, handoff.eyeHalfHeightMetres / Math.tan((FLIGHT.endFov * Math.PI) / 360));
+  const lidState = (lid.uLid as THREE.IUniform<THREE.Vector4>).value;
+  const lidBase = 0.79 * (lid.uLidFrame as THREE.IUniform<THREE.Vector4>).value.w;
   const volume = new THREE.ShaderMaterial({
     vertexShader: QUAD_VERTEX,
     fragmentShader: VOLUME_FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, ...volumeUniforms(), ...show },
+    uniforms: { ...ctx.rig.uniforms, ...volumeUniforms(), ...show, ...lid },
     depthTest: false,
     depthWrite: false,
     blending: THREE.NoBlending,
@@ -187,6 +202,10 @@ export function create(ctx: Context): Piece {
     setTime: (t) => {
       // The air clears as the camera leaves: the last frames are the flat picture the rise begins with.
       show.uThin.value = 1 - smooth(end - 3, end - 1.3, t);
+      // The lid is read only once the camera has climbed to its foot: below that it is over and behind the lens.
+      const now = lidAt(t - end, handoff.lid, FPS);
+      const high = during('eye-05') && flight(FLIGHT.riseFrame + (t - end) * FPS, FLIGHT).y > lidBase;
+      lidState.set(high ? 1 : 0, now.tau, now.eroded, 0);
       // The mist is a veil at the foot of the far wall: thinnest for the long lens of the shore shot, which looks straight through it.
       show.uVeil.value = during('eye-04') ? 0.22 : during('eye-01') ? 0.5 : during('eye-05') ? 0.8 : 0.6;
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
