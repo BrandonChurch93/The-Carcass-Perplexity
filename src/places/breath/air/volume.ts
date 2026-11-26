@@ -143,9 +143,12 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec3 n, out float under)
   vec2 da = p.xz - vec2(-21.0, -12.0);
   vec2 db = p.xz - vec2(-9.0, 13.0);
   float wells = 1.5 * exp(-dot(da, da) / 110.0) + 0.7 * exp(-dot(db, db) / 90.0);
-  float top = shaftTop(p.xz) + 24.0 * smoothstep(0.44, 0.82, n.x + 0.14 * wells) - 8.0 + 6.0 * (n.z - 0.5);
+  // Once the breath has spread the mist settles between its heaps: the heaps stand as high, the hollows between them open down to the hoops.
+  float settled = uBreath.w * uShow.w;
+  float top = shaftTop(p.xz) + (24.0 + 6.0 * settled) * smoothstep(0.44, 0.82, n.x + 0.14 * wells) - 8.0 - 5.0 * settled + 6.0 * (n.z - 0.5);
   // The top is softer the higher it stands: over the brim it thins into the air over some metres.
-  float soft = 2.6 + 0.3 * max(p.y + 4.0, 0.0);
+  // While it pours the mass is smeared by its own speed; once it stands, its heaps have an edge.
+  float soft = mix(2.6 + 0.3 * max(p.y + 4.0, 0.0), 2.0 + 0.16 * max(p.y + 4.0, 0.0), smoothstep(0.1, 0.4, settled));
   under = top - p.y;
   // A heap is a body: its skin is torn by the billows, with air in it, and a few metres in it is whole and hides what is behind it.
   float skin = smoothstep(0.36, 0.72, 0.55 * n.z + 0.45 * n.y);
@@ -259,7 +262,7 @@ void main() {
     vec3 rayU = normalize(vec3(uSunDir.z, 0.0, -uSunDir.x));
     vec3 rayV = cross(uSunDir, rayU);
     float round0 = atan(dot(rd, rayV), dot(rd, rayU)) / 6.2831853;
-    fan = smoothstep(0.44, 0.7, textureLod(tNoise, vec3(round0 * 4.0, 0.17, 0.3 + 0.008 * uTime), 0.0).g);
+    fan = smoothstep(0.3, 0.9, textureLod(tNoise, vec3(round0 * 2.6, 0.17, 0.3 + 0.008 * uTime), 0.0).g);
   }
   float roof = 8.0 + 10.0 * uBreath.y * uShow.w;
   if (uShow.z > 0.5) {
@@ -330,7 +333,7 @@ void main() {
         float sun = smoothstep(-2.6, 1.2, p.y - land.b) * sunCloud(p.xz);
         // Looking up the light, the sun comes through the vapour in rays: what stands between it and a place (the banks, the fronds, the
         // heaps up the light) lets it through in bars that run along the sun's own line, so they fan from the sun in the frame.
-        sun *= mix(1.0, 0.6 + 0.9 * fan, rays);
+        sun *= mix(1.0, 0.82 + 0.4 * fan, rays);
         // Down the shaft the sky closes to a disc overhead, and what lies deep under the top is in the shade of what lies over it.
         float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 26.0, 0.22, 1.0);
         float roofed = exp(-0.09 * max(under, 0.0));
@@ -351,7 +354,7 @@ void main() {
   // through, the more of them it carries, so what is near stands dark before them.
   if (rays > 0.01 && uShow.z > 0.5) {
     // After the breath the air over the place is damp with what it let out, and carries them the more.
-    colour += through * mix(uSunColour, vec3(2.4), 0.3) * ((0.04 + 0.08 * uBreath.w * uShow.w) * rays * fan * min(far, 90.0) / 90.0);
+    colour += through * mix(uSunColour, vec3(2.4), 0.3) * ((0.022 + 0.08 * uBreath.w * uShow.w) * rays * fan * min(far, 90.0) / 90.0);
   }
 
   // The mist on the ground: banks a knee to a head deep that lie on the water and the wet shelf and drift with the wind, torn at their
@@ -458,7 +461,9 @@ void main() {
         lit += thru * (1.0 - gone) * light;
         thru *= gone;
       }
-      colour += through * VAPOUR_ALBEDO * lit;
+      // Far off it stands in the same haze as the ground under it and takes half its colour from that: never a white cut-out on the sky.
+      float seat = 0.55 * smoothstep(250.0, 700.0, at);
+      colour += through * mix(VAPOUR_ALBEDO * lit, (1.0 - thru) * haze, seat);
       through *= thru;
       continue;
     }
