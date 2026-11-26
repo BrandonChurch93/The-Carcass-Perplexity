@@ -145,7 +145,7 @@ void main() {
 
   // Pale bone-stone: the rock's own marks, grey-ivory (its rust kept only where lichen grows), under the broad lights and darks of the sheet.
   // The rock's marks are faint on the blades: the pale and the light carry them.
-  stone = mix(vec3(0.19), stone, 0.55 + 0.3 * uCap);
+  stone = mix(vec3(0.19), stone, 0.55 - 0.1 * uCap);
   float stoneLum = dot(stone, vec3(0.333));
   float sunny = 0.5 + 0.5 * dot(n0, uSunDir);
   float field = vnoise(vWorld.xz * 0.019 + vWorld.y * 0.027 + 9.0) * 0.6 + vnoise(vWorld.xz * 0.11 + vWorld.y * 0.09) * 0.4;
