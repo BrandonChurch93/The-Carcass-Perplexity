@@ -143,6 +143,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   if (beach > 0.0) {
     // The bed by the shore is the shore's own picture gone on under the water, at its own size: eight metres of stones and grit.
     vec3 plate = texture2D(tShore, b / vec2(8.0, 4.5)).rgb;
+    // The picture's few rust grains would stand as orange specks on a wet grey bed: they are taken for stones of its own grey.
+    plate = mix(plate, vec3(dot(plate, vec3(0.333))) * vec3(1.04, 1.0, 0.94), smoothstep(1.5, 2.4, plate.r / max(plate.b, 0.02)));
     vec3 gravel = plate * (texture2D(tShore, b / vec2(43.0, 24.2) + 0.61).rgb / vec3(0.222, 0.161, 0.119)) * vec3(1.3, 1.36, 1.44);
     bare = mix(bare, gravel * 0.5, beach);
     // Under a low eye the same shingle the shore is made of goes on under the water, wet and dark, as far as the eye can tell one stone from the next.
