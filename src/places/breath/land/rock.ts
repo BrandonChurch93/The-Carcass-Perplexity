@@ -545,7 +545,7 @@ void main() {
   float seenLod = 0.5 * log2(max(max(dot(dux * texels, dux * texels), dot(duy * texels, duy * texels)), 1e-8));
   float drawnLod = max(seenLod, log2(max(drawn, 1.0)) + 1.5);
 
-  vec3 plate = mix(texture2D(tWall, vUv).rgb, textureLod(tWall, vUv, drawnLod).rgb, away);
+  vec3 plate = texture2D(tWall, vUv, away * max(drawnLod - seenLod, 0.0)).rgb;
   vec3 broad = texture2D(tWall, vUv, 4.0).rgb;
   vec2 e = vec2(1.0 / 1672.0, 1.0 / 941.0);
   float h = texture2D(tWallH, vUv).r;
@@ -578,16 +578,22 @@ void main() {
   vec3 gs = mix(mix(texture2D(tGrainN, gqz).rgb, texture2D(tGrainN, gqx).rgb, wx), texture2D(tGrainN, gq).rgb, flat0);
   // And a fifth the size under it near the lens, where a texel of the first is many pixels wide.
   float close = smoothstep(14.0, 3.0, dist);
-  vec3 g1 = mix(mix(texture2D(tGrain, gqz * 4.7 + 0.3).rgb, texture2D(tGrain, gqx * 4.7 + 0.3).rgb, wx), texture2D(tGrain, gq * 4.7 + 0.3).rgb, flat0);
+  // Read once, on the plane the face most nearly lies in: it shows only within a few strides of the lens, and three reads of it were
+  // paid on every pixel of the wall from every lens.
+  vec3 g1 = texture2D(tGrain, (flat0 > 0.5 ? gq : (wx > 0.5 ? gqx : gqz)) * 4.7 + 0.3).rgb;
   float grain = mix(1.0, clamp(1.0 + 1.3 * (dot(g0 / uGrainMean, vec3(0.3333)) - 1.0), 0.5, 1.6), max(near, 0.45)) * mix(1.0, clamp(dot(g1 / uGrainMean, vec3(0.3333)), 0.6, 1.45), close);
   // The beds: stone that breaks in level courses a hand to a pace thick, seen from the side. Laid in the world on the two upright planes,
-  // each face taking the one it most nearly lies in, at two sizes so that no course runs round the shaft unbroken.
+  // each face taking the one it most nearly lies in.
   vec2 bqz = vec2(p.x, p.y) / 5.0;
   vec2 bqx = vec2(p.z, p.y) / 5.0;
-  vec3 b0 = mix(texture2D(tBeds, bqz).rgb, texture2D(tBeds, bqx).rgb, wx);
-  vec3 bs = mix(texture2D(tBedsN, bqz).rgb, texture2D(tBedsN, bqx).rgb, wx);
-  vec3 b1 = mix(texture2D(tBeds, bqz * 0.37 + 0.21).rgb, texture2D(tBeds, bqx * 0.37 + 0.21).rgb, wx);
-  float bedTone = clamp(dot(b0 / uBedsMean, vec3(0.3333)), 0.35, 1.9) * clamp(0.55 + 0.45 * dot(b1 / uBedsMean, vec3(0.3333)), 0.6, 1.5);
+  // One plane a face and one read of each picture, at the size the wall's metres are seen at: read on both planes and at two sizes, the
+  // beds cost the wall half as much again as all the rest of it. The two planes meet where the wall runs at 45 degrees to both; the beds
+  // lie level on each, so only their breaks along the bed change there.
+  vec2 bsel = wx > 0.5 ? bqx : bqz;
+  float blod = max(log2(max(length(dpx), length(dpy)) * float(textureSize(tBeds, 0).x) / 5.0) - 0.5, 0.0);
+  vec3 b0 = textureLod(tBeds, bsel, blod).rgb;
+  vec3 bs = textureLod(tBedsN, bsel, blod).rgb;
+  float bedTone = clamp(dot(b0 / uBedsMean, vec3(0.3333)), 0.35, 1.9);
   vec3 t0 = texture2D(tMat, p.xz / 4.0 + 0.37).rgb;
   vec3 ts = texture2D(tMatN, p.xz / 4.0 + 0.37).rgb;
   float tone = clamp(1.0 + 1.2 * (dot(t0 / uMean, vec3(0.3333)) - 1.0), 0.5, 1.6);

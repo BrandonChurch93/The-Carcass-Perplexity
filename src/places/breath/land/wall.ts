@@ -156,48 +156,29 @@ export function ledge(bearing: number, nth: number): [number, number, number] {
 /** The wall as two meshes that share every point: the ribs, and the wall between them. */
 export function buildWall(): { ribs: THREE.BufferGeometry; wall: THREE.BufferGeometry } {
   const columns = 1056;
-  // Rows a hand and a half apart along the wall's outline for the 42 m a lens can see into; coarser below, in the mist.
-  const fineRows = 380;
+  // 17.5 cm rows for the 42 m a lens can see into; coarser below, in the mist.
+  const fineRows = 240;
   const rows = fineRows + 40;
   const count = (columns + 1) * (rows + 1);
   const position = new Float32Array(count * 3);
   const uv = new Float32Array(count * 2);
   const occ = new Float32Array(count);
   const rib = new Uint8Array(count);
-  // The rows of a column are not laid evenly down the shaft but evenly along the wall's own outline there. Laid by depth, the top of a rib
-  // (metres of nearly level rock in a hand of depth) was two or three strips a metre wide, each shaded as one, and they showed as lines
-  // drawn round every rib like the contours of a map.
-  const FINE_DEPTH = 42;
-  const STEP = 0.07;
-  const fineSteps = Math.round(FINE_DEPTH / STEP);
-  const along = new Float32Array(fineSteps + 1);
-  const outline: WallPoint[] = [];
-  const set = (k: number, q: WallPoint): void => {
-    position.set(q.at, k * 3);
-    uv[k * 2] = q.u;
-    uv[k * 2 + 1] = 1 - q.v;
-    occ[k] = q.open;
-    rib[k] = q.relief > RIB ? 1 : 0;
-  };
-  for (let i = 0; i <= columns; i++) {
-    const b = (JOIN - 360 + (i / columns) * 360) * RAD;
-    for (let s = 0; s <= fineSteps; s++) {
-      const q = wallPoint(b, s * STEP);
-      outline[s] = q;
-      if (s > 0) {
-        const p = (outline[s - 1] as WallPoint).at;
-        along[s] = (along[s - 1] as number) + Math.hypot(q.at[1] - p[1], Math.hypot(q.at[0], q.at[2]) - Math.hypot(p[0], p[2]));
-      }
+  // Rows even in depth, as the wall had them. Laid along the wall's own outline instead (tried: evenly, and thick where it turns) they
+  // took the lines off the tops of the ribs, but they made the ribs' tops and edges, most of what the far lens sees of the shaft, a mesh
+  // of triangles a few pixels across, and that cost 3 to 6 s a sample at 4221.
+  for (let j = 0; j <= rows; j++) {
+    const depth = j <= fineRows ? j * 0.175 : 42 + ((j - fineRows) / 40) * (DEPTH - 42 + 2);
+    for (let i = 0; i <= columns; i++) {
+      const b = (JOIN - 360 + (i / columns) * 360) * RAD;
+      const q = wallPoint(b, depth);
+      const k = j * (columns + 1) + i;
+      position.set(q.at, k * 3);
+      uv[k * 2] = q.u;
+      uv[k * 2 + 1] = 1 - q.v;
+      occ[k] = q.open;
+      rib[k] = q.relief > RIB ? 1 : 0;
     }
-    let s = 0;
-    for (let j = 0; j <= fineRows; j++) {
-      const want = ((along[fineSteps] as number) * j) / fineRows;
-      while (s < fineSteps - 1 && (along[s + 1] as number) < want) s++;
-      const span = (along[s + 1] as number) - (along[s] as number);
-      const depth = (s + (span > 1e-9 ? sat((want - (along[s] as number)) / span) : 0)) * STEP;
-      set(j * (columns + 1) + i, wallPoint(b, depth));
-    }
-    for (let j = fineRows + 1; j <= rows; j++) set(j * (columns + 1) + i, wallPoint(b, FINE_DEPTH + ((j - fineRows) / 40) * (DEPTH - FINE_DEPTH + 2)));
   }
   const all: number[] = [];
   const ribsIndex: number[] = [];
