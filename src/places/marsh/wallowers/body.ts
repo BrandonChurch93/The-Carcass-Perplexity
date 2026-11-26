@@ -179,8 +179,8 @@ void main() {
   float crease = 0.75 + 0.25 * smoothstep(0.15, 0.62, height);
   vec3 tiled = wash * tone * crease;
   vec3 albedo = mix(tiled, pic, side) * 0.8;
-  // Grey taupe: the red of it is the mud's, lower down, and not the hide's.
-  albedo = mix(vec3(dot(albedo, LUMA)) * vec3(1.03, 1.0, 0.96), albedo, 0.42);
+  // A warm tan with pink in it; the deep red is the mud's, lower down.
+  albedo = mix(vec3(dot(albedo, LUMA)) * vec3(1.14, 0.95, 0.82), albedo, 0.5);
 
   // The slope of the skin: from the light and dark of the picture on the flanks (a crease is dark), from the tile elsewhere, and the tile's grain over all near the lens.
   float tile = mix(1.2, 0.45 * uNear, side);
@@ -207,10 +207,13 @@ void main() {
   float lane = vnoise(vec2(q.x * 7.0 + q.z * 5.0, uSeed));
   float thread = smoothstep(0.5, 0.8, vnoise(vec2((q.x + q.z) * 31.0, vWorld.y * 1.3 - uSeconds * 0.3) + uSeed * 9.0));
   float ragged = 0.75 * (patchy - 0.5) + 0.3 * (lane - 0.5) + 0.14 * (grain - 0.5);
-  float wet = 1.0 - smoothstep(uWet - 0.1 + ragged, uWet + 0.06 + ragged, vWorld.y);
-  float damp = 1.0 - smoothstep(uWet - 0.15 + ragged, uWet + 0.5 + ragged + 0.3 * lane, vWorld.y);
+  // A small one is wet as far up its own side as a large one is up its side.
+  float kk = clamp(uK, 0.3, 1.0);
+  ragged *= kk;
+  float wet = 1.0 - smoothstep(uWet - 0.1 * kk + ragged, uWet + 0.06 * kk + ragged, vWorld.y);
+  float damp = 1.0 - smoothstep(uWet - 0.15 * kk + ragged, uWet + (0.5 + 0.3 * lane) * kk + ragged, vWorld.y);
   dust *= 1.0 - damp;
-  albedo = mix(albedo, vec3(0.25, 0.23, 0.21) * (0.7 + 0.5 * grain), 0.5 * dust);
+  albedo = mix(albedo, vec3(0.26, 0.225, 0.195) * (0.7 + 0.5 * grain), 0.5 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
   float smear = uMudded * smoothstep(0.3, 0.55, 0.55 * patchy + 0.45 * vnoise3(q * 5.3 + uSeed * 2.0) + 0.5 * damp + 0.25 * (1.0 - grain));
   albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.135), vec3(0.075, 0.032, 0.026), damp) * mix(0.55, 1.25, smoothstep(0.25, 0.8, grain)), 0.72 * smear);
@@ -218,7 +221,8 @@ void main() {
   float plate = vnoise3(q * 2.6 + uSeed * 5.0) + 0.25 * (vnoise3(q * 9.0 + uSeed) - 0.5);
   float cake = uMudded * (1.0 - damp) * smoothstep(0.4, 0.46, plate);
   albedo = mix(albedo, vec3(0.25, 0.195, 0.16) * (0.55 + 0.7 * grain), 0.8 * cake);
-  albedo *= 1.0 - 0.7 * uMudded * (1.0 - damp) * smoothstep(0.36, 0.4, plate) * (1.0 - smoothstep(0.4, 0.44, plate));
+  // The edge of a plate shows only where it has lifted: here and there, never all the way round.
+  albedo *= 1.0 - 0.65 * uMudded * (1.0 - damp) * smoothstep(0.36, 0.4, plate) * (1.0 - smoothstep(0.4, 0.44, plate)) * smoothstep(0.22, 0.55, vnoise3(q * 1.9 + uSeed * 11.0));
   // The cake has cracked as it dried: fine dark lines through each plate.
   float crack = abs(vnoise3(q * 11.0 + uSeed * 7.0) - 0.5);
   albedo *= 1.0 - 0.55 * cake * (1.0 - smoothstep(0.0, 0.035, crack));
@@ -237,8 +241,11 @@ void main() {
   // The claws: old ivory, grooved, stained at the root.
   vec3 ivory = vec3(0.15, 0.115, 0.08) * (0.7 + 0.5 * height) * mix(vec3(1.0), tone, 0.35);
   albedo = mix(albedo, mix(ivory, albedo * 1.3, 0.5 * side), horn);
-  albedo = mix(albedo, albedo * vec3(0.62, 0.42, 0.35), damp * (1.0 - wet) * (1.0 - uMudded));
-  vec3 soaked = mix(albedo * vec3(0.36, 0.2, 0.165) + vec3(0.008, 0.002, 0.001), albedo * 0.55, uMudded);
+  albedo = mix(albedo, albedo * vec3(0.9, 0.6, 0.48), damp * (1.0 - wet) * (1.0 - uMudded));
+  // The stuck one's head is the wettest of it: it has been under and come up again.
+  float headWet = uMudded * smoothstep(0.5, 0.82, vRest.x / uPic.x) * (1.0 - horn);
+  albedo = mix(albedo, vec3(0.034, 0.02, 0.016) * (0.55 + 0.7 * grain), 0.85 * headWet);
+  vec3 soaked = mix(albedo * vec3(0.62, 0.3, 0.23) + vec3(0.008, 0.002, 0.001), albedo * 0.55, uMudded);
   albedo = mix(albedo, soaked, wet);
   albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3), 0.6 * thread * damp * (1.0 - wet));
   // Thick mud on whatever stands in it.
@@ -248,6 +255,7 @@ void main() {
   // Wet hide does not shine all over under a white sky: it glistens on the tops of its folds.
   float glint = smoothstep(0.55, 0.95, grain);
   float rough = mix(0.93, mix(0.74, 0.44, glint), max(wet, 0.7 * thread * damp));
+  rough = mix(rough, 0.78, headWet * glint);
   rough = mix(rough, 0.34, deep);
   rough = mix(rough, 0.6, horn * (1.0 - deep));
   rough = mix(rough, 1.0, 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));

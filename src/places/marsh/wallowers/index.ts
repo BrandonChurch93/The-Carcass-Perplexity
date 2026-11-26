@@ -68,7 +68,7 @@ export function create(ctx: Context): Piece {
   const wet = new Wet(ctx, herd.length);
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
   const wallows = herd
-    .filter((h) => h.onBank)
+    .filter((h) => h.onBank && ctx.rig.land.shore(h.plan.at[0], h.plan.at[1]) > -0.02)
     .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.beast.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.beast.b.k, h.plan.dir, 1.05 * h.beast.b.k, [0.075, 0.034, 0.025], 'wallowers-mud-' + i, 1));
   const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh)];
   ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));

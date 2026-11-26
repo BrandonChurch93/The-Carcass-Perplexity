@@ -6,7 +6,7 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import type { Stood } from './animal';
 
 export const DROPS = 12;
-const FOOT_RINGS = 3;
+const FOOT_RINGS = 4;
 const BODY_RINGS_OUT = 3;
 const PER = DROPS * 2 + 4 * FOOT_RINGS + 2 + BODY_RINGS_OUT;
 
@@ -67,8 +67,16 @@ void main() {
     gl_FragColor = vec4(rigOut(c), 1.0);
     return;
   }
-  // A ring on the brine: a crest that shows more of the sky and the trough inside it that shows less.
   float r = length(vAt);
+  if (vB.x > 1.5) {
+    // Mud a foot has lifted: a brown cloud under the top of the brine, torn at its edge.
+    float blot = fbm(vAt * 2.3 + vB.w * 7.0);
+    float cloud = clamp(vB.y, 0.0, 1.0) * (1.0 - smoothstep(0.2, 0.95, r + 0.6 * (blot - 0.5))) * smoothstep(0.3, 0.6, blot) * (1.0 - uSolo);
+    if (cloud < 0.004) discard;
+    gl_FragColor = vec4(rigOut(vec3(0.06, 0.027, 0.02) * (0.7 + 0.6 * blot)) * (1.0 - uSolo), cloud);
+    return;
+  }
+  // A ring on the brine: a crest that shows more of the sky and the trough inside it that shows less.
   float w = vB.z;
   float wob = 0.03 * (vnoise(vec2(atan(vAt.y, vAt.x) * 2.5, vB.w * 9.0)) - 0.5);
   float crest = exp(-pow((r - 0.86 + wob) / w, 2.0));
@@ -194,10 +202,11 @@ export class Wet {
       const wade = alive > 0.5 && land.shore(foot.x, foot.z) < -0.02;
       for (let r = 0; r < FOOT_RINGS; r++) {
         if (!wade) this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
-        else if (r === 0) this.put(o, foot.x, 0.005, foot.z, 0.38 * k, 1, 0.75, 0.07, l + 0.5);
+        else if (r === 0) this.put(o, foot.x, 0.005, foot.z, 0.42 * k, 1, 1.0, 0.11, l + 0.5);
+        else if (r === 3) this.put(o, foot.x + fx * 0.1 * k, 0.003, foot.z + fz * 0.1 * k, 0.8 * k, 2, 0.62, 0, l * 3.1 + i * 1.7);
         else {
           const age = fract(seconds / 2.9 + r * 0.5 + l * 0.27 + i * 0.37);
-          this.put(o, foot.x, 0.004, foot.z, (0.4 + 1.15 * age) * k, 1, 0.5 * (1 - age) * (1 - age), 0.045 / (0.4 + 1.15 * age), l + r * 7);
+          this.put(o, foot.x, 0.004, foot.z, (0.4 + 1.15 * age) * k, 1, 0.95 * (1 - age) * Math.sqrt(1 - age), 0.07 / (0.4 + 1.15 * age), l + r * 7);
         }
         o += 4;
       }

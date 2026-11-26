@@ -155,13 +155,16 @@ void main() {
       fx = fract(sx + 0.5 * mod(r0 + 1.0, 2.0)) * 2.0 - 1.0;
       t = f + 1.0 - 0.42 * fx * fx;
     }
-    float lipLight = (1.0 - smoothstep(0.0, 0.2, t)) * (1.0 - away);
-    float tuck = smoothstep(0.35, 1.25, t) * (1.0 - away);
+    // Not everywhere: in places the scales have worn down to bare fibre that runs up the trunk.
+    float worn = (1.0 - away) * mix(0.15, 0.8, smoothstep(0.38, 0.62, fbm(vec2(vCoord.x * 0.9, y * 2.3) + seed * 17.0)));
+    albedo *= mix(0.82 + 0.36 * fibre, 1.0, worn / 0.8);
+    float lipLight = (1.0 - smoothstep(0.0, 0.2, t)) * worn;
+    float tuck = smoothstep(0.35, 1.25, t) * worn;
     albedo = mix(albedo * (1.0 - 0.42 * tuck), albedo * 1.25 + 0.03, 0.7 * lipLight);
     albedo = mix(albedo, rust * 0.8, 0.3 * tuck * smoothstep(0.4, 0.7, patchy));
     // The foot stands in red brine and mud.
-    float wet = 1.0 - smoothstep(0.1, 0.45 + 0.3 * patchy, vWorld.y);
-    albedo = mix(albedo, albedo * vec3(0.5, 0.2, 0.16) + vec3(0.03, 0.005, 0.004), wet);
+    float wet = 1.0 - smoothstep(0.1, 0.7 + 0.6 * patchy, vWorld.y);
+    albedo = mix(albedo, albedo * vec3(0.6, 0.22, 0.17) + vec3(0.03, 0.005, 0.004), wet);
     vec3 up = vec3(0.0, 1.0, 0.0);
     vec3 T = normalize(cross(up, n) + 1e-5);
     vec3 B = cross(n, T);
