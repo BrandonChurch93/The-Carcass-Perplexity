@@ -29,6 +29,10 @@ const FLASH_OF = [3.6, 0.8, 0.9, 3.2, 0.6, 0.15];
 const CLOUD_OF = [1.6, 0.5, 0.8, 0.75, 0.45, 0.85];
 const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 2.5];
 const ROUND_OF = [0.02, 0.2, 0.2, 0.7, 0.02, 0.15];
+/** The cloud comes up before its first stroke: over this many seconds, to this share of the stroke's light in it. The sky answers a
+ * little light with much, so the share is small. */
+const PRE_OVER = 0.07;
+const PRE_CLOUD = 0.45;
 /** Each strike's share of the light in the cloud about its root. */
 const ROOT_OF = [1, 0.8, 0.9, 0.8, 0.7, 0.8];
 /** The glow in the cloud before the first stroke, as a share of the breakdown. */
@@ -374,7 +378,11 @@ export function create(ctx: Context): Piece {
         const sky = Math.max(hard, HOLD_CLOUD * e.glow);
         // The even lift of the air goes with the cloud's glow and not with the stroke alone: lit for one frame and dark the next, the whole
         // picture flipped twice a strike, which no encoder holds.
-        const round = sky * (ROUND_OF[of] as number);
+        // And the cloud comes up over the four frames before the first stroke, evenly and without the breakdown's flicker: from dark to
+        // the stroke in one frame, three fifths of the picture's light changed at once.
+        const rising = age < 0 ? Math.max(0, 1 + age / PRE_OVER) : 0;
+        const lit = Math.max(sky, PRE_CLOUD * rising * rising * rising);
+        const round = lit * (ROUND_OF[of] as number);
         // The cloud about the root: full on a stroke, and it dies after the last one over some eight frames. Before the first stroke it flickers.
         // The lit cloud is gone eight frames after its last stroke: its last third sinks faster than the sky's own glow does.
         b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky * Math.min(1, sky / 0.3), 0.3 * before));
@@ -393,6 +401,8 @@ export function create(ctx: Context): Piece {
           flashAt.set(b.cast.x, b.cast.y, b.cast.z, FLASH * (FLASH_OF[of] as number) * land);
           flashTip.set(b.tip.x, b.tip.y, b.tip.z, FLASH * (PULSE_OF[of] as number) * land);
           flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * sky);
+        } else if (lit > 0) {
+          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * lit);
         }
         if (power + before + tail + within > 1e-4) {
           channelLight.position.copy(b.mid);
