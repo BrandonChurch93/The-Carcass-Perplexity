@@ -1,0 +1,98 @@
+{
+  "round": 9,
+  "unit": "spine",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-26 00:03 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the purple streamers trailing off the spire tips",
+        "what": "the plumes read as flat glossy ribbons with banded lines and holes, like extruded plastic, not vapour or spray; they cast no light and take none from the bolts passing through them",
+        "fix": "replace with volumetric, soft-edged plumes that scatter the lightning and fade into the air"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the spires and the snow-capped mounds they stand on",
+        "what": "faceted low-poly geometry with one stretched mottled texture on everything; the snow is smeared and streaked down the slopes and the spires sit on the mounds with no join",
+        "fix": "add real geometric detail and layered rock and snow materials, with snow banked where the spire meets the base"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the animals in the cave",
+        "what": "they look like smooth models wrapped in stiff fur cards; the fur on the left animal is streaked and smeared, the near ones float over the water and there is no wet or contact with it",
+        "fix": "groom real fur, plant the feet in the water with ripples and wet fur at the legs, and add contact shadows"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the cave walls",
+        "what": "one repeating streaked texture stretched over a smooth tube; it softens and smears where the camera is close",
+        "fix": "model real rock or ice relief and use close-range texture that holds detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the water floor of the cave",
+        "what": "flat sheet with regular orange ring speckles and no wet edge or foam against the walls or legs; the reflection reads as a tiled pattern",
+        "fix": "give the water depth, proper reflections of walls and animals, and edges where it meets rock and legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "left animal, x 0 to 17% y 58 to 75%",
+        "what": "a round dark eye-like shape with a dotted pattern shows on the animal; the animals are meant to have no eyes",
+        "fix": "remove the eye form from the model"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the dark cables from the spires and the stepped dark seams on the spire faces",
+        "what": "thin black lines and stair-step dark bands read as geometry seams and wire meshes, not rock",
+        "fix": "remove the stray lines and close the mesh seams"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the storm cloud, x 83 to 100% y 25 to 42%",
+        "what": "cloud is a soft blurred flat tint with no internal light or structure; the far mountains are flat cutout layers with hard edges",
+        "fix": "use volumetric cloud with lit edges from the lightning and atmospheric depth on the far ridges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the lightning strike on the near spire",
+        "what": "bright bolt and spark burst light nothing around them; the spire, cloud and streamers show no flash",
+        "fix": "have the strike light the spire tip, the cloud base and the plume"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the horizon and the plain below the sky, x 83 to 100% y 58 to 75%",
+        "what": "flat grey ground meets a flat sky gradient with a hard edge and a cut-out silhouette; no air or detail in the distance",
+        "fix": "add terrain detail and aerial perspective at the horizon"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "water and walls at the cave mouth",
+        "what": "the water is a flat striped plane that meets the wall along a straight hard line; the wall texture is smeared vertical streaks",
+        "fix": "break up the water surface, add a wet edge and reflections at the wall, and give the wall real relief"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-06.png",
+        "where": "fur on the right animal",
+        "what": "fur renders as dithered pixel strands with aliasing",
+        "fix": "render fur with proper filtering and sampling"
+      }
+    ]
+  }
+}

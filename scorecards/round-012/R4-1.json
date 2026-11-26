@@ -1,0 +1,56 @@
+{
+  "round": 12,
+  "unit": "eye",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-26 00:09 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "all four animals across frames 8842 to 9164 (and consecutive frames 9003 to 9014 in set-A-07.png)",
+        "what": "every animal is completely frozen like a rigid model with no breathing, weight shift, neck movement, or drinking motion over more than five seconds",
+        "fix": "animate natural weight shifts, subtle breathing, asynchronous head and neck motion, and stepped leg adjustments so each animal behaves independently"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the drinking animal in the midground and the distant animals on the left across frames 8520 to 8680",
+        "what": "the animals remain completely motionless statues as the camera sweeps past, with zero contact reaction where the snout meets the water",
+        "fix": "add subtle drinking motion, body weight shifts, and staggered idle movement to the background herd"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the lower and central frame from frames 9404 to 9540",
+        "what": "a flat, jagged-edged grey disc rises across the frame and dissolves into flat 2D-looking concentric bullseye rings on a dark void, breaking physical continuity and ending the move on a weak graphic",
+        "fix": "remove the flat grey disc and graphic dissolve, keeping the camera move grounded in real, continuously simulated water with coherent lighting and surface detail"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the water surface and ripples around the animals' legs and snouts (also visible in set-A-07.png, set-A-01.png, set-A-02.png, and set-A-03.png)",
+        "what": "the place is not alive: the water surface is completely dead and even the ripples around the legs are locked in place rather than propagating, making the shots read as a frozen diorama the camera slides across",
+        "fix": "simulate living water with propagating contact ripples, subtle wind-driven surface drift, and slowly moving mist and clouds so the scene continues changing independently of camera motion"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the rising mound and expanding rings on the water from frames 9165 to 9370, plus the two foreground animals (also in set-A-10.png)",
+        "what": "the expanding rings look like thin, uniform procedural circles pulsing evenly across glass with no fluid weight or breaking, while the two foreground animals remain completely frozen with no reaction to the event",
+        "fix": "give the emerging disturbance real water displacement, uneven wave crests, and foam or breaking edges, and have the foreground animals shift, turn, or recoil as the wave arrives"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the camera sweep around the submerged basin edge across frames 8681 to 8841 (and the orbit in set-A-02.png)",
+        "what": "the camera performs a mechanical, unmotivated orbit around static geometry over completely mirror-still water",
+        "fix": "give the camera a heavier, eased, purposeful trajectory with subtle living water flow over the drop-off edge"
+      }
+    ]
+  }
+}

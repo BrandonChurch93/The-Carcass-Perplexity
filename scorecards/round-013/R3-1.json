@@ -1,0 +1,84 @@
+{
+  "round": 13,
+  "unit": "reveal",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-26 00:21 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "central crater rim and lake",
+        "what": "the crater wall is a blurry, airbrushed orange gradient with no rock texture, meeting a flat uniform dark blue-black lake with no reflections, ripples, or wet shoreline",
+        "fix": "replace the smooth rim with detailed rocky slopes and talus, and give the lake realistic water reflections, subtle surface texture, and a natural shore transition"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "mountain ranges across the entire island",
+        "what": "the terrain reads as a procedural Voronoi/erosion heightmap made of uniform clay-like ridges and white valley lines with a single material everywhere and no real geological variation",
+        "fix": "break up the repetitive procedural ridge network with varied rock strata, soil, scree, and fine surface micro-detail"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "coastlines and inland lakes",
+        "what": "every coastline is ringed by a uniform artificial cyan glow and the lakes and ocean are flat dark blue fills with no surface texture, depth variation, foam, or sky reflection",
+        "fix": "replace the uniform coastal halo with natural bathymetry and irregular surf or wet edges, and add realistic water shading, glint, and reflections"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "cloud bands on the left and volcanic plume at upper center",
+        "what": "clouds and plume look like flat streaked noise layers pasted over the map with no 3D volume, no atmospheric haze, and no shadows cast onto the ocean or land below",
+        "fix": "render volumetric clouds and plume with directional lighting, cast soft shadows onto the underlying sea and terrain, and add subtle atmospheric scattering"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "all three terrain crops (top-left, bottom-left, and bottom-right panels)",
+        "what": "strong heightmap quantization produces stair-stepped contour banding and vertical pixelated striations across every slope",
+        "fix": "use a higher-bit-depth, higher-resolution heightfield with proper filtering and micro-displacement to eliminate contour stepping and grid striations"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "cloud deck in the top-left and bottom-right crops",
+        "what": "cloud edges break into hard-edged, flat gray thresholded noise cutouts rather than soft wispy vapor",
+        "fix": "use multi-octave volumetric density falloff with soft wispy edges instead of hard alpha thresholding"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "coastlines and inland lake edges in both crops",
+        "what": "the land-water boundary shows a jagged, pixelated dotted seam along the shore, and the eastern parallel ridges look soft and stretched",
+        "fix": "increase coastline mask resolution with smooth anti-aliased transitions, natural shoreline detail, and sharper terrain displacement on the eastern ridges"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "orange glowing spots on the upper-right landmass (also visible in set-A-08.png bottom-left crop)",
+        "what": "soft circular orange dots sit on the dark terrain without following topography or illuminating nearby ridges and haze",
+        "fix": "tie volcanic glow to actual fissures or vents in the terrain and have the emission cast realistic warm light onto adjacent rock and smoke"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "open ocean in the top-left and bottom-right crops (also in set-A-06.png right crop)",
+        "what": "tiny repeating rows of identical dotted flecks sit on the flat dark water, reading as tiled or aliased procedural noise artifacts",
+        "fix": "remove the repeating stippled noise artifact and replace it with non-repeating, physically based ocean surface detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "crater lake in the left crop and slopes in the right crop",
+        "what": "white vapor wisps over the lake read as flat blurry streaks with no lighting or shadow, while the terrain crop shows stepped contour banding and soft low-res rock",
+        "fix": "give the surface vapor volumetric lighting and soft shadows on the water, and add high-frequency rock detail to the close-up slopes"
+      }
+    ]
+  }
+}

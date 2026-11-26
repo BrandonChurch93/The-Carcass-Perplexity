@@ -1,0 +1,56 @@
+{
+  "round": 10,
+  "unit": "ribs",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-26 00:14 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "pale flyer above the right-hand shallows, frames 1241–1252",
+        "what": "the wings snap from raised to a broad low fan and back in a handful of adjacent frames; the body barely answers the stroke",
+        "fix": "space the wing poses through the stroke and let the body react to lift before the next beat"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "foreground feeding animal and its contact with the water, frames 1730–1866; confirmed close up in set-A-09.png",
+        "what": "the camera closes in while the animal holds a rigid neck and leg pose; the white contact effect stays the same fan of streaks and beads instead of breaking into the pool",
+        "fix": "animate weight changes and small interruptions in the feeding action, and give each contact a short splash that falls back and sends out ripples"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "incoming wave between the rock walls, especially frames 2429–2506",
+        "what": "the wave arrives across the channel, but its face grows into a nearly vertical striped curtain; the foam stretches down it instead of pitching forward and breaking under its own weight",
+        "fix": "carry a coherent wall forward, roll the crest over the face, then let broken foam and run-up spread around the foreground rocks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "foreground at the ocean-to-shallows approach, frames 757–946",
+        "what": "the moving chop gives way to a nearly mirror-flat surface with a sharp change in the appearance of the water",
+        "fix": "let the swell flatten gradually over the shallows and carry smaller ripples and breaking edges through the transition"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "perched animals across the terraces, frames 1517–1651; close detail in set-A-10.png",
+        "what": "many of the animals hold the same bent silhouette as the view travels past, so the colony reads as repeated posed models beneath the moving flyers",
+        "fix": "vary the resting poses and stagger small head turns, foot resets and wing folds across the ledges"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "close flyer crossing from the left cliff toward the right, frames 1867–2022",
+        "what": "the flyer travels a long way with its wings held almost rigid and little banking or body response",
+        "fix": "shape the glide with subtle wing flex and banking tied to the flight path"
+      }
+    ]
+  }
+}

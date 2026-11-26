@@ -1,0 +1,63 @@
+{
+  "round": 9,
+  "unit": "spine",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-26 00:05 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-09.png",
+        "where": "both lightning bolts striking the spires across frames 7668 to 7679 (also set-A-06.png frames 7234 to 7245 and set-A-10.png frames 8090 to 8101)",
+        "what": "lightning bolts stay locked on the same jagged path for 12 or more consecutive frames and pulse brighter on a mechanical 4-to-5-frame cycle instead of snapping in and dying out",
+        "fix": "limit each strike to a brief 1-to-3-frame flash with a fast irregular decay and distinct branch geometry if it restokes"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "the mountain ridge, snow slopes, storm clouds, and cave interior during peak strikes (also set-A-01.png, set-A-09.png, and set-A-10.png)",
+        "what": "lightning strikes emit only a local halo around the bolt and do not illuminate the surrounding ridge, clouds, or cave interior, so peak strike frames have the same scene lighting as dark frames",
+        "fix": "add a synchronized transient light flash from each bolt that illuminates the nearby rock faces, cloud undersides, snow, and cave mouth for the instant of the strike"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the three shaggy animals on the left side of the cave across frames 7875 to 8109 and the lone animal walking out across frames 8148 to 8304 (also set-A-10.png)",
+        "what": "the three herd animals on the left remain completely motionless as the camera glides past, with no breathing, head turns, or weight shifts, reading as frozen models; the lone receding animal also moves with a stiff, largely unchanged body silhouette",
+        "fix": "animate subtle independent idle motion (breathing, head turns, weight shifts) on the resting herd and add clear hip-and-shoulder weight transfer and stepped leg cycles to the walking animal"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the dark storm clouds and lower cloud deck across frames 7015 to 7337 (also set-A-02.png, set-A-03.png, and set-A-04.png)",
+        "what": "the storm clouds and horizon cloud bank are completely frozen across multi-second shots, making the sky read as a static painted backdrop",
+        "fix": "give the upper storm deck and lower cloud layer continuous, layered wind drift and slow internal boiling at different heights"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the purple-grey mist streamers trailing off the rock spire (also set-A-08.png, set-A-01.png, and set-A-04.png)",
+        "what": "the vapour plumes hold a rigid horizontal envelope and ripple like flat textured ribbons rather than shearing, billowing, and dissipating in high wind",
+        "fix": "replace the ribbon motion with volumetric advection so plumes detach, curl, and thin out downwind"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the spark cluster at the tip of the central spire across frames 7679 to 7777 (also set-A-01.png frames 7044 to 7103 and set-A-02.png frames 7469 to 7498)",
+        "what": "sparks from the strike hang around the spire tip for over a second without dispersing or falling under gravity and wind",
+        "fix": "drive the impact sparks with outward velocity, strong downwind drag, gravity, and a quick cooling fade"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the foreground snow, passing mist, and fallen creature across frames 7572 to 7659 (also set-A-07.png)",
+        "what": "once the camera slows to a stop, the scene goes still while a flat translucent grey fog blotch slides across the creature (frames 7572 and 7644) without stirring its fur or the surface snow",
+        "fix": "add fine wind-blown spindrift across the snow surface, subtle wind flutter in the creature's fur, and break up the foreground fog into wispy, multi-layered gusts"
+      }
+    ]
+  }
+}
