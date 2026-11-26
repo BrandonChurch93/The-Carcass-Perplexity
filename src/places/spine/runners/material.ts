@@ -26,8 +26,12 @@ vec3 runnerLight(vec3 p, vec3 n) {
     vec3 way = d * inversesqrt(d2);
     vec3 level = normalize(vec3(way.x, 0.12, way.z));
     vec3 seen = skyRadiance(level) + emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159);
-    float facing = clamp((dot(n, way) + 0.2) / 1.2, 0.0, 1.0);
-    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * facing * facing;
+    // The snow at the mouth and the pale wall give it back with little of the dusk's blue left in it.
+    seen = mix(seen, dot(seen, vec3(0.3, 0.5, 0.2)) * vec3(1.08, 1.0, 0.9), 0.6);
+    // The mouth is broad and the ice and the pale wall give its light back: it wraps the body, and a share of it comes from all round.
+    float facing = clamp((dot(n, way) + 0.7) / 1.7, 0.0, 1.0);
+    float fill = 0.3 + 0.12 * n.y;
+    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * (facing * facing + fill);
     // Seen against the mouth, the light comes through the ends of the coat along its outline.
     vec3 toLens = normalize(cameraPosition - p);
     float through = pow(1.0 - abs(dot(n, toLens)), 5.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
@@ -150,8 +154,9 @@ void main() {
     float char_ = 1.0 - smoothstep(0.35, 1.0, d + 0.3 * (fine - 0.5));
     albedo = mix(albedo, pic * mix(mix(0.55, 0.16, char_), 0.9, raw), on);
     // Raw at the heart of it, where the hide split open: wet red flesh inside the ring of char.
-    float heart = (1.0 - smoothstep(0.12, 0.5, d + 0.4 * (fine - 0.5))) * on;
-    albedo = mix(albedo, vec3(0.34, 0.028, 0.02) * (0.45 + 1.1 * pic.r), heart);
+    float heart = (1.0 - smoothstep(0.3, 0.62, d + 0.4 * (fine - 0.5))) * on;
+    albedo = mix(albedo, vec3(0.006, 0.005, 0.005), (1.0 - smoothstep(0.55, 1.15, d + 0.3 * (fine - 0.5))) * on * 0.9);
+    albedo = mix(albedo, vec3(0.15, 0.022, 0.014) * (0.35 + 1.2 * pic.r), heart);
     raw = max(raw, heart);
     rough = mix(rough, mix(0.9, 0.55, raw), on);
     occ = mix(occ, 0.8, on);
@@ -208,7 +213,7 @@ void main() {
   // Hair takes light from all round: the lock is lit as something between its own way out of the body and the open sky.
   vec3 n = normalize(nb + vec3(0.0, 0.3, 0.0) + side * (0.35 * position.x) + toCamera * 0.2);
   // Roots stand in each other's shade.
-  float occ = mix(0.12, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
+  float occ = mix(0.12 + 0.33 * uDoor.w, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
   vLight = runnerLight(p, n) * occ / 3.14159;
   vFrostLight = runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
   vAt = vec4(position.x, t, seed, aCard.z);
@@ -250,7 +255,7 @@ void main() {
   float frost = smoothstep(0.7, 1.2, vInfo.z + uCoat.w + 0.7 * (vAt.w - 0.5));
   float lies = frost * smoothstep(0.1, 0.5, t) * smoothstep(0.9, 1.7, lum + 0.35 * frost);
   float bead = smoothstep(0.75, 1.0, t) * smoothstep(1.0, 1.6, lum) * (0.3 + 0.5 * vAt.w);
-  float white = clamp(max(lies, bead) * (1.0 - singe), 0.0, 1.0);
+  float white = clamp(max(max(lies, bead) * (1.0 - singe), smoothstep(1.5, 2.0, vAt.w) * smoothstep(0.15, 0.6, t) * smoothstep(0.6, 1.3, lum)), 0.0, 1.0);
   c = mix(c, vec3(0.86, 0.89, 0.94) * vFrostLight, white);
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
@@ -345,8 +350,8 @@ void main() {
   float crystals = vnoise3(vWorld * 520.0);
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
-  albedo = mix(albedo, vec3(0.075, 0.062, 0.062) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
-  rime = max(rime, uWrithe.y * smoothstep(0.75, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5)) * 0.8);
+  albedo = mix(albedo, vec3(0.04, 0.03, 0.032) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
+  rime = mix(rime, 0.3 * smoothstep(0.8, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5)), uWrithe.y);
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, max(rime, 0.6 * uWrithe.y));
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);

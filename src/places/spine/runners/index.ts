@@ -136,7 +136,7 @@ export function create(ctx: Context): Piece {
       uGround: { value: ground },
       uDoor: { value: role.inside ? door : open },
       uDoorArea: { value: 420 },
-      uDoorGain: { value: 3 },
+      uDoorGain: { value: 8 },
       uCoat: { value: coatSet },
       tShag: { value: shagColour },
       tShagData: { value: shagData },
@@ -204,18 +204,18 @@ export function create(ctx: Context): Piece {
   const cream = (): [number, number, number] => {
     const k = rng.range(0.85, 1.1);
     const warm = rng.range(0, 1);
-    return [0.84 * k, (0.71 - 0.03 * warm) * k, (0.5 - 0.07 * warm) * k];
+    return [0.86 * k, (0.8 - 0.02 * warm) * k, (0.7 - 0.05 * warm) * k];
   };
 
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
-    { d: CANAL_KEY + 10, l: -0.85, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.15 },
-    { d: CANAL_KEY + 5.3, l: -1.6, yaw: along + 2.5, act: 'lie', pose: LIE, size: 1.2 },
-    { d: CANAL_KEY + 6.0, l: -2.05, yaw: along + 2.0, act: 'sit', pose: SIT, size: 1.2 },
-    { d: CANAL_KEY + 6.7, l: -1.45, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
-    { d: CANAL_KEY + 7.4, l: -2.0, yaw: along + 1.7, act: 'sit', pose: SIT, size: 1.1 },
-    { d: CANAL_KEY + 7.9, l: -1.4, yaw: along + 0.6, act: 'lie', pose: LIE, size: 1.05 },
+    { d: CANAL_KEY + 11.5, l: -0.2, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.15 },
+    { d: CANAL_KEY + 3.8, l: -2.0, yaw: along + 2.4, act: 'lie', pose: LIE, size: 1.2 },
+    { d: CANAL_KEY + 6.4, l: -2.3, yaw: along + 1.9, act: 'sit', pose: SIT, size: 1.2 },
+    { d: CANAL_KEY + 8.6, l: -1.0, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
+    { d: CANAL_KEY + 10.2, l: -2.5, yaw: along + 1.6, act: 'sit', pose: SIT, size: 1.1 },
+    { d: CANAL_KEY + 12.5, l: -2.4, yaw: along + 0.6, act: 'lie', pose: LIE, size: 1.05 },
   ];
 
 
@@ -226,7 +226,7 @@ export function create(ctx: Context): Piece {
   const deadSkin = skinOf(DEAD, 0.016).body;
   const dj = deadSkin.joints;
   const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.22 * (dj.fwd[d] as number) - 0.1 * (dj.up[d] as number) - 0.2 * (dj.right[d] as number);
-  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.34];
+  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.4];
   const dead = make({ act: 'dead', pose: DEAD, size: 1.05, cell: 0.016, clumps: 2400, long: 0.8, tone: [0.92, 0.77, 0.52], phase: 0, inside: false, burn: wound, tendrils: 110 });
 
   const burned = scorch(ctx);
@@ -269,7 +269,7 @@ export function create(ctx: Context): Piece {
     about(a.bones[2] as THREE.Matrix4, j.chest, 0.06 * Math.sin(t * 0.6 + ph), ny, nz, [fore, settle, sway]);
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
-    a.coat.set(1, a.role.inside ? 0.12 : 0.5, shiver, a.role.inside ? 0.3 : 0.1);
+    a.coat.set(1, a.role.inside ? 0.12 : 0.5, shiver, a.role.inside ? 0.2 : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
