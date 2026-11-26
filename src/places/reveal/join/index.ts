@@ -45,7 +45,7 @@ void main() {
 }`;
 
 // Cloud is soft: it is drawn half the size of the frame and laid over it.
-const SMALLER = 2;
+const SMALLER = 2.5;
 
 export function create(ctx: Context): Piece {
   // The banks stand under the lens on the first frame of the rise, wherever rise.json has put it over the lake.
