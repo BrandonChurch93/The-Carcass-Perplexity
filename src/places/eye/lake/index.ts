@@ -75,6 +75,7 @@ uniform float uMirrorOn;
 uniform float uLens;
 uniform vec4 uLap[${LAPS}];
 uniform int uLapCount;
+uniform vec4 uMirror;
 uniform vec4 uDome;
 // x: seconds since the centre rose (negative before), y: how far the rest picture of the handoff has come in.
 uniform vec4 uCentre;
@@ -119,7 +120,7 @@ void main() {
   // Rings that leave the centre, always: low and long, stronger on one side, and a train of higher ones thrown by what rises.
   if (r < 700.0) {
     float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
-    float quiet = 0.012 * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
+    float quiet = 0.012 * (uPlateTone.w > 1.5 ? 0.3 : 1.0) * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
     // What heaves at the centre sends out wide slow rings, heavy water, one every five seconds.
     quiet += 0.2 * exp(-r / 170.0) * smoothstep(20.0, 60.0, r) * cos(r * 0.135 - uTime * 1.15 + 2.5 * vnoise(out2 * 2.0) + 7.0 * vnoise(p.xz / 83.0 + 5.0) + 2.4 * vnoise(p.xz / 21.0 + 1.7)) * (0.12 + 1.7 * pow(vnoise(p.xz / 37.0 + vec2(0.0, uTime * 0.02)), 1.6));
     // A second train comes back off the south shore across the first, so that no ring runs whole from side to side.
@@ -127,8 +128,8 @@ void main() {
     // From high up the lake is a mirror first: the rings are there, slow and low, and the wall stands whole in them.
     quiet *= mix(1.0, 0.3, smoothstep(8.0, 30.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
     // Round what heaves the rings stand close and high, each broken along its length, and they thin as they go out over a third of the lake.
-    float nearDome = uDome.x * exp(-r / 120.0) * smoothstep(uDome.y * 0.5, uDome.y * 1.2, r);
-    quiet += 0.05 * nearDome * cos(r * 0.55 - uTime * 2.3 + 3.0 * vnoise(p.xz / 31.0 + 2.0)) * (0.2 + 1.4 * vnoise(vec2(atan(p.x, p.z) * 9.0, r / 23.0 - uTime * 0.08)));
+    float nearDome = uDome.x * exp(-r / 85.0) * smoothstep(uDome.y * 0.6, uDome.y * 1.3, r);
+    quiet += 0.045 * nearDome * cos(r * 0.3 - uTime * 2.0 + 2.0 * vnoise(p.xz / 47.0 + 2.0)) * (0.25 + 1.3 * vnoise(vec2(atan(p.x, p.z) * 5.0, r / 37.0 - uTime * 0.06)));
     float since = uCentre.x;
     float front = 70.0 + 40.0 * max(since, 0.0);
     float thrown = since > -1.5 ? 0.05 * smoothstep(-1.5, 0.3, since) * exp(-max(since, 0.0) / 3.5) * smoothstep(front + 30.0, front - 40.0, r) * exp(-r / 220.0) * cos(r * 0.3 - uTime * 2.6) : 0.0;
@@ -214,8 +215,10 @@ void main() {
     vec3 mistLight = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (0.13 * sunOver(land, p)) + 0.35 * skyRadiance(normalize(vec3(-v.x, 0.05, -v.z)))) * (2.4 / 3.14159);
     refl = mix(refl, mistLight, (uPlateTone.w > 1.5 ? 0.3 : 0.9) * smoothstep(0.72, 0.985, toPlate) * (1.0 - uSolo));
     // And the bank that stands at the foot of the far wall is in the mirror as it is in the air: a ray that leaves the water low finds it.
-    refl = mix(refl, mistLight, 0.5 * pow(smoothstep(0.03, 0.002, rd.y), 1.5) * (1.0 - uSolo));
+    refl = mix(refl, mistLight, 0.5 * uMirror.a * pow(smoothstep(0.03, 0.002, rd.y), 1.5) * (1.0 - uSolo));
   }
+  // Staged by shot: the far water of the shore shot lies under the shaded wall and the high sky, and is the colour of them.
+  refl *= mix(vec3(1.0), uMirror.rgb, smoothstep(12.0, 90.0, away));
   refl *= 1.0 + 0.42 * tanh(0.33 * dot(heave, normalize(v.xz)) / max(v.y, 0.03)) * smoothstep(0.5, 0.12, v.y);
   // Whatever stands in the water or at its edge, drawn once more from under it.
   if (uMirrorOn > 0.5) {
@@ -236,6 +239,9 @@ void main() {
   vec3 lip = lipHere(p.xz);
   float w = lip.x;
   float crusted = lipCover(p.xz, lip);
+  float crustLine = crusted;
+  // From the rim the mats do not stop at a line: they thin toward the lip in tongues, and the dark of the deep begins among them.
+  crusted *= mix(1.0, smoothstep(0.0, 20.0, w + 16.0 * (vnoise(p.xz / 21.0 + 6.0) - 0.5) + 7.0 * (vnoise(p.xz / 5.1) - 0.5)), smoothstep(8.0, 40.0, cameraPosition.y));
   vec3 under;
   float dry = 0.0;
   vec3 shelf = vec3(0.0);
@@ -305,9 +311,9 @@ void main() {
   // From the rim the floor is seen to fall away: a band of green water over the pale wall, before the dark.
   if (crusted < 1.0) {
     float inside = max(-w, 0.0);
-    float band = high2 * exp(-inside / 16.0) * (1.0 - crusted);
-    f *= 1.0 - 0.75 * band;
-    under += vec3(0.012, 0.075, 0.07) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * band;
+    float band = high2 * exp(-inside / 16.0) * (1.0 - crustLine) * smoothstep(0.0, 5.0, inside);
+    f *= 1.0 - 0.6 * band;
+    under += vec3(0.01, 0.055, 0.052) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * band;
   }
   // The swell at the centre is a hump of dark water: its near face looks at the eye, and the eye looks into it.
   if (r < uDome.y) {
@@ -465,6 +471,7 @@ export function create(ctx: Context): Piece {
       uLens: { value: 1 },
       uLap: { value: laps },
       uLapCount: { value: 0 },
+      uMirror: { value: new THREE.Vector4(1, 1, 1, 1) },
       uDome: { value: dome },
       uRiser: { value: RISERS.map((q) => new THREE.Vector3(q[0], q[1], q[3])) },
       uCentre: { value: centre },
@@ -517,6 +524,9 @@ void main() {
       dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 6.5 * swell * (1 + 0.05 * Math.sin(t * 2.3));
       // Staged for the wide shot: the lip is drawn 270 m nearer the centre at the sides, so that the dark of the deep is an oval the frame holds whole.
       (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
+      const mirrorTone = material.uniforms.uMirror as THREE.IUniform<THREE.Vector4>;
+      if (during('eye-04')) mirrorTone.value.set(0.56, 0.78, 1.0, 0.3);
+      else mirrorTone.value.set(1, 1, 1, 1);
       centre.x = t - rise;
       centre.y = smooth(end - 0.45, end - 0.03, t);
       laps.forEach((lap, i) => {

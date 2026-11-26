@@ -65,7 +65,7 @@ void main() {
     // Seen from behind, a neck that leans out over the water is seen short.
     float up = max(d.y, 0.0);
     q.y = pivot.y + min(d.y, 0.0) + up * (1.0 - aPose.y);
-    q.x += aPose.z * 14.0 * up * up;
+    q.x += aPose.z * 4.0 * up * up;
   } else {
     float a = aPose.y * w;
     q = pivot + vec2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a));
@@ -155,10 +155,8 @@ void main() {
 
   // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the coat is one pale tan.
   if (uSheet.y == 0.0) {
-    skin = mix(skin, vec3(0.62, 0.53, 0.42) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.7);
-    // The loose hide lies in fine creases across the neck and the hips, and dust lies in them.
-    float wrinkle = vnoise(vec2(vUv.x * 11.0 + vOwn * 9.0, vUv.y * 190.0 + 5.0 * vnoise(vUv * 14.0)));
-    skin *= 0.93 + 0.12 * smoothstep(0.25, 0.7, wrinkle);
+    skin = mix(skin, vec3(0.62, 0.53, 0.42) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.45);
+    // Dust lies in the coat.
     skin *= 0.86 + 0.28 * vnoise(vUv * vec2(520.0, 800.0));
     // A short pale coat, mottled, lying in whorls; dark along the spine, whose bumps stand under it.
     float mottle = 0.5 * vnoise(vUv * vec2(26.0, 38.0) + vOwn * 30.0) + 0.3 * vnoise(vUv * vec2(90.0, 130.0)) + 0.2 * vnoise(vUv * vec2(330.0, 520.0));
@@ -311,9 +309,16 @@ export function create(ctx: Context): Piece {
             const mx = d.x + Math.sin(d.facing * DEG) * reach;
             const mz = d.z - Math.cos(d.facing * DEG) * reach;
             const wet = Math.hypot(mx, mz) < shoreOf(mx, mz) - 0.2;
-            if (wet && (d.close || down > 0.9)) ring(mx, mz, Math.min(1, Math.max(0, (down - 0.82) / 0.12)));
+            if (wet && (d.close || down > 0.9)) ring(mx, mz, 1.3 * Math.min(1, Math.max(0, (down - 0.82) / 0.12)));
           }
-          if (d.close && ground < -0.03) ring(d.x, d.z, 0.55 + 0.2 * Math.sin(t * 0.83 + i * 1.7));
+          if (d.close && ground < -0.03) {
+            // Its fore legs and its hind legs each stand in rings of their own; they come stronger as it shifts its weight.
+            const half = 0.52 * size * d.flip;
+            const fx = Math.sin(d.facing * DEG) * half;
+            const fz = -Math.cos(d.facing * DEG) * half;
+            ring(d.x + fx, d.z + fz, 0.6 + 0.25 * Math.sin(t * 0.83 + i * 1.7) + 2 * pace);
+            ring(d.x - fx, d.z - fz, 0.5 + 0.25 * Math.sin(t * 0.71 + i * 2.9) + 2 * pace);
+          }
         });
         g.stand.needsUpdate = true;
         g.pose.needsUpdate = true;

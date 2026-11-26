@@ -143,14 +143,15 @@ void main() {
       through *= tr;
     }
   }
-  // Under the long lens the foot of the far wall stands in drifts of mist: taller here, lower there, thinning upward, and the last water before it goes pale with it.
-  if (uPlateTone.w > 1.5 && mistOn > 0.0) {
+  // Seen low or under the long lens the foot of the far wall stands in drifts of mist: taller here, lower there, thinning upward, and the last water before it goes pale with it.
+  float lowEye = uPlateTone.w > 1.5 ? 1.0 : 0.75 * smoothstep(30.0, 10.0, ro.y) * step(0.5, uPlateTone.w);
+  if (lowEye * mistOn > 0.0) {
     float dp = plateDistance(ro, rd);
     vec3 hit = ro + rd * far;
     float round2 = atan(hit.x - uPlateAt.x, hit.z - uPlateAt.z);
     float tall = 4.0 + 16.0 * vnoise(vec2(round2 * 23.0 + uTime * 0.012, 2.0)) + 5.0 * vnoise(vec2(round2 * 90.0 - uTime * 0.02, 7.0));
     float drift = 0.45 + 0.55 * vnoise(vec2(round2 * 47.0 - uTime * 0.016, hit.y / 9.0 + 4.0));
-    float a = 0.8 * smoothstep(dp - 560.0, dp - 30.0, far) * exp(-max(hit.y, 0.0) / tall) * drift;
+    float a = 0.8 * lowEye * min(mistOn * 1.6, 1.0) * smoothstep(dp - 560.0, dp - 30.0, far) * exp(-max(hit.y, 0.0) / tall) * drift;
     vec3 lit = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.35 * low) / 3.14159 * 2.4;
     light = light * (1.0 - a) + a * lit;
     through *= 1.0 - a;
