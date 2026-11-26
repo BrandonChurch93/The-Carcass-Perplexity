@@ -371,7 +371,9 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
     if (needFoot) sea = mix(sea, domeFar, toWall);
     // Its edge against the land is soft: the cloud thins where it laps the rock.
-    float lap = 0.94 * max(smoothstep(0.0, 1.0, (far - t) / (220.0 + 0.07 * t) + 0.35 * grain), seaCover);
+    // (By the depth of cloud before the rock, as cloud hides: forty metres of it hide nearly all. Thinned evenly over some hundreds of
+    // metres, the flank under the deck showed through every near head as a weave.)
+    float lap = 0.985 * max(1.0 - exp(-max(far - t, 0.0) * (1.0 + 1.4 * grain) / (40.0 + 0.03 * t)), seaCover);
     light += through * sea * lap;
     through *= 1.0 - lap;
     far = min(far, t);
