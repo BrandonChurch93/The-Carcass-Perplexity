@@ -2,6 +2,11 @@
 // two kilometres out is thinner than the land's mesh can cut). Needs RIG_GLSL and a sampler `tGrain` (see land/tiles.ts) above it.
 // The brine is a level mirror over a turbid red body. What it mirrors is a picture of the scene drawn small from under its own level before
 // every sample (tMirror, brine/index.ts), so the sky, the stalks and the animals stand in it; how much of that picture shows is Fresnel's.
+import { F, R } from './anchors';
+
+const GUST = [(R[0] * 0.8 + F[0] * 0.6) * 1.7, (R[1] * 0.8 + F[1] * 0.6) * 1.7];
+const v2 = (a: number[]): string => `vec2(${a[0].toFixed(4)}, ${a[1].toFixed(4)})`;
+
 export const BRINE_GLSL = /* glsl */ `
 // How much of the mirror shows. The surface is never still at the scale of a hair: the mirror is a soft one and never the whole of the
 // light.
@@ -38,6 +43,13 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   float deep = clamp(-s, 0.0, 6.0);
   // Slow clouds of paler silt carried in it.
   float silt = texture2D(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006)).r;
+  // The brine is not a pond: it drains down the basin a hand's breadth a second, and the silt in it is drawn out along the flow in
+  // streaks that pass, two layers of them at two speeds so that nothing slides as one sheet.
+  vec2 along = vec2(dot(p.xz, ${v2(F)}), dot(p.xz, ${v2(R)}));
+  float streak = texture2D(tGrain, vec2(along.x / 17.0 + uTime * 0.021, along.y / 5.0)).b * 0.6 + texture2D(tGrain, vec2(along.x / 7.0 + uTime * 0.034, along.y / 2.6 + 0.3)).r * 0.4;
+  silt = mix(silt, streak, 0.6);
+  // A light air crosses the basin in patches some strides wide: where one passes the skin is ruffled and shows more of the sky.
+  float gust = smoothstep(0.42, 0.7, texture2D(tGrain, (p.xz - ${v2(GUST)} * uTime) / 41.0).g);
   float d2 = max(deep + (silt - 0.5) * 0.35, 0.0);
   // Over the salt shelf at the shore it is milky and pink; a stride out a dull maroon; in the channels a brown red near black.
   vec3 bed = vec3(0.23, 0.058, 0.046);
@@ -45,7 +57,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   vec3 pit = vec3(0.03, 0.0045, 0.0038);
   vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 4.0));
   albedo = mix(albedo, pit, smoothstep(0.7, 4.0, d2));
-  albedo *= 0.8 + 0.4 * silt;
+  albedo *= 0.62 + 0.76 * silt;
   albedo = mix(albedo, vec3(0.04, 0.017, 0.012), brineMud * 0.85);
   albedo = mix(albedo, froth.rgb, foam);
   float open = skyOpen(p);
@@ -54,7 +66,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   // Far off the ripples are smaller than a pixel: half of every pixel there is a slope that shows the body, so the sheen stops short.
   float away = length(cameraPosition - p);
   // (Far off more of the unseen ripples look at the sky than the level surface does.)
-  float fres = (mirrorShare(n, v) + 0.05 * smoothstep(6.0, 28.0, away)) * (1.0 - 0.8 * foam) * mix(1.0, 0.75, smoothstep(25.0, 140.0, away)) * (1.0 + 0.3 * brineMud);
+  float fres = (mirrorShare(n, v) + (0.015 + 0.085 * gust) * smoothstep(3.0, 28.0, away)) * (1.0 - 0.8 * foam) * mix(1.0, 0.75, smoothstep(25.0, 140.0, away)) * (1.0 + 0.3 * brineMud);
   float tilt = dot(n.xz, normalize(v.xz + vec2(1e-4)));
   lit *= clamp(1.0 + tilt * 1.5, 0.8, 1.12);
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
