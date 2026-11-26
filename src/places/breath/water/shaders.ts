@@ -65,11 +65,11 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   float ruffle = smoothstep(0.25, 0.75, airs);
   if (far < 70.0) {
     // Two sheets of them of unlike size and bearing, so no square of either shows.
-    vec2 ra = texture2D(tRipple, vec2(xz.x * 0.829 - xz.y * 0.559, xz.x * 0.559 + xz.y * 0.829) * 0.37 + drift.yx * uTime * 0.11).rg - 0.5;
+    vec2 ra = far < 42.0 ? texture2D(tRipple, vec2(xz.x * 0.829 - xz.y * 0.559, xz.x * 0.559 + xz.y * 0.829) * 0.37 + drift.yx * uTime * 0.11).rg - 0.5 : vec2(0.0);
     vec2 rb = texture2D(tRipple, vec2(xz.x * 0.391 + xz.y * 0.92, -xz.x * 0.92 + xz.y * 0.391) * 0.113 + drift * uTime * 0.05).rg - 0.5;
     // Under the lens the short ones lead; farther off they are too small to see and the longer ones carry the picture.
     float off = smoothstep(5.0, 28.0, far);
-    slope = slope * (1.0 - 0.7 * smoothstep(24.0, 6.0, far)) + smoothstep(70.0, 26.0, far) * (ra * mix(1.9, 1.0, off) + rb * mix(2.1, 2.8, off)) * close * (0.45 + 0.55 * deep) * (0.7 + 0.5 * gust) * (0.3 + 1.2 * smoothstep(0.38, 0.62, g3.b + 0.5 + 0.35 * g2.x));
+    slope = slope * (1.0 - 0.7 * smoothstep(24.0, 6.0, far)) + smoothstep(70.0, 26.0, far) * (ra * mix(1.9, 1.0, off) * smoothstep(42.0, 30.0, far) + rb * mix(2.1, 2.8 + 0.6 * smoothstep(30.0, 42.0, far), off)) * close * (0.45 + 0.55 * deep) * (0.7 + 0.5 * gust) * (0.3 + 1.2 * smoothstep(0.38, 0.62, g3.b + 0.5 + 0.35 * g2.x));
   }
   // A hand's depth of water over a plate cannot carry a wave: it lies nearly flat, and shows the sky whole.
   slope *= 0.6 + 0.4 * smoothstep(0.02, 0.1, depth);

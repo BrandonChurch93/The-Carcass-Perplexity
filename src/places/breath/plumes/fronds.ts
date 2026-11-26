@@ -22,6 +22,8 @@ export interface Bush {
   mound?: number;
   /** A weeping one, 0 to 1: every stem is hung with many short sprays that fall straight down from it. Unset: 0. */
   weep?: number;
+  /** One that stands by a lens: it has no dead frond lying out from it, which would cross the lens as a bare rod. */
+  tidy?: boolean;
 }
 
 /** Where a thread ends that carries a drop. */
@@ -245,7 +247,7 @@ export class Fronds {
       const rank = Math.min(1, Math.max(0, (m + rng.range(-0.3, 0.3)) / (mains - 1)));
       const k = rng.range(-0.5, 0.5);
       // One in five grows out of the back of the bush and is turned over it by the wind.
-      const back = m % 5 === 3;
+      const back = !bush.tidy && m % 5 === 3;
       const long = (mound > 0 ? 1.12 - 0.45 * rank : 1.32 - 0.6 * rank) * rng.range(0.6, 1.05) * (back ? 0.7 : 1);
       const length = tall * long;
       const out = 0.035 * tall * rng.next();
@@ -270,7 +272,7 @@ export class Fronds {
       }
     }
     // Low down a frond or two is dead: brown, broken short, lying out over the rock.
-    const fallen = close ? 2 : rng.next() < 0.35 ? 1 : 0;
+    const fallen = bush.tidy ? 0 : close ? 2 : rng.next() < 0.35 ? 1 : 0;
     for (let d = 0; d < fallen; d++) {
       const azimuth = lean + (rng.next() < 0.5 ? -1 : 1) * rng.range(1.3, 2.6);
       const from: V3 = [bush.x, bush.y + 0.02 * tall, bush.z];

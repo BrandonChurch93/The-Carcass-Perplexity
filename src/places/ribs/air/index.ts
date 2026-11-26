@@ -115,7 +115,11 @@ void main() {
     float tm = mix(t0, t1, 0.25 + 0.5 * jitter);
     vec3 p = ro + rd * tm;
     // Air shows by distance: what stands within a hundred and fifty metres keeps its blacks.
-    float a = 1.0 - exp(-thickness(p.y) * (t1 - t0) * smoothstep(130.0, 600.0, tm));
+    // Low mist lies in banks over the wet floor and round the feet of the blades, and goes with the wind: a bank passes a blade in some
+    // ten seconds.
+    float banks = texture2D(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019)).r;
+    float mist = 0.0022 * exp(-max(p.y, 0.0) / 24.0) * smoothstep(0.3, 0.8, banks);
+    float a = 1.0 - exp(-(thickness(p.y) + mist) * (t1 - t0) * smoothstep(130.0, 600.0, tm));
     float lit = sunAt(p, landAt(p.xz));
     sum += trans * a * (ambient + sunlit * lit);
     trans *= 1.0 - a;
@@ -249,7 +253,7 @@ export function create(ctx: Context): Piece {
       const torn = Math.min(1, Math.max(0, (since - 0.15) / 2.4));
       bank.set(up ? 0.0055 * fade : 0, torn * torn * (3 - 2 * torn) * 0.7 + 0.3 * Math.min(1, since / 8), WIND.to[0] * 34 * since, WIND.to[1] * 34 * since);
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
-      air.set(thick ? 0.0036 : 0.0013, thick ? 160 : 75, 0.0003, 12);
+      air.set(thick ? 0.006 : 0.0013, thick ? 160 : 75, 0.0003, 12);
       const steam = ctx.sources.steam;
       // The heaviest columns first: there is room for MAX_SOURCES of them.
       const list = steam.map((s, i) => ({ s, i })).sort((p, q) => q.s.strength * q.s.radius * q.s.radius - p.s.strength * p.s.radius * p.s.radius || p.i - q.i).map((p) => p.s);
