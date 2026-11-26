@@ -294,21 +294,26 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   return o;
 }
 
-// The wall of the shaft, seen down through the water from over it: pale beds, green with the water, ledge under ledge.
+// The wall of the shaft, seen down through the water from over it: pale rock that falls away, green with the water.
 Bed wallAt(vec2 b, float down, float inside) {
   Bed o;
   float along = atan(b.x, b.y) * 480.0;
-  // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip: ledge under ledge, lost in the dark at its foot.
-  // The ledges do not keep to one depth all the way round: they step up and down along the wall.
-  float jog = down < 17.0 ? smoothstep(0.3, 2.5, down) * 3.0 * (vnoise(b / 3.1 + 2.0) - 0.5) : 0.0;
+  // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip. From over it its beds would lie as lines round
+  // the lip, level under level, like the lines of a map: so it is read coarse, for its colour and its great ledges alone.
+  float jog = down < 17.0 ? smoothstep(0.3, 2.5, down) * 1.6 * (vnoise(b / 7.3 + 2.0) - 0.5) : 0.0;
   vec2 uv = vec2(along / 19.0, 1.0 - clamp((down + jog) / 17.0, 0.02, 0.98));
   // The way round begins again in the north: the fineness of the picture is told from the ground, which has no such place, so no line is drawn there.
   float r2 = max(dot(b, b), 1.0);
   vec2 bx = dFdx(b);
   vec2 by = dFdy(b);
-  vec3 c = textureGrad(tWall, uv, vec2(480.0 / 19.0 * (b.y * bx.x - b.x * bx.y) / r2, dFdx(uv.y)), vec2(480.0 / 19.0 * (b.y * by.x - b.x * by.y) / r2, dFdy(uv.y))).rgb;
-  float ledge = 0.55 + 0.45 * smoothstep(0.05, 0.3, dot(c, vec3(0.33)));
-  o.albedo = clamp(c * 1.3, 0.0, 0.95) * vec3(0.62, 0.86, 0.9);
+  vec3 c = textureGrad(tWall, uv, 6.0 * vec2(480.0 / 19.0 * (b.y * bx.x - b.x * bx.y) / r2, dFdx(uv.y)), 6.0 * vec2(480.0 / 19.0 * (b.y * by.x - b.x * by.y) / r2, dFdy(uv.y))).rgb;
+  // What the eye follows on a steep wall is its fall: ribs and gullies that run down it from the lip, each of its own width, broken into blocks.
+  float rib = vnoise(vec2(along / 2.3, down / 11.0 + 3.0));
+  float fine = vnoise(vec2(along / 0.7 + 11.0, down / 4.0));
+  float block = vnoise(vec2(along / 5.1 + 7.0, down / 1.9));
+  float fall = 0.62 + 0.5 * rib + 0.22 * (fine - 0.5) + 0.2 * (block - 0.5);
+  float ledge = (0.6 + 0.4 * smoothstep(0.05, 0.3, dot(c, vec3(0.33)))) * mix(1.0, smoothstep(0.2, 0.55, rib + 0.3 * (fine - 0.5)), 0.5);
+  o.albedo = clamp(c * 1.3 * fall, 0.0, 0.95) * vec3(0.62, 0.86, 0.9);
   o.occ = ledge;
   o.tilt = vec2(0.0);
   o.glow = 0.0;
