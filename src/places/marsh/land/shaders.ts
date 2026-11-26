@@ -209,6 +209,8 @@ void main() {
       bend -= (nC.rg - 0.5) * 1.5 * close;
     }
   }
+  // (Far off the plates are told only by their relief: rims pale, hollows dark, more than the picture alone gives at that size.)
+  crust *= 1.0 + 1.1 * (hF - 0.5) * (1.0 - 0.6 * near);
   vec3 colour = greyed(crust, 0.75) * vec3(1.0, 0.88, 0.85) * (0.5 + 0.18 * wide.r);
   // Salt stands white on what is highest; the hollows between the plates are dark with old red.
   colour = mix(colour, vec3(0.42, 0.395, 0.375) * (0.75 + 0.5 * hgt), smoothstep(0.62, 0.88, hgt) * 0.3);
