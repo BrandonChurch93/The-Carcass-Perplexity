@@ -157,6 +157,13 @@ float seaN = 0.0;
 float seaSwell = 0.5;
 // Left by seaTop: metres of height for each share seaLift returns (a head is pressed down beside the ridge and stands taller far from it).
 float seaTall = HEAP_TALL;
+// Left by the march: how thick the thin cloud lies over land that stands in a hollow of the deck, 0 where the ray met the deck itself.
+float seaCover = 0.0;
+// Left by main: how far the deck has gone into the sky at the place the ray met it, the share of a metre one pixel sees at one metre
+// (times a constant), and how long the lens is against the usual one.
+float seaGone = 0.0;
+float seaPix = 0.00035;
+float seaLens = 1.0;
 float seaLift(vec3 p, int detail, bool swell) {
   // Its long swell is that of the picture of a cloud deck seen from above (mat/cloudsea, 10 km a repeat), read soft: where it stands
   // high the heaps are tall, where it lies low they are small, so no two kilometres of the deck are alike.
@@ -191,8 +198,10 @@ float seaTop(vec3 p, bool swell) {
   // Kilometres out from the ridge its heads stand taller, in ranges, some of them over the height of the lens: the far edge of the
   // deck is rows of heads against the sky and not a ruled line.
   float out_ = smoothstep(1800.0, 6500.0, abs(lee));
-  seaTall = HEAP_TALL * (1.0 + (n > 0.0 ? 0.9 * out_ : 0.0));
-  float lift = HEAP_TALL * (n + out_ * (0.15 + 0.9 * max(n, 0.0))) + 70.0 * bank;
+  // The ranges stand where the long swell is high and leave gaps where it is low, so they are seen at different distances.
+  float range = out_ * (0.3 + 1.0 * smoothstep(0.4, 0.75, seaSwell)) * (lee > 0.0 ? 1.5 : 1.0);
+  seaTall = HEAP_TALL * (1.0 + (n > 0.0 ? range : 0.0));
+  float lift = HEAP_TALL * (n + 0.1 * out_ + range * max(n, 0.0)) + 70.0 * bank;
   // Beside the ridge no billow stands over the crest: a head that rolled up there stood as a dark hill before the spires for a quarter
   // of a second. A head that would is pressed down, the more the higher it reaches, and keeps its shape; farther out the deck may
   // heap as it likes.
@@ -203,10 +212,14 @@ float seaTop(vec3 p, bool swell) {
     lift = room - 0.6 * room * press;
   }
   float top = ridge.y - CLOUD_UNDER + lift;
-  if (ridge.z > 0.01 && lee > -700.0 && lee < 1500.0) {
+  // The tallest of the far heads stop short of the height nothing of this cloud stands over, rounded and not cut.
+  float high = top - (BANK_TOP - 170.0);
+  if (high > 0.0) top = BANK_TOP - 170.0 + 160.0 * (1.0 - exp(-high / 160.0));
+  // (The pour is read only where it could stand over the deck: at its fullest it is 110 m under the crest's own height in a saddle.)
+  float gone = 1.0 - ridge.z * smoothstep(-700.0, -160.0, lee) * smoothstep(1500.0, 150.0, lee);
+  if (ridge.z > 0.01 && lee > -700.0 && lee < 1500.0 && ridge.y + 110.0 * ridge.z - 0.5 * max(lee, 0.0) - 700.0 * gone * gone > top) {
     vec3 c = p - uWind.xyz * (uTime * uWind.w);
     float m = 0.45 * noise(vec3(c.xz / 520.0, 0.37)).r + 0.2 * noise(vec3(c.xz / 140.0, 0.81)).b + 0.35 * textureLod(tSeaNh, c.xz / 1300.0 + 0.11, max(seaLod, 0.0)).b;
-    float gone = 1.0 - ridge.z * smoothstep(-700.0, -160.0, lee) * smoothstep(1500.0, 150.0, lee);
     float pour = ridge.y + (140.0 * m - 30.0) * ridge.z - 0.5 * max(lee, 0.0) - 700.0 * gone * gone;
     top = max(top, pour);
   }
@@ -258,11 +271,13 @@ void main() {
   // The cloud under the crest: a surface with a soft top, found by walking to it.
   float seaAt = -1.0;
   // Whether the ray came to a head of the deck, or only to the level it lies at far out.
-  bool seaHit = false;
   float tSea = ro.y > BANK_TOP ? (rd.y < -1e-4 ? (BANK_TOP - ro.y) / rd.y : 1e9) : 0.0;
   if (tSea < far && uShow.y > 0.0) {
     float t = tSea;
     float fall = max(-rd.y, 0.0) + 0.6;
+    // A long lens sees a far head as large as a short one sees a near head: it reads the deck as finely, and its haze stands as much farther off.
+    seaLens = max(0.466 / uInvProjection[1][1], 1.0);
+    seaPix = 0.00035 / seaLens;
     vec3 p = ro + rd * t;
     bool found = false;
     float before = t;
@@ -270,8 +285,8 @@ void main() {
     // between the two, found by halves and then by the straight line between the last two, so that no stride shows as a terrace.
     float over = 1.0;
     bool out_ = false;
-    for (int i = 0; i < 20; i++) {
-      seaLod = log2(max(t, 30.0) * 0.00035);
+    for (int i = 0; i < 16; i++) {
+      seaLod = log2(max(t, 30.0) * seaPix);
       float d = p.y - seaTop(p, (i & 1) == 0);
       if (d < 2.0 + 0.003 * t) {
         // A head is steep: a stride may end inside one.
@@ -310,12 +325,12 @@ void main() {
     // are whole and smooth along their tops, and a head between two of them is passed over, which so far off is not seen.
     if (!found && !out_) {
       float k = ceil(log(max(t, 400.0) / 400.0) / 0.0953);
-      for (int i = 0; i < 26; i++) {
+      for (int i = 0; i < 40; i++) {
         float ts = 400.0 * exp(0.0953 * (k + float(i)));
         if (ts > far || ts > 16000.0) break;
         p = ro + rd * ts;
         if (rd.y > 0.0 && p.y > BANK_TOP) break;
-        seaLod = log2(ts * 0.00035);
+        seaLod = log2(ts * seaPix);
         float d = p.y - seaTop(p, (i & 1) == 0);
         if (d < 0.0) {
           float lo = before;
@@ -343,8 +358,20 @@ void main() {
       }
     }
     p = ro + rd * t;
-    seaHit = found;
     // A ray that has not come down to it by then meets it far out, where it is level.
+    // Where the ray comes to land that lies under the deck's own level, in a hollow between two heads, the hollow is not empty:
+    // thin cloud lies in it, the thicker the deeper the land stands under the level. Without it the land shows as pale floes.
+    if (!found && far < 50000.0) {
+      vec3 h = ro + rd * far;
+      seaLod = log2(max(far, 30.0) * seaPix);
+      float top = seaTop(h, true);
+      float sunk = top - seaTall * seaN - h.y;
+      if (sunk > 0.0) {
+        seaCover = smoothstep(0.0, 60.0, sunk);
+        t = far - 0.5;
+        found = true;
+      }
+    }
     if (!found && rd.y < -1e-4) {
       t = max(t, (ridgeAt(p.x).y - CLOUD_UNDER - ro.y) / rd.y);
       found = true;
@@ -364,29 +391,28 @@ void main() {
   if (seaAt > 0.0 && through > 0.01) {
     float t = seaAt;
     vec3 p = ro + rd * t;
-    seaLod = log2(max(t, 30.0) * 0.00035);
+    seaLod = log2(max(t, 30.0) * seaPix);
     float az = atan(rd.z, rd.x);
     float dip = asin(clamp(-rd.y, 0.0, 1.0));
-    float zoomF = uSkyStage.w > 0.0 ? uSkyStage.w : 1.0;
     // The march walked to the heaps; the billows on them are found from there, two short strides along the ray. The deck's level
     // and its swell are kept from that place: only the heaps and their billows are read again.
-    seaLod = log2(max(t, 30.0) * 0.00035);
+    seaLod = log2(max(t, 30.0) * seaPix);
     float level = seaTop(p, true) - seaTall * seaN;
     float tall = seaTall;
-    if (seaLod < 0.5) {
+    if (seaLod < 0.5 && seaCover <= 0.0) {
       float slant = max(-rd.y, 0.0) + 0.45;
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 1; i++) {
         t += clamp((p.y - level - tall * seaLift(p, 1, false)) / slant, -60.0, 60.0);
         p = ro + rd * t;
       }
-      seaLod = log2(max(t, 30.0) * 0.00035);
+      seaLod = log2(max(t, 30.0) * seaPix);
     }
-    float n0 = seaLift(p, 2, false);
+    float n0 = seaLift(p, 1, false);
     // 0 on the floor of a hollow, 1 on the crown of a head.
-    float head = smoothstep(-0.2, 0.3, seaHead);
+    float head = smoothstep(-0.12, 0.34, seaHead);
     // The way a face of it looks, from the heights a little way off on two hands: wider with the distance, as the lens sees less of it.
     float e = 5.0 + 0.012 * t;
-    vec3 facing = normalize(vec3(tall * (n0 - seaLift(p + vec3(e, 0.0, 0.0), 2, false)), e, tall * (n0 - seaLift(p + vec3(0.0, 0.0, e), 2, false))));
+    vec3 facing = normalize(vec3(tall * (n0 - seaLift(p + vec3(e, 0.0, 0.0), 1, false)), e, tall * (n0 - seaLift(p + vec3(0.0, 0.0, e), 1, false))));
     // The last light comes low over the deck from the dusk: a face that looks at it is lit, a face turned away is in its own shade, and a
     // head that stands between a place and the dusk shades it. Cloud is lit through, so the light goes a little round each head.
     vec3 toDusk = vec3(cos(DUSK_AZ), 0.0, sin(DUSK_AZ));
@@ -394,16 +420,20 @@ void main() {
     float r1 = 110.0 + 0.02 * t;
     float rise = tall * (seaLift(p + toDusk * r1, 0, false) - n0) / r1;
     float open = 1.0 - smoothstep(0.04, 0.42, rise);
-    float dusk = clamp(0.4 + 0.6 * dot(facing, toLight), 0.0, 1.0) * open;
+    float dusk = clamp(0.22 + 0.78 * dot(facing, toLight), 0.0, 1.0) * open;
     // The sky from above reaches a crown whole and the floor of a hollow hardly at all: the hollows are deep blue-violet.
     float above = (0.3 + 0.7 * facing.y) * (0.03 + 0.97 * head * head);
-    vec3 cold = SEA_COLD * (0.03 + 0.66 * above + 0.72 * dusk * (0.12 + 0.88 * head)) * mix(vec3(0.74, 0.82, 1.16), vec3(0.96, 0.97, 1.04), head);
-    vec3 warm = 0.46 * SEA_WARM * dusk * (0.1 + 0.9 * head) * (1.0 - 0.7 * stormSide(rd));
+    vec3 cold = SEA_COLD * (0.03 + 1.7 * above + 1.45 * dusk * (0.12 + 0.88 * head)) * mix(vec3(0.62, 0.74, 1.24), vec3(0.97, 0.98, 1.03), head);
+    // The side of a head that looks at the dusk has a warm rim.
+    float rim = clamp(dot(facing, toDusk) * 1.6, 0.0, 1.0);
+    vec3 warm = SEA_WARM * dusk * (0.1 + 0.9 * head) * (0.4 + 2.4 * rim * rim) * (1.0 - 0.7 * stormSide(rd));
     vec3 sea = cold + warm;
-    vec3 domeFar = skyCloud(ro, normalize(vec3(rd.x, 0.035, rd.z)), 5.0);
+    // The air over the deck is thick with its own vapour: row behind row the heads go paler and bluer and their hollows fill.
+    sea = mix(sea, SEA_COLD * vec3(0.95, 1.0, 1.1) + 0.2 * SEA_WARM * (1.0 - stormSide(rd)), 0.8 * (1.0 - exp(-t / (6000.0 * seaLens))));
+    vec3 domeFar = skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 0.0);
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * stormSide(rd), 0.0, 1.5);
-    sea = sea * (1.0 - 0.5 * stormSide(rd)) * (1.0 + 0.7 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
+    sea = sea * (1.0 - 0.5 * stormSide(rd)) * mix(vec3(1.0), vec3(0.8, 0.88, 1.06), stormSide(rd)) * (1.0 + 0.7 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
     // In the flash of a stroke the heads of the deck that stand up toward the channel are lit and its hollows are not.
     if (uStrikeAt.w > 0.0) {
       vec3 toStroke = uStrikeAt.xyz - p;
@@ -411,7 +441,7 @@ void main() {
       sea += STRIKE_COLOUR * (uStrikeTop.w * 0.03 * head * head * (0.6 + 0.6 * facing.y) / (1.0 + span2 / 1.0e6));
     }
     // At the horizon it goes into the dome's own cloud.
-    float gone = 1.0 - exp(-t / 16000.0);
+    float gone = 1.0 - exp(-t * t / (1.1e8 * seaLens * seaLens));
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.
     vec2 uvP = vec2(0.0);
     float plate = uPlate.w > 0.0 ? plateAt(az, -dip, uvP) : 0.0;
@@ -423,11 +453,17 @@ void main() {
       gone = mix(gone, smoothstep(2500.0, 7000.0, t), plate);
     }
 #endif
-    sea = mix(sea, domeFar, max(gone, seaHit ? 0.0 : smoothstep(0.02 / zoomF, 0.0, dip) * (1.0 - plate)));
+    // The last rows are the sky's own value at its foot, read as sharp as the sky over them, and keep a little of their shape under
+    // it: the band of the dusk lies on them, and no line stands between the deck and the sky.
+    float crown = mix(head, clamp(0.5 + 1.6 * n0, 0.0, 1.0), smoothstep(0.5, 2.5, seaLod));
+    float shape = mix(0.66 + 0.62 * crown * (0.4 + 0.6 * dusk), 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens)));
+    sea = mix(sea, domeFar * shape, gone);
+    stormAir *= 1.0 - gone;
+    seaGone = gone;
     // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
-    sea = mix(sea, domeFar, stormSide(rd) * max(seaHit ? 0.0 : smoothstep(0.14, 0.0, dip), 0.85 * (1.0 - exp(-t / 2500.0))));
+    sea = mix(sea, domeFar, stormSide(rd) * 0.6 * (1.0 - exp(-t / 5000.0)));
     // Its edge against the land is soft: the cloud thins where it laps the rock.
-    float lap = 0.94 * smoothstep(0.0, 1.0, (far - t) / (140.0 + 0.05 * t));
+    float lap = 0.94 * max(smoothstep(0.0, 1.0, (far - t) / (140.0 + 0.05 * t)), seaCover);
     light += through * sea * lap;
     through *= 1.0 - lap;
     far = min(far, t);
@@ -531,7 +567,7 @@ void main() {
     // Open sky and the sea of cloud keep their own masses: the veil is of the ridge's air.
     if (far > 50000.0) veiled = 0.0;
     // The sea of cloud is seen from above through thin air: it keeps its lumps and its lit edge.
-    if (seaAt > 0.0 && far <= seaAt + 1.0) veiled = min(veiled, 0.3);
+    if (seaAt > 0.0 && far <= seaAt + 1.0) veiled = min(veiled, 0.3) * (1.0 - seaGone);
     // Blown snow is the storm's cold violet; the warm band stays on the horizon and does not stain the air.
     vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.005, 0.011);
     light = light * (1.0 - veiled) + snowAir * veiled;
