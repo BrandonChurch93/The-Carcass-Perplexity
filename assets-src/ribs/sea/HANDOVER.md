@@ -22,10 +22,10 @@ No approved picture is drawn. Pictures are the Builder's under `public/assets/ri
 
 ## Still wrong beside the approved pictures, worst first, by key
 
-1. ribs-4: the flat before the wall is a grey wet film, not the picture's bright mirror with the fliers' images in it; the wall has no spray blown back off its top and does not fade into mist toward the blades; after frame 2430 the wall passes through the right stack; fliers share two side poses.
+1. ribs-4: the flat before the wall is a grey wet film, not the picture's bright mirror with the fliers' images in it, and the right rock's broken mirror shows as ruled dark streaks at its foot; the wall has no spray blown back off its top and does not fade into mist toward the blades; after frame 2430 the wall passes through the right stack; fliers share two side poses.
 2. ribs-1: the body lies diagonal on the rock; the picture's hangs with limbs and tendrils free. It needs a new picture or a jointed plate.
 3. ribs-0: animals are small and few in the middle ground; a few whitecap chips read as chips at native size.
-4. ribs-3: pairs still repeat the one `perched` sheet (three cells); nests are the lead's rock.
+4. ribs-3: the colony is thin beside the picture's crowd (thinned after it read as a heap) and no water runs down the rock under it; pairs still repeat the one `perched` sheet (three cells).
 5. ribs-2: the far feeders are plain against the water; the splash is small beside the picture's.
 
 ## Staged by shot (`stagedSeconds()` or the lens of the shot)
