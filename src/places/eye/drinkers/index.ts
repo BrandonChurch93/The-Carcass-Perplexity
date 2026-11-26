@@ -150,12 +150,12 @@ void main() {
   // A back seen close from behind is a short coat lying smooth over the spine and the hips: its folds are faint.
   float creased = uSheet.y == 0.0 ? 0.14 : 0.3;
   // The picture's own shading of the ribs is not the hide's colour: half of it is taken out, and each animal has a coat of its own tone, with dust and marks in it.
-  skin = mix(skin, texture2D(tSkin, vUv, 4.5).rgb, 0.55);
+  skin = mix(skin, texture2D(tSkin, vUv, 4.5).rgb, uSheet.y == 0.0 ? 0.2 : 0.55);
   float coat = 0.6 * vnoise(vUv * vec2(9.0, 6.0) + vOwn * 40.0) + 0.4 * vnoise(vUv * vec2(70.0, 34.0) + vOwn * 17.0);
 
   // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the coat is one pale tan.
   if (uSheet.y == 0.0) {
-    skin = mix(skin, vec3(0.62, 0.53, 0.42) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.45);
+    skin = mix(skin, vec3(0.62, 0.53, 0.42) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.25);
     // Dust lies in the coat.
     skin *= 0.86 + 0.28 * vnoise(vUv * vec2(520.0, 800.0));
     // A short pale coat, mottled, lying in whorls; dark along the spine, whose bumps stand under it.

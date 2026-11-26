@@ -23,7 +23,7 @@ void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
   float u = clamp(length(w.xz) / uDome.y, 0.0, 1.0);
   float k = 1.0 - u * u;
-  w.y += uDome.x * k * k;
+  w.y += uDome.x * k * k * k;
   vWorld = w.xyz;
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
@@ -128,14 +128,14 @@ void main() {
     // From high up the lake is a mirror first: the rings are there, slow and low, and the wall stands whole in them.
     quiet *= mix(1.0, 0.3, smoothstep(8.0, 30.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
     // Round what heaves the rings stand close and high, each broken along its length, and they thin as they go out over a third of the lake.
-    float nearDome = uDome.x * exp(-r / 85.0) * smoothstep(uDome.y * 0.6, uDome.y * 1.3, r);
+    float nearDome = uDome.x * exp(-r / 85.0) * smoothstep(uDome.y * 0.35, uDome.y * 0.9, r);
     quiet += 0.045 * nearDome * cos(r * 0.3 - uTime * 2.0 + 2.0 * vnoise(p.xz / 47.0 + 2.0)) * (0.25 + 1.3 * vnoise(vec2(atan(p.x, p.z) * 5.0, r / 37.0 - uTime * 0.06)));
     float since = uCentre.x;
     float front = 70.0 + 40.0 * max(since, 0.0);
     float thrown = since > -1.5 ? 0.05 * smoothstep(-1.5, 0.3, since) * exp(-max(since, 0.0) / 3.5) * smoothstep(front + 30.0, front - 40.0, r) * exp(-r / 220.0) * cos(r * 0.3 - uTime * 2.6) : 0.0;
     // Chop on and round the swell: short waves that cross.
     float du = clamp(r / uDome.y, 0.0, 1.0);
-    float dr = (quiet + thrown) * broken + uDome.x * 2.0 * (1.0 - du * du) * (-2.0 * du / uDome.y);
+    float dr = (quiet + thrown) * broken + uDome.x * 3.0 * (1.0 - du * du) * (1.0 - du * du) * (-2.0 * du / uDome.y);
     slope += out2 * dr;
     heave += out2 * (quiet + thrown) * broken;
     float chop = clamp(uDome.x / 2.0, 0.0, 1.0) * smoothstep(210.0, 40.0, r) * (0.5 + vnoise(p.xz / 17.0 + uTime * 0.05));
@@ -145,6 +145,7 @@ void main() {
     if (chop > 0.0) slope += chop * (0.05 * waves(p.xz / 13.0, vec2(uTime * 0.05, uTime * 0.03)) + 0.04 * waves(p.xz / 3.7, vec2(-uTime * 0.11, uTime * 0.08)));
   }
   // Each small thing that breaks the surface round the swell throws its own ring, one at a time, that widens and dies.
+  float splash = 0.0;
   if (r < 300.0) {
     for (int i = 0; i < 9; i++) {
       vec3 at = uRiser[i];
@@ -157,6 +158,8 @@ void main() {
         vec2 ring = d / max(m, 1e-3) * (0.035 * (1.0 - age) * x * exp(-x * x));
         slope += ring;
         heave += ring;
+        // Where it breaks the surface the water is white with it, most as it comes up.
+        if (m < 9.0) splash += smoothstep(8.0, 1.0, m + 4.0 * vnoise(p.xz * 0.9 + uTime * vec2(0.7, 0.4) + at.z)) * (0.55 + 0.45 * cos(uTime * 0.7 + at.z * 3.0));
       }
     }
   }
@@ -322,7 +325,7 @@ void main() {
   // The swell at the centre is a hump of dark water: its near face looks at the eye, and the eye looks into it.
   if (r < uDome.y) {
     float du = r / uDome.y;
-    float hump = clamp(uDome.x / 2.5, 0.0, 1.0) * smoothstep(0.08, 0.45, du) * (1.0 - du * du) * 1.6 * smoothstep(-0.2, 0.5, dot(out2, normalize(v.xz))) * smoothstep(0.6, 0.25, v.y);
+    float hump = clamp(uDome.x / 2.5, 0.0, 1.0) * smoothstep(0.05, 0.3, du) * (1.0 - du * du) * (1.0 - du * du) * 1.6 * smoothstep(-0.2, 0.5, dot(out2, normalize(v.xz))) * smoothstep(0.6, 0.25, v.y);
     // Its crown lies open to the sky and is pale with it.
     float crown = clamp((uDome.x - 1.5) / 3.0, 0.0, 1.0) * smoothstep(0.5, 0.05, du) * smoothstep(0.6, 0.25, v.y);
     refl = mix(refl, skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.8, 0.55 * crown);
@@ -339,6 +342,7 @@ void main() {
   float sharp = 1400.0 / (1.0 + away * away / 3600.0) + 60.0;
   float glint = pow(max(dot(n, hv), 0.0), sharp) * (sharp / 1400.0) * sunAt(vec3(p.x, 0.5, p.z));
   c += uSunColour * glint * 0.6 * (close + 0.3);
+  c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.8 / 3.14159), 0.9 * min(splash, 1.0));
   // A ring round a muzzle or a leg, seen low: the face that leans to the eye shows the dark under the water, the face that leans away the bright of the sky.
   float lap = tanh(22.0 * dot(lapped, normalize(v.xz)) * 0.08 / max(v.y, 0.04));
   c = c * (1.0 - 0.45 * max(lap, 0.0)) + skyRadiance(vec3(-v.x, 0.12, -v.z)) * (0.3 * max(-lap, 0.0));
@@ -463,7 +467,7 @@ export function create(ctx: Context): Piece {
     const c = new THREE.Color(hex);
     return new THREE.Vector3(c.r, c.g, c.b);
   };
-  const dome = new THREE.Vector4(0, 46, 0, 0);
+  const dome = new THREE.Vector4(0, 66, 0, 0);
   const centre = new THREE.Vector4(-100, 0, 0, 0);
   const material = new THREE.ShaderMaterial({
     uniforms: {
@@ -530,6 +534,7 @@ void main() {
       (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
       const mirrorTone = material.uniforms.uMirror as THREE.IUniform<THREE.Vector4>;
       if (during('eye-04')) mirrorTone.value.set(0.56, 0.78, 1.0, 0.3);
+      else if (during('eye-05')) mirrorTone.value.set(0.62, 0.7, 0.8, 1);
       else mirrorTone.value.set(1, 1, 1, 1);
       centre.x = t - rise;
       centre.y = smooth(end - 0.45, end - 0.03, t);
