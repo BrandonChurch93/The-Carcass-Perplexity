@@ -52,8 +52,8 @@ export function create(ctx: Context): Piece {
     if (bush.detail < 1) continue;
     for (let e = before; e < vanes.ends.length; e++) {
       const end = vanes.ends[e] as (typeof vanes.ends)[number];
-      const keep = drops.next() < 0.6;
-      const every = drops.range(2.6, 9);
+      const keep = drops.next() < 0.5;
+      const every = drops.range(1.6, 5);
       const offset = drops.range(0, 9);
       if (!keep) continue;
       const rl = Math.hypot(end.root[0], end.root[2]) || 1;
@@ -71,8 +71,8 @@ export function create(ctx: Context): Piece {
     uSeconds: seconds,
     uSurge: surge,
     uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) },
-    tPlume: { value: ctx.assets.texture('mat/plume.jpg', { repeat: false }) },
-    tPlumeA: { value: ctx.assets.texture('mat/plume-a.png', { kind: 'data', repeat: false }) },
+    tPlume: { value: ctx.assets.texture('plumes/spray.jpg', { repeat: false }) },
+    tPlumeA: { value: ctx.assets.texture('plumes/spray-a.png', { kind: 'data', repeat: false }) },
   };
   const vaneMaterial = new THREE.ShaderMaterial({ vertexShader: VANE_VERTEX, fragmentShader: VANE_FRAGMENT, uniforms, side: THREE.DoubleSide });
   // The fog reads the depth laid before the picture: the sprays say there which of their pixels are threads.
@@ -95,7 +95,7 @@ export function create(ctx: Context): Piece {
       const y = at.getY(i);
       const z = at.getZ(i);
       const swell = 1 + 0.28 * Math.sin(x * 5 + seed) * Math.sin(z * 4.3 + seed * 1.3) + 0.2 * Math.sin(y * 7 + x * 3 + seed * 2.1) + 0.12 * Math.sin(x * 11 + z * 9 + seed);
-      const r = 0.07 * b.tall * swell;
+      const r = 0.05 * b.tall * swell;
       at.setXYZ(i, b.x + x * r * 1.25, b.y + y * r * 0.62 + 0.01 * b.tall, b.z + z * r * 1.25);
     }
     g.computeVertexNormals();

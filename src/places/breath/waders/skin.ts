@@ -19,6 +19,8 @@ export class Skin {
   private readonly whose: number[] = [];
   private readonly rest: number[] = [];
   private readonly restN: number[] = [];
+  private readonly pic: number[] = [];
+  private readonly limb: number[] = [];
   /** The animal the tubes made from now on belong to. */
   who = 0;
   position = new Float32Array(0);
@@ -66,6 +68,15 @@ export class Skin {
     this.look[v * 2 + 1] = look[1];
   }
 
+  /** Where a vertex of a blob is in the side view picture of the animal: as trunk, as limb, and how much it is limb. */
+  picture(v: number, ax: number, ay: number, bx: number, by: number, limb: number): void {
+    this.pic[v * 4] = ax;
+    this.pic[v * 4 + 1] = ay;
+    this.pic[v * 4 + 2] = bx;
+    this.pic[v * 4 + 3] = by;
+    this.limb[v] = limb;
+  }
+
   /** What does not change: `along` and `around` in metres over the skin, how pale, how hidden from the light, the radius of the tube there, a number for the animal. */
   describe(t: Tube, ring: number, side: number, along: number, around: number, pale: number, shade: number, radius: number, seed: number, kind: number, rib: number): void {
     const v = t.start + ring * (t.sides + 1) + side;
@@ -103,6 +114,8 @@ export class Skin {
     g.setAttribute('aWho', new THREE.BufferAttribute(fill(this.whose, 1), 1));
     g.setAttribute('aRest', new THREE.BufferAttribute(fill(this.rest, 3), 3));
     g.setAttribute('aRestN', new THREE.BufferAttribute(fill(this.restN, 3), 3));
+    g.setAttribute('aPic', new THREE.BufferAttribute(fill(this.pic, 4), 4));
+    g.setAttribute('aLimb', new THREE.BufferAttribute(fill(this.limb, 1), 1));
     g.setIndex(this.index);
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
     this.geometry = g;
