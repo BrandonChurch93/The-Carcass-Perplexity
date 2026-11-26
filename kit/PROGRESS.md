@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 95, 2026-11-26 05:51 UTC:
+Status 96, 2026-11-26 06:10 UTC:
 
-- `01-s95-far.jpg`: The Eye's far wall, the same crop: the old picture left, the remade one at double size right. Bedding, joints, scree and seepage that follows the cracks; nothing moved
-- `02-spine-hb3-2.jpg`: The Spine's first spire, approved left, wave 3's look at 05:44 right. This key failed the detail measure (0.33 against 0.75): the rock is a photograph pulled into brown smears, the rime ice and the far spires are missing, the kites are empty sheets. Told to both owners
-- `03-marsh3-r17.jpg`: The Marsh's wallowers, approved left, the judged frame of round 2 right. It failed the detail measure (0.40 against 0.75): the hide is close, but the pool is an opaque pink sheet with drawn rings and the mud bank is gone. Told to both owners
-- `04-eye-hb43.jpg`: The Eye in wave 3 at 05:34, approved left, built right, four keys: the shore, the mats and the far wall hold; the animals are pale clay, the swell is a grey disc, the skeleton lies on a zigzag ribbon. Told to the owner
+- `01-eye1-v1.jpg`: The Eye's drinkers, approved left, wave 3 version 1 right: coats, weight on the legs, mirrored in the water. They stand further off than in the picture by a logged choice. Still missing: rings at every leg and muzzle, and the pebbles are even dark chips
+- `02-ribs0-v1.jpg`: The Ribs, wide view, approved left, version 1 right: the blades carry relief now and the face in the backdrop is gone. The flat is still one even pebble sheet where the picture has wet sand that mirrors the sky, the blades are fluted like tusks, the near cliff is striped
+- `03-reveal4-v1.jpg`: The Reveal from orbit, approved left, version 1 right: open sea west of the skull, glint at the right edge, a wider cyclone, more land round the bones as Brandon asked. The land is one brown ridge texture and the sea cloud is dots; both are on the owner's list
+- `04-spine0-v1.jpg`: The Spine, wide view, approved left, version 1 right: the furthest of the six from its picture. No sea of cloud, a pale combed tongue for a ridge, a tan cone for a spire. Both owners have the order: cloud deck first, then spire and ridge as one snowed rock
 
+Status 95, 2026-11-26 05:51 UTC, showed: The Eye's far wall, the same crop: the old picture left, the remade one at double size right.
 Status 94, 2026-11-26 05:34 UTC, showed: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows)...
 Status 93, 2026-11-26 05:16 UTC, showed: The Heart, kept picture beside the new render of the same frame: identical (0 difference in every pixel once saved the same way); Wave 3...
-Status 92, 2026-11-26 04:53 UTC, showed: The Reveal, last version of wave 2: the approved pictures left, the built frames right, the four keys of the rise.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T05:50:55Z
-phase 4: 9.67 h used of 17.00 h
-build: 29.99 h used of 72.00 h
+2026-11-26T06:10:05Z
+phase 4: 9.99 h used of 17.00 h
+build: 30.31 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 17
+minutes since the last status: 19
 ```
 
 ## Phases
@@ -1859,6 +1859,7 @@ What happens next is yours:
 - 2026-11-26 03:37 UTC the push of `94bc9a6d` (version 2 of the Spine's storm owner merged) failed from the Builder's machine ("could not read Username for 'https://github.com'"), and so did eight more tries up to 03:39 UTC. Fetches work, and pushes from the owners' machines work (the Eye's owner pushed at 03:38 UTC). No commit is lost: `main` is whole in the workspace. Until the Builder's push works again, `main` goes to GitHub by a bundle of `origin/main..main` sent to an idle renderer (`pack_renderer_r8`), which checks that it starts at the remote's head and pushes it without force; the push is tried again from here at every commit.
 - 2026-11-26 04:09 UTC the push of `552108bf` (status 90) failed from the Builder's machine with the same error, five tries up to 04:11 UTC, and at 04:10 UTC the renderer that pushed `4910502e` to `94bc9a6d` for the Builder (`pack_renderer_r8`) failed with it too: its machine has lost the right to push as the owners' machines did in wave 1 after about 2 h 45 min. Fetches work everywhere. No commit is lost. A fresh machine pushes for the Builder from now on (`main_pusher_2`, started 04:11 UTC, the same checked steps: start hash, bundle verify, ancestor, no force), and is replaced by a fresh one when it stops working.
 - 2026-11-26 04:39 UTC `0d507bf5` pushed from the Builder's machine (the shutter rule and version 3 of eight owners), and `c85d5f4a` a minute later. The push works here again after failing from 04:09 to 04:38 UTC; nothing was changed on this machine. In the same half hour the machines of three owners lost their sign-in (the Eye at 04:31, the Marsh ground at 04:32, the Spine storm at 04:33 UTC; their branches on GitHub stand at `e043742c`, `b22f6f94` and `38d68b8c`, behind the bundles they mailed) while the other five that handed in pushed (the Ribs sea, the Marsh life, the Spine ground, the Breath ground, the Reveal). Status 91 said four owners; three is the count read from GitHub's branch heads at 04:41 UTC. `main_pusher_2` pushed nothing and stays idle.
+- 2026-11-26 06:02 UTC. The push of 4576efb7 (the Eye's version 1 merged) was refused: git could not read a username for the host, as at 04:09. A bundle went to the renderer that pushes for the Builder. Tried again at every commit.
 
 ## Session log
 
