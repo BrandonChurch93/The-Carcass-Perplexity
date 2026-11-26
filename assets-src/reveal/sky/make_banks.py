@@ -48,20 +48,22 @@ height = read(relief, (px - ax0) / MAP_A[2], (py - ay0) / (MAP_A[2] * 9 / 16))
 land = (height > 0.28).astype(np.float32)
 high = np.clip((height - 0.28) / 0.72, 0, 1) * land
 
-# Banks: the rise of the ground along the wind, read at the size of a range, on the flank and short of the crest.
-smooth = ndimage.gaussian_filter(high, 5)
+# Banks: the rise of the ground along the wind, read at the size of a whole range (60 km), not of one ridge: cloud piles against the
+# mass of a range on the flank that faces the wind, and no single ridge is drawn round. The edge is wide and soft: the cloud
+# photographs, not this map, give a bank its outline.
+smooth = ndimage.gaussian_filter(high, 14)
 gy, gx = np.gradient(smooth)
 lifted = gx * WIND[0] + gy * WIND[1]
 # (The cloud forms a little up the wind of the slope that makes it, and is carried a little way over.)
-lifted = ndimage.shift(lifted, (-WIND[1] * 3, -WIND[0] * 3), order=1, mode='nearest')
-bank = step(0.004, 0.022, lifted) * step(0.08, 0.3, smooth) * (1.0 - 0.75 * step(0.55, 0.8, high))
-bank = ndimage.gaussian_filter(bank, 2.2)
+lifted = ndimage.shift(lifted, (-WIND[1] * 6, -WIND[0] * 6), order=1, mode='nearest')
+bank = step(0.0012, 0.006, lifted) * step(0.03, 0.16, smooth)
+bank = ndimage.gaussian_filter(bank, 6)
 
-# Fog: floors that lie well under the ground round them.
-wide = ndimage.gaussian_filter(high, 16)
-near = ndimage.gaussian_filter(high, 2.5)
-fog = step(0.03, 0.14, wide - near) * step(0.1, 0.3, wide) * ndimage.gaussian_filter(land, 3) * (1.0 - step(0.3, 0.5, near))
-fog = ndimage.gaussian_filter(fog, 1.6)
+# Fog: the wide basins that lie well under the ground round them (not the narrow valleys between two ridges).
+wide = ndimage.gaussian_filter(high, 34)
+near = ndimage.gaussian_filter(high, 9)
+fog = step(0.015, 0.07, wide - near) * step(0.05, 0.2, wide) * ndimage.gaussian_filter(land, 8) * (1.0 - step(0.2, 0.4, near))
+fog = ndimage.gaussian_filter(fog, 6)
 
 soft = ndimage.gaussian_filter(land, 6)
 out = np.stack([bank, fog, soft], axis=-1)

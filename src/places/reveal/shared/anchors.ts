@@ -105,7 +105,23 @@ export function poseAt(frame: number): Pose {
     const turned = rollAt(frame);
     return { position: [dx, height, dz], aim: [dx, 0, dz], fov: FOV, up: [Math.sin(turned), 0, -Math.cos(turned)] };
   }
-  return { position: [x, height, z], aim: [x, 0, z], fov: FOV, up: [0, 0, -1] };
+  const [startX, startZ] = startOffsetAt(frame);
+  return { position: [x + startX, height, z + startZ], aim: [x + startX, 0, z + startZ], fov: FOV, up: [0, 0, -1] };
+}
+/** The first key of the rise (reveal-1, film frame 9627): from it on the camera stands where the rise puts it. */
+const START_OFFSET_UNTIL = riseKeys.frames[0] as number;
+/** Where the camera stands off the path of the rise as the rise begins, km on the ground (x, z): rise.json gives it (the climb's file), nothing if it gives none. */
+const startOffsetGiven: number[] = (tuning as { startOffsetKm?: number[] }).startOffsetKm ?? [];
+const START_OFFSET: [number, number] = [startOffsetGiven[0] ?? 0, startOffsetGiven[1] ?? 0];
+/**
+ * The offset of the camera on the ground at a frame of the film, km (x, z): all of START_OFFSET on the first frame of the rise,
+ * eased to nothing by the first key with no speed at either end, and nothing from that key on. The height is not touched.
+ */
+export function startOffsetAt(frame: number): [number, number] {
+  if (!(frame < START_OFFSET_UNTIL) || (START_OFFSET[0] === 0 && START_OFFSET[1] === 0)) return [0, 0];
+  const u = Math.min(Math.max((frame - RISE_FIRST) / (START_OFFSET_UNTIL - RISE_FIRST), 0), 1);
+  const left = 1 - u * u * u * (u * (u * 6 - 15) + 10);
+  return [START_OFFSET[0] * left, START_OFFSET[1] * left];
 }
 /** The drift of the hold and the ending: the film frame it starts after, km a second once it runs, the seconds it takes to come up, and its way on the ground. */
 const DRIFT_FROM = 10028;
