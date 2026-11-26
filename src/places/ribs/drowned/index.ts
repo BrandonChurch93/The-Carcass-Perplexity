@@ -41,9 +41,6 @@ const HUNG = {
   girth: 0.8,
   /** Where the weed caught on it hangs, behind every limb. */
   strands: 0.95,
-  /** How many strands lie over the trunk instead, and how far out: before the roundest of it. */
-  over: 3,
-  before: 3.1,
   limbs: [
     { at: 480, top: 330, out: 1.2, plumb: 0 },
     { at: 625, top: 400, out: 2.1, plumb: 0.1 },
@@ -443,6 +440,7 @@ varying vec2 vUv;
 varying vec3 vShape;
 varying vec3 vLay;
 varying vec2 vHang;
+varying float vTrunk;
 const float LAY = 0.3;
 const float METRE = ${glslNumber(1086 / PLATE.high)};
 const vec2 HIP = vec2(${HUNG.hip.map(glslNumber).join(', ')});
@@ -451,13 +449,14 @@ const vec2 HOOK = vec2(${HUNG.hook.map(glslNumber).join(', ')});
 mat2 turn(float a) {
   return mat2(cos(a), sin(a), -sin(a), cos(a));
 }
-// Where a point of the trunk hangs once the body is let fall from the hook.
-vec2 fallen(vec2 p) {
+// How far the trunk is turned at a point of it once the body is let fall from the hook, and where that point then hangs.
+float lean(vec2 p) {
   vec2 way = HEAD - HIP;
-  float s = dot(p - HIP, way) / dot(way, way);
-  vec2 neck = HIP + way * 0.78;
-  float fall = ${glslNumber(HUNG.fall)};
-  return HOOK + turn(fall) * (neck - HOOK) + turn(fall + ${glslNumber(HUNG.loll)} * smoothstep(0.78, 1.05, s)) * (p - neck);
+  return ${glslNumber(HUNG.fall)} + ${glslNumber(HUNG.loll)} * smoothstep(0.78, 1.05, dot(p - HIP, way) / dot(way, way));
+}
+vec2 fallen(vec2 p) {
+  vec2 neck = HIP + (HEAD - HIP) * 0.78;
+  return HOOK + turn(${glslNumber(HUNG.fall)}) * (neck - HOOK) + turn(lean(p)) * (p - neck);
 }
 // Which limb hangs at a place of the picture, its top and its depth.
 vec4 limbAt(vec2 pix) {
@@ -504,7 +503,11 @@ void main() {
   // uSwing: the angle each of the three turns stands at in the key (there every limb hangs as the picture has it), and how far a limb swings.
   float swing = uSwing.w * loose * (cos(number * 1.9) * sin(uTime * 1.1 - uSwing.x) + 0.5 * cos(number * 4.1) * sin(uTime * 1.9 - uSwing.y));
   float nod = uSwing.w * loose * cos(number * 2.7) * sin(uTime * 0.8 - uSwing.z);
-  vec2 moved = mix(fallen(l.xy) + pix - l.xy, fallen(pix), here.x) - pix;
+  // A limb leaves the trunk turned as the trunk is and hangs plumb from a little way down: turned as a whole and set plumb at its root, the
+  // sheet folds over itself where the two meet.
+  vec2 limbHangs = fallen(l.xy) + turn(lean(l.xy) * (1.0 - smoothstep(-30.0, 170.0, pix.y - l.y))) * (pix - l.xy);
+  vec2 moved = mix(limbHangs, fallen(pix), here.x) - pix;
+  vTrunk = here.x;
   vHang = pix + moved;
   vec3 flat_ = uOrigin + uAxis * (at.x - 0.12) + uDrop * at.y + (normalize(uAxis) * moved.x + normalize(uDrop) * moved.y) / METRE + normalize(uAxis) * (hangs * swing);
   // Out of the plane along the line of sight of the key: there the picture keeps its outline, everywhere else it is seen to have depth.
@@ -538,6 +541,7 @@ varying vec2 vUv;
 varying vec3 vShape;
 varying vec3 vLay;
 varying vec2 vHang;
+varying float vTrunk;
 void main() {
 #ifdef SHADE
   // The farther the part hangs from the face the wider and the fainter what it hides of the sky.
@@ -583,8 +587,8 @@ void main() {
   vec2 spine = normalize(vec2(${glslNumber(HUNG.head[0] - HUNG.hip[0])}, ${glslNumber(HUNG.head[1] - HUNG.hip[1])}));
   float under = smoothstep(-50.0, 110.0, dot(pix - vec2(${HUNG.hip.map(glslNumber).join(', ')}), vec2(-spine.y, spine.x)));
   float bone = smoothstep(0.4, 0.95, h);
-  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(0.8, 0.78, 0.6), 0.5 * under);
-  albedo *= mix(0.5, 0.24, under) * (1.0 + 0.7 * bone);
+  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(0.8, 0.78, 0.6), 0.5 * under * vTrunk);
+  albedo *= mix(0.6, mix(0.68, 0.4, under), vTrunk) * (1.0 + 0.5 * bone);
   // The weed that holds it: dark strands wound across the trunk and a leg, where it hangs now.
   float lie = vHang.y - 100.0;
   float weed = 1.0 - smoothstep(9.0, 13.0, abs(vHang.x - 400.0 - 0.18 * lie - 9.0 * sin(vHang.y * 0.021)));
@@ -913,35 +917,21 @@ export function create(ctx: Context): Piece {
   // Weed across the legs: strands of the living weed caught on them, hanging down over the hide.
   const plateOrigin = weedPoint(rib, DROWNED.phi, DROWNED.height + 2.5, 0.3);
   const plateWide = (PLATE.high * (FRAMED.to - FRAMED.from) * 1448) / 1086;
-  const spine = [HUNG.head[0] - HUNG.hip[0], HUNG.head[1] - HUNG.hip[1]] as const;
-  const metre = 1086 / PLATE.high;
   for (let i = 0; i < 18; i++) {
-    const across = scatter.range(0.22, 0.86);
-    const along = scatter.range(0.42, 0.8);
-    // The first few lie over the back and hang down the flank, before the trunk: the weed that holds it. They are set where the trunk
-    // hangs once it is let fall from the hook (fallen() in the vertex shader, short of the neck).
-    const over = i < HUNG.over;
-    const part = 0.08 + 0.62 * ((across - 0.22) / 0.64);
-    const px = HUNG.hip[0] + spine[0] * part + spine[1] * 0.12 - HUNG.hook[0];
-    const py = HUNG.hip[1] + spine[1] * part - spine[0] * 0.12 - HUNG.hook[1];
-    const flat = over
-      ? plateOrigin
-          .clone()
-          .addScaledVector(axis, plateWide * ((HUNG.hook[0] / 1448 - FRAMED.from) / (FRAMED.to - FRAMED.from) - 0.12) + (px * Math.cos(HUNG.fall) - py * Math.sin(HUNG.fall)) / metre)
-          .addScaledVector(down, (HUNG.hook[1] + px * Math.sin(HUNG.fall) + py * Math.cos(HUNG.fall)) / metre)
-      : plateOrigin
-          .clone()
-          .addScaledVector(axis, plateWide * (0.1 + 0.44 * ((across - 0.22) / 0.64) - 0.12))
-          .addScaledVector(down, PLATE.high * along);
-    // The rest hang between the face and the limbs, as they did behind the picture: a strand is as wide as half a limb, and one hung
-    // before a far limb hides it.
+    // Under the limbs as they hang once the body is let fall from the hook.
+    const flat = plateOrigin
+      .clone()
+      .addScaledVector(axis, plateWide * (0.1 + 0.44 * ((scatter.range(0.22, 0.86) - 0.22) / 0.64) - 0.12))
+      .addScaledVector(down, PLATE.high * scatter.range(0.42, 0.8));
+    // They hang between the face and the limbs, as they did behind the picture: a strand is as wide as half a limb, and one hung before a
+    // far limb hides it.
     flat.addScaledVector(proudWay, 0.3);
     const ray = keyEye.clone().sub(flat);
-    const root = flat.addScaledVector(ray, ((over ? HUNG.before : HUNG.strands) - 0.3) / ray.dot(proudWay));
+    const root = flat.addScaledVector(ray, (HUNG.strands - 0.3) / ray.dot(proudWay));
     const fall = down.clone().addScaledVector(axis, scatter.range(-0.15, 0.15)).normalize();
     falls.set([fall.x, fall.y, fall.z], i * 3);
     roots.set([root.x, root.y, root.z, 0.06], i * 4);
-    shapes.set([scatter.range(1.2, 2.8) * (over ? 1.2 : 1), scatter.range(0.07, 0.16), scatter.next() + 1, scatter.range(-0.08, 0.08)], i * 4);
+    shapes.set([scatter.range(1.2, 2.8), scatter.range(0.07, 0.16), scatter.next() + 1, scatter.range(-0.08, 0.08)], i * 4);
   }
   const plateGeometry = new THREE.PlaneGeometry(1, 1, 150, 220).translate(0.5, 0.5, 0);
   // The face looks up at the sky more than out at it: what hangs before it throws its shade down the face.
