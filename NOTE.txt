@@ -1,5 +1,4 @@
-2026-11-26 14:35 UTC
-work at 6971aa1 on agent/breath-wall
-5510 and 4973, main at left, mine at right: the mist behind the weed is as on main, only the wall differs; the wall is dark and plain
-look-1.jpg = out/work/look/pair-5510.png
-look-2.jpg = out/work/look/pair-4973.png
+2026-11-26 14:43 UTC
+work at 5b0b027 on agent/breath-wall
+4221 shaft at full size, hd review, main over mine: courses now read light and dark; three pale upright piers low on the wall still stand, vapour sheet faint
+look-1.jpg = out/work/look/v2-crop-4221.png
