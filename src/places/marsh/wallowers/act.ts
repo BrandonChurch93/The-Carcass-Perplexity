@@ -14,11 +14,16 @@ const ease = (a: number, b: number, v: number): number => {
 const pulse = (a: number, b: number, v: number): number => ease(a, a + 0.4 * (b - a), v) * (1 - ease(a + 0.4 * (b - a), b, v));
 
 /** A foot from `from` to `from + reach` between the seconds a and b: dragged up out of the mud, carried, and set down from above. Writes x and the lift. */
-function stride(foot: [number, number, number], from: number, reach: number, height: number, a: number, b: number, v: number): number {
+function stride(out: Drive, l: number, from: number, reach: number, height: number, a: number, b: number, v: number): number {
+  const foot = out.feet[l] as [number, number, number];
   const u = clamp((v - a) / (b - a));
   foot[0] = from + reach * ease(0.14, 0.9, u);
   const s = Math.sin(Math.PI * Math.pow(u, 1.3));
   foot[1] = height * s * s;
+  // The claws trail as the pad peels out of the mud; the pad is carried level, the toes a little up, and comes down flat.
+  const peel = Math.sin(Math.PI * clamp(u / 0.5));
+  const carry = Math.sin(Math.PI * clamp((u - 0.4) / 0.6));
+  out.toe[l] = (out.toe[l] as number) + 0.24 * peel * peel - 0.2 * carry * carry;
   return s * s;
 }
 
@@ -29,6 +34,11 @@ function rest(out: Drive, plan: Plan, b: Build): void {
   out.dir = plan.dir;
   out.squash = 1;
   out.cave = 0;
+  out.acted = 1;
+  out.under = 0;
+  // One on a bank stands in its mud to the shin.
+  out.mud = plan.ground + 0.36 * b.k;
+  for (let l = 0; l < 4; l++) out.toe[l] = 0;
   for (let l = 0; l < 4; l++) {
     const [lx, side] = LEG_AT[l] as [number, number];
     const foot = out.feet[l] as [number, number, number];
@@ -55,9 +65,7 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
   const fore = near > 0 ? 1 : 3;
   const off = near > 0 ? [-0.36, -0.29, 0.26, 0.09] : [0.26, 0.09, -0.36, -0.29];
   for (let l = 0; l < 4; l++) (out.feet[l] as number[])[0] += off[l] as number;
-  const hindFoot = out.feet[hind] as [number, number, number];
-  const foreFoot = out.feet[fore] as [number, number, number];
-  const air = stride(hindFoot, hindFoot[0], 0.42, 0.19 * k, -2.72, -0.8, t) + stride(foreFoot, foreFoot[0], 0.52, 0.22 * k, 0.45, 2.4, t);
+  const air = stride(out, hind, (out.feet[hind] as number[])[0] as number, 0.42, 0.19 * k, -2.72, -0.8, t) + stride(out, fore, (out.feet[fore] as number[])[0] as number, 0.52, 0.22 * k, 0.45, 2.4, t);
   // The weight is over the far legs while a near foot is in the air, and comes back onto the foot when it has landed.
   const lean = (v: number): number => 0.13 - 0.1 * ease(-1.2, -0.2, v) + 0.14 * ease(-0.1, 0.8, v) - 0.27 * ease(1.95, 3.1, v);
   const w = lean(t);
@@ -95,7 +103,7 @@ export function young(plan: Plan, b: Build, seconds: number, t: number, toward: 
   for (let l = 0; l < 4; l++) {
     const foot = out.feet[l] as [number, number, number];
     const a = from[l] as number;
-    const s = stride(foot, foot[0] + (off[l] as number), go, 0.3 * k, a, a + 0.8, t);
+    const s = stride(out, l, foot[0] + (off[l] as number), go, 0.3 * k, a, a + 0.8, t);
     air += s;
     if (l % 2 === 1) fore += s * (LEG_AT[l] as [number, number])[1];
   }
@@ -126,6 +134,8 @@ export function lying(plan: Plan, b: Build, seconds: number, t: number, near: nu
   const breath = Math.sin(seconds * 1.6 + b.seed * 9);
   // It turns about the middle of its trunk, not about its feet: the trunk is carried back over the place it lies in.
   out.roll = r;
+  // The brine stands at the world's 0 and it lies with its feet on the floor of it.
+  out.under = Math.max(0.05, -plan.ground / k);
   out.shift = -MID * k * Math.sin(r);
   out.bob = MID * k * (1 - Math.cos(r)) - 0.07 * k * over + 0.03 * k * breath;
   // Its legs go over with it, folded: they stay under the brine.
