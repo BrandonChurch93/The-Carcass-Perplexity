@@ -14,9 +14,9 @@ export const PARTS = ['sky', 'air', 'cloud'] as const;
 
 const MAX_SOURCES = 20;
 const STEPS = 8;
-const FOG_STEPS = 20;
+const FOG_STEPS = 14;
 /** The opening's sea fog in a metre at the water, where it lies whole. */
-const FOG_THICK = 0.0075;
+const FOG_THICK = 0.011;
 /** The blades whose feet the opening's sea fog pools round and peels off: the two the lens opens on, and the two that stand out in the sea. */
 const FOG_FEET = ['L1', 'R1', 'OL', 'OR'] as const;
 const glslFloat = (x: number): string => (Number.isInteger(x) ? x.toFixed(1) : String(x));
@@ -102,17 +102,19 @@ vec2 fogAt(vec2 x, float far) {
   float tail;
   vec2 f = fogFlow(x, pool, tail);
   vec2 q = vec2(f.x - ${glslFloat(WIND.speed)} * uFog.y, f.y);
-  float big = texture2D(tCloudShade, q / 1500.0 + 0.13).r;
+  // The level of the picture is named: read by the screen's own slope it would change from one block of pixels to the next.
+  float level = clamp(log2(far / 5.0), 0.0, 8.0);
+  float big = textureLod(tCloudShade, q / 1500.0 + 0.13, 0.0).r;
   float sheet = smoothstep(0.36, 0.7, big);
   float body = 0.16 * sheet + pool * (0.3 + 0.7 * sheet) + 1.2 * tail;
   if (body < 0.02) return vec2(0.0, 1.0);
-  float mid = texture2D(tCloudShade, q / 430.0 + vec2(0.37, 0.61)).g;
-  float fine = texture2D(tCloudShade, vec2(q.x + ${glslFloat(WIND.speed * 0.4)} * uFog.y, q.y) / 150.0 + 0.29).g;
+  float mid = textureLod(tCloudShade, q / 430.0 + vec2(0.37, 0.61), level).g;
+  float fine = textureLod(tCloudShade, vec2(q.x + ${glslFloat(WIND.speed * 0.4)} * uFog.y, q.y) / 150.0 + 0.29, level + 1.5).g;
   float lump = mix(mid, 0.5 * mid + 0.8 * fine - 0.15, smoothstep(240.0, 70.0, far));
   float torn = smoothstep(0.3, 0.72, lump);
   vec2 h = x - uFogHole.xy;
-  float blown = 1.0 - 0.92 * uFog.z * exp(-dot(h, h) / (uFogHole.z * uFogHole.z));
-  return vec2(uFog.x * body * (0.12 + 1.6 * torn * torn) * blown, (8.0 + 12.0 * pool + 44.0 * tail * (0.35 + 0.65 * mid)) * (0.55 + 0.9 * torn));
+  float blown = 1.0 - exp(-dot(h, h) / (uFogHole.z * uFogHole.z));
+  return vec2(uFog.x * body * (0.12 + 1.6 * torn * torn) * blown, (3.0 + 3.0 * pool + 5.0 * tail * (0.35 + 0.65 * mid)) * (0.6 + 0.7 * torn));
 }
 
 void viewRay(out vec3 ro, out vec3 rd, out float reach) {
@@ -204,8 +206,8 @@ void main() {
   if (uFog.x > 0.0) {
     float t0 = 15.0;
     float t1 = min(reach, 2600.0);
-    if (rd.y > 0.0) t1 = min(t1, (130.0 - ro.y) / rd.y);
-    else if (ro.y > 130.0) t0 = max(t0, (ro.y - 130.0) / -rd.y);
+    if (rd.y > 0.0) t1 = min(t1, (45.0 - ro.y) / rd.y);
+    else if (ro.y > 45.0) t0 = max(t0, (ro.y - 45.0) / -rd.y);
     if (t1 > t0) {
       vec3 fogSum = vec3(0.0);
       float fogTrans = 1.0;
@@ -224,12 +226,14 @@ void main() {
           float a = 1.0 - exp(-fog.x * through);
           if (a > 0.002) {
             // The shaft of low sun stands in the fog: what lies in it burns, what lies in a blade's shadow or under the shut cloud keeps the storm's slate.
-            vec4 land = landAt(p.xz);
+            // The shadow of a blade is read at two places in the stride: read at one, a whole stride would stand lit or dark, a block in the fog.
+            vec3 pa = ro + rd * mix(ta, tb, 0.22);
+            vec3 pb = ro + rd * mix(ta, tb, 0.78);
             float gap = smoothstep(0.11, 0.31, cloudBreaks(p.xz - uSunDir.xz * (p.y / uSunDir.y)));
-            float lit = sunBaked(p, land) * gap;
+            float lit = 0.5 * (sunBaked(pa, landAt(pa.xz)) + sunBaked(pb, landAt(pb.xz)));
             // Deep in a lump the light is the fog's own grey; its top and its torn edges take the sky and the sun.
             float top = 0.45 + 0.55 * clamp(p.y / fog.y, 0.0, 1.0);
-            fogSum += fogTrans * a * top * (uHaze * 0.62 + mix(sunAir, uSunColour, 0.5) * ((0.05 + 0.11 * phase) * lit)) * uShowAir;
+            fogSum += fogTrans * a * top * (uHaze * 0.62 + mix(sunAir, uSunColour, 0.5) * ((0.035 + 0.09 * phase) * (0.25 + 0.75 * lit) * gap)) * uShowAir;
             fogTrans *= 1.0 - a;
           }
         }
@@ -246,7 +250,7 @@ void main() {
 const LOOP_MIST = 0.7;
 
 export function create(ctx: Context): Piece {
-  const storm = ctx.assets.texture('mat/sky.jpg');
+  const storm = ctx.assets.texture('air/storm.jpg');
   storm.wrapS = THREE.MirroredRepeatWrapping;
   storm.wrapT = THREE.ClampToEdgeWrapping;
   storm.needsUpdate = true;
@@ -331,8 +335,8 @@ export function create(ctx: Context): Piece {
         const age = strikeAge(seconds, n as 0 | 1);
         return age < 0 ? 0 : Math.min(1, age / 0.6) * Math.max(0, 1 - age / (2 * STRIKE.hangs));
       }));
-      fog.set(up ? FOG_THICK * fade * fade * (3 - 2 * fade) : 0, since, Math.max(0.5, burst));
-      fogHole.set(STRIKE.foot[0], STRIKE.foot[2], 2.4 * STRIKE.half);
+      fog.set(up ? FOG_THICK * fade * fade * (3 - 2 * fade) : 0, since, burst);
+      fogHole.set(STRIKE.foot[0], STRIKE.foot[2], (2.4 + 1.2 * burst) * STRIKE.half);
       stillAir.value = up ? Math.min(1, 3 * openingWeight(seconds)) : 0;
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
       // In the card loop the mist between the blades thickens once and thins again.
