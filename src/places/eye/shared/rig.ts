@@ -292,6 +292,7 @@ export function createRig(): Rig {
     tMistNoise: { value: null },
     uMistA: { value: new THREE.Vector4() },
     uMistB: { value: new THREE.Vector4() },
+    uMistC: { value: new THREE.Vector4() },
     uMistOn: { value: 0 },
   };
 

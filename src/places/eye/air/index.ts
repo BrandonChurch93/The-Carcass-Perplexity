@@ -20,11 +20,14 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 
 // The form of the mist by the key it is seen from. a: reach over the water, sheet height, bank height, depth of the bank (metres).
 // b: thickness of the sheet, of the bank, how torn the sheet is, how much leaves the top in threads.
-const MIST: Record<'wide' | 'low' | 'shore' | 'centre', { a: [number, number, number, number]; b: [number, number, number, number] }> = {
-  wide: { a: [800, 3.0, 15, 280], b: [2.6, 2.2, 1.0, 0.3] },
-  low: { a: [560, 3.2, 18, 300], b: [1.0, 2.4, 0.7, 0.3] },
-  shore: { a: [480, 3.0, 14, 260], b: [0.7, 2.0, 0.8, 0.3] },
-  centre: { a: [700, 0.9, 24, 260], b: [0.5, 2.8, 1.0, 0.35] },
+// c: the middle and the half length of the stretch of far shore it lies along (metres from north round the picture's cylinder, 0 for all of
+// it), and how much of that stretch is clear.
+type Four = [number, number, number, number];
+const MIST: Record<'wide' | 'low' | 'shore' | 'centre', { a: Four; b: Four; c: Four }> = {
+  wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 0] },
+  low: { a: [600, 3.2, 50, 380], b: [1.0, 1.3, 0.7, 0.3], c: [0, 0, 0, 0] },
+  shore: { a: [520, 3.0, 30, 320], b: [0.8, 1.4, 0.8, 0.3], c: [0, 0, 0, 0] },
+  centre: { a: [1100, 0.9, 24, 260], b: [0.5, 2.8, 1.0, 0.35], c: [0, 0, 0, 0] },
 };
 
 const SKY_VERTEX = /* glsl */ `
@@ -74,7 +77,7 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 ${LID_GLSL}
 
-const float TOP = 80.0;
+const float TOP = 150.0;
 
 // The far shore the mist lies against: its middle on the water and its radius. With a picture hung it is the foot of the picture.
 vec3 farShore() {
@@ -89,7 +92,8 @@ vec3 mistForm(vec3 q) {
   if (near <= 0.0 || q.z < 0.0) return vec3(0.0);
   vec4 big = texture(tMistNoise, vec3(q.x / 1300.0, q.z / 1300.0, uTime * 0.0042));
   vec4 mid = texture(tMistNoise, vec3(q.x / 410.0 + 0.31, q.z / 900.0 + 0.17, 0.5 + uTime * 0.0085));
-  float cover = smoothstep(0.0, 0.55, mix(-0.25, 1.0, near) + uMistB.z * (2.6 * (big.g - 0.5) + 1.2 * (mid.a - 0.5)));
+  float cover = smoothstep(0.0, 0.55, mix(-0.25, 1.0, near) - uMistC.z + uMistB.z * (2.6 * (big.g - 0.5) + 1.2 * (mid.a - 0.5)));
+  if (uMistC.y > 0.0) cover *= smoothstep(uMistC.y, 0.3 * uMistC.y, abs(q.x - uMistC.x));
   float sheetTop = uMistA.y * (0.35 + 1.5 * mid.g);
   float ramp = smoothstep(uMistA.w, 0.0, q.z);
   // The bank does not stand along the whole wall: here it is heaped, there the foot of the wall is clear down to the sheet on the water.
@@ -161,17 +165,25 @@ void main() {
   // The mist, marched through the ring of water it lies on.
   float mistOn = uMist * uThin;
   if (mistOn > 0.0 && uMistA.x > 0.0) {
+    // Two rings: the sheet lies low over the whole reach, the bank stands only before the wall. A ray is marched from where it first
+    // comes under the one or the other, so that the steps are spent where there is mist.
     float inner = shore.z - uMistA.x;
-    float t0 = qc < inner * inner ? (-qb + sqrt(max(qb * qb - qa * (qc - inner * inner), 0.0))) / qa : 0.0;
-    float t1 = min(far, wall);
-    if (abs(rd.y) > 1e-5) {
-      float a = (0.0 - ro.y) / rd.y;
-      float b = (TOP - ro.y) / rd.y;
-      t0 = max(t0, min(a, b));
-      t1 = min(t1, max(a, b));
-    } else if (ro.y > TOP) t1 = -1.0;
+    float before = shore.z - uMistA.w;
+    float tSheet = qc < inner * inner ? (-qb + sqrt(max(qb * qb - qa * (qc - inner * inner), 0.0))) / qa : 0.0;
+    float tBank = qc < before * before ? (-qb + sqrt(max(qb * qb - qa * (qc - before * before), 0.0))) / qa : 0.0;
+    float ry = abs(rd.y) < 1e-5 ? 1e-5 : rd.y;
+    float atWater = -ro.y / ry;
+    float atSheetTop = (6.5 * uMistA.y - ro.y) / ry;
+    float atTop = (min(TOP, 5.0 * uMistA.z) - ro.y) / ry;
+    float end = min(far, wall);
+    float a0 = max(tSheet, min(atWater, atSheetTop));
+    float a1 = min(min(tBank, end), max(atWater, atSheetTop));
+    float b0 = max(tBank, min(atWater, atTop));
+    float b1 = min(end, max(atWater, atTop));
+    float t0 = max(a1 > a0 ? a0 : b0, 0.0);
+    float t1 = b1 > b0 ? b1 : a1;
     if (t1 > t0) {
-      const int STEPS = 14;
+      const int STEPS = 12;
       // The low sun comes through the mist from the side: forward of it the mist is bright, and a little again straight back.
       float phase = 0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun;
       vec3 skyLight = 0.36 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.4 * low;
@@ -272,6 +284,7 @@ export function create(ctx: Context): Piece {
       const form = MIST[during('eye-01') ? 'wide' : during('eye-04') ? 'shore' : during('eye-05') ? 'centre' : 'low'];
       (rig.uMistA as THREE.IUniform<THREE.Vector4>).value.fromArray(form.a);
       (rig.uMistB as THREE.IUniform<THREE.Vector4>).value.fromArray(form.b);
+      (rig.uMistC as THREE.IUniform<THREE.Vector4>).value.fromArray(form.c);
       (rig.uMistOn as THREE.IUniform<number>).value = show.uThin.value;
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
       (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
