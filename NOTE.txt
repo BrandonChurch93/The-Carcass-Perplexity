@@ -1,7 +1,7 @@
-2026-11-25 23:47 UTC
-work at 358426e on agent/ribs-sea
-V2 at 358426e: bore, feeders, colony, drowned at hd draft
+2026-11-26 00:31 UTC
+work at 92f7de1 on agent/ribs-sea
+V3: bore with foam lip over dark windows (ribs-4), feeders warm with membrane picture and fine splash (ribs-2), wide (ribs-0), drowned and colony (ribs-1 over ribs-3)
 look-1.jpg = out/work/look-ribs-4.jpg
 look-2.jpg = out/work/look-ribs-2.jpg
-look-3.jpg = out/work/look-ribs-3.jpg
-look-4.jpg = out/work/look-ribs-1.jpg
+look-3.jpg = out/work/look-ribs-0.jpg
+look-4.jpg = out/work/v3d.jpg
