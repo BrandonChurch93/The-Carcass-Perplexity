@@ -11,7 +11,7 @@ const NEAR = 14;
 
 /** A tube in (angle, along) with its mouth and the body of the plume: the vertex shader gives it its shape. */
 // How many filaments a plume is drawn with: by the lens of the colony, near a lens, and far off. The dearer set (520, 200, 44) costs about 0.5 s a sample more at the wide key.
-const PLUME_CLOSE = 520;
+const PLUME_CLOSE = 800;
 const PLUME_NEAR = 130;
 const PLUME_FAR = 30;
 
@@ -169,7 +169,7 @@ export function create(ctx: Context): Piece {
       const count = s.kind === 1 || s.kind === 2 ? 0 : which === 0 ? (close ? PLUME_CLOSE : PLUME_NEAR) : PLUME_FAR;
       if (close && s.kind !== 1) perches.push([top[0], top[1], top[2]]);
       // The ones the lens of the colony looks through are a hand's length away: theirs are drawn at their true size. Further off a plume is a mop as long as an arm.
-      const length = (s.kind === 0 ? (close ? 0.5 : 0.31) : s.kind === 3 ? 0.3 : 0.25) * s.size * (close ? 1 : which === 0 ? 2.8 : 3.8);
+      const length = (s.kind === 0 ? (close ? 0.43 : 0.31) : s.kind === 3 ? 0.3 : 0.25) * s.size * (close ? 1 : which === 0 ? 2.8 : 3.8);
       // Wet filaments cling: they leave the mouth each by itself and go over in locks.
       const locks = Array.from({ length: which === 0 ? 26 : count }, () => [rng.range(0, TAU), Math.pow(rng.next(), 0.7) * (close ? 1 : 0.9), rng.range(close ? 0.65 : 0.45, 1.2)] as [number, number, number]);
       for (let f = 0; f < count; f++) {
@@ -177,7 +177,7 @@ export function create(ctx: Context): Piece {
         fils[0].push(top[0], top[1], top[2], R);
         fils[1].push(ax[0], ax[1], ax[2], s.phase);
         fils[2].push(lock[0] + rng.range(-0.11, 0.11), Math.min(1, Math.max(0, lock[1] + rng.range(-0.07, 0.07))), length * lock[2] * rng.range(close ? 0.8 : 0.55, 1.1), rng.next());
-        fils[3].push(s.kind, seed, length, (which === 0 ? (close ? 0.0055 : 0.011) : 0.036) * s.size * rng.range(0.7, 1.3));
+        fils[3].push(s.kind, seed, length, (which === 0 ? (close ? 0.004 : 0.011) : 0.036) * s.size * rng.range(0.7, 1.3));
       }
       // A drop hangs from one filament in five of the near ones: only those are given one.
       if (which === 0) {

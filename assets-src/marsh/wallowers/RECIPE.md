@@ -2,7 +2,7 @@
 
 The material pictures of the wallowers, the dead and the stalks. Each began as one generated picture, 1254 px square, of a flat surface seen straight on under even light. The script takes the slow drift of tone out of it, makes it tile and writes a colour picture and a data picture (slope in red and green, height in blue) from it.
 
-## `public/assets/marsh/wallowers/hide.jpg` and `public/assets/marsh/wallowers/hide-nh.png`
+Removed at version 3: `hide.jpg` and `hide-nh.png` of this folder are deleted, the hide now reads `public/assets/marsh/mat/hide.jpg` and `public/assets/marsh/mat/rime.jpg` of the Builder. Their recipe stays here for the record, the source picture is still `assets-src/marsh/wallowers/hide-source.jpg`:
 
 Made by: the image tool `generate_image` of Perplexity Computer with its default model (the tool did not report the model's name), aspect 1:1, then `assets-src/marsh/wallowers/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
 From: `assets-src/marsh/wallowers/hide-source.jpg`, the generated picture, 1254 px square. Picture passed to the model with the prompt, for colour and character only: `references/approved/4-marsh/marsh-3-mud-wallowers.jpg`. No approved picture and no photograph is drawn into the place.
