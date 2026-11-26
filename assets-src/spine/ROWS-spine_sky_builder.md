@@ -1,6 +1,6 @@
 # Generated files, spine_sky_builder
 
-All four are single storm cloud masses cut out on a transparent ground, drawn by `src/places/spine/air/masses.ts` on two rings about the ridge, before the dome's own pictures. Never a plate: each is one heap among several, at two depths. The loaded file is made from the source by `assets-src/spine/air/massproc.py` (run from the repo's root): the colour is carried out into the clear so no fringe shows, the cut edge is softened, nothing is left at the border; the loaded JPEG holds the colour in its upper half and the cut in its lower.
+All four are single storm cloud masses cut out on a transparent ground, drawn by `src/places/spine/air/masses.ts` on two rings about the ridge, before the dome's own pictures. Never a plate: each is one heap among several, at two depths. The loaded file is made from the source by `assets-src/spine/air/massproc.py` (run from the repo's root): the colour is carried out into the clear so no fringe shows, the cut edge is softened, thin bright rim lines are taken down to the cloud about them, nothing is left at the border; the loaded JPEG holds the colour in its upper half and the cut in its lower.
 
 | file | what it is | tool and model | prompt | take | date |
 | --- | --- | --- | --- | --- | --- |

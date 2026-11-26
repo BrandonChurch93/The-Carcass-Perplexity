@@ -277,8 +277,13 @@ void main() {
     // stands before it, with a little of its glow in the air over it. It is the one warm thing in the frame, in a flash too.
     // It is short: a stretch of the horizon about the last light, not a ring round it.
     float side = smoothstep(0.84, 0.985, toLast);
-    float line = exp(-pow((d.y - 0.0075) / 0.0065, 2.0)) + 0.2 * exp(-max(d.y, 0.0) / 0.035) * smoothstep(-0.004, 0.004, d.y);
-    c += vec3(0.62, 0.21, 0.045) * (side * line * (0.25 + 0.95 * smoothstep(0.3, 1.0, lumps))) * (1.0 - plateOn);
+    // No ruled stroke: it lies a little higher here and lower there, and far cloud before it cuts it into lengths.
+    float lies = 0.0075 + 0.0045 * (lumps - 0.75);
+    float line = exp(-pow((d.y - lies) / 0.0062, 2.0)) + 0.2 * exp(-max(d.y, 0.0) / 0.035) * smoothstep(-0.004, 0.004, d.y);
+    float cutBy = textureLod(tNoise, vec3(az * 3.7 + uTime * 0.0006, d.y * 52.0 + az * 1.3, 0.11), 0.0).b;
+    float lengths = (0.2 + 1.0 * smoothstep(0.3, 1.0, lumps)) * (0.22 + 0.78 * smoothstep(0.36, 0.62, cutBy));
+    // (Where the lens is opened for the dark, the band is opened with the sky.)
+    c += vec3(0.62, 0.21, 0.045) * (side * line * lengths) * (1.0 - plateOn) * (1.0 + 0.6 * uSkyStage.y);
   }
   if (plateOn > 0.0) {
     vec3 held = strikeCloud(plateCloud(uvQ, 0.0), cameraPosition, d);
