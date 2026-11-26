@@ -154,10 +154,20 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   vec2 pq = vec2(a2 * 640.0 + bend.x * 26.0, r + bend.y * 60.0);
   float blobs = 0.6 * vnoise(b / 48.0) + 0.4 * vnoise(b / 13.0 + 3.0);
   float drawn = 0.55 * vnoise(pq / vec2(38.0, 190.0)) + 0.3 * vnoise(pq / vec2(12.0, 70.0) + 3.0) + 0.15 * vnoise(pq / vec2(3.5, 24.0) + 7.0);
+  // From the rim the mats have no lie: they are mottled, patch by patch, with dark wet channels between and small pale pools.
+  float rimEye = smoothstep(8.0, 40.0, cameraPosition.y);
+  if (rimEye > 0.0) drawn = mix(drawn, 0.5 * vnoise(b / 44.0 + 2.0) + 0.3 * vnoise(b / 17.0 + 3.0) + 0.2 * vnoise(b / 6.5 + 7.0), rimEye);
   float field = 0.62 * drawn + 0.38 * blobs;
   float lanes = smoothstep(0.035, 0.008, abs(vnoise(vec2(pq.x / 13.0, pq.y / 330.0) + 9.0) - 0.5)) * smoothstep(8.0, 50.0, w);
+  if (rimEye > 0.0) {
+    float channels = smoothstep(0.045, 0.012, abs(0.6 * vnoise(b / 31.0 + 9.0) + 0.4 * vnoise(b / 11.0 + 4.0) - 0.5)) * smoothstep(8.0, 50.0, w);
+    float pools = smoothstep(0.68, 0.76, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
+    lanes = mix(lanes, max(0.7 * channels * smoothstep(0.35, 0.6, vnoise(b / 57.0 + 13.0)), pools), rimEye);
+  }
   float toLip = smoothstep(MAT_REACH + uLipIn, 30.0, w);
   float thin = smoothstep(4.0, 46.0, inShore + 30.0 * (blobs - 0.5)) * (1.0 - 0.8 * slabs * (1.0 - crust));
+  // And they lie thick toward the pool and thin away to bare grey silt at the shore.
+  thin = mix(thin, smoothstep(6.0, 120.0, inShore + 70.0 * (blobs - 0.5)), rimEye);
   float edge = mix(0.53, 0.35, toLip) - 0.06 * smoothstep(8.0, 40.0, cameraPosition.y);
   float cover = smoothstep(edge - 0.02, edge + 0.07, field) * thin * (1.0 - 0.92 * lanes);
   // Toward the lip the weed thins to loose strands over the pale crust.
@@ -202,7 +212,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
       }
     }
     // Rust in one bed, gold in the next; gold in the heart of a patch, rust at its torn edge.
-    float tone = 0.5 * vnoise(pq / vec2(9.0, 110.0) + 5.0) + 0.3 * vnoise(pq / vec2(2.6, 40.0)) + 0.2 * vnoise(b / 6.0);
+    float tone = mix(0.5 * vnoise(pq / vec2(9.0, 110.0) + 5.0) + 0.3 * vnoise(pq / vec2(2.6, 40.0)), 0.5 * vnoise(b / 27.0 + 5.0) + 0.3 * vnoise(b / 9.0), rimEye) + 0.2 * vnoise(b / 6.0);
     float heart = smoothstep(edge, edge + 0.28, field);
     vec3 far3 = mix(vec3(0.17, 0.06, 0.02), vec3(0.31, 0.14, 0.035), smoothstep(0.3, 0.55, tone));
     far3 = mix(far3, vec3(0.46, 0.29, 0.065), smoothstep(0.5, 0.75, tone) * (0.35 + 0.65 * heart));
@@ -212,11 +222,11 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     float told = smoothstep(0.25, 0.03, px);
     // From the rim the mats are rust and orange, deep in colour whatever the sky: the light in them is the amber of the water.
     float fromRim = smoothstep(8.0, 40.0, cameraPosition.y);
-    far3 *= mix(vec3(1.0), vec3(1.1, 0.66, 0.3), fromRim);
+    far3 *= mix(vec3(1.0), vec3(1.0, 0.7, 0.4), fromRim);
     // And they are not one sheet: orange where the strands lie thick in the surface, dark brown water between them, in streaks and clouds.
-    float thick = 0.55 * vnoise(pq / vec2(2.4, 33.0) + 11.0) + 0.45 * vnoise(b / 6.0 + 4.0);
+    float thick = 0.55 * vnoise(b / 13.0 + 11.0) + 0.45 * vnoise(b / 5.0 + 4.0);
     far3 = mix(far3, mix(vec3(0.05, 0.036, 0.026), far3 * 1.3, smoothstep(0.28, 0.66, thick)), fromRim);
-    vec3 weed = mix(far3 * (0.75 + 0.5 * vnoise(pq / vec2(1.3, 19.0) + 2.0)), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
+    vec3 weed = mix(far3 * (0.75 + 0.5 * mix(vnoise(pq / vec2(1.3, 19.0) + 2.0), vnoise(b / 3.1 + 2.0), rimEye)), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
     float high = mix(0.5, mh, told);
     // The strands that stand highest are the palest: gold where the low sun finds them.
     weed *= mix(vec3(1.0), vec3(1.5, 1.38, 0.95), told * smoothstep(0.42, 0.85, mh));

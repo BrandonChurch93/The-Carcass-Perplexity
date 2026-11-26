@@ -191,6 +191,7 @@ export function create(ctx: Context): Piece {
       show.uVeil.value = during('eye-04') ? 0.22 : during('eye-01') ? 0.5 : during('eye-05') ? 0.8 : 0.6;
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
       (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
+      (rig.uPlateShade as THREE.IUniform<THREE.Vector2>).value.x = during('eye-01') ? 1 : 0;
       // The far world of the shot the camera stands in.
       const i = plateFor();
       const tone = (rig.uPlateTone as THREE.IUniform<THREE.Vector4>).value;

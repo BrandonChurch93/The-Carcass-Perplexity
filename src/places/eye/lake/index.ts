@@ -321,8 +321,8 @@ void main() {
   if (crusted < 1.0) {
     float inside = max(-w, 0.0);
     float band = high2 * exp(-inside / 16.0) * (1.0 - crustLine) * smoothstep(0.0, 5.0, inside);
-    f *= 1.0 - 0.6 * band;
-    under += vec3(0.01, 0.055, 0.052) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * band;
+    f *= 1.0 - 0.3 * band;
+    under += vec3(0.02, 0.035, 0.034) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * band;
   }
   // The swell at the centre is a hump of dark water: its near face looks at the eye, and the eye looks into it.
   if (r < uDome.y) {
@@ -339,7 +339,7 @@ void main() {
     f = mix(f, 0.9, 0.3 * thread * smoothstep(0.15, 0.6, du));
   }
   // From the rim the water over the mats is the colour of the mats: the pale of the sky lies only on the deep.
-  float onMats = smoothstep(8.0, 40.0, cameraPosition.y) * crusted;
+  float onMats = smoothstep(8.0, 40.0, cameraPosition.y) * crusted * (1.0 - smoothstep(0.68, 0.76, 0.7 * vnoise(p.xz / 19.0 + 31.0) + 0.3 * vnoise(p.xz / 6.0 + 2.0)));
   refl *= mix(vec3(1.0), vec3(0.74, 0.6, 0.46), onMats);
   under *= mix(vec3(1.0), vec3(0.94, 0.84, 0.72), onMats);
   vec3 c = mix(under, refl, f);

@@ -153,7 +153,7 @@ void main() {
     col += k * w.z;
     d += vec2(texture2D(tScreeH, (uz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.z;
   }
-  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x) * mix(vec3(1.2, 1.15, 1.04), vec3(1.0), smoothstep(12.0, 4.0, cameraPosition.y));
+  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x) * mix(vec3(1.32, 1.18, 0.98), vec3(1.0), smoothstep(12.0, 4.0, cameraPosition.y));
   vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
