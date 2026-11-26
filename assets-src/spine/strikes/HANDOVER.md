@@ -63,10 +63,11 @@ All looks were at the draft tier, 3840 x 2160, one sample. The final tier was ne
 - By lens, not by shot: far kites stand on edge and darken with distance from the camera; locks shorten where seen square on.
 
 ## Cost, seconds a sample at 3840 x 2160
-
-`npm run -s cost -- --key spine-0 --format uhd --tier draft --parts tether-kites ridge-runners strike-2`, above the empty frame (1.80 s):
-ridge-runners 0.49, tether-kites 0.20, strike-2 0.00 (under the noise). Mine together 0.69 of an aim of 2. The whole frame is 10.08 s,
+`npm run -s cost -- --key spine-0 --format uhd --tier draft --parts tether-kites ridge-runners strike-2`, above the empty frame (1.93 s):
+ridge-runners 0.50, tether-kites 0.18, strike-2 0.00 (under the noise). Mine together 0.68 of an aim of 2. The whole frame is 10.52 s,
 over the 7 s gate; the rest is the ground and the air. Not measured: the dead one close up at spine-1 (110,000 locks).
+Checks: my last own commit ecdb751 passes all four. Merged with the lead and main, determinism fails at film frame 1241 and G10 at 5930;
+neither is a Spine frame (the Spine runs from about frame 7000 to 8100), so the cause is outside these folders. I did not trace it.
 
 ## What I would do next, in order
 
