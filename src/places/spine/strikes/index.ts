@@ -16,11 +16,11 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** What the flash of a first stroke gives a face that looks at the channel from close by, as irradiance: the dusk gives level snow about 0.25. */
 const FLASH = 3.2;
 /** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
-const FLASH_OF = [1.5, 0.8, 0.9, 0.85, 0.6, 0.15];
+const FLASH_OF = [4, 0.8, 0.9, 0.85, 0.6, 0.15];
 /** Each strike's share of the light the cloud round its channel takes, of the narrow pulse that comes in by the canal's far mouth, and of
  * the round lights (the storm's even lift of the place, which a flash must not become): the sixth is seen from inside the hollow, where
  * the lift would fill the animals and the pulse is the picture. */
-const CLOUD_OF = [0.8, 0.5, 0.8, 0.75, 0.45, 0.85];
+const CLOUD_OF = [1.6, 0.5, 0.8, 0.75, 0.45, 0.85];
 const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 1.2];
 const ROUND_OF = [0.02, 0.2, 0.4, 0.7, 0.02, 0.15];
 /** The glow in the cloud before the first stroke, as a share of the breakdown. */
@@ -34,6 +34,10 @@ const INNER_GLOW = 0.02;
 const INNER_SPAN = new THREE.Vector3(10, 40, 260);
 const INNER_CLOUD = 0.5;
 const INNER_PULSE = 1.1;
+/** What stays between the strokes, as shares of the last stroke's light: on the land and in the cloud, which glows along the line the
+ * channel took. The channel itself is not drawn between them: at a share of its light it shows as a broken thread. */
+const HOLD_LAND = 0.35;
+const HOLD_CLOUD = 0.55;
 const SPARKS = 16;
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
 const TIP_RADIUS = 8;
@@ -381,15 +385,18 @@ export function create(ctx: Context): Piece {
         const round = hard * (ROUND_OF[of] as number);
         b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(hard, 1) * 130);
         const within = e.cloud;
-        if (within > 0 && hard <= 0) {
+        // Between the strokes the light does not go out: the land keeps a share of the last stroke's light for a few frames and the
+        // cloud keeps more of it for longer.
+        const land = Math.max(hard, HOLD_LAND * e.held);
+        const sky = Math.max(hard, HOLD_CLOUD * e.glow);
+        if (within > 0 && hard <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
           // A cloud lit from inside: its own glow and what of it comes in by the canal's mouth. No light with a shadow.
           flashTip.set(INNER_AT.x - 0.4 * INNER_SPAN.x, INNER_AT.y - 0.4 * INNER_SPAN.y, INNER_AT.z - 0.4 * INNER_SPAN.z, FLASH * INNER_PULSE * within);
           flashTop.set(INNER_AT.x + 0.6 * INNER_SPAN.x, INNER_AT.y + 0.6 * INNER_SPAN.y, INNER_AT.z + 0.6 * INNER_SPAN.z, FLASH * INNER_CLOUD * within);
-        }
-        if (hard > 0) {
-          flashAt.set(b.cast.x, b.cast.y, b.cast.z, FLASH * (FLASH_OF[of] as number) * hard);
-          flashTip.set(b.tip.x, b.tip.y, b.tip.z, FLASH * (PULSE_OF[of] as number) * hard);
-          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * hard);
+        } else if (land > 0) {
+          flashAt.set(b.cast.x, b.cast.y, b.cast.z, FLASH * (FLASH_OF[of] as number) * land);
+          flashTip.set(b.tip.x, b.tip.y, b.tip.z, FLASH * (PULSE_OF[of] as number) * land);
+          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * sky);
         }
         if (power + before + tail + within > 1e-4) {
           channelLight.position.copy(b.mid);

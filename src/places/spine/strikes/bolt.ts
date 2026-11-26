@@ -140,9 +140,20 @@ export const breakdown = (age: number): number => {
  * strokes. No frame of it is a flash. */
 const inner = (t: number): number => ramp(-0.1, 0, t) * (1 - ramp(0.012, 0.085, t)) * (0.88 + 0.12 * Math.sin(t * 95));
 
+/** What the strokes leave behind them, as a share of the first: each stroke's light sinks by `tau` seconds and the brightest of them
+ * counts, so that a frame between two strokes is darker than both and lit. Smooth, and exactly nothing 0.45 s after the last stroke. */
+const kept = (s: Strokes, age: number, tau: number): number => {
+  let most = 0;
+  for (let i = 0; i < s.at.length; i++) {
+    const t = age - (s.at[i] as number);
+    if (t > 0) most = Math.max(most, (s.share[i] as number) * (1 - Math.exp(-t / 0.003)) * Math.exp(-t / tau));
+  }
+  return most * (1 - ramp(0.25, 0.45, age - (s.at[s.at.length - 1] as number)));
+};
+
 /** How bright the main channel is, the branches are, and the glow the cloud keeps, at seconds since the strike's frame. `leader` is 1: a
  * camera does not see the leader, and nothing is drawn of the channel before its first stroke. */
-export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number; cloud: number } {
+export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number; cloud: number; held: number; glow: number } {
   let main = current(age);
   for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(age - (s.at[i] as number));
   // What the cloud holds after each stroke: a dull glow that sinks in an eighth of a second. Nothing of it is in the channel.
@@ -151,7 +162,7 @@ export function envelope(s: Strokes, age: number): { main: number; branch: numbe
     const t = age - (s.at[i] as number);
     if (t > 0) after += 0.05 * (s.share[i] as number) * (1 - Math.exp(-t / 0.004)) * Math.exp(-t / 0.12);
   }
-  return { main, branch: pulse(age) + current(age), after, leader: 1, cloud: s.fore === null ? 0 : inner(age - s.fore) };
+  return { main, branch: pulse(age) + current(age), after, leader: 1, cloud: s.fore === null ? 0 : inner(age - s.fore), held: kept(s, age, 0.045), glow: kept(s, age, 0.11) };
 }
 
 /** Which return stroke the channel last carried at these seconds since the strike's frame: each takes a way of its own. */

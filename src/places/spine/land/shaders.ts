@@ -802,7 +802,7 @@ void main() {
   vec3 seen = windowSky(r, 1.0 + 3.0 * snow) * open + wallSeen * (1.0 - open);
   c += seen * fres * (1.0 - 0.92 * snow) * (0.75 + 0.25 * smoothstep(0.2, 0.05, lum));
   // The cloud a strike lights beyond the mouth is in the mirror too: a streak of its light on the ice, where the mouth lets it in.
-  if (uStrikeTop.w > 0.0 && open > 0.0) {
+  if (uStrikeTop.w > 0.0) {
     float toward = max(dot(r, normalize(0.5 * (uStrikeTip.xyz + uStrikeTop.xyz) - vWorld)), 0.0);
     c += vec3(0.7, 0.56, 1.0) * (uStrikeTop.w * (0.14 * pow(toward, 50.0) + 0.012 * pow(toward, 8.0)) * open * fres * (1.0 - 0.92 * snow));
   }
