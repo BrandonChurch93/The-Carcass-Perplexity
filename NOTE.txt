@@ -1,7 +1,4 @@
-2026-11-26 04:25 UTC
-work at ac9969d on agent/spine-ground-2
-Version 3 at 3840x2160 draft: spine-2, spine-1, spine-4, spine-3
-look-1.jpg = out/work/v3-spine-2.jpg
-look-2.jpg = out/work/v3-spine-1.jpg
-look-3.jpg = out/work/v3-spine-4.jpg
-look-4.jpg = out/work/v3-spine-3.jpg
+2026-11-26 04:33 UTC
+work at 1d458a3 on agent/spine-ground-2
+04:34 after version 3: far mouth shoulder lowered, far spire head shows (spine-4 at 3840x2160 draft)
+look-1.jpg = out/work/v3-spine-4.jpg
