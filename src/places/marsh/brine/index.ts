@@ -185,10 +185,10 @@ export function create(ctx: Context): Piece {
       domeMesh.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
-      // The crown and the drops leave when the skin is half open.
-      const flung = age >= 0 ? age - TEAR * 0.5 : -1;
-      // The crown stands for a third of a second and is gone.
-      const crowned = flung >= 0 && flung < 0.59 * Math.sqrt(d.size / 0.4);
+      // The crown and the drops leave as the skin opens: the tear and the throw are one event.
+      const flung = age >= 0 ? age - 0.03 : -1;
+      // The crown stands for a quarter of a second and is gone.
+      const crowned = flung >= 0 && flung < 0.256;
       m.makeScale(1, 1, 1).setPosition(d.x, 0, d.z);
       crownMesh.setMatrixAt(i, m);
       crownLife.setXYZW(i, crowned ? flung : 0, d.seed, d.size, 0);

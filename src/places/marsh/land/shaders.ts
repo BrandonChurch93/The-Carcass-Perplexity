@@ -219,7 +219,7 @@ void main() {
   // The crust lies ON grey brown mud, in patches: back from the rims the mud shows wet where no crust has grown, and in the seams between
   // the plates.
   float bare = smoothstep(0.4, 0.5, wide.g * 0.5 + mid.r * 0.5) * smoothstep(1.0, 3.0, t) * (1.0 - rock);
-  float mudShare = max(bare * 0.95, smoothstep(0.44, 0.2, hgt) * 0.25 * (1.0 - rock));
+  float mudShare = max(bare * 0.55, smoothstep(0.44, 0.2, hgt) * 0.25 * (1.0 - rock));
   colour = mix(colour, vec3(0.2, 0.158, 0.132) * (0.7 + 0.6 * mid.b), mudShare);
   rough = mix(rough, 0.86, mudShare);
 
@@ -289,6 +289,10 @@ void main() {
       vec2 uS = (abs(grad.x) > abs(grad.y) ? vec2(p.z, p.y * 1.4) : vec2(p.x, p.y * 1.4)) / 2.2 + 0.37;
       stone = mix(stone, texture2D(tRock, uS).rgb * (0.55 + 0.5 * pc / max(dot(pc, vec3(0.333)), 0.05) * 0.4), steep * 0.75);
     }
+    // (The plate is one picture drawn over the whole rise: close to, the rock's own tile gives it its grain, at its true size.)
+    float grainR = dot(texture2D(tRock, p.xz / 1.3 + 0.2).rgb, vec3(0.333));
+    float evenR = dot(texture2D(tRock, p.xz / 1.3 + 0.2, 5.0).rgb, vec3(0.333));
+    stone *= mix(1.0, clamp(grainR / max(evenR, 0.05), 0.45, 1.6), 0.75 * seen);
     stone *= vec3(1.0, 0.94, 0.84) * (0.5 + 0.2 * mid.g);
     // The sharp relief is how closed a spot is: fractures are dark, and the red has dried in them.
     float crack = smoothstep(0.38, 0.12, h0);
@@ -421,10 +425,12 @@ void main() {
   ng = normalize(vec3(ng.x / max(ng.y, 0.2) - lean.x, 1.0, ng.z / max(ng.y, 0.2) - lean.y));
   colour *= 1.0 + clamp(0.22 * dot(bend, bright) + mix(0.25, 0.32, rock) * dot(ng.xz, bright), -0.45, 0.35);
   // Far off, the red of stalks and growth too small to draw lies on the flats as a haze of colour.
-  colour = mix(colour, vec3(0.16, 0.06, 0.055), smoothstep(0.44, 0.6, wide.g * 0.5 + mid.g * 0.5) * smoothstep(90.0, 400.0, dist) * 0.4 * (1.0 - rock));
+  colour = mix(colour, vec3(0.16, 0.06, 0.055), smoothstep(0.44, 0.6, wide.g * 0.5 + mid.g * 0.5) * smoothstep(90.0, 400.0, dist) * 0.26 * (1.0 - rock));
+  // And the salt itself pales with the damp air over it: the far flats are the lightest ground in the basin.
+  colour = mix(colour, vec3(0.47, 0.4, 0.4), 0.5 * smoothstep(18.0, 150.0, dist) * (1.0 - rock));
 
   // (The salt of the third lens's bank is wet with the pool's spray and stained by it.)
-  colour *= mix(vec3(1.0), mix(vec3(0.74, 0.6, 0.56), vec3(0.42, 0.2, 0.17), smoothstep(0.6, 0.25, hgt)), bankDry);
+  colour *= mix(vec3(1.0), mix(vec3(0.84, 0.56, 0.49), vec3(0.44, 0.19, 0.155), smoothstep(0.6, 0.25, hgt)), bankDry);
   rough = mix(rough, 1.0, churn);
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
   vec3 lit = rigShade(p, n, v, colour, rough, occ);
@@ -438,7 +444,7 @@ void main() {
     // Right at a pool's edge the film is the pool itself, come a hand's breadth over the shelf.
     body = mix(body, vec3(0.13, 0.03, 0.024), smoothstep(0.5, 0.1, t) * (1.0 - slurry));
     vec3 nf = normalize(vec3(bend.x * 0.03 + (fine.b - 0.5) * 0.3 * close, 1.0, bend.y * 0.03 + (fine.a - 0.5) * 0.3 * close));
-    float share = mirrorShare(nf, v) * mix(1.0, 0.55, smoothstep(25.0, 140.0, dist));
+    float share = mirrorShare(nf, v) * mix(1.0, 1.5, smoothstep(25.0, 120.0, dist));
     float open = skyOpen(p) * mix(occ, 1.0, 0.5);
     vec3 film = body * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159) * (1.0 - share) + mirrorAt(p, nf) * share * mix(1.0, open, 0.5);
     lit = mix(lit, film, flood);

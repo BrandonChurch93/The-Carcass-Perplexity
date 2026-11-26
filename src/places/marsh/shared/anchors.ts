@@ -36,7 +36,7 @@ export const bearingDir = (deg: number): [number, number] => [Math.sin(deg * DEG
 
 export const keyTime = (key: string): number => secondsInPlace(UNIT, cut.keyFrames[key] as number);
 export const BURST = eventSeconds(UNIT, 'burst') ?? 9;
-export const SMALL_BURST = keyTime('marsh-1') - 0.22;
+export const SMALL_BURST = keyTime('marsh-1') - 0.15;
 export const WALLOW_TIME = keyTime('marsh-3');
 /** The reference time of the place: the key frame of the establishing picture. */
 export const T0 = keyTime('marsh-0');
