@@ -166,7 +166,7 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   if (dot(n, v) < 0.0) n = -n;
-  vec3 albedo = mix(vec3(0.035, 0.026, 0.02), vec3(0.3, 0.28, 0.26), step(0.5, vWing));
+  vec3 albedo = mix(vec3(0.035, 0.026, 0.02), vec3(0.07, 0.06, 0.055), step(0.5, vWing));
   vec3 c = rigShade(vWorld, n, v, albedo, 0.7, 1.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

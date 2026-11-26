@@ -365,6 +365,8 @@ void main() {
   // The claws: old ivory, grooved, stained at the root.
   vec3 ivory = vec3(0.15, 0.115, 0.08) * (0.7 + 0.5 * height) * mix(vec3(1.0), tone, 0.35);
   albedo = mix(albedo, mix(ivory, albedo * 1.3, 0.5 * side), horn);
+  // The claws of the feet are never clean: they are black with the mud they stand in.
+  albedo = mix(albedo, vec3(0.03, 0.017, 0.013) * (0.6 + 0.8 * grain), 0.85 * horn * vInfo.z);
   albedo = mix(albedo, albedo * vec3(0.6, 0.46, 0.41), damp * (1.0 - wet) * (1.0 - uMudded));
   // The stuck one's head is the wettest of it: it has been under and come up again.
   float headWet = uMudded * smoothstep(0.5, 0.82, vRest.x / uPic.x) * (1.0 - horn);
@@ -402,8 +404,8 @@ void main() {
   float sunkIn = uMudded * (1.0 - smoothstep(0.0, 0.3 + 0.2 * lane, wy - uLine));
   albedo *= 1.0 - 0.55 * sunkIn;
   rough = mix(rough, 0.3, 0.6 * sunkIn);
-  rough = mix(rough, mix(0.38, 0.8, smoothstep(0.35, 0.7, clod)), deep);
-  rough = mix(rough, 0.6, horn * (1.0 - deep));
+  rough = mix(rough, mix(mix(0.62, 0.38, uMudded), mix(0.92, 0.8, uMudded), smoothstep(0.35, 0.7, clod)), deep);
+  rough = mix(rough, mix(0.6, 0.92, vInfo.z), horn * mix(1.0 - deep, 1.0, vInfo.z));
   rough = mix(rough, 1.0, max(0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0), graze));
   // What a fold hides from the sky, and what the body hides from it: the belly, the throat, the insides of the legs. The picture brings its own shade.
   float occ = (0.55 + 0.45 * smoothstep(0.0, 0.85, fold)) * (0.5 + 0.5 * smoothstep(-0.95, 0.25, ng.y)) * mix(crease, 1.0, side);
