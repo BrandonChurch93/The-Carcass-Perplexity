@@ -250,20 +250,29 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     };
     const neck = (seconds: number): NeckAim => {
       if (c.role === 'tastes') {
-        // Trunk raised and swinging, as if tasting the air.
+        // Trunk raised and swinging, as if tasting the air. Once, after the key of the feeding picture has seen it raised, it brings its tuft
+        // half way down to the crust, slowly, and takes it up again when that shot is over.
+        const reach = 0.55 * pulse(seconds, 11.45, 14.6, 14.8, 17.2);
         return {
-          down: 0,
+          down: reach,
           target,
           raised: [b.neckLen * (0.27 + 0.1 * Math.sin(seconds * om * 0.7 + 1)), b.neckLen * (0.72 + 0.07 * Math.sin(seconds * om * 0.85 + phase * 6)), b.neckLen * 0.3 * Math.sin(seconds * om + phase * 6)],
-          shape: 0.8,
+          shape: lerp(0.8, 0.5, reach / 0.55),
         };
       }
       // It feeds, and now and then lifts its tuft out of the heat for a moment.
       // The near one and the one the long lens looks at have their tufts in the seam when the keys look at them.
       // The one the long lens looks at feeds through its shot, pulls its tuft out near the end of it and puts it back after.
-      const hero = Math.max(pulse(seconds, 12.3, 13.4, 14.7, 16.2), working(seconds) * (1 - smooth(5, 6.2, seconds) * (1 - smooth(16.2, 17.2, seconds))));
+      const hero = Math.max(pulse(seconds, 13.0, 14.2, 14.9, 16.2), working(seconds) * (1 - smooth(5, 6.2, seconds) * (1 - smooth(16.2, 17.2, seconds))));
+      // As the long lens comes to it, it has its tuft out of the heat, well clear of the melt, and holds it there; it lowers it into the pool before the key looks.
+      const held = index === 1 ? pulse(seconds, 5.4, 7.9, 8.05, 10.75) : 0;
       const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : index === 1 ? hero : working(seconds) * (index === 0 || index === 13 ? atKey(seconds) : 1);
-      return { down: 1 - (turning ? 0.85 : index === 1 ? 0.5 : 0.85) * up, target: twice && seconds >= twice.cut ? second.target : target, raised: carried(seconds, index === 1 ? -0.38 : -0.24), shape: lerp(FEED_SHAPE, index === 1 ? 0.2 : 0.4, up) };
+      return {
+        down: 1 - Math.max((turning ? 0.85 : index === 1 ? 0.5 : 0.85) * up, 0.8 * held),
+        target: twice && seconds >= twice.cut ? second.target : target,
+        raised: carried(seconds, index === 1 ? -0.38 : -0.24),
+        shape: Math.max(lerp(FEED_SHAPE, index === 1 ? 0.2 : 0.4, up), lerp(FEED_SHAPE, 0.2, held)),
+      };
     };
     // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
     const fidget = turning ? 0 : index === 1 ? 4 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
@@ -323,8 +332,8 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       // It carries its tuft while it walks, and lowers it where it comes to stand.
       const at = body(seconds < 10 ? REST : REST + 0.75);
       const fed = feedAt(at.x, at.z, yaw, 0);
-      // It lowers its tuft over its last step, at the end of the long lens's shot: the picture at the line has it low, feeding.
-      const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.9 * smooth(12.9, 14.9, seconds);
+      // It starts its tuft down after the key of the long lens's shot and has it low by its last step: the picture at the line has it low, feeding.
+      const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.9 * smooth(11.45, 14.6, seconds);
       return { down, target: [fed[0], fed[1]], raised: carried(seconds, -0.2 + 0.12 * c.skater, 0.67), shape: lerp(0.9, FEED_SHAPE, down) };
     }
     const tau = seconds / period + shift;

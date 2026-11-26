@@ -2,23 +2,23 @@
   "version": 1,
   "bootId": "2f05047a-0f90-4aa9-bf0c-55a64f12a6f7",
   "last": {
-    "at": "2026-11-26T16:13:39Z",
+    "at": "2026-11-26T16:57:00Z",
     "kind": "tick",
     "what": "phase 5"
   },
-  "lastStatus": "2026-11-26T16:13:38Z",
+  "lastStatus": "2026-11-26T16:57:00Z",
   "phases": {
     "0": 7538,
     "1": 5961,
     "2": 10455,
     "3": 49205,
     "4": 50715,
-    "5": 21465
+    "5": 24066
   },
   "continuations": [],
   "reviewRounds": {
     "1": 9810
   },
   "extensions": {},
-  "ticks": 179
+  "ticks": 184
 }
