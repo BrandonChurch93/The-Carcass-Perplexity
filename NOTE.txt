@@ -1,7 +1,5 @@
-2026-11-26 01:31 UTC
-work at 13b3f52 on agent/reveal-place-2
-Minute 22: ground now drawn from map-a..d with relief from the height pictures (first frames, cloud and sea untouched). Wrong: soft at native at reveal-4, lowlands too brown and light, cloud still the old hard scraps, cyclone a wad, sea glare flat.
-look-1.jpg = out/work/compare/reveal-4.png
-look-2.jpg = out/work/compare/reveal-1.png
-look-3.jpg = out/work/compare/reveal-2.png
-look-4.jpg = out/work/compare/reveal-3.png
+2026-11-26 01:42 UTC
+work at 6ef971e on agent/reveal-place-2
+hb2 01:58: cloud now photo tiles (streaks, popcorn) on a cover map with fronts and shade; cyclone alpha loosened; lowlands dark teal; vapour from wisps plate. Not yet: sea glitter, lakewater, G13 stars check, uhd softness
+look-1.jpg = out/work/looks/hb2-reveal-4.png
+look-2.jpg = out/work/looks/hb2-reveal-2.png
