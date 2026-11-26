@@ -9,7 +9,7 @@ export function waterUniforms(): Record<string, THREE.IUniform> {
   return {
     uAbsorb: { value: new THREE.Vector3(...ABSORB) },
     uDeep: { value: new THREE.Vector3(0.0016, 0.0058, 0.0125) },
-    uDome: { value: new THREE.Vector4(0, 44, 0, 0) },
+    uDome: { value: new THREE.Vector4(0, 66, 0, 0) },
   };
 }
 
@@ -38,7 +38,8 @@ vec3 throughWater(vec3 c, vec3 p) {
   float ci = clamp(toCamera.y, 0.0, 1.0);
   float ct = sqrt(1.0 - (1.0 - ci * ci) / 1.77);
   vec3 t = exp(-uAbsorb * depth / ct);
-  vec3 sky = skyIrradiance(vec3(0.0, 1.0, 0.0)) * skyOpen(vec3(p.x, 0.0, p.z)) / 3.14159;
+  // The blue of deep water comes from all the water round it: the shade of the brow lies on it softly, not as an edge.
+  vec3 sky = skyIrradiance(vec3(0.0, 1.0, 0.0)) * mix(1.0, skyOpen(vec3(p.x, 0.0, p.z)), 0.3 * exp(-depth / 12.0) + 0.12) / 3.14159;
   return c * t + uDeep * sky * 2.2 * (1.0 - t);
 }`;
 

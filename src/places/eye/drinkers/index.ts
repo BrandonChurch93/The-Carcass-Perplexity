@@ -121,6 +121,8 @@ void main() {
   vec4 land = landAt(vWorld.xz);
   float wet = smoothstep(0.55, 0.1, vWorld.y) * smoothstep(1.5, -1.5, land.b);
   albedo *= mix(1.0, 0.5, wet);
+  // The hooves: dark horn.
+  albedo = mix(albedo, vec3(0.06, 0.05, 0.045), (1.0 - smoothstep(0.08, 0.12, vRest.y)) * step(1.5, vPart));
   vec2 d = nh.xy * 2.0 - 1.0;
   vec3 t = normalize(cross(n, vec3(0.2, 0.9, 0.35)));
   vec3 b = cross(n, t);

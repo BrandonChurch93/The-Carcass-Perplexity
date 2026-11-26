@@ -54,7 +54,7 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     near(-83.6, -7.6, 78, 0.52, steady(0.9, 1.1)),
     near(-79.8, -6.6, 76, 1, steady(0.97, 2.2)),
     // The near one stands off the right edge of the shore shot: only its neck comes into the frame, down to the water.
-    beside(4.3, 8.5, -120, 1, steady(0.97, 4)),
+    beside(5.1, 9.2, -120, 1, steady(0.97, 4)),
     // The two of the last shot, on the brow of the bluff below the camera with their backs to it: they lift their heads as the centre swells.
     { x: centre[0] - 2.43, z: centre[2] - 29.5, facing: 7, size: 0.61, down: (t) => 0.02 + 0.3 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0, lies: false },
     { x: centre[0] - 0.5, z: centre[2] - 28.7, facing: 351, size: 0.47, down: (t) => 0.03 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0, lies: false },

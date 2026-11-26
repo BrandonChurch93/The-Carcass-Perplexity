@@ -8,8 +8,8 @@ export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
   return {
     tCliff: { value: ctx.assets.texture('mat/cliff.jpg', { anisotropy: 2 }) },
     tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
-    tTalus: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 2 }) },
-    tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data' }) },
+    tTalus: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 8 }) },
+    tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 4 }) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
     tSinterNh: { value: ctx.assets.texture('mat/sinter-nh.png', { kind: 'data' }) },
   };

@@ -123,7 +123,7 @@ void main() {
   vec3 pale = mix(k.albedo, vec3(0.6, 0.56, 0.47) * (0.6 + 0.6 * k.occ), 0.6);
   vec3 albedo = mix(vec3(0.085, 0.06, 0.045) * (0.7 + 0.5 * k.occ), pale, slab);
   // At the shore the floor is the gravel of the beach, wet and dark.
-  albedo = mix(albedo, k.albedo * 0.42, smoothstep(7.0, 1.5, shoreward));
+  albedo = mix(albedo, k.albedo * 0.24, smoothstep(7.0, 1.5, shoreward));
   // The crust is pale and pitted, with rims of darker scale.
   float pit = 0.6 * vnoise(vWorld.xz / 0.9 + 5.0) + 0.4 * vnoise(vWorld.xz / 0.23);
   vec3 sa = texture2D(tSinter, vWorld.xz / 3.0).rgb;
@@ -186,7 +186,7 @@ void main() {
   float ledge = 0.45 + 0.55 * smoothstep(0.3, 0.6, 0.6 * vnoise(vec2(atan(vWorld.x, -vWorld.z) * 190.0, vWorld.y / 1.6)) + 0.4 * vnoise(vec2(atan(vWorld.x, -vWorld.z) * 700.0, vWorld.y / 0.5)));
   float down = -vWorld.y;
   vec3 fall = exp(-down * vec3(0.5, 0.2, 0.17));
-  vec3 c = k.albedo * e * (k.occ * ledge / 3.14159) * reach * sqrt(reach) * 2.6 * fall;
+  vec3 c = k.albedo * e * (k.occ * ledge / 3.14159) * reach * sqrt(reach) * 1.5 * fall;
   gl_FragColor = vec4(rigOut(throughWater(c, vWorld)), 1.0);
 }`;
 
@@ -306,7 +306,7 @@ void main() {
   vec4 seen = texture2D(tMirror, clamp(uv, 0.001, 0.999));
   // The sky is not drawn into the mirror: the water takes it from the rig, and darker than it is, as deep water under a low sun does.
   vec3 rd = reflect(-v, n);
-  vec3 sky = skyRadiance(vec3(rd.x, abs(rd.y), rd.z)) * uSkyMirror * mix(1.0, 0.4, smoothstep(0.06, 0.45, abs(rd.y)));
+  vec3 sky = skyRadiance(vec3(rd.x, abs(rd.y), rd.z)) * uSkyMirror * mix(1.0, 0.3, smoothstep(0.04, 0.3, abs(rd.y)));
   // The land stands in the water darker than it stands in the air.
   vec3 refl = seen.rgb * vec3(0.44, 0.48, 0.55) + (1.0 - seen.a) * sky;
   refl = mix(refl, sky, smoothstep(0.75, 0.95, v.y));
@@ -316,7 +316,7 @@ void main() {
   float hump = smoothstep(0.0, 0.45, swell);
   // Seen from above it is no dome at all, only water: the dark of the shaft, and what is in it.
   hump *= 1.0 - smoothstep(0.25, 0.7, v.y);
-  refl = mix(refl, refl * 0.3 + sky * 0.1, hump);
+  refl = mix(refl, refl * 0.07 + sky * 0.16, hump);
   f = max(f, 0.8 * hump);
   // Where the mats have grown up to the surface it is not a mirror at all.
   if (r > 470.0) f *= 1.0 - mix(0.5, 0.94, smoothstep(25.0, 220.0, length(cameraPosition - p))) * matBeds(p);
@@ -520,7 +520,7 @@ export function create(ctx: Context): Piece {
   tips.frustumCulled = false;
   const tipAt: [number, number, number][] = [];
   const scatter = ctx.rng('riser');
-  for (let i = 0; i < TIPS; i++) tipAt.push([(i / TIPS) * 360 + scatter.range(-16, 16), scatter.range(26, 110), scatter.range(0.14, 0.3)]);
+  for (let i = 0; i < TIPS; i++) tipAt.push([(i / TIPS) * 360 + scatter.range(-16, 16), scatter.range(30, 120), scatter.range(0.2, 0.42)]);
   lake.add(ctx.parts.built('riser', back, tips));
   lake.add(tips);
 
@@ -571,7 +571,7 @@ export function create(ctx: Context): Piece {
       const breathe = 1 + 0.04 * Math.sin(t * 2.3);
       dome.value.x = 8.5 * swell * breathe;
       back.visible = swell > 0.001;
-      back.scale.set(22, 5.4 * swell * breathe * smooth(0.3, 1, swell) + 0.01, 19);
+      back.scale.set(34, 5.4 * swell * breathe * smooth(0.3, 1, swell) + 0.01, 27);
       back.position.set(6, -1.6, -4);
       tipAt.forEach(([bearing, r, size], i) => {
         const up = smooth(0.25 + 0.05 * (i % 4), 0.9, swell);
@@ -601,9 +601,9 @@ export function create(ctx: Context): Piece {
           const age = t - (rise - 1.2 + 0.62 * (i - 7));
           const life = 2.7;
           if (age > 0 && age < life) {
-            radius = 38 + 44 * age;
-            width = 2.6;
-            height = 0.16 * Math.sin((Math.PI * age) / life);
+            radius = 58 + 44 * age;
+            width = 7;
+            height = 0.24 * Math.sin((Math.PI * age) / life);
           }
         } else {
           const k = i - 12;
@@ -621,7 +621,7 @@ export function create(ctx: Context): Piece {
         if (from) lap.set(from.x, from.z, from.offset, from.strength);
         else lap.set(0, 0, 0, 0);
       });
-      (surfaceMaterial.uniforms.uRest as THREE.IUniform<number>).value = smooth(end - 1.5, end - 0.35, t);
+      (surfaceMaterial.uniforms.uRest as THREE.IUniform<number>).value = smooth(end - 2.7, end - 0.35, t);
     },
     beforeSample: (renderer, camera) => {
       (surfaceMaterial.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
