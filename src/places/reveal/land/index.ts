@@ -226,6 +226,9 @@ void main() {
     upperR = length(inUpper) + 0.3 * (vnoise(xz / 11.0 + 4.0) - 0.5);
     upper = (1.0 - smoothstep(0.86, 0.98, upperR)) * smoothstep(120.0, 200.0, uViewKm);
     land *= 1.0 - upper;
+    // (It is a lake as the others are: shut in, deep in its middle, its bed dark.)
+    coastKm = mix(coastKm, min(coastKm, -(0.98 - upperR) * 23.0), upper);
+    shut = max(shut, upper);
     shallow = mix(shallow, 0.0, upper);
   }
   if (land > 0.0) kind = 0.5 + 0.5 * vec3(
