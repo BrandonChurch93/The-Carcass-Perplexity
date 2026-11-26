@@ -36,7 +36,7 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
     float sunH = sunHeight(xz) + uTerm.w * (0.05 + 0.08 * high);
     float low = mix(uSunDir.y, 0.22 + 0.6 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + uMoonColour * (0.2 + 0.25 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
+    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + uMoonColour * (0.12 + 0.16 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
     return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
   }
@@ -227,6 +227,8 @@ void main() {
   float glimmer = (0.14 + 0.16 * vnoise(vec2(uTime * 0.9, 3.0))) * exp(-dot(d1, d1) * 40.0) + (0.1 + 0.16 * vnoise(vec2(uTime * 1.3, 11.0))) * exp(-dot(d2, d2) * 55.0);
   glow += vec3(0.55, 0.42, 1.0) * glimmer * thick;
   if (uDusk > 0.0) glow *= uCalm.x;
+  // (The storm dies down with the day: by night its towers are no brighter than the bone.)
+  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
   if (uDusk > 0.0) colour += exposed(beatOnCloud(vWorld.xz)) - beatOnCloud(vWorld.xz);
   colour += glow * 1.6 + beatOnCloud(vWorld.xz);
   float alpha = clamp(thick, 0.0, 0.98);
@@ -287,7 +289,7 @@ void main() {
     if (uDusk > 0.0) {
       // The air at the edge keeps the sun longest, on the side the sun went: a twilight arc, warm against the planet and blue above,
       // and when that has gone a thin line of airglow all round. The stars come out as the exposure opens.
-      float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.16;
+      float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.08;
       vec3 arc = mix(vec3(1.0), mix(vec3(1.5, 0.62, 0.2), vec3(0.7, 0.85, 1.2), smoothstep(0.0, 40.0, km)) * sunSeen(sunH - 0.05) + 0.05 * skySeen(sunH), uTerm.w);
       float line = exp(-pow((km - 22.0) / 9.0, 2.0));
       colour = (exposed(glow * arc + vec3(0.2, 0.75, 0.42) * 0.0035 * line * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45)) * a;
@@ -300,7 +302,7 @@ void main() {
   vec3 blue = mix(vec3(0.06, 0.2, 0.62), vec3(0.42, 0.66, 1.0), band * band);
   vec3 colour = blue * band * 0.5;
   if (uDusk > 0.0) {
-    float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.12;
+    float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.05;
     vec3 arc = mix(vec3(1.0), mix(vec3(1.6, 0.6, 0.18), vec3(0.75, 0.85, 1.1), sunSeen(sunH - 0.12)) * sunSeen(sunH - 0.03) + 0.04 * skySeen(sunH), uTerm.w);
     colour = exposed(colour * arc);
   }

@@ -51,6 +51,8 @@ varying vec3 vWorld;
 const vec3 DEEP = vec3(0.0022, 0.0065, 0.0135);
 // The dearer land: false lays no ground photograph under an enlarged map (both costs in HANDOVER.md).
 const bool GROUND_DETAIL = true;
+// The height of the highest ground, km, as the shadows of dusk are thrown: drawn taller than it stands, as relief is on a map.
+const float RELIEF_KM = 16.0;
 // The lesser vents: x and z from the Heart, km, and their size beside it.
 const vec3 VENTS[6] = vec3[6](vec3(-42.0, -98.0, 0.5), vec3(76.0, -33.0, 0.55), vec3(170.0, -66.0, 0.45), vec3(124.0, 24.0, 0.4), vec3(-52.0, 50.0, 0.45), vec3(43.0, 79.0, 0.4));
 
@@ -411,8 +413,26 @@ void main() {
   float rake = 0.0;
   if (uDusk > 0.0) {
     sunH = sunHeight(xz);
+    // (Salt under a moon would outshine the bone and the fire both: the pan lies damp by night.)
+    ground *= 1.0 - 0.45 * saltFlat * uEmber.x;
     rake = uTerm.w * (1.0 - smoothstep(0.04, 0.4, sunH));
     n = normalize(vec3(-slope.x * (1.0 + 2.0 * rake), 0.8, -slope.y * (1.0 + 2.0 * rake)));
+    // The ranges throw their shadows, longer as the sun goes down: the height of the land is read toward the sun, farther and
+    // coarser at each reach, for the highest thing that stands between this place and the sun. (Only where the sun still rakes.)
+    if (rake > 0.0 && sunH > -0.05 && inWide > 0.0) {
+      vec2 toward = normalize(uSunDir.xz);
+      float here = height * land;
+      float horizon = 0.0;
+      float reach = 5.0;
+      for (int i = 0; i < 10; i++) {
+        vec2 at = (xz + toward * reach - uRectWide.xy) * uRectWide.zw;
+        float there = clamp((texture2D(uReliefWide, clamp(at, 0.0, 1.0), 0.6 * float(i)).b - 0.3) / 0.7, 0.0, 1.0);
+        horizon = max(horizon, (there - here) * RELIEF_KM / reach);
+        reach *= 1.62;
+      }
+      float low = max(sunH, 0.0) + 0.012;
+      shade *= mix(1.0, smoothstep(horizon - 0.02 - 0.25 * low, horizon + 0.02 + 0.25 * low, low), rake);
+    }
   }
   float mu = limbCos(xz);
   vec3 level = vec3(0.0, 1.0, 0.0);
@@ -450,7 +470,9 @@ void main() {
     vec3 vent = VENTS[i];
     vec2 q = fromLava - vent.xy;
     float dd = dot(q, q);
-    // The lesser vents answer the beat a little late, each in its turn.
+    // The height of the highest ground, km, as the shadows of dusk are thrown: drawn taller than it stands, as relief is on a map.
+const float RELIEF_KM = 16.0;
+// The lesser vents answer the beat a little late, each in its turn.
     float answer = 0.75 + 0.5 * uBeat * (0.5 + 0.5 * sin(float(i) * 2.4));
     heat += exp(-dd / (11.0 * vent.z * seenFar)) * 2.2 * vent.z * answer;
     halo += exp(-dd / (260.0 * vent.z)) * 0.3 * vent.z * answer;
@@ -458,18 +480,21 @@ void main() {
   float vein = d0 < 18000.0 ? cracks(xz / 7.0) * exp(-d0 / 2200.0) * (0.2 + 0.6 * uBeat) : 0.0;
   heat = (heat + vein) * land;
   vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.17 * smoothstep(0.03, 0.6, heat);
+  vec3 glowCore = glow;
   // (The beat itself: a dull red swell in the whole chest, on the ground and on the flanks of the ribs that face the Heart.)
   glow += vec3(1.0, 0.16, 0.03) * 0.09 * max(uBeat - 0.12, 0.0) * exp(-d0 / 30000.0) * land * (0.6 + 0.8 * clamp(0.5 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.0));
+  vec3 glowSwell = glow;
   glow += vec3(1.0, 0.3, 0.06) * 0.26 * halo * land * clamp(0.4 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
 
   // By night the Heart is the brightest thing on the planet: the ember swells with the beat, its fire lights the rock and the
   // flanks of the ribs that face it, falling off with distance, and veins of fire run out between the ribs.
-  // (What the day drew of it was drawn for the day's exposure.)
-  if (uDusk > 0.0) glow *= pow(uGain, -0.6);
+  // (What the day drew of it was drawn for the day's exposure; and the day's swell lights the black crust as much as the bone,
+  // which the night would show as a red disc: by night the fire's light is the ground's own colour, below.)
+  if (uDusk > 0.0) glow = (glowCore + (glowSwell - glowCore) * mix(1.0, 0.2, uEmber.x) + (glow - glowSwell)) * pow(uGain, -0.6);
   if (uDusk > 0.0 && uEmber.x > 0.0) {
     float facing = clamp(0.35 + 3.0 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 2.0);
-    float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 4900.0);
-    glow += vec3(1.0, 0.3, 0.06) * ground * (0.1 * (0.5 + 2.6 * uBeat) * reach * facing * uEmber.x * land);
+    float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 8000.0);
+    glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.4 + 2.6 * uBeat) * reach * facing * uEmber.x * land);
     // (The ember itself swells with the beat.)
     glow += blackbody(1250.0) * 0.05 * uEmber.x * uBeat * exp(-d0 / (60.0 * seenFar * (1.0 + 2.0 * uBeat))) * land;
     if (d0 < 250000.0) {

@@ -30,7 +30,7 @@ export interface Rig {
 const TERM = { x: 300, z: -100, radius: 5200 };
 /** The moon the film never shows stands low in the lower right, across the body from where the sun went. Toward the moon. */
 const MOON: [number, number, number] = [0.62, 0.52, 0.59];
-const MOON_COLOUR: [number, number, number] = [0.06, 0.08, 0.11];
+const MOON_COLOUR: [number, number, number] = [0.06, 0.088, 0.135];
 
 const ease = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -77,7 +77,8 @@ export function dusk(seconds: number): Dusk {
     sun,
     round: ease(0, 1.6, u),
     moon: ease(0.5, 3.0, u) * (1 - 0.25 * thin),
-    gain: 1 + (NIGHT_GAIN - 1) * Math.pow(night, 1.5),
+    // (The exposure opens by stops, and begins before the sun is down: the eye follows the body, not the bright edge of the planet.)
+    gain: Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.18 * thin),
     strikes: 1 - ease(1.5, 5.2, u),
     glintSlide: 1900 * ease(0.3, 5.2, u),
     glint: 1 - ease(2.6, 4.9, u),
@@ -88,7 +89,7 @@ export function dusk(seconds: number): Dusk {
 const SET_TAU = 5.5;
 const SET_DROP = (72 * Math.PI) / 180;
 const SET_SWING = (30 * Math.PI) / 180;
-const NIGHT_GAIN = 8;
+const NIGHT_GAIN = 9;
 
 export function createRig(): Rig {
   const uniforms: Record<string, THREE.IUniform> = {

@@ -74,7 +74,7 @@ float sunSeen(float h) {
 }
 // The colour the air leaves the sun's light at that height: white, gold, then red.
 vec3 sunTint(float h) {
-  return exp(-vec3(0.015, 0.05, 0.12) * max(1.0 / (max(h, 0.0) + 0.045) - 1.746, 0.0));
+  return exp(-vec3(0.01, 0.085, 0.24) * max(1.0 / (max(h, 0.0) + 0.06) - 1.702, 0.0));
 }
 // The light of the sky there: it outlasts the sun, and is gone a little way into the night.
 float skySeen(float h) {
@@ -93,7 +93,7 @@ vec3 sunLightAt(float h, float day) {
 }
 // The sky's light on a place, as a share of the day's, and bluer as the sun goes.
 vec3 skyLightAt(float h, float day) {
-  return mix(vec3(0.5 + 0.5 * day), mix(vec3(0.5, 0.68, 1.1), vec3(1.0), sunSeen(h)) * skySeen(h), uTerm.w);
+  return mix(vec3(0.5 + 0.5 * day), mix(vec3(0.45, 0.66, 1.15), vec3(1.0), smoothstep(0.0, 0.3, h)) * (0.16 + 0.84 * smoothstep(0.02, 0.5, h)) * skySeen(h), uTerm.w);
 }
 // The light the air itself throws back toward the eye there, as a share of the day's: it goes with the sun, a little after the ground.
 vec3 airLightAt(float h) {
@@ -124,13 +124,15 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     float sunH = sunHeight(p.xz);
     vec3 toSun = sunToward(sunH);
     vec3 sunLight = sunLightAt(sunH, day) * occ;
-    vec3 eDusk = sunLight * max(dot(n, toSun), 0.0) + skyIrradiance(n) * (0.55 + 0.45 * occ) * skyLightAt(sunH, day) + uMoonColour * max(dot(n, uMoonDir), 0.0) * (0.6 + 0.4 * occ);
+    vec3 eDusk = sunLight * max(dot(n, toSun), 0.0) + skyIrradiance(n) * (0.55 + 0.45 * occ) * skyLightAt(sunH, day);
+    // (Under the moon the eye and the camera lose colour: the ground is read nearly grey.)
+    vec3 eMoon = uMoonColour * (max(dot(n, uMoonDir), 0.0) * (0.6 + 0.4 * occ) + 0.16);
     vec3 hDusk = normalize(toSun + v);
     float aDusk = max(rough * rough, 0.002);
     float nhDusk = max(dot(n, hDusk), 0.0);
     float dDusk = aDusk * aDusk / (3.14159 * pow(nhDusk * nhDusk * (aDusk * aDusk - 1.0) + 1.0, 2.0));
     float fDusk = 0.02 + 0.98 * pow(1.0 - max(dot(v, hDusk), 0.0), 5.0);
-    return albedo * eDusk / 3.14159 + sunLight * (dDusk * fDusk * 0.25 * step(0.0, dot(n, toSun)));
+    return (albedo * eDusk + mix(albedo, vec3(dot(albedo, vec3(0.3, 0.55, 0.15))), 0.65) * eMoon) / 3.14159 + sunLight * (dDusk * fDusk * 0.25 * step(0.0, dot(n, toSun)));
   }
   float sun = max(dot(n, uSunDir), 0.0) * occ * day;
   vec3 e = uSunColour * mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * sun + skyIrradiance(n) * (0.55 + 0.45 * occ) * (0.5 + 0.5 * day);
