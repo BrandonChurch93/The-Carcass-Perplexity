@@ -361,7 +361,9 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const outside = lerp(stream, rock, smooth(0.9, 1.06, u));
     // The lip is broken: roof fall and spatter lie heaped along it either side of where the lava leaves, so its edge is no ruled line.
     const lipHeap = (3.2 * Math.pow(noise2(x / 11 + 6.3, 1.7), 1.6) + 1.5 * noise2(x / 3.7 + 2.1, 4.4) + 1.3 * Math.max(0, blocks(x + 7, z + 3, 4.6, 13))) * smooth(-4.5, -0.5, d) * smooth(7, 1.5, d) * smooth(3, 11, side);
-    return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)) + lipHeap, n, under: ground, isle, top, on: on * smooth(-1, 2, -d) - shelf * smooth(0.95, 1.1, u) * smooth(1.5, 4, d), far };
+    // Beside the mouth the sill does not stand out of the wall as a slab with a free edge: past the lip it goes down into the land.
+    const top0 = lerp(floor, outside, smooth(-1.5, 2.5, -d)) + lipHeap;
+    return { y: lerp(top0, Math.min(top0, ground - 0.5), far * smooth(0.2, 1.3, -d + 0.5 * (noise2(x / 1.9 + 4.1, z / 1.9 + 7.3) - 0.5))), n, under: ground, isle, top, on: Math.min(1, on * smooth(-1, 2, -d) + 0.85 * far * smooth(-2, 0.6, -d)) - shelf * smooth(0.95, 1.1, u) * smooth(1.5, 4, d), far };
   };
 
   const xs: number[] = [];

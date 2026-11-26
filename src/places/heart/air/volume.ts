@@ -7,7 +7,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_HEAT = 12;
 
 /** March steps. The cost of the volume is close to linear in these. */
-export const STEPS = { air: 8 };
+export const STEPS = { air: 4 };
 
 const COMMON = /* glsl */ `
 precision highp float;
@@ -65,14 +65,31 @@ uniform sampler2D tSmokeNearAt;
 uniform sampler2D tSmokeFarAt;
 uniform vec2 uSmokeFit;
 uniform vec4 uHang;
+uniform float uFumeShare;
 
 // The air of a caldera at dusk carries smoke: it is a little rose, never neutral.
 const vec3 AIR_ALBEDO = vec3(0.95, 0.89, 0.87);
 // The heavy air low over the lake is half smoke: it is darker than the clear air and warmer.
+// High over the lake the smoke is thin and the air is the dusk's own: cooler than the rose of the low air.
+const vec3 HIGH_AIR = vec3(0.7, 0.95, 1.4);
 const vec3 HEAVY_ALBEDO = vec3(0.72, 0.64, 0.6);
 const vec3 HANG_ALBEDO = vec3(0.4, 0.33, 0.3);
 const float LAKE_WIDE = 0.75;
 const float LAYER = 12.0;
+// The light of the dusk on the fume, band by band, against the sky's mean: the fume is old smoke, mauve where the last light is in it.
+const vec3 FUME_SKY = vec3(0.3, 0.26, 0.26);
+// The fume that fills the caldera: old smoke, thickest low and toward the open lava of the east. It is what puts a far wall far away.
+// FUME is its thickness for a metre at the level of the lake, FUME_HIGH the height over which it thins to a third.
+const float FUME = 0.0006;
+const float FUME_HIGH = 55.0;
+const vec3 FUME_ALBEDO = vec3(0.9, 0.8, 0.8);
+// How much of the fire under a point of fume it sends on to the lens.
+const float FUME_FIRE = 2.4;
+
+// The fire's light as smoke hands it on: a sensor sees red-hot light on grey smoke as orange, not as the pink of pure red laid over a blue dusk.
+vec3 fireOnSmoke(vec3 g) {
+  return vec3(g.r, max(g.g, 0.3 * g.r), max(g.b, 0.12 * g.r)) * 1.2;
+}
 
 // The round lights this view passes near enough to matter: found once for the pixel, so that the march asks only those.
 int nearLights[8];
@@ -115,7 +132,7 @@ vec3 airWarm;
 vec3 wideNear;
 vec3 wideFar;
 // p is where the air is asked for, part is where that is between the two points the wide glow was read at (0 to 1), ya and yb the heights of the two ends of the stretch it stands for.
-void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emit) {
+void airAt(vec3 p, float part, float ya, float yb, vec3 glow, out float sigma, out vec3 emit) {
   vec4 land = texture2D(tLand, (p.xz - uLandRect.xy) * uLandRect.zw);
   float y = max(p.y, 0.0);
   float overLake = smoothstep(40.0, -90.0, land.b);
@@ -147,13 +164,19 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   // The smoke that hangs before the butte of the feeding shot: thin, grey-brown, lit by the sky above and by the floor below.
   float hang = 0.0;
   if (uHang.w > 0.0) hang = uShowAir * uHang.w * (1.0 - smoothstep(0.35, 1.0, length(p.xz - uHang.xy) / uHang.z)) * exp(-y / 45.0) * (0.6 + 0.8 * n.g);
-  float haze = thin + heavy + hang;
+  // The fume: its share of a stretch is worked out as the heavy layer's is. Thinner over the bench the lens stands on, thicker over the lake and east.
+  float fumeLayer = hi - lo < 1.0 ? exp(-0.5 * (lo + hi) / FUME_HIGH) : FUME_HIGH * (exp(-lo / FUME_HIGH) - exp(-hi / FUME_HIGH)) / (hi - lo);
+  float fume = uShowAir * uFumeShare * FUME * fumeLayer * (0.4 + 0.6 * overLake) * (0.4 + 1.0 * east) * (0.25 + 1.5 * n.g);
+  // It is lit by the fire under it: glow is the lake's own light under this stretch of the view (main reads it at four places along the view).
+  vec3 fire = fireOnSmoke(glow) * (0.85 * exp(-y / 14.0) + 0.15 * exp(-y / 70.0));
+  float haze = thin + heavy + hang + fume;
   sigma = haze;
   // The lake and the warm side of the sky light the low air; the high air has the colour of the sky it is seen against.
   float low = exp(-y / 250.0);
-  emit = thin * AIR_ALBEDO * ((sky + airWarm * low) * open + 0.25 * lights + 0.6 * under)
+  emit = thin * AIR_ALBEDO * mix(HIGH_AIR, vec3(1.0), low) * ((sky + airWarm * low) * open + 0.25 * lights + 0.6 * under)
        + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + 0.6 * under * low)
-       + hang * HANG_ALBEDO * (sky * open + 1.3 * under);
+       + hang * HANG_ALBEDO * (sky * open + 1.3 * under)
+       + fume * FUME_ALBEDO * (uSkyMean * FUME_SKY * (0.6 + 0.4 * smoothstep(0.0, 220.0, y)) * (0.35 + 0.65 * open) + FUME_FIRE * fire + 0.3 * lights + 0.1 * under);
 }
 
 // One layer of smoke as it stands before this pixel's scene: its light and what it lets through, its distance, and how much of it is in front of the scene.
@@ -187,6 +210,13 @@ void main() {
   float wideB = max(min(reach * 0.85, 1300.0), wideA + 1.0);
   wideNear = lakeGlow(ro.xz + rd.xz * wideA, 450.0);
   wideFar = lakeGlow(ro.xz + rd.xz * wideB, 450.0);
+  // The fire under the view, for the fume: the lake's glow at four places along it, each over a disc as wide as the stretch it stands for
+  // and as the place is high, so that a long stretch takes the mean of what it passes over and nothing is stepped across.
+  vec3 fires[4];
+  for (int k = 0; k < 4; k++) {
+    float along = reach * (k == 0 ? 0.1 : k == 1 ? 0.335 : k == 2 ? 0.615 : 0.88);
+    fires[k] = lakeGlow(ro.xz + rd.xz * along, max(max(1.5 * max(ro.y + rd.y * along, 0.0), 12.0), 0.09 * reach));
+  }
 
   // The smoke, in two sheets at their own distances; the air is then marched from the camera and takes them in as it passes them.
   vec3 nearSum = vec3(0.0);
@@ -219,7 +249,11 @@ void main() {
     vec3 p = ro + rd * at;
     float sigma;
     vec3 emit;
-    airAt(p, clamp((at - wideA) / (wideB - wideA), 0.0, 1.0), ro.y + rd.y * prev, ro.y + rd.y * edge, sigma, emit);
+    float way = at / max(reach, 1.0);
+    vec3 glow = way < 0.335 ? mix(fires[0], fires[1], clamp((way - 0.1) / 0.235, 0.0, 1.0))
+      : way < 0.615 ? mix(fires[1], fires[2], (way - 0.335) / 0.28)
+      : mix(fires[2], fires[3], clamp((way - 0.615) / 0.265, 0.0, 1.0));
+    airAt(p, clamp((at - wideA) / (wideB - wideA), 0.0, 1.0), ro.y + rd.y * prev, ro.y + rd.y * edge, glow, sigma, emit);
     vec3 glowing = sigma > 0.0 ? emit / sigma : vec3(0.0);
     // A sheet of smoke that stands inside this stretch of air is laid at its own distance: the air before it, the smoke, then the rest of the air.
     float from = prev;
@@ -269,7 +303,7 @@ void main() {
     vec2 meet = ro.xz + rd.xz * min((1200.0 - ro.y) / max(rd.y, 0.02), 30000.0);
     float lumps = noise(vec3(meet.x + 2.0 * uTime, 300.0, meet.y) * 0.00021).g;
     float east = smoothstep(0.8, 1.0, dot(normalize(rd.xz), normalize(vec2(1500.0, -300.0) - ro.xz)));
-    float depth = min(0.6 + 6.0 * east, 3.2) * mix(0.8, 1.2, lumps) * smoothstep(0.0, 0.08, rd.y);
+    float depth = min(0.2 + 3.4 * east * east, 3.2) * mix(0.8, 1.2, lumps) * smoothstep(0.0, 0.08, rd.y);
     veil = 1.0 - exp(-depth);
     veilLight = veil * skyHere * vec3(0.5, 0.28, 0.17);
   }

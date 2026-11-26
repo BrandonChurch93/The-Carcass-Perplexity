@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { MOUTH, SHORE_POINTS, VIEW, benchDistance, calderaDistance } from '../layout';
 import { CRUST_HEIGHT_GLSL, crustUniforms } from '../lake/index';
-import { SEAMS, UNIT, keySeconds } from '../shared/anchors';
+import { CRACK_FOOT, SEAMS, UNIT, keySeconds } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { HeartContext } from '../shared/context';
 import { ROPY, SKERRY, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
@@ -596,8 +596,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       }
       return false;
     };
-    // One stone in five is pale and dusty.
-    const paled = (tone: number): number => (rng.next() < 0.2 ? rng.range(1.35, 1.9) : tone);
+    // One stone in three is pale and dusty.
+    const paled = (tone: number): number => (rng.next() < 0.35 ? rng.range(1.35, 1.9) : tone);
     const fallen = (x: number, z: number, size: number, tone: number, a: number, long = 1, sink = rng.range(0.36, 0.5)): boolean =>
       !(chute(x, z) && height(x, z) > 5) &&
       put(kinds.crag, x, z, size, { shade: false, sink, flat: rng.range(0.45, 0.9), tone: paled(tone), yaw: -a, long, lean: [Math.cos(a), Math.sin(a), rng.range(-0.3, 0.3)] });
@@ -625,7 +625,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
         const tx = (-gz / gl) * way;
         const tz = (gx / gl) * way;
         // On the long lens a pixel is 8 cm there. The picture's slope is fine scree, a grain of 4 to 12 pixels, with a block of
-        // 2 to 3 m here and there sunk to its middle: one stone in forty.
+        // 2 to 3 m here and there sunk to its middle: one stone in forty. (Stones of 0.5 to 2.2 m read better as stones at viewing size
+        // and cost half a second a sample more at that lens: not taken.)
         const block = rng.next() < 0.025;
         const size = block ? rng.range(2.2, 3.4) : sized(0.3, 1.4, 2.4);
         if (fallen(x, z, size, tone * rng.range(0.7, 1.3), Math.atan2(tz, tx), rng.range(1.0, 1.35), block ? 0.5 : undefined)) {
@@ -777,6 +778,33 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       if (Math.hypot(x - ROPY[0], z - ROPY[1]) < 15 && rng.next() < 0.7) continue;
       if (benchDistance(x, z) < 0.8) continue;
       put(size > 0.22 ? kinds.stone : kinds.pebble, x, z, size, { feet: true, shade: size > 0.12, sink: rng.range(0.2, 0.36) });
+    }
+  }
+
+  // The crust at the vent of the crag's foot is crumbs, not a coat: stones of a finger to a hand heaped along the short crack, which the rock's
+  // shader makes lemon. They draw from a stream of their own.
+  rng = ctx.rng('land/crumbs');
+  for (let i = 0; i < 420; i++) {
+    const t = rng.range(-0.7, 0.7);
+    const off = (rng.next() + rng.next() + rng.next() - 1.5) * 0.45;
+    put(i % 3 ? kinds.angular : kinds.lump, CRACK_FOOT[0] + 0.61 * t + 0.793 * off, CRACK_FOOT[1] + 0.793 * t - 0.61 * off, sized(0.025, 0.085, 1.3), { sink: rng.range(0.2, 0.3), shade: false });
+  }
+
+  // The view of the one that sank: its picture's bottom left corner is dark rock close under the lens and out of focus. Staged for that shot
+  // alone: four boulders of the skerry, 3 m ahead of the key's lens and left of its axis, their tops a metre and more under it and each lower
+  // than the last toward the middle of the frame. The lens passes over and to the right of them. They draw from a stream of their own.
+  rng = ctx.rng('land/sank');
+  {
+    const staged = during('heart-04');
+    const yaw = (43 * Math.PI) / 180;
+    const lensY = Math.max(0, height(-520, 287)) + 4.4;
+    for (const [shape, ahead, left, under, half] of [
+      [2, 3.3, 2.4, 0.93, 1.3],
+      [0, 3.2, 1.35, 1.08, 1.0],
+      [3, 3.1, 0.55, 1.3, 0.8],
+      [5, 3.0, -0.05, 1.47, 0.6],
+    ] as [number, number, number, number, number][]) {
+      stand(shape, -520 + Math.sin(yaw) * ahead - Math.cos(yaw) * left, 287 - Math.cos(yaw) * ahead - Math.sin(yaw) * left, lensY - under, half, lensY - under + 0.5, rng.range(0.5, 0.58), staged);
     }
   }
 

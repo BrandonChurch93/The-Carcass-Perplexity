@@ -10,7 +10,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_STEAM = 16;
 export const MAX_BODIES = 13;
 /** March steps for each texel. Four texels with four offsets are averaged, so the march seen is four times as fine. */
-export const SMOKE_STEPS = { body: 14, most: 24, steam: 10 };
+export const SMOKE_STEPS = { body: 8, most: 14, steam: 6 };
 
 export const SMOKE_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -47,6 +47,10 @@ const vec2 SKY_SIDE = vec2(-0.895, -0.446);
 
 vec4 noise(vec3 p) {
   return textureLod(tNoise, p, 0.0);
+}
+// The fire's light as smoke hands it on (the same as the air's, volume.ts): orange, not the pink of pure red over a blue dusk.
+vec3 fireOnSmoke(vec3 g) {
+  return vec3(g.r, max(g.g, 0.3 * g.r), max(g.b, 0.12 * g.r)) * 1.2;
 }
 
 vec3 sumN = vec3(0.0);
@@ -132,7 +136,7 @@ float bodyDensity(int i, vec3 p, bool fine, out float above) {
   above = A.w * sqrt(max(1.0 - d2, 0.0)) - yy;
   // The lumps climb the lean, so the body shears as it rises; and they change slowly as they go, so that it billows and does not only slide.
   vec4 G = uBodyG[i];
-  vec3 q = vec3(rel.x, (yy - D.x * uTime) / G.x, rel.y) / D.z + B.z + vec3(0.011, 0.0, 0.006) * uTime;
+  vec3 q = vec3(rel.x, (yy - D.x * uTime) / G.x, rel.y) / D.z + B.z + vec3(0.026, 0.0, 0.015) * uTime;
   float g = uBodyF[i].w;
   // A body that is less solid is more of its lumps: they are drawn out the stronger, so that its outline is billows and not the dome.
   float body = 0.5 + (noise(q).r - 0.5) * mix(2.6, 1.0, clamp(g, 0.0, 1.0)) + dome * g - (0.25 + 0.43 * g) - G.z;
@@ -192,6 +196,7 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   float probe = D.z * 0.09;
   float through = 1.0;
   vec3 wide = F.x > 0.0 ? 4.0 * lakeGlow(A.xy + B.xy * 0.4 * A.w, 450.0) : vec3(0.0);
+  vec4 G = uBodyG[i];
   for (int k = 0; k < ${SMOKE_STEPS.most}; k++) {
     if (float(k) >= count) break;
     float t = t0 + (float(k) + jitter) * dt;
@@ -216,8 +221,12 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float rise = 1.0 - 0.95 * exp(-up / min(10.0, F.y)) * smoothstep(8.0, 20.0, A.w);
     // What of the body stands under the point is guessed from how it thickens downward: the underside of a billow takes the fire, its top is shaded from it by its own mass.
     float under = mix(1.35, 0.3, clamp(2.0 * dens - skyward, 0.0, 1.0));
-    light += under * rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));
-    light += under * F.x * rise * exp(-up / F.y) * (0.35 + 0.65 * (1.0 - skyT)) * wide;
+    vec3 fire = under * rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));
+    fire += under * F.x * rise * exp(-up / F.y) * (0.35 + 0.65 * (1.0 - skyT)) * wide;
+    // G.w: a body that stands over open lava is lit through its own foot. Each metre of it takes its share of the fire on the way up, so that its
+    // base burns orange and its upper smoke is dark against it, lump by lump, and it is never one flat colour.
+    if (G.w > 0.0) fire *= exp(-G.w * B.w * up * (0.4 + 1.2 * dens));
+    light += fireOnSmoke(fire);
     if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
     float a = 1.0 - exp(-dens * B.w * dt);
     lay(close, t, mid, E.rgb * light, a);
@@ -267,7 +276,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   bool close = mid < uSplit;
   vec3 albedo = mix(STEAM_ALBEDO, SMOKE_ALBEDO, kind);
   // How much of the fire under it a vapour takes, and to what height: steam is white and takes a great deal close over its crack, smoke less and higher.
-  float lit = mix(1.5, 0.9, kind);
+  float lit = mix(2.6, 1.5, kind);
   float fall = mix(9.0, 5.0, kind);
   float dt = (t1 - t0) / float(${SMOKE_STEPS.steam});
   for (int k = 0; k < ${SMOKE_STEPS.steam}; k++) {
@@ -307,12 +316,17 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float inside = (1.0 - smoothstep(0.55, 0.9, length(off) / tower)) * (1.0 - smoothstep(0.75 * top, 0.97 * top, h));
     float dens = body * puff * inside * mix(0.03 + 2.2 * wisps * wisps, 4.0 * wisps, kind);
     if (dens <= 0.0) continue;
-    float sigma = dens * B.w;
     // A fountain, a pool or a crack lights the vapour that is close over it; the rest is lit by the sky, like any smoke.
     // The top of a smoke is thin and open to the sky: it is paler than its foot.
-    vec3 light = mix(1.05, mix(0.8, 1.5, u), kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0));
+    // A vapour that stands over open melt is seen against its fire: what the sky gives it is the lesser part, and it is orange and not pale.
+    vec3 below = lakeGlow(p.xz, max(1.2 * h, 2.5));
+    float hot = smoothstep(0.012, 0.15, below.r);
+    // Steam off a vent in cold rock is white and thick where it leaves the vent, and a veil the rock is seen through above that. Over melt it is thin and the fire shows through it.
+    float vent = 1.0 + 2.2 * pow(1.0 - u, 3.0);
+    float sigma = dens * B.w * mix(mix(vent, 1.0, hot), 1.0, kind);
+    vec3 light = mix(1.05, mix(0.8, 1.5, u), kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0)) * (1.0 - 0.5 * hot);
     float near = max(lit * exp(-h / fall) - 0.03, 0.0);
-    if (near > 0.0) light += near * (mix(0.45, 0.17, kind) * lakeGlow(p.xz, max(1.5 * h, 4.0)) + roundLights(p));
+    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + roundLights(p));
     float a = 1.0 - exp(-sigma * dt);
     lay(close, t, mid, albedo * light, a);
   }

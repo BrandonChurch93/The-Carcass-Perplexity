@@ -50,6 +50,19 @@ function blocks(x: number, z: number): number {
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }
 
+/** Level tables with sheer steps between them: one number in every cell, and the walls between cells a twelfth of a cell wide. */
+function tables(x: number, z: number): number {
+  const i = Math.floor(x);
+  const j = Math.floor(z);
+  const u = smooth(0.46, 0.54, x - i);
+  const v = smooth(0.46, 0.54, z - j);
+  const a = hash(i, j);
+  const b = hash(i + 1, j);
+  const c = hash(i, j + 1);
+  const d = hash(i + 1, j + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+
 /** 1 on the crest of a ridge line, falling to 0 either side. */
 const ridge = (x: number, z: number): number => 1 - Math.abs(2 * noise(x, z) - 1);
 
@@ -156,7 +169,8 @@ export function wallAt(x: number, z: number, d: number): number {
   }
   // Fans of talus under the gullies, and the apron's own lumps.
   const apron = smooth(4, 40, d) * smooth(150, 100, d);
-  h += apron * (5 * g * g + 2.4 * (fbm(x / 9, z / 9, 3) - 0.5) + 6 * (noise(x / 61, z / 61 + 4) - 0.5));
+  const lumps = 1 - 0.6 * smooth(40, 75, Math.abs(x - CHANNEL_X)) * smooth(260, 200, Math.abs(x - CHANNEL_X));
+  h += apron * (5 * g * g + 2.4 * lumps * (fbm(x / 9, z / 9, 3) - 0.5) + 6 * (noise(x / 61, z / 61 + 4) - 0.5));
   // West of that cone the wide view looks along the wall's foot: fans of talus lean against the cliff there, each with its apex up a gully,
   // and bury the lower flows. No other key sees them.
   const west = smooth(-245, -300, x) * smooth(-120, -200, z) * smooth(2, 30, d) * smooth(170, 120, d);
@@ -203,12 +217,19 @@ export function wallAt(x: number, z: number, d: number): number {
     }
     h += crop * cut * lerp(0.8, 0.62, free);
   }
-  const knob = free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
+  // Not on the slopes beside the fall, which its lens fills its frame with: those are scree lying at rest, even, with ledges at the channel alone.
+  const even = 1 - 0.8 * smooth(260, 200, Math.abs(x - CHANNEL_X));
+  const knob = even * free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
   if (knob > 0) h += knob * (2.5 + 5 * noise(x / 29 + 4.4, z / 29 + 0.9) + 2.2 * (blocks(x / 3.7 + 0.4 * z, z / 4.3 - 0.3 * x) - 0.5) + 1.2 * (noise(x / 1.9, z / 1.9 + 3) - 0.5));
   // The rim and the country outside: broken crags, then long low hills.
   // The rim is a table of flows broken at its edge into blocks: a level skyline with notches, and nothing behind it stands higher.
-  h += smooth(400, 470, d) * (5 * (fbm(x / 70, z / 70, 3) - 0.5) + 7 * (blocks(x / 31 + 0.2 * z, z / 37 - 0.15 * x) - 0.5) * smooth(700, 480, d));
-  return h;
+  // Its top is the top of one flow: level for some tens of metres, then a sheer step to the next block. No dome stands on the skyline.
+  let table = 50 + 238 * rimScale(x, z) + 7 * (tables(x / 47 + 0.2 * (z / 47) + 1.3, z / 59 - 0.15 * (x / 59) + 6.1) - 0.5) + 2.6 * (tables(x / 13 + 4.4, z / 17 + 0.9) - 0.5) + 2.2 * (noise(x / 210 + 3, z / 210) - 0.5);
+  // The rim is not one line: whole lengths of it, a hundred metres and more, stand a flow higher or lower than their neighbours,
+  // and where a gully heads the rim is notched to a third of the gully's width. Not over the mouth, whose arch is built on the rim as it was.
+  const notch = ridge(x / 71 + 9.3, z / 71 + 2.7);
+  table += free * (13 * (tables(x / 139 + 0.3 * (z / 139) + 2.2, z / 163 - 0.2 * (x / 163) + 4.8) - 0.5) - 15 * notch * notch * notch * notch - 6 * g * g * g);
+  return Math.min(h, table);
 }
 
 // Where the cameras travel on the bench: the push of the wide view, then down to the last rocks of the shore and the push of the line view.
@@ -287,7 +308,11 @@ function lineCrag(x: number, z: number): number {
   if (v < -1.2 || v > 27) return 0;
   // The face is fractured into masses of rock that stand a little forward or back of each other, and the top is broken, never level.
   const column = noise(u / 1.15 + 3.3, 7.7);
-  const vj = v - 0.9 * (column - 0.5) - 0.3 * (noise(u / 0.4, v / 0.4) - 0.5);
+  // Each two or three metres of the ridge is a block that stands half a metre forward or back of the next and a fifth taller or shorter,
+  // with a sheer side between them: seen along the ridge, the outline goes down in steps and not along one line.
+  const proud = smooth(0.42, 0.58, noise(u / 2.1 + 0.7, 9.9)) - 0.5;
+  const tall = 0.8 + 0.38 * smooth(0.42, 0.58, noise(u / 1.7 + 6.6, 2.2));
+  const vj = v - 1.1 * proud - 0.5 * (column - 0.5) - 0.3 * (noise(u / 0.4, v / 0.4) - 0.5);
   const uj = u + 0.9 * (noise(v / 1.3 + 1.7, 2.9) - 0.5);
   const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
   // Its far end comes down as a weathered ridge does, in lumps a stride across: not in steps and not in a ruled ramp.
@@ -309,12 +334,12 @@ function lineCrag(x: number, z: number): number {
   // one on the other, not one sheer face: the lens sees every block's edge, so the outline is broken and no ruled line.
   const slab = 2.2 * (smooth(0.2, 0.8, noise(u / 2.6 + 3.7, 1.9)) - 0.65);
   const upper = 1.8 * (smooth(0.2, 0.8, noise(u / 1.9 + 8.2, 5.1)) - 0.6);
-  const p = (vj + 1.1) / 2.0 + 0.34 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5) + 0.3 * slab;
+  const p = (vj + 1.1) / 2.0 + 0.2 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5) + 0.3 * slab;
   const knob = noise(u / 0.75 + 0.4, v / 0.6 + 8.8);
   const rise = Math.min(1, Math.max(0, 0.3 * smooth(0, 0.15, p) + 0.11 * smooth(0.12, 0.6, p + 0.16 * (knob - 0.5)) + 0.26 * smooth(0.58, 0.72, p + 0.1 * (knob - 0.5)) + 0.33 * smooth(0.88, 1.04, p + 0.36 * upper) + 0.06 * smooth(0.05, 0.3, p) * (knob - 0.5)));
   // Between two blocks the crest is notched a third of its height.
-  const notch = 1 - 0.3 * smooth(0.56, 0.74, noise(u / 2.2 + 1.3, 4.4));
-  return top * rise * back * start * notch;
+  const notch = 1 - 0.42 * smooth(0.56, 0.7, noise(u / 2.2 + 1.3, 4.4));
+  return top * tall * rise * back * start * notch;
 }
 
 /** Metres from (x, z) to the cameras' route on the bench. */
@@ -412,14 +437,15 @@ export function buttressAt(x: number, z: number): number {
   // so the lens sees a strip of the table over the near cliff. Positive across is the far side.
   const fallen = 0.5 * (Math.min(1, Math.max(0, u / 0.9)) + smooth(0.0, 0.9, u));
   const tilt = 1 + 0.12 * Math.max(-1.2, Math.min(1.2, across / BUTTRESS.half));
-  // Its crown is one rough slope and no stair: knolls and hollows of ten metres on it, and a ragged edge. No flow of it stands out as a table.
-  const crown = 11 * (ridge(x / 31 + 7.3, z / 31 + 2.9) - 0.55) + 5 * (fbm(x / 9, z / 9, 3) - 0.5);
+  // Its crown is broken tables: level stretches of some tens of metres, sheer steps between them, and smaller blocks on those.
+  const crown = 8 * (tables(x / 29 + 0.3 * (z / 29) + 7.3, z / 37 - 0.2 * (x / 37) + 2.9) - 0.5) + 3.4 * (tables(x / 8.3 + 1.1, z / 10.1 + 5.7) - 0.5) + 1.4 * (fbm(x / 5, z / 5, 2) - 0.5);
   // Its end by the wall is sheer and stands free, the highest point of it: a prow, with the saddle behind.
   const top = (lerp(194, 84, fallen) * tilt + crown + 9 * smooth(0.14, -0.02, u)) * smooth(1.12, 0.9, u) * smooth(-0.13, -0.085, u);
   const g = ridge(x / 38 + 1.3, z / 38 + 4.1);
   const half = BUTTRESS.half * (1 - 0.35 * smooth(0.5, 1.1, u)) + 5 * wave(x * 2 + 40, z * 2) - 9 * g * g * g + 5 * (fbm(x / 17, z / 17, 2) - 0.5);
   const edge = Math.abs(across) / half;
-  const cliff = smooth(1.0, 0.72, edge);
+  // The brow of the cliff is a corner, not a shoulder.
+  const cliff = Math.pow(Math.min(1, Math.max(0, (1 - edge) / 0.26)), 1.3);
   // Talus lies against its near side as a skirt two fifths of the cliff high, hollow in section like any scree; the far side keeps the layout's.
   const lean = Math.min(1, Math.max(0, (1.85 - edge) / 0.9));
   const scree = across < 0 ? 0.4 * (0.3 * lean + 0.7 * lean * lean) : 0.3 * smooth(1.75, 0.95, edge);
@@ -612,12 +638,16 @@ export function stagedButteHeight(x: number, z: number): number {
   // The top: a horn at the left end, then it falls away gently to the right and comes down in two shoulders. Its rim is broken blocks.
   const fall = b < 24 ? 0 : b < 43 ? (b - 24) * 0.3 : 5.7 + (b - 43) * 0.16;
   const shoulders = 1.7 * smooth(45.5, 47, b + 0.5 * noise(s / 2.3, 1.7)) + 1.9 * smooth(55, 56.3, b + 0.5 * noise(s / 2.3, 5.1)) + 3 * smooth(68, 70, b);
-  const horn = 1.3 * smooth(14.5, 16.5, b) * smooth(23, 19, b);
-  const crest = 2.0 * (blocks(b / 3.7 + 0.4, s / 9 + 1.1) - 0.5) + 1.1 * (blocks(b / 1.3 + 5.2, s / 3.1 + 0.3) - 0.5) + 0.5 * (noise(b / 0.45, s / 0.45 + 2.7) - 0.5);
+  // The horn is a worn head, not a box: it rises over some strides, its brow toward the sheer end is rounded off, and it runs into the crest.
+  const horn = 2.2 * smooth(13.5, 19, b) * smooth(31, 20, b) - 3.2 * Math.pow(smooth(18.5, 13.5, b), 2);
+  const worn = smooth(20, 30, b);
+  const crest = (0.7 + 0.9 * worn) * (blocks(b / 3.7 + 0.4, s / 9 + 1.1) - 0.5) + 0.5 * worn * (blocks(b / 1.3 + 5.2, s / 3.1 + 0.3) - 0.5) + 0.9 * (noise(b / 2.9 + 1.4, s / 4.3 + 0.6) - 0.5) + 0.3 * (noise(b / 0.45, s / 0.45 + 2.7) - 0.5);
   const top = 38.5 - fall - shoulders + horn + crest;
   // Three beds: a low band on its talus, a ledge under rubble that leans back, and the sheer upper cliff, in places with a narrow ledge half way up.
   const foot = 13 + 5 * (noise(b / 31 + 7.7, 0.3) - 0.5);
-  const lower = foot + 11 + 2.4 * (blocks(b / 6.1 + 2.9, 5.5) - 0.5);
+  // Left of the sheer end the low band is a ridge under talus: its crest rolls, and does not step.
+  const sheer = smooth(9, 17, b);
+  const lower = foot + 11 + 2.4 * sheer * (blocks(b / 6.1 + 2.9, 5.5) - 0.5) + (1 - sheer) * (2.6 * (noise(b / 13 + 4.4, 2.1) - 0.5) + 0.9 * (noise(b / 3.1 + 0.8, 6.3) - 0.5));
   const d1 = 4 + 5 * noise(b / 11 + 3.3, 9.2) + 2.2 * (blocks(b / 4.3 + 9.1, 1.7) - 0.5);
   const d2 = 4.5 * Math.max(0, blocks(b / 7.3 + 1.9, 3.3) - 0.4);
   const t = Math.min(1, Math.max(0, (s + 34) / 34));
@@ -630,7 +660,9 @@ export function stagedButteHeight(x: number, z: number): number {
   const end = 14 + 0.1 * Math.max(0, s) + 1.6 * (noise(s / 3 + 1.1, 7.7) - 0.5);
   const lean = (b - end + 0.6) * 22 + 6 * (blocks(s / 2.1 + 3.3, b / 1.7) - 0.5) + 2 * (noise(s / 0.6, b / 0.6 + 4.2) - 0.5);
   upper = Math.max(0, Math.min(upper, lean));
-  const ridge = Math.min(1, Math.max(0, 1 - (end - b) / 38 + 0.12 * (blocks(b / 3.1 + 6.2, s / 4.7) - 0.5) * smooth(end, end - 6, b)));
+  // It comes down as scree does, hollow in section, and its crest is no row of teeth.
+  const run = Math.min(1, Math.max(0, 1 - (end - b) / 38));
+  const ridge = Math.min(1, Math.max(0, Math.pow(run, 1.5) + 0.04 * (noise(b / 4.1 + 6.2, s / 6.7) - 0.5) * smooth(end, end - 6, b) * smooth(0, 0.15, run)));
   const out = smooth(93, 82, b) * smooth(38, 30, s);
   return (low * ridge + upper) * out - 0.5;
 }

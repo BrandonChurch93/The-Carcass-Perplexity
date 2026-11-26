@@ -12,6 +12,7 @@ import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
 import { createLava } from './lava';
 import { skinFragment } from './skin';
+import { SHEET_GLSL } from './sheet';
 
 export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
 
@@ -25,6 +26,37 @@ uniform vec4 uHill;
 uniform vec4 uRidge[2];
 uniform vec2 uRidgeSize[2];
 uniform vec4 uGroupSeam;
+uniform sampler2D tSheetNh;
+// The photographed crust (rope-nh: r, g the slope of its height, b the height), laid without a repeat. The lake is cut into
+// three-cornered patches a third of the sheet across; each corner reads the sheet turned and shifted its own way, and where
+// they meet the higher lies on the lower, as one toe of lava on the next. It is laid at three sizes, metres to the long side
+// of the sheet, and stands so many metres from its deepest furrow to its highest crest. The height carries the two larger
+// as far as its cells hold them; the skin paints all three at the same places.
+#define SHEET_D 1.6
+#define SHEET_M 6.4
+#define SHEET_L 25.6
+#define SHEET_TALL_D 0.012
+#define SHEET_TALL_M 0.06
+#define SHEET_TALL_L 0.24
+${SHEET_GLSL}
+// The height of the sheet, 0 to 1, read at one mip.
+float sheetHigh(vec2 q, float span, float seed, float lod) {
+  sheetGrid(q, span);
+  float got = 0.0;
+  float sum = 0.0;
+  for (int i = 0; i < 3; i++) {
+    mat2 turn;
+    vec2 shift;
+    float w = sheetCorner(i, seed, 1.0, turn, shift);
+    float high = textureLod(tSheetNh, (turn * q) * (vec2(1.0, 2.0) / span) + shift, lod).b;
+    float k = w * exp(7.0 * high);
+    got += k * high;
+    sum += k;
+  }
+  return got / sum;
+}
+// What of the height is the sheet's, metres: the lattice leaves it out of its own normal, for the skin has the sheet's slope whole.
+float gSheetHigh = 0.0;
 // Lobes: the skin is poured in broad overlapping tongues 3 to 10 m across, each a low dome with a soft rounded front, each lying
 // on the ones poured before it. The tongues of one stretch of crust run one way. The highest one wins.
 #define LOBE 5.5
@@ -147,51 +179,11 @@ float gFoldDeep = 0.1;
 vec2 gFoldDir = vec2(1.0, 0.0);
 // The mound of the one that sank (x, z, the flat radius).
 uniform vec3 uMound;
-// Where ropes are at all: patches of a few metres, broken again at half a metre. The skin reads the same through gFoldCover.
-float ropeMask(vec2 q) {
-  return smoothstep(0.45, 0.6, vnoise(q / 2.9 + 31.0)) * smoothstep(0.3, 0.45, vnoise(q / 0.55 + 53.0));
-}
 // How broken the crust is at the point brokenAt was last asked about (0 until it is asked).
 float gBroke = 0.0;
 // How much the plates at a point are flat and level (0 to 1): the floor the group feeds on is plates nearly level, with thin
 // gaps and a few tilted rims; its relief is in the rims and the gaps.
 float gFlat = 0.0;
-float gSheafBest;
-float gSheafNext;
-vec4 gSheaf;
-vec3 gSheafAlong;
-void sheafAt(vec2 wq, float size, float seed, float flowTurn, float small) {
-  vec2 base = floor(wq / size - 0.5);
-  for (int j = 0; j < 2; j++) {
-    for (int i = 0; i < 2; i++) {
-      vec2 c2 = base + vec2(float(i), float(j));
-      vec2 hs = hash22(c2 + seed);
-      float hr = hash12(c2 + seed + 8.1);
-      // The middle of a sheaf lies in the middle half of its cell and it reaches at most three quarters of a cell:
-      // so four cells are enough to look in.
-      vec2 rel = wq - (c2 + 0.5 + 0.5 * (hs - 0.5)) * size;
-      float R = size * (0.22 + 0.53 * hr);
-      float turn = flowTurn + 2.6 * (fract(hr * 17.3) - 0.5);
-      vec2 along = vec2(cos(turn), sin(turn));
-      float a = dot(rel, along);
-      float s = rel.x * along.y - rel.y * along.x;
-      // A sheaf is a band of 3 to 9 ropes that bend together: narrow across the ropes, long along them, lying on its arc.
-      float space = mix(0.12 + 0.14 * fract(hr * 11.3), 0.055 + 0.07 * fract(hr * 11.3), small);
-      float bent = a + (0.25 + 0.7 * fract(hr * 5.7)) / R * s * s;
-      float d = length(vec2(bent / ((1.5 + 3.0 * fract(hr * 41.3)) * space), s / R));
-      // One cell in five of the large ones is bare, and two in five of the small.
-      float p = (1.0 - d) * (0.7 + 0.6 * fract(hr * 29.1)) * (1.0 + 0.6 * small) * step(0.2 + 0.2 * small, fract(hr * 53.7));
-      if (p > gSheafBest) {
-        gSheafNext = gSheafBest;
-        gSheafBest = p;
-        gSheaf = vec4(a, s, R, hr);
-        gSheafAlong = vec3(along, small);
-      } else if (p > gSheafNext) {
-        gSheafNext = p;
-      }
-    }
-  }
-}
 // The coils at the line: within 11 to 15 m of the lens of key heart-1 the crust is thick lobes that lap, 1.9 to 2.8 m across,
 // each a sheet 4 to 8 cm thick that is thin where it was fed and ends at its front in a step with a crease at its foot. Each
 // wears one sheaf of cords, 11 to 14 cm apart, arcs about a point behind the lobe (0.5 to 4 m radius) that bunch up toward
@@ -277,10 +269,7 @@ float foldAt(vec2 q) {
     return 1.0;
   }
   // The ropes a toe wears round its front: rings about its middle, on its downstream half, out to its rim.
-  float toeHigh = toeAt(q);
-  // Ropes end after 0.3 to 2 m and large areas carry none; broken crust carries none at all (call brokenAt before this).
-  // Round the one that sank the ropes are everywhere: its own folds join them.
-  float ropes = max(max(ropeMask(q), 1.0 - smoothstep(13.0, 19.0, length(q - uMound.xy))), 1.0 - smoothstep(15.0, 20.0, length(q - vec2(-507.0, 212.0)))) * (1.0 - gFlat) * (1.0 - smoothstep(0.5, 0.8, gBroke));
+  toeAt(q);
   // Two places wear the lobes: the banks of the line, and the floor round the one that sank from 5 to 7 m out of its middle
   // to 24 to 28 m (its own apron, feet and seam lie inside that and stay as they are).
   float lapLine = 1.0 - smoothstep(11.0, 15.0, length(q - vec2(-505.0, 213.0)));
@@ -288,76 +277,13 @@ float foldAt(vec2 q) {
   float lapSunk = smoothstep(5.0, 7.0, sunkFar) * (1.0 - smoothstep(24.0, 28.0, sunkFar));
   float lapZone = max(lapLine, lapSunk) * (1.0 - gFlat);
   if (lapZone > 0.0) {
-    float lapCover = lapAt(q, step(lapLine, lapSunk));
+    lapAt(q, step(lapLine, lapSunk));
     gLapHigh *= lapZone;
     gToeBest *= 1.0 - lapZone;
     gToeNext *= 1.0 - lapZone;
     gToeSlope *= 1.0 - lapZone;
-    if (lapZone > 0.5) {
-      gLapRope = step(lapLine, lapSunk);
-      gLapSpace = gFoldSpace;
-      gFoldDeep = mix(gLapDeep, 0.0, gLapRope);
-      gFoldSpace = mix(gFoldSpace, 0.06, gLapRope);
-      gFoldCover = lapCover * smoothstep(0.5, 0.9, lapZone) * (1.0 - smoothstep(0.3, 0.7, pixelLong / gLapSpace)) * (1.0 - smoothstep(0.09, 0.16, pixelLong));
-      return abs(sin(3.14159 * gFoldPhase));
-    }
-    gFoldPhase = 0.0;
-    ropes *= 1.0 - smoothstep(0.1, 0.5, lapZone);
   }
-  if (ropes <= 0.0) return 1.0;
-  vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0)) + 2.2 * vec2(vnoise(q / 6.3 + 15.0), vnoise(q / 6.3 + 47.0));
-  float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
-  gSheafBest = 0.0;
-  gSheafNext = 0.0;
-  sheafAt(wq, 4.6, 2.37, flowTurn, 0.0);
-  sheafAt(wq, 1.35, 61.7, flowTurn + 1.3, 1.0);
-  float toeCover = 0.0;
-  float rho = 0.0;
-  if (toeHigh > 0.0) {
-    rho = length(gToe.xy);
-    toeCover = smoothstep(0.25, 0.5, rho) * smoothstep(-0.8, 0.1, gToe.x / max(rho, 0.01)) * step(0.6, fract(gToe.w * 37.7)) * smoothstep(0.0, 0.012, toeHigh - gToeNext) * smoothstep(0.0, 0.008, toeHigh);
-  }
-  toeCover *= ropes;
-  float sheafCover = ropes * smoothstep(0.0, 0.25, min(gSheafBest, gSheafBest - gSheafNext)) * (0.55 + 0.45 * smoothstep(0.0, 0.5, gSheafBest));
-  if (max(sheafCover, toeCover) <= 0.0) return 1.0;
-  if (toeCover > sheafCover) {
-    float hrT = gToe.w;
-    float spaceT = 0.04 + 0.05 * fract(hrT * 11.3);
-    float uT = rho * gToe.z / spaceT + 5.0 * hrT;
-    vec2 wpT = vec2(0.6 * uT + 31.0 * hrT, 2.0 * gToe.y + 5.0 * hrT);
-    float t0 = vnoise(wpT);
-    float t1 = vnoise(wpT + vec2(0.18, 0.0));
-    gFoldSpace = spaceT / max(abs(1.0 + 1.5 * (t1 - t0) / 0.3), 0.25);
-    gFoldPhase = uT + 1.5 * t0 + 0.25 * vnoise(q / 0.31 + 3.0);
-    gFoldDir = normalize(gToe.x * gToeAlong.xy + gToe.y * gToeAlong.z * vec2(gToeAlong.y, -gToeAlong.x) + 1e-5);
-    float ownT = smoothstep(0.2, 0.5, vnoise(vec2(0.7 * gFoldPhase + 17.0 * hrT, 2.5 * atan(gToe.y, gToe.x) + 9.0 * hrT)));
-    gFoldDeep = clamp(gFoldSpace * (0.25 + 0.5 * vnoise(vec2(0.9 * gFoldPhase, 7.0 * hrT))), 0.01, 0.2);
-    gFoldCover = toeCover * ownT * smoothstep(0.0, 0.2, toeCover - sheafCover) * (1.0 - smoothstep(0.3, 0.7, pixelLong / gFoldSpace));
-    return abs(sin(3.14159 * gFoldPhase));
-  }
-  float a = gSheaf.x;
-  float s = gSheaf.y;
-  float R = gSheaf.z;
-  float hr = gSheaf.w;
-  vec2 along = gSheafAlong.xy;
-  float space = mix(0.12 + 0.14 * fract(hr * 11.3), 0.055 + 0.07 * fract(hr * 11.3), gSheafAlong.z);
-  float bulge = (0.25 + 0.7 * fract(hr * 5.7)) / R;
-  float u = (a + bulge * s * s) / space + 7.0 * hr;
-  // The spacing: the count of folds runs ahead and falls behind across the sheaf, and not the same along it.
-  vec2 wp = vec2(0.6 * u + 31.0 * hr, 1.3 * s / (0.5 * R + 0.4) + 5.0 * hr);
-  float w0 = vnoise(wp);
-  float w1 = vnoise(wp + vec2(0.18, 0.0));
-  float rate = max(abs(1.0 + 1.5 * (w1 - w0) / 0.3), 0.25);
-  gFoldSpace = space / rate;
-  
-  gFoldPhase = u + 1.5 * w0 + 0.3 * vnoise(q / 0.57 + 3.0);
-  gFoldDir = normalize(along + 2.0 * bulge * s * vec2(along.y, -along.x));
-  // Each fold has its own depth, swells and thins along its run, and ends.
-  float own = smoothstep(0.2, 0.55, vnoise(vec2(0.7 * gFoldPhase + 17.0 * hr, s / (0.45 + 0.3 * R) + 9.0 * hr)));
-  float swollen = vnoise(vec2(0.8 * gFoldPhase + 3.0 * hr, s / (0.8 + 0.3 * R) + 21.0 * hr));
-  gFoldDeep = clamp(gFoldSpace * (0.25 + 0.5 * swollen), 0.012, 0.2);
-  gFoldCover = sheafCover * own * smoothstep(0.0, 0.2, sheafCover - toeCover) * (1.0 - smoothstep(0.3, 0.7, pixelLong / gFoldSpace));
-  return abs(sin(3.14159 * gFoldPhase));
+  return 1.0;
 }
 // What the skin still reads under its old name.
 #define FOLD_DEEP gFoldDeep
@@ -382,12 +308,13 @@ float ridgeAt(vec2 q, float c) {
     if (tm < -1.0 || tm > len + 1.0 || abs(side) > 3.2 * size) continue;
     // A line of slabs, each 1.5 to 4.5 m long, pushed up on edge: a long back that leans on the crust behind it and a short
     // broken face toward the lens, each its own height, its crest a little off the line, one in five fallen flat.
-    float u = tm / (1.4 * size) + 1.3 * vnoise(vec2(tm / (2.2 * size) + 7.0, 2.0));
+    // The slabs are of unlike length, 3 to 9 m: shorter, the mesh of the far lake draws each as a tent.
+    float u = tm / (2.5 * size) + 1.7 * vnoise(vec2(tm / (3.4 * size) + 7.0, 2.0));
     float k = floor(u);
     float fu = u - k;
     vec2 hk = hash22(vec2(k, 17.0 + float(i)));
     float ends = smoothstep(0.0, 0.12 * len, tm) * (1.0 - smoothstep(0.88 * len, len, tm));
-    float tall = uRidgeSize[i].x * (0.25 + 0.75 * hk.x) * ends * mix(0.2, 1.0, step(0.2, hk.y));
+    float tall = uRidgeSize[i].x * (0.2 + 0.8 * hk.x * hk.x) * ends * mix(0.15, 1.0, step(0.33, hk.y));
     float back = (1.6 + 1.2 * hk.y) * size;
     float face = max(0.35 * size, 3.0 * c);
     float s = side - (hk.y - 0.5) * 0.8 * size;
@@ -721,12 +648,19 @@ float heightAt(vec2 q, float c) {
     if (gFine < 0.16) {
       float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
       gLapCell = c;
-      float fold = foldAt(q);
-      fine = smoothSkin * gFoldCover * mix(gFoldDeep * foldHeld(gFine), gLapDeep * (1.0 - smoothstep(0.08, 0.2, gFine / gLapSpace)), gLapRope) * (pow(fold, 0.7) - 0.65);
-      fine += smoothSkin * gToeBest * toeHeld(gFine);
+      foldAt(q);
+      fine = smoothSkin * gToeBest * toeHeld(gFine);
       // The lobes at the line: sheets that lap, with their steps and creases.
       fine += off * calm * (1.0 - shoreUp) * gLapHigh * (1.0 - smoothstep(0.1, 0.3, c)) * (1.0 - smoothstep(0.09, 0.16, gFine));
     }
+    // The ropes and billows of the photographed sheet, as far as the cells hold them: a mip whose texel is a cell and a half.
+    float sheetOn = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
+    float lodM = log2(gFine * (2048.0 / SHEET_M)) + 0.5;
+    gSheetHigh = 0.0;
+    if (lodM < 9.0) gSheetHigh = SHEET_TALL_L * (sheetHigh(q, SHEET_L, 83.0, lodM - 2.0) - 0.5) * (1.0 - smoothstep(7.0, 9.0, lodM));
+    if (lodM < 7.0) gSheetHigh += SHEET_TALL_M * (sheetHigh(q, SHEET_M, 11.0, lodM) - 0.5) * (1.0 - smoothstep(5.0, 7.0, lodM));
+    gSheetHigh *= sheetOn;
+    fine += gSheetHigh;
   }
 
   // Where crust has been broken, at the ridges and against the rock, it lies in upturned slabs with rubble between them.
@@ -790,7 +724,9 @@ float heightAt(vec2 q, float c) {
       h = mix(h, level + 0.06 + 0.5 * (over + sqrt(over * over + 0.0016)), 1.0 - smoothstep(1.7, 2.5, bank));
     }
     float wallTop = min(2.0 * max(c - 0.04, 0.0), 0.6);
-    h += fine * mix(1.0, smoothstep(wallTop + 0.02, wallTop + 0.3, bank), wide);
+    float fineOn = mix(1.0, smoothstep(wallTop + 0.02, wallTop + 0.3, bank), wide);
+    h += fine * fineOn;
+    gSheetHigh *= fineOn;
     float lipWide = max(0.1, 5.0 * c);
     float lipAt = (bank - 0.07) / lipWide;
     h += (0.05 + 0.1 * vnoise(q / 0.9 + 5.0)) * exp(-lipAt * lipAt) * (0.06 / lipWide) * wide * smoothstep(0.25, 0.45, vnoise(q / 2.3 + 15.0)) * (1.0 - smoothstep(0.03, 0.08, c));
@@ -810,6 +746,7 @@ float heightAt(vec2 q, float c) {
       bed = mix(bed, level + 0.04 + 0.03 * vnoise(q / 0.6 + 21.0), isle * smoothstep(0.45, 0.6, gape) * (1.0 - smoothstep(0.03, 0.08, c)));
     }
     h = mix(h, bed, cut);
+    gSheetHigh *= 1.0 - cut;
   } else {
     h += fine;
   }
@@ -825,6 +762,7 @@ float heightAt(vec2 q, float c) {
       // Its top line is lumpy, knobs 0.8 to 1.4 m across and up to 0.22 m high: through the blur it reads as a ridge of crust.
       float knob = 0.22 * smoothstep(0.35, 0.75, vnoise(q / 0.9 + 9.0)) * smoothstep(0.3, 1.2, top);
       h = mix(h, top + knob + 0.05 * (vnoise(q / 0.8 + 9.0) - 0.5) * smoothstep(2.0, 4.0, hr), smoothstep(0.0, 0.8, top) * uHill.z);
+      gSheetHigh *= 1.0 - smoothstep(0.0, 0.8, top) * uHill.z;
     }
   }
   return h;
@@ -876,7 +814,7 @@ void main() {
   vec4 here = texelFetch(tBake, ij, 0);
   vec4 atX = texelFetch(tBake, ij + sx, 0);
   vec4 atZ = texelFetch(tBake, ij + sz, 0);
-  float high = here.r + here.g;
+  float high = here.r + here.g + here.a;
   // The slope is taken from the vertices on both sides. Taken from one side only it lies half a cell off, and along an
   // edge that runs askew to the lattice every other vertex is lit as the face and the next as the top: a row of teeth.
   ivec2 bx = ivec2(ij.x > 0 ? 1 : 0, 0);
@@ -926,8 +864,10 @@ void main() {
   float h = heightAt(q, c);
   // A half float holds a height of a metre to half a millimetre, which shows as steps in the slopes. So the height is laid
   // down in two parts: a whole number of 64ths of a metre, which a half float holds exactly, and what is left over.
-  float whole = floor(h * 64.0 + 0.5) / 64.0;
-  gl_FragColor = vec4(whole, h - whole, clamp(gBank, -8.0, 8.0), 1.0);
+  // The sheet's part goes apart, in the fourth place.
+  float own = h - gSheetHigh;
+  float whole = floor(own * 64.0 + 0.5) / 64.0;
+  gl_FragColor = vec4(whole, own - whole, clamp(gBank, -8.0, 8.0), gSheetHigh);
 }`;
 
 /**
@@ -1070,6 +1010,9 @@ export function create(ctx: HeartContext): HeartPiece {
     uSunk: { value: new THREE.Vector3(SUNK[0], SUNK[2], 14) },
     tRopeNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data' }) },
     tRope: { value: ctx.assets.texture('mat/pahoehoe.jpg') },
+    tSheet: { value: ctx.assets.texture('mat/rope-nt.jpg', { kind: 'data' }) },
+    tSheetNh: { value: ctx.assets.texture('mat/rope-nh.jpg', { kind: 'data' }) },
+    tMeltNh: { value: ctx.assets.texture('mat/melt-nh.jpg', { kind: 'data', anisotropy: 2 }) },
     uRidge: { value: RIDGES.map((r) => new THREE.Vector4(r.from[0], r.from[1], r.to[0], r.to[1])) },
     uRidgeSize: { value: RIDGES.map((r) => new THREE.Vector2(r.tall, r.reach)) },
     uGroupSeam: { value: new THREE.Vector4(-458.8, 221.3, -326.8, 179.3) },
