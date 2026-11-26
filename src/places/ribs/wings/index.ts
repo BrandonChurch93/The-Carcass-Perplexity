@@ -140,7 +140,7 @@ export function create(ctx: Context): Piece {
     const walk = f.cycles * f.cycle;
     return (m + (tau < walk ? ease(tau / walk) : 1)) * f.cycles;
   };
-  const addFeeder = (x: number, z: number, yaw: number, small: number, stationed: boolean, habit = -1, at = T0, runs = false): void => {
+  const addFeeder = (x: number, z: number, yaw: number, small: number, stationed: boolean, habit = -1, at = T0, runs = false, striding = false): void => {
     const size = small * GROW;
     const f: Feeder = {
       x0: x,
@@ -164,6 +164,8 @@ export function create(ctx: Context): Piece {
     }
     // A stationed feeder is at its station on the establishing key, in the middle of a pause.
     if (stationed) f.offset = f.period * (0.45 + 0.35 * f.seed) - at;
+    // One is caught in the middle of a step.
+    if (striding) f.offset = 0.55 * f.cycles * f.cycle - at;
     const p = gait(f, at);
     f.x0 = x - Math.sin(yaw) * f.stride * p;
     f.z0 = z - Math.cos(yaw) * f.stride * p;
@@ -180,7 +182,8 @@ export function create(ctx: Context): Piece {
   STATIONS.feeders.forEach((s, i) => {
     if (i === 0) addFeeder(s[0], s[1], Math.atan2(Math.cos(0.14), Math.sin(0.14)) + 0.25, s[3], true, 0.6, T0, true);
     else if (i < 8) addFeeder(s[0], s[1], s[2], s[3], true, HABITS[i] as number, T0);
-    else addFeeder(s[0], s[1], sideOn(s[0], s[1], i === 8 ? 0.2 : i === 9 ? -0.3 : 0.35), s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey);
+    // No two in one pose: the nearest feeds, the next is caught mid step, the last looks about with its neck up and its head the other way.
+    else addFeeder(s[0], s[1], sideOn(s[0], s[1], i === 8 ? 0.2 : i === 9 ? -0.3 : 0.35 + Math.PI), s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey, false, i === 9);
   });
   {
     // The second hero of the wide picture: walking tall, right of centre, 47 m out.
@@ -588,7 +591,7 @@ export function create(ctx: Context): Piece {
   const skeinFlock = new Kites(kites, SKEIN + PASSERS);
 
   // ---- The ones that run from the bore ----
-  const fleeFlock = new Kites(kites, FLEEING);
+  const fleeFlock = new Puppets(sheets, FLEEING, false);
   const flee = STATIONS.flee;
 
   // ---- One that lands by the establishing camera, on the key ----
@@ -741,7 +744,7 @@ export function create(ctx: Context): Piece {
         }
         // No two rows alike: half of them stand the other way round on their ledge.
         if (Math.floor(s.seed * 1000) % 2 === 1) pose.yaw += Math.PI;
-        colonySheets.put(i, pose, 0.5);
+        colonySheets.put(i, pose, 0.55 + 0.45 * s.seed);
       }
       colonySheets.commit();
       dryers.commit();
@@ -772,14 +775,18 @@ export function create(ctx: Context): Piece {
         const side = (i - (FLEEING - 1) / 2) / FLEEING;
         Object.assign(pose, stand(hash(i, 3)));
         // Low over the water before the wall, far enough from the last lens to be shapes against the white.
-        pose.size = (0.9 + 0.25 * hash(i, 5)) * GROW;
-        pose.x = flee[0] + side * 46 - 9 * lead + 3 * Math.sin(i * 2.4);
-        pose.z = flee[1] - 22 - (20 * ((i * 5) % 7)) / 7 + 17 * lead;
-        pose.y = 3.6 + (3.2 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
-        pose.yaw = Math.atan2(-9, 17);
-        pose.roll = 0.5 * Math.sin(seconds * 0.9 + i * 1.7) + 0.35 * Math.sin(i * 2.9);
+        // Seen from the side as they cross: sails up, legs trailing, no two of a size.
+        pose.size = (0.6 + 0.6 * hash(i, 5)) * GROW;
+        pose.x = flee[0] + side * 50 - 14 * lead + 3 * Math.sin(i * 2.4);
+        pose.z = flee[1] - 22 - (24 * ((i * 5) % 7)) / 7 + 12 * lead;
+        pose.y = 3.0 + (3.4 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
+        pose.yaw = Math.atan2(-14, 12);
         fly(pose, 0.7, seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9);
-        fleeFlock.put(i, pose, 0.8);
+        pose.rise = 0.95;
+        pose.bend = -0.6;
+        pose.sweep = -2.6;
+        pose.pitch = 0.1 + 0.12 * Math.sin(seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9 - 0.7);
+        fleeFlock.put(i, pose, -0.75, true);
       }
       fleeFlock.commit();
       for (let i = 0; i < landers.length; i++) {

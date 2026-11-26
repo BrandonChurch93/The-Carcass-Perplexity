@@ -138,12 +138,11 @@ export function create(ctx: Context): Piece {
   const rings = Array.from({ length: MAX_RINGS }, () => new THREE.Vector4());
   const ringList: Ring[] = Array.from({ length: MAX_RINGS }, () => ({ x: 0, z: 0, phase: 0, strength: 0 }));
   const ringCount = { value: 0 };
-  const stands = Array.from({ length: MAX_RINGS }, () => new THREE.Vector4());
   const front = { value: 0 };
   const poolMaterial = new THREE.ShaderMaterial({
     vertexShader: POOL_VERTEX,
     fragmentShader: POOL_FRAGMENT(MAX_RINGS),
-    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uStands: { value: stands }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uFront: front, uBoreHeight: { value: BORE_HEIGHT }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture } },
+    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uFront: front, uBoreHeight: { value: BORE_HEIGHT }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture } },
     transparent: true,
     depthWrite: false,
     blending: THREE.CustomBlending,
@@ -214,8 +213,6 @@ export function create(ctx: Context): Piece {
       RING_SOURCE.at?.(seconds, ringList);
       ringList.forEach((ring, i) => {
         (rings[i] as THREE.Vector4).set(ring.x, ring.z, ring.phase, ring.strength);
-        const st = ring.stand;
-        (stands[i] as THREE.Vector4).set(st ? st[0] : 0, st ? st[1] : 0, st ? st[2] : 0, st ? st[3] : 0);
       });
 
       surf.begin();

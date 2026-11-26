@@ -140,7 +140,6 @@ ${RIG_GLSL}
 uniform sampler2D tChop;
 uniform vec2 uWind;
 uniform vec4 uRings[${rings}];
-uniform vec4 uStands[${rings}];
 uniform float uFront;
 uniform float uBoreHeight;
 uniform int uRingCount;
@@ -230,26 +229,9 @@ void main() {
     float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall) * (stood.x < 0.02 || toWall < stood.y ? 1.0 : 1.0 - stood.x);
     float white = max(1.0 - smoothstep(0.1, 0.2, k), smoothstep(0.7, 0.86, k));
     vec3 lit = skyIrradiance(vec3(0.0, 0.6, 0.8)) / 3.14159;
-    refl = mix(refl, mix(vec3(0.07, 0.085, 0.07), vec3(0.9), white) * lit, wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
+    // It is white water from foot to crest now: its lifted body shows grey in the mirror, never a hole.
+    refl = mix(refl, mix(vec3(0.42, 0.46, 0.45), vec3(0.9), white) * lit, 0.8 * wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
   }
-  // The waders stand in it too: each leg a post, each body a ball, met by the mirrored ray. Feet and mirror join at the water.
-  float rl = max(length(r.xz), 1e-3);
-  vec2 rd = r.xz / rl;
-  float mirrored = 0.0;
-  for (int i = 0; i < ${rings}; i++) {
-    if (i >= uRingCount) break;
-    vec4 st = uStands[i];
-    if (st.w == 0.0) continue;
-    vec2 to = st.xy - p;
-    float t = dot(to, rd);
-    float miss = abs(to.x * rd.y - to.y * rd.x);
-    float high = t * r.y / rl;
-    float hit = st.w > 0.0
-      ? (1.0 - smoothstep(st.w * 0.5, st.w * 1.5, miss)) * (1.0 - smoothstep(st.z - 0.15, st.z, high))
-      : 1.0 - smoothstep(-st.w * 0.7, -st.w, length(vec2(miss, (high - st.z) * 1.3)));
-    mirrored = max(mirrored, hit * step(0.0, t));
-  }
-  refl = mix(refl, vec3(0.46, 0.44, 0.4) * skyIrradiance(vec3(0.0, 0.3, 0.0) - vec3(rd.x, 0.0, rd.y)) / 3.14159, mirrored * 0.85);
   vec3 hv = normalize(v + uSunDir);
   // The glare path toward the sun: a hard core, and the broken glitter of the ripples round it.
   refl += uSunColour * (pow(max(dot(n, hv), 0.0), 900.0) * 8.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
@@ -258,7 +240,7 @@ void main() {
   vec3 body = vec3(0.1, 0.105, 0.09) * e / 3.14159;
   // The meniscus: where the water climbs a stone it turns up to the sky, a bright thread along the line.
   float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
-  fres = mix(fres, 0.8, 0.55 * lip);
+  fres = mix(fres, 0.8, 0.18 * lip);
   vec3 col = fres * refl + (1.0 - fres) * murk * body;
   float alpha = (fres + (1.0 - fres) * murk) * edge;
   // Foam: lace left along the line where the water works against stone and sand, and in lanes the wind draws out over the open sheet.
