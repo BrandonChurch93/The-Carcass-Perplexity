@@ -221,9 +221,11 @@ float fallenTo(float x) {
   float hang = texture2D(tFoam, vec2(x / 13.0 + 0.3, uTime * 0.21)).g - 0.5;
   return clamp(mix(0.62, 0.22, curlAt(x, 0.0)) + 0.22 * rag + 0.16 * hang, 0.1, 0.8);
 }
+float fallen;
 vec3 wallAt(float x, float t0) {
   // The sheets hold the white's lower edge at one height (${f(PIC_EDGE)}): the face is read through that edge moved to where the white has fallen to.
   float e = fallenTo(x);
+  fallen = e;
 #ifdef CURTAIN
   float t = t0;
 #else
@@ -270,26 +272,26 @@ void main() {
   // The face is water at work, and the sheets give only its large form: how white it is at each place. The white itself is broken water
   // photographed (the foam tile) at two sizes, running down the face at the pace water falls; on the dark band between the falling lip
   // and the pile at the foot it is thin streaks, long up the face, that the wave draws toward its lip.
-  // (Read outside the branch: a picture read inside one loses its slopes here and comes back as its own mean.)
-  float heads = texture2D(tFoam, vec2(x / 19.0, uTime * 0.16)).g + 0.2 * texture2D(tFoam, vec2(x / 5.3, uTime * 0.31 + 0.5)).r;
-  float big = dot(texture2D(tFoamPic, vec2(x / 29.0, a / 33.0 - uTime * 0.24)).rgb, vec3(0.3333));
-  float fine = dot(texture2D(tFoamPic, vec2(x / 7.3 + 0.31, a / 9.0 - uTime * 0.85)).rgb, vec3(0.3333));
-  float streak = dot(texture2D(tFoamPic, vec2(x / 15.0 + 0.6, a / 41.0 + uTime * 0.07)).rgb, vec3(0.3333));
   if (uLast > 0.5) {
+    float heads = texture2D(tFoam, vec2(x / 19.0, uTime * 0.16)).g * 1.1;
+    float big = dot(texture2D(tFoamPic, vec2(x / 29.0, a / 33.0 - uTime * 0.24)).rgb, vec3(0.3333));
+    float fine = dot(texture2D(tFoamPic, vec2(x / 7.3 + 0.31, a / 9.0 - uTime * 0.85)).rgb, vec3(0.3333));
+    float streak = dot(texture2D(tFoamPic, vec2(x / 15.0 + 0.6, a / 41.0 + uTime * 0.07)).rgb, vec3(0.3333));
     float white = smoothstep(0.3, 0.62, lum);
     float lace = mix(0.6 * streak + 0.4 * fine, 0.55 * big + 0.45 * fine, white);
     // The tile is nearly all white: its range is opened so that the foam has lumps, shade and holes at this distance.
     float n = clamp((lace - 0.24) / 0.32, 0.0, 1.0);
     // The pile at the foot: white the whole width of the wall, in heads that stand and sink, higher after the lip has come down on it.
-    float pileTop = 0.3 + 0.2 * curlAt(x, -0.45) + 0.24 * (heads - 0.6);
+    float pileTop = 0.26 + 0.2 * curlAt(x, -0.45) + 0.24 * (heads - 0.6);
     // The white of the lip hangs down the face to where it has fallen, and its lower edge is foam, not a line.
-    float e = fallenTo(x) + 0.27;
+    float e = fallen + 0.4;
     float edge = t + 0.3 * (n - 0.5);
     white = max(white, max(1.0 - smoothstep(pileTop - 0.07, pileTop + 0.07, edge), smoothstep(e - 0.07, e + 0.07, edge)) * step(0.0, a));
     // All of the tile's white shows where the sheet is white, only its brightest threads on the dark water.
-    float show = smoothstep(0.0, 0.25, n - (1.0 - white) * 0.74);
+    float show = smoothstep(0.0, 0.25, n - (1.0 - white) * 0.82);
     vec3 water = vec3(0.094, 0.108, 0.08) * (0.75 + 0.8 * lum);
-    vec3 foamed = mix(vec3(0.24, 0.275, 0.265), vec3(0.95, 0.96, 0.95), smoothstep(0.15, 0.95, n)) * (0.7 + 0.3 * white);
+    // Its thickest lumps stand in the sun.
+    vec3 foamed = mix(vec3(0.24, 0.275, 0.265), vec3(0.95, 0.96, 0.95), smoothstep(0.2, 0.85, n)) * (0.7 + 0.3 * white) * (1.0 + 0.45 * smoothstep(0.5, 1.0, n));
     pic = mix(water, foamed, show);
     lum = dot(pic, vec3(0.3, 0.5, 0.2));
   }
@@ -572,7 +574,7 @@ const FOOT = 960;
 /** Of the last shot: the clots thrown off the crest, the strands that fall from the lip, the cards of mist. */
 const CREST = 1300;
 const FALLS = 700;
-const MIST = 200;
+const MIST = 160;
 const FOOT_BEFORE = 380;
 /** The foot's thrown water leaves it in this many bursts at a time. */
 const FOOT_BURSTS = 64;
