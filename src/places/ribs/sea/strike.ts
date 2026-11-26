@@ -103,7 +103,7 @@ void main() {
     col = vec3(0.95, 0.96, 0.96) * vLight * fold * (0.7 + 0.3 * vUv.y) + vBack * (1.6 - 1.1 * smoothstep(0.35, 0.9, thick * web * 1.6));
   } else if (vKind < 1.5) {
     // Droplets: a handful to a card, each its own bead, drawn out along its flight.
-    vec2 q = vUv * vec2(0.12, 0.12 / vBead) + seed;
+    vec2 q = vUv * vec2(0.3, 0.3 / vBead) + seed;
     float beads = texture2D(tDrops, q).r;
     float lobe = 1.0 - smoothstep(0.25, 1.0, r2);
     alpha = clamp(beads * 1.5, 0.0, 1.0) * lobe * vLook.x;
@@ -123,7 +123,8 @@ void main() {
     alpha = body * (0.5 + 0.5 * fine.a) * vLook.x;
     col = vec3(0.95, 0.96, 0.96) * vLight * (0.6 + 0.45 * fine.g + 0.25 * vUv.y) + vBack * 0.5;
   }
-  alpha = clamp(alpha, 0.0, 1.0) * (1.0 - uSolo);
+  // No card shows its own edge.
+  alpha = clamp(alpha * (1.0 - smoothstep(0.6, 1.0, max(abs(vUv.x), abs(vUv.y)))), 0.0, 1.0) * (1.0 - uSolo);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;
 
@@ -287,13 +288,13 @@ export class Burst {
         const a = t - j.late - 0.7 * rand(id, 6) * rand(id, 11);
         if (a < 0) continue;
         const small = rand(id, 12);
-        const k = 0.12 + 0.75 * small * small;
+        const k = 0.1 + 0.4 * small * small;
         const v0 = launch(j, 0.55 + 0.75 * rand(id, 7), 1.6, id);
-        const [dx, dy, dz, vx, vy, vz] = fly(a, k, v0, 0.9);
+        const [dx, dy, dz, vx, vy, vz] = fly(a, k, v0, 0.45);
         const y = 0.6 + dy;
         if (y < -0.5) continue;
         const [bx, bz] = base(j, id);
-        const fade = Math.min(1, a / 0.08) * Math.min(1, Math.max(0, (y + 0.5) / 1.5)) * Math.max(0, 1 - a / (5 + 5 * rand(id, 13)));
+        const fade = Math.min(1, a / 0.08) * Math.min(1, Math.max(0, (y + 0.5) / 1.5)) * Math.max(0, Math.min(1, 2.5 * (1 - a / (4 + 3.5 * rand(id, 13) * big))));
         this.put(bx + dx, y, bz + dz, big * (0.9 + 0.5 * Math.min(a, 3)) * (0.6 + 1.1 * rand(id, 9)), vx, vy, vz, 1, (0.75 + 0.25 * small) * fade * still, rand(id, 10), 0, 0);
       }
 
@@ -302,7 +303,7 @@ export class Burst {
         const id = s.id * 100000 + 40000 + i;
         const j = jet(Math.floor(rand(id, 1) * JETS));
         const a = t - j.late - 1.1 - 1.6 * rand(id, 6);
-        const life = 6 + 6 * rand(id, 13);
+        const life = 4 + 3.5 * rand(id, 13);
         if (a < 0 || a > life) continue;
         const v0 = launch(j, 0.75 + 0.3 * rand(id, 7), 1.2, id);
         const [dx, dy, dz, vx, vy, vz] = fly(a, 1.1 + 0.8 * rand(id, 12), [v0[0], v0[1] * 1.6, v0[2]], 0.75);

@@ -577,10 +577,10 @@ void main() {
   if (dot(uProud, v) < 0.0) wet = reflect(wet, uProud) * -1.0;
   // Sodden hide: a little greyer than the dry picture, and it shines where the water runs off it. The hollows between the ribs see little sky.
   // It hangs in the rock's own shade, no brighter than the weed's highlights: grey pink, stained down its length by what runs off it, green brown toward the weed it lies in.
-  vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))) * vec3(1.0, 0.9, 0.86), pic, 0.5) * 1.12;
+  vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))) * vec3(1.0, 0.88, 0.82), pic, 0.5) * 2.1;
   float streak = 0.5 + 0.5 * sin(vUv.x * 150.0 + 4.0 * sin(vUv.x * 31.0) + 2.0 * pic.g);
-  albedo *= mix(0.72, 1.0, smoothstep(0.25, 0.7, streak));
-  albedo = mix(albedo, albedo * vec3(0.55, 0.6, 0.38), 0.4 * smoothstep(0.6, 0.15, vUv.y));
+  albedo *= mix(0.8, 1.0, smoothstep(0.25, 0.7, streak));
+  albedo = mix(albedo, albedo * vec3(0.55, 0.6, 0.38), 0.25 * smoothstep(0.6, 0.15, vUv.y));
   // The approved picture keeps the hide pale, bone grey against the dark weed, and nothing lies across the trunk. The stain is shade only:
   // under the spine, where the trunk turns from the light. Darker than that it sinks into the wall late in the shot.
   vec2 pix = vec2(vUv.x * 1448.0, (1.0 - vUv.y) * 1086.0);
