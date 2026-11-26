@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 88, 2026-11-26 03:32 UTC:
+Status 89, 2026-11-26 03:45 UTC:
 
-- `01-establishing.jpg`: All seven places on main at 03:24 UTC, draft tier (version 1 of wave 2): the establishing frame of each place, then the titan frame
-- `02-v2-eye.jpg`: The Eye, version 2 (merged 03:27 UTC), approved left and built right with crops: eye-0, eye-2, eye-3, eye-4. Still wrong: the near third of eye-0 is flat, the backs in eye-4 are smooth, the wall in the water is streaks
-- `03-m-marsh-2.jpg`: The Blood Marsh, marsh-2: main on the left, the approved picture on the right. Fine detail 0.21 of the picture's, the lowest number in the film: the near stalks are out of focus and the frame is washed in fog
-- `04-hb5-reveal-4.jpg`: The Reveal at 03:29 UTC, the owner's frame: approved left, built right, crops of the cyclone and the ribs. Still wrong: the cyclone is darker and coarser than the approved
+- `01-v2-breath-life.jpg`: The Breath, version 2 (merged 03:41 UTC), approved left and built right with crops: breath-0, breath-1, breath-2, breath-3. Still wrong: the channel is turquoise where the approved is a milky grey green, the plume is a pale bush washed by vapour, the dead one is smaller and paler
+- `02-v2-spine-ground.jpg`: The Spine, version 2 (merged 03:41 UTC), built frames: spine-0, spine-2, spine-3, spine-4. Still wrong: the face in spine-2 is stretched bark, the snow caps in spine-3 are smooth domes, the floor of the hollow is a navy sheet
+- `03-v2-ribs-ground.jpg`: The Ribs, version 2 (merged 03:42 UTC), approved left and built right with crops: ribs-3 and ribs-0. The crag is now dark wet rock with runs and lichen. Still wrong: it is level courses, and the tide flat is even brown sand where the approved has wet shingle and standing water
+- `04-hb8-ribs-sea.jpg`: The Ribs at 03:36 UTC, the sea owner's frames before the lead's new crag: the colony (ribs-3) and the bore (ribs-4)
 
+Status 88, 2026-11-26 03:32 UTC, showed: All seven places on main at 03:24 UTC, draft tier (version 1 of wave 2): the establishing frame of each place, then the titan frame; The...
 Status 87, 2026-11-26 03:10 UTC, showed: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1.
 Status 86, 2026-11-26 02:48 UTC, showed: The Spine at 02:35 UTC: the dead one, and the herd in the hollow.
-Status 85, 2026-11-26 02:18 UTC, showed: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below; The Eye, the drinkers, restaged further off.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T03:32:15Z
-phase 4: 7.36 h used of 17.00 h
-build: 27.68 h used of 72.00 h
+2026-11-26T03:45:17Z
+phase 4: 7.58 h used of 17.00 h
+build: 27.90 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 22
+minutes since the last status: 13
 ```
 
 ## Phases
@@ -1325,6 +1325,10 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 02:50 UTC: how the two rounds left to each place are spent (`quality.maxRoundsPerUnit` is 3 and round 1 of each was a fail on version 2 of wave 1). Round 2 of each place judges version 3 of wave 2, due 04:55 UTC, and not version 2: a round is worth its issues, and issues written on a build one hour old would be stale when a new owner reads them. A third wave of owners starts from that same commit as soon as it is merged, with each owner's hand-over and the Builder's notes, and gets the critics' words on its parts when the round is in, about an hour into its four. Round 3, the last, judges the final version of wave 3. A place whose round 2 holds the pass bar is finished there and gets no third wave. Why a third wave and not an early end: Brandon lifted the limits of time at 22:35 UTC on 25 Nov and asked that the bar not be lowered to finish sooner, and seen beside the approved pictures at 02:48 UTC no place is at the bar. What it costs: about six more hours of Phase 4, which the clock allows (6.62 h of 17 used at 02:48 UTC).
 - 2026-11-26. 03:19 UTC: a quick measure of `main` for the owners, outside any round. The five idle measure renderers each run `npm run measure -- --unit UNIT --tier draft` on `f11e8672` (version 1 of wave 2) for `breath`, `marsh`, `spine`, `eye` and `reveal`; the Builder ran the same for `ribs` at 03:00 UTC (M2 and M3 green at every key, M1 red with 22 pixels at ribs-0, which were found at 03:12 UTC with the `invalid` view: short level runs on the tide flat at the right, x 78 to 90 percent, y 54 to 57 percent, and two at y 73 percent; both Ribs owners were told where). Why now and at draft: the numbers of round 1 are from version 2 of wave 1 and the owners are 130 minutes into four hours, so a number that arrives in 15 minutes can still be acted on, and one at the final tier in 50 minutes cannot. A draft frame is one sample and reads a little sharp, so the owners are told to take M3 under 0.9 at draft as red. It counts as no round and changes no count.
 - 2026-11-26. 03:21 UTC: the opening, read from the approach shot's sheet (`out/work/sheets/shot-ribs-01.png`, 12 preview frames, rendered 03:05 UTC). `kit/01-FILM.md` wants the land reached from the sea with the first blades coming out of the weather, and the first `film.hookSeconds` to stop a scroll with the sound off. As built the two blades stand clear in flat grey light over an even green sea from frame 0 and nothing changes for the first seconds but the fliers. The reading taken: frame 0 already shows the blades, as huge pale shapes half inside a bank of sea fog under a dark sky with one break of sun, and the bank tears open inside the first two seconds, so a phone viewer has something large in the first frame and a change that rewards staying. It is in the Ribs' own shot (`ribs-01`, frames 0 to 1041), so it goes to the lead of the Ribs in wave 3 as its first item, and Phase 5 step 2 then checks it and builds only what is still missing.
+
+- 2026-11-26 03:46 UTC. The Ribs' keys `ribs-0` and `ribs-4` after version 2 of the sea's owner, seen beside the approved pictures: in both the kite-wings stand in the middle distance as they do in the pictures (small on the flat in `ribs-0`, fleeing before the wall in `ribs-4`). No animal is further off than its picture has it, so neither key gets the restage sentence. `ribs-2` is looked at with the next looks.
+- 2026-11-26 03:46 UTC. Draft measures of version 2 of wave 2 (`b2d7afb1`), outside any round like the ones of 03:19 UTC: all six units, ordered at 03:44 UTC on `measure_renderer_r8` (`breath`), `r9` (`marsh`), `r10` (`spine`), `r11` (`eye`), `r12` (`reveal`) and `pack_renderer_r9` (`ribs`), 30 minutes each at most. Their numbers go to the owners before version 3.
+- 2026-11-26 03:46 UTC. The Ribs' lead meant to raise the motion number of `ribs-3` (4.7 percent against a floor of 8 at the draft tier) with camera drift. Declined: M2 is measured with the camera held, and `kit/07-QUALITY-BAR.md` says never to add motion only to raise the number. The motion comes from the colony, the wet runs, the weed and the spray, and both owners of the Ribs have that in their lists.
 
 ## Notes from Brandon
 
