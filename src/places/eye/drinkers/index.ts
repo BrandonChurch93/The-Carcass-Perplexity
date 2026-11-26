@@ -104,6 +104,7 @@ void main() {
 
 const FRAGMENT = /* glsl */ `
 uniform sampler2D tSkin;
+uniform vec4 uSheet;
 uniform vec2 uTexel;
 varying vec3 vWorld;
 varying vec3 vAxis;
@@ -128,8 +129,10 @@ void main() {
   vec2 e2 = uTexel * 2.0;
   float fx = texture2D(tRelief, vUv + vec2(e2.x, 0.0), 0.5).r - texture2D(tRelief, vUv - vec2(e2.x, 0.0), 0.5).r;
   float fy = texture2D(tRelief, vUv + vec2(0.0, e2.y), 0.5).r - texture2D(tRelief, vUv - vec2(0.0, e2.y), 0.5).r;
-  float fold = clamp(1.0 + 5.0 * (texture2D(tRelief, vUv, 0.0).r - texture2D(tRelief, vUv, 2.5).r), 0.45, 1.35);
-  vec3 n = normalize(face * 0.42 - axis * (hx + 2.2 * fx) - vec3(0.0, 1.0, 0.0) * (hy + 2.2 * fy));
+  // A back seen close from behind is a short coat lying smooth over the spine and the hips: its folds are faint.
+  float creased = uSheet.y == 0.0 ? 0.3 : 1.0;
+  float fold = clamp(1.0 + 5.0 * creased * (texture2D(tRelief, vUv, 0.0).r - texture2D(tRelief, vUv, 2.5).r), 0.45, 1.35);
+  vec3 n = normalize(face * 0.42 - axis * (hx + 2.2 * creased * fx) - vec3(0.0, 1.0, 0.0) * (hy + 2.2 * creased * fy));
   vec3 v = normalize(cameraPosition - vWorld);
   // Wet and dark below, where it has stood in the lake; dry and dusty above.
   float above = vWorld.y - max(vFeet, 0.0);

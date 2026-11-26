@@ -145,11 +145,13 @@ void main() {
   // Under a low eye the stones are pebbles: the top of each is in the light whatever its height, only its foot is wet, and each has a tone of its own.
   float lowEye = smoothstep(12.0, 4.0, cameraPosition.y);
   // A pebble is one stone of one tone: the plate of the scree, made for blocks, would blotch it.
-  albedo = mix(albedo, vec3(0.3, 0.29, 0.27) * (0.85 + 0.3 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0)), 0.7 * lowEye);
+  albedo = mix(albedo, vec3(0.4, 0.31, 0.22) * (0.85 + 0.3 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0)), 0.8 * lowEye);
   foot = max(foot, lowEye * smoothstep(-0.1, 0.6, normalize(vNormal).y));
   float damp = smoothstep(mix(0.3, 0.07, lowEye), 0.01, vWorld.y);
+  // The last half metre of shore before the water is wet: its stones are dark.
+  damp = max(damp, 0.75 * lowEye * smoothstep(0.1, 0.03, max(land.r, 0.0)));
   albedo *= mix(1.0, 0.55, damp) * mix(vec3(1.0), mix(vec3(0.5, 0.5, 0.52), vec3(1.5, 1.44, 1.3), vTint.y * vTint.y) * mix(vec3(1.0), vec3(1.15, 0.9, 0.68), step(0.8, vTint.z)), lowEye);
-  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), 0.9, (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
+  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.9, 0.4, damp), (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

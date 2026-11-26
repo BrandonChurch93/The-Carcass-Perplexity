@@ -152,52 +152,68 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   cover = max(cover, 0.85 * thin * smoothstep(0.34, 0.5, field + 0.25) * smoothstep(9.0, 3.0, wLip) * smoothstep(-0.6, 0.6, wLip));
   // The mats keep to the lip: a band of them round the deep, torn at its outer edge, and wet sand and cobbles between it and the shore.
   cover *= 1.0 - 0.92 * smoothstep(190.0, 300.0, w + 60.0 * (blobs - 0.5));
+  // From high on the spur the bed between the mats is not pale: it is stained with them, amber going to brown, wet.
+  bare = mix(bare, vec3(0.3, 0.16, 0.07) * (0.7 + 0.6 * blobs), smoothstep(6.0, 30.0, cameraPosition.y) * thin * (1.0 - smoothstep(190.0, 300.0, w + 60.0 * (blobs - 0.5))));
   o.albedo = bare;
   o.tilt = (snh.xy * 2.0 - 1.0) * 0.5;
   o.occ = 0.55 + 0.45 * smoothstep(0.1, 0.6, snh.b);
   o.glow = 0.0;
   o.depth = depth;
   o.dry = max(smoothstep(0.0, -0.035, depth), stands);
+  // From high up the whole band of the mats lies in the surface: it is weed and stained bed, not a mirror of the cliffs.
+  o.dry = max(o.dry, 0.86 * smoothstep(6.0, 30.0, cameraPosition.y) * thin * (1.0 - smoothstep(190.0, 300.0, w + 60.0 * (blobs - 0.5))));
   // How much of a strand of weed lies here: the strands go on over the crust of the lip.
   float strand = 0.0;
   if (cover > 0.0) {
-    // The mats themselves: one piece of the bed seen from above, laid 5 m wide so that its strands are as fine as weed is, its strands combed toward the top, laid round the lake so that the top is the centre.
-    // It is turned over at each of its edges and swung a little from lock to lock, so that no edge and no repeat shows.
-    vec2 lock = vec2(vnoise(b / 5.0 + 3.1), vnoise(b / 5.0 + 9.9)) - 0.5;
-    vec2 q = (vec2(a2 * 588.0, -r) + 0.7 * lock) / vec2(5.0, 5.19);
-    q.x += (0.004 * sin(uTime * 0.8 + 6.28 * vnoise(b / 1.9)) + 0.0012 * sin(uTime * 1.9 + 6.28 * vnoise(b / 0.4)));
-    vec3 mp = texture2D(tMat, q).rgb;
-    float mh = texture2D(tMatH, q).r;
-    // Far off, where one piece would show as a row of the same, a larger copy of it turned another way takes over.
-    float wide = smoothstep(18.0, 70.0, away);
-    if (wide > 0.0) {
-      vec2 q2 = (vec2(a2 * 588.0, -r) + 9.0 * lock + 4.0 * vec2(vnoise(b / 37.0), vnoise(b / 37.0 + 4.4))) / vec2(23.0, 23.9) + 0.37;
-      mp = mix(mp, texture2D(tMat, q2).rgb, wide);
-      mh = mix(mh, texture2D(tMatH, q2).r, wide);
+    // The mats themselves are filaments: hair-fine strands in bundles, combed toward the centre by a slow current that bends a little as it
+    // goes, drawn strand by strand in four finenesses. A strand finer than the pixel that looks at it gives its tone and not its line, so
+    // that from the spur the mats are soft streaks and close to they are hair.
+    float fc = a2 * 588.0 + 22.0 * (vnoise(b / 70.0 + 5.0) - 0.5) + 5.0 * (vnoise(b / 17.0 + 2.0) - 0.5) + 1.3 * (vnoise(b / 3.1 + 6.0) - 0.5) + 0.3 * (vnoise(b / 0.6 + 1.0) - 0.5);
+    fc += 0.02 * sin(uTime * 0.8 + 6.28 * vnoise(b / 1.9)) + 0.006 * sin(uTime * 1.9 + 6.28 * vnoise(b / 0.4));
+    float fw = length(vec2(dFdx(fc), dFdy(fc)));
+    float fil = 0.0;
+    for (int l = 0; l < 4; l++) {
+      float fq = l == 0 ? 2.3 : l == 1 ? 7.0 : l == 2 ? 21.0 : 60.0;
+      // Each fineness lies a little across the last, so that the strands cross and tangle.
+      float lay = fc + (float(l) - 1.5) * 0.11 * r + (l == 1 || l == 3 ? 0.7 * (vnoise(b / 0.9 + 3.0 * float(l)) - 0.5) : 0.0);
+      float ridge = 1.0 - abs(2.0 * vnoise(vec2(lay * fq + 13.0 * float(l), r * (0.11 + 0.07 * float(l)))) - 1.0);
+      ridge *= ridge;
+      fil += (l == 0 ? 0.3 : l == 1 ? 0.35 : 0.45) * mix(0.2, ridge * ridge * mix(1.0, ridge, smoothstep(0.02, 0.004, fw)), smoothstep(1.0, 0.3, fw * fq));
     }
-    // The plate is redder than the weed of this lake: amber, gold where it is thin.
-    mp = mix(mp, dot(mp, vec3(0.3, 0.5, 0.2)) * vec3(1.5, 0.95, 0.24), 0.5) * (0.3 + 0.7 * smoothstep(0.08, 0.5, mh));
+    float bundle = smoothstep(0.34, 0.64, 0.6 * vnoise(vec2(fc * 0.9, r * 0.1) + 3.0) + 0.4 * vnoise(vec2(fc * 0.21, r * 0.03) + 8.0));
+    // Close to, a bundle is still strands with dark water between them, never one pale sheet.
+    fil = clamp(fil * (0.05 + mix(1.7, 1.15, smoothstep(0.02, 0.004, fw)) * bundle), 0.0, 1.0);
+    // Rust where they lie thin, amber in the bundle, gold on the strands that lie highest.
+    vec3 mp = mix(mix(vec3(0.3, 0.075, 0.02), vec3(0.5, 0.2, 0.03), smoothstep(0.2, 0.55, fil)), vec3(0.62, 0.38, 0.05), smoothstep(0.55, 1.0, fil));
+    // From high on the spur no strand is told: the bundles are soft streaks of rust and amber.
+    mp = mix(mix(vec3(0.17, 0.06, 0.022), vec3(0.3, 0.135, 0.035), smoothstep(0.15, 0.85, 0.6 * vnoise(vec2(fc * 0.9, r * 0.1) + 3.0) + 0.4 * vnoise(vec2(fc * 0.21, r * 0.03) + 8.0))), mp, smoothstep(30.0, 6.0, cameraPosition.y));
+    float mh = 0.15 + 0.45 * smoothstep(0.08, 0.6, fil);
+    float wide = smoothstep(18.0, 70.0, away);
     // Rust in one bed, gold in the next.
     float tone = 0.45 * vnoise(vec2(aw * 420.0, rw / 140.0) + 5.0) + 0.3 * vnoise(vec2(aw * 1500.0, rw / 60.0)) + 0.25 * vnoise(b / 6.0);
-    vec3 weed = 0.85 * mp * mix(vec3(0.9, 0.5, 0.2), vec3(1.2, 1.0, 0.4), smoothstep(0.3, 0.72, tone));
+    vec3 weed = mp * mix(vec3(0.8, 0.68, 0.55), vec3(1.15, 1.1, 0.95), smoothstep(0.3, 0.72, tone));
     // Its relief says what stands where: the pale slabs come out of the water, the strands lie just under it, the gaps between are deeper.
     float up = (mh - 0.6) * 0.42;
     float low = smoothstep(30.0, 6.0, cameraPosition.y);
     // From high on the spur the pale crust between the strands is lost in the rust of the band: a little of it shows, no more.
-    float slab = smoothstep(0.02, 0.07, up) * mix(0.22, 1.0, low);
+    float slab = 0.0;
+    // Between the strands the pale crust shows through the water; from high up there are no gaps to be told, only streaks.
+    // In a bundle the strands lie on a felt of their own kind, rust red: the pale crust shows only between bundles.
+    float lies = mix(1.0, max(smoothstep(0.26, 0.48, fil), 0.8 * smoothstep(0.25, 0.7, bundle)), low);
     // Toward the lip the amber goes to brown and then to the dark of the deep.
     weed *= mix(vec3(0.42, 0.34, 0.3), vec3(1.0), smoothstep(6.0, 70.0, w));
     // Seen from high in the last light the band is rust and amber, brighter than any one strand of it is close to.
-    weed *= mix(vec3(1.75, 1.45, 1.05), vec3(1.0), low);
-    o.albedo = mix(bare, mix(weed, mp * vec3(0.95, 1.0, 1.08), slab), cover);
+    weed *= mix(vec3(1.1, 1.05, 1.0) * mix(0.3, 1.0, smoothstep(0.0, 130.0, w)), vec3(1.0), low);
+    o.albedo = mix(bare, weed, cover * lies);
     o.depth = mix(depth, -up + 0.02, cover);
     // From far off and low, the tops of the mats that lie in the surface take the mirror from the water.
-    float afloat = mix(smoothstep(0.2, 0.5, mh) * 0.55, mix(0.9, 0.6 + 0.32 * smoothstep(0.15, 0.45, mh), low), smoothstep(25.0, 140.0, away));
+    float afloat = mix(smoothstep(0.2, 0.5, mh) * 0.2, mix(0.9, 0.6 + 0.32 * smoothstep(0.15, 0.45, mh), low), smoothstep(25.0, 140.0, away));
     o.dry = mix(o.dry, max(smoothstep(0.0, 0.03, up) * 0.92, afloat), cover);
     o.occ = mix(o.occ, 0.5 + 0.5 * smoothstep(0.1, 0.5, mh), cover);
-    o.glow = 0.3 * cover * (1.0 - slab) * smoothstep(0.2, 0.5, mh);
-    strand = cover * (1.0 - slab) * smoothstep(0.22, 0.5, mh);
-    if (away < 45.0) {
+    o.glow = 0.07 * cover * low * smoothstep(0.2, 0.5, mh);
+    strand = cover * lies;
+    if (false) {
+      vec2 q = vec2(0.0);
       vec2 e = vec2(0.0025, 0.0);
       vec2 g = vec2(texture2D(tMatH, q + e.xy).r - texture2D(tMatH, q - e.xy).r, texture2D(tMatH, q + e.yx).r - texture2D(tMatH, q - e.yx).r);
       // q.x runs round the lake and q.y toward the centre.

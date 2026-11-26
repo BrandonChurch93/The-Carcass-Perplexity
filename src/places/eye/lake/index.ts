@@ -190,7 +190,7 @@ void main() {
   // Through a long lens the wall in the water is one picture, pulled long and only shaken by the ripples: a wave moves it a little, it does not deal it out in pieces.
   if (uPlateTone.w > 1.5) {
     vec3 still = reflect(-v, vec3(0.0, 1.0, 0.0));
-    rd.y = max(mix(still.y, rd.y, 0.3), 0.003);
+    rd.y = max(mix(still.y, rd.y, 0.12), 0.003);
   }
   rd = normalize(rd);
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
@@ -255,7 +255,7 @@ void main() {
     vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * 0.05;
     vec3 through = exp(-uAbsorb * down * (2.6 + 1.2 / fall));
     // The wall is seen for a few metres in from the lip and no further: beyond that the deep is its own dark.
-    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through * (0.06 + 0.5 * smoothstep(2.4, 0.1, inside)) + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
+    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through * (0.06 + 0.42 * smoothstep(6.0, 0.3, inside)) * vec3(0.8, 1.0, 1.05) + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));

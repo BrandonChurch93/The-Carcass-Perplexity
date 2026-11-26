@@ -90,7 +90,7 @@ vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean, out float tall) {
     }
   }
   // Limestone mostly: pale grey, some buff, a dark one now and then, each with a speck or a vein of its own.
-  vec3 shade = mix(vec3(0.17, 0.17, 0.18), vec3(0.8, 0.77, 0.7), own * own);
+  vec3 shade = mix(vec3(0.18, 0.15, 0.12), vec3(0.78, 0.64, 0.48), own * own);
   shade = mix(shade, vec3(0.55, 0.4, 0.26), smoothstep(0.74, 0.8, fract(own * 13.0)));
   shade = mix(shade, vec3(0.07, 0.07, 0.08), smoothstep(0.86, 0.9, fract(own * 29.0)));
   shade *= 0.75 + 0.5 * vnoise(xz * 37.0 + own * 50.0);
