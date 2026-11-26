@@ -131,10 +131,12 @@ export function create(ctx: Context): Piece {
   // The approach draws the sea with its own text (shaders.ts): the film's material is the one above, untouched, for every other frame.
   const openSea = new THREE.Vector4(1, 0, 0, 1);
   const openGlint = { value: 0 };
+  // The white water a strike leaves on the sea round the foot: x, z of its middle, its reach in metres, how white.
+  const wash = [new THREE.Vector4(0, 0, 1, 0), new THREE.Vector4(0, 0, 1, 0)];
   const seaOpening = new THREE.ShaderMaterial({
     vertexShader: SEA_OPENING_VERTEX,
     fragmentShader: SEA_OPENING_FRAGMENT,
-    uniforms: { ...seaUniforms, uOpenSea: { value: openSea }, uOpenGlint: openGlint },
+    uniforms: { ...seaUniforms, uOpenSea: { value: openSea }, uOpenGlint: openGlint, uWash: { value: wash } },
   });
   const sea = new THREE.Mesh(seaDisc(), seaMaterial);
   sea.frustumCulled = false;
@@ -228,7 +230,7 @@ export function create(ctx: Context): Piece {
   });
   ctx.scene.add(ctx.parts.built('bore', bore.wall, bore.back, bore.curtain, bore.cards), bore.back, bore.curtain, bore.cards);
   // The air over and behind the wall is full of water: four columns that travel with the front, drawn by the air folder in the place's light.
-  for (const [dx, radius, strength] of [[-70, 40, 0.05], [0, 50, 0.04], [75, 45, 0.05], [-260, 80, 0.03], [280, 80, 0.03]] as const) {
+  for (const [dx, radius, strength] of [] as [number, number, number][]) {
     ctx.sources.steam.push({ at: [gate[0] + dx, 6, boreFront(BORE) - 55], radius, strength, rise: 48, kind: 'spray', lean: [0.1, -0.5], speed: BORE_SPEED, since: BORE });
   }
   const feeding = shotSpan('ribs-04');
@@ -325,7 +327,9 @@ export function create(ctx: Context): Piece {
           const seed = e.id * 131 + j;
           const a = age - 0.25 * rand(seed, n + 7);
           if (a < 0 || a > 3.6) continue;
-          const up = (7 + 9 * rand(seed, n + 1)) * power;
+          // On the open shore the swell breaks knee high: its spray is a low lit haze over the surf line, not a column.
+          const low = e.id >= 1000 ? 0.24 : 1;
+          const up = (7 + 9 * rand(seed, n + 1)) * power * low;
           const out = 1.5 + 3 * rand(seed, n + 2);
           const side = (rand(seed, n + 3) - 0.5) * 9;
           const y = 0.4 + up * a - 3.4 * a * a;
@@ -334,7 +338,7 @@ export function create(ctx: Context): Piece {
           const x = e.x + side * (-main[1]) - main[0] * out * a + WIND.to[0] * drift;
           const z = e.z + side * main[0] - main[1] * out * a + WIND.to[1] * drift;
           const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / 3.4);
-          surf.put(x, y, z, (1.6 + 2.6 * a) * (0.7 + 0.6 * rand(seed, n + 4)) * Math.max(1, e.power * 1.5), 0.75 * fade * Math.min(1.2, power), rand(seed, n + 5), rand(seed, n + 6) * 6.28, 1.25);
+          surf.put(x, y, z, (1.6 + 2.6 * a) * (0.7 + 0.6 * rand(seed, n + 4)) * Math.max(1, e.power * 1.5) * (0.4 + 0.6 * low), (0.75 - 0.4 * (1 - low)) * fade * Math.min(1.2, power), rand(seed, n + 5), rand(seed, n + 6) * 6.28, 1.25);
         }
       }
       surf.end();
@@ -348,6 +352,12 @@ export function create(ctx: Context): Piece {
       openSea.w = 1 + SEA_OPEN.swell * openingWeight(seconds);
       breaker.mesh.visible = inOpening();
       if (breaker.mesh.visible) breaker.setTime(seconds, strikes, windTo);
+      strikes.forEach((s, n) => {
+        const a = seconds - s.seconds;
+        const reach = 0.5 * s.width * (0.75 + 0.1 * Math.max(a, 0)) + 7 * Math.max(a, 0);
+        const on = inOpening() && a > 0 ? Math.min(1, a / 0.5) * Math.min(1, Math.max(0, (12 - a) / 8)) : 0;
+        (wash[n] as THREE.Vector4).set(s.x + s.out[0] * reach * 0.3, s.z + s.out[1] * reach * 0.3, reach, 0.95 * on);
+      });
       spindrift.mesh.visible = inOpening();
       spindrift.gale.y = openingWeight(seconds);
     },

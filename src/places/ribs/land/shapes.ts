@@ -280,6 +280,26 @@ export function boulderShape(seed: number, detail: number, squat: number): THREE
   // The icosahedron shares no vertices: weld it so that the normals are smooth where the rock is round.
   const welded = weld(g);
   welded.computeVertexNormals();
+  // A break is a plane: a point that lies on one takes the plane's own normal, so that two breaks meet in an edge and the rock is no pillow.
+  const at = welded.getAttribute('position') as THREE.BufferAttribute;
+  const facing = welded.getAttribute('normal') as THREE.BufferAttribute;
+  for (let i = 0; i < at.count; i++) {
+    v.set(at.getX(i), at.getY(i) / squat, at.getZ(i));
+    const length = v.length();
+    v.divideScalar(length);
+    let least = Infinity;
+    let broken: THREE.Vector3 | null = null;
+    for (const c of cuts) {
+      const along = v.dot(c.n);
+      if (along > 0 && c.d / along < least) {
+        least = c.d / along;
+        broken = c.n;
+      }
+    }
+    if (broken === null || Math.abs(length - least) > 0.04) continue;
+    v.set(broken.x, broken.y / squat, broken.z).normalize();
+    facing.setXYZ(i, v.x, v.y, v.z);
+  }
   welded.computeBoundingSphere();
   return welded;
 }

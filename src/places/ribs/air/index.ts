@@ -174,10 +174,13 @@ void main() {
     float fineness = log2(t1 - t0);
     float banks = textureLod(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019), clamp(fineness - 3.6, 1.0, 8.0)).r;
     float lumps = textureLod(tCloudShade, p.xz / 210.0 - uTime * vec2(0.033, 0.058) + 0.37, clamp(fineness - 2.6, 1.0, 8.0)).g;
-    float bank = smoothstep(0.3, 0.8, banks + 0.4 * (lumps - 0.5));
+    float bank = smoothstep(0.38, 0.72, banks + 0.5 * (lumps - 0.5));
     // A bank has a top, low where it is thin and some forty metres where it is thick, and the haze over it stands thicker too.
-    float mist = 0.0034 * exp(-max(p.y, 0.0) / (9.0 + 34.0 * bank)) * bank;
-    float a = 1.0 - exp(-(thickness(p.y) * (0.6 + 0.9 * bank) + mist) * (t1 - t0) * smoothstep(130.0, 600.0, tm));
+    // Between the banks a thin breath of it lies on the wet floor, half of what lies under a bank: the far flats go into the air as
+    // the blades do, not black to the horizon. (Stronger banks than these show the screen's weave on the blades behind them.)
+    float mist = 0.0046 * bank * exp(-max(p.y, 0.0) / (7.0 + 40.0 * bank));
+    float breath = 0.0022 * (0.5 + 1.0 * bank) * exp(-max(p.y, 0.0) / (4.0 + 6.0 * bank));
+    float a = 1.0 - exp(-((thickness(p.y) * (0.35 + 0.75 * bank) + mist) * smoothstep(130.0, 600.0, tm) + breath * smoothstep(90.0, 420.0, tm)) * (t1 - t0));
     // Under the shut cloud the air is the storm's slate; where the break stands over it, it takes the sky's light and the sun.
     float gap = cloudShadeMarched(p);
     // A long stride crosses many shadows of the blades: it takes their mean, not the one it happens to stand in, which would lay the
@@ -206,7 +209,7 @@ void main() {
     float cover = 1.0 - exp(-tau);
     // The air between the lens and the column dims it; the air behind it is hidden by it.
     float near = exp(-thickness(0.5 * (ro.y + centre.y)) * clamp(tm, 0.0, reach));
-    vec3 light = (uHaze * 1.25 * uScatter.x + sunAir * (c.x * (0.15 + 0.5 * uScatter.y * phase))) * uShowAir;
+    vec3 light = (uHaze * 1.25 * uScatter.x + sunAir * (c.x * (0.07 + 0.5 * uScatter.y * phase))) * uShowAir;
     sum = sum * (1.0 - cover * near) + light * (cover * near);
     trans *= 1.0 - cover;
   }

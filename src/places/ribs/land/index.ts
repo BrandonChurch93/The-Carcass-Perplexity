@@ -14,7 +14,7 @@ import { LAND } from '../shared/rig';
 import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
-import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
+import { BOULDER_FRAGMENT, COBBLE_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
 import { CURTAIN_FRAGMENT, CURTAIN_VERTEX, curtainShape } from './curtain';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
@@ -230,10 +230,10 @@ export function create(ctx: Context): Piece {
   const weedNear = hangs(0.6);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.15, 0);
-  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uDry: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
-  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uDry: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
   // The cobbles heaped on a bar stand clear of the film of water: drained, paler, each of its own tone.
-  const cobble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uDry: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const cobble = material(RIG_VERTEX, COBBLE_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, uPool: { value: LEVELS.pool } });
 
   // The floor: fine where the cameras stand on it, coarse out to the edge of what the rig knows, where it lies deep under the sea.
   const xs = lines(LAND.minX, LAND.maxX, -340, 420, 6, 60);
@@ -280,7 +280,7 @@ export function create(ctx: Context): Piece {
   fronds.side = THREE.DoubleSide;
   {
     const hang = ctx.rng('curtain');
-    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 6000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 4400, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -414,6 +414,18 @@ export function create(ctx: Context): Piece {
       if (Math.hypot(at.x - wide[0], at.z - wide[2]) > 16 && Math.hypot(at.x - hung.x, at.z - hung.z) > 18) placed.push(rock);
     }
   }
+  // The near cliff stands on its own rubble: blocks of a stride or two heaped against its foot all the way round, thinning within a few
+  // metres of it. Its own stream of numbers, so that nothing else on the flat moves.
+  {
+    const foot = ctx.rng('foot');
+    for (let i = 0; i < 90; i++) {
+      const out = 6 * Math.pow(foot.next(), 1.8);
+      const at = weedPoint(first, foot.range(0, 6.283), 2, out - 0.3);
+      const size = (0.5 + 1.9 * Math.pow(foot.next(), 2)) * (1 - 0.08 * out);
+      const rock = { x: at.x, z: at.z, size, yaw: foot.range(0, 6.283), tilt: foot.range(-0.35, 0.35), kind: foot.int(KINDS), sink: foot.range(0.3, 0.5) };
+      if (Math.hypot(at.x - wide[0], at.z - wide[2]) > 16 && Math.hypot(at.x - hung.x, at.z - hung.z) > 11) placed.push(rock);
+    }
+  }
   // Weed-grown rock close under the gate's lens, left and right of its way: dark, out of focus, the flat between them clear.
   {
     const pose = resolve(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 0);
@@ -488,27 +500,27 @@ export function create(ctx: Context): Piece {
       kept.push({ x: x + Math.cos(a) * r, z: z + Math.sin(a) * r, size: Math.min(0.9, size * scatter.range(0.22, 0.5)), yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.3, 0.5) });
     }
   });
-  // The gravel bars close under the two low lenses are real stones, heaped: cobbles of a hand to a forearm, two and three deep on the
-  // crown of a bar and thinning to its edge, with the wet sand bare between one bar and the next.
-  const heap = (path: (typeof shots)[string], part: number, count: number, from: number, to: number, half: number): void => {
+  // Close under the two low lenses the flat is wet sand with little on it: a few stones on the crown of each gravel bar, flat, of a thumb
+  // to a forearm and no two alike, and here and there a mat of cast weed.
+  const few = (path: (typeof shots)[string], part: number, count: number, from: number, to: number, half: number): void => {
     const pose = resolve(path, part, 0);
     const yaw = yawOf(pose.aim, pose.position);
     for (let i = 0; i < count; i++) {
-      const r = from + (to - from) * Math.pow(scatter.next(), 1.5);
+      const r = from + (to - from) * Math.pow(scatter.next(), 1.3);
       const a = yaw + scatter.range(-half, half);
       const x = pose.position[0] + Math.sin(a) * r;
       const z = pose.position[2] - Math.cos(a) * r;
-      const size = 0.04 + 0.06 * scatter.next() + 0.22 * Math.pow(scatter.next(), 5);
-      const rock = { x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.5, 0.5), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.5), lift: 0 };
+      const size = 0.04 + 0.09 * scatter.next() + 0.3 * Math.pow(scatter.next(), 6);
+      const rock = { x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.25, 0.25), kind: scatter.int(KINDS), sink: scatter.range(0.3, 0.5), lift: 0 };
+      const mat = scatter.next() < 0.03;
       const bar = smooth(0.5, 0.68, noise3(x / 9, 0.5, z / 2.6) * 0.65 + noise3(x / 1.3, 2.5, z / 1.3) * 0.35);
-      if (bar <= 0.02 + 0.3 * scatter.next() || nearTrack(x, z, 0.4 + size) || bed(x, z) < LEVELS.pool - 0.03) continue;
-      // The crown of the bar stands a hand and more over its edge.
-      rock.lift = 0.16 * bar * scatter.next();
-      kept.push(rock);
+      if (bar <= 0.05 + 0.7 * scatter.next() || nearTrack(x, z, 0.4 + size) || bed(x, z) < LEVELS.pool - 0.03) continue;
+      if (mat && r > 5) kept.push({ x, z, size: 0.5 + 0.9 * scatter.next(), yaw: rock.yaw, tilt: 0.1 * rock.tilt, kind: rock.kind, sink: scatter.range(0.6, 0.7) });
+      else kept.push(rock);
     }
   };
-  heap(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 6000, 1.6, 22, 0.66);
-  heap(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 3500, 1.6, 18, 0.6);
+  few(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 1000, 1.6, 22, 0.66);
+  few(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 650, 1.6, 18, 0.6);
   const squat = [0.5, 0.58, 0.38, 0.45];
   const rocks = new THREE.Group();
   const dummy = new THREE.Object3D();
@@ -529,6 +541,7 @@ export function create(ctx: Context): Piece {
       dummy.rotation.set(p.tilt, p.yaw, p.tilt * 0.6);
       // A heap of weed lies lower and wider than a stone.
       if (p.sink > 0.555) dummy.scale.set(p.size * 1.25, p.size * 0.6, p.size);
+      else if (p.lift !== undefined) dummy.scale.set(p.size, p.size * 0.6, p.size * 0.82);
       else dummy.scale.setScalar(p.size);
       dummy.updateMatrix();
       herd.setMatrixAt(i, dummy.matrix);
