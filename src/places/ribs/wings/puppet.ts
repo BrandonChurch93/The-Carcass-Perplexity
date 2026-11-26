@@ -192,7 +192,7 @@ void main() {
   // The colony's are cream, the picture's light and dark kept as their folds: the back a shade darker than the belly and the neck, so that a body parts from its ledge.
   float under = max(step(2.5, vPart) * (1.0 - sail), step(vPart, 0.5) * max(smoothstep(230.0, 320.0, vPx.y) * smoothstep(540.0, 600.0, vPx.x), smoothstep(800.0, 880.0, vPx.x)));
   float pale = clamp(vPale, 0.0, 1.0);
-  vec3 cream = vec3(0.84, 0.75, 0.6) * (0.62 + 0.75 * dot(albedo, vec3(0.3333)));
+  vec3 cream = vec3(0.8, 0.7, 0.55) * (0.5 + 0.8 * dot(albedo, vec3(0.3333)));
   albedo = mix(albedo, cream * mix(vec3(0.8), vec3(1.04, 0.94, 0.8), under), pale);
   // Against white water it is a shape; the far sail is in the shade of the body.
   albedo *= mix(1.0, 0.3, clamp(-vPale, 0.0, 1.0)) * mix(1.0, 0.6, step(4.5, vPart));

@@ -51,8 +51,17 @@ uniform vec2 uWind;
 uniform float uFeetReach;
 varying vec3 vWorld;
 ${SWELL_GLSL}
+// The level of a picture laid over the sea at so many metres a repeat, by the long side of the pixel's foot on the water (as the pool film reads).
+vec2 footX;
+vec2 footY;
+float levelOf(sampler2D t, float metres) {
+  float size = float(textureSize(t, 0).x) / metres;
+  return log2(max(max(length(footX), length(footY)) * size, 1e-6));
+}
 void main() {
   vec2 p = vWorld.xz;
+  footX = dFdx(p);
+  footY = dFdy(p);
   vec3 toEye = cameraPosition - vWorld;
   float dist = length(toEye);
   vec3 v = toEye / dist;
@@ -64,20 +73,20 @@ void main() {
   if (land.r < 0.6) {
   float feet = texture2D(tFeet, (p - uLandRect.xy) * uLandRect.zw).r * uFeetReach;
   // Water shoals toward the sand and toward the foot of a blade alike.
-  float ragged = (texture2D(tChop, p / 173.0).b - 0.5) * 5.0 + (texture2D(tChop, p.yx / 39.0).b - 0.5) * 2.0;
+  float ragged = (textureLod(tChop, p / 173.0, levelOf(tChop, 173.0)).b - 0.5) * 5.0 + (textureLod(tChop, p.yx / 39.0, levelOf(tChop, 39.0)).b - 0.5) * 2.0;
   float shoal = min(depth + ragged * smoothstep(0.0, 3.0, depth), 0.2 + feet * 0.4);
   float calm = smoothstep(0.3, 9.0, depth);
   vec2 g;
   float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm;
   g *= calm;
 
-  vec4 c1 = texture2D(tChop, p / 47.0 - uTime * uWind * 0.064);
-  vec4 c2 = texture2D(tChop, vec2(p.y, -p.x) / 13.7 + uTime * vec2(uWind.y, -uWind.x) * 0.117);
-  vec4 c3 = texture2D(tChop, (p + (c1.xy - 0.5) * 2.0) / 3.9 - uTime * uWind * 0.23);
+  vec4 c1 = textureLod(tChop, p / 47.0 - uTime * uWind * 0.064, levelOf(tChop, 47.0));
+  vec4 c2 = textureLod(tChop, vec2(p.y, -p.x) / 13.7 + uTime * vec2(uWind.y, -uWind.x) * 0.117, levelOf(tChop, 13.7));
+  vec4 c3 = textureLod(tChop, (p + (c1.xy - 0.5) * 2.0) / 3.9 - uTime * uWind * 0.23, levelOf(tChop, 3.9));
   vec2 s2 = c2.xy - 0.5;
   float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);
   // The smallest faces only where the lens can hold them.
-  vec4 c4 = texture2D(tChop, (vec2(-p.y, p.x) + (c2.xy - 0.5) * 0.7) / 0.97 + uTime * uWind * 0.31);
+  vec4 c4 = textureLod(tChop, (vec2(-p.y, p.x) + (c2.xy - 0.5) * 0.7) / 0.97 + uTime * uWind * 0.31, levelOf(tChop, 0.97));
   float fineKeep = 1.0 - smoothstep(0.004, 0.03, px);
   vec2 chop = ((c1.xy - 0.5) * 0.55 + vec2(-s2.y, s2.x) * 0.5 + (c3.xy - 0.5) * 0.45 + (c4.xy - 0.5) * 0.4 * fineKeep) * lively;
   vec3 n = normalize(vec3(-(g.x + chop.x), 1.0, -(g.y + chop.y)));
@@ -110,10 +119,10 @@ void main() {
   body *= 1.0 + 1.6 * smoothstep(0.3, 1.2, h + 2.0 * (c1.b - 0.5)) * calm;
   col = mix(body * e / 3.14159, refl, fres);
 
-  float lace = 0.55 * texture2D(tChop, p / 7.3 - uTime * uWind * 0.08).a + 0.45 * texture2D(tChop, p.yx / 1.9 + uTime * 0.05).a;
+  float lace = 0.55 * textureLod(tChop, p / 7.3 - uTime * uWind * 0.08, levelOf(tChop, 7.3)).a + 0.45 * textureLod(tChop, p.yx / 1.9 + uTime * 0.05, levelOf(tChop, 1.9)).a;
   float cap = smoothstep(0.6, 0.76, c1.b * 0.55 + c2.b * 0.35 + 0.1 * h) * calm;
   vec2 across = vec2(-uWind.y, uWind.x);
-  float lane = texture2D(tChop, vec2(dot(p, across) / 31.0, dot(p, uWind) / 330.0 - uTime * 0.012)).b;
+  float lane = textureLod(tChop, vec2(dot(p, across) / 31.0, dot(p, uWind) / 330.0 - uTime * 0.012), levelOf(tChop, 31.0)).b;
   lane = smoothstep(0.66, 0.9, lane) * calm * 0.55;
   float ph = swellPhase(p, uTime) + 0.9 * shoal;
   float crest = pow(0.5 + 0.5 * cos(ph), 3.0);
@@ -170,15 +179,25 @@ vec2 standing(vec2 p, vec3 r) {
   }
   return vec2(hit, far);
 }
+// The level of a picture laid over the flat at so many metres a repeat, by the long side of the pixel's foot on the ground.
+// Read so, a picture costs the software renderer a fraction of what a read by its own slopes costs, and it is the same level.
+vec2 footX;
+vec2 footY;
+float levelOf(sampler2D t, float metres) {
+  float size = float(textureSize(t, 0).x) / metres;
+  return log2(max(max(length(footX), length(footY)) * size, 1e-6));
+}
 void main() {
   vec2 p = vWorld.xz;
+  footX = dFdx(p);
+  footY = dFdy(p);
   vec3 toEye = cameraPosition - vWorld;
   float dist = length(toEye);
   vec3 v = toEye / dist;
   vec4 land = landAt(p);
-  vec4 c1 = texture2D(tChop, p / 3.1 - uTime * uWind * 0.16);
-  vec4 c2 = texture2D(tChop, vec2(p.y, -p.x) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3);
-  float gust = smoothstep(0.38, 0.72, texture2D(tChop, p / 97.0 - uTime * uWind * 0.11).b);
+  vec4 c1 = textureLod(tChop, p / 3.1 - uTime * uWind * 0.16, levelOf(tChop, 3.1));
+  vec4 c2 = textureLod(tChop, vec2(p.y, -p.x) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3, levelOf(tChop, 0.83));
+  float gust = smoothstep(0.38, 0.72, textureLod(tChop, p / 97.0 - uTime * uWind * 0.11, levelOf(tChop, 97.0)).b);
   // The true bed under this pixel: the sheet ends where the bed breaks the level, in braids.
   // Over the level of the pools it is a draining film that follows the bed and lies in its fine lows, thinner the higher the bed, and none over uDrain.y.
   float over = max(land.r - uPoolLevel, 0.0);
@@ -190,10 +209,10 @@ void main() {
     if (i >= uRingCount) break;
     waded = min(waded, length(p - uRings[i].xy));
   }
-  depth -= 0.16 * smoothstep(0.36, 0.62, texture2D(tChop, p / 29.0).b + 0.5 * (texture2D(tChop, p / 7.3).b - 0.5)) * (1.0 - smoothstep(0.0, 0.05, over)) * smoothstep(0.9, 2.4, waded);
+  depth -= 0.16 * smoothstep(0.36, 0.62, textureLod(tChop, p / 29.0, levelOf(tChop, 29.0)).b + 0.5 * (textureLod(tChop, p / 7.3, levelOf(tChop, 7.3)).b - 0.5)) * (1.0 - smoothstep(0.0, 0.05, over)) * smoothstep(0.9, 2.4, waded);
   // No discard here: a picture read after a discard has no slope to pick its level by where a neighbour is gone, and the edge of every bar came out different on every render. The sheet is cut at the end.
   // The sheet is never still: thin water comes on and drains back round every stone and bar, a hand's breadth, each stretch in its own time.
-  float tide = texture2D(tChop, p / 37.0 + 0.3).a;
+  float tide = textureLod(tChop, p / 37.0 + 0.3, levelOf(tChop, 37.0)).a;
   depth += 0.011 * sin(uTime * 0.9 + tide * 19.0) + 0.006 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);
   // What the water has just left is wet and dark: a band on every stone and bar above the line.
   bool dry = depth < -0.09;
@@ -252,9 +271,9 @@ void main() {
   alpha = fres + (1.0 - fres) * murk;
   // Foam: lace left along the line where the water works against stone and sand, and in lanes the wind draws out over the open sheet.
   vec2 drift = uTime * uWind * 0.05;
-  float lace = dot(texture2D(tFoamPic, p / 6.0 - drift).rgb, vec3(0.3333));
-  float stretch = smoothstep(0.35, 0.65, texture2D(tChop, p / 23.0 + 0.7).a);
-  float lanes = smoothstep(0.6, 0.85, texture2D(tChop, vec2(p.x * 0.011, p.y * 0.07) - drift * 0.2).b) * smoothstep(0.03, 0.12, depth);
+  float lace = dot(textureLod(tFoamPic, p / 6.0 - drift, levelOf(tFoamPic, 6.0)).rgb, vec3(0.3333));
+  float stretch = smoothstep(0.35, 0.65, textureLod(tChop, p / 23.0 + 0.7, levelOf(tChop, 23.0)).a);
+  float lanes = smoothstep(0.6, 0.85, textureLod(tChop, vec2(p.x * 0.011, p.y * 0.07) - drift * 0.2, levelOf(tChop, 14.0)).b) * smoothstep(0.03, 0.12, depth);
   float foamed = smoothstep(0.38, 0.7, lace) * clamp((1.0 - smoothstep(0.0, 0.07, depth)) * stretch + 0.45 * lanes * gust, 0.0, 1.0) * edge;
   col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);
   alpha = mix(alpha, 1.0, foamed);

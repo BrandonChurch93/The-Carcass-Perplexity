@@ -423,16 +423,22 @@ export function create(ctx: Context): Piece {
     pose.leftY = -hip;
     pose.rightY = -hip;
     // Perched it sits upright, the folded sails pointing up past its head.
-    pose.pitch = s.stands ? 0 : 0.55 + 0.5 * s.seed;
+    // Never still: it rocks on its feet, shifts its weight along the ledge and works its neck, each in its own time.
+    const rock = Math.sin(t * (0.9 + 0.8 * s.seed) + s.seed * 50);
+    pose.pitch = s.stands ? 0 : 0.55 + 0.5 * s.seed + 0.07 * rock;
+    const shift = 0.12 * s.size * Math.sin(t * (0.45 + 0.4 * s.seed) + s.seed * 23);
+    pose.x += Math.sin(s.yaw) * shift;
+    pose.z += Math.cos(s.yaw) * shift;
     const look = held(t, 2.1 + 2.5 * s.seed, s.seed);
     const high = held(t, 5.3 + 3 * s.seed, s.seed + 0.25, 0.15);
-    pose.sweep = (look - 0.5) * 2.4;
+    const preen = Math.sin(t * (1.7 + 1.2 * s.seed) + s.seed * 31);
+    pose.sweep = (look - 0.5) * 2.4 + 0.3 * preen;
     // Hunched under its sails with the tuft hanging, until it looks up.
-    pose.rise = 1.15 + 0.35 * high;
+    pose.rise = 1.15 + 0.35 * high + 0.1 * rock;
     pose.tuck = 0.45 - 0.3 * high;
-    pose.bend = -2.5 + 2.3 * high;
+    pose.bend = -2.5 + 2.3 * high + 0.35 * preen;
     // Now and then one opens its sails and shakes them.
-    const shake = smooth(0.9, 0.97, held(t, 4.5, s.seed + 0.75, 0.25));
+    const shake = smooth(0.78, 0.9, held(t, 3.2, s.seed + 0.75, 0.25));
     // Perched, the sails hang round it as a tent; one that stands holds them half open to the wind and the light comes through.
     if (s.stands) {
       // No two alike: one holds its sails wide to dry, one half shut, one beats them at its neighbour.
@@ -443,7 +449,7 @@ export function create(ctx: Context): Piece {
       pose.pitch = kind === 2 ? 0.25 * row : pose.pitch;
     } else {
       pose.spread = 2 - shake;
-      pose.flap = -1.0 + 0.04 * Math.sin(t * 1.3 + s.seed * 30) + shake * (1.2 + 0.35 * Math.sin(t * 15 + s.seed * 9));
+      pose.flap = -1.0 + 0.09 * Math.sin(t * 2.1 + s.seed * 30) + shake * (1.2 + 0.35 * Math.sin(t * 15 + s.seed * 9));
     }
   };
 
@@ -676,7 +682,7 @@ export function create(ctx: Context): Piece {
         const dir = rand(i * 31 + n, born) * Math.PI * 2;
         const out = (0.12 + 0.5 * rand(i * 31 + n, born + 7) * a) * f.size;
         const up = (0.35 + 0.75 * rand(i * 31 + n, born + 3)) * f.size;
-        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.03 + 0.03 * rand(i * 31 + n, born + 5)) * f.size : (0.004 + 0.013 * rand(i * 31 + n, born + 5) * rand(i * 31 + n, born + 6)) * f.size, (n % 5 === 0 ? 0.2 : 1.6) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : 0.5 * (rand(i * 31 + n, born + 11) - 0.5), n % 5 === 0 ? 0.45 : 2.6);
+        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.03 + 0.03 * rand(i * 31 + n, born + 5)) * f.size : (0.003 + 0.008 * rand(i * 31 + n, born + 5) * rand(i * 31 + n, born + 6)) * f.size, (n % 5 === 0 ? 0.12 : 1.0) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : 0.5 * (rand(i * 31 + n, born + 11) - 0.5), n % 5 === 0 ? 0.45 : 2.6);
       }
     }
     if (runner >= 0) {
