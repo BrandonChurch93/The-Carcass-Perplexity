@@ -108,7 +108,7 @@ void main() {
       // In the long lens one veil of each spire is long and the rest are short, and half of the bare threads are gone.
       float lead = uStageMore.x > 0.5 ? mix(0.5, 1.7, step(350.0, aShape.x)) : 1.0;
       // In the wide lens fewer of the short ribbons fly, so that each is seen apart from the next.
-      if (uStageMore.z > 0.7 && more.w < 0.9 && aShape.x < 180.0 && fract(more.y * 17.7) < 0.45) {
+      if (uStage.y > 1.5 && more.w < 0.9 && aShape.x < 180.0 && fract(more.y * 17.7) < 0.7) {
         gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
         return;
       }
@@ -643,10 +643,10 @@ export function create(ctx: Context): Piece {
       // spine-01, the wide lens from far down the ridge: the first spire's ribbons twice as broad, most of its bare threads not drawn.
       const inWide = stagedSeconds() >= wideShot.from && stagedSeconds() <= wideShot.to;
       if (inStrike) stage.set(0.17, 0.32, 2.6, 3);
-      else if (inClose) stage.set(0.36, 0.42, 4, 1);
-      else if (inWide) stage.set(1, 2.1, 1, 1);
+      else if (inClose) stage.set(0.56, 0.72, 3, 1);
+      else if (inWide) stage.set(1, 1.6, 1, 1);
       else stage.set(1, 1, 1, 0);
-      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 0.8 : inClose ? 0.5 : 0);
+      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0);
       // Seen close the film shows its oil colours.
       film.z = inClose ? 0.42 : 0.15;
       veil.value = inStrike ? 1 : 0;

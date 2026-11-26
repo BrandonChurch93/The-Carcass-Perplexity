@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { breakdown, envelope, figure, strokeAt, timingOf, type Line } from './bolt';
-import { WIND, WIND_SPEED } from '../shared/anchors';
+import { WIND, WIND_SPEED, strikeTip } from '../shared/anchors';
 import { STRIKES, type StrikeSite } from './where';
 
 export const PARTS: readonly string[] = STRIKES.map((s) => s.id);
@@ -166,30 +166,44 @@ void main() {
   gl_FragColor = vec4(c * (uGlow * vHeat * a) * (1.0 - uSolo), 1.0);
 }`;
 
+/** The bloom at the struck tip: its radius in pixels of a 4K frame, and the glare's radiance as a share of the hot spot's. */
+const BLOOM_PIXELS = 380;
+const BLOOM_GLARE = 0.012;
 const HALO_VERTEX = /* glsl */ `
+#define BLOOM_PIXELS ${BLOOM_PIXELS.toFixed(1)}
 uniform vec3 uAt;
 uniform vec2 uSize;
+uniform float uLens;
 varying vec2 vUv;
 void main() {
   vec4 c = viewMatrix * vec4(uAt, 1.0);
-  // Brought a little toward the lens, so that the rock it sits on does not hide it.
-  c.z += 3.0;
-  c.xy += position.xy * uSize;
+  // Brought toward the lens, so that the rock it sits on does not hide it and the glare lies over the top of the spire.
+  c.z += 40.0;
+  // The bloom is the lens's: as wide in the frame whatever the lens, never smaller than the hot spot itself.
+  c.xy += position.xy * max(uSize, vec2(BLOOM_PIXELS * uLens * -c.z));
   vUv = position.xy;
   gl_Position = projectionMatrix * c;
 }`;
 
 const HALO_FRAGMENT = /* glsl */ `
+#define BLOOM_GLARE ${BLOOM_GLARE.toFixed(4)}
 ${RIG_UNIFORMS_GLSL}
 uniform vec3 uColour;
 varying vec2 vUv;
 void main() {
   // The white-hot spot where the channel meets the rock: small, solid at its heart. Its bloom is the air's, lit by the rig's light at the tip.
   float r = length(vUv);
-  float core = exp(-r * r * 5.0);
-  float cover = smoothstep(0.3, 0.6, core);
-  if (cover <= 0.0 || max(uColour.r, max(uColour.g, uColour.b)) < 1.0) discard;
-  gl_FragColor = vec4(uColour * core * cover, cover) * (1.0 - uSolo);
+  // White where the channel lands, burning out the tip under it; round that the glare the lens makes of it, violet, falling to nothing
+  // inside the card. It hides what is behind it only as far as it outshines it.
+  float core = exp(-r * r * 700.0);
+  float fall = (1.0 - r) * (1.0 - r);
+  float glare = fall / (1.0 + r * r * 14.0);
+  float power = max(uColour.r, max(uColour.g, uColour.b));
+  if (r >= 1.0 || power < 1.0) discard;
+  vec3 c = uColour * core + vec3(0.64, 0.5, 1.0) * (power * BLOOM_GLARE * glare);
+  // Light added to what is behind it; where it is white hot it hides it.
+  float cover = clamp(dot(c, vec3(0.333)) / 4.0 - 0.25, 0.0, 1.0);
+  gl_FragColor = vec4(c, cover) * (1.0 - uSolo);
 }`;
 
 interface Bolt {
@@ -226,7 +240,7 @@ export function create(ctx: Context): Piece {
 
     // The white-hot spot at the tip. The glow of the cloud round the channel is drawn by the air folder from the rig's lights.
     const spotGlow = new THREE.Vector3();
-    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uSize: { value: new THREE.Vector2(SPOT, SPOT) }, uColour: { value: spotGlow } }, side: THREE.DoubleSide, transparent: true, premultipliedAlpha: true, depthWrite: true }));
+    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uSize: { value: new THREE.Vector2(SPOT, SPOT) }, uColour: { value: spotGlow }, uLens: lens }, side: THREE.DoubleSide, transparent: true, premultipliedAlpha: true, depthWrite: false }));
     spot.renderOrder = 11;
     spot.frustumCulled = false;
     group.add(spot);
@@ -277,7 +291,9 @@ export function create(ctx: Context): Piece {
     for (const tip of site.branch ? [site.to, site.branch] : [site.to]) {
       let puff = puffs.find((p) => Math.hypot(p.source.at[0] - tip[0], p.source.at[2] - tip[2]) < 1);
       if (!puff) {
-        puff = { source: { at: [tip[0], tip[1] + 1.5, tip[2]], radius: 12, strength: 0, rise: 260, kind: 'steam' }, strikes: [] };
+        // The tip the long lens watches is seen from 1650 m in a field 250 m wide: its fume is small and dense, a torn puff that leaves the tip.
+        const close = Math.hypot(tip[0] - strikeTip[0], tip[2] - strikeTip[2]) < 1;
+        puff = { source: { at: [tip[0], tip[1] + 1.5, tip[2]], radius: close ? 5 : 12, strength: 0, rise: close ? 95 : 260, kind: 'steam' }, strikes: [] };
         puffs.push(puff);
         ctx.sources.steam.push(puff.source);
       }
