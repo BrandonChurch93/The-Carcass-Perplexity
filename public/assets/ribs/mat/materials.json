@@ -9,7 +9,7 @@
     "skyWidth": 2048,
     "skyQuality": 94
   },
-  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of a tile, or the whole of a plate, stands for (0 for a far backplate); relief names the grey height picture of a plate, cover the grey picture of where its subject is",
   "materials": [
     {
       "name": "bone",
@@ -76,6 +76,137 @@
       "kind": "sky",
       "width": 1536,
       "height": 1024
+    },
+    {
+      "name": "far",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "blade",
+      "kind": "plate",
+      "metres": 300,
+      "width": 1024,
+      "height": 1536,
+      "cover": "blade-a.png",
+      "relief": "blade-h.png"
+    },
+    {
+      "name": "plate",
+      "kind": "plate",
+      "metres": 48,
+      "width": 1671,
+      "height": 941,
+      "relief": "plate-h.png"
+    },
+    {
+      "name": "wall",
+      "kind": "plate",
+      "metres": 40,
+      "width": 1254,
+      "height": 1254,
+      "relief": "wall-h.png"
+    },
+    {
+      "name": "colony",
+      "kind": "plate",
+      "metres": 40,
+      "width": 1254,
+      "height": 1254,
+      "relief": "colony-h.png"
+    },
+    {
+      "name": "shingle",
+      "kind": "tile",
+      "metres": 2,
+      "mean": [
+        0.116,
+        0.123,
+        0.127
+      ]
+    },
+    {
+      "name": "kitewing",
+      "kind": "plate",
+      "metres": 2.2,
+      "width": 1536,
+      "height": 1024,
+      "cover": "kitewing-a.png"
+    },
+    {
+      "name": "kitewing-front",
+      "kind": "plate",
+      "metres": 2.2,
+      "width": 1243,
+      "height": 1266
+    },
+    {
+      "name": "hide",
+      "kind": "tile",
+      "metres": 0.5,
+      "mean": [
+        0.414,
+        0.317,
+        0.259
+      ]
+    },
+    {
+      "name": "foam",
+      "kind": "tile",
+      "metres": 6,
+      "mean": [
+        0.383,
+        0.407,
+        0.425
+      ]
+    },
+    {
+      "name": "borewall-a",
+      "kind": "plate",
+      "metres": 70,
+      "width": 2172,
+      "height": 724,
+      "relief": "borewall-a-h.png"
+    },
+    {
+      "name": "borewall-b",
+      "kind": "plate",
+      "metres": 70,
+      "width": 2119,
+      "height": 742,
+      "relief": "borewall-b-h.png"
+    },
+    {
+      "name": "spray",
+      "kind": "plate",
+      "metres": 8,
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "name": "splash",
+      "kind": "plate",
+      "metres": 0.6,
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "name": "wingopen",
+      "kind": "plate",
+      "metres": 2.4,
+      "width": 1536,
+      "height": 1024,
+      "relief": "wingopen-h.png"
+    },
+    {
+      "name": "carcass",
+      "kind": "plate",
+      "metres": 3,
+      "width": 1024,
+      "height": 1536,
+      "relief": "carcass-h.png"
     }
   ]
 }
