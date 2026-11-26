@@ -1,7 +1,7 @@
-2026-11-26 07:57 UTC
-work at 2ba1191 on agent/breath-life-3
-hb 2ba1191: breath-0 green channel, breath-1 mirror, breath-4 fronds from top left, dropout ended
-look-1.jpg = out/work/c0.jpg
-look-2.jpg = out/work/c1.jpg
-look-3.jpg = out/work/c4.jpg
-look-4.jpg = out/work/z2.jpg
+2026-11-26 08:15 UTC
+work at 711997f on agent/breath-life-3
+version 3 finals at uhd: breath-0 (4409), breath-1 (5242), breath-2 (5510), breath-4 (4731)
+look-1.jpg = out/work/looks3/v3-final-4409.jpg
+look-2.jpg = out/work/looks3/v3-final-5242.jpg
+look-3.jpg = out/work/looks3/v3-final-5510.jpg
+look-4.jpg = out/work/looks3/v3-final-4731.jpg
