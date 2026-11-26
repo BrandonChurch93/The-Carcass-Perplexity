@@ -194,6 +194,8 @@ export function create(ctx: Context): Piece {
     toneMapped: false,
   });
 
+  // The only discard of the ground is in the brine's mirror: for the depth the engine lays down first the ground is whole.
+  material.userData.depthFragment = 'void main() { gl_FragColor = vec4(0.0); }';
   const ground = new THREE.Mesh(ringsGeometry(landHeight, rel(16, 4), 192, 0.25, 8), material);
   ground.frustumCulled = false;
   const far = new THREE.Mesh(scarp(), material);
@@ -216,6 +218,7 @@ export function create(ctx: Context): Piece {
     defines: { CRUST: 1 },
     toneMapped: false,
   });
+  crustMaterial.userData.depthFragment = material.userData.depthFragment;
   const patch = new THREE.Mesh(patchGeometry((x, z) => crustHeight(x, z) + 0.012, centre, F, PATCH.half[0] * 2, PATCH.half[1] * 2, PATCH.cell, crustPaint), crustMaterial);
   ctx.scene.add(ctx.parts.built('crust', patch));
 

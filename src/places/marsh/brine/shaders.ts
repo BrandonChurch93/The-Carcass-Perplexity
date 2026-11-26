@@ -12,15 +12,17 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
 }`;
 
+export const MAX_SEEPS = 8;
+
 export const BRINE_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
 uniform sampler2D tGrain;
 uniform int uRingCount;
-// Where the seep's mouth is, on the pool's floor.
-uniform vec2 uSeep;
 // x, z of the middle, radius of the front in metres, strength.
 uniform vec4 uRings[${MAX_RINGS}];
+// Where gas comes up through the pool's floor all the time: x, z, a number of its own, strength.
+uniform vec4 uSeeps[${MAX_SEEPS}];
 ${RIG_GLSL}
 ${FIELD_GLSL}
 ${BRINE_GLSL}
@@ -36,31 +38,30 @@ void main() {
   float s = f.r + (fine.r - 0.5) * 0.1;
   if (s > 0.0) discard;
 
-  // Thick brine hardly ripples: a slow crawl of two swells, the rings that leave the seep's mouth, and the rings of every dome that has burst.
+  // There is no wind: the brine lies as a mirror, and what moves on it has a cause. A slow heave of the whole surface, too low to see but
+  // in what it mirrors; the rings that leave every place gas comes up; the rings of each dome; the rings round whatever stands in it.
   float closeBy = smoothstep(40.0, 6.0, dist);
-  vec4 swell = texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime);
-  vec2 slope = (swell.ba - 0.5) * 0.08 + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.02 * closeBy;
-  // Far off, what shows of the brine's slow drift down the channels is the sheen on it: two low swells that cross, so the glints break
-  // and gather again and do not slide.
-  float farOff = smoothstep(7.0, 28.0, dist);
-  slope += ((texture2D(tGrain, p.xz / 7.3 + vec2(0.034, 0.019) * uTime).ba - 0.5) * 0.06 + (texture2D(tGrain, p.xz / 4.1 - vec2(0.021, 0.05) * uTime).ba - 0.5) * 0.04) * farOff;
-  // Close to, the thick brine shows a slow smooth chop: a few trains of ripples a hand to a forearm long, crossing, bent by the swell so
-  // that no two crests run alike.
-  if (dist < 26.0) {
-    float chop = smoothstep(26.0, 8.0, dist);
-    vec4 slow = texture2D(tGrain, p.xz / 11.0 + vec2(0.002, 0.001) * uTime);
-    vec2 bent = p.xz + (slow.rg - 0.5) * 0.3;
-    float ph = slow.r * 5.0;
-    slope += vec2(0.83, 0.56) * cos(dot(bent, vec2(0.83, 0.56)) * 17.0 + uTime * 1.9 + ph) * 0.015 * chop;
-    slope += vec2(-0.37, 0.93) * cos(dot(bent, vec2(-0.37, 0.93)) * 27.0 + uTime * 2.6 - ph * 1.7) * 0.011 * chop;
-    slope += vec2(0.98, -0.2) * cos(dot(bent, vec2(0.98, -0.2)) * 33.0 - uTime * 3.3 + ph * 1.3) * 0.007 * chop;
-    slope += vec2(0.26, 0.97) * cos(dot(bent, vec2(0.26, 0.97)) * 9.0 + uTime * 1.3 + ph * 0.6) * 0.02 * chop;
+  vec2 slope = (texture2D(tGrain, p.xz / 5.3 + vec2(0.013, 0.008) * uTime).ba - 0.5) * 0.022 + (texture2D(tGrain, p.xz / 3.1 - vec2(0.011, 0.017) * uTime).ba - 0.5) * 0.018;
+  // Close to, a fine tremble from the gas: short crossing trains that the heave bends.
+  if (dist < 22.0) {
+    float chop = smoothstep(22.0, 6.0, dist);
+    vec4 slow = texture2D(tGrain, p.xz / 9.0 + vec2(0.002, 0.001) * uTime);
+    vec2 bent = p.xz + (slow.rg - 0.5) * 0.4;
+    float ph = slow.r * 6.0;
+    slope += vec2(0.83, 0.56) * cos(dot(bent, vec2(0.83, 0.56)) * 23.0 - uTime * 11.0 + ph) * 0.006 * chop;
+    slope += vec2(-0.37, 0.93) * cos(dot(bent, vec2(-0.37, 0.93)) * 37.0 - uTime * 14.0 - ph * 1.7) * 0.004 * chop;
+    slope += vec2(0.26, -0.97) * cos(dot(bent, vec2(0.26, -0.97)) * 13.0 - uTime * 8.3 + ph * 0.6) * 0.008 * chop;
   }
-  vec2 fromSeep = p.xz - uSeep.xy;
-  float reach = length(fromSeep);
-  if (reach < 16.0) {
-    float wob = texture2D(tGrain, p.xz / 9.0).r;
-    slope += fromSeep / max(reach, 0.01) * sin(reach * 4.4 - uTime * 2.3 + wob * 5.0) * (0.012 + 0.05 * closeBy) * smoothstep(0.3, 1.5, reach) * smoothstep(13.0, 4.0, reach);
+  float pool = length(p.xz);
+  if (pool < 16.0) {
+    // Each seep sends out ring after ring: half a stride from crest to crest, 0.7 m a second, dying with the way they have come.
+    for (int i = 0; i < ${MAX_SEEPS}; i++) {
+      vec4 seep = uSeeps[i];
+      vec2 d = p.xz - seep.xy;
+      float r = length(d);
+      float beat = 0.6 + 0.4 * sin(uTime * 0.9 + seep.z * 17.0);
+      slope += d / max(r, 0.03) * cos(r * 15.0 - uTime * 10.5 + seep.z * 40.0) * seep.w * beat * smoothstep(0.05, 0.35, r) / (1.0 + 0.55 * r * r);
+    }
     for (int i = 0; i < ${MAX_RINGS}; i++) {
       if (i >= uRingCount) break;
       vec4 ring = uRings[i];
@@ -70,21 +71,29 @@ void main() {
       float wide = 0.16 + 0.05 * ring.z;
       float env = exp(-q * q / (wide * wide)) * ring.w;
       if (env < 0.003) continue;
-      slope += d / max(r, 0.01) * env * sin(q * 14.0) * 0.5;
+      slope += d / max(r, 0.01) * env * sin(q * 14.0) * 0.14;
     }
   }
+  // Whatever stands in the brine (the contact map has it) is ringed: the rings leave it slowly and die within a stride.
+  float stood = contactDrawn(p);
+  float ringed = smoothstep(0.0, 0.12, stood) * smoothstep(0.85, 0.35, stood);
+  vec2 lens = normalize(v.xz + vec2(1e-4));
+  slope -= lens * sin(stood * 21.0 + uTime * 2.6 + fine.g * 2.0) * 0.035 * ringed;
   vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
-  // Scum in rafts that drift, thickest along the shores.
-  vec2 drift = vec2(0.004, 0.0025) * uTime;
+
+  // Scum: a pale pink froth that hugs the shore in a broken line, and rafts of it that turn slowly on the open brine.
+  vec2 drift = vec2(0.006, 0.0035) * uTime;
   vec4 raft = texture2D(tGrain, p.xz / 6.1 + drift);
-  vec4 fleck = texture2D(tGrain, p.xz / 0.57 + drift * 10.7);
-  float nearShore = smoothstep(-1.6, -0.1, s);
-  // Small rafts of bubbles, gathered where the slow turn of the pool leaves them.
-  vec4 bubble = texture2D(tGrain, p.xz / 0.21 + drift * 31.0);
-  float foam = smoothstep(0.58, 0.68, fleck.r * 0.55 + raft.g * 0.35 + bubble.g * 0.1) * smoothstep(-0.9, -0.15, s) * smoothstep(60.0, 15.0, dist);
+  vec4 fleck = texture2D(tGrain, p.xz / 0.57 + drift * 9.0);
+  vec4 bubble = texture2D(tGrain, p.xz / 0.17 + drift * 30.0);
+  float seen = smoothstep(70.0, 20.0, dist);
+  float hug = smoothstep(-0.16 - 0.5 * smoothstep(0.5, 0.75, raft.r), -0.02, s);
+  float foam = smoothstep(0.5, 0.62, fleck.r * 0.5 + bubble.g * 0.25 + hug * 0.42 - 0.12) * hug;
+  foam = max(foam, smoothstep(0.66, 0.74, fleck.g * 0.5 + raft.g * 0.38 + bubble.r * 0.12) * smoothstep(-2.5, -0.3, s));
+  foam *= seen * (0.55 + 0.45 * bubble.r);
   // Dark clots carried on the slow drift.
   float clot = smoothstep(0.7, 0.76, bubble.r * 0.5 + fleck.g * 0.5) * smoothstep(0.5, 0.65, raft.r) * smoothstep(14.0, 6.0, dist);
-  vec3 lit = brineShade(p, n, v, s, foam) * (1.0 - 0.5 * clot * (1.0 - foam));
+  vec3 lit = brineShade(p, n, v, s, foam) * (1.0 - 0.4 * clot * (1.0 - foam));
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
