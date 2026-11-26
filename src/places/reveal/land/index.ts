@@ -51,6 +51,8 @@ varying vec3 vWorld;
 const vec3 DEEP = vec3(0.0022, 0.0065, 0.0135);
 // The dearer land: false lays no ground photograph under an enlarged map (both costs in HANDOVER.md).
 const bool GROUND_DETAIL = true;
+// The height of the highest ground, km, as the shadows of dusk are thrown: drawn taller than it stands, as relief is on a map.
+const float RELIEF_KM = 16.0;
 // The lesser vents: x and z from the Heart, km, and their size beside it.
 const vec3 VENTS[6] = vec3[6](vec3(-42.0, -98.0, 0.5), vec3(76.0, -33.0, 0.55), vec3(170.0, -66.0, 0.45), vec3(124.0, 24.0, 0.4), vec3(-52.0, 50.0, 0.45), vec3(43.0, 79.0, 0.4));
 
@@ -406,6 +408,32 @@ void main() {
   }
   vec3 n = normalize(vec3(-slope.x, 0.8, -slope.y));
   float shade = cloudShade(real);
+  // The end of the day: the height of the sun here, and how far its light rakes (the relief stands out as it does under a low sun).
+  float sunH = 0.0;
+  float rake = 0.0;
+  if (uDusk > 0.0) {
+    sunH = sunHeight(xz);
+    // (Salt under a moon would outshine the bone and the fire both: the pan lies damp by night.)
+    ground *= 1.0 - 0.45 * saltFlat * uEmber.x;
+    rake = uTerm.w * (1.0 - smoothstep(0.04, 0.4, sunH));
+    n = normalize(vec3(-slope.x * (1.0 + 2.0 * rake), 0.8, -slope.y * (1.0 + 2.0 * rake)));
+    // The ranges throw their shadows, longer as the sun goes down: the height of the land is read toward the sun, farther and
+    // coarser at each reach, for the highest thing that stands between this place and the sun. (Only where the sun still rakes.)
+    if (rake > 0.0 && sunH > -0.05 && inWide > 0.0) {
+      vec2 toward = normalize(uSunDir.xz);
+      float here = height * land;
+      float horizon = 0.0;
+      float reach = 5.0;
+      for (int i = 0; i < 10; i++) {
+        vec2 at = (xz + toward * reach - uRectWide.xy) * uRectWide.zw;
+        float there = clamp((texture2D(uReliefWide, clamp(at, 0.0, 1.0), 0.6 * float(i)).b - 0.3) / 0.7, 0.0, 1.0);
+        horizon = max(horizon, (there - here) * RELIEF_KM / reach);
+        reach *= 1.62;
+      }
+      float low = max(sunH, 0.0) + 0.012;
+      shade *= mix(1.0, smoothstep(horizon - 0.02 - 0.25 * low, horizon + 0.02 + 0.25 * low, low), rake);
+    }
+  }
   float mu = limbCos(xz);
   vec3 level = vec3(0.0, 1.0, 0.0);
   vec3 earth = rigShade(vWorld, mix(level, n, land), view, ground, 0.92, shade);
@@ -431,6 +459,8 @@ void main() {
   // (The molten rock works: its light wavers, never the same from one second to the next.)
   float waver = 1.0;
   if (dot(xz - uLava, xz - uLava) < 160000.0) waver = 0.8 + 0.4 * vnoise(vec2(uTime * 1.7, 5.0)) + 0.2 * vnoise(vec2(uTime * 4.3, 9.0));
+  // (By night the working is calmer, so that the one beat is not lost in it.)
+  if (uDusk > 0.0) waver = mix(1.0, waver, uCalm.w);
   float swell = (0.8 + 0.9 * uBeat) * waver;
   float seenFar = 1.0 + 2.2 * smoothstep(500.0, 1380.0, uViewKm);
   float d0 = dot(fromLava, fromLava);
@@ -448,14 +478,38 @@ void main() {
   float vein = d0 < 18000.0 ? cracks(xz / 7.0) * exp(-d0 / 2200.0) * (0.2 + 0.6 * uBeat) : 0.0;
   heat = (heat + vein) * land;
   vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.17 * smoothstep(0.03, 0.6, heat);
+  vec3 glowCore = glow;
   // (The beat itself: a dull red swell in the whole chest, on the ground and on the flanks of the ribs that face the Heart.)
   glow += vec3(1.0, 0.16, 0.03) * 0.09 * max(uBeat - 0.12, 0.0) * exp(-d0 / 30000.0) * land * (0.6 + 0.8 * clamp(0.5 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.0));
+  vec3 glowSwell = glow;
   glow += vec3(1.0, 0.3, 0.06) * 0.26 * halo * land * clamp(0.4 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
+
+  // By night the Heart is the brightest thing on the planet: the ember swells with the beat, its fire lights the rock and the
+  // flanks of the ribs that face it, falling off with distance, and veins of fire run out between the ribs.
+  // (What the day drew of it was drawn for the day's exposure; and the day's swell lights the black crust as much as the bone,
+  // which the night would show as a red disc: by night the fire's light is the ground's own colour, below.)
+  if (uDusk > 0.0) glow = (glowCore + (glowSwell - glowCore) * mix(1.0, 0.2, uEmber.x) + (glow - glowSwell)) * pow(uGain, -1.0);
+  if (uDusk > 0.0 && uEmber.x > 0.0) {
+    float facing = clamp(0.35 + 3.0 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 2.0);
+    float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 8000.0);
+    glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.4 + 2.6 * uBeat) * reach * facing * uEmber.x * land);
+    // (The ember itself: a dull lake of fire in the chest, and it swells with the beat.)
+    float lake = exp(-d0 * (0.55 + 0.9 * vnoise(xz / 11.0 + 2.0)) / (150.0 * seenFar * (1.0 + 1.5 * uBeat)));
+    glow += vec3(1.0, 0.3, 0.045) * (0.07 + 0.2 * uBeat) * uEmber.x * lake * land;
+    if (d0 < 250000.0) {
+      // (Fire in the cracks of the crust round it, broken along its length; the beat runs out along it, as a pulse does.)
+      float pulse = uEmber.y > 0.0 ? exp(-pow((sqrt(d0) - 380.0 * uEmber.y) / 90.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
+      float broken = smoothstep(0.3, 0.75, vnoise(xz / 34.0 + 4.0));
+      float veins = cracks(xz / 44.0) * broken * min(1.0, 1.6 * crust) * exp(-d0 / 60000.0) * (0.3 + 0.3 * uBeat + 1.1 * pulse);
+      glow += blackbody(980.0 + 220.0 * clamp(veins, 0.0, 1.0)) * 0.03 * smoothstep(0.03, 0.55, veins) * uEmber.x;
+    }
+  }
 
   // ---- the water ----
   // What comes back from under the surface: the map's own shallows, bars and silt over the deep, lit by the sun and the sky.
   float day = dayAt(xz);
   vec3 light = uSunColour * uSunDir.y * shade * day + skyIrradiance(level) * (0.5 + 0.5 * day);
+  if (uDusk > 0.0) light = sunLightAt(sunH, day) * mix(uSunDir.y, max(sunH, 0.0), uTerm.w) * shade + skyIrradiance(level) * skyLightAt(sunH, day) + uMoonColour * uMoonDir.y;
   float pale = pow(shallow, 1.3);
   // (From far the shallows along the coasts are a clear teal.)
   vec3 shoal = mix(max(ground * 0.34, vec3(0.006, 0.035, 0.04)), vec3(0.011, 0.075, 0.085) * (0.5 + 0.9 * pale * (1.0 - 0.45 * pale)), 0.6 * smoothstep(240.0, 640.0, uViewKm));
@@ -541,17 +595,31 @@ void main() {
   // coast as the planet turns under the sun (uGlint is where it lies on the titan frame).
   // (It is drawn out toward the edge of the planet, as the sun's image is on a curved sea.)
   vec2 glintAt = (xz - uGlint - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
+  // (As the sun sets its image slides off toward it, and dies.)
+  if (uDusk > 0.0) glintAt = (xz - uGlint - (uTime - 8.1) * vec2(-9.0, -8.0) - uCalm.y * normalize(uSunDir.xz)) * vec2(1.0, 0.48);
   float glint = exp(-pow(dot(glintAt, glintAt) / 55000.0, 0.463));
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
+  vec3 waterBed = water;
   water += uSkyColour * (0.003 + 0.028 * fresnel) * sparkle * (0.4 + 0.6 * shade);
   // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
   water += uSkyColour * 0.006 * max(sparkle - 0.7, 0.0) * ruffle;
   // (Near its middle the sea is one sheet of light; out in the skirt the wind lanes and slicks of the surface show in it.)
   vec3 glare = uSunColour * mix(vec3(0.86, 0.93, 1.0), vec3(1.0, 0.87, 0.74), smoothstep(0.03, 0.5, glint)) * mix(0.25, 0.4, smoothstep(0.25, 0.7, glint)) * glint * (0.9 + 0.2 * calm);
+  vec3 waterSky = water;
+  if (uDusk > 0.0) glare *= sunTint(max(uSunDir.y, 0.0)) * uCalm.z;
   water += glare * (0.35 + 0.65 * shade) * mix(0.4 + 0.6 * sparkle, 0.5 + 0.5 * sparkle, glint);
+  vec3 waterGlare = water;
 
   // (From orbit the sea is seen through the blue of the air over it.)
   water += mix(vec3(0.0028, 0.0062, 0.0085) * smoothstep(150.0, 450.0, uViewKm), vec3(0.003, 0.007, 0.011), smoothstep(700.0, 1300.0, uViewKm)) * (0.5 + 0.5 * shade);
+  if (uDusk > 0.0) {
+    // The sky's image on the sea goes with the sky, the air over it with the air; and at night a faint cold sheen lies toward the moon.
+    vec2 fromSheen = xz - uTerm.xy - 1300.0 * normalize(uMoonDir.xz);
+    vec3 sheen = uMoonColour * 0.012 * sparkle * (0.4 + 0.6 * shade) * (0.25 + exp(-dot(fromSheen, fromSheen) / 1.2e6));
+    water = waterBed + (waterSky - waterBed) * skyLightAt(sunH, day) + (waterGlare - waterSky) + (water - waterGlare) * airLightAt(sunH) + sheen;
+    // (Under the moon the sea has almost no colour, and less light than the land.)
+    water = mix(water, vec3(dot(water, vec3(0.3, 0.55, 0.15))) * vec3(0.75, 0.95, 1.25), 0.55 * uEmber.x) * (1.0 - 0.3 * uEmber.x);
+  }
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   vec3 colour = mix(water, earth + 0.4 * glare, land);
   // (A pale crust lies at the foot of the lake's rim, where the water has stood higher.)
@@ -563,7 +631,9 @@ void main() {
   // From orbit the haze is thin straight down and grows toward the edge of the planet, where it lifts the darks to blue grey.
   float beyond = max(path - 1.5, 0.0);
   float air = 1.0 - exp(-(mix(0.014, 0.011, far) * path + 0.0005 * far * beyond * beyond) * (1.0 - 0.5 * height * land));
+  vec3 underAir = colour;
   colour = mix(colour, mix(uAirColour, vec3(0.08, 0.19, 0.27), 0.6 * far) * (0.4 + 0.6 * shade), air);
+  if (uDusk > 0.0) colour = mix(underAir, mix(uAirColour, vec3(0.08, 0.19, 0.27), 0.6 * far) * (0.4 + 0.6 * shade) * airLightAt(sunH), air);
   colour += glow * (1.0 - 0.5 * air);
 
   // ---- the handoff: on its first frame the rise draws what the Eye last drew, deep water and rings ----
