@@ -1,5 +1,7 @@
-2026-11-26 16:27 UTC
-work at e470bc0 on agent/ribs-bore
-v2 in work: white mass back at 2401 by the new method (approved above, mine below); six frames 2501-2506
-look-1.jpg = out/work/cmpA.jpg
-look-2.jpg = out/work/sheets/six.png
+2026-11-26 16:53 UTC
+work at e0f8269 on agent/ribs-bore
+v2 frozen at 187f05c: approved, before, after at 2401; crop; sheet 2447-2506 with six frames; uhd final crops grid
+look-1.jpg = out/work/v2/1-approved-before-after-2401.jpg
+look-2.jpg = out/work/v2/2-2401-crop-before-after.jpg
+look-3.jpg = out/work/v2/3-sheet-2447-2506-and-six.png
+look-4.jpg = out/work/crops/frame-2401-1.png
