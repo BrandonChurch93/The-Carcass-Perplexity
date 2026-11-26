@@ -598,7 +598,8 @@ void main() {
   vec3 v = normalize(toCamera);
   // Metres across the floor from its middle, and along it.
   vec2 m = vec2(vAcross.x * vHalf, vAcross.y);
-  vec2 uv = vec2(wMirror(0.5 + m.x / 8.0), wMirror(m.y / 11.55));
+  // The plate lies once across the middle of the floor, its own snow at its two edges; beyond them the floor is the snow banked at the walls.
+  vec2 uv = vec2(clamp(0.5 + m.x / 8.0, 0.015, 0.985), wMirror(m.y / 11.55));
   vec2 gx = dFdx(m) / vec2(8.0, 11.55);
   vec2 gy = dFdy(m) / vec2(8.0, 11.55);
   vec3 plate = textureGrad(tIce, uv, gx, gy).rgb;
@@ -608,23 +609,29 @@ void main() {
   float h0 = textureGrad(tIceH, uv, gx, gy).r;
   float du = (textureGrad(tIceH, uv + vec2(px.x, 0.0), gx, gy).r - h0) / (px.x * 8.0);
   float dv = (textureGrad(tIceH, uv + vec2(0.0, px.y), gx, gy).r - h0) / (px.y * 11.55);
-  du *= mod(floor(0.5 + m.x / 8.0), 2.0) < 0.5 ? 1.0 : -1.0;
   dv *= mod(floor(m.y / 11.55), 2.0) < 0.5 ? 1.0 : -1.0;
   vec3 along = normalize(dFdx(vWorld) * dFdy(m.x) - dFdy(vWorld) * dFdx(m.x));
   if (dot(along, EXIT_DIR) < 0.0) along = -along;
   vec3 side = vec3(-along.z, 0.0, along.x);
   // Snow where the plate is pale and stands high: there the floor is matt. Elsewhere it is wet ice.
   float snow = smoothstep(0.1, 0.32, lum) * smoothstep(0.3, 0.6, h0 + lum);
-  vec3 n = normalize(vec3(0.0, 1.0, 0.0) - (side * du + along * dv) * mix(0.035, 0.12, snow));
-  vec3 albedo = mix(min(plate * 2.4 + 0.07, vec3(0.5)), min(plate * 2.6, vec3(0.86)), snow);
+  // Melt water runs down the middle, wandering: smooth, dark and glossy, the mouth whole in it. Snow is banked against both walls.
+  float wander = 2.2 * (vnoise(vec2(m.y * 0.11, 3.0)) - 0.5);
+  float run = smoothstep(1.5, 0.6, abs(m.x - wander) + 0.6 * (vnoise(m * 0.9) - 0.5));
+  float bank = max(smoothstep(0.34, 0.74, abs(m.x) / max(vHalf, 1.0) + 0.3 * (vnoise(m * 0.35) - 0.5)), smoothstep(3.3, 3.95, abs(m.x)));
+  snow = max(snow * (1.0 - run), bank);
+  vec3 n = normalize(vec3(0.0, 1.0, 0.0) - (side * du + along * dv) * mix(0.035, 0.12, snow) * (1.0 - 0.85 * run) * (1.0 - bank)
+    - bank * 0.25 * vec3(vnoise(m * 1.3) - 0.5, 0.0, vnoise(m * 1.3 + 5.1) - 0.5));
+  vec3 ice = min(plate * 4.2 + 0.26, vec3(0.7)) * mix(1.0, 0.3, run);
+  vec3 albedo = mix(ice, mix(min(plate * 2.6, vec3(0.86)), vec3(0.78, 0.83, 0.9), bank), snow);
   float occ = 0.6 + 0.4 * smoothstep(0.1, 0.5, h0);
   vec3 c = rigShade(vWorld, n, v, albedo, 1.0, occ) + albedo * windowLight(vWorld, normalize(n + 0.6 * normalize(EXIT_AT - vWorld))) * occ * 5.0 / 3.14159;
   // The mirror: the far mouth and the sky in it, broken by the ice's own heave; outside the mouth it mirrors the dark of the rock.
-  vec3 nm = normalize(vec3(0.0, 1.0, 0.0) - (side * du + along * dv) * 0.02 + 0.012 * vec3(vnoise(vWorld.xz * 0.7) - 0.5, 0.0, vnoise(vWorld.xz * 0.7 + 7.3) - 0.5));
+  vec3 nm = normalize(vec3(0.0, 1.0, 0.0) - (side * du + along * dv) * 0.02 * (1.0 - 0.8 * run) + 0.012 * vec3(vnoise(vWorld.xz * 0.7) - 0.5, 0.0, vnoise(vWorld.xz * 0.7 + 7.3) - 0.5));
   vec3 r = reflect(-v, nm);
   r.y = abs(r.y);
   float nv = clamp(dot(nm, v), 0.0, 1.0);
-  float fres = 0.04 + 0.96 * pow(1.0 - nv, 5.0);
+  float fres = mix(0.04 + 0.96 * pow(1.0 - nv, 5.0), 0.12 + 0.88 * pow(1.0 - nv, 3.0), run);
   float open = uUnder > 1.5 ? throughExit(vWorld, r) : 0.0;
   // Where it does not mirror the mouth it mirrors the wall over it: pale stone under the mouths' light.
   vec3 wallSeen = vec3(0.3, 0.32, 0.36) * windowLight(vWorld + r * 9.0, -r) * 3.2 / 3.14159;
