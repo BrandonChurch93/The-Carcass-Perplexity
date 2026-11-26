@@ -153,6 +153,101 @@ function ringAt(g: number): number {
   return RING_HIGH + (w - RING_LOW - RING_DENSE * (RING_HIGH - RING_LOW));
 }
 
+const mixHash = (x: number, y: number): number => {
+  let h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263)) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+};
+/** A line cut into pieces of no two lengths, `mean` long on average: which piece c lies in, and where that piece begins and ends. */
+function piece(c: number, mean: number, seed: number): { i: number; lo: number; hi: number } {
+  const x = c / mean;
+  const end = (j: number): number => j + 0.7 * (mixHash(j, seed) - 0.5);
+  let i = Math.floor(x);
+  if (x < end(i)) i--;
+  else if (x >= end(i + 1)) i++;
+  return { i, lo: end(i) * mean, hi: end(i + 1) * mean };
+}
+
+/**
+ * The jointing of a spire's rock, on the lattice of its mesh. A relief that steps where it likes (a field of slabs read at each vertex) is
+ * cut by the lattice into a row of shards along every joint, as long as the step is deep. Here every joint lies on a line of the lattice:
+ * a bed between two rings, an upright joint between two columns. So a block is a flat face of whole quads, and the wall of a joint or the
+ * shelf of a ledge is one clean strip of them. `around` is the count of columns, `girth(y)` the way round the blade at a height in metres,
+ * `fine` the size of one quad there. The result is asked for by column and height: metres out of the face.
+ */
+function jointing(around: number, girth: (y: number) => number, fine: (y: number) => number, seed: number): (a: number, y: number) => number {
+  // How far round the blade a column stands, 0 to 1, for a section as thick as it is broad.
+  const round_: number[] = [0];
+  const at = (a: number): [number, number] => {
+    const th = (2 * Math.PI * a) / around;
+    const c = Math.cos(th);
+    const k = Math.sin(th);
+    return [Math.sign(c) * Math.pow(Math.abs(c), 2 / FIN_SECTION), Math.sign(k) * Math.pow(Math.abs(k), 2 / FIN_SECTION)];
+  };
+  for (let a = 1; a <= around; a++) {
+    const p = at(a - 1);
+    const q = at(a);
+    round_.push((round_[a - 1] as number) + Math.hypot(q[0] - p[0], q[1] - p[1]));
+  }
+  const whole = round_[around] as number;
+  const girths = new Map<number, number>();
+  const girthAt = (y: number): number => {
+    const key = Math.round(y * 8);
+    let v = girths.get(key);
+    if (v === undefined) {
+      v = girth(y);
+      girths.set(key, v);
+    }
+    return v;
+  };
+  // One size of block: the beds of this part of the face, then the blocks each bed is cut into. `bed` and `block` are their mean sizes in
+  // metres, `stand` how far a block stands in or out, `lean` how far its face leans over its own height and breadth. What is finer than the
+  // mesh can show is left out.
+  const size = (q: number, y: number, key: number, bed: number, block: number, stand: number, lean: number): { n: number; id: number } => {
+    const b = piece(y, bed, key);
+    const mid = 0.5 * (b.lo + b.hi);
+    const g = girthAt(mid);
+    const kb = Math.floor(mixHash(b.i, key + 17) * 65521);
+    const c = piece(q * g, block, kb);
+    const id = Math.floor(mixHash(c.i, kb + 5) * 65521);
+    const shown = Math.min(1, Math.max(0, (Math.min(bed, block) / fine(mid) - 1.6) / 2));
+    if (shown <= 0) return { n: 0, id };
+    const fy = (y - b.lo) / (b.hi - b.lo) - 0.5;
+    const fx = (q * g - c.lo) / (c.hi - c.lo) - 0.5;
+    // More blocks lean out than in: the top of a block stands proud of the foot of the one above it, and that step is a ledge.
+    const n = stand * 2 * (mixHash(id, 3) - 0.5) + lean * ((mixHash(id, 7) - 0.3) * 1.4 * fy + (mixHash(id, 11) - 0.5) * fx);
+    return { n: n * shown, id };
+  };
+  const cut = (a: number, y: number): { n: number; ids: [number, number, number] } => {
+    const q = (round_[((a % around) + around) % around] as number) / whole;
+    // A few great parts round the blade, each with beds of its own, so that no ledge runs round the whole spire.
+    const part = piece(q * 5.3, 1, seed + 1).i;
+    const k0 = Math.floor(mixHash(part, seed + 29) * 65521);
+    // Great slabs that stand up the face, the plates each is broken into, their blocks, and the blocks' own.
+    const slabs = size(q, y, k0, 120, 44, 7.5, 5);
+    const one = size(q, y, slabs.id, 52, 21, 3.4, 2.6);
+    const two = size(q, y, one.id, 17, 7.5, 1.5, 1.5);
+    const three = size(q, y, two.id, 5.2, 2.9, 0.5, 0.5);
+    return { n: slabs.n + one.n + two.n + three.n, ids: [one.id, two.id, three.id] };
+  };
+  return (a: number, y: number): number => {
+    const here = cut(a, y);
+    const next = cut(a + 1, y);
+    // The upright joints are cut in: the last column of a block, where the next block begins, stands back from both.
+    let slot = 0;
+    if (here.ids[0] !== next.ids[0]) slot = 2.2 * (0.4 + 0.6 * mixHash(here.ids[0], 19));
+    else if (here.ids[1] !== next.ids[1]) slot = 0.9 * (0.3 + 0.7 * mixHash(here.ids[1], 19));
+    const shown = Math.min(1, Math.max(0, (7.5 / fine(y) - 1.6) / 2));
+    return here.n - slot * shown;
+  };
+}
+
+// Where the kites hold: from this share of the breadth toward the lee edge the rock is held to within these metres of the blade's section.
+const LEE_FROM = 0.42;
+const LEE_FULL = 0.7;
+const LEE_OUT = 0.35;
+const LEE_IN = 2.2;
+
 /** A spire: a leaning broken blade cut from its feature sheet (the outline and the relief are the sheet's), and its root down the flanks into the cloud. */
 // level: 2 the spire the lens comes close to, 1 one that is seen whole in a long lens, 0 one far down the ridge. The triangles are dear in a
 // software renderer whether or not they are seen large, so only the first spire has the finest mesh.
@@ -172,6 +267,23 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
   const tLow = -(FIN_DEEP - FIN_ROOT) / tall;
   const depth = reliefDepth(sp);
   const ends = level > 1.5 ? canalInFin(sp) : null;
+  const yLow = sp.alt - FIN_ROOT;
+  const finAt = (y: number): ReturnType<typeof fin> => fin(sp, (y - yLow) / tall);
+  // (The way round a section of power 3 is close to 3.6 times its two half axes.)
+  const joints = jointing(
+    AROUND,
+    (y) => {
+      const p = finAt(y);
+      return 3.6 * (p.half + p.thick);
+    },
+    (y) => {
+      const p = finAt(y);
+      const h = (y - sp.alt) / sp.tip;
+      const ring = h < 0 ? (FIN_DEEP - FIN_ROOT) / DOWN : (sp.tip / UP) * (level > 1.5 ? (h > RING_LOW && h < RING_HIGH ? 1 / RING_DENSE : 1) * (RING_LOW + RING_DENSE * (RING_HIGH - RING_LOW) + (1 - RING_HIGH)) : 1);
+      return Math.max(ring, (3.6 * (p.half + p.thick)) / AROUND);
+    },
+    seed,
+  );
   for (let r = 0; r <= DOWN + UP + 1; r++) {
     const cap = r === DOWN + UP + 1;
     const k = Math.min(r, DOWN + UP);
@@ -198,18 +310,30 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const rag = ln < 0 ? ((vnoise(u / 15, 3.7 + seed) - 0.5) * 0.5 + (vnoise(u / 5, 8.1 + seed) - 0.5) * 0.2) * Math.pow(-ln, 3) * Math.min(1, Math.max(0, (tipY - p.y) / 30)) : 0;
       const l = p.centre + ln * p.half * snap * (1 + rag);
       const y = p.y - (cap ? 1 : 0);
-      // Its faces stand in and out as the sheet's relief has them, with the small blocks of the rock on top.
+      // Its faces stand in and out as the sheet's relief has them, and the rock on top of that is jointed into blocks (see `jointing`).
       const [su, sv] = sheetAt(sp, l, y);
-      let n = depth * (reliefAt(sp.sheet, su, sv) - 0.55) + 0.8 * slab(u - 0.2 * l, l + face * 700, 15, 5, seed + 7);
-      // The rock is jointed: great plates that stand up the face, each proud of or behind its neighbours, and the blocks they break into.
-      // (The plates are of no one breadth, and beds cross them: level ledges some 14 m apart that break each plate into blocks and
-      // give the snow somewhere to lie. Plates alone, all of a breadth, stood on the face like a curtain.)
-      const lw = l + 16 * (vnoise(u / 37 + seed, l / 55 + 2.3) - 0.5) + face * 700;
-      n += 4 * slab(u - 0.25 * l, lw + 31, 64, 21, seed + 11) + 4.5 * slab(l + 0.22 * u + face * 300, u + 9 * (vnoise(l / 30 + 5.1, u / 60 + seed) - 0.5), 52, 14, seed + 19) + 2.8 * slab(u + 0.15 * l, l + face * 700 + 57, 23, 8, seed + 3);
-      n = Math.max(-0.5 * p.thick, Math.min(0.7 * p.thick + 4, n)) * (1 - 0.92 * edge);
+      const cut = joints(a, y);
+      const scale = Math.min(1, Math.max(0.22, p.thick / 42));
+      // The lee edge keeps its line (the kites hold to it); the windward edge is let stand in and out block by block, so it is broken against the sky.
+      const keep = 1 - (ln > 0 ? 0.92 : 0.45) * edge;
+      const broad = Math.max(-0.5 * p.thick, Math.min(0.7 * p.thick + 4, depth * (reliefAt(sp.sheet, su, sv) - 0.55))) * keep;
+      // Beside the lee edge the rock keeps close to the blade's own section, a little in and hardly out: the kites' holdfasts are set by
+      // that section (kites/index.ts: 1.02 of the breadth, half the thickness out), and the lens of the kites looks along the face at
+      // them. The relief stands square to the face now, so a slab that stood out there would stand between the lens and the holdfasts.
+      const k = Math.min(1, Math.max(0, (ln - LEE_FROM) / (LEE_FULL - LEE_FROM)));
+      const lee = k * k * (3 - 2 * k);
+      const free = broad + Math.max(-0.35 * p.thick, Math.min(0.5 * p.thick, scale * cut)) * keep;
+      const n = free + (Math.max(-LEE_IN, Math.min(LEE_OUT, free)) - free) * lee;
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
       const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);
-      let along = face * Math.max(0.3 * body, body + n) * snap;
+      // The rock stands out of the blade square to its face, not along its thickness: on the thin ends of a blade a relief pushed along the
+      // thickness slides along the face instead of standing out of it, and every joint there is drawn out into shards.
+      const thickHere = p.thick * (ends && face > 0 ? 0.6 : 1);
+      const gl = (Math.sign(co) * Math.pow(Math.abs(ln), FIN_SECTION - 1)) / Math.max(p.half, 1);
+      const gb = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), (FIN_SECTION - 1) / FIN_SECTION) / Math.max(thickHere, 1);
+      const gn = Math.hypot(gl, gb) || 1;
+      let across = l + (n * gl) / gn;
+      let along = face * Math.max(0.3 * body, body + (n * gb) / gn) * snap;
       // About the mouth and the way out the face stands just outside the canal's end, so the canal is cut through a wall; the relief
       // only stands out of that wall, never in.
       if (ends) {
@@ -221,11 +345,13 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
           const target = (face < 0 ? MOUTH_S : MOUTH_S + EXIT) + face * (1.5 + 0.6 * Math.max(n, 0));
           let want = end[1];
           for (let i = 0; i < 5; i++) want += (target - locate(sp.x + m.ax * l + m.bx * want, sp.z + m.az * l + m.bz * want).s) / 0.9;
-          along += (want - along) * w * w * (3 - 2 * w);
+          const k = w * w * (3 - 2 * w);
+          along += (want - along) * k;
+          across += (l - across) * k;
         }
       }
-      const x = sp.x + m.ax * l + m.bx * along;
-      const z = sp.z + m.az * l + m.bz * along;
+      const x = sp.x + m.ax * across + m.bx * along;
+      const z = sp.z + m.az * across + m.bz * along;
       pos.push(x, y, z);
       top.push(tipY - y);
       relief.push(n);

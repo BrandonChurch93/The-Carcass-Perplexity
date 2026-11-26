@@ -265,7 +265,10 @@ void main() {
   vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   if (dot(facet, smoothN) < 0.0) facet = -facet;
   // (Only a little: the two triangles of every quad of the mesh lean two ways, and more of the facet would comb the face along their diagonals.)
-  vec3 n0 = inside ? smoothN : normalize(mix(smoothN, facet, spire ? 0.08 : 0.25 * clamp(vTop, 0.0, 1.0)));
+  // A spire's blocks are flat faces of whole quads (meshes.ts, jointing): its light is the face's own, so a block has edges. Far off, where a
+  // quad is no larger than a pixel, the round of the mesh stands in for it.
+  float flatFace = 0.85 * smoothstep(1.6, 0.5, length(fwidth(vWorld)) * uTall / 1080.0);
+  vec3 n0 = inside ? smoothN : normalize(mix(smoothN, facet, spire ? flatFace : 0.25 * clamp(vTop, 0.0, 1.0)));
 
   // The rock is read from the material pictures of the place, each at one size in metres whatever way the face looks: a picture is laid
   // on the two upright planes it can lie flat on and on the level one, and each face takes them by how squarely it looks at each. Nothing
