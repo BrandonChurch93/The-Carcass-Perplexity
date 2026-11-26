@@ -6,7 +6,7 @@ import { QUAD_VERTEX, volumeUniforms } from '../../../core/engine';
 import { WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { partAtHeight, ribByName, surface } from '../layout';
-import { stagedSeconds } from '../shared/stage';
+import { loopPhase, stagedSeconds } from '../shared/stage';
 import { RIG_GLSL } from '../shared/glsl';
 
 export const PARTS = ['sky', 'air', 'cloud'] as const;
@@ -255,12 +255,14 @@ export function create(ctx: Context): Piece {
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
       air.set(thick ? 0.006 : 0.0013, thick ? 160 : 75, 0.0003, 12);
       const steam = ctx.sources.steam;
+      // In the card loop what travels one way stands where the loop's first frame has it.
+      const run = loopPhase() === null ? seconds : staged;
       // The heaviest columns first: there is room for MAX_SOURCES of them.
       const list = steam.map((s, i) => ({ s, i })).sort((p, q) => q.s.strength * q.s.radius * q.s.radius - p.s.strength * p.s.radius * p.s.radius || p.i - q.i).map((p) => p.s);
       const n = Math.min(MAX_SOURCES, list.length);
       for (let i = 0; i < n; i++) {
         const s = list[i] as (typeof list)[number];
-        const z = s.at[2] + (s.speed ?? 0) * (seconds - (s.since ?? 0));
+        const z = s.at[2] + (s.speed ?? 0) * (run - (s.since ?? 0));
         (sourceA[i] as THREE.Vector4).set(s.at[0], s.at[1], z, s.radius);
         (sourceB[i] as THREE.Vector4).set(s.strength, s.rise, s.lean?.[0] ?? 0, s.lean?.[1] ?? 0);
         const lit = ctx.rig.land.sun(s.at[0], z) * ctx.rig.cloudShade(s.at[0], z, seconds);

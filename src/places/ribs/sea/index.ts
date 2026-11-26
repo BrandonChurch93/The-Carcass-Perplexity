@@ -6,7 +6,7 @@ import { partAtHeight, radii, skirtPad, surface } from '../layout';
 import { BORE, FLOOR, LEVELS, RIBS, STATIONS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
-import { stagedSeconds } from '../shared/stage';
+import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
 import { POOL_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_VERTEX } from './shaders';
@@ -213,7 +213,9 @@ export function create(ctx: Context): Piece {
   return {
     setTime: (seconds) => {
       const staged = stagedSeconds();
-      const frontZ = boreFront(seconds);
+      // In the card loop the wall stands off where the loop's first frame has it: it would have to come back.
+      const run = loopPhase() === null ? seconds : staged;
+      const frontZ = boreFront(run);
       front.value = frontZ;
 
       ringCount.value = staged >= feeding.from && staged <= feeding.to ? MAX_RINGS : 0;
@@ -252,7 +254,7 @@ export function create(ctx: Context): Piece {
       }
       surf.end();
 
-      bore.setTime(seconds);
+      bore.setTime(seconds, run);
     },
     beforeSample: (_renderer, camera) => {
       eye.copy(camera.position);

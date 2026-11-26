@@ -500,7 +500,8 @@ export interface Bore {
   curtain: THREE.Mesh;
   back: THREE.Mesh;
   cards: THREE.Mesh;
-  setTime(seconds: number): void;
+  /** `front`: the seconds of the place the wall stands at, when it does not run with the world (the card loop). */
+  setTime(seconds: number, front?: number): void;
   dispose(): void;
 }
 
@@ -625,7 +626,7 @@ export function createBore(
     curtain,
     back,
     cards: cards.mesh,
-    setTime: (seconds) => {
+    setTime: (seconds, front = seconds) => {
       cards.begin();
       if (DEBUG_NO_CARDS) { cards.end(); return; }
       // What stands close to the last lens has a lee: the wall goes round it and its thrown water with it, so none is ever seen before the rock
@@ -646,7 +647,7 @@ export function createBore(
         const hid = lee(x, z, size);
         if (hid < size) cards.put(x, y, z, size, alpha * (1 - Math.max(0, hid) / size), seed, turn, stretch, deep, mist);
       };
-      const frontNow = boreFront(seconds);
+      const frontNow = boreFront(front);
       // Nothing of the thrown water is seen from more than three kilometres.
       if (Math.abs(frontNow - focus[1]) > 3000) {
         cards.end();
@@ -738,7 +739,7 @@ export function createBore(
       // Where the wall strikes a blade or a cliff the water has nowhere to go but up. The surge ahead of the wall strikes first.
       for (const s of sites) {
         const count = s.near ? BURST_NEAR : BURST_FAR;
-        const since = seconds - boreArrives(s.z - s.reach) + (s.near ? 1.5 : 0.4);
+        const since = front - boreArrives(s.z - s.reach) + (s.near ? 1.5 : 0.4);
         if (since < 0 || since > 8) continue;
         for (let j = 0; j < count; j++) {
           const seed = 9000 + s.id * 977 + j;
