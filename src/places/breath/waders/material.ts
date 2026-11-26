@@ -238,11 +238,11 @@ void main() {
     float finger = step(1.5, vInfo.x);
     float tone = fract(vInfo.x);
     float own = hash12(vec2(seed, 9.0));
-    vec3 flesh = mix(vec3(0.6, 0.4, 0.34), vec3(0.78, 0.59, 0.51), own);
+    vec3 flesh = mix(vec3(0.7, 0.5, 0.43), vec3(0.86, 0.69, 0.6), own);
     vec3 blood = mix(vec3(0.2, 0.05, 0.045), vec3(0.4, 0.14, 0.12), tone);
-    albedo = mix(flesh, blood, step(0.72, own) * smoothstep(0.0, 0.25, u) * 0.6);
+    albedo = mix(flesh, blood, step(0.85, own) * smoothstep(0.0, 0.25, u) * 0.4);
     albedo = mix(albedo, vec3(0.62, 0.36, 0.33), smoothstep(0.2, 0.0, u));
-    albedo = mix(albedo, vec3(0.17, 0.09, 0.06), smoothstep(0.45, 1.0, u) * (0.55 + 0.4 * tone));
+    albedo = mix(albedo, vec3(0.2, 0.12, 0.08), smoothstep(0.4, 1.0, u) * (0.6 + 0.35 * tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
     albedo = mix(albedo, vec3(0.1, 0.095, 0.045), step(0.93, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));
     // A finger: the neck's own pale flesh, pinker down its length, raw and dark at the very end.

@@ -26,5 +26,11 @@ for radius in (1, 2, 4, 8, 16, 32):
     weight[take] = 1
 out = np.where((thread > 0.6)[..., None], rgb, colour)
 Image.fromarray((np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)).save('public/assets/breath/plumes/spray.jpg', quality=92)
-Image.fromarray((np.clip(thread, 0, 1) * 255 + 0.5).astype(np.uint8)).save('public/assets/breath/plumes/spray-a.png', optimize=True)
+# The cover is stored as a distance: 128 at the edge of a thread, 16 to a pixel, so that the edge stays smooth where the lens is so
+# close that a pixel of the picture is several of the frame, and a thread can be drawn a little fatter far off by cutting lower.
+big = np.asarray(Image.fromarray((np.clip(thread, 0, 1) * 255).astype(np.uint8)).resize((thread.shape[1] * 3, thread.shape[0] * 3), Image.BICUBIC)).astype(np.float32) / 255
+inside = big > 0.5
+distance = (ndimage.distance_transform_edt(inside) - ndimage.distance_transform_edt(~inside)) / 3
+distance = ndimage.zoom(distance, 1 / 3, order=1)
+Image.fromarray(np.clip(128 + 16 * distance, 0, 255).astype(np.uint8)).save('public/assets/breath/plumes/spray-a.png', optimize=True)
 print('threads cover', float((thread > 0.5).mean()))

@@ -15,8 +15,8 @@ export const PARTS: readonly string[] = ['dead-wader'];
 type V3 = [number, number, number];
 
 /** The picture: metres across and up it, where in it (across, and up from its foot) the animal's middle and its lowest hoof are. */
-const WIDE = 4.667;
-const TALL = 2.627;
+const WIDE = 5.5;
+const TALL = 3.096;
 const MID = 0.56;
 const FOOT = 0.25;
 /** Staged: the lens of the key at the rim (breath-2, shot breath-05), from the place's own list of cameras. The picture was made for it. */
@@ -86,7 +86,7 @@ ${CUT}
   vec3 albedo = texture2D(tCarcass, vAt).rgb;
   // Parchment: the colour has gone out of it. Dark and damp where it lies on the rock, salt on what faces up.
   float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
-  albedo = mix(albedo, grey * vec3(1.0, 0.95, 0.87), 0.2) * 1.5;
+  albedo = mix(albedo, grey * vec3(1.0, 0.95, 0.87), 0.35) * 1.5;
   albedo *= 0.9 + 0.2 * fbm(vWorld.xz * 6.0);
   albedo *= 0.6 + 0.4 * smoothstep(0.0, 0.05, lift);
   float salt = smoothstep(0.55, 0.8, fbm(vWorld.xz * 11.0 + 3.0) + 0.25 * n.y - 0.1);
