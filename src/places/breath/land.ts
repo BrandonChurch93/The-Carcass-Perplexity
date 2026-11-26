@@ -169,7 +169,7 @@ export function plateAt(wx: number, wz: number): number {
 }
 
 /** Metres a plate of the shelf is across, about. */
-const SLAB = 7.5;
+const SLAB = 5.2;
 /** The heights a plate may lie at, as the risers between them going up: none the same as the next, a hand to two feet. They repeat. */
 const RISERS = [0.3, 0.12, 0.45, 0.2, 0.6, 0.08, 0.35];
 const RUN = RISERS.reduce((sum, r) => sum + r, 0);
