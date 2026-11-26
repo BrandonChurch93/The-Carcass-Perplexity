@@ -283,6 +283,12 @@ void main() {
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * stormSide(rd), 0.0, 1.5);
     sea = sea * (1.0 - 0.5 * stormSide(rd)) * (1.0 + 0.7 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
+    // In the flash of a stroke the heads of the deck that stand up toward the channel are lit and its hollows are not.
+    if (uStrikeAt.w > 0.0) {
+      vec3 toStroke = uStrikeAt.xyz - p;
+      float span2 = dot(toStroke, toStroke);
+      sea += STRIKE_COLOUR * (uStrikeAt.w * 0.045 * head * head * grainS / (1.0 + span2 / 9.0e6));
+    }
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t / 30000.0);
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.

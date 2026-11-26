@@ -138,11 +138,11 @@ export const breakdown = (age: number): number => {
 export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number } {
   let main = current(age);
   for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(age - (s.at[i] as number));
-  // What the cloud holds after each stroke: a dull glow that sinks in a fifth of a second. Nothing of it is in the channel.
+  // What the cloud holds after each stroke: a dull glow that sinks in an eighth of a second. Nothing of it is in the channel.
   let after = 0;
   for (let i = 0; i < s.at.length; i++) {
     const t = age - (s.at[i] as number);
-    if (t > 0) after += 0.05 * (s.share[i] as number) * (1 - Math.exp(-t / 0.004)) * Math.exp(-t / 0.2);
+    if (t > 0) after += 0.05 * (s.share[i] as number) * (1 - Math.exp(-t / 0.004)) * Math.exp(-t / 0.12);
   }
   return { main, branch: pulse(age) + current(age), after, leader: 1 };
 }

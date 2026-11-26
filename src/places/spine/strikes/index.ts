@@ -17,7 +17,7 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 const FLASH = 3.2;
 /** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
 const FLASH_OF = [1, 0.7, 0.8, 0.75, 0.45, 0.85];
-const SPARKS = 90;
+const SPARKS = 30;
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
 const TIP_RADIUS = 8;
 const TIP_CAST = 300000;
@@ -143,11 +143,11 @@ void main() {
   // A fragment of rock thrown from the tip: it flies, falls, is carried by the gale, and cools.
   // It leaves fast and the air stops it within a few tens of metres; then it only falls and drifts.
   // It is seen for a few frames and no longer: under a sixth of a second.
-  float life = 0.05 + 0.1 * aSeed.x;
+  float life = 0.04 + 0.09 * aSeed.x;
   float t = max(uAge - 0.01 * aSeed.y, 0.0);
-  float drag = 1.0 - exp(-t * 6.0);
-  vec3 p = uAt + aGo * (drag / 6.0) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 6.0);
-  vec3 v = aGo * exp(-t * 6.0) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 12.0);
+  float drag = 1.0 - exp(-t * 1.5);
+  vec3 p = uAt + aGo * (drag / 1.5) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 6.0);
+  vec3 v = aGo * exp(-t * 1.5) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 12.0);
   vec4 c = viewMatrix * vec4(p, 1.0);
   vec3 along = (viewMatrix * vec4(v, 0.0)).xyz;
   float far = -c.z;
@@ -268,7 +268,7 @@ export function create(ctx: Context): Piece {
       seeds.set([rng.next(), rng.next(), rng.next(), rng.next()], i * 4);
       const az = rng.range(0, Math.PI * 2);
       const up = rng.range(-0.35, 1);
-      const speed = rng.range(40, 160) * (rng.next() < 0.2 ? 1.8 : 1);
+      const speed = rng.range(60, 190) * (rng.next() < 0.2 ? 1.6 : 1);
       const flat = Math.sqrt(Math.max(0, 1 - up * up));
       go.set([Math.cos(az) * flat * speed, up * speed, Math.sin(az) * flat * speed], i * 3);
     }
@@ -364,7 +364,9 @@ export function create(ctx: Context): Piece {
           tipLight.position.y += 2;
           tipLight.radiance.copy(TINT).multiplyScalar(TIP_CAST * power);
           cloudLight.position.copy(b.top);
-          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (power + tail * 2 + before * 3));
+          // The cloud's own bloom about a light closes on a ceiling at a hundredth of a stroke: the glow it keeps and the glow before a stroke
+          // are small shares, so that they are dull beside the stroke and die with it.
+          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (power + tail * 0.25 + before * 0.2));
         }
       });
     },
