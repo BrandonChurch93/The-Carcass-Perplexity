@@ -1,5 +1,7 @@
-2026-11-26 07:54 UTC
-work at 164c2fb on agent/marsh-life-3
-07:55 source frozen: flats bare of stalks, small far wader behind the seep, mound 127,112,107, seep stalk paler
-look-1.jpg = out/work/cur-marsh-0.jpg
-look-2.jpg = out/work/cur-marsh-1.jpg
+2026-11-26 08:27 UTC
+work at 19ef465 on agent/marsh-life-3
+version 3, final tier uhd: marsh-0, marsh-3, marsh-4 before the ground's last merge, marsh-2 after it
+look-1.jpg = out/work/final-marsh-0.jpg
+look-2.jpg = out/work/final-marsh-2.jpg
+look-3.jpg = out/work/final-marsh-3.jpg
+look-4.jpg = out/work/final-marsh-4.jpg
