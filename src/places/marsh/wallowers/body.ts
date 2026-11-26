@@ -250,7 +250,9 @@ void main() {
   // On a young one the plate is a third the size: its pores would read as down, so it is taken softer and the folds are left.
   // By the lens it is taken a little soft as well: its finest lines run all one way and read as a coat of hair.
   vec3 pic = texture2D(tPic, uv, max(1.7 * (1.0 - smoothstep(0.4, 0.8, uK)), 0.7 * nearK)).rgb;
-  float folds = mix(1.0, smoothstep(0.34, 0.62, vnoise3(q * vec3(0.55, 0.8, 0.55) + uSeed * 3.0 + 11.0)), nearK);
+  // (Only by the lens: the far ones pay nothing for it.)
+  float folds = 1.0;
+  if (nearK > 0.0) folds = mix(1.0, smoothstep(0.34, 0.62, vnoise3(q * vec3(0.55, 0.8, 0.55) + uSeed * 3.0 + 11.0)), nearK);
   vec2 e = vec2(3.0 / 1774.0, 3.0 / 887.0) * (1.0 + 1.6 * nearK);
   float foldLod = 1.6 + 0.5 * nearK;
   float l0 = dot(textureLod(tPic, uv, foldLod).rgb, LUMA);
@@ -298,11 +300,13 @@ void main() {
   bump += vec3(slope.x, -slope.y * (1.0 - top), slope.y * top * sign(vRest.z)) * mix(0.25, 1.5, folds) * side;
   bump += vec3(vBlade, 0.0);
   // The hide of a leg is too wide for it: it lies in rings where the leg folds, at the elbow or the knee and above the pad.
-  float ringed = (0.35 * smoothstep(0.16, 0.26, vRest.y) + exp(-pow((vRest.y - 0.3) / 0.11, 2.0)) + exp(-pow((vRest.y - 0.62) / 0.13, 2.0))) * vInfo.z * (1.0 - horn) * nearK;
-  float ringAt = vRest.y * 85.0 + 7.0 * vnoise3(q * 2.3 + uSeed * 5.0);
-  ringed *= 0.35 + 0.65 * smoothstep(0.3, 0.6, vnoise3(q * 4.7 + uSeed * 2.0));
-  bump.y += 0.7 * cos(ringAt) * ringed;
-  albedo *= 1.0 - min(0.6, 0.6 * ringed) * smoothstep(0.3, 0.95, -sin(ringAt));
+  if (nearK > 0.0) {
+    float ringed = (0.35 * smoothstep(0.16, 0.26, vRest.y) + exp(-pow((vRest.y - 0.3) / 0.11, 2.0)) + exp(-pow((vRest.y - 0.62) / 0.13, 2.0))) * vInfo.z * (1.0 - horn) * nearK;
+    float ringAt = vRest.y * 85.0 + 7.0 * vnoise3(q * 2.3 + uSeed * 5.0);
+    ringed *= 0.35 + 0.65 * smoothstep(0.3, 0.6, vnoise3(q * 4.7 + uSeed * 2.0));
+    bump.y += 0.7 * cos(ringAt) * ringed;
+    albedo *= 1.0 - min(0.6, 0.6 * ringed) * smoothstep(0.3, 0.95, -sin(ringAt));
+  }
   #ifdef CRUSTED
   vec3 rq = q * RIME_SCALE;
   vec3 rx = texture2D(tRimeNh, rq.zy).rgb;
