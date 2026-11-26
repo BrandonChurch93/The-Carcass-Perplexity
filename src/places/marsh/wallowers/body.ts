@@ -146,8 +146,8 @@ void main() {
   // The shoulder blade and the point of the hip: each rises under the hide as its leg takes the weight, and sinks as the leg is lifted.
   float flank = smoothstep(0.25, 0.55, abs(normal.z)) * (1.0 - aInfo.z) * (1.0 - aInfo.y);
   vec2 loads = position.z > 0.0 ? uBlade.zw : uBlade.xy;
-  vec3 fore = plate(position.xy, vec2(uGirdle.x + 0.2, 1.0), vec2(uGirdle.x - 0.14, 1.66), (0.02 + 0.085 * loads.y) * flank);
-  vec3 hind = plate(position.xy, vec2(uGirdle.y - 0.16, 1.0), vec2(uGirdle.y + 0.12, 1.6), (0.015 + 0.06 * loads.x) * flank);
+  vec3 fore = plate(position.xy, vec2(uGirdle.x + 0.2, 1.0), vec2(uGirdle.x - 0.14, 1.66), (0.03 + 0.12 * loads.y) * flank);
+  vec3 hind = plate(position.xy, vec2(uGirdle.y - 0.16, 1.0), vec2(uGirdle.y + 0.12, 1.6), (0.02 + 0.08 * loads.x) * flank);
   lift += fore.x + hind.x;
   vBlade = fore.yz + hind.yz;
   vec3 rest = position + normal * (lift + uBreath * aInfo.w);
@@ -243,13 +243,16 @@ void main() {
   // Far off the picture's neck folds run together into one dark patch behind the head: there the tile begins at the shoulder.
   float nearK = smoothstep(0.4, 0.9, uNear);
   side *= 1.0 - 0.9 * smoothstep(mix(0.4, 0.6, nearK), mix(0.56, 0.76, nearK), vRest.x / uPic.x) * (1.0 - vInfo.z);
+  // By the lens a leg wears the tile too: the picture is pulled round it and has no pores left there.
+  side *= 1.0 - 0.85 * vInfo.z * nearK;
   // Under the trunk the picture is pulled out into streaks: the tile takes over there.
   side *= mix(smoothstep(0.6, 0.95, vRest.y), 1.0, max(vInfo.z, uMudded));
   // On a young one the plate is a third the size: its pores would read as down, so it is taken softer and the folds are left.
   // By the lens it is taken a little soft as well: its finest lines run all one way and read as a coat of hair.
-  vec3 pic = texture2D(tPic, uv, max(1.7 * (1.0 - smoothstep(0.4, 0.8, uK)), 2.4 * nearK)).rgb;
+  vec3 pic = texture2D(tPic, uv, max(1.7 * (1.0 - smoothstep(0.4, 0.8, uK)), 0.7 * nearK)).rgb;
+  float folds = mix(1.0, smoothstep(0.34, 0.62, vnoise3(q * vec3(0.55, 0.8, 0.55) + uSeed * 3.0 + 11.0)), nearK);
   vec2 e = vec2(3.0 / 1774.0, 3.0 / 887.0) * (1.0 + 1.6 * nearK);
-  float foldLod = 1.6 + 1.4 * nearK;
+  float foldLod = 1.6 + 0.5 * nearK;
   float l0 = dot(textureLod(tPic, uv, foldLod).rgb, LUMA);
   float lx = dot(textureLod(tPic, uv + vec2(e.x, 0.0), foldLod).rgb, LUMA);
   float ly = dot(textureLod(tPic, uv + vec2(0.0, e.y), foldLod).rgb, LUMA);
@@ -267,6 +270,8 @@ void main() {
   tone = mix(vec3(1.0), mix(vec3(dot(tone, LUMA)), tone, 0.4), mix(0.6, 0.95, uNear));
   float crease = 0.75 + 0.25 * smoothstep(0.15, 0.62, height);
   vec3 tiled = mix(wash * tone * crease, hide * uTileGain * 1.25, uTile);
+  // Between the folds the picture gives only its colour, and the pores are the tile's, sharp at any distance.
+  pic = mix(textureLod(tPic, uv, 4.0).rgb * mix(vec3(1.0), tone, 0.8) * (0.86 + 0.2 * crease), pic, folds);
   vec3 albedo = mix(tiled, pic, side) * 0.8;
   // The grain of the hide itself, which the flank picture is too coarse to carry by the lens: every crease of the tile is dark and every ridge between two is pale.
   float ridge = smoothstep(0.22, 0.7, height);
@@ -274,7 +279,6 @@ void main() {
   albedo *= mix(1.0, mix(0.8, 1.1, ridge), creased);
   // The picture's creases all run one way, and a coat of them reads as hair. So they are kept in places and let go in others:
   // where the hide hangs it is folded, drawn harder than the picture has it, and where it is stretched it is smooth but for its pores.
-  float folds = mix(1.0, smoothstep(0.34, 0.62, vnoise3(q * vec3(0.55, 0.8, 0.55) + uSeed * 3.0 + 11.0)), nearK);
   albedo *= mix(1.0, clamp(1.0 + 1.2 * (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0), 0.45, 1.5), mix(0.08, 0.85, folds) * side * uNear * (1.0 - 0.6 * vInfo.z));
   // A warm tan with pink in it; the deep red is the mud's, lower down.
   albedo = mix(vec3(dot(albedo, LUMA)) * mix(mix(vec3(1.15, 0.95, 0.78), vec3(1.07, 0.97, 0.88), uTile), vec3(1.14, 0.95, 0.82), uMudded), albedo, mix(0.3, 0.5, uMudded));
@@ -284,7 +288,7 @@ void main() {
   albedo *= 1.0 - 0.3 * headed * mix(1.0, 0.4, ridge);
 
   // The slope of the skin: from the light and dark of the picture on the flanks (a crease is dark), from the tile elsewhere, and the tile's grain over all near the lens.
-  float tile = mix(1.2 + 0.6 * uTile + 0.9 * uNear, 1.1 * uNear, side) * (1.0 - 0.5 * vInfo.z);
+  float tile = mix(1.2 + 0.6 * uTile + 0.9 * uNear, 1.1 * uNear, side) * (1.0 - 0.7 * vInfo.z);
   vec2 sx = (hx.rg - 0.5) * tile;
   vec2 sy = (hy.rg - 0.5) * tile;
   vec2 sz = (hz.rg - 0.5) * tile;
@@ -293,6 +297,12 @@ void main() {
   // In the picture u runs from the muzzle back and v up.
   bump += vec3(slope.x, -slope.y * (1.0 - top), slope.y * top * sign(vRest.z)) * mix(0.25, 1.5, folds) * side;
   bump += vec3(vBlade, 0.0);
+  // The hide of a leg is too wide for it: it lies in rings where the leg folds, at the elbow or the knee and above the pad.
+  float ringed = (0.35 * smoothstep(0.16, 0.26, vRest.y) + exp(-pow((vRest.y - 0.3) / 0.11, 2.0)) + exp(-pow((vRest.y - 0.62) / 0.13, 2.0))) * vInfo.z * (1.0 - horn) * nearK;
+  float ringAt = vRest.y * 85.0 + 7.0 * vnoise3(q * 2.3 + uSeed * 5.0);
+  ringed *= 0.35 + 0.65 * smoothstep(0.3, 0.6, vnoise3(q * 4.7 + uSeed * 2.0));
+  bump.y += 0.7 * cos(ringAt) * ringed;
+  albedo *= 1.0 - min(0.6, 0.6 * ringed) * smoothstep(0.3, 0.95, -sin(ringAt));
   #ifdef CRUSTED
   vec3 rq = q * RIME_SCALE;
   vec3 rx = texture2D(tRimeNh, rq.zy).rgb;
