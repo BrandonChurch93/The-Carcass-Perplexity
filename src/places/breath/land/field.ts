@@ -114,7 +114,7 @@ export function bakeNear(rng: Rng): NearMap {
       }
     }
   };
-  const count = 160000;
+  const count = 110000;
   for (let k = 0; k < count; k++) {
     const x = FINE.minX + rng.next() * FINE.size;
     const z = FINE.minZ + rng.next() * FINE.size;
@@ -132,11 +132,13 @@ export function bakeNear(rng: Rng): NearMap {
     if (!inFine(x, z, 6)) continue;
     // None on the plate the dead wader lies on.
     if (padAt(x, z) > 0) continue;
-    // The loose stone lies in the gaps between the plates, as the plate's own picture has it.
-    const gap = plateAt(x, z);
-    if (gap < POOL + 0.03 || (gap > 0.5 && size < 0.997)) continue;
-    // A long tail: most are cobbles of a hand or two, one in sixty is a block of half a metre or more.
-    const radius = 0.05 + 0.08 * size * size + (size > 0.997 ? 0.25 + 0.5 * (size - 0.997) / 0.003 : 0);
+    // The loose stone lies where it fell: at the foot of a broken edge. One in fourteen has rolled out onto the open plate.
+    const here = ground(x, z);
+    const foot = Math.max(ground(x + 0.4, z), ground(x - 0.4, z), ground(x, z + 0.4), ground(x, z - 0.4)) - here > 0.1;
+    if (plateAt(x, z) < POOL + 0.03) continue;
+    if (rng.next() > (foot ? 0.3 : 0.05)) continue;
+    // Cobbles of a hand or two; a few as big as a head.
+    const radius = 0.04 + 0.07 * size * size + (size > 0.985 ? 0.08 : 0);
     stamp(x, z, radius, radius * (0.45 + 0.4 * squash), squash, turn, tone);
   }
 
@@ -227,12 +229,12 @@ export function bakeNear(rng: Rng): NearMap {
         p.setY(i, heightAt(x, z) - (inFine(x, z, step * 0.5) ? 0 : 0.5));
         continue;
       }
-      // Inside the shaft: the first ring of the grid is drawn out to the rim itself, the next hangs under it as the brim's face, the rest is not drawn.
+      // Inside the shaft: the first ring of the grid is drawn out to the rim itself, the rest is not drawn.
       const k = r > 0.001 ? rim / r : 0;
       const top = heightAt(x * k * 1.001, z * k * 1.001);
       if (r > rim - step * 1.05) p.setXYZ(i, x * k, top, z * k);
-      else if (r > rim - step * 2.1) p.setXYZ(i, x * k * 0.997, top - 0.5, z * k * 0.997);
       else {
+        // No skirt hangs under the brim: its lower edge was a row of teeth. The wall's own top (land/wall.ts) stands there.
         p.setXYZ(i, x * k * 0.99, top - 1.7, z * k * 0.99);
         deep[i] = 1;
       }

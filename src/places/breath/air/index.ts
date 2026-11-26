@@ -42,7 +42,7 @@ export function breathAt(seconds: number): [number, number, number, number] {
   const fill = smooth((u - 0.2) / 1.3);
   const over = u < 3 ? smooth((u - 0.4) / 2.4) : 0.08 + 0.92 * Math.exp(-(u - 3) / 1.3);
   // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
-  const level = -9 + swell + 3.5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
+  const level = -10 + swell + 3.5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
   const apron = smooth((u - 2.2) / 2.0) * (0.2 + 0.8 * Math.exp(-Math.max(0, u - 3.4) / 2.4));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
@@ -96,18 +96,12 @@ export function create(ctx: Context): Piece {
   // The vapour that stands over the smaller shafts: a column that leans with the wind and widens.
   for (const [x, z, r, tall] of SMALLER) {
     // A column that climbs, leans with the wind as it climbs and opens into a plume that trails off down the wind.
-    const rise = r * (3.5 + 6 * tall);
+    const rise = r * (2.6 + 3.2 * tall);
     const lean: [number, number] = [-0.4, 0.14];
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.5 + 0.8 * tall), rise * 0.58, r * (1.5 + 0.8 * tall)], lean, dense: 0.13 / r, repeat: r * 3.4, open: 0.5, climb: 4.5 + r * 0.2, sun: 0.5 });
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (3.2 + 2.6 * tall), rise * 0.36, r * (2.2 + 1.6 * tall)], lean: [-1.1, 0.4], dense: 0.045 / r, repeat: r * 5.5, open: 0.56, climb: 2.4, sun: 0.5 });
-  }
-  // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
-  for (const [x, y, z, rx, ry, rz, dense] of [
-    [-24, 1.5, -14, 12, 3, 10, 0.008],
-    [-13, 0.5, -2, 17, 3.2, 18, 0.004],
-    [-43, 2.6, -8, 12, 2.4, 9, 0.012],
-  ] as const) {
-    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.45, repeat: 13, open: 0.78, climb: 1.6, sun: 1.0 });
+    // Far off the far picture (air/sky.ts) holds the plume itself: the body there only keeps it moving.
+    const far = Math.hypot(x, z) > 450;
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.1 + 0.4 * tall), rise * 0.58, r * (1.1 + 0.4 * tall)], lean, dense: (far ? 0.025 : 0.07) / r, repeat: r * 2.6, open: 0.62, climb: 4.5 + r * 0.2, sun: 0.5 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (2.4 + 1.6 * tall), rise * 0.3, r * (1.6 + 1.0 * tall)], lean: [-1.4, 0.5], dense: (far ? 0.008 : 0.022) / r, repeat: r * 4.0, open: 0.68, climb: 2.4, sun: 0.5 });
   }
   // The banks that lie out on the flats.
   for (const [x, z, rx, ry, rz] of [
