@@ -1,7 +1,6 @@
-2026-11-26 13:37 UTC
-work at 0a4f665 on agent/marsh-stalks
-v1: frame 5618 before and after (hd review), full-size crop of the stand, the sheet 5618 to 5738, key marsh-3 before and after. Wrong: heads by the hero wallower grew too big, feet still have no collar, spent heads read as tan umbrellas
-look-1.jpg = out/work/v1/5618-before-after.png
-look-2.jpg = out/work/v1/crop-before-after.png
-look-3.jpg = out/work/v1/sheet-first.png
-look-4.jpg = out/work/v1/pair-6424.png
+2026-11-26 14:01 UTC
+work at b538960 on agent/marsh-stalks
+keys back to their pictures: 6424 pair, 5940/6800/6102 pairs, 5618 hd before/after (b538960)
+look-1.jpg = out/work/v1fix/pair-6424.png
+look-2.jpg = out/work/v1fix/keys-2-4-1.png
+look-3.jpg = out/work/v1fix/5618-before-after.png
