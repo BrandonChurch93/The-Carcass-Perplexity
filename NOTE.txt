@@ -1,0 +1,5 @@
+2026-11-26 05:14 UTC
+work at fae15df on agent/breath-ground-3
+heartbeat 1 (min 45): shelf light and colour, vapour as haze with billows, cameras of breath-0 and breath-4 moved; all in progress
+look-1.jpg = out/work/hb1-breath-0.jpg
+look-2.jpg = out/work/hb1-breath-4.jpg
