@@ -134,7 +134,7 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float rho = (0.012 + 0.05 * smoothstep(0.0, 14.0, under)) * smoothstep(0.0, 2.5 + 2.5 * n0.g, under);
   // The columns.
   float lift = 9.0 * surge;
-  float cols = column(p, vec2(-19.0, -9.0), 4.2, 9.0 + lift, n) + 0.7 * column(p, vec2(-12.0, 9.0), 3.2, 3.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 4.5, -5.0 + 1.5 * lift, n);
+  float cols = column(p, vec2(-19.0, -9.0), 4.2, 9.0 + lift, n) + 0.55 * column(p, vec2(-10.0, 11.0), 2.6, 1.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 4.5, -5.0 + 1.5 * lift, n);
   rho = max(rho, (0.085 + 0.1 * surge) * min(cols, 1.0));
   // Over the brim the columns' heads are torn: thinner the higher.
   rho *= mix(1.0, 0.6, smoothstep(1.0, 9.0, p.y));
@@ -146,9 +146,9 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float gone = max(out0, 0.0) / (16.0 + 14.0 * apron + 8.0 * surge);
   float tall = (2.3 + 1.6 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
   float lies = smoothstep(0.0, 0.5 + 0.5 * tall, foot + tall - p.y) * smoothstep(-2.5, 0.5, out0) * step(foot - 0.3, p.y);
-  float shred = smoothstep(0.5 + 0.1 * (1.0 - exp(-gone)), 0.6 + 0.12 * (1.0 - exp(-gone)), n);
+  float shred = smoothstep(0.54 + 0.1 * (1.0 - exp(-gone)), 0.68 + 0.12 * (1.0 - exp(-gone)), n);
   // Never a wash on the lens: within a few metres of the camera the layer on the rock is not there.
-  float pour = (0.07 + 0.04 * apron + 0.05 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
+  float pour = (0.05 + 0.03 * apron + 0.04 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
   return max(rho, pour) * uShow.z;
 }
 
@@ -245,8 +245,8 @@ void main() {
         float sun = sunSeen(land, p.y) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead.
         float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 34.0, 0.3, 1.0);
-        vec3 light = vec3(0.16, 0.158, 0.16) * sunk * sunk * (0.3 + 0.7 * roofed)
-          + mix(uSunColour, vec3(2.2), 0.3) * (sun * (0.3 * min(phase, 1.4) * exp(-1.1 * shade) + 0.035 * exp(-0.2 * shade)));
+        vec3 light = vec3(0.168, 0.158, 0.15) * sunk * sunk * (0.3 + 0.7 * roofed)
+          + mix(uSunColour, vec3(2.2), 0.12) * (sun * (0.3 * min(phase, 1.4) * exp(-1.1 * shade) + 0.035 * exp(-0.2 * shade)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
         through *= gone;

@@ -296,7 +296,7 @@ void main() {
   // Shingle: rounded pale stones a thumb to a fist through, lying in patches on the dry rock, along the border of the dry ground, and
   // nowhere near the tide. Past thirty metres it is not read.
   float ring = smoothstep(-0.1, -0.02, sq) * smoothstep(0.1, 0.03, sq);
-  float shingle = max(ring * smoothstep(0.4, 0.6, a.a), smoothstep(0.68, 0.78, a.r + 0.15 * hollow) * (1.0 - 0.4 * smoothstep(0.0, 0.1, sq))) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * smoothstep(34.0, 20.0, dist);
+  float shingle = max(ring * smoothstep(0.4, 0.6, a.a), smoothstep(0.61, 0.71, a.r + 0.15 * hollow) * (1.0 - 0.4 * smoothstep(0.0, 0.1, sq))) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * smoothstep(34.0, 20.0, dist);
   vec3 pebColour = vec3(0.0);
   if (shingle > 0.0) {
     vec4 pn = textureGrad(tPebN, p.xz / 1.5 + 0.21, dpx / 1.5, dpy / 1.5);
@@ -341,6 +341,8 @@ void main() {
   // The plates of the lip stand high and dry: weathered grey, not the cream of a fresh break.
   rock *= mix(1.0, 0.66, smoothstep(0.9, 2.2, over) * (1.0 - dryPad));
   vec3 albedo = rock * mix(1.0, mix(0.68, 0.74, steep), damp);
+  // Where the water meets the rock the rock is wet through: a dark band a hand high along every waterline.
+  albedo *= mix(1.0, 0.5, smoothstep(0.16, 0.03, over) * smoothstep(-0.06, 0.0, over));
   // The rocks that break the water under the lens of the feeding waders are dark and wet through, with weed on them.
   vec2 fromBar = p.xz - vec2(-50.2, -22.4);
   float bar = exp(-(0.12 * fromBar.x * fromBar.x + fromBar.y * fromBar.y) / 5.5) * smoothstep(-0.05, 0.1, over);

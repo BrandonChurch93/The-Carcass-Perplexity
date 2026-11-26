@@ -320,8 +320,12 @@ export function ground(x: number, z: number): number {
   // stands a hand over it, and the water's edge runs along the break between them. No beach of smooth ground lies between the two.
   const shore = Math.min(1 - smooth((bank - 0.75) / 0.2), smooth((base - (SEA - 0.3)) / 0.1));
   const relief = lerp(base, lerp(base, bedded(x, z), shore) + RELIEF * (Math.max(plateAt(x, z), POOL) - 0.5), fine);
+  // Where the waders feed (shot breath-04) the floor of the channel lies a hand and more under the tide all the way across: a plate that
+  // stood at the tide there was a patch of dry rock in the middle of the water, and the waders on it stood dry.
+  const feed = smooth((x + 58.5) / 3) * smooth((-38.5 - x) / 3) * smooth((-19.5 - z) / 3) * smooth((z + 44.5) / 3);
+  const floor = feed > 0 ? lerp(relief, Math.min(relief, SEA - 0.22 - 0.05 * plateAt(x, z)), feed) : relief;
   const pad = padAt(x, z);
-  if (pad <= 0) return relief + lumps(x, z);
+  if (pad <= 0) return floor + lumps(x, z);
   return pad > 0 ? lerp(relief, padLevel() - 0.03 * sat(Math.hypot(x - PAD[0], z - PAD[1]) / 3.2) ** 2, pad) : relief;
 }
 
