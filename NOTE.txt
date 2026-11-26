@@ -1,4 +1,5 @@
-2026-11-26 01:29 UTC
-work at abb8fd2 on agent/ribs-ground-2
-hb1 01:42Z: blades rebuilt as fins, stone in blade space, sun behind lens right; floor, weed wall, colony still the first owner's
-look-1.jpg = out/work/v/hb1-ribs-0.jpg
+2026-11-26 01:54 UTC
+work at 05cc335 on agent/ribs-ground-2
+hb2 01:56Z: fin sheet on blades, ground plate, weed wall sheet, colony sheet, more air; ribs-0 compare and ribs-3 frame
+look-1.jpg = out/work/v/c0.jpg
+look-2.jpg = out/work/v/k3.jpg
