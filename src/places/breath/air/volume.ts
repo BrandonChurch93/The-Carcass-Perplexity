@@ -131,19 +131,22 @@ float shaftTop(vec2 xz) {
   vec2 da = xz - vec2(-18.6, -7.2);
   vec2 db = xz - vec2(-9.0, 13.0);
   float well = exp(-dot(da, da) / 170.0) + 0.6 * exp(-dot(db, db) / 80.0);
-  return uBreath.x + 6.5 - 8.0 * (1.0 - west) + 5.0 * well + 8.0 * surge * (0.3 + 0.7 * west);
+  return uBreath.x + 6.5 - 8.0 * (1.0 - west) + 5.0 * well + 6.0 * surge * (0.3 + 0.7 * west);
 }
 // Thickness for a metre of path of the vapour in the shaft, over a span of height. under: how far the place lies below the top.
 float shaftRho(vec3 p, float hy, float out0, float way, vec3 n, out float under) {
   float surge = uBreath.y * uShow.w;
-  float top = shaftTop(p.xz) + 10.0 * (n.x - 0.45) + 3.5 * (n.z - 0.5);
+  // The top is not a level: it stands in towers that climb to the brim and over it, with gaps between them down into the dark.
+  float top = shaftTop(p.xz) + 20.0 * smoothstep(0.5, 0.84, n.x) - 5.0 + 5.0 * (n.z - 0.5);
   // The top is softer the higher it stands: over the brim it thins into the air over some metres.
   float soft = 4.5 + 0.35 * max(p.y + 4.0, 0.0);
   under = top - p.y;
   // It is thick and thin by its billows: torn, with air in it, and never a wall.
-  float rho = (0.026 + 0.004 * surge) * layerMean(top, soft, p.y, hy) * mix(0.05, 2.3, smoothstep(0.3, 0.7, 0.55 * n.z + 0.45 * n.y));
+  float rho = (0.019 + 0.011 * surge) * layerMean(top, soft, p.y, hy) * mix(0.05, 2.3, smoothstep(0.3, 0.7, 0.55 * n.z + 0.45 * n.y));
   // Deeper it is thicker: the bottom is never seen.
   rho *= 1.0 + 0.9 * smoothstep(2.0, 16.0, under);
+  // Over the brim it is in the wind and thins as it climbs: wisps, and at the breath a body.
+  rho *= exp(-max(p.y, 0.0) / (8.0 + 14.0 * surge));
   // Inside the wall; over the brim it leans out on the west, and at the breath all round.
   return rho * smoothstep(0.8, -1.5, out0 - smoothstep(-1.0, 3.0, p.y) * (8.0 * way + 5.0 * surge));
 }
@@ -309,8 +312,8 @@ void main() {
         float roofed = exp(-0.09 * max(under, 0.0));
         // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
         float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
-        vec3 light = (vec3(0.125, 0.134, 0.148) * sunk * sunk * sunk + uSunColour * (0.012 * facing * sunk * sunk)) * (0.3 + 0.7 * roofed)
-          + mix(uSunColour, vec3(2.2), 0.12) * (sun * (0.26 * min(phase, 1.8) * exp(-1.6 * sunTau) + 0.02 * exp(-0.2 * sunTau)));
+        vec3 light = (vec3(0.155, 0.162, 0.172) * sunk * sunk * sunk + uSunColour * (0.012 * facing * sunk * sunk)) * (0.3 + 0.7 * roofed)
+          + mix(uSunColour, vec3(2.2), 0.12) * (sun * (0.22 * min(phase, 1.8) * exp(-1.6 * sunTau) + 0.02 * exp(-0.2 * sunTau)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
         through *= gone;
@@ -401,21 +404,24 @@ void main() {
         qn.xz += bend * (0.3 * (1.0 - qn.y * qn.y));
         // Broad from its foot: steam off hot water spreads as soon as it leaves it.
         float girth = 0.72 + 0.28 * up;
+        // It leaves the water in heaves, and each heave climbs as a swelling of the column: its edge is a pile of them, never a ruled line.
+        float rise = qn.y * uBodyB[i].y / uBodyB[i].x;
+        girth *= 0.82 + 0.2 * sin(1.7 * rise - 0.5 * uTime + 40.0 * D.y) + 0.12 * sin(3.1 * rise - 0.8 * uTime + 17.0 * D.y);
         float m = clamp(min(1.0 - dot(qn, qn), 1.0 - dot(qn.xz, qn.xz) / (girth * girth)), 0.0, 1.0);
         if (m <= 0.0) continue;
         vec3 q = (pw - vec3(0.0, uBodyD[i].w * uTime, 0.0)) / C.z + D.y;
         q.xz -= WINDV * (uTime * 2.0 / C.z) * up;
-        vec4 n0 = textureLod(tNoise, q * 0.62, 0.0);
-        float fineN = textureLod(tNoise, q * 1.9 + 0.37, 0.0).b;
-        float lumps = 0.5 * n0.r + 0.4 * fineN + 0.25 * n0.g;
+        vec4 n0 = textureLod(tNoise, q * 0.5, 0.0);
+        float fineN = textureLod(tNoise, q * 1.3 + 0.37, 0.0).b;
+        float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
         float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up);
-        float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * m * smoothstep(0.0, 0.45, m - open * (1.0 - 1.5 * lumps));
+        float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * m * smoothstep(0.0, 0.6, m - open * (1.0 - 1.4 * lumps));
         float tau = rho * span / 5.0;
         if (tau <= 0.0005) continue;
         // Backlit: its thin edges and torn top burn, its thick heart stands grey against the glow.
         float heart = exp(-1.1 * uBodyB[i].w * min(uBodyB[i].x, uBodyB[i].z) * m * (1.6 - up));
         // Its billows: the lump that stands proud takes the light, the hollow beside it is in its shade.
-        float proud = clamp(0.35 + 1.5 * (fineN - 0.35) + 0.6 * (n0.g - 0.5), 0.1, 1.3);
+        float proud = clamp(0.55 + 0.9 * (fineN - 0.4) + 0.9 * (n0.g - 0.5), 0.15, 1.3);
         vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.6) * (sunHere * min(phase, 2.4) * 0.6 * (0.25 + 0.75 * heart) * proud * D.z);
         float gone = exp(-tau);
         lit += thru * (1.0 - gone) * light;
