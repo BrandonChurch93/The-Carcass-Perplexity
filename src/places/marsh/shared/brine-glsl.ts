@@ -47,7 +47,7 @@ float brineSilt = -1.0;
 // to see, which turn part of it toward the lens: the mirror comes in late and never whole.
 float brineFresnel(vec3 n, vec3 v) {
   float nv = max(dot(n, v), 0.02);
-  return 0.02 + 0.46 * pow(1.0 - nv, 8.0);
+  return 0.02 + 0.25 * pow(1.0 - nv, 2.5) + 0.2 * pow(1.0 - nv, 10.0);
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
@@ -89,8 +89,8 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   vec3 taken = vec3(3.4, 19.0, 23.0) * (0.75 + 0.5 * silt) + vec3(14.0) * brineMud + vec3(30.0) * brineSlurry;
   vec3 through = exp(-taken * path);
   // What the liquid itself gives back where no bed shows: a dark rust red, paler and browner where silt hangs in it.
-  vec3 body = mix(vec3(0.075, 0.0095, 0.007), vec3(0.16, 0.03, 0.02), smoothstep(0.25, 0.8, silt));
-  body = mix(body, vec3(0.04, 0.0065, 0.005), smoothstep(0.3, 0.7, depth) * 0.6);
+  vec3 body = mix(vec3(0.055, 0.008, 0.006), vec3(0.115, 0.024, 0.017), smoothstep(0.25, 0.8, silt));
+  body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6);
   body = mix(body, vec3(0.045, 0.02, 0.014), brineMud * 0.85);
   body = mix(body, vec3(0.118, 0.086, 0.072) * (0.8 + 0.4 * silt), brineSlurry * 0.92);
   vec3 albedo = brineBed * through + body * (1.0 - through);
@@ -98,9 +98,10 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   float open = skyOpen(p);
   // The body is lit from inside the liquid: the ripples do not shade it, they only turn the mirror.
   vec3 lit = albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
-  // Far off the ripples are smaller than a pixel and lean every way: the mirror there is a blurred one, a little fuller under a gust.
+  // Under a gust the skin is ruffled finer than a pixel and leans every way: seen from above, that lane gives back more of the sky than the
+  // glass beside it. Broad pale lanes on dark brine.
   float fres = brineFresnel(n, v);
-  fres = mix(fres, max(fres, 0.3), 0.5 * gust * smoothstep(8.0, 40.0, away));
+  fres = mix(fres, max(fres, 0.3), gust * (0.45 + 0.3 * smoothstep(8.0, 40.0, away)));
   fres *= 1.0 - 0.85 * foam;
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
   return lit * (1.0 - fres) + brineMirror(p, n, v) * fres * mix(1.0, open, 0.35);
