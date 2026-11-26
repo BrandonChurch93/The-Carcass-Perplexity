@@ -144,7 +144,7 @@ float strikeReach(vec3 from, vec3 d) {
     vec3 q = mix(uStrikeTip.xyz, uStrikeTop.xyz, f) - from;
     float along = dot(d, q);
     if (along <= 0.0) continue;
-    float r = mix(110.0, 520.0, clamp(f, 0.0, 1.0));
+    float r = mix(85.0, 360.0, clamp(f, 0.0, 1.0));
     float off2 = max(dot(q, q) - along * along, 0.0) / (r * r);
     // A peak at the channel and a breadth round it: never a disc with an edge.
     lit += (0.05 + 0.2 * f) * (0.8 / (1.0 + 3.0 * off2) + 0.2 / (1.0 + 0.7 * off2));
@@ -159,7 +159,7 @@ vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
   float shape = smoothstep(0.004, 0.05, body);
-  return c * (1.0 + 3.6 * lit * (1.0 - 0.8 * warm)) + vec3(0.7, 0.6, 1.0) * (lit * (0.006 + 0.05 * shape) * (1.0 - warm));
+  return c * (1.0 + 3.0 * lit * (1.0 - 0.8 * warm) * vec3(0.8, 0.56, 1.0)) + vec3(0.62, 0.36, 1.0) * (lit * (0.01 + 0.09 * shape) * (1.0 - warm));
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   vec3 c = skyAtRest(from, d, lod);

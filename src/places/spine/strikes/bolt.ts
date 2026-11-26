@@ -88,6 +88,9 @@ export interface Strokes {
   /** Seconds after the strike's frame of each return stroke, and its share. */
   at: number[];
   share: number[];
+  /** Seconds (under zero) of a stroke that stays inside the cloud before the first comes to ground, or null: it lights the cloud and
+   * what the cloud lights, and no channel is seen. */
+  fore: number | null;
 }
 
 /** The frames after a strike's own on which it strikes again, by which strike it is: no two keep the same time. The gaps are uneven and
@@ -112,7 +115,7 @@ export function strokes(rng: Rng, which = 0): Strokes {
     share.push(last);
     last *= rng.range(0.5, 0.72);
   }
-  return { at, share };
+  return { at, share, fore: null };
 }
 
 const ramp = (a: number, b: number, v: number): number => {
@@ -135,7 +138,7 @@ export const breakdown = (age: number): number => {
 
 /** How bright the main channel is, the branches are, and the glow the cloud keeps, at seconds since the strike's frame. `leader` is 1: a
  * camera does not see the leader, and nothing is drawn of the channel before its first stroke. */
-export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number } {
+export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number; cloud: number } {
   let main = current(age);
   for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(age - (s.at[i] as number));
   // What the cloud holds after each stroke: a dull glow that sinks in an eighth of a second. Nothing of it is in the channel.
@@ -144,7 +147,7 @@ export function envelope(s: Strokes, age: number): { main: number; branch: numbe
     const t = age - (s.at[i] as number);
     if (t > 0) after += 0.05 * (s.share[i] as number) * (1 - Math.exp(-t / 0.004)) * Math.exp(-t / 0.12);
   }
-  return { main, branch: pulse(age) + current(age), after, leader: 1 };
+  return { main, branch: pulse(age) + current(age), after, leader: 1, cloud: s.fore === null ? 0 : 0.7 * pulse(age - s.fore) };
 }
 
 /** Which return stroke the channel last carried at these seconds since the strike's frame: each takes a way of its own. */
@@ -175,6 +178,8 @@ export function timingOf(id: string): Strokes {
     const site = STRIKES.find((s) => s.id === id);
     for (const frame of Object.values(cut.keyFrames)) {
       const age = site ? secondsInPlace(UNIT, frame) - site.seconds : -1;
+      // A judged frame just before the strike's own has the stroke inside the cloud: the cloud is lit and the channel is not there yet.
+      if (age < -0.002 && age > -0.06) t.fore = age;
       if (age < 0.025 || age > 0.3) continue;
       let near = 1;
       for (let i = 1; i < t.at.length; i++) if (Math.abs((t.at[i] as number) - age) < Math.abs((t.at[near] as number) - age)) near = i;
