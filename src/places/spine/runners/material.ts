@@ -31,7 +31,8 @@ vec3 runnerLight(vec3 p, vec3 n) {
     // A coat holds light in itself and gives it back warmer than the ice does.
     cold = mix(cold, dot(cold, vec3(0.3, 0.5, 0.2)) * vec3(1.14, 1.0, 0.84), 0.55);
     float up = 0.75 + 0.25 * n.y;
-    e = cold * uDoorGain * up * (sE * (0.3 + 0.7 * max(dot(n, way), 0.0)) + sM * (0.3 + 0.7 * max(dot(n, normalize(back)), 0.0)));
+    // The far mouth is the window; the mouth behind the lens is far off and gives the shade its little light.
+    e = cold * uDoorGain * up * (sE * (0.14 + 0.86 * max(dot(n, way), 0.0)) + 0.3 * sM * (0.3 + 0.7 * max(dot(n, normalize(back)), 0.0)));
     // The flash comes in by the far mouth.
     vec3 level = normalize(vec3(way.x, 0.12, way.z));
     vec3 flash = emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159) + uFlash;
