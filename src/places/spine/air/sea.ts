@@ -115,10 +115,12 @@ float seaTop(vec3 p, bool swell) {
     seaTall *= press;
     lift = room - 0.6 * room * press;
   }
-  // Kilometres out it stands up again, most where the long swell is high: the lens looks down into a trough of the deck and across it to
-  // banks at its own height. Left low to the horizon, the last of it was a level dark band under the sky with a ruled edge, like water.
-  float back = smoothstep(3500.0, 8500.0, abs(lee)) * (0.45 + 0.55 * smoothstep(0.35, 0.7, seaSwell));
-  float top = ridge.y - CLOUD_UNDER - CLOUD_DEEP * smoothstep(150.0, 2000.0, abs(lee)) * (1.0 - 0.9 * back) + lift;
+  // Kilometres out it stands up again: the lens looks down into a trough of the deck and across it to banks at its own height. Left
+  // low to the horizon, the last of it was a level dark band under the sky with a ruled edge, like water.
+  // (By the place alone and not by the long swell: the march reads the swell at every other stride and keeps it between, and a
+  // height that hung on it stood in terraces, one to a stride.)
+  float back = smoothstep(3500.0, 8500.0, abs(lee));
+  float top = ridge.y - CLOUD_UNDER - CLOUD_DEEP * smoothstep(150.0, 2000.0, abs(lee)) * (1.0 - 0.8 * back) + lift;
   // The tallest of the far heads stop short of the height nothing of this cloud stands over, rounded and not cut.
   float high = top - (BANK_TOP - 170.0);
   if (high > 0.0) top = BANK_TOP - 170.0 + 160.0 * (1.0 - exp(-high / 160.0));
@@ -364,7 +366,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t * t / (1.1e8 * seaLens * seaLens * seaLens));
     // The sky's foot is read only where the deck goes into it: near the lens on the dusk side it has no part.
-    float toWall = stormSide(rd) * 0.6 * (1.0 - exp(-t / 5000.0));
+    float toWall = stormSide(rd) * 0.95 * (1.0 - exp(-t / 3000.0));
     bool needFoot = gone > 0.003 || toWall > 0.003 || uPlate.w > 0.0;
     // (Read soft: read sharp, each mass of the sky's foot stood on the deck as an upright streak under itself, like a reflection in water.)
     vec3 domeFar = needFoot ? skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 2.5) : vec3(0.0);
