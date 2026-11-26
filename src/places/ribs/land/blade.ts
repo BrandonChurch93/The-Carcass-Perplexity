@@ -43,7 +43,7 @@ export function bladeCrag(s: number, u: number, w: number, x: number, y: number,
   const rough = smooth(0.4, 0.62, noise3(s / 150 + 2.2, u / 80, w / 80));
   cells3((s + bx) / 54, (u + bu) / 15, w / 15, CELL);
   const toneA = CELL.id * 2 - 1;
-  const wallA = 1 - smooth(0.0, 1.5, CELL.edge * 15);
+  const wallA = (0.3 + 0.7 * rough) * (1 - smooth(0.0, 1.5, CELL.edge * 15));
   // One plate in four has gone, and left a hollow the depth of a house.
   const gone = CELL.id > 0.76 ? 0.35 + 0.65 * rough : 0;
   d += (1.3 + 1.0 * rough) * toneA - 3.2 * gone - 1.2 * wallA;
@@ -142,6 +142,12 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
       // The tip, or the broken top of a stump: closed over, a little proud of the last ring.
       const lift = (1 - shrink) * Math.min(a, b) * (rib.cut === undefined ? 0.7 : 0.25);
       base.addScaledVector(Ts[r] as THREE.Vector3, lift);
+    }
+    if (rib.cut !== undefined) {
+      // A stump is broken, not sawn: its top slants and steps, a tower's height lower on one side than the other.
+      const rim = rib.cut - 62 * (0.5 + 0.5 * Math.cos(phi - 1.1)) - 22 * noise2(phi * 2.2 + 3.3, 7.5) - 9 * noise2(phi * 7.1, 1.5);
+      const T = Ts[r] as THREE.Vector3;
+      if (base.y > rim) base.addScaledVector(T, -(base.y - rim) / Math.max(0.3, T.y));
     }
     const slim = Math.min(1, Math.min(a, b) / 24);
     // Under the weed line the rock keeps to its smooth form: the weed, and what hangs in it, lie on that.

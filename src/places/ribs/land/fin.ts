@@ -170,7 +170,7 @@ void main() {
   float white = max(0.7 * shelf, 0.55 * runs * (1.0 - under)) * smoothstep(0.4, 0.62, field + 0.1 * tone) * (1.0 - 0.6 * crack);
   albedo = mix(albedo, vec3(0.66, 0.65, 0.62) * (0.7 + 0.5 * stoneLum / 0.19), white * (1.0 - 0.75 * lichen));
   // A crack between two plates is black, and what lies deep among its neighbours is stained.
-  albedo *= mix(1.0, 0.6, crack * crack) * mix(1.0, 0.8, deep * deep);
+  albedo *= mix(1.0, 0.8, crack * crack) * mix(1.0, 0.85, deep * deep);
 
   float y = vWorld.y;
   float tide = uTide - 4.0 + 7.0 * (far2 - 1.0) + 3.0 * (field - 0.5);
@@ -191,7 +191,7 @@ void main() {
   // The hollows of both sheets, the cracks and the gone plates hold shade; what hangs over sees the wet floor and not the sky.
   float hollow = smoothstep(0.2, 0.55, slopes.z) * mix(1.0, smoothstep(0.15, 0.5, slopesF.z), 0.7 * nearF);
   float occ = (0.78 + 0.22 * hollow) * (0.88 + 0.12 * smoothstep(0.55, 1.0, fineLum)) * mix(1.0, 0.45, weed);
-  occ *= (1.0 - 0.55 * crack * crack) * (1.0 - 0.4 * deep * deep) * (0.6 + 0.4 * smoothstep(-0.55, 0.25, n0.y));
+  occ *= (1.0 - 0.4 * crack * crack) * (1.0 - 0.4 * deep * deep) * (0.6 + 0.4 * smoothstep(-0.55, 0.25, n0.y));
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Against the light the edge of the stone burns.
   float rim = 1.0 - max(dot(n, v), 0.0);
