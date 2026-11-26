@@ -28,10 +28,13 @@ void main() {
   vec2 q = vec2(az * 2.2, el * 9.0) + uTime * vec2(0.0012, 0.0);
   vec4 n = textureLod(tNoise, vec3(q.x * 0.21, q.y * 0.9, 0.37), 0.0);
   vec4 m = textureLod(tNoise, vec3(q.x * 0.9 + 0.3, q.y * 3.1, 0.71), 0.0);
-  float bars = smoothstep(0.5, 0.72, 0.7 * n.g + 0.3 * m.g) * smoothstep(0.012, 0.05, el) * smoothstep(0.75, 0.2, el);
+  float bars = smoothstep(0.44, 0.7, 0.7 * n.g + 0.3 * m.g) * smoothstep(0.012, 0.05, el) * smoothstep(0.75, 0.2, el);
   float w = max(dot(normalize(d.xz + 1e-5), uWarmDir.xz), 0.0);
   vec3 under = uSkyStorm * 1.9 + uWarmColour * (0.05 * w * w * smoothstep(0.3, 0.02, el));
-  c = mix(c, under, 0.85 * bars * (0.35 + 0.65 * open));
+  // Over the band the lee sky is not open dusk but the storm's own shelf running out: a dark blue-grey that deepens upward, so that the
+  // edge of the storm is lost in it and only the band and the cloud under it are light.
+  c *= mix(vec3(1.0), vec3(0.4, 0.43, 0.53), open * smoothstep(0.02, 0.22, el));
+  c = mix(c, under * 0.7, 0.85 * bars * (0.35 + 0.65 * open));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

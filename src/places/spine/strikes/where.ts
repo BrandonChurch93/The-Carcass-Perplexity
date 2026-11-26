@@ -19,7 +19,7 @@ export interface StrikeSite {
 }
 
 /** How far under a spire's highest point the channel comes to ground, metres. */
-const SINK = 2.5;
+const SINK = 5.5;
 
 const whichSpire = (to: Vec3): number => {
   for (let n = 1; n <= 8; n++) {

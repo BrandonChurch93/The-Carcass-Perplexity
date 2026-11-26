@@ -23,16 +23,16 @@ const TABLE: [number, number, number, number, number, number, number][] = [
   [-1540, 740, 10, 170, 0.9, 0.25, 1.5],
   [-732, 451, 20, 230, 1.0, 0.45, 1.9],
   [0, 0, 0, 300, 1.5, 0.5, 2.6],
-  [740, 184, -25, 195, 0.85, 0.44, 2.2],
-  [1596, 426, -40, 292, 0.95, 0.7, 2.8],
-  [2470, 745, -70, 143, 1.1, 0.2, 1.2],
-  [3010, 968, -110, 219, 0.9, 0.62, 2.6],
-  [3990, 1400, -150, 112, 1.2, 0.2, 1.5],
-  [4540, 1676, -190, 216, 0.9, 0.45, 1.9],
-  [5246, 2052, -230, 88, 1.2, 0.2, 1.5],
-  [5939, 2452, -270, 169, 1.0, 0.4, 1.8],
-  [6617, 2876, -310, 75, 1.2, 0.2, 1.5],
-  [7280, 3323, -350, 125, 1.0, 0.35, 1.7],
+  [740, 184, -25, 168, 1.45, 0.16, 1.2],
+  [1596, 426, -40, 292, 1.3, 0.7, 2.8],
+  [2470, 745, -70, 128, 1.9, -0.25, 0.8],
+  [3010, 968, -110, 236, 0.7, 0.85, 3.2],
+  [3990, 1400, -150, 104, 2.3, 0.1, 0.9],
+  [4540, 1676, -190, 232, 1.15, 0.3, 2.4],
+  [5246, 2052, -230, 82, 2.6, -0.2, 0.7],
+  [5939, 2452, -270, 188, 0.8, 0.7, 2.6],
+  [6617, 2876, -310, 70, 2.8, 0.15, 1.0],
+  [7280, 3323, -350, 140, 1.5, 0.5, 1.4],
 ];
 
 export const FIRST = 5;
@@ -168,7 +168,7 @@ export function ground(s: number, l: number): number {
   let near = spires[0] as Spire;
   for (const sp of spires) if (Math.abs(sp.s - s) < Math.abs(near.s - s)) near = sp;
   const rho = Math.hypot((s - near.s) / 150, l / 130);
-  const massif = 0.25 * near.tip * (1 - smooth(0.4, 1, rho));
+  const massif = 0.14 * near.tip * (1 - smooth(0.4, 1, rho));
   const shelf = Math.exp(-(((s - MOUTH_S + 20) / 85) ** 2));
   // The crest is a knife, a few metres of snow with a fall on either hand; it is broad only where the carcass lies.
   const stand = 19 * Math.exp(-(((s - first.s + 641) / 48) ** 2));
@@ -182,7 +182,7 @@ export function ground(s: number, l: number): number {
   let fall = ((1.15 + (l > 0 ? 0.6 * smooth(60, 220, al) : 0.5 * smooth(30, 160, al))) * al * al) / (al + 10);
   fall *= 1 + 0.16 * Math.sin(s * 0.023 + (l > 0 ? 2.1 : -2.1)) * smooth(20, 220, al);
   // The first spire stands on a shoulder: on the storm side of the trail the ground climbs to its foot in broken rock.
-  let y = crest(s) + massif + 72 * shoulder(s, l) - fall;
+  let y = crest(s) + massif + 42 * shoulder(s, l) - fall;
   y += 40 * Math.exp(-(((s - MOUTH_S - EXIT + 12) / 26) ** 2) - ((l - canalL(EXIT)) / 34) ** 2);
   const d = s - MOUTH_S;
   if (d > -6 && d < 0.6 && Math.abs(l - CANAL_L) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);

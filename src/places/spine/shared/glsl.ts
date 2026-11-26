@@ -76,7 +76,7 @@ ${RIG_UNIFORMS_GLSL}
 const float CANAL_FLOOR = ${FLOOR.toFixed(3)};
 // The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
 // ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
-const float EMITTER_CAST = 0.04;
+const float EMITTER_CAST = 0.07;
 
 // How far a direction looks into the storm: 1 level into it, 0 away from it and overhead.
 float stormSide(vec3 d) {
@@ -89,7 +89,7 @@ vec3 skyRadiance(vec3 d) {
   float up = clamp(d.y, -1.0, 1.0);
   vec3 c = mix(uSkyHorizon, uSkyZenith, pow(clamp(up, 0.0, 1.0), 0.45));
   float storm = stormSide(d);
-  c = mix(c, uSkyStorm * 0.45, 0.9 * storm) + uFlash * storm;
+  c = mix(c, uSkyStorm * 0.33, 0.9 * storm) + uFlash * storm;
   c = mix(c, uSkyGround, smoothstep(0.0, -0.25, up));
   float w = max(dot(d.xz, uWarmDir.xz) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)), 0.0);
   float band = (exp(-up * up / 0.00011) + 0.04 * exp(-up * up / 0.002)) * smoothstep(-0.02, 0.0, up);
@@ -108,7 +108,8 @@ vec3 skyIrradiance(vec3 n) {
   vec3 open = mix(uSkyHorizon, uSkyZenith, 0.55 * max(n.y, 0.0));
   float s = clamp(0.5 + 0.5 * dot(n, uStormDir), 0.0, 1.0);
   float stormShare = s * s * (1.0 - 0.45 * max(n.y, 0.0));
-  open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * stormShare;
+  // The flash counts for more on what it lights than in the sky itself: the cloud is a wall of it for the land, and a glow for the lens.
+  open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * (2.6 * stormShare);
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, uWarmDir) + 0.25) / 1.25, 0.0, 1.0);
   return 3.14159 * (e + uWarmColour * (0.24 * w * w * seen));

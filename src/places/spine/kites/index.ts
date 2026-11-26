@@ -176,11 +176,11 @@ void main() {
   float below = -v * vHalf - 0.5 * girth * vHalf;
   float cell = metres / 0.8;
   float h = hash12(vec2(floor(cell), seed));
-  float fx = (fract(cell) - 0.5 + 0.25 * (fract(h * 13.0) - 0.5)) * 0.8;
-  float lengthOf = 0.16 + 0.6 * fract(h * 7.3) * fract(h * 3.1);
+  float fx = (fract(cell) - 0.5 + 0.8 * (fract(h * 13.0) - 0.5)) * 0.8;
+  float lengthOf = 0.06 + 0.95 * fract(h * 7.3) * fract(h * 3.1) * fract(h * 17.9 + 0.3);
   float spike = step(abs(fx), 0.05 * pow(clamp(1.0 - below / lengthOf, 0.0, 1.0), 0.7)) * step(0.0, below) * step(below, lengthOf);
   float bead = 1.0 - smoothstep(0.035, 0.05, length(vec2(fx, below - lengthOf)));
-  float ice = max(spike, bead) * step(0.4, h) * (1.0 - blade) * smoothstep(0.6, 1.0, vCord) * smoothstep(0.02, 0.06, u);
+  float ice = max(spike, bead) * step(0.55, h) * (1.0 - blade) * smoothstep(0.6, 1.0, vCord) * smoothstep(0.02, 0.06, u);
   float skin = cut * blade;
   if (max(skin, max(cordHere, ice)) < 0.02) discard;
 
@@ -196,7 +196,7 @@ void main() {
 
   // Pale violet, bruised darker along the veins and in blotches where it has been beaten against itself.
   float bruise = smoothstep(0.5, 0.8, vnoise(vec2(metres / (3.0 * wide) + seed * 7.0, v * 0.9 + seed * 2.0)));
-  vec3 albedo = mix(vec3(0.8, 0.76, 0.98), vec3(0.4, 0.32, 0.62), clamp(0.45 * vein + 0.25 * crease + 0.3 * bruise + 0.5 * welt, 0.0, 1.0));
+  vec3 albedo = mix(vec3(0.66, 0.58, 0.72), vec3(0.24, 0.17, 0.3), clamp(0.75 * vein + 0.3 * crease + 0.35 * bruise + 0.6 * welt, 0.0, 1.0));
   // Light comes through it: the far side's light counts as much as the near side's, and the lightning shows through from behind.
   vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n));
   // The skin scatters what falls on it from every side: it takes the cold of the whole sky more than the warmth of the horizon's band.
@@ -225,7 +225,7 @@ void main() {
   c += uGlowTint * charge;
 
   // The small ones behind are thinner skins than the great ones.
-  float alpha = clamp(0.3 + 0.5 * thick + 0.45 * fres, 0.0, 0.96) * skin * mix(0.72, 1.0, smoothstep(4.0, 9.0, wide));
+  float alpha = clamp(0.15 + 0.62 * thick + 0.5 * fres, 0.0, 0.96) * skin * mix(0.72, 1.0, smoothstep(4.0, 9.0, wide));
   // From far its two edges are what draws it: dark lines round a pale sheet.
   float hem = vFar * smoothstep(0.66, 0.9, abs(v)) * skin;
   c *= 1.0 - 0.8 * hem;
@@ -247,7 +247,8 @@ void main() {
   alpha = max(alpha, 0.85 * ice);
   // It is seen through by leaving pixels out, not by blending: every pixel it keeps has its own depth, so the air draws over it as over rock, and
   // the storm behind shows through the pixels it leaves. The pattern moves with each sample of a frame, and the samples add up to its true cover.
-  float grain = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither);
+  // The pattern is a scatter without rows, so what is left of it after the samples reads as grain and not as a mesh.
+  float grain = fract(fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453) + uDither);
   if (alpha <= grain) discard;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

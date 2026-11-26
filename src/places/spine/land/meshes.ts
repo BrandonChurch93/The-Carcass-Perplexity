@@ -18,6 +18,8 @@ function finish(pos: number[], index: number[], top: number[], sl: number[], nor
 }
 
 const FAR = 1e4;
+// The mesh of the spires next to the first: [rings, around]. [170, 440] is the finer picture in the strike's long lens; its cost is in HANDOVER.md.
+const SPIRE_MID: [number, number] = [110, 260];
 
 /** The crest: a strip along the ridge, 520 m to each side. */
 export function crestStrip(): THREE.BufferGeometry {
@@ -108,9 +110,11 @@ export function flanks(): THREE.BufferGeometry {
 }
 
 /** A spire: a leaning broken blade built round the fin of the layout. Its tip and its edges stay where the layout has them, to within a few metres. */
-export function spireMesh(sp: Spire, rng: Rng, fineMesh: boolean): THREE.BufferGeometry {
-  const RINGS = fineMesh ? 170 : 60;
-  const AROUND = fineMesh ? 440 : 120;
+// level: 2 the spire the lens comes close to, 1 one that is seen whole in a long lens, 0 one far down the ridge. The triangles are dear in a
+// software renderer whether or not they are seen large, so only the first spire has the finest mesh.
+export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeometry {
+  const RINGS = level > 1.5 ? 170 : level > 0.5 ? SPIRE_MID[0] : 60;
+  const AROUND = level > 1.5 ? 440 : level > 0.5 ? SPIRE_MID[1] : 120;
   const f = frameAt(sp.s);
   const seed = Math.floor(rng.next() * 900);
   const pos: number[] = [];
@@ -142,7 +146,10 @@ export function spireMesh(sp: Spire, rng: Rng, fineMesh: boolean): THREE.BufferG
       const body = Math.pow(Math.abs(s), 1.25) * p.thick;
       const along = face * Math.max(0.3 * body, body + n * (1 - 0.9 * edge) * (0.3 + 0.7 * (1 - t))) * snap;
       const k = Math.max(0, (t - 0.86) / 0.14);
-      const split = k * k * (0.085 * sp.tip * (1 - Math.pow(Math.abs(c), 1.5)) + 0.04 * sp.tip * Math.max(c, 0)) + k * 5 * (slab(v, 0, 9, 9, seed + 5) + 0.4);
+      // The cleft is a notch a little to the lee of the middle, so that each prong keeps the breadth of the blade under it and the split
+      // reads from far off; the lee prong is the lower.
+      const cleft = Math.exp(-(((c - 0.12) / 0.24) ** 2));
+      const split = k * k * (0.125 * sp.tip * cleft + 0.055 * sp.tip * Math.min(1, Math.max(0, (c - 0.12) / 0.3))) + k * 5 * (slab(v, 0, 9, 9, seed + 5) + 0.4);
       const y = p.y - split - (cap ? 2 : 0);
       pos.push(sp.x + f.nx * l + f.tx * along, y, sp.z + f.nz * l + f.tz * along);
       top.push(tipY - y);
@@ -237,6 +244,10 @@ export function canalFloor(): THREE.BufferGeometry {
   });
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  // Across the floor from wall to wall, -1 to 1, and metres along it: the snow banks lie against the walls.
+  const uv: number[] = [];
+  D_LIST.forEach((d) => uv.push(-1, d, 1, d));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   const up: number[] = [];
   for (let i = 0; i < pos.length / 3; i++) up.push(0, 1, 0);
   g.setAttribute('normal', new THREE.Float32BufferAttribute(up, 3));

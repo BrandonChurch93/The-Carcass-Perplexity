@@ -79,7 +79,7 @@ export function figure(rng: Rng, site: StrikeSite): Line[] {
     // The bolt forks to a second spire: a branch that comes to ground, thinner and fainter than the main channel.
     const i = Math.floor(0.42 * (main.length - 1));
     const path2 = crooked(rng, main[i] as Vec3, site.branch, 6, 0.16);
-    lines.push({ points: path2, width: 0.4, gain: 0.32, from: 0.42, to: 1, branch: 0 });
+    lines.push({ points: path2, width: 0.25, gain: 0.08, from: 0.42, to: 1, branch: 0 });
   }
   // Fine side branches near the tip: short hairs off the last hundred metres.
   for (let h = 0; h < 5; h++) fork(main, rng.range(0.82, 0.985), rng.range(0.15, 0.3), 2, rng.range(18, 60));
@@ -93,12 +93,12 @@ export interface Strokes {
 }
 
 export function strokes(rng: Rng): Strokes {
-  const count = (3 + rng.int(2));
+  const count = (2 + rng.int(2));
   const at = [0];
   const share = [1];
   for (let i = 1; i < count; i++) {
-    at.push((at[i - 1] as number) + rng.range(0.045, 0.085));
-    share.push(rng.range(0.45, 0.85));
+    at.push((at[i - 1] as number) + rng.range(0.03, 0.06));
+    share.push(rng.range(0.3, 0.7));
   }
   return { at, share };
 }
@@ -112,11 +112,20 @@ export function envelope(s: Strokes, age: number): { main: number; branch: numbe
   const t = age + 0.004;
   let main = 0;
   for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(t - (s.at[i] as number));
-  const last = s.at[s.at.length - 1] as number;
-  const after = t <= 0 ? 0 : 0.014 * Math.exp(-Math.max(0, t - last) / 0.11) * (1 - Math.exp(-t / 0.01));
+  // The channel does not hang between the strokes: what is left of each dies within a frame of it.
+  let since = Math.max(t, 0);
+  for (let i = 0; i < s.at.length; i++) if (t >= (s.at[i] as number)) since = Math.min(since, t - (s.at[i] as number));
+  const after = t <= 0 ? 0 : 0.008 * Math.exp(-since / 0.012) * (1 - Math.exp(-t / 0.01));
   // The leader finds its way down in the twentieth of a second before the stroke: 0 at the cloud to 1 at the ground.
   const leader = t < 0 ? Math.max(0, 1 + t / 0.05) : 1;
   return { main, branch: pulse(t), after, leader };
+}
+
+/** Which return stroke the channel last carried at these seconds since the strike's frame: each takes a way of its own. */
+export function strokeAt(s: Strokes, age: number): number {
+  let n = 0;
+  for (let i = 1; i < s.at.length; i++) if (age + 0.004 >= (s.at[i] as number) - 0.002) n = i;
+  return n;
 }
 
 export interface Flash {
@@ -174,7 +183,7 @@ export function ditherAt(seconds: number): number {
 /** The pattern itself, for a fragment shader that declares `uniform float uDither`. */
 export const GRAIN_GLSL = /* glsl */ `
 float grainAt() {
-  return fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither);
+  return fract(fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453) + uDither);
 }
 // What glows in the air is drawn solid, with a depth of its own, so that the air between it and the lens draws over it as over rock. Where it is
 // dimmer than \`full\` it leaves pixels out and the ones it keeps make up the difference.

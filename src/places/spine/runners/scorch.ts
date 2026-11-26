@@ -8,6 +8,8 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
 /** Half the side of the sheet, metres, and the spans along a side. */
 const HALF = 5.5;
+/** Where the dead one lies: a little along its own line from the anchor, so its head and the wet rock before it are well inside the frame. */
+export const LIES_AT = step(carcassBody, carcassAxis, 0.55);
 const SPANS = 176;
 
 const FIELD_GLSL = /* glsl */ `
@@ -147,7 +149,7 @@ export interface Scorch {
 
 export function scorch(ctx: Context): Scorch {
   // The patch lies under the animal and reaches out toward the lens and past its head.
-  const head = step(carcassBody, carcassAxis + 180, 1.1);
+  const head = step(LIES_AT, carcassAxis + 180, 1.1);
   const centre = step(head, carcassView + 180, 0.9);
   const toLens = step(centre, carcassView + 180, 1);
   const side = SPANS + 1;
@@ -175,7 +177,7 @@ export function scorch(ctx: Context): Scorch {
         ...ctx.rig.uniforms,
         uSpot: { value: new THREE.Vector4(centre[0], centre[2], 2.1, 0) },
         uLie: { value: new THREE.Vector4(toLens[0] - centre[0], toLens[2] - centre[2], 0, 0) },
-        uHit: { value: new THREE.Vector4(carcassBody[0], carcassBody[2], 0, 0) },
+        uHit: { value: new THREE.Vector4(LIES_AT[0], LIES_AT[2], 0, 0) },
       },
       transparent: true,
       depthWrite: false,

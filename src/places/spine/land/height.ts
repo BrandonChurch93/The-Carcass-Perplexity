@@ -66,7 +66,8 @@ function trodden(s: number, l: number): number {
   let c = 1e4;
   if (d < 0.5) c = Math.max(Math.abs(l - trail(s)), first.s - 790 - s);
   // The apron before the near mouth, between the trail and the rock, is drifted snow and nothing else: the mouth is seen from far up the trail.
-  if (d > -175 && d < 0.5 && l > trail(s) && l < Math.min(CANAL_L + MOUTH_R + 4, 66 * Math.exp(-(((d + 20) / 85) ** 2)) + 12)) c = 0;
+  // Its edge is a distance, not a line: the rock comes up out of the drift over some metres, so the lattice of the mesh does not cut it in teeth.
+  if (d > -215 && d < 0.5 && l > trail(s)) c = Math.min(c, Math.max(0, l - Math.min(CANAL_L + MOUTH_R + 4, 66 * Math.exp(-(((d + 20) / 85) ** 2)) + 12), -175 - d));
   // Where the lightning came to ground the snow is open: the carcass lies on a bare saddle, with the band beyond it.
   c = Math.min(c, Math.max(0, Math.hypot(s - CARCASS_S - 14, l - 16) - 36));
   if ((d > -60 && d < 2) || (d > EXIT - 2 && d < EXIT + 90)) c = Math.min(c, Math.max(0, Math.abs(l - canalL(Math.max(0, d))) - flare(d) - 6));
@@ -87,8 +88,8 @@ export function landAt(s: number, l: number): { y: number; rock: number } {
   const ribs =
     (ridged(x / 210 + 3.1, z / 210) - 0.5) * Math.min(90, 0.2 * out) +
     (ridged(x / 74, z / 74 + 7.7) - 0.5) * Math.min(26, 0.09 * out) +
-    (ridged(s / 64 + 1.7, l / 330 + 0.3 * vnoise(s / 90, l / 90)) - 0.45) * Math.min(60, 0.5 * Math.max(0, Math.min(near, out) - 8)) +
-    (ridged(s / 23 + 5.1, l / 140) - 0.5) * Math.min(18, 0.2 * Math.max(0, Math.min(near, out) - 5));
+    (ridged(s / 84 + 1.7, l / 250 + 0.5 * vnoise(s / 90, l / 90)) - 0.45) * Math.min(60, 0.5 * Math.max(0, Math.min(near, out) - 8)) +
+    (ridged(s / 37 + 5.1, l / 85 + 0.4 * vnoise(s / 50 + 3.3, l / 50)) - 0.5) * Math.min(11, 0.2 * Math.max(0, Math.min(near, out) - 5));
   // Outcrops: rock that stands out of the snow in broken slabs, here and there on the crest and over most of the steep flanks.
   const patch = smooth(0.36, 0.54, vnoise(x / 58 + 11.3, z / 58 + 4.1));
   const steep = 0.9 * smooth(16, 70, out) * (0.5 + 0.5 * smooth(0.22, 0.48, vnoise(x / 150 + 2.2, z / 150 + 8.8)));
@@ -102,11 +103,12 @@ export function landAt(s: number, l: number): { y: number; rock: number } {
   const u = 0.82 * x + 0.57 * z;
   const v = -0.57 * x + 0.82 * z;
   const crag = where * (9 * slab(u, v, 40, 14, 3) + 3.6 * slab(u + 0.4 * v, v, 14, 6, 5) + 3 * ridged(x / 23, z / 23) - 0.6);
-  // Drifts: the snow lies in long low waves across the wind.
+  // Drifts: the snow lies in long low waves across the wind, on the crest and its benches. On the steep flanks there are none: long waves
+  // down a fall line read as a picture pulled long.
   const drift = 2.3 * (ridged(x / 16 + 5.5, z / 52) - 0.6) + 1.0 * (vnoise(x / 9 + 5.5, z / 31) - 0.5) + 0.3 * (vnoise(x / 2.7, z / 8.1 + 2.2) - 0.5);
   // Beside the trail the rock breaks through the snow in low stones and steps, a metre or two high.
   const stones = smooth(2.2, 6.5, near) * (1 - 0.7 * free) * smooth(0.43, 0.57, vnoise(x / 15 + 1.3, z / 15 + 6.6)) * Math.max(0, 2.6 * slab(u, v, 8, 3.5, 9) + 1.6 * ridged(x / 5.5, z / 5.5) - 0.2);
-  return { y: base + free * (ribs + Math.max(crag, -0.8)) + smooth(1.5, 9, near) * drift + stones, rock: Math.max(smooth(0.15, 1.2, free * crag), smooth(0.08, 0.4, stones)) };
+  return { y: base + free * (ribs + Math.max(crag, -0.8)) + smooth(1.5, 9, near) * (1 - 0.9 * smooth(16, 50, out)) * drift + stones, rock: Math.max(smooth(0.15, 1.2, free * crag), smooth(0.08, 0.4, stones)) };
 }
 
 export function heightAt(s: number, l: number): number {
