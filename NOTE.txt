@@ -1,0 +1,7 @@
+2026-11-26 01:16 UTC
+work at a50c94e on agent/marsh-life-2
+start of wave 2: the frames as inherited at marsh-3, marsh-4, marsh-2, marsh-0 beside the approved pictures. Animals are loaves with barrel legs, the dead are grey drapes, fans are a blur of worms.
+look-1.jpg = out/work/compare/marsh-3.png
+look-2.jpg = out/work/compare/marsh-4.png
+look-3.jpg = out/work/compare/marsh-2.png
+look-4.jpg = out/work/compare/marsh-0.png
