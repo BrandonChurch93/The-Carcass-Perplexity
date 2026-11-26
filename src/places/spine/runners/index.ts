@@ -56,18 +56,20 @@ const LIE: Pose = { roll: 0.12, pitch: 0, slack: 0.95, curl: 0.7, neck: [-0.35, 
 const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [-0.15, -0.3], head: [-0.7, -0.2], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
 // The dead one: fallen on its right side, slack, its legs thrown out toward the lens with the paws on the ground, the neck fallen forward.
 const DEAD: Pose = {
-  roll: 1.0,
-  pitch: 0,
-  slack: 0.86,
-  curl: -0.22,
-  neck: [-0.15, -0.45],
-  head: [-0.35, -0.35],
-  legs: [leg(0.75, -0.75, 1.15, -0.35, 1.3, -0.2), leg(0.35, 0.1, 0.8, 0.0, 1.3, 0), leg(0.5, -0.85, 0.15, -0.3, 1.0, -0.2), leg(0.2, 0.1, -0.25, 0.0, 0.9, 0)],
+  roll: 0.62,
+  pitch: -0.04,
+  slack: 0.8,
+  curl: -0.3,
+  neck: [-0.3, -0.5],
+  head: [-0.4, -0.3],
+  legs: [leg(1.0, 0.2, 1.3, 0.5, 1.4, 0.3), leg(0.5, 0.5, 1.0, 0.2, 1.3, 0), leg(0.7, 0.5, -0.2, 0.9, 1.0, 0.4), leg(-0.5, 0.3, -0.9, 0.0, 0.6, 0)],
 };
 
 const BARE = false;
+// The ground owner now draws the burned rock under the dead one (scorchfield); this folder's own sheet is kept but not drawn.
+const SCORCH = false;
 /** Where the dead one lies: right of the middle of the key's frame and a little back from the lens, its head toward the wet rock. */
-const BODY_AT = step(step(carcassBody, carcassAxis, 1.0), carcassView, -0.25);
+const BODY_AT = step(step(carcassBody, carcassAxis, 0.35), carcassView, -0.1);
 const m2 = new THREE.Matrix4();
 const m3 = new THREE.Matrix4();
 const q1 = new THREE.Quaternion();
@@ -172,7 +174,7 @@ export function create(ctx: Context): Piece {
     group.add(lockMesh);
 
     const count = role.tendrils;
-    const thin = role.act === 'dead' ? 0.72 : 1;
+    const thin = role.act === 'dead' ? 1.1 : 1;
     const hang = new Float32Array(count * 4);
     const limb = new Float32Array(count * 4);
     for (let i = 0; i < count; i++) {
@@ -218,12 +220,13 @@ export function create(ctx: Context): Piece {
   // The scorched one: on its side, the bolt's way burned into its upper flank behind the shoulder.
   const deadSkin = skinOf(DEAD, 0.016).body;
   const dj = deadSkin.joints;
-  const wound: [number, number, number, number] = [dj.chest[0] - 0.24 * dj.fwd[0] + 0.07 * dj.up[0] - 0.25 * dj.right[0], dj.chest[1] - 0.24 * dj.fwd[1] + 0.07 * dj.up[1] - 0.25 * dj.right[1], dj.chest[2] - 0.24 * dj.fwd[2] + 0.07 * dj.up[2] - 0.25 * dj.right[2], 0.2];
-  const dead = make({ act: 'dead', pose: DEAD, size: 1.05, cell: 0.016, clumps: 1500, long: 1, tone: [0.92, 0.77, 0.52], phase: 0, inside: false, burn: wound, tendrils: 110 });
+  const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.2 * (dj.fwd[d] as number) + 0.05 * (dj.up[d] as number) - 0.24 * (dj.right[d] as number);
+  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.3];
+  const dead = make({ act: 'dead', pose: DEAD, size: 1.05, cell: 0.016, clumps: 2400, long: 0.8, tone: [0.92, 0.77, 0.52], phase: 0, inside: false, burn: wound, tendrils: 110 });
 
   const burned = scorch(ctx);
   burned.drape();
-  part.add(burned.mesh);
+  if (SCORCH) part.add(burned.mesh);
   ctx.scene.add(ctx.parts.built('ridge-runners', part));
 
   const discs = ctx.rig.contactDiscs(HUDDLE.length + CROSSING + 1);

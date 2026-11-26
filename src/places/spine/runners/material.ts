@@ -135,14 +135,16 @@ void main() {
   if (d < 3.0) {
     // The picture of the burn, laid on the flank: its split runs round the body from the spine toward the belly.
     vec3 r = vRest - uBurn.xyz;
-    vec2 uv = 0.5 + vec2(dot(r, uBurnU), dot(r, uBurnV)) / 0.62;
+    vec2 uv = 0.5 + vec2(dot(r, uBurnU), dot(r, uBurnV)) / (uBurn.w * 2.3);
     vec3 pic = texture2D(tBurn, uv).rgb;
     vec2 edge = abs(uv - 0.5) * 2.0;
     float on = (1.0 - smoothstep(0.55, 0.9, max(edge.x, edge.y))) * smoothstep(0.02, 0.08, max(pic.r, max(pic.g, pic.b)));
     float raw = smoothstep(0.02, 0.1, pic.r - 1.25 * pic.g);
-    albedo = mix(albedo, pic * 0.85, on);
-    rough = mix(rough, mix(0.8, 0.3, raw), on);
-    occ = mix(occ, 0.9, on);
+    // Charred black at the middle, whatever the picture has there.
+    float char_ = 1.0 - smoothstep(0.35, 1.0, d + 0.3 * (fine - 0.5));
+    albedo = mix(albedo, pic * mix(mix(0.55, 0.16, char_), 0.9, raw), on);
+    rough = mix(rough, mix(0.9, 0.55, raw), on);
+    occ = mix(occ, 0.8, on);
   }
   vec3 e = runnerLight(vWorld, n) * occ;
   vec3 c = albedo * e / 3.14159;
@@ -194,9 +196,9 @@ void main() {
   // It is lit as the body under it is, and a little as itself: the coat reads as the body's shape, with each lock catching its own light.
   vec3 nb = normalize(c - mix(r, e, 0.45) + vec3(0.0, 1e-4, 0.0));
   // Hair takes light from all round: the lock is lit as something between its own way out of the body and the open sky.
-  vec3 n = normalize(nb * 0.6 + vec3(0.0, 0.55, 0.0) + side * (0.4 * position.x) + toCamera * 0.4);
+  vec3 n = normalize(nb + vec3(0.0, 0.3, 0.0) + side * (0.35 * position.x) + toCamera * 0.2);
   // Roots stand in each other's shade.
-  float occ = mix(0.3, 1.0, smoothstep(0.0, 0.7, t));
+  float occ = mix(0.12, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
   vLight = runnerLight(p, n) * occ / 3.14159;
   vFrostLight = runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
   vAt = vec4(position.x, t, seed, aCard.z);
@@ -333,8 +335,8 @@ void main() {
   float crystals = vnoise3(vWorld * 520.0);
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
-  albedo = mix(albedo, vec3(0.13, 0.115, 0.12) * (0.7 + 0.6 * blotch), 0.7 * uWrithe.y);
-  rime = max(rime, uWrithe.y * smoothstep(0.35, 0.8, n.y * 0.5 + 0.5 + 0.9 * (crystals - 0.5)) * 0.75);
+  albedo = mix(albedo, vec3(0.075, 0.062, 0.062) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
+  rime = max(rime, uWrithe.y * smoothstep(0.75, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5)) * 0.8);
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, max(rime, 0.6 * uWrithe.y));
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);

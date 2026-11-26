@@ -563,8 +563,8 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
     if (base <= 0) continue;
     // The face end of the head is bare; under the belly and inside the legs the coat hangs long.
     const burned = o.burn[3] > 0 ? Math.hypot(at.p[0] - o.burn[0], at.p[1] - o.burn[1], at.p[2] - o.burn[2]) / o.burn[3] : 9;
-    const singe = Math.min(1, Math.max(0, (burned - 0.7) / 0.9));
-    if (burned < 0.7 && rng.next() < 0.85) continue;
+    const singe = Math.min(1, Math.max(0, (burned - 0.75) / 0.8));
+    if (burned < 0.75 || (burned < 1.0 && rng.next() < 0.5)) continue;
     const long = base * o.long * rng.range(0.7, 1.35) * (0.12 + 0.88 * singe) * (1 + 0.5 * Math.max(0, -at.n[1]));
     // The way the clump lies: down the skin as gravity and the wind comb it, standing off it only a little, so the coat keeps the shape
     // of what is under it. Under the belly it hangs free.
@@ -594,7 +594,7 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
       // (Far from the skin the field is not known: there the end is drawn back toward its root first.)
       for (let tries = 0; tries < 4; tries++) {
         const f = body.field(e);
-        if (f <= long * 0.32) break;
+        if (f <= long * 0.2) break;
         if (f > 0.25) {
           e[0] = (e[0] + p[0]) * 0.5;
           e[1] = (e[1] + p[1]) * 0.5;
@@ -602,19 +602,28 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
           continue;
         }
         const o2 = body.out(e);
-        const far = f - long * 0.32;
+        const far = f - long * 0.2;
         e[0] -= o2[0] * far;
         e[1] -= o2[1] * far;
         e[2] -= o2[2] * far;
       }
       // The ground stops a lock.
       if (e[1] < 0.012) e[1] = 0.012 + 0.01 * rng.next();
-      const mid = add(mixv(p, e, 0.45), scale(n, long * rng.range(0.1, 0.22)));
+      if (o.burn[3] > 0) {
+        const over = Math.hypot(e[0] - o.burn[0], e[1] - o.burn[1], e[2] - o.burn[2]) / o.burn[3];
+        if (over < 0.8) {
+          const keep = 0.25 + 0.3 * rng.next();
+          e[0] = p[0] + (e[0] - p[0]) * keep;
+          e[1] = p[1] + (e[1] - p[1]) * keep;
+          e[2] = p[2] + (e[2] - p[2]) * keep;
+        }
+      }
+      const mid = add(mixv(p, e, 0.45), scale(n, long * rng.range(0.06, 0.14)));
       if (mid[1] < 0.02) mid[1] = 0.02;
       root.set(p, count * 3);
       ctrl.set(mid, count * 3);
       tip.set(e, count * 3);
-      card.set([long * 0.115 * rng.range(0.85, 1.3) * (0.6 + 0.4 * singe), rng.next(), frost, singe], count * 4);
+      card.set([long * 0.115 * rng.range(0.85, 1.3) * (0.6 + 0.4 * singe), rng.next(), frost, singe * (0.4 + 0.6 * Math.min(1, Math.max(0, (burned - 0.7) / 1.4)))], count * 4);
       bones.set([at.bones[0], at.bones[1], at.bones[2], at.kind], count * 4);
       count++;
     }
