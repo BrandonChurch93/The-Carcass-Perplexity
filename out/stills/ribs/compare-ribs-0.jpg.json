@@ -1,6 +1,6 @@
 {
   "kind": "compare",
-  "made": "2026-11-26T09:15:21Z",
+  "made": "2026-11-26T09:51:48Z",
   "key": "ribs-0",
   "approved": "references/approved/1-ribs/ribs-0-establishing.jpg",
   "frame": "out/work/stills/key-ribs-0-uhd-final.png",
@@ -58,7 +58,7 @@
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "ribs": "8d03507eddfccbb5"
+        "ribs": "358453889e52aeb9"
       },
       "format": "uhd",
       "tier": "final",
@@ -69,8 +69,8 @@
       "loop": null,
       "key": "ribs-0",
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:15:19Z",
-      "seconds": 55.39,
+      "made": "2026-11-26T09:51:47Z",
+      "seconds": 56.352,
       "portableOnly": false,
       "id": null
     }
@@ -78,6 +78,6 @@
   "keep": true,
   "phase": 4,
   "units": {
-    "ribs": "8d03507eddfccbb5"
+    "ribs": "358453889e52aeb9"
   }
 }

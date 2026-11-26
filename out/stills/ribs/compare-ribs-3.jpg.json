@@ -1,6 +1,6 @@
 {
   "kind": "compare",
-  "made": "2026-11-26T09:18:36Z",
+  "made": "2026-11-26T09:55:04Z",
   "key": "ribs-3",
   "approved": "references/approved/1-ribs/ribs-3-the-colony.jpg",
   "frame": "out/work/stills/key-ribs-3-uhd-final.png",
@@ -58,7 +58,7 @@
     {
       "engine": "e35f4e2b11964eaf",
       "units": {
-        "ribs": "8d03507eddfccbb5"
+        "ribs": "358453889e52aeb9"
       },
       "format": "uhd",
       "tier": "final",
@@ -69,8 +69,8 @@
       "loop": null,
       "key": "ribs-3",
       "machine": "space-sandbox",
-      "made": "2026-11-26T09:18:36Z",
-      "seconds": 51.769,
+      "made": "2026-11-26T09:55:03Z",
+      "seconds": 50.964,
       "portableOnly": false,
       "id": null
     }
@@ -78,6 +78,6 @@
   "keep": true,
   "phase": 4,
   "units": {
-    "ribs": "8d03507eddfccbb5"
+    "ribs": "358453889e52aeb9"
   }
 }

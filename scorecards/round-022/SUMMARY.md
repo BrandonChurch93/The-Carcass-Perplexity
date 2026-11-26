@@ -75,3 +75,9 @@ None. `R3-1` issue 3 (two glossy black eyes on a scavenger, against "Nothing liv
 - Kept: the build of the unit's best judged round, with the later fixes while the machine checks and the measures stay green. Which round is the best is written in the unit's row of `kit/PROGRESS.md`.
 - Every open severe and major issue of this round is written under "Open items" in `kit/PROGRESS.md` with its frame, the critic's words, what was tried and what to try next. Open items are worked in the polish rounds of Phase 6, worst first.
 - An issue about shared code is an open item for Phase 5.
+
+## After the round
+
+- The crab fix (`5c1109b7`, `assets-src/ribs/mat/cut-crabs.py`): the scavengers painted into the hung body's relief picture are cut out of it, because the relief turned each into a pale lump with two black spots that the critic read as eyes (`R3-1` issue 3). No critic was asked again.
+- MEASURED on `5c1109b7` at the final tier in 4K on a render machine, 2026-11-26 10:05 UTC (`measures-ribs-after-5c1109b7.json`): M1, M2 and M3 green, 15 of 15 lines. Against the round's measures three numbers moved: fine detail at `ribs-0` 0.9646 to 0.9641 and at `ribs-1` 1.0628 to 1.0531, and the share that moves at `ribs-1` 54.82 to 54.92 percent. `ribs-2`, `ribs-3` and `ribs-4` are the same.
+- The kept stills, comparison images and sheets of the Ribs were made anew from `5c1109b7`. Seven pictures changed (the stills and comparison images of `ribs-0` and `ribs-1`, and the sheets of shots `ribs-01`, `ribs-02` and `ribs-05`), and the other nine are the same bytes.
