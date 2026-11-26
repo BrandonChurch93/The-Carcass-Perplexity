@@ -296,10 +296,12 @@ void main() {
     float grainR = dot(texture2D(tRock, p.xz / 1.3 + 0.2).rgb, vec3(0.333));
     float evenR = dot(texture2D(tRock, p.xz / 1.3 + 0.2, 5.0).rgb, vec3(0.333));
     stone *= mix(1.0, clamp(grainR / max(evenR, 0.05), 0.45, 1.6), 0.75 * seen);
-    stone *= vec3(1.0, 0.94, 0.84) * (0.5 + 0.2 * mid.g);
+    stone *= vec3(1.0, 0.94, 0.84) * (0.42 + 0.2 * mid.g);
     // The sharp relief is how closed a spot is: fractures are dark, and the red has dried in them.
-    float crack = smoothstep(0.38, 0.12, h0);
-    stone = mix(stone, stone * vec3(0.55, 0.3, 0.24), crack * 0.7);
+    float crack = smoothstep(0.5, 0.18, h0);
+    stone = mix(stone, stone * vec3(0.55, 0.3, 0.24), crack * 0.85);
+    // (And the salt has crusted on what stands proud: broken, never a coat.)
+    stone = mix(stone, vec3(0.46, 0.43, 0.41), smoothstep(0.6, 0.85, h0) * smoothstep(0.35, 0.6, fine.b) * 0.5);
     // The foot of the rise is wet and red where the brine has wicked up it.
     float wick = smoothstep(1.0, 0.3, vBase + (mid.r - 0.5) * 0.6);
     stone = mix(stone, stone * vec3(0.62, 0.34, 0.3), wick * 0.6);

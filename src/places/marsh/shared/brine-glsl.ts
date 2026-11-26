@@ -75,7 +75,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   // Far off the ripples are smaller than a pixel: half of every pixel there is a slope that shows the body, so the sheen stops short.
   float away = length(cameraPosition - p);
   // (Far off more of the unseen ripples look at the sky than the level surface does.)
-  float fres = (mirrorShare(n, v) + (0.045 + 0.075 * gust) * smoothstep(3.0, 22.0, away)) * (1.0 - 0.8 * foam) * mix(1.0, 0.75, smoothstep(25.0, 140.0, away)) * mix(0.5, 1.0, smoothstep(1.0, 7.0, away)) * (1.0 + 0.3 * brineMud);
+  float fres = (mirrorShare(n, v) + (0.045 + 0.075 * gust) * smoothstep(3.0, 22.0, away)) * (1.0 - 0.8 * foam) * mix(1.0, 0.75, smoothstep(25.0, 140.0, away)) * mix(0.7, 1.0, smoothstep(1.0, 7.0, away)) * (1.0 + 0.3 * brineMud);
   float tilt = dot(n.xz, normalize(v.xz + vec2(1e-4)));
   lit *= clamp(1.0 + tilt * 3.6, 0.62, 1.36);
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
