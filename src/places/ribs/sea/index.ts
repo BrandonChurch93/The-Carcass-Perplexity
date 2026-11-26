@@ -9,7 +9,7 @@ import { LAND } from '../shared/rig';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
-import { POOL_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_VERTEX } from './shaders';
+import { POOL_FRAGMENT, POOL_LOOP_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_VERTEX } from './shaders';
 import { Spray, rand } from './spray';
 import type { Ring } from './tide';
 import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RING_SOURCE, SWELL, boreFront } from './tide';
@@ -150,6 +150,10 @@ export function create(ctx: Context): Piece {
     blendDst: THREE.OneMinusSrcAlphaFactor,
   });
   const pools = new THREE.Mesh(poolSheet((x, z) => rig.land.height(x, z), tracks), poolMaterial);
+  // The same sheet for the card loop: the film's material with the loop's text, on the film's own uniforms.
+  const poolLoop = poolMaterial.clone();
+  poolLoop.uniforms = poolMaterial.uniforms;
+  poolLoop.fragmentShader = POOL_LOOP_FRAGMENT(MAX_RINGS);
   pools.renderOrder = 1;
   ctx.scene.add(ctx.parts.built('runnels', pools));
 
@@ -215,6 +219,7 @@ export function create(ctx: Context): Piece {
       const staged = stagedSeconds();
       // In the card loop the wall stands off where the loop's first frame has it: it would have to come back.
       const run = loopPhase() === null ? seconds : staged;
+      pools.material = loopPhase() === null ? poolMaterial : poolLoop;
       const frontZ = boreFront(run);
       front.value = frontZ;
 
@@ -267,6 +272,7 @@ export function create(ctx: Context): Piece {
       seaMaterial.dispose();
       pools.geometry.dispose();
       poolMaterial.dispose();
+      poolLoop.dispose();
       bore.dispose();
       surf.dispose();
     },

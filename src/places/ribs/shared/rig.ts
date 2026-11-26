@@ -410,8 +410,11 @@ export function createRig(): Rig {
   };
   breakToward(T0);
 
+  const loopAt = new THREE.Vector2(T0, 0);
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
+    // Read by the card loop's shaders alone: the seconds of its first frame, and its phase.
+    uLoop: { value: loopAt },
     uSolo: { value: 0 },
     tLand: { value: null },
     uLandRect: { value: rect(LAND) },
@@ -525,6 +528,7 @@ export function createRig(): Rig {
     bake,
     setTime: (seconds) => {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
+      loopAt.y = loopPhase() ?? 0;
       const sky = skySeconds(seconds);
       const d = drift(sky);
       cloudShade.x = d[0];

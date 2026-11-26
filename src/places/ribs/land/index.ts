@@ -6,7 +6,7 @@ import { keyPart, shotById } from '../../../film/cut';
 import { shots } from '../cameras';
 import { RIBS, ribByName, weedPoint, type Rib } from '../layout';
 import { COLONY, DROWNED, LEVELS, STATIONS, shotSpan } from '../shared/anchors';
-import { stagedSeconds } from '../shared/stage';
+import { loopPhase, stagedSeconds } from '../shared/stage';
 import { CRAG } from '../shared/crag';
 import type { Context, Piece } from '../shared/context';
 import { RIG_VERTEX } from '../shared/glsl';
@@ -14,7 +14,7 @@ import { LAND } from '../shared/rig';
 import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
-import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
+import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
@@ -246,6 +246,9 @@ export function create(ctx: Context): Piece {
     depthWrite: false,
     side: THREE.BackSide,
   });
+  const glassLoop = glass.clone();
+  glassLoop.uniforms = glass.uniforms;
+  glassLoop.fragmentShader = MIRROR_LOOP_FRAGMENT;
   const mirrors = new THREE.Group();
   [...(RIBS as Rib[])].sort((a, b) => a.z - b.z).forEach((rib, i) => {
     const image = new THREE.Mesh(bladeShape(rib, { around: 40, fine: 7 }), glass);
@@ -509,12 +512,13 @@ export function create(ctx: Context): Piece {
       const staged = stagedSeconds();
       const atGate = staged >= gateShot.from && staged <= gateShot.to;
       for (const m of gateStacks) m.visible = atGate;
+      for (const image of mirrors.children) (image as THREE.Mesh).material = loopPhase() === null ? glass : glassLoop;
     },
     dispose: () => {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of [ground, roostRock, weed, weedNear, boulder, pebble, glass, ...stones.values()]) m.dispose();
+      for (const m of [ground, roostRock, weed, weedNear, boulder, pebble, glass, glassLoop, ...stones.values()]) m.dispose();
     },
   };
 }

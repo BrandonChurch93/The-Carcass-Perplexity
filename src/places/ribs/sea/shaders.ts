@@ -1,5 +1,6 @@
 // The water of the Ribs in the light of the rig: the open sea with its surf, the pools and runnels on the floor, the bore, and thrown spray.
 import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
+import { loopAngle, loopText } from '../shared/looptext';
 import { SWELL } from './tide';
 
 const f = (v: number): string => (Number.isInteger(v) ? `${v}.0` : `${v}`);
@@ -557,3 +558,20 @@ void main() {
   vec3 col = vec3(0.95, 0.96, 0.96) * vLight * mix((0.9 + 0.6 * t.g) * mix(0.62 + 0.3 * body + 0.42 * vUv.y + 0.25 * (t.r - 0.5), 0.6, vMist), 0.75 + 0.6 * vUv.y, drop);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;
+
+/**
+ * The pools in the card loop: every wave of the sheet goes a whole number of turns a loop, so the water of the last frame is that of the first
+ * and none of it is left to the cross-fade.
+ */
+export const POOL_LOOP_FRAGMENT = (rings: number): string =>
+  loopText(POOL_FRAGMENT(rings), [
+    ['uniform sampler2D tChop;', 'uniform sampler2D tChop;\nuniform vec2 uLoop;'],
+    ['- uTime * uWind * 0.16', '- (uLoop.x * uWind * 0.16 + uLoop.y * vec2(1.0, 1.0))'],
+    ['+ uTime * vec2(uWind.y, -uWind.x) * 0.3', '+ (uLoop.x * vec2(uWind.y, -uWind.x) * 0.3 + uLoop.y * vec2(2.0, -1.0))'],
+    ['- uTime * 2.1 +', `- ${loopAngle('2.1', 3)} +`],
+    ['- uTime * 10.0 +', `- ${loopAngle('10.0', 13)} +`],
+    ['sin(uTime * 0.9 +', `sin(${loopAngle('0.9', 1)} +`],
+    ['sin(uTime * 2.3 +', `sin(${loopAngle('2.3', 3)} +`],
+    ['sin(uTime * 0.35 +', `sin(${loopAngle('0.35', 1)} +`],
+    ['vec2 drift = uTime * uWind * 0.05;', 'vec2 drift = uLoop.x * uWind * 0.05;'],
+  ]);
