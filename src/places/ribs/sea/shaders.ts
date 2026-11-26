@@ -175,11 +175,11 @@ void main() {
   // Seen against the light a wave is a lens: the top of a face that leans to the eye, with the break in the cloud or the sun behind it,
   // is lit from inside, cold green, brightest just under the crest where the water is a hand thick.
   vec2 vh = v.xz / max(length(v.xz), 1e-4);
-  float top = smoothstep(0.5, 2.7, h + 2.0 * (c1.b - 0.5) + 0.7 * (c2.b - 0.5)) * calm;
+  float top = smoothstep(1.7, 3.9, h + 2.0 * (c1.b - 0.5) + 0.7 * (c2.b - 0.5)) * calm;
   float leans = clamp(0.35 + 2.4 * dot(n.xz, vh), 0.0, 1.0);
   float behindBreak = pow(max(dot(-vh, normalize(uSkyBreak.xz)), 0.0), 2.0);
   float behindSun = pow(max(dot(-vh, normalize(uSunDir.xz + 1e-4)), 0.0), 2.0) * sun * (1.0 - 0.6 * uSunDir.y);
-  vec3 lens = vec3(0.105, 0.19, 0.15) * top * leans * (skyRadiance(uSkyBreak) * 0.45 * behindBreak * open + uSunColour * 0.16 * behindSun);
+  vec3 lens = vec3(0.1, 0.15, 0.13) * top * leans * (skyRadiance(uSkyBreak) * 0.13 * behindBreak * open + uSunColour * 0.16 * behindSun);
   col = mix(body * e / 3.14159 + lens, refl, fres);
 
   // White water. The lace is the Builder's picture of broken water seen from above, laid in metres and carried a little by the wind.

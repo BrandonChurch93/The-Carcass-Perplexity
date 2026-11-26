@@ -228,11 +228,11 @@ export class Burst {
       const jet = (n: number): { along: number; power: number; late: number; side: number; out: number } => {
         const id = s.id * 977 + n;
         const along = (rand(id, 1) - 0.5) * 0.95;
-        const peak = Math.exp(-(along * along) / 0.045);
+        const peak = Math.exp(-(along * along) / 0.06);
         const reach = rand(id, 2);
         return {
           along,
-          power: Math.sqrt((0.22 + 0.78 * peak) * (0.5 + 0.5 * reach * reach)),
+          power: Math.sqrt((0.3 + 0.7 * peak) * (0.55 + 0.45 * reach)),
           late: 0.55 * Math.abs(along) + 0.3 * rand(id, 3),
           side: (rand(id, 4) - 0.5) * 5 + 9 * along,
           out: 0.8 + 2.6 * rand(id, 5),
@@ -301,7 +301,7 @@ export class Burst {
       for (let i = 0; i < MIST; i++) {
         const id = s.id * 100000 + 40000 + i;
         const j = jet(Math.floor(rand(id, 1) * JETS));
-        const a = t - j.late - 0.2 - 0.9 * rand(id, 6);
+        const a = t - j.late - 1.1 - 1.6 * rand(id, 6);
         const life = 6 + 6 * rand(id, 13);
         if (a < 0 || a > life) continue;
         const v0 = launch(j, 0.75 + 0.3 * rand(id, 7), 1.2, id);
@@ -309,8 +309,8 @@ export class Burst {
         const sink = 5.5 * a;
         const y = Math.max(0.6 + dy + sink, 1.5);
         const [bx, bz] = base(j, id);
-        const fade = Math.min(1, a / 0.5) * Math.pow(1 - a / life, 1.4);
-        this.put(bx + dx, y, bz + dz, big * (3.5 + 2.2 * a + 3 * rand(id, 9)), vx, vy, vz, 2, 0.26 * fade * still, rand(id, 10), 0, rand(id, 14));
+        const fade = Math.min(1, a / 1.5) * Math.pow(1 - a / life, 1.4);
+        this.put(bx + dx, y, bz + dz, big * (2.5 + 1.5 * a + 2.5 * rand(id, 9)), vx, vy, vz, 2, 0.085 * fade * still, rand(id, 10), 0, rand(id, 14));
       }
 
       // The foot: the sea piles white against the stone, boils out from it over the water, and what went up the face runs back down it.
@@ -341,11 +341,12 @@ export class Burst {
           const life = 3 + 4 * rand(id, 7);
           if (a < 0 || a > life) continue;
           const o = 1 + (4 + 9 * rand(id, 8)) * (1 - Math.exp(-a / 1.6));
-          const y = 0.8 + (2.5 + 3.5 * rand(id, 11) * peak) * Math.sin(Math.min(1, a / (1.2 + rand(id, 12))) * Math.PI) * Math.exp(-a / 2.5);
+          const lump = rand(id, 13) * rand(id, 14);
+          const y = 0.3 + 2.2 * lump + (1 + 9 * lump * (0.3 + 0.7 * peak)) * Math.sin(Math.min(1, a / (1.2 + rand(id, 12))) * Math.PI) * Math.exp(-a / 2.5);
           const x = s.x + tx * along * s.width * 1.1 + s.out[0] * o;
           const z = s.z + tz * along * s.width * 1.1 + s.out[1] * o;
           const fade = Math.min(1, a / 0.15) * Math.pow(1 - a / life, 1.2);
-          this.put(x, y, z, big * (1.8 + 1.4 * Math.min(a, 2)) * (0.7 + 0.7 * rand(id, 9)), 0, 0, 0, 3, 0.8 * fade * still, rand(id, 10), 0, 0.75);
+          this.put(x, y, z, big * (0.5 + 4.5 * lump) * (0.6 + 0.4 * Math.min(a, 2)), 0, 0, 0, 3, (0.25 + 0.7 * rand(id, 9)) * fade * still, rand(id, 10), 0, 0.7 + 0.6 * rand(id, 15));
         }
       }
     }
