@@ -74,7 +74,17 @@ function travelled(seconds: number): number {
 const TO_KEY = travelled(ARRIVAL.keySeconds);
 const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 
-function arrival(seconds: number): Pose {
+// The approach opens on a wider and higher lens than the move it joins, so that the first frame holds two blades whole against the sky:
+// how much wider, how many degrees higher, and the seconds over which both ease back into the move. From OPEN.seconds on the move is its own,
+// to the bit: the staging is exactly nothing there (the strait's shot runs on in the same move).
+const OPEN = { seconds: 11, wide: 0.32, pitch: 3.5, yaw: 7.5 };
+/** 1 at the first frame of the film, 0 from OPEN.seconds on, level at both ends. */
+export function openingLens(seconds: number): number {
+  const q = Math.min(1, Math.max(0, 1 - seconds / OPEN.seconds));
+  return q * q * (3 - 2 * q);
+}
+
+function arrival(seconds: number, staged = 0): Pose {
   const left = TO_KEY - travelled(seconds);
   const out = Math.max(0, left) / ARRIVAL.far;
   const past = Math.max(0, -left) / PAST_KEY;
@@ -83,10 +93,16 @@ function arrival(seconds: number): Pose {
   const side = ARRIVAL.offset * out * out + ARRIVAL.drift * past * past;
   const position = add(add(establish.position, scale(along, -left)), add(scale(across, side), [0, ARRIVAL.rise * Math.pow(out, 1.5), 0]));
   const lens = Math.tan((establish.fov * RAD) / 2) * Math.pow(ARRIVAL.archAhead / (ARRIVAL.archAhead + left), ARRIVAL.hold);
+  if (staged > 0) return looking(position, ARRIVAL.yaw + ARRIVAL.turn * out * out + OPEN.yaw * staged, ARRIVAL.pitch + ARRIVAL.tilt * Math.pow(out, 1.5) + OPEN.pitch * staged, (2 * Math.atan(lens * (1 + OPEN.wide * staged))) / RAD);
   return looking(position, ARRIVAL.yaw + ARRIVAL.turn * out * out, ARRIVAL.pitch + ARRIVAL.tilt * Math.pow(out, 1.5), (2 * Math.atan(lens)) / RAD);
 }
 
-const approach: CameraPath = (part) => arrival((part * shotLength(opening)) / cut.fps);
+const approach: CameraPath = (part) => {
+  const seconds = (part * shotLength(opening)) / cut.fps;
+  return arrival(seconds, openingLens(seconds));
+};
+/** The approach as it was before it was restaged: what was scattered along it once (the fliers' clearances, the skein) stays where it was, so that no later frame moves. */
+export const approachAsScattered: CameraPath = (part) => arrival((part * shotLength(opening)) / cut.fps);
 const intoStrait: CameraPath = (part) => arrival((shotLength(opening) + part * shotLength(strait)) / cut.fps);
 
 const key = (id: string): number => keyPart(shotById(id));

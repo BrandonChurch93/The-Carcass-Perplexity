@@ -5,6 +5,7 @@ import { config } from '../../../config';
 import { stream } from '../../../core/rng';
 import { RIBS, bladeSpine, landAt as layoutLand } from '../layout';
 import { SUN, T0, WIND } from './anchors';
+import { cloudShut, openingWeight } from './opening';
 import { loopPhase } from './stage';
 
 // The land map covers the strait and the sea a camera can see the bed through: cells of 4.9 by 4.8 m.
@@ -19,6 +20,14 @@ export const FINE = { size: 256, wide: 37, wideAmp: 0.2, small: 9.7, smallAmp: 0
 export const BREAK = { x: 200, z: -500, radius: 420, gain: 0.8, cover: 0.62 };
 /** The small break of the opening: where its light falls on the sea at the first frame of the place (it travels with the wind like the wide one), and its radius. */
 export const BREAK2 = { x: -200, z: 530, radius: 170, gain: 0.9 };
+/** The approach: the wide break over the strait is shut as the film opens (the blades stand in the cloud's shade) and thins back into itself. Where the shut cloud lies thickest, its radius, what it takes from the cover, and what the small break is given to stay open under it. */
+export const SHUT = { x: -40, z: -420, radius: 2400, gain: -0.6, lift: 0.55 };
+/** The approach: the small break lies off its own place, over the foot of the first blade as the film opens, and walks back to it: metres. */
+export const SHAFT = { x: -120, z: -230 };
+/** The approach: radians the sky's picture is turned so that its brightest break stands behind the first blades; how much of the sky's light and of the sun's the shut cloud keeps from the ground. */
+export const OPEN_SKY = { turn: -0.25, dim: 0.8, shade: 0.8 };
+const SKY_LIGHT = { zenith: [0.115, 0.14, 0.185], horizon: [0.33, 0.38, 0.45], ground: [0.08, 0.088, 0.097] } as const;
+
 
 export type Height = (x: number, z: number) => number;
 
@@ -410,7 +419,19 @@ export function createRig(): Rig {
   };
   breakToward(T0);
 
+  // The small break at `seconds` of the sky: x, z. In the approach it starts at the first blade's foot and walks to the film's own place.
+  const break2 = (seconds: number, world: number): [number, number] => {
+    const x = BREAK2.x + WIND.to[0] * WIND.cloud * seconds;
+    const z = BREAK2.z + WIND.to[1] * WIND.cloud * seconds;
+    const weight = openingWeight(world);
+    if (weight === 0) return [x, z];
+    return [x + SHAFT.x * weight, z + SHAFT.z * weight];
+  };
+
   const loopAt = new THREE.Vector2(T0, 0);
+  const skyZenith = new THREE.Vector3(...SKY_LIGHT.zenith);
+  const skyHorizon = new THREE.Vector3(...SKY_LIGHT.horizon);
+  const skyGround = new THREE.Vector3(...SKY_LIGHT.ground);
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
     // Read by the card loop's shaders alone: the seconds of its first frame, and its phase.
@@ -426,10 +447,10 @@ export function createRig(): Rig {
     uCloudBreak2: { value: break2At },
     uCloudShade: { value: cloudShade },
     // The sky after the storm, scene linear: slate overhead, pale and a little warm at the horizon where the cloud is thin.
-    uSkyZenith: { value: new THREE.Vector3(0.115, 0.14, 0.185) },
-    uSkyHorizon: { value: new THREE.Vector3(0.33, 0.38, 0.45) },
+    uSkyZenith: { value: skyZenith },
+    uSkyHorizon: { value: skyHorizon },
     // What wet sand and sea throw back up at the underside of things.
-    uSkyGround: { value: new THREE.Vector3(0.08, 0.088, 0.097) },
+    uSkyGround: { value: skyGround },
     uSunDir: { value: sun },
     uSunColour: { value: new THREE.Vector3(...SUN.colour) },
     // The colour the air takes at the horizon: the volume pass and the dome meet in it.
@@ -492,9 +513,17 @@ export function createRig(): Rig {
       const d = drift(seconds);
       const bx = x - (BREAK.x + WIND.to[0] * WIND.cloud * (seconds - T0));
       const bz = z - (BREAK.z + WIND.to[1] * WIND.cloud * (seconds - T0));
-      const ex = x - (BREAK2.x + WIND.to[0] * WIND.cloud * seconds);
-      const ez = z - (BREAK2.z + WIND.to[1] * WIND.cloud * seconds);
-      const c = mask.cover(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]) * BREAK.cover + BREAK.gain * Math.exp(-(bx * bx + bz * bz) / (BREAK.radius * BREAK.radius)) + BREAK2.gain * Math.exp(-(ex * ex + ez * ez) / (BREAK2.radius * BREAK2.radius));
+      let c: number;
+      if (openingWeight(world) === 0) {
+        const ex = x - (BREAK2.x + WIND.to[0] * WIND.cloud * seconds);
+        const ez = z - (BREAK2.z + WIND.to[1] * WIND.cloud * seconds);
+        c = mask.cover(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]) * BREAK.cover + BREAK.gain * Math.exp(-(bx * bx + bz * bz) / (BREAK.radius * BREAK.radius)) + BREAK2.gain * Math.exp(-(ex * ex + ez * ez) / (BREAK2.radius * BREAK2.radius));
+      } else {
+        const b = break2(seconds, world);
+        const ex = x - b[0];
+        const ez = z - b[1];
+        c = mask.cover(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]) * BREAK.cover + BREAK.gain * Math.exp(-(bx * bx + bz * bz) / (BREAK.radius * BREAK.radius)) + BREAK2.gain * Math.exp(-(ex * ex + ez * ez) / (BREAK2.radius * BREAK2.radius));
+      }
       const k = Math.min(1, Math.max(0, (c - 0.42) / 0.2));
       return CLOUD.shade + (1 - CLOUD.shade) * k * k * (3 - 2 * k);
     },
@@ -538,6 +567,37 @@ export function createRig(): Rig {
       breakAt.y = BREAK.z + WIND.to[1] * WIND.cloud * (sky - T0);
       break2At.x = BREAK2.x + WIND.to[0] * WIND.cloud * sky;
       break2At.y = BREAK2.z + WIND.to[1] * WIND.cloud * sky;
+      const weight = openingWeight(seconds);
+      cloudShade.w = CLOUD.shade;
+      breakAt.z = 1 / (BREAK.radius * BREAK.radius);
+      breakAt.w = BREAK.gain;
+      break2At.w = BREAK2.gain;
+      skyZenith.set(...SKY_LIGHT.zenith);
+      skyHorizon.set(...SKY_LIGHT.horizon);
+      skyGround.set(...SKY_LIGHT.ground);
+      if (weight !== 0) {
+        // The break stands behind the blades as the film opens and drifts to its own place; under the shut cloud less of the sky reaches the ground.
+        const turn = OPEN_SKY.turn * weight;
+        skyTurn.x += turn;
+        const c = Math.cos(turn);
+        const n = Math.sin(turn);
+        skyBreak.set(skyBreak.x * c - skyBreak.z * n, skyBreak.y, skyBreak.z * c + skyBreak.x * n);
+        const b = break2(sky, seconds);
+        break2At.x = b[0];
+        break2At.y = b[1];
+        const shut = cloudShut(seconds);
+        cloudShade.w = CLOUD.shade * (1 - OPEN_SKY.shade * shut);
+        // The wide break over the strait is shut as the film opens: the blades stand in the cloud's shade, and the sun comes down on them as it thins.
+        if (shut !== 0) {
+          const r = BREAK.radius + (SHUT.radius - BREAK.radius) * shut;
+          breakAt.set(breakAt.x + (SHUT.x - breakAt.x) * shut, breakAt.y + (SHUT.z - breakAt.y) * shut, 1 / (r * r), BREAK.gain + (SHUT.gain - BREAK.gain) * shut);
+          break2At.w = BREAK2.gain + SHUT.lift * shut;
+        }
+        const dim = 1 - OPEN_SKY.dim * shut;
+        skyZenith.multiplyScalar(dim);
+        skyHorizon.multiplyScalar(dim);
+        skyGround.multiplyScalar(dim);
+      }
     },
     beforeSample: (renderer, camera) => {
       if (!grid) bake();
