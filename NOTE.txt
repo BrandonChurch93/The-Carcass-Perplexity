@@ -1,7 +1,7 @@
-2026-11-26 13:22 UTC
-work at a310dd2 on agent/film-opening
-v1 draft: blades dark against the break from frame 0, bank, breaker, sun shaft. Wrong: breaker is a soft puff, fog meets sea in a straight line, near fliers still read as models, sea procedural
-look-1.jpg = out/work/v1/pics/first-two-seconds.png
-look-2.jpg = out/work/v1/pics/approach.png
-look-3.jpg = out/work/v1/pics/frame-0-hd-review.png
-look-4.jpg = out/work/v1/pics/frame-120-hd-review.png
+2026-11-26 14:13 UTC
+work at ca27f2f on agent/film-opening
+v2 at e587c3a: first two seconds and approach sheets, frames 0 and 120 at 1080p. Wrong still: the bank meets the sea on a nearly straight line, blades keep even courses, breaker reads only from frame 110 on
+look-1.jpg = out/work/v2/pics/first-two-seconds.png
+look-2.jpg = out/work/v2/pics/approach.png
+look-3.jpg = out/work/v2/pics/frame-0-hd-review.png
+look-4.jpg = out/work/v2/pics/frame-120-hd-review.png
