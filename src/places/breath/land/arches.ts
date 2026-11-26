@@ -105,7 +105,8 @@ function sectionAt(a: Arch, deg: number): Section {
   const centre = shaftRadius(deg * RAD, y) + 0.3 - a.thick * (0.08 + 0.3 * bow * run) + 0.3 * noise3(s * 0.08, s0, 6.5);
   // It turns into the wall at its full section, as a rib does into a spine, and what closes it is inside the rock: an end that stood
   // free was the end of a loaf, and cut square the end of a plank.
-  const into = (d: number): number => 4.2 * a.thick * (1 - sat(d / 18)) ** 1.5;
+  // It goes in over forty metres of its run, slowly: gone in within three, where it met the wall was a blunt end.
+  const into = (d: number): number => 2.3 * a.thick * (1 - sat(d / 40)) ** 2;
   let end = Math.min(sat(s / 5), sat((length - s) / 5)) ** 0.6;
   let broke = 99;
   let lost = 0;
@@ -221,8 +222,19 @@ export function cap(fine: number): THREE.BufferGeometry {
     const rim = rimRadius(b);
     // How far it hangs over, and how thick it droops: lobes a pace to a few metres wide, never even.
     const lobe = 1 - Math.abs(noise3(arc * 0.33, 3.3, 9.1));
-    const over = (1.3 + 0.8 * noise3(arc * 0.07, 6.1, 2.2) + 0.6 * lobe * lobe) * end;
-    const droop = (1.25 + 0.6 * noise3(arc * 0.05, 1.7, 5.5) + 1.3 * lobe ** 3 + 0.3 * noise3(arc * 0.9, 8.3, 4.4)) * end;
+    // It is a crust, and broken: plates a pace to four long, each standing out over the shaft by its own amount, some of them fallen,
+    // with a crack between every two. As one even skin it was a lip of putty.
+    const along = arc * 0.42 + 1.1 * noise3(arc * 0.21, 4.4, 7.7);
+    const plate = Math.floor(along);
+    const inPlate = along - plate;
+    const dice = (n: number): number => {
+      const h = Math.sin(plate * 127.1 + n * 311.7) * 43758.5453;
+      return h - Math.floor(h);
+    };
+    const crack = smooth(Math.min(inPlate, 1 - inPlate) / 0.07);
+    const fallen = dice(1) < 0.22 ? 0.12 : 1;
+    const over = (0.35 + 1.9 * dice(2) ** 1.4 + 0.3 * lobe * lobe) * fallen * (0.25 + 0.75 * crack) * end;
+    const droop = (0.3 + 0.55 * dice(3) + 0.5 * lobe ** 3 * dice(4)) * (0.5 + 0.5 * fallen) * (0.35 + 0.65 * crack) * end;
     const ca = Math.cos(ang);
     const sa = Math.sin(ang);
     const across = 0.5 + 0.5 * Math.sign(ca) * Math.abs(ca) ** 0.8;

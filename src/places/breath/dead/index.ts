@@ -74,7 +74,7 @@ const CUT = /* glsl */ `
   float level = min(0.5 * log2(max(dot(ax, ax), dot(ay, ay)) + 1e-6), 2.0);
   float told = textureLod(tCarcassH, vAt, max(level, 0.0)).r;
   // The strands of the fan are kept by the crest of their relief alone: by its foot they were rods a thumb thick.
-  if (form.g < 0.5 && told < mix(0.11, 0.33, smoothstep(0.31, 0.22, vAt.x))) discard;
+  if (form.g < 0.5 && told < mix(0.11, 0.24, smoothstep(0.31, 0.22, vAt.x))) discard;
 `;
 
 const FRAGMENT = /* glsl */ `
@@ -122,7 +122,7 @@ ${CUT}
   float occ = (0.58 + 0.42 * smoothstep(0.2, 0.55, form.b)) * (0.65 + 0.35 * smoothstep(0.0, 0.05, lift));
   // The tendrils have bled out and dried pale: only their roots at the neck keep the red.
   float strand = 1.0 - hide;
-  albedo = mix(albedo, vec3(0.72, 0.5, 0.45) * (0.7 + 0.6 * told), 0.42 * strand);
+  albedo = mix(albedo, vec3(0.66, 0.4, 0.36) * (0.7 + 0.6 * told), 0.36 * strand);
   // The shade it throws on the rock under it is not on it: the light is asked for above the reach of that shade.
   vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, 0.86, occ);
   // The fog over the shaft beside it is bright and it is pale: it is lit from that side as the living ones are.
