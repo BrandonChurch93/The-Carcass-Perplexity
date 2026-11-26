@@ -1,7 +1,7 @@
-2026-11-26 06:26 UTC
-work at 576754a on agent/eye-place-3
-minute 96: eye-4 dome, hide, mist drifts; eye-0 mats darker, herd solid; eye-3 floor stops at dark water, skeleton laid on the shelf; eye-1 pebbles from the shore picture
+2026-11-26 06:52 UTC
+work at 0e75254 on agent/eye-place-3
+minute 122: eye-4 backs sharp with coats, broad dome, grey mist; eye-0 shadows under the herd, corner blocks; eye-3 teal under the lip
 look-1.jpg = out/work/n4.jpg
 look-2.jpg = out/work/n0.jpg
 look-3.jpg = out/work/n3.jpg
-look-4.jpg = out/work/n1.jpg
+look-4.jpg = out/work/n0h.jpg
