@@ -62,6 +62,8 @@ function ridgeTexture(): THREE.DataTexture {
 }
 
 const STRIKE_FROM = secondsInPlace(UNIT, shotById('spine-04').first);
+// The storm as a marched body of cloud (storm.ts), or as the dome's pictures: the pictures stand until the marched storm has their mass.
+const STORM_MARCHED: boolean = false;
 const CARCASS_FROM = secondsInPlace(UNIT, shotById('spine-03').first);
 
 export function create(ctx: Context): Piece {
@@ -165,7 +167,7 @@ export function create(ctx: Context): Piece {
       skyStage.y = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
     },
     // The storm's body is marched for this sample's lens before the scene is drawn. The strike's long lens sees its picture instead.
-    beforeSample: (renderer, camera) => storm.render(renderer, camera, plate.w === 0),
+    beforeSample: (renderer, camera) => storm.render(renderer, camera, STORM_MARCHED && plate.w === 0),
     resize: (width, height) => storm.resize(width, height),
     solo: (part) => {
       const only = (name: string): number => (part === null || !part.startsWith('spine/') || !PARTS.includes(part.slice(6)) || part === 'spine/sky' || part === `spine/${name}` ? 1 : 0);

@@ -172,8 +172,61 @@ uniform highp sampler3D tNoise;
 uniform sampler2D tStormWall;
 uniform sampler2D tStorm;
 uniform vec4 uStormFrame;
+uniform sampler2D tSkyDusk;
+uniform sampler2D tStormLit;
 ${RIG_GLSL}
 ${SKY_GLSL}
+
+// The sky from pictures: the storm wall on the gale's side (mat/stormwall, and the same lit from inside, mat/stormwall-lit), the dusk sky on the
+// lee (mat/sky). The pictures flow. The band of the last light is kept to a thin line on the horizon: over it the dusk's cloud is cold.
+vec3 skyPainted(vec3 from, vec3 d) {
+  float el = asin(clamp(d.y, -1.0, 1.0));
+  float az = atan(d.z, d.x);
+  float turned = wrapPi(az - STORM_AZ - uSkyStage.x);
+  float toStorm = abs(turned);
+  // The storm wall: 107 degrees of it about the gale at the picture's own shape, mirrored on beyond. The picture's flat foot is under the horizon.
+  float zoom = uSkyStage.w > 0.0 ? uSkyStage.w : 1.0;
+  vec2 uvS = vec2(0.5 + turned * zoom / 1.87, (zoom > 1.0 ? 0.3 : 0.14) + el * zoom / 1.2);
+  // The dusk: the picture's band lies along the horizon, toward the last light.
+  vec2 uvD = vec2(0.62 + wrapPi(az - DUSK_AZ) * zoom / 1.5, 0.045 + (zoom > 1.0 ? el + 0.014 : el) * zoom);
+  float seam = textureLod(tNoise, vec3(az * 0.9, el * 1.7, 0.53), 0.0).r - 0.5;
+  float storm = 1.0 - smoothstep(1.2, 1.75, 1.475 + (toStorm - 1.475) * zoom + 0.4 * seam);
+  float near = cloudLit(from, d);
+  // The whole wall takes a little of a strike; the bloom about the bolt is the light, and the rest of the storm stays dark.
+  float lit = near + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * storm;
+  vec3 c = vec3(0.0);
+  if (storm < 0.999) {
+    vec3 dusk = flowing(tSkyDusk, uvD, vec2(0.012, 0.0), 26.0, 0.0);
+    // The band is a line: over it the picture's orange cloud is the cold cloud of the dusk, pale where the picture is pale.
+    float over = smoothstep(0.008, 0.034, el);
+    float heat = clamp((dusk.r - dusk.b) * 6.0, 0.0, 1.0) * over;
+    dusk = mix(dusk, dot(dusk, vec3(0.3, 0.5, 0.2)) * vec3(0.66, 0.8, 1.12), 0.92 * heat);
+    // No lit picture of the dusk: its cloud brightens and goes to violet about the bolt.
+    float k = clamp(lit, 0.0, 1.5);
+    dusk = dusk * (1.0 + 2.2 * k) + vec3(0.05, 0.035, 0.1) * k * (0.3 + 4.0 * dot(dusk, vec3(0.33)));
+    c += (1.0 - storm) * dusk;
+  }
+  if (storm > 0.001) {
+    vec3 dark = flowing(tStormWall, uvS, vec2(0.02, 0.004), 22.0, 0.0);
+    float k = clamp(lit, 0.0, 1.0);
+    // The lit picture is read only where a light reaches.
+    if (k > 0.002) dark = mix(dark, flowing(tStormLit, uvS, vec2(0.02, 0.004), 22.0, 0.0) * (1.0 + 0.8 * k), k);
+    c += storm * dark;
+  }
+  // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
+  float glow = clamp(near, 0.0, 3.0);
+  c += vec3(0.42, 0.33, 0.8) * glow * (0.03 + 1.3 * dot(c, vec3(0.33)));
+  // The storm is of masses: the pictures' own darks are pressed down and their pale bellies kept, and it is darkest overhead.
+  float mass = dot(c, vec3(0.3, 0.5, 0.2));
+  c *= mix(0.62, 1.35, smoothstep(0.04, 0.3, mass)) * mix(1.0, 0.55, smoothstep(0.12, 0.7, el) * (1.0 - clamp((c.r - c.b) * 6.0, 0.0, 1.0)));
+  // Overhead the pictures end: the cloud closes over in its own dark.
+  c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.85, 1.15, el));
+  // The storm's light is violet; only the last band keeps its orange.
+  float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
+  c *= mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN;
+  if (uStrikeTop.w > 0.0) c = strikeCloud(c, from, d);
+  return c;
+}
 
 void main() {
   vec3 d = normalize(vDir);
@@ -192,7 +245,7 @@ void main() {
       vec4 storm = 0.4 * texture2D(tStorm, at) + 0.15 * (texture2D(tStorm, at + by) + texture2D(tStorm, at - by) + texture2D(tStorm, at + vec2(by.x, -by.y)) + texture2D(tStorm, at + vec2(-by.x, by.y)));
       c = c * storm.a + storm.rgb;
     } else {
-      c = skyBroad(cameraPosition, d);
+      c = skyPainted(cameraPosition, d);
     }
     // Under the level the dome is what the air pass takes for the far end of the sea: the band of the dusk is a line on the sea's edge, and
     // nothing of it shows under that edge where the sea's own cloud ends.
