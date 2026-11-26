@@ -81,6 +81,9 @@ float levelOf(sampler2D t, vec2 dx, vec2 dy) {
   vec2 size = vec2(textureSize(t, 0));
   return log2(max(max(length(dx * size), length(dy * size)), 1e-6));
 }
+// How much of the rock's own marks the blades carry. At 0.55 (faint, as asked) the wide view fell to 0.55 of the approved picture's fine
+// detail at the final tier, under the floor of 0.75: the camera's speed blurs the near ground there and the blades must carry the detail.
+const float BLADE_MARKS = 1.15;
 void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -139,13 +142,13 @@ void main() {
   vec3 bed = bedding(vBase);
   float shelf = bed.z * smoothstep(1.0, 0.9, bed.y) * smoothstep(0.72, 0.9, bed.y);
   float shade = bed.z * smoothstep(0.16, 0.0, bed.y);
-  vec3 lean = -(level1 * gr.x + vec3(0.0, 1.0, 0.0) * gr.y) * 1.2 + vec3(0.0, 0.9, 0.0) * shelf;
+  vec3 lean = -(level1 * gr.x + vec3(0.0, 1.0, 0.0) * gr.y) * 2.0 + vec3(0.0, 0.9, 0.0) * shelf;
   lean -= n0 * dot(lean, n0);
   vec3 n = normalize(n0 + lean);
 
   // Pale bone-stone: the rock's own marks, grey-ivory (its rust kept only where lichen grows), under the broad lights and darks of the sheet.
   // The rock's marks are faint on the blades: the pale and the light carry them.
-  stone = mix(vec3(0.19), stone, 0.55 - 0.1 * uCap);
+  stone = max(mix(vec3(0.19), stone, BLADE_MARKS - 0.6 * uCap), vec3(0.0));
   float stoneLum = dot(stone, vec3(0.333));
   float sunny = 0.5 + 0.5 * dot(n0, uSunDir);
   float field = vnoise(vWorld.xz * 0.019 + vWorld.y * 0.027 + 9.0) * 0.6 + vnoise(vWorld.xz * 0.11 + vWorld.y * 0.09) * 0.4;
@@ -239,7 +242,7 @@ void main() {
   float cap = smoothstep(19.0, 27.0, vWorld.y + 7.0 * (macro - 0.5));
   float lum = dot(pic, vec3(0.333));
   float rust = smoothstep(0.55, 0.68, vnoise(vec2(arc, vWorld.y) * 0.21 + 9.0) * 0.6 + vnoise(vec2(arc, vWorld.y) * 0.9) * 0.4);
-  vec3 pale = vec3(0.39, 0.385, 0.365) * clamp(lum / 0.1, 0.8, 1.35) * mix(1.0, grain, 0.5) * (0.8 + 0.4 * macro);
+  vec3 pale = vec3(0.39, 0.385, 0.365) * clamp(lum / 0.1, 0.8, 1.35) * mix(1.0, grain, 0.8) * (0.8 + 0.4 * macro);
   pale = mix(pale, vec3(0.3, 0.14, 0.03) * (0.6 + 0.6 * grain), 0.22 * smoothstep(0.1, 0.25, rust * macro));
   albedo = mix(albedo, pale, cap);
   weedy *= 1.0 - cap;

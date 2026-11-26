@@ -281,11 +281,11 @@ void main() {
   vec3 round0 = normalize(cross(vec3(0.0, 1.0, 0.0), n0) + vec3(1e-6, 0.0, 0.0));
   vec3 rise = normalize(cross(n0, round0));
   vec2 g = (nhp.xy - 0.5) * vec2(mirror, 1.0);
-  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 0.8);
+  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 1.05);
   float top = smoothstep(0.45, 0.8, nf.y);
   float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
   pic = mix(vec3(dot(pic, vec3(0.333))), pic, 0.8);
-  vec3 albedo = pic * 0.56 * mix(1.0, grain, 0.3) * (0.88 + 0.24 * macro);
+  vec3 albedo = pic * 0.56 * mix(1.0, grain, 0.6) * (0.88 + 0.24 * macro);
   // A top is no face: it takes the broad colour of the stone under it, with white where the colony stands and lichen in crusts.
   vec3 broad = textureLod(tColony, uc, lv + 4.0).rgb;
   float splash = smoothstep(0.5, 0.66, vnoise(vWorld.xz * 0.45 + 3.0) * 0.6 + vnoise(vWorld.xz * 1.7) * 0.4 + 0.25 * (grain - 1.0));
@@ -296,7 +296,7 @@ void main() {
   albedo = mix(albedo, topC, 0.8 * top);
   // The white runs only under a shelf deep enough to hold a roost: in drips from its lip, a stride or two down the face, none on a bare face.
   float drip = smoothstep(0.8, 1.3, vLay.y) * smoothstep(0.3, 0.6, vLay.x) * exp(-vLay.x / (1.8 + 3.0 * vnoise(vec2(arc * 0.9, 3.5)))) * smoothstep(0.22, 0.5, vnoise(vec2(arc * 2.6, y * 0.22 + 7.0)) + 0.25 * (hgt - 0.5)) * (1.0 - top);
-  albedo = mix(albedo, vec3(0.36, 0.355, 0.34) * (0.75 + 0.3 * grain), 0.9 * drip);
+  albedo = mix(albedo, vec3(0.36, 0.355, 0.34) * (0.55 + 0.5 * grain), 0.9 * drip);
   // Orange lichen in patches some strides across, on the faces that take the weather, never under the white.
   float patchL = smoothstep(0.65, 0.74, vnoise(vec2(arc, y) * 0.16 + 13.0) * 0.7 + vnoise(vec2(arc, y) * 0.9 + 4.0) * 0.3 + 0.12 * (grain - 1.0));
   albedo = mix(albedo, vec3(0.3, 0.135, 0.028) * (0.55 + 0.6 * grain), 0.6 * patchL * (1.0 - drip) * (1.0 - 0.6 * top));
@@ -436,7 +436,7 @@ void main() {
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
   float run = smoothstep(0.8, 0.96, vnoise(vec2(vUv.x * 9.0, vUv.y * 0.3 + uTime * 1.6))) * smoothstep(0.55, 0.8, vnoise(vec2(vUv.x * 1.1, vUv.y * 0.13 - uTime * 0.07) + 3.0));
   c += above * (0.05 * closeW * run * (0.4 + 0.6 * occ));
-  c += above * ((1.0 - 0.7 * closeW) * 0.028 * hem * (1.0 - bare) * smoothstep(0.55, 0.9, nh.z + 0.3 * vnoise(vUv * 3.0 + uTime * 0.25)));
+  c += above * ((1.0 - 0.7 * closeW) * 0.14 * hem * (1.0 - bare) * smoothstep(0.55, 0.9, nh.z + 0.3 * vnoise(vUv * 3.0 + uTime * 0.25)));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
