@@ -1,7 +1,7 @@
-2026-11-26 03:33 UTC
-work at bbcc325 on agent/breath-ground-2
-V2: winding channel, broken plates to the tide, plate turned (no wood grain), vapour low with one column, fractured slabs
-look-1.jpg = out/work/looks-v2-breath-0.png
-look-2.jpg = out/work/looks-v2-breath-1.png
-look-3.jpg = out/work/looks-v2-breath-2.png
-look-4.jpg = out/work/looks-v2-breath-4.png
+2026-11-26 04:05 UTC
+work at 708b112 on agent/breath-ground-2
+hb5: motion back (M2 27 and 28 percent at breath-0 and breath-2, hd draft), plates level at the channel, dark lumps and shallow field at breath-1
+look-1.jpg = out/work/looks-hb5-breath-0.png
+look-2.jpg = out/work/looks-hb5-breath-1.png
+look-3.jpg = out/work/looks-hb5-breath-2.png
+look-4.jpg = out/work/looks-hb5-breath-4.png
