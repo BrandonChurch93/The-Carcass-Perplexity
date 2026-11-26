@@ -1,7 +1,7 @@
 2026-11-26 16:00 UTC
 work at 7909844 on agent/spine-rock
-v1: sheet of the kites' shot, 7418 before|after (hd review), full-size crop, 7668 before|after; wrong: long thin wedges of snow on the ledges still read as strips, beds run level and ruled, 7015 is still a cone
-look-1.jpg = out/work/v1/kites-sheet.jpg
-look-2.jpg = out/work/v1/show-7418-before-after.jpg
-look-3.jpg = out/work/v1/show-7418-crop.png
-look-4.jpg = out/work/v1/pair-7668.jpg
+v1 place frames before|after at draft preview: 7015 and 7234 hardly changed, still a cone; 7450 as 7418; 7579 the spire behind is a little more jointed
+look-1.jpg = out/work/v1/pair-7015.jpg
+look-2.jpg = out/work/v1/pair-7234.jpg
+look-3.jpg = out/work/v1/pair-7450.jpg
+look-4.jpg = out/work/v1/pair-7579.jpg
