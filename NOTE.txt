@@ -1,5 +1,7 @@
-2026-11-26 01:39 UTC
-work at 1ece677 on agent/ribs-sea-2
-bore rebuilt on the breaking-wave sheets, ribs-4 look 8
-look-1.jpg = out/work/look-bore-v0.jpg
-look-2.jpg = out/work/c0.jpg
+2026-11-26 02:06 UTC
+work at 2267eb7 on agent/ribs-sea-2
+version 1: picture bore, sheet animals, relief carcass (ribs-4, ribs-2, ribs-1, ribs-3 beside approved)
+look-1.jpg = out/work/v1-ribs-4.jpg
+look-2.jpg = out/work/v1-ribs-2.jpg
+look-3.jpg = out/work/v1-ribs-1.jpg
+look-4.jpg = out/work/v1-ribs-3.jpg
