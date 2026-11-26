@@ -230,7 +230,7 @@ void main() {
   float pit = smoothstep(0.75, 0.4, dot(m1 / uMean, vec3(0.3333))) * smoothstep(0.45, 0.7, a.g + 0.3 * (m0.g / uMean.g - 1.0));
   float tone = mix(1.0, clamp(1.0 + 1.5 * (dot(m0 / uMean, vec3(0.3333)) - 1.0), 0.45, 1.7), near) * mix(1.0, clamp(dot(m1 / uMean, vec3(0.3333)), 0.5, 1.5) * (1.0 - 0.55 * pit), close);
   // Broad stains: the rock is not one colour for more than a few metres.
-  tone *= 0.72 + 0.56 * texture2D(tRock, p.xz / 9.0 + 0.3).r;
+  float broadStain = 0.72 + 0.56 * texture2D(tRock, p.xz / 9.0 + 0.3).r;
   vec2 lean = (mn.rg - 0.5) * 0.8 * near + vec2(0.8 * (mf.r - 0.5) + 0.6 * (mf.g - 0.5), -0.6 * (mf.r - 0.5) + 0.8 * (mf.g - 0.5)) * 0.9 * close;
 
   // An edge is steep in the mesh as well as in the map: the map's fine relief alone is grain, and must not take the face's banded stone
@@ -248,8 +248,15 @@ void main() {
   // The rock: the plate's own colour, cooled a little (it was painted under a warm lamp), each loose stone its own tone.
   // It is wet, and seen against the light: its own colour is the lesser part of what reaches the lens, the sheen the greater.
   // The picture's own lights and darks are drawn out: its cracks go dark, its plates stay pale.
+  // At the lens the plate's picture is ten times too coarse and would show as soft blots: there its broad colour stays and the grain of
+  // wet rock, which is fine enough, carries the pattern.
+  plate = mix(plate, texture2D(tPlate, pq, 3.5).rgb, 0.75 * close * (1.0 - hang));
   float mark = dot(plate, vec3(0.3333)) / dot(texture2D(tPlate, pq, 6.0).rgb, vec3(0.3333));
-  vec3 rock = plate * vec3(0.43, 0.52, 0.6) * tone * clamp(pow(mark, 1.3), 0.3, 1.6);
+  // The plate the dead one lies on stands dry and pale over the tide.
+  vec2 fromPad = p.xz - vec2(-27.3, 22.6);
+  float dryPad = smoothstep(8.5, 5.0, length(fromPad)) * smoothstep(0.2, 0.4, field.r - (${SEA.toFixed(3)}));
+  plate = mix(plate, texture2D(tPlate, pq, 6.0).rgb * vec3(1.0, 0.98, 0.95), 0.8 * dryPad);
+  vec3 rock = plate * vec3(0.43, 0.52, 0.6) * tone * clamp(pow(mark, 1.3), 0.3, 1.6) * mix(broadStain, 2.0 / mix(1.0, tone, 0.5), dryPad);
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
   // It takes the grain of wet rock laid square on its own face (not the plate's picture pulled down it), in level bands as the beds lie.
@@ -267,13 +274,19 @@ void main() {
   // On a plate's broken edge the weed is only a line at the water, and the wet face keeps its stone's colour: it is not a black wall.
   rock = mix(rock, vec3(0.045, 0.05, 0.028) * (0.6 + 0.8 * tone), 0.7 * clamp(tide, 0.0, 1.0) * mix(1.0, smoothstep(0.3, 0.05, over), steep));
   vec3 albedo = rock * mix(1.0, mix(0.4, 0.55, steep), damp);
+  // The rocks that break the water under the lens of the feeding waders are dark and wet through, with weed on them.
+  vec2 fromBar = p.xz - vec2(-50.2, -22.4);
+  float bar = exp(-(0.12 * fromBar.x * fromBar.x + fromBar.y * fromBar.y) / 5.5) * smoothstep(-0.05, 0.1, over);
+  albedo = mix(albedo, albedo * vec3(0.3, 0.33, 0.3), 0.85 * bar);
   // Where the dead one lies its stain has run into the rock: dark, a little red, in the lows of the grain.
-  float stain = exp(-dot(p.xz - vec2(-27.3, 22.6), p.xz - vec2(-27.3, 22.6)) / 3.5) * smoothstep(0.25, 0.7, a.r + 0.5 * (1.0 - mn.b));
-  albedo = mix(albedo, albedo * vec3(0.42, 0.26, 0.22), 0.8 * stain);
+  // Pale dust lies in the hollows of the dry plate's grain.
+  albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.55 * dryPad * smoothstep(0.5, 0.22, mn.b) * near);
+  float stain = exp(-dot(fromPad - vec2(0.3, 0.7), fromPad - vec2(0.3, 0.7)) / 1.1) * smoothstep(0.2, 0.75, a.r + 0.6 * (1.0 - mn.b));
+  albedo = mix(albedo, albedo * vec3(0.5, 0.33, 0.28), 0.6 * stain);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
   // From the water's edge: an ankle's depth of bed with the rock's own sheen on it was a beach of wet sand along both banks.
   float under = smoothstep(0.01, -0.05, over);
-  albedo = mix(albedo, vec3(0.15, 0.27, 0.25) * clamp(tone * mark, 0.5, 1.4), 0.85 * under);
+  albedo = mix(albedo, vec3(0.13, 0.19, 0.17) * clamp(tone * mark, 0.5, 1.4), 0.85 * under);
   // The pool is a hand deep over slime: dark, green, and a mirror.
   albedo = mix(albedo, vec3(0.035, 0.045, 0.03), 0.85 * film);
   float rough = mix(mix(mix(0.9, 0.36, damp), 0.04, film), 0.95, under);
@@ -301,6 +314,9 @@ void main() {
   // Rock is rough even wet: it never mirrors the sky whole as the pool does, or wet rock near the lens would stand pale as sand.
   // Near the lens the sheen is not a sheet: it lies in the lows of the grain and breaks on its highs, so wet rock is dark with bright points.
   float gloss = mix(1.0, smoothstep(0.62, 0.3, mn.b) * (1.0 - 0.8 * pit * close), mix(near, 0.0, film));
+  gloss *= 1.0 - 0.75 * bar;
+  // Farther off the plate's own cracks and seams break it: the wet lies in the low places and glitters, the seams between are dull.
+  gloss *= mix(clamp(1.6 * (mark - 0.55), 0.15, 1.0), 1.0, film);
   colour += skyRadiance(back) * (min(fres, mix(0.3, 1.0, film)) * sheen * gloss * (0.75 + 0.25 * film) * 1.1 * occ * land.g);
   // The low sun in the wet sheen: a broad gold glare down the shelf toward it, which is what the backlight of this place is made of.
   float glare = pow(max(dot(reflect(-v, normalize(n + vec3(0.0, 1.5, 0.0))), uSunDir), 0.0), 28.0);
@@ -457,11 +473,14 @@ void main() {
 
   // The top of a rib holds dust and broken stone and is the palest thing in the shaft; its underside is wet and dark.
   float rib = smoothstep(0.5, 0.7, texture2D(tWallH, vUv, 3.0).r);
-  vec3 onTop = mix(broad, vec3(0.4, 0.36, 0.3), 0.3 + 0.35 * rib) * tone;
+  vec3 onTop = mix(broad, vec3(0.56, 0.53, 0.47), 0.3 + 0.45 * rib) * tone;
   vec3 below = broad * 0.6;
   // The rib is ivory: the plate's own pale stone, a little paler still than the wet wall it stands out of.
-  vec3 albedo = (plate * face * mix(0.85, 1.7, rib) + onTop * top + below * under) * grain * uWall.y;
+  // Between the ribs the wall is dark wet stone, grey-green; the ribs are pale.
+  // The plate was painted brown under a warm lamp: the stone is cream-grey, and keeps only thin bands of the plate's tan.
   float lum = dot(plate, vec3(0.3333));
+  vec3 stoneCol = mix(plate, lum * vec3(1.05, 1.0, 0.93), 0.55);
+  vec3 albedo = (stoneCol * face * mix(vec3(0.62, 0.72, 0.72), vec3(2.2, 2.2, 2.2), rib) + onTop * top + below * under) * grain * uWall.y;
   float wet = clamp(smoothstep(0.14, 0.04, lum) * face + 0.6 * under, 0.0, 1.0) * smoothstep(-1.0, -5.0, p.y);
   float rough = mix(0.92, 0.5, wet);
 
@@ -560,7 +579,7 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
           tGrainN: { value: grain.data },
           uGrainMean: { value: new THREE.Vector3(...grain.mean) },
           // x metres the fine relief is drawn as, y gain on the plate's colour, z the sky a shut cell still sees, w how dark a fold is.
-          uWall: { value: new THREE.Vector4(0.45, 1.05, 0.3, 2.0) },
+          uWall: { value: new THREE.Vector4(0.45, 1.3, 0.3, 2.0) },
           // How much of the sun's light the mist and the far wall hand on to a face in the shaft.
           uBounce: { value: 0.06 },
         },

@@ -121,15 +121,15 @@ float vapourRho(vec3 p, float ground, float fine) {
   float under = top - p.y;
   // Inside the wall; over the brim it may lean out a little on the west, and at the breath all round.
   float inside = smoothstep(0.5, -1.5, out0 - smoothstep(0.0, 3.0, p.y) * (2.5 * way + 3.0 * surge));
-  float body = 0.011 * smoothstep(0.0, 8.0, under) + 0.02 * smoothstep(8.0, 30.0, under);
+  float body = 0.014 * smoothstep(0.0, 8.0, under) + 0.03 * smoothstep(8.0, 30.0, under);
   // The veil over it: wisps, most where the noise is fine and high, gone a few metres up.
   float wisp = (0.012 + 0.012 * surge) * exp(min(under, 0.0) / (2.2 + 2.0 * way)) * smoothstep(0.52, 0.8, 0.55 * n0.a + 0.45 * small + 0.25 * way) * step(under, 0.5);
   // And what leaves it: thin torn sheets that hang over the west brim, a few metres up and a few metres out, where the wind takes them.
   float veil = 0.014 * west * smoothstep(0.5, -2.5, out0) * exp(-abs(out0 + 3.0) / 7.0) * smoothstep(4.5 + 5.0 * n0.a, -2.0, p.y) * smoothstep(-10.0, -3.0, p.y) * smoothstep(0.44, 0.66, 0.55 * n0.g + 0.45 * small + 0.12 * way);
   // One column stands up out of the depth on the west side, widens as it climbs and leans down the wind once it is over the brim.
   vec2 c = p.xz - vec2(-16.0, -11.0) - WINDV * (0.55 * max(p.y + 6.0, 0.0));
-  float cr = length(c) / (4.0 + 0.17 * max(p.y + 34.0, 0.0));
-  float column = 0.085 * smoothstep(1.0, 0.25, cr + 0.9 * (big - 0.5) + 0.35 * (small - 0.5)) * mix(1.0, 0.3, smoothstep(-6.0, 8.0, p.y)) * smoothstep(9.0, 3.5, p.y);
+  float cr = length(c) / (5.0 + 0.17 * max(p.y + 34.0, 0.0));
+  float column = 0.2 * smoothstep(1.0, 0.25, cr + 0.9 * (big - 0.5) + 0.35 * (small - 0.5)) * mix(1.0, 0.3, smoothstep(-6.0, 8.0, p.y)) * smoothstep(9.0, 3.5, p.y);
   float rho = inside * (body + wisp) * (0.45 + 0.55 * west) * (1.0 + 0.6 * surge) + veil + column;
 
   // On the rock by the lip.
@@ -229,8 +229,8 @@ void main() {
         float roofed = exp(-9.0 * vapourRho(p + vec3(0.0, 4.0, 0.0), land.r, 0.0) * 6.0);
         float sun = sunSeen(land, p.y) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead, and what is deep in the vapour is under the rest of it.
-        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 60.0, 0.5, 1.0);
-        vec3 light = vec3(0.2, 0.205, 0.215) * sunk * sunk * (0.1 + 0.9 * roofed)
+        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 60.0, 0.55, 1.0);
+        vec3 light = vec3(0.4, 0.4, 0.41) * sunk * (0.3 + 0.7 * roofed)
           + mix(uSunColour, vec3(2.2), 0.6) * (sun * (0.12 * phase * exp(-1.6 * shade) + 0.015 * exp(-0.3 * shade)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
