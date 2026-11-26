@@ -170,6 +170,7 @@ varying vec4 vAt;
 varying vec4 vKite;
 varying vec3 vSkin;
 varying vec3 vAcross;
+varying float vGather;
 // The outline: how wide the blade is at s of its length, as a share of its widest. A ribbon: it leaves the knot gathered, keeps much of
 // a width all its length, wandering, and runs out to a tail. Its two edges are not alike.
 float outline(float s, float sd) {
@@ -210,13 +211,13 @@ void main() {
   float far = length(cameraPosition - c);
   // Where it has wound on itself it is gathered to a rope, and opens again.
   float neck = 1.0 - 0.78 * step(0.3, fract(kSeed * 6.1)) * exp(-pow((s - 0.22 - 0.5 * fract(kSeed * 4.7)) / 0.04, 2.0));
-  float wide = kHalf * neck * outline(s, kSeed + (v > 0.0 ? 0.37 : 0.0));
+  float wide = 1.5 * kHalf * neck * outline(s, kSeed + (v > 0.0 ? 0.37 : 0.0));
   // Far off a blade is never thinner than a pixel and a half: it does not come and go between the pixels.
   float half_ = max(wide, 0.75 * uPixel * far);
   // The section: an arc the wind fills and empties as the waves pass (curl is half the angle the arc turns through), and two edges that
   // flutter each in its own time, harder toward the tail.
   float kb = 6.2832 / (7.0 * kHalf);
-  float curl = (0.6 * sin(kb * (x - kSpeed * t) + kSeed * 40.0) + 0.45 * sin(0.37 * kb * (x - 0.8 * kSpeed * t) + kPhase * 1.3)) * smoothstep(0.02, 0.2, s);
+  float curl = (0.95 * sin(kb * (x - kSpeed * t) + kSeed * 40.0) + 0.6 * sin(0.37 * kb * (x - 0.8 * kSpeed * t) + kPhase * 1.3)) * smoothstep(0.02, 0.2, s);
   float flutter = 0.2 * (0.15 + 0.85 * s) * sin(2.8 * kb * (x - 1.25 * kSpeed * t) + kSeed * 90.0 + 1.7 * v);
   float av = abs(v);
   float a = curl * v;
@@ -232,6 +233,7 @@ void main() {
   vAt = vec4(s, v, x, half_);
   vKite = vec4(kSeed, aSeed.z, smoothstep(200.0, 450.0, length(cameraPosition - aAnchor) * uReach), wide / half_);
   vSkin = vec3(curl, kHalf, kBlade);
+  vGather = (1.0 - neck) / 0.78;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
@@ -240,134 +242,204 @@ ${RIG_GLSL}
 ${NOISE_GLSL}
 uniform vec4 uStruck;
 uniform vec3 uStruckAt;
+uniform vec3 uBody;
 uniform vec3 uGlowTint;
-// x: how much of a body the skin is (its scatter), y: how much it hides of what is behind it, z: the strength of its colours, w: of its sheen.
 uniform vec4 uFilm;
+uniform vec2 uWrinkle;
+uniform vec2 uTone;
+uniform sampler2D tFilmA;
+uniform sampler2D tFilmAA;
+uniform sampler2D tFilmAH;
+uniform sampler2D tFilmB;
+uniform sampler2D tFilmBA;
+uniform sampler2D tFilmBH;
 uniform float uVeil;
-uniform sampler2D tSkin;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec4 vAt;
 varying vec4 vKite;
 varying vec3 vSkin;
+varying float vGather;
 varying vec3 vAcross;
-const vec3 SKIN_MEAN = vec3(0.321, 0.267, 0.355);
 void main() {
-  float s = vAt.x;
+  float u = vAt.x;
   float v = vAt.y;
   float metres = vAt.z;
+  float wide = 2.0 * vSkin.x;
   float seed = vKite.x * 97.0;
-  float far = vKite.z;
+  float vFar = vKite.z;
+  float vNear = 0.0;
+  float vThin = vKite.w;
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
+  // Which of its two faces the lens sees: 1 the one the section's normal leaves, -1 the other.
   float face = dot(n, toCamera) < 0.0 ? -1.0 : 1.0;
   n *= face;
+  float blade = smoothstep(0.0, 0.0 + 0.07, u);
 
-  // Where the skin is: inside its outline, less the holes the wind has worked open, the rents in from its edges and the split of its tail.
-  // inside is in shares of the half width, 0 at an edge.
-  float lie = v;
-  float edge = sign(v);
-  float ragged = 0.2 * (vnoise(vec2(metres * 0.6 + seed, 3.0 * edge)) - 0.5) + 0.08 * (vnoise(vec2(metres * 2.3, seed + edge)) - 0.5);
-  // Rents: what the gale has torn in from an edge, some of them deep.
-  float rent = smoothstep(0.6, 0.78, vnoise(vec2(metres * 0.33 + seed * 1.7, 7.0 * edge + 2.0))) * (0.35 + 0.5 * vnoise(vec2(metres * 0.11 + seed, edge)));
-  float inside = 1.0 - abs(lie) + (ragged - rent) * smoothstep(0.05, 0.25, s) * (1.0 - 0.65 * far);
-  for (int i = 0; i < 3; i++) {
-    float fi = float(i);
-    float h = fract(seed * (0.731 + 0.417 * fi));
-    if (h > 0.8) continue;
-    vec2 at = vec2(0.26 + 0.5 * fract(h * 7.7 + 0.3 * fi), (fract(h * 13.3) - 0.5) * 1.1);
-    vec2 size = vec2(2.2 + 4.5 * fract(h * 29.1), 0.22 + 0.3 * fract(h * 17.9));
-    vec2 q = vec2((s - at.x) * vSkin.z / (size.x * vSkin.y), (lie - at.y) / size.y);
-    float hole = length(q) - 1.0 + 0.5 * (vnoise(vec2(atan(q.y, q.x) * 2.2 + seed, fi)) - 0.5);
-    inside = min(inside, hole * size.y);
+  // The skin is the photograph of a ribbon, its middle laid down the blade: its holes, its veins, its colours and stretches of its edge
+  // are the picture's own; the outline is the blade's. There are two pictures, and each ribbon wears one of them either way up.
+  float s = clamp((u - 0.0) / (1.0 - 0.0), 0.0, 1.0);
+  float vb = v / max(vThin, 0.05);
+  float flip = fract(seed * 0.37) < 0.5 ? -1.0 : 1.0;
+  float vf = vb * flip;
+  vec3 pic;
+  float body;
+  float relief;
+  if (fract(seed * 0.83) < 0.5) {
+    vec2 uv = vec2(mix(0.1, 0.9, s), 1.0 - (0.455 + 0.13 * vf));
+    pic = texture2D(tFilmA, uv).rgb;
+    body = texture2D(tFilmAA, uv).r;
+    relief = texture2D(tFilmAH, uv).r;
+  } else {
+    vec2 uv = vec2(mix(0.08, 0.9, s), 1.0 - (0.415 + 0.13 * vf));
+    pic = texture2D(tFilmB, uv).rgb;
+    body = texture2D(tFilmBA, uv).r;
+    relief = texture2D(tFilmBH, uv).r;
   }
-  // The tail is split in two, deeper toward its end.
+  float torn = smoothstep(0.5, 1.0, s);
+  // The tail is torn along its length into strings, deeper toward its end and toward its edges, and here and there the skin has a hole
+  // the wind has worked open. The tears are in the skin and travel with it.
+  float strings = vnoise(vec2(vb * 8.0 + seed * 7.0, metres / (5.0 * wide) + seed)) + 0.4 * (vnoise(vec2(vb * 21.0 + seed, metres / (1.6 * wide))) - 0.5);
+  float tear = mix(-0.45, 0.78, torn * torn * (0.55 + 0.45 * abs(vb))) + 0.5 * smoothstep(0.7, 0.86, vnoise(vec2(metres / (1.3 * wide) + seed * 3.0, vb * 2.2 + seed * 11.0)));
+  float shed = smoothstep(-0.04, 0.06, strings - tear);
+  float cut = smoothstep(0.35, 0.65, body) * step(abs(vb), 1.0) * shed;
+  // And the gale has had it: ragged along both edges, rent in from them, its tail split in two.
+  float side_ = sign(vb);
+  float ragged = 0.2 * (vnoise(vec2(metres * 0.6 + seed, 3.0 * side_)) - 0.5) + 0.08 * (vnoise(vec2(metres * 2.3, seed + side_)) - 0.5);
+  float rent = smoothstep(0.6, 0.78, vnoise(vec2(metres * 0.33 + seed * 1.7, 7.0 * side_ + 2.0))) * (0.35 + 0.5 * vnoise(vec2(metres * 0.11 + seed, side_)));
+  float inside = 1.0 - abs(vb) + (ragged - rent) * smoothstep(0.05, 0.25, s) * (1.0 - 0.65 * vFar);
   float splitFrom = 0.62 + 0.25 * fract(seed * 0.293);
   float splitAt = (fract(seed * 0.611) - 0.5) * 0.7 + 0.25 * sin(s * 9.0 + seed);
-  float gap = 0.4 * smoothstep(splitFrom, 1.0, s);
-  inside = min(inside, abs(lie - splitAt) - gap + 1.0 - smoothstep(splitFrom, splitFrom + 0.05, s));
-  float soft = max(1.5 * fwidth(lie), 0.02);
-  float cut = smoothstep(0.0, soft, inside) * vKite.w;
-  if (cut < 0.01) discard;
-  // Its edge is rolled back on itself: a thicker lip wherever the skin ends.
-  float lip = 1.0 - smoothstep(0.0, 0.1 + 2.0 * soft, inside);
+  inside = min(inside, abs(vb - splitAt) - 0.4 * smoothstep(splitFrom, 1.0, s) + 1.0 - smoothstep(splitFrom, splitFrom + 0.05, s));
+  float soft = max(1.5 * fwidth(vb), 0.02);
+  float whole = smoothstep(0.0, soft, inside);
+  float lip = (1.0 - smoothstep(0.0, 0.1 + 2.0 * soft, inside)) * whole;
+  cut *= whole;
+  float skin = cut * smoothstep(0.0, 0.012, u);
+  if (skin < 0.02) discard;
 
-  // The skin itself: a sheet of veined film laid down the blade, each kite on its own part of it.
-  vec2 uv = vec2(metres / 48.0 + seed * 0.37, lie * vSkin.y / 24.0 + seed * 0.61);
-  // Its colours are read broad, as patches: the fine of the sheet is only in its relief.
-  vec3 pic = texture2D(tSkin, uv, 3.5).rgb;
-  float relief = dot(texture2D(tSkin, uv, 1.0).rgb, vec3(0.333));
-  // Its creases are in its surface: the sheet's relief turns the normal.
+  // A thin body, not a card: the skin has two faces and a thickness, and the light is on it, in it and through it. The picture gives it its
+  // veins and its small folds; the section gives it its belly, its back and the rope where it is wrung.
+  float lum = dot(pic, vec3(0.333));
+  float tone = clamp(lum / 0.2, 0.0, 2.2);
+  float fold = smoothstep(0.55, 0.9, relief);
+  float crease = 1.0 - smoothstep(0.2, 0.6, tone);
+  // Its small wrinkles are in its surface, not painted on it: the picture's relief turns the normal, so each takes the light its own way.
   vec3 px = dFdx(vWorld);
   vec3 py = dFdy(vWorld);
   vec3 r1 = cross(py, n);
   vec3 r2 = cross(n, px);
   float det = dot(px, r1);
   vec3 slope = (r1 * dFdx(relief) + r2 * dFdy(relief)) * (sign(det) / max(abs(det), 1e-7));
-  n = normalize(n - (1.0 - far) * 0.26 * slope / (1.0 + 0.5 * length(slope)));
-  // It is wrinkled down its length: broad folds, a few across its width, that wander and run into each other.
-  float wob = vnoise(vec2(metres * 0.22 + seed, lie * 1.3));
-  float phase = lie * (7.0 + 5.0 * fract(seed * 0.173)) + 5.0 * wob + metres * 0.15;
-  // Not everywhere: a stretch of it is pulled smooth, the next is gathered.
-  float gathered = mix(0.2, 1.0, smoothstep(0.3, 0.7, vnoise(vec2(metres * 0.06 + seed * 5.0, lie * 0.7 + seed))));
-  float fold = sin(phase) * gathered;
-  // And between them narrower ones, seen only close.
-  float phase2 = lie * (15.0 + 6.0 * fract(seed * 0.411)) + 7.0 * vnoise(vec2(metres * 0.35 + seed * 2.0, lie * 2.0)) - metres * 0.1;
-  float gathered2 = smoothstep(0.4, 0.75, vnoise(vec2(metres * 0.11 - seed * 3.0, lie * 1.1 - seed)));
-  float fold2 = sin(phase2) * (1.0 - far) * gathered2;
-  n = normalize(n + normalize(vAcross) * (0.5 * cos(phase) * gathered * (1.0 - 0.6 * far) + 0.34 * cos(phase2) * gathered2 * (1.0 - far)));
+  n = normalize(n - uBody.z * slope / (1.0 + uBody.z * length(slope)) * 1.6);
+  // It is wrinkled down its length: broad folds, a few across its width, that wander and run into each other, a stretch of it pulled
+  // smooth and the next gathered.
+  float wob = vnoise(vec2(metres * 0.22 + seed, vb * 1.3));
+  float phase = vb * (7.0 + 5.0 * fract(seed * 0.173)) + 5.0 * wob + metres * 0.15;
+  float gathered = mix(0.2, 1.0, smoothstep(0.3, 0.7, vnoise(vec2(metres * 0.06 + seed * 5.0, vb * 0.7 + seed))));
+  n = normalize(n + normalize(vAcross) * (0.6 * cos(phase) * gathered * (1.0 - 0.6 * vFar)));
+  float pleat = smoothstep(0.2, 1.0, sin(phase) * gathered);
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
-
-  // How many skins thick it is: thin where it is stretched over a belly, a body where it is gathered at the knot, at its lip, along a
-  // crease, and wherever it is seen aslant.
-  float drift = vnoise(vec2(metres / (2.4 * vSkin.y) + seed * 3.0, lie * 1.1 + seed));
-  float knot = 1.0 - smoothstep(0.0, 0.22, s);
-  float crease = smoothstep(0.03, 0.12, relief - 0.33);
-  float belly = smoothstep(0.2, 1.0, abs(vSkin.x)) * (1.0 - lie * lie);
-  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease + 1.0 * smoothstep(0.2, 1.0, fold) + 0.75 * smoothstep(0.3, 1.0, fold2) - 0.2 * belly + 0.35 * far;
-  // Far off its folds are not seen one by one, but it is thick in long streaks and thin between them.
-  thick = max(0.06, thick * (1.0 + far * 1.6 * (vnoise(vec2(metres * 0.045 + seed * 2.0, lie * 2.6 + seed)) - 0.55)));
-  float path = thick / max(nv, 0.3);
-  float cover = (1.0 - exp(-uFilm.y * path)) * cut;
-
-  // The light on the face the lens sees and on the one it does not, and the trough of the section in its own shade.
-  float hollow = smoothstep(0.2, 1.2, face * vSkin.x) * (1.0 - 0.5 * lie * lie);
-  float back = smoothstep(0.2, 1.2, -face * vSkin.x) * (1.0 - 0.5 * lie * lie);
-  vec3 onNear = skyIrradiance(n) / 3.14159 * (1.0 - 0.45 * hollow);
-  vec3 onFar = skyIrradiance(-n) / 3.14159 * (1.0 - 0.45 * back);
-  if (uStruck.y > 0.0) {
-    vec2 off = vWorld.xz - uStruckAt.xz;
-    float mine = max(abs(uStruck.x - vKite.y) < 0.5 ? 1.0 : 0.3, 1.0 / (1.0 + dot(off, off) / 250000.0));
-    onNear += min(vec3(0.6), 0.3 * emitterIrradiance(vWorld, n)) + uGlowTint * (0.04 * uStruck.y * mine);
-    onFar += min(vec3(0.6), 0.3 * emitterIrradiance(vWorld, -n)) + uGlowTint * (0.07 * uStruck.y * mine);
-  }
-  // The film's own colour: lilac grey, with the sheet's stains of rose, violet and gold about its mean.
-  vec3 stain = mix(vec3(1.0), clamp(pic / SKIN_MEAN, 0.5, 1.8), uFilm.z);
-  // Close, its hue wanders in broad patches: violet, a cold green, a little gold.
-  vec3 patches = 0.5 + 0.5 * cos(6.2832 * (1.4 * drift + 0.35 * wob + seed + vec3(0.0, 0.3333, 0.6667)));
-  vec3 body = mix(vec3(0.7, 0.74, 1.0), vec3(1.0, 0.8, 0.98) * (0.78 + 0.4 * patches), 1.0 - 0.5 * far) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
-  // What it scatters: a pale haze of the light on its two faces, a little even where it is thinnest, so that it stands pale before a
-  // dark sky and the sky is still seen through it.
-  float thin = 0.8 * uFilm.y;
-  float haze = cut * (thin + (1.0 - thin) * (1.0 - exp(-0.8 * path)));
+  float gather = vGather;
+  // Far off: its gathered middle (core), and how far a place is from its two thin ends (mid).
+  float mid = smoothstep(0.03, 0.28, s) * (1.0 - smoothstep(0.4, 0.9, s));
+  float core = vFar * max(mid * (1.0 - smoothstep(0.1, 0.6, abs(vb))), gather);
+  // The lens looks into the trough of the section, or at its back.
+  float hollow = smoothstep(0.2, 1.3, face * vSkin.x);
+  float back = smoothstep(0.2, 1.3, -face * vSkin.x);
+  float belly = smoothstep(0.25, 1.2, abs(vSkin.x)) * (1.0 - vb * vb) * (1.0 - gather);
+  // Its edge is rolled: a line wherever the skin ends, at the picture's own edge, round its holes and along every string of its tail.
+  float rim = (1.0 - smoothstep(0.55, 0.98, body)) * cut + (1.0 - smoothstep(0.0, 0.14, strings - tear)) * smoothstep(0.02, 0.3, tear + 0.45);
+  rim = min(rim + 0.6 * lip, 1.0);
+  // Its wrinkles catch the sky: the bright lines of the picture's relief.
+  float wrinkle = smoothstep(uWrinkle.x, uWrinkle.y, relief);
+  // How many skins thick it is here: one where it is stretched over a belly, more at a vein, a fold or its rolled edge, several where it
+  // is wrung. The lens looks through more of it where it is seen aslant.
+  float thick = 0.5 + 0.8 * fold + 0.7 * crease + 2.4 * gather + 1.1 * rim - 0.3 * belly + 0.5 * pleat;
+  float path = thick / max(nv, 0.28);
+  float through = exp(-0.45 * path) * (1.0 - 0.5 * vFar);
+  // The light on the face the lens sees and on the one it does not. Most of it comes from overhead and from the lee, where the dusk is: a face
+  // turned from it is in its own shade, and the inside of a trough is shaded by its walls.
   vec3 above = normalize(vec3(-0.45, 0.72, 0.5));
-  vec3 key = skyIrradiance(above) / 3.14159;
-  // Between two folds the skin lies in their shade.
-  float trough = 1.0 - (1.0 - far) * (0.3 * smoothstep(0.1, -0.9, fold) + 0.25 * smoothstep(0.0, -0.9, fold2));
-  vec3 c = body * (uFilm.x * (0.55 * onNear + 0.75 * onFar) * haze * trough + 0.25 * key * lip * cut * (1.0 - 0.7 * far));
-
-  // Wet: it gives the sky back, more aslant, and the colours of a thin film slide over it as it turns.
-  float fres = 0.07 + 0.93 * pow(1.0 - nv, 4.0);
+  float litNear = smoothstep(-0.55, 0.75, dot(n, above)) * (1.0 - 0.6 * hollow * (1.0 - 0.5 * vb * vb));
+  float litFar = smoothstep(-0.55, 0.75, -dot(n, above)) * (1.0 - 0.6 * back * (1.0 - 0.5 * vb * vb));
+  vec3 onNear = skyIrradiance(n) / 3.14159;
+  vec3 onFar = skyIrradiance(-n) / 3.14159;
+  if (uStruck.y > 0.0) {
+    onNear += min(vec3(0.6), 0.3 * emitterIrradiance(vWorld, n));
+    onFar += min(vec3(0.6), 0.3 * emitterIrradiance(vWorld, -n));
+  }
+  // Lilac-grey whatever lights it: the film keeps the light's brightness and little of its colour.
+  onNear = mix(onNear, dot(onNear, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.7);
+  onFar = mix(onFar, dot(onFar, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.7);
+  float toDusk = pow(clamp(dot(-toCamera, uWarmDir), 0.0, 1.0), 3.0);
+  vec3 lilac = mix(vec3(0.95, 0.9, 1.06), vec3(0.86, 0.82, 1.1), fract(seed * 3.3));
+  // The picture's own colour about its mean: lilac, its stains of violet and gold, its veins dark.
+  vec3 stain = clamp(pic / vec3(0.22, 0.2, 0.24), 0.3, 2.0);
+  // What the near face scatters back, and what comes through from the far one: violet, and strongest through a single stretched skin.
+  // A single stretched skin scatters little and is nearly clear; a fold of several is a body, and grey.
+  float dense = mix(mix(0.2, 1.0, 1.0 - exp(-0.7 * (path - 0.5))), 0.75, vFar);
+  // Seen close, where a single skin faces the lens it is clear as glass: what is behind it shows, and it is bright only at its folds, its
+  // edges and where it is seen aslant.
+  float clear = (1.0 - vFar) * smoothstep(0.15, 0.6, nv) * exp(-1.2 * max(thick - 0.5, 0.0));
+  vec3 key = dot(skyIrradiance(above), vec3(0.3, 0.5, 0.2)) * 0.3183 * vec3(0.9, 0.86, 1.16);
+  vec3 c = uFilm.x * (uBody.x * dense * (1.0 - 0.35 * gather) * onNear * mix(0.12, 1.3, litNear) + uBody.y * onFar * mix(0.12, 1.3, litFar) * through * vec3(0.8, 0.68, 1.3)) + 2.0 * uFilm.y * uWarmColour * toDusk * through;
+  c *= mix(vec3(1.0), stain, uTone.x) * lilac * (0.8 + 0.4 * fract(seed * 5.3)) * (1.0 - 0.25 * vFar) * (1.0 - 0.8 * clear) * (1.0 + 0.25 * vNear);
+  // Before the long lens the veils are violet grey, darker than the lit cloud: what is bright on them is the charge.
+  c *= mix(vec3(1.0), vec3(0.6, 0.54, 0.82), uVeil);
+  // The film's colour is its thickness and the angle it is seen at, as on a soap film: the picture's relief and a slow drift along it
+  // are the thickness, and the tint runs through violet, pink and pale green across a fold as the skin turns from the lens.
+  float drift = vnoise(vec2(metres / (2.4 * wide) + seed * 3.0, vb * 1.1 + seed));
+  float film = 0.9 * relief + 1.3 * drift + 2.2 * (1.0 - nv) + seed;
+  vec3 tints = pow(0.5 + 0.5 * cos(6.2832 * (film + vec3(0.0, 0.3333, 0.6667))), vec3(3.0));
+  // (Violet is the widest of its three bands and green the narrowest.)
+  tints *= vec3(1.9, 1.0, 0.6);
+  vec3 pearl = (vec3(0.56, 0.4, 1.0) * tints.x + vec3(1.0, 0.5, 0.8) * tints.y + vec3(0.6, 1.0, 0.76) * tints.z) / (tints.x + tints.y + tints.z);
+  c *= mix(vec3(1.0), 1.6 * pearl, 1.6 * uFilm.z * (1.0 - vFar) * (1.0 - gather));
+  // Thin as a soap film: where it is stretched it takes colours by its thickness and the angle it is seen at.
+  float oil = 1.2 + 2.2 * relief + 1.4 * drift + 0.8 * (1.0 - nv);
+  vec3 sheen = 0.5 + 0.5 * cos(6.2832 * oil * vec3(1.0, 1.17, 1.4));
+  c *= mix(vec3(1.0), 0.55 + 0.9 * sheen, 0.5 * uFilm.z * (1.0 - 0.6 * fold) * (1.0 - gather));
+  float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
+  r.y = abs(r.y) + 0.05;
   vec3 mirror = skyRadiance(normalize(r));
-  float film = 0.9 * relief + 1.2 * drift + 1.5 * (1.0 - nv) + seed;
-  vec3 tints = 0.5 + 0.5 * cos(6.2832 * (film + vec3(0.0, 0.3333, 0.6667)));
-  vec3 pearl = mix(vec3(1.0), 0.45 + 1.1 * (vec3(0.62, 0.42, 1.0) * tints.x + vec3(1.0, 0.52, 0.74) * tints.y + vec3(1.0, 0.82, 0.55) * tints.z) / (tints.x + tints.y + tints.z), uFilm.z);
+  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.5, 0.2)) * vec3(0.92, 0.94, 1.15), 0.6);
+  float glint = smoothstep(0.7, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
+  // The edge is not lit along its whole length: the line comes and goes with the film's thickness, and seen close it is thin.
+  float lineHere = mix(mix(0.25, 1.0, smoothstep(0.35, 0.65, drift)), 1.0, vFar);
+  rim *= lineHere;
+  // A wet sheen on the face that looks up, on every fold, and along the rolled edge.
+  vec3 shine = mirror * (0.5 * fres * litNear + 0.5 * uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) * (0.35 + 0.65 * litNear) * (1.0 - 0.5 * clear) + 0.6 * rim * (1.0 - 0.6 * uVeil)) * (1.0 - 0.55 * uVeil);
+  // Pearl: aslant the film gives the sky back tinted by its thickness, violet, then pink, then a pale green, and the tints slide as it
+  // turns. Its rolled edge catches the light.
+  shine += key * (pearl * (3.2 * uFilm.z * pow(1.0 - nv, 3.0) * (1.0 - 0.7 * gather) * (0.3 + 0.7 * litNear)) + vec3(0.95, 0.95, 1.1) * (0.55 * rim * (1.0 - 0.6 * uVeil))) * (1.0 - 0.8 * vFar);
+  // Seen close the film is mother of pearl on the whole of a face that looks at the sky, not only aslant: a sheen on a skin that is
+  // otherwise clear, brighter on its veins. None of its colour is the picture's.
+  float skyward = smoothstep(-0.3, 0.7, dot(n, above));
+  shine += key * mix(vec3(1.0), 1.5 * pearl, 0.8) * (0.2 * uFilm.z * (1.0 - vFar) * (1.0 - gather) * min(tone, 1.6) * mix(0.2, 1.25, skyward));
+  // The brightest of the sky on a wet skin: a line of light down every fold that turns to it, which is what says the section is round.
   float ndh = clamp(dot(n, normalize(above + toCamera)), 0.0, 1.0);
-  // The brightest of the sky on a wet skin: a soft light down every fold that turns to it.
-  vec3 shine = uFilm.w * pearl * mix(vec3(1.0), vec3(0.7, 0.62, 1.0), uVeil) * (mirror * fres * (1.0 + 2.0 * lip * (1.0 - 0.7 * far)) + key * vec3(0.8, 0.72, 1.0) * (1.6 * pow(ndh, 40.0) + 0.07 * pow(ndh, 6.0)) * (1.0 - 0.5 * far)) * cut;
-  float alpha = clamp(cover + fres * uFilm.w * cut * (1.0 - cover), 0.0, 1.0);
-  gl_FragColor = vec4(rigOut(c + shine), alpha * (1.0 - uSolo));
+  shine += key * (1.0 - 0.6 * uVeil) * (1.5 * pow(ndh, 70.0) + 0.1 * pow(ndh, 14.0)) * vec3(0.94, 0.94, 1.1);
+  // A stroke lights the kites near it for the frames it burns: their edges, their strings and the thin of their bellies flare violet
+  // white, and are dark again between the return strokes.
+  vec2 off = vWorld.xz - uStruckAt.xz;
+  float mine = max(abs(uStruck.x - vKite.y) < 0.5 ? 1.0 : 0.3, 1.0 / (1.0 + dot(off, off) / 250000.0));
+  float aslant = 1.0 - smoothstep(0.1, 0.5, nv);
+  shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.35 * rim * lineHere + 0.2 * aslant + 0.07 * belly, (0.04 + 0.25 * fold + 0.3 * glint + 0.8 * rim + 0.5 * aslant + 0.16 * belly) * (1.0 - 0.6 * core), vFar));
+  // How much of what is behind it the skin hides. Far off it is more of a body: its lit face pale, its other face dark.
+  // Far off each is a darker body where it is gathered, along its middle and at its wrung places, and thin toward its two ends and its
+  // edges, where the sky shows through it.
+  float cover = clamp((1.0 - exp(-0.33 * path)) * (1.0 - 0.8 * clear) * mix(1.0, 0.3 + 0.55 * mid, vFar) + vFar * (0.03 + 0.2 * mid + 0.3 * core) * (1.0 + 0.3 * vNear), 0.0, 0.95);
+  c *= 1.0 - 0.7 * core;
+  // Lilac-grey, whatever the light: glass, not flesh.
+  c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.97, 1.16), mix(0.2, 0.6, vFar));
+  // The shine is on the film, not in it: it shows at its full strength however thin the film.
+  c = (c * cover + shine) / max(cover, 0.05);
+  float alpha = skin * cover;
+  if (alpha < 0.02) discard;
+  gl_FragColor = vec4(rigOut(c), alpha * (1.0 - uSolo));
 }`;
 
 const CORD_VERTEX = /* glsl */ `
@@ -677,7 +749,7 @@ export function create(ctx: Context): Piece {
   const wideShot = during('spine-01');
   const closeShot = during('spine-02');
   const veil = { value: 0 };
-  const film = new THREE.Vector4(1.0, 0.75, 0.6, 1.0);
+  const film = new THREE.Vector4(1.0, 0.05, 0.15, 0.9);
   const struck = new THREE.Vector4(0, 0, 0, 0);
   const struckAt = new THREE.Vector3(0, 0, 0);
   const shared = {
@@ -699,11 +771,18 @@ export function create(ctx: Context): Piece {
       uGlowTint: { value: new THREE.Vector3(1.0, 0.72, 2.8) },
       uFilm: { value: film },
       uVeil: veil,
-      tSkin: { value: ctx.assets.texture('mat/kiteskin.jpg', { kind: 'colour', repeat: true, anisotropy: 8 }) },
+      uBody: { value: new THREE.Vector3(0.6, 1.2, 0.035) },
+      uWrinkle: { value: new THREE.Vector2(0.5, 0.85) },
+      uTone: { value: new THREE.Vector2(0.85, 0.25) },
+      tFilmA: { value: ctx.assets.texture('mat/kitefilm-a.jpg', { kind: 'colour', repeat: false, anisotropy: 8 }) },
+      tFilmAA: { value: ctx.assets.texture('mat/kitefilm-a-a.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+      tFilmAH: { value: ctx.assets.texture('mat/kitefilm-a-h.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+      tFilmB: { value: ctx.assets.texture('mat/kitefilm-b.jpg', { kind: 'colour', repeat: false, anisotropy: 8 }) },
+      tFilmBA: { value: ctx.assets.texture('mat/kitefilm-b-a.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+      tFilmBH: { value: ctx.assets.texture('mat/kitefilm-b-h.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
     },
     side: THREE.DoubleSide,
     transparent: true,
-    premultipliedAlpha: true,
     depthWrite: true,
   });
   const bladeMesh = new THREE.Mesh(strips(blades, ALONG, ACROSS, (i, j) => [i / ALONG, (j / ACROSS) * 2 - 1], false), bladeMaterial);
@@ -813,9 +892,9 @@ export function create(ctx: Context): Piece {
       stageMore.set(inStrike ? 1 : 0, inClose ? 0.1 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0, inStrike ? 1.5 : 1);
       fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0);
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
-      if (inStrike) film.set(0.3, 0.4, 0.5, 1.4);
-      else if (inClose) film.set(0.34, 0.3, 0.95, 0.75);
-      else film.set(0.3, 0.36, 0.9, 0.4);
+      // Seen close the film shows its oil colours.
+      film.z = inClose ? 0.6 : 0.15;
+      film.w = inClose ? 0.55 : 0.9;
       veil.value = inStrike ? 1 : 0;
       const flash = flashAt(seconds);
       // The stroke as it burns and nothing after it: between the return strokes the kites are dark.
