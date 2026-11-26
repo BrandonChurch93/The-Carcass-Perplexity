@@ -129,7 +129,7 @@ const SPINE: [number, number][] = [[0, -0.1], [0.2, 0.05], [0.45, 0.09], [0.8, 0
 // The neck's pitch along its length, degrees above level: carried up (it stands off the shoulders, arches and hooks over at the end so the tuft
 // hangs), and down (it leaves the chest level and goes down into the water).
 const NECK_UP: [number, number][] = [[0, 38], [0.22, 74], [0.52, 86], [0.72, 58], [0.87, 0], [1, -74]];
-const NECK_DOWN: [number, number][] = [[0, 16], [0.18, -14], [0.45, -66], [0.75, -84], [1, -80]];
+const NECK_DOWN: [number, number][] = [[0, 8], [0.14, -26], [0.4, -60], [0.75, -60], [1, -38]];
 
 // The legs: left hind, left fore, right hind, right fore, and where in the cycle each one steps. A slow walk: one foot at a time.
 const LEGS: { side: number; fore: number; at: number }[] = [
@@ -160,8 +160,8 @@ export function makeBuild(k: number, seed: number, far: boolean, cell = 0.02, ow
     stride,
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
-    neckR: (far ? 0.082 : 0.092) * k,
-    tendrils: far ? 6 : 320,
+    neckR: (far ? 0.082 : 0.078) * k,
+    tendrils: far ? 6 : 260,
     tendrilLen: 0.62 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
     chest: j(10, 0.9, 1.14),
@@ -234,6 +234,7 @@ export class Wader {
           [body.legT[v] as number, body.shade[v] as number, body.radius[v] as number, seed],
           [4, body.neckU[v] as number],
         );
+        skin.picture(this.blob.start + v, body.pic[v * 5] as number, body.pic[v * 5 + 1] as number, body.pic[v * 5 + 2] as number, body.pic[v * 5 + 3] as number, body.pic[v * 5 + 4] as number);
       }
     }
     // The trunk of one seen far off. Its section is not an ellipse: a ridge along the spine, flat flanks, a keel.
@@ -325,7 +326,7 @@ export class Wader {
     const tr = (far ? 0.012 : 0.0075) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
-      const r = tr * (1 - 0.6 * u ** 1.6);
+      const r = tr * (1 - 0.82 * u ** 1.3);
       for (let s = 0; s < tSides; s++) {
         const phi = (s / tSides) * Math.PI * 2;
         this.tendrilLocal[(i * tSides + s) * 2] = r * Math.cos(phi);
@@ -335,23 +336,25 @@ export class Wader {
     for (let n = 0; n < b.tendrils; n++) {
       const tube = skin.tube(tRings, tSides);
       this.tendrils.push(tube);
+      // A heavy wet mop: cords of flesh, none much thicker than the next, that hang in locks.
+      const finger = false;
       const clump = Math.floor(hash(seed * 3.1 + n * 0.37) * 12);
       const strand = {
         angle: (clump / 12) * Math.PI * 2 + hash(seed + clump * 5.3) * 0.5 + (hash(seed + n * 1.7) - 0.5) * 0.3,
         out: (0.15 + 0.85 * hash(seed + clump * 2.9)) * (0.8 + 0.4 * hash(seed + n * 2.9)),
-        len: b.tendrilLen * (0.3 + 0.95 * hash(seed * 1.3 + n * 5.1) ** 1.4),
-        stiff: 0.3 + 0.7 * hash(seed + n * 9.7),
+        len: b.tendrilLen * (0.35 + 0.85 * hash(seed * 1.3 + n * 5.1)),
+        stiff: 0.2 + 0.6 * hash(seed + n * 9.7),
         phase: hash(seed + n * 4.3) * 6.28,
         // Wet, the strands of one lock hang as one: they kink together.
         lock: hash(seed * 1.9 + clump * 7.7) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
-        root: 1 - 0.24 * hash(seed + n * 8.9) ** 1.5,
-        thick: far ? 1 : 0.26 + 0.75 * hash(seed + n * 12.7) ** 3.0,
+        root: 1 - 0.1 * hash(seed + n * 8.9) ** 1.5,
+        thick: far ? 1 : 0.55 + 0.75 * hash(seed + n * 12.7) ** 2,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
         const u = i / (tRings - 1);
-        for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u * strand.len, (s / tSides) * 0.1, hash(seed + n * 6.1), 0.9, tr * (1 - 0.6 * u ** 1.6), seed + n, 2, u);
+        for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u * strand.len, (s / tSides) * 0.1, hash(seed + n * 6.1) * 0.99 + (finger ? 2 : 0), 0.9, tr * (1 - 0.82 * u ** 1.3) * strand.thick, seed + n, 2, u);
       }
     }
     this.tips = new Float32Array(b.tendrils * 3);
@@ -706,7 +709,7 @@ export class Wader {
       const ahead = this.along(walked + 0.5 * b.bodyLen + 0.55 * b.neckLen);
       // The end of the neck stays out of the water: it is the mop that hangs from it that goes in.
       const floor = Math.max(env.ground(ahead[0], ahead[1]), env.sea);
-      const want = floor + (plan.reach >= 1 ? 0.25 * k : 0.6 * k) + dab;
+      const want = floor + (plan.reach >= 1 ? 0.17 * k : 0.6 * k) + dab;
       let lo = 0.3;
       let hi = 1.3;
       for (let i = 0; i < 9; i++) {
@@ -818,7 +821,7 @@ export class Wader {
       let x = (pts[r0 * 3] as number) * (1 - rf) + (pts[r0 * 3 + 3] as number) * rf + ox * rad;
       let y = (pts[r0 * 3 + 1] as number) * (1 - rf) + (pts[r0 * 3 + 4] as number) * rf + oy * rad;
       let z = (pts[r0 * 3 + 2] as number) * (1 - rf) + (pts[r0 * 3 + 5] as number) * rf + oz * rad;
-      const splay = 0.5 * st.out + 0.7 * back;
+      const splay = 0.3 * st.out + 0.5 * back;
       const each = st.len / (tube.rings - 1);
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.phase) + 0.04 * Math.sin(seconds * 3.7 + st.phase * 2.3);
       let px = x;
@@ -827,7 +830,7 @@ export class Wader {
       for (let i = 0; i < tube.rings; i++) {
         const u = i / (tube.rings - 1);
         // It leaves along the neck's end, spreads a little, and gravity takes it.
-        const g = smooth(0, 0.14 + 0.5 * st.stiff * st.stiff, u);
+        const g = smooth(0, 0.1 + 0.3 * st.stiff * st.stiff, u);
         // In the water a strand weighs little: it drifts and spreads there instead of hanging straight.
         const under = wet ? smooth(env.sea + 0.02, env.sea - 0.12, y) : 0;
         const drift = under * (0.3 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.35 * st.out);
@@ -843,8 +846,8 @@ export class Wader {
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
         // No strand hangs straight: each is kinked and curled its own way, more toward its end.
-        const curl = (0.1 + 0.5 * u) * (0.3 * Math.sin(u * 5 + st.lock * 5) + 0.2 * Math.sin(u * 13 + st.lock * 11));
-        const own = (0.05 + 0.3 * u) * (0.12 * Math.sin(u * 19 + st.phase * 11) + 0.1 * Math.sin(u * 41 + st.phase * 17));
+        const curl = (0.12 + 0.6 * u) * (0.3 * Math.sin(u * 5 + st.lock * 5) + 0.2 * Math.sin(u * 13 + st.lock * 11));
+        const own = (0.06 + 0.36 * u) * (0.12 * Math.sin(u * 19 + st.phase * 11) + 0.1 * Math.sin(u * 41 + st.phase * 17));
         dx += Math.cos(st.lock * 3) * curl + Math.cos(st.phase * 3) * own;
         dz += Math.sin(st.lock * 3) * curl + Math.sin(st.phase * 3) * own;
         dy += 0.35 * curl * Math.sin(st.lock * 7);

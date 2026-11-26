@@ -1,8 +1,8 @@
-# Status 87
+# Status 89
 
-2026-11-26 03:10 UTC. Phase 4, the other places and the rise.
+2026-11-26 03:45 UTC. Phase 4, the other places and the rise.
 
-- `01-spine.jpg`: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1. Still wrong: no sea of cloud below the ridge, canal walls too dark, spine-1 two stops under
-- `02-marsh.jpg`: The Blood Marsh at 03:01 UTC: marsh-3, marsh-4, marsh-2, marsh-0. Still wrong: blank sky, the stuck one too smooth, brine too saturated
-- `03-ribs.jpg`: The Ribs at 03:05 UTC, all five keys. Still wrong: the colony crag is cream with black slabs under its ledges, blades too soft and beige
-- `04-reveal.jpg`: The Reveal at 02:59 UTC, approved beside built: reveal-2, reveal-3, reveal-4 with crops. Still wrong: cyclone too coarse, puffs one size, lowland too orange
+- `01-v2-breath-life.jpg`: The Breath, version 2 (merged 03:41 UTC), approved left and built right with crops: breath-0, breath-1, breath-2, breath-3. Still wrong: the channel is turquoise where the approved is a milky grey green, the plume is a pale bush washed by vapour, the dead one is smaller and paler
+- `02-v2-spine-ground.jpg`: The Spine, version 2 (merged 03:41 UTC), built frames: spine-0, spine-2, spine-3, spine-4. Still wrong: the face in spine-2 is stretched bark, the snow caps in spine-3 are smooth domes, the floor of the hollow is a navy sheet
+- `03-v2-ribs-ground.jpg`: The Ribs, version 2 (merged 03:42 UTC), approved left and built right with crops: ribs-3 and ribs-0. The crag is now dark wet rock with runs and lichen. Still wrong: it is level courses, and the tide flat is even brown sand where the approved has wet shingle and standing water
+- `04-hb8-ribs-sea.jpg`: The Ribs at 03:36 UTC, the sea owner's frames before the lead's new crag: the colony (ribs-3) and the bore (ribs-4)

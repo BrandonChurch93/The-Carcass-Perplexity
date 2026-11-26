@@ -110,7 +110,7 @@ export const STATIONS = {
   establish: [establish.position[0], establish.position[2]] as [number, number],
   arch: [150, -345] as [number, number],
   gateZ: gate.position[2] - 120,
-  posts: [[gate.position[0] - 52, gate.position[2] - 78], [gate.position[0] + 50, gate.position[2] - 70]] as [number, number][],
+  posts: [[gate.position[0] - 56, gate.position[2] - 74], [gate.position[0] + 66, gate.position[2] - 104]] as [number, number][],
   colonySide: COLONY_SIDE,
   drownedPhi: DROWNED_PHI,
   drownedHeight: DROWNED_HEIGHT,

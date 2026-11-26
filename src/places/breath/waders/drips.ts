@@ -34,8 +34,8 @@ void main() {
   float thin = min(1.0, 0.0035 / (0.75 * uPixel * far));
   // Water against the light: it gathers the low sun and the bright fog behind it.
   float against = max(dot(-v, uSunDir), 0.0);
-  vec3 lit = uSunColour * (0.5 + 5.0 * pow(against, 6.0)) * sunAt(vWorld) + 0.8 * skyRadiance(vec3(-v.x, 0.3, -v.z));
-  float alpha = bead * thin * 0.85 * (1.0 - uSolo);
+  vec3 lit = uSunColour * (0.5 + 5.0 * pow(against, 6.0)) * sunAt(vWorld) + 0.3 * skyRadiance(vec3(-v.x, 0.3, -v.z));
+  float alpha = bead * thin * 0.6 * (1.0 - uSolo);
   gl_FragColor = vec4(lit * alpha, alpha);
 }`;
 

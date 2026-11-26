@@ -265,6 +265,11 @@ export function ground(s: number, l: number): number {
     const w = smooth(-60, -6, d) * (1 - smooth(MOUTH_R * 0.7, MOUTH_R * 1.9, Math.abs(l - CANAL_L)));
     y += (Math.min(y, FLOOR - 0.4) - y) * w;
   }
+  // The near mouth is half drifted shut: a bank of snow lies across it a little before the rock, high on the lee hand and low where the trail goes in.
+  if (d > -45 && d < -5) {
+    const along = Math.exp(-(((d + 17) / 5.5) ** 2));
+    y += along * (9 * Math.exp(-(((l - CANAL_L - 15) / 12) ** 2)) + 5.5 * Math.exp(-(((l - CANAL_L + 19) / 8) ** 2)));
+  }
   if (d > EXIT - 0.6 && d < EXIT + 6 && Math.abs(l - canalL(d)) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
   if (d >= EXIT + 6 && d < EXIT + 70) {
     const w = (1 - smooth(EXIT + 6, EXIT + 70, d)) * (1 - smooth(EXIT_R * 0.7, EXIT_R * 1.9, Math.abs(l - canalL(d))));
