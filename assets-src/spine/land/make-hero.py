@@ -104,15 +104,13 @@ half = 0.5 * np.linalg.norm(Pf - Pf[:, (-np.arange(AF)) % AF], axis=2)
 id1, n1 = level(Pf, 101, 74.0, 21.0, 13.0, 4.6, 3.6, 9.0)
 id2, n2 = level(Pf, id1, 30.0, 8.5, 5.5, 2.0, 1.8, 3.0)
 id3, n3 = level(Pf, id2, 10.0, 3.2, 2.4, 0.65, 0.6, 0.8)
-# (The finest: slabs a lens that comes close can count, where the lattice is fine enough to cut them.)
-id4, n4 = level(Pf, id3, 4.5, 1.25, 0.9, 0.3, 0.3, 0.25)
-d = n1 + n2 + n3 + n4
+d = n1 + n2 + n3
 # (Outward less than inward: a block that stands far out of a thin blade is a growth on it.)
 d = np.where(d > 0, 0.7 * d, d)
 d = np.clip(d, -0.4 * half - 0.2, 0.3 * half + 0.5)
 # Toward the lee edge, where the kites hold and their lens looks, the great blocks are left out and the small ones stand whole: clipping the
 # sum there left a face with no blocks at all.
-d = d + lee[None, :] * (np.clip(0.4 * n2 + 1.2 * n3 + 1.3 * n4, -2.5, 1.0) - d)
+d = d + lee[None, :] * (np.clip(0.4 * n2 + 1.3 * n3, -2.5, 1.0) - d)
 d = d * keep[None, :]
 # The tip keeps its line, and the wall the canal is cut through only stands out.
 d = d * np.clip(top / 14.0, 0, 1)
@@ -137,19 +135,48 @@ open(ROOT + 'src/places/spine/land/hero.ts', 'w').write(
     '// (%d rings by %d round, metres out of the bare blade along its normal, %s m a count). Its occlusion and normals are land/hero-ao.jpg and land/hero-n.jpg.\n'
     'export const HERO = { rings: %d, around: %d, unit: 0.07, relief: \'%s\' };\n' % (R, A, '0.07', R, A, base64.b64encode(q.tobytes()).decode()))
 
-# Normals of the fine mesh (world space), on the unwrap.
 du = np.roll(Ph, -1, axis=1) - np.roll(Ph, 1, axis=1)
 dv = np.gradient(Ph, axis=0)
 nh = np.cross(dv, du)
 nh /= np.linalg.norm(nh, axis=2, keepdims=True) + 1e-9
 if np.mean(np.sum(nh * Nf, axis=2)) < 0: nh = -nh
 SIZE = 2048
-def to_image(g, name, q=92):
-    # v up: the first row of the picture is the last ring.
-    img = Image.fromarray(g[::-1])
-    img = img.resize((SIZE, SIZE), Image.LANCZOS)
-    img.save(ROOT + 'public/assets/spine/land/' + name, quality=q, subsampling=0)
-to_image(np.clip((nh * 0.5 + 0.5) * 255 + 0.5, 0, 255).astype(np.uint8), 'hero-n.jpg', 93)
+
+# The faces of the blocks, cut at the size of a texel and not of the mesh (hero-n.jpg, 4096 round by 2048 up): no lattice a renderer can
+# carry cuts a slab of a metre with a sharp edge, and a normal taken from a fine mesh has the mesh's own cells in it. Every block of every
+# size has a face that looks a little its own way (red: round the blade, green: up or down), flat to its edge; blue is the joint between
+# two blocks, a crack. The same blocks as the relief: they are functions of the place.
+TW, TH = 4096, 2048
+Pc = np.concatenate([P, P[:, :1]], axis=1)
+tilt = np.zeros((TH, TW, 2), np.float32)
+crack = np.zeros((TH, TW), np.float32)
+tones = np.zeros((TH, TW), np.float32)
+ids = [np.zeros((TH, TW), np.int32) for k in range(4)]
+aa = (np.arange(TW) + 0.5) / TW * A
+a0 = np.minimum(aa.astype(int), A - 1); fa = (aa - a0)[None, :, None]
+for r0_ in range(0, TH, 128):
+    rr = (np.arange(r0_, min(TH, r0_ + 128)) + 0.5) / TH * (R - 1)
+    i0 = np.minimum(rr.astype(int), R - 2); fr = (rr - i0)[:, None, None]
+    p = (Pc[i0][:, a0] * (1 - fa) + Pc[i0][:, a0 + 1] * fa) * (1 - fr) + (Pc[i0 + 1][:, a0] * (1 - fa) + Pc[i0 + 1][:, a0 + 1] * fa) * fr
+    key = 101
+    sl = slice(r0_, r0_ + rr.shape[0])
+    for k, (tall, wide, deep, warp, amp) in enumerate(((74.0, 21.0, 13.0, 9.0, 0.15), (30.0, 8.5, 5.5, 3.0, 0.27), (10.0, 3.2, 2.4, 0.8, 0.38), (4.5, 1.25, 0.9, 0.25, 0.3))):
+        key, _ = level(p, key, tall, wide, deep, 1.0, 1.0, warp)
+        ids[k][sl] = key
+        tilt[sl, :, 0] += amp * 2 * (h32(key, 13) - 0.5)
+        tilt[sl, :, 1] += 0.5 * amp * 2 * (h32(key, 17) - 0.5)
+        tones[sl] += (0.3, 0.25, 0.27, 0.18)[k] * h32(key, (23, 29, 37, 41)[k])
+for k, (dark, wide) in enumerate(((0.75, 2), (0.6, 1), (0.45, 0), (0.25, 0))):
+    # (The upright joints are the open ones: the beds are closed by the weight on them.)
+    f = (ids[k] != np.roll(ids[k], 1, axis=1)).astype(np.float32)
+    f[1:] = np.maximum(f[1:], 0.5 * (ids[k][1:] != ids[k][:-1]))
+    for j in range(wide):
+        f = np.maximum(f, np.maximum(np.roll(f, 1, axis=1), np.roll(f, -1, axis=1)))
+        f[1:] = np.maximum(f[1:], f[:-1])
+    crack = np.maximum(crack, dark * f)
+hn = np.stack([0.5 + 0.5 * tilt[..., 0] / 1.1, 0.5 + 0.5 * tilt[..., 1] / 1.1, crack], axis=-1)
+# (v up: the first row of the picture is the last ring.)
+Image.fromarray(np.clip(hn[::-1] * 255 + 0.5, 0, 255).astype(np.uint8)).save(ROOT + 'public/assets/spine/land/hero-n.jpg', quality=74, subsampling=0)
 np.save(W + 'd.npy', d.astype(np.float32))
 print('relief', d.min(), d.max(), 'fine', RF, AF)
 if '--no-bake' in sys.argv: sys.exit(0)
@@ -201,12 +228,14 @@ ob.select_set(True)
 bpy.ops.object.bake(type='AO')
 px = np.array(img.pixels[:]).reshape(SIZE, SIZE, 4)[..., 0]
 print('ao', px.min(), px.mean(), px.max())
+# (24 samples leave a grain: the occlusion is a soft thing, and is read soft.)
+from PIL import ImageFilter
+px = np.asarray(Image.fromarray(np.clip(px * 255 + 0.5, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.6))) / 255.0
 # With the occlusion (red): the tone of the block a place is on, large and small (green, blue). No two blocks have weathered alike.
 def nearest(g):
     r = np.minimum((np.arange(SIZE) + 0.5) / SIZE * (RF - 1) + 0.5, RF - 1).astype(int)
     a = ((np.arange(SIZE) + 0.5) / SIZE * AF).astype(int) % AF
     return g[r][:, a]
-tone1 = nearest(0.65 * h32(id1, 23) + 0.35 * h32(id2, 29))
 # Blue: the ledges. Where a block stands back over the one below it there is a shelf that holds snow: the fine mesh before its edges were
 # softened looks up there. Spread a metre or so, so a ledge is a line of snow from far off.
 rawP = Pf + Nf * raw[..., None]
@@ -217,16 +246,7 @@ shelf = np.clip(0.5 + 0.5 * rn[..., 1], 0, 1)
 for k in range(4):
     shelf[1:] = np.maximum(shelf[1:], shelf[:-1])
     shelf = np.maximum(shelf, 0.5 * (np.roll(shelf, 1, axis=1) + np.roll(shelf, -1, axis=1)))
-tone1 = nearest(0.5 * h32(id1, 23) + 0.3 * h32(id2, 29) + 0.2 * h32(id3, 37))
+tone1 = tones[:, ::2]
 tone2 = nearest(shelf)
-# The joints between the blocks are cracks no mesh of this size can cut: dark lines in the occlusion, the great ones wider.
-def joints(ident, wide):
-    e = (ident != np.roll(ident, 1, axis=1)) | (ident != np.roll(ident, 1, axis=0))
-    e[0] = False
-    f = e.astype(np.float32)
-    for k in range(wide):
-        f = np.maximum(f, np.maximum(np.roll(f, 1, axis=1), np.roll(f, 1, axis=0)))
-    return np.asarray(Image.fromarray((f[::-1] * 255).astype(np.uint8)).resize((SIZE, SIZE), Image.BILINEAR))[::-1] / 255.0
-px = px * (1 - 0.55 * joints(id1, 1)) * (1 - 0.4 * joints(id2, 0)) * (1 - 0.2 * joints(id3, 0))
 out = np.stack([px, tone1, tone2], axis=-1)
-Image.fromarray(np.clip(out[::-1] * 255 + 0.5, 0, 255).astype(np.uint8)).save(ROOT + 'public/assets/spine/land/hero-ao.jpg', quality=92, subsampling=0)
+Image.fromarray(np.clip(out[::-1] * 255 + 0.5, 0, 255).astype(np.uint8)).save(ROOT + 'public/assets/spine/land/hero-ao.jpg', quality=86, subsampling=0)

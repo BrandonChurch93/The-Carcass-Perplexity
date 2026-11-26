@@ -41,7 +41,7 @@ Tap granite(vec2 p, vec2 gx, vec2 gy, float shift) {
   vec2 b = vec2(0.94 * p.x + 0.34 * p.y, -0.34 * p.x + 0.94 * p.y) / vec2(64.0, 43.0) + 0.37 + 1.7 * shift;
   Tap B = tap(tGran, tGranNh, b, lodA - 2.1);
   vec3 c = (A.c / GRAN_MEAN) * mix(vec3(1.0), B.c / GRAN_MEAN, 0.3);
-  vec2 s = A.s * 1.3 + vec2(0.94 * B.s.x - 0.34 * B.s.y, 0.34 * B.s.x + 0.94 * B.s.y) * 1.3;
+  vec2 s = A.s * 0.7 + vec2(0.94 * B.s.x - 0.34 * B.s.y, 0.34 * B.s.x + 0.94 * B.s.y) * 1.0;
   float h = 0.55 * A.h + 0.45 * B.h;
   // Under the lens a texel of the beds is many pixels: the rock again 5.6 times finer, turned the other way, as grain and small edges.
   float fine = smoothstep(0.6, -0.8, lodA);
@@ -49,7 +49,7 @@ Tap granite(vec2 p, vec2 gx, vec2 gy, float shift) {
     vec2 d = vec2(0.97 * p.x - 0.24 * p.y, 0.24 * p.x + 0.97 * p.y) / vec2(2.7, 1.8) + 0.61 - shift;
     Tap D = tap(tGran, tGranNh, d, lodA + 2.47);
     c *= mix(vec3(1.0), clamp(D.c / GRAN_MEAN, 0.5, 1.6), 0.3 * fine);
-    s += fine * 0.7 * vec2(0.97 * D.s.x + 0.24 * D.s.y, -0.24 * D.s.x + 0.97 * D.s.y);
+    s += fine * 0.35 * vec2(0.97 * D.s.x + 0.24 * D.s.y, -0.24 * D.s.x + 0.97 * D.s.y);
     h = mix(h, 0.7 * h + 0.3 * D.h, fine);
   }
   return Tap(c, s, h);
@@ -77,6 +77,8 @@ void main() {
   if (ground) porch = dCanal > 0.0 && dCanal < EXIT ? 1.0 - smoothstep(4.0, 26.0, abs(vSL.y - canalAt(dCanal)) - flareAt(dCanal)) : 0.0;
   vec3 n0 = smoothN;
   vec3 baked = vec3(1.0, 0.5, 0.5);
+  float crack = 0.0;
+  float facet = 1.0;
 #ifdef HERO_MAPS
   // The hero's own normals and occlusion, baked from a mesh four times finer than this one, on the unwrap of its lattice.
   {
@@ -85,9 +87,18 @@ void main() {
     vec2 hx = vec2((vHero.x * dFdx(vHero.y) - vHero.y * dFdx(vHero.x)) / (6.2831853 * turn), dFdx(vHero.z));
     vec2 hy = vec2((vHero.x * dFdy(vHero.y) - vHero.y * dFdy(vHero.x)) / (6.2831853 * turn), dFdy(vHero.z));
     float lod = max(0.0, lodAt(hx, hy, 2048.0));
-    vec3 hn = textureLod(tHeroN, at, lod).rgb * 2.0 - 1.0;
-    n0 = normalize(mix(smoothN, gl_FrontFacing ? hn : -hn, 0.999));
     baked = textureLod(tHeroAo, at, lod).rgb;
+    // The faces of its blocks (4096 round, 2048 up): each looks a little its own way, flat to its edge, and blue is the crack between two.
+    vec3 hm = textureLod(tHeroN, at, max(0.0, lodAt(vec2(2.0 * hx.x, hx.y), vec2(2.0 * hy.x, hy.y), 2048.0))).rgb;
+    float side = length(smoothN.xz);
+    vec3 hz = vec3(smoothN.z, 0.0, -smoothN.x) / max(side, 1e-3);
+    vec2 t = (hm.rg - 0.5) * 2.2 * smoothstep(0.15, 0.5, side);
+    // (A block leans back, hardly forward: a face tipped to the ground is black in this light, and a blade of black blocks is a chequer.)
+    t.y = max(t.y, -0.08);
+    n0 = normalize(smoothN + hz * t.x + cross(smoothN, hz) * t.y);
+    crack = hm.b;
+    // The rig's lights are broad and a slab's turn of some degrees would hardly show in them: the low source is counted again on the turn.
+    facet = clamp(1.0 + 1.6 * (dot(n0, KEY_DIR) - dot(smoothN, KEY_DIR)), 0.55, 1.5);
   }
 #endif
 
@@ -98,7 +109,11 @@ void main() {
   vec3 P = vec3(dot(vWorld, ax), dot(vWorld, up), dot(vWorld, bx));
   vec3 Px = dFdx(P);
   vec3 Py = dFdy(P);
-  vec3 nl = vec3(dot(n0, ax), dot(n0, up), dot(n0, bx));
+  // (The plane a face is read on is the plane the triangle itself lies nearest: at a step the shading normal says level and the face is a wall.)
+  vec3 ng = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  if (dot(ng, n0) < 0.0) ng = -ng;
+  vec3 nb = normalize(n0 + ng);
+  vec3 nl = vec3(dot(nb, ax), dot(nb, up), dot(nb, bx));
   // Each face takes the plane it looks at most squarely, and its neighbour only in a narrow turn between them: nothing is pulled long.
   vec3 w = pow(abs(nl), vec3(6.0));
   w /= w.x + w.y + w.z;
@@ -149,6 +164,12 @@ void main() {
     pit /= sum;
   }
   vec3 nRock = normalize(n0 + 0.9 * dn);
+  // The grain of a sheet may tip a face up, hardly down: what looks down is in the dark of the ground, and a face so tipped grain by grain
+  // is a black speckle no encoder holds. The dark of an overhang is the overhang's own, in one piece.
+  nRock.y = n0.y + (max(nRock.y, n0.y - 0.06) - n0.y) * smoothstep(-0.2, 0.3, n0.y);
+  nRock = normalize(nRock);
+  // The face of the triangle itself: a step between two blocks is one quad of the lattice, and nothing level lies on it.
+  float flat_ = abs(ng.y);
 
   // Colour: warm tan slabs with colder planes between, in masses larger than any sheet.
   float bed = vnoise(vec2(dot(vWorld, vec3(0.011, 0.034, 0.017)), dot(vWorld.xz, vec2(0.004, -0.003))) * 3.0);
@@ -156,16 +177,17 @@ void main() {
   vec3 tone = mix(vec3(0.72, 0.78, 0.9), vec3(1.08, 1.0, 0.9), smoothstep(0.25, 0.75, 0.6 * bed + 0.4 * blotch));
   // Pale ochre granite: the sheet gives the breaks and the grain, less of its own colour and of its darks.
   float rockLuma = dot(rock, LUMA);
-  vec3 grain = pow(mix(vec3(rockLuma), rock, 0.5), vec3(0.75));
+  vec3 grain = pow(mix(vec3(rockLuma), rock, ground ? 0.25 : 0.6), vec3(0.85));
   // (The bedrock of the ground is darker than the faces of the spires: it is wet with melt and in the snow's shadow.)
-  vec3 albedo = min(vec3(0.4, 0.345, 0.275) * (ground ? 0.6 : 1.0) * grain * tone, vec3(0.85));
+  vec3 albedo = min((ground ? vec3(0.13, 0.135, 0.15) : vec3(0.53, 0.465, 0.38)) * grain * tone, vec3(0.85));
   float rough = 0.9;
   // Its cracks are dark: the sky does not reach into them.
   float occ = 0.55 + 0.45 * smoothstep(0.1, 0.55, pit);
 #ifdef HERO_MAPS
-  occ *= 0.25 + 0.75 * smoothstep(0.1, 0.85, baked.r);
+  occ *= (0.25 + 0.75 * smoothstep(0.1, 0.85, baked.r)) * (1.0 - 0.7 * crack);
+  albedo *= facet;
   // No two blocks have weathered alike: a fresh break is warm and light, an old face grey blue and darker.
-  albedo *= mix(vec3(0.6, 0.68, 0.86) * 0.8, vec3(1.14, 1.03, 0.9), smoothstep(0.3, 0.7, baked.g)) / tone;
+  albedo *= mix(vec3(0.62, 0.68, 0.84) * 0.7, vec3(1.16, 1.04, 0.9), smoothstep(0.3, 0.7, baked.g)) / tone;
 #else
   if (spire) occ *= 0.45 + 0.55 * smoothstep(-5.0, 0.5, vRelief);
 #endif
@@ -187,14 +209,15 @@ void main() {
   // Snow lies where a face leans back far enough to hold it: on every ledge and in the hollows of the rock, deeper in the lee. The rock's
   // own relief cuts its edge, so the line where snow meets stone is broken at the size of the stone.
   float drift = vnoise(vWorld.xz / 47.0 + 7.3);
-  float lie = nRock.y * 0.6 + n0.y * 0.4 + 0.3 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
+  float lie = nRock.y * 0.3 + n0.y * 0.7 + 0.2 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
 #ifdef HERO_MAPS
   // Every ledge of the hero holds snow: where a block stands back over the one below it (baked, blue).
-  lie += 0.5 * smoothstep(0.6, 0.8, baked.b);
+  lie += 0.34 * smoothstep(0.7, 0.9, baked.b) * smoothstep(0.3, 0.6, vnoise(vWorld.xy / 34.0 + 5.5) - 0.5 * lee);
+  lie = min(lie, flat_ * 0.9 + 0.22);
 #endif
-  if (ground) lie -= 0.55 * rockness;
+  if (ground) lie -= 0.3 * rockness;
   float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
-  float snow = show > 0.01 ? smoothstep(hold, hold + 0.07, lie) : 1.0;
+  float snow = show > 0.01 ? smoothstep(hold, hold + 0.1, lie) : 1.0;
   snow *= 1.0 - burn;
   if (spire) snow *= mix(1.0, smoothstep(-0.15, 0.3, lee), uWet);
   // Just above the snow the rock is wet and dark, and frost stands in its cracks.
@@ -207,7 +230,7 @@ void main() {
   vec3 nRime = n0;
   float rime = 0.0;
   if (show > 0.01) {
-    float expose = clamp(0.45 - 0.9 * lee + 0.35 * n0.y, 0.0, 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet);
+    float expose = clamp(0.3 - 1.0 * lee + 0.3 * n0.y, 0.0, 1.0) * (ground ? 0.75 * steep : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet);
     if (expose > 0.1) {
       vec2 rp = w.x >= w.z && w.x >= w.y ? P.zy : w.z >= w.y ? P.xy : P.xz;
       vec2 rx = w.x >= w.z && w.x >= w.y ? Px.zy : w.z >= w.y ? Px.xy : Px.xz;
@@ -216,13 +239,14 @@ void main() {
       vec3 e1 = w.x >= w.z && w.x >= w.y ? up : w.z >= w.y ? up : bx;
       float lodR = lodAt(rx / 4.5, ry / 4.5, 1024.0);
       // (Read a little soft: the plumes are clumps, and a mask cut at the size of a texel is a speckle no encoder holds.)
-      Tap F = tap(tFrost, tFrostNh, rp / vec2(4.5, 3.0) + 0.19, lodR + 1.6);
-      Tap G = tap(tFrost, tFrostNh, rp.yx / vec2(17.0, 11.3) + 0.53, lodR - 0.6);
-      float plume = (0.6 * dot(F.c, LUMA) + 0.4 * dot(G.c, LUMA)) / FROST_LUMA;
-      float from = mix(2.4, 0.35, expose);
-      rime = smoothstep(from, from + 1.1, plume) * smoothstep(0.1, 0.3, expose);
-      nRime = normalize(n0 + 0.8 * (e0 * F.s.x + e1 * F.s.y));
-      albedo = mix(albedo, vec3(0.74, 0.79, 0.86) * (0.8 + 0.2 * clamp(plume * 0.4, 0.0, 1.0)), rime);
+      // The sheet is the frost itself, plumes with the rock dark between them: it is laid as it is, in masses of some metres, thick where
+      // the face looks into the gale and gone where it turns from it. Nothing is cut at the size of a texel.
+      Tap F = tap(tFrost, tFrostNh, rp / vec2(6.0, 4.0) + 0.19, lodR - 0.4);
+      float mass = vnoise(rp / 5.5 + 2.7) * 0.65 + vnoise(rp / 1.9 + 8.1) * 0.35;
+      float plume = dot(F.c, LUMA) / FROST_LUMA;
+      rime = smoothstep(0.42, 0.72, expose + 0.5 * (mass - 0.5) + 0.12 * (plume - 1.0)) * smoothstep(0.1, 0.3, expose);
+      nRime = normalize(n0 + 0.7 * (e0 * F.s.x + e1 * F.s.y));
+      albedo = mix(albedo, clamp(F.c / FROST_LUMA, 0.3, 1.7) * vec3(0.47, 0.5, 0.56), rime);
       rough = mix(rough, 1.0, rime);
       nRock = normalize(mix(nRock, nRime, rime));
       occ = mix(occ, max(occ, 0.8), rime);
@@ -241,7 +265,7 @@ void main() {
     vec2 qx = dFdx(q);
     vec2 qy = dFdy(q);
     // On a steep face a level picture would be pulled long: there the snow keeps its tone and loses its ripple.
-    float level = smoothstep(0.45, 0.8, min(n0.y, smoothN.y));
+    float level = smoothstep(0.45, 0.8, min(min(n0.y, smoothN.y), flat_));
     float lodP = lodAt(qx / 9.0, qy / 9.0, 1536.0);
     Tap A = tap(tPack, tPackNh, q / vec2(9.0, 6.0), lodP);
     vec2 r = vec2(0.77 * q.x - 0.64 * q.y, 0.64 * q.x + 0.77 * q.y);

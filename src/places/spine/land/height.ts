@@ -133,7 +133,7 @@ export function landAt(s: number, l: number): { y: number; rock: number } {
     const saw = ph - Math.floor(ph);
     y += flank * 0.6 * bed * (smooth(0.3, 0.7, saw) - saw);
   }
-  return { y, rock: Math.max(smooth(0.05, 0.8, free * crag), smooth(0.04, 0.3, stones)) };
+  return { y, rock: Math.max(smooth(0.9, 3.4, free * crag), smooth(0.5, 1.6, stones)) };
 }
 
 export function heightAt(s: number, l: number): number {
