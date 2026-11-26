@@ -15,6 +15,7 @@ varying vec3 vAux;
 varying vec2 vAway;
 uniform sampler2D tRope;
 uniform sampler2D tRopeNh;
+uniform sampler2D tSheet;
 uniform float uLava;
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -43,51 +44,34 @@ const mat2 TURN_A = mat2(0.7986, 0.6018, -0.6018, 0.7986);
 const mat2 TURN_B = mat2(0.9397, -0.3420, 0.3420, 0.9397);
 const mat2 TURN_C = mat2(-0.2588, 0.9659, -0.9659, -0.2588);
 
-// Coiled rope: within a patch of a metre or two the cords hang as festoons. Each patch has a way it flowed, and its cords
-// bow across that way as open arcs (parabolas, so that none can close into a ring), drawn thin on the flanks and bunched
-// toward the front, their width led by a slow noise. They end where the next patch laps on them.
-// The phase of the arcs, in folds. Beside it: where a point lies along and across its cord, the two axes of that, and
-// how far it is from the edge of its patch, in metres.
-vec2 gCoilUV = vec2(0.0);
-vec2 gCoilU = vec2(1.0, 0.0);
-vec2 gCoilV = vec2(0.0, 1.0);
-float gCoilEdge = 1.0;
-float coilAt(vec2 q) {
-  vec2 w = q + 0.3 * vec2(vnoise(q / 0.8 + 71.0) - 0.5, vnoise(q / 0.8 + 113.0) - 0.5);
-  vec2 g = w / 2.6;
-  vec2 i = floor(g);
-  vec2 f = g - i;
-  float best = 1e9;
-  float next = 1e9;
-  vec2 at = vec2(0.0);
-  vec2 id = vec2(0.0);
-  for (int a = -1; a <= 1; a++) {
-    for (int b = -1; b <= 1; b++) {
-      vec2 o = vec2(float(a), float(b));
-      vec2 r = hash22(i + o);
-      vec2 d = o + r - f;
-      float l = dot(d, d);
-      if (l < best) {
-        next = best;
-        best = l;
-        at = d;
-        id = r;
-      } else if (l < next) {
-        next = l;
-      }
-    }
+// The photographed crust as the relief lays it (sheetGrid), read with the footprint of a pixel (gx, gy) on the crust.
+// Returns the slope of the sheet's height (which runs 0 to 1) per metre, and that height. Leaves the colour over the
+// sheet's mean in gSheetTone when it is asked for.
+const vec3 SHEET_MEAN = vec3(0.0653, 0.0645, 0.0706);
+vec3 gSheetTone = vec3(1.0);
+vec3 sheetAt(vec2 q, float span, vec2 gx, vec2 gy, float seed, bool colour) {
+  sheetGrid(q, span);
+  vec2 scale = vec2(1.0, 2.0) / span;
+  vec3 got = vec3(0.0);
+  vec3 tone = vec3(0.0);
+  float sum = 0.0;
+  for (int i = 0; i < 3; i++) {
+    mat2 turn;
+    vec2 shift;
+    float w = sheetCorner(i, seed, turn, shift);
+    vec2 uv = (turn * q) * scale + shift;
+    vec2 ux = (turn * gx) * scale;
+    vec2 uy = (turn * gy) * scale;
+    vec4 nh = textureGrad(tSheetNh, uv, ux, uy);
+    float k = w * exp(7.0 * nh.b);
+    // The picture is loaded upside down, so its second slope is counted the other way.
+    got += k * vec3(vec2(nh.r - 0.5, 0.5 - nh.g) * turn, nh.b);
+    if (colour) tone += k * textureGrad(tSheet, uv, ux, uy).rgb;
+    sum += k;
   }
-  gCoilEdge = 1.3 * (sqrt(next) - sqrt(best));
-  float ang = 2.2 + 1.7 * (id.x - 0.5);
-  gCoilV = vec2(cos(ang), sin(ang));
-  gCoilU = vec2(-gCoilV.y, gCoilV.x);
-  vec2 rel = -2.6 * at;
-  float across = dot(rel, gCoilU);
-  float s = dot(rel, gCoilV) + (0.35 + 0.5 * id.y) * across * across;
-  gCoilUV = vec2(across, s) + 7.0 * id;
-  float c = clamp(s, -2.0, 2.0);
-  float run = s + 0.14 * c * c;
-  return run / (0.12 + 0.05 * id.y) + 13.0 * id.x + 1.5 * (vnoise(q / 0.7 + 19.0) - 0.5) + 0.5 * (vnoise(q / 0.31 + 47.0) - 0.5);
+  got /= sum;
+  if (colour) gSheetTone = tone / (sum * SHEET_MEAN);
+  return vec3(got.xy * (682.7 / span), got.z);
 }
 
 void main() {
@@ -177,12 +161,6 @@ void main() {
   // Every drawn line (where a tongue lies on the next, a fold's floor, a cord, a thread) goes into one sum, and the sum is
   // held to a quarter under its surround: the relief is told by the light on it, not by ink.
   float lines = 1.0;
-  float foldPhase = 0.0;
-  float foldOn = 0.0;
-  float foldSpace = 0.3;
-  float foldDeep = 0.1;
-  float foldCarried = 0.0;
-  float ownCoil = 0.0;
   // Round the feeding group the crust is churned: lumps of a quarter to three quarters of a metre, with hollows between
   // them, so that the light of the seam shades it. A face turned to the seam is lit, a face turned to the lens is dark.
   float churn = smoothstep(0.0, 0.35, fresh) * (1.0 - steep) * mix(0.55, 1.0, smoothstep(0.3, 0.6, vnoise(q / 5.7 + 3.0))) * (1.0 - smoothstep(0.3, 0.6, fpLong)) * (1.0 - 0.6 * broke) * (1.0 - slabGap);
@@ -206,7 +184,7 @@ void main() {
     // Each lump is a piece of another day: one dusted with ash, the next bare.
     lumpTone = 1.0 + 0.45 * churn * (2.0 * smoothstep(0.35, 0.65, vnoise(q / 1.3 + 67.0)) - 1.0);
   }
-  // Lobes and cords, as far as a pixel can tell one from the next. Beyond that the skin is a smooth sheet.
+  // Lobes and toes, as far as a pixel can tell one from the next. Beyond that the skin is a smooth sheet.
   if (fpLong < 0.7) {
     float lobeHigh = lobeAt(q);
     float has = step(1e-4, gLobeTall);
@@ -217,112 +195,55 @@ void main() {
     slope += fall * min(1.0, 1.2 / max(length(fall), 1e-4)) * calm * (1.0 - steep) * smoothstep(0.5, 1.2, cell) * detail * has;
     // Dark where one tongue lies on the next.
     lines = mix(1.0, 0.8 + 0.2 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * (1.0 - steep) * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
-    // Past this a pixel is longer than a sheaf and nothing of the folds is left to draw.
     if (fpLong < 0.4) {
       foldAt(q);
       float skinOn = calm * (1.0 - 0.85 * smoothstep(0.15, 0.5, fresh)) * (1.0 - steep) * (1.0 - broken) * smoothstep(0.0, mix(2.5, 0.4, coil * (1.0 - coilMound)), lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
-      // Ropes come in sheaves that end after a third of a metre to two metres, and broad reaches of the skin carry none:
-      // the relief lays that mask into the cover of its folds.
-      foldOn = gFoldCover * skinOn;
-      foldPhase = gFoldPhase;
-      foldSpace = gFoldSpace;
-      foldDeep = gFoldDeep;
-      foldCarried = foldHeld(vAux.x);
-      // Where the relief lays no rope on a bank of the line near the lens, the skin coils there all the same, on whole
-      // crust and on the tops of its plates: the picture's whole bank is coils. Only as far as a cord is a dozen pixels
-      // or more: farther off, even cords side by side are a field of stripes.
-      float own = coil * (1.0 - smoothstep(0.25, 0.6, gFoldCover)) * (1.0 - steep) * (1.0 - slabGap) * (1.0 - max(heap, clinker)) * (1.0 - fresh) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.004, 0.012, fpLong));
-      if (own > foldOn) {
-        foldOn = own;
-        foldPhase = coilAt(q) + 9.0 * fract(slabId * 7.31);
-        foldSpace = 0.145;
-        foldDeep = 0.06;
-        foldCarried = 0.0;
-        ownCoil = own;
-      }
-      // The toes between the sheaves: what the cells do not carry of their domes, a dark line where one lies on the next,
-      // and a tone of its own for each.
+      // The toes: what the cells do not carry of their domes, a dark line where one lies on the next, and a tone of its
+      // own for each.
       float toe = step(1e-4, gToeBest) * skinOn;
       slope += gToeSlope * (1.0 - toeHeld(vAux.x)) * toe;
       lines *= mix(1.0, 0.8 + 0.2 * smoothstep(0.0, 0.02, gToeBest - gToeNext), toe * step(1e-4, gToeNext) * (1.0 - smoothstep(0.02, 0.1, fpShort)));
       age += 0.16 * (hash12(gToeId + 3.1) - 0.5) * toe;
     }
   }
-  // Folds, and the cords on them, four to a fold: each is drawn as long as a pixel is finer than one of it across its run,
-  // so that none can beat against the pixels. All run along the lines of equal phase, and the phase is smooth, so its
-  // slope is taken from the screen.
-  vec2 phaseD = vec2(dFdx(foldPhase), dFdy(foldPhase));
-  float per = max(abs(phaseD.x), abs(phaseD.y));
-  float turn = 3.14159 * foldPhase;
-  float fold = abs(sin(turn));
-  // A fold carries one to four cords, by the fold: cords of 3 to 12 cm lie in one sheaf.
-  float strands = mix(4.0, (ownCoil > 0.0 ? 1.0 : 2.0) + floor(2.999 * hash12(vec2(floor(foldPhase), 9.1))), step(0.5, coil));
-  float cord = abs(sin(strands * turn));
-  float waver = vnoise(q / 0.23 + 61.0);
-  float seen = 1.0 - smoothstep(0.05, 0.17, per);
-  float foldSeen = foldOn * seen;
-  // Only a fold as thick as an arm carries cords.
-  float cords = foldOn * (1.0 - smoothstep(0.02, 0.05, per)) * max(smoothstep(0.07, 0.16, foldSpace), 0.8 * coil);
-  // The slope of a fold where the cells are too coarse to carry it, and of the cords always.
-  float foldRise = foldDeep * 0.7 * 3.14159 * pow(max(fold, 0.06), -0.3) * cos(turn) * sign(sin(turn)) * foldSeen * (1.0 - foldCarried);
-  foldRise += 0.1 * foldSpace * 4.0 * 3.14159 * cos(strands * turn) * sign(sin(strands * turn)) * cords * (0.4 + 1.2 * waver);
-  // A groove is dark by its depth: a deep narrow one sees a fifth of the sky, a shallow one most of it. Where a pixel no
-  // longer tells one fold from the next, what is left is the tone of the folded patch, not a row of black dashes.
-  // On coiled rope seen close, one furrow in two or three is deep, narrow and nearly black, here and not there along its
-  // run: the others stay shallow, so that the furrows are unevenly spaced and never a row of equal stripes.
-  float furrowDeep = coil * (1.0 - smoothstep(mix(0.02, 0.03, coilMound), mix(0.05, 0.09, coilMound), per)) * step(mix(0.7, 0.5, coilMound), hash12(vec2(floor(foldPhase + 0.5), 3.7))) * smoothstep(0.3, 0.55, vnoise(q / 0.8 + 83.0));
-  float pitDark = mix(mix(0.88, 0.75, smoothstep(0.2, 0.7, foldDeep / foldSpace)), mix(0.55, 0.74, coilMound), furrowDeep);
-  // Where one patch of coils laps on the next there is a crease, the deepest line of the bank.
-  float lap = ownCoil * (1.0 - smoothstep(0.0, 0.04, gCoilEdge));
-  lines *= 1.0 - 0.5 * lap;
-  lines *= mix(1.0, mix(mix(pitDark, 1.0, 0.7), pitDark + (1.0 - pitDark) * smoothstep(0.0, mix(0.8, 0.45, furrowDeep), fold), seen), foldOn);
-  lines *= mix(1.0, mix(0.85, mix(0.8, 0.9, coilMound), coil) + mix(0.15, mix(0.2, 0.1, coilMound), coil) * smoothstep(0.0, 0.7, cord), cords);
-  float crest = 0.6 * cords * pow(cord, 3.0) + (foldSeen - 0.6 * cords) * pow(fold, 3.0);
   float det = qx.x * qy.y - qx.y * qy.x;
   det = abs(det) > 1e-12 ? det : 1e12;
 
-  // The grain of the skin: grit, pits and the scales of a stretched rope, from the photograph.
-  // Each reading is skipped where a pixel is too long to hold any of it.
-  float lod = log2(max(fpGrain, 1e-5) * 1024.0) - 1.1;
-  vec4 ta = vec4(0.5);
-  vec4 tb = vec4(0.5);
-  vec4 tc = vec4(0.5);
-  if (fpGrain < 0.3) tc = mix(textureLod(tRopeNh, TURN_C * qg / 4.3 + 0.61, lod - 2.1), tc, smoothstep(0.18, 0.3, fpGrain));
-  // On the skin's own coils the photograph's strands (they run along its u) are laid along the cord, not across it.
-  // On the relief's folds at the line the same: the photograph is laid by the fold's phase, drawn out along its run.
-  bool along = ownCoil > 0.0;
-  vec2 alongUV = gCoilUV;
-  vec2 alongU = gCoilU;
-  vec2 alongV = gCoilV;
-  if (!along && coil > 0.5 && foldOn > 0.0) {
-    along = true;
-    alongUV = vec2(0.7 * dot(q, vec2(0.8, 0.6)), 0.11 * foldPhase);
-    alongV = gFoldDir;
-    alongU = vec2(-gFoldDir.y, gFoldDir.x);
+  // The skin itself is the photographed sheet (ropes of unlike thickness that curl and end, glassy slabs, cracks), read at
+  // three sizes: a quarter of its own (wrinkles and grit under the lens), its own, and four times its own (the billows of
+  // the far bank). Each reading takes the footprint of the pixel, so a rope seen low keeps its edge across the view, and
+  // what a pixel cannot hold the mips give as the mean: nothing is left to shimmer.
+  vec2 gx = dFdx(qg);
+  vec2 gy = dFdy(qg);
+  float lx = max(length(gx), 1e-6);
+  float ly = max(length(gy), 1e-6);
+  // Seen very low a pixel is thirty times as long as it is wide: past sixteen the long way is cut, or the reading would
+  // blur what lies across it.
+  gx *= min(1.0, 16.0 * ly / lx);
+  gy *= min(1.0, 16.0 * lx / ly);
+  float fpS = min(lx, ly);
+  float nearOn = 1.0 - smoothstep(0.006, 0.016, fpS);
+  float farOn = smoothstep(0.005, 0.012, fpS);
+  vec3 skinM = vec3(0.0, 0.0, 0.5);
+  vec3 skinD = skinM;
+  vec3 skinL = skinM;
+  vec3 tone = vec3(1.0);
+  if (fpS < 0.5) {
+    skinM = sheetAt(qg, SHEET_M, gx, gy, 11.0, true);
+    tone = gSheetTone;
   }
-  if (fpGrain < 0.09) ta = mix(textureLod(tRopeNh, along ? alongUV / 1.37 : TURN_A * qg / 1.37, lod - 0.45), ta, smoothstep(0.055, 0.09, fpGrain));
-  if (fpGrain < 0.03) tb = mix(textureLod(tRopeNh, along ? alongUV / 0.41 + 0.37 : TURN_B * qg / 0.41 + 0.37, lod + 1.29), tb, smoothstep(0.018, 0.03, fpGrain));
-  float grainA = ta.b - 0.5;
-  float grainB = tb.b - 0.5;
-  float grainC = tc.b - 0.5;
-  vec2 fine = (tc.rg - 0.5) * TURN_C * 2.4;
-  if (along) {
-    vec2 both = (ta.rg - 0.5) * 0.4 + (tb.rg - 0.5) * 1.5;
-    fine += both.x * alongU + both.y * alongV;
-  } else {
-    fine += (ta.rg - 0.5) * TURN_A * 2.8 + (tb.rg - 0.5) * TURN_B * 2.4;
+  if (nearOn > 0.0) skinD = mix(skinD, sheetAt(qg, SHEET_D, gx, gy, 47.0, false), nearOn);
+  if (farOn > 0.0) {
+    skinL = mix(skinL, sheetAt(qg, SHEET_L, gx, gy, 83.0, true), farOn);
+    tone *= mix(vec3(1.0), gSheetTone, farOn);
   }
-  fine *= 1.1;
-
-  // Threads: on every cord lie strands of two to three centimetres that run with the fold, waver, thin out and start again.
-  float tturn = 3.14159 * (13.0 * foldPhase + 1.6 * waver);
-  float thread = abs(sin(tturn));
-  float threads = foldOn * (1.0 - smoothstep(0.006, 0.014, per)) * smoothstep(0.14, 0.28, foldSpace) * clamp(0.5 + 2.2 * grainA + 0.8 * (waver - 0.5), 0.0, 1.0);
-  foldRise += 0.65 * foldSpace * cos(tturn) * sign(sin(tturn)) * threads;
-  lines *= mix(1.0, 0.82 + 0.18 * smoothstep(0.0, 0.55, thread), threads);
-  crease *= max(lines, mix(0.75, mix(0.55, 0.74, coilMound), max(furrowDeep, lap)));
-  slope += clamp(onCrust(phaseD, qx, qy, det), -6.0, 6.0) * clamp(foldRise, -0.8, 0.8) * (1.0 - 0.6 * coilMound);
-  age = clamp(clamp(age, 0.0, 1.0) * (1.0 - 0.75 * fresh) + (0.4 + 0.25 * fresh) * (flow - 0.5) + 0.5 * grainC * (1.0 - abs(2.0 * flow - 1.0)), 0.0, 1.0) * (1.0 - 0.8 * young);
+  vec2 fine = SHEET_TALL_M * skinM.xy + SHEET_TALL_D * skinD.xy + SHEET_TALL_L * skinL.xy;
+  float grainA = skinM.z - 0.5;
+  // A furrow sees a sixth of the sky, a crest all of it.
+  crease *= mix(1.0, smoothstep(0.05, 0.5, skinM.z), 0.85) * mix(1.0, smoothstep(0.05, 0.5, skinL.z), 0.8) * mix(1.0, smoothstep(0.1, 0.5, skinD.z), 0.5);
+  float crest = smoothstep(0.55, 0.85, skinM.z);
+  crease *= max(lines, 0.75);
+  age = clamp(clamp(age, 0.0, 1.0) * (1.0 - 0.75 * fresh) + (0.4 + 0.25 * fresh) * (flow - 0.5) + 0.5 * (skinL.z - 0.5) * (1.0 - abs(2.0 * flow - 1.0)), 0.0, 1.0) * (1.0 - 0.8 * young);
 
   // From afar the lake is one dark dry field: the flows and plates differ less, and a rough face seen low shadows itself.
   float wide = smoothstep(30.0, 130.0, far);
@@ -344,32 +265,17 @@ void main() {
 
   // Ash: pale dust lies in the hollows of the billow, in grooves and pits, and thick on old plates.
   float hollow = 1.0 - smoothstep(0.2, 0.42, vnoise(q / 2.6 + 1.0));
-  float low = max(foldSeen * (1.0 - smoothstep(0.15, 0.7, fold)), 1.0 - smoothstep(0.38, 0.52, ta.b));
+  float low = 1.0 - smoothstep(0.3, 0.5, skinM.z);
   float dust = clamp(max(hollow, smoothstep(0.7, 0.95, age)) * mix(0.15, 1.0, low) + 0.5 * spall * hollow, 0.0, 1.0) * (1.0 - young) * (1.0 - fresh) * (1.0 - steep);
 
-  // Pits: the low grains of the skin are holes of one to five centimetres, and a hole is dark unless dust lies in it.
-  crease *= 1.0 - mix(1.0, 0.35, coil * foldOn) * (1.0 - 0.8 * coil * (1.0 - coilMound)) * (0.5 * (1.0 - smoothstep(0.3, 0.44, tb.b)) * (1.0 - smoothstep(0.34, 0.5, ta.b) * 0.5) * (1.0 - dust) + 0.3 * (1.0 - smoothstep(0.3, 0.42, ta.b)) * (1.0 - dust));
   // Old skin is grey and rough, young skin black and glassy: by patch, by plate and by lobe. Grain on all of it.
   vec3 albedo = mix(vec3(0.034, 0.035, 0.037), vec3(0.125, 0.126, 0.129), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
-  // On coiled rope the tone is told by the cords and their furrows: the photographed grain, read three ways, lies on it as a felt.
-  float plain = coil * (1.0 - coilMound) * (1.0 - steep);
-  albedo *= clamp(1.0 + mix(1.0, 0.06, plain) * mix(1.0, 0.25, coil * foldOn) * 1.8 * grainA + mix(1.0, 0.6, plain) * mix(1.0, 0.25, coil * foldOn) * 1.3 * grainB + mix(1.0, 0.25, plain) * mix(1.0, 0.3, coil * foldOn) * 1.7 * grainC, 0.3, 2.0);
-  // The top of a cord is paler than its flank: worn, and dusted.
-  albedo *= 1.0 + 0.4 * coil * (1.0 - coilMound) * crest;
+  // The tone within a patch is the photograph's: pale worn crests, black furrows, glass and grit.
+  albedo *= 0.85 * clamp(tone, 0.1, 4.0) * (1.0 + 0.8 * (skinD.z - 0.5));
   // The banks of the line are dark charcoal brown, not ash.
   albedo *= mix(vec3(1.0), vec3(0.66, 0.6, 0.59), coil * (1.0 - coilMound));
-  // Grit: grains and pits of one to three centimetres, the same in every direction, as far as a pixel holds them.
-  float gritOn = (1.0 - smoothstep(0.006, 0.014, fpGrain));
-  if (gritOn > 0.0) {
-    float g1 = vnoise(qg / 0.027 + 3.0);
-    float g2 = vnoise(TURN_A * qg / 0.011 + 9.0) * (1.0 - smoothstep(0.003, 0.006, fpGrain));
-    float grit = (0.6 * (g1 - 0.5) + 0.4 * (g2 - 0.5)) * gritOn;
-    albedo *= 1.0 + mix(0.5, 0.15, plain) * grit;
-    crease *= 1.0 - mix(0.35, 0.1, plain) * gritOn * (1.0 - smoothstep(0.22, 0.38, g1));
-    slope -= clamp(onCrust(vec2(dFdx(grit), dFdy(grit)), qx, qy, det) * 0.012, -0.7, 0.7);
-  }
   albedo *= mix(vec3(1.0), vec3(0.86, 0.8, 0.77), wide);
-  albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * tb.b + 0.6 * grainA), 0.85 * spall);
+  albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * skinD.z + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
   // The floor the group feeds on is dark, with low mounds of grey ash and rubble a metre or three across, and wet patches.
   float mound = 0.0;
@@ -379,13 +285,11 @@ void main() {
     mound = fresh * smoothstep(0.6, 0.72, 0.7 * vnoise(q / 2.1 + 47.0) + 0.3 * vnoise(q / 0.7 + 3.0));
     wet = fresh * (1.0 - flow) * (1.0 - mound) * (1.0 - steep) * (1.0 - rubble) * (1.0 - spall) * smoothstep(0.58, 0.68, 0.7 * vnoise(q / 2.3 + 77.0) + 0.3 * vnoise(q / 0.6 + 19.0));
   }
-  albedo = mix(albedo, vec3(0.062, 0.06, 0.059) * (0.7 + 1.2 * tb.b - 0.3), 0.8 * mound);
+  albedo = mix(albedo, vec3(0.062, 0.06, 0.059) * (0.7 + 1.2 * skinD.z - 0.3), 0.8 * mound);
   // That floor is warm dark basalt and nothing on it is pale: its brights are the fire's, not ash on the tops of plates.
   albedo *= mix(vec3(1.0), vec3(1.08, 0.99, 0.92), fresh) * mix(1.0, min(1.0, 0.115 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
-  // Satin only where fresh glass faces the sky, on the tops of ropes: everything else is dead matte.
-  float glass = (1.0 - steep) * (1.0 - smoothstep(0.3, 0.6, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - rubble) * mix(mix(0.5, 0.0, smoothstep(0.08, 0.35, fpLong)), smoothstep(0.45, 0.9, fold), foldSeen) * smoothstep(0.42, 0.56, tb.b + 0.5 * grainA + 0.5);
-  // A coiled cord carries a satin line along its top.
-  glass = max(glass, coil * (1.0 - coilMound) * crest * (1.0 - spall) * (1.0 - 0.6 * dust) * (1.0 - rubble));
+  // Satin only where fresh glass faces the sky, on the tops of ropes and on the smooth slabs: everything else is dead matte.
+  float glass = (1.0 - steep) * (1.0 - smoothstep(0.3, 0.75, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - rubble) * max(crest, 0.35 * (1.0 - smoothstep(0.08, 0.35, fpLong)));
   float rough = mix(mix(0.93, 0.4, clamp(glass * (1.0 - mound), 0.0, 1.0)), 0.2, wet);
 
   // How much sky a point sees: less in a crease, between two lobes, below the brim of a gap.
@@ -443,10 +347,9 @@ void main() {
   float face = smoothstep(0.35, 0.65, vnoise(vec2(faceAt + 31.0, vWorld.y / 0.1 + 7.0 * floor(faceAt / 2.3))));
   light = skyLight + light * mix(1.0, (0.1 + 1.4 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.25)) * mix(0.12, 1.3, face), wallOn);
   // A broken face is duller and browner than the skin.
-  albedo = mix(albedo, vec3(0.042, 0.038, 0.036) * clamp(0.75 + 0.5 * tb.b + 0.6 * grainA + 0.5 * grainC, 0.4, 1.7), max(steep, 0.8 * wallOn));
+  albedo = mix(albedo, vec3(0.042, 0.038, 0.036) * clamp(0.75 + 0.5 * skinD.z + 0.6 * grainA + 0.5 * (skinL.z - 0.5), 0.4, 1.7), max(steep, 0.8 * wallOn));
   vec3 c = albedo * light / 3.14159;
-  // A cord's flank turned edge on would glint, one pixel wide.
-  float nv = clamp(dot(n, v), 0.35 * foldSeen, 1.0);
+  float nv = clamp(dot(n, v), 0.0, 1.0);
   // A rough face does not turn into a mirror at a grazing angle.
   float satin = 1.0 - smoothstep(0.4, 0.9, rough);
   float fresnel = mix(0.012, 0.07, satin) + 0.04 * satin * pow(1.0 - nv, 3.0);
@@ -528,16 +431,8 @@ void main() {
   }
   float nearMelt = live * smoothstep(0.05, 0.25, gape) * (1.0 - smoothstep(0.2, 4.0, beside)) * smoothstep(0.0, 0.06, beside) * (1.0 - rubble) * calm * (1.0 - heat.x);
   if (nearMelt > 0.0) {
-    // Cracks where the thin crust has split: crooked, a hand wide, half a metre to two metres long.
-    vec2 cq = q / 0.8 + 43.0;
-    float cf = vnoise(cq);
-    vec2 cg = vec2(vnoise(cq + vec2(0.12, 0.0)) - cf, vnoise(cq + vec2(0.0, 0.12)) - cf) / 0.12;
-    float cl = max(length(cg), 0.25);
-    float cd = abs(cf - 0.5) / cl * 0.8;
-    vec2 cn = cg / cl;
-    float cfoot = max(abs(dot(qx, cn)), abs(dot(qy, cn)));
-    float cwide = max(0.035 * (0.4 + vnoise(q / 0.6 + 97.0)), 1.5 * cfoot);
-    float split = (1.0 - smoothstep(0.35 * cwide, cwide, cd)) * min(1.0, 0.045 / cwide) * smoothstep(0.5, 0.62, vnoise(q / 1.1 + 59.0));
+    // Where the thin crust has split it is along its own furrows: the deepest of them show the melt, here and not there.
+    float split = (1.0 - smoothstep(0.06, 0.2, skinM.z)) * smoothstep(0.45, 0.62, vnoise(q / 1.1 + 59.0)) * (1.0 - smoothstep(0.02, 0.06, fpS));
     float ember = clamp(split * (1.0 - steep) * nearMelt * nearMelt, 0.0, 1.0);
     c *= 1.0 - ember;
     hot += blackbody(1000.0 + 90.0 * nearMelt) * ember;
