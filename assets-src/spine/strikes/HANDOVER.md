@@ -7,8 +7,9 @@ All looks were at the draft tier, 3840 x 2160, one sample. The final tier was ne
 ## How each part is drawn
 
 - strike-N (`strikes/index.ts`, `bolt.ts`, `where.ts`): a channel grown by a seeded walk from the cloud to 5.5 m under `tipOf()`, drawn as
-  camera-facing ribbons: white core, violet skirt, branches that taper; a hot spot and 800 sparks with drag and gravity; a light for the rig.
-- Strike timing (`bolt.ts`, `timingOf`): leader, strokes, beads after. Steam is pushed to `ctx.sources.steam`. No picture used.
+  camera-facing ribbons: violet-white core, violet skirt, tapering branches; a hot spot and 800 sparks (drag, gravity, gale); two rig emitters.
+- Strike timing (`bolt.ts`): a leader, then 2 or 3 strokes 30 to 60 ms apart, each on a way of its own (`moved` in the vertex shader,
+  `strokeAt`), nothing left of the channel a frame after each. Steam is pushed to `ctx.sources.steam`. No picture used.
 - tether-kites (`kites/index.ts`): colonies of membranes on sinew cords from holdfasts in the lee of each tip, flown by `uWind`;
   near ones welted, veined, holed; beyond 200 to 450 m they stand on edge with dark hems and cords at least 1.7 px. No picture used.
 - ridge-runners (`runners/shape.ts`, `material.ts`, `index.ts`): a hide of tubes on six rigid bones, 5,000 to 110,000 instanced locks rooted
@@ -34,11 +35,23 @@ All looks were at the draft tier, 3840 x 2160, one sample. The final tier was ne
 - spine-1: the wet dark rock and refrozen ice of the scorch are under the lead's ground haze in the lower third and hardly show.
 - spine-4: lying ones are mounds with one foreleg out and a dark sole at its end; no heads or beards read on them; none lies curled against
   another; a thin frost on the backs, not packed snow; the standing one's legs are straight posts (no elbows or hocks).
-- spine-3: one broad kite ribbon, not 2 to 4 of different lengths; the bolt is white with a violet skirt, the picture is violet through;
-  no glow in the cloud round the channel and no lit steam (the air must draw both).
+- spine-3: one broad kite ribbon, not 2 to 4 of different lengths; no lit steam at the tip (the air must draw it from `ctx.sources`);
+  the flash lights cloud and ridge evenly violet, the picture has it fall off down the rock.
 - spine-0: the crossing runners are about 25 px wide on the trail and barely read; far cords read as dark dashes.
 - spine-2: kites are paler and flatter than the glassy violet films of the picture; no light comes through them.
 - Everywhere: screen-door grain on kites and bolt at draft; legs are one rigid bone each.
+
+## Round 9 (judged on version 2): closed, tried, not reached
+
+- Closed, I think: bolt locked on one path and pulsing for 12 frames (now 2 or 3 short strokes, each moved, gone in about 7 frames);
+  "lights nothing" (`CAST` 520 to 2600: cloud, ridge and snow flash violet); second white bolt at spine-3 (the fork is now a faint thread);
+  sparks hanging over a second (life 0.25 to 0.8 s, more gale); eye-like mark in the canal (it was the dark sole of a lying foreleg,
+  now the paw lies flat); hole in the dead one's body (the inside-out hide); frozen herd (breath, neck and weight shifts 2 to 3 times larger).
+- Tried, partly there: clumped frosted coat (dark roots, guard locks one in seven with rime ends, frost on backs); the dead one's weight
+  and pose (hock bend, legs apart). Both still read as a model beside the pictures.
+- Not reached: kites (even lilac, dotted edges, even tassels, too soft at spine-2 on measure M3, no change of shape downwind);
+  the herd's place in the canal (standing one left of the mouth and backlit, resting ones staggered back); feet wet in the water;
+  dotted pattern on sparks; fur sharpness on M3 at spine-4; the dead one reframed to the right edge.
 
 ## Staged by shot
 
