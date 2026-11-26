@@ -1,6 +1,7 @@
-2026-11-26 17:59 UTC
-work at a0d5547 on agent/spine-kites
-last version in work: pearl by thickness and angle at 7418, far kites core and ends at 7015 and 7300, edge lines at 7450
-look-1.jpg = out/work/v4/7418-crop.jpg
-look-2.jpg = out/work/v4/far.jpg
-look-3.jpg = out/work/v4/7450-right.jpg
+2026-11-26 18:35 UTC
+work at 8c69800 on agent/spine-kites
+last version: pearl by thickness and angle, far kites dark core and thin ends, fewer edge lines
+look-1.jpg = out/work/v6/show-3-sheet-kites-7378-7498.png
+look-2.jpg = out/work/v6/show-1-7418-beside-approved.jpg
+look-3.jpg = out/work/v6/show-2-7015-kites-before-above-after.jpg
+look-4.jpg = out/work/v6/show-4-strike-7450-before-beside-after.jpg
