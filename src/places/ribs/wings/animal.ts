@@ -165,7 +165,7 @@ vec3 animalAt(float part, float s, float a, float id) {
     float ps = aNeck.z * s * s;
     // A thin neck, the bones of it standing through the skin.
     float r = mix(0.1, 0.042, pow(s, 0.7)) + 0.075 * exp(-s * 9.0) + 0.02 * knob(s, 0.965, 0.05);
-    r *= 1.0 + 0.16 * pow(abs(sin(s * 34.0)), 5.0) * smoothstep(0.08, 0.2, s);
+    r *= 1.0 + 0.07 * pow(abs(sin(s * 34.0)), 5.0) * smoothstep(0.08, 0.2, s);
     r *= 1.0 - smoothstep(0.985, 1.0, s) * 0.6;
     return ring(neckAt(s, base), t, vec3(cos(ps), 0.0, -sin(ps)), r, a);
   }
@@ -276,6 +276,14 @@ export const ANIMAL_FRAGMENT = /* glsl */ `
 precision highp float;
 ${RIG_GLSL}
 uniform sampler2D tHide;
+uniform sampler2D tHideN;
+// The mean of mat/wing.jpg in linear light (materials.json): the tile tints, the animal's own colours stand.
+const vec3 HIDE_MEAN = vec3(0.495, 0.387, 0.3);
+vec3 bumped(vec3 n, vec2 slope) {
+  vec3 t = normalize(cross(n, abs(n.y) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0)));
+  vec3 b = cross(n, t);
+  return normalize(n - slope.x * t - slope.y * b);
+}
 uniform float uPool;
 uniform float uDead;
 varying vec3 vWorld;
@@ -295,21 +303,28 @@ void main() {
   if (sail && dot(n, v) < 0.0) n = -n;
   // The hide: one picture laid along each part.
   vec2 uv = sail ? vec2(s * 1.3, a * 1.1) : vec2(s * (part < 0.5 ? 0.9 : part < 1.5 ? 1.6 : 0.8), a / 6.2832 * (part < 0.5 ? 1.0 : 0.3));
-  vec3 hide = texture2D(tHide, uv + vSeed.x * 7.0).rgb;
+  // The membrane picture (one repeat is a metre of skin) at three scales: across the part, a third, and a seventh of that.
+  vec2 at = uv + vSeed.x * 7.0;
+  vec3 hide = texture2D(tHide, at).rgb / HIDE_MEAN;
+  vec3 mid = texture2D(tHide, uv * 2.7 + vSeed.y * 5.0).rgb / HIDE_MEAN;
   float grain = dot(hide, vec3(0.3333));
-  float tone = clamp(0.35 + 0.65 * grain / 0.065, 0.5, 1.45);
+  float tone = clamp((0.3 + 0.7 * grain) * (0.45 + 0.55 * dot(mid, vec3(0.3333))), 0.5, 1.45);
+  vec3 veined = mix(vec3(1.0), hide * mid / max(grain * dot(mid, vec3(0.3333)), 0.05), 0.7);
+  vec2 slope = (texture2D(tHideN, at).rg - 0.5) + (texture2D(tHideN, uv * 2.7 + vSeed.y * 5.0).rg - 0.5);
   // Close to, the hide is creased and pored: the same picture laid fine.
-  vec3 fine = texture2D(tHide, uv * vec2(7.0, 5.0) + vSeed.x * 3.0).rgb;
-  float fineG = dot(fine, vec3(0.3333));
-  float crease = clamp(0.5 + 0.5 * fineG / 0.065, 0.55, 1.4);
+  vec2 near = uv * vec2(7.0, 5.0) + vSeed.x * 3.0;
+  float fineG = dot(texture2D(tHide, near).rgb / HIDE_MEAN, vec3(0.3333));
+  float crease = clamp(0.35 + 0.65 * fineG, 0.55, 1.4);
+  slope += 0.8 * (texture2D(tHideN, near).rg - 0.5);
   if (!sail) {
     tone *= crease;
-    n = normalize(n + 5.0 * (fine - fineG) + 0.1 * vec3(0.0, sin(s * 160.0 + 30.0 * grain), 0.0));
+    n = bumped(n, slope * 1.6);
   }
-  vec3 ivory = mix(vec3(0.5, 0.485, 0.45), vec3(0.64, 0.62, 0.575), vSeed.x);
+  // Pale skin with blood under it: warm, not the grey of the sky it stands in.
+  vec3 ivory = mix(vec3(0.66, 0.51, 0.41), vec3(0.76, 0.61, 0.5), vSeed.x);
   vec3 albedo = ivory;
   // Wet: they live in the spray, and the sky lies along every back.
-  float rough = 0.24;
+  float rough = 0.34;
   float occ = 1.0;
   if (part < 0.5) {
     float belly = smoothstep(-0.2, -0.9, sin(a));
@@ -323,13 +338,12 @@ void main() {
     float cage = smoothstep(0.3, 0.42, s) * smoothstep(0.88, 0.72, s);
     float ribs = 0.5 + 0.5 * cos(s * 52.0 + 2.5 * sin(a));
     float between = cage * (0.35 + 0.65 * flank) * (1.0 - ribs);
-    albedo *= 1.0 - 0.38 * between;
-    occ *= 1.0 - 0.45 * between;
+    albedo *= 1.0 - 0.08 * between;
+    occ *= 1.0 - 0.14 * between;
     float spine = smoothstep(0.93, 1.0, sin(a)) * (0.5 + 0.5 * cos(s * 90.0));
-    albedo = mix(albedo, ivory * 1.25, 0.5 * spine + 0.35 * cage * (0.35 + 0.65 * flank) * smoothstep(0.75, 1.0, ribs));
+    albedo = mix(albedo, ivory * 1.25, 0.3 * spine + 0.1 * cage * (0.35 + 0.65 * flank) * smoothstep(0.75, 1.0, ribs));
   } else if (part < 1.5) {
     albedo = mix(ivory, vec3(0.42, 0.37, 0.33), smoothstep(0.8, 1.0, s));
-    albedo *= 0.9 + 0.1 * sin(s * 150.0);
   } else if (part < 2.5) {
     albedo = mix(vec3(0.4, 0.34, 0.3), vec3(0.72, 0.68, 0.6), smoothstep(0.05, 0.9, s));
     rough = 0.4;
@@ -345,30 +359,30 @@ void main() {
     // Each panel between two spars is a worn sheet: paler along the spar, stained toward its lower edge, veined.
     float panel = fract(a * 5.0);
     skin *= 0.78 + 0.3 * panel;
-    skin *= 0.86 + 0.14 * sin(s * 90.0 + 6.0 * hide.r * 12.0);
+    skin *= 0.86 + 0.14 * sin(s * 90.0 + 4.7 * hide.r);
     albedo = mix(skin, vec3(0.3, 0.27, 0.24), bone * 0.8);
     float edge = smoothstep(0.72, 1.0, s);
     albedo = mix(albedo, vec3(0.6, 0.36, 0.16), edge * 0.5);
     // Folded, the skin lies layer on layer: dull orange brown, dark, the light no longer through it.
-    albedo = mix(mix(vec3(0.5, 0.42, 0.33), vec3(0.66, 0.27, 0.06), smoothstep(0.3, 0.95, s)) * (0.6 + 0.55 * panel), albedo, smoothstep(0.15, 0.7, vOpen));
-    n = normalize(n + 0.25 * (hide - grain));
+    albedo = mix(mix(vec3(0.62, 0.5, 0.38), vec3(0.82, 0.36, 0.08), smoothstep(0.5, 1.0, s)) * (0.7 + 0.45 * panel), albedo, smoothstep(0.15, 0.7, vOpen));
+    n = bumped(n, slope * 1.2);
     rough = 0.4;
   }
-  albedo *= tone;
+  albedo *= tone * veined;
   // Legs that stand in a pool are dark and wet to just over the water.
   float wetLeg = (1.0 - smoothstep(uPool + 0.02, uPool + 0.3, vWorld.y)) * step(2.5, part) * step(part, 4.5);
   albedo *= 1.0 - 0.45 * wetLeg;
   rough = mix(rough, 0.2, wetLeg);
   // The drowned one: grey, sodden, the hide gone in patches to what is under it.
   if (uDead > 0.5) {
-    float rot = smoothstep(0.16, 0.3, texture2D(tHide, uv * 0.37 + 0.3).g);
-    albedo = mix(vec3(0.2, 0.09, 0.08), mix(vec3(0.5, 0.47, 0.44), vec3(0.33, 0.36, 0.3), texture2D(tHide, uv * 0.21).r * 3.0) * tone, rot);
+    float rot = smoothstep(0.16, 0.3, texture2D(tHide, uv * 0.37 + 0.3).g * 0.5);
+    albedo = mix(vec3(0.2, 0.09, 0.08), mix(vec3(0.5, 0.47, 0.44), vec3(0.33, 0.36, 0.3), texture2D(tHide, uv * 0.21).r * 0.4) * tone, rot);
     rough = mix(0.25, 0.45, rot);
   }
   vec3 col = rigShade(vWorld, n, v, albedo, rough, occ);
   // Against the light: thin wet skin lets a little through and the low sun rims it, so a shaded animal is never a black shape.
   {
-    float rimNv = 1.0 - max(dot(n, v), 0.0);
+    float rimNv = 1.0 - clamp(dot(n, v), 0.0, 1.0);
     float against = pow(max(dot(-v, uSunDir), 0.0), 2.0);
     col += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.11 / PI;
     col += (albedo * 0.6 + 0.05) * uSunColour * pow(rimNv, 3.0) * against * 0.16 * sunAt(vWorld, landAt(vWorld.xz));
@@ -389,7 +403,8 @@ export function animalMaterial(ctx: Context, pool: number, dead = false): THREE.
     fragmentShader: ANIMAL_FRAGMENT,
     uniforms: {
       ...ctx.rig.uniforms,
-      tHide: { value: ctx.assets.texture('wings/hide.jpg', { kind: 'colour' }) },
+      tHide: { value: ctx.assets.texture('mat/wing.jpg', { kind: 'colour' }) },
+      tHideN: { value: ctx.assets.texture('mat/wing-nh.png', { kind: 'data' }) },
       uPool: { value: pool },
       uDead: { value: dead ? 1 : 0 },
     },

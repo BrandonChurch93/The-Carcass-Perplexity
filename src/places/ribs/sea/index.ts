@@ -244,7 +244,8 @@ export function create(ctx: Context): Piece {
   const FACE = 340;
   const PLUME = 130;
   const AHEAD = 90;
-  const boreSpray = new Spray(burstAt.length * BURST + CREST + FACE + PLUME + AHEAD, { ...rig.uniforms, ...shared });
+  const LIP = 520;
+  const boreSpray = new Spray(burstAt.length * BURST + CREST + FACE + PLUME + AHEAD + LIP, { ...rig.uniforms, ...shared });
   ctx.scene.add(ctx.parts.built('bore', bore, boreSpray.mesh), boreSpray.mesh);
   const lineAt = (x: number, seconds: number): number => 20 * Math.sin(x * 0.0076 + 1.3) + 8 * Math.sin(x * 0.021 + seconds * 0.25) + 3 * Math.sin(x * 0.09 - seconds * 0.6);
   const feeding = shotSpan('ribs-04');
@@ -306,7 +307,7 @@ export function create(ctx: Context): Piece {
         const z = frontZ + lineAt(x, seconds) - H * (1.3 + 4 * rand(i, n + 24)) - 3 * a;
         const y = H * (0.25 + 0.85 * rand(i, n + 25)) + 1.2 * a;
         const fade = Math.min(1, a / 1.2) * Math.min(1, (life - a) / 1.5);
-        boreSpray.put(x, y, z, (9 + 7 * rand(i, n + 28)) * (1 + 0.04 * a), 1 + 0.55 * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.85);
+        boreSpray.put(x, y, z, (15 + 10 * rand(i, n + 28)) * (1 + 0.04 * a), 1 + 0.2 * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.85);
       }
       for (const b of burstAt) {
         const hit = boreArrives(b.z) ;
@@ -342,7 +343,7 @@ export function create(ctx: Context): Piece {
         const y = H * (0.84 + 0.2 * rand(i, n + 15)) + (piled ? 14 + 14 * rand(i, n + 16) : 5 + 11 * rand(i, n + 16)) * a - 4.4 * a * a;
         const z = z0 + BORE_SPEED * (1.03 - 0.3 * a / life) * a;
         const fade = Math.min(1, a / 0.1) * Math.pow(Math.max(0, 1 - a / life), 2);
-        boreSpray.put(x, y + 1, z, (piled ? 2.0 + 2.6 * a : 1.2 + 2.0 * a) * (0.6 + 0.8 * rand(i, n + 17)), 0.7 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.25);
+        boreSpray.put(x, y + 1, z, (piled ? 1.6 + 2.0 * a : 1.0 + 1.4 * a) * (0.6 + 0.8 * rand(i, n + 17)), 0.6 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.7);
       }
       // White heads that tumble down the face in front of the wall.
       for (let i = 0; i < FACE; i++) {
@@ -356,7 +357,22 @@ export function create(ctx: Context): Piece {
         const y = H * Math.pow(uc, 1.6) + 1.5 * rand(i, n + 45);
         const z = frontZ + lineAt(x, seconds) - 0.75 * H * uc + H * (0.5 * uc * uc * uc + 0.1) + 1.5 * a;
         const fade = Math.min(1, a / 0.15) * Math.min(1, (life - a) / 0.3);
-        boreSpray.put(x, y, z, (i % 2 === 0 ? 1.7 + 1.8 * rand(i, n + 46) : 1.1 + 1.5 * rand(i, n + 46)) * (1 + 0.5 * a), 0.9 * fade, rand(i, n + 47), rand(i, n + 48) * 6.28, 0.9);
+        boreSpray.put(x, y, z, (i % 2 === 0 ? 1.7 + 1.8 * rand(i, n + 46) : 1.1 + 1.5 * rand(i, n + 46)) * (1 + 0.5 * a), (i % 2 === 0 ? 0.9 : 0.5) * fade, rand(i, n + 47), rand(i, n + 48) * 6.28, 0.9);
+      }
+      // The lip itself: a rim of small ragged heads that ride on the crest and boil, so that the top of the wall is never a drawn line.
+      for (let i = 0; i < LIP; i++) {
+        const x = gate[0] + 250 * (rand(i, 51) - 0.5);
+        const life = 0.45 + 0.5 * rand(i, 52);
+        const beat = seconds / life + rand(i, 53);
+        const n = Math.floor(beat);
+        const a = (beat - n) * life;
+        // The height of the wall as its shader has it, swell along the crest included.
+        const H = highAt(x) * (0.88 + 0.12 * Math.sin(x * 0.021 + seconds * 0.7) + 0.08 * Math.sin(x * 0.063 - seconds * 1.1));
+        const uc = 0.9 + 0.12 * rand(i, n + 54);
+        const y = H * (0.9 + 0.36 * rand(i, n + 55)) + 3.5 * a - 5 * a * a;
+        const z = frontZ + lineAt(x, seconds) - 0.75 * H * uc + H * (0.5 * uc * uc * uc + 0.1) + 2.5 * a;
+        const fade = Math.min(1, a / 0.1) * Math.min(1, (life - a) / 0.25);
+        boreSpray.put(x, y, z, (1.6 + 2.0 * rand(i, n + 56)) * (1 + 0.8 * a), 0.8 * fade, rand(i, n + 57), rand(i, n + 58) * 6.28, 1.15);
       }
       // Ahead of the wall: the air it pushes is full of water, low over the flats, and reaches the lens before the wall does.
       for (let i = 0; i < AHEAD; i++) {

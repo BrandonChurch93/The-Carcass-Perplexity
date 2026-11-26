@@ -45,6 +45,8 @@ precision highp float;
 ${RIG_GLSL}
 ${NOISE_GLSL}
 uniform sampler2D tHide;
+uniform sampler2D tHideN;
+const vec3 HIDE_MEAN = vec3(0.495, 0.387, 0.3);
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec4 vSkin;
@@ -63,8 +65,12 @@ void main() {
   // Wet cloth of a sail, torn: holes eaten through it and its lower edge in rags.
   float eaten = fbm2(f * 2.6 + 11.0) + 0.55 * smoothstep(0.45, 1.0, vSkin.z) * vnoise(f * 9.0) + 0.25 * vnoise(f * 21.0);
 #endif
-  vec3 hide = texture2D(tHide, q * 0.5).rgb;
-  float grain = clamp(0.4 + 0.6 * dot(hide, vec3(0.3333)) / 0.065, 0.55, 1.4);
+  // The membrane picture at two scales, by the place on the face so that it does not swim along a limb: sodden, so its warmth is mostly gone and its veins stay.
+  vec3 hide = texture2D(tHide, f * 0.9 + part * 0.37).rgb / HIDE_MEAN;
+  vec3 hideFine = texture2D(tHide, f * 3.1 + part * 0.61).rgb / HIDE_MEAN;
+  float lum = dot(hide, vec3(0.3333)) * (0.4 + 0.6 * dot(hideFine, vec3(0.3333)));
+  float grain = clamp(0.25 + 0.75 * lum, 0.55, 1.4);
+  vec2 slope = (texture2D(tHideN, f * 0.9 + part * 0.37).rg - 0.5) + 0.8 * (texture2D(tHideN, f * 3.1 + part * 0.61).rg - 0.5);
   // Sodden skin: bone pale, blotched grey-green and bruised, darker in every fold.
   float blotch = fbm2(f * 1.7 + part);
   float fine = fbm2(f * 9.0);
@@ -113,8 +119,11 @@ void main() {
   albedo *= 0.8 + 0.2 * sin(vSkin.y * 60.0 + 4.0 * fine);
   rough = 0.26;
 #endif
-  albedo *= grain;
-  n = normalize(n + 0.3 * (hide - dot(hide, vec3(0.3333))) * 8.0);
+  albedo *= grain * mix(vec3(1.0), hide / max(dot(hide, vec3(0.3333)), 0.05), 0.45);
+  {
+    vec3 tt = normalize(cross(n, abs(n.y) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0)));
+    n = normalize(n - 1.8 * (slope.x * tt + slope.y * cross(n, tt)));
+  }
   // Close to the face it lies in the shade of the weed and of itself.
   occ *= mix(0.5, 1.0, smoothstep(0.0, 0.45, vFace.z));
   vec3 col = rigShade(vWorld, n, v, albedo, rough, occ);
@@ -155,11 +164,12 @@ varying vec3 vRun;
 varying vec2 vAt;
 void main() {
   // vRun: x across the ribbon (-1 to 1), y along it (0 to 1), z its own number.
-  float across = 1.0 - vRun.x * vRun.x;
+  // Held at 0: at the edge of a ribbon a value read between samples can lie a hair outside -1 to 1, and a negative alpha paints a negative colour.
+  float across = max(1.0 - vRun.x * vRun.x, 0.0);
   float fall = vAt.y * 3.0 - uTime * (2.6 + 1.5 * vRun.z);
   float beads = smoothstep(0.35, 0.9, vnoise(vec2(vRun.z * 40.0 + vRun.x * 1.5, fall)));
   float thin = smoothstep(0.0, 0.08, vRun.y) * (1.0 - smoothstep(0.75, 1.0, vRun.y));
-  float alpha = across * thin * (0.16 + 0.75 * beads) * (1.0 - uSolo);
+  float alpha = clamp(across * thin * (0.16 + 0.75 * beads), 0.0, 1.0) * (1.0 - uSolo);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(uOut + vec3(0.0, 0.25, 0.0));
   vec3 col = skyRadiance(reflect(-v, n)) * 0.85 + skyIrradiance(n) * 0.08;
@@ -541,9 +551,10 @@ export function create(ctx: Context): Piece {
   const clothGeometry = geometryOf(clothMesh, toWorld);
 
   const frame = { uDown: { value: down }, uOut: { value: out }, uAcross: { value: across }, uHang: { value: hang }, uWind: { value: new THREE.Vector2(...WIND.to) } };
-  const hide = { value: ctx.assets.texture('wings/hide.jpg', { kind: 'colour' }) };
-  const material = new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, uniforms: { ...ctx.rig.uniforms, ...frame, tHide: hide }, side: THREE.DoubleSide });
-  const clothMaterial = new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, defines: { SHEET: 1 }, uniforms: { ...ctx.rig.uniforms, ...frame, tHide: hide }, side: THREE.DoubleSide });
+  const hide = { value: ctx.assets.texture('mat/wing.jpg', { kind: 'colour' }) };
+  const hideN = { value: ctx.assets.texture('mat/wing-nh.png', { kind: 'data' }) };
+  const material = new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, uniforms: { ...ctx.rig.uniforms, ...frame, tHide: hide, tHideN: hideN }, side: THREE.DoubleSide });
+  const clothMaterial = new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, defines: { SHEET: 1 }, uniforms: { ...ctx.rig.uniforms, ...frame, tHide: hide, tHideN: hideN }, side: THREE.DoubleSide });
   const body = new THREE.Mesh(skinGeometry, material);
   const cloth = new THREE.Mesh(clothGeometry, clothMaterial);
   body.frustumCulled = false;

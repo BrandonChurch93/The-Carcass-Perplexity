@@ -650,7 +650,7 @@ export function create(ctx: Context): Piece {
         const dir = rand(i * 31 + n, born) * Math.PI * 2;
         const out = (0.12 + 0.5 * rand(i * 31 + n, born + 7) * a) * f.size;
         const up = (0.35 + 0.75 * rand(i * 31 + n, born + 3)) * f.size;
-        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.07 + 0.05 * rand(i * 31 + n, born + 5)) * f.size : (0.007 + 0.011 * rand(i * 31 + n, born + 5)) * f.size, (n % 5 === 0 ? 0.55 : 1.6) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : dir, n % 5 === 0 ? 0.45 : 1.8);
+        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.03 + 0.03 * rand(i * 31 + n, born + 5)) * f.size : (0.004 + 0.013 * rand(i * 31 + n, born + 5) * rand(i * 31 + n, born + 6)) * f.size, (n % 5 === 0 ? 0.2 : 1.6) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : 0.5 * (rand(i * 31 + n, born + 11) - 0.5), n % 5 === 0 ? 0.45 : 2.6);
       }
     }
     if (runner >= 0) {
