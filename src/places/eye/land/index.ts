@@ -1,7 +1,7 @@
 // The land of the Eye: the socket of pale cliffs with its aprons of scree, the brow that hangs over the east shore, the loose stone,
 // and the stream that leaves the lake through the rim beside the wide camera.
 import * as THREE from 'three';
-import { mergeVertices, toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { DEG, shoreAt, smooth } from '../layout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
@@ -9,6 +9,7 @@ import { vnoise } from '../shared/noise';
 import { KEYS } from '../cameras';
 import { AXIS, browCover, landHeight, onAxis, streamAcross, streamBed, wallAt } from './height';
 import { PATCH, browGeometry, patchGeometry, socketGeometry, stoneGeometry } from './meshes';
+import { BLOCK_FRAGMENT, BLOCK_VERTEX, ballGeometry, blockUniforms } from './blocks';
 import { ROCK_GLSL, rockUniforms } from './rock';
 
 export const PARTS: readonly string[] = ['land', 'brow', 'scree', 'stream'];
@@ -315,7 +316,7 @@ export function create(ctx: Context): Piece {
   for (const [along, across, size] of near) {
     const [x, z] = onAxis(along, across);
     // The ones at the sides of the frame are blocks the size of a hut: the corners of the picture are theirs.
-    put(x, z, size > 2.2 && Math.abs(across) >= 12 ? size * 1.7 : size);
+    put(x, z, size > 2.2 && Math.abs(across) >= 12 ? size * 1.25 : size);
   }
   for (let i = 0; i < 5200; i++) {
     const b = rng.range(150, 216);
@@ -364,15 +365,15 @@ export function create(ctx: Context): Piece {
   const dummy = new THREE.Object3D();
   const scree: THREE.InstancedMesh[] = [];
   const discs: { x: number; z: number; size: number }[] = [];
-  stones.forEach((list, tier) => {
+  // The pebbles of the shore keep their own small shapes.
+  {
+    const list = stones[2] as Stone[];
     const VARIANTS = 3;
     for (let k = 0; k < VARIANTS; k++) {
       const mine = list.filter((_, i) => i % VARIANTS === k);
       if (mine.length === 0) continue;
-      const merged = mergeVertices(stoneGeometry(tier * 3 + k + 1, tier === 0 ? 3 : tier === 1 ? 2 : 1).deleteAttribute('uv').deleteAttribute('normal'));
-      merged.computeVertexNormals();
-      // The blocks are broken stone: their faces meet in edges.
-      const geometry = tier < 2 ? toCreasedNormals(merged, 0.5) : merged;
+      const geometry = mergeVertices(stoneGeometry(6 + k + 1, 1).deleteAttribute('uv').deleteAttribute('normal'));
+      geometry.computeVertexNormals();
       const tints = new Float32Array(mine.length * 3);
       const mesh = new THREE.InstancedMesh(geometry, stoneMaterial, mine.length);
       mine.forEach((s, i) => {
@@ -385,15 +386,70 @@ export function create(ctx: Context): Piece {
         tints[i * 3] = rng.next();
         tints[i * 3 + 1] = rng.next();
         tints[i * 3 + 2] = rng.next();
-        if (s.size > 0.4 && tier > 0) discs.push(s);
-        else if (tier === 0 && Math.hypot(s.x, s.z) < 1300) discs.push(s);
+        if (s.size > 0.4) discs.push(s);
       });
       geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(tints, 3));
       mesh.frustumCulled = false;
       scree.push(mesh);
       ctx.scene.add(mesh);
     }
-  });
+  }
+  // The blocks: each a broken stone raised from the atlas. How finely one is cut goes by how near a camera ever comes to it.
+  const blockMaterials: THREE.ShaderMaterial[] = [];
+  {
+    const block = blockUniforms(ctx);
+    const eyes = [KEYS.wide.position, KEYS.mats.position, KEYS.edge.position, KEYS.shore.position, KEYS.centre.position];
+    const [wx, wz] = [KEYS.wide.position[0], KEYS.wide.position[2]];
+    const classes: { detail: number; smoothing: number; list: Stone[] }[] = [
+      { detail: 22, smoothing: 0, list: [] },
+      { detail: 9, smoothing: 1, list: [] },
+      { detail: 4, smoothing: 2, list: [] },
+      { detail: 2, smoothing: 3, list: [] },
+    ];
+    for (const s of [...(stones[0] as Stone[]), ...(stones[1] as Stone[])]) {
+      let reach = Infinity;
+      for (const e of eyes) reach = Math.min(reach, Math.hypot(s.x - e[0], s.z - e[2]));
+      const wide = Math.hypot(s.x - wx, s.z - wz);
+      const k = wide < 150 && s.size > 1.3 ? 0 : reach < 330 && s.size > 2.2 ? 1 : reach < 330 ? 2 : 3;
+      (classes[k] as { list: Stone[] }).list.push(s);
+      if (s.size <= 2.2 || Math.hypot(s.x, s.z) < 1300) discs.push(s);
+    }
+    for (const c of classes) {
+      if (c.list.length === 0) continue;
+      const geometry = ballGeometry(c.detail);
+      const tints = new Float32Array(c.list.length * 3);
+      const seats = new Float32Array(c.list.length * 4);
+      const material = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...block, uSmooth: { value: c.smoothing } }, vertexShader: BLOCK_VERTEX, fragmentShader: BLOCK_FRAGMENT });
+      material.userData.depthFragment = NEAR_DEPTH;
+      blockMaterials.push(material);
+      const mesh = new THREE.InstancedMesh(geometry, material, c.list.length);
+      c.list.forEach((s, i) => {
+        // A stone of the atlas is about 0.8 from its middle to its faces.
+        const half = s.size * 0.58;
+        const sy = half * rng.range(0.6, 1.0);
+        const ground = landHeight(s.x, s.z);
+        const e = Math.max(0.4, s.size * 0.5);
+        // It lies bedded in the slope: a third of it and more is under the ground.
+        dummy.position.set(s.x, ground + sy * rng.range(0.12, 0.42), s.z);
+        dummy.rotation.set(rng.range(-0.4, 0.4), rng.range(0, Math.PI * 2), rng.range(-0.4, 0.4));
+        dummy.scale.set(half * rng.range(0.8, 1.3), sy, half * rng.range(0.8, 1.3));
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+        tints[i * 3] = rng.next();
+        tints[i * 3 + 1] = rng.next();
+        tints[i * 3 + 2] = rng.next();
+        seats[i * 4] = Math.floor(rng.next() * 8) % 8;
+        seats[i * 4 + 1] = ground;
+        seats[i * 4 + 2] = (landHeight(s.x + e, s.z) - landHeight(s.x - e, s.z)) / (2 * e);
+        seats[i * 4 + 3] = (landHeight(s.x, s.z + e) - landHeight(s.x, s.z - e)) / (2 * e);
+      });
+      geometry.setAttribute('aTint', new THREE.InstancedBufferAttribute(tints, 3));
+      geometry.setAttribute('aSeat', new THREE.InstancedBufferAttribute(seats, 4));
+      mesh.frustumCulled = false;
+      scree.push(mesh);
+      ctx.scene.add(mesh);
+    }
+  }
   ctx.parts.built('scree', scree[0] as THREE.InstancedMesh, ...scree.slice(1));
   const shade = ctx.rig.contactDiscs(discs.length);
   discs.forEach((s, i) => {
@@ -456,7 +512,7 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       for (const m of [socket, patch, brow, stream, ...scree]) m.geometry.dispose();
-      for (const m of [socketMaterial, patchMaterial, browMaterial, stoneMaterial, streamMaterial]) m.dispose();
+      for (const m of [socketMaterial, patchMaterial, browMaterial, stoneMaterial, streamMaterial, ...blockMaterials]) m.dispose();
     },
   };
 }
