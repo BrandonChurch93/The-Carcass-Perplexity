@@ -90,7 +90,7 @@ const vec4 LID_DECK[3] = vec4[3](vec4(${G(LID_GAP.lowest)}, 0.895, 8.0, 0.35), v
 const float LID_FOOT = ${G(LID_GAP.foot)};
 const float LID_HAZE = 0.3;
 // How far the gap opens after the cut, in halves of the frame's height as the lens sees its rim, and the height over which no lens of the rise stands while the banks are drawn.
-const float LID_OPENS = 0.6;
+const float LID_OPENS = 0.52;
 const float LID_OVER = 1.15;
 const float LID_RAGGED = ${G(LID_GAP.ragged)};
 
@@ -111,7 +111,7 @@ float lidOutside(vec2 q, float a) {
   // Well inside the gap and well outside it the bend of its edge changes nothing.
   if (r <= gap) return r - gap;
   float least = ${G(LID_GAP.least)};
-  if (least * r - gap >= LID_RAGGED * (1.0 + 2.0 * wider)) return least * r - gap;
+  if (least * r - gap >= LID_RAGGED * (1.0 + 4.0 * wider)) return least * r - gap;
   // The wider the gap, the longer the bends of its rim.
   return r * (least + (1.0 - least) * vnoise(q * 9.0 / (1.0 + 4.0 * wider) + vec2(3.7, 8.2) + a * vec2(5.0, 3.0))) - gap;
 }
@@ -121,10 +121,10 @@ float lidOutside(vec2 q, float a) {
 float lidClose(vec2 q, float a, float outside) {
   float reach = 2.2 * (1.0 - a);
   float cap = 0.25 * (1.0 - smoothstep(reach, reach + 0.3, length(q)));
-  float ragged = 1.9 * LID_RAGGED * (1.0 + 2.0 * lidWider());
+  float ragged = 1.9 * LID_RAGGED * (1.0 + 4.0 * lidWider());
   if (outside >= ragged) return cap;
   // The open edge is not one band round the gap: here it is a bay, there the bank stands to the rim.
-  ragged *= 0.12 + 0.88 * vnoise(q * 5.0 + vec2(8.4, 2.6) + a * vec2(3.0, 5.0));
+  ragged *= mix(0.12, 0.4, smoothstep(0.0, 0.1, lidWider())) + 0.6 * vnoise(q * 5.0 + vec2(8.4, 2.6) + a * vec2(3.0, 5.0));
   return cap - 0.75 * (1.0 - smoothstep(0.0, ragged, outside));
 }
 
@@ -209,7 +209,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       float body = -1.0;
       float h = 0.0;
       if (outside > 0.0) {
-        h = lidBank(q, deck, open - lidClose(q, a, outside), camA - a, false) * smoothstep(0.0, 0.001 + 0.25 * lidWider(), outside);
+        h = lidBank(q, deck, open - lidClose(q, a, outside), camA - a, met >= 0.0);
         body = lidBody(h, (a - deck.x) / tall);
       }
       if (body > 0.0) {
@@ -232,8 +232,10 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     vec2 toSun = q + sunSide * 0.4 / deck.z;
     float outSun = lidOutside(toSun, met);
     float hs = outSun > 0.0 ? lidBank(toSun, deck, open - lidClose(toSun, met, outSun), camA - met, true) : 0.0;
+    // The grain is a relief: each small head is lit on its sun side and shaded on the other, and the folds are a little darker.
     float grain = lidGrain(q, deck, camA - met);
-    float lit = clamp(0.5 + 3.5 * (metH - hs) + 0.9 * (grain - 0.42), 0.0, 1.0);
+    float grainSun = lidGrain(q + sunSide * 0.028 / deck.z, deck, camA - met);
+    float lit = clamp(0.5 + 3.5 * (metH - hs) + 1.5 * (grain - grainSun) + 0.3 * (grain - 0.5), 0.0, 1.0);
     lit = lit * lit * (3.0 - 2.0 * lit);
     // The heads stand in the light and the feet in the shade of the bank over them. A head is as high as the bank heaps it, past the last
     // cut that met it, so the top of a bank is modelled and not one flat sheet.
@@ -244,7 +246,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     vec3 shade = mix(uLidShade, uLidInside * 1.25, 0.55 * smoothstep(0.35, 0.95, metH));
     vec3 colour = mix(shade * (0.5 + 0.7 * high), uLidSunlit * (0.72 + 0.5 * high), lit * (0.3 + 0.7 * high));
     // A deck under another stands in its shade, and the folds between the heads are darker than the heads.
-    colour *= (0.72 + 0.28 * tr) * (0.84 + 0.16 * smoothstep(0.3, 0.8, metH)) * (0.7 + 0.6 * grain);
+    colour *= (0.72 + 0.28 * tr) * (0.84 + 0.16 * smoothstep(0.3, 0.8, metH)) * (0.76 + 0.45 * grain) * (1.0 + 0.7 * clamp(grain - grainSun, -0.25, 0.25));
     // Where a bank is thin the light goes through it: a veil is pale, not a sheet of shade.
     colour = mix(colour, mix(uLidShade, uLidSunlit, 0.62), 0.7 * (1.0 - smoothstep(0.1, 0.9, alpha)));
     // Seen close, the cloud is paler and its lumps are soft.
