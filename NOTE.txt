@@ -1,7 +1,6 @@
-2026-11-26 13:47 UTC
-work at 7c8b45e on agent/heart-ground
-v1, commit 7c8b45e. 2507 hd review before and after, a full-size crop, the sheet 2507 to 2627, key 2722 before and after. Wrong still: fine ropes read as hatching at a low angle, grain too even, few loose stones, no cracks, the left crag still streaky, cost 4.6 s a sample over.
-look-1.jpg = out/work/v1/sbs-2507-hd.png
-look-2.jpg = out/work/v1/sbs-crop.png
-look-3.jpg = out/work/sheets/first.png
-look-4.jpg = out/work/v1/sbs-2722.png
+2026-11-26 14:29 UTC
+work at b52639c on agent/heart-ground
+v2 state E b52639c: 2507 hd pair, 2507 lower third pair, 2722 pair (before main, after)
+look-1.jpg = out/work/v2/pair-2507-hd.jpg
+look-2.jpg = out/work/v2/pair-2507-low.jpg
+look-3.jpg = out/work/v2/pair-2722.png
