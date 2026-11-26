@@ -53,7 +53,7 @@ void main() {
   // Old bone: ivory where the air has had it, stained amber where it lies in the weed.
   vec3 picture = texture2D(tBone, vUv).rgb;
   float grey = dot(picture, vec3(0.3, 0.5, 0.2));
-  vec3 bone = mix(picture, vec3(grey) * vec3(0.92, 0.93, 0.84), 0.85) * 2.3;
+  vec3 bone = mix(picture, vec3(grey) * vec3(0.92, 0.93, 0.84), 0.85) * 2.9;
   // Weathered: each bone has its stains, dark in its hollows and its ends.
   bone *= (0.62 + 0.5 * vnoise(vUv * vec2(60.0, 20.0))) * (0.55 + 0.45 * smoothstep(0.08, 0.45, h));
   float low = smoothstep(0.14, 0.0, vWorld.y + 0.1 * (vnoise(vWorld.xz * 5.0) - 0.5));

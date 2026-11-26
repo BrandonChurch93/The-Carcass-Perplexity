@@ -304,6 +304,8 @@ void main() {
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
     deep += vec3(0.05, 0.062, 0.06) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * pale * (0.4 + 0.6 * smoothstep(0.1, 0.6, v.y));
+    // Seen low, what comes up out of the shaft is green and blue: the warm of the evening does not go down there.
+    deep *= mix(vec3(1.0), vec3(0.55, 0.84, 0.98), smoothstep(12.0, 4.0, cameraPosition.y));
     under = mix(deep, shelf, crusted);
     // Under the lip the water lies in its lee, flat, and the eye goes down the wall.
     f *= mix(0.3, 1.0, smoothstep(0.5, 14.0, inside));
