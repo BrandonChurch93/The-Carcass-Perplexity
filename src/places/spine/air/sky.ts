@@ -147,7 +147,7 @@ float strikeReach(vec3 from, vec3 d) {
     float r = mix(110.0, 520.0, clamp(f, 0.0, 1.0));
     float off2 = max(dot(q, q) - along * along, 0.0) / (r * r);
     // A peak at the channel and a breadth round it: never a disc with an edge.
-    lit += (0.05 + 0.2 * f) * (0.7 / (1.0 + 3.0 * off2) + 0.3 / (1.0 + 0.4 * off2));
+    lit += (0.05 + 0.2 * f) * (0.8 / (1.0 + 3.0 * off2) + 0.2 / (1.0 + 0.7 * off2));
   }
   return lit;
 }
@@ -155,11 +155,11 @@ float strikeReach(vec3 from, vec3 d) {
 // in uneven masses, so that the cloud's own shapes stand in the light; the last band keeps its orange.
 vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
   float masses = textureLod(tNoise, d * 1.7 + vec3(0.13, 0.41, 0.77), 0.0).r + 0.5 * textureLod(tNoise, d * 4.3 + vec3(0.61, 0.07, 0.29), 0.0).g;
-  float lit = uStrikeAt.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y) * (0.35 + 0.9 * masses);
+  float lit = uStrikeTop.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y) * (0.35 + 0.9 * masses);
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
   float shape = smoothstep(0.004, 0.05, body);
-  return c * (1.0 + 3.6 * lit * (1.0 - 0.8 * warm)) + vec3(0.6, 0.62, 1.0) * (lit * (0.006 + 0.05 * shape) * (1.0 - warm));
+  return c * (1.0 + 3.6 * lit * (1.0 - 0.8 * warm)) + vec3(0.7, 0.6, 1.0) * (lit * (0.006 + 0.05 * shape) * (1.0 - warm));
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   vec3 c = skyAtRest(from, d, lod);

@@ -87,7 +87,7 @@ vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
     if (uEmitters[i].w < 20.0 && -b > 0.0 && -b < far + 20.0) {
       float off = sqrt(max(dot(q, q) - b * b, 0.0));
       float power = 1.0 - exp(-dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) / 60000.0);
-      small += power * (exp(-off * off / 20.0) + 0.12 * exp(-off / 6.0));
+      small += power * (exp(-off * off / 7.0) + 0.1 * exp(-off / 5.0));
     }
   }
   // Staged by shot: behind the long lens of the strike (spine-04) the cloud's glow is the strike picture's own; the air adds a fifth of its.
@@ -287,7 +287,7 @@ void main() {
     if (uStrikeAt.w > 0.0) {
       vec3 toStroke = uStrikeAt.xyz - p;
       float span2 = dot(toStroke, toStroke);
-      sea += STRIKE_COLOUR * (uStrikeAt.w * 0.045 * head * head * grainS / (1.0 + span2 / 9.0e6));
+      sea += STRIKE_COLOUR * (uStrikeTop.w * 0.036 * head * head * grainS / (1.0 + span2 / 9.0e6));
     }
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t / 30000.0);
