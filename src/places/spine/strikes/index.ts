@@ -26,8 +26,6 @@ const ROUND_OF = [0.02, 0.2, 0.4, 0.7, 0.02, 0.15];
 /** The glow in the cloud before the first stroke, as a share of the breakdown; and how far down from the channel's top toward its middle
  * the cloud's glow stands: the sixth is seen through a mouth that hides the top of the storm. */
 const BEFORE_OF = [0.03, 0.03, 0.03, 0.03, 0.03, 0.06];
-/** What a stroke that stays inside the cloud gives the cloud's round light, as a share of a stroke to ground. */
-const WITHIN = 0.3;
 const LOW_OF = [0, 0, 0, 0, 0, 0.6];
 const SPARKS = 16;
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
@@ -93,7 +91,7 @@ varying float vWay;
 varying float vNear;
 varying float vFoot;
 // The air round the arc: violet, and held under white so that the channel keeps a violet edge about its white heart.
-const vec3 SHEATH = vec3(0.56, 0.32, 1.0);
+const vec3 SHEATH = vec3(0.6, 0.28, 1.0);
 // The least of the photograph in a ring round a point: bright only where the channel is broader than the ring.
 float ringOf(vec2 uv, float r) {
   vec2 px = vec2(r / 941.0, r / 1672.0);
@@ -116,13 +114,13 @@ void main() {
   float lit = mix(uEnv.x, uEnv.y + 0.12 * uEnv.x, thin);
   float lead = 0.06 * (1.0 - smoothstep(uEnv.w - 0.04, uEnv.w, vWay)) * step(uEnv.w, 0.999);
   float strength = min(lit + lead, 1.5);
-  float need = max(mix(0.13, 0.5, 1.0 - thin), 0.033 / max(strength, 1e-3));
+  float need = max(mix(0.13, 0.4, 1.0 - thin), 0.033 / max(strength, 1e-3));
   if (lum < need || strength < 0.002) discard;
   // Thin, with a hot core: the air round the arc is violet and no brighter than a lit cloud, and only the heart of the channel burns, far
   // over white, so that the lens blooms round it and not round its sheath.
   float heart = smoothstep(need + 0.12, min(need + 0.55, 1.0), lum);
   float burn = min(strength * 3.0, 1.0);
-  vec3 far = SHEATH * (1.5 + 3.0 * lum) + uHeart * (uCore * heart * heart * heart);
+  vec3 far = SHEATH * (2.2 + 4.0 * lum) + uHeart * (uCore * heart * heart * heart);
   // Seen through a long lens the photograph's channel is metres broad. There only its middle burns: the channel is worn down from
   // its edges, what is left is the core, and round it the sheath is violet air that falls off to nothing at the photograph's edge.
   float near = smoothstep(1.5, 4.0, vNear);
@@ -337,6 +335,8 @@ export function create(ctx: Context): Piece {
   });
 
   const size = new THREE.Vector2();
+  const right = new THREE.Vector3();
+  let fore: Bolt | null = null;
   let height = 0;
   return {
     setTime: (seconds) => {
@@ -350,6 +350,7 @@ export function create(ctx: Context): Piece {
       cloudLight.radiance.set(0, 0, 0);
       tipLight.radiance.set(0, 0, 0);
       for (const l of alongLights) l.radiance.set(0, 0, 0);
+      fore = null;
       flashAt.set(0, 0, 0, 0);
       flashTip.set(0, 0, 0, 0);
       flashTop.set(0, 0, 0, 0);
@@ -359,7 +360,10 @@ export function create(ctx: Context): Piece {
         b.group.visible = live;
         if (!live) return;
         const e = envelope(timingOf(b.site.id), age);
-        b.env.set(e.main, e.branch, e.after, e.leader);
+        // A stroke clips the lens white whatever its share of the first: the channel is drawn whole on every stroke, and not at all
+        // on the dim current between them, which would show as a broken thread.
+        const struck = Math.max(0, e.main - 0.09);
+        b.env.set(struck > 0 ? Math.min(1, struck * 2.2) : 0, struck > 0 ? e.branch : 0, e.after, e.leader);
         b.shift.x = strokeAt(timingOf(b.site.id), age);
         b.age.value = age;
         // Light inside the cloud before the stroke, then the stroke itself.
@@ -377,7 +381,8 @@ export function create(ctx: Context): Piece {
           // A stroke inside the cloud: its light comes down from the channel's top, on the cloud, and in by the canal's mouth.
           flashAt.set(b.top.x, b.top.y, b.top.z, FLASH * 0.1 * within);
           flashTip.set(b.tip.x, b.tip.y, b.tip.z, FLASH * (PULSE_OF[of] as number) * within);
-          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * within);
+          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * 1.3 * within);
+          fore = b;
         }
         if (hard > 0) {
           flashAt.set(b.cast.x, b.cast.y, b.cast.z, FLASH * (FLASH_OF[of] as number) * hard);
@@ -397,7 +402,7 @@ export function create(ctx: Context): Piece {
           cloudLight.position.lerpVectors(b.top, b.mid, LOW_OF[of] as number);
           // The cloud's own bloom about a light closes on a ceiling at a hundredth of a stroke: the glow it keeps and the glow before a stroke
           // are small shares, so that they are dull beside the stroke and die with it.
-          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (round + within * WITHIN + tail * 0.1 + before * (BEFORE_OF[of] as number)));
+          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (round + tail * 0.1 + before * (BEFORE_OF[of] as number)));
         }
       });
     },
@@ -405,6 +410,13 @@ export function create(ctx: Context): Piece {
       renderer.getDrawingBufferSize(size);
       pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * (height || size.y || 2160));
       lens.value = 2 / ((camera.projectionMatrix.elements[5] as number) * 2160);
+      if (fore) {
+        // The stroke inside the cloud is off to the lens's right of where the channel will come down, low in the cloud: a short one.
+        right.setFromMatrixColumn(camera.matrixWorld, 0);
+        const rise = fore.top.y - fore.tip.y;
+        flashTip.set(fore.tip.x + right.x * 0.6 * rise, fore.tip.y + 0.36 * rise, fore.tip.z + right.z * 0.6 * rise, flashTip.w);
+        flashTop.set(fore.tip.x + right.x * 0.66 * rise, fore.tip.y + 0.42 * rise, fore.tip.z + right.z * 0.66 * rise, flashTop.w);
+      }
     },
     resize: (_w, h) => {
       height = h;

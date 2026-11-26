@@ -189,6 +189,8 @@ export function create(ctx: Context): Piece {
     if (nearTrack(x, z, 30) || h < 0.7 || h > 1.5 || Math.abs(ground(x + Math.sin(yaw) * 6, z + Math.cos(yaw) * 6) - h) > 0.5) continue;
     addFeeder(x, z, yaw, scatter.range(0.8, 1.05), scatter.next() < 0.62 ? 0 : 1);
   }
+  /** In the card loop these of the wide picture, drawn in mid step, walk out and back. */
+  const walkers = [feeders[1], feeders[4], feeders[7]];
   const feederSheets = [figureMaterials(ctx, FEEDER_A, LEVELS.pool, 0.5), figureMaterials(ctx, FEEDER_B, LEVELS.pool, 0.5), figureMaterials(ctx, FEEDER_C, LEVELS.pool, 0.4)];
   const feederFigures = feederSheets.map((m) => new Figures(m, feeders.length, { mirror: true }));
   const discs = rig.contactDiscs(feeders.length + 4);
@@ -210,6 +212,7 @@ export function create(ctx: Context): Piece {
     tuft.shake = 0;
     const fx = Math.sin(f.yaw);
     const fz = Math.cos(f.yaw);
+    let heads = 1;
     let tip: [number, number] = [0, 0];
     if (f.habit === 0) {
       // Probing, then the head comes up streaming, looks about, and goes back in.
@@ -243,7 +246,31 @@ export function create(ctx: Context): Piece {
       fig.y = 0.14 * Math.abs(Math.sin(stride)) * f.size;
       tuft.shake = Math.abs(Math.cos(stride));
     }
-    if (lp !== null && f.habit !== 2) {
+    if (lp !== null && walkers.includes(f)) {
+      // The loop's walk: once a loop it walks a few of its lengths out, stands and puts its head down, turns, walks back, and turns again
+      // into the stance of the key. Each has its own time, length and way to go.
+      const long = 0.78 + 0.1 * hash(f.seed, 3);
+      const u = (lp - 0.04 - (0.94 - long) * hash(f.seed, 5)) / long;
+      if (u > 0 && u < 1) {
+        const way = (6 + 2 * hash(f.seed, 11)) * f.size;
+        const out = smooth(0.02, 0.42, u);
+        const back = smooth(0.56, 0.94, u);
+        const going = 4 * out * (1 - out) + 4 * back * (1 - back);
+        const stride = (TAU * way * (out + back)) / 2.6;
+        const dip = smooth(0.42, 0.46, u) * (1 - smooth(0.52, 0.56, u)) + smooth(0.94, 0.96, u) * (1 - smooth(0.98, 1, u));
+        if (u > 0.49 && u < 0.97) {
+          heads = -1;
+          fig.turn = f.yaw + Math.PI;
+        }
+        fig.x += fx * way * (out - back);
+        fig.z += fz * way * (out - back);
+        fig.limbs[0] += 0.45 * dip;
+        fig.limbs[1] += 0.3 * going * Math.sin(stride);
+        fig.sway += 0.02 * going * Math.sin(stride);
+        fig.y += 0.045 * f.size * going * Math.abs(Math.sin(stride));
+        tip = figurePoint(FEEDER_B, 0, TIP_B, fig.limbs);
+      }
+    } else if (lp !== null && f.habit !== 2) {
       // The loop's idle: once a loop, at its own time and for its own length, it shifts its weight, takes a step, stands, and steps back
       // to where the key has it. No two have the same time or length.
       const long = 0.24 + 0.2 * hash(f.seed, 3);
@@ -257,8 +284,8 @@ export function create(ctx: Context): Piece {
       fig.sway += 0.035 * lifted * (u < 0.5 ? 1 : -1);
     }
     fig.y += ground(fig.x, fig.z);
-    tuft.x = fig.x + fx * tip[0] * f.size;
-    tuft.z = fig.z + fz * tip[0] * f.size;
+    tuft.x = fig.x + fx * heads * tip[0] * f.size;
+    tuft.z = fig.z + fz * heads * tip[0] * f.size;
     tuft.y = fig.y + tip[1] * f.size;
   };
 
