@@ -54,20 +54,26 @@ uniform vec4 uSourceB[${MAX_SOURCES}];
 uniform vec4 uSourceC[${MAX_SOURCES}];
 // The fog bank of the opening: thickness in a metre, how far it has torn (0 whole, 1 in shreds), and how far the wind has carried it, metres.
 uniform vec4 uBank;
+// How far the bank has thinned over the breaking swell at the first blade's foot, 0 to 1.
+uniform float uBankHole;
 ${RIG_GLSL}
 
-// The bank lies across the way in, in front of the two outer blades: a body with a ragged top, hills and houses of it, and a lane that
-// opens along the camera's way and widens until the first blade stands clear. x is the fog in a metre, y how far under the top.
+// The bank lies on the sea before the shore, across the way in: a low body with a ragged top (it hides the feet of the blades and the far
+// ones, never their heads), thin over the swell that breaks before the first blade, and a lane that the wind tears along the camera's way
+// and widens as the camera comes. x is the fog in a metre, y how far under the top.
 vec2 bankAt(vec3 p) {
   vec2 q = p.xz - uBank.zw;
   float big = texture2D(tCloudShade, q / 2900.0).r;
-  float lump = texture2D(tCloudShade, q / 1300.0 + 0.37 + p.y * vec2(0.0011, 0.0005)).g;
-  float lane = (p.x + 325.0 - 0.104 * (1504.0 - p.z) + 260.0 * (big - 0.5)) / (40.0 + 520.0 * uBank.y);
+  float lump = texture2D(tCloudShade, q / 760.0 + 0.37 + p.y * vec2(0.0023, 0.0011)).g;
+  float lane = (p.x + 325.0 - 0.07 * (1504.0 - p.z) + 110.0 * (big - 0.5)) / (24.0 + 300.0 * uBank.y);
   float open = exp(-lane * lane) * smoothstep(0.0, 0.12, uBank.y);
-  float top = (70.0 + 170.0 * smoothstep(0.2, 0.75, big)) * (1.0 - open) * (1.0 - 0.3 * uBank.y);
-  float under = top - p.y + 120.0 * (lump - 0.5);
-  float inside = smoothstep(1270.0, 1150.0, p.z) * smoothstep(560.0, 760.0, p.z);
-  return vec2(uBank.x * inside * smoothstep(0.0, 30.0, under) * (0.55 + 0.9 * lump), under);
+  float hole = (p.x + 318.0 + 60.0 * (lump - 0.5)) / (40.0 + 120.0 * uBankHole);
+  open = max(open, (0.45 + 0.55 * uBankHole) * exp(-hole * hole));
+  float top = (42.0 + 64.0 * smoothstep(0.2, 0.75, big)) * (1.0 - open) * (1.0 - 0.3 * uBank.y);
+  float under = top - p.y + 46.0 * (lump - 0.5);
+  float pz = p.z + 170.0 * (big - 0.5);
+  float inside = smoothstep(790.0, 660.0, pz) * smoothstep(300.0, 430.0, pz);
+  return vec2(uBank.x * inside * smoothstep(0.0, 22.0, under) * (0.55 + 0.9 * lump), under);
 }
 
 void viewRay(out vec3 ro, out vec3 rd, out float reach) {
@@ -150,11 +156,11 @@ void main() {
   }
   // The bank of the opening stands nearer than the haze: it is marched on its own, only while it is up.
   if (uBank.x > 0.0) {
-    float ta = (1270.0 - ro.z) / rd.z;
-    float tb = (560.0 - ro.z) / rd.z;
+    float ta = (880.0 - ro.z) / rd.z;
+    float tb = (210.0 - ro.z) / rd.z;
     float from = max(min(ta, tb), 0.0);
     float to = min(min(max(ta, tb), reach), 2600.0);
-    if (rd.y > 0.0) to = min(to, (400.0 - ro.y) / rd.y);
+    if (rd.y > 0.0) to = min(to, (150.0 - ro.y) / rd.y);
     if (to > from) {
       vec3 bankSum = vec3(0.0);
       float bankTrans = 1.0;
@@ -167,7 +173,7 @@ void main() {
         if (a > 0.0005) {
           float lit = sunAt(p, landAt(p.xz));
           // Deep in the bank the light is the bank's own grey; its top and its torn edges take the sky and the sun.
-          float deep = 0.42 + 0.58 * smoothstep(150.0, 10.0, fog.y);
+          float deep = 0.42 + 0.58 * smoothstep(60.0, 4.0, fog.y);
           bankSum += bankTrans * a * (uHaze * (0.7 * deep) + uSunColour * (0.13 * phase * lit * deep)) * uShowAir;
           bankTrans *= 1.0 - a;
         }
@@ -214,6 +220,7 @@ export function create(ctx: Context): Piece {
   const count = { value: 0 };
   // Staged for the opening shot only: a bank of sea fog lies across the way in, tears open in the first two seconds and is flown through in shreds.
   const bank = new THREE.Vector4(0, 0, 0, 0);
+  const bankHole = { value: 0 };
   const openingShot = shotSpan('ribs-01');
   // Staged for the colony's shot only: the air itself stands thicker, so that the blade behind the colony's rock is a pale shape far off
   // and the roosts read against it. (It was a column of mist round that blade, which read as a flat card.)
@@ -232,6 +239,7 @@ export function create(ctx: Context): Piece {
       uShowAir: showAir,
       uShowCloud: showCloud,
       uBank: { value: bank },
+      uBankHole: bankHole,
       uSourceCount: count,
       uSourceA: { value: sourceA },
       uSourceB: { value: sourceB },
@@ -252,9 +260,12 @@ export function create(ctx: Context): Piece {
       const staged = stagedSeconds();
       const up = staged >= openingShot.from && staged < openingShot.to;
       const since = seconds - openingShot.from;
-      const fade = Math.min(1, Math.max(0, (12 - since) / 5));
-      const torn = Math.min(1, Math.max(0, (since - 0.15) / 2.4));
-      bank.set(up ? 0.0055 * fade : 0, torn * torn * (3 - 2 * torn) * 0.7 + 0.3 * Math.min(1, since / 8), WIND.to[0] * 34 * since, WIND.to[1] * 34 * since);
+      const fade = Math.min(1, Math.max(0, (13 - since) / 6));
+      // The lane opens slowly at first (the bank is whole in the first frames) and is wide by the time the camera is in it.
+      const torn = Math.min(1, Math.max(0, (since - 1.2) / 6.5));
+      const holed = Math.min(1, Math.max(0, (since + 0.4) / 2.6));
+      bank.set(up ? 0.0085 * fade : 0, torn * torn * (3 - 2 * torn), WIND.to[0] * 20 * since, WIND.to[1] * 20 * since);
+      bankHole.value = holed * holed * (3 - 2 * holed);
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
       // In the card loop the mist between the blades thickens once and thins again.
       const phase = loopPhase();

@@ -6,6 +6,7 @@ import { partAtHeight, radii, skirtPad, surface } from '../layout';
 import { BORE, FLOOR, LEVELS, RIBS, STATIONS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
+import { inOpening } from '../shared/opening';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
@@ -192,7 +193,10 @@ export function create(ctx: Context): Piece {
   });
   const PUFFS = 7;
   const surf = new Spray(surfAt.length * PUFFS, { ...rig.uniforms, ...shared });
-  ctx.scene.add(ctx.parts.built('surf', surf.mesh));
+  // The breaker of the approach (below) is thrown water of the same part.
+  const breaker = new Spray(320, { ...rig.uniforms, ...shared });
+  breaker.mesh.visible = false;
+  ctx.scene.add(ctx.parts.built('surf', surf.mesh, breaker.mesh), breaker.mesh);
   for (const e of surfAt) if (e.id % 3 === 0) ctx.sources.steam.push({ at: [e.x, 1, e.z], radius: 9, strength: 0.25 * e.power, rise: 14, kind: 'spray', lean: [WIND.to[0] * 0.8, WIND.to[1] * 0.8] });
 
   // Where the bore breaks on a blade or a stack it bursts up white; the two cliffs of the gate stand close to the last shot's lens.
@@ -214,6 +218,54 @@ export function create(ctx: Context): Piece {
   }
   const feeding = shotSpan('ribs-04');
 
+  // The approach: one heavy swell of the set breaks on the shore before the first blade as the film opens. White water is thrown up the
+  // height of a tower, hangs and comes down at the pace of its size (it falls as water falls: that is what says how big it is), and the wind
+  // takes the top of it off down the shore. Drawn only while the camera stands in the approach.
+  const BREAKER = { x: -322, half: 70, cards: 320, strikes: -1.1, speed: 37 };
+  let breakerZ = 200;
+  while (breakerZ < 420 && rig.land.height(BREAKER.x, breakerZ) > -0.8) breakerZ += 4;
+  const JETS = 16;
+  const breakerAt = (seconds: number): void => {
+    breaker.begin();
+    for (let j = 0; j < BREAKER.cards; j++) {
+      const id = 90000 + j;
+      // The water goes up in fingers: each card belongs to one, follows it up a little behind the last, and is thrown a little wide of it.
+      const jet = 91000 + Math.floor(rand(id, 1) * JETS);
+      const along = (rand(jet, 1) - 0.5) * 0.9 + (rand(id, 12) - 0.5) * 0.1;
+      // One tall burst where the swell meets the rock square, low shoulders along the rest, and it strikes from one end to the other.
+      const peak = Math.exp(-((along + 0.08) * (along + 0.08)) / 0.035);
+      const power = (0.34 + 0.66 * peak) * (0.7 + 0.3 * rand(jet, 2)) * (0.9 + 0.1 * rand(id, 2));
+      const a = seconds - (BREAKER.strikes + 0.9 * (along + 0.5) + 0.35 * rand(jet, 3) + 0.55 * rand(id, 3));
+      if (a < 0) continue;
+      const up = BREAKER.speed * power;
+      const side = (rand(jet, 4) - 0.5) * 9 + (rand(id, 13) - 0.5) * 2.5;
+      const x0 = BREAKER.x + along * 2 * BREAKER.half;
+      const z0 = breakerZ + 12 * rand(jet, 5);
+      const torn = rand(id, 5) < 0.4;
+      // Heavy water goes up and comes down; the finest of it stops in the air near the top and goes with the wind.
+      const top = (0.62 + 0.3 * rand(id, 6)) * (up / 9.81);
+      if (!torn || a < top) {
+        const y = 0.5 + up * a - 4.905 * a * a;
+        if (y < -3) continue;
+        const out = (2 + 4 * rand(jet, 7)) * a;
+        const fade = Math.min(1, a / 0.18) * (torn ? 1 : Math.min(1, Math.max(0, (y + 3) / 8)));
+        breaker.put(x0 + side * a + WIND.to[0] * 0.6 * a * a, y, z0 + out + WIND.to[1] * 0.6 * a * a, (2.2 + 1.7 * a) * (0.6 + 0.8 * rand(id, 8)), 0.85 * fade, rand(id, 9), (rand(id, 10) - 0.5) * 0.7, 1.5);
+        continue;
+      }
+      const b = a - top;
+      const life = 5 + 4 * rand(id, 11);
+      if (b > life) continue;
+      const y1 = 0.5 + up * top - 4.905 * top * top;
+      const vy = up - 9.81 * top;
+      // What is left of its rise dies in a second; then it sinks slowly and the wind has it.
+      const y = y1 + vy * 0.9 * (1 - Math.exp(-b / 0.9)) - 1.3 * b;
+      const gone = 14 * (b - 1.2 * (1 - Math.exp(-b / 1.2)));
+      const out = (2 + 4 * rand(jet, 7)) * top;
+      breaker.put(x0 + side * top + WIND.to[0] * (0.6 * top * top + gone), y, z0 + out + WIND.to[1] * (0.6 * top * top + gone), (2.2 + 1.7 * top + 4.5 * b) * (0.6 + 0.8 * rand(id, 8)), 0.5 * Math.pow(1 - b / life, 1.5), rand(id, 9), (rand(id, 10) - 0.5) * 0.7 + 0.12 * b, 1.2);
+    }
+    breaker.end();
+  };
+
   return {
     setTime: (seconds) => {
       const staged = stagedSeconds();
@@ -233,6 +285,9 @@ export function create(ctx: Context): Piece {
         (rings[i] as THREE.Vector4).set(ring.x, ring.z, ring.phase, ring.strength);
       });
 
+      // In the approach the shore's own surf is seen from a mile out, small against the foot of the blade: the one breaker of the set
+      // (below) is the tall water. It is itself again before the camera has passed it. Exactly 1 outside the approach.
+      const shore = inOpening() ? 1 - 0.62 * (1 - Math.min(1, Math.max(0, (seconds - 12.5) / 3.5))) : 1;
       surf.begin();
       for (const e of surfAt) {
         // Buried by the bore: no surf under the wall.
@@ -240,7 +295,7 @@ export function create(ctx: Context): Piece {
         const beat = (seconds - e.lag) / period;
         const n = Math.floor(beat);
         const age = (beat - n) * period;
-        const power = e.power * (0.45 + 0.55 * rand(e.id, n));
+        const power = e.power * (0.45 + 0.55 * rand(e.id, n)) * (e.id >= 1000 ? shore : 1);
         for (let j = 0; j < PUFFS; j++) {
           const seed = e.id * 131 + j;
           const a = age - 0.25 * rand(seed, n + 7);
@@ -260,6 +315,9 @@ export function create(ctx: Context): Piece {
       surf.end();
 
       bore.setTime(seconds, run);
+
+      breaker.mesh.visible = inOpening();
+      if (breaker.mesh.visible) breakerAt(seconds);
     },
     beforeSample: (_renderer, camera) => {
       eye.copy(camera.position);
@@ -275,6 +333,7 @@ export function create(ctx: Context): Piece {
       poolLoop.dispose();
       bore.dispose();
       surf.dispose();
+      breaker.dispose();
     },
   };
 }

@@ -127,6 +127,11 @@ void main() {
   float sharp = smoothstep(0.8, 0.12, px);
   // The rubble under the line view's lens.
   float byLens = smoothstep(26.0, 12.0, distance(vWorld.xz, vec2(-510.5, 215.5))) * smoothstep(3.0, 1.5, vWorld.y);
+  #ifdef BENCH
+  // The bank the wide view stands on and passes over. Its lens is 4 to 30 m from that ground and a pixel of the film is 2 to 10 mm of it,
+  // where the pictures laid for the far views (5, 11 and 29 m a tile) give 1 to 3 cm a texel: there the rock is read again at the size it was taken at.
+  float hand = smoothstep(52.0, 34.0, segmentDistance(vWorld.xz, vec4(-606.2, 327.4, -553.8, 302.6))) * smoothstep(64.0, 22.0, far) * (1.0 - byLens);
+  #endif
   // Where the mesh steps up in a single row of faces its smoothed normal still looks at the sky: the face itself says how steep it is,
   // so no picture laid from above is drawn out down a wall.
   vec3 ng = normalize(cross(wx, wy));
@@ -340,15 +345,18 @@ void main() {
       vec2 q1 = vWorld.xz / 11.0;
       vec2 q2 = TURN * vWorld.xz / 29.0 + 0.71;
       // The fine ropes are read a level and a half down the picture's pyramid: they are there, faintly, at the fronts of the billows, and never as stripes.
-      vec3 lavaA = PICK(tLava, q1, 2.83 * wx.xz / 11.0, 2.83 * wy.xz / 11.0).rgb;
-      vec3 lavaNhA = PICK(tLavaNh, q1, 2.83 * wx.xz / 11.0, 2.83 * wy.xz / 11.0).rgb;
+      // Under the wide lens they are read as sharp as the picture is.
+      float soft = mix(2.83, 1.0, hand);
+      vec3 lavaA = PICK(tLava, q1, soft * wx.xz / 11.0, soft * wy.xz / 11.0).rgb;
+      vec3 lavaNhA = PICK(tLavaNh, q1, soft * wx.xz / 11.0, soft * wy.xz / 11.0).rgb;
       vec3 lavaNhB = PICK(tLavaNh, q2, TURN * wx.xz / 29.0, TURN * wy.xz / 29.0).rgb;
-      vec3 lava = lavaA * (0.6 + 0.9 * lavaNhB.b) * (0.8 + 0.4 * big);
-      vec2 lavaTip = 0.4 * (lavaNhA.rg - 0.5) * vec2(1.0, -1.0) + 0.9 * (TURN * ((lavaNhB.rg - 0.5) * vec2(1.0, -1.0)));
+      // Close to, the billows of the large picture count for less than the ropes on them: magnified, they are a smear.
+      vec3 lava = lavaA * mix(0.6 + 0.9 * lavaNhB.b, 1.05, 0.5 * hand) * (0.8 + 0.4 * big);
+      vec2 lavaTip = 0.4 * (lavaNhA.rg - 0.5) * vec2(1.0, -1.0) + (0.9 - 0.3 * hand) * (TURN * ((lavaNhB.rg - 0.5) * vec2(1.0, -1.0)));
       plain = mix(plain, lava, ropy);
       plainNh = mix(plainNh, vec3(lavaNhA.rg, lavaNhA.b * (0.5 + lavaNhB.b)), ropy);
       tip = mix(tip, lavaTip * 2.0, ropy);
-      fold = mix(lavaNhA.b, lavaNhB.b, 0.6);
+      fold = mix(lavaNhA.b, lavaNhB.b, 0.6 - 0.3 * hand);
       // The skin of a billow is satin: a broad dull sheen on its back, no streak of white along a rope.
       rough = mix(0.92, 0.84, ropy * smoothstep(0.35, 0.7, lavaNhB.b));
     }
@@ -418,7 +426,8 @@ void main() {
 
   #ifdef NEAR
   // The camera's bench: the same rock read again at the scale of a hand.
-  float close = smoothstep(32.0, 9.0, far);
+  // Not under the wide lens, which has its own reading below.
+  float close = smoothstep(32.0, 9.0, far) * (1.0 - hand);
   if (close > 0.0) {
     // On a face the picture is read larger and counts for less, or its pits repeat up the riser.
     float tile = steep > 0.5 ? 2.3 : 1.3;
@@ -459,6 +468,76 @@ void main() {
   #endif
 
   #ifdef BENCH
+  if (hand > 0.0) {
+    // Laid on three planes by the land's smooth normal, so that nothing is drawn out down a face.
+    vec3 tw = n0 * n0;
+    tw *= tw;
+    tw /= tw.x + tw.y + tw.z;
+    // The skin of the rock, scoria at its true size: 2 mm a texel.
+    const float SKIN = 1.9;
+    vec3 skin = vec3(0.0);
+    vec3 skinTip = vec3(0.0);
+    float skinHigh = 0.0;
+    if (tw.y > 0.02) {
+      vec2 uv = TURN * vWorld.xz / SKIN + 0.37;
+      vec2 ux = TURN * wx.xz / SKIN;
+      vec2 uy = TURN * wy.xz / SKIN;
+      vec3 r = PICK(tBoulderNh, uv, ux, uy).rgb;
+      skin += tw.y * PICK(tBoulder, uv, ux, uy).rgb;
+      skinHigh += tw.y * r.b;
+      vec2 t = TURN * ((r.rg - 0.5) * vec2(1.0, -1.0));
+      skinTip += tw.y * vec3(t.x, 0.0, t.y);
+    }
+    if (tw.x > 0.02) {
+      vec2 uv = vWorld.zy / SKIN + vec2(0.11, 0.53);
+      vec3 r = PICK(tBoulderNh, uv, wx.zy / SKIN, wy.zy / SKIN).rgb;
+      skin += tw.x * PICK(tBoulder, uv, wx.zy / SKIN, wy.zy / SKIN).rgb;
+      skinHigh += tw.x * r.b;
+      skinTip += tw.x * (vec3(0.0, 0.0, 1.0) * (r.r - 0.5) - vec3(0.0, 1.0, 0.0) * (r.g - 0.5));
+    }
+    if (tw.z > 0.02) {
+      vec2 uv = vWorld.xy / SKIN + vec2(0.71, 0.29);
+      vec3 r = PICK(tBoulderNh, uv, wx.xy / SKIN, wy.xy / SKIN).rgb;
+      skin += tw.z * PICK(tBoulder, uv, wx.xy / SKIN, wy.xy / SKIN).rgb;
+      skinHigh += tw.z * r.b;
+      skinTip += tw.z * (vec3(1.0, 0.0, 0.0) * (r.r - 0.5) - vec3(0.0, 1.0, 0.0) * (r.g - 0.5));
+    }
+    // A ropy sheet close to: the ropes themselves, three to eight centimetres thick, inside the billows the far views read.
+    float ropes = sheet * tw.y;
+    float ropeTone = 1.0;
+    float ropeHigh = 0.5;
+    vec2 ropeTip = vec2(0.0);
+    if (ropes > 0.003) {
+      vec2 uv = vWorld.xz / 3.3 + vec2(0.23, 0.61);
+      vec3 r = PICK(tLavaNh, uv, wx.xz / 3.3, wy.xz / 3.3).rgb;
+      ropeTone = dot(PICK(tLava, uv, wx.xz / 3.3, wy.xz / 3.3).rgb, vec3(0.3333)) * 15.0;
+      ropeHigh = r.b;
+      ropeTip = (r.rg - 0.5) * vec2(1.0, -1.0);
+    }
+    // Whatever else lies level is rubble at its true size: stones of a finger to a hand, bedded in grit.
+    float loose = (1.0 - sheet) * tw.y;
+    float looseTone = 1.0;
+    float looseHigh = 0.5;
+    vec2 looseTip = vec2(0.0);
+    if (loose > 0.003) {
+      vec2 uv = TURN * vWorld.xz / 1.7 + vec2(0.57, 0.19);
+      vec2 ux = TURN * wx.xz / 1.7;
+      vec2 uy = TURN * wy.xz / 1.7;
+      vec3 r = PICK(tTalusNh, uv, ux, uy).rgb;
+      looseTone = dot(PICK(tTalus, uv, ux, uy).rgb, vec3(0.3333)) * 10.5;
+      looseHigh = r.b;
+      looseTip = TURN * ((r.rg - 0.5) * vec2(1.0, -1.0));
+    }
+    float skinOn = hand * mix(1.0, 0.6, sheet);
+    albedo *= mix(vec3(1.0), skin * 20.0, 0.6 * skinOn) * mix(1.0, ropeTone, 0.55 * hand * ropes) * mix(1.0, looseTone, 0.6 * hand * loose);
+    vec2 flatTip = ropeTip * 1.4 * ropes + looseTip * 1.4 * loose;
+    n = normalize(n + (skinTip * 1.1 * skinOn + vec3(flatTip.x, 0.0, flatTip.y) * hand));
+    float fine = mix(skinHigh, mix(looseHigh, ropeHigh, sheet), 0.65 * tw.y);
+    occ *= mix(1.0, 0.4 + 0.6 * smoothstep(0.15, 0.6, fine), hand);
+    // Ash and grit lie in the pits and the creases, a finger wide.
+    albedo = mix(albedo, vec3(0.17, 0.16, 0.148), 0.5 * hand * tw.y * smoothstep(0.42, 0.18, fine) * mix(1.0, 0.6, sheet));
+    height = mix(height, 0.5 * (height + fine), hand);
+  }
   // The rubble under the line view's lens, measured against the picture: near black clinker and grit, with no drawn pattern on it.
   // Its grain is read on three planes and summed, so nothing is drawn out down a slope.
   if (byLens > 0.0) {
