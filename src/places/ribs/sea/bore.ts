@@ -215,6 +215,8 @@ void main() {
 #endif
   // The sheets were shot in flat light: here the white stays white and the green water goes down dark.
   pic = pow(pic, vec3(1.3)) * 1.12;
+  // One mass: the lifted water is full of air and never goes down to a dark green hole behind the white.
+  pic = mix(vec3(0.4, 0.45, 0.43), pic, smoothstep(0.0, 0.42, dot(pic, vec3(0.3, 0.5, 0.2))));
   float lum = dot(pic, vec3(0.3, 0.5, 0.2));
   vec4 land = landAt(vWorld.xz);
   // The wall stands over the blades' shade: half of it is always in the sun.
@@ -251,7 +253,7 @@ void main() {
   vec3 nf = normalize(mix(n, vec3(0.0, 0.45, 0.89), 0.6 + 0.3 * foam));
   // Under the falling lip the face is in its shade: a dark trough before the white of the run-out.
   float trough = smoothstep(0.02, 0.16, t) * (1.0 - smoothstep(0.3, 0.62, t)) * step(0.0, a);
-  vec3 col = rigShade(vWorld, nf, v, pic * 0.8 * (1.0 - 0.38 * trough), mix(0.3, 1.0, foam), 1.0 - 0.3 * trough);
+  vec3 col = rigShade(vWorld, nf, v, pic * 0.8 * (1.0 - 0.22 * trough), mix(0.3, 1.0, foam), 1.0 - 0.3 * trough);
   col += pic * (uSunColour * 0.12 * sun + lightUp * 0.1) / 3.14159;
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (bare) discard;

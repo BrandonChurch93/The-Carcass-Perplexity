@@ -24,7 +24,7 @@ export const PARTS: readonly string[] = ['kite-wings'];
 const FEEDERS = 44;
 const FLIERS = 451;
 const SPECKS = 560;
-const PASSERS = 6;
+const PASSERS = 3;
 /** The run of the hero by the establishing camera: seconds it lasts, centred on the key, and its mean speed. */
 const RUN = { seconds: 9, speed: 3.7 };
 const LOW = 6;
@@ -502,7 +502,7 @@ export function create(ctx: Context): Piece {
         squash: scatter.range(0.55, 1),
         size: scatter.range(0.9, 1.2) * GROW,
         seed: scatter.next(),
-        dark: colony ? 0.5 : 0.7,
+        dark: colony ? -0.7 : 0.7,
       });
       clearOfLenses(fliers[fliers.length - 1] as Flier, colony ? 110 : CLEAR);
       continue;
@@ -582,10 +582,10 @@ export function create(ctx: Context): Piece {
     const fx = dx / l;
     const fz = dz / l;
     // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
-    const cross: [number, number, number, number, number][] = [[64, -30, 22, 0, 12], [78, -14, 30, 0.2, -13], [86, -44, 26, -0.4, 14], [70, -22, 20, 1.5, -12], [82, -36, 34, -1.3, 13], [105, -50, 38, 0.6, 15]];
+    const cross: [number, number, number, number, number][] = [[46, -15, 13, 0.1, 15], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
     for (let i = 0; i < PASSERS; i++) {
       const c = cross[i] as [number, number, number, number, number];
-      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: 1.1 * GROW, seed: scatter.next() });
+      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: (i === 0 ? 1.25 : 1.0) * GROW, seed: scatter.next() });
     }
   }
   const skeinFlock = new Kites(kites, SKEIN + PASSERS);
@@ -617,12 +617,6 @@ export function create(ctx: Context): Piece {
     landers.push({ x: a[0], z: a[1], y: null, yaw: Math.atan2(-ez / el, ex / el) + 0.5, t: T0 + 0.42, size: 1.12 * GROW, seed: 0.37 });
     const b = ahead(210, -40);
     landers.push({ x: b[0], z: b[1], y: null, yaw: 2.2, t: T0 - 2.1, size: 1.05 * GROW, seed: 0.81 });
-  }
-  // Two come in to the ledges past the colony camera.
-  for (let k = 0; k < 2; k++) {
-    const s = sitters[56 + k * 9] as Sitter;
-    landers.push({ x: s.x, z: s.z, y: s.y, yaw: s.yaw + Math.PI * 0.6, t: secondsInPlace(UNIT, shotById('ribs-03').first) + 1.3 + k * 1.2, size: 1.08 * GROW, seed: 0.2 + 0.5 * k });
-    s.size = 0;
   }
   const landerAt = (l: Lander, t: number): void => {
     Object.assign(pose, stand(l.seed));
@@ -739,18 +733,18 @@ export function create(ctx: Context): Piece {
           pose.flap = -0.3 + 0.12 * Math.sin(seconds * 0.8 + s.seed * 40);
           pose.lag = 0;
           pose.roll = 0;
-          dryers.put(i, pose, 0.3, true);
+          dryers.put(i, pose, -1, true);
           continue;
         }
         // No two rows alike: half of them stand the other way round on their ledge.
         if (Math.floor(s.seed * 1000) % 2 === 1) pose.yaw += Math.PI;
-        colonySheets.put(i, pose, 0.55 + 0.45 * s.seed);
+        colonySheets.put(i, pose, 0.8 + 0.2 * s.seed);
       }
       colonySheets.commit();
       dryers.commit();
       for (let i = 0; i < fliers.length; i++) {
         flierAt(fliers[i] as Flier, seconds);
-        if (i < LOW) lowFlock.put(i, pose, 0.45);
+        if (i < LOW) lowFlock.put(i, pose, -0.6);
         else highFlock.put(i - LOW, pose, (fliers[i] as Flier).dark);
       }
       lowFlock.commit();
@@ -767,26 +761,26 @@ export function create(ctx: Context): Piece {
         const bout = smooth(0.25, 0.45, held(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
         fly(pose, 0.14 + 0.5 * bout, seconds * (10 + 3 * s.seed) + s.seed * 40);
         pose.sweep = (held(seconds, 2.3, s.seed + 0.4) - 0.5) * 0.8;
-        skeinFlock.put(i, pose, i < SKEIN ? 0.6 : 0.45);
+        skeinFlock.put(i, pose, i < SKEIN ? 0.6 : -1);
       }
       skeinFlock.commit();
       const lead = seconds - BORE;
       for (let i = 0; i < FLEEING; i++) {
         const side = (i - (FLEEING - 1) / 2) / FLEEING;
         Object.assign(pose, stand(hash(i, 3)));
-        // Low over the water before the wall, far enough from the last lens to be shapes against the white.
+        // Low over the water before the wall, a wing's length over it, pale against the dark of the stacks and the grey of the wall.
         // Seen from the side as they cross: sails up, legs trailing, no two of a size.
         pose.size = (0.8 + 0.75 * hash(i, 5)) * GROW;
-        pose.x = flee[0] + side * 50 - 14 * lead + 3 * Math.sin(i * 2.4);
+        pose.x = flee[0] + side * 42 - 14 * lead + 3 * Math.sin(i * 2.4);
         pose.z = flee[1] - 22 - (24 * ((i * 5) % 7)) / 7 + 12 * lead;
-        pose.y = 3.0 + (3.4 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
+        pose.y = 2.0 + (2.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
         pose.yaw = Math.atan2(-14, 12);
         fly(pose, 0.7, seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9);
         pose.rise = 0.95;
         pose.bend = -0.6;
         pose.sweep = -2.6;
         pose.pitch = 0.1 + 0.12 * Math.sin(seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9 - 0.7);
-        fleeFlock.put(i, pose, -0.75, true);
+        fleeFlock.put(i, pose, 1, true);
       }
       fleeFlock.commit();
       for (let i = 0; i < landers.length; i++) {

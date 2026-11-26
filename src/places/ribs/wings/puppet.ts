@@ -189,10 +189,11 @@ void main() {
   // Leather, grey brown: the picture's cream is its studio light, not its hide.
   vec3 albedo = pow(pic, vec3(1.25)) * mix(0.78, 1.0, vSeed.x);
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.0, 0.9, 0.8), 0.45);
-  // The colony's sit hunched under their sails: the back dark with the wet, the belly and the neck pale, so that a body parts from its ledge.
+  // The colony's are cream, the picture's light and dark kept as their folds: the back a shade darker than the belly and the neck, so that a body parts from its ledge.
   float under = max(step(2.5, vPart) * (1.0 - sail), step(vPart, 0.5) * max(smoothstep(230.0, 320.0, vPx.y) * smoothstep(540.0, 600.0, vPx.x), smoothstep(800.0, 880.0, vPx.x)));
   float pale = clamp(vPale, 0.0, 1.0);
-  albedo = mix(albedo, mix(albedo * 0.45 + vec3(0.02, 0.02, 0.022), albedo * 0.5 + vec3(0.42, 0.4, 0.36), under), pale);
+  vec3 cream = vec3(0.68, 0.61, 0.5) * (0.6 + 1.0 * dot(albedo, vec3(0.3333)));
+  albedo = mix(albedo, cream * mix(0.8, 1.0, under), pale);
   // Against white water it is a shape; the far sail is in the shade of the body.
   albedo *= mix(1.0, 0.3, clamp(-vPale, 0.0, 1.0)) * mix(1.0, 0.6, step(4.5, vPart));
   float leg = step(0.5, vPart) * step(vPart, 2.5);
@@ -215,6 +216,8 @@ void main() {
   // Against the light the thin wet skin lets a little through and the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.05) * uSunColour * rim * pow(max(dot(-v, uSunDir), 0.0), 2.0) * 0.16 * sunAt(vWorld, land);
+  // An open sail is skin: the sky behind it comes through.
+  col += albedo * sail * vec3(1.0, 0.92, 0.82) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.6 + skyIrradiance(-n) * 0.9) / 3.14159;
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (cover < 0.5) discard;
 #endif
