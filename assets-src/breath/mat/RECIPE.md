@@ -1,8 +1,10 @@
 # Material pictures of the Breath
 
-The material pictures and the sky picture of the Breath, made by the Builder on 2026-11-25 for every owner of the place to read. Each began as one generated picture: a flat surface seen straight on under even light, 1254 px square, or a sky, 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile and writes a colour picture and a data picture from it, by the method of the Heart's materials. The list and every prompt are in `assets-src/materials/spec.py`.
+The working pictures of the Breath, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 14 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
-How to read them: the colour picture is sRGB. In the data picture red and green are the slope on x and y (0.5 is level) and blue is height. `metres` in `materials.json` is the real width one repeat stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
+How to read them: the colour picture is sRGB. For a tile, in the data picture `<name>-nh.png` red and green are the slope on x and y (0.5 is level) and blue is height, taken from the picture's own light and dark. `metres` in `materials.json` is the real width one repeat of a tile, or the whole of a plate, stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
+
+A plate is one whole picture and does not repeat: a far backplate (the far distance of a view, with its own sky and a level horizon), a feature sheet (one thing whole on black under flat light), or a ground plate (one piece of ground from straight above). Where a plate has a relief picture, `<name>-h.png`, it is grey and the size of the colour picture: white is highest (ground plates) or nearest (feature sheets and faces), black is lowest or furthest, and on a feature sheet the black round the subject is no subject. The relief was made by a second call from the colour picture, so it lies on it within a few pixels and its greys are a guess at the form, good for slope and for parallax, not a measured height. Where the generated picture came with a clear background, the plate is laid on black and `<name>-a.png` is its cover: grey, white where the subject is. The animals in these pictures have no eyes and no ears.
 
 ## `public/assets/breath/mat/shelf.jpg` and `public/assets/breath/mat/shelf-nh.png`
 
@@ -102,11 +104,249 @@ Takes: 1 made, take 1 kept.
 Why this one: the low sun through fog over the shelf.
 Date: 2026-11-25
 
+## `public/assets/breath/mat/far.jpg`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/far.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-0-establishing.jpg`, `references/drafts/working/real/plate-norris-2.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+A photograph taken soon after sunrise with a long lens from a low rise on a flat shelf of pale rock by a cold sea, looking through thin fog toward a line of sea cliffs about three kilometres away. Only the far distance is in the picture, everything further than about one kilometre: a long line of pale layered cliffs about 200 metres tall, snow on their ledges, runs from the middle of the frame out past the right edge, with one great dark cave mouth in the cliff right of centre and a slow river of fog pouring out of the cave and down the scree below it. Left of the cliffs the low sun, outside the frame beyond the upper left corner, burns through a cream and peach fog bank, and two tall columns of white steam rise from far vents and lean in a light wind. In front of the cliffs lies flat pale shelf rock with long low shreds of ground fog and thin gleams of water. The foot of the cliffs lies at the middle of the frame. Below it there is only flat pale wet rock fading into fog: no pit, no near rocks, no channel, no plants. This is a background plate for a film: only the far distance, to stand behind built scenery. The first reference image is the place as the film sees it: keep the forms of its far distance, its light, its weather and its colours, and leave out everything near. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. The horizon is exactly level, straight from the left edge to the right edge. Output one wide landscape image, sixteen units wide and nine tall. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No animals, no birds.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the cliffs, the cave and the fog bank beyond the shelf.
+Date: 2026-11-26
+
+## `public/assets/breath/mat/shaftwall.jpg` and `public/assets/breath/mat/shaftwall-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/shaftwall.png`, the generated picture, and `assets-src/breath/mat/src/shaftwall-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-4-down-the-shaft.jpg`, `references/drafts/working/real/plate-tube-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+The inner wall of a great natural shaft, a section 60 metres wide and 34 metres tall, as if the round wall were unrolled flat. Three great horizontal hoops cross it one above another, each a ruined ring of pale cartilage turned half to stone about 4 metres thick: ivory and grey-white, cracked through in places, with snapped ends where a piece has fallen out, chipped edges, rust-ochre stain running down from each, patches of dark green growth and long drips. Between the hoops the wall is dark wet grey-brown rock, ribbed and glistening, with black slime streaks, pale mineral runs and small ledges that hold rubble. One hoop is broken away for a third of its length. The surface fills the whole frame edge to edge, square on, with no background showing. Flat, even, shadowless light from the front, so that no side is brighter than another: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.
+```
+
+The prompt of the relief:
+
+```
+The reference image is a photograph of a rock face seen square on. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. White is what stands furthest out toward the viewer and black is what lies deepest in. Cracks, joints, caves, hollows and undercut bands are dark; ledges, ribs, bulges and the noses of blocks are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the wall of the shaft with its hoops, for the shape and the stain of the rings.
+Date: 2026-11-26
+
+## `public/assets/breath/mat/shelfplate.jpg` and `public/assets/breath/mat/shelfplate-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/shelfplate.png`, the generated picture, and `assets-src/breath/mat/src/shelfplate-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-0-establishing.jpg`, `references/drafts/working/real/plate-porcelain-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+A flat shelf of pale rock beside a great pit, planed by the sea, a piece 48 metres wide and 27 metres tall. Pale ivory and cream bedded rock in broad layered plates with broken stepped edges, each plate a few centimetres to half a metre above the next, pebble scree and grit lying in the hollows, dark wet pools in the lowest places, thin rust and olive weed stain along the cracks, a few loose slabs. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.
+```
+
+The prompt of the relief:
+
+```
+The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the shelf beside the pit, as broken bedded plates (asked for by `breath_ground_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/ribarch.jpg` and `public/assets/breath/mat/ribarch-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/ribarch.png`, the generated picture, and `assets-src/breath/mat/src/ribarch-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-4-down-the-shaft.jpg`, `references/drafts/working/real/plate-terrace-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+One broken arch from the wall of a great shaft, seen square on: a curved beam of pale cartilage turned half to stone, 24 metres long and 4 metres thick, lying level across the frame with a gentle upward bow. Ivory and grey-white with rust-ochre stain, patches of dark green growth, long dark drips from its lower edge, deep cracks, chipped edges, and both ends snapped off raggedly. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: one broken rib of the shaft (asked for by `breath_ground_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/slab.jpg` and `public/assets/breath/mat/slab-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/slab.png`, the generated picture, and `assets-src/breath/mat/src/slab-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-4-down-the-shaft.jpg`, `references/drafts/working/real/plate-terrace-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+One fallen slab of pale rock, seen square on: a cracked block 9 metres wide and 5 metres tall with chipped and broken edges, pale ivory and cream with thin bedding lines, rust stain in the cracks, a little grit lying on its ledges and one corner split away. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a fallen slab of the collapsed side (asked for by `breath_ground_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/scree.jpg` and `public/assets/breath/mat/scree-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/scree.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-2-the-rim.jpg`, `references/drafts/working/real/plate-porcelain-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+A material texture, seen straight down from above in an orthographic view: pebble scree and grit lying between plates of pale rock, about 3 metres across. Angular pale cream, grey and tan fragments from grit to fist size, a few larger flat pieces, darker damp grit beneath. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the scree in the hollows of the shelf (asked for by `breath_ground_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/wetrock.jpg` and `public/assets/breath/mat/wetrock-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/wetrock.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+A material texture, seen straight down from above in an orthographic view: dark wet pitted shelf rock at the edge of the sea, about 1.5 metres across. Grey-brown and slate rock, rough and pitted, glistening wet, with small pools in the pits, grit, thin green film and a few pale barnacles. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the wet rock of the near foreground (asked for by `breath_ground_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/wader.jpg` and `public/assets/breath/mat/wader-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/wader.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg`, `references/drafts/working/real/ref-wader-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+One wader, an animal of an unknown world, standing, seen exactly from the side in an orthographic view, facing right, about 3.2 metres tall at the back. It stands on four very long thin legs that go straight down, with knobbly knees and small dark hooves. Its body is a lean deep trunk under thin pale pink-white skin, with every rib, the hip bones and the knuckles of the spine showing through, faint blue veins and a few red sores. Its long neck is stretched level forward and ends, where a head would be, in nothing but a ragged mop of long pale pink filaments, wet and dripping, with strands of olive weed caught in them. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the wader whole in side view, in a rest pose.
+Date: 2026-11-26
+
+## `public/assets/breath/mat/plume.jpg` and `public/assets/breath/mat/plume-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/plume.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg`, `references/drafts/working/real/ref-tissue-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+One gill-plume, a growth of an unknown world, whole, seen square on: a low tangled bush about 1.5 metres tall and 2 metres wide rooted on a lip of pale rock. A dozen stems rise from one root and arch outward, each carrying hundreds of fine wet crimson and wine-red barbs like the gills of a fish or a feather, the barbs hanging and tangled, darker at the stem and thin and bright at their tips, with drops of water on them. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: one gill-plume whole, for its strands.
+Date: 2026-11-26
+
+## `public/assets/breath/mat/bed.jpg` and `public/assets/breath/mat/bed-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/bed.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg`, `references/drafts/working/real/plate-terrace-2.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+A material texture, seen straight down from above in an orthographic view: the bed of a shallow tide channel in pale rock, with no water on it, about 3 metres across. Pale cream travertine plates and rounded cobbles with silt between them, a thin olive-green film of algae on the stones and loose green threads lying one way. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the bed of the channel, to be seen through its water (asked for by `breath_life_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/scum.jpg` and `public/assets/breath/mat/scum-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/scum.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg`, `references/drafts/working/real/plate-norris-2.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+Scum on water: pale foam flecks, salt scum and small bubbles drifting on still water, about 1.5 metres across, in loose rafts and thin broken lines with empty black between them. The subject lies on pure black: black means nothing is there, and brightness means how much is there. The field fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this belongs to: take its colour and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp, no horizon, no sky, no text, no logo, no people, no animals.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the scum line at banks and legs (asked for by `breath_life_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/carcass.jpg` and `public/assets/breath/mat/carcass-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/carcass.png`, the generated picture, and `assets-src/breath/mat/src/carcass-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-2-the-rim.jpg`, `references/drafts/working/real/ref-hide-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+The carcass of a wader, an animal of an unknown world, long dead, lying collapsed on its side and seen from straight above, about 4.5 metres long. The trunk is sunk flat, its pale skin split open over the ribs and the hip bones, which stand through it; the long neck curves away and ends in a fan of pale dried tendrils spread on the ground; the four long legs are folded under and beside it, each ending in a small dark hoof. Pale grey-pink dried hide, stained brown where it has split. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the dead one at the rim (asked for by `breath_life_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/flank.jpg` and `public/assets/breath/mat/flank-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/flank.png`, the generated picture, and `assets-src/breath/mat/src/flank-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg`, `references/drafts/working/real/ref-hide-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+The bare trunk of a living wader, an animal of an unknown world, seen exactly from the side, 1.4 metres long: only the trunk, with the rump at the left and the chest at the right, cut off cleanly where the legs and the neck would begin. Thin pale pink-white skin over every rib, the hip bone and the knuckles of the spine, with faint blue veins, fine wrinkles, a few raw red sores and small scars. No hair, no feathers. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the trunk of a wader, for its hide laid by rest position (asked for by `breath_life_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/breath/mat/frond.jpg` and `public/assets/breath/mat/frond-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/frond.png`, the generated picture, and `assets-src/breath/mat/src/frond-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg`, `references/drafts/working/real/ref-tissue-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
+
+```
+One frond of a gill-plume, a growth of an unknown world, laid flat and seen from straight above, 1.5 metres long, lying level across the frame with its root at the left. A single dark red stem carries hundreds of fine wet crimson barbs on both sides like a feather or the gill of a fish, the barbs longest in the middle, tangled and clumped in places and thinning to hair at the tip. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: one frond, for the strands of the plumes (asked for by `breath_life_owner_2`).
+Date: 2026-11-26
+
 ## `public/assets/breath/mat/materials.json`
 
 Made by: `assets-src/materials/make-materials.mjs`.
 From: the pictures above.
 Prompt or command: `node assets-src/materials/make-materials.mjs breath`.
 
-What it holds: the settings of the script, and for each tile its name, the real width of one repeat in metres and its mean colour in linear light, so a place can tint or blend by number.
-Date: 2026-11-25
+What it holds: the settings of the script, and for each tile its name, the real width of one repeat in metres and its mean colour in linear light, so a place can tint or blend by number; for each plate its size in pixels, the real width it stands for and the name of its relief picture where it has one.
+Date: 2026-11-26
