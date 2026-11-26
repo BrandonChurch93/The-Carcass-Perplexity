@@ -1,0 +1,255 @@
+{
+  "round": 16,
+  "unit": "ribs",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 85,
+      "why": "the conspicuously stretched, repeating texture on the giant rock arches.",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "hobbyist-style fantasy landscape render (Vue/Terragen look) with repetitive stretched textures and simple scattered creature assets, not film-grade polish",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "visibly stretched textures on the cliffs and giant spires alongside flatly intersecting water and repetitive foreground pebble mapping",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 85,
+      "why": "The giant arches have visibly faceted curves, especially at the tip of the central arch.",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "The scene is an ambitious fantasy landscape, but the stretched, smeared rock textures and the moiré/hatching in the foreground pebbles look like a hobbyist or ordinary 3D render, not film or AAA polish. (d) is the close second.",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the conspicuously tiled textures on the giant background formations.",
+      "answered": "05:45 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the fantasy landscape looks like a standalone CG artwork with visibly stretched, tiling textures on the distant rock spires and simple, repeated bird sprites, which doesn't reach film-cinematic polish.",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the simple ribbon-like seaweed shaders and harsh rock-to-water intersections alongside a detailed foreground sculpt look like an ordinary independent 3D render rather than a top-budget cinematic or a mobile game.",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "the hanging seaweed has sharp polygonal folds that make it look like stiff strips of plastic.",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "The dense, art-directed detail and cinematic composition (giant carcass, tusk-like spires, birds, atmospheric haze) read as high-end film or concept-art CG, though the visibly tiled texture on the right cliffs keeps it from being a clear top-budget frame (c is the runner-up).",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 89,
+      "why": "the water’s near-perfect mirror reflections broken by conspicuously uniform ripple bands.",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the creatures and rocks have tiled, procedural-looking textures and simple water reflections, so it reads as a hobbyist or stock CG render (Vue/Terragen style) rather than film-quality work",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "flat overcast lighting with stretched low-detail rock textures alongside clean water reflections typical of a standard 3D render",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 84,
+      "why": "the giant background arches have angular silhouettes covered in visibly stretched textures.",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "the bespoke alien creature design and moody atmospheric depth look like high-end film or cinematic concept art, but the fuzzy rock textures and slightly inconsistent reflections keep it from being certain (c is the close second).",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 85,
+      "why": "the same clay-like creature model is visibly repeated across the cliff.",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the birds are copies of one model repeated across procedurally textured rock, with flat lighting and no film-grade integration",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "The heavily repeated identical 3D creature models scattered across procedurally textured rock with flat lighting and weak contact shadows look like an ordinary 3D render rather than a top-budget film or a real-time mobile/web demo.",
+      "answered": "05:47 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "The same stiff, pale winged-creature model appears over and over across the cliff.",
+      "answered": "05:46 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the cliff and bird textures look procedural and repeated, with copy-pasted bird instances and a flat, low-detail backdrop mountain with a face. That reads as a hobbyist or stock-style CG render rather than a film frame or a game cinematic. Option d is the second choice.",
+      "answered": "05:47 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the flat, low-detail bird models stand out against the elaborate wave simulation.",
+      "answered": "05:47 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "untextured gray creature models and flat, plasticky water and rock shading read as a hobbyist/stock CG render rather than film-grade VFX.",
+      "answered": "05:47 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the stretched glossy procedural cliff textures and hard geometric rock-to-water intersections alongside flatly shaded 3D creature models",
+      "answered": "05:47 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 94,
+      "why": "the foreground water stays almost perfectly flat right up to the towering breaker.",
+      "answered": "05:47 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the flying creatures are flat grey and look unfinished, and the spray and water look procedural, so this reads as a competent but ordinary 3D render rather than a film-grade frame.",
+      "answered": "05:47 UTC"
+    }
+  ]
+}

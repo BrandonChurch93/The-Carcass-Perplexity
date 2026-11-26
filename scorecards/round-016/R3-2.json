@@ -1,0 +1,70 @@
+{
+  "round": 16,
+  "unit": "ribs",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-26 05:16 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the perched colony across the center and right cliff",
+        "what": "the same pale folded wings, ribbed bodies and hooked neck poses recur across the benches, so the colony reads as copies of one sculpt",
+        "fix": "vary body shapes, wing folds, neck poses and silhouettes, and give the colony uneven staining and local contact shadows"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the foreground water around the rocks and across the foot of the breaker",
+        "what": "the bright, turbulent wave runs into a straight, calm gray plane; big rocks pierce it with almost no wake or foam",
+        "fix": "carry aerated water and irregular ripples out from the breaker, and add localized wash, menisci and wet edges around the rocks"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "lower-left crop, rounded cliff benches",
+        "what": "the same black and white bands stretch over rounded corners and down wall faces, making the bench texture look smeared onto a mesh",
+        "fix": "break up the runoff by slope and drainage and give the horizontal faces and vertical rock distinct surface detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "upper-left crop, dark flying animal",
+        "what": "the wing and neck edges have stepped translucent ghosts rather than a continuous blur",
+        "fix": "use continuous motion blur with enough temporal samples to preserve a coherent wing silhouette"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "left crop, feet of the long-legged animal in the center",
+        "what": "the toes skim the ledge without a clear grip or contact shadow, so the animal looks unweighted",
+        "fix": "seat the toes against the uneven surface and add local occlusion at each load-bearing foot"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "lower-right crop, close rock under the gray ridge",
+        "what": "a straight shelf exposes a strip of vertically dragged texture above a glossy, almost black face",
+        "fix": "reshape the shelf into irregular stone breaks and remap the exposed faces with less uniform gloss and some sky fill"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "upper-right and lower-left crops, spray in front of the breaker and right wall",
+        "what": "the dense spray resolves into a nearly uniform pale veil, with little depth or light separation from the foam behind it",
+        "fix": "separate backlit fine mist, darker dense water and foreground droplets, and let clear gaps reveal the wall at different depths"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "right crop, water behind and in front of the rock cluster",
+        "what": "evenly spaced horizontal bands cross the surface, while pale film-like collars stretch off the rocks",
+        "fix": "replace the regular banding with irregular surface and reflection detail, and confine aerated flow to the actual water-rock contact"
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "round": "18",
+  "unit": "eye",
+  "critic": "R1",
+  "packs": {
+    "R1-1": {
+      "set-A-01-a.png": "The key eye-0: its approved picture references/approved/6-eye/eye-0-establishing.jpg as -a and film frame 8412 as -b (the approved picture)",
+      "set-A-01-b.png": "The key eye-0: its approved picture references/approved/6-eye/eye-0-establishing.jpg as -a and film frame 8412 as -b (the frame)",
+      "set-A-02.png": "Matching crops of the key eye-0: references/approved/6-eye/eye-0-establishing.jpg beside film frame 8412 at native size",
+      "set-A-03-a.png": "The key eye-1: its approved picture references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg as -a and film frame 9003 as -b (the approved picture)",
+      "set-A-03-b.png": "The key eye-1: its approved picture references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg as -a and film frame 9003 as -b (the frame)",
+      "set-A-04.png": "Matching crops of the key eye-1: references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg beside film frame 9003 at native size",
+      "set-A-05-a.png": "The key eye-2: its approved picture references/approved/6-eye/eye-2-the-iris-amber-mats.jpg as -a and film frame 8600 as -b (the approved picture)",
+      "set-A-05-b.png": "The key eye-2: its approved picture references/approved/6-eye/eye-2-the-iris-amber-mats.jpg as -a and film frame 8600 as -b (the frame)",
+      "set-A-06.png": "Matching crops of the key eye-2: references/approved/6-eye/eye-2-the-iris-amber-mats.jpg beside film frame 8600 at native size"
+    },
+    "R1-2": {
+      "set-B-01-a.png": "The key eye-3: its approved picture references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg as -a and film frame 8761 as -b (the approved picture)",
+      "set-B-01-b.png": "The key eye-3: its approved picture references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg as -a and film frame 8761 as -b (the frame)",
+      "set-B-02.png": "Matching crops of the key eye-3: references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg beside film frame 8761 at native size",
+      "set-B-03-a.png": "The key eye-4: its approved picture references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg as -a and film frame 9221 as -b (the approved picture)",
+      "set-B-03-b.png": "The key eye-4: its approved picture references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg as -a and film frame 9221 as -b (the frame)",
+      "set-B-04.png": "Matching crops of the key eye-4: references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg beside film frame 9221 at native size"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "round": 18,
+  "unit": "eye",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-26 05:09 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the four animals in the shallows, particularly frames 8930–9164",
+        "what": "The front animal lowers its head, but then the group holds nearly the same silhouettes and planted leg positions for several seconds while the camera and reflections keep moving. They read as posed models.",
+        "fix": "Give each animal separately timed breathing, weight transfers, and head or ear adjustments. Let one reposition a hoof and send a small ripple out from the contact."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the central disturbance and the finish, frames 9301–9540",
+        "what": "The water rolls into very regular concentric bands, then the push loses the surface in nearly featureless blue and ends on a set of clean target-like rings. The disturbance reads as a graphic effect rather than water with weight.",
+        "fix": "Let the bulge drive a stronger first front that deforms and decays as it crosses the existing water. Carry an identifiable reflection, surface detail, or underwater cue through the move so the end follows from the event."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the low haze along the far bank below the cliffs",
+        "what": "The haze keeps an almost unchanged, fairly even profile over the whole reveal. The foreground rocks give the camera depth, but the air itself reads as a fixed layer.",
+        "fix": "Break the haze into separately drifting banks, with a few low tongues of vapour catching against the base of the cliff."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the thin water over the orange mineral channels in the foreground",
+        "what": "The changing picture is dominated by the camera sliding across the striations, with little visible interruption in the shallow water where it meets the raised deposits.",
+        "fix": "Show shallow currents bending around the deposits and small ripples breaking up the reflections independently of the camera move."
+      }
+    ]
+  }
+}

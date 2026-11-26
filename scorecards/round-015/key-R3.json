@@ -1,0 +1,26 @@
+{
+  "round": "15",
+  "unit": "spine",
+  "critic": "R3",
+  "packs": {
+    "R3-1": {
+      "set-A-01.png": "The judged frame spine-0, film frame 7234, resized to fit",
+      "set-A-02.png": "Native size crops of the judged frame spine-0, film frame 7234, part 1 of 2",
+      "set-A-03.png": "Native size crops of the judged frame spine-0, film frame 7234, part 2 of 2",
+      "set-A-04.png": "The judged frame spine-1, film frame 7579, resized to fit",
+      "set-A-05.png": "Native size crops of the judged frame spine-1, film frame 7579, part 1 of 2",
+      "set-A-06.png": "Native size crops of the judged frame spine-1, film frame 7579, part 2 of 2",
+      "set-A-07.png": "The judged frame spine-2, film frame 7418, resized to fit",
+      "set-A-08.png": "Native size crops of the judged frame spine-2, film frame 7418, part 1 of 2",
+      "set-A-09.png": "Native size crops of the judged frame spine-2, film frame 7418, part 2 of 2"
+    },
+    "R3-2": {
+      "set-B-01.png": "The judged frame spine-3, film frame 7668, resized to fit",
+      "set-B-02.png": "Native size crops of the judged frame spine-3, film frame 7668, part 1 of 2",
+      "set-B-03.png": "Native size crops of the judged frame spine-3, film frame 7668, part 2 of 2",
+      "set-B-04.png": "The judged frame spine-4, film frame 8090, resized to fit",
+      "set-B-05.png": "Native size crops of the judged frame spine-4, film frame 8090, part 1 of 2",
+      "set-B-06.png": "Native size crops of the judged frame spine-4, film frame 8090, part 2 of 2"
+    }
+  }
+}
