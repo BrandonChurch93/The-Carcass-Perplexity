@@ -183,9 +183,9 @@ export function createRig(): Rig {
     uSkyGround: { value: new THREE.Vector3(0.06, 0.054, 0.048) },
     uSunDir: { value: sunDirection },
     // The sun through the fog on a face turned to it, and the fog's own glow round it.
-    uSunColour: { value: new THREE.Vector3(3.3, 2.25, 1.25) },
+    uSunColour: { value: new THREE.Vector3(4.5, 2.9, 1.42) },
     uGlowColour: { value: new THREE.Vector3(0.37, 0.3, 0.25) },
-    uFill: { value: new THREE.Vector3(0.6, 0.72, 0.92) },
+    uFill: { value: new THREE.Vector3(0.44, 0.58, 0.86) },
   };
 
   // Until the land folder says otherwise: the ground of the layout, with the shaft cut into it.
