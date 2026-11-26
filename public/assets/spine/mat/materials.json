@@ -137,7 +137,8 @@
       "kind": "plate",
       "metres": 1.5,
       "width": 1536,
-      "height": 1024
+      "height": 1024,
+      "relief": "holdfast-h.png"
     },
     {
       "name": "tendril",
@@ -214,6 +215,13 @@
       "width": 1671,
       "height": 941,
       "relief": "scorch-h.png"
+    },
+    {
+      "name": "bolt",
+      "kind": "plate",
+      "metres": 340,
+      "width": 941,
+      "height": 1672
     }
   ]
 }

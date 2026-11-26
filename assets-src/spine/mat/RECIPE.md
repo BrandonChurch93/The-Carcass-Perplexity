@@ -1,6 +1,6 @@
 # Material pictures of the Spine
 
-The working pictures of the Spine, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 17 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
+The working pictures of the Spine, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 18 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
 How to read them: the colour picture is sRGB. For a tile, in the data picture `<name>-nh.png` red and green are the slope on x and y (0.5 is level) and blue is height, taken from the picture's own light and dark. `metres` in `materials.json` is the real width one repeat of a tile, or the whole of a plate, stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
 
@@ -226,17 +226,23 @@ Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: one kite ribbon, for the membrane of the kites (asked for by `spine_storm_owner_2`).
 Date: 2026-11-26
 
-## `public/assets/spine/mat/holdfast.jpg`
+## `public/assets/spine/mat/holdfast.jpg` and `public/assets/spine/mat/holdfast-h.png`
 
-Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
-From: `assets-src/spine/mat/src/holdfast.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg`, `references/drafts/working/real/ref-tissue-1.jpg`.
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/spine/mat/src/holdfast.png`, the generated picture, and `assets-src/spine/mat/src/holdfast-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg`, `references/drafts/working/real/ref-tissue-1.jpg`.
 Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs spine`.
 
 ```
 The holdfast of a tether-kite, a growth of an unknown world, seen square on, about 1.5 metres across: a cluster of dark leathery knobs and bulbs like the holdfast of kelp, packed together and crusted with white rime, with several thin dark stalks leaving it toward the right. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
 ```
 
-Takes: 1 made, take 1 kept.
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: the holdfasts of the kites in the clefts (asked for by `spine_storm_owner_2`).
 Date: 2026-11-26
 
@@ -388,6 +394,20 @@ The reference image is a photograph of ground seen straight down from above. Mak
 
 Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: the middle of the scorched ground close, for the detail of the scorched one; it lies on the middle 6 metres of `scorchfield` (asked for by `spine_storm_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/spine/mat/bolt.jpg`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/spine/mat/src/bolt.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg`, `references/drafts/working/real/plate-storm-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs spine`.
+
+```
+A photograph of one lightning stroke at night on a pure black background, taken with a short exposure: a single cloud-to-ground channel that enters at the top centre of the frame and runs down to the bottom centre, crooked and kinked the whole way as real lightning is and never a regular zigzag, thin and blinding white at its core with a narrow violet-blue edge. Eight or ten fine side branches leave it at shallow angles, each fainter and thinner than the channel, forking again and ending in nothing. Black means nothing is there: no glow fog, no cloud, no rain, no ground, no horizon, no stars. The first reference image is the storm this stroke belongs to: take the violet of its lightning from there, and nothing of its composition. The second reference image is a real photograph of a storm: it is the standard for how a camera records the real thing, with no painted, drawn or stylised look. Output one tall portrait image, nine units wide and sixteen tall. Photographic, sharp, no text, no logo, no border, no people.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the core of the strike, so that the bolt is a photographed channel and not a drawn zigzag; it lies on black, so its brightness is its cover (asked for by `spine_storm_owner_2`).
 Date: 2026-11-26
 
 ## `public/assets/spine/mat/materials.json`

@@ -1,0 +1,112 @@
+{
+ "place": "eye",
+ "name": "far-low",
+ "k": 2,
+ "written": [
+  3344,
+  1882
+ ],
+ "sigma": 48.0,
+ "levels": 6,
+ "windows": [
+  {
+   "window": "far-low-w00",
+   "at": [
+    0,
+    0
+   ],
+   "used": true,
+   "fitted": true,
+   "movedPx": 2.04,
+   "share": 0.143
+  },
+  {
+   "window": "far-low-w01",
+   "at": [
+    836,
+    0
+   ],
+   "used": true,
+   "fitted": true,
+   "movedPx": 1.07,
+   "share": 0.094
+  },
+  {
+   "window": "far-low-w02",
+   "at": [
+    1672,
+    0
+   ],
+   "used": true,
+   "fitted": true,
+   "movedPx": 2.37,
+   "share": 0.138
+  },
+  {
+   "window": "far-low-w10",
+   "at": [
+    0,
+    470
+   ],
+   "used": true,
+   "fitted": true,
+   "movedPx": 1.92,
+   "share": 0.099
+  },
+  {
+   "window": "far-low-w11",
+   "at": [
+    836,
+    470
+   ],
+   "used": true,
+   "fitted": true,
+   "movedPx": 1.42,
+   "share": 0.062
+  },
+  {
+   "window": "far-low-w12",
+   "at": [
+    1672,
+    470
+   ],
+   "used": true,
+   "fitted": true,
+   "movedPx": 1.31,
+   "share": 0.088
+  },
+  {
+   "window": "far-low-w20",
+   "at": [
+    0,
+    941
+   ],
+   "used": false,
+   "fitted": false,
+   "movedPx": 0.0,
+   "share": 0.143
+  },
+  {
+   "window": "far-low-w21",
+   "at": [
+    836,
+    941
+   ],
+   "used": false,
+   "fitted": false,
+   "movedPx": 0.0,
+   "share": 0.094
+  },
+  {
+   "window": "far-low-w22",
+   "at": [
+    1672,
+    941
+   ],
+   "used": false,
+   "fitted": false,
+   "movedPx": 0.0,
+   "share": 0.138
+  }
+ ]
+}
