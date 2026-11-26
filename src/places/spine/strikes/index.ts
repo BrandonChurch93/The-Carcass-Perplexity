@@ -112,12 +112,13 @@ void main() {
   float len = length(a);
   vec3 mid = 0.5 * (uTip + uTop);
   vec3 side = normalize(cross(a, cameraPosition - mid));
-  float n = uShift.x;
+  // uShift.x: which return stroke; uShift.w: which strike. No two take the picture the same way.
+  float n = uShift.x + uShift.w;
   float flip = mod(n, 2.0) < 0.5 ? 1.0 : -1.0;
   float v = 0.5 + 0.5 * position.y;
   // The picture's stroke leaves its top and reaches its foot a little off the middle; it is brought back onto the line.
   float lean = mix(0.537, 0.466, v) - 0.5;
-  float wander = 0.035 * sin(v * 9.0 + n * 2.1) * sin(v * 3.14159) * min(n, 1.0);
+  float wander = (0.03 * sin(v * 9.0 + n * 2.1) + 0.05 * sin(v * 3.7 + n * 4.3)) * sin(v * 3.14159) * min(n, 1.0);
   vUv = vec2(0.5 + flip * (0.5 * position.x) + lean + wander, v);
   vWay = 1.0 - v;
   vec3 p = mix(uTip, uTop, v) + side * (position.x * 0.5 * len * 0.5628);
@@ -296,12 +297,12 @@ export function create(ctx: Context): Piece {
   const wind = new THREE.Vector3(WIND[0], WIND[1], WIND[2]).multiplyScalar(WIND_SPEED / 26);
 
   const boltPicture = ctx.assets.texture('mat/bolt.jpg', { kind: 'colour', repeat: false, anisotropy: 8 });
-  const bolts: Bolt[] = STRIKES.map((site) => {
+  const bolts: Bolt[] = STRIKES.map((site, index) => {
     const rng = ctx.rng(`strikes/${site.id}`);
     const lines = figure(rng, site);
     const group = new THREE.Group();
     const env = new THREE.Vector4(0, 0, 0, 0);
-    const shift = new THREE.Vector4(0, site.to[1], site.rise * 0.02, 0);
+    const shift = new THREE.Vector4(0, site.to[1], site.rise * 0.02, index);
     const channelUniforms = { ...ctx.rig.uniforms, uShift: { value: shift }, uPixel: pixel, uDither: dither, uEnv: { value: env }, uTint: { value: TINT }, uCore: { value: CORE } };
     const strip = channelGeometry(lines);
     const channel = new THREE.Mesh(strip, new THREE.ShaderMaterial({ vertexShader: CHANNEL_VERTEX, fragmentShader: SHEATH_FRAGMENT, uniforms: channelUniforms, ...additive }));

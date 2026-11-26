@@ -205,7 +205,10 @@ void main() {
   r.y = abs(r.y) + 0.05;
   vec3 mirror = skyRadiance(normalize(r)) + min(vec3(1.5), emitterIrradiance(vWorld, n)) * 0.08;
   float glint = smoothstep(0.75, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
-  c += mirror * (0.35 * fres + 1.6 * glint * (0.3 + 0.7 * fres));
+  c += mirror * (0.2 * fres + 0.7 * glint * (0.3 + 0.7 * fres));
+  // Between its veins and folds the skin is a smoke-coloured film: the sky behind it is seen through it, stained.
+  float film = (1.0 - vein) * (1.0 - 0.7 * fold) * (0.35 + 0.3 * fract(seed * 4.1));
+  c = mix(c, skyRadiance(-toCamera) * vec3(0.5, 0.46, 0.6), film);
   // When its spire is struck the ribbon carries the charge for a moment along its folds.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.12;
   c += uGlowTint * (uStruck.y * mine * 0.25 * glint);
@@ -286,11 +289,8 @@ export function create(ctx: Context): Piece {
       for (let i = 0; i < count; i++) {
         // A colony is a few ribbons of one holdfast: one long streamer, the rest shorter, none alike.
         const length = (i === 0 ? rng.range(190, 260) : rng.range(70, 170)) * reach;
-        // Over 0.86 of its height the lee prong of the split top stands lower than the storm's: the holdfast goes down with it.
         const at = t + (i - (count - 1) / 2) * 0.006;
-        const k = Math.max(0, (at - 0.86) / 0.14);
-        const anchor = finEdge(sp, at, 0.93, rng.range(-0.25, 0.25));
-        anchor[1] -= k * k * 0.04 * sp.tip + k * 4.5;
+        const anchor = finEdge(sp, at, 1, rng.range(-0.25, 0.25));
         ribbons.push({
           anchor,
           length,
