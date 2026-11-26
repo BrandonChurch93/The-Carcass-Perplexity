@@ -86,9 +86,9 @@ const smax = (a: number, b: number, k: number): number => -smin(-a, -b, k);
 
 // The trunk in side view, rump (0) to chest (1), for a size of 1: the line of the back, the line of the belly, the half width.
 // A plucked bird's: one full egg, round behind, the back a low arch, the belly a full curve, closing to the root of the neck.
-const TOP: [number, number][] = [[0, 0.06], [0.05, 0.19], [0.16, 0.285], [0.38, 0.33], [0.62, 0.325], [0.84, 0.28], [1, 0.16]];
-const BOTTOM: [number, number][] = [[0, -0.03], [0.05, -0.15], [0.18, -0.265], [0.42, -0.325], [0.68, -0.335], [0.87, -0.26], [1, -0.07]];
-const WIDTH: [number, number][] = [[0, 0.06], [0.06, 0.19], [0.22, 0.285], [0.48, 0.305], [0.72, 0.275], [0.9, 0.2], [1, 0.11]];
+const TOP: [number, number][] = [[0, 0.07], [0.05, 0.235], [0.15, 0.345], [0.32, 0.395], [0.58, 0.375], [0.82, 0.31], [1, 0.17]];
+const BOTTOM: [number, number][] = [[0, -0.04], [0.05, -0.18], [0.18, -0.3], [0.42, -0.375], [0.66, -0.405], [0.86, -0.33], [1, -0.09]];
+const WIDTH: [number, number][] = [[0, 0.07], [0.06, 0.22], [0.22, 0.32], [0.48, 0.34], [0.72, 0.305], [0.9, 0.22], [1, 0.12]];
 
 /** How far under the middle of the trunk the heads of the thighs sit, for a size of 1. */
 export const HIP_DROP = 0.1;
@@ -98,11 +98,11 @@ const THIGH_TOP = -0.085;
 // A leg from above the hip (t below 0, inside the trunk: the drumstick lies on the flank) to the ground (1):
 // half thickness fore and aft, half thickness across, and how far the middle of the section stands aft (-) or fore (+) of the bone. For a leg whose joint is at 0.47.
 // Sturdy: a full drumstick, a knob at the joint twice the shank, a shank as thick as a wrist, a knuckle over a cloven hoof.
-const HIND_F: [number, number][] = [[-0.085, 0.1], [-0.03, 0.155], [0.05, 0.172], [0.16, 0.15], [0.3, 0.105], [0.4, 0.068], [0.47, 0.092], [0.535, 0.057], [0.7, 0.046], [0.87, 0.045], [0.935, 0.066], [0.965, 0.05], [1, 0.074]];
-const HIND_S: [number, number][] = [[-0.085, 0.06], [-0.03, 0.095], [0.05, 0.11], [0.16, 0.098], [0.3, 0.074], [0.4, 0.055], [0.47, 0.076], [0.535, 0.05], [0.7, 0.042], [0.87, 0.041], [0.935, 0.057], [0.965, 0.045], [1, 0.06]];
+const HIND_F: [number, number][] = [[-0.085, 0.12], [-0.03, 0.185], [0.05, 0.205], [0.15, 0.175], [0.27, 0.11], [0.38, 0.06], [0.47, 0.088], [0.53, 0.052], [0.7, 0.043], [0.87, 0.041], [0.935, 0.06], [0.965, 0.044], [1, 0.072]];
+const HIND_S: [number, number][] = [[-0.085, 0.07], [-0.03, 0.105], [0.05, 0.12], [0.15, 0.105], [0.27, 0.075], [0.38, 0.05], [0.47, 0.072], [0.53, 0.046], [0.7, 0.039], [0.87, 0.037], [0.935, 0.052], [0.965, 0.04], [1, 0.058]];
 const HIND_C: [number, number][] = [[-0.085, -0.06], [0.05, -0.045], [0.3, -0.008], [0.4, 0], [0.47, -0.026], [0.535, -0.004], [0.9, 0], [0.965, 0.01], [1, 0.03]];
-const FORE_F: [number, number][] = [[-0.085, 0.085], [-0.03, 0.125], [0.05, 0.14], [0.16, 0.125], [0.3, 0.092], [0.4, 0.064], [0.47, 0.09], [0.535, 0.055], [0.7, 0.045], [0.87, 0.044], [0.935, 0.064], [0.965, 0.05], [1, 0.074]];
-const FORE_S: [number, number][] = [[-0.085, 0.055], [-0.03, 0.085], [0.05, 0.098], [0.16, 0.09], [0.3, 0.07], [0.4, 0.054], [0.47, 0.076], [0.535, 0.049], [0.7, 0.041], [0.87, 0.04], [0.935, 0.056], [0.965, 0.045], [1, 0.06]];
+const FORE_F: [number, number][] = [[-0.085, 0.1], [-0.03, 0.145], [0.05, 0.16], [0.15, 0.138], [0.27, 0.092], [0.38, 0.055], [0.47, 0.086], [0.53, 0.05], [0.7, 0.042], [0.87, 0.04], [0.935, 0.058], [0.965, 0.044], [1, 0.072]];
+const FORE_S: [number, number][] = [[-0.085, 0.062], [-0.03, 0.092], [0.05, 0.105], [0.15, 0.094], [0.27, 0.07], [0.38, 0.048], [0.47, 0.072], [0.53, 0.045], [0.7, 0.038], [0.87, 0.036], [0.935, 0.05], [0.965, 0.04], [1, 0.058]];
 const FORE_C: [number, number][] = [[-0.085, 0.03], [0.05, 0.018], [0.3, 0], [0.4, 0.004], [0.47, 0.022], [0.535, 0.004], [0.9, 0], [0.965, 0.01], [1, 0.03]];
 
 // The side view picture of a wader (1536 x 1024, head to the right): the box of its trunk (left, top, right, bottom), the line of each leg
