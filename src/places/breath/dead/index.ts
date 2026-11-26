@@ -96,17 +96,17 @@ export function create(ctx: Context): Piece {
     // The spine: a row of knuckles along the edge that is away from the legs.
     const spine = smooth(0.72, 0.97, sn) * smooth(0.06, 0.18, t) * smooth(0.97, 0.85, t);
     const knuckle = spine * (0.5 + 0.5 * Math.cos(t * 26 * Math.PI * 2)) ** 2;
-    const slack = (0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) + 0.02 * k * Math.sin(t * 19 + 3 * Math.sin(phi * 2 + t * 7) + sn * 4)) * (1 - 0.6 * cage);
+    const slack = (0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) + 0.03 * k * Math.sin(t * 19 + 3 * Math.sin(phi * 2 + t * 7) + sn * 4)) * (1 - 0.45 * cage);
     let up: number;
     if (c > 0) {
-      up = tall * 2.5 * c ** 0.7 * (1 - 0.7 * pit) + cage * k * (0.022 * rib - 0.01) * (0.5 + 0.5 * Math.sin(t * 23 + 1.3) ** 2) * (0.6 + 0.4 * Math.sin(sn * 7 + t * 31)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
+      up = tall * 2.0 * c ** 0.7 * (1 - 0.75 * pit) * (0.86 + 0.14 * Math.sin(t * 9.0 + 1.0) + 0.08 * Math.sin(t * 23.0 + sn * 3.0)) + cage * k * (0.022 * rib - 0.01) * (0.5 + 0.5 * Math.sin(t * 23 + 1.3) ** 2) * (0.6 + 0.4 * Math.sin(sn * 7 + t * 31)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
     } else {
       // What lies on the rock is flat on it.
       up = -tall * 0.42 * (-c) ** 0.45;
     }
     const drawn = sn > 0 ? 1 : 1 - 0.3 * smooth(0.6, 0.25, t) * -sn;
     const out = 1.25 * deep * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9)) * drawn * (1 + 0.1 * smooth(0.3, -0.6, c)) + 0.014 * k * knuckle;
-    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.5 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
+    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.34 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
     // It lies rolled a little onto its belly's edge, so the spine is the high line of it and the flank faces away from the legs' side less.
     const rolled = up * Math.cos(ROLL) + out * Math.sin(ROLL);
     return [Math.max(rolled, -tall * 0.42), out * Math.cos(ROLL) - Math.max(up, 0) * Math.sin(ROLL), seen];
@@ -160,7 +160,7 @@ export function create(ctx: Context): Piece {
     const thigh = 2.2 * (1 - smooth(0, 0.48, u)) ** 0.8;
     const knuckle = 0.75 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.4 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
     const foot = 0.8 * smooth(0.95, 1, u);
-    const r = 0.037 * k * (1.0 + thigh * 0.9 + knuckle + foot * 1.1) * (1 + 0.08 * Math.sin(u * 40)) * (1 - 0.6 * smooth(0.985, 1, u)) * (0.45 + 0.55 * smooth(0, 0.08, u));
+    const r = 0.05 * k * (1.0 + thigh * 0.7 + knuckle * 0.8 + foot * 0.9) * (1 + 0.08 * Math.sin(u * 40)) * (1 - 0.6 * smooth(0.985, 1, u)) * (0.45 + 0.55 * smooth(0, 0.08, u));
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
@@ -192,7 +192,7 @@ export function create(ctx: Context): Piece {
   const tRings = 10;
   const tSides = 4;
   const tendrilLocal = new Float32Array(tRings * tSides * 2);
-  const tr = 0.015 * k;
+  const tr = 0.009 * k;
   for (let i = 0; i < tRings; i++) {
     const u = i / (tRings - 1);
     const r = tr * (1 - 0.7 * u ** 1.4);
@@ -205,7 +205,7 @@ export function create(ctx: Context): Piece {
   const end = neckLine[neckLine.length - 1] as V3;
   const before = neckLine[neckLine.length - 2] as V3;
   const way = Math.atan2(end[2] - before[2], end[0] - before[0]) - 0.1;
-  for (let n = 0; n < 96; n++) {
+  for (let n = 0; n < 150; n++) {
     const tube = skin.tube(tRings, tSides);
     const clump = Math.floor(rng.next() * 7);
     const angle = way + (clump - 3) * 0.2 + rng.range(-0.2, 0.2);

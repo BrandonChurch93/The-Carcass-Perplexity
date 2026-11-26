@@ -257,12 +257,12 @@ export class Wader {
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
       const thigh = 1.1 * (1 - smooth(-0.1, 0.2, u)) ** 1.3 + 1.5 * (1 - smooth(0.0, 0.46, u)) ** 0.7 + 0.35 * Math.exp(-(((u - b.knee + 0.07) / 0.045) ** 2));
-      const knuckle = 1.7 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.0 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
+      const knuckle = 2.4 * Math.exp(-(((u - b.knee) / 0.028) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.7 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       // The head of the thigh is inside the trunk: it narrows to the hip, so no end of it shows.
       const r = b.legR * (0.9 + thigh + knuckle + foot);
       // The haunch: muscle on the bone where it leaves the trunk, wide fore and aft and flat from side to side, gone by the knee.
-      const haunch = 3.3 * (1 - smooth(0.08, b.knee - 0.04, u)) ** 1.4 * smooth(-0.12, 0.1, u);
+      const haunch = 2.3 * (1 - smooth(0.08, b.knee - 0.04, u)) ** 1.4 * smooth(-0.12, 0.1, u);
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
         this.legLocal[(i * legSides + s) * 2] = (r + 0.3 * b.legR * haunch) * Math.cos(phi) * (1 - 0.15 * Math.min(1, thigh / 2.4));

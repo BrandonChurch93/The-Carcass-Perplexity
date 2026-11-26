@@ -124,7 +124,7 @@ export function create(ctx: Context): Piece {
       drips.begin();
       for (const tip of tips) {
         const fallen = (((t + tip.offset) % tip.every) + tip.every) % tip.every;
-        if (fallen > 1.3) continue;
+        if (fallen > 0.55) continue;
         // It left the tip where the sway had the tip then (the stem's part of the sway in shaders.ts), and falls from there.
         const then = t - fallen;
         const a = tip.h * tip.h * tip.tall;
@@ -132,13 +132,13 @@ export function create(ctx: Context): Piece {
         const quick = Math.sin(then * 3.1 - tip.h * 5 + tip.phase * 2.3);
         const shake = 0.6 + 0.4 * Math.sin(then * 6.3 - tip.h * 7 + tip.phase * 3.1);
         const blown = surgeAt(then);
-        const push = (0.035 * slow + 0.012 * quick) * a;
+        const push = (0.07 * slow + 0.024 * quick) * a;
         const x = tip.x + WIND[0] * push + tip.ax * 0.2 * blown * shake * a;
         const z = tip.z + WIND[1] * push + tip.az * 0.2 * blown * shake * a;
         const y = tip.y + (0.11 * blown * shake - 0.02 * slow) * a - 4.9 * fallen * fallen;
         if (y < tip.ground) continue;
         // The shutter is open a fiftieth of a second: a drop that has fallen a while is a short streak.
-        drips.add(x, y, z, Math.min(0.045, Math.max(0.006, 9.8 * fallen * 0.01)));
+        drips.add(x, y, z, Math.min(0.024, Math.max(0.006, 9.8 * fallen * 0.006)));
       }
       drips.end();
     },
