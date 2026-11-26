@@ -1,14 +1,14 @@
 // The gill-plumes: crimson feathered growths on the lip of the shaft and a few seedlings away from it.
-// Every bush is grown once from the seeded stream (fronds.ts): stems that arch from one holdfast, each carrying a frond of the frond picture.
-// The sway and the drops are in the vertex shaders (shaders.ts).
+// Every bush is grown once from the seeded stream (fronds.ts): limbs that lean from one holdfast and fork, hung with wet threads in locks.
+// Each bush is its own two meshes, so one that is out of the frame costs nothing. The sway and the drops are in the vertex shaders (shaders.ts).
 import * as THREE from 'three';
 import { BUSHES, SEA_LEVEL, SEEDLINGS, WIND, bushAt, onRim, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { surgeAt } from '../shared/blockout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
-import { Fronds, type Bush } from './fronds';
-import { DROP_FRAGMENT, DROP_VERTEX, STEM_FRAGMENT, STEM_VERTEX, VANE_DEPTH, VANE_FRAGMENT, VANE_VERTEX } from './shaders';
+import { grow, type Bush, type Grown, type Tip } from './fronds';
+import { DROP_FRAGMENT, DROP_VERTEX, STEM_FRAGMENT, STEM_VERTEX, THREAD_FRAGMENT, THREAD_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['gill-plumes'];
 
@@ -98,25 +98,19 @@ export function create(ctx: Context): Piece {
   }
   for (const [x, z, tall] of SEEDLINGS) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
 
-  const grown = new Fronds();
-  for (const bush of bushes) grown.grow(bush, rng, floor);
-  const { fronds: vaneGeometry, stems: stemGeometry } = grown.build();
+  const grown: Grown[] = bushes.map((bush) => grow(bush, rng, floor));
 
   const rimRng = ctx.rng('gill-plume-rim');
   const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, mound: 1 }));
-  const rimGrown = new Fronds();
-  for (const bush of rimBushes) rimGrown.grow(bush, rimRng, floor);
-  const rimBuilt = rimGrown.build();
+  const rimGrown: Grown[] = rimBushes.map((bush) => grow(bush, rimRng, floor));
   // Staged by shot (breath-02): two tall weeping ones on the south-west lip, rooted to the left of that lens and leaning across its upper left
-  // corner, so that their sprays hang into the frame from above and from the left, as the picture has them. No other shot has them.
+  // corner, so that their locks hang into the frame from above and from the left, as the picture has them. No other shot has them.
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
     return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, mound: 0, weep: 1, tidy: true };
   });
-  const hangGrown = new Fronds();
-  for (const bush of hangBushes) hangGrown.grow(bush, hangRng, floor);
-  const hangBuilt = hangGrown.build();
+  const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 
   const pixel = { value: 0.001 };
   const seconds = { value: 0 };
@@ -127,40 +121,25 @@ export function create(ctx: Context): Piece {
     uSeconds: seconds,
     uSurge: surge,
     uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) },
-    tFrond: { value: ctx.assets.texture('plumes/frond.jpg', { repeat: false }) },
-    tFrondA: { value: ctx.assets.texture('plumes/frond-a.png', { kind: 'data', repeat: false }) },
-    tFrondB: { value: ctx.assets.texture('plumes/frond-b.jpg', { repeat: false }) },
-    tFrondBA: { value: ctx.assets.texture('plumes/frond-b-a.png', { kind: 'data', repeat: false }) },
   };
-  const vaneMaterial = new THREE.ShaderMaterial({ vertexShader: VANE_VERTEX, fragmentShader: VANE_FRAGMENT, uniforms, side: THREE.DoubleSide });
-  // The fog reads the depth laid before the picture: the ribbons say there which of their pixels are threads.
-  vaneMaterial.userData.depthFragment = VANE_DEPTH;
-  const vaneMesh = new THREE.Mesh(vaneGeometry, vaneMaterial);
-  vaneMesh.frustumCulled = false;
+  // Opaque and whole: the engine lays their depth first, and a thread behind another costs only that.
+  const threadMaterial = new THREE.ShaderMaterial({ vertexShader: THREAD_VERTEX, fragmentShader: THREAD_FRAGMENT, uniforms, side: THREE.DoubleSide });
   const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms });
-  const stemMesh = new THREE.Mesh(stemGeometry, stemMaterial);
-  stemMesh.frustumCulled = false;
+  const meshes = (g: Grown, into: THREE.Group): void => {
+    into.add(new THREE.Mesh(g.threads, threadMaterial), new THREE.Mesh(g.stems, stemMaterial));
+  };
 
   // The holdfasts: a knotted lump in the rock under every bush, lumpier than round, half sunk.
   const lump = new THREE.IcosahedronGeometry(1, 4);
   const lumps: THREE.BufferGeometry[] = [];
   const holdfastMaterial = new THREE.ShaderMaterial({ vertexShader: RIG_VERTEX, fragmentShader: HOLDFAST_FRAGMENT, uniforms: { ...rig.uniforms } });
   const group = new THREE.Group();
-  group.add(vaneMesh, stemMesh);
   const rimGroup = new THREE.Group();
-  const rimVanes = new THREE.Mesh(rimBuilt.fronds, vaneMaterial);
-  rimVanes.frustumCulled = false;
-  const rimStems = new THREE.Mesh(rimBuilt.stems, stemMaterial);
-  rimStems.frustumCulled = false;
-  rimGroup.add(rimVanes, rimStems);
-  group.add(rimGroup);
   const hangGroup = new THREE.Group();
-  const hangVanes = new THREE.Mesh(hangBuilt.fronds, vaneMaterial);
-  hangVanes.frustumCulled = false;
-  const hangStems = new THREE.Mesh(hangBuilt.stems, stemMaterial);
-  hangStems.frustumCulled = false;
-  hangGroup.add(hangVanes, hangStems);
-  group.add(hangGroup);
+  for (const g of grown) meshes(g, group);
+  for (const g of rimGrown) meshes(g, rimGroup);
+  for (const g of hangGrown) meshes(g, hangGroup);
+  group.add(rimGroup, hangGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
@@ -170,10 +149,12 @@ export function create(ctx: Context): Piece {
       const y = at.getY(i);
       const z = at.getZ(i);
       const swell = 1 + 0.28 * Math.sin(x * 5 + seed) * Math.sin(z * 4.3 + seed * 1.3) + 0.2 * Math.sin(y * 7 + x * 3 + seed * 2.1) + 0.12 * Math.sin(x * 11 + z * 9 + seed);
-      const r = 0.05 * b.tall * swell;
+      const r = 0.07 * b.tall * swell;
       at.setXYZ(i, b.x + x * r * 1.25, b.y + y * r * 0.8 + 0.02 * b.tall, b.z + z * r * 1.25);
+      // The lump is smooth: its normal is the ball's, flattened as the lump is.
+      const nl = Math.hypot(x / 1.25, y / 0.8, z / 1.25) || 1;
+      (g.getAttribute('normal') as THREE.BufferAttribute).setXYZ(i, x / 1.25 / nl, y / 0.8 / nl, z / 1.25 / nl);
     }
-    g.computeVertexNormals();
     lumps.push(g);
     const m = new THREE.Mesh(g, holdfastMaterial);
     m.frustumCulled = false;
@@ -181,48 +162,53 @@ export function create(ctx: Context): Piece {
   }
   lump.dispose();
 
-  // The wet ends drip: at the end of a barb a drop hangs and swells, lets go and falls, each on its own slow beat.
+  // The wet ends drip: at the point of a lock a drop hangs and swells, lets go and falls, each on its own slow beat. One set of them for
+  // the bushes that are always there and one each for the staged ones, shown with them.
   const drops = ctx.rng('gill-plume-drops');
-  const dropGeometry = new THREE.BufferGeometry();
-  {
+  const dropsOf = (all: Grown[], share: number): THREE.BufferGeometry => {
+    const geometry = new THREE.BufferGeometry();
+    const fields: Record<'aA' | 'aB' | 'aC' | 'aSway' | 'aTint' | 'aDrop', number[]> = { aA: [], aB: [], aC: [], aSway: [], aTint: [], aDrop: [] };
     const position: number[] = [];
-    const sway: number[] = [];
-    const tint: number[] = [];
-    const root: number[] = [];
-    const drop: number[] = [];
     const corner: number[] = [];
     const index: number[] = [];
     let count = 0;
-    const quad = (end: (typeof grown.ends)[number], every: number, offset: number, size: number, falls: number, ground: number): void => {
+    const quad = (tip: Tip, every: number, offset: number, size: number, falls: number, ground: number): void => {
       for (const [cx, cy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]] as const) {
-        position.push(end.at[0], end.at[1], end.at[2]);
-        sway.push(...end.sway);
-        tint.push(0, 0, end.reach, end.tall);
-        root.push(end.root[0], end.root[1], end.root[2]);
-        drop.push(every, offset, size, falls);
+        position.push(tip.a[0], tip.a[1], tip.a[2]);
+        fields.aA.push(...tip.a);
+        fields.aB.push(...tip.b);
+        fields.aC.push(...tip.c);
+        fields.aSway.push(...tip.sway);
+        fields.aTint.push(...tip.tint);
+        fields.aDrop.push(every, offset, size, falls);
         corner.push(cx, cy, ground);
       }
       index.push(count, count + 1, count + 2, count, count + 2, count + 3);
       count += 4;
     };
-    for (const end of grown.ends) {
-      if (drops.next() < 0.3) continue;
-      const every = drops.range(1.3, 5.5);
-      const offset = drops.range(0, 9);
-      const size = drops.range(0.0045, 0.0085);
-      const ground = floor(end.at[0], end.at[2]);
-      quad(end, every, offset, size, 0, ground);
-      quad(end, every, offset, size, 1, ground);
+    for (const g of all) {
+      for (const tip of g.tips) {
+        if (drops.next() > share) continue;
+        const every = drops.range(3, 11);
+        const offset = drops.range(0, 11);
+        const size = drops.range(0.004, 0.0085);
+        const x = tip.a[0] + tip.b[0] + tip.c[0];
+        const z = tip.a[2] + tip.b[2] + tip.c[2];
+        const ground = floor(x, z);
+        quad(tip, every, offset, size, 0, ground);
+        quad(tip, every, offset, size, 1, ground);
+      }
     }
-    dropGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-    dropGeometry.setAttribute('aSway', new THREE.Float32BufferAttribute(sway, 4));
-    dropGeometry.setAttribute('aTint', new THREE.Float32BufferAttribute(tint, 4));
-    dropGeometry.setAttribute('aRoot', new THREE.Float32BufferAttribute(root, 3));
-    dropGeometry.setAttribute('aDrop', new THREE.Float32BufferAttribute(drop, 4));
-    dropGeometry.setAttribute('aCorner', new THREE.Float32BufferAttribute(corner, 3));
-    dropGeometry.setIndex(index);
-    dropGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
-  }
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+    for (const [name, values] of Object.entries(fields)) geometry.setAttribute(name, new THREE.Float32BufferAttribute(values, 4));
+    geometry.setAttribute('aCorner', new THREE.Float32BufferAttribute(corner, 3));
+    geometry.setIndex(index);
+    geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
+    return geometry;
+  };
+  // Only the bushes a lens comes close to have drops that can be seen.
+  const nearOnes = grown.filter((_g, i) => (bushes[i] as Bush).detail >= 1);
+  const dropGeometries = [dropsOf(nearOnes, 0.14), dropsOf([], 0), dropsOf(hangGrown, 0.14)];
   const dropMaterial = new THREE.ShaderMaterial({
     vertexShader: DROP_VERTEX,
     fragmentShader: DROP_FRAGMENT,
@@ -236,10 +222,12 @@ export function create(ctx: Context): Piece {
     blendSrcAlpha: THREE.OneFactor,
     blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
   });
-  const dropMesh = new THREE.Mesh(dropGeometry, dropMaterial);
-  dropMesh.frustumCulled = false;
-  dropMesh.renderOrder = 20;
-  group.add(dropMesh);
+  [group, rimGroup, hangGroup].forEach((into, i) => {
+    const dropMesh = new THREE.Mesh(dropGeometries[i] as THREE.BufferGeometry, dropMaterial);
+    dropMesh.frustumCulled = false;
+    dropMesh.renderOrder = 20;
+    into.add(dropMesh);
+  });
   ctx.scene.add(ctx.parts.built('gill-plumes', group));
 
   // Each bush stands in its own shade on the rock, and throws a long one away from the sun.
@@ -280,15 +268,13 @@ export function create(ctx: Context): Piece {
       height = h;
     },
     dispose: () => {
-      vaneGeometry.dispose();
-      vaneMaterial.dispose();
-      stemGeometry.dispose();
-      rimBuilt.fronds.dispose();
-      rimBuilt.stems.dispose();
-      hangBuilt.fronds.dispose();
-      hangBuilt.stems.dispose();
+      for (const g of [...grown, ...rimGrown, ...hangGrown]) {
+        g.threads.dispose();
+        g.stems.dispose();
+      }
+      threadMaterial.dispose();
       stemMaterial.dispose();
-      dropGeometry.dispose();
+      for (const g of dropGeometries) g.dispose();
       dropMaterial.dispose();
       holdfastMaterial.dispose();
       for (const g of lumps) g.dispose();
