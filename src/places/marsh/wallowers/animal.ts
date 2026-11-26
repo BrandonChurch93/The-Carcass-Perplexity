@@ -133,7 +133,7 @@ export interface Stood {
   belly: { x: number; y: number; z: number };
 }
 
-const LEG_AT: [number, number][] = [
+export const LEG_AT: [number, number][] = [
   [-1.22, -1],
   [0.78, -1],
   [-1.22, 1],
