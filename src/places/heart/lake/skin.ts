@@ -55,7 +55,7 @@ vec3 sheetAt(vec2 q, float span, vec2 gx, vec2 gy, float seed) {
   for (int i = 0; i < 3; i++) {
     mat2 turn;
     vec2 shift;
-    float w = sheetCorner(i, seed, turn, shift);
+    float w = sheetCorner(i, seed, 1.0, turn, shift);
     vec3 nt = textureGrad(tSheet, (turn * q) * scale + shift, (turn * gx) * scale, (turn * gy) * scale).rgb;
     float k = w * exp(9.0 * nt.b);
     // The picture is loaded upside down, so its second slope is counted the other way.
@@ -84,6 +84,10 @@ void main() {
   float live = step(1e-3, net.a);
 
   vec4 heat = heatAt(q, lake, net, 0.0);
+  // Out on the lake the paint rides its plate, and each plate is of a day of its own.
+  vec2 ride = gPlateShift;
+  float plated = step(1e-3, gPlateHalf + abs(ride.x) + abs(ride.y)) * plateZone(q, lake, net);
+  float plateAge = (gPlateId - 0.5) * plated;
   float gape = gapeAt(q, net).x;
   // Metres to the brim as the relief laid it (negative in the gap): what is painted on a lip or a wall follows the
   // shape that is there, not the finer tear of the heat, which would hang down a smooth wall as a comb.
@@ -136,8 +140,8 @@ void main() {
   float age = 0.5 + 1.6 * (0.65 * vnoise(q / 110.0 + 4.0) + 0.35 * vnoise(q / 37.0 + 9.0) - 0.5) + 0.5 * (net.b - 0.5);
   // Within a plate, flows of other days lie side by side, two to six metres across, with an edge between them:
   // wet black glass beside matte ash grey. Near the feeding group too, where all of it is young.
-  float flow = smoothstep(0.43, 0.57, 0.65 * vnoise(q / 4.1 + 17.0) + 0.35 * vnoise(q / 1.4 + 29.0));
-  age += 0.4 * (vnoise(q / 11.0 + 17.0) - 0.5);
+  float flow = smoothstep(0.43, 0.57, 0.65 * vnoise((q + ride) / 4.1 + 17.0) + 0.35 * vnoise((q + ride) / 1.4 + 29.0));
+  age += 0.4 * (vnoise((q + ride) / 11.0 + 17.0) - 0.5) + 0.7 * plateAge;
 
   vec3 n = normalize(vNormalG);
   // A face that stands (the wall of a trench, the side of a slab) is a fracture: no fold, toe or cord is drawn on it, and
@@ -146,7 +150,7 @@ void main() {
   // Where the plates of a bank lap, the step from one to the next is a crease with a soft shadow, not a fracture face.
   steep *= 1.0 - 0.7 * gOverlap * smoothstep(0.3, 1.0, bank);
   float lean = length(n.xz);
-  vec2 qg = q - (steep * vWorld.y * (1.0 - n.y) / max(lean * lean, 1e-3)) * n.xz;
+  vec2 qg = q + ride - (steep * vWorld.y * (1.0 - n.y) / max(lean * lean, 1e-3)) * n.xz;
   float fpGrain = max(fpLong, steep * max(abs(dFdx(vWorld.y)), abs(dFdy(vWorld.y))));
   vec2 slope = slabSlope;
   float crease = 1.0;
@@ -224,8 +228,10 @@ void main() {
   if (midOn > 0.0) skinM = mix(skinM, sheetAt(qg, SHEET_M, gx, gy, 11.0), midOn);
   if (nearOn > 0.0) skinD = mix(skinD, sheetAt(qg, SHEET_D, gx, gy, 47.0), nearOn);
   if (farOn > 0.0) skinL = mix(skinL, sheetAt(qg, SHEET_L, gx, gy, 83.0), farOn);
-  float tone = 4.0 * skinM.z * skinL.z;
-  vec2 fine = SHEET_TALL_M * skinM.xy + SHEET_TALL_D * skinD.xy + SHEET_TALL_L * skinL.xy;
+  // The broad billows are faint in tone: the far lake is dark plates, and the light tells their relief.
+  float tone = 2.0 * skinM.z * mix(1.0, 2.0 * skinL.z, 0.6);
+  // From across the lake the broad billows would read as ripples on water: the far crust is flat plates.
+  vec2 fine = SHEET_TALL_M * skinM.xy + SHEET_TALL_D * skinD.xy + SHEET_TALL_L * mix(1.0, 0.4, smoothstep(25.0, 70.0, length(toCamera))) * skinL.xy;
   float grainA = skinM.z - 0.5;
   // A furrow sees a sixth of the sky, a crest all of it.
   crease *= mix(1.0, smoothstep(0.05, 0.5, skinM.z), 0.85) * mix(1.0, smoothstep(0.05, 0.5, skinL.z), 0.8) * mix(1.0, smoothstep(0.1, 0.5, skinD.z), 0.5);
@@ -305,7 +311,7 @@ void main() {
   // Strong within a hand of the lip, gone by three metres, most on the faces turned to the seam, and cut where a foot or a
   // body stands between.
   float off = max(bank, 0.0);
-  float byMelt = live * smoothstep(0.05, 0.3, gape) * (0.75 * exp(-off / 0.3) + mix(0.08, 0.25, max(fresh, stringOf(net))) * (1.0 - smoothstep(0.4, 3.0, off)));
+  float byMelt = live * smoothstep(0.05, 0.3, gape) * (0.75 * exp(-off / 0.6) + mix(0.2, 0.3, max(fresh, stringOf(net))) * (1.0 - smoothstep(0.8, 3.0, off)));
   float steepAway = length(vAway);
   vec2 away = steepAway > 0.3 ? vAway / steepAway : vec2(0.0);
   // Which way a face looks is told by its plate and, where it stands, by the wall itself: never by the folds on it, whose
@@ -386,7 +392,7 @@ void main() {
   // the crust, dull red; one in three beside a pool is hotter. Away from the melt all are cold. None is lit finer than a pixel holds.
   if (slabGap > 0.3) {
     float lineBrim = shown * live * (1.0 - smoothstep(0.01, 0.05, net.g - 2.0)) * smoothstep(0.2, 0.3, gape);
-    float dull = max(1.0 - smoothstep(5.0, 12.0, groupFar(q)), lineBrim * (1.0 - smoothstep(1.0, 2.0, beside)));
+    float dull = max(1.0 - smoothstep(3.0, 6.0, groupFar(q)), lineBrim * (1.0 - smoothstep(1.0, 2.0, beside)));
     float byPool = max(stringOf(net) * live * smoothstep(0.3, 0.45, gape) * (1.0 - smoothstep(2.0, 4.0, beside)), lineBrim * (1.0 - smoothstep(0.5, 1.0, beside)));
     float some = smoothstep(0.34, 0.48, vnoise(q / 1.9 + 37.0));
     float third = smoothstep(0.52, 0.6, vnoise(q / 2.7 + 5.0));
@@ -395,27 +401,28 @@ void main() {
     c *= 1.0 - lit;
     hot += blackbody(mix(960.0, 1200.0, byPool * third) + 40.0 * (2.0 * vnoise(q / 0.4 + 3.0) - 1.0)) * lit;
   }
-  // The feeding floor is threaded with fine hot seams of its own, where the form has shut the gaps: crooked lines three
-  // to six metres apart, here and not there, thickest near the seam the group feeds at. None is drawn finer than two and
-  // a half pixels: a finer one is drawn that wide and dimmer. A stretch in five is a pocket of open melt, wider and hotter.
-  float seamOn = fresh * (1.0 - smoothstep(8.0, 48.0, groupFar(q))) * (1.0 - steep) * (1.0 - heap) * (1.0 - slabGap);
+  // The feeding floor is threaded with fine hot seams of its own, where the form has shut the gaps: crooked lines six
+  // to twelve metres apart, here and not there, thickest near the seam the group feeds at. None is drawn finer than two and
+  // a half pixels: a finer one is drawn that wide and dimmer. It runs whole: its width and heat swell and fall over tens of
+  // metres, never in short pieces.
+  float seamOn = fresh * (1.0 - smoothstep(8.0, 34.0, groupFar(q))) * (1.0 - steep) * (1.0 - heap) * (1.0 - slabGap);
   if (seamOn > 0.02) {
-    vec2 sq = q / 3.3 + 71.0;
+    vec2 sq = q / 7.0 + 71.0;
     float sf = 0.65 * vnoise(sq) + 0.35 * vnoise(TURN_A * sq * 2.3 + 11.0);
     vec2 sg = vec2(0.65 * vnoise(sq + vec2(0.1, 0.0)) + 0.35 * vnoise(TURN_A * (sq + vec2(0.1, 0.0)) * 2.3 + 11.0) - sf, 0.65 * vnoise(sq + vec2(0.0, 0.1)) + 0.35 * vnoise(TURN_A * (sq + vec2(0.0, 0.1)) * 2.3 + 11.0) - sf) / 0.1;
     float sl = max(length(sg), 0.3);
-    float sd = abs(sf - 0.5) / sl * 3.3;
+    float sd = abs(sf - 0.5) / sl * 7.0;
     vec2 sn = sg / sl;
     float sfoot = max(abs(dot(qx, sn)), abs(dot(qy, sn)));
-    float pocket = smoothstep(0.66, 0.74, vnoise(q / 2.3 + 91.0));
-    float sown = 0.025 + 0.04 * vnoise(q / 0.7 + 13.0) + 0.12 * pocket;
+    float pocket = smoothstep(0.35, 0.75, vnoise(q / 13.0 + 91.0));
+    float sown = 0.035 + 0.02 * vnoise(q / 2.1 + 13.0) + 0.07 * pocket;
     float swide = max(sown, 1.25 * sfoot);
-    float some = smoothstep(0.36, 0.5, vnoise(q / 7.9 + 23.0)) * seamOn;
+    float some = smoothstep(0.3, 0.5, vnoise(q / 31.0 + 23.0)) * seamOn;
     float seam = (1.0 - smoothstep(0.45 * swide, swide, sd)) * sqrt(min(1.0, sown / swide)) * some;
     // What glows, lights: the crust beside a seam is warm for a hand or two.
-    c += albedo * blackbody(1100.0) * (0.5 * some * (1.0 - seam) * exp(-max(sd - swide, 0.0) / (0.12 + 2.0 * sfoot)));
+    c += albedo * blackbody(1100.0) * (0.9 * some * (1.0 - seam) * exp(-max(sd - swide, 0.0) / (0.3 + 2.0 * sfoot)));
     c *= 1.0 - seam;
-    hot += blackbody(mix(960.0, 1200.0, pocket) + 40.0 * (2.0 * vnoise(q / 0.4 + 3.0) - 1.0)) * seam;
+    hot += blackbody(mix(1040.0, 1200.0, pocket) + 40.0 * (2.0 * vnoise(q / 0.4 + 3.0) - 1.0)) * seam;
   }
   float nearMelt = live * smoothstep(0.05, 0.25, gape) * (1.0 - smoothstep(0.2, 4.0, beside)) * smoothstep(0.0, 0.06, beside) * (1.0 - rubble) * calm * (1.0 - heat.x);
   if (nearMelt > 0.0) {
