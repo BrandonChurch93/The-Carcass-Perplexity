@@ -92,15 +92,23 @@ float channelWide(float z) {
   return 5.0 + 2.5 * clamp((5.0 - z) / 15.0, 0.0, 1.0) + 14.0 * clamp((-5.0 - z) / 40.0, 0.0, 1.0);
 }
 
-// The vapour of the main shaft as a density in space: metres of path it takes to dim by 1/e, inverted. It has weight and form:
-//   it stands in the shaft as a haze that thickens downward under a heaped top, low on the east side, where the far wall and its ribs
-//   stand clear of it, and brimming on the west, where the wind takes it;
-//   on the top ride billows, rounded heaps of thick steam some metres through with clear air between, cut from the block of noise, which
-//   climbs and drifts: they well up and roll, and the low sun lights one side of each;
-//   a veil of torn wisps stands a few metres over the top and leans with the wind;
+// The vapour of the main shaft as a density in space: metres of path it takes to dim by 1/e, inverted. It is in separate masses with
+// clear air between them, so the dark of the shaft and its wall show through and the low sun gets in behind each:
+//   low in the shaft it lies in a layer with a heaped top, twenty metres down, in the shaft's own shade: the bottom is never seen;
+//   out of the layer stand three columns where it wells up, two on the west and one near the middle, each some metres through, made
+//   of billows that climb. They widen as they climb, lean with the wind once they clear the brim, and tear to wisps some metres over it;
 //   over the west lip it comes out and lies on the rock a metre or three deep, sliding down the wind and torn to shreds in thirty metres;
-//   the breath lifts the whole top over the brim as a dome and lets it down again.
+//   the breath lifts the layer and the columns and thickens them, and lets them down again.
 // fine 1 reads the small billows too (the march); 0 does not (the taps toward the sun). t is the distance from the lens.
+float column(vec3 p, vec2 foot, float wide, float head, float n) {
+  // The axis wanders a little with height and leans down the wind over the brim.
+  vec2 axis = foot + WINDV * (0.55 * max(p.y + 2.0, 0.0)) + 2.0 * vec2(sin(0.21 * p.y + foot.x), cos(0.17 * p.y + foot.y));
+  vec2 d = p.xz - axis;
+  float w = wide * (1.0 + 0.022 * (p.y + 40.0));
+  // Billows: the edge of the column is where the noise says, not a tube.
+  float shape = exp(-dot(d, d) / (w * w)) + 0.9 * (n - 0.5);
+  return smoothstep(0.42, 0.62, shape) * smoothstep(head, head - 7.0, p.y + 5.0 * (n - 0.5));
+}
 float vapourRho(vec3 p, float ground, float fine, float t) {
   float r = length(p.xz);
   float b = atan(p.x, -p.z);
@@ -108,40 +116,37 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float out0 = r - rim;
   float da = b + 1.2;
   float way = exp(-da * da / 0.4);
-  float west = smoothstep(6.0, -24.0, p.x + 0.4 * p.z);
   float surge = uBreath.y * uShow.w;
   float apron = uBreath.z * uShow.w;
-  // It rises at a walk and drifts with the wind: steam is never still, and its small billows turn over faster than its heaps.
-  vec3 q = p - vec3(WINDV.x * 0.9, 1.2, WINDV.y * 0.9) * uTime;
-  vec4 n0 = textureLod(tNoise, q.xzy / 31.0, 0.0);
+  // It climbs at a walk and drifts a little with the wind: heavy steam, whose small billows turn over only a little faster than its heaps.
+  vec3 q = p - vec3(WINDV.x * 0.4, 0.85, WINDV.y * 0.4) * uTime;
+  vec4 n0 = textureLod(tNoise, q.xzy / 27.0, 0.0);
   float big = n0.r;
   float small = 0.5;
-  if (fine > 0.5) small = textureLod(tNoise, (q.xzy - vec3(WINDV.x, WINDV.y, 1.0) * (0.8 * uTime)) / 9.7 + 0.31, 0.0).b;
+  if (fine > 0.5) small = textureLod(tNoise, (q.xzy - vec3(WINDV.x, WINDV.y, 1.0) * (0.3 * uTime)) / 8.3 + 0.31, 0.0).b;
+  float n = 0.62 * big + 0.38 * small;
 
-  // In the shaft: the heaped top. One high heap stands where it wells up, west of the middle.
-  vec2 well = p.xz - vec2(-15.0, -6.0);
-  float top = uBreath.x + 1.0 + 9.0 * west + 4.5 * exp(-dot(well, well) / 110.0) + 12.0 * (big - 0.45) + 3.0 * (small - 0.5)
-    + surge * (15.0 + 6.0 * smoothstep(rim, 4.0, r) + 6.0 * (big - 0.45));
+  // The layer low in the shaft, heaped.
+  float top = uBreath.x - 9.0 + 9.0 * (big - 0.45) + 3.0 * (small - 0.5) + 7.0 * surge;
   float under = top - p.y;
+  float rho = (0.012 + 0.05 * smoothstep(0.0, 14.0, under)) * smoothstep(0.0, 2.5 + 2.5 * n0.g, under);
+  // The columns.
+  float lift = 9.0 * surge;
+  float cols = column(p, vec2(-19.0, -9.0), 5.5, 11.0 + lift, n) + column(p, vec2(-13.0, 10.0), 4.5, 6.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 5.0, -4.0 + 1.5 * lift, n);
+  rho = max(rho, (0.1 + 0.07 * surge) * min(cols, 1.0));
+  // Over the brim the columns' heads are torn: thinner the higher.
+  rho *= mix(1.0, 0.45, smoothstep(1.0, 9.0, p.y));
   // Inside the wall; over the brim it leans out on the west, and at the breath all round.
-  float inside = smoothstep(0.6, -1.2, out0 - smoothstep(0.0, 3.0, p.y) * (3.0 * way + 5.0 * surge));
-  // Under the top it is a haze that thickens with depth: the far wall and its ribs show through it, and the bottom of the shaft does not.
-  float body = (0.002 + 0.007 * smoothstep(2.0, 28.0, under) + 0.05 * surge * smoothstep(0.0, 6.0, under)) * smoothstep(0.0, 3.0 + 3.0 * n0.g, under);
-  // On the top ride the billows: rounded heaps of thick steam with clear air between, most of them on the west, each some metres through.
-  float puff = smoothstep(0.53, 0.64, 0.62 * big + 0.38 * small + 0.1 * west - 0.04) * smoothstep(-5.0 - 4.0 * west, 0.0, under) * smoothstep(16.0, 3.0, under);
-  body += (0.15 + 0.05 * surge) * puff * (0.12 + 0.88 * west);
-  // The veil over it: wisps torn off the top, gone a few metres up.
-  float wisp = (0.02 + 0.03 * surge) * exp(min(under, 0.0) / (2.5 + 3.0 * way)) * smoothstep(0.5, 0.78, 0.55 * n0.a + 0.45 * small + 0.2 * way) * step(under, 0.3);
-  float rho = inside * (body + wisp);
+  rho *= smoothstep(0.6, -1.2, out0 - smoothstep(0.0, 3.0, p.y) * (7.0 * way + 5.0 * surge));
 
   // On the rock by the west lip: a layer with its own top, thick at the brim and torn into shreds as it slides off down the wind.
   float foot = max(ground, SEA_Y);
   float gone = max(out0, 0.0) / (16.0 + 14.0 * apron + 8.0 * surge);
   float tall = (3.2 + 1.6 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
   float lies = smoothstep(0.0, 0.5 + 0.5 * tall, foot + tall - p.y) * smoothstep(-2.5, 0.5, out0) * step(foot - 0.3, p.y);
-  float shred = smoothstep(0.2 + 0.45 * (1.0 - exp(-gone)), 0.62 + 0.25 * (1.0 - exp(-gone)), 0.55 * big + 0.45 * small + 0.2 * exp(-gone));
+  float shred = smoothstep(0.34 + 0.3 * (1.0 - exp(-gone)), 0.62 + 0.25 * (1.0 - exp(-gone)), 0.55 * big + 0.45 * small + 0.2 * exp(-gone));
   // Never a wash on the lens: within a few metres of the camera the layer on the rock is not there.
-  float pour = (0.075 + 0.04 * apron + 0.05 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
+  float pour = (0.05 + 0.04 * apron + 0.05 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
   return max(rho, pour) * uShow.z;
 }
 
@@ -196,7 +201,7 @@ void main() {
   // (nothing in it is smaller than two steps) that they do not band.
   vec2 middle = vec2(-9.0, -3.0);
   float drum = 47.0;
-  float roof = 7.5 + 21.0 * uBreath.y * uShow.w + 2.0 * uBreath.z * uShow.w;
+  float roof = 12.0 + 10.0 * uBreath.y * uShow.w;
   if (uShow.z > 0.5) {
     float t0 = 0.0;
     float t1 = far;
@@ -236,9 +241,9 @@ void main() {
         float roofed = exp(-14.0 * vapourRho(p + vec3(0.0, 3.5, 0.0), land.r, 0.0, t));
         float sun = sunSeen(land, p.y) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead.
-        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 50.0, 0.45, 1.0);
-        vec3 light = vec3(0.17, 0.173, 0.18) * sunk * (0.3 + 0.7 * roofed)
-          + mix(uSunColour, vec3(2.2), 0.45) * (sun * (0.26 * min(phase, 1.25) * exp(-1.3 * shade) + 0.03 * exp(-0.22 * shade)));
+        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 34.0, 0.3, 1.0);
+        vec3 light = vec3(0.16, 0.158, 0.16) * sunk * sunk * (0.3 + 0.7 * roofed)
+          + mix(uSunColour, vec3(2.2), 0.3) * (sun * (0.3 * min(phase, 1.4) * exp(-1.1 * shade) + 0.035 * exp(-0.2 * shade)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
         through *= gone;

@@ -175,6 +175,12 @@ uniform sampler2D tPlate;
 uniform sampler2D tNear;
 uniform sampler2D tNearS;
 uniform vec4 uNear;
+uniform sampler2D tPad;
+uniform sampler2D tPadH;
+uniform sampler2D tPeb;
+uniform sampler2D tPebN;
+// The dry ground (mat/drypad, one square of it laid PAD_SIDE metres wide where the dead one lies) and the shingle (mat/pebbles, a tile).
+const float PAD_SIDE = 8.5;
 // The rim of the main shaft, as land.ts has it (rimRadius).
 float rimBump(float b, float centre, float width) {
   float d = mod(abs(b - centre), 6.2831853);
@@ -193,7 +199,7 @@ vec3 shelfShade(vec4 land, vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, flo
   float nl = max(dot(n, uSunDir), 0.0);
   vec3 sky = skyIrradiance(n);
   vec3 around = mix(uSunColour, vec3(dot(uSunColour, vec3(0.3, 0.5, 0.2))), 0.45) * (0.2 * (0.5 + 0.5 * dot(n, normalize(vec3(uSunDir.x, 0.6, uSunDir.z)))) * mix(0.75, 1.0, cloud));
-  vec3 e = (1.15 * sky + around) * open + uSunColour * (3.14159 * 0.5 * nl * sun);
+  vec3 e = (1.15 * sky + around) * open + uSunColour * (3.14159 * 0.5 * min(nl, 0.3) * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
@@ -263,6 +269,36 @@ void main() {
   float over = field.r - (${SEA.toFixed(3)});
   float film = slope.b;
   float damp = clamp(1.0 - smoothstep(0.06, 0.55, over + 0.3 * (a.a - 0.5)) + 0.5 * hollow * smoothstep(0.5, 0.75, a.r) + film, 0.0, 1.0);
+  // The dry ground where the dead one lies: one picture of warm gritty rock with its own relief, laid once, its stain under the body.
+  // It stands clear of the tide and has dried in the wind: no damp, no sheen. Its border is ragged, and shingle lies along it.
+  vec2 pu = (p.xz - vec2(-27.0, 23.3)) / PAD_SIDE + 0.5;
+  vec2 pb = min(pu, 1.0 - pu);
+  float sq = min(pb.x, pb.y) + 0.1 * (a.r - 0.5);
+  float inPad = smoothstep(0.0, 0.16, sq) * smoothstep(0.15, 0.4, over) * (1.0 - steep) * (1.0 - film);
+  vec3 padColour = vec3(0.0);
+  float padHigh = 0.5;
+  if (inPad > 0.0) {
+    padColour = texture2D(tPad, pu).rgb;
+    padHigh = texture2D(tPadH, pu).r;
+    float e = 1.0 / 400.0;
+    vec2 fall = vec2(texture2D(tPadH, pu + vec2(e, 0.0)).r, texture2D(tPadH, pu + vec2(0.0, e)).r) - padHigh;
+    lean = mix(lean, fall * 11.0, inPad);
+    damp *= 1.0 - inPad;
+  }
+  // Shingle: rounded pale stones a thumb to a fist through, lying in patches on the dry rock, along the border of the dry ground, and
+  // nowhere near the tide. Past thirty metres it is not read.
+  float ring = smoothstep(-0.22, -0.03, sq) * smoothstep(0.22, 0.04, sq);
+  float shingle = max(ring * smoothstep(0.35, 0.6, a.a), smoothstep(0.66, 0.76, a.r + 0.15 * hollow)) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * smoothstep(34.0, 20.0, dist);
+  vec3 pebColour = vec3(0.0);
+  if (shingle > 0.0) {
+    vec4 pn = textureGrad(tPebN, p.xz / 1.5 + 0.21, dpx / 1.5, dpy / 1.5);
+    // Its edge is stones, not a fade: the high stones of the tile stand out past it.
+    shingle = smoothstep(0.0, 0.25, shingle - 0.75 * (1.0 - pn.b));
+    pebColour = textureGrad(tPeb, p.xz / 1.5 + 0.21, dpx / 1.5, dpy / 1.5).rgb;
+    lean = mix(lean, (pn.rg - 0.5) * 1.1, shingle);
+    damp *= 1.0 - shingle;
+    inPad *= 1.0 - shingle;
+  }
   n = normalize(n - vec3(lean.x, 0.0, lean.y) * (1.0 - film));
   n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.97 * film));
 
@@ -303,7 +339,9 @@ void main() {
   // Pale dust lies in the hollows of the dry plate's grain.
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.55 * dryPad * smoothstep(0.5, 0.22, mn.b) * near);
   float stain = exp(-dot(fromPad - vec2(0.3, 0.7), fromPad - vec2(0.3, 0.7)) / 1.1) * smoothstep(0.2, 0.75, a.r + 0.6 * (1.0 - mn.b));
-  albedo = mix(albedo, albedo * vec3(0.5, 0.33, 0.28), 0.6 * stain);
+  albedo = mix(albedo, albedo * vec3(0.5, 0.33, 0.28), 0.6 * stain * (1.0 - 0.5 * inPad));
+  albedo = mix(albedo, padColour * (0.8 + 0.3 * padHigh), inPad);
+  albedo = mix(albedo, pebColour, shingle);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
   // From the water's edge: an ankle's depth of bed with the rock's own sheen on it was a beach of wet sand along both banks.
   float under = smoothstep(0.01, -0.05, over);
@@ -312,7 +350,7 @@ void main() {
   albedo = mix(albedo, vec3(0.035, 0.045, 0.03), 0.85 * film);
   float rough = mix(mix(mix(0.9, 0.36, damp), 0.04, film), 0.95, under);
   // The shade of a hollow, of the gap between two plates, of the gap between two stones.
-  float occ = mix(0.4, 1.0, smoothstep(0.2, 0.52, field.b)) * vOcc;
+  float occ = mix(0.4, 1.0, smoothstep(0.2, 0.52, field.b)) * vOcc * mix(1.0, 0.55 + 0.45 * smoothstep(0.1, 0.55, padHigh), inPad);
   // The sun: every edge and every stone throws its own shadow down the shelf, baked in the map at its own fineness.
   float lit = mix(1.0, smoothstep(-0.07, -0.006, field.r - field.g), inNear) * sunSeen(land, p.y);
   // The shade of the drifting fog banks dims the sun and its glare; it is not the land's shadow and does not move the shadow's height.
@@ -331,7 +369,7 @@ void main() {
   // And it lies near the tide: a plate that stands half a metre clear of it has dried in the wind.
   float dry = smoothstep(0.45, 1.0, over + 0.3 * (a.g - 0.5));
   // Under the tide the water has the sheen and the glare, not the bed.
-  float sheen = (1.0 - under) * max(damp, (1.0 - 0.8 * dry) * (0.1 + 0.4 * smoothstep(0.35, 0.75, a.r + 0.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0) * near)) * (1.0 - steep) * (1.0 - 0.6 * stone) * (1.0 - 0.7 * pit * close));
+  float sheen = (1.0 - under) * (1.0 - inPad * smoothstep(0.25, 0.5, padHigh)) * (1.0 - shingle) * max(damp, (1.0 - 0.8 * dry) * (0.1 + 0.4 * smoothstep(0.35, 0.75, a.r + 0.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0) * near)) * (1.0 - steep) * (1.0 - 0.6 * stone) * (1.0 - 0.7 * pit * close));
   // Rock is rough even wet: it never mirrors the sky whole as the pool does, or wet rock near the lens would stand pale as sand.
   // Near the lens the sheen is not a sheet: it lies in the lows of the grain and breaks on its highs, so wet rock is dark with bright points.
   float gloss = mix(1.0, smoothstep(0.62, 0.3, mn.b) * (1.0 - 0.8 * pit * close), mix(near, 0.0, film));
@@ -572,7 +610,14 @@ export interface RockKit {
   dispose(): void;
 }
 
-export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, shelf: Surface, plate: THREE.Texture, cliff: Surface, near: NearMap): RockKit {
+/** The dry ground of the shelf: the one square where the dead one lies (colour and height) and the shingle tile. */
+export interface DryGround {
+  pad: THREE.Texture;
+  padHeight: THREE.Texture;
+  pebbles: Surface;
+}
+
+export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, shelf: Surface, plate: THREE.Texture, cliff: Surface, near: NearMap, dry: DryGround): RockKit {
   const of = (s: Surface): Record<string, THREE.IUniform> => ({
     tMat: { value: s.colour },
     tMatN: { value: s.data },
@@ -587,7 +632,7 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
     return m;
   };
   return {
-    shelf: make(SHELF_FRAGMENT, { ...of(shelf), tPlate: { value: plate }, tNear: { value: near.texture }, tNearS: { value: near.slopes }, uNear: { value: near.rect } }),
+    shelf: make(SHELF_FRAGMENT, { ...of(shelf), tPlate: { value: plate }, tNear: { value: near.texture }, tNearS: { value: near.slopes }, uNear: { value: near.rect }, tPad: { value: dry.pad }, tPadH: { value: dry.padHeight }, tPeb: { value: dry.pebbles.colour }, tPebN: { value: dry.pebbles.data } }),
     cliff: make(CLIFF_FRAGMENT, of(cliff), THREE.DoubleSide),
     wall: (plate, relief, top, grain) =>
       make(
