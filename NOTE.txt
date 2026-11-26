@@ -1,5 +1,7 @@
-2026-11-26 13:52 UTC
-work at f4c3525 on HEAD
-v4 probes, rows at loop 150, 300 and 200: the two pale waders by the left cliff have walked and one has turned; the walk is a few pixels at 400 px; the bottom row still holds the file of waders, now taken out because it stood before the arch
-look-1.jpg = out/work/v4-walk.jpg
-look-2.jpg = out/work/v4-gust.jpg
+2026-11-26 14:34 UTC
+work at 02e19d3 on agent/film-loop
+v4 hand-back: seam sheet, 12 frames spread over the loop, walkers at loop 150 and 300 (walk of a few pixels at 400 px), loop 0 beside its difference to film 1241 times 8 (sparkle on the wet)
+look-1.jpg = out/work/sheets/loop-seam.png
+look-2.jpg = out/work/sheets/v4-spread.png
+look-3.jpg = out/work/v4-walk2.jpg
+look-4.jpg = out/work/probe/l0diff.jpg
