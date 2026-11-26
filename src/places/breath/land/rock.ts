@@ -246,8 +246,12 @@ void main() {
   rock = mix(rock, face, steep * (1.0 - stone));
   // A dark green-brown weed along the tide line and in the wet foot of the edges near it.
   float tide = smoothstep(0.5, 0.05, abs(over - 0.1)) * smoothstep(0.3, 0.6, a.b * 2.0 + 0.5 * (tone - 1.0)) + 0.5 * hollow * smoothstep(0.6, 0.15, over);
-  rock = mix(rock, vec3(0.045, 0.05, 0.028) * (0.6 + 0.8 * tone), 0.7 * clamp(tide, 0.0, 1.0));
-  vec3 albedo = rock * mix(1.0, 0.4, damp);
+  // On a plate's broken edge the weed is only a line at the water, and the wet face keeps its stone's colour: it is not a black wall.
+  rock = mix(rock, vec3(0.045, 0.05, 0.028) * (0.6 + 0.8 * tone), 0.7 * clamp(tide, 0.0, 1.0) * mix(1.0, smoothstep(0.3, 0.05, over), steep));
+  vec3 albedo = rock * mix(1.0, mix(0.4, 0.55, steep), damp);
+  // Where the dead one lies its stain has run into the rock: dark, a little red, in the lows of the grain.
+  float stain = exp(-dot(p.xz - vec2(-27.3, 22.6), p.xz - vec2(-27.3, 22.6)) / 3.5) * smoothstep(0.25, 0.7, a.r + 0.5 * (1.0 - mn.b));
+  albedo = mix(albedo, albedo * vec3(0.42, 0.26, 0.22), 0.8 * stain);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
   float under = smoothstep(-0.03, -0.22, over);
   albedo = mix(albedo, vec3(0.15, 0.27, 0.25) * clamp(tone * mark, 0.5, 1.4), 0.85 * under);
@@ -260,6 +264,8 @@ void main() {
   float lit = mix(1.0, smoothstep(-0.07, -0.006, field.r - field.g), inNear) * sunSeen(land, p.y);
   land.b = p.y + mix(0.35, 0.03, lit);
   vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ);
+  // A broken edge in its own shade is lit by the wet rock and the water at its foot.
+  colour += albedo * (uSkyHorizon * uFill + 0.25 * uGlowColour) * (0.3 * steep * vOcc);
   // Where it is wet the shelf mirrors the lit haze at the horizon, and in the glare path the wet grain throws the low sun back in points.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 5.0);
