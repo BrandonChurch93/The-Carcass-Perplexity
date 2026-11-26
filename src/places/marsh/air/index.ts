@@ -43,9 +43,9 @@ export function create(ctx: Context): Piece {
     return [node[0], node[1]];
   };
   const mist: THREE.Vector4[] = [
-    new THREE.Vector4(0, 0, POOL_R * 1.15, 0.45),
+    new THREE.Vector4(-2, -1, POOL_R * 0.8, 0.4),
     new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 12 - 5, HERO_DOME[1] + K1_DIR[1] * 12, 7, 0.6),
-    new THREE.Vector4(-6, -5, 7, 0.7),
+    new THREE.Vector4(-6, -5, 7, 0.45),
     new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),
     new THREE.Vector4(vein(11)[0], vein(11)[1], 12, 0.5),
     new THREE.Vector4(main[0] * 16, main[1] * 16, 11, 0.5),

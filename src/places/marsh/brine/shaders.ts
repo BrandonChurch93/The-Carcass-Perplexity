@@ -201,9 +201,9 @@ void main() {
   float f = 0.42 + 0.3 * sin(a * 2.0 + k * 9.0) + 0.26 * sin(a * 5.0 - k * 4.0) * sin(a + k) + 0.2 * sin(a * 9.0 + k * 3.0) + 0.12 * sin(a * 17.0 + k * 7.0);
   float finger = pow(clamp(f, 0.04, 1.0), 1.6);
   float h = position.y;
-  // The sheet leaves the rim at 2 m/s and leans outward as it climbs; it falls back under its own weight.
-  float up = sqrt(size / 0.4) * (2.1 * age - 4.9 * age * age) * (0.25 + 0.75 * finger);
-  float out_ = size * (0.85 + (1.1 + 1.6 * finger) * age * (0.3 + 0.7 * h * h));
+  // The sheet leaves the rim at 3 m/s and leans outward as it climbs; it falls back under its own weight.
+  float up = sqrt(size / 0.4) * (2.9 * age - 4.9 * age * age) * (0.3 + 0.7 * finger);
+  float out_ = size * (0.85 + (0.7 + 1.1 * finger) * age * (0.25 + 0.75 * h * h));
   float wob = 1.0 + 0.08 * sin(a * 7.0 + k * 5.0) + 0.05 * sin(a * 13.0 - k * 2.0);
   vec3 q = vec3(position.x * out_ * wob, max(up, 0.0) * h, position.z * out_ * wob);
   vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
@@ -224,22 +224,27 @@ uniform sampler2D tGrain;
 ${RIG_GLSL}
 
 void main() {
-  // The top of the sheet is torn into fingers and holes open in it as it stretches.
+  // The top of the sheet is torn into tongues, and holes open in it as it stretches.
   vec4 g = texture2D(tGrain, vec2(vLocal.x * 0.6 + vLife.y, vLocal.y * 0.7));
-  float torn = vLocal.y - (0.35 + 0.65 * vLocal.z) + (g.r - 0.5) * 0.7 + vLife.x * 0.9 * g.g;
+  float tip = 0.35 + 0.65 * vLocal.z;
+  float torn = vLocal.y - tip + (g.r - 0.5) * 0.45 + vLife.x * 0.7 * g.g;
   if (torn > 0.0 || vLife.x <= 0.0) discard;
   vec3 v = normalize(cameraPosition - vWorld);
-  vec3 n = normalize(vNormal);
-  if (dot(n, v) < 0.0) n = -n;
-  // A sheet of brine: dark where it is thick at the foot, clearer and pinker toward its torn edge, wet all over.
-  float edge = smoothstep(-0.35, 0.0, torn);
-  vec3 albedo = mix(vec3(0.06, 0.013, 0.011), vec3(0.19, 0.06, 0.053), edge * edge);
-  n = normalize(n + vec3(g.b - 0.5, (g.r - 0.5) * 0.6, g.a - 0.5) * 0.5);
+  vec3 radial = normalize(vNormal);
+  if (dot(radial, v) < 0.0) radial = -radial;
+  // The same thick liquid as the dome's skin, thrown: a film where it is stretched, a rolled lip where it ends (surface tension gathers
+  // the edge into a bead that looks up at the sky), dark and solid at the foot where it is still the pool.
+  float lip = smoothstep(-0.22, 0.0, torn);
+  float thick = clamp(1.0 - vLocal.y / tip, 0.0, 1.0);
+  vec3 n = normalize(mix(radial, vec3(0.0, 1.0, 0.0), 0.45 * lip * lip) + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.14);
+  vec3 albedo = mix(vec3(0.25, 0.055, 0.045), vec3(0.07, 0.01, 0.008), max(thick * 0.8, lip * 0.5));
   vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) / 3.14159);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  float window = pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 50.0);
-  lit += skyRadiance(r) * (0.015 + 0.12 * pow(1.0 - nv, 4.0) + window * 0.7);
-  gl_FragColor = vec4(rigOut(lit), 1.0);
+  float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
+  float window = 0.9 * smoothstep(0.988, 0.997, toward) + 0.06 * pow(toward, 30.0);
+  vec3 mirrored = skyRadiance(r) * (0.014 + 0.09 * pow(1.0 - nv, 5.0) + window * (1.0 - 0.85 * lip));
+  float cover = clamp(0.62 + 0.35 * thick + 0.4 * lip + 0.3 * pow(1.0 - nv, 2.0), 0.0, 0.97);
+  gl_FragColor = vec4((lit * cover + mirrored) * (1.0 - uSolo), cover);
 }`;

@@ -142,7 +142,10 @@ export function create(ctx: Context): Piece {
     thrown[i * 5 + 4] = throwRng.next();
   }
 
-  const crownMaterial = new THREE.ShaderMaterial({ vertexShader: CROWN_VERTEX, fragmentShader: CROWN_FRAGMENT, uniforms, side: THREE.DoubleSide, toneMapped: false });
+  const crownMaterial = new THREE.ShaderMaterial({
+    vertexShader: CROWN_VERTEX, fragmentShader: CROWN_FRAGMENT, uniforms, side: THREE.DoubleSide, toneMapped: false, transparent: true, depthWrite: false,
+    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+  });
   const tube = new THREE.CylinderGeometry(1, 1, 1, 72, 10, true).translate(0, 0.5, 0);
   const crownLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
   tube.setAttribute('aLife', crownLife);
@@ -181,7 +184,7 @@ export function create(ctx: Context): Piece {
       // The crown and the drops leave when the skin is half open.
       const flung = age >= 0 ? age - TEAR * 0.5 : -1;
       // The crown stands for a third of a second and is gone.
-      const crowned = flung >= 0 && flung < 0.55 * Math.sqrt(d.size / 0.4);
+      const crowned = flung >= 0 && flung < 0.59 * Math.sqrt(d.size / 0.4);
       m.makeScale(1, 1, 1).setPosition(d.x, 0, d.z);
       crownMesh.setMatrixAt(i, m);
       crownLife.setXYZW(i, crowned ? flung : 0, d.seed, d.size, 0);
