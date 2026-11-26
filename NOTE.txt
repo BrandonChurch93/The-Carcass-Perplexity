@@ -1,6 +1,7 @@
-2026-11-26 16:21 UTC
-work at d3cc332 on agent/spine-rock
-v2 in progress: 7418 hd review small, full-size crop g|h, 7015 before|after. Wrong: faces at full size are blotchy mottle, 7015 still close to a cone
-look-1.jpg = out/work/v2/h-7418-s.jpg
-look-2.jpg = out/work/v2/gh-crop.png
-look-3.jpg = out/work/v2/f-7015-pair.jpg
+2026-11-26 17:07 UTC
+work at d91b163 on agent/spine-rock
+v2 at d91b163: kites sheet, 7418 before|after hd review, 7418 full-size crop, 7015 before|after hd review. Wrong: 7015 still a tapered blade, snow thin on the ledges, flat faces between the ridges
+look-1.jpg = out/work/sheets/kites.png
+look-2.jpg = out/work/v2/show-7418-before-after.jpg
+look-3.jpg = out/work/v2/show-7418-crop.png
+look-4.jpg = out/work/v2/show-7015-before-after.jpg
