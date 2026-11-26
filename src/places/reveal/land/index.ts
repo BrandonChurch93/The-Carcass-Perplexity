@@ -414,12 +414,29 @@ void main() {
   // Below the top of the rise the body has not come together: the ranges are rock, grey brown, with snow on the highest crests
   // only, and the country between them is as light as they are, so what is seen is a land of ranges and plains and no figure.
   float unjoined = smoothstep(150.0, 320.0, uViewKm) * (1.0 - smoothstep(980.0, 1340.0, uViewKm)) * land * (1.0 - min(1.0, 1.4 * rust));
+  // (No range runs whole from the divide to the coast: each is broken where the low country climbs over it, into crests of
+  // uneven length with passes between, and the country that buries a span is forest or plain like the valley beside it.)
+  float buried = 0.0;
+  float eased = 0.0;
   if (unjoined > 0.0) {
+    vec2 over = xz + 46.0 * vec2(vnoise(xz / 74.0 + 3.0), vnoise(xz / 74.0 + 11.0));
+    // (Along a range, so that here and there a whole one is gone and the spacing is uneven; and across, so that crests end.)
+    float along = vnoise(over / vec2(52.0, 170.0) + 5.0);
+    float across = 0.6 * vnoise(over / 80.0 + 31.0) + 0.4 * vnoise(over / 33.0 + 21.0);
+    buried = max(smoothstep(0.44, 0.58, along), smoothstep(0.4, 0.54, across)) * smoothstep(-900.0, -760.0, xz.x) * unjoined;
+    // (And seen from that height under a sun a third of the way up, their relief is quiet: a lit side and a shaded side, no bars.)
+    eased = smoothstep(-900.0, -760.0, xz.x) * unjoined;
     float naturalLum = dot(natural, vec3(0.3, 0.55, 0.15));
-    vec3 rock = vec3(0.3, 0.27, 0.235) * (0.62 + 0.55 * naturalLum);
+    // (The map's own light and dark is the bars of the ribs: the rock here is read with most of it taken out.)
+    vec3 rock = vec3(0.3, 0.27, 0.235) * (0.62 + 0.55 * mix(naturalLum, 0.36, 0.78 * eased));
+    // (Range by range the rock is paler or darker, and one stands in forest.)
+    rock *= mix(vec3(0.5, 0.6, 0.5), vec3(1.08, 1.04, 1.0), smoothstep(0.3, 0.6, vnoise(over / vec2(60.0, 210.0) + 47.0)) * smoothstep(-900.0, -760.0, xz.x) + 1.0 - smoothstep(-900.0, -760.0, xz.x));
     // (The low country is no darker than the rock that stands in it: olive and tan, lit as the ranges are.)
     vec3 plain = mix(vec3(naturalLum), natural, 0.85) * vec3(0.92, 1.0, 0.96) * 0.7 + vec3(0.1, 0.105, 0.07);
-    vec3 unjoinedColour = mix(plain, rock, 0.85 * smoothstep(0.28, 0.6, height) * (1.0 - smoothstep(0.82, 0.95, height)));
+    // (Where the crests stand, the valleys between them are dry and nearly as light: high country, one mass, not stripes.)
+    plain = mix(plain, rock * vec3(0.86, 0.9, 0.84), 0.72 * eased);
+    plain = mix(plain, vec3(0.105, 0.125, 0.082) * (0.72 + 0.5 * across), buried);
+    vec3 unjoinedColour = mix(plain, rock, 0.85 * smoothstep(0.28, 0.6, height) * (1.0 - smoothstep(0.82, 0.95, height)) * (1.0 - buried));
     ground = mix(ground, 0.62 * unjoinedColour, 0.85 * unjoined);
   }
   float lowCountry = top * (1.0 - smoothstep(0.22, 0.5, height)) * (1.0 - min(1.0, 1.4 * rust));
@@ -438,7 +455,7 @@ void main() {
 
   // The chest round the Heart is old lava: a black crust between the ribs, which stand out of it pale.
   vec2 fromHeart = xz - uLava;
-  float crust = exp(-dot(fromHeart * vec2(0.75, 1.0), fromHeart * vec2(0.75, 1.0)) / 150000.0) * (1.0 - smoothstep(0.24, 0.5, height)) * land;
+  float crust = exp(-dot(fromHeart * vec2(0.75, 1.0), fromHeart * vec2(0.75, 1.0)) / 150000.0) * (1.0 - smoothstep(0.24, 0.5, height)) * land * (1.0 - 0.8 * eased);
   ground = mix(ground, mix(vec3(0.028, 0.031, 0.033), vec3(0.013, 0.043, 0.05), smoothstep(800.0, 1380.0, uViewKm)) * (0.5 + 2.2 * lum), min(1.0, 1.2 * crust));
   // The pan of the pelvis: salt, white under the sun, and the red brine that veins it. East of it the red runs out over the low ground
   // and into the sea, in streaks drawn along the fall of the land.
@@ -465,7 +482,7 @@ void main() {
   slope *= mix(0.25, 0.4, smoothstep(300.0, 1200.0, uViewKm)) * (1.0 - 0.5 * smoothstep(110.0, 240.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm))) * (1.0 - 0.6 * smoothstep(0.3, 0.62, height));
   // (Kind by kind: worn or cut, and darker or paler rock.)
   float cut = mix(1.0, mix(0.22, 1.2, smoothstep(0.25, 0.75, kind.r)), land * (1.0 - smoothstep(900.0, 1380.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm));
-  slope *= cut;
+  slope *= cut * (1.0 - 0.7 * buried) * (1.0 - 0.2 * eased);
   ground *= mix(vec3(1.0), mix(vec3(0.8, 0.86, 0.95), vec3(1.1, 1.04, 0.95), smoothstep(0.25, 0.75, kind.g)), land * smoothstep(30.0, 60.0, uViewKm) * (1.0 - smoothstep(600.0, 1300.0, uViewKm)));
   // Near the ground the country is seen in its great forms: whole mountainsides stand in the sun, warm, and whole valleys lie in
   // cool blue shade with haze in them, their small relief gone soft. (The height of the country at large, read toward and away from the sun.)
@@ -558,9 +575,10 @@ void main() {
   if (shadeIn > 0.0) shade = mix(1.0, cloudShade(real), shadeIn);
   // The ranges throw their shadows on the country and on the sea beside it: the baked horizon toward the sun is read against the
   // height of the sun here, so the shadows are short by day and grow as it goes down. Hollows see less of the sky than crests.
-  float castKm = bake.r * bake.r * 2.0 * RELIEF_DRAWN;
+  float castKm = bake.r * bake.r * 2.0 * RELIEF_DRAWN * (1.0 - 0.6 * buried) * (1.0 - 0.25 * eased);
   float sunTan = uSunDir.y / max(length(uSunDir.xz), 1e-3);
   float skyShare = clamp(0.5 + 1.3 * (bake.g - 0.5), 0.0, 1.0);
+  skyShare = mix(skyShare, 0.8, 0.5 * max(buried, 0.5 * eased));
   // The end of the day: the height of the sun here, and how far its light rakes (the relief stands out as it does under a low sun).
   float sunH = 0.0;
   float rake = 0.0;
