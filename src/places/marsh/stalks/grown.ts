@@ -170,6 +170,11 @@ void main() {
   vec3 rust = vec3(0.36, 0.15, 0.07);
   float rusty = smoothstep(0.3, 0.7, fbm(vec2(vUv.x * 3.0, vUv.y * 1.3) + seed * 5.0));
   albedo = mix(albedo, rust, clamp(pit * (0.35 + 0.55 * rusty) + 0.3 * rusty * (1.0 - crust) * smoothstep(0.3, 0.1, nh.b - 0.25), 0.0, 0.8) * (0.5 + 0.5 * min(age, 1.0)));
+  // And it runs down from a ledge: the bark under one is stained orange, in tongues, on the side the brine dries last.
+  float ledgeOver = texture2D(tBarkNh, uv + vec2(0.0, 0.04), 3.0).b;
+  float tongue = smoothstep(0.35, 0.75, fbm(vec2(vUv.x * 14.0, vUv.y * 1.6) + seed * 9.0));
+  float run = smoothstep(0.4, 0.56, ledgeOver) * (1.0 - 0.6 * crust) * (0.3 + 0.7 * tongue) * smoothstep(0.1, 0.5, rusty + 0.25);
+  albedo = mix(albedo, vec3(0.5, 0.19, 0.06), 0.8 * run * (1.0 - away));
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
@@ -294,7 +299,7 @@ void main() {
   float falls = step(fract(seed * 11.0), 0.4);
   float grown = mix(1.0, smoothstep(0.0, 0.5, cyc), falls);
   float since = max(cyc - 0.88, 0.0) * period * falls;
-  float size = (0.0016 + 0.002 * fract(seed * 17.0)) * grown * step(0.5, kept) * smoothstep(0.55, 0.9, open);
+  float size = (0.0024 + 0.0026 * fract(seed * 17.0)) * grown * step(0.5, kept) * smoothstep(0.55, 0.9, open);
   vec3 ball = position;
   ball.y = ball.y > 0.0 ? ball.y * 1.45 : ball.y;
   p += vec3(0.0, -0.75 * size - 4.9 * since * since, 0.0) + ball * size;
@@ -366,6 +371,11 @@ void main() {
   // The rib is darker than the blade, and the blade is ruled along its length.
   albedo *= (0.8 + 0.2 * smoothstep(0.0, 0.35, abs(u))) * (0.93 + 0.07 * sin(u * 11.0 + seed * 50.0));
   albedo = mix(albedo, mix(vec3(0.085, 0.042, 0.034), vec3(0.15, 0.085, 0.06), own), spent);
+  // Salt has dried on them in grains: along the edges and toward the ends, more on one blade than on the next.
+  float grainAt = floor(s * 140.0) + floor(u * 2.0 + 2.0) * 17.0;
+  float grain = fract(sin(grainAt * 12.9898 + seed * 78.233) * 43758.5453);
+  float salted = uWet * step(0.5, uWet) * smoothstep(0.25, 0.9, s) * smoothstep(0.3, 0.9, abs(u)) * step(1.0 - 0.3 * own, grain);
+  albedo = mix(albedo, vec3(0.5, 0.46, 0.45), 0.7 * salted);
   // Dark at the heart of the head, where the straps stand close, and under it.
   float occ = mix(0.3, 1.0, smoothstep(0.0, 0.75, vG.x)) * mix(1.0, 0.8, smoothstep(1.2, 2.4, vG.w));
   // Near the lens the straps are seen to be wet: the white sky lies along them.
@@ -514,13 +524,23 @@ export function matOf(list: Fronds, rng: Rng, ground: (x: number, z: number) => 
 export function plumeOf(list: Fronds, drops: Fronds, w: Wild, rng: Rng, length: number, comb: number): void {
   const { end, aim } = endOf(w);
   const n = w.kind === 1 ? 260 : w.kind === 3 ? 320 : 440;
-  for (let k = 0; k < n; k++) {
+  // Wet blades hold to each other: the plume is some tens of locks, each with its own way out, its own length and its own fall, with gaps
+  // between them, and a few blades that have left their lock and stray.
+  const locks: [number, number, number, number][] = [];
+  const lockCount = w.kind === 1 ? 14 : 30;
+  for (let k = 0; k < lockCount; k++) {
     const az = comb + rng.normal() * 1.15;
     const toward = Math.max(0, Math.cos(az - comb));
-    const leave = 0.08 + Math.abs(rng.normal()) * 0.3 + 0.3 * toward * rng.next();
-    const len = length * rng.range(0.5, 1.05) * (0.78 + 0.3 * toward);
-    const fall = rng.range(1.2, 2.5) + 0.6 * toward;
-    const half = rng.range(0.0055, 0.0105);
+    locks.push([az, 0.08 + Math.abs(rng.normal()) * 0.3 + 0.3 * toward * rng.next(), rng.range(0.45, 1.08) * (0.78 + 0.3 * toward), rng.range(1.2, 2.5) + 0.6 * toward]);
+  }
+  for (let k = 0; k < n; k++) {
+    const lock = locks[rng.int(locks.length)] as [number, number, number, number];
+    const stray = rng.next() < 0.12;
+    const az = lock[0] + rng.normal() * (stray ? 0.5 : 0.1);
+    const leave = Math.max(0.03, lock[1] + rng.normal() * (stray ? 0.2 : 0.05));
+    const len = length * lock[2] * (stray ? rng.range(0.5, 1.25) : rng.range(0.82, 1.06)) * (rng.next() < 0.08 ? rng.range(0.3, 0.6) : 1);
+    const fall = lock[3] + rng.normal() * (stray ? 0.5 : 0.14);
+    const half = rng.range(0.0045, 0.0095);
     const seed = rng.next();
     const from = w.R * 0.75 * Math.sqrt(rng.next());
     list.add(w, end, aim, az, leave, len, half, seed, fall, 0, 0, false, w.seed, from);

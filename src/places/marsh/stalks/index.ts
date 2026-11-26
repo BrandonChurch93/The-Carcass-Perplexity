@@ -18,7 +18,6 @@ const CRUST_SPAN: [number, number] = CRUST_SHOT ? [secondsInPlace(UNIT, CRUST_SH
 
 // STAGED by shot: in the wide shot the heads of the stalks seen far off are small drooping tufts on thin stems, six tenths of what they are from near,
 // as the approved wide picture has them.
-const OFF: number = 0;
 const SHOTS = shotsOf(UNIT);
 const SPANS = SHOTS.map((s) => [secondsInPlace(UNIT, s.first) - 0.004, secondsInPlace(UNIT, s.last) + 0.004] as [number, number]);
 const WIDE_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-01');
@@ -517,8 +516,6 @@ export function create(ctx: Context): Piece {
     closeFar.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 14, 8, 1), frondMesh(ctx, growth, plain, 5));
     group.add(closeSet, closeFar);
   }
-  if (OFF === 99) group.clear();
-  if (OFF === 98) wide.clear();
   ctx.scene.add(ctx.parts.built('stalks', group));
 
   // The insects: most round the plumes the camera of the colony looks through, some round the one that is stuck, some over the pool.
