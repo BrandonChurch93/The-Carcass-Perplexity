@@ -186,18 +186,20 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
     // The hide dried onto the frame in cords that run the length of the body and wind a little round it, as it twisted going down.
     const wind = a + 1.3 * along + 0.45 * Math.sin(s * 1.3 + 0.7) + 1.1 * (noise3(s * 0.4 + 9, dy, dz) - 0.5);
     // A few thick ropes of unequal girth, which wander, run into each other and part again.
-    const f1 = Math.abs(Math.sin(wind * 4.5 + 9.0 * noise3(s * 0.55 + 5, dy * 1.2, dz * 1.2) + 2.5 * noise3(s * 1.7 + 2, dy * 2.6, dz * 2.6)));
+    const f1 = Math.abs(Math.sin(wind * 10 + 3.2 * noise3(s * 0.55 + 5, dy * 1.2, dz * 1.2) + 1.6 * noise3(s * 1.7 + 2, dy * 2.6, dz * 2.6)));
     const f2 = Math.abs(Math.sin(wind * 13 + 6.5 * noise3(s * 1.1 + 5, dy * 2.3, dz * 2.3) + 2.2 * noise3(s * 3.1, dy * 5.0, dz * 5.0 + 3) + 1.5 * f1));
     // The wrinkles are deep in some places and gone in others.
     const wrinkled = 0.25 + 1.5 * smooth(0.3, 0.7, noise3(s * 0.9 + 31, dy * 1.9, dz * 1.9));
     furrow = Math.pow(1 - f1, 1.6);
     const full = Math.min(1, ring * 1.4);
-    r -= (0.17 * furrow * (0.4 + 1.2 * dry) + 0.008 * wrinkled * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
+    r -= (0.055 * furrow * (0.4 + 1.2 * dry) + 0.012 * wrinkled * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
     // The frame under it: ribs across the flank, the spine as a keel.
     const ribs = Math.pow(0.5 + 0.5 * Math.cos(s * 6.8 + 1.1 * Math.sin(a * 2 + s) + 2.0 * noise2(s * 0.9, dy * 1.3)), 3);
-    r += 0.03 * ribs * smooth(0.15, 0.75, Math.abs(dz)) * ring;
+    // Between the ribs the hide has fallen in, deeper on one flank than the other; each rib stands as a narrow ridge.
+    const flank = smooth(0.1, 0.6, Math.abs(dz)) * smooth(-0.9, -0.2, dy) * ring;
+    r += (0.085 * ribs - 0.075 * (1 - ribs) * (0.5 + noise3(s * 1.1 + 17, dy * 1.6, dz * 1.6))) * flank;
     const spine = Math.exp(-Math.pow(Math.min(a, Math.PI * 2 - a) / 0.13, 2));
-    r += 0.06 * spine * (0.6 + 0.4 * Math.cos(s * 11));
+    r += 0.085 * spine * (0.6 + 0.4 * Math.cos(s * 11));
     r += 0.045 * (noise3(s * 7, dy * 5, dz * 5) - 0.5) + 0.07 * (noise3(s * 2.6 + 13, dy * 3.2, dz * 3.2) - 0.5);
     // The hide on the ropes is cracked across, a hand to a forearm apart.
     r -= 0.035 * Math.pow(1 - Math.abs(2 * noise3(s * 4.6 + 40, dy * 6.5, dz * 6.5) - 1), 4) * Math.min(1, ring * 1.4);

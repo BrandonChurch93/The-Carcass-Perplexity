@@ -332,7 +332,8 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   for (let q = 0.5; q <= 4; q += 0.25) if (Math.abs((b.stride * q) / speed - bout) < Math.abs((b.stride * per) / speed - bout)) per = q;
   const period = (b.stride * per) / speed;
   // The one that shifts its weight rests while the long lens looks at the group.
-  const shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : phase;
+  // The two at the fall's foot are alive while the last shot looks: the larger lifts its tuft and starts off, the smaller is in mid walk.
+  const shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : index === 9 ? 1 - fract(26.3 / period) + rest / 2 : index === 10 ? 1.5 - fract(27.0 / period) : phase;
   const area = 1 - ramp;
   const gone = (u: number): number => ramp * (u * u * u - 0.5 * u * u * u * u);
   const ease = (f: number): number => {

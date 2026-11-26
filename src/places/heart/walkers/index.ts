@@ -24,7 +24,7 @@ const AWAY = Object.entries(STAGED_AWAY).map(([shot, who]) => away(shot, who));
 /** Seconds a puff of ash lasts after a pad comes down. */
 const PUFF_LIFE = 1.5;
 /** How thick the puffs are drawn. Nought until they have been seen to be right beside the pictures. */
-const PUFF_SHOWN = 0;
+const PUFF_SHOWN = 1;
 
 /** Discs of contact shade for each animal: four pads, the body, the tuft. */
 const DISCS = 6;
@@ -233,7 +233,7 @@ export function create(ctx: HeartContext): HeartPiece {
           const life = foot.age / PUFF_LIFE;
           const thick = life < 1 ? here * foot.hard * smooth(0, 0.07, life) * (1 - life) * (1 - life) : 0;
           (puffs[i * 4 + j] as THREE.Vector4).set(foot.x, 0.12, foot.z, Math.min(1, life));
-          (puffSize[i * 4 + j] as THREE.Vector4).set(b.padR * (1.8 + 3.6 * Math.sqrt(Math.min(1, life))), b.padR * (0.9 + 1.5 * Math.min(1, life)), 0.42 * thick * PUFF_SHOWN, i * 4 + j);
+          (puffSize[i * 4 + j] as THREE.Vector4).set(b.padR * (1.5 + 2.6 * Math.sqrt(Math.min(1, life))), b.padR * (1.3 + 2.0 * Math.min(1, life)), 1.2 * thick * PUFF_SHOWN, i * 4 + j);
           const off = Math.min(1, foot.lift / (1.2 * b.k));
           rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (2.0 + 1.6 * off), here * 0.9 * (1 - 0.75 * off));
         });
