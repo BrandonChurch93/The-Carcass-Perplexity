@@ -1,7 +1,7 @@
-2026-11-26 06:52 UTC
-work at ea48daa on agent/ribs-sea-3
-06:54 colony thinned and spaced, ribs-2 water darker with paws, drowned paler, bore wall with dark flat
-look-1.jpg = out/work/y.jpg
-look-2.jpg = out/work/c-ribs-2.jpg
-look-3.jpg = out/work/v-bore2.jpg
-look-4.jpg = out/work/c-ribs-1.jpg
+2026-11-26 07:15 UTC
+work at 14a7f07 on agent/ribs-sea-3
+07:17 version 2: compare ribs-4, native crops (colony, tuft, final tier bore), ribs-06 sheet, colony frame
+look-1.jpg = out/work/c-ribs-4.jpg
+look-2.jpg = out/work/v-native.jpg
+look-3.jpg = out/work/s-shot-ribs-06.jpg
+look-4.jpg = out/work/v-1546.jpg
