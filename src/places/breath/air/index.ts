@@ -62,9 +62,10 @@ export function create(ctx: Context): Piece {
     // A column that climbs, leans with the wind as it climbs and opens into a plume that trails off down the wind.
     // Far off it is a heap of steam over its pool, as broad as it is tall, and not a column to the top of the sky.
     const far = Math.hypot(x, z) > 450;
-    const rise = r * (2.6 + 3.2 * tall) * (far ? 0.52 : 1);
-    const lean: [number, number] = far ? [-0.2, 0.07] : [-0.4, 0.14];
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.3 + (far ? 0.95 : 0.6) * tall), rise * 0.58, r * (1.3 + (far ? 0.95 : 0.6) * tall)], lean, dense: (far ? 0.42 : 0.16) / r, repeat: r * 2.6, open: 0.62, climb: 4.5 + r * 0.2, sun: far ? 0.8 : 0.65 });
+    // A small vent near by is a low puff blown flat down the wind, white at its foot, as the approved pictures have it.
+    const rise = r * (2.6 + 3.2 * tall) * (far ? 0.52 : 0.62);
+    const lean: [number, number] = far ? [-0.2, 0.07] : [-1.0, 0.36];
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.3 + (far ? 0.95 : 0.6) * tall), rise * 0.58, r * (1.3 + (far ? 0.95 : 0.6) * tall)], lean, dense: (far ? 0.42 : 0.4) / r, repeat: r * (far ? 2.6 : 1.9), open: far ? 0.62 : 0.8, climb: 4.5 + r * 0.2, sun: far ? 0.8 : 0.65 });
     bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (2.4 + 1.6 * tall), rise * 0.3, r * (1.6 + 1.0 * tall)], lean: [-1.4, 0.5], dense: (far ? 0.008 : 0.022) / r, repeat: r * 4.0, open: 0.68, climb: 2.4, sun: 0.5 });
   }
   // The banks that lie out on the flats.
@@ -73,7 +74,7 @@ export function create(ctx: Context): Piece {
     [-1500, -2900, 900, 90, 600],
     [-3200, 300, 800, 60, 900],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0016, repeat: 300, open: 0.75, climb: 0.4, sun: 0.9 });
+    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0009, repeat: 300, open: 0.8, climb: 0.4, sun: 0.9 });
   }
   // The banks that lie at the foot of the far cliff, in front of it: heaped and torn, so that the cliff's foot is lost in fog and not in a level band.
   for (const [x, z, rx, ry, rz, turn] of [
@@ -82,7 +83,7 @@ export function create(ctx: Context): Piece {
     [2100, -1150, 520, 60, 230, 1.2],
     [150, -2700, 500, 45, 220, 0.1],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, 26, z], size: [rx, ry, rz], turn, dense: 0.0024, repeat: 460, open: 0.5, climb: 0.5, sun: 0.9 });
+    bodies.push({ part: 'fog', at: [x, 26, z], size: [rx, ry, rz], turn, dense: 0.0011, repeat: 460, open: 0.62, climb: 0.5, sun: 0.9 });
   }
 
   const vec4s = (): THREE.Vector4[] => Array.from({ length: MAX_BODIES }, () => new THREE.Vector4());

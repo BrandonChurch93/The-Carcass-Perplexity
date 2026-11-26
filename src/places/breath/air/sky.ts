@@ -63,7 +63,10 @@ vec4 farPicture(vec3 d) {
   vec3 air = skyRadiance(normalize(vec3(d.x, 0.03, d.z)));
   // It runs away to the left: its far end is kilometres farther than its near end, and paler by that much.
   float away = smoothstep(0.8, 0.28, uv.x);
-  lin = mix(lin, air, cliff * clamp(0.14 + 0.36 * away + 0.3 * foot + 1.6 * past, 0.0, 0.88));
+  // Its rock is dark and its snow white: the picture's own shade is kept deep, so the haze is what pales it and it does not stand flat.
+  float bright = dot(lin, vec3(0.2126, 0.7152, 0.0722));
+  lin *= mix(1.0, mix(0.66, 1.06, smoothstep(0.08, 0.5, bright)), cliff);
+  lin = mix(lin, air, cliff * clamp(0.07 + 0.36 * away + 0.22 * foot + 1.6 * past, 0.0, 0.88));
   return vec4(lin, w);
 }`;
 
