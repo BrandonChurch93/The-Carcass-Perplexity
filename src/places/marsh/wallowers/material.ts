@@ -164,7 +164,7 @@ void main() {
   cake *= 1.0 - damp;
   dust *= 1.0 - damp;
 
-  vec3 albedo = mix(vec3(0.088, 0.066, 0.05), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.5 + 0.5 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
+  vec3 albedo = mix(vec3(0.118, 0.083, 0.058), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.5 + 0.5 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
   albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.15);
   // Mud from the last wallow has dried on it in plates: pale where it is dry, and it has cracked off the tops of the folds.
   float caked = smoothstep(0.4, 0.58, fbm(vUv * vec2(2.3, 1.9) + seed * 7.0) + 0.12 * (1.0 - fold)) * (0.45 + 0.55 * smoothstep(0.25, 0.5, fbm(vUv * vec2(11.0, 9.0) + seed))) * (1.0 - mudded) * (1.0 - dead) * (1.0 - feeler) * (1.0 - damp);
@@ -202,7 +202,7 @@ void main() {
     crack = max((1.0 - smoothstep(0.008, 0.05, slab.x)) * flexed, 0.3 * (1.0 - smoothstep(0.015, 0.09, chip.x)) * smoothstep(0.5, 0.7, fbm(vUv * 3.0 + seed)));
     greyDry *= 0.92 + 0.16 * fract(slab.y * 7.31);
   }
-  greyDry = mix(greyDry, vec3(0.06, 0.04, 0.032), 0.7 * crack);
+  greyDry = mix(greyDry, vec3(0.06, 0.04, 0.032), 0.28 * crack);
   albedo = mix(albedo, mix(greyDry, greyWet, wet), smear * 0.92 * (1.0 - 0.7 * feeler));
   float split = mudded * crack * smear * (1.0 - wet) * (1.0 - feeler);
   albedo = mix(albedo, mud, soaked * 0.85);
@@ -214,7 +214,7 @@ void main() {
   rough = mix(rough, 0.5, feeler * (1.0 - soaked));
   // At a grazing look a rough wet hide does not mirror the sky as a clean rim.
   rough = mix(rough, 1.0, 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
-  float occ = vInfo.y * (1.0 - 0.5 * split) * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
+  float occ = vInfo.y * (1.0 - 0.22 * split) * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
   occ *= 1.0 - 0.55 * pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), 3.0);
   occ = mix(occ, vInfo.y * (0.75 + 0.25 * nhS.b) * mix(1.0, 0.3 + 0.7 * knob, dead), cake);
   // The mouth: a dark pit in the end of the muzzle.

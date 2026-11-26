@@ -31,19 +31,19 @@ Branch `agent/marsh-life`. Written at version 3, before the last checks. Folders
 - marsh-2: filaments are round worms without the pale strap base; stems are too fat and too clean; no second ring of dead brown fronds; insects are few and plain.
 - marsh-0: wallowers read as brown humps without legs at that size; stalks are sparse beside the picture; the dead want whiter crusts.
 - marsh-1: not worked on by me beyond what the stalks give it.
-- Motion: the walk is slow and small; the folds move with breath, head turn and a lifted leg, but I have not judged it in a held sheet; brine runs off the chin only as four drops.
-- Gate G10 fails on the place: two fresh loads of frame 5930 differ in 40 to 130 pixels. I showed it is not in these folders (it still differs with only land, brine and air built). Told the lead.
+- Motion: judged in the marsh-04 sheet after round 11. Heads now lift and look round and the walk is larger, but the trunk still reads stiff from behind, the skin does not slide over the shoulder, and the brine answers a foot only with a ring; it runs off the chin as four drops.
+- Gate G10 failed on the place until 00:07 UTC (two fresh loads of frame 5930 differed in 40 to 130 pixels). It was the brine reading its sky patch after a discard; the lead fixed it in 3f978bd, merged here, and G10 passes. Lesson for any shader that discards: read textures with a given level after it.
 
 ## Staged by shot
 
-Nothing. No call to `stagedSeconds()`. Everything is one continuous function of the place's seconds.
+No call to `stagedSeconds()`. One thing is timed to a shot and you should know it: `LOOKS` in `wallowers/index.ts` sets when the three animals by the marsh-3 lens have their heads up (10.4, 9.5 and 11.3 s of the place, again every 8 s), so that in marsh-04 they are up at the start, down in the mud at the key as in the approved picture, and two lift again before the cut. All else is one continuous function of the seconds.
 
 TEMPORARY constants (marked in the code): stalk clumping and the four stalks moved for marsh-3 in `stalks/index.ts`; animals nearer than 26 m at 0.6 size in `wallowers/index.ts`; the marsh-4 lens position for frost density in `dead/index.ts`.
 
 ## Cost, seconds a sample at 3840 x 2160, key marsh-0, draft, above the empty frame
 
-- stalks 1.30, wallowers 0.84, dead 0.82, insects 0.17, fliers 0.00: 3.13 s in all at version 3 (aim 2.5). Whole frame 9.56 s, empty frame 1.80 s.
-- The same tool gave 1.11, 0.63, 0.57, 0.04, 0.00 (2.35 s) forty minutes before, with 520 close filaments and my own hide tile. The tool's numbers move by 0.1 to 0.2 s between runs on this machine.
+- stalks 1.33, dead 0.68, wallowers 0.64, insects 0.09, fliers 0.00: 2.74 s in all at version 3 as handed back (aim 2.5). Whole frame 11.00 s with the lead at 3f978bd, empty frame 1.80 s.
+- The same tool gave 1.30, 0.82, 0.84, 0.17 (3.13 s) half an hour before, with 170 locks on the first animal, and 2.35 s before the 800 close filaments. Its numbers move by 0.1 to 0.2 s between runs on this machine.
 - Measured with `npm run -s cost -- --key marsh-0 --format uhd --tier draft --parts wallowers stalks dead insects fliers`, one sample.
 
 Dearer and cheaper sets kept behind constants: `PLUME_CLOSE / PLUME_NEAR / PLUME_FAR` in `stalks/index.ts` (800 / 130 / 30 now; 800 / 200 / 44 looks fuller in marsh-0 and costs about 0.5 s more); `FROST_NEAR / FROST_FAR` in `dead/index.ts` (2400 / 600 now; all at 2600 costs about 0.3 s more).
@@ -57,3 +57,13 @@ Dearer and cheaper sets kept behind constants: `PLUME_CLOSE / PLUME_NEAR / PLUME
 5. Plume filaments as flat straps with a pale base, in locks that cling, a ring of dead ones.
 6. Stems: `mat/bark.jpg` laid with the collars on my nodes, thinner tubes.
 7. Fliers and insects: more of them, wing beat that reads at 60 frames a second.
+
+## Round 11 (judged version 2; this is what version 3 did about my five points)
+
+1. The wallowers must live: partly closed. Every animal lifts its head 0.4 rad and looks round every 8 s (`LOOK_EVERY`, `Plan.look` in `animal.ts`), breath is 6 percent of the chest (was 2.8) at about 3.7 s, roll, shift and foot lift are half as large again. Seen in the marsh-04 sheet. Not reached: skin sliding, fringe that lags, the brine pushed by a leg.
+2. Bodies: partly closed. The dark cuff at the leg root is gone (leg occlusion 0.86 at the top, root fold 0.3), the first animal has 70 short locks in place of 170 long ones, the hide is the Builder's tile with deep folds and is a third lighter. Not reached: an elbow, drips that hang, mud staining beyond the wet line.
+3. Stalks: partly closed. Close plumes are 800 thin filaments spread all round. Not reached: curved stems (they lean but are straight), collars with thickness, a meniscus at each foot, shutter blur on the fronds (they still show copies at marsh-2).
+4. The stuck one: not closed. The dark net over the whole body is gone at rest and the flat hair strips are cut to sparse ropes, but when it heaves (marsh-05, from 19 s) a net of dark scales still shows on the neck and shoulder. I cut `crack` in `material.ts` to 0.28 and it did not change, so the net comes from somewhere else: look at `skinHeight` with `mudded` and at the `lumps` gain in the pose before anything else. Not reached: a wet contact line and ripples where it lies in the mud.
+5. Insects: not reached. They are as in version 2.
+
+Checks at hand-back: `tsc` and the build are clean, G10 passes, G8 has no line for the marsh. `npm run determinism` fails at film frame 1241, which is not the marsh (the marsh begins at 5618); it passed here at 00:08 UTC and failed after I merged main fe1a8c4. From 00:09 UTC this machine could not push to origin (no credential), so version 3 went to the Builder as a git bundle.

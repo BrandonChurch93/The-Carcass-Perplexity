@@ -214,7 +214,7 @@ export class Animal {
           const near = Math.exp(-(d * d) / 0.4);
           const r3 = ridge(d / 0.17 + 0.6 * wob, 0.55);
           sleeve += 0.08 * near * (r3 - 0.62);
-          fold = Math.min(fold, 1 - 0.55 * near * (1 - r3));
+          fold = Math.min(fold, 1 - 0.3 * near * (1 - r3));
           // The haunch and the shoulder stand out over the leg.
           sleeve += 0.11 * Math.exp(-((along - lx) ** 2) / 0.3) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
         }
@@ -268,7 +268,7 @@ export class Animal {
           const deep = (1 - smooth(0.2, 0.75, u)) * 0.8 + 0.5 * Math.exp(-(((u - 0.5) / 0.08) ** 2));
           const toes = 0.1 * Math.cos(a * 4 + l) * smooth(0.72, 0.92, u);
           this.legFold[(l * LEG_RINGS + i) * LEG_SIDES + (j % LEG_SIDES)] = 1 + 0.06 * deep * (r - 0.62) + toes;
-          skin.describe(t, i, j, u * 1.1 * k, (j / LEG_SIDES) * TAU * 0.3 * k, b.salt, (0.68 + 0.32 * smooth(0.1, 0.6, u)) * (0.5 + 0.5 * smooth(0, 0.6, 1 - deep * (1 - r))), legRadius(u) * k, seed + 0.13 * (l + 1), 1, u);
+          skin.describe(t, i, j, u * 1.1 * k, (j / LEG_SIDES) * TAU * 0.3 * k, b.salt, (0.86 + 0.14 * smooth(0.1, 0.6, u)) * (0.5 + 0.5 * smooth(0, 0.6, 1 - deep * (1 - r))), legRadius(u) * k, seed + 0.13 * (l + 1), 1, u);
         }
       }
     }
@@ -282,7 +282,7 @@ export class Animal {
       // Those that reach forward stand at the front of the lip, those that hang stand behind them: a fan when seen from the side.
       const ring = BODY_RINGS - 3 - Math.round((1 - reach) * 7) - Math.floor(3 * Math.abs(u - 0.5));
       const length = k * (0.34 + 0.5 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
-      const radius = k * (0.019 + 0.009 * cell(f, 3, sd)) * (1 + 0.2 * young);
+      const radius = k * (0.027 + 0.011 * cell(f, 3, sd)) * (1 + 0.2 * young);
       this.feelerAt.push({ ring, angle, length, radius, lean: (u - 0.5) * 2, reach });
       for (let i = 0; i < FEELER_RINGS; i++) {
         const v = i / (FEELER_RINGS - 1);
@@ -375,7 +375,7 @@ export class Animal {
       ringAxes.set([nx, ny, nz, bx, by, bz], i * 6);
       const s = this.s[i];
       const chest = bell(0.12, 0.66, s);
-      const breathe = 1 + 0.028 * d.breath * chest;
+      const breathe = 1 + 0.06 * d.breath * chest;
       const fallen = d.cave > 0 ? 1 - d.cave * 0.55 * lump(s * 9, this.b.seed, 5) * chest : 1;
       const hh = this.half[i * 2] * d.squash * breathe * fallen;
       const hw = this.half[i * 2 + 1] * (1 + 0.5 * (1 - d.squash)) * breathe;
@@ -589,12 +589,16 @@ export interface Plan {
   root: number;
   /** How far the head hangs, radians. */
   hang: number;
+  /** The second at which it has its head up and looks round; it does so again every LOOK_EVERY seconds. */
+  look: number;
 }
 
 /** The share of a cycle a foot is down. */
 const DUTY = 0.8;
 /** LH, LF, RH, RF: the hind foot of a side goes first and the fore foot of that side follows it. */
 const ORDER = [0, 0.22, 0.5, 0.72];
+/** Seconds from one lift of the head to the next. */
+const LOOK_EVERY = 8;
 
 /** The walk and the rooting of one of the herd at `seconds`: the weight goes over the feet that stay down before a foot is lifted. */
 export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
@@ -619,7 +623,7 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
       const e = u * u * (3 - 2 * u);
       x = stride * (-0.5 + e);
       // It drags out of the mud, hangs, and is set down: slow up, quicker down.
-      y = 0.2 * k * Math.pow(Math.sin(Math.PI * Math.pow(u, 0.8)), 1.5);
+      y = 0.27 * k * Math.pow(Math.sin(Math.PI * Math.pow(u, 0.8)), 1.5);
       liftSum += Math.sin(Math.PI * u);
       if (lx > 0) front += Math.sin(Math.PI * u) * side;
     }
@@ -630,22 +634,26 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
   // The left pair swings about 0.79 of the cycle and the right pair about 0.29: the trunk is over the other side a tenth of a cycle before.
   const lean = Math.cos(TAU * (c - 0.69));
   const walking = clamp(plan.speed / 0.1);
-  out.shift = 0.13 * k * lean * walking;
-  out.roll = 0.045 * lean * walking - 0.03 * front;
+  out.shift = 0.17 * k * lean * walking;
+  out.roll = 0.07 * lean * walking - 0.03 * front;
   out.sway = -0.09 * k * Math.cos(TAU * (c - 0.8)) * walking;
   out.bend = 0.05 * Math.sin(TAU * (c - 0.1)) * walking;
   // Rooting: a shove into the mud and a slower drawing back, the whole trunk behind it.
   const rootRate = 0.31 + 0.11 * (b.seed - Math.floor(b.seed));
   const rc = seconds * rootRate + b.seed * 7.3;
   const rp = rc - Math.floor(rc);
-  const shove = (rp < 0.35 ? smooth(0, 0.35, rp) : 1 - smooth(0.35, 1, rp)) * plan.root;
+  // Now and then it stops rooting, lifts its head out of the mud and looks round, and the brine runs off its chin.
+  const lc = (seconds - plan.look) / LOOK_EVERY;
+  const lp = (lc - Math.floor(lc + 0.5)) * LOOK_EVERY;
+  const up = smooth(-3.4, -2.2, lp) * (1 - smooth(0.6, 2.0, lp));
+  const shove = (rp < 0.35 ? smooth(0, 0.35, rp) : 1 - smooth(0.35, 1, rp)) * plan.root * (1 - up);
   out.surge = 0.11 * k * shove;
   out.pitch = 0.035 * shove + 0.012 * liftSum * 0;
   out.bob = -0.02 * k * shove - 0.012 * k * liftSum;
-  out.headPitch = plan.hang + 0.1 * shove + 0.03 * Math.sin(seconds * 1.3 + b.seed * 5);
+  out.headPitch = plan.hang + 0.1 * shove - 0.4 * up + 0.04 * Math.sin(seconds * 1.3 + b.seed * 5);
   // The head sweeps the mud from side to side, slowly, and not evenly.
-  out.headYaw = plan.root * (0.3 * Math.sin(seconds * 0.52 + b.seed * 11) + 0.12 * Math.sin(seconds * 1.17 + b.seed * 3));
-  out.breath = Math.sin(seconds * (1.05 + 0.3 * Math.sin(b.seed * 17)) + b.seed * 9);
+  out.headYaw = plan.root * (1 - up) * (0.3 * Math.sin(seconds * 0.52 + b.seed * 11) + 0.12 * Math.sin(seconds * 1.17 + b.seed * 3)) + up * 0.42 * Math.sin(seconds * 0.8 + b.seed * 4);
+  out.breath = Math.sin(seconds * (1.7 + 0.35 * Math.sin(b.seed * 17)) + b.seed * 9);
   out.squash = 1;
   out.cave = 0;
   out.splay = 0.55 + 0.25 * shove;
