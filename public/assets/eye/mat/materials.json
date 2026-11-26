@@ -9,7 +9,7 @@
     "skyWidth": 2048,
     "skyQuality": 94
   },
-  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of a tile, or the whole of a plate, stands for (0 for a far backplate); relief names the grey height picture of a plate, cover the grey picture of where its subject is",
   "materials": [
     {
       "name": "cliff",
@@ -66,6 +66,99 @@
       "kind": "sky",
       "width": 1536,
       "height": 1024
+    },
+    {
+      "name": "far",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "screeplate",
+      "kind": "plate",
+      "metres": 24,
+      "width": 1671,
+      "height": 941,
+      "relief": "screeplate-h.png"
+    },
+    {
+      "name": "face",
+      "kind": "plate",
+      "metres": 360,
+      "width": 1536,
+      "height": 1024,
+      "relief": "face-h.png"
+    },
+    {
+      "name": "far-low",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "far-long",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "drinker-down",
+      "kind": "plate",
+      "metres": 2.6,
+      "width": 1536,
+      "height": 1024,
+      "relief": "drinker-down-h.png"
+    },
+    {
+      "name": "drinker-up",
+      "kind": "plate",
+      "metres": 2.6,
+      "width": 1448,
+      "height": 1086,
+      "relief": "drinker-up-h.png"
+    },
+    {
+      "name": "drinker-back",
+      "kind": "plate",
+      "metres": 2.6,
+      "width": 1024,
+      "height": 1536,
+      "relief": "drinker-back-h.png"
+    },
+    {
+      "name": "calf",
+      "kind": "plate",
+      "metres": 1.4,
+      "width": 1448,
+      "height": 1086,
+      "relief": "calf-h.png"
+    },
+    {
+      "name": "matplate",
+      "kind": "plate",
+      "metres": 12,
+      "width": 1231,
+      "height": 1277,
+      "relief": "matplate-h.png"
+    },
+    {
+      "name": "skeleton",
+      "kind": "plate",
+      "metres": 5,
+      "width": 2172,
+      "height": 724,
+      "relief": "skeleton-h.png"
+    },
+    {
+      "name": "lip",
+      "kind": "plate",
+      "metres": 10,
+      "width": 1671,
+      "height": 941,
+      "relief": "lip-h.png"
     }
   ]
 }
