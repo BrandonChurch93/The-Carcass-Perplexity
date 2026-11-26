@@ -26,7 +26,7 @@ const SEEP_SPAN: [number, number] = SEEP_SHOT ? [secondsInPlace(UNIT, SEEP_SHOT.
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('wallowers');
-  const herd: { beast: Beast; plan: Plan; onBank: boolean; sunk: boolean; floor: number; paw: number; wet: number }[] = [];
+  const herd: { beast: Beast; plan: Plan; onBank: boolean; sunk: boolean; floor: number; paw: number }[] = [];
   // TEMPORARY, until the anchors give it: where the lens of the wallowers stands.
   const lens = rel(27.7, 3);
   // When each has its head up. The first three are the ones by the lens of the wallowers: heads down in the mud at its key, as in the approved picture, and up before and after it.
@@ -59,7 +59,6 @@ export function create(ctx: Context): Piece {
       sunk: sink > 0.75,
       floor: sink <= 0.15 ? Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), 0) + 0.03 : -1e9,
       paw: herd.length === 2 ? ((lens[0] - x) * -dir[1] + (lens[1] - z) * dir[0] > 0 ? 3 : 1) : -1,
-      wet,
     });
   };
   for (const b of BEASTS) {
@@ -119,13 +118,13 @@ export function create(ctx: Context): Piece {
         h.beast.feelers.visible = on;
         const acted = cleared && i < 3;
         const t = seconds - WALLOW_TIME;
-        let soaked = h.wet;
+        // The one Drive serves them all in turn: what only an acted one sets is put back for the rest.
+        drive.acted = 0;
+        drive.under = 0;
         if (acted && i === 0) great(h.plan, h.beast.b, seconds, t, cast[0] as number, drive);
         else if (acted && i === 1) young(h.plan, h.beast.b, seconds, t, toGreat, drive);
-        // The flank that comes up out of the brine comes up soaked.
-        else if (acted) soaked += 0.5 * h.beast.b.k * lying(h.plan, h.beast.b, seconds, t, cast[2] as number, drive);
+        else if (acted) lying(h.plan, h.beast.b, seconds, t, cast[2] as number, drive);
         const driven = acted ? drive : walk(h.plan, h.beast.b, seconds, drive);
-        if (i < 3) (h.beast.material.uniforms.uWet as { value: number }).value = soaked;
         driven.floor = h.floor;
         // STAGED for the lens of the wallowers: the great one's feelers are turned down and spread into the mud like the fingers of a hand, as the approved picture has them.
         if (i === 0) driven.splay += 0.3;

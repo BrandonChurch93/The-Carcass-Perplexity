@@ -122,6 +122,15 @@ export interface Drive {
   shrunk: number;
   /** The level of the mud the feelers lie on, in the world: none of them goes under it. Far below when there is none. */
   floor: number;
+  /** 1 for one that is acted through a shot (act.ts), 0 for all the rest. Only an acted one reads `toe` and `under`: its feet are held as `toe` says
+   * and not hung toe down by their lift, a leg it lifts keeps the wet and the mud it stood in, and what lay under the brine at rest stays wet as it rolls. */
+  acted: number;
+  /** For each foot of an acted one: how far its toes hang below its pad, radians. 0 is a pad flat to the ground. */
+  toe: number[];
+  /** For an acted one that lies: the height in the body at rest (its own units) that the brine stood at. */
+  under: number;
+  /** For an acted one: the level in the world of the top of the mud its feet stand in. A leg it lifts is dark with mud to there. */
+  mud: number;
 }
 
 export interface Stood {
@@ -694,5 +703,9 @@ export function newDrive(): Drive {
     knee: [0, 0, 0, 0],
     shrunk: 1,
     floor: -1e9,
+    acted: 0,
+    toe: [0, 0, 0, 0],
+    under: 0,
+    mud: -1e9,
   };
 }
