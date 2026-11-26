@@ -1,0 +1,126 @@
+{
+  "round": 12,
+  "unit": "eye",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-26 00:08 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the whole wet foreground flat, bottom two thirds of the frame",
+        "what": "the ground texture is smeared into long parallel streaks like stretched wood grain or motion-blurred paint, a projected texture stretched across the plane; it reads as CG at once",
+        "fix": "replace with a properly UV'd or triplanar wet sand/silt material with real ripple marks and grain at camera distance"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the shallow flat between the pool and the gravel bench, middle band of the frame",
+        "what": "same stretched swirly wood-grain texture across the flat, with grey flat-tint water patches pasted on top with no depth, no wet edge and no meniscus",
+        "fix": "rebuild the shallows as real thin water over sand: depth-based colour, wet darkened margins, ripple-cast reflections, consistent sand texture"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "all the animals, especially the near drinking one and the calf",
+        "what": "smooth untextured clay-like models with blobby legs and no hooves, the calf's head fuses into its neck; pose and shape read as a sculpt or game asset, not a living animal",
+        "fix": "model real anatomy (joints, hooves, musculature, skin folds), add hair/fur groom and grime, vary poses"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the reflections and the water/ground boundary, lower middle",
+        "what": "reflections are wavy squiggle shapes that do not match the bodies above, and the water stops on a hard straight horizontal line against a grey noise ground with no wet edge, foam or crust",
+        "fix": "ray-trace reflections against a correct water surface, blend the waterline with a damp gradient, mud and ripples around legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "crop x 0-17% y 58-75%, the near foreground rock",
+        "what": "rock is a faceted low-poly lump with a smeared, stretched texture; looks like plastic or clay, also soft at the closest range",
+        "fix": "use a high-detail scanned or displaced rock with sharp micro-detail and proper texel density at camera distance"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "crop x 83-100% y 58-75%, the near right boulder",
+        "what": "flat faceted planes with a stretched striped texture, no erosion or grain",
+        "fix": "replace with displaced, high-resolution rock asset"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "crop x 83-100% y 25-42%, the overhang/cave on the right",
+        "what": "shadow is an almost pure black flat region with no bounce light from the bright ground and sky",
+        "fix": "raise indirect bounces and add fill so the cave floor and walls show detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "crop x 42-58% y 25-42%, the cliff face",
+        "what": "blotchy dark stains and straight vertical streak decals repeated on the wall; cliff reads as a painted texture on a flat wall with a perfectly arched cave opening",
+        "fix": "break up decals, add real geometric relief, ledges, fallen debris and varied staining"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "crop x 42-58% y 58-75%, animals in the shallows",
+        "what": "distant animals are smooth pale mannequins with stiff, near-identical poses; legs stand on the water with no ripple, splash or wet on the legs",
+        "fix": "vary poses, add contact ripples and wet darkening on legs, better models"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "crop x 42-58% y 25-42%, the reflection under the animal's belly",
+        "what": "a shape in the reflection reads as a face-like form that matches nothing above it",
+        "fix": "check reflection source; remove the stray object or fix the reflection"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "crops x 0-17% and x 83-100% y 25-42%, animal skins",
+        "what": "tiling noise texture with visible hard polygon silhouette edges on the legs and a flat sharp seam where leg meets belly",
+        "fix": "smooth the mesh, add subsurface and fur, remove seams"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "crop x 42-58% y 58-75%, the water",
+        "what": "flat grey fill with fine horizontal streak noise, no depth, no seen bottom, reflections are abstract brown blobs",
+        "fix": "use proper water shader with Fresnel, depth absorption and coherent reflections"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "crops at y 25-42%, the far horizon line",
+        "what": "the far shore is a hard thin dark band with a white line on top and a noisy grey strip above it; distance has no air or haze gradient",
+        "fix": "add aerial perspective, soft depth haze and a real far shoreline"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the mist along the far shore",
+        "what": "fog is a flat even tint band with no volume or light in it",
+        "fix": "use volumetric mist with density variation and light scatter from the low sun"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "both crops, foreground flat",
+        "what": "the stretched striped grain is visible at native size, with fine parallel lines like a texture stretched along one axis",
+        "fix": "fix UV stretch / projection on the ground plane"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "the pool edge at mid frame",
+        "what": "the pool has an unnaturally clean, straight, raised lip, like a geometric cut in the plane",
+        "fix": "blend the pool edge into the flat with irregular, wet margin"
+      }
+    ]
+  }
+}

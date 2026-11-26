@@ -1,0 +1,105 @@
+{
+  "round": 12,
+  "unit": "eye",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-26 00:09 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "foreground shoreline and center-left drop-off",
+        "what": "The shore projects into the lake as a broad, flat shelf with a sharp corner and a straight blue wall. The target has a low, broken lip that runs diagonally from the left to the lower right, with an irregular cliff visible through the water below it.",
+        "fix": "Pull the shelf back to the diagonal lip, break up its edge and cliff face, and let the submerged rock fade into blue-green depth."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "central swell and surrounding wake",
+        "what": "The swell reads as a smooth brown dome with a pinched central seam and bright, evenly drawn rings. The target reads as lake water lifting into a broad, low, uneven mound with choppy overlapping waves and broken highlights.",
+        "fix": "Make the swell continuous with the lake, remove the seam, and build irregular water ridges and broken concentric ripples that spread and fade."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the two foreground animals",
+        "what": "Both bodies are too small in frame and the smaller animal has moved from the lower right to near the center. Their thin straight necks, angular rumps, and exposed legs replace the target's close-cropped rounded backs and thick, gently bent, wrinkled necks.",
+        "fix": "Bring both animals closer, crop the larger one into the lower left, move the smaller one down and right, and round their proportions with thicker tapered necks and warm side light."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "far cliffs, cave and scree slopes",
+        "what": "The basin reads as a flat brown wall with a black hole on the left and a broad lit patch on the right. The target has warm fractured ledges on the left, dark vertical ribs in the center, and a recessed cave high just right of center above a large cool scree slope with sparse green patches.",
+        "fix": "Restore the cave and slope arrangement, give the wall ledges and vertical fractures, add sparse growth at the right foot, and put the warm direct sun on the left ledges while keeping the lower basin cool."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "far rim and canyon wall",
+        "what": "The rim is a close-looking, nearly continuous wall of angular, horizontally striped rock with round dark holes and a broad key-lit face on the right. The target opens into a sloping left bank and irregular, more distant crags, with late sun along the left and upper center and shade on the right.",
+        "fix": "Open up the left slope, replace the uniform striping and punched holes with eroded ledges and recesses, and move the strongest light to the left and upper rim."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "open lake and reflections",
+        "what": "Crisp upside-down cliffs dominate the lake, and hard bands separate the reflection from flat dark navy water. The target has soft, vertically broken amber reflections on the left and center, subtle wide rings in the distance, and a continuous transition into dark slate-teal near water.",
+        "fix": "Break and soften the reflections, shift their warmth leftward, blend the water tones without straight boundaries, and restore the faint distant rings."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "water outside the central swell",
+        "what": "The lake is brown and mirrorlike, with a large contiguous reflected wall on the right and a straight bright seam across the far water. The target is cool slate with small horizontal wavelets that fragment the warm reflections into left-weighted glints.",
+        "fix": "Remove the horizontal seam, cool the body of the lake, and break the wall reflection into ripple-sized gold glints strongest toward the left."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "skeleton on the lower-right bank",
+        "what": "The skeleton reads as a thin orange spine and wirelike ribs surrounded by isolated pieces, rather than a substantial weathered ivory rib cage and recognizable joints and long bones resting in growth along the rim.",
+        "fix": "Build out the vertebrae, rib cage and joint masses, align the long bones with the rim, and give them mottled ivory surfaces, warm highlights, and grounded contact shadows."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "foreground rock and brown growth",
+        "what": "The foreground is flat and grainy with broad parallel brown streaks and a smooth pale rise under the bones. The target has uneven wet gray-tan rock with branching amber strands and clumps draped over raised edges.",
+        "fix": "Add rock relief and broken ledges, replace the streaks with irregular branching strands and clumps, and pick out wet surfaces with small warm highlights."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "distant shoreline and mist",
+        "what": "The haze is a flat brown veil across the cliff and ends at a ruler-straight, bright contact with the lake. The target holds a low, soft ribbon of mist over the water, warmer and more apparent on the left, with cliff details visible above it.",
+        "fix": "Concentrate the haze in a low uneven layer, warm it subtly on the left, and feather it into the lake and the base of the rock."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "distant waterline and air in front of the cliffs",
+        "what": "The fog reads as a thin bright line with a flat wash over the rocks rather than the target's broad, soft mist drifting over the far lake and separating near from far.",
+        "fix": "Soften the horizon edge and give the mist a thicker, uneven falloff just above the water, receding into the shaded bank."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "small forms around and below the wake",
+        "what": "The protrusions are mostly thin straight pegs on drawn bands and lack the target's varied curved tips, glancing highlights and small water disturbances. The faint larger forms just below the surface are also hard to read.",
+        "fix": "Use varied curved tips at different depths and distances, give exposed tips local ripples and glints, and bring back the soft submerged forms beneath them."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "deep water on the right",
+        "what": "A conspicuous cyan sliver stands in for the several faint, tapered forms at staggered depths in the target.",
+        "fix": "Replace the isolated bright sliver with several muted green-blue shapes that recede into the water at different distances."
+      }
+    ]
+  }
+}

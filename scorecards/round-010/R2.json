@@ -1,0 +1,255 @@
+{
+  "round": 10,
+  "unit": "ribs",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the flat, patchy reflections on the foreground water.",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "real-time engine look: repetitive tiled sand texture with aliasing/moiré and simple translucent creature effects, more like a game/tech demo than film-grade CG",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the combination of moody atmospheric lighting with noticeably synthetic, mid-detail shaders on the wet sand, smooth boulders, and alien creatures.",
+      "answered": "00:13 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 90,
+      "why": "The water beneath the birds breaks into flat black streaks instead of reflecting their shapes.",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 72,
+      "why": "fantastical curved rock spires, volumetric atmosphere and detailed wet-sand/rock shading look like a high-end game cinematic or in-engine capture (slightly smeared sand texture and odd creatures keep it from being certain)",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 83,
+      "why": "The foreground rocks have a conspicuously stretched, repetitive surface texture.",
+      "answered": "00:12 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "the stretched, smeared cliff textures and plain real-time-engine shading on the creature point to an indie or low-budget game rather than film-quality CG.",
+      "answered": "00:13 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the low-poly clipping geometry combined with flat real-time water shading and repeated background rock spires",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 96,
+      "why": "the foreground rock texture stretches into long, sharply defined streaks.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "The rock and creature surfaces are repetitive, noisy procedural textures with odd, unrefined geometry (blobby limbs, stringy hairs), even though the lighting and haze are atmospheric.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 79,
+      "why": "the foreground creature’s visibly angular, low-poly joints.",
+      "answered": "00:13 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "simple procedural textures on the creatures and noisy blocky rock material look like an ordinary hobbyist 3D render (Blender-style) rather than film-grade CG.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the crude low-poly geometry and disconnected cylindrical joints on the creatures alongside flat sprite splash effects",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "the foreground creature’s wing looks like a single rigid, sawtoothed sheet rather than layered feathers.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 45,
+      "why": "the foreground rock has a blocky, pixelated texture and the birds are simple, but the misty cliffs, water reflections and art direction are strong, so it could also be c.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the same visibly modeled winged creature repeats across the terraces.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "simple procedural-looking textures on repeated instanced creatures and stepped terrain with flat lighting point to an ordinary CG render, not a polished cinematic.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 82,
+      "why": "flat real-time shading with missing contact shadows and creatures clipping into coarsely textured stepped terrain",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "the same angular creature model repeats across the rock face with almost no variation.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "the creatures are cloned copies with flat, semi-transparent wings and noisy, repetitive rock textures, so it looks like an ordinary or procedural CG render and not a polished film or game frame (d is the runner-up).",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 88,
+      "why": "the distant treeline looks like a smeared texture rather than individual trees.",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the crude procedural textures, the badly stretched treeline and the rough, unconvincing bird models suggest an amateur-level 3D render rather than a photo or film-quality CG",
+      "answered": "00:14 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the crude primitive 3D geometry of the flying creatures with stick-like legs and spiky cylindrical tail feathers",
+      "answered": "00:15 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the breaking wave looks like a flat wall covered in repeating white streaks.",
+      "answered": "00:15 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 60,
+      "why": "The streaked, stretched forest texture, the crude birds and the repeating rock texture look like an amateur or real-time render, not a big-budget one.",
+      "answered": "00:14 UTC"
+    }
+  ]
+}

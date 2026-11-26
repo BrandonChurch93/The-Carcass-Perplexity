@@ -1,0 +1,105 @@
+{
+  "round": 10,
+  "unit": "ribs",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-26 00:14 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the whole frame: light and colour",
+        "what": "the warm low side-light from the right is gone; arches and cliff are flat grey, dark-sided silhouettes with no sunlit faces, no orange lichen, no bright cloud breaks; the mood is dull overcast instead of stormy sky with raking sun",
+        "fix": "bring back warm directional light from the right that catches the arch faces and lichen, deepen the storm-cloud contrast with the bright breaks, and restore the cool-warm split"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the arches across the back",
+        "what": "the arches are thick dark leaning tusks and spires; several no longer close into arches, the small arch with its window at right of centre is gone, and there is no surf or spray at their feet",
+        "fix": "return to thin pale ribbed arches that span and close, add the small window arch on the right, and put white surf and spray mist at the horizon"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the creatures on the flats and in the sky",
+        "what": "the winged pterosaur-like walkers are replaced by flamingo-like stilt birds with curled orange tail plumes; the right-hand ones are translucent ghosts; the large flock of birds in the sky is almost gone",
+        "fix": "use the pale winged walkers of -a, one striding with wings spread on the right, keep them solid and side-lit from the right, and fill the sky with the scattered flock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the foreground tidal flat",
+        "what": "the pebble beds, seaweed-covered rocks, rivulets and wet sheen of -a are gone; it is a smooth grey sheet with a few stones and big flat black shadow blobs at lower left (set-A-02 crops show texture-only ground with no stones); even read as motion blur, the stones and channels are missing",
+        "fix": "rebuild the pebble and rock beds with seaweed tufts, the braided shallow channels catching sky light, and remove the floating black shadow shapes"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the left cliff",
+        "what": "the cliff is stepped dark strata with almost no seaweed curtain; the hanging carcass is a faint grey smear",
+        "fix": "hang a dense curtain of dark olive-amber seaweed over wet black rock, with a pale sunlit upper cliff, and make the carcass a clear pale form"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the carcass on the wall",
+        "what": "the shrivelled pale-hide body with ribs, legs and crabs reads as grey tubes with black patches; the crabs are almost gone (set-A-04 top crops); there are no ribs or bones on the wall to the right",
+        "fix": "model a desiccated warm-pale hide stretched over ribs, add the crabs on its back, and add the bone and rib fragments on the wall"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the seaweed wall",
+        "what": "the wet, glistening rock with long amber kelp blades and a trickle of water is a dark furry streaked texture with no wetness, no specular drops and no water run (set-A-04 lower crops)",
+        "fix": "give the wall long translucent amber-olive kelp straps over glossy black rock, specular droplets, and the falling water trickle on the left"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the background and the beach",
+        "what": "the arches have become spires; big rounded boulders fill the lower right where -a has an open, wet, sun-glinting flat with reflections and distant walkers; the light is flat grey with no warm sun",
+        "fix": "restore the pale lichen-lit arches, remove the foreground boulders, and open the right side to a wet mirror flat catching bright sky, with small walkers in haze"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the three feeding creatures",
+        "what": "the pale wrinkled bodies with translucent, backlit orange wings, beak tendrils and dripping water are now striped grey tubes with opaque brown sawtooth fans (set-A-06 lower crops); no prey worm in the beak; the left bird is a stiff flamingo",
+        "fix": "rebuild the creatures with wrinkled pale hides and thin membranous wings glowing orange where the sun comes through, a worm caught in the tendrils, and water dripping off them"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the light and spray around the feeding",
+        "what": "the warm backlight with rim light and glittering splash crowns is gone; the splash is flat white blobs; no splashes at the other birds' feet; no breaking surf in the mid-distance",
+        "fix": "add warm low backlight with rim highlights, real droplet splash crowns and spray at each bird, and white rolling surf behind them"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the background",
+        "what": "the hazy curved arches are now square-topped stacks and mesas",
+        "fix": "replace them with the curved arches fading in spray haze"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the foreground rock",
+        "what": "the soft, out-of-focus wet rock with amber seaweed is a sharp blocky textured mound with no seaweed glow",
+        "fix": "defocus it and cover it with wet, glinting amber weed"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the water surface (set-A-06 top right)",
+        "what": "the water is clean CG grey with bare ripples and no out-of-focus rocks or sparkle",
+        "fix": "add shallow-depth defocus, sun glints and the rocks with weed in the mid-ground"
+      }
+    ]
+  }
+}
