@@ -111,6 +111,8 @@ export const FAR_FLOCK = { count: 46, bearing: [-52, -6] as [number, number], di
 /** The one that stands at the rim over the drop. Its neck is up until shot breath-04 starts and down from then on (the picture of the rim has it down). */
 export const RIM_WADER: Wader = { x: -28.6, z: 15.2, heading: 72, speed: 0, size: 1.1, up: true, phase: 0 };
 export const RIM_WADER_DOWN_FROM = secondsInPlace(UNIT, shotById('breath-04').first);
+/** The one that stands in the sunlit mist behind the first gill-plume, as the lens of key breath-3 sees it: upper left of that frame, neck up, about 33 m from the lens. */
+export const MIST_WADER: Wader = { x: -37.5, z: -27.5, heading: 60, speed: 0, size: 1.1, up: true, phase: 4 };
 /** The dead one near the lip: where it lies, its turn about y in radians, its size. */
 export const DEAD_WADER = { x: -27.3, z: 22.6, turn: -0.5, size: 1.08 };
 
