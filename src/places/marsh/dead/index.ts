@@ -87,14 +87,14 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
 
   // The salt apron round it, and the kept body: bone and dried hide under knobs of salt.
-  vec3 apron = vec3(0.2, 0.172, 0.16) * mix(vec3(1.0), rime, 0.7);
+  vec3 apron = vec3(0.3, 0.262, 0.245) * mix(vec3(1.0), rime, 0.7);
   // A top-down picture smears on a steep side: there the salt has caked over it.
   float steep = smoothstep(0.75, 0.45, nl.y);
   vec3 albedo = mix(apron, pic * 0.52 * mix(vec3(1.0), rime, 0.25), 0.35 * cover * (1.0 - 0.6 * steep));
   // What ran out of it stains the foot of the mound, and the mud it sank into still holds it.
   float above = vWorld.y - uGround;
   float stain = (1.0 - smoothstep(0.0, 0.07, above + 0.1 * (vnoise(vWorld.xz * 3.0 + uSeed) - 0.5))) * (0.5 + 0.5 * vnoise(vWorld.xz * 1.3 + uSeed * 2.0));
-  albedo = mix(albedo, albedo * vec3(0.3, 0.2, 0.17), 0.85 * stain);
+  albedo = mix(albedo, albedo * vec3(0.5, 0.27, 0.23), 0.6 * stain);
   // A hollow between the ribs sees little sky.
   float hollow = smoothstep(-0.22, 0.08, relief - mid);
   float occ = mix(1.0, 0.35 + 0.65 * hollow, cover) * (0.7 + 0.3 * smoothstep(0.0, 0.12, above));
@@ -279,7 +279,7 @@ export function create(ctx: Context): Piece {
   const live = newDrive();
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)], 0.5, [0.1, 0.072, 0.054], 'dead-mud', 0.6, 0.2);
   // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.
-  const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.14 * c.size, [0.045, 0.028, 0.024], 'dead-stain-' + i, 0.5));
+  const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.14 * c.size, [0.05, 0.022, 0.017], 'dead-stain-' + i, 1));
   const meshes = [...cards.map((c) => c.mesh), ...bodies.map((b) => b.mesh), stuck.mesh, stuck.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
   ctx.parts.built('dead', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
