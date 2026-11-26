@@ -258,7 +258,7 @@ export function create(ctx: Context): Piece {
         tSalt: { value: tSalt },
         uFlip: { value: rng.next() < 0.5 ? 1 : 0 },
         uAt: { value: new THREE.Vector4(p[0], ground + 0.04, p[1], 0) },
-        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672, rng.range(0.5, 0.75), under ? 0.36 : rng.range(0.2, 0.3)) },
+        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672, under ? 0.95 : rng.range(0.5, 0.75), under ? 0.6 : rng.range(0.2, 0.3)) },
         uSeed: { value: rng.range(1, 60) },
       },
       vertexShader: BODY_VERTEX,
@@ -274,7 +274,7 @@ export function create(ctx: Context): Piece {
   const at = rel(STUCK[0], STUCK[1]);
   const yaw = relYaw(-0.97, -0.03);
   const ground = Math.min(0.1, ctx.rig.land.height(at[0], at[1]));
-  const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.024, wet: ground + 0.3, mudded: 1, relief: 0.022 });
+  const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.024, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 26 });
   const live = newDrive();
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)]);
   // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.
@@ -296,10 +296,10 @@ export function create(ctx: Context): Piece {
       const tremble = heave * 0.012 * Math.sin(seconds * 23);
       live.ox = at[0];
       live.oz = at[1];
-      live.oy = ground - 1.56 + 0.12 * heave + tremble;
+      live.oy = ground - 1.74 + 0.12 * heave + tremble;
       live.dir = [Math.cos(yaw), -Math.sin(yaw)];
       live.surge = 0.1 * heave;
-      live.pitch = -0.5 - 0.06 * heave;
+      live.pitch = -0.66 - 0.06 * heave;
       live.roll = 0.05 * Math.sin(seconds * 0.9) + 0.05 * heave * Math.sin(seconds * 2.7);
       live.shift = 0.04 * Math.sin(seconds * 0.9 - 0.6);
       live.bend = 0.04 * Math.sin(seconds * 0.6);
@@ -307,7 +307,7 @@ export function create(ctx: Context): Piece {
       live.headYaw = 0.3 * Math.sin(seconds * 0.43) + 0.1 * Math.sin(seconds * 1.1);
       live.breath = Math.sin(seconds * 2.4);
       live.splay = 0.2 + 0.25 * heave;
-      live.floor = ground + 0.1;
+      live.floor = ground + 0.07;
       live.curl[0] = 0.85 + 0.35 * heave;
       // The feet are held by the mud: they stay where they are while the trunk strains above them.
       live.feet.forEach((foot, l) => {
@@ -318,7 +318,7 @@ export function create(ctx: Context): Piece {
         foot[2] = side * 0.68;
       });
       const stood = stuck.pose(live, seconds);
-      ctx.rig.setDisc(discs, cards.length, stood.x, stood.z, 1.7, 0.8, 1.7, stood.yaw);
+      ctx.rig.setDisc(discs, cards.length, stood.x, stood.z, 1.7, 0.3, 1.7, stood.yaw);
       mud.set(heave, seconds);
     },
     dispose: () => {

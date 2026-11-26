@@ -207,8 +207,12 @@ void main() {
   dust *= 1.0 - damp;
   albedo = mix(albedo, vec3(0.21, 0.18, 0.155) * (0.7 + 0.5 * grain), 0.28 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
-  float smear = uMudded * smoothstep(0.3, 0.6, patchy + 0.5 * damp + 0.3 * (1.0 - grain));
-  albedo = mix(albedo, mix(vec3(0.13, 0.115, 0.1), vec3(0.05, 0.043, 0.038), damp) * (0.6 + 0.6 * grain), 0.55 * smear);
+  float smear = uMudded * smoothstep(0.3, 0.55, 0.55 * patchy + 0.45 * vnoise3(q * 5.3 + uSeed * 2.0) + 0.5 * damp + 0.25 * (1.0 - grain));
+  albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.135), vec3(0.06, 0.047, 0.04), damp) * mix(0.65, 1.2, smoothstep(0.25, 0.8, grain)), 0.7 * smear);
+  // Mud lies in every crease of it.
+  albedo *= mix(1.0, mix(0.72, 1.06, smoothstep(0.2, 0.7, grain)), uMudded);
+  // And where the mud has dried the longest, on its back, the salt has come out of it white.
+  albedo = mix(albedo, vec3(0.26, 0.24, 0.22) * (0.5 + 0.8 * grain), 0.5 * uMudded * (1.0 - damp) * smoothstep(0.2, 0.8, ng.y) * smoothstep(0.45, 0.7, vnoise3(q * 4.3 + uSeed * 3.0)));
   // The claws: old ivory, grooved, stained at the root.
   vec3 ivory = vec3(0.15, 0.115, 0.08) * (0.7 + 0.5 * height) * mix(vec3(1.0), tone, 0.35);
   albedo = mix(albedo, mix(ivory, albedo * 1.3, 0.5 * side), horn);
@@ -241,6 +245,7 @@ uniform float uSeconds;
 uniform float uSplay;
 uniform float uCurl;
 uniform float uFloor;
+uniform float uHang;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLook;
@@ -249,16 +254,20 @@ void main() {
   float a = iShape.z * 40.0;
   // Each rakes to its own time: curled, then flicked out.
   float curl = max(0.3, 1.15 * uCurl + 0.16 * sin(uSeconds * (1.3 + 1.2 * fract(a)) + a) + 0.05 * sin(uSeconds * 3.3 + a * 2.3));
-  vec3 dir = normalize(iOut + vec3(0.5, 0.35, 0.0) * uSplay);
-  vec3 c = vec3(-0.3, -1.0, -0.25 * iOut.z);
+  // They hang: whatever way the head is held, each bends toward the ground under it.
+  vec3 down = normalize(transpose(mat3(uHead)) * vec3(0.0, -1.0, 0.0));
+  vec3 dir = normalize(iOut + vec3(0.5, 0.35, 0.0) * uSplay + down * (0.9 * uHang));
+  vec3 c = down + vec3(-0.25, 0.0, -0.25 * iOut.z);
   vec3 bend = normalize(c - dir * dot(c, dir));
+  curl *= 1.0 + 0.5 * uHang;
   float t = curl * s;
   vec3 centre = iAt + iShape.x * ((sin(t) / curl) * dir + ((1.0 - cos(t)) / curl) * bend);
   vec3 tangent = cos(t) * dir + sin(t) * bend;
   vec3 n1 = -sin(t) * dir + cos(t) * bend;
   vec3 n2 = cross(tangent, n1);
   // Thick where it leaves the lip, a long taper, a blunt tip.
-  float radius = iShape.y * (0.2 + 0.8 * pow(1.0 - s, 0.7)) * (1.0 + 0.06 * sin(s * 23.0 + a));
+  float knuckle = exp(-pow((s - 0.3) / 0.05, 2.0)) + 0.7 * exp(-pow((s - 0.58) / 0.045, 2.0));
+  float radius = iShape.y * (0.1 + 0.9 * pow(1.0 - s, mix(1.15, 0.7, uHang))) * (1.0 + 0.06 * sin(s * 23.0 + a) + 0.16 * knuckle * (1.0 - uHang));
   vec3 rim = n1 * position.y + n2 * position.z;
   vec4 world = uHead * vec4(centre + rim * radius, 1.0);
   world.y = max(world.y, uFloor + 0.004 * position.y);
@@ -274,6 +283,7 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLook;
 uniform float uWet;
+uniform float uHang;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -283,8 +293,13 @@ void main() {
   // Old ivory: grooved along its length, ringed where it grew, stained dark at the root and red where it has been in the mud.
   float groove = vnoise(vec2(vLook.y * 3.0 + vLook.z * 9.0, s * 2.0));
   float ring = vnoise(vec2(s * 46.0 + vLook.z * 5.0, vLook.y * 0.7));
-  vec3 albedo = vec3(0.2, 0.15, 0.105) * (0.62 + 0.3 * groove + 0.2 * ring);
+  vec3 albedo = vec3(0.17, 0.12, 0.08) * (0.55 + 0.4 * groove + 0.25 * ring);
   albedo = mix(albedo, vec3(0.07, 0.042, 0.03), 0.75 * (1.0 - smoothstep(0.0, 0.14, s)));
+  // Creased at its joints like a finger, and the mud it rakes dries on it.
+  float crease = exp(-pow((s - 0.26) / 0.012, 2.0)) + exp(-pow((s - 0.34) / 0.012, 2.0)) + exp(-pow((s - 0.55) / 0.012, 2.0)) + exp(-pow((s - 0.62) / 0.012, 2.0));
+  albedo *= 1.0 - 0.5 * min(crease, 1.0) * (1.0 - uHang);
+  albedo = mix(albedo, vec3(0.2, 0.165, 0.135) * (0.7 + 0.5 * groove), 0.6 * uHang);
+  albedo = mix(albedo, vec3(0.1, 0.075, 0.06), 0.5 * smoothstep(0.45, 0.7, vnoise(vec2(s * 9.0 + vLook.z * 30.0, vLook.y * 1.5))));
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
   albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.8 * wet);
   albedo = mix(albedo, vec3(0.03, 0.017, 0.012), 0.8 * smoothstep(0.8, 1.0, s));
@@ -325,6 +340,8 @@ export interface Look {
   wet: number;
   /** 1 for the one stuck in grey mud. */
   mudded?: number;
+  /** How many thin feelers hang from its lip in place of the hand of thick ones. */
+  tendrils?: number;
   /** How far the hide picture lifts the skin, metres. 0 for one seen from afar. */
   relief?: number;
 }
@@ -393,16 +410,32 @@ export class Beast {
     this.mesh = new THREE.Mesh(hide.geometry, this.material);
     this.mesh.frustumCulled = false;
 
-    const lip = this.skeleton.lip;
+    const rng = ctx.rng(`wallower-feelers-${seed.toFixed(3)}`);
+    // The fringe of the lip as the body gives it: a hand of thick claws. Or, on one that asks for it, three times as many, thin and long.
+    const base = this.skeleton.lip;
+    const many = look.tendrils ?? 0;
+    const lip = many
+      ? Array.from({ length: many }, (_, i) => {
+          const f = (i / (many - 1)) * (base.length - 1);
+          const a = base[Math.min(base.length - 2, Math.floor(f))] as (typeof base)[number];
+          const b2 = base[Math.min(base.length - 2, Math.floor(f)) + 1] as (typeof base)[number];
+          const w = f - Math.min(base.length - 2, Math.floor(f));
+          const row = (i % 3) * 0.045;
+          return {
+            at: [a.at[0] + (b2.at[0] - a.at[0]) * w - row, a.at[1] + (b2.at[1] - a.at[1]) * w + rng.range(-0.02, 0.05) + row * 0.6, a.at[2] + (b2.at[2] - a.at[2]) * w] as V3,
+            out: [a.out[0] + (b2.out[0] - a.out[0]) * w + rng.range(-0.45, 0.45), a.out[1] + (b2.out[1] - a.out[1]) * w - rng.range(0, 0.3), a.out[2] + (b2.out[2] - a.out[2]) * w + rng.range(-0.45, 0.45)] as V3,
+          };
+        })
+      : base;
     const at = new Float32Array(lip.length * 3);
     const out = new Float32Array(lip.length * 3);
     const shape = new Float32Array(lip.length * 4);
-    const rng = ctx.rng(`wallower-feelers-${seed.toFixed(3)}`);
     lip.forEach((l, i) => {
       at.set(l.at, i * 3);
       out.set(l.out, i * 3);
       const mid = 1 - Math.abs(i / (lip.length - 1) - 0.5) * 0.6;
-      shape.set([rng.range(0.5, 0.72) * mid * (1 - 0.25 * b.young), (0.05 + 0.018 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
+      if (many) shape.set([rng.range(0.38, 1.05) * mid, 0.014 + 0.01 * rng.next(), rng.next(), rng.next()], i * 4);
+      else shape.set([rng.range(0.42, 0.66) * mid * (1 - 0.25 * b.young), (0.042 + 0.016 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
     });
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.index = tube().index;
@@ -412,7 +445,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? 1 : 0 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
