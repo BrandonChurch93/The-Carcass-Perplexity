@@ -197,7 +197,7 @@ void main() {
   vec3 mn = texture2D(tMatN, p.xz / 6.0).rgb;
   vec2 lean = (mn.rg - 0.5) * 1.1 + (mnNear.rg - 0.5) * 0.9 * near;
   vec3 grain = (0.4 * m0 + 0.35 * m1 + 0.25 * mix(m0, m2, near)) / uMean;
-  grain = clamp(1.0 + 1.7 * (grain - 1.0), 0.3, 2.0) * mix(vec3(1.0), uMean / dot(uMean, vec3(0.3333)), 0.2);
+  grain = clamp(1.0 + 2.2 * (grain - 1.0), 0.25, 2.2) * mix(vec3(1.0), uMean / dot(uMean, vec3(0.3333)), 0.3);
   float h = (0.75 * a.g + 0.22 * b.g) * dry + 0.6 * a.r + 0.2 * b.r + 0.03 * c.r + 0.015 * c.a + 0.02 * c.g * near;
   // Where two plates meet there is a seam, open in places and closed in others.
   float crack = 0.5 * max(smoothstep(0.035, 0.0, a.b), 0.6 * smoothstep(0.04, 0.0, b.b)) * dry * smoothstep(0.45, 0.65, b.a);
@@ -213,7 +213,7 @@ void main() {
   n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.92 * film));
 
   // The high plates are washed pale and dry; the low ones are dark with wet.
-  vec3 rock = mix(vec3(0.24, 0.235, 0.23), vec3(0.72, 0.7, 0.67), clamp(0.4 + 1.0 * (a.a - 0.5) + 1.1 * (b.r - 0.5) + 0.9 * (c.a - 0.5) + 1.5 * (rel - 0.48) + 0.5 * (a.g - 0.5), 0.0, 1.0));
+  vec3 rock = mix(vec3(0.2, 0.195, 0.19), vec3(0.74, 0.72, 0.68), clamp(0.4 + 1.0 * (a.a - 0.5) + 1.1 * (b.r - 0.5) + 0.9 * (c.a - 0.5) + 1.5 * (rel - 0.48) + 0.5 * (a.g - 0.5), 0.0, 1.0));
   // Mineral crust where the vapour dries on the high plates: white, with ochre at its edge. It flakes, so it is patchy at every size.
   float crust = smoothstep(0.5, 0.64, 0.5 * b.a + 0.3 * c.r + 0.2 * a.a + 0.5 * (rel - 0.5));
   float ochre = smoothstep(0.42, 0.5, 0.5 * b.a + 0.3 * c.r + 0.2 * a.a + 0.5 * (rel - 0.5)) * (1.0 - crust);
@@ -222,7 +222,7 @@ void main() {
   rock = mix(rock, vec3(0.5, 0.48, 0.44) * (0.6 + 0.7 * c.a), crust * (0.45 + 0.55 * smoothstep(0.35, 0.65, c.r)));
   // Tea-brown where water has stood and dried, olive weed along the tide line.
   float stain = smoothstep(0.45, 0.7, b.a + 0.5 * (a.r - 0.5) + 0.3 * (c.r - 0.5));
-  rock = mix(rock, rock * vec3(0.62, 0.47, 0.34), 0.4 * stain);
+  rock = mix(rock, rock * vec3(0.62, 0.47, 0.34), 0.25 * stain);
   float tide = smoothstep(0.8, 0.0, abs(p.y + 0.05)) * smoothstep(0.4, 0.62, b.r);
   rock = mix(rock, vec3(0.085, 0.095, 0.05), 0.55 * tide);
   // A riser shows the beds it is made of: thin courses, some standing proud, broken where the plate broke.
@@ -238,14 +238,19 @@ void main() {
   float towardSmall = texture2D(tRock, (p.xz + uSunDir.xz * 0.6) / 13.7 + 0.37).g;
   float rise = 0.75 * (toward - a.g) * dry;
   float riseSmall = 0.22 * (towardSmall - b.g) * dry;
-  float shade = 1.0 - mix(0.6, 0.92, near) * max(smoothstep(0.035, 0.11, rise), 0.85 * smoothstep(0.012, 0.045, riseSmall));
+  float shade = 1.0 - mix(0.5, 0.92, near) * max(smoothstep(0.035, 0.11, rise), 0.85 * smoothstep(0.012, 0.045, riseSmall));
   float crestLit = max(smoothstep(0.035, 0.11, -rise), 0.7 * smoothstep(0.012, 0.045, -riseSmall));
   // Under a step the sky is half shut out too: the shade is cold and dark, not grey.
   occ *= mix(0.5, 1.0, shade);
-  land.b = mix(p.y + 1.0, land.b, shade);
+  // Half a shadow takes half the sun, not all of it: far off a pixel holds many steps.
+  land.b = max(land.b, p.y + mix(0.35, 0.03, shade));
   vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ);
   // The sun's glare path: every wet face throws a little of the low sun, and the grain of the rock, too fine to draw from here, spreads it wide.
   float nv = clamp(dot(n, v), 0.0, 1.0);
+  // The shelf lies open under the whole lit haze, which is brighter than the dome behind it, and where it is wet it mirrors the haze at the horizon.
+  vec3 back = reflect(-v, n);
+  back.y = abs(back.y);
+  colour += (albedo * uSkyHorizon * (0.4 * max(n.y, 0.0)) + skyRadiance(back) * ((0.04 + 0.96 * pow(1.0 - nv, 5.0)) * wet * 0.9)) * (occ * land.g);
   float glare = sunLobe(n, v, 0.4) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * max(dot(n, uSunDir), 0.0) * sunSeen(land, p.y);
   colour += uSunColour * (glare * wet * (0.35 + 0.65 * film) * (0.5 + 1.5 * c.a) * occ * 2.2);
   // Sparkle: in the glare path the wet grain throws the sun back in points.
@@ -301,6 +306,8 @@ void main() {
   if (dot(along, along) > 1e-16 && dot(across, across) > 1e-16) n = normalize(n - fl * uMat.y * ((mn.r - 0.5) * normalize(along) + (mn.g - 0.5) * normalize(across)));
   float up = clamp(n.y, 0.0, 1.0);
   vec3 base = mix(uDark, uPale, clamp(0.5 + 1.5 * (a.r - 0.5) + 0.6 * (b.a - 0.5), 0.0, 1.0)) * grain;
+  // The top of the wall is the shelf's own pale beds, not yet wet through.
+  base *= mix(1.0, 2.4, smoothstep(-10.0, -1.5, p.y) * (1.0 - smoothstep(0.3, 0.45, uBone)));
   // On the wall the stains run down in streaks; on a hoop or a slab they are patches, and the top is cleaner than the sides.
   float stain = mix(smoothstep(0.45, 0.75, run.r + 0.35 * (a.a - 0.5)), smoothstep(0.4, 0.7, a.a + 0.45 * (b.r - 0.5) + 0.12 * (run.r - 0.5)), smoothstep(0.3, 0.5, uBone)) * (1.0 - 0.6 * up);
   vec3 albedo = mix(base, base * vec3(0.5, 0.33, 0.19), 0.85 * stain * uBone + 0.3 * stain);
@@ -321,7 +328,9 @@ void main() {
   // A ledge's top lies open to the disc of sky overhead, tier under tier, each dimmer than the one over it; its face and the wall get the square of that.
   float ledge = smoothstep(0.4, 0.9, uBone);
   float open = mix(sunk * sunk, sunk * mix(sunk, 1.0, 0.75 * up), ledge);
-  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc * open * (1.0 - 0.94 * recess) * mix(1.0, 2.3 + 1.6 * up, ledge);
+  // A ledge's face that looks away from the sun looks into the lit mist and the far wall: it is not black.
+  float away = (1.0 - up) * (0.5 - 0.5 * dot(n, uSunDir));
+  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc * open * (1.0 - 0.94 * recess * mix(0.55, 1.0, smoothstep(-5.0, -18.0, p.y))) * mix(1.0, 2.3 + 1.6 * up + 2.2 * away, ledge * smoothstep(-0.5, -6.0, p.y));
   // Nothing of the sun gets down there either: the shadow's top is lifted over whatever is deep.
   vec4 land = landAt(p.xz);
   land.b = mix(p.y + 1.0, land.b, sunk * sunk);
