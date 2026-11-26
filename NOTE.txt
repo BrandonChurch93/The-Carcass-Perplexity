@@ -1,7 +1,5 @@
-2026-11-26 01:14 UTC
-work at a50c94e on agent/spine-storm-2
-Start state (main, version 3 of the first owner): spine-1 a furry headless mound, spine-4 mounds with card fur, spine-3 a thick white bolt and dotted kites, spine-0 a white stripe bolt
-look-1.jpg = out/work/compare/spine-1.png
-look-2.jpg = out/work/compare/spine-4.png
-look-3.jpg = out/work/compare/spine-3.png
-look-4.jpg = out/work/compare/spine-0.png
+2026-11-26 01:55 UTC
+work at 141ed38 on agent/spine-storm-2
+runners rebuilt as one skin with a coat of locks: dead one at spine-1, herd at spine-4, both unfinished
+look-1.jpg = out/work/look-spine-1.jpg
+look-2.jpg = out/work/look-spine-4.jpg
