@@ -93,8 +93,6 @@ attribute float aTop;
 attribute vec2 aSL;
 attribute float aRelief;
 attribute vec3 aUp;
-attribute vec3 aHero;
-varying vec3 vHero;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying float vTop;
@@ -109,14 +107,12 @@ void main() {
   vSL = aSL;
   vRelief = aRelief;
   vUp = aUp;
-  vHero = aHero;
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
 // uKind: 0 the ground, 1 a spire or the rock over the mouth, 2 the inside of the canal.
 const LAND_PRELUDE = /* glsl */ `
 precision highp float;
-varying vec3 vHero;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying float vTop;
@@ -230,8 +226,7 @@ void main() {
     float r = flareAt(dCanal);
     // The opening is broken rock, not a drawn circle: its edge stands in and out with the beds. The near mouth is a low arch, broader than it is high.
     vec2 across = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
-    // (Nothing is cut farther from the canal's middle than this: the broken line is worked out only near it. The rock stands in three
-    // layers on the first spire, and each is drawn here.)
+    // (Nothing is cut farther from the canal's middle than this: the broken line is worked out only near it.)
     if (max(abs(across.x), abs(across.y)) < r + 2.6) {
       float turn = atan(across.y, across.x);
       float ragged = 0.72 + 0.26 * vnoise(vec2(turn * 2.3 + 5.0, 0.7)) + 0.12 * (vnoise(vec2(turn * 8.0 + 1.0, 2.9)) - 0.5) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
@@ -311,7 +306,8 @@ Lay lay(sampler2D colour, sampler2D nh, vec2 at, vec2 gx, vec2 gy) {
   return Lay(textureLod(colour, at, lod).rgb, (k.rg - 0.5) * vec2(1.0, -1.0), k.b);
 }
 
-#if KIND == 2
+// The spires and the canal keep this main; the ground has its own (open.ts).
+#if KIND != 0
 void main() {
   float dCanal = vSL.x - MOUTH_S;
   vec3 smoothN = normalize(vNormal);
@@ -693,8 +689,8 @@ void main() {
   if (inside) {
     snow = smoothstep(1.6, 0.2, vWorld.y - CANAL_FLOOR + 1.2 * (pit - 0.5)) * 0.85;
     rime = 0.0;
-    // The canal goes to black from outside, wall by wall: what the sky gives it falls by half in some ten metres, so the mouth has a depth.
-    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 3.0, 0.0) / 15.0);
+    // The canal is black from outside: what the sky gives its walls is gone a few metres in.
+    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 7.0);
     snow *= lit;
     rime *= lit;
     occ *= 0.04 + 0.96 * lit;
@@ -716,7 +712,9 @@ void main() {
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
     float thick = fineRock * (1.0 - burn);
-    float cover = clamp(0.5 * rime + (0.22 + 0.7 * thick) * windward * (1.0 - burn) + 0.3 * thick * smoothstep(1.0, -6.0, vRelief) + 0.14 * thick * smoothstep(0.3, 0.6, smoothN.y) + 0.42 * (1.0 - 0.6 * gripHand) * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, (0.25 + 0.65 * thick) * windward);
+    // (The lee is bare rock: the gale lays no frost on a face it does not reach, and what stands in its cracks is thin.)
+    float bare = 1.0 - 0.7 * smoothstep(-0.05, 0.4, dot(smoothN.xz, uWind.xz));
+    float cover = clamp(0.5 * rime + (0.34 + 0.62 * thick) * windward * (1.0 - burn) + bare * (0.3 * thick * smoothstep(1.0, -6.0, vRelief) + 0.14 * thick * smoothstep(0.3, 0.6, smoothN.y) + 0.42 * (1.0 - 0.6 * gripHand) * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn)), 0.0, 0.95) * mix(crystals, 1.0, (0.25 + 0.65 * thick) * windward);
     // Staged by shot (uWet): the struck spire in the long lens is wet black rock, with frost only in its cracks.
     cover *= 1.0 - 0.85 * uWet;
     // Under the lens the frost lies piece by piece, more on one than on the next, and an open crack is a dark line through it.

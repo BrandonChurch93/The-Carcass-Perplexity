@@ -1,7 +1,7 @@
 // The land in the open air: the rock and the snow of the ground and of the spires (KIND 0 and 1). The inside of the canal keeps its own main.
 // The rock is one generated sheet of jointed granite (land/granite, 15 m by 10 m), laid at three sizes on the three planes of the beds, each lay
 // turned and shifted against the others so no repeat stands; its snow lies where the rock's own relief can hold it; the snow is the generated
-// wind pack (land/snowpack, 9 m by 6 m) at two sizes across the gale. What is baked for a hero mesh (land/hero-*) lies over all of it.
+// wind pack (land/snowpack, 9 m by 6 m) at two sizes across the gale.
 export const OPEN_UNIFORMS = /* glsl */ `
 uniform sampler2D tGran;
 uniform sampler2D tGranNh;
@@ -11,7 +11,6 @@ uniform sampler2D tCrop;
 uniform sampler2D tCropNh;
 uniform sampler2D tFrost;
 uniform sampler2D tFrostNh;
-uniform sampler2D tHeroAo;
 const vec3 GRAN_MEAN = vec3(0.2324, 0.1975, 0.1774);
 const vec3 PACK_MEAN = vec3(0.4489, 0.4965, 0.6154);
 const vec3 CROP_MEAN = vec3(0.1996, 0.2158, 0.2667);
@@ -133,31 +132,6 @@ void main() {
   float facet = 1.0;
   float across = 0.0;
   float held = 1.0;
-#ifdef HERO_MAPS
-  // The hero is built of slabs (meshes.ts, heroSlabs): each face is a plane and has its own number, carried as the radius of vHero. Its
-  // baked occlusion lies on the unwrap of its lattice.
-  float slabId = 1.0;
-  bool core = false;
-  {
-    float turn = dot(vHero.xy, vHero.xy);
-    float radius = sqrt(turn);
-    slabId = clamp(2.0 * radius - 1.0, 0.0, 1.0);
-    core = radius < 0.4;
-    vec2 at = vec2(atan(vHero.y, vHero.x) / 6.2831853, vHero.z);
-    vec2 hx = vec2((vHero.x * dFdx(vHero.y) - vHero.y * dFdx(vHero.x)) / (6.2831853 * turn), dFdx(vHero.z));
-    vec2 hy = vec2((vHero.x * dFdy(vHero.y) - vHero.y * dFdy(vHero.x)) / (6.2831853 * turn), dFdy(vHero.z));
-    float lodRaw = lodAt(hx, hy, 2048.0);
-    // (Under a lens some metres off a texel of this map is many pixels wide: what it holds is then a soft stain, and it is let go.)
-    held = smoothstep(-4.0, -1.5, lodRaw);
-    baked = textureLod(tHeroAo, at, max(0.0, lodRaw)).rgb;
-    // The blade has two faces on each side and an arete between them: windward of it the rock looks into the storm and is the dark face,
-    // toward the lee it looks to the low light. The line wanders as the blocks have broken.
-    across = sign(vHero.x) * pow(abs(vHero.x) / sqrt(turn), 0.6667);
-    float arete = across + 0.22 + 0.07 * sin(vHero.z * 23.0) + 0.04 * sin(vHero.z * 61.0 + 1.0);
-    float leeward = smoothstep(-0.012, 0.012, arete);
-    n0 = normalize(n0 + normalize(vec3(uWind.x, 0.0, uWind.z)) * mix(-0.6, 0.25, leeward) * smoothstep(0.02, 0.2, vHero.z) * (1.0 - smoothstep(0.75, 1.0, abs(across))));
-  }
-#endif
 
   // The frame of the beds: up along the lean of a spire (straight up on the ground), and the two level ways across.
   vec3 up = normalize(vUp);
@@ -172,12 +146,6 @@ void main() {
   float slabTone = 1.0;
   // (The face before its slabs are cut: what is heaped on the rock lies on this.)
   vec3 nFace = n0;
-#ifdef HERO_MAPS
-  slabTone = 0.8 + 0.4 * slabId;
-  // (The under side of a slab that stands proud looks at the snow below it and has its light from there: it is in shade, not in the dark.)
-  float under = smoothstep(-0.1, -0.5, n0.y);
-  n0 = normalize(vec3(n0.x, max(n0.y, -0.12), n0.z));
-#else
   if (spire) {
     // The slabs smaller than the mesh can cut, in three sizes: each turns its face a little its own way.
     float px = max(length(Px), length(Py));
@@ -194,7 +162,6 @@ void main() {
     // The rig's lights are broad and a slab's turn of some degrees would hardly show in them: the low source is counted again on the turn.
     facet = clamp(1.0 + 2.0 * (dot(n0, KEY_DIR) - dot(smoothN, KEY_DIR)), 0.45, 1.55);
   }
-#endif
   vec3 nb = normalize(n0 + ng);
   vec3 nl = vec3(dot(nb, ax), dot(nb, up), dot(nb, bx));
   // Each face takes the plane it looks at most squarely, and its neighbour only in a narrow turn between them: nothing is pulled long.
@@ -269,19 +236,7 @@ void main() {
   // Its cracks are dark: the sky does not reach into them.
   float occ = 0.55 + 0.45 * smoothstep(0.1, 0.55, pit);
   albedo *= slabTone * facet;
-#ifdef HERO_MAPS
-  occ *= mix(0.78, 0.55, held) + mix(0.22, 0.45, held) * smoothstep(0.1, 0.85, baked.r);
-  // No two slabs have weathered alike: a fresh break is warm and light, an old face grey blue and darker.
-  albedo *= mix(vec3(0.72, 0.76, 0.86) * 0.9, vec3(1.12, 1.03, 0.92), smoothstep(0.25, 0.75, fract(slabId * 7.31))) / tone;
-  // (Between two slabs the rock behind them is seen: it is in the dark.)
-  if (core) {
-    albedo *= 0.35;
-    occ *= 0.3;
-  }
-  occ *= 1.0 - 0.5 * under;
-#else
   if (spire) occ *= 0.45 + 0.55 * smoothstep(-5.0, 0.5, vRelief);
-#endif
 
   // The burn: the top of a spire is black glass where the lightning has come to it, time after time, and streaked below.
   float burn = 0.0;
@@ -301,18 +256,8 @@ void main() {
   // own relief cuts its edge, so the line where snow meets stone is broken at the size of the stone.
   float drift = vnoise(vWorld.xz / 47.0 + 7.3);
   float lie = nRock.y * 0.3 + mix(n0.y, nFace.y, 0.8) * 0.7 + 0.2 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
-#ifdef HERO_MAPS
-  // (Held to what the face of the lattice can carry, and its edge broken by the rock: a drift cut on the line of a triangle is a card.)
-  lie = min(lie, mix(flat_, n0.y, 0.45) * 0.9 + 0.22 + 0.22 * (vnoise(P.xz * 1.1 + P.y * 0.7) - 0.5) + 0.1 * (vnoise(P.xz * 4.3 + P.y * 2.9) - 0.5));
-#endif
   if (ground) lie -= 0.3 * rockness;
-#ifdef HERO_MAPS
-  // (A slab is a plane: snow that lay on one that only leans would be a white card. It lies on the ledges, and on those broad enough
-  // to be seen as ledges: on the top of a slab that stands well before the one above it. A ledge of a hand is a white dot.)
-  float hold = 0.66 + 0.4 * (1.0 - smoothstep(0.15, 0.4, vRelief));
-#else
   float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
-#endif
   float snow = show > 0.01 ? smoothstep(hold, hold + 0.1, lie) : 1.0;
   snow *= 1.0 - burn;
   if (spire) snow *= mix(1.0, smoothstep(-0.15, 0.3, lee), uWet);
@@ -324,15 +269,8 @@ void main() {
 
   // Rime: on what looks into the gale the frost has grown in plumes, thick on windward faces and on edges, none in the lee.
   vec3 nRime = nFace;
-#ifdef HERO_MAPS
-  // Windward of the arete the whole face looks into the gale.
-  float windward = smoothstep(-0.1, -0.5, across);
-  // (High on the blade the gale strips it and the strikes burn it: the upper windward face is bare and is the dark face.)
-  float stripped = 1.0 - 0.7 * smoothstep(0.45, 0.8, vHero.z);
-#else
   float stripped = 1.0;
   float windward = 0.0;
-#endif
   float rime = 0.0;
   if (show > 0.01) {
     float leeFace = mix(lee, dot(nFace.xz, uWind.xz), 0.75);
@@ -412,25 +350,6 @@ void main() {
   // Against a rock that stands out of it the snow lies in the rock's shadow.
   occ = mix(occ, snowOcc * (1.0 - 0.3 * show * smoothstep(hold + 0.25, hold + 0.05, lie)), snow);
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
-  // The lip of the near mouth: melt runs out of the canal and freezes on the broken stone of the arch, a sheet of ice thick over its crown
-  // and in runs down its sides. (The same broken line as the opening is cut by, in the depth pass.)
-  if (dCanal > -42.0 && dCanal < 14.0 && vWorld.y > CANAL_FLOOR - 0.2) {
-    float r = flareAt(dCanal);
-    vec2 over = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
-    if (max(abs(over.x), abs(over.y)) < 1.45 * r) {
-      float turn = atan(over.y, over.x);
-      float ragged = 0.72 + 0.26 * vnoise(vec2(turn * 2.3 + 5.0, 0.7)) + 0.12 * (vnoise(vec2(turn * 8.0 + 1.0, 2.9)) - 0.5) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
-      float low = 1.0 + 0.75 * smoothstep(-0.2, 0.7, over.y / r);
-      float out_ = length(over * vec2(1.0, low)) / ((r - 0.8) * ragged) - 1.0;
-      float crown = smoothstep(-0.3, 0.6, over.y / r);
-      float runs = vnoise(vec2(vSL.y * 0.55, 3.3)) * 0.6 + vnoise(vec2(vSL.y * 1.9, 7.1)) * 0.4;
-      float ice = (1.0 - smoothstep(0.0, mix(0.05, 0.22, crown) * (0.4 + 1.2 * runs), out_)) * smoothstep(-0.25, 0.1, over.y / r);
-      albedo = mix(albedo, vec3(0.5, 0.57, 0.66) * (0.8 + 0.4 * runs), 0.85 * ice);
-      rough = mix(rough, 0.22, ice);
-      occ = mix(occ, 1.0, 0.7 * ice);
-      n = normalize(mix(n, nFace, 0.6 * ice));
-    }
-  }
 ${scorch}
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
   vec3 lightAt = vWorld;

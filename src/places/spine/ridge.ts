@@ -29,8 +29,7 @@ export interface Spire {
 
 // Where each spire stands (x, z), the height of the crest at its foot, and its own: how tall it is, which sheet it is cut from (0 the tower with the
 // mouth, 1 the snapped stump, 2 the hooked horn), how broad for the sheet (negative: the sheet turned over), how thick for its breadth, and its turn in degrees.
-// No two are alike and they are not evenly spaced. Past the first they are all blades of the tower's kind, narrower, stepping down along the
-// ridge and leaning each its own way (shear, below): a horn or a stump among them reads as a cut-out at this distance.
+// No two are alike and they are not evenly spaced: some are horns, some are stumps the lightning has taken down.
 const TABLE: [number, number, number, number, number, number, number, number][] = [
   [-3900, 1300, 50, 232, 2, 1.0, 0.5, 10],
   [-3100, 1150, 40, 180, 1, 0.9, 0.55, -8],
@@ -38,16 +37,16 @@ const TABLE: [number, number, number, number, number, number, number, number][] 
   [-1540, 740, 10, 170, 1, 1.2, 0.5, 0],
   [-732, 451, 20, 230, 2, 0.9, 0.5, 18],
   [0, 0, 0, 300, 0, 0.62, 0.79, 21],
-  [740, 184, -25, 196, 0, 0.5, 0.55, 12],
+  [740, 184, -25, 168, 2, 1.25, 0.55, 12],
   [1596, 452, -40, 292, 0, 0.85, 0.62, 20],
-  [2470, 745, -70, 236, 0, 0.56, 0.5, -10],
-  [3010, 968, -110, 262, 0, 0.44, 0.6, 26],
-  [3990, 1400, -150, 204, 0, 0.6, 0.48, 5],
-  [4540, 1676, -190, 222, 0, 0.47, 0.56, 16],
-  [5246, 2052, -230, 132, 0, 0.7, 0.5, -14],
-  [5939, 2452, -270, 176, 0, 0.5, 0.55, 22],
-  [6617, 2876, -310, 108, 0, 0.66, 0.5, 8],
-  [7280, 3323, -350, 138, 0, 0.52, 0.55, 15],
+  [2470, 745, -70, 250, 1, 1.1, 0.55, -10],
+  [3010, 968, -110, 300, 2, 0.7, 0.5, 26],
+  [3990, 1400, -150, 250, 1, 1.0, 0.6, 5],
+  [4540, 1676, -190, 232, 2, 1.1, 0.5, 16],
+  [5246, 2052, -230, 82, 1, -1.8, 0.6, -14],
+  [5939, 2452, -270, 188, 2, -0.75, 0.5, 22],
+  [6617, 2876, -310, 70, 1, 2.0, 0.6, 8],
+  [7280, 3323, -350, 140, 2, 1.3, 0.5, 15],
 ];
 
 export const FIRST = 5;
@@ -213,7 +212,7 @@ spires.forEach((sp, i) => {
     sp.col0 = 0.5 * (a + b);
     sp.l0 = 0;
     // The third (the one the long lens sees struck) stands more upright than its sheet: its steep side to the storm, its long shoulder to the lee.
-    sp.shear = i === FIRST + 2 ? -0.3 : i > FIRST ? 0.05 + 0.24 * Math.sin(i * 2.7 + 1) : 0.12 * Math.sin(i * 2.7 + 1);
+    sp.shear = i === FIRST + 2 ? -0.3 : 0.12 * Math.sin(i * 2.7 + 1);
   }
   const [a, b] = outline(sh, sh.tip + sp.tip / sp.mv);
   sp.half = 0.5 * (b - a) * sp.mh;
@@ -323,9 +322,6 @@ export interface FinPoint {
   half: number;
   thick: number;
   y: number;
-  /** The middle and half breadth of the outline before its edges are broken: what a lattice laid on a face holds to, so the breaks of the edges do not shear it. */
-  centre0: number;
-  half0: number;
 }
 
 export const FIN_ROOT = 110;
@@ -382,7 +378,7 @@ export function fin(sp: Spire, t: number): FinPoint {
   const wide = Math.max(1.5, 0.5 * (hi - lo)) + 0.3 * (under - low);
   const thin = Math.min(0.45 * wide + 2, sp.thick);
   const thick = thin + (sp.thick - thin) * Math.pow(q, 1.05) * (1 - 0.3 * smooth(0.3, 0.8, h)) + 0.2 * under;
-  return { centre: 0.5 * (lo + hi), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t, centre0: 0.5 * (l1 + l2), half0: Math.max(1.5, 0.5 * Math.abs(l2 - l1)) + 0.3 * (under - low) };
+  return { centre: 0.5 * (lo + hi), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t };
 }
 
 /** The two level axes of a blade: across it (toward the lee) and along it (down the ridge), each turned by the spire's yaw. */

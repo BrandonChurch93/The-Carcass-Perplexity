@@ -5,10 +5,8 @@ import type { Rng } from '../../../core/rng';
 import { EXIT, FIN_DEEP, FIN_ROOT, FIN_SECTION, FLOOR, MOUTH_S, S_MAX, S_MIN, canalInFin, canalL, fin, finAxes, first, flare, frameAt, locate, sheetAt, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
 import { height, heightAt, landAt, slab, vnoise } from './height';
-import { HERO } from './hero';
 
 interface Extra {
-  wall?: number[];
   normals?: number[];
   relief?: number[];
   up?: [number, number, number];
@@ -26,7 +24,6 @@ function finish(pos: number[], index: number[], top: number[], sl: number[], ext
   const ups = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) ups.set(up, i * 3);
   g.setAttribute('aUp', new THREE.Float32BufferAttribute(ups, 3));
-  if (extra.wall) g.setAttribute('aWall', new THREE.Float32BufferAttribute(extra.wall, 1));
   g.setIndex(index);
   if (extra.normals) g.setAttribute('normal', new THREE.Float32BufferAttribute(extra.normals, 3));
   else g.computeVertexNormals();
@@ -257,9 +254,6 @@ function jointing(around: number, girth: (y: number) => number, fine: (y: number
 }
 
 // Where the kites hold: between these shares of the breadth, toward the lee edge, the relief turns from square to the face to along the thickness.
-// Where the arete of the hero's front stands across its breadth (-1 the windward edge, 1 the lee), and how far the windward plane is cut flat.
-const ARETE = 0.08;
-const ARETE_CUT = 0.75;
 const LEE_FROM = 0.35;
 const LEE_FULL = 0.65;
 const LEE_BLUNT = 2.4;
@@ -269,7 +263,7 @@ const LEE_IN = 2.5;
 /** A spire: a leaning broken blade cut from its feature sheet (the outline and the relief are the sheet's), and its root down the flanks into the cloud. */
 // level: 2 the spire the lens comes close to, 1 one that is seen whole in a long lens, 0 one far down the ridge. The triangles are dear in a
 // software renderer whether or not they are seen large, so only the first spire has the finest mesh.
-export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THREE.BufferGeometry {
+export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeometry {
   const UP = level > 1.5 ? 230 : level > 0.5 ? SPIRE_MID[0] : 48;
   const DOWN = level > 1.5 ? 50 : level > 0.5 ? 18 : 8;
   const AROUND = level > 1.5 ? 400 : level > 0.5 ? SPIRE_MID[1] : 96;
@@ -279,7 +273,6 @@ export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THR
   const top: number[] = [];
   const sl: number[] = [];
   const relief: number[] = [];
-  const wall: number[] = [];
   const tipY = fin(sp, 1).y;
   const tall = sp.tip + FIN_ROOT;
   const t0 = FIN_ROOT / tall;
@@ -341,19 +334,11 @@ export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THR
         ln < 0
           ? (bite(u - 0.3 * ln * p.half, 0) * Math.min(0.3, 15 / p.half) + bite(u + 0.25 * ln * p.half, 1) * Math.min(0.12, 5 / p.half)) * Math.pow(-ln, 3) * Math.min(1, Math.max(0, (tipY - p.y) / 30))
           : Math.min(0, bite(u + 0.3 * ln * p.half, 2) + 0.25) * Math.min(0.26, 15 / p.half) * Math.pow(ln, 2) * notch;
-      let l = p.centre + ln * p.half * snap * (1 + rag);
-      if (bare) {
-        // The broken edges are the edges' own: across the faces the lattice holds to the unbroken outline. A lattice that slides with every
-        // break of an edge shears the face's relief ring by ring, and each shear stands on the face as a level rib.
-        const e = Math.min(1, Math.max(0, (Math.abs(ln) - 0.6) / 0.38));
-        const plain = p.centre0 + ln * p.half0 * snap;
-        l = plain + (l - plain) * e * e * (3 - 2 * e);
-      }
+      const l = p.centre + ln * p.half * snap * (1 + rag);
       const y = p.y - (cap ? 1 : 0);
       // Its faces stand in and out as the sheet's relief has them, and the rock on top of that is jointed into blocks (see `jointing`).
       const [su, sv] = sheetAt(sp, l, y);
-      // (Bare: the blade with its sheet's relief and no blocks, for a hero whose blocks are built elsewhere and laid on it: see hero.ts.)
-      const [cut, joint] = bare ? [0, 0] : joints(a, y);
+      const [cut, joint] = joints(a, y);
       const scale = Math.min(1, Math.max(0.22, p.thick / 42));
       // The lee edge keeps its line (the kites hold to it); the windward edge is let stand in and out block by block, so it is broken against the sky.
       const keep = 1 - (ln > 0 ? 0.92 : 0.45) * edge;
@@ -362,22 +347,11 @@ export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THR
       const k = Math.min(1, Math.max(0, (ln - LEE_FROM) / (LEE_FULL - LEE_FROM)));
       const lee = k * k * (3 - 2 * k);
       // (No face of a block is a plane: it swells and gives a little, smoothly, so the mesh can show it.)
-      const swell = bare ? 0 : 1.3 * (vnoise(u / 6.5 + seed, l / 6.5 + face * 50) - 0.5) + 0.7 * (vnoise(u / 2.6 + 9.1, l / 2.6 + face * 50 + seed) - 0.5);
+      const swell = 1.3 * (vnoise(u / 6.5 + seed, l / 6.5 + face * 50) - 0.5) + 0.7 * (vnoise(u / 2.6 + 9.1, l / 2.6 + face * 50 + seed) - 0.5);
       const blocks = Math.max(-0.35 * p.thick, Math.min(0.5 * p.thick, scale * (cut + swell)));
       const n = broad + (blocks + lee * (Math.max(-LEE_IN, Math.min(LEE_OUT, blocks)) - blocks)) * keep;
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
-      let section = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION);
-      if (bare && face < 0 && ln < ARETE) {
-        // The hero's face to the lens of the wide shot is two planes that meet in an arete, not one round front: from the arete to the
-        // windward edge it is cut back toward a flat plane that looks to the storm and is dark, and the plane on the lee of the arete keeps
-        // the last light. Only below the kites' holdfasts, and not under the crest.
-        const k0 = Math.min(1, Math.max(0, (hh - 0.3) / 0.28));
-        const k1 = Math.min(1, Math.max(0, (hh + 0.3) / 0.3));
-        const cut = ARETE_CUT * (1 - k0 * k0 * (3 - 2 * k0)) * k1 * k1 * (3 - 2 * k1);
-        const flat = (Math.pow(1 - Math.pow(Math.abs(ARETE), FIN_SECTION), 1 / FIN_SECTION) * (1 + ln)) / (1 + ARETE);
-        section += (flat - section) * cut;
-      }
-      const body = section * p.thick * (ends && face > 0 ? 0.6 : 1);
+      const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);
       // The rock stands out of the blade square to its face, not along its thickness: on the thin ends of a blade a relief pushed along the
       // thickness slides along the face instead of standing out of it, and every joint there is drawn out into shards.
       const thickHere = p.thick * (ends && face > 0 ? 0.6 : 1);
@@ -390,7 +364,6 @@ export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THR
       let across = l + ((1 - lee) * n * gl) / gn;
       // (And at the edge itself the blade is blunt, some metres through, where it was a knife: the holdfasts stand on that.)
       const pad = Math.min(1, Math.max(0, (ln - 0.86) / 0.1));
-      let held = 0;
       let along = face * Math.max(0.3 * body, body + n * (gb / gn + lee * (1 - gb / gn)), LEE_BLUNT * pad * pad * (3 - 2 * pad)) * snap;
       // About the mouth and the way out the face stands just outside the canal's end, so the canal is cut through a wall; the relief
       // only stands out of that wall, never in.
@@ -405,14 +378,12 @@ export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THR
           for (let i = 0; i < 5; i++) want += (target - locate(sp.x + m.ax * l + m.bx * want, sp.z + m.az * l + m.bz * want).s) / 0.9;
           const k = w * w * (3 - 2 * w);
           along += (want - along) * k;
-          held = k;
           across += (l - across) * k;
         }
       }
       const x = sp.x + m.ax * across + m.bx * along;
       const z = sp.z + m.az * across + m.bz * along;
       pos.push(x, y, z);
-      wall.push(held);
       top.push(tipY - y);
       // (A joint is darker than it is deep: the light does not reach into it.)
       relief.push(n - 4 * joint * scale * keep);
@@ -434,344 +405,7 @@ export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THR
   // The beds of its rock run up along its lean.
   const run = (fin(sp, t0 + 0.7 * (1 - t0)).centre - fin(sp, t0).centre) / (0.7 * sp.tip);
   const len = Math.hypot(run, 1);
-  return finish(pos, index, top, sl, { relief, up: [(m.ax * run) / len, 1 / len, (m.az * run) / len], wall: bare ? wall : undefined });
-}
-
-/**
- * The first spire as a hero object: the bare blade with the relief that was built for it out of the film (assets-src/spine/land/make-hero.py:
- * the rock cut by three sets of joints in space, four times finer than this lattice, its occlusion baked and its normals taken from the fine
- * mesh). Here the lattice takes that relief along its own normals, and carries where it is on the unwrap of the baked pictures.
- */
-export function heroSpire(sp: Spire, rng: Rng): THREE.BufferGeometry {
-  const g = spireMesh(sp, rng, 2, true);
-  const pos = g.getAttribute('position').array as Float32Array;
-  const nor = g.getAttribute('normal').array as Float32Array;
-  const relief = g.getAttribute('aRelief').array as Float32Array;
-  const count = pos.length / 3;
-  if (count !== HERO.rings * HERO.around) throw new Error('spine/land: the hero relief is not on this lattice');
-  const d = Int8Array.from(atob(HERO.relief), (c) => c.charCodeAt(0));
-  const at = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    const n = (d[i] as number) * HERO.unit;
-    for (let k = 0; k < 3; k++) pos[i * 3 + k] = (pos[i * 3 + k] as number) + (nor[i * 3 + k] as number) * n;
-    relief[i] = (relief[i] as number) + n;
-    // (Round the blade as a point on a circle, so the unwrap closes on itself without a seam.)
-    const th = (2 * Math.PI * (i % HERO.around)) / HERO.around;
-    at[i * 3] = Math.cos(th);
-    at[i * 3 + 1] = Math.sin(th);
-    at[i * 3 + 2] = Math.floor(i / HERO.around) / (HERO.rings - 1);
-  }
-  g.setAttribute('aHero', new THREE.Float32BufferAttribute(at, 3));
-  g.userData.wall = Float32Array.from(g.getAttribute('aWall').array as Float32Array);
-  g.deleteAttribute('aWall');
-  g.computeVertexNormals();
-  g.computeBoundingSphere();
-  return g;
-}
-
-/**
- * The hero's rock as it is broken: slabs, each a plane with its own lean, standing a little before or behind its neighbours, with sides
- * that go back into the rock. A joint is the step between two planes and nothing else: it is straight because the planes are, and the
- * outline of the blade is broken by the slabs that stand proud. The slabs are cut along the lattice of `heroSpire` (strips up the blade,
- * one or two of its columns wide, broken across every few rings, no two strips at the same ring) and each lies on the outermost rock of
- * its patch. Behind them stands the lattice itself, set back, so no gap between two slabs looks through the blade; under the crest and at
- * the tip the lattice is kept as it is. A slab's number goes with it as the radius of `aHero` (0.5 to 1; the set-back rock has 0.25).
- */
-export function heroSlabs(sp: Spire, rng: Rng): THREE.BufferGeometry {
-  const g = heroSpire(sp, rng);
-  const R = HERO.rings;
-  const A = HERO.around;
-  const P = g.getAttribute('position').array as Float32Array;
-  const N = Float32Array.from(g.getAttribute('normal').array as Float32Array);
-  // (Out of the blade, whichever way the lattice is wound: away from the middle of its ring.)
-  {
-    let outward = 0;
-    for (let r = 0; r < R; r += 7) {
-      const mid = [0, 0, 0];
-      for (let a = 0; a < A; a++) for (let k = 0; k < 3; k++) mid[k] = (mid[k] as number) + (P[(r * A + a) * 3 + k] as number) / A;
-      for (let a = 0; a < A; a += 5) {
-        const i = (r * A + a) * 3;
-        for (let k = 0; k < 3; k++) outward += (N[i + k] as number) * ((P[i + k] as number) - (mid[k] as number));
-      }
-    }
-    if (outward < 0) for (let i = 0; i < N.length; i++) N[i] = -(N[i] as number);
-  }
-  const top = g.getAttribute('aTop').array as Float32Array;
-  const sl = g.getAttribute('aSL').array as Float32Array;
-  const upAt = g.getAttribute('aUp').array as Float32Array;
-  const wall = g.userData.wall as Float32Array;
-  const pos: number[] = [];
-  const nor: number[] = [];
-  const oTop: number[] = [];
-  const oSl: number[] = [];
-  const oRelief: number[] = [];
-  const oHero: number[] = [];
-  const index: number[] = [];
-  const FROM = 38;
-  const TO = R - 4;
-  const BACK = 0.9;
-  const at = (a: number, r: number): number => r * A + (((a % A) + A) % A);
-  const put = (x: number, y: number, z: number, nx: number, ny: number, nz: number, src: number, relief: number, radius: number): number => {
-    pos.push(x, y, z);
-    nor.push(nx, ny, nz);
-    oTop.push((top[src] as number) + (P[src * 3 + 1] as number) - y);
-    oSl.push(sl[src * 2] as number, sl[src * 2 + 1] as number);
-    oRelief.push(relief);
-    const th = (2 * Math.PI * (src % A)) / A;
-    oHero.push(Math.cos(th) * radius, Math.sin(th) * radius, Math.floor(src / A) / (R - 1));
-    return pos.length / 3 - 1;
-  };
-  // A triangle wound so that it faces the way its normal looks.
-  const tri = (i: number, j: number, k: number): void => {
-    const ux = (pos[j * 3] as number) - (pos[i * 3] as number);
-    const uy = (pos[j * 3 + 1] as number) - (pos[i * 3 + 1] as number);
-    const uz = (pos[j * 3 + 2] as number) - (pos[i * 3 + 2] as number);
-    const vx = (pos[k * 3] as number) - (pos[i * 3] as number);
-    const vy = (pos[k * 3 + 1] as number) - (pos[i * 3 + 1] as number);
-    const vz = (pos[k * 3 + 2] as number) - (pos[i * 3 + 2] as number);
-    const d = (uy * vz - uz * vy) * (nor[i * 3] as number) + (uz * vx - ux * vz) * (nor[i * 3 + 1] as number) + (ux * vy - uy * vx) * (nor[i * 3 + 2] as number);
-    if (d >= 0) index.push(i, j, k);
-    else index.push(i, k, j);
-  };
-  // The lattice itself: whole under the crest, and above it set back behind the slabs on every second ring and column.
-  const back = (r: number): number => {
-    const k = Math.min(1, Math.max(0, (r - FROM) / 6)) * Math.min(1, Math.max(0, (R - 2 - r) / 6));
-    return BACK * k * k * (3 - 2 * k) * (1 - 0.45 * Math.min(1, Math.max(0, (r / R - 0.55) / 0.3)));
-  };
-  const ringList: number[] = [];
-  for (let r = 0; r < FROM; r++) ringList.push(r);
-  for (let r = FROM; r < R - 1; r += 2) ringList.push(r);
-  ringList.push(R - 1);
-  const rows: number[][] = ringList.map((r) => {
-    const stride = r < FROM ? 1 : 2;
-    const row: number[] = [];
-    for (let a = 0; a < A; a += stride) {
-      const i = at(a, r);
-      const b = back(r);
-      row.push(
-        put((P[i * 3] as number) - (N[i * 3] as number) * b, (P[i * 3 + 1] as number) - (N[i * 3 + 1] as number) * b, (P[i * 3 + 2] as number) - (N[i * 3 + 2] as number) * b, N[i * 3] as number, N[i * 3 + 1] as number, N[i * 3 + 2] as number, i, 0, r < FROM ? 1 : 0.25),
-      );
-    }
-    return row;
-  });
-  for (let k = 0; k + 1 < rows.length; k++) {
-    const lo = rows[k] as number[];
-    const hi = rows[k + 1] as number[];
-    if (lo.length === hi.length) {
-      for (let a = 0; a < lo.length; a++) {
-        const b = (a + 1) % lo.length;
-        tri(lo[a] as number, hi[a] as number, lo[b] as number);
-        tri(lo[b] as number, hi[a] as number, hi[b] as number);
-      }
-    } else {
-      // (Where the whole lattice meets the one of every second column: a fan over each pair.)
-      for (let a = 0; a < hi.length; a++) {
-        const b = (a + 1) % hi.length;
-        const l0 = lo[2 * a] as number;
-        const l1 = lo[2 * a + 1] as number;
-        const l2 = lo[(2 * a + 2) % lo.length] as number;
-        tri(l0, hi[a] as number, l1);
-        tri(l1, hi[a] as number, hi[b] as number);
-        tri(l1, hi[b] as number, l2);
-      }
-    }
-  }
-  // The slabs.
-  const px = (i: number, k: number): number => P[i * 3 + k] as number;
-  const span = (i: number, j: number): number => Math.hypot(px(j, 0) - px(i, 0), px(j, 1) - px(i, 1), px(j, 2) - px(i, 2));
-  // (The way the face looks, over some metres: the lumps of the lattice are smaller than a slab.)
-  const SN = new Float32Array(R * A * 3);
-  for (let r = 0; r < R; r++) {
-    for (let a = 0; a < A; a++) {
-      let sx = 0;
-      let sy = 0;
-      let sz = 0;
-      for (let dr = -3; dr <= 3; dr++) {
-        const rr = Math.min(R - 1, Math.max(0, r + dr));
-        for (let da = -2; da <= 2; da++) {
-          const i = at(a + da, rr);
-          sx += N[i * 3] as number;
-          sy += N[i * 3 + 1] as number;
-          sz += N[i * 3 + 2] as number;
-        }
-      }
-      const l = Math.hypot(sx, sy, sz) || 1;
-      SN.set([sx / l, sy / l, sz / l], (r * A + a) * 3);
-    }
-  }
-  const RM = Math.floor(R * 0.45);
-  for (let a0 = 0; a0 < A; ) {
-    // A strip is some metres wide where the blade is broad, and no wider than the face stays one face: round an edge of the blade
-    // the strips are narrow.
-    const wish = rng.next();
-    const want = 1.2 + 3.8 * wish * wish;
-    let w = 1;
-    let across = span(at(a0, RM), at(a0 + 1, RM));
-    const s0 = at(a0, RM) * 3;
-    while (a0 + w < A && w < 48 && across < want) {
-      const s1 = at(a0 + w + 1, RM) * 3;
-      if ((SN[s0] as number) * (SN[s1] as number) + (SN[s0 + 1] as number) * (SN[s1 + 1] as number) + (SN[s0 + 2] as number) * (SN[s1 + 2] as number) < 0.93) break;
-      across += span(at(a0 + w, RM), at(a0 + w + 1, RM));
-      w++;
-    }
-    const a1 = a0 + w;
-    // Up the strip the slabs are tall, and the break between two runs aslant across it, each its own way.
-    // (A strip stands before its neighbours or behind them from its foot to its top, and looks its own way: the blade is fluted.)
-    const stripFree = Math.min(1, across / 1.5);
-    const stripProud = (rng.next() - 0.5) * 0.55 * stripFree;
-    const stripTurn = (rng.next() - 0.5) * 0.5 * Math.min(1, 2.2 / across);
-    // How far the rock of this column stands off the straight line between two of its rings.
-    const bow = (r0: number, r1: number): number => {
-      const i = at(a0, r0);
-      const j = at(a0, r1);
-      const len = span(i, j) || 1;
-      let far = 0;
-      for (let r = r0 + 1; r < r1; r++) {
-        const m = at(a0, r);
-        const t = ((px(m, 0) - px(i, 0)) * (px(j, 0) - px(i, 0)) + (px(m, 1) - px(i, 1)) * (px(j, 1) - px(i, 1)) + (px(m, 2) - px(i, 2)) * (px(j, 2) - px(i, 2))) / (len * len);
-        far = Math.max(far, Math.hypot(px(m, 0) - px(i, 0) - t * (px(j, 0) - px(i, 0)), px(m, 1) - px(i, 1) - t * (px(j, 1) - px(i, 1)), px(m, 2) - px(i, 2) - t * (px(j, 2) - px(i, 2))));
-      }
-      return far;
-    };
-    let b0 = FROM - Math.floor(rng.next() * 4);
-    let b1 = b0;
-    while (b0 < TO) {
-      const rise = Math.max(0.05, span(at(a0, b0), at(a0, Math.min(R - 1, b0 + 1))));
-      const slant = Math.min(6, Math.floor((0.45 * across) / rise));
-      // (Tall, as far as the blade stays straight under it.)
-      let tall = Math.max(3, Math.min(110, Math.round((4 + 22 * rng.next() ** 2) / rise)));
-      for (let k = 0; k < 5 && tall > 4 && bow(b0, Math.min(R - 1, b0 + tall)) > 0.7; k++) tall = Math.max(4, Math.floor(tall * 0.62));
-      let t0 = b0 + tall;
-      let t1 = Math.max(b1 + 2, t0 + Math.round((rng.next() - 0.5) * 2 * slant));
-      if (t0 >= TO - 2 || t1 >= TO - 2) {
-        t0 = TO;
-        t1 = TO;
-      }
-      const c = [at(a0, b0), at(a1, b1), at(a1, t1), at(a0, t0)] as const;
-      const rLo = Math.min(b0, b1);
-      const rHi = Math.max(t0, t1);
-      b0 = t0;
-      b1 = t1;
-      // Its plane: the way the face looks there, turned a little its own way (more round the blade than up or down, and back
-      // rather than forward: a face tipped to the ground is black in this light).
-      let nx = 0;
-      let ny = 0;
-      let nz = 0;
-      for (let r = rLo; r <= rHi; r++) {
-        for (let a = a0; a <= a1; a++) {
-          const i = at(a, r) * 3;
-          nx += SN[i] as number;
-          ny += SN[i + 1] as number;
-          nz += SN[i + 2] as number;
-        }
-      }
-      let nl = Math.hypot(nx, ny, nz);
-      const wide = 0.5 * (span(c[0], c[1]) + span(c[3], c[2]));
-      const kind = rng.next();
-      const stand = rng.next();
-      const id = 0.05 + 0.95 * rng.next();
-      const turnRound = stripTurn + (rng.next() - 0.5) * 0.16;
-      const turnBack = -0.05 + 0.22 * rng.next();
-      if (nl < 1e-6 || wide < 0.02) continue;
-      nx /= nl;
-      ny /= nl;
-      nz /= nl;
-      const side = Math.hypot(nx, nz);
-      if (side > 0.2) {
-        const hx = nz / side;
-        const hz = -nx / side;
-        const k = Math.min(1, wide / 1.2);
-        // (cross(n, h): up the face.)
-        const ux = ny * hz;
-        const uy = nz * hx - nx * hz;
-        const uz = -ny * hx;
-        nx += k * (hx * turnRound + ux * turnBack);
-        ny += k * uy * turnBack;
-        nz += k * (hz * turnRound + uz * turnBack);
-        nl = Math.hypot(nx, ny, nz);
-        nx /= nl;
-        ny /= nl;
-        nz /= nl;
-      }
-      let facing = 0;
-      for (const i of c) facing += nx * (N[i * 3] as number) + ny * (N[i * 3 + 1] as number) + nz * (N[i * 3 + 2] as number);
-      if (facing < 0) {
-        nx = -nx;
-        ny = -ny;
-        nz = -nz;
-      }
-      // It lies on the outermost rock of its patch, and stands before that or behind it as it broke: most a hand or two proud, one in
-      // eight set back (a slab that has gone), one in twelve well forward. Round the mouth and on the thin tip, hardly.
-      let most = -Infinity;
-      let mean = 0;
-      let held = 0;
-      let n = 0;
-      for (let r = rLo * A, rr = rLo; rr <= rHi; rr++, r += A) {
-        for (let a = a0; a <= a1; a++) {
-          const i = r + (a % A);
-          const d = nx * px(i, 0) + ny * px(i, 1) + nz * px(i, 2);
-          most = Math.max(most, d);
-          mean += d;
-          held = Math.max(held, wall[i] as number);
-          n++;
-        }
-      }
-      mean /= n;
-      const free = Math.min(1, wide / 0.9) * (1 - held);
-      const proud = ((kind < 0.1 ? -0.25 * stand : kind < 0.2 ? 0.35 + 0.4 * stand : 0.03 + 0.25 * stand * stand) + stripProud) * free;
-      const level = mean + Math.min(0.4, 0.5 * (most - mean)) + proud;
-      const radius = 0.5 + 0.5 * id;
-      const q: [number, number, number][] = c.map((i) => {
-        const lift = level - (nx * px(i, 0) + ny * px(i, 1) + nz * px(i, 2));
-        return [px(i, 0) + nx * lift, px(i, 1) + ny * lift, px(i, 2) + nz * lift];
-      });
-      const f = q.map((v, k) => put(v[0], v[1], v[2], nx, ny, nz, c[k] as number, proud, radius));
-      tri(f[0] as number, f[1] as number, f[2] as number);
-      tri(f[0] as number, f[2] as number, f[3] as number);
-      // Its four sides go back into the rock, square to its face.
-      const mid = [0, 1, 2].map((k) => 0.25 * ((q[0] as number[])[k]! + (q[1] as number[])[k]! + (q[2] as number[])[k]! + (q[3] as number[])[k]!));
-      const deep = Math.max(0.5, Math.min(1.8, 2 * wide)) + Math.max(0, proud);
-      for (let e = 0; e < 4; e++) {
-        const u = q[e] as [number, number, number];
-        const v = q[(e + 1) % 4] as [number, number, number];
-        const ex = v[0] - u[0];
-        const ey = v[1] - u[1];
-        const ez = v[2] - u[2];
-        let sx = ey * nz - ez * ny;
-        let sy = ez * nx - ex * nz;
-        let sz = ex * ny - ey * nx;
-        const sLen = Math.hypot(sx, sy, sz);
-        if (sLen < 1e-6) continue;
-        const out = (sx * (0.5 * (u[0] + v[0]) - mid[0]!) + sy * (0.5 * (u[1] + v[1]) - mid[1]!) + sz * (0.5 * (u[2] + v[2]) - mid[2]!)) / sLen;
-        const sgn = out >= 0 ? 1 : -1;
-        sx *= sgn / sLen;
-        sy *= sgn / sLen;
-        sz *= sgn / sLen;
-        const i0 = put(u[0], u[1], u[2], sx, sy, sz, c[e] as number, proud, radius);
-        const i1 = put(v[0], v[1], v[2], sx, sy, sz, c[(e + 1) % 4] as number, proud, radius);
-        const i2 = put(v[0] - nx * deep, v[1] - ny * deep, v[2] - nz * deep, sx, sy, sz, c[(e + 1) % 4] as number, proud, radius);
-        const i3 = put(u[0] - nx * deep, u[1] - ny * deep, u[2] - nz * deep, sx, sy, sz, c[e] as number, proud, radius);
-        tri(i0, i1, i2);
-        tri(i0, i2, i3);
-      }
-    }
-    a0 = a1;
-  }
-  const out = new THREE.BufferGeometry();
-  const count = pos.length / 3;
-  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
-  out.setAttribute('aTop', new THREE.Float32BufferAttribute(oTop, 1));
-  out.setAttribute('aSL', new THREE.Float32BufferAttribute(oSl, 2));
-  out.setAttribute('aRelief', new THREE.Float32BufferAttribute(oRelief, 1));
-  const ups = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) ups.set([upAt[0] as number, upAt[1] as number, upAt[2] as number], i * 3);
-  out.setAttribute('aUp', new THREE.Float32BufferAttribute(ups, 3));
-  out.setAttribute('aHero', new THREE.Float32BufferAttribute(oHero, 3));
-  out.setIndex(index);
-  out.computeBoundingSphere();
-  g.dispose();
-  return out;
+  return finish(pos, index, top, sl, { relief, up: [(m.ax * run) / len, 1 / len, (m.az * run) / len] });
 }
 
 const D_LIST: number[] = [];
