@@ -9,6 +9,7 @@ import type { HeartContext } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { SEAMS, seamLine } from '../shared/anchors';
 import { AUTHORED, OWN as NET_OWN, type Net } from './net';
+import { SHEET_GLSL } from './sheet';
 import { HEAT_GLSL } from './heat';
 
 export interface LavaPiece {
@@ -182,9 +183,33 @@ varying vec2 vAcross;
 uniform float uLavaOn;
 uniform vec4 uPoolFlow[${MAX_POOLS}];
 uniform vec4 uTongue;
+uniform sampler2D tMeltNh;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${HEAT_GLSL}
+${SHEET_GLSL}
+
+// The photographed melt (melt-nh: r, g the slope of the skin, b the heat, 0 dark skin to 1 white melt) at a point p of what
+// the stream carries, with the footprint of a pixel there. Returns the slope of the skin (of a height that runs 0 to 1, per
+// metre, in p's own axes) and the heat.
+vec3 meltAt(vec2 p, float span, vec2 gx, vec2 gy, float seed) {
+  sheetGrid(p, span);
+  vec2 scale = vec2(1.0, 2.0) / span;
+  vec3 got = vec3(0.0);
+  float sum = 0.0;
+  for (int i = 0; i < 3; i++) {
+    mat2 turn;
+    vec2 shift;
+    float w = sheetCorner(i, seed, 0.16, turn, shift);
+    vec4 nh = textureGrad(tMeltNh, (turn * p) * scale + shift, (turn * gx) * scale, (turn * gy) * scale);
+    // Where two readings meet, the skin of one lies on the melt of the other.
+    float k = w * exp(5.0 * (1.0 - nh.b));
+    got += k * vec3(vec2(nh.r - 0.5, 0.5 - nh.g) * turn, nh.b);
+    sum += k;
+  }
+  got /= sum;
+  return vec3(got.xy * (682.7 / span), got.z);
+}
 
 const float CYCLE = 12.0;
 // One coil in so many metres of stream.
@@ -522,13 +547,39 @@ void main() {
   float kStream = mix(1200.0, kBody, inCore);
   kStream = mix(kStream, 1490.0 + 60.0 * heart + 20.0, stir);
   hot = mix(hot, blackbody(mix(kStream, 1300.0 + 230.0 * poolHeart + 150.0 * (drawnIn - 0.45), feeding) + 60.0 * (streak - 0.5) - 90.0 * thread * (1.0 - 0.6 * heart)), open);
+  // The stream as it was photographed: dark plates of half-cooled skin, torn and wrinkled, on bright melt. The sheet is read in
+  // what the stream carries whole. The plug in mid stream rides fast, the skin of the margins slowly, a coil turns as one,
+  // and between plug and margin the skin is sheared open: no reading is ever dissolved into another.
+  float photo = (1.0 - feeding) * (1.0 - stir);
+  if (photo > 0.0) {
+    vec2 hx = dFdx(here);
+    vec2 hy = dFdy(here);
+    float plugEdge = lean + 0.35 * (fixedBig - 0.5) - coreTo - 0.22;
+    float inPlug = (1.0 - smoothstep(-0.04, 0.04, plugEdge)) * (1.0 - inCoil);
+    vec3 plug = vec3(0.0);
+    vec3 side = vec3(0.0);
+    if (inPlug > 0.0) plug = meltAt(vec2(here.x - CORE_SPEED * uTime, here.y), 3.4, hx, hy, 5.0);
+    if (inPlug < 1.0) side = meltAt(rode, 2.4, hx, hy, 9.0);
+    // Mid stream the melt is bare and what skin rides on it is thin and red; at the margins the plates crowd and are cold,
+    // and the melt between them is orange.
+    float heatPlug = clamp(0.5 + 0.32 * mid + 0.6 * plug.z, 0.0, 1.0);
+    float heatSide = mix(0.1, 1.0, side.z) * mix(0.95, 0.65, smoothstep(0.4, 1.0, lean));
+    float heat = mix(heatSide, heatPlug, inPlug);
+    float sheared = (1.0 - smoothstep(0.0, 0.04 + grain, abs(plugEdge) * gape)) * smoothstep(0.35, 0.6, vnoise(vec2(here.x * 1.3 - 0.4 * uTime, 3.0 + vSeam.y))) * (1.0 - inCoil);
+    heat = max(heat, 0.85 * sheared);
+    hot = mix(hot, blackbody(800.0 + (780.0 + 60.0 * reachOpen * inPlug - 40.0 * farAway) * heat), photo);
+    open = mix(open, smoothstep(0.1, 0.28, heat), photo);
+    vec2 lay = mix(side.xy, plug.xy, inPlug) * 0.02;
+    vec2 onLake = lay.x * vec2(vAcross.y, -vAcross.x) + lay.y * vAcross;
+    nrm = normalize(mix(nrm, normalize(vec3(-onLake.x, 1.0, -onLake.y)), photo));
+  }
   // The heat of the melt creeps along it: no even pulse.
   hot *= 1.0 + 0.12 * (creepAt(q) - 0.5) * (0.4 + 0.6 * pool);
   // From the rim of the bowl whole reaches of it flare and dim as the heat travels through the lake.
   hot *= mix(1.0, mix(0.3, 1.5, smoothstep(0.22, 0.78, surgeAt(q))), smoothstep(50.0, 140.0, length(vWorld.xz - cameraPosition.xz)));
   float skin = 1.0 - open;
-  hot = mix(hot, blackbody(1270.0 + 110.0 * plateHash.x), burnt * onRafts);
-  skin *= 1.0 - burnt * onRafts;
+  hot = mix(hot, blackbody(1270.0 + 110.0 * plateHash.x), burnt * onRafts * (1.0 - photo));
+  skin *= 1.0 - burnt * onRafts * (1.0 - photo);
 
   // Against the bank a thin dark skin clings, torn, and the glow shows through the tears. Where the stream shears past it a bright line opens.
   float inside = -bank;
@@ -575,6 +626,11 @@ void main() {
     + skin * onRafts * (0.45 + 1.1 * pitted) * blackbody(1280.0) * 0.012 * fireLit * uLavaOn
     // The glow of the creases lies on the flanks of the ropes beside them: the skin is brown, not grey.
     + skin * 0.1 * (1.0 - 0.9 * onRafts) * blackbody(kCrease) * (1.0 - crease) * (0.25 + 0.75 * (1.0 - crest)) * uLavaOn;
+  // A photographed plate is dark old skin: the sky lights its crests, and the melt it rides on lights the flanks that face it.
+  if (photo > 0.0) {
+    float faces = clamp(0.5 + 1.5 * dot(nrm.xz, fireFrom.xz), 0.0, 1.0);
+    lit = mix(lit, skin * (openSky * (0.035 * skyIrradiance(nrm) / 3.14159 + fresnel * 0.4 * skyRadiance(normalize(r))) + blackbody(1300.0) * (0.02 * (0.3 + 0.7 * faces)) * uLavaOn), photo);
+  }
   gl_FragColor = vec4(rigOut(lit) + hot * uLavaOn, 1.0);
   // Last, after every derivative. The ribbon is wider than the gap: under the crust there is none, so a hollow of the crust never shows it.
   if (bank > 0.12) discard;

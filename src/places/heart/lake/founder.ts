@@ -10,7 +10,7 @@ import { outline } from './outline';
 /** The two plates that go under. `at` is the middle of the plate at the reference time, `toward` the bearing of the edge that dips first. */
 export const FOUNDERS = [
   { line: 'spatterRight', at: [-408.8, 267.8] as [number, number], size: [13, 8.5] as [number, number], turn: 0.71, begins: -3, lasts: 30, seed: 3 },
-  { line: 'spatterLeft', at: [-472.5, 130.2] as [number, number], size: [7, 4.6] as [number, number], turn: 0.467, begins: 4, lasts: 26, seed: 8 },
+  { line: 'spatterLeft', at: [-472.5, 130.2] as [number, number], size: [7, 4.6] as [number, number], turn: 0.467, begins: -14, lasts: 26, seed: 8 },
 ];
 
 const smooth = (a: number, b: number, x: number): number => {

@@ -204,11 +204,11 @@ vec3 meltLight(vec2 q, vec4 n, float off, float below, vec3 nrm, vec2 away) {
   // Nothing reaches a point far below the melt or far from it.
   // The picture shows a warm wash for about the width of the channel and little more, and a wall that glows dimly, not a lamp:
   // most of what the melt sends up is taken by the air and the skin on it.
-  // Level crust more than a metre from a gap gets nothing.
-  float reach = exp(-max(off, 0.0) / (0.25 + 0.5 * w)) * (1.0 - smoothstep(0.5, 1.0, off));
+  // Level crust more than three metres from a gap gets nothing.
+  float reach = exp(-max(off, 0.0) / (0.5 + 0.6 * w)) * (1.0 - smoothstep(1.5, 3.0, off));
   // The bank is a thin dark lip with a hair of orange at its foot: the direct light dies a hand above the melt.
   float foot = smoothstep(-0.15, 0.0, y - level) * exp(-max(y - level, 0.0) / 0.05);
-  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (0.3 * direct * foot + 0.12 * air * smoothstep(0.3, 0.8, nrm.y)));
+  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (0.3 * direct * foot + 0.2 * air * smoothstep(0.3, 0.8, nrm.y)));
 }
 
 #ifdef LAKE_LIP
@@ -223,6 +223,78 @@ float seenOver(vec2 q, float wide, float deep, float across) {
   return smoothstep(0.4, 1.2, rise * wide / max(lies * max(across, 0.15), 1e-4));
 }
 #endif
+
+// The open lake is large plates of crust that ride the melt, each with a way and a turn of its own on top of the lake's drift.
+// A plate is the crust nearest its middle, so no two lap or part: where two pull apart new skin grows between them and the
+// seam stands open and bright from end to end, where they close on each other it is shut and dark. So the bright seams are
+// few, long, and joined, and they move as the plates do. Leaves: gPlateEdge (metres to the nearest seam), gPlateHalf (half
+// the width of the melt that shows there, metres), gPlateAcross (unit, across that seam), gPlateShift (add it to a point to
+// read what its plate carries: the paint rides the plate), gPlateId.
+const float PLATE = 64.0;
+float gPlateEdge = 1e3;
+float gPlateHalf = 0.0;
+vec2 gPlateAcross = vec2(1.0, 0.0);
+vec2 gPlateShift = vec2(0.0);
+float gPlateId = 0.0;
+// moves: 1 where the plates are free, 0 where things stand on the crust.
+void plateAt(vec2 q, float moves) {
+  // A seam is crooked at every size.
+  vec2 p = q + 18.0 * (vec2(vnoise(q / 41.0 + 3.0), vnoise(q / 41.0 + 13.0)) - 0.5) + 5.0 * (vec2(vnoise(q / 9.1 + 5.0), vnoise(q / 9.1 + 15.0)) - 0.5);
+  // Time as the plates count it: none strays more than a third of its own width in the whole of the film's stay.
+  float dt = 22.0 * tanh((uTime - uFlowT0) / 22.0) * moves;
+  vec2 base = floor(p / PLATE);
+  vec2 at[9];
+  vec2 vel[9];
+  float best = 1e12;
+  int bi = 4;
+  for (int n = 0; n < 9; n++) {
+    vec2 c = base + vec2(float(n - 3 * (n / 3)), float(n / 3)) - 1.0;
+    vec2 h = hash22(c + 17.0);
+    vec2 k = hash22(c + 71.0);
+    vec2 rest = (c + 0.5 + 0.56 * (h - 0.5)) * PLATE;
+    // The melt under the crust turns in slow cells a few plates wide; a plate goes with the cell under it, more or less.
+    float way = 6.2832 * vnoise(rest / 330.0 + 9.0) + 1.2 * (k.x - 0.5);
+    vel[n] = (0.2 + 0.4 * k.y) * vec2(cos(way), sin(way));
+    at[n] = rest + vel[n] * dt;
+    vec2 r = at[n] - p;
+    float d = dot(r, r);
+    if (d < best) {
+      best = d;
+      bi = n;
+    }
+  }
+  vec2 mine = at[bi];
+  float edge = 1e3;
+  int oi = bi;
+  for (int n = 0; n < 9; n++) {
+    if (n == bi) continue;
+    vec2 r = at[n] - p;
+    float e = (dot(r, r) - best) / (2.0 * length(at[n] - mine));
+    if (e < edge) {
+      edge = e;
+      oi = n;
+    }
+  }
+  gPlateEdge = edge;
+  gPlateAcross = normalize(at[oi] - mine);
+  float parting = dot(vel[oi] - vel[bi], gPlateAcross);
+  float slide = abs(dot(vel[oi] - vel[bi], vec2(gPlateAcross.y, -gPlateAcross.x)));
+  // Wide where two plates part fast, a hot hairline where one slides past the other, nothing where they close.
+  gPlateHalf = (0.05 + 0.4 * smoothstep(0.12, 0.6, parting)) * smoothstep(0.04, 0.16, parting) * (0.7 + 0.6 * vnoise(p / 37.0 + 21.0)) + 0.025 * smoothstep(0.25, 0.6, slide);
+  vec2 cell = base + vec2(float(bi - 3 * (bi / 3)), float(bi / 3));
+  gPlateId = hash12(cell + 3.7);
+  float turned = 0.016 * (gPlateId - 0.5) * dt;
+  vec2 arm = p - mine;
+  gPlateShift = vec2(cos(turned) * arm.x + sin(turned) * arm.y, cos(turned) * arm.y - sin(turned) * arm.x) - arm - vel[bi] * dt;
+}
+// Where the lake is plates of that kind (0 to 1): away from the rock, from the seams the pictures show, from the pool at the
+// foot of the fall and from the ground the near cameras look down on, where a seam must be cut into the relief.
+float plateZone(vec2 q, float lake, vec4 n) {
+  vec2 pr = (q - uPool.xy) * uPool.zw;
+  return smoothstep(20.0, 45.0, lake) * smoothstep(2.4, 3.6, length(pr)) * smoothstep(uSunk.z + 20.0, uSunk.z + 50.0, length(q - uSunk.xy))
+    * smoothstep(14.0, 30.0, length(q - vec2(-404.9, 204.0))) * smoothstep(45.0, 75.0, length(q - vec2(-505.0, 245.0)))
+    * mix(1.0, smoothstep(8.0, 22.0, n.r), step(1.5, n.g));
+}
 
 // x: how much of the place is open lava, 0 to 1. y: kelvin of the lava that shows. z: metres to the edge of the nearest gap that
 // is or was open (negative inside it). w: how young the skin is, 1 beside a living seam, 0 on an old plate.
@@ -258,39 +330,21 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float hotHalf = gape * mix(1.0 - 0.8 * skin, 1.0, max(shown, byPool));
   // A plate edge of the web flares and dims: its gap of bare melt widens as the heat comes through and skins over behind it.
   hotHalf *= mix(swell * sparse, 1.0, max(shown, byPool));
-  // Far from every camera route the lake is a web of long live seams, as the wide picture has it. The net has none so long, so
-  // they are drawn here: the crooked lines where a slow field crosses its middle, a main web and a finer one that branches from
-  // it in places, each of uneven width, with a lump here and there where it opens into a small sheet.
-  float farField = smoothstep(100.0, 230.0, length(q - vec2(-505.0, 245.0))) * plain;
+  // Out on the lake the seams are those between the plates, and the web's own are shut there.
+  float zone = plateZone(q, lake, n) * plain;
   float farD = 1e3;
   float farHalf = 0.0;
   float farMeet = 0.0;
   vec2 farAcross = vec2(1.0, 0.0);
-  if (farField > 0.0) {
-    vec2 w = q + 13.0 * vec2(vnoise(q / 19.0 + 3.0), vnoise(q / 19.0 + 13.0)) + 3.0 * vec2(vnoise(q / 4.1 + 5.0), vnoise(q / 4.1 + 15.0));
-    float f1 = vnoise(w / 61.0 + 7.7);
-    vec2 g1 = vec2(vnoise((w + vec2(2.0, 0.0)) / 61.0 + 7.7), vnoise((w + vec2(0.0, 2.0)) / 61.0 + 7.7)) - f1;
-    float d1 = abs(f1 - 0.5) * 2.0 / max(length(g1), 0.012);
-    float f2 = vnoise(w / 24.0 + 31.3);
-    vec2 g2 = vec2(vnoise((w + vec2(2.0, 0.0)) / 24.0 + 31.3), vnoise((w + vec2(0.0, 2.0)) / 24.0 + 31.3)) - f2;
-    float d2 = abs(f2 - 0.5) * 2.0 / max(length(g2), 0.03);
-    float lane1 = smoothstep(0.3, 0.45, vnoise(q / 140.0 + 1.7));
-    // The finer web is drawn in a third of the places the glow map has it.
-    float lane2 = smoothstep(0.52 + 0.15 * drawnOnly, 0.66 + 0.15 * drawnOnly, vnoise(q / 75.0 + 5.1));
-    float uneven = vnoise(q / 5.3 + 9.0) * vnoise(q / 23.0 + 4.0);
-    float lump = smoothstep(0.7, 0.86, vnoise(q / 15.0 + vec2(2.0, uTime * 0.004)));
-    float h1 = lane1 * (0.1 + 0.75 * uneven + 1.1 * lump);
-    float h2 = lane2 * (0.05 + 0.4 * uneven + 0.5 * lump);
-    // The nearer of the two, in half widths.
-    bool first = d1 * max(h2, 1e-3) < d2 * max(h1, 1e-3);
-    farD = first ? d1 : d2;
-    vec2 across2 = first ? g1 : g2;
-    farAcross = across2 / max(length(across2), 1e-5);
-    farHalf = (first ? h1 : h2) * farField;
-    // Where two seams meet the crust is pulled apart: wider, and hotter.
-    farMeet = (1.0 - smoothstep(1.0, 6.0, d1)) * (1.0 - smoothstep(1.0, 6.0, d2)) * lane1 * lane2 * farField * (least > 0.5 ? 0.0 : 1.0);
-    farHalf += 0.6 * farMeet;
-    farHalf *= swell * mix(1.0, pieces, drawnOnly);
+  gPlateShift = vec2(0.0);
+  if (zone > 0.0) {
+    // Where the group feeds, the plates lie still under its feet.
+    plateAt(q, zone * smoothstep(60.0, 110.0, length(q - vec2(-404.9, 204.0))));
+    farD = gPlateEdge;
+    farAcross = gPlateAcross;
+    // The glow map keeps the light the lake gave: the web's seams stay in it, and the plates' go in wider than they are drawn.
+    farHalf = gPlateHalf * zone * mix(4.0, 1.0, drawnOnly);
+    hotHalf *= mix(1.0, 1.0 - zone * drawnOnly, 1.0 - shown);
   }
   // A seam is brighter where it is wide, and a few are fully open. Hot spots come and go along it, slowly.
   float fully = smoothstep(0.72, 0.9, fract(n.g * 7.13 + 0.37));
@@ -322,20 +376,24 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
 #endif
   if (farHalf > 0.0) {
     float hotSpot = vnoise(q / 9.0 + vec2(uTime * 0.04, 6.0));
-    gFloor = (0.4 + 0.3 * smoothstep(0.1, 0.6, farHalf)) * seenFloor;
+    gFloor = (0.2 + 0.3 * smoothstep(0.1, 0.6, farHalf)) * seenFloor;
     vec2 f = gapHeat(farD, farHalf, 1320.0 + 80.0 * smoothstep(0.15, 0.9, farHalf) + 60.0 * farMeet + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5) + drawnOnly * 190.0 * (surge - 0.5) + unlike, least);
 #ifdef LAKE_LIP
     vec2 sightLine = q - cameraPosition.xz;
     float farSight = seenOver(q, 2.0 * farHalf, 0.035, abs(dot(farAcross, sightLine / max(length(sightLine), 1.0))));
+    // A seam between plates is brimful: from low over the lake it thins, and it does not go out.
+    farSight = max(farSight, 0.6);
     f.x *= farSight;
 #endif
-    f.x *= flared;
+    f.x *= mix(0.6, 1.0, flare);
     if (f.x > g.x) g = f;
     gFloor = 0.0;
 #ifdef LAKE_LIP
     // The warm halo on the crust beside a far seam.
     float beside = max(farD - farHalf, 0.0);
     gLip += blackbody(1300.0) * ((0.3 + 0.7 * farSight) * 3.0 * farHalf / (farHalf + 0.4 * beside + 0.01) * exp(-beside / (0.4 + 1.5 * gFoot)));
+    // And the crust is warm for a metre or two beside it: the thin new skin there is hot from below.
+    gLip += blackbody(1180.0) * (0.9 * farHalf / (farHalf + 0.08) * exp(-beside / (1.8 + 2.0 * gFoot)));
 #endif
   }
 #ifdef LAKE_LIP
