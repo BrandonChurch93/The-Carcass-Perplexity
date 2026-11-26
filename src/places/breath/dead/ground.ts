@@ -41,9 +41,9 @@ void main() {
   float fine = vnoise(vWorld.xz * 17.0);
   float d = vNear + 0.5 * (broad - 0.5) + 0.07 * (fine - 0.5);
   // What ran out of it has soaked the rock dark, darkest under it; where its edge dried there is a pale broken line of salt.
-  float stain = smoothstep(0.3, 0.0, d);
-  float salt = smoothstep(0.07, 0.0, abs(d - 0.33)) * smoothstep(0.3, 0.7, fine);
-  float alpha = max(0.62 * stain * (0.6 + 0.4 * broad), 0.4 * salt);
+  float stain = smoothstep(0.42, 0.0, d);
+  float salt = smoothstep(0.07, 0.0, abs(d - 0.45)) * smoothstep(0.3, 0.7, fine);
+  float alpha = max(0.88 * stain * (0.6 + 0.4 * broad), 0.4 * salt);
   if (alpha < 0.004) discard;
   vec3 albedo = mix(vec3(0.62, 0.6, 0.56), mix(vec3(0.05, 0.03, 0.025), vec3(0.1, 0.032, 0.026), fine), smoothstep(0.0, 0.25, stain));
   vec3 colour = rigShade(vWorld, vec3(0.0, 1.0, 0.0), v, albedo, mix(0.9, 0.5, stain), 1.0);

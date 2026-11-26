@@ -91,12 +91,12 @@ export function growBush(stems: Ribbons, vanes: Vanes, bush: Bush, rng: Rng, flo
 
   for (let t = 0; t < fronds; t++) {
     const k = (t + rng.range(0.25, 0.75)) / fronds - 0.5;
-    const yaw = lean + k * 2.9 + rng.range(-0.2, 0.2);
-    const length = tall * rng.range(0.9, 1.7) * (1 - 0.3 * Math.abs(k));
-    const rise = rng.range(1.1, 1.45) - 0.5 * Math.abs(k);
+    const yaw = lean + k * 3.6 + rng.range(-0.2, 0.2);
+    const length = tall * rng.range(0.8, 1.45) * (1 - 0.3 * Math.abs(k));
+    const rise = rng.range(0.75, 1.2) - 0.45 * Math.abs(k);
     const out = 0.07 * tall * rng.range(0.2, 1);
     const base: V3 = [bush.x + Math.sin(yaw) * out, bush.y + 0.02 * tall, bush.z - Math.cos(yaw) * out];
-    const points = grow(base, yaw, rise, rng.range(0.5, 1.5), length, lean, 0.3, 20, () => [rng.range(-0.09, 0.09), rng.range(-0.08, 0.08)]);
+    const points = grow(base, yaw, rise, rng.range(0.9, 1.9), length, lean, 0.3, 20, () => [rng.range(-0.09, 0.09), rng.range(-0.08, 0.08)]);
     const phase = rng.range(0, 6.28);
     const open = 1 - 0.55 * (1 - 2 * Math.abs(k));
     frond(points, phase, 0, barbMax * rng.range(0.85, 1.15), 0.0065 * tall * rng.range(0.8, 1.2), open, rng.range(0.9, 1.35));

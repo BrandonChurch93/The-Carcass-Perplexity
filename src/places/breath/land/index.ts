@@ -5,7 +5,7 @@ import { terrain } from '../../../core/blockout';
 import { DEPTH, RAD, SEA, bearingOf, farGround, ground, lerp, nearLand, rimRadius, smooth } from '../land';
 import { SMALLER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { createRock } from './rock';
+import { createRock, type Surface } from './rock';
 import { cliff, collar, heap, hoop, mergeGeometries, open, shaftWall, slab, talusHeight } from './shapes';
 
 export const PARTS: readonly string[] = ['land', 'shaft', 'hoops', 'slabs', 'cliff'];
@@ -49,7 +49,18 @@ export function create(ctx: Context): Piece {
     (x, z) => 1 - smooth((ground(x, z) - SEA - 0.1) / 0.85),
   );
 
-  const rock = createRock(ctx.rig.uniforms, ctx.rng('land/rock'));
+  // The material pictures of the place (assets-src/breath/mat/RECIPE.md): colour and height, lit by the rig like everything else.
+  const surface = (name: string, mean: [number, number, number], metres: number, relief: number, anisotropy = 1): Surface => ({
+    colour: ctx.assets.texture(`mat/${name}.jpg`, { kind: 'colour', repeat: true, anisotropy }),
+    data: ctx.assets.texture(`mat/${name}-nh.png`, { kind: 'data', repeat: true, anisotropy }),
+    mean,
+    metres,
+    relief,
+  });
+  const strata = surface('strata', [0.298, 0.223, 0.16], 5, 0.6);
+  const ivory = surface('hoop', [0.493, 0.392, 0.288], 4, 0.5);
+  const seep = surface('wall', [0.077, 0.061, 0.033], 6, 0.5);
+  const rock = createRock(ctx.rig.uniforms, ctx.rng('land/rock'), surface('shelf', [0.438, 0.363, 0.302], 6, 0.09), surface('cliff', [0.291, 0.273, 0.265], 200, 22));
   const disposable: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
     disposable.push(g);
@@ -68,11 +79,13 @@ export function create(ctx: Context): Piece {
 
   // The main shaft's wall and the mouths of the smaller ones.
   const shaft = new THREE.Group();
-  const wall = rock.bone(0.25, [0.12, 0.115, 0.105], [0.05, 0.048, 0.045], THREE.DoubleSide);
+  const wall = rock.bone(0.25, [0.2, 0.185, 0.16], [0.085, 0.078, 0.068], seep, THREE.DoubleSide);
   shaft.add(mesh(shaftWall(), wall));
-  const rubble = rock.bone(0.5, [0.3, 0.265, 0.215], [0.14, 0.12, 0.1], THREE.DoubleSide);
-  const fallen = rock.bone(0.8, [0.38, 0.34, 0.275], [0.2, 0.175, 0.14], THREE.DoubleSide);
-  const pale = rock.bone(1, [0.62, 0.56, 0.46], [0.36, 0.31, 0.24], THREE.DoubleSide);
+  const rubble = rock.bone(0.5, [0.23, 0.205, 0.17], [0.11, 0.095, 0.08], strata, THREE.DoubleSide);
+  const fallen = rock.bone(0.8, [0.3, 0.27, 0.22], [0.16, 0.14, 0.115], strata, THREE.DoubleSide);
+  const pale = rock.bone(1, [0.62, 0.56, 0.46], [0.36, 0.31, 0.24], ivory, THREE.DoubleSide);
+  // The brim is the shelf's own top beds seen edge on: the layered rim.
+  const beds = rock.bone(0.9, [0.44, 0.4, 0.34], [0.2, 0.18, 0.145], strata, THREE.DoubleSide);
   for (const [x, z, r] of SMALLER) shaft.add(mesh(collar(x, z, r), pale));
   ctx.scene.add(ctx.parts.built('shaft', shaft));
 
@@ -106,7 +119,7 @@ export function create(ctx: Context): Piece {
           ] as const
         ).map(([from, to], i) => hoop(0, 30, from, to, 1.1 + 0.1 * (i % 3), 41 + i * 5.3, brim)),
       ),
-      pale,
+      beds,
     ),
   );
   ctx.scene.add(ctx.parts.built('hoops', hoops));
