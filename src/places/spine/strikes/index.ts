@@ -16,17 +16,28 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** What the flash of a first stroke gives a face that looks at the channel from close by, as irradiance: the dusk gives level snow about 0.25. */
 const FLASH = 3.2;
 /** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
-const FLASH_OF = [1.5, 0.8, 0.9, 0.85, 0.6, 0.15];
+const FLASH_OF = [4, 0.8, 0.9, 0.85, 0.6, 0.15];
 /** Each strike's share of the light the cloud round its channel takes, of the narrow pulse that comes in by the canal's far mouth, and of
  * the round lights (the storm's even lift of the place, which a flash must not become): the sixth is seen from inside the hollow, where
  * the lift would fill the animals and the pulse is the picture. */
-const CLOUD_OF = [0.8, 0.5, 0.8, 0.75, 0.45, 0.85];
+const CLOUD_OF = [1.6, 0.5, 0.8, 0.75, 0.45, 0.85];
 const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 1.2];
 const ROUND_OF = [0.02, 0.2, 0.4, 0.7, 0.02, 0.15];
-/** The glow in the cloud before the first stroke, as a share of the breakdown; and how far down from the channel's top toward its middle
- * the cloud's glow stands: the sixth is seen through a mouth that hides the top of the storm. */
+/** The glow in the cloud before the first stroke, as a share of the breakdown. */
 const BEFORE_OF = [0.03, 0.03, 0.03, 0.03, 0.03, 0.06];
-const LOW_OF = [0, 0, 0, 0, 0, 0.6];
+/** The one cloud of the storm that is lit from inside before the sixth strike, staged for the far mouth of the canal: where it
+ * stands (high and to the right in the mouth, four kilometres off) and its light as a share of a stroke's. */
+const INNER_AT = new THREE.Vector3(3444, 1295, 1776);
+const INNER_GLOW = 0.02;
+/** The breadth of that cloud's lit heart, from one end to the other, metres; what the cloud takes of its light and what comes in by
+ * the mouth, as shares of a first stroke's. */
+const INNER_SPAN = new THREE.Vector3(10, 40, 260);
+const INNER_CLOUD = 0.5;
+const INNER_PULSE = 1.1;
+/** What stays between the strokes, as shares of the last stroke's light: on the land and in the cloud, which glows along the line the
+ * channel took. The channel itself is not drawn between them: at a share of its light it shows as a broken thread. */
+const HOLD_LAND = 0.35;
+const HOLD_CLOUD = 0.55;
 const SPARKS = 16;
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
 const TIP_RADIUS = 8;
@@ -335,9 +346,24 @@ export function create(ctx: Context): Piece {
   });
 
   const size = new THREE.Vector2();
-  const right = new THREE.Vector3();
-  let fore: Bolt | null = null;
   let height = 0;
+  // The stroke's light on the land is compiled into the shaders that read the rig only while a strike gives light: which shader a
+  // material has is set from the time alone, each time, so a frame is drawn the same whatever was drawn before it.
+  const burns = (on: boolean): void => {
+    ctx.scene.traverse((o) => {
+      const held = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+      if (!held) return;
+      for (const m of Array.isArray(held) ? held : [held]) {
+        const s = m as THREE.ShaderMaterial;
+        if (!s.isShaderMaterial || !(s.fragmentShader.includes('STRIKE_BURNS') || s.vertexShader.includes('STRIKE_BURNS'))) continue;
+        const defines = (s.defines ??= {});
+        if ('STRIKE_BURNS' in defines === on) continue;
+        if (on) defines.STRIKE_BURNS = '';
+        else delete defines.STRIKE_BURNS;
+        s.needsUpdate = true;
+      }
+    });
+  };
   return {
     setTime: (seconds) => {
       for (const p of puffs) {
@@ -350,7 +376,6 @@ export function create(ctx: Context): Piece {
       cloudLight.radiance.set(0, 0, 0);
       tipLight.radiance.set(0, 0, 0);
       for (const l of alongLights) l.radiance.set(0, 0, 0);
-      fore = null;
       flashAt.set(0, 0, 0, 0);
       flashTip.set(0, 0, 0, 0);
       flashTop.set(0, 0, 0, 0);
@@ -377,17 +402,18 @@ export function create(ctx: Context): Piece {
         const round = hard * (ROUND_OF[of] as number);
         b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(hard, 1) * 130);
         const within = e.cloud;
-        if (within > 0 && hard <= 0) {
-          // A stroke inside the cloud: its light comes down from the channel's top, on the cloud, and in by the canal's mouth.
-          flashAt.set(b.top.x, b.top.y, b.top.z, FLASH * 0.1 * within);
-          flashTip.set(b.tip.x, b.tip.y, b.tip.z, FLASH * (PULSE_OF[of] as number) * within);
-          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * 1.3 * within);
-          fore = b;
-        }
-        if (hard > 0) {
-          flashAt.set(b.cast.x, b.cast.y, b.cast.z, FLASH * (FLASH_OF[of] as number) * hard);
-          flashTip.set(b.tip.x, b.tip.y, b.tip.z, FLASH * (PULSE_OF[of] as number) * hard);
-          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * hard);
+        // Between the strokes the light does not go out: the land keeps a share of the last stroke's light for a few frames and the
+        // cloud keeps more of it for longer.
+        const land = Math.max(hard, HOLD_LAND * e.held);
+        const sky = Math.max(hard, HOLD_CLOUD * e.glow);
+        if (within > 0 && hard <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
+          // A cloud lit from inside: its own glow and what of it comes in by the canal's mouth. No light with a shadow.
+          flashTip.set(INNER_AT.x - 0.4 * INNER_SPAN.x, INNER_AT.y - 0.4 * INNER_SPAN.y, INNER_AT.z - 0.4 * INNER_SPAN.z, FLASH * INNER_PULSE * within);
+          flashTop.set(INNER_AT.x + 0.6 * INNER_SPAN.x, INNER_AT.y + 0.6 * INNER_SPAN.y, INNER_AT.z + 0.6 * INNER_SPAN.z, FLASH * INNER_CLOUD * within);
+        } else if (land > 0) {
+          flashAt.set(b.cast.x, b.cast.y, b.cast.z, FLASH * (FLASH_OF[of] as number) * land);
+          flashTip.set(b.tip.x, b.tip.y, b.tip.z, FLASH * (PULSE_OF[of] as number) * land);
+          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * sky);
         }
         if (power + before + tail + within > 1e-4) {
           channelLight.position.copy(b.mid);
@@ -399,24 +425,20 @@ export function create(ctx: Context): Piece {
           tipLight.position.copy(b.tip);
           tipLight.position.y += 2;
           tipLight.radiance.copy(TINT).multiplyScalar(TIP_CAST * hard);
-          cloudLight.position.lerpVectors(b.top, b.mid, LOW_OF[of] as number);
+          // A strike seen from inside the canal has its cloud where the far mouth shows it; the others have it where the channel enters.
+          cloudLight.position.copy(timingOf(b.site.id).fore !== null ? INNER_AT : b.top);
           // The cloud's own bloom about a light closes on a ceiling at a hundredth of a stroke: the glow it keeps and the glow before a stroke
           // are small shares, so that they are dull beside the stroke and die with it.
-          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (round + tail * 0.1 + before * (BEFORE_OF[of] as number)));
+          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (round + within * INNER_GLOW + tail * 0.1 + before * (BEFORE_OF[of] as number)));
         }
       });
+      burns(flashAt.w > 0 || flashTop.w > 0);
     },
     beforeSample: (renderer, camera) => {
       renderer.getDrawingBufferSize(size);
       pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * (height || size.y || 2160));
       lens.value = 2 / ((camera.projectionMatrix.elements[5] as number) * 2160);
-      if (fore) {
-        // The stroke inside the cloud is off to the lens's right of where the channel will come down, low in the cloud: a short one.
-        right.setFromMatrixColumn(camera.matrixWorld, 0);
-        const rise = fore.top.y - fore.tip.y;
-        flashTip.set(fore.tip.x + right.x * 0.6 * rise, fore.tip.y + 0.36 * rise, fore.tip.z + right.z * 0.6 * rise, flashTip.w);
-        flashTop.set(fore.tip.x + right.x * 0.66 * rise, fore.tip.y + 0.42 * rise, fore.tip.z + right.z * 0.66 * rise, flashTop.w);
-      }
+
     },
     resize: (_w, h) => {
       height = h;

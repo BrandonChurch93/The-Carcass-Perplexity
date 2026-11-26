@@ -138,16 +138,20 @@ vec3 skyAtRest(vec3 from, vec3 d, float lod) {
 // about it is lit through, by metres from the line as the lens sees it, far wider where the channel is inside the cloud.
 float strikeReach(vec3 from, vec3 d) {
   float lit = 0.0;
+  // A light shorter than any channel (one cloud lit from inside) lights as little cloud round itself as it is long.
+  float breadth = clamp(length(uStrikeTop.xyz - uStrikeTip.xyz) / 420.0, 0.3, 1.0);
+  float wide = smoothstep(0.7, 1.0, breadth);
   for (int i = 0; i < 5; i++) {
     // From a little over the tip to well inside the cloud over the channel's top: the light is most where the channel is in the cloud.
     float f = 0.1 + 0.3 * float(i);
     vec3 q = mix(uStrikeTip.xyz, uStrikeTop.xyz, f) - from;
     float along = dot(d, q);
     if (along <= 0.0) continue;
-    float r = mix(85.0, 360.0, clamp(f, 0.0, 1.0));
+    float r = mix(85.0, 360.0, clamp(f, 0.0, 1.0)) * breadth;
     float off2 = max(dot(q, q) - along * along, 0.0) / (r * r);
     // A peak at the channel and a breadth round it: never a disc with an edge.
-    lit += (0.05 + 0.2 * f) * (0.8 / (1.0 + 3.0 * off2) + 0.2 / (1.0 + 0.7 * off2));
+    // And far round it the storm's whole wall takes a share: a stroke lights the cloud for a kilometre, not a patch of it.
+    lit += (0.05 + 0.2 * f) * (0.8 / (1.0 + 3.0 * off2) + 0.2 / (1.0 + 0.7 * off2) + 0.14 * wide / (1.0 + 0.1 * off2));
   }
   return lit;
 }
@@ -163,7 +167,7 @@ vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   vec3 c = skyAtRest(from, d, lod);
-  if (uStrikeAt.w > 0.0) c = strikeCloud(c, from, d);
+  if (uStrikeTop.w > 0.0) c = strikeCloud(c, from, d);
   return c;
 }`;
 
