@@ -160,11 +160,13 @@ void main() {
     float wide = uSteam[i].w + 0.2 * x;
     vec3 c = at - uWind.xyz * (uTime * uWind.w * 0.5);
     // A torn puff, not a fan: one size of tear for the whole of it, holes where the noise is low, and its light the sky's and the flash's.
-    float tear = uSteam[i].w * 4.0 + 18.0;
+    // A breath is a small source (under 1 m): its tears are of its own size, and it has no holes.
+    bool breath = uSteam[i].w < 1.0;
+    float tear = breath ? 0.9 : uSteam[i].w * 4.0 + 18.0;
     float curl = noise(vec3(dot(c, uWind.xyz) / (2.5 * tear), c.y / tear, (c.x - c.z) / tear)).r;
     float fine = noise(c / (0.37 * tear) + 0.3).g;
     float body = exp(-dot(off, off) / (wide * wide)) * (1.0 - x / rise) * (1.0 - x / rise) * smoothstep(0.0, 0.06, x / rise + 0.02);
-    float thick = clamp(strength * body * smoothstep(0.3, 0.72, 0.7 * curl + 0.3 * fine) * 1.6, 0.0, 0.5) * uShow.x;
+    float thick = clamp(strength * body * (breath ? 0.35 + 0.65 * smoothstep(0.2, 0.7, 0.7 * curl + 0.3 * fine) : smoothstep(0.3, 0.72, 0.7 * curl + 0.3 * fine)) * 1.6, 0.0, breath ? 0.3 : 0.5) * uShow.x;
     // The flash lights it violet and no brighter than a cloud: it is vapour, not a lamp.
     vec3 pale = (smoke ? 0.25 : 0.6) * (skyOn(1.0, rd) + min(strikeLight(at) * 0.6, vec3(0.2, 0.17, 0.32)));
     light += through * thick * pale;

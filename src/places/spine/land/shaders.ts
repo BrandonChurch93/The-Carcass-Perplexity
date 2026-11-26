@@ -122,9 +122,16 @@ uniform sampler2D tSheet;
 uniform sampler2D tSheetH;
 uniform vec4 uSheet;
 uniform vec4 uSheetMap;
+// The height of the frame in pixels, so that what is decided by the size of a pixel is decided the same at every format.
+uniform float uTall;
 uniform float uSheetDepth;
 uniform float uSheetShear;
-uniform float uKind;
+#ifndef KIND
+#define KIND 0
+#endif
+// The kind is fixed when the shader is built, one build for each: what a kind never draws is not in its shader, and costs nothing.
+const float uKind = float(KIND);
+const bool ground = KIND == 0;
 ${RIG_GLSL}
 ${NOISE_GLSL}
 ${WINDOW_GLSL}
@@ -202,9 +209,14 @@ void main() {
 export const LAND_FRAGMENT = /* glsl */ `${LAND_PRELUDE}
 // A picture laid on a face at one size in metres, with the slopes of its height map. The gradients are given, so that a lookup may stand in a branch.
 struct Lay { vec3 c; vec2 t; float pit; };
+// The level of detail is worked once from the gradients and both pictures are read at it: a read by level costs far less than a read by gradient.
+float lodOf(sampler2D picture, vec2 gx, vec2 gy) {
+  return 0.5 * log2(max(max(dot(gx, gx), dot(gy, gy)), 1e-12)) + log2(float(textureSize(picture, 0).x));
+}
 Lay lay(sampler2D colour, sampler2D nh, vec2 at, vec2 gx, vec2 gy) {
-  vec3 k = textureGrad(nh, at, gx, gy).rgb;
-  return Lay(textureGrad(colour, at, gx, gy).rgb, (k.rg - 0.5) * vec2(1.0, -1.0), k.b);
+  float lod = lodOf(colour, gx, gy);
+  vec3 k = textureLod(nh, at, lod).rgb;
+  return Lay(textureLod(colour, at, lod).rgb, (k.rg - 0.5) * vec2(1.0, -1.0), k.b);
 }
 
 void main() {
@@ -214,11 +226,12 @@ void main() {
   vec3 toCamera = cameraPosition - vWorld;
   float far = length(toCamera);
   vec3 v = toCamera / far;
-  bool spire = uKind > 0.5 && uKind < 1.5;
+  const bool spire = KIND == 1;
   // The rock over the canal is the spire's own face, carried by the ground.
-  float porch = uKind < 0.5 && dCanal > 0.0 && dCanal < EXIT ? 1.0 - smoothstep(4.0, 26.0, abs(vSL.y - canalAt(dCanal)) - flareAt(dCanal)) : 0.0;
+  float porch = 0.0;
+  if (ground) porch = dCanal > 0.0 && dCanal < EXIT ? 1.0 - smoothstep(4.0, 26.0, abs(vSL.y - canalAt(dCanal)) - flareAt(dCanal)) : 0.0;
   bool plates = spire || porch > 0.5;
-  bool inside = uKind > 1.5;
+  const bool inside = KIND == 2;
   // Broken rock is flat faces that meet in edges: a little of the face of the triangle itself with the round of the mesh.
   vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   if (dot(facet, smoothN) < 0.0) facet = -facet;
@@ -249,17 +262,19 @@ void main() {
   float steep = smoothstep(0.96, 0.8, smoothN.y);
   float rib = uKind < 0.5 ? steep * (smoothstep(0.42, 0.7, vnoise(vec2(vSL.x / 17.0, vSL.y / 120.0 + 3.0)) + 0.25 * (vnoise(vWorld.xz * 0.21) - 0.5)) * 0.8 - 0.55 * dot(n0.xz, uWind.xz) * smoothstep(0.0, 1.0, -dot(n0.xz, uWind.xz) * 3.0)) : 0.0;
   float lie0 = mix(smoothN.y, n0.y, 0.35) - 0.07 + 0.12 * dot(n0.xz, uWind.xz) + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5) - rib;
-  bool buried = uKind < 0.5 && porch <= 0.0 && lie0 - 0.42 * clamp(vTop, 0.0, 1.0) > 0.57;
+  bool buried = false;
+  if (ground) buried = porch <= 0.0 && lie0 - 0.42 * clamp(vTop, 0.0, 1.0) > 0.57;
   vec3 sheetAx = vec3(uSheet.z, 0.0, uSheet.w);
   vec2 sheetUv = vec2((dot(vWorld.xz - uSheet.xy, uSheet.zw) + uSheetShear * vWorld.y) * uSheetMap.x + uSheetMap.y, vWorld.y * uSheetMap.z + uSheetMap.w);
   vec3 sheetC = vec3(0.0);
   float sheet = 0.0;
-  if (!inside && (spire || porch > 0.0)) {
+  if (!inside) if (spire || porch > 0.0) {
     sheetC = texture2D(tSheet, sheetUv).rgb;
     float facing = abs(dot(smoothN, vec3(-sheetAx.z, 0.0, sheetAx.x)));
     sheet = smoothstep(0.035, 0.1, max(sheetC.r, max(sheetC.g, sheetC.b))) * smoothstep(0.26, 0.55, facing) * smoothstep(0.0, 0.06, sheetUv.y) * (spire ? 1.0 : porch);
   }
-  bool covered = spire && sheet > 0.98 && top < 0.001;
+  // Close to, a sheet is drawn larger than it was made and would go soft: how close is told by how many of its texels a pixel covers.
+  float near = smoothstep(1.4, 0.3, length(fwidth(sheetUv) * vec2(textureSize(tSheet, 0))) * uTall / 1080.0);
   vec3 across = normalize(mix(ax, bx, step(0.5, wa)));
   vec3 upAlong = up;
   if (inside) {
@@ -293,87 +308,50 @@ void main() {
     across = tw.x > max(tw.y, tw.z) ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
   } else if (buried) {
     rock = RUBBLE_MEAN * 1.5;
-  } else if (covered) {
-    // Under the sheet only the grain of the tile shows, at its fine size, on the plane the face looks along.
-    vec2 atG = (wa > 0.5 ? vec2(pb, pu) : vec2(pa, pu) + 4.1) / 8.3;
-    Lay f = lay(tSpire, tSpireNh, atG, dFdx(atG), dFdy(atG));
-    rock = f.c * 2.7;
-    t = 1.3 * f.t;
-    pit = 0.25 + 0.5 * f.pit;
   } else {
-    vec3 side = vec3(0.0);
-    vec3 level = vec3(0.0);
-    vec2 tSide = vec2(0.0);
-    vec2 tLevel = vec2(0.0);
-    float pSide = 0.5;
-    float pLevel = 0.5;
-    // The two upright lays: one on the plane across ax, one on the plane across bx.
-    vec2 atA = vec2(pb, pu);
-    vec2 atB = vec2(pa, pu);
-    vec2 gAx = dFdx(atA);
-    vec2 gAy = dFdy(atA);
-    vec2 gBx = dFdx(atB);
-    vec2 gBy = dFdy(atB);
-    vec2 atL = vec2(dot(vWorld.xz, vec2(0.82, 0.57)), dot(vWorld.xz, vec2(-0.57, 0.82)));
-    vec2 gLx = dFdx(atL);
-    vec2 gLy = dFdy(atL);
-    if (top < 0.999) {
-      float sum = 0.0;
-      if (plates) {
-        if (wa > 0.03) {
-          Lay a = lay(tSpire, tSpireNh, atA / 30.0, gAx / 30.0, gAy / 30.0);
-          vec3 c2 = textureGrad(tSpire, atA / 103.0 + 0.37, gAx / 103.0, gAy / 103.0).rgb;
-          side += wa * a.c * (0.4 + 0.6 * c2 / SPIRE_MEAN);
-          tSide += wa * a.t * 1.2;
-          pSide = a.pit;
-          if (close > 0.0) {
-            Lay f = lay(tSpire, tSpireNh, atA / 8.3 + 0.13, gAx / 8.3, gAy / 8.3);
-            side += wa * a.c * (0.4 + 0.6 * c2 / SPIRE_MEAN) * (f.c / SPIRE_MEAN - 1.0) * 0.6 * close;
-            tSide += wa * close * 1.1 * f.t;
-            pSide = mix(pSide, pSide * (0.5 + f.pit), close);
-          }
-          sum += wa;
-        }
-        if (wa < 0.97) {
-          float wb = 1.0 - wa;
-          Lay a = lay(tSpire, tSpireNh, atB / 30.0 + 0.5, gBx / 30.0, gBy / 30.0);
-          vec3 c2 = textureGrad(tSpire, atB / 103.0 + 0.71, gBx / 103.0, gBy / 103.0).rgb;
-          side += wb * a.c * (0.4 + 0.6 * c2 / SPIRE_MEAN);
-          tSide += wb * a.t * 1.2;
-          pSide = mix(a.pit, pSide, wa);
-          if (close > 0.0) {
-            Lay f = lay(tSpire, tSpireNh, atB / 8.3 + 0.63, gBx / 8.3, gBy / 8.3);
-            side += wb * a.c * (0.4 + 0.6 * c2 / SPIRE_MEAN) * (f.c / SPIRE_MEAN - 1.0) * 0.6 * close;
-            tSide += wb * close * 1.1 * f.t;
-            pSide = mix(pSide, pSide * (0.5 + f.pit), close * wb);
-          }
-        }
-        side *= 2.7;
-      } else {
-        // The ground's own cliffs are broken rock, not jointed plates: the picture of blocks half in snow, which has no grain.
-        if (wa > 0.03) {
-          Lay a = lay(tRubble, tRubbleNh, atA / 23.0, gAx / 23.0, gAy / 23.0);
-          vec3 c2 = textureGrad(tRubble, atA.yx / 67.0 + 0.37, gAx.yx / 67.0, gAy.yx / 67.0).rgb;
-          side += wa * a.c * (0.45 + 0.55 * c2 / RUBBLE_MEAN);
-          tSide += wa * a.t * 1.2;
-          pSide = a.pit;
-        }
-        if (wa < 0.97) {
-          float wb = 1.0 - wa;
-          Lay a = lay(tRubble, tRubbleNh, atB / 23.0 + 0.5, gBx / 23.0, gBy / 23.0);
-          vec3 c2 = textureGrad(tRubble, atB.yx / 67.0 + 0.71, gBx.yx / 67.0, gBy.yx / 67.0).rgb;
-          side += wb * a.c * (0.45 + 0.55 * c2 / RUBBLE_MEAN);
-          tSide += wb * a.t * 1.2;
-          pSide = mix(a.pit, pSide, wa);
-        }
-        side *= 1.5;
-      }
+    // One upright lay, on whichever of the two upright planes the face looks at more squarely, and one level lay. A lay that is never
+    // seen is still paid for on every pixel, so each kind has only its own.
+    bool onA = wa > 0.5;
+    vec2 atS = onA ? vec2(pb, pu) : vec2(pa, pu) + 17.3;
+    vec2 gSx = onA ? vec2(dFdx(pb), dFdx(pu)) : vec2(dFdx(pa), dFdx(pu));
+    vec2 gSy = onA ? vec2(dFdy(pb), dFdy(pu)) : vec2(dFdy(pa), dFdy(pu));
+#if KIND == 1
+    if (sheet < 0.98 || near > 0.0) {
+      // A spire: its jointed rock at its real 30 m, broken close to by the blocks of the rubble picture at their real 5 m.
+      Lay a = lay(tSpire, tSpireNh, atS / 30.0, gSx / 30.0, gSy / 30.0);
+      vec3 c2 = textureLod(tSpire, atS / 103.0 + 0.37, lodOf(tSpire, gSx / 103.0, gSy / 103.0)).rgb;
+      Lay f = lay(tRubble, tRubbleNh, atS / 5.0 + 0.13, gSx / 5.0, gSy / 5.0);
+      float fineK = max(close, near);
+      rock = 2.7 * a.c * (0.4 + 0.6 * c2 / SPIRE_MEAN) * (1.0 + 0.7 * fineK * (dot(f.c, vec3(0.33)) / dot(RUBBLE_MEAN, vec3(0.33)) - 1.0));
+      t = a.t * 1.2 + fineK * 1.4 * f.t;
+      pit = mix(a.pit, a.pit * (0.5 + f.pit), fineK);
+    } else {
+      // Far off and under its sheet a spire needs none of its tiles.
+      rock = 2.7 * SPIRE_MEAN;
     }
+#elif KIND == 0
+    // The ground's own cliffs are broken rock, not jointed plates: the picture of blocks half in snow, which has no grain.
+    vec3 side = vec3(0.0);
+    vec2 tSide = vec2(0.0);
+    float pSide = 0.5;
+    if (top < 0.999) {
+      Lay a = lay(tRubble, tRubbleNh, atS / 23.0, gSx / 23.0, gSy / 23.0);
+      vec3 c2 = textureLod(tRubble, atS.yx / 67.0 + 0.37, lodOf(tRubble, gSx / 67.0, gSy / 67.0)).rgb;
+      side = 1.5 * a.c * (0.45 + 0.55 * c2 / RUBBLE_MEAN);
+      tSide = a.t * 1.2;
+      pSide = a.pit;
+    }
+    vec3 level = vec3(0.0);
+    vec2 tLevel = vec2(0.0);
+    float pLevel = 0.5;
     if (top > 0.001) {
-      Lay a = lay(tRubble, tRubbleNh, atL / 19.0, gLx / 19.0, gLy / 19.0);
-      level = a.c;
-      tLevel = a.t * 1.2;
-      pLevel = a.pit;
+      vec2 atL = vec2(dot(vWorld.xz, vec2(0.82, 0.57)), dot(vWorld.xz, vec2(-0.57, 0.82)));
+      vec2 gLx = vec2(dot(dFdx(vWorld.xz), vec2(0.82, 0.57)), dot(dFdx(vWorld.xz), vec2(-0.57, 0.82)));
+      vec2 gLy = vec2(dot(dFdy(vWorld.xz), vec2(0.82, 0.57)), dot(dFdy(vWorld.xz), vec2(-0.57, 0.82)));
+      Lay b = lay(tRubble, tRubbleNh, atL / 19.0, gLx / 19.0, gLy / 19.0);
+      level = b.c;
+      tLevel = b.t * 1.2;
+      pLevel = b.pit;
       if (close > 0.0) {
         Lay f = lay(tRubble, tRubbleNh, atL / 5.0 + 0.21, gLx / 5.0, gLy / 5.0);
         level = mix(level, 0.5 * level + 0.5 * f.c, 0.8 * close);
@@ -385,6 +363,7 @@ void main() {
     rock = mix(side, level, top);
     t = mix(tSide, tLevel, top);
     pit = mix(pSide, pLevel, top);
+#endif
   }
   vec3 nRock = normalize(n0 + mix(across * t.x + upAlong * t.y, vec3(t.x, 0.0, t.y), top));
   // A spire is cut from its feature sheet: the sheet lies on its two broad faces, square on, and gives them their rock, their joints and
@@ -400,15 +379,13 @@ void main() {
       float da = (texture2D(tSheetH, uv + vec2(px.x, 0.0)).r - h0) / px.x * uSheetMap.x;
       float dy = (texture2D(tSheetH, uv + vec2(0.0, px.y)).r - h0) / px.y * uSheetMap.z;
       float grain = dot(rock, vec3(0.33)) / (2.7 * dot(SPIRE_MEAN, vec3(0.33)));
-      // Close to, the sheet is drawn larger than it was made and would go soft: there it gives the masses alone, and the rock's own
-      // tiles, at their true size, give the fracture and the grain, in colour and in relief.
-      float texel = length(fwidth(uv) * vec2(textureSize(tSheet, 0)));
-      float close = smoothstep(1.4, 0.3, texel);
-      float fine = clamp(dot(rock, vec3(0.33)) / dot(SPIRE_MEAN, vec3(0.33)), 0.25, 2.2);
-      rock = mix(rock, sc * 1.5 * mix(0.8 + 0.2 * grain, 0.25 + 0.75 * fine, 0.85 * close), sheet);
-      nRock = normalize(mix(nRock, normalize(n0 + mix(0.35, 1.5, close) * (across * t.x + upAlong * t.y)), sheet) - sheet * uSheetDepth * mix(0.3, 0.16, close) * (sa * da + vec3(0.0, dy, 0.0)));
-      pit = mix(pit, mix(0.25 + 0.6 * h0, pit, 0.6 * close), 0.6 * sheet);
-      pit = mix(pit, 0.25 + 0.6 * h0, 0.6 * sheet);
+      // Far off the sheet is the rock, whole. Close to it would be a picture pulled large and soft: there it gives only the broad tone
+      // of its masses, and the rock's own tiles, at their true size, are the crag, in colour and in relief.
+      vec3 massed = sc * 1.5 * (0.8 + 0.2 * grain);
+      vec3 crag = rock * clamp(0.45 + 0.55 * dot(sc, vec3(0.33)) / 0.16, 0.6, 1.5);
+      rock = mix(rock, mix(massed, crag, near), sheet);
+      nRock = normalize(mix(nRock, normalize(n0 + mix(0.35, 1.6, near) * (across * t.x + upAlong * t.y)), sheet) - sheet * uSheetDepth * mix(0.2, 0.12, near) * (sa * da + vec3(0.0, dy, 0.0)));
+      pit = mix(pit, mix(0.25 + 0.6 * h0, pit, 0.8 * near), 0.6 * sheet);
     }
   }
 
@@ -421,9 +398,11 @@ void main() {
   tone = mix(tone, vec3(1.0), sheet);
   vec3 albedo = min(rock * (inside ? vec3(1.0) : tone), vec3(0.9));
   // A spire's rock is tan where the dusk lights it: a quarter of its pictures' brown is taken out, no more.
-  if (spire && !inside) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(0.94, 0.97, 1.06), 0.25);
+  if (spire) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(0.94, 0.97, 1.06), 0.25);
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
+  // Close to, the cracks of a spire are dark.
+  if (spire) albedo *= mix(1.0, 0.3 + 0.7 * smoothstep(0.12, 0.55, pit), near);
 
   // The burn: the top of a spire is black glass where the lightning has come to it, time after time, and streaked below.
   float burn = 0.0;
@@ -444,6 +423,8 @@ void main() {
     // On a spire the snow keeps to the ledges and the gullies: where the body of the rock leans back, and where a slab stands in from its neighbours.
     float held = 0.55 * smoothN.y + 0.45 * n0.y + 0.2 * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
     snow = smoothstep(0.62, 0.76, held) * (1.0 - sheet);
+    // Close to, the sheet's own snow is gone with its picture: snow lies on what the broken rock turns up to the sky, block by block.
+    snow = mix(snow, smoothstep(0.74, 0.88, 0.4 * held + 0.6 * nRock.y + 0.25 * (pit - 0.5)), near * sheet);
     // A spire stands in the drift at its foot.
     float above = vWorld.y - landAt(vWorld.xz).r;
     snow = max(snow, smoothstep(5.0, 0.5, above + 3.0 * (pit - 0.5)));
@@ -464,11 +445,15 @@ void main() {
     rime *= lit;
     occ *= 0.04 + 0.96 * lit;
   }
-  if (spire && !inside && rime + 0.3 > 0.02) {
+  if (spire) if (rime + 0.3 > 0.02) {
     // Rime on a spire is the frost picture at its own 3 m, feathered crystal by crystal: thick to windward, a dusting in the lee.
     vec3 rw = abs(smoothN);
-    rw /= rw.x + rw.y + rw.z;
-    vec3 frostC = texture2D(tRime, vWorld.zy / 3.0).rgb * rw.x + texture2D(tRime, vWorld.xz / 3.0 + 0.4).rgb * rw.y + texture2D(tRime, vWorld.xy / 3.0 + 0.7).rgb * rw.z;
+    vec3 gx = dFdx(vWorld) / 3.0;
+    vec3 gy = dFdy(vWorld) / 3.0;
+    bool rX = rw.x > max(rw.y, rw.z);
+    bool rY = rw.y > rw.z;
+    vec2 atR = rX ? vWorld.zy / 3.0 : rY ? vWorld.xz / 3.0 + 0.4 : vWorld.xy / 3.0 + 0.7;
+    vec3 frostC = textureLod(tRime, atR, lodOf(tRime, rX ? gx.zy : rY ? gx.xz : gx.xy, rX ? gy.zy : rY ? gy.xz : gy.xy)).rgb;
     float crystals = smoothstep(0.15, 0.38, dot(frostC, vec3(0.33)) * (0.55 + 0.9 * pit));
     float cover = clamp(0.45 * rime + 0.4 * (1.0 - burn), 0.0, 0.8) * crystals;
     albedo = mix(albedo, min(frostC * 1.5, vec3(0.88)) * vec3(0.95, 0.98, 1.05), 0.85 * cover);
@@ -484,7 +469,7 @@ void main() {
   vec3 nSnow = normalize(mix(smoothN, n0, 0.35));
   float snowOcc = 1.0;
   vec3 snowTint = vec3(1.0);
-  if (snow > 0.0 && !inside) {
+  if (!inside) if (snow > 0.0) {
     // Wind-packed snow from its picture, laid across the gale: broad for the drifts' skin far off, fine under the lens.
     vec2 q = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98)));
     vec2 qx = dFdx(q);
@@ -495,7 +480,7 @@ void main() {
     float flat_ = smoothstep(0.35, 0.7, n0.y);
     vec2 g = b.t * 0.9 * flat_;
     snowTint = mix(vec3(1.0), snowTint, 0.4 + 0.6 * flat_);
-    if (close > 0.0 && !spire) {
+    if (!spire) if (close > 0.0) {
       Lay f = lay(tSnow, tSnowNh, q / 4.0, qx / 4.0, qy / 4.0);
       snowTint = mix(snowTint, snowTint * f.c / SNOW_MEAN, 0.7 * close * flat_);
       g += close * 1.2 * f.t * flat_;
@@ -546,13 +531,14 @@ void main() {
   }
 
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
-  vec3 lightAt = !inside && dCanal > 0.0 && dCanal < EXIT && abs(vSL.y - canalAt(dCanal)) < 60.0 ? vWorld + vec3(0.0, 16.0, 0.0) : vWorld;
+  vec3 lightAt = vWorld;
+  if (!inside) if (dCanal > 0.0 && dCanal < EXIT && abs(vSL.y - canalAt(dCanal)) < 60.0) lightAt.y += 16.0;
   vec3 c = rigShade(lightAt, n, v, albedo, rough, occ);
-  if (inside && uUnder > 1.5) {
+  if (inside) if (uUnder > 1.5) {
     // Inside, the two mouths are the windows: cold light on what faces them, and the far mouth seen in the glaze of ice on the rock.
     c += albedo * windowLight(vWorld, normalize(mix(n, normalize(EXIT_AT + vec3(0.0, 6.0, 0.0) - vWorld), 0.55 * wallRime))) * (0.45 + 0.55 * pit) * (4.5 + 2.5 * wallRime) / 3.14159 + windowGlaze(vWorld, n, v, 2.5) * (1.0 - wallRime) * 2.0;
   }
-  if (inside && uUnder < 1.5) {
+  if (inside) if (uUnder < 1.5) {
     float shown = exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 9.0);
     c = c * (0.03 + 0.97 * shown) + vec3(0.0035, 0.0045, 0.0085) * (1.0 - shown);
   }

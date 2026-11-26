@@ -23,6 +23,9 @@ export function create(ctx: Context): Piece {
 
   const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY }) });
   const data = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}-nh.png`, { kind: 'data', anisotropy: ANISOTROPY }) });
+  // The height of the frame being drawn, in pixels: read from the renderer as each mesh is drawn.
+  const tall = { value: 1080 };
+  const size = new THREE.Vector2();
   const pictures = {
     tSpire: picture('spire'),
     tSpireNh: data('spire'),
@@ -38,6 +41,7 @@ export function create(ctx: Context): Piece {
     tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
     tScorch: { value: ctx.assets.texture('mat/scorchfield.jpg', { anisotropy: ANISOTROPY, repeat: false }) },
     tScorchH: { value: ctx.assets.texture('mat/scorchfield-h.png', { kind: 'data', anisotropy: ANISOTROPY, repeat: false }) },
+    uTall: tall,
     uScorch: { value: new THREE.Vector4(scorchAt[0], scorchAt[2], 0, 0) },
     uScorchAxes: { value: new THREE.Vector4(Math.cos(carcassAxis * RAD), Math.sin(carcassAxis * RAD), Math.cos(carcassView * RAD), Math.sin(carcassView * RAD)) },
   };
@@ -58,7 +62,8 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_FRAGMENT,
-      uniforms: { ...ctx.rig.uniforms, ...pictures, ...sheetOf(sp), uKind: { value: kind } },
+      defines: { KIND: kind },
+      uniforms: { ...ctx.rig.uniforms, ...pictures, ...sheetOf(sp) },
       side,
       toneMapped: false,
       // The depth is already there (see LAND_DEPTH_FRAGMENT): colour is shaded only where this is the nearest surface.
@@ -69,7 +74,8 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_DEPTH_FRAGMENT,
-      uniforms: { ...ctx.rig.uniforms, ...pictures, uKind: { value: kind } },
+      defines: { KIND: kind },
+      uniforms: { ...ctx.rig.uniforms, ...pictures },
       side,
       toneMapped: false,
       colorWrite: false,
@@ -105,6 +111,10 @@ export function create(ctx: Context): Piece {
     made.push(geometry);
     const mesh = new THREE.Mesh(geometry, m);
     mesh.frustumCulled = false;
+    mesh.onBeforeRender = (renderer): void => {
+      const target = renderer.getRenderTarget();
+      tall.value = target ? target.height : renderer.getDrawingBufferSize(size).y;
+    };
     land.add(mesh);
     const first = depthOf.get(m);
     if (first) {
