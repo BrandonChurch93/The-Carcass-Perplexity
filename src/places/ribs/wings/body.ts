@@ -448,14 +448,15 @@ export interface BodyMaterials {
   body: THREE.ShaderMaterial;
   mirror: THREE.ShaderMaterial;
 }
-export function bodyMaterials(ctx: Context, pool: number, grey: number): BodyMaterials {
+/** `sheet` is the picture the skin is thrown from (its cover and relief beside it) and `flank` the evenly lit patch of it laid where it cannot be thrown. */
+export function bodyMaterials(ctx: Context, pool: number, grey: number, sheet = 'feeder-a', flank: [number, number, number, number] = FLANK): BodyMaterials {
   const uniforms = {
     ...ctx.rig.uniforms,
-    tPic: { value: ctx.assets.texture('mat/feeder-a.jpg', { kind: 'colour', repeat: false, anisotropy: 4 }) },
-    tCover: { value: ctx.assets.texture('mat/feeder-a-a.png', { kind: 'data', repeat: false }) },
-    tRelief: { value: ctx.assets.texture('mat/feeder-a-h.png', { kind: 'data', repeat: false }) },
+    tPic: { value: ctx.assets.texture(`mat/${sheet}.jpg`, { kind: 'colour', repeat: false, anisotropy: 4 }) },
+    tCover: { value: ctx.assets.texture(`mat/${sheet}-a.png`, { kind: 'data', repeat: false }) },
+    tRelief: { value: ctx.assets.texture(`mat/${sheet}-h.png`, { kind: 'data', repeat: false }) },
     uSize: { value: new THREE.Vector2(...SIZE) },
-    uFlank: { value: new THREE.Vector4(...FLANK) },
+    uFlank: { value: new THREE.Vector4(...flank) },
     uPool: { value: pool },
     uGrey: { value: grey },
   };

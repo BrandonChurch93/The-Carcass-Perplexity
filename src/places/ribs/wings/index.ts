@@ -9,7 +9,7 @@ import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cu
 import { approachAsScattered, approachEye, shots } from '../cameras';
 import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { inOpening } from '../shared/opening';
+import { FLOCK, inOpening } from '../shared/opening';
 import { loopPhase } from '../shared/stage';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { foamTexture } from '../sea/chop';
@@ -22,6 +22,7 @@ import { CONTACTS, MAX_CONTACTS } from './contacts';
 import type { Contact } from './contacts';
 import { FEEDER_C, FLIERS, Figures, PERCHED, figureMaterials, placed } from './figure';
 import type { Placed } from './figure';
+import { FLIER_FLANK, Flight, flying } from './flier';
 import { footAt, ramp, wayAt } from './gait';
 import type { At, Step, Way } from './gait';
 
@@ -915,7 +916,102 @@ export function create(ctx: Context): Piece {
     splash.end();
   };
 
+
+  // ---- The stream of the approach: bodies that leave a ledge of the near blade one after another, cross to the gap and wheel there; and the many that turn round the tips ----
+  const STREAM = 110;
+  const SWIRL = 260;
+  const airBodies = bodyMaterials(ctx, LEVELS.pool, 0.1, 'fliers', FLIER_FLANK);
+  const flight = new Flight(airBodies, STREAM + SWIRL);
+  const F = flying();
+  const streamWay = { x: FLOCK.toward[0] - FLOCK.from[0], y: FLOCK.toward[1] - FLOCK.from[1], z: FLOCK.toward[2] - FLOCK.from[2], long: 1, hx: 0, hz: 0 };
+  streamWay.long = Math.hypot(streamWay.x, streamWay.y, streamWay.z);
+  streamWay.x /= streamWay.long;
+  streamWay.y /= streamWay.long;
+  streamWay.z /= streamWay.long;
+  {
+    const flat = Math.hypot(streamWay.x, streamWay.z) || 1;
+    streamWay.hx = streamWay.x / flat;
+    streamWay.hz = streamWay.z / flat;
+  }
+  /** Where the i-th of the stream is at t, into `out`; false before it has left the ledge. */
+  const streamPlace = (i: number, t: number, out: Spot): boolean => {
+    const left = FLOCK.began + ((FLOCK.until - FLOCK.began) * (i + hash(i, 71))) / STREAM;
+    const tau = t - left;
+    if (tau < 0) return false;
+    // It drops off the ledge slow and is at its speed in a few strokes.
+    const d = FLOCK.speed * tau - (FLOCK.speed - 7) * 1.6 * (1 - Math.exp(-tau / 1.6));
+    const wide = smooth(0, 150, d);
+    const a = (hash(i, 73) + hash(i, 74) - 1) * 34 * wide + 5 * wide * Math.sin(tau * (0.4 + 0.3 * hash(i, 75)) + i);
+    const b = (hash(i, 76) + hash(i, 77) - 1) * 22 * wide + 3 * wide * Math.sin(tau * (0.3 + 0.3 * hash(i, 78)) + i * 1.7) - 8 * Math.sin(Math.PI * Math.min(1, tau / 2.6));
+    // Across the way, level: to the right of it.
+    const px = streamWay.hz;
+    const pz = -streamWay.hx;
+    const along = Math.min(d, streamWay.long);
+    let x = FLOCK.from[0] + streamWay.x * along + px * a;
+    let y = FLOCK.from[1] + streamWay.y * along + b;
+    let z = FLOCK.from[2] + streamWay.z * along + pz * a;
+    if (d > streamWay.long) {
+      // At the gap it goes into a wheel that its way touches, to its own side and of its own width, and rides the air there.
+      const side = hash(i, 79) < 0.5 ? 1 : -1;
+      const radius = 70 + 120 * hash(i, 80);
+      const round = (d - streamWay.long) / radius;
+      x += radius * (px * side * (1 - Math.cos(round)) + streamWay.hx * Math.sin(round));
+      z += radius * (pz * side * (1 - Math.cos(round)) + streamWay.hz * Math.sin(round));
+      y += streamWay.y * radius * Math.sin(round) + 14 * Math.sin(round * 0.37 + i);
+    }
+    out.x = x;
+    out.y = y;
+    out.z = z;
+    return true;
+  };
+  const swirl: Flier[] = [];
+  for (let i = 0; i < SWIRL; i++) {
+    const radius = 14 + 130 * scatter.next() ** 2;
+    swirl.push({
+      cx: FLOCK.swirl[0] + scatter.normal() * 55,
+      cz: FLOCK.swirl[2] + scatter.normal() * 55,
+      radius,
+      y: FLOCK.swirl[1] + scatter.normal() * 45,
+      rate: ((scatter.next() < 0.5 ? 1 : -1) * scatter.range(11, 17)) / radius,
+      phase: scatter.range(0, Math.PI * 2),
+      squash: scatter.range(0.55, 1),
+      size: scatter.range(0.85, 1.25),
+      seed: scatter.next(),
+      dark: 0,
+    });
+  }
+  const was: Spot = { x: 0, y: 0, z: 0, yaw: 0, roll: 0 };
+  const next: Spot = { x: 0, y: 0, z: 0, yaw: 0, roll: 0 };
+  /** A body in the air into `F` from where it was, is and will be a twentieth of a second apart: it heads the way it goes, noses up as it climbs and banks into its turn. */
+  const borne = (size: number, seed: number, t: number, hard: number): void => {
+    const h = 0.05;
+    const vx = (next.x - was.x) / (2 * h);
+    const vy = (next.y - was.y) / (2 * h);
+    const vz = (next.z - was.z) / (2 * h);
+    const speed = Math.hypot(vx, vz) || 1;
+    const before = Math.atan2(spot.x - was.x, spot.z - was.z);
+    const after = Math.atan2(next.x - spot.x, next.z - spot.z);
+    let turned = after - before;
+    if (turned > Math.PI) turned -= TAU;
+    if (turned < -Math.PI) turned += TAU;
+    // Strokes in bouts, glides between, each at its own beat; one just off the ledge strokes hard.
+    const bout = Math.max(hard, smooth(0.3, 0.5, held(t, 3.1 + 2 * seed, seed, 0.3)));
+    F.x = spot.x;
+    F.y = spot.y;
+    F.z = spot.z;
+    F.yaw = Math.atan2(vx, vz);
+    F.pitch = Math.atan2(vy, speed) + 0.05 * bout;
+    F.roll = Math.max(-1, Math.min(1, Math.atan(((turned / h) * speed) / 9.8))) + 0.1 * Math.sin(t * (0.5 + 0.4 * seed) + seed * 11);
+    F.size = size;
+    F.tone = 0.86 + 0.24 * seed;
+    F.stroke = t * (7.2 + 3 * seed) + seed * 40;
+    F.deep = 0.12 + 0.88 * bout;
+    F.drawn = 0;
+    F.legs = 0;
+  };
+
   const group = new THREE.Group();
+  group.add(flight.mesh);
   group.add(bodies.mesh, bodies.mirror, runners.mesh);
   if (runners.mirror) group.add(runners.mirror);
   // ---- The card loop's own: a knot that stoops into the sky of the establishing picture and climbs out over the top of the frame ----
@@ -966,6 +1062,29 @@ export function create(ctx: Context): Piece {
       runners.commit();
       bodies.commit();
       splashAt(seconds);
+
+      // The stream and the swirl are the film's: the card loop begins after they have gone to the gap.
+      flight.mesh.visible = lp === null;
+      if (lp === null) {
+        for (let i = 0; i < STREAM; i++) {
+          if (!streamPlace(i, seconds - 0.05, was) || !streamPlace(i, seconds, spot) || !streamPlace(i, seconds + 0.05, next)) {
+            flight.hide(i);
+            continue;
+          }
+          const gone = seconds - 0.05 - (FLOCK.began + ((FLOCK.until - FLOCK.began) * (i + hash(i, 71))) / STREAM);
+          borne((0.95 + 0.4 * hash(i, 81)) * smooth(0, 0.4, gone), hash(i, 82), seconds, 1 - smooth(2, 5, gone));
+          flight.put(i, F);
+        }
+        for (let i = 0; i < swirl.length; i++) {
+          const f = swirl[i] as Flier;
+          flierPlace(f, seconds - 0.05, was);
+          flierPlace(f, seconds + 0.05, next);
+          flierPlace(f, seconds, spot);
+          borne(f.size, f.seed, seconds, 0);
+          flight.put(STREAM + i, F);
+        }
+        flight.commit();
+      }
       for (let i = 0; i < sitters.length; i++) {
         sitterAt(sitters[i] as Sitter, i, seconds);
         colonyFigures.put(i, fig);
@@ -1101,6 +1220,9 @@ export function create(ctx: Context): Piece {
         m.late.dispose();
       }
       bodySheet.body.dispose();
+      airBodies.body.dispose();
+      airBodies.mirror.dispose();
+      flight.dispose();
       bodySheet.mirror.dispose();
       bodies.dispose();
       for (const figures of [runners, colonyFigures, standers, flockFigures, skeinFigures, swoopFigures]) figures.dispose();
