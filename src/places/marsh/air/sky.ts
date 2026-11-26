@@ -18,6 +18,7 @@ precision highp sampler3D;
 varying vec3 vDir;
 uniform highp sampler3D tNoise;
 uniform vec4 uRain;
+uniform sampler2D tSky;
 ${RIG_GLSL}
 
 void main() {
@@ -38,6 +39,17 @@ void main() {
   float el = d.y / max(length(d.xz), 0.05);
   float belly = smoothstep(2.4, 0.3, side + (big - 0.5) * 1.6) * smoothstep(0.02, 0.14, el) * smoothstep(0.75, 0.3, el);
   c *= 1.0 - 0.3 * belly;
+  // The overcast's own picture, laid round the horizon with its raining cloud over the curtain: it gives the sheet its soft lumps and its
+  // weight. It is turned over at each end so that it has no seam, it climbs to forty degrees, and it drifts with the wind.
+  float span = 1.9;
+  vec2 uv = vec2(0.56 + (az - uRain.x - 0.003 * uTime) / span, 0.04 + el * 1.25);
+  uv.x = 1.0 - abs(1.0 - mod(uv.x, 2.0));
+  uv.y = 1.0 - abs(1.0 - mod(uv.y, 2.0));
+  // (Divided by what each of its rows comes to, so that only its lumps are taken from it and not its own lightening upward.)
+  vec3 pic = texture2D(tSky, vec2(uv.x, 1.0 - uv.y), -1.0).rgb / (vec3(0.99, 0.98, 1.03) * mix(0.6, 0.83, smoothstep(0.35, 0.8, uv.y)));
+  // Its lumps, deepened: an overcast seen over a pale flat has more shape than a camera gives it.
+  pic = pow(pic, vec3(3.6));
+  c *= mix(vec3(1.0), pic, smoothstep(-0.01, 0.05, d.y)) * mix(0.86, 0.66, smoothstep(0.03, 0.5, el));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -50,7 +62,7 @@ export function createSky(ctx: Context, noise: THREE.Data3DTexture, rain: THREE.
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, tNoise: { value: noise }, uRain: { value: rain } },
+    uniforms: { ...ctx.rig.uniforms, tNoise: { value: noise }, uRain: { value: rain }, tSky: { value: ctx.assets.texture('mat/sky.jpg', { kind: 'colour', repeat: true }) } },
     side: THREE.BackSide,
     // At the far plane and drawn last, so that the engine can reject it wherever anything stands in front.
     depthTest: true,

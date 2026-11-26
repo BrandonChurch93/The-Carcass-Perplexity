@@ -76,7 +76,7 @@ void main() {
   float skim = pow(1.0 - clamp(v.y, 0.0, 1.0), 3.0);
   vec3 sky = skyRadiance(normalize(vec3(-v.x, abs(v.y) + 0.25, -v.z))) * skyOpen(vWorld);
   vec3 c = mix(vec3(0.04, 0.013, 0.011), sky * (0.14 + 0.3 * skim), crest / max(crest + trough, 1e-4));
-  float a = clamp(vB.y, 0.0, 1.0) * clamp(crest * 0.4 + trough * 0.12, 0.0, 1.0) * (1.0 - uSolo);
+  float a = clamp(vB.y, 0.0, 1.0) * clamp(crest * 0.62 + trough * 0.22, 0.0, 1.0) * (1.0 - uSolo);
   if (a < 0.004) discard;
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
 }`;
@@ -104,7 +104,7 @@ export class Wet {
     this.drops = new Float32Array(count * DROPS * 6);
     for (let i = 0; i < count * DROPS; i++) {
       const chin = i % DROPS >= DROPS - 4 ? 1 : 0;
-      this.drops.set([rng.range(-1, 1), rng.range(-1, 1), rng.range(1.5, 4.2), rng.next(), rng.range(0.008, 0.014), chin], i * 6);
+      this.drops.set([rng.range(-1, 1), rng.range(-1, 1), rng.range(1.5, 4.2), rng.next(), rng.range(0.012, 0.02), chin], i * 6);
     }
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0]), 3));
@@ -216,7 +216,7 @@ export class Wet {
     for (let r = 0; r < BODY_RINGS_OUT; r++) {
       const age = fract(seconds / 4.3 + r / BODY_RINGS_OUT + i * 0.23);
       const size = (1.5 + 1.7 * age) * k;
-      if (sunk) this.put(o, stood.x, 0.004, stood.z, size, 1, 0.7 * (1 - age) * (1 - age), 0.07 / (1.5 + 1.7 * age), 60 + r);
+      if (sunk) this.put(o, stood.x, 0.004, stood.z, size, 1, 1.0 * (1 - age) * (1 - age * 0.6), 0.07 / (1.5 + 1.7 * age), 60 + r);
       else this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       o += 4;
     }

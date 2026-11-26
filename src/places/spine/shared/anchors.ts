@@ -68,4 +68,6 @@ export const CANAL_KEY = EXIT - EXIT_FLARE - 5;
 export const canalFar = tube(EXIT - 6, 0, 4);
 /** Seconds of the place from which the camera is on its way into the canal (shot spine-05), and of its key. */
 export const INSIDE_FROM = secondsInPlace(UNIT, shotById('spine-05').first);
+export const CARCASS_FROM = secondsInPlace(UNIT, shotById('spine-03').first);
+export const STRIKE_FROM = secondsInPlace(UNIT, shotById('spine-04').first);
 export const CANAL_KEY_AT = INSIDE_FROM + (keyPart(shotById('spine-05')) * shotLength(shotById('spine-05'))) / cut.fps;

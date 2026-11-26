@@ -318,9 +318,75 @@ export function canalFloor(): THREE.BufferGeometry {
   const uv: number[] = [];
   D_LIST.forEach((d) => uv.push(-1, d, 1, d));
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  const half: number[] = [];
+  D_LIST.forEach((d) => half.push(0.79 * flare(d) + 0.6, 0.79 * flare(d) + 0.6));
+  g.setAttribute('aHalf', new THREE.Float32BufferAttribute(half, 1));
   const up: number[] = [];
   for (let i = 0; i < pos.length / 3; i++) up.push(0, 1, 0);
   g.setAttribute('normal', new THREE.Float32BufferAttribute(up, 3));
+  g.setIndex(index);
+  g.computeBoundingSphere();
+  return g;
+}
+
+/** The icicles of the canal: thick along the upper lip of the far mouth, fewer and shorter along the roof behind it. Each hangs plumb from a root in the rock. */
+export function icicles(rng: Rng): THREE.BufferGeometry {
+  const pos: number[] = [];
+  const nor: number[] = [];
+  const uv: number[] = [];
+  const index: number[] = [];
+  const SIDES = 5;
+  const RINGS = 4;
+  const hang = (d: number, ang: number, length: number, radius: number): void => {
+    const f = frameAt(MOUTH_S + d);
+    const r0 = flare(d);
+    const r = r0 + 0.7;
+    const l = canalL(d) + Math.cos(ang) * r;
+    const y0 = FLOOR + 0.62 * r0 + Math.sin(ang) * r;
+    const x0 = f.x + f.nx * l;
+    const z0 = f.z + f.nz * l;
+    const turn = rng.next() * 6.283;
+    const bendX = (rng.next() - 0.5) * 0.08 * length;
+    const bendZ = (rng.next() - 0.5) * 0.08 * length;
+    const base = pos.length / 3;
+    for (let k = 0; k <= RINGS; k++) {
+      const t = k / RINGS;
+      // Broad at the root, a long thin point: ice that grew by dripping.
+      const rr = radius * (k === RINGS ? 0.02 : Math.pow(1 - t, 1.5) + 0.06);
+      for (let a = 0; a < SIDES; a++) {
+        const th = turn + (a / SIDES) * 6.283;
+        const cx = Math.cos(th);
+        const cz = Math.sin(th);
+        pos.push(x0 + bendX * t * t + cx * rr, y0 - length * t, z0 + bendZ * t * t + cz * rr);
+        nor.push(cx, 0.15, cz);
+        uv.push(d, t);
+      }
+    }
+    for (let k = 0; k < RINGS; k++) {
+      for (let a = 0; a < SIDES; a++) {
+        const p0 = base + k * SIDES + a;
+        const p1 = base + k * SIDES + ((a + 1) % SIDES);
+        index.push(p0, p0 + SIDES, p1, p1, p0 + SIDES, p1 + SIDES);
+      }
+    }
+  };
+  // The lip: rows of them, long in clumps and short between.
+  for (let i = 0; i < 280; i++) {
+    const ang = (0.14 + 0.72 * rng.next()) * Math.PI;
+    const clump = 0.5 + 0.5 * Math.sin(ang * 9 + 1.3);
+    const length = (1.2 + 3.6 * rng.next() ** 2 * (0.35 + 0.65 * clump)) / Math.max(Math.sin(ang), 0.55);
+    hang(EXIT - 1.4 - 3.4 * rng.next() ** 1.5, ang, length + 0.9, 0.09 + 0.05 * length * (0.6 + 0.4 * rng.next()));
+  }
+  // The roof behind it.
+  for (let i = 0; i < 170; i++) {
+    const ang = (0.27 + 0.46 * rng.next()) * Math.PI;
+    const length = 0.5 + 1.5 * rng.next() ** 2;
+    hang(EXIT - 5 - 55 * rng.next() ** 1.4, ang, length + 0.9, 0.07 + 0.05 * length);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   g.setIndex(index);
   g.computeBoundingSphere();
   return g;
