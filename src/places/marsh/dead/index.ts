@@ -240,6 +240,7 @@ function grid(across: number, down: number): THREE.BufferGeometry {
 
 // Which heap each dead one is, in the order of the anchors: the three the lens of the thin crust sees are all different.
 const KINDS = [1, 0, 2, 2, 0, 1];
+const FALLEN = DEAD[4] as (typeof DEAD)[number];
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('dead');
@@ -288,6 +289,7 @@ export function create(ctx: Context): Piece {
     mesh.frustumCulled = false;
     mesh.updateMatrixWorld();
     cards.push({ mesh, material, x: p[0], z: p[1], yaw: d.yaw, size });
+    if (d === FALLEN) continue;
     // The body: about three metres of it, sunk in its apron to a different depth each, the furthest gone the deepest.
     const kind = KINDS[bodies.length % KINDS.length] as number;
     const crop: [number, number] = kind === 1 ? [0, 0.72] : kind === 2 ? [0.22, 1] : [0, 1];
@@ -321,9 +323,46 @@ export function create(ctx: Context): Piece {
   const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.024, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 26 });
   const live = newDrive();
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)], 0.5, [0.1, 0.072, 0.054], 'dead-mud', 0.6, 0.2);
+  // One of the dead is not yet a heap: it lies on its side as it fell, half under, caked and salted, the upper legs stiff in the air.
+  const fa = rel(FALLEN.d, FALLEN.l);
+  const fl = Math.hypot(lens[0] - fa[0], lens[1] - fa[1]);
+  // STAGED for the lens of the thin crust: it lies a stride and a half to the left of its anchor as that lens sees it, whole in the frame.
+  const fp: [number, number] = [fa[0] - ((lens[1] - fa[1]) / fl) * 1.7, fa[1] + ((lens[0] - fa[0]) / fl) * 1.7];
+  const fGround = Math.min(0.1, ctx.rig.land.height(fp[0], fp[1]));
+  const fallen = new Beast(ctx, { k: 0.85, young: 0, seed: 41.3, bulk: 0.86, salt: 0.3 }, { cell: 0.03, wet: fGround - 5, mudded: 0.5, crust: 1, relief: 0, tendrils: 12 });
+  const lie = newDrive();
+  {
+    const k = 0.85;
+    const across: [number, number] = [-(lens[1] - fp[1]), lens[0] - fp[0]];
+    const al = Math.hypot(across[0], across[1]);
+    lie.dir = [across[0] / al, across[1] / al];
+    // Its legs lie toward the lens of the thin crust.
+    if (lie.dir[1] * (lens[0] - fp[0]) - lie.dir[0] * (lens[1] - fp[1]) < 0) lie.dir = [-lie.dir[0], -lie.dir[1]];
+    lie.ox = fp[0];
+    lie.oz = fp[1];
+    lie.oy = fGround - 0.42 * k;
+    lie.roll = 1.32;
+    lie.shift = -1.12 * k;
+    lie.pitch = 0.06;
+    lie.bend = 0.12;
+    lie.headPitch = 0.3;
+    lie.headYaw = -0.25;
+    lie.breath = -1;
+    lie.splay = 0.12;
+    lie.floor = -1e9;
+    lie.curl.fill(0.9);
+    lie.feet.forEach((foot, l) => {
+      const upper = l < 2;
+      const fore = l % 2 === 1;
+      foot[0] = (fore ? 1.05 : -1.5) * k;
+      foot[1] = (upper ? (fore ? 0.48 : 0.3) : -0.6) * k;
+      foot[2] = (upper ? -1.25 : -0.9) * k * 0.86;
+    });
+    fallen.pose(lie, 0);
+  }
   // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.
   const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.14 * c.size, [0.05, 0.022, 0.017], 'dead-stain-' + i, 1));
-  const meshes = [...cards.map((c) => c.mesh), ...bodies.map((b) => b.mesh), stuck.mesh, stuck.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
+  const meshes = [...cards.map((c) => c.mesh), ...bodies.map((b) => b.mesh), stuck.mesh, stuck.feelers, fallen.mesh, fallen.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
   ctx.parts.built('dead', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
 
@@ -372,6 +411,7 @@ export function create(ctx: Context): Piece {
       for (const b of bodies) b.material.dispose();
       bodyGrid.dispose();
       stuck.dispose();
+      fallen.dispose();
       mud.dispose();
       for (const w of stains) w.dispose();
     },

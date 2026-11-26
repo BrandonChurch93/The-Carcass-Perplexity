@@ -134,6 +134,8 @@ uniform float uSeconds;
 uniform float uWet;
 uniform float uSalt;
 uniform float uMudded;
+uniform float uCrust;
+uniform float uFloorY;
 uniform float uSeed;
 uniform float uNear;
 ${NOISE_GLSL}
@@ -204,9 +206,9 @@ void main() {
   // Wet: what has been under the brine is dark and red and shines. The line is ragged, and the brine still runs from it in threads.
   float lane = vnoise(vec2(q.x * 7.0 + q.z * 5.0, uSeed));
   float thread = smoothstep(0.5, 0.8, vnoise(vec2((q.x + q.z) * 31.0, vWorld.y * 1.3 - uSeconds * 0.3) + uSeed * 9.0));
-  float ragged = 0.45 * (patchy - 0.5) + 0.22 * (lane - 0.5) + 0.12 * (grain - 0.5);
+  float ragged = 0.75 * (patchy - 0.5) + 0.3 * (lane - 0.5) + 0.14 * (grain - 0.5);
   float wet = 1.0 - smoothstep(uWet - 0.1 + ragged, uWet + 0.06 + ragged, vWorld.y);
-  float damp = 1.0 - smoothstep(uWet + ragged, uWet + 0.35 + ragged + 0.25 * lane, vWorld.y);
+  float damp = 1.0 - smoothstep(uWet - 0.15 + ragged, uWet + 0.5 + ragged + 0.3 * lane, vWorld.y);
   dust *= 1.0 - damp;
   albedo = mix(albedo, vec3(0.25, 0.23, 0.21) * (0.7 + 0.5 * grain), 0.5 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
@@ -227,6 +229,11 @@ void main() {
   albedo *= mix(1.0, mix(0.72, 1.06, smoothstep(0.2, 0.7, grain)), uMudded);
   // And where the mud has dried the longest, on its back, the salt has come out of it white.
   albedo = mix(albedo, vec3(0.26, 0.24, 0.22) * (0.5 + 0.8 * grain), 0.5 * uMudded * (1.0 - damp) * smoothstep(0.2, 0.8, ng.y) * smoothstep(0.45, 0.7, vnoise3(q * 4.3 + uSeed * 3.0)));
+  // A dead one: the hide has dried dark and tight, and salt has grown over most of it in clumps.
+  float grown = smoothstep(0.4, 0.52, vnoise3(q * 3.3 + uSeed * 4.0) + 0.4 * (grain - 0.5) + 0.2 * (ng.y - 0.2));
+  float clumps = vnoise3(q * 17.0 + uSeed) * 0.6 + vnoise3(q * 41.0 + uSeed * 2.0) * 0.4;
+  albedo = mix(albedo, mix(albedo * vec3(0.36, 0.29, 0.26), vec3(0.115, 0.104, 0.098) * (0.25 + 0.7 * grain + 1.0 * clumps), grown), uCrust);
+  albedo *= mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.5, vWorld.y - uFloorY), uCrust);
   // The claws: old ivory, grooved, stained at the root.
   vec3 ivory = vec3(0.15, 0.115, 0.08) * (0.7 + 0.5 * height) * mix(vec3(1.0), tone, 0.35);
   albedo = mix(albedo, mix(ivory, albedo * 1.3, 0.5 * side), horn);
@@ -354,6 +361,8 @@ export interface Look {
   wet: number;
   /** 1 for the one stuck in grey mud. */
   mudded?: number;
+  /** 0 a live one. A dead one is grown over with salt, the hide dark and dried where it shows through. */
+  crust?: number;
   /** How many thin feelers hang from its lip in place of the hand of thick ones. */
   tendrils?: number;
   /** How far the hide picture lifts the skin, metres. 0 for one seen from afar. */
@@ -415,6 +424,8 @@ export class Beast {
         uWet: { value: look.wet },
         uSalt: { value: b.salt },
         uMudded: { value: look.mudded ?? 0 },
+        uCrust: { value: look.crust ?? 0 },
+        uFloorY: { value: look.wet + 5 },
         uSeed: { value: seed },
         uNear: { value: look.relief ? 1 : 0.4 },
       },

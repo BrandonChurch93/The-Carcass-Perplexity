@@ -62,6 +62,8 @@ export function create(ctx: Context): Piece {
   const bank = bearingDir(37);
   const bl = Math.hypot(1, 0.12);
   add(bank[0] * 8.6, bank[1] * 8.6, keyTime('marsh-2'), [-1 / bl, -0.12 / bl], 1, 0.12, 0.2, 0.05);
+  // It keeps to a shoal: the brine is to its shins and its belly is clear of it.
+  (herd[herd.length - 1] as (typeof herd)[number]).plan.ground = -0.06;
 
   const wet = new Wet(ctx, herd.length);
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
