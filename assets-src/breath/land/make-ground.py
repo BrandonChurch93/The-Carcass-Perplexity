@@ -32,7 +32,7 @@ def blur_wrap(g, radius):
     return np.real(np.fft.ifft2(np.fft.fft2(g) * kernel)).astype(np.float32)
 
 
-def make(name, spread, strength):
+def make(name, spread, strength, fine):
     src = Image.open(os.path.join(ROOT, 'assets-src', 'breath', 'land', 'src', name + '.jpg')).convert('RGB')
     w, h = src.size
     side = min(w, h)
@@ -46,7 +46,8 @@ def make(name, spread, strength):
     out = os.path.join(ROOT, 'public', 'assets', 'breath', 'land')
     Image.fromarray(np.clip(f, 0, 255).astype(np.uint8)).save(os.path.join(out, name + '.jpg'), quality=90, subsampling=0)
     lum = (f @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)) / 255
-    hgt = 0.65 * (blur_wrap(lum, 1.6) - blur_wrap(lum, N * 0.05)) + 0.35 * (blur_wrap(lum, 7) - blur_wrap(lum, N * 0.09))
+    # The height is the broad light and dark of the sheet: its grain, a texel or two across, is colour and would be noise as relief.
+    hgt = 0.2 * (blur_wrap(lum, fine) - blur_wrap(lum, N * 0.05)) + 0.8 * (blur_wrap(lum, 3.5 * fine) - blur_wrap(lum, N * 0.09))
     hgt = np.clip(0.5 + (hgt - hgt.mean()) / hgt.std() * spread, 0, 1)
     dx = (np.roll(hgt, -1, 1) - np.roll(hgt, 1, 1)) * 0.5 * strength * 8
     dy = (np.roll(hgt, -1, 0) - np.roll(hgt, 1, 0)) * 0.5 * strength * 8
@@ -56,5 +57,5 @@ def make(name, spread, strength):
     print(name, 'mean', [round(float(v), 3) for v in mean])
 
 
-make('crust', 0.2, 2.2)
-make('gravel', 0.2, 2.2)
+make('crust', 0.2, 2.2, 4.0)
+make('gravel', 0.2, 2.2, 1.6)

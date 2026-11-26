@@ -42,7 +42,7 @@ vec2 turned(vec2 d, float by) {
 vec4 water(vec2 xz, float depth, vec4 land) {
   // The water begins along a ragged line, and the line is not still: the swell lifts it a finger up the rock and lets it fall.
   float ragged = depth < 0.2 ? vnoise(xz * 1.7) * 0.05 + vnoise(xz * 9.0) * 0.015 + 0.008 * sin(uTime * 1.7 + 9.0 * vnoise(xz * 0.9)) : 0.0;
-  float cover = smoothstep(0.0, 0.03, depth - 0.6 * ragged);
+  float cover = smoothstep(0.0, 0.012, depth - 0.6 * ragged);
   if (cover <= 0.0) return vec4(-1.0);
 
   vec3 toEye = cameraPosition - vWorld;
@@ -123,7 +123,7 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   float hy2 = max(h.y * h.y, 0.01);
   float vh = clamp(dot(v, h), 0.0, 1.0);
   float glint = (0.02 + 0.98 * pow(1.0 - vh, 5.0)) * faces / (4.0 * max(v.y, 0.04) * hy2 * hy2);
-  mirror += uSunColour * vec3(1.0, 0.8, 0.52) * (min(glint, 7.0) * sunHere * (1.0 - hit));
+  mirror += uSunColour * vec3(1.0, 0.74, 0.42) * (min(glint, 7.0) * sunHere * (1.0 - hit));
 
   // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
   float low = 1.0 - smoothstep(3.0, 7.0, cameraPosition.y - uSea);
@@ -132,16 +132,22 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   // The image is of things in the shade of their own bodies, seen from below: darker than what stands over it.
   mirror = mirror * (1.0 - mix(0.85, 0.96, low) * image.a) + mix(0.4, 0.26, low) * image.rgb;
 
-  // What is in the water. It is clear: a hand deep the bed shows whole, a metre deep the water's own colour has taken its place, and that
-  // colour goes from the warm grey of stirred silt at the edge to green and then to teal where the channel has depth.
+  // What is in the water. It is clear: a hand deep the bed shows whole, knee deep the water's own colour has taken its place, and that
+  // colour is teal, a little milky with silt, darker where the channel has depth.
   float path = depth / max(nv, 0.25);
-  float clear = exp(-path * 2.6);
-  vec3 tone = mix(vec3(0.4, 0.36, 0.28), mix(vec3(0.12, 0.25, 0.22), vec3(0.045, 0.17, 0.19), smoothstep(0.35, 1.1, depth)), smoothstep(0.06, 0.45, depth));
+  float clear = exp(-path * 4.5);
+  vec3 tone = mix(vec3(0.13, 0.18, 0.18), mix(vec3(0.07, 0.175, 0.2), vec3(0.04, 0.125, 0.165), smoothstep(0.25, 0.9, depth)), smoothstep(0.03, 0.25, depth));
   // The low sun goes into the water as well and lights the silt in it.
   vec3 body = tone * (skyUp * open + uSunColour * (0.06 * sunHere));
 
   vec3 colour = fresnel * mirror + (1.0 - fresnel) * (1.0 - clear) * body;
-  float alpha = 1.0 - (1.0 - fresnel) * clear;
+  // A wet bed is darker than a dry one: under the thinnest film of water the rock has already lost a third of its light, so the water
+  // has a dark glossy margin where it meets the dry rock.
+  float alpha = 1.0 - (1.0 - fresnel) * clear * 0.62;
+  // And where the water meets what stands in it, it climbs it a hair and turns the sky away: a thin dark line along every bank and stone.
+  float meet = 1.0 - smoothstep(0.0, 0.022, depth - 0.6 * ragged);
+  alpha = max(alpha, 0.6 * meet);
+  colour *= 1.0 - 0.7 * meet;
   // Looked down on, the water mirrors little, and still the image of what stands in it is seen: the animal is between the sky and
   // the water under it, so the silt there is in its shade and the bed is hidden by it.
   colour = mix(colour * (1.0 - 0.35 * image.a), mix(0.4, 0.26, low) * image.rgb, mix(0.5, 0.75, low) * image.a);
