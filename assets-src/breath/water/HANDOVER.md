@@ -45,8 +45,10 @@ Owner until 08:46 UTC, 26 November 2026: breath_life_owner_3, branch `agent/brea
 - M12 "no sway in fronds": sway is in the vertex shader; M2 green. M13, M14, M15: not done.
 
 ## Measures and cost
-MEASURES
-COST
+- Measure (draft, uhd, 08:25, before the ground's last merge): M1, M2, M3 green. M3: breath-0 1.11, breath-1 1.22, breath-2 1.77, breath-3 1.94,
+  breath-4 3.56. M2: 21.7, 49.9, 26.7, 56.6, 45.7 percent of the picture moves. Determinism pass, G10 pass. All five keys rendered at final.
+- Cost (cost tool, breath-0, uhd, draft, 08:31): sea 0.82 (0.64 in the run of 07:55; received 0.74), gill-plumes 0.21 (0.23), waders 0.05
+  (0.20), dead-wader 0.00; the three together 1.08 against 1.17 received. The run is noisy by 0.1; the sea is the part to watch.
 
 ## Staged (by shot, never by clock)
 - breath-05: `RIM_GROWTH`, nine bushes round the rim wader (plumes); rim wader's neck down at the key, up 0.9 s after it (`RIM_LIFTS`).
