@@ -57,7 +57,9 @@ void main() {
   vec2 slope = ((texture2D(tGrain, p.xz / 5.3 + vec2(0.013, 0.008) * uTime).ba - 0.5) * 0.2 + (texture2D(tGrain, p.xz / 2.3 - vec2(0.011, 0.017) * uTime).ba - 0.5) * 0.16) * ruffle;
   // Close to, the skin is never glass: small wavelets from the gas cross it every way, two fields of them sliding through each other, so
   // that no crest travels and every slope winks. (The tile keeps its smaller copies: far off the wavelets close up to nothing.)
-  float chop = smoothstep(60.0, 6.0, dist) * ruffle * (1.0 + 1.1 * smoothstep(12.0, 3.0, dist));
+  // Where the big ones wade the brine is churned: dark with mud and never still.
+  brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
+  float chop = smoothstep(60.0, 6.0, dist) * ruffle * (1.0 + 1.1 * smoothstep(12.0, 3.0, dist)) * (1.0 + 1.6 * brineMud);
   vec4 rA = texture2D(tRipple, p.xz / 2.3 + vec2(0.031, 0.017) * uTime);
   // (The second and third are a picture of still brine with its relief, mat/ripple: its wavelets lie one way, as the light air lays them,
   // and it is laid twice, the second time turned and smaller.)
@@ -115,7 +117,6 @@ void main() {
   vec4 froth = vec4(scum * 1.5 + 0.05, foam);
   // Dark clots carried on the slow drift.
   float clot = smoothstep(0.7, 0.76, bubble.r * 0.5 + fleck.g * 0.5) * smoothstep(0.5, 0.65, raft.r) * smoothstep(14.0, 6.0, dist);
-  brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
   vec3 lit = brineShade(p, n, v, s, froth) * (1.0 - 0.4 * clot * (1.0 - foam));
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;

@@ -9,7 +9,7 @@ float mirrorShare(vec3 n, vec3 v) {
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // Water's own law, held short of a whole mirror: the skin is never still at the scale of a hair. A slope that leans from the lens shows it
   // the sky and one that leans to it the red body, and that alone draws every ripple.
-  return 0.04 + 0.3 * pow(1.0 - nv, 4.0);
+  return 0.02 + 0.75 * pow(1.0 - nv, 6.0);
 }
 // What a level wet surface at p mirrors, stained by the red film on it. A ripple swings the mirrored ray by twice its lean times the way to
 // what it mirrors, which is not known, so a share of the way to the lens stands for it.
@@ -46,7 +46,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 4.0));
   albedo = mix(albedo, pit, smoothstep(0.7, 4.0, d2));
   albedo *= 0.8 + 0.4 * silt;
-  albedo = mix(albedo, vec3(0.05, 0.023, 0.017), brineMud * 0.8);
+  albedo = mix(albedo, vec3(0.04, 0.017, 0.012), brineMud * 0.85);
   albedo = mix(albedo, froth.rgb, foam);
   float open = skyOpen(p);
   // The body is lit from inside the liquid: the ripples do not shade it.
@@ -54,7 +54,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   // Far off the ripples are smaller than a pixel: half of every pixel there is a slope that shows the body, so the sheen stops short.
   float away = length(cameraPosition - p);
   // (Far off more of the unseen ripples look at the sky than the level surface does.)
-  float fres = (mirrorShare(n, v) + 0.09 * smoothstep(6.0, 28.0, away)) * (1.0 - 0.8 * foam) * mix(1.0, 0.75, smoothstep(25.0, 140.0, away)) * (1.0 - 0.4 * brineMud);
+  float fres = (mirrorShare(n, v) + 0.09 * smoothstep(6.0, 28.0, away)) * (1.0 - 0.8 * foam) * mix(1.0, 0.75, smoothstep(25.0, 140.0, away)) * (1.0 - 0.3 * brineMud);
   float tilt = dot(n.xz, normalize(v.xz + vec2(1e-4)));
   lit *= clamp(1.0 + tilt * 1.5, 0.8, 1.12);
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
