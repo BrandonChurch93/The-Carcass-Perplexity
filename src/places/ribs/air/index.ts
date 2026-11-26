@@ -76,8 +76,8 @@ vec2 bankAt(vec3 p) {
   float lane = (p.x + 325.0 - 0.07 * (1504.0 - p.z) + 110.0 * (big - 0.5)) / (24.0 + 300.0 * uBank.y);
   float open = exp(-lane * lane) * smoothstep(0.0, 0.12, uBank.y);
   // The clearing is widest over the breaking swell and narrows toward the lens: out there the mist closes in from both sides.
-  float hole = (p.x + 318.0 + 60.0 * (lump - 0.5)) / ((95.0 + 90.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, p.z)));
-  open = max(open, (0.62 + 0.38 * uBankHole) * exp(-hole * hole));
+  float hole = (p.x + 318.0 + 60.0 * (lump - 0.5)) / ((135.0 + 60.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, p.z)));
+  open = max(open, (0.9 + 0.1 * uBankHole) * exp(-hole * hole));
   float fine = texture2D(tCloudShade, q / 410.0 + 0.11 + p.y * vec2(0.004, 0.007)).r;
   // East of the blades the banks stand taller: their torn tops rise out of the grey of the far air into the sky.
   float top = (42.0 + 64.0 * smoothstep(0.2, 0.75, big)) * (1.0 + 0.8 * smoothstep(100.0, 600.0, p.x)) * (1.0 + 0.5 * smoothstep(640.0, 400.0, p.z)) * (1.0 - open) * (1.0 - 0.3 * uBank.y);
@@ -229,9 +229,9 @@ void main() {
       float through = (t1 - t0) * g * exp(-max(ro.y + rd.y * t0, 0.0) / 14.0);
       vec3 pa = ro + rd * min(reach, 160.0);
       vec3 pb = ro + rd * min(reach, 420.0);
-      float ha = (pa.x + 318.0) / ((95.0 + 90.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, pa.z)));
-      float hb = (pb.x + 318.0) / ((95.0 + 90.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, pb.z)));
-      float clear = (0.62 + 0.38 * uBankHole) * 0.5 * (exp(-ha * ha) + exp(-hb * hb));
+      float ha = (pa.x + 318.0) / ((135.0 + 60.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, pa.z)));
+      float hb = (pb.x + 318.0) / ((135.0 + 60.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, pb.z)));
+      float clear = (0.9 + 0.1 * uBankHole) * 0.5 * (exp(-ha * ha) + exp(-hb * hb));
       float patches = texture2D(tCloudShade, (pb.xz - uBank.zw) / 900.0 + 0.29).g;
       // Where clear water runs between two banks the mist is thin as well: the far sky is seen down the gap.
       vec3 pc = ro + rd * min(reach, 700.0);
