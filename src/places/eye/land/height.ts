@@ -21,21 +21,34 @@ export function axisOf(x: number, z: number): [number, number] {
 }
 
 /** The stream: it leaves the lake left of the spur and runs out through the rim. `across` of its middle at `along`, and the level of its bed. */
-export const streamAcross = (along: number): number => -40 + 7 * Math.sin(along / 37 + 0.6) + 4 * Math.sin(along / 13 + 2);
-export const streamBed = (along: number): number => -0.35 - 0.05 * Math.max(0, along - 18) - 1.2 * smooth(52, 60, along) - 1.6 * smooth(96, 106, along) - 1.4 * smooth(150, 162, along);
+export const streamAcross = (along: number): number => -11.5 - 22 * smooth(138, 96, along) - 4 * smooth(96, 30, along) + 2.2 * Math.sin(along / 11 + 0.6) * smooth(150, 120, along) + 1.2 * Math.sin(along / 4.7 + 2);
+export const streamBed = (along: number): number =>
+  -0.35 + 0.012 * Math.min(17, Math.max(0, along)) + 33.5 * smooth(17, 105, along) + 9 * smooth(150, 320, along) + 0.9 * smooth(112, 116, along) + 1.1 * smooth(127, 130, along) + 1.3 * smooth(141, 145, along);
 
 /** The depth of the shelf of the shallows, metres below the water: knee-deep, with hollows and bare bars. */
 export function shelfDepth(x: number, z: number, inFromShore: number): number {
   const hollows = 0.3 + 0.32 * fbm(x / 46, z / 46, 3);
-  return Math.min(inFromShore * 0.04, hollows);
+  const depth = Math.min(inFromShore * 0.04, hollows);
+  // At the lip the floor ends in a rim of pale crust that stands out of the water in places.
+  const w = Math.hypot(x, z) - lipAt(Math.atan2(x, -z));
+  if (w > 10) return depth;
+  const crust = -0.17 + 0.3 * fbm(x / 1.9, z / 1.9, 3) + 0.12 * fbm(x / 0.43 + 7, z / 0.43, 3) - 0.1 * smooth(1.6, 0.2, w);
+  const s = smooth(1.2, 10, w);
+  return crust * (1 - s) + depth * s;
 }
 
 /** The edge of the deep: an irregular lip, metres from the centre at that angle. */
 export function lipAt(a: number): number {
   const cx = Math.cos(a);
   const cz = Math.sin(a);
-  return DEEP + 9 * (vnoise(cx * 9 + 3, cz * 9 + 7) - 0.5) + 5 * (vnoise(cx * 31 + 1, cz * 31 + 5) - 0.5) + 2.4 * (vnoise(cx * 110, cz * 110) - 0.5);
+  const b = (((a / DEG) % 360) + 360) % 360;
+  // A tongue of the shelf stands out into the deep beside the place of the edge shot, so that the wall of the shaft under it is seen from the lip.
+  const bay = 34 * smooth(LIP_BAY + 0.1, LIP_BAY + 0.6, b) * (1 - smooth(LIP_BAY + 3.4, LIP_BAY + 4.6, b));
+  return DEEP + 9 * (vnoise(cx * 9 + 3, cz * 9 + 7) - 0.5) + 5 * (vnoise(cx * 31 + 1, cz * 31 + 5) - 0.5) + 2.4 * (vnoise(cx * 110, cz * 110) - 0.5) - bay;
 }
+
+/** The bearing at which the bay in the lip begins: the edge shot stands just short of it. */
+export const LIP_BAY = 197.2;
 
 /** Metres from the shore to the foot of the cliff at that angle, the height of the scree at the foot, and the height of the top. */
 export function wallAt(a: number): { foot: number; scree: number; top: number } {
@@ -44,10 +57,25 @@ export function wallAt(a: number): { foot: number; scree: number; top: number } 
   const east = bump(a, 92, 52);
   const west = bump(a, 270, 48);
   const south = bump(a, 182, 50);
-  const foot = BROW.recess * browAt(a) + 64 + 150 * west + 470 * south - 20 * east + 22 * Math.sin(5 * a + 0.7) + 14 * Math.sin(11 * a + 2.1) + 46 * (vnoise(cx * 7 + 11, cz * 7 + 4) - 0.5) + 24 * (vnoise(cx * 23 + 2, cz * 23 + 9) - 0.5) + 9 * (vnoise(cx * 70, cz * 70 + 3) - 0.5);
+  // Buttresses and bays: the wall stands in blocks, forward and back, at three sizes, with sharp corners.
+  const block = (f: number, o: number, lo: number, hi: number): number => smooth(lo, hi, vnoise(cx * f + o, cz * f + o * 1.7));
+  const blocks = 56 * (block(11, 3.1, 0.38, 0.62) - 0.5) + 16 * (block(29, 8.3, 0.3, 0.7) - 0.5);
+  const foot = BROW.recess * browAt(a) + 64 + 150 * west + 470 * south - 20 * east + 22 * Math.sin(5 * a + 0.7) + 14 * Math.sin(11 * a + 2.1) + 46 * (vnoise(cx * 7 + 11, cz * 7 + 4) - 0.5) + blocks * (1 - 0.6 * browAt(a));
   const scree = 24 + 50 * west + 76 * south - 12 * east + 9 * Math.sin(7 * a + 2) + 22 * (vnoise(cx * 16 + 5, cz * 16) - 0.5);
-  const top = 214 + 20 * Math.sin(3 * a + 0.5) + 11 * Math.sin(8 * a + 1.9) + 6 * Math.sin(17 * a + 0.3) - 62 * west - 84 * south + (44 + 90 * smooth(48, 96, a / DEG)) * browAt(a) + 16 * (vnoise(cx * 26 + 8, cz * 26 + 1) - 0.5);
-  return { foot: Math.max(46, foot), scree: Math.max(3, scree), top };
+  const top =
+    214 +
+    20 * Math.sin(3 * a + 0.5) +
+    11 * Math.sin(8 * a + 1.9) -
+    62 * west -
+    84 * south -
+    170 * bump(a, 224, 30) -
+    70 * bump(a, 326, 20) +
+    34 * (fbm(cx * 38 + 4, cz * 38 + 2, 3) - 0.5) +
+    (44 + 120 * smooth(48, 96, a / DEG)) * browAt(a) +
+    64 * (block(9, 5.7, 0.3, 0.7) - 0.5) +
+    22 * (block(27, 2.2, 0.38, 0.62) - 0.5) +
+    9 * (block(90, 7.1, 0.4, 0.6) - 0.5);
+  return { foot: Math.max(46, foot), scree: Math.max(3, Math.min(scree, 0.6 * Math.max(26, top))), top: Math.max(26, top) };
 }
 
 const BEACH = 30;
@@ -92,7 +120,7 @@ export function landHeight(x: number, z: number): number {
     const face = smooth(wall.foot, wall.foot + FACE, ds);
     const far = Math.max(0, ds - wall.foot - FACE);
     // The scree stands in cones under the gullies and thin under the buttresses.
-    const cone = 0.75 + 0.5 * vnoise(Math.cos(a) * 40 + 3, Math.sin(a) * 40 + 8);
+    const cone = 0.5 + 2.8 * vnoise(Math.cos(a) * 14 + 3, Math.sin(a) * 14 + 8) ** 2.2;
     y = 0.03 * BEACH + wall.scree * cone * s ** 1.3 + (wall.top - wall.scree * cone) * face + far * 0.02 + 14 * smooth(0, 500, far) * Math.sin(x * 0.0041 + 1.2) * Math.cos(z * 0.0037);
     y += 5 * s * (fbm(x / 60, z / 60, 3) - 0.5) + 9 * smooth(0, 300, far) * (fbm(x / 130, z / 130, 3) - 0.5);
     // The beds of the cliff: ledges and risers, their level wandering along the wall.
@@ -102,34 +130,37 @@ export function landHeight(x: number, z: number): number {
       const t = y / bed + 0.6 * vnoise(Math.cos(a) * 30, Math.sin(a) * 30 + 6) + 0.25 * vnoise(x / 26, z / 26);
       const whole = Math.floor(t);
       const stepped = (whole + smooth(0.34, 0.66, t - whole) - (t - y / bed)) * bed;
-      y += (stepped - y) * 0.78 * onFace;
+      y += (stepped - y) * (0.3 + 0.4 * vnoise(Math.cos(a) * 19 + 4, Math.sin(a) * 19)) * onFace;
       // Flutes down the face.
-      y -= 7 * onFace * ridged(Math.cos(a) * 150, Math.sin(a) * 150, 2) * (0.4 + 0.6 * vnoise(Math.cos(a) * 12 + 9, Math.sin(a) * 12));
+      y -= 1.5 * onFace * ridged(Math.cos(a) * 150, Math.sin(a) * 150, 2) * (0.4 + 0.6 * vnoise(Math.cos(a) * 12 + 9, Math.sin(a) * 12));
     }
   }
 
   // The bluff of the last shot, on the shore at x = 0.
-  if (z > 0) y += BLUFF * smooth(6, 56, ds) * (1 - smooth(95, 150, ds)) * Math.exp(-((x / 44) ** 2));
+  if (z > 0) y += BLUFF * smooth(6, 70, ds) * (1 - smooth(95, 150, ds)) * Math.exp(-((x / 44) ** 2));
 
   const [along, across] = axisOf(x, z);
   if (along > -40 && along < 2600 && Math.abs(across) < 400) {
-    // The spur the wide camera stands on: bedrock ribs that step down to the beach, steep on the side of the stream.
-    const lateral = across > 0 ? Math.exp(-((across / 78) ** 2)) : Math.exp(-((across / 36) ** 2));
-    const crest = 42 * smooth(30, 150, along) + 14 * smooth(150, 320, along);
-    const rough = 0.86 + 0.28 * fbm(x / 21, z / 21, 3);
+    // The spur the wide camera stands on: bedrock ribs that step down to the beach. Its two shoulders stand forward of its middle,
+    // so that the camera looks down a notch between them, and the stream comes down the left one.
+    const lateral = across > 0 ? Math.exp(-((across / 78) ** 2)) : Math.exp(-((across / 70) ** 2));
+    const side = Math.abs(across + 1.5 * Math.sin(along / 9));
+    const shift = 30 * smooth(6, 21 + 6 * vnoise(along / 13, 2.2), side);
+    const crest = 42 * smooth(62 - shift, 150 - shift, along) + 14 * smooth(150, 320, along);
+    const rough = 0.9 + 0.2 * fbm(x / 21, z / 21, 3);
     let spur = crest * rough;
     const ledge = 3.2;
     const t = spur / ledge + 0.8 * vnoise(x / 15, z / 15);
     const whole = Math.floor(t);
     spur += ((whole + smooth(0.3, 0.7, t - whole) - (t - spur / ledge)) * ledge - spur) * 0.6;
-    if (spur > y) y += (spur - y) * lateral * smooth(20, 60, along);
+    if (spur > y) y += (spur - y) * lateral * smooth(10, 40, along);
 
-    // The ravine of the stream.
+    // The gully of the stream.
     const off = Math.abs(across - streamAcross(along));
-    const open = smooth(3.5 + 2.5 * vnoise(along / 9, 3.3), 30 + 14 * vnoise(along / 31, 7.7), off);
-    const bed = streamBed(along) + 0.5 * (vnoise(x / 2.3, z / 2.3) - 0.5) * smooth(18, 40, along);
+    const open = smooth(1.2 + 1.2 * vnoise(along / 9, 3.3), 7 + 5 * vnoise(along / 31, 7.7), off);
+    const bed = streamBed(along) + 0.4 * (vnoise(x / 2.3, z / 2.3) - 0.5) * smooth(18, 40, along);
     const from = smooth(-30, 6, along);
-    y = y * (1 - from) + (bed * (1 - open) + y * open) * from;
+    if (bed < y) y = y * (1 - from) + (bed * (1 - open) + y * open) * from;
   }
   return y;
 }

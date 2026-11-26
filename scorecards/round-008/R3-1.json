@@ -1,0 +1,77 @@
+{
+  "round": 8,
+  "unit": "breath",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-25 23:56 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the stepped pit across the right half, also seen in set-A-01.png",
+        "what": "similarly rounded slab edges and near-black gaps turn the pit into stacked set pieces rather than a continuous rock formation",
+        "fix": "vary the ledge profiles and fracture scale, connect the strata down the wall, and recover a little indirect light in the deepest readable faces"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the three foreground waders",
+        "what": "the repeated dome torsos and hard angular knees look like copies of one rigid model; the closest legs end abruptly in the surface",
+        "fix": "vary torso and joint silhouettes and the weight on each leg; add convincing submersion and local wakes where the feet meet the water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the beige band across the pit and along the mountain foot",
+        "what": "the pit vapor reads as a broad blur laid over the rocks and the distant band repeats the same curled profile",
+        "fix": "vary plume density and altitude in depth, have ledges occlude parts of the vapor, and give the illuminated edges directional scattering"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "top right and lower left, the flats beyond the pit",
+        "what": "the ground texture is dragged into long horizontal streaks and broad smears",
+        "fix": "break the flats into irregular wet and dry patches with scale-consistent sediment detail that holds up at grazing angles"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop, on the slanted pit blocks",
+        "what": "the diagonal facets have softly streaked faces and thin, evenly outlined cracks that look drawn on",
+        "fix": "break up the planar faces with fractured geometry and vary crack depth, edge roughness, and infill"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "upper crops, at the waders' leg roots",
+        "what": "the cylindrical legs appear to slot into the body beneath an abrupt overhanging shell",
+        "fix": "blend the hips into the torso with believable skin folds, muscle transitions and contact shading"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "both water crops",
+        "what": "the regularly sized ripple texture continues through most of the surface without enough variation in direction or scale",
+        "fix": "mix longer swell, patchy small ripples, and animal-driven disturbance while retaining the reflections"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top left, at the bright shoreline",
+        "what": "the water-to-land transition turns into a smooth graphic stripe without a credible wet margin",
+        "fix": "break up the bank outline with shallow sediment, damp discoloration and small lapping highlights"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "left crop, at the fallen animal's neck-to-torso bend",
+        "what": "the skin detail stretches into parallel ridges along the bend and bunches abruptly at the join",
+        "fix": "correct the deformation and texture mapping, then add irregular compression and local dirt transfer where the animal rests on the ground"
+      }
+    ]
+  }
+}
