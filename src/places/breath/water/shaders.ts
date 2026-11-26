@@ -95,7 +95,7 @@ void main() {
   float drawn = 1.0 - 0.85 * tanh(3.4 * tip);
   mirror *= drawn;
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
-  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.92, 1.0, 0.93), 0.75 * smoothstep(0.04, 0.22, v.y)) * mix(0.72, 1.3, smoothstep(0.06, 0.3, v.y));
+  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.92, 1.0, 0.93), 0.75 * smoothstep(0.04, 0.22, v.y)) * mix(0.72, 0.62, smoothstep(0.06, 0.3, v.y));
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
   float rise = r.y / max(length(r.xz), 1e-4);
