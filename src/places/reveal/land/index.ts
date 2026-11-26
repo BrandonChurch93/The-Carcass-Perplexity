@@ -469,6 +469,8 @@ void main() {
   float waver = 1.0;
   if (dot(xz - uLava, xz - uLava) < 160000.0) waver = 0.8 + 0.4 * vnoise(vec2(uTime * 1.7, 5.0)) + 0.2 * vnoise(vec2(uTime * 4.3, 9.0));
   // (By night the working is calmer, so that the one beat is not lost in it.)
+  // (While the frame is held the fire is seen to breathe, slow and uneven.)
+  if (uLive > 0.0) waver *= mix(1.0, 0.62 + 0.76 * vnoise(vec2(uTime * 0.6, 21.0)), smoothstep(0.0, 1.5, uLive));
   if (uDusk > 0.0) waver = mix(1.0, waver, uCalm.w);
   float swell = (0.8 + 0.9 * uBeat) * waver;
   float seenFar = 1.0 + 2.2 * smoothstep(500.0, 1380.0, uViewKm);
@@ -519,10 +521,10 @@ void main() {
       float skin = 0.25 + 0.75 * vnoise(xz / 6.0 + 9.0);
       // (After the beat it breathes, and never evenly: two slow swells that do not keep step.)
       float breathe = mix(1.0, 0.62 + 0.5 * vnoise(vec2(uTime * 0.8, 5.0)) + 0.3 * vnoise(vec2(uTime * 2.1, 9.0)), smoothstep(1.4, 3.2, uEmber.y));
-      float hot = breathe * lake * (0.2 * skin + (0.45 + 0.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
+      float hot = breathe * lake * (0.12 * skin + (0.45 + 0.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
       glow += vec3(1.0, 0.24, 0.025) * 0.3 * hot * uEmber.x * land;
       // (The fume that stands over it, lit red from under: a soft dome, uneven as smoke is.)
-      glow += vec3(1.0, 0.17, 0.035) * breathe * (0.012 + 0.04 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
+      glow += vec3(1.0, 0.17, 0.035) * breathe * (0.012 + 0.03 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
       // (Fire in the cracks of the crust round it, broken along its length; the beat runs out along it, as a pulse does.)
       float pulse = uEmber.y > 0.0 ? exp(-pow((far0 - 380.0 * uEmber.y) / 90.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
       float broken = smoothstep(0.3, 0.75, vnoise(xz / 34.0 + 4.0));
@@ -530,7 +532,7 @@ void main() {
       glow += blackbody(980.0 + 220.0 * clamp(veins, 0.0, 1.0)) * 0.03 * smoothstep(0.03, 0.55, veins) * uEmber.x;
     }
     // (Fire seen by an open camera goes to a deep orange, never to white: the red is held and the rest follows it.)
-    glow *= mix(1.0, 1.0 / (1.0 + 1.4 * glow.r * uGain), uEmber.x);
+    glow *= mix(1.0, 1.0 / (1.0 + 1.0 * glow.r * uGain), uEmber.x);
     glow.gb = mix(glow.gb, min(glow.gb, glow.r * vec2(0.5, 0.1)), uEmber.x);
     glow *= uEmber.w;
   }
@@ -627,6 +629,7 @@ void main() {
   vec2 glintAt = (xz - uGlint - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
   // (As the sun sets its image slides off toward it, and dies.)
   if (uDusk > 0.0) glintAt = (xz - uGlint - (uTime - 8.1) * vec2(-9.0, -8.0) - uCalm.y * normalize(uSunDir.xz)) * vec2(1.0, 0.48);
+  if (uLive > 0.0) glintAt -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   float glint = exp(-pow(dot(glintAt, glintAt) / 55000.0, 0.463));
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   vec3 waterBed = water;
@@ -645,7 +648,7 @@ void main() {
   if (uDusk > 0.0) {
     // The sky's image on the sea goes with the sky, the air over it with the air; and at night a faint cold sheen lies toward the moon.
     vec2 fromSheen = xz - uTerm.xy - 1500.0 * normalize(uMoonDir.xz);
-    vec3 sheen = moonAt(sunH) * (0.0018 + 0.0065 * exp(-dot(fromSheen, fromSheen) / 3.0e6) * (0.6 + 0.4 * sparkle)) * (0.5 + 0.5 * shade);
+    vec3 sheen = moonAt(sunH) * (0.003 + 0.0065 * exp(-dot(fromSheen, fromSheen) / 3.0e6) * (0.6 + 0.4 * sparkle)) * (0.5 + 0.5 * shade);
     // (The moon does not reach the bed of the sea: by night only the surface is seen.)
     water = waterBed * (1.0 - 0.9 * uEmber.x) + (waterSky - waterBed) * skyLightAt(sunH, day) + (waterGlare - waterSky) + (water - waterGlare) * airLightAt(sunH) + sheen;
     // (Under the moon the sea has almost no colour.)
