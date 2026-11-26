@@ -113,14 +113,17 @@ vec3 stratus(vec3 c, vec3 from, vec3 d) {
   return c;
 }
 // The storm with none of its billows, for what fades into the sky: its dark where it stands, and the rig's lights on it.
+const float FOOT_AIR = 0.55;
 vec3 skyBroad(vec3 from, vec3 d) {
   // The band of the dusk is a line on the horizon and the dome's alone: air, snow and the far sea take the cold sky over it, never its orange.
-  vec3 c = skyClear(normalize(vec3(d.x, max(d.y, 0.07), d.z)));
+  // At its very foot it is thinner and darker: the far sea goes into it there, and the sea's lit tops keep their shape against it.
+  float low = mix(FOOT_AIR, 1.0, smoothstep(0.0, 0.07, d.y));
+  vec3 c = skyClear(normalize(vec3(d.x, max(d.y, 0.07), d.z))) * low;
   float cover = stormCover(d);
   if (cover <= 0.0) return c;
   vec3 cloud = mix(vec3(0.019, 0.022, 0.036), vec3(0.012, 0.014, 0.023), smoothstep(0.1, 0.8, d.y)) + 0.15 * flashCast();
   cloud += vec3(0.42, 0.33, 0.8) * (0.04 * clamp(cloudLit(from, d), 0.0, 3.0));
-  return mix(c, cloud, cover);
+  return mix(c, cloud * low, cover);
 }
 vec3 skyAtRest(vec3 from, vec3 d, float lod) {
   float el = asin(clamp(d.y, -1.0, 1.0));
@@ -156,7 +159,7 @@ float strikeReach(vec3 from, vec3 d) {
 // in uneven masses, so that the cloud's own shapes stand in the light; the last band keeps its orange.
 vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
   float masses = textureLod(tNoise, d * 1.7 + vec3(0.13, 0.41, 0.77), 0.0).r + 0.5 * textureLod(tNoise, d * 4.3 + vec3(0.61, 0.07, 0.29), 0.0).g;
-  float lit = uStrikeTop.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y) * (0.35 + 0.9 * masses);
+  float lit = uStrikeTop.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y) * mix(0.22, 1.0, smoothstep(0.0, 0.06, d.y)) * (0.35 + 0.9 * masses);
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
   float shape = smoothstep(0.004, 0.05, body);
@@ -225,7 +228,7 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   c += vec3(0.42, 0.33, 0.8) * glow * (0.03 + 1.3 * dot(c, vec3(0.33)));
   // The storm is of masses: the pictures' own darks are pressed down and their pale bellies kept, and it is darkest overhead.
   float mass = dot(c, vec3(0.3, 0.5, 0.2));
-  c *= mix(0.62, 1.35, smoothstep(0.04, 0.3, mass)) * mix(1.0, 0.55, smoothstep(0.12, 0.7, el) * (1.0 - clamp((c.r - c.b) * 6.0, 0.0, 1.0)));
+  c *= mix(0.78, 1.35, smoothstep(0.04, 0.3, mass)) * mix(1.0, 0.75, smoothstep(0.12, 0.7, el) * (1.0 - clamp((c.r - c.b) * 6.0, 0.0, 1.0)));
   // Overhead the pictures end: the cloud closes over in its own dark.
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.85, 1.15, el));
   // The storm's light is violet; only the last band keeps its orange.
@@ -256,13 +259,17 @@ void main() {
     }
     // Under the level the dome is what the air pass takes for the far end of the sea: the band of the dusk is a line on the sea's edge, and
     // nothing of it shows under that edge where the sea's own cloud ends.
-    vec3 seaAir = skyBroad(cameraPosition, normalize(vec3(d.x, 0.075, d.z)));
+    c *= 1.0 + uSkyStage.y;
+    // (It is read as the sea reads it, flash and all: in a strike the sea's far end and the sky's foot light as one.)
+    vec3 seaAir = skyCloud(cameraPosition, normalize(vec3(d.x, 0.0003, d.z)), 0.0);
     c = mix(c, seaAir, smoothstep(0.0, -0.005, d.y));
     // The sky's foot stands in the air the far sea stands in: the horizon is no ruled line between a pale sea and a dark storm, the one goes
     // into the other over a degree or two. Toward the last light the band keeps its line.
     float toLast = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
-    c = mix(c, seaAir * 1.0, 0.9 * exp(-max(d.y, 0.0) / 0.02) * (1.0 - 0.85 * pow(toLast, 3.0)));
-    c *= 1.0 + uSkyStage.y;
+    // The far sea's tops are lumps, not a level: the air stands higher here and lower there along the horizon, and under the band it is low.
+    float lumps = textureLod(tNoise, vec3(az * 3.1 + uTime * 0.0006, 0.31, 0.57), 0.0).g + 0.5 * textureLod(tNoise, vec3(az * 9.7 - uTime * 0.0011, 0.63, 0.19), 0.0).r;
+    float tallAir = mix(0.02, 0.011, pow(toLast, 3.0)) * (0.2 + 1.2 * lumps);
+    c = mix(c, seaAir, 0.92 * exp(-max(d.y, 0.0) / tallAir));
   }
   if (plateOn > 0.0) {
     vec3 held = strikeCloud(plateCloud(uvQ, 0.0), cameraPosition, d);

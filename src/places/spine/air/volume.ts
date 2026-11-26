@@ -382,7 +382,8 @@ ${SEA_SHADE_GLSL}
   // The strike's own sky has its air in it: before it the haze is only of what stands nearer than the picture.
   if (plateOn > 0.0) length = min(length, mix(30000.0, 5000.0, plateOn));
   if (openSky) length = 0.0;
-  float depth = base * (abs(fall) < 1e-5 ? length : (1.0 - exp(-fall * length)) / fall) * uShow.x;
+  // Where the sea has gone into the dome's foot it is the open sky's, and takes no more haze than the sky over it: no line at the horizon.
+  float depth = base * (abs(fall) < 1e-5 ? length : (1.0 - exp(-fall * length)) / fall) * uShow.x * (1.0 - seaGone);
   float clear = exp(-depth);
   vec3 haze = mix(mix(uSkyHorizon, uSkyZenith, 0.35) * 0.6, domeAir, 0.7);
   light = light * clear + haze * (1.0 - clear);
