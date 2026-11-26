@@ -159,7 +159,7 @@ void main() {
   albedo *= mix(vec3(0.97, 0.99, 1.02), vec3(1.07, 1.0, 0.9), smoothstep(0.3, 0.7, macro));
   // The near cliff's cap: pale layered stone, cream more than grey, its lichen in patches.
   if (uCap > 0.0) {
-    vec3 cream = vec3(0.43, 0.41, 0.37) * clamp(stoneLum / 0.19, 0.45, 1.6) * fineLum * (0.85 + 0.3 * macro) * (1.0 + 0.2 * tone);
+    vec3 cream = vec3(0.48, 0.455, 0.405) * clamp(stoneLum / 0.19, 0.45, 1.6) * fineLum * (0.85 + 0.3 * macro) * (1.0 + 0.2 * tone);
     cream = mix(cream, vec3(0.42, 0.2, 0.04) * clamp(stoneLum / 0.19, 0.6, 1.4), 0.6 * smoothstep(0.56, 0.7, field + 0.25 * shelf));
     albedo = mix(albedo, cream, 0.85 * uCap);
   }

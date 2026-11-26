@@ -282,7 +282,7 @@ void main() {
   vec3 round0 = normalize(cross(vec3(0.0, 1.0, 0.0), n0) + vec3(1e-6, 0.0, 0.0));
   vec3 rise = normalize(cross(n0, round0));
   vec2 g = (nhp.xy - 0.5) * vec2(mirror, 1.0);
-  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 0.55);
+  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 0.36);
   float top = smoothstep(0.45, 0.8, nf.y);
   float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
   // The stone is a mid grey: the sheet's own rust is taken out of it, and its lichen is laid again below, in patches.
@@ -331,15 +331,15 @@ void main() {
   // The weed is no mirror: it keeps its own olive, and the rock's slopes are not its slopes.
   n = normalize(mix(n, n0 + 0.6 * round0 * (vnoise(vec2(aw * 17.0 + 0.4, y * 2.0)) - vnoise(vec2(aw * 17.0 - 0.4, y * 2.0))), weed));
   // Close, the sheet is a smear: there the stone takes its own pits and grit, a thumb across, in colour and in slope.
-  float closeC = smoothstep(45.0, 12.0, length(cameraPosition - vWorld)) * (1.0 - weed);
+  float closeC = smoothstep(60.0, 16.0, length(cameraPosition - vWorld)) * (1.0 - weed);
   if (closeC > 0.01) {
     vec2 up2 = vec2(arc, y) * 11.0;
     float pit = vnoise(up2);
     vec2 slopeP = vec2(vnoise(up2 + vec2(0.35, 0.0)), vnoise(up2 + vec2(0.0, 0.35))) - pit;
-    n = normalize(n - (round0 * slopeP.x + rise * slopeP.y) * 1.1 * closeC);
+    n = normalize(n - (round0 * slopeP.x + rise * slopeP.y) * 1.4 * closeC);
     albedo *= mix(1.0, 0.72 + 0.56 * pit, closeC);
   }
-  float rough = mix(mix(0.9, 0.5, max(band, 0.7 * low)), 0.4, weed);
+  float rough = mix(mix(0.9, 0.68, max(band, 0.7 * low)), 0.4, weed);
   float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
@@ -696,14 +696,14 @@ void main() {
   // Cast weed on a rock: olive and gold brown where its straps turn up, wet. Under it barnacles in pale crusts on the bare stone.
   vec3 gold = mix(vec3(0.62, 0.7, 0.72), vec3(1.0), weedPatch) * mix(wc * 0.5, vec3(0.105, 0.07, 0.022) * (0.4 + 2.2 * wc.g / 0.04 * 0.5), smoothstep(0.03, 0.09, wc.g) * 0.2);
   float crust = smoothstep(0.55, 0.7, vnoise(flat2 * 3.1 + 2.0) * 0.5 + vnoise(flat2 * 23.0) * 0.5 + 0.3 * (nh.z - 0.5)) * (1.0 - cover) * uWeedy;
-  vec3 albedo = mix(side * mix(0.4 + 0.6 * tone, 0.6, uWeedy), gold, 0.85 * cover);
+  vec3 albedo = mix(side * mix(0.55 + 0.85 * tone, 0.6, uWeedy), gold, 0.85 * cover);
   albedo = mix(albedo, vec3(0.3, 0.29, 0.26), 0.6 * crust);
   // Weed is no mirror: wet straps, matt in the mass, bright only in small glints.
   float rough = mix(mix(0.3, 0.45, uWeedy), 0.66 - 0.5 * smoothstep(0.62, 0.8, wn.z), cover);
   // What stands in the pool or just out of it is soaked: near black and bright where it turns to the sky.
   float soak = smoothstep(uPool + 0.75, uPool + 0.15, vWorld.y + 0.3 * (vnoise(vWorld.xz * 1.7) - 0.5));
-  albedo *= mix(1.0, mix(0.42, 0.7, uWeedy), soak);
-  rough = mix(rough, 0.16, soak * (1.0 - cover));
+  albedo *= mix(1.0, mix(0.58, 0.7, uWeedy), soak);
+  rough = mix(rough, 0.2, soak * (1.0 - cover));
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
   n = normalize(mix(n, bump(n0, vWorld, ut, (wn.xy - 0.5) * 1.3), cover));
   occ = mix(occ, 0.3 + 0.7 * smoothstep(0.15, 0.6, wn.z), cover);
@@ -725,9 +725,9 @@ void main() {
   vec2 us = flat2 / 1.1 + 0.31;
   vec3 side = texture2D(tBoulder, us).rgb;
   vec3 nh = texture2D(tBoulderN, us).rgb;
-  vec3 n = bump(n0, vWorld, us, nh.xy - 0.5);
+  vec3 n = bump(n0, vWorld, us, (nh.xy - 0.5) * 1.6);
   float own = vnoise(vWorld.xz * 9.0 + 4.0);
-  vec3 albedo = mix(vec3(0.075, 0.08, 0.085), vec3(0.34, 0.32, 0.28), own * (0.4 + 0.6 * own)) * (0.5 + 2.2 * dot(side, vec3(0.333)));
+  vec3 albedo = mix(vec3(0.095, 0.1, 0.105), vec3(0.36, 0.34, 0.3), own * (0.55 + 0.45 * own)) * (0.5 + 2.2 * dot(side, vec3(0.333)));
   float soak = 1.0 - 0.75 * smoothstep(uPool + 0.02, uPool + 0.12, vWorld.y);
   albedo *= mix(1.0, 0.42, soak);
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
