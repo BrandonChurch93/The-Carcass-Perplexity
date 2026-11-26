@@ -23,6 +23,8 @@ interface Dome {
 
 /** The share of a dome's period it spends swelling; the rest is the burst and the still water after it. */
 const SWELL = 0.8;
+/** Seconds a dome takes to tear open from one side and fall back: ten frames. */
+const TEAR = 0.17;
 const DROP_LIFE = 1.5;
 const RING_LIFE = 5;
 const RING_SPEED = 0.9;
@@ -112,7 +114,7 @@ export function create(ctx: Context): Piece {
     thrown[i * 5] = throwRng.range(0, TAU);
     thrown[i * 5 + 1] = throwRng.range(0.25, 1.9);
     thrown[i * 5 + 2] = throwRng.range(1.6, 4.6);
-    thrown[i * 5 + 3] = 0.008 + 0.026 * Math.pow(throwRng.next(), 2.2);
+    thrown[i * 5 + 3] = 0.004 + 0.02 * Math.pow(throwRng.next(), 2.6);
     thrown[i * 5 + 4] = throwRng.next();
   }
 
@@ -143,33 +145,38 @@ export function create(ctx: Context): Piece {
       const age = cycle >= SWELL ? (cycle - SWELL) * d.period : -1;
       // It rises slowly, then quickly at the last: gas gathers under a skin that gives.
       const grow = swell <= 0 ? 0 : 0.25 * swell + 0.75 * Math.pow(swell, 2.6);
-      const r = d.size * (0.35 + 0.65 * grow) * (swell > 0 ? 1 : 0);
-      const tall = r * (0.22 + 0.5 * grow);
+      // The skin does not vanish: it opens from one side over ten frames and sags as the gas leaves it.
+      const tear = age >= 0 && age < TEAR ? age / TEAR : 0;
+      const full = age >= 0 && age < TEAR ? 1 : grow;
+      const r = d.size * (0.35 + 0.65 * full) * (swell > 0 || tear > 0 || (age >= 0 && age < TEAR) ? 1 : 0);
+      const tall = r * (0.22 + 0.5 * full) * (1 - 0.5 * tear * tear);
       m.makeScale(r, tall, r).setPosition(d.x, -0.01, d.z);
       domeMesh.setMatrixAt(i, m);
-      domeLife.setXYZW(i, grow, d.seed, d.size, 0);
+      domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
+      // The crown and the drops leave when the skin is half open.
+      const flung = age >= 0 ? age - TEAR * 0.5 : -1;
       // The crown stands for a third of a second and is gone.
-      const crowned = age >= 0 && age < 0.55 * Math.sqrt(d.size / 0.4);
+      const crowned = flung >= 0 && flung < 0.55 * Math.sqrt(d.size / 0.4);
       m.makeScale(1, 1, 1).setPosition(d.x, 0, d.z);
       crownMesh.setMatrixAt(i, m);
-      crownLife.setXYZW(i, crowned ? age : 0, d.seed, d.size, 0);
+      crownLife.setXYZW(i, crowned ? flung : 0, d.seed, d.size, 0);
 
       for (let k = 0; k < d.drops; k++, drop++) {
         const a = thrown[drop * 5] as number;
         const out = (thrown[drop * 5 + 1] as number) * Math.sqrt(d.size / 0.4);
         const rise = (thrown[drop * 5 + 2] as number) * Math.sqrt(d.size / 0.4);
         const size = (thrown[drop * 5 + 3] as number) * (0.6 + d.size);
-        const y = age < 0 ? -1 : 0.25 * d.size + rise * age - 4.905 * age * age;
-        if (age < 0 || age > DROP_LIFE || y < -size) {
+        const y = flung < 0 ? -1 : 0.25 * d.size + rise * flung - 4.905 * flung * flung;
+        if (flung < 0 || flung > DROP_LIFE || y < -size) {
           m.makeScale(0, 0, 0);
           dropMesh.setMatrixAt(drop, m);
           continue;
         }
-        const reach = d.size * 0.8 + out * age;
+        const reach = d.size * 0.8 + out * flung;
         pos.set(d.x + Math.cos(a) * reach, y, d.z + Math.sin(a) * reach);
         // A drop in flight is drawn out along its way and trails a thinner tail.
-        dir.set(Math.cos(a) * out, rise - 9.81 * age, Math.sin(a) * out);
+        dir.set(Math.cos(a) * out, rise - 9.81 * flung, Math.sin(a) * out);
         const speed = dir.length();
         q.setFromUnitVectors(up, dir.divideScalar(speed || 1));
         scale.set(size, size * (1 + 0.22 * speed), size);

@@ -68,13 +68,13 @@ float steamAt(vec3 p, int i) {
   float reach = radius * 1.6 + (0.2 + 1.1 * h) * A.w;
   if (dot(off, off) > reach * reach) return 0.0;
   // A slow wander of the whole column, more the higher it is.
-  vec2 wander = (textureLod(tNoise, vec3(C.x, y * 0.02 - uTime * 0.03, C.x * 1.7), 0.0).ga - 0.5) * (0.4 + 2.2 * h) * A.w;
+  vec2 wander = (textureLod(tNoise, vec3(C.x, y * 0.02 - uTime * 0.09, C.x * 1.7), 0.0).ga - 0.5) * (0.4 + 2.2 * h) * A.w;
   vec2 centre = A.xz + B.xy * y + wander;
   vec2 d = (p.xz - centre) / radius;
   float body = exp(-dot(d, d) * 1.7);
   if (body < 0.02) return 0.0;
   // Vapour is drawn out along its rise into strands: the lumps are read taller than they are wide, at two sizes.
-  vec3 q = (p - vec3(B.x, 1.0, B.y) * C.y * uTime) / C.z + C.x;
+  vec3 q = (p - vec3(B.x, 1.0, B.y) * C.y * uTime * 1.7) / C.z + C.x;
   q.y *= 0.45;
   float lumps = textureLod(tNoise, q, 0.0).r * 0.55 + textureLod(tNoise, q * 3.1 + 0.31, 0.0).b * 0.45;
   // Torn: there is clear air between the strands, more of it the higher they are.
@@ -136,14 +136,15 @@ void main() {
   // The haze, and the rain inside it at its own distance.
   float curtain = uRain.z / max(length(rd.xz), 0.05);
   float az = atan(rd.x, -rd.z);
-  float side = abs(az - uRain.x) / uRain.y;
+  // The shaft walks along the horizon with the wind, a degree in six seconds.
+  float side = abs(az - uRain.x - 0.003 * uTime) / uRain.y;
   float rain = 0.0;
   if (uShow.y > 0.5 && far > curtain && side < 1.9 && rd.y > -0.02 && rd.y < 0.4) {
     float el = rd.y / max(length(rd.xz), 0.05);
     // Streaks that lean with the wind, in sheets of unlike weight.
     float lean = az * 40.0 + el * 9.0;
-    float sheets = textureLod(tNoise, vec3(az * 1.7, 0.2, 0.4 + uTime * 0.002), 0.0).g;
-    float streaks = textureLod(tNoise, vec3(lean * 0.33, el * 0.35 - uTime * 0.01, 0.7), 0.0).r * 0.55 + textureLod(tNoise, vec3(lean * 1.3, el * 0.8 - uTime * 0.02, 0.13), 0.0).b * 0.45;
+    float sheets = textureLod(tNoise, vec3(az * 1.7 - uTime * 0.004, 0.2, 0.4 + uTime * 0.012), 0.0).g;
+    float streaks = textureLod(tNoise, vec3(lean * 0.33, el * 0.35 - uTime * 0.03, 0.7), 0.0).r * 0.55 + textureLod(tNoise, vec3(lean * 1.3, el * 0.8 - uTime * 0.07, 0.13), 0.0).b * 0.45;
     float edge = smoothstep(1.5, 0.0, side + (sheets - 0.5) * 1.6);
     edge *= edge;
     float base = smoothstep(0.3, 0.07 + 0.08 * sheets, el) * smoothstep(-0.004, 0.012, el);

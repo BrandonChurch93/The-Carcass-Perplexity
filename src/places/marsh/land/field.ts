@@ -348,7 +348,9 @@ export function createField(): Field {
       const t = raw / bed + 0.8 * (fbm(x / (m.a * 0.2) + 3, z / (m.a * 0.2), 2) - 0.5);
       const part = t - Math.floor(t);
       const layered = (Math.floor(t) + 0.2 * part + 0.8 * smooth(0.55, 0.95, part)) * bed;
-      h = Math.max(h, raw * 0.45 + layered * 0.55 - 0.4 * (1 - k));
+      // Far off no mound keeps a flat top: under the mist they are low swells.
+      const away = smooth(110, 280, Math.hypot(x, z));
+      h = Math.max(h, (raw * (0.45 + 0.55 * away) + layered * 0.55 * (1 - away)) * (1 - 0.55 * away) - 0.4 * (1 - k));
     }
     return h;
   };
@@ -368,12 +370,12 @@ export function createField(): Field {
       return r * r;
     };
     const on = smooth(-0.4, 0.6, base);
-    const raw = base + on * (0.9 * (ridge(x / 3.7 + 1, z / 3.7) - 0.4) + 0.2 * (ridge(x / 1.1 + 5, z / 1.1) - 0.45));
-    const bed = raw / 0.24 + 1.1 * (fbm(x / 1.7 + 3, z / 1.7, 2) - 0.5);
+    const raw = base + on * (0.55 * (ridge(x / 3.7 + 1, z / 3.7) - 0.4) + 0.2 * (ridge(x / 1.1 + 5, z / 1.1) - 0.45));
+    const bed = raw / 0.34 + 0.9 * (fbm(x / 2.3 + 3, z / 2.3, 2) - 0.5);
     const part = bed - Math.floor(bed);
-    const broken = 0.3 * (fbm(x / 0.5 + 4, z / 0.5, 2) - 0.5);
-    const stepped = (0.25 * part + 0.75 * smooth(0.6 + broken, 0.9 + broken, part) - part) * 0.24;
-    return raw + on * (stepped * 0.8 + 0.035 * (ridge(x / 0.47, z / 0.47 + 2) - 0.45));
+    const broken = 0.3 * (fbm(x / 1.3 + 4, z / 1.3, 2) - 0.5);
+    const stepped = (0.25 * part + 0.75 * smooth(0.42 + broken, 0.95 + broken, part) - part) * 0.34;
+    return raw + on * (stepped * 0.9 + 0.03 * (ridge(x / 0.6, z / 0.6 + 2) - 0.45));
   };
 
   // The flats: a bed under the brine, a shelf a finger under its level at the shore (the brine's own edge is cut for each pixel, on this shelf),

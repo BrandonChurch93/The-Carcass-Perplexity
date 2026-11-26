@@ -29,15 +29,18 @@ vec3 fieldAt(vec2 xz) {
   return far;
 }`;
 
+/** True: the ground reads the material pictures. False: the cheaper painted ground of version 2. Costs of both are in HANDOVER.md. */
+const MATS: boolean = true;
+
 export const LAND_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vPaint;
 uniform sampler2D tPlates;
-// The material pictures of the place (public/assets/marsh/mat): colour, and slope with height. Take this constant out for the painted
-// ground of version 2, which reads none of them.
-#define MATS 1
+// The material pictures of the place (public/assets/marsh/mat): colour, and slope with height. With MATS false the ground is the painted
+// one of version 2, which reads none of them and is cheaper.
+${MATS ? '#define MATS 1' : ''}
 uniform sampler2D tCrust;
 uniform sampler2D tCrustN;
 uniform sampler2D tMud;
@@ -168,7 +171,7 @@ void main() {
   float tr = abs(fract(t * 1.3 + fine.r * 1.4) - 0.5) * 2.0;
   float lip = smoothstep(0.72, 0.95, tr) * smoothstep(4.5, 1.5, t) * smoothstep(0.5, 0.9, s) * smoothstep(0.35, 0.55, tiny.r * 0.5 + fine.g * 0.5);
   float thinFar = 0.3 + 0.7 * smoothstep(170.0, 50.0, dist);
-  colour = mix(colour, vec3(0.33, 0.29, 0.272), lip * 0.75 * thinFar);
+  colour = mix(colour, vec3(0.3, 0.27, 0.255), lip * 0.4 * thinFar);
 
   // The shore itself: wet red ground at the brine, then the white frill of salt.
   float s2 = s + (fine.g - 0.5) * 0.3 + (tiny.r - 0.5) * 0.14;
@@ -238,14 +241,18 @@ void main() {
     top = mix(top, vec3(0.11, 0.06, 0.05), under * 0.7);
     vec3 mud = mix(vec3(0.06, 0.047, 0.04), vec3(0.125, 0.1, 0.085), fine.r * 0.5 + tiny.r * 0.5);
     vec2 mudBend = vec2(0.0);
+    float mudLow = 0.0;
     vec2 topBend = vec2(0.0);
 #ifdef MATS
     if (dist < 70.0) {
       float k2 = smoothstep(70.0, 35.0, dist);
-      vec2 um = (p.xz + (mid.ba - 0.5) * 0.8) / 2.0;
+      vec2 um = (p.xz + (mid.ba - 0.5) * 0.12) / 2.0;
       vec3 mt = texture2D(tMud, um).rgb * (0.4 + 0.6 * texture2D(tMud, um * 0.29 + 0.43).rgb / vec3(0.318, 0.179, 0.155));
+      // Close, the same mud read small, so a hand's breadth of it has grain.
+      if (dist < 14.0) mt *= mix(vec3(1.0), 0.45 + 0.55 * texture2D(tMud, um * 3.7 + 0.19).rgb / vec3(0.318, 0.179, 0.155), smoothstep(14.0, 7.0, dist));
       vec4 mn = texture2D(tMudN, um);
-      mud = mix(mud, greyed(mt, 0.5) * 0.42 * (0.6 + 0.4 * smoothstep(0.1, 0.5, mn.b)), k2);
+      mud = mix(mud, greyed(mt, 0.6) * 0.46 * (0.4 + 0.6 * smoothstep(0.15, 0.6, mn.b)), k2);
+      mudLow = smoothstep(0.34, 0.16, mn.b + (fine.r - 0.5) * 0.2) * k2;
       mudBend = -(mn.rg - 0.5) * 0.5 * k2;
       vec2 ut = (vec2(p.x * 0.6 + p.z * 0.8, p.z * 0.6 - p.x * 0.8)) / 1.7;
       vec3 tt = texture2D(tCrust, ut).rgb;
@@ -256,6 +263,7 @@ void main() {
     }
 #endif
     float pooled = smoothstep(0.46, 0.53, mid.g * 0.45 + fine.r * 0.25 + wide.r * 0.3);
+    pooled = max(pooled, mudLow);
     mud = mix(mud, vec3(0.075, 0.02, 0.016), pooled * 0.85);
     // Far enough off, the gaps between slabs close to the eye.
     kept = max(kept, smoothstep(9.0, 22.0, dist));
@@ -292,25 +300,28 @@ void main() {
     // The rock of the picture, laid on from above and from the two sides by how each face looks, so that no wall is smeared.
     vec3 w3 = pow(abs(ng), vec3(4.0));
     w3 /= w3.x + w3.y + w3.z;
-    vec2 ru = (p.xz + (mid.ba - 0.5) * 0.7) / 4.0;
+    vec2 ru = (p.xz + (mid.ba - 0.5) * 0.2) / 4.0;
     vec3 rk = texture2D(tRock, ru).rgb * w3.y;
     if (w3.x > 0.02) rk += texture2D(tRock, vec2(p.z, p.y * 1.4) / 4.0 + 0.37).rgb * w3.x;
     if (w3.z > 0.02) rk += texture2D(tRock, vec2(p.x, p.y * 1.4) / 4.0 + 0.71).rgb * w3.z;
     if (seen > 0.0) {
       vec4 rn = texture2D(tRockN, ru);
-      rockBend = -(rn.rg - 0.5) * 2.4 * w3.y * seen;
+      rockBend = -(rn.rg - 0.5) * 1.5 * w3.y * seen;
       rockOcc = 1.0 - 0.4 * smoothstep(0.45, 0.12, rn.b) * w3.y * seen;
     }
     if (close > 0.0) {
       vec2 du = w3.y > max(w3.x, w3.z) ? p.xz : (w3.x > w3.z ? vec2(p.z, p.y * 1.4) : vec2(p.x, p.y * 1.4));
       rk *= mix(vec3(1.0), 0.35 + 0.65 * texture2D(tRock, du / 1.1 + 0.21).rgb / vec3(0.439, 0.321, 0.279), close);
     }
-    stone = greyed(rk, 0.8) * mix(0.44, 0.3, steep) * (0.8 + 0.4 * mid.g);
+    stone = greyed(rk, 0.85) * mix(0.5, 0.3, steep) * (0.8 + 0.4 * mid.g);
 #endif
     // Beds of unlike stone, level, seen as bands on every mound however far.
     float strata = texture2D(tGrain, vec2(dot(p.xz, vec2(0.62, 0.79)) / 53.0, p.y / 1.9 + mid.r * 0.15), 4.5).r;
     stone *= 0.62 + 0.76 * strata;
     float joint = smoothstep(0.6, 0.95, abs(fract(beds / 0.26 + (rf.r - 0.5) * 0.9) - 0.5) * 2.0) * seen * smoothstep(0.4, 0.6, mid.g);
+#ifdef MATS
+    joint = 0.0;
+#endif
     stone *= 1.0 - 0.35 * joint * steep;
     // Cracks, painted: thin, dark, wet and red.
     vec4 block = vec4(0.0, 0.5, 0.5, 0.5);
@@ -321,22 +332,26 @@ void main() {
     float crack = max(painted, max(vPaint.x, vPaint.y * 0.8));
     stone = mix(stone, vec3(0.3, 0.115, 0.06), smoothstep(0.5, 0.72, wide.g * 0.4 + mid.r * 0.6) * 0.5 * (0.3 + 0.7 * seen));
     float foot = smoothstep(1.5, 0.35, p.y + (mid.r - 0.5) * 0.9);
-    stone = mix(stone, vec3(0.17, 0.045, 0.036), clamp(foot * 0.7 + crack * 0.75 * (0.4 + 0.6 * mid.g), 0.0, 0.9));
+    stone = mix(stone, vec3(0.17, 0.045, 0.036), clamp(foot * 0.7 + crack * 0.35 * (0.4 + 0.6 * mid.g), 0.0, 0.9));
     // Pitted like any salt-eaten stone: the pits are dark because the sky does not reach into them.
     float pits = mix(1.0, 0.7 + 0.4 * smoothstep(0.25, 0.6, rt.r), close) * (0.88 + 0.24 * rf.r);
 #ifndef MATS
     stone *= pits;
 #endif
     // Rust and red where water gathers: in the clefts and under each ledge.
-    stone = mix(stone, vec3(0.24, 0.085, 0.045), clamp(vPaint.y * 1.1, 0.0, 0.85) * smoothstep(0.35, 0.65, mid.g) * 0.8);
+    stone = mix(stone, vec3(0.24, 0.085, 0.045), clamp(vPaint.y * 1.1, 0.0, 0.85) * smoothstep(0.35, 0.65, mid.g) * 0.3);
     // Whatever looks at the sky wears a crust of salt, pale against the dark of the faces under it.
     float crusted = smoothstep(0.72, 0.93, ng.y + (rf.r - 0.5) * 0.12) * mix(0.25 + 0.7 * smoothstep(0.4, 0.6, strata * 0.5 + mid.g * 0.5), 0.55 + 0.45 * smoothstep(0.3, 0.6, rt.g), seen) * (1.0 - 0.8 * crack) * mix(1.0, smoothstep(0.3, 0.55, rf.r * 0.45 + rt.g * 0.3 + mid.g * 0.25), seen);
 #ifdef MATS
-    crusted *= 0.45;
+    crusted *= 0.3;
 #endif
     stone = mix(stone, mix(vec3(0.25, 0.228, 0.212), vec3(0.34, 0.315, 0.295), seen) * (0.8 + 0.4 * lump), crusted * 0.9);
     colour = mix(colour, stone, rock);
+#ifdef MATS
+    rough = mix(rough, mix(0.97, 0.8, crack * (1.0 - crusted)), rock);
+#else
     rough = mix(rough, mix(0.95, 0.35, crack * (1.0 - crusted)), rock);
+#endif
     float pit = (1.0 - 0.2 * joint * steep) * (1.0 - 0.55 * vPaint.x) * (1.0 - 0.55 * vPaint.y) * (1.0 - 0.5 * painted) * (1.0 - 0.35 * steep);
     occ = mix(occ, pit * rockOcc, rock);
 #ifdef MATS
@@ -348,7 +363,7 @@ void main() {
 
   // An overcast is not the same all round: the quarter away from the rain is the brighter, and every lump and lip shows it.
   vec2 bright = vec2(-0.86, 0.5);
-  colour *= 1.0 + clamp(mix(0.22, 0.45, rock) * dot(bend, bright) + mix(0.25, 0.5, rock) * dot(ng.xz, bright), -0.45, 0.35);
+  colour *= 1.0 + clamp(mix(0.22, 0.4, rock) * dot(bend, bright) + mix(0.25, 0.32, rock) * dot(ng.xz, bright), -0.45, 0.35);
 
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y));
   vec3 lit = rigShade(p, n, v, colour, rough, occ);
@@ -357,6 +372,9 @@ void main() {
   float w = max(fwidth(f.r) * 0.75, 0.015);
   // Where the crust is thin the low ground is mud, not open brine.
   float under = smoothstep(w, -w, s) * (1.0 - rock) * (1.0 - smoothstep(0.2, 0.6, thin));
-  if (under > 0.0) lit = mix(lit, brineShade(vec3(p.x, 0.0, p.z), vec3(0.0, 1.0, 0.0), v, s, 0.0), under);
+  if (under > 0.0) {
+    vec2 run = (texture2D(tGrain, p.xz / 7.3 + vec2(0.034, 0.019) * uTime).ba - 0.5) * 0.06 + (texture2D(tGrain, p.xz / 4.1 - vec2(0.021, 0.05) * uTime).ba - 0.5) * 0.04;
+    lit = mix(lit, brineShade(vec3(p.x, 0.0, p.z), normalize(vec3(run.x, 1.0, run.y)), v, s, 0.0), under);
+  }
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
