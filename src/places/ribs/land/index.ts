@@ -13,7 +13,7 @@ import { LAND } from '../shared/rig';
 import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
-import { BOULDER_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
+import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
@@ -139,9 +139,7 @@ export function create(ctx: Context): Piece {
   const wallN = tex('land/wall-nh.png', { kind: 'data', anisotropy: 4 });
   const ledgeC = tex('mat/ledge.jpg');
   const ledgeN = tex('mat/ledge-nh.png', { kind: 'data' });
-  const colonyC = tex('mat/colony.jpg', { anisotropy: 4 });
-  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 4 });
-  for (const t of [plateC, plateN, wallC, wallN, colonyC, colonyN]) {
+  for (const t of [plateC, plateN, wallC, wallN]) {
     t.wrapS = THREE.MirroredRepeatWrapping;
     t.wrapT = THREE.MirroredRepeatWrapping;
   }
@@ -181,7 +179,7 @@ export function create(ctx: Context): Piece {
   };
   // A grain below zero is stone that is no blade: it has no sheet of its own.
   const rock = stoneOf(-12);
-  const roostRock = material(ROCK_VERTEX, ROCK_FRAGMENT, { tRock: { value: colonyC }, tRockN: { value: colonyN }, tWide: { value: ledgeC }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: COLONY.step }, uGrain: { value: new THREE.Vector2(27, 6.3) }, uRockTint: { value: new THREE.Vector3(2.7, 2.65, 2.55) } });
+  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tLedge: { value: ledgeC }, tLedgeN: { value: ledgeN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide } });
   const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
     material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
