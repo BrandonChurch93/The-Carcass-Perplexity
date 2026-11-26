@@ -1,0 +1,4 @@
+2026-11-26 01:23 UTC
+work at eb30556 on agent/breath-life-2
+breath-1 after 40 min: waders rebuilt as one skin (SDF, surface nets, bones), a foot lifts clear. Wrong: trunk too thin, ribs too banded, too brown, mop still red wire, water untouched
+look-1.jpg = out/work/compare/breath-1.png
