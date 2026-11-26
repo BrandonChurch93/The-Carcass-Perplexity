@@ -1,7 +1,7 @@
-2026-11-26 11:31 UTC
-work at 1558bf8 on agent/film-ending
-After V1: 11120 over 11200 hd (dusk band, brown not gold, night side black), 11340 over 11743 hd, both at 400 px, ending sheet. Ember still reads as a round lamp
+2026-11-26 11:59 UTC
+work at 7e25bbb on agent/film-ending
+Work toward V2: 11150 over 11340 hd, the Heart enlarged, ending and beat sheets. Wrong: dusk still more brown than gold, cloud specks at night as bright as bone, sea very blue
 look-1.jpg = out/work/pair2.png
-look-2.jpg = out/work/pair.png
-look-3.jpg = out/work/s400.png
-look-4.jpg = out/work/sheets/ending.png
+look-2.jpg = out/work/heart.png
+look-3.jpg = out/work/sheets/ending.png
+look-4.jpg = out/work/sheets/beat.png
