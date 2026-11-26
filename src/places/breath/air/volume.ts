@@ -145,6 +145,8 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec3 n, out float under)
   float rho = (0.019 + 0.011 * surge) * layerMean(top, soft, p.y, hy) * mix(0.0, 3.1, smoothstep(0.4, 0.68, 0.55 * n.z + 0.45 * n.y));
   // Deeper it is thicker: the bottom is never seen.
   rho *= 1.0 + 2.2 * smoothstep(3.0, 20.0, under);
+  // It wells up on the west and is thin on the east, where the wall and the arches stand clear of it.
+  rho *= mix(0.45, 1.15, smoothstep(10.0, -20.0, p.x));
   // Over the brim it is in the wind and thins as it climbs: wisps, and at the breath a body.
   rho *= exp(-max(p.y, 0.0) / (8.0 + 14.0 * surge));
   // Inside the wall; over the brim it leans out on the west, and at the breath all round.
@@ -417,14 +419,13 @@ void main() {
         float fineN = textureLod(tNoise, q * 0.85 + 0.37, 0.0).b;
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
         float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up);
-        float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * m * smoothstep(0.0, 0.6, m - open * (1.0 - 1.4 * lumps));
+        float body = smoothstep(0.0, 0.35, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.25, m);
+        float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * body;
         float tau = rho * span / 5.0;
         if (tau <= 0.0005) continue;
-        // Backlit: its thin edges and torn top burn, its thick heart stands grey against the glow.
-        float heart = exp(-1.1 * uBodyB[i].w * min(uBodyB[i].x, uBodyB[i].z) * m * (1.6 - up));
-        // Its billows: the lump that stands proud takes the light, the hollow beside it is in its shade.
-        float proud = clamp(0.55 + 0.9 * (fineN - 0.4) + 0.9 * (n0.g - 0.5), 0.15, 1.3);
-        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.6) * (sunHere * min(phase, 2.4) * 0.5 * (0.6 + 0.4 * heart) * proud * D.z);
+        // Backlit: where a billow is thin the sun comes through it and it burns, where it is thick it stands grey against its own rim.
+        float glow = (0.3 + 1.0 * exp(-3.2 * body * m * (1.3 - up))) * clamp(0.55 + 1.5 * (fineN - 0.45), 0.25, 1.4);
+        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.6) * (sunHere * min(phase, 2.4) * 0.5 * glow * D.z);
         float gone = exp(-tau);
         lit += thru * (1.0 - gone) * light;
         thru *= gone;
