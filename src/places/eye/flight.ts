@@ -35,9 +35,9 @@ const ramp = (x: number): number => (x >= 1 ? x - 0.5 : x <= 0 ? 0 : x ** 4 * (x
 
 /**
  * The move up to this many frames after the key is the one that was judged, with the numbers it had then: the lens creeps in over the
- * shallows toward the centre. From there on the climb is restaged (LEAVE below) and the numbers of handoff.json steer only the new part.
+ * shallows toward the centre. Every sample of the last judged frame, 115 after the key, lies before it. From there on the climb is restaged (LEAVE below) and the numbers of handoff.json steer only the new part.
  */
-const JUDGED_FRAMES = 115;
+const JUDGED_FRAMES = 116;
 const JUDGED_HALF = 212;
 const JUDGED_CLIMB = 0.006;
 

@@ -88,28 +88,39 @@ const vec4 LID_DECK[3] = vec4[3](vec4(${G(LID_GAP.lowest)}, 0.895, 8.0, 0.35), v
 // The Eye begins to draw the banks when its lens is this high. No bank stands where the lens could have seen it from lower down.
 const float LID_FOOT = ${G(LID_GAP.foot)};
 const float LID_HAZE = 0.3;
+// How far the gap opens after the cut, in halves of the frame's height as the lens sees its rim, and the height over which no lens of the rise stands while the banks are drawn.
+const float LID_OPENS = 2.3;
+const float LID_OVER = 1.15;
 const float LID_RAGGED = ${G(LID_GAP.ragged)};
 
 // How far a place is outside the gap the lens climbs through, at a height: under 0 is open air. The gap is long, bent, off the middle, and it
 // widens downward, so that every bank comes into the frame over its edge and none is switched on inside it.
+// After the cut the gap opens: its rim runs out faster than the frame grows, from rest, and the banks leave by the edges of the frame.
+float lidWider() {
+  float s = clamp(uLid.z / 0.95, 0.0, 1.0);
+  return LID_OPENS * s * s * s * s;
+}
+
 float lidOutside(vec2 q, float a) {
   vec2 w = q - vec2(${G(LID_GAP.off[0] as number)}, ${G(LID_GAP.off[1] as number)});
   w = vec2(0.8 * w.x + 0.6 * w.y, -0.6 * w.x + 0.8 * w.y);
   w.x /= ${G(LID_GAP.long)};
   float r = length(w);
-  float gap = ${G(LID_GAP.widen)} * max(LID_FOOT - a, 0.0) + ${G(LID_GAP.narrow)};
+  float wider = lidWider() * (LID_OVER - a);
+  float gap = ${G(LID_GAP.widen)} * max(LID_FOOT - a, 0.0) + ${G(LID_GAP.narrow)} + wider;
   // Well inside the gap and well outside it the bend of its edge changes nothing.
   if (r <= gap) return r - gap;
   float least = ${G(LID_GAP.least)};
-  if (least * r - gap >= LID_RAGGED) return least * r - gap;
-  return r * (least + (1.0 - least) * vnoise(q * 9.0 + vec2(3.7, 8.2))) - gap;
+  if (least * r - gap >= LID_RAGGED * (1.0 + 8.0 * wider)) return least * r - gap;
+  // The wider the gap, the longer the bends of its rim.
+  return r * (least + (1.0 - least) * vnoise(q * 9.0 / (1.0 + 4.0 * wider) + vec2(3.7, 8.2))) - gap;
 }
 
 // How much less open air a deck has at a place. Over the lake the banks stand closest, a cap of cloud with the gap in it, as much of each deck
 // as the lens sees from the height of the cut; farther out they stand apart. At the edge of the gap the air opens lump by lump.
 float lidClose(vec2 q, float a, float outside) {
   float reach = 2.2 * (1.0 - a);
-  return 0.25 * (1.0 - smoothstep(reach, reach + 0.3, length(q))) - 0.75 * (1.0 - smoothstep(0.0, LID_RAGGED, outside));
+  return 0.25 * (1.0 - smoothstep(reach, reach + 0.3, length(q))) - 0.75 * (1.0 - smoothstep(0.0, LID_RAGGED * (1.0 + 8.0 * lidWider() * (LID_OVER - a)), outside));
 }
 
 // How high the bank stands over a place, 0 to 1 of the deck: lumps drawn out along the wind, steep at their sides and heaped on top, with air
@@ -150,11 +161,9 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   vec3 ld = normalize(vec3(rd.x, rd.y * uLidFrame.z / uLidFrame.w, rd.z));
   float down = max(-ld.y, 0.3);
   vec2 sunSide = normalize(uLidSun.xz);
-  // The banks break up after the cut: the air opens, they thin, and the last of them is gone before they stop being drawn.
-  float broken = smoothstep(0.7, 1.0, uLid.z);
-  // Whole, the banks stand close: on the two frames of the cut only the deep water shows in the gap. After it the air between them widens.
-  float loose = 0.17 * smoothstep(0.04, 0.5, uLid.z) + 0.3 * broken;
-  float thin = (1.0 - 0.5 * broken) * (1.0 - smoothstep(0.88, 1.0, uLid.z));
+  // After the cut the air between the banks widens a little as they leave, and nothing of them is drawn at the end.
+  float loose = 0.12 * smoothstep(0.04, 0.5, uLid.z);
+  float thin = 1.0 - smoothstep(0.9, 1.0, uLid.z);
   vec3 sum = vec3(0.0);
   float tr = 1.0;
   for (int i = 0; i < LID_DECKS; i++) {
@@ -229,12 +238,12 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   if (about > 0.0 && tr > 0.02 && floorA < LID_HAZE) {
     vec2 q = from + lean * (LID_HAZE - camA);
     float lumps = lidBank(q * 0.6, LID_DECK[2], 0.2, 1.0, true);
-    float haze = about * smoothstep(${G(0.92)} * (1.0 - LID_HAZE), ${G(0.98)} * (1.0 - LID_HAZE), length(q));
+    float haze = about * smoothstep(${G(0.92)} * (1.0 - LID_HAZE), ${G(0.98)} * (1.0 - LID_HAZE), length(q) - lidWider() * (LID_OVER - LID_HAZE));
     sum += tr * haze * uLidShade * (0.5 + 0.3 * lumps);
     tr *= 1.0 - haze;
   }
-  // The shade of the banks lies on the water and the shore under them, thrown away from the sun and farther the higher the bank.
-  float shadeIn = uLidShadow * thin * smoothstep(LID_FOOT, 0.93, camA);
+  // The shade of the banks lies on the water and the shore under them, thrown away from the sun and farther the higher the bank. It goes as the banks leave the frame.
+  float shadeIn = uLidShadow * thin * smoothstep(LID_FOOT, 0.93, camA) * (1.0 - smoothstep(0.5, 0.85, uLid.z));
   vec2 g = from + lean * (floorA - camA);
   float lightLeft = 1.0;
   if (shadeIn > 0.0 && tr > 0.06 && floorA < 0.45) {
