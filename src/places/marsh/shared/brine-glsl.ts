@@ -68,7 +68,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   // (Far off more of the unseen ripples look at the sky than the level surface does.)
   float fres = (mirrorShare(n, v) + (0.015 + 0.085 * gust) * smoothstep(3.0, 28.0, away)) * (1.0 - 0.8 * foam) * mix(1.0, 0.75, smoothstep(25.0, 140.0, away)) * (1.0 + 0.3 * brineMud);
   float tilt = dot(n.xz, normalize(v.xz + vec2(1e-4)));
-  lit *= clamp(1.0 + tilt * 1.5, 0.8, 1.12);
+  lit *= clamp(1.0 + tilt * 2.4, 0.7, 1.28);
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
   return lit * (1.0 - fres) + mirrorAt(p, n) * fres * mix(1.0, open, 0.5);
 }`;

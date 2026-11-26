@@ -427,7 +427,7 @@ void main() {
   // Far off, the red of stalks and growth too small to draw lies on the flats as a haze of colour.
   colour = mix(colour, vec3(0.16, 0.06, 0.055), smoothstep(0.44, 0.6, wide.g * 0.5 + mid.g * 0.5) * smoothstep(90.0, 400.0, dist) * 0.26 * (1.0 - rock));
   // And the salt itself pales with the damp air over it: the far flats are the lightest ground in the basin.
-  colour = mix(colour, vec3(0.47, 0.4, 0.4), 0.5 * smoothstep(18.0, 150.0, dist) * (1.0 - rock));
+  colour = mix(colour, vec3(0.47, 0.4, 0.4), 0.15 * smoothstep(18.0, 150.0, dist) * (1.0 - rock)) * (1.0 + 0.3 * smoothstep(18.0, 150.0, dist) * (1.0 - rock));
 
   // (The salt of the third lens's bank is wet with the pool's spray and stained by it.)
   colour *= mix(vec3(1.0), mix(vec3(0.84, 0.56, 0.49), vec3(0.44, 0.19, 0.155), smoothstep(0.6, 0.25, hgt)), bankDry);

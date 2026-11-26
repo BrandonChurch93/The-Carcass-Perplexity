@@ -60,9 +60,9 @@ void main() {
   // that no crest travels and every slope winks. (The tile keeps its smaller copies: far off the wavelets close up to nothing.)
   // Where the big ones wade the brine is churned: dark with mud and never still.
   brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
-  float chop = smoothstep(60.0, 6.0, dist) * ruffle * (1.0 + 0.5 * smoothstep(12.0, 3.0, dist)) * (1.0 + 1.6 * brineMud);
+  float chop = smoothstep(110.0, 6.0, dist) * ruffle * (1.0 + 1.0 * smoothstep(12.0, 3.0, dist)) * (1.0 + 1.6 * brineMud);
   // (At a lens the finest of them are let go: what is left are the wavelets a hand and more long, which is how brine looks from a stride.)
-  float soft = 1.7 * smoothstep(14.0, 2.5, dist);
+  float soft = 1.0 * smoothstep(14.0, 2.5, dist);
   vec4 rA = texture2D(tRipple, p.xz / 2.3 + vec2(0.085, 0.047) * uTime, soft);
   // (The second and third are a picture of still brine with its relief, mat/ripple: its wavelets lie one way, as the light air lays them,
   // and it is laid twice, the second time turned and smaller.)
@@ -244,7 +244,7 @@ void main() {
   float a = atan(position.z, position.x);
   float k = aLife.y * 6.283;
   // No two tongues of it alike: a few tall, most low, and none evenly spaced.
-  float f = 0.5 + 0.2 * sin(a * 3.0 + k * 9.0) + 0.2 * sin(a * 5.0 - k * 4.0) * sin(a + k) + 0.17 * sin(a * 11.0 + k * 3.0) * sin(a * 3.0 - k) + 0.13 * sin(a * 23.0 + k * 7.0) * sin(a * 4.0 + k * 2.0);
+  float f = 0.4 + 0.15 * sin(a * 3.0 + k * 9.0) + 0.13 * sin(a * 5.0 - k * 4.0) * sin(a + k) + 0.26 * pow(abs(sin(a * 6.5 + k * 3.0)), 3.0) * (0.55 + 0.45 * sin(a * 2.0 - k)) + 0.2 * pow(abs(sin(a * 11.5 + k * 7.0)), 4.0) * (0.5 + 0.5 * sin(a * 3.0 + k * 2.0));
   float finger = pow(clamp(f, 0.14, 1.0), 1.4);
   float h = position.y;
   // The sheet leaves the rim at near 5 m/s and leans outward as it climbs. It is a film: its own tension, not its weight, stops it within
@@ -284,14 +284,14 @@ void main() {
   float lip = smoothstep(-0.22, 0.0, torn);
   float thick = clamp(1.0 - vLocal.y / tip, 0.0, 1.0);
   vec3 n = normalize(mix(radial, vec3(0.0, 1.0, 0.0), 0.45 * lip * lip) + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.14);
-  vec3 albedo = mix(vec3(0.2, 0.05, 0.04), vec3(0.065, 0.01, 0.008), max(thick * 0.8, lip * 0.7));
+  vec3 albedo = mix(vec3(0.14, 0.028, 0.022), vec3(0.06, 0.009, 0.007), max(thick * 0.8, lip * 0.7));
   vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) / 3.14159);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
   float window = 0.3 * smoothstep(0.99, 0.998, toward) * lip + 0.03 * pow(toward, 30.0);
-  vec3 mirrored = skyRadiance(r) * (0.01 + 0.05 * pow(1.0 - nv, 5.0) + 0.5 * window);
-  float cover = clamp(0.72 + 0.3 * thick + 0.4 * lip + 0.3 * pow(1.0 - nv, 2.0) + (g.g - 0.5) * 0.3, 0.0, 0.97);
+  vec3 mirrored = skyRadiance(r) * (0.02 + 0.24 * pow(1.0 - nv, 4.0) + 0.5 * window);
+  float cover = clamp(0.86 + 0.2 * thick + 0.3 * lip + 0.2 * pow(1.0 - nv, 2.0) + (g.g - 0.5) * 0.2, 0.0, 0.98);
   gl_FragColor = vec4((lit * cover + mirrored) * (1.0 - uSolo), cover);
 }`;

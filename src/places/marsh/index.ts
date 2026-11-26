@@ -40,7 +40,7 @@ const K1: Pose = {
   aim: [K1_LENS[0] + K1_DIR[0] * 10, K1_LENS[1] - 10 * Math.tan(9.5 * DEG), K1_LENS[2] + K1_DIR[1] * 10],
   fov: 35,
   focus: 3.8,
-  aperture: 0.011,
+  aperture: 0.008,
 };
 
 /** marsh-3, the wallowers in the vein. */
