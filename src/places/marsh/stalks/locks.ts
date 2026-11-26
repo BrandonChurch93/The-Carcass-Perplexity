@@ -51,7 +51,7 @@ const CUT = /* glsl */ `
   vec4 t = texture2D(tLock, vUv.xy);
   float luma = max(t.r, max(t.g, t.b));
   // Far off a filament is thinner than a pixel: it is kept at a lower light, or the plume would thin to nothing.
-  if (luma < mix(0.07, 0.034, smoothstep(3.0, 30.0, distance(cameraPosition, vWorld)))) discard;
+  if (luma < mix(0.1, 0.034, smoothstep(3.0, 30.0, distance(cameraPosition, vWorld)))) discard;
 `;
 
 export const LOCK_FRAGMENT = /* glsl */ `
@@ -68,13 +68,13 @@ ${CUT}
   // The hue is the photograph's; its light is taken out of it at the edge of a filament, where the black round it would draw an outline.
   vec3 hue = t.rgb / max(luma, 0.02);
   float away = smoothstep(3.0, 30.0, distance(cameraPosition, vWorld));
-  vec3 albedo = mix(vec3(dot(hue, vec3(0.3, 0.5, 0.2))), hue, 0.88) * (0.028 + 0.15 * mix(smoothstep(0.02, 0.5, luma), 0.75, away));
+  vec3 albedo = mix(vec3(dot(hue, vec3(0.3, 0.5, 0.2))), hue, 0.88) * (0.05 + 0.27 * mix(smoothstep(0.02, 0.5, luma), 0.75, away));
   float bead = smoothstep(0.55, 0.9, min(t.g, t.b));
   vec3 n = normalize(vNormal * sign(dot(vNormal, v) + 1e-5) * 0.6 + vOut + vec3(0.0, 0.3, 0.0) + v * 0.7);
   // Dark at the core, where the strands stand close and the sky does not reach.
   float core = smoothstep(0.0, 0.7, vUv.z);
   albedo *= mix(vec3(0.6, 0.42, 0.42), vec3(1.0), core);
-  float occ = mix(0.28, 1.0, core) * mix(0.6, 1.0, vUv.w);
+  float occ = mix(0.42, 1.0, core) * mix(0.6, 1.0, vUv.w);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.96, 0.4, bead), occ);
   // Wet and thin: the sky behind a filament comes through it.
   c += albedo * skyIrradiance(-n) / 3.14159 * 0.3 * occ * skyOpen(vWorld);

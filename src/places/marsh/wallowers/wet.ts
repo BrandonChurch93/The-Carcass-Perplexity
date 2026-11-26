@@ -207,14 +207,17 @@ export class Wet {
       const wade = alive > 0.5 && land.shore(foot.x, foot.z) < -0.02;
       for (let r = 0; r < FOOT_RINGS; r++) {
         if (!wade) this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
-        else if (r === 0) this.put(o, foot.x, 0.005, foot.z, (0.4 + 0.05 * Math.sin(seconds * 2.1 + l * 1.9 + i)) * k, 1, 0.7 + 0.3 * Math.sin(seconds * 1.7 + l * 2.3 + i * 1.3), 0.11, l + 0.5);
+        // No ring hugs a leg that stands still: the brine steepens about it by the contact map, and that is the ground's.
+        else if (r === 0) this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
         else if (r === 3) this.put(o, foot.x + fx * 0.1 * k, 0.003, foot.z + fz * 0.1 * k, 0.8 * k, 2, 0.62, 0, l * 3.1 + i * 1.7);
         else {
           // Each goes out in its own time and dies before it has gone a pace: no two rings of a leg keep step.
           const every = 1.9 + 0.5 * r + 0.23 * l;
           const turn = seconds / every + r * 0.41 + l * 0.27 + i * 0.37;
           const age = fract(turn);
-          this.put(o, foot.x, 0.004, foot.z, (0.4 + 1.25 * age) * k, 1, 0.95 * (1 - age) * (1 - age), 0.07 / (0.4 + 1.25 * age), l + r * 7 + Math.floor(turn) * 0.37);
+          // A swell leaves a leg only while it moves: where nothing moves there is no ring.
+          const moving = Math.min(1, foot.lift / (0.04 * k));
+          this.put(o, foot.x, 0.004, foot.z, (0.4 + 1.25 * age) * k, 1, 0.95 * moving * (1 - age) * (1 - age), 0.07 / (0.4 + 1.25 * age), l + r * 7 + Math.floor(turn) * 0.37);
         }
         o += 4;
       }
@@ -225,7 +228,7 @@ export class Wet {
       const near = alive > 0.5 && land.shore(m.x, m.z) < -0.02 && m.y < 0.45 * k;
       const turn = seconds / (1.6 + 0.5 * r) + r * 0.5 + i * 0.61;
       const age = fract(turn);
-      if (near) this.put(o, m.x + fx * 0.2 * k, 0.004, m.z + fz * 0.2 * k, (0.3 + 1.0 * age) * k, 1, 0.5 * (1 - age) * (1 - age), 0.05 / (0.3 + 1.0 * age), 40 + r + Math.floor(turn) * 0.41);
+      if (near && r === 0) this.put(o, m.x + fx * 0.2 * k, 0.004, m.z + fz * 0.2 * k, (0.3 + 1.0 * age) * k, 1, 0.4 * (1 - age) * (1 - age), 0.05 / (0.3 + 1.0 * age), 40 + r + Math.floor(turn) * 0.41);
       else this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       o += 4;
     }
@@ -236,7 +239,7 @@ export class Wet {
       const turn = seconds / (2.6 + 0.6 * r) + r * 0.37 + i * 0.23;
       const age = fract(turn);
       const size = (1.3 + 1.9 * age) * k;
-      if (sunk) this.put(o, stood.x, 0.004, stood.z, size, 1, 0.9 * (1 - age) * (1 - age), 0.07 / (1.3 + 1.9 * age), 60 + r + Math.floor(turn) * 0.53);
+      if (sunk && r === 0) this.put(o, stood.x, 0.004, stood.z, size, 1, 0.6 * (1 - age) * (1 - age), 0.07 / (1.3 + 1.9 * age), 60 + r + Math.floor(turn) * 0.53);
       else this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       o += 4;
     }

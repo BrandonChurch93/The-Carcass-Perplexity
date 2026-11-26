@@ -194,6 +194,7 @@ ${RIG_GLSL}
 ${LIGHT_GLSL}
 ${BONES_GLSL}
 uniform vec4 uCoat;
+uniform float uLockKind;
 varying vec3 vLight;
 varying vec3 vFrostLight;
 varying vec4 vAt;
@@ -219,7 +220,8 @@ void main() {
   vec3 toCamera = normalize(cameraPosition - p);
   vec3 side = normalize(cross(way, toCamera));
   // Broad where it leaves the body, drawn in to its end.
-  float w = aCard.x * size;
+  // The herd's locks are the fine straight ones: narrower, so they read as hanging hair and not as leaves.
+  float w = aCard.x * size * (1.0 - 0.38 * uLockKind);
   p += side * (position.x * w);
   // It is lit as the body under it is, and a little as itself: the coat reads as the body's shape, with each lock catching its own light.
   vec3 nb = normalize(c - mix(r, e, 0.45) + vec3(0.0, 1e-4, 0.0));
@@ -241,6 +243,9 @@ void main() {
 export const LOCK_FRAGMENT = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 uniform sampler2D tLock;
+uniform sampler2D tLockB;
+uniform sampler2D tLockBA;
+uniform float uLockKind;
 uniform vec4 uTone;
 uniform vec4 uCoat;
 varying vec3 vLight;
@@ -252,16 +257,33 @@ void main() {
   float u = vAt.x;
   float t = vAt.y;
   float seed = vAt.z;
-  // One of the eight locks of the picture, either way round. The picture is on black: where it is black there is no hair.
-  float which = floor(fract(seed * 9.73) * 8.0);
   float flip = fract(seed * 5.31) < 0.5 ? -1.0 : 1.0;
-  vec2 uv = vec2((which + 0.5 + 0.47 * u * flip) / 8.0, 1.0 - (0.03 + 0.925 * t));
-  vec3 pic = texture2D(tLock, uv).rgb;
-  float cover = max(pic.r, max(pic.g, pic.b));
-  if (cover < 0.085) discard;
-  float lum = dot(pic, vec3(0.333)) / 0.148;
+  vec3 pic;
+  vec3 mean_ = LOCK_MEAN;
+  if (uLockKind > 0.5) {
+    // The herd in the canal: one of the twelve fine straight locks of the second picture, cut by its own soft outline.
+    float which = floor(fract(seed * 9.73) * 12.0);
+    float col = mod(which, 6.0);
+    float y = which < 5.5 ? mix(0.019, 0.489, t) : mix(0.513, 0.978, t);
+    vec2 uv = vec2(0.114 + 0.155 * col + 0.07 * u * flip, 1.0 - y);
+    // Its outline is frayed by its own strands: the cut wanders with the hair's brightness, and the black the picture stands on is taken out of its edge.
+    float cut = texture2D(tLockBA, uv).r;
+    pic = texture2D(tLockB, uv).rgb;
+    float strand = max(pic.r, max(pic.g, pic.b));
+    if (cut < 0.5 || strand < 0.1 + 0.14 * t * t) discard;
+    pic /= max(cut, 0.5);
+    mean_ = vec3(0.217, 0.204, 0.21);
+  } else {
+    // One of the eight locks of the picture, either way round. The picture is on black: where it is black there is no hair.
+    float which = floor(fract(seed * 9.73) * 8.0);
+    vec2 uv = vec2((which + 0.5 + 0.47 * u * flip) / 8.0, 1.0 - (0.03 + 0.925 * t));
+    pic = texture2D(tLock, uv).rgb;
+    float cover = max(pic.r, max(pic.g, pic.b));
+    if (cover < 0.085) discard;
+  }
+  float lum = dot(pic, vec3(0.333)) / dot(mean_, vec3(0.333));
   float singe = 1.0 - vInfo.w;
-  vec3 albedo = uTone.rgb * pic / LOCK_MEAN * 0.8 * (0.85 + 0.3 * fract(seed * 7.31));
+  vec3 albedo = uTone.rgb * pic / mean_ * 0.8 * (0.85 + 0.3 * fract(seed * 7.31));
   // Wet and dark toward the root, where the coat is matted.
   albedo *= mix(0.55, 1.0, smoothstep(0.0, 0.5, t));
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
