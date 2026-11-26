@@ -114,6 +114,31 @@ uniform vec4 uSpur;
 // Every picture is read with slopes taken from the world position at the top of main: a read inside a branch that took its own slope
 // would take it from a neighbour that never computed the coordinate, and the frame would differ from one page load to the next.
 #define PICK(t, uv, gx, gy) textureGrad(t, uv, gx, gy)
+#ifdef HAND
+// Plates of cooled lava. x: how far p lies from the nearest gap between two plates, in cells. y: a number of the plate's own.
+vec2 plates(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = p - i;
+  float d1 = 8.0;
+  float d2 = 8.0;
+  float own = 0.0;
+  for (int b = -1; b <= 1; b++) {
+    for (int a = -1; a <= 1; a++) {
+      vec2 c = vec2(float(a), float(b));
+      vec2 h = hash22(i + c);
+      float d = length(c + 0.15 + 0.7 * h - f);
+      if (d < d1) {
+        d2 = d1;
+        d1 = d;
+        own = h.x;
+      } else if (d < d2) {
+        d2 = d;
+      }
+    }
+  }
+  return vec2(0.5 * (d2 - d1), own);
+}
+#endif
 const mat2 TURN = mat2(0.7986, -0.6018, 0.6018, 0.7986);
 
 void main() {
@@ -510,6 +535,13 @@ void main() {
     vec2 fl = vec2(foot / 1.7, 0.0);
     vec3 bed = PICK(tTalusNh, TURN * vWorld.xz / 1.7 + vec2(0.57, 0.19), fl, fl.yx).rgb;
     vec2 looseTip = TURN * ((bed.rg - 0.5) * vec2(1.0, -1.0));
+    // Old lava cracked as it cooled: plates a stride or two across with a gap of a finger between them, each plate a tone of its own.
+    // A gap narrower than a pixel is drawn a pixel wide and that much fainter.
+    vec2 bent = vWorld.xz + 0.55 * vec2(vnoise(vWorld.xz / 0.9 + 2.2), vnoise(vWorld.xz / 0.9 + 7.5));
+    vec2 plate = plates(bent / 1.7);
+    float drawn = max(0.009, 0.7 * px);
+    float cracked = hand * level * (1.0 - dust) * (0.009 / drawn) * (1.0 - smoothstep(0.35 * drawn, drawn, plate.x * 1.7));
+    albedo *= mix(1.0, 0.88 + 0.24 * plate.y, hand * level);
     float skinOn = hand * level * mix(1.0, 0.6, sheet) * mix(0.35, 1.25, smoothstep(0.3, 0.6, field)) * (1.0 - 0.85 * dust);
     float bare = 1.0 - 0.8 * dust;
     albedo *= mix(1.0, 0.35 + 1.3 * skin.b, 0.7 * skinOn) * mix(1.0, 0.5 + 1.0 * rope.b, 0.6 * hand * ropes) * mix(1.0, 0.4 + 1.2 * bed.b, 0.7 * hand * loose * bare);
@@ -517,7 +549,8 @@ void main() {
     n = normalize(n + vec3(flatTip.x, 0.0, flatTip.y));
     float fine = mix(skin.b, mix(bed.b, mix(0.5, rope.b, festoon), sheet * (1.0 - rubble)), 0.65);
     float pits = hand * level * bare;
-    occ *= mix(1.0, 0.4 + 0.6 * smoothstep(0.15, 0.6, fine), pits);
+    occ *= mix(1.0, 0.4 + 0.6 * smoothstep(0.15, 0.6, fine), pits) * (1.0 - 0.85 * cracked);
+    albedo *= 1.0 - 0.6 * cracked;
     // Ash and grit lie in the pits and the creases, a finger wide.
     albedo = mix(albedo, vec3(0.17, 0.16, 0.148), 0.25 * pits * smoothstep(0.42, 0.18, fine) * mix(1.0, 0.6, sheet));
     albedo = mix(albedo, vec3(0.105, 0.098, 0.09) * (0.85 + 0.3 * bed.b), 0.7 * hand * dust);
