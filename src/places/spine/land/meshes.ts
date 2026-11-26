@@ -173,9 +173,9 @@ function piece(c: number, mean: number, seed: number): { i: number; lo: number; 
  * cut by the lattice into a row of shards along every joint, as long as the step is deep. Here every joint lies on a line of the lattice:
  * a bed between two rings, an upright joint between two columns. So a block is a flat face of whole quads, and the wall of a joint or the
  * shelf of a ledge is one clean strip of them. `around` is the count of columns, `girth(y)` the way round the blade at a height in metres,
- * `fine` the size of one quad there. The result is asked for by column and height: metres out of the face.
+ * `fine` the size of one quad there, `great(y)` how much of the great slabs is let stand. The result is asked for by column and height: metres out of the face, and how deep a joint is cut there.
  */
-function jointing(around: number, girth: (y: number) => number, fine: (y: number) => number, seed: number): (a: number, y: number) => number {
+function jointing(around: number, girth: (y: number) => number, fine: (y: number) => number, great: (y: number) => number, seed: number): (a: number, y: number) => [number, number] {
   // How far round the blade a column stands, 0 to 1, for a section as thick as it is broad.
   const round_: number[] = [0];
   const at = (a: number): [number, number] => {
@@ -200,37 +200,48 @@ function jointing(around: number, girth: (y: number) => number, fine: (y: number
     }
     return v;
   };
-  // One size of block: the beds of this part of the face, then the blocks each bed is cut into. `bed` and `block` are their mean sizes in
-  // metres, `stand` how far a block stands in or out, `lean` how far its face leans over its own height and breadth. What is finer than the
-  // mesh can show is left out.
-  const size = (q: number, y: number, key: number, bed: number, block: number, stand: number, lean: number): { n: number; id: number } => {
-    const b = piece(y, bed, key);
-    const mid = 0.5 * (b.lo + b.hi);
-    const g = girthAt(mid);
-    const kb = Math.floor(mixHash(b.i, key + 17) * 65521);
-    const c = piece(q * g, block, kb);
-    const id = Math.floor(mixHash(c.i, kb + 5) * 65521);
-    const shown = Math.min(1, Math.max(0, (Math.min(bed, block) / fine(mid) - 1.6) / 2));
+  // One size of block. The rock stands in upright pillars, as frost-shattered rock does: a stage of the face is cut into pillars first, and
+  // each pillar into blocks by beds of its own, so no bed runs level across the face from pillar to pillar. `stage`, `bed` and `block` are
+  // mean sizes in metres, `stand` how far a block stands in or out, `lean` how far its face leans over its own height and breadth. What is
+  // finer than the mesh can show is left out.
+  const size = (q: number, y: number, key: number, stage: number, bed: number, block: number, stand: number, lean: number): { n: number; id: number } => {
+    const s = piece(y, stage, key);
+    const g = girthAt(0.5 * (s.lo + s.hi));
+    const ks = Math.floor(mixHash(s.i, key + 17) * 65521);
+    const c = piece(q * g, block, ks);
+    const kc = Math.floor(mixHash(c.i, ks + 5) * 65521);
+    // The beds of a stage dip, 10 to 25 degrees one way or the other: each pillar has the stage's beds where the dip brings them to it, so
+    // a bed climbs across the face pillar by pillar and is broken at every joint.
+    const dip = (mixHash(s.i, key + 41) < 0.5 ? -1 : 1) * Math.tan(((10 + 15 * mixHash(s.i, key + 43)) * Math.PI) / 180);
+    const shift = dip * 0.5 * (c.lo + c.hi);
+    const b = piece(y - shift, bed, ks + 9);
+    const id = Math.floor(mixHash(b.i, kc + 3) * 65521);
+    const shown = Math.min(1, Math.max(0, (Math.min(bed, block) / fine(y) - 1.6) / 2));
     if (shown <= 0) return { n: 0, id };
-    const fy = (y - b.lo) / (b.hi - b.lo) - 0.5;
+    const lo = Math.max(b.lo + shift, s.lo);
+    const hi = Math.min(b.hi + shift, s.hi);
+    const fy = (y - lo) / Math.max(hi - lo, 1e-3) - 0.5;
     const fx = (q * g - c.lo) / (c.hi - c.lo) - 0.5;
-    // More blocks lean out than in: the top of a block stands proud of the foot of the one above it, and that step is a ledge.
-    const n = stand * 2 * (mixHash(id, 3) - 0.5) + lean * ((mixHash(id, 7) - 0.3) * 1.4 * fy + (mixHash(id, 11) - 0.5) * fx);
+    // More blocks lean out than in: the top of a block stands proud of the foot of the one above it, and that step is a ledge. Across its
+    // breadth a block leans less, or every ledge would be a long wedge.
+    const n = stand * 2 * (mixHash(id, 3) - 0.5) + lean * ((mixHash(id, 7) - 0.3) * 1.4 * fy + 0.45 * (mixHash(id, 11) - 0.5) * fx);
     return { n: n * shown, id };
   };
   const cut = (a: number, y: number): { n: number; ids: [number, number, number] } => {
     const q = (round_[((a % around) + around) % around] as number) / whole;
-    // A few great parts round the blade, each with beds of its own, so that no ledge runs round the whole spire.
+    // A few great parts round the blade, each with stages of its own.
     const part = piece(q * 5.3, 1, seed + 1).i;
     const k0 = Math.floor(mixHash(part, seed + 29) * 65521);
     // Great slabs that stand up the face, the plates each is broken into, their blocks, and the blocks' own.
-    const slabs = size(q, y, k0, 120, 44, 7.5, 5);
-    const one = size(q, y, slabs.id, 52, 21, 3.4, 2.6);
-    const two = size(q, y, one.id, 17, 7.5, 1.5, 1.5);
-    const three = size(q, y, two.id, 5.2, 2.9, 0.5, 0.5);
-    return { n: slabs.n + one.n + two.n + three.n, ids: [one.id, two.id, three.id] };
+    const slabs = size(q, y, k0, 210, 110, 46, 14, 5);
+    const one = size(q, y, slabs.id, 90, 44, 16, 5.5, 2.5);
+    const two = size(q, y, one.id, 40, 14, 5.5, 1.8, 1);
+    const three = size(q, y, two.id, 20, 5.5, 2.3, 0.7, 0.35);
+    // (`great`: where a lens comes close to the face the great slabs stand less, or one of them would be all the lens saw.)
+    const gr = great(y);
+    return { n: gr * slabs.n + (0.4 + 0.6 * gr) * one.n + two.n + three.n, ids: [one.id, two.id, three.id] };
   };
-  return (a: number, y: number): number => {
+  return (a: number, y: number): [number, number] => {
     const here = cut(a, y);
     const next = cut(a + 1, y);
     // The upright joints are cut in: the last column of a block, where the next block begins, stands back from both.
@@ -238,7 +249,7 @@ function jointing(around: number, girth: (y: number) => number, fine: (y: number
     if (here.ids[0] !== next.ids[0]) slot = 2.2 * (0.4 + 0.6 * mixHash(here.ids[0], 19));
     else if (here.ids[1] !== next.ids[1]) slot = 0.9 * (0.3 + 0.7 * mixHash(here.ids[1], 19));
     const shown = Math.min(1, Math.max(0, (7.5 / fine(y) - 1.6) / 2));
-    return here.n - slot * shown;
+    return [here.n - slot * shown, slot * shown];
   };
 }
 
@@ -283,8 +294,15 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const ring = h < 0 ? (FIN_DEEP - FIN_ROOT) / DOWN : (sp.tip / UP) * (level > 1.5 ? (h > RING_LOW && h < RING_HIGH ? 1 / RING_DENSE : 1) * (RING_LOW + RING_DENSE * (RING_HIGH - RING_LOW) + (1 - RING_HIGH)) : 1);
       return Math.max(ring, (3.6 * (p.half + p.thick)) / AROUND);
     },
+    (y) => {
+      const k = Math.min(1, Math.max(0, ((y - sp.alt) / sp.tip - 0.42) / 0.16));
+      return level > 1.5 ? 1 - 0.8 * k * k * (3 - 2 * k) : 1;
+    },
     seed,
   );
+  // The bites of the windward edge: whole blocks gone from it, some 40 and 12 m high, each with a level top and foot (not a wave: a wave of
+  // 5 m on an edge 140 m out stood on it as a row of teeth).
+  const bite = (u: number, n: number): number => 2 * (mixHash(piece(u, n ? 12 : 40, seed + 61 + n).i, seed + 67 + n) - 0.5);
   for (let r = 0; r <= DOWN + UP + 1; r++) {
     const cap = r === DOWN + UP + 1;
     const k = Math.min(r, DOWN + UP);
@@ -308,12 +326,12 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const snap = cap ? 0.12 : 1;
       // The windward edge of the blade is broken: bites and shoulders of some 15 and 5 m stand in and out of its line, so that no spire
       // shows a ruled side against the sky. The lee edge keeps its line (the kites hold to it), and so does the tip.
-      const rag = ln < 0 ? ((vnoise(u / 15, 3.7 + seed) - 0.5) * 0.5 + (vnoise(u / 5, 8.1 + seed) - 0.5) * 0.2) * Math.pow(-ln, 3) * Math.min(1, Math.max(0, (tipY - p.y) / 30)) : 0;
+      const rag = ln < 0 ? (bite(u, 0) * Math.min(0.2, 13 / p.half) + bite(u, 1) * Math.min(0.08, 4.5 / p.half)) * Math.pow(-ln, 3) * Math.min(1, Math.max(0, (tipY - p.y) / 30)) : 0;
       const l = p.centre + ln * p.half * snap * (1 + rag);
       const y = p.y - (cap ? 1 : 0);
       // Its faces stand in and out as the sheet's relief has them, and the rock on top of that is jointed into blocks (see `jointing`).
       const [su, sv] = sheetAt(sp, l, y);
-      const cut = joints(a, y);
+      const [cut, joint] = joints(a, y);
       const scale = Math.min(1, Math.max(0.22, p.thick / 42));
       // The lee edge keeps its line (the kites hold to it); the windward edge is let stand in and out block by block, so it is broken against the sky.
       const keep = 1 - (ln > 0 ? 0.92 : 0.45) * edge;
@@ -321,7 +339,9 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       // (Toward the lee edge the blocks stand hardly out and not far in: see `LEE_FROM`.)
       const k = Math.min(1, Math.max(0, (ln - LEE_FROM) / (LEE_FULL - LEE_FROM)));
       const lee = k * k * (3 - 2 * k);
-      const blocks = Math.max(-0.35 * p.thick, Math.min(0.5 * p.thick, scale * cut));
+      // (No face of a block is a plane: it swells and gives a little, smoothly, so the mesh can show it.)
+      const swell = 1.3 * (vnoise(u / 6.5 + seed, l / 6.5 + face * 50) - 0.5) + 0.7 * (vnoise(u / 2.6 + 9.1, l / 2.6 + face * 50 + seed) - 0.5);
+      const blocks = Math.max(-0.35 * p.thick, Math.min(0.5 * p.thick, scale * (cut + swell)));
       const n = broad + (blocks + lee * (Math.max(-LEE_IN, Math.min(LEE_OUT, blocks)) - blocks)) * keep;
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
       const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);
@@ -358,7 +378,8 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const z = sp.z + m.az * across + m.bz * along;
       pos.push(x, y, z);
       top.push(tipY - y);
-      relief.push(n);
+      // (A joint is darker than it is deep: the light does not reach into it.)
+      relief.push(n - 4 * joint * scale * keep);
       // Where it is on the ridge, for the spire the canal goes through: the canal is cut out of it.
       if (level > 1.5) {
         const at = locate(x, z);
