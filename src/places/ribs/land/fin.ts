@@ -81,9 +81,9 @@ float levelOf(sampler2D t, vec2 dx, vec2 dy) {
   vec2 size = vec2(textureSize(t, 0));
   return log2(max(max(length(dx * size), length(dy * size)), 1e-6));
 }
-// How much of the rock's own marks the blades carry. At 0.55 (faint, as asked) the wide view fell to 0.55 of the approved picture's fine
-// detail at the final tier, under the floor of 0.75: the camera's speed blurs the near ground there and the blades must carry the detail.
-const float BLADE_MARKS = 1.15;
+// How much of the rock's own marks the blades carry: faint, as asked. The wide view keeps its fine detail from the near ground, which the
+// camera's shutter no longer smears (film.maxSmearShare): 0.96 of the approved picture's at the final tier, against a floor of 0.75.
+const float BLADE_MARKS = 0.55;
 void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
