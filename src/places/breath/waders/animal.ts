@@ -462,7 +462,7 @@ export class Wader {
     this.tendrilLocal = new Float32Array(tRings * tSides * 2);
     // Cords of wet flesh, thin where they root, thicker where the weed hangs on them, ragged to a point.
     const cord = (u: number): number => (0.7 + 0.55 * smooth(0.2, 0.5, u)) * (1 - 0.85 * smooth(0.78, 1, u));
-    const tr = (far ? 0.014 : 0.0092) * k;
+    const tr = (far ? 0.014 : 0.0082) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
       const r = tr * cord(u);
@@ -901,8 +901,10 @@ export class Wader {
       // Where the tuft would come down, and how far the neck must go for its end to be a hand above the bed there.
       const ahead = this.along(walked + 0.5 * b.bodyLen + (plan.feedAt ?? 0.55) * b.neckLen);
       // The end of the neck stays out of the water: it is the mop that hangs from it that goes in.
-      const floor = Math.max(env.ground(ahead[0], ahead[1]), env.sea);
-      const want = floor + (plan.reach >= 1 ? 0.15 * k : 0.6 * k) + dab;
+      const bed = env.ground(ahead[0], ahead[1]);
+      const floor = Math.max(bed, env.sea);
+      // Over rock the mop is not laid down: it hangs, and only its longest strands brush the stone.
+      const want = floor + (plan.reach >= 1 ? (bed > env.sea ? 0.44 * k : 0.15 * k) : 0.6 * k) + dab;
       let lo = 0.3;
       let hi = 1.3;
       for (let i = 0; i < 9; i++) {
@@ -1023,7 +1025,9 @@ export class Wader {
       const splay = 0.7 * st.out + 0.6 * back;
       const rest = st.floats ? afloat : sunk;
       // Let down into the water the mop opens: each cord goes in at its own place, a hand or two from the next.
-      const flare = 0.34 + 0.95 * down * (wet ? 1 : 0.4);
+      // Over rock it hangs close, a brush; let down into the water it opens.
+      const flare = wet ? 0.34 + 0.95 * down : 0.34 - 0.12 * down;
+      const loose = wet ? 1 : 1 - 0.55 * down;
       const each = st.len / (tube.rings - 1);
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.lock) + 0.04 * Math.sin(seconds * 3.7 + st.lock * 2.3);
       let px = x;
@@ -1056,9 +1060,11 @@ export class Wader {
         const curl = (0.25 + 0.75 * u) * (0.5 * Math.sin(u * 4.4 + st.lock * 5) + 0.3 * Math.sin(u * 9 + st.lock * 11 + st.phase));
         const own = (0.3 - 0.24 * u) * (0.1 * Math.sin(u * 11 + st.phase * 11) + 0.03 * Math.sin(u * 23 + st.phase * 17));
         // No two hang the same way: a mop, not a curtain.
-        const askew = 0.26 * (0.25 + 0.75 * st.stiff) * (1 - 0.5 * u);
-        dx += Math.cos(st.lock * 3) * curl + Math.cos(st.phase * 3) * own + Math.cos(st.phase * 5) * askew;
-        dz += Math.sin(st.lock * 3) * curl + Math.sin(st.phase * 3) * own + Math.sin(st.phase * 5) * askew;
+        // Wet hair mats: the strands of a lock go askew together and cling, each only a little its own way.
+        const askew = 0.3 * loose * (0.3 + 0.7 * Math.abs(Math.sin(st.lock * 9))) * (1 - 0.5 * u);
+        const stray = 0.07 * (0.25 + 0.75 * st.stiff) * (1 - 0.5 * u);
+        dx += Math.cos(st.lock * 3) * curl + Math.cos(st.phase * 3) * own + Math.cos(st.lock * 5) * askew + Math.cos(st.phase * 5) * stray;
+        dz += Math.sin(st.lock * 3) * curl + Math.sin(st.phase * 3) * own + Math.sin(st.lock * 5) * askew + Math.sin(st.phase * 5) * stray;
         dy += 0.35 * curl * Math.sin(st.lock * 7);
         const dl = Math.hypot(dx, dy, dz) || 1;
         dx /= dl;
@@ -1092,7 +1098,7 @@ export class Wader {
         qz = nz;
         skin.ring(tube, i, x, y, z, nx, ny, nz, bx, by, bz, this.tendrilLocal, i * tube.sides * 2, st.thick);
         // How wet: what has been in the water is dark and shines.
-        skin.setHeat(tube, i, wet ? smooth(env.sea + 0.35, env.sea, y) : 0);
+        skin.setHeat(tube, i, wet ? 0.5 + 0.5 * smooth(env.sea + 0.35, env.sea, y) : 0);
         px = x;
         py = y;
         pz = z;

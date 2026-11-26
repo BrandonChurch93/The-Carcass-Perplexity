@@ -112,7 +112,7 @@ export function makeHerd(rng: Rng): Member[] {
     const up: [number, number][] = far.next() < 0.3 ? [[-5, 30]] : [[start, start + far.range(2.5, 6)], [start + far.range(11, 16), start + far.range(17, 22)]];
     // Some stand, one or two of them on three legs; the rest walk at their own pace and stop when they like.
     const lot = hash(i * 7.13 + 3);
-    const plan: Plan = { ...planOf(anchor, up, far), speed: lot < 0.3 ? 0 : anchor.speed * PACE, pauses: 0.1 + 0.4 * hash(i * 3.3 + 1), carry: 2 * hash(i * 5.7 + 2), tuck: lot < 0.12 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0, feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4) };
+    const plan: Plan = { ...planOf(anchor, up, far), speed: lot < 0.3 ? 0 : anchor.speed * PACE, pauses: 0.1 + 0.4 * hash(i * 3.3 + 1), carry: 2 * hash(i * 5.7 + 2), tuck: lot < 0.12 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0, feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4), reach: hash(i * 4.7 + 6) < 0.38 ? 0 : 1 };
     herd.push({ build: makeBuild(anchor.size * 1.06, 301 + i * 3.77, true), plan, near: false });
   }
   MORE.forEach((m, i) => {
