@@ -68,6 +68,8 @@ export interface Plan {
   carry?: number;
   /** A leg it draws up under it and holds while it stands: 0 none, 1 to 4 the left hind, left fore, right hind, right fore. */
   tuck?: number;
+  /** How far it has let itself down on its folded legs: 0 stands, 1 lies on its belly. Only for one seen from far. */
+  rest?: number;
   /** How far before its feet it feeds, as a part of its neck: 0.3 at its toes, 0.62 at full stretch. */
   feedAt?: number;
 }
@@ -687,7 +689,7 @@ export class Wader {
     const cz = o[1] + rz * side;
     const base4 = (feet[0]!.y - feet[0]!.lift + feet[1]!.y - feet[1]!.lift + feet[2]!.y - feet[2]!.lift + feet[3]!.y - feet[3]!.lift) / 4;
     // The legs are never locked: it stands a little under its full height, sinks as a foot leaves the ground and rises over the one that takes the weight.
-    const cy = base4 + b.standH - 0.012 * k - 0.02 * k * dipSum - 0.01 * k * lurch * (1 - still) - 0.012 * k * down + 0.006 * k * habit2;
+    const cy = base4 + b.standH * (1 - 0.8 * (plan.rest ?? 0)) - 0.012 * k - 0.02 * k * dipSum - 0.01 * k * lurch * (1 - still) - 0.012 * k * down + 0.006 * k * habit2;
     const yaw = plan.heading + b.skew + (0.02 + 0.06 * still) * habit + (walk ? 0.028 * Math.sin((cyc - 0.02) * Math.PI * 2) : -0.02 * holdSide);
     const pitch = (4 - 7 * down) * (Math.PI / 180) + 0.035 * nose + 0.012 * habit2 + (walk ? 0.012 * Math.sin((cyc + 0.1) * Math.PI * 4) : 0) - 0.04 * Math.max(-1, Math.min(1, gained / (0.15 * k)));
     const lean = (walk ? 0.03 * Math.cos((cyc - 0.08) * Math.PI * 2) : -0.06 * holdSide) + 0.015 * habit;

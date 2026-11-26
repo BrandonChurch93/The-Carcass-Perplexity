@@ -41,7 +41,7 @@ const MORE: [number, number, number, number, number, number, number][] = [
   [-97, -70, -32, 1.0, 0.25, 1.5, 0],
   [-66, -95, 160, 0.86, 0, 0.5, 0],
 ];
-const MORE_UP: [number, number][][] = [[[3.4, 6.1], [16, 20]], [[-5, 2.8], [11, 14]], [[7, 9.6]], [[-5, 30]], [[-5, 4.4], [15, 30]], [[5.2, 8]]];
+const MORE_UP: [number, number][][] = [[[3.4, 6.1], [16, 20]], [[-5, 2.8], [11, 14]], [[7, 9.6]], [[-5, 30]], [[-5, 4.4], [15, 30]], [[-5, 8]]];
 
 /** The three seen close in the channel are three animals: a deep-chested old one, a sway-backed one, a small one with a drawn-up belly. */
 const OWN: Partial<Build>[] = [
@@ -117,13 +117,15 @@ export function makeHerd(rng: Rng): Member[] {
     const up: [number, number][] = far.next() < 0.3 ? [[-5, 30]] : [[start, start + far.range(2.5, 6)], [start + far.range(11, 16), start + far.range(17, 22)]];
     // Some stand, one or two of them on three legs; the rest walk at their own pace and stop when they like.
     const lot = hash(i * 7.13 + 3);
-    const plan: Plan = { ...planOf(anchor, up, far), speed: lot < 0.3 ? 0 : anchor.speed * PACE, pauses: 0.1 + 0.4 * hash(i * 3.3 + 1), carry: 2 * hash(i * 5.7 + 2), tuck: lot < 0.12 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0, feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4), reach: hash(i * 4.7 + 6) < 0.38 ? 0 : 1 };
+    // A few have lain down on the flat with their legs folded under them, neck up or along the ground.
+    const lies = hash(i * 6.1 + 8) < 0.1;
+    const plan: Plan = { ...planOf(anchor, up, far), speed: lot < 0.3 || lies ? 0 : anchor.speed * PACE, pauses: 0.1 + 0.4 * hash(i * 3.3 + 1), carry: 2 * hash(i * 5.7 + 2), tuck: lot < 0.12 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0, feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4), reach: hash(i * 4.7 + 6) < 0.38 ? 0 : 1, rest: lies ? 1 : 0 };
     herd.push({ build: makeBuild(anchor.size * 1.06, 301 + i * 3.77, true), plan, near: false });
   }
   MORE.forEach((m, i) => {
     const anchor: Anchor = { x: m[0], z: m[1], heading: m[2], speed: m[4] * PACE, size: m[3], up: false, phase: i };
     const own: Partial<Build> = { chest: 0.92 + 0.24 * hash(i * 4.1 + 7), belly: 0.85 + 0.4 * hash(i * 6.3 + 8), sway: -0.8 + 1.5 * hash(i * 8.7 + 9), gaunt: 0.95 + 0.2 * hash(i * 2.3 + 6) };
-    const plan: Plan = { ...planOf(anchor, MORE_UP[i] ?? [], rng), pauses: 0.12 + 0.3 * hash(i * 3.9 + 5), pauseMax: 3, carry: m[5], tuck: m[6], feedAt: 0.4 + 0.3 * hash(i * 5.1 + 3) };
+    const plan: Plan = { ...planOf(anchor, MORE_UP[i] ?? [], rng), pauses: 0.12 + 0.3 * hash(i * 3.9 + 5), pauseMax: 3, carry: m[5], tuck: m[6], feedAt: 0.4 + 0.3 * hash(i * 5.1 + 3), rest: i === 5 ? 1 : 0 };
     herd.push({ build: makeBuild(m[3] * 1.06, 501 + i * 9.17, false, 0.024, own), plan, near: true });
   });
   return herd;
