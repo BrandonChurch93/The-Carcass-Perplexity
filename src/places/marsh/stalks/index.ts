@@ -157,12 +157,13 @@ export function create(ctx: Context): Piece {
     sheet(1, 4, 4);
     palm.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
     palm.setIndex(pi);
+    // No anisotropy on a picture whose cover is tested: the cut would then depend on an extension the film may not have.
     const palmMaterial = new THREE.ShaderMaterial({
       uniforms: {
         ...ctx.rig.uniforms,
         uSeconds,
-        tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false, anisotropy: 4 }) },
-        tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false, anisotropy: 4 }) },
+        tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) },
+        tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) },
       },
       vertexShader: PALM_VERTEX,
       fragmentShader: PALM_FRAGMENT,
