@@ -342,7 +342,7 @@ export function create(ctx: Context): Piece {
   const yaw = relYaw(-0.97, -0.03);
   // The crust has given way under it: the land's hollow is 0.2 m deep here, and the rig's land height does not include it.
   const ground = Math.min(0.1, ctx.rig.land.height(at[0], at[1])) - 0.2;
-  const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.03, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 19, hang: 0.85, thick: 1.5, long: 0.6, tile: 'mud', cover: 0.7 });
+  const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.03, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 14, hang: 0.5, thick: 2.1, long: 0.75 });
   const live = newDrive();
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)], 0.5, [0.1, 0.072, 0.054], 'dead-mud', 0.6, 0.2);
   // One of the dead is not yet a heap: it lies on its side as it fell, half under, caked and salted, the upper legs stiff in the air.

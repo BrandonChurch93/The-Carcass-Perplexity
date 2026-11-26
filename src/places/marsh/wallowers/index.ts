@@ -42,7 +42,7 @@ export function create(ctx: Context): Piece {
     const hero = herd.length === 0;
     const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.05 * b.k : 0);
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.6 * b.k;
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.72 : 0.6) * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
     const near = herd.length < 3;
     const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
@@ -62,7 +62,8 @@ export function create(ctx: Context): Piece {
     const hl = b.head[1] / n;
     const p = rel(b.d, b.l);
     // TEMPORARY, until the lead sets it in the anchors: the ones that wade nearest the lens of the wide key stand larger in it than anything in the approved picture.
-    const size = b.d < 26 ? b.size * 0.6 : b.size;
+    // STAGED for the lens of the wallowers: the great one is a tenth smaller than the anchors have it, and fills as much of that frame as the approved picture gives it.
+    const size = b.d < 26 ? b.size * 0.6 : herd.length === 0 ? b.size * 0.9 : b.size;
     // STAGED for the wide key: the two that lie in the brine nearest its lens lie across its view, as the approved picture has them, and not tail on.
     const dir: [number, number] = b.d < 26 ? [0.25 * F[0] - 0.97 * R[0], 0.25 * F[1] - 0.97 * R[1]] : [F[0] * hd + R[0] * hl, F[1] * hd + R[1] * hl];
     // STAGED by distance: the ones that wade away from the lens of the wallowers go at a walk that is seen from far off, and are where the anchors put them half way between the wide key and the key of the wallowers.
@@ -81,7 +82,7 @@ export function create(ctx: Context): Piece {
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
   const wallows = herd
     .filter((h) => h.onBank && ctx.rig.land.shore(h.plan.at[0], h.plan.at[1]) > -0.02)
-    .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.beast.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.beast.b.k, h.plan.dir, 1.05 * h.beast.b.k, [0.075, 0.034, 0.025], 'wallowers-mud-' + i, 1));
+    .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.beast.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.beast.b.k, h.plan.dir, 1.05 * h.beast.b.k, [0.08, 0.052, 0.042], 'wallowers-mud-' + i, 1));
   const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh)];
   ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
@@ -99,6 +100,8 @@ export function create(ctx: Context): Piece {
         h.beast.feelers.visible = on;
         const driven = walk(h.plan, h.beast.b, seconds, drive);
         driven.floor = h.floor;
+        // STAGED for the lens of the wallowers: the great one's feelers are curled down into the mud like the fingers of a hand, as the approved picture has them.
+        if (i === 0) driven.curl[0] = (driven.curl[0] ?? 1) * 1.6 + 0.3;
         // One that lies in the brine lies nose down: the back stands out of it and falls away to the head.
         if (h.sunk && h.paw < 0) {
           // It wallows: it rolls a little to one side and the other, comes up as it fills its chest and settles as it empties it.
