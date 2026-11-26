@@ -489,7 +489,7 @@ void main() {
   slope *= mix(0.25, 0.4, smoothstep(300.0, 1200.0, uViewKm)) * (1.0 - 0.5 * smoothstep(110.0, 240.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm))) * (1.0 - 0.6 * smoothstep(0.3, 0.62, height));
   // (Kind by kind: worn or cut, and darker or paler rock.)
   float cut = mix(1.0, mix(0.22, 1.2, smoothstep(0.25, 0.75, kind.r)), land * (1.0 - smoothstep(900.0, 1380.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm));
-  slope *= cut * (1.0 - 0.7 * buried) * (1.0 - 0.2 * eased);
+  slope *= cut * (1.0 - 0.55 * buried) * (1.0 - 0.1 * eased);
   ground *= mix(vec3(1.0), mix(vec3(0.8, 0.86, 0.95), vec3(1.1, 1.04, 0.95), smoothstep(0.25, 0.75, kind.g)), land * smoothstep(30.0, 60.0, uViewKm) * (1.0 - smoothstep(600.0, 1300.0, uViewKm)));
   // Near the ground the country is seen in its great forms: whole mountainsides stand in the sun, warm, and whole valleys lie in
   // cool blue shade with haze in them, their small relief gone soft. (The height of the country at large, read toward and away from the sun.)
@@ -622,8 +622,11 @@ void main() {
     }
   }
   if (uDusk > 0.0) sunTan = max(sunH, 0.0) / sqrt(max(1.0 - sunH * sunH, 1e-3));
-  float thrown = smoothstep(castKm - 0.08 - 0.3 * sunTan, castKm + 0.04 + 0.2 * sunTan, sunTan);
-  shade *= mix(1.0, thrown, smoothstep(100.0, 200.0, uViewKm) * mix(0.62, 0.85, smoothstep(700.0, 1300.0, uViewKm)) * (1.0 - 0.5 * dome));
+  // (Below orbit the baked horizon is coarser than the picture: its shadow is taken with a wide soft edge and less depth, so no
+  // dark blot with a hard rim lies behind each spur.)
+  float softEdge = 0.34 * (1.0 - smoothstep(700.0, 1300.0, uViewKm));
+  float thrown = smoothstep(castKm - 0.08 - 0.3 * sunTan - softEdge, castKm + 0.04 + 0.2 * sunTan + softEdge, sunTan);
+  shade *= mix(1.0, thrown, smoothstep(100.0, 200.0, uViewKm) * mix(0.5, 0.85, smoothstep(700.0, 1300.0, uViewKm)) * (1.0 - 0.5 * dome));
   // (The shadow of the ice ridge is the darkest thing on the spine, and nothing softens it.)
   shade *= mix(1.0, thrown, 0.85 * spineBand * (1.0 - ice));
   shade *= mix(1.0, tileLit, 0.8);
