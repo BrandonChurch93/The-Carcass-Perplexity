@@ -105,7 +105,23 @@ export function poseAt(frame: number): Pose {
     const turned = rollAt(frame);
     return { position: [dx, height, dz], aim: [dx, 0, dz], fov: FOV, up: [Math.sin(turned), 0, -Math.cos(turned)] };
   }
-  return { position: [x, height, z], aim: [x, 0, z], fov: FOV, up: [0, 0, -1] };
+  const [startX, startZ] = startOffsetAt(frame);
+  return { position: [x + startX, height, z + startZ], aim: [x + startX, 0, z + startZ], fov: FOV, up: [0, 0, -1] };
+}
+/** The first key of the rise (reveal-1, film frame 9627): from it on the camera stands where the rise puts it. */
+const START_OFFSET_UNTIL = riseKeys.frames[0] as number;
+/** Where the camera stands off the path of the rise as the rise begins, km on the ground (x, z): rise.json gives it (the climb's file), nothing if it gives none. */
+const startOffsetGiven: number[] = (tuning as { startOffsetKm?: number[] }).startOffsetKm ?? [];
+const START_OFFSET: [number, number] = [startOffsetGiven[0] ?? 0, startOffsetGiven[1] ?? 0];
+/**
+ * The offset of the camera on the ground at a frame of the film, km (x, z): all of START_OFFSET on the first frame of the rise,
+ * eased to nothing by the first key with no speed at either end, and nothing from that key on. The height is not touched.
+ */
+export function startOffsetAt(frame: number): [number, number] {
+  if (!(frame < START_OFFSET_UNTIL) || (START_OFFSET[0] === 0 && START_OFFSET[1] === 0)) return [0, 0];
+  const u = Math.min(Math.max((frame - RISE_FIRST) / (START_OFFSET_UNTIL - RISE_FIRST), 0), 1);
+  const left = 1 - u * u * u * (u * (u * 6 - 15) + 10);
+  return [START_OFFSET[0] * left, START_OFFSET[1] * left];
 }
 /** The drift of the hold and the ending: the film frame it starts after, km a second once it runs, the seconds it takes to come up, and its way on the ground. */
 const DRIFT_FROM = 10028;
@@ -178,13 +194,15 @@ function gathered(t: number, from: number, over: number): number {
 /**
  * The clock of the weather, seconds: the cloud, the cyclone and the vapour are carried by it. The light of the ending runs hours
  * in seconds, and the weather runs on the same clock: nothing up to LIVE_FROM, the pace of liveAt at first, then it gathers way
- * through the hold (2.5 times by film frame 10880), runs fastest while the terminator crosses (3.5 times, film frames 11050 to
- * 11320) and eases a little for the night. Its pace never falls and it never turns back.
+ * through the hold (2.5 times by film frame 10880), runs faster while the terminator crosses (3.5 times from film frame 11050)
+ * and fastest through the night (4 times from film frame 11240 to the end). Its pace never falls and it never turns back.
  */
+/** Seconds after LIVE_FROM at which the day ends (film frame 10880): the weather gathers its last way from here. */
+const WX_DUSK = (10880 - 10028) / FPS;
 export function weatherAt(seconds: number): number {
   const t = seconds - LIVE_FROM;
   if (!(t > 0)) return 0;
-  return liveAt(seconds) + 1.5 * gathered(t, 2, 12) + gathered(t, 12, 5) - 0.7 * gathered(t, 21.5, 5);
+  return liveAt(seconds) + 1.5 * gathered(t, 2, 12) + gathered(t, 12, 5) + 0.5 * gathered(t, WX_DUSK, 6);
 }
 
 /** The rings on the lake that the Eye hands over fade out between these widths of the view, in units of the width at the first frame. */

@@ -28,7 +28,7 @@ export function pairFor(cx: number, cy: number, width: number, aspect: number): 
   for (let i = LEVELS.length - 1; i >= 1; i--) {
     const coarse = LEVELS[i - 1] as Level;
     const fill = Math.max((Math.abs(cx - coarse.cx) + width / 2) / (coarse.width / 2), (Math.abs(cy - coarse.cy) + width / aspect / 2) / ((coarse.width * 9) / 32));
-    if (fill < 0.955 || i === 1) {
+    if (fill < 0.92 || i === 1) {
       const t = Math.min(1, Math.max(0, (fill - 0.66) / (0.92 - 0.66)));
       return { coarse: i - 1, fine: i, mix: 1 - t * t * (3 - 2 * t) };
     }
