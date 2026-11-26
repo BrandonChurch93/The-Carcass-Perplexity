@@ -48,7 +48,7 @@ export function create(ctx: Context): Piece {
 
   // The shelf: fine round the shaft, coarse out to the haze.
   const land = new THREE.Group();
-  land.add(mesh(open(nearMap.mesh(680)), rock.shelf));
+  land.add(mesh(open(nearMap.mesh(512)), rock.shelf));
   const mid = terrain(NEAR, NEAR, 300, 300, midGround);
   mid.computeVertexNormals();
   land.add(mesh(open(mid), rock.shelf));
