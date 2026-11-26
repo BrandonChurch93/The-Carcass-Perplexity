@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Vec3 } from '../../core/cameras';
+import { SHEETS, type SheetData } from './shared/sheets';
 
 export interface Spire {
   x: number;
@@ -7,57 +8,45 @@ export interface Spire {
   s: number;
   alt: number;
   tip: number;
+  /** Half its breadth where it leaves the crest. */
   half: number;
+  /** Half its thickness there. */
   thick: number;
-  lean: number;
-  /** How sharply its top hooks over: the power its lean grows by with height. */
-  hook: number;
-  /** Half the breadth of its broken top. */
-  top: number;
-  /** The power its breadth falls by with height: 1 a plain wedge, 2 a horn on a broad foot. */
-  taper: number;
-  /** The blade is turned by this about the upright, radians: its near face looks a little into the lee. */
+  /** Which feature sheet it is cut from (SHEETS), and whether the sheet is turned over. */
+  sheet: number;
+  flip: boolean;
+  /** Metres to a pixel of its sheet, up and across. */
+  mv: number;
+  mh: number;
+  /** The pixel column of its sheet that stands at l0 across the ridge. */
+  col0: number;
+  l0: number;
+  /** How far the sheet is sheared toward the storm, metres for a metre of height: its lean beyond the sheet's own. */
+  shear: number;
+  /** The blade is turned by this about the upright, radians. */
   yaw: number;
 }
 
-// Where each spire stands (x, z), the height of the crest at its foot, and its own: how tall it is, how broad for its height, how far it leans for its breadth, and its hook.
+// Where each spire stands (x, z), the height of the crest at its foot, and its own: how tall it is, which sheet it is cut from (0 the tower with the
+// mouth, 1 the snapped stump, 2 the hooked horn), how broad for the sheet (negative: the sheet turned over), how thick for its breadth, and its turn in degrees.
 // No two are alike and they are not evenly spaced: some are horns, some are stumps the lightning has taken down.
-const TABLE: [number, number, number, number, number, number, number][] = [
-  [-3900, 1300, 50, 232, 1.0, 0.4, 1.8],
-  [-3100, 1150, 40, 180, 0.9, 0.3, 1.6],
-  [-2330, 950, 30, 252, 1.0, 0.5, 2.0],
-  [-1540, 740, 10, 170, 0.9, 0.25, 1.5],
-  [-732, 451, 20, 230, 1.0, 0.45, 1.9],
-  [0, 0, 0, 300, 1.25, 0.66, 1.25],
-  [740, 184, -25, 168, 1.1, 0.5, 1.5],
-  [1596, 426, -40, 292, 1.05, 0.42, 1.7],
-  [2470, 745, -70, 128, 1.5, -0.2, 0.9],
-  [3010, 968, -110, 236, 0.7, 0.8, 2.6],
-  [3990, 1400, -150, 104, 1.8, 0.15, 0.9],
-  [4540, 1676, -190, 232, 0.95, 0.4, 2.2],
-  [5246, 2052, -230, 82, 2.0, -0.2, 0.8],
-  [5939, 2452, -270, 188, 0.75, 0.7, 2.4],
-  [6617, 2876, -310, 70, 2.2, 0.15, 1.0],
-  [7280, 3323, -350, 140, 1.3, 0.5, 1.4],
-];
-// Each spire's own cut: how thick it is for its breadth, the half breadth of its top, the power of its taper, and its turn in degrees.
-const CUT: [number, number, number, number][] = [
-  [0.4, 7, 1.6, 10],
-  [0.45, 9, 1.4, -8],
-  [0.4, 6, 1.9, 14],
-  [0.5, 10, 1.3, 0],
-  [0.4, 7, 1.7, 18],
-  [0.74, 9, 1.75, 5],
-  [0.5, 5, 1.5, 12],
-  [0.46, 12, 1.45, 20],
-  [0.55, 14, 1.1, -10],
-  [0.42, 4, 2.1, 26],
-  [0.6, 12, 1.0, 5],
-  [0.44, 6, 1.8, 16],
-  [0.6, 10, 1.0, -14],
-  [0.42, 5, 2.0, 22],
-  [0.6, 9, 1.1, 8],
-  [0.5, 7, 1.5, 15],
+const TABLE: [number, number, number, number, number, number, number, number][] = [
+  [-3900, 1300, 50, 232, 2, 1.0, 0.5, 10],
+  [-3100, 1150, 40, 180, 1, 0.9, 0.55, -8],
+  [-2330, 950, 30, 252, 2, -0.8, 0.5, 14],
+  [-1540, 740, 10, 170, 1, 1.2, 0.5, 0],
+  [-732, 451, 20, 230, 2, 0.9, 0.5, 18],
+  [0, 0, 0, 300, 0, 0.62, 0.79, 21],
+  [740, 184, -25, 168, 2, 1.25, 0.55, 12],
+  [1596, 426, -40, 292, 1, 0.85, 0.5, 20],
+  [2470, 745, -70, 128, 1, -1.4, 0.55, -10],
+  [3010, 968, -110, 236, 2, 0.7, 0.5, 26],
+  [3990, 1400, -150, 104, 1, 1.6, 0.6, 5],
+  [4540, 1676, -190, 232, 2, 1.1, 0.5, 16],
+  [5246, 2052, -230, 82, 1, -1.8, 0.6, -14],
+  [5939, 2452, -270, 188, 2, -0.75, 0.5, 22],
+  [6617, 2876, -310, 70, 1, 2.0, 0.6, 8],
+  [7280, 3323, -350, 140, 2, 1.3, 0.5, 15],
 ];
 
 export const FIRST = 5;
@@ -97,12 +86,23 @@ function nearestIndex(x: number, z: number): number {
 
 const origin = nearestIndex(0, 0) * STEP;
 
-export const spires: Spire[] = TABLE.map(([x, z, alt, tip, broad, lean, hook], i) => {
-  const [thick, top, taper, yaw] = CUT[i] as [number, number, number, number];
-  // Half its breadth where it leaves the crest: a blade is about as broad at the foot as it is tall.
-  const half = i === FIRST ? (0.32 * tip + 40) * broad : (0.15 * tip + 20) * broad;
-  return { x, z, s: nearestIndex(x, z) * STEP - origin, alt, tip, half, thick: thick * half, lean: lean * half, hook, top, taper, yaw: (yaw * Math.PI) / 180 };
-});
+export const spires: Spire[] = TABLE.map(([x, z, alt, tip, sheet, broad, thick, yaw]) => ({
+  x,
+  z,
+  s: nearestIndex(x, z) * STEP - origin,
+  alt,
+  tip,
+  half: 0,
+  thick,
+  sheet,
+  flip: broad < 0,
+  mv: 0,
+  mh: Math.abs(broad),
+  col0: 0,
+  l0: 0,
+  shear: 0,
+  yaw: (yaw * Math.PI) / 180,
+}));
 
 export const S_MIN = -origin;
 export const S_MAX = SAMPLES * STEP - origin;
@@ -186,6 +186,66 @@ export function crest(s: number): number {
 
 export const FLOOR = crest(MOUTH_S);
 
+/** Where the mouth is painted on the tower's sheet: its middle, in pixels. */
+const SHEET_MOUTH: [number, number] = [583, 727];
+/** The edges of a sheet at a pixel row, in pixels; under its foot it goes on down, widening. */
+function outline(sh: SheetData, row: number): [number, number] {
+  const f = ((row - sh.tip) / (sh.foot - sh.tip)) * (sh.left.length - 1);
+  const i = Math.min(sh.left.length - 2, Math.max(0, Math.floor(f)));
+  const k = Math.min(1, Math.max(0, f - i));
+  const under = Math.max(0, row - sh.foot);
+  return [(sh.left[i] as number) * (1 - k) + (sh.left[i + 1] as number) * k - 0.25 * under, (sh.right[i] as number) * (1 - k) + (sh.right[i + 1] as number) * k + 0.25 * under];
+}
+// Each spire is set on its sheet. The first by its mouth: the painted mouth lies on the canal's. The others stand with a fifth of their sheet under the crest.
+spires.forEach((sp, i) => {
+  const sh = SHEETS[sp.sheet] as SheetData;
+  if (i === FIRST) {
+    sp.mv = (sp.alt + sp.tip - (FLOOR + 17)) / (SHEET_MOUTH[1] - sh.tip);
+    sp.mh *= sp.mv;
+    sp.col0 = SHEET_MOUTH[0];
+    sp.l0 = canalInFin(sp).mouth[0];
+    sp.shear = 0.2;
+  } else {
+    sp.mv = sp.tip / (0.8 * (sh.foot - sh.tip));
+    sp.mh *= sp.mv;
+    const [a, b] = outline(sh, sh.tip + sp.tip / sp.mv);
+    sp.col0 = 0.5 * (a + b);
+    sp.l0 = 0;
+    sp.shear = 0.12 * Math.sin(i * 2.7 + 1);
+  }
+  const [a, b] = outline(sh, sh.tip + sp.tip / sp.mv);
+  sp.half = 0.5 * (b - a) * sp.mh;
+  sp.thick *= sp.half;
+});
+
+/** Where the canal's two ends lie in a blade's own frame: metres across it and metres along the ridge from its middle. The ridge bends, so these are not the ridge's own s and l. */
+export function canalInFin(sp: Spire): { mouth: [number, number]; exit: [number, number] } {
+  const m = finAxes(sp);
+  const at = (s: number): [number, number] => {
+    const f = frameAt(s);
+    const x = f.x + f.nx * CANAL_L - sp.x;
+    const z = f.z + f.nz * CANAL_L - sp.z;
+    return [x * m.ax + z * m.az, x * m.bx + z * m.bz];
+  };
+  return { mouth: at(MOUTH_S), exit: at(MOUTH_S + EXIT) };
+}
+
+/** The same as numbers for a shader: u = (l + shear * y) * [0] + [1], v = y * [2] + [3]. */
+export function sheetMap(sp: Spire): [number, number, number, number] {
+  const sh = SHEETS[sp.sheet] as SheetData;
+  const k = sp.flip ? -1 : 1;
+  // A picture's v runs up from its foot in a shader, and its rows run down from its top.
+  return [k / (sp.mh * sh.width), (sp.col0 - (k * (sp.l0 + sp.shear * sp.alt)) / sp.mh) / sh.width, 1 / (sp.mv * sh.height), 1 - (sh.tip + (sp.alt + sp.tip) / sp.mv) / sh.height];
+}
+
+/** Where a point of a spire lies on its sheet: l metres across the blade and y metres up give (u, v), 0 to 1 from the left and from the top. */
+export function sheetAt(sp: Spire, l: number, y: number): [number, number] {
+  const sh = SHEETS[sp.sheet] as SheetData;
+  const col = sp.col0 + ((sp.flip ? -1 : 1) * (l + sp.shear * (y - sp.alt) - sp.l0)) / sp.mh;
+  const row = sh.tip + (sp.alt + sp.tip - y) / sp.mv;
+  return [col / sh.width, row / sh.height];
+}
+
 export function ground(s: number, l: number): number {
   const shelf = Math.exp(-(((s - MOUTH_S + 20) / 85) ** 2));
   // The crest is a knife, a few metres of snow with a fall on either hand; it is broad only where the carcass lies and before the mouths.
@@ -217,8 +277,9 @@ export function ground(s: number, l: number): number {
     const off = l - canalL(d);
     const w = 1 - smooth(r + 6, r + 30, Math.abs(off) + 5 * Math.sin(l * 0.31 + 1.3));
     if (w > 0) {
-      const over = FLOOR + 1.62 * r + 5 + 2.4 * Math.min(deep, 30);
-      y += (Math.max(y, over) - y) * w * smooth(0.3, 2.4, deep);
+      const over = FLOOR + 1.62 * r + 5 + 0.8 * Math.min(deep, 30);
+      // It starts well inside the blade: the blade's face is the wall the mouth is cut through.
+      y += (Math.max(y, over) - y) * w * smooth(20, 26, deep);
     }
   }
   return Math.max(y, -2700);
@@ -250,7 +311,7 @@ export interface FinPoint {
 export const FIN_ROOT = 110;
 
 /** The power of a blade's section: 2 would be an ellipse, 1 a diamond. Between them: two faces that meet in an edge at each end and are full in the middle. */
-export const FIN_SECTION = 1.55;
+export const FIN_SECTION = 3;
 
 export function fin(sp: Spire, t: number): FinPoint {
   // h is 0 where the blade leaves the crest and 1 at its top; under the crest it is negative, and the blade goes on down the flanks as a buttress on either hand.
@@ -258,21 +319,19 @@ export function fin(sp: Spire, t: number): FinPoint {
   const h = (t - t0) / (1 - t0);
   const q = Math.min(1, Math.max(0, 1 - h));
   const under = Math.max(0, -h) * sp.tip;
-  const wide = sp.top + (sp.half - sp.top) * Math.pow(q, sp.taper) + 0.22 * under;
-  const thin = 0.45 * sp.top + 2;
-  const thick = thin + (sp.thick - thin) * Math.pow(q, 1.05) * (1 - 0.3 * smooth(0.3, 0.8, h)) + 0.16 * under;
-  // No spire is whole: each has lost a piece of its lee edge, a notch where a slab came away and, lower, the step of a fallen shoulder.
-  // Where they are and how deep is the spire's own (from its height, so that it is the same in every build).
-  const own = Math.abs(Math.sin(sp.tip * 12.9898) * 43758.5453) % 1;
-  const notchAt = 0.5 + 0.28 * own;
-  const stepAt = 0.2 + 0.2 * ((own * 7.31) % 1);
-  const bite = wide * (0.24 * Math.exp(-(((h - notchAt) / 0.04) ** 2)) + (0.05 + 0.08 * own) * smooth(stepAt - 0.015, stepAt + 0.015, h) * (1 - smooth(notchAt + 0.1, 0.97, h)));
-  return {
-    centre: -sp.lean * Math.pow(Math.max(h, 0), sp.hook) - 0.5 * bite,
-    half: wide - 0.5 * bite,
-    thick,
-    y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t,
-  };
+  // Its outline is its sheet's.
+  const sh = SHEETS[sp.sheet] as SheetData;
+  // Under the crest it keeps the outline it has a little below the crest and widens evenly: the sheet's own foot is a ragged fan.
+  const low = Math.min(under, 0.28 * sp.tip);
+  const [a, b] = outline(sh, sh.tip + ((1 - Math.min(h, 1)) * sp.tip + low) / sp.mv);
+  const k = sp.flip ? -1 : 1;
+  const lean = sp.shear * Math.min(h, 1) * sp.tip;
+  const l1 = sp.l0 + k * (a - sp.col0) * sp.mh - lean;
+  const l2 = sp.l0 + k * (b - sp.col0) * sp.mh - lean;
+  const wide = Math.max(1.5, 0.5 * Math.abs(l2 - l1)) + 0.3 * (under - low);
+  const thin = Math.min(0.45 * wide + 2, sp.thick);
+  const thick = thin + (sp.thick - thin) * Math.pow(q, 1.05) * (1 - 0.3 * smooth(0.3, 0.8, h)) + 0.2 * under;
+  return { centre: 0.5 * (l1 + l2), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t };
 }
 
 /** The two level axes of a blade: across it (toward the lee) and along it (down the ridge), each turned by the spire's yaw. */
@@ -325,7 +384,7 @@ export function finEdge(sp: Spire, t: number, side: number, along = 0): Vec3 {
   return [sp.x + m.ax * l + m.bx * along * p.thick, p.y, sp.z + m.az * l + m.bz * along * p.thick];
 }
 
-/** The highest point of a spire: the storm-side prong of its split top. */
+/** The highest point of a spire. */
 export function tipOf(sp: Spire): Vec3 {
-  return finEdge(sp, 1, -0.7);
+  return finEdge(sp, 1, 0);
 }
