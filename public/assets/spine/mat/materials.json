@@ -137,7 +137,8 @@
       "kind": "plate",
       "metres": 1.5,
       "width": 1536,
-      "height": 1024
+      "height": 1024,
+      "relief": "holdfast-h.png"
     },
     {
       "name": "tendril",

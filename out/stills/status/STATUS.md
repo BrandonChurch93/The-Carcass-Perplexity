@@ -1,8 +1,8 @@
-# Status 82
+# Status 83
 
-2026-11-26 01:11 UTC. Phase 4, the other places and the rise.
+2026-11-26 01:34 UTC. Phase 4, the other places and the rise.
 
-- `01-st82-maps.jpg`: The Reveal's new ground, kept set. Top row: four nested satellite maps made by the image tool from the approved master (the whole body 4,536 km wide, head and shoulders, the skull, the lake of the Eye 274 km). Bottom row: the height picture of each. Working pictures: the approved pictures stay the target.
-- `02-v3-ribs-ground.jpg`: The Ribs, version 3, where wave 2 starts. Lower left: the approved picture; lower right: the built frame. Blades stand as single horns where the picture has arches, and the floor is a dark sheet where the picture has a wet flat with pools and glare.
-- `03-v3-eye.jpg`: The Eye, version 3. Middle left: the approved picture; middle right: the built frame. The lake is a thin strip where the picture has a wide ellipse, the near boulders carry a picture pulled long, and the drinkers read as models, so they go to a distance now.
-- `04-v3-marsh-life.jpg`: The Blood Marsh, version 3: stalks, wallowers and the stuck one, each approved picture beside its frame, and twelve frames of one shot. The stalks are near their picture; the wallowers are furred mounds on barrel legs and get one rebuild as one skin.
+- `01-g1.jpg`: Working pictures for the owners, first sheet: far backplates, scenery and animals on black. No animal has eyes or ears.
+- `02-g2a.jpg`: Second sheet: the Ribs and the Breath. Ground plates, the bore wall, an open wing, the one that stayed, the rib arch.
+- `03-g2b.jpg`: Third sheet: the Marsh, the Spine and the Eye. Crust and shore plates, hair locks, the scorch field, the storm wall, the drinkers.
+- `04-h1.jpg`: Reliefs made by a second call from each colour picture: form for lighting the plates and cards.

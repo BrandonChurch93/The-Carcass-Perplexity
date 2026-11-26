@@ -113,7 +113,8 @@
       "kind": "plate",
       "metres": 9,
       "width": 1681,
-      "height": 935
+      "height": 935,
+      "relief": "slab-h.png"
     },
     {
       "name": "scree",
