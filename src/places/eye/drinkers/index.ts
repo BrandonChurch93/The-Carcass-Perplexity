@@ -6,7 +6,7 @@ import { landHeight } from '../land/height';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { during } from '../shared/anchors';
-import { LEVELS, MID_DATA, NEAR_DATA } from './body.data';
+import { LEVELS, MID_DATA } from './body.data';
 import { createCards } from './cards';
 import { WADE, herd, standPose, type Drinker } from './herd';
 import { BONES, solve, type Solved } from './skeleton';
@@ -69,7 +69,16 @@ void main() {
   bool mirrored = cameraPosition.y < 0.0;
   // The coat: the picture of the whole animal from the side, laid on the body as it was made. It gives the tone everywhere, and on the flanks the hide itself:
   // the ribs, the folds at the shoulder and the hip, the dust along the back.
-  vec2 cu = vec2(0.57 - 0.1842 * vRest.z, 0.12 + 0.2594 * vRest.y);
+  // The body's neck and legs do not lie where the picture's do: each is carried to its own in the picture, so the rings of the neck and the hide of the legs are drawn too.
+  vec2 q = vRest.zy;
+  vec2 nk = q - vec2(1.0, 2.25);
+  float inNeck = smoothstep(0.0, 0.5, dot(nk, vec2(0.64, 0.77)));
+  vec2 turned = vec2(0.9397 * nk.x + 0.342 * nk.y, 0.9397 * nk.y - 0.342 * nk.x);
+  turned -= 0.25 * dot(turned, vec2(0.64, 0.77)) * vec2(0.64, 0.77);
+  q = mix(q, vec2(1.0, 2.25) + turned, inNeck);
+  q.x -= 0.6 * max(1.0 - q.y / 1.9, 0.0) * smoothstep(-0.3, -0.6, q.x);
+  q.x += 0.2 * max(1.0 - q.y / 1.6, 0.0) * smoothstep(0.3, 0.5, q.x);
+  vec2 cu = vec2(0.57 - 0.1842 * q.x, 0.12 + 0.2594 * q.y);
   vec3 tone = texture2D(tCoat, cu, 5.0).rgb;
   vec3 skin = tone;
   vec2 side = vRest.zy * vec2(1.0, 1.4) + own * 37.0;
@@ -91,7 +100,7 @@ void main() {
     vec4 broad = hideAt(at * 1.5, dx * 1.5, dy * 1.5, ma, me, w);
     vec4 fine = vec4(0.69, 0.41, 0.32, 0.5);
     if (px < 0.004) fine = hideAt(at.yzx * 4.7, dx.yzx * 4.7, dy.yzx * 4.7, ma.yzx, me.yzx, w);
-    float flank = smoothstep(0.25, 0.6, rn.x) * smoothstep(1.15, 1.45, vRest.y) * (1.0 - smoothstep(2.4, 2.65, vRest.y));
+    float flank = smoothstep(0.25, 0.6, rn.x) * (1.0 - smoothstep(3.3, 3.5, vRest.y));
     vec3 coat = texture2D(tCoat, cu).rgb;
     float grain = dot(coat, vec3(0.3, 0.5, 0.2));
     vec3 tiled = sqrt(broad.rgb * fine.rgb) / vec3(0.69, 0.41, 0.32);
@@ -104,9 +113,6 @@ void main() {
     float relief = 0.012 * grain * flank + 0.002 * broad.a + 0.0005 * fine.a;
     vec3 lean = sign(det) * (dFdx(relief) * r1 + dFdy(relief) * r2) * (1.0 - smoothstep(0.004, 0.02, px));
     n = normalize(abs(det) * n - lean / max(1.0, length(lean) / (0.4 * abs(det) + 1e-12)));
-    // Each animal has marks of its own.
-    float mark = smoothstep(0.56, 0.7, 0.65 * vnoise(side * 1.1 + 11.0) + 0.35 * vnoise(side * 6.0 + vRest.x * 3.0));
-    skin = mix(skin, skin * vec3(0.62, 0.58, 0.57), mark * (0.2 + 0.4 * fract(own * 13.7)));
   }
   // Each a tone of its own.
   skin *= mix(vec3(0.86, 0.85, 0.84), vec3(1.08, 1.04, 1.0), fract(own * 7.3));
@@ -121,9 +127,11 @@ void main() {
   skin *= mix(0.9, 1.03, smoothstep(1.15, 2.2, above + 0.3 * (blotch - 0.5)));
   float wet = 1.0 - smoothstep(0.3, 0.8, above + 0.3 * ragged);
   // Its legs are dark with the mud and the water of the shore, to above the knee.
-  skin *= mix(0.45, 1.0, smoothstep(0.5, 1.0, above + 0.3 * ragged));
+  skin *= mix(0.3, 1.0, smoothstep(0.7, 1.45, above + 0.3 * ragged));
   float fleck = smoothstep(0.6, 0.68, vnoise(vRest.zy * 46.0 + vRest.x * 31.0)) * (1.0 - smoothstep(0.5, 1.5, above + 0.5 * ragged)) * (1.0 - smoothstep(1.2, 1.6, vRest.y));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
+  // Far off in the shade of the evening it is tan going to grey, as the herd of cards beside it is: the sky lights its back and leaves its belly in its own shade.
+  if (uShade.w > 0.1) skin = mix(skin, vec3(0.3, 0.22, 0.17), 0.75) * mix(0.45, 1.1, smoothstep(0.5, 0.95, above / 2.4));
   vec3 albedo = mix(skin * mix(1.0, 0.45, wet), vec3(0.11, 0.085, 0.065), 0.8 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.7, 1.0, vShade.x);
@@ -180,6 +188,7 @@ function bodyGeometry(text: string, level: { vertices: number; triangles: number
 
 interface Drawn {
   animal: Drinker;
+  index: number;
   mesh: THREE.Mesh;
   material: THREE.ShaderMaterial;
   bones: Float32Array;
@@ -187,14 +196,16 @@ interface Drawn {
 }
 
 export function create(ctx: Context): Piece {
-  // The four of the shore shot are bodies while that shot runs; every other animal, and these four in every other shot, is still a card.
-  const animals = herd(ctx.rng('drinkers-bodies'), ctx.events.rise - 1.7).slice(0, 4);
+  // The four of the shore shot and the three of the mats shot are bodies while their shots run; every other animal, and these in every other shot, is still a card.
+  const all = herd(ctx.rng('drinkers-bodies'), ctx.events.rise - 1.7);
+  const cast = [0, 1, 2, 3, 6, 7, 8];
+  const animals = cast.map((index) => all[index] as Drinker);
   const cards = createCards(ctx);
-  const near = bodyGeometry(NEAR_DATA, LEVELS.near);
   const mid = bodyGeometry(MID_DATA, LEVELS.mid);
   const tHide = { value: ctx.assets.texture('drinker/hide.png', { repeat: true, anisotropy: 4 }) };
   const tCoat = { value: ctx.assets.texture('drinker/coat.jpg', { repeat: false, anisotropy: 4 }) };
   const drawn: Drawn[] = animals.map((animal, i) => {
+    const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
     const own = new THREE.Vector4(animal.own, animal.build.size, 0, 0);
     const material = new THREE.ShaderMaterial({
@@ -204,13 +215,12 @@ export function create(ctx: Context): Piece {
       // The surface is wound with its outside as its back: only that side is drawn.
       side: THREE.BackSide,
     });
-    // The whole surface for the one the lens comes closest to, a lighter one for the three behind it.
     const mesh = new THREE.Mesh(mid, material);
     mesh.frustumCulled = false;
     mesh.visible = false;
     ctx.scene.add(mesh);
     ctx.reflected.push(mesh);
-    return { animal, mesh, material, bones, own };
+    return { animal, index, mesh, material, bones, own };
   });
   ctx.parts.built('drinkers', (cards.meshes[0] as THREE.Mesh), ...cards.meshes.slice(1), ...drawn.map((d) => d.mesh));
   for (let i = 0; i < 22; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
@@ -234,8 +244,11 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: (t) => {
-      const bodies = during('eye-04');
-      let lap = cards.setTime(t, bodies);
+      // The four of the shore are bodies while the shore shot runs, the three beyond the mats while the mats shot runs.
+      const shore = during('eye-04');
+      const mats = during('eye-02');
+      const isBody = (index: number): boolean => (shore && index < 4) || (mats && index >= 6 && index <= 8);
+      let lap = cards.setTime(t, isBody);
       const ring = (x: number, z: number, strength: number): void => {
         const slot = ctx.laps[lap];
         if (!slot || strength <= 0) return;
@@ -246,6 +259,7 @@ export function create(ctx: Context): Piece {
       };
       for (const g of drawn) {
         const d = g.animal;
+        const bodies = isBody(g.index);
         g.mesh.visible = bodies;
         if (!bodies) continue;
         const solved = poseAt(d, t, g.bones);
@@ -271,7 +285,6 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       cards.dispose();
-      near.dispose();
       mid.dispose();
       for (const g of drawn) g.material.dispose();
     },

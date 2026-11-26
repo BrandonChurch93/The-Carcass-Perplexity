@@ -1,6 +1,6 @@
 // The drinkers as cards: each is one skin, taken from a picture of the whole animal (four sheets: neck down, neck up, seen from behind, a calf)
 // and stood as a card in the place, lit by the place's own light from the relief of the sheet.
-// They stand wherever the bodies of index.ts do not yet: everywhere but the four of the shore shot while that shot runs.
+// They stand wherever the bodies of index.ts do not yet: everywhere but the four of the shore shot and the three of the mats shot while those shots run.
 import * as THREE from 'three';
 import { DEG, shoreOf, smooth } from '../layout';
 import { landHeight } from '../land/height';
@@ -229,8 +229,8 @@ interface Group {
 
 export interface Cards {
   meshes: THREE.Mesh[];
-  /** Sets the cards at t and writes their rings from the first slot on; `bodies` is true while the four of the shore are drawn as bodies. Returns the next free slot. */
-  setTime: (t: number, bodies: boolean) => number;
+  /** Sets the cards at t and writes their rings from the first slot on; `bodies` says which of them are drawn as bodies just now and so have no card. Returns the next free slot. */
+  setTime: (t: number, bodies: (index: number) => boolean) => number;
   dispose: () => void;
 }
 
@@ -290,7 +290,7 @@ export function createCards(ctx: Context): Cards {
       const wide = during('eye-01');
       for (const g of groups) {
         g.members.forEach(({ animal: d, index: i }, k) => {
-          const size = (d.wideOnly && !wide) || (bodies && i < 4) ? 0 : d.size;
+          const size = (d.wideOnly && !wide) || bodies(i) ? 0 : d.size;
           const ground = d.level ?? Math.max(-0.5, landHeight(d.x, d.z));
           const down = Math.min(1, Math.max(0, d.down(t)));
           // A sheet with its neck down lifts its head by turning the neck about its root; one with its neck up only looks about.
