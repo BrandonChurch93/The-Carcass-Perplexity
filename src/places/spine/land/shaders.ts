@@ -190,6 +190,25 @@ float canalAt(float d) {
   float k = max(0.0, min(d, EXIT + 40.0) - 140.0);
   return CANAL_L + 0.0025 * k * k;
 }
+// The near mouth's broken edge, read the same by the depth and by the colour: metres outside the opening, below 0 in the open.
+float mouthEdge(vec2 across, float r) {
+  float turn = atan(across.y, across.x);
+  float ragged = 0.72 + 0.26 * vnoise(vec2(turn * 2.3 + 5.0, 0.7)) + 0.12 * (vnoise(vec2(turn * 8.0 + 1.0, 2.9)) - 0.5) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
+  float low = 1.0 + 0.75 * smoothstep(-0.2, 0.7, across.y / r);
+  return length(across * vec2(1.0, low)) - (r - 0.8) * ragged;
+}
+// Ice hangs from the upper lip of the near mouth: fine icicles, each of its own length, left standing in the opening (g is mouthEdge there).
+float hangs(vec2 across, float r, float g) {
+  float crown = across.y / r;
+  if (g > 0.0 || crown < 0.15) return 0.0;
+  float low = 1.0 + 0.75 * smoothstep(-0.2, 0.7, crown);
+  // How far below the lip this is, by the lean of the lip overhead.
+  float below = -g * length(across * vec2(1.0, low)) / max(across.y * low * low, 0.01);
+  float cell = across.x / 0.7;
+  float h = fract(sin(floor(cell) * 12.9898 + 4.1) * 43758.5453);
+  float len = (0.8 + 5.5 * h * h) * smoothstep(0.15, 0.5, crown);
+  return below < len && abs(fract(cell) - 0.5) < (0.16 + 0.26 * h) * (1.0 - below / len) ? 1.0 : 0.0;
+}
 
 // The trail of the layout (anchors.ts): l at s.
 float trailAt(float s) {
@@ -228,11 +247,11 @@ void main() {
     vec2 across = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
     // (Nothing is cut farther from the canal's middle than this: the broken line is worked out only near it.)
     if (max(abs(across.x), abs(across.y)) < r + 2.6) {
-      float turn = atan(across.y, across.x);
-      float ragged = 0.72 + 0.26 * vnoise(vec2(turn * 2.3 + 5.0, 0.7)) + 0.12 * (vnoise(vec2(turn * 8.0 + 1.0, 2.9)) - 0.5) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
-      float low = dCanal < 0.5 * EXIT ? 1.0 + 0.75 * smoothstep(-0.2, 0.7, across.y / r) : 1.0 + 0.25 * smoothstep(0.0, 1.0, across.y / r);
-      // The far mouth is cut wider than the canal, so that from inside the canal's own lip is its edge.
-      if (dCanal < 0.5 * EXIT ? length(across * vec2(1.0, low)) < (r - 0.8) * ragged : length(across) < r + 2.5) discard;
+      // The far mouth is cut wider than the canal, so that from inside the canal's own lip is its edge. The near one keeps the ice that hangs from its lip.
+      if (dCanal < 0.5 * EXIT) {
+        float g = mouthEdge(across, r);
+        if (g < 0.0 && (uKind < 0.5 || hangs(across, r, g) < 0.5)) discard;
+      } else if (length(across) < r + 2.5) discard;
       // Behind the arch the ground does not stand inside the canal: where a flank passes through it, it is cut away to the canal's own wall.
       if (uKind < 0.5 && dCanal > 2.5 && dCanal < EXIT - 2.5 && length(across) < r + 0.4) discard;
     }
@@ -398,13 +417,13 @@ void main() {
     vec3 n2 = texture2D(tCanalNh, qX).rgb * tw.x + texture2D(tCanalNh, pY * 0.21).rgb * tw.y + texture2D(tCanalNh, qZ).rgb * tw.z;
     // Water-worn stone in level beds, cream and brown as its picture has it; broad darker bands run through it, larger than the picture.
     float band = vnoise(vec2(vWorld.y * 0.42 + 0.6 * n2.b, 0.035 * (vWorld.x + vWorld.z)));
-    rock = c1 * 1.9 * mix(vec3(1.04, 1.0, 0.93), vec3(0.5, 0.42, 0.36), smoothstep(0.42, 0.78, band)) * (0.62 + 0.76 * n2.b);
+    rock = c1 * 1.9 * mix(vec3(1.04, 1.0, 0.93), vec3(0.5, 0.42, 0.36), smoothstep(0.42, 0.78, band) * (uUnder > 1.5 ? 1.0 : 0.35)) * (0.62 + 0.76 * n2.b);
     t = ((n1.rg - 0.5) * 0.22 + (n2.rg - 0.5) * 0.6) * vec2(1.0, -1.0);
     pit = 0.55 * n1.b + 0.45 * n2.b;
     // Rime: the frost picture at its own 3 m, only round each mouth where the gale reaches; farther in the rock is bare and wet.
     vec3 rimeC = texture2D(tRime, vWorld.zy / 3.0).rgb * tw.x + texture2D(tRime, vWorld.xz / 3.0 + 0.4).rgb * tw.y + texture2D(tRime, vWorld.xy / 3.0 + 0.7).rgb * tw.z;
     float frost = smoothstep(0.32, 0.62, dot(rimeC, vec3(0.33)));
-    float lipW = exp(-max(min(dCanal, EXIT - dCanal) - 2.0, 0.0) / 9.0);
+    float lipW = exp(-max(min(dCanal, EXIT - dCanal) - 2.0, 0.0) / (uUnder > 1.5 ? 9.0 : 13.0));
     wallRime = clamp(frost * 1.5 * lipW * lipW + 0.8 * lipW * lipW * lipW, 0.0, 1.0) * (0.45 + 0.55 * smoothstep(0.25, 0.55, pit + 0.7 * lipW));
     wallRimeC = rimeC;
     // Under frost the rock's grain is filled.
@@ -689,8 +708,8 @@ void main() {
   if (inside) {
     snow = smoothstep(1.6, 0.2, vWorld.y - CANAL_FLOOR + 1.2 * (pit - 0.5)) * 0.85;
     rime = 0.0;
-    // The canal is black from outside: what the sky gives its walls is gone a few metres in.
-    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 7.0);
+    // From outside the canal is a funnel going down into the dark: what the sky gives its walls dies away down it, and the throat is black.
+    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 3.0, 0.0) / 10.0);
     snow *= lit;
     rime *= lit;
     occ *= 0.04 + 0.96 * lit;
@@ -809,6 +828,23 @@ void main() {
   // Where the bolt came to ground: the burned wet rock under the dead one, a plate 14 m across laid square to the lens of that shot.
 // Staged by shot: the burn is compiled in only for the shot by the dead one (spine-03). No other lens sees it, and a software renderer pays
 // for it on every pixel of the ground otherwise.
+#if KIND == 1
+  // Ice on the arch: sheeting on the lip of the near mouth, thickest over its crown and in runs down its sides, and the icicles under it.
+  if (dCanal > -42.0 && dCanal < 0.5 * EXIT && vWorld.y > CANAL_FLOOR - 0.2) {
+    float r = flareAt(dCanal);
+    vec2 over = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
+    if (max(abs(over.x), abs(over.y)) < r + 2.6) {
+      float g = mouthEdge(over, r);
+      float crown = smoothstep(-0.3, 0.6, over.y / r);
+      float runs = vnoise(vec2(vSL.y * 0.55, 3.3)) * 0.6 + vnoise(vec2(vSL.y * 1.9, 7.1)) * 0.4;
+      float wide = mix(0.8, 4.5, crown) * (0.4 + 1.2 * runs);
+      float ice = g < 0.0 ? 1.0 : (1.0 - smoothstep(0.45 * wide, wide, g)) * smoothstep(-0.25, 0.1, over.y / r);
+      albedo = mix(albedo, vec3(0.6, 0.68, 0.79) * (0.8 + 0.4 * runs), 0.9 * ice);
+      rough = mix(rough, 0.22, ice);
+      occ = mix(occ, 1.0, 0.7 * ice);
+    }
+  }
+#endif
 ${SCORCH_BLOCK}
 
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
@@ -820,7 +856,11 @@ ${SCORCH_BLOCK}
     c += albedo * windowLight(vWorld, normalize(mix(n, normalize(EXIT_AT + vec3(0.0, 6.0, 0.0) - vWorld), 0.55 * wallRime))) * (0.3 + 0.7 * pit) * (6.5 + 2.5 * wallRime) / 3.14159 + windowGlaze(vWorld, n, v, 2.5) * (1.0 - wallRime) * 1.6;
   }
   if (inside) if (uUnder < 1.5) {
-    float shown = exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 9.0);
+    // No sky stands over the canal's rock, so the rig gives it nothing: what lights the funnel from outside is the sky that looks in at the
+    // mouth, strongest on what faces it and on the wall the low light comes to, less in the pits of the rock. It reaches a few metres.
+    vec3 toMouth = normalize((dCanal < 0.5 * EXIT ? -CANAL_ALONG : CANAL_ALONG) + vec3(0.0, 0.3, 0.0));
+    c += albedo * skyIrradiance(normalize(n + 1.5 * toMouth)) * ((0.25 + 0.75 * smoothstep(-0.2, 0.7, dot(n, toMouth))) * (0.3 + 0.7 * pit) * mix(0.12, 1.5, smoothstep(-0.5, 0.8, (vSL.y - canalAt(dCanal)) / flareAt(dCanal))) * 0.8 / 3.14159);
+    float shown = exp(-max(min(dCanal, EXIT - dCanal) - 4.0, 0.0) / 7.0);
     c = c * (0.03 + 0.97 * shown) + vec3(0.0035, 0.0045, 0.0085) * (1.0 - shown);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -914,7 +954,9 @@ void main() {
   }
   if (uUnder < 1.5) {
     // From outside the canal is dark a few metres in: its floor with it.
-    float shown = exp(-max(min(vAcross.y, EXIT_FAR - vAcross.y) - 1.0, 0.0) / 9.0);
+    // The floor takes the sky that looks in at the mouth, as the walls do.
+    c += albedo * skyIrradiance(normalize(n + vec3(0.0, 0.5, 0.0))) * (0.8 / 3.14159);
+    float shown = exp(-max(min(vAcross.y, EXIT_FAR - vAcross.y) - 4.0, 0.0) / 7.0);
     c = c * (0.03 + 0.97 * shown) + vec3(0.0035, 0.0045, 0.0085) * (1.0 - shown);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
