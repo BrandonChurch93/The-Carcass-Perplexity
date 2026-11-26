@@ -1,5 +1,6 @@
-2026-11-26 12:09 UTC
-work at 6f0b361 on agent/lens
-Frame 9003 crop at draft tier, before (left) and after (right): the 4 px lattice is gone and stone outlines are as soft as their blur; the new blur costs more than the 1.0 s allowed and is being cut
-look-1.jpg = out/work/lab/pair-v1-a.png
-look-2.jpg = out/work/lab/pair-v1-z.png
+2026-11-26 12:22 UTC
+work at 367187b on agent/lens
+v1 367187b: frame 9003 final uhd, main left, new blur right: pebble bank native, 2x, in-focus neck against the cliff 2x
+look-1.jpg = out/work/lab/pair-9003.png
+look-2.jpg = out/work/lab/pair-9003-z.png
+look-3.jpg = out/work/lab/pair-9003-subject.png
