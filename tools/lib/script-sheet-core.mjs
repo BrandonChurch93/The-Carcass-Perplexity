@@ -2,6 +2,7 @@
 // Every line gets the shot it falls on, its time in the film, a length worked out with the cut's own estimate,
 // and a verdict a machine can repeat: fits, tight or too long. Marks on what the picture shows are the Builder's and are kept in the draft file.
 import { estimateSeconds, strikeSpans, DEFAULT_ESTIMATE, STRIKE_BEFORE_SECONDS, STRIKE_AFTER_SECONDS } from './cut-core.mjs';
+import { lineStates } from './script.mjs';
 
 export const DRAFT_SCHEMA = 'carcass/script-draft 1';
 export const SHEET_SCHEMA = 'carcass/script-sheet 1';
@@ -180,6 +181,10 @@ export function bannedIn(rows) {
   return out;
 }
 
+// How many lines the cut of the narration takes from the film, in words.
+const cutWords = (gone, short) =>
+  [gone ? `${gone} ${gone === 1 ? 'line' : 'lines'} cut from the film whole` : '', short ? `${short} ${short === 1 ? 'line' : 'lines'} cut to ${short === 1 ? 'its' : 'their'} first words` : ''].filter(Boolean).join(' and ');
+
 function ruleChecks(draft, rows, clips, spans, fps) {
   const out = [];
   const bad = bannedIn(rows);
@@ -197,7 +202,13 @@ function ruleChecks(draft, rows, clips, spans, fps) {
   const total = clips.reduce((a, c) => a + c.seconds, 0);
   const old = clips.reduce((a, c) => a + (c.approvedSeconds ?? 0), 0);
   const repaired = rows.reduce((a, r) => a + (r.mark?.replace?.[0]?.seconds ?? r.seconds), 0);
-  out.push(`About the same length as now: the draft is ${total.toFixed(1)} s of speech where the approved script is ${old.toFixed(1)} s, by the same estimate. With the first replacement of every marked line it is ${repaired.toFixed(1)} s. No shot moves either way.`);
+  const gone = rows.filter((r) => r.spoken === null).length;
+  const cutShort = rows.filter((r) => r.shortened === true).length;
+  out.push(
+    gone + cutShort === 0
+      ? `About the same length as now: the draft is ${total.toFixed(1)} s of speech where the approved script is ${old.toFixed(1)} s, by the same estimate. With the first replacement of every marked line it is ${repaired.toFixed(1)} s. No shot moves either way.`
+      : `About the same length as now: that was asked of the draft, which is ${total.toFixed(1)} s of speech in ${rows.length} lines, and ${repaired.toFixed(1)} s with the first replacement of every marked line. Since then the script is cut: the approved script is ${old.toFixed(1)} s in ${rows.length - gone} lines by the same estimate, with ${cutWords(gone, cutShort)}. No shot moves either way, and no line that stays moves.`
+  );
   const marked = rows.filter((r) => r.mark);
   const kinds = { length: 'too long for their shots', tight: 'with too little to spare', picture: 'that do not match what the shot shows' };
   const parts = KINDS.map((k) => [marked.filter((r) => r.mark.kind === k).length, kinds[k] ?? k]).filter(([n]) => n > 0).map(([n, what]) => `${n} ${what}`);
@@ -221,6 +232,8 @@ export function layout(draft, cut, map, cfg) {
   const spans = strikeSpans(cut, map);
   const errors = [];
   const rows = [];
+  // How each recorded line stands in the film: spoken whole, cut to its first words, or cut from the film.
+  const states = new Map(lineStates(cfg).map((x) => [x.id, x]));
   for (const c of draft.clips) {
     const place = cut.places.find((p) => p.unit === c.unit);
     if (!place) {
@@ -267,13 +280,17 @@ export function layout(draft, cut, map, cfg) {
         }),
         lands,
         mark,
-        note: l.note ?? null
+        note: l.note ?? null,
+        // The words the film speaks of this line, as the config holds them: null when narration.cut drops the line.
+        spoken: states.get(`${c.id}-${i + 1}`)?.spoken ?? null,
+        shortened: states.get(`${c.id}-${i + 1}`)?.shortened === true
       });
     });
   }
   if (errors.length) throw new Error(errors.join('\n'));
 
-  const approved = new Map(cfg.narration.clips.map((c) => [c.id, c]));
+  // The approved script is the spoken one: narration.clips less what narration.cut drops, a shortened line in its short words.
+  const approved = new Map(cfg.narration.clips.map((c) => [c.id, { lines: [...states.values()].filter((x) => x.clip === c.id && x.spoken !== null).map((x) => x.spoken) }]));
   // A clip's stretch of the film: its place, shared in film order where two clips speak in one place.
   const opens = (c) => Math.min(...c.lines.flatMap((l) => l.on ?? []).map((id) => cut.shots.find((x) => x.id === id).first));
   const clips = draft.clips.map((c, k) => {
@@ -294,6 +311,7 @@ export function layout(draft, cut, map, cfg) {
       lines: mine.length,
       characters: mine.reduce((a, r) => a + r.characters, 0),
       seconds: r2(mine.reduce((a, r) => a + r.seconds, 0)),
+      approvedLines: old ? old.lines.length : null,
       approvedCharacters: old ? old.lines.reduce((a, t) => a + [...t].length, 0) : null,
       approvedSeconds: old ? r2(old.lines.reduce((a, t) => a + estimateSeconds(t, estimate), 0)) : null
     };
@@ -318,8 +336,11 @@ export function layout(draft, cut, map, cfg) {
       lines: rows.length,
       characters: rows.reduce((a, r) => a + r.characters, 0),
       seconds: r2(rows.reduce((a, r) => a + r.seconds, 0)),
+      approvedLines: clips.reduce((a, c) => a + (c.approvedLines ?? 0), 0),
       approvedCharacters: clips.reduce((a, c) => a + (c.approvedCharacters ?? 0), 0),
       approvedSeconds: r2(clips.reduce((a, c) => a + (c.approvedSeconds ?? 0), 0)),
+      cutLines: rows.filter((r) => r.spoken === null).length,
+      shortenedLines: rows.filter((r) => r.shortened).length,
       marked: rows.filter((r) => r.mark).length,
       byKind: Object.fromEntries(KINDS.map((k) => [k, rows.filter((r) => r.mark?.kind === k).length]))
     }
@@ -359,6 +380,18 @@ export function factWords(x, r) {
 
 export const spareWords = (r) => (r.spare === null ? '' : `${r.spare >= 1.5 ? 'over 1.5' : r.spare.toFixed(1)} s to spare`);
 
+// What the cut of the narration does to a line, in words: nothing for a line the film speaks whole.
+// A sheet written before the cut holds no such field, and says nothing.
+export const filmWords = (r) =>
+  r.spoken === null ? 'Cut from the film. The line is recorded and kept, and the film does not speak it.' : r.shortened === true ? `Cut to its first words in the film, which speaks: "${r.spoken}" The whole line is recorded and kept.` : '';
+
+// One sentence for the head of the sheet: how much of the draft the film speaks. Empty when it speaks all of it.
+export const cutIntro = (sheet) => {
+  const t = sheet.totals;
+  if (!(t.cutLines > 0 || t.shortenedLines > 0)) return '';
+  return `The film speaks ${t.approvedLines} of these ${t.lines} lines, with ${cutWords(t.cutLines, t.shortenedLines)}. A line the cut touches says so under its words. Every recording is kept.`;
+};
+
 export function rowHtml(r, { src }) {
   const pics = (r.pictures ?? [])
     .map((p) => `<figure><img src="${esc(src(p))}" alt="${esc(p.label)}" width="${p.width}" height="${p.height}" loading="lazy" decoding="async"><figcaption>${esc(p.label)}</figcaption></figure>`)
@@ -372,11 +405,12 @@ export function rowHtml(r, { src }) {
         .join('')}</ol>`
     : '';
   return [
-    `<article class="row${r.mark ? ` marked ${r.mark.kind}` : ''}">`,
+    `<article class="row${r.mark ? ` marked ${r.mark.kind}` : ''}${r.spoken === null ? ' cut' : ''}">`,
     `<div class="when"><span class="id">${esc(r.id)}</span><span class="time">${clock(r.start)}</span><span class="len">${r.seconds.toFixed(1)} s, to ${clock(r.end)}</span>${r.spare !== null ? `<span class="len">${spareWords(r)}</span>` : ''}<span class="chip">${verdictWords(r)}</span></div>`,
     `<div class="pics${(r.pictures ?? []).length === 1 ? ' one' : ''}">${pics}</div>`,
     '<div class="say">',
     `<p class="text">${esc(r.text)}</p>`,
+    filmWords(r) ? `<p class="film">${esc(filmWords(r))}</p>` : '',
     `<p class="shot">${esc(shotWords(r))}</p>`,
     r.lands.length ? `<p class="lands">${esc(r.lands.join(' '))}</p>` : '',
     r.mark ? `<p class="why">${esc(r.mark.why)}</p>` : '',
@@ -396,7 +430,7 @@ export function clipHtml(sheet, clip, opts) {
   const tag = opts.tag ?? 'section';
   return [
     `<${tag} class="script-clip"${opts.id ? ` id="${esc(opts.id)}"` : ''}>`,
-    `<header><span class="id">${esc(c.id)}</span><span class="title">${esc(c.title)}</span><span class="facts">${clock(c.from)} to ${clock(c.to)} · ${c.seconds.toFixed(1)} s of speech, ${c.approvedSeconds === null ? 'no approved clip' : `${c.approvedSeconds.toFixed(1)} s in the approved script`} · ${marked ? `${marked} of ${rows.length} lines marked` : 'no line marked'}</span></header>`,
+    `<header><span class="id">${esc(c.id)}</span><span class="title">${esc(c.title)}</span><span class="facts">${clock(c.from)} to ${clock(c.to)} · ${c.seconds.toFixed(1)} s of speech, ${c.approvedSeconds === null ? 'no approved clip' : `${c.approvedSeconds.toFixed(1)} s in the approved script${typeof c.approvedLines === 'number' && c.approvedLines !== rows.length ? `, which speaks ${c.approvedLines} of these ${rows.length} lines` : ''}`} · ${marked ? `${marked} of ${rows.length} lines marked` : 'no line marked'}</span></header>`,
     ...rows.map((r) => rowHtml(r, opts)),
     `</${tag}>`
   ].join('\n');
@@ -434,6 +468,8 @@ export const SHEET_CSS = `
 .row .lands { margin-top: 6px !important; color: var(--soft); font-size: 14px; line-height: 1.4; }
 .row .text { font: 400 25px/1.3 var(--serif); }
 .row .shot { margin-top: 8px !important; color: var(--soft); font-size: 14px; line-height: 1.4; }
+.row .film { margin-top: 8px !important; color: var(--ember); font-size: 15px; line-height: 1.45; }
+.row.cut .text { color: var(--faint); }
 .row .why { margin-top: 10px !important; padding-left: 12px; border-left: 2px solid var(--ember); font-size: 15px; line-height: 1.45; }
 .row .note { margin-top: 10px !important; color: var(--soft); font-size: 15px; line-height: 1.45; }
 .row .swap { margin: 10px 0 0; padding: 0; list-style: none; counter-reset: swap; }
@@ -444,7 +480,7 @@ export const SHEET_CSS = `
 .narrow .row { grid-template-columns: 92px 250px minmax(0, 1fr); gap: 16px; }
 .narrow .row .pics, .narrow .row .pics.one { grid-template-columns: 1fr; }
 .narrow .row .text { font-size: 24px; }
-.narrow .row .why, .narrow .row .note { font-size: 15.5px; }
+.narrow .row .why, .narrow .row .note, .narrow .row .film { font-size: 15.5px; }
 .narrow .row .shot, .narrow .row .lands, .narrow .row .swap .fact, .narrow .row .when .len { font-size: 14.5px; }
 .narrow .row .pics figcaption { font-size: 13px; color: var(--soft); }
 .inline .row { grid-template-columns: 210px minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: "when say" "pics say"; gap: 10px 20px; }
@@ -490,13 +526,16 @@ export function markdown(sheet) {
   const out = ['# The script sheet', ''];
   const [first, second] = intro(sheet);
   out.push(first, '', second, '');
+  if (cutIntro(sheet)) out.push(cutIntro(sheet), '');
+  // A sheet written since the cut says how many lines of each clip the approved script speaks.
+  const spoke = (n) => (typeof n === 'number' ? `${n} ${n === 1 ? 'line' : 'lines'}, ` : '');
   out.push('| Clip | Place | In the film | Draft | Approved script |', '| --- | --- | --- | --- | --- |');
-  for (const c of sheet.clips) out.push(`| ${c.id} | ${c.title} | ${clock(c.from)} to ${clock(c.to)} | ${c.seconds.toFixed(1)} s, ${c.characters} characters | ${c.approvedSeconds?.toFixed(1) ?? '?'} s, ${c.approvedCharacters ?? '?'} characters |`);
-  out.push(`| all | | | ${sheet.totals.seconds.toFixed(1)} s, ${sheet.totals.characters} characters | ${sheet.totals.approvedSeconds.toFixed(1)} s, ${sheet.totals.approvedCharacters} characters |`, '');
+  for (const c of sheet.clips) out.push(`| ${c.id} | ${c.title} | ${clock(c.from)} to ${clock(c.to)} | ${spoke(typeof c.approvedLines === 'number' ? c.lines : undefined)}${c.seconds.toFixed(1)} s, ${c.characters} characters | ${spoke(c.approvedLines)}${c.approvedSeconds?.toFixed(1) ?? '?'} s, ${c.approvedCharacters ?? '?'} characters |`);
+  out.push(`| all | | | ${spoke(typeof sheet.totals.approvedLines === 'number' ? sheet.totals.lines : undefined)}${sheet.totals.seconds.toFixed(1)} s, ${sheet.totals.characters} characters | ${spoke(sheet.totals.approvedLines)}${sheet.totals.approvedSeconds.toFixed(1)} s, ${sheet.totals.approvedCharacters} characters |`, '');
   for (const c of sheet.clips) {
     out.push(`## ${c.id} · ${c.title}`, '');
     for (const r of sheet.rows.filter((x) => x.clip === c.id)) {
-      out.push(`**${r.id}** · ${clock(r.start)} to ${clock(r.end)} (${r.seconds.toFixed(1)} s${r.spare !== null ? `, ${spareWords(r)}` : ''}) · ${verdictWords(r)}`, '', `> ${r.text}`, '', `On: ${shotWords(r)}.${r.lands.length ? ` ${r.lands.join(' ')}` : ''}`);
+      out.push(`**${r.id}** · ${clock(r.start)} to ${clock(r.end)} (${r.seconds.toFixed(1)} s${r.spare !== null ? `, ${spareWords(r)}` : ''}) · ${verdictWords(r)}`, '', `> ${r.text}`, '', ...(filmWords(r) ? [filmWords(r), ''] : []), `On: ${shotWords(r)}.${r.lands.length ? ` ${r.lands.join(' ')}` : ''}`);
       if ((r.pictures ?? []).length) out.push('', r.pictures.map((p) => `![${p.label}](../${p.file})`).join(' '));
       if (r.mark) {
         out.push('', `Marked: ${r.mark.why}`, '');

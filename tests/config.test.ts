@@ -238,6 +238,47 @@ describe('names that must exist', () => {
     expectLoud(broken((c) => { first(c.narration.clips).unit = NO_UNIT; }), /narration clip .* unit that does not exist: no-such-unit/);
   });
 
+  it('holds the cut of the narration: the dropped lines and the short n8-4', () => {
+    const cut = real().narration.cut;
+    expect(cut.dropped).toEqual(['n2-3', 'n2-4', 'n3-4', 'n4-3', 'n4-4', 'n5-4', 'n6-4', 'n7-3', 'n7-4', 'n8-2']);
+    expect(cut.shortened).toEqual([{ id: 'n8-4', text: 'Everything here feeds on it.', endSeconds: 2.15, fadeOutSeconds: 0.05, file: 'audio/kept/lines/n8-4-short.wav' }]);
+    expect(real().narration.clips.flatMap((c) => c.lines).length).toBe(32);
+  });
+
+  it('passes an empty cut, and fails a cut that is missing or of the wrong type', () => {
+    expect(validate(broken((c) => { c.narration.cut = { dropped: [], shortened: [] }; }), approved)).toEqual([]);
+    expect(validate(without('narration.cut'), approved)).toEqual(['missing key: narration.cut']);
+    expect(validate(without('narration.cut.dropped'), approved)).toEqual(['missing key: narration.cut.dropped']);
+    expect(validate(without('narration.cut.shortened'), approved)).toEqual(['missing key: narration.cut.shortened']);
+    expectLoud(broken((c) => { (c.narration as Bag).cut = []; }), /wrong type: narration\.cut has to be an object/);
+    expectLoud(broken((c) => { (c.narration.cut as Bag).dropped = 'n2-3'; }), /wrong type: narration\.cut\.dropped has to be a list/);
+    expectLoud(broken((c) => { (c.narration.cut as Bag).shortened = {}; }), /wrong type: narration\.cut\.shortened has to be a list/);
+  });
+
+  it('fails a cut that drops a line that does not exist, or one line twice', () => {
+    expectLoud(broken((c) => { c.narration.cut.dropped.push('n9-1'); }), /narration\.cut\.dropped names a line that does not exist: n9-1/);
+    expectLoud(broken((c) => { c.narration.cut.dropped.push('n8-5'); }), /names a line that does not exist: n8-5/);
+    expectLoud(broken((c) => { (c.narration.cut.dropped as unknown[]).push(3); }), /names a line that does not exist: 3/);
+    expectLoud(broken((c) => { c.narration.cut.dropped.push('n2-3'); }), /narration\.cut\.dropped names n2-3 twice/);
+  });
+
+  it('fails a shortened line that is not the first words of a recorded line that stays', () => {
+    const short = (change: (s: Bag) => void) => broken((c) => { change(first(c.narration.cut.shortened) as Bag); });
+    expectLoud(short((s) => { s.id = 'n9-1'; }), /shortened\[0\] names a line that does not exist: n9-1/);
+    expectLoud(short((s) => { s.id = 'n8-2'; s.text = 'None of it'; }), /shortens n8-2, which narration\.cut\.dropped drops/);
+    expectLoud(broken((c) => { c.narration.cut.shortened.push({ ...first(c.narration.cut.shortened) }); }), /shortened\[1\] shortens n8-4 a second time/);
+    expectLoud(short((s) => { s.text = 'And it is not finished.'; }), /text has to be the first words of the recorded line n8-4/);
+    expectLoud(short((s) => { s.text = 'Everything here feeds on it. And it is not finished.'; }), /and shorter than it/);
+    expectLoud(short((s) => { s.text = ''; }), /text has to be the first words/);
+    expectLoud(short((s) => { delete s.text; }), /text has to be the first words/);
+    expectLoud(short((s) => { s.endSeconds = 0; }), /endSeconds has to be a number over 0/);
+    expectLoud(short((s) => { s.endSeconds = '2.15'; }), /endSeconds has to be a number over 0/);
+    expectLoud(short((s) => { s.fadeOutSeconds = -0.01; }), /fadeOutSeconds has to be a number from 0 to endSeconds/);
+    expectLoud(short((s) => { s.fadeOutSeconds = 2.2; }), /fadeOutSeconds has to be a number from 0 to endSeconds/);
+    expectLoud(short((s) => { delete s.file; }), /file has to name the sound file of the short line/);
+    expectLoud(broken((c) => { (c.narration.cut.shortened as unknown[]).push(null); }), /shortened\[1\] is not an object/);
+  });
+
   it('fails when a settled line names a key that does not exist', () => {
     expectLoud(broken((c) => { (c.settled as Record<string, string[]>)[NO_KEY] = ['A line for a picture that is not there.']; }), /key that does not exist: no-such-key/);
   });

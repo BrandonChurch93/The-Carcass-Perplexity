@@ -179,7 +179,19 @@
           "Everything here feeds on it. And it is not finished."
         ]
       }
-    ]
+    ],
+    "cut": {
+      "dropped": ["n2-3", "n2-4", "n3-4", "n4-3", "n4-4", "n5-4", "n6-4", "n7-3", "n7-4", "n8-2"],
+      "shortened": [
+        {
+          "id": "n8-4",
+          "text": "Everything here feeds on it.",
+          "endSeconds": 2.15,
+          "fadeOutSeconds": 0.05,
+          "file": "audio/kept/lines/n8-4-short.wav"
+        }
+      ]
+    }
   },
   "audio": {
     "sampleRate": 48000,

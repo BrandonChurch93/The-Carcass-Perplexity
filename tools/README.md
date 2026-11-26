@@ -154,16 +154,39 @@ The build makes a web copy of the mix: `closeBundle` in `vite.config.ts` calls `
 | --- | --- |
 | `npm run audiomap` | Reads the music and writes `cut/MAP.json`: tempo, beats, bar lines, hits, sections, the quiet and the landmarks, with how each compares with `music.landmarks`. `--from-landmarks` writes the map from the config when there is no music file. `--plot PATH` draws it |
 | `npm run voice` | Makes the narration with the voice tool, checks every take and keeps one for each clip. See "The voice" below |
-| `npm run cut` | Compiles `cut/PLAN.json`, the hand-written plan in bars and beats, against the map and the kept lines into `cut/CUTLIST.json` and `cut/CUES.md`, and checks the rules as it goes |
+| `npm run cut` | Compiles `cut/PLAN.json`, the hand-written plan in bars and beats, against the map and the kept lines into `cut/CUTLIST.json` and `cut/CUES.md`, and checks the rules as it goes. It lays the spoken script, see "The recorded script and the spoken script" below |
+| `npm run cut -- --shorten` | Makes the short form of every line that `narration.cut` shortens, from its kept line, with its record. It calls no service and gives the same bytes on every run |
 | `npm run mix` | Builds the soundtrack from the cut list: `audio/mix/mix.flac` and its report `audio/mix/mix.json`. Made twice from the same inputs it is byte for byte the same |
 | `npm run animatic` | Makes the animatic from the cut list, the approved pictures and the mix: `out/work/film/animatic.mp4` |
+
+### The recorded script and the spoken script
+
+`narration.clips` in the config is the recorded script: every line the voice read, 8 clips of 4 lines. It is the record of what was recorded and it does not change when the film is cut. The voice tool, the records under `audio/records/` and check A1 read it.
+
+`narration.cut` in the config is the cut the film speaks:
+
+```json
+"cut": {
+  "dropped": ["n2-3", "n8-2"],
+  "shortened": [{ "id": "n8-4", "text": "Everything here feeds on it.", "endSeconds": 2.15, "fadeOutSeconds": 0.05, "file": "audio/kept/lines/n8-4-short.wav" }]
+}
+```
+
+- `dropped`: the ids of the lines the film does not speak, as the clip id, a dash and the number of the line.
+- `shortened`: a line the film speaks in its first words only. `text` is those words and has to be the start of the recorded line. `endSeconds` is where the sound ends in the kept line, `fadeOutSeconds` the fade out before that end, `file` the short form.
+- Both lists have to be there. Empty lists mean the film speaks the recorded script whole.
+
+The spoken script is the recorded script less the dropped lines, with a shortened line in its short words. `tools/lib/script.mjs` works it out, and the plan, the cut list, the cue sheet, the script sheet, the review page, the mix and check G16 read it. A line keeps its id in both scripts, so nothing is renumbered and no file is renamed: `n8-3` is line 3 of clip n8 whether or not line 2 is spoken. `cut/PLAN.json` has to hold every spoken line and no other, and the compile says so when it does not. To bring a dropped line back, take its id out of `dropped` and give it a position in the plan.
+
+The short form of a line is the kept line from its start to `endSeconds`, sample for sample, with a raised cosine fade over its last `fadeOutSeconds`: no gain, no limiter, no dither. The cut has to lie in a silence, where the kept line stays under -60 dBFS from the start of the fade to past the cut, or the tool refuses it. The kept line is read and never written. `npm run cut` stops when a short form is missing or is not what its kept line gives, so the cut list never names a stale file.
 
 ### Where the sound and cut files live
 
 ```
 audio/supplied/The-Carcass-Audio.mp3     the music, 233.51 s, 44.1 kHz stereo
 audio/kept/narration/<clip>.mp3          a whole narration clip as the voice tool returned it, clip ids n1 to n8
-audio/kept/lines/<clip>-<line>.wav       one spoken line, 48 kHz mono, levelled, trimmed. <line> is 1 to 4
+audio/kept/lines/<clip>-<line>.wav       one recorded line, 48 kHz mono, levelled, trimmed. <line> is 1 to 4
+audio/kept/lines/<clip>-<line>-short.wav the short form of a line that narration.cut shortens, made by `npm run cut -- --shorten`
 audio/kept/sounds/<unit>/<id>.wav        a bed or a spot sound
 audio/records/<id>.md                    one text record for each kept clip and sound (format in kit/06-ASSETS.md, "Records of sounds")
 audio/mix/mix.flac                       the newest mix, 48 kHz stereo, 16 bit
@@ -241,7 +264,7 @@ Written by `npm run cut`. Frames are film frames at `film.fps` (60). Frame `f` s
 - `places`: one entry for each unit in `film.order`, in that order, filling frames 0 to `frameCount - 1` with no gap and no overlap.
 - `shots`: fill frames 0 to `frameCount - 1` with no gap and no overlap, each inside one place. A cut is the first frame of every shot but the first. `key` is the key the shot answers, or `null`. `picture` is the key whose approved picture stands in for the shot in the animatic, or `"black"`. `move` is `in`, `out`, `hold`, `left` or `right`. `label` is the small text the animatic shows.
 - `keyFrames`: one frame for every key in `keys` of the config (34 keys), each inside its own unit's span.
-- `lines`: every line of `narration.clips` in script order. `first` is the frame it starts on and `frames` its length. `file` is `null` while no clip is kept. `carried` is true when the line is meant to run across a cut between places.
+- `lines`: every line of the spoken script in script order, which is `narration.clips` less what `narration.cut` drops. A shortened line has its short words in `text` and its short form in `file`. A line keeps its `clip` and its `line` whatever is cut around it. `first` is the frame it starts on and `frames` its length. `file` is `null` while no clip is kept. `carried` is true when the line is meant to run across a cut between places.
 - `events`: a moment in the picture that lands on the music. `accent` is the music time of the mapped accent it lands on.
 - `titanFrame`: the first frame with the whole body in view.
 - `sounds`: beds and spot sounds. Empty in Phase 1. `event` names the event a spot sound belongs to, or is `null`.

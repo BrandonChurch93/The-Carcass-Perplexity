@@ -1,9 +1,10 @@
 import { CUT_LIST, readJsonIf, report, skip, num, count, isWhole, placeOf } from './inputs.mjs';
+import { spokenLines } from '../lib/script.mjs';
 
 export const TITAN_LINE = 3;
 
-export const scriptLines = (cfg) =>
-  cfg.narration.clips.flatMap((c) => c.lines.map((text, i) => ({ clip: c.id, line: i + 1, text, unit: c.unit })));
+// The script the film speaks: narration.clips less what narration.cut drops, a shortened line in its short words.
+export const scriptLines = (cfg) => spokenLines(cfg);
 
 export const titanClip = (cfg) => cfg.narration.clips[cfg.narration.clips.length - 1];
 
@@ -16,16 +17,16 @@ export function words(cut, cfg) {
   const want = scriptLines(cfg);
   const got = Array.isArray(cut.lines) ? cut.lines : [];
 
-  if (got.length !== want.length) faults.push(`${CUT_LIST} holds ${count(got.length, 'line')} and narration.clips holds ${want.length}.`);
+  if (got.length !== want.length) faults.push(`${CUT_LIST} holds ${count(got.length, 'line')} and the spoken script holds ${want.length}.`);
   let same = 0;
   for (let i = 0; i < Math.min(got.length, want.length); i++) {
     const g = got[i];
     const w = want[i];
     if (g.clip !== w.clip || g.line !== w.line) faults.push(`Line ${i + 1} of the cut list is line ${g.line} of clip ${g.clip}, and the script has line ${w.line} of clip ${w.clip} there.`);
-    else if (g.text !== w.text) faults.push(`${name(w)} reads "${g.text}" in the cut list and "${w.text}" in narration.clips.`);
+    else if (g.text !== w.text) faults.push(`${name(w)} reads "${g.text}" in the cut list and "${w.text}" in the spoken script.`);
     else same++;
   }
-  info.push(`${same} of ${count(want.length, 'line')} of narration.clips are in the cut list word for word and in order.`);
+  info.push(`${same} of ${count(want.length, 'line')} of the spoken script are in the cut list word for word and in order.`);
 
   const timed = got.filter((l) => {
     const ok = isWhole(l.first) && isWhole(l.frames) && l.frames > 0;

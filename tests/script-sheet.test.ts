@@ -150,7 +150,10 @@ describe('the script sheet', () => {
 
   it('says how long the draft is against the approved script', () => {
     expect(sheet.totals.seconds).toBeCloseTo(sheet.rows.reduce((a: number, r: any) => a + r.seconds, 0), 1);
-    expect(sheet.totals.approvedSeconds).toBeGreaterThan(100);
+    // The approved script is the spoken one, 22 of the 32 lines: 70.45 s by the estimate of the sheet.
+    expect(sheet.totals.approvedLines).toBe(22);
+    expect(sheet.totals.approvedSeconds).toBe(70.45);
+    expect(sheet.totals.approvedCharacters).toBe(628);
     expect(sheet.totals.seconds).toBeGreaterThan(sheet.totals.approvedSeconds);
     expect(sheet.rules.some((r: string) => r.startsWith('About the same length as now'))).toBe(true);
   });
@@ -171,25 +174,55 @@ describe('the script sheet', () => {
 });
 
 describe('the sheet that is committed', () => {
-  // The committed sheet is the record of the draft stage (2026-11-25). Its "approved" lengths are those of the script the
-  // config held then, the one the draft replaced, so they are left out of the comparison with what the tool makes today:
-  // the config now holds the final script. The one rule line that quotes that length is left out with them.
-  const noApproved = (o: any) => ({ ...o, approvedCharacters: undefined, approvedSeconds: undefined });
+  // The committed sheet is the draft of 2026-11-25 laid out again since the narration was cut (2026-11-26). Its
+  // "approved" lengths are those of the approved script, the 22 lines the film speaks, so nothing but the pictures is
+  // left out of the comparison with what the tool makes today. One rule line quotes that length.
   const quotesApproved = (line: string) => /approved script is [\d.]+ s/.test(line);
   const bare = (s: any) => ({
     ...s,
     sheets: undefined,
-    clips: s.clips.map(noApproved),
-    totals: noApproved(s.totals),
-    rules: s.rules.filter((x: any) => !quotesApproved(typeof x === 'string' ? x : JSON.stringify(x))),
     rows: s.rows.map((r: any) => ({ ...r, pictures: undefined })),
     unnamed: s.unnamed.map((u: any) => ({ ...u, thumb: undefined }))
   });
 
-  it('is what the tool makes from the draft and the cut list today, but for the lengths of the script the draft replaced', () => {
+  it('is what the tool makes from the draft, the cut list and the cut of the narration today', () => {
     expect(JSON.parse(JSON.stringify(bare(saved)))).toEqual(JSON.parse(JSON.stringify(bare(sheet))));
     expect(saved.rules.filter((x: any) => quotesApproved(typeof x === 'string' ? x : JSON.stringify(x)))).toHaveLength(1);
-    expect(saved.totals.approvedSeconds).toBe(126.1);
+    expect(saved.totals.approvedSeconds).toBe(70.45);
+    expect(saved.totals).toMatchObject({ lines: 32, approvedLines: 22, cutLines: 10, shortenedLines: 1 });
+  });
+
+  it('says of every line what the cut of the narration does to it', () => {
+    const gone = saved.rows.filter((r: any) => r.spoken === null).map((r: any) => r.id);
+    expect(gone).toEqual(['n2.3', 'n2.4', 'n3.4', 'n4.3', 'n4.4', 'n5.4', 'n6.4', 'n7.3', 'n7.4', 'n8.2']);
+    expect(saved.rows.filter((r: any) => r.shortened).map((r: any) => [r.id, r.spoken])).toEqual([['n8.4', 'Everything here feeds on it.']]);
+    // A line the film speaks is spoken in the words the config holds for it.
+    const recorded = cfg.narration.clips.flatMap((c: any) => c.lines.map((text: string, i: number) => [`${c.id}.${i + 1}`, text]));
+    for (const [id, text] of recorded) {
+      const r = saved.rows.find((x: any) => x.id === id);
+      if (r.spoken !== null && !r.shortened) expect(r.spoken, id).toBe(text);
+    }
+    expect(saved.clips.map((c: any) => c.approvedLines)).toEqual([4, 2, 3, 2, 3, 3, 2, 3]);
+    const md = markdown(saved);
+    expect(md).toContain('The film speaks 22 of these 32 lines, with 10 lines cut from the film whole and 1 line cut to its first words.');
+    expect(md.match(/^Cut from the film\. /gm)).toHaveLength(10);
+    expect(md).toContain('Cut to its first words in the film, which speaks: "Everything here feeds on it." The whole line is recorded and kept.');
+    const n8 = clipHtml(saved, 'n8', { src: (p: any) => p.file });
+    expect(n8.match(/<article class="row[^"]* cut">/g)).toHaveLength(1);
+    expect(n8.match(/<p class="film">/g)).toHaveLength(2);
+    expect(n8).toContain('which speaks 3 of these 4 lines');
+    expect(clipHtml(saved, 'n1', { src: (p: any) => p.file })).not.toContain('<p class="film">');
+  });
+
+  it('lays the same draft with nothing cut when the cut is empty', () => {
+    const whole = layout(draft, cut, map, { ...cfg, narration: { ...cfg.narration, cut: { dropped: [], shortened: [] } } });
+    expect(whole.totals).toMatchObject({ lines: 32, approvedLines: 32, cutLines: 0, shortenedLines: 0 });
+    expect(whole.rows.every((r: any) => typeof r.spoken === 'string' && r.shortened === false)).toBe(true);
+    expect(whole.rules.find((r: string) => r.startsWith('About the same length as now'))).toMatch(/where the approved script is [\d.]+ s, by the same estimate/);
+    expect(markdown(whole)).not.toContain('The film speaks');
+    // The rows are judged as they were: the cut changes what the film speaks, not where a line of the draft lies.
+    const strip = (r: any) => ({ ...r, spoken: undefined, shortened: undefined });
+    expect(whole.rows.map(strip)).toEqual(sheet.rows.map(strip));
   });
 
   it('carries a picture for every line and every unnamed thing, and the files are there', () => {

@@ -1,6 +1,7 @@
 // The script sheet: lays cut/SCRIPT-DRAFT.json against the cut list and writes cut/SCRIPT-SHEET.json, cut/SCRIPT-SHEET.md,
 // one small picture for every shot a line falls on and one sheet picture a clip, all under out/stills/script.
 // It makes no sound and it does not touch narration.clips in the config: the draft stays a draft until the script is final.
+// The approved script it sets the draft beside is the spoken one, and each line says what narration.cut does to it.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -63,10 +64,16 @@ export function picturePlan(row, cut, cfg, have = { heart: true, preview: true }
   return out.slice(0, 2);
 }
 
+// A frame of a film that is already in out/stills/script stands when that film is not on this machine:
+// the films are not in the repo and the frames are, and a frame is named by its line, its shot and its time.
+const onDisk = (plan) => fs.existsSync(path.join(DIR, `${plan.name}.jpg`));
+const stands = (plan) => !plan.video || fs.existsSync(plan.video) || onDisk(plan);
+
 async function make(plan, cfg, made) {
   const file = path.join(DIR, `${plan.name}.jpg`);
   if (!made.has(file)) {
-    if (plan.video) await fromVideo(plan.video, plan.at, file);
+    if (plan.video && !fs.existsSync(plan.video) && onDisk(plan)) made.kept = (made.kept ?? 0) + 1;
+    else if (plan.video) await fromVideo(plan.video, plan.at, file);
     else await fromKey(cfg.keys.find((k) => k.id === plan.key).image, file);
     made.add(file);
   }
@@ -147,21 +154,21 @@ async function main() {
 
   fs.mkdirSync(DIR, { recursive: true });
   const have = { heart: fs.existsSync(HEART), preview: fs.existsSync(PREVIEW) };
-  if (!have.heart) console.log(`script: ${short(HEART)} is not here, the Heart's lines get their approved key pictures`);
-  if (!have.preview) console.log(`script: ${short(PREVIEW)} is not here, the two long moves get their approved key pictures only`);
+  if (!have.heart) console.log(`script: ${short(HEART)} is not here: a line of the Heart keeps the frame of it that is in ${short(DIR)}, and gets its approved key picture where there is none`);
+  if (!have.preview) console.log(`script: ${short(PREVIEW)} is not here: a line on one of the two long moves keeps the frame of it that is in ${short(DIR)}, and gets its approved key picture only where there is none`);
   const made = new Set();
+  const all = { heart: true, preview: true };
   for (const r of sheet.rows) {
     r.pictures = [];
-    for (const p of picturePlan(r, cut, cfg, have)) r.pictures.push(await make(p, cfg, made));
+    const full = picturePlan(r, cut, cfg, all);
+    for (const p of full.every(stands) ? full : picturePlan(r, cut, cfg, have)) r.pictures.push(await make(p, cfg, made));
   }
   for (const u of sheet.unnamed) {
     const shot = cut.shots.find((x) => x.id === u.shot);
     const mid = (u.from + u.to) / 2;
     const heart = cut.places.find((p) => p.unit === 'heart');
-    const plan =
-      shot.unit === 'heart' && have.heart
-        ? { video: HEART, at: mid - heart.first / cut.fps, name: `shown-${u.shot}-${tag(mid)}`, label: `${u.shot} at ${clock(mid)} · the Heart review clip, final tier` }
-        : { key: u.picture, name: `key-${u.picture}`, label: `${u.shot} · approved key picture ${u.picture}` };
+    const frame = { video: HEART, at: mid - heart.first / cut.fps, name: `shown-${u.shot}-${tag(mid)}`, label: `${u.shot} at ${clock(mid)} · the Heart review clip, final tier` };
+    const plan = shot.unit === 'heart' && stands(frame) ? frame : { key: u.picture, name: `key-${u.picture}`, label: `${u.shot} · approved key picture ${u.picture}` };
     u.thumb = await make(plan, cfg, made);
   }
   sheet.sheets = a['no-pictures'] ? [] : await pictures(sheet);
@@ -174,7 +181,8 @@ async function main() {
     console.log(`script: wrote the sheet for the thread to ${short(path.resolve(a.inline))}`);
   }
   console.log(`\nscript: ${sheet.totals.lines} lines, ${sheet.totals.marked} marked (${sheet.totals.byKind.length} too long, ${sheet.totals.byKind.tight} tight, ${sheet.totals.byKind.picture} for the picture).`);
-  console.log(`script: wrote ${short(SHEET)}, ${short(SHEET_MD)}, ${made.size - sheet.sheets.length} small pictures and ${sheet.sheets.length} sheets in ${short(DIR)}`);
+  console.log(`script: wrote ${short(SHEET)}, ${short(SHEET_MD)}, ${made.size - sheet.sheets.length} small pictures${made.kept ? `, ${made.kept} of them frames kept as they were` : ''}, and ${sheet.sheets.length} sheets in ${short(DIR)}`);
+  if (sheet.totals.cutLines || sheet.totals.shortenedLines) console.log(`script: the film speaks ${sheet.totals.approvedLines} of the ${sheet.totals.lines} lines, ${sheet.totals.cutLines} cut whole and ${sheet.totals.shortenedLines} cut to the first words`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

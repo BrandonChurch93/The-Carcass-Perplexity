@@ -60,12 +60,11 @@ function makeCut() {
   const place = (unit) => places.find((p) => p.unit === unit);
   const keyFrames = Object.fromEntries(cfg.keys.map((k) => [k.id, place(k.unit).first + (k.order + 1) * fps]));
   const seen = {};
-  const lines = cfg.narration.clips.flatMap((c) =>
-    c.lines.map((text, i) => {
-      const k = (seen[c.unit] = (seen[c.unit] ?? -1) + 1);
-      return { clip: c.id, line: i + 1, text, unit: c.unit, first: place(c.unit).first + fps + k * 200, frames: 120, file: null, carried: false };
-    })
-  );
+  // The made-up cut list holds the spoken script: narration.clips less what narration.cut drops.
+  const lines = g16.scriptLines(cfg).map((l) => {
+    const k = (seen[l.unit] = (seen[l.unit] ?? -1) + 1);
+    return { clip: l.clip, line: l.line, text: l.text, unit: l.unit, first: place(l.unit).first + fps + k * 200, frames: 120, file: null, carried: false };
+  });
   return {
     schema: 'carcass/cutlist 1',
     fps,
@@ -340,7 +339,7 @@ describe('G16, the words', () => {
     expect(r.faults[0]).toContain(`Line ${word.lines[5].line} of clip ${word.lines[5].clip} reads`);
     const less = makeCut();
     less.lines.pop();
-    expect(text(g16.words(less, cfg))).toContain(`holds ${less.lines.length} lines and narration.clips holds ${less.lines.length + 1}`);
+    expect(text(g16.words(less, cfg))).toContain(`holds ${less.lines.length} lines and the spoken script holds ${less.lines.length + 1}`);
     const swap = makeCut();
     [swap.lines[0], swap.lines[1]] = [{ ...swap.lines[1], first: swap.lines[0].first }, { ...swap.lines[0], first: swap.lines[1].first }];
     expect(text(g16.words(swap, cfg))).toContain('Line 1 of the cut list is line 2 of clip');

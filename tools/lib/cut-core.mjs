@@ -2,6 +2,7 @@ import { MUSIC_DIR, MS, near, num, isWhole } from '../checks/inputs.mjs';
 import { lengths } from '../checks/g7.mjs';
 import { cutFollowsMusic, accentsOf, nearest, musicTime } from '../checks/g11.mjs';
 import { words, scriptLines } from '../checks/g16.mjs';
+import { recordedLines } from './script.mjs';
 
 // The film plays the cleaned track when the config names one: the supplied track with two spots of laughter
 // taken out, the same length to the sample, so the map made from the supplied track holds for both.
@@ -74,6 +75,77 @@ export function wavSeconds(buf) {
     at += 8 + size + (size % 2);
   }
   return null;
+}
+
+// What a shortened line may be cut in: a stretch of the kept line where no sample reaches this level.
+export const CUT_SILENCE_DBFS = -60;
+
+function pcm16(buf) {
+  if (buf.length < 12 || buf.toString('ascii', 0, 4) !== 'RIFF' || buf.toString('ascii', 8, 12) !== 'WAVE') return null;
+  let at = 12;
+  let fmt = null;
+  while (at + 8 <= buf.length) {
+    const id = buf.toString('ascii', at, at + 4);
+    const size = buf.readUInt32LE(at + 4);
+    if (id === 'fmt ') fmt = { format: buf.readUInt16LE(at + 8), channels: buf.readUInt16LE(at + 10), rate: buf.readUInt32LE(at + 12), bits: buf.readUInt16LE(at + 22) };
+    if (id === 'data') {
+      if (!fmt || fmt.format !== 1 || fmt.bits !== 16) return null;
+      const bytes = Math.min(size, buf.length - at - 8);
+      return { ...fmt, data: buf.subarray(at + 8, at + 8 + bytes - (bytes % (2 * fmt.channels))) };
+    }
+    at += 8 + size + (size % 2);
+  }
+  return null;
+}
+
+// The short form of a kept line: the kept line from its start to endSeconds, sample for sample, with a raised cosine
+// fade out over its last fadeOutSeconds. No gain, no limiter, no dither, so the level of what stays is the kept line's.
+// The cut has to lie in a silence: from the start of the fade to the cut no sample of the kept line reaches
+// CUT_SILENCE_DBFS. The same kept line and the same numbers give the same bytes on every run.
+export function shortenWav(buf, { endSeconds, fadeOutSeconds }) {
+  const wav = pcm16(buf);
+  if (wav === null) throw new Error('it is no 16 bit PCM WAV file');
+  const step = 2 * wav.channels;
+  const total = wav.data.length / step;
+  const frames = Math.round(endSeconds * wav.rate);
+  const fade = Math.round(fadeOutSeconds * wav.rate);
+  if (!(frames > 0 && frames < total)) throw new Error(`it is ${num(total / wav.rate, 4)} s long, so it cannot end at ${endSeconds} s and be shorter`);
+  if (!(fade >= 0 && fade <= frames)) throw new Error(`a fade of ${fadeOutSeconds} s does not go into ${endSeconds} s`);
+  const limit = 32768 * 10 ** (CUT_SILENCE_DBFS / 20);
+  const loud = (frame) => {
+    for (let c = 0; c < wav.channels; c++) if (Math.abs(wav.data.readInt16LE(frame * step + 2 * c)) >= limit) return true;
+    return false;
+  };
+  let from = frames;
+  while (from > 0 && !loud(from - 1)) from--;
+  let to = frames;
+  while (to < total && !loud(to)) to++;
+  const silence = { from: from / wav.rate, to: to / wav.rate };
+  if (from > frames - fade || to <= frames) {
+    throw new Error(`the cut at ${endSeconds} s with a fade of ${fadeOutSeconds} s does not lie in a silence: the kept line is under ${CUT_SILENCE_DBFS} dBFS from ${num(silence.from, 3)} s to ${num(silence.to, 3)} s only`);
+  }
+  const out = Buffer.alloc(44 + frames * step);
+  out.write('RIFF', 0, 'ascii');
+  out.writeUInt32LE(36 + frames * step, 4);
+  out.write('WAVEfmt ', 8, 'ascii');
+  out.writeUInt32LE(16, 16);
+  out.writeUInt16LE(1, 20);
+  out.writeUInt16LE(wav.channels, 22);
+  out.writeUInt32LE(wav.rate, 24);
+  out.writeUInt32LE(wav.rate * step, 28);
+  out.writeUInt16LE(step, 32);
+  out.writeUInt16LE(16, 34);
+  out.write('data', 36, 'ascii');
+  out.writeUInt32LE(frames * step, 40);
+  wav.data.copy(out, 44, 0, frames * step);
+  for (let i = 0; i < fade; i++) {
+    const g = 0.5 + 0.5 * Math.cos((Math.PI * (i + 1)) / fade);
+    for (let c = 0; c < wav.channels; c++) {
+      const at = 44 + (frames - fade + i) * step + 2 * c;
+      out.writeInt16LE(Math.round(out.readInt16LE(at) * g), at);
+    }
+  }
+  return { bytes: out, rate: wav.rate, channels: wav.channels, frames, seconds: frames / wav.rate, keptSeconds: total / wav.rate, fadeFrames: fade, silence };
 }
 
 function lazy(kind, has, work) {
@@ -309,10 +381,11 @@ export function compile({ plan, map, cfg, kept = {} }) {
   });
 
   const ids = script.map(lineId);
+  const recordedIds = recordedLines(cfg).map(lineId);
   const given = planLines.map(lineId);
-  for (const id of ids) if (!given.includes(id)) errors.push(`line ${id}: it is in narration.clips and missing from the plan`);
+  for (const id of ids) if (!given.includes(id)) errors.push(`line ${id}: it is in the spoken script and missing from the plan`);
   given.forEach((id, i) => {
-    if (!ids.includes(id)) errors.push(`line ${id}: it is extra, narration.clips holds no such line`);
+    if (!ids.includes(id)) errors.push(`line ${id}: it is extra, ${recordedIds.includes(id) ? 'narration.cut drops that line' : 'narration.clips holds no such line'}`);
     else if (given.indexOf(id) !== i) errors.push(`line ${id}: it is in the plan twice`);
   });
   const sameSet = ids.length === given.length && ids.every((id) => given.includes(id));

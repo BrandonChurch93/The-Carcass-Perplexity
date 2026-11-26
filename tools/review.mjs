@@ -4,7 +4,8 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { ROOT, config, args, utc } from './lib/paths.mjs';
-import { clipHtml, unnamedHtml, rulesHtml, intro, repaired, clock, SHEET_CSS } from './lib/script-sheet-core.mjs';
+import { clipHtml, unnamedHtml, rulesHtml, intro, cutIntro, repaired, clock, SHEET_CSS } from './lib/script-sheet-core.mjs';
+import { lineStates } from './lib/script.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MB = 1e6;
@@ -320,19 +321,27 @@ export function collect(root = ROOT, cfg = config()) {
   const narrFiles = list(narrDir, SOUND);
   const byId = new Map(narrFiles.map((n) => [n.replace(SOUND, ''), n]));
   const narration = [];
+  // The words under a clip are the spoken script: what the film says of it. The kept clip is the recording whole,
+  // so a clip with a line the cut drops or shortens says under its words what the recording holds besides.
+  const states = lineStates(cfg);
   for (const c of cfg.narration.clips) {
     if (!byId.has(c.id)) continue;
     const n = byId.get(c.id);
     byId.delete(c.id);
     const rec = r('audio', 'records', `${c.id}.md`);
     const said = fs.existsSync(rec) ? madeFrom(fs.readFileSync(rec, 'utf8')) : [];
+    const mine = states.filter((x) => x.clip === c.id);
     narration.push({
       ...item(path.join(narrDir, n), `narration/${n}`),
       id: c.id,
       title: c.name ?? '',
       place: cfg.units.find((u) => u.id === c.unit)?.name ?? c.unit ?? '',
-      lines: c.lines ?? [],
-      // A kept clip whose record quotes other words than the script holds was made before the script changed.
+      lines: mine.filter((x) => x.spoken !== null).map((x) => x.spoken),
+      spoken: mine.filter((x) => x.spoken !== null).map((x) => ({ line: x.line, text: x.spoken })),
+      cut: mine.filter((x) => x.spoken === null).map((x) => ({ line: x.line, text: x.recorded })),
+      shortened: mine.filter((x) => x.shortened).map((x) => ({ line: x.line, text: x.spoken, recorded: x.recorded })),
+      recorded: (c.lines ?? []).length,
+      // A kept clip whose record quotes other words than the recorded script holds was made before the script changed.
       replaced: said.length > 0 && (c.lines ?? []).length > 0 && said.join('\n') !== (c.lines ?? []).join('\n')
     });
   }
@@ -519,6 +528,20 @@ function musicHtml(music) {
     .join('\n');
 }
 
+// The spoken lines of a clip, one a row. A line keeps its number in the clip, so a row after a cut line says its own.
+const spokenItems = (c) => (c.spoken ?? c.lines.map((text, i) => ({ line: i + 1, text }))).map((l, i) => `    <li${l.line === i + 1 ? '' : ` value="${l.line}"`}>${esc(l.text)}</li>`);
+
+// What the recording of a clip holds besides the words the film speaks. Empty for a clip the film speaks whole.
+export function cutNote(c) {
+  const cut = c.cut ?? [];
+  const short = c.shortened ?? [];
+  if (cut.length + short.length === 0) return '';
+  const out = [`The film speaks ${c.lines.length} of the ${c.recorded} lines this clip was recorded with. The recording below is the kept clip whole, so it says more than the lines above.`];
+  if (cut.length) out.push(`Cut from the film: ${cut.map((l) => `line ${l.line}, "${l.text}"`).join('; ')}`);
+  for (const l of short) out.push(`Line ${l.line} is cut to its first words in the film and goes on in the recording: "${l.recorded}"`);
+  return out.join(' ');
+}
+
 function scriptHtml(sheet, final = false) {
   const src = (p) => `review/script/${url(path.basename(p.file))}`;
   const [first, second] = intro(sheet);
@@ -529,12 +552,14 @@ function scriptHtml(sheet, final = false) {
     `<p class="lede">${esc(first)}</p>`,
     `<p class="lede">${esc(second)} Every marked line has two replacement lines under it, A and B. ${
       final
-        ? 'The script is final. The config holds these lines, each marked line as one of its replacements, and the clips under Listen are made from them and show the words as spoken. This sheet is the draft as it was laid out, kept as the record: its lengths are the worked out ones, and its last column is the script the draft replaced.'
+        ? typeof sheet.totals.approvedLines === 'number'
+          ? `The script is final. The config holds these lines, each marked line as one of its replacements, and the clips under Listen are made from them. ${cutIntro(sheet) ? `${cutIntro(sheet)} The words under Listen are the ones the film speaks.` : 'The words under Listen are the words as spoken.'} This sheet is the draft as it was laid out, kept as the record: its lengths are the worked out ones, and its last column is the approved script, the lines the film speaks, by the same estimate.`
+          : 'The script is final. The config holds these lines, each marked line as one of its replacements, and the clips under Listen are made from them and show the words as spoken. This sheet is the draft as it was laid out, kept as the record: its lengths are the worked out ones, and its last column is the script the draft replaced.'
         : 'No narration is made from this draft: the config keeps the approved script until the script is final.'
     }</p>`,
     '<div class="scroll">',
     '<table class="lengths">',
-    `  <thead><tr><th>Clip</th><th>Place</th><th>In the film</th><th>Draft</th><th>With every A</th><th>${final ? 'The script before' : 'Approved script'}</th><th>Marked</th></tr></thead>`,
+    `  <thead><tr><th>Clip</th><th>Place</th><th>In the film</th><th>Draft</th><th>With every A</th><th>${final && typeof sheet.totals.approvedLines !== 'number' ? 'The script before' : 'Approved script'}</th><th>Marked</th></tr></thead>`,
     '  <tbody>',
     ...sheet.clips.map(row),
     `    <tr class="all"><td>all</td><td></td><td></td><td>${sheet.totals.seconds.toFixed(1)} s</td><td>${repaired(sheet).toFixed(1)} s</td><td>${sheet.totals.approvedSeconds.toFixed(1)} s</td><td>${sheet.totals.marked} of ${sheet.totals.lines}</td></tr>`,
@@ -601,7 +626,8 @@ export function render(model, { date = utc(), total = 0 } = {}) {
           [
             '<article class="clip">',
             `  <header><span class="id">${esc(c.id)}</span><span class="title">${esc(c.title || c.name)}</span>${c.place ? `<span class="place">${esc(c.place)}</span>` : ''}</header>`,
-            c.lines.length ? `  <ol class="lines">\n${c.lines.map((l) => `    <li>${esc(l)}</li>`).join('\n')}\n  </ol>` : '  <p class="words">No words for this clip in the script.</p>',
+            c.lines.length ? `  <ol class="lines">\n${spokenItems(c).join('\n')}\n  </ol>` : '  <p class="words">No words for this clip in the script.</p>',
+            ...(cutNote(c) ? [`  <p class="take"><span>${esc(cutNote(c))}</span></p>`] : []),
             ...(c.replaced ? ['  <p class="take"><span>Made before the script changed. The lines above are the script as it stands, and this clip still speaks the older words.</span></p>'] : []),
             `  ${audio(c)}`,
             '</article>'

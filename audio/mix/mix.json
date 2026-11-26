@@ -6,7 +6,7 @@
   "channels": 2,
   "integratedLufs": -14,
   "truePeakDb": -1.1,
-  "gainDb": -2.59,
+  "gainDb": -2.72,
   "limited": true,
   "inputs": [
     {
@@ -38,14 +38,6 @@
       "sha256": "6e766c5ded04c9399fbc6e2d892931c45028410f57e6dcc0166a888d2c44e607"
     },
     {
-      "file": "audio/kept/lines/n2-3.wav",
-      "sha256": "90826bd79613c0a2e474cd75c4d4a7ad087d89c6a016da4503d2038235103763"
-    },
-    {
-      "file": "audio/kept/lines/n2-4.wav",
-      "sha256": "199525b6b7a52286c40f694ed8e2bd06cc8e8e373412adc0e036bb2983d2ff01"
-    },
-    {
       "file": "audio/kept/lines/n3-1.wav",
       "sha256": "53d979f3184a49eea50b1a264b30a61952be3b97e1a16bb9908fbea47abd62f7"
     },
@@ -58,24 +50,12 @@
       "sha256": "4d29e15abdea4fb7a122015a792a9b462dc8d2ff6b3807f2ad52ea7f0b90c614"
     },
     {
-      "file": "audio/kept/lines/n3-4.wav",
-      "sha256": "4a51131e228d6ae7165633823022b044ea294e8a57eff0e2348ebf3d998867d3"
-    },
-    {
       "file": "audio/kept/lines/n4-1.wav",
       "sha256": "b8b8f2bc0e1c65cffed7a989713363a54b59867243ba13d2b41685b45a1148c0"
     },
     {
       "file": "audio/kept/lines/n4-2.wav",
       "sha256": "f178e7a9c96f0eb2064308fc2abf3ba511dfe0d1412a952a870e470a3caa627a"
-    },
-    {
-      "file": "audio/kept/lines/n4-3.wav",
-      "sha256": "4f32dd02010668dc9eca9909c9e6167c225e6592188f2abb26deaa925f3d211e"
-    },
-    {
-      "file": "audio/kept/lines/n4-4.wav",
-      "sha256": "478424d96e2f03d791f0a5980e168dca5e26b48f70302aa0d31b2d39e6c42d07"
     },
     {
       "file": "audio/kept/lines/n5-1.wav",
@@ -90,10 +70,6 @@
       "sha256": "93a944722bfc2fced72c03a48068394c837de66c4c17dc15a0cf88a80248f722"
     },
     {
-      "file": "audio/kept/lines/n5-4.wav",
-      "sha256": "d660f4e78d9e4632b555415387e0d8d06d01acaad552e28be8c95790c2fbdef8"
-    },
-    {
       "file": "audio/kept/lines/n6-1.wav",
       "sha256": "f436c3e27b453a6ae963f5a4f10dc107188ba7c5db1bb05e2e8aca322a25e277"
     },
@@ -106,10 +82,6 @@
       "sha256": "4225e333f79b117c038c20a8286b5c27517895bf19939d61a5a6bdf35d12a670"
     },
     {
-      "file": "audio/kept/lines/n6-4.wav",
-      "sha256": "dc57e3c1f6ace338acd307b89c43d59dfae2f0ec7de9f93b3e9567b2a993d00a"
-    },
-    {
       "file": "audio/kept/lines/n7-1.wav",
       "sha256": "8446a2ad957a5abac01ac08d4fe247524ceb9f463743d9967bbf9df7a1f3d528"
     },
@@ -118,28 +90,16 @@
       "sha256": "eadb3776eb216abea92c84f93c87d7ff61f61faf4dc955ee09469e00d7f84987"
     },
     {
-      "file": "audio/kept/lines/n7-3.wav",
-      "sha256": "62056951ba9a1600d15a253b061f166240d336b9634cc31a2d78e56fdab9a03b"
-    },
-    {
-      "file": "audio/kept/lines/n7-4.wav",
-      "sha256": "d7ba72f8b5043fb09a2b0b2830123ee1aba5859bd3ceb67f5fb8241b4a76281a"
-    },
-    {
       "file": "audio/kept/lines/n8-1.wav",
       "sha256": "3fda8acaee9707222c5e01a68da977eb6072c0172abd4b48de7161e21af78f39"
-    },
-    {
-      "file": "audio/kept/lines/n8-2.wav",
-      "sha256": "94393068a1efebde2dcf4835b9ead031d0a35d0d9289068b6fb0c057186951bc"
     },
     {
       "file": "audio/kept/lines/n8-3.wav",
       "sha256": "435c914de09b0d132c292a7de4bbab2cd8fff99187b952c86b259c95670a719e"
     },
     {
-      "file": "audio/kept/lines/n8-4.wav",
-      "sha256": "d65cbca65f9e248441495294d5b690d6d97e7b2ad31e39e41d98a2cd412551e1"
+      "file": "audio/kept/lines/n8-4-short.wav",
+      "sha256": "13060d0f465692e646fa6bc117494c886e6b151babf9e098bb1644ab8482169d"
     },
     {
       "file": "audio/kept/sounds/ribs/ribs-bed.wav",
@@ -229,11 +189,11 @@
       "first": 84,
       "frames": 246,
       "duckDb": 3.17,
-      "voiceBandDb": -21.65,
-      "restBandDb": -27.65,
+      "voiceBandDb": -21.78,
+      "restBandDb": -27.78,
       "marginDb": 6,
-      "voiceDb": -16.55,
-      "restDb": -25.04
+      "voiceDb": -16.67,
+      "restDb": -25.16
     },
     {
       "clip": "n1",
@@ -241,11 +201,11 @@
       "first": 432,
       "frames": 122,
       "duckDb": 4.34,
-      "voiceBandDb": -21.86,
-      "restBandDb": -27.86,
+      "voiceBandDb": -21.98,
+      "restBandDb": -27.98,
       "marginDb": 6,
-      "voiceDb": -16.15,
-      "restDb": -24.67
+      "voiceDb": -16.27,
+      "restDb": -24.79
     },
     {
       "clip": "n1",
@@ -253,11 +213,11 @@
       "first": 654,
       "frames": 144,
       "duckDb": 1.05,
-      "voiceBandDb": -21,
-      "restBandDb": -27,
+      "voiceBandDb": -21.13,
+      "restBandDb": -27.13,
       "marginDb": 6,
-      "voiceDb": -16.83,
-      "restDb": -24.24
+      "voiceDb": -16.95,
+      "restDb": -24.36
     },
     {
       "clip": "n1",
@@ -265,11 +225,11 @@
       "first": 930,
       "frames": 87,
       "duckDb": 0,
-      "voiceBandDb": -22.43,
-      "restBandDb": -34.94,
+      "voiceBandDb": -22.55,
+      "restBandDb": -35.06,
       "marginDb": 12.51,
-      "voiceDb": -18.68,
-      "restDb": -31.33
+      "voiceDb": -18.81,
+      "restDb": -31.46
     },
     {
       "clip": "n2",
@@ -277,11 +237,11 @@
       "first": 1074,
       "frames": 71,
       "duckDb": 6.79,
-      "voiceBandDb": -23.24,
-      "restBandDb": -29.24,
+      "voiceBandDb": -23.36,
+      "restBandDb": -29.36,
       "marginDb": 6,
-      "voiceDb": -18.43,
-      "restDb": -22.83
+      "voiceDb": -18.56,
+      "restDb": -22.96
     },
     {
       "clip": "n2",
@@ -289,35 +249,11 @@
       "first": 1188,
       "frames": 217,
       "duckDb": 0,
-      "voiceBandDb": -20.51,
-      "restBandDb": -26.76,
+      "voiceBandDb": -20.63,
+      "restBandDb": -26.88,
       "marginDb": 6.25,
-      "voiceDb": -16.77,
-      "restDb": -20.01
-    },
-    {
-      "clip": "n2",
-      "line": 3,
-      "first": 1533,
-      "frames": 302,
-      "duckDb": 6.67,
-      "voiceBandDb": -21.33,
-      "restBandDb": -27.33,
-      "marginDb": 6,
-      "voiceDb": -17.38,
-      "restDb": -22.84
-    },
-    {
-      "clip": "n2",
-      "line": 4,
-      "first": 2016,
-      "frames": 383,
-      "duckDb": 7.88,
-      "voiceBandDb": -20.99,
-      "restBandDb": -26.99,
-      "marginDb": 6,
-      "voiceDb": -16.52,
-      "restDb": -24.64
+      "voiceDb": -16.89,
+      "restDb": -20.13
     },
     {
       "clip": "n3",
@@ -325,11 +261,11 @@
       "first": 2550,
       "frames": 67,
       "duckDb": 0,
-      "voiceBandDb": -20.65,
-      "restBandDb": -26.67,
-      "marginDb": 6.02,
-      "voiceDb": -17.74,
-      "restDb": -19.66
+      "voiceBandDb": -20.74,
+      "restBandDb": -26.78,
+      "marginDb": 6.04,
+      "voiceDb": -17.83,
+      "restDb": -19.77
     },
     {
       "clip": "n3",
@@ -337,11 +273,11 @@
       "first": 2658,
       "frames": 200,
       "duckDb": 6.49,
-      "voiceBandDb": -21.32,
-      "restBandDb": -27.32,
+      "voiceBandDb": -21.44,
+      "restBandDb": -27.44,
       "marginDb": 6,
-      "voiceDb": -17.14,
-      "restDb": -22.14
+      "voiceDb": -17.26,
+      "restDb": -22.27
     },
     {
       "clip": "n3",
@@ -349,23 +285,11 @@
       "first": 2964,
       "frames": 269,
       "duckDb": 7.4,
-      "voiceBandDb": -19.94,
-      "restBandDb": -25.94,
+      "voiceBandDb": -20.06,
+      "restBandDb": -26.06,
       "marginDb": 6,
-      "voiceDb": -17.03,
-      "restDb": -22.42
-    },
-    {
-      "clip": "n3",
-      "line": 4,
-      "first": 3414,
-      "frames": 303,
-      "duckDb": 8.89,
-      "voiceBandDb": -21.1,
-      "restBandDb": -27.1,
-      "marginDb": 6,
-      "voiceDb": -16.82,
-      "restDb": -23.73
+      "voiceDb": -17.15,
+      "restDb": -22.54
     },
     {
       "clip": "n4",
@@ -373,11 +297,11 @@
       "first": 4257,
       "frames": 80,
       "duckDb": 9,
-      "voiceBandDb": -26.15,
-      "restBandDb": -31.08,
+      "voiceBandDb": -26.27,
+      "restBandDb": -31.2,
       "marginDb": 4.93,
-      "voiceDb": -20.73,
-      "restDb": -27.24
+      "voiceDb": -20.85,
+      "restDb": -27.37
     },
     {
       "clip": "n4",
@@ -385,35 +309,11 @@
       "first": 4374,
       "frames": 314,
       "duckDb": 7.77,
-      "voiceBandDb": -21.7,
-      "restBandDb": -27.7,
+      "voiceBandDb": -21.82,
+      "restBandDb": -27.82,
       "marginDb": 6,
-      "voiceDb": -17.16,
-      "restDb": -23.53
-    },
-    {
-      "clip": "n4",
-      "line": 3,
-      "first": 4890,
-      "frames": 150,
-      "duckDb": 9,
-      "voiceBandDb": -20.67,
-      "restBandDb": -25.55,
-      "marginDb": 4.88,
-      "voiceDb": -16,
-      "restDb": -23.74
-    },
-    {
-      "clip": "n4",
-      "line": 4,
-      "first": 5178,
-      "frames": 380,
-      "duckDb": 9,
-      "voiceBandDb": -20.46,
-      "restBandDb": -26.11,
-      "marginDb": 5.64,
-      "voiceDb": -16.55,
-      "restDb": -23.95
+      "voiceDb": -17.28,
+      "restDb": -23.65
     },
     {
       "clip": "n5",
@@ -421,11 +321,11 @@
       "first": 5655,
       "frames": 96,
       "duckDb": 6.75,
-      "voiceBandDb": -21.01,
-      "restBandDb": -27.01,
+      "voiceBandDb": -21.14,
+      "restBandDb": -27.14,
       "marginDb": 6,
-      "voiceDb": -16.83,
-      "restDb": -21.84
+      "voiceDb": -16.96,
+      "restDb": -21.97
     },
     {
       "clip": "n5",
@@ -433,11 +333,11 @@
       "first": 5832,
       "frames": 300,
       "duckDb": 3.88,
-      "voiceBandDb": -21.66,
-      "restBandDb": -27.66,
+      "voiceBandDb": -21.78,
+      "restBandDb": -27.78,
       "marginDb": 6,
-      "voiceDb": -17.08,
-      "restDb": -21.88
+      "voiceDb": -17.2,
+      "restDb": -22
     },
     {
       "clip": "n5",
@@ -445,23 +345,11 @@
       "first": 6288,
       "frames": 228,
       "duckDb": 6.72,
-      "voiceBandDb": -19.72,
-      "restBandDb": -25.72,
+      "voiceBandDb": -19.85,
+      "restBandDb": -25.85,
       "marginDb": 6,
-      "voiceDb": -17.02,
-      "restDb": -23.79
-    },
-    {
-      "clip": "n5",
-      "line": 4,
-      "first": 6636,
-      "frames": 215,
-      "duckDb": 6.71,
-      "voiceBandDb": -20.5,
-      "restBandDb": -26.5,
-      "marginDb": 6,
-      "voiceDb": -17.42,
-      "restDb": -22.81
+      "voiceDb": -17.14,
+      "restDb": -23.91
     },
     {
       "clip": "n6",
@@ -469,11 +357,11 @@
       "first": 7035,
       "frames": 65,
       "duckDb": 5.29,
-      "voiceBandDb": -22.74,
-      "restBandDb": -28.74,
+      "voiceBandDb": -22.86,
+      "restBandDb": -28.86,
       "marginDb": 6,
-      "voiceDb": -16.59,
-      "restDb": -21.77
+      "voiceDb": -16.71,
+      "restDb": -21.89
     },
     {
       "clip": "n6",
@@ -481,11 +369,11 @@
       "first": 7137,
       "frames": 207,
       "duckDb": 8.07,
-      "voiceBandDb": -22.14,
-      "restBandDb": -28.14,
+      "voiceBandDb": -22.27,
+      "restBandDb": -28.27,
       "marginDb": 6,
-      "voiceDb": -17.75,
-      "restDb": -24.46
+      "voiceDb": -17.87,
+      "restDb": -24.58
     },
     {
       "clip": "n6",
@@ -493,23 +381,11 @@
       "first": 7500,
       "frames": 268,
       "duckDb": 9,
-      "voiceBandDb": -21.3,
-      "restBandDb": -25.18,
+      "voiceBandDb": -21.42,
+      "restBandDb": -25.3,
       "marginDb": 3.88,
-      "voiceDb": -17.09,
-      "restDb": -23.75
-    },
-    {
-      "clip": "n6",
-      "line": 4,
-      "first": 7908,
-      "frames": 230,
-      "duckDb": 9,
-      "voiceBandDb": -19.5,
-      "restBandDb": -24.41,
-      "marginDb": 4.91,
-      "voiceDb": -15.84,
-      "restDb": -22.42
+      "voiceDb": -17.21,
+      "restDb": -23.87
     },
     {
       "clip": "n7",
@@ -517,11 +393,11 @@
       "first": 8337,
       "frames": 60,
       "duckDb": 9,
-      "voiceBandDb": -22.83,
-      "restBandDb": -27.36,
+      "voiceBandDb": -22.95,
+      "restBandDb": -27.48,
       "marginDb": 4.53,
-      "voiceDb": -15.74,
-      "restDb": -24.52
+      "voiceDb": -15.87,
+      "restDb": -24.65
     },
     {
       "clip": "n7",
@@ -529,35 +405,11 @@
       "first": 8478,
       "frames": 306,
       "duckDb": 9,
-      "voiceBandDb": -21.55,
-      "restBandDb": -27.43,
+      "voiceBandDb": -21.67,
+      "restBandDb": -27.55,
       "marginDb": 5.88,
-      "voiceDb": -17.8,
-      "restDb": -24.86
-    },
-    {
-      "clip": "n7",
-      "line": 3,
-      "first": 8874,
-      "frames": 207,
-      "duckDb": 6.48,
-      "voiceBandDb": -20.15,
-      "restBandDb": -26.15,
-      "marginDb": 6,
-      "voiceDb": -16.41,
-      "restDb": -22.73
-    },
-    {
-      "clip": "n7",
-      "line": 4,
-      "first": 9192,
-      "frames": 243,
-      "duckDb": 0.36,
-      "voiceBandDb": -22.63,
-      "restBandDb": -28.63,
-      "marginDb": 6,
-      "voiceDb": -17.39,
-      "restDb": -26.24
+      "voiceDb": -17.92,
+      "restDb": -24.98
     },
     {
       "clip": "n8",
@@ -565,23 +417,11 @@
       "first": 9630,
       "frames": 152,
       "duckDb": 0.28,
-      "voiceBandDb": -22.24,
-      "restBandDb": -28.24,
+      "voiceBandDb": -22.36,
+      "restBandDb": -28.36,
       "marginDb": 6,
-      "voiceDb": -16.34,
-      "restDb": -26.99
-    },
-    {
-      "clip": "n8",
-      "line": 2,
-      "first": 9846,
-      "frames": 120,
-      "duckDb": 5.9,
-      "voiceBandDb": -19.73,
-      "restBandDb": -25.73,
-      "marginDb": 6,
-      "voiceDb": -15.99,
-      "restDb": -25.45
+      "voiceDb": -16.46,
+      "restDb": -27.11
     },
     {
       "clip": "n8",
@@ -589,23 +429,23 @@
       "first": 10027,
       "frames": 101,
       "duckDb": 7.76,
-      "voiceBandDb": -22.57,
-      "restBandDb": -28.57,
+      "voiceBandDb": -22.69,
+      "restBandDb": -28.69,
       "marginDb": 6,
-      "voiceDb": -19.11,
-      "restDb": -24.21
+      "voiceDb": -19.23,
+      "restDb": -24.33
     },
     {
       "clip": "n8",
       "line": 4,
       "first": 10620,
-      "frames": 240,
-      "duckDb": 2.09,
-      "voiceBandDb": -22.27,
-      "restBandDb": -28.25,
-      "marginDb": 5.98,
-      "voiceDb": -17.24,
-      "restDb": -21.56
+      "frames": 129,
+      "duckDb": 3.44,
+      "voiceBandDb": -22.51,
+      "restBandDb": -28.51,
+      "marginDb": 6,
+      "voiceDb": -17.61,
+      "restDb": -23.32
     }
   ],
   "sounds": [

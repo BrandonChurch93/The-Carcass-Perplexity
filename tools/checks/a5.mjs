@@ -1,5 +1,7 @@
 import { CUT_LIST, RECORDS, listFiles, readTextIf, readJsonIf, idOf, recordField, report, skip, count } from './inputs.mjs';
 
+import { narrationCut } from '../lib/script.mjs';
+
 export const TAKES = 'Takes:';
 
 export function takesMade(line) {
@@ -7,8 +9,9 @@ export function takesMade(line) {
   return m ? Number(m[1]) : null;
 }
 
+// A clip, a line of a clip, or the short form of a line that narration.cut shortens.
 export function isNarration(id, cfg) {
-  return cfg.narration.clips.some((c) => id === c.id || c.lines.some((_, i) => id === `${c.id}-${i + 1}`));
+  return cfg.narration.clips.some((c) => id === c.id || c.lines.some((_, i) => id === `${c.id}-${i + 1}`)) || narrationCut(cfg).shortened.some((s) => typeof s?.file === 'string' && idOf(s.file) === id);
 }
 
 export function takeFaults(records, cut, cfg) {
