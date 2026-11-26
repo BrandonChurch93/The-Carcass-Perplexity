@@ -29,8 +29,8 @@ export interface Rig {
 /** The round body the terminator is drawn on: its middle (the middle of the land) and its radius, km. */
 const TERM = { x: 300, z: -100, radius: 5200 };
 /** The moon the film never shows stands low in the lower right, across the body from where the sun went. Toward the moon. */
-const MOON: [number, number, number] = [0.62, 0.52, 0.59];
-const MOON_COLOUR: [number, number, number] = [0.06, 0.088, 0.135];
+const MOON: [number, number, number] = [0.66, 0.38, 0.62];
+const MOON_COLOUR: [number, number, number] = [0.078, 0.114, 0.175];
 
 const ease = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -50,16 +50,18 @@ export interface Dusk {
   glint: number;
   working: number;
   ember: number;
+  /** How much more the night side is exposed than the frame is, while the day still stands in it (1 once it is night). */
+  lift: number;
 }
 
 /** The end of the day at a second of the place: a pure function of the time, and the day itself (dusk 0) up to DUSK_FROM. */
 export function dusk(seconds: number): Dusk {
   const u = (seconds - DUSK_FROM) / SET_SLOW;
-  if (!(u > 0)) return { dusk: 0, sun: [...SUN], round: 0, moon: 0, gain: 1, strikes: 1, glintSlide: 0, glint: 1, working: 1, ember: 0 };
+  if (!(u > 0)) return { dusk: 0, sun: [...SUN], round: 0, moon: 0, gain: 1, strikes: 1, glintSlide: 0, glint: 1, working: 1, ember: 0, lift: 1 };
   const length = Math.hypot(...SUN);
   const height0 = Math.asin(SUN[1] / length);
   const turn0 = Math.atan2(SUN[0], -SUN[2]);
-  // The sun's height: it starts from rest, falls fastest as it sets (about 4.6 s in) and comes to rest well under the horizon.
+  // The sun's height: it starts from rest, falls fastest as it sets (about 5.1 s in) and comes to rest well under the horizon.
   const fallen = 1 - Math.exp(-((u / SET_TAU) * (u / SET_TAU)));
   const height = height0 - SET_DROP * fallen;
   // And it sets to the left of where it stood: the planet turns under it.
@@ -68,27 +70,29 @@ export function dusk(seconds: number): Dusk {
   const sun: [number, number, number] = [Math.sin(turn) * flat, Math.sin(height), -Math.cos(turn) * flat];
   const degrees = (height * 180) / Math.PI;
   // The night: come when the sun stands 15 degrees under the horizon of the middle of the body.
-  const night = ease(6, -20, degrees);
+  const night = ease(6, -13, degrees);
   const since = BEAT === null ? -10 : seconds - BEAT;
   // After the beat the night thins: the camera's eye closes a little, and the fire sinks back.
   const thin = ease(1.2, 6.8, since);
+  const gain = Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.18 * thin);
   return {
     dusk: Math.max(1e-4, ease(0, 7, u)),
     sun,
     round: ease(0, 1.6, u),
     moon: ease(0.5, 3.0, u) * (1 - 0.25 * thin),
     // (The exposure opens by stops, and begins before the sun is down: the eye follows the body, not the bright edge of the planet.)
-    gain: Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.18 * thin),
+    gain,
     strikes: 1 - ease(1.5, 5.2, u),
     glintSlide: 1900 * ease(0.3, 5.2, u),
     glint: 1 - ease(2.6, 4.9, u),
     working: 1 - 0.85 * ease(2, 6.5, u),
-    ember: night * (1 - 0.3 * thin),
+    ember: night * (1 - 0.42 * thin),
+    lift: (NIGHT_GAIN * (1 - 0.18 * thin)) / gain,
   };
 }
 const SET_TAU = 5.5;
 /** The whole of the dusk is this much slower than it was first timed: the night is come at about film frame 11300. */
-const SET_SLOW = 1.1;
+const SET_SLOW = 1.22;
 const SET_DROP = (72 * Math.PI) / 180;
 const SET_SWING = (30 * Math.PI) / 180;
 const NIGHT_GAIN = 9;
@@ -125,7 +129,7 @@ export function createRig(): Rig {
     // x: the lightning of the storm (1 by day, 0 by night). y: how far the sun's image has slid off the sea, km. z: how much of it is left. w: the working of the lava (1 by day, less by night).
     uCalm: { value: new THREE.Vector4(1, 0, 1, 1) },
     // x: the fire of the Heart as the night sees it (0 by day, 1 at night, less as the film ends). y: seconds since the beat (negative before it).
-    uEmber: { value: new THREE.Vector2(0, -1) },
+    uEmber: { value: new THREE.Vector3(0, -1, 1) },
   };
   const sunDay = new THREE.Vector3(...SUN).normalize();
   let landHeight: Height = () => 0;
@@ -158,7 +162,7 @@ export function createRig(): Rig {
       (uniforms.uMoonColour as THREE.IUniform<THREE.Color>).value.setRGB(MOON_COLOUR[0] * d.moon, MOON_COLOUR[1] * d.moon, MOON_COLOUR[2] * d.moon);
       (uniforms.uGain as THREE.IUniform<number>).value = d.gain;
       (uniforms.uCalm as THREE.IUniform<THREE.Vector4>).value.set(d.strikes, d.glintSlide, d.glint, d.working);
-      (uniforms.uEmber as THREE.IUniform<THREE.Vector2>).value.set(d.ember, BEAT === null ? -1 : seconds - BEAT);
+      (uniforms.uEmber as THREE.IUniform<THREE.Vector3>).value.set(d.ember, BEAT === null ? -1 : seconds - BEAT, d.lift);
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       (uniforms.uBeat as THREE.IUniform<number>).value = beat(seconds);
       (uniforms.uViewKm as THREE.IUniform<number>).value = halfHeightAt(Math.max(0, seconds));
