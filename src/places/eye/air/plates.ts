@@ -19,6 +19,8 @@ export interface Plate {
   tone: [number, number, number];
   /** The air its wall stands in: contrast, the grey it turns about, how far the warm of the low slopes is cooled, and the v above the waterline under which. */
   air?: [number, number, number, number];
+  /** Streaks of cirrus in its sky, at most two: u and v of the middle in the picture, half length in u, tilt (v for u), how much shows. */
+  cirrus?: [number, number, number, number, number][];
   /** Mip levels the picture is softened by. */
   soft?: number;
   /** True for a picture of a wall alone, with no sky in it. */
@@ -35,7 +37,7 @@ const tan = (degrees: number): number => Math.tan((degrees * Math.PI) / 180);
 
 export const PLATES: Plate[] = [
   // The rim and the sky as the wide camera sees them. Its waterline is hung on the water just beyond the far lip of the shaft.
-  { file: 'mat/far.jpg', shots: ['eye-01'], at: [wide[0], 0, wide[2]], radius: 1390, bearing: 18, tanAcross: tan(20) * (16 / 9), tanUp: tan(20), horizon: 0.512, tone: [1, 1, 1], key: 'wide', near: 760 },
+  { file: 'mat/far.jpg', shots: ['eye-01'], at: [wide[0], 0, wide[2]], radius: 1390, bearing: 18, tanAcross: tan(20) * (16 / 9), tanUp: tan(20), horizon: 0.512, tone: [1, 1, 1], cirrus: [[0.64, 0.81, 0.07, 0.03, 0.5], [0.36, 0.9, 0.13, -0.02, 0.36]], key: 'wide', near: 760 },
   // The north rim from the water, for the three shots that stand in the shallows of the south shore.
   { file: 'mat/far-low.jpg', shots: ['eye-02'], at: [-110, 0, 550], radius: 1500, bearing: 5, tanAcross: tan(22.5) * (16 / 9) * 1.14, tanUp: tan(22.5), horizon: 0.545, tone: [1, 1, 1], key: 'mats', near: 420 },
   // The whole rim from far off for the shot at the edge of the shaft, which looks down and has only six degrees over the water: a thin

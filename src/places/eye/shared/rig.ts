@@ -289,6 +289,9 @@ export function createRig(): Rig {
     uPlateShade: { value: new THREE.Vector2(0, 0.2) },
     uPlateAir: { value: new THREE.Vector4(1, 0.3, 0, 0.1) },
     uPlateSoft: { value: 0 },
+    uCirrusA: { value: new THREE.Vector4(0, 0, 0.1, 0) },
+    uCirrusB: { value: new THREE.Vector4(0, 0, 0.1, 0) },
+    uCirrus: { value: new THREE.Vector2(0, 0) },
     uShade: { value: new THREE.Vector4(Math.sin((198 * Math.PI) / 180), -Math.cos((198 * Math.PI) / 180), 588, 0.55) },
     // The mist: the air folder makes its noise and sets its form by shot. See glsl.ts.
     tMistNoise: { value: null },

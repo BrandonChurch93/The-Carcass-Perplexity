@@ -128,6 +128,12 @@ uniform vec2 uPlateShade;
 // which that is done: the last sun is on the upper ledges only. uPlateSoft: mip levels the picture is softened by.
 uniform vec4 uPlateAir;
 uniform float uPlateSoft;
+// One or two thin streaks of high cloud in the sky of the picture, still in the sun when the ground is not. Each: where its middle lies
+// in the picture (tan across from the middle, tan up from the waterline), its half length (tan), and its tilt. uCirrus.x and .y: how
+// much of each shows, 0 for none.
+uniform vec4 uCirrusA;
+uniform vec4 uCirrusB;
+uniform vec2 uCirrus;
 uniform vec4 uNear;
 uniform vec4 uShade;
 uniform sampler2D tUngrade;
@@ -198,6 +204,19 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   return vec4(lit * (2.5 / 3.14159), a);
 }
 
+// A streak of cirrus at xy of the picture. It does not travel: its fibres thicken, thin and part where they hang, by the noise's third axis.
+float cirrus(vec2 xy, vec4 c) {
+  vec2 d = xy - c.xy;
+  float along = d.x / c.z;
+  float across = d.y - c.w * d.x + 0.05 * d.x * d.x / c.z;
+  if (abs(along) >= 1.0 || abs(across) > 0.03) return 0.0;
+  vec4 lie = texture(tMistNoise, vec3(d.x * 2.3 + 0.5, 0.7, 0.4 + uTime * 0.004));
+  vec4 fibre = texture(tMistNoise, vec3(d.x * 7.0, across * 55.0 + 0.3, 0.13 + uTime * 0.006));
+  float width = 0.0032 * (0.45 + 1.3 * lie.r) * (0.5 + 0.5 * (1.0 - along * along));
+  float body = exp(-pow((across - 0.012 * (lie.g - 0.5)) / width, 2.0));
+  return body * pow(1.0 - along * along, 1.5) * smoothstep(0.22, 0.62, 0.7 * fibre.g + 0.5 * lie.b);
+}
+
 vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   vec3 sky = skyRadiance(rd);
   if (uPlateTone.w < 0.5) return sky;
@@ -224,6 +243,11 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   if (tall) {
     plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005, clamp(vv + 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb)
       + ungrade(texture2D(tPlate, vec2(u - 0.005, clamp(vv - 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb));
+  }
+  if (uCirrus.x + uCirrus.y > 0.0) {
+    vec2 xy = vec2(tan(phi), (v - uPlateLens.w) * 2.0 * uPlateLens.z);
+    float streak = uCirrus.x * cirrus(xy, uCirrusA) + uCirrus.y * cirrus(xy, uCirrusB);
+    if (streak > 0.0) plate += vec3(1.0, 0.84, 0.78) * (dot(plate, vec3(0.3, 0.5, 0.2)) * streak / (1.0 + 0.5 * bias));
   }
   if (uPlateAir.x != 1.0 || uPlateAir.z > 0.0) {
     float grey = max(dot(plate, vec3(0.3, 0.5, 0.2)), 1e-4);
