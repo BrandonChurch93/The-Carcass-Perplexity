@@ -57,7 +57,7 @@ export function create(ctx: Context): Piece {
   group.add(mesh, drips.mesh);
   ctx.scene.add(ctx.parts.built('waders', group));
 
-  const ripples = makeRipples(96, SEA_LEVEL, rig.uniforms.uSolo as THREE.IUniform);
+  const ripples = makeRipples(144, SEA_LEVEL, rig.uniforms.uSolo as THREE.IUniform);
   const rings = new THREE.WebGLRenderTarget(8, 8, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false });
   rings.texture.generateMipmaps = false;
   RIPPLES.texture.value = rings.texture;

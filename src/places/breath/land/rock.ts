@@ -496,6 +496,115 @@ void main() {
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
+// The main shaft: its dark wet wall (uBone 0) and the pale arches that stand out of it (uBone 1). An arch is smooth mineral, wet all over
+// from the steam, so it carries the sky as a sheen; iron in the seep has marbled it with rust, in veins and in runs down its flanks; where
+// it meets the wall it is green with damp, and dust lies on its top. The wall is nearly black with wet, green where the seep keeps it,
+// pale only in its top beds under the brim. All of the pattern is laid in the world's metres (three ways, by the face), so none can stretch.
+export const PIT_FRAGMENT = /* glsl */ `
+${COMMON}
+uniform float uBone;
+uniform sampler2D tMat;
+uniform sampler2D tMatN;
+uniform vec3 uMean;
+uniform vec2 uMat;
+void main() {
+  vec3 p = vWorld;
+  vec3 v = normalize(cameraPosition - p);
+  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
+  vec3 q = p / uMat.x;
+  vec3 dqx = dFdx(q);
+  vec3 dqy = dFdy(q);
+  vec3 an = abs(n);
+  ivec3 ma = (an.x > an.y && an.x > an.z) ? ivec3(0, 1, 2) : (an.y > an.z) ? ivec3(1, 2, 0) : ivec3(2, 0, 1);
+  ivec3 mi = (an.x < an.y && an.x < an.z) ? ivec3(0, 1, 2) : (an.y < an.z) ? ivec3(1, 2, 0) : ivec3(2, 0, 1);
+  ivec3 me = ivec3(3) - mi - ma;
+  vec2 ua = vec2(q[ma.y], q[ma.z]);
+  vec2 ub = vec2(q[me.y], q[me.z]);
+  vec2 uax = vec2(dqx[ma.y], dqx[ma.z]);
+  vec2 uay = vec2(dqy[ma.y], dqy[ma.z]);
+  vec2 ubx = vec2(dqx[me.y], dqx[me.z]);
+  vec2 uby = vec2(dqy[me.y], dqy[me.z]);
+  vec2 w = clamp((vec2(an[ma.x], an[me.x]) - 0.5773) / 0.4227, 0.0, 1.0) + 1e-4;
+  w /= w.x + w.y;
+  vec3 m0 = textureGrad(tMat, ua, uax, uay).rgb * w.x + textureGrad(tMat, ub, ubx, uby).rgb * w.y;
+  vec3 sa = textureGrad(tMatN, ua, uax, uay).rgb;
+  vec3 sb = textureGrad(tMatN, ub, ubx, uby).rgb;
+  vec3 ga = vec3(0.0);
+  ga[ma.y] = sa.r - 0.5;
+  ga[ma.z] = sa.g - 0.5;
+  vec3 gb = vec3(0.0);
+  gb[me.y] = sb.r - 0.5;
+  gb[me.z] = sb.g - 0.5;
+  vec3 lean = ga * w.x + gb * w.y;
+  float height = sa.b * w.x + sb.b * w.y;
+  float grey = dot(m0 / uMean, vec3(0.3333));
+  float up = clamp(n.y, 0.0, 1.0);
+
+  // Broad fields, by the shape's own metres (along it and round it): too broad to show a stretch. The second is bent by the first, which
+  // is what makes a vein wander.
+  vec4 a = texture2D(tRock, vUv / vec2(41.0, 17.0));
+  vec4 b = texture2D(tRock, vUv / vec2(19.0, 7.3) + 0.35 * a.ra);
+  vec4 c = texture2D(tRock, vec2(vUv.x / 3.1, p.y / 9.0) + 0.3 * b.ar);
+  vec3 albedo;
+  float rough;
+  float occ = vOcc;
+  if (uBone > 0.5) {
+    n = normalize(n - 0.55 * uMat.y * (lean - n * dot(lean, n)));
+    float tone = clamp(1.0 + 0.4 * (grey - 1.0), 0.6, 1.25);
+    vec3 base = mix(vec3(0.66, 0.62, 0.55), vec3(0.84, 0.82, 0.76), clamp(0.55 + 1.6 * (a.r - 0.5) + 0.6 * (height - 0.5), 0.0, 1.0)) * tone;
+    // Rust: broad marbled patches with dark hearts, veins that wander, and runs down the flanks from every stained place.
+    float patch0 = smoothstep(0.57, 0.68, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.3 * (height - 0.5) + 0.12 * (c.a - 0.5));
+    float heart = smoothstep(0.68, 0.8, b.a + 0.5 * (a.a - 0.5));
+    float vein = smoothstep(0.88, 0.98, 1.0 - abs(2.0 * b.r - 1.0) + 0.1 * (c.a - 0.5)) * smoothstep(0.35, 0.6, a.a + 0.3 * patch0);
+    float runs = smoothstep(0.56, 0.74, c.r + 0.25 * patch0) * smoothstep(0.75, 0.2, n.y) * smoothstep(-0.95, -0.3, n.y);
+    vec3 rust = mix(vec3(0.52, 0.3, 0.12), vec3(0.24, 0.11, 0.04), heart);
+    albedo = mix(base, rust * (0.6 + 0.5 * tone), 0.7 * patch0);
+    albedo = mix(albedo, vec3(0.4, 0.21, 0.08) * tone, 0.6 * runs * (1.0 - 0.6 * patch0));
+    albedo = mix(albedo, vec3(0.16, 0.075, 0.03), 0.8 * vein);
+    // Green and dark with damp where it meets the wall and under its belly.
+    float damp = smoothstep(0.8, 0.45, vOcc + 0.25 * (c.a - 0.5));
+    albedo = mix(albedo, vec3(0.13, 0.15, 0.075) * (0.6 + 0.6 * tone), 0.75 * damp);
+    // Dust and broken stone on its top: matt, the grain of the picture at full strength.
+    float dust = smoothstep(0.72, 0.95, up) * smoothstep(0.3, 0.6, a.a + 0.4 * (height - 0.5));
+    albedo = mix(albedo, vec3(0.47, 0.44, 0.39) * clamp(grey, 0.5, 1.5), 0.7 * dust);
+    rough = mix(mix(0.2, 0.34, patch0), 0.85, dust);
+    albedo *= mix(0.82, 1.0, dust);
+    occ *= 0.8 + 0.4 * height;
+  } else {
+    n = normalize(n - uMat.y * (lean - n * dot(lean, n)));
+    float tone = clamp(1.0 + 1.3 * (grey - 1.0), 0.35, 1.9);
+    vec3 base = mix(vec3(0.035, 0.036, 0.03), vec3(0.11, 0.105, 0.085), clamp(0.5 + 1.5 * (a.r - 0.5), 0.0, 1.0)) * tone;
+    // Slime where the seep keeps the rock wet, rust below the foot of an arch, pale lime where water has dried.
+    float slime = smoothstep(0.42, 0.62, b.a + 0.3 * (c.r - 0.5));
+    base = mix(base, vec3(0.05, 0.075, 0.034) * tone, 0.75 * slime);
+    float iron = smoothstep(0.55, 0.75, c.a + 0.3 * (a.a - 0.5)) * (1.0 - up);
+    base = mix(base, vec3(0.19, 0.095, 0.04) * tone, 0.5 * iron);
+    float lime = smoothstep(0.7, 0.85, c.r + 0.3 * (b.r - 0.5)) * (1.0 - up);
+    base = mix(base, vec3(0.3, 0.31, 0.26) * tone, 0.35 * lime);
+    // The top beds are the shelf's own stone: pale, green with weed, not yet wet through.
+    float topBeds = smoothstep(-6.5, -1.5, p.y + 3.0 * (a.a - 0.5));
+    albedo = mix(base, mix(vec3(0.3, 0.29, 0.23), vec3(0.17, 0.2, 0.12), slime) * tone, 0.8 * topBeds);
+    // A ledge holds what falls: grit, paler than the face.
+    albedo = mix(albedo, vec3(0.2, 0.185, 0.16) * tone, 0.6 * smoothstep(0.6, 0.9, up));
+    rough = mix(0.3, 0.75, topBeds);
+    occ *= 0.55 + 0.9 * height;
+  }
+
+  // Down the shaft: the land map says where the pit is. A face there sees the sky as a disc overhead, smaller the deeper it is.
+  vec4 land = landAt(p.xz);
+  float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);
+  float depth = max(-p.y, 0.0);
+  float openUp = 1.0 / (1.0 + depth * depth / 700.0);
+  float openSide = 0.6 / (1.0 + depth * depth / 1500.0);
+  float open = mix(1.0, mix(openSide, openUp, up), pit);
+  vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ * open);
+  // What the shut-off part of the sky is replaced by: the far wall and the mist in the shaft, lit by the sky and by the sun on the south wall.
+  vec3 bounce = (0.55 * uSkyHorizon * uFill + 0.3 * uGlowColour) * (pit * (1.0 - open) * (0.55 + 0.45 * smoothstep(-0.2, 0.6, -n.y + 0.4)));
+  bounce += uSunColour * (0.12 * pit * exp(-depth / 30.0));
+  colour += albedo * bounce * occ;
+  gl_FragColor = vec4(rigOut(colour), 1.0);
+}`;
+
 // The wall of the shaft and its ribs (land/wall.ts): the colour is the wall plate's picture on the mesh its relief shaped. What the mesh is
 // too coarse to hold (the chips, the cracks, the drips) is taken from the same relief as a lean of the normal and a shade in the folds,
 // at a low strength (the relief is a guess at form, not a measure). A top or an underside is seen edge on by the plate, so there the
@@ -674,6 +783,8 @@ export interface RockKit {
   shelf: THREE.ShaderMaterial;
   wall(plate: THREE.Texture, relief: THREE.Texture, top: Surface, grain: Surface, beds: Surface): THREE.ShaderMaterial;
   bone(amount: number, pale: [number, number, number], dark: [number, number, number], of: Surface, side?: THREE.Side): THREE.ShaderMaterial;
+  /** The main shaft: 0 its wall, 1 its arches. */
+  pit(amount: number, of: Surface): THREE.ShaderMaterial;
   dispose(): void;
 }
 
@@ -721,6 +832,7 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
         THREE.DoubleSide,
       ),
     bone: (amount, pale, dark, surface, side) => make(BONE_FRAGMENT, { uBone: { value: amount }, uPale: { value: new THREE.Vector3(...pale) }, uDark: { value: new THREE.Vector3(...dark) }, ...of(surface) }, side),
+    pit: (amount, surface) => make(PIT_FRAGMENT, { uBone: { value: amount }, ...of(surface) }, THREE.DoubleSide),
     dispose: () => {
       for (const m of made) m.dispose();
       tile.dispose();
