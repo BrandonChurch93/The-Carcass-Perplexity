@@ -24,25 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 99, 2026-11-26 07:52 UTC:
+Status 100, 2026-11-26 08:15 UTC:
 
-- `01-reveal4.jpg`: The Reveal from orbit: approved left, built right (the owner's heartbeat of 07:44, draft tier)
-- `02-est.jpg`: The establishing frame of every place and the titan frame, as built on main (version 2, draft tier)
-- `03-spine3.jpg`: The Spine, the strike on the third spire: approved left, built right (heartbeat of 07:50, draft tier)
-- `04-ribs.jpg`: The Ribs, heartbeat of 07:46: the wet flat, the nesting crag, the bore (draft tier)
+- `01-reveal4.jpg`: The Reveal from orbit, version 3: approved left, built right (draft tier)
+- `02-eye.jpg`: The Eye, heartbeat of 08:05: approved left, built right; the wide view above, what rises from the centre below (final tier)
+- `03-ribs.jpg`: The Ribs, the bore arrives: approved left, built right at final tier with two native crops (heartbeat of 08:03)
+- `04-voice.jpg`: The eight narration clips as kept: each clip's waveform with its four lines marked
 
+Status 99, 2026-11-26 07:52 UTC, showed: The Reveal from orbit: approved left, built right (the owner's heartbeat of 07:44, draft tier); The establishing frame of every place and...
 Status 98, 2026-11-26 07:29 UTC, showed: The Breath, the rim: approved left, built right (version 2, draft tier); The Eye, the edge where the floor stops: approved left, built...
 Status 97, 2026-11-26 07:07 UTC, showed: The Ribs, wide view, approved left, heartbeat of 06:50 right: the flat is wet now with bands that mirror the sky, the blades are bedded...
-Status 96, 2026-11-26 06:10 UTC, showed: The Eye's drinkers, approved left, wave 3 version 1 right: coats, weight on the legs, mirrored in the water.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T07:52:56Z
-phase 4: 11.70 h used of 17.00 h
-build: 32.03 h used of 72.00 h
+2026-11-26T08:15:38Z
+phase 4: 12.08 h used of 17.00 h
+build: 32.41 h used of 72.00 h
 extra rounds: yes
 half point: reached
 minutes since the last status: 23
