@@ -43,6 +43,8 @@ varying vec3 vAcross;
 varying vec3 vFace;
 varying vec2 vSeed;
 varying float vUnder;
+varying float vPale;
+varying float vFly;
 ${PUPPET_GLSL}
 vec2 turned(vec2 p, float a) {
   float c = cos(a);
@@ -51,16 +53,33 @@ vec2 turned(vec2 p, float a) {
 }
 void main() {
   vec2 px = position.xy;
+  float fly = step(0.5, aBody.w);
+  float depth = 0.0;
   // Forward and up from the hip, in units of the pose.
   vec2 p = vec2(px.x - HIP.x, HIP.y - px.y) / UNIT;
-  if (aPart > 0.5 && aPart < 2.5) {
+  if (aPart > 3.5) {
+    // A sail of the picture seen from ahead, stood on the shoulder: in the air only. Its bone leads, its skin trails, and from the side
+    // the stroke is its height; the far sail shows behind the body.
+    float far = step(4.5, aPart);
+    float th = 0.35 + 1.3 * (aBody.w - 10.0) - 0.25 * far;
+    float up = sin(th);
+    up = (up < 0.0 ? -1.0 : 1.0) * max(abs(up), 0.28);
+    float span = (560.0 - px.x) / 223.0;
+    float chord = (px.y - 330.0) / 223.0;
+    vec2 root = vec2(790.0 - HIP.x + 30.0 * far, HIP.y - 125.0) / UNIT;
+    p = root + fly * (span * vec2(-0.3 * abs(up) - 0.25 * (1.0 - abs(up)), up) + chord * vec2(-0.72, -0.12 * up));
+    p = turned(p, aBody.y);
+    depth = 0.05 - 0.1 * far;
+  } else if (aPart > 0.5 && aPart < 2.5) {
     bool hind = aPart < 1.5;
     float t = clamp(-p.y / STAND, 0.0, 1.2);
     float footZ = hind ? aFeet.x : aFeet.z;
     float footY = hind ? aFeet.y : aFeet.w;
     // The picture stands mid stride: hind foot behind the hip, fore foot under it. The pose swings each about that.
-    p.x += footZ * t * 1.1;
-    p.y *= clamp(-footY / STAND, 0.2, 1.3);
+    p.x += footZ * t * 1.1 * (1.0 - fly);
+    p.y *= mix(clamp(-footY / STAND, 0.2, 1.3), 0.8, fly);
+    // In the air the legs trail.
+    p = turned(p, (-1.2 + (hind ? 0.0 : -0.12) + aBody.y) * fly);
   } else {
     if (aPart > 2.5) {
       vec2 from = vec2(NECK0.x - HIP.x, HIP.y - NECK0.y) / UNIT;
@@ -80,6 +99,12 @@ void main() {
       float turn = a - (A + aNeck.x) * 0.8 * hang + aNeck.z * hang;
       vec2 q = from + L * centre + turned(d * (s - sc) * L + dn * off, turn);
       p = from + turned(q - from, lift);
+    } else {
+      // The folded sail is no board: it hangs from the shoulder, its tips lower the more the body tips, each animal's a little its own.
+      vec2 shoulder = vec2(790.0 - HIP.x, HIP.y - 100.0) / UNIT;
+      float tipward = smoothstep(650.0, 330.0, px.x);
+      float droop = (0.1 + 0.3 * aNeck.w + 0.85 * max(-aBody.y, 0.0)) * tipward * (1.0 - fly);
+      p = shoulder + turned(p - shoulder, droop) * (1.0 - 0.12 * tipward);
     }
     p = turned(p, aBody.y);
   }
@@ -93,6 +118,8 @@ void main() {
   float sgn = c < 0.0 ? -1.0 : 1.0;
   vec2 f = normalize(right * sgn * max(abs(c), 0.7) + away * dot(h, away));
   vec3 w = hip + size * vec3(f.x * p.x, p.y, f.y * p.x);
+  vec3 out3 = vec3(-f.y, 0.0, f.x);
+  w += out3 * (dot(out3, cameraPosition - hip) < 0.0 ? -1.0 : 1.0) * depth * size;
   vUnder = 0.0;
 #ifdef MIRROR
   // The mirror: the animal turned over about the water, laid on the water where the lens would see it.
@@ -107,6 +134,8 @@ void main() {
   vAcross = vec3(f.x, 0.0, f.y);
   vFace = vec3(-f.y, 0.0, f.x) * sgn;
   vSeed = vec2(aNeck.w, size);
+  vPale = aBody.z;
+  vFly = fly;
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
 }`;
 
@@ -115,6 +144,7 @@ precision highp float;
 ${RIG_GLSL}
 uniform sampler2D tSide;
 uniform sampler2D tCover;
+uniform sampler2D tFront;
 uniform float uPool;
 varying vec3 vWorld;
 varying vec2 vPx;
@@ -123,12 +153,17 @@ varying vec3 vAcross;
 varying vec3 vFace;
 varying vec2 vSeed;
 varying float vUnder;
+varying float vPale;
+varying float vFly;
 ${PUPPET_GLSL}
 const float PI = 3.14159265;
 void main() {
   vec2 uv = vec2(vPx.x / ${PX.w.toFixed(1)}, 1.0 - vPx.y / ${PX.h.toFixed(1)});
   vec3 pic = texture2D(tSide, uv).rgb;
   float cover = texture2D(tCover, uv).r;
+  // A sail is of the other picture, where brightness is cover.
+  float sail = step(3.5, vPart);
+  vec3 front = texture2D(tFront, vec2(vPx.x / 1243.0, 1.0 - vPx.y / 1266.0), -1.0).rgb;
   // The round of the body, from the cover read soft: the sheet is lit as the thing it shows.
   vec2 e = vec2(6.0 / ${PX.w.toFixed(1)}, 6.0 / ${PX.h.toFixed(1)});
   float gx = texture2D(tCover, uv + vec2(e.x, 0.0), 3.0).r - texture2D(tCover, uv - vec2(e.x, 0.0), 3.0).r;
@@ -137,21 +172,36 @@ void main() {
   float side = legSide(vPx);
   float along = neckAlong(vPx);
   float mine = 1.0;
-  if (vPart < 0.5) mine = (vPx.y < 318.0 || vPx.x < 420.0 || vPx.x > 830.0) && !(vPx.x > 880.0 && along > 0.0) ? 1.0 : 0.0;
+  if (vPart > 3.5) mine = vPx.x > 465.0 && vPx.y > 445.0 ? 0.0 : 1.0;
+  else if (vPart < 0.5) mine = (vPx.y < 318.0 || vPx.x < 420.0 || vPx.x > 830.0) && !(vPx.x > 880.0 && along > 0.0) && !(vFly > 0.5 && vPx.x < 590.0) ? 1.0 : 0.0;
   else if (vPart < 1.5) mine = side < 0.0 ? 1.0 : 0.0;
   else if (vPart < 2.5) mine = side >= 0.0 ? 1.0 : 0.0;
   else mine = along > 0.0 ? 1.0 : 0.0;
-  cover *= mine;
+  cover = mix(cover, step(0.035, max(front.r, max(front.g, front.b))), sail) * mine;
+  pic = mix(pic, front, sail);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 face = dot(vFace, v) < 0.0 ? -vFace : vFace;
-  vec3 n = normalize(face + (vAcross * -gx + vec3(0.0, 1.0, 0.0) * -gy) * 1.6);
+  // And the lie of the hide inside the outline, from the picture's own light and dark read soft.
+  float hx = texture2D(tSide, uv + vec2(e.x, 0.0), 2.0).g - texture2D(tSide, uv - vec2(e.x, 0.0), 2.0).g;
+  float hy = texture2D(tSide, uv + vec2(0.0, e.y), 2.0).g - texture2D(tSide, uv - vec2(0.0, e.y), 2.0).g;
+  vec3 n = normalize(face + (vAcross * -(gx * 1.6 + hx * 2.2) + vec3(0.0, 1.0, 0.0) * -(gy * 1.6 + hy * 2.2)) * (1.0 - sail));
   // The picture is lit soft from above; take that out to a hide of its own tone and light it here.
-  vec3 albedo = pow(pic, vec3(1.08)) * mix(0.82, 1.04, vSeed.x) * 1.12;
+  // Leather, grey brown: the picture's cream is its studio light, not its hide.
+  vec3 albedo = pow(pic, vec3(1.25)) * mix(0.78, 1.0, vSeed.x);
+  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.0, 0.9, 0.8), 0.45);
+  // The colony's are cream, the picture's light and dark kept as their folds: the back a shade darker than the belly and the neck, so that a body parts from its ledge.
+  float under = max(step(2.5, vPart) * (1.0 - sail), step(vPart, 0.5) * max(smoothstep(230.0, 320.0, vPx.y) * smoothstep(540.0, 600.0, vPx.x), smoothstep(800.0, 880.0, vPx.x)));
+  float pale = clamp(vPale, 0.0, 1.0);
+  vec3 cream = vec3(0.68, 0.61, 0.5) * (0.6 + 1.0 * dot(albedo, vec3(0.3333)));
+  albedo = mix(albedo, cream * mix(0.8, 1.0, under), pale);
+  // Against white water it is a shape; the far sail is in the shade of the body.
+  albedo *= mix(1.0, 0.3, clamp(-vPale, 0.0, 1.0)) * mix(1.0, 0.6, step(4.5, vPart));
   float leg = step(0.5, vPart) * step(vPart, 2.5);
   float wet = (1.0 - smoothstep(uPool + 0.03, uPool + 0.35, vWorld.y)) * leg;
   albedo *= 1.0 - 0.5 * wet;
   float rough = mix(0.55, 0.22, wet);
-  float occ = mix(0.6, 1.0, smoothstep(-0.6, 0.4, n.y));
+  // Darker underneath: the belly and the under side of the folded sails are turned from the sky.
+  float occ = mix(0.45, 1.0, smoothstep(-0.6, 0.4, n.y)) * mix(1.0, mix(0.6, 0.95, pale), step(vPart, 0.5) * smoothstep(250.0, 400.0, vPx.y));
   vec4 land = landAt(vWorld.xz);
 #ifdef MIRROR
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
@@ -165,8 +215,9 @@ void main() {
   vec3 col = rigShade(vWorld, n, v, albedo, rough, occ);
   // Against the light the thin wet skin lets a little through and the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
-  col += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.08 / PI;
   col += (albedo * 0.6 + 0.05) * uSunColour * rim * pow(max(dot(-v, uSunDir), 0.0), 2.0) * 0.16 * sunAt(vWorld, land);
+  // An open sail is skin: the sky behind it comes through.
+  col += albedo * sail * vec3(1.0, 0.92, 0.82) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.6 + skyIrradiance(-n) * 0.9) / 3.14159;
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (cover < 0.5) discard;
 #endif
@@ -192,10 +243,12 @@ function sheetGeometry(): THREE.BufferGeometry {
       }
     }
   };
-  grid(0, 190, 40, 1010, 400, 1, 1);
+  grid(0, 190, 40, 1010, 400, 12, 5);
   grid(1, 410, PX.hip[1], 700, 990, 1, 8);
   grid(2, 580, PX.hip[1], 830, 990, 1, 8);
   grid(3, 860, 120, 1380, 720, 14, 16);
+  grid(4, 50, 150, 560, 700, 4, 2);
+  grid(5, 50, 150, 560, 700, 4, 2);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   g.setAttribute('aPart', new THREE.Float32BufferAttribute(parts, 1));
@@ -213,6 +266,7 @@ export function puppetMaterials(ctx: Context, pool: number): PuppetMaterials {
     ...ctx.rig.uniforms,
     tSide: { value: ctx.assets.texture('mat/kitewing.jpg', { kind: 'colour', repeat: false }) },
     tCover: { value: ctx.assets.texture('mat/kitewing-a.png', { kind: 'data', repeat: false }) },
+    tFront: { value: ctx.assets.texture('mat/kitewing-front.jpg', { kind: 'colour', repeat: false }) },
     uPool: { value: pool },
   };
   const body = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, side: THREE.DoubleSide });
@@ -231,7 +285,7 @@ export function puppetMaterials(ctx: Context, pool: number): PuppetMaterials {
   return { body, mirror };
 }
 
-const neckOf = (p: Pose): [number, number] => [Math.min(0.85, Math.max(-0.6, 0.6 * (p.rise + 0.25))), Math.min(0.9, Math.max(-1.0, 0.55 * (p.bend + 0.75)))];
+const neckOf = (p: Pose): [number, number] => [Math.min(1.7, Math.max(-0.6, 0.75 * (p.rise + 0.25))), Math.min(0.9, Math.max(-1.0, 0.55 * (p.bend + 0.75)))];
 
 /** Where the end of the tuft hangs for a pose: up from the hip and ahead of it, in units of the pose (the vertex shader's own sum). */
 export function sheetTip(pose: Pose): [number, number] {
@@ -294,9 +348,10 @@ export class Puppets {
     }
   }
 
-  put(i: number, p: Pose): void {
+  /** pale: 0 the hide as it wades, 1 dark backed and pale bellied on a ledge, under 0 a shape against white water. flying: sails up, legs trailing. */
+  put(i: number, p: Pose, pale = 0, flying = false): void {
     this.place.setXYZW(i, p.x, p.y, p.z, p.yaw);
-    this.body.setXYZW(i, p.size, p.pitch * 0.8, 0, 0);
+    this.body.setXYZW(i, p.size, p.pitch * 0.8, pale, flying ? 10 + p.flap : 0);
     // The picture's own neck leaves the body a little under the level and curls down: the pose is read against that.
     const [lift, arc] = neckOf(p);
     this.neck.setXYZW(i, lift, arc, 0.3 * p.sweep, p.seed);

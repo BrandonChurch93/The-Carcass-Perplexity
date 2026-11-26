@@ -83,14 +83,14 @@ export function create(ctx: Context): Piece {
   const rs = ctx.rng('land/slabs');
   const blocks: THREE.BufferGeometry[] = [];
   // On the rubble: each lies on the slope where it stopped, long side across the fall.
-  for (let i = 0; i < 64; i++) {
+  for (let i = 0; i < 46; i++) {
     const k = rs.next();
     const b = (112 + (rs.next() - 0.5) * 60) * RAD;
     const r = lerp(rimRadius(b) + 1.5, 13, k ** 0.8) + rs.range(-1.5, 1.5);
     const x = Math.sin(b) * r;
     const z = -Math.cos(b) * r;
     // A few great slabs and many lesser blocks.
-    const big = i < 9 ? 1 : rs.next() ** 2.2;
+    const big = i < 6 ? 0.8 : rs.next() ** 2.2;
     const h = lerp(0.7, 3.2, big) * rs.range(0.8, 1.2);
     const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) + h * 0.3;
     const slope = r > rimRadius(b) - 1 ? 0.12 : 0.62;
@@ -110,23 +110,11 @@ export function create(ctx: Context): Piece {
     blocks.push(block(20 + bearing * 0.37, [w, 2.4, d], [x, y + 0.9, z], [lean, -b + yaw, lean * 0.6]));
   }
   // The fallen slabs are the shelf's own stone, broken: its beds show on their sides, and they are wet and stained, not pale.
-  const fallen = rock.bone(0.9, [0.44, 0.4, 0.35], [0.2, 0.175, 0.15], surface('shelf', [0.438, 0.363, 0.302], 5, 1.3), THREE.DoubleSide);
-  const darkRock = rock.bone(0.3, [0.15, 0.14, 0.125], [0.05, 0.046, 0.042], surface('wetrock', [0.153, 0.133, 0.107], 1.5, 1.4), THREE.DoubleSide);
+  const face = mirrored('land/slabface.jpg', 'colour');
+  const fallen = rock.bone(0.5, [0.36, 0.32, 0.27], [0.07, 0.06, 0.05], { colour: face, data: ctx.assets.texture('mat/shelf-nh.png', { kind: 'data', repeat: true, anisotropy: 1 }), mean: [0.42, 0.36, 0.3], metres: 5.5, relief: 1.6 }, THREE.DoubleSide);
   slabs.add(mesh(mergeGeometries(blocks), fallen));
   slabs.add(mesh(heap(), rubble));
-  // Loose blocks on the shelf by the south lip, dark and wet: pieces of the plates that broke when the side went. The first lies a few
-  // metres from where the dead wader lies, low in the lens of the last shot.
-  const loose: THREE.BufferGeometry[] = [];
-  for (const [n, x, z, w, h, d, yaw, tip] of [
-    [91, -29.3, 26.1, 2.0, 1.25, 1.4, 0.4, 0.12],
-    [92, -31.6, 24.6, 1.3, 0.7, 1.0, 1.3, -0.1],
-    [93, -22.4, 27.2, 1.6, 0.8, 1.1, -0.5, 0.15],
-    [94, -19.5, 31.5, 2.4, 1.0, 1.5, 0.9, 0.08],
-    [95, -12.0, 34.6, 1.4, 0.6, 1.0, 2.1, -0.12],
-  ] as const) {
-    loose.push(block(n, [w, h, d], [x, ground(x, z) + h * 0.32, z], [tip, yaw, tip * 0.7]));
-  }
-  slabs.add(mesh(mergeGeometries(loose), darkRock));
+
   ctx.scene.add(ctx.parts.built('slabs', slabs));
 
   // The cliff, 3 km on: the far picture's own, laid on the sky (air/sky.ts).

@@ -114,7 +114,7 @@ export function bakeNear(rng: Rng): NearMap {
       }
     }
   };
-  const count = 110000;
+  const count = 170000;
   for (let k = 0; k < count; k++) {
     const x = FINE.minX + rng.next() * FINE.size;
     const z = FINE.minZ + rng.next() * FINE.size;
@@ -136,7 +136,7 @@ export function bakeNear(rng: Rng): NearMap {
     const here = ground(x, z);
     const foot = Math.max(ground(x + 0.4, z), ground(x - 0.4, z), ground(x, z + 0.4), ground(x, z - 0.4)) - here > 0.1;
     if (plateAt(x, z) < POOL + 0.03) continue;
-    if (rng.next() > (foot ? 0.3 : 0.05)) continue;
+    if (rng.next() > (foot ? 0.8 : 0.03)) continue;
     // Cobbles of a hand or two; a few as big as a head.
     const radius = 0.04 + 0.07 * size * size + (size > 0.985 ? 0.08 : 0);
     stamp(x, z, radius, radius * (0.45 + 0.4 * squash), squash, turn, tone);
