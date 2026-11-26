@@ -201,11 +201,13 @@ void main() {
   float vein = 1.0 - smoothstep(0.25, 0.8, tone);
   float fold = smoothstep(0.45, 0.85, max(relief, reliefFine));
   vec3 behind = skyRadiance(-toCamera);
+  // Lilac-grey whatever is behind it: the film keeps the sky's brightness and little of its colour.
+  behind = mix(behind, dot(behind, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.65);
   vec3 held = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) / 3.14159 + min(vec3(0.6), 0.2 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
   vec3 lilac = mix(vec3(0.95, 0.9, 1.06), vec3(0.86, 0.82, 1.1), fract(seed * 3.3));
   // The picture's own colour, about its mean: its wrinkles, its stains of violet and brown.
   vec3 stain = clamp(fine / vec3(0.202, 0.181, 0.217), 0.55, 1.5);
-  vec3 c = (0.74 * behind + 0.2 * held) * mix(vec3(1.0), stain, 0.8) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
+  vec3 c = (0.96 * behind + 0.3 * held) * mix(vec3(1.0), stain, 0.6) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
   c *= 1.0 - 0.5 * (1.0 - smoothstep(0.2, 0.55, tone));
   // Wet glints on the folds, fine and few.
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
