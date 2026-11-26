@@ -31,7 +31,7 @@ Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/pla
 ## Still wrong beside the approved pictures, worst first
 
 1. `reveal-4`: the bones carry the grain of rock now, but it is the range tile laid 8 and 15 times its real size, not relief of their own; the pale band under it keeps a soft edge and a dark surround that reads as tinted at native size.
-2. `reveal-4`: red is still high (mean 55/63/72 against 47/62/73). The land and the warm glare carry it; the top of the frame is hazier than approved.
+2. `reveal-4`: mean 49/58/68 against 47/62/73. The sea is a little less blue than approved; the top of the frame is brighter (the front there), and approved has many small scattered clouds toward the limb where this has a few large systems.
 3. `reveal-4`, `reveal-3`: cloud scraps keep hard edges at native size, and the low deck has no depth of its own (one height). No picture of a front is used: `mat/front.jpg` is not placed.
 4. `reveal-2`, `reveal-3`: one family of dendritic valleys still carries the head. The three kinds of country change grain and colour, the tableland only a little of the large shape.
 5. `reveal-1`, `reveal-2`: near cloud is the old tile, soft and without structure.
@@ -64,7 +64,7 @@ Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/pla
 ## Next, in order
 
 1. Give the bones relief of their own in the heights (with land take 6) in place of the wide lay of the range tile, and break the edge of the pale band by slope and snow line.
-2. Take red down on the land from far and thin the air at the top of the frame, to the approved means.
+2. Scatter small cloud toward the limb in place of the upper front, and bring the sea up in blue, to the approved means.
 3. Place `mat/front.jpg` for the two fronts and give the deck a second height with its own shadow.
 4. In that same land take 6 (the last allowed): the bay, a river mouth, and two more provinces in the heights themselves.
 5. Use `mat/shelf` on the shelves and `mat/redflat` on the pan; replace the near cloud tile with the photographs at a smaller lay.

@@ -26,7 +26,7 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
   vec3 c = 0.92 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
   float air = 1.0 - exp(-0.0125 * (1.0 - 0.6 * high) / max(mu, 0.12));
-  return mix(c, uAirColour * 0.86, air);
+  return mix(c, uAirColour * 0.7, air);
 }`;
 
 const CLOUD_FRAGMENT = /* glsl */ `

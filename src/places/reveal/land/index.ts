@@ -219,7 +219,7 @@ void main() {
   // range is seen as rock with its own valleys and not as a band of colour.)
   float crest = smoothstep(0.1, 0.46, height);
   ground = mix(ground, vec3(0.57, 0.545, 0.49), 0.46 * skeleton * top * mix(0.42, 1.12, crest));
-  ground *= mix(vec3(1.0), vec3(0.93, 1.0, 1.05), top);
+  ground *= mix(vec3(1.0), vec3(0.86, 0.97, 1.04), top);
   ground *= mix(1.0, 0.72, (1.0 - skeleton) * top) * mix(1.0, 0.8, top);
   // Bare rock is the colour of old bone, not of snow: the snow lies on the highest crests alone.
   float bare = smoothstep(0.1, 0.26, height) * (1.0 - smoothstep(0.58, 0.76, height));
@@ -287,7 +287,7 @@ void main() {
     sea *= mix(vec3(0.78, 0.92, 1.12), vec3(1.0, 1.22, 1.05), smoothstep(0.3, 0.75, bloom));
   }
   sea = mix(sea, sea * vec3(1.7, 0.75, 0.5), stain);
-  vec3 water = sea * light * (0.2 + 0.12 * shelf + 0.3 * stain) * mix(vec3(1.0), vec3(0.5, 0.6, 0.52), far * (1.0 - shelf) * (1.0 - stain));
+  vec3 water = sea * light * (0.2 + 0.12 * shelf + 0.3 * stain) * mix(vec3(1.0), vec3(0.52, 0.76, 0.9), far * (1.0 - shelf) * (1.0 - stain));
   // The sky on the surface, and the sun on its waves: the glint lies where the surface of the planet leans half way to the sun.
   vec2 wind = xz + 60.0 * vec2(vnoise(xz / 310.0), vnoise(xz / 310.0 + 9.7));
   float calm = texture2D(uCloudTile, wind / 900.0 + vec2(0.5, 0.2)).b;
@@ -297,7 +297,7 @@ void main() {
   float t2 = lean * lean / (rough * rough);
   float lobe = exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
-  water += uSkyColour * 0.22 * fresnel;
+  water += uSkyColour * mix(0.22, 0.1, far) * fresnel;
   water += uSunColour * vec3(1.0, 0.86, 0.66) * lobe * 0.0036 * shade * (0.6 + 0.4 * depth);
   // Round the glint the low sun lies on the sea as a broad warm glare.
   water += uSunColour * vec3(1.0, 0.84, 0.62) * 0.0064 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
@@ -309,8 +309,8 @@ void main() {
 
   // ---- the air between the surface and the eye: more of it toward the edge of the planet ----
   float path = 1.0 / max(mu, 0.12);
-  float air = 1.0 - exp(-0.0125 * path * (1.0 - 0.45 * height * land));
-  colour = mix(colour, uAirColour * (0.46 + 0.4 * shade), air);
+  float air = 1.0 - exp(-mix(0.0125, 0.008, far) * path * (1.0 - 0.45 * height * land));
+  colour = mix(colour, uAirColour * (0.36 + 0.32 * shade), air);
   // Haze lies in the valleys and over the plains, and thins up the ranges.
   float low = land * (1.0 - smoothstep(0.0, 0.3, height)) * (0.6 + 0.8 * vnoise(xz / 70.0));
   colour = mix(colour, (uAirColour * 1.2 + vec3(0.03)) * (0.55 + 0.45 * shade), 0.012 * low * path);
