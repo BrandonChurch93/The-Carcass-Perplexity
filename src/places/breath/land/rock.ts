@@ -216,7 +216,10 @@ void main() {
   vec3 rock = plate * vec3(1.0, 1.05, 1.1) * tone;
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
-  rock = mix(rock, rock * vec3(0.62, 0.52, 0.42), steep * (1.0 - stone));
+  // It takes the grain of wet rock laid square on its own face (not the plate's picture pulled down it), in level bands as the beds lie.
+  vec3 side = abs(n.x) > abs(n.z) ? texture2D(tMat, vec2(p.z, p.y * 2.2) / 1.1).rgb : texture2D(tMat, vec2(p.x, p.y * 2.2) / 1.1).rgb;
+  vec3 face = texture2D(tPlate, pq, 4.0).rgb * vec3(0.7, 0.6, 0.5) * clamp(dot(side / uMean, vec3(0.3333)), 0.35, 1.8) * (0.75 + 0.25 * sin(p.y * 70.0 + 3.0 * a.g));
+  rock = mix(rock, face, steep * (1.0 - stone));
   // A dark green-brown weed along the tide line and in the wet foot of the edges near it.
   float tide = smoothstep(0.5, 0.05, abs(over - 0.1)) * smoothstep(0.3, 0.6, a.b * 2.0 + 0.5 * (tone - 1.0)) + 0.5 * hollow * smoothstep(0.6, 0.15, over);
   rock = mix(rock, vec3(0.045, 0.05, 0.028) * (0.6 + 0.8 * tone), 0.7 * clamp(tide, 0.0, 1.0));
@@ -237,7 +240,10 @@ void main() {
   back.y = abs(back.y);
   // The whole shelf has a thin wet sheen at dawn: at a grazing angle even a dry plate mirrors the sky, and toward the sun that is the gold glare.
   float sheen = max(damp, 0.38 * (1.0 - steep) * (1.0 - stone));
-  colour += skyRadiance(back) * (fres * sheen * (0.4 + 0.6 * film) * 1.1 * occ * land.g);
+  colour += skyRadiance(back) * (fres * sheen * (0.75 + 0.25 * film) * 1.1 * occ * land.g);
+  // The low sun in the wet sheen: a broad gold glare down the shelf toward it, which is what the backlight of this place is made of.
+  float glare = pow(max(dot(reflect(-v, normalize(n + vec3(0.0, 1.5, 0.0))), uSunDir), 0.0), 28.0);
+  colour += uSunColour * vec3(1.0, 0.8, 0.55) * (glare * sheen * (0.12 + 0.88 * fres) * mix(0.35, 1.0, lit) * occ * 0.9);
   float tight = sunLobe(normalize(n + vec3(mn.r - 0.5, 0.0, mn.g - 0.5) * 0.5), v, 0.2) * fres * lit;
   colour += uSunColour * (min(tight, 8.0) * damp * smoothstep(0.4, 0.8, mn.b) * occ * 0.5);
   gl_FragColor = vec4(rigOut(colour), 1.0);

@@ -52,7 +52,8 @@ void viewRay(out vec3 ro, out vec3 rd, out float far) {
   rd = world - ro;
   far = length(rd);
   rd /= far;
-  if (depth >= 1.0) far = 30000.0;
+  // The sky stands where the far ground ends, so that the far picture on it is veiled as the ground under it is and no more.
+  if (depth >= 1.0) far = 9000.0;
 }
 
 // The colour the haze has toward d: the sky of that bearing at the horizon, so that the dome and the air meet without a line.
