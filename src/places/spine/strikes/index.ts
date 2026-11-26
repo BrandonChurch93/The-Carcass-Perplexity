@@ -16,7 +16,7 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** What the flash of a first stroke gives a face that looks at the channel from close by, as irradiance: the dusk gives level snow about 0.25. */
 const FLASH = 3.2;
 /** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
-const FLASH_OF = [1, 0.7, 0.8, 0.75, 0.6, 0.85];
+const FLASH_OF = [1, 0.7, 0.8, 0.75, 0.45, 0.85];
 const SPARKS = 90;
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
 const TIP_RADIUS = 8;

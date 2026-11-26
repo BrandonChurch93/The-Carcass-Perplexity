@@ -162,12 +162,20 @@ const vec3 STRIKE_COLOUR = vec3(0.74, 0.8, 1.0);
 const float STRIKE_REACH = 1500.0;
 vec3 strikeIrradiance(vec3 p, vec3 n) {
   if (uStrikeAt.w <= 0.0) return vec3(0.0);
+  // The foot of the channel on what is close under it: the rock and the rime of the struck spire's top take a hard light from just over
+  // the tip, gone within a hundred metres or so, so that the edges that look up at it stand out and its flanks stay dark.
+  vec3 low = uStrikeTip.xyz + vec3(0.0, 14.0, 0.0) - p;
+  float lowDist2 = dot(low, low);
+  vec3 near = vec3(0.0);
+  if (lowDist2 < 250000.0) near = STRIKE_COLOUR * (uStrikeAt.w * 2.5 * clamp(dot(n, low) * inversesqrt(lowDist2), 0.0, 1.0) / (1.0 + lowDist2 / 1600.0)) * (1.0 - lowDist2 / 250000.0);
   vec3 d = uStrikeAt.xyz - p;
   float dist = length(d);
   vec3 l = d / dist;
   // Hard, with the least wrap: snow turned from the channel stays in the dusk.
   float facing = clamp((dot(n, l) + 0.06) / 1.06, 0.0, 1.0);
-  if (facing <= 0.0) return vec3(0.0);
+  if (facing <= 0.0) return near;
+  // Faces square to the channel take the most by far: the light models the rock, it does not coat it.
+  facing *= sqrt(facing);
   // The land between the face and the channel: the ray is walked toward the light and is shaded wherever the ground stands over it.
   float lit = 1.0;
   float reach = min(dist * 0.9, 1400.0);
@@ -176,9 +184,9 @@ vec3 strikeIrradiance(vec3 p, vec3 n) {
     float t = reach * f * f;
     vec3 q = p + l * t;
     lit = min(lit, smoothstep(-1.5 - 0.04 * t, 0.5 + 0.01 * t, q.y - landAt(q.xz).r + 1.0 + 0.02 * t));
-    if (lit <= 0.0) return vec3(0.0);
+    if (lit <= 0.0) return near;
   }
-  return STRIKE_COLOUR * (uStrikeAt.w * facing * lit / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
+  return near + STRIKE_COLOUR * (uStrikeAt.w * facing * lit / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
 }
 
 // Irradiance from the round lights: the lightning. Each is a ball of real size (a bolt a kilometre long is a row of them, or one tall one) and falls

@@ -139,25 +139,27 @@ vec3 skyAtRest(vec3 from, vec3 d, float lod) {
 float strikeReach(vec3 from, vec3 d) {
   float lit = 0.0;
   for (int i = 0; i < 5; i++) {
-    // From a little over the tip to well inside the cloud over the channel's top.
-    float f = 0.15 + 0.3 * float(i);
+    // From a little over the tip to well inside the cloud over the channel's top: the light is most where the channel is in the cloud.
+    float f = 0.1 + 0.3 * float(i);
     vec3 q = mix(uStrikeTip.xyz, uStrikeTop.xyz, f) - from;
     float along = dot(d, q);
     if (along <= 0.0) continue;
-    float r = mix(140.0, 620.0, clamp(f, 0.0, 1.0));
+    float r = mix(110.0, 520.0, clamp(f, 0.0, 1.0));
     float off2 = max(dot(q, q) - along * along, 0.0) / (r * r);
-    lit += (0.07 + 0.17 * f) * (1.0 / (1.0 + off2 * off2) + 0.1 / (1.0 + 0.3 * off2));
+    // A peak at the channel and a breadth round it: never a disc with an edge.
+    lit += (0.05 + 0.2 * f) * (0.7 / (1.0 + 3.0 * off2) + 0.3 / (1.0 + 0.4 * off2));
   }
   return lit;
 }
-// The cloud in the flash of a stroke: what stands round the channel is lit from inside, its pale bodies far more than its dark ones, so
-// that the cloud's own shapes stand in the light; the last band keeps its orange.
+// The cloud in the flash of a stroke: what stands round the channel is lit from inside, its pale bodies far more than its dark ones and
+// in uneven masses, so that the cloud's own shapes stand in the light; the last band keeps its orange.
 vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
-  float lit = uStrikeAt.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y);
+  float masses = textureLod(tNoise, d * 1.7 + vec3(0.13, 0.41, 0.77), 0.0).r + 0.5 * textureLod(tNoise, d * 4.3 + vec3(0.61, 0.07, 0.29), 0.0).g;
+  float lit = uStrikeAt.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y) * (0.35 + 0.9 * masses);
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
   float shape = smoothstep(0.004, 0.05, body);
-  return c * (1.0 + 7.0 * lit * (1.0 - 0.8 * warm)) + vec3(0.6, 0.62, 1.0) * (lit * (0.01 + 0.1 * shape) * (1.0 - warm));
+  return c * (1.0 + 3.6 * lit * (1.0 - 0.8 * warm)) + vec3(0.6, 0.62, 1.0) * (lit * (0.006 + 0.05 * shape) * (1.0 - warm));
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   vec3 c = skyAtRest(from, d, lod);
