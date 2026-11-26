@@ -5,9 +5,10 @@ import * as THREE from 'three';
 import { config } from '../../../config';
 import { resolve } from '../../../core/cameras';
 import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cut';
-import { shots } from '../cameras';
+import { approachAsScattered, shots } from '../cameras';
 import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
+import { inOpening } from '../shared/opening';
 import { loopPhase } from '../shared/stage';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { foamTexture } from '../sea/chop';
@@ -503,7 +504,7 @@ export function create(ctx: Context): Piece {
   }
   const skein: Passer[] = [];
   const opening = shotById('ribs-01');
-  const openPath = shots['ribs-01'] as (typeof shots)[string];
+  const openPath = approachAsScattered;
   for (let i = 0; i < SKEIN; i++) {
     const part = i < 9 ? scatter.range(0.035, 0.2) : scatter.range(0.2, 0.92);
     const frame = opening.first + part * (opening.last - opening.first);
@@ -669,8 +670,14 @@ export function create(ctx: Context): Piece {
         flockFigures.put(i, fig);
       }
       flockFigures.commit();
+      // In the approach no animal comes near the lens: the skein that flew in beside it is not drawn (none of it is ahead of any later lens).
+      const approaching = inOpening();
       for (let i = 0; i < skein.length; i++) {
         const s = skein[i] as Passer;
+        if (approaching && i < SKEIN) {
+          skeinFigures.hide(i);
+          continue;
+        }
         const bout = smooth(0.25, 0.45, heldAt(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
         const y = s.y + 1.2 * Math.sin(at * 0.6 + s.seed * 20);
         const amp = i < SKEIN ? 0.25 + 0.75 * bout : 1;
