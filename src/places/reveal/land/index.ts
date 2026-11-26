@@ -147,10 +147,15 @@ void main() {
   }
   // Blue of the relief: over 0.3 the height of the land, under 0.25 water and how shallow it is.
   // The shore is a line: the distance to it is read, so it stays fine however far the map is enlarged, and the rivers with it.
+  // The strait of the Ribs: the sea stands in the valley under the spine here and runs up between the ribs, so their arches stand
+  // with their feet in it and the surf breaks along them.
+  vec2 fromStrait = (xz - vec2(${X(AT.strait.x).toFixed(1)}, ${Z(AT.strait.y).toFixed(1)})) / vec2(200.0, 85.0);
+  float strait = exp(-dot(fromStrait, fromStrait)) * smoothstep(60.0, 160.0, uViewKm);
+  coastKm -= 12.0 * strait * (0.55 + 0.9 * vnoise(xz / 27.0 + 3.0));
   float shoreEdge = max(0.75 * pixelKm, 0.02);
   float land = smoothstep(-shoreEdge, shoreEdge, coastKm);
   // (A river is water the bake drew where the map has land.)
-  float river = (1.0 - land) * smoothstep(0.3, 0.34, relief.b) * step(-12.0, coastKm);
+  float river = (1.0 - land) * smoothstep(0.3, 0.34, relief.b) * step(-12.0, coastKm) * (1.0 - smoothstep(0.08, 0.3, strait));
   float drowned = 0.0;
   float height = clamp((relief.b - 0.3) / 0.7, 0.0, 1.0);
   // (The height of the country at large, its valleys and crests drawn together: what says range or lowland.)
@@ -452,6 +457,39 @@ void main() {
     slope += vec2(-rimOut.y, rimOut.x) * gully * 0.8 * wall * rimSeen * (1.0 - smoothstep(110.0, 190.0, uViewKm));
     ground = mix(ground, vec3(0.62, 0.57, 0.5) * (0.5 + 1.3 * dot(ground, vec3(0.3, 0.55, 0.15))), 0.6 * wall * rimSeen);
   }
+  // The throat: dark round mouths in the ground, each in its own steps of pale terrace that go down to it.
+  float mouths = 0.0;
+  vec2 atThroat = xz - uThroat;
+  if (dot(atThroat, atThroat) < 90.0 * 90.0 && land > 0.0) {
+    vec2 toSun = normalize(uSunDir.xz);
+    for (int i = 0; i < 4; i++) {
+      vec3 mouth = i == 0 ? vec3(0.0, 0.0, 13.0) : i == 1 ? vec3(35.0, -21.0, 9.0) : i == 2 ? vec3(-31.0, 19.0, 10.5) : vec3(17.0, 37.0, 7.0);
+      vec2 q = atThroat - mouth.xy;
+      float wobble = 1.0 + 0.22 * (vnoise(q / (0.55 * mouth.z) + 7.3 * float(i)) - 0.5) + 0.08 * (vnoise(q / (0.16 * mouth.z) + 3.1 * float(i)) - 0.5);
+      float d = length(q) / (mouth.z * wobble);
+      if (d < 2.4) {
+        // (The side of a step that faces the sun is lit and the side that faces away is dark: the steps face inward.)
+        float facing = 0.5 - 0.5 * dot(q / max(length(q), 1e-3), toSun);
+        float down = clamp((d - 1.0) / 1.3, 0.0, 1.0);
+        float tread = fract(down * 4.0);
+        float riser = smoothstep(0.0, 0.12, tread) * (1.0 - smoothstep(0.2, 0.34, tread));
+        float around = (1.0 - smoothstep(2.05, 2.4, d)) * smoothstep(0.95, 1.02, d);
+        vec3 stone = vec3(0.5, 0.44, 0.34) * (0.5 + 0.5 * (floor(down * 4.0) + 0.5) / 4.0) * (0.85 + 0.3 * vnoise(q / 1.7));
+        stone *= mix(1.0, mix(0.3, 1.7, facing), riser);
+        ground = mix(ground, stone, 0.92 * around);
+        float pit = 1.0 - smoothstep(0.9, 1.02, d);
+        // (The mouth itself: no bottom to be seen, and the wall that faces the sun lit a little way down.)
+        vec3 dark = vec3(0.012, 0.012, 0.014) + vec3(0.2, 0.17, 0.13) * smoothstep(0.62, 1.0, d) * smoothstep(0.55, 0.95, facing);
+        ground = mix(ground, dark, pit);
+        mouths = max(mouths, max(pit, 0.5 * around));
+      }
+    }
+  }
+  // The spine: one ridge of ice along its crest, lit on the side of the sun, with its shadow laid along its other side.
+  vec2 fromSpine = xz - vec2(${X(AT.storm.x).toFixed(1)}, ${Z(AT.storm.y).toFixed(1)});
+  float spineBand = smoothstep(-390.0, -300.0, fromSpine.x) * (1.0 - smoothstep(250.0, 330.0, fromSpine.x)) * (1.0 - smoothstep(14.0, 30.0, abs(fromSpine.y - 10.0 - 0.05 * fromSpine.x))) * land;
+  float ice = spineBand * smoothstep(0.5, 0.64, height + 0.05 * (vnoise(xz / 4.0) - 0.5));
+  ground = mix(ground, vec3(0.74, 0.84, 0.95) * (0.82 + 0.3 * vnoise(xz / 2.3 + 5.0)), 0.92 * ice);
   vec3 n = normalize(vec3(-slope.x, 0.8, -slope.y));
   float shade = cloudShade(real);
   // The ranges throw their shadows on the country and on the sea beside it: the baked horizon toward the sun is read against the
@@ -497,6 +535,8 @@ void main() {
   if (uDusk > 0.0) sunTan = max(sunH, 0.0) / sqrt(max(1.0 - sunH * sunH, 1e-3));
   float thrown = smoothstep(castKm - 0.08 - 0.3 * sunTan, castKm + 0.04 + 0.2 * sunTan, sunTan);
   shade *= mix(1.0, thrown, smoothstep(60.0, 160.0, uViewKm) * mix(0.62, 0.85, smoothstep(700.0, 1300.0, uViewKm)) * (1.0 - 0.5 * dome) * smoothstep(-1.5, 0.5, coastKm));
+  // (The shadow of the ice ridge is the darkest thing on the spine, and nothing softens it.)
+  shade *= mix(1.0, thrown, 0.85 * spineBand * (1.0 - ice));
   // (The shadows the cloud threw were the sun's: they go with it.)
   if (uDusk > 0.0) shade = mix(shade, 1.0, min(1.0, 1.7 * uEmber.x));
   float mu = limbCos(xz);
