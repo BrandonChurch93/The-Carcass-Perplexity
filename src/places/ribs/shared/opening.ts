@@ -47,24 +47,31 @@ export function openingLight(seconds: number): number {
 }
 
 // ---- The staging of the restaged opening: the facts every folder keys off. World metres and seconds of the place (the film's first frame is 0). ----
-// The lens itself is `openingCamera(seconds)` and `approachEye(seconds)` in ../cameras: it opens at (200, 850), 8 m over the sea, looking
-// north-north-west (yaw -18.5 degrees) on a 36 degree lens (60 degrees wide), and sweeps west at 66 m/s onto the old move (its own from 16 s).
+// The lens itself is `openingCamera(seconds)` and `approachEye(seconds)` in ../cameras: it opens at (150, 700), 3.5 m over the still sea in the
+// trough behind a heavy swell, looking north-north-west (yaw -18.5 degrees, 13 degrees up) on a 36 degree lens (60 degrees wide). It tops that
+// swell's crest at 0.45 s (9 m up), is down at 4.5 m in the next trough at 1.5 s, and sweeps west at 62 m/s onto the old move (its own from
+// 16 s), crossing the shore's edge at x = -207 at 13 s.
 // In the first frame L1 stands in the left half from the sea to the top, R1 leans in from the right edge, their tips 8 degrees apart.
 
 /**
- * The strike: a heavy swell breaks on the seaward foot of the near blade. `foot` is the middle of the burst on the shore's edge before L1
- * (7 percent in from the left edge of the first frame, 700 m from the lens), `half` its half length along the shore (x), `times` the
- * seconds its water first leaves the sea, `height` the metres the burst should climb, and `hangs` the seconds a burst of that height takes
- * to go up and come down (it falls as water falls). The sun is behind the lens' left shoulder: the burst is lit from the front and its
- * thin top is bright against the dark blade foot and the dark sky.
+ * The strike: a heavy swell breaks on the shore's edge before the seaward foot of the near blade. `foot` is the middle of the burst (a
+ * quarter in from the left edge of the first frame and 440 m from the lens: before L1's foot as the lens sees it, and it slides right
+ * against the blade as the lens sweeps west, to the middle of the frame by 6 s), `half` its half length
+ * along the shore (x), `times` the seconds its water first leaves the sea, `height` the metres the first burst climbs (a third of the
+ * frame's height in the first frame; L1 is 430 m), `rises` the seconds its head takes to stand at full height (thrown water slowed by the
+ * air, not a stone), `hangs` the seconds from leaving the sea to all of it being down, and `lesser` the second burst's height as a part
+ * of the first. The crest ahead of the lens hides the shore until 0.3 s. The lens passes 120 m west of `foot` at 13 s: both bursts are down by then.
+ * The sun is behind the lens' left shoulder: the burst is lit from the front, pale against the blade's shaded foot and the dark sky.
  */
 export const STRIKE = {
   blade: 'L1',
-  foot: [-290, 0, 345] as [number, number, number],
+  foot: [-90, 0, 335] as [number, number, number],
   half: 60,
-  times: [0.35, 4.0] as [number, number],
-  height: 50,
-  hangs: 6.4,
+  times: [0.35, 4.4] as [number, number],
+  height: 100,
+  rises: 2.1,
+  hangs: 9,
+  lesser: 0.6,
 };
 
 /** Seconds since strike `n` (0 or 1) left the sea, negative before it. */
