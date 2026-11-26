@@ -10,5 +10,12 @@
   "d": "orb-iss44-sinai.jpg",
   "a": "orb-modis-arabia.jpg"
  },
- "a": "The first reference image is a blurred, low-resolution satellite image of a whole continent on an ocean world, about 4,500 kilometres wide, lying in a dark sea: long curved mountain ranges of pale rock, lower country between and around them, a ragged coast with islands and teal shallows. Make the same satellite image at full resolution."
+ "a": "The first reference image is a blurred, low-resolution satellite image of a whole continent on an ocean world, about 4,500 kilometres wide, lying in a dark sea: long curved mountain ranges of pale rock, lower country between and around them, a ragged coast with islands and teal shallows. Make the same satellite image at full resolution.",
+ "win": {
+  "a": "The first reference image is a blurred, low-resolution satellite image of a region about 1,800 kilometres wide: one part of a continent on an ocean world that lies in a dark sea, with long curved mountain ranges of pale rock, lower country between and around them, and a ragged coast with islands and teal shallows.",
+  "b": "The first reference image is a blurred, low-resolution satellite image of a region about 900 kilometres wide: one part of a continent on an ocean world, with curved mountain ranges of pale rock, lower country between them and a dark sea.",
+  "c": "The first reference image is a blurred, low-resolution satellite image of a region about 390 kilometres wide: one part of a great ring-shaped mountain massif of pale rock around a round black-blue lake, with lower country around the massif and the sea beyond.",
+  "d": "The first reference image is a blurred, low-resolution satellite image of a region about 110 kilometres wide: one part of a round lake about 100 kilometres across, black-blue in the middle with a thin margin of amber-gold shallows along its shore, and of the high cold massif of pale ivory-grey rock around it."
+ },
+ "winEnd": " The picture shows only the part that is there. Where it shows open water, the result is the same open water with nothing in it: no island, no ship, no wake. Where it shows land, the result is the same land. Make the same satellite image at full resolution."
 }
