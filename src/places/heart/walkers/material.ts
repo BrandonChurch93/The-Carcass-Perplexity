@@ -7,6 +7,7 @@ attribute vec4 aInfo;
 attribute vec2 aLook;
 attribute float aHeat;
 attribute float aWho;
+attribute vec3 aBake;
 uniform float uPixel;
 uniform vec4 uPools[14];
 uniform vec4 uFeet[56];
@@ -19,6 +20,7 @@ varying vec4 vInfo;
 varying vec2 vLook;
 varying float vHeat;
 varying float vWho;
+varying vec3 vBake;
 void main() {
   vec3 n = normalize(normal);
   vec3 p = position;
@@ -54,6 +56,7 @@ void main() {
   vLook = aLook;
   vHeat = aHeat;
   vWho = aWho;
+  vBake = aBake;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
   // One that is not in this shot is not drawn.
   if (uPools[int(aWho + 0.5)].w > 0.5) gl_Position = vec4(0.0, 0.0, 3.0, 1.0);
@@ -90,7 +93,12 @@ varying vec4 vInfo;
 varying vec2 vLook;
 varying float vHeat;
 varying float vWho;
+varying vec3 vBake;
 uniform float uPixel;
+uniform sampler2D tTorso;
+uniform sampler2D tTorsoNh;
+uniform sampler2D tLimb;
+uniform sampler2D tLimbNh;
 uniform sampler2D tHide;
 uniform sampler2D tHideNh;
 uniform sampler2D tFlake;
@@ -146,7 +154,6 @@ void main() {
   float pad = smoothstep(3.5, 3.9, kind) * (1.0 - smoothstep(4.1, 4.5, kind));
   float rag = smoothstep(4.5, 4.9, kind);
   float limb = 1.0 - max(body, rag);
-  float pale = vInfo.x;
   float seed = vInfo.w;
 
   // Which way the skin's own two directions run in the world here, so that relief drawn on the skin can turn the normal.
@@ -160,110 +167,168 @@ void main() {
   det = (det < 0.0 ? -1.0 : 1.0) * max(abs(det), 1e-10);
   vec3 gu = (r1 * dux.x + r2 * duy.x) / det;
   vec3 gv = (r1 * dux.y + r2 * duy.y) / det;
+  vec3 hu = gu * inversesqrt(max(dot(gu, gu), 1e-12));
+  vec3 hv = gv * inversesqrt(max(dot(gv, gv), 1e-12));
   gu /= max(1.0, length(gu));
   gv /= max(1.0, length(gv));
 
-  // Two pictures of skin: flaking hide in broad patches, and cracked hide finer. On a limb the fine one is drawn out along it
-  // and winds round it a little as it goes down, as a dried root does.
-  vec2 wound = vec2(vUv.y + 0.22 * vUv.x, vUv.x);
-  vec2 uvF = mix(vUv / 2.5, vUv.yx / vec2(1.2, 1.7), limb) + seed * 3.1;
-  vec2 uvH = mix(vec2(vUv.y * 0.8 - vUv.x * 0.25, vUv.x * 0.9 + vUv.y * 0.2) / 2.2, wound / vec2(0.62, 1.15), limb) + seed * 1.7;
-  vec3 flakeC = texture2D(tFlake, uvF).rgb;
-  vec3 hideC = texture2D(tHide, uvH).rgb;
-  vec3 nhF = texture2D(tFlakeNh, uvF).rgb;
-  vec3 nhH = texture2D(tHideNh, uvH).rgb;
+  // The skin is two photographs of dry hide, drawn at their own contrast: on the trunk a sheet of shrunken, cracked, peeling hide; on the legs
+  // and the neck a sheet of dry cords and bark whose grain runs along the limb and winds round it a little as it goes down.
+  float onLimb = 1.0 - max(body, rag);
+  vec2 uvS = mix(vUv.yx / vec2(3.0, 3.4) + seed * 3.1, vec2(vUv.y + 0.07 * vUv.x, vUv.x) / vec2(1.25, 2.3) + seed * 1.7, onLimb);
+  vec2 sx = dFdx(uvS);
+  vec2 sy = dFdy(uvS);
+  vec2 bakeUv = vec2(vBake.x, (clamp(vBake.y, 0.003, 0.997) + floor(vBake.z + 0.5)) / 3.0);
+  vec2 bx = dFdx(bakeUv);
+  vec2 by = dFdy(bakeUv);
   float fine = smoothstep(260.0, 60.0, far);
-  // The grain of the two pictures is a few centimetres across: two or three pixels of the hero. Turned as far as the pictures have it, it
-  // put half of those pixels in the dark and the hide came out as red and black sand. It is kept as a faint tooth; the relief that reads is the folds.
-  vec2 slopeF = (nhF.rg - 0.5) * 0.4;
-  vec2 slopeH = (nhH.rg - 0.5) * 0.35 * fine;
-  // On a limb of the hero the grain is what the lens is focused on: it is turned up there, and its pits are darkened below.
-  vec2 slope = mix(slopeF + vec2(slopeH.x * 0.8 + slopeH.y * 0.6, slopeH.y * 0.8 - slopeH.x * 0.6), slopeF.yx * 1.6 + slopeH.yx * 2.4, limb);
-  float high = mix(nhF.b, nhH.b, 0.5 * fine);
+  vec3 skinC;
+  vec3 nh;
+  vec3 slopeW;
+  float plate = 0.0;
+  if (onLimb > 0.5) {
+    skinC = textureGrad(tLimb, uvS, sx, sy).rgb;
+    nh = textureGrad(tLimbNh, uvS, sx, sy).rgb;
+    // Across the sheet is round the limb, down the sheet is along it.
+    slopeW = (gv * (nh.r - 0.5) - gu * (nh.g - 0.5)) * 2.6 * fine;
+    // Over the cords what is left of the hide: plates with cracks between them, some lifted at an edge, the cords bare where a plate has gone.
+    vec2 uvP = vUv / vec2(1.9, 1.5) + seed * 5.3;
+    vec2 px = dFdx(uvP);
+    vec2 py = dFdy(uvP);
+    vec3 plateN = textureGrad(tTorsoNh, uvP, px, py).rgb;
+    vec3 plateC = textureGrad(tTorso, uvP, px, py).rgb;
+    plate = smoothstep(0.42, 0.58, plateN.b + 0.25 * (vnoise(vUv * vec2(0.5, 0.9) + seed * 3.0) - 0.5)) * (1.0 - tendril);
+    slopeW = mix(slopeW, slopeW * 0.35 + (gu * (plateN.r - 0.5) - gv * (plateN.g - 0.5)) * 3.0 * fine, plate);
+    skinC = mix(skinC * 0.8, plateC * 1.7, plate);
+    nh.b = mix(nh.b * 0.8, 0.25 + 0.75 * plateN.b, plate);
+  } else {
+    skinC = textureGrad(tTorso, uvS, sx, sy).rgb;
+    nh = textureGrad(tTorsoNh, uvS, sx, sy).rgb;
+    slopeW = (gv * (nh.r - 0.5) - gu * (nh.g - 0.5)) * 2.2 * fine;
+  }
+  float high = nh.b;
+  // The sheets are browner than the animals of the pictures, which are the grey of old bone and ash with a little umber in it.
+  skinC = mix(vec3(dot(skinC, vec3(0.3, 0.55, 0.15))), skinC, mix(0.6, 0.3, onLimb));
 
   // Rings round the neck, closer and deeper toward the crown; creases across a joint.
   float crown = smoothstep(0.62, 0.95, vLook.y) * neck;
   float ringAt = vUv.x * 6.2832 / 0.42 + mix(11.0, 2.5, neck) * vnoise(vUv * vec2(0.9, 5.0) + seed) + mix(5.0, 1.0, neck) * vnoise(vUv * vec2(2.3, 11.0) + seed * 1.7);
   float crease = (1.0 - neck) * limb * (1.0 - tendril) * vLook.y * 0.55;
   float ringAmp = (0.04 * crown + crease + 0.015 * neck) * fine;
-  slope.x += ringAmp * sin(ringAt) * 1.1;
-  slope.y += 0.9 * neck * smoothstep(0.3, 0.8, vLook.y) * fine * (vnoise(vec2(vUv.x * 0.3, vUv.y * 60.0 + 0.25) + seed * 1.3) - vnoise(vec2(vUv.x * 0.3, vUv.y * 60.0 - 0.25) + seed * 1.3));
+  slopeW += gu * ringAmp * sin(ringAt) * 1.1;
   float ridge = 0.5 + 0.5 * cos(ringAt);
+  vec3 n = normalize(ng + slopeW * (1.0 - 0.8 * tendril));
 
-  // Where the hide is drawn together at the two ends of the body its pattern would pinch: it lies plain there.
-  float pole = body * smoothstep(0.4, 0.8, vLook.y);
-  slope *= 1.0 - pole;
-  // Leather: folds that run along a limb and hang down a flank, finer ones across them, and rings of slack skin round a joint.
-  float px = far * uPixel;
-  float folds = (1.0 - tendril) * (1.0 - rag) * (1.0 - pole) * smoothstep(0.12, 0.03, px);
-  float fold = 0.5;
-  if (folds > 0.0) {
-    // On a limb they are the grain of dead wood: short, and they wander round it, so that no line runs the length of a bone.
-    // On the body they are lumps and short wrinkles that run no one way: torn dry flesh, not cloth that hangs.
-    vec2 fu = mix(vec2(vUv.x * 1.8 + 1.3 * vnoise(vUv * vec2(0.9, 1.1) + seed), vUv.y * 1.5 + 1.3 * vnoise(vUv * vec2(1.3, 0.8) + seed * 2.0)), vec2(vUv.x * 2.6 + 1.6 * vnoise(vUv * vec2(1.7, 6.0) + seed * 3.1), vUv.y * 13.0 + 4.5 * vnoise(vUv * vec2(2.3, 3.0) + seed * 2.3)), limb) + seed * 5.3;
-    float f1 = vnoise(fu);
-    float f2 = vnoise(fu * vec2(2.3, 2.1) + 7.0);
-    fold = 0.65 * f1 + 0.35 * f2;
-    vec2 across = mix(vec2(1.0, 0.0), vec2(0.0, 1.0), limb);
-    // The body is shrivelled: its folds are deeper and cross one another.
-    float f3 = vnoise(fu.yx * vec2(1.7, 1.3) + 3.0);
-    slope += folds * across * ((f1 - 0.5) * 1.5 + (f2 - 0.5) * 0.9) * (1.0 + 1.3 * body);
-    slope += folds * across.yx * (f3 - 0.5) * 1.6 * body;
-    fold = mix(fold, 0.6 * fold + 0.4 * f3, body);
-  }
-  // The body is dried flesh: strands that run along it, each a ridge with a dark gap beside it, none straight.
-  float strand = 1.0;
-  float flesh = body * (1.0 - pole) * folds;
-  if (flesh > 0.0) {
-    vec2 su = vec2(vUv.x * 0.8 + 0.7 * vnoise(vUv * vec2(1.3, 2.9) + seed * 2.0), vUv.y * 3.4 + 2.6 * vnoise(vUv * vec2(1.5, 2.1) + seed * 4.0)) + seed * 2.3;
-    float s0 = 1.0 - abs(2.0 * vnoise(su) - 1.0);
-    float s1 = 1.0 - abs(2.0 * vnoise(su + vec2(0.0, 0.22)) - 1.0);
-    float t0 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + 5.0) - 1.0);
-    float t1 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + vec2(5.0, 5.22)) - 1.0);
-    strand = 0.65 * s0 + 0.35 * t0;
-    slope.y += flesh * ((s1 - s0) * 1.8 + (t1 - t0) * 1.4);
-  }
-  vec3 n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril) * (1.0 - 0.25 * body));
-
-  // A hide the colour of the crust it walks on: charcoal, a little brown, darker in its folds. No two alike: each is sootier or browner than the next.
-  float lum = 0.55 * dot(flakeC, vec3(4.0)) + 0.45 * dot(hideC, vec3(5.2));
-  lum = mix(lum, 0.9, pole);
-  float crack = mix(smoothstep(0.1, 0.5, high), 0.8, pole);
-  crack = mix(crack, 0.75, 0.7);
-  float mottle = vnoise(vUv * 0.9 + seed * 7.0);
+  // No two alike: each is sootier or browner than the next.
+  float crack = mix(smoothstep(0.1, 0.5, high), 0.75, 0.7);
   float sooty = fract(sin(vWho * 12.9898 + 4.1) * 43758.5453);
   float warm = fract(sin(vWho * 78.233 + 1.7) * 43758.5453);
-  // The look of the place deepens the colour of what is dark: a hide a tenth warmer than grey comes out brown-black, as in the pictures.
-  vec3 hide = vec3(0.085, 0.088, 0.09) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.84 + 0.42 * sooty);
-  // pale: a little lighter at the joints and where the skin is worn, never bone.
-  vec3 albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold)) * mix(1.0, 0.5 + 0.75 * strand, flesh);
+  float pale = vInfo.x;
+  vec3 tone = mix(vec3(1.07, 1.0, 0.93), vec3(0.95, 1.0, 1.06), warm) * (0.78 + 0.5 * sooty);
+  // The trunk is ash grey and umber; a leg is darker and browner (45 29 23 in its shade on the picture's hero, about 70 50 40 where the sky finds it).
+  vec3 albedo = skinC * tone * mix(vec3(0.44), vec3(0.2), onLimb) * (0.9 + 0.25 * (pale - 0.4));
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
-  // Dry sinew and torn flesh: the pits of the grain are black, its ridges worn pale, and ash is caked on it in scabs with hard edges.
-  float rough = (1.0 - tendril) * (1.0 - rag) * (1.0 - pole) * fine * (1.0 - 0.75 * neck * smoothstep(0.3, 0.9, vLook.y));
-  float pit = smoothstep(0.22, 0.62, high);
-  albedo *= mix(1.0, mix(0.42, 1.12, pit), rough);
-  albedo *= mix(1.0, mix(0.68, 1.1, smoothstep(0.3, 0.7, fold)), rough * limb);
-  // A leg is darker and browner than the back: measured on the picture's hero, 45 29 23 in its shade and about 70 50 40 where the sky finds it.
-  albedo *= mix(vec3(1.0), vec3(0.7, 0.6, 0.54), limb * (1.0 - tendril));
-  float cake = smoothstep(0.56, 0.6, vnoise(vUv * vec2(1.6, 4.5) + seed * 9.0) + 0.3 * (high - 0.5) + 0.12 * (fold - 0.5)) * rough;
-  albedo = mix(albedo, vec3(0.125, 0.115, 0.105) * (0.55 + 0.6 * high), 0.6 * cake * mix(0.7, 0.8, limb));
-  // Ash lies pale on every ridge of the trunk that looks up, and the hollows between are black.
-  float crest = body * (1.0 - pole) * smoothstep(0.52, 0.72, fold + 0.25 * (high - 0.5)) * smoothstep(-0.35, 0.45, n.y) * fine;
-  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.6 + 0.5 * high), 0.55 * crest);
-  albedo *= 1.0 - 0.45 * body * (1.0 - pole) * fine * smoothstep(0.42, 0.22, fold);
-  // Scab like the crust's own skin, in patches on the back and the rump.
-  float scab = body * smoothstep(-0.1, 0.5, ng.y) * smoothstep(0.5, 0.68, vnoise(vUv * 0.55 + seed * 3.0) + 0.25 * (nhF.b - 0.5)) * (1.0 - pole);
-  albedo = mix(albedo, vec3(0.1, 0.097, 0.094) * (0.6 + 0.4 * dot(flakeC, vec3(4.0))) * (0.7 + 0.3 * crack), 0.8 * scab);
+  // The pits of the grain are black and its ridges worn pale.
+  float pit = smoothstep(0.2, 0.62, high);
+  albedo *= mix(1.0, mix(0.6, 1.12, pit), (1.0 - tendril) * fine);
+  // The trunk keeps its first skin: flaking hide in broad patches and cracked hide finer, over folds and strands drawn here.
+  vec2 uvF = vUv / 2.5 + seed * 3.1;
+  vec2 uvH = vec2(vUv.y * 0.8 - vUv.x * 0.25, vUv.x * 0.9 + vUv.y * 0.2) / 2.2 + seed * 1.7;
+  vec2 dFx = dFdx(uvF);
+  vec2 dFy = dFdy(uvF);
+  vec2 dHx = dFdx(uvH);
+  vec2 dHy = dFdy(uvH);
+  float ownBody = 1.0;
+  if (body > 0.5) {
+    // Two pictures of skin: flaking hide in broad patches, and cracked hide finer. On a limb the fine one is drawn out along it
+    // and winds round it a little as it goes down, as a dried root does.
+    vec3 flakeC = textureGrad(tFlake, uvF, dFx, dFy).rgb;
+    vec3 hideC = textureGrad(tHide, uvH, dHx, dHy).rgb;
+    vec3 nhF = textureGrad(tFlakeNh, uvF, dFx, dFy).rgb;
+    vec3 nhH = textureGrad(tHideNh, uvH, dHx, dHy).rgb;
+    // The grain of the two pictures is a few centimetres across: two or three pixels of the hero. Turned as far as the pictures have it, it
+    // put half of those pixels in the dark and the hide came out as red and black sand. It is kept as a faint tooth; the relief that reads is the folds.
+    vec2 slopeF = (nhF.rg - 0.5) * 0.4;
+    vec2 slopeH = (nhH.rg - 0.5) * 0.35 * fine;
+    // On a limb of the hero the grain is what the lens is focused on: it is turned up there, and its pits are darkened below.
+    vec2 slope = mix(slopeF + vec2(slopeH.x * 0.8 + slopeH.y * 0.6, slopeH.y * 0.8 - slopeH.x * 0.6), slopeF.yx * 1.6 + slopeH.yx * 2.4, limb);
+    high = mix(nhF.b, nhH.b, 0.5 * fine);
+
+    slope.y += 0.9 * neck * smoothstep(0.3, 0.8, vLook.y) * fine * (vnoise(vec2(vUv.x * 0.3, vUv.y * 60.0 + 0.25) + seed * 1.3) - vnoise(vec2(vUv.x * 0.3, vUv.y * 60.0 - 0.25) + seed * 1.3));
+
+    // Where the hide is drawn together at the two ends of the body its pattern would pinch: it lies plain there.
+    float pole = body * smoothstep(0.4, 0.8, vLook.y);
+    slope *= 1.0 - pole;
+    // Leather: folds that run along a limb and hang down a flank, finer ones across them, and rings of slack skin round a joint.
+    float px = far * uPixel;
+    float folds = (1.0 - tendril) * (1.0 - rag) * (1.0 - pole) * smoothstep(0.12, 0.03, px);
+    float fold = 0.5;
+    if (folds > 0.0) {
+      // On a limb they are the grain of dead wood: short, and they wander round it, so that no line runs the length of a bone.
+      // On the body they are lumps and short wrinkles that run no one way: torn dry flesh, not cloth that hangs.
+      vec2 fu = mix(vec2(vUv.x * 1.8 + 1.3 * vnoise(vUv * vec2(0.9, 1.1) + seed), vUv.y * 1.5 + 1.3 * vnoise(vUv * vec2(1.3, 0.8) + seed * 2.0)), vec2(vUv.x * 2.6 + 1.6 * vnoise(vUv * vec2(1.7, 6.0) + seed * 3.1), vUv.y * 13.0 + 4.5 * vnoise(vUv * vec2(2.3, 3.0) + seed * 2.3)), limb) + seed * 5.3;
+      float f1 = vnoise(fu);
+      float f2 = vnoise(fu * vec2(2.3, 2.1) + 7.0);
+      fold = 0.65 * f1 + 0.35 * f2;
+      vec2 across = mix(vec2(1.0, 0.0), vec2(0.0, 1.0), limb);
+      // The body is shrivelled: its folds are deeper and cross one another.
+      float f3 = vnoise(fu.yx * vec2(1.7, 1.3) + 3.0);
+      slope += folds * across * ((f1 - 0.5) * 1.5 + (f2 - 0.5) * 0.9) * (1.0 + 1.3 * body);
+      slope += folds * across.yx * (f3 - 0.5) * 1.6 * body;
+      fold = mix(fold, 0.6 * fold + 0.4 * f3, body);
+    }
+    // The body is dried flesh: strands that run along it, each a ridge with a dark gap beside it, none straight.
+    float strand = 1.0;
+    float flesh = body * (1.0 - pole) * folds;
+    if (flesh > 0.0) {
+      vec2 su = vec2(vUv.x * 0.8 + 0.7 * vnoise(vUv * vec2(1.3, 2.9) + seed * 2.0), vUv.y * 3.4 + 2.6 * vnoise(vUv * vec2(1.5, 2.1) + seed * 4.0)) + seed * 2.3;
+      float s0 = 1.0 - abs(2.0 * vnoise(su) - 1.0);
+      float s1 = 1.0 - abs(2.0 * vnoise(su + vec2(0.0, 0.22)) - 1.0);
+      float t0 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + 5.0) - 1.0);
+      float t1 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + vec2(5.0, 5.22)) - 1.0);
+      strand = 0.65 * s0 + 0.35 * t0;
+      slope.y += flesh * ((s1 - s0) * 1.8 + (t1 - t0) * 1.4);
+    }
+    n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril) * (1.0 - 0.25 * body));
+
+    // A hide the colour of the crust it walks on: charcoal, a little brown, darker in its folds. No two alike: each is sootier or browner than the next.
+    float lum = 0.55 * dot(flakeC, vec3(4.0)) + 0.45 * dot(hideC, vec3(5.2));
+    lum = mix(lum, 0.9, pole);
+    crack = mix(smoothstep(0.1, 0.5, high), 0.8, pole);
+    crack = mix(crack, 0.75, 0.7);
+    float mottle = vnoise(vUv * 0.9 + seed * 7.0);
+    // The look of the place deepens the colour of what is dark: a hide a tenth warmer than grey comes out brown-black, as in the pictures.
+    vec3 hide = vec3(0.085, 0.088, 0.09) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.84 + 0.42 * sooty);
+    // pale: a little lighter at the joints and where the skin is worn, never bone.
+    albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold)) * mix(1.0, 0.5 + 0.75 * strand, flesh);
+    // Dry sinew and torn flesh: the pits of the grain are black, its ridges worn pale, and ash is caked on it in scabs with hard edges.
+    float rough = (1.0 - tendril) * (1.0 - rag) * (1.0 - pole) * fine * (1.0 - 0.75 * neck * smoothstep(0.3, 0.9, vLook.y));
+    pit = smoothstep(0.22, 0.62, high);
+    albedo *= mix(1.0, mix(0.42, 1.12, pit), rough);
+    albedo *= mix(1.0, mix(0.68, 1.1, smoothstep(0.3, 0.7, fold)), rough * limb);
+    // A leg is darker and browner than the back: measured on the picture's hero, 45 29 23 in its shade and about 70 50 40 where the sky finds it.
+    albedo *= mix(vec3(1.0), vec3(0.7, 0.6, 0.54), limb * (1.0 - tendril));
+    float cake = smoothstep(0.56, 0.6, vnoise(vUv * vec2(1.6, 4.5) + seed * 9.0) + 0.3 * (high - 0.5) + 0.12 * (fold - 0.5)) * rough;
+    albedo = mix(albedo, vec3(0.125, 0.115, 0.105) * (0.55 + 0.6 * high), 0.6 * cake * mix(0.7, 0.8, limb));
+    // Ash lies pale on every ridge of the trunk that looks up, and the hollows between are black.
+    float crest = body * (1.0 - pole) * smoothstep(0.52, 0.72, fold + 0.25 * (high - 0.5)) * smoothstep(-0.35, 0.45, n.y) * fine;
+    albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.6 + 0.5 * high), 0.3 * crest);
+    albedo *= 1.0 - 0.45 * body * (1.0 - pole) * fine * smoothstep(0.42, 0.22, fold);
+    // Scab like the crust's own skin, in patches on the back and the rump.
+    float scab = body * smoothstep(-0.1, 0.5, ng.y) * smoothstep(0.5, 0.68, vnoise(vUv * 0.55 + seed * 3.0) + 0.25 * (nhF.b - 0.5)) * (1.0 - pole);
+    albedo = mix(albedo, vec3(0.1, 0.097, 0.094) * (0.6 + 0.4 * dot(flakeC, vec3(4.0))) * (0.7 + 0.3 * crack), 0.8 * scab);
+    ownBody = mix(1.0, 0.5 + 0.5 * strand, flesh) * (0.75 + 0.25 * smoothstep(0.2, 0.6, fold));
+  }
+  float stain = smoothstep(0.35, 0.75, vnoise(vUv * vec2(1.3, 9.0) + seed * 2.0));
   // The last third of the neck pales to bone and is ribbed like a spine; the roots are pale fibre, cream with brown stains. They do not glow:
   // they are pale things in the light of the pool.
-  float stain = smoothstep(0.35, 0.75, vnoise(vUv * vec2(1.3, 9.0) + seed * 2.0));
   vec3 bone = vec3(0.38, 0.33, 0.265) * mix(1.0, 0.5, stain) * (0.7 + 0.3 * crack);
   float crownPale = neck * mix(0.04, 1.0, smoothstep(0.28, 0.93, vLook.y));
   // The lower neck and the crown are dry wood, brown, with pale worn cords that run down them into the roots and dark gaps between.
   // The grain runs along the neck: each cord holds for metres, so that none steps across to the next in a zigzag.
   float cord = 0.5 * vnoise(vec2(vUv.x * 0.3, vUv.y * 60.0) + seed * 1.3) + 0.5 * vnoise(vec2(vUv.x * 0.7, vUv.y * 140.0) + seed * 2.1);
   vec3 wood = vec3(0.2, 0.158, 0.122) * mix(1.0, 0.6, stain) * (0.6 + 0.4 * crack);
-  albedo = mix(albedo, wood * mix(0.6, 1.4, smoothstep(0.3, 0.7, cord)) * (0.8 + 0.2 * ridge) * (0.8 + 0.24 * vnoise(vUv * vec2(2.6, 15.0) + seed)), 0.85 * crownPale);
+  albedo = mix(albedo, wood * mix(0.6, 1.4, smoothstep(0.3, 0.7, cord)) * (0.8 + 0.2 * ridge) * (0.8 + 0.24 * vnoise(vUv * vec2(2.6, 15.0) + seed)) * (0.55 + 0.9 * pit), 0.6 * crownPale);
   // A root is dark where it leaves the crown and tan below, where the pool finds it.
   // A tuft that is not over a pool has nothing to light it from below: its roots are dull and brown there, not pale specks under the sky.
   float fed = uPools[int(vWho + 0.5)].z;
@@ -275,15 +340,15 @@ void main() {
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
   float up = smoothstep(0.2, 0.8, ng.y);
-  float ash = up * smoothstep(0.95, 0.35, high + 0.4 * grit - 0.6 * up) * (1.0 - tendril) * (0.55 + 0.45 * body);
+  float ash = up * smoothstep(0.95, 0.35, high + 0.4 * grit - 0.6 * up) * (1.0 - tendril) * (0.55 - 0.1 * body);
   float dust = smoothstep(2.6, 0.1, vWorld.y) * (0.25 + 0.5 * grit) * (1.0 - tendril);
   albedo = mix(albedo, vec3(0.146, 0.146, 0.15) * (0.7 + 0.3 * grit), 0.55 * ash * smoothstep(0.4, 3.0, vWorld.y));
   // The dust is the crust's own: a foot is as dark as what it stands on.
-  albedo = mix(albedo, vec3(0.085, 0.078, 0.074) * (0.7 + 0.5 * grit), 0.6 * dust);
+  albedo = mix(albedo, vec3(0.115, 0.108, 0.1) * (0.6 + 0.6 * grit), dust * (0.45 + 0.4 * (1.0 - pit)));
   // The foot itself is caked dark with what it treads in.
-  albedo = mix(albedo, vec3(0.058, 0.05, 0.045) * (0.6 + 0.6 * grit), 0.92 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
+  albedo = mix(albedo, vec3(0.058, 0.05, 0.045) * (0.6 + 0.6 * grit), 0.6 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
 
-  float own = mix(1.0, 0.5 + 0.5 * strand, flesh) * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge)) * (0.75 + 0.25 * smoothstep(0.2, 0.6, fold));
+  float own = ownBody * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
   float occ = vInfo.y * own;
   // The hide is dull: no shine on it at all. Only the roots are wet.
   // The rig's light, put together here from its own parts and not by rigShade: its lake light gives a face that looks up a share of the
@@ -329,4 +394,50 @@ void main() {
     c += blackbody(mix(1050.0, 1230.0, hot)) * hot;
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
+}`;
+
+// The ash a pad throws up as it comes down: a low soft ring that spreads and thins. One card a pad, turned to the camera.
+export const PUFF_VERTEX = /* glsl */ `
+attribute vec2 aCorner;
+attribute float aFoot;
+uniform vec4 uPuffs[56];
+uniform vec4 uPuffSize[56];
+uniform highp sampler2D tGround;
+varying vec2 vCard;
+varying vec3 vWorld;
+varying vec3 vPuff;
+void main() {
+  vec4 q = uPuffs[int(aFoot + 0.5)];
+  vec4 e = uPuffSize[int(aFoot + 0.5)];
+  // x, z, the top of the crust there, how far it is through its life; its width and height, how thick it is, its own number.
+  vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
+  float top = texture2D(tGround, vec2((aFoot + 0.5) / 56.0, 0.5)).r;
+  vec3 p = vec3(q.x, top, q.z) + right * aCorner.x * e.x + vec3(0.0, 1.0, 0.0) * (aCorner.y * 0.5 + 0.5) * e.y;
+  vCard = aCorner;
+  vWorld = p;
+  vPuff = vec3(q.w, e.z, e.w);
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+  if (e.z <= 0.0) gl_Position = vec4(0.0, 0.0, 3.0, 1.0);
+}`;
+export const PUFF_FRAGMENT = /* glsl */ `
+precision highp float;
+varying vec2 vCard;
+varying vec3 vWorld;
+varying vec3 vPuff;
+${NOISE_GLSL}
+${RIG_GLSL}
+void main() {
+  float life = vPuff.x;
+  // Thick low down and at the middle; its edge is broken and rolls outward as it ages.
+  vec2 c = vec2(vCard.x, vCard.y * 0.5 + 0.5);
+  float body = (1.0 - smoothstep(0.25, 1.0, abs(c.x))) * (1.0 - smoothstep(0.1, 1.0, c.y)) * smoothstep(0.0, 0.06, c.y);
+  // Hollow in the middle once it has spread: the ash goes out from under the pad in a ring.
+  body *= mix(1.0, 0.45 + 0.55 * smoothstep(0.1, 0.6, abs(c.x)), smoothstep(0.2, 0.7, life));
+  float n = vnoise(vec2(c.x * 2.6 + vPuff.z * 7.0, c.y * 3.0 - life * 1.4)) * 0.6 + vnoise(vec2(c.x * 6.5 - vPuff.z * 3.0, c.y * 7.0 - life * 2.2)) * 0.4;
+  float a = smoothstep(0.32, 0.75, body * (0.55 + 0.9 * n)) * vPuff.y;
+  if (a < 0.003) discard;
+  // Grey ash in the light of the place: the sky on it from above, the lake under it.
+  vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * skyOpen(vWorld) * 0.8 + 0.5 * lakeIrradianceFar(vWorld, vec3(0.0, -1.0, 0.0));
+  vec3 col = vec3(0.12, 0.112, 0.105) * e / 3.14159;
+  gl_FragColor = vec4(rigOut(col) * a, a);
 }`;
