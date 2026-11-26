@@ -1,5 +1,5 @@
 {
-  "what": "The handoff between the Eye and the rise. On the frames either side of it both places draw the same picture: deep water and rings, seen from straight above the centre of the lake. This file has an identical copy in the other place and a test fails if the two differ.",
+  "what": "The handoff between the Eye and the rise. On the frames either side of it both places draw the same picture: the inside of the lid of cloud over the lake, seen from straight above its centre. The ring numbers are read only by the stand-ins. This file has an identical copy in the other place and a test fails if the two differ.",
   "climbPerFrame": 0.006,
   "water": "#0c1a2c",
   "ring": "#31465c",
@@ -16,7 +16,7 @@
     "insideWarm": [0.44, 0.38, 0.32],
     "drift": [0.035, -0.02],
     "erodeFrames": 73,
-    "erodePower": 0.55,
+    "erodePower": 0.9,
     "shadow": 0.5
   }
 }

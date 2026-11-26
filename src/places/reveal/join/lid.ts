@@ -60,7 +60,7 @@ uniform vec2 uLidDrift;
 const int LID_LAYERS = 11;
 // From the top down. x: height. y: how much of the layer is open when the sheet is whole (under 0: none). z: how thick it is.
 const vec3 LID_LAYER[11] = vec3[11](
-  vec3(1.064, 0.42, 0.9), vec3(1.043, 0.26, 1.6), vec3(1.022, 0.02, 2.6), vec3(1.0, -0.3, 3.6), vec3(0.979, -0.3, 3.6), vec3(0.957, -0.16, 2.8),
+  vec3(1.064, 0.42, 0.9), vec3(1.043, 0.26, 1.6), vec3(1.022, 0.04, 2.6), vec3(1.0, -0.12, 3.6), vec3(0.979, -0.04, 3.2), vec3(0.957, 0.06, 2.6),
   vec3(0.934, 0.12, 1.8), vec3(0.905, 0.34, 1.2), vec3(0.872, 0.46, 0.9), vec3(0.838, 0.54, 0.7), vec3(0.803, 0.6, 0.55));
 
 // The large shape of the sheet: where it is thick and where it will open. One field for every layer, so a gap is a well through all of them.
@@ -71,8 +71,14 @@ float lidBig(vec2 q) {
 
 // How open the sheet is at a place: it breaks up with time, it thins toward its rim, and it opens first a little off the middle.
 float lidOpen(vec2 q) {
-  vec2 w = q - vec2(0.045, -0.03);
-  return 1.05 * uLid.z + 0.9 * smoothstep(0.55, 1.4, length(q)) + 0.5 * smoothstep(0.2, 0.55, uLid.z) * exp(-dot(w, w) / 0.006);
+  return 1.05 * uLid.z + 0.9 * smoothstep(0.55, 1.4, length(q));
+}
+
+// The first gap: long, a little off the middle, and bent by the large shape of the sheet, so that its edge is the edge of the cloud.
+float lidWell(vec2 q, float big) {
+  vec2 w = q - vec2(0.05, -0.035) + (big - 0.5) * vec2(0.16, -0.11);
+  w = vec2(0.8 * w.x + 0.6 * w.y, -0.6 * w.x + 0.8 * w.y);
+  return 0.36 * smoothstep(0.08, 0.36, uLid.z) * exp(-w.x * w.x / 0.016 - w.y * w.y / 0.004);
 }
 
 // The cloud between the eye and whatever lies at 'far' along the ray: rgb is its light, a is how much of what lies behind comes through.
@@ -92,13 +98,13 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   vec2 d = uLidDrift * uLid.y;
   // The fibres of the cloud lie along the wind.
   vec2 wind = normalize(uLidDrift);
-  mat2 comb = mat2(wind.x * 0.45, -wind.y, wind.y * 0.45, wind.x);
+  mat2 comb = mat2(wind.x * 0.7, -wind.y, wind.y * 0.7, wind.x);
   vec3 sum = vec3(0.0);
   float tr = 1.0;
   // The cloud the lens itself stands in: soft, uneven, and nearly all there is for the few frames either side of the cut.
-  float fog = 0.95 * exp(-pow((camA - 0.996) / 0.026, 2.0));
+  float fog = 0.95 * exp(-pow((camA - 0.997) / 0.019, 2.0));
   if (fog > 0.001) {
-    float uneven = 0.82 + 0.36 * vnoise(ld.xz * 2.6 + vec2(camA * 9.0, uLid.y * 0.4));
+    float uneven = 0.82 + 0.36 * vnoise(ld.xz * 2.6 - wind * camA * 26.0);
     float a = fog * (0.9 + 0.1 * uneven);
     sum += a * within * uneven;
     tr *= 1.0 - a;
@@ -113,18 +119,28 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     float open = layer.y + lidOpen(q);
     if (open >= 1.0) continue;
     float big = lidBig(q);
+    open += lidWell(q, big);
+    // No fine cloud can close what the large shape leaves this open.
+    if ((0.56 * big - 0.06) * 1.6 + 0.5 <= open) continue;
     vec2 f = comb * q;
-    float fine = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(f * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * vnoise(f * 113.0 + layer.x * 53.0 + d * 9.0);
-    float n = clamp((0.56 * big + 0.44 * fine - 0.5) * 1.6 + 0.5, 0.0, 1.0);
-    float cover = smoothstep(open, open + 0.4, n);
+    float finest = vnoise(f * 113.0 + layer.x * 53.0 + d * 9.0);
+    float fine = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(f * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest;
+    float h = 0.56 * big + 0.44 * fine;
+    float n = clamp((h - 0.5) * 1.6 + 0.5, 0.0, 1.0);
+    float cover = smoothstep(open, open + 0.38, n);
     if (cover <= 0.0) continue;
-    float a = 1.0 - exp(-layer.z * thin * cover * cover * min(near / 0.02, 1.0) / down);
-    // The low sun reaches a place on the sheet when the cloud toward it stands no higher: the hollows lie in long soft shade.
-    vec2 toSun = q + sunSide * 0.035;
-    float sunward = 0.56 * lidBig(toSun) + 0.44 * 0.5 * vnoise(comb * toSun * 19.0 + layer.x * 37.0 + d * 3.0) + 0.11;
-    float lit = smoothstep(-0.05, 0.05, 0.56 * big + 0.44 * fine - sunward + (cover - 0.7) * 0.06) * mix(0.35, 1.0, tr);
-    vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.62 + 0.75 * n);
-    vec3 colour = mix(within * (0.75 + 0.5 * fine), top, above);
+    float a = 1.0 - exp(-layer.z * thin * cover * sqrt(cover) * min(near / 0.02, 1.0) / down);
+    vec3 colour = within * (0.75 + 0.5 * fine);
+    if (above > 0.0) {
+      // The low sun reaches a place on the sheet when the cloud toward it stands no higher: every lump has a lit side and a side in shade.
+      vec2 toSun = q + sunSide * 0.03;
+      vec2 fs = comb * toSun;
+      float hs = 0.56 * lidBig(toSun) + 0.44 * (0.5 * vnoise(fs * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(fs * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest);
+      float lit = clamp(0.5 + 4.5 * (h - hs) + 0.5 * (cover - 0.75), 0.0, 1.0);
+      lit = lit * lit * (3.0 - 2.0 * lit) * mix(0.4, 1.0, tr);
+      vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.6 + 0.8 * n);
+      colour = mix(colour, top, above);
+    }
     sum += tr * a * colour;
     tr *= 1.0 - a;
     if (tr < 0.01) break;
@@ -132,8 +148,9 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   // The shade of the sheet lies on the water under it.
   if (uLid.w > 0.0 && tr > 0.01) {
     vec2 g = (ro.xz + rd.xz * far - uLidFrame.xy) / uLidFrame.z - sunSide * 0.12;
-    float open = -0.3 + lidOpen(g);
-    float shadow = smoothstep(open, open + 0.34, clamp((lidBig(g) - 0.5) * 1.7 + 0.5, 0.0, 1.0));
+    float big = lidBig(g);
+    float open = -0.12 + lidOpen(g) + lidWell(g, big);
+    float shadow = smoothstep(open, open + 0.38, clamp((big - 0.5) * 1.6 + 0.5, 0.0, 1.0));
     tr *= 1.0 - uLid.w * thin * shadow;
   }
   return vec4(sum, tr);

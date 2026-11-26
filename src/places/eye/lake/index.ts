@@ -364,9 +364,9 @@ void main() {
     float downward = uLeave.x * smoothstep(0.3, 0.8, v.y);
     // The dome has sunk and its waves go out: long ones first and far, short ones after and near, each broken along its length, all of them dying.
     float since = max(uLeave.y, 0.05);
-    float phase = 132.0 * since * since / max(r, 8.0);
-    float wavenumber = phase / max(r, 8.0);
-    float train = 0.1 * exp(-r / 190.0) * exp(-since / 5.5) * smoothstep(1.7, 0.6, wavenumber) * smoothstep(0.0, 1.2, uLeave.y) * cos(phase + 1.3 * vnoise(p.xz / 90.0 + 9.0));
+    float phase = 0.78 * r * (1.0 - 0.0011 * r) - 2.7 * since + 1.3 * vnoise(p.xz / 90.0 + 9.0);
+    float front = 30.0 + 72.0 * since;
+    float train = 0.085 * exp(-r / 210.0) * exp(-since / 6.5) * smoothstep(front, front - 70.0, r) * smoothstep(4.0, 26.0, r) * smoothstep(0.0, 1.2, uLeave.y) * cos(phase);
     train *= 0.25 + 1.5 * vnoise(out2 * 1.7 + r / 160.0 + 4.0);
     vec2 leaning = heave + out2 * train;
     // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east.
@@ -374,8 +374,6 @@ void main() {
     float face = clamp(4.0 * toLit, -1.0, 1.0);
     c += uSunColour * vec3(0.0017, 0.002, 0.0027) * max(face, 0.0) * downward;
     c *= 1.0 - 0.28 * max(-face, 0.0) * downward;
-    // Lanes where the air has roughened the water are a little paler: they take more of the sky.
-    c += skyRadiance(vec3(0.0, 1.0, 0.0)) * 0.035 * gust * downward;
     // What rose is going down the shaft: pale, long, wider than the frame, lost in the blue as it sinks.
     float sunkBy = uLeave.z;
     vec2 pp = (p.xz - vec2(-46.0, 28.0)) * (1.0 + sunkBy / 420.0);
@@ -386,7 +384,7 @@ void main() {
     float body = exp(-1.4 * pow(abs(along.y) / girth, 2.0 + 0.5 / (soft + 0.3))) * smoothstep(-470.0, -300.0, along.x) * (1.0 - smoothstep(240.0, 480.0, along.x));
     float folds = 0.5 + 0.5 * vnoise(vec2(along.x / 13.0 + 2.0 * vnoise(pp / 21.0), along.y / 34.0)) * (0.6 + 0.4 * vnoise(pp / 5.0));
     float rounded = exp(-1.2 * pow(along.y / girth, 2.0));
-    vec3 paleLight = vec3(0.62, 0.6, 0.52) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.12 / 3.14159) * exp(-uAbsorb * sunkBy * 1.2);
+    vec3 paleLight = vec3(0.62, 0.6, 0.52) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.3 / 3.14159) * exp(-uAbsorb * sunkBy * 0.8);
     c += paleLight * body * (0.35 + 0.65 * rounded) * (0.45 + 0.55 * folds) * downward;
     // Its air comes up after it: small white flecks that open on the surface over where it went and are gone.
     vec2 cellAt = p.xz / 6.0;

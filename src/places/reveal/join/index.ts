@@ -21,21 +21,53 @@ void main() {
 
 const FRAGMENT = /* glsl */ `
 varying vec3 vRay;
-${RIG_GLSL}
 ${NOISE_GLSL}
 ${LID_GLSL}
 void main() {
   vec3 rd = normalize(vRay);
-  vec4 lid = lidOver(cameraPosition, rd, -cameraPosition.y / min(rd.y, -1e-4));
+  gl_FragColor = lidOver(cameraPosition, rd, -cameraPosition.y / min(rd.y, -1e-4));
+}`;
+
+const OVER_VERTEX = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}`;
+
+const OVER_FRAGMENT = /* glsl */ `
+uniform sampler2D tLid;
+varying vec2 vUv;
+${RIG_GLSL}
+void main() {
+  vec4 lid = texture2D(tLid, vUv);
   gl_FragColor = vec4(rigOut(lid.rgb), mix(lid.a, 1.0, uSolo));
 }`;
 
+// Cloud is soft: it is drawn a third of the size of the frame and laid over it.
+const SMALLER = 3;
+
 export function create(ctx: Context): Piece {
   const lid = lidUniforms(handoff.lid, [X(AT.lake.x), Z(AT.lake.y)], handoff.revealHalfHeightKm, handoff.revealHalfHeightKm / HALF_TAN);
+  const target = new THREE.WebGLRenderTarget(8, 8, {
+    type: THREE.HalfFloatType,
+    format: THREE.RGBAFormat,
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    generateMipmaps: false,
+    depthBuffer: false,
+    stencilBuffer: false,
+    colorSpace: THREE.NoColorSpace,
+  });
+  const drawn = new THREE.ShaderMaterial({ uniforms: lid, vertexShader: VERTEX, fragmentShader: FRAGMENT, depthTest: false, depthWrite: false, blending: THREE.NoBlending });
+  const small = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), drawn);
+  small.frustumCulled = false;
+  const smallScene = new THREE.Scene();
+  smallScene.add(small);
   const material = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, ...lid },
-    vertexShader: VERTEX,
-    fragmentShader: FRAGMENT,
+    uniforms: { ...ctx.rig.uniforms, tLid: { value: target.texture } },
+    vertexShader: OVER_VERTEX,
+    fragmentShader: OVER_FRAGMENT,
     transparent: true,
     depthTest: false,
     depthWrite: false,
@@ -58,18 +90,32 @@ export function create(ctx: Context): Piece {
   }
   ctx.scene.add(sheet);
   const state = (lid.uLid as THREE.IUniform<THREE.Vector4>).value;
+  let on = false;
 
   return {
     setTime: (seconds) => {
       const now = lidAt(seconds, handoff.lid, FPS);
       // Once the sheet has broken up it is not drawn: every frame after that is the rise alone.
-      const on = now.eroded < 1;
+      on = now.eroded < 1;
       sheet.visible = on;
       state.set(on ? 1 : 0, now.tau, now.eroded, on ? handoff.lid.shadow : 0);
     },
+    beforeSample: (renderer, camera) => {
+      if (!on || !sheet.visible) return;
+      const was = renderer.getRenderTarget();
+      renderer.setRenderTarget(target);
+      renderer.render(smallScene, camera);
+      renderer.setRenderTarget(was);
+    },
+    resize: (width, height) => {
+      target.setSize(Math.max(8, Math.ceil(width / SMALLER)), Math.max(8, Math.ceil(height / SMALLER)));
+    },
     dispose: () => {
       sheet.geometry.dispose();
+      small.geometry.dispose();
       material.dispose();
+      drawn.dispose();
+      target.dispose();
     },
   };
 }
