@@ -9,7 +9,7 @@ import type { HeartContext } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { SEAMS, seamLine } from '../shared/anchors';
 import { AUTHORED, OWN as NET_OWN, type Net } from './net';
-import { SHEET_GLSL } from './sheet';
+import { MELT_GLSL, SHEET_GLSL } from './sheet';
 import { HEAT_GLSL } from './heat';
 
 export interface LavaPiece {
@@ -183,33 +183,12 @@ varying vec2 vAcross;
 uniform float uLavaOn;
 uniform vec4 uPoolFlow[${MAX_POOLS}];
 uniform vec4 uTongue;
-uniform sampler2D tMeltNh;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${HEAT_GLSL}
 ${SHEET_GLSL}
 
-// The photographed melt (melt-nh: r, g the slope of the skin, b the heat, 0 dark skin to 1 white melt) at a point p of what
-// the stream carries, with the footprint of a pixel there. Returns the slope of the skin (of a height that runs 0 to 1, per
-// metre, in p's own axes) and the heat.
-vec3 meltAt(vec2 p, float span, vec2 gx, vec2 gy, float seed) {
-  sheetGrid(p, span);
-  vec2 scale = vec2(1.0, 2.0) / span;
-  vec3 got = vec3(0.0);
-  float sum = 0.0;
-  for (int i = 0; i < 3; i++) {
-    mat2 turn;
-    vec2 shift;
-    float w = sheetCorner(i, seed, 0.16, turn, shift);
-    vec4 nh = textureGrad(tMeltNh, (turn * p) * scale + shift, (turn * gx) * scale, (turn * gy) * scale);
-    // Where two readings meet, the skin of one lies on the melt of the other.
-    float k = w * exp(5.0 * (1.0 - nh.b));
-    got += k * vec3(vec2(nh.r - 0.5, 0.5 - nh.g) * turn, nh.b);
-    sum += k;
-  }
-  got /= sum;
-  return vec3(got.xy * (682.7 / span), got.z);
-}
+${MELT_GLSL}
 
 const float CYCLE = 12.0;
 // One coil in so many metres of stream.
@@ -562,9 +541,23 @@ void main() {
     if (inPlug < 1.0) side = meltAt(rode, 2.4, hx, hy, 9.0);
     // Mid stream the melt is bare and what skin rides on it is thin and red; at the margins the plates crowd and are cold,
     // and the melt between them is orange.
-    float heatPlug = clamp(0.5 + 0.32 * mid + 0.6 * plug.z, 0.0, 1.0);
-    float heatSide = mix(0.1, 1.0, side.z) * mix(0.95, 0.65, smoothstep(0.4, 1.0, lean));
+    // The edge of a plate is not a line of one width: here it is sharp, black on yellow where the plate lies over the melt,
+    // there it thins out through red over a hand or two.
+    float edgy = vnoise(rode * 2.3 + 31.0);
+    vec3 cut = vec3(mix(0.02, 0.2, edgy), mix(0.5, 0.26, edgy), 0.0);
+    float sideHeat = smoothstep(cut.x, cut.x + cut.y, side.z) * (0.55 + 0.45 * side.z);
+    float plugHeat = smoothstep(cut.x, cut.x + cut.y, plug.z) * (0.55 + 0.45 * plug.z);
+    // The bare melt is not one colour: the folds of the sheet show in it, yellow-white where it wells and orange between.
+    float heatPlug = clamp(0.34 + 0.3 * mid + 0.5 * plugHeat, 0.0, 1.0);
+    float heatSide = mix(0.08, 1.0, sideHeat) * mix(0.95, 0.65, smoothstep(0.4, 1.0, lean));
     float heat = mix(heatSide, heatPlug, inPlug);
+    // Where the sheet is bare the melt still shows how it runs: lines drawn out along the stream and films of new skin a shade
+    // darker, both riding with the melt they lie on.
+    vec2 ride = inPlug > 0.5 ? vec2(here.x - CORE_SPEED * uTime, here.y) : rode;
+    float bare = smoothstep(0.72, 0.95, heat);
+    float lines = vnoise(vec2(ride.x * 0.45, ride.y * 7.0) + 7.0);
+    float film = smoothstep(0.5, 0.7, vnoise(vec2(ride.x * 0.8, ride.y * 2.6) + 23.0));
+    heat -= bare * (0.14 * (lines - 0.2) + 0.16 * film);
     float sheared = (1.0 - smoothstep(0.0, 0.04 + grain, abs(plugEdge) * gape)) * smoothstep(0.35, 0.6, vnoise(vec2(here.x * 1.3 - 0.4 * uTime, 3.0 + vSeam.y))) * (1.0 - inCoil);
     heat = max(heat, 0.85 * sheared);
     hot = mix(hot, blackbody(800.0 + (780.0 + 60.0 * reachOpen * inPlug - 40.0 * farAway) * heat), photo);

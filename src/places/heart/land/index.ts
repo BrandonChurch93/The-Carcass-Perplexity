@@ -6,7 +6,7 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { CRACK_FOOT, CRACK_TOP, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
-import { BUTTE, FLOWS, SPUR, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, widePath, type Crack } from './height';
+import { BUTTE, SPUR, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, widePath, type Crack } from './height';
 import { fracture, type Joints } from './fracture';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
@@ -15,35 +15,6 @@ import { FEET, FEET_FADE, GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from '.
 export const PARTS: readonly string[] = ['land', 'bench', 'sulphur-crack'];
 
 export { landHeight };
-
-// One row of numbers for each third of a metre of height: which flow it is in, how hard and dark that flow is, and how far up the flow.
-function strataTexture(): THREE.DataTexture {
-  const W = 1024;
-  const data = new Uint8Array(W * 4);
-  const tops = [0, ...FLOWS, 400];
-  for (let i = 0; i < W; i++) {
-    const y = ((i + 0.5) / W) * 340;
-    let k = 1;
-    while ((tops[k] as number) < y) k++;
-    const a = tops[k - 1] as number;
-    const b = tops[k] as number;
-    const thick = b - a;
-    const r = Math.abs(Math.sin(k * 12.9898 + 4.1) * 43758.5453) % 1;
-    const tone = thick > 14 ? 0.25 + 0.3 * r : 0.6 + 0.4 * r;
-    data[i * 4] = Math.round(255 * r);
-    data[i * 4 + 1] = Math.round(255 * tone);
-    data[i * 4 + 2] = Math.round((255 * (y - a)) / thick);
-    data[i * 4 + 3] = Math.round(255 * Math.min(1, thick / 32));
-  }
-  const t = new THREE.DataTexture(data, W, 1, THREE.RGBAFormat, THREE.UnsignedByteType);
-  t.minFilter = THREE.NearestFilter;
-  t.magFilter = THREE.NearestFilter;
-  t.wrapS = THREE.ClampToEdgeWrapping;
-  t.wrapT = THREE.ClampToEdgeWrapping;
-  t.colorSpace = THREE.NoColorSpace;
-  t.needsUpdate = true;
-  return t;
-}
 
 export function create(ctx: HeartContext): HeartPiece {
   // The two cracks: the long one up on the bench, the short one by the line.
@@ -68,7 +39,6 @@ export function create(ctx: HeartContext): HeartPiece {
     tBoulder: { value: ctx.assets.texture('mat/boulder.jpg') },
     tBoulderNh: { value: ctx.assets.texture('mat/boulder-nh.png', { kind: 'data' }) },
     tSulphur: { value: ctx.assets.texture('mat/sulphur.jpg') },
-    tStrata: { value: strataTexture() },
     uCrackA: { value: new THREE.Vector4((cracks[0] as Crack).ax, (cracks[0] as Crack).az, (cracks[0] as Crack).bx, (cracks[0] as Crack).bz) },
     // Where the vent's stain sits on the crag of the line view: a point high on its lake face, and the stain's reach.
     uStain: { value: new THREE.Vector4(-505.0, 1.9, 203.6, 2.6) },
@@ -103,6 +73,7 @@ export function create(ctx: HeartContext): HeartPiece {
   };
 
   // The wall: ribs every 1.6 m where the long lens looks (round the mouth), 5 m along the rest of the north wall, coarser where it is far or behind the cameras.
+  const unit01 = (v: number): number => Math.min(1, Math.max(0, v));
   const spacing = (x: number, z: number): number => {
     if (z < -150 && Math.abs(x + 30) < 215) return 1.6;
     // The stretch the wide lens sees against the sky: cut fine enough to carry the wall's blocks.
@@ -111,12 +82,17 @@ export function create(ctx: HeartContext): HeartPiece {
     if (x > 700 && z < 330) return 9;
     return 18;
   };
-  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip);
+  // The slopes under the mouth fill the fall's lens: a slope got a row every five metres and showed its faces. There it gets three times its share.
+  const underMouth = (x: number, z: number, y: number): number => 1 + 2.2 * unit01((250 - Math.abs(x - MOUTH.x)) / 50) * unit01(-(z + 150) / 40) * unit01((y - 0.5) / 2) * unit01((100 - y) / 15);
+  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 230, 0.8, 0.3, [1.6, 5, 16], flowDip, underMouth);
   // The wall stands whole over the mouth and is opened only inside the arch, a little wider than the arch itself: the fall's rim covers the edge.
   open(wallAll, (x, y, z) => inArch(x, y, z, 1.03));
   // The wall is broken along its joints: blocks the size of a house stand back from the face and leave notches in the rim, smaller ones in them.
   // Not beside the fall, whose channel and arch are built on the land as it is, nor on the aprons, nor where the mesh is too coarse to carry a block.
-  const unit01 = (v: number): number => Math.min(1, Math.max(0, v));
+  const CRAG_JOINTS: Joints[] = [
+    { cell: [1.3, 0.9, 1.3], depth: 0.5, seed: 7 },
+    { cell: [0.42, 0.3, 0.42], depth: 0.14, seed: 29 },
+  ];
   const WALL_JOINTS: Joints[] = [
     { cell: [26, 40, 26], depth: 4.5, seed: 3 },
     { cell: [10, 16, 10], depth: 2, seed: 11 },
@@ -196,8 +172,17 @@ export function create(ctx: HeartContext): HeartPiece {
   // The crag that stands at the left edge of the line view, 8 to 14 m from that lens: cut at 0.12 m, so that its outline breaks at a hand's width.
   // It sinks a little under the bench at its border, where the bench's own sheet takes over.
   const cragHeight = (x: number, z: number): number => landHeight(x, z) - 0.06 * (1 - Math.min(1, Math.max(0, Math.min(x - CRAG.x0, CRAG.x1 - x, z - CRAG.z0, CRAG.z1 - z) / 0.6)));
-  const cragFine = mesh(sheet(CRAG.x0, CRAG.z0, CRAG.x1, CRAG.z1, 0.12, cragHeight, onBench, 0, 0.1), nearMaterial);
-  cragFine.renderOrder = -5;
+  // A level grid gives an upright face one row of faces as tall as the face: the crag is ribs, whose rows are spread over its surface,
+  // and its faces are broken along joints into blocks of an arm's length that stand back a hand or two.
+  const cragRibs: Rib[] = [];
+  const cragCount = Math.round((CRAG.z1 - CRAG.z0) / 0.12);
+  for (let j = 0; j <= cragCount; j++) cragRibs.push({ x: CRAG.x0, z: CRAG.z0 + ((CRAG.z1 - CRAG.z0) * j) / cragCount, dx: 1, dz: 0, length: CRAG.x1 - CRAG.x0, on: true });
+  const cragAll = ribs(cragHeight, cragRibs, 300, 0.05, 0.3, [0.15, 0.5]);
+  const cragEdge = (x: number, z: number): number => Math.min(x - CRAG.x0, CRAG.x1 - x, z - CRAG.z0, CRAG.z1 - z);
+  fracture(cragAll, CRAG_JOINTS, (x, y, z, ny) => unit01((cragEdge(x, z) - 0.7) / 0.8) * unit01((0.85 - ny) / 0.3) * unit01((y - 0.6) / 0.8));
+  keepOnly(cragAll, onBench);
+  const cragFine = mesh(cragAll, nearMaterial);
+  cragFine.renderOrder = -5.2;
   // The last metres before the line view's lens: rubble a hand to a forearm across, cut far finer than the bench under it.
   const AHEAD: [number, number] = [0.788, -0.616];
   const RUBBLE = { back: -7, front: 15, left: -10, right: 4, x0: -523, z0: 199, x1: -494, z1: 229 };
@@ -240,8 +225,21 @@ export function create(ctx: HeartContext): HeartPiece {
     const spill = -0.07 + 0.27 * Math.sqrt(t) + rubbleAt(x, z) * (0.5 + 0.5 * t);
     return Math.max(onBench, base - 0.06 + inside * unit(t / 0.12) * (spill - base + 0.06));
   };
-  const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0, 0, 0.04, [0.2, 0.6]), nearMaterial);
-  rubble.renderOrder = -5;
+  // Where that lens rides and looks, a stone of the heap is hundreds of pixels across and a cell of 7.5 cm was a sliver of a face a finger thick,
+  // each shaded on its own: the heap read as fibres. There it is cut at 3.5 cm, and the coarse sheet keeps a hand's width under its border.
+  const FINE = { back: -3.8, front: 9.5, left: -5, right: 2 };
+  const inFine = (x: number, z: number): number => {
+    const s = (x + 510.5) * AHEAD[0] + (z - 215.5) * AHEAD[1];
+    const t = -(x + 510.5) * AHEAD[1] + (z - 215.5) * AHEAD[0];
+    return Math.min(s - FINE.back, FINE.front - s, t - FINE.left, FINE.right - t);
+  };
+  const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0 && inFine(x, z) < 0.16, 0, 0.04, [0.2, 0.6]), nearMaterial);
+  rubble.renderOrder = -5.4;
+  const rubbleFine = mesh(sheet(-516.6, 205.7, -501.7, 219.5, 0.035, rubbleHeight, (x, z) => inFine(x, z) > 0, 0, 0.03, [0.2, 0.6]), nearMaterial);
+  rubbleFine.renderOrder = -5.6;
+  // Both are seen along themselves from a man's height: drawn nearest first, a lump hides what lies behind it before it is shaded.
+  nearFirst(rubble.geometry, AHEAD);
+  nearFirst(rubbleFine.geometry, AHEAD);
   const rocks = scatterRocks(ctx, shared, landHeight, feetLift);
   // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
   for (const r of rocks.bench) r.renderOrder = -6;
@@ -267,7 +265,12 @@ export function create(ctx: HeartContext): HeartPiece {
       { cell: [7, 11, 7], depth: 1.6, seed: 5 },
       { cell: [2.6, 4, 2.6], depth: 0.6, seed: 23 },
     ],
-    (_x, y, _z, ny) => unit01((y - 12) / 6) * Math.max(unit01((0.75 - ny) / 0.25), unit01((y - 24) / 6)),
+    (x, y, z, ny) => {
+      // Its tops and the ridge left of its sheer end are cut less: a block left standing between two that fell was a tooth on the skyline.
+      const b = -(x - BUTTE.from[0]) * BUTTE.ahead[1] + (z - BUTTE.from[1]) * BUTTE.ahead[0];
+      const steep = unit01((0.75 - ny) / 0.25);
+      return unit01((y - 12) / 6) * Math.max(steep, 0.3 * unit01((y - 24) / 6)) * (0.25 + 0.75 * unit01((b - 11) / 5));
+    },
   );
   const butte = mesh(butteAll, butteMaterial);
   butte.renderOrder = -1;
@@ -279,7 +282,7 @@ export function create(ctx: HeartContext): HeartPiece {
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80, (x, z) => inPatch(x, z) > 0.6), lipMaterial);
   lip.renderOrder = -5;
-  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, lip, ...rocks.bench), midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, lip, ...rocks.bench);
+  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, rubbleFine, lip, ...rocks.bench), midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, rubbleFine, lip, ...rocks.bench);
 
   // The sulphur crack: the fissure itself, cut finer than the bench round it, with its lips. The stain and the crystals are in the bench's shader, so they fade out across both.
   const crackMeshes: THREE.Mesh[] = [];
@@ -302,12 +305,15 @@ export function create(ctx: HeartContext): HeartPiece {
       const x = c.ax + (c.bx - c.ax) * t;
       const z = c.az + (c.bz - c.az) * t;
       const strong = 0.55 + 0.45 * Math.abs(Math.sin(i * 2.4 + c.seed));
+      // The middle of the long crack is the vent of the wide view's bank: one dense pale plume, standing well over a man, as in that picture.
+      // The short crack lies 7 m from the line view's lens, at the foot of its crag: it only smokes, thin enough that the crag shows through.
+      const long = c.depth > 1;
+      const plume = long && i === (vents - 1) / 2;
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
-        radius: c.depth > 1 ? 0.4 : 0.22,
-        // The vent at the foot of the line view's crag: dense pale steam against the crag, as in the line's picture.
-        strength: (c.depth > 1 ? 0.45 : 0.2) * strong,
-        rise: (c.depth > 1 ? 6 : 3) * (0.7 + 0.3 * strong),
+        radius: plume ? 0.38 : long ? 0.4 : 0.22,
+        strength: plume ? 0.5 : (long ? 0.45 : 0.2) * strong,
+        rise: plume ? 8 : (long ? 6 : 3) * (0.7 + 0.3 * strong),
         kind: 'steam',
         lean: c.depth > 1 ? [-0.42, 0.2] : [-0.3, -0.35],
       });
@@ -328,7 +334,6 @@ export function create(ctx: HeartContext): HeartPiece {
       for (const g of geometries) g.dispose();
       for (const m of materials) m.dispose();
       rocks.dispose();
-      (shared.tStrata.value as THREE.Texture).dispose();
     },
   };
 }
@@ -370,6 +375,44 @@ function open(g: THREE.BufferGeometry, hole: (x: number, y: number, z: number) =
     kept.push(a, b, c);
   }
   g.setIndex(kept);
+}
+
+function keepOnly(g: THREE.BufferGeometry, keep: (x: number, z: number, y: number) => boolean): void {
+  const p = g.getAttribute('position') as THREE.BufferAttribute;
+  const index = g.getIndex() as THREE.BufferAttribute;
+  const ok = new Uint8Array(p.count);
+  for (let i = 0; i < p.count; i++) ok[i] = keep(p.getX(i), p.getZ(i), p.getY(i)) ? 1 : 0;
+  const kept: number[] = [];
+  for (let i = 0; i < index.count; i += 3) {
+    const a = index.getX(i);
+    const b = index.getX(i + 1);
+    const c = index.getX(i + 2);
+    if (ok[a] && ok[b] && ok[c]) kept.push(a, b, c);
+  }
+  g.setIndex(kept);
+}
+
+/** Orders the faces of g by how far they lie along a lens's axis, nearest first: what stands in front is drawn first and what it hides is never shaded. */
+function nearFirst(g: THREE.BufferGeometry, ahead: readonly [number, number]): void {
+  const p = g.getAttribute('position') as THREE.BufferAttribute;
+  const index = g.getIndex() as THREE.BufferAttribute;
+  const count = index.count / 3;
+  const along = new Float64Array(count);
+  const order = new Uint32Array(count);
+  for (let f = 0; f < count; f++) {
+    const a = index.getX(f * 3);
+    const b = index.getX(f * 3 + 1);
+    const c = index.getX(f * 3 + 2);
+    along[f] = (p.getX(a) + p.getX(b) + p.getX(c)) * ahead[0] + (p.getZ(a) + p.getZ(b) + p.getZ(c)) * ahead[1];
+    order[f] = f;
+  }
+  order.sort((i, j) => (along[i] as number) - (along[j] as number) || i - j);
+  const sorted: number[] = [];
+  for (let f = 0; f < count; f++) {
+    const at = (order[f] as number) * 3;
+    sorted.push(index.getX(at), index.getX(at + 1), index.getX(at + 2));
+  }
+  g.setIndex(sorted);
 }
 
 function trim(g: THREE.BufferGeometry, below: number): void {
