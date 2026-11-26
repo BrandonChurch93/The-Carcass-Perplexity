@@ -349,7 +349,9 @@ void main() {
   // Three looks are for the wall. Where the lowest of them still passes over its top all three find the sky, which one look tells as well.
   bool drawnOut = spread > 0.0045 && uPlateTone.w < 1.5;
   // Seen from the rim, the deep water inside the ring of mats: it comes in over the drop-off, in tongues, and has no edge.
-  float pool = rimEye * smoothstep(215.0, 130.0, shoalAt);
+  float pool = rimEye * (1.0 - uLeave.x) * smoothstep(215.0, 130.0, shoalAt);
+  // From the rim the mirror reads over the deep and the drop-off; over the mats beyond, one look tells it.
+  if (rimEye >= 0.5) drawnOut = false;
   if (drawnOut && uPlateTone.w > 0.5) {
     vec2 o = p.xz - uPlateAt.xz;
     float qa = max(dot(rd.xz, rd.xz), 1e-6);
