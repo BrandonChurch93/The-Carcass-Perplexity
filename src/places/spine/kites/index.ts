@@ -815,7 +815,7 @@ export function create(ctx: Context): Piece {
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
       if (inStrike) film.set(0.3, 0.4, 0.5, 1.4);
       else if (inClose) film.set(0.34, 0.3, 0.95, 0.75);
-      else film.set(0.24, 0.3, 0.9, 0.35);
+      else film.set(0.3, 0.36, 0.9, 0.4);
       veil.value = inStrike ? 1 : 0;
       const flash = flashAt(seconds);
       // The stroke as it burns and nothing after it: between the return strokes the kites are dark.
