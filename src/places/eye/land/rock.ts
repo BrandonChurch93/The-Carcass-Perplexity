@@ -238,6 +238,22 @@ Rock rockAt(vec3 p, vec3 n, float face) {
         sh = texture2D(tShorePH, su).r;
         float es = 0.012;
         lean = 2.0 * vec2(texture2D(tShorePH, su + vec2(es / 8.0, 0.0)).r - sh, texture2D(tShorePH, su + vec2(0.0, es / 4.5)).r - sh);
+        // Before the shore camera the picture would lie flat under the lens: there the ground is fine wet gravel of the scree itself,
+        // in two sizes laid across each other, and the stones on it are real ones.
+        float bay = lowEye * (1.0 - smoothstep(34.0, 46.0, length(p.xz - vec2(-18.2, 626.0))));
+        if (bay > 0.01) {
+          vec2 ga = p.xz / 1.7;
+          vec2 gb = vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) / 0.62 + 0.31;
+          vec3 na = texture2D(tGravelNh, ga).rgb;
+          vec3 nb = texture2D(tGravelNh, gb).rgb;
+          float drifts = smoothstep(0.35, 0.65, 0.6 * vnoise(p.xz / 2.7 + 4.0) + 0.4 * vnoise(p.xz / 0.8 + 9.0));
+          vec3 fineGrit = mix(texture2D(tGravel, ga).rgb, texture2D(tGravel, gb).rgb, 0.35 + 0.4 * drifts) / 0.32;
+          fineGrit *= mix(vec3(0.2, 0.19, 0.18), vec3(0.31, 0.29, 0.26), drifts) * (0.8 + 0.4 * vnoise(p.xz / 6.1 + 13.0));
+          sc = mix(sc, fineGrit, bay);
+          sh = mix(sh, mix(na.b, nb.b, 0.5), bay);
+          vec2 lb2 = nb.rg - 0.5;
+          lean = mix(lean, 0.5 * ((na.rg - 0.5) + vec2(0.8 * lb2.x + 0.6 * lb2.y, -0.6 * lb2.x + 0.8 * lb2.y)), bay);
+        }
       } else {
         // Its grit is finer gravel of the same stone, read from the picture again at its own size.
         vec3 grit = texture2D(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37).rgb;
