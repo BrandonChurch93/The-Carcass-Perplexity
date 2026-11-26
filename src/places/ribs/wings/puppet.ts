@@ -36,6 +36,9 @@ attribute vec4 aBody;
 attribute vec4 aNeck;
 attribute vec4 aFeet;
 uniform float uPool;
+#ifdef SHADE
+uniform vec3 uSunDir;
+#endif
 varying vec3 vWorld;
 varying vec2 vPx;
 varying float vPart;
@@ -128,6 +131,12 @@ void main() {
   vUnder = w.y - uPool;
   w = vec3(cameraPosition.xz + (w.xz - cameraPosition.xz) * k, uPool + 0.012).xzy;
 #endif
+#ifdef SHADE
+  // Its shade: the same outline a little larger than itself and just behind it, so the rock round it is darker where it hides the sky.
+  vec3 ray = normalize(w - cameraPosition);
+  vec3 fall = -uSunDir - ray * dot(-uSunDir, ray);
+  w = hip + (w - hip) * 1.16 + normalize(fall + vec3(0.0, -0.05, 0.0)) * 0.08 * size + ray * 0.1;
+#endif
   vWorld = w;
   vPx = px;
   vPart = aPart;
@@ -192,8 +201,13 @@ void main() {
   // The colony's are cream, the picture's light and dark kept as their folds: the back a shade darker than the belly and the neck, so that a body parts from its ledge.
   float under = max(step(2.5, vPart) * (1.0 - sail), step(vPart, 0.5) * max(smoothstep(230.0, 320.0, vPx.y) * smoothstep(540.0, 600.0, vPx.x), smoothstep(800.0, 880.0, vPx.x)));
   float pale = clamp(vPale, 0.0, 1.0);
+  float perched = pale * (1.0 - step(0.5, vFly));
+  // No two the same hide: the back runs from grey brown to cream by the animal, the belly and neck stay pale, and one in three stands in shade.
+  float tone = fract(vSeed.x * 13.7);
+  vec3 back = mix(vec3(0.8), vec3(0.56, 0.5, 0.44), perched * (1.0 - tone * tone));
   vec3 cream = vec3(0.8, 0.7, 0.55) * (0.5 + 0.8 * dot(albedo, vec3(0.3333)));
-  albedo = mix(albedo, cream * mix(vec3(0.8), vec3(1.04, 0.94, 0.8), under), pale);
+  albedo = mix(albedo, cream * mix(back, vec3(1.04, 0.94, 0.8), under), pale);
+  albedo *= 1.0 - 0.45 * perched * step(fract(vSeed.x * 7.3), 0.33);
   // Against white water it is a shape; the far sail is in the shade of the body.
   albedo *= mix(1.0, 0.3, clamp(-vPale, 0.0, 1.0)) * mix(1.0, 0.6, step(4.5, vPart));
   float leg = step(0.5, vPart) * step(vPart, 2.5);
@@ -203,7 +217,11 @@ void main() {
   // Darker underneath: the belly and the under side of the folded sails are turned from the sky.
   float occ = mix(0.45, 1.0, smoothstep(-0.6, 0.4, n.y)) * mix(1.0, mix(0.6, 0.95, pale), step(vPart, 0.5) * smoothstep(250.0, 400.0, vPx.y));
   vec4 land = landAt(vWorld.xz);
-#ifdef MIRROR
+  float soft = mix(texture2D(tCover, uv, 3.5).r, cover, sail) * mine;
+#if defined(SHADE)
+  float dim = 0.6 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
+  gl_FragColor = vec4(rigOut(vec3(0.0)) * dim, dim);
+#elif defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
   vec3 col = rigShade(up, n, v, albedo, rough, occ);
   // Only standing water holds a mirror, and the water takes most of the light of what it shows.
@@ -259,6 +277,7 @@ function sheetGeometry(): THREE.BufferGeometry {
 export interface PuppetMaterials {
   body: THREE.ShaderMaterial;
   mirror: THREE.ShaderMaterial;
+  shade: THREE.ShaderMaterial;
 }
 
 export function puppetMaterials(ctx: Context, pool: number): PuppetMaterials {
@@ -282,7 +301,19 @@ export function puppetMaterials(ctx: Context, pool: number): PuppetMaterials {
     blendSrc: THREE.OneFactor,
     blendDst: THREE.OneMinusSrcAlphaFactor,
   });
-  return { body, mirror };
+  const shade = new THREE.ShaderMaterial({
+    vertexShader: VERTEX,
+    fragmentShader: FRAGMENT,
+    uniforms,
+    defines: { SHADE: 1 },
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.CustomBlending,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+  });
+  return { body, mirror, shade };
 }
 
 const neckOf = (p: Pose): [number, number] => [Math.min(1.7, Math.max(-0.6, 0.75 * (p.rise + 0.25))), Math.min(0.9, Math.max(-1.0, 0.55 * (p.bend + 0.75)))];
@@ -315,13 +346,14 @@ export function sheetTip(pose: Pose): [number, number] {
 export class Puppets {
   readonly mesh: THREE.Mesh;
   readonly mirror: THREE.Mesh | undefined;
+  readonly shade: THREE.Mesh | undefined;
   private readonly attributes: THREE.InstancedBufferAttribute[] = [];
   private readonly place: THREE.InstancedBufferAttribute;
   private readonly body: THREE.InstancedBufferAttribute;
   private readonly neck: THREE.InstancedBufferAttribute;
   private readonly feet: THREE.InstancedBufferAttribute;
 
-  constructor(materials: PuppetMaterials, readonly count: number, mirrored: boolean) {
+  constructor(materials: PuppetMaterials, readonly count: number, mirrored: boolean, shaded = false) {
     const shape = sheetGeometry();
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.setAttribute('position', shape.getAttribute('position'));
@@ -345,6 +377,11 @@ export class Puppets {
       this.mirror = new THREE.Mesh(geometry, materials.mirror);
       this.mirror.frustumCulled = false;
       this.mirror.renderOrder = 2;
+    }
+    if (shaded) {
+      this.shade = new THREE.Mesh(geometry, materials.shade);
+      this.shade.frustumCulled = false;
+      this.shade.renderOrder = 1;
     }
   }
 

@@ -260,7 +260,7 @@ void main() {
   }
   vec3 hv = normalize(v + uSunDir);
   // The glare path toward the sun: a hard core, and the broken glitter of the ripples round it.
-  refl += uSunColour * (pow(max(dot(n, hv), 0.0), 900.0) * 8.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
+  refl += uSunColour * (pow(max(dot(n, hv), 0.0), 500.0) * 4.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
   float murk = 1.0 - exp(-max(depth, 0.0) * 2.2);
   vec3 body = vec3(0.1, 0.105, 0.09) * e / 3.14159;

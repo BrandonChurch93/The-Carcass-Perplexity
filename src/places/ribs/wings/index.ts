@@ -400,7 +400,7 @@ export function create(ctx: Context): Piece {
       const out = Math.atan2(Math.cos(a), Math.sin(a));
       const stands = scatter.next() < 0.22;
       // A sheet reads only from its side: each stands across the colony lens's line of sight, a little turned.
-      const across = Math.atan2(z - colonyEye[2], -(x - colonyEye[0])) + scatter.range(-0.4, 0.4);
+      const across = Math.atan2(z - colonyEye[2], -(x - colonyEye[0])) + scatter.range(-0.85, 0.85);
       sitters.push({ x, y: perchY, z, yaw: across, size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], perchY - colonyEye[1], z - colonyEye[2]) });
     }
   }
@@ -408,7 +408,7 @@ export function create(ctx: Context): Piece {
   // The few that stand with their sails held out to dry are the picture of the animal seen from ahead.
   const kites = kiteMaterial(ctx);
   const dryers = new Kites(kites, COLONISTS);
-  const colonySheets = new Puppets(sheets, COLONISTS, false);
+  const colonySheets = new Puppets(sheets, COLONISTS, false, true);
   const sitterAt = (s: Sitter, t: number): void => {
     Object.assign(pose, stand(s.seed));
     pose.size = s.size;
@@ -592,7 +592,7 @@ export function create(ctx: Context): Piece {
     const fz = dz / l;
     // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
     // The first hangs over the upper ledge, coming in to land; three cross close and fast, soft with their own motion; two are far.
-    const cross: [number, number, number, number, number][] = [[36, -13, 15, 0, 3], [20, -15, 5, 0.05, 19], [17, 10, 0.5, 0.1, -20], [34, -20, 12, -0.1, 17], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
+    const cross: [number, number, number, number, number][] = [[26, -9.4, 10.8, 0, 3], [20, -15, 5, 0.05, 19], [17, 10, 0.5, 0.1, -20], [34, -20, 12, -0.1, 17], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
     for (let i = 0; i < PASSERS; i++) {
       const c = cross[i] as [number, number, number, number, number];
       skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: (i === 0 ? 1.15 : i < 4 ? 1.15 : 1.0) * GROW, seed: scatter.next() });
@@ -707,6 +707,7 @@ export function create(ctx: Context): Piece {
 
   const group = new THREE.Group();
   group.add(feederSheets.mesh, colonySheets.mesh, landSheets.mesh);
+  if (colonySheets.shade) group.add(colonySheets.shade);
   if (feederSheets.mirror) group.add(feederSheets.mirror);
   group.add(feederFlock.mesh, dryers.mesh, lowFlock.mesh, highFlock.mesh, skeinFlock.mesh, fleeFlock.mesh, landFlock.mesh);
   ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh), splash.mesh);
