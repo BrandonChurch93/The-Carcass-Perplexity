@@ -1,4 +1,7 @@
-2026-11-26 01:55 UTC
-work at 039400b on agent/spine-ground-2
-01:55 spine-0 hd draft: tower cut from its sheet, mouth in the face, dome from stormwall pictures; cloud sea and ground next
-look-1.jpg = out/work/hb2-spine0.jpg
+2026-11-26 02:22 UTC
+work at 566781d on agent/spine-ground-2
+v1: sheet-cut spires, picture dome and cloud sea, canal mouth open with lit walls
+look-1.jpg = out/work/v1-spine0.jpg
+look-2.jpg = out/work/v1-spine1.jpg
+look-3.jpg = out/work/v1-spine3.jpg
+look-4.jpg = out/work/v1-spine4.jpg
