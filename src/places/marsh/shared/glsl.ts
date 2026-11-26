@@ -69,6 +69,13 @@ uniform vec3 uEmitterRadiance[8];`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
+// Toward the brighter side of the overcast, on x and z (bearing 320 degrees), and how much more a face turned to it takes.
+const vec2 RIG_KEY = vec2(-0.643, -0.766);
+const float RIG_KEY_SHARE = 0.26;
+const float RIG_CLOUD_SHARE = 0.11;
+// The grade: the light that stays where it is, and how much steeper the darks fall away under it.
+const float RIG_PIVOT = 0.4;
+const float RIG_CONTRAST = 0.9;
 
 // Radiance of the overcast toward d, for lighting and for what a wet surface mirrors. An overcast is brightest overhead and a third as bright
 // at the horizon; this one keeps more at the horizon, where the haze over the salt is lit from below by the flats.
@@ -87,7 +94,19 @@ vec3 skyIrradiance(vec3 n) {
   float seen = lean * lean * lean;
   float up = n.y >= 0.0 ? 0.5 + 0.5 * n.y : 0.5 * seen;
   vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.6 * max(n.y, 0.0)), up) * uFill;
+  // The overcast has a brighter side, where the sun stands behind it: a face turned to it takes more, one turned away less, and level
+  // ground the same as before. This is what gives a body, a trunk and a bank a light side and a dull one.
+  e *= 1.0 + RIG_KEY_SHARE * dot(n.xz, RIG_KEY);
   return 3.14159 * e;
+}
+
+// The slow shade of the cloud as it passes over the flats: thicker and thinner overcast, some hundreds of strides across, travelling with
+// the upper wind. 1 is the mean.
+float rigCloud(vec2 xz) {
+  vec2 q = xz * 0.012 + vec2(0.085, 0.031) * uTime;
+  float a = sin(q.x + 1.7 * sin(q.y * 0.83 + 0.6)) * sin(q.y * 1.13 + 1.3 * sin(q.x * 0.71 + 2.0));
+  float b = sin(q.x * 2.3 - q.y * 1.7 + 2.0 * sin(q.y * 1.9 + 0.4));
+  return 1.0 + RIG_CLOUD_SHARE * (0.7 * a + 0.3 * b);
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1),
@@ -149,11 +168,11 @@ float skyOpen(vec3 p) {
   vec2 uv = (p.xz - uLandRect.xy) * uLandRect.zw;
   vec2 e = min(uv, 1.0 - uv);
   // Outside the map the flats are open and level, and the map is not read.
-  if (min(e.x, e.y) <= 0.0) return 1.0;
+  if (min(e.x, e.y) <= 0.0) return rigCloud(p.xz);
   vec4 land = texture2D(tLand, uv);
   float above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 12.0, 0.0, 1.0));
-  return vis * (1.0 - contactDrawn(p) * smoothstep(3.0, 0.0, above));
+  return vis * rigCloud(p.xz) * (1.0 - contactDrawn(p) * smoothstep(3.0, 0.0, above));
 }
 
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the surface's own small-scale occlusion, 1 for none.
@@ -180,7 +199,23 @@ vec3 rigAir(vec3 c, float distance, float height) {
 }
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
+// It carries the grade of the place as well, in scene-linear light and before the air lies over the surface: the darks are taken down
+// and kept rust red, and what is pale loses its pink, so that salt is grey-white beside the brine.
+vec3 rigGrade(vec3 c) {
+  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  if (l <= 1e-5) return c;
+  float m = RIG_PIVOT * pow(l / RIG_PIVOT, RIG_CONTRAST);
+  c *= m / l;
+  float pale = smoothstep(0.1, 0.48, m);
+  c = mix(vec3(m), c, mix(1.0, 0.58, pale));
+  return max(c * mix(vec3(1.0), vec3(0.985, 1.0, 1.03), pale), 0.0);
+}
 vec3 rigOut(vec3 c) {
+  // (Not while the brine's mirror is drawn: what it mirrors is graded once, when the brine itself comes out.)
+  return (uMirror > 0.5 ? c : rigGrade(c)) * (1.0 - uSolo);
+}
+// For what is not a surface (the sky): blacked when an effect is drawn alone, and not graded.
+vec3 rigPlain(vec3 c) {
   return c * (1.0 - uSolo);
 }`;
 
