@@ -196,13 +196,15 @@ void main() {
   }
   rd = normalize(rd);
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
-  vec3 refl = farRadiance(p, rd, soft) * mix(vec3(0.5, 0.6, 0.76), vec3(0.8, 0.86, 0.95), smoothstep(8.0, 40.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
+  vec3 refl = farRadiance(p, rd, soft) * mix(vec3(0.78, 0.8, 0.84), vec3(0.8, 0.86, 0.95), smoothstep(8.0, 40.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
   // Far off the eye looks along the water: the mirror there is whole and as bright as what stands over it, and the mist that lies at the
   // foot of the far wall lies on the water too, so that no line shows where the water ends.
   if (uPlateTone.w > 0.5) {
     float toPlate = length(p.xz - uPlateAt.xz) / uPlateAt.w;
     vec3 mistLight = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (0.13 * sunOver(land, p)) + 0.35 * skyRadiance(normalize(vec3(-v.x, 0.05, -v.z)))) * (2.4 / 3.14159);
     refl = mix(refl, mistLight, 0.9 * smoothstep(0.72, 0.985, toPlate) * (1.0 - uSolo));
+    // And the bank that stands at the foot of the far wall is in the mirror as it is in the air: a ray that leaves the water low finds it.
+    refl = mix(refl, mistLight, 0.85 * pow(smoothstep(0.035, 0.002, rd.y), 1.5) * (1.0 - uSolo));
   }
   refl *= 1.0 + 0.42 * tanh(0.33 * dot(heave, normalize(v.xz)) / max(v.y, 0.03)) * smoothstep(0.5, 0.12, v.y);
   // Whatever stands in the water or at its edge, drawn once more from under it.
@@ -250,6 +252,9 @@ void main() {
     under = shelf;
     // Where a slab, the crust of the lip or the top of a mat stands out of the water it is wet stone and weed, not a mirror.
     dry = bed.dry * crusted;
+    // A low eye that looks a long way along the water finds only the mirror: what stands a finger out of it far off is lost in the glance.
+    dry *= mix(1.0, smoothstep(520.0, 220.0, away), smoothstep(12.0, 4.0, cameraPosition.y));
+    dry *= 1.0 - smoothstep(600.0, 1000.0, away) * (1.0 - smoothstep(0.03, 0.07, v.y));
   }
   if (crusted < 1.0) {
     // Over the shaft: the wall goes down pale and green under the lip and is lost in a few metres; then only the dark of the water.
@@ -263,8 +268,9 @@ void main() {
     // The low sun hardly enters the deep: what little does is the same everywhere, so the shade of the rim draws no edge on it.
     vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * 0.05;
     vec3 through = exp(-uAbsorb * down * (2.6 + 1.2 / fall));
-    // The wall is seen for a few metres in from the lip and no further: beyond that the deep is its own dark.
-    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through * (0.06 + 0.42 * smoothstep(6.0, 0.3, inside)) * vec3(0.8, 1.0, 1.05) + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
+    // The wall is seen for some metres down from the lip: its picture carries the water's own tint, so the water here only takes it away with depth.
+    float seen = exp(-down * 0.34);
+    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * seen * exp(-uAbsorb * down * 0.9) * 1.1 + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
@@ -284,6 +290,17 @@ void main() {
     under *= 1.0 - 0.75 * hump;
   }
   vec3 c = mix(under, refl, f);
+  // The swell stood up: its face is turned up to the sky and takes the pale of it, and the water it has lifted runs off it in threads.
+  if (r < uDome.y && uDome.x > 1.6) {
+    float du = r / uDome.y;
+    float stood = clamp((uDome.x - 1.6) / 2.4, 0.0, 1.0) * smoothstep(1.0, 0.55, du) * smoothstep(0.6, 0.25, v.y);
+    float round2 = atan(p.x, p.z);
+    float run = vnoise(vec2(round2 * 23.0, r / 7.0 - uTime * 1.4)) * (0.4 + 0.6 * vnoise(vec2(round2 * 7.0, 3.0)));
+    float lean = dot(out2, normalize(v.xz));
+    vec3 silver = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (1.0 / 3.14159) * mix(0.22, 0.75, smoothstep(-0.7, 0.8, lean + 0.6 * (vnoise(vec2(round2 * 3.0, r / 30.0)) - 0.5)));
+    silver += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.2 / 3.14159) * smoothstep(0.34, 0.6, run) * smoothstep(1.0, 0.2, du);
+    c = mix(c, silver, 0.8 * stood);
+  }
   // A low sun on moving water: a hard glitter where a wavelet turns its face to it.
   vec3 hv = normalize(uSunDir + v);
   float sharp = 1400.0 / (1.0 + away * away / 3600.0) + 60.0;
@@ -473,7 +490,7 @@ void main() {
     setTime: (t) => {
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
-      dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 2.3 * swell * (1 + 0.05 * Math.sin(t * 2.3));
+      dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 5.2 * swell * (1 + 0.05 * Math.sin(t * 2.3));
       // Staged for the wide shot: the lip is drawn 270 m nearer the centre at the sides, so that the dark of the deep is an oval the frame holds whole.
       (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
       centre.x = t - rise;

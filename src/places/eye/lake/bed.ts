@@ -15,15 +15,14 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     uLipFrom: { value: new THREE.Vector2(KEYS.edge.position[0], KEYS.edge.position[2]) },
     tMat: { value: mirrored(ctx.assets.texture('mat/matplate.jpg', { anisotropy: 8 })) },
     tMatH: { value: mirrored(ctx.assets.texture('mat/matplate-h.png', { kind: 'data', anisotropy: 4 })) },
-    tMatTile: { value: ctx.assets.texture('mat/mat.jpg', { anisotropy: 8 }) },
+    tMatTile: { value: mirrored(ctx.assets.texture('mat/matdark.jpg', { anisotropy: 8 })) },
     tLipPlate: { value: mirrored(ctx.assets.texture('mat/lip.jpg', { anisotropy: 8 })) },
     tLipPlateH: { value: mirrored(ctx.assets.texture('mat/lip-h.png', { kind: 'data', anisotropy: 4 })) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
-    tSinterNh: { value: ctx.assets.texture('mat/sinter-nh.png', { kind: 'data' }) },
     tShore: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 2 }) },
-    tCliff: { value: ctx.assets.texture('mat/cliff.jpg') },
+    tWall: { value: mirrored(ctx.assets.texture('mat/shaftwall.jpg', { anisotropy: 4 })) },
     uAbsorb: { value: new THREE.Vector3(...ABSORB) },
-    uDeep: { value: new THREE.Vector3(0.004, 0.02, 0.045) },
+    uDeep: { value: new THREE.Vector3(0.004, 0.017, 0.03) },
   };
 }
 
@@ -38,9 +37,8 @@ uniform sampler2D tMatTile;
 uniform sampler2D tLipPlate;
 uniform sampler2D tLipPlateH;
 uniform sampler2D tSinter;
-uniform sampler2D tSinterNh;
 uniform sampler2D tShore;
-uniform sampler2D tCliff;
+uniform sampler2D tWall;
 uniform vec3 uAbsorb;
 uniform vec3 uDeep;
 
@@ -116,7 +114,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float patchy = smoothstep(0.35, 0.65, vnoise(b / 2.9 + 11.0));
   sinter = mix(sinter, texture2D(tSinter, turned).rgb, patchy);
   vec3 sinterFar = texture2D(tSinter, b / 17.0 + 0.37).rgb;
-  vec3 snh = mix(texture2D(tSinterNh, b / 3.0).rgb, texture2D(tSinterNh, turned).rgb, patchy);
+  // The lie of the crust is read from its own picture: its pale tops stand, its dark seams lie low.
+  vec3 snh = vec3(0.5, 0.5, clamp(dot(sinter, vec3(0.5, 0.9, 0.6)) * 1.1, 0.0, 1.0));
   vec3 pale = sinter * (sinterFar / vec3(0.501, 0.351, 0.19)) * vec3(0.84, 1.02, 1.3);
   float slabs = smoothstep(0.5, 0.68, 0.6 * vnoise(b / 7.3 + 2.0) + 0.4 * vnoise(b / 2.2)) * (1.0 - 0.85 * smoothstep(150.0, 230.0, w));
   float crust = smoothstep(9.0, 1.5, w);
@@ -156,6 +155,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float thin = smoothstep(4.0, 46.0, inShore + 30.0 * (blobs - 0.5)) * (1.0 - 0.8 * slabs * (1.0 - crust));
   float edge = mix(0.53, 0.35, toLip);
   float cover = smoothstep(edge - 0.02, edge + 0.07, field) * thin * (1.0 - 0.92 * lanes);
+  // Toward the lip the weed thins to loose strands over the pale crust.
+  cover *= mix(0.3, 1.0, smoothstep(1.0, 20.0, wLip + 14.0 * (blobs - 0.5)));
   // The crust of the lip keeps a strand here and there.
   cover = max(cover, 0.8 * thin * smoothstep(0.42, 0.56, field) * smoothstep(9.0, 3.0, wLip) * smoothstep(-0.6, 0.6, wLip));
   o.albedo = bare;
@@ -183,8 +184,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     vec3 near3 = mix(texture2D(tMat, qa, 1.2 * fine).rgb, texture2D(tMat, qb, 1.2 * fine).rgb, pick);
     float mh = mix(ha, hb, pick);
     if (fine > 0.0) {
-      vec3 tile = texture2D(tMatTile, vec2(qa.y, qa.x) * (MAT_A / 1.15) + sway * 0.6).rgb;
-      float hair = smoothstep(0.1, 0.4, dot(tile, vec3(0.4, 0.5, 0.1)));
+      vec3 tile = texture2D(tMatTile, vec2(qa.y, qa.x) * (MAT_A / 2.6) + sway * 0.4).rgb;
+      float hair = smoothstep(0.06, 0.3, dot(tile, vec3(0.4, 0.5, 0.1)));
       // The hair lies on the weed, not on the bare slab.
       float weedy = fine * smoothstep(0.75, 0.5, mh) * 0.85;
       near3 = mix(near3, mix(near3 * 0.55, tile * 1.3, hair), weedy);
@@ -210,7 +211,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     float up = (high - 0.62) * 0.34;
     o.depth = mix(depth, max(-up, 0.0) + 0.015, lies);
     // From far off and low, the tops of the mats that lie in the surface take the mirror from the water.
-    float afloat = mix(0.2, mix(0.08, 0.86, smoothstep(6.0, 30.0, cameraPosition.y)), smoothstep(0.03, 0.4, px)) * smoothstep(0.3, 0.6, high);
+    float afloat = mix(0.2, mix(0.08, 0.95, smoothstep(6.0, 30.0, cameraPosition.y)), smoothstep(0.03, 0.4, px)) * smoothstep(0.3, 0.6, high);
     o.dry = mix(o.dry, max(smoothstep(0.0, 0.035, up) * 0.9, afloat), lies);
     o.occ = mix(o.occ, 0.45 + 0.55 * smoothstep(0.1, 0.5, high), lies);
     // The low sun comes through the strands that stand up into it.
@@ -244,12 +245,11 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
 Bed wallAt(vec2 b, float down, float inside) {
   Bed o;
   float along = atan(b.x, b.y) * 480.0;
-  vec2 uv = vec2(along, -down) / vec2(21.0, 30.0);
-  vec3 c = texture2D(tCliff, uv).rgb;
-  // Beds and the stains that run down them.
-  float runs = 0.55 + 0.45 * smoothstep(0.25, 0.7, 0.6 * vnoise(vec2(along / 1.3, down / 9.0)) + 0.4 * vnoise(vec2(along / 0.37, down / 4.0) + 3.0));
-  float ledge = 0.45 + 0.55 * smoothstep(0.3, 0.62, 0.6 * vnoise(vec2(along / 6.0, down / 1.7)) + 0.4 * vnoise(vec2(along / 1.9, down / 0.5)));
-  o.albedo = clamp(c * vec3(0.7, 0.95, 0.85) * runs, 0.0, 0.9);
+  // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip: ledge under ledge, lost in the dark at its foot.
+  vec2 uv = vec2(along / 30.0, 1.0 - clamp(down / 17.0, 0.02, 0.98));
+  vec3 c = texture2D(tWall, uv).rgb;
+  float ledge = 0.55 + 0.45 * smoothstep(0.05, 0.3, dot(c, vec3(0.33)));
+  o.albedo = clamp(c * 1.3, 0.0, 0.95);
   o.occ = ledge;
   o.tilt = vec2(0.0);
   o.glow = 0.0;

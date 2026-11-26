@@ -118,9 +118,12 @@ void main() {
   if (h < 0.16) discard;
   vec3 skin = texture2D(tSkin, vUv, -2.5).rgb;
   // The form of the body, from the relief read soft: it turns away toward every outline.
-  vec2 e = uTexel * 12.0;
-  float hx = texture2D(tRelief, vUv + vec2(e.x, 0.0), 4.0).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), 4.0).r;
-  float hy = texture2D(tRelief, vUv + vec2(0.0, e.y), 4.0).r - texture2D(tRelief, vUv - vec2(0.0, e.y), 4.0).r;
+  // Seen from behind and close, only the great forms are read: the barrel, the hips, the root of the neck.
+  float broad = uSheet.y == 0.0 ? 1.0 : 0.0;
+  vec2 e = uTexel * mix(12.0, 44.0, broad);
+  float lod = mix(4.0, 6.0, broad);
+  float hx = (texture2D(tRelief, vUv + vec2(e.x, 0.0), lod).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), lod).r) * mix(1.0, 0.5, broad);
+  float hy = (texture2D(tRelief, vUv + vec2(0.0, e.y), lod).r - texture2D(tRelief, vUv - vec2(0.0, e.y), lod).r) * mix(1.0, 0.5, broad);
   float soft = texture2D(tRelief, vUv, 3.0).r;
   vec3 axis = normalize(vAxis);
   vec3 face = normalize(vFace);
@@ -130,7 +133,9 @@ void main() {
   float fx = texture2D(tRelief, vUv + vec2(e2.x, 0.0), 0.5).r - texture2D(tRelief, vUv - vec2(e2.x, 0.0), 0.5).r;
   float fy = texture2D(tRelief, vUv + vec2(0.0, e2.y), 0.5).r - texture2D(tRelief, vUv - vec2(0.0, e2.y), 0.5).r;
   // A back seen close from behind is a short coat lying smooth over the spine and the hips: its folds are faint.
-  float creased = uSheet.y == 0.0 ? 0.3 : 1.0;
+  float creased = uSheet.y == 0.0 ? 0.0 : 0.55;
+  // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the coat is one pale tan.
+  if (uSheet.y == 0.0) skin = mix(skin, vec3(0.5, 0.36, 0.26) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.8);
   float fold = clamp(1.0 + 5.0 * creased * (texture2D(tRelief, vUv, 0.0).r - texture2D(tRelief, vUv, 2.5).r), 0.45, 1.35);
   vec3 n = normalize(face * 0.42 - axis * (hx + 2.2 * creased * fx) - vec3(0.0, 1.0, 0.0) * (hy + 2.2 * creased * fy));
   vec3 v = normalize(cameraPosition - vWorld);

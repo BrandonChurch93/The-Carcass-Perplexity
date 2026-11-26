@@ -45,7 +45,7 @@ export const KEYS = {
   wide: look(standOn(150, 0, 6.2), 18, -4.6, 40),
   mats: look([matsAt[0], 1.1, matsAt[1]], 8, -11.2, 45),
   edge: look([edgeAt[0], 2.6, edgeAt[1]], 2, -13.6, 40),
-  shore: { ...look(onShore(-75, 11, 2.1), SHORE_HEADING, -5.5, 25), aperture: 0.009, focus: 30 },
+  shore: { ...look(onShore(-75, 5, 2.1), SHORE_HEADING, -5.5, 25), aperture: 0.016, focus: 26 },
   centre: look(above(0, front + 98, 2.3), 0, CENTRE_PITCH, 8),
 };
 
