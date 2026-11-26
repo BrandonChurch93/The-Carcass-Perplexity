@@ -60,6 +60,12 @@ float lipRadius(vec2 xz) {
   return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r - uLipIn * (1.0 - 0.95 * smoothstep(0.6, 1.0, toward));
 }
 
+float lipWander(vec2 xz) {
+  // Drawn in for the wide shot, the line of the lip is seen whole from the rim: it wanders by tens of metres, bays and tongues, never an arc.
+  float bays = uLipIn > 0.0 ? uLipIn / 270.0 * (38.0 * (vnoise(xz / 90.0 + 7.0) - 0.5) + 14.0 * (vnoise(xz / 27.0 + 3.0) - 0.5)) : 0.0;
+  return bays + 1.1 * (vnoise(xz / 6.3 + 2.0) - 0.5) + 0.4 * (vnoise(xz / 1.7) - 0.5);
+}
+
 // The lip where this point is: x is metres in from its line, measured square to it (less than nothing over the shaft), and yz is the way along it.
 // The line wanders, and where a tongue of the shelf stands out into the deep it runs almost toward the centre.
 vec3 lipHere(vec2 xz) {
@@ -68,8 +74,12 @@ vec3 lipHere(vec2 xz) {
   vec2 g = vec2((length(xz + vec2(e, 0.0)) - lipRadius(xz + vec2(e, 0.0))) - (length(xz - vec2(e, 0.0)) - lipRadius(xz - vec2(e, 0.0))),
     (length(xz + vec2(0.0, e)) - lipRadius(xz + vec2(0.0, e))) - (length(xz - vec2(0.0, e)) - lipRadius(xz - vec2(0.0, e)))) / (2.0 * e);
   float steep = max(length(g), 1.0);
-  float w = m / steep + 1.1 * (vnoise(xz / 6.3 + 2.0) - 0.5) + 0.4 * (vnoise(xz / 1.7) - 0.5);
+  float w = m / steep + lipWander(xz);
   return vec3(w, vec2(-g.y, g.x) / max(length(g), 1e-3));
+}
+// The lip a step away from a point where it is already known: the same line, read off its lie there, not looked up again.
+vec3 lipNear(vec2 xz, vec2 from, vec3 lip) {
+  return vec3(lip.x - lipWander(from) + dot(xz - from, vec2(lip.z, -lip.y)) + lipWander(xz), lip.yz);
 }
 
 // The lip is one piece of broken crust 10 m long, seen from above, its drop along its top edge and nothing beyond it. It is laid along the lip,
@@ -120,7 +130,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float slabs = smoothstep(0.5, 0.68, 0.6 * vnoise(b / 7.3 + 2.0) + 0.4 * vnoise(b / 2.2)) * (1.0 - 0.85 * smoothstep(150.0, 230.0, w));
   float crust = smoothstep(9.0, 1.5, w);
   vec3 silt = mix(vec3(0.07, 0.05, 0.035), vec3(0.2, 0.185, 0.165), smoothstep(150.0, 230.0, w)) * (0.5 + 1.0 * snh.b);
-  vec3 bare = mix(silt, pale, max(slabs, crust));
+  vec3 bare = mix(silt, pale * mix(vec3(1.0), vec3(0.36, 0.38, 0.42), smoothstep(8.0, 40.0, cameraPosition.y) * (1.0 - crust)), max(slabs, crust));
   float stands = 0.0;
   vec2 stoneLean = vec2(0.0);
   float beach = smoothstep(11.0, 2.5, inShore);
@@ -148,7 +158,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float lanes = smoothstep(0.035, 0.008, abs(vnoise(vec2(pq.x / 13.0, pq.y / 330.0) + 9.0) - 0.5)) * smoothstep(8.0, 50.0, w);
   float toLip = smoothstep(MAT_REACH + uLipIn, 30.0, w);
   float thin = smoothstep(4.0, 46.0, inShore + 30.0 * (blobs - 0.5)) * (1.0 - 0.8 * slabs * (1.0 - crust));
-  float edge = mix(0.53, 0.35, toLip);
+  float edge = mix(0.53, 0.35, toLip) - 0.06 * smoothstep(8.0, 40.0, cameraPosition.y);
   float cover = smoothstep(edge - 0.02, edge + 0.07, field) * thin * (1.0 - 0.92 * lanes);
   // Toward the lip the weed thins to loose strands over the pale crust.
   cover *= mix(0.3, 1.0, smoothstep(1.0, 20.0, wLip + 14.0 * (blobs - 0.5)));
@@ -195,6 +205,12 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     far3 *= mix(vec3(0.5, 0.42, 0.38), vec3(1.0), smoothstep(4.0, 60.0, w));
     // Far off no strand is told: the patch has its own tone and the streaks of its lie.
     float told = smoothstep(0.25, 0.03, px);
+    // From the rim the mats are rust and orange, deep in colour whatever the sky: the light in them is the amber of the water.
+    float fromRim = smoothstep(8.0, 40.0, cameraPosition.y);
+    far3 *= mix(vec3(1.0), vec3(1.1, 0.66, 0.3), fromRim);
+    // And they are not one sheet: orange where the strands lie thick in the surface, dark brown water between them, in streaks and clouds.
+    float thick = 0.55 * vnoise(pq / vec2(2.4, 33.0) + 11.0) + 0.45 * vnoise(b / 6.0 + 4.0);
+    far3 = mix(far3, mix(vec3(0.05, 0.036, 0.026), far3 * 1.3, smoothstep(0.28, 0.66, thick)), fromRim);
     vec3 weed = mix(far3 * (0.75 + 0.5 * vnoise(pq / vec2(1.3, 19.0) + 2.0)), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
     float high = mix(0.5, mh, told);
     // The strands that stand highest are the palest: gold where the low sun finds them.
@@ -241,10 +257,10 @@ Bed wallAt(vec2 b, float down, float inside) {
   Bed o;
   float along = atan(b.x, b.y) * 480.0;
   // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip: ledge under ledge, lost in the dark at its foot.
-  vec2 uv = vec2(along / 30.0, 1.0 - clamp(down / 17.0, 0.02, 0.98));
+  vec2 uv = vec2(along / 19.0, 1.0 - clamp(down / 17.0, 0.02, 0.98));
   vec3 c = texture2D(tWall, uv).rgb;
   float ledge = 0.55 + 0.45 * smoothstep(0.05, 0.3, dot(c, vec3(0.33)));
-  o.albedo = clamp(c * 1.3, 0.0, 0.95);
+  o.albedo = clamp(c * 1.3, 0.0, 0.95) * vec3(0.62, 0.86, 0.9);
   o.occ = ledge;
   o.tilt = vec2(0.0);
   o.glow = 0.0;

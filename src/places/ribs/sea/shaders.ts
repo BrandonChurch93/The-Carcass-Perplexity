@@ -43,7 +43,7 @@ ${SWELL.map(([dx, dz, length, amp], n) => {
     float keep = 1.0 - smoothstep(0.35, 1.0, ${f(k)} * px);
     // And not at every crest, nor evenly along one: whole stretches of the sea break and whole stretches do not.
     float where = textureLod(chop, lay.yx * 0.19 + ${f(0.61 * n + 0.2)}, log2(max(px * 256.0 / ${f(length * 2)}, 1e-6))).a;
-    float on = smoothstep(${f(0.47 + 0.02 * n)}, ${f(0.62 + 0.02 * n)}, torn + 0.9 * (where - 0.55)) * keep;
+    float on = smoothstep(${f(0.45 + 0.02 * n)}, ${f(0.8 + 0.02 * n)}, torn + 0.9 * (where - 0.55)) * keep;
     // Thickest in the middle of its length and thinning to nothing at its ends.
     cap.x = max(cap.x, on * smoothstep(-0.2 - 0.45 * on, -0.1, back) * (1.0 - smoothstep(0.05, 0.3, back)));
     cap.y = max(cap.y, on * smoothstep(-3.2, -0.6, back) * (1.0 - smoothstep(-0.2, 0.4, back)));
@@ -173,10 +173,10 @@ void main() {
   amount = max(amount, surfZone * (0.3 + 0.7 * crest) + wash * (0.55 + 0.4 * sin(ph - 1.2)));
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
   // The break itself is thick white water, ragged at its rim.
-  float fresh = smoothstep(0.42, 0.66, caps.x * (0.22 + 0.75 * lacePic + 0.5 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
-  foam = max(foam, fresh);
+  float fresh = smoothstep(0.3, 1.0, caps.x * (0.2 + 0.9 * lacePic + 0.4 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
+  foam = max(foam, 0.82 * fresh);
   // Fresh white water is thick and white; what trails is thin, and the green shows through it.
-  vec3 foamCol = vec3(0.78, 0.82, 0.84) * (0.5 + 0.5 * mix(lace, 0.8, fresh)) * mix(0.8, 1.12, max(fresh, surfZone)) * e / 3.14159;
+  vec3 foamCol = vec3(0.78, 0.82, 0.84) * (0.5 + 0.5 * mix(lace, 0.35 + 0.7 * lacePic, fresh)) * mix(0.8, 1.12, max(fresh, surfZone)) * e / 3.14159;
   col = mix(col, foamCol, clamp(foam, 0.0, 1.0));
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
@@ -235,7 +235,7 @@ float levelOf(sampler2D t, float metres) {
 // Ripples seen at a glance keep their crests: read by the long side they went to glass a stone's throw out. Between the long side and the short.
 float rippleLevel(sampler2D t, float metres) {
   float size = float(textureSize(t, 0).x) / metres;
-  return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size) + 0.7;
+  return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size) + 0.4;
 }
 // The rig's sky, cloud shadow and contact, word for word (shared/glsl.ts: skyCloud, cloudShade, contactDrawn), but each picture read at a
 // stated level: over the rippled sheet a read by its own slopes is several times the cost for the same picture. Keep in step with the rig.
@@ -361,6 +361,13 @@ void main() {
   vec3 body = vec3(0.125, 0.11, 0.085) * e / 3.14159;
   // The meniscus: where the water climbs a stone it turns up to the sky, a bright thread along the line.
   float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
+  // A ruffled stretch throws the bright sky wide of the lens and reads dark; near the lens the eye looks down into the water and the bed shows.
+  refl *= 1.0 - 0.4 * paw * (1.0 - lip);
+  // Under the wall the flat lies in its shade, dark slate, and only long slack bands across it still hold the sky.
+  float under = smoothstep(430.0, 160.0, p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3));
+  float slack = smoothstep(0.5, 0.85, 0.5 + 0.5 * sin(p.y * 0.33 + 5.0 * barB.a + 2.0 * sin(p.x * 0.017)));
+  refl *= 1.0 - 0.62 * under * (1.0 - 0.8 * slack);
+  fres *= mix(0.55, 1.0, smoothstep(8.0, 34.0, distance(cameraPosition, vWorld)));
   fres = mix(fres, 0.8, 0.18 * lip);
   col = fres * refl + (1.0 - fres) * murk * body;
   alpha = fres + (1.0 - fres) * murk;

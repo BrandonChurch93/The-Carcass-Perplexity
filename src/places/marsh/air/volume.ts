@@ -177,7 +177,7 @@ void main() {
         if (wisp <= 0.0) continue;
         // How much of a sheet the view crosses: more the flatter it looks along it, and nothing where a solid stands in it.
         float crossed = min((0.2 + 0.09 * fl) / abs(rd.y), 2.5);
-        float a = 1.0 - exp(-wisp * cover * crossed * 0.075 * exp(-y / 1.5));
+        float a = 1.0 - exp(-wisp * cover * crossed * 0.05 * exp(-y / 1.5));
         a *= smoothstep(0.25, 1.6, t) * smoothstep(0.0, 0.5, far - t);
         sum += trans * a * steamLit * 0.98;
         trans *= 1.0 - a;
@@ -255,7 +255,7 @@ void main() {
     float reach = min(far, mix(9000.0, 1100.0, open));
     float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
     float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
-    bank = 0.0005 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    bank = 0.00014 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
     // Over the sky the bank is only the foot of the far picture: it hides the picture's own ground and lets its hills stand.
     bank = mix(bank, 1.5 * exp(-max(elev, 0.0) / 0.007) * show, open);
     // Nearer than that, banks of mist stand over the far pools, each a wall a few strides high, broken along its length and drifting, so

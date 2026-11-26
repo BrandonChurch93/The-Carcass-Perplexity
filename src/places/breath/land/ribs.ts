@@ -283,7 +283,7 @@ export function block(seed: number, size: [number, number, number], at: [number,
     const rough = 0.34 * chipped(lx + seed * 9, ly, lz - seed * 5) + 0.09 * (Math.abs(bed - Math.floor(bed) - 0.5) * 2 - 0.5);
     p.multiplyScalar(1 + rough / Math.max(0.6, p.length()));
     p.applyMatrix4(m);
-    return { at: [p.x, p.y, p.z], uv: [lx + seed * 13, ly + lz], occ: lerp(0.55, 1, smooth(dy * 0.8 + 0.75)) };
+    return { at: [p.x, p.y, p.z], uv: [lx + seed * 13, ly + lz], occ: lerp(0.2, 1, smooth(dy * 1.1 + 0.72)) };
   });
   return g;
 }

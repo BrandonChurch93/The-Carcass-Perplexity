@@ -66,6 +66,8 @@ void main() {
   // its bellies as dark and its hills as faint as they were taken. (A fit of the curve's inverse, good from 0.4 to 0.93 of white.)
   vec3 shown = pow(far, vec3(1.0 / 2.2));
   far = exp2((((43.76 * shown - 96.814) * shown + 79.933) * shown - 21.049) * shown - 3.544) * FAR_GAIN;
+  // Over the far picture the sheet is heavier than at the horizon's pale band: a lens that looks level sees its grey weight.
+  c *= mix(1.0, 0.72, smoothstep(0.16, 0.42, el));
   c = mix(c, far, low);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
