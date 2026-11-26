@@ -135,13 +135,17 @@ vec3 skyCloud(vec3 from, vec3 d) {
   // The picture has a sixth of a texel for a pixel of the widest lens: its own lumps, read four times smaller and against their own
   // local mean, are laid into it as the fine structure a cloud has at every size.
   vec2 fineAt = uv * 4.0 + vec2(0.31, 0.17) + 0.05 * work;
-  c *= mix(1.0, clamp(texture2D(tSkyFine, fineAt).r * 1.992, 0.65, 1.4), 0.4);
+  c *= mix(1.0, clamp(texture2D(tSkyFine, fineAt).r * 1.992, 0.6, 1.22), 0.7);
+  // The storm's cloud is slate: the brown of the picture's bases is taken out.
+  float grey = dot(c, vec3(0.3, 0.5, 0.2));
+  c = mix(c, grey * vec3(0.87, 0.98, 1.13), 0.55);
   // The break is silver, not gold: what burns in the picture is cooled to the white of light through thin cloud; a little of its warmth stays.
   float burning = dot(c, vec3(0.333));
   c = mix(c, burning * vec3(0.93, 0.99, 1.08), 0.82 * smoothstep(0.12, 0.7, burning));
-  // The break burns: where the picture is bright the cloud is lit through, far above the grey of the bases.
-  // The bases are heavy: what is dark in the picture is darker here, what is bright burns.
-  c *= 0.6 + 0.4 * smoothstep(0.04, 0.22, dot(c, vec3(0.333))) + 1.6 * smoothstep(0.45, 1.5, dot(c, vec3(0.333)));
+  // The bases are heavy and the break burns: what is dark in the picture is darker here and what is bright is brighter, by one smooth
+  // curve, so that the break keeps the soft edge it has in the picture.
+  burning = dot(c, vec3(0.333));
+  c *= 0.55 + 1.9 * burning / (burning + 1.6);
   // Straight overhead the picture runs out: the slate of the cloud's base.
   c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
   // Toward the horizon the cloud is seen through more and more air.

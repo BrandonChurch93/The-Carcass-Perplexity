@@ -17,19 +17,19 @@ export const MAX_EMITTERS = 8;
 /** The fine relief of the floor, laid over the bed twice from one tiling picture: metres of a repeat and metres of relief, wide and small. */
 export const FINE = { size: 256, wide: 37, wideAmp: 0.2, small: 9.7, smallAmp: 0.07 };
 /** The one wide break in the cloud that lets the sun down on the strait: where its light falls on the ground at the establishing key, and its radius, metres. */
-export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62 };
+export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62, bounce: 2.2 };
 /**
  * The break by shot: where the low sun comes down on the ground at the shot's key and how wide, metres, and where the break stands in the
  * sky, degrees right of north. The approach and the strait are one move and keep BREAK. Inside a shot the light goes with the wind; at a cut
  * it stands where the next shot wants it, as a crew waits for the light: on the colony's rock (whose faces to the lens are its lee: there
  * the light the lit sea and flats throw back is raised, `bounce` times, as a crew would hold a white sheet), on the feeders and the water behind them, on the flats behind the one that hangs in the weed (pale against a cliff in shade), on the
- * bore's spray in the gate.
+ * bore's spray in the gate. `sky` is what the cloud's own brightness is given in the shot: the bore comes in under a heavier sky.
  */
-const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number }[] = [
+const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number }[] = [
   { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 4.4 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23 },
   { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4 },
-  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22 },
+  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.66 },
 ];
 /** Where the break stands in the sky at the establishing key, degrees right of north: upper right of the strait's frame, left of the sun that burns through its edge. */
 const BREAK_YAW = 42;
@@ -425,10 +425,10 @@ export function createRig(): Rig {
   const skyTurn = new THREE.Vector4(0, 0, 0, SKY_GAIN);
   const staging = BREAK_BY_SHOT.map((b) => ({ ...b, span: shotSpan(b.shot), at: keySeconds(b.key) }));
   /** The break's staging for the shot the camera stands in: its own, or the strait's. */
-  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number } => {
+  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number } => {
     const staged = stagedSeconds();
     const own = loopPhase() === null ? staging.find((b) => staged >= b.span.from && staged < b.span.to) : undefined;
-    return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0 };
+    return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0, bounce: BREAK.bounce };
   };
   const breakToward = (seconds: number, drifted = seconds): void => {
     // The break drifts with the cloud: six tenths of a degree a second, to the right. In the picture it lies 0.715 radians right of the middle.
@@ -631,7 +631,7 @@ export function createRig(): Rig {
       skyGround.set(...SKY_LIGHT.ground);
       haze.set(...HAZE);
       bounce.set(...BOUNCE).multiplyScalar(stagedBreak().bounce ?? 1);
-      skyTurn.w = SKY_GAIN;
+      skyTurn.w = SKY_GAIN * (stagedBreak().sky ?? 1);
       if (weight !== 0) {
         // The burning break stands in the right of the frame as the film opens, and drifts to its own place.
         const turn = STORM.turn * weight;
