@@ -193,7 +193,7 @@ export function create(ctx: Context): Piece {
     (a.bones[0] as THREE.Matrix4).compose(v1.set(fore, -0.006 * breath, sway), q1.setFromEuler(e1.set(sway * 0.5, 0, 0.012 * breath, 'YXZ')), new THREE.Vector3(1, 1 + 0.018 * breath, 1 + 0.03 * breath));
     HIPS.forEach((hip, i) => leg(a.bones[i + 1] as THREE.Matrix4, hip, 0, 0, 0, fore, 0, sway));
     about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.2 * Math.sin(t * 0.31 + ph), 0.28 * Math.sin(t * 0.41 + ph * 2) + look, 0.1 * Math.sin(t * 0.63 + ph) - 0.05, [fore, 0, sway]);
-    a.coat.set(a.role.inside ? 0.8 * a.role.skirt + 0.3 : 1.2, a.role.inside ? 0.05 : 0.5, 0.012 + shiver, a.role.inside ? 0.14 : 0.2);
+    a.coat.set(a.role.inside ? 0.8 * a.role.skirt + 0.3 : 1.2, a.role.inside ? 0.05 : 0.5, 0.012 + shiver, a.role.inside ? 0.24 : 0.2);
     a.writhe.set(1, 0, 0, 0);
   };
 
@@ -214,7 +214,7 @@ export function create(ctx: Context): Piece {
       else m.set(1, slope, 0, out, 0, 0.36, 0, 0.0, 0, 0, 1, side * 0.06, 0, 0, 0, 1);
     });
     about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(ph * 3) + 0.06 * Math.sin(t * 0.37 + ph), 0.5 * Math.sin(ph * 7) + 0.1 * Math.sin(t * 0.29 + ph), -0.35 + 0.05 * Math.sin(t * 0.5 + ph), [0, down, 0]);
-    a.coat.set(0.8, 0.04, 0.012 + shiver, 0.14);
+    a.coat.set(0.8, 0.04, 0.012 + shiver, 0.3);
     a.writhe.set(0.6, 0, 0, 0);
   };
 
