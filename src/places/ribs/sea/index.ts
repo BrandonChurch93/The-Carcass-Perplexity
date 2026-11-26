@@ -230,7 +230,7 @@ export function create(ctx: Context): Piece {
   });
   ctx.scene.add(ctx.parts.built('bore', bore.wall, bore.back, bore.curtain, bore.cards), bore.back, bore.curtain, bore.cards);
   // The air over and behind the wall is full of water: four columns that travel with the front, drawn by the air folder in the place's light.
-  for (const [dx, radius, strength] of [[-70, 40, 0.05], [0, 50, 0.04], [75, 45, 0.05], [-260, 80, 0.03], [280, 80, 0.03]] as const) {
+  for (const [dx, radius, strength] of [] as [number, number, number][]) {
     ctx.sources.steam.push({ at: [gate[0] + dx, 6, boreFront(BORE) - 55], radius, strength, rise: 48, kind: 'spray', lean: [0.1, -0.5], speed: BORE_SPEED, since: BORE });
   }
   const feeding = shotSpan('ribs-04');

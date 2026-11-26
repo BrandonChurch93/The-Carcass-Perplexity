@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { hash2 } from '../../../core/rng';
 import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { WALL_A } from './crest';
+import { dropsTexture } from './strike';
 
 /** The sheet that stands before the last shot's lens: mat/borewall-c.jpg, a dark standing face under a pitching lip. Its crest is level in the picture: the heads along it are given here. */
 const WALL_B = { foot: 0.185, crest: 0.8, aspect: 2048 / 768, profile: Array.from({ length: WALL_A.profile.length }, (_, i) => {
@@ -250,8 +251,9 @@ vec3 wallAt(float x, float t0) {
   return mix(a, b, w);
 }
 void main() {
-#ifdef BACK
-  // The second wall is a sheet of sky colour with an edge when no thrown water hides it: in the last shot mist stands there instead.
+#ifdef CURTAIN
+  // Before the last shot's lens neither sheet stands: the second wall is a sheet of sky colour with an edge, and the first, this close, is
+  // glass drawn out along the crest. The thrown water there is the cards'.
   if (uLast > 0.5) discard;
 #endif
   vec3 v = normalize(cameraPosition - vWorld);
@@ -302,12 +304,13 @@ void main() {
   float sun = mix(sunAt(vWorld + vec3(0.0, 30.0, 0.0), land), 1.0, 0.5);
   vec3 lightUp = skyIrradiance(vec3(0.0, 1.0, 0.0));
 #ifdef CURTAIN
-  float alpha = smoothstep(0.02, 0.22, lum) * (1.0 - smoothstep(0.6, 1.0, a)) * (1.0 - uSolo);
+  float alpha = smoothstep(0.02, 0.22, lum) * (1.0 - smoothstep(0.2, 0.85, a)) * (1.0 - uSolo);
   // Thrown water is lumps and holes: no sheet of it has an edge, least of all where it leaves the lip.
   vec3 lumps = texture2D(tFoamPic, vec2(x / 13.0, a * 1.7 - uTime * 0.22)).rgb;
   float lump = dot(lumps, vec3(0.3333));
-  alpha *= smoothstep(0.0, 0.3, a + 0.6 * (lump - 0.5)) * smoothstep(0.22 + 0.3 * a, 0.62 + 0.3 * a, lump + 0.25);
-  pic = mix(lumps * 1.15 + 0.1, pic, smoothstep(0.1, 0.4, a));
+  // And it is the lumps that are seen, to the top: the sheet's own picture over its crest is a pale band, and stood in the air as glass.
+  alpha *= smoothstep(0.0, 0.3, a + 0.6 * (lump - 0.5)) * smoothstep(0.26 + 0.5 * a, 0.66 + 0.5 * a, lump + 0.25);
+  pic = mix(lumps * 1.15 + 0.1, pic, 0.3 * smoothstep(0.1, 0.4, a));
   vec3 col = pic * (lightUp * 0.9 + uSunColour * 0.45 * sun) / 3.14159;
   // Thrown water is thin at its top and the bright sky behind the wave shows in it.
   vec3 behind = skyRadiance(-v);
@@ -402,6 +405,7 @@ precision highp float;
 ${RIG_UNIFORMS_GLSL}
 uniform sampler2D tFoam;
 uniform sampler2D tAtlas;
+uniform sampler2D tDrops;
 uniform float uAtlas;
 varying vec2 vUv;
 varying vec2 vRaw;
@@ -417,10 +421,9 @@ void main() {
   vec2 o = vLook.y * vec2(3.1, 7.3);
   vec4 t = texture2D(tFoam, vUv * mix(0.33, 0.2, mist) + o);
   vec4 g = texture2D(tFoam, vUv * 1.3 + o.yx);
-  vec4 k = texture2D(tFoam, vUv * 0.37 + o * 1.7);
   // Thrown water is not a ball: a torn clot, thick only at its heart, that breaks toward its rim into strings and then into single drops.
   float clot = 1.0 - smoothstep(-0.15, 0.85, r2 + 1.5 * (t.r - 0.5) + 0.7 * (0.45 - g.g));
-  float grain = smoothstep(0.5 - 0.45 * clot, 0.62 - 0.3 * clot, k.b + 0.3 * (k.a - 0.3));
+  float grain = smoothstep(0.5 - 0.45 * clot, 0.62 - 0.3 * clot, g.b + 0.3 * (g.a - 0.3));
   float soft = 1.0 - smoothstep(mix(0.0, -0.1, mist), 0.95, r2 + 0.3 * (t.r - 0.5));
   float dens = mix(clot * grain * (1.0 - smoothstep(0.75, 1.0, r2)), soft, mist);
   vec2 cell = vec2(mod(floor(vMore.z), 4.0), floor(vMore.z / 4.0));
@@ -431,15 +434,20 @@ void main() {
   float age = vMore.w;
   if (age > 0.0) cut *= smoothstep(0.55 * age, 0.25 + 0.7 * age, lum);
   dens = mix(mix(dens, cut, uAtlas), dens, mist);
+  // Round every clot the water has already come apart: single drops, each its own bead, thick at the torn rim and thinning outward.
+  float beads = texture2D(tDrops, vUv * 0.55 + o.yx * 1.3).r;
+  float loose = beads * (1.0 - mist) * smoothstep(0.02, 0.3, r2) * (1.0 - smoothstep(0.45, 1.0, r2)) * (1.0 - 0.7 * age);
+  dens = max(dens, 0.9 * loose);
   float alpha = clamp(dens * vLook.x, 0.0, 1.0) * (1.0 - uSolo);
   // Lit through, not on a skin: the side toward the sun a little brighter, the heart of a mass grey, the thin rim against the sun burning.
   float side = 0.5 + 0.5 * dot(normalize(vRaw + 1e-4), normalize(vSunView.xy + 1e-4)) * sqrt(r2);
   float rim = pow(max(-vSunView.z, 0.0), 2.0) * (1.0 - clot) * 1.2;
   float deep = vMore.x;
-  vec3 col = vec3(0.92, 0.94, 0.95) * (vSky * (0.85 + 0.3 * vUv.y) * (1.0 - 0.45 * deep - 0.2 * clot) + vSun * (0.3 + 0.6 * side + rim) * (1.0 - 0.6 * deep));
-  col *= mix(mix(1.0, 0.55 + 0.75 * lum, uAtlas), 0.55, mist);
+  // The body is the sky's and cool, grey at its heart; the sun is on the side that stands to it and nowhere else, and a single drop takes it whole.
+  vec3 col = vec3(0.92, 0.94, 0.95) * (vSky * (0.72 + 0.3 * vUv.y) * (1.0 - 0.55 * deep - 0.3 * clot) + vSun * (0.12 + 0.95 * side + rim + 0.5 * loose) * (1.0 - 0.6 * deep));
+  col *= mix(mix(1.0, 0.5 + 0.8 * lum, uAtlas), 0.55, mist);
   // Lit from behind: where the water is thin, at the torn rim of every clot and in the mist, the bright sky behind the wave glows in it.
-  col += vBehind * (0.75 * (1.0 - clot) * (1.0 - 0.5 * deep) + 0.25 * mist);
+  col += vBehind * (0.4 * (1.0 - clot) * (1.0 - 0.5 * deep) + 0.25 * mist);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;
 
@@ -689,7 +697,8 @@ export function createBore(
   back.renderOrder = 3;
 
   const count = Math.max(LIPS + PLUME + FOOT_BEFORE + VEIL, CREST + FALLS + FOOT + MIST) + sites.reduce((n, s) => n + (s.near ? BURST_NEAR : BURST_FAR), 0);
-  const cards = new Cards(count, { ...rigUniforms, tFoam: { value: foam }, tAtlas: { value: pictures.spray }, uAtlas: { value: 1 } });
+  const drops = dropsTexture();
+  const cards = new Cards(count, { ...rigUniforms, tFoam: { value: foam }, tAtlas: { value: pictures.spray }, tDrops: { value: drops }, uAtlas: { value: 1 } });
   const X = focus[0];
   const high = (x: number): number => highAt(x, X);
   const tip = (x: number, t: number): [number, number] => tipAt(x, t, X);
@@ -974,6 +983,7 @@ export function createBore(
       curtain.geometry.dispose();
       curtainMaterial.dispose();
       backMaterial.dispose();
+      drops.dispose();
       profile.dispose();
       cards.dispose();
     },

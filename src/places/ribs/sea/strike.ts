@@ -133,7 +133,7 @@ void main() {
 }`;
 
 /** Beads of water scattered over a square, a few to a hand: round, of many sizes, most of them small. Worked out, not loaded. */
-function dropsTexture(): THREE.DataTexture {
+export function dropsTexture(): THREE.DataTexture {
   const N = 256;
   const data = new Uint8Array(N * N);
   const cover = new Float32Array(N * N);
@@ -304,7 +304,7 @@ export class Burst {
         const y = 0.6 + dy;
         if (y < -0.5) continue;
         const [bx, bz] = base(j, id);
-        const fade = Math.min(1, a / 0.08) * Math.min(1, Math.max(0, (y + 0.5) / 1.5)) * Math.max(0, Math.min(1, 2.5 * (1 - a / (4 + 3.5 * rand(id, 13) * big))));
+        const fade = Math.min(1, a / 0.08) * Math.min(1, Math.max(0, (y + 0.5) / 1.5)) * Math.max(0, Math.min(1, 2 * (1 - a / (2.8 + 2.4 * rand(id, 13) * big))));
         this.put(bx + dx, y, bz + dz, big * (0.9 + 0.5 * Math.min(a, 3)) * (0.6 + 1.1 * rand(id, 9)), vx, vy, vz, 1, (0.75 + 0.25 * small) * fade * still, rand(id, 10), 0, sunward(j.along, id));
       }
 

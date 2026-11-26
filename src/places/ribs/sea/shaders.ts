@@ -213,14 +213,14 @@ void main() {
   amount = max(amount, surfZone * (0.3 + 0.7 * crest) + wash * (0.55 + 0.4 * sin(ph - 1.2)));
   // Within a stone's throw a break is no white tile laid on the water: it is the same lace, thick, with the water showing in its holes.
   float nearBreak = 1.0 - smoothstep(0.08, 0.3, pixel);
-  amount = max(amount, 0.86 * caps.x * nearBreak);
+  amount = max(amount, 0.58 * caps.x * caps.x * nearBreak);
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
   // The break itself is thick white water, ragged at its rim.
   float fresh = smoothstep(0.3, 1.0, caps.x * (0.2 + 0.9 * lacePic + 0.4 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
   // Close under the lens a break is no tile: its rim is eaten by the bubbles' own lace and there are holes in its body.
   // Its picture is read by the short side of the pixel, as its outline is: read by the long side its inside was one flat white.
   float bubbles = dot(textureLod(tFoamPic, p / 1.7 + uTime * uWind * 0.09, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 1.7, 1e-6))).rgb, vec3(0.3333));
-  fresh *= mix(1.0, 0.45 * smoothstep(0.25, 0.75, 1.5 * bubbles + 0.7 * fresh - 0.45), nearBreak);
+  fresh *= mix(1.0, 0.12 * smoothstep(0.25, 0.75, 1.5 * bubbles + 0.7 * fresh - 0.45), nearBreak);
   foam = max(foam, 0.82 * fresh);
   // Fresh white water is thick and white; what trails is thin, and the green shows through it.
   // Foam is white all through: it takes the sky from every side and the low sun as a standing thing does, and gives it back nearly white.
