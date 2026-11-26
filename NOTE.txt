@@ -1,6 +1,6 @@
-2026-11-26 03:04 UTC
-work at 898769c on agent/ribs-ground-2
-hb4: colony crag, stacks unlike, sun from the left, floor wet map, calmer blades
-look-1.jpg = out/work/v/hb4-all.jpg
-look-2.jpg = out/work/v/hb4-ribs-3.jpg
-look-3.jpg = out/work/v/hb4-ribs-0.jpg
+2026-11-26 03:41 UTC
+work at 6e3205b on agent/ribs-ground-2
+version 2: crag by world position, M1 green, cost 3.63 s
+look-1.jpg = out/work/compare/ribs-3.png
+look-2.jpg = out/work/compare/ribs-0.png
+look-3.jpg = out/work/v/v2b.jpg
