@@ -74,17 +74,48 @@ function travelled(seconds: number): number {
 const TO_KEY = travelled(ARRIVAL.keySeconds);
 const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 
-// The approach opens on a wider and higher lens than the move it joins, so that the first frame holds two blades whole against the sky:
-// how much wider, how many degrees higher, and the seconds over which both ease back into the move. From OPEN.seconds on the move is its own,
-// to the bit: the staging is exactly nothing there (the strait's shot runs on in the same move).
-const OPEN = { seconds: 11, wide: 0.245, pitch: 4.4, yaw: 6.6 };
+// The film's first shot, restaged (the rung 2 restaging of the opening): not the old move seen from farther out on a long lens, but a
+// move of its own. It starts 850 m out and 400 m EAST of the old axis, low over the swell, on a 36 degree lens, at 66 metres a second
+// mostly sideways, and sweeps west onto the old move in one arc, so that the near blade (L1) slides against the far ones the whole way in.
+// From the east the tips of L1 and R1 stand 8 degrees apart with the arch of L2 between them: they cross only once both have left the top of the frame.
+// From OPEN.seconds on (film frame 960) the pose is `arrival`'s own, to the bit, and the two join level in place, speed and acceleration.
+export const OPEN = {
+  seconds: 16,
+  /** Where the lens is as the film opens (x, z), the way it is going (degrees, 0 is north, negative is west) and its speed. */
+  from: [200, 850] as [number, number],
+  heading: -50,
+  speed: 66,
+  /** Metres over the old move's height as the film opens, and the heave of a lens that rides the swell: metres, seconds a turn. */
+  lift: 0.8,
+  heave: [[1.0, 5.3, 0.9], [0.3, 2.3, 2.1]] as [number, number, number][],
+  /** The point on the strait floor the lens is held on through the arc: under the gap between the tips of L1 and R1. */
+  target: [-149, -193] as [number, number],
+  /** Degrees over the level as the film opens and how far it tilts up as the blade grows; the lens as the film opens and as it widens. */
+  pitch: 10.5,
+  tilt: 3,
+  fov: 36,
+  widens: 10,
+  /** The seconds from which the look eases into the old move's. */
+  eases: 6,
+  /** Degrees the lens rolls with the swell. */
+  roll: 0.9,
+};
+
+const smoother = (a: number, b: number, x: number): number => {
+  const u = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return u * u * u * (u * (6 * u - 15) + 10);
+};
+const smoothed = (a: number, b: number, x: number): number => {
+  const u = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return u * u * (3 - 2 * u);
+};
+
 /** 1 at the first frame of the film, 0 from OPEN.seconds on, level at both ends. */
 export function openingLens(seconds: number): number {
-  const q = Math.min(1, Math.max(0, 1 - seconds / OPEN.seconds));
-  return q * q * (3 - 2 * q);
+  return 1 - smoother(0, OPEN.seconds, seconds);
 }
 
-function arrival(seconds: number, staged = 0): Pose {
+function arrivalLook(seconds: number): { position: Vec3; yaw: number; pitch: number; fov: number } {
   const left = TO_KEY - travelled(seconds);
   const out = Math.max(0, left) / ARRIVAL.far;
   const past = Math.max(0, -left) / PAST_KEY;
@@ -93,17 +124,67 @@ function arrival(seconds: number, staged = 0): Pose {
   const side = ARRIVAL.offset * out * out + ARRIVAL.drift * past * past;
   const position = add(add(establish.position, scale(along, -left)), add(scale(across, side), [0, ARRIVAL.rise * Math.pow(out, 1.5), 0]));
   const lens = Math.tan((establish.fov * RAD) / 2) * Math.pow(ARRIVAL.archAhead / (ARRIVAL.archAhead + left), ARRIVAL.hold);
-  if (staged > 0) return looking(position, ARRIVAL.yaw + ARRIVAL.turn * out * out + OPEN.yaw * staged, ARRIVAL.pitch + ARRIVAL.tilt * Math.pow(out, 1.5) + OPEN.pitch * staged, (2 * Math.atan(lens * (1 + OPEN.wide * staged))) / RAD);
-  return looking(position, ARRIVAL.yaw + ARRIVAL.turn * out * out, ARRIVAL.pitch + ARRIVAL.tilt * Math.pow(out, 1.5), (2 * Math.atan(lens)) / RAD);
+  return { position, yaw: ARRIVAL.yaw + ARRIVAL.turn * out * out, pitch: ARRIVAL.pitch + ARRIVAL.tilt * Math.pow(out, 1.5), fov: (2 * Math.atan(lens)) / RAD };
 }
 
-const approach: CameraPath = (part) => {
-  const seconds = (part * shotLength(opening)) / cut.fps;
-  return arrival(seconds, openingLens(seconds));
-};
+function arrival(seconds: number): Pose {
+  const a = arrivalLook(seconds);
+  return looking(a.position, a.yaw, a.pitch, a.fov);
+}
+
+// The join: the old move's place, speed and acceleration at OPEN.seconds (central differences of a smooth function of time).
+const JOIN = ((): { p: Vec3; v: Vec3; a: Vec3 } => {
+  const h = 1e-3;
+  const p0 = arrivalLook(OPEN.seconds - h).position;
+  const p1 = arrivalLook(OPEN.seconds).position;
+  const p2 = arrivalLook(OPEN.seconds + h).position;
+  return {
+    p: p1,
+    v: [(p2[0] - p0[0]) / (2 * h), 0, (p2[2] - p0[2]) / (2 * h)],
+    a: [(p2[0] - 2 * p1[0] + p0[0]) / (h * h), 0, (p2[2] - 2 * p1[2] + p0[2]) / (h * h)],
+  };
+})();
+
+/** The lens of the film's first shot at `seconds` of the place: where it is and how it looks. The old move's own from OPEN.seconds on. */
+export function openingCamera(seconds: number): Pose {
+  if (seconds >= OPEN.seconds) return arrival(seconds);
+  const old = arrivalLook(seconds);
+  const J = OPEN.seconds;
+  const s = Math.max(0, seconds) / J;
+  const s2 = s * s;
+  const s3 = s2 * s;
+  const s4 = s3 * s;
+  const s5 = s4 * s;
+  // A quintic between (place, velocity, no acceleration) as the film opens and (place, velocity, acceleration) of the old move at the join.
+  const h0 = 1 - 10 * s3 + 15 * s4 - 6 * s5;
+  const h1 = s - 6 * s3 + 8 * s4 - 3 * s5;
+  const h3 = 0.5 * s3 - s4 + 0.5 * s5;
+  const h4 = -4 * s3 + 7 * s4 - 3 * s5;
+  const h5 = 10 * s3 - 15 * s4 + 6 * s5;
+  const vx = OPEN.speed * Math.sin(OPEN.heading * RAD);
+  const vz = -OPEN.speed * Math.cos(OPEN.heading * RAD);
+  const x = h0 * OPEN.from[0] + h1 * J * vx + h3 * J * J * JOIN.a[0] + h4 * J * JOIN.v[0] + h5 * JOIN.p[0];
+  const z = h0 * OPEN.from[1] + h1 * J * vz + h3 * J * J * JOIN.a[2] + h4 * J * JOIN.v[2] + h5 * JOIN.p[2];
+  const own = openingLens(seconds);
+  let heave = 0;
+  let roll = 0;
+  for (const [metres, period, phase] of OPEN.heave) {
+    heave += metres * Math.sin((2 * Math.PI * seconds) / period + phase);
+    roll += (metres / (OPEN.heave[0] as [number, number, number])[0]) * Math.sin((2 * Math.PI * seconds) / (period * 1.37) + phase + 1.3);
+  }
+  const position: Vec3 = [x, old.position[1] + own * (OPEN.lift + heave), z];
+  const ease = smoother(OPEN.eases, J, seconds);
+  const held = Math.atan2(OPEN.target[0] - x, z - OPEN.target[1]) / RAD;
+  const yaw = held + (old.yaw - held) * ease;
+  const pitch = OPEN.pitch + OPEN.tilt * smoothed(0, OPEN.eases, seconds);
+  const fov = OPEN.fov + OPEN.widens * smoothed(0, 9, seconds);
+  return { ...looking(position, yaw, pitch + (old.pitch - pitch) * ease, fov + (old.fov - fov) * ease), roll: OPEN.roll * roll * own };
+}
+
+const approach: CameraPath = (part) => openingCamera((part * shotLength(opening)) / cut.fps);
+/** Where the lens of the approach is at `seconds` of the place, to the metre and smoothly. */
+export const approachEye = (seconds: number): Vec3 => openingCamera(seconds).position;
 /** The approach as it was before it was restaged: what was scattered along it once (the fliers' clearances, the skein) stays where it was, so that no later frame moves. */
-/** Where the lens of the approach is at `seconds` of the place, to the metre and smoothly: the staging moves its look, never its place. */
-export const approachEye = (seconds: number): Vec3 => arrival(seconds).position;
 export const approachAsScattered: CameraPath = (part) => arrival((part * shotLength(opening)) / cut.fps);
 const intoStrait: CameraPath = (part) => arrival((shotLength(opening) + part * shotLength(strait)) / cut.fps);
 
