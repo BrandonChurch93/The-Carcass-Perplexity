@@ -253,7 +253,7 @@ export function createField(): Field {
       const ahead = dx * K1_DIR[0] + dz * K1_DIR[1];
       const across = -dx * K1_DIR[1] + dz * K1_DIR[0];
       // Land on the lens's side of a line that bows toward the lens at the middle of the frame.
-      const want = 1.45 + 0.5 * across - ahead + 0.5 * (fbm(x / 1.3 + 2, z / 1.3, 3) - 0.5) + 0.25 * (vnoise(x / 0.4, z / 0.4) - 0.5);
+      const want = 2.45 + 0.65 * across - ahead + 0.5 * (fbm(x / 1.3 + 2, z / 1.3, 3) - 0.5) + 0.25 * (vnoise(x / 0.4, z / 0.4) - 0.5);
       const w = smooth(8, 4.5, Math.hypot(dx, dz));
       near.d[k] = (near.d[k] as number) * (1 - w) + Math.max(-3, Math.min(3, want)) * w;
     }
@@ -373,7 +373,7 @@ export function createField(): Field {
     const part = bed - Math.floor(bed);
     const broken = 0.3 * (fbm(x / 0.5 + 4, z / 0.5, 2) - 0.5);
     const stepped = (0.25 * part + 0.75 * smooth(0.6 + broken, 0.9 + broken, part) - part) * 0.24;
-    return raw + on * (stepped * 0.8 + 0.06 * (ridge(x / 0.31, z / 0.31 + 2) - 0.45) + 0.03 * (fbm(x / 0.11, z / 0.11, 2) - 0.5));
+    return raw + on * (stepped * 0.8 + 0.035 * (ridge(x / 0.47, z / 0.47 + 2) - 0.45));
   };
 
   // The flats: a bed under the brine, a shelf a finger under its level at the shore (the brine's own edge is cut for each pixel, on this shelf),

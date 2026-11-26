@@ -159,9 +159,9 @@ export function create(ctx: Context): Piece {
     const base = field.height(x, z);
     const s = field.shore(x, z);
     if (s < 0.03 || s > 1.2) return base;
-    const env = smooth(0.03, 0.2, s) * smooth(1.1, 0.35, s);
+    const env = smooth(0.03, 0.16, s) * smooth(0.8, 0.25, s + 0.5 * (fbm(x / 0.9 + 5, z / 0.9, 2) - 0.5));
     const c = fbm(x / 0.37 + 2, z / 0.37, 2);
-    return base + env * (0.015 + (0.3 + 0.7 * smooth(0.35, 0.65, c)) * (0.075 * knobs(x, z, 0.11) + 0.03 * knobs(x + 3.3, z, 0.042)));
+    return base + env * (0.015 + (0.3 + 0.7 * smooth(0.35, 0.65, c)) * (0.06 * knobs(x, z, 0.11) + 0.035 * knobs(x + 3.3, z, 0.042)));
   };
   // How deep a point sits among its neighbours, near and wide: clefts are dark because the sky does not reach into them.
   const hollowOf = (h: (x: number, z: number) => number, a: number, b: number, da: number, db: number) => (x: number, z: number): [number, number] => {
@@ -183,6 +183,12 @@ export function create(ctx: Context): Piece {
       tFieldFar: { value: field.far },
       tPlates: { value: plates },
       tGrain: { value: grain },
+      tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
+      tMud: { value: ctx.assets.texture('mat/mud.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tMudN: { value: ctx.assets.texture('mat/mud-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
+      tRock: { value: ctx.assets.texture('mat/rock.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tRockN: { value: ctx.assets.texture('mat/rock-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) },
       uBank: { value: new THREE.Vector3(bankCentre[0], bankCentre[1], 3.6) },
     },
     toneMapped: false,

@@ -28,7 +28,10 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, float foam) {
   // Seen from above it is red; seen low, where the view skims it, it is a pale glare. The turn from one to the other is quick, so every
   // ripple that leans away from the lens shows as a line of light.
   // The sky it gives back is an overcast with lumps in it, so the sheen lies on the brine in patches.
-  float cloud = texture2D(tGrain, (p.xz + r.xz / max(r.y, 0.12) * 40.0) / 230.0).g;
+  // How wide a pixel lies on the brine is taken from the place itself, not from the mirrored ray: where a neighbour in the renderer's block
+  // of four is cut away at a shore, the ray there is not worked out, and a read sized by it is not the same on every load of the page.
+  vec2 cloudAt = (p.xz + r.xz / max(r.y, 0.12) * 40.0) / 230.0;
+  float cloud = textureGrad(tGrain, cloudAt, dFdx(p.xz) / 230.0, dFdy(p.xz) / 230.0).g;
   float mirror = (0.02 + 0.42 * pow(1.0 - nv, 14.0)) * (0.5 + 0.9 * smoothstep(0.25, 0.75, cloud)) * (1.0 - 0.8 * foam);
   return lit + skyRadiance(r) * (open * mirror);
 }`;
