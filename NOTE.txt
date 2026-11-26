@@ -1,5 +1,7 @@
-2026-11-26 15:53 UTC
+2026-11-26 16:06 UTC
 work at 907aa0d on agent/breath-column
-4590 (top) and 4500 (bottom), shaft enlarged, main left, mine right: the slab is billows with an uneven edge; keys 4731 and 5510 main left, mine right: 4731's puff is more torn, with wisps under it
-look-1.jpg = out/work/look/col-slabs.jpg
-look-2.jpg = out/work/col-t3/keys.jpg
+column 907aa0d: slab crops 4500 over 4590, full pairs, keys 4731 over 5510, 4973; main left, mine right
+look-1.jpg = out/work/look/col-slab-crops.jpg
+look-2.jpg = out/work/look/col-pairs-slab.jpg
+look-3.jpg = out/work/look/col-pairs-keys.jpg
+look-4.jpg = out/work/look/col-4973.jpg
