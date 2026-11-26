@@ -149,6 +149,10 @@ void main() {
     // Charred black at the middle, whatever the picture has there.
     float char_ = 1.0 - smoothstep(0.35, 1.0, d + 0.3 * (fine - 0.5));
     albedo = mix(albedo, pic * mix(mix(0.55, 0.16, char_), 0.9, raw), on);
+    // Raw at the heart of it, where the hide split open: wet red flesh inside the ring of char.
+    float heart = (1.0 - smoothstep(0.12, 0.5, d + 0.4 * (fine - 0.5))) * on;
+    albedo = mix(albedo, vec3(0.34, 0.028, 0.02) * (0.45 + 1.1 * pic.r), heart);
+    raw = max(raw, heart);
     rough = mix(rough, mix(0.9, 0.55, raw), on);
     occ = mix(occ, 0.8, on);
   }

@@ -194,7 +194,7 @@ void main() {
   float vein = 1.0 - smoothstep(0.08, 0.3, lum);
   float fold = smoothstep(0.45, 0.85, relief);
   vec3 albedo = pic * (0.55 + 0.5 * fract(seed * 5.3)) * mix(vec3(1.0), vec3(0.85, 0.75, 1.1), fract(seed * 3.3));
-  vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + min(vec3(2.5), 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
+  vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + min(vec3(1.2), 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
   vec3 c = albedo * e / 3.14159;
   // What is behind it shows through where it is thin, stained by it.
   c += albedo * skyRadiance(-toCamera) * 0.5 * (1.0 - 0.8 * vein) * (1.0 - 0.5 * fold);
@@ -203,7 +203,7 @@ void main() {
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
   r.y = abs(r.y) + 0.05;
-  vec3 mirror = skyRadiance(normalize(r)) + emitterIrradiance(vWorld, n) * 0.08;
+  vec3 mirror = skyRadiance(normalize(r)) + min(vec3(1.5), emitterIrradiance(vWorld, n)) * 0.08;
   float glint = smoothstep(0.75, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
   c += mirror * (0.35 * fres + 1.6 * glint * (0.3 + 0.7 * fres));
   // When its spire is struck the ribbon carries the charge for a moment along its folds.

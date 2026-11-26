@@ -54,16 +54,19 @@ const SIT: Pose = { roll: 0.06, pitch: 0.62, slack: 1, curl: 0.15, neck: [-0.6, 
 // Lying on its chest, curled, legs folded under, forepaws out before it, the head down on them.
 const LIE: Pose = { roll: 0.12, pitch: 0, slack: 0.95, curl: 0.7, neck: [-0.35, 0.5], head: [-0.4, 0.4], legs: [leg(1.1, 0.3, 1.45, 0.1, 1.5), leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(1.2, 0.5, -1.3, 0.3, 1.4), leg(1.25, 0.55, -1.2, 0.3, 1.4)] };
 const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [-0.15, -0.3], head: [-0.7, -0.2], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
-// The dead one: fallen on its right side, slack, its legs thrown out toward the lens with the paws on the ground, the neck fallen forward.
+// The dead one: on its right side, stiff, the four legs straight out toward the lens, the upper pair held off the ground as it froze, the
+// neck stretched along the ground.
 const DEAD: Pose = {
-  roll: 0.62,
-  pitch: -0.04,
-  slack: 0.8,
-  curl: -0.3,
-  neck: [-0.3, -0.5],
-  head: [-0.4, -0.3],
-  legs: [leg(1.0, 0.2, 1.3, 0.5, 1.4, 0.3), leg(0.5, 0.5, 1.0, 0.2, 1.3, 0), leg(0.7, 0.5, -0.2, 0.9, 1.0, 0.4), leg(-0.5, 0.3, -0.9, 0.0, 0.6, 0)],
+  roll: 1.32,
+  pitch: 0,
+  slack: 0.9,
+  curl: -0.12,
+  neck: [-0.15, -0.1],
+  head: [-0.2, -0.15],
+  legs: [leg(0.35, 0.22, 0.25, 0, 0.9, 0), leg(-0.25, 0.02, 0.45, 0, 0.8, 0), leg(-0.2, 0.28, -0.45, 0, 0.9, 0), leg(0.3, 0.02, -0.7, 0, 0.8, 0)],
 };
+/** How far the dead one is turned from square on to the lens, radians: enough that its legs are seen along their length. */
+const DEAD_TURN = 0.3;
 
 const BARE = false;
 // The ground owner now draws the burned rock under the dead one (scorchfield); this folder's own sheet is kept but not drawn.
@@ -222,8 +225,8 @@ export function create(ctx: Context): Piece {
   // The scorched one: on its side, the bolt's way burned into its upper flank behind the shoulder.
   const deadSkin = skinOf(DEAD, 0.016).body;
   const dj = deadSkin.joints;
-  const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.2 * (dj.fwd[d] as number) + 0.05 * (dj.up[d] as number) - 0.24 * (dj.right[d] as number);
-  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.3];
+  const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.22 * (dj.fwd[d] as number) - 0.1 * (dj.up[d] as number) - 0.2 * (dj.right[d] as number);
+  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.34];
   const dead = make({ act: 'dead', pose: DEAD, size: 1.05, cell: 0.016, clumps: 2400, long: 0.8, tone: [0.92, 0.77, 0.52], phase: 0, inside: false, burn: wound, tendrils: 110 });
 
   const burned = scorch(ctx);
@@ -374,7 +377,7 @@ export function create(ctx: Context): Piece {
       dead.ground.set(gy - sx * cx - sz * cz, sx, sz, 0);
       lie3.set(-sx, 1, -sz).normalize();
       tilt.setFromUnitVectors(UP, lie3);
-      q1.setFromEuler(e1.set(0, -(carcassAxis + 180) * RAD, 0, 'YXZ')).premultiply(tilt);
+      q1.setFromEuler(e1.set(0, -(carcassAxis + 180) * RAD + DEAD_TURN, 0, 'YXZ')).premultiply(tilt);
       dead.group.position.set(cx, gy, cz);
       dead.group.quaternion.copy(q1);
       dead.group.scale.setScalar(dead.role.size);
