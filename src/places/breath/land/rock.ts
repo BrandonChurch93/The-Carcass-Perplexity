@@ -389,6 +389,14 @@ void main() {
     inPad *= 1.0 - shingle;
   }
   n = normalize(n - vec3(lean.x, 0.0, lean.y) * (1.0 - film));
+  // The broken face of a plate shows its beds: level courses a hand thick, each with a shut dark foot under the lip of the one above.
+  // Without them the face took only the grain's lean, and its wet sheen broke on that in white points: a fuzz, not stone.
+  float bedAt = p.y / 0.09 + 2.4 * (a.r - 0.5) + 1.1 * (a.b - 0.5);
+  float bedIn = fract(bedAt);
+  float bedLone = fract(sin(floor(bedAt) * 12.9898 + 1.7) * 43758.5453);
+  float bedSeen = steep * smoothstep(0.8, 0.3, fwidth(bedAt)) * (1.0 - film);
+  float bedFoot = bedSeen * smoothstep(0.24, 0.0, bedIn) * (0.4 + 0.6 * bedLone);
+  n = normalize(n + vec3(0.0, bedSeen * mix(0.14, -0.75, smoothstep(0.24, 0.0, bedIn)) * (0.4 + 0.6 * bedLone), 0.0));
   n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.97 * film));
 
   // The rock: the plate's own colour, cooled a little (it was painted under a warm lamp), each loose stone its own tone.
@@ -421,6 +429,7 @@ void main() {
     side = mix(textureGrad(tMat, vec2(p.x, p.y * 1.6) / 1.1, vec2(ex.x, ex.y * 1.6) / 1.1, vec2(ey.x, ey.y * 1.6) / 1.1).rgb, textureGrad(tMat, vec2(p.z, p.y * 1.6) / 1.1, vec2(ex.z, ex.y * 1.6) / 1.1, vec2(ey.z, ey.y * 1.6) / 1.1).rgb, wx);
   }
   vec3 face = texture2D(tPlate, pq, 4.0).rgb * vec3(0.62, 0.58, 0.52) * clamp(dot(side / uMean, vec3(0.3333)), 0.4, 1.7);
+  face *= mix(1.0, 0.5, bedFoot) * mix(1.0, 0.75 + 0.5 * bedLone, 0.6 * bedSeen);
   rock = mix(rock, face, steep * (1.0 - stone));
   // A dark green-brown weed along the tide line and in the wet foot of the edges near it.
   float tide = smoothstep(0.5, 0.05, abs(over - 0.1)) * smoothstep(0.3, 0.6, a.b * 2.0 + 0.5 * (tone - 1.0)) + 0.5 * hollow * smoothstep(0.6, 0.15, over);
@@ -477,7 +486,7 @@ void main() {
   // And it lies near the tide: a plate that stands half a metre clear of it has dried in the wind.
   float dry = smoothstep(0.45, 1.0, over + 0.3 * (a.g - 0.5));
   // Under the tide the water has the sheen and the glare, not the bed.
-  float sheen = (1.0 - under) * (1.0 - inPad * smoothstep(0.25, 0.5, padHigh) * (1.0 - padLow)) * (1.0 - shingle) * max(mix(0.42 * damp, 1.0, film), (1.0 - 0.8 * dry) * (0.1 + 0.4 * smoothstep(0.35, 0.75, a.r + 0.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0) * near)) * (1.0 - steep) * (1.0 - 0.6 * stone) * (1.0 - 0.7 * pit * close));
+  float sheen = (1.0 - under) * (1.0 - inPad * smoothstep(0.25, 0.5, padHigh) * (1.0 - padLow)) * (1.0 - shingle) * max(mix(0.42 * damp, 1.0, film), (1.0 - 0.8 * dry) * (0.1 + 0.4 * smoothstep(0.35, 0.75, a.r + 0.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0) * near)) * (1.0 - steep) * (1.0 - 0.6 * stone) * (1.0 - 0.7 * pit * close)) * (1.0 - 0.8 * steep);
   // Rock is rough even wet: it never mirrors the sky whole as the pool does, or wet rock near the lens would stand pale as sand.
   // Near the lens the sheen is not a sheet: it lies in the lows of the grain and breaks on its highs, so wet rock is dark with bright points.
   float gloss = mix(1.0, smoothstep(0.62, 0.3, mn.b) * (1.0 - 0.8 * pit * close), mix(near, 0.0, film));
@@ -490,7 +499,8 @@ void main() {
   float glare = pow(max(dot(reflect(-v, normalize(n + vec3(0.0, 1.5, 0.0))), uSunDir), 0.0), 28.0);
   colour += uSunColour * vec3(1.0, 0.8, 0.55) * (glare * sheen * (0.35 + 0.65 * gloss) * (0.12 + 0.88 * fres) * mix(0.3, 1.0, lit) * cloud * occ * 1.7);
   float tight = sunLobe(normalize(n + vec3(mn.r - 0.5, 0.0, mn.g - 0.5) * 0.5), v, 0.2) * fres * lit;
-  colour += uSunColour * (min(tight, 8.0) * cloud * damp * (1.0 - under) * smoothstep(0.4, 0.8, mn.b) * occ * 0.5);
+  // Not on a plate's broken face: there the points stood all over it as a white fuzz.
+  colour += uSunColour * (min(tight, 8.0) * cloud * damp * (1.0 - under) * smoothstep(0.4, 0.8, mn.b) * occ * 0.5 * (1.0 - 0.9 * steep));
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
@@ -654,6 +664,39 @@ void main() {
     rough = mix(mix(0.2, 0.34, patch0), 0.85, dust);
     albedo *= mix(0.82, 1.0, dust);
     occ *= 0.8 + 0.4 * height;
+    // It was smooth putty. An arch is laid down skin on skin, and the skins show: thin beds that run along it, each with a steep lip and
+    // a long back, in thicker courses; it is pitted where the seep has eaten it, and here and there a flake of the outer skin has come
+    // off and the beds under it stand bare, pale and matt. All of this is one relief in metres that leans the normal. The beds are level
+    // sets of height plus distance from the axis, laid in the world: they run along the arch on its top and on its face toward the shaft,
+    // and have no seam.
+    float bedAt = (p.y + length(p.xz)) / 0.3 + 3.2 * (a.r - 0.5) + 1.3 * (b.a - 0.5);
+    float bedIn = fract(bedAt);
+    float bedId = floor(bedAt);
+    float skin = min(bedIn / 0.2, (1.0 - bedIn) / 0.8);
+    float lone = fract(sin(bedId * 12.9898 + 4.1) * 43758.5453);
+    float seen = smoothstep(0.8, 0.3, fwidth(bedAt));
+    float courseAt = fract(bedAt / 3.7 + 0.4 * (a.a - 0.5));
+    float course = min(courseAt / 0.12, (1.0 - courseAt) / 0.88);
+    vec4 d = texture2D(tRock, vUv / vec2(2.3, 1.9) + 0.2 * b.ra);
+    float pits = max(0.6 * smoothstep(0.3, 0.14, height), smoothstep(0.68, 0.76, d.r + 0.3 * (0.5 - height)));
+    float spall = smoothstep(0.58, 0.63, b.r + 0.3 * (d.a - 0.5) + 0.12 * (c.a - 0.5)) * (1.0 - dust);
+    // Not every skin shows: where the outer one is whole only a lip here and there stands through it, and the arch keeps its wet sheen.
+    float shown = seen * mix(smoothstep(0.5, 0.62, lone) * smoothstep(0.3, 0.6, c.r), 1.0, spall);
+    float relief = shown * (0.02 + 0.03 * spall) * skin * (0.4 + 1.2 * lone) + 0.045 * course - 0.05 * pits - 0.07 * spall;
+    vec3 dpx = dFdx(p);
+    vec3 dpy = dFdy(p);
+    vec3 r1 = cross(dpy, n);
+    vec3 r2 = cross(n, dpx);
+    float det = dot(dpx, r1);
+    vec3 grad = sign(det) * (dFdx(relief) * r1 + dFdy(relief) * r2);
+    n = normalize(abs(det) * n - grad);
+    // A bed's foot is shut in and dark, and one bed is not the colour of the next; a pit holds wet and shade; bare beds are fresh stone.
+    float foot = shown * smoothstep(0.35, 0.0, skin);
+    albedo *= mix(1.0, 0.62, foot * (0.5 + 0.5 * spall)) * mix(1.0, 0.8 + 0.4 * lone, 0.5 * shown);
+    albedo = mix(albedo, vec3(0.8, 0.77, 0.7) * tone * (0.75 + 0.5 * lone), 0.6 * spall);
+    albedo *= mix(1.0, 0.5, pits);
+    rough = mix(rough, 0.75, max(spall, 0.6 * pits));
+    occ *= mix(1.0, 0.55, pits) * mix(1.0, 0.7, foot);
   } else {
     // The picture's own blocks are held down: at full strength, on courses, the wall was laid masonry with moss in the joints.
     n = normalize(n - 0.55 * uMat.y * (lean - n * dot(lean, n)));
