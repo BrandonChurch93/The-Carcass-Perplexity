@@ -289,7 +289,7 @@ ${SEA_SHADE_GLSL}
     float veiled = 1.0 - exp(-depthV);
     // On the ridge a far spire is never the veil alone: it keeps a fifth of its own light and shade, and more in a flash, when the veil
     // is lit and would be a flat fill.
-    if (uStage.z >= 0.75) veiled = min(veiled, 0.8) * (1.0 - 0.3 * clamp(uStrikeTop.w, 0.0, 1.0));
+    if (uStage.z >= 0.75) veiled = min(veiled, 0.8) * (1.0 - 0.5 * clamp(uStrikeTop.w, 0.0, 1.0));
     // Open sky and the sea of cloud keep their own masses: the veil is of the ridge's air.
     if (far > 50000.0) veiled = 0.0;
     // The sea of cloud is seen from above through thin air: it keeps its lumps and its lit edge.

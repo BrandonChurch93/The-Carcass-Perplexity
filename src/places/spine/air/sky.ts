@@ -276,10 +276,13 @@ void main() {
     // The last band of orange: a thin bright line low on the horizon toward the last light, broken along its length by the far cloud that
     // stands before it, with a little of its glow in the air over it. It is the one warm thing in the frame, in a flash too.
     // It is short: a stretch of the horizon about the last light, not a ring round it.
-    float side = smoothstep(0.84, 0.985, toLast);
+    // Out of the canal the horizon lies under the far ridge: there the band stands a little higher and runs longer, so it is seen to
+    // run on behind the ridge and is not a patch in the mouth's corner.
+    float canal = smoothstep(1.4, 1.8, uSkyStage.y);
+    float side = smoothstep(mix(0.84, 0.55, canal), 0.985, toLast);
     // No ruled stroke: it lies a little higher here and lower there, and far cloud before it cuts it into lengths.
-    float lies = 0.0075 + 0.0045 * (lumps - 0.75);
-    float line = exp(-pow((d.y - lies) / 0.0062, 2.0)) + 0.2 * exp(-max(d.y, 0.0) / 0.035) * smoothstep(-0.004, 0.004, d.y);
+    float lies = 0.0075 + 0.0045 * (lumps - 0.75) + 0.036 * canal;
+    float line = exp(-pow((d.y - lies) / mix(0.0062, 0.0085, canal), 2.0)) + 0.2 * exp(-max(d.y, 0.0) / 0.035) * smoothstep(-0.004, 0.004, d.y);
     float cutBy = textureLod(tNoise, vec3(az * 3.7 + uTime * 0.0006, d.y * 52.0 + az * 1.3, 0.11), 0.0).b;
     float lengths = (0.2 + 1.0 * smoothstep(0.3, 1.0, lumps)) * (0.22 + 0.78 * smoothstep(0.36, 0.62, cutBy));
     // (Where the lens is opened for the dark, the band is opened with the sky.)
