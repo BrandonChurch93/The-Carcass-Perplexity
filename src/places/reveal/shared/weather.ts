@@ -1,7 +1,7 @@
 // The cloud as one field of the world, so that the surface that takes its shade and the sheets that draw it read the same cloud.
 // Where the weather stands comes from sky/cover.png (assets-src/reveal/sky/make_cover.py); what it looks like comes from the Builder's
 // photographs of cloud from orbit (public/assets/reveal/mat). Lengths are kilometres, the drift is a pure function of the time.
-import { KM, X, Z } from './anchors';
+import { AT, KM, X, Z } from './anchors';
 
 /** The rectangle of the world the picture of the cover lies on: x and z of its corner, one over its width and its height. */
 export const COVER_RECT: [number, number, number, number] = [X(-900), Z(-820), 1 / (8500 * KM), 1 / (((8500 * 9) / 16) * KM)];
@@ -40,12 +40,20 @@ float seen(vec3 c, float least, float full) {
 }
 
 // The photograph of the low field at a point of its own drifting ground: from near a field of small cumulus at its real size
-// (250 km a repeat), from orbit the fine wind-drawn streaks that cover the sea (1,600 km a repeat). One read, two while they change over.
+// (250 km a repeat), from orbit the fine wind-drawn streaks that cover the sea (laid at 900 km a repeat). One read, two while they change over.
 float lowPicture(vec2 w) {
   float away = smoothstep(650.0, 1200.0, uViewKm);
   float pic = 0.0;
-  if (away < 1.0) pic += (1.0 - away) * seen(texture2D(uMatPopcorn, mat2(0.8, 0.6, -0.6, 0.8) * w / 250.0 + vec2(0.13, 0.4), 0.5).rgb, 0.2, 0.8);
-  if (away > 0.0) pic += away * seen(texture2D(uMatStreaks, mat2(0.97, -0.24, 0.24, 0.97) * w / 1600.0 + vec2(0.3, 0.7), 0.5).rgb, 0.11, 0.56);
+  if (away < 1.0) {
+    // Small cumulus stand in streets along the wind, with clear lanes between: the photograph's puffs, kept where a street runs.
+    float puff = seen(texture2D(uMatPopcorn, mat2(0.8, 0.6, -0.6, 0.8) * w / 140.0 + vec2(0.13, 0.4)).rgb, 0.22, 0.85);
+    float street = texture2D(uCloudTile, mat2(0.9, 0.44, -0.44, 0.9) * w / vec2(330.0, 170.0) + vec2(0.4, 0.1), 1.0).b;
+    pic += (1.0 - away) * puff * smoothstep(0.42, 0.7, street);
+  }
+  if (away > 0.0) {
+    float streak = seen(texture2D(uMatStreaks, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(1700.0, 1350.0) + vec2(0.3, 0.7)).rgb, 0.2, 0.85);
+    pic += away * streak * (0.4 + 0.6 * streak);
+  }
   return pic;
 }
 
@@ -58,12 +66,13 @@ vec2 lowGround(vec2 at) {
 // The share of the sky it takes comes from the cover and from slow noise that drifts with it: thick here, torn there, clear between.
 vec2 lowField(vec2 at) {
   vec2 w = lowGround(at);
-  float amount = coverAt(at).g;
+  // The sky stands clear over the lake of the Eye, where the rise begins.
+  float amount = coverAt(at).g * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
-  float field = amount * smoothstep(0.34, 0.74, slow + 0.2 * (amount - 0.6));
+  float field = amount * (0.12 + 0.88 * smoothstep(0.34, 0.72, slow + 0.2 * (amount - 0.6)));
   float pic = lowPicture(w);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
-  float thick = pic * (0.35 + 0.65 * pic) * field;
+  float thick = min(1.0, 1.25 * pic) * smoothstep(0.0, 0.5, field);
   return vec2(thick, pic);
 }
 

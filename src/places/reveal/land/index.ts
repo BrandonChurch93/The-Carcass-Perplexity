@@ -4,7 +4,7 @@
 // public/assets/reveal/mat are laid under it by world position. The light is the rig's: one sun, the air, the shade of the cloud.
 import * as THREE from 'three';
 import { FPS } from '../../../config';
-import { AT, KM, RING_FADE, RISE_FIRST, X, Z, handoff, rise } from '../shared/anchors';
+import { AT, FILM_ASPECT, KM, RING_FADE, RISE_FIRST, X, Z, handoff, rise } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
@@ -16,9 +16,6 @@ const FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
 ${WEATHER_GLSL}
-uniform sampler2D uMapA;
-uniform sampler2D uReliefA;
-uniform vec4 uRectA;
 uniform sampler2D uMapWide;
 uniform sampler2D uReliefWide;
 uniform vec4 uRectWide;
@@ -33,6 +30,8 @@ uniform sampler2D uMatPlain;
 uniform sampler2D uMatBadland;
 uniform sampler2D uMatShelf;
 uniform sampler2D uMatRangeNh;
+uniform sampler2D uMatGlitter;
+uniform sampler2D uMatLakewater;
 uniform float uOnly;
 uniform vec3 uHandWater;
 uniform vec3 uHandRing;
@@ -49,7 +48,7 @@ uniform float uPlanetKm;
 varying vec3 vWorld;
 
 // The deep sea under the sky of this planet: what comes back from the water itself, as a reflectance.
-const vec3 DEEP = vec3(0.0035, 0.009, 0.02);
+const vec3 DEEP = vec3(0.0022, 0.0065, 0.0135);
 // The dearer land: false lays no ground photograph under an enlarged map (both costs in HANDOVER.md).
 const bool GROUND_DETAIL = true;
 // The lesser vents: x and z from the Heart, km, and their size beside it.
@@ -82,14 +81,9 @@ void main() {
   vec3 relief = texture2D(uReliefWide, clamp(uvWide, 0.0, 1.0)).rgb;
   float texel = uTexelKm.x;
   if (inWide < 1.0) {
-    // Past the edge of the wide map lies the widest, and past that the open sea.
-    vec2 uvA = (xz - uRectA.xy) * uRectA.zw;
-    float inA = inside(uvA, 0.04);
-    vec3 beyond = mix(vec3(0.0, 0.004, 0.009), texture2D(uMapA, clamp(uvA, 0.0, 1.0)).rgb, inA);
-    vec3 farRelief = mix(vec3(0.5, 0.5, 0.0), texture2D(uReliefA, clamp(uvA, 0.0, 1.0)).rgb, inA);
-    ground = mix(beyond, ground, inWide);
-    relief = mix(farRelief, relief, inWide);
-    texel = mix(uTexelKm.z, texel, inWide);
+    // Past the edge of the wide map lies the open sea.
+    ground = mix(vec3(0.0, 0.004, 0.009), ground, inWide);
+    relief = mix(vec3(0.5, 0.5, 0.0), relief, inWide);
   }
   if (inClose > 0.0) {
     ground = mix(ground, texture2D(uMapClose, clamp(uvClose, 0.0, 1.0)).rgb, inClose);
@@ -148,23 +142,32 @@ void main() {
   lum = dot(ground, vec3(0.3, 0.55, 0.15));
   float growth = clamp((ground.g - max(ground.r, ground.b)) / max(lum, 0.02) * 4.0, 0.0, 1.0) * land;
   ground = mix(ground, lum * vec3(0.42, 0.68, 0.78), 0.85 * growth);
-  ground = mix(ground, mix(vec3(lum), ground, 0.8) * vec3(0.92, 0.99, 1.09), land);
+  ground = mix(ground, mix(vec3(lum), ground, 0.85) * mix(vec3(0.92, 0.99, 1.09), vec3(1.0), smoothstep(0.2, 0.5, height)), land);
   // Only near the top of the rise does the body come together: the great ranges stand pale as old bone, the country between them falls dark and cold.
+  // Near the ground the country is warm tan under a soft light, its shade open.
+  float near = (1.0 - smoothstep(150.0, 520.0, uViewKm)) * land;
+  ground = mix(ground, pow(ground, vec3(0.72)) * 0.56 * vec3(1.08, 0.95, 0.78), 0.8 * near);
   // From the height at which country is seen and no longer ground, the low country lies dark: wet, grown over, teal and slate.
   float wide = smoothstep(60.0, 260.0, uViewKm) * land;
   float lowness = 1.0 - smoothstep(0.12, 0.5, height);
-  ground = mix(ground, lum * vec3(0.27, 0.56, 0.6), 0.72 * lowness * wide);
-  ground *= mix(1.0, 0.34, lowness * wide) * (1.0 + 0.3 * smoothstep(0.45, 0.8, height) * wide);
+  ground = mix(ground, lum * vec3(0.27, 0.56, 0.6), 0.25 * lowness * wide);
+  ground *= mix(1.0, 0.62, lowness * wide);
+  // The bones are ivory and tan, never chalk: the brightest of the map is taken down.
+  ground *= mix(1.0, 0.74, smoothstep(0.4, 0.8, lum) * wide);
   slope *= mix(1.0, 0.55, lowness * wide);
+  // (And even: from that height the low country is one dark body of growth, its small features gone into it.)
+  ground = mix(ground, vec3(0.016, 0.042, 0.047) * (0.6 + 1.6 * lum), 0.12 * lowness * wide);
   float top = smoothstep(680.0, 1380.0, uViewKm) * land;
   float crest = smoothstep(0.3, 0.62, height);
-  ground *= mix(1.0, mix(0.72, 1.12, crest), top);
-  ground = mix(ground, vec3(0.74, 0.72, 0.66), 0.3 * top * smoothstep(0.5, 0.85, height));
+  ground *= mix(1.0, mix(0.8, 1.0, crest), top);
+  ground = mix(ground, vec3(0.6, 0.54, 0.44), 0.25 * top * smoothstep(0.5, 0.85, height));
   // The high ground is old bone: its pale is warm, never the white of snow.
-  ground *= mix(vec3(1.0), vec3(1.0, 0.9, 0.76), land * smoothstep(0.3, 0.75, height) * smoothstep(0.3, 0.6, lum));
+  ground *= mix(vec3(1.0), vec3(0.98, 0.84, 0.66), land * smoothstep(0.25, 0.7, height) * smoothstep(0.2, 0.5, lum));
 
   // ---- the light ----
   // The maps hold soft light from the upper left, and the place's sun stands on that side: the relief is lit from the slope, on top of it.
+  // Near the ground the relief is gentle, as low sun on old worn country; from orbit it is drawn stronger, as relief is on a map.
+  slope *= mix(0.25, 0.4, smoothstep(300.0, 1200.0, uViewKm)) * (1.0 - 0.6 * smoothstep(0.3, 0.62, height));
   vec3 n = normalize(vec3(-slope.x, 0.8, -slope.y));
   float shade = cloudShade(xz);
   float mu = limbCos(xz);
@@ -203,33 +206,50 @@ void main() {
   if (lakeR < 1.3) {
     vec2 w = lakeAt + 0.2 * vec2(vnoise(lakeAt * 2.7 + 3.0), vnoise(lakeAt * 2.7 + 17.0));
     float swirl = vnoise(w * 5.0 + 2.4 * vnoise(w * 2.1 + 3.0 + uTime * 0.02));
-    float amber = max(smoothstep(0.7 + 0.24 * swirl, 0.99, lakeR), smoothstep(0.08, 0.55, shallow));
+    float amber = max(smoothstep(0.7 + 0.24 * swirl, 0.99, lakeR), smoothstep(0.08, 0.55, shallow) * smoothstep(0.55, 0.85, lakeR));
     float paler = smoothstep(0.25, 0.9, shallow + 0.5 * (swirl - 0.4));
     vec3 eye = mix(vec3(0.003, 0.006, 0.014), mix(vec3(0.055, 0.026, 0.004), vec3(0.24, 0.13, 0.022), paler), amber);
     bed = mix(bed, eye, 1.0 - smoothstep(1.12, 1.3, lakeR));
   }
   vec3 water = bed * light / 3.14159;
+  // The surface is a photograph of sea under the sun from orbit (mat/glitter.jpg), read for how much each patch of it throws back:
+  // lanes of wind, slicks, swell. It is laid at the size at which one of its texels is about a pixel, in octaves, and it drifts.
+  float seaOctave = max(log2(max(pixelKm * 1024.0 * 1.2 / 400.0, 1e-3)), -2.0);
+  float seaLower = floor(seaOctave);
+  float seaShare = smoothstep(0.15, 0.85, seaOctave - seaLower);
+  vec2 sw = xz - uTime * vec2(0.5, 0.22);
+  float layS = 400.0 * exp2(seaLower);
+  vec3 gl = mix(
+    texture2D(uMatGlitter, mat2(0.8, 0.6, -0.6, 0.8) * sw / layS + 0.37 * seaLower).rgb,
+    texture2D(uMatGlitter, mat2(-0.28, 0.96, -0.96, -0.28) * sw / (2.0 * layS) + 0.37 * (seaLower + 1.0)).rgb,
+    seaShare);
+  float sparkle = clamp(dot(gl, vec3(0.3, 0.55, 0.15)) / 0.0575, 0.4, 2.6);
+  // The water of the lake, from near: a photograph of dark still water under wind (mat/lakewater.jpg), 20 km a repeat, and again at 7.
+  float inLakeWater = 1.0 - smoothstep(1.0, 1.25, lakeR);
+  if (inLakeWater > 0.0 && pixelKm < 0.6) {
+    vec2 lw = xz - uTime * vec2(0.03, 0.012);
+    float l1 = dot(texture2D(uMatLakewater, mat2(0.8, 0.6, -0.6, 0.8) * lw / 20.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.0138;
+    float l2 = dot(texture2D(uMatLakewater, mat2(-0.28, 0.96, -0.96, -0.28) * lw / 53.0 + 0.4).rgb, vec3(0.3, 0.55, 0.15)) / 0.0138;
+    sparkle = mix(sparkle, clamp(0.55 * l1 + 0.45 * l2, 0.75, 1.35), inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm)));
+  }
   // The sky on the surface, and the sun on its waves: the glint lies where the surface of the planet leans half way to the sun.
-  // The sea is ruffled in lanes and calm in slicks, so the glare is torn and the dark sea has grain.
-  vec2 wind = xz + 60.0 * vec2(vnoise(xz / 310.0), vnoise(xz / 310.0 + 9.7));
-  float calm = texture2D(uCloudTile, wind / 900.0 + vec2(0.5, 0.2)).b;
-  float ruffle = texture2D(uCloudTile, wind / 140.0).b;
-  float rough = mix(0.075, 0.125, clamp(0.3 + 0.6 * (calm - 0.5) + 0.4 * (ruffle - 0.5), 0.0, 1.0));
+  float calm = texture2D(uCloudTile, xz / 1900.0 + vec2(0.5, 0.2), 2.0).b;
+  float rough = mix(0.07, 0.125, clamp(0.25 + 0.5 * (calm - 0.5) + 0.3 * (sparkle - 1.0), 0.0, 1.0));
   float lean = length(xz - uGlint) / uPlanetKm;
   float t2 = lean * lean / (rough * rough);
   float lobe = exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
-  water += uSkyColour * 0.2 * fresnel * (0.7 + 0.6 * ruffle);
-  water += uSunColour * vec3(0.92, 0.95, 1.0) * lobe * 0.004 * shade;
-  water += uSunColour * vec3(0.9, 0.94, 1.0) * 0.006 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
+  water += uSkyColour * (0.005 + 0.2 * fresnel) * sparkle * (0.4 + 0.6 * shade);
+  water += uSunColour * vec3(0.9, 0.95, 1.0) * lobe * 0.004 * shade * (0.55 + 0.45 * sparkle);
+  water += uSunColour * vec3(0.88, 0.94, 1.0) * 0.0075 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.25 + 0.75 * sparkle) * (0.6 + 0.8 * calm);
 
   vec3 colour = mix(water, earth, land);
 
   // ---- the air between the surface and the eye: more of it toward the edge of the planet, less over the high ground ----
   float path = 1.0 / max(mu, 0.12);
   float far = smoothstep(120.0, 900.0, uViewKm);
-  float air = 1.0 - exp(-mix(0.04, 0.02, far) * path * (1.0 - 0.5 * height * land));
-  colour = mix(colour, uAirColour * (0.4 + 0.6 * shade), air);
+  float air = 1.0 - exp(-mix(0.03, 0.05, far) * path * (1.0 - 0.5 * height * land));
+  colour = mix(colour, mix(uAirColour, vec3(0.2, 0.27, 0.38), 0.5 * far) * (0.4 + 0.6 * shade), air);
   colour += glow * (1.0 - 0.5 * air);
 
   // ---- the handoff: on its first frame the rise draws what the Eye last drew, deep water and rings ----
@@ -282,9 +302,6 @@ export function create(ctx: Context): Piece {
   const uniforms: Record<string, THREE.IUniform> = {
     ...ctx.rig.uniforms,
     uSolo: own,
-    uMapA: { value: maps[0] },
-    uReliefA: { value: reliefs[0] },
-    uRectA: { value: rects[0] },
     uMapWide: { value: maps[0] },
     uReliefWide: { value: reliefs[0] },
     uRectWide: { value: rects[0] },
@@ -299,6 +316,8 @@ export function create(ctx: Context): Piece {
     uMatBadland: { value: ctx.assets.texture('mat/badland.jpg', { kind: 'colour', repeat: true }) },
     uMatShelf: { value: ctx.assets.texture('mat/shelf.jpg', { kind: 'colour', repeat: true }) },
     uMatRangeNh: { value: ctx.assets.texture('mat/range-nh.png', { kind: 'data', repeat: true }) },
+    uMatGlitter: { value: ctx.assets.texture('mat/glitter.jpg', { kind: 'colour', repeat: true }) },
+    uMatLakewater: { value: ctx.assets.texture('mat/lakewater.jpg', { kind: 'colour', repeat: true }) },
     uOnly: { value: 0 },
     uHandWater: { value: new THREE.Color(handoff.water) },
     uHandRing: { value: new THREE.Color(handoff.ring) },
@@ -333,8 +352,9 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: (seconds) => {
-      const width = rise.at(RISE_FIRST + seconds * FPS).w;
-      const pair = pairFor(width);
+      const window = rise.at(RISE_FIRST + seconds * FPS);
+      const width = window.w;
+      const pair = pairFor(window.cx, window.cy, width, FILM_ASPECT);
       (uniforms.uMapWide as THREE.IUniform).value = maps[pair.coarse];
       (uniforms.uReliefWide as THREE.IUniform).value = reliefs[pair.coarse];
       (uniforms.uRectWide as THREE.IUniform).value = rects[pair.coarse];

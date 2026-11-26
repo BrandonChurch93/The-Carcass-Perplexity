@@ -64,9 +64,9 @@ void main() {
   vec2 hv = up + uTime * vec2(2.2, -1.3);
   float ice = dot(texture2D(uVeil, mat2(0.9, 0.44, -0.44, 0.9) * hv / 800.0).rgb, vec3(0.3, 0.55, 0.15));
   float where = texture2D(uCloudTile, hv / 5200.0 + vec2(0.61, 0.27)).b;
-  float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.42, 0.75, where);
+  float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.42, 0.75, where) * smoothstep(500.0, 1500.0, length(up - vec2(${X(AT.lake.x).toFixed(1)}, ${Z(AT.lake.y).toFixed(1)})));
 
-  vec3 lowColour = cloudLight(xz, 0.25 + 0.5 * low.y + 0.45 * self, low.x, 0.0) * (1.0 - 0.5 * under) * (1.0 - 0.15 * high);
+  vec3 lowColour = cloudLight(xz, 0.15 + 0.5 * low.y + 0.55 * self, low.x, 0.0) * (1.0 - 0.5 * under) * (1.0 - 0.15 * high);
   vec3 frontColour = cloudLight(mid, 0.2 + 0.55 * front.y + 0.5 * frontSelf, 0.5 + 0.5 * front.x, 0.5) * (0.55 + 0.6 * front.y);
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
   float a = low.x * 0.94;
@@ -102,9 +102,11 @@ void main() {
   vec2 sunStep = spin * normalize(uSunDir.xz) * vec2(0.5, 0.5);
   float sunward = lightOf(q + sunStep * 0.012);
   float self = clamp(0.5 + 3.0 * (seenLight - sunward), 0.0, 1.0);
-  float thick = smoothstep(0.26, 0.85, seenLight) * (1.0 - smoothstep(0.8, 0.98, r)) * (0.8 + 0.2 * smoothstep(0.05, 0.3, r));
+  // Only the wall round the eye is whole. Out along the arms the cloud is bands with sea between, thinner the farther out.
+  float open = smoothstep(0.08, 0.42, r);
+  float thick = smoothstep(mix(0.3, 0.46, open), mix(0.8, 0.9, open), seenLight) * (1.0 - smoothstep(0.7, 0.98, r)) * mix(1.0, 0.8, open);
   float tall = smoothstep(0.45, 0.9, seenLight);
-  vec3 colour = cloudLight(vWorld.xz, 0.18 + 0.4 * seenLight + 0.55 * self, 0.5 + 0.5 * tall, 0.5 * tall) * (0.5 + 0.6 * seenLight);
+  vec3 colour = cloudLight(vWorld.xz, 0.1 + 0.4 * seenLight + 0.7 * self, 0.5 + 0.5 * tall, 0.5 * tall) * (0.42 + 0.62 * seenLight);
   float alpha = clamp(thick, 0.0, 0.97);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
@@ -198,12 +200,12 @@ void main() {
     float a = smoothstep(-3.0, 3.0, km);
     float outer = exp(-max(km, 0.0) / 26.0);
     vec3 glow = mix(vec3(0.05, 0.17, 0.55), vec3(0.4, 0.64, 1.0), outer * outer) * outer * 0.5;
-    vec2 cell = floor(vWorld.xz / 9.0);
-    vec2 within = fract(vWorld.xz / 9.0) - 0.5;
+    vec2 cell = floor(vWorld.xz / 40.0);
+    vec2 within = fract(vWorld.xz / 40.0) - 0.5;
     float pick = hash12(cell);
     vec2 off = vec2(hash12(cell + 7.3), hash12(cell + 19.1)) - 0.5;
-    float star = step(0.93, pick) * exp(-dot(within - 0.6 * off, within - 0.6 * off) * 190.0) * (0.25 + 0.75 * hash12(cell + 3.7)) * smoothstep(20.0, 90.0, km);
-    vec3 colour = (glow + vec3(0.85, 0.9, 1.0) * star * 0.5) * a;
+    float star = step(0.94, pick) * exp(-dot(within - 0.6 * off, within - 0.6 * off) * 520.0) * (0.25 + 0.75 * hash12(cell + 3.7)) * smoothstep(20.0, 90.0, km);
+    vec3 colour = (glow + vec3(0.85, 0.9, 1.0) * star * 0.3) * a;
     gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
     return;
   }

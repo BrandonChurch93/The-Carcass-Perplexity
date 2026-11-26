@@ -57,7 +57,12 @@ for level in 'abcd':
     shallow = np.clip((ndimage.gaussian_filter(light, 0.7 * scale) - deep - 3.0) / (PALE - deep), 0.0, 1.0)
     b = np.where(land, 0.3 + 0.7 * up, 0.25 * shallow)
     out = np.stack([r, g, b], axis=-1)
-    Image.fromarray((out * 255.0 + 0.5).astype(np.uint8), 'RGB').save(os.path.join(OUT, f'relief-{level}.png'), optimize=True)
+    # Written smaller than the map (2048 wide for the widest, 1760 for the others): the slope is smooth, and each file stays under 3 MB.
+    picture = Image.fromarray((out * 255.0 + 0.5).astype(np.uint8), 'RGB')
+    wide = 2048 if level == 'a' else 1760
+    if picture.width > wide:
+        picture = picture.resize((wide, round(wide * picture.height / picture.width)), Image.LANCZOS)
+    picture.save(os.path.join(OUT, f'relief-{level}.png'), optimize=True)
     print(level, h.shape, 'land share %.2f' % land.mean(), 'low %.3f top %.3f deep %.1f' % (low, top, deep), 'shallow mean %.2f' % float(shallow[water].mean()))
     if level == 'd':
         # The lake of the Eye: its middle and half axes, px of this map, for the shader (uLakeSize).
