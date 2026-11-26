@@ -618,6 +618,8 @@ void main() {
   float shelfLen = mix(6.0, 55.0, smoothstep(0.25, 0.75, texture2D(uCloudTile, xz / 620.0 + vec2(0.71, 0.13), 2.0).r));
   float onShelf = exp(min(coastKm, 0.0) / shelfLen) * (1.0 - land) * smoothstep(60.0, 160.0, uViewKm);
   bed = mix(bed, mix(vec3(0.006, 0.04, 0.052), vec3(0.03, 0.105, 0.1), onShelf * onShelf), 0.75 * onShelf);
+  // (A river carries the country's silt: brown green water, dark beside its banks, paler where it runs wide toward its mouth.)
+  bed = mix(bed, mix(vec3(0.012, 0.026, 0.024), vec3(0.06, 0.05, 0.026), smoothstep(-0.2, -2.5, coastKm) * (0.4 + 0.6 * vnoise(xz / 14.0))), 0.9 * river);
   // (From orbit the coasts stand on wide shelves: the water pales to teal over them by depth, broken by shoals and channels, no line.)
   float shelfWide = (1.0 - land) * smoothstep(0.1, 0.34, mix(0.0, broadB, inWide)) * smoothstep(600.0, 1100.0, uViewKm) * (1.0 - smoothstep(0.0, 0.35, west)) * smoothstep(0.95, 1.3, length(inSkull));
   if (shelfWide > 0.0) {
@@ -731,7 +733,7 @@ void main() {
   earth *= mix(1.0, 0.62 + 0.76 * skyShare, smoothstep(60.0, 160.0, uViewKm));
   // The shore: a pale line of beach on the land's side, broken where the coast is rock, and surf on the water's side, broken too.
   float lineKm = max(1.1 * pixelKm, 0.25);
-  float coastSeen = smoothstep(60.0, 160.0, uViewKm);
+  float coastSeen = smoothstep(60.0, 160.0, uViewKm) * (1.0 - uEmber.x);
   float beachAt = smoothstep(0.35, 0.6, texture2D(uCloudTile, xz / 310.0 + vec2(0.11, 0.57), 1.0).g);
   float beach = (1.0 - smoothstep(0.2 * lineKm, 0.9 * lineKm, coastKm)) * land * beachAt * coastSeen;
   earth = mix(earth, vec3(0.42, 0.38, 0.3) * light / 3.14159, 0.5 * beach);
@@ -741,7 +743,7 @@ void main() {
   water = mix(water, vec3(0.62, 0.66, 0.68) * light / 3.14159, 0.7 * surf);
   vec3 colour = mix(water, earth + 0.4 * glare, land);
   // (By night the low coast has no line: the wet plain is a shade over the sea beside it and the land rises out of that into the moon's light.)
-  if (uDusk > 0.0) colour = mix(colour, max(colour, water) * 0.35 + water * 0.95, 0.92 * (1.0 - smoothstep(0.0, 0.16, height)) * land * uEmber.x);
+  if (uDusk > 0.0) colour = mix(colour, max(colour, water) * 0.35 + water * 0.95, 0.92 * (1.0 - smoothstep(0.04, 0.34, height)) * land * uEmber.x);
   // (A pale crust lies at the foot of the lake's rim, where the water has stood higher.)
   colour *= 1.0 + 0.45 * (1.0 - smoothstep(0.0, 0.07, abs(shoreR - 0.98))) * land * (1.0 - smoothstep(150.0, 400.0, uViewKm));
 
@@ -760,7 +762,8 @@ void main() {
 
   // ---- the handoff: the rise begins inside the cloud that lies over the lake (join/). Under it, until the maps of the lake are near
   // enough to their own size to be water, the lake is its own deep colour with the wind on it ----
-  if (uHand.x > 0.0) colour = mix(colour, uHandWater * (0.62 + 0.5 * sparkle), uHand.x);
+  // (Only the deep water: the shore, the amber rim and the land round them are in the frame from the first frame of the rise.)
+  if (uHand.x > 0.0) colour = mix(colour, uHandWater * (0.62 + 0.5 * sparkle), uHand.x * (1.0 - land) * (1.0 - smoothstep(0.5, 0.82, shoreR + 0.07)));
 
   // ---- one part drawn alone ----
   vec2 inLake = (xz - uLakeMid) / uLakeSize;
