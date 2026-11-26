@@ -49,7 +49,7 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 - Kelp wall (ribs-1): only recoloured by `mat/weed.jpg`. No straps, no running water, no drops.
 - Colony as a stepped cliff seen along its face: not reached (needs the camera and the buttress shape).
 - Cloud moves in the held frame: changed (0.35 degrees a second, warp works four times faster). The grid in the sky: the air's per-pixel jitter is halved, not removed; the volume is drawn at half size, which is where the grid comes from.
-- Pushing: GitHub refused my pushes from 00:16 UTC (no credential in the sandbox). Commits after `2290395` went to the director as a bundle.
+- Pushing: GitHub refused my pushes from 00:16 to about 00:30 UTC (no credential in the sandbox), then took them again. Everything is on `agent/ribs-ground`.
 
 ## Staged by shot
 
