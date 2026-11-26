@@ -122,7 +122,7 @@ vec3 skyIrradiance(vec3 n) {
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, KEY_DIR) + 0.12) / 1.12, 0.0, 1.0);
   // One low source: what looks to it is lit warm, by the square, and what looks away keeps the cold of the sky alone.
-  return 3.14159 * (e * (0.72 + 0.28 * (1.0 - w)) + uWarmColour * (0.34 * w * w * seen));
+  return 3.14159 * (e * (0.72 + 0.28 * (1.0 - w)) + uWarmColour * (0.26 * w * w * seen));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it

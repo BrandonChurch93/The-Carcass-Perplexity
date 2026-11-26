@@ -113,6 +113,11 @@ uniform sampler2D tFace;
 uniform sampler2D tFaceH;
 // The part of the face photograph that is laid: its bare jointed rock, right of its rimed edge and under its burned top.
 const vec4 FACE_RECT = vec4(0.3, 0.0, 0.7, 0.68);
+uniform sampler2D tCrust;
+uniform sampler2D tCrustH;
+// The ground's photograph (mat/crustfield, 40 m by 22 m from straight above): the part of it that has no prints, 40 m by 14.5 m.
+const vec4 CRUST_RECT = vec4(0.0, 0.0, 1.0, 0.66);
+const vec3 CRUST_SNOW = vec3(0.34, 0.375, 0.445);
 uniform sampler2D tLedge;
 uniform sampler2D tLedgeNh;
 uniform sampler2D tRubble;
@@ -266,18 +271,20 @@ void main() {
   float pit = 0.5;
   float ledgeSnow = 0.0;
   float fineRock = 0.0;
+  float crustRock = 0.0;
+  vec3 crustTint = vec3(1.0);
   float wallRime = 0.0;
   vec3 wallRimeC = vec3(0.7);
   // What the lays below would be spent on unseen: ground the snow buries whole, and a spire's broad face where its sheet covers it.
   // The gale strips the flanks to ribs of dark rock that run down the fall, and leaves the snow in the lee of each.
   float steep = smoothstep(0.985, 0.85, smoothN.y);
-  float rib = uKind < 0.5 ? steep * (smoothstep(0.42, 0.7, vnoise(vec2(vSL.x / 17.0, vSL.y / 120.0 + 3.0)) + 0.25 * (vnoise(vWorld.xz * 0.21) - 0.5)) * 0.8 - 0.55 * dot(n0.xz, uWind.xz) * smoothstep(0.0, 1.0, -dot(n0.xz, uWind.xz) * 3.0)) : 0.0;
+  float rib = uKind < 0.5 ? steep * (smoothstep(0.42, 0.7, vnoise(vWorld.xz / 23.0 + 3.0) + 0.25 * (vnoise(vWorld.xz * 0.21) - 0.5)) * 0.8 - 0.55 * dot(n0.xz, uWind.xz) * smoothstep(0.0, 1.0, -dot(n0.xz, uWind.xz) * 3.0)) : 0.0;
   float lie0 = mix(smoothN.y, n0.y, 0.35) - 0.07 + 0.12 * dot(n0.xz, uWind.xz) + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5) - rib;
   // About the dead one the snow is thin: the gale has scoured the place where the bolt came down, and rock shows through it.
   float thin = 0.0;
   if (ground) thin = smoothstep(30.0, 9.0, length(vWorld.xz - uScorch.xy));
   bool buried = false;
-  if (ground) buried = porch <= 0.0 && thin <= 0.0 && lie0 - 0.42 * clamp(vTop, 0.0, 1.0) > 0.57;
+  // (Nothing of the ground is taken as buried whole any more: its snow and its stones are both the photograph's.)
   vec3 sheetAx = vec3(uSheet.z, 0.0, uSheet.w);
   vec2 sheetUv = vec2((dot(vWorld.xz - uSheet.xy, uSheet.zw) + uSheetShear * vWorld.y) * uSheetMap.x + uSheetMap.y, vWorld.y * uSheetMap.z + uSheetMap.w);
   vec3 sheetC = vec3(0.0);
@@ -382,23 +389,18 @@ void main() {
       fineRock = fine;
       vec2 tFine = vec2(0.0);
       if (fine > 0.01) {
-        vec2 atD = vec2(atS.x - 0.31 * atS.y, atS.y + 0.31 * atS.x) / 5.6 + vec2(0.13, 0.71);
-        float lodD = lodA - 2.6;
-        vec2 e2 = vec2(max(0.004, exp2(lodD) / 1254.0), 0.0);
-        vec2 q = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atD.x), wMirror(atD.y));
-        vec2 qx = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atD.x + e2.x / FACE_RECT.z), wMirror(atD.y));
-        vec2 qy = FACE_RECT.xy + FACE_RECT.zw * vec2(wMirror(atD.x), wMirror(atD.y + e2.x / FACE_RECT.w));
-        vec3 cD = textureLod(tFace, q, lodD).rgb;
-        vec3 hD = vec3(textureLod(tFaceH, q, lodD).r, textureLod(tFaceH, qx, lodD).r, textureLod(tFaceH, qy, lodD).r);
-        cF *= mix(vec3(1.0), clamp(cD / 0.31, 0.3, 2.0), 0.55 * fine);
-        tFine = clamp(vec2(hD.y - hD.x, hD.z - hD.x) * (-0.3 / (e2.x * 8.0)), vec2(-1.2), vec2(1.2)) * fine;
-        hF.x = mix(hF.x, 0.5 * hF.x + 0.5 * hD.x, fine);
+        // (The picture of broken blocks, which has no grain: the face photograph again at this size would hatch the rock like wood.)
+        vec2 atD = vec2(atS.x - 0.31 * atS.y, atS.y + 0.31 * atS.x);
+        Lay d = lay(tRubble, tRubbleNh, atD / 6.5 + vec2(0.13, 0.71), gSx / 6.5, gSy / 6.5);
+        cF *= mix(vec3(1.0), clamp(d.c / RUBBLE_MEAN, 0.35, 1.8), 0.6 * fine);
+        tFine = d.t * 1.1 * fine;
+        hF.x = mix(hF.x, 0.5 * hF.x + 0.5 * d.pit, fine);
       }
       // The photograph's own snow lies on its ledges: pale and without colour.
       float paleF = dot(cF, vec3(0.3, 0.5, 0.2));
       ledgeSnow = smoothstep(0.42, 0.62, paleF) * smoothstep(0.16, 0.05, max(cF.r, max(cF.g, cF.b)) - min(cF.r, min(cF.g, cF.b)));
       // Grey-tan stone under a cold sky: half of the photograph's brown is taken out, and the dusk puts its own warmth on the lee.
-      rock = mix(cF, vec3(dot(cF, vec3(0.3, 0.5, 0.2))) * vec3(1.0, 0.99, 0.98), 0.5) * 1.1;
+      rock = mix(cF, vec3(dot(cF, vec3(0.3, 0.5, 0.2))) * vec3(1.03, 0.99, 0.93), 0.75) * 1.15;
       // Its relief, from the photograph's height: the joints are cut a hand deep at this size, the plates between them stand flat.
       t = vec2(hF.y - hF.x, hF.z - hF.x) * (-0.55 / (eps.x * 50.0));
       t = clamp(t, vec2(-1.6), vec2(1.6)) + tFine;
@@ -420,20 +422,32 @@ void main() {
     vec2 tLevel = vec2(0.0);
     float pLevel = 0.5;
     if (top > 0.001) {
+      // What lies level is a photograph of wind crust with dark ribs and stones standing out of it, from straight above, laid on the
+      // level at its one real size and turned over at its edges. Its pale is the place's snow and its dark the place's rock.
       vec2 atL = vec2(dot(vWorld.xz, vec2(0.82, 0.57)), dot(vWorld.xz, vec2(-0.57, 0.82)));
       vec2 gLx = vec2(dot(dFdx(vWorld.xz), vec2(0.82, 0.57)), dot(dFdx(vWorld.xz), vec2(-0.57, 0.82)));
       vec2 gLy = vec2(dot(dFdy(vWorld.xz), vec2(0.82, 0.57)), dot(dFdy(vWorld.xz), vec2(-0.57, 0.82)));
-      Lay b = lay(tRubble, tRubbleNh, atL / 19.0, gLx / 19.0, gLy / 19.0);
-      level = b.c;
-      tLevel = b.t * 1.2;
-      pLevel = b.pit;
+      vec2 uvC = atL / vec2(40.0, 14.5);
+      float lodC = lodOf(tCrust, gLx / 40.0, gLy / 40.0);
+      float eC = max(0.003, exp2(lodC) / 1688.0);
+      vec2 q = CRUST_RECT.xy + CRUST_RECT.zw * vec2(wMirror(uvC.x), wMirror(uvC.y));
+      vec2 qx = CRUST_RECT.xy + CRUST_RECT.zw * vec2(wMirror(uvC.x + eC), wMirror(uvC.y));
+      vec2 qy = CRUST_RECT.xy + CRUST_RECT.zw * vec2(wMirror(uvC.x), wMirror(uvC.y + eC * 40.0 / 14.5 * CRUST_RECT.w / CRUST_RECT.w));
+      vec3 cC = textureLod(tCrust, q, lodC).rgb;
+      vec3 hC = vec3(textureLod(tCrustH, q, lodC).r, textureLod(tCrustH, qx, lodC).r, textureLod(tCrustH, qy, lodC).r);
+      float lumC = dot(cC, vec3(0.3, 0.5, 0.2));
+      crustRock = smoothstep(0.25, 0.13, lumC);
+      vec2 slope = clamp(vec2(hC.y - hC.x, hC.z - hC.x) * (-0.55 / (eC * 40.0)), vec2(-1.3), vec2(1.3)) * mix(0.3, 1.0, crustRock);
+      // Back to the world's own two level ways.
+      tLevel = vec2(0.82 * slope.x - 0.57 * slope.y, 0.57 * slope.x + 0.82 * slope.y);
+      pLevel = hC.x;
+      crustTint = cC / CRUST_SNOW;
+      level = cC * 1.7;
       if (close > 0.0) {
         Lay f = lay(tRubble, tRubbleNh, atL / 5.0 + 0.21, gLx / 5.0, gLy / 5.0);
-        level = mix(level, 0.5 * level + 0.5 * f.c, 0.8 * close);
-        tLevel += close * 1.1 * f.t;
-        pLevel = mix(pLevel, 0.5 * pLevel + 0.5 * f.pit, close);
+        level = mix(level, level * f.c / RUBBLE_MEAN, 0.6 * close);
+        tLevel += close * 0.8 * f.t * crustRock;
       }
-      level *= 1.5;
     }
     rock = mix(side, level, top);
     t = mix(tSide, tLevel, top);
@@ -493,6 +507,11 @@ void main() {
   // Rock that stands out of the snow keeps it only on its level tops.
   float bare = spire ? 0.0 : clamp(vTop, 0.0, 1.0);
   float snow = smoothstep(0.36, 0.56, lie - 0.42 * bare - rib);
+  if (ground) {
+    // The photograph's ribs and stones stand out of the snow, more of them where the gale has the ground and none in the deep of a drift.
+    float drift = vnoise(vWorld.xz / 47.0 + 7.3);
+    snow *= 1.0 - top * crustRock * smoothstep(0.52, 0.34, drift);
+  }
   if (ground) if (thin > 0.0) {
     // The rubble picture is blocks half in snow: where it is dark there is a stone or a rib of rock, wet and dark, and the snow stops at it.
     float stone = thin * smoothstep(0.34, 0.2, dot(rock, vec3(0.33)) / 1.5 + 0.12 * (vnoise(vWorld.xz * 0.35) - 0.5));
@@ -507,6 +526,10 @@ void main() {
     // Close to, the sheet's own snow is gone with its picture: snow lies on what the broken rock turns up to the sky, block by block.
     snow = mix(snow, max(ledgeSnow, smoothstep(0.78, 0.9, 0.4 * held + 0.6 * nRock.y + 0.25 * (pit - 0.5))), near * sheet);
     snow = max(snow, ledgeSnow * (1.0 - sheet));
+    // Snow lies on every ledge of the rock: wherever the broken face itself turns up flatter than some forty degrees, and deeper low down
+    // and to windward, so the spire stands out of the ridge's own snow.
+    float low = smoothstep(280.0, 20.0, vWorld.y - landAt(vWorld.xz).r);
+    snow = max(snow, smoothstep(0.5 - 0.3 * low, 0.7 - 0.3 * low, 0.7 * nRock.y + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
     // Under the lens snow lies only on what the rock itself turns up to the sky; a slab's side keeps none.
     snow *= mix(1.0, smoothstep(0.25, 0.6, 0.5 * (nRock.y + facet.y)), fineRock);
     // A spire stands in the drift at its foot.
@@ -542,7 +565,7 @@ void main() {
     float crystals = smoothstep(0.15, 0.38, frostL * (0.55 + 0.9 * pit));
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
-    float cover = clamp(0.5 * rime + 0.4 * windward * (1.0 - burn) + 0.3 * smoothstep(0.42, 0.2, pit) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
+    float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.3 * smoothstep(0.42, 0.2, pit) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
     albedo = mix(albedo, min(frostC * 1.6, vec3(0.9)) * vec3(0.93, 0.97, 1.06), cover);
     // The feathers stand out of the rock: their own relief, from the frost picture's light and dark across the face.
     vec3 dPx = dFdx(vWorld);
@@ -568,32 +591,57 @@ void main() {
     vec2 q = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98)));
     vec2 qx = dFdx(q);
     vec2 qy = dFdy(q);
-    Lay b = lay(tSnow, tSnowNh, q / 27.0 + 0.4, qx / 27.0, qy / 27.0);
-    snowTint = b.c / SNOW_MEAN;
-    // On a steep face the level picture would be pulled long: there the snow keeps its tone and loses its ripple.
+    // On a steep face a level picture would be pulled long: there the snow keeps its tone and loses its ripple.
     float flat_ = smoothstep(0.35, 0.7, n0.y);
-    // Far off the drifts are smooth: their ripple is under the size of a pixel and would only be grain.
-    vec2 g = b.t * 0.9 * flat_ * smoothstep(1400.0, 350.0, far);
-    snowTint = mix(vec3(1.0), snowTint, (spire ? 0.0 : 0.4) + 0.6 * flat_);
-    if (!spire) if (close > 0.0) {
-      Lay f = lay(tSnow, tSnowNh, q / 4.0, qx / 4.0, qy / 4.0);
-      snowTint = mix(snowTint, snowTint * f.c / SNOW_MEAN, 0.7 * close * flat_);
-      g += close * 1.2 * f.t * flat_;
-      vec3 p = prints(vSL);
-      g += 1.6 * p.yz;
-      snowOcc = 1.0 + 0.8 * min(p.x, 0.0);
-      // Wind crust: the scoops between the ridges are scoured hard and lie darker than the soft snow on their crests.
-      snowOcc *= 1.0 - 0.35 * close * flat_ * smoothstep(0.6, 0.25, f.pit);
+    vec2 g = vec2(0.0);
+#if KIND == 0
+    {
+      // The ground's snow is its photograph's: the crust, the scoops and the tails behind the stones, in tone and in relief.
+      // Seen from far its scoops are under the size of a pixel: the drift keeps its broad tone and lies smooth.
+      float footprint = length(fwidth(vWorld.xz));
+      float wide = smoothstep(0.03, 0.25, footprint);
+      snowTint = mix(vec3(1.0), clamp(crustTint, 0.45, 1.2), top * mix(1.0, 0.4, wide));
+      g = t * top * mix(1.0, 0.3, wide);
+      // Under the lens a texel of it is many pixels wide: the packed snow's own picture at 4 m, and again at 0.9 m for its grain.
+      float fine = smoothstep(0.05, 0.012, footprint) * flat_;
+      if (fine > 0.01) {
+        Lay f = lay(tSnow, tSnowNh, q / 4.0, qx / 4.0, qy / 4.0);
+        snowTint *= mix(vec3(1.0), f.c / SNOW_MEAN, 0.55 * fine);
+        g += fine * 0.9 * f.t;
+        snowOcc *= 1.0 - 0.3 * fine * smoothstep(0.6, 0.25, f.pit);
+        float grain = smoothstep(0.012, 0.003, footprint);
+        if (grain > 0.01) {
+          Lay k = lay(tSnow, tSnowNh, q.yx / 0.9 + 0.37, qx.yx / 0.9, qy.yx / 0.9);
+          snowTint *= mix(vec3(1.0), k.c / SNOW_MEAN, 0.5 * grain);
+          g += grain * 0.7 * k.t.yx;
+        }
+      }
+      // The prints of the herd: a line of pits to the mouth, seen as far as a pit is wider than a pixel, and the trough they tread.
+      float seen = smoothstep(0.3, 0.08, footprint);
+      if (seen > 0.0) {
+        vec3 p = prints(vSL);
+        g += 1.6 * p.yz * seen;
+        snowOcc *= 1.0 + 0.85 * min(p.x, 0.0) * seen;
+      }
     }
+#else
+    {
+      // Wind-packed snow from its picture, laid across the gale.
+      Lay b = lay(tSnow, tSnowNh, q / 27.0 + 0.4, qx / 27.0, qy / 27.0);
+      snowTint = mix(vec3(1.0), b.c / SNOW_MEAN, 0.6 * flat_);
+      // Far off the drifts are smooth: their ripple is under the size of a pixel and would only be grain.
+      g = b.t * 0.9 * flat_ * smoothstep(1400.0, 350.0, far);
+    }
+#endif
     nSnow = normalize(nSnow + vec3(g.x, 0.0, g.y));
   }
   // Under a sky without a sun a drift shows by which way its faces lean: the lean of the snow is drawn out for the light.
-  if (!spire) nSnow = normalize(vec3(nSnow.x * 2.4, nSnow.y, nSnow.z * 2.4));
+  if (!spire) nSnow = normalize(vec3(nSnow.x * 1.5, nSnow.y, nSnow.z * 1.5));
   vec3 n = normalize(mix(nRock, nSnow, snow));
   // Packed by the wind in long plates, the snow is glazed and blue-grey; between them it lies soft and white.
-  float plate = smoothstep(0.4, 0.62, vnoise(vec2(dot(vWorld.xz, vec2(0.98, -0.2)) * 0.19, dot(vWorld.xz, vec2(0.2, 0.98)) * 0.045)));
+  float plate = (ground ? 0.35 : 1.0) * smoothstep(0.4, 0.62, vnoise(vec2(dot(vWorld.xz, vec2(0.98, -0.2)) * 0.11, dot(vWorld.xz, vec2(0.2, 0.98)) * 0.08)));
   albedo = mix(albedo, mix(vec3(0.78, 0.84, 0.93), vec3(0.56, 0.64, 0.78), 0.55 * plate) * clamp(snowTint, 0.4, 1.1), snow);
-  rough = mix(rough, 0.7 - 0.3 * plate, snow);
+  rough = mix(rough, 0.88 - 0.3 * plate, snow);
   occ = mix(occ, snowOcc, snow);
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
   // Where the bolt came to ground: the burned wet rock under the dead one, a plate 14 m across laid square to the lens of that shot.

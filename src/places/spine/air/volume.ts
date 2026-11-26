@@ -122,6 +122,9 @@ float stormDepth(vec3 ro, vec3 rd, float reach) {
 // so that the flank goes down into cloud; and in the saddles the storm's cloud, which comes over the crest and falls down the lee into the bank.
 const float CLOUD_UNDER = 130.0;
 const vec3 SEA_MEAN = vec3(0.113, 0.127, 0.201);
+// The deck's own light: what the sky gives its heads, and what the dusk gives the faces that look at it.
+const vec3 SEA_COLD = vec3(0.115, 0.125, 0.18);
+const vec3 SEA_WARM = vec3(0.16, 0.085, 0.045);
 float seaLod = 1.0;
 float seaTop(vec3 p, bool fine) {
   vec3 q = p - uWind.xyz * (uTime * 38.0);
@@ -130,14 +133,18 @@ float seaTop(vec3 p, bool fine) {
   float deck = textureLod(tSeaNh, q.xz / 10000.0, seaLod).b;
   // The smaller lumps run faster and a little across the larger: the deck rolls.
   float lumps = textureLod(tSeaNh, q2.zx / 2900.0 + 0.37, seaLod + 1.0).b;
-  float n = 0.62 * deck + 0.38 * lumps;
-  if (fine) n += 0.12 * (noise(vec3(q2.xz / 210.0, 0.43 + uTime * 0.02)).r - 0.5);
+  float n = 0.5 * deck + 0.5 * lumps;
+  // Its heads: the same deck at the size of one heap of cloud, rolling on its own way, and the small of them.
+  if (fine) {
+    vec3 q3 = p - vec3(0.3, 0.0, 0.95) * (uTime * 52.0);
+    n += 0.3 * (textureLod(tSeaNh, q3.xz / 870.0 + 0.61, max(seaLod - 1.0, 0.0)).b - 0.5) + 0.1 * (noise(vec3(q2.xz / 210.0, 0.43 + uTime * 0.02)).r - 0.5);
+  }
   vec3 ridge = ridgeAt(p.x);
   float lee = p.z - ridge.x;
   // The sea lies close under the crest on both hands, level to the horizon, and stands a little higher against the rock:
   // the ridge is a knife out of cloud, and its flanks go down into it.
   float bank = smoothstep(900.0, 120.0, abs(lee));
-  float top = ridge.y - CLOUD_UNDER + 300.0 * (n - 0.5) + 70.0 * bank;
+  float top = ridge.y - CLOUD_UNDER + 360.0 * (n - 0.5) + 70.0 * bank;
   if (ridge.z > 0.01 && lee > -700.0 && lee < 1500.0) {
     vec3 c = p - uWind.xyz * (uTime * uWind.w);
     float m = 0.45 * noise(vec3(c.xz / 520.0, 0.37)).r + 0.2 * noise(vec3(c.xz / 140.0, 0.81)).b + 0.35 * textureLod(tSeaNh, c.xz / 1300.0 + 0.11, seaLod).b;
@@ -244,15 +251,21 @@ void main() {
     vec3 sea = flowing(tFar, uvF, vec2(0.016, 0.0), 24.0, lodF) * SKY_GAIN;
     // The billows of the surface itself, broad and soft: their heads a little lighter, their hollows a little darker.
     float h0 = seaTop(p, true);
-    float head = smoothstep(-90.0, 110.0, h0 - (ridgeAt(p.x).y - CLOUD_UNDER));
-    // Each billow leans: the face toward the last light is paler, the face away from it darker, so the tops roll and are not a level sheet.
+    float head = smoothstep(-150.0, 150.0, h0 - (ridgeAt(p.x).y - CLOUD_UNDER));
+    // Each billow leans: the face toward the last light is lit warm, the face away from it is in its own shade, so the deck is heaps of
+    // cloud with light on them and not a level sheet.
     vec3 toDusk = vec3(cos(DUSK_AZ), 0.0, sin(DUSK_AZ));
-    float reachS = 160.0 + 0.03 * t;
-    float lean = clamp((h0 - seaTop(p + toDusk * reachS, true)) / reachS * 2.2, -1.0, 1.0);
-    sea *= (0.72 + 0.4 * head) * (1.0 + 0.45 * lean);
+    float reachS = 110.0 + 0.03 * t;
+    float lean = clamp((h0 - seaTop(p + toDusk * reachS, true)) / reachS * 2.4, -1.0, 1.0);
+    // The picture gives its grain; the tone is the deck's own: cold from the sky on its heads, deep blue-violet in its hollows, and the
+    // dusk on what faces it.
+    float grainS = clamp(dot(sea, vec3(0.33)) / max(dot(flowing(tFar, uvF, vec2(0.016, 0.0), 24.0, 5.0) * SKY_GAIN, vec3(0.33)), 1e-4), 0.7, 1.4);
+    vec3 cold = SEA_COLD * (0.1 + 0.6 * head * head) * (1.0 + 0.6 * lean);
+    vec3 warm = 0.6 * SEA_WARM * smoothstep(0.0, 0.8, lean) * (0.25 + 0.75 * head) * (1.0 - 0.7 * stormSide(rd));
+    sea = (cold + warm) * grainS;
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * stormSide(rd), 0.0, 1.5);
-    sea = sea * (1.0 - 0.35 * stormSide(rd)) * (1.0 + 1.6 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
+    sea = sea * (1.0 - 0.5 * stormSide(rd)) * (1.0 + 0.7 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t / 30000.0);
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.

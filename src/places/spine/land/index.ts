@@ -30,6 +30,8 @@ export function create(ctx: Context): Piece {
   const pictures = {
     tFace: picture('kiteface'),
     tFaceH: { value: ctx.assets.texture('mat/kiteface-h.png', { kind: 'data', anisotropy: ANISOTROPY }) },
+    tCrust: picture('crustfield'),
+    tCrustH: { value: ctx.assets.texture('mat/crustfield-h.png', { kind: 'data', anisotropy: ANISOTROPY }) },
     tSpire: picture('spire'),
     tSpireNh: data('spire'),
     tLedge: picture('ledge'),
