@@ -510,6 +510,8 @@ export function createRig(): Rig {
     uSkyBreak: { value: skyBreak },
     // The picture of the storm sky (the air folder loads it); how far it has turned round the dome (radians), how far its lumps have worked, its gain.
     tSky: { value: null },
+    // The same picture's fine structure: its brightness over its own local mean, 0.502 for no change.
+    tSkyFine: { value: null },
     uSkyTurn: { value: skyTurn },
   };
 

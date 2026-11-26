@@ -42,6 +42,7 @@ uniform vec3 uHaze;
 uniform vec3 uBounce;
 uniform vec3 uSkyBreak;
 uniform sampler2D tSky;
+uniform sampler2D tSkyFine;
 uniform vec4 uSkyTurn;`;
 
 export const RIG_GLSL = /* glsl */ `
@@ -123,7 +124,7 @@ float cloudShade(vec3 p) {
 }
 
 // The sky with its cloud, toward d: what the dome draws, and what a mirror (a pool, the sea) should show. from is where it is seen from.
-// One picture of a storm sky laid round the dome and mirrored behind, turning slowly with the wind while its lumps work; two texture reads.
+// One picture of a storm sky laid round the dome and mirrored behind, turning slowly with the wind while its lumps work; three texture reads.
 // For light on a rough surface skyRadiance is enough.
 vec3 skyCloud(vec3 from, vec3 d) {
   float az = atan(d.x, -d.z);
@@ -134,9 +135,10 @@ vec3 skyCloud(vec3 from, vec3 d) {
   // The picture has a sixth of a texel for a pixel of the widest lens: its own lumps, read four times smaller and against their own
   // local mean, are laid into it as the fine structure a cloud has at every size.
   vec2 fineAt = uv * 4.0 + vec2(0.31, 0.17) + 0.05 * work;
-  float fine = dot(texture2D(tSky, fineAt).rgb, vec3(0.333));
-  float broad = dot(textureLod(tSky, fineAt, 6.5).rgb, vec3(0.333));
-  c *= mix(1.0, clamp(fine / max(broad, 0.004), 0.65, 1.4), 0.4);
+  c *= mix(1.0, clamp(texture2D(tSkyFine, fineAt).r * 1.992, 0.65, 1.4), 0.4);
+  // The break is silver, not gold: what burns in the picture is cooled to the white of light through thin cloud; a little of its warmth stays.
+  float burning = dot(c, vec3(0.333));
+  c = mix(c, burning * vec3(0.93, 0.99, 1.08), 0.82 * smoothstep(0.12, 0.7, burning));
   // The break burns: where the picture is bright the cloud is lit through, far above the grey of the bases.
   // The bases are heavy: what is dark in the picture is darker here, what is bright burns.
   c *= 0.6 + 0.4 * smoothstep(0.04, 0.22, dot(c, vec3(0.333))) + 1.6 * smoothstep(0.45, 1.5, dot(c, vec3(0.333)));

@@ -156,7 +156,7 @@ void main() {
   float phase = 0.45 + 0.6 * mu2 * mu2 + 0.8 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
   vec3 ambient = uHaze * uScatter.x * uShowAir;
   // The air takes the sun's own warmth only toward the sun: across its light and away from it the mist is the sky's cool silver.
-  vec3 sunAir = mix(vec3(0.82, 0.93, 1.06) * dot(uSunColour, vec3(0.3, 0.5, 0.2)), uSunColour, smoothstep(0.6, 0.96, mu));
+  vec3 sunAir = mix(vec3(0.82, 0.93, 1.06) * dot(uSunColour, vec3(0.3, 0.5, 0.2)), uSunColour, 0.3 * smoothstep(0.8, 0.98, mu));
   vec3 sunlit = sunAir * (uScatter.y * phase) * uShowCloud;
   vec3 sum = vec3(0.0);
   float trans = 1.0;
@@ -265,6 +265,11 @@ export function create(ctx: Context): Piece {
   storm.wrapT = THREE.MirroredRepeatWrapping;
   storm.needsUpdate = true;
   (ctx.rig.uniforms.tSky as THREE.IUniform).value = storm;
+  const fine = ctx.assets.texture('air/storm-fine.jpg', { kind: 'data' });
+  fine.wrapS = THREE.MirroredRepeatWrapping;
+  fine.wrapT = THREE.MirroredRepeatWrapping;
+  fine.needsUpdate = true;
+  (ctx.rig.uniforms.tSkyFine as THREE.IUniform).value = fine;
   const sky = new THREE.ShaderMaterial({
     vertexShader: SKY_VERTEX,
     fragmentShader: SKY_FRAGMENT,
