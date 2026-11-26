@@ -5,7 +5,7 @@ src/places/reveal/shared/weather.ts (the same rectangle as cover.png).
   red    banks: where the wind of the low field (from the left of the master, a little down) is lifted by a range, cloud piles on
          the flank that faces it and thins over the crest
   green  fog: the low floors between ranges, shut in by high ground on two sides, where cold air lies
-  blue   the land, read soft: for the haze that pools over lowland
+  blue   haze: the low ground, plains and wide valley floors, read wide and soft, where haze pools under the ranges
 
 It is read from the relief of the widest map of the land (public/assets/reveal/land/relief-a.png, blue: the height). Nothing random.
 Run: python3 assets-src/reveal/sky/make_banks.py   (Python 3 with numpy, scipy and Pillow)
@@ -67,10 +67,20 @@ bank = ndimage.gaussian_filter(bank, 6)
 # Fog: the wide basins that lie well under the ground round them (not the narrow valleys between two ridges).
 wide = ndimage.gaussian_filter(high, 34)
 near = ndimage.gaussian_filter(high, 9)
-fog = step(0.015, 0.07, wide - near) * step(0.05, 0.2, wide) * ndimage.gaussian_filter(land, 8) * (1.0 - step(0.2, 0.4, near))
-fog = ndimage.gaussian_filter(fog, 6)
+# (The floor is read fine, at 15 km: fog lies along the floors and runs up the side valleys in fingers, and stops where the ground
+# rises. Read coarse and blurred it stood as round soft lumps beside the ranges. And it is kept to floors with land all round:
+# along an open coast the same test drew the outline of the continent in fog.)
+floor = ndimage.gaussian_filter(high, 3.5)
+fog = step(0.02, 0.07, wide - floor) * step(0.05, 0.2, wide) * step(0.72, 0.92, ndimage.gaussian_filter(land, 12)) * (1.0 - step(0.16, 0.3, floor))
+# (Nor over the sounds and the shelf, which the relief holds a little above its sea level and the land draws as water.)
+fog = fog * step(0.34, 0.4, ndimage.gaussian_filter(height, 1.5))
+fog = ndimage.gaussian_filter(fog, 1.6)
 
-soft = ndimage.gaussian_filter(land, 6)
+# Haze: it pools over the low ground, the plains and the floors of the wide valleys, and the ranges stand up out of it. Read wide
+# and soft: haze has no edge.
+# (Low is told against the ground round it, as for the fog, but wider and without its limit: every floor that lies under its
+# neighbours holds some, the high plateaus none.)
+soft = ndimage.gaussian_filter(land * step(-0.01, 0.04, wide - near) * (1.0 - step(0.2, 0.45, near)), 8) * ndimage.gaussian_filter(land, 5)
 out = np.stack([bank, fog, soft], axis=-1)
 Image.fromarray((np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGB').save(os.path.join(PUB, 'sky', 'banks.png'), optimize=True)
 print('banks.png', out.shape, 'means', out.reshape(-1, 3).mean(0).round(3))
