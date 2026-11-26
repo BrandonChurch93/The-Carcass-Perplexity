@@ -180,6 +180,14 @@ void main() {
   #else
   float steep = smoothstep(0.35, 0.49, slope + 0.12 * (mid - 0.5));
   #endif
+  // In software both sides of every branch are paid by every pixel. A face of the wall that is all cliff (SHEER) or all scree (FLAT), told
+  // face by face when the wall is built, is drawn by a material that has only that half: the same pixels, without the half that counted for nothing.
+  #ifdef SHEER
+  steep = 1.0;
+  #endif
+  #ifdef FLAT
+  steep = 0.0;
+  #endif
 
   vec3 cliff = vec3(0.0);
   vec3 cliffNh = vec3(0.5);
@@ -189,6 +197,7 @@ void main() {
   // Which upright plane a face's pictures are laid on, from the smooth normal of the land and not from the triangle's own:
   // the two layings cross over a quarter turn of the face, so no triangle's edge shows as a change of grain.
   float kx = smoothstep(0.26, 0.74, n0.x * n0.x / (n0.x * n0.x + n0.z * n0.z + 1e-5));
+  #ifndef FLAT
   if (steep > 0.003 && byLens < 0.999) {
     // The wall: each lava flow reads the cliff picture at its own place, so the bands run level and no two repeat.
     // The wall and the crags of the bench are massive rock broken along joints, and no stack of beds: nothing of them is read by its height.
@@ -283,6 +292,7 @@ void main() {
     }
     #endif
   }
+  #endif
 
   #ifdef BENCH
   // The heap of clinker under the line view's lens has no cliff in it: the side of a lump is a broken face of the same clinker, not a face of
@@ -299,6 +309,7 @@ void main() {
   float rough = 0.92;
   float sheet = 0.0;
   float fold = 0.5;
+  #ifndef SHEER
   if (steep < 0.997) {
     #ifdef BENCH
     // Ropy sheets on the level treads, cinder and rubble on everything that slopes, in patches tens of metres across.
@@ -362,6 +373,7 @@ void main() {
     }
     #endif
   }
+  #endif
 
   vec3 albedo = mix(plain, cliff, steep);
   // The pictures' rock leans warm (red over blue near 1.2): charcoal with a little brown, never blue.
@@ -652,7 +664,9 @@ void main() {
   #else
   float shade = contactAt(vWorld) * smoothstep(4.0, 0.0, vWorld.y - land.r);
   #endif
+  #ifndef DRY
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * mid), 0.92 * lakeRind(vWorld));
+  #endif
   #ifdef FAR_LIGHT
   // The cone of debris left of the fall, as the fall's picture has it: a dark ramp of rubble down to the fan, darker than the wall behind
   // its crest, with blocks a stride or two across lying pale on it. Its near flank only: east of the crest the fall lights it.
@@ -672,12 +686,14 @@ void main() {
   }
   // What the long lens resolves on every slope of scree below the cliffs: pale chips a hand across and dark blocks a stride across, crisp,
   // read in all three axes so that nothing is drawn out down the slope. The ground between them is dark: the picture's is near black.
+  #ifndef SHEER
   float longLens = smoothstep(0.3, 0.1, px) * (1.0 - steep) * smoothstep(110.0, 80.0, vWorld.y);
   if (longLens > 0.0) {
     float chips = smoothstep(0.63, 0.7, vnoise3(vWorld / 0.34 + 1.1));
     float clods = smoothstep(0.58, 0.64, vnoise3(vWorld / 1.3 + 3.3));
     albedo *= mix(1.0, 0.72 * (1.0 + 1.7 * chips) * (1.0 - 0.55 * clods), longLens);
   }
+  #endif
   // The wall that stands behind the ramp's head is the fire's own: baked buff, the palest rock of that frame.
   float behind = smoothstep(-100.0, -118.0, vWorld.x) * smoothstep(-215.0, -180.0, vWorld.x) * smoothstep(0.3, 0.8, steep) * smoothstep(48.0, 72.0, vWorld.y) * smoothstep(200.0, 150.0, vWorld.y + 40.0 * (big - 0.5));
   albedo *= mix(vec3(1.0), vec3(1.9, 1.6, 1.2) * (0.75 + 0.5 * mid), behind);

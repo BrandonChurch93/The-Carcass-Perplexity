@@ -65,7 +65,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const rimMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', HAND: '' } });
   const lipMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: LIP_FRAGMENT, uniforms: shared });
   const butteMaterial = ground({ FAR_LIGHT: '', STAGED: '' });
-  const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial, handMaterial, rimMaterial, lipMaterial, butteMaterial];
+  const materials: THREE.Material[] = [wallMaterial, benchMaterial, nearMaterial, crackMaterial, handMaterial, rimMaterial, lipMaterial, butteMaterial];
   const geometries: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
     geometries.push(g);
@@ -98,7 +98,51 @@ export function create(ctx: HeartContext): HeartPiece {
     { cell: [10, 16, 10], depth: 2, seed: 11 },
   ];
   fracture(wallAll, WALL_JOINTS, (x, y, z) => unit01(-z / 40) * unit01((x + 700) / 40) * unit01((330 - x) / 40) * unit01((y - 45) / 30) * unit01((Math.abs(x - MOUTH.x) - 100) / 35));
-  const wall = mesh(wallAll, wallMaterial);
+  // The shader's own test of a face (the steeper of the land's slope and the face's, with a twentieth of noise either way), made here for
+  // every face: what is all cliff and what is all scree go to materials that have only that half. The rest keeps both.
+  // A face that stands wholly above the reach of the lake's rind (4.7 m at most) is told as well (DRY).
+  const FACES: Record<string, string>[] = [{}, { SHEER: '' }, { FLAT: '' }, { DRY: '' }, { SHEER: '', DRY: '' }, { FLAT: '', DRY: '' }];
+  const byFace = (g: THREE.BufferGeometry, defines: Record<string, string>): THREE.Mesh[] => {
+    const p = g.getAttribute('position');
+    const n = g.getAttribute('aSlope');
+    const all = g.getIndex() as THREE.BufferAttribute;
+    const lists: number[][] = FACES.map(() => []);
+    const up = (i: number): number => n.getY(i) / Math.max(Math.hypot(n.getX(i), n.getY(i), n.getZ(i)), 1e-9);
+    for (let t = 0; t < all.count; t += 3) {
+      const a = all.getX(t);
+      const b = all.getX(t + 1);
+      const c = all.getX(t + 2);
+      const ux = p.getX(b) - p.getX(a);
+      const uy = p.getY(b) - p.getY(a);
+      const uz = p.getZ(b) - p.getZ(a);
+      const vx = p.getX(c) - p.getX(a);
+      const vy = p.getY(c) - p.getY(a);
+      const vz = p.getZ(c) - p.getZ(a);
+      const fx = uy * vz - uz * vy;
+      const fy = uz * vx - ux * vz;
+      const fz = ux * vy - uy * vx;
+      const face = Math.abs(fy) / Math.max(Math.hypot(fx, fy, fz), 1e-12);
+      const least = Math.min(up(a), up(b), up(c));
+      const kind = face < 0.32 ? 1 : face > 0.6 && least > 0.73 ? 2 : 0;
+      const dry = Math.min(p.getY(a), p.getY(b), p.getY(c)) > 5 ? 3 : 0;
+      (lists[kind + dry] as number[]).push(a, b, c);
+    }
+    const made: THREE.Mesh[] = [];
+    FACES.forEach((face, k) => {
+      const list = lists[k] as number[];
+      if (list.length === 0) return;
+      const part = new THREE.BufferGeometry();
+      for (const name of Object.keys(g.attributes)) part.setAttribute(name, g.getAttribute(name));
+      part.setIndex(list);
+      const material = ground({ ...defines, ...face });
+      materials.push(material);
+      made.push(mesh(part, material));
+    });
+    g.dispose();
+    return made;
+  };
+  const wallFaces = byFace(wallAll, { FAR_LIGHT: '' });
+  const wall = wallFaces[0] as THREE.Mesh;
 
   // The buttress: ribs across it, so its sheer faces get rows all the way up. The wall's ring is drawn without it, and it sinks under the ring where the wall is the higher.
   const [rx, rz] = BUTTRESS.root;
@@ -117,7 +161,7 @@ export function create(ctx: HeartContext): HeartPiece {
   trim(buttressAll, -1.2);
   // Its cliffs and its table are broken as the wall's are; the talus against its foot is not.
   fracture(buttressAll, WALL_JOINTS, (_x, y, _z, ny) => unit01((y - 20) / 25) * Math.max(unit01((0.75 - ny) / 0.25), unit01((y - 70) / 30)));
-  const buttress = mesh(buttressAll, ground({ FAR_LIGHT: '', BUTTRESS: '' }));
+  const buttressFaces = byFace(buttressAll, { FAR_LIGHT: '', BUTTRESS: '' });
 
   // The bench: 4 m where no camera goes, 1 m round the route, 0.35 m where the camera comes down to it.
   const NEAR = { x0: -592, x1: -486, z0: 172, z1: 322 };
@@ -250,7 +294,7 @@ export function create(ctx: HeartContext): HeartPiece {
   midBench.renderOrder = -4;
   farBench.renderOrder = -3;
   for (const r of rocks.land) r.renderOrder = -2;
-  buttress.renderOrder = -1;
+  for (const b of buttressFaces) b.renderOrder = -1;
   // Staging by shot: the butte behind the group stands in shot heart-02 alone.
   // Ribs along that lens's axis, a stride apart: every face it sees is crossed by them and gets rows all the way up.
   const butteRibs: Rib[] = [];
@@ -278,7 +322,8 @@ export function create(ctx: HeartContext): HeartPiece {
   const butteShot = shotById('heart-02');
   const butteFrom = secondsInPlace(UNIT, butteShot.first) - 0.3 / 60;
   const butteTo = secondsInPlace(UNIT, butteShot.last) + 0.7 / 60;
-  ctx.scene.add(ctx.parts.built('land', wall, buttress, butte, ...rocks.land), buttress, butte, ...rocks.land);
+  const wallParts = [...wallFaces.slice(1), ...buttressFaces];
+  ctx.scene.add(ctx.parts.built('land', wall, ...wallParts, butte, ...rocks.land), ...wallParts, butte, ...rocks.land);
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80, (x, z) => inPatch(x, z) > 0.6), lipMaterial);
   lip.renderOrder = -5;
