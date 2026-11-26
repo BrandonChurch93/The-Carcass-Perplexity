@@ -419,8 +419,10 @@ void main() {
     n = normalize(vec3(-slope.x * (1.0 + 2.0 * rake), 0.8, -slope.y * (1.0 + 2.0 * rake)));
     // The ranges throw their shadows, longer as the sun goes down: the height of the land is read toward the sun, farther and
     // coarser at each reach, for the highest thing that stands between this place and the sun. (Only where the sun still rakes.)
-    if (rake > 0.0 && sunH > -0.05 && inWide > 0.0) {
-      vec2 toward = normalize(uSunDir.xz);
+    if (rake > 0.0 && inWide > 0.0) {
+      // (Once the sun is gone from a place the same reading is made toward the moon, and the ranges throw the moon's shadows.)
+      bool byMoon = sunH <= -0.05;
+      vec2 toward = normalize(byMoon ? uMoonDir.xz : uSunDir.xz);
       float here = height * land;
       float horizon = 0.0;
       float reach = 5.0;
@@ -431,9 +433,16 @@ void main() {
         reach *= 1.62;
       }
       float low = max(sunH, 0.0) + 0.012;
-      shade *= mix(1.0, smoothstep(horizon - 0.02 - 0.25 * low, horizon + 0.02 + 0.25 * low, low), rake);
+      if (byMoon) {
+        float moonLow = uMoonDir.y / length(uMoonDir.xz);
+        moonShade = mix(1.0, smoothstep(horizon - 0.16, horizon + 0.16, moonLow), 1.0 - smoothstep(-0.2, -0.05, sunH));
+      } else {
+        shade *= mix(1.0, smoothstep(horizon - 0.02 - 0.25 * low, horizon + 0.02 + 0.25 * low, low), rake * smoothstep(-0.05, 0.03, sunH));
+      }
     }
   }
+  // (The shadows the cloud threw were the sun's: they go with it.)
+  if (uDusk > 0.0) shade = mix(shade, 1.0, min(1.0, 1.7 * uEmber.x));
   float mu = limbCos(xz);
   vec3 level = vec3(0.0, 1.0, 0.0);
   vec3 earth = rigShade(vWorld, mix(level, n, land), view, ground, 0.92, shade);
@@ -488,28 +497,49 @@ void main() {
   // flanks of the ribs that face it, falling off with distance, and veins of fire run out between the ribs.
   // (What the day drew of it was drawn for the day's exposure; and the day's swell lights the black crust as much as the bone,
   // which the night would show as a red disc: by night the fire's light is the ground's own colour, below.)
-  if (uDusk > 0.0) glow = (glowCore + (glowSwell - glowCore) * mix(1.0, 0.2, uEmber.x) + (glow - glowSwell)) * pow(uGain, -1.0);
+  if (uDusk > 0.0) glow = (glowCore * (1.0 - 0.93 * uEmber.x) + (glowSwell - glowCore) * mix(1.0, 0.2, uEmber.x) + (glow - glowSwell)) * pow(uGain, -1.0);
+  float lakeNight = 0.0;
   if (uDusk > 0.0 && uEmber.x > 0.0) {
-    float facing = clamp(0.35 + 3.0 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 2.0);
+    float far0 = sqrt(d0);
+    // The beat starts at the middle of the lake and runs outward: the net of cracks in a few frames, the fume and the flanks after it.
+    float breath = min(uBeat, 0.12);
+    float hit = max(uBeat - 0.12, 0.0);
+    float beatNear = breath + hit * (uEmber.y > 0.0 ? smoothstep(0.0, 1.0, (uEmber.y * 420.0 - far0) / 60.0 + 1.0) : 1.0);
+    float beatFar = breath + hit * (uEmber.y > 0.0 ? smoothstep(0.0, 1.0, (uEmber.y * 1100.0 - far0) / 150.0 + 1.0) : 1.0);
+    float facing = clamp(0.35 + 3.0 * dot(slope, fromLava / (far0 + 1.0)), 0.0, 2.0);
     float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 8000.0);
-    glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.4 + 2.6 * uBeat) * reach * facing * uEmber.x * land);
-    // (The ember itself: a dull lake of fire in the chest, and it swells with the beat.)
-    float lake = exp(-d0 * (0.55 + 0.9 * vnoise(xz / 11.0 + 2.0)) / (150.0 * seenFar * (1.0 + 1.5 * uBeat)));
-    glow += vec3(1.0, 0.3, 0.045) * (0.07 + 0.2 * uBeat) * uEmber.x * lake * land;
+    glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.4 + 2.6 * beatFar) * reach * facing * uEmber.x * land);
     if (d0 < 250000.0) {
+      // The Heart itself: a lake of fire under a cracked skin, no two sides of its shore alike. The skin glows dull red, the cracks
+      // bright, hottest at the middle; and the beat widens it.
+      float shore = length(fromLava * mat2(0.82, 0.38, -0.5, 1.25)) / (58.0 * (1.0 + 0.9 * beatNear)) * (0.5 + 1.0 * vnoise(xz / 24.0 + 2.0));
+      float lake = 1.0 - smoothstep(0.45, 1.0, shore);
+      lakeNight = lake * uEmber.x * land;
+      float net = sqrt(cracks(xz / 27.0));
+      float skin = 0.25 + 0.75 * vnoise(xz / 6.0 + 9.0);
+      // (After the beat it breathes, and never evenly: two slow swells that do not keep step.)
+      float breathe = mix(1.0, 0.62 + 0.5 * vnoise(vec2(uTime * 0.8, 5.0)) + 0.3 * vnoise(vec2(uTime * 2.1, 9.0)), smoothstep(1.4, 3.2, uEmber.y));
+      float hot = breathe * lake * (0.2 * skin + (0.45 + 0.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
+      glow += vec3(1.0, 0.24, 0.025) * 0.3 * hot * uEmber.x * land;
+      // (The fume that stands over it, lit red from under: a soft dome, uneven as smoke is.)
+      glow += vec3(1.0, 0.17, 0.035) * breathe * (0.012 + 0.04 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
       // (Fire in the cracks of the crust round it, broken along its length; the beat runs out along it, as a pulse does.)
-      float pulse = uEmber.y > 0.0 ? exp(-pow((sqrt(d0) - 380.0 * uEmber.y) / 90.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
+      float pulse = uEmber.y > 0.0 ? exp(-pow((far0 - 380.0 * uEmber.y) / 90.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
       float broken = smoothstep(0.3, 0.75, vnoise(xz / 34.0 + 4.0));
-      float veins = cracks(xz / 44.0) * broken * min(1.0, 1.6 * crust) * exp(-d0 / 60000.0) * (0.3 + 0.3 * uBeat + 1.1 * pulse);
+      float veins = cracks(xz / 44.0) * broken * min(1.0, 1.6 * crust) * exp(-d0 / 60000.0) * (0.3 + 0.3 * beatFar + 1.1 * pulse);
       glow += blackbody(980.0 + 220.0 * clamp(veins, 0.0, 1.0)) * 0.03 * smoothstep(0.03, 0.55, veins) * uEmber.x;
     }
+    // (Fire seen by an open camera goes to a deep orange, never to white: the red is held and the rest follows it.)
+    glow *= mix(1.0, 1.0 / (1.0 + 1.4 * glow.r * uGain), uEmber.x);
+    glow.gb = mix(glow.gb, min(glow.gb, glow.r * vec2(0.5, 0.1)), uEmber.x);
+    glow *= uEmber.w;
   }
 
   // ---- the water ----
   // What comes back from under the surface: the map's own shallows, bars and silt over the deep, lit by the sun and the sky.
   float day = dayAt(xz);
   vec3 light = uSunColour * uSunDir.y * shade * day + skyIrradiance(level) * (0.5 + 0.5 * day);
-  if (uDusk > 0.0) light = sunLightAt(sunH, day) * mix(uSunDir.y, max(sunH, 0.0), uTerm.w) * shade + skyIrradiance(level) * skyLightAt(sunH, day) + uMoonColour * uMoonDir.y;
+  if (uDusk > 0.0) light = sunLightAt(sunH, day) * mix(uSunDir.y, max(sunH, 0.0), uTerm.w) * shade + skyIrradiance(level) * skyLightAt(sunH, day) + moonAt(sunH) * uMoonDir.y;
   float pale = pow(shallow, 1.3);
   // (From far the shallows along the coasts are a clear teal.)
   vec3 shoal = mix(max(ground * 0.34, vec3(0.006, 0.035, 0.04)), vec3(0.011, 0.075, 0.085) * (0.5 + 0.9 * pale * (1.0 - 0.45 * pale)), 0.6 * smoothstep(240.0, 640.0, uViewKm));
@@ -614,11 +644,12 @@ void main() {
   water += mix(vec3(0.0028, 0.0062, 0.0085) * smoothstep(150.0, 450.0, uViewKm), vec3(0.003, 0.007, 0.011), smoothstep(700.0, 1300.0, uViewKm)) * (0.5 + 0.5 * shade);
   if (uDusk > 0.0) {
     // The sky's image on the sea goes with the sky, the air over it with the air; and at night a faint cold sheen lies toward the moon.
-    vec2 fromSheen = xz - uTerm.xy - 1300.0 * normalize(uMoonDir.xz);
-    vec3 sheen = uMoonColour * 0.012 * sparkle * (0.4 + 0.6 * shade) * (0.25 + exp(-dot(fromSheen, fromSheen) / 1.2e6));
-    water = waterBed + (waterSky - waterBed) * skyLightAt(sunH, day) + (waterGlare - waterSky) + (water - waterGlare) * airLightAt(sunH) + sheen;
-    // (Under the moon the sea has almost no colour, and less light than the land.)
-    water = mix(water, vec3(dot(water, vec3(0.3, 0.55, 0.15))) * vec3(0.75, 0.95, 1.25), 0.55 * uEmber.x) * (1.0 - 0.3 * uEmber.x);
+    vec2 fromSheen = xz - uTerm.xy - 1500.0 * normalize(uMoonDir.xz);
+    vec3 sheen = moonAt(sunH) * (0.0018 + 0.0065 * exp(-dot(fromSheen, fromSheen) / 3.0e6) * (0.6 + 0.4 * sparkle)) * (0.5 + 0.5 * shade);
+    // (The moon does not reach the bed of the sea: by night only the surface is seen.)
+    water = waterBed * (1.0 - 0.9 * uEmber.x) + (waterSky - waterBed) * skyLightAt(sunH, day) + (waterGlare - waterSky) + (water - waterGlare) * airLightAt(sunH) + sheen;
+    // (Under the moon the sea has almost no colour.)
+    water = mix(water, vec3(dot(water, vec3(0.3, 0.55, 0.15))) * vec3(0.8, 0.96, 1.2), 0.8 * uEmber.x);
   }
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   vec3 colour = mix(water, earth + 0.4 * glare, land);
@@ -634,6 +665,8 @@ void main() {
   vec3 underAir = colour;
   colour = mix(colour, mix(uAirColour, vec3(0.08, 0.19, 0.27), 0.6 * far) * (0.4 + 0.6 * shade), air);
   if (uDusk > 0.0) colour = mix(underAir, mix(uAirColour, vec3(0.08, 0.19, 0.27), 0.6 * far) * (0.4 + 0.6 * shade) * airLightAt(sunH), air);
+  // (The skin of the lake of fire is black rock: the moon shows nothing of it.)
+  if (uDusk > 0.0) colour *= 1.0 - 0.85 * lakeNight;
   colour += glow * (1.0 - 0.5 * air);
 
   // ---- the handoff: on its first frame the rise draws what the Eye last drew, deep water and rings ----

@@ -31,7 +31,7 @@ uniform vec3 uMoonDir;
 uniform vec3 uMoonColour;
 uniform float uGain;
 uniform vec4 uCalm;
-uniform vec2 uEmber;`;
+uniform vec4 uEmber;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -72,9 +72,16 @@ float sunHeight(vec2 xz) {
 float sunSeen(float h) {
   return smoothstep(-0.04, 0.1, h);
 }
+// The moon's light on a place. While the day still stands in the frame the camera is closed down for it: the night side is drawn
+// as the night will show it, so that no place is darker in the dusk than in the night that follows.
+vec3 moonAt(float h) {
+  return uMoonColour * mix(1.0, uEmber.z, 1.0 - smoothstep(-0.08, 0.14, h));
+}
+// How much of the moon reaches a place past the ranges that stand toward it (the land sets it before it shades).
+float moonShade = 1.0;
 // The colour the air leaves the sun's light at that height: white, gold, then red.
 vec3 sunTint(float h) {
-  return exp(-vec3(0.01, 0.085, 0.24) * max(1.0 / (max(h, 0.0) + 0.06) - 1.702, 0.0));
+  return exp(-vec3(0.009, 0.08, 0.23) * max(1.0 / (max(h, 0.0) + 0.06) - 1.702, 0.0));
 }
 // The light of the sky there: it outlasts the sun, and is gone a little way into the night.
 float skySeen(float h) {
@@ -89,7 +96,8 @@ vec3 sunToward(float h) {
 }
 // The sun's light on a place: its colour and how much of it is left, by the height of the sun there. day is the flat day's own figure.
 vec3 sunLightAt(float h, float day) {
-  return uSunColour * mix(mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * day, sunTint(h) * sunSeen(h), uTerm.w);
+  // (Once the camera has opened for the night, what the sun still lights is held down as a highlight is, not blown.)
+  return uSunColour * mix(mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * day, sunTint(h) * sunSeen(h), uTerm.w) * pow(max(uGain / 1.3, 1.0), -0.85);
 }
 // The sky's light on a place, as a share of the day's, and bluer as the sun goes.
 vec3 skyLightAt(float h, float day) {
@@ -97,7 +105,7 @@ vec3 skyLightAt(float h, float day) {
 }
 // The light the air itself throws back toward the eye there, as a share of the day's: it goes with the sun, a little after the ground.
 vec3 airLightAt(float h) {
-  return mix(vec3(1.0), 0.75 * sunTint(h + 0.03) * sunSeen(h + 0.05) + 0.25 * vec3(0.5, 0.68, 1.1) * skySeen(h) + 0.3 * uMoonColour, uTerm.w);
+  return mix(vec3(1.0), 0.75 * sunTint(h + 0.03) * sunSeen(h + 0.05) * pow(max(uGain / 1.3, 1.0), -0.85) + 0.25 * vec3(0.5, 0.68, 1.1) * skySeen(h) + 0.22 * moonAt(h), uTerm.w);
 }
 // The exposure of the camera, on the radiance a surface writes.
 vec3 exposed(vec3 c) {
@@ -126,13 +134,16 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     vec3 sunLight = sunLightAt(sunH, day) * occ;
     vec3 eDusk = sunLight * max(dot(n, toSun), 0.0) + skyIrradiance(n) * (0.55 + 0.45 * occ) * skyLightAt(sunH, day);
     // (Under the moon the eye and the camera lose colour: the ground is read nearly grey.)
-    vec3 eMoon = uMoonColour * (max(dot(n, uMoonDir), 0.0) * (0.6 + 0.4 * occ) + 0.24);
+    vec3 eMoon = moonAt(sunH) * (max(0.85 * dot(n, uMoonDir) + 0.15, 0.0) * (0.6 + 0.4 * occ) * moonShade + 0.14);
+    // (And the night is long in the tones: the pale rock stands two or three times over the dark land, not twenty.)
+    float pale = dot(albedo, vec3(0.3, 0.55, 0.15));
+    vec3 nightAlbedo = mix(albedo, vec3(pale), 0.65) * 0.27 * pow(pale + 0.004, -0.5);
     vec3 hDusk = normalize(toSun + v);
     float aDusk = max(rough * rough, 0.002);
     float nhDusk = max(dot(n, hDusk), 0.0);
     float dDusk = aDusk * aDusk / (3.14159 * pow(nhDusk * nhDusk * (aDusk * aDusk - 1.0) + 1.0, 2.0));
     float fDusk = 0.02 + 0.98 * pow(1.0 - max(dot(v, hDusk), 0.0), 5.0);
-    return (albedo * eDusk + mix(albedo, vec3(dot(albedo, vec3(0.3, 0.55, 0.15))), 0.65) * eMoon) / 3.14159 + sunLight * (dDusk * fDusk * 0.25 * step(0.0, dot(n, toSun)));
+    return (albedo * eDusk + nightAlbedo * eMoon) / 3.14159 + sunLight * (dDusk * fDusk * 0.25 * step(0.0, dot(n, toSun)));
   }
   float sun = max(dot(n, uSunDir), 0.0) * occ * day;
   vec3 e = uSunColour * mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * sun + skyIrradiance(n) * (0.55 + 0.45 * occ) * (0.5 + 0.5 * day);

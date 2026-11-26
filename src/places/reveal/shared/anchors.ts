@@ -97,8 +97,23 @@ export function poseAt(frame: number): Pose {
   const x = X(v.cx);
   const z = Z(v.cy);
   const height = (v.w * KM) / FILM_ASPECT / 2 / HALF_TAN;
+  if (frame > DRIFT_FROM) {
+    // The camera never comes to a dead stop: as the day ends the rise eases into a slow drift along the orbit, one direction to the
+    // last frame, the ground sliding under it. (Its speed comes up from rest over DRIFT_EASE seconds and holds.)
+    const t = (frame - DRIFT_FROM) / FPS;
+    const u = Math.min(t, DRIFT_EASE) / DRIFT_EASE;
+    const km = DRIFT_SPEED * (DRIFT_EASE * (u * u * u - (u * u * u * u) / 2) + Math.max(t - DRIFT_EASE, 0));
+    const dx = x + DRIFT_TOWARD[0] * km;
+    const dz = z + DRIFT_TOWARD[1] * km;
+    return { position: [dx, height, dz], aim: [dx, 0, dz], fov: FOV, up: [0, 0, -1] };
+  }
   return { position: [x, height, z], aim: [x, 0, z], fov: FOV, up: [0, 0, -1] };
 }
+/** The drift of the ending: the film frame it starts after, km a second once it runs, the seconds it takes to come up, and its way on the ground. */
+const DRIFT_FROM = 10880;
+const DRIFT_SPEED = 36;
+const DRIFT_EASE = 7;
+const DRIFT_TOWARD: [number, number] = [-0.92, -0.39];
 
 /** Seconds of the place at which the Heart's glow beats once on the body. */
 export const BEAT = eventSeconds(UNIT, 'heartbeat');

@@ -25,7 +25,7 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 beatOnCloud(vec2 xz) {
   vec2 fromHeart = xz - vec2(${X(AT.lava.x).toFixed(1)}, ${Z(AT.lava.y).toFixed(1)});
   // (By night the fire is on the underside of the cloud all the time, dull, and the beat swells it.)
-  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.02 * (0.4 + 1.6 * uBeat)) * exp(-dot(fromHeart, fromHeart) / 90000.0);
+  if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.012 * (0.4 + 1.6 * uBeat)) * exp(-dot(fromHeart, fromHeart) / 90000.0);
   return vec3(1.0, 0.2, 0.04) * 0.3 * max(uBeat - 0.12, 0.0) * exp(-dot(fromHeart, fromHeart) / 90000.0);
 }
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
@@ -33,10 +33,10 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float day = dayAt(xz);
   if (uDusk > 0.0) {
     // Cloud stands over the ground: it keeps the sun a moment after the ground under it has lost it, the high cloud longest.
-    float sunH = sunHeight(xz) + uTerm.w * (0.05 + 0.08 * high);
-    float low = mix(uSunDir.y, 0.22 + 0.6 * max(sunH, 0.0), uTerm.w);
+    float sunH = sunHeight(xz) + uTerm.w * (0.09 + 0.1 * high);
+    float low = mix(uSunDir.y, 0.42 + 0.22 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + uMoonColour * (0.1 + 0.14 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
+    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.035 + 0.085 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
     return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
   }
@@ -81,7 +81,16 @@ void main() {
   float a = low.x * 0.94;
   float b = high * mix(0.09, 0.11, smoothstep(700.0, 1300.0, uViewKm));
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
-  if (uDusk > 0.0) colour = lowColour * a * (1.0 - b) + highColour * b + exposed(beatOnCloud(xz)) * a;
+  if (uDusk > 0.0) {
+    // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
+    // take too little light to show over the ground.)
+    float gone = uTerm.w * (1.0 - smoothstep(-0.1, 0.34, sunHeight(xz)));
+    float aNight = a * mix(1.0, 0.3 + 0.45 * a, gone);
+    float bNight = b * (1.0 - 0.8 * gone);
+    colour = lowColour * aNight * (1.0 - bNight) + highColour * bNight + exposed(beatOnCloud(xz)) * a;
+    a = aNight;
+    b = bNight;
+  }
   float alpha = 1.0 - (1.0 - a) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
@@ -155,6 +164,8 @@ void main() {
   float self = clamp(0.62 - 0.6 * clamp(0.014 * dot(fall, sunStep), -0.6, 0.6), 0.0, 1.0);
   float tall = 1.0 - smoothstep(0.02, 0.2, r);
   vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (0.86 + 0.1 * thick);
+  // (By night the cyclone is a dim wheel, no brighter than the bone.)
+  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
   // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
   float side = smoothstep(-0.2, 0.9, dot(p / max(r, 1e-3), vec2(-0.5, -0.86)));
@@ -290,9 +301,12 @@ void main() {
       // The air at the edge keeps the sun longest, on the side the sun went: a twilight arc, warm against the planet and blue above,
       // and when that has gone a thin line of airglow all round. The stars come out as the exposure opens.
       float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.08;
-      vec3 arc = mix(vec3(1.0), mix(vec3(1.5, 0.62, 0.2), vec3(0.7, 0.85, 1.2), smoothstep(0.0, 40.0, km)) * sunSeen(sunH - 0.05) + 0.05 * skySeen(sunH), uTerm.w);
-      float line = exp(-pow((km - 22.0) / 12.0, 2.0));
-      colour = (exposed(glow * arc * pow(uGain, -0.7) + vec3(0.3, 0.62, 0.42) * 0.0028 * line * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45)) * a;
+      // (Layered as it is seen from orbit: red against the planet, orange, a pale band, and blue above. Held under the opening exposure.)
+      float lowSun = uTerm.w * (1.0 - smoothstep(0.05, 0.32, sunH));
+      vec3 layers = mix(mix(vec3(0.85, 0.13, 0.03), vec3(1.0, 0.46, 0.12), smoothstep(1.0, 12.0, km)), mix(vec3(0.8, 0.78, 0.7), vec3(0.2, 0.4, 0.95), smoothstep(22.0, 62.0, km)), smoothstep(9.0, 30.0, km));
+      vec3 arc = mix(glow, layers * exp(-max(km, 0.0) / 34.0) * 0.5, lowSun) * mix(1.0, sunSeen(sunH - 0.05) + 0.03 * skySeen(sunH), uTerm.w);
+      float airglow = exp(-pow((km - 16.0) / 20.0, 2.0));
+      colour = (exposed(arc * pow(uGain, -0.88) + vec3(0.2, 0.36, 0.8) * 0.0011 * airglow * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45) * (uEmber.y > 3.0 ? min(1.0, uGain / 5.0) : 1.0)) * a;
     }
     gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
     return;
@@ -303,8 +317,8 @@ void main() {
   vec3 colour = blue * band * 0.5;
   if (uDusk > 0.0) {
     float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.05;
-    vec3 arc = mix(vec3(1.0), mix(vec3(1.6, 0.6, 0.18), vec3(0.75, 0.85, 1.1), sunSeen(sunH - 0.12)) * sunSeen(sunH - 0.03) + 0.04 * skySeen(sunH), uTerm.w);
-    colour = exposed(colour * arc * pow(uGain, -0.7));
+    vec3 arc = mix(vec3(1.0), mix(vec3(1.25, 0.5, 0.16), vec3(0.75, 0.85, 1.1), sunSeen(sunH - 0.12)) * sunSeen(sunH - 0.03) + 0.04 * skySeen(sunH), uTerm.w);
+    colour = exposed(colour * arc * pow(uGain, -0.88));
   }
   gl_FragColor = vec4(colour * (1.0 - uSolo), 0.0);
 }`;
