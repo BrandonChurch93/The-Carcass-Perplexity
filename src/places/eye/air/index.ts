@@ -57,7 +57,7 @@ const float TOP = 30.0;
 float mistAt(vec3 p, vec4 land) {
   float band = smoothstep(-200.0, -30.0, land.b) * (1.0 - smoothstep(30.0, 170.0, land.b));
   float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
-  float lift = 3.0 + 6.0 * vnoise(p.xz / 210.0 + 3.0);
+  float lift = 1.6 + 3.6 * vnoise(p.xz / 210.0 + 3.0 + uTime * 0.01);
   float thick = band * far * exp(-max(p.y, 0.0) / lift);
   if (thick < 0.004) return 0.0;
   vec2 q = p.xz / 150.0 + vec2(uTime * 0.05, -uTime * 0.028);

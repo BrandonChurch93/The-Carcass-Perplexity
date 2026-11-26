@@ -286,6 +286,8 @@ void main() {
       float x = (r - g.x) / g.y;
       dr -= g.z * 2.0 * x / g.y * exp(-x * x);
     }
+    // No ring is whole: each is stronger on one side and broken on another, as rings on a lake are.
+    dr *= mix(0.45 + 1.0 * vnoise(out2 * 3.0 + r / 37.0), 1.0, uRest);
     float u = clamp(r / uDome.y, 0.0, 1.0);
     dr += uDome.x * 2.0 * (1.0 - u * u) * (-2.0 * u / uDome.y);
     slope += out2 * dr;
@@ -324,7 +326,7 @@ void main() {
   vec3 rd = reflect(-v, n);
   vec3 sky = skyRadiance(vec3(rd.x, abs(rd.y), rd.z)) * uSkyMirror * mix(1.0, 0.3, smoothstep(0.04, 0.3, abs(rd.y)));
   // The land stands in the water darker than it stands in the air.
-  vec3 refl = seen.rgb * vec3(0.44, 0.48, 0.55) + (1.0 - seen.a) * sky;
+  vec3 refl = seen.rgb * vec3(0.38, 0.45, 0.56) + (1.0 - seen.a) * sky;
   refl = mix(refl, sky, smoothstep(0.75, 0.95, v.y));
   // Where a gust has passed, the mirror is broken and the water gives back the pale of the sky.
   refl = mix(refl, refl * 0.3 + sky * 0.5, 0.55 * gust * (1.0 - smoothstep(0.3, 0.8, v.y)));
@@ -334,7 +336,7 @@ void main() {
   float hump = smoothstep(0.0, 0.45, swell);
   // Seen from above it is no dome at all, only water: the dark of the shaft, and what is in it.
   hump *= 1.0 - smoothstep(0.25, 0.7, v.y);
-  refl = mix(refl, refl * 0.07 + sky * 0.16, hump);
+  refl = mix(refl, sky * (0.17 + 0.06 * vnoise(p.xz / 4.0 + uTime * 0.4)), hump);
   f = max(f, 0.8 * hump);
   // Where the mats have grown up to the surface it is not a mirror at all.
   if (r > 470.0) f *= 1.0 - mix(0.5, 0.94, smoothstep(25.0, 220.0, length(cameraPosition - p))) * matBeds(p);
@@ -612,16 +614,16 @@ export function create(ctx: Context): Piece {
           const life = 13.5;
           if (age > 0 && age < life) {
             radius = 6 + 15 * age;
-            width = 2.2;
-            height = 0.05 * Math.sin((Math.PI * age) / life);
+            width = 5;
+            height = 0.075 * Math.sin((Math.PI * age) / life);
           }
         } else if (i < 12) {
           const age = t - (rise - 1.2 + 0.62 * (i - 7));
           const life = 2.7;
           if (age > 0 && age < life) {
             radius = 58 + 44 * age;
-            width = 7;
-            height = 0.24 * Math.sin((Math.PI * age) / life);
+            width = 12;
+            height = 0.3 * Math.sin((Math.PI * age) / life);
           }
         } else {
           const k = i - 12;
