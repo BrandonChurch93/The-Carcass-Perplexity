@@ -16,6 +16,7 @@ import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
+import { CURTAIN_FRAGMENT, CURTAIN_VERTEX, curtainShape } from './curtain';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
@@ -229,8 +230,10 @@ export function create(ctx: Context): Piece {
   const weedNear = hangs(0.6);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.15, 0);
-  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
-  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uDry: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uDry: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  // The cobbles heaped on a bar stand clear of the film of water: drained, paler, each of its own tone.
+  const cobble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uDry: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
 
   // The floor: fine where the cameras stand on it, coarse out to the edge of what the rig knows, where it lies deep under the sea.
   const xs = lines(LAND.minX, LAND.maxX, -340, 420, 6, 60);
@@ -270,6 +273,14 @@ export function create(ctx: Context): Piece {
     add(blades, bladeShape(rib, cut), stoneOf(cut.grain, rib.name === 'L1' ? 4 : Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
     add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
+  }
+
+  // The near cliff's curtain: real fronds over the sheet, on the side the lenses see.
+  const fronds = material(CURTAIN_VERTEX, CURTAIN_FRAGMENT, {});
+  fronds.side = THREE.DoubleSide;
+  {
+    const hang = ctx.rng('curtain');
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 6000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -320,7 +331,7 @@ export function create(ctx: Context): Piece {
   }
   const nearTrack = (x: number, z: number, reach: number): boolean => tracks.some((p) => Math.hypot(x - p[0], z - p[1]) < reach);
   const scatter = ctx.rng('rocks');
-  const placed: { x: number; z: number; size: number; yaw: number; tilt: number; kind: number; sink: number }[] = [];
+  const placed: { x: number; z: number; size: number; yaw: number; tilt: number; kind: number; sink: number; lift?: number }[] = [];
   const KINDS = 4;
   const ribFeet = (rib: Rib, count: number, lo: number, hi: number, reach: number): void => {
     for (let i = 0; i < count; i++) {
@@ -477,23 +488,44 @@ export function create(ctx: Context): Piece {
       kept.push({ x: x + Math.cos(a) * r, z: z + Math.sin(a) * r, size: Math.min(0.9, size * scatter.range(0.22, 0.5)), yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.3, 0.5) });
     }
   });
+  // The gravel bars close under the two low lenses are real stones, heaped: cobbles of a hand to a forearm, two and three deep on the
+  // crown of a bar and thinning to its edge, with the wet sand bare between one bar and the next.
+  const heap = (path: (typeof shots)[string], part: number, count: number, from: number, to: number, half: number): void => {
+    const pose = resolve(path, part, 0);
+    const yaw = yawOf(pose.aim, pose.position);
+    for (let i = 0; i < count; i++) {
+      const r = from + (to - from) * Math.pow(scatter.next(), 1.5);
+      const a = yaw + scatter.range(-half, half);
+      const x = pose.position[0] + Math.sin(a) * r;
+      const z = pose.position[2] - Math.cos(a) * r;
+      const size = 0.04 + 0.06 * scatter.next() + 0.22 * Math.pow(scatter.next(), 5);
+      const rock = { x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.5, 0.5), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.5), lift: 0 };
+      const bar = smooth(0.5, 0.68, noise3(x / 9, 0.5, z / 2.6) * 0.65 + noise3(x / 1.3, 2.5, z / 1.3) * 0.35);
+      if (bar <= 0.02 + 0.3 * scatter.next() || nearTrack(x, z, 0.4 + size) || bed(x, z) < LEVELS.pool - 0.03) continue;
+      // The crown of the bar stands a hand and more over its edge.
+      rock.lift = 0.16 * bar * scatter.next();
+      kept.push(rock);
+    }
+  };
+  heap(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 6000, 1.6, 22, 0.66);
+  heap(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 3500, 1.6, 18, 0.6);
   const squat = [0.5, 0.58, 0.38, 0.45];
   const rocks = new THREE.Group();
   const dummy = new THREE.Object3D();
   const shades = ctx.rig.contactDiscs(kept.filter((p) => p.size > 0.3).length);
   let shade = 0;
   // Three grades of shape: rock over a metre, stones, and pebbles of a few facets.
-  const grade = (size: number): number => (size >= 0.3 ? 0 : size >= 0.09 ? 1 : 2);
-  const DETAIL = [4, 2, 0];
-  for (let kind = 0; kind < KINDS * 3; kind++) {
+  const grade = (p: { size: number; lift?: number }): number => (p.lift !== undefined ? (p.size >= 0.12 ? 3 : 4) : p.size >= 0.3 ? 0 : p.size >= 0.09 ? 1 : 2);
+  const DETAIL = [4, 2, 0, 1, 0];
+  for (let kind = 0; kind < KINDS * 5; kind++) {
     const g = Math.floor(kind / KINDS);
-    const mine = kept.filter((p) => p.kind === kind % KINDS && grade(p.size) === g);
+    const mine = kept.filter((p) => p.kind === kind % KINDS && grade(p) === g);
     if (mine.length === 0) continue;
-    const herd = new THREE.InstancedMesh(boulderShape((kind % KINDS) + 1, DETAIL[g] as number, squat[kind % KINDS] as number), g === 0 ? boulder : pebble, mine.length);
+    const herd = new THREE.InstancedMesh(boulderShape((kind % KINDS) + 1, DETAIL[g] as number, squat[kind % KINDS] as number), g === 0 ? boulder : g >= 3 ? cobble : pebble, mine.length);
     herd.frustumCulled = false;
     herd.frustumCulled = false;
     mine.forEach((p, i) => {
-      dummy.position.set(p.x, ground0(p.x, p.z) + p.size * (squat[kind % KINDS] as number) * (1 - 2 * p.sink) * 0.5, p.z);
+      dummy.position.set(p.x, ground0(p.x, p.z) + p.size * (squat[kind % KINDS] as number) * (1 - 2 * p.sink) * 0.5 + (p.lift ?? 0), p.z);
       dummy.rotation.set(p.tilt, p.yaw, p.tilt * 0.6);
       // A heap of weed lies lower and wider than a stone.
       if (p.sink > 0.555) dummy.scale.set(p.size * 1.25, p.size * 0.6, p.size);
@@ -518,7 +550,7 @@ export function create(ctx: Context): Piece {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of [ground, roostRock, weed, weedNear, boulder, pebble, glass, glassLoop, ...stones.values()]) m.dispose();
+      for (const m of [ground, roostRock, weed, weedNear, fronds, boulder, pebble, cobble, glass, glassLoop, ...stones.values()]) m.dispose();
     },
   };
 }
