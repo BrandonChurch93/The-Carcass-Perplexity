@@ -369,7 +369,9 @@ void main() {
     if (uPlateLens.w + 0.5 * (lowest / uPlateAt.w) / uPlateLens.z > 1.02) drawnOut = false;
   }
   if (drawnOut) {
-    soft += log2(1.0 + spread * 420.0) + 0.6 * step(0.5, rimEye);
+    // Under the long lens of the climb, as from the rim, the two outer looks tell the wall in the water.
+    bool twoLooks = rimEye >= 0.5 || uCentre.w > 0.0 || uLeave.x > 0.0;
+    soft += log2(1.0 + spread * 420.0) + (twoLooks ? 0.6 : 0.0);
     vec2 tip = level * (1.3 * spread);
     vec3 nUp = normalize(vec3(-slope.x - tip.x, 1.0, -slope.y - tip.y));
     vec3 nDown = normalize(vec3(-slope.x + tip.x, 1.0, -slope.y + tip.y));
@@ -383,7 +385,7 @@ void main() {
     rDown.y = max(abs(rDown.y), 0.003);
     refl = wUp * farRadiance(p, normalize(rUp), soft) + wDown * farRadiance(p, normalize(rDown), soft);
     // From the rim the wall in the water is small: the two outer looks, each softer, tell it.
-    if (rimEye < 0.5) refl += wMid * farRadiance(p, rd, soft);
+    if (!twoLooks) refl += wMid * farRadiance(p, rd, soft);
     else wMid = 0.0;
     refl /= max(wUp + wMid + wDown, 1e-4);
   } else {
