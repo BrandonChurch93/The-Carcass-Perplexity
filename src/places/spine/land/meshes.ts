@@ -242,11 +242,12 @@ function jointing(around: number, girth: (y: number) => number, fine: (y: number
   };
 }
 
-// Where the kites hold: from this share of the breadth toward the lee edge the rock is held to within these metres of the blade's section.
-const LEE_FROM = 0.42;
-const LEE_FULL = 0.7;
-const LEE_OUT = 0.35;
-const LEE_IN = 2.2;
+// Where the kites hold: between these shares of the breadth, toward the lee edge, the relief turns from square to the face to along the thickness.
+const LEE_FROM = 0.35;
+const LEE_FULL = 0.65;
+const LEE_BLUNT = 2.4;
+const LEE_OUT = 1;
+const LEE_IN = 2.5;
 
 /** A spire: a leaning broken blade cut from its feature sheet (the outline and the relief are the sheet's), and its root down the flanks into the cloud. */
 // level: 2 the spire the lens comes close to, 1 one that is seen whole in a long lens, 0 one far down the ridge. The triangles are dear in a
@@ -317,13 +318,11 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       // The lee edge keeps its line (the kites hold to it); the windward edge is let stand in and out block by block, so it is broken against the sky.
       const keep = 1 - (ln > 0 ? 0.92 : 0.45) * edge;
       const broad = Math.max(-0.5 * p.thick, Math.min(0.7 * p.thick + 4, depth * (reliefAt(sp.sheet, su, sv) - 0.55))) * keep;
-      // Beside the lee edge the rock keeps close to the blade's own section, a little in and hardly out: the kites' holdfasts are set by
-      // that section (kites/index.ts: 1.02 of the breadth, half the thickness out), and the lens of the kites looks along the face at
-      // them. The relief stands square to the face now, so a slab that stood out there would stand between the lens and the holdfasts.
+      // (Toward the lee edge the blocks stand hardly out and not far in: see `LEE_FROM`.)
       const k = Math.min(1, Math.max(0, (ln - LEE_FROM) / (LEE_FULL - LEE_FROM)));
       const lee = k * k * (3 - 2 * k);
-      const free = broad + Math.max(-0.35 * p.thick, Math.min(0.5 * p.thick, scale * cut)) * keep;
-      const n = free + (Math.max(-LEE_IN, Math.min(LEE_OUT, free)) - free) * lee;
+      const blocks = Math.max(-0.35 * p.thick, Math.min(0.5 * p.thick, scale * cut));
+      const n = broad + (blocks + lee * (Math.max(-LEE_IN, Math.min(LEE_OUT, blocks)) - blocks)) * keep;
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
       const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);
       // The rock stands out of the blade square to its face, not along its thickness: on the thin ends of a blade a relief pushed along the
@@ -332,8 +331,13 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const gl = (Math.sign(co) * Math.pow(Math.abs(ln), FIN_SECTION - 1)) / Math.max(p.half, 1);
       const gb = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), (FIN_SECTION - 1) / FIN_SECTION) / Math.max(thickHere, 1);
       const gn = Math.hypot(gl, gb) || 1;
-      let across = l + (n * gl) / gn;
-      let along = face * Math.max(0.3 * body, body + (n * gb) / gn) * snap;
+      // Toward the lee edge it goes back to standing along the thickness, as the blade was first built: the kites' holdfasts are set by
+      // the hollows the sheet has there (kites/index.ts), and the lens of the kites looks along that face at them, so the rock under
+      // and before them must be where it was.
+      let across = l + ((1 - lee) * n * gl) / gn;
+      // (And at the edge itself the blade is blunt, some metres through, where it was a knife: the holdfasts stand on that.)
+      const pad = Math.min(1, Math.max(0, (ln - 0.86) / 0.1));
+      let along = face * Math.max(0.3 * body, body + n * (gb / gn + lee * (1 - gb / gn)), LEE_BLUNT * pad * pad * (3 - 2 * pad)) * snap;
       // About the mouth and the way out the face stands just outside the canal's end, so the canal is cut through a wall; the relief
       // only stands out of that wall, never in.
       if (ends) {
