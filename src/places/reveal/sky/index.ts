@@ -229,9 +229,9 @@ void main() {
   // Puffs leave the throat one after another and thin as they go.
   float puff = 0.78 + 0.22 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
   float inside = smoothstep(0.0, 0.02, q.x) * (1.0 - smoothstep(0.55, 0.98, q.x)) * smoothstep(0.0, 0.08, q.y) * (1.0 - smoothstep(0.92, 1.0, q.y));
-  float thick = smoothstep(0.1, 0.9, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
+  float thick = smoothstep(0.08, 0.7, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.7, 0.3);
-  float alpha = clamp(thick * 0.7, 0.0, 1.0);
+  float alpha = clamp(thick * 0.9, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 

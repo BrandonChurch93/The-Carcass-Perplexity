@@ -93,7 +93,7 @@ void main() {
   }
   // Between the ground and orbit the country is seen through air: the map's own hard light and dark, crest by crest, is drawn
   // toward the light of the country round it, so a range is one soft pale body with fine lines in it and no etched thing.
-  float soften = mix(0.14, 0.48, smoothstep(90.0, 240.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm)) * inWide;
+  float soften = mix(0.04, 0.48, smoothstep(90.0, 240.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm)) * inWide;
   if (soften > 0.0) {
     vec3 around = texture2D(uMapWide, clamp(uvWide, 0.0, 1.0), 4.5).rgb;
     if (inClose > 0.0) around = mix(around, texture2D(uMapClose, clamp(uvClose, 0.0, 1.0), 4.5).rgb, inClose);
@@ -161,11 +161,11 @@ void main() {
       vec3 country = clamp(mix(ofLow, ofRange, high), 0.35, 2.4);
       // (Only the light and dark of the photograph: the colour of the ground stays the map's.)
       float tone = dot(country, vec3(0.3, 0.55, 0.15));
-      ground *= mix(vec3(1.0), mix(vec3(tone), country, 0.35), 0.75 * detail * land);
+      ground *= mix(vec3(1.0), mix(vec3(tone), country, 0.35), 0.88 * detail * land);
       vec2 a1 = texture2D(uMatRangeNh, pa).rg * 2.0 - 1.0;
       vec2 a2 = texture2D(uMatRangeNh, pb).rg * 2.0 - 1.0;
       vec2 small = mix(vec2(a1.x, a1.y) * turnA, vec2(a2.x, a2.y) * turnB, share);
-      slope += small * 0.5 * detail * land * (0.4 + 0.6 * high);
+      slope += small * 0.62 * detail * land * (0.4 + 0.6 * high);
     } else {
       // Under shallow water: bars, channels and silt.
       vec3 ofShelf = mix(texture2D(uMatShelf, pa * 0.5).rgb, texture2D(uMatShelf, pb * 0.5).rgb, share) / vec3(0.055, 0.159, 0.148);

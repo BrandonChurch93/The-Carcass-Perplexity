@@ -40,7 +40,7 @@ Unit `reveal`, shot `reveal-01`, frames 9541 to 11860, keys `reveal-1` to `revea
 7. Glint: warm and at the right, but broader and flatter than approved.
 8. Frames 9565 to 9581: the lake fills the frame as flat blue-black water with only faint lanes.
 
-## Round 13 (judged on the first owner's version 2): what I did
+## Round 13 (judged on the first owner's version 2): what I did (all 50 issues word for word in `ROUND-13.md` beside this file; "closed" is by my own look, not judged)
 
 1. Body at the top by value: closed by my look at 400 px (skeleton on a continent, two sockets, jaw). Whole figure first reads at about frame 9860; ribs at 9756 as in approved.
 2. Rings 9563 to 9606: closed. Soft rest rings at 9541 agreed with the Eye, gone by 9565, amber margin in from 9581.
@@ -66,8 +66,8 @@ Unit `reveal`, shot `reveal-01`, frames 9541 to 11860, keys `reveal-1` to `revea
 
 ## Cost, seconds a sample at 3840 x 2160, key `reveal-4`, draft (`npm run -s cost`)
 
-- Whole frame COSTWHOLE; an empty frame COSTEMPTY. `continent` COSTLAND above empty, `cloud` COSTCLOUD, `cyclone` COSTCYC, `vapour` COSTVAP, `storm` COSTSTORM, `space` and `atmosphere` under 0.05.
-- The aim of 7 is missed by COSTMISS. Cheapest cuts: the 9.5 km cell layer and the masses in `lowPicture` (about 0.2), the second read of `lowField` for self shade in `sky` (about 0.3).
+- Whole frame 8.73; an empty frame 1.65. `continent` 4.12 above empty, `cloud` 2.36, `cyclone` 0.52, `atmosphere` 0.10, `storm` 0.03, `vapour` 0.02, `space` 0.00. Version 2 was 7.84; runs of the same code differ by about 0.3.
+- The aim of 7 is missed by about 1.7. Cheapest cuts: the 9.5 km cell layer and the masses in `lowPicture` (about 0.2), the second read of `lowField` for self shade in `sky` (about 0.3).
 
 ## Next, in order
 
