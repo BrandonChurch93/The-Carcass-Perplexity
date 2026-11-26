@@ -2,7 +2,7 @@
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
 /** How far a plume is out, 0 drawn in to 1 spread. kind: 0 open, 1 a bud, 2 broken and empty, 3 half out. */
-const OPEN_GLSL = /* glsl */ `
+export const OPEN_GLSL = /* glsl */ `
 uniform float uSeconds;
 float plumeOpen(float kind, float phase, float seed) {
   float base = kind < 0.5 ? 1.0 : kind < 1.5 ? 0.0 : kind < 2.5 ? 0.0 : 0.5;
@@ -52,21 +52,21 @@ vec3 stemPoint(float a, float v) {
     float collar = smoothstep(h - 0.1, h, y);
     r = R * (1.12 - 0.12 * v) * (1.0 + 0.26 * flare + 0.05 * (1.0 - smoothstep(0.0, 0.4, q)) + 0.035 * wob(a + y * 3.0, seed));
     r *= 1.0 + collar * (0.2 + 0.16 * wob(a, seed + 2.0));
-    float torn = kind > 1.5 && kind < 2.5 ? 0.07 : 0.035;
-    y += collar * torn * (wob(a * 0.7, seed + 5.0) + 0.5 * wob(a * 2.0, seed + 8.0));
+    float torn = kind > 1.5 && kind < 2.5 ? 0.045 : 0.035;
+    y += collar * torn * (0.4 * wob(a * 0.7, seed + 5.0) + 0.7 * wob(a * 3.0, seed + 8.0) + 0.4 * wob(a * 6.0, seed + 3.0));
     // The foot spreads into the crust.
     r *= 1.0 + 0.5 * exp(-y / 0.09);
   } else if (aSkin < 1.5) {
     // The inside of the mouth.
-    float torn = kind > 1.5 && kind < 2.5 ? 0.07 : 0.035;
-    y = h + torn * (wob(a * 0.7, seed + 5.0) + 0.5 * wob(a * 2.0, seed + 8.0)) * (1.0 - v) - 0.4 * v;
+    float torn = kind > 1.5 && kind < 2.5 ? 0.045 : 0.035;
+    y = h + torn * (0.4 * wob(a * 0.7, seed + 5.0) + 0.7 * wob(a * 3.0, seed + 8.0) + 0.4 * wob(a * 6.0, seed + 3.0)) * (1.0 - v) - 0.4 * v;
     r = R * mix(1.0 + 0.2 + 0.16 * wob(a, seed + 2.0), 0.7, smoothstep(0.0, 0.2, v));
   } else {
     // The body of the plume in the mouth: a pointed bud when it is drawn in, a low throat when it is out.
     float open = plumeOpen(kind, aKind.y, seed);
     float len = (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * aKind.z * mix(0.22, 0.15, open);
     y = h - 0.06 + len * v;
-    r = R * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * mix(1.1, 0.8, open) * pow(max(sin(3.14159 * pow(mix(0.12, 1.0, v), 0.8)), 0.0), 0.8) * (1.0 + 0.07 * sin(a * 3.0 + v * 2.2 + seed * 30.0) + 0.03 * sin(a * 5.0 - v * 3.0));
+    r = R * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * mix(0.7, 0.8, open) * pow(max(sin(3.14159 * pow(mix(0.12, 1.0, v), 0.8)), 0.0), 0.8) * (1.0 + 0.07 * sin(a * 3.0 + v * 2.2 + seed * 30.0) + 0.03 * sin(a * 5.0 - v * 3.0));
   }
   vec3 A = vec3(aAxis.x * sin(lean), cos(lean), aAxis.y * sin(lean));
   vec3 U = vec3(aAxis.x * cos(lean), -sin(lean), aAxis.y * cos(lean));
@@ -320,88 +320,64 @@ void main() {
 }`;
 
 /** Where an insect is: a slow wander round its home with quicker darts on it. The same lines serve its body and its wings. */
-const INSECT_GLSL = /* glsl */ `
+// The insects, each one card of the Builder's photograph cut in three: the body and the two pairs of wings, which beat about it.
+// They dart and hang: a hop to a new place in a third of its time, then the rest of it hovering there.
+export const INSECT_VERTEX = /* glsl */ `
 attribute vec4 aHome;
 attribute vec4 aRate;
 attribute vec4 aPhase;
 uniform float uSeconds;
-vec3 insectAt(float t) {
-  float reach = aHome.w;
-  return aHome.xyz + vec3(
-    reach * sin(aRate.x * t + aPhase.x) + 0.3 * sin(0.4 * t + aPhase.y) + 0.05 * sin(7.3 * t + aPhase.z),
-    0.5 * reach * sin(aRate.y * t + aPhase.y) + 0.03 * sin(9.1 * t + aPhase.x),
-    reach * cos(aRate.z * t + aPhase.z) + 0.3 * cos(0.33 * t + aPhase.x) + 0.05 * cos(6.7 * t + aPhase.y));
-}
-vec3 insectPlace(vec3 local, out vec3 fwd, out vec3 right, out vec3 up) {
-  vec3 at = insectAt(uSeconds);
-  vec3 vel = insectAt(uSeconds + 0.05) - insectAt(uSeconds - 0.05);
-  fwd = normalize(vel + vec3(1e-4, 0.0, 0.0));
-  // It hangs tail down as it flies, the way a mayfly does.
-  fwd = normalize(vec3(fwd.x, fwd.y * 0.4 + 0.35, fwd.z));
-  right = normalize(cross(fwd, vec3(0.0, 1.0, 0.0)));
-  up = cross(right, fwd);
-  return at + (fwd * local.x + up * local.y + right * local.z) * aPhase.w;
-}`;
-
-export const INSECT_VERTEX = /* glsl */ `
-${INSECT_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormal;
-varying float vTone;
+varying vec2 vUv;
+float hashOf(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+vec3 hop(float i) {
+  return aHome.w * (vec3(hashOf(vec2(i, aPhase.x)), hashOf(vec2(i + 17.3, aPhase.y)), hashOf(vec2(i + 41.7, aPhase.z))) - 0.5) * vec3(2.0, 1.0, 2.0);
+}
 void main() {
-  vec3 fwd;
-  vec3 right;
-  vec3 up;
-  vec3 p = insectPlace(position, fwd, right, up);
-  vWorld = p;
-  vNormal = normalize(fwd * normal.x + up * normal.y + right * normal.z);
-  vTone = uv.x;
-  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+  float period = 0.7 + 0.9 * fract(aPhase.x * 0.37);
+  float s = uSeconds / period + aPhase.y;
+  float i = floor(s);
+  float f = fract(s);
+  vec3 a = hop(i);
+  vec3 b = hop(i + 1.0);
+  float dart = smoothstep(0.0, 0.32, f);
+  vec3 at = aHome.xyz + mix(a, b, dart) + 0.012 * vec3(sin(uSeconds * 7.3 + aPhase.z), sin(uSeconds * 9.1 + aPhase.x), cos(uSeconds * 6.7 + aPhase.y));
+  // It turns to where it is going as it leaves, and hangs tail down, the way a mayfly does.
+  vec3 heading = mix(a - hop(i - 1.0), b - a, smoothstep(0.0, 0.1, f));
+  vec3 fwd = normalize(vec3(heading.x, 0.0, heading.z) + vec3(1e-4, 0.0, 0.0));
+  fwd = normalize(fwd + vec3(0.0, 0.55 - 0.35 * sin(3.14159 * dart), 0.0));
+  vec3 right = normalize(cross(fwd, vec3(0.0, 1.0, 0.0)));
+  vec3 up = cross(right, fwd);
+  // position: x across the picture, y along it, z which piece (0 the body, 1 and -1 the wings).
+  float side = position.z;
+  float reach = abs(position.x) * 0.04;
+  float beat = sin(uSeconds * (38.0 + 14.0 * fract(aPhase.x)) + aPhase.y);
+  float ang = (0.3 + 0.85 * beat) * abs(side);
+  vec3 local = fwd * (position.y * 0.0267) + right * (sign(position.x) * reach * cos(ang)) + up * (reach * sin(ang));
+  vWorld = at + local * aPhase.w;
+  vNormal = normalize(up * cos(ang) - right * (sign(position.x) * sin(ang)));
+  vUv = vec2(position.x + 0.5, position.y + 0.57);
+  gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
 export const INSECT_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
 varying vec3 vNormal;
-varying float vTone;
+varying vec2 vUv;
+uniform sampler2D tInsect;
 ${RIG_GLSL}
 void main() {
-  vec3 n = normalize(vNormal);
+  vec3 t = texture2D(tInsect, vUv).rgb;
+  float luma = max(t.r, max(t.g, t.b));
+  // The wing is a clear skin between its veins: the veins and the body hide what is behind them, the skin only dims it.
+  float a = smoothstep(0.006, 0.05, luma);
+  if (a < 0.02) discard;
   vec3 v = normalize(cameraPosition - vWorld);
-  vec3 albedo = mix(vec3(0.07, 0.05, 0.035), vec3(0.2, 0.16, 0.1), vTone);
-  vec3 c = rigShade(vWorld, n, v, albedo, 0.5, 1.0);
-  gl_FragColor = vec4(rigOut(c), 1.0);
-}`;
-
-export const WING_VERTEX = /* glsl */ `
-${INSECT_GLSL}
-varying vec3 vWorld;
-varying vec2 vWing;
-void main() {
-  vec3 fwd;
-  vec3 right;
-  vec3 up;
-  // position: x along the body, y the length of the wing from its root, z which side and which of the pair.
-  float side = sign(position.z);
-  float beat = sin(uSeconds * (38.0 + 14.0 * fract(aPhase.x)) + aPhase.y + abs(position.z) * 1.3);
-  float ang = 0.35 + 0.75 * beat;
-  vec3 local = vec3(position.x - 0.12 * position.y, position.y * sin(ang), side * position.y * cos(ang));
-  vec3 p = insectPlace(local, fwd, right, up);
-  vWorld = p;
-  vWing = vec2(uv.x, uv.y);
-  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
-}`;
-
-export const WING_FRAGMENT = /* glsl */ `
-precision highp float;
-varying vec3 vWorld;
-varying vec2 vWing;
-${RIG_GLSL}
-void main() {
-  // A clear wing with a few dark veins: it takes the white of the sky and lets most of what is behind it through.
-  float vein = smoothstep(0.75, 1.0, abs(sin(vWing.x * 16.0 + vWing.y * 5.0)));
-  float edge = smoothstep(0.0, 0.25, vWing.x) * smoothstep(1.0, 0.75, vWing.x) * smoothstep(1.0, 0.8, vWing.y);
-  vec3 c = mix(skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.75, vec3(0.05, 0.035, 0.03), 0.6 * vein) * skyOpen(vWorld);
-  float a = (0.22 + 0.3 * vein) * edge * (1.0 - uSolo);
-  gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
+  vec3 n = normalize(vNormal) * sign(dot(vNormal, v) + 1e-5);
+  vec3 c = rigShade(vWorld, n, v, t * vec3(0.3, 0.24, 0.18) + 0.01, 0.6, 1.0);
+  gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a * (1.0 - uSolo));
 }`;
