@@ -123,6 +123,7 @@ uniform float uRise;
 uniform float uRingsOn;
 // How clear the water of the shaft is beside the amber water of the shelf.
 uniform float uClear;
+uniform vec3 uDeepTone;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${BED_GLSL}
@@ -334,6 +335,13 @@ void main() {
   float shoalAt = rimEye > 0.0 ? w + rimEye * (46.0 * (vnoise(p.xz / 57.0 + 6.0) - 0.5) + 18.0 * (vnoise(p.xz / 17.0) - 0.5)) : w;
   float shoal = rimEye * smoothstep(95.0, 0.0, shoalAt);
   float crusted = mix(lipCover(p.xz, lip), smoothstep(-14.0, 10.0, shoalAt), rimEye);
+  // From straight over it the pale water inside the lip is no even band round the deep: it lies in runs of its own length, wide here and gone there.
+  float runs = 1.0;
+  if (uLeave.x > 0.0) {
+    runs = mix(1.0, smoothstep(0.46, 0.68, vnoise(p.xz / 110.0 + 4.0) + 0.4 * (vnoise(p.xz / 31.0 + 9.0) - 0.5)), uLeave.x);
+    crusted *= mix(runs, 1.0, smoothstep(-6.0, 8.0, shoalAt));
+  }
+  float noRock = 0.0;
   // A low eye over the deep: the mirror is for the far water, where the look lies along it, and it is soft. Near, the eye goes into the dark.
   float lowDeep = (1.0 - crusted) * (1.0 - rimEye) * (1.0 - uLeave.x);
 
@@ -459,10 +467,11 @@ void main() {
     // Down to the rock from the sky overhead, and up again along the look.
     vec3 through = exp(-uAbsorb * mix(1.5, uClear, rimEye) * down * (1.0 + 1.0 / fall));
     vec3 deep = uDeep * skyDown * open * (1.0 - through);
+    noRock = 1.0 - smoothstep(0.08, 0.6, through.b);
     // Where no light comes back from the rock it is not looked for.
     if (through.b > 0.015) {
       Bed bed = wallAt(b, down, inside);
-      deep += bed.albedo * e * (bed.occ / 3.14159) * through;
+      deep += bed.albedo * e * (bed.occ / 3.14159) * through * runs;
     }
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
@@ -478,6 +487,10 @@ void main() {
   float margin = inShore > 18.0 ? 1.0 : smoothstep(0.0, mix(2.0, 11.0, rimEye), inShore + mix(1.0, 7.0, rimEye) * (vnoise(p.xz / 5.3) - 0.5) + mix(0.3, 4.0, rimEye) * (vnoise(p.xz / 1.4 + 3.0) - 0.5));
   f *= mix(0.12, 1.0, margin);
   vec3 c = mix(under, refl, f);
+  // Past the pale wall the deep goes down out of the light: dark blue-green, then black.
+  // Only its own blue is taken down: what it mirrors of the wall keeps its colour.
+  float blueOfIt = (1.0 - crusted) * noRock * smoothstep(1.3, 2.6, c.b / max(c.r, 1e-4)) * uDeepTone.x;
+  c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.6, 0.95, 0.95) * uDeepTone.y, blueOfIt);
   // The churned water is white in flecks, no finer than the pixels can hold, each in its own time.
   if (churn > 0.0) {
     float grain = max(0.5, 2.5 * covers);
@@ -713,6 +726,7 @@ export function create(ctx: Context): Piece {
       uRise: { value: ctx.events.rise },
       uRingsOn: { value: 1 },
       uClear: { value: 0.55 },
+      uDeepTone: { value: new THREE.Vector3(0, 1, 0) },
     },
     vertexShader: WATER_VERTEX,
     fragmentShader: WATER_FRAGMENT,
@@ -772,6 +786,8 @@ void main() {
       else if (during('eye-05')) mirrorTone.value.set(0.76, 0.78, 0.8, 1);
       else if (during('eye-03')) mirrorTone.value.set(1.4, 1.26, 1.12, 1);
       else mirrorTone.value.set(1, 1, 1, 1);
+      if (during('eye-03')) (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0.95, 0.55, 0);
+      else (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0, 1, 0);
       centre.x = t - rise;
       // Under the long lens the water round the swell is ringed by its breathing, as far as the eye goes; from over it the rings are few and broken.
       const over = during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0;
