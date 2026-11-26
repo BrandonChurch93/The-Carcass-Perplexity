@@ -581,20 +581,12 @@ void main() {
   float streak = 0.5 + 0.5 * sin(vUv.x * 150.0 + 4.0 * sin(vUv.x * 31.0) + 2.0 * pic.g);
   albedo *= mix(0.72, 1.0, smoothstep(0.25, 0.7, streak));
   albedo = mix(albedo, albedo * vec3(0.55, 0.6, 0.38), 0.4 * smoothstep(0.6, 0.15, vUv.y));
-  // Long dead and wet through: it has taken the tone of the wall it hangs on, darkest on the belly and down the limbs, and only the
-  // ribs and the bones that stand through the hide are paler. Pale all over, it is the brightest thing on the cliff and reads as alive.
+  // The approved picture keeps the hide pale, bone grey against the dark weed, and nothing lies across the trunk. The stain is shade only:
+  // under the spine, where the trunk turns from the light. Darker than that it sinks into the wall late in the shot.
   vec2 pix = vec2(vUv.x * 1448.0, (1.0 - vUv.y) * 1086.0);
   vec2 spine = normalize(vec2(${glslNumber(HUNG.head[0] - HUNG.hip[0])}, ${glslNumber(HUNG.head[1] - HUNG.hip[1])}));
   float under = smoothstep(-50.0, 110.0, dot(pix - vec2(${HUNG.hip.map(glslNumber).join(', ')}), vec2(-spine.y, spine.x)));
-  float bone = smoothstep(0.4, 0.95, h);
-  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(0.8, 0.78, 0.6), 0.5 * under * vTrunk);
-  albedo *= mix(0.6, mix(0.68, 0.4, under), vTrunk) * (1.0 + 0.5 * bone);
-  // The weed that holds it: dark strands wound across the trunk and a leg, where it hangs now.
-  float lie = vHang.y - 100.0;
-  float weed = 1.0 - smoothstep(9.0, 13.0, abs(vHang.x - 400.0 - 0.18 * lie - 9.0 * sin(vHang.y * 0.021)));
-  weed = max(weed, 1.0 - smoothstep(11.0, 16.0, abs(vHang.x - 525.0 - 0.05 * lie - 12.0 * sin(vHang.y * 0.017 + 2.0))));
-  weed = max(weed, 1.0 - smoothstep(8.0, 12.0, abs(vHang.x - 665.0 + 0.12 * lie - 8.0 * sin(vHang.y * 0.026 + 4.0))));
-  albedo = mix(albedo, vec3(0.02, 0.024, 0.012), 0.92 * weed * smoothstep(130.0, 210.0, vHang.y));
+  albedo *= 1.0 - 0.22 * under * vTrunk;
   // The hide is lit where the picture lay, by the lie of the hide: asked from where it now hangs, a metre or two out, the land's coarse bake
   // answers for another place at every fold. The form under the hide then turns that light: what faces the sky and the sun is brighter, what
   // faces down or hangs close to the face and behind the trunk is darker.
