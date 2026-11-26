@@ -11,7 +11,7 @@ import { bakeGrain, bakePlates } from './tiles';
 export const PARTS = ['land', 'crust'] as const;
 
 /** The patch of thin crust that is built finely: its middle and half sizes along the establishing view's forward and right. */
-const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [number, number], cell: 0.04 };
+const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [number, number], cell: 0.03 };
 /** The foot of the rock rise the first lens looks down on, built finely for the same reason. */
 /** The bank the third lens lies on, a hand above the salt. */
 const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.02 };
@@ -162,7 +162,7 @@ export function create(ctx: Context): Piece {
       tFieldFar: { value: field.far },
       tSilt: { value: ctx.assets.texture('mat/silt.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tSiltN: { value: ctx.assets.texture('mat/silt-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
-      tPan: { value: ctx.assets.texture('mat/pan.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tPan: { value: ctx.assets.texture('mat/pan.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tPanN: { value: ctx.assets.texture('mat/pan-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tSlick: { value: ctx.assets.texture('mat/slick.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tSlickN: { value: ctx.assets.texture('mat/slick-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },

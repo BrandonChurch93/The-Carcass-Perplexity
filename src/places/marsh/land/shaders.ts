@@ -59,11 +59,11 @@ vec2 panSheet(vec2 xz, vec2 r, out vec2 turn) {
   turn = vec2(cos(a), sin(a));
   return vec2(turn.x * xz.x - turn.y * xz.y, turn.y * xz.x + turn.x * xz.y) / vec2(3.0, 2.0) + vec2(r.y, fract(r.x * 7.31 + r.y * 3.17));
 }
-// Thin crust: the pans are plates lying loose on the mud. Each has drawn back from its edge by its own measure (one in ten is gone
+// Thin crust: the pans are plates lying loose on the mud. Each has drawn back from its edge by its own measure (one in sixteen is gone
 // altogether), and each is tipped its own way.
-float panGap(float thin, vec2 r) { return smoothstep(0.0, 0.5, thin) * (0.012 + 0.15 * r.x * r.x + 3.0 * step(r.y, 0.1)); }
+float panGap(float thin, vec2 r) { return smoothstep(0.0, 0.5, thin) * (0.012 + 0.15 * r.x * r.x + 3.0 * step(r.y, 0.06)); }
 vec2 panTilt(vec2 r) { return (fract(r * 7.13 + r.yx * 3.71) - 0.5) * 0.2; }
-float panLift(vec2 r, vec2 c) { return clamp(dot(panTilt(r), c), -0.015, 0.07) + 0.012; }
+float panLift(vec2 r, vec2 c) { return clamp(dot(panTilt(r), c), -0.015, 0.045) + 0.012; }
 `;
 
 // The heights the fine patches are raised by, read at a vertex. y0 is the ground's own height there.
@@ -80,15 +80,17 @@ float reliefAt(vec2 xz, float y0) {
   vec2 dir;
   vec2 r;
   vec2 turn;
-  panAt(xz + (textureLod(tGrain, xz / 1.9, 0.0).rg - 0.5) * 0.35, PAN, e, c, dir, r);
+  panAt(xz + (vec2(textureLod(tGrain, xz / 7.6, 3.0).r, textureLod(tGrain, xz.yx / 9.1 + 0.37, 3.0).r) - 0.5) * 0.7, PAN, e, c, dir, r);
   float sh = textureLod(tPanN, panSheet(xz, r, turn), log2(uCell * 512.0)).b;
-  float ep = e + (sh - 0.5) * 0.06 - panGap(thin, r);
+  float k = smoothstep(0.0, 0.5, thin);
+  // (The mesh takes the edge without the sheet's grain: a grain finer than the mesh would comb it.)
+  float ep = e + (sh - 0.5) * 0.06 * (1.0 - k) - panGap(thin, r);
+  if (k > 0.0) ep += (textureLod(tGrain, xz / 2.5 + 0.23, 3.0).r - 0.5) * 0.16 * k;
   // A pan's rim stands two fingers over it.
   float rim = 1.0 - smoothstep(0.0, (0.03 + 0.04 * r.x) * 1.6, ep);
   float up = ((sh - 0.45) * 0.02 + 0.022 * rim) * smoothstep(-0.05, 0.25, y0);
-  float k = smoothstep(0.0, 0.5, thin);
   // (A plate of the thin crust stands on the mud by its own tilt: one edge lifted, the other down in it.)
-  if (k > 0.0) up = mix(up, mix(-0.035, (sh - 0.45) * 0.012 + 0.02 * rim + panLift(r, c), smoothstep(-0.02, 0.01, ep)), k);
+  if (k > 0.0) up = mix(up, mix(-0.035, (sh - 0.45) * 0.003 + 0.006 * rim + panLift(r, c), smoothstep(-0.05, 0.02, ep)), k);
   // (The rock's blocks are in the mesh's own heights: nothing is added to them here.)
   up *= 1.0 - rock;
   return up;
@@ -201,7 +203,7 @@ void main() {
   float footM = 0.0;
   float slab = 1.0;
   float ep = 1.0;
-  float aa = 0.01;
+  float ea = 0.01;
   float lift = 0.0;
   vec2 tilt = vec2(0.0);
   if (big < 1.0) {
@@ -210,23 +212,42 @@ void main() {
     vec2 pdir;
     vec2 pr;
     vec2 turn;
-    panAt(p.xz + (fine.rg - 0.5) * 0.35, PAN, e, pc, pdir, pr);
+    // (The edges wander by the grain's smooth height, read twice and wide: anything finer than the mesh would comb the plates' edges.)
+    panAt(p.xz + (vec2(textureLod(tGrain, p.xz / 7.6, 3.0).r, textureLod(tGrain, p.xz.yx / 9.1 + 0.37, 3.0).r) - 0.5) * 0.7, PAN, e, pc, pdir, pr);
     vec2 uv = panSheet(p.xz, pr, turn);
     vec2 ax = vec2(turn.x * px.x - turn.y * px.y, turn.y * px.x + turn.x * px.y) / vec2(3.0, 2.0);
     vec2 ay = vec2(turn.x * py.x - turn.y * py.y, turn.y * py.x + turn.x * py.y) / vec2(3.0, 2.0);
+    // (Seen along the ground a pixel is many times longer than it is wide: the sheet is read no more than three widths long, or it
+    // would be smeared to the softness of snow.)
+    float la = length(ax);
+    float lb = length(ay);
+    float lo = min(la, lb) * 3.0;
+    ax *= min(1.0, lo / max(la, 1e-7));
+    ay *= min(1.0, lo / max(lb, 1e-7));
     vec4 nA = textureGrad(tPanN, uv, ax, ay);
     sheet = textureGrad(tPan, uv, ax, ay).rgb / PAN_MEAN;
     sh = nA.b;
     vec2 sl = nA.rg - 0.5;
+    // Under a lens the sheet's grain is coarser than a pixel: the same sheet lies on it again a fifth the size, as the crystals.
+    float crystal = smoothstep(0.0016, 0.0006, min(length(px), length(py)));
+    if (crystal > 0.0) {
+      vec2 uc = uv * 5.3 + pr.yx;
+      vec4 nC = textureGrad(tPanN, uc, ax * 5.3, ay * 5.3);
+      sheet *= mix(vec3(1.0), 0.45 + 0.55 * textureGrad(tPan, uc, ax * 5.3, ay * 5.3).rgb / PAN_MEAN, crystal);
+      sl += (nC.rg - 0.5) * 0.7 * crystal;
+      sh += (nC.b - 0.5) * 0.15 * crystal;
+    }
     bend = vec2(turn.x * sl.x + turn.y * sl.y, turn.x * sl.y - turn.y * sl.x) * 2.4;
     // (The rim is knobbed: its edge follows the lumps of the crust.)
-    ep = e + (sh - 0.5) * 0.06 - panGap(thin, pr);
-    aa = max(abs(dot(pdir, px)) + abs(dot(pdir, py)), 0.002);
+    ep = e + (sh - 0.5) * 0.06 * (1.0 - 0.75 * k) - panGap(thin, pr);
+    // (A broken plate's edge is ragged.)
+    if (k > 0.0) ep += (textureLod(tGrain, p.xz / 2.5 + 0.23, 3.0).r - 0.5) * 0.16 * k;
+    ea = max(abs(dot(pdir, px)) + abs(dot(pdir, py)), 0.002);
     float rimW = 0.03 + 0.04 * pr.x;
-    slab = smoothstep(-aa, aa, ep);
-    rim = smoothstep(rimW + aa, rimW * 0.5 - aa, ep) * slab;
+    slab = smoothstep(-ea, ea, ep);
+    rim = smoothstep(rimW + ea, rimW * 0.5 - ea, ep) * slab;
     prof = (1.0 - smoothstep(0.0, rimW * 1.6, ep)) * slab;
-    footM = smoothstep(rimW * 3.0 + aa, rimW * 1.3, ep) * (1.0 - rim) * slab;
+    footM = smoothstep(rimW * 3.0 + ea, rimW * 1.3, ep) * (1.0 - rim) * slab;
     bend -= pdir * prof * (1.0 - prof) * 5.0;
     tone = 0.88 + 0.24 * pr.y;
     tilt = panTilt(pr);
@@ -293,9 +314,9 @@ void main() {
     }
     float shade = smoothstep(-(0.03 + max(lift, 0.0) * 1.6), 0.0, ep) * (1.0 - big);
     mudCol *= 1.0 - 0.65 * shade;
-    float section = smoothstep(-0.016 - aa, -0.016 + aa, ep) * smoothstep(0.005, 0.035, lift) * (1.0 - big);
-    mudCol = mix(mudCol, mix(vec3(0.2, 0.09, 0.07), vec3(0.47, 0.43, 0.4), smoothstep(-0.012, -0.004, ep)) * (0.75 + 0.5 * sh), section);
-    colour = mix(colour, mix(mudCol, colour * vec3(0.88, 0.83, 0.8), slab), k);
+    float section = smoothstep(-0.03 - ea, -0.03 + ea, ep) * (0.35 + 0.65 * smoothstep(0.005, 0.035, lift)) * (1.0 - big);
+    mudCol = mix(mudCol, mix(vec3(0.15, 0.07, 0.055), vec3(0.44, 0.4, 0.37), smoothstep(-0.014, -0.004, ep)) * (0.75 + 0.5 * sh), section);
+    colour = mix(colour, mix(mudCol, mix(colour * vec3(0.66, 0.59, 0.55), colour, rim * 0.45), slab), k);
     hgt = mix(hgt, mix(0.08 + 0.3 * nS.b, max(hgt, 0.5), slab), k);
     bend = mix(bend, mix(grain, bend - tilt * 4.0, slab), k);
     occ = mix(occ, mix(0.72 - 0.3 * shade, occ, slab), k);
@@ -362,10 +383,10 @@ void main() {
   // A face too steep for a picture laid on from above shows the crust's own section: salt in thin beds, stained between them.
   // (A lip that only leans is already too steep for it when it faces the lens: the picture's grain would run down it in streaks.)
   vec3 gn = normalize(cross(dFdx(p), dFdy(p)));
-  float sheer = smoothstep(0.86, 0.62, min(abs(gn.y), ng.y)) * (1.0 - rock) * smoothstep(120.0, 60.0, dist);
+  float sheer = smoothstep(0.86, 0.62, min(abs(gn.y), ng.y)) * (1.0 - rock) * smoothstep(120.0, 60.0, dist) * (1.0 - k);
   if (sheer > 0.0) {
     vec4 gb = texture2D(tGrain, vec2(dot(p.xz, vec2(0.7, 0.71)) / 0.9, p.y / 0.11));
-    vec3 section = mix(vec3(0.3, 0.13, 0.11), vec3(0.6, 0.55, 0.51), smoothstep(0.35, 0.65, gb.r)) * (0.7 + 0.5 * gb.g);
+    vec3 section = mix(vec3(0.17, 0.085, 0.07), vec3(0.4, 0.365, 0.34), 0.35 * smoothstep(0.35, 0.65, gb.r) + 0.65 * smoothstep(0.03, 0.07, p.y - vBase + 0.02)) * (0.7 + 0.5 * gb.g);
     // (Its foot stands in the brine and is dark with it.)
     section = mix(vec3(0.085, 0.04, 0.032), section, smoothstep(0.02, 0.16, p.y + (gb.b - 0.5) * 0.08));
     colour = mix(colour, section, sheer);
@@ -465,7 +486,7 @@ void main() {
   rough = mix(rough, 0.82, soaked);
   // Round every pool, a stride back from its wet margin, the brine has left its salt: a pale rim, broken, wider here and narrower there.
   float rimAt = wetTo + 0.3 + 0.5 * mid.r;
-  float salted = smoothstep(wetTo * 0.5, wetTo, tw) * smoothstep(rimAt + 0.9, rimAt, t) * smoothstep(0.3, 0.55, mid.b * 0.6 + fine.b * 0.4) * (1.0 - rock) * step(0.0, s) * (1.0 - flood) * (1.0 - churn) * (1.0 - 0.8 * sheer);
+  float salted = smoothstep(wetTo * 0.5, wetTo, tw) * smoothstep(rimAt + 0.9, rimAt, t) * smoothstep(0.3, 0.55, mid.b * 0.6 + fine.b * 0.4) * (1.0 - rock) * step(0.0, s) * (1.0 - flood) * (1.0 - churn) * (1.0 - 0.8 * sheer) * (1.0 - 0.85 * k);
   colour = mix(colour, vec3(0.53, 0.512, 0.495) * (0.72 + 0.45 * hgt) * mix(1.0, dot(sheet, vec3(0.3333)), 0.45), salted * mix(0.7, 0.55, close));
   // An overcast is not the same all round: the quarter away from the rain is the brighter, and every lump and lip shows it.
   vec2 bright = vec2(-0.86, 0.5);
