@@ -13,11 +13,11 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 - `sky`: a dome in `air/index.ts`; `skyCloud(from, d)` in `shared/glsl.ts` lays `mat/sky.jpg` by heading and height, turning 0.2 degrees a second; bright parts are multiplied up so the break burns.
 - `air`: one volume pass, 8 steps, in `air/index.ts`; density two layers (`uAir`), light `uHaze` plus sun with a forward lobe; sources come through `ctx.sources`.
 - `cloud`: no geometry of its own: the drifting cloud shadow (`cloudShade`, a baked mask plus one bright break) in `shared/rig.ts`.
-- Light: `SUN` in `shared/anchors.ts` is low and ahead (yaw 36, pitch 21 degrees), sky fill in `shared/rig.ts`. `rigShade` and `rigOut` in `shared/glsl.ts`.
+- Light: `SUN` in `shared/anchors.ts` is low and from the right (yaw 58, pitch 20 degrees; the sky break stays at yaw 36), sky fill in `shared/rig.ts`. `rigShade` and `rigOut` in `shared/glsl.ts`.
 
 ## Tried and did not work
 
-- Sun behind the camera: even grey, no glare. Moved ahead on the director's order.
+- Sun behind the camera: even grey, no glare. Sun ahead at yaw 36 (version 2): glare, but every face toward the lens unlit, judged flat and dull in round 10. Now at the side.
 - Cutting the sky fill by half with the sun ahead: everything facing the lens went black. The fill was raised instead (about 1.65 times the first value).
 - Finding the bars before the wide camera by noise alone (`out/work/bedfit.ts`): no bar came to the right of the lens. They are laid by hand (`LAID` in `land/height.ts`).
 - Wet film thresholds tight to the pool level: the floor read as dry pebbles. The bed was lowered under the pool instead.
@@ -29,7 +29,7 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 
 ## Still wrong beside the approved pictures, worst first
 
-- ribs-0: the blades are dark shapes with faint beds; the approved ones are pale sunlit stone with orange lichen, arches and broken stacks. With the sun ahead no face toward the lens is lit. This is the largest gap and it is a question of light direction, not of detail.
+- ribs-0: the blades are dark horns with faint beds and a lit right edge; the approved ones are pale sunlit arches that close, with orange lichen and broken stacks. This is the largest gap: shape first, then light.
 - ribs-0: the water sheet is still too clean and too large. Few weed heaps, no braided runnels across the near floor, the bar on the right is one even field of shingle with dark dots for stones.
 - ribs-0: the near cliff `L1` has weed in pillowed tiers, not hanging ropes; its pale ledged top is brown and striped.
 - ribs-0: middle and far blades are flat cut-outs in haze: no arch, no pierced stack, no second outline behind.
@@ -41,7 +41,15 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 
 ## Round 10 (judged on version 2: match 2, filmed 3, motion 5), item by item
 
-ROUND10
+- Invalid pixels (M1) at 1241 and 2081: on the current tree `still --diag invalid --tier final --format uhd` showed none at ribs-0 and at ribs-1 (00:30 UTC, final tree; I read the diag picture as one even grey, which I take to mean no pixel is marked). Cause as far as known: the partner's shaders read pictures after a `discard`; my mirror decal had the same fault and is fixed. A full `measure` at final uhd did not finish in 8 minutes and was stopped: run it first.
+- Light: tried and changed. Sky is now the dark storm picture `mat/sky.jpg` with its bright parts multiplied up; the sun moved again, to the right side (58 degrees right of north, 20 up), so right flanks are lit. Not reached: sunlit arch faces as in the approved picture; the colony and the bore keys now lie mostly in shade.
+- Rock textures (smeared, tiled, fur-like): tried. All rock, weed, flat and boulders now read the Builder's `mat/` pictures at two scales. Still mapped by the surface's own coordinates, not on three axes, so stretch remains on steep relief; faceted outlines not touched.
+- Blades as closing arches: not reached. The layout is still single horns; no arch, no window stack.
+- Flat: tried. Weed heaps in the water, rubble at blade feet, contact rings weaker, blade mirror thinner. Not reached: pebble beds blended in, rivulets, the cross-hatched bump (two rotated scales of one normal picture).
+- Kelp wall (ribs-1): only recoloured by `mat/weed.jpg`. No straps, no running water, no drops.
+- Colony as a stepped cliff seen along its face: not reached (needs the camera and the buttress shape).
+- Cloud moves in the held frame: changed (0.35 degrees a second, warp works four times faster). The grid in the sky: the air's per-pixel jitter is halved, not removed; the volume is drawn at half size, which is where the grid comes from.
+- Pushing: GitHub refused my pushes from 00:16 UTC (no credential in the sandbox). Commits after `2290395` went to the director as a bundle.
 
 ## Staged by shot
 
@@ -49,20 +57,20 @@ Nothing of mine is staged by time or by shot. Three things are placed by a key c
 
 ## Cost, seconds a sample at 3840 x 2160, key ribs-0, draft tier
 
-Measured 00:10 UTC with `npm run -s cost -- --key ribs-0 --format uhd --tier draft --parts ...`, each part alone less the empty frame (1.86 s).
+Measured 00:34 UTC on the final tree with `npm run -s cost -- --key ribs-0 --format uhd --tier draft --parts ...`, each part alone less the empty frame (1.93 s). Runs differ by about 0.1 s a part.
 
-- Mine, 4.10 in all (share 4.5): `land` 1.49, `ribs` 1.35, `rocks` 0.66, `weed` 0.31, `sky` 0.26, `ledges` 0.03. `air` and `cloud` are not listed by the tool: they ride in the empty frame and in each part's shading.
-- Partner, 5.18 in all (share 2.5): `sea` 1.94, `runnels` 1.54, `kite-wings` 1.16, `bore` 0.34, `drowned` 0.20, `surf` 0.00.
-- The whole frame: 10.18 s against the aim of 7.
+- Mine, 3.44 in all (share 4.5): `land` 1.39, `ribs` 1.24, `rocks` 0.52, `weed` 0.23, `sky` 0.06, `ledges` 0.00. `air` and `cloud` are not listed by the tool: they ride in the empty frame and in each part's shading.
+- Partner, 4.52 in all (share 2.5): `sea` 1.83, `runnels` 1.31, `kite-wings` 1.30, `surf` 0.04, `bore` 0.04, `drowned` 0.00.
+- The whole frame: 10.05 s against the aim of 7.
 
 No cheaper version sits behind a constant: nothing of mine was built over its share.
 
 ## What I would do next, in order
 
-1. Decide the light once: either the sun ahead (dark blades, glare) as now, or a side light from the right as in the approved picture, which lights the blade faces. Then tune `SUN`, the fill and `uHaze` together on ribs-0.
+1. Run the full `measure` at final uhd and close M1 for certain. Then tune `SUN` (now at the side), the fill and `uHaze` together on ribs-0 until the blade faces are sunlit as in the approved picture.
 2. Break the water sheet: more bars and islets in `bed`, weed heaps as proper lumps (`weedLump`), runnels.
 3. `L1`: hang the weed as ropes (long narrow strips from `skirtShape`), pale ledged rock above the tide band.
 4. Blades: an arch between two blades and broken stacks at the feet as real geometry; a second row behind in the haze.
 5. Colony: irregular treads, white runs by `mat/ledge.jpg` height, lichen in patches.
 6. Ask the Builder for a far backplate of blades in haze for ribs-0 and ribs-4.
-7. Bring the whole frame from 10.2 s toward 7: the pool sheet and the sea are the largest; of mine, the floor (two pictures at two scales plus the mirror of the sky) and the blade rock.
+7. Bring the whole frame from 10 s toward 7: the pool sheet and the sea are the largest; of mine, the floor (two pictures at two scales plus the mirror of the sky) and the blade rock.
