@@ -193,14 +193,11 @@ void main() {
     // The wall: each lava flow reads the cliff picture at its own place, so the bands run level and no two repeat.
     #ifdef BENCH
     vec4 flow = PICK(tStrata, vec2((vWorld.y + 3.0 * (big - 0.5)) / 340.0, 0.5), vec2(wx.y / 340.0, 0.0), vec2(wy.y / 340.0, 0.0));
-    float shift = flow.r * 7.0;
+    float shift = 0.0;
     const float wander = 0.0;
     #else
-    // The wall's flows dip and wander (vLand.y, the same number the shape was cut with), and the cliff picture wanders with them:
-    // no band of it is a level line, and no flow starts the picture afresh.
-    vec4 flow = PICK(tStrata, vec2((vWorld.y + vLand.y) / 340.0, 0.5), vec2(wx.y / 340.0, 0.0), vec2(wy.y / 340.0, 0.0));
+    // The wall is massive rock broken along joints, and no stack of beds: nothing of it is read by its height.
     float shift = 0.0;
-    // The cliff picture lies level: its beds are beds. Sheared along the flows' dip its grain ran slantwise in patches.
     const float wander = 0.0;
     #endif
     #ifndef BENCH
@@ -209,12 +206,12 @@ void main() {
     float alcove = smoothstep(${(MOUTH.width / 2 + 27).toFixed(1)}, ${(MOUTH.width / 2 + 7).toFixed(1)}, beside) * smoothstep(${(MOUTH.z - 72).toFixed(1)}, ${(MOUTH.z - 58).toFixed(1)}, vWorld.z);
     shift *= 1.0 - alcove;
     #endif
-    // The low crags of the bench are the same rock seen close: the picture at a fifth of the size.
+    // The picture is three wide to two tall. The low crags of the bench are the same rock seen close: the picture at an eighth of the size.
     #ifdef BENCH
-    const float CLIFF = 13.0;
+    const vec2 CLIFF = vec2(19.5, 13.0);
     #else
-    // The wall's picture is laid large: its beds are flows ten to twenty metres thick, not strata.
-    const float CLIFF = 140.0;
+    // On the wall a texel of it is a hand's width: what the long lens resolves.
+    const vec2 CLIFF = vec2(150.0, 100.0);
     #endif
     cliffNh = vec3(0.0);
     if (kx > 0.003) {
@@ -250,9 +247,8 @@ void main() {
     }
     #endif
     #ifndef BENCH
-    // The beds of the picture count for less than the masses of the rock, and what the large picture cannot hold is read again
-    // at the scale of a block: broken faces a metre or two across, with their own shade.
-    cliff = mix(vec3(dot(cliff, vec3(0.3333))), cliff, 0.6) * 0.5 + 0.5 * vec3(0.105, 0.096, 0.088);
+    // What the large picture cannot hold is read again at the scale of a block: broken faces a metre or two across, with their own shade.
+    cliff *= 1.3;
     if (px < 0.7) {
       // Laid on both upright planes and crossed by the face's direction, as the cliff picture is.
       vec3 frz = PICK(tBoulderNh, vWorld.zy / 17.0 + vec2(0.37, 0.11), wx.zy / 17.0, wy.zy / 17.0).rgb;
@@ -276,55 +272,18 @@ void main() {
     // Each flow sits on the rubble of the one below and overhangs it a little: a line of shade at its foot.
     ledge = 0.55 + 0.45 * smoothstep(0.0, 0.09, flow.b);
     #else
-    // The wall is one dark rock in masses tens of metres across, some sooted, some weathered paler; the flows only tint it.
+    // The wall is one dark rock in masses tens of metres across, some sooted, some weathered paler.
     float mass = vnoise3(vWorld / 43.0 + 2.7);
-    cliff *= (0.93 + 0.14 * flow.g) * (0.87 + 0.26 * streak) * (0.5 + 1.0 * mass);
-    // The shade under each flow's foot is there in stretches, where the flow overhangs, and not along the whole wall.
-    float hangs = smoothstep(0.32, 0.6, vnoise(vec2((vWorld.x - vWorld.z) / 11.0, flow.r * 91.0)));
-    ledge = 1.0 - 0.6 * hangs * (1.0 - smoothstep(0.0, 0.12, flow.b));
-    // Fractures: joints that cut the wall into masses some metres across, and finer ones between them.
-    // The rock between two fractures is a face of its own that leans its own way, so a light from the side picks the faces out.
-    // They break the face into blocks a little taller than wide, not into curtains.
-    vec3 fp = vec3(vWorld.x, vWorld.y * 0.55, vWorld.z);
-    float f1 = vnoise3(fp / 7.5 + 3.1);
-    vec3 along = normalize(vec3(-n0.z, 0.0, n0.x) + 1e-4);
-    float w1 = 0.022 + px / 7.5;
-    float crack = (1.0 - smoothstep(0.4 * w1, w1, abs(f1 - 0.5))) * smoothstep(1.6, 0.5, px);
-    float f2 = vnoise3(fp / 2.3 + 9.7);
-    float w2 = 0.03 + px / 2.3;
-    float fineCrack = (1.0 - smoothstep(0.4 * w2, w2, abs(f2 - 0.5))) * smoothstep(0.5, 0.12, px);
-    ledge *= (1.0 - 0.7 * crack) * (1.0 - 0.6 * fineCrack);
-    lean += along * (f1 - 0.5) * 1.5 * smoothstep(1.6, 0.5, px);
-    cliff *= mix(0.84, 1.14, smoothstep(0.42, 0.58, f2));
-    // A thick flow cools into columns: upright prisms two or three metres across in its lower two thirds, each face leaning its own way,
-    // a black joint between them. The rubbly top of the flow has none.
-    float run = (kx > 0.5 ? vWorld.z : vWorld.x) + 0.3 * sin(vWorld.y * 0.9 + 7.0 * flow.r);
-    float c1 = vnoise(vec2(run / 1.9 + 9.0 * flow.r, flow.r * 53.0));
-    float columns = smoothstep(0.3, 0.55, flow.a) * smoothstep(0.78, 0.6, flow.b) * smoothstep(1.3, 0.45, px) * smoothstep(0.35, 0.6, vnoise(vWorld.xz / 71.0 + 6.2));
-    float wj = 0.05 + px / 1.9;
-    lean += along * (c1 - 0.5) * 0.9 * columns;
-    ledge *= 1.0 - 0.4 * columns * (1.0 - smoothstep(0.3 * wj, wj, abs(c1 - 0.5)));
-    cliff *= 1.0 - 0.22 * columns;
+    cliff *= (0.87 + 0.26 * streak) * (0.5 + 1.0 * mass);
     // A few fresh breaks, buff against the soot.
-    float fresh = smoothstep(0.7, 0.82, vnoise(vec2(vWorld.x + vWorld.z, vWorld.y * 1.3) / 13.0 + 5.3)) * smoothstep(0.5, 0.62, f2);
+    float fresh = smoothstep(0.7, 0.82, vnoise(vec2(vWorld.x + vWorld.z, vWorld.y * 1.3) / 13.0 + 5.3)) * smoothstep(0.45, 0.65, cliffNh.b);
     cliff = mix(cliff, vec3(0.2, 0.172, 0.135) * (0.55 + 0.9 * cliffNh.b), 0.55 * fresh);
-    #endif
-    #ifndef BENCH
-    // What a long lens resolves: the overhang's shade deepens and rubble lies pale on the ledge at the top of each flow.
-    float fineLens = smoothstep(0.3, 0.1, px);
-    ledge = mix(ledge, 0.28 + 0.72 * smoothstep(0.0, 0.16, flow.b), fineLens * smoothstep(96.0, 124.0, beside));
-    cliff = mix(cliff, vec3(0.21, 0.2, 0.185) * (0.5 + cliffNh.b), 0.8 * fineLens * smoothstep(0.8, 0.95, flow.b));
-    // Two or three of those ledges are broken back to fresh rock, buff and cream, and catch the fire's light.
+    // What a long lens resolves: here and there a block is broken back to fresh rock, buff and cream, and catches the fire's light.
     // Right of the mouth, and on the wall that stands behind the ramp's head left of it; not on the ramp.
+    float fineLens = smoothstep(0.3, 0.1, px);
     float buffSide = max(smoothstep(66.0, 94.0, vWorld.x - (${MOUTH.x.toFixed(1)})), smoothstep(-100.0, -118.0, vWorld.x) * smoothstep(-215.0, -180.0, vWorld.x) * smoothstep(60.0, 85.0, vWorld.y));
-    float buff = smoothstep(0.54, 0.66, vnoise3(vWorld / vec3(23.0, 9.0, 23.0) + 1.3)) * smoothstep(0.45, 0.8, flow.b + 0.3 * (cliffNh.b - 0.5));
+    float buff = smoothstep(0.56, 0.68, vnoise3(vWorld / vec3(17.0, 11.0, 17.0) + 1.3)) * smoothstep(0.45, 0.7, cliffNh.b);
     cliff = mix(cliff, vec3(0.5, 0.37, 0.19) * (0.5 + cliffNh.b), 0.85 * fineLens * buff * buffSide);
-    float h = kx > 0.5 ? vWorld.z : vWorld.x;
-    // Gullies: narrow chutes cut back into the face every thirty metres or so, in shade, running down through many flows.
-    float gn = vnoise(vec2(h / 26.0, 3.7 + vWorld.y / 420.0));
-    float gully = smoothstep(0.075, 0.015, abs(gn - 0.5)) * smoothstep(0.9, 0.3, px) * smoothstep(96.0, 124.0, beside);
-    cliff *= 1.0 - 0.45 * gully;
-    ledge *= 1.0 - 0.5 * gully;
     #endif
   }
 
@@ -408,7 +367,12 @@ void main() {
 
   vec3 albedo = mix(plain, cliff, steep);
   // The pictures' rock leans warm (red over blue near 1.2): charcoal with a little brown, never blue.
+  #ifdef BENCH
   albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(1.07, 0.99, 0.92), 0.8);
+  #else
+  // The wall keeps the browns and rusts of its picture.
+  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(1.07, 0.99, 0.92), mix(0.8, 0.4, steep));
+  #endif
   #ifdef BENCH
   // The faces of the bench's crags are broken rock with ash on every ledge, paler than the glassy flats.
   albedo *= mix(${BENCH_TONE.toFixed(2)}, ${BENCH_FACE_TONE.toFixed(2)}, steep);
@@ -693,10 +657,6 @@ void main() {
   #ifdef STAGED
   // The staged butte of the feeding picture stands dark against its smoke: sooted brown rock, a little paler on its ledges and its talus.
   albedo *= vec3(0.68, 0.6, 0.55) * mix(1.25, 0.9, steep);
-  // Its cliffs are bedded: flows a man or two thick, one dark and the next pale, that wander a little along the face.
-  float along = dot(vWorld.xz, vec2(0.713, 0.701));
-  float bed = vnoise(vec2((vWorld.y + 1.5 * vnoise(vec2(along / 14.0, 3.3))) / 1.7, along / 55.0));
-  albedo *= mix(1.0, 0.62 + 0.62 * smoothstep(0.3, 0.7, bed), steep);
   #endif
   // The fire lies low and its light comes in along the ground: on rough level ground the crowns of the rubble take it and the pits between them
   // lie in each other's shade. A face that stands up takes it whole.
