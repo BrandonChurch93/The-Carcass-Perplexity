@@ -158,6 +158,9 @@ float contactAt(vec3 p) {
 // The flash of a stroke on a face: one light from the channel, by direction, with the land's own shadow. It is what a camera sees of a
 // strike: for a frame the faces that see the channel are lit blue-white and the rest keep the dusk. Nothing when no stroke burns.
 const vec3 STRIKE_COLOUR = vec3(0.74, 0.8, 1.0);
+// What a cloud lit from inside throws on the land, and how much of its glow comes down as light.
+const vec3 INNER_COLOUR = vec3(0.62, 0.5, 1.0);
+const float INNER_CAST = 0.3;
 // The light falls off with the square of the distance past this many metres: the channel is a kilometre tall and lights the ridge as a line does.
 const float STRIKE_REACH = 1500.0;
 vec3 strikeIrradiance(vec3 p, vec3 n) {
@@ -210,6 +213,11 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   e = e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / (EMITTER_CEILING * (1.0 + 12.0 * lift)));
   // The stroke's own flash is not held under the ceiling: it has direction and shadow, and what it does not reach stays dark.
   if (uStrikeAt.w > 0.0) e += strikeIrradiance(p, n);
+  // A cloud lit from inside, while no stroke burns: a low violet light with no shadow on what looks at it, wrapped as the round lights are.
+  else if (uStrikeTop.w > 0.0) {
+    vec3 to = normalize(0.5 * (uStrikeTip.xyz + uStrikeTop.xyz) - p);
+    e += INNER_COLOUR * (uStrikeTop.w * INNER_CAST * clamp((dot(n, to) + 0.25) / 1.25, 0.0, 1.0));
+  }
   return e;
 }
 
