@@ -5,11 +5,12 @@ import { terrain } from '../../../core/blockout';
 import { DEPTH, NEAR, RAD, SEA, bearingOf, farGround, ground, lerp, midGround, rimRadius, smooth } from '../land';
 import { SMALLER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
+import { createCliff } from '../air/sky';
 import { bakeNear } from './field';
 import { createRock, type Surface } from './rock';
 import { block, rib, type Rib } from './ribs';
 import { buildWall, ledge } from './wall';
-import { cliff, collar, heap, mergeGeometries, open, talusHeight } from './shapes';
+import { collar, heap, mergeGeometries, open, talusHeight } from './shapes';
 
 export const PARTS: readonly string[] = ['land', 'shaft', 'hoops', 'slabs', 'cliff'];
 
@@ -47,8 +48,8 @@ export function create(ctx: Context): Piece {
 
   // The shelf: fine round the shaft, coarse out to the haze.
   const land = new THREE.Group();
-  land.add(mesh(open(nearMap.mesh(960)), rock.shelf));
-  const mid = terrain(NEAR, NEAR, 500, 500, midGround);
+  land.add(mesh(open(nearMap.mesh(680)), rock.shelf));
+  const mid = terrain(NEAR, NEAR, 300, 300, midGround);
   mid.computeVertexNormals();
   land.add(mesh(open(mid), rock.shelf));
   const far = terrain(WORLD, WORLD, 160, 160, farGround);
@@ -112,14 +113,16 @@ export function create(ctx: Context): Piece {
   slabs.add(mesh(heap(), rubble));
   ctx.scene.add(ctx.parts.built('slabs', slabs));
 
-  // The cliff, 3 km on.
-  ctx.scene.add(ctx.parts.built('cliff', mesh(cliff(), rock.cliff)));
+  // The cliff, 3 km on: the far picture's own, laid on the sky (air/sky.ts).
+  const farCliff = createCliff(ctx);
+  ctx.scene.add(ctx.parts.built('cliff', farCliff.mesh));
 
   return {
     dispose: () => {
       for (const g of disposable) g.dispose();
       rock.dispose();
       nearMap.dispose();
+      farCliff.dispose();
     },
   };
 }

@@ -107,26 +107,7 @@ export function create(ctx: Context): Piece {
     [-13, 0.5, -2, 17, 3.2, 18, 0.004],
     [-43, 2.6, -8, 12, 2.4, 9, 0.012],
   ] as const) {
-    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.9, repeat: 13, open: 0.7, climb: 1.6, sun: 1.0 });
-  }
-  // The fog that pours from the cave and down the scree under it, and lies along the foot of the cliff.
-  const turn = Math.atan2(-0.984, -0.177);
-  for (const [s, p, lift, long, tall, deep, dense] of [
-    [60, -190, 40, 560, 45, 150, 0.0045],
-    [240, -420, 30, 520, 45, 210, 0.0045],
-    [520, -700, 10, 700, 36, 300, 0.004],
-    [-900, -620, 16, 900, 40, 260, 0.0026],
-  ] as const) {
-    const [x, z] = cliffPoint(s, p);
-    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense: dense * 0.4, repeat: 150, open: 0.72, climb: -3, sun: 0.8 });
-  }
-  // Layers of haze between the shelf and the cliff: long low sheets, one behind the other, that take the foot of the cliff away.
-  for (const [x, z, rx, ry, rz, y] of [
-    [500, -820, 1300, 22, 160, 14],
-    [900, -1350, 1500, 30, 200, 30],
-    [1500, -1750, 1300, 38, 200, 70],
-  ] as const) {
-    bodies.push({ part: 'fog', at: [x, y, z], size: [rx, ry, rz], turn: -0.5, dense: 0.001, repeat: 170, open: 0.8, climb: 0.3, sun: 0.85 });
+    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.45, repeat: 13, open: 0.78, climb: 1.6, sun: 1.0 });
   }
   // The banks that lie out on the flats.
   for (const [x, z, rx, ry, rz] of [
@@ -157,7 +138,7 @@ export function create(ctx: Context): Piece {
       tNoise: { value: noise },
       uShow: { value: show },
       uBreath: { value: breath },
-      uHaze: { value: new THREE.Vector4(0.42e-4, 420, 1.1e-4, 60) },
+      uHaze: { value: new THREE.Vector4(0.08e-4, 420, 0.7e-4, 60) },
       uBodyCount: count,
       uBodyA: { value: bodyA },
       uBodyB: { value: bodyB },

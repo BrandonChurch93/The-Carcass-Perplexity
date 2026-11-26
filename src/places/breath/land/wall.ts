@@ -98,9 +98,9 @@ export function ledge(bearing: number, nth: number): [number, number, number] {
 
 /** The wall as two meshes that share every point: the ribs, and the wall between them. */
 export function buildWall(): { ribs: THREE.BufferGeometry; wall: THREE.BufferGeometry } {
-  const columns = 1504;
-  // 12.5 cm rows for the 42 m a lens can see into; coarser below, in the mist.
-  const fineRows = 336;
+  const columns = 1056;
+  // 17.5 cm rows for the 42 m a lens can see into; coarser below, in the mist.
+  const fineRows = 240;
   const rows = fineRows + 40;
   const count = (columns + 1) * (rows + 1);
   const position = new Float32Array(count * 3);
@@ -108,7 +108,7 @@ export function buildWall(): { ribs: THREE.BufferGeometry; wall: THREE.BufferGeo
   const occ = new Float32Array(count);
   const rib = new Uint8Array(count);
   for (let j = 0; j <= rows; j++) {
-    const depth = j <= fineRows ? j * 0.125 : 42 + ((j - fineRows) / 40) * (DEPTH - 42 + 2);
+    const depth = j <= fineRows ? j * 0.175 : 42 + ((j - fineRows) / 40) * (DEPTH - 42 + 2);
     for (let i = 0; i <= columns; i++) {
       const b = (JOIN - 360 + (i / columns) * 360) * RAD;
       const q = wallPoint(b, depth);
