@@ -1,7 +1,7 @@
-2026-11-26 02:59 UTC
-work at 70af1e0 on agent/spine-storm-2
-03:00 herd cream-white, dead one burn and spikes, kites pale lilac, bolt at spine-3
+2026-11-26 03:36 UTC
+work at 6448c99 on agent/spine-storm-2
+version 2: huddle, dead one, kites, strike
 look-1.jpg = out/work/look-spine-4.jpg
 look-2.jpg = out/work/look-spine-1.jpg
-look-3.jpg = out/work/crop-s0.jpg
+look-3.jpg = out/work/look-spine-2.jpg
 look-4.jpg = out/work/look-spine-3.jpg
