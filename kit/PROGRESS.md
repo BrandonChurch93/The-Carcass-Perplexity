@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 97, 2026-11-26 07:07 UTC:
+Status 98, 2026-11-26 07:29 UTC:
 
-- `01-c-ribs0.jpg`: The Ribs, wide view, approved left, heartbeat of 06:50 right: the flat is wet now with bands that mirror the sky, the blades are bedded rock in courses, the face in the backdrop is gone. Still off: the stones lie evenly like dropped pebbles, the blades are darker and more ribbed than the picture's pale smooth stone, the feeders are bright pink where the picture has thin dark ones
-- `02-c-marsh3.jpg`: The Marsh's wallowers, approved left, version 2 right: the great one stands on a mud bank with a creased hide, the brine is red. Still off: sky and far flats are white where the picture is a warm wet haze, the stalks read as clean palm trunks, the brine is flat paint without mirror, the one in the water has a cut-out edge
-- `03-c-spine0.jpg`: The Spine, wide view, approved left, heartbeat of 06:47 right: there is a sea of cloud now, a snowed ridge, a rock spire with its cave, far spires, a strike. Still off: the spire is a twisted cone with a combed pattern, the snow reads as creased cloth, the kites are a tangle of hair where the picture has a few long ribbons
-- `04-c-reveal4.jpg`: The Reveal from orbit, approved left, heartbeat of 06:57 right: more land round the bones as you asked, in kinds of country (forest, scree, red flanks, green plain), sea cloud in groups, the body still reads at once. Still off: the ranges repeat one ridge pattern, the limbs are thicker than the picture's, the glint is weak
+- `01-s98-breath2.jpg`: The Breath, the rim: approved left, built right (version 2, draft tier)
+- `02-s98-eye3.jpg`: The Eye, the edge where the floor stops: approved left, built right (version 2, draft tier)
+- `03-s98-ribs2.jpg`: The Ribs, tide pool feeders: approved left, built right (version 2, draft tier)
+- `04-s98-marsh2.jpg`: The Blood Marsh, the stalk colony: approved left, built right (version 2, draft tier)
 
+Status 97, 2026-11-26 07:07 UTC, showed: The Ribs, wide view, approved left, heartbeat of 06:50 right: the flat is wet now with bands that mirror the sky, the blades are bedded...
 Status 96, 2026-11-26 06:10 UTC, showed: The Eye's drinkers, approved left, wave 3 version 1 right: coats, weight on the legs, mirrored in the water.
 Status 95, 2026-11-26 05:51 UTC, showed: The Eye's far wall, the same crop: the old picture left, the remade one at double size right.
-Status 94, 2026-11-26 05:34 UTC, showed: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows)...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T07:07:32Z
-phase 4: 10.95 h used of 17.00 h
-build: 31.27 h used of 72.00 h
+2026-11-26T07:29:39Z
+phase 4: 11.32 h used of 17.00 h
+build: 31.64 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 57, status overdue
+minutes since the last status: 22
 ```
 
 ## Phases
@@ -1352,6 +1352,10 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. - 2026-11-26 06:12 UTC. Wave 3, version 1: nine of ten owners merged into main between 05:58 and 06:09 (the Ribs' ground and sea, the Eye, the Spine's ground and storm, the Reveal, the Marsh's ground and life, the Breath's ground). One conflict, in the Eye's materials list, settled by keeping main's entry for the remade far wall. Each owner got the Builder's notes on its version, worst first, by what a viewer names first. The Reveal's join (frames 9773 to 9795, round 19 R4) was checked with three draft frames from main: continuous; closed, not declined. A critic's line against the broad land round the Reveal's bones would be declined, since Brandon's note 10 asks for it.
 - 2026-11-26. - 2026-11-26 06:14 UTC. Disk: a render refused to start with 3.0 GB free. Deleted harness output under out/work (old stills, the jury's sent packs, the site copy that the review tool builds again, the music cleaning's working stems, old film parts) and the reference run's first two rounds of candidates outside the repo (their kept takes are with Brandon as shared files and the approved pictures are in the repo). 4.5 GB free.
 - 2026-11-26. - 2026-11-26 07:08 UTC. Status 97 was shown at 07:08, 58 minutes after status 96: a miss of the 30 minute rule by 28 minutes. Cause: the Builder waited for mail from 06:15 and the owners' heartbeats arrive without waking it; the first mail that did was the Marsh life owner's version 2 at 07:06. From now on the Builder does not wait without a timer: it polls a clock that ends 25 minutes after the last status and reads mail between polls.
+- 2026-11-26. - 2026-11-26 07:18 UTC. Wave 3, version 2 merges so far, each with tsc, build, G8 and G9 passing and pushed: the Marsh (ground heartbeat 4 b5b8804, life version 2 c8ecca4) and the Spine (storm version 2 6adc777 with ground heartbeat 5 32f779d) at cf56a3f7; the Breath (ground version 2 2cf451e with the life owner's heartbeat 5) at 961f6e08; the Eye (version 2 b731d16) at 0f7e8c46. Notes went to every one of these owners, worst first, from their looks set beside the approved pictures (texts in out/work/tmp/msgs/breath-v2.txt, marsh-v2.txt, spine-v2.txt; the Eye's in the thread of agents). Chief lines: the Breath's channel is still a flat brown sheet and its plumes near black; the Marsh's brine is flat red paint and its far stalks are dots; the Spine's struck spire is an iceberg and its wall bare tan; the Eye's mats are combed streaks and its herd pale on pale. Costs: Breath 26.14 s a sample against 24.76 received, Spine 17.41, Eye 16.00 against 16.01: all three were told version 3 must be under what they received.
+- 2026-11-26. - 2026-11-26 07:18 UTC. Repo size: G9 reads 1.962 GB of the 2 GB that repo.maxTreeGb allows, and the kept stills, comparison images and narration of the phases to come need some 60 to 80 MB. Decision: the 238 generated source pictures under assets-src/<place>/mat/src/ (PNG, 654 MB) are written again with a stronger lossless PNG packer (oxipng, level 3, no chunk removed). Every file is decoded before and after and must be equal in every pixel, or it is left as it was. Measured on two files: 21 and 22 per cent smaller. Nothing that a page loads is touched (public/assets stays byte for byte), so no frame of the film can change. references/ is not touched (the kit forbids it). The limit itself is not raised.
+- 2026-11-26. - 2026-11-26 07:28 UTC. Wave 3 version 2 of all ten owners is in main (`e76bcd74`): after the lines of 07:18, merged Marsh ground `4216420` and Ribs sea `14a7f07` (`61297b19`), the Reveal's heartbeat 5 (`cd69d7a4`), Spine ground `aaffe34`, Ribs ground `5a25a5c` and Reveal `f7c2f37` (`1baba4a6`), Breath life `ca8d3ae` (`e76bcd74`); tsc, build, G8 and G9 pass after each, each pushed. Notes went to every owner, worst first, read from sheets with the approved picture beside the build (texts in `out/work/tmp/msgs/` and in the messages): chief lines are the Breath's channel (a flat brown sheet), its plumes (stiff fir branches where the picture has soft thread) and its dead wader (a stick figure lying on the ground); the Marsh's flat red brine and dot stalks; the Spine's cone spire, cloth snow and bare tan wall; the Eye's mats and pale herd; the Ribs' evenly dropped stones, dark ribbed blades and block-wall crag; the Reveal's one ridge pattern, speck cloud and neat oval lake. STATED by owners, not judged: draft-tier M3 green on every key except what the Ribs has to measure again merged; four places cost more a sample than they were received at (Breath 26.14 against 24.76, Spine 17.04 against 15.2, Ribs 11.26 against 10.85, Reveal up to 9.07 against 8.7) and each owner is told version 3 must be under its received cost. Last versions by 08:36; round 3 follows at once.
+- 2026-11-26. - 2026-11-26 07:28 UTC. The source pictures were repacked without loss (commit `523ddc16`): the 238 generated PNGs under `assets-src/<place>/mat/src` written again with a stronger packer, each decoded before and after and equal in every pixel, no chunk removed; 642.7 MB before, 515.1 MB after. MEASURED: G9 reads 1.834 GB of the 2 GB allowed (1.962 before). Nothing a page loads changed and nothing under `references/` was touched. The disk was at 2.7 GB free, under the 3 GB a render needs: deleted the generation takes of the reference rounds that sit in the repo under the same names (`/home/user/workspace/r3/gen`, 1.2 GB; four files not in the repo were kept in `r3/gen-kept`) and owners' heartbeat attachments older than 90 minutes (150 MB; the music attachment kept). 4.7 GB free.
 
 ## Notes from Brandon
 

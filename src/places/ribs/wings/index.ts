@@ -26,7 +26,9 @@ const SPECKS = 560;
 const PASSERS = 6;
 const LOW = 6;
 const FLEEING = 9;
-const COLONISTS = 150;
+const COLONISTS = 40;
+/** Which of them, counted from the colony's lens, are the large ones with their sails part open: not neighbours. */
+const LARGE = [0, 3, 7, 12];
 const SKEIN = 22;
 /** Metres a flier keeps from every lens. */
 const CLEAR = 45;
@@ -135,9 +137,9 @@ export function create(ctx: Context): Piece {
   }
   // Staged for the feeding key: the three stand nearer its lens than their stations. The first feeds, filling the right of the frame; the
   // second shakes its tuft dry; the third runs off with its sails up, and is in the place for that shot alone.
-  const NEARER: [number, number][] = [[-54.4, -434.4], [-55.4, -455.2], [-61.5, -464]];
+  const NEARER: [number, number][] = [[-54.83, -434.61], [-55.4, -455.2], [-61.5, -464]];
   NEARER.forEach(([x, z], i) => {
-    if (i === 0) addFeeder(x, z, sideOn(x, z, 0.2), 1.02, 0, feedKey);
+    if (i === 0) addFeeder(x, z, sideOn(x, z, 0.2), 0.92, 0, feedKey);
     else if (i === 1) addFeeder(x, z, sideOn(x, z, -0.25), 1, 1);
     else addFeeder(x, z, sideOn(x, z, 0.12), 0.95, 2, feedKey, 2.2);
   });
@@ -248,33 +250,34 @@ export function create(ctx: Context): Piece {
   colonyLens.updateProjectionMatrix();
   const seen = new THREE.Vector3();
   const sitters: (Sitter & { d: number })[] = [];
-  // In knots of two to five along a ledge, with bare rock between the knots: animals to be read one by one.
-  while (sitters.length < COLONISTS) {
-    // Most of the knots sit where the colony's own shot looks, on the ledges that face its lens; the rest anywhere on the weather side.
-    let tier = 0;
-    let a0 = 0;
-    for (let tries = 0; tries < 60; tries++) {
-      tier = scatter.range(LEVELS.tide + 2, COLONY.top - 6);
-      a0 = sitters.length < COLONISTS * 0.75 ? scatter.range(0, Math.PI * 2) : facing + scatter.normal() * 0.8;
-      if (sitters.length >= COLONISTS * 0.75) break;
-      const [r0, y0] = COLONY.perch(a0, tier, 0.5);
-      seen.set(COLONY.x + Math.cos(a0) * r0, y0 + 1.5, COLONY.z + Math.sin(a0) * r0);
-      const toward = (colonyEye[0] - seen.x) * Math.cos(a0) + (colonyEye[2] - seen.z) * Math.sin(a0);
-      const far = Math.hypot(colonyEye[0] - seen.x, colonyEye[2] - seen.z);
-      seen.project(colonyLens);
-      if (toward > 0.2 * far && Math.abs(seen.x) < 0.92 && seen.y > -0.9 && seen.y < 0.8 && seen.z < 1) break;
+  // Each on its own piece of ledge, alone or two together, with bare rock, lichen and white between: animals to be read one by one.
+  const taken: [number, number][] = [];
+  for (let tries = 0; sitters.length < COLONISTS && tries < 6000; tries++) {
+    const tier = scatter.range(LEVELS.tide + 2, COLONY.top - 6);
+    // Four in five sit where the colony's own shot looks, on the ledges that face its lens; the rest anywhere on the weather side.
+    const forLens = sitters.length < COLONISTS * 0.8;
+    const a0 = forLens ? scatter.range(0, Math.PI * 2) : facing + scatter.normal() * 0.8;
+    const [r0, y0] = COLONY.perch(a0, tier, 0.5);
+    seen.set(COLONY.x + Math.cos(a0) * r0, y0 + 1.5, COLONY.z + Math.sin(a0) * r0);
+    const toward = (colonyEye[0] - seen.x) * Math.cos(a0) + (colonyEye[2] - seen.z) * Math.sin(a0);
+    const far = Math.hypot(colonyEye[0] - seen.x, colonyEye[2] - seen.z);
+    seen.project(colonyLens);
+    const inFrame = Math.abs(seen.x) < 1.1 && Math.abs(seen.y) < 1.1 && seen.z < 1;
+    if (forLens && !(toward > 0.2 * far && Math.abs(seen.x) < 0.95 && seen.y > -0.92 && seen.y < 0.85 && seen.z < 1)) continue;
+    if (inFrame) {
+      // No two knots within a fifth of the frame of each other: whole faces of the cliff stay bare.
+      if (taken.some((t) => Math.hypot((t[0] - seen.x) * 1.78, t[1] - seen.y) < 0.58)) continue;
+      taken.push([seen.x, seen.y]);
     }
-    const knot = 2 + scatter.int(6);
+    const knot = scatter.next() < 0.22 ? 2 : 1;
     let along = 0;
     for (let k = 0; k < knot && sitters.length < COLONISTS; k++) {
-      const size = scatter.range(0.72, 1.25) * GROW;
-      // The crag's own standing places: most sit back against the cliff behind, where the lip hides half of them from a lens that looks up.
+      const size = scatter.range(0.7, 1.3) * GROW;
       const a = a0 + along / COLONY.radiusAt(tier);
-      const [r, perchY] = COLONY.perch(a, tier, scatter.next() < 0.6 ? scatter.range(0.1, 0.5) : scatter.range(0.4, 0.95));
-      along += scatter.range(0.8, 1.9) * size;
+      const [r, perchY] = COLONY.perch(a, tier, scatter.range(0.45, 0.9));
+      along += scatter.range(1.6, 2.4) * size;
       const x = COLONY.x + Math.cos(a) * r;
       const z = COLONY.z + Math.sin(a) * r;
-      const out = Math.atan2(Math.cos(a), Math.sin(a));
       const stands = scatter.next() < 0.22;
       // A sheet reads only from its side: each stands across the colony lens's line of sight, a little turned.
       const across = Math.atan2(z - colonyEye[2], -(x - colonyEye[0])) + scatter.range(-0.85, 0.85);
@@ -285,15 +288,17 @@ export function create(ctx: Context): Piece {
   const perchedSheet = figureMaterials(ctx, PERCHED, LEVELS.pool, 0.86);
   const colonyFigures = new Figures(perchedSheet, COLONISTS, { shade: true });
   /** Which of the six a sitter is: most sit hunched or crouched, some stand, a few hold a sail out or both open. */
-  const cellOf = (s: Sitter): number => {
+  const cellOf = (s: Sitter, rank: number): number => {
+    // The nearest to the colony's lens stand with their sails part open.
+    if (LARGE.includes(rank)) return rank % 2 === 0 ? 3 : 2;
     const k = (s.seed * 977) % 1;
-    return k < 0.34 ? 5 : k < 0.62 ? 0 : k < 0.74 ? 4 : k < 0.84 ? 1 : k < 0.93 ? 2 : 3;
+    return k < 0.24 ? 5 : k < 0.44 ? 0 : k < 0.57 ? 4 : k < 0.7 ? 1 : k < 0.86 ? 2 : 3;
   };
-  const sitterAt = (s: Sitter, t: number): void => {
+  const sitterAt = (s: Sitter, rank: number, t: number): void => {
     Object.assign(fig, placed());
-    const cell = cellOf(s);
+    const cell = cellOf(s, rank);
     fig.cell = cell;
-    fig.size = s.size * 0.46;
+    fig.size = s.size * (LARGE.includes(rank) ? 0.8 : 0.6);
     // No two rows alike: half of them stand the other way round on their ledge.
     fig.turn = s.yaw + (Math.floor(s.seed * 1000) % 2 === 1 ? Math.PI : 0);
     // Never still: it shifts its weight along the ledge, rocks, and works its neck, each in its own time.
@@ -303,14 +308,14 @@ export function create(ctx: Context): Piece {
     fig.y = s.y - 0.04;
     fig.sway = 0.035 * Math.sin(t * (0.9 + 0.8 * s.seed) + s.seed * 50);
     const look = held(t, 1.6 + 2.2 * s.seed, s.seed, 0.3);
-    fig.limbs[0] = (look - 0.5) * 0.7 + 0.06 * Math.sin(t * (1.7 + 1.2 * s.seed) + s.seed * 31);
+    fig.limbs[0] = (s.seed - 0.5) * 0.7 + (look - 0.5) * 0.6 + 0.06 * Math.sin(t * (1.7 + 1.2 * s.seed) + s.seed * 31);
     // A sail held out is flicked and beaten at a neighbour now and then.
     const row = smooth(0.55, 0.75, held(t, 2.3, s.seed + 0.6, 0.3));
     fig.limbs[1] = (cell === 3 ? -1 : 1) * (0.1 * Math.sin(t * 1.9 + s.seed * 17) + row * 0.3 * Math.sin(t * 9 + s.seed * 9));
     fig.limbs[2] = 0.1 * Math.sin(t * 1.7 + s.seed * 12) + row * 0.3 * Math.sin(t * 9 + s.seed * 9 + 0.5);
     // Weathered each to its own grey, and one in three in the shade of the rock over it.
-    fig.tone = 0.62 + 0.4 * ((s.seed * 13.7) % 1);
-    fig.shade = (s.seed * 7.3) % 1 < 0.36 ? 0.75 + 0.25 * ((s.seed * 3.1) % 1) : 0;
+    fig.tone = 0.74 + 0.36 * ((s.seed * 13.7) % 1);
+    fig.shade = (s.seed * 7.3) % 1 < 0.3 ? 0.4 + 0.25 * ((s.seed * 3.1) % 1) : 0;
   };
 
   // ---- The flock in the air ----
@@ -522,9 +527,9 @@ export function create(ctx: Context): Piece {
           if (tuft.wet > 0.5) {
             // A crown where the strands go in and work: thrown up and out, falling back.
             const power = 0.5 + 1.6 * tuft.shake;
-            const out = (0.1 + 0.55 * rand(key, born + 7) * a * power) * f.size;
-            const up = (0.25 + 0.8 * rand(key, born + 3)) * f.size * power;
-            splash.put(tuft.x + Math.cos(dir) * out, LEVELS.pool + 0.03 + up * 2 * a * (1 - a), tuft.z + Math.sin(dir) * out, (big ? 0.03 + 0.03 * rand(key, born + 5) : 0.008 + 0.014 * rand(key, born + 5)) * f.size * (1 + power * 0.4), (big ? 0.22 : 0.9) * (1 - a), rand(key, 9), dir);
+            const out = (0.1 + 0.95 * rand(key, born + 7) * a * power) * f.size;
+            const up = (0.3 + 1.2 * rand(key, born + 3)) * f.size * power;
+            splash.put(tuft.x + Math.cos(dir) * out, LEVELS.pool + 0.03 + up * 2 * a * (1 - a), tuft.z + Math.sin(dir) * out, (big ? 0.022 + 0.016 * rand(key, born + 5) : 0.008 + 0.014 * rand(key, born + 5)) * f.size * (1 + power * 0.4), (big ? 0.5 : 0.95) * (1 - a * a), rand(key, 9), dir, big ? 1 : 1.8);
           } else {
             // Lifted, the tuft streams: strings of drops fall from its strands to the pool.
             const fall = 4.9 * age * age;
@@ -580,7 +585,7 @@ export function create(ctx: Context): Piece {
       for (const figures of feederFigures) figures.commit();
       splashAt(seconds);
       for (let i = 0; i < sitters.length; i++) {
-        sitterAt(sitters[i] as Sitter, seconds);
+        sitterAt(sitters[i] as Sitter, i, seconds);
         colonyFigures.put(i, fig);
       }
       colonyFigures.commit();
@@ -650,6 +655,7 @@ export function create(ctx: Context): Piece {
         m.body.dispose();
         m.mirror.dispose();
         m.shade.dispose();
+        m.late.dispose();
       }
       for (const figures of [...feederFigures, colonyFigures, standers, flockFigures, skeinFigures]) figures.dispose();
       splash.dispose();
