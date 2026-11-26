@@ -136,7 +136,7 @@ vec3 stormFace(vec3 p, float t, vec3 rd) {
   vec3 q = p - uWind.xyz * (uTime * 30.0);
   float streak = noise(vec3(q.x / 420.0, q.y / 5200.0 + q.z / 1400.0, q.z / 420.0)).g;
   float under = smoothstep(500.0, -500.0, h);
-  c = mix(c, mix(uSkyHorizon, uSkyZenith, 0.4) * (0.14 + 0.12 * streak), 0.4 * under);
+  c = mix(c, mix(uSkyHorizon, uSkyZenith, 0.4) * (0.16 + 0.05 * streak), 0.4 * under);
   vec3 within = uFlash * 0.3;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
@@ -315,14 +315,15 @@ void main() {
     float hollowed = smoothstep(-0.25, 0.5, (seaTop(p + vec3(n.x, 0.0, n.z) * 500.0, false) - h0) / 500.0);
     float w = max(dot(n, uWarmDir), 0.0);
     float wn = clamp((w + 0.25) / 1.25, 0.0, 1.0);
-    vec3 sea = 0.5 * ((skyIrradiance(n) / 3.14159 - uWarmColour * (0.19 * wn * wn)) * (1.0 - 0.7 * hollowed) + uFlash * 0.25 * stormSide(rd) + strikeLight(p) * 0.15);
+    vec3 sea = 0.5 * ((skyIrradiance(n) / 3.14159 - uWarmColour * (0.19 * wn * wn)) * (1.0 - 0.82 * hollowed) + uFlash * 0.25 * stormSide(rd) + strikeLight(p) * 0.15);
     // The deck's own tone: pale on the heads of its lumps, blue-grey between them.
     vec3 qs = p - uWind.xyz * (uTime * uWind.w * 0.6);
     vec3 tint = clamp(textureLod(tDeck, qs.xz / 10000.0, seaLod).rgb / SEA_MEAN, 0.45, 1.9);
-    sea *= mix(vec3(1.0), tint, 0.75);
+    // Cloud is not snow: it is the greyer and the bluer of the two, and only the heads of its billows come near the snow's value.
+    sea *= mix(vec3(1.0), tint, 0.75) * vec3(0.6, 0.68, 0.86) * (0.75 + 0.5 * smoothstep(-0.1, 0.5, n.y - 0.75 + 0.6 * w));
     sea = mix(sea, uSkyGround, gone);
     // Its edge against the land is soft: the cloud thins where it laps the rock.
-    float lap = clamp((far - t) / 160.0, 0.0, 1.0);
+    float lap = smoothstep(0.0, 1.0, (far - t) / (260.0 + 0.1 * t));
     light += through * sea * lap;
     through *= 1.0 - lap;
     far = min(far, t);

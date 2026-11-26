@@ -46,6 +46,9 @@ const vec3 SNOW_MEAN = vec3(0.33, 0.372, 0.456);
 const vec3 CANAL_ALONG = vec3(${frameAt(first.s).tx.toFixed(4)}, 0.0, ${frameAt(first.s).tz.toFixed(4)});
 
 const float EXIT = ${EXIT.toFixed(3)};
+// The drawn slabs (a tone and a tilt for each block, snow on its ledge) are kept for the spires. On the ground the joints come from the
+// rock picture alone, which is the cheaper land; true gives the ground its drawn slabs back, at the cost given in HANDOVER.md.
+const bool SLABS_ON_GROUND = false;
 
 // The canal of the layout (ridge.ts): its radius d metres in from the near mouth, and the l of its axis.
 float flareAt(float d) {
@@ -203,7 +206,7 @@ void main() {
   // Slabs: the rock is jointed along the lean of the vertebrae and broken across it, each slab with its own tone and its own tilt,
   // a dark crack between it and the next, and a ledge at its foot where the snow lies.
   float ledgeSnow = 0.0;
-  if (!inside) {
+  if (!inside && (spire || SLABS_ON_GROUND)) {
     vec2 j = top > 0.5 ? vec2(dot(vWorld.xz, vec2(0.82, 0.57)), dot(vWorld.xz, vec2(-0.57, 0.82))) : vec2(dot(vWorld, vec3(0.1, 0.94, -0.33)), (w.x > w.z ? vWorld.z : vWorld.x) + 0.35 * vWorld.y);
     float cv = j.y / 5.5 + 1.7 * vnoise(vec2(j.y * 0.06, j.x * 0.017)) + 0.5 * vnoise(vec2(j.y * 0.23, j.x * 0.03));
     float col = floor(cv);
@@ -217,7 +220,8 @@ void main() {
     float thin = 0.14 + 0.0011 * far;
     // Far off the slabs go into the mass of the rock: what is left is its beds and the snow on its ledges.
     float near = smoothstep(1300.0, 220.0, far);
-    float crack = (1.0 - smoothstep(0.0, thin, min(dv, du * 0.8))) * near;
+    // The joints themselves come from the picture of the rock (mat/spire): the drawn crack is only the shade in a joint, faint.
+    float crack = (1.0 - smoothstep(0.0, thin * 2.5, min(dv, du * 0.8))) * near * (spire ? 0.3 : 0.12);
     float mass = hash12(vec2(floor(cv * 0.23 + 0.4 * own.y), floor(cu * 0.4)));
     albedo *= mix(1.0, 0.66 + 0.68 * own.x, 0.3 + 0.7 * near) * (0.8 + 0.4 * mass) * (1.0 - 0.7 * crack);
     occ *= 1.0 - 0.6 * crack;
