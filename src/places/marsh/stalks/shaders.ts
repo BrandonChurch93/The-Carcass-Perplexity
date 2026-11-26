@@ -30,6 +30,9 @@ float nodeAt(float y, float sp, float seed) {
 float wob(float a, float s) {
   return sin(a * 3.0 + s * 9.0) * 0.5 + sin(a * 7.0 + s * 23.0) * 0.3 + sin(a * 13.0 + s * 41.0) * 0.2;
 }
+float lobe(float a, float s) {
+  return sin(a * 2.0 + s * 9.0) * 0.6 + sin(a * 3.0 + s * 23.0) * 0.4;
+}
 vec3 stemPoint(float a, float v) {
   float h = aBase.w;
   float R = aAxis.w;
@@ -47,20 +50,20 @@ vec3 stemPoint(float a, float v) {
     float q = fract(ny);
     float node = floor(ny);
     // At every node a collar of salt stands out, thin, ragged, and broken away in places.
-    float ragged = 0.55 + 0.6 * wob(a, node + seed) + 0.35 * wob(a * 2.3, node * 1.7 + seed);
-    float flare = smoothstep(0.62, 0.93, q) * (1.0 - smoothstep(0.93, 1.0, q)) * max(ragged, 0.0);
+    float ragged = 0.7 + 0.3 * sin(a * 2.0 + (node + seed) * 9.0) + 0.2 * sin(a * 5.0 + (node + seed) * 23.0);
+    float flare = smoothstep(0.35, 0.88, q) * (1.0 - smoothstep(0.88, 1.0, q)) * max(ragged, 0.0);
     float collar = smoothstep(h - 0.1, h, y);
-    r = R * (1.12 - 0.12 * v) * (1.0 + 0.26 * flare + 0.05 * (1.0 - smoothstep(0.0, 0.4, q)) + 0.035 * wob(a + y * 3.0, seed));
-    r *= 1.0 + collar * (0.2 + 0.16 * wob(a, seed + 2.0));
+    r = R * (1.12 - 0.12 * v) * (1.0 + 0.15 * flare + 0.05 * (1.0 - smoothstep(0.0, 0.4, q)) + 0.035 * lobe(a + y * 3.0, seed));
+    r *= 1.0 + collar * (0.2 + 0.16 * lobe(a, seed + 2.0));
     float torn = kind > 1.5 && kind < 2.5 ? 0.045 : 0.035;
-    y += collar * torn * (0.4 * wob(a * 0.7, seed + 5.0) + 0.7 * wob(a * 3.0, seed + 8.0) + 0.4 * wob(a * 6.0, seed + 3.0));
+    y += collar * torn * (0.6 * wob(a * 0.7, seed + 5.0) + 0.4 * wob(a * 1.6, seed + 8.0) + 0.1 * wob(a * 3.0, seed + 3.0));
     // The foot spreads into the crust.
     r *= 1.0 + 0.5 * exp(-y / 0.09);
   } else if (aSkin < 1.5) {
     // The inside of the mouth.
     float torn = kind > 1.5 && kind < 2.5 ? 0.045 : 0.035;
-    y = h + torn * (0.4 * wob(a * 0.7, seed + 5.0) + 0.7 * wob(a * 3.0, seed + 8.0) + 0.4 * wob(a * 6.0, seed + 3.0)) * (1.0 - v) - 0.4 * v;
-    r = R * mix(1.0 + 0.2 + 0.16 * wob(a, seed + 2.0), 0.7, smoothstep(0.0, 0.2, v));
+    y = h + torn * (0.6 * wob(a * 0.7, seed + 5.0) + 0.4 * wob(a * 1.6, seed + 8.0) + 0.1 * wob(a * 3.0, seed + 3.0)) * (1.0 - v) - 0.4 * v;
+    r = R * mix(1.0 + 0.2 + 0.16 * lobe(a, seed + 2.0), 0.7, smoothstep(0.0, 0.2, v));
   } else {
     // The body of the plume in the mouth: a pointed bud when it is drawn in, a low throat when it is out.
     float open = plumeOpen(kind, aKind.y, seed);
@@ -363,6 +366,14 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
+const INSECT_CUT = /* glsl */ `
+  vec3 t = texture2D(tInsect, vUv).rgb;
+  float luma = max(t.r, max(t.g, t.b));
+  // The body and the veins of the wing are kept and the clear skin between them is let go: the lens then knows how far off the insect is
+  // and keeps it as sharp as the plume it flies in.
+  if (luma < 0.03) discard;
+`;
+
 export const INSECT_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
@@ -371,13 +382,21 @@ varying vec2 vUv;
 uniform sampler2D tInsect;
 ${RIG_GLSL}
 void main() {
-  vec3 t = texture2D(tInsect, vUv).rgb;
-  float luma = max(t.r, max(t.g, t.b));
-  // The wing is a clear skin between its veins: the veins and the body hide what is behind them, the skin only dims it.
-  float a = smoothstep(0.006, 0.05, luma);
-  if (a < 0.02) discard;
+${INSECT_CUT}
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal) * sign(dot(vNormal, v) + 1e-5);
-  vec3 c = rigShade(vWorld, n, v, t * vec3(0.3, 0.24, 0.18) + 0.01, 0.6, 1.0);
-  gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a * (1.0 - uSolo));
+  // Dark against the white air, as a small thing with the sky behind it is.
+  vec3 c = rigShade(vWorld, n, v, t * vec3(0.11, 0.08, 0.06) + 0.004, 0.96, 1.0);
+  gl_FragColor = vec4(rigOut(c), 1.0);
+}`;
+
+export const INSECT_DEPTH = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec2 vUv;
+uniform sampler2D tInsect;
+void main() {
+${INSECT_CUT}
+  gl_FragColor = vec4(0.0);
 }`;

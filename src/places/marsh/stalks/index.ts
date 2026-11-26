@@ -4,7 +4,7 @@ import { K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, distToSegment, makePools, m
 import type { Context, Piece } from '../shared/context';
 import { LOCK_DEPTH, LOCK_FRAGMENT, LOCK_VERTEX } from './locks';
 import { PALM_DEPTH, PALM_FRAGMENT, PALM_VERTEX } from './palms';
-import { INSECT_FRAGMENT, INSECT_VERTEX, STEM_FRAGMENT, STEM_VERTEX } from './shaders';
+import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX, STEM_FRAGMENT, STEM_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['stalks', 'insects'];
 
@@ -157,12 +157,13 @@ export function create(ctx: Context): Piece {
     sheet(1, 4, 4);
     palm.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
     palm.setIndex(pi);
+    // No anisotropy on a picture whose cover is tested: the cut would then depend on an extension the film may not have.
     const palmMaterial = new THREE.ShaderMaterial({
       uniforms: {
         ...ctx.rig.uniforms,
         uSeconds,
-        tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false, anisotropy: 4 }) },
-        tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false, anisotropy: 4 }) },
+        tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) },
+        tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) },
       },
       vertexShader: PALM_VERTEX,
       fragmentShader: PALM_FRAGMENT,
@@ -268,8 +269,20 @@ export function create(ctx: Context): Piece {
   const rate = new Float32Array(COUNT * 4);
   const phase = new Float32Array(COUNT * 4);
   const stuck = rel(STUCK[0], STUCK[1]);
+  const ahead = (u: [number, number, number]): number => (u[0] - K2_AT[0]) * K2_DIR[0] + (u[2] - K2_AT[1]) * K2_DIR[1];
+  const aside = (u: [number, number, number]): number => Math.abs((u[0] - K2_AT[0]) * K2_RIGHT[0] + (u[2] - K2_AT[1]) * K2_RIGHT[1]);
+  const nearPerches = perches.filter((u) => ahead(u) > 0.8 && ahead(u) < 4 && aside(u) < 0.45 * ahead(u)).sort((u, w) => ahead(u) - ahead(w)).slice(0, 3);
   for (let i = 0; i < COUNT; i++) {
     let p: [number, number, number];
+    if (i < 12 && nearPerches.length > 0) {
+      // STAGED for the lens of the colony: a dozen keep to the two plumes nearest it, close in among the strands.
+      const perch = nearPerches[i % nearPerches.length] as [number, number, number];
+      p = [perch[0] + swarm.range(-0.3, 0.3), perch[1] + swarm.range(-0.05, 0.3), perch[2] + swarm.range(-0.3, 0.3)];
+      home.set([p[0], p[1], p[2], swarm.range(0.12, 0.3)], i * 4);
+      rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
+      phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0.7, 1.1)], i * 4);
+      continue;
+    }
     if (i < 80 && perches.length > 0) {
       // They live in the plumes: each keeps to the one it was hatched in.
       const perch = perches[swarm.int(perches.length)] as [number, number, number];
@@ -298,10 +311,9 @@ export function create(ctx: Context): Piece {
       vertexShader: INSECT_VERTEX,
       fragmentShader: INSECT_FRAGMENT,
       side: THREE.DoubleSide,
-      transparent: true,
-      depthWrite: false,
     }),
   );
+  (bugs.material as THREE.ShaderMaterial).userData.depthFragment = INSECT_DEPTH;
   bugs.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('insects', bugs));
 

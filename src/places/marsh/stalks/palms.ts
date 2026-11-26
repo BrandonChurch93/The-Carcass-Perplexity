@@ -57,6 +57,7 @@ void main() {
 
 const CUT = /* glsl */ `
   vec2 uv = vUv.xy;
+  bool torn = false;
   if (vUv.z < 0.5) {
     // The photographed trunk is as long as five of its widths: a taller one runs up it and down it again.
     float w = vUv.y;
@@ -65,12 +66,13 @@ const CUT = /* glsl */ `
     uv = vec2(mix(0.449, 0.413, smoothstep(0.1, 0.4, pv)) + vUv.x, pv);
     // A broken one ends in a torn rim.
     float tear = 0.5 + 0.3 * sin(vUv.x * 90.0 + vKind.w * 50.0) + 0.2 * sin(vUv.x * 210.0 + vKind.w * 90.0);
-    if (vKind.x > 1.5 && vKind.x < 2.5 && vUv.w > 1.0 - 0.09 / vKind.y * tear) discard;
+    torn = vKind.x > 1.5 && vKind.x < 2.5 && vUv.w > 1.0 - 0.09 / vKind.y * tear;
   }
+  // Every read of a picture comes before any discard: the software renderer leaves the slopes of a dropped pixel's neighbours undefined.
   vec4 t = texture2D(tStalk, uv);
   float cover = texture2D(tStalkA, uv).r;
   float away = smoothstep(6.0, 60.0, distance(cameraPosition, vWorld));
-  if (cover < mix(0.5, 0.2, away)) discard;
+  if (torn || cover < mix(0.5, 0.2, away)) discard;
 `;
 
 export const PALM_FRAGMENT = /* glsl */ `

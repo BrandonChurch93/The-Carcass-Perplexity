@@ -102,10 +102,31 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   float phi = (1.0 - abs(mod(k + 1.0, 4.0) - 2.0)) * halfField;
   float u = 0.5 + 0.5 * tan(phi) / uPlateLens.y;
   float v = uPlateLens.w + 0.5 * (q.y / (uPlateAt.w * cos(phi))) / uPlateLens.z;
-  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(v, 0.004, 0.996)), bias).rgb) * uPlateTone.rgb;
-  // A picture of a wall alone (w is 2) has no sky of its own: what the water mirrors above it is still the wall.
-  float open = uPlateTone.w > 1.5 && bias > 0.0 ? 0.0 : 1.0;
-  return mix(plate, sky, smoothstep(0.9, 0.995, v) * open);
+  // Above a picture of a wall alone (w is 2) a mirror still holds rock, the wall told over again, dimmed toward the slate of the dusk over the rim.
+  bool tall = uPlateTone.w > 1.5 && bias > 0.0;
+  float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
+  float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
+  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + 2.5 * over).rgb) * uPlateTone.rgb;
+  // In the water under a long lens the wall is drawn out up and down: three looks one above another, so that it runs in soft streaks.
+  if (tall) {
+    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u, clamp(vv + 0.035, 0.004, 0.996)), bias + 1.0 + 2.5 * over).rgb)
+      + ungrade(texture2D(tPlate, vec2(u, clamp(vv - 0.035, 0.004, 0.996)), bias + 1.0 + 2.5 * over).rgb));
+  }
+  // The sky of the picture itself, in a mirror, is the low warm sky: water that is never quite still gives back less of the blue overhead.
+  if (bias > 0.0) {
+    // That is how a low eye sees it. An eye that stands high over the water looks down into the mirror and finds the sky overhead in it.
+    float high = smoothstep(8.0, 40.0, cameraPosition.y);
+    float blue = smoothstep(0.0, 0.25, (plate.b - plate.r) / max(plate.b, 1e-3));
+    plate = mix(plate, dot(plate, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.72, 0.56), 0.85 * blue * (1.0 - high));
+    sky = mix(skyRadiance(normalize(vec3(rd.x, min(rd.y, 0.1), rd.z))) * vec3(0.5, 0.46, 0.44), sky * 1.25, high);
+    if (tall) {
+      vec3 slate = skyRadiance(normalize(vec3(rd.x, max(rd.y, 0.35), rd.z))) * mix(0.62, 0.26, smoothstep(0.03, 0.3, rd.y));
+      float lum = dot(plate, vec3(0.3, 0.5, 0.2));
+      plate = mix(plate, slate, over * (1.0 - 0.75 * smoothstep(0.5, 1.6, lum / max(dot(slate, vec3(0.33)), 1e-3) * 0.25)));
+      return plate;
+    }
+  }
+  return mix(plate, sky, smoothstep(0.9, 0.995, v));
 }
 
 // Metres along a ray to the picture of the far world.
