@@ -1,8 +1,15 @@
 // The stone of the Eye: pale bedded limestone on the faces, grey gravel and talus on the flats. One chunk of GLSL, used by the land, the brow,
 // the scree and the wall of the shaft, so that all the rock is the same rock.
 //   tCliff, tCliffNh (cliff, 120 m a repeat, beds level, rubble at its foot), tTalus, tTalusNh (shore, 4 m), tSinter, tSinterNh (sinter, 3 m): the pictures in public/assets/eye/mat/.
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import type { Context } from '../shared/context';
+
+/** A plate is one piece of ground and does not repeat: laid end to end it is turned over at every edge, so no seam shows. */
+export function mirrored(t: THREE.Texture): THREE.Texture {
+  t.wrapS = THREE.MirroredRepeatWrapping;
+  t.wrapT = THREE.MirroredRepeatWrapping;
+  return t;
+}
 
 export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
   return {
@@ -12,6 +19,8 @@ export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
     tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 4 }) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
     tSinterNh: { value: ctx.assets.texture('mat/sinter-nh.png', { kind: 'data' }) },
+    tScree: { value: mirrored(ctx.assets.texture('mat/screeplate.jpg', { anisotropy: 6 })) },
+    tScreeH: { value: mirrored(ctx.assets.texture('mat/screeplate-h.png', { kind: 'data', anisotropy: 3 })) },
   };
 }
 
@@ -22,6 +31,14 @@ uniform sampler2D tTalus;
 uniform sampler2D tTalusNh;
 uniform sampler2D tSinter;
 uniform sampler2D tSinterNh;
+uniform sampler2D tScree;
+uniform sampler2D tScreeH;
+
+// The plate of the scree slope, 24 m by 13.5 m of broken grey stone seen from above, laid on the ground as it lies. Returns colour and, in a, its height.
+vec4 screeAt(vec2 xz) {
+  vec2 uv = xz / vec2(24.0, 13.51);
+  return vec4(texture2D(tScree, uv).rgb, texture2D(tScreeH, uv).r);
+}
 
 struct Rock {
   vec3 albedo;
@@ -54,7 +71,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   vec3 bentFace = vec3(0.0);
   float fh = 0.5;
   float arch = 0.0;
-  if (face > 0.01) {
+  if (face > 0.01 && wall >= 0.5) {
     vec3 ca = texture2D(tCliff, ua).rgb;
     vec3 cb = texture2D(tCliff, ub).rgb;
     vec3 nb = texture2D(tCliffNh, ua).rgb;
@@ -107,7 +124,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   vec3 gravel = vec3(0.0);
   vec3 bentFlat = vec3(0.0);
   float gh = 0.5;
-  if (face < 0.99) {
+  if (face < 0.99 && wall >= 0.5) {
     vec3 ta = texture2D(tTalus, ga).rgb;
     vec3 tb = texture2D(tTalus, gb).rgb;
     vec3 ha = texture2D(tTalusNh, ga).rgb;
@@ -128,6 +145,25 @@ Rock rockAt(vec3 p, vec3 n, float face) {
       bentFlat = mix(bentFlat, vec3(hc.x * 2.0 - 1.0, 0.0, hc.y * 2.0 - 1.0) * 1.1, 0.75 * close);
       gh = mix(gh, hc.b, close);
     }
+  }
+  if (wall < 0.5) {
+    // The spur and the beach under it are one slope of broken grey stone: the plate of the scree, laid on the ground at its own size,
+    // and again larger and turned so that the eye finds no repeat. Its relief gives every stone its faces.
+    vec2 q = p.xz + vec2(0.0, 0.35 * p.y);
+    vec4 a = screeAt(q);
+    vec2 qr = vec2(q.x * 0.8 - q.y * 0.6, q.x * 0.6 + q.y * 0.8) * 0.31 + 7.3;
+    vec4 b = screeAt(qr);
+    float e = 0.045;
+    float hx = screeAt(q + vec2(e, 0.0)).a - screeAt(q - vec2(e, 0.0)).a;
+    float hz = screeAt(q + vec2(0.0, e)).a - screeAt(q - vec2(0.0, e)).a;
+    vec3 grey = a.rgb * (0.55 + 0.9 * b.rgb / vec3(0.33, 0.32, 0.31) * 0.5);
+    gravel = grey * vec3(0.94, 0.98, 1.06);
+    stone = gravel;
+    bentFlat = vec3(-hx, 0.0, -hz) * 7.0;
+    bentFace = bentFlat;
+    gh = mix(a.a, b.a, 0.35);
+    fh = gh;
+    arch = 0.0;
   }
   k.albedo = clamp(mix(gravel, stone, face), 0.0, 0.92);
   vec3 bent = mix(bentFlat, bentFace, face);

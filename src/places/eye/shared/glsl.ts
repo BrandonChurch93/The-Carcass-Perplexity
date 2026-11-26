@@ -49,7 +49,14 @@ uniform vec3 uSunDir;
 uniform vec3 uSunColour;
 uniform vec3 uGlowDir;
 uniform vec3 uGlowColour;
-uniform vec3 uFill;`;
+uniform vec3 uFill;
+uniform sampler2D tPlate;
+uniform vec4 uPlateAt;
+uniform vec4 uPlateLens;
+uniform vec4 uPlateTone;
+uniform vec4 uNear;
+uniform vec4 uShade;
+uniform sampler2D tUngrade;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -62,6 +69,46 @@ vec3 skyRadiance(vec3 d) {
   float w = max(dot(normalize(vec3(d.x, 0.0, d.z) + vec3(0.0, 1e-4, 0.0)), uGlowDir), 0.0);
   float w2 = w * w;
   return c + uGlowColour * ((0.75 * w2 * w2 + 0.25 * w2) * exp(-3.2 * max(up, 0.0)) * smoothstep(-0.12, 0.02, up));
+}
+
+// A picture is what a camera made of a place. The film will make its own picture of whatever radiance it is given, so a picture that is to be seen
+// as it is has to be taken back through the film's tone curve first: this is that curve, backward (the three matrices and the curve of the grade).
+vec3 ungrade(vec3 c) {
+  const mat3 TO_2020 = mat3(vec3(0.6274, 0.0691, 0.0164), vec3(0.3293, 0.9195, 0.0880), vec3(0.0433, 0.0113, 0.8956));
+  const mat3 FROM_2020 = mat3(vec3(1.6605, -0.1246, -0.0182), vec3(-0.5876, 1.1329, -0.1006), vec3(-0.0728, -0.0083, 1.1187));
+  const mat3 INSET = mat3(vec3(0.856627153315983, 0.137318972929847, 0.11189821299995), vec3(0.0951212405381588, 0.761241990602591, 0.0767994186031903), vec3(0.0482516061458583, 0.101439036467562, 0.811302368396859));
+  const mat3 OUTSET = mat3(vec3(1.1271005818144368, -0.1413297634984383, -0.14132976349843826), vec3(-0.11060664309660323, 1.157823702216272, -0.11060664309660294), vec3(-0.016493938717834573, -0.016493938717834257, 1.2519364065950405));
+  vec3 x = INSET * pow(max(TO_2020 * c, 0.0), vec3(1.0 / 2.2));
+  x = vec3(texture2D(tUngrade, vec2(x.r, 0.5)).r, texture2D(tUngrade, vec2(x.g, 0.5)).r, texture2D(tUngrade, vec2(x.b, 0.5)).r);
+  return max(FROM_2020 * (OUTSET * x), 0.0);
+}
+
+// The far world along a ray: the picture of the rim and the sky on its cylinder, and the rig's sky above its top edge.
+// The picture is carried on round the camera mirrored, so it has no side edge. bias softens it (a mirror in moving water).
+vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
+  vec3 sky = skyRadiance(rd);
+  if (uPlateTone.w < 0.5) return sky;
+  vec2 o = ro.xz - uPlateAt.xz;
+  vec2 d = rd.xz;
+  float a = max(dot(d, d), 1e-6);
+  float b = dot(o, d);
+  float c = dot(o, o) - uPlateAt.w * uPlateAt.w;
+  float t = (-b + sqrt(max(b * b - a * c, 0.0))) / a;
+  vec3 q = ro + rd * t - uPlateAt.xyz;
+  float az = atan(q.x, -q.z) - uPlateLens.x;
+  az = atan(sin(az), cos(az));
+  float halfField = atan(uPlateLens.y);
+  float k = az / halfField;
+  float phi = (1.0 - abs(mod(k + 1.0, 4.0) - 2.0)) * halfField;
+  float u = 0.5 + 0.5 * tan(phi) / uPlateLens.y;
+  float v = uPlateLens.w + 0.5 * (q.y / (uPlateAt.w * cos(phi))) / uPlateLens.z;
+  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(v, 0.004, 0.996)), bias).rgb) * uPlateTone.rgb;
+  return mix(plate, sky, smoothstep(0.9, 0.995, v));
+}
+
+// True where the built land gives way to the picture of the far world.
+bool beyondNear(vec3 p) {
+  return uNear.w > 0.5 && length(p.xz - uNear.xy) > uNear.z;
 }
 
 // Irradiance from the whole sky on a face with normal n, before anything hides the sky.
@@ -92,14 +139,18 @@ float contactAt(vec3 p) {
 }
 
 // 1 in the sun, 0 in the long shadow of the cliffs, from the land map alone. The edge is as soft as a shadow thrown a kilometre.
-float sunOver(vec4 land, float y) {
-  return smoothstep(-1.6, 1.6, y - land.a);
+float sunOver(vec4 land, vec3 p) {
+  // The shade of the evening: the rim behind the wide camera has already taken the sun from the south shore and the spur. uShade: the way the shade
+  // deepens (unit, on the ground), where it starts along that way, how fast its top climbs, and whether it is there at all.
+  float thrown = uShade.w * (dot(p.xz, uShade.xy) - uShade.z);
+  float edge = 1.6 + 0.12 * max(dot(p.xz, uShade.xy) - uShade.z + 120.0, 0.0);
+  return smoothstep(-1.6, 1.6, p.y - land.a) * (uShade.w > 0.0 ? smoothstep(-edge, edge, p.y - thrown) : 1.0);
 }
 
 // The same with what stands on the ground: within three metres of the ground the contact map hides the sun.
 float sunAt(vec3 p) {
   vec4 land = landAt(p.xz);
-  return sunOver(land, p.y) * (1.0 - contactDrawn(p) * smoothstep(3.0, 0.3, p.y - max(land.r, 0.0)));
+  return sunOver(land, p) * (1.0 - contactDrawn(p) * smoothstep(3.0, 0.3, p.y - max(land.r, 0.0)));
 }
 
 // How much of the sky a point sees: the land's own horizon, opening with height above the ground, and whatever stands over it.
@@ -116,7 +167,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float above = p.y - max(land.r, 0.0);
   float drawn = contactDrawn(p);
   float open = mix(land.g, 1.0, clamp(above / 80.0, 0.0, 1.0)) * (1.0 - 0.7 * drawn * smoothstep(3.0, 0.0, above)) * occ;
-  float sun = sunOver(land, p.y) * (1.0 - drawn * smoothstep(3.0, 0.3, above));
+  float sun = sunOver(land, p) * (1.0 - drawn * smoothstep(3.0, 0.3, above));
   float nl = max(dot(n, uSunDir), 0.0);
   vec3 e = skyIrradiance(n) * open + uSunColour * (nl * sun * (0.4 + 0.6 * occ));
   // The warm light thrown back by sunlit rock and gravel on what is turned from the sun.

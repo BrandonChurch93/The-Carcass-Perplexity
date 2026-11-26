@@ -1,250 +1,19 @@
-// The lake of the Eye: the still surface that mirrors the cliffs and the sky, the knee-deep shelf of the shallows with its amber mats,
-// the shaft that goes straight down inside the shelf, and what rises at its centre.
+// The lake of the Eye, drawn by one surface: what the still water mirrors (the far world of the rig, and whatever stands in it),
+// the bed seen through it (the knee-deep shelf with its amber mats, the pale lip, the wall of the shaft going down into the dark),
+// the rings that leave the centre and every mouth and leg, the breath of air on it, and what rises at its centre.
+// There is no floor mesh under the shallows: the bed is worked out where the bent ray meets it, so there is one sheet of water and no box.
 import * as THREE from 'three';
 import handoff from '../handoff.json';
-import { DEEP, DEG, at, shoreAt, smooth } from '../layout';
-import { lipAt, shelfDepth } from '../land/height';
-import { ROCK_GLSL, rockUniforms } from '../land/rock';
+import { smooth } from '../layout';
+import { lipAt } from '../land/height';
 import type { Context, Piece } from '../shared/context';
-import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
-import { vnoise } from '../shared/noise';
-import { WATER_GLSL, createMirror, waterUniforms } from './water';
+import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { BED_GLSL, bedUniforms } from './bed';
+import { createMirror } from './water';
 
 export const PARTS: readonly string[] = ['lake', 'shallows', 'shaft', 'mats', 'riser'];
 
-const RINGS = 21;
 const LAPS = 22;
-
-const FLOOR_VERTEX = /* glsl */ `
-uniform float uLift;
-varying vec3 vWorld;
-varying vec3 vNormal;
-void main() {
-  vec4 w = modelMatrix * vec4(position, 1.0);
-  w.y += uLift;
-  vWorld = w.xyz;
-  vNormal = normalize(mat3(modelMatrix) * normal);
-  gl_Position = projectionMatrix * viewMatrix * w;
-}`;
-
-// The mats: where they grow, how thick, and the grain of the filaments, which lie combed toward the centre and sway.
-const EDGE_BED = at(197.6, DEEP + 2);
-
-const MATS_GLSL = /* glsl */ `
-uniform sampler2D tMat;
-uniform sampler2D tMatNh;
-struct Mat {
-  float cover;
-  float strand;
-  vec3 colour;
-  vec2 grain;
-};
-// Where the mats grow: beds drawn out toward the centre, with dark water between, thin toward the shore and gone at the lip.
-float matBeds(vec3 p) {
-  float r = length(p.xz);
-  float shoreward = -landAt(p.xz).b;
-  vec2 dir = p.xz / max(r, 1.0);
-  float rays = 0.6 * vnoise(dir * 46.0 + vec2(r, -0.7 * r) / 85.0) + 0.4 * vnoise(dir * 150.0 + vec2(-0.6 * r, r) / 34.0 + 3.0);
-  float blobs = 0.6 * vnoise(p.xz / 38.0) + 0.4 * vnoise(p.xz / 9.0 + 3.0);
-  float beds = 0.52 * rays + 0.48 * blobs + 0.1 * vnoise(p.xz / 2.4);
-  // A bed lies over the lip where the old bones are.
-  beds += 0.1 * smoothstep(30.0, 6.0, length(p.xz - vec2(${EDGE_BED[0].toFixed(1)}, ${EDGE_BED[1].toFixed(1)})));
-  return smoothstep(0.38, 0.55, beds) * smoothstep(2.0, 16.0, shoreward);
-}
-Mat matsAt(vec3 p) {
-  Mat m;
-  m.cover = 0.0;
-  m.strand = 0.0;
-  m.colour = vec3(0.0);
-  m.grain = vec2(0.0);
-  float beds = matBeds(p);
-  if (beds <= 0.0) return m;
-  // The filaments lie combed from the shore toward the centre, in locks that swing round each other as hair does in a slow water, and sway.
-  float r = length(p.xz);
-  vec2 w = p.xz;
-  vec2 bend = vec2(vnoise(w / 31.0), vnoise(w / 31.0 + 17.3)) - 0.5;
-  vec2 curl = vec2(vnoise(w / 5.0 + 3.1), vnoise(w / 5.0 + 9.9)) - 0.5;
-  vec2 lock = vec2(vnoise(w / 2.3 + 7.7), vnoise(w / 2.3 + 2.2)) - 0.5;
-  vec2 kink = vec2(vnoise(w / 0.8 + 1.7), vnoise(w / 0.8 + 6.3)) - 0.5;
-  float sway = 0.05 * sin(uTime * 0.7 + 6.28 * vnoise(w / 1.9)) + 0.016 * sin(uTime * 1.7 + 6.28 * vnoise(w / 0.37));
-  // Across is metres round the lake, along is metres out from the middle. The seam of the angle lies in the east, under the brow.
-  vec2 q = vec2(atan(p.z, -p.x) * 560.0 + sway, r) + vec2(20.0, 9.0) * bend + 3.2 * curl + 0.6 * lock + 0.14 * kink;
-  // The locks: pools of dark water stand between them, and they end in wisps.
-  // The picture is laid by where the ground is, at one scale, turned a little by the locks: nothing is pulled long.
-  vec2 g = w + 0.9 * curl + 0.5 * lock + 0.12 * kink + vec2(sway, 0.6 * sway);
-  float tress = 0.5 * vnoise(g / 1.5) + 0.3 * vnoise(g / 0.47 + 4.0) + 0.2 * vnoise(g / 0.15 + 9.0);
-  m.cover = beds * smoothstep(0.43, 0.6, tress + 0.3 * (beds - 0.5));
-  // On the crust of the lip, out of the water, they lie dry: thinner and darker.
-  float dry = smoothstep(-0.03, 0.04, p.y);
-  m.cover *= 1.0 - 0.7 * dry;
-  m.cover *= 1.0 - 0.8 * dry * smoothstep(0.62, 0.4, tress);
-  // The filaments are the mat picture laid in the combed space: 3 m a repeat, its hair along the comb. Again at a third and at five times that.
-  vec2 ma = g / 3.0;
-  vec2 mb = vec2(g.x * 0.8 + 0.6 * g.y, g.y - 0.6 * g.x) / 1.05 + vec2(0.31, 0.57);
-  vec2 mc = vec2(g.y, -g.x) / 14.0 + vec2(0.11, 0.73);
-  vec3 ta = texture2D(tMat, ma).rgb;
-  vec3 tb = texture2D(tMat, mb).rgb;
-  vec3 tc = texture2D(tMat, mc).rgb;
-  vec3 ha = texture2D(tMatNh, ma).rgb;
-  // Fine hair near the camera, the picture itself in the middle distance, its broad streaks from far off.
-  float grain = 0.5 * (fwidth(g.x) + fwidth(g.y));
-  float fine = 1.0 - smoothstep(0.004, 0.02, grain);
-  vec3 hair = mix(ta, tb, 0.45 * fine);
-  hair = mix(hair, hair * (tc / vec3(0.279, 0.092, 0.014)), 0.5);
-  // The pale stone of the picture is not hair: there the water shows.
-  float lum = dot(hair, vec3(0.3, 0.5, 0.2));
-  float red = hair.r / max(hair.g, 1e-3);
-  float isHair = smoothstep(1.5, 2.3, red);
-  m.strand = isHair * (0.55 + 0.45 * smoothstep(0.2, 0.65, ha.b));
-  // Amber and gold, not red: the picture is tinted toward the approved one, and is darker where the hair lies deep.
-  m.colour = hair * mix(vec3(0.6, 0.8, 0.45), vec3(1.05, 1.5, 0.8), smoothstep(0.25, 0.7, ha.b)) * mix(1.0, 0.7, dry);
-  m.grain = (ha.xy * 2.0 - 1.0) * fine;
-  // From far off no thread shows: the bed is its mean colour, rust in one place and gold in another, and the repeat of the picture is gone.
-  float distant = smoothstep(0.03, 0.14, grain);
-  float tone = 0.6 * vnoise(p.xz / 27.0 + 5.0) + 0.4 * vnoise(p.xz / 7.0);
-  vec3 mean = vec3(0.279, 0.092, 0.014) * mix(vec3(0.7, 0.85, 0.5), vec3(1.25, 1.75, 0.95), smoothstep(0.3, 0.7, tone));
-  m.colour = mix(m.colour, mean, 0.8 * distant);
-  m.strand = mix(m.strand, 0.75, 0.8 * distant);
-  return m;
-}`;
-
-const FLOOR_FRAGMENT = /* glsl */ `
-varying vec3 vWorld;
-varying vec3 vNormal;
-${NOISE_GLSL}
-${RIG_GLSL}
-${ROCK_GLSL}
-${WATER_GLSL}
-${MATS_GLSL}
-void main() {
-  vec3 n = normalize(vNormal);
-  vec3 v = normalize(cameraPosition - vWorld);
-  Rock k = rockAt(vWorld, n, 0.0);
-  // Pale stone, stained where the mats lie on it.
-  float stained = matBeds(vWorld);
-  // Dark silt, with slabs of pale stone standing through it, pale gravel at the shore and a pale crust at the lip.
-  float shoreward = -landAt(vWorld.xz).b;
-  float slab = smoothstep(0.58, 0.68, 0.7 * vnoise(vWorld.xz / 6.3 + 2.0) + 0.3 * vnoise(vWorld.xz / 2.1));
-  float crust = smoothstep(-0.14, -0.02, vWorld.y);
-  slab = max(slab, crust);
-  stained *= 1.0 - 0.85 * crust;
-  vec3 pale = mix(k.albedo, vec3(0.6, 0.56, 0.47) * (0.6 + 0.6 * k.occ), 0.6);
-  vec3 albedo = mix(vec3(0.085, 0.06, 0.045) * (0.7 + 0.5 * k.occ), pale, slab);
-  // At the shore the floor is the gravel of the beach, wet and dark.
-  albedo = mix(albedo, k.albedo * 0.24, smoothstep(7.0, 1.5, shoreward));
-  // The crust is pale and pitted, with rims of darker scale.
-  float pit = 0.6 * vnoise(vWorld.xz / 0.9 + 5.0) + 0.4 * vnoise(vWorld.xz / 0.23);
-  vec3 sa = texture2D(tSinter, vWorld.xz / 3.0).rgb;
-  vec3 sb = texture2D(tSinter, vWorld.xz / 13.0 + 0.37).rgb;
-  vec3 sn = texture2D(tSinterNh, vWorld.xz / 3.0).rgb;
-  albedo = mix(albedo, mix(sa, sb, 0.4) * vec3(1.05, 1.2, 1.45) * (0.75 + 0.35 * pit), 0.9 * crust);
-  k.normal = normalize(mix(k.normal, normalize(n + vec3(sn.x * 2.0 - 1.0, 0.0, sn.y * 2.0 - 1.0) * 1.3), crust));
-  k.occ = mix(k.occ, 0.5 + 0.5 * smoothstep(0.1, 0.6, sn.b), crust);
-  albedo = mix(albedo, albedo * vec3(0.55, 0.3, 0.14), 0.7 * stained);
-  // Out of the water the rim is wet stone; under it the stone is darker than it is dry.
-  float dry = smoothstep(0.0, 0.14, vWorld.y);
-  albedo *= mix(0.62, 0.8, dry);
-  // Under the water the silt lies smooth.
-  k.normal = normalize(mix(n, k.normal, mix(0.3, 1.0, max(slab, dry))));
-  vec3 c = rigShade(vWorld, k.normal, v, albedo, mix(0.95, 0.4, smoothstep(-0.02, 0.03, vWorld.y) * (1.0 - 0.5 * dry)), k.occ) * sunk(vWorld);
-  gl_FragColor = vec4(rigOut(throughWater(c, vWorld)), 1.0);
-}`;
-
-const MATS_FRAGMENT = /* glsl */ `
-varying vec3 vWorld;
-varying vec3 vNormal;
-${NOISE_GLSL}
-${RIG_GLSL}
-${WATER_GLSL}
-${MATS_GLSL}
-void main() {
-  vec3 v = normalize(cameraPosition - vWorld);
-  Mat m = matsAt(vWorld);
-  float a = m.cover * m.strand;
-  vec3 n = normalize(vec3(m.grain.x, 1.6, m.grain.y));
-  vec3 c = rigShade(vWorld, n, v, m.colour, 0.8, 0.45 + 0.55 * m.strand);
-  // The filaments are thin: the sun comes through them.
-  c += m.colour * uSunColour * (0.14 * sunAt(vec3(vWorld.x, 0.0, vWorld.z)) * m.strand);
-  c = throughWater(c * sunk(vWorld), vWorld);
-  float on = 1.0 - uSolo;
-  gl_FragColor = vec4(c * a * on, a * on);
-}`;
-
-const SHAFT_FRAGMENT = /* glsl */ `
-varying vec3 vWorld;
-varying vec3 vNormal;
-${NOISE_GLSL}
-${RIG_GLSL}
-${ROCK_GLSL}
-${WATER_GLSL}
-void main() {
-  vec3 n = normalize(vNormal);
-  vec3 v = normalize(cameraPosition - vWorld);
-  // Far down nothing of the wall comes back up: there it is only the dark of the water, and is not worked out.
-  vec3 reach = sunk(vWorld);
-  if (reach.b < 0.035) {
-    gl_FragColor = vec4(rigOut(throughWater(vec3(0.0), vWorld)), 1.0);
-    return;
-  }
-  Rock k = rockAt(vWorld, n, 1.0);
-  // Under the water the light comes from above alone: the wall is lit as an open face under the sky, and dies with depth.
-  vec3 at = vec3(vWorld.x, 0.0, vWorld.z);
-  vec3 e = skyIrradiance(normalize(k.normal + vec3(0.0, 0.7, 0.0))) * skyOpen(at) + uSunColour * (0.35 * sunAt(at) * max(dot(k.normal, normalize(vec3(uSunDir.x, 0.75, uSunDir.z))), 0.0));
-  // The ledges hold their own shade, and the pale of the wall is gone a few metres down.
-  float ledge = 0.45 + 0.55 * smoothstep(0.3, 0.6, 0.6 * vnoise(vec2(atan(vWorld.x, -vWorld.z) * 190.0, vWorld.y / 1.6)) + 0.4 * vnoise(vec2(atan(vWorld.x, -vWorld.z) * 700.0, vWorld.y / 0.5)));
-  float down = -vWorld.y;
-  vec3 fall = exp(-down * vec3(0.5, 0.2, 0.17));
-  vec3 c = k.albedo * e * (k.occ * ledge / 3.14159) * reach * sqrt(reach) * 1.5 * fall;
-  gl_FragColor = vec4(rigOut(throughWater(c, vWorld)), 1.0);
-}`;
-
-const FORM_VERTEX = /* glsl */ `
-uniform float uSway;
-uniform float uTime;
-varying vec3 vWorld;
-varying vec3 vNormal;
-void main() {
-  vec4 p = vec4(position, 1.0);
-  vec3 n = normal;
-  #ifdef USE_INSTANCING
-  p = instanceMatrix * p;
-  n = mat3(instanceMatrix) * n;
-  #endif
-  vec4 w = modelMatrix * p;
-  #ifdef USE_INSTANCING
-  float phase = instanceMatrix[3].x * 0.37 + instanceMatrix[3].z * 0.21;
-  w.x += uSway * 0.9 * sin(uTime * 0.31 + phase) * (0.5 + 0.5 * position.y);
-  w.z += uSway * 0.7 * sin(uTime * 0.23 + phase * 1.7) * (0.5 + 0.5 * position.y);
-  w.y += uSway * 0.5 * sin(uTime * 0.19 + phase * 0.6);
-  #endif
-  vWorld = w.xyz;
-  vNormal = normalize(mat3(modelMatrix) * n);
-  gl_Position = projectionMatrix * viewMatrix * w;
-}`;
-
-// Pale skin under water: the forms that hang in the deep, and what rises.
-const FORM_FRAGMENT = /* glsl */ `
-varying vec3 vWorld;
-varying vec3 vNormal;
-uniform float uPale;
-uniform float uMurk;
-${NOISE_GLSL}
-${RIG_GLSL}
-${WATER_GLSL}
-void main() {
-  vec3 n = normalize(vNormal);
-  vec3 v = normalize(cameraPosition - vWorld);
-  float mottle = fbm(vWorld.xz * 0.6 + vWorld.y * 0.4);
-  vec3 albedo = vec3(0.7, 0.68, 0.62) * (0.75 + 0.4 * mottle) * uPale;
-  vec3 at = vec3(vWorld.x, max(vWorld.y, 0.0), vWorld.z);
-  float wet = step(vWorld.y, domeAt(vWorld.xz));
-  vec3 e = skyIrradiance(normalize(n + vec3(0.0, 0.6 * wet, 0.0))) * skyOpen(at) + uSunColour * (sunAt(at) * mix(max(dot(n, uSunDir), 0.0), 0.3 * max(n.y, 0.0), wet));
-  vec3 c = albedo * e / 3.14159;
-  c = mix(c, throughWater(c * sunk(vWorld), vWorld), wet);
-  // What rises brings the dark of the shaft up with it: under the dome it is a pale shape and no more.
-  c *= exp(-uMurk * wet * max(domeAt(vWorld.xz) - vWorld.y, 0.0) * vec3(0.62, 0.46, 0.4));
-  gl_FragColor = vec4(rigOut(c), 1.0);
-}`;
 
 const WATER_VERTEX = /* glsl */ `
 uniform vec4 uDome;
@@ -260,207 +29,177 @@ void main() {
 
 const WATER_FRAGMENT = /* glsl */ `
 varying vec3 vWorld;
+uniform sampler2D tRipple;
 uniform sampler2D tMirror;
 uniform mat4 uMirrorMatrix;
-uniform vec3 uRing[${RINGS}];
-uniform vec4 uLap[${LAPS}];
-uniform float uRest;
+uniform float uMirrorOn;
 uniform float uLens;
+uniform vec4 uLap[${LAPS}];
+uniform vec4 uDome;
+// x: seconds since the centre rose (negative before), y: how far the rest picture of the handoff has come in.
+uniform vec4 uCentre;
 uniform vec3 uRestWater;
 uniform vec3 uRestRing;
 uniform float uRestRadius[9];
 uniform float uRestWidth;
-uniform vec3 uSkyMirror;
 ${NOISE_GLSL}
 ${RIG_GLSL}
-${WATER_GLSL}
-${MATS_GLSL}
-// The slope of a field of noise: what a slow swell does to a mirror.
-vec2 heave(vec2 q) {
-  return vec2(vnoise(q + vec2(0.35, 0.0)) - vnoise(q - vec2(0.35, 0.0)), vnoise(q + vec2(0.0, 0.35)) - vnoise(q - vec2(0.0, 0.35)));
+${BED_GLSL}
+
+// Metres in from the shore. Where the built land has given way to the picture of the far world the water runs on, shallow, to the picture's own shore.
+float shoreIn(vec2 xz) {
+  float s = -landAt(xz).b;
+  if (uNear.w > 0.5 && length(xz - uNear.xy) > uNear.z) s = max(s, 14.0);
+  return s;
 }
+
+// The slope of the water from a field of small waves that repeats: two reads of it that cross make water that never comes round.
+vec2 waves(vec2 q, vec2 drift) {
+  return texture2D(tRipple, q + drift).rg + texture2D(tRipple, q * 0.73 + vec2(0.31, 0.57) - drift.yx * 1.3).rg;
+}
+
 void main() {
   vec3 p = vWorld;
+  vec3 toCamera = cameraPosition - p;
+  float away = length(toCamera);
+  vec3 v = toCamera / away;
   float r = length(p.xz);
   vec2 out2 = p.xz / max(r, 1e-3);
-  // The slope of the surface: the rings from the centre, the rings where something drinks, the dome, and a breath of nothing at all.
+  vec4 land = landAt(p.xz);
+  float inShore = shoreIn(p.xz);
+
+  // The slope of the surface.
   vec2 slope = vec2(0.0);
-  if (r < 620.0) {
-    float dr = 0.0;
-    for (int i = 0; i < ${RINGS}; i++) {
-      vec3 g = uRing[i];
-      float x = (r - g.x) / g.y;
-      dr -= g.z * 2.0 * x / g.y * exp(-x * x);
-    }
-    // No ring is whole: each is stronger on one side and broken on another, as rings on a lake are.
-    dr *= mix(0.45 + 1.0 * vnoise(out2 * 3.0 + r / 37.0), 1.0, uRest);
-    float u = clamp(r / uDome.y, 0.0, 1.0);
-    dr += uDome.x * 2.0 * (1.0 - u * u) * (-2.0 * u / uDome.y);
+  // Rings that leave the centre, always: low and long, stronger on one side, and a train of higher ones thrown by what rises.
+  if (r < 700.0) {
+    float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
+    float quiet = 0.012 * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
+    float since = uCentre.x;
+    float front = 70.0 + 40.0 * max(since, 0.0);
+    float thrown = since > -1.5 ? 0.05 * smoothstep(-1.5, 0.3, since) * exp(-max(since, 0.0) / 3.5) * smoothstep(front + 30.0, front - 40.0, r) * exp(-r / 220.0) * cos(r * 0.3 - uTime * 2.6) : 0.0;
+    // Chop on and round the swell: short waves that cross.
+    float du = clamp(r / uDome.y, 0.0, 1.0);
+    float dr = (quiet + thrown) * broken + uDome.x * 2.0 * (1.0 - du * du) * (-2.0 * du / uDome.y);
     slope += out2 * dr;
+    float chop = clamp(uDome.x / 3.0, 0.0, 1.0) * smoothstep(190.0, 40.0, r);
+    if (chop > 0.0) slope += chop * (0.05 * waves(p.xz / 13.0, vec2(uTime * 0.05, uTime * 0.03)) + 0.04 * waves(p.xz / 3.7, vec2(-uTime * 0.11, uTime * 0.08)));
   }
-  if (r > 470.0) for (int i = 0; i < ${LAPS}; i++) {
+  // Rings where something drinks or stands: two trains of unlike length that leave it and die within a few metres.
+  for (int i = 0; i < ${LAPS}; i++) {
     vec4 l = uLap[i];
     vec2 d = p.xz - l.xy;
     float m = length(d);
-    if (l.w > 0.0 && m < 14.0) {
-      // Rings that leave where it touches the water: two trains of unlike length, so no ring comes round to where the last one stood.
-      float ph = m * 6.3 - (uTime + l.z) * 4.37;
-      float ph2 = m * 10.9 - (uTime + l.z * 2.3) * 7.9;
-      float pack = 0.6 + 0.4 * sin(m * 0.8 - uTime * 1.13 + l.z * 5.0);
-      float env = l.w * 0.0036 * exp(-m / 2.6) * smoothstep(0.05, 0.5, m) * pack;
-      slope += d / max(m, 1e-3) * (env * (6.3 * cos(ph) + 4.0 * cos(ph2)));
+    if (l.w > 0.0 && m < 11.0) {
+      float ph = m * 7.4 - (uTime + l.z) * 5.1;
+      float ph2 = m * 13.9 - (uTime + l.z * 2.3) * 8.3;
+      float pack = 0.55 + 0.45 * sin(m * 0.9 - uTime * 1.13 + l.z * 5.0);
+      float env = l.w * 0.03 * exp(-m / 2.2) * smoothstep(0.03, 0.3, m) * pack;
+      slope += d / max(m, 1e-3) * (env * (cos(ph) + 0.6 * cos(ph2)));
     }
   }
-  // A breath of wind: a long slow heave, wavelets that travel with it, and lanes where a gust has roughened the mirror.
-  float away = length(cameraPosition - p);
+  // A breath of air: a long slow heave everywhere, wavelets nearer, and lanes where a cat's paw has roughened the mirror.
   vec2 wind = vec2(0.8, 0.6);
-  float gust = smoothstep(0.42, 0.78, vnoise(vec2(dot(p.xz, wind), dot(p.xz, vec2(-wind.y, wind.x)) * 2.6) / 150.0 - vec2(uTime * 0.07, 0.0)));
-  slope += 0.011 * heave(p.xz / 46.0 - wind * uTime * 0.14);
-  float mid = 1.0 - smoothstep(250.0, 700.0, away);
-  if (mid > 0.0) slope += (0.006 + 0.012 * gust) * mid * heave(p.xz / 9.0 - wind * uTime * 0.12 + 7.0);
-  float close = 1.0 - smoothstep(40.0, 140.0, away);
-  if (close > 0.0) slope += (0.004 + 0.014 * gust) * close * heave(p.xz / 1.9 - wind * uTime * 0.3 + 3.0);
+  float gust = smoothstep(0.38, 0.75, vnoise(vec2(dot(p.xz, wind), dot(p.xz, vec2(-wind.y, wind.x)) * 2.4) / 170.0 - vec2(uTime * 0.06, 0.0)));
+  slope += 0.0035 * waves(p.xz / 71.0, wind * uTime * 0.011);
+  float mid = 1.0 - smoothstep(260.0, 900.0, away);
+  if (mid > 0.0) slope += (0.003 + 0.011 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
+  float close = 1.0 - smoothstep(25.0, 110.0, away);
+  if (close > 0.0) slope += (0.004 + 0.012 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.09);
+  float closer = 1.0 - smoothstep(4.0, 22.0, away);
+  if (closer > 0.0) slope += 0.006 * closer * waves(p.xz / 0.61, wind * uTime * 0.21);
+
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
-  vec3 v = normalize(cameraPosition - p);
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  float f = 0.02 + 0.98 * pow(1.0 - nv, 4.0);
-  vec4 m4 = uMirrorMatrix * vec4(p.x, 0.0, p.z, 1.0);
-  vec3 bent = (viewMatrix * vec4(n.x, 0.0, n.z, 0.0)).xyz;
-  vec2 uv = m4.xy / m4.w + vec2(bent.x, -bent.z) * uLens * 0.9;
-  vec4 seen = texture2D(tMirror, clamp(uv, 0.001, 0.999));
-  // The sky is not drawn into the mirror: the water takes it from the rig, and darker than it is, as deep water under a low sun does.
+  float f = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
+
+  // What the water mirrors: the far world, softer the further off and where the air has roughened it.
   vec3 rd = reflect(-v, n);
-  vec3 sky = skyRadiance(vec3(rd.x, abs(rd.y), rd.z)) * uSkyMirror * mix(1.0, 0.3, smoothstep(0.04, 0.3, abs(rd.y)));
-  // The land stands in the water darker than it stands in the air.
-  vec3 refl = seen.rgb * vec3(0.38, 0.45, 0.56) + (1.0 - seen.a) * sky;
-  refl = mix(refl, sky, smoothstep(0.75, 0.95, v.y));
-  // Where a gust has passed, the mirror is broken and the water gives back the pale of the sky.
-  refl = mix(refl, refl * 0.3 + sky * 0.5, 0.55 * gust * (1.0 - smoothstep(0.3, 0.8, v.y)));
-  // The dome is no flat mirror: its slopes throw back the dim upper sky, and it stands dark on the bright water.
-  float du = clamp(r / uDome.y, 0.0, 1.0);
-  float swell = (1.0 - du * du) * clamp(uDome.x / 2.0, 0.0, 1.0);
-  float hump = smoothstep(0.0, 0.45, swell);
-  // Seen from above it is no dome at all, only water: the dark of the shaft, and what is in it.
-  hump *= 1.0 - smoothstep(0.25, 0.7, v.y);
-  refl = mix(refl, sky * (0.17 + 0.06 * vnoise(p.xz / 4.0 + uTime * 0.4)), hump);
-  f = max(f, 0.8 * hump);
-  // Where the mats have grown up to the surface it is not a mirror at all.
-  if (r > 470.0) f *= 1.0 - mix(0.5, 0.94, smoothstep(25.0, 220.0, length(cameraPosition - p))) * matBeds(p);
-  vec4 c = vec4(refl * f, f);
-  // The last second of the place: the flat picture the rise begins with.
-  if (uRest > 0.0) {
-    float ring = 0.0;
-    for (int i = 0; i < 9; i++) {
-      float w = uRestRadius[i] * uRestWidth * 0.5;
-      float e = fwidth(r) * 0.7;
-      ring = max(ring, 1.0 - smoothstep(w - e, w + e, abs(r - uRestRadius[i])));
-    }
-    c = mix(c, vec4(mix(uRestWater, uRestRing, ring), 1.0), uRest);
+  rd.y = abs(rd.y) + 0.003;
+  rd = normalize(rd);
+  float soft = 0.6 + 2.2 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
+  vec3 refl = farRadiance(p, rd, soft) * vec3(0.5, 0.6, 0.76);
+  // Whatever stands in the water or at its edge, drawn once more from under it.
+  if (uMirrorOn > 0.5) {
+    vec4 m4 = uMirrorMatrix * vec4(p.x, 0.0, p.z, 1.0);
+    vec3 bent = (viewMatrix * vec4(n.x, 0.0, n.z, 0.0)).xyz;
+    vec2 uv = m4.xy / m4.w + vec2(bent.x, -bent.z) * uLens * 0.6;
+    vec4 seen = texture2D(tMirror, clamp(uv, 0.001, 0.999));
+    refl = mix(refl, seen.rgb * 0.82, seen.a);
   }
-  float on = 1.0 - uSolo;
-  gl_FragColor = vec4(c.rgb * on, c.a * on);
+
+  // What lies under it.
+  vec3 rf = refract(-v, n, 0.752);
+  float fall = max(-rf.y, 0.12);
+  float w = r - lipRadius(p.xz);
+  vec3 under;
+  float dry = 0.0;
+  if (w > 0.0) {
+    float depth = shelfDepthAt(p.xz, inShore, w);
+    vec2 b = p.xz + rf.xz * (max(depth, 0.0) / fall);
+    float w2 = length(b) - lipRadius(b);
+    float in2 = shoreIn(b);
+    float depth2 = shelfDepthAt(b, in2, w2);
+    Bed bed = bedAt(b, max(w2, 0.0), in2, depth2, away);
+    vec3 at = vec3(b.x, 0.0, b.y);
+    float sun = sunAt(at);
+    float open = skyOpen(at);
+    vec3 bn = normalize(vec3(bed.tilt.x, 1.0, bed.tilt.y));
+    vec3 e = skyIrradiance(bn) * open + uSunColour * (sun * (max(dot(bn, normalize(vec3(uSunDir.x, uSunDir.y + 0.35, uSunDir.z))), 0.0) * 0.8 + bed.glow));
+    // The light of the low sky comes into the water far more easily than the sun does: the bed is lit from above.
+    vec3 lit = bed.albedo * e * (bed.occ / 3.14159);
+    float d = max(depth2, 0.0);
+    vec3 through = exp(-uAbsorb * d * (1.0 + 1.0 / fall));
+    through = mix(through, vec3(1.0), bed.dry);
+    under = lit * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * 0.7 * (1.0 - through);
+    // Where the crust of the lip or a bar stands out of the water it is wet stone, not a mirror.
+    dry = max(smoothstep(0.0, -0.035, depth2), bed.dry);
+  } else {
+    // Over the shaft: the wall goes down pale and green under the lip and is lost in a few metres; then only the dark of the water.
+    float inside = -w;
+    float down = 0.5 + 1.3 * inside + 0.22 * inside * inside;
+    vec2 b = p.xz + rf.xz * (min(down, 9.0) / fall) * 0.25;
+    Bed bed = wallAt(b, down, inside);
+    vec3 at = vec3(p.x, 0.0, p.z);
+    float open = skyOpen(at);
+    vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (0.12 * sunAt(at));
+    vec3 through = exp(-uAbsorb * down * (1.6 + 1.0 / fall));
+    under = bed.albedo * e * (bed.occ / 3.14159) * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
+    // What rises: a pale shape under the dome, never the whole of it.
+    float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
+    float pale = clamp(uDome.x / 6.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
+    under += vec3(0.05, 0.062, 0.06) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * pale * (0.4 + 0.6 * smoothstep(0.1, 0.6, v.y));
+  }
+  f *= 1.0 - dry;
+  vec3 c = mix(under, refl, f);
+  // A low sun on moving water: a hard glitter where a wavelet turns its face to it.
+  vec3 hv = normalize(uSunDir + v);
+  float sharp = 1400.0 / (1.0 + away * away / 3600.0) + 60.0;
+  float glint = pow(max(dot(n, hv), 0.0), sharp) * sqrt(sharp / 1400.0) * sunAt(vec3(p.x, 0.5, p.z));
+  c += uSunColour * glint * 0.6 * (close + 0.3);
+
+  // The last second of the place: the picture the rise begins with, soft rings on deep water seen from straight above.
+  if (uCentre.y > 0.0) {
+    float theta = atan(p.x, -p.z);
+    float m = 0.0;
+    for (int i = 0; i < 9; i++) {
+      float x = (r - uRestRadius[i]) / (0.5 * uRestWidth * uRestRadius[i]);
+      m += exp(-x * x) * (0.35 + 0.30 * (0.5 + 0.5 * sin(2.0 * theta + 2.4 * float(i))));
+    }
+    c = mix(c, mix(uRestWater, uRestRing, clamp(m, 0.0, 1.0)), uCentre.y);
+  }
+  gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
-// The bearings of the columns of the floor and of the wall under it: even all round, and fine where the edge shot stands on the lip.
-function bearings(): number[] {
-  const list: number[] = [];
-  for (let i = 0; i < 1024; i++) list.push((i / 1024) * 360);
-  for (let b = 190; b <= 204.5; b += 0.02) list.push(b);
-  list.sort((p, q) => p - q);
-  const out = list.filter((b, i) => i === 0 || b - (list[i - 1] as number) > 0.004);
-  out.push(360);
-  return out;
-}
-
-function floorGeometry(): THREE.BufferGeometry {
-  const around = bearings();
-  const COLS = around.length - 1;
-  const FINE = 45;
-  const ROWS = FINE + 40;
-  const positions = new Float32Array((COLS + 1) * (ROWS + 1) * 3);
-  for (let i = 0; i <= COLS; i++) {
-    const a = ((around[i] as number) % 360) * DEG;
-    const lip = lipAt(a);
-    const shore = shoreAt(a / DEG) - 4.6;
-    for (let j = 0; j <= ROWS; j++) {
-      const r = j <= FINE ? lip + j * 0.2 : lip + FINE * 0.2 + (shore - lip - FINE * 0.2) * ((j - FINE) / (ROWS - FINE));
-      const x = Math.sin(a) * r;
-      const z = -Math.cos(a) * r;
-      const o = (i * (ROWS + 1) + j) * 3;
-      positions[o] = x;
-      positions[o + 1] = -shelfDepth(x, z, shore + 4.6 - r) - (j === ROWS ? 0.03 : 0);
-      positions[o + 2] = z;
-    }
-  }
-  return grid(positions, COLS, ROWS + 1, false);
-}
-
-function grid(positions: Float32Array, cols: number, rows: number, inward: boolean): THREE.BufferGeometry {
-  const index = new Uint32Array(cols * (rows - 1) * 6);
-  let n = 0;
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows - 1; j++) {
-      const a = i * rows + j;
-      const b = (i + 1) * rows + j;
-      if (inward) {
-        index[n++] = a;
-        index[n++] = a + 1;
-        index[n++] = b;
-        index[n++] = b;
-        index[n++] = a + 1;
-        index[n++] = b + 1;
-      } else {
-        index[n++] = a;
-        index[n++] = b;
-        index[n++] = a + 1;
-        index[n++] = b;
-        index[n++] = b + 1;
-        index[n++] = a + 1;
-      }
-    }
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  g.setIndex(new THREE.BufferAttribute(index, 1));
-  g.computeVertexNormals();
-  return g;
-}
-
-const DEPTHS = [0, 0.2, 0.5, 0.9, 1.4, 2, 2.8, 3.8, 5, 6.5, 8.5, 11, 14, 18, 23, 29, 36, 45, 57, 73, 94, 122, 160, 215, 290, 400];
-
-function shaftGeometry(): THREE.BufferGeometry {
-  const around = bearings();
-  const COLS = around.length - 1;
-  const R = DEPTHS.length;
-  const positions = new Float32Array((COLS + 1) * R * 3);
-  for (let i = 0; i <= COLS; i++) {
-    const a = ((around[i] as number) % 360) * DEG;
-    const lip = lipAt(a);
-    const top = -shelfDepth(Math.sin(a) * lip, -Math.cos(a) * lip, shoreAt(a / DEG) - lip);
-    for (let j = 0; j < R; j++) {
-      const d = DEPTHS[j] as number;
-      // Under the lip the wall falls away in a broken slope and then sheer, in ledges, so that it is seen from the lip.
-      const ledges = 7 * (vnoise(Math.cos(a) * 60 + 2, Math.sin(a) * 60 + d / 7) - 0.5) + 3 * (vnoise(Math.cos(a) * 190, Math.sin(a) * 190 + d / 2.5) - 0.5);
-      const r = lip - 0.3 * smooth(0, 0.7, d) - 6.5 * (1 - Math.exp(-d / 7)) - 0.13 * d + ledges * smooth(1.5, 12, d);
-      const o = (i * R + j) * 3;
-      positions[o] = Math.sin(a) * r;
-      positions[o + 1] = top - d;
-      positions[o + 2] = -Math.cos(a) * r;
-    }
-  }
-  return grid(positions, COLS, R, true);
-}
-
 function surfaceGeometry(): THREE.BufferGeometry {
-  const COLS = 384;
+  const COLS = 256;
   const radii: number[] = [];
-  for (let r = 0.5; r < 64; r += 1) radii.push(r);
-  for (let r = 64; r < 1020; r *= 1.055) radii.push(r);
-  radii.push(1020);
+  for (let r = 1; r < 72; r += 1.5) radii.push(r);
+  for (let r = 72; r < 4200; r *= 1.07) radii.push(r);
+  radii.push(4200);
   const R = radii.length;
-  const positions = new Float32Array(((COLS + 1) * R + 1) * 3);
-  for (let i = 0; i <= COLS; i++) {
-    const a = ((i % COLS) / COLS) * Math.PI * 2;
+  const positions = new Float32Array((COLS * R + 1) * 3);
+  for (let i = 0; i < COLS; i++) {
+    const a = (i / COLS) * Math.PI * 2;
     for (let j = 0; j < R; j++) {
       const o = (i * R + j) * 3;
       positions[o] = Math.sin(a) * (radii[j] as number);
@@ -468,196 +207,156 @@ function surfaceGeometry(): THREE.BufferGeometry {
       positions[o + 2] = -Math.cos(a) * (radii[j] as number);
     }
   }
-  const g = grid(positions, COLS, R, false);
-  // The middle: a fan to the centre.
-  const index = Array.from((g.getIndex() as THREE.BufferAttribute).array);
-  const centre = (COLS + 1) * R;
-  for (let i = 0; i < COLS; i++) index.push(centre, (i + 1) * R, i * R);
+  const index: number[] = [];
+  for (let i = 0; i < COLS; i++) {
+    const k = (i + 1) % COLS;
+    for (let j = 0; j < R - 1; j++) {
+      const a = i * R + j;
+      const b = k * R + j;
+      index.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+    index.push(COLS * R, k * R, i * R);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   g.setIndex(index);
   return g;
 }
 
+/** A field of small waves that repeats: red and green are its slope, with a spread of one. Summed from waves of whole numbers of turns, so its edges meet. */
+function rippleTexture(seed: () => number): THREE.DataTexture {
+  const N = 256;
+  const waves: [number, number, number, number][] = [];
+  for (let i = 0; i < 28; i++) {
+    const k = 3 + Math.floor(seed() * 11);
+    const a = seed() * Math.PI * 2;
+    const kx = Math.round(Math.cos(a) * k);
+    const ky = Math.round(Math.sin(a) * k);
+    waves.push([kx, ky, seed() * Math.PI * 2, 1 / Math.max(1, Math.hypot(kx, ky)) ** 0.5]);
+  }
+  const sx = new Float32Array(N * N);
+  const sy = new Float32Array(N * N);
+  let sum = 0;
+  for (let j = 0; j < N; j++) {
+    for (let i = 0; i < N; i++) {
+      let dx = 0;
+      let dy = 0;
+      for (const [kx, ky, ph, amp] of waves) {
+        const c = amp * Math.cos(((kx * i + ky * j) / N) * Math.PI * 2 + ph);
+        dx += c * kx;
+        dy += c * ky;
+      }
+      sx[j * N + i] = dx;
+      sy[j * N + i] = dy;
+      sum += dx * dx + dy * dy;
+    }
+  }
+  const spread = Math.sqrt(sum / (N * N));
+  const data = new Uint16Array(N * N * 4);
+  for (let i = 0; i < N * N; i++) {
+    data[i * 4] = THREE.DataUtils.toHalfFloat((sx[i] as number) / spread);
+    data[i * 4 + 1] = THREE.DataUtils.toHalfFloat((sy[i] as number) / spread);
+    data[i * 4 + 3] = THREE.DataUtils.toHalfFloat(1);
+  }
+  const t = new THREE.DataTexture(data, N, N, THREE.RGBAFormat, THREE.HalfFloatType);
+  // Far off, where one pixel holds many waves, the slopes average out: the water there is smooth, not noise.
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.generateMipmaps = true;
+  t.magFilter = THREE.LinearFilter;
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.NoColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
+
+/** The lip of the shaft all round, metres from the centre, by bearing: the bed in the shader and the lip of the land are the same line. */
+function lipTexture(): THREE.DataTexture {
+  const N = 4096;
+  const data = new Uint16Array(N * 4);
+  for (let i = 0; i < N; i++) data[i * 4] = THREE.DataUtils.toHalfFloat(lipAt(((i + 0.5) / N) * Math.PI * 2));
+  const t = new THREE.DataTexture(data, N, 1, THREE.RGBAFormat, THREE.HalfFloatType);
+  t.minFilter = THREE.LinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.ClampToEdgeWrapping;
+  t.colorSpace = THREE.NoColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
+
 export function create(ctx: Context): Piece {
   const rig = ctx.rig.uniforms;
-  const rock = rockUniforms(ctx);
-  const water: Record<string, THREE.IUniform> = { ...waterUniforms(), tMat: { value: ctx.assets.texture('mat/mat.jpg', { anisotropy: 4 }) }, tMatNh: { value: ctx.assets.texture('mat/mat-nh.png', { kind: 'data' }) } };
   const mirror = createMirror();
-  const lake = new THREE.Group();
-
-  const floorShape = floorGeometry();
-  const floorMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...rock, ...water, uLift: { value: 0 } }, vertexShader: FLOOR_VERTEX, fragmentShader: FLOOR_FRAGMENT });
-  const floor = new THREE.Mesh(floorShape, floorMaterial);
-  floor.frustumCulled = false;
-  lake.add(ctx.parts.built('shallows', floor));
-
-  const matsMaterial = new THREE.ShaderMaterial({
-    uniforms: { ...rig, ...water, uLift: { value: 0.05 } },
-    vertexShader: FLOOR_VERTEX,
-    fragmentShader: MATS_FRAGMENT,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.CustomBlending,
-    blendSrc: THREE.OneFactor,
-    blendDst: THREE.OneMinusSrcAlphaFactor,
-  });
-  const mats = new THREE.Mesh(floorShape, matsMaterial);
-  mats.frustumCulled = false;
-  mats.renderOrder = 1;
-  lake.add(ctx.parts.built('mats', mats));
-
-  const shaftMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...rock, ...water }, vertexShader: RIG_VERTEX, fragmentShader: SHAFT_FRAGMENT });
-  const shaft = new THREE.Mesh(shaftGeometry(), shaftMaterial);
-  shaft.frustumCulled = false;
-  const formMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...water, uSway: { value: 1 }, uPale: { value: 0.5 }, uMurk: { value: 0 } }, vertexShader: FORM_VERTEX, fragmentShader: FORM_FRAGMENT });
-  // The pale forms that hang upright in the deep, far down, most of them under the lip the camera comes to.
-  const rng = ctx.rng('shaft');
-  const FORMS = 70;
-  const forms = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 14, 12), formMaterial, FORMS);
-  const dummy = new THREE.Object3D();
-  for (let i = 0; i < FORMS; i++) {
-    const b = i < 40 ? rng.range(176, 222) : rng.range(0, 360);
-    const a = b * DEG;
-    const r = lipAt(a) - rng.range(22, 150);
-    const size = rng.range(1.1, 2.6);
-    dummy.position.set(Math.sin(a) * r, -rng.range(38, 80), -Math.cos(a) * r);
-    dummy.rotation.set(rng.range(-0.12, 0.12), rng.range(0, 6.28), rng.range(-0.12, 0.12));
-    dummy.scale.set(size * 0.34, size * rng.range(2.2, 4.2), size * 0.34 * rng.range(0.7, 1));
-    dummy.updateMatrix();
-    forms.setMatrixAt(i, dummy.matrix);
-  }
-  forms.frustumCulled = false;
-  // The shaft has no floor that is ever seen, but it is closed: nothing behind it shows through from above.
-  const pit = new THREE.Mesh(new THREE.CircleGeometry(DEEP, 48).rotateX(-Math.PI / 2), shaftMaterial);
-  pit.position.y = -390;
-  pit.frustumCulled = false;
-  lake.add(ctx.parts.built('shaft', shaft, forms, pit));
-  lake.add(forms, pit);
-
-  // What rises: a pale back under a dome of water, never the whole of it, and thin pale tips that break the surface around it.
-  const riserMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...water, uSway: { value: 0 }, uPale: { value: 0.8 }, uMurk: { value: 1 } }, vertexShader: FORM_VERTEX, fragmentShader: FORM_FRAGMENT });
-  const back = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), riserMaterial);
-  back.frustumCulled = false;
-  const TIPS = 9;
-  const tipShape = new THREE.LatheGeometry(
-    [0, 0.08, 0.2, 0.35, 0.5, 0.65, 0.8, 0.92, 1].map((t) => new THREE.Vector2(0.9 * (1 - t) ** 0.7 * (1 + 0.15 * Math.sin(t * 9)) + 0.02, t * 7 - 3.5)),
-    14,
-  );
-  const tips = new THREE.InstancedMesh(tipShape, riserMaterial, TIPS);
-  tips.frustumCulled = false;
-  const tipAt: [number, number, number][] = [];
-  const scatter = ctx.rng('riser');
-  for (let i = 0; i < TIPS; i++) tipAt.push([(i / TIPS) * 360 + scatter.range(-16, 16), scatter.range(30, 120), scatter.range(0.2, 0.42)]);
-  lake.add(ctx.parts.built('riser', back, tips));
-  lake.add(tips);
-
-  const rings = Array.from({ length: RINGS }, () => new THREE.Vector3(0, 1, 0));
+  const seed = ctx.rng('ripple');
+  const ripple = rippleTexture(() => seed.next());
+  const lip = lipTexture();
+  const bed = bedUniforms(ctx, lip);
   const laps = Array.from({ length: LAPS }, () => new THREE.Vector4(0, 0, 0, 0));
-  const restRadius = handoff.ringRadii.map((share) => share * handoff.eyeHalfHeightMetres);
   const linear = (hex: string): THREE.Vector3 => {
     const c = new THREE.Color(hex);
     return new THREE.Vector3(c.r, c.g, c.b);
   };
-  const surfaceMaterial = new THREE.ShaderMaterial({
+  const dome = new THREE.Vector4(0, 66, 0, 0);
+  const centre = new THREE.Vector4(-100, 0, 0, 0);
+  const material = new THREE.ShaderMaterial({
     uniforms: {
       ...rig,
-      ...water,
+      ...bed,
       ...mirror.uniforms,
-      uRing: { value: rings },
-      uLap: { value: laps },
-      uRest: { value: 0 },
+      tRipple: { value: ripple },
+      uMirrorOn: { value: 0 },
       uLens: { value: 1 },
+      uLap: { value: laps },
+      uDome: { value: dome },
+      uCentre: { value: centre },
       uRestWater: { value: linear(handoff.water) },
       uRestRing: { value: linear(handoff.ring) },
-      uRestRadius: { value: restRadius },
+      uRestRadius: { value: handoff.ringRadii.map((share) => share * handoff.eyeHalfHeightMetres) },
       uRestWidth: { value: handoff.ringWidth },
-      uSkyMirror: { value: new THREE.Vector3(0.19, 0.26, 0.4) },
     },
     vertexShader: WATER_VERTEX,
     fragmentShader: WATER_FRAGMENT,
-    transparent: true,
-    depthWrite: true,
-    blending: THREE.CustomBlending,
-    blendSrc: THREE.OneFactor,
-    blendDst: THREE.OneMinusSrcAlphaFactor,
   });
-  const surface = new THREE.Mesh(surfaceGeometry(), surfaceMaterial);
+  const surface = new THREE.Mesh(surfaceGeometry(), material);
   surface.frustumCulled = false;
-  surface.renderOrder = 2;
-  lake.add(ctx.parts.built('lake', surface));
-  ctx.scene.add(lake);
+  ctx.scene.add(ctx.parts.built('lake', surface));
+  for (const name of ['shallows', 'shaft', 'mats', 'riser']) ctx.parts.effect(name, 'built');
 
   const rise = ctx.events.rise;
   const end = ctx.events.end;
-  const dome = water.uDome as THREE.IUniform<THREE.Vector4>;
-  const euler = new THREE.Euler();
+  const hidden: THREE.Object3D[] = [];
 
   return {
     setTime: (t) => {
-      const swell = smooth(rise - 1.7, rise - 0.15, t) * (1 - smooth(rise + 0.8, rise + 2.5, t));
-      const breathe = 1 + 0.04 * Math.sin(t * 2.3);
-      dome.value.x = 8.5 * swell * breathe;
-      back.visible = swell > 0.001;
-      back.scale.set(34, 5.4 * swell * breathe * smooth(0.3, 1, swell) + 0.01, 27);
-      back.position.set(6, -1.6, -4);
-      tipAt.forEach(([bearing, r, size], i) => {
-        const up = smooth(0.25 + 0.05 * (i % 4), 0.9, swell);
-        const a = bearing * DEG;
-        dummy.position.set(Math.sin(a) * r, -3.9 * size + 6.4 * size * up + 0.05 * Math.sin(t * 1.7 + i), -Math.cos(a) * r);
-        dummy.rotation.copy(euler.set(0.2 * Math.sin(i * 2.1), i * 1.9, 0.25 * Math.cos(i * 1.3)));
-        dummy.scale.setScalar(up > 0 ? size : 0);
-        dummy.updateMatrix();
-        tips.setMatrixAt(i, dummy.matrix);
-      });
-      tips.instanceMatrix.needsUpdate = true;
-
-      // The rings from the centre: a slow set that is always leaving, a fast set thrown by the rise, and the set that comes to rest for the handoff.
-      rings.forEach((ring, i) => {
-        let radius = 0;
-        let width = 1;
-        let height = 0;
-        if (i < 7) {
-          const age = t - (-11.6 + 2.6 * i);
-          const life = 13.5;
-          if (age > 0 && age < life) {
-            radius = 6 + 15 * age;
-            width = 5;
-            height = 0.075 * Math.sin((Math.PI * age) / life);
-          }
-        } else if (i < 12) {
-          const age = t - (rise - 1.2 + 0.62 * (i - 7));
-          const life = 2.7;
-          if (age > 0 && age < life) {
-            radius = 58 + 44 * age;
-            width = 12;
-            height = 0.3 * Math.sin((Math.PI * age) / life);
-          }
-        } else {
-          const k = i - 12;
-          const from = rise + 0.3 + 0.1 * (8 - k);
-          const grown = smooth(from, from + end - 1 - rise - 1.1, t);
-          const u = grown * grown * (3 - 2 * grown);
-          radius = (restRadius[k] as number) * u;
-          width = Math.max(0.4, radius * handoff.ringWidth * 0.5);
-          height = u > 0 ? 0.035 * width * Math.sin(Math.PI * Math.min(1, u * 1.4)) + 0.02 * width * u : 0;
-        }
-        ring.set(radius, width, height);
-      });
+      const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
+      dome.x = 5.2 * swell * (1 + 0.05 * Math.sin(t * 2.3));
+      centre.x = t - rise;
+      centre.y = smooth(end - 1.6, end - 0.1, t);
       laps.forEach((lap, i) => {
         const from = ctx.laps[i];
         if (from) lap.set(from.x, from.z, from.offset, from.strength);
         else lap.set(0, 0, 0, 0);
       });
-      (surfaceMaterial.uniforms.uRest as THREE.IUniform<number>).value = smooth(end - 2.7, end - 0.35, t);
     },
     beforeSample: (renderer, camera) => {
-      (surfaceMaterial.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
-      mirror.render(renderer, ctx.scene, camera, [lake, ...ctx.unmirrored]);
+      const reflected = ctx.reflected;
+      const on = reflected.length > 0 && camera.position.y < 60;
+      (material.uniforms.uMirrorOn as THREE.IUniform<number>).value = on ? 1 : 0;
+      if (!on) return;
+      (material.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
+      // Only what stands in or at the water is drawn into the mirror: the far world the water takes from the rig.
+      hidden.length = 0;
+      for (const o of ctx.scene.children) if (!reflected.includes(o)) hidden.push(o);
+      mirror.render(renderer, ctx.scene, camera, hidden);
     },
     resize: (width, height) => mirror.resize(width, height),
     dispose: () => {
       mirror.dispose();
-      for (const m of [floor, shaft, forms, pit, back, tips, surface]) m.geometry.dispose();
-      for (const m of [floorMaterial, matsMaterial, shaftMaterial, formMaterial, riserMaterial, surfaceMaterial]) m.dispose();
+      ripple.dispose();
+      lip.dispose();
+      surface.geometry.dispose();
+      material.dispose();
     },
   };
 }

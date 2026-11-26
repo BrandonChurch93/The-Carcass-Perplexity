@@ -53,8 +53,8 @@ export interface Context {
   readonly sources: { steam: SteamSource[]; heat: HeatSource[] };
   /** Where a mouth or a leg stirs the water, now. Whoever stands in the lake writes its slots in `setTime`; the lake reads them after and draws the rings. */
   readonly laps: Lap[];
-  /** What the lake's mirror leaves out: the sky, which the water takes from the rig instead. */
-  readonly unmirrored: THREE.Object3D[];
+  /** What stands in the water or at its edge, near the camera: the lake draws these, and nothing else, once more from under the water. The far world it takes from the rig. */
+  readonly reflected: THREE.Object3D[];
   /** Seconds, in the time of the place: `rise` is the crest of the dome at the centre (key eye-4), `end` the first frame of the rise to orbit. */
   readonly events: { rise: number; end: number };
 }
