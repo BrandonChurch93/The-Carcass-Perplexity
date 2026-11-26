@@ -144,7 +144,7 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec3 n, out float under)
   // It is thick and thin by its billows: torn, with air in it, and never a wall.
   float rho = (0.019 + 0.011 * surge) * layerMean(top, soft, p.y, hy) * mix(0.05, 2.3, smoothstep(0.3, 0.7, 0.55 * n.z + 0.45 * n.y));
   // Deeper it is thicker: the bottom is never seen.
-  rho *= 1.0 + 0.9 * smoothstep(2.0, 16.0, under);
+  rho *= 1.0 + 2.2 * smoothstep(3.0, 20.0, under);
   // Over the brim it is in the wind and thins as it climbs: wisps, and at the breath a body.
   rho *= exp(-max(p.y, 0.0) / (8.0 + 14.0 * surge));
   // Inside the wall; over the brim it leans out on the west, and at the breath all round.
@@ -314,8 +314,8 @@ void main() {
         float roofed = exp(-0.09 * max(under, 0.0));
         // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
         float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
-        vec3 light = (vec3(0.155, 0.162, 0.172) * sunk * sunk * sunk + uSunColour * (0.012 * facing * sunk * sunk)) * (0.3 + 0.7 * roofed)
-          + mix(uSunColour, vec3(2.2), 0.12) * (sun * (0.22 * min(phase, 1.8) * exp(-1.6 * sunTau) + 0.02 * exp(-0.2 * sunTau)));
+        vec3 light = (vec3(0.155, 0.162, 0.172) * sunk * sunk + uSunColour * (0.012 * facing * sunk * sunk)) * (0.3 + 0.7 * roofed)
+          + mix(uSunColour, vec3(2.4), 0.42) * (sun * (0.22 * min(phase, 1.8) * exp(-1.6 * sunTau) + 0.02 * exp(-0.2 * sunTau)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
         through *= gone;
@@ -414,7 +414,7 @@ void main() {
         vec3 q = (pw - vec3(0.0, uBodyD[i].w * uTime, 0.0)) / C.z + D.y;
         q.xz -= WINDV * (uTime * 2.0 / C.z) * up;
         vec4 n0 = textureLod(tNoise, q * 0.5, 0.0);
-        float fineN = textureLod(tNoise, q * 1.3 + 0.37, 0.0).b;
+        float fineN = textureLod(tNoise, q * 0.85 + 0.37, 0.0).b;
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
         float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up);
         float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * m * smoothstep(0.0, 0.6, m - open * (1.0 - 1.4 * lumps));
