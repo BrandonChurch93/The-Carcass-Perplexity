@@ -36,7 +36,7 @@ const vec3 SEA_WARM = vec3(0.16, 0.085, 0.045);
 const float HEAP_SPAN = 2300.0;
 const float HEAP_TALL = 180.0;
 // How far the grain of the real deck turns a face of a heap, and how far it moves a place between hollow and crown.
-const float GRAIN_TILT = 0.9;
+const float GRAIN_TILT = 0.5;
 const float GRAIN_HEAD = 0.9;
 // Metres of the mist over the tops that hide two thirds of what lies behind.
 const float MIST_LONG = 240.0;
@@ -314,10 +314,10 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     float dusk = clamp(0.22 + 0.78 * dot(facing, toLight), 0.0, 1.0) * open;
     // The sky from above reaches a crown whole and the floor of a hollow hardly at all: the hollows are deep blue-violet.
     float above = (0.3 + 0.7 * facing.y) * (0.03 + 0.97 * head * head);
-    vec3 cold = SEA_COLD * (0.03 + 2.05 * above + 1.75 * dusk * (0.12 + 0.88 * head)) * mix(vec3(0.62, 0.74, 1.24), vec3(0.97, 0.98, 1.03), head);
+    vec3 cold = SEA_COLD * (0.03 + 2.05 * above + 1.75 * dusk * (0.12 + 0.88 * head)) * mix(vec3(0.5, 0.68, 1.3), vec3(0.97, 0.98, 1.03), head);
     // The side of a head that looks at the dusk has a warm rim.
-    float rim = clamp(dot(facing, toDusk) * 1.6, 0.0, 1.0);
-    vec3 warm = SEA_WARM * dusk * (0.1 + 0.9 * head) * (0.4 + 2.4 * rim * rim) * (1.0 - 0.7 * stormSide(rd));
+    float rim = clamp(dot(facing, toDusk) * 2.4 + 0.1, 0.0, 1.0);
+    vec3 warm = SEA_WARM * dusk * (0.1 + 0.9 * head) * (0.4 + 3.4 * rim * rim) * (1.0 - 0.7 * stormSide(rd));
     vec3 sea = cold + warm;
     // The mist the ray came through over the heads before this one.
     vec3 mistTone = (SEA_COLD * vec3(1.55, 1.65, 1.95) + 0.5 * SEA_WARM * (1.0 - stormSide(rd)));
