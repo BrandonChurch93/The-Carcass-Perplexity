@@ -2,9 +2,10 @@
 // rock.ts is the surfaces, shapes.ts is the shapes. This folder also tells the rig the true height of the land, so that the low sun's long shadows are baked from it.
 import * as THREE from 'three';
 import { terrain } from '../../../core/blockout';
-import { DEPTH, RAD, SEA, bearingOf, farGround, ground, lerp, nearLand, rimRadius, smooth } from '../land';
+import { DEPTH, NEAR, RAD, SEA, bearingOf, farGround, ground, lerp, midGround, rimRadius, smooth } from '../land';
 import { SMALLER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
+import { bakeNear } from './field';
 import { createRock, type Surface } from './rock';
 import { cliff, collar, heap, hoop, mergeGeometries, open, shaftWall, slab, talusHeight } from './shapes';
 
@@ -60,7 +61,8 @@ export function create(ctx: Context): Piece {
   const strata = surface('strata', [0.298, 0.223, 0.16], 5, 0.6);
   const ivory = surface('hoop', [0.493, 0.392, 0.288], 4, 0.5);
   const seep = surface('wall', [0.077, 0.061, 0.033], 6, 0.5);
-  const rock = createRock(ctx.rig.uniforms, ctx.rng('land/rock'), surface('shelf', [0.438, 0.363, 0.302], 6, 0.09), surface('cliff', [0.291, 0.273, 0.265], 200, 22));
+  const nearMap = bakeNear(ctx.rng('land/near'));
+  const rock = createRock(ctx.rig.uniforms, ctx.rng('land/rock'), surface('shelf', [0.438, 0.363, 0.302], 6, 0.09), surface('cliff', [0.291, 0.273, 0.265], 200, 22), nearMap);
   const disposable: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
     disposable.push(g);
@@ -69,9 +71,10 @@ export function create(ctx: Context): Piece {
 
   // The shelf: fine round the shaft, coarse out to the haze.
   const land = new THREE.Group();
-  const near = nearLand(500);
-  near.computeVertexNormals();
-  land.add(mesh(open(near), rock.shelf));
+  land.add(mesh(open(nearMap.mesh(960)), rock.shelf));
+  const mid = terrain(NEAR, NEAR, 500, 500, midGround);
+  mid.computeVertexNormals();
+  land.add(mesh(open(mid), rock.shelf));
   const far = terrain(WORLD, WORLD, 160, 160, farGround);
   far.computeVertexNormals();
   land.add(mesh(open(far), rock.shelf));
@@ -165,6 +168,7 @@ export function create(ctx: Context): Piece {
     dispose: () => {
       for (const g of disposable) g.dispose();
       rock.dispose();
+      nearMap.dispose();
     },
   };
 }

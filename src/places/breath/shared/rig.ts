@@ -183,8 +183,8 @@ export function createRig(): Rig {
     uSkyGround: { value: new THREE.Vector3(0.06, 0.054, 0.048) },
     uSunDir: { value: sunDirection },
     // The sun through the fog on a face turned to it, and the fog's own glow round it.
-    uSunColour: { value: new THREE.Vector3(1.75, 1.0, 0.46) },
-    uGlowColour: { value: new THREE.Vector3(0.4, 0.29, 0.21) },
+    uSunColour: { value: new THREE.Vector3(2.1, 1.6, 1.05) },
+    uGlowColour: { value: new THREE.Vector3(0.37, 0.3, 0.25) },
     uFill: { value: new THREE.Vector3(0.66, 0.77, 0.95) },
   };
 
