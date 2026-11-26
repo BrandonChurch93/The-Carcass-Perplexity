@@ -672,7 +672,7 @@ export function create(ctx: Context): Piece {
     let right = 0;
     for (let k = 0; k < more && sitters.length < ROOKERY; k++) {
       const size = nests.range(0.62, 1.05) * GROW;
-      const gap = nests.range(1.05, 1.7) * size;
+      const gap = nests.range(1.45, 2.2) * size;
       const a = a0 + (k % 2 === 0 ? (right += gap) : -(left += gap)) / COLONY.radiusAt(tier);
       const [r, perchY] = COLONY.perch(a, tier + nests.range(-0.5, 0.5), nests.range(0.4, 0.9));
       const x = COLONY.x + Math.cos(a) * r;
@@ -714,6 +714,8 @@ export function create(ctx: Context): Piece {
     // Weathered each to its own grey, and one in three in the shade of the rock over it.
     fig.tone = 0.74 + 0.36 * ((s.seed * 13.7) % 1);
     fig.shade = (s.seed * 7.3) % 1 < 0.3 ? 0.4 + 0.25 * ((s.seed * 3.1) % 1) : 0;
+    // Those of a clump lay no shade of their own on the rock (below zero tells the sheet so): shades laid one over another are a black blot.
+    if (s.low) fig.shade = -1 - fig.shade;
   };
 
   // ---- The flock in the air ----
@@ -798,7 +800,7 @@ export function create(ctx: Context): Piece {
     clearOfLenses(f, low ? 60 : CLEAR);
     fliers.push(f);
   }
-  const airSheet = figureMaterials(ctx, FLIERS, LEVELS.pool, 0.45, true);
+  const airSheet = figureMaterials(ctx, FLIERS, LEVELS.pool, 0.6, true);
   const flockFigures = new Figures(airSheet, FLIERS_N + SPECKS, {}, 6, 4);
   const spot: Spot = { x: 0, y: 0, z: 0, yaw: 0, roll: 0 };
   /** One in the air into `fig`: where it is, the way it goes (metres a second), how hard it strokes (0 a glide, 1 full), at its own phase. */
@@ -1026,7 +1028,7 @@ export function create(ctx: Context): Piece {
   // ---- The stream of the approach: bodies that leave a ledge of the near blade one after another, cross to the gap and wheel there; and the many that turn round the tips ----
   const STREAM = 110;
   const SWIRL = 260;
-  const airBodies = bodyMaterials(ctx, LEVELS.pool, 0.38, 'fliers', FLIER_FLANK);
+  const airBodies = bodyMaterials(ctx, LEVELS.pool, 0.5, 'fliers', FLIER_FLANK);
   const LEAD = 126;
   /** Of the leaders, those that stand in the first frame itself. */
   const FIRST = 14;
@@ -1100,7 +1102,9 @@ export function create(ctx: Context): Piece {
     const az = cam.aim[2] - cam.position[2];
     const al = Math.hypot(ax, ay, az) || 1;
     const fl = Math.hypot(ax, az) || 1;
-    const far = k < FIRST ? 70 + 130 * ((k * 5) % FIRST) / FIRST : 60 + 95 * hash(k, 93);
+    // Of those in the first frame, four are near enough that the bent sail and the body read: no two side by side.
+    const slot = (k * 5) % FIRST;
+    const far = k < FIRST ? (slot < 4 ? 22 + 6 * slot : 60 + 140 * slot / FIRST) : 60 + 95 * hash(k, 93);
     const side = (k < FIRST ? ((k + 0.5) / FIRST) * 2 - 1 + 0.08 * (hash(k, 92) - 0.5) : 2 * hash(k, 92) - 1) * 0.42 * far;
     const over = (-0.05 + 0.27 * hash(k, 94)) * far;
     const x = cam.position[0] + (ax / al) * far - (az / fl) * side;
@@ -1127,11 +1131,11 @@ export function create(ctx: Context): Piece {
   const leavers: Leaver[] = Array.from({ length: FLEEING }, (_, i) => {
     const staged = i < 6;
     // Where it is at the bore's event if it has left by then: six staged across the middle of the bore's frame, the rest by the flats.
-    const far = staged ? ([44, 35, 52, 40, 33, 48][i] as number) : 0;
-    const off = staged ? ([-19, -10, -3, 6, 13, 21][i] as number) + 5 : 0;
+    const far = staged ? ([37, 30, 44, 33, 28, 40][i] as number) : 0;
+    const off = staged ? ([-15, -8, -2.5, 4.5, 10, 16.5][i] as number) + 2 : 0;
     const side = (i - (FLEEING - 1) / 2) / FLEEING;
-    const vx = staged ? -gateRight[0] * 10 - gateAhead[0] * 12 : -14;
-    const vz = staged ? -gateRight[1] * 10 - gateAhead[1] * 12 : 12;
+    const vx = staged ? -gateRight[0] * 14 - gateAhead[0] * 6.5 : -14;
+    const vz = staged ? -gateRight[1] * 14 - gateAhead[1] * 6.5 : 12;
     const speed = Math.hypot(vx, vz);
     const l: Leaver = {
       x: staged ? gateEye[0] + gateAhead[0] * far + gateRight[0] * off : flee[0] + side * 42 + 3 * Math.sin(i * 2.4),
@@ -1140,7 +1144,7 @@ export function create(ctx: Context): Piece {
       yaw: Math.atan2(vx, vz),
       speed,
       t: BORE + (LEFT[i] as number),
-      size: staged ? 1.15 + 0.3 * hash(i, 5) : 0.62 + 0.5 * hash(i, 5),
+      size: staged ? 1.3 + 0.3 * hash(i, 5) : 0.7 + 0.5 * hash(i, 5),
       seed: hash(i, 7),
     };
     const back = gone(l, Math.max(0, -(LEFT[i] as number)));
@@ -1365,7 +1369,7 @@ export function create(ctx: Context): Piece {
         }
         const bout = smooth(0.25, 0.45, heldAt(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
         const y = s.y + 1.2 * Math.sin(at * 0.6 + s.seed * 20);
-        const amp = i < SKEIN ? 0.25 + 0.75 * bout : 1;
+        const amp = i < SKEIN ? 0.25 + 0.75 * bout : lp === null ? 0.7 : 1;
         if (lp === null) {
           straight(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp);
           escort.put(i, F);
@@ -1415,14 +1419,21 @@ export function create(ctx: Context): Piece {
         skeinFigures.put(SKEIN + PASSERS + i, fig);
       }
       if (lp === null) fleet.commit();
-      escort.mesh.visible = lp === null;
-      if (lp === null) {
-        for (let i = 0; i < ROOK; i++) {
+      // While the lens is far out at sea none of them is a pixel wide: not drawn.
+      escort.mesh.visible = lp === null && lens === null;
+      // The crowd over the colony is drawn where a lens is near enough to tell one of it from the specks of the flock.
+      const off = Math.hypot(eye[0] - COLONY.x, eye[2] - COLONY.z);
+      const crowded = off < 540;
+      // They come up out of nothing as the lens nears, so that none is seen to start.
+      const grown = smooth(540, 430, off);
+      escort.draw(SKEIN + PASSERS + LOW + (crowded ? ROOK : 0));
+      if (escort.mesh.visible) {
+        for (let i = 0; crowded && i < ROOK; i++) {
           const f = rooks[i] as Flier;
           flierPlace(f, seconds - 0.05, was);
           flierPlace(f, seconds + 0.05, next);
           flierPlace(f, seconds, spot);
-          borne(f.size, f.seed, seconds, 0);
+          borne(f.size * grown, f.seed, seconds, 0);
           escort.put(SKEIN + PASSERS + LOW + i, F);
         }
         escort.commit();

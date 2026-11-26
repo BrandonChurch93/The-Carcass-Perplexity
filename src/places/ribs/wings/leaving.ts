@@ -60,7 +60,7 @@ export const leaving = (l: Leaver, seconds: number, out: Flying): number => {
   out.pitch = pitch + rock;
   out.roll = 0.06 * Math.sin(seconds * (0.8 + 0.5 * l.seed) + l.seed * 17) * smooth(0.3, 1.2, tau);
   out.size = l.size;
-  out.tone = 0.86 + 0.24 * l.seed;
+  out.tone = 0.8 + 0.18 * l.seed;
   // The sails come out and up as it dips; the first stroke down is the push, and the strokes slow as it gathers way.
   out.drawn = 1 - smooth(-0.6, -0.08, tau);
   out.deep = smooth(-0.6, -0.05, tau);

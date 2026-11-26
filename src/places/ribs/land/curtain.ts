@@ -17,7 +17,7 @@ export interface CurtainOptions {
   next: () => number;
 }
 
-const SEGMENTS = 11;
+const SEGMENTS = 12;
 
 export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeometry {
   const tTide = partAtHeight(rib, 30);
@@ -54,18 +54,18 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
       const phi = near ? options.focus[0] + 0.22 * (options.next() + options.next() - 1) : options.from + (options.to - options.from) * options.next();
       foot.copy(surface(rib, tTide, phi, at, bt));
       const top = weedTop(foot.x, foot.z) - 1.5;
-      hank = { phi, top: 3 + (top - 3) * Math.sqrt(options.next()), length: 4 + 7 * options.next() ** 1.5, layer: options.next(), tone: options.next(), amber: options.next() < 0.14 ? 0.5 + 0.5 * options.next() : 0 };
+      hank = { phi, top: 3 + (top - 3) * Math.sqrt(options.next()), length: 4 + 7 * options.next() ** 1.5, layer: options.next(), tone: options.next(), amber: options.next() < 0.24 ? 0.5 + 0.5 * options.next() : 0 };
     }
     const phi0 = hank.phi + (1.1 * (options.next() - 0.5)) / reach;
     const yTop = hank.top - 0.9 * options.next();
     const length = hank.length * (0.55 + 0.45 * options.next());
-    const breadth = 0.26 + 0.46 * options.next();
+    const breadth = 0.34 + 0.6 * options.next();
     const layer = Math.min(1, hank.layer * 0.8 + 0.25 * options.next());
     const twist = 0.7 * (options.next() - 0.5);
     const drift = 1.2 * (options.next() - 0.5);
     const wave = options.next() * 6.283;
     const tone = Math.min(1, Math.max(0, hank.tone + 0.3 * (options.next() - 0.5)));
-    const amber = Math.max(hank.amber * options.next(), 0.12 * options.next());
+    const amber = Math.max(hank.amber * options.next(), 0.07 * options.next());
     const yEnd = Math.max(0.5, yTop - length);
     // Not across the one who hangs there.
     const arc = (phi0 - options.focus[0]) * reach;
@@ -101,13 +101,23 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
         tones[q + 1] = amber;
         tones[q + 2] = 0.35 + 0.65 * layer;
       }
-      if (k < SEGMENTS) {
+    }
+    // Away from the one who hangs there no lens comes near: a frond is one strip of half as many lengths.
+    const own: number[] = [];
+    if (Math.abs(arc) > 34) {
+      for (let k = 0; k < SEGMENTS; k += 2) {
+        const a = v0 + k * 3;
+        own.push(a, a + 6, a + 2, a + 2, a + 6, a + 8);
+      }
+    } else {
+      for (let k = 0; k < SEGMENTS; k++) {
         for (let s = 0; s < 2; s++) {
           const a = v0 + k * 3 + s;
-          index.push(a, a + 3, a + 1, a + 1, a + 3, a + 4);
+          own.push(a, a + 3, a + 1, a + 1, a + 3, a + 4);
         }
       }
     }
+    for (const i of own) index.push(i);
     made += 1;
   }
   const g = new THREE.BufferGeometry();
@@ -147,29 +157,33 @@ ${NOISE_GLSL}
 void main() {
   vec3 n0 = normalize(vNormal);
   if (!gl_FrontFacing) n0 = -n0;
-  vec3 v = normalize(cameraPosition - vWorld);
+  vec3 toLens = cameraPosition - vWorld;
+  vec3 v = normalize(toLens);
   float edge = abs(vUv.x * 2.0 - 1.0);
-  // The frond's own wrinkles, across it and along.
-  vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
-  float wr = vnoise(at);
-  float wr2 = vnoise(at * vec2(2.7, 0.6) + 7.0);
+  // The frond's own wrinkles, across it and along. Every fragment of the curtain that is seen is paid for: from 70 m they are not seen, nor asked.
+  float wr = 0.5;
+  float wr2 = 0.5;
+  float close = 1.0 - smoothstep(2500.0, 4900.0, dot(toLens, toLens));
+  if (close > 0.0) {
+    vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
+    wr = mix(0.5, vnoise(at), close);
+    wr2 = mix(0.5, vnoise(at * vec2(2.7, 0.6) + 7.0), close);
+  }
   // A frond is no flat strap: it is ruffled at its edges and troughed along its midrib, so the wet light on it is a line and not a face.
-  float ragged = 0.62 + 0.38 * vnoise(vec2(vUv.y * 23.0 + vTone.x * 53.0, vUv.x < 0.5 ? 1.5 : 8.5));
-  if (edge > ragged) discard;
   vec3 du = dFdx(vWorld) * dFdy(vUv.y) - dFdy(vWorld) * dFdx(vUv.y);
   vec3 across = normalize(du - n0 * dot(du, n0) + vec3(1e-7, 0.0, 0.0)) * sign(dFdx(vUv.x) * dFdy(vUv.y) - dFdy(vUv.x) * dFdx(vUv.y) + 1e-12);
   float ruffle = sin(vUv.y * 60.0 + vTone.x * 40.0 + 3.0 * wr) * smoothstep(0.3, 0.9, edge);
-  vec3 n = normalize(n0 + across * ((vUv.x * 2.0 - 1.0) * 0.9) + 0.5 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5) + 0.6 * ruffle, wr2 - 0.5));
-  vec3 olive = mix(vec3(0.006, 0.0056, 0.0036), vec3(0.017, 0.0135, 0.0055), vTone.x);
-  vec3 amber = vec3(0.075, 0.034, 0.006);
+  vec3 n = normalize(n0 + across * ((vUv.x * 2.0 - 1.0) * 0.28) + 0.5 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5) + 0.6 * ruffle, wr2 - 0.5));
+  vec3 olive = mix(vec3(0.008, 0.007, 0.004), vec3(0.026, 0.02, 0.0075), vTone.x);
+  vec3 amber = vec3(0.13, 0.062, 0.011);
   float gold = vTone.y * (0.35 + 0.65 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
   vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
-  float rough = 0.3 + 0.25 * wr;
+  float rough = 0.44 + 0.25 * wr;
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The low sun through a thin wet frond.
-  float thru = max(dot(-n0, uSunDir), 0.0) * sunAt(vWorld, landAt(vWorld.xz));
-  c += amber * uSunColour * (0.2 * thru * vTone.y * occ);
+  float thru = (max(dot(-n0, uSunDir), 0.0) + 0.12 * max(dot(n0, uSunDir), 0.0)) * (0.08 + 0.92 * vTone.y) * occ;
+  if (thru > 0.06) c += amber * uSunColour * (0.3 * thru * sunAt(vWorld, landAt(vWorld.xz)));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

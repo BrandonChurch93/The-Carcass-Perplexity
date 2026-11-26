@@ -23,29 +23,50 @@ const ROWS = 4;
 /** The picture shows the sail swept ahead by its own slant to the lens: taken out, pixels ahead for a pixel out. */
 const SWEEP = 0.2;
 const WING_VERTS = OUT.length * ROWS;
+/** The hand of the sail is drawn shorter than the picture has it and the sail broader, so that one seen from ahead is a wing and not a blade. */
+const HAND = 0.76;
+const CHORD = 1.24;
 
 /** The trunk and neck: [metres ahead of the shoulders, metres up, radius], tail to beak. */
-const SPINE: [number, number, number][] = [[-1.08, 0, 0.02], [-0.92, 0, 0.12], [-0.5, 0, 0.18], [-0.08, 0.01, 0.2], [0.16, 0.04, 0.12], [0.5, 0.09, 0.06], [0.88, 0.12, 0.055], [1.04, 0.12, 0.085], [1.3, 0.09, 0.012]];
+const SPINE: [number, number, number][] = [[-1.08, 0, 0.03], [-0.92, 0, 0.16], [-0.5, -0.02, 0.25], [-0.08, 0, 0.27], [0.16, 0.04, 0.16], [0.5, 0.09, 0.08], [0.88, 0.12, 0.07], [1.04, 0.12, 0.1], [1.2, 0.105, 0.052], [1.52, 0.07, 0.012]];
 const SIDES = 6;
+/** The rings of the spine where the neck leaves the shoulders and where the head sits on it. */
+const NECK = 4;
+const HEAD = 6;
 const SPINE_VERTS = SPINE.length * SIDES;
 /** A leg trailed: [metres ahead of the shoulders, metres up, radius]. */
-const LEG: [number, number, number][] = [[-0.9, -0.06, 0.07], [-1.7, -0.12, 0.042], [-2.75, -0.2, 0.034], [-2.95, -0.27, 0.05]];
+const LEG: [number, number, number][] = [[-0.9, -0.06, 0.1], [-1.62, -0.11, 0.058], [-1.74, -0.12, 0.066], [-2.75, -0.2, 0.042], [-2.95, -0.27, 0.062]];
+/** The ring of the knee: what is below it lags as the leg comes down. */
+const KNEE = 2;
 const LEG_SIDES = 4;
 const LEG_VERTS = LEG.length * LEG_SIDES;
 const VERTS = 2 * WING_VERTS + SPINE_VERTS + 2 * LEG_VERTS;
 
 /** Metres from the middle of the back to the tip of a sail at size 1. */
-export const SAIL_LONG = (OUT[OUT.length - 1] as number) / PX;
+export const SAIL_LONG = ((OUT[WRIST] as number) + ((OUT[OUT.length - 1] as number) - (OUT[WRIST] as number)) * HAND) / PX;
 
 /** Where a foot is with the legs let down by `legs`: [metres ahead of the shoulders, metres up] at size 1. */
-export const footOf = (legs: number): [number, number] => {
+/** A ring of a leg let down by `legs`: [metres ahead of the shoulders, metres up] at size 1. The leg swings about the hip from behind to under, and the shin lags at the knee on the way. */
+const legAt = (r: number, legs: number): [number, number] => {
   const hip = LEG[0] as [number, number, number];
-  const toe = LEG[LEG.length - 1] as [number, number, number];
-  const back = toe[0] - hip[0];
-  const low = toe[1] - hip[1];
+  const knee = LEG[KNEE] as [number, number, number];
+  const ring = LEG[r] as [number, number, number];
   const swing = 1.25 * legs;
-  return [hip[0] + back * Math.cos(swing) - low * Math.sin(swing), hip[1] + low * Math.cos(swing) + back * Math.sin(swing)];
+  const turned = (back: number, low: number, by: number): [number, number] => [back * Math.cos(by) - low * Math.sin(by), low * Math.cos(by) + back * Math.sin(by)];
+  // Down, it stands on a bent leg, the thigh ahead and the shin back; only the push straightens it.
+  const down = Math.min(1, Math.max(0, legs));
+  const stood = down * down * (1 - Math.min(1, Math.max(0, (legs - 1) / 0.1)));
+  const thigh = swing + 0.25 * stood;
+  if (r <= KNEE) {
+    const [x, y] = turned(ring[0] - hip[0], ring[1] - hip[1], thigh);
+    return [hip[0] + x, hip[1] + y];
+  }
+  const [kx, ky] = turned(knee[0] - hip[0], knee[1] - hip[1], thigh);
+  const [x, y] = turned(ring[0] - knee[0], ring[1] - knee[1], thigh - 0.75 * Math.sin(Math.PI * down) - 0.5 * stood);
+  return [hip[0] + kx + x, hip[1] + ky + y];
 };
+/** Where a foot is with the legs let down by `legs`: [metres ahead of the shoulders, metres up] at size 1. */
+export const footOf = (legs: number): [number, number] => legAt(LEG.length - 1, legs);
 
 const edge = (line: [number, number][], out: number): number => {
   for (let i = 0; i + 1 < line.length; i++) {
@@ -105,7 +126,8 @@ export class Flight {
       hide[v * 2] = ahead * 0.9 + 300;
       hide[v * 2 + 1] = out * 0.9 + 300;
       this.mix[v * 3] = thrown;
-      this.mix[v * 3 + 1] = occ;
+      // In the open air all the sky lights it: more of the sky's light than one that stands on the ground under a rock takes.
+      this.mix[v * 3 + 1] = occ * 1.25;
       this.mix[v * 3 + 2] = 1;
     };
     for (let i = 0; i < count; i++) {
@@ -174,6 +196,12 @@ export class Flight {
     }
   }
 
+  /** Only the first `many` of them are drawn from here on: those after them cost nothing. */
+  draw(many: number): void {
+    const each = (this.mesh.geometry.index?.count ?? 0) / this.count;
+    this.mesh.geometry.setDrawRange(0, Math.min(this.count, Math.max(0, many)) * each);
+  }
+
   hide(i: number): void {
     const from = i * VERTS * 3;
     this.at.fill(0, from, from + VERTS * 3);
@@ -228,8 +256,11 @@ export class Flight {
     // The stroke: the arm goes down faster than it comes up, the hand follows it a quarter of a beat late, and on the way up the hand is
     // drawn in so that the sail spills the air it would have to lift.
     const s = p.stroke;
-    const arm = 0.16 + p.deep * (0.62 * Math.cos(s + 0.25 * Math.sin(s)) - 0.08) - 0.5 * p.drawn;
-    const hand = arm + p.deep * 0.5 * Math.cos(s - 1.15) - 0.25 * p.drawn;
+    // Gliding, the arm is held up and the hand hangs from the wrist.
+    const glide = (1 - p.deep) * (1 - p.drawn);
+    const arm = 0.26 + 0.14 * glide + p.deep * (0.56 * Math.cos(s + 0.25 * Math.sin(s)) - 0.06) - 0.5 * p.drawn;
+    // The hand always hangs a little from the wrist: seen from ahead the sail is bent, never a straight line.
+    const hand = arm - (0.24 + 0.36 * glide) * (1 - p.drawn) + p.deep * 0.4 * Math.cos(s - 1.15) - 0.25 * p.drawn;
     const rising = Math.max(0, -Math.sin(s - 0.5));
     const fold = 1 - 0.22 * p.deep * rising - 0.45 * p.drawn;
     const reach = 1 - 0.2 * p.drawn;
@@ -245,16 +276,16 @@ export class Flight {
         const q = (OUT[k] as number) / PX;
         const front = edge(FRONT, OUT[k] as number) + 7;
         const back = edge(BACK, OUT[k] as number) - 9;
-        const far = k <= WRIST ? q * reach : wrist * reach + (q - wrist) * fold;
-        const side0 = k <= WRIST ? q * reach * ca : wrist * reach * ca + (q - wrist) * fold * ch;
-        const up0 = k <= WRIST ? q * reach * sa : wrist * reach * sa + (q - wrist) * fold * sh;
+        const far = k <= WRIST ? q * reach : wrist * reach + (q - wrist) * fold * HAND;
+        const side0 = k <= WRIST ? q * reach * ca : wrist * reach * ca + (q - wrist) * fold * HAND * ch;
+        const up0 = k <= WRIST ? q * reach * sa : wrist * reach * sa + (q - wrist) * fold * HAND * sh;
         const c = k < WRIST ? ca : k === WRIST ? Math.cos(0.5 * (arm + hand)) : ch;
         const sn = k < WRIST ? sa : k === WRIST ? Math.sin(0.5 * (arm + hand)) : sh;
         for (let j = 0; j < ROWS; j++) {
-          const along = front + ((back - front) * j) / (ROWS - 1);
+          const along = 0.5 * (front + back) + (back - front) * CHORD * (j / (ROWS - 1) - 0.5);
           // Drawn in, the hand swings back as well as in; and the skin bellies up between its front and back edges.
           const ahead = (along - SWEEP * (OUT[k] as number)) / PX - (k > WRIST ? (q - wrist) * (1 - fold) * 0.9 : 0) - 0.25 * p.drawn * far;
-          const belly = 0.05 * Math.sin((Math.PI * j) / (ROWS - 1)) * (1 - 0.6 * p.drawn);
+          const belly = 0.09 * Math.sin((Math.PI * j) / (ROWS - 1)) * (1 - 0.6 * p.drawn);
           out(n, ahead, up0 + belly * c + 0.02, sign * (0.08 + side0 - belly * sn));
           turn(n, 0, c, -sign * sn);
           n += 3;
@@ -262,14 +293,36 @@ export class Flight {
       }
     }
     let n = (v0 + 2 * WING_VERTS) * 3;
+    // With its legs down it carries its neck up and its head level, as one that stands; in the air the neck is stretched ahead.
+    const down = Math.min(1, Math.max(0, p.legs));
+    const lift = 0.95 * down * down * (3 - 2 * down);
+    const base = SPINE[NECK] as [number, number, number];
+    const nape = SPINE[HEAD] as [number, number, number];
+    const cl = Math.cos(lift);
+    const sl = Math.sin(lift);
+    const napeAhead = base[0] + (nape[0] - base[0]) * cl - (nape[1] - base[1]) * sl;
+    const napeUp = base[1] + (nape[0] - base[0]) * sl + (nape[1] - base[1]) * cl;
     for (let r = 0; r < SPINE.length; r++) {
       const ring = SPINE[r] as [number, number, number];
+      let ahead = ring[0];
+      let up = ring[1];
+      let lean = 0;
+      if (r > HEAD) {
+        ahead = napeAhead + ring[0] - nape[0];
+        up = napeUp + ring[1] - nape[1];
+      } else if (r > NECK) {
+        ahead = base[0] + (ring[0] - base[0]) * cl - (ring[1] - base[1]) * sl;
+        up = base[1] + (ring[0] - base[0]) * sl + (ring[1] - base[1]) * cl;
+        lean = r === HEAD ? 0.5 * lift : lift;
+      } else if (r === NECK) lean = 0.5 * lift;
+      const ca2 = Math.cos(lean);
+      const sa2 = Math.sin(lean);
       for (let k = 0; k < SIDES; k++) {
         const a = (k / SIDES) * Math.PI * 2;
         const c = Math.cos(a);
         const sn = Math.sin(a);
-        out(n, ring[0], ring[1] + c * ring[2] * 0.85, sn * ring[2]);
-        turn(n, 0, c, sn);
+        out(n, ahead - c * ring[2] * 0.85 * sa2, up + c * ring[2] * 0.85 * ca2, sn * ring[2]);
+        turn(n, -c * sa2, c * ca2, sn);
         n += 3;
       }
     }
@@ -277,17 +330,12 @@ export class Flight {
       const sign = leg === 0 ? 1 : -1;
       for (let r = 0; r < LEG.length; r++) {
         const ring = LEG[r] as [number, number, number];
-        // Let down, a leg swings about the hip from behind to under.
-        const back = ring[0] - (LEG[0] as [number, number, number])[0];
-        const low = ring[1] - (LEG[0] as [number, number, number])[1];
-        const swing = 1.25 * p.legs;
-        const ax = (LEG[0] as [number, number, number])[0] + back * Math.cos(swing) - low * Math.sin(swing);
-        const ay = (LEG[0] as [number, number, number])[1] + low * Math.cos(swing) + back * Math.sin(swing);
+        const [ax, ay] = legAt(r, p.legs);
         for (let k = 0; k < LEG_SIDES; k++) {
           const a = (k / LEG_SIDES) * Math.PI * 2;
           const c = Math.cos(a);
           const sn = Math.sin(a);
-          out(n, ax, ay + c * ring[2], sign * (0.07 + 0.02 * r) + sn * ring[2]);
+          out(n, ax, ay + c * ring[2], sign * (0.09 + 0.025 * r) + sn * ring[2]);
           turn(n, 0, c, sn);
           n += 3;
         }
