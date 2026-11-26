@@ -24,7 +24,7 @@ export const PARTS: readonly string[] = ['kite-wings'];
 const FEEDERS = 44;
 const FLIERS = 451;
 const SPECKS = 560;
-const PASSERS = 3;
+const PASSERS = 6;
 /** The run of the hero by the establishing camera: seconds it lasts, centred on the key, and its mean speed. */
 const RUN = { seconds: 9, speed: 3.7 };
 const LOW = 6;
@@ -399,14 +399,16 @@ export function create(ctx: Context): Piece {
       const z = COLONY.z + Math.sin(a) * r;
       const out = Math.atan2(Math.cos(a), Math.sin(a));
       const stands = scatter.next() < 0.22;
-      sitters.push({ x, y: perchY, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], perchY - colonyEye[1], z - colonyEye[2]) });
+      // A sheet reads only from its side: each stands across the colony lens's line of sight, a little turned.
+      const across = Math.atan2(z - colonyEye[2], -(x - colonyEye[0])) + scatter.range(-0.85, 0.85);
+      sitters.push({ x, y: perchY, z, yaw: across, size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], perchY - colonyEye[1], z - colonyEye[2]) });
     }
   }
   sitters.sort((a, b) => a.d - b.d);
   // The few that stand with their sails held out to dry are the picture of the animal seen from ahead.
   const kites = kiteMaterial(ctx);
   const dryers = new Kites(kites, COLONISTS);
-  const colonySheets = new Puppets(sheets, COLONISTS, false);
+  const colonySheets = new Puppets(sheets, COLONISTS, false, true);
   const sitterAt = (s: Sitter, t: number): void => {
     Object.assign(pose, stand(s.seed));
     pose.size = s.size;
@@ -420,16 +422,23 @@ export function create(ctx: Context): Piece {
     pose.rightZ = 0.1 * (1 - up) - 0.05 * up;
     pose.leftY = -hip;
     pose.rightY = -hip;
-    pose.pitch = -0.16 * (1 - up);
+    // Perched it sits upright, the folded sails pointing up past its head.
+    // Never still: it rocks on its feet, shifts its weight along the ledge and works its neck, each in its own time.
+    const rock = Math.sin(t * (0.9 + 0.8 * s.seed) + s.seed * 50);
+    pose.pitch = s.stands ? 0 : 0.55 + 0.5 * s.seed + 0.07 * rock;
+    const shift = 0.12 * s.size * Math.sin(t * (0.45 + 0.4 * s.seed) + s.seed * 23);
+    pose.x += Math.sin(s.yaw) * shift;
+    pose.z += Math.cos(s.yaw) * shift;
     const look = held(t, 2.1 + 2.5 * s.seed, s.seed);
     const high = held(t, 5.3 + 3 * s.seed, s.seed + 0.25, 0.15);
-    pose.sweep = (look - 0.5) * 2.4;
+    const preen = Math.sin(t * (1.7 + 1.2 * s.seed) + s.seed * 31);
+    pose.sweep = (look - 0.5) * 2.4 + 0.3 * preen;
     // Hunched under its sails with the tuft hanging, until it looks up.
-    pose.rise = 1.15 + 0.35 * high;
+    pose.rise = 1.15 + 0.35 * high + 0.1 * rock;
     pose.tuck = 0.45 - 0.3 * high;
-    pose.bend = -2.5 + 2.3 * high;
+    pose.bend = -2.5 + 2.3 * high + 0.35 * preen;
     // Now and then one opens its sails and shakes them.
-    const shake = smooth(0.9, 0.97, held(t, 4.5, s.seed + 0.75, 0.25));
+    const shake = smooth(0.78, 0.9, held(t, 3.2, s.seed + 0.75, 0.25));
     // Perched, the sails hang round it as a tent; one that stands holds them half open to the wind and the light comes through.
     if (s.stands) {
       // No two alike: one holds its sails wide to dry, one half shut, one beats them at its neighbour.
@@ -440,7 +449,7 @@ export function create(ctx: Context): Piece {
       pose.pitch = kind === 2 ? 0.25 * row : pose.pitch;
     } else {
       pose.spread = 2 - shake;
-      pose.flap = -1.0 + 0.04 * Math.sin(t * 1.3 + s.seed * 30) + shake * (1.2 + 0.35 * Math.sin(t * 15 + s.seed * 9));
+      pose.flap = -1.0 + 0.09 * Math.sin(t * 2.1 + s.seed * 30) + shake * (1.2 + 0.35 * Math.sin(t * 15 + s.seed * 9));
     }
   };
 
@@ -582,10 +591,11 @@ export function create(ctx: Context): Piece {
     const fx = dx / l;
     const fz = dz / l;
     // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
-    const cross: [number, number, number, number, number][] = [[46, -15, 13, 0.1, 15], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
+    // The first hangs over the upper ledge, coming in to land; three cross close and fast, soft with their own motion; two are far.
+    const cross: [number, number, number, number, number][] = [[26, -9.4, 10.8, 0, 3], [20, -15, 5, 0.05, 19], [17, 10, 0.5, 0.1, -20], [34, -20, 12, -0.1, 17], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
     for (let i = 0; i < PASSERS; i++) {
       const c = cross[i] as [number, number, number, number, number];
-      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: (i === 0 ? 1.25 : 1.0) * GROW, seed: scatter.next() });
+      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: (i === 0 ? 1.15 : i < 4 ? 1.15 : 1.0) * GROW, seed: scatter.next() });
     }
   }
   const skeinFlock = new Kites(kites, SKEIN + PASSERS);
@@ -672,7 +682,7 @@ export function create(ctx: Context): Piece {
         const dir = rand(i * 31 + n, born) * Math.PI * 2;
         const out = (0.12 + 0.5 * rand(i * 31 + n, born + 7) * a) * f.size;
         const up = (0.35 + 0.75 * rand(i * 31 + n, born + 3)) * f.size;
-        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.03 + 0.03 * rand(i * 31 + n, born + 5)) * f.size : (0.004 + 0.013 * rand(i * 31 + n, born + 5) * rand(i * 31 + n, born + 6)) * f.size, (n % 5 === 0 ? 0.2 : 1.6) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : 0.5 * (rand(i * 31 + n, born + 11) - 0.5), n % 5 === 0 ? 0.45 : 2.6);
+        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.03 + 0.03 * rand(i * 31 + n, born + 5)) * f.size : (0.003 + 0.008 * rand(i * 31 + n, born + 5) * rand(i * 31 + n, born + 6)) * f.size, (n % 5 === 0 ? 0.12 : 1.0) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : 0.5 * (rand(i * 31 + n, born + 11) - 0.5), n % 5 === 0 ? 0.45 : 2.6);
       }
     }
     if (runner >= 0) {
@@ -697,6 +707,7 @@ export function create(ctx: Context): Piece {
 
   const group = new THREE.Group();
   group.add(feederSheets.mesh, colonySheets.mesh, landSheets.mesh);
+  if (colonySheets.shade) group.add(colonySheets.shade);
   if (feederSheets.mirror) group.add(feederSheets.mirror);
   group.add(feederFlock.mesh, dryers.mesh, lowFlock.mesh, highFlock.mesh, skeinFlock.mesh, fleeFlock.mesh, landFlock.mesh);
   ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh), splash.mesh);

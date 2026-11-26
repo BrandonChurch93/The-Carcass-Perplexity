@@ -736,6 +736,20 @@ export function create(ctx: Context): Piece {
   const axis = right.clone().multiplyScalar(Math.cos(PLATE.turn)).addScaledVector(view, Math.sin(PLATE.turn)).normalize();
   const proudWay = new THREE.Vector3().crossVectors(axis, down).normalize();
   if (proudWay.dot(view) > 0) proudWay.negate();
+  // Weed across the legs: strands of the living weed caught on them, hanging down over the hide.
+  const plateOrigin = weedPoint(rib, DROWNED.phi, DROWNED.height + 2.5, 0.3);
+  const plateWide = (PLATE.high * (FRAMED.to - FRAMED.from) * 1448) / 1086;
+  for (let i = 0; i < 18; i++) {
+    const root = plateOrigin
+      .clone()
+      .addScaledVector(axis, plateWide * (scatter.range(0.22, 0.86) - 0.12))
+      .addScaledVector(down, PLATE.high * scatter.range(0.42, 0.8))
+      .addScaledVector(proudWay, PLATE.deep * 0.8);
+    const fall = down.clone().addScaledVector(axis, scatter.range(-0.15, 0.15)).normalize();
+    falls.set([fall.x, fall.y, fall.z], i * 3);
+    roots.set([root.x, root.y, root.z, 0.06], i * 4);
+    shapes.set([scatter.range(1.2, 2.8), scatter.range(0.07, 0.16), scatter.next() + 1, scatter.range(-0.08, 0.08)], i * 4);
+  }
   const plateGeometry = new THREE.PlaneGeometry(1, 1, 96, 144).translate(0.5, 0.5, 0);
   const plateMaterial = new THREE.ShaderMaterial({
     vertexShader: PLATE_VERTEX,
@@ -744,8 +758,8 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       tCarcass: { value: ctx.assets.texture('mat/carcass-hung.jpg', { kind: 'colour', repeat: false }) },
       tRelief: { value: ctx.assets.texture('mat/carcass-hung-h.png', { kind: 'data', repeat: false }) },
-      uOrigin: { value: weedPoint(rib, DROWNED.phi, DROWNED.height + 2.5, 0.3) },
-      uAxis: { value: axis.clone().multiplyScalar((PLATE.high * (FRAMED.to - FRAMED.from) * 1448) / 1086) },
+      uOrigin: { value: plateOrigin },
+      uAxis: { value: axis.clone().multiplyScalar(plateWide) },
       uDrop: { value: down.clone().multiplyScalar(PLATE.high) },
       uProud: { value: proudWay.clone().multiplyScalar(PLATE.deep) },
     },
