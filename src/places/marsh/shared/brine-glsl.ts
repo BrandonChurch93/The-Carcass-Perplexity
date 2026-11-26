@@ -47,7 +47,7 @@ float brineSilt = -1.0;
 // to see, which turn part of it toward the lens: the mirror comes in late and never whole.
 float brineFresnel(vec3 n, vec3 v) {
   float nv = max(dot(n, v), 0.02);
-  return 0.02 + 0.25 * pow(1.0 - nv, 2.5) + 0.2 * pow(1.0 - nv, 10.0);
+  return 0.02 + 0.25 * pow(1.0 - nv, 2.5) + 0.12 * pow(1.0 - nv, 10.0);
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
@@ -96,13 +96,14 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   vec3 albedo = brineBed * through + body * (1.0 - through);
   albedo = mix(albedo, froth.rgb, foam);
   float open = skyOpen(p);
-  // The body is lit from inside the liquid: the ripples do not shade it, they only turn the mirror.
-  vec3 lit = albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
+  // The body is lit from inside the liquid: the ripples do not shade it, they only turn the mirror. Froth stands on it and is lit as it leans.
+  vec3 lit = albedo * skyIrradiance(normalize(mix(vec3(0.0, 1.0, 0.0), n, foam))) * (open / 3.14159);
   // Under a gust the skin is ruffled finer than a pixel and leans every way: seen from above, that lane gives back more of the sky than the
   // glass beside it. Broad pale lanes on dark brine.
   float fres = brineFresnel(n, v);
   fres = mix(fres, max(fres, 0.3), gust * (0.45 + 0.3 * smoothstep(8.0, 40.0, away)));
-  fres *= 1.0 - 0.85 * foam;
+  // (Froth is wet too: each bubble carries its own small piece of the sky.)
+  fres *= 1.0 - 0.55 * foam;
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
   return lit * (1.0 - fres) + brineMirror(p, n, v) * fres * mix(1.0, open, 0.35);
 }`;

@@ -114,11 +114,12 @@ void main() {
   float ruffle = 0.04 + 0.5 * paw + 0.12 * inPool + 0.8 * brineMud;
   vec4 bend = texture2D(tGrain, p.xz / 0.83 + vec2(0.01, 0.007) * uTime);
   vec2 ripples = vec2(0.0);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.31), 0.41, bend.r * 4.0) * 0.05 * smoothstep(0.2, 0.07, px);
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.47), 0.27, bend.g * 5.0) * 0.055 * smoothstep(0.13, 0.045, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.83), 0.173, bend.b * 5.0) * 0.05 * smoothstep(0.085, 0.03, px);
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 1.3), 0.117, bend.a * 6.0) * 0.045 * smoothstep(0.058, 0.02, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 2.4), 0.071, bend.r * 7.0 + 1.3) * 0.035 * smoothstep(0.035, 0.012, px);
+  // (No train is everywhere: each comes and goes in patches of its own, or the five would weave one cloth.)
+  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.31), 0.41, bend.r * 4.0) * 0.1 * fine.g * smoothstep(0.2, 0.07, px);
+  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.47), 0.27, bend.g * 5.0) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.13, 0.045, px);
+  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.83), 0.173, bend.b * 5.0) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.085, 0.03, px);
+  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 1.3), 0.117, bend.a * 6.0) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.058, 0.02, px);
+  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 2.4), 0.071, bend.r * 7.0 + 1.3) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.035, 0.012, px);
   slope += ripples * ruffle * (0.6 + 0.8 * bend.g);
 
   // How much froth the domes and the bursts have left here.
@@ -149,10 +150,19 @@ void main() {
       boil = max(boil, env * smoothstep(1.5, 0.25, ring.z));
     }
   }
-  // Whatever stands in the brine (the contact map has it) troubles it: the wavelets are steeper round it.
+  // Whatever stands in the brine (the contact map has it) is met by it: the brine climbs the thing in a tight lip, the wavelets that reach it
+  // are turned and stand steeper, and it sends its own small rings out as it sways.
   float stood = contactDrawn(p);
   float ringed = smoothstep(0.0, 0.12, stood) * smoothstep(0.85, 0.35, stood);
-  slope *= 1.0 + 1.3 * ringed;
+  float collar = 0.0;
+  if (stood > 0.01) {
+    vec2 lean = vec2(contactDrawn(p - vec3(0.07, 0.0, 0.0)) - contactDrawn(p + vec3(0.07, 0.0, 0.0)), contactDrawn(p - vec3(0.0, 0.0, 0.07)) - contactDrawn(p + vec3(0.0, 0.0, 0.07)));
+    float ll = length(lean);
+    vec2 off = ll > 1e-4 ? lean / ll : vec2(0.0);
+    slope *= 1.0 + 1.3 * ringed;
+    slope += off * (0.1 * ringed * sin(stood * 30.0 + uTime * 5.5 + patchy.r * 9.0) + 0.75 * smoothstep(0.6, 0.92, stood)) * smoothstep(30.0, 10.0, dist);
+    collar = smoothstep(0.45, 0.8, stood) * (1.0 - brineMud);
+  }
   // The meniscus: in the last two fingers before the bank the brine climbs it, and that lip looks the other way from the rest of the surface.
   float lipAt = smoothstep(0.17, 0.26, s) * smoothstep(40.0, 12.0, dist);
   slope -= bank * 0.55 * lipAt * lipAt;
@@ -172,14 +182,21 @@ void main() {
   want = max(want, lip * smoothstep(-0.9, -0.06, s) * smoothstep(0.6, 0.78, fleck.g * 0.4 + raft.g * 0.6 + 0.3 * smoothstep(-0.5, -0.04, s)));
   // What the flow carries off the banks goes down the channel in thin strings.
   float strings = smoothstep(0.71, 0.8, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, length(flow)) * 0.55;
-  want = max(max(want, strings), min(boil * 0.8, 0.6)) * seen;
-  vec2 fuv = (p.xz - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 1.5;
+  // (And scum catches on whatever stands in it.)
+  want = max(max(want, strings), max(min(boil * 0.8, 0.6), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
+  // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
+  vec2 fuv = (p.xz - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 0.62;
   vec4 relief = texture2D(tFrothN, fuv);
+  vec4 clump = texture2D(tFrothN, fuv * 0.31 + 0.37);
   vec3 scum = texture2D(tFroth, fuv).rgb;
-  float foam = smoothstep(0.0, 0.16, relief.b - 1.0 + want * 0.8) * step(1e-3, want);
-  vec4 froth = vec4((scum * 2.3 + 0.07) * vec3(0.92, 0.74, 0.7), foam * 0.92);
+  float high = relief.b * 0.62 + clump.b * 0.38;
+  float foam = smoothstep(0.0, 0.14, high - 1.0 + want * 0.8) * step(1e-3, want);
+  // Its own colours, as the picture has them: cream where the bubbles are small and dry, red where the brine stands in them. Dark down
+  // between the bubbles, where the sky does not reach.
+  float pit = smoothstep(0.25, 0.75, relief.b);
+  vec4 froth = vec4((scum * 1.25 + 0.02) * (0.4 + 0.6 * pit) * mix(vec3(1.0, 0.8, 0.74), vec3(1.0), smoothstep(0.5, 0.8, high)), foam * 0.95);
   // The bubbles stand up out of the surface: their own slopes take over from the brine's.
-  slope = mix(slope, (relief.rg - 0.5) * vec2(1.0, -1.0) * 1.6, foam);
+  slope = mix(slope, (relief.rg - 0.5) * vec2(1.0, -1.0) * 2.6, foam);
   vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
 
   // The bed under the shallows, seen where the line of sight is bent down to it.
@@ -259,19 +276,21 @@ void main() {
   float solid = 0.0;
   // Torn: the skin opens from one point on its side, the hole's edge ragged and rolled thick, until nothing of it stands.
   float rim = 0.0;
+  float glint = 0.0;
   if (vLife.w > 0.0) {
-    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.6, 0.75, sin(vLife.y * 40.0) * 0.6));
+    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.35, 0.94, sin(vLife.y * 40.0) * 0.35));
     vec3 at = normalize(vLocal);
-    // The film that has drawn back is rolled up in the hole's edge, and the edge breaks into beads as it runs: no two alike.
-    vec3 side = normalize(cross(from, vec3(0.0, 1.0, 0.0)));
-    float about = atan(dot(at, side), dot(at, cross(side, from)));
-    float beads = pow(abs(sin(about * 8.0 + g.r * 5.0 + vLife.y * 20.0)), 3.0);
-    float open = dot(at, from) + (g.g - 0.5) * 0.2 + (grit.r - 0.5) * 0.06 - 0.09 * beads * vLife.w;
+    // The film that has drawn back is rolled up in the hole's edge, and the edge runs ahead here and hangs back there: no two parts alike.
+    vec4 ragged = texture2D(tGrain, vLocal.xz * 0.37 + vLife.y * 3.0);
+    float open = dot(at, from) + (ragged.g - 0.5) * 0.12 + (ragged.r - 0.5) * 0.24 * vLife.w;
     float gone = 1.0 - 2.0 * vLife.w * (0.55 + 0.45 * vLife.w);
     if (open > gone) discard;
-    rim = smoothstep(gone - 0.05 - 0.14 * vLife.w, gone, open);
+    // A rolled bead, thicker the further it has run: dark, and round enough to carry a line of the sky along its back.
+    float fat = 0.035 + 0.07 * vLife.w;
+    rim = smoothstep(gone - fat, gone - fat * 0.6, open);
     albedo = mix(albedo, vec3(0.05, 0.008, 0.006), rim);
-    n = normalize(n + (from - at * dot(at, from)) * 0.9 * rim);
+    thin *= 1.0 - rim;
+    glint = smoothstep(gone - fat * 0.75, gone - fat * 0.5, open) * smoothstep(gone - fat * 0.1, gone - fat * 0.4, open);
   }
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.03);
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -303,21 +322,21 @@ void main() {
   env *= 1.0 + (0.5 * smoothstep(0.75, 0.99, toward) + 0.5 * smoothstep(0.972, 0.995, toward)) * (0.6 + 0.8 * run.g);
   float fres = min(1.0, (0.035 + 0.965 * pow(1.0 - nv, 5.0)) * 1.7);
 #ifdef DROP
-  fres = 0.03 + 0.6 * pow(1.0 - nv, 4.0);
+  // (A bead of dark brine: one small window of the sky on its upper side and no pale limb.)
+  fres = 0.03 + 0.45 * smoothstep(0.93, 0.99, toward);
 #endif
-  vec3 mirrored = env * fres * mix(1.0, open, 0.5) * (1.0 - 0.3 * rim);
+  vec3 mirrored = env * fres * mix(1.0, open, 0.5) * (1.0 - 0.75 * rim) + skyRadiance(vec3(0.0, 1.0, 0.0)) * 0.17 * glint * mix(1.0, open, 0.5);
   // Grit and scum ride on the skin and slide down it with the runs.
-  float speck = smoothstep(0.74, 0.8, grit.g * 0.6 + run.b * 0.4) * (1.0 - 0.6 * top);
+  float speck = smoothstep(0.79, 0.84, grit.g * 0.6 + run.b * 0.4) * (1.0 - 0.6 * top);
   lit = mix(lit, vec3(0.05, 0.016, 0.012) * skyIrradiance(n) * (open / 3.14159), speck);
   float cover = clamp(1.0 - kept * (1.0 - fres) * (1.0 - veil * 2.0), 0.0, 1.0);
   cover = max(max(cover, rim), speck);
   gl_FragColor = vec4((lit + mirrored) * (1.0 - uSolo), cover);
 }`;
 
-// What the pool does when a dome's skin is gone. A unit tube (radius 1, y 0 to 1) drawn twice for every dome; aLife.x is seconds since the
-// skin tore, aLife.y the dome's own number, aLife.z its size in metres, aLife.w which of the two it is.
-// 0: the lip the skin's rolled edge throws up where it runs into the pool, last and highest across from the tear.
-// 1: the pool's floor coming back up through the middle as a blunt column, which falls and spreads.
+// What the pool does when a dome's skin is gone: its floor comes back up through the middle as a low mound, which falls and spreads.
+// A unit tube (radius 1, y 0 to 1) folded into a cap; aLife.x is seconds since it began to rise, aLife.y the dome's own number, aLife.z its
+// size in metres.
 export const CROWN_VERTEX = /* glsl */ `
 attribute vec4 aLife;
 varying vec3 vWorld;
@@ -329,43 +348,21 @@ void main() {
   float size = aLife.z;
   float a = atan(position.z, position.x);
   float k = aLife.y * 6.283;
-  float h = position.y;
-  vec3 q;
-  vec3 n;
-  float live = 0.0;
-  float lump = 0.0;
-  if (aLife.w < 0.5) {
-    float c = 0.6247 * cos(a - aLife.y * 40.0);
-    float arrive = (-1.1 + sqrt(1.21 + 3.6 * (1.0 - c))) / 1.8 * ${TEAR.toFixed(3)};
-    float tau = (age - arrive) / 0.26;
-    lump = clamp(0.22 + 0.1 * sin(a * 3.0 + k * 9.0) + 0.34 * pow(abs(sin(a * 4.5 + k * 3.0)), 3.0) * (0.55 + 0.45 * sin(a * 2.0 - k)) + 0.4 * pow(abs(sin(a * 9.5 + k * 7.0)), 4.0) * (0.5 + 0.5 * sin(a * 3.0 + k * 2.0)), 0.08, 1.0);
-    float mass = 0.3 + 0.7 * smoothstep(0.25, -0.6, c);
-    live = tau > 0.0 && tau < 1.0 ? tau : 0.0;
-    float up = size * 0.3 * lump * mass * 4.0 * live * (1.0 - live);
-    float wide = size * (0.98 + 0.3 * live * (0.25 + 0.75 * h) * (0.5 + lump));
-    q = vec3(cos(a) * wide, up * h - 0.01, sin(a) * wide);
-    n = normalize(vec3(cos(a), 0.3 + 0.5 * h, sin(a)));
-  } else {
-    // A low mound, level where it joins the pool and round on top: the brine heaving up, not a spout.
-    float v0 = 1.2 * sqrt(size / 0.4);
-    float tall = max(v0 * age - 4.905 * age * age, 0.0);
-    float dur = v0 / 4.905;
-    float spread = 0.6 + 0.7 * age / dur;
-    live = tall > 0.0 && age > 0.0 ? clamp(age / dur, 0.001, 1.0) : 0.0;
-    float rho = 1.0 - h;
-    float wob = 1.0 + 0.1 * sin(a * 3.0 + k * 5.0) * rho + 0.05 * sin(a * 5.0 - k * 3.0);
-    float wide = rho * size * spread * wob;
-    float hill = (1.0 - rho * rho) * (1.0 - rho * rho);
-    q = vec3(cos(a) * wide, tall * hill - 0.01, sin(a) * wide);
-    float fall = 4.0 * rho * (1.0 - rho * rho) * tall;
-    n = normalize(vec3(cos(a) * fall, size * spread, sin(a) * fall));
-    lump = 1.0;
-  }
-  vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
+  // Level where it joins the pool and round on top: the brine heaving up, not a spout.
+  float v0 = 1.2 * sqrt(size / 0.4);
+  float tall = max(v0 * age - 4.905 * age * age, 0.0);
+  float dur = v0 / 4.905;
+  float spread = 0.6 + 0.7 * age / dur;
+  float rho = 1.0 - position.y;
+  float wob = 1.0 + 0.1 * sin(a * 3.0 + k * 5.0) * rho + 0.05 * sin(a * 5.0 - k * 3.0);
+  float wide = rho * size * spread * wob;
+  float hill = (1.0 - rho * rho) * (1.0 - rho * rho);
+  float fall = 4.0 * rho * (1.0 - rho * rho) * tall;
+  vec4 w = modelMatrix * instanceMatrix * vec4(cos(a) * wide, tall * hill - 0.01, sin(a) * wide, 1.0);
   vWorld = w.xyz;
-  vLocal = vec3(a, h, lump);
-  vLife = vec4(live, aLife.yzw);
-  vNormal = n;
+  vLocal = vec3(a, position.y, rho);
+  vLife = vec4(tall > 0.0 && age > 0.0 ? clamp(age / dur, 0.001, 1.0) : 0.0, aLife.yzw);
+  vNormal = normalize(vec3(cos(a) * fall, size * spread, sin(a) * fall));
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -381,26 +378,15 @@ ${RIG_GLSL}
 void main() {
   if (vLife.x <= 0.0) discard;
   vec4 g = texture2D(tGrain, vec2(vLocal.x * 0.6 + vLife.y, vLocal.y * 0.7));
-  float h = vLocal.y;
-  float film = 0.0;
-  float lip = 0.0;
-  if (vLife.w < 0.5) {
-    // The lip is a sheet: torn at the top into tongues, holes opening in it as it stretches, its edge rolled into a bead.
-    float tip = 0.4 + 0.6 * vLocal.z;
-    float torn = h - tip + (g.r - 0.5) * 0.7 + vLife.x * 0.8 * g.g;
-    if (torn > 0.0) discard;
-    lip = smoothstep(-0.2, 0.0, torn);
-    film = smoothstep(0.1, 0.6, h / tip) * (1.0 - lip);
-  }
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   if (dot(n, v) < 0.0) n = -n;
-  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.22 + vec3(0.0, 0.7 * lip * lip, 0.0));
+  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.12);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   float open = skyOpen(vWorld);
-  // The brine itself, thrown: dark where it is thick, the light of the sky through it where it is a film.
-  vec3 body = mix(vec3(0.055, 0.008, 0.006), vec3(0.13, 0.026, 0.02), film);
+  // The brine itself, heaved up.
+  vec3 body = vec3(0.055, 0.008, 0.006);
   vec3 lit = body * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
   // It is wet: the sky stands in it over the mirrored horizon, the dark pool under.
   vec3 pond = vec3(0.05, 0.012, 0.01) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
@@ -408,8 +394,9 @@ void main() {
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
   env *= 1.0 + 0.6 * smoothstep(0.8, 0.99, toward);
   // (The same held-back mirror as the pool's own skin, so that what the pool throws up is the pool's colour.)
-  float fres = 0.03 + 0.3 * pow(1.0 - nv, 5.0);
+  float fres = 0.02 + 0.25 * pow(1.0 - nv, 2.5) + 0.12 * pow(1.0 - nv, 10.0);
   vec3 mirrored = env * vec3(1.0, 0.8, 0.75) * fres * mix(1.0, open, 0.5);
-  float cover = clamp(1.0 - 0.55 * film + 0.6 * fres, 0.0, 1.0);
-  gl_FragColor = vec4((lit * cover + mirrored) * (1.0 - uSolo), cover);
+  // It runs out into the pool with no edge.
+  float cover = smoothstep(1.0, 0.8, vLocal.z);
+  gl_FragColor = vec4((lit + mirrored) * cover * (1.0 - uSolo), cover);
 }`;

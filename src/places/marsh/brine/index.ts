@@ -1,5 +1,5 @@
 // The brine of the Blood Marsh: the level red water of the seep pool, the vein and the creeks (part `brine`), the domes of gas that swell on the
-// seep pool (part `domes`), and the tearing of a dome: the lip and the column the pool throws up, the drops, and the rings they leave (part `burst`).
+// seep pool (part `domes`), and the tearing of a dome: the drops its edge lets go, the mound the pool heaves up, and the rings they leave (part `burst`).
 // All of it is a function of the place's seconds: every dome has a period and a moment in it, and nothing is remembered between frames.
 import * as THREE from 'three';
 import { BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, keyTime, rel } from '../shared/anchors';
@@ -32,7 +32,7 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('brine/domes');
 
   const domes: Dome[] = [
-    { x: HERO_DOME[0], z: HERO_DOME[1], size: 0.62, period: 10.4, burst: BURST, seed: 0.37, drops: 130 },
+    { x: HERO_DOME[0], z: HERO_DOME[1], size: 0.62, period: 10.4, burst: BURST, seed: 0.37, drops: 220 },
     { x: SMALL_DOME[0], z: SMALL_DOME[1], size: 0.4, period: 7.6, burst: SMALL_BURST, seed: 0.81, drops: 80 },
     // The one the second lens ends on: it stands full in the middle of that pool and tears a second after the key frame.
     { x: -4.0, z: 0.6, size: 0.6, period: 12.4, burst: keyTime('marsh-2') + 1, seed: 0.53, drops: 100 },
@@ -142,7 +142,7 @@ export function create(ctx: Context): Piece {
     thrown[i * 5] = throwRng.range(0, TAU);
     thrown[i * 5 + 1] = throwRng.next();
     thrown[i * 5 + 2] = throwRng.next();
-    thrown[i * 5 + 3] = 0.0025 + 0.013 * Math.pow(throwRng.next(), 3.2);
+    thrown[i * 5 + 3] = 0.0012 + 0.007 * Math.pow(throwRng.next(), 3.2);
     thrown[i * 5 + 4] = throwRng.next();
   }
 
@@ -151,9 +151,9 @@ export function create(ctx: Context): Piece {
     blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
   });
   const tube = new THREE.CylinderGeometry(1, 1, 1, 192, 14, true).translate(0, 0.5, 0);
-  const crownLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 8), 4);
+  const crownLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
   tube.setAttribute('aLife', crownLife);
-  const crownMesh = new THREE.InstancedMesh(tube, crownMaterial, domes.length * 2);
+  const crownMesh = new THREE.InstancedMesh(tube, crownMaterial, domes.length);
   crownMesh.frustumCulled = false;
   const burst = new THREE.Group();
   burst.add(crownMesh, dropMesh);
@@ -185,23 +185,19 @@ export function create(ctx: Context): Piece {
       domeMesh.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
-      // Where the edge runs into the pool it throws up a lip; then the pool's floor comes back up through the middle.
-      const lipped = age > 0 && age < TEAR + 0.27;
-      m.makeScale(lipped ? 1 : 0, lipped ? 1 : 0, lipped ? 1 : 0).setPosition(d.x, 0, d.z);
-      crownMesh.setMatrixAt(i, m);
-      crownLife.setXYZW(i, lipped ? age : 0, d.seed, d.size, 0);
+      // Then the pool's floor comes back up through the middle.
       const back = age - TEAR * 0.8;
       const risen = back > 0 && back < (1.2 * Math.sqrt(d.size / 0.4)) / 4.905;
       m.makeScale(risen ? 1 : 0, risen ? 1 : 0, risen ? 1 : 0).setPosition(d.x, 0, d.z);
-      crownMesh.setMatrixAt(domes.length + i, m);
-      crownLife.setXYZW(domes.length + i, risen ? back : 0, d.seed, d.size, 1);
+      crownMesh.setMatrixAt(i, m);
+      crownLife.setXYZW(i, risen ? back : 0, d.seed, d.size, 0);
 
       // The drops are the edge's beads let go: each leaves the place on the skin where the edge found it, at the moment the edge came by,
       // along the way the edge was running and a little off the skin, and then it only falls.
-      const fh = Math.hypot(0.6, 0.75);
-      const fx = (Math.cos(d.seed * 40) * 0.6) / fh;
-      const fy = 0.75 / fh;
-      const fz = (Math.sin(d.seed * 40) * 0.6) / fh;
+      const fh = Math.hypot(0.35, 0.94);
+      const fx = (Math.cos(d.seed * 40) * 0.35) / fh;
+      const fy = 0.94 / fh;
+      const fz = (Math.sin(d.seed * 40) * 0.35) / fh;
       const landed: number[] = [];
       for (let k = 0; k < d.drops; k++, drop++) {
         const az = thrown[drop * 5] as number;
@@ -242,7 +238,7 @@ export function create(ctx: Context): Piece {
         dir.set(vx, vy - 9.81 * fl, vz);
         const speed = dir.length();
         q.setFromUnitVectors(up, dir.divideScalar(speed || 1));
-        scale.set(size, size * (1 + 0.45 * speed), size);
+        scale.set(size, size * (1 + 0.3 * speed), size);
         m.compose(pos, q, scale);
         dropMesh.setMatrixAt(drop, m);
         dropLife.setXYZW(drop, 0.5, own, size, 0);
