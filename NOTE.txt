@@ -1,7 +1,4 @@
-2026-11-26 17:24 UTC
-work at b76b2ab on agent/reveal-orbit
-v2: two ringed banks travel (10094 to 11355), cloud grain back to before, ember never under before; cost at 11400 still over
-look-1.jpg = out/work/v2/show-0-banks.png
-look-2.jpg = out/work/v2/show-1-sheet.png
-look-3.jpg = out/work/v2/show-3-last.png
-look-4.jpg = out/work/v2/show-4-most.png
+2026-11-26 17:35 UTC
+work at 1b7d974 on agent/reveal-orbit
+last: banks out, rest of v2 kept; 10346, 10851, 11355
+look-1.jpg = out/work/v3/show-last-sheet.png
