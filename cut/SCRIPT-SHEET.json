@@ -48,8 +48,9 @@
       "lines": 4,
       "characters": 111,
       "seconds": 11.87,
-      "approvedCharacters": 103,
-      "approvedSeconds": 11.48
+      "approvedLines": 4,
+      "approvedCharacters": 111,
+      "approvedSeconds": 11.86
     },
     {
       "id": "n2",
@@ -62,8 +63,9 @@
       "lines": 4,
       "characters": 213,
       "seconds": 24.08,
-      "approvedCharacters": 180,
-      "approvedSeconds": 20.6
+      "approvedLines": 2,
+      "approvedCharacters": 48,
+      "approvedSeconds": 5.24
     },
     {
       "id": "n3",
@@ -76,8 +78,9 @@
       "lines": 4,
       "characters": 161,
       "seconds": 17.82,
-      "approvedCharacters": 149,
-      "approvedSeconds": 16.55
+      "approvedLines": 3,
+      "approvedCharacters": 97,
+      "approvedSeconds": 10.59
     },
     {
       "id": "n4",
@@ -90,8 +93,9 @@
       "lines": 4,
       "characters": 166,
       "seconds": 19.35,
-      "approvedCharacters": 165,
-      "approvedSeconds": 19.02
+      "approvedLines": 2,
+      "approvedCharacters": 56,
+      "approvedSeconds": 6.88
     },
     {
       "id": "n5",
@@ -104,8 +108,9 @@
       "lines": 4,
       "characters": 148,
       "seconds": 16.74,
-      "approvedCharacters": 132,
-      "approvedSeconds": 15.06
+      "approvedLines": 3,
+      "approvedCharacters": 104,
+      "approvedSeconds": 11.62
     },
     {
       "id": "n6",
@@ -118,8 +123,9 @@
       "lines": 4,
       "characters": 156,
       "seconds": 17.59,
-      "approvedCharacters": 146,
-      "approvedSeconds": 16.53
+      "approvedLines": 3,
+      "approvedCharacters": 94,
+      "approvedSeconds": 10.87
     },
     {
       "id": "n7",
@@ -132,8 +138,9 @@
       "lines": 4,
       "characters": 163,
       "seconds": 19.13,
-      "approvedCharacters": 144,
-      "approvedSeconds": 17.12
+      "approvedLines": 2,
+      "approvedCharacters": 54,
+      "approvedSeconds": 6.67
     },
     {
       "id": "n8",
@@ -146,8 +153,9 @@
       "lines": 4,
       "characters": 131,
       "seconds": 14.47,
-      "approvedCharacters": 88,
-      "approvedSeconds": 9.74
+      "approvedLines": 3,
+      "approvedCharacters": 64,
+      "approvedSeconds": 6.72
     }
   ],
   "rows": [
@@ -197,6 +205,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "Past the last calm water, there is a shore.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n1-1-ribs-01-0038.jpg",
@@ -258,6 +268,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "Nothing on it has a name.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n1-2-ribs-01-0085.jpg",
@@ -319,6 +331,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "Nothing on it should be alive.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n1-3-ribs-01-0125.jpg",
@@ -382,6 +396,8 @@
       ],
       "mark": null,
       "note": null,
+      "spoken": "All of it is.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n1-4-ribs-01-0160.jpg",
@@ -443,6 +459,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "The strait.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-ribs-0.jpg",
@@ -576,6 +594,8 @@
         ]
       },
       "note": null,
+      "spoken": "Stone blades, taller than the storms.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-ribs-0.jpg",
@@ -749,6 +769,8 @@
         ]
       },
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-ribs-3.jpg",
@@ -836,6 +858,8 @@
       ],
       "mark": null,
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-ribs-1.jpg",
@@ -897,6 +921,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "The fire.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n3-1-heart-01-0430.jpg",
@@ -952,6 +978,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "A lake of it, under a black skin.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n3-2-heart-01-0461.jpg",
@@ -1007,6 +1035,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "The tall ones walk the skin, and drink from the cracks.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n3-3-heart-02-0524.jpg",
@@ -1184,6 +1214,8 @@
         ]
       },
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n3-4-heart-03-0580.jpg",
@@ -1245,6 +1277,8 @@
       "lands": [],
       "mark": null,
       "note": "The shot is the shelf with one pit steaming on it. The line says pits.",
+      "spoken": "The pits.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-breath-0.jpg",
@@ -1326,6 +1360,8 @@
       ],
       "mark": null,
       "note": null,
+      "spoken": "The ground breathes here. Slow. From far below.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-breath-0.jpg",
@@ -1459,6 +1495,8 @@
         ]
       },
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-breath-3.jpg",
@@ -1630,6 +1668,8 @@
         ]
       },
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-breath-1.jpg",
@@ -1691,6 +1731,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "The red flats.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-marsh-0.jpg",
@@ -1869,6 +1911,8 @@
         ]
       },
       "note": null,
+      "spoken": "Stalks root in the red. The ground still bleeds.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-marsh-2.jpg",
@@ -1930,6 +1974,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "The heavy ones wallow in it, and grow fat.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-marsh-3.jpg",
@@ -1990,6 +2036,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-marsh-4.jpg",
@@ -2045,6 +2093,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "The ridge.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-spine-0.jpg",
@@ -2195,6 +2245,8 @@
         ]
       },
       "note": null,
+      "spoken": "Above the cloud. Under the storm.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-spine-0.jpg",
@@ -2290,6 +2342,8 @@
       ],
       "mark": null,
       "note": "Its first sentence is said over the kites and then over the animal the lightning killed. Neither is named.",
+      "spoken": "Every night the lightning walks it. Spire to spire.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-spine-1.jpg",
@@ -2408,6 +2462,8 @@
         ]
       },
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-spine-4.jpg",
@@ -2463,6 +2519,8 @@
       "lands": [],
       "mark": null,
       "note": null,
+      "spoken": "The lake.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-eye-0.jpg",
@@ -2557,6 +2615,8 @@
       ],
       "mark": null,
       "note": "\"Black at the center.\" is said over the edge, where the black water lies behind a skeleton on the lip. The centre itself comes two shots later.",
+      "spoken": "Still. Gold at the edge. Black at the center.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-eye-2.jpg",
@@ -2705,6 +2765,8 @@
         ]
       },
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-eye-1.jpg",
@@ -2838,6 +2900,8 @@
         ]
       },
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/key-eye-4.jpg",
@@ -2953,6 +3017,8 @@
         ]
       },
       "note": null,
+      "spoken": "The land has a shape.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n8-1-reveal-01-1627.jpg",
@@ -3016,6 +3082,8 @@
       ],
       "mark": null,
       "note": null,
+      "spoken": null,
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n8-2-reveal-01-1647.jpg",
@@ -3079,6 +3147,8 @@
       ],
       "mark": null,
       "note": "Brandon wrote \"It was a body.\" and on 2026-11-25 (note 15) asked for a stronger word, \"being\" or \"titan\" or the Builder's choice. \"Titan\" is chosen: it is the word the whole build uses for it, it says how large it is, and the line keeps its five syllables and its stress, so its timing does not move. Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word \"titan\" should fall on the strike instead, the line starts about 0.6 s earlier.",
+      "spoken": "It was a titan.",
+      "shortened": false,
       "pictures": [
         {
           "file": "out/stills/script/n8-3-reveal-01-1679.jpg",
@@ -3147,6 +3217,8 @@
       ],
       "mark": null,
       "note": "Placed where the approved script had its last line. It can sit up to 5 s later if the beat should answer \"not finished\".",
+      "spoken": "Everything here feeds on it.",
+      "shortened": true,
       "pictures": [
         {
           "file": "out/stills/script/n8-4-reveal-01-1800.jpg",
@@ -3244,7 +3316,7 @@
     "No \"I\", no \"you\", no people, no maps, no god: met by every line of the draft and by every replacement line.",
     "Nothing says outright that the land is a body before the Reveal: met. None of the 28 lines before clip n8, and none of their replacements, names a body or a part of one. \"Skin\", \"breathes\" and \"bleeds\" stand as the figures of speech the note asks for.",
     "Eight clips, four lines each: met.",
-    "About the same length as now: the draft is 141.1 s of speech where the approved script is 126.1 s, by the same estimate. With the first replacement of every marked line it is 130.2 s. No shot moves either way.",
+    "About the same length as now: that was asked of the draft, which is 141.1 s of speech in 32 lines, and 130.2 s with the first replacement of every marked line. Since then the script is cut: the approved script is 70.5 s in 22 lines by the same estimate, with 10 lines cut from the film whole and 1 line cut to its first words. No shot moves either way, and no line that stays moves.",
     "Every line falls on the picture it describes: 21 of the 32 do as written. The other 11 are marked: 5 too long for their shots, 2 with too little to spare and 4 that do not match what the shot shows.",
     "The third line of the Reveal lands on the reveal strike: it starts on frame 10027, the frame of the strike at 2:47.1.",
     "Short, blunt lines, and not every line about dying: by my reading 5 of the 32 lines are about dying or the dead (n2.4, n3.4, n4.4, n5.4 and n8.4). The longest line is n2.4, at 8.8 s."
@@ -3253,8 +3325,11 @@
     "lines": 32,
     "characters": 1249,
     "seconds": 141.05,
-    "approvedCharacters": 1107,
-    "approvedSeconds": 126.1,
+    "approvedLines": 22,
+    "approvedCharacters": 628,
+    "approvedSeconds": 70.45,
+    "cutLines": 10,
+    "shortenedLines": 1,
     "marked": 11,
     "byKind": {
       "length": 5,
@@ -3273,43 +3348,43 @@
       "clip": "n2",
       "file": "out/stills/script/script-n2.jpg",
       "width": 1200,
-      "height": 2282
+      "height": 2438
     },
     {
       "clip": "n3",
       "file": "out/stills/script/script-n3.jpg",
       "width": 1200,
-      "height": 2295
+      "height": 2408
     },
     {
       "clip": "n4",
       "file": "out/stills/script/script-n4.jpg",
       "width": 1200,
-      "height": 2645
+      "height": 2790
     },
     {
       "clip": "n5",
       "file": "out/stills/script/script-n5.jpg",
       "width": 1200,
-      "height": 2271
+      "height": 2306
     },
     {
       "clip": "n6",
       "file": "out/stills/script/script-n6.jpg",
       "width": 1200,
-      "height": 2340
+      "height": 2454
     },
     {
       "clip": "n7",
       "file": "out/stills/script/script-n7.jpg",
       "width": 1200,
-      "height": 2274
+      "height": 2510
     },
     {
       "clip": "n8",
       "file": "out/stills/script/script-n8.jpg",
       "width": 1200,
-      "height": 2663
+      "height": 2696
     }
   ]
 }

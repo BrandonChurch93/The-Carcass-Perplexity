@@ -285,6 +285,32 @@ describe('the review page with content', () => {
     for (const c of model.listen.narration) expect(c.replaced, c.id).toBe(false);
   });
 
+  it('shows under each clip the words the film speaks, and says what else its recording holds', () => {
+    const model = review.collect();
+    const of = (id: string) => model.listen.narration.find((c: any) => c.id === id);
+    expect(model.listen.narration.flatMap((c: any) => c.lines)).toHaveLength(22);
+    expect(model.listen.narration.map((c: any) => c.lines.length)).toEqual([4, 2, 3, 2, 3, 3, 2, 3]);
+    expect(of('n1')).toMatchObject({ lines: cfg.narration.clips[0].lines, cut: [], shortened: [], recorded: 4 });
+    expect(review.cutNote(of('n1'))).toBe('');
+    expect(of('n8').lines).toEqual(['The land has a shape.', 'It was a titan.', 'Everything here feeds on it.']);
+    expect(of('n8').spoken.map((l: any) => l.line)).toEqual([1, 3, 4]);
+    expect(of('n8').cut).toEqual([{ line: 2, text: 'None of it was ever land.' }]);
+    expect(of('n8').shortened).toEqual([{ line: 4, text: 'Everything here feeds on it.', recorded: 'Everything here feeds on it. And it is not finished.' }]);
+    expect(review.cutNote(of('n8'))).toBe(
+      'The film speaks 3 of the 4 lines this clip was recorded with. The recording below is the kept clip whole, so it says more than the lines above. Cut from the film: line 2, "None of it was ever land." Line 4 is cut to its first words in the film and goes on in the recording: "Everything here feeds on it. And it is not finished."'
+    );
+    expect(review.cutNote(of('n7'))).toContain('Cut from the film: line 3, "The herds drink. None of them looks down."; line 4, "The center has no floor. Something looks back."');
+    const page = review.render(model);
+    const part = page.split('<section id="listen">')[1].split('</section>')[0];
+    const n8 = part.split('<article class="clip">').find((a: string) => a.includes('<span class="id">n8</span>')) ?? '';
+    expect(n8).toContain('<li>The land has a shape.</li>');
+    expect(n8).toContain('<li value="3">It was a titan.</li>');
+    expect(n8).toContain('<li value="4">Everything here feeds on it.</li>');
+    expect(n8).not.toContain('<li>None of it was ever land.</li>');
+    expect(n8.indexOf('The film speaks 3 of the 4 lines')).toBeLessThan(n8.indexOf('<audio'));
+    expect(part.match(/The film speaks \d of the 4 lines this clip was recorded with/g)).toHaveLength(7);
+  });
+
   it('says the script is final once the config holds the draft as it was settled, and not before', () => {
     const sheet = out.model.script.sheet;
     expect(out.model.script.final).toBe(true);
@@ -310,7 +336,11 @@ describe('the review page with content', () => {
     expect(part).toContain('<h3>Shown and not named</h3>');
     expect(part).toContain('<h3>The rules of the note, checked on the draft</h3>');
     expect(part).toContain('The script is final.');
-    expect(part).toContain('<th>The script before</th>');
+    // The last column of the sheet is the approved script, the 22 lines the film speaks, since the narration was cut.
+    expect(part).toContain('<th>Approved script</th>');
+    expect(part).toContain('The film speaks 22 of these 32 lines, with 10 lines cut from the film whole and 1 line cut to its first words.');
+    expect(part).toContain('its last column is the approved script, the lines the film speaks');
+    expect(part.match(/<p class="film">/g)).toHaveLength(11);
     expect(part).not.toContain('No narration is made from this draft');
     expect(part).not.toContain('<section');
     expect(review.counts(out.model).script).toBe(32);

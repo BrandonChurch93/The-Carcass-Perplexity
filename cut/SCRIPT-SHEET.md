@@ -4,17 +4,19 @@ The draft of 32 lines laid against the cut list. Lengths are worked out, not mea
 
 Marked: 11 of 32 lines (5 too long, 2 tight, 4 for the picture).
 
+The film speaks 22 of these 32 lines, with 10 lines cut from the film whole and 1 line cut to its first words. A line the cut touches says so under its words. Every recording is kept.
+
 | Clip | Place | In the film | Draft | Approved script |
 | --- | --- | --- | --- | --- |
-| n1 | The opening | 0:00.0 to 0:17.4 | 11.9 s, 111 characters | 11.5 s, 103 characters |
-| n2 | The Ribs | 0:17.4 to 0:41.8 | 24.1 s, 213 characters | 20.6 s, 180 characters |
-| n3 | The Heart | 0:41.8 to 1:10.3 | 17.8 s, 161 characters | 16.6 s, 149 characters |
-| n4 | The Breath | 1:10.3 to 1:33.6 | 19.4 s, 166 characters | 19.0 s, 165 characters |
-| n5 | The Blood Marsh | 1:33.6 to 1:56.9 | 16.7 s, 148 characters | 15.1 s, 132 characters |
-| n6 | The Spine | 1:56.9 to 2:18.4 | 17.6 s, 156 characters | 16.5 s, 146 characters |
-| n7 | The Eye | 2:18.4 to 2:39.0 | 19.1 s, 163 characters | 17.1 s, 144 characters |
-| n8 | The Reveal | 2:39.0 to 3:17.7 | 14.5 s, 131 characters | 9.7 s, 88 characters |
-| all | | | 141.1 s, 1249 characters | 126.1 s, 1107 characters |
+| n1 | The opening | 0:00.0 to 0:17.4 | 4 lines, 11.9 s, 111 characters | 4 lines, 11.9 s, 111 characters |
+| n2 | The Ribs | 0:17.4 to 0:41.8 | 4 lines, 24.1 s, 213 characters | 2 lines, 5.2 s, 48 characters |
+| n3 | The Heart | 0:41.8 to 1:10.3 | 4 lines, 17.8 s, 161 characters | 3 lines, 10.6 s, 97 characters |
+| n4 | The Breath | 1:10.3 to 1:33.6 | 4 lines, 19.4 s, 166 characters | 2 lines, 6.9 s, 56 characters |
+| n5 | The Blood Marsh | 1:33.6 to 1:56.9 | 4 lines, 16.7 s, 148 characters | 3 lines, 11.6 s, 104 characters |
+| n6 | The Spine | 1:56.9 to 2:18.4 | 4 lines, 17.6 s, 156 characters | 3 lines, 10.9 s, 94 characters |
+| n7 | The Eye | 2:18.4 to 2:39.0 | 4 lines, 19.1 s, 163 characters | 2 lines, 6.7 s, 54 characters |
+| n8 | The Reveal | 2:39.0 to 3:17.7 | 4 lines, 14.5 s, 131 characters | 3 lines, 6.7 s, 64 characters |
+| all | | | 32 lines, 141.1 s, 1249 characters | 22 lines, 70.5 s, 628 characters |
 
 ## n1 · The opening
 
@@ -77,6 +79,8 @@ Marked: 6.4 s, and the strait has 4.3 s left after "The strait." and its pause. 
 
 > At low tide the winged ones come down to feed. They do not have long.
 
+Cut from the film. The line is recorded and kept, and the film does not speak it.
+
 On: ribs-03 (0:24.0 to 0:27.5, 3.2 s of the line) then ribs-04 (0:27.5 to 0:31.1, 3.6 s of the line) then ribs-05 (0:31.1 to 0:38.3, 1.0 s of the line).
 
 ![ribs-03 · approved key picture ribs-3](../out/stills/script/key-ribs-3.jpg) ![ribs-04 · approved key picture ribs-2](../out/stills/script/key-ribs-2.jpg)
@@ -89,6 +93,8 @@ Marked: 7.8 s over two shots that last 7.1 s together, the colony and the feeder
 **n2.4** · 0:32.3 to 0:41.1 (8.8 s, 0.7 s to spare) · Fits
 
 > High in the weed hangs one that stayed. Then the sea returns. All at once.
+
+Cut from the film. The line is recorded and kept, and the film does not speak it.
 
 On: ribs-05 (0:31.1 to 0:38.3, 6.0 s of the line) then ribs-06 (0:38.3 to 0:41.8, 2.8 s of the line). "High in the weed hangs one that stayed." falls wholly on ribs-05, the camera looks up at the drowned. "All at once." runs from 0:39.8 to 0:41.1, across the hit where the bore comes through the cage at 0:40.0.
 
@@ -124,6 +130,8 @@ On: heart-02 (0:49.0 to 0:56.3).
 
 > Sometimes the skin gives way. The fire beneath has never cooled.
 
+Cut from the film. The line is recorded and kept, and the film does not speak it.
+
 On: heart-03 (0:56.3 to 0:59.6, 3.3 s of the line) then heart-04 (0:59.6 to 1:03.2, 3.5 s of the line) then heart-05 (1:03.2 to 1:10.3, 0.4 s of the line). "Sometimes the skin gives way." does not fall on heart-04, the one that sank: it runs from 0:56.4 to 0:59.4 and the shot from 0:59.6 to 1:03.2. "The fire beneath has never cooled." does not fall on heart-03, the fire under the skin: it runs from 1:00.0 to 1:03.6 and the shot from 0:56.3 to 0:59.6.
 
 ![heart-03 at 0:58.0 · the Heart review clip, final tier](../out/stills/script/n3-4-heart-03-0580.jpg) ![heart-04 at 1:01.4 · the Heart review clip, final tier](../out/stills/script/n3-4-heart-04-0614.jpg)
@@ -157,6 +165,8 @@ On: breath-01 (1:10.3 to 1:16.6, 3.8 s of the line) then breath-02 (1:16.6 to 1:
 
 > Red growth crowds the rim, feeding on the breath.
 
+Cut from the film. The line is recorded and kept, and the film does not speak it.
+
 On: breath-03 (1:21.1 to 1:24.7, 3.5 s of the line) then breath-04 (1:24.7 to 1:30.0, 1.9 s of the line).
 
 ![breath-03 · approved key picture breath-3](../out/stills/script/key-breath-3.jpg) ![breath-04 · approved key picture breath-1](../out/stills/script/key-breath-1.jpg)
@@ -169,6 +179,8 @@ Marked: 5.3 s on a shot of 3.6 s. Whole, it fits only if it starts at 1:19.3, an
 **n4.4** · 1:25.1 to 1:32.2 (7.1 s, 1.4 s to spare) · Picture
 
 > The pale herds graze the channel, and never the rim. One did.
+
+Cut from the film. The line is recorded and kept, and the film does not speak it.
 
 On: breath-04 (1:24.7 to 1:30.0, 5.0 s of the line) then breath-05 (1:30.0 to 1:33.6, 2.2 s of the line). "One did." falls wholly on breath-05, the one at the rim.
 
@@ -214,6 +226,8 @@ On: marsh-04 (1:44.4 to 1:49.8).
 
 > The salt keeps whatever it catches. Forever.
 
+Cut from the film. The line is recorded and kept, and the film does not speak it.
+
 On: marsh-05 (1:49.8 to 1:56.9).
 
 ![marsh-05 · approved key picture marsh-4](../out/stills/script/key-marsh-4.jpg)
@@ -255,6 +269,8 @@ Note: Its first sentence is said over the kites and then over the animal the lig
 
 > The herds shelter in the hollow beneath, and wait for morning.
 
+Cut from the film. The line is recorded and kept, and the film does not speak it.
+
 On: spine-05 (2:11.3 to 2:18.4).
 
 ![spine-05 · approved key picture spine-4](../out/stills/script/key-spine-4.jpg)
@@ -288,6 +304,8 @@ Note: "Black at the center." is said over the edge, where the black water lies b
 
 > The herds drink at the shallows. None of them looks down.
 
+Cut from the film. The line is recorded and kept, and the film does not speak it.
+
 On: eye-04 (2:27.4 to 2:32.8, 5.3 s of the line) then eye-05 (2:32.8 to 2:39.0, 1.2 s of the line).
 
 ![eye-04 · approved key picture eye-1](../out/stills/script/key-eye-1.jpg) ![eye-05 · approved key picture eye-4](../out/stills/script/key-eye-4.jpg)
@@ -300,6 +318,8 @@ Marked: 6.5 s on a shot of 5.4 s. Its last second is said over the centre, and i
 **n7.4** · 2:32.9 to 2:38.9 (6.0 s, 0.1 s to spare) · Tight
 
 > The center has no floor. Something there looks back.
+
+Cut from the film. The line is recorded and kept, and the film does not speak it.
 
 On: eye-05 (2:32.8 to 2:39.0).
 
@@ -329,6 +349,8 @@ Marked: 4.3 s where 2.8 s are free. It cannot start before the camera has left t
 
 > None of it was ever land.
 
+Cut from the film. The line is recorded and kept, and the film does not speak it.
+
 On: reveal-01 (2:39.0 to 3:15.7). "None of it was ever land." ends 1.1 s before the reveal strike of the music at 2:47.1.
 
 ![reveal-01 at 2:44.7 · blockout, framing only](../out/stills/script/n8-2-reveal-01-1647.jpg) ![approved key picture reveal-3, which falls at 2:42.6](../out/stills/script/key-reveal-3.jpg)
@@ -346,6 +368,8 @@ Note: Brandon wrote "It was a body." and on 2026-11-25 (note 15) asked for a str
 **n8.4** · 2:57.0 to 3:03.0 (6.0 s, over 1.5 s to spare) · Fits
 
 > Everything here feeds on it. And it is not finished.
+
+Cut to its first words in the film, which speaks: "Everything here feeds on it." The whole line is recorded and kept.
 
 On: reveal-01 (2:39.0 to 3:15.7). "And it is not finished." ends 5.9 s before the beat where the Heart's glow pulses once on the body at 3:08.9.
 
@@ -366,7 +390,7 @@ Note: Placed where the approved script had its last line. It can sit up to 5 s l
 - No "I", no "you", no people, no maps, no god: met by every line of the draft and by every replacement line.
 - Nothing says outright that the land is a body before the Reveal: met. None of the 28 lines before clip n8, and none of their replacements, names a body or a part of one. "Skin", "breathes" and "bleeds" stand as the figures of speech the note asks for.
 - Eight clips, four lines each: met.
-- About the same length as now: the draft is 141.1 s of speech where the approved script is 126.1 s, by the same estimate. With the first replacement of every marked line it is 130.2 s. No shot moves either way.
+- About the same length as now: that was asked of the draft, which is 141.1 s of speech in 32 lines, and 130.2 s with the first replacement of every marked line. Since then the script is cut: the approved script is 70.5 s in 22 lines by the same estimate, with 10 lines cut from the film whole and 1 line cut to its first words. No shot moves either way, and no line that stays moves.
 - Every line falls on the picture it describes: 21 of the 32 do as written. The other 11 are marked: 5 too long for their shots, 2 with too little to spare and 4 that do not match what the shot shows.
 - The third line of the Reveal lands on the reveal strike: it starts on frame 10027, the frame of the strike at 2:47.1.
 - Short, blunt lines, and not every line about dying: by my reading 5 of the 32 lines are about dying or the dead (n2.4, n3.4, n4.4, n5.4 and n8.4). The longest line is n2.4, at 8.8 s.

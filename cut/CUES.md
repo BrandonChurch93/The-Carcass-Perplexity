@@ -74,32 +74,22 @@ Written by `npm run cut` from `cut/PLAN.json`. Do not edit by hand. Frames count
 | n1 | 4 | All of it is. | 930 | 0:15.30 | 1.45 | audio/kept/lines/n1-4.wav | ribs-01 | 15.5 |
 | n2 | 1 | The strait. | 1074 | 0:17.54 | 1.18 | audio/kept/lines/n2-1.wav | ribs-02 | 17.9 |
 | n2 | 2 | Stone blades, taller than the storms. | 1188 | 0:19.48 | 3.62 | audio/kept/lines/n2-2.wav | ribs-02 | 19.8 |
-| n2 | 3 | At low tide the winged ones feed. They do not have long. | 1533 | 0:25.33 | 5.03 | audio/kept/lines/n2-3.wav | ribs-03 | 25.55 |
-| n2 | 4 | High in the weed hangs one that stayed. Then the sea returns. All at once. | 2016 | 0:33.36 | 6.38 | audio/kept/lines/n2-4.wav | ribs-05 | 33.6 |
 | n3 | 1 | The fire. | 2550 | 0:42.30 | 1.12 | audio/kept/lines/n3-1.wav | heart-01 | 42.5 |
 | n3 | 2 | A lake of it, under a black skin. | 2658 | 0:44.18 | 3.33 | audio/kept/lines/n3-2.wav | heart-01 | 44.3 |
 | n3 | 3 | The tall ones walk the skin, and drink from the cracks. | 2964 | 0:49.24 | 4.48 | audio/kept/lines/n3-3.wav | heart-02 | 49.4 |
-| n3 | 4 | The fire has never cooled. Sometimes the skin gives way. | 3414 | 0:56.54 | 5.05 | audio/kept/lines/n3-4.wav | heart-03 | 56.9 |
 | n4 | 1 | The pits. | 4257 | 1:10.57 | 1.33 | audio/kept/lines/n4-1.wav | breath-01 | 70.95 |
 | n4 | 2 | The ground breathes here. Slow. From far below. | 4374 | 1:12.54 | 5.23 | audio/kept/lines/n4-2.wav | breath-01 | 72.9 |
-| n4 | 3 | Red growth feeds on the breath. | 4890 | 1:21.30 | 2.5 | audio/kept/lines/n4-3.wav | breath-03 | 81.5 |
-| n4 | 4 | The pale herds graze the channel, not the rim. One did. One will. | 5178 | 1:26.18 | 6.33 | audio/kept/lines/n4-4.wav | breath-04 | 86.3 |
 | n5 | 1 | The red flats. | 5655 | 1:34.15 | 1.6 | audio/kept/lines/n5-1.wav | marsh-01 | 94.25 |
 | n5 | 2 | Stalks root in the red. The ground still bleeds. | 5832 | 1:37.12 | 5 | audio/kept/lines/n5-2.wav | marsh-01 | 97.2 |
 | n5 | 3 | The heavy ones wallow in it, and grow fat. | 6288 | 1:44.48 | 3.8 | audio/kept/lines/n5-3.wav | marsh-04 | 104.8 |
-| n5 | 4 | The salt keeps whatever it catches. Forever. | 6636 | 1:50.36 | 3.58 | audio/kept/lines/n5-4.wav | marsh-05 | 110.6 |
 | n6 | 1 | The ridge. | 7035 | 1:57.15 | 1.08 | audio/kept/lines/n6-1.wav | spine-01 | 117.25 |
 | n6 | 2 | Above the cloud. Under the storm. | 7137 | 1:58.57 | 3.45 | audio/kept/lines/n6-2.wav | spine-01 | 118.95 |
 | n6 | 3 | Every night the lightning walks it. Spire to spire. | 7500 | 2:05.00 | 4.47 | audio/kept/lines/n6-3.wav | spine-03 | 125 |
-| n6 | 4 | The herds shelter in the hollow beneath, until morning. | 7908 | 2:11.48 | 3.83 | audio/kept/lines/n6-4.wav | spine-05 | 131.8 |
 | n7 | 1 | The lake. | 8337 | 2:18.57 | 1 | audio/kept/lines/n7-1.wav | eye-01 | 138.95 |
 | n7 | 2 | Still. Gold at the edge. Black at the center. | 8478 | 2:21.18 | 5.1 | audio/kept/lines/n7-2.wav | eye-01 | 141.3 |
-| n7 | 3 | The herds drink. None of them looks down. | 8874 | 2:27.54 | 3.45 | audio/kept/lines/n7-3.wav | eye-04 | 147.9 |
-| n7 | 4 | The center has no floor. Something looks back. | 9192 | 2:33.12 | 4.05 | audio/kept/lines/n7-4.wav | eye-05 | 153.2 |
 | n8 | 1 | The land has a shape. | 9630 | 2:40.30 | 2.53 | audio/kept/lines/n8-1.wav | reveal-01 | 160.5 |
-| n8 | 2 | None of it was ever land. | 9846 | 2:44.06 | 2 | audio/kept/lines/n8-2.wav | reveal-01 | 164.1 |
 | n8 | 3 | It was a titan. | 10027 | 2:47.07 | 1.68 | audio/kept/lines/n8-3.wav | reveal-01 | 167.12 |
-| n8 | 4 | Everything here feeds on it. And it is not finished. | 10620 | 2:57.00 | 4 | audio/kept/lines/n8-4.wav | reveal-01 | 212.82 |
+| n8 | 4 | Everything here feeds on it. | 10620 | 2:57.00 | 2.15 | audio/kept/lines/n8-4-short.wav | reveal-01 | 212.82 |
 
 ## Events
 

@@ -491,26 +491,6 @@
       "carried": false
     },
     {
-      "clip": "n2",
-      "line": 3,
-      "text": "At low tide the winged ones feed. They do not have long.",
-      "unit": "ribs",
-      "first": 1533,
-      "frames": 302,
-      "file": "audio/kept/lines/n2-3.wav",
-      "carried": false
-    },
-    {
-      "clip": "n2",
-      "line": 4,
-      "text": "High in the weed hangs one that stayed. Then the sea returns. All at once.",
-      "unit": "ribs",
-      "first": 2016,
-      "frames": 383,
-      "file": "audio/kept/lines/n2-4.wav",
-      "carried": false
-    },
-    {
       "clip": "n3",
       "line": 1,
       "text": "The fire.",
@@ -541,16 +521,6 @@
       "carried": false
     },
     {
-      "clip": "n3",
-      "line": 4,
-      "text": "The fire has never cooled. Sometimes the skin gives way.",
-      "unit": "heart",
-      "first": 3414,
-      "frames": 303,
-      "file": "audio/kept/lines/n3-4.wav",
-      "carried": false
-    },
-    {
       "clip": "n4",
       "line": 1,
       "text": "The pits.",
@@ -568,26 +538,6 @@
       "first": 4374,
       "frames": 314,
       "file": "audio/kept/lines/n4-2.wav",
-      "carried": false
-    },
-    {
-      "clip": "n4",
-      "line": 3,
-      "text": "Red growth feeds on the breath.",
-      "unit": "breath",
-      "first": 4890,
-      "frames": 150,
-      "file": "audio/kept/lines/n4-3.wav",
-      "carried": false
-    },
-    {
-      "clip": "n4",
-      "line": 4,
-      "text": "The pale herds graze the channel, not the rim. One did. One will.",
-      "unit": "breath",
-      "first": 5178,
-      "frames": 380,
-      "file": "audio/kept/lines/n4-4.wav",
       "carried": false
     },
     {
@@ -621,16 +571,6 @@
       "carried": false
     },
     {
-      "clip": "n5",
-      "line": 4,
-      "text": "The salt keeps whatever it catches. Forever.",
-      "unit": "marsh",
-      "first": 6636,
-      "frames": 215,
-      "file": "audio/kept/lines/n5-4.wav",
-      "carried": false
-    },
-    {
       "clip": "n6",
       "line": 1,
       "text": "The ridge.",
@@ -661,16 +601,6 @@
       "carried": false
     },
     {
-      "clip": "n6",
-      "line": 4,
-      "text": "The herds shelter in the hollow beneath, until morning.",
-      "unit": "spine",
-      "first": 7908,
-      "frames": 230,
-      "file": "audio/kept/lines/n6-4.wav",
-      "carried": false
-    },
-    {
       "clip": "n7",
       "line": 1,
       "text": "The lake.",
@@ -691,26 +621,6 @@
       "carried": false
     },
     {
-      "clip": "n7",
-      "line": 3,
-      "text": "The herds drink. None of them looks down.",
-      "unit": "eye",
-      "first": 8874,
-      "frames": 207,
-      "file": "audio/kept/lines/n7-3.wav",
-      "carried": false
-    },
-    {
-      "clip": "n7",
-      "line": 4,
-      "text": "The center has no floor. Something looks back.",
-      "unit": "eye",
-      "first": 9192,
-      "frames": 243,
-      "file": "audio/kept/lines/n7-4.wav",
-      "carried": false
-    },
-    {
       "clip": "n8",
       "line": 1,
       "text": "The land has a shape.",
@@ -718,16 +628,6 @@
       "first": 9630,
       "frames": 152,
       "file": "audio/kept/lines/n8-1.wav",
-      "carried": false
-    },
-    {
-      "clip": "n8",
-      "line": 2,
-      "text": "None of it was ever land.",
-      "unit": "reveal",
-      "first": 9846,
-      "frames": 120,
-      "file": "audio/kept/lines/n8-2.wav",
       "carried": false
     },
     {
@@ -744,11 +644,11 @@
     {
       "clip": "n8",
       "line": 4,
-      "text": "Everything here feeds on it. And it is not finished.",
+      "text": "Everything here feeds on it.",
       "unit": "reveal",
       "first": 10620,
-      "frames": 240,
-      "file": "audio/kept/lines/n8-4.wav",
+      "frames": 129,
+      "file": "audio/kept/lines/n8-4-short.wav",
       "carried": false
     }
   ],

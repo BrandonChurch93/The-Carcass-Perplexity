@@ -63,36 +63,26 @@
 
     { "clip": "n2", "line": 1, "at": { "film": 17.9 } },
     { "clip": "n2", "line": 2, "at": { "film": 19.8 } },
-    { "clip": "n2", "line": 3, "at": { "film": 25.55 } },
-    { "clip": "n2", "line": 4, "at": { "film": 33.6 } },
 
     { "clip": "n3", "line": 1, "at": { "film": 42.5 } },
     { "clip": "n3", "line": 2, "at": { "film": 44.3 } },
     { "clip": "n3", "line": 3, "at": { "film": 49.4 } },
-    { "clip": "n3", "line": 4, "at": { "film": 56.9 } },
 
     { "clip": "n4", "line": 1, "at": { "film": 70.95 } },
     { "clip": "n4", "line": 2, "at": { "film": 72.9 } },
-    { "clip": "n4", "line": 3, "at": { "film": 81.5 } },
-    { "clip": "n4", "line": 4, "at": { "film": 86.3 } },
 
     { "clip": "n5", "line": 1, "at": { "film": 94.25 } },
     { "clip": "n5", "line": 2, "at": { "film": 97.2 } },
     { "clip": "n5", "line": 3, "at": { "film": 104.8 } },
-    { "clip": "n5", "line": 4, "at": { "film": 110.6 } },
 
     { "clip": "n6", "line": 1, "at": { "film": 117.25 } },
     { "clip": "n6", "line": 2, "at": { "film": 118.95 } },
     { "clip": "n6", "line": 3, "at": { "film": 125.0 } },
-    { "clip": "n6", "line": 4, "at": { "film": 131.8 } },
 
     { "clip": "n7", "line": 1, "at": { "film": 138.95 } },
     { "clip": "n7", "line": 2, "at": { "film": 141.3 } },
-    { "clip": "n7", "line": 3, "at": { "film": 147.9 } },
-    { "clip": "n7", "line": 4, "at": { "film": 153.2 } },
 
     { "clip": "n8", "line": 1, "at": { "film": 160.5 } },
-    { "clip": "n8", "line": 2, "at": { "film": 164.1 } },
     { "clip": "n8", "line": 3, "at": { "landmark": "revealHit" }, "onStrike": "revealHit" },
     { "clip": "n8", "line": 4, "at": { "film": 177.0 } }
   ],

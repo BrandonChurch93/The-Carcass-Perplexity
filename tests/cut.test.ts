@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { afterAll, describe, expect, it } from 'vitest';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -11,10 +12,15 @@ const loud = await tool('lib/loudness');
 const g7 = await tool('checks/g7');
 const g11 = await tool('checks/g11');
 const g16 = await tool('checks/g16');
+const script = await tool('lib/script');
 const { config, rel, readJson } = await tool('lib/paths');
 const { trialPlan } = await import(new URL('./fixtures/cut-plan.mjs', import.meta.url).href);
 
-const cfg = config();
+// The trial plan is made up to try the compiler, and it lays the recorded script whole, every line of
+// narration.clips. So it is compiled against the config with an empty cut. The cut itself, and the plan of the
+// film against the config as it stands, are tried at the foot of this file.
+const filmCfg = config();
+const cfg = { ...filmCfg, narration: { ...filmCfg.narration, cut: { dropped: [], shortened: [] } } };
 const map = readJson(rel('cut', 'MAP.json'));
 const fps = cfg.film.fps;
 const bars = map.bars;
@@ -426,22 +432,22 @@ describe('the tables and the command', () => {
     fs.writeFileSync(planFile, JSON.stringify(trialPlan()));
     const said = [];
     const a = { plan: planFile, out, cues, lines: empty };
-    const checked = cmd.cutCommand({ ...a, check: true }, { print: (l) => said.push(l) });
+    const checked = cmd.cutCommand({ ...a, check: true }, { cfg, print: (l) => said.push(l) });
     expect(checked.ok).toBe(true);
     expect(checked.wrote).toEqual([]);
     expect(fs.existsSync(out)).toBe(false);
     expect(said[said.length - 1]).toMatch(/^cut: checked .* and wrote nothing, 0 faults$/);
 
-    const first = cmd.cutCommand(a, { print: () => {} });
+    const first = cmd.cutCommand(a, { cfg, print: () => {} });
     expect(first.ok).toBe(true);
     const bytes = [fs.readFileSync(out), fs.readFileSync(cues)];
     expect(JSON.parse(bytes[0].toString())).toEqual(cut);
-    cmd.cutCommand(a, { print: () => {} });
+    cmd.cutCommand(a, { cfg, print: () => {} });
     expect(fs.readFileSync(out).equals(bytes[0])).toBe(true);
     expect(fs.readFileSync(cues).equals(bytes[1])).toBe(true);
 
     const json = [];
-    const asJson = cmd.cutCommand({ ...a, json: true, check: true }, { print: (l) => json.push(l) });
+    const asJson = cmd.cutCommand({ ...a, json: true, check: true }, { cfg, print: (l) => json.push(l) });
     expect(asJson.ok).toBe(true);
     const parsed = JSON.parse(json.join('\n'));
     expect(Object.keys(parsed)).toEqual(['ok', 'errors', 'faults', 'info', 'tables', 'wrote']);
@@ -449,15 +455,15 @@ describe('the tables and the command', () => {
     expect(parsed.info.length).toBeGreaterThan(5);
 
     fs.writeFileSync(planFile, '{ not json');
-    expect(() => cmd.cutCommand(a, { print: () => {} })).toThrow(/plan\.json is not valid JSON/);
-    expect(() => cmd.cutCommand({ ...a, plan: path.join(dir, 'nope.json') }, { print: () => {} })).toThrow(/does not exist/);
+    expect(() => cmd.cutCommand(a, { cfg, print: () => {} })).toThrow(/plan\.json is not valid JSON/);
+    expect(() => cmd.cutCommand({ ...a, plan: path.join(dir, 'nope.json') }, { cfg, print: () => {} })).toThrow(/does not exist/);
 
     const bad = trialPlan();
     bad.titan = { music: 200 };
     fs.writeFileSync(planFile, JSON.stringify(bad));
     fs.rmSync(out);
     const lines = [];
-    const failed = cmd.cutCommand(a, { print: (l) => lines.push(l) });
+    const failed = cmd.cutCommand(a, { cfg, print: (l) => lines.push(l) });
     expect(failed.ok).toBe(false);
     expect(fs.existsSync(out)).toBe(false);
     expect(lines[0]).toMatch(/^cut: error\. titan: /);
@@ -466,10 +472,160 @@ describe('the tables and the command', () => {
     faulty.shots[faulty.shots.length - 1].picture = 'reveal-4';
     fs.writeFileSync(planFile, JSON.stringify(faulty));
     const more = [];
-    const withFault = cmd.cutCommand(a, { print: (l) => more.push(l) });
+    const withFault = cmd.cutCommand(a, { cfg, print: (l) => more.push(l) });
     expect(withFault.ok).toBe(false);
     expect(fs.existsSync(out)).toBe(true);
     expect(more.filter((l) => l.startsWith('cut: fault. ')).length).toBe(1);
     expect(more[more.length - 1]).toMatch(/1 fault$/);
+  });
+});
+
+describe('the cut of the narration', () => {
+  const DROPPED = ['n2-3', 'n2-4', 'n3-4', 'n4-3', 'n4-4', 'n5-4', 'n6-4', 'n7-3', 'n7-4', 'n8-2'];
+  const SPOKEN = ['n1-1', 'n1-2', 'n1-3', 'n1-4', 'n2-1', 'n2-2', 'n3-1', 'n3-2', 'n3-3', 'n4-1', 'n4-2', 'n5-1', 'n5-2', 'n5-3', 'n6-1', 'n6-2', 'n6-3', 'n7-1', 'n7-2', 'n8-1', 'n8-3', 'n8-4'];
+  const SHORT = { id: 'n8-4', text: 'Everything here feeds on it.', endSeconds: 2.15, fadeOutSeconds: 0.05, file: 'audio/kept/lines/n8-4-short.wav' };
+  const WHOLE = 'audio/kept/lines/n8-4.wav';
+  // sha256 of the kept line as it was recorded and kept, before the cut.
+  const KEPT_N8_4 = 'd65cbca65f9e248441495294d5b690d6d97e7b2ad31e39e41d98a2cd412551e1';
+  const withCut = (cut) => ({ ...filmCfg, narration: { ...filmCfg.narration, cut } });
+  const filmPlan = () => readJson(rel('cut', 'PLAN.json'));
+
+  it('is the approved one: ten lines dropped whole, n8-4 cut to its first sentence', () => {
+    expect(filmCfg.narration.cut).toEqual({ dropped: DROPPED, shortened: [SHORT] });
+    expect(script.cutFaults(filmCfg)).toEqual([]);
+  });
+
+  it('leaves the recorded script whole and every id as it was', () => {
+    const recorded = script.recordedLines(filmCfg);
+    expect(recorded.length).toBe(32);
+    expect(recorded.map(script.idOfLine)).toEqual(filmCfg.narration.clips.flatMap((c) => c.lines.map((_, i) => `${c.id}-${i + 1}`)));
+    expect(recorded.find((l) => script.idOfLine(l) === 'n8-4').text).toBe('Everything here feeds on it. And it is not finished.');
+    expect(recorded.find((l) => script.idOfLine(l) === 'n7-3').text).toBe('The herds drink. None of them looks down.');
+  });
+
+  it('gives the spoken script: 22 lines, in order, word for word but for the short n8-4', () => {
+    const spoken = g16.scriptLines(filmCfg);
+    expect(spoken).toEqual(script.spokenLines(filmCfg));
+    expect(spoken.map(script.idOfLine)).toEqual(SPOKEN);
+    const recorded = new Map(script.recordedLines(filmCfg).map((l) => [script.idOfLine(l), l]));
+    for (const l of spoken) expect(l).toEqual(script.idOfLine(l) === 'n8-4' ? { ...recorded.get('n8-4'), text: SHORT.text } : recorded.get(script.idOfLine(l)));
+    expect(spoken.find((l) => script.idOfLine(l) === 'n8-3')).toMatchObject({ clip: 'n8', line: 3, text: 'It was a titan.' });
+    const states = script.lineStates(filmCfg);
+    expect(states.length).toBe(32);
+    expect(states.filter((x) => x.spoken === null).map((x) => x.id)).toEqual(DROPPED);
+    expect(states.filter((x) => x.shortened).map((x) => [x.id, x.spoken])).toEqual([['n8-4', SHORT.text]]);
+  });
+
+  it('is the recorded script whole when the cut is empty', () => {
+    expect(g16.scriptLines(cfg)).toEqual(script.recordedLines(filmCfg));
+  });
+
+  it('names what is wrong with a cut, and no tool reads a cut that is wrong', () => {
+    const faults = (cut) => script.cutFaults(withCut(cut)).join('\n');
+    expect(faults({ dropped: ['n9-1'], shortened: [] })).toMatch(/dropped names "n9-1", which is no line/);
+    expect(faults({ dropped: ['n2-3', 'n2-3'], shortened: [] })).toMatch(/names n2-3 twice/);
+    expect(faults({ dropped: 'n2-3', shortened: [] })).toMatch(/needs a list "dropped" and a list "shortened"/);
+    expect(faults({ dropped: ['n8-4'], shortened: [SHORT] })).toMatch(/shortens n8-4, which narration\.cut\.dropped drops/);
+    expect(faults({ dropped: [], shortened: [SHORT, SHORT] })).toMatch(/shortens n8-4 a second time/);
+    expect(faults({ dropped: [], shortened: [{ ...SHORT, id: 'n8-5' }] })).toMatch(/names "n8-5", which is no line/);
+    expect(faults({ dropped: [], shortened: [{ ...SHORT, text: 'It is not finished.' }] })).toMatch(/text has to be the first words of the recorded line n8-4/);
+    expect(faults({ dropped: [], shortened: [{ ...SHORT, text: 'Everything here feeds on it. And it is not finished.' }] })).toMatch(/and shorter than it/);
+    expect(faults({ dropped: [], shortened: [{ ...SHORT, endSeconds: 0 }] })).toMatch(/endSeconds has to be a number over 0/);
+    expect(faults({ dropped: [], shortened: [{ ...SHORT, fadeOutSeconds: 3 }] })).toMatch(/fadeOutSeconds has to be a number from 0 to endSeconds/);
+    expect(faults({ dropped: [], shortened: [{ ...SHORT, file: '' }] })).toMatch(/file has to name the sound file/);
+    expect(() => g16.scriptLines(withCut({ dropped: ['n9-1'], shortened: [] }))).toThrow(/config\/showcase\.json is not valid/);
+  });
+
+  it('compiles the plan of the film to the spoken script, each line where the plan puts it', () => {
+    const plan = filmPlan();
+    expect(plan.lines.map(script.idOfLine)).toEqual(SPOKEN);
+    const { cut, errors } = core.compile({ plan, map, cfg: filmCfg, kept: cmd.keptLines(rel('audio', 'kept', 'lines'), filmCfg) });
+    expect(errors).toEqual([]);
+    expect(cut.lines.map(script.idOfLine)).toEqual(SPOKEN);
+    expect(lineOf(cut, 'n8-3')).toMatchObject({ first: cut.titanFrame, text: 'It was a titan.', file: 'audio/kept/lines/n8-3.wav' });
+    expect(lineOf(cut, 'n8-4')).toMatchObject({ text: SHORT.text, frames: 129, file: SHORT.file });
+    const committed = readJson(rel('cut', 'CUTLIST.json'));
+    expect(committed.lines).toEqual(cut.lines);
+    expect(g16.words(committed, filmCfg).faults).toEqual([]);
+  });
+
+  it('stops a plan that lays a dropped line, and a plan that leaves a spoken line out', () => {
+    const extra = filmPlan();
+    extra.lines.push({ clip: 'n7', line: 3, at: { film: 147.9 } });
+    const r = core.compile({ plan: extra, map, cfg: filmCfg, kept: {} });
+    expect(r.cut).toBe(null);
+    expect(r.errors.join('\n')).toMatch(/line n7-3: it is extra, narration\.cut drops that line/);
+    const less = filmPlan();
+    less.lines = less.lines.filter((l) => script.idOfLine(l) !== 'n8-3');
+    expect(core.compile({ plan: less, map, cfg: filmCfg, kept: {} }).errors.join('\n')).toMatch(/line n8-3: it is in the spoken script and missing from the plan/);
+    const whole = core.compile({ plan: trialPlan(), map, cfg: filmCfg, kept: {} });
+    expect(whole.cut).toBe(null);
+    expect(whole.errors.filter((e) => /narration\.cut drops that line/.test(e)).length).toBe(DROPPED.length);
+  });
+
+  it('makes the short line from the kept line, the same bytes as the file in the repo, and leaves the kept line alone', () => {
+    const whole = fs.readFileSync(rel(...WHOLE.split('/')));
+    const made = core.shortenWav(whole, SHORT);
+    expect(made.bytes.equals(fs.readFileSync(rel(...SHORT.file.split('/'))))).toBe(true);
+    expect(core.shortenWav(whole, SHORT).bytes.equals(made.bytes)).toBe(true);
+    expect(made).toMatchObject({ rate: 48000, channels: 1, frames: 103200, seconds: 2.15, keptSeconds: 4, fadeFrames: 2400 });
+    expect(core.wavSeconds(made.bytes)).toBe(2.15);
+    // The header says 48 kHz, mono, 16 bit PCM, as the kept line's does.
+    expect(made.bytes.subarray(20, 36).equals(whole.subarray(20, 36))).toBe(true);
+    // Sample for sample the kept line up to the fade: no gain, no dither.
+    const upTo = 44 + (103200 - 2400) * 2;
+    expect(made.bytes.subarray(44, upTo).equals(whole.subarray(44, upTo))).toBe(true);
+    // The fade only ever makes a sample smaller, and the last one is 0.
+    for (let at = upTo; at < made.bytes.length; at += 2) expect(Math.abs(made.bytes.readInt16LE(at))).toBeLessThanOrEqual(Math.abs(whole.readInt16LE(at)));
+    expect(made.bytes.readInt16LE(made.bytes.length - 2)).toBe(0);
+    // The kept line is the one that was recorded: 4.00 s, with both sentences in it.
+    expect(core.wavSeconds(whole)).toBe(4);
+    expect(crypto.createHash('sha256').update(whole).digest('hex')).toBe(KEPT_N8_4);
+  });
+
+  it('cuts inside the silence between the two sentences, and refuses a cut in the voice', () => {
+    const whole = fs.readFileSync(rel(...WHOLE.split('/')));
+    const { silence } = core.shortenWav(whole, SHORT);
+    expect(core.CUT_SILENCE_DBFS).toBe(-60);
+    expect(silence.from).toBeLessThan(SHORT.endSeconds - SHORT.fadeOutSeconds);
+    expect(silence.to).toBeGreaterThan(SHORT.endSeconds);
+    expect(silence.from).toBeGreaterThan(1.85);
+    expect(silence.to).toBeLessThan(2.4);
+    expect(() => core.shortenWav(whole, { endSeconds: 1.5, fadeOutSeconds: 0.05 })).toThrow(/does not lie in a silence/);
+    expect(() => core.shortenWav(whole, { endSeconds: 1.93, fadeOutSeconds: 0.05 })).toThrow(/does not lie in a silence/);
+    expect(() => core.shortenWav(whole, { endSeconds: 2.15, fadeOutSeconds: 0.5 })).toThrow(/does not lie in a silence/);
+    expect(() => core.shortenWav(whole, { endSeconds: 4, fadeOutSeconds: 0.05 })).toThrow(/cannot end at 4 s and be shorter/);
+    expect(() => core.shortenWav(Buffer.from('no sound'), SHORT)).toThrow(/no 16 bit PCM WAV file/);
+  });
+
+  it('refuses a short line that is missing or stale, and --shorten makes it again from the kept line', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'carcass-short-'));
+    try {
+      const lines = path.join(root, 'audio', 'kept', 'lines');
+      fs.mkdirSync(lines, { recursive: true });
+      fs.mkdirSync(path.join(root, 'audio', 'records'), { recursive: true });
+      const whole = fs.readFileSync(rel(...WHOLE.split('/')));
+      fs.writeFileSync(path.join(lines, 'n8-4.wav'), whole);
+      fs.copyFileSync(rel('audio', 'records', 'n8-4.md'), path.join(root, 'audio', 'records', 'n8-4.md'));
+      expect(() => cmd.keptLines(lines, filmCfg, root)).toThrow(/n8-4-short\.wav, the short form of line n8-4, is not made yet\. Run npm run cut -- --shorten/);
+      fs.writeFileSync(path.join(lines, 'n8-4-short.wav'), whole);
+      expect(() => cmd.keptLines(lines, filmCfg, root)).toThrow(/n8-4-short\.wav is not what .*n8-4\.wav gives with narration\.cut/);
+      const said = [];
+      const r = cmd.shortenCommand({}, { cfg: filmCfg, root, print: (l) => said.push(l), today: '2026-11-26' });
+      expect(r).toEqual({ ok: true, wrote: [SHORT.file] });
+      expect(said[0]).toMatch(/^cut: audio\/kept\/lines\/n8-4-short\.wav written: "Everything here feeds on it\.", 2\.15 s of the 4\.00 s/);
+      expect(fs.readFileSync(path.join(lines, 'n8-4-short.wav')).equals(fs.readFileSync(rel(...SHORT.file.split('/'))))).toBe(true);
+      expect(fs.readFileSync(path.join(lines, 'n8-4.wav')).equals(whole)).toBe(true);
+      expect(fs.readFileSync(path.join(root, 'audio', 'records', 'n8-4-short.md'), 'utf8')).toBe(fs.readFileSync(rel('audio', 'records', 'n8-4-short.md'), 'utf8'));
+      expect(cmd.keptLines(lines, filmCfg, root)).toEqual({ 'n8-4': { seconds: 2.15, file: path.relative(rel(), path.join(lines, 'n8-4-short.wav')).split(path.sep).join('/') } });
+      const again = [];
+      cmd.shortenCommand({}, { cfg: filmCfg, root, print: (l) => again.push(l), today: '2027-01-01' });
+      expect(again[0]).toMatch(/is already what the kept line gives/);
+      expect(fs.readFileSync(path.join(root, 'audio', 'records', 'n8-4-short.md'), 'utf8')).toMatch(/^Date: 2026-11-26$/m);
+      fs.rmSync(path.join(lines, 'n8-4.wav'));
+      expect(() => cmd.shortenCommand({}, { cfg: filmCfg, root, print: () => {} })).toThrow(/the kept line of n8-4, does not exist/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });
