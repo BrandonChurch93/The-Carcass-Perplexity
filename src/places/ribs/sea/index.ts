@@ -244,7 +244,8 @@ export function create(ctx: Context): Piece {
   const FACE = 340;
   const PLUME = 130;
   const AHEAD = 90;
-  const boreSpray = new Spray(burstAt.length * BURST + CREST + FACE + PLUME + AHEAD, { ...rig.uniforms, ...shared });
+  const LIP = 520;
+  const boreSpray = new Spray(burstAt.length * BURST + CREST + FACE + PLUME + AHEAD + LIP, { ...rig.uniforms, ...shared });
   ctx.scene.add(ctx.parts.built('bore', bore, boreSpray.mesh), boreSpray.mesh);
   const lineAt = (x: number, seconds: number): number => 20 * Math.sin(x * 0.0076 + 1.3) + 8 * Math.sin(x * 0.021 + seconds * 0.25) + 3 * Math.sin(x * 0.09 - seconds * 0.6);
   const feeding = shotSpan('ribs-04');
@@ -357,6 +358,21 @@ export function create(ctx: Context): Piece {
         const z = frontZ + lineAt(x, seconds) - 0.75 * H * uc + H * (0.5 * uc * uc * uc + 0.1) + 1.5 * a;
         const fade = Math.min(1, a / 0.15) * Math.min(1, (life - a) / 0.3);
         boreSpray.put(x, y, z, (i % 2 === 0 ? 1.7 + 1.8 * rand(i, n + 46) : 1.1 + 1.5 * rand(i, n + 46)) * (1 + 0.5 * a), (i % 2 === 0 ? 0.9 : 0.5) * fade, rand(i, n + 47), rand(i, n + 48) * 6.28, 0.9);
+      }
+      // The lip itself: a rim of small ragged heads that ride on the crest and boil, so that the top of the wall is never a drawn line.
+      for (let i = 0; i < LIP; i++) {
+        const x = gate[0] + 250 * (rand(i, 51) - 0.5);
+        const life = 0.45 + 0.5 * rand(i, 52);
+        const beat = seconds / life + rand(i, 53);
+        const n = Math.floor(beat);
+        const a = (beat - n) * life;
+        // The height of the wall as its shader has it, swell along the crest included.
+        const H = highAt(x) * (0.88 + 0.12 * Math.sin(x * 0.021 + seconds * 0.7) + 0.08 * Math.sin(x * 0.063 - seconds * 1.1));
+        const uc = 0.9 + 0.12 * rand(i, n + 54);
+        const y = H * (0.9 + 0.36 * rand(i, n + 55)) + 3.5 * a - 5 * a * a;
+        const z = frontZ + lineAt(x, seconds) - 0.75 * H * uc + H * (0.5 * uc * uc * uc + 0.1) + 2.5 * a;
+        const fade = Math.min(1, a / 0.1) * Math.min(1, (life - a) / 0.25);
+        boreSpray.put(x, y, z, (1.6 + 2.0 * rand(i, n + 56)) * (1 + 0.8 * a), 0.8 * fade, rand(i, n + 57), rand(i, n + 58) * 6.28, 1.15);
       }
       // Ahead of the wall: the air it pushes is full of water, low over the flats, and reaches the lens before the wall does.
       for (let i = 0; i < AHEAD; i++) {
