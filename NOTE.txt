@@ -1,5 +1,7 @@
-2026-11-25 23:59 UTC
-work at e77f660 on agent/eye-place
-Minute 157, new material pictures in. eye-2 hd and eye-0; keys 1 to 4. Wrong: eye-4 dome reads as a glass lens with white ring lines and brown water; animals still smooth; shaft flank a hard cyan panel; eye-1 foreground blurred
-look-1.jpg = out/work/sheet12.png
-look-2.jpg = out/work/sheet13.png
+2026-11-26 00:20 UTC
+work at 4a58269 on agent/eye-place
+min 178: mats no longer pulled long (eye-2, eye-3), animals move in eye-04, water moves. Wrong: eye-3 lip is a stretched pale band and the water a cut box; animals still modelled; eye-0 held motion subtle
+look-1.jpg = out/work/sheet20.png
+look-2.jpg = out/work/sheets/shot-eye-04.png
+look-3.jpg = out/work/sheets/held-eye-0.png
+look-4.jpg = out/work/sheets/shot-eye-05.png
