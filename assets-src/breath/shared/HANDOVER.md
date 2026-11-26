@@ -1,77 +1,63 @@
 # Hand-over: the ground, shaft, vapour, sky and cameras of the Breath
 
-From `breath_ground_owner_2`, branch `agent/breath-ground-2`, at version 3 (Phase 4, wave 2). Folders: `src/places/breath/` root (`index.ts`, `land.ts`), `shared/`, `land/`, `air/`. Wide key `breath-0`. Partner: `agent/breath-life-2` (`water/`, `plumes/`, `waders/`, `dead/`).
+From `breath_ground_owner_3`, branch `agent/breath-ground-3`, at version 3 (Phase 4, wave 3, the last owner). Folders: `src/places/breath/` root (`index.ts`, `land.ts`), `shared/`, `land/`, `air/`. Wide key `breath-0`. Partner: `agent/breath-life-3` (`water/`, `plumes/`, `waders/`, `dead/`).
 
 ## How each part is drawn
 
-- `land`: `land.ts` gives the height. `smoothGround()` is the shelf, lips, flats and the channel (`channelX`, `channelWidth`: it winds and varies 0.6 to 1.4 in width, fixed between z -40 and -16). `bedded()` breaks it into Voronoi plates about 5 m across (`SLAB`), each at its own level (`RISERS`, 8 to 60 cm) with its own tilt, level beside the channel, edges warped by the plate picture and fine noise. `ground()` adds the plate picture's relief (`mat/shelfplate-h`, laid turned by `PLATE_TURN`), the pad under the dead one (`padAt`, six sides) and the dark rocks under the breath-04 lens (`lumps`). `land/field.ts` bakes height, shadow, slope, stones and pool film into a 2048 map over `FINE`; stones lie at riser feet. Meshes: near 512 cells, mid 300, far 160. Shader `SHELF_FRAGMENT` in `land/rock.ts`: plate colour cooled, `mat/wetrock` grain near and at a quarter size close, face stone on true edges only, sheen broken by grain and seams, gold glare, bed grey-green under the tide.
-- `shaft`, `hoops`: one displaced mesh from `mat/shaftwall-h` (`land/wall.ts`), `WALL_FRAGMENT`: stone cream-grey with thin tan bands, grey-green between the ribs, ribs pale, sky as a disc that closes with depth, bounce from the mist.
-- `slabs`: 46 fractured blocks on a rubble heap and 6 on the ribs (`block()` in `land/ribs.ts`), `land/slabface.jpg` (made by `assets-src/breath/land/make-slabface.py`).
-- `cliff`, `sky`: `air/sky.ts`. The far scarp and the sun-side sky are `air/far.jpg` (made by `assets-src/breath/air/make-far.py` from the Builder's `mat/far.jpg`), read through an inverse of the film's tone curve (`untoned`) so it lands as painted; the rest is the closed-form dome and `sunHalo`.
-- `air`, `fog`, `vapour`, `exhale`: one pass, `air/volume.ts`. The vapour of the pit is a density marched in 32 steps (`vapourRho`: a heaped body under a noisy top, wisps, a veil at the west brim, one leaning column, a pour on the north-west lip), each step shaded by 2 taps toward the sun and 1 up. Then a low mist on water and wet shelf (4 taps in a layer 2.5 m deep, none within 7 m of a lens), the far bodies (ellipsoids, small-shaft plumes), and haze in two layers (`uHaze`), the lower thick with distance.
-- Light: `shared/rig.ts`, `shared/glsl.ts`. Sun (3.3, 2.25, 1.25), bearing -15, elevation 8.5. `sunCloud()` in the rig dims the sun by drifting fog banks (0.5 to 1): every part gets it through `rigShadeOn` and `sunAt`.
-- Cameras: `index.ts`. `lens(pose, aperture, focus)` opens the lens at keys breath-03 (0.03, 4.8 m), breath-04 (0.075, 10.5 m), breath-05 (0.028, 6.2 m).
+- `land`: `land.ts` gives the height, as before (`smoothGround`, `bedded` Voronoi plates, `ground` with the plate relief, the pad `padAt`, the dark rocks `lumps`). New: the channel floor is sunk under the breath-04 lens (x -58.5 to -38.5, z -44.5 to -19.5) so water covers it. `land/field.ts` bakes height, shadow, slope, stones and pool film over `FINE`. Shader `SHELF_FRAGMENT` in `land/rock.ts`: grain laid on three planes by the surface direction (no stretch on steep faces), a finer octave near the lens, a dark wet band along the waterline, bed `vec3(0.21, 0.32, 0.3)` under the tide. The pad under the dead one: pale warm rock from `mat/drypad`, joints from the `mat/pebbles` tile at 5.3 m (`padCrack`), damp hollows (`padLow`), grit at 0.31 m.
+- `shaft`, `hoops`: one displaced wall (`land/wall.ts`, `land/ribs.ts`). The first rib lies 1.7 m under the brim, each tier has its own reach and profile. `WALL_FRAGMENT`: three-plane grain, ribs pale, the wall between ribs darker with depth, rust runs and green damp by bearing and depth. The collar at the brim is lobed.
+- `slabs`: fallen blocks (`boulder()` in `land/shapes.ts`, `rock.bone`) in the pale grey-cream of the rim, on a rubble fan (`heap()`, `talusHeight`) at bearing 108 to 112 degrees whose head lies 11 m under the brim; each block has a contact shade on the heap.
+- `cliff`, `sky`: `air/sky.ts`. The far scarp is `air/far.jpg` read through `untoned`; `farPicture` tones its white patches to pale rock (knee at luminance 0.15 to 0.26) and darkens the whole cliff to 0.8. No mesh for the cliff any more.
+- `air`, `fog`, `vapour`, `exhale`: one pass, `air/volume.ts`, `STEPS` 16. `vapourRho`: a fog layer that fills the shaft, high on the west (top near `uBreath.x + 2.5`), 12 m lower in the middle and east so the core stays dark; three columns that well up out of it at (-19, -9), (-10, 11), (-2, -5); a pour over the west lip; a torn mist layer on the wet shelf. `vapourNear(p)` skips steps where none of these can be, before the land is read. Light: warm ambient that falls with depth cubed, the sun on the side that faces it.
+- Light: `shared/rig.ts`, `shared/glsl.ts`, unchanged: sun bearing -15, elevation 8.5; `sunCloud()` dims it by drifting banks.
+- Cameras: `index.ts`. breath-01 `look([-41.5, 11, 42.3], 21, -15, 50)`; breath-02 `look([-8.6, 4.4, 31.2], 13, -25, 50)`; lenses open at breath-03 (0.02, 4.8 m), breath-04 (0.04, 10.5 m), breath-05 (0.012, 6.2 m).
 
 ## Tried, and it did not work
 
-- Bedded contour sheets for the shelf: read as a layered model, risers like contour lines. Stones scattered evenly: read as droppings. A skirt of teeth under the brim.
-- Leaning the plates with the bank: a beach of smooth rock. Bed colour starting 20 cm under the tide: a band of wet sand along both banks.
-- The plate picture laid square: its beds ran across every lens as wood grain. Face stone wherever the map is steep: long streaks on level ground.
-- Pale gold light: the film's tone curve washes it white; it must be saturated. A grey vapour ambient squared with depth: black pit.
-- Vapour lowered into the pit with nothing over the shelf: M2 fell to 6.9 and 5.8 percent at breath-0 and breath-2 (floor 8).
-- A loose big stone near the breath-05 lens: an unlit black lump in front of the dead one.
+- A rib that roofed the pit near the breath-02 lens: read as a tent; removed. Vapour as one heaped body: a lump; as thin columns only: a wisp in a clear shaft.
+- The heap of fallen slabs with its head at the brim: a wall of cream blocks filling a fifth of breath-4; at 8.5 m under the brim still a heap in the lens; 11 m and narrower is what stands.
+- Fallen slabs in tan: read as clay. Blocks squared off harder: read as cut stone.
+- The far cliff with its white left in: read as snow at every tone tried above luminance 0.2.
+- GLSL names `round` and `patch` do not compile. Renders in the background are killed.
+- Fog ambient at (0.265, 0.24, 0.212) with a 34 m fall: the left of breath-4 measured 75/66/58 against the picture's 102/90/81 and the core 74 against 50.
 
 ## Still wrong beside the approved pictures, worst first
 
-- `breath-0`: plates are larger and cleaner than the picture's broken shelf, some stand cream-white toward the sun; no scum line along the channel; a teal patch in the channel's deep part (water, partner's); the far shelf does not melt into glare enough on the sun's side.
-- `breath-4`: no plume at the left edge and the column does not read as one column; vapour hides the far wall; the wall's upper faces are still brown; slabs at right read as smooth blocks.
-- `breath-2`: the ground by the dead one is paler now but streaked, with no grit, pebbles, roots or dark blurred rock at the lower left; the pit behind is a grey veil, not lit billows.
-- `breath-1`: the dark rocks at the lower edge are round boulders, not broken plate; the far bank is a thin strip; no mist round the legs in the middle distance.
-- `breath-3`: the brim at the right is a smooth pale blade; no weathered bone or pebbles at the root; the top of the frond reads washed.
-- Motion: only shot breath-01 was watched as a sheet at version 3 (the column stands and leans, the mist drifts). In its last frames the shade of the fog banks (`sunCloud`) crosses the pale plates near the lens as dark parallel bars: too regular, soften or widen them. Shots 02 to 05 were not watched; the exhale at frame 4652 was not re-checked. Nothing was checked at 3840 x 2160 native crops this round.
+- `breath-0`: the shelf by the channel is larger, smoother plates than the picture's many broken, partly drowned shelves; the pit shows little fog from this side (the east stands low) and one pale square of vapour between two tiers; the right edge has almost no fallen rock now.
+- `breath-4`: the heap at the lower right is still a pile of rounded cream blocks, not two slabs on a mid shelf; the wall between ribs has regular vertical flutes; the fog column has a soft even edge; no glints on the far water (partner's water).
+- `breath-2`: the pad is even and a little dark (101/89/81 against 110/95/85), with few loose stones and no lit edges toward the sun; the tier recesses behind are brighter than the picture's.
+- `breath-3`: the brim at the right is soft under the open lens; the base under the plants is coarse dark rock, no pebbles; the engine's blur leaves a pale outline on the rock silhouette.
+- `breath-1`: the foreground boulders are round and stand as a strip; mist round the legs is thin.
+- Motion: all five shots watched as sheets at 07:42. In breath-02 after frame 4768 the column crosses the left third as a pale diagonal with a straight edge. The exhale at frames 4650 to 4661 was not re-checked after the fog change. `sunCloud` bars were not re-checked. Nothing was looked at in native 3840 x 2160 crops in the last hour.
 
-## Round 8, each severe and major issue, and what I did
+## Round 2 of wave 3, each severe and major issue, and what I did
 
-- "pitch-black void lined with dark blocky geometric slabs and an extra flat-topped volcanic vent": pit rebuilt as one displaced wall with rib ledges, lit by sky disc and bounce, vapour marched inside. Closed in part; vent body removed.
-- "smooth dark-brown terrain with flat painted crack lines and an artificial smooth rounded mudbank": broken plates in the mesh, banks are plate edges. Closed in part (plates too clean).
-- "smooth featureless brown ridge with no cave or snow and a stiff uniform white cloud band": the far picture is the cliff, with cave and snow; band removed. Closed.
-- "straight canal-like channel of opaque grey-blue water": channel winds and varies in width, bed grey-green. Water itself is the partner's. Closed in part.
-- "flat pale beige light and isolated, opaque, blurry smoke puffs": gold sun, halo, glare on wet rock, marched vapour, haze. Closed in part.
-- "smooth mudbank and water show coarse CG shading... overcrowded with stiff reddish-brown models": bank is broken plate; waders scattered (`NEAR_WADERS` 3 to 8). Models are the partner's.
-- "out-of-focus wet foreground rock shelf... completely absent, flat deep focus everywhere": rocks under the lens and an open lens at breath-04. Closed in part (boulders, not plate).
-- "flat beige light, no ground mist, and a smooth brown ridge with a stiff white fog band"; "flat cool beige light, pale featureless water, and a smooth brown ridge without the cave overhang": gold sun, low drifting mist, far picture. Closed in part.
-- "glossy flat brown cracked surface with no foreground rock framing": dry pale pad with grain and dust; no foreground rock (the one I placed read as a black lump and was removed). Not reached.
-- "visibly pixelated, low-resolution repeating polygonal mud-crack texture": plate picture plus wetrock grain at 1.5 m and 0.4 m. Closed in part.
-- "dark charcoal-brown blocky low-poly terraces falling into near-black darkness": wall mesh from the relief, ribs pale, rust in the plate. Closed in part (no moss).
-- "large, opaque, blurry bright-beige fog patch hangs across the top": removed; vapour is in the depth. Closed; steam at lower left not reached.
-- "pulled-back view of smooth, blocky, flat-shaded grey-brown cliff ledges and a tall smooth mountain ridge": breath-03 key moved in and lens opened; ridge is the far picture. Rim at the right still smooth. Closed in part.
-- "flat desaturated beige fog with straight diagonal light streaks"; "flat clinical lighting with harsh black shadows on the left rock and zero depth of field": streaks removed, gold backlight; lens not opened at breath-02. Closed in part.
-- "sharp, dry red palm-like shrub on a smooth, stretched-texture pale ledge with sharp polygonal edges": shrub is the partner's; the ledge is now the shelf's own plates. Closed in part.
-- "thin, jagged bright-white polygon and UV-seam lines": the hoops and brim ledge that had them are gone (one mesh). Not looked for at native size.
-- "pitch-black angular chasm with dark flat stepped blocks and a thin beige fog strip"; "rounded slab edges and near-black gaps turn the pit into stacked set pieces": continuous wall mesh, bounce in the gaps, strip removed. Closed in part.
-- "pit vapor reads as a broad blur laid over the rocks and the distant band repeats the same curled profile": marched density that the wall occludes; band removed. Closed in part.
-- "ground texture is dragged into long horizontal streaks and broad smears": plate turned, far ground takes the picture's mean. Closed in part.
-- "diagonal facets have softly streaked faces and thin, evenly outlined cracks that look drawn on": slabs are fractured blocks with `slabface.jpg`. Closed in part (still smooth at breath-4).
-- The partner's, not mine: "flat grey-green noisy plane... almost no drips or splash"; "bright airborne splash droplets... missing; tendrils show coarse tubular geometry"; "scattered short white vertical rain streaks"; "regularly sized ripple texture".
-- "water-to-land transition turns into a smooth graphic stripe without a credible wet margin": plates stand to the tide, weed line at the water. Closed in part (no scum, no lapping).
-- "rock reads as molded slabs, with angular cutouts, smooth bevels and thin bright cracks": wall and shelf rebuilt from reliefs. Closed in part.
-- "broad, smooth patch of mist lies across the rim with a nearly horizontal lower edge": removed. Closed.
-- "shelves disappear into near-black gaps with almost no reflected light"; "texture smears over the rounded edges in broad stripes": bounce term and vapour light; stone laid in the world on faces. Closed in part, not checked at native size.
-- "stretched vertical streaks and abrupt polygonal breaks"; "squared-off steps and the nearby stone detail stretches into parallel ribbons": plate edges warped and broken; the brim at breath-3 still smooth. Not closed.
-- "long, parallel bands behind a straight transition": haze thick with distance. Not checked.
-- Motion: "keeps one soft, blobby outline for six seconds... like a flat card"; "pops instead of welling up"; "fixed shapes, not rising, wind-sheared columns"; "same soft blob from frame to frame"; "smeared, hard-edged dark band": the pit vapour is a marched density that rises and drifts (M2 27 percent at breath-0), the dark band is gone. The exhale and the far plumes were not watched as sheets this round: unproven.
+- "A wide, gray-brown pool replaces much of the broken pale rock pavement ... target has a discrete blue-green channel": bed made blue-green, wet band at the waterline, floor sunk where it stood dry. The water is the partner's (its sheet let the bed through at some frames; they have a cure). Closed in part.
+- "opens farther left and takes up more of the frame. Straight vertical fluting and neat ledges make it read as a stepped quarry": tiers given their own reach and profile, stains by bearing; breath-01 pose moved. Flutes remain. Closed in part.
+- "A dry-looking, continuous, finely patterned slab ... straight edge makes a prominent diagonal boundary"; "fur-like or carpet noise texture ... thin hard line with a brown seam": pad redrawn from `drypad` with joints, hollows and grit; carpet noise removed. Closed in part (still even).
+- "straight, terraced vertical cut rather than an angled wall with thick, pale, rounded layers ... broad gray veil hangs across the middle": ribs thickened and paled over dark recesses; veil replaced by fog that stands in the pit with columns. Closed in part.
+- "Broad, clean, nearly flat shelves run across the front right ... The far cliff also sits higher": lens opened to 0.02; cliff not moved. Not closed.
+- "Cool gray haze forms a broad horizontal blanket rather than warm, localized plumes": the pale level band is the far shelf and sea through the open lens, not fog; the vapour is now columns lit warm. Closed in part.
+- "a near ledge below it" (breath-4 left rim): breath-02 key moved to the south rim, the tent rib removed. Closed.
+- "wider, more open amphitheater of thin jagged benches and repetitive fluted walls ... prominent brown blocks"; "clean box-shaped slabs with straight edges and flat faces read as placed primitives": blocks made pale rim rock, smaller, dropped 11 m into the pit. Closed in part (no single large slab on a shelf).
+- "gray veil is spread through much of the pit ... defined steam columns ... a much darker core": fog high on the west, three columns, core darkened by number. Closed in part.
+- "prominent pale far slope and muted water strip ... lacks the strong warm glints": cliff darkened to 0.8; glints are the water's. Closed in part.
+- "the rock is soft, pale and smeared like clay ... texture is stretched across the tilted faces"; "faceted planar faces with texture stretched": three-plane projection on shelf, wall and blocks, finer grain near the lens. Closed in part (facets remain on near plates).
+- Major: "cliff is sharper and more heavily white-streaked, and a broad horizontal fog blanket": white toned to rock; blanket replaced by the torn mist layer. Closed in part. "flat grey veil with no internal structure and no light in it ... a visible straight line": mist top heaped and torn by noise, lit by the sun's side. Closed in part. "melted clay or plastic ... waxy sheen, one material"; "pale glossy mineral crust, ochre flow marks, dark green damp patches": rust runs and green damp added; no glossy crust. Closed in part. "coarse bare dark rock rather than ... mixed warm stone, damp grit, rounded pebbles": not reached. "bright halo outline runs along the rock silhouette": the engine's blur; not mine to change. "mist silhouette and density shift noticeably from one frame to the next" (4650 to 4661); "breath-03 and breath-05 mist static"; "distant cliff clouds" frozen: the vapour is now a fog layer and columns cut from drifting noise in place of the old bodies, so it moves in every shot (M2 below); the boil at the exhale was not checked on a held sheet. Not closed.
+- Minor: "perfect circular disc sits on the surface like a placed prop": collar lobed. Closed in part.
 
 ## Checks at version 3, staging, cost
 
-- At commit 2b081e6 (code as handed back): `npx tsc --noEmit -p .` clean, `npm run -s build` passes, `npm run -s determinism` prints `determinism: pass`, `npm run -s gate -- --phase 1 --only G10` passes.
-- `npm run -s measure -- --unit breath --tier draft --format hd` (hd, not uhd), keys 0 to 4: M1 0 invalid pixels; M2 26.6, 48.6, 29.2, 41.7, 93.8 percent (floor 8); M3 1.17, 1.10, 1.09, 1.39, 0.96 (floor 0.75; breath-4 is near it, the vapour softens it).
+- At the handed-back commit: `npx tsc --noEmit -p .` clean, `npm run -s build` passes, `npm run -s determinism` prints `determinism: pass`, `npm run -s gate -- --phase 1 --only G10` passes.
+- `npm run measure -- --unit breath --tier draft` (uhd), keys 0 to 4: M1 0 invalid pixels; M2 22.4, 52.4, 28.0, 59.2, 68.1 percent (floor 8); M3 1.11, 1.43, 1.79, 2.03, 3.25 (breath-4 is over 3: the fog's grain at draft adds to it) (floor 0.75).
+- Every key rendered once at `--tier final`, hd (50 to 63 s each): no difference in kind from draft.
 - Staged by shot: nothing. `stagedSeconds()` is not used in my folders.
-- Cost, `npm run -s cost -- --key breath-0 --format uhd --tier draft --parts land shaft hoops slabs cliff sky`, one sample, 4-core VM: whole frame 23.71 s, empty frame 2.14 s. Above the empty frame: `land` 8.55 (6.21 half an hour before; not explained, three plate reads were added), `shaft` 2.79, `slabs` 2.00, `hoops` 0.96, `sky` 0.47, `cliff` 0.00. The volume pass is not itemised. My share is about 15 s against an aim of 5: not met, and worse than the first owner's 10 s frame.
+- Cost, `npm run -s cost -- --key breath-0 --format uhd --tier draft --parts land shaft slabs hoops`, one sample: whole frame 23.71 s, empty frame 3.47 s; above the empty frame `land` 8.34, `shaft` 1.75, `hoops` 0.90, `slabs` 0.00. Received at 24.76 s whole. Saved: the march (32 steps to 16, early-out before the land is read, a lower roof), the cliff mesh, dead bodies of the old exhale. The land shader is the dearest part and was not cut: its three-plane grain costs what the march saved. The aim of 5 s for my share is not met.
 
 ## What I would do next, in order
 
-1. Watch every shot as a sheet; check the exhale at frame 4652 wells up, and that no mist crosses a subject.
-2. breath-0: break the plates further (two sizes of Voronoi), rubble in seams, scum along the channel.
-3. breath-4 and breath-2: light the vapour's tops from the sun's side so it reads as billows; one clear column; open the lens at breath-02.
-4. Cost: the land (plate search in the bake is not the cost; the near mesh and the shelf shader are); try `STEPS` 24 in `air/volume.ts`.
-5. Delete what is no longer read: `exhaleBodies`, `BILLOWS` in `air/index.ts`; `hoop`, `slab`, `shaftWall`, `cliff` in `land/shapes.ts`; `CLIFF_FRAGMENT` and `rock.cliff` in `land/rock.ts`.
+1. Hold a sheet on the exhale (frames 4640 to 4670) and on breath-03 and breath-05: the fog must drift visibly and must not boil.
+2. breath-4: one large pale slab angled across a mid shelf in place of the heap's upper blocks; break the wall's flutes with the tier's own noise.
+3. breath-0: a second, smaller size of plate along the channel, half drowned; raise the fog on the east so the pit reads full from the west.
+4. breath-2: loose stones and lit edges on the pad; darken the recesses (100/86/75 against 55/52/47).
+5. Cost: in `SHELF_FRAGMENT`, read the three planes only where the slope needs them (one plane on level rock).
