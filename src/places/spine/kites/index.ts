@@ -276,6 +276,8 @@ void main() {
   // Lilac-grey whatever lights it: the film keeps the light's brightness and little of its colour.
   held = mix(held, dot(held, vec3(0.3, 0.5, 0.2)) * vec3(0.94, 0.92, 1.12), 0.7);
   vec3 c = (uFilm.x * held + uFilm.y * uWarmColour * toDusk) * mix(vec3(1.0), stain, uTone.x) * lilac * (0.8 + 0.4 * fract(seed * 5.3));
+  // Before the long lens the veils are violet grey, darker than the lit cloud: what is bright on them is the charge.
+  c *= mix(vec3(1.0), vec3(0.6, 0.54, 0.82), uVeil);
   // Thin as a soap film: where it is stretched it takes colours by its thickness and the angle it is seen at.
   float thick = 1.2 + 2.2 * relief + 1.4 * vnoise(vec2(metres / (1.7 * wide) + seed, vb * 1.3)) + 0.8 * (1.0 - nv);
   vec3 sheen = 0.5 + 0.5 * cos(6.2832 * thick * vec3(1.0, 1.17, 1.4));
