@@ -292,3 +292,13 @@ Written by `npm run cut`. Frames are film frames at `film.fps` (60). Frame `f` s
 ```
 
 - `duckDb` is how far the music and the beds were lowered under that line, a positive number. `voiceBandDb` and `restBandDb` are the levels of the voice and of everything else, after ducking, in the band where speech lives (300 Hz to 3.4 kHz) over the span of the line. `marginDb` is their difference. `voiceDb` and `restDb` are the same across the whole band.
+
+## The caption layer, `assets-src/subs/subs.py`
+
+`npm run subs -- cues | still T OUT [FRAME.png] | burn FILM AUDIO OUT | layer OUT W H FPS | prove | contrast T FRAME.png | step T0 T1 W H FPS`. Python 3 with numpy, OpenCV and Pillow, and ffmpeg for `burn` and `layer`. It lays the narration's words over finished frames. The page never draws them, so it changes no hash and no pixel of a render. `assets-src/subs/README.md` says what each command does and how to change the look.
+
+- `cues` writes `cut/CAPTIONS.json`, schema `carcass/captions 1`, from `cut/CUTLIST.json`, `assets-src/subs/alignment-kept.json` and the lines' records under `audio/records/`. It keeps the `look` it finds in the file, and run twice it writes the same bytes. Run it after `npm run cut` whenever a line moves. `cues --check` exits 1 when the file is not what it would write.
+- `look` holds the text colour, the three haze colours of each place and whether it carries embers, the crossfade length, the type size and the baseline. The colours are picked by film time from `places` in the cut list and never read from a frame.
+- `lines` holds, for each spoken line, `clip`, `line`, `text`, `unit`, `rows`, every word as `{ w, on, off }` in film seconds, and `in`, `out` and `gone`: when its haze starts, when it starts to fade and when it is gone.
+- Every other command only reads the file. `burn` and `layer` write where they are told, which must be under `out/work/`.
+- `prove` needs the kept lines under `audio/kept/lines/`. It exits 1 while a word shows more than 40 ms before the rise it was matched to, or more than 80 ms after.

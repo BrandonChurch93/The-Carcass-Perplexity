@@ -71,3 +71,4 @@ ElevenLabs, Creator plan. Read 2026-11-24: Terms of Use, ElevenCreative Terms wi
 
 | File | What it is | Source URL | Licence | Date added |
 | --- | --- | --- | --- | --- |
+| `assets-src/subs/Lato-Medium.ttf` | Lato Medium 2.015, the type of the caption layer. A build-time file: `assets-src/subs/subs.py` draws the words with it over finished frames, and it is not shipped to the browser. Its licence file is `assets-src/subs/OFL.txt` | https://github.com/BrandonChurch93/Solar-System-Perplexity/blob/main/assets-src/subs/Lato-Medium.ttf (the Lato family by Łukasz Dziedzic, https://www.latofonts.com/) | SIL Open Font License 1.1, which allows commercial use, embedding and use in a published video | 2026-11-26 |
