@@ -221,6 +221,7 @@ varying vec4 vHead;
 uniform sampler2D tFan;
 uniform sampler2D tFanA;
 uniform sampler2D tLock;
+uniform float uDeep;
 ${RIG_GLSL}
 void main() {
 ${HEAD_CUT}
@@ -238,6 +239,8 @@ ${HEAD_CUT}
   albedo *= mix(vec3(0.78, 0.8, 0.86), vec3(1.2, 1.0, 0.92), own);
   float spent = vHead.y;
   albedo = mix(albedo, mix(vec3(0.075, 0.036, 0.03), vec3(0.125, 0.07, 0.052), own) * (0.25 + 1.1 * smoothstep(0.02, 0.6, luma)), spent);
+  // In the wide shot the leaf is seen as a mass, and a mass of it is wine red: the pink of a single strap in the light does not carry.
+  albedo *= mix(vec3(1.0), vec3(0.7, 0.34, 0.42), uDeep * (1.0 - spent));
   float out_ = (vUv.x - mix(0.3, 0.5, vUv.z)) * 1.4;
   vec3 n = normalize(vRight * out_ + vec3(0.0, 0.5, 0.0) + v * 0.7);
   // Dark at the heart of it, where the straps stand close.
