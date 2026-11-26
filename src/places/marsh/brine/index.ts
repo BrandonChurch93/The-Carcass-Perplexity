@@ -5,7 +5,6 @@ import * as THREE from 'three';
 import { BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, rel } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { landShared } from '../land';
-import { bakeRipple } from '../land/tiles';
 import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS } from './shaders';
 
 export const PARTS = ['brine', 'domes', 'burst'] as const;
@@ -74,7 +73,7 @@ export function create(ctx: Context): Piece {
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tRipple: { value: bakeRipple(ctx.rng('brine/ripple')) }, tRippleN: { value: ctx.assets.texture('mat/ripple-nh.png', { kind: 'data', repeat: true, anisotropy: 2 }) }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
+    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFrothN: { value: ctx.assets.texture('mat/froth-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) }, tBed: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;
@@ -122,7 +121,7 @@ export function create(ctx: Context): Piece {
     blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
   });
   const dropSkin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, defines: { DROP: 1 }, toneMapped: false });
-  const ball = new THREE.SphereGeometry(1, 40, 16, 0, TAU, 0, Math.PI / 2);
+  const ball = new THREE.SphereGeometry(1, 96, 32, 0, TAU, 0, Math.PI / 2);
   const domeLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
   ball.setAttribute('aLife', domeLife);
   const domeMesh = new THREE.InstancedMesh(ball, skin, domes.length);
