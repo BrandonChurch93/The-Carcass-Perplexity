@@ -156,7 +156,8 @@ export function create(ctx: Context): Piece {
     });
     return o;
   };
-  const growth: GrowthUniforms = { uSeconds, uGrove, uHead, uViewH };
+  const uSway = { value: 1 };
+  const growth: GrowthUniforms = { uSeconds, uGrove, uHead, uViewH, uSway };
   // The ones the lens of the colony stands among shade the ground as they did. Every other one that is drawn does it below, where it is made.
   const stood = stalks.filter((s) => closeOf(s));
   const discs = ctx.rig.contactDiscs(stood.length);
@@ -277,10 +278,13 @@ export function create(ctx: Context): Piece {
       if (framed) w.h = from3 < 7 ? 1.4 + 0.4 * ((seed * 7.7) % 1) : 2.5 + 0.3 * ((seed * 7.7) % 1);
       wilds.push(w);
       // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
-      if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
+      if (s.kind !== 2) dress(w, headOf(s.kind), (0.6 + 0.7 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
       if (framed) {
         const turn = -0.2 + 0.7 * ((seed * 3.3) % 1);
-        w.cards = [[turn, 0.4, 0.5, 1.2, 0, 0, 0], [turn, 0.6, 0.55, 0.2, 0, 0.1, 0], [turn - 0.8, 0.8, 0.4, 0.2, 0, 0.3, 0.3]];
+        // No two the same: one full, one thin and ragged, each with a fall of older straps to its own side.
+        const big = 0.65 + 0.7 * ((seed * 11.3) % 1);
+        const torn = 0.2 + 0.6 * ((seed * 17.9) % 1);
+        w.cards = [[turn, 0.4, 0.5 * big, 1.2, 0, torn, 0], [turn + 0.3, 0.6, 0.6 * big, 0.2, 0, 0.4, 0], [turn - 1.1, 0.9, 0.45 * big, 0.2, 0, 0.6, 0.4]];
       }
       // A fork: a second trunk that leaves this one part of the way up, goes out and turns up.
       if (!lowly && tall > 1.5 && wild.next() < 0.2 && !anchored) {
@@ -427,7 +431,7 @@ export function create(ctx: Context): Piece {
         const nearF = new Fronds();
         const farF = new Fronds();
         const own = ctx.rng('stalks-fronds-' + shot.id);
-        for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineOf(from(w)), broadOf(from(w)), false);
+        for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineOf(from(w)), broadOf(from(w)), false, 0.5 + 0.4 * ((w.seed * 5.9) % 1));
         // The stems the same way: by the lens of the shot the ledges of the bark are the mesh, far off a stem is a plain tube.
         const closeW = wilds.filter((w) => from(w) < 7);
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
@@ -436,6 +440,7 @@ export function create(ctx: Context): Piece {
           frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 3, { small: true }),
           stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 6, 5, 0, true),
         ];
+        if (shot.id === 'marsh-03') for (const m of [meshes[2], meshes[3]]) (((m as THREE.Mesh).material as THREE.ShaderMaterial).uniforms.uRust as THREE.IUniform<number>).value = 1;
         crowns[which] = meshes;
         group.add(...meshes);
       });
@@ -492,6 +497,7 @@ export function create(ctx: Context): Piece {
   const own = ctx.rng('stalks-close');
   const closeSet = new THREE.Group();
   const closeFar = new THREE.Group();
+  let closeRust: THREE.IUniform<number> | undefined;
   // They are built whole: a trunk fine enough to carry its ledges and its crust in relief, and a plume of blades, each one a mesh.
   {
     const closeW: Wild[] = [];
@@ -523,7 +529,9 @@ export function create(ctx: Context): Piece {
     const plain = new Fronds();
     const less = ctx.rng('stalks-close-far');
     for (const w of closeW) if (w.kind !== 2) crownOf(plain, w, less, 12, 1.3, false);
-    closeFar.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 14, 8, 1), frondMesh(ctx, growth, plain, 5));
+    const farStems = stemMesh(ctx, growth, closeW.length, lines(closeW), 14, 8, 1);
+    closeRust = ((farStems as THREE.Mesh).material as THREE.ShaderMaterial).uniforms.uRust as THREE.IUniform<number>;
+    closeFar.add(farStems, frondMesh(ctx, growth, plain, 5));
     group.add(closeSet, closeFar);
   }
   ctx.scene.add(ctx.parts.built('stalks', group));
@@ -611,6 +619,7 @@ export function create(ctx: Context): Piece {
       else uGrove.value.set(1, 1);
       const inWide = staged >= WIDE_SPAN[0] && staged <= WIDE_SPAN[1];
       uHead.value = inWide ? 1.15 : 1;
+      uSway.value = inWide ? 2.4 : 1;
       wide.visible = inWide;
       // The heads made for the shot that is on: between shots, those of the one that is nearest in time.
       let on = 0;
@@ -629,6 +638,7 @@ export function create(ctx: Context): Piece {
       const among = SHOTS[on]?.id === 'marsh-02';
       closeSet.visible = among;
       closeFar.visible = !among;
+      if (closeRust) closeRust.value = SHOTS[on]?.id === 'marsh-03' ? 1 : 0;
     },
     resize: (_width, height) => {
       uViewH.value = height;

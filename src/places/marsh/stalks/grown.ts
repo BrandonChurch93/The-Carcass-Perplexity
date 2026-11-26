@@ -12,6 +12,7 @@ import { lineAt, type Wild } from './stands';
 // The air over the flats is close to still. Slow fronts cross them and lull; each plant also rocks in its own time. A frond reads the front where
 // its plant stands, so a gust is seen to travel from stand to stand.
 export const AIR_GLSL = /* glsl */ `
+uniform float uSway;
 const vec3 WIND = vec3(0.8, 0.0, 0.6);
 float airAt(vec2 xz, float t) {
   float along = dot(xz, WIND.xz);
@@ -29,7 +30,7 @@ vec3 swayOf(vec2 xz, float h, float t, float quiver, float rate, float phase) {
   float own = sin(uSeconds * rate + phase) + 0.4 * sin(uSeconds * rate * 2.3 + phase * 1.7);
   float side = sin(uSeconds * rate * 0.77 + phase * 2.3);
   vec3 across = vec3(-WIND.z, 0.0, WIND.x);
-  return (WIND * (0.7 * airAt(xz, uSeconds) + 0.3 * own) + across * (0.3 * side)) * (0.02 * quiver * h * t * t);
+  return (WIND * (0.7 * airAt(xz, uSeconds) + 0.3 * own) + across * (0.3 * side)) * (0.02 * uSway * quiver * h * t * t);
 }
 // The size of one pixel at a distance, in metres.
 uniform float uViewH;
@@ -153,6 +154,7 @@ uniform sampler2D tBark;
 uniform sampler2D tBarkNh;
 uniform float uCrowned;
 uniform float uLedgeF;
+uniform float uRust;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${KEY_GLSL}
@@ -168,7 +170,7 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   float away = smoothstep(8.0, 70.0, distance(cameraPosition, vWorld));
-  float age = vLook.x;
+  float age = max(vLook.x, 0.6 * uRust);
   float deadStem = age > 1.5 ? 1.0 : 0.0;
   // Chalk white salt over a horn-coloured tube: the picture of the bark gives the rings, the salt takes most of its colour out.
   float luma = dot(bark, vec3(0.3, 0.5, 0.2));
@@ -179,6 +181,7 @@ void main() {
   float crust = smoothstep(0.5, 0.78, nh.b + 0.3 * (patchy - 0.5) + 0.12 * (grain - 0.5));
   // Far off the salt is not seen as white: a stem there is the cream of its bark.
   float crustNear = 1.0 - 0.8 * smoothstep(4.0, 30.0, distance(cameraPosition, vWorld));
+  crustNear *= 1.0 - 0.5 * uRust;
   crust = max(crust, 0.8 * vLook.z);
   albedo = mix(albedo, vec3(0.8, 0.79, 0.76) * (0.9 + 0.2 * grain), 0.75 * crust * crustNear);
   // No two the same age: a young one is clean and warm, an old one grey with what has run down it, a dead one has lost its salt.
@@ -186,13 +189,15 @@ void main() {
   // Rust gathers where the picture is lowest: under the lips of the ledges and in the cracks, more on one side of a trunk than the other.
   float pit = 1.0 - smoothstep(0.12, 0.42, nh.b);
   vec3 rust = vec3(0.36, 0.15, 0.07);
-  float rusty = smoothstep(0.3, 0.7, fbm(vec2(vUv.x * 3.0, vUv.y * 1.3) + seed * 5.0));
+  float rusty = max(smoothstep(0.3, 0.7, fbm(vec2(vUv.x * 3.0, vUv.y * 1.3) + seed * 5.0)), 0.85 * uRust);
   albedo = mix(albedo, rust, clamp(pit * (0.35 + 0.55 * rusty) + 0.3 * rusty * (1.0 - crust) * smoothstep(0.3, 0.1, nh.b - 0.25), 0.0, 0.8) * (0.5 + 0.5 * min(age, 1.0)) * rustK);
   // And it runs down from a ledge: the bark under one is stained orange, in tongues, on the side the brine dries last.
   float ledgeOver = texture2D(tBarkNh, uv + vec2(0.0, 0.04), 3.0).b;
   float tongue = smoothstep(0.35, 0.75, fbm(vec2(vUv.x * 14.0, vUv.y * 1.6) + seed * 9.0));
   float run = smoothstep(0.4, 0.56, ledgeOver) * (1.0 - 0.6 * crust) * (0.3 + 0.7 * tongue) * smoothstep(0.1, 0.5, rusty + 0.25);
-  albedo = mix(albedo, vec3(0.5, 0.19, 0.06), 0.8 * run * (1.0 - away) * rustK);
+  albedo = mix(albedo, vec3(0.5, 0.19, 0.06), min(0.9, 0.8 * (1.0 + 0.6 * uRust) * run) * (1.0 - away) * rustK);
+  albedo = mix(albedo, albedo * vec3(0.52, 0.37, 0.28), uRust * (0.6 + 0.4 * smoothstep(0.3, 0.7, fbm(vec2(vUv.x * 2.0 + seed * 7.0, vUv.y * 0.9)))) * (1.0 - 0.45 * crust));
+  albedo = mix(albedo, vec3(0.42, 0.17, 0.07), uRust * 0.85 * smoothstep(0.4, 0.6, ledgeOver) * (0.4 + 0.6 * tongue) * (1.0 - smoothstep(0.55, 0.8, nh.b)));
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
   // Far off a stem is seen against pale ground and paler air: it is the horn colour of its tube, with its rings as bands, not chalk.
@@ -316,7 +321,7 @@ void main() {
   // A gust reaches every head a little after its neighbour, and the end of a strap a little after its root; while it blows the ends flutter.
   float air = airAt(aRoot.xz + 1.5 * vec2(cos(aAim.w), sin(aAim.w)), uSeconds - 0.12 * s);
   float give = len * s * s * aFr3.z;
-  p += WIND * (give * 0.15 * air);
+  p += WIND * (give * 0.15 * min(uSway, 1.6) * air);
   if (uDry < 0.5) {
     p += WIND * (give * 0.03 * sin(uSeconds * rate * 0.6 + own * 1.3 - 2.0 * s));
     p += b * (give * 0.035 * sin(uSeconds * rate * 0.83 + own * 1.7 - 2.5 * s));
@@ -416,8 +421,8 @@ void main() {
   vec3 c = rigShade(vWorld, n, v, albedo * keyLight(n), rough, occ);
   // Wet, the film of brine on a blade is a mirror only where its fold turns the bright part of the sky to the lens: a thin line down its length.
   vec3 r = reflect(-v, n);
-  float line = pow(clamp(dot(r, KEY), 0.0, 1.0), 32.0) + 0.4 * pow(clamp(r.y, 0.0, 1.0), 16.0);
-  c += step(0.5, uWet) * (1.0 - spent) * (0.3 + 0.7 * own) * 0.9 * line * skyRadiance(vec3(r.x, abs(r.y), r.z)) * occ * skyOpen(vWorld);
+  float line = pow(clamp(dot(r, KEY), 0.0, 1.0), 24.0) + 0.45 * pow(clamp(r.y, 0.0, 1.0), 12.0);
+  c += step(0.5, uWet) * (1.0 - spent) * (0.3 + 0.7 * own) * 1.35 * line * skyRadiance(vec3(r.x, abs(r.y), r.z)) * occ * skyOpen(vWorld);
   // A strap is thin: the sky behind it comes through.
   c += (1.0 - 0.6 * spent) * albedo * vec3(1.2, 0.6, 0.7) * skyIrradiance(-n) / 3.14159 * 0.35 * occ * skyOpen(vWorld);
   // One that is drawn wider than it is carries less of the picture's pixel: it is mixed toward what stands behind a head, which is more head.
@@ -490,7 +495,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
           // A plume, not a star: most of a head leaves to the side the air has combed it, arches over and weeps.
           az = turn + rng.normal() * 0.75;
           leave = Math.min(2.2, 0.3 + Math.abs(rng.normal()) * 0.5 + 0.4 * droop);
-          length = 0.8 * wide * tall * rng.range(0.6, 1.1);
+          length = 0.8 * wide * tall * rng.range(0.4, 1.15);
           fall = rng.range(1.9, 3.1);
         }
       } else {
@@ -600,6 +605,7 @@ export interface GrowthUniforms {
   uGrove: THREE.IUniform<THREE.Vector2>;
   uHead: THREE.IUniform<number>;
   uViewH: THREE.IUniform<number>;
+  uSway: THREE.IUniform<number>;
 }
 
 function strip(segments: number): THREE.BufferGeometry {
@@ -704,7 +710,7 @@ export function dropMesh(ctx: Context, u: GrowthUniforms, list: Fronds): THREE.M
 export function stemMesh(ctx: Context, u: GrowthUniforms, count: number, lines: Record<string, Float32Array>, rings: number, sides: number, ledges: number, small = false): THREE.Mesh {
   const material = new THREE.ShaderMaterial({
     uniforms: {
-      ...ctx.rig.uniforms, ...u, uLedge: { value: ledges }, uLedgeF: { value: ledges }, uCrowned: { value: 1 },
+      ...ctx.rig.uniforms, ...u, uLedge: { value: ledges }, uLedgeF: { value: ledges }, uCrowned: { value: 1 }, uRust: { value: 0 },
       tBark: { value: ctx.assets.texture('mat/bark.jpg', { kind: 'colour', anisotropy: 4 }) },
       tBarkNh: { value: ctx.assets.texture('mat/bark-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
