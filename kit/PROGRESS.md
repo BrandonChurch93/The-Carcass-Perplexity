@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 101, 2026-11-26 08:30 UTC:
+Status 102, 2026-11-26 08:57 UTC:
 
-- `01-marsh3.jpg`: The Blood Marsh, version 3: approved left, built right at final tier (the wide view, the wallowers, the one on the thin crust)
-- `02-spine.jpg`: The Spine, version 3: approved left, built right at final tier (the wide view, the strike on the third spire)
-- `03-breath.jpg`: The Breath, version 3: approved left, built right (the wide view, the rim)
-- `04-spine24.jpg`: The Spine's two weakest keys, version 3: approved left, built right at final tier (the kites on the first spire, inside the canal)
+- `01-ribs0.jpg`: The Ribs, the wide view: approved left, built right at final tier in 4K, with the tighter shutter limit and the blades faint again
+- `02-smear.jpg`: The shutter fix at native size, before left and after right: the Ribs' near ground, a blade of the Ribs (marks strong, then faint), the Spine's rock at frame 7418
+- `03-ribs413.jpg`: The Ribs' other keys, version 3, before the shutter change: approved left, built right (the bore arrives, the drowned one in the weed, the colony)
+- `04-key-ribs-0-uhd-final.jpg`: The frame that answers ribs-0, film frame 1241, uhd, final tier
 
+Status 101, 2026-11-26 08:30 UTC, showed: The Blood Marsh, version 3: approved left, built right at final tier (the wide view, the wallowers, the one on the thin crust); The Spine...
 Status 100, 2026-11-26 08:15 UTC, showed: The Reveal from orbit, version 3: approved left, built right (draft tier); The Eye, heartbeat of 08:05: approved left, built right; the...
 Status 99, 2026-11-26 07:52 UTC, showed: The Reveal from orbit: approved left, built right (the owner's heartbeat of 07:44, draft tier); The establishing frame of every place and...
-Status 98, 2026-11-26 07:29 UTC, showed: The Breath, the rim: approved left, built right (version 2, draft tier); The Eye, the edge where the floor stops: approved left, built...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T08:30:51Z
-phase 4: 12.34 h used of 17.00 h
-build: 32.66 h used of 72.00 h
+2026-11-26T08:57:19Z
+phase 4: 12.78 h used of 17.00 h
+build: 33.10 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 15
+minutes since the last status: 26
 ```
 
 ## Phases
