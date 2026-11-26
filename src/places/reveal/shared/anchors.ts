@@ -102,7 +102,7 @@ export function poseAt(frame: number): Pose {
     const dx = x + driftX;
     const dz = z + driftZ;
     // (And the camera turns a little about its own eye as it rides the orbit: the edge of the planet swings, slow, one way.)
-    const turned = ROLL_RATE * eased((frame - DRIFT_FROM) / FPS);
+    const turned = rollAt(frame);
     return { position: [dx, height, dz], aim: [dx, 0, dz], fov: FOV, up: [Math.sin(turned), 0, -Math.cos(turned)] };
   }
   return { position: [x, height, z], aim: [x, 0, z], fov: FOV, up: [0, 0, -1] };
@@ -113,7 +113,14 @@ const DRIFT_SPEED = 32;
 const DRIFT_EASE = 6;
 const DRIFT_TOWARD: [number, number] = [-0.97, -0.24];
 /** The turn of the camera about its own eye, radians a second once it runs: about twelve degrees by the last frame. */
-const ROLL_RATE = (0.47 * Math.PI) / 180;
+const ROLL_RATE = (0.62 * Math.PI) / 180;
+/** As the day ends the turn gathers this much more, radians a second, over ROLL_GATHER seconds: about twenty six degrees by the last frame. */
+const ROLL_MORE = (0.8 * Math.PI) / 180;
+const ROLL_GATHER = 4;
+/** And from there the camera's way on the ground bends: a second move comes up from rest over DRIFT_BEND seconds, DRIFT_ACROSS km a second toward DRIFT_ACROSS_TOWARD, as the first settles. */
+const DRIFT_ACROSS = 22;
+const DRIFT_ACROSS_TOWARD: [number, number] = [0.25, -0.97];
+const DRIFT_BEND = 5;
 /** From this many seconds into the drift (film frame 10880, where the day ends) its speed settles, over DRIFT_SETTLE seconds, to DRIFT_SLOW km a second: the body stays whole and near the middle of the frame, and the camera never stops. */
 const DRIFT_SLOW_FROM = (10880 - DRIFT_FROM) / FPS;
 const DRIFT_SLOW = 9;
@@ -136,7 +143,13 @@ export function driftAt(frame: number): [number, number] {
   let km = DRIFT_SPEED * eased(Math.min(t, DRIFT_SLOW_FROM));
   const late = t - DRIFT_SLOW_FROM;
   if (late > 0) km += DRIFT_SLOW * late + (DRIFT_SPEED - DRIFT_SLOW) * DRIFT_SETTLE * (1 - Math.exp(-late / DRIFT_SETTLE));
-  return [DRIFT_TOWARD[0] * km, DRIFT_TOWARD[1] * km];
+  const across = DRIFT_ACROSS * gathered(t, DRIFT_SLOW_FROM, DRIFT_BEND);
+  return [DRIFT_TOWARD[0] * km + DRIFT_ACROSS_TOWARD[0] * across, DRIFT_TOWARD[1] * km + DRIFT_ACROSS_TOWARD[1] * across];
+}
+/** The turn of the camera about its own eye at a frame of the film, radians: nothing up to DRIFT_FROM. */
+function rollAt(frame: number): number {
+  const t = (frame - DRIFT_FROM) / FPS;
+  return ROLL_RATE * eased(t) + ROLL_MORE * gathered(t, DRIFT_SLOW_FROM, ROLL_GATHER);
 }
 
 /** Seconds of the place at which the Heart's glow beats once on the body. */
@@ -153,6 +166,25 @@ export function liveAt(seconds: number): number {
   if (!(t > 0)) return 0;
   const u = Math.min(t, 3) / 3;
   return 3 * (u * u * u - (u * u * u * u) / 2) + Math.max(t - 3, 0);
+}
+
+/** Seconds of a move that starts from rest at from, comes up over the given seconds and then runs with the clock. */
+function gathered(t: number, from: number, over: number): number {
+  const s = t - from;
+  if (!(s > 0)) return 0;
+  const u = Math.min(s, over) / over;
+  return over * (u * u * u - (u * u * u * u) / 2) + Math.max(s - over, 0);
+}
+/**
+ * The clock of the weather, seconds: the cloud, the cyclone and the vapour are carried by it. The light of the ending runs hours
+ * in seconds, and the weather runs on the same clock: nothing up to LIVE_FROM, the pace of liveAt at first, then it gathers way
+ * through the hold (2.5 times by film frame 10880), runs fastest while the terminator crosses (3.5 times, film frames 11050 to
+ * 11320) and eases a little for the night. Its pace never falls and it never turns back.
+ */
+export function weatherAt(seconds: number): number {
+  const t = seconds - LIVE_FROM;
+  if (!(t > 0)) return 0;
+  return liveAt(seconds) + 1.5 * gathered(t, 2, 12) + gathered(t, 12, 5) - 0.7 * gathered(t, 21.5, 5);
 }
 
 /** The rings on the lake that the Eye hands over fade out between these widths of the view, in units of the width at the first frame. */

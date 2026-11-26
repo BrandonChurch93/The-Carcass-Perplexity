@@ -32,6 +32,7 @@ uniform vec3 uMoonColour;
 uniform float uGain;
 uniform vec4 uCalm;
 uniform float uLive;
+uniform float uWx;
 uniform vec4 uEmber;`;
 
 export const RIG_GLSL = /* glsl */ `
@@ -107,6 +108,11 @@ vec3 skyLightAt(float h, float day) {
 // The light the air itself throws back toward the eye there, as a share of the day's: it goes with the sun, a little after the ground.
 vec3 airLightAt(float h) {
   return mix(vec3(1.0), 0.75 * sunTint(h + 0.03) * sunSeen(h + 0.05) * pow(max(uGain / 1.3, 1.0), -0.85) + 0.25 * vec3(0.5, 0.68, 1.1) * skySeen(h) + 0.22 * moonAt(h), uTerm.w);
+}
+// The working of the fire by night, 0 to 1: a slow swell and sinking that never keeps step with itself. The ground, the lake of fire
+// and the cloud over it all take it from here, so they swell together.
+float emberWork() {
+  return 0.5 + 0.3 * sin(uTime * 4.83 + 0.4) + 0.13 * sin(uTime * 7.61 + 2.0) + 0.07 * sin(uTime * 2.9 + 1.1);
 }
 // The exposure of the camera, on the radiance a surface writes.
 vec3 exposed(vec3 c) {
