@@ -48,6 +48,7 @@ export function create(ctx: Context): Piece {
     tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
     tScorch: { value: ctx.assets.texture('mat/scorchfield.jpg', { anisotropy: ANISOTROPY, repeat: false }) },
     tScorchH: { value: ctx.assets.texture('mat/scorchfield-h.png', { kind: 'data', anisotropy: ANISOTROPY, repeat: false }) },
+    tScorchD: { value: ctx.assets.texture('mat/scorch.jpg', { anisotropy: ANISOTROPY }) },
     uTall: tall,
     uScorch: { value: new THREE.Vector4(scorchAt[0], scorchAt[2], 0, 0) },
     uScorchAxes: { value: new THREE.Vector4(Math.cos(carcassAxis * RAD), Math.sin(carcassAxis * RAD), Math.cos(carcassView * RAD), Math.sin(carcassView * RAD)) },

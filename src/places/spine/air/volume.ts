@@ -109,10 +109,15 @@ float stormDepth(vec3 ro, vec3 rd, float reach) {
     float into = ridge.x - p.z;
     float h = p.y - ridge.y;
     vec3 q = p - (uWind.xyz + vec3(0.6, 0.0, 0.0)) * (uTime * 22.0);
-    float bank = noise(q / 4300.0).r;
-    float thick = smoothstep(250.0 + 900.0 * bank, 2600.0 + 900.0 * bank, into) * smoothstep(3200.0, 600.0, h);
+    // (Each picture of the bank is read only where it can count: a read that comes to nothing is still paid for.)
+    float thick = 0.0;
+    if (into > 250.0 && h < 3200.0) {
+      float bank = noise(q / 4300.0).r;
+      thick = smoothstep(250.0 + 900.0 * bank, 2600.0 + 900.0 * bank, into) * smoothstep(3200.0, 600.0, h);
+    }
     // And the cloud that comes over the low saddles with the gale, close on the crest.
-    thick += 0.5 * ridge.z * smoothstep(-500.0, 60.0, into) * smoothstep(900.0, 100.0, abs(into)) * smoothstep(160.0, -40.0, h) * smoothstep(0.35, 0.7, noise(q / 900.0).g);
+    float saddle = 0.5 * ridge.z * smoothstep(-500.0, 60.0, into) * smoothstep(900.0, 100.0, abs(into)) * smoothstep(160.0, -40.0, h);
+    if (saddle > 0.0005) thick += saddle * smoothstep(0.35, 0.7, noise(q / 900.0).g);
     depth += thick * span * (2.0 * f / 6.0);
   }
   return depth / 5200.0;
@@ -259,7 +264,7 @@ void main() {
     float lean = clamp((h0 - seaTop(p + toDusk * reachS, true)) / reachS * 2.4, -1.0, 1.0);
     // The picture gives its grain; the tone is the deck's own: cold from the sky on its heads, deep blue-violet in its hollows, and the
     // dusk on what faces it.
-    float grainS = clamp(dot(sea, vec3(0.33)) / max(dot(flowing(tFar, uvF, vec2(0.016, 0.0), 24.0, 5.0) * SKY_GAIN, vec3(0.33)), 1e-4), 0.7, 1.4);
+    float grainS = clamp(dot(sea, vec3(0.33)) / dot(SEA_MEAN, vec3(0.33)), 0.7, 1.4);
     vec3 cold = SEA_COLD * (0.1 + 0.6 * head * head) * (1.0 + 0.6 * lean);
     vec3 warm = 0.6 * SEA_WARM * smoothstep(0.0, 0.8, lean) * (0.25 + 0.75 * head) * (1.0 - 0.7 * stormSide(rd));
     sea = (cold + warm) * grainS;
@@ -273,7 +278,7 @@ void main() {
     float plate = uPlate.w > 0.0 ? plateAt(az, -dip, uvP) : 0.0;
     if (plate > 0.0) {
       vec3 seaP = skyCloud(ro, rd, 0.0);
-      sea = mix(sea, seaP * (0.8 + 0.3 * head) * (1.0 + 0.4 * lean), plate);
+      sea = mix(sea, seaP * (0.55 + 0.9 * head * head) * (1.0 + 0.5 * lean), plate);
       domeFar = mix(domeFar, seaP, plate);
       gone = mix(gone, smoothstep(2500.0, 7000.0, t), plate);
     }
@@ -412,7 +417,11 @@ void main() {
     float lens = 0.466 / uInvProjection[1][1];
     float fly = 0.0;
     float hid = 1.0;
-    for (int k = 0; k < 6; k++) {
+    // Staged by shot (uStage.z under 0.75): from inside the canal the snow flies only out beyond the far mouth, at the three depths past it.
+    bool beyond = uStage.z < 0.75;
+    for (int j = 0; j < 6; j++) {
+      int k = beyond ? j + 5 : j;
+      if (beyond && j > 2) break;
       float dist = 1.6 * pow(2.0, float(k)) * lens;
       if (dist * 0.8 > far) break;
       vec2 pc = onLens * dist;
@@ -431,8 +440,10 @@ void main() {
       float ac = floor(a);
       ivec2 cell = ivec2(int(qc), int(ac));
       // They come in gusts: a clump of them, then none.
+      float chance = rnd(cell, uint(23 + k));
+      if (chance > 0.42 - 0.04 * float(k)) continue;
       float gustL = noise(vec3(pc / (30.0 * cellQ) - d1 * (uTime * 0.6), float(k) * 0.31)).g;
-      if (rnd(cell, uint(23 + k)) > (0.42 - 0.04 * float(k)) * smoothstep(0.3, 0.7, gustL)) continue;
+      if (chance > (0.42 - 0.04 * float(k)) * smoothstep(0.3, 0.7, gustL)) continue;
       float dq = (q - qc - 0.25 - 0.5 * rnd(cell, uint(31 + k))) * cellQ;
       // Each is brightest in its middle and gone at its ends, and no two are one length.
       float lengthOf = 0.3 + 0.4 * rnd(cell, uint(41 + k));
@@ -446,7 +457,7 @@ void main() {
       hid *= 1.0 - flake;
     }
     // Against the open sky blown snow is the sky's own tone and is lost; it shows against the rock and the snow.
-    fly *= uShow.w * uStage.z * mix(1.0, 0.2, smoothstep(120.0, 700.0, far));
+    fly *= uShow.w * (beyond ? 3.0 : uStage.z) * mix(1.0, beyond ? 0.45 : 0.2, smoothstep(120.0, 700.0, far));
     vec3 flakes = 1.1 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
     light = light * (1.0 - fly) + flakes * fly;
     through *= 1.0 - fly;
