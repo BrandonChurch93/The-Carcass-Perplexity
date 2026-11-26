@@ -17,6 +17,8 @@ export class Skin {
   private readonly info: number[] = [];
   private readonly look: number[] = [];
   private readonly whose: number[] = [];
+  private readonly rest: number[] = [];
+  private readonly restN: number[] = [];
   /** The animal the tubes made from now on belong to. */
   who = 0;
   position = new Float32Array(0);
@@ -40,6 +42,28 @@ export class Skin {
       }
     }
     return t;
+  }
+
+  /** A skin that is no tube: `count` vertices and its own triangles. The pose writes `position` and `normal` from `start` on. */
+  blob(count: number, index: Uint32Array): Tube {
+    const t = { start: this.total, rings: count, sides: 0 };
+    this.total += count;
+    for (let v = t.start; v < this.total; v++) this.whose[v] = this.who;
+    for (let i = 0; i < index.length; i++) this.index.push(t.start + (index[i] as number));
+    return t;
+  }
+
+  /** What does not change for a vertex of a blob: where it is on the animal at rest and how its skin faces there, and the same things a tube has. */
+  describeAt(v: number, rest: [number, number, number], restN: [number, number, number], uv: [number, number], info: [number, number, number, number], look: [number, number]): void {
+    for (let i = 0; i < 3; i++) {
+      this.rest[v * 3 + i] = rest[i] as number;
+      this.restN[v * 3 + i] = restN[i] as number;
+    }
+    this.uv[v * 2] = uv[0];
+    this.uv[v * 2 + 1] = uv[1];
+    for (let i = 0; i < 4; i++) this.info[v * 4 + i] = info[i] as number;
+    this.look[v * 2] = look[0];
+    this.look[v * 2 + 1] = look[1];
   }
 
   /** What does not change: `along` and `around` in metres over the skin, how pale, how hidden from the light, the radius of the tube there, a number for the animal. */
@@ -77,6 +101,8 @@ export class Skin {
     g.setAttribute('aInfo', new THREE.BufferAttribute(fill(this.info, 4), 4));
     g.setAttribute('aLook', new THREE.BufferAttribute(fill(this.look, 2), 2));
     g.setAttribute('aWho', new THREE.BufferAttribute(fill(this.whose, 1), 1));
+    g.setAttribute('aRest', new THREE.BufferAttribute(fill(this.rest, 3), 3));
+    g.setAttribute('aRestN', new THREE.BufferAttribute(fill(this.restN, 3), 3));
     g.setIndex(this.index);
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
     this.geometry = g;

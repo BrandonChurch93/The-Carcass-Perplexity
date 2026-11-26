@@ -28,7 +28,7 @@ vec3 sunGlitter(vec3 r, float far) {
   float rs2 = rs * rs;
   float rs8 = rs2 * rs2 * rs2 * rs2;
   float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
-  float broad = rs64 * 0.34;
+  float broad = rs64 * 0.2 + rs8 * rs8 * 0.012;
   float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
   return uSunColour * (broad + spark);
 }
@@ -66,10 +66,17 @@ void main() {
   vec2 slope = (g1 * 0.3 + g2 * 0.26) * (0.4 + 0.6 * deep) + g3.rg * 0.1;
   // Near the lens the small ripples show one by one.
   float close = smoothstep(120.0, 8.0, far);
-  if (close > 0.0) slope = slope * (1.0 - 0.55 * close) + (texture2D(tRipple, vec2(xz.x * 0.829 - xz.y * 0.559, xz.x * 0.559 + xz.y * 0.829) * 0.43 + drift.yx * uTime * 0.07).rg - 0.5) * 1.3 * close * (0.5 + 0.5 * deep);
+  // The wind does not lie evenly on it: it is ruffled in patches that drift, and between them it is nearly glass.
+  float gust = smoothstep(0.3, 0.72, 0.65 * vnoise(xz * 0.13 + vec2(uTime * 0.035, uTime * 0.011)) + 0.35 * vnoise(xz * 0.61 - vec2(uTime * 0.05, 0.0)));
+  if (close > 0.0) {
+    // Two sheets of them of unlike size and bearing, so no square of either shows.
+    vec2 ra = texture2D(tRipple, vec2(xz.x * 0.829 - xz.y * 0.559, xz.x * 0.559 + xz.y * 0.829) * 0.37 + drift.yx * uTime * 0.07).rg - 0.5;
+    vec2 rb = texture2D(tRipple, vec2(xz.x * 0.391 + xz.y * 0.92, -xz.x * 0.92 + xz.y * 0.391) * 0.113 + drift * uTime * 0.031).rg - 0.5;
+    slope = slope * (1.0 - 0.6 * close) + (ra * 0.55 + rb * 1.15) * close * (0.45 + 0.55 * deep) * (0.22 + 1.0 * gust);
+  }
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
-  slope += rings.rg * 2.0;
+  slope += rings.rg * 3.2;
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
 
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -98,12 +105,32 @@ void main() {
     reach *= 2.9;
   }
   mirror = mix(mirror, vec3(0.05, 0.045, 0.04) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159, hit * 0.85);
-  mirror += sunGlitter(r, far) * sunAt(vWorld + vec3(0.0, 0.3, 0.0));
+  float sunHere = sunAt(vWorld + vec3(0.0, 0.3, 0.0));
+  mirror += sunGlitter(r, far) * sunHere;
+  // Sparks: here and there a facet smaller than a ripple turns the sun to the lens for a moment, far outside its path. Each is a point that lives a tenth of a second.
+  float px = far * 2.0 / (uFrame.y * 1.6);
+  float lobe = pow(max(dot(r, uSunDir), 0.0), 9.0) * (0.3 + 0.7 * gust) * (0.4 + 2.2 * rings.b);
+  float sparks = 0.0;
+  float seen = smoothstep(0.012, 0.004, px);
+  if (seen > 0.0 && lobe > 0.002) {
+    for (int o = 0; o < 2; o++) {
+      float tick = uTime * 9.0 + float(o) * 0.5;
+      float slot = floor(tick);
+      float life = 1.0 - abs(fract(tick) * 2.0 - 1.0);
+      vec2 cellAt = xz / 0.022 + float(o) * 17.3;
+      vec2 id = floor(cellAt);
+      vec2 rnd = hash22(id + slot * 7.13);
+      float on = step(1.0 - 0.16 * lobe, hash12(id * 1.37 + slot * 3.1));
+      float dot_ = smoothstep(0.34, 0.1, length(fract(cellAt) - 0.5 - 0.3 * (rnd - 0.5)));
+      sparks += on * dot_ * life;
+    }
+  }
+  mirror += uSunColour * sunHere * (sparks * seen * 0.9 + (1.0 - seen) * lobe * 0.012);
   // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
   vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.07 + (g1.x + g2.y) * 0.012, (slope.y + g1.y * 0.5) * 0.2) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
   vec4 image = texture2D(tMirror, at);
   // The image is of things in the shade of their own bodies, seen from below: darker than what stands over it.
-  mirror = mirror * (1.0 - 0.55 * image.a) + 0.16 * image.rgb;
+  mirror = mirror * (1.0 - 0.8 * image.a) + 0.2 * image.rgb;
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
   float path = depth / max(nv, 0.25);
@@ -114,7 +141,14 @@ void main() {
   float rim = smoothstep(0.16, 0.06, depth);
 
   vec3 colour = fresnel * mirror + (1.0 - fresnel) * (1.0 - clear) * body;
-  float alpha = 1.0 - (1.0 - fresnel) * clear * (1.0 - 0.35 * rim);
+  float alpha = 1.0 - (1.0 - fresnel) * clear * (1.0 - 0.5 * rim);
+  // What the water leaves at its edge: a broken line of scum and small bubbles, pale, that rides the ragged line of the bank.
+  float line = depth - ragged;
+  float scum = smoothstep(0.045, 0.07, line) * smoothstep(0.15, 0.085, line) * smoothstep(0.42, 0.62, vnoise(xz * 3.1 + 0.2 * uTime * drift) + 0.25 * vnoise(xz * 17.0)) * smoothstep(60.0, 20.0, far);
+  float bubbles = 0.55 + 0.45 * smoothstep(0.35, 0.7, vnoise(xz * 70.0));
+  vec3 froth = vec3(0.62, 0.58, 0.5) * bubbles * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * (0.6 + 0.8 * sunHere);
+  colour = mix(colour, froth, 0.7 * scum);
+  alpha = mix(alpha, 1.0, 0.7 * scum);
   alpha *= cover;
   colour *= cover;
   float keep = 1.0 - uSolo;
