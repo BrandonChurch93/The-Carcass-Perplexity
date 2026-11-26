@@ -1,6 +1,6 @@
 import { add, scale, through, type CameraPath, type Pose, type Vec3 } from '../../core/cameras';
 import { cut, keyPart, shotById, shotLength } from '../../film/cut';
-import { BUTTRESS, buttressRadius, groundAt, ribByName, weedPoint } from './layout';
+import { BUTTRESS, buttressRadius, groundAt, landAt, ribByName, weedPoint } from './layout';
 
 const RAD = Math.PI / 180;
 
@@ -75,10 +75,10 @@ const TO_KEY = travelled(ARRIVAL.keySeconds);
 const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 
 // The film's first shot, restaged (the rung 2 restaging of the opening): not the old move seen from farther out on a long lens, but a
-// move of its own. It starts 870 m out and 400 m EAST of the old axis, low on the back of a heavy swell, and pushes in hard at 86 metres a
+// move of its own. It starts 880 m out and 400 m EAST of the old axis, low on the back of a heavy swell, and pushes in hard at 86 metres a
 // second, then sweeps west along the shore onto the old move in one arc, so that the near blade (L1) grows and slides against the far ones
 // the whole way in. The lens rides the long swell of sea/tide.ts under it: it tops the crest before it inside the first second, sinks into
-// the trough behind (the next crest stands up before the shore at about 2.4 s) and is lifted again.
+// the trough behind (the next crest stands up before the shore) and is lifted again, its nose rising and falling with it.
 // From the east the tips of L1 and R1 stand 8 degrees apart with the arch of L2 between them: they cross only once both have left the top of the frame.
 // From OPEN.seconds on (film frame 960) the pose is `arrival`'s own, to the bit, and the two join level in place, speed and acceleration.
 export const OPEN = {
@@ -91,29 +91,34 @@ export const OPEN = {
   lift: 0.8,
   heave: [[1.0, 5.3, 0.9], [0.3, 2.3, 2.1]] as [number, number, number][],
   /**
-   * The ride: how much of the long swell's height under it the lens takes, the metres it keeps over that, the seconds between which it
-   * settles onto the old move's height, and the degrees its nose lifts for each metre a second it climbs.
-   */
-  rides: 0.8,
-  over: 2.3,
-  settles: [3.2, 8] as [number, number],
-  noses: 0.15,
-  /**
-   * No crest reaches the lens: it keeps `clears` metres over all the sea within `round` metres of it (the sea's own sheet presses the water
-   * down under a lens that comes nearer than that, and the pressed place shows as a pit with straight walls), and over a crest up to `reach`
-   * metres ahead that much less `gives` metres for each metre beyond, so that it is lifted over each crest as it comes and never set into one.
+   * The ride. The lens goes up and down with the long swell under it and with nothing shorter (the short sea passes under it five times a
+   * second: a lens that followed it would shake): it keeps `clears` metres over the highest the long swell stands within `round` metres
+   * of it, and `chop` more for each metre the short sea can stand over that. Nearer than `round` the sea's own sheet presses the water
+   * down under a lens, and the pressed place shows as a pit with straight walls: so no crest ever comes that near. `settles`: the seconds
+   * between which it goes over to the old move's height wherever that is the higher. `noses`: the degrees its nose lifts for each metre a
+   * second it climbs.
    */
   clears: 1.6,
   round: 12,
-  reach: 44,
-  gives: 0.1,
+  chop: 1,
+  settles: [3.2, 8] as [number, number],
+  noses: 0.18,
   /** The point on the strait floor the lens is held on through the arc: under the gap between the tips of L1 and R1. */
   target: [-149, -193] as [number, number],
-  /** Degrees over the level as the film opens and how far it tilts up as the blade grows; the lens as the film opens and as it widens (from 2 s). */
-  pitch: 11.5,
-  tilt: 3,
+  /**
+   * Degrees over the level as the film opens, how far it tilts up and between which seconds; the lens as the film opens, how far it widens
+   * and between which seconds. It widens late and tilts little: the near blade outgrows the frame, its tip gone through the top inside two
+   * seconds and ever farther out, while the tip of the right row's blade (6 degrees lower) is held inside the top by a clear margin.
+   */
+  pitch: 11,
+  tilt: 1.7,
+  tilting: [2.8, 5.5] as [number, number],
+  /** Over the first crest the nose comes down ahead of the fall: degrees, and the seconds it begins, is lowest and is back. */
+  nods: 1.6,
+  nodding: [0.15, 0.8, 1.6] as [number, number, number],
   fov: 31,
   widens: 15,
+  widening: [4, 10] as [number, number],
   /** The seconds from which the look eases into the old move's. */
   eases: 6,
   /** Degrees the lens rolls with the swell. */
@@ -199,7 +204,12 @@ function openingPlace(seconds: number): [number, number] {
   ];
 }
 
-/** The height of the swell (its first `count` waves) at a place and a time of the approach, in metres over the still sea. */
+/** How much higher the sea of the approach stands at `seconds` (sea/index.ts). */
+const seaStands = (seconds: number): number => 1 + OPEN_SEA_STANDS * (1 - smoothed(0, OPEN.seconds, seconds));
+/** How much of the swell is left over a shoaling bed (sea/shaders.ts, `calm`). */
+const seaCalm = (x: number, z: number): number => smoothed(0.2, 4.5, -landAt(x, z));
+
+/** The height of the long swell (the first `count` waves of the sea) at a place and a time of the approach, in metres over the still sea. */
 function swellHeight(x: number, z: number, seconds: number, count: number): number {
   let h = 0;
   for (let i = 0; i < count; i += 1) {
@@ -208,41 +218,47 @@ function swellHeight(x: number, z: number, seconds: number, count: number): numb
     const phase = k * (x * dx + z * dz) - Math.sqrt(9.81 * k) * seconds;
     h += metres * (Math.cos(phase) + 0.9 * k * metres * Math.cos(2 * phase));
   }
-  return h * (1 + OPEN_SEA_STANDS * (1 - smoothed(0, OPEN.seconds, seconds)));
+  return h * seaStands(seconds) * seaCalm(x, z);
 }
 
-/** The height of the lens of the film's first shot: it rides the long swell, clear of every crest, then settles onto the old move's height (its own from OPEN.seconds on). */
+/** The most the short sea (every wave after the first `count`) can stand over the long swell, in metres. */
+function chopHeight(count: number): number {
+  let h = 0;
+  for (let i = count; i < SEA_SWELL.length; i += 1) {
+    const [, , length, metres] = SEA_SWELL[i] as [number, number, number, number];
+    h += metres * (1 + (0.9 * 2 * Math.PI * metres) / length);
+  }
+  return h;
+}
+const LONG = 2;
+const CHOP = chopHeight(LONG);
+
+/** The height of the lens of the film's first shot: it rides the long swell, clear of every crest, and goes over to the old move's height (its own from OPEN.seconds on). */
 function openingHeight(seconds: number): number {
   const [x, z] = openingPlace(seconds);
-  const [x1, z1] = openingPlace(seconds + 0.05);
-  const far = Math.hypot(x1 - x, z1 - z) || 1;
-  const ux = (x1 - x) / far;
-  const uz = (z1 - z) / far;
   let heave = 0;
   for (const [metres, period, phase] of OPEN.heave) heave += metres * Math.sin((2 * Math.PI * seconds) / period + phase);
   const settled = arrivalLook(seconds).position[1] + openingLens(seconds) * (OPEN.lift + heave);
-  const ride = OPEN.rides * swellHeight(x, z, seconds, 2) + OPEN.over;
-  const rode = ride + (settled - ride) * smoother(OPEN.settles[0], OPEN.settles[1], seconds);
-  // The highest of the ride and of what the sea round the lens and each crest ahead ask, taken softly (a sum of powers), so that the
-  // height has no corner in it.
-  const SHARP = 4;
-  const asks: number[] = [rode, swellHeight(x, z, seconds, SEA_SWELL.length) + OPEN.clears];
-  for (let ring = 1; ring <= 3; ring += 1) {
-    const r = (OPEN.round * ring) / 3;
+  // The highest the long swell stands under the lens and round it, taken softly (a sum of powers), so that the height has no corner in it.
+  const SHARP = 5;
+  const stands: number[] = [swellHeight(x, z, seconds, LONG)];
+  for (let ring = 1; ring <= 2; ring += 1) {
+    const r = (OPEN.round * ring) / 2;
     for (let i = 0; i < 8; i += 1) {
-      const a = ((i + 0.5 * (ring % 2)) / 8) * 2 * Math.PI;
-      asks.push(swellHeight(x + Math.cos(a) * r, z + Math.sin(a) * r, seconds, SEA_SWELL.length) + OPEN.clears);
+      const a = ((i + 0.5 * ring) / 8) * 2 * Math.PI;
+      stands.push(swellHeight(x + Math.cos(a) * r, z + Math.sin(a) * r, seconds, LONG));
     }
   }
-  for (let r = OPEN.round + 8; r <= OPEN.reach; r += 8) {
-    asks.push(swellHeight(x + ux * r, z + uz * r, seconds, SEA_SWELL.length) + OPEN.clears - OPEN.gives * (r - OPEN.round));
-  }
-  let most = rode;
-  for (const ask of asks) most = Math.max(most, ask);
+  let most = -1e9;
+  for (const h of stands) most = Math.max(most, h);
   let sum = 0;
-  for (const ask of asks) sum += Math.exp(SHARP * (ask - most));
-  const own = openingLens(seconds);
-  return rode + (most + Math.log(sum) / SHARP - rode) * Math.min(1, 4 * own);
+  for (const h of stands) sum += Math.exp(SHARP * (h - most));
+  const ride = most + Math.log(sum / stands.length) / SHARP + OPEN.clears + OPEN.chop * CHOP * seaStands(seconds) * seaCalm(x, z);
+  // The higher of the ride and of the old move's height once it has settled, as softly; and the old move's own as the join comes (the
+  // sea is long behind the lens by then: it crosses the shore's edge at 13 s).
+  const over = smoother(OPEN.settles[0], OPEN.settles[1], seconds) * (settled - ride);
+  const rode = ride + Math.max(over, 0) + Math.log(1 + Math.exp(-SHARP * Math.abs(over))) / SHARP;
+  return settled + (rode - settled) * (1 - smoother(13.6, 15.6, seconds));
 }
 
 /** The lens of the film's first shot at `seconds` of the place: where it is and how it looks. The old move's own from OPEN.seconds on. */
@@ -257,12 +273,13 @@ export function openingCamera(seconds: number): Pose {
     roll += (metres / (OPEN.heave[0] as [number, number, number])[0]) * Math.sin((2 * Math.PI * seconds) / (period * 1.37) + phase + 1.3);
   }
   const position: Vec3 = [x, openingHeight(seconds), z];
-  const climbs = (openingHeight(seconds + 0.02) - openingHeight(seconds - 0.02)) / 0.04;
+  const mid = Math.max(seconds, 0.02);
+  const climbs = (openingHeight(mid + 0.02) - openingHeight(mid - 0.02)) / 0.04;
   const ease = smoother(OPEN.eases, J, seconds);
   const held = Math.atan2(OPEN.target[0] - x, z - OPEN.target[1]) / RAD;
   const yaw = held + (old.yaw - held) * ease;
-  const pitch = OPEN.pitch + OPEN.tilt * smoothed(0, OPEN.eases, seconds) + OPEN.noses * climbs * own;
-  const fov = OPEN.fov + OPEN.widens * smoothed(2, 9, seconds);
+  const pitch = OPEN.pitch + OPEN.tilt * smoothed(OPEN.tilting[0], OPEN.tilting[1], seconds) + OPEN.noses * climbs * own - OPEN.nods * (smoothed(OPEN.nodding[0], OPEN.nodding[1], seconds) - smoothed(OPEN.nodding[1], OPEN.nodding[2], seconds));
+  const fov = OPEN.fov + OPEN.widens * smoothed(OPEN.widening[0], OPEN.widening[1], seconds);
   return { ...looking(position, yaw, pitch + (old.pitch - pitch) * ease, fov + (old.fov - fov) * ease), roll: OPEN.roll * roll * own };
 }
 

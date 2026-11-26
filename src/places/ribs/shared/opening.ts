@@ -47,11 +47,12 @@ export function openingLight(seconds: number): number {
 }
 
 // ---- The staging of the restaged opening: the facts every folder keys off. World metres and seconds of the place (the film's first frame is 0). ----
-// The lens itself is `openingCamera(seconds)` and `approachEye(seconds)` in ../cameras: it opens at (229, 880), low behind the crest of a
-// heavy swell, looking north-north-west (yaw -19 degrees, 11.5 degrees up) on a 31 degree lens (52 degrees wide). It runs 40 degrees west of
-// north at 86 m/s and rides the long swell: over that first crest inside 0.4 s, down into the next trough by 1.1 s with the next swell
-// standing up before it, over that one near 2.5 s, and so on, slowing onto the old move (its own from 16 s) and crossing the shore's edge
-// at x = -207 at 13 s. It never comes nearer than 1.6 m to the water within 12 m of it.
+// The lens itself is `openingCamera(seconds)` and `approachEye(seconds)` in ../cameras: it opens at (229, 880), 4.7 m up behind the crest
+// of a heavy swell, looking north-north-west (yaw -19 degrees, 13 degrees up) on a 31 degree lens (52 degrees wide). It runs 40 degrees west
+// of north at 86 m/s and rides the long swell: over that first crest inside 0.2 s and up to 8.8 m at 0.8 s, its nose coming down, then
+// down to 0.2 m in the next trough at 2.3 s with the next swell standing up before it from 1.9 s, over that one by 2.8 s, and so on,
+// slowing onto the old move (its own from 16 s) and crossing the shore's edge at x = -207 at 13 s. It never comes nearer than 1.4 m to
+// the water within 12 m of it. The tip of L1 leaves the top of the frame at 0.7 s; R1's stays inside it until 9.5 s.
 // In the first frame L1 stands in the left half from the sea to the top, R1 leans in from the right edge, their tips 8 degrees apart.
 
 /**
