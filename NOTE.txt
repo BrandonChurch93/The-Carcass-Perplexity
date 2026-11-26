@@ -1,5 +1,7 @@
-2026-11-26 01:42 UTC
-work at 6ef971e on agent/reveal-place-2
-hb2 01:58: cloud now photo tiles (streaks, popcorn) on a cover map with fronts and shade; cyclone alpha loosened; lowlands dark teal; vapour from wisps plate. Not yet: sea glitter, lakewater, G13 stars check, uhd softness
-look-1.jpg = out/work/looks/hb2-reveal-4.png
-look-2.jpg = out/work/looks/hb2-reveal-2.png
+2026-11-26 02:15 UTC
+work at 487f1eb on agent/reveal-place-2
+V1 02:16: four keys, approved left, frame right (reveal-4 uhd draft, others hd draft)
+look-1.jpg = out/work/looks/v1-reveal-4.png
+look-2.jpg = out/work/looks/v1-reveal-3.png
+look-3.jpg = out/work/looks/v1-reveal-2.png
+look-4.jpg = out/work/looks/v1-reveal-1.png
