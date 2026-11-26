@@ -1,6 +1,7 @@
-2026-11-26 05:38 UTC
-work at d67ae14 on agent/marsh-life-3
-motion pass 1: marsh-3, marsh-2, marsh-0 after rings dark, fliers string, wader smaller
+2026-11-26 06:04 UTC
+work at b0435b4 on agent/marsh-life-3
+v1: hide creased with salt grains (marsh-3 uhd), stuck one with mud tile, keys 0 2 4 at hd draft
 look-1.jpg = out/work/cur-marsh-3.jpg
 look-2.jpg = out/work/cur-marsh-2.jpg
 look-3.jpg = out/work/cur-marsh-0.jpg
+look-4.jpg = out/work/cur-marsh-4.jpg
