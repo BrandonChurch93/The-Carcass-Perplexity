@@ -1,9 +1,12 @@
 // The herd: who each wader is and what it does. Where they stand is the lead's (shared/anchors.ts).
 import type { Rng } from '../../../core/rng';
-import { FAR_FLOCK, FEED_AT, NEAR_WADERS, RIM_WADER, RIM_WADER_DOWN_FROM, type Wader as Anchor } from '../shared/anchors';
+import { FAR_FLOCK, FEED_AT, NEAR_WADERS, RIM_WADER, RIM_WADER_DOWN_FROM, keySeconds, type Wader as Anchor } from '../shared/anchors';
 import { makeBuild, type Build, type Plan } from './animal';
 
 const RAD = Math.PI / 180;
+/** Staged: in the view of the rim the live one has its neck down over the dead one, as the picture has it, and a second after that picture it
+ *  begins to lift it and looks out over the shaft. */
+const RIM_LIFTS = keySeconds('breath-2') + 0.9;
 /** Staged: the middle one of the three in the channel is this far ahead of its plan, so that it is at the end of a stride, a hind leg far back, at 17.0 s. */
 const AHEAD = 0.14;
 
@@ -59,7 +62,7 @@ export function makeHerd(rng: Rng): Member[] {
     herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false, i < 3 ? 0.0125 : 0.022, OWN[i] ?? {}), plan: { ...planOf(a, UP[i] ?? [], rng), ahead: i === 1 ? AHEAD : 0 }, near: true });
   });
   // The one at the rim: it stands with its weight on three legs and looks down the shaft, then lets its neck hang.
-  herd.push({ build: makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.02, belly: 1.2, sway: -0.6, gaunt: 1.15 }), plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5]], rng, 1, 0.8), near: false });
+  herd.push({ build: makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.02, belly: 1.2, sway: -0.6, gaunt: 1.15 }), plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5], [RIM_LIFTS, RIM_LIFTS + 60]], rng, 1, 0.8), near: false });
   // The far flock: grains of rice on the shallows. No two do the same thing at the same time.
   const far = rng;
   for (let i = 0; i < FAR_FLOCK.count; i++) {

@@ -534,8 +534,13 @@ export interface CoatOptions {
   long: number;
   /** Where the coat is burned off, in the animal's metres, and how far (0 for none). */
   burn: [number, number, number, number];
+  /** The way along the body, down which the burn is narrow, and how much narrower less one. */
+  burnAxis?: V3;
+  burnNarrow?: number;
   /** The way the wind lays the coat, in the animal's frame, and how much. */
   wind: V3;
+  /** Where no clump is grown: the side an animal lies on, that no lens sees. */
+  skip?: (p: V3, n: V3) => boolean;
 }
 
 export interface Coat {
@@ -559,12 +564,21 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
   const card = new Float32Array(most * 4);
   const bones = new Float32Array(most * 4);
   let count = 0;
+  // How far a place is from the middle of the burn, in the burn's own reach: narrow along the body, long round it.
+  const burnAt = (p: V3 | number[]): number => {
+    if (o.burn[3] <= 0) return 9;
+    const r: V3 = [(p[0] as number) - o.burn[0], (p[1] as number) - o.burn[1], (p[2] as number) - o.burn[2]];
+    const ax = o.burnAxis ?? [0, 0, 0];
+    const along = (r[0] * ax[0] + r[1] * ax[1] + r[2] * ax[2]) * (o.burnNarrow ?? 0);
+    return Math.hypot(r[0] + ax[0] * along, r[1] + ax[1] * along, r[2] + ax[2] * along) / o.burn[3];
+  };
   for (let c = 0; c < o.clumps; c++) {
     const at = body.pick(rng);
     const base = LENGTH[at.kind] as number;
     if (base <= 0) continue;
+    if (o.skip && o.skip(at.p, at.n)) continue;
     // The face end of the head is bare; under the belly and inside the legs the coat hangs long.
-    const burned = o.burn[3] > 0 ? Math.hypot(at.p[0] - o.burn[0], at.p[1] - o.burn[1], at.p[2] - o.burn[2]) / o.burn[3] : 9;
+    const burned = burnAt(at.p);
     const singe = Math.min(1, Math.max(0, (burned - 0.75) / 0.8));
     if (burned < 0.75 || (burned < 1.0 && rng.next() < 0.5)) continue;
     // On the flanks of one that rests the coat hangs in long matted curtains to the floor.
@@ -618,7 +632,7 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
       // The ground stops a lock.
       if (e[1] < 0.012) e[1] = 0.012 + 0.01 * rng.next();
       if (o.burn[3] > 0) {
-        const over = Math.hypot(e[0] - o.burn[0], e[1] - o.burn[1], e[2] - o.burn[2]) / o.burn[3];
+        const over = burnAt(e);
         if (over < 0.8 && !spike) {
           const keep = 0.25 + 0.3 * rng.next();
           e[0] = p[0] + (e[0] - p[0]) * keep;
@@ -654,8 +668,8 @@ export function lockGeometry(segments: number): THREE.BufferGeometry {
   return g;
 }
 
-export function tendrilGeometry(): THREE.BufferGeometry {
-  const g = new THREE.CylinderGeometry(1, 1, 1, 7, 20, true);
+export function tendrilGeometry(round = 7, along = 20): THREE.BufferGeometry {
+  const g = new THREE.CylinderGeometry(1, 1, 1, round, along, true);
   g.translate(0, 0.5, 0);
   return g;
 }
