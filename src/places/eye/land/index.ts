@@ -311,7 +311,8 @@ export function create(ctx: Context): Piece {
   ];
   for (const [along, across, size] of near) {
     const [x, z] = onAxis(along, across);
-    put(x, z, size);
+    // The ones at the sides of the frame are blocks the size of a hut: the corners of the picture are theirs.
+    put(x, z, size > 2.2 && Math.abs(across) >= 12 ? size * 1.7 : size);
   }
   for (let i = 0; i < 5200; i++) {
     const b = rng.range(150, 216);

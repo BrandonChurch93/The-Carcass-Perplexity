@@ -157,7 +157,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     vec4 a = screeAt(p.xz) * w3.y;
     // Under the feet of a low eye the same broken stone is small: cobbles and pebbles, the plate laid six times finer.
     float lowEye = smoothstep(12.0, 4.0, cameraPosition.y);
-    float fine = mix(1.0, 1.0 - smoothstep(16.0, 40.0, length(cameraPosition - p)), lowEye) * w3.y * w3.y;
+    float fine = mix(1.0 - smoothstep(280.0, 430.0, length(cameraPosition - p)), 1.0 - smoothstep(16.0, 40.0, length(cameraPosition - p)), lowEye) * w3.y * w3.y;
     if (w3.x > 0.02) a += screeAt(p.zy + 11.0) * w3.x;
     if (w3.z > 0.02) a += screeAt(p.xy + 23.0) * w3.z;
     vec2 qr = vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) * 0.31 + 7.3;
@@ -172,7 +172,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     // Under the feet of a low eye the shore is pebbles and grit, each stone drawn for itself: small ones everywhere, a cobble among them here and there.
     float shingle = 0.0;
     vec3 pebbleBent = vec3(0.0);
-    if (fine > 0.0) {
+    if (fine > 0.02) {
       // The picture of the shore itself, eight metres of it at its own size: stones of every size in wet grit, with weed dried on them.
       // From the rim the same picture is laid two and a half times larger and turned: cobbles are boulders there, in beds of gravel.
       vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6, p.xz, lowEye) / vec2(8.0, 4.5);
@@ -180,7 +180,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
       vec3 sc = texture2D(tShoreP, su).rgb;
       float sh = texture2D(tShorePH, su).r;
       float es = 0.012;
-      vec2 lean = vec2(texture2D(tShorePH, su + vec2(es / 8.0, 0.0)).r - texture2D(tShorePH, su - vec2(es / 8.0, 0.0)).r, texture2D(tShorePH, su + vec2(0.0, es / 4.5)).r - texture2D(tShorePH, su - vec2(0.0, es / 4.5)).r);
+      vec2 lean = 2.0 * vec2(texture2D(tShorePH, su + vec2(es / 8.0, 0.0)).r - sh, texture2D(tShorePH, su + vec2(0.0, es / 4.5)).r - sh);
       // Its grit is finer gravel of the same stone, read from the picture again at its own size.
       vec3 grit = texture2D(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37).rgb;
       sc = mix(sc * (0.55 + 0.45 * grit / vec3(0.222, 0.161, 0.119)), sc, lowEye);
