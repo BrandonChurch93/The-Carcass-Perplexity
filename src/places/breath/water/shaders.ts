@@ -85,7 +85,7 @@ void main() {
   float drawn = 1.0 - 0.85 * tanh(3.0 * tip);
   mirror *= drawn;
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
-  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.98, 1.02, 0.95), 0.6 * smoothstep(0.04, 0.3, v.y)) * 1.3;
+  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.98, 1.02, 0.95), 0.6 * smoothstep(0.04, 0.3, v.y)) * mix(0.72, 1.3, smoothstep(0.06, 0.3, v.y));
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
   float rise = r.y / max(length(r.xz), 1e-4);
@@ -109,7 +109,7 @@ void main() {
   float path = depth / max(nv, 0.25);
   vec3 through = exp(-path * vec3(4.2, 1.9, 2.2));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = mix(vec3(0.18, 0.175, 0.15), vec3(0.2, 0.25, 0.205), smoothstep(0.2, 0.45, v.y)) * (0.6 + 2.9 * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = mix(vec3(0.18, 0.175, 0.15), vec3(0.2, 0.25, 0.205), smoothstep(0.2, 0.45, v.y)) * (0.3 + 5.7 * v.y * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 

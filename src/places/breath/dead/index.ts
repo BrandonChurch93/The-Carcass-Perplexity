@@ -106,7 +106,7 @@ export function create(ctx: Context): Piece {
     }
     const drawn = sn > 0 ? 1 : 1 - 0.3 * smooth(0.6, 0.25, t) * -sn;
     const out = 1.25 * deep * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9)) * drawn * (1 + 0.1 * smooth(0.3, -0.6, c)) + 0.014 * k * knuckle;
-    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.62 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
+    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.5 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
     // It lies rolled a little onto its belly's edge, so the spine is the high line of it and the flank faces away from the legs' side less.
     const rolled = up * Math.cos(ROLL) + out * Math.sin(ROLL);
     return [Math.max(rolled, -tall * 0.42), out * Math.cos(ROLL) - Math.max(up, 0) * Math.sin(ROLL), seen];
@@ -172,7 +172,7 @@ export function create(ctx: Context): Piece {
   const bones: [V3, V3, V3][] = [
     // Hind, upper: off the hip, the joint out on the rock toward the lens, the shank back along it; hind, under: beneath it.
     [[-0.02, 0.2, -0.4], [0.66, 0.5, -0.16], [1.3, 0.06, -0.78]],
-    [[0.0, 0.07, -0.46], [0.82, 0.075, -0.98], [1.42, 0.05, -1.66]],
+    [[0.0, 0.07, -0.46], [0.74, 0.075, -0.06], [1.2, 0.05, -1.0]],
     // Fore, upper: folded at the joint, the shank back under itself; fore, under: bent beneath the chest.
     [[-0.02, 0.17, 0.42], [0.9, 0.12, 0.06], [0.4, 0.055, -0.6]],
     [[0.0, 0.07, 0.48], [0.78, 0.075, 0.5], [0.94, 0.05, -0.3]],
