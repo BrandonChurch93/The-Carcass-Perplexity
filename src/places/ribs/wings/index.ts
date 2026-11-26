@@ -24,7 +24,7 @@ export const PARTS: readonly string[] = ['kite-wings'];
 const FEEDERS = 44;
 const FLIERS = 451;
 const SPECKS = 560;
-const PASSERS = 3;
+const PASSERS = 6;
 /** The run of the hero by the establishing camera: seconds it lasts, centred on the key, and its mean speed. */
 const RUN = { seconds: 9, speed: 3.7 };
 const LOW = 6;
@@ -399,7 +399,9 @@ export function create(ctx: Context): Piece {
       const z = COLONY.z + Math.sin(a) * r;
       const out = Math.atan2(Math.cos(a), Math.sin(a));
       const stands = scatter.next() < 0.22;
-      sitters.push({ x, y: perchY, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], perchY - colonyEye[1], z - colonyEye[2]) });
+      // A sheet reads only from its side: each stands across the colony lens's line of sight, a little turned.
+      const across = Math.atan2(z - colonyEye[2], -(x - colonyEye[0])) + scatter.range(-0.4, 0.4);
+      sitters.push({ x, y: perchY, z, yaw: across, size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], perchY - colonyEye[1], z - colonyEye[2]) });
     }
   }
   sitters.sort((a, b) => a.d - b.d);
@@ -420,7 +422,8 @@ export function create(ctx: Context): Piece {
     pose.rightZ = 0.1 * (1 - up) - 0.05 * up;
     pose.leftY = -hip;
     pose.rightY = -hip;
-    pose.pitch = -0.16 * (1 - up);
+    // Perched it sits upright, the folded sails pointing up past its head.
+    pose.pitch = s.stands ? 0 : 0.55 + 0.5 * s.seed;
     const look = held(t, 2.1 + 2.5 * s.seed, s.seed);
     const high = held(t, 5.3 + 3 * s.seed, s.seed + 0.25, 0.15);
     pose.sweep = (look - 0.5) * 2.4;
@@ -582,10 +585,11 @@ export function create(ctx: Context): Piece {
     const fx = dx / l;
     const fz = dz / l;
     // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
-    const cross: [number, number, number, number, number][] = [[46, -15, 13, 0.1, 15], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
+    // The first hangs over the upper ledge, coming in to land; three cross close and fast, soft with their own motion; two are far.
+    const cross: [number, number, number, number, number][] = [[36, -13, 15, 0, 3], [20, -15, 5, 0.05, 19], [17, 10, 0.5, 0.1, -20], [34, -20, 12, -0.1, 17], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
     for (let i = 0; i < PASSERS; i++) {
       const c = cross[i] as [number, number, number, number, number];
-      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: (i === 0 ? 1.25 : 1.0) * GROW, seed: scatter.next() });
+      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: (i === 0 ? 1.15 : i < 4 ? 1.15 : 1.0) * GROW, seed: scatter.next() });
     }
   }
   const skeinFlock = new Kites(kites, SKEIN + PASSERS);

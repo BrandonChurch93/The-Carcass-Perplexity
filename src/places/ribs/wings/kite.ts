@@ -84,7 +84,7 @@ void main() {
   vec3 n = normalize(face + vec3(0.0, 0.35, 0.0) + (across * -gx + vec3(0.0, 1.0, 0.0) * -gy) * 2.5);
   vec3 albedo = mix(pic, vec3(dot(pic, vec3(0.3333))) * vec3(1.0, 0.9, 0.8), 0.6) * mix(0.8, 1.05, vLook.y);
   // The colony's are pale: cream hide, the picture's own light and dark kept as its folds.
-  albedo = mix(albedo, vec3(0.68, 0.61, 0.5) * (0.6 + 1.0 * dot(pic, vec3(0.3333))), clamp(-vLook.x, 0.0, 1.0));
+  albedo = mix(albedo, vec3(0.84, 0.75, 0.6) * (0.2 + 1.5 * dot(pic, vec3(0.3333))), clamp(-vLook.x, 0.0, 1.0));
   vec3 col = rigShade(vWorld, n, v, albedo, 0.5, mix(0.55, 1.0, smoothstep(-0.5, 0.5, n.y)));
   // The sky comes through the stretched skin of a sail; the bones and the body stay dark against it.
   float skin = step(0.5, vPart) * step(vPart, 2.5) * smoothstep(0.08, 0.3, cover);
