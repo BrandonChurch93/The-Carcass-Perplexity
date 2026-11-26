@@ -1,0 +1,77 @@
+{
+  "round": 17,
+  "unit": "marsh",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-26 05:12 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the ripples around the legs and bodies in the red fluid, foreground and right",
+        "what": "the ripples are perfect bright white concentric rings of even width, like rings drawn on top. They do not bend the reflection or the colour of the fluid, and they read as graphics at normal speed",
+        "fix": "make the ripples displace the surface so they show as distorted reflection and shading, not as added white rings. Break up their spacing and let them fade unevenly"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the grey rocks at left and the grey masses in the foreground and at right (crops x0-17/y25-42, x83-100/y25-42, x42-58/y58-75)",
+        "what": "one grey material everywhere, with a clay or plastic look. The procedural texture smears into stretched streaks across the slopes at native size",
+        "fix": "give the rock real mineral variation and crust in colour and roughness, and reproject or tri-planar the textures so nothing stretches on steep faces"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the salt crust over the pools, middle ground and right foreground (crops x0-17/y58-75, x83-100/y58-75, x83-100/y25-42)",
+        "what": "the salt patches read as flat white decals with a shiny streaked pattern and the same breakup over and over. They have no thickness, no raised edge and no crust where they meet the fluid",
+        "fix": "model the crust with real height and rims at the water edge, vary the size of the plates, and cut back the specular smear"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the foreground animal where its body enters the fluid",
+        "what": "the body meets the crust and the fluid with no meniscus, no ripple, no wet darkening and no salt on its skin, so it looks pasted into the ground. Its skin is a uniform dry grey",
+        "fix": "add a wet line and displacement where it enters the fluid, darken and wet the lower body, and crust some salt on it"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the comb of tusk or whisker spikes on the foreground animal's snout",
+        "what": "the spikes are near-identical, evenly spaced and stiffly parallel, which looks like a procedural instance",
+        "fix": "vary their length, curvature, spacing and wear, and add dirt or salt near the tips"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the claws dipping into the fluid (crop x0-17/y58-75)",
+        "what": "the claws carry a thin bright outline halo, an edge artefact. Where the tips meet the fluid there is no meniscus or ripple, so they look as if they hover in or clip through it",
+        "fix": "fix the edge and alpha filtering on the claws, and add contact ripples or a wet line where each tip enters"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the palm trunks at left (crop x0-17/y25-42)",
+        "what": "the trunk silhouettes are jagged and noisy from the displacement, and the rust-coloured blotches repeat like a tiled pattern",
+        "fix": "smooth the silhouette displacement, and break the tiling with a second, larger-scale texture"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-04.png",
+        "where": "the dark particles in the air near the left grove of trees, upper centre",
+        "what": "the airborne debris reads as scattered dark dots with no motion blur and no light on them",
+        "fix": "add motion blur and size variation and light the particles with the haze, or remove them"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03.png",
+        "where": "the right-hand animal (crop x83-100/y58-75)",
+        "what": "the fur and skin go soft and smeary, and the texture loses all detail compared with its neighbours at a similar depth",
+        "fix": "check the texture resolution and mip level on this asset so its sharpness matches its depth of field"
+      }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 # Material pictures of the Eye
 
-The working pictures of the Eye, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 13 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
+The working pictures of the Eye, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 17 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
 How to read them: the colour picture is sRGB. For a tile, in the data picture `<name>-nh.png` red and green are the slope on x and y (0.5 is level) and blue is height, taken from the picture's own light and dark. `metres` in `materials.json` is the real width one repeat of a tile, or the whole of a plate, stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
 
@@ -100,7 +100,13 @@ Prompt or command: the prompt below, then `node assets-src/materials/make-materi
 A photograph taken on a clear, windless evening from a slope above the shore of a round mountain lake that lies in a socket of cliffs, looking across the lake. Only the far side is in the picture, everything beyond the middle of the lake: a long curving wall of pale limestone cliffs about 200 metres tall and two kilometres away runs the whole width of the frame, in thick level beds of cream, buff and gold, broken into terraces and buttresses, with caves and dark alcoves along some beds and fans of pale scree at its foot. The low sun from the left lights the left and middle of the wall warm gold; toward the right the wall turns into cool blue shade and rises into a great overhanging brow of rock. A thin line of mist lies at the foot of the cliffs along the far shore. The sky is cloudless: pale gold low down, deepening to soft blue. The top of the cliffs lies one third of the way down the frame and the far shore line lies at the middle of the frame. Below the shore line there is only still dark blue water that mirrors the cliffs: no near shore, no rocks, no plants. This is a background plate for a film: only the far distance, to stand behind built scenery. The first reference image is the place as the film sees it: keep the forms of its far distance, its light, its weather and its colours, and leave out everything near. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. The horizon is exactly level, straight from the left edge to the right edge. Output one wide landscape image, sixteen units wide and nine tall. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No animals, no birds.
 ```
 
-Takes: 1 made, take 1 kept.
+The file in `public/` is the larger copy, 3344 x 1882: the generated picture is the parent, cut into 3 x 3 windows, each made again at full resolution by the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) from its enlarged crop with `references/drafts/working/real/plate-crater-1.jpg` as the standard, and the windows are fitted to the parent, tone-matched and joined by `python3 assets-src/materials/enlarge-plate.py join eye far` (the method of `assets-src/reveal/maps/enlarge-maps.py`). MEASURED (`src/big/far-join.json`): 6 of 6 windows used were fitted, moved at most 19.92 px at a corner. Not used: the three windows of the bottom row show only water below the reflections; as with far-low they are not made, and there the plate is the enlarged parent. The prompt of a window:
+
+```
+The first reference image is a blurred, low-resolution photograph: one part of a wide view across a round mountain lake on a clear, windless evening, taken from a slope above the near shore. In the whole view a wall of pale limestone cliffs about 200 metres tall and two kilometres away runs along the far shore, lit warm gold by low sun from the left and in cool blue shade under an overhanging brow on the right, under a cloudless sky, with a thin line of mist at its foot, above still dark blue water that mirrors it. The picture shows only the part that is there. Where it shows sky, the result is the same empty sky. Where it shows water, the result is the same water with the same reflections. Where it shows the cliffs, the result is the same cliffs. Make the same photograph at full resolution. Keep every cliff, ledge, cave, slope, shadow, reflection and colour exactly where it is and at the same size: add nothing new and move nothing. Add what a real camera records at this distance and the first image lacks: bedding planes and joints in the limestone, small ledges with scree, dark seepage streaks that follow the cracks, broken strata inside the caves, the grain of the scree fans, fine ripples on the water. The second reference image is a real photograph: the standard for how a camera records real rock, with real grain and micro detail and no painted or generated look. Photographic, sharp from edge to edge. No text, no logo, no border, no people, no animals, no birds.
+```
+
+Takes: 1 made, take 1 kept. The larger copy: 9 windows, 1 take each, 6 kept.
 Why this one: the far rim of the socket, sunlit, for the establishing frame.
 Date: 2026-11-26
 
@@ -336,6 +342,86 @@ The reference image shows one subject on a black background. Make its relief map
 
 Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: a drinker from behind at three-quarter and a little above, as the last detail sees the backs and necks in front of it: the square view from behind could only give a rump and a post (asked for by `eye_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/eye/mat/matfield.jpg` and `public/assets/eye/mat/matfield-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/eye/mat/src/matfield.png`, the generated picture, and `assets-src/eye/mat/src/matfield-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/6-eye/eye-0-establishing.jpg`, `references/drafts/working/real/orb-prismatic.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs eye`.
+
+```
+The amber shallows of a mountain lake as seen from high above, a piece 240 metres wide and 135 metres tall, under perfectly clear, still water with no ripples and no reflections. Long patches and streaks of rust, orange and gold growth lie on the bed, all drawn out one way, toward the top edge of the picture, torn and ragged, in every width from a hand to twenty metres, with gaps of open water over pale silt between them: the gaps are as wide as the patches and nowhere regular. Along the bottom edge the growth thins out to bare wet pale silt and gravel. Toward the top edge the patches close up, the colour deepens to dark rust and brown, and the water over them darkens. No stripes of one width, no even spacing. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.
+```
+
+The prompt of the relief:
+
+```
+The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the amber shallows of the establishing picture from high: patches and streaks with open water between, where the built mats read as tiger stripes (asked for by `eye_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/eye/mat/matdark.jpg` and `public/assets/eye/mat/matdark-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/eye/mat/src/matdark.png`, the generated picture, and `assets-src/eye/mat/src/matdark-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/6-eye/eye-2-the-iris-amber-mats.jpg`, `references/drafts/working/real/plate-terrace-2.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs eye`.
+
+```
+The bed of the shallow, perfectly clear margin of a lake, a piece 12 metres wide and 12 metres tall, seen with no ripples and no reflections. A dense tangle of fine gold, amber and rust filaments, strands over strands, thick as rope in places and thin as hair in others, all combed roughly toward the top of the picture, the upper strands bright and the ones beneath them dimmer. They lie over dark clear water and dark brown silt, not over pale rock: every gap between the strands is deep brown to black. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.
+```
+
+The prompt of the relief:
+
+```
+The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the tangle of strands of the weed detail over dark water, where the built strands are thin pale swirls on brown (asked for by `eye_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/eye/mat/shaftwall.jpg` and `public/assets/eye/mat/shaftwall-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/eye/mat/src/shaftwall.png`, the generated picture, and `assets-src/eye/mat/src/shaftwall-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg`, `references/drafts/working/real/plate-crater-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs eye`.
+
+```
+The sheer rock wall of a flooded shaft seen square on through perfectly clear water, a face 30 metres wide and 17 metres tall. Pale limestone in thick level beds, with ledges, rounded overhangs, pockets and broken edges, a little pale silt lying on the ledges and a few thin strands of amber growth hanging from the uppermost lip. The water tints the rock more with depth and that is the only change of brightness in the picture: along the top edge the rock is pale cream and clear, in the middle it is blue-green, and toward the bottom edge it is lost in blue-black. The surface fills the whole frame edge to edge, square on, with no background showing. Flat, even, shadowless light from the front, so that no side is brighter than another: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.
+```
+
+The prompt of the relief:
+
+```
+The reference image is a photograph of a rock face seen square on. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. White is what stands furthest out toward the viewer and black is what lies deepest in. Cracks, joints, caves, hollows and undercut bands are dark; ledges, ribs, bulges and the noses of blocks are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the wall of the shaft under water at the edge where the floor stops: pale at the lip and lost in blue-black below (asked for by `eye_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/eye/mat/shoreplate.jpg` and `public/assets/eye/mat/shoreplate-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/eye/mat/src/shoreplate.png`, the generated picture, and `assets-src/eye/mat/src/shoreplate-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg`, `references/drafts/working/real/plate-terrace-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs eye`.
+
+```
+The wet edge of a lake shore, a piece 8 metres wide and 4.5 metres tall. Rounded cobbles and pebbles of pale grey and buff limestone in every size from a pea to a loaf, most of them small, bedded in dark wet silt and coarse grit, some half sunk, some lying on others, with a few torn scraps of orange and rust growth stranded among them and a film of water in the lowest hollows. The stones are packed close in some parts and sparse in others. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.
+```
+
+The prompt of the relief:
+
+```
+The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the wet shore at the drinkers: cobbles and pebbles of many sizes in dark silt, where the built pebbles read as beans on flat grey (asked for by `eye_owner_3`).
 Date: 2026-11-26
 
 ## `public/assets/eye/mat/materials.json`

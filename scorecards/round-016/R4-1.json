@@ -1,0 +1,77 @@
+{
+  "round": 16,
+  "unit": "ribs",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-26 05:17 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "the wave arriving from frame 2353 to the end",
+        "what": "the wave never comes in as a wall of water with weight. It is a bank of white spray that swells and blanks the frame. The sea in the foreground never rises, the near rocks are never hit or swamped, and the shot ends on an almost empty white-grey frame (2506)",
+        "fix": "build a water body that rises and breaks with real mass and runs over the near rocks and up the stacks, then let the spray follow it. End before the frame washes out, or on the water pulling back"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the creature on the cliff face, frames 1983 to 2294, and set-A-08.png frames 2081 to 2092",
+        "what": "the creature holds one pose for the whole push-in. It never shifts its weight, breathes, moves its head or grips, so it reads as a sculpted model stuck to the rock. The move also ends on a dark, crowded close view of rock and creature, which is a weak picture",
+        "fix": "add an idle performance: breathing, the head turning, a limb resetting its grip, the tail moving. End the push-in on a clearer composition with the creature lit apart from the rock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the sea surface from frame 757 to 1041, carrying into set-A-02.png",
+        "what": "over a few seconds the open swell turns into a flat, mirror-like sheet with no waves, as if the water material were swapped mid-shot. Dark blotches on the surface then appear and vanish (set-A-02 frames 1078 to 1150)",
+        "fix": "move from deep swell to shallows gradually with the depth: let the waves shorten and wash, keep a little chop and foam, and remove the blotches that pop in and out"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the foreground birds in flight and the grey face stack behind them, frames 1517 to 1651, and set-A-10.png",
+        "what": "the big pale birds in the foreground look semi-transparent and hold almost the same raised-wing pose from frame to frame, so they seem to hang rather than fly. The grey stack behind them looks like a translucent flat card, and the birds and the cliff show through its edge",
+        "fix": "make the birds and the stack opaque and sort them properly by depth. Give each bird a full wingbeat that is out of step with the others, and let them travel through the frame"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the nesting colony and the streaks of falling water down the cliff",
+        "what": "the colony is packed but shows almost no movement between frames: no heads turning, no wings flicking. The white streaks of water down the cliff read as painted texture, not falling water",
+        "fix": "add scattered, random idle motion to the colony and make the runoff real, flowing water that catches light and splashes on the ledges"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the bed of pebbles and shingle in the middle ground, frames 1241 to 1252, and set-A-02.png frames 1186 to 1295",
+        "what": "the pebble bed looks smeared and streaky, and in the wider sheet it seems to appear and grow into view rather than be passed by the camera. Its fine detail swims from frame to frame",
+        "fix": "fix the stones as real geometry that doesn't stream at a distance. Raise the sampling or the level of detail on the gravel to stop it swimming"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the three wading birds, frames 1652 to 1866, and set-A-09.png",
+        "what": "the big wader keeps its head down in one pose for most of the shot, and the two birds behind barely change pose. Only the ripples around their feet are alive, so the group reads as posed models, not birds feeding",
+        "fix": "give each bird its own feeding cycle, out of step with the others: probing, lifting its head, taking a step with the weight shifting first, shaking water off. Make the far birds walk"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-06.png",
+        "where": "the right-hand stack seen through the spray, frames 2391 to 2429",
+        "what": "the stack shows through the spray with a hard, ghosted edge, as if spray and rock were layered without depth",
+        "fix": "make the spray thicken properly with depth so the stack fades behind it smoothly"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "the giant stacks in the background, frames 0 to 662",
+        "what": "the background holds as a static, hazy picture. Little moves in the air or the cloud apart from the birds, so the distance feels like a matte painting",
+        "fix": "let cloud drift slowly at its own height, and add mist moving around the bases of the stacks"
+      }
+    ]
+  }
+}
