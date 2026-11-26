@@ -800,7 +800,7 @@ export function create(ctx: Context): Piece {
     clearOfLenses(f, low ? 60 : CLEAR);
     fliers.push(f);
   }
-  const airSheet = figureMaterials(ctx, FLIERS, LEVELS.pool, 0.45, true);
+  const airSheet = figureMaterials(ctx, FLIERS, LEVELS.pool, 0.6, true);
   const flockFigures = new Figures(airSheet, FLIERS_N + SPECKS, {}, 6, 4);
   const spot: Spot = { x: 0, y: 0, z: 0, yaw: 0, roll: 0 };
   /** One in the air into `fig`: where it is, the way it goes (metres a second), how hard it strokes (0 a glide, 1 full), at its own phase. */
@@ -1028,7 +1028,7 @@ export function create(ctx: Context): Piece {
   // ---- The stream of the approach: bodies that leave a ledge of the near blade one after another, cross to the gap and wheel there; and the many that turn round the tips ----
   const STREAM = 110;
   const SWIRL = 260;
-  const airBodies = bodyMaterials(ctx, LEVELS.pool, 0.38, 'fliers', FLIER_FLANK);
+  const airBodies = bodyMaterials(ctx, LEVELS.pool, 0.5, 'fliers', FLIER_FLANK);
   const LEAD = 126;
   /** Of the leaders, those that stand in the first frame itself. */
   const FIRST = 14;
@@ -1131,11 +1131,11 @@ export function create(ctx: Context): Piece {
   const leavers: Leaver[] = Array.from({ length: FLEEING }, (_, i) => {
     const staged = i < 6;
     // Where it is at the bore's event if it has left by then: six staged across the middle of the bore's frame, the rest by the flats.
-    const far = staged ? ([28, 22, 34, 25, 21, 31][i] as number) : 0;
-    const off = staged ? ([-12, -6.5, -2, 3.5, 8, 13][i] as number) + 3 : 0;
+    const far = staged ? ([37, 30, 44, 33, 28, 40][i] as number) : 0;
+    const off = staged ? ([-15, -8, -2.5, 4.5, 10, 16.5][i] as number) + 2 : 0;
     const side = (i - (FLEEING - 1) / 2) / FLEEING;
-    const vx = staged ? -gateRight[0] * 10 - gateAhead[0] * 12 : -14;
-    const vz = staged ? -gateRight[1] * 10 - gateAhead[1] * 12 : 12;
+    const vx = staged ? -gateRight[0] * 14 - gateAhead[0] * 6.5 : -14;
+    const vz = staged ? -gateRight[1] * 14 - gateAhead[1] * 6.5 : 12;
     const speed = Math.hypot(vx, vz);
     const l: Leaver = {
       x: staged ? gateEye[0] + gateAhead[0] * far + gateRight[0] * off : flee[0] + side * 42 + 3 * Math.sin(i * 2.4),
@@ -1421,13 +1421,19 @@ export function create(ctx: Context): Piece {
       if (lp === null) fleet.commit();
       // While the lens is far out at sea none of them is a pixel wide: not drawn.
       escort.mesh.visible = lp === null && lens === null;
+      // The crowd over the colony is drawn where a lens is near enough to tell one of it from the specks of the flock.
+      const off = Math.hypot(eye[0] - COLONY.x, eye[2] - COLONY.z);
+      const crowded = off < 540;
+      // They come up out of nothing as the lens nears, so that none is seen to start.
+      const grown = smooth(540, 430, off);
+      escort.draw(SKEIN + PASSERS + LOW + (crowded ? ROOK : 0));
       if (escort.mesh.visible) {
-        for (let i = 0; i < ROOK; i++) {
+        for (let i = 0; crowded && i < ROOK; i++) {
           const f = rooks[i] as Flier;
           flierPlace(f, seconds - 0.05, was);
           flierPlace(f, seconds + 0.05, next);
           flierPlace(f, seconds, spot);
-          borne(f.size, f.seed, seconds, 0);
+          borne(f.size * grown, f.seed, seconds, 0);
           escort.put(SKEIN + PASSERS + LOW + i, F);
         }
         escort.commit();
