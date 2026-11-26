@@ -3,6 +3,7 @@ import { BEASTS, F, K1_AT, K1_DIR, R, T0, UNIT, WALLOW_TIME, bearingDir, keyTime
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
+import { great, lying, young } from './act';
 import { newDrive, walk, type Build, type Plan } from './animal';
 import { Beast } from './body';
 import { mudWallow } from '../dead/mud';
@@ -25,7 +26,7 @@ const SEEP_SPAN: [number, number] = SEEP_SHOT ? [secondsInPlace(UNIT, SEEP_SHOT.
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('wallowers');
-  const herd: { beast: Beast; plan: Plan; onBank: boolean; sunk: boolean; floor: number; paw: number }[] = [];
+  const herd: { beast: Beast; plan: Plan; onBank: boolean; sunk: boolean; floor: number; paw: number; wet: number }[] = [];
   // TEMPORARY, until the anchors give it: where the lens of the wallowers stands.
   const lens = rel(27.7, 3);
   // When each has its head up. The first three are the ones by the lens of the wallowers: heads down in the mud at its key, as in the approved picture, and up before and after it.
@@ -58,6 +59,7 @@ export function create(ctx: Context): Piece {
       sunk: sink > 0.75,
       floor: sink <= 0.15 ? Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), 0) + 0.03 : -1e9,
       paw: herd.length === 2 ? ((lens[0] - x) * -dir[1] + (lens[1] - z) * dir[0] > 0 ? 3 : 1) : -1,
+      wet,
     });
   };
   for (const b of BEASTS) {
@@ -100,6 +102,11 @@ export function create(ctx: Context): Piece {
 
   const discs = ctx.rig.contactDiscs(herd.length * DISCS);
   const drive = newDrive();
+  // STAGED for the shot of the wallowers: the three by its lens are acted (act.ts) while the camera stands in that shot, and walk with the herd in every other.
+  // +1 where `to` lies to the left of the animal, -1 to its right.
+  const leftOf = (h: (typeof herd)[number], to: [number, number]): number => ((to[0] - h.plan.at[0]) * -h.plan.dir[1] + (to[1] - h.plan.at[1]) * h.plan.dir[0] < 0 ? 1 : -1);
+  const cast = herd.slice(0, 3).map((h) => leftOf(h, lens));
+  const toGreat = herd.length > 1 ? leftOf(herd[1] as (typeof herd)[number], (herd[0] as (typeof herd)[number]).plan.at) : 1;
 
   return {
     setTime: (seconds) => {
@@ -110,7 +117,15 @@ export function create(ctx: Context): Piece {
         const on = !(cleared && OFF_SET.includes(i)) && !(seep && bySeep[i]) && (i !== seepWader || seep);
         h.beast.mesh.visible = on;
         h.beast.feelers.visible = on;
-        const driven = walk(h.plan, h.beast.b, seconds, drive);
+        const acted = cleared && i < 3;
+        const t = seconds - WALLOW_TIME;
+        let soaked = h.wet;
+        if (acted && i === 0) great(h.plan, h.beast.b, seconds, t, cast[0] as number, drive);
+        else if (acted && i === 1) young(h.plan, h.beast.b, seconds, t, toGreat, drive);
+        // The flank that comes up out of the brine comes up soaked.
+        else if (acted) soaked += 0.5 * h.beast.b.k * lying(h.plan, h.beast.b, seconds, t, cast[2] as number, drive);
+        const driven = acted ? drive : walk(h.plan, h.beast.b, seconds, drive);
+        if (i < 3) (h.beast.material.uniforms.uWet as { value: number }).value = soaked;
         driven.floor = h.floor;
         // STAGED for the lens of the wallowers: the great one's feelers are turned down and spread into the mud like the fingers of a hand, as the approved picture has them.
         if (i === 0) driven.splay += 0.3;
@@ -123,7 +138,7 @@ export function create(ctx: Context): Piece {
           driven.roll += 0.09 * Math.sin(seconds * 1.05 + seed * 7) + 0.04 * Math.sin(seconds * 2.3 + seed);
           driven.bob += h.beast.b.k * (0.045 * Math.sin(seconds * 1.6 + seed * 9) + 0.02 * Math.sin(seconds * 2.9 + seed * 2));
         }
-        if (h.paw >= 0) {
+        if (h.paw >= 0 && !acted) {
           // STAGED for the lens of the wallowers: the one that lies in the brine before it.
           // It is a low wet hump: it rolls and breathes, and holds its head at the top of the brine, the feelers spread on it.
           const seed = h.beast.b.seed;
