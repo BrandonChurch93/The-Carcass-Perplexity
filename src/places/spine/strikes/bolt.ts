@@ -33,8 +33,8 @@ function crooked(rng: Rng, from: Vec3, to: Vec3, depth: number, wander: number):
       const span = sub(b, a);
       const l = len(span);
       const k = rng.range(0.32, 0.68);
-      // A real channel wanders most at the size of tens of metres and stays crooked below: the share falls slowly with depth.
-      const push = l * wander * (d < 2 ? 1 : 0.8);
+      // A channel wanders at the size of hundreds of metres and is sharply kinked at the size of metres, which is what a long lens sees of it.
+      const push = l * wander * (d < 2 ? 1 : d < 4 ? 0.8 : 1.35);
       const m: Vec3 = [a[0] + span[0] * k + rng.range(-1, 1) * push, a[1] + span[1] * k + rng.range(-0.45, 0.45) * push, a[2] + span[2] * k + rng.range(-1, 1) * push];
       next.push(m, b);
     }
@@ -47,12 +47,14 @@ function crooked(rng: Rng, from: Vec3, to: Vec3, depth: number, wander: number):
 export function figure(rng: Rng, site: StrikeSite): Line[] {
   const drift: Vec3 = site.lean ?? [rng.range(-200, 260), 0, -rng.range(260, 620)];
   const top: Vec3 = [site.to[0] + drift[0], site.to[1] + site.rise, site.to[2] + drift[2]];
-  const main = crooked(rng, top, site.to, 7, 0.17);
+  // How finely it is broken: a channel a long lens watches from close is crooked down to a metre, the others to some nine metres.
+  const fine = site.rise < 500 ? 2 : 0;
+  const main = crooked(rng, top, site.to, 7 + fine, 0.17);
   const lines: Line[] = [{ points: main, width: 1, gain: 1, from: 0, to: 1, branch: 0 }];
   const fork = (path: Vec3[], at: number, share: number, level: number, reach: number): void => {
     const i = Math.min(path.length - 3, Math.max(1, Math.floor(at * (path.length - 1))));
     const a = path[i] as Vec3;
-    const ahead = sub(path[Math.min(path.length - 1, i + 6)] as Vec3, a);
+    const ahead = sub(path[Math.min(path.length - 1, i + (6 << fine))] as Vec3, a);
     const l = len(ahead) || 1;
     // A branch leaves at 20 to 55 degrees from the way the channel goes, and always downward.
     const side: Vec3 = [rng.range(-1, 1), rng.range(-0.25, 0.1), rng.range(-1, 1)];
@@ -61,7 +63,7 @@ export function figure(rng: Rng, site: StrikeSite): Line[] {
     const dir: Vec3 = [ahead[0] / l + (side[0] / sl) * lean, Math.min(-0.25, ahead[1] / l + (side[1] / sl) * lean), ahead[2] / l + (side[2] / sl) * lean];
     const dl = len(dir);
     const end = add(a, dir, reach / dl);
-    const path2 = crooked(rng, a, end, level === 0 ? 5 : 4, 0.2);
+    const path2 = crooked(rng, a, end, (level === 0 ? 5 : 4) + fine, 0.2);
     lines.push({ points: path2, width: 0.5 * share + 0.12, gain: 0.5 * share, from: at, to: Math.min(1, at + (reach / site.rise) * 0.9), branch: 1 });
     if (level < 2) {
       const twigs = level === 0 ? (1 + rng.int(3)) : (0 + rng.int(2));
@@ -76,11 +78,46 @@ export function figure(rng: Rng, site: StrikeSite): Line[] {
   if (site.branch) {
     // The bolt forks to a second spire: a branch that comes to ground, thinner and fainter than the main channel.
     const i = Math.floor(0.42 * (main.length - 1));
-    const path2 = crooked(rng, main[i] as Vec3, site.branch, 6, 0.16);
+    const path2 = crooked(rng, main[i] as Vec3, site.branch, 6 + fine, 0.16);
     lines.push({ points: path2, width: 0.25, gain: 0.08, from: 0.42, to: 1, branch: 0 });
   }
   // Fine side branches near the tip: short hairs off the last hundred metres.
   for (let h = 0; h < 5; h++) fork(main, rng.range(0.82, 0.985), rng.range(0.15, 0.3), 2, rng.range(18, 60));
+  return lines.concat(streamers(rng, site));
+}
+
+/** The channel a later stroke takes: it leaves the same cloud and lands on the same tip by another way, and of the first stroke's
+ * branches it finds only the lowest again, faintly. */
+export function restruck(rng: Rng, site: StrikeSite, first: Line[]): Line[] {
+  const main = (first[0] as Line).points;
+  // It keeps the first stroke's way through its upper half, where the air is still hot, and leaves it lower down.
+  const at = Math.floor(main.length * rng.range(0.35, 0.55));
+  const kept = main.slice(0, at + 1);
+  const fine = site.rise < 500 ? 2 : 0;
+  const fresh = crooked(rng, main[at] as Vec3, site.to, 6 + fine, 0.2);
+  const path = kept.concat(fresh.slice(1));
+  const lines: Line[] = [{ points: path, width: 0.85, gain: 1, from: 0, to: 1, branch: 0 }];
+  for (let h = 0; h < 3; h++) {
+    const i = Math.min(path.length - 3, Math.floor(rng.range(0.55, 0.97) * (path.length - 1)));
+    const a = path[i] as Vec3;
+    const reach = rng.range(20, 70);
+    const dir: Vec3 = [rng.range(-1, 1), rng.range(-0.9, -0.3), rng.range(-1, 1)];
+    lines.push({ points: crooked(rng, a, add(a, dir, reach / len(dir)), 4 + fine, 0.2), width: 0.3, gain: 0.3, from: i / (path.length - 1), to: 1, branch: 1 });
+  }
+  return lines.concat(streamers(rng, site));
+}
+
+/** Where the channel lands: short threads that leave the tip upward to meet it. They are the contact flash, a few metres of it. */
+function streamers(rng: Rng, site: StrikeSite): Line[] {
+  const lines: Line[] = [];
+  for (let k = 0; k < 5; k++) {
+    const az = rng.range(0, Math.PI * 2);
+    const up = rng.range(0.15, 1);
+    const flat = Math.sqrt(1 - up * up);
+    const reach = rng.range(1.5, 5.5);
+    const end: Vec3 = [site.to[0] + Math.cos(az) * flat * reach, site.to[1] + up * reach, site.to[2] + Math.sin(az) * flat * reach];
+    lines.push({ points: crooked(rng, site.to, end, 4, 0.3), width: 0.3, gain: 0.45, from: 1, to: 1, branch: 1 });
+  }
   return lines;
 }
 
@@ -93,16 +130,9 @@ export interface Strokes {
   fore: number | null;
 }
 
-/** The frames after a strike's own on which it strikes again, by which strike it is: no two keep the same time. The gaps are uneven and
- * never under two frames, so that a dark frame stands between any two strokes, and all of it is over inside a quarter of a second. */
-const RESTRIKES: readonly (readonly number[])[] = [
-  [3, 5, 10],
-  [3, 7],
-  [2, 4, 7, 10],
-  [3, 5, 9],
-  [4, 6],
-  [2, 6, 8],
-];
+/** The frames after a strike's own on which it strikes again, by which strike it is. One each, three to five frames on: more
+ * of them strobed, and between the two the land and the cloud keep a sinking share of the light (kept), so no frame is dark. */
+const RESTRIKES: readonly (readonly number[])[] = [[4], [3], [5], [3], [4], [3]];
 
 export function strokes(rng: Rng, which = 0): Strokes {
   // The first stroke is the flash; each restrike is weaker than the one before it, by an uneven share.
@@ -153,7 +183,7 @@ const kept = (s: Strokes, age: number, tau: number): number => {
 
 /** How bright the main channel is, the branches are, and the glow the cloud keeps, at seconds since the strike's frame. `leader` is 1: a
  * camera does not see the leader, and nothing is drawn of the channel before its first stroke. */
-export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number; cloud: number; held: number; glow: number } {
+export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number; cloud: number; held: number; glow: number; channel: number } {
   let main = current(age);
   for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(age - (s.at[i] as number));
   // What the cloud holds after each stroke: a dull glow that sinks in an eighth of a second. Nothing of it is in the channel.
@@ -162,7 +192,13 @@ export function envelope(s: Strokes, age: number): { main: number; branch: numbe
     const t = age - (s.at[i] as number);
     if (t > 0) after += 0.05 * (s.share[i] as number) * (1 - Math.exp(-t / 0.004)) * Math.exp(-t / 0.12);
   }
-  return { main, branch: pulse(age) + current(age), after, leader: 1, cloud: s.fore === null ? 0 : inner(age - s.fore), held: kept(s, age, 0.045), glow: kept(s, age, 0.11) };
+  // What is seen of the channel: each stroke whole for its frame, then the current it leaves, a fifth of it and sinking fast.
+  let channel = 0;
+  for (let i = 0; i < s.at.length; i++) {
+    const t = age - (s.at[i] as number);
+    channel = Math.max(channel, (i === 0 ? 1 : Math.max(0.7, s.share[i] as number)) * (pulse(t) + (t > 0.01 ? 0.2 * ramp(0.01, 0.016, t) * Math.exp(-(t - 0.016) / 0.012) * (1 - ramp(0.03, 0.045, t)) : 0)));
+  }
+  return { main, branch: pulse(age) + (age > 0.01 ? 0.2 * ramp(0.01, 0.016, age) * Math.exp(-(age - 0.016) / 0.012) * (1 - ramp(0.03, 0.045, age)) : 0), after, leader: 1, cloud: s.fore === null ? 0 : inner(age - s.fore), held: kept(s, age, 0.05), glow: kept(s, age, 0.11), channel };
 }
 
 /** Which return stroke the channel last carried at these seconds since the strike's frame: each takes a way of its own. */
