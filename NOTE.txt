@@ -1,0 +1,7 @@
+2026-11-26 11:25 UTC
+work at 3235e8f on agent/film-ending
+V1 sheets and stills: dusk to night, the beat, last frame. Wrong: night bones read as a white line drawing on black land, Heart is a small spark with thin radial lines, sea is one flat blue
+look-1.jpg = out/work/sheets/ending.png
+look-2.jpg = out/work/sheets/beat.png
+look-3.jpg = out/work/pair.png
+look-4.jpg = out/work/s400.png
