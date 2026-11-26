@@ -25,7 +25,7 @@ void main() {
   vec3 p = position;
   // A leg or a strand a long way off is thinner than a pixel and would flicker: it is never drawn thinner than a pixel and a half.
   float far = length(cameraPosition - p);
-  float least = aLook.x > 1.5 && aLook.x < 2.5 ? 0.4 : 0.8;
+  float least = aLook.x > 1.5 && aLook.x < 2.5 ? 0.7 : 0.8;
   p += n * max(0.0, least * uPixel * far - aInfo.z);
   vWorld = p;
   vNormal = n;
@@ -152,9 +152,9 @@ void main() {
     float shank = smoothstep(0.42, 0.52, legT);
     float fold = (vnoise(vec2(dot(vRest.xy, vec2(0.89, 0.45)) * 46.0 + 3.0 * vnoise(q * 7.0), vRest.z * 9.0 + dot(vRest.xy, vec2(-0.45, 0.89)) * 7.0) + seed) - 0.5) * smoothstep(0.02, 0.12, neckU);
     height = (0.003 * rib * cage + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.002 * crease + 0.004 * fold) * mid;
-    pale = mix(vec3(0.66, 0.5, 0.46), vec3(0.9, 0.79, 0.72), smoothstep(0.2, 0.65, blotch)) * (0.84 + 0.32 * mottle) * clamp(told, 0.0, 2.0);
+    pale = mix(vec3(0.76, 0.58, 0.55), vec3(0.96, 0.85, 0.81), smoothstep(0.2, 0.65, blotch)) * (0.84 + 0.32 * mottle) * clamp(told, 0.0, 2.0);
     albedo = pale * (0.84 + 0.16 * crack) * (1.0 + (0.3 * drape + 0.1 * crease + 0.2 * fold) * mid);
-    occ *= 1.0 - 0.07 * between * mid;
+    occ *= 1.0 - 0.04 * between * mid;
     albedo = mix(albedo, vec3(0.42, 0.44, 0.54), 0.2 * vein * mid * (1.0 - shank));
     // Raw where bone rubs the skin from inside: the points of the hips, the spine, the joints, the end of the neck.
     float bony = smoothstep(0.55, 0.95, rn.y) * (1.0 - step(0.01, legT)) * (1.0 - smoothstep(0.0, 0.1, neckU));
@@ -171,6 +171,8 @@ void main() {
     // Wet from the water up to where it last stood deeper, and dark with it.
     wet = smoothstep(0.3, 0.42, legT) * smoothstep(uSea + 0.55, uSea + 0.12, vWorld.y + 0.25 * (blotch - 0.5));
     thin = mix(0.5, 0.75, smoothstep(0.1, 0.5, neckU)) * (1.0 - 0.3 * shank);
+    // The back is damp with the breath of the shaft: it takes a sheen from the low sun.
+    rough = mix(rough, 0.36, 0.7 * smoothstep(0.1, 0.8, n.y) * (1.0 - step(0.01, legT)));
   } else if (kind < 0.5) {
     // The trunk: the ribs show through the skin as fine ridges that curve down the flank, each a little unlike the next;
     // the points of the hips and the spine are rubbed raw, the belly is splashed grey with silt.
@@ -216,7 +218,7 @@ void main() {
     float own = hash12(vec2(seed, 9.0));
     vec3 flesh = mix(vec3(0.66, 0.4, 0.36), vec3(0.8, 0.6, 0.54), own);
     vec3 blood = mix(vec3(0.3, 0.08, 0.07), vec3(0.52, 0.2, 0.17), tone);
-    albedo = mix(flesh, blood, step(0.5, own) * smoothstep(0.0, 0.25, u) * 0.85);
+    albedo = mix(flesh, blood, step(0.3, own) * smoothstep(0.0, 0.25, u) * 0.85);
     albedo = mix(albedo, vec3(0.62, 0.36, 0.33), smoothstep(0.2, 0.0, u));
     albedo = mix(albedo, vec3(0.16, 0.1, 0.06), smoothstep(0.6, 1.0, u) * (0.35 + 0.5 * tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
