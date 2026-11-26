@@ -325,7 +325,13 @@ export function compile({ plan, map, cfg, kept = {} }) {
       const entry = planLines.find((p) => lineId(p) === id);
       return attempt(`line ${id}`, () => {
         const span = lineSpan(id, true);
-        return { clip: l.clip, line: l.line, text: l.text, unit: l.unit, first: span.first, frames: span.frames, file: span.file, carried: entry.carried === true };
+        const made = { clip: l.clip, line: l.line, text: l.text, unit: l.unit, first: span.first, frames: span.frames, file: span.file, carried: entry.carried === true };
+        // A line that Brandon's note places on a strike (review round 1, note 7: the third line of the Reveal lands on the reveal strike) says so in the plan.
+        if (entry.onStrike !== undefined) {
+          if (!STRIKES.includes(entry.onStrike)) stop(`onStrike names ${JSON.stringify(entry.onStrike)}, which is none of ${STRIKES.join(', ')}`);
+          made.onStrike = entry.onStrike;
+        }
+        return made;
       });
     });
 
@@ -420,6 +426,11 @@ export function ownRules(cut, map, cfg, { spans = true } = {}) {
     for (const l of lines) {
       const from = l.first / fps;
       const to = (l.first + l.frames) / fps;
+      // The one exception: a line placed on this strike by name starts on it, within a frame, and may then run over its clear time.
+      if (l.onStrike === s.name) {
+        if (Math.abs(from - s.film) > 1 / fps + EPS) faults.push(`${lineName(l)} is placed on the strike ${s.name} and starts at ${num(from, 2)} s, not on the strike at film second ${num(s.film, 2)}.`);
+        continue;
+      }
       if (from < s.to - EPS && to > s.from + EPS) faults.push(`${lineName(l)} runs from ${num(from, 2)} s to ${num(to, 2)} s and lies over the strike ${s.name} at film second ${num(s.film, 2)}, which is kept clear from ${num(s.from, 2)} s to ${num(s.to, 2)} s.`);
     }
   }
