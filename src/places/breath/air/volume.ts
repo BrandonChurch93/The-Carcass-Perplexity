@@ -350,7 +350,8 @@ void main() {
   // of it. The bars are far longer than the place, so from anywhere in it they fan from the sun the same way: the more air a pixel looks
   // through, the more of them it carries, so what is near stands dark before them.
   if (rays > 0.01 && uShow.z > 0.5) {
-    colour += through * mix(uSunColour, vec3(2.4), 0.3) * (0.04 * rays * fan * min(far, 90.0) / 90.0);
+    // After the breath the air over the place is damp with what it let out, and carries them the more.
+    colour += through * mix(uSunColour, vec3(2.4), 0.3) * ((0.04 + 0.08 * uBreath.w * uShow.w) * rays * fan * min(far, 90.0) / 90.0);
   }
 
   // The mist on the ground: banks a knee to a head deep that lie on the water and the wet shelf and drift with the wind, torn at their
