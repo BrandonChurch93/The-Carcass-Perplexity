@@ -1,8 +1,8 @@
-# Status 118
+# Status 120
 
-2026-11-26 15:00 UTC. Phase 5, the whole film.
+2026-11-26 15:48 UTC. Phase 5, the whole film.
 
-- `01-g-join-b.jpg`: The join, version 2, merged (draft tier, preview size, rendered on the Builder's machine): version 1 at left, version 2 at right. Top, frame 9563. Bottom, frame 9584. The lake shows through the lid of cloud
-- `02-g-strike-b.jpg`: The Spine's lightning, version 2, merged (draft tier, preview size, rendered on the Builder's machine): version 1 at left, version 2 at right. Top, frame 7668, key spine-3. Bottom, frame 8090, key spine-4: the sky through the mouth is dark at right, which goes back to its builder
-- `03-g-heart.jpg`: The Heart's near bank, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 2507, the jury's frame. Bottom, frame 2722, key heart-0
-- `04-g-eye.jpg`: The Eye's seam, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 8305, the Eye's first frame. Bottom, frame 9221, key eye-4
+- `01-r27-f0.jpg`: Frame 0 as round 2's jury and scroll-stop critic saw it (final tier, rendered in 4K on a render machine, shown smaller): 1 of 5 jurors took it for a photograph or a film frame
+- `02-r27-a02.jpg`: The whole film, sheet 2 of 4, as the motion critic saw it (review tier, preview size, rendered on a render machine). Frames 3028 and 3280, top left: the Heart's walkers in the same stances four seconds apart
+- `03-r27-a04.jpg`: The whole film, sheet 4 of 4, as the motion critic saw it (review tier, preview size, rendered on a render machine). Frames 10094 to 11608: the cloud and the cyclone do not move in 25 seconds from orbit
+- `04-r27-a10.jpg`: The join from the lake into the rise, frames 9535 to 9546, as the motion critic saw them (review tier, preview size, rendered on a render machine): twelve frames with no form in them
