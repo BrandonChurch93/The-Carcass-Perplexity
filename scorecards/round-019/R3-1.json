@@ -1,0 +1,63 @@
+{
+  "round": 19,
+  "unit": "reveal",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-26 05:11 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the right-hand mountains above and below the east–west valley",
+        "what": "the long, nearly parallel ridges recur at the same spacing and repeat the same feathered side gullies, making the mountain chain look stamped",
+        "fix": "break the spacing and alignment, and vary ridge length, branching and summit shape across the chain"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the broad field of white flecks over the left-hand water; also visible in set-A-05.png and set-A-08.png",
+        "what": "the bright layer breaks up into dense, isolated white dots and blobs, reading as sprayed paint rather than a continuous physical surface or volume",
+        "fix": "resolve the flecks into coherent structures with graded edges and depth; if they are surface highlights, tie them to wave crests and the lighting direction"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the three pale trails in the upper-right crop",
+        "what": "the trails have nearly identical widths and parallel starts, then break into flat white fragments instead of thinning into translucent vapor",
+        "fix": "give each plume a different width and opacity, and let the trails thin and mix gradually with the surrounding air"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the central crater lake and its ochre perimeter; the lake interior is shown at native size in set-A-02.png and set-A-03.png",
+        "what": "the smooth ochre band wraps around most of the basin, then feathers into a nearly uniform navy center, giving the shoreline and depth a painted look",
+        "fix": "vary the shore transition with the basin topography, break up the sediment band at inlets and shelves, and add restrained surface detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the north inlet in the upper-right crop",
+        "what": "the river is a smooth teal ribbon with almost constant width and a clean edge even as the terrain changes around it",
+        "fix": "fit it to the valley floor and vary channel width, banks and shallows at bends and where it enters the lake"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the pale crests in the right crop",
+        "what": "the pale ridge texture smears across the slope breaks at native size, obscuring where the ridges turn into rock faces",
+        "fix": "add terrain detail that follows slope and erosion, and sharpen the actual crest geometry rather than the whole image"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the orange points among the ridges in the lower-left crop",
+        "what": "the points have tiny halos but no visible interaction with adjacent terrain or haze, so they look placed over the image",
+        "fix": "if they are meant to be luminous, anchor each to a visible feature and give the brightest point subtle spill on the nearest slope or haze"
+      }
+    ]
+  }
+}

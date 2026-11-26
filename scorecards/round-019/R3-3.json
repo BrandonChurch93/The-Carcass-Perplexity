@@ -1,0 +1,42 @@
+{
+  "round": 19,
+  "unit": "reveal",
+  "pack": "R3-3",
+  "family": "gpt",
+  "answered": "2026-11-26 05:10 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-C-04.png",
+        "where": "the ochre band ringing the basin, especially the broad left coves",
+        "what": "the nearly solid ochre ribbon fades through brown to navy around much of the basin, like a painted shoreline mask rather than water of varying depth",
+        "fix": "drive the water color by actual bathymetry and sediment, with irregular transitions and localized surface detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-02.png",
+        "where": "the headland and cove in the lower-left crop",
+        "what": "a thin pale outline traces the coast at nearly constant width, with little sign of wet rock or water breaking against it",
+        "fix": "replace the outline with a wet margin and discontinuous shore breaks that follow local slope and exposure"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-05.png",
+        "where": "the ridges in the lower-left crop",
+        "what": "rock detail smears across slopes, and neighboring ridges share the same charcoal grooves and tan grain, making the terrain look like a draped map texture",
+        "fix": "give exposed rock and scree distinct materials and add slope-specific relief and sharper breakup"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-06.png",
+        "where": "the open water in the left crop",
+        "what": "only broad soft streaks break up the navy surface; there is no convincing directional glint or smaller wave structure",
+        "fix": "add multiscale wind ripples with restrained specular response and a direction consistent with the shoreline conditions"
+      }
+    ]
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "round": 17,
+  "unit": "marsh",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-26 05:12 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the pool across the lower half, especially around the foreground animal and the adult's feet",
+        "what": "The opaque pink-red sheet and broad, pale concentric rings replace the target's dark rusty, reflective water with fine broken ripples. The rings read as a graphic laid over the pool.",
+        "fix": "Deepen the water to rusty brown, break reflections with low irregular ripples, and confine wakes to where feet and bodies displace the water."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the main animal's pool and the flats across the lower two thirds",
+        "what": "The subject is in a continuous reddish pool with broad, flat patches of white crust. The target puts it in a shallow gray-brown slurry pocket with raised, broken mineral shelves, reserving deeper red for separate channels and pools.",
+        "fix": "Build low, fractured shelf edges and wet flecks at several heights, use gray-brown silty water immediately around the animal, and leave the deeper rust red in the openings between shelves."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "from the near bottom edge to the planted horizon",
+        "what": "The foreground slab and the mid-distance trees, animals, and flats are all legible, and one bright white plume dominates the left middle distance. The target isolates the main subject against a soft near obstruction and a progressively hazier, softer background, without that distinct plume.",
+        "fix": "Put the near obstruction closer and out of focus, concentrate focus around the subject, and spread the plume's opacity into a low, diffuse veil that gradually softens the distance."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the left shore, the adult's muzzle, and the juvenile's bank at right",
+        "what": "Open water runs under the adult's raised muzzle and the juvenile's bank is a small patch at the frame edge. In the target the adult is feeding into a broken muddy shelf and the juvenile is working a substantial crusted bank.",
+        "fix": "Carry an uneven mud shelf in from the left to meet the adult's muzzle, enlarge the right shelf, and make both animals visibly bear on and disturb the wet substrate."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the center-right subject and the herd behind it",
+        "what": "The main animal has shifted left and down, leaving its target position at lower right as open water. Several rather large animals crowd the right middle distance, where the target reads as a dispersed herd of smaller, softer silhouettes.",
+        "fix": "Move the half-submerged focal animal toward center-right and spread the secondary animals farther back across the flats, keeping fewer overlapping masses near the right pool."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the adult's flank and underside, and the juvenile on the right",
+        "what": "A broad even gray-to-red stain and dark underside replace varied warm-gray creases, patchy wet rust, and pale crust on the upper backs. The target's hanging mud and water under the bellies and wet glints at the legs are largely lost.",
+        "fix": "Break up the color boundary with mineral crust and uneven splatter, add selective wet highlights, and put wet residue and drips at the belly and leg contact points."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the main subject's back, muzzle, and waterline",
+        "what": "The hide reads as mostly dark and dry with small pale flecks, and the muzzle appendages have a uniform matte finish. The target has rough, caked sediment over the shoulders and back, muddier tips, and more legible wet reflections where the animal meets the slurry.",
+        "fix": "Layer irregular mineral and mud deposits onto the hide and appendages, pick up diffuse daylight on the wet surfaces, and show little reflections and disturbed silt at the waterline."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the left vegetation and upper background",
+        "what": "Thick, cropped trunks dominate the left edge and a sparse, sharp row of stems and distant rises stands against a broad blank gray sky. The target frames the subject with slender, pale stems and spreading red fronds, then recedes into soft vegetation scattered over hazy flats.",
+        "fix": "Thin the nearest stems, bring their spreading fronds into frame, and populate and soften the farther flats so the empty sky and distant contours draw less attention."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the groves at upper left and directly behind the herd",
+        "what": "Tall, thick, densely grouped leaning trunks dominate both sides in the candidate. In the target there are lighter, slender clumps with longer gaps and much smaller plants toward the horizon.",
+        "fix": "Reduce trunk girth and grove density, move some large stems back, and break the far growth into spaced, low clusters."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the lower center and back right of the herd",
+        "what": "The foreground animal rides high and stretches across the pool with its head above the surface, and several large cropped backs crowd the right background. The target foreground animal is a low submerged hump with its muzzle close to the water, with one soft isolated back providing distance behind the juvenile.",
+        "fix": "Settle the near animal deeper, keep a low wet contour and muzzle at the surface, and reduce or push back the extra right-hand masses."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the lower-left obstruction, the left shelf, and the far-right mound",
+        "what": "The gray heaps have a similar coarse, rock-like surface. The target distinguishes a pale encrusted near form, an irregular low mound with exposed rootlike material at left, and a softer pale mound at right.",
+        "fix": "Vary their profiles and materials, with lumpy pale crust on the near form, broken crust and exposed strands on the left shelf, and a lower, softer mineral mound at right."
+      }
+    ]
+  }
+}

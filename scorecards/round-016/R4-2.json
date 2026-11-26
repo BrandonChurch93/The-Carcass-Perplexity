@@ -1,0 +1,56 @@
+{
+  "round": 16,
+  "unit": "ribs",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-26 05:17 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the left rock stack, frames 2405 to 2412",
+        "what": "white spray shows up inside the rock's silhouette and grows frame by frame, cut off on a hard edge that follows the rock's outline. The rock reads as a hole in a matte, as if it turned transparent, and in playback it shows as a flashing white patch on the stone.",
+        "fix": "put the spray layer behind the rock, or hold the rock matte, so spray only shows around the edge and wraps it with soft, broken edges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the left rock stack, frames 2404 to 2411",
+        "what": "the same spray-through-rock matte error is there. This sheet repeats the frames of set-B-01 shifted by one frame, so the error is in the shot itself, not in how one sheet was put together.",
+        "fix": "same fix: layer the spray correctly behind the rock and rebuild the rock alpha"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "the whole frame with the camera held, over 6 s",
+        "what": "the place reads as a still picture. The clouds, the haze and the water falling from the arch do not visibly change in 6 s, and the large forms and the sky do not change at all. Only the foam on the foreground flat moves, and only a little.",
+        "fix": "drive the clouds at their own height and speed, let the stream fall and break into spray, and roll fresh sheets of water and foam across the flat"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the animal on the left cliff face and the small creatures in the midground",
+        "what": "the animal on the cliff keeps nearly the same pose for all 6 s and seems pinned to a vertical face with no footing, so it reads as a placed model. The midground creatures barely move, and none of them pause, turn or shift weight.",
+        "fix": "give the animal a ledge to stand on and real behaviour: shift its weight, turn its head, take a step. Make the midground creatures move out of step with each other"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the spray wall behind the rocks and the gulls",
+        "what": "the big spray curtain hardly changes over 12 frames, and the gull on the right stays in the same place. The wave reads as a backdrop rather than water hitting the shore with weight.",
+        "fix": "simulate the break so the spray rises, breaks apart and falls back, and give the gulls wingbeats and travel"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the foreground water surface",
+        "what": "the ripples and foam marks move very little and evenly, which hints at a scrolling texture",
+        "fix": "use displacement and foam that come from the incoming swell"
+      }
+    ]
+  }
+}
