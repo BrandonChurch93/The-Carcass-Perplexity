@@ -9,11 +9,15 @@ uniform sampler2D tPack;
 uniform sampler2D tPackNh;
 uniform sampler2D tCrop;
 uniform sampler2D tCropNh;
+uniform sampler2D tFrost;
+uniform sampler2D tFrostNh;
 uniform sampler2D tHeroN;
 uniform sampler2D tHeroAo;
 const vec3 GRAN_MEAN = vec3(0.2324, 0.1975, 0.1774);
 const vec3 PACK_MEAN = vec3(0.4489, 0.4965, 0.6154);
 const vec3 CROP_MEAN = vec3(0.1996, 0.2158, 0.2667);
+const float FROST_LUMA = 0.3075;
+const vec3 LUMA = vec3(0.3, 0.5, 0.2);
 `;
 
 export const openMain = (scorch: string): string => /* glsl */ `
@@ -36,19 +40,28 @@ Tap granite(vec2 p, vec2 gx, vec2 gy, float shift) {
   // The masses: the same rock 4.3 times larger, turned a little, so slabs of 20 to 60 m carry the face from far off.
   vec2 b = vec2(0.94 * p.x + 0.34 * p.y, -0.34 * p.x + 0.94 * p.y) / vec2(64.0, 43.0) + 0.37 + 1.7 * shift;
   Tap B = tap(tGran, tGranNh, b, lodA - 2.1);
-  vec3 c = (A.c / GRAN_MEAN) * mix(vec3(1.0), B.c / GRAN_MEAN, 0.6);
-  vec2 s = A.s * 0.9 + vec2(0.94 * B.s.x - 0.34 * B.s.y, 0.34 * B.s.x + 0.94 * B.s.y) * 1.3;
+  vec3 c = (A.c / GRAN_MEAN) * mix(vec3(1.0), B.c / GRAN_MEAN, 0.3);
+  vec2 s = A.s * 1.3 + vec2(0.94 * B.s.x - 0.34 * B.s.y, 0.34 * B.s.x + 0.94 * B.s.y) * 1.3;
   float h = 0.55 * A.h + 0.45 * B.h;
   // Under the lens a texel of the beds is many pixels: the rock again 5.6 times finer, turned the other way, as grain and small edges.
   float fine = smoothstep(0.6, -0.8, lodA);
   if (fine > 0.01) {
     vec2 d = vec2(0.97 * p.x - 0.24 * p.y, 0.24 * p.x + 0.97 * p.y) / vec2(2.7, 1.8) + 0.61 - shift;
     Tap D = tap(tGran, tGranNh, d, lodA + 2.47);
-    c *= mix(vec3(1.0), clamp(D.c / GRAN_MEAN, 0.5, 1.6), 0.55 * fine);
+    c *= mix(vec3(1.0), clamp(D.c / GRAN_MEAN, 0.5, 1.6), 0.3 * fine);
     s += fine * 0.7 * vec2(0.97 * D.s.x + 0.24 * D.s.y, -0.24 * D.s.x + 0.97 * D.s.y);
     h = mix(h, 0.7 * h + 0.3 * D.h, fine);
   }
   return Tap(c, s, h);
+}
+
+// The bedrock where it lies level and breaks through the snow (land/outcrop, 8 m): frost-shattered, dark, with snow lodged in it.
+Tap bedrock(vec2 p, vec2 gx, vec2 gy) {
+  float lodA = lodAt(gx / 8.0, gy / 8.0, 1248.0);
+  Tap A = tap(tCrop, tCropNh, p / 8.0, lodA);
+  vec2 b = vec2(0.91 * p.x - 0.42 * p.y, 0.42 * p.x + 0.91 * p.y) / 29.0 + 0.27;
+  Tap B = tap(tCrop, tCropNh, b, lodA - 1.86);
+  return Tap((A.c / CROP_MEAN) * mix(vec3(1.0), B.c / CROP_MEAN, 0.45), A.s + vec2(0.91 * B.s.x + 0.42 * B.s.y, -0.42 * B.s.x + 0.91 * B.s.y), 0.6 * A.h + 0.4 * B.h);
 }
 
 void main() {
@@ -121,7 +134,11 @@ void main() {
       vec2 q = vec2(0.8 * P.x + 0.6 * P.z, -0.6 * P.x + 0.8 * P.z);
       vec2 qx = vec2(0.8 * Px.x + 0.6 * Px.z, -0.6 * Px.x + 0.8 * Px.z);
       vec2 qy = vec2(0.8 * Py.x + 0.6 * Py.z, -0.6 * Py.x + 0.8 * Py.z);
+#if KIND == 0
+      Tap t = bedrock(q + 51.3, qx, qy);
+#else
       Tap t = granite(q + 51.3, qx, qy, 0.63);
+#endif
       rock += w.y * t.c;
       dn += w.y * ((0.8 * ax + 0.6 * bx) * t.s.x + (-0.6 * ax + 0.8 * bx) * t.s.y);
       pit += w.y * t.h;
@@ -131,20 +148,24 @@ void main() {
     dn /= sum;
     pit /= sum;
   }
-  vec3 nRock = normalize(n0 + 0.55 * dn);
+  vec3 nRock = normalize(n0 + 0.9 * dn);
 
   // Colour: warm tan slabs with colder planes between, in masses larger than any sheet.
   float bed = vnoise(vec2(dot(vWorld, vec3(0.011, 0.034, 0.017)), dot(vWorld.xz, vec2(0.004, -0.003))) * 3.0);
   float blotch = vnoise(vWorld.xz * 0.021 + vWorld.y * 0.013);
-  vec3 tone = mix(vec3(0.74, 0.78, 0.86), vec3(1.1, 1.0, 0.88), smoothstep(0.25, 0.75, 0.6 * bed + 0.4 * blotch));
-  vec3 albedo = min(GRAN_MEAN * 1.25 * rock * tone, vec3(0.85));
+  vec3 tone = mix(vec3(0.72, 0.78, 0.9), vec3(1.08, 1.0, 0.9), smoothstep(0.25, 0.75, 0.6 * bed + 0.4 * blotch));
+  // Pale ochre granite: the sheet gives the breaks and the grain, less of its own colour and of its darks.
+  float rockLuma = dot(rock, LUMA);
+  vec3 grain = pow(mix(vec3(rockLuma), rock, 0.5), vec3(0.75));
+  // (The bedrock of the ground is darker than the faces of the spires: it is wet with melt and in the snow's shadow.)
+  vec3 albedo = min(vec3(0.4, 0.345, 0.275) * (ground ? 0.6 : 1.0) * grain * tone, vec3(0.85));
   float rough = 0.9;
   // Its cracks are dark: the sky does not reach into them.
-  float occ = 0.3 + 0.7 * smoothstep(0.12, 0.6, pit);
+  float occ = 0.55 + 0.45 * smoothstep(0.1, 0.55, pit);
 #ifdef HERO_MAPS
   occ *= 0.25 + 0.75 * smoothstep(0.1, 0.85, baked.r);
   // No two blocks have weathered alike: a fresh break is warm and light, an old face grey blue and darker.
-  albedo *= mix(vec3(0.42, 0.5, 0.66), vec3(1.4, 1.18, 0.9), smoothstep(0.3, 0.7, baked.g)) * (0.6 + 0.8 * baked.b) / tone;
+  albedo *= mix(vec3(0.6, 0.68, 0.86) * 0.8, vec3(1.14, 1.03, 0.9), smoothstep(0.3, 0.7, baked.g)) / tone;
 #else
   if (spire) occ *= 0.45 + 0.55 * smoothstep(-5.0, 0.5, vRelief);
 #endif
@@ -167,7 +188,12 @@ void main() {
   // own relief cuts its edge, so the line where snow meets stone is broken at the size of the stone.
   float drift = vnoise(vWorld.xz / 47.0 + 7.3);
   float lie = nRock.y * 0.6 + n0.y * 0.4 + 0.3 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
-  float hold = spire ? 0.56 + 0.1 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
+#ifdef HERO_MAPS
+  // Every ledge of the hero holds snow: where a block stands back over the one below it (baked, blue).
+  lie += 0.5 * smoothstep(0.6, 0.8, baked.b);
+#endif
+  if (ground) lie -= 0.55 * rockness;
+  float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
   float snow = show > 0.01 ? smoothstep(hold, hold + 0.07, lie) : 1.0;
   snow *= 1.0 - burn;
   if (spire) snow *= mix(1.0, smoothstep(-0.15, 0.3, lee), uWet);
@@ -177,22 +203,52 @@ void main() {
   float frost = (1.0 - snow) * (1.0 - burn) * smoothstep(0.34, 0.16, pit) * smoothstep(-0.2, 0.5, n0.y + 0.4 * -lee) * (1.0 - 0.8 * uWet);
   albedo = mix(albedo, vec3(0.6, 0.65, 0.72), 0.5 * frost);
 
+  // Rime: on what looks into the gale the frost has grown in plumes, thick on windward faces and on edges, none in the lee.
+  vec3 nRime = n0;
+  float rime = 0.0;
+  if (show > 0.01) {
+    float expose = clamp(0.45 - 0.9 * lee + 0.35 * n0.y, 0.0, 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet);
+    if (expose > 0.1) {
+      vec2 rp = w.x >= w.z && w.x >= w.y ? P.zy : w.z >= w.y ? P.xy : P.xz;
+      vec2 rx = w.x >= w.z && w.x >= w.y ? Px.zy : w.z >= w.y ? Px.xy : Px.xz;
+      vec2 ry = w.x >= w.z && w.x >= w.y ? Py.zy : w.z >= w.y ? Py.xy : Py.xz;
+      vec3 e0 = w.x >= w.z && w.x >= w.y ? bx : ax;
+      vec3 e1 = w.x >= w.z && w.x >= w.y ? up : w.z >= w.y ? up : bx;
+      float lodR = lodAt(rx / 4.5, ry / 4.5, 1024.0);
+      // (Read a little soft: the plumes are clumps, and a mask cut at the size of a texel is a speckle no encoder holds.)
+      Tap F = tap(tFrost, tFrostNh, rp / vec2(4.5, 3.0) + 0.19, lodR + 1.6);
+      Tap G = tap(tFrost, tFrostNh, rp.yx / vec2(17.0, 11.3) + 0.53, lodR - 0.6);
+      float plume = (0.6 * dot(F.c, LUMA) + 0.4 * dot(G.c, LUMA)) / FROST_LUMA;
+      float from = mix(2.4, 0.35, expose);
+      rime = smoothstep(from, from + 1.1, plume) * smoothstep(0.1, 0.3, expose);
+      nRime = normalize(n0 + 0.8 * (e0 * F.s.x + e1 * F.s.y));
+      albedo = mix(albedo, vec3(0.74, 0.79, 0.86) * (0.8 + 0.2 * clamp(plume * 0.4, 0.0, 1.0)), rime);
+      rough = mix(rough, 1.0, rime);
+      nRock = normalize(mix(nRock, nRime, rime));
+      occ = mix(occ, max(occ, 0.8), rime);
+    }
+  }
+
   // The snow's own surface: the wind pack laid across the gale at two sizes, and the prints.
   vec3 nSnow = n0;
   float snowOcc = 1.0;
   vec3 snowTint = vec3(1.0);
   if (snow > 0.0) {
     vec2 q = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98)));
+    // (No two fields of sastrugi run alike: the pack is pulled about over some 60 m, and in places the wind has polished it flat.)
+    q += 7.0 * vec2(vnoise(vWorld.xz / 63.0 + 3.1), vnoise(vWorld.xz / 63.0 + 17.7));
+    float rippled = 0.35 + 0.65 * smoothstep(0.3, 0.7, vnoise(vWorld.xz / 41.0 + 9.2));
     vec2 qx = dFdx(q);
     vec2 qy = dFdy(q);
     // On a steep face a level picture would be pulled long: there the snow keeps its tone and loses its ripple.
     float level = smoothstep(0.45, 0.8, min(n0.y, smoothN.y));
     float lodP = lodAt(qx / 9.0, qy / 9.0, 1536.0);
     Tap A = tap(tPack, tPackNh, q / vec2(9.0, 6.0), lodP);
-    vec2 r = vec2(0.92 * q.x - 0.39 * q.y, 0.39 * q.x + 0.92 * q.y);
+    vec2 r = vec2(0.77 * q.x - 0.64 * q.y, 0.64 * q.x + 0.77 * q.y);
     Tap B = tap(tPack, tPackNh, r / vec2(38.0, 25.0) + 0.43, lodP - 2.08);
-    vec2 g = A.s * 0.5 + vec2(0.92 * B.s.x + 0.39 * B.s.y, -0.39 * B.s.x + 0.92 * B.s.y) * 0.9;
-    snowTint = mix(vec3(1.0), (A.c / PACK_MEAN) * mix(vec3(1.0), B.c / PACK_MEAN, 0.7), 0.8 * level);
+    float field = smoothstep(0.35, 0.65, vnoise(vWorld.xz / 29.0 + 4.4));
+    vec2 g = rippled * (A.s * 0.5 * (1.0 - 0.8 * field) + vec2(0.77 * B.s.x + 0.64 * B.s.y, -0.64 * B.s.x + 0.77 * B.s.y) * 0.6 * (0.35 + 0.65 * field));
+    snowTint = mix(vec3(1.0), mix(vec3(1.0), A.c / PACK_MEAN, 1.0 - 0.8 * field) * mix(vec3(1.0), B.c / PACK_MEAN, 0.3 + 0.5 * field), 0.7 * level);
     snowOcc = mix(1.0, 0.72 + 0.28 * smoothstep(0.15, 0.6, 0.5 * A.h + 0.5 * B.h), level);
     float footprint = length(fwidth(vWorld.xz));
     float fine = smoothstep(0.012, 0.003, footprint) * level;

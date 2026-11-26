@@ -57,6 +57,8 @@ export function create(ctx: Context): Piece {
     tPackNh: sheetData('snowpack'),
     tCrop: sheet('outcrop'),
     tCropNh: sheetData('outcrop'),
+    tFrost: sheet('rimeface'),
+    tFrostNh: sheetData('rimeface'),
     tHeroN: { value: ctx.assets.texture('land/hero-n.jpg', { kind: 'data', anisotropy: 4 }) },
     tHeroAo: { value: ctx.assets.texture('land/hero-ao.jpg', { kind: 'data', anisotropy: 4 }) },
     // The dome's own pictures, for what is seen of the sky from inside the canal: in the ice of the floor, in the glaze on the rock.

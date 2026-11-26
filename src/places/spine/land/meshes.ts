@@ -257,6 +257,9 @@ function jointing(around: number, girth: (y: number) => number, fine: (y: number
 }
 
 // Where the kites hold: between these shares of the breadth, toward the lee edge, the relief turns from square to the face to along the thickness.
+// Where the arete of the hero's front stands across its breadth (-1 the windward edge, 1 the lee), and how far the windward plane is cut flat.
+const ARETE = 0.08;
+const ARETE_CUT = 0.75;
 const LEE_FROM = 0.35;
 const LEE_FULL = 0.65;
 const LEE_BLUNT = 2.4;
@@ -363,7 +366,18 @@ export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THR
       const blocks = Math.max(-0.35 * p.thick, Math.min(0.5 * p.thick, scale * (cut + swell)));
       const n = broad + (blocks + lee * (Math.max(-LEE_IN, Math.min(LEE_OUT, blocks)) - blocks)) * keep;
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
-      const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick * (ends && face > 0 ? 0.6 : 1);
+      let section = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION);
+      if (bare && face < 0 && ln < ARETE) {
+        // The hero's face to the lens of the wide shot is two planes that meet in an arete, not one round front: from the arete to the
+        // windward edge it is cut back toward a flat plane that looks to the storm and is dark, and the plane on the lee of the arete keeps
+        // the last light. Only below the kites' holdfasts, and not under the crest.
+        const k0 = Math.min(1, Math.max(0, (hh - 0.3) / 0.28));
+        const k1 = Math.min(1, Math.max(0, (hh + 0.3) / 0.3));
+        const cut = ARETE_CUT * (1 - k0 * k0 * (3 - 2 * k0)) * k1 * k1 * (3 - 2 * k1);
+        const flat = (Math.pow(1 - Math.pow(Math.abs(ARETE), FIN_SECTION), 1 / FIN_SECTION) * (1 + ln)) / (1 + ARETE);
+        section += (flat - section) * cut;
+      }
+      const body = section * p.thick * (ends && face > 0 ? 0.6 : 1);
       // The rock stands out of the blade square to its face, not along its thickness: on the thin ends of a blade a relief pushed along the
       // thickness slides along the face instead of standing out of it, and every joint there is drawn out into shards.
       const thickHere = p.thick * (ends && face > 0 ? 0.6 : 1);

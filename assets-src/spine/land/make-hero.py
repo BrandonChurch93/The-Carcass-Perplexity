@@ -104,11 +104,15 @@ half = 0.5 * np.linalg.norm(Pf - Pf[:, (-np.arange(AF)) % AF], axis=2)
 id1, n1 = level(Pf, 101, 74.0, 21.0, 13.0, 4.6, 3.6, 9.0)
 id2, n2 = level(Pf, id1, 30.0, 8.5, 5.5, 2.0, 1.8, 3.0)
 id3, n3 = level(Pf, id2, 10.0, 3.2, 2.4, 0.65, 0.6, 0.8)
-d = n1 + n2 + n3
+# (The finest: slabs a lens that comes close can count, where the lattice is fine enough to cut them.)
+id4, n4 = level(Pf, id3, 4.5, 1.25, 0.9, 0.3, 0.3, 0.25)
+d = n1 + n2 + n3 + n4
 # (Outward less than inward: a block that stands far out of a thin blade is a growth on it.)
 d = np.where(d > 0, 0.7 * d, d)
 d = np.clip(d, -0.4 * half - 0.2, 0.3 * half + 0.5)
-d = d + lee[None, :] * (np.clip(d, -2.0, 0.8) - d)
+# Toward the lee edge, where the kites hold and their lens looks, the great blocks are left out and the small ones stand whole: clipping the
+# sum there left a face with no blocks at all.
+d = d + lee[None, :] * (np.clip(0.4 * n2 + 1.2 * n3 + 1.3 * n4, -2.5, 1.0) - d)
 d = d * keep[None, :]
 # The tip keeps its line, and the wall the canal is cut through only stands out.
 d = d * np.clip(top / 14.0, 0, 1)
@@ -116,7 +120,8 @@ d = d + wall * (0.8 * np.abs(d) - d)
 d = np.clip(d, -8.8, 8.8)
 # The edge of a block is a narrow slope, not a step: a step that crosses the fine lattice aslant is a stair, and its treads stand in the
 # baked normals as stripes when a lens comes close.
-for k in range(4):
+raw = d.copy()
+for k in range(2):
     d = 0.25 * (np.roll(d, 1, axis=1) + np.roll(d, -1, axis=1)) + 0.5 * d
     d[1:-1] = 0.25 * (d[:-2] + d[2:]) + 0.5 * d[1:-1]
 
@@ -202,7 +207,18 @@ def nearest(g):
     a = ((np.arange(SIZE) + 0.5) / SIZE * AF).astype(int) % AF
     return g[r][:, a]
 tone1 = nearest(0.65 * h32(id1, 23) + 0.35 * h32(id2, 29))
-tone2 = nearest(0.6 * h32(id2, 31) + 0.4 * h32(id3, 37))
+# Blue: the ledges. Where a block stands back over the one below it there is a shelf that holds snow: the fine mesh before its edges were
+# softened looks up there. Spread a metre or so, so a ledge is a line of snow from far off.
+rawP = Pf + Nf * raw[..., None]
+rn = np.cross(np.gradient(rawP, axis=0), np.roll(rawP, -1, axis=1) - np.roll(rawP, 1, axis=1))
+rn /= np.linalg.norm(rn, axis=2, keepdims=True) + 1e-9
+if np.mean(np.sum(rn * Nf, axis=2)) < 0: rn = -rn
+shelf = np.clip(0.5 + 0.5 * rn[..., 1], 0, 1)
+for k in range(4):
+    shelf[1:] = np.maximum(shelf[1:], shelf[:-1])
+    shelf = np.maximum(shelf, 0.5 * (np.roll(shelf, 1, axis=1) + np.roll(shelf, -1, axis=1)))
+tone1 = nearest(0.5 * h32(id1, 23) + 0.3 * h32(id2, 29) + 0.2 * h32(id3, 37))
+tone2 = nearest(shelf)
 # The joints between the blocks are cracks no mesh of this size can cut: dark lines in the occlusion, the great ones wider.
 def joints(ident, wide):
     e = (ident != np.roll(ident, 1, axis=1)) | (ident != np.roll(ident, 1, axis=0))
