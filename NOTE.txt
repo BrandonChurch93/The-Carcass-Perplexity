@@ -1,7 +1,6 @@
-2026-11-26 06:24 UTC
-work at a7cf535 on agent/marsh-life-3
-06:24 adult on its legs, two off set, stem break thick, cream trunks, stuck one's feelers; M3 marsh-3 final 1.47, draft 2.28; cost 1.90 s
+2026-11-26 06:40 UTC
+work at 7ce99a2 on agent/marsh-life-3
+06:41 marsh-3 adult on the mud bank, feelers down; marsh-4 stuck one bare folded hide with plates (rendered with --focus 5.6, asked partner to set it); marsh-1 seep stalk red brown and wet
 look-1.jpg = out/work/cur-marsh-3.jpg
-look-2.jpg = out/work/cur-marsh-2.jpg
-look-3.jpg = out/work/cur-marsh-4.jpg
-look-4.jpg = out/work/sheets/shot-marsh-04.png
+look-2.jpg = out/work/cur-marsh-4f.jpg
+look-3.jpg = out/work/cur-marsh-1.jpg
