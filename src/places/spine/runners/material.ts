@@ -134,13 +134,21 @@ void main() {
   w /= w.x + w.y + w.z;
   float s = vKind > 3.5 ? 0.3 : 0.55;
   vec3 q = vRest / s + uTone.w * 5.0;
+  // How fast the place runs over the screen, found before any branch: the herd's one laying changes axis from one pixel to the next
+  // along a seam, and the place itself does not jump there.
+  vec3 qDx = dFdx(q);
+  vec3 qDy = dFdy(q);
   vec3 shag;
   vec3 lie;
   if (uLockKind > 0.5) {
     // The herd's hide is under its locks and seen from metres away: one laying of the picture, on the axis it faces most.
-    vec2 one = w.x > max(w.y, w.z) ? q.zy : (w.y > w.z ? q.xz : q.xy);
-    shag = texture2D(tShag, one).rgb / SHAG_MEAN;
-    lie = texture2D(tShagData, one).rgb;
+    bool onX = w.x > max(w.y, w.z);
+    bool onY = w.y > w.z;
+    vec2 one = onX ? q.zy : (onY ? q.xz : q.xy);
+    vec2 oneDx = onX ? qDx.zy : (onY ? qDx.xz : qDx.xy);
+    vec2 oneDy = onX ? qDy.zy : (onY ? qDy.xz : qDy.xy);
+    shag = textureGrad(tShag, one, oneDx, oneDy).rgb / SHAG_MEAN;
+    lie = textureGrad(tShagData, one, oneDx, oneDy).rgb;
   } else {
     shag = (texture2D(tShag, q.zy).rgb * w.x + texture2D(tShag, q.xz).rgb * w.y + texture2D(tShag, q.xy).rgb * w.z) / SHAG_MEAN;
     lie = texture2D(tShagData, q.zy).rgb * w.x + texture2D(tShagData, q.xz).rgb * w.y + texture2D(tShagData, q.xy).rgb * w.z;
@@ -331,15 +339,16 @@ void main() {
   float flip = fract(seed * 5.31) < 0.5 ? -1.0 : 1.0;
   vec3 pic;
   vec3 mean_ = LOCK_MEAN;
+  // The herd in the canal: one of the twelve fine straight locks of the second picture, cut by its own soft outline. Where it lies in the
+  // picture and how fast that turns across the screen are found before any branch, so every pixel of a block agrees on them.
+  float fine = floor(fract(seed * 9.73) * 12.0);
+  float fineY = fine < 5.5 ? mix(0.019, 0.489, t) : mix(0.513, 0.978, t);
+  vec2 fineUv = vec2(0.114 + 0.155 * mod(fine, 6.0) + 0.07 * u * flip, 1.0 - fineY);
+  vec2 uvDx = dFdx(fineUv);
+  vec2 uvDy = dFdy(fineUv);
   if (uLockKind > 0.5) {
-    // The herd in the canal: one of the twelve fine straight locks of the second picture, cut by its own soft outline.
-    float which = floor(fract(seed * 9.73) * 12.0);
-    float col = mod(which, 6.0);
-    float y = which < 5.5 ? mix(0.019, 0.489, t) : mix(0.513, 0.978, t);
-    vec2 uv = vec2(0.114 + 0.155 * col + 0.07 * u * flip, 1.0 - y);
+    vec2 uv = fineUv;
     // Its outline is frayed by its own strands: the cut wanders with the hair's brightness, and the black the picture stands on is taken out of its edge.
-    vec2 uvDx = dFdx(uv);
-    vec2 uvDy = dFdy(uv);
     float cut = textureGrad(tLockBA, uv, uvDx, uvDy).r;
     if (cut < 0.5) discard;
     pic = textureGrad(tLockB, uv, uvDx, uvDy).rgb;
