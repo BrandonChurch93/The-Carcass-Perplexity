@@ -269,17 +269,17 @@ void main() {
     shallow = mix(shallow, 0.5, stream);
   }
   // (North of the lake of the Eye a second crater holds water: a long dark lake, its shore uneven.)
-  vec2 inUpper = (xz - uLakeMid - vec2(45.0, -137.0)) / vec2(42.0, 23.0);
+  vec2 inUpper = (xz - uLakeMid - vec2(40.0, -146.0)) / vec2(62.0, 37.0);
   float upperR = 9.0;
   float upper = 0.0;
   if (dot(inUpper, inUpper) < 2.5) {
-    upperR = length(inUpper) + 0.3 * (vnoise(xz / 11.0 + 4.0) - 0.5);
+    upperR = length(inUpper) + 0.3 * (vnoise(xz / 11.0 + 4.0) - 0.5) + 0.34 * (vnoise(xz / 31.0 + 14.0) - 0.5);
     upper = (1.0 - smoothstep(0.86, 0.98, upperR)) * smoothstep(120.0, 200.0, uViewKm);
     land *= 1.0 - upper;
     // (It is a lake as the others are: shut in, deep in its middle, its bed dark.)
-    coastKm = mix(coastKm, min(coastKm, -(0.98 - upperR) * 23.0), upper);
+    coastKm = mix(coastKm, min(coastKm, -(0.98 - upperR) * 37.0), upper);
     shut = max(shut, upper);
-    shallow = mix(shallow, 0.0, upper);
+    shallow = mix(shallow, 0.2 + 0.6 * vnoise(inUpper * 1.7 + 3.0), upper);
   }
   if (land > 0.0) kind = 0.5 + 0.5 * vec3(
     sin(xz.x / 143.0 + 0.9 + 1.7 * sin(xz.y / 201.0)) * sin(xz.y / 117.0 + 2.2),
@@ -515,10 +515,27 @@ void main() {
   vec3 provinceTint = mix(mix(mix(vec3(1.0), vec3(1.5, 1.32, 1.0), provinceSand), vec3(1.45, 0.74, 0.5), provinceRed), vec3(0.5, 0.82, 0.95), provinceWet);
   ground *= mix(vec3(1.0), provinceTint, land * (1.0 - 0.7 * smoothstep(0.5, 0.8, height)) * (1.0 - min(1.0, 1.4 * rust)));
   float greatB = textureLod(uReliefWide, clamp(uvWide, 0.0, 1.0), log2(30.0 / uTexelKm.x)).b;
-  float great = smoothstep(0.43, 0.53, (greatB - 0.3) / 0.7) * inWide * land * smoothstep(150.0, 320.0, uViewKm);
+  // (The chest is the highest country of all: more of its ranges are great, so each side carries five or six, unlike and broken.)
+  float chestAt = (1.0 - smoothstep(0.7, 1.1, length((xz - vec2(-339.0, -123.0)) / vec2(560.0, 470.0)))) * (1.0 - 0.75 * provinceRed);
+  float great = smoothstep(0.43, 0.53, (greatB - 0.3) / 0.7 + 0.05 * chestAt) * inWide * land * smoothstep(150.0, 320.0, uViewKm);
   float lesser = (1.0 - smoothstep(0.38, 0.48, (greatB - 0.3) / 0.7)) * smoothstep(0.3, 0.55, height) * land * smoothstep(150.0, 320.0, uViewKm) * smoothstep(0.9, 1.2, length(fromSkull));
-  ground = mix(ground, vec3(0.5, 0.455, 0.39) * (0.5 + 1.1 * min(lowLum, 0.45)), 0.7 * great * smoothstep(0.34, 0.62, max(height, (greatB - 0.3) / 0.7 + 0.06)) * (1.0 - min(1.0, 1.4 * rust)));
+  ground = mix(ground, vec3(0.5, 0.455, 0.39) * (0.5 + 1.1 * min(lowLum, 0.45)) * (1.0 + 0.2 * chestAt), mix(0.7, 0.9, chestAt) * great * smoothstep(0.34 - 0.06 * chestAt, 0.62 - 0.1 * chestAt, max(height, (greatB - 0.3) / 0.7 + 0.06)) * (1.0 - min(1.0, 1.4 * rust)));
   ground *= mix(vec3(1.0), vec3(0.62, 0.58, 0.56), lesser);
+  // (East and north of the skull the red country is pitted, far past the throat: old lava with its roof fallen in.)
+  vec2 fromPitted = (xz - uThroat - vec2(-40.0, -60.0)) / vec2(400.0, 430.0);
+  float pitted = exp(-dot(fromPitted, fromPitted)) * land * (1.0 - great) * smoothstep(0.95, 1.2, length(fromSkull));
+  if (pitted > 0.03 && uViewKm > 120.0) {
+    // (And among them pools and wider craters, a few to a hundred kilometres, each with a pale lip on its sunward side.)
+    vec2 wg = mat2(0.8, -0.6, 0.6, 0.8) * xz / 78.0;
+    vec2 wid = floor(wg);
+    vec2 wat = 0.5 + 0.5 * (vec2(hash12(wid + 13.1), hash12(wid + 27.7)) - 0.5);
+    vec2 wd = (fract(wg) - wat) * vec2(1.0, 1.0 + 0.7 * hash12(wid + 4.3));
+    float wsize = mix(0.1, 0.34, hash12(wid + 19.2) * hash12(wid + 2.2));
+    float wr = length(wd) + 0.05 * (vnoise(wg * 5.0 + 3.0) - 0.5);
+    float wider = step(hash12(wid + 8.5), 0.7) * (1.0 - smoothstep(0.4, 0.56, height)) * pitted * smoothstep(120.0, 220.0, uViewKm) * (1.0 - smoothstep(900.0, 1300.0, uViewKm)) * smoothstep(1.25, 1.6, lakeFar);
+    ground *= 1.0 + 0.5 * wider * (1.0 - smoothstep(0.0, 0.3 * wsize, abs(wr - 1.12 * wsize))) * smoothstep(-0.4, 0.6, dot(normalize(wd + 1e-4), vec2(-0.7, -0.7)));
+    ground = mix(ground, vec3(0.006, 0.02, 0.026), 0.95 * wider * (1.0 - smoothstep(0.8 * wsize, wsize, wr)));
+  }
   float lowCountry = top * (1.0 - smoothstep(0.22, 0.5, height)) * (1.0 - min(1.0, 1.4 * rust)) * (1.0 - 0.85 * great);
   // (The same low country as on the way up, a little darker under the air of orbit: no change of colour at the top of the rise.)
   vec3 countryColour = 0.55 * floorTone * (0.34 + 2.3 * lowLum);
