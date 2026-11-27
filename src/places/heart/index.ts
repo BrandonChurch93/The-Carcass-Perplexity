@@ -64,7 +64,7 @@ const KEY3 = lens(fly([groupAt[0] - 42.8, 6.3, groupAt[1] + 50.5], 44.5, 0.4, 18
 const KEY1 = lens(fly([LINE[0] - 3.5, 1.7, LINE[1] + 3.5], 52, -7.5, 45), 0.016, 6);
 
 /** heart-2, the one that sank: from the shore, the carcass in the middle distance and the mouth behind it on the left. */
-const KEY2 = lens(fly(over(-520, 287, 4.4), 43, -4.5, 40), 0.075, 21);
+const KEY2 = lens(fly(over(-520, 287, 4.4), 43, -4.5, 40), 0.03, 21);
 
 /** heart-4, the mouth and its fall, through the longest lens of the place, from the crust. */
 const MOUTH_AIM: Vec3 = [MOUTH.x + 26, 68, MOUTH.z];
