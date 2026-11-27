@@ -83,8 +83,6 @@ const float APRON_TONE = 0.48;
 const float WALL_TONE = 0.6;
 // How much brighter than its plain geometry the melt lights the rim: the fume in the mouth glows and lights it too.
 const float RIM_LIGHT = 5.0;
-// How much of the open pool's light the crusted river in the tube gives the roof over it.
-const float TUBE_GLOW = 0.06;
 uniform float uFlare;
 float tubeAxis(float d) {
   float k = smoothstep(25.0, 200.0, d);
@@ -126,8 +124,6 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   float e = poolLight(p, n, vec3(${f(MOUTH.x - 34)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 9)}), 13.0) * uFlare * shade * reach;
   // The crusted shelf east of the pool gives the east wall just enough to show it as rock against the dark.
   e += 0.009 * poolLight(p, n, vec3(${f(MOUTH.x + 16)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 26.0) * smoothstep(46.0, 8.0, d) * smoothstep(0.6, 3.5, d);
-  // The river further in runs under a broken crust and lights the roof and the ribs over it from below, less with every rib.
-  e += TUBE_GLOW * poolLight(p, n, vec3(riverX(d), ${f(TUBE.floor)}, p.z), 24.0) * exp(-d / 19.0) * smoothstep(1.5, 9.0, d);
   return blackbody(1390.0) * 3.14159 * RIM_LIGHT * e;
 }
 // What is left in the dark of the tube: the glow of the river far in, on soot. It shows the rock as rock and no more.
@@ -228,21 +224,12 @@ void main() {
   // What the wall hides is thrown away at the end and is not worked out: every picture is read with the slopes taken above.
   bool hidden = hiddenByWall(vWorld, vSkin.z);
   // Far inside no light reaches and there is no rock to draw; between, only the melt's light on plain dark rock.
-  // Deep in, the same ribs go on round the tube: layers a metre or two deep, each a little proud of the one behind, their under
-  // sides turned to the river and their hollows sooted. They take the river's light and nothing else.
-  vec3 deepC = vec3(0.0);
-  float deepOn = inside * smoothstep(18.0, 26.0, d);
-  if (deepOn > 0.0 && d < 130.0) {
-    float deepLay = vSkin.y / 2.1 + 2.4 * vnoise(vSkin.xy / 13.0) + 0.6 * vnoise(vSkin.xy / 3.3 + 4.0);
-    float deepAlong = vSkin.x / 17.0;
-    float deepRib = 0.7 * vnoise(vec2(deepAlong, deepLay)) + 0.3 * vnoise(vec2(deepAlong * 3.1 + 3.0, deepLay * 2.6));
-    float deepRibIn = 0.7 * vnoise(vec2(deepAlong, deepLay + 0.22)) + 0.3 * vnoise(vec2(deepAlong * 3.1 + 3.0, (deepLay + 0.22) * 2.6));
-    vec3 deepN = normalize(n + vec3(0.0, 0.0, 1.0) * (deepRibIn - deepRib) * 7.0);
-    float deepRough = (0.75 + 0.5 * vnoise(vSkin.xy / 1.7 + 11.0)) * (0.8 + 0.4 * vnoise(vSkin.xy / 0.45 + 5.0));
-    deepC = vec3(0.075) * (0.25 + 1.5 * smoothstep(0.3, 0.72, deepRib)) * deepRough * (tubeDark(d) + riverLight(vWorld, deepN, d)) / 3.14159 * (1.0 - smoothstep(95.0, 130.0, d));
-  }
   if (inside > 0.5 && d > 26.0) {
-    if (!hidden) c = deepC;
+    // The same ribs go on round the tube, and only their fronts show.
+    if (d < 110.0 && !hidden) {
+      float deepRib = vnoise(vec2(vSkin.x / 17.0, vSkin.y / 2.1 + 2.4 * vnoise(vSkin.xy / 13.0)));
+      c = vec3(0.06) * (0.12 + 1.6 * smoothstep(0.3, 0.72, deepRib)) * (tubeDark(d) + (d < 64.0 ? riverLight(vWorld, n, d) : vec3(0.0))) / 3.14159;
+    }
   } else if (!ragged && !hidden) {
     if (collar < 1.0) {
       // The rim and the tube have no upright direction (the roof, the bevel): the picture is laid on from the axis the face looks along.
@@ -267,7 +254,7 @@ void main() {
       float crack = smoothstep(0.03, 0.0, abs(vnoise(vec2(vSkin.x / 4.3, lay * 0.9 + 7.0)) - 0.5)) * smoothstep(0.35, 0.6, vnoise(vSkin.xy / 8.0 + 21.0));
       cliff *= 1.0 - broken * max(0.8 * hollow, 0.7 * crack);
       cliff *= mix(1.0, (0.62 + 0.8 * rib) * (0.6 + 0.8 * vnoise(vSkin.xy / 14.0 + 7.0)), broken);
-      c = mix(rockShade(vWorld, n, v, cliff, 1.0, vec3(0.0), d), deepC, deepOn);
+      c = rockShade(vWorld, n, v, cliff, 1.0, vec3(0.0), d);
     }
     if (collar > 0.0) {
       // The land's rock, read with the slopes taken at the top: the same rock under the same light as the wall.

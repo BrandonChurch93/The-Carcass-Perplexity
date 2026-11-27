@@ -260,8 +260,7 @@ void main() {
   // Rafts of the same skin, torn from the rim, lie on the open melt and drift along it.
   vec2 rafted = q + vec2(0.95, -0.3) * (0.2 * uTime);
   float raft = feeding * smoothstep(0.5, 0.58, vnoise(rafted / 0.55 + 47.0) * 0.72 + vnoise(rafted / 0.19 + 3.0 + vec2(0.0, uTime * 0.2)) * 0.28 - 0.12 * (drawnIn - 0.5));
-  // On the line the tongue lies nearer the middle, so the bare melt reaches most of the way to both banks.
-  float strays = (0.5 + 0.2 * vnoise(vec2(vFlow.x / 5.0, vSeam.y * 1.9))) * (abs(vSeam.y - uTongue.w) < 0.5 ? 0.45 : 1.0);
+  float strays = 0.5 + 0.2 * vnoise(vec2(vFlow.x / 5.0, vSeam.y * 1.9));
   float lean = mix(abs(bankSide * ax - strays), mix(ax, inFrom, feeding), max(stir, feeding));
   // Metres across the stream from the middle of the gap as the net has it, signed, and smooth through the middle: the ribbon's own
   // middle line is up to a metre off it.

@@ -752,15 +752,12 @@ float heightAt(vec2 q, float c) {
   // its top level with the bottom of that frame, out of focus.
   if (uHill.z > 0.0) {
     vec2 dh = q - uHill.xy;
-    // It lies across the view as a pressure ridge does, and is no dome: a little lower than it was, and it runs on to the right.
-    float hr = length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582)) / 1.65));
+    float hr = length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582))));
     if (hr < 7.6) {
       float over = max(hr - 2.0, 0.0);
-      float top = 2.9 - 0.096 * over * over;
-      // Its top line is broken: slabs two to three metres long tilted up against each other, and knobs 0.8 to 1.4 m across on
-      // them. Through the blur it reads as a ridge of crust.
-      float slabUp = abs(fract(dot(dh, vec2(0.813, 0.582)) / 2.6 + 0.35 * vnoise(q / 3.1 + 4.0)) - 0.5);
-      float knob = (0.2 * smoothstep(0.35, 0.75, vnoise(q / 0.9 + 9.0)) + 0.34 * slabUp - 0.1) * smoothstep(0.3, 1.2, top);
+      float top = 2.96 - 0.096 * over * over;
+      // Its top line is lumpy, knobs 0.8 to 1.4 m across and up to 0.22 m high: through the blur it reads as a ridge of crust.
+      float knob = 0.22 * smoothstep(0.35, 0.75, vnoise(q / 0.9 + 9.0)) * smoothstep(0.3, 1.2, top);
       h = mix(h, top + knob + 0.05 * (vnoise(q / 0.8 + 9.0) - 0.5) * smoothstep(2.0, 4.0, hr), smoothstep(0.0, 0.8, top) * uHill.z);
       gSheetHigh *= 1.0 - smoothstep(0.0, 0.8, top) * uHill.z;
     }
@@ -907,8 +904,12 @@ void main() {
   vec2 xz = vWorld.xz;
   float shore = landAt(xz).b;
   vec2 q = xz - vDrift;
-  vec4 heat = heatAt(q, -shore, netAt(q), 1.0 / uGlowTexels);
-  gl_FragColor = vec4(blackbody(heat.y) * heat.x, 1.0);
+  vec4 net = netAt(q);
+  vec4 heat = heatAt(q, -shore, net, 1.0 / uGlowTexels);
+  // The channel at the line is drawn wider than its seam was, with pools, and nearer its bank: what it gives the rig is what
+  // the narrower one gave.
+  float onLine = step(1.5, net.g) * (1.0 - smoothstep(0.01, 0.04, net.g - 2.0));
+  gl_FragColor = vec4(blackbody(heat.y) * heat.x * mix(1.0, 0.4, onLine), 1.0);
   if (shore > 1.5) discard;
 }`;
 

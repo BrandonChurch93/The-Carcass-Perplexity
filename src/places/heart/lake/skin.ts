@@ -84,7 +84,7 @@ void main() {
   float blurred = 0.0;
   if (uHill.z > 0.0) {
     vec2 dh = q - uHill.xy;
-    blurred = uHill.z * (1.0 - smoothstep(6.4, 7.6, length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582)) / 1.65))));
+    blurred = uHill.z * (1.0 - smoothstep(6.4, 7.6, length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582))))));
     fpLong = max(fpLong, 0.45 * blurred);
     fpShort = max(fpShort, 0.2 * blurred);
   }
@@ -227,8 +227,6 @@ void main() {
   float slabSeen = 1.0 - smoothstep(0.012, 0.04, fpS);
   // A crest is worn pale, a furrow is black glass, and each slab is of its own day.
   float tone = clamp(0.78 + mix(2.4, 0.5, smoothstep(0.004, 0.02, fpS)) * (skinM.z - 0.5), 0.1, 1.7) * (1.0 - 0.85 * pourGap) * (1.0 + 0.22 * (slabTag - 0.5) * slabSeen);
-  // Round the one that sank the picture's ropes stand out hard: crests worn pale, furrows black, wherever a cord is told at all.
-  tone *= mix(1.0, 0.4 + 1.9 * smoothstep(0.25, 0.8, skinM.z), coilMound * (1.0 - smoothstep(0.03, 0.1, fpS)));
   // The light on the crust is the flat light of an overcast sky: the paint leans a cord half again as steep as it stands.
   vec2 fine = 1.5 * POUR_TALL * gPourSpan * skinM.xy + SHEET_TALL_D * skinD.xy;
   float grainA = skinM.z - 0.5;
@@ -297,7 +295,7 @@ void main() {
   // The banks of the line are dark charcoal brown, not ash.
   // The crust at the line is as the picture has it under that sky: a lit grey with a breath of violet, not charcoal. Round
   // the one that sank it is a third paler than it was.
-  albedo *= mix(vec3(1.0), vec3(3.2, 2.9, 3.05), coil * (1.0 - coilMound) * (1.0 - fresh)) * mix(1.0, 1.08, coilMound);
+  albedo *= mix(vec3(1.0), vec3(3.2, 2.9, 3.05), coil * (1.0 - coilMound) * (1.0 - fresh)) * mix(1.0, 1.3, coilMound);
   albedo *= mix(vec3(1.0), vec3(0.86, 0.8, 0.77), wide);
   albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * skinD.z + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
@@ -372,7 +370,11 @@ void main() {
   float wallOn = max(steep, shown * (1.0 - smoothstep(-0.03, 0.03, bank)) * smoothstep(0.0, 0.06, vWorld.y - meltLevel(net))) * live * (1.0 - smoothstep(0.1, 0.4, fresh));
   float faceAt = q.x / 0.23 + q.y / 0.31;
   float face = smoothstep(0.35, 0.65, vnoise(vec2(faceAt + 31.0, vWorld.y / 0.1 + 7.0 * floor(faceAt / 2.3))));
-  light = skyLight + light * mix(1.0, (0.1 + 1.4 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.25)) * mix(0.12, 1.3, face), wallOn);
+  // The grey of the crust at the line is what it shows under the sky. Of the fire it takes what the dark skin took: the
+  // plate stays grey and is warm only at the brim.
+  vec3 fireTone = mix(vec3(1.0), vec3(0.66, 0.6, 0.59) / vec3(3.2, 2.9, 3.05), coil * (1.0 - coilMound) * (1.0 - fresh));
+  fireTone = mix(fireTone, vec3(1.0), max(steep, 0.8 * wallOn));
+  light = skyLight + fireTone * light * mix(1.0, (0.1 + 1.4 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.25)) * mix(0.12, 1.3, face), wallOn);
   // A broken face is duller and browner than the skin.
   albedo = mix(albedo, vec3(0.042, 0.038, 0.036) * clamp(0.75 + 0.5 * skinD.z + 0.6 * grainA + 0.5 * (skinL.z - 0.5), 0.4, 1.7), max(steep, 0.8 * wallOn));
   vec3 c = albedo * light / 3.14159;
