@@ -50,7 +50,7 @@ float brineFresnel(vec3 n, vec3 v) {
   // (Seen from high above, the fine ruffle on it turns a share of the skin to the sky: a lens low over it sees the body and the glints.)
   // (And the mirror falls with the angle of the look itself, not only with the wavelet's: near a low lens, where it looks down into
   // the brine, the pool is its own red.)
-  return 0.022 + 0.03 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.2 * pow(1.0 - nv, 8.0) * mix(1.0, 0.3, smoothstep(0.1, 0.36, v.y));
+  return 0.016 + 0.036 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.15 * pow(1.0 - nv, 8.0) * mix(1.0, 0.25, smoothstep(0.04, 0.24, v.y));
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
@@ -71,7 +71,7 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   seen = rigAir(seen, 3.0 + away * 0.8, 0.5);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
-  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.77, 0.71);
+  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.73, 0.67);
 }
 // s: metres to the shore, negative in the brine. n: the surface's normal (ripples and rings laid in by the caller). froth: the colour of the
 // scum on top and how much of it there is.

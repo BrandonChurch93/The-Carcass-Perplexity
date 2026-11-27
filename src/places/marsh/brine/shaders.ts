@@ -67,7 +67,7 @@ vec4 groups(vec2 q, vec2 dir, float len, float levels) {
   float k = 6.2832 / len;
   float w = k * sqrt(9.81 / k + 0.000074 * k);
   vec2 g = vec2(dot(dir, q) - 0.5 * w / k * uTime, dot(vec2(-dir.y, dir.x), q));
-  return textureLod(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)), max(grainLod - levels, 0.0));;
+  return textureLod(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)), max(grainLod - levels, 0.0));
 }
 
 void main() {
@@ -451,7 +451,7 @@ void main() {
   fres *= mix(0.15, 1.0, smoothstep(0.04, 0.26, vLocal.y)) * (1.0 - 0.8 * rim);
   // Scum rides on the skin where the runs have left it, and grit from the pool's floor: both hide what is behind them.
   // (Scum is a stain, soft at its edge and never whole: what the runs left behind, rust in the red. The lumps in it are few and pale.)
-  float scum = 0.7 * smoothstep(0.56, 0.84, g.g * 0.62 + grit.r * 0.2 + 0.18 * scumTex.r + 0.12 * film.y) * smoothstep(0.25, 0.6, vLocal.y);
+  float scum = 0.55 * smoothstep(0.6, 0.92, g.g * 0.75 + grit.r * 0.1 + 0.15 * scumTex.r + 0.12 * film.y) * smoothstep(0.25, 0.6, vLocal.y);
   float speck = smoothstep(0.86, 0.885, grit.g * 0.6 + fleck.b * 0.4) * smoothstep(0.25, 0.45, vLocal.y);
   float covered = max(max(scum, speck), rim);
 #ifdef THROUGH
@@ -488,7 +488,7 @@ void main() {
   env += uSkyZenith * (2.4 * window * window + 26.0 * hot * hot * hot) * (1.0 - 0.6 * film.y) * (0.6 + 0.4 * g.r);
   lit += env * fres * mix(1.0, open, 0.5) * vec3(1.0, 0.95, 0.93);
   lit += skyRadiance(up) * 0.035 * glint * smoothstep(0.35, 0.7, grit.r) * mix(1.0, open, 0.5);
-  vec3 onTop = mix(vec3(0.34, 0.25, 0.2) * (0.5 + fleck.r), vec3(0.17, 0.062, 0.034) * (0.5 + 0.9 * scumTex.g), (1.0 - speck) * (1.0 - rim));
+  vec3 onTop = mix(vec3(0.34, 0.25, 0.2) * (0.5 + fleck.r), vec3(0.27, 0.11, 0.06) * (0.5 + 0.9 * scumTex.g), (1.0 - speck) * (1.0 - rim));
   // (The rolled edge of a torn skin is the brine itself, gathered: dark.)
   onTop = mix(onTop, vec3(0.05, 0.008, 0.006), rim);
   lit = mix(lit, onTop * fallsOn, covered);
