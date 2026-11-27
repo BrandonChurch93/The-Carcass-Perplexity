@@ -811,7 +811,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   // The shelf of the line view, 2 to 13 m from its lens: its picture has broken blocks of scoria of many sizes standing clear of a bed of grit,
   // each with a top that takes the sky. The land draws the bed and what is lower than a hand; these are the blocks. A stream of their own.
   rng = ctx.rng('land/heap');
-  for (let i = 0; i < 700; i++) {
+  for (let i = 0; i < 300; i++) {
     const a = rng.range(2.4, 13);
     const r = rng.range(-6.2, 2.6);
     const size = sized(0.16, 0.9, 1.2);
