@@ -155,7 +155,7 @@ export function wallRibs(spacing: (x: number, z: number) => number, from: number
 }
 
 /** A level grid draped on the land. `keep` chooses the triangles by their corners: a triangle is kept when it says yes for all three. */
-export function sheet(x0: number, z0: number, x1: number, z1: number, cell: number, height: Height, keep: (x: number, z: number, y: number) => boolean, lift = 0, e = cell * 0.5, radii: readonly number[] = [cell, cell * 3]): THREE.BufferGeometry {
+export function sheet(x0: number, z0: number, x1: number, z1: number, cell: number, height: Height, keep: (x: number, z: number, y: number) => boolean, lift = 0, e = cell * 0.5, radii: readonly number[] = [cell, cell * 3], broken = false): THREE.BufferGeometry {
   const nx = Math.max(1, Math.round((x1 - x0) / cell));
   const nz = Math.max(1, Math.round((z1 - z0) / cell));
   const total = (nx + 1) * (nz + 1);
@@ -190,6 +190,11 @@ export function sheet(x0: number, z0: number, x1: number, z1: number, cell: numb
       const b = a + 1;
       const c = a + nx + 1;
       const d = c + 1;
+      // On broken ground a cell is cut along the diagonal that climbs least: cut one way always, a face that crosses the rows is a row of teeth.
+      if (broken && ok[a] && ok[b] && ok[c] && ok[d] && Math.abs((ys[a] as number) - (ys[d] as number)) < Math.abs((ys[b] as number) - (ys[c] as number))) {
+        index.push(use(a), use(c), use(d), use(a), use(d), use(b));
+        continue;
+      }
       if (ok[a] && ok[c] && ok[b]) index.push(use(a), use(c), use(b));
       if (ok[b] && ok[c] && ok[d]) index.push(use(b), use(c), use(d));
     }

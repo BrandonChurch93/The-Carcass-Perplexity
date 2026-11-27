@@ -581,21 +581,14 @@ void main() {
     vec3 clinker = vec3(0.06, 0.052, 0.047) * (0.35 + 1.1 * smoothstep(0.1, 0.75, grain)) * (0.7 + 0.6 * pits);
     #ifdef RUBBLE
     // The heap is blocks on a bed (vLand.y: what stands over the bed). A block's broken sides are the black of fresh scoria and its top
-    // carries ash and takes the sky; the bed is grit and pebbles read at their true size, with ash lying in its hollows.
+    // carries ash and takes the sky.
     float block = smoothstep(0.1, 0.6, vLand.y);
     float topAsh = block * smoothstep(0.6, 0.88, n0.y) * (0.5 + 0.5 * smoothstep(0.3, 0.6, vnoise(vWorld.xz / 0.23 + 3.7)));
     clinker = mix(clinker * mix(1.0, 0.75, block), vec3(0.2, 0.19, 0.178) * (0.5 + 0.8 * grain), 0.8 * topAsh);
-    vec3 bedNh = PICK(tTalusNh, TURN * vWorld.xz / 1.1 + 0.41, TURN * wx.xz / 1.1, TURN * wy.xz / 1.1).rgb;
-    vec3 bed = vec3(0.046, 0.041, 0.038) * (0.3 + 1.4 * bedNh.b);
-    // Ash lies on it in drifts, and in the ash pale grains of pumice a finger across.
-    float drifted = smoothstep(0.35, 0.6, vnoise(vWorld.xz / 0.8 + 9.3));
-    float grains = smoothstep(0.62, 0.74, vnoise(vWorld.xz / 0.035 + 5.1)) * sharp;
-    bed = mix(bed, vec3(0.13, 0.122, 0.114), 0.5 * smoothstep(0.55, 0.25, bedNh.b) * drifted);
-    bed = mix(bed, vec3(0.16, 0.152, 0.14), (0.15 + 0.35 * drifted) * grains);
-    vec2 bedTip = TURN * ((bedNh.rg - 0.5) * vec2(1.0, -1.0));
+    // The bed between them is grit, black in its pits, with ash lying on it in drifts.
+    vec3 bed = vec3(0.046, 0.041, 0.038) * (0.3 + 1.4 * grain);
+    bed = mix(bed, vec3(0.13, 0.122, 0.114) * (0.6 + 0.8 * pits), 0.5 * smoothstep(0.35, 0.6, vnoise(vWorld.xz / 0.8 + 9.3)));
     clinker = mix(bed, clinker, block);
-    bent = mix(vec3(bedTip.x, 0.0, bedTip.y) * 0.7, bent, block);
-    grain = mix(bedNh.b, grain, block);
     #endif
     albedo = mix(albedo, clinker, byLens);
     n = normalize(n + bent * 2.4 * byLens);
