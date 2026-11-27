@@ -94,7 +94,7 @@ export function create(ctx: Context): Piece {
   const AWAY = { x: -58, z: -98 };
   // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
   // Staged: in the view of the plumes it is a whole animal far off in the vapour, seen in the gap between the fronds, as the picture has it.
-  const MIST = { x: -41.1, z: -74.5, heading: -95 };
+  const MIST = { x: -38.5, z: -56.7, heading: -95 };
   // Staged: in the view of the rim it stands clear of the growth, before it, where the picture of the rim has it.
   const RIM_NEAR = { x: -28.0, z: 17.4, heading: 38 };
   const rimUp = rim.plan.up;
