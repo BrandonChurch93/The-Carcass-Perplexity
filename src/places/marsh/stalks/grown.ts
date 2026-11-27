@@ -219,8 +219,8 @@ void main() {
   float side = smoothstep(0.25, 0.65, fbm(vec2(vUv.x * 3.0 + seed * 3.0, vUv.y * 0.8)));
   float ran = smoothstep(0.2 + 0.5 * (1.0 - side), 0.85, ringF + 0.5 * (tongue - 0.5));
   albedo *= mix(vec3(1.0), vec3(0.95, 0.87, 0.73), byLens);
-  albedo = mix(albedo, mix(vec3(0.24, 0.078, 0.013), vec3(0.09, 0.03, 0.009), tongue) * (0.7 + 0.6 * luma), 0.95 * ran * (0.55 + 0.45 * side) * ringK);
-  albedo *= mix(vec3(1.0), vec3(0.3, 0.15, 0.085), smoothstep(0.74, 0.9, ringF) * ringK * (0.7 + 0.3 * tongue));
+  albedo = mix(albedo, mix(vec3(0.17, 0.05, 0.008), vec3(0.075, 0.022, 0.006), tongue) * (0.7 + 0.6 * luma), 0.95 * ran * (0.55 + 0.45 * side) * ringK);
+  albedo *= mix(vec3(1.0), vec3(0.22, 0.09, 0.04), smoothstep(0.72, 0.9, ringF) * ringK * (0.7 + 0.3 * tongue));
   albedo = mix(albedo, vec3(0.68, 0.65, 0.62) * (0.9 + 0.2 * grain), 0.75 * (1.0 - smoothstep(0.06, 0.2, ringF)) * ringK * smoothstep(0.3, 0.5, patchy));
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
