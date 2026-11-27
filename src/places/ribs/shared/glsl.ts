@@ -42,8 +42,9 @@ uniform vec3 uHaze;
 uniform vec3 uBounce;
 uniform vec3 uSkyBreak;
 uniform sampler2D tSky;
-uniform sampler2D tSkyFine;
-uniform vec4 uSkyTurn;`;
+uniform vec4 uSkyTurn;
+uniform sampler2D tDome;
+uniform vec4 uDome;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -124,35 +125,45 @@ float cloudShade(vec3 p) {
 }
 
 // The sky with its cloud, toward d: what the dome draws, and what a mirror (a pool, the sea) should show. from is where it is seen from.
-// One picture of a storm sky laid round the dome and mirrored behind, turning slowly with the wind while its lumps work; three texture reads.
-// For light on a rough surface skyRadiance is enough.
-vec3 skyCloud(vec3 from, vec3 d) {
-  float az = atan(d.x, -d.z);
-  float el = asin(clamp(d.y, 0.0, 1.0));
-  vec2 uv = vec2(0.5 + (az - uSkyTurn.x) / 2.62, 1.0 - exp(-el / 0.82));
-  vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
-  vec3 c = texture2D(tSky, uv + 0.022 * work).rgb * uSkyTurn.w;
-  // The picture has a sixth of a texel for a pixel of the widest lens: its own lumps, read four times smaller and against their own
-  // local mean, are laid into it as the fine structure a cloud has at every size.
-  vec2 fineAt = uv * 4.0 + vec2(0.31, 0.17) + 0.05 * work;
-  c *= mix(1.0, clamp(texture2D(tSkyFine, fineAt).r * 1.992, 0.6, 1.22), 0.7);
-  // The storm's cloud is slate: the brown of the picture's bases is taken out.
+// One picture of a breaking storm sky (tDome) laid round the dome by heading and height and mirrored behind, turning slowly with the wind
+// while its lumps work. The picture is a bright afternoon's: domeTone makes it the storm's (slate, heavy bases, the white heads kept) and
+// lays the air over it, thick at the horizon and thin overhead, so that the dome, the far sea and the last blades end in one colour.
+// uDome: x the shot's gain of the whole sky, y the depth of air straight up (the veil at a height is 1 - exp(-y / sin)), z what the
+// break is given, w how far the white is shut away from the break.
+vec3 domeTone(vec3 c, vec3 d, float el) {
   float grey = dot(c, vec3(0.3, 0.5, 0.2));
-  c = mix(c, grey * vec3(0.87, 0.98, 1.13), 0.55);
-  // The break is silver, not gold: what burns in the picture is cooled to the white of light through thin cloud; a little of its warmth stays.
-  float burning = dot(c, vec3(0.333));
-  c = mix(c, burning * vec3(0.93, 0.99, 1.08), 0.82 * smoothstep(0.12, 0.7, burning));
-  // The bases are heavy and the break burns: what is dark in the picture is darker here and what is bright is brighter, by one smooth
-  // curve, so that the break keeps the soft edge it has in the picture.
-  burning = dot(c, vec3(0.333));
-  c *= 0.55 + 1.9 * burning / (burning + 1.6);
+  c = mix(vec3(grey), c, 0.8);
+  c *= 0.18 + 0.72 * smoothstep(0.1, 0.6, grey);
   // Straight overhead the picture runs out: the slate of the cloud's base.
   c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
-  // Toward the horizon the cloud is seen through more and more air.
   float s = max(dot(d, uSkyBreak), 0.0);
   float s2 = s * s;
-  float low = 0.7 * smoothstep(0.07, 0.0, d.y);
-  return mix(c, uHaze * (1.0 + 0.5 * s2 * s2), low);
+  float near = s2 * s2;
+  near = near * near * near;
+  // One break: the picture's white heads stand where the rig's break is, and away from it they are shut down to the storm's grey.
+  c *= mix(1.0 - uDome.w * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z, near);
+  float veil = 1.0 - exp(-uDome.y / max(d.y, 0.008));
+  return uDome.x * mix(c, uHaze * (0.85 + 0.5 * s2 * s2), veil);
+}
+vec2 domeAt(vec3 d, out float el) {
+  float az = atan(d.x, -d.z);
+  el = asin(clamp(d.y, 0.0, 1.0));
+  // The picture's own pale foot stands under the horizon: the air's veil is the horizon's light, and cloud comes down to it.
+  // The picture's break lies 0.47 radians right of its middle; the rig turns it as if it lay 0.715 right (the first picture's place).
+  return vec2(0.5 + (az - uSkyTurn.x - 0.245) / 2.62, 1.0 - 0.91 * exp(-el / 0.82));
+}
+vec3 skyCloud(vec3 from, vec3 d) {
+  float el;
+  vec2 uv = domeAt(d, el);
+  vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
+  return domeTone(texture2D(tDome, uv + 0.012 * work).rgb, d, el);
+}
+// The same sky for a mirror that names the level of the picture it reads (a rippled sheet read by its own slopes costs several times
+// more): the cloud's slow working is left out, the ripples bend the picture far more than it does.
+vec3 skyMirror(vec3 d, float level) {
+  float el;
+  vec2 uv = domeAt(d, el);
+  return domeTone(textureLod(tDome, uv, level).rgb, d, el);
 }
 
 // How much of the sun reaches p through the blades and the land (baked once) and the cloud (drifting).
@@ -195,7 +206,9 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   vec3 h = normalize(v + uSunDir);
   float gloss = 2.0 / max(rough * rough * rough * rough, 2e-4);
   float spec = pow(max(dot(n, h), 0.0), gloss) * (gloss + 8.0) * 0.0398;
-  return c + f * (env * open + uSunColour * (spec * nl * sun));
+  // The glint is the sun on water: silver-white, with a third of the light's own warmth.
+  vec3 glint = mix(vec3(dot(uSunColour, vec3(0.3, 0.5, 0.2))), uSunColour, 0.35);
+  return c + f * (env * open + glint * (spec * nl * sun));
 }
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
