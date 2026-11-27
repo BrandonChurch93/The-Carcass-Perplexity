@@ -50,14 +50,14 @@ export function create(ctx: Context): Piece {
     const hero = herd.length === 0;
     const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.05 * b.k : 0);
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.87 : 0.6) * b.k;
-    const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.16 * b.k - under) / (1.59 * b.k)))) - 0.633);
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 1.3 : herd.length === 1 ? 0.85 : 0.6) * b.k - 0.06 * b.k;
+    const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.16 * b.k - under) / (1.42 * b.k)))) - 0.785);
     const near = herd.length < 3;
     // The one by the lens of the wallowers has rolled and is wet all over; the rest that lie in the brine have dried down to a hand above it.
     const wet = sink > 0.5 ? (herd.length === 2 ? rng.range(1.0, 1.4) : 0.4 * rng.range(1.0, 1.4) - 0.05) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
-      // The one that lies in the brine before the lens of the wallowers is shaggy: the photographed matted hair is its hide.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}), ...(near && herd.length < 2 ? { coat: [0.8, 1.75, 0, 0] as [number, number, number, number], tendrils: hero ? 10 : 8, hang: 0, thick: hero ? 3.4 : 3.0, long: hero ? 0.9 : 0.8 } : {}) }),
+      // The one that lies in the brine before the lens of the wallowers is wet all over its back: skin, with the mud of the brine low on it.
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 2.1 } : herd.length === 1 ? { droop: 1.8, strand: 0.5 } : {}), ...(near ? { coat: (herd.length === 2 ? [1.45, 9, 1, 0] : [0.84, 1.95, 0, 0]) as [number, number, number, number], tendrils: 10, hang: 0, ...(herd.length === 2 ? { tint: 0.4, skip: 2 } : {}), thick: hero ? 5.2 : herd.length === 2 ? 3.4 : 5.0, long: hero ? 0.72 : herd.length === 1 ? 0.7 : 0.8 } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
@@ -71,7 +71,7 @@ export function create(ctx: Context): Piece {
     const hl = b.head[1] / n;
     // STAGED for the lens of the wallowers: the young one stands on the bank a stride behind where the anchors have it, whole in that frame beside the great one's rump,
     // and the one behind the three is five metres further off and to the right, small and in the haze, as the approved picture has them.
-    const p = herd.length === 1 ? rel(34.25, 5.25) : herd.length === 3 ? rel(49, 9.5) : rel(b.d, b.l);
+    const p = herd.length === 1 ? rel(34.25, 5.5) : herd.length === 3 ? rel(49, 9.5) : rel(b.d, b.l);
     // TEMPORARY, until the lead sets it in the anchors: the ones that wade nearest the lens of the wide key stand larger in it than anything in the approved picture.
     // STAGED for the lens of the wallowers: the great one is a tenth smaller than the anchors have it, and fills as much of that frame as the approved picture gives it.
     const size = b.d < 26 ? b.size * 0.6 : herd.length === 0 ? b.size * 0.9 : b.size;
@@ -174,7 +174,7 @@ export function create(ctx: Context): Piece {
           ctx.rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, 0.55 * k * (1 + 0.6 * off), on ? 0.85 * (1 - 0.7 * off) * dry : 0);
         }
         ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, on ? (ctx.rig.land.shore(stood.x, stood.z) > 0.05 ? 0.6 : 0.3) : 0, 1.9, stood.yaw);
-        wet.set(i, stood, k, seconds, on ? 1 : 0);
+        wet.set(i, stood, k, seconds, on ? 1 : 0, i > 2);
         if (i < 2) {
           for (let j = 0; j < 4; j++) {
             const foot = stood.feet[j] as (typeof stood.feet)[number];

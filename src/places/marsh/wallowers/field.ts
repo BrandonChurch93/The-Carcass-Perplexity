@@ -131,15 +131,15 @@ export function wallowerBody(young: number, seed: number): Body {
     ball(PELVIS, [-1.26 * lx, 1.1, s * 0.5], [0.52, 0.5, 0.4], 0.2);
     ball(CHEST, [0.78 * lx, 1.12, s * 0.52], [0.46, 0.52, 0.38], 0.2);
   }
-  ball(NECK, [1.16 * lx, 1.14, 0], [0.72 * hd, 0.72 * hd, 0.66 * hd], 0.3, -0.35);
+  ball(NECK, [1.1 * lx, 1.12, 0], [0.66 * hd, 0.68 * hd, 0.62 * hd], 0.3, -0.5);
   // The throat hangs in a dewlap between the forelegs and the jaw.
-  ball(NECK, [1.3 * lx, 0.68, 0], [0.46 * hd, 0.34 * hd, 0.46 * hd], 0.2);
-  ball(HEAD, [1.62 * lx, 0.92, 0], [0.58 * hd, 0.58 * hd, 0.6 * hd], 0.24, -0.5);
-  ball(HEAD, [1.96 * lx, 0.62, 0], [0.4 * hd, 0.48 * hd, 0.52 * hd], 0.16, -0.2);
+  ball(NECK, [1.2 * lx, 0.88, 0], [0.36 * hd, 0.28 * hd, 0.4 * hd], 0.2);
+  ball(HEAD, [1.5 * lx, 0.84, 0], [0.5 * hd, 0.52 * hd, 0.54 * hd], 0.24, -0.8);
+  ball(HEAD, [1.74 * lx, 0.5, 0], [0.37 * hd, 0.44 * hd, 0.52 * hd], 0.16, -0.7);
   // The lip: a broad pad that overhangs the mouth.
-  ball(HEAD, [2.14 * lx, 0.32, 0], [0.22 * hd, 0.22 * hd, 0.48 * hd], 0.1);
+  ball(HEAD, [1.86 * lx, 0.26, 0], [0.25 * hd, 0.23 * hd, 0.5 * hd], 0.1);
   // A brow with nothing under it.
-  ball(HEAD, [1.84 * lx, 1.12, 0], [0.32 * hd, 0.16 * hd, 0.44 * hd], 0.14, -0.6);
+  ball(HEAD, [1.68 * lx, 0.98, 0], [0.28 * hd, 0.15 * hd, 0.4 * hd], 0.14, -0.95);
 
   const skeleton: Skeleton = {
     joint: [],
@@ -147,14 +147,14 @@ export function wallowerBody(young: number, seed: number): Body {
     knee: [],
     ankle: [],
     lip: [],
-    muzzle: [2.28 * lx, 0.22, 0],
+    muzzle: [1.98 * lx, 0.16, 0],
     belly: [-0.5 * lx, 0.6, 0],
   };
   skeleton.joint[PELVIS] = [-1.25 * lx, 1.25, 0];
   skeleton.joint[BELLY] = [-0.35 * lx, 1.3, 0];
   skeleton.joint[CHEST] = [0.2 * lx, 1.3, 0];
-  skeleton.joint[NECK] = [1.0 * lx, 1.16, 0];
-  skeleton.joint[HEAD] = [1.4 * lx, 1.0, 0];
+  skeleton.joint[NECK] = [0.95 * lx, 1.16, 0];
+  skeleton.joint[HEAD] = [1.3 * lx, 0.98, 0];
   const stub = 1 - 0.12 * young;
   LEG_AT.forEach(([x0, side], l) => {
     const hind = x0 < 0;
@@ -199,7 +199,7 @@ export function wallowerBody(young: number, seed: number): Body {
     const u = f / (FRINGE - 1);
     const a = (u - 0.5) * 2.7;
     const r = 0.4 * hd;
-    const at: V3 = [2.08 * lx + Math.cos(a) * 0.19 * hd, 0.27 - 0.05 * Math.cos(a), Math.sin(a) * r];
+    const at: V3 = [1.82 * lx + Math.cos(a) * 0.2 * hd, 0.2 - 0.05 * Math.cos(a), Math.sin(a) * r];
     // Splayed like the fingers of a hand: out from the lip and forward, then down.
     const down = 0.55 + 0.35 * hash3(f, 3, 1, sd);
     const out: V3 = [Math.cos(a) * 1.1 + 0.25, -down, Math.sin(a) * 1.15];
@@ -337,10 +337,11 @@ export function wallowerBody(young: number, seed: number): Body {
       let hidden = 0;
       for (let i = 0; i < 4; i++) {
         const d = [0.06, 0.14, 0.3, 0.6][i] as number;
-        const v = Math.min(base(x + nx * d, y + ny * d, z + nz * d), y + ny * d - 0.1);
+        // (The ground is taken a hand under the feet: a muzzle carried at the mud is not shut in a hole by it.)
+        const v = Math.min(base(x + nx * d, y + ny * d, z + nz * d), y + ny * d + 0.05);
         hidden += ([0.3, 0.3, 0.25, 0.15][i] as number) * clamp((d - v) / d);
       }
-      return clamp(1 - 1.5 * hidden);
+      return 0.2 + 0.8 * clamp(1 - 1.5 * hidden);
     },
     weigh: (x, y, z, out) => {
       base(x, y, z);
