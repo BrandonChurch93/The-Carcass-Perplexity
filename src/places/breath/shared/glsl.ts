@@ -59,7 +59,7 @@ ${RIG_UNIFORMS_GLSL}
 vec3 sunHalo(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
   // The innermost term is the sun's own aureole in the fog: pale gold and far over white, so the lens blooms on it as it does in the pictures.
-  return uGlowColour * (vec3(1.0, 0.84, 0.6) * exp(-a / 0.75) + vec3(1.4, 0.62, 0.1) * exp(-a / 0.34) + vec3(7.0, 2.6, 0.5) * exp(-a / 0.1) + vec3(26.0, 17.0, 7.5) * exp(-a / 0.035));
+  return uGlowColour * (vec3(1.25, 0.92, 0.58) * exp(-a / 0.8) + vec3(1.4, 0.62, 0.1) * exp(-a / 0.34) + vec3(7.0, 2.6, 0.5) * exp(-a / 0.1) + vec3(26.0, 17.0, 7.5) * exp(-a / 0.035));
 }
 float sunGlow(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
