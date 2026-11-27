@@ -281,8 +281,9 @@ export function archesOver(deg: number, y: number): { back: number; shut: number
     const under = q.y - y;
     // The recess: deepest just under the arch, closing over three times its height.
     const recess = smooth((under + 0.3 * half) / (0.9 * half)) * (1 - smooth((under - 1.2 * half) / (3.6 * half)));
-    // No recess where it turns into the wall: eaten back there, the wall left its end standing free in the air.
-    back = Math.max(back, k * recess);
+    // No recess where it turns into the wall: eaten back there, the wall left its end standing free in the air. It opens only where the
+    // arch is whole: begun where the arch goes under the rock, its end wall stood as a pale upright sliver below the arch's end.
+    back = Math.max(back, k * recess * smooth((Math.min(q.near, q.far) - 8) / 10));
     const shade = smooth((under + 0.6 * half) / (0.8 * half)) * (1 - smooth((under - 1.5 * half) / (5.5 * half)));
     shut = Math.max(shut, Math.min(1, k * 1.15) * shade);
     on = Math.max(on, k * (1 - smooth((Math.abs(under) - 0.9 * half) / (1.2 * half))));

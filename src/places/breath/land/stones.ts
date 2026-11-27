@@ -48,14 +48,14 @@ export function scatter(rng: Rng, heightAt: (x: number, z: number) => number, ke
     // Not on an edge: a stone there hangs in the air on one side.
     if (Math.abs(heightAt(x + 0.3, z) - heightAt(x - 0.3, z)) + Math.abs(heightAt(x, z + 0.3) - heightAt(x, z - 0.3)) > 0.22) return;
     // A chip is a flat thing: as wide as it is long or a little less, a third to a half as thick. It is what a few breaks leave.
-    const wide = long * rng.range(0.55, 0.95);
-    const thick = long * rng.range(0.2, 0.42);
+    const wide = long * rng.range(0.6, 0.95);
+    const thick = long * rng.range(0.3, 0.55);
     planes.length = 0;
     for (let k = 0; k < 9; k++) {
       const a = rng.range(0, 2 * Math.PI);
       const e = rng.range(-1, 1);
       const s = Math.sqrt(1 - e * e);
-      planes.push([s * Math.cos(a), e, s * Math.sin(a), rng.range(0.62, 1)]);
+      planes.push([s * Math.cos(a), e, s * Math.sin(a), rng.range(0.8, 1)]);
     }
     const yaw = rng.range(0, 2 * Math.PI);
     const tilt = rng.range(-0.3, 0.3);
@@ -102,10 +102,19 @@ export function scatter(rng: Rng, heightAt: (x: number, z: number) => number, ke
         const j = (i + k) * 3;
         const yy = at[j + 1] as number;
         position.push(at[j] as number, yy, at[j + 2] as number);
-        normal.push(nx, ny, nz);
+        // Worn, not fresh broken: the light turns over an edge of it, and its top takes the sky.
+        const rx = ((at[j] as number) - x) / long;
+        const ry = (yy - (y0 + thick * 0.5 - sink)) / thick;
+        const rz = ((at[j + 2] as number) - z) / wide;
+        const rl = Math.hypot(rx, ry, rz) || 1;
+        const mx = 0.5 * nx + (0.5 * rx) / rl;
+        const my = 0.5 * ny + (0.5 * ry) / rl + 0.2;
+        const mz = 0.5 * nz + (0.5 * rz) / rl;
+        const ml = Math.hypot(mx, my, mz) || 1;
+        normal.push(mx / ml, my / ml, mz / ml);
         uv.push((at[j] as number) + 3.7 * long, (at[j + 2] as number) + yy);
         // Where it meets the rock it is in its own shade and holds the damp.
-        occ.push(0.6 + 0.4 * Math.min(1, Math.max(0, (yy - y0) / (0.6 * thick))));
+        occ.push(0.72 + 0.28 * Math.min(1, Math.max(0, (yy - y0) / (0.6 * thick))));
       }
     }
     if (long > 0.07) shades.push([x, z, 0.5 * wide, thick - sink]);
@@ -126,10 +135,10 @@ export function scatter(rng: Rng, heightAt: (x: number, z: number) => number, ke
       for (let i = 0; i < big; i++) {
         const b = rng.range(0, 2 * Math.PI);
         const e = spread * Math.sqrt(rng.next());
-        lay(cx + Math.cos(b) * e, cz + Math.sin(b) * e, 0.07 + 0.3 * rng.next() ** 3.2);
+        lay(cx + Math.cos(b) * e, cz + Math.sin(b) * e, 0.06 + 0.17 * rng.next() ** 3);
       }
       // And one or two that lie alone.
-      for (let i = 0; i < 2; i++) lay(cx + rng.range(-3, 3), cz + rng.range(-3, 3), rng.range(0.05, 0.2));
+      for (let i = 0; i < 2; i++) lay(cx + rng.range(-3, 3), cz + rng.range(-3, 3), rng.range(0.05, 0.14));
       for (let i = 0; i < 14; i++) {
         const b = rng.range(0, 2 * Math.PI);
         const e = 1.5 * spread * rng.next();

@@ -255,8 +255,8 @@ export function block(seed: number, size: [number, number, number], at: [number,
   const m = new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(turn[0], turn[1], turn[2], 'YXZ')), new THREE.Vector3(1, 1, 1));
   const p = new THREE.Vector3();
   const longest = Math.max(size[0], size[2]);
-  const columns = Math.max(36, Math.round((longest * 3.4) / 0.22));
-  const rows = Math.max(28, Math.round((Math.max(size[1], Math.min(size[0], size[2])) * 3) / 0.24));
+  const columns = Math.max(30, Math.round((longest * 3.4) / 0.31));
+  const rows = Math.max(24, Math.round((Math.max(size[1], Math.min(size[0], size[2])) * 3) / 0.33));
   // The normal of the face each point lies on: the edges of a broken block are sharp, and a mesh smoothed across them is a boulder.
   const faces: number[] = [];
   const turned = new THREE.Matrix3().setFromMatrix4(m);
