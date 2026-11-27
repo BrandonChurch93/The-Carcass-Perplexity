@@ -1,6 +1,6 @@
 // The stalk colonies: salt-crusted tubes with crimson plumes round the seep pools, and the small winged insects that live in them.
 import * as THREE from 'three';
-import { EYE, F as AHEAD, R as ASIDE, K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, UNIT, distToSegment, makePools, makeStalks, rel, type Stalk } from '../shared/anchors';
+import { EYE, F as AHEAD, R as ASIDE, K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, UNIT, distToSegment, makePools, makeStalks, rel, type Stalk, K1_DIR } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
@@ -246,7 +246,9 @@ export function create(ctx: Context): Piece {
       const cls = wild.next();
       const grown = anchored || lowly ? wild.range(0.86, 1.14) : cls < 0.15 ? wild.range(1.25, 1.65) : cls < 0.7 ? wild.range(0.85, 1.2) : cls < 0.9 ? wild.range(0.55, 0.8) : wild.range(0.3, 0.5);
       const grow = backdrop ? Math.min(grown, 1.15) : grown;
-      const tall = s.h * (0.45 + 0.75 * r1) * grow;
+      // Short clumps, not groves: what no key's lens stands by is grown lower, each by its own measure.
+      const squat = anchored || lowly ? 1 : 0.55 + 0.35 * ((seed * 67.1) % 1);
+      const tall = s.h * (0.45 + 0.75 * r1) * grow * squat;
       const girth = anchored ? wild.range(0.95, 1.08) : Math.pow(grow, 0.5) * wild.range(0.95, 1.35);
       const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * r3 * girth;
       const leaner = !anchored && wild.next() < 0.14 ? wild.range(0.2, 0.5) : 0;
@@ -377,7 +379,7 @@ export function create(ctx: Context): Piece {
       for (const w of wilds.filter((v) => v.foot && v.kind !== 2 && v.h > 1.2 && v.low === 0 && v.cards.length > 0)) {
         // Round the seep they stand thickest: its key's picture has a thicket there.
         const dense = Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) < 45;
-        const n = dense ? 3 + thick.int(4) : 1 + thick.int(3);
+        const n = dense ? 3 + thick.int(3) : 1 + thick.int(3);
         for (let k = 0; k < n; k++) {
           const a = thick.range(0, TAU);
           const d = thick.range(0.12, 0.75) * (dense ? 2.4 : 1);
@@ -386,7 +388,7 @@ export function create(ctx: Context): Piece {
           const yaw = a + thick.range(-1.2, 1.2);
           const h = w.h * thick.range(0.3, 1.05);
           const state = thick.next();
-          const kind = state < 0.24 ? 2 : state < 0.38 ? 1 : 0;
+          const kind = state < (dense ? 0.17 : 0.24) ? 2 : state < (dense ? 0.29 : 0.38) ? 1 : 0;
           const kinks = thick.next() < 0.6;
           const level = levelAt(x, z);
           const c: Wild = {
@@ -400,7 +402,47 @@ export function create(ctx: Context): Piece {
         }
       }
     }
-    for (const w of wilds) w.R *= SLIM;
+    {
+      // STAGED for the lens at the seep: its key's picture has a dense band of stalks on the far shore of the pool, of every height, most
+      // under a red head. They stand in clumps on the ground there, none in the brine.
+      const band = ctx.rng('stalks-band');
+      const like = wilds.find((v) => v.foot && v.kind === 0 && v.low === 0 && v.cards.length > 0);
+      for (let c = 0; like && c < 20; c++) {
+        const ahead = band.range(11.5, 27);
+        const across = band.range(-0.75, 0.75) * ahead;
+        const cx = K1_AT[0] + K1_DIR[0] * ahead - K1_DIR[1] * across;
+        const cz = K1_AT[1] + K1_DIR[1] * ahead + K1_DIR[0] * across;
+        const grows = band.range(0.55, 1.2);
+        const n = 2 + band.int(6);
+        for (let k = 0; k < n; k++) {
+          const a = band.range(0, TAU);
+          const d = band.range(0.1, 1.5);
+          const x = cx + Math.cos(a) * d;
+          const z = cz + Math.sin(a) * d;
+          const yaw = band.range(0, TAU);
+          const h = grows * band.range(0.9, 3.1);
+          const state = band.next();
+          const kind = state < 0.16 ? 2 : state < 0.27 ? 1 : 0;
+          const kinks = band.next() < 0.5;
+          const seed = band.next();
+          const head = (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
+          const turn = band.range(0, TAU);
+          if (ctx.rig.land.height(x, z) < -0.1) continue;
+          wilds.push({
+            ...like, x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: band.range(0.03, 0.45), R: band.range(0.02, 0.042) * Math.pow(h / 2.2, 0.4),
+            kind, phase: band.range(0, TAU), seed, bowA: band.range(0, TAU), bowM: band.range(0.04, 0.28),
+            kinkT: kinks ? band.range(0.25, 0.8) : 2, kinkM: kinks ? band.range(0.12, 0.45) : 0, kinkA: band.range(0, TAU), swayA: band.range(0, TAU),
+            age: kind === 2 ? 2 : band.range(0, 0.7), stain: band.range(0.12, 1.1), uvo: band.range(0, 2), fork: [0, 0, 0], collar: band.range(0.5, 1.2),
+            cards: kind === 2 ? [] : [[turn, 0.3, head, 0.2, 0, 0, band.next() < 0.12 ? 0.5 : 0, 0]], foot: true, bare: false,
+          });
+        }
+      }
+    }
+    // The red of the brine climbs a foot, not a stalk: on a short one it stops low, and the stalk above it is pale.
+    for (const w of wilds) {
+      w.R *= SLIM;
+      w.stain = Math.min(w.stain, 0.16 * w.h);
+    }
     const feet = wilds.filter((w) => w.foot || w.quiver === 0);
     const shade = ctx.rig.contactDiscs(feet.length);
     feet.forEach((w, i) => {
@@ -416,12 +458,12 @@ export function create(ctx: Context): Piece {
     const lensOf: Record<string, (w: Wild) => number> = {
       'marsh-01': (w) => distToSegment(w.x, w.z, eyeA, eyeB),
       'marsh-02': (w) => distToSegment(w.x, w.z, k2a, k2b),
-      'marsh-03': (w) => Math.max(0, Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) - 8),
+      'marsh-03': (w) => Math.max(0, Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) - 5),
       'marsh-04': (w) => Math.hypot(w.x - k3[0], w.z - k3[1]),
       'marsh-05': (w) => Math.hypot(w.x - k4[0], w.z - k4[1]),
     };
     const fineOf = (d: number): number => (d < 9 ? 40 : d < 18 ? 28 : d < 36 ? 13 : d < 80 ? 5 : 3);
-    const broadOf = (d: number): number => (d < 18 ? 0.62 : d < 36 ? 1.4 : d < 80 ? 2.5 : 3.6);
+    const broadOf = (d: number): number => (d < 9 ? 0.62 : d < 18 ? 1.05 : d < 36 ? 1.6 : d < 80 ? 2.5 : 3.6);
     {
       const footed = wilds.filter((w) => w.foot && !w.bare);
       const foot = new Float32Array(footed.length * 4);
@@ -466,7 +508,9 @@ export function create(ctx: Context): Piece {
         const nearF = new Fronds();
         const farF = new Fronds();
         const own = ctx.rng('stalks-fronds-' + shot.id);
-        for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineOf(from(w)), broadOf(from(w)), false);
+        // STAGED for the wide: from its height a stand is pale stalks under small tufts, so there no head is made as the full mop it is from among them.
+        const fineIn = (w: Wild): number => (shot.id === 'marsh-01' && from(w) > 6 ? Math.min(13, fineOf(from(w))) : fineOf(from(w)));
+        for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineIn(w), broadOf(from(w)), false);
         // The stems the same way: by the lens of the shot the ledges of the bark are the mesh, far off a stem is a plain tube.
         const closeW = wilds.filter((w) => from(w) < 7);
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
@@ -498,9 +542,8 @@ export function create(ctx: Context): Piece {
       const low = new Fronds();
       const listOf = (d: number): Fronds => (d < 20 ? nearF : d < 38 ? midF : farF);
       const wideOf = lensOf['marsh-01'] ?? reach;
-      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
-      // Most stems are bare below the head: one in four keeps an old leaf hanging.
-      for (const w of stands.leaves) if (seen(w.x, w.z) && wideOf(w) < 38 && (w.phase * 7.3) % 1 < 0.25) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)) * 0.35, broadOf(wideOf(w)) * 1.2, true);
+      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, wideOf(w) > 6 ? Math.min(13, fineOf(wideOf(w))) : fineOf(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
+      // No leaf hangs down these stems in the wide: its picture has pale bare stalks under a small red tuft.
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
       const t1 = stands.tufts[1] as number[];
