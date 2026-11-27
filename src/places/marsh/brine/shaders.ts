@@ -186,6 +186,7 @@ void main() {
 
   // How much froth the domes and the bursts have left here.
   float boil = 0.0;
+  vec2 swell = vec2(0.0);
   if (pool < 16.0) {
     // Each seep sends out ring after ring: half a stride from crest to crest, 0.7 m a second, dying with the way they have come.
     for (int i = 0; i < ${MAX_SEEPS}; i++) {
@@ -214,7 +215,9 @@ void main() {
       float env = exp(-q * q / (wide * wide)) * ring.w * (0.45 + 1.1 * clamp(thrown, 0.0, 1.0));
       if (env < 0.003) continue;
       // The long waves lead and the short ones follow: the crests are closer behind the front than before it.
-      slope += d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3 * nearGain;
+      vec2 front = d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3 * nearGain;
+      slope += front;
+      swell += front;
       boil = max(boil, env * smoothstep(1.5, 0.25, ring.z));
     }
   }
@@ -303,7 +306,8 @@ void main() {
   // The cloud is brightest overhead: a wavelet that leans to the lens far enough stands the high sky on its face. Small hard glints
   // on the crests, and the body between them stays its own red.
   // (Counted by how far the wavelet lifts the mirrored ray over the level pool's, or a lens that looks down would find the glint on all of it.)
-  float high = reflect(-v, n).y - v.y;
+  // (And by the wavelet alone: the long face of a ring wave leans to the lens along its whole front, and would carry one grey band.)
+  float high = reflect(-v, normalize(vec3(slope.x - 0.8 * swell.x, 1.0, slope.y - 0.8 * swell.y))).y - v.y;
   // (Soft at its edge and broken along a crest: a long front carries it in pieces, never as one white band.)
   float glint = smoothstep(0.2, 0.62, high + (bend.g - 0.5) * 0.3 + (fleck.r - 0.5) * 0.14);
   // Silt hangs in it in slow clouds a hand to a stride across, paler here and darker there: under a dome and in a thing's mirror image,
@@ -446,14 +450,15 @@ void main() {
     // (Behind the edge the film is gathered: thicker for a hand's breadth.)
     film.x += 0.3 * smoothstep(gone - 2.5 * fat, gone - fat, gap);
     // (What still stands is the same thin skin, seen from inside on the far side: it is not a wall of brine.)
-    film.x *= gl_FrontFacing ? 0.75 : 0.45;
+    // (And it is stretched as it goes: the further the hole has run, the thinner and the paler what is left of it.)
+    film.x *= (gl_FrontFacing ? 0.75 : 0.45) * mix(1.0, 0.3, smoothstep(0.1, 0.8, vLife.w));
   }
   // The skin is never smooth as blown glass: it carries the pool's small waves up with it, and they run down it.
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.07 + vec3(grit.b - 0.5, 0.0, grit.a - 0.5) * 0.05 * (1.0 - 0.5 * top));
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // The near wall. Light crosses it once on the way to the lens: the longer its way through the film (a thick place, or the film seen
   // along itself at the dome's edge), the more is taken, the green and the blue first.
-  vec3 through = exp(-FILM_TAKES * film.x / max(nv, 0.2));
+  vec3 through = exp(-FILM_TAKES * film.x / max(nv, mix(0.5, 0.2, whole)));
   // The far wall, seen through the near one while the dome is whole: the line of sight goes on through the gas and leaves by the far
   // side of the skin, or comes down on the pool inside. (The dome is a ball pressed flat: in its own measure the line is straight.)
   float wide = vLife.z * (0.35 + 0.65 * vLife.x);
