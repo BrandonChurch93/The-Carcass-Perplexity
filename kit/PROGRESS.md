@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 167, 2026-11-27 13:16 UTC:
+Status 168, 2026-11-27 13:38 UTC:
 
-- `01-s167-spine-7418.jpg`: The Spine at 2:03 (frame 7418), the tether-kites on the first spire: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has a pale rock face crusted with snow and rime, a few shaggy animals clinging to it, each holding one long thin line to a wide translucent membrane that bellies like wet silk with a soft violet sheen, a far row of spires in mist, one small violet bolt and a low band of orange light; the frame has a brown rock face with even diagonal streaks of snow and no rime, many more animals as dark spiky tufts in a regular row, the membranes as dozens of thin crumpled ribbons with hard bright edges that fill the right half, a heavy cloud close behind them, and the far spires small and low at the bottom edge. The Builder's reading of the two pictures; the critic that compares with the approved pictures gave this place 3 of 10. Below the bar.
-- `02-s167-eye-8600.jpg`: The Eye at 2:23 (frame 8600), the amber mats: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has clear shallow water over amber and rust weed in long soft strands with pale stones between, small bubbles rising, a hairless animal drinking at the left with two more far off, low mist on the water and warm cliffs behind; the frame has the cliffs and the drinking animal close to the picture, but the water is a hard mirror that shows the cliffs upside down across the middle with a sharp dark blue band behind it, the weed is thin bright lines without depth, pale flat patches lie on the surface like paper, and the mist is gone. The Builder's reading of the two pictures; the critic that compares with the approved pictures gave this place 3 of 10. Below the bar.
-- `03-s167-ribs-2401.jpg`: The Ribs at 0:40 (frame 2401), the bore arrives: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has a wall of white water breaking between dark weed-hung cliffs, rib arches fading into spray and storm cloud behind, a bright tear in the cloud, a line of long-winged flyers low over a wet flat that mirrors the light, and dark wet stones in front; the frame has the wave, the arches and the flyers in the same places, but the arches are sharp and pale with no spray over them, the wave is a band of dark green with white crests in even clumps, the cliffs at both sides are smooth grey with even ridges, the flat is dull grey without the mirrored light, and the stones are a few smooth dark lumps. The Builder's reading of the two pictures; the critic that compares with the approved pictures gave this place 5 of 10. Below the bar.
+- `01-s168-marsh-keys.jpg`: The Blood Marsh: its five judged frames of round 30 at right, each beside its approved picture at left, drawn at 3840x2160, final tier, and shown smaller here. From the top: 1:35, where the picture has winding pools of dark red water between salt crusts and the frame a flat pink plain with one channel and thin sparse stalks; 1:41, the dome in the brine, where the frame's dome is pale and matte and the stalks are thin lines without crowns; 1:39, the ringed trunks with shaggy red crowns, the nearest of the five to its picture; 1:47, the wallowers, where the frame's animals stand on dry-looking red clay in place of wet mud and dark water; 1:53, the dead one in the salt, where the frame is paler and its crust smoother. The Builder's reading; the critic that compares with the approved pictures gave this place 3 of 10. Below the bar.
+- `02-s168-heart-keys.jpg`: The Heart: its five judged frames of round 30 at right, each beside its approved picture at left, drawn at 3840x2160, final tier, and shown smaller here. From the top: 0:45, the establishing view, close to its picture in layout but under a clear blue-grey sky where the picture has smoke lit from below; 0:57, the channel, where the frame's flow is a clean bright band and its crust is cut by straight dark cracks; 1:01, the one that sank, further off and thinner than in the picture; 0:52, the striders, the nearest of the five to its picture, with less glow and haze around them; 1:06, the vessel mouth, where the frame's fall is thinner and the cave is drawn redder and sharper than the picture's dark mouth. The Builder's reading; the critic that compares with the approved pictures gave this place 4 of 10. Below the bar.
+- `03-s168-reveal-keys.jpg`: The Reveal: its four judged frames of round 30 at right, each beside its approved picture at left, drawn at 3840x2160, final tier, and shown smaller here. From the top: 2:40, the crater lake from above, close to its picture in shape, with a harder orange shore and no river running in; 2:41, the skull massif, where the frame has sharper ridges and white cloud in clumps while the lake and the dark basins sit close to the picture's; 2:42, head and shoulders, where the ribs are wider and whiter than the picture's thin ridges; 2:47, the whole titan from orbit, where the frame has more land around the bones, as Brandon asked, with heavy pale crests and a bright sun at the right edge. The Builder's reading; the critic that compares with the approved pictures gave this place 6 of 10. Below the bar.
 
+Status 167, 2026-11-27 13:16 UTC, showed: The Spine at 2:03 (frame 7418), the tether-kites on the first spire: the approved picture at left and the judged frame of round 30 at...
 Status 166, 2026-11-27 12:58 UTC, showed: The Ribs at 0:34 (frame 2081), the drowned body hung in the weed: the approved picture at left and the judged frame of round 30 at right...
 Status 165, 2026-11-27 12:44 UTC, showed: The Heart at 1:07 (frame 4006), the vessel mouth and its lava fall: the approved picture at left and the judged frame of round 30 at right...
-Status 164, 2026-11-27 12:22 UTC, showed: The Breath, the two frames that one build does not draw the same twice.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T13:16:15Z
-phase 6: 16.44 h used of 24.00 h
-build: 61.42 h used of 72.00 h
+2026-11-27T13:38:39Z
+phase 6: 16.82 h used of 24.00 h
+build: 61.79 h used of 72.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 18
+minutes since the last status: 22
 ```
 
 ## Phases
