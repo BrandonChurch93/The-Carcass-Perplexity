@@ -148,7 +148,8 @@ void main() {
   bool high = uViewKm > 100.0;
   vec3 bake = vec3(0.0, 0.5, 0.0);
   // (Where the close map covers the ground whole, the wide one's light and coast are not read.)
-  if (high && inClose < 1.0) bake = readWide(uLightWide, clamp(uvWide, 0.0, 1.0), 0.0).rgb;
+  // (From orbit the baked horizon is read a level coarser than the country: the shadows keep a soft edge, the rock its grain.)
+  if (high && inClose < 1.0) bake = readWide(uLightWide, clamp(uvWide, 0.0, 1.0), 2.0 * orbitBias).rgb;
   float coastKm = 0.0;
   if (inClose < 1.0) coastKm = shoreKm(readWide(uShoreWide, clamp(uvWide, 0.0, 1.0), 0.0).r, uBakeKm.x);
   float texel = uTexelKm.x;
@@ -277,15 +278,18 @@ void main() {
     shallow = mix(shallow, 0.5, stream);
   }
   // (North of the lake of the Eye a second crater holds water: a long dark lake, its shore uneven.)
-  vec2 inUpper = (xz - uLakeMid - vec2(40.0, -146.0)) / vec2(62.0, 37.0);
+  vec2 inUpper = (xz - uLakeMid - vec2(40.0, -146.0)) / vec2(50.0, 29.0);
   float upperR = 9.0;
   float upper = 0.0;
   if (dot(inUpper, inUpper) < 2.5) {
-    upperR = length(inUpper) + 0.3 * (vnoise(xz / 11.0 + 4.0) - 0.5) + 0.34 * (vnoise(xz / 31.0 + 14.0) - 0.5);
+    upperR = length(inUpper) + 0.34 * (vnoise(xz / 11.0 + 4.0) - 0.5) + 0.62 * (vnoise(xz / 27.0 + 14.0) - 0.5);
+    // (A bar of rock and scree crosses it aslant: two unlike waters, not one round one.)
+    float bar = inUpper.x * 0.8 + inUpper.y * 0.6 - 0.12 + 0.3 * (vnoise(xz / 17.0 + 2.0) - 0.5);
+    upperR += 0.8 * exp(-bar * bar / 0.03);
     upper = (1.0 - smoothstep(0.86, 0.98, upperR)) * smoothstep(120.0, 200.0, uViewKm);
     land *= 1.0 - upper;
     // (It is a lake as the others are: shut in, deep in its middle, its bed dark.)
-    coastKm = mix(coastKm, min(coastKm, -(0.98 - upperR) * 37.0), upper);
+    coastKm = mix(coastKm, min(coastKm, -(0.98 - upperR) * 29.0), upper);
     shut = max(shut, upper);
     shallow = mix(shallow, 0.0, upper);
   }
@@ -546,7 +550,9 @@ void main() {
   float greatB = textureLod(uReliefWide, clamp(uvWide, 0.0, 1.0), log2(30.0 / uTexelKm.x)).b;
   // (The chest is the highest country of all: more of its ranges are great, so each side carries five or six, unlike and broken.)
   float chestAt = (1.0 - smoothstep(0.7, 1.1, length((xz - vec2(-339.0, -123.0)) / vec2(560.0, 470.0)))) * (1.0 - 0.75 * provinceRed);
-  float great = smoothstep(0.43, 0.53, (greatB - 0.3) / 0.7 + 0.05 * chestAt) * inWide * land * smoothstep(150.0, 320.0, uViewKm);
+  // (Of the chest's ranges some stand higher and carry pale rock, some do not, and each for a part of its length only.)
+  float pick = chestAt > 0.0 ? vnoise(vec2(xz.x / 95.0 + xz.y / 600.0, xz.y / 330.0) + 31.0) - 0.5 : 0.0;
+  float great = smoothstep(0.43, 0.53, (greatB - 0.3) / 0.7 + chestAt * (0.04 + 0.22 * pick)) * inWide * land * smoothstep(150.0, 320.0, uViewKm);
   float lesser = (1.0 - smoothstep(0.38, 0.48, (greatB - 0.3) / 0.7)) * smoothstep(0.3, 0.55, height) * land * smoothstep(150.0, 320.0, uViewKm) * smoothstep(0.9, 1.2, length(fromSkull));
   ground = mix(ground, vec3(0.5, 0.455, 0.39) * (0.5 + 1.1 * min(lowLum, 0.45)) * (1.0 + 0.2 * chestAt), mix(0.7, 0.9, chestAt) * great * smoothstep(0.34 - 0.06 * chestAt, 0.62 - 0.1 * chestAt, max(height, (greatB - 0.3) / 0.7 + 0.06)) * (1.0 - min(1.0, 1.4 * rust)));
   ground *= mix(vec3(1.0), vec3(0.62, 0.58, 0.56), lesser);
@@ -891,16 +897,26 @@ void main() {
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
   bed = mix(bed, vec3(0.3, 0.06, 0.02), 0.85 * plume * (1.0 - land));
   // (South of it, round the lower leg, the currents carry ochre silt: long curling threads of it, drawn out by the water.)
-  vec2 fromSilt = (xz - uSalt - vec2(300.0, 330.0)) / vec2(640.0, 380.0);
+  vec2 fromSilt = (xz - uSalt - vec2(240.0, 350.0)) / vec2(760.0, 400.0);
   float siltAt = exp(-dot(fromSilt, fromSilt)) * smoothstep(680.0, 1100.0, uViewKm);
   if (siltAt > 0.05 && land < 1.0) {
     vec2 sc = xz / 520.0 + 0.5 * (readTile(uCloudTile, xz / 900.0 + vec2(0.2, 0.7) + uTime * vec2(0.0006, -0.0004), 1.0 / 900.0, 1.0).rg - 0.5);
     float thread = readTile(uCloudTile, sc * vec2(0.8, 1.7) + vec2(0.4, 0.1), 1.7 / 520.0, 0.5).b;
-    // (Faint plumes of it off the shores, soft and of unlike widths, thinning out to sea.)
-    vec2 calm = xz / 520.0 + uTime * vec2(0.0005, -0.0003);
-    vec2 drawn = calm * vec2(1.3, 2.6) + 1.1 * vec2(vnoise(calm * 2.1 + 3.0), vnoise(calm * 2.1 + 41.0));
-    float plumes = smoothstep(0.45, 0.9, 0.7 * vnoise(drawn) + 0.3 * vnoise(drawn * 2.7 + 9.0) + 0.15 * thread);
-    bed = mix(bed, vec3(0.16, 0.1, 0.02), 0.5 * min(1.0, 1.5 * siltAt) * plumes * exp(min(coastKm, 0.0) / 70.0) * (1.0 - land));
+    // (The currents wind it into plumes: soft threads of unlike width and strength that curl, part and thin out to sea, some reaches clear.)
+    vec2 calm = xz / 300.0 + uTime * vec2(0.0008, -0.0005);
+    vec2 wound = calm * vec2(1.0, 1.7);
+    wound += 0.9 * vec2(vnoise(wound * 1.3 + 3.0), vnoise(wound * 1.3 + 41.0));
+    wound += 0.3 * vec2(vnoise(wound * 3.3 + 7.0), vnoise(wound * 3.3 + 19.0));
+    float wide = 1.0 - abs(2.0 * vnoise(wound * 2.1) - 1.0);
+    float fine = 1.0 - abs(2.0 * vnoise(wound * 4.7 + 13.0) - 1.0);
+    float reach = smoothstep(0.2, 0.62, vnoise(calm * 0.9 + 8.0));
+    // (Each has a dense core and a skirt of thinner water, and its strength comes and goes along its length: silt, not a line.)
+    float along = 0.25 + 0.75 * smoothstep(0.3, 0.7, vnoise(wound * 1.1 + 23.0));
+    float core = smoothstep(0.6, 0.97, wide);
+    float swirl = (0.45 * core + 0.85 * core * core) * reach * along;
+    core = smoothstep(0.6, 0.98, fine);
+    swirl += 0.38 * core * core * (1.0 - 0.6 * reach) * smoothstep(0.3, 0.6, thread);
+    bed = mix(bed, vec3(0.24, 0.15, 0.028), min(0.7, 0.75 * min(1.0, 1.6 * siltAt) * swirl) * exp(min(coastKm, 0.0) / 420.0) * (1.0 - land));
   }
   // The lake of the Eye: black in the middle, and round it a margin of amber shallows, uneven, with tongues of it curling in.
   vec2 lakeAt = (xz - uLakeMid) / uLakeSize;
