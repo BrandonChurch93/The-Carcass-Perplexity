@@ -167,6 +167,7 @@ const vec3 INNER_COLOUR = vec3(0.62, 0.5, 1.0);
 const float INNER_CAST = 0.3;
 // The light falls off with the square of the distance past this many metres: the channel is a kilometre tall and lights the ridge as a line does.
 const float STRIKE_REACH = 1500.0;
+const float STRIKE_WRAP = 0.45;
 vec3 strikeIrradiance(vec3 p, vec3 n) {
   if (uStrikeAt.w <= 0.0) return vec3(0.0);
   // The foot of the channel on what is close under it: the rock and the rime of the struck spire's top take a hard light from just over
@@ -178,8 +179,9 @@ vec3 strikeIrradiance(vec3 p, vec3 n) {
   vec3 d = uStrikeAt.xyz - p;
   float dist = length(d);
   vec3 l = d / dist;
-  // Hard, with the least wrap: snow turned from the channel stays in the dusk.
-  float facing = clamp((dot(n, l) + 0.06) / 1.06, 0.0, 1.0);
+  // Wrapped: a stroke lights the air and the cloud about it, and they light what is turned a little from the channel; what is turned
+  // well away stays in the dusk.
+  float facing = clamp((dot(n, l) + STRIKE_WRAP) / (1.0 + STRIKE_WRAP), 0.0, 1.0);
   if (facing <= 0.0) return near;
   // Faces square to the channel take the most by far: the light models the rock, it does not coat it.
   facing *= facing;
