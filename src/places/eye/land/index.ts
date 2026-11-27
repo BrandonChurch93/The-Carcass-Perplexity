@@ -252,7 +252,7 @@ export function create(ctx: Context): Piece {
   const crop = cropGround();
   const block = blockUniforms(ctx);
   const cropMaterial = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, uAxis: cut.uAxis, tCrop: { value: crop.map }, uCropRect: { value: crop.rect }, tFace: block.tFace as THREE.IUniform, tFaceNh: block.tFaceNh as THREE.IUniform, tGravel: rock.tGravel as THREE.IUniform, tGravelNh: rock.tGravelNh as THREE.IUniform },
+    uniforms: { ...ctx.rig.uniforms, uAxis: cut.uAxis, tCrop: { value: ctx.assets.texture('land/outcrop-map.png', { kind: 'data', repeat: false }) }, tCropRock: { value: ctx.assets.texture('land/outcrop-rock.png', { kind: 'data', repeat: false }) }, tCropMesh: { value: ctx.assets.texture('land/outcrop-mesh.png', { kind: 'data', repeat: false }) }, uCropColumns: { value: crop.columns }, uCropRect: { value: crop.rect }, tFace: block.tFace as THREE.IUniform, tFaceNh: block.tFaceNh as THREE.IUniform, tGravel: rock.tGravel as THREE.IUniform, tGravelNh: rock.tGravelNh as THREE.IUniform },
     vertexShader: CROP_VERTEX,
     fragmentShader: CROP_FRAGMENT,
   });
@@ -616,7 +616,6 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       for (const m of [socket, patch, cropMesh, lipMesh, brow, ...scree]) m.geometry.dispose();
-      crop.map.dispose();
       for (const b of balls) b.dispose();
       for (const m of [socketMaterial, patchMaterial, cropMaterial, lipMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
       stream.dispose();
