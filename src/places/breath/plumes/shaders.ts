@@ -19,7 +19,7 @@ float gustAt(vec2 xz, vec2 lee, float t) {
   float a = sin(down * 0.33 + cross_ * 0.07 - t * 1.31);
   float b = sin(down * 0.87 - cross_ * 0.31 - t * 2.63 + 1.7);
   float c = sin(down * 2.3 + cross_ * 0.9 - t * 5.3 + 0.6);
-  return clamp(0.46 + 0.3 * a + 0.2 * b * (0.6 + 0.4 * a) + 0.1 * c, 0.0, 1.0);
+  return clamp(0.46 + 0.3 * a + 0.2 * b * (0.6 + 0.4 * a) + 0.05 * c, 0.0, 1.0);
 }
 vec3 swayAt(vec3 p, vec4 bush, float tall, float u, float phase, float t, float surge) {
   float r = max(length(p - bush.xyz) / tall - 0.1, 0.0);
@@ -47,10 +47,10 @@ vec3 swayAt(vec3 p, vec4 bush, float tall, float u, float phase, float t, float 
   float down = dot(p.xz, lee);
   float fine = max(u - 0.55, 0.0);
   fine *= fine;
-  float w1 = sin(down * 4.3 + p.y * 2.1 - t * 6.7 + phase);
-  float w2 = sin(down * 9.1 - p.y * 5.3 - t * 11.3 + phase * 2.3);
-  push += lee * (0.028 * tall * (w1 + 0.5 * w2) * (0.25 + g) * fine);
-  lift += 0.012 * tall * (w2 - 0.6 * w1) * (0.25 + g) * fine;
+  float w1 = sin(down * 4.3 + p.y * 2.1 - t * 3.4 + phase);
+  float w2 = sin(down * 9.1 - p.y * 5.3 - t * 5.9 + phase * 2.3);
+  push += lee * (0.014 * tall * (w1 + 0.4 * w2) * (0.25 + g) * fine);
+  lift += 0.006 * tall * (w2 - 0.6 * w1) * (0.25 + g) * fine;
   return p + vec3(push.x, lift, push.y);
 }
 // A strip: rooted at a, it leaves along b and is turned by c (a + b s + c s s). One that carries nothing (sway.z is not negative) swings
@@ -63,7 +63,7 @@ vec3 stripAt(vec3 a, vec3 b, vec3 c, vec4 sway, vec4 bush, float tall, float s, 
     float len = length(b);
     vec2 lee = -normalize(bush.xz);
     float g = gustAt(a.xz, lee, t - 0.22);
-    float swing = 0.3 * (g - 0.4) + (0.06 * sin(t * 4.1 + sway.z) + 0.03 * sin(t * 7.7 + sway.z * 2.7)) * (0.3 + g);
+    float swing = 0.3 * (g - 0.4) + (0.05 * sin(t * 2.9 + sway.z) + 0.015 * sin(t * 5.3 + sway.z * 2.7)) * (0.3 + g);
     vec3 bent = vec3(lee.x * swing, 0.16 * max(g - 0.4, 0.0) + 0.4 * surge, lee.y * swing) * len;
     p += bent * (s * s);
     tangent += 2.0 * s * bent;
@@ -165,9 +165,10 @@ void main() {
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
-  float line = pow(max(1.0 - th * th, 0.0), 22.0);
-  float beads = 0.55 + 0.45 * smoothstep(0.35, 0.8, vnoise(vec2(s * 9.0 + own * 91.0, own * 37.0)));
-  colour += uSunColour * vec3(1.0, 0.86, 0.72) * (0.22 * line * beads * lit * sunLeft * (1.0 - 0.6 * dead)) * (1.0 - 0.7 * mass);
+  float line = pow(max(1.0 - th * th, 0.0), 12.0);
+  float beads = 0.75 + 0.25 * smoothstep(0.35, 0.8, vnoise(vec2(s * 9.0 + own * 91.0, own * 37.0)));
+  // A thread thinner than a pixel is drawn a pixel wide: its line of light is dimmed by as much, or it sparks from frame to frame.
+  colour += uSunColour * vec3(1.0, 0.78, 0.5) * (0.05 * line * beads * lit * sunLeft * (1.0 - 0.6 * dead)) * (1.0 - 0.7 * mass) / max(vLight.z, 1.0);
   // And the film of water on it gives back the bright air round it, most at its edges: its dark is wine and never black.
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);

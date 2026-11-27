@@ -219,7 +219,7 @@ export function create(ctx: Context): Piece {
       for (const tip of open) {
         // They gather: the locks of one part of the bush run with water and their neighbours hold none. Most are small, a few heavy.
         const cell = Math.sin(Math.floor(tip.a[0] * 2.6) * 12.9898 + Math.floor(tip.a[1] * 2.6) * 78.233 + Math.floor(tip.a[2] * 2.6) * 37.719) * 43758.5453;
-        const run = cell - Math.floor(cell) < 0.3 ? 3.3 : 0;
+        const run = cell - Math.floor(cell) < 0.4 ? 2.5 : 0;
         if (drops.next() > (run * share) / Math.max(1, open.length)) continue;
         const every = drops.range(2.2, 8);
         const offset = drops.range(0, 11);
@@ -242,7 +242,7 @@ export function create(ctx: Context): Piece {
   };
   // Only the bushes a lens comes close to have drops that can be seen.
   const nearOnes = grown.filter((_g, i) => (bushes[i] as Bush).detail >= 1);
-  const dropGeometries = [dropsOf(nearOnes, 45), dropsOf([], 0), dropsOf(hangGrown, 90)];
+  const dropGeometries = [dropsOf(nearOnes, 150), dropsOf([], 0), dropsOf(hangGrown, 90)];
   const dropMaterial = new THREE.ShaderMaterial({
     vertexShader: DROP_VERTEX,
     fragmentShader: DROP_FRAGMENT,
