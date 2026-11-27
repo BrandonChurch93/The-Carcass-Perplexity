@@ -191,11 +191,9 @@ void main() {
       // so no bank keeps its shape for longer than a few seconds.
       float gusts = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uTime * vec2(0.049, 0.015), level).g;
       float bank = smoothstep(0.1, 0.42, banks * gusts);
-      // It pools where a blade's foot shuts the land's horizon, and down the wind of a foot it peels off in the banks' own shapes.
+      // It pools where a blade's foot shuts the land's horizon, and the pool goes and comes with the banks that pass over it.
       vec4 land = landAt(p.xz);
-      float pool = smoothstep(${glslFloat(AIR.poolFrom)}, ${glslFloat(AIR.poolTo)}, land.g);
-      float peel = smoothstep(${glslFloat(AIR.poolFrom)}, ${glslFloat(AIR.poolTo)}, landAt(p.xz - vec2(${glslFloat(WIND.to[0] * 80)}, ${glslFloat(WIND.to[1] * 80)})).g) * bank;
-      float foot = max(pool * (0.3 + 0.7 * bank), peel);
+      float foot = smoothstep(${glslFloat(AIR.poolFrom)}, ${glslFloat(AIR.poolTo)}, land.g) * (0.3 + 0.7 * bank);
       float y0 = ro.y + rd.y * t0;
       // What stands within a stone's throw keeps its blacks: the low mist is thin round the lens.
       float tau = uAir.x * (1.0 + uFarAir * smoothstep(140.0, 460.0, tm)) * layerDepth(y0, rd.y, dt, uAir.y)
@@ -291,11 +289,6 @@ void main() {
 const LOOP_MIST = 0.7;
 
 export function create(ctx: Context): Piece {
-  const storm = ctx.assets.texture('air/storm.jpg');
-  storm.wrapS = THREE.MirroredRepeatWrapping;
-  storm.wrapT = THREE.MirroredRepeatWrapping;
-  storm.needsUpdate = true;
-  (ctx.rig.uniforms.tSky as THREE.IUniform).value = storm;
   const picture = ctx.assets.texture('air/sky.jpg');
   picture.wrapS = THREE.MirroredRepeatWrapping;
   picture.wrapT = THREE.MirroredRepeatWrapping;

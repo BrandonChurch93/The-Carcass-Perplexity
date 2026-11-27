@@ -530,6 +530,7 @@ void main() {
 const PLATE_FRAGMENT = /* glsl */ `
 precision highp float;
 ${RIG_GLSL}
+${NOISE_GLSL}
 uniform sampler2D tCarcass;
 uniform sampler2D tRelief;
 uniform vec3 uAxis;
@@ -590,7 +591,11 @@ void main() {
   // The hide is lit where the picture lay, by the lie of the hide: asked from where it now hangs, a metre or two out, the land's coarse bake
   // answers for another place at every fold. The form under the hide then turns that light: what faces the sky and the sun is brighter, what
   // faces down or hangs close to the face and behind the trunk is darker.
-  vec3 col = rigShade(vLay, wet, v, albedo, 0.26, mix(0.4, 0.85, smoothstep(0.1, 0.7, h)));
+  // Sodden: dark where the water still stands in the hide, in ragged patches that run down it, and bright in a narrow light where it
+  // turns to the sky.
+  float sodden = smoothstep(0.42, 0.62, vnoise(vec2(vUv.x * 9.0, vUv.y * 3.5) + 3.0) * 0.6 + 0.4 * vnoise(vec2(vUv.x * 31.0, vUv.y * 9.0)) + 0.25 * (0.5 - h));
+  albedo *= mix(vec3(1.0), vec3(0.62, 0.56, 0.5), sodden);
+  vec3 col = rigShade(vLay, wet, v, albedo, mix(0.24, 0.1, sodden), mix(0.4, 0.85, smoothstep(0.1, 0.7, h)));
   float sunHere = sunAt(vLay, landAt(vLay.xz + uProud.xz * 14.0));
   vec3 grey = vec3(0.3, 0.5, 0.2);
   float lit = dot(skyIrradiance(n), grey) + dot(uSunColour, grey) * max(dot(n, uSunDir), 0.0) * sunHere;

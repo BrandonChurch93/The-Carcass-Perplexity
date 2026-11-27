@@ -24,9 +24,10 @@ export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62, bou
  * it stands where the next shot wants it, as a crew waits for the light: on the colony's rock (whose faces to the lens are its lee: there
  * the light the lit sea and flats throw back is raised, `bounce` times, as a crew would hold a white sheet), on the feeders and the water behind them, on the flats behind the one that hangs in the weed (pale against a cliff in shade), on the
  * bore's spray in the gate. `sky` is what the cloud's own brightness is given in the shot: the bore comes in under a heavier sky.
+ * `shade` is what the sky's own light on things is given: the colony's rock keeps its folds dark under a sun that only tops its ledges.
  */
-const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number }[] = [
-  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 3.2, sky: 0.64 },
+const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number }[] = [
+  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 1.6, sky: 0.54, shade: 0.5 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23, sky: 0.75 },
   { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4 },
   { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.54, heads: 0.4 },
@@ -45,10 +46,8 @@ export const BREAK2 = { radius: 5, gain: 0.9 };
  * the right of the first frame, over the far row; `burn` is what it is given over its own brightness.
  */
 export const STORM = { gain: -0.25, dim: 0.42, holds: 4.5, ends: 14, turn: -0.4, burn: 0.5 };
-/** The gain of the first storm picture (`tSky`): no longer on the dome, kept for the sea's own copy of the mirror until it reads `skyMirror`. */
-const SKY_GAIN = 2.3;
 /** The dome's picture (`tDome`): the gain of the whole sky, the depth of air straight up that veils it (0.035 is three tenths of a veil at 6 degrees and two thirds at 2), what the break is given over the rest, how far the picture's white is shut away from the break, and the same under the storm of the approach. */
-export const DOME = { gain: 1.0, veil: 0.035, lift: 1.2, shut: 0.5, storm: 0.85 };
+export const DOME = { gain: 1.0, veil: 0.035, lift: 1.2, shut: 0.62, storm: 0.85 };
 /** The low sun on what stands high: from this height, whole by this one, how much thinner the cloud counts there (0.2 is a whole step of its edge); and the floor under every shade, as a share of the ground's light. */
 export const HEADS = { from: 60, to: 260, thin: 0.3, floor: 0.9 };
 /** The sun of the approach: the low warm light of the first wave on the first blade, going to the place's ivory as the storm ends. */
@@ -429,11 +428,11 @@ export function createRig(): Rig {
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const skyBreak = new THREE.Vector3();
-  const skyTurn = new THREE.Vector4(0, 0, 0, SKY_GAIN);
+  const skyTurn = new THREE.Vector4(0, 0, 0, 0);
   const dome = new THREE.Vector4(DOME.gain, DOME.veil, DOME.lift, DOME.shut);
   const staging = BREAK_BY_SHOT.map((b) => ({ ...b, span: shotSpan(b.shot), at: keySeconds(b.key) }));
   /** The break's staging for the shot the camera stands in: its own, or the strait's. */
-  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number } => {
+  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number } => {
     const staged = stagedSeconds();
     const own = loopPhase() === null ? staging.find((b) => staged >= b.span.from && staged < b.span.to) : undefined;
     return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0, bounce: BREAK.bounce };
@@ -521,7 +520,6 @@ export function createRig(): Rig {
     // The way to the bright break in the storm sky, as the cameras of the strait see it: up and to the right of the way in.
     uSkyBreak: { value: skyBreak },
     // The picture of the storm sky (the air folder loads it); how far it has turned round the dome (radians), how far its lumps have worked, its gain.
-    tSky: { value: null },
     uSkyTurn: { value: skyTurn },
     // The picture on the dome (the air folder loads it) and what it is given: DOME.
     tDome: { value: null },
@@ -643,8 +641,11 @@ export function createRig(): Rig {
       skyHorizon.set(...SKY_LIGHT.horizon);
       skyGround.set(...SKY_LIGHT.ground);
       haze.set(...HAZE);
+      const shade = stagedBreak().shade ?? 1;
+      skyZenith.multiplyScalar(shade);
+      skyHorizon.multiplyScalar(shade);
+      skyGround.multiplyScalar(shade);
       bounce.set(...BOUNCE).multiplyScalar(stagedBreak().bounce ?? 1);
-      skyTurn.w = SKY_GAIN * (stagedBreak().sky ?? 1);
       dome.set(DOME.gain * (stagedBreak().sky ?? 1), DOME.veil, DOME.lift, DOME.shut);
       heads.z = HEADS.thin * (stagedBreak().heads ?? 1);
       sunColour.set(...SUN.colour);
@@ -652,7 +653,6 @@ export function createRig(): Rig {
         // The burning break stands in the right of the frame as the film opens, and drifts to its own place.
         const turn = STORM.turn * weight;
         skyTurn.x += turn;
-        skyTurn.w = SKY_GAIN * (1 + STORM.burn * openingLight(seconds));
         const c = Math.cos(turn);
         const n = Math.sin(turn);
         skyBreak.set(skyBreak.x * c - skyBreak.z * n, skyBreak.y, skyBreak.z * c + skyBreak.x * n);
