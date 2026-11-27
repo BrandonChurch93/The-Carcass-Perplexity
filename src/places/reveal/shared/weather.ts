@@ -260,7 +260,12 @@ float lowDepth(vec2 at) {
   // run together into banks with a wide thin body round them, and high in others, where only fine specks are left.)
   float gathered = smoothstep(0.38, 0.62, torn);
   float dense = max(pow(streak, 0.15) * pow(knots * fine, 1.3) * level - mix(1.4, 0.85, gathered), 0.0);
-  float drawn = mix(0.1, 0.35, gathered) * max(pow(streak, 0.5) * mix(1.0, knots, 0.7) * level - 0.8, 0.0) * mix(1.0, lump, 0.4);
+  // (From orbit a tuft that barely clears the level is one hard white pixel, and a sea of them is a noise no encoder holds.
+  // The least of them are let down to grey, the bodies keep their white, and the thin the wind draws out between near
+  // neighbours is a little wider, so they stand joined in a veil.)
+  float far = smoothstep(500.0, 1300.0, uViewKm);
+  dense = dense * dense / (dense + 0.5 * far + 1e-4);
+  float drawn = mix(0.1, 0.35, gathered) * mix(1.0, 2.2, far) * max(pow(streak, mix(0.5, 0.25, far)) * mix(1.0, knots, mix(0.7, 0.95, far)) * level - 0.8 + 0.08 * far, 0.0) * mix(1.0, lump, 0.4);
   return (dense + drawn) * smoothstep(0.02, 0.3, share);
 }
 
@@ -425,5 +430,5 @@ float cloudShade(vec2 xz) {
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
   float stormShade = pow(1.0 - smoothstep(0.02, 0.48, fromStorm), 1.3) * uArrive;
-  return (1.0 - 0.55 * smoothstep(0.04, 0.6, low)) * (1.0 - 0.3 * high * uArrive) * (1.0 - 0.8 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
+  return (1.0 - mix(0.55, 0.42, smoothstep(500.0, 1300.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.3 * high * uArrive) * (1.0 - 0.8 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
 }`;
