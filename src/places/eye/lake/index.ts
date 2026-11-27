@@ -332,6 +332,9 @@ void main() {
   // Rings where something drinks or stands: three lengths of small wave that leave it in the beat of its lapping, each at its own speed, and die within a few metres.
   // Not looked for where no ring can be: away from all that drinks, or where a pixel is wider than the longest of them.
 #if EYE_LAPS
+  // The bed under a ring is never level: where the water is a hand deep a wave is slow and where it is knee deep it is quick, so a ring
+  // that left a leg round is drawn out of round within a metre, each part of it by the bed it has crossed.
+  float uneven = vnoise(p.xz / 1.3 + 3.0) + 0.5 * vnoise(p.xz / 0.37 + 9.0) - 0.75;
   bool lapsNear = uLapCount > 0 && length(p.xz - uLapZone.xy) < uLapZone.z && r > uLapZone.w && min(length(fx), length(fy)) < 0.45;
   for (int i = 0; i < ${LAPS}; i++) {
     if (!lapsNear || i >= uLapCount) break;
@@ -340,6 +343,7 @@ void main() {
     float m = length(d);
     if (l.w > 0.0 && m < 14.0) {
       vec2 dir = d / max(m, 1e-3);
+      m += 0.65 * uneven * smoothstep(0.15, 1.6, m);
       float fp = max(abs(dot(dir, fx)), abs(dot(dir, fy)));
       float dm = 0.0;
       for (int j = 0; j < 3; j++) {
