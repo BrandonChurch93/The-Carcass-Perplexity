@@ -155,6 +155,8 @@ uniform vec4 uMistA;
 uniform vec4 uMistB;
 uniform vec4 uMistC;
 uniform vec4 uMistD;
+// How much of the sky's light the mist of the shot stands in: under a near wall less than out on the open water.
+uniform float uMistTone;
 uniform float uMistOn;`;
 
 export const RIG_GLSL = /* glsl */ `
@@ -192,7 +194,7 @@ vec3 skyIrradiance(vec3 n);
 // The light of the sky in the mist. The bank lies in the shade of the rim, so most of it is the cool light from overhead and only a
 // little is the warm low sky behind it.
 vec3 mistSkyLight(vec3 low) {
-  return 0.45 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(0.84, 0.95, 1.12) + 0.12 * low;
+  return uMistTone * (0.34 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(0.84, 0.95, 1.12) + 0.09 * low);
 }
 
 // How high on the far shore a mirror at ro would read if the water lay still: the mist is soft and stands low, so the water gives it
