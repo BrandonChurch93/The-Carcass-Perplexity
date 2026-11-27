@@ -21,7 +21,9 @@ void main() {
   vLay = uv;
   vec4 w = modelMatrix * vec4(position, 1.0);
   vWorld = w.xyz;
-  vNormal = normalize(mat3(modelMatrix) * normal);
+  // No normalize of what may have no length: a value that is no number spreads over every pixel of its triangles.
+  vec3 nw = mat3(modelMatrix) * normal;
+  vNormal = nw * inversesqrt(max(dot(nw, nw), 1e-12));
   vBlade = aBlade;
   vNb = aNb;
   vAlong = aAlong;
@@ -68,9 +70,9 @@ void cliff(vec2 at, float size, float lod, out vec3 colour, out vec3 slopes) {
   slopes = vec3((nh.xy - 0.5) * vec2(mirror, froSign), nh.z);
 }
 void main() {
-  vec3 n0 = normalize(vNormal);
+  vec3 n0 = normalize(vNormal + vec3(0.0, 1e-5, 0.0));
   vec3 v = normalize(cameraPosition - vWorld);
-  vec3 w = abs(normalize(vNb));
+  vec3 w = abs(normalize(vNb + vec3(1e-5)));
   w *= w;
   // 0 on a broad face, 1 on the thin edge of the blade.
   float edge = smoothstep(0.3, 0.7, w.y / (w.y + w.z + 1e-4));
@@ -99,8 +101,8 @@ void main() {
   vec3 stone;
   vec3 slopes;
   cliff(wide, uRock, lr, stone, slopes);
-  vec3 alongW = normalize(vAlong);
-  vec3 acrossW = thin > 0.5 ? normalize(cross(vAlong, vAcross)) : normalize(vAcross);
+  vec3 alongW = normalize(vAlong + vec3(0.0, 1e-5, 0.0));
+  vec3 acrossW = thin > 0.5 ? normalize(cross(vAlong, vAcross) + vec3(0.0, 0.0, 1e-5)) : normalize(vAcross + vec3(1e-5, 0.0, 0.0));
   if (uCap > 0.5) {
     alongW = level1;
     acrossW = vec3(0.0, 1.0, 0.0);
@@ -230,9 +232,9 @@ void laid(vec2 at, float size, float lod, out vec3 colour, out vec3 slopes) {
   slopes = vec3(nh.xy - 0.5, nh.z);
 }
 void main() {
-  vec3 n0 = normalize(vNormal);
+  vec3 n0 = normalize(vNormal + vec3(0.0, 1e-5, 0.0));
   vec3 v = normalize(cameraPosition - vWorld);
-  vec3 w = abs(normalize(vNb));
+  vec3 w = abs(normalize(vNb + vec3(1e-5)));
   w *= w;
   // 0 on a broad face, 1 on the thin edge of the blade.
   float edge = smoothstep(0.3, 0.7, w.y / (w.y + w.z + 1e-4));
@@ -266,8 +268,8 @@ void main() {
   float grooveB = (vnoise(vec2(vBlade.x * 0.013 + 3.0, bedY * 0.62)) - 0.5) * (1.0 - smoothstep(0.5, 1.6, foot));
   float grooveC = (vnoise(vec2(vBlade.x * 0.005 + 7.0, bedY * 0.17)) - 0.5) * (1.0 - smoothstep(2.0, 6.0, foot));
   marks *= 1.0 + 0.3 * grooveA + 0.3 * grooveB + 0.28 * grooveC;
-  vec3 alongW = normalize(vAlong);
-  vec3 acrossW = thin > 0.5 ? normalize(cross(vAlong, vAcross)) : normalize(vAcross);
+  vec3 alongW = normalize(vAlong + vec3(0.0, 1e-5, 0.0));
+  vec3 acrossW = thin > 0.5 ? normalize(cross(vAlong, vAcross) + vec3(0.0, 0.0, 1e-5)) : normalize(vAcross + vec3(1e-5, 0.0, 0.0));
   vec2 g = sW.xy * 2.6 + sF.xy * 1.9 * nearF;
   vec3 lean = alongW * g.x - acrossW * g.y;
   lean -= n0 * dot(lean, n0);
@@ -339,7 +341,7 @@ uniform sampler2D tRock;
 uniform sampler2D tWeed;
 uniform vec4 uStack;
 void main() {
-  vec3 n0 = normalize(vNormal);
+  vec3 n0 = normalize(vNormal + vec3(0.0, 1e-5, 0.0));
   vec3 v = normalize(cameraPosition - vWorld);
   vec2 d = vWorld.xz - uStack.xy;
   float arc = atan(d.x, d.y) * uStack.z;
