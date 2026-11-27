@@ -109,7 +109,7 @@ export function create(ctx: Context): Piece {
   const arches = rock.hoop(sheet('travface', [0.385, 0.259, 0.159], FACE.wide, 0.2), FACE.tall, sheet('travskin', [0.467, 0.29, 0.157], 3.2, 0.2));
   const shaft = new THREE.Group();
   shaft.add(mesh(built.wall, wall));
-  const rubble = rock.bone(0.5, [0.47, 0.44, 0.4], [0.2, 0.185, 0.165], surface('scree', [0.287, 0.229, 0.184], 3, 1.2), THREE.DoubleSide);
+  const rubble = rock.bone(0.68, [0.55, 0.52, 0.46], [0.27, 0.25, 0.22], surface('scree', [0.287, 0.229, 0.184], 2.2, 1.2), THREE.DoubleSide);
   const pale = rock.bone(1, [0.6, 0.56, 0.49], [0.42, 0.385, 0.33], surface('shelf', [0.438, 0.363, 0.302], 6, 0.9), THREE.DoubleSide);
   for (const [x, z, r] of SMALLER) shaft.add(mesh(collar(x, z, r), pale));
   ctx.scene.add(ctx.parts.built('shaft', shaft));
@@ -136,6 +136,18 @@ export function create(ctx: Context): Piece {
     const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) - h * 0.2;
     const slope = r > rimRadius(b) - 1 ? 0.12 : 0.62;
     blocks.push(block(i + 1, [lerp(1.6, 11, big) * rs.range(0.8, 1.25), h, lerp(1.2, 6.5, big) * rs.range(0.8, 1.2)], [x, y, z], [slope + rs.range(-0.25, 0.35), -b + rs.range(-0.9, 0.9), rs.range(-0.3, 0.3)], 14));
+  }
+  // On the ledge in the rubble: three great blocks side by side where the band stopped them, each leaning on the slope behind it.
+  for (const [bearing, long, tall, deep, yaw] of [
+    [90, 7.5, 3.3, 4.6, 0.5],
+    [98, 9.5, 3.9, 5.4, -0.35],
+    [106, 6.5, 3.0, 4.2, 0.8],
+  ] as const) {
+    const b = bearing * RAD;
+    const r = rimRadius(b) - 0.29 * (rimRadius(b) - 9);
+    const x = Math.sin(b) * r;
+    const z = -Math.cos(b) * r;
+    blocks.push(block(90 + bearing, [long, tall, deep], [x, talusHeight(x, z) + tall * 0.22, z], [0.28, -b + yaw, 0.12 * yaw], 22));
   }
   // On the hoops: pieces of the ring above that stopped on the one below. Each lies flat on the top of a hoop, sunk a hand into the grit
   // there, with the lesser pieces that came down with it beside it. Where no hoop is under one it is not laid: hung on the wall at a

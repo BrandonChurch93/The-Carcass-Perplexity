@@ -705,7 +705,7 @@ void main() {
   // is what makes a vein wander.
   vec4 a = texture2D(tRock, vUv / mix(vec2(41.0, 17.0), vec2(23.0, 19.0), uBone));
   vec4 b = texture2D(tRock, vUv / mix(vec2(19.0, 7.3), vec2(8.3, 7.1), uBone) + 0.35 * a.ra);
-  vec4 c = texture2D(tRock, vec2(vUv.x / 3.1, p.y / 9.0) + 0.3 * b.ar);
+  vec4 c = texture2D(tRock, vec2(vUv.x / 3.1, p.y / 4.2) + 0.3 * b.ar);
   vec3 albedo;
   float rough;
   float occ = vOcc;
@@ -732,7 +732,7 @@ void main() {
   // Runs: where water comes down the face the rock is black and shines, and between the runs lime has dried pale on it.
   // A run is a few paces long and an arm wide, and a bed's lip breaks it: drawn out twenty times its width, as it was, the face was
   // combed into upright stripes a finger apart from top to bottom.
-  float streak = texture2D(tRock, vec2(vUv.x / 5.3, p.y / 23.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 2.9 + 0.3, p.y / 9.0)).a - 0.5);
+  float streak = texture2D(tRock, vec2(vUv.x / 5.3, p.y / 8.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 2.9 + 0.3, p.y / 4.0)).a - 0.5);
   float wetRun = smoothstep(0.52, 0.36, streak + 0.12 * (bedLone - 0.5)) * (1.0 - up);
   albedo *= mix(1.0, 0.5, wetRun);
   albedo = mix(albedo, vec3(0.3, 0.27, 0.2) * tone, 0.16 * smoothstep(0.66, 0.8, streak) * (1.0 - up));
@@ -1015,9 +1015,10 @@ void main() {
   // Stains: rust runs down the wall and the faces of the ribs in streaks an arm to a pace wide, and the damp holds dark green in patches
   // between the ribs. Both are laid by the bearing round the shaft and the depth (whole repeats round it: no seam), so they run true down.
   float bear = atan(p.x, -p.z) / 6.28318;
-  float run = 0.6 * textureLod(tRock, vec2(bear * 61.0, p.y / 23.0), 0.0).r + 0.4 * textureLod(tRock, vec2(bear * 113.0 + 0.4, p.y / 9.0), 1.0).a;
-  float rust = smoothstep(0.5, 0.7, run) * (1.0 - 0.6 * top) * (1.0 - under);
-  albedo = mix(albedo, albedo * vec3(1.3, 0.72, 0.38), 0.7 * rust);
+  // A run is as long as two or three beds are deep and no more: drawn out from top to bottom it was a smear down the wall.
+  float run = 0.6 * textureLod(tRock, vec2(bear * 43.0, p.y / 6.5), 0.0).r + 0.4 * textureLod(tRock, vec2(bear * 97.0 + 0.4, p.y / 3.1), 1.0).a;
+  float rust = smoothstep(0.52, 0.72, run) * (1.0 - 0.6 * top) * (1.0 - under);
+  albedo = mix(albedo, albedo * vec3(0.95, 0.6, 0.36), 0.45 * rust);
   float mossy = smoothstep(0.56, 0.74, textureLod(tRock, vec2(bear * 37.0 + 0.61, p.y / 6.0 + 0.2), 0.0).r) * face * (1.0 - rib);
   albedo = mix(albedo, albedo * vec3(0.5, 0.68, 0.42), 0.6 * mossy);
   float wet = clamp(smoothstep(0.14, 0.04, lum) * face + 0.6 * under, 0.0, 1.0) * smoothstep(-1.0, -5.0, p.y);
