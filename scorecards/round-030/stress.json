@@ -1,0 +1,207 @@
+{
+  "schema": "carcass/stress 1",
+  "made": "2026-11-27T08:24:20Z",
+  "engine": "6714b45ff14a5941",
+  "browser": "147.0.7727.15",
+  "machine": "space-sandbox",
+  "format": "hd",
+  "tier": "final",
+  "fps": 60,
+  "clipSeconds": 1,
+  "stressMbps": 10,
+  "crf": 16,
+  "pixelFormat": "yuv420p",
+  "asTheFilmIsDelivered": true,
+  "moments": [
+    {
+      "id": "heart",
+      "name": "The Heart's peak",
+      "unit": "heart",
+      "frame": 4010,
+      "timecode": "1:06.50",
+      "source": "the event surge",
+      "exact": true,
+      "notes": [],
+      "first": 3980,
+      "last": 4039,
+      "frames": 60,
+      "format": "hd",
+      "tier": "final",
+      "width": 1920,
+      "height": 1080,
+      "files": {
+        "delivered": "heart-hd-final-delivered.mp4",
+        "stress": "heart-hd-final-stress.mp4",
+        "stillSource": "heart-hd-final-source.png",
+        "stillDelivered": "heart-hd-final-delivered.png",
+        "stillStress": "heart-hd-final-stress.png",
+        "sideBySide": "heart-hd-final-side-by-side.png"
+      },
+      "measured": {
+        "delivered": {
+          "bytes": 1888611,
+          "mbps": 15.11,
+          "psnrDb": 36.24
+        },
+        "stress": {
+          "bytes": 1153904,
+          "mbps": 9.23,
+          "psnrDb": 35.54
+        },
+        "betweenPsnrDb": 39.93
+      },
+      "harsher": true,
+      "reused": false,
+      "crop": {
+        "left": 1120,
+        "top": 810,
+        "width": 321,
+        "height": 180
+      }
+    },
+    {
+      "id": "marsh",
+      "name": "The seep pool on the marsh",
+      "unit": "marsh",
+      "frame": 6158,
+      "timecode": "1:42.38",
+      "source": "the event burst",
+      "exact": true,
+      "notes": [],
+      "first": 6128,
+      "last": 6187,
+      "frames": 60,
+      "format": "hd",
+      "tier": "final",
+      "width": 1920,
+      "height": 1080,
+      "files": {
+        "delivered": "marsh-hd-final-delivered.mp4",
+        "stress": "marsh-hd-final-stress.mp4",
+        "stillSource": "marsh-hd-final-source.png",
+        "stillDelivered": "marsh-hd-final-delivered.png",
+        "stillStress": "marsh-hd-final-stress.png",
+        "sideBySide": "marsh-hd-final-side-by-side.png"
+      },
+      "measured": {
+        "delivered": {
+          "bytes": 3065085,
+          "mbps": 24.52,
+          "psnrDb": 39.94
+        },
+        "stress": {
+          "bytes": 1262754,
+          "mbps": 10.1,
+          "psnrDb": 37.17
+        },
+        "betweenPsnrDb": 38.39
+      },
+      "harsher": true,
+      "reused": false,
+      "crop": {
+        "left": 800,
+        "top": 90,
+        "width": 321,
+        "height": 180
+      }
+    },
+    {
+      "id": "spine",
+      "name": "The storm on the Spine",
+      "unit": "spine",
+      "frame": 7450,
+      "timecode": "2:04.10",
+      "source": "the event strike-3",
+      "exact": true,
+      "notes": [],
+      "first": 7420,
+      "last": 7479,
+      "frames": 60,
+      "format": "hd",
+      "tier": "final",
+      "width": 1920,
+      "height": 1080,
+      "files": {
+        "delivered": "spine-hd-final-delivered.mp4",
+        "stress": "spine-hd-final-stress.mp4",
+        "stillSource": "spine-hd-final-source.png",
+        "stillDelivered": "spine-hd-final-delivered.png",
+        "stillStress": "spine-hd-final-stress.png",
+        "sideBySide": "spine-hd-final-side-by-side.png"
+      },
+      "measured": {
+        "delivered": {
+          "bytes": 4135771,
+          "mbps": 33.09,
+          "psnrDb": 36.75
+        },
+        "stress": {
+          "bytes": 1335036,
+          "mbps": 10.68,
+          "psnrDb": 32.09
+        },
+        "betweenPsnrDb": 33.65
+      },
+      "harsher": true,
+      "reused": false,
+      "crop": {
+        "left": 0,
+        "top": 720,
+        "width": 321,
+        "height": 180
+      }
+    },
+    {
+      "id": "titan",
+      "name": "The titan frame",
+      "unit": "reveal",
+      "frame": 10027,
+      "timecode": "2:47.07",
+      "source": "the titan frame",
+      "exact": true,
+      "notes": [],
+      "first": 9997,
+      "last": 10056,
+      "frames": 60,
+      "format": "hd",
+      "tier": "final",
+      "width": 1920,
+      "height": 1080,
+      "files": {
+        "delivered": "titan-hd-final-delivered.mp4",
+        "stress": "titan-hd-final-stress.mp4",
+        "stillSource": "titan-hd-final-source.png",
+        "stillDelivered": "titan-hd-final-delivered.png",
+        "stillStress": "titan-hd-final-stress.png",
+        "sideBySide": "titan-hd-final-side-by-side.png"
+      },
+      "measured": {
+        "delivered": {
+          "bytes": 2431416,
+          "mbps": 19.45,
+          "psnrDb": 37.75
+        },
+        "stress": {
+          "bytes": 1231993,
+          "mbps": 9.86,
+          "psnrDb": 35.76
+        },
+        "betweenPsnrDb": 37.84
+      },
+      "harsher": true,
+      "reused": false,
+      "crop": {
+        "left": 0,
+        "top": 450,
+        "width": 321,
+        "height": 180
+      }
+    }
+  ],
+  "joinedFrom": [
+    "stress-heart.json",
+    "stress-marsh.json",
+    "stress-spine.json",
+    "stress-titan.json"
+  ]
+}
