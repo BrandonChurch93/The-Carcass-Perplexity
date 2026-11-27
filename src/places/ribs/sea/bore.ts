@@ -408,6 +408,7 @@ uniform sampler2D tFoam;
 uniform sampler2D tAtlas;
 uniform sampler2D tDrops;
 uniform float uAtlas;
+uniform float uLast;
 varying vec2 vUv;
 varying vec2 vRaw;
 varying vec4 vLook;
@@ -439,7 +440,13 @@ void main() {
   float beads = texture2D(tDrops, vUv * 0.55 + o.yx * 1.3).r;
   float loose = beads * (1.0 - mist) * smoothstep(0.02, 0.3, r2) * (1.0 - smoothstep(0.45, 1.0, r2)) * (1.0 - 0.7 * age);
   dens = max(dens, 0.9 * loose);
-  float alpha = clamp(dens * vLook.x, 0.0, 1.0) * (1.0 - uSolo);
+  // Thrown water has mass: it hides what stands behind it, and it does not fade. As it spends itself it comes apart, the thin of it
+  // first and the heart last, so a clot ends as a few bright lumps and never as a ghost of itself. Only what is too fine to fall is a veil.
+  float keep = clamp(vLook.x * 1.25, 0.0, 1.0);
+  float thick = mix(clot * grain, lum, uAtlas) + 0.2 * (g.b - 0.5);
+  float gone = 0.8 * (1.0 - keep);
+  float solid = max(min(dens, 1.0) * smoothstep(gone, gone + 0.2, thick), 0.9 * loose * keep) * smoothstep(0.0, 0.1, keep);
+  float alpha = mix(clamp(dens * vLook.x, 0.0, 1.0), mix(0.97 * solid, clamp(dens * vLook.x, 0.0, 1.0), mist), uLast) * (1.0 - uSolo);
   // Lit through, not on a skin: the side toward the sun a little brighter, the heart of a mass grey, the thin rim against the sun burning.
   float side = 0.5 + 0.5 * dot(normalize(vRaw + 1e-4), normalize(vSunView.xy + 1e-4)) * sqrt(r2);
   float rim = pow(max(-vSunView.z, 0.0), 2.0) * (1.0 - clot) * 1.2;
@@ -699,7 +706,7 @@ export function createBore(
 
   const count = Math.max(LIPS + PLUME + FOOT_BEFORE + VEIL, CREST + FALLS + FOOT + MIST) + sites.reduce((n, s) => n + (s.near ? BURST_NEAR : BURST_FAR), 0);
   const drops = dropsTexture();
-  const cards = new Cards(count, { ...rigUniforms, tFoam: { value: foam }, tAtlas: { value: pictures.spray }, tDrops: { value: drops }, uAtlas: { value: 1 } });
+  const cards = new Cards(count, { ...rigUniforms, tFoam: { value: foam }, tAtlas: { value: pictures.spray }, tDrops: { value: drops }, uAtlas: { value: 1 }, uLast: last });
   const X = focus[0];
   const high = (x: number): number => highAt(x, X);
   const tip = (x: number, t: number): [number, number] => tipAt(x, t, X);
@@ -865,8 +872,10 @@ export function createBore(
           const rolls = i % 4 === 0;
           const z = rolls ? frontNow + lineAt(x, seconds) + 5 + 30 * rand(i, n + 24) + 3 * a : boreFront(born) + lineAt(x, born) - H * (0.3 + 1.2 * rand(i, n + 24)) + (BORE_SPEED - 9) * a;
           const y = rolls ? 1.5 + 5 * rand(i, n + 25) + 0.6 * a : H * (0.85 + 0.5 * rand(i, n + 25)) + 2.2 * a;
-          const fade = Math.min(1, a / 0.8) * Math.min(1, (life - a) / 2);
-          thrown(x, y, z, (rolls ? 7 + 6 * rand(i, n + 28) : 8 + 7 * rand(i, n + 28)) * (1 + 0.08 * a), (rolls ? 0.05 : 0.16) * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.8, 0.5, 1);
+          // It leaves the crest small and thick and thins as it spreads: nothing comes up out of the air in its place.
+          const spread = 0.3 + 0.7 * Math.min(1, a / 2.2);
+          const fade = Math.min(1, a / 0.15) * Math.min(1, (life - a) / 2) / Math.pow(spread, 1.2);
+          thrown(x, y, z, (rolls ? 7 + 6 * rand(i, n + 28) : 8 + 7 * rand(i, n + 28)) * (1 + 0.08 * a) * spread, (rolls ? 0.05 : 0.11) * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.8, 0.5, 1);
         }
 
         // Water thrown off the crest as the lip pitches and falls: it leaves the lip with the wall's speed, climbs, hangs, comes down as water
@@ -969,8 +978,8 @@ export function createBore(
             // What goes up the flank falls back beside it and is not carried on to the lens.
             const z = s.z - Math.cos(ang) * rr * 0.9 + (flank ? 3 + 5 * rand(seed, 10) : 10 + 16 * rand(seed, 10)) * a;
             const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / (flank ? 3.0 : 5.2));
-            const size = (flank ? 1.3 + 1.4 * a : 2.6 + 3.6 * a) * (0.6 + 0.9 * rand(seed, 5));
-            thrown(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.05 + 0.5 * rand(seed, 11), Math.min(flank ? 0.1 : 0.5, 0.12 * a), 0.8 * a / (flank ? 3.0 : 5.2));
+            const size = (flank ? 1.3 + 1.4 * a : 2.6 + 2.2 * a) * (0.6 + 0.9 * rand(seed, 5));
+            thrown(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.05 + 0.5 * rand(seed, 11), Math.min(flank ? 0.1 : 0.2, 0.05 * a), 0.8 * a / (flank ? 3.0 : 5.2));
           }
         }
       };
