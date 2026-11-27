@@ -605,6 +605,12 @@ export class Bodies {
     }
   }
 
+  /** Only the first `many` of them are drawn from here on: those after them cost nothing. */
+  draw(many: number): void {
+    const each = (this.mesh.geometry.index?.count ?? 0) / this.count;
+    this.mesh.geometry.setDrawRange(0, Math.min(this.count, Math.max(0, many)) * each);
+  }
+
   private fold(i: number): void {
     const from = i * VERTS * 3;
     this.at.fill(0, from, from + VERTS * 3);
