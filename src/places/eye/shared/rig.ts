@@ -92,6 +92,7 @@ function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid
   const hz = SUN_DIR[2] / Math.hypot(SUN_DIR[0], SUN_DIR[2]);
   const fall = Math.tan((SUN.elevation * Math.PI) / 180);
   let shade: Float32Array = new Float32Array(w * h);
+  const under = new Float32Array(w * h).fill(-Infinity);
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
       const x = spec.minX + (i + 0.5) * cx;
@@ -104,11 +105,35 @@ function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid
       if (cover) {
         const c = cover(x, z);
         if (c > top) {
-          top = c;
+          under[j * w + i] = c;
           open[j * w + i] = (open[j * w + i] as number) * (1 - 0.55 * Math.min(1, Math.max(0, (c - (heights[j * w + i] as number)) / 40)));
         }
       }
       shade[j * w + i] = top;
+    }
+  }
+  // The shade of what hangs over the ground has no ruled edge: it deepens over the first hundred and seventy metres in from the edge of the cover,
+  // so that seen from above, where the cover itself is not drawn, the shade falls off and is no bound.
+  const SOFT = 170;
+  const cells = Math.ceil(SOFT / Math.min(cx, cz));
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      const c = under[j * w + i] as number;
+      if (c === -Infinity) continue;
+      let nearest = SOFT;
+      for (let dj = -cells; dj <= cells; dj++) {
+        const jj = j + dj;
+        if (jj < 0 || jj >= h) continue;
+        for (let di = -cells; di <= cells; di++) {
+          const ii = i + di;
+          if (ii < 0 || ii >= w || under[jj * w + ii] !== -Infinity) continue;
+          const d = Math.hypot(di * cx, dj * cz);
+          if (d < nearest) nearest = d;
+        }
+      }
+      const ground = Math.max(heights[j * w + i] as number, 0);
+      const soft = nearest >= SOFT ? c : Math.min(c, ground - 1.6 + (3.2 * nearest) / SOFT + Math.max(0, nearest - 0.8 * SOFT) * 2);
+      if (soft > (shade[j * w + i] as number)) shade[j * w + i] = soft;
     }
   }
   shade = soften(shade, w, h);
