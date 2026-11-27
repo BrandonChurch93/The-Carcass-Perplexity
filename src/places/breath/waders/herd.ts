@@ -113,12 +113,24 @@ export function makeHerd(rng: Rng): Member[] {
     const b = far.range(FAR_FLOCK.bearing[0], FAR_FLOCK.bearing[1]) * RAD;
     const d = far.range(FAR_FLOCK.distance[0], FAR_FLOCK.distance[1]);
     const anchor: Anchor = { x: Math.sin(b) * d, z: -Math.cos(b) * d, heading: far.range(0, 360), speed: far.range(0.15, 0.45), size: far.range(0.68, 1.14), up: far.next() < 0.35, phase: far.range(0, 6.28) };
+    // Most of them work along the shallows, across the line of sight from the shaft, so they are seen from the side; a few go their own way.
+    if (hash(i * 8.3 + 12) < 0.72) anchor.heading = b / RAD + (hash(i * 1.9 + 13) < 0.5 ? 90 : -90) + 110 * (hash(i * 2.7 + 14) - 0.5);
+    // They do not stand evenly: one in three keeps close to the one before it, a body's length or two off, going the same way; some of those are young.
+    const last = herd[herd.length - 1];
+    if (i > 0 && last && hash(i * 5.3 + 15) < 0.34) {
+      const off = (hash(i * 3.1 + 16) * 2 - 1) * Math.PI;
+      const gap = 2.2 + 3.4 * hash(i * 4.3 + 17);
+      anchor.x = last.plan.x + Math.sin(off) * gap;
+      anchor.z = last.plan.z - Math.cos(off) * gap;
+      anchor.heading = last.plan.heading / RAD + 50 * (hash(i * 6.7 + 18) - 0.5);
+      if (hash(i * 7.9 + 19) < 0.4) anchor.size = 0.56 + 0.14 * hash(i * 9.7 + 20);
+    }
     const start = far.range(-8, 20);
-    const up: [number, number][] = far.next() < 0.3 ? [[-5, 30]] : [[start, start + far.range(2.5, 6)], [start + far.range(11, 16), start + far.range(17, 22)]];
+    const up: [number, number][] = far.next() < 0.14 ? [[-5, 30]] : [[start, start + far.range(2.5, 6)], [start + far.range(11, 16), start + far.range(17, 22)]];
     // Some stand, one or two of them on three legs; the rest walk at their own pace and stop when they like.
     const lot = hash(i * 7.13 + 3);
     // A few have lain down on the flat with their legs folded under them, neck up or along the ground.
-    const lies = hash(i * 6.1 + 8) < 0.1;
+    const lies = hash(i * 6.1 + 8) < 0.13;
     const plan: Plan = { ...planOf(anchor, up, far), speed: lot < 0.3 || lies ? 0 : anchor.speed * PACE, pauses: 0.1 + 0.4 * hash(i * 3.3 + 1), carry: 2 * hash(i * 5.7 + 2), tuck: lot < 0.12 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0, feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4), reach: hash(i * 4.7 + 6) < 0.38 ? 0 : 1, rest: lies ? 1 : 0 };
     herd.push({ build: makeBuild(anchor.size * 1.06, 301 + i * 3.77, true), plan, near: false });
   }
