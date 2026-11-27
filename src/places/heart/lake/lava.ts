@@ -303,6 +303,8 @@ void main() {
     // Not a circle: a coil is pressed by the stream and by its neighbour.
     float r = length(rel * vec2(0.8, 1.0)) * (1.0 + 0.16 * sin(3.0 * atan(rel.y, rel.x) + 6.28 * h.x));
     float w = 1.0 - smoothstep(0.55 * reach, 1.2 * reach, r);
+    // The channel at the line runs too full for many: two in three of its coils are not there.
+    w *= 1.0 - (abs(vSeam.y - uTongue.w) < 0.5 ? 1.0 : 0.0) * step(0.33, fract(h.y * 7.3));
     psi = mix(psi, middle.y - side * r, w);
     if (w > held) {
       coilAt = middle;
@@ -425,7 +427,7 @@ void main() {
   // centimetre or two, and here and there, for a while, a tear opens between them and closes again.
   // From far the core is narrower and darker at its edge: a streak of yellow in dark skin, not a field of orange.
   float farAway = smoothstep(12.0, 20.0, length(vWorld.xz - cameraPosition.xz)) * onLine;
-  float coreTo = (0.16 + 0.3 * max(reachOpen, 0.35 * onLine) + 0.25 * pool * onLine) * (1.0 - 0.45 * farAway);
+  float coreTo = (0.16 + 0.3 * max(reachOpen, 0.75 * onLine) + (0.5 + 0.25 * pool) * onLine) * (1.0 - 0.45 * farAway);
   float present = max(smoothstep(-0.03, 0.03, leanMid - coreTo - 0.12 * (plateHash.x - 0.5)), inCoil);
   // The plates are welded into sheets and lie over one another at their rims: nothing glows inside a sheet. A plate burns only
   // where it meets the open melt: one rim, 2 to 5 cm wide.
@@ -571,8 +573,8 @@ void main() {
     float heatPlug = clamp(mix(0.22 + 0.2 * mid, 0.72 + 0.3 * mid, furrow) + 0.3 * plugHeat, 0.0, 1.0);
     // In the slack of a pool of the line, and along its open tongue, the melt lies bare and broad, yellow white, and what skin
     // there is rides on it as dark wrinkled islands with the cords of the sheet on them.
-    float broad = onLine * max(smoothstep(0.2, 0.6, pool), 0.55 * reachOpen);
-    float isle = smoothstep(0.5, 0.58, vnoise(coilAt * vec2(0.55, 1.5) + 41.0) + 0.3 * (coil - 0.45));
+    float broad = onLine * max(max(smoothstep(0.2, 0.6, pool), 0.55 * reachOpen), 0.82 + 0.18 * smoothstep(0.35, 0.65, vnoise(coilAt * vec2(0.16, 0.5) + 83.0)));
+    float isle = smoothstep(0.5, 0.58, 0.7 * vnoise(coilAt * vec2(0.4, 1.1) + 41.0) + 0.3 * vnoise(coilAt * vec2(1.3, 3.1) + 7.0) + 0.3 * (coil - 0.45) + 0.12 * smoothstep(0.5, 1.1, lean));
     heatPlug = mix(heatPlug, mix(0.9 + 0.1 * mid, mix(0.06, 0.4, furrow * furrow), isle), broad);
     float heatSide = mix(0.08, 1.0, sideHeat) * mix(0.95, 0.65, smoothstep(0.4, 1.0, lean));
     float heat = mix(heatSide, heatPlug, inPlug);
@@ -582,7 +584,7 @@ void main() {
     float bare = smoothstep(0.72, 0.95, heat);
     float lines = vnoise(vec2(ride.x * 0.45, ride.y * 7.0) + 7.0);
     float film = smoothstep(0.5, 0.7, vnoise(vec2(ride.x * 0.8, ride.y * 2.6) + 23.0));
-    heat -= bare * (0.14 * (lines - 0.2) + 0.16 * film);
+    heat -= bare * (0.14 * (lines - 0.2) + 0.16 * film) + bare * onLine * 0.28 * smoothstep(0.35, 0.75, coil);
     float sheared = (1.0 - smoothstep(0.0, 0.04 + grain, abs(plugEdge) * gape)) * smoothstep(0.35, 0.6, vnoise(vec2(here.x * 1.3 - 0.4 * uTime, 3.0 + vSeam.y))) * (1.0 - inCoil);
     heat = max(heat, 0.85 * sheared);
     hot = mix(hot, blackbody(800.0 + (780.0 + 60.0 * reachOpen * inPlug - 40.0 * farAway) * heat), photo);

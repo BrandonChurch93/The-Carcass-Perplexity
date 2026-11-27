@@ -264,12 +264,17 @@ void main() {
   vec3 gritL = gritAt(q / 0.045 + 7.0);
   float bubbly = smoothstep(0.3, 0.62, 0.6 * vnoise(q / 0.8 + 37.0) + 0.4 * vnoise(q / 0.21 + 11.0));
   float vesicle = (1.0 - smoothstep(0.1, 0.3, gritS.x)) * smoothstep(0.42, 0.5, gritS.z) * mix(0.25, 1.0, bubbly) * gritNear;
-  float crackle = (1.0 - smoothstep(0.0, max(0.06, 1.2 * fpS / 0.045), gritL.y)) * smoothstep(0.35, 0.6, vnoise(q / 0.55 + 71.0)) * chipNear;
+  float crackLine = (1.0 - smoothstep(0.0, max(0.06, 1.2 * fpS / 0.045), gritL.y)) * chipNear;
+  float crackle = crackLine * smoothstep(0.35, 0.6, vnoise(q / 0.55 + 71.0));
+  // Between the chip and the slab the skin is mottled, a palm across and a finger across.
+  float mottle = (vnoise(q / 0.11 + 5.0) - 0.5) * (1.0 - smoothstep(0.03, 0.09, fpG)) + 0.7 * (vnoise(q / 0.031 + 9.0) - 0.5) * chipNear;
   float chip = (gritL.z - 0.5) * chipNear;
   float speck = (gritS.z - 0.5) * gritNear;
   float gritTall = 0.002 * chip + 0.001 * speck - 0.0035 * vesicle - 0.002 * crackle;
   fine += clamp(onCrust(vec2(dFdx(gritTall), dFdy(gritTall)), qx, qy, det), -1.0, 1.0);
-  tone *= (1.0 + 0.4 * chip + 0.3 * speck) * (1.0 - 0.65 * vesicle);
+  tone *= (1.0 + 0.6 * chip + 0.4 * speck + 0.55 * mottle) * (1.0 - 0.65 * vesicle);
+  // A standing face is the broken edge of the skin: its layers show, a finger thick, and it is rough.
+  tone *= mix(1.0, 0.55 + 0.9 * vnoise(vec2(dot(q, vec2(0.71, 0.71)) / 0.07, vWorld.y / 0.012)), steep * (1.0 - smoothstep(0.014, 0.04, fpG)));
   crease *= (1.0 - 0.5 * vesicle) * (1.0 - 0.35 * crackle);
   // The shape decides what a face looks at (its neighbour, the sky, the melt); the grain only turns the light on it.
   vec3 nShape = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
@@ -288,7 +293,9 @@ void main() {
   // The mean of what is left out on the blurred swell: its grooves and its spall darken and warm it by a tenth.
   albedo *= mix(vec3(1.0), vec3(0.99, 0.9, 0.885), blurred);
   // The banks of the line are dark charcoal brown, not ash.
-  albedo *= mix(vec3(1.0), vec3(0.66, 0.6, 0.59), coil * (1.0 - coilMound));
+  // The crust at the line is as the picture has it under that sky: a lit grey with a breath of violet, not charcoal. Round
+  // the one that sank it is a third paler than it was.
+  albedo *= mix(vec3(1.0), vec3(3.2, 2.9, 3.05), coil * (1.0 - coilMound) * (1.0 - fresh)) * mix(1.0, 1.3, coilMound);
   albedo *= mix(vec3(1.0), vec3(0.86, 0.8, 0.77), wide);
   albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * skinD.z + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
@@ -457,6 +464,11 @@ void main() {
     c *= 1.0 - ember;
     hot += blackbody(1000.0 + 90.0 * nearMelt) * ember;
   }
+  // At the lip itself the skin is a hand thick and crazed, and the melt under it shows in the crazing: sparks of orange,
+  // most at the brim, none a metre back.
+  float lipGlow = crackLine * live * smoothstep(0.05, 0.25, gape) * (1.0 - smoothstep(0.03, 0.45, beside)) * smoothstep(0.0, 0.04, beside) * (1.0 - rubble) * calm * (1.0 - heat.x) * smoothstep(0.56, 0.7, 0.6 * vnoise(q / 0.06 + 43.0) + 0.4 * vnoise(q / 0.31 + 17.0));
+  c *= 1.0 - lipGlow;
+  hot += blackbody(1120.0 + 220.0 * gritL.z) * lipGlow;
   gl_FragColor = vec4(rigOut(c * (1.0 - heat.x)) + hot * uLava, 1.0);
   // Last, after every derivative is taken. Far off the crust runs on under the rock, which hides it.
   if (land.b > 1.5 + 0.6 * max(far - 150.0, 0.0)) discard;
