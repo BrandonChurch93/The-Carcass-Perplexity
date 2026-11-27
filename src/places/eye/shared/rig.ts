@@ -93,23 +93,40 @@ function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid
   const fall = Math.tan((SUN.elevation * Math.PI) / 180);
   let shade: Float32Array = new Float32Array(w * h);
   const under = new Float32Array(w * h).fill(-Infinity);
+  // The shade is carried from cell to cell away from the sun: a cell is in the shade of the cell next to it toward the sun, or of whatever
+  // that cell is in the shade of, lowered by the fall of the light over the way between them. Every crest is met, whatever its distance,
+  // so the edge of a long shadow has no steps; a march with far steps met a far crest in one cell and missed it in the next.
+  const alongX = Math.abs(hx) * cz >= Math.abs(hz) * cx;
+  const lines = alongX ? w : h;
+  const across = alongX ? h : w;
+  const toward = (alongX ? hx : hz) > 0 ? 1 : -1;
+  const way = alongX ? cx / Math.abs(hx) : cz / Math.abs(hz);
+  const slip = alongX ? (hz * way) / cz : (hx * way) / cx;
+  const cell = (line: number, k: number): number => (alongX ? k * w + line : line * w + k);
+  for (let n = 0; n < lines; n++) {
+    const line = toward > 0 ? lines - 1 - n : n;
+    for (let k = 0; k < across; k++) {
+      if (n === 0) {
+        shade[cell(line, k)] = Math.max(-50, (heights[cell(line, k)] as number) - 5 * fall);
+        continue;
+      }
+      const f = Math.min(across - 1, Math.max(0, k + slip));
+      const k0 = Math.min(across - 2, Math.floor(f));
+      const a0 = cell(line + toward, k0);
+      const a1 = cell(line + toward, k0 + 1);
+      const v0 = Math.max(heights[a0] as number, shade[a0] as number);
+      const v1 = Math.max(heights[a1] as number, shade[a1] as number);
+      shade[cell(line, k)] = Math.max(-50, v0 + (v1 - v0) * (f - k0) - fall * way);
+    }
+  }
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
-      const x = spec.minX + (i + 0.5) * cx;
-      const z = spec.minZ + (j + 0.5) * cz;
-      let top = -50;
-      for (let d = 5; d < 2700; d += Math.max(4, d * 0.045)) {
-        const c = at(x + hx * d, z + hz * d) - d * fall;
-        if (c > top) top = c;
+      if (!cover) continue;
+      const c = cover(spec.minX + (i + 0.5) * cx, spec.minZ + (j + 0.5) * cz);
+      if (c > (shade[j * w + i] as number)) {
+        under[j * w + i] = c;
+        open[j * w + i] = (open[j * w + i] as number) * (1 - 0.55 * Math.min(1, Math.max(0, (c - (heights[j * w + i] as number)) / 40)));
       }
-      if (cover) {
-        const c = cover(x, z);
-        if (c > top) {
-          under[j * w + i] = c;
-          open[j * w + i] = (open[j * w + i] as number) * (1 - 0.55 * Math.min(1, Math.max(0, (c - (heights[j * w + i] as number)) / 40)));
-        }
-      }
-      shade[j * w + i] = top;
     }
   }
   // The shade of what hangs over the ground has no ruled edge: it deepens over the first hundred and seventy metres in from the edge of the cover,
