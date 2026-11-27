@@ -39,6 +39,8 @@ interface Kite {
   spire: number;
   /** The long one of its colony. */
   lead: boolean;
+  /** The one long kite of its spire, off the highest holdfast: the others of the long lens are wisps beside it. */
+  chief?: boolean;
 }
 
 /** Where the colonies of a spire hold on, as shares of its height, and how many kites each has. Few and near the top: the lee of the tip is where the gale is cleanest. */
@@ -100,8 +102,8 @@ bool kiteSet() {
     if (abs(aSeed.z - uStage.w) > 0.5) {
       if (uStageMore.x > 0.5) return false;
     } else {
-      // In the long lens one kite of each colony is long and the rest are short.
-      float lead = uStageMore.x > 0.5 ? mix(0.5, 1.7, aLead) : 1.0;
+      // In the long lens one kite of the spire is long and broad; the long ones of its other colonies are wisps beside it, the rest short.
+      float lead = uStageMore.x > 0.5 ? (aLead > 0.9 ? 1.7 : mix(0.5, 1.0, aLead)) : 1.0;
       if (uFly.x > 0.5 && kThread < 0.5) {
         // The wide lens sees the first spire's kites from the side, all in one sheet of air: fewer fly, and the ones that head toward
         // the lens are the larger.
@@ -113,7 +115,7 @@ bool kiteSet() {
         kHalf *= 1.0 + 0.3 * rank;
       }
       kBlade *= uStage.x * lead;
-      if (uStageMore.x > 0.5) kHalf *= mix(0.4, 1.0, aLead);
+      if (uStageMore.x > 0.5) kHalf *= aLead > 0.9 ? 1.0 : mix(0.3, 0.5, aLead);
       kWave *= uStage.x * lead;
       kHalf *= uStage.y;
       kCord *= uStage.z;
@@ -262,6 +264,7 @@ uniform sampler2D tFilmB;
 uniform sampler2D tFilmBA;
 uniform sampler2D tFilmBH;
 uniform float uVeil;
+uniform float uInside;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec4 vAt;
@@ -297,6 +300,8 @@ void main() {
   vec2 uv = vec2(mix(0.015, 0.985, s), 1.0 - ((first ? 0.47 : 0.415) + 0.2 * vf));
   vec2 uvDx = dFdx(uv);
   vec2 uvDy = dFdy(uv);
+  // How much of the strip's width a pixel covers: its edge is let go over two pixels, never cut.
+  float edgeW = 2.0 * fwidth(vb);
   vec3 pic;
   float body;
   float relief;
@@ -310,7 +315,7 @@ void main() {
     relief = textureGrad(tFilmBH, uv, uvDx, uvDy).r;
   }
   // Far off the picture's outline is finer than a pixel: there the blade's own width is the outline.
-  float cut = mix(smoothstep(0.35, 0.65, body), 1.0, vFar) * step(abs(vb), 1.0);
+  float cut = mix(smoothstep(0.35, 0.65, body), 1.0, vFar) * (1.0 - smoothstep(1.0 - min(edgeW, 1.0), 1.0, abs(vb)));
   float lip = (1.0 - smoothstep(0.5, 0.8, body)) * cut * (1.0 - vFar);
   float skin = cut * smoothstep(0.0, 0.012, u);
   if (skin < 0.02) discard;
@@ -434,6 +439,9 @@ void main() {
   // Down the ridge it is a grey wisp against the cloud, nearer the sky's tone the farther it is.
   // At the middle distances too the sky stands behind it: a film, not a cloth.
   float alpha = skin * cover * (1.0 - 0.45 * distant) * mix(1.0, 0.72, vFar * (1.0 - distant));
+  // From inside the canal the kites stand far off in the bright mouth: there they are let into the air, pale wisps of the sky's own tone.
+  c = mix(c, 1.2 * skyRadiance(-toCamera), 0.8 * uInside);
+  alpha *= 1.0 - 0.6 * uInside;
   if (alpha < 0.02) discard;
   gl_FragColor = vec4(rigOut(c), alpha * (1.0 - uSolo));
 }`;
@@ -447,8 +455,10 @@ varying vec3 vNormal;
 varying vec4 vAt;
 varying vec3 vKite;
 varying float vRoot;
+varying float vAcross;
 void main() {
   if (!kiteSet()) {
+    vAcross = 1.0;
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
     return;
   }
@@ -474,6 +484,8 @@ void main() {
   float least = 0.9 * uPixel * far;
   float thin = min(1.0, r / least);
   r = max(r, least);
+  // Its half width in pixels of the film.
+  vAcross = r / (uPixel * far);
   vec3 ring = u * cos(aAt.y) + w * sin(aAt.y);
   vec3 p = c + ring * r;
   vWorld = p;
@@ -492,6 +504,8 @@ varying vec3 vNormal;
 varying vec4 vAt;
 varying vec3 vKite;
 varying float vRoot;
+varying float vAcross;
+uniform float uInside;
 void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
@@ -513,8 +527,13 @@ void main() {
   rime = mix(rime, smoothstep(0.3, 0.7, 0.45 * n.y + 0.9 * ridges - 0.1), smoothstep(0.1, 0.5, vRoot));
   vec3 albedo = mix(sinew, vec3(0.62, 0.66, 0.74), rime);
   vec3 c = rigShade(vWorld, n, toCamera, albedo, mix(0.3, 0.85, rime), 1.0);
-  // Thinner than a pixel, it is a fainter line and not a narrower one.
-  gl_FragColor = vec4(rigOut(c * mix(0.75, 1.0, vAt.w)), 1.0);
+  // Thinner than a pixel, it is a fainter line and not a narrower one: it fades by how much of the pixel it would fill. Its edge is let
+  // go, not cut: where the cord is a pixel or two across it is clear at its rim and whole along its middle.
+  float facing = abs(dot(n, toCamera));
+  float rim = clamp(facing / sqrt(min(1.0, 2.0 / max(vAcross, 0.5))), 0.0, 1.0);
+  // From inside the canal the cords are far off in the bright mouth: faint lines of the sky's tone.
+  c = mix(c, 1.2 * skyRadiance(-toCamera), 0.7 * uInside);
+  gl_FragColor = vec4(rigOut(c), max(0.3, vAt.w) * rim * (1.0 - 0.6 * uInside));
 }`;
 
 // The ice on a cord: spikes where its water froze as it dripped, each with a bead at its end.
@@ -708,6 +727,11 @@ export function create(ctx: Context): Piece {
   const farness = (k: Kite): number => Math.hypot(k.anchor[0] + WIND[0] * k.blade * 0.4 - stand[0], k.anchor[1] - stand[1], k.anchor[2] + WIND[2] * k.blade * 0.4 - stand[2]);
   kites.sort((a, b) => farness(b) - farness(a));
   const blades = kites.filter((k) => k.half > 0);
+  for (let sp = 1; sp <= 8; sp++) {
+    const leads = kites.filter((k) => k.lead && k.spire === sp);
+    if (leads.length > 0) leads.reduce((a, b) => ((b.anchor[1] as number) > (a.anchor[1] as number) ? b : a)).chief = true;
+  }
+  const leadOf = (k: Kite): number => (k.chief ? 1 : k.lead ? 0.6 : 0);
 
   /** One mesh of every kite in `list`, each a grid of `down` by `round` cells whose points carry the kite and where on it they are. */
   const strips = (list: Kite[], down: number, round: number, at: (i: number, j: number) => [number, number], closed: boolean): THREE.BufferGeometry => {
@@ -727,7 +751,7 @@ export function create(ctx: Context): Piece {
           anchor.set(k.anchor, v * 3);
           size.set([k.cord, k.blade, k.half, k.wave], v * 4);
           seed.set([k.phase, k.seed, k.spire, k.sag], v * 4);
-          lead[v] = k.lead ? 1 : 0;
+          lead[v] = leadOf(k);
           where.set(at(i, j), v * 2);
           if (i < down && j < round) {
             if (closed) index.push(v, v + round + 1, v + 1, v + 1, v + round + 1, v + round + 2);
@@ -756,6 +780,7 @@ export function create(ctx: Context): Piece {
   const wideShot = during('spine-01');
   const closeShot = during('spine-02');
   const veil = { value: 0 };
+  const inside = { value: 0 };
   const film = new THREE.Vector4(1.0, 0.05, 0.15, 0.9);
   const struck = new THREE.Vector4(0, 0, 0, 0);
   const struckAt = new THREE.Vector3(0, 0, 0);
@@ -778,6 +803,7 @@ export function create(ctx: Context): Piece {
       uGlowTint: { value: new THREE.Vector3(1.0, 0.72, 2.8) },
       uFilm: { value: film },
       uVeil: veil,
+      uInside: inside,
       uBody: { value: new THREE.Vector3(0.6, 1.2, 0.035) },
       uWrinkle: { value: new THREE.Vector2(0.5, 0.85) },
       uTone: { value: new THREE.Vector2(0.85, 0.25) },
@@ -797,9 +823,11 @@ export function create(ctx: Context): Piece {
   // Drawn after the dome, so that the sky is behind the skin when it is laid over.
   bladeMesh.renderOrder = 12;
 
-  const cordMaterial = new THREE.ShaderMaterial({ vertexShader: CORD_VERTEX, fragmentShader: CORD_FRAGMENT, uniforms: shared, side: THREE.DoubleSide });
+  const cordMaterial = new THREE.ShaderMaterial({ vertexShader: CORD_VERTEX, fragmentShader: CORD_FRAGMENT, uniforms: shared, side: THREE.DoubleSide, transparent: true, depthWrite: true });
   const cordMesh = new THREE.Mesh(strips(kites, CORD_ALONG, CORD_ROUND, (i, j) => [i / CORD_ALONG, (j / CORD_ROUND) * Math.PI * 2], true), cordMaterial);
   cordMesh.frustumCulled = false;
+  // Laid over what is behind it, after the dome and before the skins.
+  cordMesh.renderOrder = 11;
 
   // The ice: a spike is a cone of a few sides; each cord has its own, where its seed says, longest where the cord hangs lowest.
   const spike = new THREE.CylinderGeometry(1, 1, 1, 6, 8, true);
@@ -820,7 +848,7 @@ export function create(ctx: Context): Piece {
       iceAnchor.set(k.anchor, v * 3);
       iceSize.set([k.cord, k.blade, k.half, k.wave], v * 4);
       iceSeed.set([k.phase, k.seed, k.spire, k.sag], v * 4);
-      iceLead[v] = k.lead ? 1 : 0;
+      iceLead[v] = leadOf(k);
       const at = (i + hung.range(0.15, 0.85)) / ICE;
       // Few long ones, many short.
       iceAt.set([0.06 + 0.9 * at, 0.25 + 1.9 * hung.next() ** 3 + 0.9 * Math.sin(Math.PI * at) * hung.next(), hung.next()], v * 3);
@@ -865,7 +893,7 @@ export function create(ctx: Context): Piece {
       podAnchor.push(k.anchor[0], k.anchor[1], k.anchor[2]);
       podSize.push(k.cord, k.blade, k.half, k.wave);
       podSeed.push(k.phase, k.seed, k.spire, k.sag);
-      podLead.push(k.lead ? 1 : 0);
+      podLead.push(leadOf(k));
     }
   });
   podGeometry.setAttribute('aAnchor', new THREE.InstancedBufferAttribute(new Float32Array(podAnchor), 3));
@@ -904,6 +932,11 @@ export function create(ctx: Context): Piece {
       film.z = inClose ? 0.9 : 0.15;
       film.w = inClose ? 0.55 : 0.9;
       veil.value = inStrike ? 1 : 0;
+      inside.value = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 1 : 0;
+      // From inside, the cloud and the mist of the mouth are laid over the kites as over the sky: a skin that held its own depth there
+      // would stand as a flat shape cut out of them.
+      bladeMaterial.depthWrite = inside.value < 0.5;
+      cordMaterial.depthWrite = inside.value < 0.5;
       const flash = flashAt(seconds);
       // The stroke as it burns and nothing after it: between the return strokes the kites are dark.
       struck.set(flash ? flash.spire : 0, flash ? Math.min(1.5, flash.power * 1.2) : 0, 0, 0);
@@ -911,7 +944,8 @@ export function create(ctx: Context): Piece {
     },
     beforeSample: (renderer, camera) => {
       renderer.getDrawingBufferSize(size);
-      pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * (height || size.y || 2160));
+      // The pixel that counts is the film's at 1920 wide: nothing is drawn finer than that, whatever the size of this render.
+      pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * Math.min(1080, height || size.y || 2160));
       reach.value = 1 / ((camera.projectionMatrix.elements[5] as number) * 0.3249);
     },
     resize: (_w, h) => {
