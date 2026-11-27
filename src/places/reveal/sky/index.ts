@@ -72,6 +72,8 @@ void main() {
 
   // The low field. Its tops are relief: a flank that falls toward the sun is lit, the flank behind it is in its own shade, and the
   // ice above throws its shadow down on it.
+  // (From orbit the field is read half again softer than the pixel: a tuft has form at two pixels and more.)
+  lowSoft = mix(1.0, 1.5, smoothstep(500.0, 1300.0, uViewKm));
   vec2 low = lowField(xz);
   float flank = dot(lowSlope, toSun);
   float self = clamp(0.5 + 1.25 * flank, 0.0, 1.0);
