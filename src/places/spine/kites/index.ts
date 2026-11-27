@@ -148,14 +148,20 @@ vec3 kiteCentre(float d) {
   // Gusts go down the line at the wind's own speed and the waves swell where one passes: the outline is never the same a second later.
   float gust = 0.62 + 0.3 * sin(3.3 * (t - x / uWind.w) + kPhase * 4.0) + 0.2 * sin(1.9 * (t - x / uWind.w) + kPhase * 1.3);
   float env = s * sqrt(s);
-  float amp = 0.05 * kBlade * uStageMore.w * gust;
+  // No two bow alike: each by its own amount, and each with one long slow bend of its own that travels down it.
+  float ownAmp = 0.55 + 0.9 * fract(kSeed * 7.7);
+  float amp = 0.05 * kBlade * uStageMore.w * gust * ownAmp;
+  float bend = 0.045 * kBlade * uStageMore.w * (1.5 - ownAmp) * s * sin(0.42 * k * (x - 0.7 * kSpeed * t) + kPhase * 3.3);
+  p += lift * bend + side * (0.6 * bend * cos(kPhase * 2.1));
   float p1 = k * (x - kSpeed * t) + kPhase;
   float p2 = 1.83 * k * (x - 1.17 * kSpeed * t) + kPhase * 2.7;
   float p3 = 0.71 * k * (x - 0.85 * kSpeed * t) + kPhase * 1.9 + 1.3;
   float p4 = 4.3 * k * (x - 1.3 * kSpeed * t) + kPhase * 5.1;
   // The tail whips: a short fast wave on its last third.
-  float whip = 0.3 * amp * s * s * s * sin(p4);
-  p += lift * (amp * env * (sin(p1) + 0.3 * sin(p2)) + whip) + side * (0.8 * amp * env * (sin(p3) + 0.25 * cos(p2)) + 0.7 * whip);
+  // Far off the short waves are dropped: a few clear loops hold where many would run into a patch.
+  float farK = smoothstep(200.0, 450.0, length(cameraPosition - aAnchor) * uReach);
+  float whip = 0.3 * amp * s * s * s * sin(p4) * (1.0 - farK);
+  p += lift * (amp * env * (sin(p1) + 0.3 * (1.0 - farK) * sin(p2)) + whip) + side * (0.8 * amp * env * (sin(p3) + 0.25 * (1.0 - farK) * cos(p2)) + 0.7 * whip);
   // A wet skin has weight: the far end rides lower than the knot.
   p.y -= 0.035 * kBlade * s * s;
   return p;
@@ -426,7 +432,8 @@ void main() {
   // The shine is on the film, not in it: it shows at its full strength however thin the film.
   c = (c * cover * (1.0 - 0.3 * distant) + shine * (1.0 - 0.6 * distant)) / max(cover, 0.05);
   // Down the ridge it is a grey wisp against the cloud, nearer the sky's tone the farther it is.
-  float alpha = skin * cover * (1.0 - 0.45 * distant);
+  // At the middle distances too the sky stands behind it: a film, not a cloth.
+  float alpha = skin * cover * (1.0 - 0.45 * distant) * mix(1.0, 0.72, vFar * (1.0 - distant));
   if (alpha < 0.02) discard;
   gl_FragColor = vec4(rigOut(c), alpha * (1.0 - uSolo));
 }`;
@@ -463,8 +470,8 @@ void main() {
   // The holdfast: the cord's own root, swollen where it grips the rock, knuckled, and a little of it inside the stone.
   float root = exp(-max(d, 0.0) / (0.9 + 0.8 * fract(kSeed * 3.1)));
   r += root * (0.17 + 0.14 * fract(kSeed * 6.7)) * (0.55 + 0.9 * vnoise(vec2(aAt.y * 1.3 + kSeed * 50.0, d * 1.9)));
-  // Far off it is a line a pixel and a third wide and no thinner.
-  float least = 0.65 * uPixel * far;
+  // Far off it is a line near two pixels wide and no thinner: an encoder holds it where it crosses the dark.
+  float least = 0.9 * uPixel * far;
   float thin = min(1.0, r / least);
   r = max(r, least);
   vec3 ring = u * cos(aAt.y) + w * sin(aAt.y);
@@ -498,6 +505,8 @@ void main() {
   float beads = 0.6 * vnoise(vec2(d * 1.3, seed)) + 0.4 * vnoise(vec2(d * 6.0 + vAt.y, seed + 3.0));
   float rime = smoothstep(0.2, 0.6, 0.5 * n.y - 0.3 * dot(n, normalize(uWind.xyz)) + 0.8 * beads + 0.3) * (1.0 - 0.5 * vAt.z);
   rime = mix(max(rime, 0.62), 0.5, vKite.z);
+  // Where it is no more than a line it is a rimed line, pale against the dark behind it.
+  rime = max(rime, 0.8 * (1.0 - vAt.w));
   // The root is old growth, dark and ridged, with the rime packed into its hollows.
   float ridges = vnoise(vec2(vAt.y * 2.6 + seed, d * 3.3));
   sinew = mix(sinew, vec3(0.06, 0.04, 0.035) * (0.5 + ridges), smoothstep(0.1, 0.5, vRoot));
@@ -505,7 +514,7 @@ void main() {
   vec3 albedo = mix(sinew, vec3(0.62, 0.66, 0.74), rime);
   vec3 c = rigShade(vWorld, n, toCamera, albedo, mix(0.3, 0.85, rime), 1.0);
   // Thinner than a pixel, it is a fainter line and not a narrower one.
-  gl_FragColor = vec4(rigOut(c * mix(0.45, 1.0, vAt.w)), 1.0);
+  gl_FragColor = vec4(rigOut(c * mix(0.75, 1.0, vAt.w)), 1.0);
 }`;
 
 // The ice on a cord: spikes where its water froze as it dripped, each with a bead at its end.
@@ -587,7 +596,9 @@ void main() {
   float turn = atan(position.z, position.x);
   // Blunt at its root, widest a third of the way along, drawn out to a point; the scales stand out of it.
   float t = 0.5 + 0.5 * y;
-  float girth = 0.36 * (1.0 - 0.5 * t) * (1.0 + 0.13 * sin(turn * 5.0 + y * 4.0 + aAxis.w * 20.0) * sin(y * 9.0 + aAxis.w * 7.0));
+  // Its scales lie in rows, each row standing out over the root of the next: the outline is stepped, not a pebble's.
+  float saw = fract(t * 5.0);
+  float girth = 0.34 * (1.0 - 0.5 * t) * (0.86 + 0.34 * saw * (1.0 - smoothstep(0.82, 1.0, saw))) * (1.0 + 0.1 * sin(turn * 5.0 + y * 4.0 + aAxis.w * 20.0) * sin(y * 9.0 + aAxis.w * 7.0));
   vec3 centre = on + spoke * aPod.z + axis * (0.4 * aPod.w);
   vec3 p = centre + aPod.w * (axis * (0.5 * y) + (u * position.x + w * position.z) * girth);
   vWorld = p;
@@ -606,13 +617,20 @@ void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   float seed = vPod.z * 97.0;
-  float rows = smoothstep(-0.2, 0.9, sin(vPod.x * 9.0 + 1.2 * sin(vPod.y * 5.0 + seed)));
+  // The scales: five rows down it, each row set half a scale round from the last, every scale dark at its root under the one above
+  // and worn pale at its lip.
+  float rowAt = (0.5 + 0.5 * vPod.x) * 5.0;
+  float row = floor(rowAt);
+  float fr = fract(rowAt);
+  float across = fract(vPod.y / 6.2832 * 6.0 + 0.5 * mod(row, 2.0) + seed) - 0.5;
+  float lip = fr - 2.2 * across * across;
+  float rows = smoothstep(0.0, 0.4, fr) * (1.0 - 0.6 * smoothstep(0.38, 0.5, abs(across)) * (1.0 - fr));
   float grain = vnoise(vec2(vPod.y * 4.0 + seed, vPod.x * 9.0));
-  // Brown as old kelp, each husk its own shade, and frost on what looks up, in the rows and on the tip.
-  vec3 husk = mix(vec3(0.07, 0.042, 0.028), vec3(0.3, 0.19, 0.115), grain * (0.5 + 0.5 * rows)) * (0.6 + 0.8 * fract(seed * 0.37));
+  // Brown as old kelp, each husk its own shade, and frost on what looks up, on the lips of the scales and on the tip.
+  vec3 husk = mix(vec3(0.085, 0.05, 0.032), vec3(0.36, 0.23, 0.14), (0.35 + 0.65 * grain) * (0.35 + 0.65 * smoothstep(0.1, 0.9, lip))) * (0.7 + 0.7 * fract(seed * 0.37));
   float frost = vnoise(vec2(vPod.y * 9.0 + seed, vPod.x * 17.0));
-  float rime = smoothstep(0.42, 0.8, 0.55 * n.y - 0.25 * dot(n, normalize(uWind.xyz)) + 0.55 * frost + 0.12 + 0.2 * smoothstep(0.3, 1.0, vPod.x)) * 0.85;
-  vec3 c = rigShade(vWorld, n, toCamera, mix(husk, vec3(0.62, 0.66, 0.74), rime), 1.0, 0.45 + 0.55 * rows);
+  float rime = smoothstep(0.42, 0.8, 0.55 * n.y - 0.25 * dot(n, normalize(uWind.xyz)) + 0.45 * frost + 0.12 + 0.2 * smoothstep(0.3, 1.0, vPod.x) + 0.35 * smoothstep(0.55, 0.9, lip)) * 0.85;
+  vec3 c = rigShade(vWorld, n, toCamera, mix(husk, vec3(0.62, 0.66, 0.74), rime), 1.0, 0.5 + 0.5 * rows);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -819,7 +837,7 @@ export function create(ctx: Context): Piece {
 
   // The husks: a few round each cord where it leaves the rock, strung a little way down the wind's line so that the rock, whose face
   // is not the layout's, always has some of them standing out of it.
-  const ball = new THREE.SphereGeometry(1, 12, 9);
+  const ball = new THREE.SphereGeometry(1, 14, 20);
   const podGeometry = new THREE.InstancedBufferGeometry();
   podGeometry.index = ball.index;
   podGeometry.setAttribute('position', ball.getAttribute('position'));
@@ -839,9 +857,10 @@ export function create(ctx: Context): Piece {
     const big = k.spire === 1 ? 1 : 1.7;
     const many = k.half > 0 ? 13 : 5;
     for (let i = 0; i < many; i++) {
-      const d = -2 + 6 * husks.next() ** 1.5;
+      // None sits further down the cord than the cord is thick enough to carry: nothing hangs off it in the air.
+      const d = -2 + 4.2 * husks.next() ** 1.5;
       const small = 1 - 0.5 * Math.min(1, Math.max(0, (d - 1.5) / 2.5));
-      pods.push(d * big, husks.range(0, 2 * Math.PI), husks.range(0.05, 0.3) * big * small, husks.range(1.2, 2.2) * big * small);
+      pods.push(d * big, husks.range(0, 2 * Math.PI), husks.range(0.03, 0.2) * big * small, husks.range(1.5, 2.7) * big * small);
       podAxes.push(husks.range(0.2, 1), husks.range(0.5, 1.1), husks.range(0.1, 0.9), husks.next() + nth * 0.01);
       podAnchor.push(k.anchor[0], k.anchor[1], k.anchor[2]);
       podSize.push(k.cord, k.blade, k.half, k.wave);

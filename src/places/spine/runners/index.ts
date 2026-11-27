@@ -108,8 +108,8 @@ export function create(ctx: Context): Piece {
   const shagColour = ctx.assets.texture('mat/shag.jpg', { kind: 'colour', anisotropy: 4 });
   const shagData = ctx.assets.texture('mat/shag-nh.png', { kind: 'data', anisotropy: 4 });
   const lockPicture = ctx.assets.texture('mat/lock.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
-  const lockFine = ctx.assets.texture('mat/lock-b.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
-  const lockFineCut = ctx.assets.texture('mat/lock-b-a.png', { kind: 'data', repeat: false, anisotropy: 4 });
+  const lockFine = ctx.assets.texture('mat/lock-b.jpg', { kind: 'colour', repeat: false, anisotropy: 1 });
+  const lockFineCut = ctx.assets.texture('mat/lock-b-a.png', { kind: 'data', repeat: false, anisotropy: 1 });
   const burnPicture = ctx.assets.texture('mat/burn.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
   const door = new THREE.Vector4(canalFar[0], canalFar[1], canalFar[2], 1);
   const open = new THREE.Vector4(0, 0, 0, 0);
@@ -181,7 +181,7 @@ export function create(ctx: Context): Piece {
     // The dead one lies on its right side: the coat of that side is under it, in the snow, and is not grown, nor is the coat low on its
     // back, which is turned from the lens for as long as it is in the frame.
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 || (n[2] > 0.5 && n[1] < 0.45) : undefined;
-    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.08, 0.15, 0.115, 0.085, 0, 0.035] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
+    const c = coat(body, rng, { clumps: role.clumps, locks: role.act === 'dead' ? 6 : 4, broad: role.act === 'dead' ? 0.55 : role.inside ? 0.62 : 1, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.08, 0.15, 0.115, 0.085, 0, 0.035] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
@@ -280,8 +280,9 @@ export function create(ctx: Context): Piece {
 
   ctx.scene.add(ctx.parts.built('ridge-runners', part));
 
-  const discs = ctx.rig.contactDiscs(HUDDLE.length + CROSSING + 1 + 4);
+  const discs = ctx.rig.contactDiscs(HUDDLE.length + CROSSING + 1 + 4 + 3);
   const FOOT_DISC = HUDDLE.length + CROSSING + 1;
+  const DEAD_DISC = FOOT_DISC + 4;
   const place = (a: Animal, at: Vec3, yaw: number): void => {
     q1.setFromEuler(e1.set(0, yaw, 0, 'YXZ'));
     a.group.position.set(at[0], at[1], at[2]);
@@ -321,7 +322,7 @@ export function create(ctx: Context): Piece {
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
     // The gale reaches the one at the mouth in gusts: its coat is blown and falls back.
-    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0.3 + 0.1 * Math.sin(t * 0.9 + ph)) : 0.5, shiver, a.role.inside ? (standing ? 0.2 : 0.02) : 0.1);
+    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0.3 + 0.1 * Math.sin(t * 0.9 + ph)) : 0.5, shiver, a.role.inside ? (standing ? 0.42 : 0.3) : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
@@ -544,7 +545,7 @@ export function create(ctx: Context): Piece {
       } else mark(base, 0, 0, 0, 0, 0, 1, 0, 0);
       // Under the foot the floor is dark; a foot in the air has let go of it.
       const held = Math.max(0, 1 - lift / (0.05 * SIZE));
-      mark(base + 1, here.x, here.y + 0.012, here.z, paw * (1.75 - 0.45 * held), 0.92 * held * held, 0, yaw, hash(i, 1));
+      mark(base + 1, here.x, here.y + 0.012, here.z, paw * (2.0 - 0.5 * held), 0.97 * held * held, 0, yaw, hash(i, 1));
       // The ice gives the leg back, drawn out towards the lens: a foot off the floor stands clear of what the ice shows of it.
       mark(base + 2, here.x, here.y + 0.008, here.z, 0.075 * SIZE, 0.72, 2, lift, 1.3);
       ctx.rig.setDisc(discs, FOOT_DISC + i, here.x, here.z, 0.3 * SIZE, held);
@@ -566,7 +567,7 @@ export function create(ctx: Context): Piece {
     }
     // And the trunk over them, broad and faint.
     mark(4 * PER_FOOT, x, floorAt(x, z) + 0.006, z, 0.3 * SIZE, 0.42, 2, 0.34 * SIZE, 2.6);
-    mark(4 * PER_FOOT + 1, x, floorAt(x, z) + 0.004, z, 0.8 * SIZE, 0.5, 0, yaw, 0.37);
+    mark(4 * PER_FOOT + 1, x, floorAt(x, z) + 0.004, z, 0.72 * SIZE, 0.74, 0, yaw, 0.37);
     markAtAttribute.needsUpdate = true;
     markLookAttribute.needsUpdate = true;
   };
@@ -599,7 +600,7 @@ export function create(ctx: Context): Piece {
           if (go > 0) carry(a, strides(gone), go);
           tread(a, gone, at[0], floor, at[2], yaw);
         } else idle(a, seconds, (0.45 + 0.07 * i) * start * (i % 2 ? 1 : -1), 0.03 * start, start);
-        ctx.rig.setDisc(discs, i, at[0], at[2], (h.act === 'stand' ? 1.25 : 1.6) * a.role.size, i === 0 ? 0.7 : 1);
+        ctx.rig.setDisc(discs, i, at[0], at[2], (h.act === 'stand' ? 1.1 : 1.6) * a.role.size, i === 0 ? 0.95 : 1);
         const n = BREATHERS.indexOf(i);
         const b = breaths[n];
         if (!b) return;
@@ -653,6 +654,13 @@ export function create(ctx: Context): Piece {
       // Its shade on the ground lies along it, from the rump to the head.
       const mid = step(BODY_AT, DEAD_HEADING, 0.5 * dead.role.size);
       ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, mid[0], mid[2], 0.6 * dead.role.size, 0.75, 2.0, -DEAD_HEADING * RAD);
+      // And where its weight is on the snow the shade is close and dark: under the trunk, under the head and its tendrils, under the limbs
+      // that lie toward the lens.
+      ctx.rig.setDisc(discs, DEAD_DISC, mid[0], mid[2], 0.27 * dead.role.size, 1, 2.7, -DEAD_HEADING * RAD);
+      const brow = step(BODY_AT, DEAD_HEADING, 1.3 * dead.role.size);
+      ctx.rig.setDisc(discs, DEAD_DISC + 1, brow[0], brow[2], 0.3 * dead.role.size, 0.85, 1.5, -DEAD_HEADING * RAD);
+      const limbs = step(mid, carcassView, -0.42 * dead.role.size);
+      ctx.rig.setDisc(discs, DEAD_DISC + 2, limbs[0], limbs[2], 0.24 * dead.role.size, 0.9, 2.6, -DEAD_HEADING * RAD);
     },
   };
 }
