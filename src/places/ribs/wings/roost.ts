@@ -20,17 +20,17 @@ export interface Roosting {
 
 /** The shoulder in the body's frame, metres at size 1 (body.ts: SHOULDER). */
 const SHOULDER: [number, number] = [0.755, 0.531];
-/** By stance: the nose up (radians), the hips over the ledge and the feet ahead of them (metres at size 1). */
-export const SEAT: { up: number; more: number; hips: number; ahead: number }[] = [
-  { up: 0.3, more: 0.22, hips: 0.74, ahead: 0.72 },
-  { up: 0.06, more: 0.12, hips: 0.56, ahead: 0.94 },
-  { up: 0.26, more: 0.16, hips: 1.28, ahead: 0.1 },
+/** By stance: the nose up (radians), the hips over the ledge and the feet ahead of them (metres at size 1), the neck's rise off the back, the folded sails' droop. */
+export const SEAT: { up: number; more: number; hips: number; ahead: number; rise: number; droop: number }[] = [
+  { up: 0.3, more: 0.18, hips: 1.02, ahead: 0.3, rise: 0.95, droop: 0.12 },
+  { up: 0.2, more: 0.14, hips: 0.52, ahead: 0.85, rise: 1.25, droop: 0.03 },
+  { up: 0.3, more: 0.16, hips: 1.38, ahead: 0.12, rise: 0.8, droop: 0 },
 ];
 /** By stance, where the head is from the shoulder (ahead and up in the place, metres at size 1) and the way the neck ends (radians up from level): at rest, looking about, and working at its own breast. */
 const HEADS: { rest: [number, number, number]; look: [number, number, number]; preen: [number, number, number] }[] = [
-  { rest: [0.62, 0.4, -1.85], look: [0.72, 0.8, -1.15], preen: [0.32, -0.15, -2.3] },
-  { rest: [0.95, 0.08, -1.45], look: [0.85, 0.62, -1.0], preen: [0.5, -0.1, -2.1] },
-  { rest: [0.62, 1.05, -1.5], look: [0.5, 1.45, -0.95], preen: [0.45, 0.2, -2.0] },
+  { rest: [0.62, 0.62, -1.9], look: [0.5, 1.45, -0.7], preen: [0.3, -0.05, -2.3] },
+  { rest: [0.42, 1.0, -1.7], look: [0.35, 1.7, -0.5], preen: [0.45, 0.1, -2.2] },
+  { rest: [0.55, 1.15, -1.5], look: [0.45, 1.75, -0.7], preen: [0.4, 0.25, -2.1] },
 ];
 
 const frac = (x: number): number => x - Math.floor(x);
@@ -53,8 +53,10 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   const heads = HEADS[s.stance] as (typeof HEADS)[number];
   const size = s.size;
   // What it is doing: mostly nothing. Now and then its head comes up and it looks about; now and then it works at its breast.
-  const look = smooth(0.52, 0.8, cyc.held(t, 2.6 + 3 * k1, s.seed + 0.11, 0.35));
-  const preen = smooth(0.8, 0.93, cyc.held(t, 4.3 + 2.5 * k2, s.seed + 0.37, 0.3)) * (1 - look);
+  // One in four carries its head high most of the time, and one in six is mostly at its breast: no two neighbours hold one pose.
+  const habit = frac(s.seed * 29.7);
+  const look = Math.max(smooth(0.52, 0.8, cyc.held(t, 2.6 + 3 * k1, s.seed + 0.11, 0.35)), habit < 0.25 ? 0.55 + 0.45 * smooth(0.3, 0.6, cyc.held(t, 3.1 + 2 * k3, s.seed + 0.23, 0.4)) : 0);
+  const preen = Math.max(smooth(0.8, 0.93, cyc.held(t, 4.3 + 2.5 * k2, s.seed + 0.37, 0.3)), habit > 0.83 ? 0.5 + 0.5 * smooth(0.3, 0.6, cyc.held(t, 2.2 + 2 * k1, s.seed + 0.61, 0.4)) : 0) * (1 - look);
   const side = (cyc.held(t, 1.5 + 1.9 * k3, s.seed + 0.53, 0.3) - 0.5) * (0.5 + 1.3 * look);
   // One that stands beats its sails at a neighbour for a moment and settles.
   const row = s.stance === 2 ? smooth(0.62, 0.78, cyc.held(t, 2.9 + 1.6 * k2, s.seed + 0.71, 0.25)) : 0;
@@ -75,7 +77,8 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.roll = (s.stance === 2 ? -0.05 : -0.025) * shift + 0.06 * (k2 - 0.5);
   p.size = size;
   // Weathered, each to its own grey-brown: none is clean.
-  p.tone = 0.36 + 0.2 * k3;
+  p.tone = 0.4 + 0.2 * k3;
+  p.shade = 1;
   for (let leg = 0; leg < 2; leg++) {
     const foot = p.feet[leg] as Pose['feet'][number];
     const at = s.feet[leg] as [number, number, number];
@@ -108,8 +111,10 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.shake = 0.04 * gust + 0.3 * row;
   p.clock = t;
   p.beat = 0;
-  p.sail = (s.stance === 2 ? 0.2 + 0.3 * k2 : s.stance === 0 ? 0.04 + 0.1 * k3 : 0) + 0.02 * breath + 0.03 * gust + row * (0.3 + 0.28 * cyc.wave(t, 9, s.seed * 9, 0.5));
+  p.sail = (s.stance === 2 ? 0.2 + 0.3 * k2 : -seat.droop * (0.6 + 0.8 * k3)) + 0.02 * breath + 0.03 * gust + row * (0.3 + 0.28 * cyc.wave(t, 9, s.seed * 9, 0.5));
   // Out of the water the strands are short and hang close.
-  p.tuft = 0.42 + 0.16 * k2;
+  p.tuft = 0.5 + 0.2 * k2;
+  // Its neck stands up off its back and arches over.
+  p.rise = seat.rise + 0.3 * (k2 - 0.5) + 0.25 * look - 0.5 * preen;
   p.seed = s.seed;
 }
