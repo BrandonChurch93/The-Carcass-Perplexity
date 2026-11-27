@@ -912,7 +912,7 @@ void main() {
   // The channel at the line is drawn wider than its seam was, with pools, and nearer its bank: what it gives the rig is what
   // the narrower one gave.
   float onLine = step(1.5, net.g) * (1.0 - smoothstep(0.01, 0.04, net.g - 2.0));
-  gl_FragColor = vec4(blackbody(heat.y) * heat.x * mix(1.0, 0.4, onLine), 1.0);
+  gl_FragColor = vec4(blackbody(heat.y) * heat.x * mix(1.0, 0.28, onLine), 1.0);
   if (shore > 1.5) discard;
 }`;
 
