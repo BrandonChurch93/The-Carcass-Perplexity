@@ -1211,7 +1211,7 @@ export function create(ctx: Context): Piece {
     // as it goes. The four go its way instead, stooping ahead of it and to its left as it crabs: it comes up on them from behind, each
     // holds its place against the sky of the gap and grows, whole from the first frame until it is at its nearest after the first second.
     const slot = (k * 5) % FIRST;
-    const near = k < FIRST && slot < 4;
+    const near = k < FIRST && slot < 2;
     const at = near ? ([1.08, 1.3, 1.55, 1.8][slot] as number) : k < FIRST ? 0.2 * hash(k, 91) : -0.4 + (7.4 * (k - FIRST + hash(k, 91))) / (LEAD - FIRST);
     const cam = openingCamera(at);
     const ax = cam.aim[0] - cam.position[0];
@@ -1235,7 +1235,46 @@ export function create(ctx: Context): Piece {
     const flat = Math.hypot(dx, dz) || 1;
     return { at, x, y, z, dx: dx / l, dy: dy / l, dz: dz / l, px: dz / flat, pz: -dx / flat, speed: near ? 27 + 2 * hash(k, 95) : FLOCK.speed * (0.85 + 0.3 * hash(k, 95)), seed: hash(k, 96), sway: near ? 0.25 : 1 };
   });
+  // Two of them are what the eye is given in the first frame: each stands in the bright gap between the first blade and the outer one, large
+  // enough to be read as an animal, and is flown where the lens has it. It keeps its bearing from the lens (its own way is a third of a
+  // right angle to the left of the look, as the lens crabs, so the lens comes up on its quarter), banked into its turn so that the spread
+  // of its sails is turned to the lens, and grows for a second; then it goes on round to the left and up, and leaves by the top over a
+  // quarter of a second. Metres ahead of the lens at the start and lost each second, the bearing (right, up; tangents), when it turns
+  // away and how far (left, up; metres), its bank and its size.
+  const HEROES: { [k: number]: { ahead: number; closes: number; right: number; up: number; turns: number; left: number; climbs: number; bank: number; size: number } } = {
+    0: { ahead: 40, closes: 16, right: -0.0655, up: 0.0527, turns: 0.95, left: 12, climbs: 10, bank: 0.55, size: 1.15 },
+    3: { ahead: 150, closes: 52, right: -0.02, up: 0.14, turns: 1.85, left: 5, climbs: 11, bank: 0.6, size: 1.05 },
+  };
+  const heroPlace = (k: number, t: number, out: Spot): void => {
+    const h = HEROES[k] as (typeof HEROES)[number];
+    const cam = openingCamera(t);
+    const ax = cam.aim[0] - cam.position[0];
+    const ay = cam.aim[1] - cam.position[1];
+    const az = cam.aim[2] - cam.position[2];
+    const al = Math.hypot(ax, ay, az) || 1;
+    const fl = Math.hypot(ax, az) || 1;
+    const fx = ax / al;
+    const fy = ay / al;
+    const fz = az / al;
+    const rx = -az / fl;
+    const rz = ax / fl;
+    // The lens's own up: across its look and its right.
+    const ux = -rz * fy;
+    const uy = rz * fx - rx * fz;
+    const uz = rx * fy;
+    const a = h.ahead - h.closes * t;
+    const away = Math.max(0, (t - h.turns) / 0.6) ** 2;
+    const r = a * h.right - h.left * away + 0.5 * Math.sin(t * 1.9 + k);
+    const u = a * h.up + h.climbs * away + 0.4 * Math.sin(t * 2.6 + k * 2);
+    out.x = cam.position[0] + fx * a + rx * r + ux * u;
+    out.y = cam.position[1] + fy * a + uy * u;
+    out.z = cam.position[2] + fz * a + rz * r + uz * u;
+  };
   const leadPlace = (k: number, t: number, out: Spot): void => {
+    if (HEROES[k]) {
+      heroPlace(k, t, out);
+      return;
+    }
     const b = leads[k] as (typeof leads)[number];
     const gone = b.speed * (t - b.at);
     const aside = b.sway * (5 * Math.sin(t * (0.35 + 0.3 * b.seed) + k * 2.1) + 2 * Math.sin(t * (0.9 + 0.4 * b.seed) + k));
@@ -1244,13 +1283,15 @@ export function create(ctx: Context): Piece {
     out.z = b.z + b.dz * gone + b.pz * aside;
   };
   // ---- Those that leave the flats before the wall: each stands, dips, pushes off and gathers way, one after another about the bore ----
-  const LEFT = [-1.25, -0.1, -0.8, 0.35, -0.45, 0.75, -1.7, -0.95, -0.3];
+  // Every one of the six is off the ground by the bore's event, the last of them a tenth of a second before it.
+  const LEFT = [-1.25, -0.35, -0.8, -0.1, -0.55, -0.22, -1.7, -0.95, -0.3];
   const fleet = new Flight(airBodies, FLEEING, true);
   const leavers: Leaver[] = Array.from({ length: FLEEING }, (_, i) => {
     const staged = i < 6;
     // Where it is at the bore's event if it has left by then: six staged across the middle of the bore's frame, the rest by the flats.
-    const far = staged ? ([37, 30, 44, 33, 28, 40][i] as number) : 0;
-    const off = staged ? ([-15, -8, -2.5, 4.5, 10, 16.5][i] as number) + 2 : 0;
+    const far = staged ? ([39, 30, 47, 35, 28, 43][i] as number) : 0;
+    // A loose group: no two gaps alike.
+    const off = staged ? ([-17, -9.5, -5.5, 3.5, 7, 16][i] as number) + 2 : 0;
     const side = (i - (FLEEING - 1) / 2) / FLEEING;
     const vx = staged ? -gateRight[0] * 14 - gateAhead[0] * 6.5 : -14;
     const vz = staged ? -gateRight[1] * 14 - gateAhead[1] * 6.5 : 12;
@@ -1262,7 +1303,7 @@ export function create(ctx: Context): Piece {
       yaw: Math.atan2(vx, vz),
       speed,
       t: BORE + (LEFT[i] as number),
-      size: staged ? 1.3 + 0.3 * hash(i, 5) : 0.7 + 0.5 * hash(i, 5),
+      size: staged ? 0.82 + 0.3 * hash(i, 5) : 0.6 + 0.4 * hash(i, 5),
       seed: hash(i, 7),
     };
     const back = gone(l, Math.max(0, -(LEFT[i] as number)));
@@ -1423,6 +1464,14 @@ export function create(ctx: Context): Piece {
           leadPlace(k, seconds - 0.05, was);
           leadPlace(k, seconds + 0.05, next);
           leadPlace(k, seconds, spot);
+          const hero = HEROES[k];
+          if (hero) {
+            borne(hero.size, (leads[k] as (typeof leads)[number]).seed, seconds, 0.35);
+            // Banked into its turn from the first frame, and harder as it goes away.
+            F.roll = hero.bank + 0.25 * smooth(hero.turns, hero.turns + 0.5, seconds) + 0.06 * Math.sin(seconds * 2.3 + k);
+            flight.put(STREAM + SWIRL + k, F);
+            continue;
+          }
           borne(1 + 0.3 * hash(k, 97), (leads[k] as (typeof leads)[number]).seed, seconds, 0.75);
           // They come on at the lens, and one that flies straight at it is a flat spread outline: each holds its head off its way into the
           // wind of the storm, by its own amount, one sail low, so that a flank and the top of a sail are what the lens has of it.

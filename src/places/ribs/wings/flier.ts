@@ -154,14 +154,15 @@ void main() {
   float thick = mix(4.6, 1.8, vPx.y);
   float seen = thick / (thick + fine);
   float strut = (1.0 - smoothstep(0.45 * thick, thick + fine, off)) * step(-0.5, cell) * step(cell, 3.5) * seen * sail;
-  float fineCell = cell * 4.0;
+  // The veins between wander: ruled lines are a drawing, not a skin.
+  float fineCell = cell * 4.0 + 0.3 * sin(vPx.y * 9.0 + cell * 3.1) + 0.2 * sin(vPx.y * 23.0 - cell * 5.3);
   float veinOff = abs(fineCell - floor(fineCell + 0.5)) * period * 0.25;
   float vein = (1.0 - smoothstep(0.3, 1.1 + fine, veinOff)) * (0.9 / (0.9 + fine)) * sail * smoothstep(0.1, 0.3, vPx.y);
   // The ribs on the flank of the trunk.
   float flank = smoothstep(0.25, 0.8, abs(sin(vPx.y))) * smoothstep(-0.75, -0.55, vPx.x) * (1.0 - smoothstep(0.02, 0.2, vPx.x)) * hide;
   float ribFine = 1.0 / (1.0 + 40.0 * (abs(dux.x) + abs(duy.x)));
   vec2 slope = vec2(0.0);
-  slope.x += sail * (-0.55 * sign(near) * strut - 0.3 * sin(6.2832 * near) * seen * step(-0.5, cell));
+  slope.x += sail * (-0.22 * sign(near) * strut - 0.2 * sin(6.2832 * near) * seen * step(-0.5, cell));
   slope.x += flank * ribFine * 0.7 * cos(vPx.x * 52.0);
   float det = dux.x * duy.y - dux.y * duy.x;
   det = abs(det) < 1e-9 ? 1e-9 : det;
@@ -174,13 +175,13 @@ void main() {
   vec3 pelt = mix(vec3(0.26, 0.235, 0.2), vec3(0.37, 0.34, 0.3), smoothstep(0.2, -0.8, cos(vPx.y))) * (1.0 + 0.12 * mottle - 0.16 * flank * ribFine * sin(vPx.x * 52.0));
   float thin = mix(0.4, 1.0, smoothstep(0.02, 0.55, vPx.y)) * mix(0.55, 1.0, smoothstep(10.0, 70.0, vPx.x));
   vec3 web = mix(vec3(0.24, 0.215, 0.185), vec3(0.32, 0.29, 0.25), thin) * (1.0 + 0.07 * mottle);
-  web = mix(web, vec3(0.17, 0.15, 0.13), max(strut, 0.45 * vein));
-  vec3 albedo = mix(mix(horn, pelt, hide), web, sail) * vMix.z;
+  web = mix(web, vec3(0.13, 0.115, 0.1), max(0.8 * strut, 0.3 * vein));
+  vec3 albedo = mix(mix(horn, pelt, hide), web, sail) * vMix.z * 0.74;
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.45, vWorld.y);
   albedo *= 1.0 - 0.42 * wet;
   float occ = vMix.y * mix(0.7, 1.0, smoothstep(-0.6, 0.4, n.y));
   // What of the light behind a sail comes through it: less where it is thick, little through a strut.
-  float through = sail * thin * (1.0 - 0.85 * strut) * (1.0 - 0.4 * vein);
+  float through = sail * thin * (1.0 - 0.85 * strut) * (1.0 - 0.4 * vein) * (0.7 + 0.3 * mottle);
   vec4 land = landAt(vWorld.xz);
 #if defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
@@ -195,13 +196,15 @@ void main() {
   // The shade the animal lays on the ground under it (the contact map) is not laid on the animal: taken back out of the sky's light here.
   vec4 before = landAt(vWorld.xz + n.xz * 14.0);
   float own = 1.0 / max(1.0 - contactDrawn(vWorld) * smoothstep(4.0, 0.0, vWorld.y - before.r), 0.3);
-  vec3 col = rigShade(vWorld, n, v, albedo, mix(0.62, 0.22, wet), occ * own);
+  // A dry hide has no sheen: seen along its surface it would take the whole sky as a pale glaze, and the animal would be a smooth doll.
+  vec3 matte = normalize(n + 0.55 * v * (1.0 - wet));
+  vec3 col = rigShade(vWorld, matte, v, albedo, mix(0.9, 0.22, wet), occ * own);
   float sun = sunAt(vWorld, land);
   col -= albedo * uSunColour * (max(dot(n, uSunDir), 0.0) * sunAt(vWorld, before) * occ * (own - 1.0)) / 3.14159;
   // The wet flat and the sea send the sky back up at what flies over them.
-  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.3 * sail);
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.5 - 0.2 * n.y) * vMix.y * (1.0 - 0.3 * sail);
   // The sun behind a sail comes through its skin warm, and the sky behind it a little and pale.
-  col += through * (vec3(1.0, 0.56, 0.27) * uSunColour * (sun * 0.62 * max(dot(-n0, uSunDir), 0.0)) + vec3(0.72, 0.6, 0.5) * skyIrradiance(-n0) * 0.16) / 3.14159;
+  col += through * (vec3(1.0, 0.62, 0.36) * uSunColour * (sun * 0.42 * max(dot(-n0, uSunDir), 0.0)) + vec3(0.72, 0.6, 0.5) * skyIrradiance(-n0) * 0.16) / 3.14159;
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun * (1.0 - 0.6 * sail) * mix(0.2, 1.0, max(hide, sail));
