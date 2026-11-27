@@ -289,11 +289,6 @@ void main() {
 const LOOP_MIST = 0.7;
 
 export function create(ctx: Context): Piece {
-  const storm = ctx.assets.texture('air/storm.jpg');
-  storm.wrapS = THREE.MirroredRepeatWrapping;
-  storm.wrapT = THREE.MirroredRepeatWrapping;
-  storm.needsUpdate = true;
-  (ctx.rig.uniforms.tSky as THREE.IUniform).value = storm;
   const picture = ctx.assets.texture('air/sky.jpg');
   picture.wrapS = THREE.MirroredRepeatWrapping;
   picture.wrapT = THREE.MirroredRepeatWrapping;

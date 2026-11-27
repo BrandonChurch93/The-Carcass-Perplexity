@@ -42,7 +42,6 @@ uniform vec3 uSunColour;
 uniform vec3 uHaze;
 uniform vec3 uBounce;
 uniform vec3 uSkyBreak;
-uniform sampler2D tSky;
 uniform vec4 uSkyTurn;
 uniform sampler2D tDome;
 uniform vec4 uDome;`;
