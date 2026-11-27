@@ -88,12 +88,16 @@ uniform float uSampleIndex;
 uniform float uHaze;
 uniform float uMist;
 uniform float uThin;
+// How far the lens has climbed over the lake: from above the mist is seen on the water all round the shore, not only before the far wall.
+uniform float uMistRound;
 varying vec2 vUv;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${LID_GLSL}
 
 const float TOP = 150.0;
+// How far in from the shore the veil that is seen from above lies: to the middle of the lake.
+const float ROUND = 1000.0;
 
 // The far shore the mist lies against: its middle on the water and its radius. With a picture hung it is the foot of the picture.
 vec3 farShore() {
@@ -112,7 +116,7 @@ vec4 keptBig;
 float keptTongue;
 
 vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
-  if (q.z > uMistA.x || q.z < 0.0) return vec3(0.0);
+  if (q.z > (uMistRound > 0.0 ? ROUND : uMistA.x) || q.z < 0.0) return vec3(0.0);
   // The edge of the sheet on the water is not one line: it goes out in tongues, and the same tongue is one all the way from the wall.
   float reach = uMistA.x;
   float tongue = 1.0;
@@ -123,7 +127,7 @@ vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
   float near = 1.0 - q.z / reach;
   // Where the widest read already leaves the water bare, the next is not made.
   float bare = mix(-0.25, 1.0, near) - uMistC.z + uMistB.z * (2.6 * (big.g - 0.5) + 0.6);
-  if (bare <= 0.0) return vec3(0.0);
+  if (bare <= 0.0 && uMistRound <= 0.0) return vec3(0.0);
   vec4 mid = texture(tMistNoise, vec3(lie.x / 410.0 + 0.31, lie.y / 900.0 + 0.17, 0.5 + uTime * 0.0085));
   float cover = smoothstep(0.0, 0.55, mix(-0.25, 1.0, near) - uMistC.z + uMistB.z * (2.6 * (big.g - 0.5) + 1.2 * (mid.a - 0.5)));
   if (uMistC.y > 0.0) cover *= smoothstep(uMistC.y, 0.3 * uMistC.y, abs(q.x - uMistC.x));
@@ -134,11 +138,22 @@ vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
   float top = uMistA.z * ramp * stands * (0.35 + 1.5 * mid.r) + sheetTop;
   // Where uMistD.y asks, the sheet thins all the way out from the wall, so that it has no outer edge to see from above.
   float thins = mix(1.0, pow(clamp(near, 0.0, 1.0), 1.6), uMistD.y);
-  return vec3(uMistB.x * cover * thins * tongue * exp(-q.y / sheetTop), top, cover * ramp * stands);
+  // The bank and the sheet of the far shore leave with the air of the place (uThin) as the lens climbs out of it.
+  float sheet = uThin * uMistB.x * cover * thins * tongue * exp(-q.y / sheetTop);
+  // Seen from above, the shallows and the mats all round the lake hold a low veil in wide soft patches. It laps the rim of the deep
+  // water of the middle and leaves the middle itself clear, so the pool is seen whole. It lies where it lies: it comes into sight as the lens climbs over it and
+  // does not travel.
+  if (uMistRound > 0.0) {
+    // Its patches are as wide one way as the other: they are looked down on, and no lens draws them out.
+    vec4 round2 = texture(tMistNoise, vec3(lie.x / 560.0 + 0.11, lie.y / 560.0 + 0.37, 0.3 + uTime * 0.004));
+    float lying = smoothstep(0.42, 0.88, 0.5 * big.r + 0.5 * round2.g);
+    sheet += uMistRound * 3.8 * lying * smoothstep(290.0, 520.0, ROUND - q.z) * exp(-q.y / 6.0);
+  }
+  return vec3(sheet, top, uThin * cover * ramp * stands);
 }
 
 vec3 mistForm(vec3 q) {
-  if (q.z > uMistA.x || q.z < 0.0) return vec3(0.0);
+  if (q.z > (uMistRound > 0.0 ? ROUND : uMistA.x) || q.z < 0.0) return vec3(0.0);
   // Past the ends of a bank that has ends there is nothing to read.
   if (uMistC.y > 0.0 && abs(q.x - uMistC.x) >= uMistC.y) return vec3(0.0);
   // uMistD.z draws the tongues closer together (a long lens holds only a short run of shore) and leaves the water bare between them.
@@ -214,11 +229,11 @@ void main() {
   vec3 light = (low * vec3(0.8, 0.8, 0.84) + uSunColour * (0.016 + 0.03 * toSun * toSun + 0.05 * pow(max(toSun, 0.0), 6.0)) * inSun) * (1.0 - through);
 
   // The mist, marched through the ring of water it lies on.
-  float mistOn = uMist * uThin;
-  if (mistOn > 0.0 && uMistA.x > 0.0) {
+  float mistOn = uMist;
+  if (mistOn * max(uThin, uMistRound) > 0.0 && uMistA.x > 0.0) {
     // Two rings: the sheet lies low over the whole reach, the bank stands only before the wall. A ray is marched from where it first
     // comes under the one or the other, so that the steps are spent where there is mist.
-    float inner = max(shore.z - uMistA.x, 0.0);
+    float inner = max(shore.z - (uMistRound > 0.0 ? ROUND : uMistA.x), 0.0);
     float before = max(shore.z - uMistA.w, 0.0);
     float tSheet = qc < inner * inner ? (-qb + sqrt(max(qb * qb - qa * (qc - inner * inner), 0.0))) / qa : 0.0;
     float tBank = qc < before * before ? (-qb + sqrt(max(qb * qb - qa * (qc - before * before), 0.0))) / qa : 0.0;
@@ -263,6 +278,7 @@ void main() {
         float az = atan(r.x, -r.y);
         // Only against the wall the lens looks at: the shore behind the camera has none.
         float faced = smoothstep(-0.1, 0.5, cos(az - (uPlateTone.w > 0.5 ? uPlateLens.x : 0.0)));
+        faced = mix(faced, 1.0, uMistRound);
         if (faced <= 0.0) continue;
         vec3 q = vec3(az * shore.z, p.y, shore.z - d);
         float bearing = uPlateTone.w > 0.5 ? uPlateLens.x : 0.0;
@@ -310,7 +326,7 @@ export function create(ctx: Context): Piece {
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('mist', 'built');
 
-  const show = { uHaze: { value: 1 }, uMist: { value: 1 }, uThin: { value: 1 } };
+  const show = { uHaze: { value: 1 }, uMist: { value: 1 }, uThin: { value: 1 }, uMistRound: { value: 0 } };
   // The lid is measured from the camera of the last frame of the place: straight over the centre, the view on the water 424 m high.
   const lid = lidUniforms(handoff.lid, [0, 0], handoff.eyeHalfHeightMetres, handoff.eyeHalfHeightMetres / Math.tan((FLIGHT.endFov * Math.PI) / 360));
   const lidState = (lid.uLid as THREE.IUniform<THREE.Vector4>).value;
@@ -358,6 +374,8 @@ export function create(ctx: Context): Piece {
         (rig.uMistB as THREE.IUniform<THREE.Vector4>).value.lerp(HIGH.b, over);
         (rig.uMistC as THREE.IUniform<THREE.Vector4>).value.lerp(HIGH.c, over);
         (rig.uMistD as THREE.IUniform<THREE.Vector4>).value.lerp(HIGH.d, over);
+        // The veil stays under the lens longer than the air does, and is gone before the place is left.
+        show.uMistRound.value = smooth(0.45, 1, over) * (1 - smooth(end - 0.9, end - 0.2, t));
       }
       (rig.uMistOn as THREE.IUniform<number>).value = show.uThin.value;
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
