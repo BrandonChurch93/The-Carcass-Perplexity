@@ -262,6 +262,10 @@ vec3 farRadianceGrad(vec3 ro, vec3 rd, float bias, vec2 gx, vec2 gy) {
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
   // The water at the far shore holds the foot of the wall nearly as it stands; the higher on the wall a mirror reads, the more it is drawn out.
   float drawn = tall ? smoothstep(0.015, 0.22, v - uPlateLens.w) : 0.0;
+  // The footprint follows what is read: half as tall where a tall wall is folded back on itself, and level where the picture's edge is held.
+  float held = (vv < 0.004 || vv > 0.996) ? 0.0 : (tall && v > 0.95 ? 0.495 : 1.0);
+  gx.y *= held;
+  gy.y *= held;
   float wide = exp2(bias + uPlateSoft + 2.5 * over + 2.0 * drawn);
   vec3 plate = ungrade(textureGrad(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), gx * wide, gy * wide).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
