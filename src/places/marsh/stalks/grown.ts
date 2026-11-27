@@ -228,6 +228,8 @@ void main() {
   float banded = (0.5 + 0.5 * sin(vUv.y * (18.0 + 46.0 * fract(seed * 37.7)) + 2.2 * sin(vUv.y * 5.3 + seed * 17.0) + seed * 30.0)) * smoothstep(0.15, 0.6, fract(seed * 53.1));
   vec3 horn = mix(vec3(1.12, 1.05, 0.97), vec3(1.08, 0.92, 0.8), pow(fract(seed * 29.1), 1.5)) * (0.9 + 0.12 * banded) * mix(0.55, 1.08, smoothstep(0.0, 0.6, vUv.w)) * (0.7 + 0.5 * fract(seed * 17.3));
   albedo = mix(albedo, mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))), 0.45) * horn, smoothstep(6.0, 28.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
+  // And from further still a living stalk is pale against the red water: the crust is what shows of it, not its stains.
+  albedo = mix(albedo, vec3(0.5, 0.45, 0.42) * (0.8 + 0.4 * fract(seed * 17.3)), 0.55 * smoothstep(12.0, 40.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
   // By the lens the mouth of a living trunk is its husk: brown and fibrous, ragged where the crust begins under it.
   float under = (1.0 - vUv.w) * vKind.y;
@@ -443,7 +445,7 @@ void main() {
   // Far off a head is a few pixels of it against pale ground: there it is the red of the lit blade, not of the shade between blades.
   albedo = mix(albedo, albedo * vec3(1.25, 0.7, 0.8), (1.0 - uLowly) * smoothstep(10.0, 34.0, distance(cameraPosition, vWorld)));
   // Further off the red goes dusty: a far head is rose in the haze, not a berry.
-  albedo = mix(albedo, vec3(dot(albedo, vec3(0.5, 0.3, 0.2))) * vec3(1.3, 0.85, 0.85), 0.5 * smoothstep(22.0, 60.0, distance(cameraPosition, vWorld)));
+  albedo = mix(albedo, vec3(dot(albedo, vec3(0.5, 0.3, 0.2))) * vec3(1.3, 0.85, 0.85), 0.35 * smoothstep(26.0, 70.0, distance(cameraPosition, vWorld)));
   albedo = mix(albedo, vec3(0.2, 0.06, 0.06), 0.45 * smoothstep(0.55, 1.0, s) * fract(seed * 5.1));
   albedo = mix(albedo, vec3(0.2, 0.12, 0.075), 1.0 - smoothstep(0.02, 0.14, s));
   // The rib is darker than the blade, and the blade is ruled along its length.
@@ -540,7 +542,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
     const q = (w.seed * 29.3) % 1;
     // Seen from far a head is a small tuft at the tip of a pale stalk, and the stalk below it is bare: no head longer than its stalk can show.
     const off = fine <= 13;
-    const wide = Math.min(1.5, (19 * 2 * w.R * size) / slim, (off ? 0.26 : 0.5) * w.h) * (1.15 + 0.9 * u * u + 0.25 * swept);
+    const wide = Math.min(1.5, (19 * 2 * w.R * size) / slim, (off ? 0.42 : 0.5) * w.h) * (1.15 + 0.9 * u * u + 0.25 * swept);
     // How far a head arches over to its side is the plant's own: one stands swept up, the next hangs its ends.
     const arch = (off ? 0.45 : 1) * (0.6 + 1.0 * ((w.seed * 41.3) % 1));
     const sprays = off || v < 0.4 ? 1 : v < 0.82 ? 2 : 3;

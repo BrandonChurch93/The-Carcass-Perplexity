@@ -438,7 +438,11 @@ export function create(ctx: Context): Piece {
         }
       }
     }
-    for (const w of wilds) w.R *= SLIM;
+    // The red of the brine climbs a foot, not a stalk: on a short one it stops low, and the stalk above it is pale.
+    for (const w of wilds) {
+      w.R *= SLIM;
+      w.stain = Math.min(w.stain, 0.16 * w.h);
+    }
     const feet = wilds.filter((w) => w.foot || w.quiver === 0);
     const shade = ctx.rig.contactDiscs(feet.length);
     feet.forEach((w, i) => {
@@ -504,7 +508,9 @@ export function create(ctx: Context): Piece {
         const nearF = new Fronds();
         const farF = new Fronds();
         const own = ctx.rng('stalks-fronds-' + shot.id);
-        for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineOf(from(w)), broadOf(from(w)), false);
+        // STAGED for the wide: from its height a stand is pale stalks under small tufts, so there no head is made as the full mop it is from among them.
+        const fineIn = (w: Wild): number => (shot.id === 'marsh-01' && from(w) > 6 ? Math.min(13, fineOf(from(w))) : fineOf(from(w)));
+        for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineIn(w), broadOf(from(w)), false);
         // The stems the same way: by the lens of the shot the ledges of the bark are the mesh, far off a stem is a plain tube.
         const closeW = wilds.filter((w) => from(w) < 7);
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
@@ -536,8 +542,7 @@ export function create(ctx: Context): Piece {
       const low = new Fronds();
       const listOf = (d: number): Fronds => (d < 20 ? nearF : d < 38 ? midF : farF);
       const wideOf = lensOf['marsh-01'] ?? reach;
-      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
-      // Most stems are bare below the head: one in four keeps an old leaf hanging.
+      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, wideOf(w) > 6 ? Math.min(13, fineOf(wideOf(w))) : fineOf(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
       // No leaf hangs down these stems in the wide: its picture has pale bare stalks under a small red tuft.
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
