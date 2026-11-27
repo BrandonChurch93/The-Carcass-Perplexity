@@ -88,7 +88,7 @@ void main() {
   // Never one tone for a hand's width: the dried hide is mottled.
   albedo *= mix(1.0, 0.8 + 0.42 * fbm(vUv * 23.0 + 4.0), hide);
   // Dirt: yellow-brown where it has lain and leaked, in blotches a hand to an arm across, and grey dust on what faces up.
-  float dirt = smoothstep(0.26, 0.66, fbm(vWorld.xz * 3.7 + vWorld.y * 5.0 + 11.0) + 0.1 * (0.5 - h0));
+  float dirt = smoothstep(0.32, 0.72, fbm(vWorld.xz * 3.7 + vWorld.y * 5.0 + 11.0) + 0.1 * (0.5 - h0));
   albedo = mix(albedo, albedo * vec3(0.6, 0.47, 0.34), 0.8 * dirt * hide);
   float dust = smoothstep(0.3, 0.7, fbm(vWorld.xz * 6.3 + 2.0)) * smoothstep(0.2, 0.9, n.y);
   albedo = mix(albedo, vec3(0.4, 0.35, 0.29), 0.45 * dust * hide);
