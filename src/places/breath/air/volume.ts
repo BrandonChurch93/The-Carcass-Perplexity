@@ -182,15 +182,16 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under,
   // The columns climb from the pool's top over the wells: billows with an edge and clear air between them, fewer the higher they have climbed.
   float h = -under;
   float spent = uSpent * uShow.w;
-  float reach = 5.0 + 5.0 * wells + 4.0 * settled + 12.0 * surge + 7.0 * spent;
+  float reach = 5.0 + 5.0 * wells + 4.0 * settled + 12.0 * surge + 3.0 * spent;
   float f = clamp(h / reach, 0.0, 1.0);
   float inside = 0.7 * n.x + 0.3 * n.w + 0.9 * (wells - 0.6) + 0.14 * surge + 0.04 * settled - 0.3 * f - 0.5;
   float body = smoothstep(0.0, 0.1, inside) * (1.0 - f * f) * smoothstep(-3.0, 0.5, h);
   core = max(core, 0.55 * smoothstep(0.08, 0.3, inside) * step(0.0, h));
   // Inside the wall; over the brim it leans out.
-  // Over the emptied pool what climbs is in strands with the dark of the drop between them, not a veil.
+  // Over the emptied pool what climbs is a few thin strands with the dark of the drop between them: any more of it is a pale veil
+  // over the whole drop.
   body *= mix(1.0, 3.0 * smoothstep(0.57, 0.7, n.w) * smoothstep(0.48, 0.68, n.x), spent);
-  return (pool + (0.022 + 0.05 * surge + 0.06 * spent) * body) * smoothstep(0.8, -1.5, out0 - leanOut(p.y, way, surge));
+  return (pool + (0.022 + 0.05 * surge) * (1.0 - 0.55 * spent) * body) * smoothstep(0.8, -1.5, out0 - leanOut(p.y, way, surge));
 }
 // The height over which there is none of it at a place, from the same numbers as shaftRho and no picture: the highest a heap can stand
 // and, where a well is near, the highest its column can climb.
@@ -200,7 +201,7 @@ float shaftCeiling(vec3 p) {
   float west;
   float level = poolLevel(p, surge, wells, west);
   float ceiling = level + 10.0 + 2.5 * surge;
-  if (wells > 0.1 - 0.28 * surge) ceiling += 5.0 + 5.0 * wells + (4.0 * uBreath.w + 7.0 * uSpent) * uShow.w + 12.0 * surge;
+  if (wells > 0.1 - 0.28 * surge) ceiling += 5.0 + 5.0 * wells + (4.0 * uBreath.w + 3.0 * uSpent) * uShow.w + 12.0 * surge;
   return ceiling;
 }
 // The ground the sheet lies on at a place: the rock, or the tide. Inside the brim the land is the pit, so there it is the lip beside it.
