@@ -7,7 +7,7 @@ import { WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { loopPhase, stagedSeconds } from '../shared/stage';
-import { STRIKE, openingWeight, strikeAge } from '../shared/opening';
+import { STRIKE, strikeAge } from '../shared/opening';
 import { RIG_GLSL } from '../shared/glsl';
 
 export const PARTS = ['sky', 'air', 'cloud'] as const;
@@ -16,7 +16,7 @@ const MAX_SOURCES = 20;
 const STEPS = 6;
 const FOG_STEPS = 14;
 /** The air of the strait: haze in a metre at the sea and the height it thins over, low mist in a metre under a bank and its depth, how much thicker the haze stands in the colony's shot, how much thicker the mist lies round a blade's foot and how many of its own depths taller, and how much of the sky the land sees where that begins and where it is whole. */
-const AIR = { haze: 0.00055, high: 280, mist: 0.0022, low: 14, colony: 2.6, pool: 1.8, poolHigh: 4.5, poolFrom: 0.85, poolTo: 0.5 };
+const AIR = { haze: 0.00036, high: 280, mist: 0.0022, low: 14, colony: 4, pool: 1.8, poolHigh: 3.5, bankHigh: 3, poolFrom: 0.85, poolTo: 0.5 };
 /** The opening's sea fog in a metre at the water, where it lies whole. */
 const FOG_THICK = 0.011;
 /** The blades whose feet the opening's sea fog pools round and peels off: the two the lens opens on, and the two that stand out in the sea. */
@@ -66,8 +66,8 @@ uniform vec3 uFog;
 uniform vec3 uFeet[${FOG_FEET.length}];
 // The breaking swell: x, z, and the radius the burst keeps clear.
 uniform vec3 uFogHole;
-// The approach: how far the march of the air is held still on the screen (1 as the film opens, nothing from the sixteenth second).
-uniform float uStillAir;
+// The colony's shot: how many times thicker the haze stands past the colony's rock (0 elsewhere).
+uniform float uFarAir;
 ${RIG_GLSL}
 
 // The sea fog goes with the wind as water goes round a pile: the field is read in the coordinates of the flow itself (how far along the
@@ -185,23 +185,27 @@ void main() {
       // tip. The low mist lies on the wet floor and the water, uAir.w deep, in banks that go with the wind (a bank passes a blade in
       // some ten seconds): thick under a bank and taller there, nearly gone between two. Each is summed whole along the stride by its
       // own fall with height, so neither has a top that shows, and the bank is read at the level a stride can follow.
-      float banks = textureLod(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019), clamp(log2(dt) - 3.6, 1.0, 8.0)).r;
-      float bank = smoothstep(0.36, 0.72, banks);
+      float level = clamp(log2(dt) - 3.6, 2.5, 8.0);
+      float banks = textureLod(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019), level).r;
+      // The gusts cross the strait faster than the banks go down it: where the two meet the mist stands up, and it works as it goes,
+      // so no bank keeps its shape for longer than a few seconds.
+      float gusts = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uTime * vec2(0.049, 0.015), level).g;
+      float bank = smoothstep(0.1, 0.42, banks * gusts);
       // It pools where a blade's foot shuts the land's horizon, and down the wind of a foot it peels off in the banks' own shapes.
       vec4 land = landAt(p.xz);
       float pool = smoothstep(${glslFloat(AIR.poolFrom)}, ${glslFloat(AIR.poolTo)}, land.g);
       float peel = smoothstep(${glslFloat(AIR.poolFrom)}, ${glslFloat(AIR.poolTo)}, landAt(p.xz - vec2(${glslFloat(WIND.to[0] * 80)}, ${glslFloat(WIND.to[1] * 80)})).g) * bank;
-      float foot = max(pool, peel);
+      float foot = max(pool * (0.3 + 0.7 * bank), peel);
       float y0 = ro.y + rd.y * t0;
       // What stands within a stone's throw keeps its blacks: the low mist is thin round the lens.
-      float tau = uAir.x * (0.75 + 0.5 * bank) * layerDepth(y0, rd.y, dt, uAir.y)
-        + uAir.z * (0.12 + 2.4 * bank * bank + ${glslFloat(AIR.pool)} * foot) * smoothstep(30.0, 380.0, tm) * layerDepth(y0, rd.y, dt, uAir.w * (0.5 + 1.6 * bank + ${glslFloat(AIR.poolHigh)} * foot));
+      float tau = uAir.x * (1.0 + uFarAir * smoothstep(140.0, 460.0, tm)) * layerDepth(y0, rd.y, dt, uAir.y)
+        + uAir.z * (0.06 + 2.6 * bank * bank + ${glslFloat(AIR.pool)} * foot) * smoothstep(30.0, 380.0, tm) * layerDepth(y0, rd.y, dt, uAir.w * (0.4 + max(${glslFloat(AIR.bankHigh)} * bank * bank, ${glslFloat(AIR.poolHigh)} * foot)));
       float a = 1.0 - exp(-tau);
       // Under the shut cloud the air is the storm's slate; where the break stands over it, it takes the sky's light and the sun.
       float gap = cloudShadeMarched(p);
       // A stride longer than a blade's shadow is wide takes the shadows' mean, not the one it happens to stand in, which would lay the
-      // screen's weave over the air.
-      float lit = mix(sunBaked(p, land), 0.55, smoothstep(30.0, 140.0, dt)) * gap;
+      // screen's weave over the air; and the shadow on the ground under a stride is only part of the shade in the air over it.
+      float lit = mix(sunBaked(p, land), 0.55, max(0.6, smoothstep(30.0, 140.0, dt))) * gap;
       sum += trans * a * (ambient * (0.7 + 0.5 * gap) + sunlit * lit);
       trans *= 1.0 - a;
       t0 = t1;
@@ -209,7 +213,7 @@ void main() {
     // Past the march the air goes on to what the ray meets: the sea's far edge and the last blades go into it whole.
     if (reach > span) {
       float y0 = ro.y + rd.y * span;
-      float a = 1.0 - exp(-uAir.x * layerDepth(y0, rd.y, reach - span, uAir.y) - uAir.z * 0.8 * layerDepth(y0, rd.y, reach - span, uAir.w));
+      float a = 1.0 - exp(-uAir.x * (1.0 + uFarAir) * layerDepth(y0, rd.y, reach - span, uAir.y) - uAir.z * 0.8 * layerDepth(y0, rd.y, reach - span, uAir.w));
       sum += trans * a * (ambient * 0.85 + sunlit * 0.3);
       trans *= 1.0 - a;
     }
@@ -328,7 +332,7 @@ export function create(ctx: Context): Piece {
     return new THREE.Vector3(rib.x, rib.z, 0.5 * (rib.a + rib.b) + (rib.flare ?? 0));
   });
   const fogHole = new THREE.Vector3(STRIKE.foot[0], STRIKE.foot[2], 2.4 * STRIKE.half);
-  const stillAir = { value: 0 };
+  const farAir = { value: 0 };
   const openingShot = shotSpan('ribs-01');
   // Staged for the colony's shot only: the air itself stands thicker, so that the blade behind the colony's rock is a pale shape far off
   // and the roosts read against it. (It was a column of mist round that blade, which read as a flat card.)
@@ -349,7 +353,7 @@ export function create(ctx: Context): Piece {
       uFog: { value: fog },
       uFeet: { value: feet },
       uFogHole: { value: fogHole },
-      uStillAir: stillAir,
+      uFarAir: farAir,
       uSourceCount: count,
       uSourceA: { value: sourceA },
       uSourceB: { value: sourceB },
@@ -379,12 +383,12 @@ export function create(ctx: Context): Piece {
       }));
       fog.set(up ? FOG_THICK * fade * fade * (3 - 2 * fade) : 0, since, burst);
       fogHole.set(STRIKE.foot[0], STRIKE.foot[2], (2.4 + 1.2 * burst) * STRIKE.half);
-      stillAir.value = up ? Math.min(1, 3 * openingWeight(seconds)) : 0;
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
       // In the card loop the mist between the blades thickens once and thins again.
       const phase = loopPhase();
       const mist = phase === null ? 1 : 1 + LOOP_MIST * (1 - Math.cos(phase * Math.PI * 2)) * 0.5;
-      air.set(AIR.haze * (thick ? AIR.colony : 1) * mist, AIR.high, AIR.mist * mist, AIR.low);
+      farAir.value = thick ? AIR.colony - 1 : 0;
+      air.set(AIR.haze * mist, AIR.high, AIR.mist * mist, AIR.low);
       const steam = ctx.sources.steam;
       // In the card loop what travels one way stands where the loop's first frame has it.
       const run = loopPhase() === null ? seconds : staged;

@@ -210,15 +210,19 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   // The baked land knows nothing finer than ten metres, and inside a blade's own foot it is dark: an upright face asks for the land in front of it.
   vec4 land = landAt(p.xz + n.xz * 14.0);
   float above = p.y - land.r;
-  float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above)) * occ;
+  float stood = 1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above);
+  float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * stood * occ;
   float gap = cloudShade(p);
   float sun = sunBaked(p, land) * gap * occ;
-  float nl = max(dot(n, uSunDir), 0.0);
+  // What stands high stands in the light of the break itself, which is wide: there the light goes round a blade past its edge
+  // (six tenths of the way), so its round shows from the lit side to the shade.
+  float wide = 0.6 * smoothstep(uHeads.x, uHeads.y, p.y);
+  float nl = max((dot(n, uSunDir) + wide) / (1.0 + wide), 0.0);
   // The lit flats throw the low sun back up: a face that looks down or stands upright over sunlit ground takes it warm, and the more of
   // it the higher it stands over its own shadow. This is what keeps a lee face from going to the sky's cold grey alone.
   vec3 bounce = uSunColour * uBounce * (uSunDir.y * (gap - uCloudShade.w) * (0.5 - 0.5 * n.y) * (0.3 + 0.7 * clamp(above / 90.0, 0.0, 1.0)));
-  // No wall goes to nothing: wet ground and water all round it throw the sky back into its darkest fold (uHeads.w of the ground's light).
-  vec3 e = (skyIrradiance(n) + bounce) * open + 3.14159 * uSkyGround * (uHeads.w * occ) + uSunColour * (nl * sun);
+  // No wall goes to nothing: wet ground and water all round it throw the sky back into its darkest fold (uHeads.w of the ground's light), but not under what stands on it.
+  vec3 e = (skyIrradiance(n) + bounce) * open + 3.14159 * uSkyGround * (uHeads.w * occ * stood) + uSunColour * (nl * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);

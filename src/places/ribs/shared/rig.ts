@@ -26,10 +26,10 @@ export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62, bou
  * bore's spray in the gate. `sky` is what the cloud's own brightness is given in the shot: the bore comes in under a heavier sky.
  */
 const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number }[] = [
-  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 4.4, sky: 0.64 },
+  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 3.2, sky: 0.64 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23, sky: 0.75 },
   { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4 },
-  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.62, heads: 0.4 },
+  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.54, heads: 0.4 },
 ];
 /** Where the break stands in the sky at the establishing key, degrees right of north: upper right of the strait's frame, left of the sun that burns through its edge. */
 const BREAK_YAW = 42;
@@ -50,7 +50,7 @@ const SKY_GAIN = 2.3;
 /** The dome's picture (`tDome`): the gain of the whole sky, the depth of air straight up that veils it (0.035 is three tenths of a veil at 6 degrees and two thirds at 2), what the break is given over the rest, how far the picture's white is shut away from the break, and the same under the storm of the approach. */
 export const DOME = { gain: 1.0, veil: 0.035, lift: 1.2, shut: 0.5, storm: 0.85 };
 /** The low sun on what stands high: from this height, whole by this one, how much thinner the cloud counts there (0.2 is a whole step of its edge); and the floor under every shade, as a share of the ground's light. */
-export const HEADS = { from: 110, to: 330, thin: 0.2, floor: 0.9 };
+export const HEADS = { from: 60, to: 260, thin: 0.3, floor: 0.9 };
 /** The sun of the approach: the low warm light of the first wave on the first blade, going to the place's ivory as the storm ends. */
 const STORM_SUN = [7.6, 5.2, 3.0] as const;
 /** What the lit flats and sea throw back up of the sun's light, by colour: wet sand and shingle, warm. */
