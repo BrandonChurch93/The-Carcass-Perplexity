@@ -163,20 +163,20 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under,
   // The pool has a surface: it is whole a stride under its top. The top is heaped, and the hollows between the heaps are in shade.
   vec2 dh = p.xz - vec2(-27.0, -8.0);
   float high = exp(-dot(dh, dh) / 400.0);
-  float level = uBreath.x + 2.0 + 8.5 * high - 6.0 * (1.0 - west) + 6.5 * surge * (0.15 + 0.85 * west);
+  float level = uBreath.x + 2.0 + 6.5 * high - 9.0 * (1.0 - west) + 6.5 * surge * (0.15 + 0.85 * west);
   float top = level + 12.0 * (n.x - 0.6) + 7.0 * (n.w - 0.5);
   under = top - p.y;
   float pool = (0.24 + 0.04 * surge) * layerMean(top, 1.6 - 0.8 * west + 2.5 * surge, p.y, hy) * mix(0.4, 1.0, west);
   core = (0.2 + 0.6 * smoothstep(0.7, 0.4, 0.55 * n.x + 0.45 * n.w)) * smoothstep(-1.0, 1.0, under);
   // The columns climb from the pool's top over the wells: billows with an edge and clear air between them, fewer the higher they have climbed.
   float h = -under;
-  float reach = 8.0 + 6.0 * wells + 4.0 * settled + 10.0 * surge;
+  float reach = 5.0 + 5.0 * wells + 4.0 * settled + 12.0 * surge;
   float f = clamp(h / reach, 0.0, 1.0);
   float inside = 0.8 * n.x + 0.2 * n.w + 0.44 * (wells - 0.55) + 0.2 * surge + 0.04 * settled - 0.2 * f - 0.52;
   float body = smoothstep(0.0, 0.1, inside) * (1.0 - f * f) * smoothstep(-3.0, 0.5, h);
   core = max(core, 0.55 * smoothstep(0.08, 0.3, inside) * step(0.0, h));
   // Inside the wall; over the brim it leans out.
-  return (pool + (0.045 + 0.03 * surge) * body) * smoothstep(0.8, -1.5, out0 - leanOut(p.y, way, surge));
+  return (pool + (0.022 + 0.05 * surge) * body) * smoothstep(0.8, -1.5, out0 - leanOut(p.y, way, surge));
 }
 // The ground the sheet lies on at a place: the rock, or the tide. Inside the brim the land is the pit, so there it is the lip beside it.
 float pourFoot(vec2 xz, float out0) {
@@ -379,7 +379,7 @@ void main() {
 
   // The damp air up the light: the more air a pixel looks through toward the low sun, the more of its glow it carries, so what is
   // near stands dark before it. No bars are drawn in it: the wisps themselves are what the light is seen in.
-  float glare = smoothstep(0.3, 0.85, toSun) * smoothstep(-0.5, -0.2, rd.y);
+  float glare = smoothstep(0.5, 0.97, toSun) * smoothstep(-0.5, -0.2, rd.y);
   if (glare > 0.01 && uShow.z > 0.5) {
     colour += through * mix(uSunColour, vec3(2.4), 0.3) * ((0.012 + 0.03 * uBreath.w * uShow.w) * 1.6 * glare * (1.0 - exp(-far / 220.0)));
   }
@@ -468,11 +468,11 @@ void main() {
         float girth = 0.72 + 0.28 * up;
         // It leaves the water in heaves, and each heave climbs as a swelling of the column: its edge is a pile of them, never a ruled line.
         float rise = qn.y * uBodyB[i].y / uBodyB[i].x;
-        girth *= 0.82 + 0.2 * sin(1.7 * rise - 0.5 * uTime + 40.0 * D.y) + 0.12 * sin(3.1 * rise - 0.8 * uTime + 17.0 * D.y);
+        girth *= 0.8 + 0.24 * sin(1.7 * rise - 1.25 * uTime + 40.0 * D.y) + 0.14 * sin(3.1 * rise - 2.1 * uTime + 17.0 * D.y);
         float m = clamp(min(1.0 - dot(qn, qn), 1.0 - dot(qn.xz, qn.xz) / (girth * girth)), 0.0, 1.0);
         if (m <= 0.0) continue;
         vec3 q = (pw - vec3(0.0, uBodyD[i].w * uTime, 0.0)) / C.z + D.y;
-        q.xz -= WINDV * (uTime * 2.0 / C.z) * up;
+        q.xz -= WINDV * (uTime * 6.0 / C.z) * up;
         vec4 n0 = textureLod(tNoise, q * 0.5, 0.0);
         float fineN = textureLod(tNoise, q * 0.85 + 0.37, 0.0).b;
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
@@ -483,7 +483,7 @@ void main() {
         if (tau <= 0.0005) continue;
         // Backlit: where a billow is thin the sun comes through it and it burns, where it is thick it stands grey against its own rim.
         float glow = (0.3 + 1.0 * exp(-3.2 * body * m * (1.3 - up))) * clamp(0.55 + 1.5 * (fineN - 0.45), 0.25, 1.4);
-        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.6) * (sunHere * min(phase, 2.4) * 0.5 * glow * D.z);
+        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.35) * (sunHere * min(phase, 2.4) * 0.5 * glow * D.z);
         float gone = exp(-tau);
         lit += thru * (1.0 - gone) * light;
         thru *= gone;
@@ -495,7 +495,7 @@ void main() {
       continue;
     }
     vec3 q = (mid - vec3(0.0, uBodyD[i].w * uTime, 0.0)) / C.z + D.y;
-    q.xz -= WINDV * (uTime * 2.0 / C.z);
+    q.xz -= WINDV * (uTime * (D.x > 0.5 && D.x < 1.5 ? 9.0 : 2.0) / C.z);
     vec4 n0 = textureLod(tNoise, q, 0.0);
     vec4 n1 = textureLod(tNoise, q * 3.1 + 0.37, 0.0);
     // The fine lumps are for far off: near the lens they are smaller than a pixel's step along the ray and would boil.
