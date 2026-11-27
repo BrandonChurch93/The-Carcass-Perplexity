@@ -26,7 +26,7 @@ type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre', { a: Four; b: Four; c: Four; d?: Four }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1] },
   low: { a: [600, 3.0, 70, 420], b: [0.4, 0.6, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
-  edge: { a: [520, 2.0, 12, 300], b: [0.12, 0.6, 1.0, 0.3], c: [0, 0, 0.2, 0.6], d: [1, 0, 0, 0] },
+  edge: { a: [560, 2.4, 24, 320], b: [0.2, 0.95, 1.0, 0.35], c: [0, 0, 0.1, 0.6], d: [1, 0, 0, 0] },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   centre: { a: [520, 2.0, 10, 140], b: [0.75, 0.8, 1.0, 0.35], c: [0, 0, 0.3, 0.45], d: [0.8, 1, 1, 0] },
 };
@@ -321,6 +321,7 @@ export function create(ctx: Context): Piece {
         tone.set(p.tone[0], p.tone[1], p.tone[2], p.wall ? 2 : 1);
         (rig.uPlateAir as THREE.IUniform<THREE.Vector4>).value.fromArray(p.air ?? [1, 0.3, 0, 0.1]);
         (rig.uPlateSoft as THREE.IUniform<number>).value = p.soft ?? 0;
+        (rig.uPlateDraw as THREE.IUniform<number>).value = p.drawn ?? 1;
         // The streaks are given in the picture's u and v and handed on in tan from its middle and its waterline.
         const streaks = [rig.uCirrusA, rig.uCirrusB] as THREE.IUniform<THREE.Vector4>[];
         const shown = (rig.uCirrus as THREE.IUniform<THREE.Vector2>).value.set(0, 0);

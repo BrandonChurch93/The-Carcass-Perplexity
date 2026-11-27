@@ -132,6 +132,9 @@ uniform vec2 uPlateShade;
 // which that is done: the last sun is on the upper ledges only. uPlateSoft: mip levels the picture is softened by.
 uniform vec4 uPlateAir;
 uniform float uPlateSoft;
+// How many times taller than it stands the wall of the picture lies in the water: water that is never quite still draws a far bright
+// wall out toward the eye. 1 is a true mirror.
+uniform float uPlateDraw;
 // One or two thin streaks of high cloud in the sky of the picture, still in the sun when the ground is not. Each: where its middle lies
 // in the picture (tan across from the middle, tan up from the waterline), its half length (tan), and its tilt. uCirrus.x and .y: how
 // much of each shows, 0 for none.
@@ -257,6 +260,11 @@ vec3 farRadianceGrad(vec3 ro, vec3 rd, float bias, vec2 gx, vec2 gy) {
   float phi = at.z;
   float t = at.w;
   vec3 q = ro + rd * t - uPlateAt.xyz;
+  if (bias > 0.0 && uPlateDraw > 1.0 && v > uPlateLens.w) {
+    v = uPlateLens.w + (v - uPlateLens.w) / uPlateDraw;
+    gx.y /= uPlateDraw;
+    gy.y /= uPlateDraw;
+  }
   bool tall = uPlateTone.w > 1.5 && bias > 0.0;
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
