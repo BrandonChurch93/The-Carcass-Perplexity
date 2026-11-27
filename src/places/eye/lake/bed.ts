@@ -29,6 +29,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
     tShore: { value: mirrored(ctx.assets.texture('mat/shoreplate.jpg', { anisotropy: 8 })) },
     tWall: { value: mirrored(ctx.assets.texture('mat/shaftwall.jpg', { anisotropy: 4 })) },
+    uWallFall: { value: 1 },
     uAbsorb: { value: new THREE.Vector3(...ABSORB) },
     uDeep: { value: new THREE.Vector3(0.004, 0.017, 0.03) },
   };
@@ -48,6 +49,8 @@ uniform sampler2D tLipPlateH;
 uniform sampler2D tSinter;
 uniform sampler2D tShore;
 uniform sampler2D tWall;
+// How steeply the wall falls from the lip, against the wide shot's.
+uniform float uWallFall;
 uniform vec3 uAbsorb;
 uniform vec3 uDeep;
 
@@ -395,6 +398,17 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
 // fell: how fast the wall falls for a metre out from the lip here, across and up the frame (told at the top of the branch that calls this, from gFx and gFy).
 Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   Bed o;
+#if EYE_EDGE
+  // From beside the edge the wall is rock under the eye, a few metres off: broken pale stone that falls away in ledges, seen from over it.
+  // The Builder's picture of the wall is a face seen from in front; laid down under the eye its beds are the lines of a map and its shading
+  // is a hanging cloth. So here it is the pale stone of the shelf itself, seen from above as the eye sees it, that goes down into the water.
+  vec3 c = readAt(tSinter, b / 4.1 + 0.3, mat2(1.0 / 4.1)).rgb;
+  float great = dot(readAt(tSinter, b / 13.0 + 0.6, mat2(1.0 / 13.0)).rgb, vec3(0.33));
+  o.albedo = clamp(c * 1.45, 0.0, 0.95) * vec3(0.9, 0.95, 0.94);
+  float ledge = (0.35 + 0.65 * smoothstep(0.25, 0.6, great)) * (0.6 + 0.4 * smoothstep(0.1, 0.45, dot(c, vec3(0.33))));
+  // Ledge under ledge it turns to a wall that the sky overhead no longer lights: past a few metres down only its highest ledges are seen.
+  ledge *= 1.0 - smoothstep(1.5, 9.0, down - 3.0 * great);
+#else
   float along = atan(b.x, b.y) * 480.0;
   // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip. From over it its beds would lie as lines round
   // the lip, level under level, like the lines of a map: so it is read coarse, for its colour and its great ledges alone.
@@ -411,6 +425,7 @@ Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   float fall = 0.62 + 0.5 * rib + 0.22 * (fine - 0.5) + 0.2 * (block - 0.5);
   float ledge = (0.6 + 0.4 * smoothstep(0.05, 0.3, dot(c, vec3(0.33)))) * mix(1.0, smoothstep(0.2, 0.55, rib + 0.3 * (fine - 0.5)), 0.5);
   o.albedo = clamp(c * 1.3 * fall, 0.0, 0.95) * vec3(0.62, 0.86, 0.9);
+#endif
   o.occ = ledge;
   o.tilt = vec2(0.0);
   o.glow = 0.0;

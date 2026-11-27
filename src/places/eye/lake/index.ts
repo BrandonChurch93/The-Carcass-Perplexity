@@ -125,6 +125,7 @@ uniform float uRingsOn;
 // How clear the water of the shaft is beside the amber water of the shelf.
 uniform float uClear;
 uniform vec3 uDeepTone;
+uniform vec4 uDeepMirror;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${BED_GLSL}
@@ -386,8 +387,8 @@ void main() {
   // a wave tips what it mirrors up and down and hardly at all to the side, so the wall in the water is drawn out in soft upright shapes.
   float lowEye = (1.0 - rimEye) * (1.0 - uLeave.x);
   lost += uRuffle * smoothstep(25.0, 110.0, away);
-  float spread = max(sqrt(0.5 * lost), 0.012 * lowDeep);
-  float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.7 * lowEye + 1.5 * uLeave.x;
+  float spread = max(sqrt(0.5 * lost), 0.012 * lowDeep * uDeepMirror.w);
+  float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.7 * lowEye * uDeepMirror.w + 1.5 * uLeave.x;
   vec3 rd = reflect(-v, n);
   rd.y = max(abs(rd.y), 0.003);
   rd = normalize(rd);
@@ -450,7 +451,7 @@ void main() {
   if (crusted < 1.0) {
     // Under the lip the bed falls away, steep and then steeper, ledge under ledge: pale rock, seen for as far down as the water lets the light go and come back.
     float inside = max(-shoalAt, 0.0) + 0.2;
-    float down = 0.3 + 3.2 * rimEye + mix(1.7, 0.22, rimEye) * inside + mix(0.16, 0.004, rimEye) * inside * inside;
+    float down = 0.3 + 3.2 * rimEye + uWallFall * (mix(1.7, 0.22, rimEye) * inside + mix(0.16, 0.004, rimEye) * inside * inside);
     vec2 b = p.xz + rf.xz * (min(down, 12.0) / fall) * 0.4;
     vec3 at = vec3(p.x, 0.0, p.z);
     // Out over the deep the whole sky is overhead: the land map's own count of it is coarse there and would draw its steps on the water.
@@ -464,7 +465,7 @@ void main() {
     // Where no light comes back from the rock it is not looked for.
     if (through.b > 0.015) {
       // How fast the wall falls across this pixel: its depth is counted from the line of the lip, square to it, and stops where its picture ends.
-      float falls = (mix(1.7, 0.22, rimEye) + 2.0 * mix(0.16, 0.004, rimEye) * inside) * step(down, 16.6);
+      float falls = uWallFall * (mix(1.7, 0.22, rimEye) + 2.0 * mix(0.16, 0.004, rimEye) * inside) * step(down, 16.6);
       vec2 square = vec2(lip.z, -lip.y);
       Bed bed = wallAt(b, down, inside, falls * vec2(dot(square, fx), dot(square, fy)));
       deep += bed.albedo * e * (bed.occ / 3.14159) * through * runs;
@@ -478,7 +479,7 @@ void main() {
     under += deep * (1.0 - crusted);
   }
   f *= 1.0 - dry;
-  f *= mix(1.0, mix(0.03, 1.0, smoothstep(28.0, 120.0, away)), lowDeep * (1.0 - step(1.5, uPlateTone.w)));
+  f *= mix(1.0, mix(uDeepMirror.x, 1.0, smoothstep(uDeepMirror.y, uDeepMirror.z, away)), lowDeep * (1.0 - step(1.5, uPlateTone.w)));
   // The last metres before the shore are a finger deep: the eye goes through to the wet stones, and the mirror comes on in tongues, never at a line.
   float margin = inShore > 18.0 ? 1.0 : smoothstep(0.0, mix(2.0, 11.0, rimEye), inShore + mix(1.0, 7.0, rimEye) * (vnoise(p.xz / 5.3) - 0.5) + mix(0.3, 4.0, rimEye) * (vnoise(p.xz / 1.4 + 3.0) - 0.5));
   f *= mix(0.12, 1.0, margin);
@@ -680,7 +681,7 @@ void main() {
 // as what it lets in. So whatever a whole frame has no use for (the looks of a low eye seen from the rim, the water from over its centre
 // before the camera leaves, rings where nothing drinks) is left out of the program itself, by these names. Each is told from the frame
 // alone, by the same test the shader would have made of its uniforms, so the picture is the same picture.
-function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean): Record<string, number> {
+function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean, edge: boolean): Record<string, number> {
   const rim = eyeHeight <= 8 ? 0 : eyeHeight >= 40 ? 2 : 1;
   return {
     // rimEye: 0 where it is nothing, 2 where it is all, 1 between.
@@ -694,6 +695,7 @@ function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing:
     EYE_LAPS: lapping ? 1 : 0,
     EYE_MIRRORED: mirrored ? 1 : 0,
     EYE_RUFFLED: ruffled ? 1 : 0,
+    EYE_EDGE: edge ? 1 : 0,
   };
 }
 
@@ -776,7 +778,7 @@ export function create(ctx: Context): Piece {
   // Under the long lens of the climb the short lengths are finer than its pixels: the train is of longer ones.
   const ringsClimb = ringsOf([9, 15, 24, 36, 52, 97], [0.011, 0.011, 0.012, 0.012, 0.011, 0.01], 1);
   const material = new THREE.ShaderMaterial({
-    defines: variantOf(0, 0, false, false, false, false, false, false),
+    defines: variantOf(0, 0, false, false, false, false, false, false, false),
     uniforms: {
       ...rig,
       ...bed,
@@ -802,6 +804,7 @@ export function create(ctx: Context): Piece {
       uRingsOn: { value: 1 },
       uClear: { value: 0.55 },
       uDeepTone: { value: new THREE.Vector3(0, 1, 0) },
+      uDeepMirror: { value: new THREE.Vector4(0.03, 28, 120, 1) },
     },
     vertexShader: WATER_VERTEX,
     fragmentShader: WATER_FRAGMENT,
@@ -864,8 +867,13 @@ void main() {
       const span = material.uniforms.uMirrorSpan as THREE.IUniform<THREE.Vector4>;
       if (during('eye-02')) span.value.set(3, 9, 40, 150);
       else span.value.set(12, 90, 1e6, 2e6);
-      if (during('eye-03')) (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0.95, 0.55, 0);
+      // Beside the edge the wall is near enough to be rock (EYE_EDGE), and it falls more steeply than the wide shot draws it.
+      (material.uniforms.uWallFall as THREE.IUniform<number>).value = during('eye-03') ? 1.2 : 1;
+      if (during('eye-03')) (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0.6, 0.9, 0);
       else (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0, 1, 0);
+      // At the edge the deep has a skin: the eye goes into it near by the angle of the look alone, and further out it is a mirror.
+      if (during('eye-03')) (material.uniforms.uDeepMirror as THREE.IUniform<THREE.Vector4>).value.set(0.1, 7, 34, 0.2);
+      else (material.uniforms.uDeepMirror as THREE.IUniform<THREE.Vector4>).value.set(0.03, 28, 120, 1);
       centre.x = t - rise;
       // Under the long lens the water round the swell is ringed by its breathing, as far as the eye goes; from over it the rings are few and broken.
       const over = during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0;
@@ -916,6 +924,7 @@ void main() {
         (material.uniforms.uLapCount as THREE.IUniform<number>).value > 0,
         ctx.reflected.length > 0 && camera.position.y < 60,
         (material.uniforms.uRuffle as THREE.IUniform<number>).value > 0,
+        (material.uniforms.uWallFall as THREE.IUniform<number>).value > 1,
       );
       if (Object.entries(variant).some(([name, value]) => (material.defines as Record<string, number>)[name] !== value)) {
         material.defines = variant;
