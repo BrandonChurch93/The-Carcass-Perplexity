@@ -204,7 +204,7 @@ void main() {
   col += through * (vec3(1.0, 0.56, 0.27) * uSunColour * (sun * 0.62 * max(dot(-n0, uSunDir), 0.0)) + vec3(0.72, 0.6, 0.5) * skyIrradiance(-n0) * 0.16) / 3.14159;
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
-  col += (albedo * 0.6 + 0.04) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun * (1.0 - 0.6 * sail);
+  col += (albedo * 0.6 + 0.04) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun * (1.0 - 0.6 * sail) * mix(0.2, 1.0, max(hide, sail));
   // And the low sun wraps a little way round what it lights: the edge turned to it is warm.
   col += albedo * uSunColour * (pow(clamp(dot(n, uSunDir) + 0.45, 0.0, 1.0), 2.0) * (0.12 + 0.5 * rim) * sun * vMix.y * (1.0 - sail)) / 3.14159;
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));

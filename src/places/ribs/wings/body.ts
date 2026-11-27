@@ -215,13 +215,15 @@ export interface Pose {
   beat: number;
   /** A folded sail lifted off the back, radians. */
   sail: number;
+  /** How long the strands of the tuft are: 1 as the feeder's, which reach the pool. */
+  tuft: number;
   /** Each animal's own number, for what differs strand by strand. */
   seed: number;
 }
 export const pose = (): Pose => ({
   x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, size: 1, tone: 1,
   feet: [{ x: 0, y: 0, z: 0, yaw: 0, droop: 0 }, { x: 0, y: 0, z: 0, yaw: 0, droop: 0 }],
-  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, seed: 0,
+  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, tuft: 1, seed: 0,
 });
 
 /** The body's frame in the place: the columns ahead, up and left of a pose. */
@@ -363,6 +365,7 @@ uniform vec2 uSize;
 uniform vec4 uFlank;
 uniform float uPool;
 uniform float uGrey;
+uniform float uThrough;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vPx;
@@ -446,7 +449,7 @@ void main() {
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
   col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
   // The light that comes through a sail from the sun and the sky behind it.
-  col += mix(albedo, vec3(dot(albedo, vec3(0.3333))), 0.5 * (1.0 - amber)) * skin * mix(vec3(1.0, 0.74, 0.48), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * (0.45 + 0.9 * max(dot(-n0, uSunDir), 0.0)) + skyIrradiance(-n0) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
+  col += uThrough * mix(albedo, vec3(dot(albedo, vec3(0.3333))), 0.5 * (1.0 - amber)) * skin * mix(vec3(1.0, 0.74, 0.48), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * (0.45 + 0.9 * max(dot(-n0, uSunDir), 0.0)) + skyIrradiance(-n0) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun;
@@ -462,7 +465,7 @@ export interface BodyMaterials {
   mirror: THREE.ShaderMaterial;
 }
 /** `sheet` is the picture the skin is thrown from (its cover and relief beside it) and `flank` the evenly lit patch of it laid where it cannot be thrown. */
-export function bodyMaterials(ctx: Context, pool: number, grey: number, sheet = 'feeder-a', flank: [number, number, number, number] = FLANK): BodyMaterials {
+export function bodyMaterials(ctx: Context, pool: number, grey: number, sheet = 'feeder-a', flank: [number, number, number, number] = FLANK, through = 1): BodyMaterials {
   const uniforms = {
     ...ctx.rig.uniforms,
     tPic: { value: ctx.assets.texture(`mat/${sheet}.jpg`, { kind: 'colour', repeat: false, anisotropy: 4 }) },
@@ -472,6 +475,8 @@ export function bodyMaterials(ctx: Context, pool: number, grey: number, sheet = 
     uFlank: { value: new THREE.Vector4(...flank) },
     uPool: { value: pool },
     uGrey: { value: grey },
+    // How much of the light behind a sail comes through it: 1 where it is held up to the sun, less where it lies folded on a back.
+    uThrough: { value: through },
   };
   const folded = sheet === 'feeder-a' ? { FOLDED: 1 } : {};
   const body = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines: { ...folded }, side: THREE.DoubleSide });
@@ -823,7 +828,7 @@ export class Bodies {
       dx /= dl;
       dy /= dl;
       dz /= dl;
-      const long = (1.2 + 0.6 * k3) * size;
+      const long = (1.2 + 0.6 * k3) * size * p.tuft;
       const each = long / (STRAND_RINGS - 1);
       const thick = ((9.5 - 3.5 * k2) / PX) * size;
       // Each curls its own way as it hangs: a slow turn about its own line, and in towards the animal at its end.
