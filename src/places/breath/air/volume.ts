@@ -27,6 +27,7 @@ uniform highp sampler3D tNoise;
 uniform vec4 uShow;
 // x the level of the vapour in the shaft, y how far the breath has come over the lip (0 to 1), z how much lies on the apron, w how far it has spread in the channel.
 uniform vec4 uBreath;
+uniform float uSpent;
 // x thickness of the high haze for a metre at sea level, y its scale height, z the same for the low sea fog, w its scale height.
 uniform vec4 uHaze;
 uniform int uBodyCount;
@@ -176,13 +177,16 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under,
   core = (0.12 + 0.5 * smoothstep(0.7, 0.4, 0.55 * n.x + 0.45 * n.w)) * smoothstep(-1.0, 1.0, under);
   // The columns climb from the pool's top over the wells: billows with an edge and clear air between them, fewer the higher they have climbed.
   float h = -under;
-  float reach = 5.0 + 5.0 * wells + 4.0 * settled + 12.0 * surge;
+  float spent = uSpent * uShow.w;
+  float reach = 5.0 + 5.0 * wells + 4.0 * settled + 12.0 * surge + 7.0 * spent;
   float f = clamp(h / reach, 0.0, 1.0);
-  float inside = 0.8 * n.x + 0.2 * n.w + 0.9 * (wells - 0.6) + 0.25 * surge + 0.04 * settled - 0.2 * f - 0.52;
+  float inside = 0.7 * n.x + 0.3 * n.w + 0.9 * (wells - 0.6) + 0.14 * surge + 0.04 * settled - 0.3 * f - 0.5;
   float body = smoothstep(0.0, 0.1, inside) * (1.0 - f * f) * smoothstep(-3.0, 0.5, h);
   core = max(core, 0.55 * smoothstep(0.08, 0.3, inside) * step(0.0, h));
   // Inside the wall; over the brim it leans out.
-  return (pool + (0.022 + 0.05 * surge) * body) * smoothstep(0.8, -1.5, out0 - leanOut(p.y, way, surge));
+  // Over the emptied pool what climbs is in strands with the dark of the drop between them, not a veil.
+  body *= mix(1.0, 3.0 * smoothstep(0.57, 0.7, n.w) * smoothstep(0.48, 0.68, n.x), spent);
+  return (pool + (0.022 + 0.05 * surge + 0.06 * spent) * body) * smoothstep(0.8, -1.5, out0 - leanOut(p.y, way, surge));
 }
 // The height over which there is none of it at a place, from the same numbers as shaftRho and no picture: the highest a heap can stand
 // and, where a well is near, the highest its column can climb.
@@ -192,7 +196,7 @@ float shaftCeiling(vec3 p) {
   float west;
   float level = poolLevel(p, surge, wells, west);
   float ceiling = level + 10.0 + 2.5 * surge;
-  if (wells > 0.1 - 0.28 * surge) ceiling += 5.0 + 5.0 * wells + 4.0 * uBreath.w * uShow.w + 12.0 * surge;
+  if (wells > 0.1 - 0.28 * surge) ceiling += 5.0 + 5.0 * wells + (4.0 * uBreath.w + 7.0 * uSpent) * uShow.w + 12.0 * surge;
   return ceiling;
 }
 // The ground the sheet lies on at a place: the rock, or the tide. Inside the brim the land is the pit, so there it is the lip beside it.
@@ -290,8 +294,11 @@ void main() {
   float surge = uBreath.y * uShow.w;
   float roof = 11.0 + 10.0 * surge;
   // The light of the place on vapour, from the rig: the sky's own grey with the glow of the sun's half of it, and the low sun, warm.
-  vec3 skyLight = 0.52 * uSkyHorizon + 0.1 * uSkyZenith + (0.16 + 0.3 * toSun * toSun) * uGlowColour;
+  vec3 skyGrey = 0.52 * uSkyHorizon + 0.1 * uSkyZenith;
+  vec3 skyGlow = (0.16 + 0.3 * toSun * toSun) * uGlowColour;
+  vec3 skyLight = skyGrey + skyGlow;
   vec3 sunLight = mix(uSunColour, vec3(2.5), 0.45);
+  vec3 skyWay = normalize(vec3(uSunDir.x, 0.55, uSunDir.z));
   if (uShow.z > 0.5) {
     float t0 = 0.0;
     float t1 = far;
@@ -355,15 +362,19 @@ void main() {
         rho *= smoothstep(roof, roof - 5.0, p.y) * smoothstep(2.0, 14.0, t) * uShow.z;
         if (rho <= 0.0004) continue;
         vec4 land = landAt(p.xz);
-        if (pooled > 0.0004 && p.y - land.b > -2.6) {
-          // Toward the sun, five metres on: the sun is low, so this is the next heap along.
-          vec3 ps = p + uSunDir * 5.0;
+        // What stands between the place and its light, asked once some metres on: in the sun, toward the sun (it is low, so this is the
+        // next heap along); in the rim's shadow, toward the bright half of the sky over the sun. A heap has a lit side and a dark one
+        // either way, and a hollow between two heaps is dark.
+        bool sunned = p.y - land.b > -2.6;
+        float skyTau = 0.0;
+        if (pooled > 0.0004) {
+          vec3 ps = p + (sunned ? uSunDir * 5.0 : skyWay * 4.5);
           float unders;
           float os = length(ps.xz) - rimAt(atan(ps.x, -ps.z));
           float cores;
-          sunTau += 7.0 * shaftRho(ps, 1.0, os, way, risingNoise(ps, 0.0), unders, cores);
+          skyTau = shaftRho(ps, 1.0, os, way, risingNoise(ps, 0.0), unders, cores);
           // The sun is low: to reach a place a metre under the pool's top its light has come seven metres through the fog.
-          sunTau += 3.2 * pooled * clamp(min(under, unders + 1.0), 0.0, 8.0) + 2.5 * pooled;
+          if (sunned) sunTau += 7.0 * skyTau + 3.2 * pooled * clamp(min(under, unders + 1.0), 0.0, 8.0) + 2.5 * pooled;
         }
         float tau = rho * dl;
         // The rim's shadow in the vapour is three metres deep and stands higher and lower by the heaps: light gets about in it.
@@ -374,7 +385,8 @@ void main() {
         // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
         float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
         // The heart of a billow is in its own shade: its edge is what the sky lights.
-        vec3 light = (skyLight * sunk + uSunColour * (0.008 * facing * sunk)) * (0.45 + 0.55 * roofed) * (1.0 - core)
+        float open = exp(-14.0 * skyTau);
+        vec3 light = ((skyGrey * (0.42 + 0.63 * open) + skyGlow * (0.25 + 1.15 * open)) * sunk + uSunColour * (0.008 * facing * sunk)) * (0.45 + 0.55 * roofed) * (1.0 - core)
           + sunLight * (sun * (0.09 * min(phase, 1.9) * exp(-1.5 * sunTau) + (0.012 + 0.04 * toSun * toSun) * exp(-0.22 * sunTau)));
         float gone = exp(-tau);
         float w = thru * (1.0 - gone);
@@ -488,7 +500,10 @@ void main() {
         float girth = 0.72 + 0.28 * up;
         // It leaves the water in heaves, and each heave climbs as a swelling of the column: its edge is a pile of them, never a ruled line.
         float rise = qn.y * uBodyB[i].y / uBodyB[i].x;
-        girth *= 0.8 + 0.24 * sin(1.7 * rise - 1.25 * uTime + 40.0 * D.y) + 0.14 * sin(3.1 * rise - 2.1 * uTime + 17.0 * D.y);
+        // Three or four of them stand in its height at once and climb with its lumps, so it keeps its whole shape while they pass up it:
+        // one swelling as long as the column swells and shrinks all of it together, and it beats like a bladder.
+        float climbed = rise - uBodyD[i].w * uTime / uBodyB[i].x;
+        girth *= 0.9 + 0.1 * sin(9.0 * climbed + 40.0 * D.y) + 0.06 * sin(15.0 * climbed + 17.0 * D.y);
         float m = clamp(min(1.0 - dot(qn, qn), 1.0 - dot(qn.xz, qn.xz) / (girth * girth)), 0.0, 1.0);
         if (m <= 0.0) continue;
         vec3 q = (pw - vec3(0.0, uBodyD[i].w * uTime, 0.0)) / C.z + D.y;
