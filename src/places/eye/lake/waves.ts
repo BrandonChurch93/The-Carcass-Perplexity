@@ -251,10 +251,13 @@ uniform sampler2D tWave2;
 uniform float uWaveKept[${LEVELS}];
 
 // One field read twice, the second turned and a third larger, so that no tile can be found on the water.
-vec2 waveRead(sampler2D t, vec2 x, float tile, float coarser) {
-  vec2 a = texture2D(t, x / tile, coarser).rg;
+// gx and gy are how far x moves from one pixel to the next, across and up the frame, as the caller measured it at the top of its main:
+// a read that took its fineness from the pixels beside it would not repeat under a branch. Twice as long, the read is one level coarser.
+vec2 waveRead(sampler2D t, vec2 x, float tile, vec2 gx, vec2 gy) {
+  vec2 a = textureGrad(t, x / tile, gx / tile, gy / tile).rg;
   vec2 q = vec2(0.809 * x.x - 0.588 * x.y, 0.588 * x.x + 0.809 * x.y) / (tile * 1.37) + 0.37;
-  vec2 b = texture2D(t, q, coarser).rg;
+  // The fields are read round, never drawn out, so the turn of the second read does not change what a pixel covers of it.
+  vec2 b = textureGrad(t, q, gx / (tile * 1.37), gy / (tile * 1.37)).rg;
   return (a + vec2(0.809 * b.x + 0.588 * b.y, -0.588 * b.x + 0.809 * b.y)) * 0.7071;
 }
 

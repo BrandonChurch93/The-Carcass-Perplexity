@@ -55,11 +55,32 @@ struct Bed {
   float depth;
 };
 
+// How much water one pixel covers, across and up the frame (metres, x and z), and the longer of the two. Set once at the top of main, before
+// anything can leave it. Every picture below is read by this and never by what the pixel beside it holds: the renderer shades four pixels
+// together, and one of the four that does not take a branch leaves in it whatever was there before, which is not the same twice.
+vec2 gFx;
+vec2 gFy;
+float gCovers;
+
+// The picture t at q, where q is the water turned and sized by m (q = m * xz + something that hardly changes); coarser softens it by that many levels.
+vec4 readAt(sampler2D t, vec2 q, mat2 m) {
+  return textureGrad(t, q, m * gFx, m * gFy);
+}
+vec4 readAt(sampler2D t, vec2 q, mat2 m, float coarser) {
+  return readAt(t, q, m * exp2(coarser));
+}
+// The same where q is counted round the lake and in toward its centre: across is the size of q.x for a metre round at this place, inward that of q.y for a metre out.
+vec4 readRound(sampler2D t, vec2 q, vec2 b, float across, float inward) {
+  float r2 = max(dot(b, b), 1.0);
+  float r = sqrt(r2);
+  return textureGrad(t, q, vec2(across * (b.y * gFx.x - b.x * gFx.y) / r2, inward * dot(b, gFx) / r), vec2(across * (b.y * gFy.x - b.x * gFy.y) / r2, inward * dot(b, gFy) / r));
+}
+
 // Metres from the centre to the lip of the shaft, at the bearing of this point.
 float lipRadius(vec2 xz) {
   // Drawn in, the deep keeps its reach toward the wide camera and gives way at the sides: an oval lying along the look.
   float toward = dot(xz, vec2(-0.309, 0.951)) / max(length(xz), 1.0);
-  vec2 lips = texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).rg;
+  vec2 lips = textureLod(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5), 0.0).rg;
   return mix(lips.x, lips.y, min(uLipIn / 100.0, 1.0)) - uLipIn * (1.0 - 0.95 * smoothstep(0.6, 1.0, toward));
 }
 
@@ -98,11 +119,15 @@ const float LIP_DEEP = 5.63;
 vec2 lipPlateAt(vec2 xz, vec3 lip) {
   return vec2(dot(xz - uLipFrom, lip.yz) / 10.0, 1.0 - (lip.x + LIP_OUT) / LIP_DEEP);
 }
+// The same picture read: its rows lie along the lip, so the water is turned to the lip's own way.
+vec4 lipPlateRead(sampler2D t, vec2 q, vec3 lip) {
+  return readAt(t, q, mat2(lip.y / 10.0, -lip.z / LIP_DEEP, lip.z / 10.0, lip.y / LIP_DEEP));
+}
 // How much of the crust is here: nothing beyond its broken edge.
 float lipCover(vec2 xz, vec3 lip) {
   if (lip.x > LIP_DEEP - LIP_OUT - 0.4) return 1.0;
   if (lip.x < -LIP_OUT + 0.02) return 0.0;
-  return smoothstep(0.035, 0.07, texture2D(tLipPlateH, lipPlateAt(xz, lip)).r);
+  return smoothstep(0.035, 0.07, lipPlateRead(tLipPlateH, lipPlateAt(xz, lip), lip).r);
 }
 
 // Metres of water over the shelf: it shelves from nothing at the shore to knee-deep hollows, and comes up again to a crust at the lip
@@ -127,9 +152,9 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   vec2 turned = vec2(b.x * 0.74 - b.y * 0.67, b.x * 0.67 + b.y * 0.74) / 5.3 + 0.41;
   float patchy = smoothstep(0.35, 0.65, vnoise(b / 2.9 + 11.0));
   // From the rim one read of the crust is all that can be told apart.
-  vec3 sinter = texture2D(tSinter, turned).rgb;
-  if (cameraPosition.y < 20.0) sinter = mix(texture2D(tSinter, b / 3.0).rgb, sinter, patchy);
-  vec3 sinterFar = texture2D(tSinter, b / 17.0 + 0.37).rgb;
+  vec3 sinter = readAt(tSinter, turned, mat2(0.74, 0.67, -0.67, 0.74) / 5.3).rgb;
+  if (cameraPosition.y < 20.0) sinter = mix(readAt(tSinter, b / 3.0, mat2(1.0 / 3.0)).rgb, sinter, patchy);
+  vec3 sinterFar = readAt(tSinter, b / 17.0 + 0.37, mat2(1.0 / 17.0)).rgb;
   // The lie of the crust is read from its own picture: its pale tops stand, its dark seams lie low.
   vec3 snh = vec3(0.5, 0.5, clamp(dot(sinter, vec3(0.5, 0.9, 0.6)) * 1.1, 0.0, 1.0));
   vec3 pale = sinter * (sinterFar / vec3(0.501, 0.351, 0.19)) * vec3(0.84, 1.02, 1.3);
@@ -142,10 +167,10 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float beach = smoothstep(11.0, 2.5, inShore);
   if (beach > 0.0) {
     // The bed by the shore is the shore's own picture gone on under the water, at its own size: eight metres of stones and grit.
-    vec3 plate = texture2D(tShore, b / vec2(8.0, 4.5)).rgb;
+    vec3 plate = readAt(tShore, b / vec2(8.0, 4.5), mat2(1.0 / 8.0, 0.0, 0.0, 1.0 / 4.5)).rgb;
     // The picture's few rust grains would stand as orange specks on a wet grey bed: they are taken for stones of its own grey.
     plate = mix(plate, vec3(dot(plate, vec3(0.333))) * vec3(1.04, 1.0, 0.94), smoothstep(1.5, 2.4, plate.r / max(plate.b, 0.02)));
-    vec3 gravel = plate * (texture2D(tShore, b / vec2(43.0, 24.2) + 0.61).rgb / vec3(0.222, 0.161, 0.119)) * vec3(1.3, 1.36, 1.44);
+    vec3 gravel = plate * (readAt(tShore, b / vec2(43.0, 24.2) + 0.61, mat2(1.0 / 43.0, 0.0, 0.0, 1.0 / 24.2)).rgb / vec3(0.222, 0.161, 0.119)) * vec3(1.3, 1.36, 1.44);
     bare = mix(bare, gravel * 0.5, beach);
     // Under a low eye the same shingle the shore is made of goes on under the water, wet and dark, as far as the eye can tell one stone from the next.
     float under = beach * smoothstep(40.0, 16.0, away) * smoothstep(12.0, 4.0, cameraPosition.y);
@@ -196,7 +221,9 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     // The mats themselves are the Builder's picture of them, laid by where the bed is and never pulled: a tangle of hair-fine strands, gold over
     // rust over dark water, with its own pale slabs. It is laid twice, at two sizes and turned, and the strand that stands higher lies on top,
     // so that strands cross strands and no row of it comes round.
-    float px = max(length(dFdx(b)), length(dFdy(b)));
+    float px = gCovers;
+    mat2 ma = mat2(0.951, -0.309, 0.309, 0.951) / MAT_A;
+    mat2 mb = mat2(0.999, 0.035, -0.035, 0.999) / MAT_B;
     // A slow sway, toward the centre and back: each tuft in its own time.
     vec2 sway = (b / max(r, 1.0)) * (0.022 * sin(uTime * 0.9 + 6.28 * vnoise(b / 2.3)) + 0.008 * sin(uTime * 2.1 + 6.28 * vnoise(b / 0.5 + 4.0)));
     vec2 qa = vec2(b.x * 0.951 + b.y * 0.309, -b.x * 0.309 + b.y * 0.951) / MAT_A + sway / MAT_A;
@@ -205,15 +232,15 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     float mh = 0.5;
     vec3 near3 = vec3(0.27, 0.125, 0.035);
     if (px < 0.25) {
-      float ha = texture2D(tMatH, qa).r;
-      float hb = texture2D(tMatH, qb).r;
+      float ha = readAt(tMatH, qa, ma).r;
+      float hb = readAt(tMatH, qb, mb).r;
       float pick = smoothstep(-0.12, 0.12, hb - ha + 0.5 * (vnoise(b / 3.7 + 21.0) - 0.5));
       // Closer than the picture is fine it is let go soft, and the finer tile of the same weed lies over it as hair: every tuft is made of strands.
       float fine = smoothstep(0.012, 0.004, px);
-      near3 = mix(texture2D(tMat, qa, 1.2 * fine).rgb, texture2D(tMat, qb, 1.2 * fine).rgb, pick);
+      near3 = mix(readAt(tMat, qa, ma, 1.2 * fine).rgb, readAt(tMat, qb, mb, 1.2 * fine).rgb, pick);
       mh = mix(ha, hb, pick);
       if (fine > 0.0) {
-        vec3 tile = texture2D(tMatTile, vec2(qa.y, qa.x) * (MAT_A / 2.6) + sway * 0.4).rgb;
+        vec3 tile = readAt(tMatTile, vec2(qa.y, qa.x) * (MAT_A / 2.6) + sway * 0.4, mat2(-0.309, 0.951, 0.951, 0.309) / 2.6).rgb;
         float hair = smoothstep(0.06, 0.3, dot(tile, vec3(0.4, 0.5, 0.1)));
         // The hair lies on the weed, not on the bare slab.
         float weedy = fine * smoothstep(0.75, 0.5, mh) * 0.85;
@@ -238,14 +265,14 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
       // Laid by the way round and the way in, hardly bent, so that every tress runs to the centre. The picture turns over at each repeat
       // and all three sizes start from the same line, so the place where the way round begins again shows no seam.
       vec2 cq = vec2(a2 * 640.0 + bend.x * 9.0, r + bend.y * 16.0);
-      vec3 ca = texture2D(tComb, cq / vec2(66.0, 44.0)).rgb;
-      vec3 cb = texture2D(tComb, cq / vec2(228.0, 152.0)).rgb;
+      vec3 ca = readRound(tComb, cq / vec2(66.0, 44.0), b, 640.0 / 66.0, 1.0 / 44.0).rgb;
+      vec3 cb = readRound(tComb, cq / vec2(228.0, 152.0), b, 640.0 / 228.0, 1.0 / 152.0).rgb;
       float la = dot(ca, vec3(0.4, 0.5, 0.1));
       float lb = dot(cb, vec3(0.4, 0.5, 0.1));
       // The finest size is hair on the tresses, told only as near as a pixel can hold it.
       float hairy = smoothstep(0.5, 0.12, px);
       vec3 cc = vec3(0.34, 0.105, 0.0065);
-      if (hairy > 0.0) cc = texture2D(tComb, cq / vec2(17.0, 11.3)).rgb;
+      if (hairy > 0.0) cc = readRound(tComb, cq / vec2(17.0, 11.3), b, 640.0 / 17.0, 1.0 / 11.3).rgb;
       float lc = dot(cc, vec3(0.4, 0.5, 0.1));
       combed = clamp(2.4 * la + 2.0 * lb - 0.14 + hairy * 1.6 * (lc - 0.19), 0.0, 1.0);
       vec3 strands = ca * (0.45 + 2.9 * lb) * mix(vec3(1.0), cc / vec3(0.34, 0.105, 0.0065) * vec3(1.0, 1.0, 0.25) + vec3(0.0, 0.0, 0.75), 0.6 * hairy) * vec3(0.92, 1.25, 3.4);
@@ -277,10 +304,10 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float onLip = smoothstep(LIP_DEEP - LIP_OUT - 0.2, LIP_DEEP - LIP_OUT - 1.5, wLip + 0.5 * (vnoise(b / 1.1 + 4.0) - 0.5));
   if (onLip > 0.0) {
     vec2 q = lipPlateAt(b, lip);
-    vec3 lp = texture2D(tLipPlate, q).rgb;
-    float lh = texture2D(tLipPlateH, q).r;
+    vec3 lp = lipPlateRead(tLipPlate, q, lip).rgb;
+    float lh = lipPlateRead(tLipPlateH, q, lip).r;
     vec2 e = vec2(0.004, 0.0);
-    vec2 g = 2.0 * vec2(texture2D(tLipPlateH, q + e.xy).r - lh, texture2D(tLipPlateH, q + e.yx).r - lh);
+    vec2 g = 2.0 * vec2(lipPlateRead(tLipPlateH, q + e.xy, lip).r - lh, lipPlateRead(tLipPlateH, q + e.yx, lip).r - lh);
     vec2 around = lip.yz;
     vec2 inward = vec2(-lip.z, lip.y);
     // The crust keeps its weed: rust-orange filaments lie over the pale sinter to the very edge, and the crust shows between them.
@@ -297,7 +324,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
 }
 
 // The wall of the shaft, seen down through the water from over it: pale rock that falls away, green with the water.
-Bed wallAt(vec2 b, float down, float inside) {
+// fell: how fast the wall falls for a metre out from the lip here, across and up the frame (told at the top of the branch that calls this, from gFx and gFy).
+Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   Bed o;
   float along = atan(b.x, b.y) * 480.0;
   // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip. From over it its beds would lie as lines round
@@ -306,9 +334,7 @@ Bed wallAt(vec2 b, float down, float inside) {
   vec2 uv = vec2(along / 19.0, 1.0 - clamp((down + jog) / 17.0, 0.02, 0.98));
   // The way round begins again in the north: the fineness of the picture is told from the ground, which has no such place, so no line is drawn there.
   float r2 = max(dot(b, b), 1.0);
-  vec2 bx = dFdx(b);
-  vec2 by = dFdy(b);
-  vec3 c = textureGrad(tWall, uv, 6.0 * vec2(480.0 / 19.0 * (b.y * bx.x - b.x * bx.y) / r2, dFdx(uv.y)), 6.0 * vec2(480.0 / 19.0 * (b.y * by.x - b.x * by.y) / r2, dFdy(uv.y))).rgb;
+  vec3 c = textureGrad(tWall, uv, 6.0 * vec2(480.0 / 19.0 * (b.y * gFx.x - b.x * gFx.y) / r2, fell.x / 17.0), 6.0 * vec2(480.0 / 19.0 * (b.y * gFy.x - b.x * gFy.y) / r2, fell.y / 17.0)).rgb;
   // What the eye follows on a steep wall is its fall: ribs and gullies that run down it from the lip, each of its own width, broken into blocks.
   float rib = vnoise(vec2(along / 2.3, down / 11.0 + 3.0));
   float fine = vnoise(vec2(along / 0.7 + 11.0, down / 4.0));
