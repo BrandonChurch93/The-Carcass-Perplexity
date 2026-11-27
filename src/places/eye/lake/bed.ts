@@ -344,7 +344,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
       // (Hardly bent, every tress ran straight to the centre and the mats were long parallel tongues, flames from the rim.) Round the lake the picture runs on
       // into itself and is never turned over (turned over, the tresses either side of the turn were a butterfly). Each size goes round
       // a whole number of times (61, 18 and 237), so the place where the way round begins again shows no seam.
-      vec2 cq = vec2(a2 * 640.0 + bend.x * 34.0, r + bend.y * 44.0);
+      vec2 cq = vec2(a2 * 640.0 + bend.x * 24.0, r + bend.y * 44.0);
       vec3 ca = readRound(tComb, cq / vec2(COMB_A, 44.0), b, 640.0 / COMB_A, 1.0 / 44.0).rgb;
       vec3 cb = readRound(tComb, cq / vec2(COMB_B, 152.0), b, 640.0 / COMB_B, 1.0 / 152.0).rgb;
       float la = dot(ca, vec3(0.4, 0.5, 0.1));
@@ -382,7 +382,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     // At the torn edge of a patch only the strands that stand highest are left: wisps, not a line.
     float lies = smoothstep(0.0, 0.22, cover * 1.25 - (1.0 - high) * 0.7 * told * smoothstep(0.95, 0.5, cover) - 0.12 * (1.0 - told));
     // From the rim it is the tresses that say where the weed is: the water between them is open even in the thick of a bed.
-    lies = mix(lies, smoothstep(0.0, 0.2, cover * 1.15 - (1.0 - combed) * 0.95), fromRim * (1.0 - told));
+    lies = mix(lies, smoothstep(0.0, 0.2, cover * 1.15 - (1.0 - combed) * 0.6), fromRim * (1.0 - told));
     o.albedo = mix(bare, weed, lies);
     // Its relief says what lies where: the strands that stand highest lie in the surface, the gaps between are a hand deeper.
     float up = (high - 0.62) * 0.34;
@@ -437,6 +437,12 @@ Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   ledge *= 1.0 - smoothstep(3.5, 17.0, down - 5.0 * great);
 #else
   ledge *= 1.0 - smoothstep(1.5, 9.0, down - 3.0 * great);
+  // The weed of the lip hangs over its edge into the water: strands a hand wide and a metre or two long, each of its own length.
+  float alongLip = atan(b.x, b.y) * 480.0;
+  float strand = vnoise(vec2(alongLip / 0.22, down / 3.5 + 2.0));
+  float hangs = smoothstep(0.52, 0.7, strand + 0.25 * (vnoise(vec2(alongLip / 1.9 + 5.0, 0.5)) - 0.5)) * smoothstep(1.5 + 4.5 * vnoise(vec2(alongLip / 0.6, 7.0)), 0.2, down);
+  o.albedo = mix(o.albedo, vec3(0.3, 0.14, 0.04), 0.85 * hangs);
+  ledge = mix(ledge, 0.8, hangs);
 #endif
 #else
   float along = atan(b.x, b.y) * 480.0;
