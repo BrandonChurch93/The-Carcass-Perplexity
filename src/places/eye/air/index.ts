@@ -45,8 +45,12 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
   vec3 d = normalize(vDir);
+  // The footprint of a pixel on the far picture, taken here before any branch so that the frame repeats.
+  vec2 plateSpot = plateUv(cameraPosition, d);
+  vec2 plateGx = dFdx(plateSpot);
+  vec2 plateGy = dFdy(plateSpot);
   if (uPlateTone.w > 0.5) {
-    gl_FragColor = vec4(rigOut(farRadiance(cameraPosition, d, 0.0)), 1.0);
+    gl_FragColor = vec4(rigOut(farRadianceGrad(cameraPosition, d, 0.0, plateGx, plateGy)), 1.0);
     return;
   }
   vec3 c = skyRadiance(d);
@@ -203,7 +207,7 @@ void main() {
       // where the picture's wall is in shade the mist is the blue grey of the sky. The picture is read wide and soft, so no edge of it shows.
       float wallSun = 1.0;
       if (uPlateTone.w > 0.5) {
-        vec3 foot = farRadiance(ro, normalize(vec3(rd.x, 0.0, rd.z) * wall + vec3(0.0, 0.05 * shore.z - ro.y, 0.0)), 6.5);
+        vec3 foot = farRadianceLevel(ro, normalize(vec3(rd.x, 0.0, rd.z) * wall + vec3(0.0, 0.05 * shore.z - ro.y, 0.0)), 7.5);
         wallSun = smoothstep(0.06, 0.34, (foot.r - foot.b) / max(foot.r + foot.b, 1e-3)) * smoothstep(0.04, 0.2, foot.r);
       }
       vec3 sum = vec3(0.0);
