@@ -120,8 +120,10 @@ void main() {
   float ridden = mix(a2, a1, w1);
   // White where it falls, where it piles and where it is torn, and a thread of it along the shallows of each bank.
   // It runs over a stony bed all the way down: every few metres a riffle breaks it, whether the bed falls there or not.
-  float riffle = smoothstep(0.38, 0.7, vnoise(vec2(vFlow.x / 2.7, 7.0))) * smoothstep(1.9, 0.5, abs(vFlow.y + 0.9 * (vnoise(vec2(vFlow.x / 4.3, 2.0)) - 0.5)));
-  float much = clamp(0.1 + 0.75 * riffle + 0.85 * max(fall, 0.85 * churned) + 0.5 * piled + 0.7 * wake + 0.12 * smoothstep(0.1, 0.03, depth), 0.0, 1.0);
+  float riffle = smoothstep(0.46, 0.72, vnoise(vec2(vFlow.x / 1.5, 7.0))) * smoothstep(1.9, 0.5, abs(vFlow.y + 0.9 * (vnoise(vec2(vFlow.x / 4.3, 2.0)) - 0.5)));
+  // Between its riffles it is glass, and a riffle is white in lumps, where a stone of the bed stands near the top.
+  float lumps = smoothstep(0.3, 0.62, vnoise(vec2(vFlow.x * 1.3, vFlow.y * 3.1) + 11.0));
+  float much = clamp(0.03 + 0.75 * riffle * (0.35 + 0.65 * lumps) + 0.85 * max(fall, 0.85 * churned) + 0.5 * piled + 0.7 * wake + 0.12 * smoothstep(0.1, 0.03, depth), 0.0, 1.0);
   // Glass for the most part: the white is threads, and they thicken only where the water has been broken.
   float white = smoothstep(0.9 - 0.56 * much, 1.06 - 0.4 * much, ridden) * smoothstep(0.02, 0.2, much);
   // The skin of the water: small waves that go with it, higher where it runs fast.
