@@ -38,6 +38,8 @@ export function create(ctx: Context): Piece {
   const geometry = skin.build();
 
   const pixel = { value: 0.001 };
+  // Staged: in the view of the plumes the sun breaks through the vapour on the one far off. Where it stands, and whether.
+  const veiled = { value: new THREE.Vector3() };
   const pictures = {
     tHide: { value: ctx.assets.texture('waders/hide.jpg') },
     tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
@@ -47,7 +49,7 @@ export function create(ctx: Context): Piece {
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 0 } },
+    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 0 }, uVeiled: veiled },
   });
   material.userData.depthFragment = DEPTH_FRAGMENT;
   const mesh = new THREE.Mesh(geometry, material);
@@ -67,7 +69,7 @@ export function create(ctx: Context): Piece {
   const mirrored = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 1 } },
+    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 1 }, uVeiled: veiled },
     side: THREE.DoubleSide,
   });
   const image = new THREE.Mesh(geometry, mirrored);
@@ -92,7 +94,7 @@ export function create(ctx: Context): Piece {
   const AWAY = { x: -58, z: -98 };
   // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
   // Staged: in the view of the plumes it is a whole animal far off in the vapour, seen in the gap between the fronds, as the picture has it.
-  const MIST = { x: -37.2, z: -39.75, heading: 85 };
+  const MIST = { x: -38.5, z: -56.7, heading: -95 };
   // Staged: in the view of the rim it stands clear of the growth, before it, where the picture of the rim has it.
   const RIM_NEAR = { x: -28.0, z: 17.4, heading: 38 };
   const rimUp = rim.plan.up;
@@ -118,7 +120,8 @@ export function create(ctx: Context): Piece {
       rim.plan.z = away ? AWAY.z : misted ? MIST.z : nearRim ? RIM_NEAR.z : RIM_WADER.z;
       rim.plan.heading = (misted ? MIST.heading : nearRim ? RIM_NEAR.heading : RIM_WADER.heading) * RAD;
       rim.plan.up = misted ? MIST_UP : rimUp;
-      rim.plan.carry = misted ? 1 : rimCarry;
+      rim.plan.carry = misted ? 0.55 : nearRim ? 2.3 : rimCarry;
+      veiled.value.set(MIST.x, MIST.z, misted ? 1 : 0);
       const out = at >= wide[0] && at <= wide[1] ? 1.5 : 1;
       for (const o of outer) {
         o.animal.plan.x = WIDE_FROM.x + (o.x - WIDE_FROM.x) * out;

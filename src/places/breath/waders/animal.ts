@@ -510,7 +510,7 @@ export class Wader {
         lock: root ? hash(seed * 1.9 + n * 7.7) * 6.28 : (of as { lock: number }).lock + (hash(seed + n * 8.1) - 0.5) * 0.9,
         // Most root at the very end of the neck, the rest a little way back up it, so the neck frays into them.
         root: 1 - 0.1 * hash(seed * 1.7 + n * 8.9) ** 1.6,
-        thick: far ? 0.014 * k : root ? (n < CORE ? 0.05 - 0.005 * n : 0.017 + 0.012 * hash(seed + n * 12.7) ** 1.4) * k : weed ? 0.0034 * k : (0.008 + 0.005 * hash(seed + n * 12.7)) * k,
+        thick: far ? 0.014 * k : root ? (n < CORE ? 0.03 - 0.002 * n : 0.014 + 0.01 * hash(seed + n * 12.7) ** 1.4) * k : weed ? 0.0034 * k : (0.008 + 0.005 * hash(seed + n * 12.7)) * k,
       };
       this.strands.push(strand);
       for (let i = 0; i < rings; i++) {
@@ -616,7 +616,8 @@ export class Wader {
     // A restless one: where its weight is (1 off the left hind leg, -1 off the right), held, then moved over in a second or so.
     const restAt = (t: number): number => {
       if (!plan.restless) return 0;
-      const w = Math.sin((t / plan.restless + (plan.restlessAt ?? 0)) * Math.PI * 2);
+      // No two of its spells on one leg are of a length: the beat is drawn out and gathered by a slower one that does not divide it.
+      const w = Math.sin((t / plan.restless + (plan.restlessAt ?? 0)) * Math.PI * 2 + 1.3 * Math.sin((t / (plan.restless * 2.73)) * Math.PI * 2 + 0.6) - 0.73);
       return Math.tanh(3.2 * w) / Math.tanh(3.2);
     };
     const weightAt = restAt(seconds);
@@ -893,7 +894,7 @@ export class Wader {
     // Each feeds to its own side of its chest.
     const sided = (hash(b.seed * 2.7 + 5) - 0.5) * 1.1;
     // A restless one looks round before it moves its weight.
-    const sweep = down * (work + sided) + (1 - down) * ((0.3 + 0.25 * still) * habit + 0.14 * habit2 - 0.55 * restAt(seconds + 1.3)) + 1.6 * behind;
+    const sweep = down * (work + sided) + (1 - down) * ((0.3 + 0.25 * still) * habit + 0.14 * habit2 - 0.55 * (0.75 + 0.35 * habit2) * restAt(seconds + 1.3)) + 1.6 * behind;
     // Starting off, the neck is left behind and leans back; stopping, it runs on and nods.
     const nod = Math.max(-1, Math.min(1, gained / (0.12 * k)));
     const dab = down * (0.035 * wander(seconds * 2.3, b.seed + 6.1) + (plan.reach < 1 ? 0.11 * k * wander(seconds * 0.5, b.seed + 8.2) : 0));
@@ -1086,6 +1087,9 @@ export class Wader {
         sz = (path[o + 5] as number) + oz * 0.55;
       }
       const each = st.len / (tube.rings - 1);
+      // Most of what reaches the water does not sink: it lies in the surface and trails there.
+      const afloat = wet && st.stiff < 0.7;
+      const lieY = afloat ? env.sea + 0.003 : rest;
       // How far a strand stands off before it falls: thick roots hold their line longer than threads do.
       const hold = isRoot ? 0.16 + 0.3 * st.stiff + 0.3 * down * (wet ? 1 : 0.2) : 0.3 + 0.3 * st.stiff;
       // Lifted, the mop swings on from the lift and comes to rest, every strand at the beat of its own length; so the mop spreads and gathers.
@@ -1099,7 +1103,7 @@ export class Wader {
       const stir = air * (1 - down) * (isRoot ? 0.7 : 1.5) * (0.6 + 0.8 * st.stiff);
       const swX = (swing + stir) * fhx + (0.35 * swing * Math.sin(st.lock) + 0.6 * stir) * cyw;
       const swZ = (swing + stir) * fhz + (0.35 * swing * Math.sin(st.lock) + 0.6 * stir) * sy;
-      const flare = isRoot ? (0.14 + 0.3 * (1 - down)) * st.out : 0.26 * st.out;
+      const flare = isRoot ? (0.2 + 0.4 * (1 - down)) * st.out : 0.36 * st.out;
       let px = x;
       let py = y;
       let pz = z;
@@ -1120,13 +1124,13 @@ export class Wader {
         let dx = sx * (1 - g) + (lagX + swX * way + ox * (flare + drift)) * g;
         let dy = sy0 * (1 - g) - g * (1 - 0.55 * under);
         let dz = sz * (1 - g) + (lagZ + swZ * way + oz * (flare + drift)) * g;
-        if (y < rest + 0.025) {
-          // On the bed or the rock: it lies along it, fanned.
-          const fan = Math.atan2(oz, ox) + 0.2 * Math.sin(st.phase);
-          const lie = wet ? 0.4 : 0.9;
+        if (y < lieY + 0.025) {
+          // On the water, the bed or the rock: it lies along it, fanned; on the water it wavers.
+          const fan = Math.atan2(oz, ox) + 0.2 * Math.sin(st.phase) + (afloat ? 0.5 * Math.sin(seconds * 0.7 + st.phase * 5 + u * 5) : 0);
+          const lie = afloat ? 0.8 : wet ? 0.4 : 0.9;
           dx = Math.cos(fan) * lie + lagX * 2;
           dz = Math.sin(fan) * lie + lagZ * 2;
-          dy = (rest - y) * 4;
+          dy = (lieY - y) * 4;
         }
         // No strand hangs straight: a root is kinked a little, a fine end curls, more toward its tip.
         const kink = isRoot ? 0.5 : st.type === 2 ? 1.5 : 1.1;
@@ -1141,7 +1145,7 @@ export class Wader {
         dz /= dl;
         if (i > 0) {
           x = px + dx * each;
-          y = Math.max(rest - 0.02, py + dy * each);
+          y = Math.max(lieY - 0.02, py + dy * each);
           z = pz + dz * each;
         }
         if (isRoot) {
