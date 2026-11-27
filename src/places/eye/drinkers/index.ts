@@ -165,7 +165,7 @@ void main() {
   loose = mix(0.3, 1.0, loose * (0.6 + 0.8 * n3(at * 1.9 + 7.0)));
   float relief = neck * root * 0.004 * rings
     + leg * joint * 0.0026 * legRings
-    + ribs * 0.007 * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9)) / 0.15);
+    + ribs * 0.0055 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
   float groove = max(0.5 * neck * root * (1.0 - rings), 0.5 * leg * joint * (1.0 - legRings));
   // Every slope across the screen is taken here, above the first branch.
   vec2 slope = vec2(dFdx(relief), dFdy(relief));
@@ -201,11 +201,10 @@ void main() {
   }
   // Dirt lies in every crease and hollow.
   skin *= mix(vec3(1.0), vec3(0.5, 0.44, 0.4), 0.75 * groove) * mix(vec3(0.66, 0.6, 0.56), vec3(1.0), vShade.y);
-  // Dust and old mud dark along the spine and the withers, smeared down the shoulder and the haunch, and run down the flanks in streaks.
+  // Dust and old mud dark along the spine and the withers, and smeared down the shoulder and the haunch.
   float top = trunk * smoothstep(0.45, 0.95, rn.y) * smoothstep(0.5, 0.2, abs(vRest.x) + 0.25 * (blotch - 0.5));
   float smear = trunk * smoothstep(0.5, 0.72, n3(at * vec3(2.2, 1.1, 2.2) + 11.0) + 0.25 * (vRest.y - 1.9));
-  float streak = flank * smoothstep(0.55, 0.8, n3(at * vec3(9.0, 1.3, 9.0)) * (0.6 + 0.4 * blotch) + 0.2 * (vRest.y - 1.7));
-  float dirt = clamp(0.5 * top * smoothstep(0.3, 0.7, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.3 * smear + 0.28 * streak, 0.0, 1.0);
+  float dirt = clamp(0.5 * top * smoothstep(0.3, 0.7, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.34 * smear, 0.0, 1.0);
   skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt);
   // Each a tone of its own.
   skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3));
