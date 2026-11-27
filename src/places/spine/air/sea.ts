@@ -378,12 +378,19 @@ export const SEA_SHADE_GLSL = /* glsl */ `
       float turnP = az * 1.27324 + uTime * 0.0011;
       // (A long lens sees a few degrees of it: the picture is laid finer for it, or one bank filled the frame.)
       float finer = pow(seaLens, 0.6);
-      float downP = 0.13 + 3.0 * finer * tan(dip);
+      // (Behind the long lens its rows are read larger and softer: thin and sharp there they were ripples on water.)
+      float longP = clamp(seaLens - 1.6, 0.0, 1.0);
+      float downP = 0.13 + mix(3.0, 2.2, longP) * finer * tan(dip);
       vec2 uvLow = vec2(abs(fract(0.5 * turnP * finer) * 2.0 - 1.0), 1.0 - abs(fract(0.5 * downP) * 2.0 - 1.0));
-      float bankP = dot(textureLod(tDeck, uvLow, 1.5).rgb, vec3(0.3, 0.5, 0.2)) / 0.135;
-      farBank = mix(farBank, 0.2 + 0.85 * bankP * bankP, lowSeen);
+      float bankP = dot(textureLod(tDeck, uvLow, 1.5 + 0.8 * longP).rgb, vec3(0.3, 0.5, 0.2)) / 0.135;
+      farBank = mix(farBank, mix(0.2 + 0.85 * bankP * bankP, 0.3 + 0.62 * bankP * bankP, longP), lowSeen);
     }
-    sea = mix(sea, (SEA_COLD * vec3(0.95, 1.0, 1.1) + 0.2 * SEA_WARM * (1.0 - inStorm)) * farBank, max(0.8 * (1.0 - exp(-t / (6000.0 * seaLens * seaLens))), 0.85 * lowSeen));
+    // (What the air's own vapour does not pale is the deck in the dusk under a dark sky: slate, its banks told by a little light on
+    // their tops. Paled whole, behind a long lens and far from any stroke it lay under the dark sky as a lit plane, like open water.)
+    float paled = 0.8 * (1.0 - exp(-t / (6000.0 * seaLens * seaLens)));
+    float hazed = max(paled, 0.85 * lowSeen);
+    vec3 farTone = mix(SEA_COLD * vec3(0.3, 0.34, 0.43) * (0.55 + 0.45 * farBank), (SEA_COLD * vec3(0.95, 1.0, 1.1) + 0.2 * SEA_WARM * (1.0 - inStorm)) * farBank, clamp(paled / max(hazed, 1e-4), 0.0, 1.0));
+    sea = mix(sea, farTone, hazed);
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * inStorm, 0.0, 1.5);
     sea = sea * (1.0 - 0.5 * inStorm) * mix(vec3(1.0), vec3(0.8, 0.88, 1.06), inStorm) * (1.0 + 0.7 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
@@ -391,10 +398,12 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // (By the light the storm's cloud keeps of a stroke, which builds and dies over some frames, and to kilometres off: the whole deck
     // answers a strike, its tops most. Lit only close under the channel and only on the stroke's own frame, the sea kept its exposure
     // through a flash.)
+    vec3 flare = vec3(0.0);
     if (uStrikeTop.w > 0.0) {
       vec2 toStroke = uStrikeTop.xz - p.xz;
       float span2 = dot(toStroke, toStroke);
-      sea += STRIKE_COLOUR * vec3(0.86, 0.84, 1.0) * min(uStrikeTop.w * 0.05 * (0.2 + 0.8 * head) * (0.6 + 0.6 * facing.y) * (0.35 + 0.65 / (1.0 + span2 / 9.0e6)), 0.09);
+      flare = STRIKE_COLOUR * vec3(0.86, 0.84, 1.0) * min(uStrikeTop.w * 0.05 * (0.2 + 0.8 * head) * (0.6 + 0.6 * facing.y) * (0.35 + 0.65 / (1.0 + span2 / 9.0e6)), 0.09);
+      sea += flare;
     }
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t * t / (1.1e8 * seaLens * seaLens * seaLens));
@@ -421,13 +430,17 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // it: the band of the dusk lies on them, and no line stands between the deck and the sky.
     float crown = mix(head, clamp(0.5 + 1.6 * n0, 0.0, 1.0), smoothstep(0.5, 2.5, seaLod));
     float shape = mix(0.66 + 0.62 * crown * (0.4 + 0.6 * dusk), 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens)));
+    // (Behind the long lens the rows the march finds are thin level lines: the banks there are the deck picture's alone.)
+    shape = mix(shape, 1.0, 0.8 * plate);
     // The far deck is cloud to the last: it pales and takes a share of the dusk's own colour as the air thickens, and only in its last
     // sliver under the horizon is it the sky's foot. Given the foot's colour two degrees deep it lay there as a level of bright water.
     if (needFoot) {
-      sea = mix(sea, mix(SEA_COLD * vec3(1.2, 1.25, 1.4), domeFar, 0.42) * shape * mix(farBank, 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens))), gone);
+      sea = mix(sea, mix(mix(SEA_COLD * vec3(1.2, 1.25, 1.4), SEA_COLD * vec3(0.3, 0.34, 0.44), plate), domeFar, 0.42) * shape * mix(farBank, 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens))), gone);
       // (Under the storm the foot is the dark wall's and the deck goes into it whole: kept pale there it stood as a ruled line against it.)
       sea = mix(sea, domeFar, plate > 0.0 ? 0.4 * gone : mix(1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)), gone, inStorm));
     }
+    // (Behind the long lens the deck is slate under the dark sky, and pale only while a stroke lights it.)
+    sea += flare * (0.7 * plate);
     // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
     if (needFoot) sea = mix(sea, domeFar, toWall);
     // Under the wall the air's haze stays on the deck to its last degree and thins only there, into the sky's foot. Thinned as on the
