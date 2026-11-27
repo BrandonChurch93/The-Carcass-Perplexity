@@ -109,7 +109,8 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
       flecks = there * mix(smoothstep(cut, cut + 0.14, f2.r + f2.b - 1.0 + 0.5 * (f2.a - 0.5)),
                            smoothstep(cut, cut + 0.14, f1.r + f1.b - 1.0 + 0.5 * (f1.a - 0.5)), w1);
     }
-    slick = smoothstep(0.3, 0.8, lanes) * moving;
+    // Lightly: a lane that lost all its ripples lay in the high view as a dark blotch with a hard edge.
+    slick = 0.5 * smoothstep(0.1, 0.95, lanes) * moving;
   }
 
   // Five bands, from a swell five metres long to ripples a hand long. Each is read only where a pixel can show it. [length, root mean square of its slope]
@@ -233,7 +234,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   tone = mix(tone, vec3(0.15, 0.13, 0.095), 0.92 * flat2 * (1.0 - smoothstep(2.6, 5.0, eyeUp)));
   // The low sun goes into the water as well and lights the silt in it.
   // The silt goes down in the same lanes: the water's colour is streaked along the stream, milkier and clearer by turns.
-  tone *= 1.0 + 0.12 * inStream * (lanes - 0.5);
+  tone *= 1.0 + 0.05 * inStream * (lanes - 0.5);
   vec3 body = tone * (skyUp * open + uSunColour * (0.06 * sunHere));
 
   vec3 colour = fresnel * mirror + (1.0 - fresnel) * (1.0 - clear) * body;
