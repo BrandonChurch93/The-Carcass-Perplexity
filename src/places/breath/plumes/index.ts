@@ -18,21 +18,21 @@ const HERO_WEST = 4.6;
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
 const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
-  [-28.3, 11.5, 4.6, 1],
-  [-27.2, 13.2, 3.4, 1],
-  [-31.0, 12.5, 3.4, 1],
-  [-32.8, 14.4, 2.6, 1],
-  [-30.6, 18.0, 2.2, 1],
-  [-32.4, 19.3, 1.0, 0.5],
-  [-30.8, 21.6, 0.75, 0.5],
-  [-33.6, 16.6, 1.2, 0.5],
-  [-34.9, 20.4, 0.8, 0.5],
+  [-28.3, 11.5, 4.6, 0.5],
+  [-27.2, 13.2, 3.4, 0.5],
+  [-31.0, 12.5, 3.4, 0.5],
+  [-32.8, 14.4, 2.6, 0.5],
+  [-30.6, 18.0, 1.6, 0.5],
+  [-32.4, 19.3, 0.7, 0.45],
+  [-30.8, 21.6, 0.55, 0.45],
+  [-33.6, 16.6, 0.8, 0.45],
+  [-34.9, 20.4, 0.6, 0.45],
 ];
 
 /** Staged for shot breath-02: where each hanging one is rooted (x, z), how tall, and the point on the ground it leans over (x, z). */
 const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
-  [-13.1, 30.4, 7.6, -11.4, 28.3],
-  [-14.5, 28.4, 6.6, -12.5, 26.2],
+  [-14.1, 27.6, 4.2, -9.9, 25.8],
+  [-15.0, 26.0, 3.8, -10.8, 24.2],
 ];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
@@ -108,7 +108,8 @@ export function create(ctx: Context): Piece {
   const grown: Grown[] = bushes.map((bush) => grow(bush, rng, floor));
 
   const rimRng = ctx.rng('gill-plume-rim');
-  const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, habit: 'fountain' }));
+  // The low ones on the plate are sprigs: a few swept stalks. The tall ones are fountains of brush.
+  const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, habit: tall < 1 ? 'sweep' : 'fountain', full: tall < 1 ? 0.6 : 1 }));
   // In that shot the two tall ones by the lens of breath-03 are low domes too (see setTime).
   for (let i = 0; i < 2; i++) {
     const b = bushes[i] as Bush;
@@ -120,7 +121,7 @@ export function create(ctx: Context): Piece {
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
-    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang' };
+    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 1.7 };
   });
   const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 

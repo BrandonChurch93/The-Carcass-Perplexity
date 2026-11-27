@@ -154,8 +154,8 @@ void main() {
   float through = (0.06 + 0.94 * against * against) * sunLeft * sqrt(sunLeft) * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
   // Toward its end a lock is thin and the sun is through all of it: there it glows orange red.
   float thin = smoothstep(0.3, 1.0, s);
-  vec3 blood = mix(mix(vec3(0.5, 0.012, 0.045), vec3(0.85, 0.11, 0.03), thin), vec3(0.9, 0.3, 0.26), 0.3 * end);
-  colour += blood * uSunColour * (0.3 * (0.6 + 2.0 * thin) * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
+  vec3 blood = mix(mix(vec3(0.42, 0.008, 0.035), vec3(0.8, 0.075, 0.02), thin), vec3(0.9, 0.3, 0.26), 0.25 * end);
+  colour += blood * uSunColour * (0.24 * (0.3 + 2.2 * thin * thin) * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.6 * mass);
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
