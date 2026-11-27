@@ -276,7 +276,7 @@ export function create(ctx: Context): Piece {
       // The ones at the left of the wallowers' picture end inside its frame, each under an open head that weeps into it.
       const from3 = Math.hypot(s.x - k3[0], s.z - k3[1]);
       const framed = from3 < 12.5 && s.kind !== 2 && w.h > 1.8;
-      if (framed) w.h = from3 < 7 ? 1.4 + 0.4 * ((seed * 7.7) % 1) : 2.5 + 0.3 * ((seed * 7.7) % 1);
+      if (framed) w.h = from3 < 7 ? 1.15 + 0.7 * ((seed * 7.7) % 1) : 2.2 + 0.7 * ((seed * 7.7) % 1);
       if (!anchored) {
         // No two alike: from its own seed, so that what `wild` gives the others stays what it gave, a stalk leans further and may kink where it did not.
         w.lean += 0.3 * Math.pow((seed * 23.1) % 1, 2);
@@ -289,8 +289,12 @@ export function create(ctx: Context): Piece {
       // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
       if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
       if (framed) {
-        const turn = -0.2 + 0.7 * ((seed * 3.3) % 1);
-        w.cards = [[turn, 0.4, 0.5, 1.2, 0, 0, 0], [turn, 0.6, 0.55, 0.2, 0, 0.1, 0], [turn - 0.8, 0.8, 0.4, 0.2, 0, 0.3, 0.3]];
+        // Each its own: the size of the head, how far it hangs, which way it is turned, and whether it has a third lock at all.
+        const turn = -0.6 + 1.5 * ((seed * 3.3) % 1);
+        const big = 0.6 + 0.8 * ((seed * 19.7) % 1);
+        const hangs = 0.5 + 1.2 * ((seed * 43.1) % 1);
+        w.cards = [[turn, 0.4 * hangs, 0.5 * big, 1.2, 0, 0, 0], [turn, 0.6 * hangs, 0.55 * big, 0.2, 0, 0.1, 0]];
+        if ((seed * 61.3) % 1 < 0.6) w.cards.push([turn - 0.8, 0.8 * hangs, 0.4 * big, 0.2, 0, 0.3, 0.3]);
       }
       // A fork: a second trunk that leaves this one part of the way up, goes out and turns up.
       if (!lowly && tall > 1.5 && wild.next() < 0.2 && !anchored) {
@@ -379,7 +383,7 @@ export function create(ctx: Context): Piece {
       for (const w of wilds.filter((v) => v.foot && v.kind !== 2 && v.h > 1.2 && v.low === 0 && v.cards.length > 0)) {
         // Round the seep they stand thickest: its key's picture has a thicket there.
         const dense = Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) < 45;
-        const n = dense ? 3 + thick.int(3) : 1 + thick.int(3);
+        const n = dense ? 2 + thick.int(3) : 1 + thick.int(3);
         for (let k = 0; k < n; k++) {
           const a = thick.range(0, TAU);
           const d = thick.range(0.12, 0.75) * (dense ? 1.2 : 1);
@@ -410,8 +414,12 @@ export function create(ctx: Context): Piece {
       for (let c = 0; like && c < 24; c++) {
         // Thickest and reddest along the shore, thinning into the haze behind it.
         const back = Math.pow(band.next(), 2);
-        const ahead = 11.5 + 15.5 * back;
-        const across = band.range(-0.58, 0.58) * ahead;
+        const bearing = band.range(-0.5, 0.5);
+        // The pool is long: its far shore is found, not assumed, along this clump's own bearing from the lens.
+        let shore = 11.5;
+        while (shore < 34 && ctx.rig.land.height(K1_AT[0] + (K1_DIR[0] - K1_DIR[1] * bearing) * shore, K1_AT[1] + (K1_DIR[1] + K1_DIR[0] * bearing) * shore) < -0.03) shore += 0.5;
+        const ahead = shore + 0.4 + 9 * back;
+        const across = bearing * ahead;
         const cx = K1_AT[0] + K1_DIR[0] * ahead - K1_DIR[1] * across;
         const cz = K1_AT[1] + K1_DIR[1] * ahead + K1_DIR[0] * across;
         const grows = band.range(0.55, 1.2);
@@ -602,9 +610,9 @@ export function create(ctx: Context): Piece {
       if (s.kind === 2) continue;
       if (s.kind !== 1) perches.push(lineAt(w, 1));
       clings.push(w);
-      const comb = want + own.range(-0.3, 0.3);
+      const comb = want + own.range(-0.7, 0.7);
       plumeDrawn(w, own);
-      plumeOf(blades, beads, w, ctx.rng('stalks-plume-' + closeW.length), (s.kind === 0 ? 0.52 : s.kind === 3 ? 0.46 : 0.6) * s.size, comb);
+      plumeOf(blades, beads, w, ctx.rng('stalks-plume-' + closeW.length), (s.kind === 0 ? 0.52 : s.kind === 3 ? 0.46 : 0.6) * s.size * (0.75 + 0.5 * ((seed * 71.3) % 1)), comb);
     }
     closeSet.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 28, 2), frondMesh(ctx, growth, blades, 24, { wet: 1 }), dropMesh(ctx, growth, beads));
     // Seen from the other shots they are far off, and are made as the far ones are.
