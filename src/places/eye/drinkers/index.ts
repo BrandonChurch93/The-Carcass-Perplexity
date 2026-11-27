@@ -210,7 +210,9 @@ void main() {
   // Dust and old mud dark along the spine and the withers, and smeared down the shoulder and the haunch.
   float top = trunk * smoothstep(0.45, 0.95, rn.y) * smoothstep(0.5, 0.2, abs(vRest.x) + 0.25 * (blotch - 0.5));
   float smear = trunk * smoothstep(0.5, 0.72, n3(at * vec3(2.2, 1.1, 2.2) + 11.0) + 0.25 * (vRest.y - 1.9));
-  float dirt = clamp(0.5 * top * smoothstep(0.3, 0.7, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear, 0.0, 1.0);
+  // Where rain has run off the back the old dirt stands in streaks down the ribs and the haunch.
+  float run = trunk * (1.0 - smoothstep(0.005, 0.016, px)) * smoothstep(1.5, 2.1, vRest.y) * smoothstep(0.56, 0.74, n3(vec3(at.x * 0.6, at.y * 0.45, at.z * 21.0)));
+  float dirt = clamp(0.85 * top * smoothstep(0.2, 0.6, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear + 0.3 * run, 0.0, 1.0);
   skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt);
   // Each a tone of its own.
   skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3));
@@ -225,12 +227,12 @@ void main() {
   // Where the leg goes into the lake the water climbs it a finger's width and is dark with the leg's own shade.
   float waterline = (1.0 - smoothstep(0.0, 0.035, above)) * step(uOwn.z, -0.02);
   float muddy = (1.0 - smoothstep(0.2, 1.25, above + 0.5 * ragged)) * leg;
-  skin *= mix(vec3(1.0), vec3(0.62, 0.56, 0.52), 0.7 * muddy);
+  skin *= mix(vec3(1.0), vec3(0.5, 0.44, 0.39), 0.85 * muddy * (0.55 + 0.9 * ragged));
   float fleck = smoothstep(0.7, 0.78, n3(at * vec3(110.0, 70.0, 110.0)) * (0.7 + 0.6 * n3(at * 6.0))) * (1.0 - smoothstep(0.3, 1.4, above + 0.6 * ragged));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
   vec3 albedo = mix(skin * mix(vec3(1.0), vec3(0.17, 0.15, 0.14), wet) * (1.0 - 0.6 * waterline), vec3(0.13, 0.1, 0.08), 0.55 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
-  float occ = mix(0.62, 1.0, vShade.x) * (1.0 - 0.35 * groove);
+  float occ = mix(0.48, 1.0, vShade.x) * (1.0 - 0.35 * groove);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
   vec3 c = rigShade(p, n, v, albedo, mix(0.78, 0.6, wet), occ);
   // The two under the last camera stand in the shade of the bluff it looks from. The rig knows no such shade: their feet are at a level of
@@ -252,7 +254,7 @@ void main() {
   c += albedo * uSunColour * (vec3(0.05, -0.01, -0.13) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim) * (sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
   // The herd stands on a bank the evening shade has taken, and the dark gravel gives nothing back: a hide there is grey, and darkest at
   // the belly and down the legs. Backs and necks stand up into the last of the sun.
-  c *= max(0.2, 1.0 - uPose.y * (0.5 + 0.8 * (1.0 - smoothstep(0.1, 1.0, above)) + 0.7 * max(-n.y, 0.0)));
+  c *= max(0.14, 1.0 - uPose.y * (0.5 + 1.15 * (1.0 - smoothstep(0.15, 1.15, above)) + 0.9 * max(-n.y, 0.0)));
   c += albedo * uSunColour * (vec3(1.0, 0.9, 0.78) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim)
     * (1.6 * uPose.y * (1.0 - sunHere) * smoothstep(0.25, 1.1, above) * (0.4 + 0.6 * occ) / 3.14159);
   // The wet of the leg takes the sun as a film of water does.

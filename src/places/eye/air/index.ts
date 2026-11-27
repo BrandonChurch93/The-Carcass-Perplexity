@@ -23,11 +23,12 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 // c: the middle and the half length of the stretch of far shore it lies along (metres from north round the picture's cylinder, 0 for all of
 // it), how much of that stretch is clear, and how much of it the mirror holds. d: how far the sheet's edge goes out in tongues, how
 // far the sheet thins out from the wall, how close the tongues stand, and how far the heaps are as deep as they are long.
+// tone: how much of the sky's light the mist stands in, 1 where it is not said: under the near wall of the edge shot it is in the wall's shade.
 type Four = [number, number, number, number];
-const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: Four; b: Four; c: Four; d?: Four }> = {
+const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: Four; b: Four; c: Four; d?: Four; tone?: number }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1] },
   low: { a: [600, 4.0, 45, 420], b: [0.9, 1.1, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
-  edge: { a: [560, 2.4, 34, 320], b: [0.25, 1.5, 0.75, 0.4], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
+  edge: { a: [560, 2.4, 34, 320], b: [0.25, 1.1, 0.5, 0.4], c: [0, 0, 0.1, 0.3], d: [1, 0, 0, 0], tone: 0.6 },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   // The last shot is seen from the water and then from straight above. From the water it is a low torn bank at the foot of the far wall.
   centre: { a: [520, 2.0, 22, 200], b: [0.6, 1.5, 1.0, 0.5], c: [0, 0, 0.3, 0.6], d: [0.8, 1, 1, 1] },
@@ -233,8 +234,8 @@ void main() {
     float t0 = max(a1 > a0 ? a0 : b0, 0.0);
     float t1 = b1 > b0 ? b1 : a1;
     if (t1 > t0) {
-      // Twelve steps where the way goes through the bank before the wall, half of them where it meets only the thin sheet on the water.
-      int steps = b1 > b0 ? 12 : 6;
+      // Ten steps where the way goes through the bank before the wall, half of them where it meets only the thin sheet on the water.
+      int steps = b1 > b0 ? 10 : 5;
       // The low sun comes through the mist from the side: forward of it the mist is bright, and a little again straight back.
       float phase = 0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun;
       vec3 skyLight = mistSkyLight(low);
@@ -347,6 +348,7 @@ export function create(ctx: Context): Piece {
       // bank is drawn thicker, so that the same banks that close the far shore from the water still show from above. Its form is not moved.
       (rig.uMistC as THREE.IUniform<THREE.Vector4>).value.fromArray(form.c);
       (rig.uMistD as THREE.IUniform<THREE.Vector4>).value.fromArray(form.d ?? [0, 0, 0, 0]);
+      (rig.uMistTone as THREE.IUniform<number>).value = form.tone ?? 1;
       if (during('eye-05')) {
         // By the height of the camera over the water, so that the bank is one thing at every frame of the climb.
         const over = smooth(OVER[0], OVER[1], flight(FLIGHT.riseFrame + (t - end) * FPS, FLIGHT).y);
