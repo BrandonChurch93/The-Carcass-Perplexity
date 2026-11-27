@@ -404,10 +404,10 @@ void main() {
   // the low ground between is green grey plain in one province and wet dark teal in the next, and pale silt lies along some shores.)
   float forest = smoothstep(0.5, 0.72, kind.g) * top;
   float scree = smoothstep(0.55, 0.8, kind.r) * (1.0 - forest) * top;
-  ground = mix(ground, (0.012 + 0.5 * lateLum) * vec3(0.5, 0.74, 0.5), 0.8 * forest * flank);
+  ground = mix(ground, (0.012 + 0.5 * lateLum) * vec3(0.5, 0.64, 0.58), 0.8 * forest * flank);
   ground = mix(ground, (0.02 + 0.8 * lateLum) * vec3(0.84, 0.8, 0.74), 0.7 * scree * flank);
   float plainAt = smoothstep(0.42, 0.7, kind.b) * lowness * top * (1.0 - flank) * (1.0 - min(1.0, 1.4 * rust));
-  ground = mix(ground, vec3(0.034, 0.06, 0.036) * (0.7 + 2.2 * lum), 0.7 * plainAt);
+  ground = mix(ground, vec3(0.03, 0.052, 0.05) * (0.7 + 2.2 * lum), 0.7 * plainAt);
   float siltShore = (1.0 - smoothstep(0.0, 0.14, height)) * smoothstep(0.55, 0.8, 1.0 - kind.g) * top * (1.0 - min(1.0, 1.4 * rust));
   if (siltShore > 0.01) siltShore *= smoothstep(0.38, 0.62, texture2D(uCloudTile, xz / 260.0 + vec2(0.3, 0.9), 1.0).r);
   ground = mix(ground, vec3(0.2, 0.18, 0.13) * (0.7 + 1.2 * lum), 0.36 * siltShore);
@@ -416,6 +416,15 @@ void main() {
   ground = mix(ground, vec3(0.68, 0.6, 0.5) * (0.36 + 1.0 * lateLum), 0.45 * crestHi);
   // (From orbit the crest is a thin line of pale rock: the snow is on the highest only.)
   ground *= mix(1.0, 0.82, top * smoothstep(0.25, 0.6, lateLum));
+  // (The low country in the colours of the approved pictures, which hold no green: tan, rust in patches on the flanks and where the
+  // map is dry and red, and on the low floors, where the map is grown over, a dark teal grey. The map's own light and dark stays in
+  // it, so fans, channels and dry beds are still read.)
+  float lowLum = dot(natural, vec3(0.3, 0.55, 0.15));
+  float overgrown = clamp((natural.g - max(natural.r, natural.b)) / max(lowLum, 0.02) * 4.0, 0.0, 1.0);
+  float dryMap = smoothstep(0.04, 0.34, (natural.r - natural.b) / max(lowLum, 0.02)) * (1.0 - overgrown);
+  float rustAt = max(0.55 * dryMap, smoothstep(0.08, 0.2, height) * (1.0 - smoothstep(0.36, 0.52, height)) * smoothstep(0.4, 0.62, vnoise(xz / 150.0 + 41.0)));
+  float lowFloor = (1.0 - smoothstep(0.08, 0.3, height)) * (0.4 + 0.6 * overgrown);
+  vec3 floorTone = mix(mix(vec3(0.3, 0.265, 0.225), vec3(0.3, 0.16, 0.11), rustAt), vec3(0.05, 0.082, 0.095), lowFloor);
   // From orbit the land is a continent first: round and between the ranges lies low country of its own colours, province by
   // province (dark growth, olive plain, ochre dry ground), darker and lower in contrast than the ranges that stand out of it.
   // Below the top of the rise the body has not come together: the ranges are rock, grey brown, with snow on the highest crests
@@ -443,8 +452,7 @@ void main() {
     vec3 rock = vec3(0.3, 0.27, 0.235) * (0.62 + 0.55 * mix(naturalLum, 0.36, 0.78 * eased));
     // (Range by range the rock is paler or darker, and one stands in forest.)
     rock *= mix(vec3(0.5, 0.6, 0.5), vec3(1.0), paleRange);
-    // (The low country is no darker than the rock that stands in it: olive and tan, lit as the ranges are.)
-    vec3 plain = mix(vec3(naturalLum), natural, 0.85) * vec3(0.92, 1.0, 0.96) * 0.7 + vec3(0.1, 0.105, 0.07);
+    vec3 plain = floorTone * (0.34 + 2.3 * naturalLum);
     // (Where the crests stand, the valleys between them are dry and nearly as light: high country, one mass, not stripes.)
     plain = mix(plain, rock * vec3(0.86, 0.9, 0.84), 0.72 * eased);
     plain = mix(plain, vec3(0.105, 0.125, 0.082) * (0.72 + 0.5 * across), buried);
@@ -452,7 +460,8 @@ void main() {
     ground = mix(ground, 0.62 * unjoinedColour, 0.85 * unjoined);
   }
   float lowCountry = top * (1.0 - smoothstep(0.22, 0.5, height)) * (1.0 - min(1.0, 1.4 * rust));
-  vec3 countryColour = mix(vec3(dot(natural, vec3(0.3, 0.55, 0.15))), natural, 0.8) * vec3(0.4, 0.46, 0.4);
+  // (The same low country as on the way up, a little darker under the air of orbit: no change of colour at the top of the rise.)
+  vec3 countryColour = 0.55 * floorTone * (0.34 + 2.3 * lowLum);
   ground = mix(ground, countryColour, 0.7 * lowCountry);
   // From orbit the skull is one pale dome of old bone, its valleys gone into it, and the basin beside the lake of the Eye lies in
   // shade: the second socket. (Only from that height: lower down it is a massif like any other.)
@@ -460,14 +469,17 @@ void main() {
   float dome = length(inSkull) < 1.1 ? (1.0 - smoothstep(0.62, 1.0, length(inSkull) + 0.12 * (vnoise(xz / 60.0 + 3.0) - 0.5))) * top : 0.0;
   float domeLum = dot(ground, vec3(0.3, 0.55, 0.15));
   ground = mix(ground, vec3(0.6, 0.54, 0.45) * (0.24 + 0.8 * domeLum), 0.62 * dome);
-  vec2 inSocket = (xz - vec2(-1431.4, -227.9)) / vec2(58.0, 42.0);
+  // (Lower down that basin is a lake district, four lakes of unlike sizes in the map: only from orbit do they run together.)
+  vec2 inSocket = (xz - vec2(-1475.0, -233.9)) / vec2(62.0, 40.0);
   float socket = length(inSocket) < 1.3 ? 1.0 - smoothstep(0.7, 1.1, length(inSocket) + 0.3 * (vnoise(xz / 14.0 + 9.0) - 0.5)) : 0.0;
-  float sunk = socket * smoothstep(140.0, 250.0, uViewKm) * land;
-  ground = mix(ground, vec3(0.006, 0.02, 0.03) * (0.6 + 0.8 * domeLum), 0.95 * sunk);
+  float sunk = socket * top * land;
+  ground = mix(ground, vec3(0.006, 0.02, 0.03) * (0.6 + 0.8 * domeLum), 0.8 * sunk);
 
   // The chest round the Heart is old lava: a black crust between the ribs, which stand out of it pale.
   vec2 fromHeart = xz - uLava;
   float crust = exp(-dot(fromHeart * vec2(0.75, 1.0), fromHeart * vec2(0.75, 1.0)) / 150000.0) * (1.0 - smoothstep(0.24, 0.5, height)) * land * (1.0 - 0.8 * eased);
+  // (Flows, not a floor: the lava lies in tongues down some of the valleys and leaves the others tan and rust.)
+  if (crust > 0.01) crust *= mix(0.12, 1.0, smoothstep(0.38, 0.62, 0.65 * vnoise(xz / vec2(150.0, 95.0) + 17.0) + 0.35 * vnoise(xz / 37.0 + 5.0) + 0.3 * exp(-dot(fromHeart, fromHeart) / 26000.0)));
   ground = mix(ground, mix(vec3(0.028, 0.031, 0.033), vec3(0.013, 0.043, 0.05), smoothstep(800.0, 1380.0, uViewKm)) * (0.5 + 2.2 * lum), min(1.0, 1.2 * crust));
   // The pan of the pelvis: salt, white under the sun, and the red brine that veins it. East of it the red runs out over the low ground
   // and into the sea, in streaks drawn along the fall of the land.

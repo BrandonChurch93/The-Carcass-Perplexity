@@ -24,7 +24,7 @@ GAIN = 7.0  # the slope of one texel, drawn up before tanh squeezes it into 0 to
 SHORE = 22 / 255.0  # the height pictures are black on water and jump to about 50 on the lowest land
 PALE = 78.0  # the light of the palest shoal, of 255
 
-for level in 'abcd':
+for level in os.environ.get('LEVELS', 'abcd'):
     h = np.asarray(Image.open(os.path.join(MAPS, f'map-{level}-h.png')).convert('L'), dtype=np.float32) / 255.0
     rgb = np.asarray(Image.open(os.path.join(MAPS, f'map-{level}.jpg')).convert('RGB'), dtype=np.float32)
     if rgb.shape[:2] != h.shape:
