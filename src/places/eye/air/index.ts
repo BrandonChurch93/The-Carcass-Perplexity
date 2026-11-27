@@ -233,8 +233,8 @@ void main() {
     float t0 = max(a1 > a0 ? a0 : b0, 0.0);
     float t1 = b1 > b0 ? b1 : a1;
     if (t1 > t0) {
-      // Twelve steps where the way goes through the bank before the wall, half of them where it meets only the thin sheet on the water.
-      int steps = b1 > b0 ? 12 : 6;
+      // Ten steps where the way goes through the bank before the wall, half of them where it meets only the thin sheet on the water.
+      int steps = b1 > b0 ? 10 : 5;
       // The low sun comes through the mist from the side: forward of it the mist is bright, and a little again straight back.
       float phase = 0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun;
       vec3 skyLight = mistSkyLight(low);
