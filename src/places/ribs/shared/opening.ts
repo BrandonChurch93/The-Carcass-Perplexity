@@ -60,27 +60,27 @@ export function openingLight(seconds: number): number {
 /**
  * The strike: the swell breaks on the shore's edge before the seaward foot of the near blade, twice, as two pulses of different size:
  * a lesser one that is up as the film opens and drains, and then the breaker, the one large event of the approach. `foot` is the
- * middle of the burst (on the line from the lens to L1's foot the whole way in from the east: a sixth in from the left edge of the
- * first frame and 780 m from the lens, a quarter in at 1 s, a fifth in at 4 s, and from 5 s it slides right against the blade as the
- * lens sweeps west, out of the right edge at 9.3 s), `half` its half length along the shore (x), `times` the seconds the water of
+ * middle of the burst (before L1's foot as seen from the lens the whole way in from the east: 40 m west of the line from the lens
+ * to the foot in the first seconds, on it at 6.4 s, when the breaker stands full, so its mass hangs on the blade's lee and not
+ * across the gap; from then it slides right against the blade as the lens sweeps west), `half` its half length along the shore (x), `times` the seconds the water of
  * each pulse first leaves the sea, `height` the metres the first climbs (L1 is 430 m), `rises` the seconds its head takes to stand
  * at full height (thrown water slowed by the air, not a stone), `hangs` the seconds from leaving the sea to all of it being down, and
  * `lesser` the second pulse's height as a part of the first: more than one, the second is the breaker.
  * The first pulse left the sea two seconds before the film opens: it stands at its full height inside the first second, half as wide
- * as L1's foot, and has drained back by 3 s. The breaker goes up at 2.8 s on the next crest of the set, stands 180 m up the blade
+ * as L1's foot, and has drained back by 3 s. The breaker goes up at 2.8 s on the next crest of the set, stands 150 m up the blade
  * between 5 s and 7 s with the lens 300 m off (half the frame's height), and comes down as a veil across the gap as the lens passes
  * 141 m south of `foot` at 9.2 s; it is thin air by 10 s.
  * The sun is behind the lens' left shoulder: the bursts are lit from the front, pale against the blade's shaded foot and the dark sky.
  */
 export const STRIKE = {
   blade: 'L1',
-  foot: [25, 0, 335] as [number, number, number],
+  foot: [-25, 0, 335] as [number, number, number],
   half: 80,
   times: [-2.0, 2.8] as [number, number],
   height: 100,
   rises: 2.1,
   hangs: 9,
-  lesser: 1.8,
+  lesser: 1.5,
 };
 
 /** Seconds since strike `n` (0 or 1) left the sea, negative before it. */
