@@ -102,6 +102,8 @@ export interface Body {
   skeleton: Skeleton;
   /** For a point on the skin: the two bones that carry it and the share of the first. */
   weigh(x: number, y: number, z: number, out: Weighed): void;
+  /** How much of the sky a point on the smooth skin with normal n sees past the body itself and the mud it stands in, 0 to 1. */
+  open(x: number, y: number, z: number, nx: number, ny: number, nz: number): number;
 }
 
 /** `young` 0 an adult, 1 a young one (a larger head, a rounder trunk, stubbier legs). `seed` gives each body its own folds. */
@@ -117,23 +119,27 @@ export function wallowerBody(young: number, seed: number): Body {
     prims.push({ kind: 1, bone, melt, a, b, ra, rb, cos: 1, sin: 0, leg, horn, cut: false });
   };
 
-  // The trunk: a rump, a deep belly slung under one arch of back, a chest between the shoulders, and a head that hangs with no neck to speak of.
-  ball(PELVIS, [-1.52 * lx, 1.25, 0], [0.62, 0.63, 0.7], 0);
-  ball(BELLY, [-0.5 * lx, 1.33, 0], [1.02, 0.63 + 0.08 * young, 0.86], 0.3);
-  ball(BELLY, [-0.1 * lx, 1.52, 0], [1.25, 0.55, 0.6], 0.25);
-  ball(CHEST, [0.6 * lx, 1.29, 0], [0.82, 0.63, 0.8], 0.3);
+  // The trunk along its spine: a round rump, a belly that sags almost to the mud behind the middle, the back highest in a hump over the shoulders,
+  // and from there a heavy head that hangs down to a broad blunt lip, with no neck to speak of.
+  ball(PELVIS, [-1.5 * lx, 1.02, 0], [0.6, 0.6, 0.66], 0);
+  ball(BELLY, [-0.55 * lx, 1.2, 0], [1.0, 0.6 + 0.06 * young, 0.76 + 0.06 * young], 0.3);
+  ball(BELLY, [-0.15 * lx, 1.5, 0], [1.0, 0.52, 0.56], 0.3);
+  ball(CHEST, [0.5 * lx, 1.28, 0], [0.84, 0.7, 0.74], 0.3);
+  ball(CHEST, [0.3 * lx, 1.72, 0], [0.7, 0.4, 0.46], 0.3);
   for (const s of [-1, 1]) {
-    // The haunch and the shoulder stand out over each leg.
-    ball(PELVIS, [-1.24 * lx, 1.14, s * 0.44], [0.52, 0.47, 0.4], 0.22);
-    ball(CHEST, [0.74 * lx, 1.14, s * 0.47], [0.46, 0.45, 0.38], 0.22);
+    // The haunch and the shoulder stand out from the flank over each leg.
+    ball(PELVIS, [-1.26 * lx, 1.1, s * 0.5], [0.52, 0.5, 0.4], 0.2);
+    ball(CHEST, [0.78 * lx, 1.12, s * 0.52], [0.46, 0.52, 0.38], 0.2);
   }
-  ball(NECK, [1.28 * lx, 1.1, 0], [0.66 * hd, 0.62 * hd, 0.6 * hd], 0.3, -0.35);
-  ball(HEAD, [1.82 * lx, 0.86, 0], [0.56 * hd, 0.42 * hd, 0.45 * hd], 0.24, -0.5);
-  ball(HEAD, [2.2 * lx, 0.64, 0], [0.42 * hd, 0.28 * hd, 0.36 * hd], 0.16, -0.65);
+  ball(NECK, [1.16 * lx, 1.14, 0], [0.72 * hd, 0.72 * hd, 0.66 * hd], 0.3, -0.35);
+  // The throat hangs in a dewlap between the forelegs and the jaw.
+  ball(NECK, [1.3 * lx, 0.68, 0], [0.46 * hd, 0.34 * hd, 0.46 * hd], 0.2);
+  ball(HEAD, [1.62 * lx, 0.92, 0], [0.58 * hd, 0.58 * hd, 0.6 * hd], 0.24, -0.5);
+  ball(HEAD, [1.96 * lx, 0.62, 0], [0.4 * hd, 0.48 * hd, 0.52 * hd], 0.16, -0.2);
   // The lip: a broad pad that overhangs the mouth.
-  ball(HEAD, [2.36 * lx, 0.52, 0], [0.2 * hd, 0.16 * hd, 0.33 * hd], 0.1, -0.7);
+  ball(HEAD, [2.14 * lx, 0.32, 0], [0.22 * hd, 0.22 * hd, 0.48 * hd], 0.1);
   // A brow with nothing under it.
-  ball(HEAD, [2.02 * lx, 0.98, 0], [0.26 * hd, 0.12 * hd, 0.34 * hd], 0.14, -0.5);
+  ball(HEAD, [1.84 * lx, 1.12, 0], [0.32 * hd, 0.16 * hd, 0.44 * hd], 0.14, -0.6);
 
   const skeleton: Skeleton = {
     joint: [],
@@ -141,14 +147,14 @@ export function wallowerBody(young: number, seed: number): Body {
     knee: [],
     ankle: [],
     lip: [],
-    muzzle: [2.5 * lx, 0.42, 0],
-    belly: [-0.4 * lx, 0.58, 0],
+    muzzle: [2.28 * lx, 0.22, 0],
+    belly: [-0.5 * lx, 0.6, 0],
   };
   skeleton.joint[PELVIS] = [-1.25 * lx, 1.25, 0];
   skeleton.joint[BELLY] = [-0.35 * lx, 1.3, 0];
   skeleton.joint[CHEST] = [0.2 * lx, 1.3, 0];
-  skeleton.joint[NECK] = [1.12 * lx, 1.16, 0];
-  skeleton.joint[HEAD] = [1.66 * lx, 0.98, 0];
+  skeleton.joint[NECK] = [1.0 * lx, 1.16, 0];
+  skeleton.joint[HEAD] = [1.4 * lx, 1.0, 0];
   const stub = 1 - 0.12 * young;
   LEG_AT.forEach(([x0, side], l) => {
     const hind = x0 < 0;
@@ -166,16 +172,21 @@ export function wallowerBody(young: number, seed: number): Body {
     skeleton.joint[bone + 2] = ankle;
     const fat = 1 + 0.12 * young;
     // A leg and not a pillar: a thick arm under the hide of the trunk, a knee that stands out, a shin that narrows to the wrist, and the pad wider than the wrist.
-    limb(bone, hip, knee, 0.36 * fat, 0.235 * fat, 0.2, 1);
-    ball(bone + 1, [knee[0] + (hind ? 0.05 : -0.05), knee[1], knee[2]], [0.25 * fat, 0.2 * fat, 0.24 * fat], 0.08);
+    limb(bone, hip, knee, 0.4 * fat, 0.3 * fat, 0.2, 1);
+    ball(bone + 1, [knee[0] + (hind ? 0.05 : -0.05), knee[1], knee[2]], [0.31 * fat, 0.25 * fat, 0.3 * fat], 0.08);
     prims[prims.length - 1]!.leg = 1;
-    limb(bone + 1, knee, [ankle[0], 0.2, ankle[2]], 0.215 * fat, 0.17 * fat, 0.08, 1);
+    limb(bone + 1, knee, [ankle[0], 0.2, ankle[2]], 0.28 * fat, 0.235 * fat, 0.08, 1);
+    // The hide is too wide for the limb: it has slid down and lies in a heavy roll over the wrist, and a lesser one above it.
+    ball(bone + 1, [ankle[0] + (hind ? -0.04 : 0.05), 0.33, ankle[2] + side * 0.02], [0.31 * fat, 0.1, 0.3 * fat], 0.07);
+    prims[prims.length - 1]!.leg = 1;
+    ball(bone + 1, [ankle[0] - (hind ? -0.05 : 0.04), 0.5 * stub, ankle[2] - side * 0.02], [0.28 * fat, 0.07, 0.29 * fat], 0.08);
+    prims[prims.length - 1]!.leg = 1;
     // A broad pad, and four blunt claws that splay from it.
-    ball(bone + 2, [ankle[0] + 0.05, 0.1, ankle[2]], [0.31 * fat, 0.14, 0.28 * fat], 0.1);
+    ball(bone + 2, [ankle[0] + 0.05, 0.1, ankle[2]], [0.35 * fat, 0.15, 0.32 * fat], 0.1);
     prims[prims.length - 1]!.leg = 1;
     for (let c = 0; c < 4; c++) {
       const f = (c - 1.5) / 1.5;
-      const a: V3 = [ankle[0] + 0.26 * fat - 0.05 * f * f, 0.085, ankle[2] + f * 0.19 * fat];
+      const a: V3 = [ankle[0] + 0.3 * fat - 0.05 * f * f, 0.085, ankle[2] + f * 0.22 * fat];
       // Short and blunt, a hoof to each toe: long ones read as the fingers of a hand.
       const b: V3 = [a[0] + 0.13 - 0.04 * f * f, 0.045, a[2] + f * 0.07 + side * 0.02];
       limb(bone + 2, a, b, 0.082, 0.05, 0.03, 1, 1);
@@ -187,8 +198,8 @@ export function wallowerBody(young: number, seed: number): Body {
   for (let f = 0; f < FRINGE; f++) {
     const u = f / (FRINGE - 1);
     const a = (u - 0.5) * 2.7;
-    const r = 0.3 * hd;
-    const at: V3 = [2.3 * lx + Math.cos(a) * 0.17 * hd, 0.47 - 0.05 * Math.cos(a), Math.sin(a) * r];
+    const r = 0.4 * hd;
+    const at: V3 = [2.08 * lx + Math.cos(a) * 0.19 * hd, 0.27 - 0.05 * Math.cos(a), Math.sin(a) * r];
     // Splayed like the fingers of a hand: out from the lip and forward, then down.
     const down = 0.55 + 0.35 * hash3(f, 3, 1, sd);
     const out: V3 = [Math.cos(a) * 1.1 + 0.25, -down, Math.sin(a) * 1.15];
@@ -275,13 +286,13 @@ export function wallowerBody(young: number, seed: number): Body {
     const trunk = (1 - legness) * (1 - horn);
     const side = clamp(Math.abs(z) / 0.6);
     const top = smooth(1.55, 1.95, y);
-    const neck = smooth(0.85 * lx, 1.25 * lx, x) * (1 - smooth(1.95 * lx, 2.3 * lx, x));
+    const neck = smooth(0.8 * lx, 1.15 * lx, x) * (1 - smooth(1.75 * lx, 2.1 * lx, x));
     const flank = (1 - smooth(0.7 * lx, 1.2 * lx, x)) * smooth(-2.1 * lx, -1.6 * lx, x);
     // Heavy rolls of slack hide hang down the flank, slanting back as they fall, no two the same width.
     const r1 = ridge((x + 0.22 * (y - 1.2)) / (0.3 * space) + 2.6 * w1 + 1.1 * w2, 0.55);
     // Rings round the neck and the head, closer and deeper, deepest under the throat.
-    const nx = (x - 1.12 * lx) * 0.94 - (y - 1.16) * 0.34;
-    const r2 = ridge(nx / (0.15 * space) + 1.7 * w1 + 0.9 * w2, 0.5);
+    const nx = (x - 1.0 * lx) * 0.94 - (y - 1.16) * 0.34;
+    const r2 = ridge(nx / (0.23 * space) + 2.6 * w1 + 1.3 * w2, 0.5);
     // The hide is gathered like a sleeve round the root of each leg, and lies in rings down it.
     let sleeve = 0;
     let r3 = 1;
@@ -290,7 +301,7 @@ export function wallowerBody(young: number, seed: number): Body {
       const d = Math.hypot(x - h[0], (y - h[1] - 0.1) * 0.9, (z - h[2]) * 0.8);
       const near = Math.exp(-(d * d) / 0.34);
       const r = ridge(d / (0.19 * space) + 0.9 * w2 + 0.4 * w1, 0.55);
-      sleeve += 0.034 * near * (r - 0.62);
+      sleeve += 0.055 * near * (r - 0.62);
       r3 = Math.min(r3, 1 - near * (1 - r));
     }
     const r4 = ridge(y / (0.125 * space) + 1.5 * w2 + 0.7 * w3 + 0.3 * Math.sin(x * 9 + z * 7), 0.55);
@@ -298,10 +309,10 @@ export function wallowerBody(young: number, seed: number): Body {
     // Not everywhere: a slack patch here, a tight one there.
     const gate = 0.25 + 0.75 * smooth(0.35, 0.6, noise3(x * 0.9 + 7, y * 0.9, z * 0.9 + 3, sd + 9));
     let h = 0;
-    h += 0.03 * gate * trunk * flank * (0.45 + 0.55 * side) * (1 - 0.6 * top) * (r1 - 0.62);
-    h += 0.04 * (0.5 + 0.5 * gate) * trunk * neck * (1 - 0.35 * top) * (r2 - 0.62);
+    h += 0.05 * gate * trunk * flank * (0.45 + 0.55 * side) * (1 - 0.6 * top) * (r1 - 0.62);
+    h += 0.045 * (0.5 + 0.5 * gate) * trunk * neck * (1 - 0.35 * top) * (r2 - 0.62);
     h += sleeve * (1 - horn) * (1 - 0.7 * legness * smooth(0.6, 0.3, y));
-    h += 0.026 * shin * (r4 - 0.62);
+    h += 0.034 * shin * (r4 - 0.62);
     // Slow lumps: nothing on it is a clean ellipsoid.
     h += (0.09 * w1 + 0.04 * w2 + 0.012 * w3) * (1 - horn) * (1 - 0.6 * legness);
     // The belly hangs lower behind the middle.
@@ -321,6 +332,16 @@ export function wallowerBody(young: number, seed: number): Body {
     field,
     box: { min: [-2.6, -0.08, -1.25], max: [2.85, 2.35, 1.25] },
     skeleton,
+    open: (x, y, z, nx, ny, nz) => {
+      // The field itself says what stands in the way: a step out along the normal that gains less distance than its length is a step toward skin.
+      let hidden = 0;
+      for (let i = 0; i < 4; i++) {
+        const d = [0.06, 0.14, 0.3, 0.6][i] as number;
+        const v = Math.min(base(x + nx * d, y + ny * d, z + nz * d), y + ny * d - 0.1);
+        hidden += ([0.3, 0.3, 0.25, 0.15][i] as number) * clamp((d - v) / d);
+      }
+      return clamp(1 - 1.5 * hidden);
+    },
     weigh: (x, y, z, out) => {
       base(x, y, z);
       out.leg = legness;
