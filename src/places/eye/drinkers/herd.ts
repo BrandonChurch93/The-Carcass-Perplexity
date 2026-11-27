@@ -108,10 +108,11 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     // The two of the last shot, below the camera with their backs to it, cut by the foot of the frame. Each lifts its head to the swell, not together.
     seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 8, 1.12, (t) => 0.8 - 0.5 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, key: riseAt + 1.7 }, 0.8),
     seenFromBehind({ ...one(centre[0] + 1.0, centre[2] - 18.5, -8, 0.82, (t) => 0.86 - 0.62 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, key: riseAt + 1.7 }, 1.0),
-    // The ones of the mats shot: out on the shelf beyond the mats, small, side on. The middle one stands with its head up and watches.
-    mats(from(KEYS.mats, -13, 31, 80, 1, sips(5, MATS_KEY, 0.46), false)),
-    mats(from(KEYS.mats, -21, 44, 262, 1, up(1.4), true)),
-    mats(from(KEYS.mats, -17.5, 52, 96, 0.9, sips(9, MATS_KEY, 0.42), false)),
+    // The ones of the mats shot. One is near, alone, side on with its head down, as the approved picture has it; two are far off behind it, one
+    // of them upright and watching.
+    mats(from(KEYS.mats, -15, 16.5, 84, 1.05, sips(5, MATS_KEY, 0.3), false)),
+    mats(from(KEYS.mats, -25, 62, 262, 1, up(1.4), true)),
+    mats(from(KEYS.mats, -21.5, 74, 96, 0.9, sips(9, MATS_KEY, 0.42), false)),
   ];
   // The herd along the south shore, as the wide shot sees it. They are placed from that picture: loose knots of unequal number strung along the
   // near bank between the two rocks of the foreground, most on the gravel by the water, some in the shallows, two far out on the shelf.
@@ -228,20 +229,22 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     }
     const slack = k === restLeg ? rests * (1 - arcUp) : 0;
     weight = Math.max(weight, slack);
-    hz += 0.07 * s * slack;
+    hz += 0.11 * s * slack;
     // The ground under this hoof, in the world.
     const wx = px - cosB * hx + sinB * hz;
     const wz = pz - sinB * hx - cosB * hz;
     const floor = d.level === undefined ? Math.max(WADE * s, ground(wx, wz)) - y : 0;
-    hooves.push({ at: [hx, floor + 0.17 * s * arcUp + 0.012 * s * slack, hz], fold: d.lies ? 1 : Math.max(arcUp, 0.3 * slack) });
+    hooves.push({ at: [hx, floor + 0.17 * s * arcUp + 0.012 * s * slack, hz], fold: d.lies ? 1 : Math.max(arcUp, 0.42 * slack) });
     // Its weight goes off the leg before the hoof leaves the ground and comes back on after it lands.
     const side = k % 2 === 0 ? 1 : -1;
     const hind = k < 2;
     shift[0] -= side * 0.08 * s * weight;
     shift[2] += (hind ? 1 : -1) * 0.03 * s * weight;
     shift[1] -= 0.012 * s * weight;
-    roll += side * (0.018 * weight + 0.022 * slack);
+    roll += side * (0.018 * weight + 0.05 * slack);
     shift[1] -= 0.01 * s * slack;
+    // The hip over a leg at rest hangs, and the trunk stands over the other hind leg.
+    shift[0] -= side * 0.05 * s * slack;
   }
   // What takes its attention sets it back on its haunches: the weight goes onto the hind legs and the croup sinks a little, then it eases.
   const taken = d.alert === undefined ? 0 : ease(d.alert - 0.05, d.alert + 0.5, t) * (1 - 0.45 * ease(d.alert + 1.6, d.alert + 4.2, t));
@@ -281,7 +284,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const fs = (fu - Math.floor(fu)) * flickEvery;
   const tail: [number, number] = [0.05 + 0.04 * Math.sin(t * 0.7 + o * 9), 0.07 * Math.sin(t * 1.3 + o * 20) + 0.55 * Math.sin(fs * 15) * Math.exp(-fs * 3.5)];
   const breathEvery = 2.7 + 1.2 * hash(o * 83);
-  const breath = 0.034 * Math.sin((t / breathEvery + o) * Math.PI * 2);
+  const breath = 0.05 * Math.sin((t / breathEvery + o) * Math.PI * 2);
   shift[0] += 0.012 * s * Math.sin(t * 0.47 + o * 12);
   shift[2] += 0.01 * s * Math.sin(t * 0.31 + o * 25) + 0.07 * s * low;
   shift[1] += 0.004 * s * Math.sin((t / breathEvery + o) * Math.PI * 2) - 0.045 * s * low - 0.02 * s;
