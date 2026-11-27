@@ -193,7 +193,8 @@ void main() {
   float film = 1.0 - smoothstep(run - 0.004, run, up);
   // The rock the swash has been over stays wet a hand above the line, raggedly, and dries upward.
   float reach = 0.05 + 0.13 * vnoise(xz * 0.6 + 9.0) + 0.03 * vnoise(xz * 4.7);
-  float wet = 1.0 - smoothstep(0.45 * reach, reach, up);
+  // Only a hand or two in from the line: the flat top of a low stone is wet round its rim and dry in the middle.
+  float wet = (1.0 - smoothstep(0.45 * reach, reach, up)) * (1.0 - smoothstep(0.1, 0.24, vOut.z));
   // Its front carries a line of froth up the rock and leaves it there in bits as it falls back.
   float front = smoothstep(run - 0.009, run - 0.003, up) * (1.0 - smoothstep(run, run + 0.003, up));
   // Froth gathers where the stream lays it against the bank: thick in the lee of a stone or a bar, none on a clean reach.

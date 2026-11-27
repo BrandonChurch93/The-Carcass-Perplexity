@@ -142,8 +142,15 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   // They are read a little aside by the wind's own slope, so a ring crosses the ripples as a bent, broken line and not as a drawn circle.
   // A second, slower push aside makes their spacing uneven, and they stand only in arcs: where the wind's ripples are high a ring is lost.
-  float part = vnoise(xz * 2.3 - 0.5 * gone + 5.0);
-  vec2 aside = vec2(vnoise(xz * 4.3 + 0.3 * gone), part) - 0.5;
+  // Far off a ring is a pixel wide and is read where it lies.
+  float nearBy = 1.0 - smoothstep(40.0, 60.0, far);
+  float part = 0.5;
+  vec2 aside = vec2(0.0);
+  if (nearBy > 0.0) {
+    part = vnoise(xz * 2.3 - 0.5 * gone + 5.0);
+    aside = (vec2(vnoise(xz * 4.3 + 0.3 * gone), part) - 0.5) * nearBy;
+    part = mix(0.5, part, nearBy);
+  }
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame + (slope * vec2(0.012, 0.03) + aside * vec2(0.012, 0.01)) * min(1.0, 8.0 / far));
   float held = clamp(rings.a, 0.0, 1.0);
   float arcs = smoothstep(0.28, 0.62, part);
