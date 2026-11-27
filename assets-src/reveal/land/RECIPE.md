@@ -13,6 +13,15 @@ Date: 2026-11-26
 
 Each file has the size of its map: when a larger copy of a map arrives under the same name, run the script again.
 
+## `public/assets/reveal/land/lakebed.png`
+
+Made by: `assets-src/reveal/land/lake/make_lakebed.py` on Python 3 with numpy, scipy and Pillow.
+From: `references/approved/7-reveal/reveal-1-above-the-lake.jpg` and its window in the master from `references/approved/7-reveal/pullback.json`. The picture is measured, not copied: where it has water, how much amber stands in that water, where the feeder's mouth lies. No pixel of it is read as colour.
+Prompt or command: `python3 assets-src/reveal/land/lake/make_lakebed.py` from the root of the repo (about a minute and a half).
+Takes: not generated. Four passes of the numbers at the top of the script, each set beside the first approved picture.
+Why this one: the lake of the Eye was a round of constants broken by noise, its shore a bent circle that stood about a sixth too wide on the west. This map is the bed of the lake and of the two pools in that window, 2048 x 1152 over the window of the first approved picture (0.123 km a texel). Red is the signed distance to the shore in the code of `shore-*.png` (so the depth of the water is read from it, and the shore under the mist of the north east wall is traced by hand along the wall's foot). Green is how much silt stands in the water, drawn along the way the water turns so it frays into threads, and on land the silt of the nearest water, which says where the shore is stained. Blue is the pale bars of the delta at the feeder's mouth, a fan that branches, seeded.
+Date: 2026-11-27
+
 ## `public/assets/reveal/land/shore-{a,b,c,d}.png`
 
 Made by: `assets-src/reveal/land/make_bake.py` on Python 3 with numpy, scipy and Pillow.
