@@ -26,9 +26,10 @@ vec3 mirrorAt(vec3 p, vec3 n) {
   // Three ripples answer for a pixel, each swinging the ray its own way: what stands in the mirror is drawn out toward the lens and broken.
   vec4 q1 = uMirrorMatrix * vec4(p.x + swing.x * 2.3 - swing.y * 0.6, p.y, p.z + swing.y * 2.3 + swing.x * 0.6, 1.0);
   vec4 q2 = uMirrorMatrix * vec4(p.x - swing.x * 0.7 + swing.y * 0.8, p.y, p.z - swing.y * 0.7 - swing.x * 0.8, 1.0);
-  vec3 seen = (textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), 0.0).rgb
-    + textureLod(tMirror, clamp(q1.xy / q1.w, 0.003, 0.997), 0.0).rgb
-    + textureLod(tMirror, clamp(q2.xy / q2.w, 0.003, 0.997), 0.0).rgb) / 3.0;
+  vec3 seen = (textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), 0.0).rgb
+    + textureLod(tMirror, clamp(q1.xy / max(q1.w, 1e-3), 0.003, 0.997), 0.0).rgb
+    + textureLod(tMirror, clamp(q2.xy / max(q2.w, 1e-3), 0.003, 0.997), 0.0).rgb) / 3.0;
+  seen = clamp(seen, vec3(0.0), vec3(8.0));
   // Far off, what stands in the mirror is smaller than the mirror's picture can hold (a bird there is one dark square): the mirror
   // gives way to the sky alone.
   vec3 d = (p - cameraPosition) / away;
@@ -68,8 +69,11 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   float soft = max(log2(float(textureSize(tMirror, 0).x) / 170.0), 0.0);
   // (And a wavelet that leans hard throws the ray far: what it brings back is a wider piece of the picture, softer, or a thing that
   // stands in the mirror would lie on the pool in hard-cut flakes.)
-  vec3 seen = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), soft + min(length(n.xz) * 9.0, 1.6)).rgb;
+  vec3 seen = textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), soft + min(length(n.xz) * 9.0, 1.6)).rgb;
   // (The air lies between the brine and what it mirrors too: what stands in the mirror is as pale as it stands over it.)
+  // (What is drawn into the mirror is not always a colour: a part that puts out less than nothing there, or far more than the sky,
+  // would stand on the pool as black and glowing dots.)
+  seen = clamp(seen, vec3(0.0), vec3(8.0));
   seen = rigAir(seen, 3.0 + away * 0.8, 0.5);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
