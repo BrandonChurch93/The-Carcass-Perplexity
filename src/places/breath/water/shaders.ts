@@ -151,12 +151,12 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
     aside = (vec2(vnoise(xz * 4.3 + 0.3 * gone), part) - 0.5) * nearBy;
     part = mix(0.5, part, nearBy);
   }
-  vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame + (slope * vec2(0.012, 0.03) + aside * vec2(0.012, 0.01)) * min(1.0, 8.0 / far));
+  vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame + (slope * vec2(0.012, 0.03) + aside * vec2(0.02, 0.016)) * min(1.0, 8.0 / far));
   float held = clamp(rings.a, 0.0, 1.0);
-  float arcs = smoothstep(0.28, 0.62, part);
+  float arcs = smoothstep(0.32, 0.6, part);
   // Where a ring is steep, and hard against a leg or a mop, the water is worked into small steep faces.
   float stirred = min(1.0, smoothstep(0.04, 0.2, rings.b) + smoothstep(0.0, 0.25, held));
-  slope += rings.rg * (2.6 * (0.35 + 0.65 * arcs));
+  slope += rings.rg * (2.8 * (0.12 + 0.88 * arcs));
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float rough = sqrt(lost);
 
@@ -217,7 +217,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // It is milky: the silt hides the bed a hand deep. With clearer water the wide view showed the gravel of the bed through the whole
   // channel as a speckle, where the picture has one soft opaque green.
   float clear = exp(-path * 14.0);
-  vec3 tone = mix(vec3(0.25, 0.3, 0.26), mix(vec3(0.16, 0.265, 0.235), vec3(0.085, 0.2, 0.2), smoothstep(0.2, 0.7, depth)), smoothstep(0.03, 0.2, depth));
+  vec3 tone = mix(vec3(0.215, 0.3, 0.275), mix(vec3(0.13, 0.265, 0.25), vec3(0.068, 0.2, 0.212), smoothstep(0.2, 0.7, depth)), smoothstep(0.03, 0.2, depth));
   // Seen from low down and against the light the body of shallow water is not green: what comes back out of it is the low sun in its silt,
   // a dull warm olive, as under the feeding waders in the picture. From above it is the teal of the wide view.
   // Only where the eye is low and the look is flat: looked down on by more than a quarter of a right angle the teal comes through again,
