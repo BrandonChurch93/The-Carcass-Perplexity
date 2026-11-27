@@ -47,8 +47,8 @@ uniform sampler2D tSkyFlow;
 const vec2 PANO_FROM = vec2(${PANO_FROM[0].toFixed(5)}, ${PANO_FROM[1].toFixed(5)});
 const vec2 PANO_SPAN = vec2(${PANO_SPAN[0].toFixed(5)}, ${PANO_SPAN[1].toFixed(5)});
 const float PANO_DOT = ${(PANO_SPAN[0] / 4096).toFixed(7)};
-const float PANO_DRIFT = 0.0021;
-const float FLOW_RATE = 0.0095;
+const float PANO_DRIFT = 0.0062;
+const float FLOW_RATE = 0.014;
 const float FLOW_PERIOD = 10.0;
 const float SCUD_OVER = 650.0;
 vec2 panoUv(float az, float el) {
@@ -159,7 +159,8 @@ const float FOOT_AIR = 0.8;
 vec3 skyBroad(vec3 from, vec3 d) {
   // The band of the dusk is a line on the horizon and the dome's alone: air, snow and the far sea take the cold sky over it, never its orange.
   // At its very foot it is thinner and darker: the far sea goes into it there, and the sea's lit tops keep their shape against it.
-  float low = mix(FOOT_AIR, 1.0, smoothstep(0.0, 0.07, d.y));
+  // (Not on the storm's side: there the mist of the fall is the foot, and is one tone over the horizon and under it.)
+  float low = mix(FOOT_AIR, 1.0, max(smoothstep(0.0, 0.07, d.y), smoothstep(0.05, 0.75, -dot(d.xz, GALE) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)))));
   float toLast = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
   float el = asin(clamp(max(d.y, 0.07), -1.0, 1.0));
   float lit = clamp(cloudLit(from, d) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * (1.0 - smoothstep(0.7, 0.95, toLast)), 0.0, 1.0);
@@ -237,7 +238,7 @@ ${SKY_GLSL}
 vec4 scudOver(vec3 from, vec3 d, float toLast, float lit) {
   if (d.y <= 0.02) return vec4(0.0);
   float t = SCUD_OVER / d.y;
-  vec2 p = (from.xz + d.xz * t - GALE * (34.0 * uTime)) / 2500.0;
+  vec2 p = (from.xz + d.xz * t - GALE * (48.0 * uTime)) / 2500.0;
   float far = smoothstep(9000.0, 3500.0, t);
   float lumps = textureLod(tNoise, vec3(p, 0.43 + 0.006 * uTime), 0.0).r;
   float ragged = textureLod(tNoise, vec3(p * 3.3 + 0.21, 0.17 + 0.011 * uTime), 0.0).b;
@@ -267,6 +268,8 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   float moving = smoothstep(0.05, 0.4, 2.0 * length(f.rg - 0.5));
   c = max(soft + (c - soft) * mix(1.0, inversesqrt(w * w + (1.0 - w) * (1.0 - w)), moving), vec3(0.0));
   float near = cloudLit(from, d);
+  // Lit through, the cloud about a bolt shows its large forms and none of its fine: light inside a cloud is soft.
+  c = mix(c, soft, 0.8 * smoothstep(0.06, 0.45, near));
   float toLast = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
   // The whole storm takes a little of a strike; the bloom about the bolt is the light, and the rest of the storm stays dark.
   float lit = near * near / (near + 0.4) + 0.04 * min(dot(uFlash, vec3(0.33)), 1.0) * (1.0 - smoothstep(0.7, 0.95, toLast));
@@ -321,7 +324,9 @@ void main() {
     // The far sea's tops are lumps, not a level: the air stands higher here and lower there along the horizon, and under the band it is low.
     float lumps = textureLod(tNoise, vec3(az * 3.1 + uTime * 0.0006, 0.31, 0.57), 0.0).g + 0.5 * textureLod(tNoise, vec3(az * 9.7 - uTime * 0.0011, 0.63, 0.19), 0.0).r;
     float tallAir = mix(0.02, 0.011, pow(toLast, 3.0)) * (0.2 + 1.2 * lumps);
-    c = mix(c, seaAir, 0.92 * exp(-max(d.y, 0.0) / tallAir) * (1.0 - 0.8 * smoothstep(0.55, 0.85, toLast)));
+    // On the storm's side the mist of its fall stands down to the sea and is the foot itself: no darker bar lies along the horizon there.
+    float inFall = smoothstep(0.05, 0.75, -dot(d.xz, GALE) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)));
+    c = mix(c, seaAir, 0.92 * exp(-max(d.y, 0.0) / tallAir) * (1.0 - 0.8 * smoothstep(0.55, 0.85, toLast)) * (1.0 - 0.9 * inFall));
     // The last band of orange: a thin bright line low on the horizon toward the last light, broken along its length by the far cloud that
     // stands before it, with a little of its glow in the air over it. It is the one warm thing in the frame, in a flash too.
     // It is short: a stretch of the horizon about the last light, not a ring round it.
