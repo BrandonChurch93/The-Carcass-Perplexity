@@ -334,9 +334,9 @@ void main() {
   float lip = smoothstep(0.55, 0.9, vLay.y);
   float reach = 0.4 + 3.4 * pow(vnoise(vec2(arc * 1.9, 3.5)), 2.0);
   float strings = smoothstep(0.46, 0.58, vnoise(vec2(arc * 9.0, y * 0.3 + 7.0)) * 0.6 + vnoise(vec2(arc * 23.0, y * 0.8)) * 0.4 + 0.3 * smoothstep(0.35, 0.0, vLay.x));
-  float drip = lip * strings * smoothstep(reach, 0.35 * reach, vLay.x) * smoothstep(0.3, 0.5, vnoise(vec2(arc * 0.6, 11.5))) * (1.0 - top);
+  float drip = lip * strings * smoothstep(reach, 0.35 * reach, vLay.x) * smoothstep(0.22, 0.42, vnoise(vec2(arc * 0.6, 11.5))) * (1.0 - top);
   float roost = smoothstep(0.34, 0.56, vnoise(vWorld.xz * 0.17 + y * 0.13 + 7.0));
-  float white = max(0.75 * splash * top * (0.25 + 0.75 * roost), 0.9 * drip * (0.3 + 0.7 * roost));
+  float white = max(0.8 * splash * top * (0.4 + 0.6 * roost), 0.9 * drip * (0.5 + 0.5 * roost));
   albedo = mix(albedo, mix(crust, vec3(0.4, 0.26, 0.07), 0.45) * vec3(0.8, 0.78, 0.7) * (0.75 + 0.25 * grain), 0.9 * patchL * (1.0 - white));
   albedo = mix(albedo, vec3(0.68, 0.675, 0.64) * (0.7 + 0.3 * grain), white);
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (hgt - 0.5);
@@ -358,7 +358,10 @@ void main() {
   // The weed is no mirror of the rock: it lies over the stone's cracks, and its straps catch the sky each its own way.
   n = normalize(mix(n, n0 + (round0 * (wk.g - wk.r) + rise * (wl - 0.06)) * 3.0, weed));
   float rough = mix(mix(mix(0.74, 0.88, top), 0.6, max(band, 0.7 * low)), 0.56, weed);
-  float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4);
+  // Ledges of unequal depth: here and there, for some strides along the crag, a ledge overhangs deep and the face under its lip stands in its shade.
+  float deep = smoothstep(0.42, 0.6, vnoise(vec2(arc * 0.09, y * 0.19) + 21.0)) * (1.0 - top) * smoothstep(2.8, 0.2, vLay.x) * (1.0 - white);
+  albedo *= 1.0 - 0.4 * deep;
+  float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4) * (1.0 - 0.6 * deep);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
   vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * vec3(dot(uSunColour, vec3(0.36, 0.36, 0.28))) * cloudShade(vWorld)) * (0.3 / 3.14159) * (0.75 + 0.25 * occ);
