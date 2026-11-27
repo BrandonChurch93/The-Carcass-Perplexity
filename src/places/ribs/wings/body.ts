@@ -217,13 +217,15 @@ export interface Pose {
   sail: number;
   /** How long the strands of the tuft are: 1 as the feeder's, which reach the pool. */
   tuft: number;
+  /** The neck leaves the shoulder turned up from the line of the back by this, radians: 0 as the feeder's. */
+  rise: number;
   /** Each animal's own number, for what differs strand by strand. */
   seed: number;
 }
 export const pose = (): Pose => ({
   x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, size: 1, tone: 1,
   feet: [{ x: 0, y: 0, z: 0, yaw: 0, droop: 0 }, { x: 0, y: 0, z: 0, yaw: 0, droop: 0 }],
-  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, tuft: 1, seed: 0,
+  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, tuft: 1, rise: 0, seed: 0,
 });
 
 /** The body's frame in the place: the columns ahead, up and left of a pose. */
@@ -257,7 +259,7 @@ export function inPlace(p: Pose, at: V3): V3 {
 
 /** The neck: a curve from the shoulder to the head that keeps its length. Fills `curve` with NECK_RINGS points and ways, in the body's frame. */
 const curve = { p: new Float32Array((NECK_RINGS + 1) * 3), t: new Float32Array((NECK_RINGS + 1) * 3) };
-function bend(head: V3, pitch: number, yaw: number): void {
+function bend(head: V3, pitch: number, yaw: number, rise = 0): void {
   let hx = head[0] - SHOULDER[0];
   let hy = head[1] - SHOULDER[1];
   let hz = head[2] - SHOULDER[2];
@@ -268,7 +270,8 @@ function bend(head: V3, pitch: number, yaw: number): void {
   hy *= reach;
   hz *= reach;
   const d1: V3 = [Math.cos(pitch) * Math.cos(yaw), Math.sin(pitch), Math.cos(pitch) * Math.sin(yaw)];
-  const d0 = SHOULDER_WAY;
+  // The way it leaves the shoulder: along the back, or turned up from it where the animal carries its neck high.
+  const d0: V3 = [SHOULDER_WAY[0] * Math.cos(rise) - SHOULDER_WAY[1] * Math.sin(rise), SHOULDER_WAY[0] * Math.sin(rise) + SHOULDER_WAY[1] * Math.cos(rise), 0];
   const point = (h: number, u: number, out: V3, way: V3 | null): void => {
     const a = 1 - u;
     for (let k = 0; k < 3; k++) {
@@ -318,7 +321,7 @@ function bend(head: V3, pitch: number, yaw: number): void {
 
 /** Where the root of the tuft is in the place for a pose, and the way the neck ends there. */
 export function headInPlace(p: Pose): { at: V3; way: V3 } {
-  bend(p.head, p.headPitch, p.headYaw);
+  bend(p.head, p.headPitch, p.headYaw, p.rise);
   const n = NECK_RINGS * 3;
   const at = inPlace(p, [curve.p[n] as number, curve.p[n + 1] as number, curve.p[n + 2] as number]);
   frame(p, basis);
@@ -421,8 +424,12 @@ void main() {
   // Where the picture is amber it is the skin of a sail, and light comes through it.
   float amber = smoothstep(0.4, 0.62, (skinPic.r - skinPic.b) / max(skinPic.r, 0.05));
   float skin = sail ? mix(0.3 * free, 1.0, amber) * mix(0.35, 1.0, free) : 0.0;
-  vec3 albedo = (sail ? pow(skinPic, vec3(0.92)) : min(pow(skinPic, vec3(0.8)) * 1.22, vec3(0.94))) * vMix.z;
+  // A sail that lies folded and dry on a back is as pale as the hide: only one held up to the light keeps the picture's deep amber.
+  vec3 pale = min(pow(skinPic, vec3(0.8)) * 1.22, vec3(0.94));
+  vec3 albedo = (sail ? mix(pale, pow(skinPic, vec3(0.92)), 0.3 + 0.7 * uThrough) : pale) * vMix.z;
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.02, 0.98, 0.93), uGrey * (1.0 - skin * (1.0 - uGrey)));
+  // And a folded, dry one has lost most of its colour.
+  if (sail) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.05, 0.98, 0.9), 0.5 * (1.0 - uThrough));
   // Wet where it stands in the pool, and a hand over it.
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.45, vWorld.y);
   albedo *= 1.0 - 0.42 * wet;
@@ -669,7 +676,7 @@ export class Bodies {
       const up = turn(ring.ty, ring.tx, 0);
       this.ring(c[0], c[1], c[2], up[0], up[1], up[2], l[0], l[1], l[2], (ring.r / PX) * size, ((ring.r * (WIDE[0] as number)) / PX) * size, SIDES, COS.trunk, SIN.trunk);
     }
-    bend(p.head, p.headPitch, p.headYaw);
+    bend(p.head, p.headPitch, p.headYaw, p.rise);
     // The ring keeps its top as the neck bends: carried along the curve from the shoulder, never spun about it.
     let ux = (torso[TORSO_RINGS - 1] as (typeof torso)[number]).ty;
     let uy = (torso[TORSO_RINGS - 1] as (typeof torso)[number]).tx;

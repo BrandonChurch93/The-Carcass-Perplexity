@@ -50,9 +50,9 @@ const ROOKERY = 130;
 /** Those of them nearest the colony's lens that are bodies while its shot runs: the rest, and all of them in every other shot, are sheets. */
 const ROOSTING = 84;
 /** And those put down beside them on the same ledges. */
-const MATES = 136;
+const MATES = 116;
 /** Whether the crouched bodies of the colony are drawn in place of its nearest sheets: not until they sit right. */
-const ROOSTED: boolean = false;
+const ROOSTED: boolean = true;
 /** Which of them, counted from the colony's lens, are the large ones with their sails part open: not neighbours. */
 const LARGE = [0, 3, 7, 12];
 const SKEIN = 22;
@@ -707,12 +707,13 @@ export function create(ctx: Context): Piece {
   const roostOrder = sitters.map((s, i) => ({ i, d: s.d % 1000 })).sort((a, b) => a.d - b.d).slice(0, ROOSTING);
   const seated = (sx: number, sy: number, sz: number, size: number, seed: number, stance: Stance): Roosting => {
     const k = (seed * 977) % 1;
-    // It sits along its ledge, one way or the other, its breast turned a little out to the open air.
-    const angle = Math.atan2(sz - COLONY.z, sx - COLONY.x);
+    // Staged for the colony's lens: it stands side on to it, one way or the other, turned up to a third of a quarter toward it or away.
+    // One that stands breast on to the lens is a pale post.
+    const toEye = Math.atan2(colonyEye[0] - sx, colonyEye[2] - sz);
     const way = Math.floor(seed * 1000) % 2 === 1 ? 1 : -1;
-    const turned = 0.15 + 0.6 * ((seed * 331) % 1);
-    const fx = -Math.sin(angle) * way * Math.cos(turned) + Math.cos(angle) * Math.sin(turned);
-    const fz = Math.cos(angle) * way * Math.cos(turned) + Math.sin(angle) * Math.sin(turned);
+    const turned = toEye + way * (Math.PI / 2 + 1.1 * (((seed * 331) % 1) - 0.5));
+    const fx = Math.sin(turned);
+    const fz = Math.cos(turned);
     const yaw = Math.atan2(fx, fz);
     const seat = SEAT[stance] as (typeof SEAT)[number];
     const y = ledgeUnder(sx, sz, sy);
@@ -730,52 +731,45 @@ export function create(ctx: Context): Piece {
     }) as [[number, number, number], [number, number, number]];
     return { x: sx, y, z: sz, yaw, size, seed, stance, feet };
   };
-  const roosts: Roosting[] = roostOrder.map(({ i }) => {
+  // No two stand in one another: where the sheets were set close as a clump, one body takes the place of both.
+  const apart = (x: number, y: number, z: number, size: number): boolean => !roosts.some((o) => Math.hypot(o.x - x, o.z - z) < 1.3 * (o.size + size) + 0.3 && Math.abs(o.y - y) < 1.9);
+  const roosts: Roosting[] = [];
+  for (const { i } of roostOrder) {
     const s = sitters[i] as Sitter;
     const k = (s.seed * 977) % 1;
-    // Few stand: a colony at rest is down on its nests.
-    const stance: Stance = LARGE.includes(i) ? (i % 2 === 0 ? 2 : 0) : s.stands ? (k < 0.5 ? 2 : 0) : s.low ? (k < 0.45 ? 1 : 0) : k < 0.2 ? 1 : 0;
-    return seated(s.x, s.y, s.z, s.size * (LARGE.includes(i) ? 0.8 : 0.66), s.seed, stance);
-  });
-  // The ledges nearest the colony's lens are packed: beside each sitter another is down on its nest where the same ledge has room, and on
-  // the ledge over it and the ledge under it, and beside those in their turn.
-  const room = (x: number, y: number, z: number, size: number): boolean =>
-    !roosts.some((o) => Math.hypot(o.x - x, o.z - z) < 0.72 * (o.size + size) + 0.5 && Math.abs(o.y - y) < 1.5) &&
-    // And only where the ledge is deep enough to hold it: one put on a narrow step hangs on the face.
-    Math.abs(ledgeUnder(x + ((x - COLONY.x) / Math.hypot(x - COLONY.x, z - COLONY.z)) * 0.4 * size, z + ((z - COLONY.z) / Math.hypot(x - COLONY.x, z - COLONY.z)) * 0.4 * size, y) - y) < 0.16;
+    const size = s.size * (LARGE.includes(i) ? 0.8 : 0.52 + 0.3 * ((s.seed * 389) % 1));
+    if (!apart(s.x, s.y, s.z, size)) continue;
+    // Most stand hunched with the neck arched over; some are down on the ledge with the neck up; a few stand tall with their sails part open.
+    const stance: Stance = LARGE.includes(i) ? (i % 2 === 0 ? 2 : 0) : k < 0.52 ? 0 : k < 0.84 ? 1 : 2;
+    roosts.push(seated(s.x, s.y, s.z, size, s.seed, stance));
+  }
+  // The ledges nearest the colony's lens are packed: beside each sitter others stand, and on the ledges over it and under it, and beside
+  // those in their turn.
   for (let j = 0; j < roosts.length && roosts.length < ROOSTING + MATES; j++) {
     const by = roosts[j] as Roosting;
-    if (Math.hypot(by.x - colonyEye[0], by.y - colonyEye[1], by.z - colonyEye[2]) > 60) continue;
+    if (Math.hypot(by.x - colonyEye[0], by.y - colonyEye[1], by.z - colonyEye[2]) > 90) continue;
     const angle = Math.atan2(by.z - COLONY.z, by.x - COLONY.x);
-    const ca = Math.cos(angle);
-    const sa = Math.sin(angle);
-    for (let n = 0; n < 4 && roosts.length < ROOSTING + MATES; n++) {
+    const reach = Math.hypot(by.x - COLONY.x, by.z - COLONY.z);
+    for (let n = 0; n < 6 && roosts.length < ROOSTING + MATES; n++) {
       const seed = (by.seed * 7.13 + 0.37 * (n + 1)) % 1;
-      const size = by.size * (0.74 + 0.3 * ((seed * 53) % 1)) * (by.size > 1.5 ? 0.85 : 1);
-      const stance: Stance = (seed * 977) % 1 < 0.5 ? 1 : (seed * 977) % 1 < 0.9 ? 0 : 2;
-      if (n < 2) {
-        const along = (n === 0 ? 1 : -1) * (1.2 + 0.7 * ((seed * 211) % 1)) * by.size;
-        const inward = (((seed * 131) % 1) - 0.35) * 0.5 * by.size;
-        const x = by.x - sa * along - ca * inward;
-        const z = by.z + ca * along - sa * inward;
-        if (Math.abs(ledgeUnder(x, z, by.y) - by.y) > 0.16 || !room(x, by.y, z, size)) continue;
-        roosts.push(seated(x, by.y, z, size, seed, stance));
-        continue;
-      }
-      // Up the crag or down it: to where the rock next stands a step higher or lower, and a little way onto that ledge.
-      const up = n === 2;
-      const slip = (((seed * 311) % 1) - 0.5) * 1.6 * by.size;
-      for (let d = 0.2; d < 3.4; d += 0.2) {
-        const out = up ? -d : d;
-        const x = by.x + ca * out - sa * slip;
-        const z = by.z + sa * out + ca * slip;
-        const rock = ledgeUnder(x, z, by.y + 3);
-        if (up ? rock < by.y + 0.6 : rock > by.y - 0.6) continue;
-        const on = (up ? -0.4 : 0.9) * size;
-        const x2 = x + ca * on;
-        const z2 = z + sa * on;
-        const y2 = ledgeUnder(x2, z2, rock + (up ? 0.6 : 0));
-        if (Math.abs(y2 - rock) < 0.35 && Math.abs(y2 - by.y) < 4 && room(x2, y2, z2, size)) roosts.push(seated(x2, y2, z2, size, seed, stance));
+      const size = by.size * (0.7 + 0.42 * ((seed * 53) % 1)) * (by.size > 1.5 ? 0.8 : 1);
+      const stance: Stance = (seed * 977) % 1 < 0.5 ? 0 : (seed * 977) % 1 < 0.86 ? 1 : 2;
+      // Along the crag one way or the other, on its own ledge or one a step or two up or down: at the ledge's edge, where the lens under
+      // it sees it whole, and only where the ledge is deep enough to stand on and open over it.
+      const along = (n % 2 === 0 ? 1 : -1) * (1.3 * (by.size + size) + 0.35 + 1.6 * ((seed * 211) % 1) * by.size);
+      const lift = ([0, 0, 1.5, -1.3, 2.9, -2.5][n] as number) + 0.8 * (((seed * 311) % 1) - 0.5);
+      const a2 = angle + along / Math.max(reach, 1);
+      const row0 = Math.round((by.y + lift) / CRAG.row);
+      for (const dj of [0, 1, -1, 2, -2, 3, -3]) {
+        const y = (row0 + dj) * CRAG.row;
+        const edge = COLONY.cragAt(a2, y);
+        const r = edge - 0.3 * size;
+        let open = true;
+        for (let k = 1; k <= 5 && open; k++) open = COLONY.cragAt(a2, y + k * CRAG.row) < r - 0.15 * size;
+        if (!open) continue;
+        const x = COLONY.x + Math.cos(a2) * r;
+        const z = COLONY.z + Math.sin(a2) * r;
+        if (apart(x, y, z, size)) roosts.push(seated(x, y, z, size, seed, stance));
         break;
       }
     }
@@ -1448,7 +1442,8 @@ export function create(ctx: Context): Piece {
         colonyFigures.put(i, fig);
       }
       roostBodies.draw(roost ? roosts.length : 0);
-      mats.draw(roost);
+      // The nest mats are not drawn until they read as nests.
+      mats.draw(false);
       if (roost) {
         for (let i = 0; i < roosts.length; i++) {
           roostPose(R, roosts[i] as Roosting, seconds, { wave, held: heldAt }, WIND.to);
