@@ -185,7 +185,7 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under,
   float level = poolLevel(p, surge, wells, west);
   float top = level + 12.0 * (n.x - 0.6) + 7.0 * (n.w - 0.5);
   under = top - p.y;
-  float pool = (0.24 + 0.04 * surge) * layerMean(top, 1.6 - 0.8 * west + 2.5 * surge, p.y, hy) * mix(0.4, 1.0, west);
+  float pool = (0.24 + 0.04 * surge) * layerMean(top, 1.6 + 0.9 * west + 2.5 * surge, p.y, hy) * mix(0.4, 1.0, west);
   core = (0.12 + 0.5 * smoothstep(0.7, 0.4, 0.55 * n.x + 0.45 * n.w)) * smoothstep(-1.0, 1.0, under);
   // The columns climb from the pool's top over the wells: billows with an edge and clear air between them, fewer the higher they have climbed.
   float h = -under;
@@ -338,7 +338,9 @@ void main() {
       float dl = (t1 - t0) / ${STEPS}.0;
       // A step that runs level still crosses heaps that stand up beside it: it is weighed as if it spanned some height, so the top of a heap
       // comes in over a step and not at one.
-      float hy = 0.5 * dl * max(abs(rd.y), 0.6);
+      // It is weighed over its whole length, however level it runs: at less, each step met a heap's side at an edge, and near the lens the
+      // heaps were stacked scallops, one for a step.
+      float hy = 0.5 * dl;
       float first = fract(0.1 * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) + float(uSampleIndex) * 0.6180339);
       // What the march gathers stands apart until its end: its grain is cut into it there, once, at the depth where most of it lies.
       vec3 lit = vec3(0.0);
