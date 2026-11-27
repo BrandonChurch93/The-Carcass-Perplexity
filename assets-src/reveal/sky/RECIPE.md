@@ -39,7 +39,7 @@ y -820 to 3961.25). Where the weather stands:
 Made by: `assets-src/reveal/sky/make_banks.py` (Python 3 with numpy, scipy and Pillow), committed here
 From: `public/assets/reveal/land/relief-a.png` (blue: the height of the land on its widest map)
 Prompt or command: `python3 assets-src/reveal/sky/make_banks.py`, from the root of the repo; no model and no prompt; the only noise is of a fixed seed
-Takes: 10 made (three in the first wave; in the second: the deck and the pools as lines, which read as white sausages; the pools as patches filled to a level; the ice in wide swaths; the ice in narrow swaths; no pools on the coasts and a deck broken finer, which left almost no deck; two more for how full the deck stands); the tenth is kept
+Takes: 11 made (the eleventh is the tenth's script run again on the land's relief of its second version in this wave, nothing else changed; three in the first wave; in the second: the deck and the pools as lines, which read as white sausages; the pools as patches filled to a level; the ice in wide swaths; the ice in narrow swaths; no pools on the coasts and a deck broken finer, which left almost no deck; two more for how full the deck stands); the tenth is kept
 Why this one: the deck stands at the level where the place draws scattered cells, closing to clumps in its middle, so no patch ends on its outline; the stratus is pooled inland only; the ice lies in narrow swaths that cross the ranges and not along the spine
 Date: 2026-11-27
 
@@ -55,6 +55,7 @@ Used by: `src/places/reveal/shared/weather.ts` (`bankDepth`, `fogDepth`, `highDe
   fills each pool to a low level against the land's own relief (`land/relief-a.png`, read only), so only the valley floors
   fill and the edge of the stratus is the branching of the valley it lies in.
 - blue: ice. Five narrow swaths that cross the ranges at an angle unlike their own, where the high ice is drawn out in streaks.
+  (Nothing reads it now: at the size of the frame the swaths were straight parallel hairlines, and they were taken out of the place.)
   (Up to the second wave this channel held a pooled haze that nothing read.)
 
 ### What is read as data
