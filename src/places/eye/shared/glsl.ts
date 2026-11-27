@@ -66,8 +66,8 @@ vec4 pebbleAt(vec2 x) {
 // The shingle of the shore at xz, stone by stone: its colour and, in a, the dome of the stone (0 in the grit). xs is the same ground counted
 // in fist-sized stones, lean the way each dome turns its face, tall the metres the stone stands above the grit. Four sizes lie on one
 // another, the large ones fewest, and a size smaller than the pixel that looks at it is left out. One shore above the water and under it.
-vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean, out float tall) {
-  float foot = length(fwidth(xs));
+// foot is length(fwidth(xs)), taken at the top of main: a derivative under a branch does not repeat from render to render.
+vec4 shingleFoot(vec2 xz, vec2 xs, float foot, out vec2 lean, out float tall) {
   // Beds of larger and smaller stone.
   float bed = vnoise(xz / 1.9 + 11.0);
   float dome = 0.0;
@@ -100,6 +100,10 @@ vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean, out float tall) {
   lean = -to * (2.4 * (1.0 - dome) * step(0.01, dome) + 0.9 * dome);
   return vec4(mix(grit, shade, step(0.001, dome)), dome);
 }
+// The old name. Only at the top of main, before any branch.
+vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean, out float tall) {
+  return shingleFoot(xz, xs, length(fwidth(xs)), lean, tall);
+}
 `;
 
 export const RIG_UNIFORMS_GLSL = /* glsl */ `
@@ -128,6 +132,9 @@ uniform vec2 uPlateShade;
 // which that is done: the last sun is on the upper ledges only. uPlateSoft: mip levels the picture is softened by.
 uniform vec4 uPlateAir;
 uniform float uPlateSoft;
+// How many times taller than it stands the wall of the picture lies in the water: water that is never quite still draws a far bright
+// wall out toward the eye. 1 is a true mirror.
+uniform float uPlateDraw;
 // One or two thin streaks of high cloud in the sky of the picture, still in the sun when the ground is not. Each: where its middle lies
 // in the picture (tan across from the middle, tan up from the waterline), its half length (tan), and its tilt. uCirrus.x and .y: how
 // much of each shows, 0 for none.
@@ -148,6 +155,8 @@ uniform vec4 uMistA;
 uniform vec4 uMistB;
 uniform vec4 uMistC;
 uniform vec4 uMistD;
+// How much of the sky's light the mist of the shot stands in: under a near wall less than out on the open water.
+uniform float uMistTone;
 uniform float uMistOn;`;
 
 export const RIG_GLSL = /* glsl */ `
@@ -182,6 +191,18 @@ vec3 skyIrradiance(vec3 n);
 // The bank of mist at the foot of the far wall as a mirror holds it: a ray that leaves the water low ends in it. along is metres along the
 // far shore and up is metres over the water where the ray meets the wall. The march of the air is told here in one look: the same heaps
 // at the same places, summed through the depth of the bank by rule. rgb is its light and a how much of the wall it hides.
+// The light of the sky in the mist. The bank lies in the shade of the rim, so most of it is the cool light from overhead and only a
+// little is the warm low sky behind it.
+vec3 mistSkyLight(vec3 low) {
+  return uMistTone * (0.34 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(0.84, 0.95, 1.12) + 0.09 * low);
+}
+
+// How high on the far shore a mirror at ro would read if the water lay still: the mist is soft and stands low, so the water gives it
+// back where a flat mirror would, under the waterline as far as it stands over it, however the ripples draw out the wall behind it.
+float stillUp(vec3 ro, vec3 rd, float t) {
+  return ro.y + max(cameraPosition.y - ro.y, 0.0) / max(length(ro.xz - cameraPosition.xz), 1.0) * t * length(rd.xz);
+}
+
 vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   if (uMistOn <= 0.0 || uMistA.x <= 0.0) return vec4(0.0);
   vec4 big = texture(tMistNoise, vec3(along / 1300.0, 60.0 / 1300.0, uTime * 0.0042));
@@ -190,19 +211,22 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   if (uMistC.y > 0.0) cover *= smoothstep(uMistC.y, 0.3 * uMistC.y, abs(along - uMistC.x));
   float sheetTop = uMistA.y * (0.35 + 1.5 * mid.g);
   float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
+  stands = mix(stands, 1.0, 0.6);
+  cover = mix(cover, 1.0, 0.5);
   float top = uMistA.z * stands * (0.35 + 1.5 * mid.r) + sheetTop;
   vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
   float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
   // A bank that is not torn stands in the mirror as one soft bank, not as a row of heaps.
-  heap = mix(1.0, heap, uMistB.z);
+  // And water that is never quite flat gives back no single heap: in the mirror the bank is nearly whole, with a soft top.
+  heap = mix(1.0, heap, 0.3 * uMistB.z);
   float h = up / (top * heap);
-  float bank = uMistB.y * cover * stands * mix(1.0, smoothstep(0.2, 0.9, heap), uMistB.z) * 0.45 * uMistA.w * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
+  float bank = uMistB.y * cover * stands * 0.6 * min(uMistA.w, 320.0) * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
   float sheet = uMistB.x * cover * min(sheetTop / max(rd.y, 1e-3), 0.5 * uMistA.x) * exp(-up / max(sheetTop, 0.05));
   float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * uMistC.w * (1.0 - uSolo);
   float toSun = dot(rd, uSunDir);
   float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
-  vec3 lit = 0.36 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.4 * skyRadiance(normalize(vec3(rd.x, 0.05, rd.z)))
-    + uSunColour * (0.16 * 0.8 * sun * (0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun));
+  vec3 lit = mistSkyLight(skyRadiance(normalize(vec3(rd.x, 0.05, rd.z))))
+    + uSunColour * (0.2 * 0.8 * sun * (0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun));
   return vec4(lit * (2.5 / 3.14159), a);
 }
 
@@ -219,9 +243,10 @@ float cirrus(vec2 xy, vec4 c) {
   return body * pow(1.0 - along * along, 1.5) * smoothstep(0.22, 0.62, 0.7 * fibre.g + 0.5 * lie.b);
 }
 
-vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
-  vec3 sky = skyRadiance(rd);
-  if (uPlateTone.w < 0.5) return sky;
+// Where a ray meets the picture of the far world. xy: the picture's u and v there, z: the bearing folded into the picture's field,
+// w: metres along the ray. No texture is read and no derivative taken: it may be called anywhere.
+vec4 plateAt(vec3 ro, vec3 rd) {
+  if (uPlateTone.w < 0.5) return vec4(0.0);
   vec2 o = ro.xz - uPlateAt.xz;
   vec2 d = rd.xz;
   float a = max(dot(d, d), 1e-6);
@@ -234,19 +259,52 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   float halfField = atan(uPlateLens.y);
   float k = az / halfField;
   float phi = (1.0 - abs(mod(k + 1.0, 4.0) - 2.0)) * halfField;
-  float u = 0.5 + 0.5 * tan(phi) / uPlateLens.y;
-  float v = uPlateLens.w + 0.5 * (q.y / (uPlateAt.w * cos(phi))) / uPlateLens.z;
-  // Above a picture of a wall alone (w is 2) a mirror still holds rock, the wall told over again, dimmed toward the slate of the dusk over the rim.
+  return vec4(0.5 + 0.5 * tan(phi) / uPlateLens.y, uPlateLens.w + 0.5 * (q.y / (uPlateAt.w * cos(phi))) / uPlateLens.z, phi, t);
+}
+vec2 plateUv(vec3 ro, vec3 rd) {
+  return plateAt(ro, rd).xy;
+}
+
+// farRadianceAt is the one body: it takes what plateAt(ro, rd) gave as well, for a caller that already holds it.
+// The far world along a ray, with the screen gradients of plateUv(ro, rd) handed in: gx = dFdx(uv), gy = dFdy(uv), both taken at the
+// top of main before any branch. Nothing in here takes a derivative or reads a mipmapped picture at an implicit level, so it may be
+// called under a branch, in a loop or after a discard and repeats from render to render. bias softens it by that many mip levels.
+vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
+  vec3 sky = skyRadiance(rd);
+  if (uPlateTone.w < 0.5) return sky;
+  float u = at.x;
+  float v = at.y;
+  float phi = at.z;
+  float t = at.w;
+  vec3 q = ro + rd * t - uPlateAt.xyz;
+  if (bias > 0.0 && uPlateDraw > 1.0 && v > uPlateLens.w) {
+    v = uPlateLens.w + (v - uPlateLens.w) / uPlateDraw;
+    gx.y /= uPlateDraw;
+    gy.y /= uPlateDraw;
+  }
   bool tall = uPlateTone.w > 1.5 && bias > 0.0;
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
   // The water at the far shore holds the foot of the wall nearly as it stands; the higher on the wall a mirror reads, the more it is drawn out.
   float drawn = tall ? smoothstep(0.015, 0.22, v - uPlateLens.w) : 0.0;
-  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + uPlateSoft + 2.5 * over + 2.0 * drawn).rgb) * uPlateTone.rgb;
+  // The footprint follows what is read: half as tall where a tall wall is folded back on itself, and level where the picture's edge is held.
+  float held = (vv < 0.004 || vv > 0.996) ? 0.0 : (tall && v > 0.95 ? 0.495 : 1.0);
+  gx.y *= held;
+  gy.y *= held;
+  // The level of the picture a pixel's footprint asks for, worked out here and read with textureLod: the renderer's own textureGrad
+  // costs a second a frame more. As the card does with a filter of two taps, the long side of the footprint may be twice the short.
+  vec2 size = vec2(textureSize(tPlate, 0));
+  vec2 fx = gx * size;
+  vec2 fy = gy * size;
+  float fa = dot(fx, fx);
+  float fb = dot(fy, fy);
+  float level = 0.5 * log2(max(max(min(fa, fb), 0.25 * max(fa, fb)), 1e-8));
+  vec3 plate = ungrade(textureLod(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), level + bias + uPlateSoft + 2.5 * over + 2.0 * drawn).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
   if (tall) {
-    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), bias + 3.2 * drawn + 2.5 * over).rgb)
-      + ungrade(texture2D(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), bias + 3.2 * drawn + 2.5 * over).rgb));
+    float wider = level + bias + 3.2 * drawn + 2.5 * over;
+    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(textureLod(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), wider).rgb)
+      + ungrade(textureLod(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), wider).rgb));
   }
   // The low sun comes through thin high cloud: what it lights on the far wall swells and fades a little where it stands, the shade never.
   float lit = smoothstep(0.2, 0.4, (plate.r - plate.b) / max(plate.r + plate.b, 1e-3));
@@ -285,13 +343,31 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
       vec3 slate = skyRadiance(normalize(vec3(rd.x, max(rd.y, 0.35), rd.z))) * mix(0.62, 0.26, smoothstep(0.03, 0.3, rd.y));
       float lum = dot(plate, vec3(0.3, 0.5, 0.2));
       plate = mix(plate, slate, over * (1.0 - 0.75 * smoothstep(0.5, 1.6, lum / max(dot(slate, vec3(0.33)), 1e-3) * 0.25)));
-      vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, ro.y + rd.y * t, plate);
+      vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, stillUp(ro, rd, t), plate);
       return mix(plate, bank.rgb, bank.a);
     }
-    vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, ro.y + rd.y * t, plate);
+    vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, stillUp(ro, rd, t), plate);
     return mix(mix(plate, sky, smoothstep(0.9, 0.995, v)), bank.rgb, bank.a);
   }
   return mix(plate, sky, smoothstep(0.9, 0.995, v));
+}
+
+vec3 farRadianceGrad(vec3 ro, vec3 rd, float bias, vec2 gx, vec2 gy) {
+  return farRadianceAt(ro, rd, bias, plateAt(ro, rd), gx, gy);
+}
+
+// The same for a look that does not follow the screen (the mist asking what light the wall's foot stands in): the footprint is one
+// texel of the picture, softened by bias levels as in farRadiance. Safe under a branch, and the same at every size of frame.
+vec3 farRadianceLevel(vec3 ro, vec3 rd, float bias) {
+  vec2 texel = 1.0 / vec2(textureSize(tPlate, 0));
+  return farRadianceGrad(ro, rd, bias, vec2(texel.x, 0.0), vec2(0.0, texel.y));
+}
+
+// The old name: it takes the gradients itself, so it is only for the top of main, before any branch, loop or discard.
+// Under a branch the derivative of a pixel that did not take the branch is whatever was left in memory, and the frame does not repeat.
+vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
+  vec4 at = plateAt(ro, rd);
+  return farRadianceAt(ro, rd, bias, at, dFdx(at.xy), dFdy(at.xy));
 }
 
 // Metres along a ray to the picture of the far world.

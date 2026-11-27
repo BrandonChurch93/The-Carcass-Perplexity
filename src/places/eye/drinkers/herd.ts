@@ -3,7 +3,7 @@
 import { KEYS, SHORE_HEADING } from '../cameras';
 import { DEG, at, shoreAt } from '../layout';
 import type { Rng } from '../../../core/rng';
-import { restHoof, type Build, type Hoof, type Pose, type V3 } from './skeleton';
+import { restHoof, standing, type Build, type Hoof, type Pose, type V3 } from './skeleton';
 
 export interface Drinker {
   x: number;
@@ -21,8 +21,16 @@ export interface Drinker {
   wideOnly?: boolean;
   /** The level its feet stand at, where that is not the ground under it. */
   level?: number;
+  /** How deep it wades at most, in its own sizes, where that is not WADE. */
+  wade?: number;
   /** When something ahead of it takes its whole attention: from then it looks nowhere else. */
   alert?: number;
+  /** How far it gives ground when that takes it, in its own sizes: it steps back, one hoof after another. */
+  gives?: number;
+  /** It walks: its own sizes a second, the way it faces. It is where it is placed at the key of the wide shot. */
+  walks?: number;
+  /** It lies on the gravel with its legs folded under it. */
+  lies?: boolean;
   /** A number of its own, 0 to 1: its coat, its clocks. */
   own: number;
   /** Seconds between the steps of one leg, about. */
@@ -34,9 +42,18 @@ export interface Drinker {
 /** Seconds into the place at the keys of the shore shot (frame 9003) and of the mats shot (frame 8600), at 60 frames a second. */
 const SHORE_KEY = (9003 - 8305) / 60;
 const MATS_KEY = (8600 - 8305) / 60;
+/** And at the key of the wide shot (frame 8412). */
+const WIDE_KEY = (8412 - 8305) / 60;
+/** The first of the list are the animals the close shots are about; the herd of the wide shot follows them. */
+export const CLOSE_COUNT = 9;
+/** A walk: the part of its stride a hoof stands, and how far the body passes over it meanwhile, in the animal's sizes. */
+const STANCE = 0.68;
+const STRIDE = 0.44;
 
 /** How deep they wade: the bed they stand on is never further under the water than this, metres. */
 export const WADE = -0.34;
+/** How deep this one wades at most, in the world. */
+export const wadeOf = (d: { wade?: number; build: { size: number } }): number => (d.wade ?? WADE) * d.build.size;
 
 const hash = (n: number): number => {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -60,6 +77,9 @@ const build = (size: number, own: number, calf = false): Build =>
         head: 0.94 + 0.14 * hash(own * 13),
       };
 
+/** The two the last shot looks past: a small head on a long neck, as the approved picture has them. */
+const seenFromBehind = (d: Drinker, neck: number): Drinker => ({ ...d, build: { ...d.build, head: 0.6, neck, girth: 1.04, stem: 0.56 } });
+
 export function herd(rng: Rng, riseAt: number): Drinker[] {
   // One that drinks: mouth in the water and sipping, then the head comes half up and it swallows, then it stands and looks, then down again.
   // `at` is where in the period it is at the key of its shot, so the key is drawn as the approved picture has it.
@@ -73,54 +93,75 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   let count = 0;
   const one = (x: number, z: number, facing: number, size: number, down: (t: number) => number, watches: boolean, close: boolean, calf = false): Drinker => {
     const own = hash(++count * 7.31);
-    return { x, z, facing, build: build(size, own, calf), down, watches, close, own, stepEvery: 9 + 9 * hash(own * 19), key: 0 };
+    return { x, z, facing, build: build(size, own, calf), down, watches, close, own, stepEvery: 5 + 6 * hash(own * 19), key: 0 };
   };
   const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, down: (t: number) => number, watches: boolean, calf = false): Drinker =>
     one(key.position[0] + Math.sin(bearing * DEG) * distance, key.position[2] - Math.cos(bearing * DEG) * distance, facing, size, down, watches, true, calf);
   const shore = (d: Drinker): Drinker => ({ ...d, key: SHORE_KEY });
-  const mats = (d: Drinker): Drinker => ({ ...d, key: MATS_KEY });
+  // Out on the mats the bed is knee deep, and they stand on it: the lake cuts each leg half way up the cannon.
+  const mats = (d: Drinker): Drinker => ({ ...d, key: MATS_KEY, wade: -0.44 });
   const centre = KEYS.centre.position;
   const H = SHORE_HEADING;
   const list: Drinker[] = [
+    // Each of the close ones has a time of its own inside its shot: one lifts its head soon after the key, one late, one has only just come
+    // down to the water, one drinks on. The periods are short, for the shots are: five seconds, and under three.
     // The four of the shore shot: they stand off in the shallows, side on, the low sun behind them. One has its head up, a calf beside it, two drink.
     shore(from(KEYS.shore, H - 7.5, 31, H + 84, 1, up(0.3), true)),
-    shore(from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, sips(9, SHORE_KEY, 0.2), false, true)),
-    shore(from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(11, SHORE_KEY, 0.34), false)),
-    shore(from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(13, SHORE_KEY, 0.08), false)),
+    shore(from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, sips(4.6, SHORE_KEY, 0.36), false, true)),
+    shore(from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(7.5, SHORE_KEY, 0.14), false)),
+    shore(from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(6.2, SHORE_KEY, 0.27), false)),
     // The two of the last shot, below the camera with their backs to it, cut by the foot of the frame. Each lifts its head to the swell, not together.
-    { ...one(centre[0] - 1.22, centre[2] - 13.5, 6, 1.12, (t) => 0.78 - 0.46 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.83, alert: riseAt + 0.9, key: riseAt + 1.7 },
-    { ...one(centre[0] + 0.72, centre[2] - 16.5, -8, 1.0, (t) => 0.84 - 0.54 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.9, alert: riseAt + 1.15, key: riseAt + 1.7 },
-    // The ones of the mats shot: out on the shelf beyond the mats, small, side on. Both companions are down at the key.
-    mats(from(KEYS.mats, -13, 31, 80, 1, sips(10, MATS_KEY, 0.3), false)),
-    mats(from(KEYS.mats, -21, 44, 262, 1, sips(12, MATS_KEY, 0.12), false)),
-    mats(from(KEYS.mats, -17.5, 52, 96, 0.9, sips(9, MATS_KEY, 0.42), false)),
+    seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 8, 1.12, (t) => 0.8 - 0.5 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, key: riseAt + 1.7 }, 0.8),
+    seenFromBehind({ ...one(centre[0] + 1.0, centre[2] - 18.5, -8, 0.82, (t) => 0.86 - 0.62 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, key: riseAt + 1.7 }, 1.0),
+    // The ones of the mats shot. One is near, alone, side on with its head down, as the approved picture has it; two are far off behind it, one
+    // of them upright and watching.
+    mats(from(KEYS.mats, -15, 16.5, 84, 1.05, sips(5, MATS_KEY, 0.3), false)),
+    mats(from(KEYS.mats, -25, 62, 262, 1, up(1.4), true)),
+    mats(from(KEYS.mats, -21.5, 74, 96, 0.9, sips(9, MATS_KEY, 0.42), false)),
   ];
-  // The herd along the south shore, as the wide shot sees it: in the shallows and on the gravel.
-  // They stand in loose bands of two to five, some far out on the shelf, some up on the gravel: never one row along the water.
-  let band = 196;
-  let out = -10;
-  for (let i = 0; i < 26; i++) {
-    if (i % 4 === 0) {
-      band = rng.range(187, 199);
-      out = i % 8 === 0 ? rng.range(3, 12) : rng.range(-20, -1.5);
+  // The herd along the south shore, as the wide shot sees it. They are placed from that picture: loose knots of unequal number strung along the
+  // near bank between the two rocks of the foreground, most on the gravel by the water, some in the shallows, two far out on the shelf.
+  // `across` is where the knot stands across the frame at the key, and `lo` to `hi` how far up the bank from the water's edge, metres.
+  const knots: { across: number; wide: number; n: number; lo: number; hi: number }[] = [
+    { across: 0.37, wide: 0.035, n: 4, lo: -5, hi: 7 },
+    { across: 0.48, wide: 0.04, n: 4, lo: 2, hi: 13 },
+    { across: 0.565, wide: 0.01, n: 1, lo: 15, hi: 18 },
+    { across: 0.65, wide: 0.05, n: 6, lo: -11, hi: 8 },
+    { across: 0.78, wide: 0.04, n: 5, lo: -7, hi: 14 },
+    { across: 0.875, wide: 0.03, n: 4, lo: -15, hi: 1 },
+    { across: 0.55, wide: 0.12, n: 2, lo: -42, hi: -26 },
+  ];
+  let i = 0;
+  for (const knot of knots) {
+    for (let k = 0; k < knot.n; k++, i++) {
+      const across = knot.across + rng.range(-knot.wide, knot.wide);
+      // Evenly up the bank inside the knot, then shaken: no two of a knot stand at one depth, which from this camera would be one row.
+      const out = knot.lo + ((k + 0.5 + rng.range(-0.4, 0.4)) / knot.n) * (knot.hi - knot.lo);
+      const bearing = 201.6 - (across - 0.3) * 19.2 + Math.max(0, -out) * 0.035 * (across - 0.5);
+      let [x, z] = at(bearing, shoreAt(bearing) + out);
+      // None stands inside another: one that would is moved along the bank, away from the middle of its knot, until it has room.
+      for (let tries = 0; tries < 8 && list.slice(CLOSE_COUNT).some((o) => Math.hypot(o.x - x, o.z - z) < 6.5); tries++) {
+        [x, z] = at(bearing + (across < knot.across ? 0.5 : -0.5) * (tries + 1), shoreAt(bearing) + out);
+      }
+      const period = rng.range(9, 17);
+      const phase = rng.next();
+      const way = rng.next() < 0.5 ? 1 : -1;
+      const dry = out > -0.5;
+      const edge = out > -3 && out <= 0.5;
+      // A few walk along the bank, each at a pace of its own, and a few lie on the gravel. One at the edge drinks with its back to the camera.
+      const walks = i === 3 || i === 8 || i === 13 || i === 17;
+      const lies = dry && !walks && out > 4 && (i === 5 || i === 7 || i === 16 || i === 18);
+      const kind = i % 9 === 4 ? 'calf' : edge ? 'edge' : dry || i % 3 === 2 ? 'up' : i % 5 === 1 ? 'back' : 'down';
+      const facing = walks ? 18 + 90 * way + rng.range(-14, 14) : kind === 'back' || kind === 'edge' ? 18 + (hash(i * 3.1) - 0.5) * 70 : 18 + 90 * way + rng.range(-34, 34);
+      const size = rng.range(1.35, 2.1) * (kind === 'calf' ? 1.1 : 1);
+      const drinks = !walks && !lies && (kind === 'down' || kind === 'edge' || (kind === 'calf' && !dry));
+      const head = walks ? () => 0.16 + 0.1 * phase : drinks ? sips(period, 0, phase) : up(phase * 6);
+      list.push({
+        ...one(x, z, facing, size, head, !walks && !drinks, false, kind === 'calf'),
+        ...(walks ? { walks: 0.26 + 0.14 * hash(i * 5.3) } : {}),
+        ...(lies ? { lies: true } : {}),
+      });
     }
-    const dry = out > 0;
-    const bearing = band + rng.range(-1.3, 1.3);
-    const r = shoreAt(bearing) + out + rng.range(-3, 3);
-    const [x, z] = at(bearing, r);
-    const period = rng.range(9, 17);
-    const phase = rng.next();
-    const kind = i % 9 === 4 ? 'calf' : i % 5 === 1 ? 'back' : dry || i % 3 === 2 ? 'up' : 'down';
-    const way = rng.next() < 0.5 ? 1 : -1;
-    // None of the herd stands in front of the low cameras of the close shots: those have their own animals, placed for them.
-    const hidden = Math.min(...[KEYS.mats, KEYS.edge, KEYS.shore].map((k) => Math.hypot(x - k.position[0], z - k.position[2]))) < 110;
-    const facing = kind === 'back' ? 18 + (hash(i * 3.1) - 0.5) * 56 : 18 + 90 * way + rng.range(-28, 28);
-    const size = rng.range(1.35, 2.1) * (kind === 'calf' ? 1.1 : 1);
-    rng.next();
-    list.push({
-      ...one(x, z, facing, size, kind === 'up' || kind === 'back' ? up(phase * 6) : sips(period, 0, phase), kind === 'up' || kind === 'back', false, kind === 'calf'),
-      wideOnly: hidden,
-    });
   }
   return list;
 }
@@ -135,12 +176,26 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const s = b.size;
   const o = d.own;
   const bearing = d.facing * DEG;
-  const y = d.level ?? Math.max(WADE * s, ground(d.x, d.z));
   const sinB = Math.sin(bearing);
   const cosB = Math.cos(bearing);
+  // One that walks is carried along the way it faces at one speed; its hooves stand still on the ground meanwhile.
+  const gone = d.walks ? d.walks * s * (t - WIDE_KEY) : 0;
+  const px = d.x + sinB * gone;
+  const pz = d.z - cosB * gone;
+  const y = d.level ?? Math.max(wadeOf(d), ground(px, pz));
+  const stride = d.walks ? STRIDE / (STANCE * d.walks) : 1;
   const shift: V3 = [0, 0, 0];
   let roll = 0;
   const hooves: Hoof[] = [];
+  // It stands on three legs and rests the fourth, a hind one: that hock is slack and forward, the toe only touches, the hip on that side hangs
+  // and the trunk is carried over the three that bear. What takes its attention puts the leg back under it.
+  // It does not rest one leg for ever: every few seconds, each at its own time, it sets that hoof down flat, stands square a moment, and lets
+  // the other hind leg go.
+  const change = (t - d.key) / (5.5 + 3.5 * hash(o * 53)) + hash(o * 29);
+  const swapped = Math.floor(change);
+  const into = change - swapped;
+  const restLeg = Math.abs(swapped + (hash(o * 47) < 0.5 ? 0 : 1)) % 2;
+  const rests = d.walks || d.lies ? 0 : 0.8 * ease(0.07, 0.2, into) * (1 - ease(0.92, 1, into)) * (d.alert === undefined ? 1 : 1 - ease(d.alert - 0.1, d.alert + 0.3, t));
   for (let k = 0; k < 4; k++) {
     const every = d.stepEvery * (0.75 + 0.6 * hash(o * 17 + k));
     const u = (t - d.key) / every + 0.22 + 0.56 * hash(o * 31 + k * 3.7);
@@ -153,23 +208,62 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     const a = offset(m - 1);
     const c = offset(m);
     const rest = restHoof(b, k);
-    const hx = rest[0] + a[0] + (c[0] - a[0]) * e;
-    const hz = rest[2] + a[1] + (c[1] - a[1]) * e;
-    const arcUp = Math.sin(Math.PI * e);
+    let hx = rest[0] + a[0] + (c[0] - a[0]) * e;
+    let hz = rest[2] + a[1] + (c[1] - a[1]) * e;
+    let arcUp = Math.sin(Math.PI * e);
+    let weight = Math.max(ease(1.0, 0.2, until), 1 - ease(swing * 0.6, swing + 0.7, since));
+    // One that gives ground: a hind hoof goes back, then the fore hoof across from it, then the other two. The trunk goes back with them.
+    if (d.alert !== undefined && d.gives) {
+      const start = d.alert + ([1.0, 0.32, 0.62, 1.3][k] as number);
+      const g = ease(start, start + 0.42, t);
+      hz -= d.gives * s * g;
+      arcUp = Math.max(arcUp, Math.sin(Math.PI * g));
+      weight = Math.max(weight, ease(start - 0.3, start - 0.04, t) * (1 - ease(start + 0.36, start + 0.75, t)));
+      shift[2] -= 0.25 * d.gives * s * ease(start + 0.1, start + 0.7, t);
+    }
+    if (d.walks) {
+      // A walk, in the order hind left, fore left, hind right, fore right. While a hoof stands the body passes over it at the speed the animal
+      // is carried at, so the hoof stays where it was set down; then it swings forward to the next place.
+      const wu = part(t / stride + o + ([0, 0.5, 0.25, 0.75][k] as number));
+      const swung = Math.max(0, (wu - STANCE) / (1 - STANCE));
+      hx = rest[0];
+      hz = rest[2] + STRIDE * s * (wu < STANCE ? 0.5 - wu / STANCE : swung * swung * (3 - 2 * swung) - 0.5);
+      arcUp = Math.sin(Math.PI * swung);
+      weight = wu < STANCE ? Math.max(ease(STANCE - 0.1, STANCE, wu), 1 - ease(0, 0.1, wu)) : 1;
+    }
+    if (d.lies) {
+      hx = rest[0] * 0.85;
+      hz = rest[2] + (k < 2 ? 0.36 : 0.3) * s;
+      arcUp = 0;
+      weight = 0;
+    }
+    const slack = k === restLeg ? rests * (1 - arcUp) : 0;
+    weight = Math.max(weight, slack);
+    hz += 0.11 * s * slack;
     // The ground under this hoof, in the world.
-    const wx = d.x - cosB * hx + sinB * hz;
-    const wz = d.z - sinB * hx - cosB * hz;
-    const floor = d.level === undefined ? Math.max(WADE * s, ground(wx, wz)) - y : 0;
-    hooves.push({ at: [hx, floor + 0.17 * s * arcUp, hz], fold: arcUp });
+    const wx = px - cosB * hx + sinB * hz;
+    const wz = pz - sinB * hx - cosB * hz;
+    const floor = d.level === undefined ? Math.max(wadeOf(d), ground(wx, wz)) - y : 0;
+    hooves.push({ at: [hx, floor + 0.17 * s * arcUp + 0.012 * s * slack + 0.045 * s * Math.sin(Math.PI * slack / 0.8), hz], fold: d.lies ? 1 : Math.max(arcUp, 0.42 * slack) });
     // Its weight goes off the leg before the hoof leaves the ground and comes back on after it lands.
-    const weight = Math.max(ease(1.0, 0.2, until), 1 - ease(swing * 0.6, swing + 0.7, since));
     const side = k % 2 === 0 ? 1 : -1;
     const hind = k < 2;
-    shift[0] -= side * 0.06 * s * weight;
+    shift[0] -= side * 0.08 * s * weight;
     shift[2] += (hind ? 1 : -1) * 0.03 * s * weight;
     shift[1] -= 0.012 * s * weight;
-    roll += side * 0.012 * weight;
+    roll += side * (0.018 * weight + 0.075 * slack);
+    shift[1] -= 0.01 * s * slack;
+    // The hip over a leg at rest hangs, and the trunk stands over the other hind leg.
+    shift[0] -= side * 0.085 * s * slack;
   }
+  // What takes its attention sets it back on its haunches: the weight goes onto the hind legs and the croup sinks a little, then it eases.
+  const taken = d.alert === undefined ? 0 : ease(d.alert - 0.05, d.alert + 0.5, t) * (1 - 0.45 * ease(d.alert + 1.6, d.alert + 4.2, t));
+  shift[2] -= 0.075 * s * taken;
+  shift[1] -= 0.018 * s * taken;
+  // One that lies has its belly on the gravel. One that walks rises and sinks twice in a stride.
+  if (d.lies) shift[1] -= standing(b) - 0.6 * s * b.depth;
+  const tread = d.walks ? Math.cos((t / stride + o) * Math.PI * 4) : 0;
+  shift[1] += 0.012 * s * tread;
   // The neck: each joint follows the one below it a little late, the head last.
   const drive = (i: number): number => d.down(t - 0.075 * i);
   const low = Math.min(1, Math.max(0, d.down(t)));
@@ -200,17 +294,17 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const fs = (fu - Math.floor(fu)) * flickEvery;
   const tail: [number, number] = [0.05 + 0.04 * Math.sin(t * 0.7 + o * 9), 0.07 * Math.sin(t * 1.3 + o * 20) + 0.55 * Math.sin(fs * 15) * Math.exp(-fs * 3.5)];
   const breathEvery = 2.7 + 1.2 * hash(o * 83);
-  const breath = 0.022 * Math.sin((t / breathEvery + o) * Math.PI * 2);
+  const breath = 0.05 * Math.sin((t / breathEvery + o) * Math.PI * 2);
   shift[0] += 0.012 * s * Math.sin(t * 0.47 + o * 12);
   shift[2] += 0.01 * s * Math.sin(t * 0.31 + o * 25) + 0.07 * s * low;
   shift[1] += 0.004 * s * Math.sin((t / breathEvery + o) * Math.PI * 2) - 0.045 * s * low - 0.02 * s;
   return {
-    x: d.x,
+    x: px,
     y,
-    z: d.z,
+    z: pz,
     bearing,
     shift,
-    pitch: 0.05 * low + 0.004 * Math.sin(t * 0.53 + o * 7),
+    pitch: 0.05 * low + 0.004 * Math.sin(t * 0.53 + o * 7) - 0.03 * taken + 0.01 * tread,
     roll,
     yaw: 0.01 * Math.sin(t * 0.37 + o * 3),
     chest: [0.04 * neckTurn * free, 0.03 * low],

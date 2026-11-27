@@ -250,11 +250,17 @@ uniform sampler2D tWave1;
 uniform sampler2D tWave2;
 uniform float uWaveKept[${LEVELS}];
 
-// One field read twice, the second turned and a third larger, so that no tile can be found on the water.
-vec2 waveRead(sampler2D t, vec2 x, float tile, float coarser) {
-  vec2 a = texture2D(t, x / tile, coarser).rg;
+// The level of a field at which one texel of it is as wide as a pixel that covers this many metres of water.
+float waveLevel(float covers, float tile) {
+  return log2(max(covers * ${N}.0 / tile, 1e-4));
+}
+
+// One field read twice, the second turned and a third larger, so that no tile can be found on the water. The level is the caller's, from
+// waveLevel of what it measured at the top of its main: a read that took its level from the pixels beside it would not repeat under a branch.
+vec2 waveRead(sampler2D t, vec2 x, float tile, float level) {
+  vec2 a = textureLod(t, x / tile, level).rg;
   vec2 q = vec2(0.809 * x.x - 0.588 * x.y, 0.588 * x.x + 0.809 * x.y) / (tile * 1.37) + 0.37;
-  vec2 b = texture2D(t, q, coarser).rg;
+  vec2 b = textureLod(t, q, level - 0.454).rg;
   return (a + vec2(0.809 * b.x + 0.588 * b.y, -0.588 * b.x + 0.809 * b.y)) * 0.7071;
 }
 
