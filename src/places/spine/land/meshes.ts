@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
 import { EXIT, FIN_DEEP, FIN_ROOT, FIN_SECTION, FLOOR, MOUTH_S, S_MAX, S_MIN, canalInFin, canalL, fin, finAxes, first, flare, frameAt, locate, sheetAt, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
+import { FIELD_FROM, FIELD_TO, FIELD_WIDE, driftAt } from './drift';
 import { height, heightAt, landAt, slab, vnoise } from './height';
 
 interface Extra {
@@ -74,15 +75,147 @@ export function crestStrip(): THREE.BufferGeometry {
       sl.push(s, l);
     });
   }
+  // The fine field: where the wide lens stands over the crest and the dead one lies, the strip is cut out and laid again five times finer,
+  // with what drift.ts cuts into it. Its rim lies on the edges of the strip's own quads, so nothing opens between them.
+  const i0 = sList.findIndex((s) => s >= FIELD_FROM);
+  const i1 = sList.length - 1 - [...sList].reverse().findIndex((s) => s <= FIELD_TO);
+  const j0 = lList.indexOf(-FIELD_WIDE);
+  const j1 = lList.indexOf(FIELD_WIDE);
   const index: number[] = [];
   for (let i = 0; i < sList.length - 1; i++) {
     for (let j = 0; j < rows - 1; j++) {
+      if (i >= i0 && i < i1 && j >= j0 && j < j1) continue;
       const a = i * rows + j;
       const c = a + rows;
       index.push(a, a + 1, c, a + 1, c + 1, c);
     }
   }
-  return finish(pos, index, top, sl, { normals });
+  const FINE = 5;
+  const na = (i1 - i0) * FINE + 1;
+  const nb = (j1 - j0) * FINE + 1;
+  const base = pos.length / 3;
+  // (How far the snow here stands over the scoured pack, metres: the ground's shader lights the hollows less.)
+  const relief = new Array<number>(base + na * nb).fill(0);
+  const ys = new Float32Array(na * nb);
+  for (let a = 0; a < na; a++) {
+    const ci = Math.min(i1 - 1, i0 + Math.floor(a / FINE));
+    const fa = (a - (ci - i0) * FINE) / FINE;
+    const s = (sList[ci] as number) * (1 - fa) + (sList[ci + 1] as number) * fa;
+    const f = frameAt(s);
+    for (let b = 0; b < nb; b++) {
+      const cj = Math.min(j1 - 1, j0 + Math.floor(b / FINE));
+      const fb = (b - (cj - j0) * FINE) / FINE;
+      const l = (lList[cj] as number) * (1 - fb) + (lList[cj + 1] as number) * fb;
+      const rim = a === 0 || a === na - 1 || b === 0 || b === nb - 1;
+      if (rim) {
+        // On the rim: the strip's own edge, a straight line between two of its corners.
+        const p = (ci + (a === na - 1 ? 1 : 0)) * rows + cj + (b === nb - 1 ? 1 : 0);
+        const q = a === 0 || a === na - 1 ? p + (b === nb - 1 ? 0 : 1) : p + rows;
+        const k = a === 0 || a === na - 1 ? (b === nb - 1 ? 0 : fb) : fa;
+        for (let c = 0; c < 3; c++) pos.push((pos[p * 3 + c] as number) * (1 - k) + (pos[q * 3 + c] as number) * k);
+        top.push((top[p] as number) * (1 - k) + (top[q] as number) * k);
+      } else {
+        const here = landAt(s, l);
+        const x = f.x + f.nx * l;
+        const z = f.z + f.nz * l;
+        const cut = driftAt(s, l, x, z);
+        pos.push(x, here.y + cut.y, z);
+        top.push(Math.max(here.rock, cut.rock));
+        relief[base + a * nb + b] = cut.snow;
+      }
+      ys[a * nb + b] = pos[pos.length - 2] as number;
+      sl.push(s, l);
+    }
+  }
+  const DS = ((sList[i0 + 1] as number) - (sList[i0] as number)) / FINE;
+  const DL = ((lList[j0 + 1] as number) - (lList[j0] as number)) / FINE;
+  for (let a = 0; a < na; a++) {
+    const ci = Math.min(i1 - 1, i0 + Math.floor(a / FINE));
+    const fa = (a - (ci - i0) * FINE) / FINE;
+    const f = frameAt((sList[ci] as number) * (1 - fa) + (sList[ci + 1] as number) * fa);
+    for (let b = 0; b < nb; b++) {
+      const a0 = Math.max(0, a - 1);
+      const a1 = Math.min(na - 1, a + 1);
+      const b0 = Math.max(0, b - 1);
+      const b1 = Math.min(nb - 1, b + 1);
+      const ds = ((ys[a1 * nb + b] as number) - (ys[a0 * nb + b] as number)) / ((a1 - a0) * DS);
+      const dl = ((ys[a * nb + b1] as number) - (ys[a * nb + b0] as number)) / ((b1 - b0) * DL);
+      const nx = -ds * f.tx - dl * f.nx;
+      const nz = -ds * f.tz - dl * f.nz;
+      const len = Math.hypot(nx, 1, nz);
+      normals.push(nx / len, 1 / len, nz / len);
+    }
+  }
+  for (let a = 0; a < na - 1; a++) {
+    for (let b = 0; b < nb - 1; b++) {
+      const p = base + a * nb + b;
+      const c = p + nb;
+      index.push(p, p + 1, c, p + 1, c + 1, c);
+    }
+  }
+  return finish(pos, index, top, sl, { normals, relief });
+}
+
+const ease = (a: number, b: number, v: number): number => {
+  const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+/**
+ * The bed of rock where the bolt came to ground: under the dead one and out to the lens of its shot the snow is burned off, and what
+ * stands there is the rock's own broken beds. A lens that stands a hand over the ground sees no picture laid on it, only what stands
+ * up: so the beds are in the mesh, slabs of no two shapes with a riser of a hand to a span, some of them gone (slush lies there).
+ * `aTop` is 1 on a slab that stands. At its rim the bed is the ground's own snow, lying a finger over it.
+ */
+export function scorchBed(at: readonly [number, number], view: number): THREE.BufferGeometry {
+  const vx = Math.cos((view * Math.PI) / 180);
+  const vz = Math.sin((view * Math.PI) / 180);
+  const U0 = -5;
+  const U1 = 5;
+  const V0 = -4.1;
+  const V1 = 3.6;
+  const DU = 0.03;
+  const DV = 0.025;
+  const cols = Math.round((U1 - U0) / DU) + 1;
+  const rows = Math.round((V1 - V0) / DV) + 1;
+  const pos: number[] = [];
+  const top: number[] = [];
+  const sl: number[] = [];
+  for (let j = 0; j < rows; j++) {
+    const v = V0 + j * DV;
+    for (let i = 0; i < cols; i++) {
+      const u = U0 + i * DU;
+      const x = at[0] + vx * v - vz * u;
+      const z = at[1] + vz * v + vx * u;
+      const rag = 0.5 * (vnoise(u * 0.7 + 3.1, v * 0.7 + 8.3) - 0.5);
+      // (Full under the lens of the shot, which stands 2.9 m back from the middle, and low right at it.)
+      const inside = ease(0, 1, (Math.min(u - U0, U1 - u, v - V0, V1 - v) + rag) / 0.8) * (0.3 + 0.7 * ease(0.3, 1.1, Math.hypot(u, v + 2.9)));
+      // The beds strike across the view, a little turned.
+      const p = 0.82 * u + 0.57 * v;
+      const q = -0.57 * u + 0.82 * v;
+      const big = slab(p, q, 0.95, 0.6, 31, 0.06);
+      const small = slab(p + 0.2 * q, q, 0.33, 0.21, 37, 0.02);
+      const stands = big > -0.18 ? 1 : 0;
+      // Under the dead one they lie low: it rests on the layout's ground.
+      const low = 0.15 + 0.85 * ease(0.9, 2.1, Math.abs(v - 0.2));
+      const h = stands * low * (0.03 + 0.085 * (big + 0.18) + 0.022 * (small + 0.4)) + 0.008 * (vnoise(u * 11.3, v * 11.3) - 0.5);
+      pos.push(x, height(x, z) + 0.03 + inside * Math.max(0, h), z);
+      top.push(stands * Math.min(1, 3 * inside));
+      const here = locate(x, z);
+      sl.push(here.s, here.l);
+    }
+  }
+  const index: number[] = [];
+  for (let j = 0; j < rows - 1; j++) {
+    for (let i = 0; i < cols - 1; i++) {
+      const a = j * cols + i;
+      index.push(a, a + 1, a + cols, a + 1, a + cols + 1, a + cols);
+    }
+  }
+  // Every point looks straight up: the shader gives a riser its own triangle's face, so a slab's edge is as hard as the mesh.
+  const normals: number[] = [];
+  for (let i = 0; i < rows * cols; i++) normals.push(0, 1, 0);
+  return finish(pos, index, top, sl, { normals, relief: new Array<number>(rows * cols).fill(100) });
 }
 
 /** The flanks: the same ground, coarse, from the strip down under the cloud on every side. */
