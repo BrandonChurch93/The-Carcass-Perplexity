@@ -19,8 +19,6 @@ const TEAR_GAIN = 1.6;
 const ASH_ON_HIDE: [number, number, number] = [0.27, 0.205, 0.135];
 /** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
 const FAR = 150;
-/** Beyond this the thin skin round the heap is the lake's own crust, seen through the sheet. */
-const AFAR = 42;
 
 /** The settling, at film frame 3740, in the last third of the push of shot heart-04, in the seconds of the place. A slab of the
  *  folded skin beside the split breaks off along a ragged line and tilts in; the face of the break shows the hot inside of
@@ -278,6 +276,9 @@ export function create(ctx: HeartContext): HeartPiece {
     const staged = stagedSeconds();
     const nearShot = staged >= NEAR_SHOT.from && staged <= NEAR_SHOT.to;
     shared.uLift.value = nearShot ? LIFT : WIDE_LIFT;
+    // Outside its own shot the thin skin round the heap is the lake's own crust, seen through the sheet: one choice a shot, so nothing
+    // comes or goes while the lens moves.
+    fine.material = coarse.material = nearShot ? fieldMaterial : afarMaterial;
     // From the wide view the smoke of the split gathered into a pale ball beside the hull: there it is thin.
     const smoky = nearShot ? 1 : 0.25;
     const now = settling(seconds);
@@ -327,7 +328,6 @@ export function create(ctx: HeartContext): HeartPiece {
       const close = away < FAR;
       near.visible = close;
       far.visible = !close;
-      fine.material = coarse.material = away < AFAR ? fieldMaterial : afarMaterial;
     },
     dispose: () => {
       for (const m of meshes) m.geometry.dispose();

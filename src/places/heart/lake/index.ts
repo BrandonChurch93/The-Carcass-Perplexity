@@ -7,7 +7,7 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { SEAMS, SUNK, UNIT } from '../shared/anchors';
-import { NET, NET_FINE, POOL, RIDGES, bakeNet } from './net';
+import { LINE_BEND_GLSL, NET, NET_FINE, POOL, RIDGES, bakeNet } from './net';
 import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
 import { createLava } from './lava';
@@ -355,6 +355,7 @@ float groupFar(vec2 q) {
 }
 // Metres from the middle of the channel at the line (the same crooked line the net lays down), and which way is away from it.
 uniform vec4 uLineSeam;
+${LINE_BEND_GLSL}
 vec2 gLineAway;
 // How far along the channel at the line the point lies, 0 where it leaves the shore to 1 past the lens of key heart-1.
 float gLineT = 0.0;
@@ -363,7 +364,7 @@ float lineFar(vec2 q) {
   vec2 ab = uLineSeam.zw - uLineSeam.xy;
   float l = length(ab);
   float t = clamp(dot(q - uLineSeam.xy, ab) / (l * l), 0.0, 1.0);
-  float k = 0.9 * (sin(t * 9.0 + 2.1) + 0.6 * sin(t * 23.0 + 6.3)) * sin(3.14159 * t);
+  float k = 0.9 * (sin(t * 9.0 + 2.1) + 0.6 * sin(t * 23.0 + 6.3)) * sin(3.14159 * t) + lineBend(t);
   vec2 d = q - uLineSeam.xy - ab * t - vec2(-ab.y, ab.x) / l * k;
   float far = length(d);
   gLineAway = d / max(far, 1e-3);
@@ -903,8 +904,12 @@ void main() {
   vec2 xz = vWorld.xz;
   float shore = landAt(xz).b;
   vec2 q = xz - vDrift;
-  vec4 heat = heatAt(q, -shore, netAt(q), 1.0 / uGlowTexels);
-  gl_FragColor = vec4(blackbody(heat.y) * heat.x, 1.0);
+  vec4 net = netAt(q);
+  vec4 heat = heatAt(q, -shore, net, 1.0 / uGlowTexels);
+  // The channel at the line is drawn wider than its seam was, with pools, and nearer its bank: what it gives the rig is what
+  // the narrower one gave.
+  float onLine = step(1.5, net.g) * (1.0 - smoothstep(0.01, 0.04, net.g - 2.0));
+  gl_FragColor = vec4(blackbody(heat.y) * heat.x * mix(1.0, 0.4, onLine), 1.0);
   if (shore > 1.5) discard;
 }`;
 

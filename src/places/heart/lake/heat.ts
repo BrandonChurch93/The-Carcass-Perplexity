@@ -159,12 +159,12 @@ float bankAt(vec2 q, vec4 n) {
 }
 
 // The height of the melt in the gap of a seam the pictures show, metres (the brim is zero). One level for a seam, so the liquid
-// lies level. The channel at the line and its fingers lie in a trench, 0.3 m down: the near bank hides the near edge of the melt
+// lies level. The channel at the line and its fingers lie in a shallow trench, 0.17 m down: the near bank hides the near edge of the melt
 // and the far bank stands over it as a wall. The other gaps are nearly full: the long seam of the group at 0.045 m, the narrow
 // near seams highest (0.08 m), the fountain lines at 0.2 m.
 float meltLevel(vec4 n) {
   float c = n.g - 2.0;
-  float level = mix(mix(mix(0.3, 0.1, smoothstep(0.01, 0.04, c)), 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
+  float level = mix(mix(mix(0.17, 0.1, smoothstep(0.01, 0.04, c)), 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
   // The pools of the string stand brimful: a long lens five degrees over the crust sees into them.
   return -mix(level, 0.045, smoothstep(0.06, 0.075, c) * (1.0 - smoothstep(0.105, 0.115, c)));
 }
