@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 176, 2026-11-27 15:59 UTC:
+Status 177, 2026-11-27 16:18 UTC:
 
-- `01-s176-breath-5242-native1.jpg`: The Breath at 1:27 (frame 5242), a wader close to the camera: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left, the flank, a hind leg and the thick tail of the pale pink animal, ribs showing under wrinkled skin, backlit, and small waders far off in the haze. Top right, its chest and forelegs, the far shore soft behind. Bottom left, a curved pale limb at the edge of the frame before a shore out of focus. Bottom right, thin legs standing in shallow rippled water full of glints, two whole and one cut by the edge. The skin's wrinkles are one even pattern over the whole body, the body's edges are a little soft, and the legs enter the water with no ring or wake around them. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `02-s176-spine-7579-native1.jpg`: The Spine at 2:06 (frame 7579): four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left, the sky: flat grey-blue bands of cloud. Top right, a far mountainside in haze with thin patches of snow. Bottom left, a peak in haze with a band of orange light behind it at the horizon. Bottom right, the snow ground with two grey boulders and dark snow-flecked cables crossing at the corner. The boulders are plainly a few flat faces with a stretched texture, the snow is smooth with almost no grain, and the far slopes are soft shapes with little rock detail in them. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `03-s176-eye-8412-native1.jpg`: The Eye at 2:20 (frame 8412), its first key: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left, a sunlit cliff top above a scree slope. Top right, a cliff face with dark streaks running down it and a hollow at its foot. Bottom left, a dark overhang of layered rock. Bottom right, the lake's surface: streaks of orange, red and blue smeared in one direction, with a few white flecks. The rock holds its detail at this size, though the dark streaks look painted on; the lake reads as a smeared picture and not as water, with no depth and no ripple. The critic of fine detail gave this place 5 of 10 in round 30. The Builder's reading. Below the bar.
+- `01-s177-breath-5242-native2.jpg`: The Breath at 1:27 (frame 5242), a wader close to the camera: two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left, two thin legs of a wader standing in shallow rippled water, their dark reflections broken into wavy lines down the crop, a smooth rounded shape half under the water between them and a pale rough shape at the right edge. Right, open water: even ripples in beige and brown with one broken dark reflection at the upper left. The reflections break up as they would in ripples, which reads well; the legs enter the water with no ring or wake, the ripples are one even pattern and a little soft, and the rounded shape is see-through like glass. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `02-s177-spine-7579-native2.jpg`: The Spine at 2:06 (frame 7579): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Both crops show one surface close to the camera: a mat of long frost-tipped fibres like wind-combed fur, grey-white tips over buff and dark brown, swept to one side. Left, tufts standing in clumps with dark gaps between them. Right, longer strands lying flatter, with a pale bare patch at the top. The strands are sharp at this size and the clumps vary, the most fine detail of these three pictures; some strands read as flat ribbons. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `03-s177-eye-8412-native2.jpg`: The Eye at 2:20 (frame 8412), its first key: two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left, the lake in swirls of orange, yellow, red and blue with pale long-necked animals standing in the shallows: two large ones at the lower right, one of them cut by the edge, two smaller ones farther off, and a small flyer over the water at the top. Right, the open lake as long slanted streaks of the same colours with a few white flecks, and parts of two animals at the bottom edge. The animals are smooth pale shapes with a soft shadow at their feet and no ring, ripple or reflection where they stand; the lake reads as a smeared painting and not as water. The critic of fine detail gave this place 5 of 10 in round 30. The Builder's reading. Below the bar.
 
+Status 176, 2026-11-27 15:59 UTC, showed: The Breath at 1:27 (frame 5242), a wader close to the camera: four crops at full size from the judged frame of round 30, drawn at...
 Status 175, 2026-11-27 15:46 UTC, showed: The Ribs at 0:20 (frame 1241), the first full view of the ribs: two crops at full size from the judged frame of round 30, drawn at...
 Status 174, 2026-11-27 15:28 UTC, showed: The Ribs at 0:20 (frame 1241), the first full view of the ribs: four crops at full size from the judged frame of round 30, drawn at...
-Status 173, 2026-11-27 15:15 UTC, showed: The Breath at 1:13 (frame 4409), the terrace and the lip of the pit: two crops at full size from the judged frame of round 30, drawn at...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T15:59:25Z
-phase 6: 19.16 h used of 24.00 h
-build: 64.13 h used of 72.00 h
+2026-11-27T16:18:14Z
+phase 6: 19.48 h used of 24.00 h
+build: 64.45 h used of 72.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 13
+minutes since the last status: 19
 ```
 
 ## Phases
