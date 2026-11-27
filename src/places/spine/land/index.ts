@@ -7,7 +7,7 @@ import type { Context, Piece } from '../shared/context';
 import { CARCASS, INSIDE_FROM, RAD, STRIKE_FROM, UNIT, WIND, carcassAxis, carcassBody, carcassView, step, strikeCrag } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { secondsInPlace, shotById } from '../../../film/cut';
-import { canalFloor, canalShell, crag, crestStrip, flanks, hollow, icicles, reliefDepth, scorchBed, spireMesh, stones } from './meshes';
+import { canalFloor, canalShell, crag, crestStrip, flanks, hollow, icicles, reliefDepth, spireMesh, stones } from './meshes';
 import { height } from './height';
 import { CRAG_FRAGMENT, CRAG_VERTEX, ICE_FRAGMENT, ICE_VERTEX, ICICLE_FRAGMENT, ICICLE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
 
@@ -155,7 +155,6 @@ export function create(ctx: Context): Piece {
   }
   add(crestStrip(), groundMaterial);
   add(flanks(), groundMaterial);
-  add(scorchBed([scorchAt[0], scorchAt[2]], carcassView), groundMaterial);
   spires.forEach((sp, i) => add(spireMesh(sp, ctx.rng(`land/spire-${i}`), i === FIRST ? 2 : i >= FIRST - 1 && i <= FIRST + 3 ? 1 : 0), spireMaterials[i] as THREE.ShaderMaterial));
   // The stones about the dead one, each with its tail of drift; the body lies in a bank drifted against its windward side, with a
   // longer tail in its lee. The lens of that shot and the body itself are kept clear.

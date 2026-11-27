@@ -282,11 +282,10 @@ const SCORCH_BLOCK = /* glsl */ `#if SCORCH == 1
       float close = smoothstep(0.02, 0.004, spanS);
       sc = clamp(sc * 3.2 * mix(vec3(1.0), near_ / 0.16, 0.9 * close), vec3(0.018, 0.018, 0.02), vec3(0.6));
       // The plate's own snow goes into the snow of the place at its rim; its burn keeps to the middle, ragged by the picture's own dark.
-      // (It reaches out to the lens of its shot and round both ends of the dead one.)
-      float out_ = length((uvS - vec2(0.5, 0.42)) * vec2(0.8, 1.0)) / 0.36;
+      float out_ = length((uvS - 0.5) * vec2(1.0, 0.9)) / 0.26;
       // Tongues of new snow lie across it down the gale.
       float tongue = vnoise(vec2(dot(vWorld.xz, uWind.xz) * 0.35, dot(vWorld.xz, vec2(-uWind.z, uWind.x)) * 1.6));
-      float scorch = 0.9 * smoothstep(1.0, 0.55, out_ + 0.4 * (lum - 0.3) + 0.6 * (tongue - 0.45));
+      float scorch = 0.85 * smoothstep(1.0, 0.55, out_ + 0.9 * (lum - 0.3) + 0.7 * (tongue - 0.45));
       vec2 px = 4.0 / vec2(textureSize(tScorchH, 0));
       float h0 = textureGrad(tScorchH, uvS, uvSx, uvSy).r;
       float du = (textureGrad(tScorchH, uvS + vec2(px.x, 0.0), uvSx, uvSy).r - h0) / (px.x * 7.0);
@@ -297,19 +296,10 @@ const SCORCH_BLOCK = /* glsl */ `#if SCORCH == 1
       float clot = vnoise(dS * 2.3 + 4.1) * 0.6 + vnoise(dS * 7.1 + 1.3) * 0.4;
       float slush = smoothstep(0.5, 0.62, clot + 0.35 * (0.5 - h0) + 0.25 * (tongue - 0.5));
       sc = mix(sc, vec3(0.34, 0.38, 0.45) * (0.75 + 0.5 * clot), 0.85 * slush);
-      // What stands of the rock's beds (they are in the mesh: vTop) is burned black and glazed; between them the slush lies alone.
-      float bare = smoothstep(0.3, 0.7, vTop);
-      // (The slabs are the burned rock itself, black with a rust of the burn in it and the close picture's cracks; the plate's pale parts
-      // are its snow, and they stay off the stone.)
-      vec3 burned = mix(vec3(0.03, 0.031, 0.036), vec3(0.085, 0.05, 0.036), smoothstep(0.45, 0.75, vnoise(dS * 1.7 + 9.3))) * clamp(0.45 + 1.1 * near_ / 0.16, 0.3, 2.2);
-      albedo = mix(albedo, mix(vec3(0.46, 0.5, 0.57) * (0.7 + 0.6 * clot), mix(burned, min(sc, vec3(0.2)), 0.25), bare), scorch);
-      // (The beds keep the faces the mesh gives them: the plate's own relief only roughens their tops.)
-#if KIND == 0
-      n = normalize(mix(n, nRock, scorch * bare));
-#endif
-      n = normalize(n + scorch * bare * (1.0 - 0.6 * slush) * smoothstep(0.5, 0.85, n.y) * (nS - vec3(0.0, 1.0, 0.0)));
+      albedo = mix(albedo, sc, scorch);
+      n = normalize(mix(n, normalize(mix(nS, vec3(0.0, 1.0, 0.0), 0.6 * slush)), scorch));
       // The rock is glazed, not flooded: a wet skin on a rough stone gives a broad dull shine, and no mirror for the sky to ripple in.
-      rough = mix(rough, mix(0.9, mix(0.5 + 0.35 * smoothstep(0.25, 0.6, h0), 0.9, slush), bare), scorch);
+      rough = mix(rough, mix(0.34 + 0.4 * smoothstep(0.25, 0.6, h0), 0.9, slush), scorch);
       occ = mix(occ, 0.6 + 0.4 * h0, scorch);
     }
   }
