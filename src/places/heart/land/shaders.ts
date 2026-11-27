@@ -139,6 +139,32 @@ vec2 plates(vec2 p) {
 }
 #endif
 const mat2 TURN = mat2(0.7986, -0.6018, 0.6018, 0.7986);
+#ifdef RUBBLE
+// Gravel: every cell is one stone. xy: from the stone's middle to p, in cells. z: a number of the stone's own. w: how far p lies from the
+// gap round the stone, in cells.
+vec4 gravel(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = p - i;
+  float d1 = 8.0;
+  float d2 = 8.0;
+  vec2 to = vec2(0.0);
+  float own = 0.0;
+  for (int b = -1; b <= 1; b++) {
+    for (int a = -1; a <= 1; a++) {
+      vec2 c = vec2(float(a), float(b));
+      vec2 h = hash22(i + c);
+      vec2 r = c + 0.1 + 0.8 * h - f;
+      float d = dot(r, r);
+      float nearer = step(d, d1);
+      d2 = mix(min(d2, d), d1, nearer);
+      to = mix(to, -r, nearer);
+      own = mix(own, fract(h.x * 7.31 + h.y * 3.17), nearer);
+      d1 = min(d1, d);
+    }
+  }
+  return vec4(to, own, 0.5 * (sqrt(d2) - sqrt(d1)));
+}
+#endif
 
 void main() {
   vec3 n0 = normalize(vNormal);
@@ -613,7 +639,20 @@ void main() {
     // The bed between them is grit, black in its pits, with ash lying on it in drifts.
     vec3 bed = vec3(0.046, 0.041, 0.038) * (0.3 + 1.4 * grain);
     bed = mix(bed, vec3(0.13, 0.122, 0.114) * (0.6 + 0.8 * pits), 0.3 * smoothstep(0.35, 0.6, vnoise(vWorld.xz / 0.8 + 9.3)) * smoothstep(0.7, 0.4, grain));
+    // The bed is gravel, as the picture's is: stones a thumb to a fist across, each with its own shade and its own round back, black
+    // between them and one in eight a pale chip. Two sizes, each left out where a pixel is no smaller than its stones.
+    float loose = 1.0 - block;
+    vec4 g1 = gravel(pc / 0.07 + shift);
+    vec4 g2 = gravel(TURN * pc / 0.028 + shift);
+    float seen1 = loose * smoothstep(0.55, 0.22, px / 0.07);
+    float seen2 = loose * smoothstep(0.55, 0.22, px / 0.028);
+    float gap1 = smoothstep(0.0, 0.1, g1.w);
+    float gap2 = smoothstep(0.0, 0.1, g2.w);
+    bed *= mix(1.0, (0.5 + 1.1 * g1.z) * (0.2 + 0.8 * gap1), seen1) * mix(1.0, (0.6 + 0.8 * g2.z) * (0.3 + 0.7 * gap2), seen2);
+    bed = mix(bed, vec3(0.17, 0.158, 0.143) * (0.6 + 0.8 * pits), 0.8 * seen1 * gap1 * smoothstep(0.86, 0.9, g1.z));
+    bent += 0.55 * seen1 * (tb * g1.x - ta * g1.y) + 0.35 * seen2 * gap1 * (tb * (g2.xy * TURN).x - ta * (g2.xy * TURN).y);
     clinker = mix(bed, clinker, block) * mix(1.0, 0.5 + 1.0 * ves.b, sharp);
+    occ *= mix(1.0, 0.35 + 0.65 * gap1, seen1 * byLens);
     #endif
     albedo = mix(albedo, clinker, byLens);
     n = normalize(n + bent * 2.4 * byLens);

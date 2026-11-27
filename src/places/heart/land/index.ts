@@ -258,6 +258,15 @@ export function create(ctx: HeartContext): HeartPiece {
   const unit = (v: number): number => Math.min(1, Math.max(0, v));
   // Round the short crack the heap is no blocks but one low mound of crystal crumbs: sulphur painted on the top of a block was a decal.
   const vent = cracks[1] as Crack;
+  // Beside the channel the heap is a bed of gravel with single stones on it: only the crowns of its blocks stand out of the bed there,
+  // none over a forearm above the crust (see `benchAt`). Scaled down whole, the blocks were smooth swells.
+  const stones = (x: number, z: number): number => {
+    const near = 1 - unit((lineChannelDistance(x, z) - 4.2) / 1.3);
+    const h = rubbleAt(x, z);
+    if (near <= 0) return h;
+    const bed = 0.035 + 0.03 * noise(x / 0.35 + 2.7, z / 0.35 + 5.9);
+    return h <= bed ? h : bed + Math.max(0, h - bed - 0.25 * near) * (1 - 0.4 * near);
+  };
   const heapAt = (x: number, z: number): number => {
     const ex = vent.bx - vent.ax;
     const ez = vent.bz - vent.az;
@@ -265,18 +274,16 @@ export function create(ctx: HeartContext): HeartPiece {
     const k = Math.min(0.7, Math.max(0.3, ((x - vent.ax) * ex + (z - vent.az) * ez) / (ex * ex + ez * ez)));
     const d = Math.hypot(x - vent.ax - ex * k, z - vent.az - ez * k) + 0.25 * (noise(x / 0.5 + 6.1, z / 0.5 + 2.3) - 0.5);
     const by = unit((0.44 - d) / 0.22);
-    if (by <= 0) return rubbleAt(x, z);
+    if (by <= 0) return stones(x, z);
     const w = by * by * (3 - 2 * by);
-    return rubbleAt(x, z) * (1 - w) + w * (0.02 + 0.08 * unit((0.4 - d) / 0.3) + 0.8 * crustAt(x, z));
+    return stones(x, z) * (1 - w) + w * (0.02 + 0.08 * unit((0.4 - d) / 0.3) + 0.8 * crustAt(x, z));
   };
   const rubbleHeight = (x: number, z: number): number => {
     const base = benchUnder(x, z);
     // It sinks under the bench at its border and stays off the faces of the crag.
     const inside = unit(inPatch(x, z) / 0.8);
     const on = inside * unit((base - 0.08) / 0.14) * unit((2.4 - base) / 0.6);
-    // Beside the channel the heap is low: no block stands over a forearm above the crust there (see `benchAt`).
-    const low = 0.45 + 0.55 * unit((lineChannelDistance(x, z) - 4.2) / 1.3);
-    const heap = heapAt(x, z) * low;
+    const heap = heapAt(x, z);
     const onBench = base - 0.06 + on * (0.06 + heap);
     if (base > 0.3) return onBench;
     // The shore is no kerb: the rubble spills out over the crust, half a metre here and two there, and thins to single stones.
