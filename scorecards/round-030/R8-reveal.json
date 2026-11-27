@@ -1,0 +1,7 @@
+{
+  "round": 30,
+  "unit": "reveal",
+  "question": "kit/07-QUALITY-BAR.md, R8, word for word",
+  "viewers": [],
+  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in."
+}

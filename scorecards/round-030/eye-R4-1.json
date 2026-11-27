@@ -1,0 +1,63 @@
+{
+  "round": 30,
+  "unit": "eye",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-27 07:36 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "frames 9438 to 9540, the move down into the lake and out to the cloud view",
+        "what": "the camera tilts down into flat dark water that fills the frame (9472 is a near-empty blue field with a soft blob), then the picture swaps to a top-down cloud deck with a dark hole in it. It reads as a dissolve between two unrelated pictures, not one move that carries through. The cloud view does not look like a real view from any height",
+        "fix": "keep the camera travelling continuously up and back so the crater stays in frame and shrinks into the cloud layer. The water and rim should stay readable the whole way, and the cloud gap should frame the real crater"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "frames 9233 to 9370, the swell in the open water",
+        "what": "the event is a smooth, even dome that rises and sends out evenly spaced concentric rings, like a procedural ripple. There is no break, spray or displaced mass, so it does not land as something surfacing",
+        "fix": "give the swell weight. Water should sheet off a body, the crest should break unevenly, and the rings should be irregular and interfere with the reeds and the necks' wakes"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the three animals across all of shot 4 (8842 to 9164) and set-A-07",
+        "what": "over about five seconds only the big animal's head goes down and comes back up. The two smaller animals and the calf hold almost the same pose, with no weight shift, tail, ear or leg motion, so they read as placed models",
+        "fix": "give each animal its own offset idle: weight shifting between legs, ear and tail flicks, small head turns, one smaller animal lifting its head or stepping"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "frames 8363 to 8402, foreground boulders and the herd",
+        "what": "the large foreground rocks clear away and the herd shows up between two sampled frames. The crane over the rocks feels abrupt rather than eased",
+        "fix": "ease the crane-up over the rocks so the herd is revealed gradually as near rocks pass under the lens"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "frames 9404 to 9472, end of the tilt down",
+        "what": "the push in ends on a weak, almost featureless picture of dark water",
+        "fix": "end the move on a composed frame (rim, steam, reflection) or carry straight on into the climb"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the shallow water over the orange mats in shot 2 and set-A-08",
+        "what": "apart from rings at the animal's feet, the water surface and steam barely change while the camera moves, so the pool reads close to a still picture slid past",
+        "fix": "add slow surface drift, faint wind ripples and rising steam wisps that change from frame to frame"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "the open water and haze behind the skeleton, shot 3 and set-A-09",
+        "what": "the lake and the haze over the far wall are static. Only the camera move gives life to the shot",
+        "fix": "add drifting fume over the water and gentle surface movement in the reflection"
+      }
+    ]
+  }
+}

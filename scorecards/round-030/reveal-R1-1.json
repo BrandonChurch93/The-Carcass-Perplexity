@@ -1,0 +1,98 @@
+{
+  "round": 30,
+  "unit": "reveal",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-27 07:36 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the main crater, its feeder and the neighboring right-hand pools",
+        "what": "the lake is a wider bowl displaced up and left relative to the pools; the feeder now enters almost from directly above instead of reaching the upper-left shore, and the two right-hand pools sit noticeably higher",
+        "fix": "restore the target's more upright bowl and the relative positions of the river mouth and satellite pools"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the rusty upland northeast of the large inlet",
+        "what": "the broad field of dark round basins is largely replaced by long ridges; the few surviving pits are crowded against the far-right edge",
+        "fix": "bring back the scattered dark basins within the rust-colored upland, including the larger ones, without removing the added relief elsewhere"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the rusty saddle between the left basin group and the right ridge country",
+        "what": "most of the target's prominent dark round pools are missing, leaving a more continuous reddish slope",
+        "fix": "reopen the clustered dark pools in the saddle and retain the rusty ground between them"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the ochre shelf and feeder delta inside the main lake",
+        "what": "the mineral margin forms thick smooth bands and the delta ends in a few broad pale spokes, rather than the target's fine branching fingers, irregular staining and curled southwest shoal",
+        "fix": "break up the orange rings into irregular translucent shoals and restore dendritic channels at the mouth and the southwest curl"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "over the upper-right arc of the main lake",
+        "what": "the target's thin white vapour follows the inner rim over dark water; the soft light veil in the revision sits mostly on the outer rock",
+        "fix": "carry a narrow translucent streamer over the water along the inside of the rim"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the isolated small pool to the lower right of the main lake",
+        "what": "the shoreline is a nearly smooth oval where the target has an irregular two-lobed outline with a distinct constriction",
+        "fix": "restore the two lobes and their pinched, uneven shoreline"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the open sea at left",
+        "what": "at native size, extensive opaque tan shapes read as rock well out into the dark sea, where the target reads as open blue water with small white cloud flecks",
+        "fix": "keep the layered clouds and sea shadows, but confine solid tan forms to the near-coast shallows and let offshore gaps read as continuous deep blue"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "above the northeast rust field and the upper edge of the large inlet",
+        "what": "diffuse cloud patches remain, but the target's long translucent streamers with a clear sweep across the rust field are no longer legible",
+        "fix": "restore a few connected, wind-aligned white vapour ribbons over this region without flattening the cloud layers"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "southwest tidal fringe below the middle crater",
+        "what": "sharp pale loops outline bright turquoise patches; they read like drawn contours rather than the target's soft submerged channels",
+        "fix": "soften and interrupt those loops, letting the turquoise fade naturally into deeper blue away from recognizable shallow channels"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the right-hand crest faces on both sides of the central channel",
+        "what": "a broad chalk-gray wash covers whole slopes, muting the target's narrow warm rock highlights and blue-green shadow tones",
+        "fix": "keep the greater relief and land area, but limit the light mineral color to exposed crests and bring cool blue-green and rust back into the shaded faces"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "above the left basin group and across the central rust saddle",
+        "what": "broken cloud patches replace the distinct long pale streamers that curve over the saddle in the target",
+        "fix": "restore the directional vapour filaments while keeping the added cloud depth"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the southern shoreline and offshore sea below the left basin group",
+        "what": "bright gray threads make tight loops over dark water and around islands; in the native crop they lack the target's gradual blue-green shallows and tapering streaks",
+        "fix": "replace the hard looping edges with translucent, tapering filaments and smooth the shallow-to-deep water transition"
+      }
+    ]
+  }
+}

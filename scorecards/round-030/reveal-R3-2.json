@@ -1,0 +1,84 @@
+{
+  "round": 30,
+  "unit": "reveal",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-27 07:35 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "the crater lake filling the centre of frame 9561",
+        "what": "the water is one flat dark navy with no depth, no sky reflection, no sun glint and no cloud shadow on it; it reads as a painted hole rather than a lake",
+        "fix": "give the lake a Fresnel sky reflection, a sun glint, depth falloff to lighter water at the shore and the shadows of the clouds over it"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "the orange shore band round the crater lake (also set-B-08 lower left, set-B-09 right crop)",
+        "what": "one smooth flat ochre material with no grain, no strata and no wet line; it looks like clay or plastic and stops on a hard edge against both the water and the grey rock",
+        "fix": "break the band up with rock and sediment texture, add a dark wet edge and a beach or foam line at the water, and blend it into the grey rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the whole land mass, frame 10027 (same in set-B-02 top right, set-B-03 left)",
+        "what": "the terrain reads as an embossed shaded-relief map: every ridge has the same hard bright side and black side, the same brown on every slope and the same clean, comb-like ridge spacing, so it looks like a height map rather than ground seen from orbit",
+        "fix": "soften the relief shading for the altitude, vary the material by height and slope (vegetation, scree, sediment, salt), and break the repeated ridge rhythm"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the sun haze on the right, x 83 to 100%, y 25 to 42% (also set-B-03 right crop)",
+        "what": "the glare is a flat tan tint laid over the scene, with blotchy dark patches in it that read as flat cards rather than cloud shadows; the land and sea under it lose all detail",
+        "fix": "make the glare a specular sun glint on the water with a bright core and falloff, and let the clouds and their shadows keep form inside it"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the open ocean, x 0 to 17%, y 25 to 42% and y 58 to 75% (and over the sea in set-B-01)",
+        "what": "the small cumulus are bright popcorn dots of near-equal size scattered evenly, with no shadow on the sea and no thickness",
+        "fix": "vary the cloud sizes and cluster them into streets or fields, and cast their shadows on the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the red patch at the centre right of the land",
+        "what": "a saturated red stain with branching lines reads as a texture or decal; if it is lava, it lights nothing around it and has no bloom, plume or haze",
+        "fix": "give it emission with bloom and a fume plume lit from below, or blend it into the ground as mineral colour"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-09.png",
+        "where": "the clouds over the crater lake, left crop, and set-B-08 top right",
+        "what": "the clouds are soft blurry blobs with no lit tops or shaded bases and cast no shadow on the dark water below them",
+        "fix": "light the clouds with a clear sun side and a shadow side, and cast their shadows on the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the coast round the whole island (set-B-03 lower and right crops)",
+        "what": "one even teal halo of shallow water rings every shore at the same width, with no surf, no sediment plume and no change with depth",
+        "fix": "vary the shelf width with the seabed, add sediment plumes at river mouths and some surf at exposed coasts"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "a small bright white point on the land, upper left of centre (about x 37%, y 38%)",
+        "what": "a stray bright dot with no context, like a light or a render fleck",
+        "fix": "remove it, or explain it with something visible at that spot"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-04.png",
+        "where": "set-B-04 to set-B-06",
+        "what": "they are exact copies of set-B-01 to set-B-03 (the same frame, 10027), so the pack shows only two frames",
+        "fix": "check the pack export and supply the intended frames"
+      }
+    ]
+  }
+}

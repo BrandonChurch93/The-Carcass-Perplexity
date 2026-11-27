@@ -1,0 +1,63 @@
+{
+  "round": 30,
+  "unit": "eye",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-27 07:36 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "the orange film across both water crops, especially the right crop and the blue opening at the bottom of the left crop",
+        "what": "the surface pulls into long parallel brush streaks and a fringe of equally oriented orange fingers, making the film look like a stretched image laid across the lake",
+        "fix": "break up the directional stretch with different-sized patches of film, distinct edges that follow local ripples, and stretches of clear water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the three larger animals in the center and their reflections",
+        "what": "the repeated barrel torsos and stiff, similarly bent legs make the herd look like copies of a clay model, with almost the same dry tan finish from torso to waterline",
+        "fix": "vary body proportions, weight shifts and leg spacing between animals, and darken the wetted parts with a distinct wet sheen"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "top-right crop, the foreground animal's diagonal neck at the shoulder bend",
+        "what": "the skin ridges repeat in a tight stepped pattern that looks stamped onto the bend rather than folded by it, while the adjacent flank looks like sculpted clay",
+        "fix": "replace the repeated ridges with irregular folds that follow neck compression and vary the skin's fine texture and roughness"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top-center and bottom-left crops, the far side of the water below the scree",
+        "what": "a nearly straight translucent band separates the cliffs from the lake and blends into broad flat blue strips, giving the haze and water a layered-card look",
+        "fix": "vary mist density and height along the scree and break up the blue bands with irregular ripples and reflected shoreline detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the broad strip of foreground boulders below the herd",
+        "what": "many sizable stones have simple flat planes and knife-straight edges, making the near shore read as a scatter of faceted meshes despite the fine gravel between them",
+        "fix": "give the closest boulders irregular break faces, chipped or weathered edges, and more varied surface relief"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "right crop, where the pale patch meets the dark orange-threaded water",
+        "what": "the pale patch lies over the dark surface as a broad soft color change with no distinct wet margin, relief, or change in ripple character",
+        "fix": "give the pale material an irregular wet perimeter with local height, gloss, and ripple changes where it meets the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top-left crop, around the background waders' feet and the smaller animal's lowered head",
+        "what": "the small dark tips end at the water plane with almost no local displacement; the general surface streaks continue past them, making the animals look placed on the sheet",
+        "fix": "anchor the individual contact points with small offset ripple rings, subtle waterline highlights and localized reflection distortion"
+      }
+    ]
+  }
+}

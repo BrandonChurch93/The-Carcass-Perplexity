@@ -1,0 +1,129 @@
+{
+  "round": 30,
+  "unit": "eye",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the shoreline herd looks like repeated instances of the same stiff 3D animal model.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the small, pasted-looking animals scattered on the shore with off-scale, uniform lighting against an otherwise photoreal procedural landscape reads as an ordinary CG render.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the stiff, smooth 3D animal models and procedurally scattered foreground rocks sitting on a flat shoreline against an otherwise detailed CG landscape.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the foreground rocks have conspicuously repeated faceted shapes.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "The cliffs and light look convincing, but the small llama-like animals are crudely modeled and scattered evenly. The streaky orange water looks procedural, and the foreground rocks are repetitive. Together these point to a decent but ordinary CG render, not film-grade work.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 87,
+      "why": "the animals’ featureless heads and uniformly clay-like surfaces look like unfinished 3D models.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the untextured clay-like animal models with odd anatomy composited into a photoreal landscape read as an ordinary 3D render/stock CG composite.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the featureless bump-mapped animal models lacking real fur or facial detail combined with offline raytraced water reflections",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 87,
+      "why": "The upright animal’s head is a blunt wedge with no visible facial features.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the animals are smooth, clay-like, oddly shaped CG models with no fur detail, pasted into a photographic landscape, so it reads as a stock or hobbyist CG composite and not a top-budget film frame.",
+      "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the foreground animal’s visibly sculpted anatomy and uniform surface texture.",
+      "answered": "07:36 UTC"
+    }
+  ]
+}

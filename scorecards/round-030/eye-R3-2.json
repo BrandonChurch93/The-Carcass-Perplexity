@@ -1,0 +1,56 @@
+{
+  "round": 30,
+  "unit": "eye",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-27 07:35 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the broad dark mound in the middle of the lake",
+        "what": "the smooth raised silhouette and thin, nearly unbroken perimeter make it read as a separate rubber sheet laid over the water",
+        "fix": "Blend the surface slopes into the lake and break up the rim with irregular displacement, localized ripples, and reflected cliff light."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the two pale foreground animal forms",
+        "what": "the closely matched, blunt silhouettes and uniformly dry, softly shaded surfaces make the pair look like molded props",
+        "fix": "Vary their profiles and poses and add uneven skin folds and wet sheen that follows the shape and light."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "left crop, the ribs, joints, and mineral shelf immediately under them",
+        "what": "the bones have smooth rounded profiles with angular joints and little surface wear; some tips look detached from the shelf, whose vein texture smears across the foreground",
+        "fix": "Add chipped and stained bone detail, strengthen contact shadows only where bones touch, and give the mineral shelf sharper texture and small-scale relief."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "upper right crop, the orange mineral shelf meeting teal water",
+        "what": "the shelf ends in a thin, sharp contour even though the water is shallow and clear there; the edge reads like a material mask",
+        "fix": "Add an irregular submerged lip and a narrow transition with wet darkening, refraction, and broken highlights."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the far shoreline across the cliff and scree crops",
+        "what": "the haze forms a pale ribbon at almost the same height and density across different rock faces",
+        "fix": "Vary haze depth along the shore and let soft, uneven wisps catch more light by the sunlit cliff than by the scree."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "both open-water crops",
+        "what": "reflections flatten into long, nearly parallel horizontal streaks with little variation in ripple scale or direction",
+        "fix": "Use overlapping ripple patterns at different scales and preserve some coherent reflected forms between them."
+      }
+    ]
+  }
+}

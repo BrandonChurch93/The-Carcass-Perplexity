@@ -1,0 +1,49 @@
+{
+  "round": 30,
+  "unit": "eye",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-27 07:35 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the herd on the shore, all twelve frames",
+        "what": "over 6 s the animals hold the same poses and spacing; the whole group only creeps a few pixels left together, like sprites sliding, with no steps, weight shifts, head turns or one animal breaking from the rest",
+        "fix": "give each animal its own gait and timing, let some graze, stop, turn or lift a head, and move feet with real steps, not a group slide"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the lake surface and its reflection",
+        "what": "the orange ripple pattern and the reflection of the cliff stay almost frozen frame to frame, changing at an even trickle; the water reads as a still texture, not a wind-moved surface",
+        "fix": "drive the ripples with travelling wind gusts so the cat's-paws cross the water, break up the reflection and change brightness over time"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the band of mist along the far shore",
+        "what": "the only clearly moving element, and it changes at the same rate every step (an even drift), reading as a sliding overlay rather than vapour that pours and pools",
+        "fix": "let the mist thicken, thin and curl unevenly, settle into the low ground and lift off the water in places"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the sky and the thin cloud streak",
+        "what": "the sky and cloud are pixel-identical for 6 s; nothing drifts at its own height",
+        "fix": "give the high cloud a slow drift and let the light on the cliff shift slightly with it"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the cliff face and the foreground rocks",
+        "what": "fully static, which is correct for rock, but no light change or shadow from the cloud or mist plays across them, so the place reads as a held picture",
+        "fix": "pass soft shadow or light variation from the cloud and mist over the cliff and shore"
+      }
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "round": 30,
+  "unit": "reveal",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-27 07:34 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the clouds over the ocean and coast, left third and lower middle",
+        "what": "the small clouds are scattered bright white popcorn blobs, all the same size and brightness. They sit on the image like sprinkled dots, with no visible shadow on the sea or land under them and no thinning at their edges",
+        "fix": "use real cumulus fields that form streets and clusters, vary their size and density, give them soft lit and shaded sides, and cast offset shadows on the surface below"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the large crater lake",
+        "what": "the water is one flat navy fill with no depth gradient, no sun glint and no reflection of the rim. The ochre shore band reads as smeared paint, with streaks dragged into the water, not as shallows or a beach",
+        "fix": "add depth-driven colour from shallow turquoise to deep blue, a faint sunglint or sky sheen, a sediment plume that diffuses naturally, and a real shore with a wet edge"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "all four land crops at native size",
+        "what": "the terrain is soft and smeared at native size. The ridges are faceted, triangular shapes painted over with a blurred colour wash, and there is no rock, scree or vegetation detail. Valley floors look like a semi-transparent blue haze card laid over the relief",
+        "fix": "raise terrain texture resolution, add multi-scale erosion and material variation such as bare rock, alluvium and vegetation, and use real atmospheric scattering in place of the flat blue overlay"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the ridgelines across both crops",
+        "what": "the ridges are a repeated combed herringbone pattern, the same branching motif over and over at one scale and one orientation. It reads as a procedural noise stamp, not as eroded drainage",
+        "fix": "break up the repetition with varied drainage density, asymmetric slopes, rock outcrops and different lithologies"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the bottom-left crop, around the twin crater pits",
+        "what": "concentric contour-like lines step out around the pits like terraced banding or a topographic-map artifact. The cloud clump on top is a dense mass of identical white dots",
+        "fix": "remove the contour banding by smoothing the heightfield or shading, and replace the dot clouds with volumetric cumulus that has varied structure"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the left crop, coastal water",
+        "what": "pale meandering ribbons lie on top of the dark sea like floating strings, with no sediment diffusion. The cloud mass is again uniform white dots with no shadows",
+        "fix": "render river outflow as diffuse turbid plumes that fade into the sea, and give the clouds volume and cast shadows"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the bottom-left crop, the orange glow points",
+        "what": "small fire or glow points are hard orange dots. They light nothing around them and give off no smoke plume",
+        "fix": "add smoke plumes drifting downwind, a soft bloom and a faint warm spill on the nearby ground, or remove the points"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the left and lower-right crops, the larger cloud sheets",
+        "what": "the thin cloud sheets are flat, semi-transparent grey streak cards with no internal light or shadow. The sea under them is a uniform speckle noise",
+        "fix": "give the stratiform cloud volumetric density and sun-side brightening, and add real ocean surface variation such as sunglint gradient and swell"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the whole frame, land against sea",
+        "what": "the frame is lit evenly, with no limb haze or atmospheric depth. The white streaky cloud bands on the right mountains read as flat smears painted along the ridges",
+        "fix": "add aerial perspective and blue scattering that build toward the far edge, and model the orographic cloud as volume with shadow"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "the left crop, the deep lake",
+        "what": "the water shows faint vertical streaks and is otherwise an empty flat fill at native size",
+        "fix": "add subtle surface variation and a depth gradient"
+      }
+    ]
+  }
+}

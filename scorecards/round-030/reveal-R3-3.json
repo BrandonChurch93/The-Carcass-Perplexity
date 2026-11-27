@@ -1,0 +1,98 @@
+{
+  "round": 30,
+  "unit": "reveal",
+  "pack": "R3-3",
+  "family": "claude",
+  "answered": "2026-11-27 07:34 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-C-01.png",
+        "where": "the whole crater lake",
+        "what": "the lake is one flat dark navy tone with no depth gradient, no sky reflection and no sun glint; it reads as a painted fill, not water seen from altitude",
+        "fix": "give the water a depth gradient from shallow rim to deep centre, a sky/Fresnel reflection and a soft specular hotspot"
+      },
+      {
+        "severity": "severe",
+        "file": "set-C-04.png",
+        "where": "the whole crater lake",
+        "what": "same flat navy fill with no reflection, depth or light response; the small lake at right is a different teal, which makes the big lake look even more like a flat tint",
+        "fix": "shade both lakes with the same water model with depth colour, reflection and glint"
+      },
+      {
+        "severity": "severe",
+        "file": "set-C-01.png",
+        "where": "the orange band around the lake shore",
+        "what": "the shore band is smooth, flat, uniform orange with soft marbled swirls like poured paint; no sediment grain, no wet edge, no crust, and it has a hard cutout edge against the rock",
+        "fix": "break the band into sediment/mineral texture with varying saturation, a wet dark margin and a feathered transition into the rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-02.png",
+        "where": "crop x 83-100% y 25-42% (ridges)",
+        "what": "terrain shows hard triangular facets and angular planes; sharp diagonal seams where brown and blue-grey materials meet in straight lines like overlapping texture tiles",
+        "fix": "raise mesh density or add displacement detail and blend the material masks with noise along slope, not straight seams"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-02.png",
+        "where": "crop x 0-17% y 58-75% (snow rim left of shore)",
+        "what": "the rim is a soft smeared stretched texture with streaking along one direction, reading as projection stretch rather than snow on rock",
+        "fix": "use triplanar or higher-resolution texture on the steep rim so detail is not stretched"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-01.png",
+        "where": "clouds over the lake and rim",
+        "what": "clouds are small flat cutout puffs with no shadow cast on the water or land below, and same-brightness tops and bottoms; several over the lake look like white speckle stickers",
+        "fix": "give clouds volumetric shading and cast shadows on the ground and water; vary scale and density"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-02.png",
+        "where": "crop x 42-58% y 25-42% (lake surface)",
+        "what": "dark blotches on the water look like a darkened noise texture, not cloud shadows or depth; they do not match the clouds above and have no direction of light",
+        "fix": "tie dark patches to actual cloud shadows or bathymetry and blur them consistently"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-03.png",
+        "where": "crop x 42-58% y 58-75% (lake surface)",
+        "what": "defocused clouds are soft blobs on a flat navy field with no reflection; the water has no texture that would carry depth of field",
+        "fix": "add surface ripple/reflection detail so the water reads as a material under the haze"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-01.png",
+        "where": "the whole frame",
+        "what": "no atmospheric perspective; the distant rim at top is as sharp and as contrasted as the near rim, no haze or air between camera and ground",
+        "fix": "add aerial perspective haze that rises with distance and slightly lifts the blacks"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-04.png",
+        "where": "the radiating ridges around the crater",
+        "what": "the ridges radiate in uniform straight combed lines and repeat the same pattern around the rim, reading as a procedural brush or tiling",
+        "fix": "vary ridge spacing, length and erosion so the radial pattern breaks up"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-05.png",
+        "where": "crop x 0-17% y 25-42% (shore band)",
+        "what": "thin orange streaks run out into the navy water with hard edges and no diffusion, like paint strokes",
+        "fix": "diffuse sediment plumes into the water with soft falloff"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-06.png",
+        "where": "crop x 83-100% y 58-75% (small lake rim)",
+        "what": "the rim around the small lake is a clean, even ring band with the same texture all the way round",
+        "fix": "break the ring with erosion, gullies and varied width"
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "round": 30,
+  "unit": "reveal",
+  "pack": "R4",
+  "family": "gemini",
+  "answered": "2026-11-27 07:36 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the entire orbital frame over the 6-second hold (0.00 s to 6.00 s)",
+        "what": "the frame is completely frozen once the camera stops moving; the large cyclone in the lower right does not rotate, the ocean and continental cloud fields do not drift or evolve, and the atmospheric haze and light do not change at all, reading as a still picture",
+        "fix": "keep the world alive during the hold with continuous slow rotation of the lower-right cyclone, subtle multi-layer cloud drift and evolution, and gentle shifts in atmospheric scatter or sun glint"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the clouds across the ocean and the spiral cyclone in the lower right (frames 9795 to 10027)",
+        "what": "the cloud deck and cyclone remain locked rigidly to the surface with no internal motion, rotation, or altitude parallax as the camera eases out, making the upper climb read like pulling back from a static painted globe",
+        "fix": "animate independent cloud-layer drift, cyclone rotation, and subtle cloud-height parallax above the terrain throughout the ascent into orbit"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the thick overcast cloud layer surrounding the crater lake (frames 9541 to 9583, also seen in set-A-03.png frames 9575 to 9586)",
+        "what": "the dense cloud deck around the crater vanishes completely in roughly 0.7 seconds by fading out in place rather than remaining below as the camera rises above it, reading like an opacity fade on a cloud overlay",
+        "fix": "pass physically through a volumetric or layered cloud deck that breaks with parallax and stays partially visible over the surrounding terrain below instead of dissolving away completely"
+      }
+    ]
+  }
+}

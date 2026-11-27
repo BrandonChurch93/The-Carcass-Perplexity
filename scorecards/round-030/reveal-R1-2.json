@@ -1,0 +1,63 @@
+{
+  "round": 30,
+  "unit": "reveal",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-27 07:34 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the skull, rib ranges, lower arm and both legs",
+        "what": "The ridges are almost continuously chalk-white, with deep charcoal cuts between them. The target has narrower, softer pale crests over muted brown rock, so the relief sits in the same light as the sea instead of looking lit separately.",
+        "fix": "Reserve the near-white for the highest crests, warm the exposed flanks slightly and soften the contrast in the ravines without removing the added terrain."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the lower-right ocean cyclone",
+        "what": "The cyclone is a dense mass of broken white cloud around a fuzzy eye, where the target has a dark blue eye and long, distinct spiral bands with open sea between them.",
+        "fix": "Open and darken the eye, thin the bright cloud mass and reconnect the bands into longer arcs separated by visible blue water."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the upper-right sea around the extended leg",
+        "what": "The sunlight becomes a broad, mottled beige veil running down the right edge, and nearly swallows the far end of the leg. The target has a smoother, more localized reflection on the sea and the coast stays legible against it.",
+        "fix": "Pull the strongest glow toward the upper-right edge, smooth its falloff on the water and keep some blue-water contrast immediately around the coast."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the open sea left of the skull and below the lower arm",
+        "what": "Much of the ocean cloud reads as isolated white flecks and chunky patches rather than the target's longer, fine wind-swept streaks.",
+        "fix": "Keep the layers and their shadows, but organize more of the low cloud into fine directional streaks and leave darker gaps between them."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the skull and sea just above it",
+        "what": "The target's fine vapor streams lift from the skull and curve toward the upper right. In the remake, scattered cloud overlaps the skull and those continuous streams are hard to pick out.",
+        "fix": "Clear enough cloud around the source to restore the few slender vapor ribbons and their sweep over the sea."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the pale central basin and the water between the legs",
+        "what": "The branching red center survives, but its outflow reads mainly as a dark red streak over rock. The target carries translucent rusty red and ochre tendrils well out into the blue water.",
+        "fix": "Keep the red branches in the basin and restore diffuse red and ochre filaments that spread into the adjacent water rather than ending on the terrain."
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "black space above the upper-left horizon",
+        "what": "A few pinprick stars show where the target's backdrop reads as clean black.",
+        "fix": "Dim or remove those points."
+      }
+    ]
+  }
+}
