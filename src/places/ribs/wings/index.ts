@@ -390,7 +390,7 @@ export function create(ctx: Context): Piece {
       way = f.round as Way;
       const long = 0.8 + 0.1 * hash(f.seed, 3);
       const u = ((((lp as number) - 0.03 - (0.97 - long) * hash(f.seed, 5)) % 1) + 1) % 1 / long;
-      s += 4 * f.step * (ramp(u / 0.43) + ramp((u - 0.55) / 0.43));
+      s += f.step * surge(4 * (ramp(u / 0.43) + ramp((u - 0.55) / 0.43)));
       dipHead = smooth(0.42, 0.47, u) * (1 - smooth(0.53, 0.57, u)) + smooth(0.985, 1.02, u) * (1 - smooth(1 / long - 0.06, 1 / long, u));
       span = 0;
     } else if (f.habit === 0) {
@@ -422,6 +422,22 @@ export function create(ctx: Context): Piece {
       if (f.habit === 0) brace = ph > 0.5 * period ? smooth(period - 1.7, period - 0.85, ph) : 1 - smooth(-0.2, 0.75, ph);
     }
 
+    // In the card loop one that feeds cannot wade away: it treads round its tuft, which stays in the pool where it is. A step or two to
+    // one side, the near foot out and the other brought up to it, and later the same way back, each at its own time in the loop.
+    let tread = 0;
+    const treads = lp !== null && f.habit === 0 && !walker;
+    const treadWay = hash(f.seed, 63) < 0.5 ? 1 : -1;
+    const treadTurn = (0.4 + 0.14 * hash(f.seed, 67)) / HEAD_REST[0];
+    if (treads) {
+      const far = hash(f.seed, 65) < 0.55 ? 2 : 1;
+      const each = far === 2 ? 0.95 + 0.25 * hash(f.seed, 69) : 1.2 + 0.5 * hash(f.seed, 69);
+      const out = 0.2 + (far === 2 ? 0.9 : 2.2) * hash(f.seed, 71);
+      const back = out + far * each + 0.5 + (LOOP_SECONDS - 0.9 - out - 2 * far * each) * hash(f.seed, 73);
+      const q = LOOP_SECONDS * (lp as number);
+      tread = far * (ramp((q - out) / (far * each)) - ramp((q - back) / (far * each)));
+      span = 0;
+    }
+
     // The feet.
     let lift = 0;
     let highest = 0;
@@ -432,6 +448,26 @@ export function create(ctx: Context): Piece {
       const foot = p.feet[leg] as Pose['feet'][number];
       nudging = f;
       footAt(way, leg, s, f.step, 0.13 * size, wading ? printNudge : noNudge, stood);
+      if (treads) {
+        // The foot on the side it goes to is put out through the first half of a tread, the other brought up through the second:
+        // and on the way back the other goes first, as it must. Each stands at its own place on the round between.
+        const n = Math.floor(tread);
+        const u = tread - n;
+        const leads = (treadWay === 1) === (leg === 0);
+        const c = leads ? clamp01(u / 0.5) : clamp01((u - 0.5) / 0.5);
+        const turned = f.yaw + treadWay * treadTurn * (n + c * c * (3 - 2 * c));
+        const reach = HEAD_REST[0] * size;
+        const fore = (leg === 0 ? -0.5 : 0.5) * f.step - reach;
+        const side = (leg === 0 ? 1 : -1) * 0.13 * size;
+        stood.x = f.x + Math.sin(f.yaw) * reach + Math.sin(turned) * fore - Math.cos(turned) * side;
+        stood.z = f.z + Math.cos(f.yaw) * reach + Math.cos(turned) * fore + Math.sin(turned) * side;
+        stood.yaw = turned;
+        stood.carry = c;
+        // The weight goes over the foot that stays down while the other is in the air.
+        const air = Math.sin(Math.PI * c);
+        lean.off += (leg === 0 ? -1 : 1) * 1.1 * air;
+        lean.dip += 0.5 * air;
+      }
       // Drawn up out of the pool toes hanging, swung through, and set down flat.
       let raised = (wading ? 0.3 : 0.24) * size * Math.sin(Math.PI * stood.carry);
       let droop = 0.7 * Math.sin(Math.PI * stood.carry);
@@ -467,6 +503,13 @@ export function create(ctx: Context): Piece {
 
     // The hips: over the way, off towards the foot that bears the weight, and highest as they pass over it.
     wayAt(way, s, hips);
+    if (treads) {
+      const turned = f.yaw + treadWay * treadTurn * tread;
+      const reach = HEAD_REST[0] * size;
+      hips.x = f.x + Math.sin(f.yaw) * reach - Math.sin(turned) * reach;
+      hips.z = f.z + Math.cos(f.yaw) * reach - Math.cos(turned) * reach;
+      hips.yaw = turned;
+    }
     const along = (Math.PI * s) / f.step;
     const striding = Math.abs(Math.sin(along));
     // Standing, it is never square on both feet: the weight goes slowly from one to the other, and the hips sink and tip as it goes.
