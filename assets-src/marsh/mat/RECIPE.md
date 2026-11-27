@@ -538,3 +538,12 @@ A seamless tiling material texture photographed from straight above (orthographi
 Takes: 1 made, take 1 kept.
 Why this one: the knobbed salt rind of the seep pool bank, and the salt grown on the dead (made by `marsh_ground_builder`).
 Date: 2026-11-26
+
+## `public/assets/marsh/mat/rise-nh.jpg` and `public/assets/marsh/mat/rise-m.jpg`
+
+Made by: `assets-src/marsh/mat/make-rise.py` on Python 3.14.8 with Pillow 13.0.0 and numpy 2.5.5. No image model and no picture goes in: every number comes from the seed in the script.
+From: nothing but the script.
+Prompt or command: `python3 assets-src/marsh/mat/make-rise.py`
+Takes: 3 made (the first two to set the reach of the occlusion and the way the rows are written), take 3 kept.
+Why this one: the one sheet of the rock rise the first camera leaves, 21.5 m by 16 m and not repeating: `rise-nh.jpg` is the surface's normal (red, green) and its height (blue, 1.8 m for the whole of blue) that the fine patch's vertices are raised by, `rise-m.jpg` is how open each spot is to the sky (red), where red water gathers and dries (green) and where salt dries (blue). It replaces the jointed blocks that read as paving (made by `marsh_ground_builder_w2`).
+Date: 2026-11-27
