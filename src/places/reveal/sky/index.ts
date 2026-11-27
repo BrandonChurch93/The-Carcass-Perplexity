@@ -365,7 +365,7 @@ uniform vec2 uWind;
 varying vec3 vWorld;
 // One ribbon of the breath: where it lies across the trail and how wide, its own slow wander down the wind.
 float ribbon(float across, float gone, float centre, float spread, float width, vec4 own, float sway) {
-  float at = centre + spread * (own.x + 0.3 * sin(gone * own.y + own.z + sway));
+  float at = centre + spread * (own.x + 0.22 * sin(gone * own.y + own.z + sway));
   float x = (across - at) / width;
   return own.w * exp(-x * x);
 }
@@ -377,28 +377,30 @@ void main() {
   // The wind carries the curls: the ribbons wander through a bend that travels down the trail, wider the farther they have gone.
   float carried = uTime * 0.011;
   if (uLive > 0.0) carried += uWx * 0.03;
-  vec2 flow = texture2D(uCloudTile, vec2(along * 0.8 - carried, across * 0.4 + 0.3), 2.0).rg - 0.5;
+  vec2 flow = texture2D(uCloudTile, vec2(along * 0.05 - carried * 0.17, across * 0.02 + 0.3), 2.0).rg - 0.5;
   float gone = clamp(along, 0.0, 1.3);
   // (The approved pictures show the breath as a few long luminous ribbons that leave the neck together, part, and bend
   // as one toward the right of the wind: each is a smooth line of vapour, the photograph gives only the fibre along it.)
-  float centre = 0.3 * gone * gone + 0.07 * sin(7.0 * gone + 0.8) * smoothstep(0.0, 0.25, gone) + 0.3 * flow.y * smoothstep(0.03, 0.6, gone);
+  float centre = 0.3 * gone * gone + 0.1 * sin(5.0 * gone + 0.8) * smoothstep(0.0, 0.3, gone) + 0.6 * flow.y * smoothstep(0.03, 0.6, gone);
   float spread = 0.015 + 0.3 * pow(gone, 0.8);
-  float width = 0.01 + 0.03 * gone;
-  float sway = 3.0 * flow.x;
+  float width = 0.006 + 0.024 * gone;
+  float sway = 2.0 * flow.x;
   float ribbons = ribbon(across, gone, centre, spread, width, vec4(-0.95, 5.1, 0.4, 0.75), sway)
     + ribbon(across, gone, centre, spread, width * 1.5, vec4(-0.3, 3.7, 2.2, 1.0), sway)
     + ribbon(across, gone, centre, spread, width * 0.8, vec4(0.25, 6.3, 4.0, 0.6), sway)
-    + ribbon(across, gone, centre, spread, width * 1.2, vec4(0.9, 4.4, 5.3, 0.85), sway);
+    + ribbon(across, gone, centre, spread, width * 1.2, vec4(0.9, 4.4, 5.3, 0.85), sway)
+    + ribbon(across, gone, centre, spread, width * 0.7, vec4(-0.62, 2.9, 1.1, 0.55), sway)
+    + ribbon(across, gone, centre, spread, width * 0.9, vec4(0.58, 3.3, 3.1, 0.7), sway);
   float off = (across - centre) / (1.25 * spread + 0.03);
-  float between = 0.07 * exp(-off * off);
+  float between = 0.05 * exp(-off * off);
   // The fibre along a ribbon: the photograph of trails read stretched down the wind, and a slow unevenness over it.
   float fibre = dot(texture2D(uPicture, vec2(0.3 + 0.55 * fract(along * 0.9 - carried * 0.5), 0.5 + 0.14 * off), 1.0).rgb, vec3(0.3, 0.55, 0.15));
   float uneven = texture2D(uCloudTile, vec2(along * 1.9 - carried + 0.1, across * 2.3 + 0.6), 1.0).b;
   // Puffs leave the throat one after another and thin as they go.
-  float puff = 0.8 + 0.2 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
-  if (uLive > 0.0) puff = 0.8 + 0.2 * sin(along * 26.0 - uTime * 0.5 - uLive * 1.6 + 3.0 * flow.x);
+  float puff = 0.88 + 0.12 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
+  if (uLive > 0.0) puff = 0.88 + 0.12 * sin(along * 26.0 - uTime * 0.5 - uLive * 1.6 + 3.0 * flow.x);
   float inside = smoothstep(0.0, 0.03, along) * (1.0 - smoothstep(0.45, 1.0, along));
-  float thick = (ribbons * (0.45 + 0.5 * uneven + 0.9 * fibre) + between * (0.4 + 1.2 * uneven)) * inside * puff;
+  float thick = (ribbons * (0.62 + 0.4 * uneven + 0.4 * fibre) + between * (0.4 + 1.2 * uneven)) * inside * puff;
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.4 + 0.5 * min(thick, 1.0), 0.3);
   float alpha = clamp(thick * 0.72, 0.0, 0.85);
   // (And the vapour of the throat is seen to trail: a little denser while the frame is held.)
