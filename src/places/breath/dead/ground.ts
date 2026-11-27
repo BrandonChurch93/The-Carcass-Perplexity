@@ -29,9 +29,9 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float speck = vnoise(vWorld.xz * 160.0 + vWorld.y * 90.0);
-  vec3 albedo = mix(vec3(0.42, 0.37, 0.32), vec3(0.8, 0.75, 0.66), vTone) * (0.8 + 0.4 * speck);
+  vec3 albedo = mix(vec3(0.34, 0.29, 0.25), vec3(0.62, 0.56, 0.49), vTone) * (0.8 + 0.4 * speck);
   // Salt has dried on what faces up.
-  albedo = mix(albedo, vec3(0.74, 0.72, 0.68), 0.5 * smoothstep(0.5, 0.95, n.y) * smoothstep(0.35, 0.7, speck + 0.3 * vTone));
+  albedo = mix(albedo, vec3(0.66, 0.63, 0.58), 0.3 * smoothstep(0.5, 0.95, n.y) * smoothstep(0.35, 0.7, speck + 0.3 * vTone));
   float occ = 0.5 + 0.5 * smoothstep(-0.4, 0.5, n.y);
   // The body's own shade on the rock is a dark disc: read through it each grain was a black bead. They are lit above it and shaded by hand.
   vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, 0.85, 0.9 * occ);

@@ -38,6 +38,8 @@ export function create(ctx: Context): Piece {
   const geometry = skin.build();
 
   const pixel = { value: 0.001 };
+  // Staged: in the view of the plumes the sun breaks through the vapour on the one far off. Where it stands, and whether.
+  const veiled = { value: new THREE.Vector3() };
   const pictures = {
     tHide: { value: ctx.assets.texture('waders/hide.jpg') },
     tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
@@ -47,7 +49,7 @@ export function create(ctx: Context): Piece {
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 0 } },
+    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 0 }, uVeiled: veiled },
   });
   material.userData.depthFragment = DEPTH_FRAGMENT;
   const mesh = new THREE.Mesh(geometry, material);
@@ -67,7 +69,7 @@ export function create(ctx: Context): Piece {
   const mirrored = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 1 } },
+    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 1 }, uVeiled: veiled },
     side: THREE.DoubleSide,
   });
   const image = new THREE.Mesh(geometry, mirrored);
@@ -91,24 +93,53 @@ export function create(ctx: Context): Piece {
   const rim = herd[NEAR_WADERS.length] as Wader;
   const AWAY = { x: -58, z: -98 };
   // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
-  const MIST = { x: -34.4, z: -8.4, heading: -100 };
+  // Staged: in the view of the plumes it is a whole animal far off in the vapour, seen in the gap between the fronds, as the picture has it.
+  const MIST = { x: -38.5, z: -56.7, heading: -95 };
+  // Staged: in the view of the rim it stands clear of the growth, before it, where the picture of the rim has it.
+  const RIM_NEAR = { x: -28.0, z: 17.4, heading: 38 };
   const rimUp = rim.plan.up;
   const rimCarry = rim.plan.carry;
   const MIST_UP: [number, number][] = [[-5, 60]];
   const RAD = Math.PI / 180;
   const shaft = shotSpan('breath-02');
   const mist = shotSpan('breath-03');
+  const rimView = shotSpan('breath-05');
+  // Staged: in the wide view only the three in the channel are near. The others of the herd are half as far again out on the flats, small, as the
+  // picture has them; in the view in the channel they are where they were.
+  const wide = shotSpan('breath-01');
+  const WIDE_FROM = { x: -41.5, z: 42.3 };
+  const outer = herd.map((animal, i) => (i >= 3 && i !== NEAR_WADERS.length && wading.includes(i) ? { animal, x: animal.plan.x, z: animal.plan.z } : null)).filter((o) => o !== null);
+
+  // Staged: in the wide view the three in the channel do not stand in a row all one way: two of them have turned and stand apart.
+  const TURNED: [number, number, number][] = [[0, 0, 0], [-1.5, -5.5, -80], [3.5, 2, 140]];
+  const trio = TURNED.map((_, i) => {
+    const animal = herd[i] as Wader;
+    return { animal, x: animal.plan.x, z: animal.plan.z, heading: animal.plan.heading };
+  });
 
   return {
     setTime: (seconds) => {
       const at = stagedSeconds();
       const away = at >= shaft[0] && at <= shaft[1];
       const misted = at >= mist[0] && at <= mist[1];
-      rim.plan.x = away ? AWAY.x : misted ? MIST.x : RIM_WADER.x;
-      rim.plan.z = away ? AWAY.z : misted ? MIST.z : RIM_WADER.z;
-      rim.plan.heading = (misted ? MIST.heading : RIM_WADER.heading) * RAD;
+      const nearRim = at >= rimView[0] && at <= rimView[1];
+      rim.plan.x = away ? AWAY.x : misted ? MIST.x : nearRim ? RIM_NEAR.x : RIM_WADER.x;
+      rim.plan.z = away ? AWAY.z : misted ? MIST.z : nearRim ? RIM_NEAR.z : RIM_WADER.z;
+      rim.plan.heading = (misted ? MIST.heading : nearRim ? RIM_NEAR.heading : RIM_WADER.heading) * RAD;
       rim.plan.up = misted ? MIST_UP : rimUp;
-      rim.plan.carry = misted ? 1 : rimCarry;
+      rim.plan.carry = misted ? 0.55 : nearRim ? 2.3 : rimCarry;
+      veiled.value.set(MIST.x, MIST.z, misted ? 1 : 0);
+      const out = at >= wide[0] && at <= wide[1] ? 1.5 : 1;
+      for (const o of outer) {
+        o.animal.plan.x = WIDE_FROM.x + (o.x - WIDE_FROM.x) * out;
+        o.animal.plan.z = WIDE_FROM.z + (o.z - WIDE_FROM.z) * out;
+      }
+      trio.forEach((o, i) => {
+        const turn = out > 1 ? (TURNED[i] as [number, number, number]) : [0, 0, 0];
+        o.animal.plan.x = o.x + (turn[0] as number);
+        o.animal.plan.z = o.z + (turn[1] as number);
+        o.animal.plan.heading = o.heading + (turn[2] as number) * RAD;
+      });
       ripples.begin();
       drips.begin();
       herd.forEach((animal, i) => {
@@ -118,7 +149,9 @@ export function create(ctx: Context): Piece {
           stood.feet.forEach((foot, j) => {
             if (foot.wet < 0.02) return;
             // A leg that stands sends a faint ring as the animal shifts; one that has just come down or is drawn through the water sends strong ones.
-            ripples.add(foot.x, foot.z, 1.5, 0.3 + 0.5 * foot.carried, foot.since, seed + j * 1.9);
+            // Where the shank crosses the water's level the water is told of it: none while the foot is carried clear.
+            const inWater = Math.min(1, Math.max(0, (SEA_LEVEL + 0.02 - foot.y) / 0.05));
+            ripples.add(foot.x, foot.z, 1.5, 0.3 + 0.5 * foot.carried, foot.since, seed + j * 1.9, 26, 0.36, 0.034 * animal.b.k, inWater);
             // A foot that has just come down throws a crown of drops; each is where the time since it landed puts it.
             if (foot.since < 0.6) {
               for (let d = 0; d < 18; d++) {
@@ -141,7 +174,7 @@ export function create(ctx: Context): Piece {
           const sea = SEA_LEVEL;
           if (stood.tuft.y < sea + 0.35 && footing(stood.tuft.x, stood.tuft.z) < sea) {
             // The tuft is worked through the water: the water round it is never still.
-            ripples.add(stood.tuft.x, stood.tuft.z, 2.0, 0.75, 0.4, seed * 2.3, 21, 0.42);
+            ripples.add(stood.tuft.x, stood.tuft.z, 2.0, 0.75, 0.4, seed * 2.3, 21, 0.42, 0.2 * animal.b.k, Math.min(1, Math.max(0, (sea + 0.35 - stood.tuft.y) / 0.2)));
             // And it throws water: small drops in short arcs, a few at any moment, each where the time since it was thrown puts it.
             for (let d = 0; d < 26; d++) {
               const period = 0.3 + 0.45 * hash(seed + d * 4.7);

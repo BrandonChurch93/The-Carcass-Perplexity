@@ -9,7 +9,8 @@ import { createCliff } from '../air/sky';
 import { bakeNear } from './field';
 import { createRock, type Surface } from './rock';
 import { block } from './ribs';
-import { buildWall, ledge } from './wall';
+import { FACE, archTop } from './arches';
+import { buildWall } from './wall';
 import { collar, heap, mergeGeometries, open, talusHeight } from './shapes';
 import { scatter } from './stones';
 
@@ -39,7 +40,6 @@ export function create(ctx: Context): Piece {
     metres,
     relief: 1,
   });
-  const ivory = surface('hoop', [0.493, 0.392, 0.288], 2.2, 1.0);
   const seep = surface('wall', [0.077, 0.061, 0.033], 4, 1.0);
   // The plate of the shelf, laid turn and turn about so that it has no edge (land.ts lays its relief the same way).
   const plate = ctx.assets.texture('mat/shelfplate.jpg', { kind: 'colour', repeat: true, anisotropy: 4 });
@@ -90,18 +90,26 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('land', land));
 
   // The main shaft: the dark bedded wall, and the pale arches that stand out of it (land/wall.ts, land/arches.ts).
-  const mirrored = (name: string, kind: 'colour' | 'data'): THREE.Texture => {
-    const t = ctx.assets.texture(name, { kind, repeat: true, anisotropy: 2 });
+  const mirrored = (name: string, kind: 'colour' | 'data', anisotropy = 2): THREE.Texture => {
+    const t = ctx.assets.texture(name, { kind, repeat: true, anisotropy });
     t.wrapS = THREE.MirroredRepeatWrapping;
     t.wrapT = THREE.MirroredRepeatWrapping;
     return t;
   };
   const built = buildWall();
   const wall = rock.pit(0, seep);
-  const arches = rock.pit(1, ivory);
+  // The hoops: the sheet of a broken bedded face and the sheet of the outer skin (assets-src/breath/land/RECIPE.md), mirrored at each repeat.
+  const sheet = (name: string, mean: [number, number, number], metres: number, relief: number): Surface => ({
+    colour: mirrored(`land/${name}.jpg`, 'colour', 1),
+    data: mirrored(`land/${name}-h.png`, 'data', 1),
+    mean,
+    metres,
+    relief,
+  });
+  const arches = rock.hoop(sheet('travface', [0.385, 0.259, 0.159], FACE.wide, 0.2), FACE.tall, sheet('travskin', [0.467, 0.29, 0.157], 3.2, 0.2));
   const shaft = new THREE.Group();
   shaft.add(mesh(built.wall, wall));
-  const rubble = rock.bone(0.5, [0.47, 0.44, 0.4], [0.2, 0.185, 0.165], surface('scree', [0.287, 0.229, 0.184], 3, 1.2), THREE.DoubleSide);
+  const rubble = rock.bone(0.55, [0.45, 0.41, 0.35], [0.2, 0.18, 0.15], surface('scree', [0.287, 0.229, 0.184], 2.2, 1.2), THREE.DoubleSide);
   const pale = rock.bone(1, [0.6, 0.56, 0.49], [0.42, 0.385, 0.33], surface('shelf', [0.438, 0.363, 0.302], 6, 0.9), THREE.DoubleSide);
   for (const [x, z, r] of SMALLER) shaft.add(mesh(collar(x, z, r), pale));
   ctx.scene.add(ctx.parts.built('shaft', shaft));
@@ -116,7 +124,7 @@ export function create(ctx: Context): Piece {
   const rs = ctx.rng('land/slabs');
   const blocks: THREE.BufferGeometry[] = [];
   // On the rubble: each lies on the slope where it stopped, long side across the fall.
-  for (let i = 0; i < 46; i++) {
+  for (let i = 0; i < 28; i++) {
     const k = rs.next();
     const b = (108 + (rs.next() - 0.5) * 44) * RAD;
     const r = lerp(rimRadius(b) - 4.5, 13, k ** 0.8) + rs.range(-1.5, 1.5);
@@ -124,12 +132,26 @@ export function create(ctx: Context): Piece {
     const z = -Math.cos(b) * r;
     // A few great slabs and many lesser blocks.
     const big = i < 2 ? 0.8 : 0.6 * rs.next() ** 2.2;
-    const h = lerp(0.7, 3.2, big) * rs.range(0.8, 1.2);
-    const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) + h * 0.3;
+    const h = lerp(0.8, 4.4, big) * rs.range(0.8, 1.2);
+    const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) - h * 0.2;
     const slope = r > rimRadius(b) - 1 ? 0.12 : 0.62;
-    blocks.push(block(i + 1, [lerp(1.6, 11, big) * rs.range(0.8, 1.25), h, lerp(1.2, 6.5, big) * rs.range(0.8, 1.2)], [x, y, z], [slope + rs.range(-0.25, 0.35), -b + rs.range(-0.9, 0.9), rs.range(-0.3, 0.3)]));
+    blocks.push(block(i + 1, [lerp(1.6, 11, big) * rs.range(0.8, 1.25), h, lerp(1.2, 6.5, big) * rs.range(0.8, 1.2)], [x, y, z], [slope + rs.range(-0.25, 0.35), -b + rs.range(-0.9, 0.9), rs.range(-0.3, 0.3)], 34));
   }
-  // On the ribs: pieces of the ring above that stopped on the one below, leaning on the wall.
+  // On the ledge in the rubble: three great blocks side by side where the band stopped them, each leaning on the slope behind it.
+  for (const [bearing, long, tall, deep, yaw] of [
+    [90, 7.5, 3.3, 4.6, 0.5],
+    [98, 9.5, 3.9, 5.4, -0.35],
+    [106, 6.5, 3.0, 4.2, 0.8],
+  ] as const) {
+    const b = bearing * RAD;
+    const r = rimRadius(b) - 0.29 * (rimRadius(b) - 9);
+    const x = Math.sin(b) * r;
+    const z = -Math.cos(b) * r;
+    blocks.push(block(90 + bearing, [long, tall, deep], [x, talusHeight(x, z) + tall * 0.22, z], [0.28, -b + yaw, 0.12 * yaw], 40));
+  }
+  // On the hoops: pieces of the ring above that stopped on the one below. Each lies flat on the top of a hoop, sunk a hand into the grit
+  // there, with the lesser pieces that came down with it beside it. Where no hoop is under one it is not laid: hung on the wall at a
+  // guessed depth they were bricks in the air.
   for (const [bearing, nth, w, d, yaw, lean] of [
     [-58, 1, 6.5, 3.6, 0.4, 0.35],
     [38, 0, 7.5, 4, -0.3, -0.4],
@@ -139,12 +161,23 @@ export function create(ctx: Context): Piece {
     [12, 1, 5.5, 3.2, 0.6, -0.45],
   ] as const) {
     const b = bearing * RAD;
-    const [x, y, z] = ledge(bearing, nth);
-    blocks.push(block(20 + bearing * 0.37, [w, 2.4, d], [x, y + 0.9, z], [lean, -b + yaw, lean * 0.6]));
+    const seat = archTop(bearing, nth);
+    if (!seat) continue;
+    // A slab of the tier above, twice a man's height long and as thick as his chest is high, tipped where it stopped, a corner of it down in
+    // the grit. As deep as it was wide it was a brick set on the hoop.
+    blocks.push(block(20 + bearing * 0.37, [w * 0.74, 1.5 + 0.08 * w, d * 0.86], [seat[0], seat[1] + 0.45, seat[2]], [lean * 0.7, -b + yaw, lean * 0.5], 26));
+    for (let k = 0; k < 4; k++) {
+      const side = (k % 2 === 0 ? 1 : -1) * (w * 0.3 + 0.6 + 1.1 * rs.next() + k * 0.5);
+      const at = archTop(bearing + (side / Math.hypot(seat[0], seat[2])) / RAD, nth);
+      const size = rs.range(0.7, 1.9);
+      if (!at) continue;
+      const out = rs.range(-0.6, 0.9);
+      blocks.push(block(60 + k + bearing * 0.21, [size * rs.range(0.9, 1.5), size * 0.55, size], [at[0] - Math.sin(b) * out, at[1] + size * 0.2, at[2] + Math.cos(b) * out], [rs.range(-0.2, 0.2), rs.range(0, 6.28), rs.range(-0.2, 0.2)], 70));
+    }
   }
-  // The fallen slabs are the rim's own stone, broken: pale grey-cream like the tiers they fell from, their beds showing on their sides.
-  const face = mirrored('land/slabface.jpg', 'colour');
-  const fallen = rock.bone(0.9, [0.57, 0.545, 0.5], [0.3, 0.28, 0.25], { colour: face, data: ctx.assets.texture('mat/shelf-nh.png', { kind: 'data', repeat: true, anisotropy: 1 }), mean: [0.42, 0.36, 0.3], metres: 5.5, relief: 1.6 }, THREE.DoubleSide);
+  // The fallen slabs are the tiers' own stone, broken: cream like the tiers they fell from, plain on their broken faces. Drawn with the
+  // tiers' bedded sheet they were striped like a sweet.
+  const fallen = rock.bone(0.72, [0.56, 0.51, 0.43], [0.26, 0.225, 0.18], { ...tile('crust', [0.307, 0.255, 0.218], 5.5) }, THREE.FrontSide);
   slabs.add(mesh(mergeGeometries(blocks), fallen));
   slabs.add(mesh(heap(), rubble));
 

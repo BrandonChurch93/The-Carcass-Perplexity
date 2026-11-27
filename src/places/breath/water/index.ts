@@ -4,7 +4,9 @@ import * as THREE from 'three';
 import type { Context, Piece } from '../shared/context';
 import { FRAGMENT, VERTEX } from './shaders';
 import { bandMap, bedMap } from './maps';
-import { SEA_LEVEL, WIND, shotSpan } from '../shared/anchors';
+import { flowMap } from './flow';
+import { EDGE_FRAGMENT, EDGE_VERTEX, edgeGeometry } from './edge';
+import { SEA_LEVEL, WIND, channelX, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { MIRROR } from '../waders/mirror';
 import { RIPPLES } from '../waders/ripples';
@@ -20,8 +22,10 @@ export function create(ctx: Context): Piece {
   const height = (x: number, z: number): number => ctx.rig.land.height(x, z);
   const far = bedMap(height, SEA_LEVEL, FAR.x, FAR.z, FAR.half, FAR.cells);
   // Two squares of waves; the shader lays each down several times over at unlike sizes and bearings, each size with its own speed (shaders.ts).
-  const waves = bandMap(ctx.rng('water-waves'));
-  const ripples = bandMap(ctx.rng('water-ripples'));
+  const waves = bandMap(ctx.rng('water-waves'), 256, 12, 72, 1.5);
+  const ripples = bandMap(ctx.rng('water-ripples'), 256, 12, 72, 1.7);
+
+  const flow = flowMap(height, SEA_LEVEL, channelX);
 
   const frame = new THREE.Vector2(3840, 2160);
   // Staged by shot: the wide view from above (breath-01) sees the channel as green water over pale silt from its first frame to its last.
@@ -42,6 +46,9 @@ export function create(ctx: Context): Piece {
       tMirror: MIRROR.texture,
       tRings: RIPPLES.texture,
       uFrame: { value: frame },
+      tLines: { value: flow.lines },
+      tCarried: { value: flow.carried },
+      uFlowRect: { value: flow.rect },
     },
     transparent: true,
     depthWrite: true,
@@ -63,7 +70,31 @@ export function create(ctx: Context): Piece {
   sheet.position.y = SEA_LEVEL;
   sheet.frustumCulled = false;
   sheet.renderOrder = 10;
-  ctx.scene.add(ctx.parts.built('sea', sheet));
+  // The water's edge on the rock (edge.ts), drawn after the sheet and over the land.
+  const edgeMaterial = new THREE.ShaderMaterial({
+    vertexShader: EDGE_VERTEX,
+    fragmentShader: EDGE_FRAGMENT,
+    uniforms: { ...ctx.rig.uniforms, uSea: material.uniforms.uSea as THREE.IUniform, tCarried: material.uniforms.tCarried as THREE.IUniform, uFlowRect: material.uniforms.uFlowRect as THREE.IUniform },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+    blending: THREE.CustomBlending,
+    blendEquation: THREE.AddEquation,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+    blendSrcAlpha: THREE.OneFactor,
+    blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
+  });
+  const edgeShape = edgeGeometry(height, SEA_LEVEL);
+  const edge = new THREE.Mesh(edgeShape, edgeMaterial);
+  edge.frustumCulled = false;
+  edge.renderOrder = 11;
+  const sea = new THREE.Group();
+  sea.add(sheet, edge);
+  ctx.scene.add(ctx.parts.built('sea', sea));
 
   return {
     setTime: () => {
@@ -76,9 +107,13 @@ export function create(ctx: Context): Piece {
     dispose: () => {
       geometry.dispose();
       material.dispose();
+      edgeShape.dispose();
+      edgeMaterial.dispose();
       far.dispose();
       waves.dispose();
       ripples.dispose();
+      flow.lines.dispose();
+      flow.carried.dispose();
     },
   };
 }

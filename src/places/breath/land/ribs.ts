@@ -226,7 +226,7 @@ export function wall(levels: number[]): THREE.BufferGeometry {
 }
 
 /** A block that broke from a rib or the brim: a lump cut by its own fracture planes, so it has faces and edges, worn by the same solid noise. */
-export function block(seed: number, size: [number, number, number], at: [number, number, number], turn: [number, number, number]): THREE.BufferGeometry {
+export function block(seed: number, size: [number, number, number], at: [number, number, number], turn: [number, number, number], edge = 30): THREE.BufferGeometry {
   const planes: [number, number, number, number][] = [];
   const h = (k: number): number => hash3(Math.floor(seed * 131), k, 5);
   // The six sides, each leaning well off square (no face of a fallen block is true), and ten more that take a corner or an edge off:
@@ -255,8 +255,8 @@ export function block(seed: number, size: [number, number, number], at: [number,
   const m = new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(turn[0], turn[1], turn[2], 'YXZ')), new THREE.Vector3(1, 1, 1));
   const p = new THREE.Vector3();
   const longest = Math.max(size[0], size[2]);
-  const columns = Math.max(36, Math.round((longest * 3.4) / 0.22));
-  const rows = Math.max(28, Math.round((Math.max(size[1], Math.min(size[0], size[2])) * 3) / 0.24));
+  const columns = Math.max(30, Math.round((longest * 3.4) / 0.31));
+  const rows = Math.max(24, Math.round((Math.max(size[1], Math.min(size[0], size[2])) * 3) / 0.33));
   // The normal of the face each point lies on: the edges of a broken block are sharp, and a mesh smoothed across them is a boulder.
   const faces: number[] = [];
   const turned = new THREE.Matrix3().setFromMatrix4(m);
@@ -274,7 +274,7 @@ export function block(seed: number, size: [number, number, number], at: [number,
     for (const [nx, ny, nz, d] of planes) {
       const along = nx * dx + ny * dy + nz * dz;
       if (along <= 0.02) continue;
-      const w = (along / d) ** 30;
+      const w = (along / d) ** edge;
       reach += w * (along / d);
       soft += w;
       fn.x += (w * nx) / size[0];
@@ -290,7 +290,9 @@ export function block(seed: number, size: [number, number, number], at: [number,
     const bed = ly * 2.6 + 0.5 * noise3(lx * 0.4 + seed, ly * 0.4, lz * 0.4);
     const stepped = Math.floor(bed) + smooth((bed - Math.floor(bed) - 0.8) / 0.2);
     const sides = 1 - Math.abs(fn.y) / (fn.length() || 1);
-    const rough = 0.07 * chipped(lx + seed * 9, ly, lz - seed * 5) + 0.07 * sides * (hash3(Math.floor(seed * 17), Math.floor(bed), 3) - 0.5 + 0.4 * (stepped - bed));
+    // No face of it is a plane: each is bowed and dished a hand or two over its breadth, and pitted.
+    const bowed = 0.24 * noise3(lx * 0.33 + seed * 3, ly * 0.33, lz * 0.33 + seed) + 0.09 * noise3(lx * 1.2 + seed, ly * 1.2, lz * 1.2);
+    const rough = bowed + 0.11 * chipped(lx + seed * 9, ly, lz - seed * 5) + 0.09 * sides * (hash3(Math.floor(seed * 17), Math.floor(bed), 3) - 0.5 + 0.4 * (stepped - bed));
     p.multiplyScalar(1 + rough / Math.max(0.6, p.length()));
     p.applyMatrix4(m);
     fn.normalize().applyMatrix3(turned);
@@ -299,7 +301,7 @@ export function block(seed: number, size: [number, number, number], at: [number,
   });
   const n = g.getAttribute('normal') as THREE.BufferAttribute;
   for (let k = 0; k < n.count; k++) {
-    fn.set((faces[k * 3] as number) + 0.35 * n.getX(k), (faces[k * 3 + 1] as number) + 0.35 * n.getY(k), (faces[k * 3 + 2] as number) + 0.35 * n.getZ(k)).normalize();
+    fn.set((faces[k * 3] as number) + 1.1 * n.getX(k), (faces[k * 3 + 1] as number) + 1.1 * n.getY(k), (faces[k * 3 + 2] as number) + 1.1 * n.getZ(k)).normalize();
     n.setXYZ(k, fn.x, fn.y, fn.z);
   }
   return g;

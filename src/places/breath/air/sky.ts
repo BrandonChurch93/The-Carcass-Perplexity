@@ -100,7 +100,8 @@ void main() {
   c *= 1.0 + low * 0.2 * (streak - 0.5);
   // The sun: a pale hot heart with no edge, inside the glare that the fog spreads and turns deep gold.
   float s = dot(d, uSunDir);
-  c += uSunColour * (vec3(1.0, 0.88, 0.62) * (5.0 * smoothstep(0.9995, 0.99997, s)) + vec3(1.0, 0.42, 0.1) * (0.8 * pow(max(s, 0.0), 500.0) + 0.25 * pow(max(s, 0.0), 60.0)));
+  float a2 = max(2.0 - 2.0 * s, 0.0);
+  c += uSunColour * (vec3(1.0, 0.8, 0.5) * (1.5 * exp(-a2 / 0.0035) + 0.45 * exp(-a2 / 0.02)) + vec3(1.0, 0.42, 0.1) * (0.5 * pow(max(s, 0.0), 500.0) + 0.3 * pow(max(s, 0.0), 60.0)));
   vec4 far = farPicture(d);
   c = mix(c, far.rgb, far.a);
   gl_FragColor = vec4(rigOut(c), 1.0);
