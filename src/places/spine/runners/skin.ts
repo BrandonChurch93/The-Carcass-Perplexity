@@ -596,6 +596,8 @@ export interface CoatOptions {
   lengths?: number[];
   /** How broad a lock is for its length, 1 the usual: less is finer hair. */
   broad?: number;
+  /** 0 to 1: how far the coat hangs by its own weight instead of lying combed toward the tail. */
+  droop?: number;
 }
 
 export interface Coat {
@@ -648,10 +650,11 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
     // The way the clump lies: down the skin as gravity and the wind comb it, standing off it only a little, so the coat keeps the shape
     // of what is under it. Under the belly it hangs free.
     // Combed toward the tail, as any coat grows.
-    const pull: V3 = add([-0.55, -1, 0], scale(o.wind, 0.6 + 0.8 * rng.next()));
+    const droop = o.droop ?? 0;
+    const pull: V3 = add([-0.55 * (1 - 0.75 * droop), -1, 0], scale(o.wind, (0.6 + 0.8 * rng.next()) * (1 - 0.7 * droop)));
     const into = pull[0] * at.n[0] + pull[1] * at.n[1] + pull[2] * at.n[2];
     const slide = sub(pull, scale(at.n, Math.min(0, into)));
-    const jitter: V3 = [rng.range(-0.22, 0.22), rng.range(-0.1, 0.1), rng.range(-0.22, 0.22)];
+    const jitter: V3 = [rng.range(-0.22, 0.22) * (1 + droop), rng.range(-0.1, 0.1), rng.range(-0.22, 0.22) * (1 + droop)];
     let fall = norm(add(add(slide, jitter), scale(at.n, 0.06)));
     // A coat never stands on end.
     if (fall[1] > 0.05) fall = norm([fall[0], 0.05, fall[2]]);
@@ -690,6 +693,8 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
         e[1] -= o2[1] * far;
         e[2] -= o2[2] * far;
       }
+      // A coat that hangs: the end of a lock is lower than where the comb left it, and no two by the same.
+      if (droop > 0) e[1] -= droop * long * (0.12 + 0.3 * rng.next());
       // The ground stops a lock.
       if (e[1] < 0.012) e[1] = 0.012 + 0.01 * rng.next();
       if (o.burn[3] > 0) {
@@ -701,7 +706,8 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
           e[2] = p[2] + (e[2] - p[2]) * keep;
         }
       }
-      const mid = add(mixv(p, e, 0.45), scale(n, long * rng.range(0.06, 0.14)));
+      const mid = add(mixv(p, e, 0.45 - 0.1 * droop), scale(n, long * rng.range(0.06, 0.14) * (1 + 1.4 * droop)));
+      if (droop > 0) mid[1] = Math.max(mid[1] as number, (p[1] as number) - 0.15 * long);
       if (mid[1] < 0.02) mid[1] = 0.02;
       root.set(p, count * 3);
       ctrl.set(mid, count * 3);

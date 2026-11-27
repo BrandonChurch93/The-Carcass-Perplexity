@@ -346,14 +346,20 @@ void main() {
   vec2 fineUv = vec2(0.114 + 0.155 * mod(fine, 6.0) + 0.07 * u * flip, 1.0 - fineY);
   vec2 uvDx = dFdx(fineUv);
   vec2 uvDy = dFdy(fineUv);
+  // The strands a lock parts into, and how much of one a pixel covers: found here too. No edge of a lock is cut: each is let go over a
+  // pixel or two, and a strand finer than a pixel is drawn a pixel wide and fainter.
+  float parts = (uWhole > 0.5 ? 2.0 : 3.0) + floor(3.0 * fract(seed * 2.71));
+  float partK = (0.5 + 0.5 * u) * parts + (uWhole > 0.5 ? 0.35 * t * sin(t * 5.0 + seed * 23.0) : 0.45 * t * sin(t * 6.0 + seed * 23.0));
+  float partW = clamp(fwidth(partK), 0.001, 0.5);
+  float alpha = 1.0;
   if (uLockKind > 0.5) {
     vec2 uv = fineUv;
     // Its outline is frayed by its own strands: the cut wanders with the hair's brightness, and the black the picture stands on is taken out of its edge.
     float cut = textureGrad(tLockBA, uv, uvDx, uvDy).r;
-    if (cut < 0.5) discard;
+    alpha *= smoothstep(0.3, 0.7, cut);
     pic = textureGrad(tLockB, uv, uvDx, uvDy).rgb;
     float strand = max(pic.r, max(pic.g, pic.b));
-    if (strand < 0.1 + 0.14 * t * t) discard;
+    alpha *= smoothstep(0.04, 0.16, strand - 0.14 * t * t);
     pic /= max(cut, 0.5);
     mean_ = vec3(0.217, 0.204, 0.21);
   } else {
@@ -362,7 +368,7 @@ void main() {
     vec2 uv = vec2((which + 0.5 + 0.47 * u * flip) / 8.0, 1.0 - (0.03 + 0.925 * t));
     pic = texture2D(tLock, uv).rgb;
     float cover = max(pic.r, max(pic.g, pic.b));
-    if (cover < 0.085) discard;
+    alpha *= smoothstep(0.045, 0.125, cover);
   }
   float own;
   float run;
@@ -373,22 +379,23 @@ void main() {
     run = t;
     body = 0.55 + 0.45 * smoothstep(0.1, 0.5, max(pic.r, max(pic.g, pic.b)));
     // It does not end square, as a card does: toward its end it parts into a few wet points, each ending where it ends.
-    float points = 2.0 + floor(3.0 * fract(seed * 2.71));
-    float k = (0.5 + 0.5 * u) * points + 0.35 * t * sin(t * 5.0 + seed * 23.0);
+    float k = partK;
     float f = abs(fract(k) - 0.5);
     float ends = 0.7 + 0.3 * fract(sin(floor(k) * 12.9898 + seed * 78.233) * 43758.5453);
-    if (f > 0.5 * (1.0 - smoothstep(ends - 0.42, ends, t))) discard;
+    float halfW = 0.5 * (1.0 - smoothstep(ends - 0.42, ends, t));
+    float drawn = max(halfW, 0.5 * partW);
+    alpha *= mix(1.0, (1.0 - smoothstep(drawn - partW, drawn + partW, f)) * halfW / drawn, smoothstep(0.0, 0.06, 0.5 - halfW));
   } else {
     // A lock is not a blade: it is a few strands, matted into one at the root, that part toward their ends, and each ends where it ends.
-    float strands = 3.0 + floor(3.0 * fract(seed * 2.71));
-    float k = (0.5 + 0.5 * u) * strands + 0.45 * t * sin(t * 6.0 + seed * 23.0);
+    float k = partK;
     float f = fract(k) - 0.5;
     own = fract(sin(floor(k) * 12.9898 + seed * 78.233) * 43758.5453);
     run = t / (0.6 + 0.4 * own);
     // Each strand is drawn out to a point, not cut off.
     float halfW = mix(0.5, 0.17, smoothstep(0.15, 0.8, run)) * (1.0 - smoothstep(0.72, 1.0, run));
-    if (run > 1.0 || abs(f) > halfW) discard;
-    body = sqrt(max(0.0, 1.0 - (f / max(halfW, 1e-3)) * (f / max(halfW, 1e-3))));
+    float drawn = max(halfW, 0.5 * partW);
+    alpha *= mix(1.0, (1.0 - smoothstep(drawn - partW, drawn + partW, abs(f))) * halfW / drawn, smoothstep(0.0, 0.06, 0.5 - halfW)) * step(run, 1.0);
+    body = sqrt(max(0.0, 1.0 - min(1.0, (f / drawn) * (f / drawn))));
   }
   float lum = dot(pic, vec3(0.333)) / dot(mean_, vec3(0.333));
   float singe = 1.0 - vInfo.w;
@@ -406,7 +413,8 @@ void main() {
   float bead = max(smoothstep(0.75, 1.0, t) * smoothstep(1.0, 1.6, lum) * (0.3 + 0.5 * vAt.w), 0.75 * smoothstep(0.7, 0.97, run) * step(0.3, fract(own * 7.7)));
   float white = clamp(max(max(lies, bead) * (1.0 - singe), smoothstep(1.5, 2.0, vAt.w) * smoothstep(0.15, 0.6, t) * smoothstep(0.6, 1.3, lum)), 0.0, 1.0);
   c = mix(c, vec3(0.86, 0.89, 0.94) * vFrostLight, white);
-  gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
+  if (alpha < 0.03) discard;
+  gl_FragColor = vec4(c * (1.0 - uSolo), alpha);
 }`;
 
 export const TENDRIL_VERTEX = /* glsl */ `
