@@ -465,7 +465,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     float b1 = vnoise(vec2(s * 0.36 + 3.0, age * 0.47 + 1.0));
     float b2 = vnoise(vec2(s * 0.62 + 17.0, age * 0.72 + 5.0));
     // On a tread they are strands a metre wide; down a drop and at the lip they swell and run together.
-    float wide = (0.096 + 0.075 * smoothstep(1.9, 3.4, speed)) * (1.0 + 2.1 * bright - 0.25 * dark) + 0.2 * lipHot + 0.05 * pour;
+    float wide = (0.17 + 0.1 * smoothstep(1.9, 3.4, speed)) * (1.0 + 1.6 * bright - 0.25 * dark) + 0.2 * lipHot + 0.07 * pour;
     float d1 = abs(b1 - 0.5);
     float d2 = abs(b2 - 0.47);
     core = max(1.0 - smoothstep(0.55 * wide, wide, d1), 1.0 - smoothstep(0.45 * wide, 0.85 * wide, d2));
@@ -501,7 +501,10 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     kelvin = mix(kelvin, skin, raft);
     // Between the strands a tread is under its skin: dark crust that rides with the melt, orange where it meets a strand, with a
     // crack or two alight along the flow. A drop tears it up, the lip has none yet, and the surge breaks most of it.
-    float skinOn = smoothstep(1.5, 2.3, strandFar) * (1.0 - 0.92 * smoothstep(1.9, 3.2, speed)) * smoothstep(3.0, 10.0, len) * (1.0 - 0.97 * behind) * (1.0 - lay);
+    // The skin is no lid from strand to strand: it is floes two to four metres long that ride down at the speed of the melt, crowd
+    // the margins and leave the body of the stream open between them, orange from bank to bank.
+    float floe = smoothstep(0.44, 0.58, 0.7 * vnoise(vec2(s * 0.55 + 7.0, ride * 1.1)) + 0.3 * vnoise(vec2(s * 1.6 + 3.0, ride * 3.1)) + 0.22 * smoothstep(0.5, 0.95, u) - 0.08);
+    float skinOn = smoothstep(1.5, 2.3, strandFar) * floe * (1.0 - 0.92 * smoothstep(1.9, 3.2, speed)) * smoothstep(3.0, 10.0, len) * (1.0 - 0.97 * behind) * (1.0 - lay);
     float crustK = mix(790.0, 1030.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)) + 260.0 * smoothstep(3.1, 1.7, strandFar) + 190.0 * clamp(thread, 0.0, 1.0);
     // A pack is skin from bank to bank, torn here and there, and a drop does not tear all of it up.
     float pack = dark * (1.0 - 0.5 * fast) * (1.0 - 0.97 * behind) * smoothstep(0.2, 0.42, vnoise(vec2(s * 0.8 + 2.0, ride * 1.9)) + 0.3 * (1.0 - core));
@@ -624,7 +627,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     vec2 mp = vec2(s, STREAM_RIDE * (flow.x - uTime));
     vec3 m = meltAt(mp, 15.0, vec2(gFlowDx.y, STREAM_RIDE * gFlowDx.x), vec2(gFlowDy.y, STREAM_RIDE * gFlowDy.x), 3.0);
     float rindAt = u + 0.16 * (vnoise(vec2(len * 0.5, s > 0.0 ? 2.0 : 9.0)) - 0.5) + 0.07 * (vnoise(vec2(len * 1.9, s * 1.3)) - 0.5);
-    float rind = smoothstep(0.66, 0.84, rindAt) * (1.0 - 0.5 * fast) * smoothstep(1.0, 6.0, len);
+    float rind = smoothstep(0.78, 0.92, rindAt) * (1.0 - 0.5 * fast) * smoothstep(1.0, 6.0, len);
     // The body of the stream is bare melt, orange at its margins and yellow-white down its middle, its folds those of the sheet.
     float body = clamp(0.46 + 0.5 * m.z + 0.3 * (1.0 - u) * (1.0 - u) + 0.14 * core + 0.1 * fast + 0.08 * behind, 0.0, 1.0);
     // The plates come down in packs: whole reaches carry them and others run bare, they crowd the margins, and a drop tears
@@ -634,7 +637,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     float heat = mix(body, 0.13 + 0.08 * behind, plate);
     heat *= 1.0 - 0.85 * rind;
     // The rind glows where the melt runs against it.
-    heat = max(heat, 0.55 * smoothstep(0.07, 0.0, abs(rindAt - 0.68)) * (1.0 - 0.5 * rind));
+    heat = max(heat, 0.55 * smoothstep(0.07, 0.0, abs(rindAt - 0.8)) * (1.0 - 0.5 * rind));
     kelvin = mix(kelvin, 780.0 + 780.0 * heat, sheetOn);
   }
 #endif
