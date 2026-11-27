@@ -560,6 +560,16 @@ void main() {
   vec2 e = vec2(3.0 / 1448.0, 3.0 / 1086.0);
   float hx = texture2D(tRelief, vUv + vec2(e.x, 0.0), 1.5).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), 1.5).r;
   float hy = texture2D(tRelief, vUv + vec2(0.0, e.y), 1.5).r - texture2D(tRelief, vUv - vec2(0.0, e.y), 1.5).r;
+  // The side of the head: the plate has a round red hollow there, which in the frame is a socket. The hide of the neck beside it is
+  // laid over it, colour and relief, with a ragged edge: the head is closed, torn and sodden as the rest.
+  vec2 headPx = vec2(vUv.x * 1448.0, (1.0 - vUv.y) * 1086.0);
+  vec2 fromHollow = (headPx - vec2(965.0, 506.0)) / vec2(29.0, 38.0);
+  float closed = 1.0 - smoothstep(0.7, 1.2, length(fromHollow) + 0.3 * (vnoise(headPx * 0.11) - 0.5));
+  vec2 graft = vUv + vec2(-50.0 / 1448.0, 45.0 / 1086.0);
+  pic = mix(pic, texture2D(tCarcass, graft).rgb, closed);
+  h = mix(h, texture2D(tRelief, graft).r, closed);
+  hx = mix(hx, texture2D(tRelief, graft + vec2(e.x, 0.0), 1.5).r - texture2D(tRelief, graft - vec2(e.x, 0.0), 1.5).r, closed);
+  hy = mix(hy, texture2D(tRelief, graft + vec2(0.0, e.y), 1.5).r - texture2D(tRelief, graft - vec2(0.0, e.y), 1.5).r, closed);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 across = normalize(uAxis);
   vec3 down = normalize(uDrop);
