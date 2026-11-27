@@ -289,7 +289,7 @@ export function create(ctx: Context): Piece {
     const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
     add(blades, bladeShape(rib, cut), stoneOf(cut.grain, rib.name === 'L1' ? 4 : Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
-    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 40, broken: rib.name !== 'L1', ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
+    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 40, broken: rib.name !== 'L1' && rib.name !== 'OR', ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }
 
   // The near cliff's curtain: real fronds over the sheet, on the side the lenses see.
