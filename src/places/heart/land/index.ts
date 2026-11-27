@@ -278,9 +278,9 @@ export function create(ctx: HeartContext): HeartPiece {
     const t = -(x + 510.5) * AHEAD[1] + (z - 215.5) * AHEAD[0];
     return Math.min(s - FINE.back, FINE.front - s, t - FINE.left, FINE.right - t);
   };
-  const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0 && inFine(x, z) < 0.16, 0, 0.04, [0.2, 0.6]), rubbleMaterial);
+  const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0 && inFine(x, z) < 0.16, 0, 0.04, [0.2, 0.6], true), rubbleMaterial);
   rubble.renderOrder = -5.4;
-  const rubbleFine = mesh(sheet(-516.6, 205.7, -501.7, 219.5, 0.035, rubbleHeight, (x, z) => inFine(x, z) > 0, 0, 0.03, [0.2, 0.6]), rubbleMaterial);
+  const rubbleFine = mesh(sheet(-516.6, 205.7, -501.7, 219.5, 0.035, rubbleHeight, (x, z) => inFine(x, z) > 0, 0, 0.03, [0.2, 0.6], true), rubbleMaterial);
   rubbleFine.renderOrder = -5.6;
   // The shader is told, corner by corner, what stands over the bed of grit: a block's face is read as broken scoria, the bed as grit under ash.
   for (const g of [rubble.geometry, rubbleFine.geometry]) {
