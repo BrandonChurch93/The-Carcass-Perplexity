@@ -309,7 +309,9 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     float n0 = seaLift(p, 1, false);
     // 0 on the floor of a hollow, 1 on the crown of a head.
     // Where the deck has climbed into the storm it is the storm's own cloud: dark, soft, without the dusk.
-    float inWall = smoothstep(150.0, 1400.0, ridgeAt(p.x).x - p.z);
+    // (Some way off only: close under the lens the deck on that side is the deck as on the other. Dark from the ridge's foot, it lay
+    // at the foot of the first spire's cliff as a dark wedge.)
+    float inWall = smoothstep(150.0, 1400.0, ridgeAt(p.x).x - p.z) * smoothstep(500.0, 2000.0, t);
     float inStorm = max(stormSide(rd), inWall);
     float head = mix(smoothstep(-0.2, 0.55, seaHead), 0.45, 0.5 * inWall);
     // The way a face of it looks, from the heights a little way off on two hands: wider with the distance, as the lens sees less of it.
@@ -397,7 +399,9 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t * t / (1.1e8 * seaLens * seaLens * seaLens));
     // The sky's foot is read only where the deck goes into it: near the lens on the dusk side it has no part.
-    float toWall = inStorm * (1.0 - exp(-t / 1500.0));
+    // (By the way the lens looks and not by where the deck stands: looked at from a spire toward the dusk, the deck under the storm
+    // given the sky's foot whole lay at the cliff's foot as a flat dark wedge.)
+    float toWall = stormSide(rd) * (1.0 - exp(-t / 1500.0));
     bool needFoot = gone > 0.003 || toWall > 0.003 || uPlate.w > 0.0;
     // (Read soft: read sharp, each mass of the sky's foot stood on the deck as an upright streak under itself, like a reflection in water.)
     vec3 domeFar = needFoot ? skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 2.5) : vec3(0.0);
