@@ -311,6 +311,8 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
 vec3 rigOut(vec3 c) {
+  // (And no surface hands the frame what is not a colour: one such fragment is a hole in every pass after it.)
+  if (any(isnan(c)) || any(isinf(c))) return vec3(0.0);
   return c * (1.0 - uSolo);
 }`;
 
