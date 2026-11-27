@@ -24,27 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 159, 2026-11-27 09:40 UTC:
+Status 160, 2026-11-27 10:00 UTC:
 
-- `01-s159-ribs-bones-alone.jpg`: The Ribs at 0:34 (frame 2085) with the rib bones drawn alone at the review tier at 960x540, from the stills a render machine sent at 2:09 AM. Left: the whole frame; everything that is not bone is black, and the white dot is inside the circle at the top edge, beside the top of a far bone. Right: that part of the top edge enlarged 10 times; a round spot of full white with a soft fall-off. None of the other thirteen parts of the place has a bright pixel there
-- `02-s159-hung-body-head.jpg`: The Ribs at 0:34 (frame 2081) as the critics of round 30 saw it, drawn at 3840x2160 at the final tier and reduced for them. Left: the frame, with the head of the hung body inside the circle. Right: the head enlarged about two times; the dark round hole on its side reads as an eye socket. The third wave closes it, because nothing living here has eyes or ears
-- `03-s159-spine-strike.jpg`: The Spine at 2:07 in Preview 06 (960x540): the upper left part of three frames in a row of the preview, film frames 7666, 7668 and 7670, enlarged 2 times. A thin first bolt, the main bolt, and the sparks after it. The spire, the kites at right and the cloud away from the bolt keep the same brightness in all three, which is what the motion critics of round 30 call lightning that lights nothing
+- `01-s160-heart-3477.jpg`: The Heart at 0:58 (frame 3477), the crusted channel: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. This frame now has 1.13 of its approved picture's fine detail, where it had 0.48 in round 29, so that measure is green for it. What the critics still name: clean blue sky where the picture has warm smoke lit from below, a crust of flat plates with straight cracks where the picture has ropy folds, and a channel broader and brighter than the picture's
+- `02-s160-marsh-5725.jpg`: The Blood Marsh at 1:35 (frame 5725), the wide view: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has dark, glossy red water with rings round every wallowing animal and steam at the left; the frame has a pale, matte red that reads as wet clay, fewer animals, and the rain at the top right as a grey smear. The critics ask for the herd back and for brine that reflects
+- `03-s160-eye-9221.jpg`: The Eye at 2:34 (frame 9221), the back that rises in the lake: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. In the picture water streams off a wet back and rings spread from it; in the frame the back is a smooth dark dome on still water. The third wave makes it read as water streaming off a wet mass
+- `04-s160-spine-8090.jpg`: The Spine at 2:15 (frame 8090), the herd in the cave: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has warm stone in deep shadow with violet light on the rim and the herd huddled close; the frame has a cave wall with one texture stretched in streaks, cooler and brighter light, and the herd lower in the frame. The critics ask for the shadow, the warm stone and fur that reads as fur
 
+Status 159, 2026-11-27 09:40 UTC, showed: The Ribs at 0:34 (frame 2085) with the rib bones drawn alone at the review tier at 960x540, from the stills a render machine sent at 2:09...
 Status 158, 2026-11-27 09:09 UTC, showed: The Ribs at 0:34 (frame 2085), drawn at the review tier at 960x540 from two builds.
 Status 157, 2026-11-27 08:41 UTC, showed: Where the invalid pixels of round 30 are, enlarged from the judged frames drawn at 3840x2160, final tier.
-Status 156, 2026-11-27 08:11 UTC, showed: The Breath at 1:13 (frame 4409), the wide view: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T09:40:30Z
-phase 6: 12.85 h used of 24.00 h
-build: 57.82 h used of 72.00 h
+2026-11-27T10:00:56Z
+phase 6: 13.19 h used of 24.00 h
+build: 58.16 h used of 72.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 5
+minutes since the last status: 20
 ```
 
 ## Phases
