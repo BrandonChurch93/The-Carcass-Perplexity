@@ -122,7 +122,7 @@ export function create(ctx: Context): Piece {
   const shared = { tChop: { value: chop }, tFoam: { value: foamMap }, uWind: { value: new THREE.Vector2(WIND.to[0], WIND.to[1]) } };
 
   const foamPicture = ctx.assets.texture('mat/foam.jpg', { kind: 'colour' });
-  const seaUniforms = { ...rig.uniforms, ...shared, uEye: { value: eye }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture } };
+  const seaUniforms = { ...rig.uniforms, ...shared, uEye: { value: eye }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture }, tFoamNh: { value: ctx.assets.texture('mat/foam-nh.png', { kind: 'data' }) } };
   const seaMaterial = new THREE.ShaderMaterial({
     vertexShader: SEA_VERTEX,
     fragmentShader: SEA_FRAGMENT,
