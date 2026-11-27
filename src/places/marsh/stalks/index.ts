@@ -4,7 +4,7 @@ import { EYE, F as AHEAD, R as ASIDE, K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU
 import type { Context, Piece } from '../shared/context';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
-import { Fronds, crownOf, dropMesh, frondMesh, matOf, plumeDrawn, plumeOf, stemMesh, tuftOf, type GrowthUniforms } from './grown';
+import { Fronds, SLIM, crownOf, dropMesh, frondMesh, matOf, plumeDrawn, plumeOf, stemMesh, tuftOf, type GrowthUniforms } from './grown';
 import { COLLAR_FRAGMENT, COLLAR_VERTEX } from './palms';
 import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX } from './shaders';
 import { growStands, lineAt, type Wild } from './stands';
@@ -275,6 +275,14 @@ export function create(ctx: Context): Piece {
       const from3 = Math.hypot(s.x - k3[0], s.z - k3[1]);
       const framed = from3 < 12.5 && s.kind !== 2 && w.h > 1.8;
       if (framed) w.h = from3 < 7 ? 1.4 + 0.4 * ((seed * 7.7) % 1) : 2.5 + 0.3 * ((seed * 7.7) % 1);
+      if (!anchored) {
+        // No two alike: from its own seed, so that what `wild` gives the others stays what it gave, a stalk leans further and may kink where it did not.
+        w.lean += 0.3 * Math.pow((seed * 23.1) % 1, 2);
+        if (w.kinkM === 0 && (seed * 53.7) % 1 < 0.45) {
+          w.kinkT = 0.3 + 0.5 * ((seed * 91.7) % 1);
+          w.kinkM = 0.15 + 0.4 * ((seed * 17.9) % 1);
+        }
+      }
       wilds.push(w);
       // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
       if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
@@ -362,6 +370,37 @@ export function create(ctx: Context): Piece {
       }
     });
     // Each one shades the ground it stands on, and one that lies shades the length of it.
+    {
+      // A thicket, not single trunks in a row: beside each standing stalk one to three slender ones of its own kin, of unlike height, lean,
+      // kink and state: a fan, a bud, a bare stick or a broken one. From their own stream: the stalks that stood keep all they had.
+      const thick = ctx.rng('stalks-thicket');
+      for (const w of wilds.filter((v) => v.foot && v.kind !== 2 && v.h > 1.2 && v.low === 0 && v.cards.length > 0)) {
+        // Round the seep they stand thickest: its key's picture has a thicket there.
+        const dense = Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) < 45;
+        const n = dense ? 3 + thick.int(4) : 1 + thick.int(3);
+        for (let k = 0; k < n; k++) {
+          const a = thick.range(0, TAU);
+          const d = thick.range(0.12, 0.75) * (dense ? 2.4 : 1);
+          const x = w.x + Math.cos(a) * d;
+          const z = w.z + Math.sin(a) * d;
+          const yaw = a + thick.range(-1.2, 1.2);
+          const h = w.h * thick.range(0.3, 1.05);
+          const state = thick.next();
+          const kind = state < 0.24 ? 2 : state < 0.38 ? 1 : 0;
+          const kinks = thick.next() < 0.6;
+          const level = levelAt(x, z);
+          const c: Wild = {
+            ...w, x, y: Math.abs(level - w.y) < 0.3 ? Math.min(level, w.y + 0.05) : w.y, z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: thick.range(0.05, 0.55), R: w.R * thick.range(0.45, 0.8),
+            kind, phase: thick.range(0, TAU), seed: thick.next(), bowA: thick.range(0, TAU), bowM: thick.range(0.05, 0.3),
+            kinkT: kinks ? thick.range(0.25, 0.8) : 2, kinkM: kinks ? thick.range(0.15, 0.5) : 0, kinkA: thick.range(0, TAU), swayA: thick.range(0, TAU),
+            age: kind === 2 ? 2 : thick.range(0, 0.6), stain: thick.range(0.12, 1.1), uvo: thick.range(0, 2), fork: [0, 0, 0], collar: thick.range(0.5, 1.2), cards: [], foot: true,
+          };
+          if (kind !== 2) c.cards = [[thick.range(0, TAU), 0.3, (0.8 + 0.35 * thick.next()) * headFor(h) * (kind === 1 ? 0.5 : 1), 0.2, 0, thick.next() < 0.3 ? thick.range(0.2, 0.6) : 0, thick.next() < 0.15 ? 0.5 : 0, 0]];
+          wilds.push(c);
+        }
+      }
+    }
+    for (const w of wilds) w.R *= SLIM;
     const feet = wilds.filter((w) => w.foot || w.quiver === 0);
     const shade = ctx.rig.contactDiscs(feet.length);
     feet.forEach((w, i) => {
@@ -442,6 +481,7 @@ export function create(ctx: Context): Piece {
     }
     // The stands of the wide shot: more stems and their heads, the leaf that hangs down the stems, and the growth at their feet.
     const stands = growStands(ctx, wilds, uSeconds);
+    for (const w of stands.stems) w.R *= SLIM;
     {
       // The wide lens walks 16 m forward and turns 23 degrees in all: what stands behind it or beyond the sides of all it sees is not made.
       const seen = (x: number, z: number): boolean => {
@@ -459,7 +499,8 @@ export function create(ctx: Context): Piece {
       const listOf = (d: number): Fronds => (d < 20 ? nearF : d < 38 ? midF : farF);
       const wideOf = lensOf['marsh-01'] ?? reach;
       for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
-      for (const w of stands.leaves) if (seen(w.x, w.z) && wideOf(w) < 38) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)) * 0.35, broadOf(wideOf(w)) * 1.2, true);
+      // Most stems are bare below the head: one in four keeps an old leaf hanging.
+      for (const w of stands.leaves) if (seen(w.x, w.z) && wideOf(w) < 38 && (w.phase * 7.3) % 1 < 0.25) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)) * 0.35, broadOf(wideOf(w)) * 1.2, true);
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
       const t1 = stands.tufts[1] as number[];
@@ -524,8 +565,13 @@ export function create(ctx: Context): Piece {
     // Seen from the other shots they are far off, and are made as the far ones are.
     const plain = new Fronds();
     const less = ctx.rng('stalks-close-far');
-    for (const w of closeW) if (w.kind !== 2) crownOf(plain, w, less, 12, 1.3, false);
-    closeFar.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 14, 8, 1), frondMesh(ctx, growth, plain, 5));
+    // From there they are slender stalks like the rest, and one that is shut is no ringed post with a knob on it: it stands broken, and leans.
+    const slender = closeW.map((w): Wild => ({
+      ...w, R: w.R * SLIM, lean: w.lean + (w.kind === 1 ? 0.35 : 0.12 * ((w.seed * 23.1) % 1)), h: w.kind === 1 ? w.h * 0.62 : w.h,
+      kinkT: 0.35 + 0.4 * ((w.seed * 91.7) % 1), kinkM: w.kind === 1 ? 0.45 : 0.3 * ((w.seed * 17.9) % 1), kinkA: w.seed * 61, age: w.kind === 1 ? 2 : w.age, kind: w.kind === 1 ? 2 : w.kind,
+    }));
+    for (const w of slender) if (w.kind !== 2) crownOf(plain, w, less, 12, 1.3, false);
+    closeFar.add(stemMesh(ctx, growth, slender.length, lines(slender), 14, 8, 1), frondMesh(ctx, growth, plain, 5));
     group.add(closeSet, closeFar);
   }
   ctx.scene.add(ctx.parts.built('stalks', group));

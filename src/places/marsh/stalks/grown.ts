@@ -113,7 +113,7 @@ void main() {
   // as far as the picture says they are high: the ragged lips are the mesh, not paint.
   // No two ledges the same distance apart, and none level all the way round.
   float vy = y / (3.4 * D);
-  vy += 0.17 * sin(vy * 2.1 + seed * 20.0) + 0.07 * sin(vy * 5.3 + seed * 47.0) + 0.022 * sin(vy * 13.7 + a + seed * 7.0);
+  vy += 0.06 * sin(vy * 2.1 + seed * 20.0) + 0.02 * sin(vy * 5.3 + seed * 47.0) + 0.012 * sin(vy * 13.7 + a + seed * 7.0);
   vec2 barkUv = vec2(a / 6.28318, vy) + seed * vec2(3.1, 7.7);
   float ledge = 0.0;
   if (close > 0.5) {
@@ -125,6 +125,12 @@ void main() {
     ledge = smoothstep(0.03, 0.2, lip) * kept;
     float lump = 0.5 + 0.5 * sin(a * 9.0 + vy * 40.0 + seed * 50.0) * sin(a * 4.0 - vy * 71.0);
     r += R * ((0.55 * lip + 0.08 * lump * ledge) * (0.2 + 0.8 * kept) + 0.25 * min(fineH - broadH, 0.0) + 0.08 * (broadH - 0.5)) * (1.0 - 0.5 * dead);
+    // The segments of the trunk (the fragment shader paints the same ones): each swells to a ridge at its foot and draws in under the next.
+    float ringQ = barkUv.y * (4.6 + 4.4 * fract(seed * 37.7)) + 0.3 * sin(barkUv.y * 4.3 + seed * 17.0) + 0.06 * sin(barkUv.x * 6.28318 + barkUv.y * 3.0) + 0.035 * sin(barkUv.x * 18.84954 + seed * 23.0);
+    float ringId = floor(ringQ);
+    float ringF = ringQ - ringId;
+    float ringK = 0.3 + 0.7 * step(0.33, fract(sin(ringId * 12.9898 + seed * 78.233) * 43758.5453));
+    r += R * ringK * (0.13 * (1.0 - smoothstep(0.0, 0.3, ringF)) * (0.5 + 0.5 * kept) - 0.06 * smoothstep(0.7, 0.95, ringF)) * (1.0 - dead);
   }
   // The mouth flares a little, and its wall has a thickness.
   r *= 1.0 + mix(0.16, 0.3, close) * smoothstep(1.0 - mix(1.2, 2.2, close) * R / h, 1.0, t) * (1.0 - dead);
@@ -197,6 +203,22 @@ void main() {
   float tongue = smoothstep(0.35, 0.75, fbm(vec2(vUv.x * 14.0, vUv.y * 1.6) + seed * 9.0));
   float run = smoothstep(0.62, 0.8, ledgeOver) * (1.0 - 0.8 * crust) * (0.3 + 0.7 * tongue) * smoothstep(0.1, 0.5, rusty + 0.25 - 0.3 * zone);
   albedo = mix(albedo, vec3(0.4, 0.15, 0.055), 0.75 * run * (1.0 - away) * rustK);
+  // By the lens a trunk is told in segments from across the frame (the same rings the mesh carries, see the vertex shader): a ridge of white
+  // crystal, a dark wet seam under it, and ochre and rust run down from the seam, further on one side than the other. No two segments the same
+  // height, none level all the way round, and one in three hardly there.
+  // No two trunks the same either: each has its own count of segments to a metre.
+  float byLens = step(1.5, uLedgeF) * (1.0 - deadStem);
+  float ringA = vUv.x * 6.28318;
+  float ringQ = vUv.y * (4.6 + 4.4 * fract(seed * 37.7)) + 0.3 * sin(vUv.y * 4.3 + seed * 17.0) + 0.06 * sin(ringA + vUv.y * 3.0) + 0.035 * sin(ringA * 3.0 + seed * 23.0);
+  float ringId = floor(ringQ);
+  float ringF = ringQ - ringId;
+  float ringK = (0.3 + 0.7 * step(0.33, fract(sin(ringId * 12.9898 + seed * 78.233) * 43758.5453))) * byLens;
+  float side = smoothstep(0.25, 0.65, fbm(vec2(vUv.x * 3.0 + seed * 3.0, vUv.y * 0.8)));
+  float ran = smoothstep(0.3 + 0.5 * (1.0 - side), 0.88, ringF + 0.16 * (tongue - 0.5));
+  albedo *= mix(vec3(1.0), vec3(1.05, 0.95, 0.84), byLens);
+  albedo = mix(albedo, mix(vec3(0.6, 0.3, 0.12), vec3(0.4, 0.15, 0.07), tongue) * (0.7 + 0.6 * luma), 0.92 * ran * (0.35 + 0.65 * side) * ringK);
+  albedo *= mix(vec3(1.0), vec3(0.26, 0.17, 0.13), smoothstep(0.8, 0.92, ringF) * ringK * (0.7 + 0.3 * tongue));
+  albedo = mix(albedo, vec3(0.68, 0.65, 0.62) * (0.9 + 0.2 * grain), 0.75 * (1.0 - smoothstep(0.06, 0.2, ringF)) * ringK * smoothstep(0.3, 0.5, patchy));
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
   // Far off a stem is seen against pale ground and paler air: it is the horn colour of its tube, with its rings as bands, not chalk.
@@ -478,54 +500,68 @@ const endOf = (w: Wild): { end: [number, number, number]; aim: [number, number, 
   return { end, aim: [(d[0] as number) / l, (d[1] as number) / l, (d[2] as number) / l] };
 };
 
+/** A stalk that is not one of the colony's own trunks is this much of the girth it was given: a slender stalk, not a palm's trunk. Its head keeps its size. */
+export const SLIM = 0.6;
+
 /**
- * The head of a line, from the cards it was dressed with (index.ts and stands.ts): a card of the lock is a spray that stands up round the line,
- * a card of the fan is a fall of straps to one side. `fine` is how many straps a card is worth, by how near a lens ever comes.
+ * The head of a line. On a stalk that stands it is a fan: one to three sparse sprays of long thin straps that leave the line upward and to one
+ * side, like spread fingers, and only curve over at their ends. No head is round and none droops evenly all round. The cards a stalk was dressed
+ * with (index.ts and stands.ts) say which way the fan is swept, how big it is, and how much of it is ragged or spent.
+ * `hung` is the old leaf that hangs down a stem. `fine` is how many straps a card is worth, by how near a lens ever comes.
  */
-export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: number, hung: boolean, swept = 0): void {
+export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: number, hung: boolean, swept = 0, slim = SLIM): void {
   if (w.cards.length === 0) return;
   const { end, aim } = endOf(w);
-  const up = !w.bare && !hung;
-  let first = true;
+  if (!hung) {
+    const c0 = w.cards[0] as number[];
+    let size = 0;
+    let ragged = 0;
+    let spent = 0;
+    for (const c of w.cards) {
+      size = Math.max(size, c[2] as number);
+      ragged = Math.max(ragged, c[5] as number);
+      spent += (c[6] as number) / w.cards.length;
+    }
+    // Every plant its own: the size of its head, the number of its sprays and how open they stand are taken from its seed.
+    const u = (w.seed * 7.31) % 1;
+    const v = (w.seed * 13.7) % 1;
+    const q = (w.seed * 29.3) % 1;
+    const wide = Math.min(1.5, (19 * 2 * w.R * size) / slim) * (0.95 + 0.9 * u * u + 0.25 * swept);
+    const sprays = v < 0.4 ? 1 : v < 0.82 ? 2 : 3;
+    const each = Math.max(sprays === 1 ? 3 : 2, Math.round(fine * (0.38 + 0.36 * q) * (1 - 0.4 * ragged)));
+    let first = true;
+    for (let j = 0; j < sprays; j++) {
+      const turn = (c0[0] as number) + (j - (sprays - 1) / 2) * rng.range(0.5, 0.95) + rng.normal() * 0.12;
+      const tilt = rng.range(0.22, 0.6) + (j > 0 ? 0.15 : 0);
+      const reach = j === 0 ? 1 : rng.range(0.55, 0.9);
+      for (let k = 0; k < each; k++) {
+        const sp = spent > 0.5 ? (rng.next() < spent ? 1 : 0) : rng.next() < spent ? 1 : 0;
+        const az = turn + rng.normal() * 0.3;
+        const leave = sp ? rng.range(1.2, 1.9) : Math.max(0.06, tilt + rng.normal() * 0.2);
+        const length = 0.95 * wide * reach * rng.range(0.5, 1.1) * (1 - ragged * rng.range(0, 0.6));
+        const fall = sp ? rng.range(1.2, 2.2) : rng.range(0.15, 0.95);
+        // The first strap of a head is the last to go when the head is thinned for distance: no head thins to nothing.
+        list.add(w, end, aim, az, leave, length, Math.min(0.022, Math.max(0.007, length * rng.range(0.022, 0.036))) * broad, rng.next(), fall, sp, first ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
+        first = false;
+      }
+    }
+    return;
+  }
   for (const c of w.cards) {
     const turn = c[0] as number;
     const droop = c[1] as number;
     const wide = Math.min(1.5, 19 * 2 * w.R * (c[2] as number));
-    const lock = (c[3] as number) >= 1 && !hung;
-    const tall = 0.72 + ((((c[3] as number) % 1) / 0.45) * 0.58);
     const ragged = c[5] as number;
     const spent = c[6] as number;
-    const n = Math.max(2, Math.round(fine * (lock ? 1.3 : 1) * (1 - 0.4 * ragged)));
+    const n = Math.max(2, Math.round(fine * (1 - 0.4 * ragged)));
     for (let k = 0; k < n; k++) {
-      let az: number;
-      let leave: number;
-      let length: number;
-      let fall: number;
-      if (lock) {
-        // The heart of a head: young straps that stand, the outer of them starting to arch.
-        az = rng.range(0, TAU);
-        leave = Math.max(0.04, Math.abs(rng.normal()) * 0.4 + 0.5 * droop * Math.cos(az - turn));
-        length = 0.6 * wide * tall * rng.range(0.55, 1.05);
-        fall = rng.range(1.1, 2.1) + 1.2 * leave;
-        if (rng.next() < swept) {
-          // A plume, not a star: most of a head leaves to the side the air has combed it, arches over and weeps.
-          az = turn + rng.normal() * 0.75;
-          leave = Math.min(2.2, 0.3 + Math.abs(rng.normal()) * 0.5 + 0.4 * droop);
-          length = 0.8 * wide * tall * rng.range(0.6, 1.1);
-          fall = rng.range(1.9, 3.1);
-        }
-      } else {
-        // The fall of a head: straps that leave to one side, arch over and hang by their ends.
-        az = turn + rng.normal() * 0.6;
-        leave = Math.min(2.6, Math.max(0.15, 0.55 + droop * 0.7 + rng.normal() * 0.28));
-        length = 0.72 * wide * rng.range(0.5, 1.0);
-        fall = rng.range(1.5, 2.8);
-      }
-      length *= 1 - ragged * rng.range(0, 0.6);
+      // The fall of a leaf: straps that leave to one side, arch over and hang by their ends.
+      const az = turn + rng.normal() * 0.6;
+      const leave = Math.min(2.6, Math.max(0.15, 0.55 + droop * 0.7 + rng.normal() * 0.28));
+      const length = 0.72 * wide * rng.range(0.5, 1.0) * (1 - ragged * rng.range(0, 0.6));
+      const fall = rng.range(1.5, 2.8);
       const sp = spent > 0.5 ? spent : rng.next() < spent ? 1 : 0;
-      // The first strap of a head is the last to go when the head is thinned for distance: no head thins to nothing.
-      list.add(w, end, aim, az, leave + 0.35 * sp, length, Math.min(0.02, Math.max(0.006, length * rng.range(0.028, 0.048))) * broad, rng.next(), fall, sp, first ? 0 : rng.next(), up, w.seed);
-      first = false;
+      list.add(w, end, aim, az, leave + 0.35 * sp, length, Math.min(0.02, Math.max(0.006, length * rng.range(0.028, 0.048))) * broad, rng.next(), fall, sp, rng.next(), false, w.seed);
     }
   }
 }
