@@ -175,6 +175,8 @@ void main() {
   float depth = uSea - land.r;
   float ragged = depth < 0.2 ? vnoise(xz * 1.7) * 0.05 + vnoise(xz * 9.0) * 0.015 + 0.008 * sin(uTime * 1.7 + 9.0 * vnoise(xz * 0.9)) : 0.0;
   float sheet = smoothstep(0.0, 0.012, depth - 0.6 * ragged) * (1.0 - smoothstep(0.0, 0.012, up));
+  // Most of the skin lies under the sheet or past its own inland end: nothing more is worked out there.
+  if (sheet > 0.995 || vOut.z > 0.46) discard;
 
   vec3 face = normalize(vFace);
   face = face.y < 0.0 ? -face : face;

@@ -114,6 +114,8 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // Between the gusts the water is not glass: a light air lies on all of it and keeps every band alive. A gust doubles the short ones.
   // The swell is the sea's: on the shelf, in a channel twenty metres wide, a wave five metres long has no room.
   float a5 = (0.022 + 0.02 * broad) * (1.0 - 0.88 * shelf);
+  // Where it is too low to be seen it is not read.
+  a5 *= smoothstep(0.0035, 0.007, a5);
   // From the high wide view the light air is not seen as a grain over the whole channel: the water lies silky there between the gusts,
   // which cross it as darker ruffled patches.
   float air = 1.0 - 0.6 * uHigh;
@@ -127,7 +129,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float k04 = 1.0 - smoothstep(0.1, 0.42, foot);
   float k016 = 1.0 - smoothstep(0.04, 0.16, foot);
   float k008 = 1.0 - smoothstep(0.02, 0.08, foot);
-  if (k5 > 0.0 && foot > 0.02) slope += band(tWave, xz, turned(uWind, 0.14), 64.0, 1.6, 1.2, stream, foot) * (4.0 * a5);
+  if (k5 > 0.0 && foot > 0.02 && a5 > 0.0) slope += band(tWave, xz, turned(uWind, 0.14), 64.0, 1.6, 1.2, stream, foot) * (4.0 * a5);
   if (k1 > 0.0) slope += band(tRipple, xz, turned(uWind, -0.25), 17.0, 0.75, 3.2, stream, foot) * (4.0 * a1);
   if (k04 > 0.0) slope += band(tWave, xz, turned(uWind, 0.38), 5.0, 0.4, 6.1, stream, foot) * (4.0 * a04);
   if (k016 > 0.0) slope += band(tRipple, xz, turned(uWind, -0.52), 1.9, 0.27, 9.1, stream, foot) * (4.0 * a016);
@@ -175,7 +177,9 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // bend the mirror and are read for the sun alone.
   vec2 facet = slope;
   float kPoint = 1.0 - smoothstep(0.004, 0.016, foot);
-  if (kPoint > 0.0) facet += band(tRipple, xz, turned(uWind, 1.1), 0.33, 0.18, 14.0, stream, foot) * (4.0 * kPoint * (0.05 + 0.07 * gust) * deep);
+  // Read only where a facet could reach the sun's slope at all: a band is the dearest thing in this shader.
+  vec2 miss0 = -slope - want;
+  if (kPoint > 0.0 && dot(miss0, miss0) < 0.25) facet += band(tRipple, xz, turned(uWind, 1.1), 0.33, 0.18, 14.0, stream, foot) * (4.0 * kPoint * (0.05 + 0.07 * gust) * deep);
   vec2 miss = -facet - want;
   float spread = 0.0022 + lost;
   float faces = exp(-dot(miss, miss) / spread) / (3.14159 * spread);
@@ -219,8 +223,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   alpha = max(alpha, 0.6 * meet);
   colour *= 1.0 - 0.7 * meet;
   // The same round a leg or a wet mop that stands in it (the waders folder says where): a dark line where the water climbs it.
-  // It is read where it is, not aside as the rings are: pushed about by the ripples it smeared to a haze round the leg.
-  float held = clamp(texture2D(tRings, gl_FragCoord.xy / uFrame).a, 0.0, 1.0);
+  float held = clamp(rings.a, 0.0, 1.0);
   float touch = smoothstep(0.14, 0.55, held);
   alpha = max(alpha, 0.9 * touch);
   colour *= 1.0 - 0.8 * touch;
