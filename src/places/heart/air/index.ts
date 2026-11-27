@@ -88,11 +88,14 @@ const BODIES: readonly Body[] = [
   { at: behind(250, 0), radius: 230, height: 13, lean: [0, 0], dense: 0.001, repeat: 36, hard: 2.2, climb: 1.2, colour: SOOT, foot: 0, lake: [0.1, 8], floor: [0.2, 7], lights: 0.2, tops: 0.55, solid: 0.3, streak: 1.8, taper: 1.6, sparse: 0.08, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
   // The first is the tall lit smoke that stands east of the fan and a little behind its toe, so that the face of the fan is clear of it: streaks that climb fast, thickest and brightest low, thinning as they rise. The two beside it are low and thin.
-  { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.042, widen: 0.85, repeat: 84, hard: 4, climb: 13, colour: ROSE, foot: 0.05, lake: [1.25, 12], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.15, streak: 2.6, taper: 1.0, sparse: 0.2, through: 0.4, shots: { 'heart-05': 1, rest: 0.08 } },
+  // As thin streaks of many small lumps it added up, through its depth, to one even brown veil right of the cliff. It is fewer, rounder billows
+  // 25 m across with air between them: each has an underside the flow lights and a top that is dark, the cliff shows between them, and the
+  // fire is spent on the way up through it.
+  { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.03, widen: 0.85, repeat: 120, hard: 4.5, climb: 13, colour: ROSE, foot: 0.05, lake: [0.8, 16], floor: [0.3, 30], lights: 0.9, tops: 0.6, solid: 0.2, streak: 1.4, taper: 1.0, sparse: 0.32, through: 1.0, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(14, -4), radius: 26, height: 62, lean: [0.5, 0.2], dense: 0.007, widen: 0.9, repeat: 64, hard: 3.2, climb: 9, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(58, 44), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.005, widen: 0.3, repeat: 64, hard: 3.2, climb: 7, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, streak: 1.6, shots: { 'heart-05': 1, rest: 0.08 } },
   // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture. Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
-  { at: [571, -400], radius: 50, height: 1000, lean: [0.3, 0.4], dense: 0.03, widen: 10, foot: 0.1, repeat: 260, hard: 7, climb: 28, colour: UMBER, floor: [0.3, 120], tops: 2.2, solid: 0.6, streak: 0.8, shots: { 'heart-02': 0, 'heart-05': 0 } },
+  { at: [571, -400], radius: 50, height: 1000, lean: [0.3, 0.4], dense: 0.03, widen: 10, foot: 0.1, repeat: 260, hard: 7, climb: 42, colour: UMBER, floor: [0.3, 120], tops: 2.2, solid: 0.6, streak: 0.8, shots: { 'heart-02': 0, 'heart-05': 0 } },
   // The smoke that rises from the seam the hero feeds at, lit by the melt in it: it lies low behind the animal in the feeding shot, under the horizon of that lens, and what is behind the animal is the dark of the far smoke.
   { at: [-397, 181], radius: 11, height: 6.5, lean: BANK_LEAN, dense: 0.035, repeat: 9, hard: 2.6, climb: 1.6, colour: SOOT, foot: 0.1, lake: [1.1, 3], floor: [1.6, 3], lights: 0.6, tops: 0.7, solid: 0.4, shots: { 'heart-02': 1, rest: 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
@@ -256,7 +259,7 @@ export function create(ctx: HeartContext): HeartPiece {
         const seed = steamSeed[index % steamSeed.length] as number;
         const own = (k: number): number => steamOwn[(index % 64) * 5 + k - 1] as number;
         const vary = smoke ? 0 : 1;
-        const radius = Math.max(0.05, s.radius * (1 + vary * (own(1) * 0.9 - 0.3)));
+        const radius = Math.max(0.05, s.radius * (1 + vary * (own(1) * 0.8 - 0.4)));
         const rise = s.rise * (1 + vary * (own(2) * 0.7 - 0.45));
         const strength = s.strength * (1 + vary * (own(3) * 0.7 - 0.4));
         const drift = vary * (0.25 + 0.6 * own(4));
