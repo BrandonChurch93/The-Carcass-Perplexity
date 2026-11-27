@@ -24,26 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 144, 2026-11-27 02:26 UTC:
+Status 145, 2026-11-27 02:52 UTC:
 
-- `01-s144-heart.jpg`: The Heart at 0:58 (frame 3477): the film now at left and the Heart team's branch at right (its commit 37ce7fb, 7:17 PM). The near bank is broken blocks, and the crust beyond the channel has ropy coils and cracks where it was one even pattern. From the Heart team's first report, drawn on its machine; not judged
-- `02-s144-reveal.jpg`: The Reveal at 2:42 (frame 9756, the head and shoulders): the film now at left and with the sky builder's first merge at right (commit ee46d718). Cloud and haze at more heights: thin veils, small cloud over the land and mist along the central valley. From the Reveal team's first report, drawn on its machine; not judged
-- `03-s144-marsh.jpg`: The Blood Marsh at 1:42 (frame 6102): the film now at left and the Blood Marsh team's work at right. The two domes in the brine carry the brine's red and a wet shine where they were pale and glassy, and the salt crust in front has deeper relief. From the Blood Marsh team's first report, drawn on its machine; not judged
+- `01-s145-join.jpg`: The join from the Eye into the rise, frames 9535 to 9546 (2:38.9 to 2:39.1). Upper two rows: the film now. Lower two rows: the Reveal team's climb V2 (its branch at 42d81370). The cut is between 9540 and 9541. Drawn by the Builder at the draft tier, 960x540; not judged
+- `02-s145-cut.jpg`: The cut at 2:39 at full size: the last frame of the Eye at left and the first frame of the rise at right, the film now above and climb V2 below. With V2 the cloud keeps its place and the lake its outline; the frame still brightens at the cut, and a brown patch of shore appears at the lower left of the lake. Drawn by the Builder; not judged
+- `03-s145-stress.jpg`: The four stress moments of round 29: the Heart's peak, the seep pool on the Blood Marsh, the storm on the Spine and the titan frame. For each, the film as delivered at left and after a 10 Mbps encode at right, and below them the part that changed most at twice its size. From the render machines; this is what the compression critics judge
+- `04-s145-marsh-ground.jpg`: The Blood Marsh at 1:38.8 (frame 5930): the film now at left and the team's branch in wave 2 at right (its commit 62a2b41), drawn on its test machine, where this build repeats byte for byte in 12 draws. Ringed stalks with sheaths under the crowns, finer fronds, and red, wet domes in the brine. Not judged
 
+Status 144, 2026-11-27 02:26 UTC, showed: The Heart at 0:58 (frame 3477): the film now at left and the Heart team's branch at right (its commit 37ce7fb, 7:17 PM).
 Status 143, 2026-11-27 02:09 UTC, showed: The Breath: the film now, after wave 1, at left, and the same two frames with the Breath team's wave 2 work so far at right (its branch at...
 Status 142, 2026-11-27 01:33 UTC, showed: The film before and after polish wave 1, with the words on screen: Preview 04 at left, Preview 05 at right.
-Status 141, 2026-11-27 01:17 UTC, showed: Words on screen on dark ground at the Ribs (frame 1005, the line All of it is.), from the caption builder's third report: warm off-white...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T02:26:35Z
-phase 6: 5.62 h used of 24.00 h
-build: 50.59 h used of 72.00 h
+2026-11-27T02:52:38Z
+phase 6: 6.05 h used of 24.00 h
+build: 51.02 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 26
 ```
 
 ## Phases
