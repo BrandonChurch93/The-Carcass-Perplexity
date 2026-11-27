@@ -70,10 +70,11 @@ export function create(ctx: Context): Piece {
   const ahead = new THREE.Vector3();
   const upward = new THREE.Vector3();
 
+  const frothSheet = ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 });
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFrothN: { value: ctx.assets.texture('mat/froth-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) }, tBed: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
+    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFrothN: { value: ctx.assets.texture('mat/froth-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) }, tBed: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) }, tFroth: { value: frothSheet } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;
@@ -115,19 +116,25 @@ export function create(ctx: Context): Piece {
   water.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('brine', water));
 
-  // The skin of a dome is a film: drawn over what is behind it, premultiplied, after everything solid.
-  const skin = new THREE.ShaderMaterial({
-    vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, toneMapped: false, transparent: true, depthWrite: false,
-    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
-  });
-  const dropSkin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, defines: { DROP: 1 }, toneMapped: false });
-  skin.side = THREE.DoubleSide;
+  // The skin of a dome is a film, drawn after everything solid and twice: first what it lets through of what is behind it (the frame is
+  // multiplied by it), then the light it gives back itself (added).
+  const domeUniforms = { ...uniforms, tFroth: { value: frothSheet } };
+  const film = { vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms: domeUniforms, toneMapped: false, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor } as const;
+  const skinThrough = new THREE.ShaderMaterial({ ...film, defines: { THROUGH: 1 }, blendSrc: THREE.ZeroFactor, blendDst: THREE.SrcColorFactor });
+  const skin = new THREE.ShaderMaterial({ ...film, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor });
+  const dropSkin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms: domeUniforms, defines: { DROP: 1 }, toneMapped: false });
   const ball = new THREE.SphereGeometry(1, 96, 32, 0, TAU, 0, Math.PI / 2);
   const domeLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
   ball.setAttribute('aLife', domeLife);
+  const domeShade = new THREE.InstancedMesh(ball, skinThrough, domes.length);
+  domeShade.frustumCulled = false;
+  domeShade.renderOrder = 1;
   const domeMesh = new THREE.InstancedMesh(ball, skin, domes.length);
   domeMesh.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('domes', domeMesh));
+  domeMesh.renderOrder = 2;
+  const domeGroup = new THREE.Group();
+  domeGroup.add(domeShade, domeMesh);
+  ctx.scene.add(ctx.parts.built('domes', domeGroup));
 
   const dropCount = domes.reduce((n, d) => n + d.drops, 0);
   const bead = new THREE.SphereGeometry(1, 12, 8);
@@ -183,6 +190,7 @@ export function create(ctx: Context): Piece {
       const tall = r * (0.22 + 0.5 * full) * (1 - 0.3 * tear * tear);
       m.makeScale(r, tall, r).setPosition(d.x, -0.01, d.z);
       domeMesh.setMatrixAt(i, m);
+      domeShade.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
       // Then the pool's floor comes back up through the middle.
@@ -268,6 +276,7 @@ export function create(ctx: Context): Piece {
     });
     ringCount.value = ring;
     domeMesh.instanceMatrix.needsUpdate = true;
+    domeShade.instanceMatrix.needsUpdate = true;
     domeLife.needsUpdate = true;
     crownMesh.instanceMatrix.needsUpdate = true;
     crownLife.needsUpdate = true;
@@ -316,6 +325,7 @@ export function create(ctx: Context): Piece {
       tube.dispose();
       surface.dispose();
       skin.dispose();
+      skinThrough.dispose();
       dropSkin.dispose();
       crownMaterial.dispose();
     },
