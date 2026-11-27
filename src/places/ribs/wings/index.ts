@@ -761,7 +761,7 @@ export function create(ctx: Context): Piece {
       .map((r) => ({ x: r.x + Math.sin(r.yaw) * 0.38 * r.size, y: r.y, z: r.z + Math.cos(r.yaw) * 0.38 * r.size, size: r.size * (r.stance === 1 ? 1.15 : 1), seed: r.seed })),
     ledgeUnder,
   );
-  const roostBodies = new Bodies(bodyMaterials(ctx, LEVELS.pool, 0.42, 'feeder-a', undefined, 0.3), ROOSTING + MATES);
+  const roostBodies = new Bodies(bodyMaterials(ctx, LEVELS.pool, 0.55, 'feeder-a', undefined, 0.12), ROOSTING + MATES);
   const roosting = new Set(roostOrder.map((o) => o.i));
   const R: Pose = pose();
   /** Which of the six a sitter is: most sit hunched or crouched, some stand, a few hold a sail out or both open. */
