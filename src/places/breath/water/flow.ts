@@ -5,15 +5,13 @@
 // one, so no water is made or lost anywhere, none crosses a bank, and it parts round every stone that stands in it. Deep water carries more
 // than shallow (the bed's drag), so the stream keeps to the deep lane and crawls over the bars.
 //
-// What floats is carried by reading a pattern at (psi, T - t): psi names the line a fleck rides on and T is the time the stream takes to
-// reach a place. That is the fleck's own path, exactly, for as long as the film runs: nothing is slid, stretched or begun again.
-// T is counted at the mean speed of the stream round a place, not at each line's own: counted line by line, the slow water at a bank falls
-// minutes behind the middle within a hundred metres and the pattern is drawn out into hairs. Slow water is shown by a second pattern that
-// goes at half the pace and lies where the stream is slow.
+// What floats is carried in the shader by reading a pattern where the fleck was a moment ago, along the velocity baked here, in two
+// readings half a turn apart. Reading a pattern at (psi, time of travel) was tried first and drew the flecks out into hairs wherever the
+// lines of the stream close up: do not go back to it.
 import * as THREE from 'three';
 
 export interface Flow {
-  /** Half floats. r: psi in metres across a channel 24 m wide, g and b: cosine and sine of the turn of T in PERIOD, a: the pace T was counted at, m a second. */
+  /** Half floats. r: psi in metres across a channel 24 m wide, g and b: the velocity along x and z, m a second, a: the mean pace of the stream round the place. */
   lines: THREE.DataTexture;
   /** Bytes. r: the speed over FASTEST, g: what the stream carries (froth shed by stones, bars and banks upstream), b: how broken the water is (fast over a shallow bed). */
   carried: THREE.DataTexture;
@@ -21,8 +19,6 @@ export interface Flow {
   rect: THREE.Vector4;
 }
 
-/** Seconds of travel after which the carried pattern comes round again: longer than the place is on screen. */
-export const PERIOD = 128;
 export const FASTEST = 0.8;
 const CELL = 0.5;
 const AREA = { minX: -150, maxX: 0, minZ: -180, maxZ: 112 };
@@ -180,6 +176,14 @@ export function flowMap(height: (x: number, z: number) => number, sea: number, m
     return sum;
   };
   const mean = blur(blur(speed, depth, 12), depth, 12);
+  // What floats is carried by the stream a metre and a half round it, not by the cell it is in: beside a stone the speed changes within a
+  // cell, and a pattern carried by that is torn into streaks in a second.
+  const eased = (f: Float32Array): Float32Array => {
+    const up = blur(f.map((v) => v + 2), depth, 3);
+    return up.map((v) => (v > 0 ? v - 2 : 0));
+  };
+  const carryX = eased(vx);
+  const carryZ = eased(vz);
 
   // What the stream sheds and where it breaks. Froth is made where fast water runs thin over a bar, where it passes a stone, and along a bank it rubs.
   const broken = new Float32Array(n);
@@ -196,9 +200,8 @@ export function flowMap(height: (x: number, z: number) => number, sea: number, m
       made[o] = (broken[o] as number) * 0.5 + stone * Math.min(1, s / 0.25) * 1.6 + bank * Math.min(1, s / 0.3) * 0.5;
     }
   }
-  // T, and what is carried, by going one cell back up the stream from every place. The rows are taken from the land toward the sea, which is
+  // What is carried, by going one cell back up the stream from every place. The rows are taken from the land toward the sea, which is
   // the way the stream goes, twice over, west to east and east to west, so that a reach that runs across the channel is served too.
-  const time = new Float32Array(n);
   const froth = new Float32Array(n);
   const at = (f: Float32Array, x: number, z: number): number => {
     const fx = Math.min(w - 1.001, Math.max(0, x));
@@ -217,56 +220,24 @@ export function flowMap(height: (x: number, z: number) => number, sea: number, m
         const o = j * w + i;
         const s = speed[o] as number;
         if (kind[o] !== 0 || s < 0.004) {
-          // Still water and dry ground take the time of the stream beside them, so the picture has no cliff where the shader reads between cells.
-          time[o] = j > 0 ? (time[o - w] as number) + CELL / Math.max(mean[o] as number, 0.15) : 0;
           froth[o] = 0;
           continue;
         }
         const ux = (vx[o] as number) / s;
         const uz = (vz[o] as number) / s;
-        const pace = Math.max(mean[o] as number, 0.12);
-        time[o] = j === 0 && uz > 0 ? 0 : at(time, i - ux, j - uz) + CELL / pace;
         // What is carried sinks and bursts: half of it is gone in twelve seconds.
         froth[o] = Math.min(4, at(froth, i - ux, j - uz) * Math.exp(-CELL / (Math.max(s, 0.03) * 17)) + (made[o] as number) * CELL * 0.35);
       }
     }
   }
 
-  // Dry ground and still water take the time of the stream beside them, eight cells deep, so that a read between a wet cell and a dry one
-  // at a bank does not fall between two unlike times.
-  const known = new Uint8Array(n);
-  for (let o = 0; o < n; o++) known[o] = kind[o] === 0 && (speed[o] as number) >= 0.004 ? 1 : 0;
-  for (let pass = 0; pass < 8; pass++) {
-    const next: number[] = [];
-    for (let j = 1; j < h - 1; j++) {
-      for (let i = 1; i < w - 1; i++) {
-        const o = j * w + i;
-        if (known[o] === 1) continue;
-        let sum = 0;
-        let count = 0;
-        for (const q of [o - 1, o + 1, o - w, o + w, o - w - 1, o - w + 1, o + w - 1, o + w + 1]) {
-          if (known[q] === 1) {
-            sum += time[q] as number;
-            count++;
-          }
-        }
-        if (count > 0) {
-          time[o] = sum / count;
-          next.push(o);
-        }
-      }
-    }
-    for (const o of next) known[o] = 1;
-  }
-
   const lines = new Uint16Array(n * 4);
   const carried = new Uint8Array(n * 4);
   const half = THREE.DataUtils.toHalfFloat;
   for (let o = 0; o < n; o++) {
-    const turn = ((time[o] as number) / PERIOD) * Math.PI * 2;
     lines[o * 4] = half((psi[o] as number) * ACROSS);
-    lines[o * 4 + 1] = half(Math.cos(turn));
-    lines[o * 4 + 2] = half(Math.sin(turn));
+    lines[o * 4 + 1] = half(carryX[o] as number);
+    lines[o * 4 + 2] = half(carryZ[o] as number);
     lines[o * 4 + 3] = half(Math.max(mean[o] as number, 0.12));
     carried[o * 4] = Math.round(255 * Math.min(1, (speed[o] as number) / FASTEST));
     carried[o * 4 + 1] = Math.round(255 * Math.min(1, (froth[o] as number) / 2));

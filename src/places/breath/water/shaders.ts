@@ -1,6 +1,6 @@
 // The water in the light of the rig: what the sky puts on it, what shows through it, and the low sun's glitter.
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { FASTEST, PERIOD } from './flow';
+import { FASTEST } from './flow';
 
 export const VERTEX = /* glsl */ `
 varying vec3 vWorld;
@@ -83,26 +83,28 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
     float speed = ca.r * ${FASTEST.toFixed(2)};
     float moving = smoothstep(0.015, 0.06, speed) * inStream;
     broken = ca.b * inStream;
-    // Where on its line a pixel is, in turns of the period, and the same a moment of the film later: what floats has gone down with it.
-    float turn = atan(ln.b, ln.g) / 6.2831853;
-    float fast = turn - uTime / ${PERIOD.toFixed(1)};
-    float slow = turn - 0.5 * uTime / ${PERIOD.toFixed(1)};
-    // The squares are laid 2.6 m across the stream and a few seconds along it, which is as many metres as the stream's pace there makes it.
-    float pace = max(ln.a, 0.1);
-    float level = log2(max(foot, 1e-5) * 256.0 / min(2.6, 5.33 * pace));
-    // Froth: small pale rafts, a hand to a forearm long, a little drawn out along the stream, thick below a stone or a bar and thin in open
-    // water. Two layers: the one that goes with the middle of the stream and the one that lags in the slow water at the banks.
-    vec4 f1 = textureLod(tWave, vec2(ln.r / 2.6, fast * 24.0), level);
-    vec4 f2 = textureLod(tRipple, vec2(ln.r / 3.7 + 0.37, slow * 30.0), level - 0.5);
+    // What floats goes down with the stream: the pattern is read where the fleck was a moment ago. Two readings half a turn apart, each
+    // faded out before it has been carried far enough to tear, and each turn a new place in the pattern, so nothing comes round again.
+    vec2 vel = ln.gb;
+    float turn = uTime / 3.2 + 1.7 * vnoise(xz * 0.19);
+    float turn2 = turn + 0.5;
+    float n1 = floor(turn);
+    float n2 = floor(turn2);
+    float p1 = turn - n1;
+    float p2 = turn2 - n2;
+    float w1 = 1.0 - abs(2.0 * p1 - 1.0);
+    float level = log2(max(foot, 1e-5) * 256.0 / 1.7);
+    // Froth: small pale rafts a hand long, few, in drifts, thick below a stone or a bar and thin in open water.
+    vec4 f1 = textureLod(tWave, (xz - vel * (3.2 * (p1 - 0.5))) / 1.7 + vec2(0.37, 0.61) * n1, level);
+    vec4 f2 = textureLod(tRipple, (xz - vel * (3.2 * (p2 - 0.5))) / 1.7 + vec2(0.37, 0.61) * n2 + 0.5, level);
     float load = min(ca.g * 2.0, 1.0);
-    float quick = smoothstep(0.06, 0.22, speed);
-    float seen = 1.0 - smoothstep(0.04, 0.2, foot);
-    float cut = mix(0.74, 0.3, load);
-    flecks = moving * seen * max(quick * smoothstep(cut, cut + 0.12, f1.r + f1.b - 1.0 + 0.7 * (f2.a - 0.5)),
-                                (1.0 - quick) * smoothstep(cut + 0.06, cut + 0.18, f2.r + f2.b - 1.0 + 0.7 * (f1.a - 0.5)));
-    // And lanes many metres long of smooth water between ruffled water, which go down with it too.
-    vec4 f3 = textureLod(tRipple, vec2(ln.r / 11.0 + 0.61, fast * 3.0 + 0.3), level - 2.6);
+    float seen = 1.0 - smoothstep(0.03, 0.12, foot);
+    // Lanes many metres long of smooth water between ruffled water lie along the lines of the stream and go down with it too.
+    vec4 f3 = textureLod(tRipple, vec2(ln.r / 11.0 + 0.61, 0.021 * xz.y - 0.004 * uTime), level - 2.6);
     lanes = clamp(0.5 + 2.0 * (f3.g + f3.a - 1.0), 0.0, 1.0);
+    float cut = mix(0.96, 0.5, load) - 0.3 * (lanes - 0.5);
+    flecks = moving * seen * mix(smoothstep(cut, cut + 0.14, f2.r + f2.b - 1.0 + 0.5 * (f2.a - 0.5)),
+                                 smoothstep(cut, cut + 0.14, f1.r + f1.b - 1.0 + 0.5 * (f1.a - 0.5)), w1);
     slick = smoothstep(0.55, 0.7, lanes) * moving;
   }
 
@@ -131,8 +133,11 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   lost = 2.0 * (a5 * a5 * (1.0 - k5) + a1 * a1 * (1.0 - k1) + a04 * a04 * (1.0 - k04) + a016 * a016 * (1.0 - k016) + a008 * a008 * (1.0 - k008));
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   // They are read a little aside by the wind's own slope, so a ring crosses the ripples as a bent, broken line and not as a drawn circle.
-  vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame + slope * vec2(0.012, 0.03) * min(1.0, 8.0 / far));
-  slope += rings.rg * 3.0;
+  // A second, slower push aside makes their spacing uneven, and they stand only in arcs: where the wind's ripples are high a ring is lost.
+  vec2 aside = vec2(vnoise(xz * 4.3 + 0.3 * gone), vnoise(xz * 4.3 + 31.0 - 0.3 * gone)) - 0.5;
+  vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame + (slope * vec2(0.012, 0.03) + aside * vec2(0.012, 0.01)) * min(1.0, 8.0 / far));
+  float arcs = smoothstep(0.28, 0.62, vnoise(xz * 2.3 - 0.5 * gone + 5.0));
+  slope += rings.rg * (2.6 * (0.2 + 0.8 * arcs));
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float rough = sqrt(lost);
 
@@ -184,10 +189,10 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // It is milky: the silt hides the bed a hand deep. With clearer water the wide view showed the gravel of the bed through the whole
   // channel as a speckle, where the picture has one soft opaque green.
   float clear = exp(-path * 9.0);
-  vec3 tone = mix(vec3(0.13, 0.18, 0.18), mix(vec3(0.07, 0.175, 0.2), vec3(0.04, 0.125, 0.165), smoothstep(0.25, 0.9, depth)), smoothstep(0.03, 0.25, depth));
+  vec3 tone = mix(vec3(0.17, 0.215, 0.195), mix(vec3(0.095, 0.185, 0.175), vec3(0.045, 0.13, 0.14), smoothstep(0.2, 0.7, depth)), smoothstep(0.03, 0.2, depth));
   // Seen from low down and against the light the body of shallow water is not green: what comes back out of it is the low sun in its silt,
   // a dull warm olive, as under the feeding waders in the picture. From above it is the teal of the wide view.
-  tone = mix(tone, vec3(0.15, 0.13, 0.095), 0.7 * (1.0 - smoothstep(3.0, 7.0, cameraPosition.y - uSea)));
+  tone = mix(tone, vec3(0.15, 0.13, 0.095), 0.92 * (1.0 - smoothstep(3.0, 7.0, cameraPosition.y - uSea)));
   // The low sun goes into the water as well and lights the silt in it.
   // The silt goes down in the same lanes: the water's colour is streaked along the stream, milkier and clearer by turns.
   tone *= 1.0 + 0.12 * inStream * (lanes - 0.5);
@@ -201,6 +206,10 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float meet = 1.0 - smoothstep(0.0, 0.022, depth - 0.6 * ragged);
   alpha = max(alpha, 0.6 * meet);
   colour *= 1.0 - 0.7 * meet;
+  // The same round a leg or a wet mop that stands in it (the waders folder says where): a dark line where the water climbs it.
+  float touch = smoothstep(0.2, 0.75, clamp(rings.a, 0.0, 1.0));
+  alpha = max(alpha, 0.8 * touch);
+  colour *= 1.0 - 0.65 * touch;
   // Looked down on, the water mirrors little, and still the image of what stands in it is seen: the animal is between the sky and
   // the water under it, so the silt there is in its shade and the bed is hidden by it.
   colour = mix(colour * (1.0 - 0.35 * image.a), mix(0.4, 0.26, low) * image.rgb, mix(0.5, 0.75, low) * image.a);
@@ -217,8 +226,8 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // What the stream carries is drawn on the water: pale, matt, lit by the sky and the low sun.
   if (flecks > 0.0) {
     vec3 pale = vec3(0.6, 0.58, 0.52) * (skyUp * open + uSunColour * (0.22 * sunHere));
-    colour = mix(colour, pale, 0.8 * flecks);
-    alpha = mix(alpha, 1.0, 0.8 * flecks);
+    colour = mix(colour, pale, 0.6 * flecks);
+    alpha = mix(alpha, 1.0, 0.6 * flecks);
   }
   alpha *= cover;
   colour *= cover;
