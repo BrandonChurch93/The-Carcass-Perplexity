@@ -331,6 +331,11 @@ void main() {
     vec2 g = rippled * (A.s * 0.5 * (1.0 - 0.8 * field) + vec2(0.77 * B.s.x + 0.64 * B.s.y, -0.64 * B.s.x + 0.77 * B.s.y) * 0.6 * (0.35 + 0.65 * field));
     snowTint = mix(vec3(1.0), mix(vec3(1.0), A.c / PACK_MEAN, 1.0 - 0.8 * field) * mix(vec3(1.0), B.c / PACK_MEAN, 0.3 + 0.5 * field), 0.7 * level);
     snowOcc = mix(1.0, 0.72 + 0.28 * smoothstep(0.15, 0.6, 0.5 * A.h + 0.5 * B.h), level);
+    // In the fine field of the crest the sastrugi are in the mesh: the scoured pack between them is glazed and in their shade.
+    if (ground) {
+      snowOcc *= 1.0 + clamp(1.5 * vRelief, -0.2, 0.1);
+      snowTint *= mix(vec3(1.0), vec3(0.9, 0.95, 1.04), smoothstep(-0.02, -0.11, vRelief));
+    }
     float fine = smoothstep(0.012, 0.003, footprint) * level;
     if (fine > 0.01) {
       Tap D = tap(tPack, tPackNh, q.yx / vec2(1.9, 1.27) + 0.37, lodP + 2.24);

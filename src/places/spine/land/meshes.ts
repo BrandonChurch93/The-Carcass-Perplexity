@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
 import { EXIT, FIN_DEEP, FIN_ROOT, FIN_SECTION, FLOOR, MOUTH_S, S_MAX, S_MIN, canalInFin, canalL, fin, finAxes, first, flare, frameAt, locate, sheetAt, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
+import { FIELD_FROM, FIELD_TO, FIELD_WIDE, driftAt } from './drift';
 import { height, heightAt, landAt, slab, vnoise } from './height';
 
 interface Extra {
@@ -74,15 +75,85 @@ export function crestStrip(): THREE.BufferGeometry {
       sl.push(s, l);
     });
   }
+  // The fine field: where the wide lens stands over the crest and the dead one lies, the strip is cut out and laid again five times finer,
+  // with what drift.ts cuts into it. Its rim lies on the edges of the strip's own quads, so nothing opens between them.
+  const i0 = sList.findIndex((s) => s >= FIELD_FROM);
+  const i1 = sList.length - 1 - [...sList].reverse().findIndex((s) => s <= FIELD_TO);
+  const j0 = lList.indexOf(-FIELD_WIDE);
+  const j1 = lList.indexOf(FIELD_WIDE);
   const index: number[] = [];
   for (let i = 0; i < sList.length - 1; i++) {
     for (let j = 0; j < rows - 1; j++) {
+      if (i >= i0 && i < i1 && j >= j0 && j < j1) continue;
       const a = i * rows + j;
       const c = a + rows;
       index.push(a, a + 1, c, a + 1, c + 1, c);
     }
   }
-  return finish(pos, index, top, sl, { normals });
+  const FINE = 5;
+  const na = (i1 - i0) * FINE + 1;
+  const nb = (j1 - j0) * FINE + 1;
+  const base = pos.length / 3;
+  // (How far the snow here stands over the scoured pack, metres: the ground's shader lights the hollows less.)
+  const relief = new Array<number>(base + na * nb).fill(0);
+  const ys = new Float32Array(na * nb);
+  for (let a = 0; a < na; a++) {
+    const ci = Math.min(i1 - 1, i0 + Math.floor(a / FINE));
+    const fa = (a - (ci - i0) * FINE) / FINE;
+    const s = (sList[ci] as number) * (1 - fa) + (sList[ci + 1] as number) * fa;
+    const f = frameAt(s);
+    for (let b = 0; b < nb; b++) {
+      const cj = Math.min(j1 - 1, j0 + Math.floor(b / FINE));
+      const fb = (b - (cj - j0) * FINE) / FINE;
+      const l = (lList[cj] as number) * (1 - fb) + (lList[cj + 1] as number) * fb;
+      const rim = a === 0 || a === na - 1 || b === 0 || b === nb - 1;
+      if (rim) {
+        // On the rim: the strip's own edge, a straight line between two of its corners.
+        const p = (ci + (a === na - 1 ? 1 : 0)) * rows + cj + (b === nb - 1 ? 1 : 0);
+        const q = a === 0 || a === na - 1 ? p + (b === nb - 1 ? 0 : 1) : p + rows;
+        const k = a === 0 || a === na - 1 ? (b === nb - 1 ? 0 : fb) : fa;
+        for (let c = 0; c < 3; c++) pos.push((pos[p * 3 + c] as number) * (1 - k) + (pos[q * 3 + c] as number) * k);
+        top.push((top[p] as number) * (1 - k) + (top[q] as number) * k);
+      } else {
+        const here = landAt(s, l);
+        const x = f.x + f.nx * l;
+        const z = f.z + f.nz * l;
+        const cut = driftAt(s, l, x, z);
+        pos.push(x, here.y + cut.y, z);
+        top.push(Math.max(here.rock, cut.rock));
+        relief[base + a * nb + b] = cut.snow;
+      }
+      ys[a * nb + b] = pos[pos.length - 2] as number;
+      sl.push(s, l);
+    }
+  }
+  const DS = ((sList[i0 + 1] as number) - (sList[i0] as number)) / FINE;
+  const DL = ((lList[j0 + 1] as number) - (lList[j0] as number)) / FINE;
+  for (let a = 0; a < na; a++) {
+    const ci = Math.min(i1 - 1, i0 + Math.floor(a / FINE));
+    const fa = (a - (ci - i0) * FINE) / FINE;
+    const f = frameAt((sList[ci] as number) * (1 - fa) + (sList[ci + 1] as number) * fa);
+    for (let b = 0; b < nb; b++) {
+      const a0 = Math.max(0, a - 1);
+      const a1 = Math.min(na - 1, a + 1);
+      const b0 = Math.max(0, b - 1);
+      const b1 = Math.min(nb - 1, b + 1);
+      const ds = ((ys[a1 * nb + b] as number) - (ys[a0 * nb + b] as number)) / ((a1 - a0) * DS);
+      const dl = ((ys[a * nb + b1] as number) - (ys[a * nb + b0] as number)) / ((b1 - b0) * DL);
+      const nx = -ds * f.tx - dl * f.nx;
+      const nz = -ds * f.tz - dl * f.nz;
+      const len = Math.hypot(nx, 1, nz);
+      normals.push(nx / len, 1 / len, nz / len);
+    }
+  }
+  for (let a = 0; a < na - 1; a++) {
+    for (let b = 0; b < nb - 1; b++) {
+      const p = base + a * nb + b;
+      const c = p + nb;
+      index.push(p, p + 1, c, p + 1, c + 1, c);
+    }
+  }
+  return finish(pos, index, top, sl, { normals, relief });
 }
 
 /** The flanks: the same ground, coarse, from the strip down under the cloud on every side. */
