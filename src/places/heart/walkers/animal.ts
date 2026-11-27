@@ -34,6 +34,8 @@ export interface Build {
   neckLen: number;
   neckR: number;
   tendrils: number;
+  /** Thin roots that leave the stout ones lower down, on the animals a lens comes close to. */
+  hairs: number;
   tendrilLen: number;
   /** Height of a step, metres. */
   stepH: number;
@@ -395,23 +397,27 @@ export class Animal {
     // each forks once on its way down, and every other one twice.
     const stout = b.tendrils;
     const mains = stout;
-    const forks = stout + (stout >> 1);
+    const coarse = stout + (stout >> 1);
+    const forks = coarse + b.hairs;
     for (let i = 0; i < mains + forks; i++) {
       const fork = i >= mains;
       const parent = fork ? (i - mains) % stout : -1;
       const big = fork ? false : i < stout;
+      // A hair is a root no thicker than a finger that leaves a stout one anywhere along it.
+      const hair = i >= mains + coarse;
       const tube = skin.tube(TENDRIL_RINGS, TENDRIL_SIDES);
       const local = new Float32Array(TENDRIL_RINGS * TENDRIL_SIDES * 2);
       const inner = !fork && i % 3 === 2;
-      const at = fork ? 3 + Math.floor(hash(i, seed + 6) * 5) : 0;
+      const at = hair ? 2 + Math.floor(hash(i, seed + 6) * 7) : fork ? 3 + Math.floor(hash(i, seed + 6) * 5) : 0;
       // A brush of roots of every length: some reach the melt, some hang short of it.
       const whole = b.tendrilLen * (0.62 + 0.45 * hash(fork ? parent : i, seed + 2)) * (!fork && i % 4 === 3 ? 0.7 : 1);
       const length = fork ? whole * (1 - at / (TENDRIL_RINGS - 1)) * (0.7 + 0.5 * hash(i, seed + 7)) : whole;
-      const thick = (fork || big ? 0.105 + 0.045 * hash(fork ? parent : i, seed + 1) : 0.034 + 0.022 * hash(i, seed + 1)) * k * (fork ? 0.5 * (1 - (0.5 * at) / (TENDRIL_RINGS - 1)) : 1);
+      const thick = (fork || big ? 0.068 + 0.03 * hash(fork ? parent : i, seed + 1) : 0.034 + 0.022 * hash(i, seed + 1)) * k * (fork ? 0.62 * (1 - (0.5 * at) / (TENDRIL_RINGS - 1)) : 1) * (hair ? 0.42 : 1);
       for (let r = 0; r < TENDRIL_RINGS; r++) {
         const u = r / (TENDRIL_RINGS - 1);
-        // Round and fibrous: as thick as a wrist where it leaves the crown and half that at its end, knotted on the way.
-        const rad = r === TENDRIL_RINGS - 1 ? 0.012 * k : thick * (1 - 0.62 * Math.pow(u, 1.1)) * (1 + 0.36 * (hash(i * 3 + r, seed + 9) - 0.4));
+        // Round and fibrous: as thick as a wrist where it leaves the crown and half that at its end, knotted on the way. Slender: the gaps
+        // between the roots are as wide as the roots.
+        const rad = r === TENDRIL_RINGS - 1 ? 0.012 * k : thick * (1 - 0.5 * Math.pow(u, 1.1)) * (1 + 0.36 * (hash(i * 3 + r, seed + 9) - 0.4));
         for (let side = 0; side < TENDRIL_SIDES; side++) {
           const a = (side / TENDRIL_SIDES) * Math.PI * 2;
           local[(r * TENDRIL_SIDES + side) * 2] = Math.cos(a) * rad;
