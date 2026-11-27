@@ -274,6 +274,50 @@ const LINE_PATH: [[number, number], [number, number]] = [
 ];
 const LINE_LENS: [number, number] = [-510.5, 215.5];
 const LINE_AHEAD: [number, number] = [0.788, -0.616];
+// Metres the shore draws back before that lens.
+const LINE_BAY = 0.7;
+// The channel of the line view as the lake runs it (lake/net.ts: the seam 'line' bent toward the shore), from where it leaves the far
+// bank to where it passes the lens, and its two pools. Numbers given by the lake's builder; if the lake moves its channel, these follow.
+const LINE_CHANNEL: [number, number][] = [
+  [-501.6, 201.3],
+  [-501.9, 203.0],
+  [-502.7, 204.6],
+  [-504.0, 206.0],
+  [-504.5, 207.0],
+  [-505.7, 209.0],
+  [-506.0, 210.8],
+  [-506.0, 213.5],
+  [-506.1, 214.3],
+];
+const LINE_POOLS: [number, number][] = [
+  [-506.0, 213.5],
+  [-504.5, 207.0],
+];
+
+/** Metres from (x, z) to the centre of the line view's channel. */
+export function lineChannelDistance(x: number, z: number): number {
+  let best = 1e9;
+  for (let i = 0; i + 1 < LINE_CHANNEL.length; i++) {
+    const a = LINE_CHANNEL[i] as [number, number];
+    const b = LINE_CHANNEL[i + 1] as [number, number];
+    const ex = b[0] - a[0];
+    const ez = b[1] - a[1];
+    const t = Math.min(1, Math.max(0, ((x - a[0]) * ex + (z - a[1]) * ez) / (ex * ex + ez * ez)));
+    const d = Math.hypot(x - a[0] - ex * t, z - a[1] - ez * t);
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+/** Metres by which (x, z) stands clear of the line view's channel and its pools: under nothing, the lake's. */
+export function lineChannelRoom(x: number, z: number): number {
+  let room = lineChannelDistance(x, z) - 1.5;
+  for (const [px, pz] of LINE_POOLS) room = Math.min(room, Math.hypot(x - px, z - pz) - 2.5);
+  return room;
+}
+
+// Set while `landHeightUncut` runs: the shore of the line view as it stood before it was drawn back for the channel.
+let uncut = false;
 
 /** Metres from (x, z) to the path of the line view. */
 export function linePathDistance(x: number, z: number): number {
@@ -360,7 +404,16 @@ export function routeDistance(x: number, z: number): number {
 export function benchAt(x: number, z: number, d0: number): number {
   if (d0 < -3) return -8;
   // The edge is bitten into bays and toes, within a metre of the layout's line.
-  const d = d0 + 1.7 * (fbm(x / 3.7 + 9, z / 3.7, 2) - 0.37) - 0.25;
+  let d = d0 + 1.7 * (fbm(x / 3.7 + 9, z / 3.7, 2) - 0.37) - 0.25;
+  // Before the line view's lens the shore draws back a stride, most where the lens stands: the channel and the crust show left of the
+  // frame's middle, as in the line's picture, and the heap is a wedge at the left and not half the frame.
+  const ls = (x - LINE_LENS[0]) * LINE_AHEAD[0] + (z - LINE_LENS[1]) * LINE_AHEAD[1];
+  const cd = uncut ? 99 : lineChannelDistance(x, z);
+  if (!uncut) {
+    if (ls > -4 && ls < 12) d -= LINE_BAY * smooth(-4, 0.5, ls) * smooth(12, 5, ls);
+    // The channel and its pools lie on the lake: the shore keeps a stride and a half off the channel's centre and clear of the pools.
+    if (cd < 5) d = Math.min(d, 0.8 * lineChannelRoom(x, z));
+  }
   if (d < 0) return Math.max(-8, 2.5 * d);
   const base = benchHeight(x, z);
   const in1 = smooth(0.4, 7, d);
@@ -415,6 +468,12 @@ export function benchAt(x: number, z: number, d0: number): number {
   if (near > 0) {
     const lump = 0.34 * (blocks(x / 1.15 + 0.37 * z, z / 1.3 - 0.29 * x) - 0.5) + 0.3 * (noise(x / 2.7 + 6.3, z / 2.7 + 1.1) - 0.5) + 0.16 * (noise(x / 0.75, z / 0.75 + 4.4) - 0.5);
     h += near * lump * (0.35 + 0.65 * smooth(0.6, 2.6, low)) * smooth(0.3, 1.5, d);
+  }
+  // Within four metres of the line view's channel the bank lies low, a hand over the crust, so the channel shows over it from that lens
+  // and the heap on it stands no higher than a forearm. The crag keeps its face to within a stride or two of that.
+  if (cd < 5.5 && h > 0.2) {
+    const tall = smooth(0.8, 2, h);
+    h = lerp(0.2 + 0.05 * (1 - Math.exp(0.2 - h)), h, smooth(lerp(4.2, 2.5, tall), lerp(5.5, 4, tall), cd));
   }
   // The lip at the line: a step of a few hand widths, not a ramp.
   return h * smooth(0, 0.3, d);
@@ -514,6 +573,15 @@ function compose(x: number, z: number, spur: boolean, alcove = true): number {
 
 export function landHeight(x: number, z: number): number {
   return compose(x, z, true);
+}
+
+/** `landHeight` with the shore of the line view as it stood before it was drawn back for the channel. The rocks are dealt by this,
+ *  so that drawing the shore back moves no rock anywhere else (rocks.ts). */
+export function landHeightUncut(x: number, z: number): number {
+  uncut = true;
+  const h = compose(x, z, true);
+  uncut = false;
+  return h;
 }
 
 /** The land as the wall's ring draws it: everything but the buttress, and the wall standing whole over the mouth.

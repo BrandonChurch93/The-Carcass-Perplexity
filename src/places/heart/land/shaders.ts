@@ -570,17 +570,35 @@ void main() {
       relief += tw.z * r.b;
       bent += tw.z * (vec3(0.0, -1.0, 0.0) * (r.g - 0.5) + vec3(1.0, 0.0, 0.0) * (r.r - 0.5));
     }
-    vec3 f;
+    // The pits are read on the nearest plane alone.
+    vec2 pc = vWorld.xy;
+    vec2 pgx = wx.xy;
+    vec2 pgy = wy.xy;
+    vec3 ta = vec3(0.0, -1.0, 0.0);
+    vec3 tb = vec3(1.0, 0.0, 0.0);
+    float shift = 0.41;
     if (tw.y >= tw.x && tw.y >= tw.z) {
-      f = PICK(tBoulderNh, vWorld.xz / PIT + 0.19, wx.xz / PIT, wy.xz / PIT).rgb;
-      bent += 0.8 * sharp * (vec3(0.0, 0.0, -1.0) * (f.g - 0.5) + vec3(1.0, 0.0, 0.0) * (f.r - 0.5));
+      pc = vWorld.xz;
+      pgx = wx.xz;
+      pgy = wy.xz;
+      ta = vec3(0.0, 0.0, -1.0);
+      shift = 0.19;
     } else if (tw.x >= tw.z) {
-      f = PICK(tBoulderNh, vWorld.zy / PIT + 0.67, wx.zy / PIT, wy.zy / PIT).rgb;
-      bent += 0.8 * sharp * (vec3(0.0, -1.0, 0.0) * (f.g - 0.5) + vec3(0.0, 0.0, 1.0) * (f.r - 0.5));
-    } else {
-      f = PICK(tBoulderNh, vWorld.xy / PIT + 0.41, wx.xy / PIT, wy.xy / PIT).rgb;
-      bent += 0.8 * sharp * (vec3(0.0, -1.0, 0.0) * (f.g - 0.5) + vec3(1.0, 0.0, 0.0) * (f.r - 0.5));
+      pc = vWorld.zy;
+      pgx = wx.zy;
+      pgy = wy.zy;
+      tb = vec3(0.0, 0.0, 1.0);
+      shift = 0.67;
     }
+    vec3 f = PICK(tBoulderNh, pc / PIT + shift, pgx / PIT, pgy / PIT).rgb;
+    bent += 0.8 * sharp * (ta * (f.g - 0.5) + tb * (f.r - 0.5));
+    #ifdef RUBBLE
+    // And once more at the size of a fingernail, for the lens that lies on the heap: the vesicles of the scoria, which the lens resolves
+    // and the reading above does not reach.
+    const float VESICLE = 0.058;
+    vec3 ves = PICK(tBoulderNh, pc.yx / VESICLE + shift + 0.23, pgx.yx / VESICLE, pgy.yx / VESICLE).rgb;
+    bent += 0.5 * sharp * (ta * (ves.r - 0.5) + tb * (ves.g - 0.5));
+    #endif
     float pits = f.b;
     float grain = mix(relief, 0.5 * (relief + pits), sharp);
     // Near black clinker, measured against the picture, a little brown, black in its pits.
@@ -595,7 +613,7 @@ void main() {
     // The bed between them is grit, black in its pits, with ash lying on it in drifts.
     vec3 bed = vec3(0.046, 0.041, 0.038) * (0.3 + 1.4 * grain);
     bed = mix(bed, vec3(0.13, 0.122, 0.114) * (0.6 + 0.8 * pits), 0.3 * smoothstep(0.35, 0.6, vnoise(vWorld.xz / 0.8 + 9.3)) * smoothstep(0.7, 0.4, grain));
-    clinker = mix(bed, clinker, block);
+    clinker = mix(bed, clinker, block) * mix(1.0, 0.5 + 1.0 * ves.b, sharp);
     #endif
     albedo = mix(albedo, clinker, byLens);
     n = normalize(n + bent * 2.4 * byLens);
@@ -634,7 +652,7 @@ void main() {
     albedo = mix(albedo, albedo * vec3(1.55, 1.4, 0.7) + vec3(0.025, 0.022, 0.005), stain);
     // Crystals stand on the crust: pale points a finger across.
     yellow = mix(yellow, vec3(1.0, 0.92, 0.5), smoothstep(0.62, 0.82, vnoise(sp / 0.045 + 7.3)) * sharp);
-    albedo = mix(albedo, mix(sul * 1.4, yellow, 0.85) * (1.1 + 0.5 * grain) * mix(1.0, 1.7, byLens), crust);
+    albedo = mix(albedo, mix(sul * 1.4, yellow, 0.85) * (1.1 + 0.5 * grain), crust);
     rough = mix(rough, 0.95, crust);
   }
   #endif
@@ -667,8 +685,8 @@ void main() {
   // On the heap the mound is built: lumps of crystal crust with holes between them. A lump is lemon on its crown and olive down its sides,
   // and the holes are the dark rock under it: no tone is drawn that the shape does not carry.
   float crown = smoothstep(0.5, 0.96, n0.y + 0.12 * (knob - 0.5));
-  float mound = smoothstep(0.7, 0.4, segmentDistance(vWorld.xz, uCrackB) + 0.3 * (knob - 0.5) + 0.2 * (1.0 - gap)) * smoothstep(0.1, 0.5, vLand.y) * (0.75 + 0.25 * smoothstep(0.25, 0.45, crumbTone));
-  albedo = mix(albedo, mix(vec3(0.2, 0.15, 0.03), vec3(0.82, 0.7, 0.2), crown) * (0.6 + 0.6 * crumbTone), mound);
+  float mound = smoothstep(0.36, 0.18, segmentDistance(vWorld.xz, vec4(mix(uCrackB.xy, uCrackB.zw, 0.3), mix(uCrackB.xy, uCrackB.zw, 0.7))) + 0.3 * (knob - 0.5) + 0.2 * (1.0 - gap)) * smoothstep(0.1, 0.5, vLand.y) * (0.75 + 0.25 * smoothstep(0.25, 0.45, crumbTone));
+  albedo = mix(albedo, mix(vec3(0.11, 0.09, 0.025), vec3(0.42, 0.36, 0.09), crown) * (0.6 + 0.6 * crumbTone), mound);
   #else
   float mound = smoothstep(0.42, 0.2, segmentDistance(vWorld.xz, uCrackB) + 0.2 * (knob - 0.5) + 0.25 * (1.0 - gap)) * (0.55 + 0.45 * smoothstep(0.25, 0.45, crumbTone));
   albedo = mix(albedo, mix(vec3(0.6, 0.48, 0.1), vec3(1.0, 0.88, 0.36), smoothstep(0.35, 0.8, knob)) * (0.45 + 0.9 * crumbTone), mound);

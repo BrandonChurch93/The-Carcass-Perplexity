@@ -6,7 +6,7 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { CRACK_FOOT, CRACK_TOP, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
-import { BUTTE, SPUR, buttressHeight, crackDip, crustAt, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, widePath, type Crack } from './height';
+import { BUTTE, SPUR, buttressHeight, crackDip, crustAt, flowDip, inArch, landHeight, landHeightUncut, lineChannelDistance, lineChannelRoom, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, widePath, type Crack } from './height';
 import { fracture, type Joints } from './fracture';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
@@ -261,26 +261,30 @@ export function create(ctx: HeartContext): HeartPiece {
   const heapAt = (x: number, z: number): number => {
     const ex = vent.bx - vent.ax;
     const ez = vent.bz - vent.az;
-    const k = unit(((x - vent.ax) * ex + (z - vent.az) * ez) / (ex * ex + ez * ez));
+    // The middle of the crack only: the picture's crust is a patch two hands across, not a bank along the whole crack.
+    const k = Math.min(0.7, Math.max(0.3, ((x - vent.ax) * ex + (z - vent.az) * ez) / (ex * ex + ez * ez)));
     const d = Math.hypot(x - vent.ax - ex * k, z - vent.az - ez * k) + 0.25 * (noise(x / 0.5 + 6.1, z / 0.5 + 2.3) - 0.5);
-    const by = unit((0.8 - d) / 0.4);
+    const by = unit((0.44 - d) / 0.22);
     if (by <= 0) return rubbleAt(x, z);
     const w = by * by * (3 - 2 * by);
-    return rubbleAt(x, z) * (1 - w) + w * (0.02 + 0.2 * unit((0.75 - d) / 0.6) + crustAt(x, z));
+    return rubbleAt(x, z) * (1 - w) + w * (0.02 + 0.08 * unit((0.4 - d) / 0.3) + 0.8 * crustAt(x, z));
   };
   const rubbleHeight = (x: number, z: number): number => {
     const base = benchUnder(x, z);
     // It sinks under the bench at its border and stays off the faces of the crag.
     const inside = unit(inPatch(x, z) / 0.8);
     const on = inside * unit((base - 0.08) / 0.14) * unit((2.4 - base) / 0.6);
-    const onBench = base - 0.06 + on * (0.06 + heapAt(x, z));
+    // Beside the channel the heap is low: no block stands over a forearm above the crust there (see `benchAt`).
+    const low = 0.45 + 0.55 * unit((lineChannelDistance(x, z) - 4.2) / 1.3);
+    const heap = heapAt(x, z) * low;
+    const onBench = base - 0.06 + on * (0.06 + heap);
     if (base > 0.3) return onBench;
     // The shore is no kerb: the rubble spills out over the crust, half a metre here and two there, and thins to single stones.
-    const reach = 0.5 + 1.7 * noise(x / 1.7 + 3.3, z / 1.7 + 7.1) + 0.6 * (noise(x / 0.45 + 1.2, z / 0.45) - 0.5);
+    const reach = 0.3 + 1.1 * noise(x / 1.7 + 3.3, z / 1.7 + 7.1) + 0.4 * (noise(x / 0.45 + 1.2, z / 0.45) - 0.5);
     const edge = 0.2 - 1.5 * reach;
     const t = unit((base - edge) / (0.2 - edge));
-    const spill = -0.07 + 0.27 * Math.sqrt(t) + heapAt(x, z) * (0.5 + 0.5 * t);
-    return Math.max(onBench, base - 0.06 + inside * unit(t / 0.12) * (spill - base + 0.06));
+    const spill = -0.1 + 0.3 * t + heap * (0.6 + 0.4 * t);
+    return Math.max(onBench, base - 0.06 + inside * unit(t / 0.12) * unit(lineChannelRoom(x, z) / 0.5) * (spill - base + 0.06));
   };
   // Where that lens rides and looks, a stone of the heap is hundreds of pixels across and a cell of 7.5 cm was a sliver of a face a finger thick,
   // each shaded on its own: the heap read as fibres. There it is cut at 3.5 cm, and the coarse sheet keeps a hand's width under its border.
@@ -298,12 +302,14 @@ export function create(ctx: HeartContext): HeartPiece {
   for (const g of [rubble.geometry, rubbleFine.geometry]) {
     const p = g.getAttribute('position') as THREE.BufferAttribute;
     const l = g.getAttribute('aLand') as THREE.BufferAttribute;
-    for (let i = 0; i < p.count; i++) l.setY(i, unit((p.getY(i) - benchUnder(p.getX(i), p.getZ(i)) - 0.04) / 0.05));
+    for (let i = 0; i < p.count; i++) l.setY(i, unit((heapAt(p.getX(i), p.getZ(i)) - 0.055) / 0.05));
   }
   // Both are seen along themselves from a man's height: drawn nearest first, a lump hides what lies behind it before it is shaded.
   nearFirst(rubble.geometry, AHEAD);
   nearFirst(rubbleFine.geometry, AHEAD);
-  const rocks = scatterRocks(ctx, shared, landHeight, feetLift);
+  // The rocks are dealt on the land with the line view's shore as it stood before it was drawn back (see `put` in rocks.ts).
+  const dealt = (x: number, z: number): number => (Math.hypot(x + 510.5, z - 215.5) < 40 ? landHeightUncut(x, z) : landHeight(x, z));
+  const rocks = scatterRocks(ctx, shared, dealt, feetLift);
   // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
   for (const r of rocks.bench) r.renderOrder = -6;
   nearBench.renderOrder = -5;

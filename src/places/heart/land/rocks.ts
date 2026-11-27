@@ -8,7 +8,7 @@ import { CRUST_HEIGHT_GLSL, crustUniforms } from '../lake/index';
 import { CRACK_FOOT, SEAMS, UNIT, keySeconds } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { HeartContext } from '../shared/context';
-import { ROPY, SKERRY, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
+import { ROPY, SKERRY, landHeight, lineChannelDistance, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
 import { CARPET_BAKE_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, carpetBakeFragment } from './rock-shader';
 import { ROCK_LEVELS, rockShape, type RockKind, type RockShape } from './rock-shape';
 
@@ -110,7 +110,11 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     return new THREE.Quaternion(Math.sqrt(1 - u) * Math.sin(a), Math.sqrt(1 - u) * Math.cos(a), Math.sqrt(u) * Math.sin(b), Math.sqrt(u) * Math.cos(b));
   };
   const put = (k: Kind, x: number, z: number, size: number, o: Options = {}): boolean => {
+    // Round the line view's lens the shore was drawn back for the channel after the rocks were dealt. `height` is the land with the shore
+    // as it stood (index.ts), so that every draw of the stream falls as it did and no rock anywhere else moves; a rock there then follows
+    // the ground down, and is left out where the ground under it is the lake's now.
     const g = height(x, z) + (o.feet ? feetLift(x, z) : 0);
+    const now = o.feet ? g : landHeight(x, z);
     if (g < 0.05 && !o.onLake) return false;
     const base = Math.max(g, 0.04);
     const half = size / 2;
@@ -158,7 +162,15 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     // Nor does anything lie on the shore's rind or beyond it where that view looks down on the shore.
     if (!o.stand && benchDistance(x, z) < 0.75 + half && Math.hypot(x + 510.5, z - 215.5) < 70) return false;
     const [from, to] = o.only ?? ALWAYS;
-    rocks.push({ m: new THREE.Matrix4().compose(at, q, scale), seed: [rng.next(), size, base, o.tone ?? rng.range(0.6, 1.25)], shape, part: k.part, from, to });
+    const seed: [number, number, number, number] = [rng.next(), size, base, o.tone ?? rng.range(0.6, 1.25)];
+    if (now < g - 0.005 && !o.onLake) {
+      if (now < 0.05) return true;
+      at.y -= g - Math.max(now, 0.04);
+      seed[2] = Math.max(now, 0.04);
+    }
+    // Beside that channel nothing stands over a forearm above the crust: a boulder there shows its crown only.
+    if (!o.stand && at.y + tall > 0.4 && lineChannelDistance(x, z) < 4.5) at.y = 0.4 - tall;
+    rocks.push({ m: new THREE.Matrix4().compose(at, q, scale), seed, shape, part: k.part, from, to });
     if (o.shade ?? size > 0.3) shades.push([x, z, half * 1.5, Math.min(0.75, 0.35 + 0.25 * size)]);
     return true;
   };
