@@ -456,9 +456,9 @@ void main() {
   // The wet flat and the pool send the sky back up at what stands over them.
   col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 1.0 + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
-  col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
+  col = mix(col, vec3(dot(col, vec3(0.3333))), 0.8 * far * skin);
   // The light that comes through a sail from the sun and the sky behind it.
-  col += uThrough * mix(albedo, vec3(dot(albedo, vec3(0.3333))), 0.5 * (1.0 - amber)) * skin * mix(vec3(1.0, 0.74, 0.48), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * (0.45 + 0.9 * max(dot(-n0, uSunDir), 0.0)) + skyIrradiance(-n0) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
+  col += uThrough * mix(albedo, vec3(dot(albedo, vec3(0.3333))), 0.5 * (1.0 - amber)) * skin * mix(vec3(1.0, 0.74, 0.48), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * (0.1 + 1.25 * max(dot(-n0, uSunDir), 0.0)) + skyIrradiance(-n0) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04 * vMix.z) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun;
