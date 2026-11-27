@@ -289,6 +289,7 @@ export function createRig(): Rig {
     uPlateShade: { value: new THREE.Vector2(0, 0.2) },
     uPlateAir: { value: new THREE.Vector4(1, 0.3, 0, 0.1) },
     uPlateSoft: { value: 0 },
+    uPlateDraw: { value: 1 },
     uCirrusA: { value: new THREE.Vector4(0, 0, 0.1, 0) },
     uCirrusB: { value: new THREE.Vector4(0, 0, 0.1, 0) },
     uCirrus: { value: new THREE.Vector2(0, 0) },

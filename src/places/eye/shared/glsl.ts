@@ -132,6 +132,9 @@ uniform vec2 uPlateShade;
 // which that is done: the last sun is on the upper ledges only. uPlateSoft: mip levels the picture is softened by.
 uniform vec4 uPlateAir;
 uniform float uPlateSoft;
+// How many times taller than it stands the wall of the picture lies in the water: water that is never quite still draws a far bright
+// wall out toward the eye. 1 is a true mirror.
+uniform float uPlateDraw;
 // One or two thin streaks of high cloud in the sky of the picture, still in the sun when the ground is not. Each: where its middle lies
 // in the picture (tan across from the middle, tan up from the waterline), its half length (tan), and its tilt. uCirrus.x and .y: how
 // much of each shows, 0 for none.
@@ -245,18 +248,23 @@ vec2 plateUv(vec3 ro, vec3 rd) {
   return plateAt(ro, rd).xy;
 }
 
+// farRadianceAt is the one body: it takes what plateAt(ro, rd) gave as well, for a caller that already holds it.
 // The far world along a ray, with the screen gradients of plateUv(ro, rd) handed in: gx = dFdx(uv), gy = dFdy(uv), both taken at the
 // top of main before any branch. Nothing in here takes a derivative or reads a mipmapped picture at an implicit level, so it may be
 // called under a branch, in a loop or after a discard and repeats from render to render. bias softens it by that many mip levels.
-vec3 farRadianceGrad(vec3 ro, vec3 rd, float bias, vec2 gx, vec2 gy) {
+vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
   vec3 sky = skyRadiance(rd);
   if (uPlateTone.w < 0.5) return sky;
-  vec4 at = plateAt(ro, rd);
   float u = at.x;
   float v = at.y;
   float phi = at.z;
   float t = at.w;
   vec3 q = ro + rd * t - uPlateAt.xyz;
+  if (bias > 0.0 && uPlateDraw > 1.0 && v > uPlateLens.w) {
+    v = uPlateLens.w + (v - uPlateLens.w) / uPlateDraw;
+    gx.y /= uPlateDraw;
+    gy.y /= uPlateDraw;
+  }
   bool tall = uPlateTone.w > 1.5 && bias > 0.0;
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
@@ -266,13 +274,20 @@ vec3 farRadianceGrad(vec3 ro, vec3 rd, float bias, vec2 gx, vec2 gy) {
   float held = (vv < 0.004 || vv > 0.996) ? 0.0 : (tall && v > 0.95 ? 0.495 : 1.0);
   gx.y *= held;
   gy.y *= held;
-  float wide = exp2(bias + uPlateSoft + 2.5 * over + 2.0 * drawn);
-  vec3 plate = ungrade(textureGrad(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), gx * wide, gy * wide).rgb) * uPlateTone.rgb;
+  // The level of the picture a pixel's footprint asks for, worked out here and read with textureLod: the renderer's own textureGrad
+  // costs a second a frame more. As the card does with a filter of two taps, the long side of the footprint may be twice the short.
+  vec2 size = vec2(textureSize(tPlate, 0));
+  vec2 fx = gx * size;
+  vec2 fy = gy * size;
+  float fa = dot(fx, fx);
+  float fb = dot(fy, fy);
+  float level = 0.5 * log2(max(max(min(fa, fb), 0.25 * max(fa, fb)), 1e-8));
+  vec3 plate = ungrade(textureLod(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), level + bias + uPlateSoft + 2.5 * over + 2.0 * drawn).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
   if (tall) {
-    float wider = exp2(bias + 3.2 * drawn + 2.5 * over);
-    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(textureGrad(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), gx * wider, gy * wider).rgb)
-      + ungrade(textureGrad(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), gx * wider, gy * wider).rgb));
+    float wider = level + bias + 3.2 * drawn + 2.5 * over;
+    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(textureLod(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), wider).rgb)
+      + ungrade(textureLod(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), wider).rgb));
   }
   // The low sun comes through thin high cloud: what it lights on the far wall swells and fades a little where it stands, the shade never.
   float lit = smoothstep(0.2, 0.4, (plate.r - plate.b) / max(plate.r + plate.b, 1e-3));
@@ -320,6 +335,10 @@ vec3 farRadianceGrad(vec3 ro, vec3 rd, float bias, vec2 gx, vec2 gy) {
   return mix(plate, sky, smoothstep(0.9, 0.995, v));
 }
 
+vec3 farRadianceGrad(vec3 ro, vec3 rd, float bias, vec2 gx, vec2 gy) {
+  return farRadianceAt(ro, rd, bias, plateAt(ro, rd), gx, gy);
+}
+
 // The same for a look that does not follow the screen (the mist asking what light the wall's foot stands in): the footprint is one
 // texel of the picture, softened by bias levels as in farRadiance. Safe under a branch, and the same at every size of frame.
 vec3 farRadianceLevel(vec3 ro, vec3 rd, float bias) {
@@ -330,8 +349,8 @@ vec3 farRadianceLevel(vec3 ro, vec3 rd, float bias) {
 // The old name: it takes the gradients itself, so it is only for the top of main, before any branch, loop or discard.
 // Under a branch the derivative of a pixel that did not take the branch is whatever was left in memory, and the frame does not repeat.
 vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
-  vec2 uv = plateUv(ro, rd);
-  return farRadianceGrad(ro, rd, bias, dFdx(uv), dFdy(uv));
+  vec4 at = plateAt(ro, rd);
+  return farRadianceAt(ro, rd, bias, at, dFdx(at.xy), dFdy(at.xy));
 }
 
 // Metres along a ray to the picture of the far world.
