@@ -15,7 +15,6 @@ varying vec3 vAux;
 varying vec2 vAway;
 uniform sampler2D tRope;
 uniform sampler2D tRopeNh;
-uniform sampler2D tSheet;
 uniform float uLava;
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -43,28 +42,6 @@ vec2 onCrust(vec2 d, vec2 qx, vec2 qy, float det) {
 const mat2 TURN_A = mat2(0.7986, 0.6018, -0.6018, 0.7986);
 const mat2 TURN_B = mat2(0.9397, -0.3420, 0.3420, 0.9397);
 const mat2 TURN_C = mat2(-0.2588, 0.9659, -0.9659, -0.2588);
-
-// The photographed crust as the relief lays it (sheetGrid), read with the footprint of a pixel (gx, gy) on the crust: one
-// reading a corner. Returns the slope of the sheet's height (which runs 0 to 1) per metre, and the sheet's tone, 0.5 at
-// its mean: a crest is pale and a furrow black, so the tone stands for the height too.
-vec3 sheetAt(vec2 q, float span, vec2 gx, vec2 gy, float seed) {
-  sheetGrid(q, span);
-  vec2 scale = vec2(1.0, 2.0) / span;
-  vec3 got = vec3(0.0);
-  float sum = 0.0;
-  for (int i = 0; i < 3; i++) {
-    mat2 turn;
-    vec2 shift;
-    float w = sheetCorner(i, seed, 1.0, turn, shift);
-    vec3 nt = textureGrad(tSheet, (turn * q) * scale + shift, (turn * gx) * scale, (turn * gy) * scale).rgb;
-    float k = w * exp(9.0 * nt.b);
-    // The picture is loaded upside down, so its second slope is counted the other way.
-    got += k * vec3(vec2(nt.r - 0.5, 0.5 - nt.g) * turn, nt.b);
-    sum += k;
-  }
-  got /= sum;
-  return vec3(got.xy * (682.7 / span), min(1.25 * got.z, 1.0));
-}
 
 void main() {
   vec2 q = vQ;
@@ -189,35 +166,12 @@ void main() {
     // Each lump is a piece of another day: one dusted with ash, the next bare.
     lumpTone = 1.0 + 0.45 * churn * (2.0 * smoothstep(0.35, 0.65, vnoise(q / 1.3 + 67.0)) - 1.0);
   }
-  // Lobes and toes, as far as a pixel can tell one from the next. Beyond that the skin is a smooth sheet.
-  if (fpLong < 0.7) {
-    float lobeHigh = lobeAt(q);
-    float has = step(1e-4, gLobeTall);
-    float detail = 1.0 - smoothstep(0.3, 0.7, fpLong);
-    age += 0.1 * (hash12(gLobeId + 5.3) - 0.5) * detail * has;
-    // Where the cells are too coarse to carry a lobe, its dome goes into the normal.
-    vec2 fall = -3.0 * gLobeTall * gLobeT2 * gLobeT2 * gLobeGrad;
-    slope += fall * min(1.0, 1.2 / max(length(fall), 1e-4)) * calm * (1.0 - steep) * smoothstep(0.5, 1.2, cell) * detail * has;
-    // Dark where one tongue lies on the next.
-    lines = mix(1.0, 0.8 + 0.2 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * (1.0 - steep) * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
-    if (fpLong < 0.4) {
-      foldAt(q);
-      float skinOn = calm * (1.0 - 0.85 * smoothstep(0.15, 0.5, fresh)) * (1.0 - steep) * (1.0 - broken) * smoothstep(0.0, mix(2.5, 0.4, coil * (1.0 - coilMound)), lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
-      // The toes: what the cells do not carry of their domes, a dark line where one lies on the next, and a tone of its
-      // own for each.
-      float toe = step(1e-4, gToeBest) * skinOn;
-      slope += gToeSlope * (1.0 - toeHeld(vAux.x)) * toe;
-      lines *= mix(1.0, 0.8 + 0.2 * smoothstep(0.0, 0.02, gToeBest - gToeNext), toe * step(1e-4, gToeNext) * (1.0 - smoothstep(0.02, 0.1, fpShort)));
-      age += 0.16 * (hash12(gToeId + 3.1) - 0.5) * toe;
-    }
-  }
   float det = qx.x * qy.y - qx.y * qy.x;
   det = abs(det) > 1e-12 ? det : 1e12;
 
-  // The skin itself is the photographed sheet (ropes of unlike thickness that curl and end, glassy slabs, cracks), read at
-  // three sizes: a quarter of its own (wrinkles and grit under the lens), its own, and four times its own (the billows of
-  // the far bank). Each reading takes the footprint of the pixel, so a rope seen low keeps its edge across the view, and
-  // what a pixel cannot hold the mips give as the mean: nothing is left to shimmer.
+  // The skin itself is the poured crust (sheet.ts): one whole reading of the slab sheet a slab, the higher slab on the lower.
+  // The reading takes the footprint of the pixel, so a rope seen low keeps its edge across the view, and what a pixel
+  // cannot hold the mips give as the mean: nothing is left to shimmer.
   vec2 gx = dFdx(qg);
   vec2 gy = dFdy(qg);
   float lx = max(length(gx), 1e-6);
@@ -227,25 +181,44 @@ void main() {
   gx *= min(1.0, 2.5 * ly / lx);
   gy *= min(1.0, 2.5 * lx / ly);
   float fpS = max(min(lx, ly), 0.025 * blurred);
-  float nearOn = 1.0 - smoothstep(0.006, 0.016, fpS);
-  float farOn = smoothstep(0.008, 0.02, fpS);
-  vec3 skinM = vec3(0.0, 0.0, 0.5);
-  vec3 skinD = skinM;
-  vec3 skinL = skinM;
-  // Each reading is taken only where a pixel can tell it from its mean: the readings are what the crust costs.
-  float midOn = 1.0 - smoothstep(0.03, 0.06, fpS);
-  if (midOn > 0.0) skinM = mix(skinM, sheetAt(qg, SHEET_M, gx, gy, 11.0), midOn);
-  if (nearOn > 0.0) skinD = mix(skinD, sheetAt(qg, SHEET_D, gx, gy, 47.0), nearOn);
-  if (farOn > 0.0) skinL = mix(skinL, sheetAt(qg, SHEET_L, gx, gy, 83.0), farOn);
-  // The broad billows are faint in tone: the far lake is dark plates, and the light tells their relief.
-  float tone = 2.0 * skinM.z * mix(1.0, 2.0 * skinL.z, 0.6);
-  // From across the lake the broad billows would read as ripples on water: the far crust is flat plates.
-  vec2 fine = SHEET_TALL_M * skinM.xy + SHEET_TALL_D * skinD.xy + SHEET_TALL_L * mix(1.0, 0.4, smoothstep(25.0, 70.0, length(toCamera))) * skinL.xy;
+  vec3 skinM = pourAt(qg, gx, gy);
+  int top = gPourTop;
+  float roped = top == 0 ? gPourCell[0].z : top == 1 ? gPourCell[1].z : gPourCell[2].z;
+  float slabTag = top == 0 ? gPourTag[0] : top == 1 ? gPourTag[1] : gPourTag[2];
+  mat2 topTurn = top == 0 ? gPourTurn[0] : top == 1 ? gPourTurn[1] : gPourTurn[2];
+  vec2 topShift = top == 0 ? gPourShift[0] : top == 1 ? gPourShift[1] : gPourShift[2];
+  // The black gap where a slab ends on the next: a hand wide or a pixel and dimmer. The lower slab lies in the shade of
+  // the upper for a hand or two.
+  float gapWide = max(0.012, 0.6 * fpS);
+  float pourGap = (1.0 - smoothstep(0.35 * gapWide, gapWide, gPourEdge)) * min(1.0, 0.03 / gapWide) * (1.0 - steep);
+  float pourShade = (1.0 - gPourOver) * exp(-gPourEdge / 0.045) * (1.0 - smoothstep(0.05, 0.2, fpS)) * (1.0 - steep);
+  // Under the lens the skin of a slab has wrinkles of its own: the sheet once more, a sixth of its size, laid as its slab is.
+  float nearOn = 1.0 - smoothstep(0.004, 0.012, fpS);
+  vec3 skinD = vec3(0.0, 0.0, 0.5);
+  if (nearOn > 0.0) {
+    mat2 turnD = topTurn * TURN_A;
+    vec2 scaleD = vec2(1.0, 2.0) / SHEET_D;
+    vec3 nh = textureGrad(tPour, (turnD * qg) * scaleD + topShift.yx, (turnD * gx) * scaleD, (turnD * gy) * scaleD).rgb;
+    skinD = mix(skinD, vec3((vec2(nh.r - 0.5, 0.5 - nh.g) * turnD) * (819.2 / SHEET_D), nh.b), nearOn * mix(0.35, 0.8, roped));
+  }
+  vec3 skinL = vec3(0.0, 0.0, 0.5);
+  // A crest is worn pale, a furrow is black glass, and each slab is of its own day.
+  // From afar the lake is one dark field: no slab is told from the next by its tone.
+  float slabSeen = 1.0 - smoothstep(0.015, 0.06, fpS);
+  float tone = mix(0.4, 0.92, smoothstep(0.15, 0.95, skinM.z)) * (1.0 - 0.85 * pourGap) * (1.0 + 0.36 * (slabTag - 0.5) * slabSeen);
+  vec2 fine = POUR_TALL * skinM.xy + SHEET_TALL_D * skinD.xy;
   float grainA = skinM.z - 0.5;
   // A furrow sees a sixth of the sky, a crest all of it.
-  crease *= mix(1.0, smoothstep(0.05, 0.5, skinM.z), 0.85) * mix(1.0, smoothstep(0.05, 0.5, skinL.z), 0.8) * mix(1.0, smoothstep(0.1, 0.5, skinD.z), 0.5);
+  crease *= mix(1.0, smoothstep(0.04, 0.5, skinM.z), 0.85) * mix(1.0, smoothstep(0.1, 0.5, skinD.z), 0.4) * (1.0 - 0.6 * pourShade) * (1.0 - 0.8 * pourGap);
   float crest = smoothstep(0.55, 0.85, skinM.z);
   crease *= max(lines, 0.75);
+  // Under a loaded pad the crust is pressed dark, and the line where the dish breaks from the crust round it is a crack.
+  vec3 dent = dentAt(vWorld.xz, vnoise(q / 0.11 + 5.0) - 0.5);
+  float dentCrack = dent.z * (1.0 - smoothstep(0.01, 0.04, fpS)) * smoothstep(0.25, 0.4, vnoise(q / 0.23 + 31.0));
+  tone *= (1.0 - 0.3 * dent.y) * (1.0 - 0.7 * dentCrack);
+  crease *= (1.0 - 0.3 * dent.y) * (1.0 - 0.6 * dentCrack);
+  // A satin slab is young black glass, a roped one older and duller.
+  age += (0.3 * (slabTag - 0.5) - 0.22 * (1.0 - roped)) * slabSeen;
   age = clamp(clamp(age, 0.0, 1.0) * (1.0 - 0.75 * fresh) + (0.4 + 0.25 * fresh) * (flow - 0.5) + 0.5 * (skinL.z - 0.5) * (1.0 - abs(2.0 * flow - 1.0)), 0.0, 1.0) * (1.0 - 0.8 * young);
 
   // From afar the lake is one dark dry field: the flows and plates differ less, and a rough face seen low shadows itself.
