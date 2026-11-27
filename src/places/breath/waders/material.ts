@@ -92,7 +92,6 @@ void main() {
   // In the water's mirror only what stands above the water is seen, from the mirrored eye.
   vec3 eye = cameraPosition;
   if (uMirror > 0.5) {
-    if (vWorld.y < uSea) discard;
     eye.y = 2.0 * uSea - eye.y;
   }
   vec3 n = normalize(vNormal);
@@ -387,6 +386,7 @@ void main() {
   float veil = uVeiled.z * smoothstep(8.0, 5.0, length(vWorld.xz - uVeiled.xy));
   colour = mix(colour, max(colour * 8.0, (0.66 * albedo + vec3(0.2, 0.16, 0.14) * (1.0 - tendril)) * fogColour * 16.0 * (0.76 + 0.3 * n.y) * (0.62 + 0.38 * occ)), veil);
   if (uMirror > 0.5) {
+    if (vWorld.y < uSea) discard;
     gl_FragColor = vec4(colour * (1.0 - uSolo), 1.0);
     return;
   }
