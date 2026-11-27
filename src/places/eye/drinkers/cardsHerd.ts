@@ -59,9 +59,9 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     { x: centre[0] - 1.22, z: centre[2] - 13.5, level: centre[1] - 3.15, facing: 0, size: 0.7, down: (t) => -0.2 + 0.22 * (1 - smooth(riseAt, riseAt + 0.9, t)), sheet: 'quarter', flip: 1, close: false },
     { x: centre[0] + 0.72, z: centre[2] - 16.5, level: centre[1] - 3.47, facing: 0, size: 0.75, down: (t) => -0.1 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), sheet: 'back', flip: -1, close: false },
     // The ones of the mats shot, restaged: out on the shelf beyond the mats, small, side on.
-    from(KEYS.mats, -13, 31, 80, 1, 'down', sips(5, MATS_KEY, 0.45)),
-    from(KEYS.mats, -21, 44, 262, 1, 'up', up(1.4)),
-    from(KEYS.mats, -17.5, 52, 96, 0.9, 'down', sips(6, MATS_KEY, 0.05)),
+    from(KEYS.mats, -15, 16.5, 84, 1.05, 'down', sips(5, MATS_KEY, 0.45)),
+    from(KEYS.mats, -25, 62, 262, 1, 'up', up(1.4)),
+    from(KEYS.mats, -21.5, 74, 96, 0.9, 'down', sips(6, MATS_KEY, 0.05)),
   ];
   // The herd along the south shore, as the wide shot sees it: side on to that camera or with their backs to it, in the shallows and on the gravel.
   // They stand in loose bands of two to five, some far out on the shelf, some up on the gravel: never one row along the water.

@@ -157,16 +157,16 @@ void main() {
   skin = mix(skin, textureLod(tSkin, vUv, max(level + 4.5, 0.0)).rgb, uSheet.y == 0.0 ? 0.2 : 0.55);
   float coat = 0.6 * vnoise(vUv * vec2(9.0, 6.0) + vOwn * 40.0) + 0.4 * vnoise(vUv * vec2(70.0, 34.0) + vOwn * 17.0);
 
-  // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the coat is one pale tan.
+  // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the hide is one pale cream, as the bodies of the other shots are.
   if (uSheet.y == 0.0) {
-    skin = mix(skin, vec3(0.62, 0.53, 0.42) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.25);
+    skin = mix(skin, vec3(0.7, 0.63, 0.52) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.62);
     // Dust lies in the coat.
     skin *= 0.86 + 0.28 * vnoise(vUv * vec2(520.0, 800.0));
     // A short pale coat, mottled, lying in whorls; dark along the spine, whose bumps stand under it.
     float mottle = 0.5 * vnoise(vUv * vec2(26.0, 38.0) + vOwn * 30.0) + 0.3 * vnoise(vUv * vec2(90.0, 130.0)) + 0.2 * vnoise(vUv * vec2(330.0, 520.0));
     skin *= 0.84 + 0.32 * mottle;
     float spine = smoothstep(0.022, 0.004, abs(vUv.x - uSheet.z - 0.01 * sin(vUv.y * 9.0))) * smoothstep(0.0, 0.3, vUv.y);
-    skin *= 1.0 - 0.3 * spine * (0.55 + 0.45 * sin(vUv.y * 260.0));
+    skin *= 1.0 - 0.1 * spine * (0.55 + 0.45 * sin(vUv.y * 260.0));
   }
   skin *= mix(vec3(0.78, 0.76, 0.74), vec3(1.12, 1.08, 1.02), vOwn) * (0.84 + 0.32 * coat);
   float fold = clamp(1.0 + 5.0 * creased * (textureLod(tRelief, vUv, max(level + 0.0, 0.0)).r - textureLod(tRelief, vUv, max(level + 2.5, 0.0)).r), 0.45, 1.35);
