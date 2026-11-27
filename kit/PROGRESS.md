@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 180, 2026-11-27 17:27 UTC:
+Status 181, 2026-11-27 17:47 UTC:
 
-- `01-s180-ribs-1546-native1.jpg`: The Ribs at 0:25 (frame 1546): four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left: pale grey mist with two blurred buff shapes like wings at the left edge, and a tall grey cliff face with fine level banding. Top right: grey rock in stacked ledges with orange-brown patches and pale streaks hanging from the ledges like drips. Bottom left: tilted grey rock with orange patches; across its middle the surface is pulled into long stretched streaks, with brown upright strips, thin-legged brown animals at the top and a pale ribbed fan at the lower left. Bottom right: blue-grey haze with two soft dark stacks, a paler cliff at the right edge and one small dark oblong in the air; little detail. The critic of fine detail gave this place 3 of 10 in round 30. The Builder's reading. Below the bar.
-- `02-s180-heart-3477-native1.jpg`: The Heart at 0:57 (frame 3477): four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left, out of focus: a dark brown slanted mass with soft pale fume on it, orange glowing haze behind and a bright orange line of lava with glowing knots at the far shore. Top right: dusky brown haze over a dim far bank with a short streak of bright yellow, flat dark grey ground below and two thin dark stilt legs at the right. Bottom left, out of focus: tall animals on thin jointed legs against orange-pink haze, a pale grey cone at the left edge, dark ground with glowing orange flecks. Bottom right: red-brown rounded rocks with rough skins, a yellow-brown smear above them and a large blurred dark shape across the bottom. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `03-s180-marsh-6102-native1.jpg`: The Blood Marsh at 1:41 (frame 6102): four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left: a pale pink ringed trunk with red-brown stains, leaning, before pale pink-grey misty water with faint ripples and a row of thin dark stems in the haze at the top. Top right: dark red water with soft ripples, a pale pink dome with a glint lying on it, and a pale bank with thin leaning stems at the top. Bottom left: red rippled water under a pale grey-white bank from which a fan of thin brown stems grows. Bottom right: deep red water with darker wavy streaks, the grey foot of a trunk with rings of ripples round it at the top left and a few pale patches at the right. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `01-s181-marsh-6424-before.jpg`: The Blood Marsh at 1:47 (frame 6424), the red key, drawn by a helper at 960x540 at the draft tier, not film quality. Top left, before wave 2: a great grey-brown animal with a striped hide on short dark legs, two smaller ones behind it and one lying in front, on red mud with broken white crust in patches; red-plumed stalks at the left edge; thin streaks of rain in a pale sky. Top right, now: the same view; the great animal is paler with soft folds and long claws hanging at its head, the ground is a smooth brown band of mud under the animals and a smooth red pool round the lying one, the crust at the left is soft and pale, the stalks are thinner and the rain streaks are gone. Bottom row, which part shows where, before and now: red is brine, brown the mud drawn with the animals, white the land, dark grey the animals and stalks, blue speckle the sky. Before, the lower half is mostly white land with a brown band and almost no red; now red brine fills the foreground and the brown band is wider. The Builder's reading. Below the bar.
+- `02-s181-marsh-6424-contrast.jpg`: The Blood Marsh at 1:47 (frame 6424): three maps of local contrast made by a helper from small draft frames, blue where the picture is smooth and yellow where it is busy. Left, before wave 2: yellow on the stalks at the left, speckled yellow across the ground in the lower third and along the lying animal. Middle, now: the lower third is mostly blue, with a little yellow on the lying animal's back; the great animal's hide has some yellow; a stalk at the top left and a plume at the top right are yellow. Right, the approved picture: the animal's back and the ground to the left and right of the animals are strongly yellow and the sky is blue. So the approved picture is busy where the film is now smooth. The Builder's reading. Below the bar.
+- `03-s181-marsh-6424-brine.jpg`: The Blood Marsh at 1:47 (frame 6424): two parts drawn alone on black by a helper at the draft tier, with the animals and the stalks drawn in both. Left, the brine alone: a smooth red-brown pool in the foreground round the lying animal, a band of red behind the stalks at the left and a red stretch at the right; black where the land and the mud would be. Right, the wallowers part alone: under the animals a pink-brown sheet of mud with darker streaks, a ragged dark fringe at the lower left and wet rings round the legs, the lying animal in a hollow of it; black elsewhere. The Builder's reading. Below the bar.
 
+Status 180, 2026-11-27 17:27 UTC, showed: The Ribs at 0:25 (frame 1546): four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the...
 Status 179, 2026-11-27 17:12 UTC, showed: The Ribs at 0:34 (frame 2081), the frame with the hung body: two crops at full size from the judged frame of round 30, drawn at 3840x2160...
 Status 178, 2026-11-27 16:31 UTC, showed: The Ribs at 0:34 (frame 2081), the frame with the hung body: four crops at full size from the judged frame of round 30, drawn at 3840x2160...
-Status 177, 2026-11-27 16:18 UTC, showed: The Breath at 1:27 (frame 5242), a wader close to the camera: two crops at full size from the judged frame of round 30, drawn at 3840x2160...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T17:27:33Z
-phase 6: 20.63 h used of 24.00 h
-build: 65.60 h used of 72.00 h
+2026-11-27T17:47:05Z
+phase 6: 20.96 h used of 24.00 h
+build: 65.93 h used of 72.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 15
+minutes since the last status: 20
 ```
 
 ## Phases
