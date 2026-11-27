@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 171, 2026-11-27 14:39 UTC:
+Status 172, 2026-11-27 14:57 UTC:
 
-- `01-s171-breath-native.jpg`: The Breath at 1:13 (frame 4409), the waders and the pit: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture. Top left, the waders in the glare on the shallow water, thin ribbed bodies with their reflections, a little soft. Top right, two red bushes at the rim of the pit with mist below them, and a thin straight dark line across the flat behind, the seam the open items name. Bottom left, a layered ledge under a flat that is smeared into streaks. Bottom right, rippled water around pale slabs that shine like wet clay. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `02-s171-spine-native.jpg`: The Spine at 2:00 (frame 7234), the storm: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture. In this frame the four standard boxes fall almost wholly on the sky. Top left, dark cloud with streaks falling from it. Top right, a billowing cloud bank with a corner of the snow slope. Bottom left, layered cloud against paler sky. Bottom right, a flat dark haze with a corner of snow-covered rock. The sky is soft and believable. These crops show almost nothing of the ground, the walkers or the tether-kites, which is where the critics fault the place. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `03-s171-eye-native.jpg`: The Eye at 2:26 (frame 8761), the lake and its cliffs: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture. Top left, the cliffs mirrored in the lake, the reflection rippled but built of square blocks. Top right, an orange cliff whose columns are blocky and blurred, like a small picture stretched large, above a scalloped orange shore line and teal water. Bottom left, a cliff in shadow with the same square blocks, and its reflection. Bottom right, shallow water over pale sediment with fine orange streaks, the most natural of the four. The critic of fine detail gave this place 5 of 10 in round 30. The Builder's reading. Below the bar.
-- `04-s171-reveal-native.jpg`: The Reveal at 2:47 (frame 10027), the titan frame: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture. Top left and bottom right, dark ocean under scattered small clouds and a streaked cloud sheet. Top right, mountain ranges in brown and rust with snow on the ridges, a teal river through the valleys and a small lake, the crop that reads most like land seen from orbit. Bottom left, a snow-capped ridge running out to a cape, beside a pale flat area that is blotchy and without detail. The critic of fine detail gave this place 3 of 10 in round 30. The Builder's reading. Below the bar.
+- `01-s172-spine-native2.jpg`: The Spine at 2:00 (frame 7234), its ground: two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left, a rock face with snow lying in its ledges, a snow ridge in front of it and pale streaks of blown snow across both; the layers of the rock and the broken edge of the snow hold up at this size, and a thin pale streak runs down the rock like a frozen fall. Right, a row of rock spires along a ridge, each with a curved vane bent the same way, standing in a flat field of drifting snow; the spires are soft and the field has almost no detail. This is the ground Still 156 did not show. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `02-s172-heart-native2.jpg`: The Heart at 0:52 (frame 3156), the crust walkers: two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left, two thin legs with knobbly joints under a body whose skin is striped like weathered wood, the best detail in the pair; the crust under them is a soft brown blur with a few small glowing cracks. Right, one more leg further off and out of focus, on crust with patches of bright lava and a few loose stones; the ground is smooth and low in detail. The approved picture has rough matte basalt here, and this frame fails the measure of fine detail against it. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `03-s172-marsh-native2.jpg`: The Blood Marsh at 1:47 (frame 6424), the wallowers: two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left, a view between two thick dark legs onto brown and pink flats with a wavy combed pattern, soft throughout, and a wrinkled rounded lump at the bottom edge. Right, the shaggy underside of a wallower above pink and brown mud with a marbled pattern, thin pale strands hanging between the body and the ground, and one red streak. Nothing here reads as water: the approved picture has dark wine-red brine that mirrors the animals and the sky, and this frame fails the measure of fine detail against it. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `04-s172-ribs-native2.jpg`: The Ribs at 0:29 (frame 1759), the feeders: two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left, a feeder's bundle of thin legs entering the water, with rings of ripples around them, their reflection below and a few white drops in the air; the legs are clean and the reflection believable. Right, open grey water with small ripples and broken highlights and nothing else in it. The approved picture has a shallow tidal flat with stones under broken reflections where this frame has a smooth sheet of water, and this frame fails the measure of fine detail against it. The critic of fine detail gave this place 3 of 10 in round 30. The Builder's reading. Below the bar.
 
+Status 171, 2026-11-27 14:39 UTC, showed: The Breath at 1:13 (frame 4409), the waders and the pit: four crops at full size from the judged frame of round 30, drawn at 3840x2160...
 Status 170, 2026-11-27 14:20 UTC, showed: The Ribs at 0:29 (frame 1759), the feeders: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one...
 Status 169, 2026-11-27 13:57 UTC, showed: The Ribs: its five judged frames of round 30 at right, each beside its approved picture at left, drawn at 3840x2160, final tier, and shown...
-Status 168, 2026-11-27 13:38 UTC, showed: The Blood Marsh: its five judged frames of round 30 at right, each beside its approved picture at left, drawn at 3840x2160, final tier, and...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T14:39:11Z
-phase 6: 17.83 h used of 24.00 h
-build: 62.80 h used of 72.00 h
+2026-11-27T14:57:30Z
+phase 6: 18.13 h used of 24.00 h
+build: 63.10 h used of 72.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 19
+minutes since the last status: 18
 ```
 
 ## Phases
