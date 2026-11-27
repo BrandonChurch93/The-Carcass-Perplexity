@@ -24,9 +24,10 @@ export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62, bou
  * it stands where the next shot wants it, as a crew waits for the light: on the colony's rock (whose faces to the lens are its lee: there
  * the light the lit sea and flats throw back is raised, `bounce` times, as a crew would hold a white sheet), on the feeders and the water behind them, on the flats behind the one that hangs in the weed (pale against a cliff in shade), on the
  * bore's spray in the gate. `sky` is what the cloud's own brightness is given in the shot: the bore comes in under a heavier sky.
+ * `shade` is what the sky's own light on things is given: the colony's rock keeps its folds dark under a sun that only tops its ledges.
  */
-const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number }[] = [
-  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 3.2, sky: 0.64 },
+const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number }[] = [
+  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 1.6, sky: 0.54, shade: 0.5 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23, sky: 0.75 },
   { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4 },
   { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.54, heads: 0.4 },
@@ -433,7 +434,7 @@ export function createRig(): Rig {
   const dome = new THREE.Vector4(DOME.gain, DOME.veil, DOME.lift, DOME.shut);
   const staging = BREAK_BY_SHOT.map((b) => ({ ...b, span: shotSpan(b.shot), at: keySeconds(b.key) }));
   /** The break's staging for the shot the camera stands in: its own, or the strait's. */
-  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number } => {
+  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number } => {
     const staged = stagedSeconds();
     const own = loopPhase() === null ? staging.find((b) => staged >= b.span.from && staged < b.span.to) : undefined;
     return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0, bounce: BREAK.bounce };
@@ -643,6 +644,10 @@ export function createRig(): Rig {
       skyHorizon.set(...SKY_LIGHT.horizon);
       skyGround.set(...SKY_LIGHT.ground);
       haze.set(...HAZE);
+      const shade = stagedBreak().shade ?? 1;
+      skyZenith.multiplyScalar(shade);
+      skyHorizon.multiplyScalar(shade);
+      skyGround.multiplyScalar(shade);
       bounce.set(...BOUNCE).multiplyScalar(stagedBreak().bounce ?? 1);
       skyTurn.w = SKY_GAIN * (stagedBreak().sky ?? 1);
       dome.set(DOME.gain * (stagedBreak().sky ?? 1), DOME.veil, DOME.lift, DOME.shut);
