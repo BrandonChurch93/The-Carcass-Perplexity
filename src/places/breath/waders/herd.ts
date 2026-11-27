@@ -11,8 +11,8 @@ const hash = (n: number): number => {
 /** Staged: in the view of the rim the live one has its neck down over the dead one, as the picture has it, and a second after that picture it
  *  begins to lift it and looks out over the shaft. */
 const RIM_LIFTS = keySeconds('breath-2') + 0.9;
-/** A feeding walk: a stride in three to four seconds. */
-const PACE = 0.62;
+/** A feeding walk: a stride in two and a half to three seconds. */
+const PACE = 0.85;
 /** Staged: where in its stride the middle one of the three in the channel is at 17.0 s: the hind leg on the camera's side lifted and trailing, as the picture has it. */
 const STRIDE_AT = 0.585;
 
@@ -106,7 +106,7 @@ export function makeHerd(rng: Rng): Member[] {
   // It is the stocky one of the herd: short in the leg, deep in the barrel, its back arched, and when its neck is down the tuft lies on the rock.
   const lank = makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.14, belly: 0.9, sway: 0.7, gaunt: 0.7 });
   const stocky: Build = { ...lank, standH: lank.standH * 0.8, legLen: lank.legLen * 0.806, legR: lank.legR * 1.35, neckR: lank.neckR * 1.18, bodyLen: lank.bodyLen * 1.08 };
-  herd.push({ build: stocky, plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5], [RIM_LIFTS, RIM_LIFTS + 60]], rng, 1, 1), near: false });
+  herd.push({ build: stocky, plan: { ...planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5], [RIM_LIFTS, RIM_LIFTS + 60]], rng, 1, 1), feedAt: 0.31, carry: 0.5, restless: 7, restlessAt: 0.129 }, near: false });
   // The far flock: grains of rice on the shallows. No two do the same thing at the same time.
   const far = rng;
   for (let i = 0; i < FAR_FLOCK.count; i++) {

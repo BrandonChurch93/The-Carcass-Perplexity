@@ -91,24 +91,39 @@ export function create(ctx: Context): Piece {
   const rim = herd[NEAR_WADERS.length] as Wader;
   const AWAY = { x: -58, z: -98 };
   // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
-  const MIST = { x: -34.4, z: -8.4, heading: -100 };
+  // Staged: in the view of the plumes it is a whole animal far off in the vapour, seen in the gap between the fronds, as the picture has it.
+  const MIST = { x: -37.2, z: -39.75, heading: 85 };
+  // Staged: in the view of the rim it stands clear of the growth, before it, where the picture of the rim has it.
+  const RIM_NEAR = { x: -28.0, z: 17.4, heading: 38 };
   const rimUp = rim.plan.up;
   const rimCarry = rim.plan.carry;
   const MIST_UP: [number, number][] = [[-5, 60]];
   const RAD = Math.PI / 180;
   const shaft = shotSpan('breath-02');
   const mist = shotSpan('breath-03');
+  const rimView = shotSpan('breath-05');
+  // Staged: in the wide view only the three in the channel are near. The others of the herd are half as far again out on the flats, small, as the
+  // picture has them; in the view in the channel they are where they were.
+  const wide = shotSpan('breath-01');
+  const WIDE_FROM = { x: -41.5, z: 42.3 };
+  const outer = herd.map((animal, i) => (i >= 3 && i !== NEAR_WADERS.length && wading.includes(i) ? { animal, x: animal.plan.x, z: animal.plan.z } : null)).filter((o) => o !== null);
 
   return {
     setTime: (seconds) => {
       const at = stagedSeconds();
       const away = at >= shaft[0] && at <= shaft[1];
       const misted = at >= mist[0] && at <= mist[1];
-      rim.plan.x = away ? AWAY.x : misted ? MIST.x : RIM_WADER.x;
-      rim.plan.z = away ? AWAY.z : misted ? MIST.z : RIM_WADER.z;
-      rim.plan.heading = (misted ? MIST.heading : RIM_WADER.heading) * RAD;
+      const nearRim = at >= rimView[0] && at <= rimView[1];
+      rim.plan.x = away ? AWAY.x : misted ? MIST.x : nearRim ? RIM_NEAR.x : RIM_WADER.x;
+      rim.plan.z = away ? AWAY.z : misted ? MIST.z : nearRim ? RIM_NEAR.z : RIM_WADER.z;
+      rim.plan.heading = (misted ? MIST.heading : nearRim ? RIM_NEAR.heading : RIM_WADER.heading) * RAD;
       rim.plan.up = misted ? MIST_UP : rimUp;
       rim.plan.carry = misted ? 1 : rimCarry;
+      const out = at >= wide[0] && at <= wide[1] ? 1.5 : 1;
+      for (const o of outer) {
+        o.animal.plan.x = WIDE_FROM.x + (o.x - WIDE_FROM.x) * out;
+        o.animal.plan.z = WIDE_FROM.z + (o.z - WIDE_FROM.z) * out;
+      }
       ripples.begin();
       drips.begin();
       herd.forEach((animal, i) => {
