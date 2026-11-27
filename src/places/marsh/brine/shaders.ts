@@ -4,6 +4,7 @@ import { F, K1_AT, POOL_R, R, STUCK, rel } from '../shared/anchors';
 const STUCK_AT = rel(STUCK[0], STUCK[1]);
 import { BRINE_GLSL } from '../shared/brine-glsl';
 import { RIG_GLSL } from '../shared/glsl';
+import { CONTACT } from '../shared/rig';
 import { FIELD_GLSL } from '../land/shaders';
 
 export const MAX_RINGS = 24;
@@ -57,19 +58,33 @@ vec4 groups(vec2 q, vec2 dir, float len, float px) {
   return textureLod(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)), log2(max(px / (len * 13.0) * float(textureSize(tGrain, 0).x), 1.0)));
 }
 
+// The renderer shades four pixels together, and a value set under a branch or after a discard is not set in the pixel that did not get
+// there: its fall across the four, and the level a mipmapped picture picks for itself from that fall, is then not the same twice. So the
+// fall of the place on the level is taken once, of the varying, before any branch, and every mipmapped read is given it.
+vec2 gX;
+vec2 gY;
+// The grain, laid per metres to the tile.
+vec4 grain(vec2 uv, float per) {
+  return textureGrad(tGrain, uv, gX / per, gY / per);
+}
+
 void main() {
+  gX = dFdx(vWorld.xz);
+  gY = dFdy(vWorld.xz);
+  fieldDx = gX;
+  fieldDy = gY;
   vec3 p = vWorld;
   vec3 toEye = cameraPosition - p;
   float dist = length(toEye);
   vec3 v = toEye / dist;
   vec3 f = fieldAt(p.xz);
-  vec4 fine = texture2D(tGrain, p.xz / 1.9);
+  vec4 fine = grain(p.xz / 1.9, 1.9);
   // The same shore the land paints: one line for both.
   float s = f.r + (fine.r - 0.5) * 0.1;
   // The surface is laid over the whole shelf, to where the bank comes up through the level: the bank itself cuts the waterline.
   if (s > 0.3) discard;
   // How wide a pixel lies on the brine, metres: what is finer than that is not drawn as a wave, it is left to the sheen.
-  float px = max(length(dFdx(p.xz)), length(dFdy(p.xz)));
+  float px = max(length(gX), length(gY));
   float pool = length(p.xz);
   float inPool = smoothstep(${(POOL_R + 2.5).toFixed(1)}, ${(POOL_R - 0.5).toFixed(1)}, pool);
 
@@ -94,24 +109,33 @@ void main() {
   }
   // What the flow carries is looked up where it came from: twice, half a turn apart, each fading out as the other fades in, so that the
   // carried pattern never snaps back. No two places turn over together.
-  vec4 patchy = texture2D(tGrain, p.xz / 37.0);
+  vec4 patchy = grain(p.xz / 37.0, 37.0);
   float turn = uTime / 9.0 + patchy.g * 2.0;
   float pa = fract(turn);
   float pb = fract(turn + 0.5);
   float wa = 1.0 - abs(2.0 * pa - 1.0);
   vec2 qa = p.xz - flow * 9.0 * (pa - 0.5);
   vec2 qb = p.xz - flow * 9.0 * (pb - 0.5) + vec2(3.7, 1.9);
-  vec4 ca = texture2D(tGrain, qa / 7.3);
-  vec4 cb = texture2D(tGrain, qb / 7.3);
-  vec4 fa = texture2D(tGrain, qa / 1.7);
-  vec4 fb = texture2D(tGrain, qb / 1.7);
+  // (The turn-over is not the same in two neighbours, so what is carried is drawn out across a pixel by more than the pixel's own width:
+  // how much is read off the turn-over a pixel on, and the carried grain is read that much softer.)
+  vec2 qx = gX;
+  vec2 qy = gY;
+  if (flow.x != 0.0 || flow.y != 0.0) {
+    vec2 turns = vec2(grain((p.xz + gX) / 37.0, 37.0).g, grain((p.xz + gY) / 37.0, 37.0).g) - patchy.g;
+    qx -= flow * (18.0 * turns.x);
+    qy -= flow * (18.0 * turns.y);
+  }
+  vec4 ca = textureGrad(tGrain, qa / 7.3, qx / 7.3, qy / 7.3);
+  vec4 cb = textureGrad(tGrain, qb / 7.3, qx / 7.3, qy / 7.3);
+  vec4 fa = textureGrad(tGrain, qa / 1.7, qx / 1.7, qy / 1.7);
+  vec4 fb = textureGrad(tGrain, qb / 1.7, qx / 1.7, qy / 1.7);
   vec4 carried = mix(cb, ca, wa);
   vec4 carriedFine = mix(fb, fa, wa);
   brineSilt = clamp(carried.r * 0.7 + carriedFine.g * 0.3 + 0.25 * (carried.b - 0.5), 0.0, 1.0);
 
   // There is no wind to speak of: the brine lies near to glass, and what moves on it has a cause.
   // A slow heave of the whole surface, too low to see but in what it mirrors.
-  vec4 heave = texture2D(tGrain, p.xz / 4.1 + vec2(0.013, 0.008) * uTime);
+  vec4 heave = grain(p.xz / 4.1 + vec2(0.013, 0.008) * uTime, 4.1);
   vec2 slope = (heave.ba - 0.5) * 0.035 + (heave.rg - 0.5) * 0.025;
   // The flow dimples the skin where it runs: low boils and seams that go down the channel with it.
   float speed = length(flow);
@@ -126,12 +150,12 @@ void main() {
   // each bent by what is under it. Between the lanes it is glass. Over the seep pool the gas keeps it troubled.
   vec2 wdir = ${v2(WIND_N)};
   vec2 lane = vec2(dot(p.xz, wdir) - 1.6 * uTime, dot(p.xz, vec2(-wdir.y, wdir.x)));
-  float paw = smoothstep(0.5, 0.74, texture2D(tGrain, vec2(lane.x / 41.0, lane.y / 11.0) + patchy.rb * 0.06).g);
+  vec2 wcross = vec2(-wdir.y, wdir.x);
+  float paw = smoothstep(0.5, 0.74, textureGrad(tGrain, vec2(lane.x / 41.0, lane.y / 11.0) + patchy.rb * 0.06, vec2(dot(gX, wdir) / 41.0, dot(gX, wcross) / 11.0), vec2(dot(gY, wdir) / 41.0, dot(gY, wcross) / 11.0)).g);
   // Outside the lanes it is not glass either: the flow, the gas and what wades keep a low ripple on it, more here and less there.
   float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 2.2 * speed + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
-  vec4 bend = texture2D(tGrain, p.xz / 0.83 + vec2(0.01, 0.007) * uTime);
+  vec4 bend = grain(p.xz / 0.83 + vec2(0.01, 0.007) * uTime, 0.83);
   vec2 ripples = vec2(0.0);
-  vec2 wcross = vec2(-wdir.y, wdir.x);
   // (No train is everywhere: each comes and goes in patches of its own, or the six would weave one cloth. And a wave is drawn only where
   // a lens can tell its crests apart: finer than that it would be grit.)
   if (px < 0.12) {
@@ -190,13 +214,11 @@ void main() {
   float stood = contactDrawn(p);
   float ringed = smoothstep(0.0, 0.12, stood) * smoothstep(0.85, 0.35, stood);
   float collar = 0.0;
-  // (Which way the thing stands from here is read off the map's own fall across the pixel and its neighbours.)
-  vec2 px0 = dFdx(p.xz);
-  vec2 px1 = dFdy(p.xz);
-  vec2 fall = vec2(dFdx(stood), dFdy(stood));
-  float det = px0.x * px1.y - px0.y * px1.x;
   if (stood > 0.01) {
-    vec2 lean = abs(det) > 1e-12 ? -vec2(px1.y * fall.x - px0.y * fall.y, px0.x * fall.y - px1.x * fall.x) / det : vec2(0.0);
+    // (Which way the thing stands from here is read off the map itself, a pixel's width on along x and along z: never off the fall of
+    // stood across the four pixels, which is set after the shore's discard.)
+    float reach = max(px, 1.0 / (uContactRect.z * ${CONTACT.size.toFixed(1)}));
+    vec2 lean = -vec2(contactDrawn(p + vec3(reach, 0.0, 0.0)) - stood, contactDrawn(p + vec3(0.0, 0.0, reach)) - stood) / reach;
     float ll = length(lean);
     vec2 off = ll > 1e-4 ? lean / ll : vec2(0.0);
     slope *= 1.0 + 1.3 * ringed;
@@ -209,8 +231,8 @@ void main() {
 
   // Scum: froth gathers against the bank where the bank holds it, in clumps and strings, never a band. It is the froth's own picture and
   // relief: the tallest bubbles show first, and more of them where more gathers.
-  vec4 raft = texture2D(tGrain, p.xz / 6.1);
-  vec4 fleck = texture2D(tGrain, p.xz / 0.57);
+  vec4 raft = grain(p.xz / 6.1, 6.1);
+  vec4 fleck = grain(p.xz / 0.57, 0.57);
   float seen = smoothstep(70.0, 20.0, dist);
   // Where the big ones wade the bed lies a hand under the brine for metres: that is not a bank, and no scum gathers on it.
   float wade = smoothstep(4.0, 6.5, length(p.xz - uWade));
@@ -228,8 +250,8 @@ void main() {
   float foam = 0.0;
   vec4 froth = vec4(0.0);
   vec2 frothSlope = vec2(0.0);
-  vec2 fdx = dFdx(p.xz) / 0.62;
-  vec2 fdy = dFdy(p.xz) / 0.62;
+  vec2 fdx = gX / 0.62;
+  vec2 fdy = gY / 0.62;
   float sill = 0.0;
   if (want > 1e-3) {
     // Froth stands a finger over the level: a lens low over it sees each clump's near face drawn short and its far side run on over the
@@ -267,7 +289,7 @@ void main() {
   if (depth < 0.6) bedTex = textureGrad(tBed, bedAt / 2.6, fdx * (0.62 / 2.6), fdy * (0.62 / 2.6)).rgb;
   // (Wet and stained: the bed under the shallows is darker than the dry crust beside it, never paler.)
   brineBed = bedTex * vec3(0.2, 0.1, 0.085) * (0.7 + 0.6 * fleck.b);
-  vec3 lit = brineShade(p, n, v, s, froth) * (1.0 - 0.3 * sill);
+  vec3 lit = brineShade(p, n, v, s, froth, gX, gY) * (1.0 - 0.3 * sill);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -278,7 +300,12 @@ varying vec3 vWorld;
 uniform sampler2D tGrain;
 ${FIELD_GLSL}
 void main() {
-  float s = fieldAt(vWorld.xz).r + (texture2D(tGrain, vWorld.xz / 1.9).r - 0.5) * 0.1;
+  // (Read exactly as the surface reads it, or the two would not cut the same shore.)
+  vec2 gx = dFdx(vWorld.xz);
+  vec2 gy = dFdy(vWorld.xz);
+  fieldDx = gx;
+  fieldDy = gy;
+  float s = fieldAt(vWorld.xz).r + (textureGrad(tGrain, vWorld.xz / 1.9, gx / 1.9, gy / 1.9).r - 0.5) * 0.1;
   if (s > 0.3) discard;
   gl_FragColor = vec4(0.0);
 }`;
@@ -317,6 +344,9 @@ uniform sampler2D tGrain;
 ${RIG_GLSL}
 
 void main() {
+  // (The fall of the skin's own place across the pixel, taken before any branch: every read of the grain below is given it.)
+  vec3 lx = dFdx(vLocal);
+  vec3 ly = dFdy(vLocal);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   // (The far wall is drawn only while the skin is open, when it is seen through the hole.)
@@ -325,8 +355,9 @@ void main() {
   // The skin drains from the crown toward the foot: thin and clear on top, thick and dark where it meets the pool. Through the thin top the
   // far wall of the dome shows, paler; across it lies the sky, as on any wet bubble.
   float top = smoothstep(0.1, 1.0, vLocal.y);
-  vec4 g = texture2D(tGrain, vLocal.xz * 0.9 + vLife.y);
-  vec4 run = texture2D(tGrain, vec2(atan(vLocal.z, vLocal.x) * 0.9 + vLife.y, vLocal.y * 0.35));
+  vec4 g = textureGrad(tGrain, vLocal.xz * 0.9 + vLife.y, lx.xz * 0.9, ly.xz * 0.9);
+  float round2 = max(dot(vLocal.xz, vLocal.xz), 1e-4);
+  vec4 run = textureGrad(tGrain, vec2(atan(vLocal.z, vLocal.x) * 0.9 + vLife.y, vLocal.y * 0.35), vec2((vLocal.x * lx.z - vLocal.z * lx.x) / round2 * 0.9, lx.y * 0.35), vec2((vLocal.x * ly.z - vLocal.z * ly.x) / round2 * 0.9, ly.y * 0.35));
   // (The skin drains in runs down its sides: thick dark streaks between thinner panes.)
   float thin = clamp(top * (0.35 + 0.65 * vLife.x) + (g.r - 0.5) * 0.45 + (run.r - 0.5) * 0.5 * (1.0 - top), 0.0, 1.0);
   // The skin is a clear film of thick liquid: what is behind it shows through it, stained. It is thick and dark only where it is seen
@@ -334,7 +365,7 @@ void main() {
   // (Cloudy: the brine in the film is milky where it is stretched, and red runs stand in it where it drains.)
   vec3 albedo = mix(vec3(0.075, 0.011, 0.009), vec3(0.25, 0.08, 0.066), thin * (0.55 + 0.45 * smoothstep(0.35, 0.65, g.g)));
   albedo = mix(albedo, vec3(0.09, 0.013, 0.01), smoothstep(0.52, 0.72, run.r) * (1.0 - 0.6 * top) * 0.8);
-  vec4 grit = texture2D(tGrain, vLocal.xz * 3.3 + vLife.y * 7.0);
+  vec4 grit = textureGrad(tGrain, vLocal.xz * 3.3 + vLife.y * 7.0, lx.xz * 3.3, ly.xz * 3.3);
   float solid = 0.0;
   // Torn: the skin opens from one point on its side, the hole's edge ragged and rolled thick, until nothing of it stands.
   float rim = 0.0;
@@ -343,7 +374,7 @@ void main() {
     vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.35, 0.94, sin(vLife.y * 40.0) * 0.35));
     vec3 at = normalize(vLocal);
     // The film that has drawn back is rolled up in the hole's edge, and the edge runs ahead here and hangs back there: no two parts alike.
-    vec4 ragged = texture2D(tGrain, vLocal.xz * 0.13 + vLife.y * 3.0);
+    vec4 ragged = textureGrad(tGrain, vLocal.xz * 0.13 + vLife.y * 3.0, lx.xz * 0.13, ly.xz * 0.13);
     float open = dot(at, from) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w;
     float gone = 1.0 - 2.0 * vLife.w * (0.55 + 0.45 * vLife.w);
     if (open > gone) discard;
@@ -442,8 +473,11 @@ uniform sampler2D tGrain;
 ${RIG_GLSL}
 
 void main() {
+  // (Taken before the discard: see the surface.)
+  vec2 gx = dFdx(vWorld.xz) / 0.9;
+  vec2 gy = dFdy(vWorld.xz) / 0.9;
   if (vLife.x <= 0.0) discard;
-  vec4 g = texture2D(tGrain, vWorld.xz / 0.9 + vLife.y);
+  vec4 g = textureGrad(tGrain, vWorld.xz / 0.9 + vLife.y, gx, gy);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   if (dot(n, v) < 0.0) n = -n;
