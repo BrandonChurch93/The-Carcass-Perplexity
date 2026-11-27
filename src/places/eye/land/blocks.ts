@@ -14,9 +14,9 @@ export function blockUniforms(ctx: Context): Record<string, THREE.IUniform> {
   return {
     tRockN: { value: data('land/rocks-n.jpg') },
     tRockR: { value: data('land/rocks-r.png') },
-    tFace: { value: ctx.assets.texture('land/rockface.jpg', { anisotropy: 2 }) },
+    tFace: { value: ctx.assets.texture('land/rockface.jpg', { anisotropy: 1 }) },
     tFaceNh: { value: ctx.assets.texture('land/rockface-nh.jpg', { kind: 'data' }) },
-    tGrit: { value: ctx.assets.texture('land/gravel.jpg', { anisotropy: 2 }) },
+    tGrit: { value: ctx.assets.texture('land/gravel.jpg', { anisotropy: 1 }) },
   };
 }
 

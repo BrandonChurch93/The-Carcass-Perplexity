@@ -13,15 +13,15 @@ export function mirrored(t: THREE.Texture): THREE.Texture {
 
 export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
   return {
-    tCliff: { value: ctx.assets.texture('mat/cliff.jpg', { anisotropy: 2 }) },
+    tCliff: { value: ctx.assets.texture('mat/cliff.jpg', { anisotropy: 1 }) },
     tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
-    tTalus: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 8 }) },
-    tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 4 }) },
-    tShoreP: { value: mirrored(ctx.assets.texture('mat/shoreplate.jpg', { anisotropy: 8 })) },
-    tShorePH: { value: mirrored(ctx.assets.texture('mat/shoreplate-h.png', { kind: 'data', anisotropy: 4 })) },
-    tScree: { value: mirrored(ctx.assets.texture('mat/screeplate.jpg', { anisotropy: 6 })) },
-    tScreeH: { value: mirrored(ctx.assets.texture('mat/screeplate-h.png', { kind: 'data', anisotropy: 3 })) },
-    tGravel: { value: ctx.assets.texture('land/gravel.jpg', { anisotropy: 4 }) },
+    tTalus: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 1 }) },
+    tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 1 }) },
+    tShoreP: { value: mirrored(ctx.assets.texture('mat/shoreplate.jpg', { anisotropy: 1 })) },
+    tShorePH: { value: mirrored(ctx.assets.texture('mat/shoreplate-h.png', { kind: 'data', anisotropy: 1 })) },
+    tScree: { value: mirrored(ctx.assets.texture('mat/screeplate.jpg', { anisotropy: 1 })) },
+    tScreeH: { value: mirrored(ctx.assets.texture('mat/screeplate-h.png', { kind: 'data', anisotropy: 1 })) },
+    tGravel: { value: ctx.assets.texture('land/gravel.jpg', { anisotropy: 1 }) },
     tGravelNh: { value: ctx.assets.texture('land/gravel-nh.jpg', { kind: 'data', anisotropy: 2 }) },
   };
 }

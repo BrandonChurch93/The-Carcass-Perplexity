@@ -319,16 +319,16 @@ export function cropGround(): Crop {
   map.wrapS = THREE.ClampToEdgeWrapping;
   map.wrapT = THREE.ClampToEdgeWrapping;
   map.generateMipmaps = true;
-  map.anisotropy = 8;
+  map.anisotropy = 1;
   map.needsUpdate = true;
 
-  // The mesh: a hand's width a cell where the wide camera passes close, coarser out on the shoulders.
+  // The mesh: a hand and a half a cell where the wide camera passes close, coarser out on the shoulders.
   const us: number[] = [];
-  for (let a = CROP.along0; a < CROP.along1 + 1e-6; a += 0.16) us.push(a);
+  for (let a = CROP.along0; a < CROP.along1 + 1e-6; a += 0.2) us.push(a);
   const vs: number[] = [];
   const FINE = 27;
   for (let c = CROP.across0; c < -FINE - 1e-6; c += 0.45) vs.push(c);
-  for (let c = -FINE; c < FINE - 1e-6; c += 0.13) vs.push(c);
+  for (let c = -FINE; c < FINE - 1e-6; c += 0.16) vs.push(c);
   for (let c = FINE; c < CROP.across1 + 1e-6; c += 0.45) vs.push(c);
   const nu = us.length;
   const nv = vs.length;
