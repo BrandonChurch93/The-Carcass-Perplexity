@@ -65,7 +65,7 @@ vec3 panoAtRest(vec3 c, float toLast, float el, float lit) {
   float glowing = clamp((0.5 * (c.r + c.b) - c.g) * 12.0 - 0.35, 0.0, 1.0) * (1.0 - warm);
   c = mix(c, body * vec3(0.8, 0.92, 1.16) * mix(1.0, 0.5, glowing), glowing * (1.0 - lit));
   c *= 1.0 + 0.8 * lit;
-  c = mix(c, body * vec3(0.7, 0.84, 1.1), warm * max(max(1.0 - smoothstep(0.6, 0.9, toLast), 0.85 * smoothstep(0.025, 0.08, el)), 0.45));
+  c = mix(c, body * vec3(0.7, 0.84, 1.1), warm * max(max(1.0 - smoothstep(0.6, 0.9, toLast), 0.9 * smoothstep(0.012, 0.05, el)), 0.7));
   return c;
 }
 // A picture at uv, flowing: two copies half a period apart, each carried along the eddies from where it started.
@@ -141,7 +141,7 @@ vec3 stratus(vec3 c, vec3 from, vec3 d) {
   return c;
 }
 // The storm with none of its billows, for what fades into the sky: its dark where it stands, and the rig's lights on it.
-const float FOOT_AIR = 0.55;
+const float FOOT_AIR = 0.8;
 vec3 skyBroad(vec3 from, vec3 d) {
   // The band of the dusk is a line on the horizon and the dome's alone: air, snow and the far sea take the cold sky over it, never its orange.
   // At its very foot it is thinner and darker: the far sea goes into it there, and the sea's lit tops keep their shape against it.
@@ -245,10 +245,10 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
     float body = dot(textureLod(tSkyPano, uvS, lodS + 2.5).rgb, vec3(0.3, 0.5, 0.2));
     float bodyBroad = dot(textureLod(tSkyPano, uvS, 6.0).rgb, vec3(0.3, 0.5, 0.2));
     float clump = textureLod(tNoise, vec3(p * 0.21, 0.43), 0.0).r;
-    float thick = smoothstep(0.0, 0.035, body - bodyBroad + 0.05 * (clump - 0.45)) * smoothstep(0.38, 0.62, clump);
+    float thick = smoothstep(-0.012, 0.04, body - bodyBroad + 0.05 * (clump - 0.45)) * smoothstep(0.4, 0.6, clump);
     thick *= smoothstep(0.015, 0.07, d.y) * exp(-t / 7000.0) * (1.0 - smoothstep(0.75, 0.95, toLast));
-    vec3 torn = mix(vec3(0.03, 0.034, 0.05), vec3(0.085, 0.088, 0.115), smoothstep(0.0, 0.06, body - bodyBroad)) * (1.0 + 2.0 * clamp(lit, 0.0, 1.0));
-    c = mix(c, mix(torn, c, 0.35), 0.5 * thick);
+    vec3 torn = mix(vec3(0.024, 0.027, 0.04), vec3(0.07, 0.074, 0.1), smoothstep(0.0, 0.07, body - bodyBroad)) * (1.0 + 2.0 * clamp(lit, 0.0, 1.0));
+    c = mix(c, mix(torn, c, 0.25), 0.7 * thick);
   }
   // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
   c += vec3(0.42, 0.33, 0.8) * clamp(near, 0.0, 3.0) * (0.03 + 1.3 * dot(c, vec3(0.33)));
@@ -275,7 +275,7 @@ void main() {
       // The storm's pass is smaller than the frame: read over a little more than one of its own dots, so no stair shows on a thin lit edge.
       vec2 at = gl_FragCoord.xy * uStormFrame.xy;
       vec2 by = uStormFrame.xy * uStormFrame.w;
-      vec4 storm = 0.4 * texture2D(tStorm, at) + 0.15 * (texture2D(tStorm, at + by) + texture2D(tStorm, at - by) + texture2D(tStorm, at + vec2(by.x, -by.y)) + texture2D(tStorm, at + vec2(-by.x, by.y)));
+      vec4 storm = 0.4 * textureLod(tStorm, at, 0.0) + 0.15 * (textureLod(tStorm, at + by, 0.0) + textureLod(tStorm, at - by, 0.0) + textureLod(tStorm, at + vec2(by.x, -by.y), 0.0) + textureLod(tStorm, at + vec2(-by.x, by.y), 0.0));
       c = c * storm.a + storm.rgb;
     } else {
       c = skyPainted(cameraPosition, d, foot);
@@ -349,13 +349,13 @@ void main() {
       float h = clamp((elS + 0.012 * unit) / (tall + 0.012 * unit), 0.0, 1.0);
       // A leaning blade: broad at the sea, a knife at the top, broken along both edges.
       float lean = (pl ? -0.4 : mod(k, 2.0) < 0.5 ? -0.35 : 0.28) * tall * h * h;
-      float half_ = tall * ((pl ? 0.55 : 0.34) * pow(1.0 - h, 1.3) + 0.012) * (1.0 + 0.5 * (texture(tNoise, vec3(h * 3.0 + k, k * 0.37, 0.2)).r - 0.5));
+      float half_ = tall * ((pl ? 0.55 : 0.34) * pow(1.0 - h, 1.3) + 0.012) * (1.0 + 0.5 * (textureLod(tNoise, vec3(h * 3.0 + k, k * 0.37, 0.2), 0.0).r - 0.5));
       float off = wrapPi(az - azS) - lean;
-      float inSpire = (1.0 - smoothstep(half_ - 1.5 * foot, half_ + 1.5 * foot, abs(off) + 0.004 * size * unit * (texture(tNoise, vec3(elS / unit * 90.0, off / unit * 60.0 + k, 0.7)).r - 0.5))) * (1.0 - smoothstep(tall - 2.0 * foot, tall + 2.0 * foot, elS));
+      float inSpire = (1.0 - smoothstep(half_ - 1.5 * foot, half_ + 1.5 * foot, abs(off) + 0.004 * size * unit * (textureLod(tNoise, vec3(elS / unit * 90.0, off / unit * 60.0 + k, 0.7), 0.0).r - 0.5))) * (1.0 - smoothstep(tall - 2.0 * foot, tall + 2.0 * foot, elS));
       if (inSpire > 0.0) {
         // Rock in the far air: dark toward the storm, the dusk on its lee face, and paler the farther off; its foot is in the cloud.
         float lee = smoothstep(-0.3, 0.6, off / max(half_, 1e-4));
-        vec3 rockFar = mix(vec3(0.02, 0.022, 0.034), vec3(0.075, 0.05, 0.04), lee * 0.6) * (0.7 + 0.6 * texture(tNoise, vec3(elS / unit * 70.0 + k, off / unit * 45.0, 0.31)).r);
+        vec3 rockFar = mix(vec3(0.02, 0.022, 0.034), vec3(0.075, 0.05, 0.04), lee * 0.6) * (0.7 + 0.6 * textureLod(tNoise, vec3(elS / unit * 70.0 + k, off / unit * 45.0, 0.31), 0.0).r);
         // Against the strike's dark cloud a far spire is a darker shape still, never a pale one.
         if (pl) rockFar = min(rockFar, c * 0.4);
         float air = 1.0 - exp(-(0.3 + 0.2 * k));
