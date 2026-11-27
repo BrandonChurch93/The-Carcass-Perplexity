@@ -1,90 +1,92 @@
-# The Spine: hand-over of the wide polish (wave of spine_lead)
+# The Spine: hand-over of the wide polish, wave 2 (spine_lead_w2)
 
-Unit `spine`, film frames 7015 to 8304. Branch `agent/p6-spine-polish`. Written by the lead of the wave; the lead wrote no picture code. Older notes of single folders stand beside this file: `shared/HANDOVER.md`, `strikes/HANDOVER.md`.
+Unit `spine`, film frames 7015 to 8304. Branch `agent/p7-spine-polish`, begun at 4e84d7b (the picture of 1718ba08, the end of wave 1). Written by the lead of the wave; the lead wrote no picture code. Older notes of single folders stand beside this file: `shared/HANDOVER.md`, `strikes/HANDOVER.md`. The hand-over of wave 1 is in this file's history (733a68c).
 
-Frames used to judge: 7015 (first frame), 7234 (spine-0), 7579 (spine-1), 7418 (spine-2), 7668 (spine-3), 8090 (spine-4); strikes at 7015, 7231, 7450, 7665, 7874, 8091; the walker's feet 8293 to 8304.
+Frames used to judge: 7015 (first frame), 7234 (spine-0), 7579 (spine-1), 7418 (spine-2), 7668 (spine-3), 8090 (spine-4), and 7120, 7200, 7330, 7450, 7632, 7800, 8250 between them; strikes at 7015, 7231, 7450, 7665, 7874, 8091. Judged at draft tier in the preview format, the keys also at review tier in hd. Nothing here was judged at the final tier, by a critic, by a jury, or through the film's encoder: every "nearer" below is the lead's eye on a before and after beside the approved picture.
 
 ## 1. Done, part by part, with the commit of each merge
 
+Sky, light, grade (`air/` but the sea files, `shared/`, the `look` line of `index.ts`):
+- 9d98763 (sky d936159): the thirteen masses give way to one flowing panorama of sky that turns over; a fall wall at the left of the strike lens; `strikeIrradiance` wraps 0.45.
+- bfffb0c (sky 257f672): driven snow as veils at three depths, plumes off the crests, banked mist among the far spires; no implicit texture reads inside branches.
+- b25efe3 (sky beed9bb): a colder grade and rig (`tint` 0.985, 1, 1.03); haze behind the dead one so the first spire sits back; the sky in the canal's mouth violet with a lit core; spindrift parts round the body; the band as a glow.
+- 31356e4 (sky b2b7300): a stroke lights the cloud about the bolt and the far storm stays dark; the ridge flares and decays over 7015 to 7030; the struck spire's flanks keep shadow; veils lie flat on the gale; the band cut into lengths.
+- 6fcb624 (sky 8118b59): the far ground and far spires by the dead one set back in a low drift layer; the clear side of the sky takes little of a stroke; the left mist stands in heads.
+
 Kites and runners (`kites/`, `runners/`):
-- 4177b65: the branch `agent/spine-kites` at 8c698001 taken in first.
-- 389570c: kites as bodies, sagging rimed cords with icicles, holdfast knots.
-- 4a65619: the walker (8042 to 8304) treads: footfalls fixed in the world, two-bone legs solved onto them, weight on the carrying forefoot, a dark contact, prints, the ice's dim showing of legs. It reads the canal floor from `floorRise` of `land/meshes.ts`.
-- d03609d: walker back at its old distance (1.9 m/s), coat as strands that part to their ends, herd breathes and shifts, the dead one (7579) flat on its side and sunk.
-- 845e93f: the kites take main's glassy veil again on narrow torn blades with lengthwise folds; husks dark frosted brown; five kites on the first spire. `mat/kiteskin.jpg` deleted.
-- 02b85fb: a faint body in the wide's kites, prints as a shallow pad and four toes, the dead one's legs re-posed (life cc97ba4).
-
-Storm (`strikes/`, `air/heaps.ts`, `air/sea.ts`):
-- 4f1e652: the cloud sea's GLSL and uniforms moved from `air/volume.ts` to `air/sea.ts`, no pixel changed, so two builders never share a file.
-- 622bbf0: the bolt as a channel with lit cloud at its root, restrike, decay of the flash.
-- 77ec5c5: mist over the sea's tops, softer far banks.
-- 2fc8193: the deck falls 360 m away from the ridge and is shaded by its depth under the crest; warm only on crowns the dusk reaches; strike 5 shows no white bar on 7874.
-- 262640e: the cloud's glow comes up over the frames before a stroke; more of the first strike's light on the snow; recipe of `mat/litcloud.jpg`.
-- 2e0867f: the storm side's far deck stays in the air's haze: no specks, no stepped heads at the horizon.
-- 02b85fb: strike 2 casts from the lit cloud 1100 m over the tip; the snow under the first spire takes a little more of the flash (storm 2b11d79).
-
-Sky, light, grade (`air/` but the sea, `shared/`, the `look` line of `index.ts`):
-- 13793b8: rig without sheen on snow and rough rock, warm dusk rim, snow light thrown up onto rock; haze beyond the first spire; the sky's foot reads the far sea so the horizon dissolves; grade (exposure 1.7, contrast 1.1, warm tint). The marched storm of this builder is switched off (`STORM_MARCHED` in `air/index.ts`).
-- 6f9a140: 13 storm masses from four generated pictures on two rings (3.5 and 8 km) over the old dome, each drifting, with parallax under the dolly (`air/masses.ts`).
-- 86ad58d: inside the canal the rig's sky light comes from the two mouths; the sky in the mouth is the brightest thing; recipes of the four masses.
-- 28c75e2: the thin bright band of orange low at the horizon is back; mass edges fade as vapour.
-- 7dddc36: the band is cut into lengths by far cloud bars and runs behind the far ridge in the canal; far spires keep more of their shade in a flash (sky adef2a5).
+- 52b3bb4 (life d4bf844, `runners/` only): the dead one slumped on its side, belly run out, limbs on the ice, rimed, a dark split with no red window.
+- 7c2ee51 (life 27ef642): the dead one's muzzle on the snow and a fan of arched rimed tendrils (in frame at 7632); each of the herd breathes at its own rate, the lying ones ease a shoulder at staggered times, the standing one's trunk sinks onto the carrying side; kites as clear skins without rainbow banding that thin and grey with distance.
+- 8f849cf (life d1b04b2): coats as fine locks drawn out to points; contact shade under the dead one and the standing one; husks as frosted cones; cords rimed pale; the black shoulder seam gone.
+- 1e0e7dd (life be3bf3e): the resting herd's coats hang by their own weight; one long broad ribbon at the struck spire; no alpha cut left, edges blended over a pixel or two, cords never finer than a pixel at 1920.
 
 Ground (`land/`, `ridge.ts`):
-- 9058dd5: wind-packed snow on the ridge from generated sheets at two sizes, dark bedrock breaking through. Spires as they were.
-- c77588b: recipes of the land's four sheets; `tiles.json` deleted.
-- edc1ee4: the cave mouth has an ice lip with icicles and one dimly lit inner wall.
-- 7dddc36: the ice on the mouth's lip stands in lengths with bare rock between; snow deeper, fewer bare patches (ground 5eca32e).
+- 158648c (ground d4f1455): the first spire on a thin outline of its own with a snowed shoulder (the other spires keep main's mesh); a cliff quad takes its own triangle's normal, so rock lies on its own plane and no snow streaks down walls; the struck spire keeps snow on more ledges.
+- 5b6620f (ground bba4a89, from a bundle): the crest under the wide lens is a mesh five times finer with sharp rock through the snow and sastrugi (`land/drift.ts`); the first blade thins over its whole height; the pale runs that read as rain on the rock are gone.
+- 06fc604 (ground 1c32100, from a bundle): the kite cliff's rock read a level coarser, small tilts halved, rime in cold masses on the gale side.
+
+Storm (`strikes/`, `air/sea.ts`, `air/heaps.ts`):
+- eb3e853 (storm 3021aec): the storm side climbs into a dark wall, so no ruled level stands left of the spire; the far deck takes the real deck picture's forms at the sky's slate tone; the deck flares with each strike; strikes build over three frames and die over eight; a far violet strike behind the dead one. The near heaps are main's, untouched.
+
+Last merges of the wave:
+- d498e75 (sky 30109ca): the sky's flow period shorter, the plate's horizon broken by cloud tops, the left mist in heads. A trial after it was reverted by its builder.
+- 7c3600e (life 591499c): the standing one's coat hangs by its weight, so the walker's rump at 8250 is under locks and no bare hide shows; the dead one's claws are grey horn.
+- 9d356a7 (storm efe98a1): the deck beyond the ridge takes the dusk's haze where the lens looks into the dusk, so the blue notch right of the first spire at 7579 is gone (the mist now hides half of the dusk gap); a white core and a violet glare where the stroke meets the tip at 7668.
 
 ## 2. Still wrong, worst first
 
-1. The first spire (7015, 7234, 7418). It shows a leaning cone with rock texture smeared down it, and at 7418 soft rounded lumps with dark blotches. spine-0 and spine-2 ask a blade of split, slabbed rock with a dark lee and a rimed windward face, sharp at one texel a pixel. Tried: bevelled hero relief (800597a: rust lumps, snow lost), joints cut by the shader (d9b4210: black strokes curved like wood grain, dotted where rime meets), planar slabs in the mesh (eb3ce4c, 1d774c6: roof shingles at 7234, flat tan boards with black gaps at 7418). None beat the rock as it stood.
-2. Far spires and the cloud sea (7015, 7234, 7668). The far spires are pale flat cut-outs, in a flash a lilac fill; the sea is soft heaps without torn tops, the storm side a featureless hazed level, the dusk side has no drop (the land's lee flank is a broad massif 100 m under the crest, so banks stand at ridge height). spine-0 asks spires that stand in weather with their own light and shade, and a sea with depth. Tried: haze by distance (in), shading by depth under the crest (in); a marched storm volume was a wavy grey noise field (322a3a9) and is off.
-3. The sky (all ridge frames). Masses drift and lean but do not turn over; the band is one ruled even line; no snow in the air on the ridge (streaks read as grey dashes at 2ae0492 and were switched off). spine-0 and spine-3 ask driven snow and cloud that boils.
-4. Kites in the wide (7015, 7234): thin scribbles of white line. Close (7418, 7450) they are glass again but fewer and plainer than spine-2.
-5. The canal (8090, 8250): walls are streaky fibre, not ribbed water-worn rock; the walker's prints are round holes; coat strands blunt close.
-6. The dead one (7579): legs stubby; the burn under it reads as dark water.
-7. Strike light: the near spire and the snow under it take little of the flash (7231).
-8. Encode at 7450: proven only on a stand-in (x264 at 625 kb/s at preview size, 7438 to 7461: worst frame 21.7 dB and flipping before, 22.9 and flat after). Not run with the film's encoder at 10 Mb/s.
+Each line: where, what it shows, what its approved picture shows.
 
-## 3. Held versions
+1. Rock, everywhere but the crest. Canal walls at 8090 and 8250: streaky stretched fibre; spine-4 shows ribbed, water-worn rock with a glossy meltwater floor. Hills through the mouth: flat grey facets; spine-4 shows snowed ridges in haze. Icicles: dark cones; spine-4 shows clear ice. Kite cliff at 7418: orange-brown with long pale stripes along the slab sides; spine-2 shows pale tan slabbed rock under heavy rime. Third spire at 7668: pale grey and crumpled in the flash, the near left rock a brown blur with no snow; spine-3 shows dark wet strata with snow on every ledge. Far spires: main's mesh, little done.
+2. The dead one at 7579. The ground is a grey rippled sheet; spine-1 shows glazed wet rock, slush and sparkling ice. Everything is in focus (the look has haze, no focus blur); spine-1 has a soft far field. No snow flies near the lens. The forelimb is a furry lump and the claws are flat blades. No print trail. The camera stands higher and the spire nearer than in spine-1: open, not declined; a lower camera only as a proposal to the Builder. The mist hides half of the dusk gap since 9d356a7.
+3. The cloud sea. Near heaps at 7234 and 7015 are main's: soft lumps with no torn crowns and no fog spilling round the lower spires; spine-0 shows a torn deck with the ridge stepping down into it. The far deck's top at 7668 and 7800 is a ruled edge (the foot of the sky's plate against the deck's tone); spine-3 shows a broken horizon. The left mist at 7200 and 7234 is soft, not cloud.
+4. Coats. They are still cards: by the life builder's measure the herd at 8090 carries 8.16 of fine detail where spine-4 carries 2.74. The walker from behind is mottled, with a tan fringe at the lifted foot. The standing one's trunk moves little; the cave animals read as nearly still at 8075.
+5. Strikes and kites. No fume and only dash sparks at the tip at 7668; a gap at the bolt's foot at 7234 behind vapour. Husks and far loops are plain at 7668. The sky is one warped picture, so wisps come and go rather than travel.
+6. Foreground snow at 7015 and 7234: the crest gained; fine wind detail is still thin.
+7. Not measured by anyone: the encode at 7420 to 7479 after the changes (the compression critic gave 5 before them), M3, repeat tests on browser 147, the final tier. `dFdx(frostL)` still sits inside an `if` in the spire rime (`land/shaders.ts`, near line 767).
+8. Of the round 29 issues (`issues-spine.md`) the wave closed none by a critic's word. Not closed and not declined: strand fur, real displacement, canal walls, hills through the mouth, icicles, focus blur, print trail. Declined: ear movements only (nothing living has ears).
 
-Ground, branch `agent/p6-spine-ground`:
-- 800597a (V1): bevelled hero relief. Rust lumpy rock, snow lost on the spire, outcrops lost.
-- e528ecf (early look): tone right, but at 7418 soft sandstone lumps, sooty blotches, blue-grey rime; the spire still a cone.
-- d9b4210 (V2, shader joints 61d4988): joints are black strokes curved like wood grain, dotted where rime meets them; the rimed block a lattice.
-- eb3ce4c, 1d774c6 (planar slabs, the `heroSlabs` mesh and its bake): roof shingles at 7234, flat tan boards with black gaps at 7418. A layered mesh drawn double sided cost 3.4 s more.
-- 66ca369 (far blades, TABLE rows and `shear` in `ridge.ts`): tips and edges of spires 6 and 8 to 15 move; the lines kites and strikes read were not checked. Never judged in a merge.
+## 3. Versions held back
 
-Sky, branch `agent/p6-spine-sky` (its history was rewritten once by the builder, early, to add trailers; the hashes below are as they were sent):
-- 0d49ccf (V1, marched storm): smooth smears, a peach band, teal dusk; further from spine-0 than main.
-- 322a3a9 (early look): a wavy grey noise field, pale and flat, kites lost in it. The march stays in the tree, off.
-- 2ae0492, 63016f9, 214ebda (V2 and two fixes): snow as grey dashes, a milky haze patch on the near spire, husks orange; then haze lost beyond the canal mouth at 8090 and a ruled horizon at 7015. All mended in f3783f1, which was merged. The snow streaks stay off.
+Ground, `agent/p7-spine-ground`:
+- 6c23841: the 7418 plate hero read as a flat tan plane with a stitched trench.
+- 3258510: a clapboard wall and tape rungs at 7418.
+- de881c7: the third spire lost its ledge snow, a white rectangle and a slit at 7668 and 7800 (mended in d4f1455, merged).
+- 811e6eb: `scorchBed` drew a black band of flowing tar at 7579 (merged without it as bba4a89).
+- 0ebfabc, the builder's last: the bed at 7579 as parted dark slabs reads as rounded pads, stepping stones on snow, and its lift hides the tendrils and the foot of the ribs. The builder judged it the same way. The cause it found is worth keeping: the earlier beds lay under the crest's half metre mesh.
 
-Kites and runners, branch `agent/p6-spine-life`:
-- 54bb65e (V1): opaque mauve kites that vanish in the wide, holdfasts removed.
-- The builder's own film skin and rose-violet patches (in 1f8232c, merged, then taken out again in 7410d74 at the Builder's guard: flat opaque strips against the subject sheet's "translucent ribbons").
-- Not drawn, kept in code: crossing walkers (`WALKERS = false`), prints fading with age, larger herd breath.
+Life, `agent/p7-spine-life`:
+- d60dd93: the corpse propped on stiff legs with a red window wound.
+- 6d380b4: a bald pale hind paw read as a small standing animal.
+- the kites of d4bf844: opaque lavender bands at 7234 (mended in 27ef642, merged).
 
-Storm, branch `agent/p6-spine-storm`: every version sent was merged. Held by the builder itself: a second cast point a strike; far heads on the storm side.
+Storm, `agent/p7-spine-storm`:
+- e70f124: the dusk deck read as snow slopes.
+- c51fa78: snow dunes and swell at 7120 and 7330.
+- bbd969c: flat pale fog, glassy wedges at the spire's foot, a dark wedge at 7450, scribble sparks at 7668.
+- bd3e910: the far deck pale like open water at 7668 and 7800 (mended in 3021aec, merged).
 
-## 4. What to try next, for each of the worst three
+Sky, `agent/p7-spine-sky`: every version sent was merged.
 
-1. First spire: model it as a mesh hero outside the shader (a sculpt with real fracture planes, baked normal and occlusion), then lay today's rock sheets on it; judge at 7418 first, since every version failed there, and only then at 7234. Keep `tipOf`, `finEdge`, the lee edge and tip lines of `ridge.ts`: strikes, kites and the camera read them.
-2. Far spires and sea: draw the far spires as lit geometry with their own rime and shade, then lay the haze over; lower the lee massif under the dusk side in `land/height.ts` so the sea can fall there; give the far deck large slow forms (an encoder holds those), not fine noise.
-3. Sky: let masses turn over (two pictures of one mass cross-faded with a slow warp), break the band with cloud along its length, and bring driven snow back as soft streaked veils at three depths, never as single dashes.
+## 4. What to try next, for the worst three
+
+1. Rock. Lay the rock textures by face normal (three planes) and give the canal walls and the hills through the mouth real displacement, not a shaded plane; start at 8090, where the walls fill the frame. At 7418 the albedo is already pale: the orange-brown comes from the warm low rig on small normals, so change the light on that cliff or its normals, not its colour; break the long pale stripes by laying rime in masses across slab sides, with plumes off the edges.
+2. 7579. Build the bed as one broken sheet, not pads: the mesh `scorchBed` exists; lay it on the highest ground within a cell as 0ebfabc does, keep its joints open through the crest snow, glaze the tops, and keep it below the tendrils and the ribs. Add a depth blur to the look for the shots 7499 to 7659 only (the sky's line of `index.ts`), and snow flying near the lens. A lower camera goes to the Builder as a before and after, not into a merge.
+3. Cloud sea. Opacity taken from the depth walked under the deck's top, with torn crowns, worked for the far left fall and made glassy panes where it met rock: keep it off the rock by a margin and try it on the near heaps. Match the tone of the plate's foot to the deck's (a job across the sky's and the storm's files, to be given to one of them) so the ruled edge at 7668 and 7800 goes.
 
 ## 5. What a newcomer would trip over
 
-- Guard frames 1241 and 4409 (other units) must stay byte for byte; render them draft, preview, and `cmp` with files made on `origin/main`.
+- Guard frames 1241 and 4409 (other units) must stay byte for byte: render them at draft, preview, and `cmp` with files made on the branch's start. Equal at every report of this wave, and at 9d356a7.
 - Never two builders in one file. `air/sea.ts` and `air/heaps.ts` are the storm's; the rest of `air/` and all `shared/` are the sky's; `src/places/spine/index.ts` belongs to nobody but its `look` line, which is the sky's.
-- The runners import `floorRise` from `land/meshes.ts` (read only): `ctx.rig.land` has no canal floor. Do not rename it.
-- The rig feeds every part. A change of exposure or of the warm rim in `shared/` turns the husks rust orange and hides the band; look at 7418, 7450 and 8090 after any change there.
-- `STORM_MARCHED` in `air/index.ts` is false: the marched storm is compiled out.
-- Gate G8: every file under `public/assets/spine/` needs a `## ` heading with its full path in a `RECIPE.md` under `assets-src/spine/`. Green at the last commit.
-- Cost is measured with `npm run -s cost -- --frame N --format uhd --tier draft --parts spine/sky`; the tool varies by about 0.4 s a sample. Before: 7015 19.97, 8090 24.68. Now: 7015 21.97 (10 percent over), 8090 28.39 (15 percent over). Shares of the rise: the masses and the canal light (sky), strands of the coat (runners at 7579 are 3.33 s a sample), the land's sheets (land alone 12.24 to 12.7 at 7234).
-- Every commit, merges too, ends with the trailer `Co-authored-by: Perplexity <noreply@perplexity.ai>` once. Some early merge commits of this wave lack it (4177b65 and before the note); they were not rewritten, by order.
-- Pushing failed on some machines in this wave; the sky's last three versions came as bundles, and the lead's last commits went to the Builder as a bundle.
-- The mouth of the first spire is lit by a term of the land's own in `land/shaders.ts`, since no sky stands over the canal in the rig; a mouth light in `shared/` would be the real mend.
-- The near spire takes almost none of a flash: `strikeIrradiance` in `shared/glsl.ts` wraps 6 percent onto faces turned from the channel. The storm cannot mend that in its files.
-- The dead one at 7579 does not reach the bar close. The camera was kept, by rule; if a critic names it, keep the animal at a distance.
+- Who holds what was settled in this wave: the ground under the dead one (the scorch, `SCORCH_BLOCK` in `land/shaders.ts`) is the ground's, the body and its prints are the life's, the spindrift over it and all haze are the sky's; the light inside the canal is the sky's (`shared/glsl.ts`), not the land's mouths; the straight top edge of the far deck at 7668 and 7800 is the horizon of the sky's plate, which the deck cannot break from `air/sea.ts`.
+- The lee side already falls 2000 m by 1.3 km out (measured by the ground builder): there is no massif to lower in `land/height.ts`, against what wave 1's hand-over said. The level of the deck is the storm's own.
+- Frames that do not repeat between runs come from screen derivatives (`dFdx`, `dFdy`, `fwidth`) or implicit-level `texture2D` reads of mipmapped textures inside branches or loops. Take derivatives at the top of `main` and read with `textureGrad` or `textureLod`. Mended in this wave in the sky, the kites, the runners, the scorch and `open.ts`; one is known to remain: `dFdx(frostL)` in the spire rime of `land/shaders.ts`. Repeat tests are to be trusted only on browser 147.0.7727.15; the lead's machine carried another build and ran none.
+- `kit/06-ASSETS.md` allows an approved picture as a source of sky: the sky's panorama comes from that, on the conditions that no bolt, kite or spire is baked in and that a nearer layer keeps parallax.
+- The runners import `floorRise` from `land/meshes.ts` (read only). Do not rename it. `tipOf`, `finEdge` and the lee edge and tip lines of `ridge.ts` are read by the kites and the strikes.
+- The rig feeds every part. The cold grade of b25efe3 changed how rock, snow and coats sit; look at 7418, 7450 and 8090 after any change in `shared/`.
+- `WALKERS = false` in `runners/index.ts` is on purpose since wave 1 (a far walker read as a person in the wide; spine-1 has none). The Builder has that answer.
+- `scorchBed` in `land/meshes.ts` is kept and not drawn (see held versions).
+- The encode: the Builder measured that at 7450 the 10 Mb/s encode loses the picture where it carries contrast from one pixel to the next, and that the shared grain is not the cause. The rule that follows: nothing finer than a pixel at 1920 wide, soft edges on lines and cards, detail at several pixels and up. The coats, the cords and the kite cliff were taken a step that way; nobody measured the result.
+- Gate G8 passes at 9d356a7, the last commit of picture code. Every commit, merges too, ends with the trailer `Co-authored-by: Perplexity <noreply@perplexity.ai>` once.
+- Pushing failed on the builders' machines for about twenty minutes near minute 170; two ground versions came as bundles cut against the unit branch's head.
+- Cost, `npm run -s cost -- --frame N --format uhd --tier draft --parts none --runs 2` on the lead's machine, seconds a sample: 7234 22.33 before, 23.71 at 9d356a7 (plus 6.2 percent); 7579 30.25 before, 33.58 (plus 11.0 percent); 8090 28.79 before, 29.32 (plus 1.8 percent). The cap was 16 percent. 7015 was 22.23 before and was not measured again by the lead; the storm builder had 22.61 against its own 21.38 on its machine.
+- The after set of this wave is `out/work/after/` on the lead's machine (not in the repository): draft, preview, frames 1241, 4409, 7015, 7120, 7234, 7330, 7418, 7450, 7579, 7668, 7800, 7950, 8090, 8250, with 7234 and 7579 at review tier in hd; the before set of the same frames from 4e84d7b is `out/work/before/`.
