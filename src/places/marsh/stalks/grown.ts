@@ -176,7 +176,7 @@ void main() {
   // and rust where the crust has flaked off. Under this sky the sheet at two thirds of its own value is the cream and tan of the picture.
   float luma = dot(bark, vec3(0.3, 0.5, 0.2));
   float flaked = smoothstep(0.6, 1.15, (bark.r - bark.b) / max(luma, 0.05));
-  vec3 albedo = mix(vec3(luma), bark, 0.9) * 0.66;
+  vec3 albedo = bark * vec3(0.72, 0.66, 0.6);
   float patchy = fbm(vec2(vUv.x * 5.0, vUv.y * 2.2) + seed * 11.0);
   float grain = fbm(vUv.xy * vec2(90.0, 60.0));
   // The lumps are crystal: whiter than the crust they stand on. Far off they are not seen as white.
@@ -190,7 +190,7 @@ void main() {
   float zone = smoothstep(0.3, 0.7, fbm(vec2(seed * 9.0 + vUv.x * 0.8, vUv.y * 0.42)));
   albedo *= mix(vec3(0.74, 0.56, 0.45), vec3(1.06, 1.04, 1.02), zone);
   // Where the crust has flaked the tube shows: rust, ochre and brown, more of it on an old trunk and in a thin span.
-  vec3 rust = bark * vec3(0.8, 0.5, 0.36);
+  vec3 rust = bark * vec3(0.95, 0.5, 0.3);
   albedo = mix(albedo, rust, flaked * (0.75 + 0.25 * min(age, 1.0)) * mix(1.0, 0.7, zone) * mix(1.0, 0.5, plain));
   float rusty = smoothstep(0.3, 0.7, fbm(vec2(vUv.x * 3.0, vUv.y * 1.3) + seed * 5.0));
   // And it runs down from a ring: the crust under one is stained orange, in tongues, on the side the brine dries last.
@@ -207,7 +207,7 @@ void main() {
   // By the lens the mouth of a living trunk is its husk: brown and fibrous, ragged where the crust begins under it.
   float under = (1.0 - vUv.w) * vKind.y;
   float mouth = step(1.5, uLedgeF) * (1.0 - deadStem) * (1.0 - smoothstep(0.07, 0.15, under + 0.12 * (patchy - 0.5) + 0.03 * sin(vUv.x * 44.0 + seed * 60.0)));
-  albedo = mix(albedo, vec3(0.2, 0.105, 0.05) * (0.55 + 0.9 * grain) * (0.7 + 0.3 * sin(vUv.x * 150.0 + seed * 9.0)), 0.9 * mouth);
+  albedo = mix(albedo, vec3(0.34, 0.17, 0.075) * (0.55 + 0.9 * grain) * (0.7 + 0.3 * sin(vUv.x * 150.0 + seed * 9.0)), 0.9 * mouth);
   float above = vWorld.y - vLook.w;
   // The foot stands in red brine and mud, and the stain of it climbs the foot, higher on one than on the next, and ragged.
   float wet = 1.0 - smoothstep(0.03, 0.03 + vLook.y, above + 0.09 * sin(vUv.x * 9.5 + seed * 30.0) + 0.05 * sin(vWorld.y * 31.0 + seed * 11.0));
@@ -224,7 +224,7 @@ void main() {
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, above)) * (0.72 + 0.28 * smoothstep(0.0, 1.5, above)) * mix(0.5 + 0.5 * smoothstep(0.08, 0.5, nh.b), 0.94, away);
   // Under its head a stem stands in the head's shade.
   float below = (1.0 - vUv.w) * vKind.y;
-  occ *= mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.1 * vKind.y + 0.12, below), uCrowned * (1.0 - deadStem));
+  occ *= mix(1.0, mix(0.55, 0.78, step(1.5, uLedgeF)) + mix(0.45, 0.22, step(1.5, uLedgeF)) * smoothstep(0.0, 0.1 * vKind.y + 0.12, below), uCrowned * (1.0 - deadStem));
   // A stem a few pixels wide is all edge: far off, the sky's glance off its sides is all that would be seen of it, so there it is shaded as
   // the flat thing the lens sees, and keeps its own colour.
   float thin = smoothstep(6.0, 22.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF));
@@ -307,7 +307,7 @@ void main() {
   // The strap's line is the sum of its directions from its root: three places along it are enough to take the sum.
   // A strap of a plume the lens stands by is told how late along its length it turns (aFr2.w, below zero), and may hook back under itself.
   float late = aFr2.w < 0.0 ? -aFr2.w : 1.5;
-  float most = aFr2.w < 0.0 ? 4.3 : 3.02;
+  float most = aFr2.w < 0.0 ? 3.9 : 3.02;
   vec3 at = s * vec3(0.1127, 0.5, 0.8873);
   vec3 bends = clamp(bend0 + fall * pow(max(at, vec3(1e-5)), vec3(late)), vec3(-1.2), vec3(most));
   vec3 weigh = vec3(0.2778, 0.4444, 0.2778);
@@ -589,7 +589,7 @@ export function matOf(list: Fronds, rng: Rng, ground: (x: number, z: number) => 
 export function plumeOf(list: Fronds, drops: Fronds, w: Wild, rng: Rng, length: number, comb: number): void {
   const { end, aim } = endOf(w);
   const bud = w.kind === 1;
-  const n = bud ? 240 : w.kind === 3 ? 420 : 560;
+  const n = bud ? 240 : w.kind === 3 ? 380 : 500;
   // Wet filaments hold to each other: the plume is some tens of locks. A lock leaves the mouth close to the trunk's own line, stands for most of
   // its length, then arches over and hangs or hooks at its end: how late it turns (the fourth number) is the lock's, so its filaments stay
   // together. The locks on the side the air has combed them to leave wider and fall further; a few on the other side stand and hook back.
@@ -615,7 +615,7 @@ export function plumeOf(list: Fronds, drops: Fronds, w: Wild, rng: Rng, length: 
     // A lock thins to its end: its filaments are of unlike length, and a few are short and young.
     const len = length * own[2] * (core ? 1 : (stray ? rng.range(0.5, 1.2) : 1 - 0.55 * Math.pow(rng.next(), 1.6)) * (rng.next() < 0.07 ? rng.range(0.3, 0.6) : 1));
     const fall = own[3] + (core ? 0 : rng.normal() * (stray ? 0.5 : 0.06));
-    const half = bud ? rng.range(0.006, 0.011) : core ? rng.range(0.0065, 0.0105) : rng.range(0.002, 0.0048);
+    const half = bud ? rng.range(0.006, 0.011) : core ? rng.range(0.008, 0.013) : rng.range(0.003, 0.0065);
     const seed = rng.next();
     const from = w.R * 0.7 * Math.sqrt(rng.next());
     const late = -(own[4] + (core ? 0 : stray ? rng.range(-0.5, 0.5) : rng.range(-0.05, 0.05)));
@@ -627,6 +627,36 @@ export function plumeOf(list: Fronds, drops: Fronds, w: Wild, rng: Rng, length: 
   for (let k = 0; k < husks; k++) {
     list.add(w, end, aim, (k / husks) * TAU + rng.range(-0.3, 0.3), rng.range(0.15, 0.65), w.R * rng.range(0.9, 2.6), w.R * rng.range(0.13, 0.24), rng.next(), rng.range(0.6, 2.6), HUSK, -rng.range(1.2, 2.4), false, w.seed, w.R * 0.95);
   }
+}
+
+/**
+ * Takes from `rng` exactly what a plume took of it before the plumes were made as they are now. The trunks by the lens of the colony draw their
+ * lines from the same stream, one after the other: with this they stand where the key's picture has them, whatever a plume is made of.
+ */
+export function plumeDrawn(w: Wild, rng: Rng): void {
+  const lockCount = w.kind === 1 ? 14 : 30;
+  for (let k = 0; k < lockCount; k++) {
+    rng.normal();
+    rng.normal();
+    rng.next();
+    rng.range(0, 1);
+    rng.range(0, 1);
+  }
+  const n = w.kind === 1 ? 260 : w.kind === 3 ? 320 : 440;
+  for (let k = 0; k < n; k++) {
+    rng.int(lockCount);
+    rng.next();
+    rng.normal();
+    rng.normal();
+    rng.range(0, 1);
+    if (rng.next() < 0.08) rng.range(0, 1);
+    rng.normal();
+    rng.range(0, 1);
+    rng.next();
+    rng.next();
+    if (w.kind !== 1) rng.next();
+  }
+  for (let k = 0; k < 18; k++) for (let j = 0; j < 6; j++) rng.next();
 }
 
 /** What a husk of the mouth carries where a strap carries how spent it is. */

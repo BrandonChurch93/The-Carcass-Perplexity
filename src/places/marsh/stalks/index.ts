@@ -4,7 +4,7 @@ import { EYE, F as AHEAD, R as ASIDE, K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU
 import type { Context, Piece } from '../shared/context';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
-import { Fronds, crownOf, dropMesh, frondMesh, matOf, plumeOf, stemMesh, tuftOf, type GrowthUniforms } from './grown';
+import { Fronds, crownOf, dropMesh, frondMesh, matOf, plumeDrawn, plumeOf, stemMesh, tuftOf, type GrowthUniforms } from './grown';
 import { COLLAR_FRAGMENT, COLLAR_VERTEX } from './palms';
 import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX } from './shaders';
 import { growStands, lineAt, type Wild } from './stands';
@@ -516,9 +516,11 @@ export function create(ctx: Context): Piece {
       if (s.kind === 2) continue;
       if (s.kind !== 1) perches.push(lineAt(w, 1));
       clings.push(w);
-      plumeOf(blades, beads, w, own, (s.kind === 0 ? 0.62 : s.kind === 3 ? 0.5 : 0.6) * s.size, want + own.range(-0.3, 0.3));
+      const comb = want + own.range(-0.3, 0.3);
+      plumeDrawn(w, own);
+      plumeOf(blades, beads, w, ctx.rng('stalks-plume-' + closeW.length), (s.kind === 0 ? 0.52 : s.kind === 3 ? 0.46 : 0.6) * s.size, comb);
     }
-    closeSet.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 28, 2), frondMesh(ctx, growth, blades, 14, { wet: 1 }), dropMesh(ctx, growth, beads));
+    closeSet.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 28, 2), frondMesh(ctx, growth, blades, 24, { wet: 1 }), dropMesh(ctx, growth, beads));
     // Seen from the other shots they are far off, and are made as the far ones are.
     const plain = new Fronds();
     const less = ctx.rng('stalks-close-far');
