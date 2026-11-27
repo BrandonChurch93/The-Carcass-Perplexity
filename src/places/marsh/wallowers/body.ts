@@ -474,6 +474,7 @@ void main() {
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it: the belly and the insides of the legs are red brown, not black.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.72, 0.42, 0.34) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (1.0 - 0.6 * uMudded);
+  c = clamp(c, 0.0, 8.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -562,9 +563,11 @@ void main() {
   // On one that wades in mud they are the brown of the mud, not ivory.
   albedo *= mix(vec3(1.0, 0.8, 0.62), vec3(1.0), smoothstep(0.6, 0.9, uTint));
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
-  float rough = mix(0.95, mix(0.9, 0.58, groove * ring * 2.0), wet);
+  // (On one that wades they are wet with mud, not with water: no white sheen stands on them.)
+  float rough = mix(0.95, mix(0.9, mix(0.74, 0.58, smoothstep(0.6, 0.9, uTint)), clamp(groove * ring * 2.0, 0.0, 1.0)), wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
+  c = clamp(c, 0.0, 8.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -603,6 +606,8 @@ export interface Look {
   crust?: number;
   /** How many thin feelers hang from its lip in place of the hand of thick ones. */
   tendrils?: number;
+  /** On one that wears the coats: how dark its feelers are, 0.44 unless said. */
+  tint?: number;
   /** With tendrils: how far they hang, 1 straight down as a comb (the default), 0.3 a fan that rakes forward. And how thick, 1 as the comb. */
   hang?: number;
   thick?: number;
@@ -729,7 +734,7 @@ export class Beast {
           return {
             at: [a.at[0] + (b2.at[0] - a.at[0]) * w - row, a.at[1] + (b2.at[1] - a.at[1]) * w + rng.range(-0.02, 0.05) + row * 0.6, a.at[2] + (b2.at[2] - a.at[2]) * w] as V3,
             // On one that wades the fan is broad: the outer ones stand out to the sides like the fingers of a spread hand.
-            out: [a.out[0] + (b2.out[0] - a.out[0]) * w + rng.range(-0.45, 0.45), a.out[1] + (b2.out[1] - a.out[1]) * w - rng.range(0, 0.3), a.out[2] + (b2.out[2] - a.out[2]) * w + rng.range(-0.45, 0.45) + (look.coat || look.mudded ? 1.5 * (i / (many - 1) - 0.5) : 0)] as V3,
+            out: [a.out[0] + (b2.out[0] - a.out[0]) * w + rng.range(-0.45, 0.45) + (look.coat ? 0.7 * ((((i * 7) % many) / (many - 1)) - 0.5) : 0), a.out[1] + (b2.out[1] - a.out[1]) * w - rng.range(0, 0.3), a.out[2] + (b2.out[2] - a.out[2]) * w + rng.range(-0.45, 0.45) + (look.coat || look.mudded ? 2.0 * (i / (many - 1) - 0.5) : 0)] as V3,
           };
         })
       : base;
@@ -753,7 +758,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? 0.55 : 1 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.44) : 1 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });

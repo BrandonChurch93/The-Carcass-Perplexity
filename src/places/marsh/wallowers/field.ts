@@ -337,10 +337,11 @@ export function wallowerBody(young: number, seed: number): Body {
       let hidden = 0;
       for (let i = 0; i < 4; i++) {
         const d = [0.06, 0.14, 0.3, 0.6][i] as number;
-        const v = Math.min(base(x + nx * d, y + ny * d, z + nz * d), y + ny * d - 0.1);
+        // (The ground is taken a hand under the feet: a muzzle carried at the mud is not shut in a hole by it.)
+        const v = Math.min(base(x + nx * d, y + ny * d, z + nz * d), y + ny * d + 0.05);
         hidden += ([0.3, 0.3, 0.25, 0.15][i] as number) * clamp((d - v) / d);
       }
-      return clamp(1 - 1.5 * hidden);
+      return 0.2 + 0.8 * clamp(1 - 1.5 * hidden);
     },
     weigh: (x, y, z, out) => {
       base(x, y, z);
