@@ -8,6 +8,7 @@
 import { HASH_GLSL } from '../../../core/post';
 import { RIG_GLSL } from '../shared/glsl';
 import { SEA } from '../land';
+import { NOISE_SIZE } from './noise';
 
 export const MAX_BODIES = 32;
 
@@ -124,14 +125,21 @@ float layerMean(float top, float soft, float y, float hy) {
 // The noise the vapour of the shaft is cut from, at a place: x the heaps (round lumps, 31 m a repeat), y a smooth drift, z and w (asked for
 // with fine) a smooth field and fine billows at a third of that size, taller than wide, pushed about by the large one and climbing faster
 // than it, so that a wisp shears and turns over as it climbs and never rides up as one printed pattern.
+// The block of noise read with a rounded join between its texels. Read plainly it is flat between texels and creased where they meet:
+// half a metre a texel in the shaft, so near the lens a heap's edge was a polygon. Same single read, the place in the texel eased first.
+vec4 noiseRound(vec3 uvw) {
+  vec3 at = uvw * ${NOISE_SIZE}.0 - 0.5;
+  vec3 f = fract(at);
+  return textureLod(tNoise, (floor(at) + f * f * (3.0 - 2.0 * f) + 0.5) / ${NOISE_SIZE}.0, 0.0);
+}
 vec4 risingNoise(vec3 p, float fine) {
   vec3 q = p - vec3(WINDV.x * 0.35, 0.8, WINDV.y * 0.35) * uTime;
   q.xz -= WINDV * (0.7 * max(p.y + 1.0, 0.0));
-  vec4 n0 = textureLod(tNoise, q.xzy / 31.0, 0.0);
+  vec4 n0 = noiseRound(q.xzy / 31.0);
   vec2 mid = vec2(0.3 + 0.4 * n0.a, 0.5);
   if (fine > 0.5) {
     vec3 w = q + vec3(5.0 * (n0.g - 0.5), -0.75 * uTime, 5.0 * (n0.a - 0.5));
-    mid = textureLod(tNoise, w.xzy * vec3(1.0, 1.0, 0.55) / 11.0 + 0.37, 0.0).gb;
+    mid = noiseRound(w.xzy * vec3(1.0, 1.0, 0.55) / 11.0 + 0.37).gb;
   }
   return vec4(n0.r, n0.g, mid);
 }
@@ -142,7 +150,7 @@ float wispDetail(vec3 p) {
   q.xz -= WINDV * (0.7 * max(p.y + 1.0, 0.0));
   vec4 push = textureLod(tNoise, q.xzy / 19.0 + 0.71, 0.0);
   vec3 w = (q + 2.4 * vec3(push.g - 0.5, 0.0, push.a - 0.5)).xzy * vec3(1.0, 1.0, 0.6);
-  float billow = textureLod(tNoise, w / 6.7 + 0.11, 0.0).b;
+  float billow = noiseRound(w / 6.7 + 0.11).b;
   float thread = textureLod(tNoise, (w - vec3(0.0, 0.0, 0.3 * uTime)) / 2.9 + 0.53, 0.0).g;
   return 0.6 * billow + 0.4 * (1.0 - abs(2.0 * thread - 1.0));
 }
@@ -186,7 +194,7 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under,
   float f = clamp(h / reach, 0.0, 1.0);
   float inside = 0.7 * n.x + 0.3 * n.w + 0.9 * (wells - 0.6) + 0.14 * surge + 0.04 * settled - 0.3 * f - 0.5;
   float body = smoothstep(0.0, 0.1, inside) * (1.0 - f * f) * smoothstep(-3.0, 0.5, h);
-  core = max(core, 0.55 * smoothstep(0.08, 0.3, inside) * step(0.0, h));
+  core = max(core, 0.55 * smoothstep(0.08, 0.3, inside) * smoothstep(0.0, 1.5, h));
   // Inside the wall; over the brim it leans out.
   // Over the emptied pool what climbs is a few thin strands with the dark of the drop between them: any more of it is a pale veil
   // over the whole drop.

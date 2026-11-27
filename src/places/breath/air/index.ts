@@ -56,10 +56,10 @@ export function breathAt(seconds: number): [number, number, number, number] {
   const over = 1 - (1 - 0.22 * build) * (1 - burst);
   // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
   const risen = fill * (0.3 + 0.7 * Math.exp(-after(u - 2.6) / 4));
-  // The breath empties it: once it has gone over the lip the pool falls well under where it lay, the drop stands dark with what still
-  // climbs from the wells seen against it, and it fills again in ten seconds.
+  // The breath spends it: once it has gone over the lip the pool falls a stride or two under where it lay, enough for the far rim to
+  // stand clear over it and not so far that the tiers down in the shaft are bared, and it fills again in ten seconds.
   const spent = spentAt(seconds);
-  const level = -10 + swell + 3.5 * (1 - (1 - 0.6 * build) * (1 - risen)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-after(u - 6) / 7) - 5.5 * spent;
+  const level = -10 + swell + 3.5 * (1 - (1 - 0.6 * build) * (1 - risen)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-after(u - 6) / 7) - 2.2 * spent;
   const poured = smooth((u - 1.6) / 1.8) * (0.25 + 0.75 * Math.exp(-after(u - 3.6) / 2.6));
   const apron = 1 - (1 - 0.3 * build) * (1 - poured);
   const spread = smooth((u - 2.2) / 7);
