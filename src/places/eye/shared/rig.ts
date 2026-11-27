@@ -103,7 +103,6 @@ function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid
   const way = alongX ? cx / Math.abs(hx) : cz / Math.abs(hz);
   const slip = alongX ? (hz * way) / cz : (hx * way) / cx;
   const cell = (line: number, k: number): number => (alongX ? k * w + line : line * w + k);
-  const cross = alongX ? cz : cx;
   // How far the shade at a cell has been thrown, in metres.
   const thrown = new Float32Array(w * h);
   for (let n = 0; n < lines; n++) {
@@ -113,9 +112,7 @@ function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid
         shade[cell(line, k)] = Math.max(-50, (heights[cell(line, k)] as number) - 5 * fall);
         continue;
       }
-      // The way to the sun bends a little from run to run, so the side of a long shadow is not ruled.
-      const bend = 0.15 * Math.sin(n * way * 0.0093 + 0.004 * k * cross + 0.7) + 0.1 * Math.sin(n * way * 0.0217 - 0.007 * k * cross + 2.9);
-      const f = Math.min(across - 1, Math.max(0, k + slip + bend));
+      const f = Math.min(across - 1, Math.max(0, k + slip));
       const k0 = Math.min(across - 2, Math.floor(f));
       const a0 = cell(line + toward, k0);
       const a1 = cell(line + toward, k0 + 1);
