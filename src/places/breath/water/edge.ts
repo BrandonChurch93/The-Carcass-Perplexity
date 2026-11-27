@@ -15,7 +15,7 @@ const FINE = 0.25;
 /** Metres the skin stands off the land: the land's own mesh has cells of 24 cm and this one's corners do not fall on them. */
 export const LIFT = 0.03;
 /** Metres along the ground from the water's line, toward the rock, at which a row has its points. */
-const ROW = [-0.5, -0.16, -0.04, 0.03, 0.09, 0.18, 0.32, 0.5];
+const ROW = [-0.34, -0.14, -0.04, 0.03, 0.09, 0.18, 0.32, 0.46];
 
 export function edgeGeometry(height: (x: number, z: number) => number, sea: number): THREE.BufferGeometry {
   const w = Math.round((AREA.maxX - AREA.minX) / COARSE);
@@ -168,7 +168,7 @@ void main() {
   float far = length(toEye);
   // Metres above the still water: the skin's own height, which follows a ledge where the land map (a third of a metre a cell) cannot.
   float up = vWorld.y - uSea - ${LIFT.toFixed(3)};
-  if (up > 0.32 || far > 170.0) discard;
+  if (up > 0.28 || far > 170.0) discard;
   vec4 land = texture2D(tLand, (xz - uLandRect.xy) * uLandRect.zw);
   // Where the sheet is drawn (shaders.ts: the same ragged line). The sheet stops short of the rock by as much as its map is coarse: below
   // the water's level this skin is the water that reaches the rock, and under the sheet it is nothing.
@@ -176,7 +176,7 @@ void main() {
   float ragged = depth < 0.2 ? vnoise(xz * 1.7) * 0.05 + vnoise(xz * 9.0) * 0.015 + 0.008 * sin(uTime * 1.7 + 9.0 * vnoise(xz * 0.9)) : 0.0;
   float sheet = smoothstep(0.0, 0.012, depth - 0.6 * ragged) * (1.0 - smoothstep(0.0, 0.012, up));
   // Most of the skin lies under the sheet or past its own inland end: nothing more is worked out there.
-  if (sheet > 0.995 || vOut.z > 0.46) discard;
+  if (sheet > 0.995 || vOut.z > 0.455) discard;
 
   vec3 face = normalize(vFace);
   face = face.y < 0.0 ? -face : face;
@@ -191,23 +191,30 @@ void main() {
   float rising = smoothstep(-0.2, 0.6, cos(beat + 0.7 * sin(beat)));
   float run = 0.003 + (0.008 + 0.022 * vnoise(xz * 0.8 + 3.0)) * lap;
   float film = 1.0 - smoothstep(run - 0.004, run, up);
+  // The rock the swash has been over stays wet a hand above the line, raggedly, and dries upward.
+  float reach = 0.05 + 0.13 * vnoise(xz * 0.6 + 9.0) + 0.03 * vnoise(xz * 4.7);
+  // Only a hand or two in from the line: the flat top of a low stone is wet round its rim and dry in the middle.
+  float wet = (1.0 - smoothstep(0.45 * reach, reach, up)) * (1.0 - smoothstep(0.1, 0.24, vOut.z));
   // Its front carries a line of froth up the rock and leaves it there in bits as it falls back.
-  float bits = smoothstep(0.38, 0.62, vnoise(xz * 27.0) * 0.6 + vnoise(xz * 9.0 + 1.0) * 0.4);
   float front = smoothstep(run - 0.009, run - 0.003, up) * (1.0 - smoothstep(run, run + 0.003, up));
   // Froth gathers where the stream lays it against the bank: thick in the lee of a stone or a bar, none on a clean reach.
   vec2 fu = (xz + out2 * 0.7 - uFlowRect.xy) * uFlowRect.zw;
   float lee = min(textureLod(tCarried, fu, 0.0).g * 2.0, 1.0);
-  float left = smoothstep(-0.02, -0.004, up) * (1.0 - smoothstep(0.004, 0.02 + 0.016 * lee, up))
-    * smoothstep(0.62 - 0.35 * lee, 0.8, vnoise(xz * 1.3 + 2.0) * 0.45 + vnoise(xz * 6.0) * 0.3 + vnoise(xz * 31.0) * 0.25);
+  float left = smoothstep(-0.02, -0.004, up) * (1.0 - smoothstep(0.004, 0.02 + 0.016 * lee, up));
+  // Above the wet the water has left its salts as it dried: a pale crust, a broken line a finger wide along the top of the wet.
+  float crust = smoothstep(reach - 0.012, reach + 0.004, up) * (1.0 - smoothstep(reach + 0.012, reach + 0.045, up)) * (1.0 - smoothstep(0.1, 0.3, vOut.z));
+  // Most of the skin is dry rock above all of these: it is left before any light is worked out.
+  if (film + wet + front + left + crust <= 0.0) discard;
+  float fine = vnoise(xz * 31.0);
+  float mid = vnoise(xz * 9.0 + 1.0);
+  float bits = smoothstep(0.38, 0.62, fine * 0.6 + mid * 0.4);
+  if (left > 0.0) left *= smoothstep(0.62 - 0.35 * lee, 0.8, vnoise(xz * 1.3 + 2.0) * 0.45 + mid * 0.3 + fine * 0.25);
+  if (crust > 0.0) crust *= smoothstep(0.4, 0.6, vnoise(xz * 2.1 + 7.0) * 0.4 + mid * 0.35 + fine * 0.25);
   float froth = clamp(front * bits * (0.25 + 0.75 * rising) + left * (0.3 + 0.7 * lee), 0.0, 1.0);
-
-  // The rock the swash has been over stays wet a hand above the line, raggedly, and dries upward.
-  float reach = 0.05 + 0.13 * vnoise(xz * 0.6 + 9.0) + 0.03 * vnoise(xz * 4.7);
-  float wet = 1.0 - smoothstep(0.45 * reach, reach, up);
 
   vec3 v = toEye / far;
   // A wet face is the rock's own face smoothed by the film on it; the film itself lies level.
-  vec2 grain = vec2(vnoise(xz * 13.0), vnoise(xz * 13.0 + 17.0)) - 0.5;
+  vec2 grain = vec2(mid, fine) - 0.5;
   vec3 n = normalize(mix(face + vec3(0.3 * grain.x, 0.0, 0.3 * grain.y), vec3(0.0, 1.0, 0.0), 0.8 * film));
   float nv = clamp(dot(n, v), 0.03, 1.0);
   float fresnel = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
@@ -234,10 +241,6 @@ void main() {
   vec3 pale = vec3(0.62, 0.59, 0.52) * (skyUp * open + uSunColour * (0.22 * sun));
   colour = mix(colour, pale, 0.8 * froth);
   alpha = mix(alpha, 1.0, 0.8 * froth);
-  // Above the wet the water has left its salts as it dried: a pale crust, a broken line a finger wide along the top of the wet.
-  float crust = smoothstep(reach - 0.012, reach + 0.004, up) * (1.0 - smoothstep(reach + 0.012, reach + 0.045, up))
-    * smoothstep(0.4, 0.6, vnoise(xz * 2.1 + 7.0) * 0.4 + vnoise(xz * 11.0) * 0.35 + vnoise(xz * 37.0) * 0.25)
-    * (1.0 - smoothstep(0.1, 0.3, vOut.z));
   colour = mix(colour, pale, 0.55 * crust);
   alpha = mix(alpha, 1.0, 0.55 * crust);
   // Gone far off, where a hand of wet rock is less than a pixel.
