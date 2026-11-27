@@ -19,18 +19,54 @@ export const OCC = { ways: 4, taps: 3, reach: 0.12, far: 420, depth: 2.0 };
 /** How far the near air is counted over the sky, metres. */
 // How fast the rain walks along the horizon, in radians a second. The sky's raining cloud keeps the same pace.
 export const RAIN_WALK = 0.016;
-// The place's second (uTime is 0 at the place's first frame) at which a shaft stands on the rain's bearing. Set so that one hangs over the
-// middle of the first lens as the place opens and behind the wallowers when the fourth comes to them.
+// The place's second (uTime is 0 at the place's first frame) at which a shaft stands on the rain's bearing. Set so that one hangs right of
+// the middle of the first lens at its key, where the approved picture has it, and behind the wallowers when the fourth comes to them.
 export const RAIN_AT = -2.3;
+// The shafts stand this far round from the rain's bearing, in radians (the sky's far picture and its sheet are laid by the bearing and
+// stay where they were). Set so that the one curtain of the first lens hangs right of its middle at its key, where the approved picture has it.
+export const RAIN_TURN = 1.134;
 export const HAZE_OVER_SKY = 500;
-// The shafts of rain stand this far apart along the horizon, in radians: wherever a lens looks, one is in its view or near it.
-export const RAIN_APART = 0.84;
+// The shafts of rain stand this far apart along the horizon, in radians: wider than the widest lens, so no lens holds two.
+export const RAIN_APART = 1.3;
 // The overcast thickens as the rain comes on: between these two seconds of the place the sky and the far air lose this share of their light.
 export const DUSK = { from: 3.2, to: 7, share: 0.6 };
+// After that the sheet is not one weight: each later shot looks another way under it and has the share of the light its approved picture
+// shows. From the place's second `from` (a cut of the film, frames 6048 and 6263 of a place that opens at 5618) the share is `share`.
+export const DUSK_SHOTS: { from: number; share: number }[] = [
+  { from: (6048 - 5618) / 60, share: 0.95 },
+  { from: (6263 - 5618) / 60, share: 0.56 },
+];
+/** GLSL: the share of its light the sky and the far air keep at the place's second t. Shared by the sky and the air pass. */
+export const DUSK_GLSL = /* glsl */ `
+float duskAt(float t) {
+  float d = mix(1.0, ${DUSK.share.toFixed(4)}, smoothstep(${DUSK.from.toFixed(4)}, ${DUSK.to.toFixed(4)}, t));
+${DUSK_SHOTS.map((shot) => `  d = mix(d, ${shot.share.toFixed(4)}, step(${shot.from.toFixed(5)}, t));`).join('\n')}
+  return d;
+}`;
 // The cast shade of what stands over the ground: ways up into the sky, reads on each, reach in metres as a share of the distance, depth.
 export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.52 };
 
+/** The low air: the vapour that lies on the warm brine and the wet flats, lit from under by them, so warm and pink where the sky's air over it
+ *  is cool. How much of a surface's light a metre of it takes at the ground, the height in metres at which it has thinned to a third,
+ *  its light, how far it is counted over the sky (metres) and how much of the dusk it takes. A lens that stands in it sees the distance
+ *  close in it; a lens that stands over it sees through it to the near ground and loses the far flats in it. Near the lens it counts for
+ *  the share `near`, and whole from the second of the two distances `whole` on (metres): the near ground keeps its darks. */
+export const LOW_AIR = { density: 0.0012, height: 9, light: [0.45, 0.375, 0.405], overSky: 4000, dusk: 0.9, near: 0.15, whole: [60, 900] };
+/** Steam is vapour, never a wall: the most of the view a whole depth of it may take, the metres from the lens between which it comes in
+ *  (a lens that stands in a column sees through it), the light of its foot over the brine, the height in metres at which it is the sky's, how much of the dusk it takes and how much of the
+ *  sky's light its top gives back (vapour is greyer than the sheet it stands against). */
+export const STEAM_LOOK = { most: 0.7, near: [0.5, 2.5], foot: [0.56, 0.45, 0.46], whole: 1.6, dusk: 0.8, grey: 0.74 };
+/** The rain hangs from its cloud to the flats and no higher: the top of the curtain as the tangent of its height over the horizon. */
+export const RAIN_TOP = 0.12;
+/** The fourth shot (film frames 6263 to 6585 of a place that opens at 5618, 60 a second) stands low in the wallow's own vapour: the share
+ *  of the view the near air takes there and nowhere else. It lifts that shot's darks to the picture's. */
+export const WALLOW_VEIL = { from: (6263 - 5618) / 60, to: (6586 - 5618) / 60, share: 0.016 };
+/** The seconds of the place between which each zone that is kept clear of low steam holds: the wallow's from the fourth shot on, the
+ *  colony's through the second shot (film frames 5833 to 6047). */
+export const CLEAR_FROM = { wallow: (6263 - 5618) / 60, colony: [(5833 - 5618) / 60, (6048 - 5618) / 60] as [number, number] };
+
 const f = (v: number): string => v.toFixed(5);
+const v3 = (v: readonly number[]): string => `vec3(${v.map(f).join(', ')})`;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -43,6 +79,7 @@ precision highp float;
 #define HAZE_OVER_SKY ${f(HAZE_OVER_SKY)}
 #define RAIN_WALK ${f(RAIN_WALK)}
 #define RAIN_AT ${f(RAIN_AT)}
+#define RAIN_TURN ${f(RAIN_TURN)}
 #define OCC_TAPS ${OCC.taps}
 #define OCC_WAYS ${OCC.ways}
 #define OCC_REACH ${f(OCC.reach)}
@@ -53,9 +90,25 @@ precision highp float;
 #define CAST_REACH ${f(CAST.reach)}
 #define CAST_DEPTH ${f(CAST.depth)}
 #define RAIN_APART ${f(RAIN_APART)}
-#define DUSK_FROM ${f(DUSK.from)}
-#define DUSK_TO ${f(DUSK.to)}
-#define DUSK_SHARE ${f(DUSK.share)}
+#define LOW_DENSITY ${f(LOW_AIR.density)}
+#define LOW_K ${f(1 / LOW_AIR.height)}
+#define LOW_LIGHT ${v3(LOW_AIR.light)}
+#define LOW_OVER_SKY ${f(LOW_AIR.overSky)}
+#define LOW_DUSK ${f(LOW_AIR.dusk)}
+#define LOW_NEAR ${f(LOW_AIR.near)}
+#define LOW_WHOLE_A ${f(LOW_AIR.whole[0] as number)}
+#define LOW_WHOLE_B ${f(LOW_AIR.whole[1] as number)}
+#define STEAM_MOST ${f(STEAM_LOOK.most)}
+#define STEAM_NEAR_A ${f(STEAM_LOOK.near[0] as number)}
+#define STEAM_NEAR_B ${f(STEAM_LOOK.near[1] as number)}
+#define STEAM_FOOT ${v3(STEAM_LOOK.foot)}
+#define STEAM_WHOLE ${f(STEAM_LOOK.whole)}
+#define STEAM_DUSK ${f(STEAM_LOOK.dusk)}
+#define STEAM_GREY ${f(STEAM_LOOK.grey)}
+#define RAIN_TOP ${f(RAIN_TOP)}
+#define VEIL_FROM ${f(WALLOW_VEIL.from)}
+#define VEIL_TO ${f(WALLOW_VEIL.to)}
+#define VEIL_SHARE ${f(WALLOW_VEIL.share)}
 precision highp sampler3D;
 uniform highp sampler2D tDepth;
 uniform mat4 uInvProjection;
@@ -80,6 +133,7 @@ uniform vec3 uClear[2];
 varying vec2 vUv;
 ${HASH_GLSL}
 ${RIG_GLSL}
+${DUSK_GLSL}
 
 void viewRay(out vec3 ro, out vec3 rd, out float far, out float open) {
   // The engine lays this half-size pass over the scene by depth, and takes each texel to have been marched to the depth of the full-size pixel at twice its index.
@@ -189,6 +243,14 @@ float hazeBetween(vec3 ro, vec3 rd, float a, float b) {
   float run = abs(slope * len) < 1e-3 ? len : (1.0 - exp(-slope * len)) / slope;
   return uAir.x * exp(-y * k) * run;
 }
+// The same sum for the low air.
+float lowBetween(vec3 ro, vec3 rd, float a, float b) {
+  float y = max(ro.y + rd.y * a, 0.0);
+  float slope = rd.y * LOW_K;
+  float len = b - a;
+  float run = abs(slope * len) < 1e-3 ? len : (1.0 - exp(-slope * len)) / slope;
+  return LOW_DENSITY * exp(-y * LOW_K) * run;
+}
 
 // The steam of source i at p: a column that widens and thins as it rises, torn into lumps that climb.
 float steamShade;
@@ -235,11 +297,14 @@ void main() {
   viewRay(ro, rd, far, open);
   vec3 airLight = uAirColour;
   // The far air greys with the sky as the rain comes on.
-  float dusk = mix(1.0, DUSK_SHARE, smoothstep(DUSK_FROM, DUSK_TO, uTime));
+  float dusk = duskAt(uTime);
   vec3 sum = vec3(0.0);
   float trans = 1.0;
 
-  vec3 steamLit = (uSkyZenith * 0.6 + uSkyHorizon * 0.4) * 0.97;
+  // Steam takes the sky's light, so it greys with the sky as the rain comes on: it is never brighter than the overcast behind it.
+  // Its foot takes the light the brine throws up.
+  vec3 steamLit = (uSkyZenith * 0.6 + uSkyHorizon * 0.4) * STEAM_GREY * mix(1.0, dusk, STEAM_DUSK);
+  vec3 steamFoot = STEAM_FOOT * mix(1.0, dusk, STEAM_DUSK);
   ivec2 here = ivec2(gl_FragCoord.xy);
   // (Half a step of play, and a different one for each sample of a frame: the frame's samples together are smoother than any one.)
   float jitter = 0.25 + 0.5 * float(hash2(uint(here.x) + uint(uSampleIndex) * 131u, uint(here.y) + uint(uSampleIndex) * 71u) & 1023u) / 1024.0;
@@ -281,11 +346,13 @@ void main() {
       if (t1 <= t0) continue;
       float dt = (t1 - t0) / float(${STEAM_STEPS});
       for (int k = 0; k < ${STEAM_STEPS}; k++) {
-        float sigma = steamAt(ro + rd * (t0 + (float(k) + jitter) * dt), i);
+        float tk = t0 + (float(k) + jitter) * dt;
+        vec3 p = ro + rd * tk;
+        float sigma = steamAt(p, i);
         if (sigma <= 0.0) continue;
-        float a = 1.0 - exp(-sigma * dt);
+        float a = (1.0 - exp(-sigma * dt)) * smoothstep(STEAM_NEAR_A, STEAM_NEAR_B, tk);
         // Steam is white where the sky reaches it, on its top and its rim, and grey in its heart, where its own body stands over it.
-        sum += trans * a * steamLit * (mix(1.1, 0.62, smoothstep(0.05, 0.7, steamShade)) + 0.12 * steamSide);
+        sum += trans * a * mix(steamFoot, steamLit, smoothstep(0.0, STEAM_WHOLE, p.y - A.y)) * (mix(1.1, 0.62, smoothstep(0.05, 0.7, steamShade)) + 0.12 * steamSide);
         trans *= 1.0 - a;
       }
     }
@@ -324,7 +391,7 @@ void main() {
         float crossed = min((0.2 + 0.09 * fl) / abs(rd.y), 2.5);
         float a = 1.0 - exp(-wisp * cover * crossed * 0.05 * exp(-y / 1.5));
         a *= smoothstep(0.25, 1.6, t) * smoothstep(0.0, 0.5, far - t);
-        sum += trans * a * steamLit * 0.98;
+        sum += trans * a * mix(steamFoot, steamLit, smoothstep(0.0, STEAM_WHOLE, y)) * 0.98;
         trans *= 1.0 - a;
       }
     }
@@ -368,6 +435,13 @@ void main() {
     }
   }
 #endif
+  // However many columns and sheets a view crosses, what stands behind them is still seen through them.
+  float steamed = 1.0 - trans;
+  if (steamed > 0.0) {
+    float keep = STEAM_MOST * (1.0 - exp(-steamed / STEAM_MOST)) / steamed;
+    sum *= keep;
+    trans = 1.0 - steamed * keep;
+  }
 
   // The haze, and the rain inside it at its own distance.
   float curtain = uRain.z / max(length(rd.xz), 0.05);
@@ -375,16 +449,17 @@ void main() {
   // The shaft walks along the horizon with the wind, a degree a second, and the sky's raining cloud walks with it.
   // A shaft of rain is narrow at its foot and wide under its cloud, and the wind leans it.
   float elev = rd.y / max(length(rd.xz), 0.05);
-  float walk = az - uRain.x + RAIN_WALK * (uTime - RAIN_AT);
+  float walk = az - uRain.x - RAIN_TURN + RAIN_WALK * (uTime - RAIN_AT);
   // One shaft after another along the horizon, each its own width and weight.
   float shaft = floor(walk / RAIN_APART + 0.5);
   walk -= shaft * RAIN_APART;
   float own = fract(sin(shaft * 12.9898 + 4.1) * 43758.5453);
   // The foot of a shaft trails behind its cloud: every streak leans the same way.
-  float lean = walk + 0.25 * elev;
+  // (Far off and seen square on, the trails hang straight.)
+  float lean = walk + 0.02 * elev;
   float side = abs(lean) / (uRain.y * (0.8 + 0.5 * own) * (1.0 + 1.6 * max(elev, 0.0)));
   float rain = 0.0;
-  if (uShow.y > 0.5 && far > curtain && side < 2.6 && rd.y > -0.02 && rd.y < 0.5) {
+  if (uShow.y > 0.5 && far > curtain && side < 2.6 && rd.y > -0.02 && elev < RAIN_TOP) {
     float el = elev;
     // It has no side: it thins away to either hand, and what is seen of it is slanting trails in veils of unlike weight, each veil
     // its own width and its own height. The veils walk with the shaft, change as they go, and their trails come down.
@@ -392,12 +467,16 @@ void main() {
     float torn = textureLod(tNoise, vec3(lean * 7.0 + uTime * 0.005, el * 2.6 + 0.3 + uTime * 0.05, 0.8 + uTime * 0.04), 0.0).b;
     // The trails: broad ones a degree or two across, which a small screen still shows, and fine ones inside them. They are the
     // lesser part of the veil: where the gaps between them are narrow, the gaps are what is seen, as pale beams.
-    float broad = textureLod(tNoise, vec3(lean * 5.5 + own * 3.0, el * 0.22 + uTime * 0.02, 0.7 + uTime * 0.01), 0.0).g;
-    float fine = textureLod(tNoise, vec3(lean * 17.0, el * 0.5 + uTime * 0.045, 0.13), 0.0).b;
-    float streaks = smoothstep(0.5, 0.78, broad * 0.65 + fine * 0.35);
+    float broad = textureLod(tNoise, vec3(lean * 11.0 + own * 3.0, el * 0.22 + uTime * 0.02, 0.7 + uTime * 0.01), 0.0).g;
+    float fine = textureLod(tNoise, vec3(lean * 37.0, el * 0.5 + uTime * 0.045, 0.13), 0.0).b;
+    float streaks = smoothstep(0.3, 0.75, broad * 0.5 + fine * 0.5);
     float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
-    float base = smoothstep(0.5, 0.22 + 0.1 * veils, el) * smoothstep(-0.004, 0.04, el);
-    rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.75 + 1.1 * streaks);
+    // It hangs from the belly of its cloud, whole under it and thinner as it comes down: much of it never reaches the flats.
+    // (Its top is the cloud's belly, soft and a little uneven; each trail is its own length, and few come all the way down.)
+    float top = RAIN_TOP * (0.85 + 0.4 * (veils - 0.5));
+    float reachDown = 0.7 * textureLod(tNoise, vec3(lean * 23.0 + 0.7, 0.21, 0.6 + uTime * 0.01), 0.0).g;
+    float base = smoothstep(top, top * 0.5, el) * mix(reachDown, 1.0, smoothstep(0.0, top * 0.9, el)) * smoothstep(-0.004, 0.012, el);
+    rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.55 + 0.6 * streaks);
   }
   float show = uShow.x;
   // Where the view ends on the sky only the near air lies over it (the far picture has its own), but for its foot: there the air closes
@@ -441,7 +520,8 @@ void main() {
       float a = 1.0 - exp(-tau);
       // A bank is white on top, where the whole sky lights it, and greyer in its depth, where its own top stands over it.
       float lit = exp(-sigma * top * 22.0 * exp(-max(p.y, 0.0) / top));
-      sum += trans * a * airLight * mix(0.8, 1.08, lit) * mix(1.0, dusk, smoothstep(200.0, 2000.0, t0));
+      // (A bank's foot stands in the low air and takes its light.)
+      sum += trans * a * mix(LOW_LIGHT * 1.12, airLight, smoothstep(0.0, 10.0, p.y)) * mix(0.8, 1.08, lit) * mix(1.0, dusk, smoothstep(200.0, 2000.0, t0));
       trans *= 1.0 - a;
       t0 = t1;
     }
@@ -453,10 +533,16 @@ void main() {
   if (rain > 0.0) {
     // The veil hangs far off in the air and is seen through it. Falling rain under an overcast is darker than whatever is behind it,
     // the sky or the far flats: it takes their light and gives little of its own.
-    float r = 0.62 * (1.0 - exp(-rain)) * exp(-0.3 * hazeBetween(ro, rd, 0.0, curtain) * show);
+    float r = 0.72 * (1.0 - exp(-rain)) * exp(-0.3 * hazeBetween(ro, rd, 0.0, curtain) * show);
     sum *= 1.0 - 0.8 * r;
     trans *= 1.0 - r;
   }
+  // The low air lies over all of it: the foot of the rain and the last of the flats go out in it, and the horizon has no line.
+  float low = lowBetween(ro, rd, 0.0, mix(far, LOW_OVER_SKY, open)) * mix(LOW_NEAR, 1.0, smoothstep(LOW_WHOLE_A, LOW_WHOLE_B, far));
+  low += VEIL_SHARE * step(VEIL_FROM, uTime) * step(uTime, VEIL_TO) * (1.0 - exp(-far * 0.4));
+  float lowTaken = (1.0 - exp(-low)) * show;
+  sum = sum * (1.0 - lowTaken) + LOW_LIGHT * mix(1.0, dusk, LOW_DUSK) * lowTaken;
+  trans *= 1.0 - lowTaken;
   // What the nearness of things takes from a surface's light is taken before the air lies over it.
   // So is the slow shade of the cloud that crosses the flats.
   if (open < 0.5) trans *= closedIn(2 * here) * mix(rigCloud((ro + rd * far).xz), 1.0, smoothstep(2000.0, 6000.0, far));

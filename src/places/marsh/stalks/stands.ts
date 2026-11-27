@@ -528,6 +528,14 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
         age: dead ? 2 : shoot ? rng.range(0, 0.25) : cls === 0 ? rng.range(0.6, 1) : rng.range(0, 0.7), stain: rng.range(0.12, 1.1), uvo: rng.range(0, 2), quiver: shoot ? 1.6 : 1,
         fork: [0, 0, 0], collar: rng.range(0.6, 1.5), cards: [], foot: true,
       };
+      if (!dead && !shoot) {
+        // No two alike: from its own seed, a stalk leans further and may kink where it did not.
+        w.lean = Math.min(0.75, w.lean + 0.35 * Math.pow((w.seed * 23.1) % 1, 2));
+        if (w.kinkM === 0 && (w.seed * 53.7) % 1 < 0.45) {
+          w.kinkT = 0.3 + 0.5 * ((w.seed * 91.7) % 1);
+          w.kinkM = 0.15 + 0.4 * ((w.seed * 17.9) % 1);
+        }
+      }
       (s.far < 48 ? stems : farStems).push(w);
       if (s.far < 40) shades.push([x, z, Math.max(0.14, R * 6.5), 0.7, 1, 0]);
       if (dead) continue;

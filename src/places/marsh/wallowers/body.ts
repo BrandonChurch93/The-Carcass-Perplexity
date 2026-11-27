@@ -6,6 +6,7 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { MID, type Build, type Drive, type Stood } from './animal';
 import { BELLY, BONES, CHEST, HEAD, LEG, NECK, PELVIS, wallowerBody, type Skeleton, type V3 } from './field';
 import { normals, shell } from './nets';
+import { SLICK_FRAGMENT } from './slick';
 
 export interface Hide {
   geometry: THREE.BufferGeometry;
@@ -23,11 +24,13 @@ export function hideOf(young: number, seed: number, cell: number): Hide {
   const s = shell(body.field, body.box, cell);
   const bones = new Float32Array(s.count * 3);
   const info = new Float32Array(s.count * 4);
+  const open = new Float32Array(s.count);
   const out = { a: 0, b: 0, w: 1, leg: 0, horn: 0, lift: 0, fold: 1 };
   for (let v = 0; v < s.count; v++) {
     const x = s.position[v * 3] as number;
     const y = s.position[v * 3 + 1] as number;
     const z = s.position[v * 3 + 2] as number;
+    open[v] = body.open(x, y, z, s.normal[v * 3] as number, s.normal[v * 3 + 1] as number, s.normal[v * 3 + 2] as number);
     body.weigh(x, y, z, out);
     // The folds lift the smooth skin along its normal: the surface is taken without them and they are pressed into it here.
     s.position[v * 3] = x + (s.normal[v * 3] as number) * out.lift;
@@ -50,6 +53,7 @@ export function hideOf(young: number, seed: number, cell: number): Hide {
   geometry.setAttribute('normal', new THREE.BufferAttribute(s.normal, 3));
   geometry.setAttribute('aBones', new THREE.BufferAttribute(bones, 3));
   geometry.setAttribute('aInfo', new THREE.BufferAttribute(info, 4));
+  geometry.setAttribute('aOpen', new THREE.BufferAttribute(open, 1));
   geometry.setIndex(new THREE.BufferAttribute(s.index, 1));
   const hide = { geometry, skeleton: body.skeleton };
   made.set(key, hide);
@@ -75,6 +79,8 @@ vec2 picAt(vec3 p, float leg) {
 const VERTEX = /* glsl */ `
 attribute vec3 aBones;
 attribute vec4 aInfo;
+attribute float aOpen;
+varying float vOpen;
 uniform mat4 uBones[${BONES}];
 uniform float uK;
 uniform float uBreath;
@@ -162,6 +168,7 @@ void main() {
   vRest = position;
   vRestN = normal;
   vInfo = aInfo;
+  vOpen = aOpen;
   vRaise = mix(raised(aBones.y), raised(aBones.x), aBones.z);
   if (vRaise > 0.0) {
     // A foot that is pulled out of the mud brings it up with it: it hangs from the sole in lobes, and from the back of the leg.
@@ -522,6 +529,7 @@ varying vec3 vLook;
 uniform float uWet;
 uniform float uHang;
 uniform float uSalted;
+uniform float uTint;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -536,7 +544,7 @@ void main() {
   // Creased at its joints like a finger, and the mud it rakes dries on it.
   float crease = exp(-pow((s - 0.26) / 0.012, 2.0)) + exp(-pow((s - 0.34) / 0.012, 2.0)) + exp(-pow((s - 0.55) / 0.012, 2.0)) + exp(-pow((s - 0.62) / 0.012, 2.0));
   albedo *= 1.0 - 0.5 * min(crease, 1.0) * (1.0 - uHang);
-  albedo = mix(albedo, mix(vec3(0.13, 0.075, 0.05), vec3(0.27, 0.2, 0.135), smoothstep(0.05, 0.4, s)) * (0.7 + 0.5 * groove), 0.6 * uHang);
+  albedo = mix(albedo, mix(vec3(0.1, 0.06, 0.035), vec3(0.2, 0.14, 0.07), smoothstep(0.05, 0.4, s)) * (0.7 + 0.5 * groove), min(1.0, 1.6 * uHang));
   albedo = mix(albedo, vec3(0.1, 0.075, 0.06), 0.5 * smoothstep(0.45, 0.7, vnoise(vec2(s * 9.0 + vLook.z * 30.0, vLook.y * 1.5))));
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
   albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.45 * wet);
@@ -547,7 +555,7 @@ void main() {
   float knobs = smoothstep(0.42, 0.6, vnoise(vec2(s * 14.0 + vLook.z * 50.0, vLook.y * 2.0)) + 0.25 * n.y);
   albedo = mix(albedo, mix(vec3(0.26, 0.17, 0.105) * (0.6 + 0.5 * groove), vec3(0.33, 0.29, 0.27), knobs), uSalted);
   // No two alike: each its own tone, and the grooves and rings break the light along it.
-  albedo *= 0.78 + 0.44 * fract(vLook.z * 7.31 + 0.2);
+  albedo *= (0.78 + 0.44 * fract(vLook.z * 7.31 + 0.2)) * uTint;
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   float rough = mix(0.95, mix(0.9, 0.58, groove * ring * 2.0), wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
@@ -606,6 +614,9 @@ export interface Look {
   /** A photographed tile over the whole of it in place of the flank picture: matted hair, or mud drying on the folds. And how much of it, 0 to 1. */
   tile?: 'hair' | 'mud';
   cover?: number;
+  /** The three coats of slick.ts in place of the flank picture: how high the wet mud stands on the trunk and where the dry cake begins, metres on the body
+   * as built; 1 for one that is wet all over; 0 for the red mud of the vein, 1 for the grey slurry of the thin crust. */
+  coat?: [number, number, number, number];
 }
 
 const m = new THREE.Matrix4();
@@ -675,6 +686,13 @@ export class Beast {
         uFloorY: { value: look.wet + 5 },
         uSeed: { value: seed },
         uNear: { value: look.relief ? 1 : 0.4 },
+        ...(look.coat
+          ? {
+              uCoat: { value: new THREE.Vector4(...look.coat) },
+              tCake: { value: ctx.assets.texture('mat/mudhide.jpg', { kind: 'colour', anisotropy: 4 }) },
+              tCakeNh: { value: ctx.assets.texture('mat/mudhide-nh.png', { kind: 'data', anisotropy: 4 }) },
+            }
+          : {}),
         ...(look.crust
           ? {
               tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', anisotropy: 4 }) },
@@ -684,7 +702,7 @@ export class Beast {
       },
       defines: look.crust ? { CRUSTED: 1, RIME_SCALE: '1.3' } : look.relief ? { FINE: 1 } : {},
       vertexShader: VERTEX,
-      fragmentShader: FRAGMENT,
+      fragmentShader: look.coat ? SLICK_FRAGMENT : FRAGMENT,
     });
     this.mesh = new THREE.Mesh(hide.geometry, this.material);
     this.mesh.frustumCulled = false;
@@ -713,7 +731,8 @@ export class Beast {
       at.set(l.at, i * 3);
       out.set(l.out, i * 3);
       const mid = 1 - Math.abs(i / (lip.length - 1) - 0.5) * 0.6;
-      if (many) shape.set([rng.range(0.38, 1.05) * mid * (look.long ?? 1), (0.014 + 0.01 * rng.next()) * (look.thick ?? 1), rng.next(), rng.next()], i * 4);
+      // Thin as a finger and long: a fan of them, never the four tusks of a walrus.
+      if (many) shape.set([rng.range(0.6, 1.15) * mid * (look.long ?? 1), (0.0065 + 0.004 * rng.next()) * (look.thick ?? 1), rng.next(), rng.next()], i * 4);
       else shape.set([rng.range(0.56, 0.86) * mid * (1 - 0.25 * b.young) * (look.reach ?? 1), (0.042 + 0.016 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
     });
     const geometry = new THREE.InstancedBufferGeometry();
@@ -724,7 +743,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? 0.4 : 1 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
