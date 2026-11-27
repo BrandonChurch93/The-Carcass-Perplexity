@@ -11,7 +11,7 @@ import { CLEAR_FROM, MAX_MIST, MAX_STEAM, SHEETS, VOLUME_FRAGMENT } from './volu
 
 // The seconds of the place in which the pool's lens looks (the cuts at frames 6048 and 6263 of a place that opens at 5618).
 // How much more of the seep's wisp is clear air between its strands than of a column: a wisp so small is a few threads, not a body.
-const SEEP_TORN = 0.14;
+const SEEP_TORN = 0.07;
 const SEEP_SHOT = [(6048 - 5618) / 60, (6263 - 5618) / 60] as const;
 export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 
@@ -132,7 +132,7 @@ export function create(ctx: Context): Piece {
       steamCount.value = order.length;
     },
     setTime: (seconds) => {
-      seep.strength = seconds >= SEEP_SHOT[0] && seconds < SEEP_SHOT[1] ? 0.66 : 0;
+      seep.strength = seconds >= SEEP_SHOT[0] && seconds < SEEP_SHOT[1] ? 0.58 : 0;
       (clear[0] as THREE.Vector3).z = seconds >= CLEAR_FROM.wallow ? 12 : NONE;
       (clear[1] as THREE.Vector3).z = seconds >= CLEAR_FROM.colony[0] && seconds < CLEAR_FROM.colony[1] ? 8 : NONE;
     },
