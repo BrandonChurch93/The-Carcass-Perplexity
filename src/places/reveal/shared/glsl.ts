@@ -145,7 +145,8 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     // (Under the moon the eye and the camera lose colour: the ground is read nearly grey.)
     // (The moon stands low and has a side: a flank that faces it takes it, the flat and the far flank take almost none. Lit
     // evenly with a fill, the pale ranges lay flat grey on black, a drawing in line.)
-    vec3 eMoon = moonAt(sunH) * (2.4 * pow(max(dot(n, uMoonDir), 0.0), 2.2) * (0.6 + 0.4 * occ) * moonShade + 0.08);
+    // (The far flank is not a black rim: the sky's own night light fills it a little, and the shade a range throws is thin.)
+    vec3 eMoon = moonAt(sunH) * (2.2 * pow(max(0.9 * dot(n, uMoonDir) + 0.1, 0.0), 2.2) * (0.6 + 0.4 * occ) * mix(0.3, 1.0, moonShade) + 0.11);
     // (And the night is long in the tones: the pale rock stands two or three times over the dark land, not twenty.)
     float pale = dot(albedo, vec3(0.3, 0.55, 0.15));
     vec3 nightAlbedo = mix(albedo, vec3(pale), 0.65) * 0.3 * pow(pale + 0.006, -0.4);
