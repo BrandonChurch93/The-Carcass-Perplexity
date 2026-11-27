@@ -1,103 +1,84 @@
 # Hand-over of the Ribs (unit `ribs`, film frames 0 to 2506, the opening and the card loop)
 
-Written by the lead of the wide polish, wave p6. Branch `agent/p6-ribs-polish`, last commit of picture work 204c548. Builders' branches: `agent/p6-ribs-ground`, `-sea`, `-sky`, `-life`, `-opening`. Everything below was looked at in rendered frames beside `references/approved/1-ribs/`.
+Written by the lead of the wide polish, wave p7 (second wave). Branch `agent/p7-ribs-polish`, last commit of picture work 90ddcb6, forked from `origin/main` 6e539cf. Builders' branches: `agent/p7-ribs-ground`, `-sea`, `-sky`, `-life`, `-opening`. Everything below was looked at in rendered frames beside `references/approved/1-ribs/`. Keys: ribs-0 is frame 1241, ribs-1 is 2081, ribs-2 is 1759, ribs-3 is 1546, ribs-4 is 2401.
+
+State of the checks at the last commit: guard frames 4409 and 7234 byte for byte equal to the before files; G8 passes; nothing outside `src/places/ribs/`, `public/assets/ribs/`, `assets-src/ribs/` changed; loop frame 0 equals frame 480 byte for byte. The full G14 passed on the opening builder's machine at ca65422 (seam 1.75, largest elsewhere 2.32) and again on the opening builder's head 2dfd08e, which holds opening V4 (seam 1.57 levels, largest elsewhere 2.05). It was NOT run in full on the last commit, which also holds ground V5, sea V4, sky V4 and life V4: run `npm run -s gate -- --phase 5 --only G14` (about 30 minutes) before anything is built on this branch.
+
+Cost, uhd draft, `--parts none --runs 2`, seconds a sample on the lead's machine, before to now: frame 1241 12.68 to 13.08 (limit 15.1); frame 0 13.29 to 14.67 (limit 15.8); frame 1546 13.66 to 13.79 (limit 16.3); frame 2081 18.49 on main, 19.4 to 20.0 with ground V5 (limit 22.0).
 
 ## 1. Done, part by part
 
-Opening (`shared/opening.ts`, `cameras.ts`):
-- afe929d, then bfa45e8 (merge f5784c6): the first shot restaged. The lens starts low behind a crest, the near blade L1 fills most of the height, staging facts STRIKE, FLOCK and SHAFT_TARGET live in `shared/opening.ts` and the other parts read them.
-- 57930a4 (merge 3783e45): the lens rides the swell from frame 0 to 121, kept clear of all water within 12 m, no pit at frames 6 to 22.
-- 35ad43b (merge 8c26cdc): the lens rides the long swell only, it no longer shakes with the short sea.
-- eff1998 (merge 204c548): the lens slews 5 degrees onto its mark through the first 2.4 s, so frames 22 to 55 reframe on every frame; the lens is 29.5 degrees (L1 is 74 percent of frame 0's height) and widens from 3 s.
-
-Sky and light (`air/`, `shared/look.ts`, `index.ts` look line):
-- 2db0821: key light from the right, 24 degrees up, a break chosen per shot, bounce, one grade, the slab fog gone.
-- fe799d5 (merge 7f07fde): painted storm sheet turned per shot, fog with a scale height.
-- ed57265 (merge ed848c5): break and haze cooled to silver, a small break stands on the hung body, haze in banks.
-- 0276e53 (merge c8c1fd5): sky rebuilt without sharpening halos, cloud pulled to slate, the lee faces of the strait warmed, recipes of `storm.jpg` and `storm-fine.jpg` written (G8 green).
-- b6b81b6 (merge 6756331, holds 3dc8a94): the low mist's banks stand a little more apart and the breath on the flats is half between them; thin lit rims of the sky sheet are held back, they read as drawn lines when magnified.
-
-Ground (`land/`, `drowned/`, far blades in `layout.ts`):
-- 6ff4130 (merge cd1cebc): blades are fractured pale stone with quiet faces and lichen sunward, six far blades are arches of unlike bend with blunt heads.
-- 2b93b41 (merge fd2c10c): the colony crag is grey with lichen in patches, the hung body is pale flesh, the weed is a curtain of ribbons.
-- 14b2098 (merge 0d5b574): the bed at 1241 is a wet flat with few flat stones and weed mats, fronds are flat olive strips, the crag base is hanging strands.
-- a442004 (merge 28805d1): the crag's faces are matt and pitted with less of the sheet's slope; pebbles are wet grey, not black; the near cliff's cap goes toward ivory.
+Ground (`land/`, `drowned/`, `layout.ts`; one function `bedFine` in `shared/glsl.ts` by leave):
+- cb8fa1c (merge 012992b): the great blades are clean tapering sweeps again with fine relief on the surface; the crag is laid in beds with lichen in patches, not stripes.
+- 80f6cb6 (merge 27dbf17): no `normalize` of a zero vector at a blade's tip. This was the white disc and its strobe. Checked on consecutive frames 2083 to 2091 and at 2250.
+- c3f756c (merge 7493cc1): the blades' stone lies in the world in level beds, L1 in the same stone, skirts on blocks on every blade but OR.
+- fda6b6d (merge 2afdc81): the floor's wet map is free of the lens, `bedFine` is pinned, the hung weed at 2081 is narrow olive fronds.
+- 177c8ca (merge 1b1099f): silt and wrack on the floor at 1241, blade edges broken in small steps, the weed wall's hems near the lens olive and gold.
 
 Sea (`sea/`):
-- 6f9351a (merge f5784c6): peaked swell, light through crests, a strike of thrown water on L1's foot.
-- 1ef2570 (merge 03f2747): cool water, white foam, finer beads, spindrift, a silver path.
-- 3bda574 (merge 84e5226): the burst is cool white with a crown and a wash, foam has thickness and a crest rim, hanging beads cleared at 600, the bore's spray is white and silver.
-- 7991326 (merge 7bd78e0): the surf's white water is drawn where it was masked off (frames 757 to 852), its fronts in fingers; the open sea's foam stands in the lifted light.
+- 571edd9 (merge 748acff): the open sea lifted from near black to slate green at frames 120 and 600, foam lit by its height.
+- d865319 (merge 48a16b4): sea and flat mirror the rig's sky (`skyMirror`), the flat is rippled silver, rings and a meniscus stand at every foot, the bore's cards are opaque clots.
+- 9288347 (merge d91b9b8): the bore at 2401 has no ruled strips, the spindrift cards at frame 0 are smaller, a swash runs at 770 to 790, the veil at 1759 is thinner.
+
+Sky and light (`air/`, `shared/` but not `opening.ts` and `looptext.ts`):
+- 24bc9b5 (merge cc50a70): a new dome in slate blue with white heads, the air in two layers, an ivory sun.
+- a5ae51f (merge 9432497): the blades' heads take the low sun, a floor light under every shade, mist banks worked by gusts.
+- 29ad9eb (merge a53aa41): the dome's white shut to a torn break, scud, the colony's sky light halved, `storm.jpg` removed.
+- 68ef602 (merge a8f23cd): the storm heads take sun so L1 is lit warm on slate from frame 0, the water mirrors the break wider (1759 mean 106, picture 107), less sky and bounce in the strait's held shot.
 
 Life (`wings/`):
-- d8907fe (merge 122b1c6): the shore feeders are jointed bodies with planted feet instead of cards, the card loop's waders step and no longer slide (loop frames 100 to 148 checked against the rocks).
-- fbb2101 (merge 88e2043): every wader is the posed body, pale; nine jointed fliers at the bore; a flock in frame 0.
-- 91cc11c (merge b8306a3): fliers are bodies with a bent sail, a crowd over the colony, leavers set back at the bore.
-- bcccff3 (merge 9335a52): the leavers at the bore stand on bent legs with raised necks and fly across; the leaders of the flock hold their heads off their way with one sail low (frames 0 and 600); the shade that made the black blot at 1546 is lighter (0.62 to 0.4); every hide is by draw range, so a solo of one part holds.
+- 595162b (merge bc7ed47): fliers are geometry, no flier is cut by the edge at frame 0.
+- 29cb2f8 (merge 4bd42a0): the leading fliers end by the seventh second.
+- 8c057e7 (merge 9a540fe): the colony is opaque jointed bodies, one hero flier stands whole in the bright gap of the first frame, leavers are small and dark.
+- dbe5008 (merge 90ddcb6): the colony is 134 smaller, paler bodies with feet on their own ledges, the hero flier climbs past the lens with the under side of both sails, feeders are darker and shift their weight.
+
+Opening and loop (`shared/opening.ts`, `shared/looptext.ts`, `cameras.ts`):
+- d5e98d7 (merge f8d3261): the first two seconds restaged, the start moved east, OR wipes off the right.
+- 0590090 (merge 8f64a57): the start at (580, 885) clear of OR's flank, a taller strike; full G14 pass, seam 0.78.
+- 4bb15d1 (merge 6860a60): the strike in two pulses, the breaker up L1 at 2.8 s.
+- ca65422 (merge 20b8912): the loop camera's swing cut to a ring of 0.7 by 0.3 m, so the near rock stays in the frame; full G14 pass on the builder's machine.
+- 1283fb0 (merge e8fb7e1): the strike's foot 50 m west, the breaker stands against the left spire at frames 390 to 440.
 
 ## 2. Still wrong, worst first
 
-1. Frame 0 at full size (the opening's first frame). It shows: the fliers are smooth pale dolls with stick limbs, and since the last merge the nearest one, banked now, is cut by the left edge of the frame; the foam on the near crest is a flat grey sheet of noise with no thickness. The subject sheet asks for a first two seconds that hold a viewer and for no part that reads as a model. Tried: wings went from cards to jointed bodies with a bent sail in four versions (d8907fe, fbb2101, 91cc11c, bcccff3, where the leader stopped facing the lens); the sea gave foam a rim and thickness (3bda574) and lifted its light (7991326); the lens slews through frames 22 to 55 (eff1998). It fell short because the near flier is seen larger than any other and its body has no surface of its own, because the near crest's foam was not among the sea's last items, and because the slew moves the frame without anything passing near the lens.
-2. Frame 1546 (ribs-3, the colony crag). It shows: rock faces that are smeared and glassy like a painting pulled large, lichen in vertical stripes, a dark blot at the top right (x 0.96, y 0.1), smaller since bcccff3, and a rookery of flat sheets that overlap. The approved picture shows dry broken rock with ledges and a crowd of separate animals. Tried: grey rock with lichen in patches (2b93b41), matt and pitted faces (a442004), a crowd over the colony (91cc11c). It fell short because the faces are still `mat/colony.jpg` magnified many times, and the blot is the shade of a hidden sitter of `wings/` stamped on the rock in front, lightened from 0.62 to 0.4 and not removed.
-3. Frame 600 (the end of the opening's rise). It shows: a straight pale band along the far edge of the sea; the flier at the foot of L1, a streak before bcccff3, is now a body with drooped sails that still reads as pasted on. The picture set shows the sea going into mist with no line. Tried: haze in banks (ed57265), banks set apart (b6b81b6), beads cleared at 600 (3bda574). It fell short because the band is where the sea's far edge meets the haze at one height, and no part owned that meeting.
-4. Frame 2081 (ribs-1, the hung body). The weed reads as dark hoses and brown fronds; the picture asks for wet olive ribbons. Three versions of `drowned/curtain.ts`; the brown comes from the specular under the warm key.
-5. Frame 1241 (ribs-0). The weed mats are black blobs and the mist at the blades' feet is one even band; the picture has broken low mist and pale wet flats. The bed, the stones and the blades were remade (14b2098); the mats and the mist were not reached.
-6. The break in the cloud is soft at uhd: the sky source is 1536 wide and is seen six times magnified. Edges were kept free of halos (0276e53), not made sharper.
-7. L1's tip stands out of the top of the frame from about frame 60, a little more since the lens of 29.5 degrees (eff1998).
-8. The surf has no pitching lip, the sea meets the sand at a hard line, the burst has no falling sheets.
-9. Frame 1759 (ribs-2): the body is a cooler grey than the picture's warm white; white blobs stand at the left animal's feet. 
+1. Nothing takes off, walks or lands. The colony at 1514 and the waders at 1766 still read as placed; the far waders glide; every colony body is one build with one neck curve. No gaits were built in this wave.
+2. The wave break at 2440 to 2506 has no falling water: no droplets, no collapsing sheet. The flier there holds one wing pose. Untouched by life, only the bore's strips were closed by the sea.
+3. Frame 1241 is too light in its darks (5th percentile 44, picture 24). The sky builder found it held up by the near cliff's weed, which went from brown-black to grey-green with the ground's last versions, and by the wet flats, not by the rig.
+4. The weed wall at 2081 is a mottled sheet whose flutes read as bark, not fronds; the rivulet is glassy and sits beside the body.
+5. The crag at 1546 is grey and even, its ledges steps of one depth; no shade patch under a bird, no nests, no white streaks.
+6. The breaker of the opening: drop cards of one size that do not fall; the first pulse is small; OR is a plain wall in frame 0.
+7. Frames 720 to 800: no white surf line along z = 330 where the lens crosses the shore, only a swash. The dark slab at 770 to 798 is the ground's berm at z = 315 to 322, cut by the level sea in a polyline.
+8. Scud stands only on the dome, behind the arches. The sky is soft at uhd. The water at 1759 is a pale sheet without sparkle.
+9. At 2500 the two fliers before the wave are grey, low at the left, one cut by the edge. Animals' mirror images are whole away from the legs; two pale cards lie on OR's foot at frame 0; a pebble patch stays mid floor at 1241.
 
-## 3. Held versions
+## 3. Versions held back
 
-- sky 1ec615b on `agent/p6-ribs-sky`: first key light. Held: the crag at 1546 went black and the bore at 2401 turned warm milk. Replaced by 2db0821.
-- ground 2300b92 on `agent/p6-ribs-ground`: first fractured blades. Held: every blade dark brown and evenly cobbled like bark, away from ribs-0. Replaced by 6ff4130.
-- life cf0565b on `agent/p6-ribs-life`: first bodies. Held: at 1759 the body was mid grey with a tube neck and a brush tuft, worse than the card. Replaced by d8907fe.
-- sea 848d472 on `agent/p6-ribs-sea`: Held for one part: the bore's spray at 2401 was tan dust. Replaced by 3bda574, one line in `sea/bore.ts`.
-- Nothing else is held. Every builder's last commit is in the branch.
+- `agent/p7-ribs-life` 9a3d1c8: eight sitters drew black at 1546.
+- `agent/p7-ribs-ground` 906241f: L1's top became a smooth orange post at 900 and 1241. Replaced by cb8fa1c.
+- `agent/p7-ribs-life` a059431: the colony's lying bodies read as a heap of arrows run into each other at 1546.
+- `agent/p7-ribs-ground` 0119b3b: OR's skirt blocks stood as glossy black stairs in the corner of frame 120. Replaced by c3f756c.
+- `agent/p7-ribs-sea` 9318de4: the flat became smooth glass with whole mirror legs at 1759, the glitter was lost at 2081 and 900. Replaced by d865319.
+- Never rendered: the sky builder's patch for scud before the arches, `out/work/rags.py` in that builder's scratch (uniform `uRags`).
 
-## 4. What to try next, for each of the worst three
+## 4. What to try next for the worst three
 
-For frame 0:
-- The near flier: give the one flier nearest the lens its own body (a skin with ribs and a wing membrane with fingers), keep it whole inside the frame through the slew of the lens, or move the flock's nearest member back to where the others fly. The flock's place is FLOCK in `shared/opening.ts`.
-- The near crest's foam: in `sea/`, read the foam picture by 2.0 times the pixel on steep faces (the sea builder's note: foot-long pictures go flat there), and add the rim and thickness of 3bda574 to the near crest too.
-- Frames 22 to 55: stage one event there (a second strike, or the flock crossing), named in `shared/opening.ts`.
+1. Motion of the animals: hand a roost to `wings/leaving.ts` for take-offs; a second body sheet beside `feeder-a` and more neck shapes in `roost.ts` (SEAT, HEADS); a stepping gait for the feeders in place of the slow sway; a wing cycle for the flier at 2501 to 2506.
+2. Falling water at 2440 to 2506: a droplet family in `sea/bore.ts` `thrownNow`, small opaque clots on long ballistic arcs; the same idea for DROPS in `sea/strike.ts` with mixed sizes and falling streaks. A third pulse of the breaker needs Burst and `strikeAge` widened.
+3. Darks at 1241: darken the near cliff's weed in `land/` toward brown-black and take the sheen off the wet flats before touching the rig; the sky's floor, sky and bounce numbers barely move it.
 
-For frame 1546:
-- Replace the close-up albedo of the crag with computed strata and joints; keep `mat/colony.jpg` for the far view only. Place lichen by noise alone, not by the picture's columns (the ground builder's note).
-- Lay no shade from hidden or stacked sitters in `wings/` (pass a shade below zero, as members of a clump do); it is the dark blot.
-- Build the rookery from separate small bodies on ledges, not sheets.
-
-For frame 600:
-- Let the sea's far edge fade into the haze: the sky's haze needs more than 8 strides or a blur of its half-size pass (the sky builder's note), and the sea needs a fade of its own over the last part of its reach.
-- The flier at L1's foot: set it farther from the lens path or leave it out of the opening.
-
-Further, in the builders' own words. Weed: `drowned/curtain.ts` fronds take brown from the specular under the key, try roughness 0.3 and a sheen from the sky, and give the weed mats an olive material of their own. Blades: the cream and lichen thresholds in `land/fin.ts` are the two dials; the rubble feet reuse boulderShape. Break: a larger sky take (1 of 6 was used) or a computed rim. Cheapest cut of cost: drop the `lumps` read in the sky. Burst: falling sheets and a second, later wash ring in `sea/strike.ts`. Surf: a lip in surfAt (a vertex push where b is near 1), puffs along surf.y, coverage 0.6 times surf.z. The bore's mist went with the steam columns; if wanted back, few and low, in `index.ts`.
-
-From the life builder. Rookery: give the forty sitters nearest the colony lens crouched bodies from `wings/body.ts` and keep sheets beyond; the gap of a clump is range(1.45, 2.2) times size in `wings/index.ts`. Fliers: fold the neck in flight and shorten the legs in `wings/flier.ts` (SPINE, LEG); let the leaders curve off the lens instead of crabbing (CRAB in `wings/index.ts`); the leavers need a foot and a thicker thigh.
-
-From the opening builder. Frames 22 to 55 still lean on the slew of the lens; a nearer foreground (wreckage, or a rock passed close at 0.5 s) would give real parallax. The burst peaks at 3 to 7 s, not in the first second: `STRIKE.times[0]` in `shared/opening.ts` could go earlier.
+Beyond those: cover the wall near the hung body with `land/curtain.ts` fronds instead of the sheet and draw the rivulet as thin cards; change ledge depth in `shared/crag.ts` together with life, since the birds stand on it; spray puffs along the berm's true waterline by `rig.land.height` (puffs are excluded for x > -262 in `sea/index.ts`) and a shelving bed so `surfAt` rollers can break; for sparkle at 1759 move ribs-04 `yaw` so the break stands low before the lens or lower the glint threshold in `sea/shaders.ts` (it needs `skyMirror` over 1.25 times the mean sky).
 
 ## 5. What a newcomer would trip over
 
-- The full seam gate (`npm run -s gate -- --phase 5 --only G14`) renders all 480 loop frames. It took 27 minutes on one builder's machine and did not finish in 35 on the lead's. A quick check that it will not fail on identity: `npm run -s still -- --loop 0 --tier draft --format preview --force` and the same with `--loop 480`, then `cmp`: byte equal.
-- Guard frames 4409 and 7234 (other units) repeat byte for byte at draft, preview, on the lead's machine; the before files are `out/work/before/frame-4409-preview-draft.png` and `frame-7234-preview-draft.png` (not in the repository, render them anew from origin/main).
-- Cost (`npm run -s cost -- --frame N --format uhd --tier draft`) is noisy by about half a second a sample on a shared machine; frame 0 read between 12.1 and 13.8 s within the hour on nearly the same picture. Measure twice before blaming a part.
-- Staging facts of the opening are in `src/places/ribs/shared/opening.ts`; sea, wings and air read them. Move the strike or the flock there, not in the parts.
-- `wings/contacts.ts` exports where feet and strands touch the water; the sea draws rings and crowns from it. Beads stay in wings.
-- `layout.ts` was opened to the ground builder for the far blades only; OL and OR were not moved; the feet of all blades are where they were.
-- The merge commits before 3783e45 carry no `Co-authored-by` trailer; they are pushed and were not rewritten.
-- Pushing failed on some machines of this wave (no login); a bundle of `origin/main..HEAD` was the road.
-- Stills and cost build from the live source. An edit, a checkout or a merge while a render runs leaks into that render. One render at a time, and no git work on `src/` while it runs.
-- The engine has a depth prepass. A `discard` in a fragment shader of a part drops its depth twin; holes then show the wrong depth.
-- Sky: use `textureLod` inside the march; the pass is half size; `uStillAir` holds the air for the loop; the opening's fog is separate (FOG_STEPS 14) and the loop has `LOOP_MIST`. There is one sun, in `anchors.ts`; the break is staged per shot in `rig.ts` (`BREAK_BY_SHOT`), with `BREAK.bounce`; the grade is in `look.ts`. `opening.ts` is read, never copied. Measure the sky's cost with `--parts sky` only.
-- `assets-src/ribs/air/sheet.py` and `fine.py` remake `public/assets/ribs/air/storm.jpg` and `storm-fine.jpg`. If either file is remade, RECIPE.md and its ROWS must follow or G8 goes red (`npm run gate -- --phase 6 --only G8 --json` must name no file under `public/assets/ribs/`).
-- Sea: the opening's variants are string swaps on SEA_FRAGMENT and SEA_VERTEX; keep the anchor lines whole or the swap silently does nothing. `feet` is metres, depth is `-land.r`. A `vec3 e` in the fragment is unused.
-- origin/main moved (49a907e to 02a577d) during the last hour of the wave. This branch was not rebased; its fork point is 49a907e.
-- The unit tests (`npm test`, 36 files) passed at 84e5226 with no numbers pinned anew. They were not run again on the last merges.
-- Wings: never set `mesh.visible` in the update; the solo view owns that switch. Use `Flight.draw(n)` or `Figures.hide(i)`.
-- Wings: a figure's shade is drawn with GreaterDepth on anything nearer than its plane, so stacked or hidden figures blot the rock in front. Members of a clump pass a shade below zero to lay none.
-- Wings: the card loop draws no bodies in the air (flight, fleet and escort draw 0) and keeps the sheets (airSheet grey 0.6). Every period must divide 480 frames.
-- `cameras.ts`: SEA_SWELL, OPEN_SEA_STANDS and seaCalm are copies of `sea/tide.ts`, `sea/index.ts` and the sea's vertex shader (an import would be a cycle). If the swell changes in the sea, the lens no longer clears it and a straight-walled pit shows wherever a crest stands within 12 m of the lens. The opening builder checked 1.4 m clear on all 1042 frames against the surf of 3bda574, not against 7991326.
-- `shared/opening.ts`: the names STRIKE, FLOCK and SHAFT_TARGET are read by sea, wings and air. `openingCamera` must equal the arrival to the bit from 16 s (frame 960).
-- `shared/looptext.ts` was not touched in this wave. Any change to the loop needs the full G14, about 30 minutes.
-- G14 (the loop's seam) passed in full on 84e5226, run by the opening builder (30 minutes): loop frame 480 equals 0 at draft, review and final, seam step 0.79 levels, largest step 6.94 at 116 to 117. On the last commit only the quick check was run: loop 0 equals loop 480 byte for byte at draft preview on 9335a52, and loop 0 is byte equal before and after eff1998. The full gate was not run on the last commit.
+- The full G14 renders all 480 loop frames and takes 21 to 30 minutes. A loop change needs it. Loop periods must divide 480.
+- Stills build from the live source: no git work and no build while a render runs. One render process at a time.
+- Repeat tests are trusted only on browser 147 (`chromium_headless_shell-1217`); this wave's determinism runs were on 1255.
+- In `land/shaders.ts` any implicit-level texture read or `dFdx` inside an `if` breaks repeat: take the level outside with `footLevel`, read with `textureLod` or `textureGrad`. A rotation or large warp of world coordinates that varies in space draws rings.
+- `weedPoint`, `radii`, `surface`, `partAtHeight` and L1's foot are read by other parts. `bladeCrag`'s `gain` scales edge relief by blade breadth. The rivulet is placed by `RILL_ALONG` and `DROWNED` in `land/index.ts`; the cost at 2081 is mostly the 7000 fronds.
+- Sea: swap anchors in `sea/shaders.ts` must match exactly once or the build throws; `--diag solo --part` shows nothing useful for sea parts, test by `mesh.visible = false`; the pool sheet stands at 1.15 m and its vertex ignores `mesh.position`; the bore's run-out is cut by the `bare` discard, keep its rim sunk; never change the swell, `cameras.ts` holds copies of it.
+- Sky: `domeTone` has a fourth argument (0 dome, toward 1 mirror) and `skyMirror` passes 0.6. Per-shot numbers live in `BREAK_BY_SHOT` (`sky`, `shade`, `bounce`, `heads`); ribs-02 has no row and takes `BREAK` plus `HELD`. The air is summed only before built things; the sea and the water sheets haze themselves (`uHaze` times 1.9 and 0.9), so the line where sea meets haze is theirs. The first wave's `ROWS-ribs_sky_builder.md` still lists the removed `sheet.py` and `storm-1.png`.
+- Life: flier pitch is nose up positive, body `Pose.pitch` nose down positive. `Pose.shade` darkens by height over `p.floor` at the end of `Bodies.put()`. Roost bodies draw only inside `shotSpan('ribs-03')`, never in the loop. `HEROES` are placed in the lens frame from `openingCamera`: any camera change at 0 to 2 s moves them. Rig contact discs only work within 4 m of the baked floor.
+- Opening: `STRIKE.foot` must sit on the line from the lens to L1, recheck frames 300 to 440 after any OPEN change; `OPEN.floor` and the sinks keep the lens off the water; `openingCamera` must equal the arrival from frame 960; the lens crosses FLOOR.south (z = 330) at frame 792.
+- Cost runs drift about 0.3 s within an hour on one machine: measure two trees back to back. Frame 0 is the tightest (limit 15.8 s).
+- The builders' branches have several merge bases with the lead's branch, so a three-dot diff lists foreign files. Check a version with `git diff --name-only <lead> <scratch merge>`.
+- `index.ts` of the place belongs to nobody. Frames of the Eye are never guards.
