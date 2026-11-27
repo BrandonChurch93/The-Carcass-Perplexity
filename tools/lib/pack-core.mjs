@@ -143,6 +143,27 @@ const judgedOf = (cfg, cut, film, unit) =>
     .map((e) => (Number.isInteger(e.loop) ? { id: e.id, loop: e.loop } : { id: e.id, frame: film.judged[e.id] }))
     .filter((e) => (e.loop !== undefined ? film.loop && e.loop <= film.loop.frameCount : Number.isInteger(e.frame)));
 
+// One frame that stands under several entries of the judged list is sent once and named for every entry it stands under.
+// No entry leaves the list: the first entry keeps its place, and the ids of the others go into `ids` beside it.
+export function oncePerFrame(entries) {
+  const out = [];
+  const seen = new Map();
+  for (const e of entries) {
+    const at = e.loop !== undefined ? `loop ${e.loop}` : `frame ${e.frame}`;
+    const i = seen.get(at);
+    if (i === undefined) {
+      seen.set(at, out.length);
+      out.push(e);
+    } else out[i] = { ...out[i], ids: [...(out[i].ids ?? [out[i].id]), e.id] };
+  }
+  return out;
+}
+export const entryNames = (e) => {
+  const ids = e.ids ?? [e.id];
+  return ids.length > 1 ? `${ids.slice(0, -1).join(', ')} and ${ids.at(-1)}` : ids[0];
+};
+const judgedNamed = (e) => `judged frame${e.ids ? 's' : ''} ${entryNames(e)}`;
+
 export function planR4b({ cfg, film }) {
   const count = cfg.critics.contactSheetFrames;
   const k = unitKinds(cfg);
@@ -172,10 +193,10 @@ export function planR1({ cfg, film, unit }) {
 }
 
 export function planR3({ cfg, cut, film, unit }) {
-  const groups = judgedOf(cfg, cut, film, unit).map((e) => ({
+  const groups = oncePerFrame(judgedOf(cfg, cut, film, unit)).map((e) => ({
     items: [
-      { kind: 'still', ...e, what: `The judged frame ${e.id}, film frame ${e.frame}, resized to fit` },
-      { kind: 'crops', ...e, what: `Native size crops of the judged frame ${e.id}, film frame ${e.frame}` },
+      { kind: 'still', ...e, what: `The ${judgedNamed(e)}, film frame ${e.frame}, resized to fit` },
+      { kind: 'crops', ...e, what: `Native size crops of the ${judgedNamed(e)}, film frame ${e.frame}` },
     ],
   }));
   return { groups, left: groups.length ? [] : [`The unit ${unit} has no judged frame on the page.`] };
@@ -241,12 +262,12 @@ export function planR4({ cfg, cut, film, unit }) {
 export function planR5({ cfg, cut, film, unit }) {
   const count = cfg.critics.contactSheetFrames;
   const groups = [{ items: wholeFilm(film, count) }];
-  const judged = judgedOf(cfg, cut, film, unit);
+  const judged = oncePerFrame(judgedOf(cfg, cut, film, unit));
   const per = TILES.cols * TILES.rows;
   const total = Math.ceil(judged.length / per);
   for (let i = 0; i < total; i++) {
     const entries = judged.slice(i * per, (i + 1) * per);
-    groups.push({ items: [{ kind: 'tiles', entries, title: `frames of the film in order${SEP}part ${i + 1} of ${total}`, what: `The judged frames of the film in order, part ${i + 1} of ${total}: ${entries.map((e) => `${e.id} at ${e.loop !== undefined ? `loop frame ${e.loop}` : `frame ${e.frame}`}`).join(', ')}` }] });
+    groups.push({ items: [{ kind: 'tiles', entries, title: `frames of the film in order${SEP}part ${i + 1} of ${total}`, what: `The judged frames of the film in order, part ${i + 1} of ${total}: ${entries.map((e) => `${entryNames(e)} at ${e.loop !== undefined ? `loop frame ${e.loop}` : `frame ${e.frame}`}`).join(', ')}` }] });
   }
   const est = film.places.map((p) => keysOf(cfg, p.unit).find((x) => x.kind === 'establishing')).filter((x) => x && Number.isInteger(film.keyFrames[x.id]));
   const frames = [...est.map((x) => film.keyFrames[x.id]), film.titanFrame];
