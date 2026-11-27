@@ -81,7 +81,7 @@ export function create(ctx: Context): Piece {
     const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] - 0.55, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
     // The one on the south-west lip is by the wide lens: there it is a low fountain, not a tall plume in the corner of that frame.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.45 : i === 0 ? tall * 1.12 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.75 } : {}) });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.25 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 0.8 } : i === 5 ? { full: 0.5 } : {}) });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
@@ -138,8 +138,9 @@ export function create(ctx: Context): Piece {
   // Opaque and whole: the engine lays their depth first, and a strip behind another costs only that. Each bush has its own two
   // materials (one program for all of them), because its sway is worked from its own root.
   const materials: THREE.ShaderMaterial[] = [];
-  const meshes = (g: Grown, into: THREE.Group): void => {
-    const own = { ...uniforms, uBush: { value: g.root }, uTall: { value: g.tall } };
+  const meshes = (g: Grown, into: THREE.Group, glow = 1): void => {
+    // `glow`: how much of the sun comes through its hair. The ones that hang into the pit are seen from above, in the pit's shade.
+    const own = { ...uniforms, uBush: { value: g.root }, uTall: { value: g.tall }, uGlow: { value: glow } };
     const threadMaterial = new THREE.ShaderMaterial({ vertexShader: THREAD_VERTEX, fragmentShader: THREAD_FRAGMENT, uniforms: own, side: THREE.DoubleSide });
     const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms: own });
     materials.push(threadMaterial, stemMaterial);
@@ -157,7 +158,7 @@ export function create(ctx: Context): Piece {
   const domeGroup = new THREE.Group();
   grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : group));
   rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
-  for (const g of hangGrown) meshes(g, hangGroup);
+  for (const g of hangGrown) meshes(g, hangGroup, 0.4);
   group.add(rimGroup, hangGroup, heroGroup, domeGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
@@ -216,10 +217,13 @@ export function create(ctx: Context): Piece {
       // Only a point with open air under it drips where it can be seen: the others drip into the bush. `share` is how many drip, a bush.
       const open = g.tips.filter((tip) => tip.under > 0.9);
       for (const tip of open) {
-        if (drops.next() > share / Math.max(1, open.length)) continue;
+        // They gather: the locks of one part of the bush run with water and their neighbours hold none. Most are small, a few heavy.
+        const cell = Math.sin(Math.floor(tip.a[0] * 2.6) * 12.9898 + Math.floor(tip.a[1] * 2.6) * 78.233 + Math.floor(tip.a[2] * 2.6) * 37.719) * 43758.5453;
+        const run = cell - Math.floor(cell) < 0.3 ? 3.3 : 0;
+        if (drops.next() > (run * share) / Math.max(1, open.length)) continue;
         const every = drops.range(2.2, 8);
         const offset = drops.range(0, 11);
-        const size = drops.range(0.009, 0.02);
+        const size = 0.005 + 0.016 * drops.next() ** 2.2;
         const x = tip.a[0] + tip.b[0] + tip.c[0];
         const z = tip.a[2] + tip.b[2] + tip.c[2];
         const ground = floor(x, z);
@@ -227,7 +231,6 @@ export function create(ctx: Context): Piece {
         quad(g, tip, every, offset, size, 1, ground);
         // A drop seldom falls alone: a smaller one follows it off the same point.
         quad(g, tip, every, offset - 0.17, size * 0.7, 1, ground);
-        quad(g, tip, every, offset - 0.36, size * 0.55, 1, ground);
       }
     }
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
