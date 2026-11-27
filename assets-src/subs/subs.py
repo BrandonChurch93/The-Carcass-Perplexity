@@ -13,7 +13,7 @@ Adapted from the caption layer of the Solar System Fly-Through (assets-src/subs/
   subs.py contrast T FRAME.png      the text against what lies under it in that frame, as JSON
   subs.py step T0 T1 W H FPS        the haze's mean change from frame to frame over mid grey, in 8 bit levels, as JSON
 """
-import json, os, re, sys, math, subprocess, wave
+import json, os, re, sys, math, subprocess, wave, zlib
 import numpy as np, cv2
 from PIL import Image, ImageDraw, ImageFont
 
@@ -46,25 +46,30 @@ DEFAULT_LOOK = dict(
 # ---- how it moves, in units of the type size (em = look.em * H). The Solar layer's numbers, kept.
 LEAD = 1.32           # row to row, em
 MAXW = 0.80           # widest row, share of the frame width
-ONEROW = 0.64         # a line narrower than this share of the width stays one row
+ONEROW = 0.55         # a line narrower than this share of the width stays one row
 WORD_IN = 0.22        # a word's fade in, s
 WORD_AHEAD = 0.04     # it starts this long before its sound, s
 WORD_RISE = 0.10      # it rises this far into place, em
 WORD_SOFT = 0.07      # it comes in out of this much blur, em
 HAZE_AHEAD = 0.26     # the haze under a word starts this long before its sound, s
 HAZE_IN = 0.36        # and takes this long, s
-HOLD = 0.80           # the line stands this long after its last word ends, s (less if the next line is near)
+HOLD = 0.90           # the line stands this long after its last word ends, s (less if the next line is near)
+MIN_UP = 1.40         # and this long in all from its first word, s
 OUT = 0.55            # then all of it fades over this, s
-NEXT_GAP = 0.30       # a line is gone this long before the next line's first word, s
-MIN_OUT = 0.25        # where the next line is nearer than that allows, the fade is shortened, to this at the least, s
+S_GAP = 0.30          # a gap before a word no longer than this is running speech, s
+MIN_OUT = 0.20        # where the next line is nearer than that allows, the fade is shortened, to this at the least, s
 PILL_X, PILL_Y = 0.42, 0.30
-CORE_SIG, WIDE_SIG = 0.52, 1.35
-A_CORE, A_WIDE = 0.70, 0.30
+NEAR_SIG = 0.62                     # the haze close round the words, em
+MID_SIG = (1.25, 0.72)              # its body, across and down, em
+FAR_SIG = (2.60, 1.15)              # its thin outer reach, em
+A_HAZE = 0.80                       # the haze at its thickest, as a share of look.cover
+A_NEAR = 0.70                       # and what stands close round the words on top of that
+LOBES = 5                           # each line's haze leans out in this many places of its own
 BLOOM_T = 0.50
 GRID_EM = 13.5        # the haze is computed on a grid of this many cells to the em (same look at any size)
 CAP, DESC = 0.72, 0.19
 YCAP = 0.130          # the haze is never lighter than this (relative luminance)
-SHADE = 0.45          # the shadow round the letters is the haze's darkest colour times this
+SHADE = 0.80          # the shadow round the letters is the haze's darkest colour times this
 EDGE_ROOM, EDGE_WINDOW = 0.03, 0.01   # edgeRoomSeconds and windowSeconds of tools/lib/voice-core.mjs, which cut the kept lines
 AHEAD_MS, BEHIND_MS = 40.0, 80.0   # a word may show this long before its sound, and this long after it at most
 STOPW = {'a', 'an', 'the', 'of', 'to', 'and', 'in', 'on', 'is', 'than', 'from', 'for', 'its', 'has', 'was', 'only', 'our', 'at', 'it'}
@@ -121,7 +126,7 @@ def measure_rows(words, look, breaks_at=None):
         return [list(range(0, breaks_at)), list(range(breaks_at, n))]
     if sum(widths) + space * (n - 1) <= ONEROW * Wd:
         return [list(range(n))]
-    best = None
+    cands = []
     for b in range(1, n):
         w1 = sum(widths[:b]) + space * (b - 1); w2 = sum(widths[b:]) + space * (n - b - 1)
         if max(w1, w2) > maxw:
@@ -131,10 +136,10 @@ def measure_rows(words, look, breaks_at=None):
         c += 0.0 if prev[-1] in '.?' else (0.10 if prev[-1] in ',;:' else 0.28)
         if bare(prev) in STOPW and prev[-1] not in '.?,;:':
             c += 0.25
-        if w1 > w2 * 1.35:
-            c += 0.10
-        if best is None or c < best[0]:
-            best = (c, b)
+        cands.append((c, b, prev[-1] in '.?,;:'))
+    # a row ends on a full stop or a comma wherever the line has one that fits
+    marked = [x for x in cands if x[2]]
+    best = min(marked or cands) if cands else None
     if best is None:
         raise SystemExit('the line %r does not fit two rows' % ' '.join(words))
     return [list(range(0, best[1])), list(range(best[1], n))]
@@ -165,24 +170,28 @@ def make_cues():
         words = [dict(w=w, on=round(t + p[1] - s0, 4), off=round(t + p[2] - s0, 4)) for w, p in zip(shown, para)]
         # the kept line was cut EDGE_ROOM before the first window that holds sound: its first word begins there, wherever the alignment put it
         words[0]['on'] = round(min(t + EDGE_ROOM + EDGE_WINDOW, words[0]['off'] - 0.02), 4)
+        # the alignment gives the hiss of an s to the gap before its word: in running speech such a word begins to show as the word before it ends
+        for i in range(1, len(words)):
+            gap = words[i]['on'] - words[i - 1]['off']
+            if shown[i][0] in 'sS' and 0 < gap <= S_GAP:
+                words[i]['on'] = round(min(words[i - 1]['off'] + WORD_AHEAD, words[i]['on']), 4)
         end = t + l['frames'] / fps
         for w in words:
             w['off'] = round(min(w['off'], end), 4); w['on'] = round(min(w['on'], w['off']), 4)
         rows = measure_rows(shown, look, look.get('breaks', {}).get('%s-%d' % (clip, n)))
         lines.append(dict(clip=clip, line=n, text=l['text'], unit=l['unit'], rows=[' '.join(shown[i] for i in r) for r in rows], words=words))
+    cuts = [p['first'] / fps for p in C['places']][1:] + [C['frameCount'] / fps]
     for a, b in zip(lines, lines[1:] + [None]):
-        last = a['words'][-1]['off']
-        nxt = b['words'][0]['on'] if b else 1e9
-        hold = min(HOLD, max(0.10, nxt - NEXT_GAP - HAZE_AHEAD - OUT - last))
-        a['in'] = round(a['words'][0]['on'] - HAZE_AHEAD - 0.05, 4)
-        gone = last + hold + OUT
-        if b and gone > nxt - HAZE_AHEAD - 0.05:
-            gone = nxt - HAZE_AHEAD - 0.05
-            hold = min(0.10, 0.25 * (gone - last))
-            if gone - last - hold < MIN_OUT:
-                raise SystemExit('%s-%d: the next line comes too soon for it to fade' % (a['clip'], a['line']))
+        first, last = a['words'][0]['on'], a['words'][-1]['off']
+        # the line must be gone before the next line's first word begins to show, and before the cut to the next place
+        limit = min(([b['words'][0]['on'] - WORD_AHEAD] if b else []) + [min(c for c in cuts if c > last)])
+        want = max(HOLD, first + MIN_UP - last)
+        hold = max(0.0, min(want, limit - MIN_OUT - last))
+        a['in'] = round(first - HAZE_AHEAD - 0.05, 4)
         a['out'] = round(last + hold, 4)
-        a['gone'] = round(gone, 4)
+        a['gone'] = round(min(last + hold + OUT, limit), 4)
+        if a['gone'] - a['out'] < MIN_OUT - 1e-6:
+            raise SystemExit('%s-%d: the next line comes too soon for it to fade' % (a['clip'], a['line']))
     doc = dict(schema=SCHEMA, fps=fps, frameCount=C['frameCount'], look=look, lines=lines)
     return dumps(doc)
 
@@ -340,6 +349,32 @@ class Renderer:
                 cx = np.clip(np.minimum(np.arange(xa, xb) + 1, x1) - np.maximum(np.arange(xa, xb), x0), 0, 1).astype(np.float32)
                 cy = np.clip(np.minimum(np.arange(ya, yb) + 1, y1) - np.maximum(np.arange(ya, yb), y0), 0, 1).astype(np.float32)
                 it['pill'] = (slice(ya, yb), slice(xa, xb), np.outer(cy, cx))
+        # each line's own outline: a still, large pattern and a few lobes, seeded by the line's id. Fixed in time.
+        self.shape = {}; self.lobes = {}
+        yy, xx = np.mgrid[0:self.gh, 0:self.gw].astype(np.float32)
+        for c in self.cues:
+            rs = np.random.RandomState(zlib.crc32(c['id'].encode()) & 0x7fffffff)
+            ox, oy, ot = rs.rand() * 64, rs.rand() * 32, rs.rand() * 64
+            n = fbm(self.N[4], self.U * 0.21 + ox, self.V * 0.46 + oy, ot, 3)
+            fine = fbm(self.N[3], self.U * 0.62 + oy, self.V * 1.05 + ox, ot * 0.7, 2)
+            self.shape[c['id']] = np.clip((0.72 * n + 0.28 * fine - 0.5) * 2.6 + 0.5, 0, 1)
+            items = L.lines[c['id']]['items']; lobes = []
+            for k in range(LOBES):
+                i = 0 if k == 0 else (len(items) - 1 if k == 1 else rs.randint(len(items)))
+                it = items[i]
+                side = -1.0 if k == 0 else (1.0 if k == 1 else (1.0 if rs.rand() < 0.5 else -1.0))
+                reach = rs.uniform(0.5, 2.9) if k < 2 else rs.uniform(0.0, 1.4)
+                cx = (it['x'] + (it['w'] if side > 0 else 0.0) + side * reach * em) / cell
+                cy = (it['base'] - 0.3 * em + rs.uniform(-1.25, 1.05) * em) / cell
+                rx, ry = rs.uniform(0.9, 2.1) * GRID_EM, rs.uniform(0.40, 0.85) * GRID_EM
+                wt = rs.uniform(0.45, 1.0)
+                xa, xb = max(0, int(cx - 3 * rx)), min(self.gw, int(cx + 3 * rx) + 1)
+                ya, yb = max(0, int(cy - 3 * ry)), min(self.gh, int(cy + 3 * ry) + 1)
+                if xb <= xa or yb <= ya:
+                    continue
+                blob = wt * np.exp(-0.5 * (((xx[ya:yb, xa:xb] - cx) / rx) ** 2 + ((yy[ya:yb, xa:xb] - cy) / ry) ** 2))
+                lobes.append((it['i'], slice(ya, yb), slice(xa, xb), blob.astype(np.float32)))
+            self.lobes[c['id']] = lobes
 
     def palette(self, t):
         """The colours at film time t: each place's own, crossed over look.crossfadeSeconds centred on every cut."""
@@ -353,24 +388,33 @@ class Renderer:
                     out[k] = out[k] + w * self.pal[u][k]
         return out
 
-    def cue_at(self, t):
-        act = [c for c in self.cues if c['in'] <= t <= c['gone']]
-        assert len(act) <= 1, 'two lines at %.3f' % t
-        return act[0] if act else None
-
     def layer(self, t, parts=False):
-        """The band at time t: colour times alpha (bh, Wd, 3) and alpha (bh, Wd), or None when no line stands."""
-        c = self.cue_at(t)
-        if c is None:
+        """The band at time t: colour times alpha (bh, Wd, 3) and alpha (bh, Wd), or None when no line stands.
+        A line may still be fading while the haze of the next one comes in: the later line lies over the earlier."""
+        out = None
+        for c in self.cues:
+            if c['in'] <= t <= c['gone']:
+                r = self.one(c, t)
+                if out is None:
+                    out = r
+                else:
+                    P, A, At = r
+                    out = (out[0] * (1 - A[..., None]) + P, out[1] * (1 - A) + A, np.maximum(out[2], At))
+        if out is None:
             return None
+        return out if parts else out[:2]
+
+    def one(self, c, t):
+        """One line at time t: colour times alpha, alpha, and the letters alone."""
         L = self.L; em = L.em
         dark, body, bright, sparkw = self.palette(t)
         env = 1.0 if t <= c['out'] else 1.0 - float(sstep(0, 1, (t - c['out']) / (c['gone'] - c['out'])))
-        M = np.zeros((self.gh, self.gw), np.float32); Mb = np.zeros_like(M)
+        M = np.zeros((self.gh, self.gw), np.float32); Mb = np.zeros_like(M); H = {}
         At = np.zeros((L.bh, self.Wd), np.float32)
         for it in L.lines[c['id']]['items']:
             w = c['words'][it['i']]
             h = float(sstep(0, 1, (t - (w['on'] - HAZE_AHEAD)) / HAZE_IN)) * env
+            H[it['i']] = h
             if h <= 0:
                 continue
             ys, xs, rect = it['pill']
@@ -392,8 +436,13 @@ class Renderer:
             ty, tx = it['ty'], it['tx']; th, tw = tile.shape
             ya, yb = max(0, ty), min(L.bh, ty + th); xa, xb = max(0, tx), min(self.Wd, tx + tw)
             At[ya:yb, xa:xb] = np.maximum(At[ya:yb, xa:xb], tile[ya - ty:yb - ty, xa - tx:xb - tx] * (e * env))
-        core = cv2.GaussianBlur(M, (0, 0), CORE_SIG * GRID_EM)
-        wide = cv2.GaussianBlur(M, (0, 0), WIDE_SIG * GRID_EM)
+        Mw = M.copy()
+        for i, ys, xs, blob in self.lobes[c['id']]:
+            if H.get(i, 0) > 0:
+                Mw[ys, xs] = np.maximum(Mw[ys, xs], H[i] * blob)
+        near = cv2.GaussianBlur(M, (0, 0), NEAR_SIG * GRID_EM)
+        mid = np.minimum(1.0, 1.30 * cv2.GaussianBlur(Mw, (0, 0), MID_SIG[0] * GRID_EM, sigmaY=MID_SIG[1] * GRID_EM))
+        far = np.minimum(1.0, 1.90 * cv2.GaussianBlur(Mw, (0, 0), FAR_SIG[0] * GRID_EM, sigmaY=FAR_SIG[1] * GRID_EM))
         S = cv2.GaussianBlur(Mb, (0, 0), 0.60 * GRID_EM) if Mb.max() > 0 else Mb
         U, V = self.U, self.V
         # the clouds: slow value noise, bent by a slower one, drifting left. A function of t and of the place in em only.
@@ -410,9 +459,11 @@ class Renderer:
         col = dark + (body - dark) * depth[..., None] + (bright - body) * lift[..., None]
         y = lum(np.clip(col, 0, 1))
         col = np.clip(col * np.minimum(1.0, (YCAP / np.maximum(y, 1e-4)) ** (1 / 2.2))[..., None], 0, 1)
-        edge = fbm(self.N[4], U * 0.42 - t * 0.05 + 0.8 * warp, V * 1.10, t * 0.20, 3)
-        cloud = 0.30 + 0.70 * u
-        a = A_CORE * sstep(0.05, 0.62, core * (0.50 + 1.00 * edge)) + A_WIDE * sstep(0.0, 0.60, wide) * (0.35 + 0.95 * cloud) + 0.10 * S
+        # thick close to the words, then a long thinning out. The outline is the line's own still pattern, so it never moves.
+        F = 0.30 * near + 0.38 * mid + 0.32 * far
+        ragged = 0.18 + 1.45 * self.shape[c['id']]
+        F = F * (ragged + (1.0 - ragged) * sstep(0.35, 0.95, near))
+        a = self.cover * (1.0 - (1.0 - A_HAZE * sstep(0.0, 0.92, F) * (0.90 + 0.10 * u)) * (1.0 - A_NEAR * sstep(0.0, 0.90, near * (0.85 + 0.40 * self.shape[c['id']])))) + 0.08 * S
         a = np.minimum(a, self.cover)
         # where the haze thins it goes to its darkest colour, so its rim darkens a bright frame and never tints it
         col = dark + (col - dark) * sstep(0.18, 0.66, a)[..., None]
@@ -427,13 +478,12 @@ class Renderer:
         if g.shape[0] < L.bh or g.shape[1] < self.Wd:
             g = cv2.copyMakeBorder(g, 0, L.bh - g.shape[0], 0, self.Wd - g.shape[1], cv2.BORDER_REPLICATE)
         hc, ha = g[..., :3], g[..., 3]
-        sh = np.minimum(0.90, 0.85 * np.minimum(1.0, 2.2 * cv2.GaussianBlur(At, (0, 0), 0.085 * em)) + 0.55 * np.minimum(1.0, 2.2 * cv2.GaussianBlur(At, (0, 0), 0.26 * em)))
+        sh = np.minimum(0.93, 0.85 * np.minimum(1.0, 2.2 * cv2.GaussianBlur(At, (0, 0), 0.085 * em)) + 0.75 * np.minimum(1.0, 2.4 * cv2.GaussianBlur(At, (0, 0), 0.26 * em))
+                        + 0.55 * np.minimum(1.0, 2.8 * cv2.GaussianBlur(At, (0, 0), 0.50 * em)))
         P = hc * ha[..., None]; A = ha
         P = P * (1 - sh[..., None]) + (dark * SHADE) * sh[..., None]; A = A * (1 - sh) + sh
         P = P * (1 - At[..., None]) + At[..., None] * self.text; A = A * (1 - At) + At
-        if parts:
-            return P, A, At
-        return P, A
+        return P, A, At
 
     def over(self, frame, t):
         """frame: uint8 (Ht, Wd, 3) RGB, changed in place inside the band. The dither is fixed in place, so it never moves."""
@@ -539,6 +589,22 @@ def rises_in_speech(x, sr):
     return out
 
 
+def hiss_start(x, sr, tau):
+    """Where the sound above 4 kHz comes up to within 12 dB of its height round the alignment's start of the word: the start of an s."""
+    n = 512; h = sr // 500
+    frames = np.lib.stride_tricks.sliding_window_view(np.concatenate([np.zeros(n // 2, np.float32), x, np.zeros(n // 2, np.float32)]), n)[::h]
+    mag = np.abs(np.fft.rfft(frames * np.hanning(n).astype(np.float32), axis=1)) ** 2
+    f = np.fft.rfftfreq(n, 1.0 / sr)
+    hi = 10 * np.log10(mag[:, f >= 4000].mean(axis=1) + 1e-12); hop = h / sr
+    a, b = max(0, int((tau - 0.12) / hop)), min(len(hi), int((tau + 0.08) / hop))
+    if b - a < 3:
+        return None
+    k = a + int(np.argmax(hi[a:b])); th = hi[k] - 12
+    while k > 0 and hi[k] >= th:
+        k -= 1
+    return (k + 1) * hop if tau - (k + 1) * hop <= 0.30 else None
+
+
 def prove(D):
     """For every word: where its line's own sound rises nearest the word's time, and how long before (-) or after (+) that rise the word shows."""
     C = {(c['clip'], c['line']): c for c in json.load(open(CUTLIST, encoding='utf-8'))['lines']}
@@ -550,6 +616,8 @@ def prove(D):
         x, sr = read_wav(path); t0 = c['first'] / D['fps']
         clear = rises_after_silence(level_db(x, sr)); soft = rises_in_speech(x, sr)
         taus = [w['on'] - t0 for w in l['words']]
+        para = take_words(json.load(open(ALIGN, encoding='utf-8'))[l['clip']]['alignment'])[l['line'] - 1]
+        s0 = line_start(l['clip'], l['line'])[1]
         owner = {}
         for r in clear:
             i = min(range(len(taus)), key=lambda i: abs(taus[i] - r))
@@ -558,6 +626,8 @@ def prove(D):
         for i, w in enumerate(l['words']):
             tau = taus[i]
             r = owner.get(i); kind = 'after a silence'
+            if r is None and i > 0 and w['w'][0] in 'sS':
+                r = hiss_start(x, sr, para[i][1] - s0); kind = 'the hiss of an s'
             if r is None:
                 near = [x for x in soft if abs(x - tau) <= NEAR_S and not any(abs(x - c) < 0.03 for c in clear)]
                 r = min(near, key=lambda x: abs(x - tau)) if near else None; kind = 'in speech'
@@ -574,7 +644,7 @@ def proof_summary(res):
         return dict(words=len(d), largestMs=max(d, key=abs), medianMs=round(float(np.median(d)), 1), medianAbsMs=round(float(np.median(np.abs(d))), 1), earliestMs=min(d), latestMs=max(d))
     bad = [dict(id=r['id'], w=r['w'], kind=r['kind'], showsMs=r['showsMs']) for r in res if r['showsMs'] is not None and not (-AHEAD_MS - 0.5 <= r['showsMs'] <= BEHIND_MS + 0.5)]
     return dict(words=len(res), limitsMs=[-AHEAD_MS, BEHIND_MS], all=part(res), afterASilence=part([r for r in res if r['kind'] == 'after a silence']),
-                inSpeech=part([r for r in res if r['kind'] == 'in speech']), noRiseFound=[dict(id=r['id'], w=r['w']) for r in res if r['showsMs'] is None], outside=bad)
+                inSpeech=part([r for r in res if r['kind'] == 'in speech']), hissOfAnS=part([r for r in res if r['kind'] == 'the hiss of an s']), noRiseFound=[dict(id=r['id'], w=r['w']) for r in res if r['showsMs'] is None], outside=bad)
 
 
 # ---- files -------------------------------------------------------------------------------------------------

@@ -21,6 +21,9 @@ const HAZE_AHEAD = constant('HAZE_AHEAD');
 const WORD_AHEAD = constant('WORD_AHEAD');
 const OUT = constant('OUT');
 const MIN_OUT = constant('MIN_OUT');
+const HOLD = constant('HOLD');
+const MIN_UP = constant('MIN_UP');
+const S_GAP = constant('S_GAP');
 const [, EDGE_ROOM, EDGE_WINDOW] = /^EDGE_ROOM, EDGE_WINDOW = ([0-9.]+), ([0-9.]+)/m.exec(source).map(Number);
 const r4 = (v) => Math.round(v * 1e4) / 1e4;
 const bare = (w) => w.toLowerCase().replace(/[^0-9a-z]/g, '');
@@ -84,7 +87,11 @@ describe('cut/CAPTIONS.json, the cue list', () => {
       const end = t + c.frames / cut.fps;
       l.words.forEach((w, i) => {
         const off = r4(Math.min(r4(t + para[i].end - start), end));
-        const on = i === 0 ? r4(Math.min(t + EDGE_ROOM + EDGE_WINDOW, r4(t + para[0].end - start) - 0.02)) : r4(t + para[i].start - start);
+        let on = i === 0 ? r4(Math.min(t + EDGE_ROOM + EDGE_WINDOW, r4(t + para[0].end - start) - 0.02)) : r4(t + para[i].start - start);
+        if (i > 0 && /^s/i.test(w.w)) {
+          const before = r4(t + para[i - 1].end - start);
+          if (on - before > 0 && on - before <= S_GAP) on = r4(Math.min(before + WORD_AHEAD, on));
+        }
         expect(w.off).toBeCloseTo(off, 4);
         expect(w.on).toBeCloseTo(Math.min(on, off), 4);
         expect(w.on).toBeGreaterThanOrEqual(t);
@@ -105,17 +112,43 @@ describe('cut/CAPTIONS.json, the cue list', () => {
     }
   });
 
-  it('has every line gone before the next begins, and inside the film', () => {
+  it('has every line gone before the next line shows a word, before the cut to the next place, and inside the film', () => {
+    const cuts = [...cut.places.slice(1).map((p) => p.first / cut.fps), cut.frameCount / cut.fps];
     caps.lines.forEach((l, n) => {
+      const last = l.words[l.words.length - 1].off;
       expect(l.in).toBeCloseTo(l.words[0].on - HAZE_AHEAD - 0.05, 4);
-      expect(l.out).toBeGreaterThan(l.words[l.words.length - 1].off);
-      expect(l.gone - l.out).toBeGreaterThanOrEqual(MIN_OUT - 1e-9);
-      expect(l.gone - l.out).toBeLessThanOrEqual(OUT + 1e-9);
+      expect(l.gone - l.out).toBeGreaterThanOrEqual(MIN_OUT - 1e-4);
+      expect(l.gone - l.out).toBeLessThanOrEqual(OUT + 1e-4);
       const next = caps.lines[n + 1];
-      if (next) expect(l.gone).toBeLessThanOrEqual(next.in + 1e-9);
+      if (next) expect(l.gone).toBeLessThanOrEqual(next.words[0].on - WORD_AHEAD + 1e-4);
+      expect(l.gone).toBeLessThanOrEqual(cuts.find((c) => c > last) + 1e-4);
       expect(l.in).toBeGreaterThanOrEqual(0);
-      expect(l.gone).toBeLessThanOrEqual(cut.frameCount / cut.fps);
     });
+  });
+
+  it('holds every line long enough to read, or says why it cannot', () => {
+    const short = [];
+    caps.lines.forEach((l, n) => {
+      const last = l.words[l.words.length - 1].off;
+      const next = caps.lines[n + 1];
+      const room = next ? next.words[0].on - WORD_AHEAD - last : Infinity;
+      const held = l.out - last;
+      if (room >= HOLD + MIN_OUT) {
+        expect(held).toBeGreaterThanOrEqual(HOLD - 1e-4);
+        expect(l.out - l.words[0].on).toBeGreaterThanOrEqual(MIN_UP - 1e-4);
+      } else {
+        expect(held).toBeCloseTo(room - MIN_OUT, 3);
+        short.push(`${l.clip}-${l.line}`);
+      }
+      expect(held).toBeGreaterThanOrEqual(0.5);
+    });
+    expect(short).toEqual(['n1-4', 'n2-1', 'n3-1', 'n4-1', 'n6-1']);
+  });
+
+  it('puts a line wider than 55 percent of the frame on two rows, broken at a full stop or a comma', () => {
+    const two = caps.lines.filter((l) => l.rows.length === 2).map((l) => `${l.clip}-${l.line}`);
+    expect(two).toEqual(['n3-3', 'n4-2', 'n5-2', 'n6-3']);
+    for (const l of caps.lines) if (l.rows.length === 2) expect(/[.,]$/.test(l.rows[0])).toBe(true);
   });
 });
 

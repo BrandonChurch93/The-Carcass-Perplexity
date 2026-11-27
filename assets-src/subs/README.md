@@ -43,7 +43,15 @@ The colours are a list for each place, picked by film time from `places` in the 
 
 A word's film time is `first / fps` of its line in the cut list, plus the word's time in the take, less the second of the take the line was cut from (its record under `audio/records/` says "Take N from A s"). The first word of a line is the exception: the kept line was cut 0.03 s before the first 0.01 s window that holds sound, so the first word begins at the end of that window, wherever the alignment put it. A word shows 0.04 s before its time.
 
-A line leaves 0.80 s after its last word and fades over 0.55 s. Where the next line is nearer than that, it holds less and fades faster, and is gone when the next one's haze begins.
+A second exception: the alignment gives the hiss of an s to the gap before its word. In running speech (a gap of 0.30 s or less) a word that begins with s starts to show as the word before it ends. `prove` checks these words against the start of their hiss, the words after a pause against the rise out of the silence, and the rest against the nearest rise in the sound, which is a weak measure inside running speech.
+
+A line stands 0.90 s after its last word ends, and 1.40 s in all from its first word at the least, then fades over 0.55 s. It is always gone 0.04 s before the next line's first word, when that word begins to show, and before the cut to the next place. Where the next line is nearer than the hold and the fade need, the fade is shortened to 0.20 s and the hold takes what is left. A line may still be fading while the haze of the next one comes in.
+
+A line wider than 55 percent of the frame goes on two rows. The break is at a full stop or a comma where the line has one that fits, and of those the one that leaves the rows most alike in width.
+
+## The haze
+
+Thick close to the words, then a long thinning out with no edge. Each line has an outline of its own: a still, large pattern and a few lobes seeded by the line's id, fixed in time. Only the colour inside it drifts.
 
 ## What is the same at every size and rate
 
