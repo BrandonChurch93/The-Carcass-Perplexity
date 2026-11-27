@@ -1,0 +1,49 @@
+{
+  "round": 30,
+  "unit": "film",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-27 08:08 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-10.png",
+        "where": "frames 9535-9546 transitioning to set-A-04.png frame 9589",
+        "what": "the ground-to-orbit climb passes through a 100% overcast cloud deck with a small ragged opening over dark water, then 0.7 seconds later in frame 9589 the entire cloud layer abruptly vanishes to reveal a cloudless, much wider crater lake and bare mountains, reading as a pop and swap of picture",
+        "fix": "keep cloud density and crater scale continuous through the transition so the same broken cloud deck recedes naturally below the camera instead of disappearing"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "frames 9589 to 11608 (the ground-to-orbit climb)",
+        "what": "the ascent speed changes abruptly, rocketing from a single crater lake (9589) to full planetary curvature (9841) in about four seconds, then stalling to a near standstill from 10094 to 11608 across twenty-five seconds, breaking the pull of an unbroken climb",
+        "fix": "use a single continuous logarithmic ease-out curve for the camera altitude so the climb accelerates smoothly through the atmosphere and settles gradually into orbit without a sudden brake"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "frames 10094 to 11608 (clouds and cyclone over the planet)",
+        "what": "across twenty-five seconds of orbital hold, the spiral cyclone in the lower right and the cloud patterns across the ocean stay completely frozen in shape and position, making the planet read like a still picture under a moving shadow",
+        "fix": "animate slow, continuous rotation in the cyclone and subtle drift and shearing in the cloud layers throughout the orbital hold"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "frames 9841 to 11103 (the continental landmass)",
+        "what": "once at orbital height, the landmass stops reading as real terrain from orbit and looks like a flat stylized skeleton illustration mapped onto a globe",
+        "fix": "integrate the bone-like ridges into realistic geological relief, coastal bathymetry, and atmospheric haze so the form emerges from plausible planetary topography"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-09.png",
+        "where": "frames 8299 to 8304 (the shaggy creature walking in the ice cave)",
+        "what": "while the camera tracks smoothly forward down the cave, the creature holds nearly the same stance with minimal visible weight shift or leg articulation across the six-frame run, reading slightly stiff",
+        "fix": "add clearer shoulder and hip weight transfer, foot lift, and secondary fur swing so the gait reads as heavy and grounded"
+      }
+    ]
+  }
+}

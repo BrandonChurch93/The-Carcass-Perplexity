@@ -1,0 +1,35 @@
+{
+  "round": 30,
+  "unit": "film",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-27 08:07 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the entire orbital frame across frames 11623 to 11743",
+        "what": "the final two seconds read as a completely frozen still picture with no visible camera drift, planet rotation, cyclone spin, cloud drift, or change in the glowing chest heart",
+        "fix": "add slow continuous orbital camera drift or planet rotation, rotate the cyclone and drift the cloud bands, and give the orange glow in the ribcage a subtle organic pulse"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the wading animals along the midground shoreline",
+        "what": "the creatures stay planted on the exact same spots for the entire eight-second loop with only slight neck bobs and no stepping, turning, or weight shifts, so they read like fixed models",
+        "fix": "give individual creatures staggered weight shifts, occasional steps with settled feet, turns, or foraging movements so the group reads as living animals"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03.png",
+        "where": "the mist and cloud bank behind the giant bone arches",
+        "what": "the low mist and cloud formations remain virtually static across all 480 frames while the foreground tide washes in and out",
+        "fix": "add a slow seamless drift to the low coastal mist and cloud layers across the loop"
+      }
+    ]
+  }
+}

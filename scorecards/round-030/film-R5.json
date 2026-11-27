@@ -1,0 +1,28 @@
+{
+  "round": 30,
+  "unit": "film",
+  "pack": "R5",
+  "family": "gpt",
+  "answered": "2026-11-27 08:06 UTC",
+  "answer": {
+    "critic": "R5",
+    "score": 8,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the daylight orbital wide, across the torso and lower body",
+        "what": "the skeleton reads at once, and the crater lake, coastal ribs and red flats have recognizable anchors, but the lava basin and steaming terraces are hard to place individually in the brown relief",
+        "fix": "carry the lava basin's dark escarpment and branching orange runoff, and the terraces' pale stepped rims and green pools, through to the daylight wide as separate landmarks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the pink flats, from the center channels to the far horizon",
+        "what": "the nearly uniform pink-gray light and soft horizon flatten the middle distance, so this location feels less grounded than the neighboring lava basin and terraces",
+        "fix": "give the channels and pale crust different wetness and reflectance, and retain some middle-distance relief before the fog takes over"
+      }
+    ]
+  }
+}

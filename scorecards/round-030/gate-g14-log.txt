@@ -1,0 +1,8 @@
+
+> the-carcass@0.1.0 gate
+> node tools/gate.mjs --phase 6 --only G14
+
+G14 pass  The seam of the loop
+gate phase 6 (only G14): pass. 1 of 1 passed, 0 failed, 0 not built.
+gate: out/work/gate/phase-6-only.json
+ENDED 0
