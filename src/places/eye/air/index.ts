@@ -26,7 +26,7 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: Four; b: Four; c: Four; d?: Four }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1] },
-  low: { a: [600, 3.0, 70, 420], b: [0.4, 0.6, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
+  low: { a: [600, 4.0, 45, 420], b: [0.9, 1.1, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
   edge: { a: [560, 2.4, 34, 320], b: [0.25, 1.5, 0.75, 0.4], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   // The last shot is seen from the water and then from straight above. From the water it is a low torn bank at the foot of the far wall.
@@ -34,7 +34,7 @@ const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: F
   // From above the same bank has to be seen down through a dozen metres of itself and not along a thousand, and what the lens holds is
   // the shallows and the pool, not the foot of the wall: so as the camera climbs the bank is drawn thicker and stands farther out over
   // the shallows, in heaps as deep as they are long (d.w), without the threads that would lie as white strokes.
-  over: { a: [560, 2.0, 4.5, 800], b: [0.6, 60, 1.0, 0], c: [0, 0, 0.1, 0], d: [0, 1, 0, 1] },
+  over: { a: [560, 2.0, 5, 800], b: [0.6, 14, 0.8, 0], c: [0, 0, 0.1, 0], d: [0, 1, 0, 1] },
 };
 
 // The heights of the camera (metres over the water) between which the bank of the last shot takes the form it has from above.
@@ -106,19 +106,23 @@ vec3 farShore() {
 // on the water and not round the middle of the ring, so that no heap is drawn out toward that middle.
 vec2 lie;
 
-vec3 mistForm(vec3 q) {
+// The two widest reads of the form are kept from the place itself for the look toward the sun, forty-five metres on: over that way they do not change.
+vec4 keptBig;
+float keptTongue;
+
+vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
   if (q.z > uMistA.x || q.z < 0.0) return vec3(0.0);
   // The edge of the sheet on the water is not one line: it goes out in tongues, and the same tongue is one all the way from the wall.
   float reach = uMistA.x;
   float tongue = 1.0;
   if (uMistD.x > 0.0) {
-    // uMistD.z draws the tongues closer together (a long lens holds only a short run of shore) and leaves the water bare between them.
-    tongue = smoothstep(0.3, 0.68, texture(tMistNoise, vec3(q.x / (520.0 / (1.0 + 2.0 * uMistD.z)) + 0.6, 0.21, 0.25 + uTime * 0.004)).b);
-    reach *= mix(1.0, 0.1 + 0.9 * tongue, uMistD.x);
-    tongue = mix(1.0, tongue, uMistD.z);
+    reach *= mix(1.0, 0.1 + 0.9 * tongueRead, uMistD.x);
+    tongue = mix(1.0, tongueRead, uMistD.z);
   }
   float near = 1.0 - q.z / reach;
-  vec4 big = texture(tMistNoise, vec3(lie.x / 1300.0, lie.y / 1300.0, uTime * 0.0042));
+  // Where the widest read already leaves the water bare, the next is not made.
+  float bare = mix(-0.25, 1.0, near) - uMistC.z + uMistB.z * (2.6 * (big.g - 0.5) + 0.6);
+  if (bare <= 0.0) return vec3(0.0);
   vec4 mid = texture(tMistNoise, vec3(lie.x / 410.0 + 0.31, lie.y / 900.0 + 0.17, 0.5 + uTime * 0.0085));
   float cover = smoothstep(0.0, 0.55, mix(-0.25, 1.0, near) - uMistC.z + uMistB.z * (2.6 * (big.g - 0.5) + 1.2 * (mid.a - 0.5)));
   if (uMistC.y > 0.0) cover *= smoothstep(uMistC.y, 0.3 * uMistC.y, abs(q.x - uMistC.x));
@@ -130,6 +134,16 @@ vec3 mistForm(vec3 q) {
   // Where uMistD.y asks, the sheet thins all the way out from the wall, so that it has no outer edge to see from above.
   float thins = mix(1.0, pow(clamp(near, 0.0, 1.0), 1.6), uMistD.y);
   return vec3(uMistB.x * cover * thins * tongue * exp(-q.y / sheetTop), top, cover * ramp * stands);
+}
+
+vec3 mistForm(vec3 q) {
+  if (q.z > uMistA.x || q.z < 0.0) return vec3(0.0);
+  // Past the ends of a bank that has ends there is nothing to read.
+  if (uMistC.y > 0.0 && abs(q.x - uMistC.x) >= uMistC.y) return vec3(0.0);
+  // uMistD.z draws the tongues closer together (a long lens holds only a short run of shore) and leaves the water bare between them.
+  keptTongue = uMistD.x > 0.0 ? smoothstep(0.3, 0.68, texture(tMistNoise, vec3(q.x / (520.0 / (1.0 + 2.0 * uMistD.z)) + 0.6, 0.21, 0.25 + uTime * 0.004)).b) : 1.0;
+  keptBig = texture(tMistNoise, vec3(lie.x / 1300.0, lie.y / 1300.0, uTime * 0.0042));
+  return mistShape(q, keptBig, keptTongue);
 }
 
 // How thick the mist is at q. h is how high the point stands in the bank, 0 at the water and 1 at its top.
@@ -151,7 +165,7 @@ float mistAt(vec3 q, out float h) {
     h /= heap;
     float body = pow(clamp(1.0 - h - 0.45 * (fine.b - 0.3) * smoothstep(0.15, 0.9, h), 0.0, 1.0), 1.6);
     // What leaves the top: thin threads that stand up out of the bank and lean over as they go.
-    float thread = smoothstep(0.55, 0.8, texture(tMistNoise, vec3(lie.x / 64.0 + 0.25 * h, q.y / 170.0 - uTime * 0.007, lie.y / mix(800.0, 90.0, uMistD.w) + uTime * 0.003)).g + 0.3 * (fine.g - 0.5));
+    float thread = uMistB.w <= 0.0 ? 0.0 : smoothstep(0.55, 0.8, texture(tMistNoise, vec3(lie.x / 64.0 + 0.25 * h, q.y / 170.0 - uTime * 0.007, lie.y / mix(800.0, 90.0, uMistD.w) + uTime * 0.003)).g + 0.3 * (fine.g - 0.5));
     d += uMistB.y * form.z * smoothstep(0.2, 0.9, heap) * (body + uMistB.w * thread * smoothstep(3.0, 0.9, h) * smoothstep(0.3, 0.9, h));
   }
   return d;
@@ -263,7 +277,7 @@ void main() {
         if (sun > 0.01) {
           vec3 sq = vec3(dot(uSunDir.xz, vec2(-out2.y, out2.x)), uSunDir.y, -dot(uSunDir.xz, out2));
           lie += 45.0 * mix(sq.xz, vec2(dot(uSunDir.xz, vec2(-toWall.y, toWall.x)), -dot(uSunDir.xz, toWall)), uMistD.w);
-          vec3 toward = mistForm(q + sq * 45.0);
+          vec3 toward = mistShape(q + sq * 45.0, keptBig, keptTongue);
           float between = toward.x + uMistB.y * toward.z * smoothstep(1.0, 0.3, (q.y + sq.y * 45.0) / max(toward.y, 0.5));
           sun *= exp(-1.5 * between) * mix(0.7, 1.0, smoothstep(0.1, 1.0, h));
         }
