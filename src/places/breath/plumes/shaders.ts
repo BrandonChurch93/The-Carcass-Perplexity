@@ -135,7 +135,7 @@ void main() {
   float open = vLight.y;
   // Wet flesh: wine at the limb, crimson along it, and at the very end bleached to a pale pink that the light goes through. A lock
   // here and there is browner or more purple than its neighbours.
-  vec3 wine = mix(vec3(0.085, 0.009, 0.024), vec3(0.24, 0.02, 0.05), tone * tone);
+  vec3 wine = mix(vec3(0.085, 0.014, 0.027), vec3(0.24, 0.03, 0.055), tone * tone);
   wine = mix(wine, wine.r * vec3(1.0, 0.3, 0.16), smoothstep(0.78, 0.95, own) * 0.7);
   wine = mix(wine, wine.r * vec3(0.85, 0.1, 0.3), smoothstep(0.2, 0.05, own) * 0.6);
   float end = smoothstep(0.6, 1.0, s) * (0.3 + 0.7 * smoothstep(0.7, 1.2, tone + 0.5 * own));
@@ -154,19 +154,19 @@ void main() {
   float through = (0.06 + 0.94 * against * against) * sunLeft * sqrt(sunLeft) * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
   // Toward its end a lock is thin and the sun is through all of it: there it glows orange red.
   float thin = smoothstep(0.3, 1.0, s);
-  vec3 blood = mix(mix(vec3(0.42, 0.008, 0.035), vec3(0.8, 0.075, 0.02), thin), vec3(0.9, 0.3, 0.26), 0.25 * end);
-  colour += blood * uSunColour * (0.24 * (0.3 + 2.2 * thin * thin) * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.6 * mass);
+  vec3 blood = mix(mix(vec3(0.42, 0.008, 0.035), vec3(0.8, 0.19, 0.055), thin), vec3(0.9, 0.3, 0.26), 0.25 * end);
+  colour += blood * uSunColour * (0.5 * (0.5 + 0.5 * smoothstep(1.5, 3.0, vTint.z)) * (0.3 + 2.2 * thin * thin) * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.75 * mass);
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
-  float line = pow(max(1.0 - th * th, 0.0), 60.0);
-  float beads = 0.35 + 0.65 * smoothstep(0.45, 0.8, vnoise(vec2(s * 23.0 + own * 91.0, own * 37.0)));
-  colour += uSunColour * vec3(1.0, 0.86, 0.72) * (0.5 * line * beads * lit * sunLeft * (1.0 - 0.6 * dead)) * (1.0 - 0.7 * mass);
+  float line = pow(max(1.0 - th * th, 0.0), 22.0);
+  float beads = 0.55 + 0.45 * smoothstep(0.35, 0.8, vnoise(vec2(s * 9.0 + own * 91.0, own * 37.0)));
+  colour += uSunColour * vec3(1.0, 0.86, 0.72) * (0.22 * line * beads * lit * sunLeft * (1.0 - 0.6 * dead)) * (1.0 - 0.7 * mass);
   // And the film of water on it gives back the bright air round it, most at its edges: its dark is wine and never black.
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   float f = 0.03 + 0.97 * pow(1.0 - sqrt(max(1.0 - edge, 0.0)), 4.0);
-  colour += min(skyRadiance(r), vec3(1.2)) * (f * 0.12 * open * (0.1 + 0.9 * skyLeft * skyLeft) * (1.0 - 0.7 * dead));
+  colour += min(skyRadiance(r), vec3(1.2)) * (f * 0.12 * open * (0.1 + 0.9 * skyLeft * skyLeft) * (1.0 - 0.7 * dead) * (1.0 - 0.75 * mass));
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 

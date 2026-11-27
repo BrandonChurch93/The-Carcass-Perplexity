@@ -121,7 +121,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   const bushPhase = rng.range(0, 6.283);
   const leanDir: V3 = [Math.sin(lean), 0, -Math.cos(lean)];
   // Far off a strip is thinner than a pixel: there the bush is grown of fewer, thicker strips, which read the same from there.
-  const coarse = close ? 1 : middle ? 2.2 : 4.5;
+  const coarse = close ? 1 : middle ? (habit === 'fountain' ? 1.25 : 2.2) : 4.5;
 
   const tA: number[] = [];
   const tB: number[] = [];
@@ -154,8 +154,8 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     for (let i = 0; i <= steps; i++) {
       const v = i / steps;
       const w = v ** power;
-      const a = kink * Math.sin(v * 7.3 + w1) * v;
-      const b = kink * Math.sin(v * 5.1 + w2) * v;
+      const a = kink * Math.sin(v * 7.3 + w1) * (0.3 + 0.7 * v);
+      const b = kink * Math.sin(v * 5.1 + w2) * (0.3 + 0.7 * v);
       const t = unit([d0[0] + (d1[0] - d0[0]) * w + s1[0] * a + s2[0] * b, d0[1] + (d1[1] - d0[1]) * w + s1[1] * a + s2[1] * b, d0[2] + (d1[2] - d0[2]) * w + s1[2] * a + s2[2] * b]);
       if (i > 0) {
         p = [p[0] + (t[0] * length) / steps, p[1] + (t[1] * length) / steps, p[2] + (t[2] * length) / steps];
@@ -185,7 +185,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       side = unit([side[0] - t[0] * d, side[1] - t[1] * d, side[2] - t[2] * d]);
       const over = cross(t, side);
       if (i > 0) along += c.length / (rings - 1);
-      const r = (thin + (thick - thin) * (1 - v) ** 1.6) * (1 + 0.14 * Math.sin(v * 23 + seed) + 0.08 * Math.sin(v * 61 + seed * 2)) * (1 + 1.3 * flesh * Math.exp(-v * 7));
+      const r = (thin + (thick - thin) * (1 - v) ** 1.6) * (1 + 0.14 * Math.sin(v * 23 + seed) + 0.08 * Math.sin(v * 61 + seed * 2)) * (1 + 2.1 * flesh * Math.exp(-v * 6));
       for (let k = 0; k < sides; k++) {
         const a = (k / sides) * Math.PI * 2;
         const nx = side[0] * Math.cos(a) + over[0] * Math.sin(a);
@@ -237,7 +237,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   const comb = habit === 'sweep' ? 0.42 : habit === 'hang' ? 0.12 : 0.1;
   const wet = habit === 'hang' ? 1.5 : 1;
   /** Where a fork is heading by its end: on beside its limb, combed, and hanging by `hang`. */
-  const heading = (t: V3, d0: V3, hang: number): V3 => unit([0.62 * t[0] + 0.3 * d0[0] + comb * leanDir[0], 0.62 * t[1] + 0.3 * d0[1] - hang * wet, 0.62 * t[2] + 0.3 * d0[2] + comb * leanDir[2]]);
+  const heading = (t: V3, d0: V3, hang: number): V3 => unit([0.62 * t[0] + 0.3 * d0[0] + comb * leanDir[0] + rng.range(-0.22, 0.22), 0.62 * t[1] + 0.3 * d0[1] - hang * wet + rng.range(-0.15, 0.15), 0.62 * t[2] + 0.3 * d0[2] + comb * leanDir[2] + rng.range(-0.22, 0.22)]);
   /** The way a fork leaves a limb: forward, at a narrow angle. */
   const leave = (t: V3, lo: number, hi: number): V3 => {
     const theta = rng.range(lo, hi);
@@ -251,7 +251,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   const half3 = tall * 0.0007;
   /** The branchlets along a limb from `v0` of the way, each with its filaments. `scale`: how long they are against the bush's longest. */
   const feather = (c: Path, v0: number, phase: number, scale: number, tone0: number): void => {
-    const spacing = 0.016 * tall * coarse;
+    const spacing = 0.013 * tall * coarse;
     const n = Math.max(2, Math.round((c.length * (1 - v0)) / spacing));
     for (let i = 0; i <= n; i++) {
       // The last one is the end of the limb itself, which thins into a branchlet.
@@ -283,8 +283,8 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   };
 
   const full = bush.full ?? 1;
-  const stalks = Math.max(3, Math.round((habit === 'fountain' ? (close ? 30 : middle ? 26 : 13) : habit === 'hang' ? 9 : close ? 11 : middle ? 9 : 7) * full));
-  const spread = bush.spread ?? (habit === 'fountain' ? Math.PI : habit === 'hang' ? 0.5 : 0.95);
+  const stalks = Math.max(3, Math.round((habit === 'fountain' ? (close ? 34 : middle ? 32 : 13) : habit === 'hang' ? 9 : close ? 11 : middle ? 9 : 7) * full));
+  const spread = bush.spread ?? (habit === 'fountain' ? Math.PI : habit === 'hang' ? 0.6 : 0.95);
   for (let m = 0; m < stalks; m++) {
     // From the crown of the bush to its skirt: the first rise and bend over only at their ends, the last go out low and hang.
     const rank = Math.min(1, Math.max(0, (m + rng.range(-0.3, 0.3)) / (stalks - 1)));
@@ -294,32 +294,32 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     let length: number;
     let turn: number;
     if (habit === 'sweep') {
-      el0 = 1.3 - 1.0 * rank + rng.range(-0.1, 0.1);
-      el1 = -0.35 - 0.55 * rank + rng.range(-0.2, 0.15);
+      el0 = 1.3 - 0.78 * rank + rng.range(-0.1, 0.1);
+      el1 = -0.3 - 0.45 * rank + rng.range(-0.2, 0.15);
       length = tall * (1.22 - 0.3 * rank) * rng.range(0.8, 1.08);
       turn = 0.3;
     } else if (habit === 'fountain') {
-      el0 = 1.4 - 0.65 * rank + rng.range(-0.12, 0.1);
-      el1 = -0.55 - 0.55 * rank + rng.range(-0.25, 0.15);
-      length = tall * (1.05 - 0.35 * rank) * rng.range(0.7, 1.1);
+      el0 = 1.4 - 0.75 * rank + rng.range(-0.12, 0.1);
+      el1 = -0.7 - 0.5 * rank + rng.range(-0.25, 0.15);
+      length = tall * (0.95 - 0.3 * rank) * rng.range(0.7, 1.1);
       turn = 0.85;
     } else {
-      el0 = 1.12 - 0.3 * rank + rng.range(-0.1, 0.1);
-      el1 = -0.75 - 0.3 * rank + rng.range(-0.15, 0.15);
-      length = extent * (1.1 - 0.3 * rank) * rng.range(0.8, 1.1);
+      el0 = 1.24 - 0.22 * rank + rng.range(-0.1, 0.1);
+      el1 = -0.75 - 0.15 * rank + rng.range(-0.15, 0.15);
+      length = extent * (1.1 - 0.15 * rank) * rng.range(0.85, 1.1);
       turn = 0.6;
     }
     const az0 = lean + spread * k + rng.range(-0.15, 0.15);
     const az1 = lean + turn * spread * k + rng.range(-0.15, 0.15);
     const d0: V3 = [Math.sin(az0) * Math.cos(el0), Math.sin(el0), -Math.cos(az0) * Math.cos(el0)];
     const d1: V3 = [Math.sin(az1) * Math.cos(el1), Math.sin(el1), -Math.cos(az1) * Math.cos(el1)];
-    const out = 0.04 * tall * rng.next();
+    const out = 0.085 * tall * Math.sqrt(rng.next());
     const from: V3 = [bush.x + Math.sin(az0) * out, bush.y + 0.02 * tall, bush.z - Math.cos(az0) * out];
     const phase = rng.range(0, 6.283);
     const tone0 = rng.range(0.25, 0.75);
-    const stalk = path(from, d0, d1, length, close ? 26 : middle ? 16 : 10, habit === 'fountain' ? rng.range(1.2, 1.9) : habit === 'hang' ? rng.range(2.0, 3.0) : rng.range(1.5, 2.3), rng.range(0.1, 0.22), 0, 1, true);
+    const stalk = path(from, d0, d1, length, close ? 26 : middle ? 16 : 10, habit === 'fountain' ? rng.range(0.9, 1.3) : habit === 'hang' ? rng.range(2.0, 3.0) : rng.range(1.4, 2.1), rng.range(0.1, 0.22), 0, 1, true);
     const thick = tall * 0.013 * (0.75 + 0.5 * (length / tall)) * rng.range(0.85, 1.15);
-    tube(stalk, thick, tall * 0.0012, 1, phase, close ? 9 : middle ? 6 : 4);
+    tube(stalk, thick, tall * 0.0012, habit === 'fountain' ? 0.35 : 1, phase, close ? 9 : middle ? 6 : 4);
     // Its branches: none on the bare foot of the stalk, the longest a third of the way up, shorter to the end, as a feather's.
     const bare = habit === 'hang' ? rng.range(0.3, 0.42) : rng.range(0.06, 0.11);
     const gap = (close ? 0.06 : middle ? 0.085 : 0.13) * (habit === 'fountain' ? 1.3 : 1) * rng.range(0.85, 1.15);
@@ -343,7 +343,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       feather(branch, 0.06, phase, 0.55 + 0.45 * shape, tone0);
     }
     // Past its middle the stalk is thin and carries branchlets itself, to its end.
-    feather(stalk, habit === 'hang' ? 0.55 : 0.35, phase, 0.8, tone0);
+    feather(stalk, habit === 'hang' ? 0.55 : habit === 'fountain' ? 0.12 : 0.35, phase, 0.8, tone0);
   }
   // The toes of the holdfast: they leave it low, thick as a wrist, and go into the cracks of the rock.
   const toes = close ? 12 : middle ? 6 : 0;
@@ -395,7 +395,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     const long = Math.hypot(tB[i * 4] as number, tB[i * 4 + 1] as number, tB[i * 4 + 2] as number);
     // The area a strip hides, seen from the side, for each cubic metre of its cell: the share of light a metre of path through it takes.
     const k = (iz * CELLS + iy) * CELLS + ix;
-    dense[k] = (dense[k] as number) + (long * 1.5 * (tA[i * 4 + 3] as number)) / (cell * cell * cell);
+    dense[k] = (dense[k] as number) + (long * (habit === 'fountain' ? 3.0 : 1.5) * (tA[i * 4 + 3] as number)) / (cell * cell * cell);
   }
   const denseAt = (x: number, y: number, z: number): number => {
     const fx = (x - lox) / cell - 0.5;
@@ -444,7 +444,9 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     // A drop gathers at an end that hangs, with air under it.
     if (e[1] > -0.3 || y < floor(x, z) + 0.25) continue;
     const pick = <T extends number[]>(from: number[]): T => [from[at] as number, from[at + 1] as number, from[at + 2] as number, from[at + 3] as number] as T;
-    tips.push({ a: pick(tA), b: pick(tB), c: pick(tC), sway: pick(tSway), tint: pick(tTint), under: left(x, y - 0.03, z, 0, -1, 0) });
+    // On a swept bush the drops that are seen hang from its lee side, past the holdfast.
+    const lee = ((x - bush.x) * leanDir[0] + (z - bush.z) * leanDir[2]) / extent;
+    tips.push({ a: pick(tA), b: pick(tB), c: pick(tC), sway: pick(tSway), tint: pick(tTint), under: left(x, y - 0.03, z, 0, -1, 0) * (habit === 'sweep' ? smooth(0.15, 0.45, lee) : 1) });
   }
   for (let i = 0; i < stemCount; i++) {
     const x = stemPosition[i * 3] as number;
