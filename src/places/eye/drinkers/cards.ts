@@ -100,22 +100,28 @@ void main() {
 
 const CUT = /* glsl */ `
 uniform sampler2D tRelief;
+uniform vec2 uTexel;
 varying vec2 vUv;
-float coverAt(vec2 uv) {
-  return texture2D(tRelief, uv, -2.5).r;
+// Every read of a sheet names its level. The level is taken once, at the top of main, above the first branch: a read that leaves the level to
+// the renderer below a discard or a branch does not come out the same twice.
+float levelOf(vec2 uv) {
+  return log2(max(max(length(dFdx(uv) / uTexel), length(dFdy(uv) / uTexel)), 1e-6));
+}
+float coverAt(vec2 uv, float level) {
+  return textureLod(tRelief, uv, max(level - 2.5, 0.0)).r;
 }`;
 
 const DEPTH = /* glsl */ `
 ${CUT}
 void main() {
-  if (coverAt(vUv) < 0.16) discard;
+  float level = levelOf(vUv);
+  if (coverAt(vUv, level) < 0.16) discard;
   gl_FragColor = vec4(0.0);
 }`;
 
 const FRAGMENT = /* glsl */ `
 uniform sampler2D tSkin;
 uniform vec4 uSheet;
-uniform vec2 uTexel;
 varying vec3 vWorld;
 varying vec3 vAxis;
 varying vec3 vFace;
@@ -126,28 +132,29 @@ ${CUT}
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
-  float h = coverAt(vUv);
+  float level = levelOf(vUv);
+  float h = coverAt(vUv, level);
   if (h < 0.16) discard;
-  vec3 skin = texture2D(tSkin, vUv, -2.5).rgb;
+  vec3 skin = textureLod(tSkin, vUv, max(level + -2.5, 0.0)).rgb;
   // The form of the body, from the relief read soft: it turns away toward every outline.
   // Seen from behind and close, only the great forms are read: the barrel, the hips, the root of the neck.
   float broad = uSheet.y == 0.0 ? 1.0 : 0.0;
   vec2 e = uTexel * mix(12.0, 44.0, broad);
   float lod = mix(4.0, 6.0, broad);
-  float hx = (texture2D(tRelief, vUv + vec2(e.x, 0.0), lod).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), lod).r) * mix(1.0, 0.5, broad);
-  float hy = (texture2D(tRelief, vUv + vec2(0.0, e.y), lod).r - texture2D(tRelief, vUv - vec2(0.0, e.y), lod).r) * mix(1.0, 0.5, broad);
-  float soft = texture2D(tRelief, vUv, 3.0).r;
+  float hx = (textureLod(tRelief, vUv + vec2(e.x, 0.0), max(level + lod, 0.0)).r - textureLod(tRelief, vUv - vec2(e.x, 0.0), max(level + lod, 0.0)).r) * mix(1.0, 0.5, broad);
+  float hy = (textureLod(tRelief, vUv + vec2(0.0, e.y), max(level + lod, 0.0)).r - textureLod(tRelief, vUv - vec2(0.0, e.y), max(level + lod, 0.0)).r) * mix(1.0, 0.5, broad);
+  float soft = textureLod(tRelief, vUv, max(level + 3.0, 0.0)).r;
   vec3 axis = normalize(vAxis);
   vec3 face = normalize(vFace);
   // The hide over the form, from the relief read sharp: the ribs, the points of the hip and the shoulder, the folds at the neck and the knee,
   // and the lie of the short coat. Each fold is dark in its hollow.
   vec2 e2 = uTexel * 2.0;
-  float fx = texture2D(tRelief, vUv + vec2(e2.x, 0.0), 0.5).r - texture2D(tRelief, vUv - vec2(e2.x, 0.0), 0.5).r;
-  float fy = texture2D(tRelief, vUv + vec2(0.0, e2.y), 0.5).r - texture2D(tRelief, vUv - vec2(0.0, e2.y), 0.5).r;
+  float fx = textureLod(tRelief, vUv + vec2(e2.x, 0.0), max(level + 0.5, 0.0)).r - textureLod(tRelief, vUv - vec2(e2.x, 0.0), max(level + 0.5, 0.0)).r;
+  float fy = textureLod(tRelief, vUv + vec2(0.0, e2.y), max(level + 0.5, 0.0)).r - textureLod(tRelief, vUv - vec2(0.0, e2.y), max(level + 0.5, 0.0)).r;
   // A back seen close from behind is a short coat lying smooth over the spine and the hips: its folds are faint.
   float creased = uSheet.y == 0.0 ? 0.14 : 0.3;
   // The picture's own shading of the ribs is not the hide's colour: half of it is taken out, and each animal has a coat of its own tone, with dust and marks in it.
-  skin = mix(skin, texture2D(tSkin, vUv, 4.5).rgb, uSheet.y == 0.0 ? 0.2 : 0.55);
+  skin = mix(skin, textureLod(tSkin, vUv, max(level + 4.5, 0.0)).rgb, uSheet.y == 0.0 ? 0.2 : 0.55);
   float coat = 0.6 * vnoise(vUv * vec2(9.0, 6.0) + vOwn * 40.0) + 0.4 * vnoise(vUv * vec2(70.0, 34.0) + vOwn * 17.0);
 
   // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the coat is one pale tan.
@@ -162,7 +169,7 @@ void main() {
     skin *= 1.0 - 0.3 * spine * (0.55 + 0.45 * sin(vUv.y * 260.0));
   }
   skin *= mix(vec3(0.78, 0.76, 0.74), vec3(1.12, 1.08, 1.02), vOwn) * (0.84 + 0.32 * coat);
-  float fold = clamp(1.0 + 5.0 * creased * (texture2D(tRelief, vUv, 0.0).r - texture2D(tRelief, vUv, 2.5).r), 0.45, 1.35);
+  float fold = clamp(1.0 + 5.0 * creased * (textureLod(tRelief, vUv, max(level + 0.0, 0.0)).r - textureLod(tRelief, vUv, max(level + 2.5, 0.0)).r), 0.45, 1.35);
   vec3 n = normalize(face * 0.42 - axis * (hx + 2.2 * creased * fx) - vec3(0.0, 1.0, 0.0) * (hy + 2.2 * creased * fy));
   vec3 v = normalize(cameraPosition - vWorld);
   // Wet and dark below, where it has stood in the lake; dry and dusty above.
@@ -172,18 +179,20 @@ void main() {
   float occ = (0.5 + 0.5 * smoothstep(0.15, 0.75, soft)) * fold;
   // Far off in the shade of the evening the herd is pale: tan going to grey.
   if (uShade.w > 0.1) {
-    albedo = mix(albedo, vec3(0.3, 0.22, 0.17), 0.75);
+    albedo = mix(albedo, vec3(0.5, 0.445, 0.385), 0.75);
     // The sky lights its back and leaves its belly in its own shade: a small solid thing, told by that alone.
-    albedo *= mix(0.45, 1.1, smoothstep(0.5, 0.95, above / (2.4 * vSize)));
+    albedo *= mix(0.6, 1.1, smoothstep(0.5, 0.95, above / (2.4 * vSize)));
   }
   // Its legs are dark with the mud and the water of the shore, to the knee.
-  albedo *= mix(0.4, 1.0, smoothstep(0.25, 0.62, above / (1.2 * vSize) + 0.12 * vnoise(vUv * 30.0 + vOwn * 9.0)));
+  albedo *= mix(0.5, 1.0, smoothstep(0.25, 0.62, above / (1.2 * vSize) + 0.12 * vnoise(vUv * 30.0 + vOwn * 9.0)));
   vec3 c = rigShade(vec3(vWorld.x, vWorld.y + 3.2, vWorld.z), n, v, albedo, mix(0.9, 0.55, wet), occ * mix(0.7, 1.0, smoothstep(0.0, 1.2, above)));
   // The pale gravel and the water under it throw the sky back up at it.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 * skyOpen(vWorld) / 3.14159);
   // The low sun in the short hair along every outline that is turned to it.
   float rim = smoothstep(0.5, 0.12, soft) * max(dot(n, uSunDir) + 0.35, 0.0);
   c += skin * uSunColour * (0.11 * rim * sunAt(vWorld));
+  // In the shade of the evening the bright sky where the sun went down still warms the side turned to it.
+  c += albedo * uSunColour * (0.022 * step(0.1, uShade.w) * max(dot(n, uSunDir) + 0.3, 0.0));
   if (uSheet.y == 0.0) {
     // Seen from behind it stands against the lit wall it watches: that wall's warm light lies along its outline, on the side the sun went down.
     vec3 wallLight = normalize(vec3(-v.x, 0.3, -v.z) - axis * 0.7);
