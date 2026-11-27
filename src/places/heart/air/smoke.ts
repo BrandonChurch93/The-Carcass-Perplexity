@@ -10,7 +10,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_STEAM = 16;
 export const MAX_BODIES = 13;
 /** March steps for each texel. Four texels with four offsets are averaged, so the march seen is four times as fine. */
-export const SMOKE_STEPS = { body: 8, most: 14, reach: 18, steam: 6 };
+export const SMOKE_STEPS = { body: 8, most: 13, reach: 16, steam: 6 };
 
 export const SMOKE_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -390,7 +390,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     // less than what lies under it, and to the same height.
     // A vent in the rock of the bank stands over no lava and takes none of this: it is pale. Only a vapour whose foot is on the lake does.
     float onLake = smoothstep(2.0, 0.6, A.y);
-    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + onLake * mix(0.3, 0.2, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) + roundLights(p));
+    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + (onLake > 0.0 ? onLake * mix(0.3, 0.2, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) : vec3(0.0)) + roundLights(p));
     float a = 1.0 - exp(-sigma * dt);
     lay(close, t, mid, albedo * light, a);
   }
