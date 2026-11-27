@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
 import { PLATE, PLATE_TURN, SEA } from '../land';
 import { RIG_GLSL } from '../shared/glsl';
+import { BAND_GLSL } from './arches';
 import type { NearMap } from './field';
 
 const SIZE = 512;
@@ -183,6 +184,12 @@ uniform sampler2D tCrust;
 uniform sampler2D tCrustN;
 uniform sampler2D tGravel;
 uniform sampler2D tGravelN;
+// A place in each square of a grid, for the slabs the crust lies in round the dead one.
+vec2 slabSite(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.xx + p3.yz) * p3.zy);
+}
 uniform vec3 uCrustMean;
 // The crust at the lens (land/crust, land/gravel): one repeat of it in metres, and the metres from its highest to its lowest.
 const float CRUST = 2.3;
@@ -392,6 +399,44 @@ void main() {
     damp *= 1.0 - shingle;
     inPad *= 1.0 - shingle;
   }
+  // Round the dead one the crust lies in slabs a stride or two across, each its own grey, parted by cracks that hold the dark. A slab's
+  // edge is rounded down into its crack.
+  float slabCrack = 0.0;
+  float slabOwn = 0.5;
+  float slabbed = hand * smoothstep(8.5, 5.0, length(p.xz - vec2(-27.3, 22.6))) * smoothstep(0.2, 0.4, over) * (1.0 - shingle);
+  vec2 slabWarp = texture2D(tRock, p.xz / 5.3 + 0.61).rg - 0.5;
+  if (slabbed > 0.0) {
+    vec2 sq = (p.xz + 1.3 * slabWarp) / 1.7 + 7.3;
+    vec2 ci = floor(sq);
+    vec2 cf = sq - ci;
+    float f1 = 9.0;
+    float f2 = 9.0;
+    vec2 r1 = vec2(0.0);
+    vec2 r2 = vec2(0.0);
+    vec2 id = ci;
+    for (int j = -1; j <= 1; j++) {
+      for (int i = -1; i <= 1; i++) {
+        vec2 g = vec2(float(i), float(j));
+        vec2 r = g + slabSite(ci + g) - cf;
+        float d = dot(r, r);
+        if (d < f1) {
+          f2 = f1;
+          r2 = r1;
+          f1 = d;
+          r1 = r;
+          id = ci + g;
+        } else if (d < f2) {
+          f2 = d;
+          r2 = r;
+        }
+      }
+    }
+    vec2 between = r2 - r1;
+    float gap = 1.7 * dot(0.5 * (r1 + r2), between) / max(length(between), 1e-4) + 0.05 * (crustHigh - 0.5);
+    slabCrack = slabbed * smoothstep(0.045, 0.012, gap);
+    slabOwn = slabSite(id + 3.1).x;
+    lean -= (slabbed * 0.9 * smoothstep(0.22, 0.03, gap)) * normalize(between + 1e-5);
+  }
   n = normalize(n - vec3(lean.x, 0.0, lean.y) * (1.0 - film));
   // The broken face of a plate shows its beds: level courses a hand thick, each with a shut dark foot under the lip of the one above.
   // Without them the face took only the grain's lean, and its wet sheen broke on that in white points: a fuzz, not stone.
@@ -421,6 +466,11 @@ void main() {
     // Clear of the tide it is dry travertine: pale, nearly half of the light that falls on it comes back.
     float pale = mix(clamp(dot(broad, vec3(0.3333)), 0.2, 0.4), 0.55 * mix(0.85 + 0.3 * a.r, 1.05, dryPad), smoothstep(0.3, 0.9, over + 0.3 * (a.a - 0.5)));
     rock = mix(rock, mix(crust, uCrustMean, 0.2) * (pale / dot(uCrustMean, vec3(0.3333))), hand);
+    // Round the dead one the crust stands dry and bleached: grey-cream, its darks lifted, as old travertine is.
+    float bright = dot(rock, vec3(0.3333));
+    rock = mix(rock, vec3(0.99, 1.0, 0.96) * mix(bright, pale, 0.45), 0.72 * dryPad * hand);
+    rock *= mix(1.0, mix(0.82, 1.14, slabOwn), slabbed);
+    rock = mix(rock, rock * vec3(0.3, 0.28, 0.27), slabCrack);
   }
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
@@ -452,9 +502,14 @@ void main() {
   // Pale dust lies in the hollows of the dry plate's grain.
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.55 * dryPad * smoothstep(0.5, 0.22, mn.b) * near);
   // It has run down the shelf from it and lies in the lows of the crust, darkest under the trunk.
-  vec2 fromBody = fromPad - vec2(0.3, 0.7);
-  float stain = exp(-dot(fromBody, fromBody) / 2.4) * smoothstep(0.15, 0.6, a.r + 0.7 * (1.0 - crustHigh)) + exp(-dot(fromBody, fromBody) / 0.9);
-  albedo = mix(albedo, albedo * vec3(0.3, 0.14, 0.11), 0.88 * clamp(stain, 0.0, 1.0));
+  // It lies along the body on the side of the rim's lens, from under the neck to the folded legs, and is soaked through under the chest.
+  vec2 fromBody = fromPad - vec2(-1.09, 0.33);
+  vec2 lain = vec2(0.979 * fromBody.x + 0.206 * fromBody.y, 0.206 * fromBody.x - 0.979 * fromBody.y);
+  float ragged = 0.6 + 0.8 * a.a;
+  float stain = exp(-(lain.x * lain.x / 1.7 + lain.y * lain.y / 0.5) / ragged) * smoothstep(0.0, 0.45, a.r + 0.7 * (1.0 - crustHigh)) + 0.9 * exp(-((lain.x - 0.15) * (lain.x - 0.15) / 1.3 + (lain.y - 0.3) * (lain.y - 0.3) / 0.45) / ragged);
+  // Under the mop the rock is damp and in its shade.
+  stain = max(stain, 0.45 * exp(-((lain.x + 1.55) * (lain.x + 1.55) + (lain.y - 0.25) * (lain.y - 0.25)) / 0.9));
+  stain = clamp(stain, 0.0, 1.0);
   // The dry ground is pale rough rock. Its picture is laid 12 m wide and is soft at the lens, so it gives only the broad lights and darks;
   // the grain of the rock at two sizes and grit a hand across (the shingle's tile, a third of its size) carry the rest.
   vec3 padSoft = mix(vec3(dot(padColour, vec3(0.3333))), padColour, 0.7);
@@ -463,6 +518,7 @@ void main() {
   padSoft *= mix(1.0, 0.4, padCrack) * mix(1.0, 0.78, padLow);
   albedo = mix(albedo, padSoft, inPad);
   albedo = mix(albedo, pebColour, shingle);
+  albedo = mix(albedo, albedo * vec3(0.2, 0.09, 0.08), 0.92 * stain);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
   // From the water's edge: an ankle's depth of bed with the rock's own sheen on it was a beach of wet sand along both banks.
   float under = smoothstep(0.01, -0.05, over);
@@ -471,7 +527,7 @@ void main() {
   albedo = mix(albedo, vec3(0.035, 0.045, 0.03), 0.85 * film);
   float rough = mix(mix(mix(0.9, 0.36, damp), 0.04, film), 0.95, under);
   // The shade of a hollow, of the gap between two plates, of the gap between two stones.
-  float occ = mix(0.4, 1.0, smoothstep(0.2, 0.52, field.b)) * vOcc * mix(1.0, 0.55 + 0.45 * smoothstep(0.1, 0.55, padHigh), inPad) * mix(1.0, 0.62 + 0.55 * crustHigh, hand);
+  float occ = mix(0.4, 1.0, smoothstep(0.2, 0.52, field.b)) * vOcc * mix(1.0, 0.55 + 0.45 * smoothstep(0.1, 0.55, padHigh), inPad) * mix(1.0, 0.62 + 0.55 * crustHigh, hand) * (1.0 - 0.45 * slabCrack);
   // The sun: every edge and every stone throws its own shadow down the shelf, baked in the map at its own fineness.
   float lit = mix(1.0, smoothstep(-0.07, -0.006, field.r - field.g), inNear) * sunSeen(land, p.y) * mix(1.0, crustLit, hand);
   // The shade of the drifting fog banks dims the sun and its glare; it is not the land's shadow and does not move the shadow's height.
@@ -491,6 +547,7 @@ void main() {
   float dry = smoothstep(0.45, 1.0, over + 0.3 * (a.g - 0.5));
   // Under the tide the water has the sheen and the glare, not the bed.
   float sheen = (1.0 - under) * (1.0 - inPad * smoothstep(0.25, 0.5, padHigh) * (1.0 - padLow)) * (1.0 - shingle) * max(mix(0.42 * damp, 1.0, film), (1.0 - 0.8 * dry) * (0.1 + 0.4 * smoothstep(0.35, 0.75, a.r + 0.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0) * near)) * (1.0 - steep) * (1.0 - 0.6 * stone) * (1.0 - 0.7 * pit * close)) * (1.0 - 0.8 * steep);
+  sheen *= 1.0 - 0.8 * stain;
   // Rock is rough even wet: it never mirrors the sky whole as the pool does, or wet rock near the lens would stand pale as sand.
   // Near the lens the sheen is not a sheet: it lies in the lows of the grain and breaks on its highs, so wet rock is dark with bright points.
   float gloss = mix(1.0, smoothstep(0.62, 0.3, mn.b) * (1.0 - 0.8 * pit * close), mix(near, 0.0, film));
@@ -605,6 +662,7 @@ uniform sampler2D tMat;
 uniform sampler2D tMatN;
 uniform vec3 uMean;
 uniform vec2 uMat;
+${BAND_GLSL}
 void main() {
   vec3 p = vWorld;
   vec3 v = normalize(cameraPosition - p);
@@ -646,86 +704,56 @@ void main() {
   vec3 albedo;
   float rough;
   float occ = vOcc;
-  if (uBone > 0.5) {
-    n = normalize(n - 0.55 * uMat.y * (lean - n * dot(lean, n)));
-    float tone = clamp(1.0 + 0.4 * (grey - 1.0), 0.6, 1.25);
-    vec3 base = mix(vec3(0.7, 0.67, 0.61), vec3(0.88, 0.86, 0.81), clamp(0.55 + 1.6 * (a.r - 0.5) + 0.6 * (height - 0.5), 0.0, 1.0)) * tone;
-    // Rust: broad marbled patches with dark hearts, veins that wander, and runs down the flanks from every stained place.
-    float patch0 = smoothstep(0.57, 0.68, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.3 * (height - 0.5) + 0.12 * (c.a - 0.5));
-    float heart = smoothstep(0.68, 0.8, b.a + 0.5 * (a.a - 0.5));
-    float vein = smoothstep(0.88, 0.98, 1.0 - abs(2.0 * b.r - 1.0) + 0.1 * (c.a - 0.5)) * smoothstep(0.35, 0.6, a.a + 0.3 * patch0);
-    float runs = smoothstep(0.56, 0.74, c.r + 0.25 * patch0) * smoothstep(0.75, 0.2, n.y) * smoothstep(-0.95, -0.3, n.y);
-    vec3 rust = mix(vec3(0.52, 0.3, 0.12), vec3(0.24, 0.11, 0.04), heart);
-    albedo = mix(base, rust * (0.6 + 0.5 * tone), 0.7 * patch0);
-    albedo = mix(albedo, vec3(0.4, 0.21, 0.08) * tone, 0.6 * runs * (1.0 - 0.6 * patch0));
-    albedo = mix(albedo, vec3(0.16, 0.075, 0.03), 0.45 * vein);
-    // Green and dark with damp where it meets the wall and under its belly.
-    float damp = smoothstep(0.8, 0.45, vOcc + 0.25 * (c.a - 0.5));
-    albedo = mix(albedo, vec3(0.13, 0.15, 0.075) * (0.6 + 0.6 * tone), 0.75 * damp);
-    // Dust and broken stone on its top: matt, the grain of the picture at full strength.
-    float dust = smoothstep(0.86, 0.98, up) * smoothstep(0.4, 0.7, a.a + 0.4 * (height - 0.5));
-    albedo = mix(albedo, vec3(0.47, 0.44, 0.39) * clamp(grey, 0.5, 1.5), 0.45 * dust);
-    rough = mix(mix(0.2, 0.34, patch0), 0.85, dust);
-    albedo *= mix(0.82, 1.0, dust);
-    occ *= 0.8 + 0.4 * height;
-    // It was smooth putty. An arch is laid down skin on skin, and the skins show: thin beds that run along it, each with a steep lip and
-    // a long back, in thicker courses; it is pitted where the seep has eaten it, and here and there a flake of the outer skin has come
-    // off and the beds under it stand bare, pale and matt. All of this is one relief in metres that leans the normal. The beds are level
-    // sets of height plus distance from the axis, laid in the world: they run along the arch on its top and on its face toward the shaft,
-    // and have no seam.
-    float bedAt = (p.y + length(p.xz)) / 0.3 + 3.2 * (a.r - 0.5) + 1.3 * (b.a - 0.5);
-    float bedIn = fract(bedAt);
-    float bedId = floor(bedAt);
-    float skin = min(bedIn / 0.2, (1.0 - bedIn) / 0.8);
-    float lone = fract(sin(bedId * 12.9898 + 4.1) * 43758.5453);
-    float seen = smoothstep(0.8, 0.3, fwidth(bedAt));
-    float courseAt = fract(bedAt / 3.7 + 0.4 * (a.a - 0.5));
-    float course = min(courseAt / 0.12, (1.0 - courseAt) / 0.88);
-    vec4 d = texture2D(tRock, vUv / vec2(2.3, 1.9) + 0.2 * b.ra);
-    float pits = max(0.6 * smoothstep(0.3, 0.14, height), smoothstep(0.68, 0.76, d.r + 0.3 * (0.5 - height)));
-    float spall = smoothstep(0.58, 0.63, b.r + 0.3 * (d.a - 0.5) + 0.12 * (c.a - 0.5)) * (1.0 - dust);
-    // Not every skin shows: where the outer one is whole only a lip here and there stands through it, and the arch keeps its wet sheen.
-    float shown = seen * mix(smoothstep(0.5, 0.62, lone) * smoothstep(0.3, 0.6, c.r), 1.0, spall);
-    float relief = shown * (0.02 + 0.03 * spall) * skin * (0.4 + 1.2 * lone) + 0.045 * course - 0.05 * pits - 0.07 * spall;
-    vec3 dpx = dFdx(p);
-    vec3 dpy = dFdy(p);
-    vec3 r1 = cross(dpy, n);
-    vec3 r2 = cross(n, dpx);
-    float det = dot(dpx, r1);
-    vec3 grad = sign(det) * (dFdx(relief) * r1 + dFdy(relief) * r2);
-    n = normalize(abs(det) * n - grad);
-    // A bed's foot is shut in and dark, and one bed is not the colour of the next; a pit holds wet and shade; bare beds are fresh stone.
-    float foot = shown * smoothstep(0.35, 0.0, skin);
-    albedo *= mix(1.0, 0.62, foot * (0.5 + 0.5 * spall)) * mix(1.0, 0.8 + 0.4 * lone, 0.5 * shown);
-    albedo = mix(albedo, vec3(0.8, 0.77, 0.7) * tone * (0.75 + 0.5 * lone), 0.6 * spall);
-    albedo *= mix(1.0, 0.5, pits);
-    rough = mix(rough, 0.75, max(spall, 0.6 * pits));
-    occ *= mix(1.0, 0.55, pits) * mix(1.0, 0.7, foot);
-  } else {
-    // The picture's own blocks are held down: at full strength, on courses, the wall was laid masonry with moss in the joints.
-    n = normalize(n - 0.55 * uMat.y * (lean - n * dot(lean, n)));
-    float tone = clamp(1.0 + 0.6 * (grey - 1.0), 0.5, 1.5);
-    vec3 base = mix(vec3(0.035, 0.036, 0.03), vec3(0.11, 0.105, 0.085), clamp(0.5 + 1.5 * (a.r - 0.5), 0.0, 1.0)) * tone;
-    // Slime where the seep keeps the rock wet, rust below the foot of an arch, pale lime where water has dried.
-    float slime = smoothstep(0.42, 0.62, b.a + 0.3 * (c.r - 0.5));
-    base = mix(base, vec3(0.05, 0.062, 0.034) * tone, 0.6 * slime);
-    float iron = smoothstep(0.55, 0.75, c.a + 0.3 * (a.a - 0.5)) * (1.0 - up);
-    base = mix(base, vec3(0.19, 0.095, 0.04) * tone, 0.5 * iron);
-    float lime = smoothstep(0.7, 0.85, c.r + 0.3 * (b.r - 0.5)) * (1.0 - up);
-    base = mix(base, vec3(0.3, 0.31, 0.26) * tone, 0.35 * lime);
-    // The top beds are the shelf's own stone: pale, green with weed, not yet wet through.
-    float topBeds = smoothstep(-6.5, -1.5, p.y + 3.0 * (a.a - 0.5));
-    albedo = mix(base, mix(vec3(0.2, 0.18, 0.14), vec3(0.11, 0.115, 0.08), slime) * tone, 0.7 * topBeds);
-    // Runs: where water comes down the face the rock is black and shines, and between the runs lime has dried pale on it.
-    float streak = texture2D(tRock, vec2(vUv.x / 1.9, p.y / 37.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 0.7 + 0.3, p.y / 19.0)).a - 0.5);
-    float wetRun = smoothstep(0.52, 0.36, streak) * (1.0 - up);
-    albedo *= mix(1.0, 0.5, wetRun);
-    albedo = mix(albedo, vec3(0.3, 0.27, 0.2) * tone, 0.3 * smoothstep(0.66, 0.8, streak) * (1.0 - up));
-    // A ledge holds what falls: grit, paler than the face.
-    albedo = mix(albedo, vec3(0.2, 0.185, 0.16) * tone, 0.6 * smoothstep(0.6, 0.9, up));
-    rough = mix(mix(0.3, 0.75, topBeds), 0.16, wetRun);
-    occ *= 0.75 + 0.5 * height;
-  }
+  // The wall is bedded stone: level beds a hand to a forearm thick that dip and wander a little, each broken off at its own place.
+  float bedAt = p.y / 0.34 + 3.0 * (a.r - 0.5) + 1.4 * (b.a - 0.5) + 0.5 * (c.r - 0.5);
+  float bedIn = fract(bedAt);
+  float bedLone = fract(sin(floor(bedAt) * 12.9898 + 2.3) * 43758.5453);
+  float bedSeen = smoothstep(0.8, 0.3, fwidth(bedAt)) * (1.0 - up);
+  float bedFoot = bedSeen * smoothstep(0.22, 0.0, bedIn) * (0.4 + 0.6 * bedLone);
+  // The picture's own blocks are held down: at full strength, on courses, the wall was laid masonry with moss in the joints.
+  n = normalize(n - 0.55 * uMat.y * (lean - n * dot(lean, n)));
+  float tone = clamp(1.0 + 0.6 * (grey - 1.0), 0.5, 1.5);
+  vec3 base = mix(vec3(0.035, 0.036, 0.03), vec3(0.11, 0.105, 0.085), clamp(0.5 + 1.5 * (a.r - 0.5), 0.0, 1.0)) * tone;
+  // Slime where the seep keeps the rock wet, rust below the foot of an arch, pale lime where water has dried.
+  float slime = smoothstep(0.42, 0.62, b.a + 0.3 * (c.r - 0.5));
+  base = mix(base, vec3(0.05, 0.062, 0.034) * tone, 0.6 * slime);
+  float iron = smoothstep(0.55, 0.75, c.a + 0.3 * (a.a - 0.5)) * (1.0 - up);
+  base = mix(base, vec3(0.15, 0.075, 0.035) * tone, 0.32 * iron);
+  float lime = smoothstep(0.7, 0.85, c.r + 0.3 * (b.r - 0.5)) * (1.0 - up);
+  base = mix(base, vec3(0.3, 0.31, 0.26) * tone, 0.2 * lime);
+  // The top beds are the shelf's own stone: pale, green with weed, not yet wet through.
+  float topBeds = smoothstep(-3.6, -0.8, p.y + 2.0 * (a.a - 0.5));
+  albedo = mix(base, mix(vec3(0.2, 0.18, 0.14), vec3(0.11, 0.115, 0.08), slime) * tone, 0.7 * topBeds);
+  // Runs: where water comes down the face the rock is black and shines, and between the runs lime has dried pale on it.
+  // A run is a few paces long and an arm wide, and a bed's lip breaks it: drawn out twenty times its width, as it was, the face was
+  // combed into upright stripes a finger apart from top to bottom.
+  float streak = texture2D(tRock, vec2(vUv.x / 5.3, p.y / 23.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 2.9 + 0.3, p.y / 9.0)).a - 0.5);
+  float wetRun = smoothstep(0.52, 0.36, streak + 0.12 * (bedLone - 0.5)) * (1.0 - up);
+  albedo *= mix(1.0, 0.5, wetRun);
+  albedo = mix(albedo, vec3(0.3, 0.27, 0.2) * tone, 0.16 * smoothstep(0.66, 0.8, streak) * (1.0 - up));
+  // The beds: one is not the tone of the next, and the foot of each is shut in under the lip of the one above.
+  albedo *= mix(1.0, 0.55, bedFoot) * mix(1.0, 0.72 + 0.56 * bedLone, 0.7 * bedSeen);
+  n = normalize(n + vec3(0.0, bedSeen * mix(0.16, -0.8, smoothstep(0.22, 0.0, bedIn)) * (0.4 + 0.6 * bedLone), 0.0));
+  occ *= mix(1.0, 0.6, bedFoot);
+  // A ledge holds what falls: grit, paler than the face.
+  albedo = mix(albedo, vec3(0.2, 0.185, 0.16) * tone, 0.6 * smoothstep(0.6, 0.9, up));
+  rough = mix(mix(0.3, 0.75, topBeds), 0.16, wetRun);
+  occ *= 0.75 + 0.5 * height;
+  // The tiers carried on round the side that fell: bands of the arches' own stone, cream with rust in it, and under each the wall is
+  // rust-dark and wet with what runs off it.
+  float bearing = degrees(atan(p.x, -p.z));
+  float band = smoothstep(0.03, 0.3, bandOn(bearing, p.y));
+  float underBand = bandOn(bearing, p.y + 1.25) * (1.0 - band);
+  vec3 trav = mix(vec3(0.45, 0.4, 0.31), vec3(0.7, 0.64, 0.53), smoothstep(0.3, 0.7, a.r + 0.4 * (grey - 1.0)));
+  // Its rust lies along it, bed by bed, not down it.
+  vec4 lie = texture2D(tRock, vec2(vUv.x / 13.0, p.y / 1.9) + 0.2 * a.ar);
+  trav = mix(trav, vec3(0.4, 0.19, 0.07), 0.6 * smoothstep(0.42, 0.64, lie.a + 0.25 * (lie.r - 0.5)));
+  trav *= 0.8 + 0.4 * lie.g;
+  trav *= tone * mix(1.0, 0.6, bedFoot) * mix(1.0, 0.72 + 0.56 * bedLone, 0.5 * bedSeen) * mix(1.0, 0.6, wetRun);
+  albedo = mix(albedo, trav, band);
+  albedo = mix(albedo, vec3(0.15, 0.07, 0.03) * tone, 0.6 * underBand);
+  rough = mix(rough, mix(0.34, 0.62, smoothstep(0.35, 0.65, lie.g)), band);
+  rough = mix(rough, 0.14, 0.7 * underBand);
 
   // Down the shaft: the land map says where the pit is. A face there sees the sky as a disc overhead, smaller the deeper it is.
   vec4 land = landAt(p.xz);
@@ -814,24 +842,24 @@ void main() {
   // Ivory, with the sheet's own rust, pits and beds as tone and hue; paler on the beds that stand out.
   float grey = dot(tex, vec3(0.3333));
   vec3 hue = tex / max(grey, 0.05);
-  vec3 ivory = mix(vec3(0.6, 0.56, 0.49), vec3(0.83, 0.8, 0.73), clamp(0.45 + 1.4 * (a.r - 0.5) + 0.5 * (height - 0.5), 0.0, 1.0));
-  vec3 albedo = ivory * mix(vec3(1.0), hue, 0.8) * clamp(mix(1.0, grey, 0.85), 0.3, 1.5);
+  vec3 ivory = mix(vec3(0.66, 0.62, 0.55), vec3(0.85, 0.82, 0.75), clamp(0.45 + 1.4 * (a.r - 0.5) + 0.5 * (height - 0.5), 0.0, 1.0));
+  vec3 albedo = ivory * mix(vec3(1.0), hue, 0.35) * clamp(mix(1.0, grey, 0.4), 0.5, 1.3);
   // Rust beyond the sheet's own: broad marbled patches with dark hearts, and runs down the face from them.
-  float patch0 = smoothstep(0.57, 0.7, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.3 * (height - 0.5) + 0.12 * (c.a - 0.5));
-  float heart = smoothstep(0.68, 0.8, b.a + 0.5 * (a.a - 0.5));
-  float runs = smoothstep(0.56, 0.74, c.r + 0.25 * patch0) * smoothstep(0.75, 0.2, n.y) * smoothstep(-0.95, -0.3, n.y);
-  vec3 rust = mix(vec3(0.5, 0.29, 0.12), vec3(0.24, 0.11, 0.04), heart);
-  albedo = mix(albedo, rust * clamp(grey, 0.5, 1.4), 0.5 * patch0);
-  albedo = mix(albedo, vec3(0.4, 0.21, 0.08) * clamp(grey, 0.5, 1.4), 0.5 * runs * (1.0 - 0.6 * patch0));
+  float patch0 = smoothstep(0.5, 0.66, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.1 * (height - 0.5) + 0.12 * (c.a - 0.5));
+  float heart = smoothstep(0.66, 0.8, b.a + 0.5 * (a.a - 0.5));
+  float runs = smoothstep(0.5, 0.7, c.r + 0.25 * patch0) * smoothstep(0.75, 0.2, n.y) * smoothstep(-0.95, -0.3, n.y);
+  vec3 rust = mix(vec3(0.52, 0.29, 0.11), vec3(0.24, 0.11, 0.04), heart);
+  albedo = mix(albedo, rust * clamp(grey, 0.5, 1.4), 0.72 * patch0);
+  albedo = mix(albedo, vec3(0.42, 0.21, 0.08) * clamp(grey, 0.5, 1.4), 0.62 * runs * (1.0 - 0.6 * patch0));
   // Green and dark with damp where it meets the wall and under its belly, and in the recesses between the beds there.
   float damp = smoothstep(0.8, 0.45, vOcc + 0.25 * (c.a - 0.5) + 0.2 * (height - 0.5));
   albedo = mix(albedo, vec3(0.13, 0.15, 0.075) * (0.5 + 0.6 * grey), 0.75 * damp);
   // Dust and grit lie on its top, in the lows of the skin.
   float dust = smoothstep(0.86, 0.98, up) * smoothstep(0.55, 0.3, height + 0.4 * (a.a - 0.5));
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42) * clamp(grey, 0.6, 1.3), 0.5 * dust);
-  float rough = mix(mix(0.62, 0.4, level), 0.85, dust);
-  rough = mix(rough, 0.3, 0.6 * damp);
-  float occ = vOcc * mix(0.5, 1.08, smoothstep(0.12, 0.62, height)) * (1.0 - 0.5 * under);
+  float rough = mix(mix(0.56, 0.33, level), 0.85, dust);
+  rough = mix(rough, 0.26, 0.6 * damp);
+  float occ = vOcc * mix(0.66, 1.06, smoothstep(0.12, 0.62, height)) * (1.0 - 0.4 * under);
 
   vec4 land = landAt(p.xz);
   float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);

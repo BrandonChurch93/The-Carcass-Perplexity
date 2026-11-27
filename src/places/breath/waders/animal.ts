@@ -72,6 +72,9 @@ export interface Plan {
   rest?: number;
   /** How far before its feet it feeds, as a part of its neck: 0.3 at its toes, 0.62 at full stretch. */
   feedAt?: number;
+  /** One that stands and is seen for a long time: it goes from one hind leg to the other, looks about and carries its neck higher and lower. Seconds from one hind leg to the same again, and where in that it is at time zero. */
+  restless?: number;
+  restlessAt?: number;
 }
 
 export interface Env {
@@ -298,7 +301,7 @@ export function makeBuild(k: number, seed: number, far: boolean, cell = 0.02, ow
     neckLen: 2.1 * k * j(7, 0.84, 1.1),
     neckR: (far ? 0.095 : 0.08) * k,
     tendrils: far ? 6 : 98,
-    tendrilLen: 0.66 * k * j(8, 0.85, 1.2),
+    tendrilLen: 0.76 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
     chest: j(10, 0.9, 1.14),
     belly: j(11, 0.75, 1.25),
@@ -319,9 +322,11 @@ const TENDRIL_RINGS = 14;
 const TENDRIL_SIDES = 5;
 /** Roots of flesh in the mop of one seen near, and the rings of a fine end. */
 const ROOTS = 24;
+/** Of them, the thick ones at the heart of the mop. */
+const CORE = 5;
 const FINE_RINGS = 8;
 /** How a strand thins from where it starts (0) to its tip (1), as a part of its thickness: a root is a carrot drawn out to a thread, a fine end a thread, weed a ribbon. */
-const taper = (type: number, u: number): number => (type === 0 ? 0.2 + 0.8 * (1 - u) ** 1.3 : type === 1 ? 1 - 0.6 * u : 0.7 + 0.5 * Math.sin(u * 9)) * (1 - smooth(0.9, 1, u) * 0.85);
+const taper = (type: number, u: number): number => (type === 0 ? 0.3 + 0.7 * (1 - u) : type === 1 ? 1 - 0.6 * u : 0.7 + 0.5 * Math.sin(u * 9)) * (1 - smooth(0.9, 1, u) * 0.85);
 
 export class Wader {
   private body: Tube | null = null;
@@ -495,16 +500,17 @@ export class Wader {
         type: root ? 0 : weed ? 2 : 1,
         angle: root ? ((n + 0.5 * (clump % 2)) / roots) * Math.PI * 2 + (hash(seed + n * 1.7) - 0.5) * 0.5 : (of as { angle: number }).angle + (hash(seed + n * 1.7) - 0.5) * 2.4,
         // Where round the end of the neck it roots: the long ones at its very middle, the short ones round them.
-        out: root ? 0.2 + 0.8 * hash(seed + n * 2.9) : 0.4 + 0.6 * hash(seed + n * 2.9),
+        // The first few roots are the heart of the mop: thick, short, close together, matted into one wet mass the others hang round.
+        out: root ? (!far && n < CORE ? 0.12 + 0.05 * n : 0.3 + 0.7 * hash(seed + n * 2.9)) : 0.4 + 0.6 * hash(seed + n * 2.9),
         len: root
-          ? b.tendrilLen * (0.55 + 0.6 * hash(seed * 1.3 + n * 5.1) ** 1.3)
+          ? b.tendrilLen * (!far && n < CORE ? 0.5 + 0.07 * n : 0.55 + 0.6 * hash(seed * 1.3 + n * 5.1) ** 1.3)
           : (of as { len: number }).len * (1 - branchAt) * (weed ? 0.9 + 0.5 * hash(seed * 2.3 + n * 1.9) : 0.55 + 0.6 * hash(seed * 2.3 + n * 1.9)),
         stiff: 0.2 + 0.6 * hash(seed + n * 9.7),
         phase: hash(seed + n * 4.3) * 6.28,
         lock: root ? hash(seed * 1.9 + n * 7.7) * 6.28 : (of as { lock: number }).lock + (hash(seed + n * 8.1) - 0.5) * 0.9,
         // Most root at the very end of the neck, the rest a little way back up it, so the neck frays into them.
         root: 1 - 0.1 * hash(seed * 1.7 + n * 8.9) ** 1.6,
-        thick: far ? 0.014 * k : root ? (0.014 + 0.011 * hash(seed + n * 12.7) ** 1.4) * k : weed ? 0.003 * k : (0.0042 + 0.0026 * hash(seed + n * 12.7)) * k,
+        thick: far ? 0.014 * k : root ? (n < CORE ? 0.05 - 0.005 * n : 0.017 + 0.012 * hash(seed + n * 12.7) ** 1.4) * k : weed ? 0.0034 * k : (0.008 + 0.005 * hash(seed + n * 12.7)) * k,
       };
       this.strands.push(strand);
       for (let i = 0; i < rings; i++) {
@@ -607,6 +613,13 @@ export class Wader {
     const rx = -fz;
     const rz = fx;
 
+    // A restless one: where its weight is (1 off the left hind leg, -1 off the right), held, then moved over in a second or so.
+    const restAt = (t: number): number => {
+      if (!plan.restless) return 0;
+      const w = Math.sin((t / plan.restless + (plan.restlessAt ?? 0)) * Math.PI * 2);
+      return Math.tanh(3.2 * w) / Math.tanh(3.2);
+    };
+    const weightAt = restAt(seconds);
     // The feet. Each is put down a stride on and stays there while the body passes over it.
     const feet: Foot[] = [];
     let dipSum = 0;
@@ -650,12 +663,14 @@ export class Wader {
         carried = 1;
       }
       let groundY = env.ground(x, z);
-      // The slack hind leg rests on its toe, drawn in under the body.
-      if (stands && plan.slack === (leg.side < 0 ? 1 : 2) && leg.fore < 0) {
-        x += -rx * leg.side * 0.1 * k + fx * 0.22 * k;
-        z += -rz * leg.side * 0.1 * k + fz * 0.22 * k;
+      // The slack hind leg rests on its toe, drawn in under the body. A restless one changes legs: the foot is picked up and set down again.
+      const rests = !stands || leg.fore > 0 ? 0 : plan.restless ? sat(leg.side < 0 ? weightAt : -weightAt) : plan.slack === (leg.side < 0 ? 1 : 2) ? 1 : 0;
+      if (rests > 0) {
+        x += (-rx * leg.side * 0.1 * k + fx * 0.22 * k) * rests;
+        z += (-rz * leg.side * 0.1 * k + fz * 0.22 * k) * rests;
         groundY = env.ground(x, z);
-        off = 0.75;
+        off = 0.75 * smooth(0, 0.5, rests);
+        if (plan.restless) lift = 0.5 * b.stepH * Math.sin(Math.PI * rests) ** 1.5;
       }
       if (stands) {
         // One that stands is never still on its feet. It draws a leg up under it and holds it there, like any wader at rest, or
@@ -705,7 +720,7 @@ export class Wader {
     const base4 = (feet[0]!.y - feet[0]!.lift + feet[1]!.y - feet[1]!.lift + feet[2]!.y - feet[2]!.lift + feet[3]!.y - feet[3]!.lift) / 4;
     // The legs are never locked: it stands a little under its full height, sinks as a foot leaves the ground and rises over the one that takes the weight.
     const cy = base4 + b.standH * (1 - 0.8 * (plan.rest ?? 0)) - 0.012 * k - 0.036 * k * dipSum - 0.016 * k * lurch * (1 - still) - 0.012 * k * down + 0.006 * k * habit2;
-    const yaw = plan.heading + b.skew + (0.02 + 0.06 * still) * habit + (walk ? 0.046 * Math.sin((cyc - 0.02) * Math.PI * 2) : -0.03 * holdSide);
+    const yaw = plan.heading + b.skew + 0.13 * weightAt + (0.02 + 0.06 * still) * habit + (walk ? 0.046 * Math.sin((cyc - 0.02) * Math.PI * 2) : -0.03 * holdSide);
     const pitch = (4 - 7 * down) * (Math.PI / 180) + 0.055 * nose + 0.012 * habit2 + (walk ? 0.018 * Math.sin((cyc + 0.1) * Math.PI * 4) : 0) - 0.04 * Math.max(-1, Math.min(1, gained / (0.15 * k)));
     const lean = (walk ? 0.05 * Math.cos((cyc - 0.08) * Math.PI * 2) : -0.07 * holdSide) + 0.015 * habit;
 
@@ -874,16 +889,17 @@ export class Wader {
     // The head is carried late: when the body goes over to one side or starts forward, the end of the neck stays where it was a moment longer.
     const swayLate = walk ? over(walk.at(seconds - 0.45) + base + 1000) : 0;
     const behind = walk ? (0.125 * k * (swayLate - sway)) / b.neckLen : 0;
-    const work = 0.4 * wander(seconds * 0.62 + plan.phase * 7, b.seed + 2.1) + 0.2 * wander(seconds * 1.45 + plan.phase * 3, b.seed + 4.4);
+    const work = 0.42 * wander(seconds * 0.85 + plan.phase * 7, b.seed + 2.1) + 0.2 * wander(seconds * 1.9 + plan.phase * 3, b.seed + 4.4);
     // Each feeds to its own side of its chest.
     const sided = (hash(b.seed * 2.7 + 5) - 0.5) * 1.1;
-    const sweep = down * (work + sided) + (1 - down) * ((0.3 + 0.25 * still) * habit + 0.14 * habit2) + 1.6 * behind;
+    // A restless one looks round before it moves its weight.
+    const sweep = down * (work + sided) + (1 - down) * ((0.3 + 0.25 * still) * habit + 0.14 * habit2 - 0.55 * restAt(seconds + 1.3)) + 1.6 * behind;
     // Starting off, the neck is left behind and leans back; stopping, it runs on and nods.
     const nod = Math.max(-1, Math.min(1, gained / (0.12 * k)));
     const dab = down * (0.035 * wander(seconds * 2.3, b.seed + 6.1) + (plan.reach < 1 ? 0.11 * k * wander(seconds * 0.5, b.seed + 8.2) : 0));
     const fhx = Math.sin(yaw);
     const fhz = -Math.cos(yaw);
-    const carry = plan.carry ?? 0;
+    const carry = (plan.carry ?? 0) + (plan.restless ? 0.45 * restAt(seconds - 1.4) : 0);
     const carry1 = sat(1 - Math.abs(carry - 1));
     const carry2 = sat(carry - 1);
     const carry0 = 1 - carry1 - carry2;
@@ -1083,7 +1099,7 @@ export class Wader {
       const stir = air * (1 - down) * (isRoot ? 0.7 : 1.5) * (0.6 + 0.8 * st.stiff);
       const swX = (swing + stir) * fhx + (0.35 * swing * Math.sin(st.lock) + 0.6 * stir) * cyw;
       const swZ = (swing + stir) * fhz + (0.35 * swing * Math.sin(st.lock) + 0.6 * stir) * sy;
-      const flare = isRoot ? (0.1 + 0.16 * (1 - down)) * st.out : 0.2 * st.out;
+      const flare = isRoot ? (0.14 + 0.3 * (1 - down)) * st.out : 0.26 * st.out;
       let px = x;
       let py = y;
       let pz = z;
