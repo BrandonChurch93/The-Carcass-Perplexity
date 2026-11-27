@@ -551,7 +551,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
     const hand = (w.seed * 53.9) % 1 < 0.5 ? -1 : 1;
     const sprays = off || v < 0.4 ? 1 : v < 0.82 ? 2 : 3;
     // A far head is a mop all the same: full enough to be one red shape on its stalk, that rises from the tip and hangs by its ends.
-    const each = Math.max(sprays === 1 ? 3 : 2, Math.round(fine * (off ? 1.7 : 1) * (0.75 + 0.6 * q) * (1 - 0.4 * ragged)));
+    const each = Math.max(sprays === 1 ? 3 : 2, Math.round(fine * (off ? 1.2 : 1) * (0.75 + 0.6 * q) * (1 - 0.4 * ragged)));
     let first = true;
     for (let j = 0; j < sprays; j++) {
       const turn = (c0[0] as number) + hand * j * rng.range(0.45, 0.85) + rng.normal() * 0.12;

@@ -384,7 +384,7 @@ export function create(ctx: Context): Piece {
         // Round the seep they stand thickest: its key's picture has a thicket there.
         const dense = Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) < 45;
         // In clumps with room between them: one stalk in three stands alone.
-        const n = thick.next() < 0.33 ? 0 : dense ? 2 + thick.int(3) : 1 + thick.int(3);
+        const n = thick.next() < 0.33 ? 0 : dense ? 1 + thick.int(3) : Math.min(2, 1 + thick.int(3));
         for (let k = 0; k < n; k++) {
           const a = thick.range(0, TAU);
           const d = thick.range(0.12, 0.75) * (dense ? 1.2 : 1);
@@ -435,7 +435,7 @@ export function create(ctx: Context): Piece {
           const head = 1.25 * (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
           const turn = band.range(0, TAU);
           // Spaced groups of a few, not a thicket: fewer than half of those cast are grown.
-          if (seed > 0.45 || ctx.rig.land.height(x, z) < -0.1) continue;
+          if (seed > 0.36 || ctx.rig.land.height(x, z) < -0.1) continue;
           wilds.push({
             ...like, x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: 0.6 * band.range(0.03, 0.45), R: band.range(0.02, 0.042) * Math.pow(h / 2.2, 0.4),
             kind, phase: band.range(0, TAU), seed, bowA: band.range(0, TAU), bowM: band.range(0.04, 0.28),
