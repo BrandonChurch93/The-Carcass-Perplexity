@@ -225,6 +225,10 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   float outer = smoothstep(0.15, 0.65, r);
   float clumps = lum(textureGrad(uStreaks, ub, gx * 0.75, gy * 0.75).rgb);
   float fine = (mix(0.45, 0.2, outer) * clumps + mix(0.4, 0.5, outer) * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb)) / 0.304;
+  // (Near the eye the wound lays have shrunk under a pixel and the bands were smooth. There the same cells are laid in
+  // rings round the eye, a few pixels each, so the inner bands are crowds of tops.)
+  float ringed = lum(textureGrad(uStreaks, vec2(8.0 * around, 9.0 * r) + vec2(0.31, 0.57), gx * 3.0, gy * 3.0).rgb) / 0.304;
+  fine *= mix(1.0, 0.5 + 0.5 * ringed, 1.0 - smoothstep(0.12, 0.34, r));
   // (Left whole, the arms read from far off as five bold strokes of one weight. A second lay of the bands, finer and at
   // its own place along the winding, and the clumps of the cell photograph break each into lengths of unlike weight.)
   vec2 ue = vec2(2.0 * wound.x - 1.7 * drawnIn, 3.0 * wound.y) + vec2(0.67, 0.09) + 0.03 * bend;
