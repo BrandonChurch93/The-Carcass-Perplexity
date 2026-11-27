@@ -380,8 +380,8 @@ void main() {
 
   #ifdef AFAR
   // From afar only the folded heap is the sheet's: the thin skin round it is left to the lake's own crust, slabs, cracks and all,
-  // so no patch with an outline lies on the lake. Up close this material is not used.
-  alpha = mix(1.0, max(smoothstep(0.04, 0.4, folded), 1.0 - smoothstep(0.3, 1.2, abs(vBreak.y))), smoothstep(45.0, 70.0, far));
+  // so no patch with an outline lies on the lake. In the carcass's own shot this material is not used.
+  alpha = max(smoothstep(0.04, 0.4, folded), 1.0 - smoothstep(0.3, 1.2, abs(vBreak.y)));
   #endif
   gl_FragColor = vec4(rigOut(c), alpha);
   // Last, so the pixels beside a dropped one still have their derivatives.
