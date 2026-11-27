@@ -114,6 +114,13 @@ export const OPEN = {
   sinks: 0.35,
   floors: [1.2, 2.2] as [number, number],
   settles: [3.2, 8] as [number, number],
+  /**
+   * The last swell before the shore: the lens is carried this many metres higher over it, at its highest at the middle second of the
+   * three, and is down on the old move's height as it crosses the shore's edge. From the height of the water the crest ahead hides the
+   * shore's edge and the feet of the blades behind a dark wall just as they come near; from over it the surf line and the feet are seen.
+   */
+  carried: 4.5,
+  carrying: [6, 9.6, 13.6] as [number, number, number],
   noses: 0.1,
   /** The point on the strait floor the lens is held on through the arc: under the gap between the tips of L1 and R1. */
   target: [-149, -193] as [number, number],
@@ -283,7 +290,8 @@ function openingHeight(seconds: number): number {
   // sea is long behind the lens by then: it crosses the shore's edge at 13 s).
   const over = smoother(OPEN.settles[0], OPEN.settles[1], seconds) * (settled - ride);
   const rode = ride + Math.max(over, 0) + Math.log(1 + Math.exp(-SHARP * Math.abs(over))) / SHARP;
-  return settled + (rode - settled) * (1 - smoother(13.6, 15.6, seconds));
+  const carried = OPEN.carried * smoother(OPEN.carrying[0], OPEN.carrying[1], seconds) * (1 - smoother(OPEN.carrying[1], OPEN.carrying[2], seconds));
+  return settled + (rode - settled) * (1 - smoother(13.6, 15.6, seconds)) + carried;
 }
 
 /** The lens of the film's first shot at `seconds` of the place: where it is and how it looks. The old move's own from OPEN.seconds on. */

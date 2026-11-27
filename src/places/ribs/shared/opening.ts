@@ -73,12 +73,12 @@ export function openingLight(seconds: number): number {
 export const STRIKE = {
   blade: 'L1',
   foot: [25, 0, 335] as [number, number, number],
-  half: 60,
-  times: [-1.2, 2.8] as [number, number],
-  height: 100,
+  half: 80,
+  times: [-1.2, 3.4] as [number, number],
+  height: 140,
   rises: 2.1,
   hangs: 9,
-  lesser: 0.6,
+  lesser: 0.8,
 };
 
 /** Seconds since strike `n` (0 or 1) left the sea, negative before it. */
