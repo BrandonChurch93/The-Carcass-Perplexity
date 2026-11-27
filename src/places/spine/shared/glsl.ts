@@ -285,7 +285,8 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     vec3 toFar = CANAL_FAR - p;
     vec3 toNear = CANAL_NEAR - p;
     vec3 toLight = normalize(normalize(toFar) / (dot(toFar, toFar) + 400.0) + 0.35 * normalize(toNear) / (dot(toNear, toNear) + 400.0));
-    skyE *= mix(0.3, 1.3, smoothstep(-0.35, 0.85, dot(n, toLight)));
+    float faces = smoothstep(0.0, 0.9, dot(n, toLight) + 0.45 * max(n.y, 0.0));
+    skyE *= mix(vec3(0.22, 0.2, 0.2), vec3(1.3, 1.16, 1.62), faces * faces);
   }
   vec3 warm = uWarmColour * (outside ? 0.4 * rim * rim * sqrt(sky) * mix(0.15, 1.0, paleOf) : 0.0);
   vec3 e = skyE * shut + warm * (0.35 + 0.65 * occ) + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));

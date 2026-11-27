@@ -258,9 +258,9 @@ export function createRig(): Rig {
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
     // The dusk above the cloud, set against the approved wide view: the open sky above the band, the first dark overhead, the cloud sea below, the storm.
-    uSkyZenith: { value: new THREE.Vector3(0.034, 0.038, 0.062) },
-    uSkyHorizon: { value: new THREE.Vector3(0.108, 0.114, 0.144) },
-    uSkyGround: { value: new THREE.Vector3(0.03, 0.034, 0.048) },
+    uSkyZenith: { value: new THREE.Vector3(0.03, 0.037, 0.066) },
+    uSkyHorizon: { value: new THREE.Vector3(0.096, 0.11, 0.156) },
+    uSkyGround: { value: new THREE.Vector3(0.027, 0.033, 0.05) },
     uSkyStorm: { value: new THREE.Vector3(0.012, 0.012, 0.022) },
     uStormDir: { value: new THREE.Vector3(-WIND[0], 0, -WIND[2]).normalize() },
     uWarmDir: { value: new THREE.Vector3(DUSK[0], 0.04, DUSK[2]).normalize() },
@@ -375,21 +375,23 @@ export function createRig(): Rig {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       // Staged by shot: low by the dead one (spine-03) the lens is opened for the dusk on the snow, and the sky gives more.
       const byDead = stagedSeconds() >= CARCASS_FROM && stagedSeconds() < STRIKE_FROM;
-      // The snow there is a neutral grey under the open cloud, not the blue of the wide view: the storm's wall is behind the lens.
+      // The snow there is the cold blue grey of its approved picture, under a dark sky: opened, but less than the first wave had it.
       if (byDead) {
-        (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.125, 0.12, 0.15);
-        (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.36, 0.345, 0.42);
-        (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.12, 0.115, 0.14);
+        (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.09, 0.094, 0.128);
+        (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.25, 0.258, 0.34);
+        (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.085, 0.088, 0.118);
       } else {
-        (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.034, 0.038, 0.062);
-        (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.108, 0.114, 0.144);
-        (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.03, 0.034, 0.048);
+        // Before the long lens of the strike the spire stands in the storm's shadow: the sky gives less, and the stroke is the light.
+        const shade = stagedSeconds() >= STRIKE_FROM && stagedSeconds() < INSIDE_FROM ? 0.62 : 1;
+        (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.03, 0.037, 0.066).multiplyScalar(shade);
+        (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.096, 0.11, 0.156).multiplyScalar(shade);
+        (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.027, 0.033, 0.05).multiplyScalar(shade);
       }
       // Staged by shot: from the cut into the canal the lens is exposed for the dark, and the light that reaches in counts for more.
       (uniforms.uUnder as THREE.IUniform<number>).value = stagedSeconds() >= INSIDE_FROM ? 40 : 1;
       // Staged by shot: inside the canal the light is the cold of the mouths alone; the last warm band does not reach in. Low by the dead one
       // (spine-03) the light is the storm's cold, and the band gives a third of itself.
-      (uniforms.uWarmColour as THREE.IUniform<THREE.Vector3>).value.set(1.35, 0.78, 0.44).multiplyScalar(stagedSeconds() >= INSIDE_FROM ? 0.08 : stagedSeconds() >= CARCASS_FROM && stagedSeconds() < STRIKE_FROM ? 0.3 : 0.75);
+      (uniforms.uWarmColour as THREE.IUniform<THREE.Vector3>).value.set(1.35, 0.78, 0.44).multiplyScalar(stagedSeconds() >= INSIDE_FROM ? 0.08 : stagedSeconds() >= CARCASS_FROM && stagedSeconds() < STRIKE_FROM ? 0.22 : 0.6);
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();

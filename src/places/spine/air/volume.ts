@@ -195,15 +195,31 @@ ${SEA_SHADE_GLSL}
     vec4 land = landAt(hit.xz);
     float above = hit.y - land.r;
     if (above < 6.0 && above > -2.0 && land.a < 0.3) {
-      vec3 carried = hit - uWind.xyz * (uWind.w * 0.7 * uTime);
-      vec2 a = vec2(dot(carried.xz, uWind.xz), dot(carried.xz, vec2(-uWind.z, uWind.x)));
+      vec2 downW = normalize(uWind.xz);
+      vec2 a = vec2(dot(hit.xz, downW), dot(hit.xz, vec2(-downW.y, downW.x)));
+      // By the dead one the running snow meets a body: it runs round it as a stream runs round a stone (the stream's own lines are what
+      // the snow is read along), banks up on the side the gale strikes, and leaves a thin, ragged wake in the lee.
+      float met = 1.0;
+      if (uClear.z > 0.0) {
+        vec2 rel = hit.xz - uClear.xy;
+        vec2 b = vec2(dot(rel, downW), dot(rel, vec2(-downW.y, downW.x)));
+        float r2 = max(dot(b, b), 0.01);
+        float k = min(uClear.z * uClear.z / r2, 1.0);
+        a += vec2(b.x * k, -b.y * k);
+        float r = sqrt(r2);
+        float struck = smoothstep(3.2 * uClear.z, uClear.z, r) * max(-b.x / r, 0.0);
+        float torn = noise(vec3(b.x / 7.0 - uTime * 0.6, b.y / 2.3, 0.21)).g;
+        float lee = step(0.0, b.x) * smoothstep((1.25 - 0.6 * torn) * uClear.z, 0.35 * uClear.z, abs(b.y)) * exp(-b.x / (4.0 * uClear.z));
+        met = (1.0 + 1.1 * struck) * (1.0 - 0.6 * lee);
+      }
+      a.x -= uWind.w * 0.7 * uTime;
       float n = 0.6 * noise(vec3(a.x / 90.0, a.y / 13.0, 0.3)).g + 0.4 * noise(vec3(a.x / 21.0, a.y / 3.7, 0.7)).a;
-      float column = smoothstep(0.5, 0.78, n) * 3.2 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 2.5);
+      float column = smoothstep(0.5, 0.78, n) * 3.2 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 2.5) * met;
       column *= uClear.z > 0.0 ? smoothstep(0.4 * uClear.z, uClear.z, length(hit.xz - uClear.xy)) : 1.0;
       // Close to the lens the same snow is seen as it is: snakes a hand deep and a pace wide, running fast along the ground.
       if (far < 90.0) {
         float snake = 0.6 * noise(vec3(a.x / 9.0, a.y / 1.1, 0.5)).r + 0.4 * noise(vec3(a.x / 2.6, a.y / 0.33, 0.9)).b;
-        column += smoothstep(0.47, 0.7, snake) * (0.5 + n) * 2.6 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 0.5) * smoothstep(90.0, 25.0, far) * (uClear.z > 0.0 ? smoothstep(0.8, 2.0, length(hit.xz - uClear.xy)) : 1.0);
+        column += smoothstep(0.47, 0.7, snake) * (0.5 + n) * 2.6 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 0.5) * smoothstep(90.0, 25.0, far) * met * (uClear.z > 0.0 ? smoothstep(0.8, 2.0, length(hit.xz - uClear.xy)) : 1.0);
       }
       float kept = exp(-0.11 * column * smoothstep(1400.0, 500.0, far) * uShow.w * uStage.x);
       vec3 snow = 0.9 * (skyOn(1.0, rd) + min(strikeLight(hit) * 0.2, vec3(0.1, 0.085, 0.17)));
@@ -329,16 +345,16 @@ ${SEA_SHADE_GLSL}
       float dist = (j == 0 ? 26.0 : j == 1 ? 95.0 : 340.0) / lensV;
       float before = smoothstep(dist, dist * 1.3, far);
       if (before <= 0.0) break;
-      float grain = (j == 0 ? 3.0 : j == 1 ? 9.0 : 27.0) / sqrt(lensV);
+      float grain = (j == 0 ? 7.0 : j == 1 ? 20.0 : 56.0) / sqrt(lensV);
       vec3 at = ro + rd * dist;
       vec3 p = at - downV * (uWind.w * (0.8 + 0.12 * float(j)) * uTime);
-      vec3 q = vec3(dot(p, downV) / (grain * 16.0), dot(p, upV) / grain, dot(p, acrossV) / (grain * 3.0));
-      float streak = 0.6 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).r + 0.4 * noise(q * vec3(2.3, 2.7, 2.3) + 0.37).g;
+      vec3 q = vec3(dot(p, downV) / (grain * 9.0), dot(p, upV) / grain, dot(p, acrossV) / (grain * 2.5));
+      float streak = 0.74 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).r + 0.26 * noise(q * vec3(2.3, 2.7, 2.3) + 0.37).g;
       float gust = noise(vec3(q.x * 0.21, 0.37 * float(j) + 0.13, q.z * 0.17)).b;
-      float veil = smoothstep(0.4, 0.8, streak) * smoothstep(0.36, 0.7, gust) * before;
-      // It thins with the height over the crest, and against the open sky it is the sky's own tone and half lost.
-      veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.5 : 1.0);
-      veil *= j == 0 ? (uClear.z > 0.0 ? 0.05 : 0.1) : j == 1 ? 0.16 : 0.22;
+      float veil = smoothstep(0.36, 0.84, streak) * smoothstep(0.36, 0.7, gust) * before;
+      // It thins with the height over the crest, and against the open sky it is the sky's own tone and all but lost.
+      veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.2 : 1.0);
+      veil *= j == 0 ? (uClear.z > 0.0 ? 0.08 : 0.16) : j == 1 ? 0.3 : 0.4;
       driven += keptV * veil;
       keptV *= 1.0 - veil;
     }
