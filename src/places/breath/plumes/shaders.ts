@@ -32,7 +32,7 @@ vec3 swayAt(vec3 p, vec4 bush, float tall, float u, float phase, float t, float 
   float beat = 1.5 + 0.5 * fract(phase * 3.7);
   float own = sin(t * beat - u * 2.6 + phase) + 0.4 * sin(t * beat * 2.3 - u * 5.0 + phase * 1.9);
   float whole = sin(t * 0.83 + bush.w - r * 1.7);
-  float bend = (0.13 * (g - 0.4) + 0.025 * whole) * a + 0.024 * own * (0.35 + g) * uu;
+  float bend = (0.28 * (g - 0.4) + 0.05 * whole) * a + 0.036 * own * (0.35 + g) * uu;
   vec2 push = lee * (bend * tall);
   // Leaning over, an arched limb goes down; let go, it comes up again.
   float lift = (-0.45 * bend + 0.012 * own * (0.35 + g) * uu) * tall;
@@ -63,7 +63,7 @@ vec3 stripAt(vec3 a, vec3 b, vec3 c, vec4 sway, vec4 bush, float tall, float s, 
     float len = length(b);
     vec2 lee = -normalize(bush.xz);
     float g = gustAt(a.xz, lee, t - 0.22);
-    float swing = 0.3 * (g - 0.4) + (0.05 * sin(t * 2.9 + sway.z) + 0.015 * sin(t * 5.3 + sway.z * 2.7)) * (0.3 + g);
+    float swing = 0.4 * (g - 0.4) + (0.05 * sin(t * 2.9 + sway.z) + 0.015 * sin(t * 5.3 + sway.z * 2.7)) * (0.3 + g);
     vec3 bent = vec3(lee.x * swing, 0.16 * max(g - 0.4, 0.0) + 0.4 * surge, lee.y * swing) * len;
     p += bent * (s * s);
     tangent += 2.0 * s * bent;
@@ -166,9 +166,9 @@ void main() {
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
   float line = pow(max(1.0 - th * th, 0.0), 12.0);
-  float beads = 0.75 + 0.25 * smoothstep(0.35, 0.8, vnoise(vec2(s * 9.0 + own * 91.0, own * 37.0)));
+  float beads = 0.9 + 0.1 * smoothstep(0.35, 0.8, vnoise(vec2(s * 9.0 + own * 91.0, own * 37.0)));
   // A thread thinner than a pixel is drawn a pixel wide: its line of light is dimmed by as much, or it sparks from frame to frame.
-  colour += uSunColour * vec3(1.0, 0.78, 0.5) * (0.05 * line * beads * lit * sunLeft * (1.0 - 0.6 * dead)) * (1.0 - 0.7 * mass) / max(vLight.z, 1.0);
+  colour += uSunColour * vec3(1.0, 0.78, 0.5) * (0.025 * line * beads * lit * sunLeft * (1.0 - 0.6 * dead)) * (1.0 - 0.7 * mass) / max(vLight.z, 1.0);
   // And the film of water on it gives back the bright air round it, most at its edges: its dark is wine and never black.
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);

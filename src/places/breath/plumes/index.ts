@@ -14,6 +14,8 @@ export const PARTS: readonly string[] = ['gill-plumes'];
 
 /** Staged, metres: see where the bushes are placed. */
 const HERO_WEST = 4.6;
+/** Which of `BUSHES` stands on the south lip at the right edge of the wide lens. */
+const SOUTH = 6;
 
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
@@ -30,8 +32,8 @@ const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
 
 /** Staged for shot breath-02: where each hanging one is rooted (x, z), how tall, and the point on the ground it leans over (x, z). */
 const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
-  [-14.1, 27.6, 4.2, -9.5, 25.2],
-  [-15.0, 26.0, 3.8, -10.6, 23.6],
+  [-14.1, 27.6, 4.2, -8.9, 24.6],
+  [-15.0, 26.0, 3.8, -10.0, 23.0],
 ];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
@@ -81,7 +83,7 @@ export function create(ctx: Context): Piece {
     const [x, z] = i === 1 ? [-36.31, -1.13] : i === 0 ? [at[0] - 1.17, at[1] - 2.1] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
     // The one on the south-west lip is by the wide lens: there it is a low fountain, not a tall plume in the corner of that frame.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.17 : i === 0 ? tall * 1.3 : tall, lean: i === 1 ? Math.atan2(0.35, 0.94) : Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 1.0 } : i === 1 ? { full: 1.3 } : i === 5 ? { full: 0.5 } : {}) });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.11 : i === 0 ? tall * 1.3 : tall, lean: i === 1 ? Math.atan2(0.35, 0.94) : Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 1.0 } : i === 1 ? { full: 0.95 } : i === 5 ? { full: 0.4 } : {}) });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
@@ -89,7 +91,7 @@ export function create(ctx: Context): Piece {
   for (let j = 0; j < 16; j++) {
     const bearing = -72 + (j + fill.next()) * (50 / 16);
     const [x, z] = onRim(bearing, fill.range(0.8, 5.5));
-    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain' });
+    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain', full: 0.92 });
   }
   // And on the lip west of the first tall one, toward the channel: the low end of the crescent, left of every lens that stands at the lip
   // (the breath-03 lens at x -32.5 looks north past it; from the rim's lens it is small red tufts at the left).
@@ -100,7 +102,7 @@ export function create(ctx: Context): Piece {
     const tall = fill.range(0.9, 1.9);
     const y = floor(x, z);
     if (y < SEA_LEVEL + 0.12) continue;
-    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain' });
+    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain', full: 0.92 });
   }
   // A seedling whose anchor is under the water is not grown: nothing of this kind roots in the channel.
   for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall: tall * 0.7, lean: Math.atan2(-x, z), detail: 0.5, habit: 'fountain', full: 0.45 });
@@ -121,7 +123,7 @@ export function create(ctx: Context): Piece {
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
-    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 1.9 };
+    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 2.4 };
   });
   const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 
@@ -156,10 +158,12 @@ export function create(ctx: Context): Piece {
   const hangGroup = new THREE.Group();
   const heroGroup = new THREE.Group();
   const domeGroup = new THREE.Group();
-  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : group, i < 2 ? 1.5 : 1));
+  // The one on the south lip is cut by the right edge of the wide lens of breath-01, as in its picture: it is kept dark there, as the others are.
+  const southGroup = new THREE.Group();
+  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : i === SOUTH ? southGroup : group, i < 2 ? 1.5 : i === 5 || i === SOUTH ? 0.4 : 1));
   rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
   for (const g of hangGrown) meshes(g, hangGroup, 0.4);
-  group.add(rimGroup, hangGroup, heroGroup, domeGroup);
+  group.add(rimGroup, hangGroup, heroGroup, domeGroup, southGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
@@ -184,7 +188,7 @@ export function create(ctx: Context): Piece {
     lumps.push(g);
     const m = new THREE.Mesh(g, holdfastMaterial);
     m.frustumCulled = false;
-    (rimBushes.includes(b) ? (rimBushes.indexOf(b) >= RIM_GROWTH.length ? domeGroup : rimGroup) : bushes.indexOf(b) < 2 ? heroGroup : group).add(m);
+    (rimBushes.includes(b) ? (rimBushes.indexOf(b) >= RIM_GROWTH.length ? domeGroup : rimGroup) : bushes.indexOf(b) < 2 ? heroGroup : bushes.indexOf(b) === SOUTH ? southGroup : group).add(m);
   }
   lump.dispose();
 
@@ -223,7 +227,7 @@ export function create(ctx: Context): Piece {
         if (drops.next() > (run * share) / Math.max(1, open.length)) continue;
         const every = drops.range(2.2, 8);
         const offset = drops.range(0, 11);
-        const size = 0.005 + 0.016 * drops.next() ** 2.2;
+        const size = 0.007 + 0.022 * drops.next() ** 2.2;
         const x = tip.a[0] + tip.b[0] + tip.c[0];
         const z = tip.a[2] + tip.b[2] + tip.c[2];
         const ground = floor(x, z);
