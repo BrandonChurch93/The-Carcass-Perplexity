@@ -21,6 +21,8 @@ export interface Drinker {
   wideOnly?: boolean;
   /** The level its feet stand at, where that is not the ground under it. */
   level?: number;
+  /** How deep it wades at most, in its own sizes, where that is not WADE. */
+  wade?: number;
   /** When something ahead of it takes its whole attention: from then it looks nowhere else. */
   alert?: number;
   /** How far it gives ground when that takes it, in its own sizes: it steps back, one hoof after another. */
@@ -50,6 +52,8 @@ const STRIDE = 0.44;
 
 /** How deep they wade: the bed they stand on is never further under the water than this, metres. */
 export const WADE = -0.34;
+/** How deep this one wades at most, in the world. */
+export const wadeOf = (d: { wade?: number; build: { size: number } }): number => (d.wade ?? WADE) * d.build.size;
 
 const hash = (n: number): number => {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -94,7 +98,8 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, down: (t: number) => number, watches: boolean, calf = false): Drinker =>
     one(key.position[0] + Math.sin(bearing * DEG) * distance, key.position[2] - Math.cos(bearing * DEG) * distance, facing, size, down, watches, true, calf);
   const shore = (d: Drinker): Drinker => ({ ...d, key: SHORE_KEY });
-  const mats = (d: Drinker): Drinker => ({ ...d, key: MATS_KEY });
+  // Out on the mats the bed is knee deep, and they stand on it: the lake cuts each leg half way up the cannon.
+  const mats = (d: Drinker): Drinker => ({ ...d, key: MATS_KEY, wade: -0.44 });
   const centre = KEYS.centre.position;
   const H = SHORE_HEADING;
   const list: Drinker[] = [
@@ -177,15 +182,20 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const gone = d.walks ? d.walks * s * (t - WIDE_KEY) : 0;
   const px = d.x + sinB * gone;
   const pz = d.z - cosB * gone;
-  const y = d.level ?? Math.max(WADE * s, ground(px, pz));
+  const y = d.level ?? Math.max(wadeOf(d), ground(px, pz));
   const stride = d.walks ? STRIDE / (STANCE * d.walks) : 1;
   const shift: V3 = [0, 0, 0];
   let roll = 0;
   const hooves: Hoof[] = [];
   // It stands on three legs and rests the fourth, a hind one: that hock is slack and forward, the toe only touches, the hip on that side hangs
   // and the trunk is carried over the three that bear. What takes its attention puts the leg back under it.
-  const restLeg = hash(o * 47) < 0.5 ? 0 : 1;
-  const rests = d.walks || d.lies ? 0 : 0.8 * (d.alert === undefined ? 1 : 1 - ease(d.alert - 0.1, d.alert + 0.3, t));
+  // It does not rest one leg for ever: every few seconds, each at its own time, it sets that hoof down flat, stands square a moment, and lets
+  // the other hind leg go.
+  const change = (t - d.key) / (5.5 + 3.5 * hash(o * 53)) + hash(o * 59);
+  const swapped = Math.floor(change);
+  const into = change - swapped;
+  const restLeg = Math.abs(swapped + (hash(o * 47) < 0.5 ? 0 : 1)) % 2;
+  const rests = d.walks || d.lies ? 0 : 0.8 * ease(0.07, 0.2, into) * (1 - ease(0.92, 1, into)) * (d.alert === undefined ? 1 : 1 - ease(d.alert - 0.1, d.alert + 0.3, t));
   for (let k = 0; k < 4; k++) {
     const every = d.stepEvery * (0.75 + 0.6 * hash(o * 17 + k));
     const u = (t - d.key) / every + 0.22 + 0.56 * hash(o * 31 + k * 3.7);
@@ -233,18 +243,18 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     // The ground under this hoof, in the world.
     const wx = px - cosB * hx + sinB * hz;
     const wz = pz - sinB * hx - cosB * hz;
-    const floor = d.level === undefined ? Math.max(WADE * s, ground(wx, wz)) - y : 0;
-    hooves.push({ at: [hx, floor + 0.17 * s * arcUp + 0.012 * s * slack, hz], fold: d.lies ? 1 : Math.max(arcUp, 0.42 * slack) });
+    const floor = d.level === undefined ? Math.max(wadeOf(d), ground(wx, wz)) - y : 0;
+    hooves.push({ at: [hx, floor + 0.17 * s * arcUp + 0.012 * s * slack + 0.045 * s * Math.sin(Math.PI * slack / 0.8), hz], fold: d.lies ? 1 : Math.max(arcUp, 0.42 * slack) });
     // Its weight goes off the leg before the hoof leaves the ground and comes back on after it lands.
     const side = k % 2 === 0 ? 1 : -1;
     const hind = k < 2;
     shift[0] -= side * 0.08 * s * weight;
     shift[2] += (hind ? 1 : -1) * 0.03 * s * weight;
     shift[1] -= 0.012 * s * weight;
-    roll += side * (0.018 * weight + 0.05 * slack);
+    roll += side * (0.018 * weight + 0.075 * slack);
     shift[1] -= 0.01 * s * slack;
     // The hip over a leg at rest hangs, and the trunk stands over the other hind leg.
-    shift[0] -= side * 0.05 * s * slack;
+    shift[0] -= side * 0.085 * s * slack;
   }
   // What takes its attention sets it back on its haunches: the weight goes onto the hind legs and the croup sinks a little, then it eases.
   const taken = d.alert === undefined ? 0 : ease(d.alert - 0.05, d.alert + 0.5, t) * (1 - 0.45 * ease(d.alert + 1.6, d.alert + 4.2, t));
