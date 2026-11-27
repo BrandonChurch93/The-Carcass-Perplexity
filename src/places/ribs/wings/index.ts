@@ -1236,10 +1236,9 @@ export function create(ctx: Context): Piece {
     return { at, x, y, z, dx: dx / l, dy: dy / l, dz: dz / l, px: dz / flat, pz: -dx / flat, speed: near ? 27 + 2 * hash(k, 95) : FLOCK.speed * (0.85 + 0.3 * hash(k, 95)), seed: hash(k, 96), sway: near ? 0.25 : 1 };
   });
   // Two of them are what the eye is given in the first frame: each stands in the bright gap between the first blade and the outer one, large
-  // enough to be read as an animal, and is flown where the lens has it. It keeps its bearing from the lens (its own way is a third of a
-  // right angle to the left of the look, as the lens crabs, so the lens comes up on its quarter), banked into its turn so that the spread
-  // of its sails is turned to the lens, and grows for a second; then it goes on round to the left and up, and leaves by the top over a
-  // quarter of a second. Metres ahead of the lens at the start and lost each second, the bearing (right, up; tangents), when it turns
+  // enough to be read as an animal, and is flown where the lens has it. It keeps its bearing from the lens, banked into its turn so that the spread
+  // of its sails is turned to the lens, and grows as the lens closes on it; then it goes on round to the left and up, and leaves by the
+  // top of the frame. Metres ahead of the lens at the start and lost each second, the bearing (right, up; tangents), when it turns
   // away and how far (left, up; metres), its bank and its size.
   const HEROES: { [k: number]: { ahead: number; closes: number; right: number; up: number; turns: number; left: number; climbs: number; bank: number; size: number } } = {
     0: { ahead: 40, closes: 16, right: -0.0655, up: 0.0527, turns: 0.95, left: 12, climbs: 10, bank: 0.55, size: 1.15 },
