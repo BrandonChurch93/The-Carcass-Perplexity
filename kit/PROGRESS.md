@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 178, 2026-11-27 16:31 UTC:
+Status 179, 2026-11-27 17:12 UTC:
 
-- `01-s178-ribs-2081-native1.jpg`: The Ribs at 0:34 (frame 2081), the frame with the hung body: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left and bottom right, dark hanging strands like wet rope, blue-grey to black, with clusters of small buff knobs on them, both out of focus. Top right, a pale weathered beam crossing the crop on a slant, its surface flaking and fibrous like dry bone or driftwood, with the dark strands curving down behind it, grey sky at the right and a few thin pale streaks of rain. Bottom left, soft mottled grey with nothing sharp in it, cloud or a far cliff. The beam holds real grain at this size and is the sharpest thing here; the strands are smooth tubes with little surface of their own, and three of the four crops are blurred, so most of what these boxes show carries no fine detail. The critic of fine detail gave this place 3 of 10 in round 30. The Builder's reading. Below the bar.
-- `02-s178-heart-3685-native1.jpg`: The Heart at 1:01 (frame 3685): four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left, the thin black jointed legs of a tall animal crossing the crop before a brown-grey rock wall in haze, a dark red rock with a glowing edge at the left and orange glow along the ground. Top right, a band of bright yellow and orange lava with a blotchy broken edge, and behind it a tall thin-legged animal with a long neck standing in red-brown haze. Bottom left, a cliff fading into grey-pink smoke with a small long-legged animal in silhouette far off and orange glow at the ground. Bottom right, the dark crust close to the camera: grey-black folds covered in fine swirled lines like fingerprints, with a patch of small orange sparks and two dark cracks. The crust is the sharpest thing here and its swirls repeat like an engraved pattern; the legs are flat black with no surface; the edge of the lava reads as flat blotches with dark outlines; the far wall and the smoke are soft. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `03-s178-marsh-5940-native1.jpg`: The Blood Marsh at 1:39 (frame 5940), among the plants: four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the first half of the standard boxes. Top left, two pale ringed trunks close to the camera, buff and salmon with raised white rings and red-brown stains, thin stalks and faint grey leaf fans in pale pink haze between them. Top right, curved red blades at the left and a red grassy clump at the lower right with three clear drops on them, pale flat ground behind with faint shapes of far plants. Bottom left, red spiky leaf crowns on thin pale stalks, a grey boulder at the lower left and one red bud with flat faces like a cut stone. Bottom right, a dense mass of red grass blades close to the camera with a few drops. The trunks carry fine grain and their rings read as real; the blades are flat ribbons with pale edges and little surface, the bud and the edge of the left trunk show straight facets, and everything behind the plants is a pale flat wash that does not read as water. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `01-s179-ribs-2081-native2.jpg`: The Ribs at 0:34 (frame 2081), the frame with the hung body: two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left, sharp: long strands running down on a slant, pale brown and pink ones like stripped stems or sinew over dark grey-black glossy blades, with olive-brown ribbons between them that look translucent. Right, out of focus: grey sea with low dark rocks, pale bands of foam and one blurred buff shape near the top. The critic of fine detail gave this place 3 of 10 in round 30. The Builder's reading. Below the bar.
+- `02-s179-heart-3685-native2.jpg`: The Heart at 1:01 (frame 3685): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: dark grey-brown crust in thick ropy folds, each with fine streaks along it like bark, a spot of bright orange at the lower left edge, brown rock and a pale shape at the top. Right: darker crust in flat streaked bands, blurred across the middle, the foot of a brown ringed limb at the top left and fine swirled lines at the top right. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `03-s179-marsh-5940-native2.jpg`: The Blood Marsh at 1:39 (frame 5940), among the plants: two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: one pale ringed trunk, buff with raised white rings and red-brown stains, two small pale shapes like moths on its right edge, and soft murky red-brown water behind it. Right: the red-brown water alone, with darker red streaks, a few small pale flecks and one pale ringed bump low in the middle, nothing sharp in it. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
 
+Status 178, 2026-11-27 16:31 UTC, showed: The Ribs at 0:34 (frame 2081), the frame with the hung body: four crops at full size from the judged frame of round 30, drawn at 3840x2160...
 Status 177, 2026-11-27 16:18 UTC, showed: The Breath at 1:27 (frame 5242), a wader close to the camera: two crops at full size from the judged frame of round 30, drawn at 3840x2160...
 Status 176, 2026-11-27 15:59 UTC, showed: The Breath at 1:27 (frame 5242), a wader close to the camera: four crops at full size from the judged frame of round 30, drawn at...
-Status 175, 2026-11-27 15:46 UTC, showed: The Ribs at 0:20 (frame 1241), the first full view of the ribs: two crops at full size from the judged frame of round 30, drawn at...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T16:31:10Z
-phase 6: 19.69 h used of 24.00 h
-build: 64.66 h used of 72.00 h
+2026-11-27T17:12:15Z
+phase 6: 20.38 h used of 24.00 h
+build: 65.35 h used of 72.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 13
+minutes since the last status: 41, status overdue
 ```
 
 ## Phases
