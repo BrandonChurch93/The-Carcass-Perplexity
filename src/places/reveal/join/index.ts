@@ -111,6 +111,7 @@ export function create(ctx: Context): Piece {
     },
     resize: (width, height) => {
       target.setSize(Math.max(8, Math.ceil(width / SMALLER)), Math.max(8, Math.ceil(height / SMALLER)));
+      (lid.uLidRows as THREE.IUniform<number>).value = Math.max(8, Math.ceil(height / SMALLER));
     },
     dispose: () => {
       sheet.geometry.dispose();

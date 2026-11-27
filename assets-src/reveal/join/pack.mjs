@@ -28,7 +28,8 @@ function tiling(a) {
         const bend = 0.04 * Math.sin(6.2832 * (2 * along + (down ? 0.3 : 0.7))) + 0.025 * Math.sin(6.2832 * (5 * along + 0.1));
         let w = ramp((0.4 - d + bend) / 0.16);
         w = w * w * (3 - 2 * w);
-        const other = down ? src[((y + N / 2) % N) * N + x] : src[y * N + ((x + N / 2) % N)];
+        // The other is also turned over, so the tile does not hold the same bank twice half a tile apart.
+        const other = down ? src[((y + N / 2) % N) * N + (N - 1 - x)] : src[(N - 1 - y) * N + ((x + N / 2) % N)];
         out[y * N + x] = Math.max(src[y * N + x] * w, other * (1 - w));
       }
     }
