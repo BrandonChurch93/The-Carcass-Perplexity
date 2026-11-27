@@ -210,6 +210,8 @@ float lowDepth(vec2 at) {
   vec4 gLane = GRADS(uvLane);
   vec4 gFlow = GRADS(uvFlow);
   vec4 gGrown = GRADS(uvGrown);
+  vec2 uvGroup = mat2(0.8, 0.6, -0.6, 0.8) * wCell / 520.0 + vec2(0.21, 0.66);
+  vec4 gGroup = GRADS(uvGroup);
   // (Where the sky stands clear nothing more is read: most of the cost of the field is its photographs.)
   lowWeigh = vec3(0.0);
   lowNear = vec2(0.0);
@@ -259,8 +261,14 @@ float lowDepth(vec2 at) {
   // (Cut at one level everywhere, the field was flecks of one size. The level stands low in some reaches, where the knots
   // run together into banks with a wide thin body round them, and high in others, where only fine specks are left.)
   float gathered = smoothstep(0.38, 0.62, torn);
-  float dense = max(pow(streak, 0.15) * pow(knots * fine, 1.3) * level - mix(1.4, 0.85, gathered), 0.0);
+  // (From orbit the smallest tufts, spread evenly, are a grey the eye and an encoder both smear into streaks. Cumulus over a
+  // sea stands in groups some tens of kilometres across with clear dark water between: from high up the field is thinned
+  // between the groups and a little thickened inside them, so the tufts gather and the water between them is left clean.)
+  float far = smoothstep(300.0, 900.0, uViewKm);
+  float grouped = smoothstep(0.43, 0.57, pic(uCloudTile, uvGroup, gGroup, 2.5).b);
+  float dense = max(pow(streak, 0.15) * pow(knots * fine, 1.3) * level * mix(1.0, mix(0.35, 1.22, grouped), far) - mix(1.4, 0.85, gathered), 0.0);
   float drawn = mix(0.1, 0.35, gathered) * max(pow(streak, 0.5) * mix(1.0, knots, 0.7) * level - 0.8, 0.0) * mix(1.0, lump, 0.4);
+  drawn *= mix(1.0, 0.2 + grouped, far);
   return (dense + drawn) * smoothstep(0.02, 0.3, share);
 }
 
