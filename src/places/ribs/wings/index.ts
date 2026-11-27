@@ -716,6 +716,8 @@ export function create(ctx: Context): Piece {
     fig.shade = (s.seed * 7.3) % 1 < 0.3 ? 0.4 + 0.25 * ((s.seed * 3.1) % 1) : 0;
     // Those of a clump lay no shade of their own on the rock (below zero tells the sheet so): shades laid one over another are a black blot.
     if (s.low) fig.shade = -1 - fig.shade;
+    // In the film none lays the sheet's shade: it is drawn on whatever stands nearer than the sheet, and was a dark blot on the rock in front.
+    if (lp === null) fig.shade = -1 - Math.abs(fig.shade);
   };
 
   // ---- The flock in the air ----
