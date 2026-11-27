@@ -73,7 +73,7 @@ float sunImage(vec2 xz) {
 // streaks of the low field curve into its arms.
 vec2 roundStorm(vec2 at) {
   vec2 from = at - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))});
-  float turned = 1.1 * exp(-length(from) / ${f(1100 * KM)});
+  float turned = 0.5 * exp(-length(from) / ${f(1100 * KM)});
   return vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))}) + mat2(cos(turned), sin(turned), -sin(turned), cos(turned)) * from;
 }
 
@@ -127,10 +127,12 @@ vec4 lowGD = vec4(0.0);
 vec4 lowGE = vec4(0.0);
 vec3 lowWeigh = vec3(0.0);
 vec2 lowNear = vec2(0.0);
+// How much softer than the pixel the field is read (1 as it is seen; more for its shadow from orbit).
+float lowSoft = 1.0;
 
 const mat2 LOW_A = mat2(0.97, -0.24, 0.24, 0.97);
 const mat2 LOW_B = mat2(0.8, 0.6, -0.6, 0.8);
-const mat2 LOW_C = mat2(0.28, 0.96, -0.96, 0.28);
+const mat2 LOW_C = mat2(0.94, -0.34, 0.34, 0.94);
 const mat2 LOW_D = mat2(-0.6, 0.8, -0.8, -0.6);
 const mat2 LOW_E = mat2(0.71, -0.7, 0.7, 0.71);
 
@@ -160,8 +162,16 @@ float lowDepth(vec2 at) {
   // the lanes curve, the dashes turn with them, and cloud carried through a bend is seen to turn.)
   vec2 bendAt = at / ${f(KM)};
   w += ${f(KM)} * vec2(
-    360.0 * sin(bendAt.y / 1300.0 + 1.3 * sin(bendAt.x / 2300.0) + 0.6) + 100.0 * sin((bendAt.y + 0.5 * bendAt.x) / 520.0 + 2.1),
-    520.0 * sin(bendAt.x / 1150.0 + 1.1 * sin(bendAt.y / 1900.0) + 1.9) + 130.0 * sin((bendAt.x - 0.6 * bendAt.y) / 560.0 + 0.4));
+    180.0 * sin(bendAt.y / 1300.0 + 1.3 * sin(bendAt.x / 2300.0) + 0.6) + 50.0 * sin((bendAt.y + 0.5 * bendAt.x) / 520.0 + 2.1),
+    260.0 * sin(bendAt.x / 1150.0 + 1.1 * sin(bendAt.y / 1900.0) + 1.9) + 65.0 * sin((bendAt.x - 0.6 * bendAt.y) / 560.0 + 0.4));
+  // (And within a few hundred kilometres it meanders: laid straight, the grain of the photographs stood at one angle over a
+  // whole ocean. The filaments of specks now wander by a few degrees either way.)
+  // (All the bends together must not draw a photograph out more than three to one, or its cells are strokes and, where the
+  // ground folds on itself, straight hairlines that cross. As they stand the worst is 2.7 to 1 and the middle 1.3,
+  // measured over the sea of the widest view by the change of the ground across ten kilometres. Whoever adds a bend measures again.)
+  w += vec2(
+    6.0 * sin(at.y / 61.0 + 1.4 * sin(at.x / 173.0 + 0.7) + 2.3) + 1.8 * sin((at.y - 0.7 * at.x) / 29.0 + 1.1),
+    5.4 * sin(at.x / 67.0 + 1.2 * sin(at.y / 151.0 + 2.9) + 0.5) + 1.65 * sin((at.x + 0.6 * at.y) / 33.0 + 4.0));
   vec2 wSlow = w;
   vec2 wLane = w;
   vec2 wCell = w;
@@ -178,7 +188,7 @@ float lowDepth(vec2 at) {
   // stretched streak is left to give the field its shape, which then reads as brush strokes at one angle. The clusters and the
   // specks are laid so a puff is five to eight kilometres, two sizes on two winds; the finer lays come in below, as before.)
   lowUvA = LOW_A * wLane / vec2(1050.0, 760.0) + vec2(0.3, 0.7);
-  lowUvB = LOW_B * wCell / 540.0 + vec2(0.13, 0.4);
+  lowUvB = LOW_B * wCell / 330.0 + vec2(0.13, 0.4);
   lowUvC = LOW_C * wPuff / 700.0 + vec2(0.61, 0.27);
   lowUvD = LOW_D * wCell / 64.0 + vec2(0.83, 0.52);
   lowUvE = LOW_E * w / 22.0 + vec2(0.37, 0.91);
@@ -190,9 +200,9 @@ float lowDepth(vec2 at) {
   vec2 uvLane = LOW_A * wLane / vec2(4200.0, 1150.0) + vec2(0.52, 0.18);
   vec2 uvFlow = mat2(0.92, 0.39, -0.39, 0.92) * wFlow / vec2(4200.0, 1500.0) + vec2(0.62, 0.35);
   vec2 uvGrown = w / 1700.0 + vec2(0.44, 0.08);
-  lowGA = GRADS(lowUvA);
-  lowGB = GRADS(lowUvB);
-  lowGC = GRADS(lowUvC);
+  lowGA = GRADS(lowUvA) * lowSoft;
+  lowGB = GRADS(lowUvB) * lowSoft;
+  lowGC = GRADS(lowUvC) * lowSoft;
   lowGD = GRADS(lowUvD);
   lowGE = GRADS(lowUvE);
   vec4 gTorn = GRADS(uvTorn);
@@ -231,9 +241,9 @@ float lowDepth(vec2 at) {
   if (lowNear.x > 0.0) lump = mix(1.0, cloudAt(uMatPopcorn, lowUvD, lowGD, 0.34), lowNear.x);
   if (lowNear.y > 0.0) grain = mix(1.0, cloudAt(uMatSpecks, lowUvE, lowGE, 0.2), lowNear.y);
   // (A field is not one kind of cloud: here it is all fine specks along the wind, there the clusters have grown.)
-  float grown = smoothstep(0.35, 0.65, pic(uCloudTile, uvGrown, gGrown, 3.0).b);
-  float byCluster = mix(0.35, 0.9, grown);
-  float byPuff = mix(1.0, 0.7, grown);
+  float grown = smoothstep(0.46, 0.7, pic(uCloudTile, uvGrown, gGrown, 3.0).b);
+  float byCluster = mix(0.0, 0.85, grown);
+  float byPuff = mix(1.0, 0.6, grown);
   float knots = mix(1.0, cluster, byCluster) * mix(1.0, puff, byPuff);
   float fine = mix(1.0, lump, 0.55) * mix(1.0, grain, 0.4);
   lowWeigh = vec3(byCluster, byPuff, share);
@@ -246,8 +256,11 @@ float lowDepth(vec2 at) {
   // photograph of them has; nothing is pressed flat into a raft.)
   float level = mix(0.56, 0.9, share);
   // (The knots take their shape from the puffs, not from the streak: the streak only says where they gather.)
-  float dense = max(pow(streak, 0.35) * pow(knots * fine, 1.5) * level - 1.2, 0.0);
-  float drawn = 0.17 * max(streak * level - 0.85, 0.0) * mix(1.0, lump, 0.4);
+  // (Cut at one level everywhere, the field was flecks of one size. The level stands low in some reaches, where the knots
+  // run together into banks with a wide thin body round them, and high in others, where only fine specks are left.)
+  float gathered = smoothstep(0.38, 0.62, torn);
+  float dense = max(pow(streak, 0.15) * pow(knots * fine, 1.3) * level - mix(1.4, 0.85, gathered), 0.0);
+  float drawn = mix(0.1, 0.35, gathered) * max(pow(streak, 0.5) * mix(1.0, knots, 0.7) * level - 0.8, 0.0) * mix(1.0, lump, 0.4);
   return (dense + drawn) * smoothstep(0.02, 0.3, share);
 }
 
@@ -399,7 +412,9 @@ float cloudShade(vec2 xz) {
   vec2 toSun = uSunDir.xz / max(uSunDir.y, 0.2);
   // From orbit the shadows are drawn longer than they fall, as relief is on a map, so that each height of cloud is seen to stand off the sea.
   float lift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
-  float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * lift), 0.0));
+  // (From orbit the shadow of the low field is read soft: sharp, every fleck of cloud had a dark twin cut to its own shape.)
+  lowSoft = mix(1.0, 4.5, smoothstep(200.0, 700.0, uViewKm));
+  float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * min(lift, 1.7)), 0.0));
   float high = highDepth(xz + toSun * ${HIGH_KM.toFixed(1)} * lift);
   // (The middle deck stands well off the ground, and its shadow is drawn well off it: that is what tells its height.)
   float bank = 1.0 - exp(-1.3 * max(bankDepth(xz + toSun * ${BANK_KM.toFixed(1)} * 2.2 * lift), 0.0));
@@ -410,5 +425,5 @@ float cloudShade(vec2 xz) {
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
   float stormShade = pow(1.0 - smoothstep(0.02, 0.48, fromStorm), 1.3) * uArrive;
-  return (1.0 - mix(0.55, 0.78, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.3 * high * uArrive) * (1.0 - 0.8 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
+  return (1.0 - 0.55 * smoothstep(0.04, 0.6, low)) * (1.0 - 0.3 * high * uArrive) * (1.0 - 0.8 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
 }`;
