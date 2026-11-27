@@ -188,9 +188,25 @@ float lakePath(float path) {
 // the fire). It is read at the map's finest level and is gone two metres from a gap and four metres above the lake. Nothing reads the lake wide for
 // a level face any more: that wash is what turned a kilometre of crust maroon.
 const float LAKE_LIP = 0.5;
+const float LAKE_BANK = 1.3;
 vec3 lakeLip(vec3 p, float h) {
   if (h >= 4.0) return vec3(0.0);
   return lakeGlow(p.xz, 0.9) * (LAKE_LIP * smoothstep(4.0, 1.0, h));
+}
+// The bank. The taps of lakeIrradiance look down from a face by its height, so a face half a metre over the lake saw the lava under it and no
+// further, and the owners give the lake's light on the crust a hundredth: a channel lit nothing two metres from its brim, and its bank and the
+// crust beside it stood as cold as ground a hundred metres off. But the fire of a channel lies at the level of its bank and comes to it along
+// the ground, and what takes it is whatever leans toward it, by how far it leans (a face leaning a half all of it, a ripple of the
+// crust two fifths, a level face a tenth, by the grains of rough ground that face the fire): one tap 3.5 m out the way the face leans (a level face:
+// where it lies), over a disc that holds 1 to 6 m. The side of a block that is turned to the fire burns and its top does not: the rim is hard. It is whole to
+// 0.9 m above the lake and gone by 2.2 m: at 5 m it lit the whole flank of a mound that stands by a seam, and the mound at the lens's feet in the
+// view of the mouth stood as a red slab where it is dark. It goes with the round lights (emitterIrradiance), which every owner takes whole, and under their shade: a pad or a
+// body that stands between cuts it. The out argument is the way to the fire along the ground.
+vec3 lakeBank(vec3 p, vec3 n, out vec2 toward) {
+  float h = max(p.y, 0.0);
+  float side = length(n.xz);
+  toward = n.xz / max(side, 0.25);
+  return lakeGlow(p.xz + toward * 3.5, 2.5) * (3.14159 * LAKE_BANK * (0.1 + 0.9 * smoothstep(0.0, 0.5, side)) * smoothstep(2.2, 0.9, h));
 }
 vec3 lakeIrradiance(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);
@@ -291,6 +307,12 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   poolLit *= clamp(0.4 + 2.4 * dot(n.xz, poolWay), 0.0, 1.0);
   e += poolLit;
   aim += vec3(poolWay, 1.0) * poolLit.r;
+  if (p.y < 2.2) {
+    vec2 bankWay;
+    vec3 bankLit = lakeBank(p, n, bankWay);
+    e += bankLit;
+    aim += vec3(bankWay, 1.0) * bankLit.r;
+  }
   // The stream of the fall (uRigStream: a row every few metres of z from the lip to the toe of the fan, each the middle of the stream, half the
   // width of its open lava, the height of its surface, and its lean and share in one number; uRigStreamSpan: z of the first row, rows in a metre,
   // the last row, z of the last row). The rock beside it takes the lava's light from that strip: whole at the brim, half at 6 m, nothing past
@@ -312,15 +334,16 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   aim += vec3(toStream.xz * inversesqrt(max(dot(toStream.xz, toStream.xz), 1e-4)), 1.0) * streamLit.r;
   // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the fire, on the crust of the lake
   // only (within a metre of its level). The map is read once, toward where the light comes from: a read for each light cost half a second a sample.
-  if (aim.z > 0.02) {
+  // Above that level nothing is cut, so nothing is read: the land and the walls paid two reads here for a shade they never took.
+  if (aim.z > 0.02 && p.y < 1.2) {
     float low = smoothstep(1.2, 0.3, p.y);
     vec2 toward = aim.xy * (1.4 / aim.z);
     // A second read at 3 m, at half strength: the shade of a leg or a boulder runs on past its first metre and thins, as a thrown shade does.
     // The read costs nothing that can be measured (the whole frame at the wide key with and without the first: 20.87 and 20.93 s).
-    float thrown = max(contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y)), 0.5 * contactDrawn(vec3(p.x + 2.15 * toward.x, p.y, p.z + 2.15 * toward.y)));
-    // And where the thing itself stands: the crust under a pad and round its edge is closed to the fire as it is to the sky. The thrown shade alone
-    // began a pace behind the foot, so a pad stood on lit crust and its shade lay apart from it.
-    thrown = max(thrown, contactDrawn(p));
+    // The first read lies 0.85 m toward the light (it lay 1.4 m off, and the shade began a pace behind the foot, so a pad stood on lit crust
+    // with its shade apart from it; a further read where the thing stands closed that, and cost a read on every pixel of the crust). So near,
+    // the shade begins at the edge of the pad and the crust under its rim is closed to the fire as it is to the sky.
+    float thrown = max(contactDrawn(vec3(p.x + 0.6 * toward.x, p.y, p.z + 0.6 * toward.y)), 0.5 * contactDrawn(vec3(p.x + 2.15 * toward.x, p.y, p.z + 2.15 * toward.y)));
     e *= 1.0 - low * EMITTER_SHADE * thrown;
   }
   return e * uCast;
