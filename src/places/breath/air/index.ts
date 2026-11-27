@@ -41,11 +41,17 @@ export function breathAt(seconds: number): [number, number, number, number] {
   // It fills from below for a second, wells up over the mouth for two more, then slides off over the west lip and thins: by three and a
   // half seconds (the end of the shot that looks down the shaft) the rock shows again. Every part is smooth in time: no corner.
   const after = (x: number): number => 0.5 * (x + Math.sqrt(x * x + 0.25));
+  // It does not come from nothing: for five seconds before it the pool swells toward the brim and what stands over the wells thickens, so
+  // the breath is the top of a rise and not a thing switched on. The swell is gone into the breath by the time the breath is whole.
+  const build = smooth((u + 5.5) / 5.5) * Math.exp(-after(u - 3) / 4);
   const fill = smooth((u - 0.1) / 1.2);
-  const over = smooth((u - 0.3) / 2.0) * (0.08 + 0.92 * Math.exp(-after(u - 2.3) / 0.9));
+  const burst = smooth((u - 0.3) / 2.0) * (0.08 + 0.92 * Math.exp(-after(u - 2.3) / 0.9));
+  const over = 1 - (1 - 0.22 * build) * (1 - burst);
   // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
-  const level = -10 + swell + 3.5 * fill * (0.3 + 0.7 * Math.exp(-after(u - 2.6) / 4)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-after(u - 6) / 7);
-  const apron = smooth((u - 1.6) / 1.8) * (0.25 + 0.75 * Math.exp(-after(u - 3.6) / 2.6));
+  const risen = fill * (0.3 + 0.7 * Math.exp(-after(u - 2.6) / 4));
+  const level = -10 + swell + 3.5 * (1 - (1 - 0.6 * build) * (1 - risen)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-after(u - 6) / 7);
+  const poured = smooth((u - 1.6) / 1.8) * (0.25 + 0.75 * Math.exp(-after(u - 3.6) / 2.6));
+  const apron = 1 - (1 - 0.3 * build) * (1 - poured);
   const spread = smooth((u - 2.2) / 7);
   return [level, over, apron, spread];
 }
@@ -65,7 +71,7 @@ export function create(ctx: Context): Piece {
     // A small vent near by is a low puff blown flat down the wind, white at its foot, as the approved pictures have it.
     const rise = r * (2.6 + 3.2 * tall) * (far ? 0.52 : 0.62);
     const lean: [number, number] = far ? [-0.2, 0.07] : [-1.0, 0.36];
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.3 + (far ? 0.95 : 0.6) * tall), rise * 0.58, r * (1.3 + (far ? 0.95 : 0.6) * tall)], lean, dense: (far ? 0.42 : 0.4) / r, repeat: r * (far ? 2.6 : 1.9), open: far ? 0.62 : 0.8, climb: 4.5 + r * 0.2, sun: far ? 0.8 : 0.65 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (far ? 1.0 + 0.7 * tall : 1.3 + 0.6 * tall), rise * 0.58, r * (far ? 1.0 + 0.7 * tall : 1.3 + 0.6 * tall)], lean, dense: (far ? 0.42 : 0.4) / r, repeat: r * (far ? 2.6 : 1.9), open: far ? 0.62 : 0.8, climb: (far ? 11 : 4.5) + r * 0.2, sun: far ? 0.8 : 0.65 });
     bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (2.4 + 1.6 * tall), rise * 0.3, r * (1.6 + 1.0 * tall)], lean: [-1.4, 0.5], dense: (far ? 0.008 : 0.022) / r, repeat: r * 4.0, open: 0.68, climb: 2.4, sun: 0.5 });
   }
   // The banks that lie out on the flats.
@@ -106,7 +112,7 @@ export function create(ctx: Context): Piece {
       tNoise: { value: noise },
       uShow: { value: show },
       uBreath: { value: breath },
-      uHaze: { value: new THREE.Vector4(0.08e-4, 420, 1.1e-3, 14) },
+      uHaze: { value: new THREE.Vector4(0.08e-4, 420, 0.85e-3, 14) },
       uBodyCount: count,
       uBodyA: { value: bodyA },
       uBodyB: { value: bodyB },
