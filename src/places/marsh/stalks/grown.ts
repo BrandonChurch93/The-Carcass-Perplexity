@@ -217,10 +217,10 @@ void main() {
   float ringF = ringQ - ringId;
   float ringK = (0.3 + 0.7 * step(0.33, fract(sin(ringId * 12.9898 + seed * 78.233) * 43758.5453))) * byLens;
   float side = smoothstep(0.25, 0.65, fbm(vec2(vUv.x * 3.0 + seed * 3.0, vUv.y * 0.8)));
-  float ran = smoothstep(0.3 + 0.5 * (1.0 - side), 0.88, ringF + 0.16 * (tongue - 0.5));
-  albedo *= mix(vec3(1.0), vec3(1.05, 0.95, 0.84), byLens);
-  albedo = mix(albedo, mix(vec3(0.6, 0.3, 0.12), vec3(0.4, 0.15, 0.07), tongue) * (0.7 + 0.6 * luma), 0.92 * ran * (0.35 + 0.65 * side) * ringK);
-  albedo *= mix(vec3(1.0), vec3(0.26, 0.17, 0.13), smoothstep(0.8, 0.92, ringF) * ringK * (0.7 + 0.3 * tongue));
+  float ran = smoothstep(0.25 + 0.5 * (1.0 - side), 0.85, ringF + 0.2 * (tongue - 0.5));
+  albedo *= mix(vec3(1.0), vec3(0.95, 0.87, 0.73), byLens);
+  albedo = mix(albedo, mix(vec3(0.13, 0.042, 0.012), vec3(0.055, 0.02, 0.008), tongue) * (0.7 + 0.6 * luma), 0.95 * ran * (0.55 + 0.45 * side) * ringK);
+  albedo *= mix(vec3(1.0), vec3(0.14, 0.08, 0.06), smoothstep(0.66, 0.84, ringF) * ringK * (0.7 + 0.3 * tongue));
   albedo = mix(albedo, vec3(0.68, 0.65, 0.62) * (0.9 + 0.2 * grain), 0.75 * (1.0 - smoothstep(0.06, 0.2, ringF)) * ringK * smoothstep(0.3, 0.5, patchy));
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
@@ -544,21 +544,23 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
     const off = fine <= 13;
     const wide = Math.min(1.5, (19 * 2 * w.R * size) / slim, (off ? 0.42 : 0.5) * w.h) * (1.15 + 0.9 * u * u + 0.25 * swept);
     // How far a head arches over to its side is the plant's own: one stands swept up, the next hangs its ends.
-    const arch = (off ? 0.45 : 1) * (0.6 + 1.0 * ((w.seed * 41.3) % 1));
+    const arch = (off ? 1.25 : 1) * (0.6 + 1.0 * ((w.seed * 41.3) % 1));
+    // Its sprays stand to one side of the first, never either side of it: a head has no middle to be even about.
+    const hand = (w.seed * 53.9) % 1 < 0.5 ? -1 : 1;
     const sprays = off || v < 0.4 ? 1 : v < 0.82 ? 2 : 3;
     const each = Math.max(sprays === 1 ? 3 : 2, Math.round(fine * (0.75 + 0.6 * q) * (1 - 0.4 * ragged)));
     let first = true;
     for (let j = 0; j < sprays; j++) {
-      const turn = (c0[0] as number) + (j - (sprays - 1) / 2) * rng.range(0.5, 0.95) + rng.normal() * 0.12;
+      const turn = (c0[0] as number) + hand * j * rng.range(0.45, 0.85) + rng.normal() * 0.12;
       const tilt = rng.range(0.22, 0.6) + (j > 0 ? 0.15 : 0);
-      const reach = j === 0 ? 1 : rng.range(0.55, 0.9);
+      const reach = j === 0 ? 1 : rng.range(0.4, 0.8) / j;
       for (let k = 0; k < each; k++) {
         const sp = spent > 0.5 ? (rng.next() < spent ? 1 : 0) : rng.next() < spent ? 1 : 0;
         // A mop that hangs to its side, never a crown that droops evenly all round.
         const az = turn + rng.normal() * 0.55;
-        const leave = sp ? rng.range(1.2, 1.9) : Math.max(0.06, tilt + 0.15 + rng.normal() * 0.25);
+        const leave = sp ? rng.range(1.2, 1.9) : Math.max(0.06, tilt + (off ? 0.4 : 0.15) + rng.normal() * 0.25);
         const length = 0.95 * wide * reach * rng.range(0.5, 1.1) * (1 - ragged * rng.range(0, 0.6));
-        const fall = sp ? rng.range(1.2, 2.2) : arch + rng.range(-0.2, off ? 0.4 : 0.7);
+        const fall = sp ? rng.range(1.2, 2.2) : arch + rng.range(-0.2, off ? 0.9 : 0.7);
         // The first strap of a head is the last to go when the head is thinned for distance: no head thins to nothing.
         list.add(w, end, aim, az, leave, length, Math.min(0.026, Math.max(0.008, length * rng.range(0.026, 0.042))) * broad, rng.next(), fall, sp, first ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
         first = false;

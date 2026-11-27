@@ -382,7 +382,7 @@ export function create(ctx: Context): Piece {
         const n = dense ? 3 + thick.int(3) : 1 + thick.int(3);
         for (let k = 0; k < n; k++) {
           const a = thick.range(0, TAU);
-          const d = thick.range(0.12, 0.75) * (dense ? 2.4 : 1);
+          const d = thick.range(0.12, 0.75) * (dense ? 1.2 : 1);
           const x = w.x + Math.cos(a) * d;
           const z = w.z + Math.sin(a) * d;
           const yaw = a + thick.range(-1.2, 1.2);
@@ -407,25 +407,27 @@ export function create(ctx: Context): Piece {
       // under a red head. They stand in clumps on the ground there, none in the brine.
       const band = ctx.rng('stalks-band');
       const like = wilds.find((v) => v.foot && v.kind === 0 && v.low === 0 && v.cards.length > 0);
-      for (let c = 0; like && c < 20; c++) {
-        const ahead = band.range(11.5, 27);
-        const across = band.range(-0.75, 0.75) * ahead;
+      for (let c = 0; like && c < 24; c++) {
+        // Thickest and reddest along the shore, thinning into the haze behind it.
+        const back = Math.pow(band.next(), 2);
+        const ahead = 11.5 + 15.5 * back;
+        const across = band.range(-0.58, 0.58) * ahead;
         const cx = K1_AT[0] + K1_DIR[0] * ahead - K1_DIR[1] * across;
         const cz = K1_AT[1] + K1_DIR[1] * ahead + K1_DIR[0] * across;
         const grows = band.range(0.55, 1.2);
-        const n = 2 + band.int(6);
+        const n = 2 + band.int(6) + (back < 0.25 ? 2 : 0);
         for (let k = 0; k < n; k++) {
           const a = band.range(0, TAU);
           const d = band.range(0.1, 1.5);
           const x = cx + Math.cos(a) * d;
           const z = cz + Math.sin(a) * d;
           const yaw = band.range(0, TAU);
-          const h = grows * band.range(0.9, 3.1);
+          const h = grows * band.range(0.9, 2.6);
           const state = band.next();
-          const kind = state < 0.16 ? 2 : state < 0.27 ? 1 : 0;
+          const kind = state < 0.06 + 0.16 * back ? 2 : state < 0.15 + 0.2 * back ? 1 : 0;
           const kinks = band.next() < 0.5;
           const seed = band.next();
-          const head = (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
+          const head = (1.25 - 0.5 * back) * (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
           const turn = band.range(0, TAU);
           if (ctx.rig.land.height(x, z) < -0.1) continue;
           wilds.push({
