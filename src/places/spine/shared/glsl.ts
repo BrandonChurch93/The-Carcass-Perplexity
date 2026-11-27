@@ -181,7 +181,14 @@ vec3 strikeIrradiance(vec3 p, vec3 n) {
   vec3 l = d / dist;
   // Wrapped: a stroke lights the air and the cloud about it, and they light what is turned a little from the channel; what is turned
   // well away stays in the dusk.
-  float facing = clamp((dot(n, l) + STRIKE_WRAP) / (1.0 + STRIKE_WRAP), 0.0, 1.0);
+  // The spire that is struck stands under the channel itself: it is lit from over its tip and little comes round to its flanks, which
+  // keep the storm's shadow.
+  float under = smoothstep(120.0, 500.0, length(p.xz - uStrikeTip.xz));
+  float wrap = STRIKE_WRAP * mix(0.2, 1.0, under);
+  float facing = clamp((dot(n, l) + wrap) / (1.0 + wrap), 0.0, 1.0);
+  // And a fill with no direction: the cloud over the channel is lit through and throws a little of the flash on every face under it,
+  // most on what looks up, so what is turned from the bolt flares too and is not left out of the stroke.
+  near += STRIKE_COLOUR * (uStrikeAt.w * 0.006 * mix(0.3, 1.0, under) * (0.45 + 0.55 * n.y) / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
   if (facing <= 0.0) return near;
   // Faces square to the channel take the most by far: the light models the rock, it does not coat it.
   facing *= facing;

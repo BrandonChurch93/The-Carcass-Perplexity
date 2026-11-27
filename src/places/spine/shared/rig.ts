@@ -382,7 +382,7 @@ export function createRig(): Rig {
         (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.085, 0.088, 0.118);
       } else {
         // Before the long lens of the strike the spire stands in the storm's shadow: the sky gives less, and the stroke is the light.
-        const shade = stagedSeconds() >= STRIKE_FROM && stagedSeconds() < INSIDE_FROM ? 0.62 : 1;
+        const shade = stagedSeconds() >= STRIKE_FROM && stagedSeconds() < INSIDE_FROM ? 0.4 : 1;
         (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.03, 0.037, 0.066).multiplyScalar(shade);
         (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.096, 0.11, 0.156).multiplyScalar(shade);
         (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.027, 0.033, 0.05).multiplyScalar(shade);

@@ -159,7 +159,10 @@ export function create(ctx: Context): Piece {
       // Staged by shot: the whole sky's picture is turned toward the lee, so that the storm stands behind what the lens looks at and the clear
       // dusk is low at the frame's edge: by 19 degrees under the kites (spine-02), by 14 in the canal's mouth (spine-05).
       const inKites = stagedSeconds() >= KITES_FROM - 1e-4 && stagedSeconds() < CARCASS_FROM - 1e-4;
-      skyStage.x = inKites ? 0.33 : stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.25 : 0;
+      // The picture drifts down the gale fast enough to be seen to move; each shot's turn is set so that at its key frame the storm stands
+      // where its approved picture has it.
+      const keyAt = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 8090 : inStrike ? 7668 : inCarcass ? 7579 : inKites ? 7418 : 7234;
+      skyStage.x = (inKites ? 0.33 : stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.25 : 0) - 0.0041 * (secondsInPlace(UNIT, keyAt) - 12);
       // Staged by shot: in the long lens of the strike (spine-04) the bloom about the stroke is a sixth of the lights' own size, as its picture has it.
       skyStage.z = inStrike ? 0.085 : 0;
       // Staged by shot: for that lens the dome's pictures are laid four times smaller, so that its cloud has masses and edges at the size the lens sees.
