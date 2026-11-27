@@ -65,6 +65,7 @@ const STRIKE_FROM = secondsInPlace(UNIT, shotById('spine-04').first);
 // The storm as a marched body of cloud (storm.ts), or as the dome's pictures: the pictures stand until the marched storm has their mass.
 const STORM_MARCHED: boolean = false;
 const CARCASS_FROM = secondsInPlace(UNIT, shotById('spine-03').first);
+const KITES_FROM = secondsInPlace(UNIT, shotById('spine-02').first);
 
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
@@ -143,7 +144,7 @@ export function create(ctx: Context): Piece {
       // the flakes do not fly inside the canal, only out beyond its far mouth (0.5), where the veil is thicker for the storm seen from shelter; by the dead one (spine-03) the running snow is held off 10 m round it and the veil is a fifth, so the spire behind keeps its rock.
       const inStrike = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
       const inCarcass = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4;
-      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 4 : inStrike ? 0.2 : inCarcass ? 0.22 : 1;
+      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 2.2 : inStrike ? 0.2 : inCarcass ? 0.22 : 1;
       // Staged by shot: the strike's own sky and sea (the plate) are compiled into the air only for its shot (spine-04); a software renderer
       // pays for them on every pixel otherwise.
       const plateOn = inStrike ? 1 : 0;
@@ -155,8 +156,13 @@ export function create(ctx: Context): Piece {
       clear.z = inCarcass ? 3.5 : 0;
       // Staged by shot: by the dead one (spine-03) scud races low past the spires.
       stage.w = inCarcass ? 1 : 0;
-      // Staged by shot: in the long lens of the strike (spine-04) the storm wall stands 33 degrees further round, so that it ends right of the struck spire and the dusk shows beyond.
-      skyStage.x = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4 ? 0.572 : 0;
+      // Staged by shot: the whole sky's picture is turned toward the lee, so that the storm stands behind what the lens looks at and the clear
+      // dusk is low at the frame's edge: by 19 degrees under the kites (spine-02), by 14 in the canal's mouth (spine-05).
+      const inKites = stagedSeconds() >= KITES_FROM - 1e-4 && stagedSeconds() < CARCASS_FROM - 1e-4;
+      // The picture drifts down the gale fast enough to be seen to move; each shot's turn is set so that at its key frame the storm stands
+      // where its approved picture has it.
+      const keyAt = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 8090 : inStrike ? 7668 : inCarcass ? 7579 : inKites ? 7418 : 7234;
+      skyStage.x = (inKites ? 0.33 : stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.25 : 0) - 0.0069 * (secondsInPlace(UNIT, keyAt) - 12);
       // Staged by shot: in the long lens of the strike (spine-04) the bloom about the stroke is a sixth of the lights' own size, as its picture has it.
       skyStage.z = inStrike ? 0.085 : 0;
       // Staged by shot: for that lens the dome's pictures are laid four times smaller, so that its cloud has masses and edges at the size the lens sees.

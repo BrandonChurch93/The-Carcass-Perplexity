@@ -85,7 +85,7 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
 varying vec3 vRestNormal;
-varying float vKind;
+flat varying float vKind;
 void main() {
   mat4 bone = boneOf(aBones);
   vec4 w = modelMatrix * bone * vec4(position, 1.0);
@@ -110,6 +110,7 @@ uniform sampler2D tShagData;
 uniform sampler2D tBurn;
 uniform vec3 uBurnV;
 uniform float uLockKind;
+uniform float uWhole;
 float groundY(vec3 p) {
   return uGround.x + dot(uGround.yz, p.xz);
 }
@@ -117,9 +118,15 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
 varying vec3 vRestNormal;
-varying float vKind;
+flat varying float vKind;
 const vec3 SHAG_MEAN = vec3(0.237, 0.215, 0.232);
 void main() {
+  // Where the picture of the burn lies, and how fast that runs over the screen: worked out here, before any branch, so that the
+  // picture is read the same way in every pixel of a block.
+  vec3 fromBurn = vRest - uBurn.xyz;
+  vec2 burnUv = 0.5 + vec2(dot(fromBurn, uBurnU), dot(fromBurn, uBurnV)) / (max(uBurn.w, 0.001) * 2.3);
+  vec2 burnDx = dFdx(burnUv);
+  vec2 burnDy = dFdy(burnUv);
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   // The close coat under the locks, from the picture of the coat, laid by place on three axes so that it is pulled long nowhere.
@@ -127,13 +134,21 @@ void main() {
   w /= w.x + w.y + w.z;
   float s = vKind > 3.5 ? 0.3 : 0.55;
   vec3 q = vRest / s + uTone.w * 5.0;
+  // How fast the place runs over the screen, found before any branch: the herd's one laying changes axis from one pixel to the next
+  // along a seam, and the place itself does not jump there.
+  vec3 qDx = dFdx(q);
+  vec3 qDy = dFdy(q);
   vec3 shag;
   vec3 lie;
   if (uLockKind > 0.5) {
     // The herd's hide is under its locks and seen from metres away: one laying of the picture, on the axis it faces most.
-    vec2 one = w.x > max(w.y, w.z) ? q.zy : (w.y > w.z ? q.xz : q.xy);
-    shag = texture2D(tShag, one).rgb / SHAG_MEAN;
-    lie = texture2D(tShagData, one).rgb;
+    bool onX = w.x > max(w.y, w.z);
+    bool onY = w.y > w.z;
+    vec2 one = onX ? q.zy : (onY ? q.xz : q.xy);
+    vec2 oneDx = onX ? qDx.zy : (onY ? qDx.xz : qDx.xy);
+    vec2 oneDy = onX ? qDy.zy : (onY ? qDy.xz : qDy.xy);
+    shag = textureGrad(tShag, one, oneDx, oneDy).rgb / SHAG_MEAN;
+    lie = textureGrad(tShagData, one, oneDx, oneDy).rgb;
   } else {
     shag = (texture2D(tShag, q.zy).rgb * w.x + texture2D(tShag, q.xz).rgb * w.y + texture2D(tShag, q.xy).rgb * w.z) / SHAG_MEAN;
     lie = texture2D(tShagData, q.zy).rgb * w.x + texture2D(tShagData, q.xz).rgb * w.y + texture2D(tShagData, q.xy).rgb * w.z;
@@ -154,6 +169,8 @@ void main() {
   if (vKind > 5.5) {
     // A claw: dark horn, ridged along its length, worn pale at the tip, wet.
     albedo = mix(vec3(0.03, 0.026, 0.024), vec3(0.12, 0.1, 0.08), smoothstep(0.45, 0.9, grain) * 0.6);
+    // The dead one's claws are seen close, on the ice before the lens: grey horn, paler along its ridges, not a black shape.
+    if (uWhole > 0.5) albedo = mix(vec3(0.075, 0.062, 0.054), vec3(0.3, 0.25, 0.2), smoothstep(0.3, 0.9, grain));
     rough = 0.62;
     occ = 0.9;
   }
@@ -169,14 +186,20 @@ void main() {
   float rime = smoothstep(0.45, 0.9, n.y + 0.5 * (grain - 0.5) + uCoat.w - (vKind > 4.5 ? 0.35 + 0.5 * vnoise3(vRest * 23.0) : 0.0)) * (vKind > 5.5 ? 0.35 : 0.7);
   // Out in the gale the bare of the head is under hoar, in broad patches: nothing on it is one bright point.
   if (vKind > 1.5 && vKind < 2.5 || vKind > 6.5) rime = mix(rime, 0.8 * smoothstep(0.3, 0.6, vnoise3(vRest * 7.0) + 0.25 * n.y), 1.0 - uLockKind);
+  // The dead one's face is under the tendrils and wet with what ran out of it: no hoar holds there.
+  if (uWhole > 0.5 && vKind > 6.5) rime *= 0.15;
+  // The dead one is seen close: what shows between its locks is the under-coat, pale and matted, with the rime in it in patches.
+  if (uWhole > 0.5 && vKind < 4.5) {
+    albedo = uTone.rgb * shag * mix(0.6, 1.05, smoothstep(0.2, 0.7, lie.b));
+    rime *= 0.75 * smoothstep(0.35, 0.7, vnoise3(vRest * 17.0) + 0.3 * (fine - 0.5));
+  }
   albedo = mix(albedo, vec3(0.86, 0.88, 0.92), rime);
   // Where the bolt went through: the coat is gone and the skin is charred, split, and raw in the splits.
   float d = burnAt(vRest);
-  if (d < 3.0) {
+  if (d < 3.0 && vKind < 1.5) {
     // The picture of the burn, laid on the flank: its split runs round the body from the spine toward the belly.
-    vec3 r = vRest - uBurn.xyz;
-    vec2 uv = 0.5 + vec2(dot(r, uBurnU), dot(r, uBurnV)) / (uBurn.w * 2.3);
-    vec3 pic = texture2D(tBurn, uv).rgb;
+    vec2 uv = burnUv;
+    vec3 pic = textureGrad(tBurn, uv, burnDx, burnDy).rgb;
     // The picture is a scorched hide as it is: a raw split, the coat singed to tight dark curls either side of it, paler outward. It is
     // laid as it was photographed, no hollow cut in it and nothing crushed to black: what the lens sees in the wound is hide and hair.
     vec2 edge = abs(uv - 0.5) * 2.0;
@@ -188,7 +211,32 @@ void main() {
     albedo = mix(albedo, hide, on);
     rough = mix(rough, mix(0.92, 0.5, raw), on);
     occ = mix(occ, mix(0.85, 0.6, raw), on);
+    if (uWhole > 0.5) {
+      // Seen close, the split itself: open along its middle to wet meat, its lips burned black and curled, ragged along their length.
+      // It wanders along its length: the hide tore where it was weakest, not along a rule.
+      vec3 astray = normalize(uBurnU) * (0.05 * (vnoise3(vRest * 9.0) - 0.5) + 0.02 * (vnoise3(vRest * 31.0) - 0.5));
+      float ragged = burnAt(vRest + astray) + 0.22 * (vnoise3(vRest * 29.0) - 0.5) + 0.14 * (vnoise3(vRest * 95.0) - 0.5);
+      // It closes toward its ends.
+      ragged += 0.5 * smoothstep(0.45, 1.0, length(vRest - uBurn.xyz) / uBurn.w);
+      float core = 1.0 - smoothstep(0.42, 0.52, ragged);
+      float lips = smoothstep(0.45, 0.55, ragged) * (1.0 - smoothstep(0.9, 1.3, ragged));
+      // Nothing of the picture's square is left round the split: the hide there is singed dark under the coat that lies over it.
+      albedo = pelt * mix(0.5, 1.0, smoothstep(0.8, 2.4, d)) * (0.7 + 0.6 * dot(pic, vec3(0.333)));
+      // The meat is the picture's own raw hide, seen nearer: its fibres run down the split.
+      vec3 near = textureGrad(tBurn, 0.5 + (uv - 0.5) * vec2(3.1, 1.3), burnDx * vec2(3.1, 1.3), burnDy * vec2(3.1, 1.3)).rgb;
+      float fibre = vnoise3(vRest * vec3(160.0, 22.0, 160.0));
+      vec3 meat = mix(vec3(0.2, 0.075, 0.06), vec3(0.06, 0.022, 0.02), smoothstep(0.25, 0.75, 0.6 * fibre + 0.4 * vnoise3(vRest * 44.0))) * min(0.45 + 3.0 * dot(near, vec3(0.333)), 1.05);
+      albedo = mix(albedo, (vec3(0.012, 0.01, 0.009) + 0.03 * grain) * (0.5 + 1.2 * vnoise3(vRest * 70.0)), 0.7 * lips);
+      albedo = mix(albedo, meat, core);
+      rough = mix(rough, 0.34, core);
+      rough = mix(rough, 0.8, lips * (1.0 - core));
+      occ = mix(occ, 0.5, core);
+      // The meat lies under the lips of the hide.
+      n = normalize(n + 0.7 * core * vec3(vnoise3(vRest * 60.0) - 0.5, 0.0, vnoise3(vRest * 60.0 + 9.0) - 0.5));
+    }
   }
+  // A limb that lies against the split is singed as the flank is: no pale hide stands beside the wound.
+  if (uWhole > 0.5 && vKind > 1.5) albedo *= mix(0.3, 1.0, smoothstep(0.7, 2.2, d));
   vec3 e = runnerLight(vWorld, n) * occ;
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
@@ -212,6 +260,7 @@ ${LIGHT_GLSL}
 ${BONES_GLSL}
 uniform vec4 uCoat;
 uniform float uLockKind;
+uniform float uWhole;
 varying vec3 vLight;
 varying vec3 vFrostLight;
 varying vec4 vAt;
@@ -240,14 +289,17 @@ void main() {
   vec3 side = normalize(cross(way, toCamera));
   // Broad where it leaves the body, drawn in to its end.
   // The herd's locks are the fine straight ones: narrower, so they read as hanging hair and not as leaves.
-  float w = aCard.x * size * (1.0 - 0.38 * uLockKind);
+  // The herd's lock pictures leave the outer fifth of a card empty: the card is drawn that much narrower and shows the same of its picture.
+  float trim = 1.0 - 0.22 * uLockKind;
+  float w = aCard.x * size * (1.0 - 0.38 * uLockKind) * trim;
   // No lock hangs straight: each is kinked and waved its own way, more toward its end.
   float kink = sin(t * (4.0 + 5.0 * fract(seed * 3.3)) + seed * 40.0) + 0.5 * sin(t * (11.0 + 6.0 * fract(seed * 5.9)) + seed * 71.0);
   p += side * (position.x * w + 0.55 * w * kink * t);
   // It is lit as the body under it is, and a little as itself: the coat reads as the body's shape, with each lock catching its own light.
   vec3 nb = normalize(c - mix(r, e, 0.45) + vec3(0.0, 1e-4, 0.0));
-  // A lock of the herd on the side of the body turned from the lens is behind the body: it is not drawn.
-  if (uLockKind > 0.5 && dot(nb, normalize(cameraPosition - r)) < -0.25) {
+  // A lock on the side of the body turned from the lens is behind the body: it is not drawn. (The coat is drawn before the skin, so
+  // a hidden lock would be paid for in full.)
+  if ((uLockKind > 0.5 || uWhole > 0.5) && dot(nb, normalize(cameraPosition - r)) < (uWhole > 0.5 ? -0.4 : -0.25)) {
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
     return;
   }
@@ -259,7 +311,7 @@ void main() {
   vLight = lit * occ;
   // Inside the canal the light is the mouth's whichever way a hair looks: the rime on a lock takes the lock's own light.
   vFrostLight = uLockKind > 0.5 ? lit * 1.1 : runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
-  vAt = vec4(position.x, t, seed, aCard.z);
+  vAt = vec4(position.x * trim, t, seed, aCard.z);
   // How much this lock is frosted: it looks up, and it is on the weather side.
   // Along the outline in the open the locks stand clear of the rime and dark against the snow behind them.
   float outline = pow(1.0 - abs(dot(nb, toCamera)), 3.0) * (1.0 - uDoor.w);
@@ -274,6 +326,7 @@ uniform sampler2D tLock;
 uniform sampler2D tLockB;
 uniform sampler2D tLockBA;
 uniform float uLockKind;
+uniform float uWhole;
 uniform vec4 uTone;
 uniform vec4 uCoat;
 varying vec3 vLight;
@@ -288,18 +341,28 @@ void main() {
   float flip = fract(seed * 5.31) < 0.5 ? -1.0 : 1.0;
   vec3 pic;
   vec3 mean_ = LOCK_MEAN;
+  // The herd in the canal: one of the twelve fine straight locks of the second picture, cut by its own soft outline. Where it lies in the
+  // picture and how fast that turns across the screen are found before any branch, so every pixel of a block agrees on them.
+  float fine = floor(fract(seed * 9.73) * 12.0);
+  float fineY = fine < 5.5 ? mix(0.019, 0.489, t) : mix(0.513, 0.978, t);
+  vec2 fineUv = vec2(0.114 + 0.155 * mod(fine, 6.0) + 0.07 * u * flip, 1.0 - fineY);
+  // The picture is read a little coarser than the screen asks: hair by hair it would be finer than a pixel of the film, and would only glitter.
+  vec2 uvDx = 2.4 * dFdx(fineUv);
+  vec2 uvDy = 2.4 * dFdy(fineUv);
+  // The strands a lock parts into, and how much of one a pixel covers: found here too. No edge of a lock is cut: each is let go over a
+  // pixel or two, and a strand finer than a pixel is drawn a pixel wide and fainter.
+  float parts = (uWhole > 0.5 ? 2.0 : 3.0) + floor(3.0 * fract(seed * 2.71));
+  float partK = (0.5 + 0.5 * u) * parts + (uWhole > 0.5 ? 0.35 * t * sin(t * 5.0 + seed * 23.0) : 0.45 * t * sin(t * 6.0 + seed * 23.0));
+  float partW = clamp(fwidth(partK), 0.001, 0.5);
+  float alpha = 1.0;
   if (uLockKind > 0.5) {
-    // The herd in the canal: one of the twelve fine straight locks of the second picture, cut by its own soft outline.
-    float which = floor(fract(seed * 9.73) * 12.0);
-    float col = mod(which, 6.0);
-    float y = which < 5.5 ? mix(0.019, 0.489, t) : mix(0.513, 0.978, t);
-    vec2 uv = vec2(0.114 + 0.155 * col + 0.07 * u * flip, 1.0 - y);
+    vec2 uv = fineUv;
     // Its outline is frayed by its own strands: the cut wanders with the hair's brightness, and the black the picture stands on is taken out of its edge.
-    float cut = texture2D(tLockBA, uv).r;
-    if (cut < 0.5) discard;
-    pic = texture2D(tLockB, uv).rgb;
+    float cut = textureGrad(tLockBA, uv, uvDx, uvDy).r;
+    alpha *= smoothstep(0.3, 0.7, cut);
+    pic = textureGrad(tLockB, uv, uvDx, uvDy).rgb;
     float strand = max(pic.r, max(pic.g, pic.b));
-    if (strand < 0.1 + 0.14 * t * t) discard;
+    alpha *= smoothstep(0.04, 0.16, strand - 0.14 * t * t);
     pic /= max(cut, 0.5);
     mean_ = vec3(0.217, 0.204, 0.21);
   } else {
@@ -308,24 +371,43 @@ void main() {
     vec2 uv = vec2((which + 0.5 + 0.47 * u * flip) / 8.0, 1.0 - (0.03 + 0.925 * t));
     pic = texture2D(tLock, uv).rgb;
     float cover = max(pic.r, max(pic.g, pic.b));
-    if (cover < 0.085) discard;
+    alpha *= smoothstep(0.045, 0.125, cover);
   }
-  // A lock is not a blade: it is a few strands, matted into one at the root, that part toward their ends, and each ends where it ends.
-  float strands = 3.0 + floor(3.0 * fract(seed * 2.71));
-  float k = (0.5 + 0.5 * u) * strands + 0.45 * t * sin(t * 6.0 + seed * 23.0);
-  float f = fract(k) - 0.5;
-  float own = fract(sin(floor(k) * 12.9898 + seed * 78.233) * 43758.5453);
-  float run = t / (0.6 + 0.4 * own);
-  float halfW = mix(0.5, 0.15, smoothstep(0.15, 1.0, run));
-  if (run > 1.0 || abs(f) > halfW) discard;
-  float body = sqrt(max(0.0, 1.0 - (f / halfW) * (f / halfW)));
+  float own;
+  float run;
+  float body;
+  if (uWhole > 0.5) {
+    // The dead one is seen close: its locks are the picture's own hairs, whole, each matted lock ending in the picture's frayed end.
+    own = fract(seed * 3.17);
+    run = t;
+    body = 0.55 + 0.45 * smoothstep(0.1, 0.5, max(pic.r, max(pic.g, pic.b)));
+    // It does not end square, as a card does: toward its end it parts into a few wet points, each ending where it ends.
+    float k = partK;
+    float f = abs(fract(k) - 0.5);
+    float ends = 0.7 + 0.3 * fract(sin(floor(k) * 12.9898 + seed * 78.233) * 43758.5453);
+    float halfW = 0.5 * (1.0 - smoothstep(ends - 0.42, ends, t));
+    float drawn = max(halfW, 0.5 * partW);
+    alpha *= mix(1.0, (1.0 - smoothstep(drawn - partW, drawn + partW, f)) * halfW / drawn, smoothstep(0.0, 0.06, 0.5 - halfW));
+  } else {
+    // A lock is not a blade: it is a few strands, matted into one at the root, that part toward their ends, and each ends where it ends.
+    float k = partK;
+    float f = fract(k) - 0.5;
+    own = fract(sin(floor(k) * 12.9898 + seed * 78.233) * 43758.5453);
+    run = t / (0.6 + 0.4 * own);
+    // Each strand is drawn out to a point, not cut off.
+    float halfW = mix(0.5, 0.17, smoothstep(0.15, 0.8, run)) * (1.0 - smoothstep(0.72, 1.0, run));
+    float drawn = max(halfW, 0.5 * partW);
+    alpha *= mix(1.0, (1.0 - smoothstep(drawn - partW, drawn + partW, abs(f))) * halfW / drawn, smoothstep(0.0, 0.06, 0.5 - halfW)) * step(run, 1.0);
+    body = sqrt(max(0.0, 1.0 - min(1.0, (f / drawn) * (f / drawn))));
+  }
   float lum = dot(pic, vec3(0.333)) / dot(mean_, vec3(0.333));
   float singe = 1.0 - vInfo.w;
   vec3 albedo = uTone.rgb * pic / mean_ * 0.8 * (0.85 + 0.3 * fract(seed * 7.31));
   // Wet and dark toward the root, where the coat is matted.
-  albedo *= mix(uLockKind > 0.5 ? 0.5 : 0.45, 1.0, smoothstep(0.0, 0.55, t)) * (0.8 + 0.4 * own);
+  albedo *= mix(uLockKind > 0.5 ? 0.62 : mix(0.45, 0.78, uWhole), 1.0, smoothstep(0.0, 0.55, t)) * (uLockKind > 0.5 ? 0.9 + 0.2 * own : 0.8 + 0.4 * own);
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
-  vec3 c = albedo * vLight * (0.55 + 0.45 * body);
+  // The herd is seen from metres off: a strand of its coat is a pixel or two across, and is not shaded dark at its edges.
+  vec3 c = albedo * vLight * (uLockKind > 0.5 ? 0.75 + 0.25 * body : 0.55 + 0.45 * body);
   // Rime and packed snow: on the locks that look up it lies thick on the bright hairs, on the others it beads the ends.
   // Rime gathers on the fur round the burn, where the steam of it froze.
   float ring = smoothstep(0.02, 0.2, singe) * (1.0 - smoothstep(0.4, 0.75, singe));
@@ -335,20 +417,24 @@ void main() {
   float bead = max(smoothstep(0.75, 1.0, t) * smoothstep(1.0, 1.6, lum) * (0.3 + 0.5 * vAt.w), 0.75 * smoothstep(0.7, 0.97, run) * step(0.3, fract(own * 7.7)));
   float white = clamp(max(max(lies, bead) * (1.0 - singe), smoothstep(1.5, 2.0, vAt.w) * smoothstep(0.15, 0.6, t) * smoothstep(0.6, 1.3, lum)), 0.0, 1.0);
   c = mix(c, vec3(0.86, 0.89, 0.94) * vFrostLight, white);
-  gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
+  if (alpha < 0.03) discard;
+  gl_FragColor = vec4(c * (1.0 - uSolo), alpha);
 }`;
 
 export const TENDRIL_VERTEX = /* glsl */ `
 attribute vec4 aHang;
 attribute vec4 aLimb;
+${RIG_GLSL}
+${LIGHT_GLSL}
 ${BONES_GLSL}
-uniform float uTime;
 uniform vec4 uFace;
 uniform vec4 uLead;
 uniform vec4 uWrithe;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vAt;
+varying vec3 vLit;
+varying vec3 vGleam;
 // aHang: where it leaves the face (up and across on it), how it splays, and its side; aLimb: length, thickness, how much it curls, a seed.
 // The middle of a tendril at t along it, in metres from its root. uWrithe.x: how alive it is. uWrithe.y: 0 hanging from a living animal,
 // 1 spilled over the ground from a dead one.
@@ -363,7 +449,7 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   vec3 hangs = lead * (0.3 * t - 0.12 * t * t) + down * (0.25 * t + 0.6 * t * t) + across * (0.12 * wr * s1 + 0.09 * aHang.w * t + 0.05 * sin(t * 7.0 + seed * 50.0))
     + lead * (0.1 * wr * s2 - 0.35 * curl * t) + down * (-0.25 * curl * t);
   // Dead, it lies fanned over the rock where the head fell: slack, kinked like a root, arched off the ground and frozen so, its end curled.
-  float fan = 1.5 * aHang.w;
+  float fan = 1.3 * aHang.w;
   vec3 flatLead = normalize(vec3(lead.x, 0.0, lead.z));
   vec3 flatAcross = vec3(-flatLead.z, 0.0, flatLead.x);
   vec3 dir = flatLead * cos(fan) + flatAcross * sin(fan);
@@ -371,8 +457,8 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   float bend = (fract(seed * 7.3) - 0.5) * 2.0;
   float hook = aLimb.z * smoothstep(0.55, 1.0, t);
   float arch = fract(seed * 3.1);
-  vec3 spilled = dir * (t - 0.45 * hook * hook - 0.12 * bend * bend * t * t) + sideways * (0.8 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.12 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.45 * hook * hook * sign(bend))
-    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.07 * arch * arch * sin(3.14159 * pow(t, 0.8)) + 0.03 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.14 * hook * hook * step(0.4, fract(seed * 11.0)));
+  vec3 spilled = dir * (t - 0.2 * hook * hook - 0.06 * bend * bend * t * t) + sideways * (0.25 * bend * t * t + 0.05 * sin(t * 8.0 + seed * 20.0) * t + 0.02 * sin(t * 21.0 + seed * 31.0) + 0.06 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.2 * hook * hook * sign(bend))
+    + down * (0.3 * t + 0.5 * t * t) + vec3(0.0, 1.0, 0.0) * ((0.03 + 0.17 * arch) * sin(3.14159 * pow(t, 0.7)) + 0.02 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.06 * hook * hook * step(0.4, fract(seed * 11.0)));
   return mix(hangs, spilled, uWrithe.y);
 }
 void main() {
@@ -390,7 +476,7 @@ void main() {
   vec3 across = normalize(cross(lead, vec3(0.0, 1.0, 0.0)) + vec3(1e-4, 0.0, 0.0));
   float len = aLimb.x * size * (1.0 + 0.1 * uWrithe.y);
   // Thick where it leaves the face, knuckled along its length, a point at its end.
-  float r = aLimb.y * size * (1.0 - 0.97 * pow(t, mix(1.6, 0.7, uWrithe.y))) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
+  float r = aLimb.y * size * mix(1.0, 0.68, uWrithe.y) * (1.0 - 0.97 * pow(t, mix(1.6, 0.9, uWrithe.y))) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
   vec3 centre = root + len * pathAt(t, lead, across, seed);
   vec3 ahead = root + len * pathAt(t + 0.03, lead, across, seed);
   float bed = r * 0.85 + 0.01;
@@ -404,18 +490,23 @@ void main() {
   vWorld = p;
   vNormal = normalize(ring);
   vAt = vec3(t, atan(position.z, position.x), seed);
+  // Its light is worked out at its rings, not at every point of it: it is round and finely cut, and the light on it is broad.
+  vec3 toCamera = normalize(cameraPosition - p);
+  vLit = runnerLight(p, vNormal);
+  vGleam = runnerLight(p, normalize(reflect(-toCamera, vNormal) + vNormal));
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
 export const TENDRIL_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
-${LIGHT_GLSL}
 uniform vec4 uCoat;
 uniform vec4 uWrithe;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vAt;
+varying vec3 vLit;
+varying vec3 vGleam;
 void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
@@ -428,17 +519,16 @@ void main() {
   float crystals = vnoise3(vWorld * 520.0);
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
-  albedo = mix(albedo, vec3(0.13, 0.105, 0.1) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
-  rime = mix(rime, 0.7 * smoothstep(0.55, 0.9, n.y * 0.5 + 0.5 + 0.45 * (crystals - 0.5) + 0.25 * (vnoise3(vWorld * 45.0) - 0.5)), uWrithe.y);
+  albedo = mix(albedo, vec3(0.05, 0.04, 0.038) * (0.4 + 1.0 * blotch) * (0.7 + 0.5 * rings), 0.9 * uWrithe.y);
+  rime = mix(rime, 0.55 * smoothstep(0.8, 1.0, n.y * 0.5 + 0.5 + 0.45 * (crystals - 0.5) + 0.25 * (vnoise3(vWorld * 45.0) - 0.5)), uWrithe.y);
   // On a living one in the cold its own breath has frozen on them: they hang frosted, pale as the coat.
   rime = max(rime, (1.0 - uWrithe.y) * (0.45 + 0.4 * crystals));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
-  float rough = mix(0.32, 0.85, max(rime, 0.6 * uWrithe.y));
-  vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);
+  float rough = mix(0.32, 0.85, max(rime, 0.3 * uWrithe.y));
+  vec3 e = vLit * (0.55 + 0.45 * t);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
-  vec3 r = reflect(-toCamera, n);
-  c += (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough) * runnerLight(vWorld, normalize(r + n)) / 3.14159;
+  c += (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough) * vGleam / 3.14159;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

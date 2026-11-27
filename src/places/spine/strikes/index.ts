@@ -4,9 +4,10 @@
 import * as THREE from 'three';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
-import { breakdown, envelope, figure, restruck, strokeAt, timingOf, type Line } from './bolt';
+import { breakdown, envelope, figure, restruck, strokeAt, timingOf, type Line, type Strokes } from './bolt';
 import { createChannel } from './channel';
-import { WIND, WIND_SPEED, strikeTip } from '../shared/anchors';
+import { UNIT, WIND, WIND_SPEED, carcassBody, carcassView, step, strikeTip } from '../shared/anchors';
+import { cut, secondsInPlace } from '../../../film/cut';
 import { STRIKES, during, type StrikeSite } from './where';
 
 /** The fifth strike falls on the last frame of the long lens's shot, close before that lens: there its channel would stand as a white bar
@@ -32,7 +33,7 @@ const ROUND_OF = [0.02, 0.2, 0.2, 0.7, 0.02, 0.15];
 /** The cloud comes up before its first stroke: over this many seconds, to this share of the stroke's light in it. The sky answers a
  * little light with much, so the share is small. */
 const PRE_OVER = 0.07;
-const PRE_CLOUD = 0.45;
+const PRE_CLOUD = 0.6;
 /** Each strike's share of the light in the cloud about its root. */
 const ROOT_OF = [1, 0.8, 0.9, 0.8, 0.7, 0.8];
 /** The glow in the cloud before the first stroke, as a share of the breakdown. */
@@ -48,9 +49,9 @@ const INNER_CLOUD = 0.5;
 const INNER_PULSE = 1.1;
 /** What stays between the strokes, as shares of the last stroke's light: on the land and in the cloud, which glows along the line the
  * channel took. The channel itself is not drawn between them: at a share of its light it shows as a broken thread. */
-const HOLD_LAND = 0.6;
-const HOLD_CLOUD = 0.55;
-const SPARKS = 16;
+const HOLD_LAND = 0.78;
+const HOLD_CLOUD = 0.88;
+const SPARKS = 44;
 /** The least height over the struck tip from which each strike's flash is cast, metres. */
 const CAST_UP = [480, 1100, 320, 110, 320, 320];
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
@@ -62,8 +63,23 @@ const SPOT = 0.9;
 const HEART = new THREE.Vector3(0.78, 0.66, 1);
 /** The cloud about the root of a channel, lit from inside by it: how broad the lit cloud stands, metres, and its radiance at the
  * first stroke. It is a picture of lit cloud and of nothing else, laid where the channel enters the cloud: black where no light is. */
+/** The fume a stroke flashes off the watched tip: how broad it stands, metres, and its radiance in a stroke's light. */
+const FUME_WIDE = 30;
+const FUME_GLOW = 0.5;
 const ROOT_WIDE = 1500;
 const ROOT_GLOW = 1.1;
+/** A strike far off in the storm, which the lens beside the dead one sees over the saddle (key spine-1): it comes to ground beyond the
+ * last spires, lights the cloud about its own head and nothing on the ridge. Where it stands from that lens: degrees to the right of
+ * its heading, metres off, metres over and under the lens for its head and its foot; and its two strokes, the second on the key. */
+const FAR_BEARING = 6.6;
+const FAR_OFF = 9000;
+const FAR_HEAD = 1250;
+const FAR_FOOT = -260;
+const FAR_STROKES: Strokes = { at: [0, 3 / 60], share: [1, 0.72], fore: null };
+const FAR_WIDE = 1150;
+/** Nine kilometres of the storm's air stand before it: its heart is violet, not white, and a tenth as hot. */
+const FAR_HEART = new THREE.Vector3(0.62, 0.47, 1);
+const FAR_CORE = 110;
 const ROOT_VERTEX = /* glsl */ `
 uniform vec3 uAt;
 uniform vec4 uLay;
@@ -100,6 +116,9 @@ void main() {
   // The dim billows far from the root go dark first.
   float keep = smoothstep(0.0, 0.45, lum * (1.25 - 0.75 * length(vOff)) - 0.5 * uDie.x);
   vec3 c = pic * (0.35 + 1.6 * lum) * uGlow * (edge * mix(1.0, keep, min(1.0, 3.0 * uDie.x)));
+  // It is violet to its heart: the brightest of it closes on a ceiling and keeps its colour, where added whole it burned out white.
+  float most = max(c.r, max(c.g, c.b));
+  c *= 1.0 / (1.0 + max(most - 0.06, 0.0) / 0.1);
   gl_FragColor = vec4(c * (1.0 - uSolo), 0.0);
 }`;
 
@@ -115,8 +134,8 @@ varying float vHeat;
 void main() {
   // A fragment of rock thrown from the tip: it flies, falls, is carried by the gale, and cools.
   // It leaves fast and the air stops it within a few tens of metres; then it only falls and drifts.
-  // It is seen for a few frames and no longer: under a sixth of a second.
-  float life = 0.04 + 0.09 * aSeed.x;
+  // It is seen for some frames and no longer: under half a second, most of them for a fifth.
+  float life = 0.09 + 0.34 * aSeed.x * aSeed.x;
   float t = max(uAge - 0.01 * aSeed.y, 0.0);
   float drag = 1.0 - exp(-t * 1.5);
   vec3 p = uAt + aGo * (drag / 1.5) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 6.0);
@@ -124,10 +143,11 @@ void main() {
   vec4 c = viewMatrix * vec4(p, 1.0);
   vec3 along = (viewMatrix * vec4(v, 0.0)).xyz;
   float far = -c.z;
-  float size = max(0.05 + 0.09 * aSeed.z, (0.7 + 0.7 * aSeed.z) * uPixel * far);
+  float size = max(0.06 + 0.1 * aSeed.z, (0.7 + 0.7 * aSeed.z) * uPixel * far);
   // A streak as long as the fragment flies while the shutter is open.
   vec2 dir = normalize(along.xy + vec2(1e-4));
-  float reach = max(size, min(length(along.xy) * 0.0042, size * 9.0));
+  // (Short: drawn as long as they fly in a shutter they stood round the tip as pale dashes, a scribble.)
+  float reach = max(size, min(length(along.xy) * 0.0042, size * 3.0));
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
   // A fragment far smaller than a pixel is not seen: from across the ridge the spray is no dot of light at the tip.
@@ -145,27 +165,32 @@ void main() {
   float r = length(vUv);
   float a = exp(-vUv.y * vUv.y * 3.0) * (1.0 - smoothstep(0.5, 1.0, abs(vUv.x))) * (1.0 - smoothstep(0.8, 1.0, r));
   // Hot rock: white at first, orange as it cools.
-  vec3 c = mix(vec3(1.0, 0.3, 0.05), vec3(1.0, 0.8, 0.55), smoothstep(0.45, 1.0, vHeat));
+  vec3 c = mix(vec3(1.0, 0.3, 0.05), vec3(1.0, 0.56, 0.2), smoothstep(0.45, 1.0, vHeat));
   // A fragment is there or it is not: no pattern of dots.
-  if (uGlow * vHeat * a < 0.5) discard;
+  if (uGlow * vHeat * a < 0.35) discard;
   gl_FragColor = vec4(c * (uGlow * vHeat * a) * (1.0 - uSolo), 1.0);
 }`;
 
 /** The bloom at the struck tip: its radius in pixels of a 4K frame, and the glare's radiance as a share of the hot spot's. */
-const BLOOM_PIXELS = 90;
-const BLOOM_GLARE = 0.005;
+const BLOOM_PIXELS = 190;
+const BLOOM_GLARE = 0.03;
 const HALO_VERTEX = /* glsl */ `
 #define BLOOM_PIXELS ${BLOOM_PIXELS.toFixed(1)}
 uniform vec3 uAt;
 uniform vec2 uSize;
 uniform float uLens;
 varying vec2 vUv;
+varying float vNear;
 void main() {
   vec4 c = viewMatrix * vec4(uAt, 1.0);
   // Brought toward the lens, so that the rock it sits on does not hide it and the glare lies over the top of the spire.
   c.z += 40.0;
   // The bloom is the lens's: as wide in the frame whatever the lens, never smaller than the hot spot itself.
-  c.xy += position.xy * max(uSize, vec2(BLOOM_PIXELS * uLens * -c.z));
+  // (At its widest only where the lens stands close on the tip, fifteen pixels of a 4K frame to the metre: from across the ridge it
+  // is under half as wide and its glare a sixth, a spark and no orb.)
+  float near = clamp(1.0 / (uLens * -c.z * 15.0), 0.47, 1.0);
+  vNear = (near - 0.47) / 0.53;
+  c.xy += position.xy * max(uSize, vec2(BLOOM_PIXELS * near * uLens * -c.z));
   vUv = position.xy;
   gl_Position = projectionMatrix * c;
 }`;
@@ -175,18 +200,29 @@ const HALO_FRAGMENT = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 uniform vec3 uColour;
 varying vec2 vUv;
+varying float vNear;
 void main() {
   // The white-hot spot where the channel meets the rock: small, solid at its heart. Its bloom is the air's, lit by the rig's light at the tip.
   float r = length(vUv);
   // White where the channel lands, burning out the tip under it; round that the glare the lens makes of it, violet, falling to nothing
   // inside the card. It hides what is behind it only as far as it outshines it.
   // (Taller than wide and small: it is the foot of the channel swollen where it meets the rock. Round and larger it stood as a bead.)
-  float core = exp(-(vUv.x * vUv.x * 1500.0 + vUv.y * vUv.y * 520.0));
+  float core = exp(-(vUv.x * vUv.x * 900.0 + vUv.y * vUv.y * 560.0));
+  // And the arc's own rays where it meets the rock: a few short uneven spikes, thin as the channel, no disc.
+  float rays = 0.0;
+  for (int k = 0; k < 5; k++) {
+    float turn = 0.5 + 1.31 * float(k);
+    vec2 d = vec2(cos(turn), sin(turn));
+    float on = dot(vUv, d);
+    float off = vUv.x * d.y - vUv.y * d.x;
+    rays += exp(-off * off * 30000.0) * exp(-max(on, 0.0) * (9.0 + 5.0 * float(k))) * smoothstep(-0.005, 0.005, on);
+  }
+  core += 0.05 * rays;
   float fall = (1.0 - r) * (1.0 - r);
   float glare = fall / (1.0 + r * r * 14.0);
   float power = max(uColour.r, max(uColour.g, uColour.b));
   if (r >= 1.0 || power < 1.0) discard;
-  vec3 c = uColour * core + vec3(0.64, 0.5, 1.0) * (power * BLOOM_GLARE * glare);
+  vec3 c = uColour * core + vec3(0.64, 0.5, 1.0) * (power * BLOOM_GLARE * mix(0.17, 1.0, vNear) * glare);
   // Light added to what is behind it; where it is white hot it hides it.
   float cover = clamp(dot(c, vec3(0.333)) / 4.0 - 0.25, 0.0, 1.0);
   gl_FragColor = vec4(c, cover) * (1.0 - uSolo);
@@ -204,6 +240,9 @@ interface Bolt {
   rootDie: THREE.Vector2;
   age: { value: number };
   spotGlow: THREE.Vector3;
+  fumeGlow: THREE.Vector3;
+  fumeDie: THREE.Vector2;
+  fumeAt: THREE.Vector3;
   top: THREE.Vector3;
   /** Where the flash is cast from: a point low on the channel. */
   cast: THREE.Vector3;
@@ -218,6 +257,28 @@ export function create(ctx: Context): Piece {
   const wind = new THREE.Vector3(WIND[0], WIND[1], WIND[2]).multiplyScalar(WIND_SPEED / 26);
 
   const rootPicture = ctx.assets.texture('mat/litcloud.jpg', { kind: 'colour', repeat: false });
+  // The far strike of key spine-1: a channel and the cloud about its head. It is drawn with the first strike's part.
+  const farKey = (cut.keyFrames as Record<string, number>)['spine-1'];
+  const farSeconds = farKey === undefined ? -1e9 : secondsInPlace(UNIT, farKey) - (FAR_STROKES.at[1] as number);
+  const farFoot = step(carcassBody, carcassView + FAR_BEARING, FAR_OFF, FAR_FOOT);
+  const farSite: StrikeSite = { id: 'far', seconds: farSeconds, to: farFoot, rise: FAR_HEAD - FAR_FOOT, lean: [260, 0, -180], branch: null, spire: 0 };
+  const farLines = figure(ctx.rng('strikes/far'), farSite);
+  const farChannel = createChannel(farLines, ctx.rig.uniforms, lens, FAR_HEART, FAR_CORE, 1);
+  const farGroup = new THREE.Group();
+  farGroup.add(farChannel.group);
+  const farGlow = new THREE.Vector3();
+  const farDie = new THREE.Vector2();
+  {
+    const head = (farLines[0] as Line).points[0] as [number, number, number];
+    const at = new THREE.Vector3(head[0], head[1], head[2]).lerp(new THREE.Vector3(farFoot[0], farFoot[1], farFoot[2]), 0.08);
+    const card = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: ROOT_VERTEX, fragmentShader: ROOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, tRoot: { value: rootPicture }, uAt: { value: at }, uLay: { value: new THREE.Vector4(0.5 * FAR_WIDE, 0.2, -1, 0) }, uGlow: { value: farGlow }, uDie: { value: farDie } }, side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor }));
+    card.renderOrder = 11;
+    card.frustumCulled = false;
+    farGroup.add(card);
+  }
+  farGroup.visible = false;
+  ctx.scene.add(farGroup);
+
   const bolts: Bolt[] = STRIKES.map((site, index) => {
     const rng = ctx.rng(`strikes/${site.id}`);
     const lines = figure(rng, site);
@@ -250,6 +311,18 @@ export function create(ctx: Context): Piece {
     spot.frustumCulled = false;
     group.add(spot);
 
+    // The fume the stroke flashes off the rime of the tip the long lens watches, seen while the stroke lights it: a torn puff of lit
+    // vapour in the lee of the tip, a picture of lit cloud added over what is behind. What stays of it in the dark the air folder draws.
+    const fumeGlow = new THREE.Vector3();
+    const fumeDie = new THREE.Vector2();
+    const fumeAt = new THREE.Vector3();
+    if (Math.hypot(site.to[0] - strikeTip[0], site.to[2] - strikeTip[2]) < 1) {
+      const fume = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: ROOT_VERTEX, fragmentShader: ROOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, tRoot: { value: rootPicture }, uAt: { value: fumeAt }, uLay: { value: new THREE.Vector4(0.5 * FUME_WIDE, 0.3, 1, 0) }, uGlow: { value: fumeGlow }, uDie: { value: fumeDie } }, side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor }));
+      fume.renderOrder = 11;
+      fume.frustumCulled = false;
+      group.add(fume);
+    }
+
     // The spray of glowing fragments.
     const age = { value: -1 };
     const seeds = new Float32Array(SPARKS * 4);
@@ -258,8 +331,8 @@ export function create(ctx: Context): Piece {
       seeds.set([rng.next(), rng.next(), rng.next(), rng.next()], i * 4);
       // No ring of them: most are thrown to the lee side and down the flank, a few go anywhere, and no two at one speed.
       const lee = Math.atan2(WIND[2], WIND[0]);
-      const az = rng.next() < 0.7 ? lee + rng.range(-0.9, 0.9) : rng.range(0, Math.PI * 2);
-      const up = rng.range(-0.7, 0.75);
+      const az = rng.next() < 0.45 ? lee + rng.range(-0.9, 0.9) : rng.range(0, Math.PI * 2);
+      const up = rng.range(-0.55, 0.9);
       const speed = rng.range(35, 210) * (rng.next() < 0.2 ? 1.6 : 1);
       const flat = Math.sqrt(Math.max(0, 1 - up * up));
       go.set([Math.cos(az) * flat * speed, up * speed, Math.sin(az) * flat * speed], i * 3);
@@ -270,17 +343,17 @@ export function create(ctx: Context): Piece {
     sparkGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 4));
     sparkGeometry.setAttribute('aGo', new THREE.InstancedBufferAttribute(go, 3));
     sparkGeometry.instanceCount = SPARKS;
-    const sparks = new THREE.Mesh(sparkGeometry, new THREE.ShaderMaterial({ vertexShader: SPOT_VERTEX, fragmentShader: SPOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uAge: age, uPixel: pixel, uGale: { value: wind }, uGlow: { value: 90 } }, side: THREE.DoubleSide }));
+    const sparks = new THREE.Mesh(sparkGeometry, new THREE.ShaderMaterial({ vertexShader: SPOT_VERTEX, fragmentShader: SPOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uAge: age, uPixel: pixel, uGale: { value: wind }, uGlow: { value: 9 } }, side: THREE.DoubleSide }));
     sparks.frustumCulled = false;
     group.add(sparks);
 
     group.visible = false;
-    ctx.scene.add(ctx.parts.built(site.id, group));
+    ctx.scene.add(index === 0 ? ctx.parts.built(site.id, group, farGroup) : ctx.parts.built(site.id, group));
     // Where the flash is cast from: a point on the channel, and never lower over the tip than CAST_UP, so that level snow a kilometre
     // off is lit from above as the lit cloud lights it and not grazed.
     const cast = new THREE.Vector3().lerpVectors(tip, top, 0.28);
     cast.y = Math.max(cast.y, tip.y + (CAST_UP[index % CAST_UP.length] as number));
-    return { site, group, first: firstChannel.env, again: againChannel.env, firstGroup: firstChannel.group, againGroup: againChannel.group, rootGlow, rootDie, age, spotGlow, top, cast, mid, tip };
+    return { site, group, first: firstChannel.env, again: againChannel.env, firstGroup: firstChannel.group, againGroup: againChannel.group, rootGlow, rootDie, age, spotGlow, fumeGlow, fumeDie, fumeAt, top, cast, mid, tip };
   });
 
   // Two lights of the rig: the channel over the struck tip, and the cloud lit from inside where the channel enters it.
@@ -305,7 +378,7 @@ export function create(ctx: Context): Piece {
       if (!puff) {
         // The tip the long lens watches is seen from 1650 m in a field 250 m wide: its fume is small and dense, a torn puff that leaves the tip.
         const close = Math.hypot(tip[0] - strikeTip[0], tip[2] - strikeTip[2]) < 1;
-        puff = { source: { at: [tip[0], tip[1] + 1.5, tip[2]], radius: close ? 4 : 12, strength: 0, rise: close ? 34 : 260, kind: 'steam' }, strikes: [] };
+        puff = { source: { at: [tip[0], tip[1] + 1.5, tip[2]], radius: close ? 6.5 : 12, strength: 0, rise: close ? 58 : 260, kind: 'steam' }, strikes: [] };
         puffs.push(puff);
         ctx.sources.steam.push(puff.source);
       }
@@ -338,7 +411,22 @@ export function create(ctx: Context): Piece {
         let most = 0;
         // It bursts out with the stroke and thins over the next six seconds.
         for (const at of p.strikes) if (seconds > at) most = Math.max(most, (1 - Math.exp(-(seconds - at) / 0.04)) * Math.exp(-(seconds - at) / 6));
-        p.source.strength = most;
+        p.source.strength = most * (p.source.radius < 10 ? 2 : 1);
+      }
+      {
+        // The far strike: its channel on its two strokes, and the cloud about its head coming up before the first and dying after the last.
+        const age = seconds - farSeconds;
+        const live = age > -0.1 && age < 0.6;
+        farGroup.visible = live;
+        if (live) {
+          const e = envelope(FAR_STROKES, age);
+          const level = 0.4 * Math.min(1.2, e.channel);
+          farChannel.env.set(level, strokeAt(FAR_STROKES, age) === 0 ? e.branch : 0.6 * level, 0, 0);
+          farChannel.group.visible = level > 0.0005;
+          const rising = age < 0 ? Math.max(0, 1 + age / PRE_OVER) : 0;
+          farGlow.copy(TINT).multiplyScalar(ROOT_GLOW * 2.2 * Math.max(Math.max(0, e.main - 0.09), 0.8 * e.glow, 0.6 * PRE_CLOUD * rising * rising));
+          farDie.set(Math.min(1, Math.max(0, 1 - Math.max(e.main, e.glow))), strokeAt(FAR_STROKES, age));
+        }
       }
       channelLight.radiance.set(0, 0, 0);
       cloudLight.radiance.set(0, 0, 0);
@@ -358,7 +446,7 @@ export function create(ctx: Context): Piece {
         const stroke = strokeAt(timingOf(b.site.id), age);
         const level = Math.min(1.2, e.channel);
         b.first.set(stroke === 0 ? level : 0, stroke === 0 ? e.branch : 0, 0, 0);
-        b.again.set(stroke > 0 ? level : 0, stroke > 0 ? 0.5 * level : 0, 0, 0);
+        b.again.set(stroke > 0 ? level : 0, stroke > 0 ? 0.85 * level : 0, 0, 0);
         b.firstGroup.visible = stroke === 0 && level > 0.0005;
         b.againGroup.visible = stroke > 0 && level > 0.0005;
         b.age.value = age;
@@ -371,27 +459,33 @@ export function create(ctx: Context): Piece {
         const hard = Math.max(0, power - 0.09);
         const of = index % FLASH_OF.length;
         b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(hard, 1) * 130);
+        // The fume leaves the tip down the gale, a little up, and is lit while the stroke and what the land keeps of it last.
+        b.fumeAt.copy(b.tip).addScaledVector(wind, (0.42 + 0.9 * Math.max(age, 0)) * FUME_WIDE / (wind.length() || 1));
+        b.fumeAt.y += 0.2 * FUME_WIDE;
+        b.fumeGlow.set(0.8, 0.76, 1).multiplyScalar(FUME_GLOW * Math.max(hard, 0.6 * e.held));
+        b.fumeDie.set(0, stroke);
         const within = e.cloud;
         // Between the strokes the light does not go out: the land keeps a share of the last stroke's light for a few frames and the
         // cloud keeps more of it for longer.
-        const land = Math.max(hard, HOLD_LAND * e.held);
+        const land = Math.max(hard, HOLD_LAND * e.held, age < 0 ? 0.6 * PRE_CLOUD * Math.max(0, 1 + age / PRE_OVER) ** 2 : 0);
         const sky = Math.max(hard, HOLD_CLOUD * e.glow);
         // The even lift of the air goes with the cloud's glow and not with the stroke alone: lit for one frame and dark the next, the whole
         // picture flipped twice a strike, which no encoder holds.
         // And the cloud comes up over the four frames before the first stroke, evenly and without the breakdown's flicker: from dark to
         // the stroke in one frame, three fifths of the picture's light changed at once.
         const rising = age < 0 ? Math.max(0, 1 + age / PRE_OVER) : 0;
-        const lit = Math.max(sky, PRE_CLOUD * rising * rising * rising);
+        const lit = Math.max(sky, PRE_CLOUD * rising * rising);
         const round = lit * (ROUND_OF[of] as number);
         // The cloud about the root: full on a stroke and gone some four frames after it, so that it never stands as one fixed shape while
         // the sky's own glow dies round it. Before the first stroke it flickers.
-        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(hard, 0.5 * e.held * e.held, 0.15 * before));
+        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(hard, 0.7 * e.held, 0.15 * before, 0.6 * PRE_CLOUD * rising * rising));
         b.rootDie.set(before > 0 && sky <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - sky)), stroke);
         if (index === 4 && seconds < FIFTH_FROM) {
           b.firstGroup.visible = false;
           b.againGroup.visible = false;
           b.rootGlow.set(0, 0, 0);
           b.spotGlow.set(0, 0, 0);
+          b.fumeGlow.set(0, 0, 0);
         }
         if (within > 0 && hard <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
           // A cloud lit from inside: its own glow and what of it comes in by the canal's mouth. No light with a shadow.

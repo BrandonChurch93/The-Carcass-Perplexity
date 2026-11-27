@@ -263,17 +263,23 @@ void main() {
 
 // The burn under the dead one, shared by the two mains of the land.
 const SCORCH_BLOCK = /* glsl */ `#if SCORCH == 1
-  if (uKind < 0.5) {
+  {
     vec2 dS = vWorld.xz - uScorch.xy;
     vec2 uvS = vec2(dot(dS, uScorchAxes.xy) / 7.0, dot(dS, uScorchAxes.zw) / 3.94) + 0.5;
     vec2 eS = abs(uvS - 0.5);
-    if (max(eS.x, eS.y) < 0.5) {
+    // (The gradients are taken here, before the branch, and every picture inside it is read by them.)
+    vec2 uvSx = dFdx(uvS);
+    vec2 uvSy = dFdy(uvS);
+    vec2 dSx = dFdx(dS);
+    vec2 dSy = dFdy(dS);
+    float spanS = length(abs(dSx) + abs(dSy));
+    if (uKind < 0.5 && max(eS.x, eS.y) < 0.5) {
       // Seen low across it, the plate's fine bright lines would lie down into ripples like water: it is read soft, and its contrast is held in.
-      vec3 sc = texture2D(tScorch, uvS).rgb;
+      vec3 sc = textureGrad(tScorch, uvS, uvSx, uvSy).rgb;
       float lum = dot(sc, vec3(0.3, 0.5, 0.2));
       // Burned rock is dark and wet; under the lens the burn's own close picture (2.4 m) gives it its cracks and glass.
-      vec3 near_ = texture2D(tScorchD, dS / 2.4).rgb;
-      float close = smoothstep(0.02, 0.004, length(fwidth(vWorld.xz)));
+      vec3 near_ = textureGrad(tScorchD, dS / 2.4, dSx / 2.4, dSy / 2.4).rgb;
+      float close = smoothstep(0.02, 0.004, spanS);
       sc = clamp(sc * 3.2 * mix(vec3(1.0), near_ / 0.16, 0.9 * close), vec3(0.018, 0.018, 0.02), vec3(0.6));
       // The plate's own snow goes into the snow of the place at its rim; its burn keeps to the middle, ragged by the picture's own dark.
       float out_ = length((uvS - 0.5) * vec2(1.0, 0.9)) / 0.26;
@@ -281,15 +287,19 @@ const SCORCH_BLOCK = /* glsl */ `#if SCORCH == 1
       float tongue = vnoise(vec2(dot(vWorld.xz, uWind.xz) * 0.35, dot(vWorld.xz, vec2(-uWind.z, uWind.x)) * 1.6));
       float scorch = 0.85 * smoothstep(1.0, 0.55, out_ + 0.9 * (lum - 0.3) + 0.7 * (tongue - 0.45));
       vec2 px = 4.0 / vec2(textureSize(tScorchH, 0));
-      float h0 = texture2D(tScorchH, uvS).r;
-      float du = (texture2D(tScorchH, uvS + vec2(px.x, 0.0)).r - h0) / (px.x * 7.0);
-      float dv = (texture2D(tScorchH, uvS + vec2(0.0, px.y)).r - h0) / (px.y * 3.94);
+      float h0 = textureGrad(tScorchH, uvS, uvSx, uvSy).r;
+      float du = (textureGrad(tScorchH, uvS + vec2(px.x, 0.0), uvSx, uvSy).r - h0) / (px.x * 7.0);
+      float dv = (textureGrad(tScorchH, uvS + vec2(0.0, px.y), uvSx, uvSy).r - h0) / (px.y * 3.94);
       // Burned rock, wet but broken: it is rough, and only its hollows hold a little water. The relief is laid at a low strength.
       vec3 nS = normalize(vec3(0.0, 1.0, 0.0) - 0.022 * (vec3(uScorchAxes.x, 0.0, uScorchAxes.y) * du + vec3(uScorchAxes.z, 0.0, uScorchAxes.w) * dv));
+      // Slush lies on it in clots, grey and granular, thickest in its hollows and down the gale of every head of rock: it is ice, not water.
+      float clot = vnoise(dS * 2.3 + 4.1) * 0.6 + vnoise(dS * 7.1 + 1.3) * 0.4;
+      float slush = smoothstep(0.5, 0.62, clot + 0.35 * (0.5 - h0) + 0.25 * (tongue - 0.5));
+      sc = mix(sc, vec3(0.34, 0.38, 0.45) * (0.75 + 0.5 * clot), 0.85 * slush);
       albedo = mix(albedo, sc, scorch);
-      n = normalize(mix(n, nS, scorch));
-      // Melt water stands in its hollows and glints; its heads are wet rock.
-      rough = mix(rough, 0.1 + 0.55 * smoothstep(0.25, 0.6, h0), scorch);
+      n = normalize(mix(n, normalize(mix(nS, vec3(0.0, 1.0, 0.0), 0.6 * slush)), scorch));
+      // The rock is glazed, not flooded: a wet skin on a rough stone gives a broad dull shine, and no mirror for the sky to ripple in.
+      rough = mix(rough, mix(0.34 + 0.4 * smoothstep(0.25, 0.6, h0), 0.9, slush), scorch);
       occ = mix(occ, 0.6 + 0.4 * h0, scorch);
     }
   }
@@ -343,7 +353,10 @@ void main() {
   bool plates = spire || porch > 0.5;
   const bool inside = KIND == 2;
   // Broken rock is flat faces that meet in edges: a little of the face of the triangle itself with the round of the mesh.
-  vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  // (Every screen derivative of this main is taken up here, before any branch, and handed down.)
+  vec3 wX = dFdx(vWorld);
+  vec3 wY = dFdy(vWorld);
+  vec3 facet = normalize(cross(wX, wY));
   if (dot(facet, smoothN) < 0.0) facet = -facet;
   // (Only a little: the two triangles of every quad of the mesh lean two ways, and more of the facet would comb the face along their diagonals.)
   // A spire's blocks are flat faces of whole quads (meshes.ts, jointing): its light is the face's own, so a block has edges. Far off, where a
@@ -361,6 +374,8 @@ void main() {
   float pu = dot(vWorld, up);
   float pa = dot(vWorld, ax);
   float pb = dot(vWorld, bx);
+  vec3 pX = vec3(dFdx(pa), dFdx(pu), dFdx(pb));
+  vec3 pY = vec3(dFdy(pa), dFdy(pu), dFdy(pb));
   vec3 w = vec3(dot(n0, ax), n0.y, dot(n0, bx));
   w *= w;
   float top = spire ? smoothstep(0.55, 0.8, w.y) : inside ? 0.0 : smoothstep(0.4, 0.75, w.y);
@@ -391,10 +406,12 @@ void main() {
   // (Nothing of the ground is taken as buried whole any more: its snow and its stones are both the photograph's.)
   vec3 sheetAx = vec3(uSheet.z, 0.0, uSheet.w);
   vec2 sheetUv = vec2((dot(vWorld.xz - uSheet.xy, uSheet.zw) + uSheetShear * vWorld.y) * uSheetMap.x + uSheetMap.y, vWorld.y * uSheetMap.z + uSheetMap.w);
+  vec2 sheetUvX = dFdx(sheetUv);
+  vec2 sheetUvY = dFdy(sheetUv);
   vec3 sheetC = vec3(0.0);
   float sheet = 0.0;
   if (!inside) if (spire || porch > 0.0) {
-    sheetC = textureLod(tSheet, sheetUv, lodOf(tSheet, dFdx(sheetUv), dFdy(sheetUv))).rgb;
+    sheetC = textureLod(tSheet, sheetUv, lodOf(tSheet, sheetUvX, sheetUvY)).rgb;
     float facing = abs(dot(smoothN, vec3(-sheetAx.z, 0.0, sheetAx.x)));
     sheet = smoothstep(0.035, 0.1, max(sheetC.r, max(sheetC.g, sheetC.b))) * smoothstep(0.26, 0.55, facing) * smoothstep(0.0, 0.06, sheetUv.y) * (spire ? 1.0 : porch);
   }
@@ -439,8 +456,8 @@ void main() {
     // seen is still paid for on every pixel, so each kind has only its own.
     bool onA = wa > 0.5;
     vec2 atS = onA ? vec2(pb, pu) : vec2(pa, pu) + 17.3;
-    vec2 gSx = onA ? vec2(dFdx(pb), dFdx(pu)) : vec2(dFdx(pa), dFdx(pu));
-    vec2 gSy = onA ? vec2(dFdy(pb), dFdy(pu)) : vec2(dFdy(pa), dFdy(pu));
+    vec2 gSx = onA ? vec2(pX.z, pX.y) : vec2(pX.x, pX.y);
+    vec2 gSy = onA ? vec2(pY.z, pY.y) : vec2(pY.x, pY.y);
     if (spire) {
       // A spire's slabs stand metres out of its face, and the side of a slab looks another way than the face it stands on: each flat
       // of the rock takes the plane it is itself most square to, the level one too, so no slab's side is a picture pulled long.
@@ -448,16 +465,16 @@ void main() {
       vec3 wc = abs(vec3(dot(nc, ax), dot(nc, up), dot(nc, bx)));
       if (wc.y > max(wc.x, wc.z)) {
         atS = vec2(pa, pb) + 41.7;
-        gSx = vec2(dFdx(pa), dFdx(pb));
-        gSy = vec2(dFdy(pa), dFdy(pb));
+        gSx = vec2(pX.x, pX.z);
+        gSy = vec2(pY.x, pY.z);
       } else if (wc.x > wc.z) {
         atS = vec2(pb, pu);
-        gSx = vec2(dFdx(pb), dFdx(pu));
-        gSy = vec2(dFdy(pb), dFdy(pu));
+        gSx = vec2(pX.z, pX.y);
+        gSy = vec2(pY.z, pY.y);
       } else {
         atS = vec2(pa, pu) + 17.3;
-        gSx = vec2(dFdx(pa), dFdx(pu));
-        gSy = vec2(dFdy(pa), dFdy(pu));
+        gSx = vec2(pX.x, pX.y);
+        gSy = vec2(pY.x, pY.y);
       }
     }
 #if KIND == 1
@@ -471,7 +488,10 @@ void main() {
       // is read up to a level finer than that, by how thin the patch is.)
       float longS = max(dot(gSx, gSx), dot(gSy, gSy));
       float thinS = abs(gSx.x * gSy.y - gSx.y * gSy.x) / max(longS, 1e-12);
-      lodA -= min(0.9, -0.3 * log2(clamp(thinS, 1e-4, 1.0)));
+      // (Under the lens it is read a level coarser instead: what is finer than a pixel of the film's frame is lost in its encoding, and takes
+      // the form of the slabs with it.)
+      float under = smoothstep(1.2, -0.6, lodA - min(0.9, -0.3 * log2(clamp(thinS, 1e-4, 1.0))));
+      lodA += mix(-min(0.9, -0.3 * log2(clamp(thinS, 1e-4, 1.0))), 0.9, under);
       // Far off its joints would be finer than a pixel and the face a smooth skin: there the same rock is laid three times larger, so a far
       // spire is cut by joints it can show.
       float which = smoothstep(1.6, 2.2, lodA);
@@ -495,15 +515,17 @@ void main() {
       }
       // Under the lens a texel of that lay is many pixels wide: there the same rock is laid again six times finer, as the grain, the cracks
       // and the small edges of the blocks, in colour and in relief.
-      float fine = smoothstep(1.2, -0.6, lodA);
+      float fine = under;
       fineRock = fine;
       vec2 tFine = vec2(0.0);
       if (fine > 0.01) {
         // (The picture of broken blocks, which has no grain: the face photograph again at this size would hatch the rock like wood.)
         vec2 atD = vec2(atS.x - 0.31 * atS.y, atS.y + 0.31 * atS.x);
-        Lay d = lay(tRubble, tRubbleNh, atD / 6.5 + vec2(0.13, 0.71), gSx / 6.5, gSy / 6.5);
+        Lay d = lay(tRubble, tRubbleNh, atD / 6.5 + vec2(0.13, 0.71), gSx / 3.6, gSy / 3.6);
         cF *= mix(vec3(1.0), clamp(d.c / RUBBLE_MEAN, 0.35, 1.8), 0.6 * fine);
-        tFine = d.t * 1.1 * fine;
+        // (Its tilt is kept low: under a light that comes from one side, a face tilted every way at the size of a few pixels is a stipple of
+        // dark blots, and the slabs are lost in it.)
+        tFine = d.t * 0.45 * fine;
         hF.x = mix(hF.x, 0.5 * hF.x + 0.5 * d.pit, fine);
       }
       // The photograph's own snow lies on its ledges: pale and without colour.
@@ -513,13 +535,13 @@ void main() {
       rock = mix(cF, vec3(dot(cF, vec3(0.3, 0.5, 0.2))) * vec3(1.03, 0.99, 0.93), 0.75) * 1.15;
       // Its relief, from the photograph's height: the joints are cut a hand deep at this size, the plates between them stand flat.
       t = vec2(hF.y - hF.x, hF.z - hF.x) * (-0.55 / (eps.x * 50.0));
-      t = clamp(t, vec2(-1.6), vec2(1.6)) + tFine;
+      t = clamp(t, vec2(-1.6), vec2(1.6)) * (1.0 - 0.5 * fine) + tFine;
       pit = hF.x;
       // Under the lens a block of the mesh is metres across and flat, and what a hand could grip is finer than the mesh: the rock is
       // shattered into pieces of a metre and of a hand's breadth, each tilted its own way, with a hairline crack between them, and its
       // skin is pitted. All of it per pixel, from where the pixel lies on the plane of its face, so it holds still on the rock.
       // (How much rock a pixel covers, across and along the face: the mean of the two, since a face seen aslant still shows its pieces.)
-      float span = sqrt(length(dFdx(vWorld)) * length(dFdy(vWorld))) * uTall / 1080.0;
+      float span = sqrt(length(wX) * length(wY)) * uTall / 1080.0;
       float grip = smoothstep(0.16, 0.05, span);
       if (grip > 0.01) {
         // (The pieces stand upright and their beds dip, as the blocks of the mesh do.)
@@ -527,14 +549,14 @@ void main() {
         vec3 big = shards(atG / vec2(0.9, 1.9));
         float hand = grip * smoothstep(0.07, 0.03, span);
         vec3 small = hand > 0.01 ? shards(atG / vec2(0.21, 0.34) + 7.7 + 3.0 * big.yz) : vec3(1.0, 0.5, 0.5);
-        // (Not every side of a piece is an open crack: most are closed, and a crack that runs on from piece to piece is rare.)
-        float open = smoothstep(0.35, 0.75, fract(big.y * 7.0 + big.z * 3.0));
-        float crack = max(smoothstep(0.02 + 1.6 * span / 0.9, 0.6 * span / 0.9, big.x) * grip * (0.25 + 0.75 * open), 0.8 * smoothstep(0.035 + 1.6 * span / 0.21, 0.6 * span / 0.21, small.x) * hand * (1.0 - 0.5 * open) * step(0.4, small.y));
-        t += grip * (big.yz - 0.5) * 1.0 + hand * (small.yz - 0.5) * 0.7;
+        // (No crack is drawn between the pieces: a hairline is contrast at the size of one pixel, which no encoding of the film holds, and
+        // drawn wider it rules the face into boxes. The breaks of the face are the mesh's, and each piece's own tilt and tone.)
+        float crack = 0.0;
+        t += grip * (big.yz - 0.5) * 0.7 + hand * (small.yz - 0.5) * 0.3;
         // So near, the photograph's own light and dark are blots many pixels wide: they are drawn toward their mean, and the pieces carry the face.
         rock = mix(rock, vec3(dot(rock, vec3(0.3, 0.5, 0.2))) * vec3(1.03, 0.99, 0.93) * 0.5 + 0.5 * SPIRE_MEAN * 1.6, 0.5 * hand);
         ledgeSnow *= 1.0 - hand;
-        float shade = mix(1.0, (0.78 + 0.44 * big.y) * (0.86 + 0.28 * small.z), grip) * (1.0 - 0.62 * crack);
+        float shade = mix(1.0, (0.78 + 0.44 * big.y) * (0.86 + 0.28 * small.z), grip) * (1.0 - 0.45 * crack);
         rock *= shade;
         gripCrack = crack;
         gripHand = hand;
@@ -542,8 +564,8 @@ void main() {
         float skin = grip * smoothstep(0.035, 0.012, span);
         if (skin > 0.01) {
           float pits = vnoise(atS * 31.0 + 3.1) - 0.5;
-          t += skin * 0.8 * vec2(pits, (small.z - 0.5) * pits * 2.0);
-          rock *= 1.0 + skin * 0.6 * pits;
+          t += skin * 0.25 * vec2(pits, (small.z - 0.5) * pits * 2.0);
+          rock *= 1.0 + skin * 0.15 * pits;
         }
       }
     }
@@ -566,8 +588,8 @@ void main() {
       // What lies level is a photograph of wind crust with dark ribs and stones standing out of it, from straight above, laid on the
       // level at its one real size and turned over at its edges. Its pale is the place's snow and its dark the place's rock.
       vec2 atL = vec2(dot(vWorld.xz, vec2(0.82, 0.57)), dot(vWorld.xz, vec2(-0.57, 0.82)));
-      vec2 gLx = vec2(dot(dFdx(vWorld.xz), vec2(0.82, 0.57)), dot(dFdx(vWorld.xz), vec2(-0.57, 0.82)));
-      vec2 gLy = vec2(dot(dFdy(vWorld.xz), vec2(0.82, 0.57)), dot(dFdy(vWorld.xz), vec2(-0.57, 0.82)));
+      vec2 gLx = vec2(dot(wX.xz, vec2(0.82, 0.57)), dot(wX.xz, vec2(-0.57, 0.82)));
+      vec2 gLy = vec2(dot(wY.xz, vec2(0.82, 0.57)), dot(wY.xz, vec2(-0.57, 0.82)));
       vec2 uvC = atL / vec2(40.0, 14.5);
       float lodC = lodOf(tCrust, gLx / 40.0, gLy / 40.0);
       float eC = max(0.003, exp2(lodC) / 1688.0);
@@ -604,8 +626,10 @@ void main() {
     vec2 uv = sheetUv;
     vec3 sc = sheetC;
     if (sheet > 0.0) {
-      vec2 px = 3.0 / vec2(textureSize(tSheetH, 0));
-      float lodH = lodOf(tSheetH, dFdx(uv), dFdy(uv));
+      // (Its relief is read broad: at the size of a texel a hairline joint of the sheet turns the light like a wire, and a row of them down
+      // a steep face is pale rain on the rock.)
+      vec2 px = 8.0 / vec2(textureSize(tSheetH, 0));
+      float lodH = lodOf(tSheetH, sheetUvX, sheetUvY) + 2.0;
       float h0 = textureLod(tSheetH, uv, lodH).r;
       float da = (textureLod(tSheetH, uv + vec2(px.x, 0.0), lodH).r - h0) / px.x * uSheetMap.x;
       float dy = (textureLod(tSheetH, uv + vec2(0.0, px.y), lodH).r - h0) / px.y * uSheetMap.z;
@@ -632,7 +656,7 @@ void main() {
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
   // Close to, the cracks of a spire are dark.
-  if (spire) albedo *= mix(1.0, 1.25 * (0.3 + 0.7 * smoothstep(0.06, 0.32, pit)), near);
+  if (spire) albedo *= mix(1.0, 1.25 * (0.5 + 0.5 * smoothstep(0.06, 0.32, pit)), near);
 
   // The burn: the top of a spire is black glass where the lightning has come to it, time after time, and streaked below.
   float burn = 0.0;
@@ -673,7 +697,9 @@ void main() {
     upPix = mix(upPix, upLens, gripHand);
     float upFace = mix(n0.y, upPix, fineRock);
     float upRock = mix(nRock.y, upPix, fineRock);
-    float held = 0.55 * smoothN.y + 0.45 * upFace + 0.2 * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
+    // (A joint that stands upright on a steep face holds no snow of its own: snow standing all along it is a pale run down the rock, like rain.)
+    float gully = smoothstep(0.3, 0.65, smoothN.y);
+    float held = 0.55 * smoothN.y + 0.45 * upFace + 0.2 * gully * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
     snow = smoothstep(0.62, 0.76, held) * (1.0 - sheet);
     // Close to, the sheet's own snow is gone with its picture: snow lies on what the broken rock turns up to the sky, block by block.
     snow = mix(snow, max(ledgeSnow, smoothstep(0.78, 0.9, 0.4 * held + 0.6 * upRock + 0.25 * (pit - 0.5))), near * sheet);
@@ -684,7 +710,7 @@ void main() {
     float low = smoothstep(280.0, 20.0, above);
     // (the lee faces keep their rock: the gale lays its snow on what looks into it)
     low *= smoothstep(-0.25, 0.45, -dot(smoothN.xz, uWind.xz));
-    float deep = fineRock * (0.05 + 0.12 * smoothstep(1.0, -5.0, vRelief));
+    float deep = fineRock * (0.05 + 0.12 * gully * smoothstep(1.0, -5.0, vRelief));
     snow = max(snow, smoothstep(0.5 - 0.3 * low - deep, 0.7 - 0.3 * low - deep, 0.7 * upRock + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
     // Under the lens snow lies only on what the rock itself turns up to the sky; a slab's side keeps none.
     snow *= mix(1.0, smoothstep(0.3 + 0.12 * gripHand, 0.55 + 0.06 * gripHand, upPix + 0.5 * deep), fineRock) * (1.0 - 0.8 * gripCrack);
@@ -696,7 +722,7 @@ void main() {
     // dark: frost and snow lie in them (below), and the dark is kept for the joints.
     occ *= mix(0.4 + 0.6 * proud, 0.72 + 0.28 * proud, fineRock);
     albedo *= mix(0.75 + 0.25 * proud, 0.92 + 0.08 * proud, fineRock);
-    albedo = mix(albedo, min(albedo * 1.25 + vec3(0.085, 0.075, 0.06), vec3(0.9)), fineRock * (1.0 - 0.8 * gripCrack));
+    albedo = mix(albedo, min(albedo * vec3(1.3, 1.16, 0.98) + vec3(0.07, 0.05, 0.03), vec3(0.9)), fineRock * (1.0 - 0.8 * gripCrack));
   }
   if (!spire) snow *= 1.0 - sheet;
   snow *= 1.0 - burn;
@@ -722,8 +748,8 @@ void main() {
     // of its own planes, and askew to the world's, where the frost was pulled long.)
     vec3 pr = vec3(pa, pu, pb) / 3.0;
     vec3 rw = abs(vec3(dot(smoothN, ax), dot(smoothN, up), dot(smoothN, bx)));
-    vec3 gx = dFdx(pr);
-    vec3 gy = dFdy(pr);
+    vec3 gx = pX.xyz / 3.0;
+    vec3 gy = pY.xyz / 3.0;
     bool rX = rw.x > max(rw.y, rw.z);
     bool rY = rw.y > rw.z;
     vec2 atR = rX ? pr.zy : rY ? pr.xz + 0.4 : pr.xy + 0.7;
@@ -733,6 +759,8 @@ void main() {
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
     float thick = fineRock * (1.0 - burn);
+    // (Under the lens a slab's own side that looks into the gale is crusted too, whichever way the body of the rock looks.)
+    windward = max(windward, thick * smoothstep(0.05, 0.55, -dot(n0.xz, uWind.xz)));
     // (The lee is bare rock: the gale lays no frost on a face it does not reach, and what stands in its cracks is thin.)
     float bare = 1.0 - 0.7 * smoothstep(-0.05, 0.4, dot(smoothN.xz, uWind.xz));
     float cover = clamp(0.5 * rime + (0.34 + 0.62 * thick) * windward * (1.0 - burn) + bare * (0.3 * thick * smoothstep(1.0, -6.0, vRelief) + 0.14 * thick * smoothstep(0.3, 0.6, smoothN.y) + 0.42 * (1.0 - 0.6 * gripHand) * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn)), 0.0, 0.95) * mix(crystals, 1.0, (0.25 + 0.65 * thick) * windward);
@@ -745,14 +773,19 @@ void main() {
     cover = min(cover * mix(gripFrost, 1.0, 0.6 * white), 0.95) * (1.0 - 0.85 * cut);
     albedo *= 1.0 - 0.45 * cut;
     // (Near the lens the windward rime is thick and white, feather on feather: the frost picture gives its feathers, not its dark.)
-    vec3 frostA = min(frostC * (1.6 + 0.3 * thick), vec3(0.9)) * mix(vec3(0.93, 0.97, 1.06), vec3(0.98, 0.99, 1.03), thick);
-    frostA = mix(frostA, min(vec3(0.84, 0.86, 0.89) * (0.78 + 0.5 * smoothstep(0.1, 0.5, frostL)), vec3(0.9)), 0.75 * white);
+    // (Under the lens the rime is there or it is not, in masses, and it is cold white on the tan rock: the low warm light makes one brown
+    // of a rock and a frost that are both pale.)
+    cover = mix(cover, 0.95 * smoothstep(0.38, 0.62, cover + 0.25 * (frostL - 0.3)), thick);
+    vec3 frostA = min(frostC * (1.6 + 0.3 * thick), vec3(0.9)) * mix(vec3(0.93, 0.97, 1.06), vec3(0.86, 0.95, 1.12), thick);
+    frostA = mix(frostA, min(vec3(0.8, 0.87, 0.97) * (0.78 + 0.5 * smoothstep(0.1, 0.5, frostL)), vec3(0.95)), 0.75 * max(white, 0.8 * thick));
     albedo = mix(albedo, frostA, cover);
     // The feathers stand out of the rock: their own relief, from the frost picture's light and dark across the face.
-    vec3 dPx = dFdx(vWorld);
-    vec3 dPy = dFdy(vWorld);
+    vec3 dPx = wX;
+    vec3 dPy = wY;
     vec3 gradF = dFdx(frostL) * dPx / max(dot(dPx, dPx), 1e-8) + dFdy(frostL) * dPy / max(dot(dPy, dPy), 1e-8);
     nRock = normalize(nRock - cover * (1.0 - 0.65 * thick) * clamp(0.5 * gradF, vec3(-1.5), vec3(1.5)));
+    // (Thick rime is a heap of feathers on the slab, not its flat side: it takes the light as the round of the rock does, and from above.)
+    nRock = normalize(mix(nRock, normalize(smoothN + vec3(0.0, 0.7, 0.0)), 0.75 * cover * thick));
     rough = mix(rough, 0.55, cover);
     occ = mix(occ, mix(0.55, 0.95, white) + 0.45 * smoothstep(0.2, 0.6, frostL), 0.7 * cover);
     rime = 0.0;
@@ -772,8 +805,8 @@ void main() {
   if (!inside) if (snow > 0.0) {
     // Wind-packed snow from its picture, laid across the gale: broad for the drifts' skin far off, fine under the lens.
     vec2 q = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98)));
-    vec2 qx = dFdx(q);
-    vec2 qy = dFdy(q);
+    vec2 qx = vec2(dot(wX.xz, vec2(0.98, -0.2)), dot(wX.xz, vec2(0.2, 0.98)));
+    vec2 qy = vec2(dot(wY.xz, vec2(0.98, -0.2)), dot(wY.xz, vec2(0.2, 0.98)));
     // On a steep face a level picture would be pulled long: there the snow keeps its tone and loses its ripple.
     float flat_ = smoothstep(0.35, 0.7, n0.y);
     vec2 g = vec2(0.0);
@@ -781,7 +814,7 @@ void main() {
     {
       // The ground's snow is its photograph's: the crust, the scoops and the tails behind the stones, in tone and in relief.
       // Seen from far its scoops are under the size of a pixel: the drift keeps its broad tone and lies smooth.
-      float footprint = length(fwidth(vWorld.xz));
+      float footprint = length(abs(wX.xz) + abs(wY.xz));
       float wide = smoothstep(0.03, 0.25, footprint);
       snowTint = mix(vec3(1.0), clamp(crustTint, 0.45, 1.2), top * mix(1.0, 0.4, wide));
       g = t * top * mix(1.0, 0.3, wide);

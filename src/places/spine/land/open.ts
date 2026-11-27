@@ -143,6 +143,16 @@ void main() {
   // (The plane a face is read on is the plane the triangle itself lies nearest: at a step the shading normal says level and the face is a wall.)
   vec3 ng = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   if (dot(ng, n0) < 0.0) ng = -ng;
+  // A cliff of the ground is a few tall quads between two heights, and the round of the mesh says it is level: there the face is the
+  // triangle's own, so its rock is laid on the plane it stands in and no snow lies on a wall.
+  // (The burned bed under the dead one is marked by a relief of 100: no rime stands on its risers.)
+  float onBed = step(50.0, vRelief);
+  if (ground) n0 = normalize(mix(n0, ng, smoothstep(0.12, 0.4, n0.y - ng.y)));
+  // (Taken here, before any branch: what a branch needs of them it is handed.)
+  vec2 snowQ = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98))) + 7.0 * vec2(vnoise(vWorld.xz / 63.0 + 3.1), vnoise(vWorld.xz / 63.0 + 17.7));
+  vec2 snowQx = dFdx(snowQ);
+  vec2 snowQy = dFdy(snowQ);
+  float footprint = length(fwidth(vWorld.xz));
   float slabTone = 1.0;
   // (The face before its slabs are cut: what is heaped on the rock lies on this.)
   vec3 nFace = n0;
@@ -277,7 +287,7 @@ void main() {
   float rime = 0.0;
   if (show > 0.01) {
     float leeFace = mix(lee, dot(nFace.xz, uWind.xz), 0.75);
-    float expose = clamp(0.36 - 1.0 * leeFace + 0.3 * nFace.y + 0.55 * windward, 0.0, 1.0) * (ground ? 0.45 * steep : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet) * stripped;
+    float expose = clamp(0.36 - 1.0 * leeFace + 0.3 * nFace.y + 0.55 * windward, 0.0, 1.0) * (ground ? 0.45 * steep * (1.0 - onBed) : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet) * stripped;
     if (expose > 0.1) {
       vec2 rp = w.x >= w.z && w.x >= w.y ? P.zy : w.z >= w.y ? P.xy : P.xz;
       vec2 rx = w.x >= w.z && w.x >= w.y ? Px.zy : w.z >= w.y ? Px.xy : Px.xz;
@@ -308,12 +318,11 @@ void main() {
   float snowOcc = 1.0;
   vec3 snowTint = vec3(1.0);
   if (snow > 0.0) {
-    vec2 q = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98)));
     // (No two fields of sastrugi run alike: the pack is pulled about over some 60 m, and in places the wind has polished it flat.)
-    q += 7.0 * vec2(vnoise(vWorld.xz / 63.0 + 3.1), vnoise(vWorld.xz / 63.0 + 17.7));
+    vec2 q = snowQ;
     float rippled = 0.35 + 0.65 * smoothstep(0.3, 0.7, vnoise(vWorld.xz / 41.0 + 9.2));
-    vec2 qx = dFdx(q);
-    vec2 qy = dFdy(q);
+    vec2 qx = snowQx;
+    vec2 qy = snowQy;
     // On a steep face a level picture would be pulled long: there the snow keeps its tone and loses its ripple.
     float level = smoothstep(0.45, 0.8, min(min(n0.y, smoothN.y), flat_));
     float lodP = lodAt(qx / 9.0, qy / 9.0, 1536.0);
@@ -324,7 +333,11 @@ void main() {
     vec2 g = rippled * (A.s * 0.5 * (1.0 - 0.8 * field) + vec2(0.77 * B.s.x + 0.64 * B.s.y, -0.64 * B.s.x + 0.77 * B.s.y) * 0.6 * (0.35 + 0.65 * field));
     snowTint = mix(vec3(1.0), mix(vec3(1.0), A.c / PACK_MEAN, 1.0 - 0.8 * field) * mix(vec3(1.0), B.c / PACK_MEAN, 0.3 + 0.5 * field), 0.7 * level);
     snowOcc = mix(1.0, 0.72 + 0.28 * smoothstep(0.15, 0.6, 0.5 * A.h + 0.5 * B.h), level);
-    float footprint = length(fwidth(vWorld.xz));
+    // In the fine field of the crest the sastrugi are in the mesh: the scoured pack between them is glazed and in their shade.
+    if (ground) {
+      snowOcc *= 1.0 + (1.0 - onBed) * clamp(1.5 * vRelief, -0.2, 0.1);
+      snowTint *= mix(vec3(1.0), vec3(0.9, 0.95, 1.04), smoothstep(-0.02, -0.11, vRelief));
+    }
     float fine = smoothstep(0.012, 0.003, footprint) * level;
     if (fine > 0.01) {
       Tap D = tap(tPack, tPackNh, q.yx / vec2(1.9, 1.27) + 0.37, lodP + 2.24);

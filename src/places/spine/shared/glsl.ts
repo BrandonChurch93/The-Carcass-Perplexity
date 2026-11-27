@@ -167,6 +167,7 @@ const vec3 INNER_COLOUR = vec3(0.62, 0.5, 1.0);
 const float INNER_CAST = 0.3;
 // The light falls off with the square of the distance past this many metres: the channel is a kilometre tall and lights the ridge as a line does.
 const float STRIKE_REACH = 1500.0;
+const float STRIKE_WRAP = 0.45;
 vec3 strikeIrradiance(vec3 p, vec3 n) {
   if (uStrikeAt.w <= 0.0) return vec3(0.0);
   // The foot of the channel on what is close under it: the rock and the rime of the struck spire's top take a hard light from just over
@@ -178,8 +179,16 @@ vec3 strikeIrradiance(vec3 p, vec3 n) {
   vec3 d = uStrikeAt.xyz - p;
   float dist = length(d);
   vec3 l = d / dist;
-  // Hard, with the least wrap: snow turned from the channel stays in the dusk.
-  float facing = clamp((dot(n, l) + 0.06) / 1.06, 0.0, 1.0);
+  // Wrapped: a stroke lights the air and the cloud about it, and they light what is turned a little from the channel; what is turned
+  // well away stays in the dusk.
+  // The spire that is struck stands under the channel itself: it is lit from over its tip and little comes round to its flanks, which
+  // keep the storm's shadow.
+  float under = smoothstep(120.0, 500.0, length(p.xz - uStrikeTip.xz));
+  float wrap = STRIKE_WRAP * mix(0.2, 1.0, under);
+  float facing = clamp((dot(n, l) + wrap) / (1.0 + wrap), 0.0, 1.0);
+  // And a fill with no direction: the cloud over the channel is lit through and throws a little of the flash on every face under it,
+  // most on what looks up, so what is turned from the bolt flares too and is not left out of the stroke.
+  near += STRIKE_COLOUR * (uStrikeAt.w * 0.006 * mix(0.3, 1.0, under) * (0.45 + 0.55 * n.y) / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
   if (facing <= 0.0) return near;
   // Faces square to the channel take the most by far: the light models the rock, it does not coat it.
   facing *= facing;
@@ -193,7 +202,8 @@ vec3 strikeIrradiance(vec3 p, vec3 n) {
     lit = min(lit, smoothstep(-0.6 - 0.015 * t, 0.3 + 0.004 * t, q.y - landAt(q.xz).r + 0.5 + 0.008 * t));
     if (lit <= 0.0) return near;
   }
-  return near + STRIKE_COLOUR * (uStrikeAt.w * facing * lit / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
+  // (The struck spire takes the stroke at its tip, from the foot of the channel; of the channel's length over it, it sees little.)
+  return near + STRIKE_COLOUR * (uStrikeAt.w * mix(0.16, 1.0, under) * facing * lit / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
 }
 
 // Irradiance from the round lights: the lightning. Each is a ball of real size (a bolt a kilometre long is a row of them, or one tall one) and falls
@@ -283,7 +293,8 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     vec3 toFar = CANAL_FAR - p;
     vec3 toNear = CANAL_NEAR - p;
     vec3 toLight = normalize(normalize(toFar) / (dot(toFar, toFar) + 400.0) + 0.35 * normalize(toNear) / (dot(toNear, toNear) + 400.0));
-    skyE *= mix(0.3, 1.3, smoothstep(-0.35, 0.85, dot(n, toLight)));
+    float faces = smoothstep(0.0, 0.9, dot(n, toLight) + 0.45 * max(n.y, 0.0));
+    skyE *= mix(vec3(0.22, 0.2, 0.2), vec3(1.3, 1.16, 1.62), faces * faces);
   }
   vec3 warm = uWarmColour * (outside ? 0.4 * rim * rim * sqrt(sky) * mix(0.15, 1.0, paleOf) : 0.0);
   vec3 e = skyE * shut + warm * (0.35 + 0.65 * occ) + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));

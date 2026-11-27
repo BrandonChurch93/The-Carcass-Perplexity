@@ -195,16 +195,35 @@ ${SEA_SHADE_GLSL}
     vec4 land = landAt(hit.xz);
     float above = hit.y - land.r;
     if (above < 6.0 && above > -2.0 && land.a < 0.3) {
-      vec3 carried = hit - uWind.xyz * (uWind.w * 0.7 * uTime);
-      vec2 a = vec2(dot(carried.xz, uWind.xz), dot(carried.xz, vec2(-uWind.z, uWind.x)));
+      vec2 downW = normalize(uWind.xz);
+      vec2 a = vec2(dot(hit.xz, downW), dot(hit.xz, vec2(-downW.y, downW.x)));
+      // By the dead one the running snow meets a body: it runs round it as a stream runs round a stone (the stream's own lines are what
+      // the snow is read along), banks up on the side the gale strikes, and leaves a thin, ragged wake in the lee.
+      float met = 1.0;
+      if (uClear.z > 0.0) {
+        vec2 rel = hit.xz - uClear.xy;
+        vec2 b = vec2(dot(rel, downW), dot(rel, vec2(-downW.y, downW.x)));
+        float r2 = max(dot(b, b), 0.01);
+        float k = min(uClear.z * uClear.z / r2, 1.0);
+        a += vec2(b.x * k, -b.y * k);
+        float r = sqrt(r2);
+        float struck = smoothstep(3.2 * uClear.z, uClear.z, r) * max(-b.x / r, 0.0);
+        float torn = noise(vec3(b.x / 7.0 - uTime * 0.6, b.y / 2.3, 0.21)).g;
+        float lee = step(0.0, b.x) * smoothstep((1.25 - 0.6 * torn) * uClear.z, 0.35 * uClear.z, abs(b.y)) * exp(-b.x / (4.0 * uClear.z));
+        met = (1.0 + 1.1 * struck) * (1.0 - 0.6 * lee);
+      }
+      a.x -= uWind.w * 0.7 * uTime;
       float n = 0.6 * noise(vec3(a.x / 90.0, a.y / 13.0, 0.3)).g + 0.4 * noise(vec3(a.x / 21.0, a.y / 3.7, 0.7)).a;
-      float column = smoothstep(0.5, 0.78, n) * 3.2 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 2.5);
+      float column = smoothstep(0.5, 0.78, n) * 3.2 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 2.5) * met;
       column *= uClear.z > 0.0 ? smoothstep(0.4 * uClear.z, uClear.z, length(hit.xz - uClear.xy)) : 1.0;
       // Close to the lens the same snow is seen as it is: snakes a hand deep and a pace wide, running fast along the ground.
       if (far < 90.0) {
         float snake = 0.6 * noise(vec3(a.x / 9.0, a.y / 1.1, 0.5)).r + 0.4 * noise(vec3(a.x / 2.6, a.y / 0.33, 0.9)).b;
-        column += smoothstep(0.47, 0.7, snake) * (0.5 + n) * 2.6 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 0.5) * smoothstep(90.0, 25.0, far) * (uClear.z > 0.0 ? smoothstep(0.8, 2.0, length(hit.xz - uClear.xy)) : 1.0);
+        column += smoothstep(0.47, 0.7, snake) * (0.5 + n) * 2.6 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 0.5) * smoothstep(90.0, 25.0, far) * met * (uClear.z > 0.0 ? smoothstep(0.8, 2.0, length(hit.xz - uClear.xy)) : 1.0);
       }
+      // About the body and its burn no snow runs on the ground: bands that cross the burn and take no notice of the body read as a
+      // surface that slides. It runs beyond, where the air behind the body softens it.
+      if (uClear.z > 0.0) column *= smoothstep(1.7 * uClear.z, 4.0 * uClear.z, length(hit.xz - uClear.xy));
       float kept = exp(-0.11 * column * smoothstep(1400.0, 500.0, far) * uShow.w * uStage.x);
       vec3 snow = 0.9 * (skyOn(1.0, rd) + min(strikeLight(hit) * 0.2, vec3(0.1, 0.085, 0.17)));
       light = light + through * (1.0 - kept) * snow;
@@ -229,7 +248,7 @@ ${SEA_SHADE_GLSL}
       if (tr < 0.0 || tr > far) continue;
       vec3 at = ro + rd * tr;
       vec3 off = at - on;
-      float wide = (3.0 + 0.16 * x) * (0.5 + 0.5 * size);
+      float wide = (5.0 + 0.2 * x) * (0.5 + 0.5 * size);
       // A lens standing in a plume sees through it, not a wall of it.
       float clearOf = smoothstep(0.5 * wide, 5.0 * wide, tr);
       float d2 = dot(off, off) / (wide * wide);
@@ -242,7 +261,7 @@ ${SEA_SHADE_GLSL}
       float gust = noise(vec3(along / 260.0, float(i) * 0.37, 0.11)).g;
       float k = x / reach;
       float body = exp(-d2) * (1.0 - k) * (1.0 - k) * smoothstep(0.0, 0.05, k + 0.01);
-      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 1.6, 0.0, 0.32) * uShow.w * uStage.x * clearOf;
+      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 2.3, 0.0, 0.46) * uShow.w * uStage.x * clearOf;
       // Staged by shot: before the long lens of the strike a plume is a thin smoke of snow, not a bank.
       thick *= 1.0 - 0.75 * uPlate.w;
       vec3 pale = 0.95 * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
@@ -286,6 +305,14 @@ ${SEA_SHADE_GLSL}
     float azV = atan(rd.z, rd.x);
     float bands = noise(vec3(azV * 0.9 - uTime * 0.013, rd.y * 2.6 + uTime * 0.004, 0.37)).g;
     depthV *= (0.65 + 0.7 * bands) * uShow.x * uStage.y;
+    // Mist stands in banks between one spire and the next, and lies low: each spire is in more or less of it by where it stands, its foot
+    // more than its tip.
+    if (far < 50000.0 && uStage.z >= 0.75) {
+      vec3 hitV = ro + rd * far;
+      float bank = noise(vec3(hitV.xz / 800.0 - uWind.xz * (uTime * 0.012), 0.21)).r;
+      float lowV = exp(-max(hitV.y - crestY + 50.0, 0.0) / 140.0);
+      depthV *= (0.5 + 1.0 * bank) * (0.65 + 1.1 * lowV);
+    }
     float veiled = 1.0 - exp(-depthV);
     // On the ridge a far spire is never the veil alone: it keeps a fifth of its own light and shade, and more in a flash, when the veil
     // is lit and would be a flat fill.
@@ -298,6 +325,18 @@ ${SEA_SHADE_GLSL}
     vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.006, 0.009);
     light = light * (1.0 - veiled) + snowAir * veiled;
     through *= 1.0 - veiled;
+    // By the dead one the lens is low and close: the air behind the body is thick with blown snow, and the first spire and its mouth
+    // stand back in it, pale and soft, as far behind the body as they are.
+    if (uClear.z > 0.0 && far < 50000.0) {
+      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 540.0), 0.72);
+      // And low over the ground the drift stands thick: what is seen along the ground (the snowfield, the feet of the far spires) is seen
+      // through the whole of it, what stands up out of it through a few metres.
+      float lowPath = rd.y > 0.001 ? min(far, 4.0 / rd.y) : far;
+      float drift = min(1.0 - exp(-max(lowPath - 9.0, 0.0) / 170.0), 0.45);
+      behind = (1.0 - (1.0 - behind) * (1.0 - drift)) * uShow.x;
+      light = light * (1.0 - behind) + snowAir * 0.55 * behind;
+      through *= 1.0 - behind;
+    }
     // Scud: torn cloud that races low past the spires on the gale, paler than the storm behind it (staged by shot, uStage.w).
     if (uStage.w > 0.0 && far > 120.0) {
       float scud = 0.7 * noise(vec3(azV * 0.8 - uTime * 0.05, rd.y * 5.0 + uTime * 0.006, 0.61)).r + 0.3 * noise(vec3(azV * 2.6 - uTime * 0.14, rd.y * 15.0, 0.2)).b;
@@ -305,6 +344,44 @@ ${SEA_SHADE_GLSL}
       light = light * (1.0 - wisp) + (snowAir * 1.5 + vec3(0.008, 0.008, 0.012)) * wisp;
       through *= 1.0 - wisp;
     }
+  }
+
+  // The driven snow of the ridge: veils of it at three depths, each a place in the world that the gale carries, drawn out down the wind and
+  // torn into gusts. A veil is metres across and thin, never a flake; the lens moves through them, and the near one crosses it fastest.
+  if (uShow.w * uStage.x > 0.0) {
+    float lensV = uInvProjection[1][1] / 0.466;
+    vec3 downV = normalize(vec3(uWind.x, -0.1, uWind.z));
+    vec3 acrossV = normalize(vec3(-uWind.z, 0.0, uWind.x));
+    vec3 upV = cross(acrossV, downV);
+    float crestV = ridgeAt(ro.x).y;
+    float driven = 0.0;
+    float keptV = 1.0;
+    for (int j = 0; j < 3; j++) {
+      // (By the dead one the first of them flies between the lens and the body, an arm's length off.)
+      bool dead = uClear.z > 0.0;
+      float dist = dead ? (j == 0 ? 2.2 : j == 1 ? 40.0 : 150.0) : (j == 0 ? 26.0 : j == 1 ? 95.0 : 340.0) / lensV;
+      float before = smoothstep(dist, dist * 1.3, far);
+      if (before <= 0.0) break;
+      float grain = dead ? (j == 0 ? 2.4 : j == 1 ? 9.0 : 30.0) : (j == 0 ? 7.0 : j == 1 ? 20.0 : 56.0) / sqrt(lensV);
+      vec3 at = ro + rd * dist;
+      vec3 p = at - downV * (uWind.w * (0.8 + 0.12 * float(j)) * uTime);
+      // Sheets that lie flat on the gale, long down it and broad across it, soft: seen along the wind they are level bands, never lines that
+      // fall.
+      vec3 q = vec3(dot(p, downV) / (grain * 6.0), dot(p, upV) / (grain * 1.6), dot(p, acrossV) / (grain * 5.0));
+      float streak = 0.7 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).g + 0.3 * noise(q * vec3(2.1, 2.3, 2.1) + 0.37).a;
+      float gust = noise(vec3(q.x * 0.21, 0.37 * float(j) + 0.13, q.z * 0.17)).b;
+      float veil = smoothstep(0.42, 0.74, streak) * smoothstep(0.36, 0.7, gust) * before;
+      // It thins with the height over the crest, and against the open sky it is the sky's own tone and all but lost.
+      veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.2 : 1.0);
+      veil *= dead ? (j == 0 ? 0.07 : j == 1 ? 0.14 : 0.18) : (j == 0 ? 0.16 : j == 1 ? 0.3 : 0.4);
+      driven += keptV * veil;
+      keptV *= 1.0 - veil;
+    }
+    // Through the strike's long lens the veils lie a kilometre deep before the spire: thinned there, or the spire is a ghost in milk.
+    driven *= uShow.w * uStage.x * (uSkyStage.z > 0.0 ? 0.3 : 1.0);
+    vec3 snowV = 0.85 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * (95.0 / lensV)) * 0.2, vec3(0.1, 0.085, 0.17)));
+    light = light * (1.0 - driven) + snowV * driven;
+    through *= 1.0 - driven;
   }
 
   // The snow before the lens: streaks in the gale, soft and few, each many times longer than it is wide, in gusts, at three depths. Each depth
