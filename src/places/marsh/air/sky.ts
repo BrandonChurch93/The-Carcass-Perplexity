@@ -65,7 +65,7 @@ void main() {
   // from them, as the first lens sees them. It stands round the whole horizon (turned over at each end, so it has no seam) and gives way to
   // the sheet above it eleven degrees up. (Its painted shaft of rain is taken out; see assets-src/marsh/air/dry.py.)
   // (It was taken with the first lens: 44 degrees high, so its whole height is 0.808 in tangent and its width 1.436.)
-  float fu = 0.68 + (az - uRain.x) / 1.436;
+  float fu = 0.68 + (az - uRain.x - ${RAIN_TURN.toFixed(4)}) / 1.436;
   fu = 1.0 - abs(1.0 - mod(fu, 2.0));
   float fv = 0.574 + max(el, 0.0) / 0.808;
   vec3 far = texture2D(tFar, vec2(fu, min(fv, 0.995))).rgb;
