@@ -230,9 +230,10 @@ export function bandAt(deg: number, y: number): number {
       (h[4] - h[3]) * sat((deg - b.d1) / 10) +
       (h[5] - h[4]) * sat((deg - b.d1 - 10) / 10) +
       0.9 * Math.sin(Math.PI * f) * Math.sin(7 * f + b.seed);
-    const half = 0.85 + 0.25 * Math.sin(13 * f + 1.7 * b.seed);
     const held = Math.max(1 - smooth(f / 0.1), 1 - smooth((1 - f) / 0.1));
     const gate = Math.max(held, smooth((Math.sin(10 * f + 2.1 * b.seed) + 0.45 * Math.sin(27 * f + b.seed) + 0.55) / 0.45)) * smooth((deg - (b.d0 - 20)) / 10) * smooth((b.d1 + 20 - deg) / 10);
+    // As thick as the hoop where it takes over from it, a third of that along the wall, and it thins to nothing where it is broken.
+    const half = (0.85 + 0.25 * Math.sin(13 * f + 1.7 * b.seed) + 0.9 * held) * (0.25 + 0.75 * gate);
     const t = (y - mid) / half;
     if (Math.abs(t) < 1) most = Math.max(most, gate * Math.sqrt(1 - t * t));
   }
@@ -246,9 +247,9 @@ float bandOne(float deg, float y, float d0, float d1, float ya, float yb, float 
   float f = clamp((deg - d0) / (d1 - d0), 0.0, 1.0);
   float mid = ya + (yb - ya) * clamp((deg - (d0 - 20.0)) / 10.0, 0.0, 1.0) + (yc - yb) * clamp((deg - (d0 - 10.0)) / 10.0, 0.0, 1.0) + (yd - yc) * f
     + (ye - yd) * clamp((deg - d1) / 10.0, 0.0, 1.0) + (yf - ye) * clamp((deg - d1 - 10.0) / 10.0, 0.0, 1.0) + 0.9 * sin(3.14159265 * f) * sin(7.0 * f + seed);
-  float halfTall = 0.85 + 0.25 * sin(13.0 * f + 1.7 * seed);
   float held = max(1.0 - smoothstep(0.0, 0.1, f), 1.0 - smoothstep(0.0, 0.1, 1.0 - f));
   float gate = max(held, smoothstep(0.0, 0.45, sin(10.0 * f + 2.1 * seed) + 0.45 * sin(27.0 * f + seed) + 0.55)) * smoothstep(d0 - 20.0, d0 - 10.0, deg) * smoothstep(d1 + 20.0, d1 + 10.0, deg);
+  float halfTall = (0.85 + 0.25 * sin(13.0 * f + 1.7 * seed) + 0.9 * held) * (0.25 + 0.75 * gate);
   float t = (y - mid) / halfTall;
   return gate * sqrt(max(0.0, 1.0 - t * t));
 }

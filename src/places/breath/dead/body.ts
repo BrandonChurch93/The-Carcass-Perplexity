@@ -210,7 +210,7 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
       const round = closed(t, 0.16, 0.13);
       const chest = bell(t, 0.3, 0.24);
       const hip = bell(t, 0.82, 0.1);
-      return { wide: (0.34 + 0.07 * chest + 0.05 * hip) * round, tall: (0.19 + 0.1 * chest + 0.09 * hip) * round };
+      return { wide: (0.37 + 0.05 * chest + 0.03 * hip) * round, tall: (0.25 + 0.06 * chest + 0.04 * hip) * round };
     },
     (t, ang) => {
       const round = closed(t, 0.16, 0.13);
@@ -274,8 +274,8 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
   // lies out across the other hind leg, which is straight. The fore leg is folded under the chest.
   const hindOver: V3[] = [
     [0.66, 0.2, -0.34],
-    [0.72, 0.4, -0.2],
-    [0.62, 0.3, 0.1],
+    [0.72, 0.37, -0.2],
+    [0.62, 0.29, 0.1],
     [0.44, 0.1, 0.36],
     [0.4, 0.075, 0.44],
     [0.62, 0.07, 0.4],
@@ -283,7 +283,7 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     [1.3, 0.06, 0.2],
     [1.62, 0.045, 0.24],
   ];
-  limb(skin, hindOver, [0.13, 0.036], [[0.13, 0.085], [0.49, 0.062], [0.74, 0.05], [0.985, 0.043]], 1.3);
+  limb(skin, hindOver, [0.1, 0.034], [[0.13, 0.085], [0.49, 0.066], [0.74, 0.052], [0.985, 0.043]], 1.3);
   hoof(skin, [1.65, 0.04, 0.245], [1, 0.1], 1.15);
   const hindUnder: V3[] = [
     [0.8, 0.13, -0.2],
@@ -351,12 +351,12 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
       (t) => [0, 0.55 + 0.45 * t],
     );
   };
-  const mains = 13;
+  const mains = 19;
   for (let i = 0; i < mains; i++) {
     const u = (i + 0.2 + 0.6 * random()) / mains;
     // The fan opens away from the neck's end: toward the low end of the animal and toward the lens. The cords leave the neck as one
     // matted bundle as thick as it is.
-    const bearing = Math.PI * lerp(0.4, 1.08, u) + 0.1 * (random() - 0.5);
+    const bearing = Math.PI * lerp(0.3, 1.02, u ** 1.3) + 0.1 * (random() - 0.5);
     const thick = 0.034 + 0.026 * random();
     cord([root[0] + 0.05 * (random() - 0.5), root[1] + 0.05 * random(), root[2] - 0.12 + 0.07 * (random() - 0.5)], bearing, 1.0 + 0.9 * random(), thick, 0.05 * random(), 2);
   }

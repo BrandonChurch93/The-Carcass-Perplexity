@@ -297,7 +297,9 @@ export function block(seed: number, size: [number, number, number], at: [number,
     p.applyMatrix4(m);
     fn.normalize().applyMatrix3(turned);
     faces.push(fn.x, fn.y, fn.z);
-    return { at: [p.x, p.y, p.z], uv: [lx + seed * 13, ly + lz], occ: lerp(0.2, 1, smooth(dy * 1.1 + 0.72)) };
+    // The tiers' own sheet lies on it at twice its fineness: a block is seen from nearer than a tier, and at the tier's scale its beds
+    // were the stripes of a sweet.
+    return { at: [p.x, p.y, p.z], uv: [(lx + seed * 13) * 2.1, (ly + 0.6 * lz) * 2.1], occ: lerp(0.2, 1, smooth(dy * 1.1 + 0.72)) };
   });
   const n = g.getAttribute('normal') as THREE.BufferAttribute;
   for (let k = 0; k < n.count; k++) {

@@ -162,10 +162,8 @@ export function create(ctx: Context): Piece {
       blocks.push(block(60 + k + bearing * 0.21, [size * rs.range(0.9, 1.5), size * 0.55, size], [at[0] - Math.sin(b) * out, at[1] + size * 0.2, at[2] + Math.cos(b) * out], [rs.range(-0.2, 0.2), rs.range(0, 6.28), rs.range(-0.2, 0.2)], 70));
     }
   }
-  // The fallen slabs are the rim's own stone, broken: pale grey-cream like the tiers they fell from, their beds showing on their sides.
-  const face = mirrored('land/slabface.jpg', 'colour');
-  const fallen = rock.bone(0.9, [0.57, 0.545, 0.5], [0.3, 0.28, 0.25], { colour: face, data: ctx.assets.texture('mat/shelf-nh.png', { kind: 'data', repeat: true, anisotropy: 1 }), mean: [0.42, 0.36, 0.3], metres: 5.5, relief: 1.6 }, THREE.DoubleSide);
-  slabs.add(mesh(mergeGeometries(blocks), fallen));
+  // The fallen slabs are the tiers' own stone, broken: the same bedded travertine, rust in it, damp and dark at their feet.
+  slabs.add(mesh(mergeGeometries(blocks), arches));
   slabs.add(mesh(heap(), rubble));
 
   ctx.scene.add(ctx.parts.built('slabs', slabs));
