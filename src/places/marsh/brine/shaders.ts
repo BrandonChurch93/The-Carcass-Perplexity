@@ -511,19 +511,22 @@ varying vec4 vLife;
 void main() {
   float size = aLife.z;
   float a = atan(position.z, position.x);
-  float k = aLife.y * 6.283;
+  float k = aLife.y * 6.283 + 2.1;
   float dur = ${CROWN_LIFE.toFixed(2)} * sqrt(size / 0.4);
   float x = clamp(aLife.x / dur, 0.0, 1.0);
   // Seven to nine fingers, never evenly set and no two as tall. (Each is where the edge's bead was thickest when it came down.)
   float count = 7.0 + floor(fract(aLife.y * 7.3) * 3.0);
   float turn = count * a + k * 3.0 + 0.8 * sin(a * 2.0 + k) + 0.5 * sin(a * 3.0 - k * 2.0);
-  float finger = pow(0.5 + 0.5 * cos(turn), 9.0);
+  // (The edge is a row of round lobes, and only the fullest of them throws a thin jet on: a row of spikes is a toy crown.)
+  float lobe = pow(0.5 + 0.5 * cos(turn), 2.0);
   float own = 0.62 + 0.38 * sin(a * 3.0 + k * 5.0) * sin(a + k * 2.0);
+  float jet = pow(0.5 + 0.5 * cos(turn), 6.0) * smoothstep(0.55, 0.85, own);
+  float finger = max(lobe * 0.6, jet);
   // Thrown, it only rises and falls. The side the tear reached first is up first.
   float lead = 0.12 * (0.5 + 0.5 * cos(a - aLife.y * 40.0));
   float xa = clamp((x - lead) / (1.0 - lead), 0.0, 1.0);
   float rise = 4.0 * xa * (1.0 - xa);
-  float tall = size * rise * (0.13 + 0.62 * finger * own) * (0.8 + 0.2 * sin(a * 5.0 + k));
+  float tall = size * rise * (0.2 + 0.24 * lobe * own + 0.14 * jet) * (0.8 + 0.2 * sin(a * 5.0 + k));
   float h = position.y * tall;
   // It leaves the pool leaning out and leans further as it falls; a finger leans more than the wall between.
   float lean = 0.25 + 0.6 * xa + 0.2 * finger;
@@ -570,17 +573,18 @@ void main() {
   vec3 r = reflect(-v, n);
   float open = skyOpen(vWorld);
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
-  float thick = mix(1.0, 0.3, smoothstep(0.05, 0.7, up01)) + 0.2 * bead + 0.6 * vLocal.z;
+  // (It was drawn out unevenly: thick runs and thin between them, up the wall.)
+  float thick = (mix(1.4, 0.55, smoothstep(0.05, 0.7, up01)) + 0.2 * bead + 0.5 * vLocal.z) * (0.55 + 0.9 * fine.g);
   // The brine itself, and the light that comes through the thin of it from the sky behind: red where it is thick, pale where it is film.
   vec3 takes = exp(-vec3(0.95, 2.9, 3.2) * thick * 1.6);
-  vec3 lit = vec3(0.07, 0.011, 0.0085) * above * (1.0 - takes.g) + above * takes * 0.05;
+  vec3 lit = vec3(0.07, 0.011, 0.0085) * above * (1.0 - takes.g) + above * takes * 0.018;
   // It is wet on both sides: the sky stands in it over the mirrored horizon, the dark pool under, and the cloud's window on every bend.
   vec3 pond = vec3(0.05, 0.012, 0.01) * above + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
   vec3 env = mix(pond, skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z))), smoothstep(-0.05, 0.08, r.y + (g.g - 0.5) * 0.1));
   float toward = max(dot(r, ${DOME_KEY}), 0.0);
-  env += uSkyZenith * 6.0 * pow(smoothstep(0.86, 1.0, toward), 3.0);
-  float fres = min(0.025 + 0.97 * pow(1.0 - nv, 5.0), 0.1);
-  vec3 mirrored = env * vec3(1.0, 0.92, 0.9) * fres * mix(1.0, open, 0.5);
+  env += uSkyZenith * 2.2 * pow(smoothstep(0.86, 1.0, toward), 3.0);
+  float fres = min(0.025 + 0.97 * pow(1.0 - nv, 5.0), 0.05);
+  vec3 mirrored = env * vec3(1.0, 0.92, 0.9) * fres * mix(1.0, open, 0.5) * (0.45 + 1.1 * g.r);
   // It comes up out of the level and goes back into it: at its foot and at both ends of its life it is the pool.
   float cover = (1.0 - 0.85 * takes.r * (1.0 - 0.5 * bead)) * smoothstep(0.0, 0.08, up01) * smoothstep(0.0, 0.06, vLife.x) * smoothstep(1.0, 0.9, vLife.x);
   gl_FragColor = vec4((lit * cover + mirrored * smoothstep(0.0, 0.08, up01)) * (1.0 - uSolo), cover);

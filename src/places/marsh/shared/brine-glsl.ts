@@ -56,7 +56,9 @@ float brineFresnel(vec3 n, vec3 v) {
 // The film of scum on the skin stains it a little.
 vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   float away = length(cameraPosition - p);
-  vec2 swing = n.xz * 2.0 * clamp(away * 0.3, 0.15, 12.0);
+  // (How far a leaning wavelet throws the ray goes with the height of what it finds, not with the way to the lens: a dome or a stalk
+  // standing in the pool lies in the mirror at its own foot, shaken, never strewn over the pool in pieces.)
+  vec2 swing = n.xz * 2.0 * clamp(away * 0.11, 0.1, 12.0);
   // (A slope that leans to the lens would mirror the brine before it, which mirrors the sky in its turn: it is not swung under the level.)
   vec2 toLens = normalize(cameraPosition.xz - p.xz);
   swing -= toLens * max(dot(swing, toLens), 0.0) * 0.75;
