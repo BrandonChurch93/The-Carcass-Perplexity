@@ -47,7 +47,11 @@ const float SEA_Y = -0.4;
 // The ray of this pixel: where it starts, where it goes, and how far it gets before it meets the scene.
 void viewRay(out vec3 ro, out vec3 rd, out float far, out float veil) {
   ivec2 pixel = 2 * ivec2(gl_FragCoord.xy);
-  float depth = texelFetch(tDepth, pixel, 0).r;
+  // The nearest of the four full-size pixels this texel stands for: a hair one pixel wide is in the march whichever of them it crosses.
+  // The engine's join weighs this texel by the same nearest depth (src/core/engine.ts); the two lines go in together or not at all.
+  ivec2 last = textureSize(tDepth, 0) - 1;
+  float depth = min(min(texelFetch(tDepth, pixel, 0).r, texelFetch(tDepth, min(pixel + ivec2(1, 0), last), 0).r),
+    min(texelFetch(tDepth, min(pixel + ivec2(0, 1), last), 0).r, texelFetch(tDepth, min(pixel + ivec2(1, 1), last), 0).r));
   vec2 uv = (vec2(pixel) + 0.5) / vec2(textureSize(tDepth, 0));
   vec4 view = uInvProjection * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
   vec3 world = (uCameraWorld * vec4(view.xyz / view.w, 1.0)).xyz;
