@@ -1,0 +1,229 @@
+{
+  "unit": "spine",
+  "tier": "final",
+  "format": "uhd",
+  "measures": [
+    "M1",
+    "M2",
+    "M3"
+  ],
+  "colour": {
+    "M1": "green",
+    "M2": "green",
+    "M3": "green"
+  },
+  "missing": [],
+  "frames": [
+    {
+      "id": "spine-0",
+      "frame": 7234,
+      "key": true
+    },
+    {
+      "id": "spine-1",
+      "frame": 7579,
+      "key": true
+    },
+    {
+      "id": "spine-2",
+      "frame": 7418,
+      "key": true
+    },
+    {
+      "id": "spine-3",
+      "frame": 7668,
+      "key": true
+    },
+    {
+      "id": "spine-4",
+      "frame": 8090,
+      "key": true
+    }
+  ],
+  "results": [
+    {
+      "measure": "M1",
+      "id": "spine-0",
+      "frame": 7234,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "spine-1",
+      "frame": 7579,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "spine-2",
+      "frame": 7418,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "spine-3",
+      "frame": 7668,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "spine-4",
+      "frame": 8090,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "spine-0",
+      "frame": 7234,
+      "status": "pass",
+      "share": 0.93587,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "spine-1",
+      "frame": 7579,
+      "status": "pass",
+      "share": 0.341943,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "spine-2",
+      "frame": 7418,
+      "status": "pass",
+      "share": 0.162488,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "spine-3",
+      "frame": 7668,
+      "status": "pass",
+      "share": 0.965152,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "spine-4",
+      "frame": 8090,
+      "status": "pass",
+      "share": 0.938843,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M3",
+      "id": "spine-0",
+      "frame": 7234,
+      "status": "pass",
+      "ratio": 2.635,
+      "floor": 0.75,
+      "frameEnergy": 696.0554,
+      "approvedEnergy": 264.1546,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/5-spine/spine-0-establishing.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "spine-1",
+      "frame": 7579,
+      "status": "pass",
+      "ratio": 1.4965,
+      "floor": 0.75,
+      "frameEnergy": 491.4363,
+      "approvedEnergy": 328.3936,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/5-spine/spine-1-where-lightning-came-to-ground.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "spine-2",
+      "frame": 7418,
+      "status": "pass",
+      "ratio": 3.0703,
+      "floor": 0.75,
+      "frameEnergy": 1431.1809,
+      "approvedEnergy": 466.1301,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "spine-3",
+      "frame": 7668,
+      "status": "pass",
+      "ratio": 3.9407,
+      "floor": 0.75,
+      "frameEnergy": 747.9708,
+      "approvedEnergy": 189.8058,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "spine-4",
+      "frame": 8090,
+      "status": "pass",
+      "ratio": 1.7706,
+      "floor": 0.75,
+      "frameEnergy": 699.5322,
+      "approvedEnergy": 395.0799,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/5-spine/spine-4-inside-the-canal.jpg"
+    }
+  ],
+  "usual": {
+    "tier": "final",
+    "format": "uhd"
+  },
+  "thresholds": {
+    "pixelThreshold": 4,
+    "checkGapSeconds": 1,
+    "minSharpnessRatio": 0.75
+  },
+  "sharpness": "The mean squared response of a four neighbour Laplacian on the Rec. 709 luminance of the 8 bit picture, over every pixel that is not on the border. The approved picture is cropped at its centre to the shape of the frame, and both pictures go through the same lanczos3 resize to the size of that crop.",
+  "state": {
+    "engine": "4b68cc4defa189d0",
+    "units": {
+      "heart": "d59ab305371fbcbd",
+      "ribs": "b549c100acd88b70",
+      "breath": "1a26212f7ac44a85",
+      "marsh": "f5aa0d56643589fa",
+      "spine": "9595964014454c9b",
+      "eye": "24a291c0bd93ef72",
+      "reveal": "d5cb0b494ce9d667",
+      "film": "51d802f37e2b75ab"
+    },
+    "browser": "147.0.7727.15"
+  }
+}
