@@ -124,8 +124,12 @@ void main() {
   vec2 hazeAt = fogAt - uWx * vec2(9.0, 3.0);
   vec2 hazeUvA = mat2(0.91, 0.42, -0.42, 0.91) * hazeAt / vec2(1500.0, 520.0) + vec2(0.23, 0.61);
   vec2 hazeUvB = mat2(0.97, -0.24, 0.24, 0.97) * hazeAt / vec2(560.0, 230.0) + vec2(0.74, 0.12);
-  float layers = dot(0.6 * pic(uMatVeil, hazeUvA, GRADS(hazeUvA), 1.0).rgb + 0.4 * pic(uMatVeil, hazeUvB, GRADS(hazeUvB), 1.0).rgb, vec3(0.3, 0.55, 0.15));
-  goldA *= 0.76 + 0.24 * smoothstep(0.1, 0.42, layers) + 0.2 * (layers - 0.262);
+  vec4 hazeGA = GRADS(hazeUvA);
+  vec4 hazeGB = GRADS(hazeUvB);
+  if (goldA > 0.0) {
+    float layers = dot(0.6 * pic(uMatVeil, hazeUvA, hazeGA, 1.0).rgb + 0.4 * pic(uMatVeil, hazeUvB, hazeGB, 1.0).rgb, vec3(0.3, 0.55, 0.15));
+    goldA *= 0.76 + 0.24 * smoothstep(0.1, 0.42, layers) + 0.2 * (layers - 0.262);
+  }
   vec3 gold = uSunColour * vec3(1.0, 0.8, 0.52) * (0.08 + 0.34 * image);
   if (uDusk > 0.0) {
     gold = exposed(gold * sunTint(max(uSunDir.y, 0.0)));

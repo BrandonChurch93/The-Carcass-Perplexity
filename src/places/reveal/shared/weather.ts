@@ -265,7 +265,7 @@ float lowDepth(vec2 at) {
   // sea stands in groups some tens of kilometres across with clear dark water between: from high up the field is thinned
   // between the groups and a little thickened inside them, so the tufts gather and the water between them is left clean.)
   float far = smoothstep(300.0, 900.0, uViewKm);
-  float grouped = smoothstep(0.43, 0.57, pic(uCloudTile, uvGroup, gGroup, 2.5).b);
+  float grouped = far > 0.0 ? smoothstep(0.43, 0.57, pic(uCloudTile, uvGroup, gGroup, 2.5).b) : 1.0;
   float dense = max(pow(streak, 0.15) * pow(knots * fine, 1.3) * level * mix(1.0, mix(0.35, 1.22, grouped), far) - mix(1.4, 0.85, gathered), 0.0);
   float drawn = mix(0.1, 0.35, gathered) * max(pow(streak, 0.5) * mix(1.0, knots, 0.7) * level - 0.8, 0.0) * mix(1.0, lump, 0.4);
   drawn *= mix(1.0, 0.2 + grouped, far);
