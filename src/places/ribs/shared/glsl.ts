@@ -134,7 +134,7 @@ float cloudShade(vec3 p) {
 // lays the air over it, thick at the horizon and thin overhead, so that the dome, the far sea and the last blades end in one colour.
 // uDome: x the shot's gain of the whole sky, y the depth of air straight up (the veil at a height is 1 - exp(-y / sin)), z what the
 // break is given, w how far the white is shut away from the break.
-vec3 domeTone(vec3 c, vec3 d, float el) {
+vec3 domeTone(vec3 c, vec3 d, float el, float mirror) {
   float grey = dot(c, vec3(0.3, 0.5, 0.2));
   c = mix(vec3(grey), c, 0.8);
   c *= 0.18 + 0.72 * smoothstep(0.1, 0.6, grey);
@@ -145,9 +145,10 @@ vec3 domeTone(vec3 c, vec3 d, float el) {
   float near = s2 * s2;
   near = near * near * near;
   near *= near;
-  near *= near;
+  // Water is ruffled: what mirrors the sky sees the break wider and its white less shut (mirror toward 1) than the dome shows them (0).
+  near *= mix(near, 1.0, mirror);
   // One break: the picture's white heads stand where the rig's break is, and away from it they are shut down to the storm's grey.
-  c *= mix(1.0 - uDome.w * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z, near);
+  c *= mix(1.0 - uDome.w * (1.0 - 0.2 * mirror) * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z, near);
   float veil = 1.0 - exp(-uDome.y / max(d.y, 0.008));
   return uDome.x * mix(c, uHaze * (0.85 + 0.5 * s2 * s2), veil);
 }
@@ -162,14 +163,14 @@ vec3 skyCloud(vec3 from, vec3 d) {
   float el;
   vec2 uv = domeAt(d, el);
   vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
-  return domeTone(texture2D(tDome, uv + 0.012 * work).rgb, d, el);
+  return domeTone(texture2D(tDome, uv + 0.012 * work).rgb, d, el, 0.0);
 }
 // The same sky for a mirror that names the level of the picture it reads (a rippled sheet read by its own slopes costs several times
 // more): the cloud's slow working is left out, the ripples bend the picture far more than it does.
 vec3 skyMirror(vec3 d, float level) {
   float el;
   vec2 uv = domeAt(d, el);
-  return domeTone(textureLod(tDome, uv, level).rgb, d, el);
+  return domeTone(textureLod(tDome, uv, level).rgb, d, el, 0.6);
 }
 
 // The dome itself: the same sky with the fine edges a picture laid round half the heaven has not at the lens's size (a texel of it is
@@ -196,7 +197,7 @@ vec3 skyDome(vec3 d) {
   // The grain is the cloud's, not the clear air's between the heads: it is given by how grey the place is.
   float grey = dot(c, vec3(0.3, 0.5, 0.2));
   c *= 1.0 + (0.09 * a.y + 0.08 * b.x) * smoothstep(0.75, 0.3, grey);
-  return domeTone(c, d, el);
+  return domeTone(c, d, el, 0.0);
 }
 
 // How much of the sun reaches p through the blades and the land (baked once) and the cloud (drifting).

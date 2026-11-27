@@ -49,7 +49,9 @@ export const STORM = { gain: -0.25, dim: 0.42, holds: 4.5, ends: 14, turn: -0.4,
 /** The dome's picture (`tDome`): the gain of the whole sky, the depth of air straight up that veils it (0.035 is three tenths of a veil at 6 degrees and two thirds at 2), what the break is given over the rest, how far the picture's white is shut away from the break, and the same under the storm of the approach. */
 export const DOME = { gain: 1.0, veil: 0.035, lift: 1.2, shut: 0.62, storm: 0.85 };
 /** The low sun on what stands high: from this height, whole by this one, how much thinner the cloud counts there (0.2 is a whole step of its edge); and the floor under every shade, as a share of the ground's light. */
-export const HEADS = { from: 60, to: 260, thin: 0.3, floor: 0.9 };
+export const HEADS = { from: 60, to: 260, thin: 0.3, floor: 0.9, storm: 1.0 };
+/** The strait's held shot: what the sky's light and the lit flats' bounce are given there, so the near cliff and the stones keep the picture's blacks. */
+const HELD = { shade: 0.8, bounce: 0.45 };
 /** The sun of the approach: the low warm light of the first wave on the first blade, going to the place's ivory as the storm ends. */
 const STORM_SUN = [7.6, 5.2, 3.0] as const;
 /** What the lit flats and sea throw back up of the sun's light, by colour: wet sand and shingle, warm. */
@@ -430,6 +432,7 @@ export function createRig(): Rig {
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 0);
   const dome = new THREE.Vector4(DOME.gain, DOME.veil, DOME.lift, DOME.shut);
+  const straitSpan = shotSpan('ribs-02');
   const staging = BREAK_BY_SHOT.map((b) => ({ ...b, span: shotSpan(b.shot), at: keySeconds(b.key) }));
   /** The break's staging for the shot the camera stands in: its own, or the strait's. */
   const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number } => {
@@ -641,11 +644,12 @@ export function createRig(): Rig {
       skyHorizon.set(...SKY_LIGHT.horizon);
       skyGround.set(...SKY_LIGHT.ground);
       haze.set(...HAZE);
-      const shade = stagedBreak().shade ?? 1;
+      const held = loopPhase() === null && stagedSeconds() >= straitSpan.from && stagedSeconds() < straitSpan.to;
+      const shade = held ? HELD.shade : (stagedBreak().shade ?? 1);
       skyZenith.multiplyScalar(shade);
       skyHorizon.multiplyScalar(shade);
       skyGround.multiplyScalar(shade);
-      bounce.set(...BOUNCE).multiplyScalar(stagedBreak().bounce ?? 1);
+      bounce.set(...BOUNCE).multiplyScalar((stagedBreak().bounce ?? 1) * (held ? HELD.bounce : 1));
       dome.set(DOME.gain * (stagedBreak().sky ?? 1), DOME.veil, DOME.lift, DOME.shut);
       heads.z = HEADS.thin * (stagedBreak().heads ?? 1);
       sunColour.set(...SUN.colour);
@@ -664,7 +668,7 @@ export function createRig(): Rig {
         dome.z = DOME.lift * (1 + STORM.burn * openingLight(seconds));
         dome.w = DOME.shut + (DOME.storm - DOME.shut) * dark;
         dome.x = DOME.gain * (1 - 0.5 * STORM.dim * dark);
-        heads.z = HEADS.thin * (1 - 0.7 * dark);
+        heads.z = HEADS.thin * (1 + HEADS.storm * dark);
         sunColour.set(...SUN.colour).lerp(stormSun, dark);
         skyZenith.multiplyScalar(dim);
         skyHorizon.multiplyScalar(dim);
