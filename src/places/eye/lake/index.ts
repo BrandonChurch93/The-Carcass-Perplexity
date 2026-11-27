@@ -127,10 +127,13 @@ ${WAVES_GLSL}
 ${DOME_GLSL}
 
 // Metres in from the shore. Where the built land has given way to the picture of the far world the water runs on, shallow, to the picture's own shore.
-float shoreIn(vec2 xz) {
-  float s = -landAt(xz).b;
+float shoreOf(vec4 land, vec2 xz) {
+  float s = -land.b;
   if (uNear.w > 0.5 && length(xz - uNear.xy) > uNear.z) s = max(s, 14.0);
   return s;
+}
+float shoreIn(vec2 xz) {
+  return shoreOf(landAt(xz), xz);
 }
 
 void main() {
@@ -145,7 +148,7 @@ void main() {
   float r = length(p.xz);
   vec2 out2 = p.xz / max(r, 1e-3);
   vec4 land = landAt(p.xz);
-  float inShore = shoreIn(p.xz);
+  float inShore = shoreOf(land, p.xz);
 
   // The surface. The lake is still: what moves on it is the long breathing of a mirror, and the rings of whatever has touched it.
   // Each wave is drawn as a slope only where the pixels can hold it. What they cannot hold is not thrown away: it is counted in lost
@@ -168,10 +171,10 @@ void main() {
     float k1 = waveKept(covers * 4.0, ${WAVE_TILES[1].toFixed(1)});
     float k2 = waveKept(covers * 4.0, ${WAVE_TILES[2].toFixed(1)});
     vec3 breath = uBreath.xyz * alive;
-    if (k0 > 0.02) slope += breath.x * waveRead(tWave0, p.xz, ${WAVE_TILES[0].toFixed(1)}, 4.0 * fx, 4.0 * fy);
-    if (k1 > 0.02) slope += breath.y * waveRead(tWave1, p.xz, ${WAVE_TILES[1].toFixed(1)}, 4.0 * fx, 4.0 * fy);
+    if (k0 > 0.02) slope += breath.x * waveRead(tWave0, p.xz, ${WAVE_TILES[0].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[0].toFixed(1)}) + 2.0);
+    if (k1 > 0.02) slope += breath.y * waveRead(tWave1, p.xz, ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[1].toFixed(1)}) + 2.0);
     // The longest field is as wide as the lake: it is read once, there is no second tile of it to hide.
-    slope += breath.z * textureGrad(tWave2, p.xz / ${WAVE_TILES[2].toFixed(1)}, fx * (4.0 / ${WAVE_TILES[2].toFixed(1)}), fy * (4.0 / ${WAVE_TILES[2].toFixed(1)})).rg;
+    slope += breath.z * textureLod(tWave2, p.xz / ${WAVE_TILES[2].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[2].toFixed(1)}) + 2.0).rg;
     lost += breath.x * breath.x * (1.0 - k0) + breath.y * breath.y * (1.0 - k1) + breath.z * breath.z * (1.0 - k2);
   }
   // Rings that leave the centre. Whatever heaves there sends out waves of four lengths, each at the speed water gives a wave of that length,
@@ -243,8 +246,8 @@ void main() {
         float beatA = fract(uTime / 2.3);
         float beatB = fract(uTime / 2.3 + 0.5);
         float share = 1.0 - abs(2.0 * beatA - 1.0);
-        vec2 runA = waveRead(tWave1, (p.xz - way * carry * beatA), ${WAVE_TILES[1].toFixed(1)}, fx, fy);
-        vec2 runB = waveRead(tWave1, (p.xz - way * carry * beatB) + 19.0, ${WAVE_TILES[1].toFixed(1)}, fx, fy);
+        vec2 runA = waveRead(tWave1, (p.xz - way * carry * beatA), ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[1].toFixed(1)}));
+        vec2 runB = waveRead(tWave1, (p.xz - way * carry * beatB) + 19.0, ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[1].toFixed(1)}));
         slope += mix(runB, runA, share) * (lifted * (0.07 + 0.1 * min(uDome.w, 1.0)) * inversesqrt(share * share + (1.0 - share) * (1.0 - share)));
       }
       // Where the water it has lifted runs off it and meets the lake, the lake is churned: a torn band of short steep water round its foot,
@@ -258,7 +261,7 @@ void main() {
         churn = mix(churn, uDome.w * blotch * (0.3 + 1.2 * torn), uLeave.x);
       }
       if (churn > 0.0) {
-        slope += churn * 0.1 * waveRead(tWave0, p.xz * 2.25, ${WAVE_TILES[0].toFixed(1)}, 2.25 * fx, 2.25 * fy);
+        slope += churn * 0.1 * waveRead(tWave0, p.xz * 2.25, ${WAVE_TILES[0].toFixed(1)}, waveLevel(covers * 2.25, ${WAVE_TILES[0].toFixed(1)}));
         lost += churn * churn * 0.01 * (1.0 - waveKept(covers, ${(WAVE_TILES[0] / 2.25).toFixed(1)}));
       }
     }
@@ -531,8 +534,8 @@ void main() {
     float patches = smoothstep(0.3, 0.78, lanes + 0.5 * (along - 0.5)) * slick;
     float keepFine = smoothstep(4.0, 8.0, 1.15 / covers);
     float keepMid = smoothstep(4.0, 8.0, 2.1 / covers);
-    vec2 ripple = keepMid * 0.6 * waveRead(tWave1, p.xz * 2.6, ${WAVE_TILES[1].toFixed(1)}, 2.6 * fx, 2.6 * fy);
-    if (keepFine > 0.0) ripple += keepFine * 0.6 * waveRead(tWave0, p.xz * 0.6, ${WAVE_TILES[0].toFixed(1)}, 0.6 * fx, 0.6 * fy);
+    vec2 ripple = keepMid * 0.6 * waveRead(tWave1, p.xz * 2.6, ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers * 2.6, ${WAVE_TILES[1].toFixed(1)}));
+    if (keepFine > 0.0) ripple += keepFine * 0.6 * waveRead(tWave0, p.xz * 0.6, ${WAVE_TILES[0].toFixed(1)}, waveLevel(covers * 0.6, ${WAVE_TILES[0].toFixed(1)}));
     ripple *= 0.075 * (0.12 + 0.88 * patches);
     // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east:
     // a crest is a bright line toward the sun with a dark one behind it.

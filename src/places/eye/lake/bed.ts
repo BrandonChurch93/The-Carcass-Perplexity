@@ -62,18 +62,28 @@ vec2 gFx;
 vec2 gFy;
 float gCovers;
 
-// The picture t at q, where q is the water turned and sized by m (q = m * xz + something that hardly changes); coarser softens it by that many levels.
-vec4 readAt(sampler2D t, vec2 q, mat2 m) {
-  return textureGrad(t, q, m * gFx, m * gFy);
+// How coarse a picture is read where one pixel covers ax and ay of it, in its own texels: the level at which the short side of that is one
+// texel, and never finer than half the long side. The level is worked out and the picture read at it (textureLod): a read that is handed
+// the two sides themselves (textureGrad) repeats as well, but costs this renderer a third more of the whole lake.
+float levelOf(vec2 ax, vec2 ay) {
+  float a2 = dot(ax, ax);
+  float b2 = dot(ay, ay);
+  return 0.5 * log2(max(max(min(a2, b2), 0.25 * max(a2, b2)), 1e-9));
 }
+// The picture t at q, where q is the water turned and sized by m (q = m * xz + something that hardly changes); coarser softens it by that many levels.
 vec4 readAt(sampler2D t, vec2 q, mat2 m, float coarser) {
-  return readAt(t, q, m * exp2(coarser));
+  vec2 size = vec2(textureSize(t, 0));
+  return textureLod(t, q, levelOf(m * gFx * size, m * gFy * size) + coarser);
+}
+vec4 readAt(sampler2D t, vec2 q, mat2 m) {
+  return readAt(t, q, m, 0.0);
 }
 // The same where q is counted round the lake and in toward its centre: across is the size of q.x for a metre round at this place, inward that of q.y for a metre out.
 vec4 readRound(sampler2D t, vec2 q, vec2 b, float across, float inward) {
   float r2 = max(dot(b, b), 1.0);
   float r = sqrt(r2);
-  return textureGrad(t, q, vec2(across * (b.y * gFx.x - b.x * gFx.y) / r2, inward * dot(b, gFx) / r), vec2(across * (b.y * gFy.x - b.x * gFy.y) / r2, inward * dot(b, gFy) / r));
+  vec2 size = vec2(textureSize(t, 0));
+  return textureLod(t, q, levelOf(vec2(across * (b.y * gFx.x - b.x * gFx.y) / r2, inward * dot(b, gFx) / r) * size, vec2(across * (b.y * gFy.x - b.x * gFy.y) / r2, inward * dot(b, gFy) / r) * size));
 }
 
 // Metres from the centre to the lip of the shaft, at the bearing of this point.
@@ -334,7 +344,8 @@ Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   vec2 uv = vec2(along / 19.0, 1.0 - clamp((down + jog) / 17.0, 0.02, 0.98));
   // The way round begins again in the north: the fineness of the picture is told from the ground, which has no such place, so no line is drawn there.
   float r2 = max(dot(b, b), 1.0);
-  vec3 c = textureGrad(tWall, uv, 6.0 * vec2(480.0 / 19.0 * (b.y * gFx.x - b.x * gFx.y) / r2, fell.x / 17.0), 6.0 * vec2(480.0 / 19.0 * (b.y * gFy.x - b.x * gFy.y) / r2, fell.y / 17.0)).rgb;
+  vec2 size = vec2(textureSize(tWall, 0));
+  vec3 c = textureLod(tWall, uv, levelOf(vec2(480.0 / 19.0 * (b.y * gFx.x - b.x * gFx.y) / r2, fell.x / 17.0) * size, vec2(480.0 / 19.0 * (b.y * gFy.x - b.x * gFy.y) / r2, fell.y / 17.0) * size) + 2.585).rgb;
   // What the eye follows on a steep wall is its fall: ribs and gullies that run down it from the lip, each of its own width, broken into blocks.
   float rib = vnoise(vec2(along / 2.3, down / 11.0 + 3.0));
   float fine = vnoise(vec2(along / 0.7 + 11.0, down / 4.0));
