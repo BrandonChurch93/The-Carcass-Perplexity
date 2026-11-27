@@ -172,10 +172,10 @@ export function scorchBed(at: readonly [number, number], view: number): THREE.Bu
   const vz = Math.sin((view * Math.PI) / 180);
   const U0 = -5;
   const U1 = 5;
-  const V0 = -2.6;
+  const V0 = -4.1;
   const V1 = 3.6;
-  const DU = 0.06;
-  const DV = 0.05;
+  const DU = 0.03;
+  const DV = 0.025;
   const cols = Math.round((U1 - U0) / DU) + 1;
   const rows = Math.round((V1 - V0) / DV) + 1;
   const pos: number[] = [];
@@ -187,19 +187,20 @@ export function scorchBed(at: readonly [number, number], view: number): THREE.Bu
       const u = U0 + i * DU;
       const x = at[0] + vx * v - vz * u;
       const z = at[1] + vz * v + vx * u;
-      const rag = 0.9 * (vnoise(u * 0.7 + 3.1, v * 0.7 + 8.3) - 0.5);
-      const inside = ease(0, 1, (Math.min(u - U0, U1 - u, v - V0, V1 - v) + rag) / 1.3);
+      const rag = 0.5 * (vnoise(u * 0.7 + 3.1, v * 0.7 + 8.3) - 0.5);
+      // (Full under the lens of the shot, which stands 2.9 m back from the middle, and low right at it.)
+      const inside = ease(0, 1, (Math.min(u - U0, U1 - u, v - V0, V1 - v) + rag) / 0.8) * (0.3 + 0.7 * ease(0.3, 1.1, Math.hypot(u, v + 2.9)));
       // The beds strike across the view, a little turned.
-      const p = u + 0.35 * v;
-      const q = v - 0.25 * u;
-      const big = slab(p, q, 1.3, 0.55, 31, 0.05);
-      const small = slab(p + 0.2 * q, q, 0.42, 0.24, 37, 0.03);
+      const p = 0.82 * u + 0.57 * v;
+      const q = -0.57 * u + 0.82 * v;
+      const big = slab(p, q, 0.95, 0.6, 31, 0.06);
+      const small = slab(p + 0.2 * q, q, 0.33, 0.21, 37, 0.02);
       const stands = big > -0.18 ? 1 : 0;
       // Under the dead one they lie low: it rests on the layout's ground.
-      const low = 0.35 + 0.65 * ease(0.4, 1.5, Math.abs(v - 0.2));
+      const low = 0.15 + 0.85 * ease(0.9, 2.1, Math.abs(v - 0.2));
       const h = stands * low * (0.03 + 0.085 * (big + 0.18) + 0.022 * (small + 0.4)) + 0.008 * (vnoise(u * 11.3, v * 11.3) - 0.5);
       pos.push(x, height(x, z) + 0.03 + inside * Math.max(0, h), z);
-      top.push(stands * inside);
+      top.push(stands * Math.min(1, 3 * inside));
       const here = locate(x, z);
       sl.push(here.s, here.l);
     }
@@ -208,10 +209,13 @@ export function scorchBed(at: readonly [number, number], view: number): THREE.Bu
   for (let j = 0; j < rows - 1; j++) {
     for (let i = 0; i < cols - 1; i++) {
       const a = j * cols + i;
-      index.push(a, a + cols, a + 1, a + 1, a + cols, a + cols + 1);
+      index.push(a, a + 1, a + cols, a + 1, a + cols + 1, a + cols);
     }
   }
-  return finish(pos, index, top, sl);
+  // Every point looks straight up: the shader gives a riser its own triangle's face, so a slab's edge is as hard as the mesh.
+  const normals: number[] = [];
+  for (let i = 0; i < rows * cols; i++) normals.push(0, 1, 0);
+  return finish(pos, index, top, sl, { normals, relief: new Array<number>(rows * cols).fill(100) });
 }
 
 /** The flanks: the same ground, coarse, from the strip down under the cloud on every side. */

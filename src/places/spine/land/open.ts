@@ -145,6 +145,8 @@ void main() {
   if (dot(ng, n0) < 0.0) ng = -ng;
   // A cliff of the ground is a few tall quads between two heights, and the round of the mesh says it is level: there the face is the
   // triangle's own, so its rock is laid on the plane it stands in and no snow lies on a wall.
+  // (The burned bed under the dead one is marked by a relief of 100: no rime stands on its risers.)
+  float onBed = step(50.0, vRelief);
   if (ground) n0 = normalize(mix(n0, ng, smoothstep(0.12, 0.4, n0.y - ng.y)));
   // (Taken here, before any branch: what a branch needs of them it is handed.)
   vec2 snowQ = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98))) + 7.0 * vec2(vnoise(vWorld.xz / 63.0 + 3.1), vnoise(vWorld.xz / 63.0 + 17.7));
@@ -271,7 +273,7 @@ void main() {
   float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
   float snow = show > 0.01 ? smoothstep(hold, hold + (ground ? 0.035 : 0.1), lie) : 1.0;
   snow *= 1.0 - burn;
-  if (spire) snow *= mix(1.0, smoothstep(-0.5, 0.05, lee), uWet);
+  if (spire) snow *= mix(1.0, smoothstep(-0.15, 0.3, lee), uWet);
   // Just above the snow the rock is wet and dark, and frost stands in its cracks.
   float brim = show > 0.01 ? smoothstep(hold - 0.22, hold, lie) * (1.0 - snow) : 0.0;
   albedo *= 1.0 - 0.2 * brim;
@@ -285,7 +287,7 @@ void main() {
   float rime = 0.0;
   if (show > 0.01) {
     float leeFace = mix(lee, dot(nFace.xz, uWind.xz), 0.75);
-    float expose = clamp(0.36 - 1.0 * leeFace + 0.3 * nFace.y + 0.55 * windward, 0.0, 1.0) * (ground ? 0.45 * steep : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet) * stripped;
+    float expose = clamp(0.36 - 1.0 * leeFace + 0.3 * nFace.y + 0.55 * windward, 0.0, 1.0) * (ground ? 0.45 * steep * (1.0 - onBed) : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet) * stripped;
     if (expose > 0.1) {
       vec2 rp = w.x >= w.z && w.x >= w.y ? P.zy : w.z >= w.y ? P.xy : P.xz;
       vec2 rx = w.x >= w.z && w.x >= w.y ? Px.zy : w.z >= w.y ? Px.xy : Px.xz;
@@ -333,7 +335,7 @@ void main() {
     snowOcc = mix(1.0, 0.72 + 0.28 * smoothstep(0.15, 0.6, 0.5 * A.h + 0.5 * B.h), level);
     // In the fine field of the crest the sastrugi are in the mesh: the scoured pack between them is glazed and in their shade.
     if (ground) {
-      snowOcc *= 1.0 + clamp(1.5 * vRelief, -0.2, 0.1);
+      snowOcc *= 1.0 + (1.0 - onBed) * clamp(1.5 * vRelief, -0.2, 0.1);
       snowTint *= mix(vec3(1.0), vec3(0.9, 0.95, 1.04), smoothstep(-0.02, -0.11, vRelief));
     }
     float fine = smoothstep(0.012, 0.003, footprint) * level;
