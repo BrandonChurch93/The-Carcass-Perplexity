@@ -119,6 +119,17 @@ void main() {
   // (No haze is laid over the low land: pooled there it read as grey smears on glass and flattened the ranges.)
   float image = sunImage(fogAt);
   float goldA = 0.7 * smoothstep(0.05, 0.7, image) * uArrive;
+  // (The lit air is not one smooth ramp, which an encoder cuts into bands: it lies in layers the wind has drawn out, thin
+  // cloud and thicker air, a few percent either way, and they pass in the hold.)
+  vec2 hazeAt = fogAt - uWx * vec2(9.0, 3.0);
+  vec2 hazeUvA = mat2(0.91, 0.42, -0.42, 0.91) * hazeAt / vec2(1500.0, 520.0) + vec2(0.23, 0.61);
+  vec2 hazeUvB = mat2(0.97, -0.24, 0.24, 0.97) * hazeAt / vec2(560.0, 230.0) + vec2(0.74, 0.12);
+  vec4 hazeGA = GRADS(hazeUvA);
+  vec4 hazeGB = GRADS(hazeUvB);
+  if (goldA > 0.0) {
+    float layers = dot(0.6 * pic(uMatVeil, hazeUvA, hazeGA, 1.0).rgb + 0.4 * pic(uMatVeil, hazeUvB, hazeGB, 1.0).rgb, vec3(0.3, 0.55, 0.15));
+    goldA *= 0.76 + 0.24 * smoothstep(0.1, 0.42, layers) + 0.2 * (layers - 0.262);
+  }
   vec3 gold = uSunColour * vec3(1.0, 0.8, 0.52) * (0.08 + 0.34 * image);
   if (uDusk > 0.0) {
     gold = exposed(gold * sunTint(max(uSunDir.y, 0.0)));
@@ -211,7 +222,7 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   // (The same photograph at three sizes, the finer the farther out, where the winding has drawn the coarse one out to strokes.)
   float outer = smoothstep(0.15, 0.65, r);
   float clumps = lum(textureGrad(uStreaks, ub, gx * 0.75, gy * 0.75).rgb);
-  float fine = (mix(0.3, 0.1, outer) * clumps + mix(0.5, 0.35, outer) * lum(textureGrad(uStreaks, uc, gx * 1.5, gy * 1.5).rgb) + mix(0.2, 0.55, outer) * lum(textureGrad(uStreaks, ud, gx * 3.0, gy * 3.0).rgb)) / 0.304;
+  float fine = (mix(0.35, 0.2, outer) * clumps + 0.5 * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb)) / 0.304;
   // (Left whole, the arms read from far off as five bold strokes of one weight. A second lay of the bands, finer and at
   // its own place along the winding, and the clumps of the cell photograph break each into lengths of unlike weight.)
   vec2 ue = vec2(2.0 * wound.x - 1.7 * drawnIn, 3.0 * wound.y) + vec2(0.67, 0.09) + 0.03 * bend;
@@ -265,7 +276,7 @@ void main() {
   float tall = 1.0 - smoothstep(0.02, 0.2, r);
   vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (0.74 + 0.34 * thick);
   // (By night the cyclone is a dim wheel, no brighter than the bone.)
-  if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
+  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
   // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
   float veil = 0.04 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.5) + 0.1 * (1.0 - smoothstep(0.004, 0.05, r));
@@ -339,7 +350,7 @@ void main() {
   if (uLive > 0.0) glow *= 1.0 + 1.8 * smoothstep(0.0, 2.0, uLive);
   if (uDusk > 0.0) glow *= uCalm.x;
   // (The storm dies down with the day: by night its towers are no brighter than the bone.)
-  if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
+  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
   if (uDusk > 0.0) colour += exposed(beatOnCloud(vWorld.xz)) - beatOnCloud(vWorld.xz);
   colour += glow * 1.6 + beatOnCloud(vWorld.xz);
   float alpha = clamp(thick, 0.0, 0.98);
