@@ -5,6 +5,8 @@ import { AT, KM, X, Z } from './anchors';
 
 /** The rectangle of the world the picture of the cover lies on: x and z of its corner, one over its width and its height. */
 export const COVER_RECT: [number, number, number, number] = [X(-900), Z(-820), 1 / (8500 * KM), 1 / (((8500 * 9) / 16) * KM)];
+/** The rectangle of the land's widest relief (land/relief-a.png, the first of land/levels.ts), as COVER_RECT is given. */
+export const GROUND_RECT: [number, number, number, number] = [X(2983.67 - 5295.59 / 2), Z(1727.13 - (5295.59 * 9) / 32), 1 / (5295.59 * KM), 1 / (((5295.59 * 9) / 16) * KM)];
 /** Height over the sea, km: the low field of small cloud, the fronts, the veil of ice. */
 export const LOW_KM = 2.6;
 export const HIGH_KM = 10.5;
@@ -240,8 +242,7 @@ vec2 highUvSheet = vec2(0.0);
 vec2 highUvThread = vec2(0.0);
 // The ice without the fall of its tops (what a shadow needs).
 float highDepth(vec2 at) {
-  float far = smoothstep(300.0, 1100.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
-  if (far <= 0.0) return 0.0;
+  float far = smoothstep(240.0, 520.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   vec2 hv = at + uTime * vec2(6.5, -3.8);
   vec2 hs = hv;
   if (uLive > 0.0) {
@@ -250,6 +251,11 @@ float highDepth(vec2 at) {
   }
   highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
   highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1250.0, 900.0) + vec2(0.7, 0.2);
+  // (Over the land the ice lies in long swaths across the ranges (sky/banks.png, blue), carried on its own wind with the rest.)
+  vec2 highUvFibre = mat2(0.97, 0.26, -0.26, 0.97) * hv / vec2(2300.0, 380.0) + vec2(0.43, 0.11);
+  vec2 uvSwath = clamp((hv - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0);
+  if (far <= 0.0) return 0.0;
+  float swath = texture2D(uBanks, uvSwath).b;
   // (Where the ice stands at all: two soft swells that cross, carried with it. They are waves and not a picture or a noise of
   // cells, so the pattern has no corner, no step and no flat for the last sun to redden: the fibre of the photographs is all the
   // outline the ice has.)
@@ -257,12 +263,16 @@ float highDepth(vec2 at) {
   vec2 h = mat2(0.5, 0.87, -0.87, 0.5) * hv;
   float wide = 0.5 + 0.5 * sin(g.x / 480.0 + 1.7 * sin(g.y / 620.0 + 0.4)) * sin(g.y / 530.0 + 1.3 * sin(g.x / 700.0 + 1.9));
   float fine = 0.5 + 0.5 * sin(h.x / 205.0 + 1.5 * sin(h.y / 260.0)) * sin(h.y / 225.0 + 1.2 * sin(h.x / 310.0 + 0.8));
-  float where = 0.8 * smoothstep(0.56, 0.96, 0.6 * wide + 0.4 * fine) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
+  float where = max(0.8 * smoothstep(0.56, 0.96, 0.6 * wide + 0.4 * fine), swath * (0.75 + 0.25 * fine)) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
   if (where <= 0.0) return 0.0;
   float sheet = cloudIn(uMatVeil, highUvSheet, 0.27);
   float thread = cloudIn(uMatStreaks, highUvThread, 0.31);
+  // (In a swath over the land the ice is a little thicker, so its streaks and the shadow they throw are seen to cross the ranges.)
   float depth = sheet * mix(1.0, thread, 0.55) * where * 1.7 - 0.85;
-  return (1.0 - exp(-1.1 * max(depth, 0.0))) * far;
+  // (There the same fibre is read drawn out six to one along the wind, so it comes as long thin streaks and not as a sheet.)
+  float fibre = cloudIn(uMatStreaks, highUvFibre, 0.31);
+  float streaked = smoothstep(0.0, 0.3, swath) * clamp(0.9 * (fibre * (0.4 + 0.6 * thread) * (0.35 + 0.85 * swath) - 1.0), 0.0, 1.0);
+  return max(1.0 - exp(-1.1 * max(depth, 0.0)), streaked) * far;
 }
 
 float highField(vec2 at) {
@@ -299,7 +309,8 @@ float bankDepth(vec2 bankAt) {
   float fine = 1.0;
   bankNear = 1.0 - smoothstep(420.0, 600.0, uViewKm);
   if (bankNear > 0.0) fine = mix(1.0, cloudIn(uMatSpecks, bankUvB, 0.2), bankNear);
-  float today = smoothstep(0.32, 0.6, texture2D(uCloudTile, uvToday, 3.0).b);
+  // (The middle deck, the strongest of the picture, stands on every day.)
+  float today = max(smoothstep(0.32, 0.6, texture2D(uCloudTile, uvToday, 3.0).b), smoothstep(0.4, 0.62, held));
   // (A bank is the wind's own cloud, caught: it is drawn out along the wind in streaks as the low field is, torn where the streak
   // photograph is clear and thin round its clusters, so no bank has the outline of the range that holds it.)
   float drawn = cloudIn(uMatStreaks, uvDrawn, 0.31);
@@ -316,6 +327,8 @@ float bankDepth(vec2 bankAt) {
   float thin = 0.3 * max(drawn * 1.6 * gather - 0.5, 0.0);
   return (dense + thin) * smoothstep(0.02, 0.2, gather) - 0.001;
 }
+vec2 fogUv = vec2(0.0);
+float fogVeil = 1.0;
 float fogDepth(vec2 fogAt) {
   float held = texture2D(uBanks, clamp((fogAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).g;
   float clear = smoothstep(100.0, 230.0, length(fogAt - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
@@ -324,21 +337,15 @@ float fogDepth(vec2 fogAt) {
   if (uLive > 0.0) w -= uWx * vec2(3.0, -2.0);
   vec2 uvVeil = mat2(0.5, 0.87, -0.87, 0.5) * w / 520.0 + vec2(0.4, 0.9);
   vec2 uvToday = fogAt / 1900.0 + vec2(0.83, 0.37);
-  if (held * clear <= 0.004) return -0.5;
+  fogUv = uvVeil;
+  if (held * clear <= 0.004) return 0.0;
   // (Fog lies level: its top has the soft fibre of a veil and no lumps, and it thins up the slopes through that fibre.)
   float veil = cloudIn(uMatVeil, uvVeil, 0.27);
-  float today = smoothstep(0.34, 0.62, texture2D(uCloudTile, uvToday, 3.0).b);
-  return held * today * clear * (0.3 + 0.9 * veil) * 1.5 - 0.5;
-}
-
-// The haze that pools over low ground (sky/banks.png, blue): 0 to 1. It lies in the plains and on the wide valley floors and the
-// ranges stand out of it; it is thicker on some days' reaches than on others, and has no edge.
-float hazeAt(vec2 xz) {
-  float pooled = texture2D(uBanks, clamp((xz - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).b;
-  if (pooled <= 0.004) return 0.0;
-  vec2 w = xz - uTime * vec2(0.5, -0.3);
-  if (uLive > 0.0) w -= uWx * vec2(2.0, -1.2);
-  return pooled * (0.45 + 0.55 * smoothstep(0.3, 0.62, texture2D(uCloudTile, w / 2300.0 + vec2(0.27, 0.59), 3.0).b));
+  fogVeil = veil;
+  float today = 0.55 + 0.45 * smoothstep(0.34, 0.62, texture2D(uCloudTile, uvToday, 3.0).b);
+  // (How far a pool is filled, 0 to 1, with the fibre of its top: the sheet that draws it sets this against the height of the
+  // ground, so the stratus lies in the valleys and its edge is the ground's own contour.)
+  return held * today * clear * (0.8 + 0.3 * veil);
 }
 
 // The share of the sun that reaches a point of the ground under the cloud. Each height of cloud throws its own shadow, as far from
@@ -349,10 +356,11 @@ float cloudShade(vec2 xz) {
   float lift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
   float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * lift), 0.0));
   float high = highDepth(xz + toSun * ${HIGH_KM.toFixed(1)} * lift);
-  float bank = 1.0 - exp(-1.3 * max(bankDepth(xz + toSun * ${BANK_KM.toFixed(1)} * lift), 0.0));
+  // (The middle deck stands well off the ground, and its shadow is drawn well off it: that is what tells its height.)
+  float bank = 1.0 - exp(-1.3 * max(bankDepth(xz + toSun * ${BANK_KM.toFixed(1)} * 1.5 * lift), 0.0));
   float standing = coverAt(xz + toSun * 6.5 * lift).b;
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
   float stormShade = pow(1.0 - smoothstep(0.02, 0.48, fromStorm), 1.3) * uArrive;
-  return (1.0 - mix(0.55, 0.78, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.22 * high * uArrive) * (1.0 - 0.6 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
+  return (1.0 - mix(0.55, 0.78, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.3 * high * uArrive) * (1.0 - 0.8 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
 }`;
