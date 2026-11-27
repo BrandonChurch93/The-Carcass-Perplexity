@@ -73,9 +73,11 @@ const DEAD: Pose = {
 const DEAD_HEADING = carcassView - 76;
 /** Its size beside the living: the picture has it fill the right half of the frame. */
 const DEAD_SIZE = 1.25;
+/** How much narrower the dead one's split is along the body than round it, less one. */
+const SPLIT_NARROW = 4;
 
 /** Where the dead one lies: right of the middle of the key's frame and a little back from the lens, its head toward the wet rock. */
-const BODY_AT = step(step(carcassBody, carcassAxis, 1.15), carcassView, -0.45);
+const BODY_AT = step(step(carcassBody, carcassAxis, 0.95), carcassView, -0.45);
 const m2 = new THREE.Matrix4();
 const m3 = new THREE.Matrix4();
 const q1 = new THREE.Quaternion();
@@ -133,6 +135,11 @@ export function create(ctx: Context): Piece {
     const writhe = new THREE.Vector4(1, 0, 0, 0);
     const { body, claws: horn } = skinOf(role.pose, role.cell);
     const j = body.joints;
+    // The way across the burn. On the dead one the split leans: its top toward the head, its foot toward the tail.
+    const lean = role.act === 'dead' ? 0.6 : 0;
+    const acrossRaw = [0, 1, 2].map((i) => (j.fwd[i] as number) - lean * (j.up[i] as number));
+    const acrossLen = Math.hypot(acrossRaw[0] as number, acrossRaw[1] as number, acrossRaw[2] as number);
+    const across: [number, number, number] = [(acrossRaw[0] as number) / acrossLen, (acrossRaw[1] as number) / acrossLen, (acrossRaw[2] as number) / acrossLen];
     const shared = {
       ...ctx.rig.uniforms,
       uBones: { value: bones },
@@ -151,7 +158,8 @@ export function create(ctx: Context): Piece {
       uLockKind: { value: role.inside ? 1 : 0 },
       uWhole: { value: role.act === 'dead' ? 1 : 0 },
       tBurn: { value: burnPicture },
-      uBurnU: { value: new THREE.Vector3(j.fwd[0], j.fwd[1], j.fwd[2]) },
+      // The dead one's burn is a long split: far narrower along the body than a singe is. (The shader squares this length.)
+      uBurnU: { value: new THREE.Vector3(across[0], across[1], across[2]).multiplyScalar(role.act === 'dead' ? Math.sqrt(SPLIT_NARROW / BURN_NARROW) : 1) },
       // The dead one's wound is laid on the flank the lens looks at, from above it and from the lens's side.
       uBurnV: { value: role.act === 'dead' ? new THREE.Vector3(0, 0.8, 0.6) : new THREE.Vector3(j.up[0], j.up[1], j.up[2]) },
       uTone: { value: new THREE.Vector4(role.tone[0], role.tone[1], role.tone[2], rng.next()) },
@@ -173,7 +181,7 @@ export function create(ctx: Context): Piece {
     // The dead one lies on its right side: the coat of that side is under it, in the snow, and is not grown, nor is the coat low on its
     // back, which is turned from the lens for as long as it is in the frame.
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 || (n[2] > 0.5 && n[1] < 0.45) : undefined;
-    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.13, 0.12, 0.055, 0.025, 0, 0.1] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: [j.fwd[0] as number, j.fwd[1] as number, j.fwd[2] as number], burnNarrow: BURN_NARROW });
+    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.13, 0.15, 0.115, 0.03, 0, 0.1] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
@@ -244,8 +252,8 @@ export function create(ctx: Context): Piece {
   const deadSkin = skinOf(DEAD, 0.022).body;
   const dj = deadSkin.joints;
   const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.22 * (dj.fwd[d] as number) - 0.1 * (dj.up[d] as number) - 0.2 * (dj.right[d] as number);
-  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.36];
-  const dead = make({ act: 'dead', pose: DEAD, size: DEAD_SIZE, cell: 0.022, clumps: 2000, long: 0.85, tone: [1.1, 1.02, 0.88], phase: 0, inside: false, burn: wound, tendrils: 64 });
+  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.5];
+  const dead = make({ act: 'dead', pose: DEAD, size: DEAD_SIZE, cell: 0.022, clumps: 1550, long: 0.85, tone: [1.1, 1.02, 0.88], phase: 0, inside: false, burn: wound, tendrils: 40 });
 
   // What the one that walks does to the floor: the dark under each foot that is down, the prints where it stood, and the snow a foot
   // kicks up as it leaves. Flat on the floor, or turned to the lens for the snow.
@@ -639,7 +647,7 @@ export function create(ctx: Context): Piece {
       dead.group.updateMatrixWorld(true);
       // Its shade on the ground lies along it, from the rump to the head.
       const mid = step(BODY_AT, DEAD_HEADING, 0.5 * dead.role.size);
-      ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, mid[0], mid[2], 0.8 * dead.role.size, 0.85, 1.7, -DEAD_HEADING * RAD);
+      ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, mid[0], mid[2], 0.6 * dead.role.size, 0.75, 2.0, -DEAD_HEADING * RAD);
     },
   };
 }

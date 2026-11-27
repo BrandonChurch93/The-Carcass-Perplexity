@@ -203,14 +203,20 @@ void main() {
     occ = mix(occ, mix(0.85, 0.6, raw), on);
     if (uWhole > 0.5) {
       // Seen close, the split itself: open along its middle to wet meat, its lips burned black and curled, ragged along their length.
-      float ragged = d + 0.3 * (vnoise3(vRest * 7.0) - 0.5) + 0.2 * (vnoise3(vRest * 29.0) - 0.5) + 0.12 * (vnoise3(vRest * 95.0) - 0.5);
-      float core = 1.0 - smoothstep(0.3, 0.37, ragged);
-      float lips = smoothstep(0.31, 0.38, ragged) * (1.0 - smoothstep(0.55, 0.9, ragged));
+      // It wanders along its length: the hide tore where it was weakest, not along a rule.
+      vec3 astray = normalize(uBurnU) * (0.05 * (vnoise3(vRest * 9.0) - 0.5) + 0.02 * (vnoise3(vRest * 31.0) - 0.5));
+      float ragged = burnAt(vRest + astray) + 0.22 * (vnoise3(vRest * 29.0) - 0.5) + 0.14 * (vnoise3(vRest * 95.0) - 0.5);
+      // It closes toward its ends.
+      ragged += 0.5 * smoothstep(0.45, 1.0, length(vRest - uBurn.xyz) / uBurn.w);
+      float core = 1.0 - smoothstep(0.42, 0.52, ragged);
+      float lips = smoothstep(0.45, 0.55, ragged) * (1.0 - smoothstep(0.9, 1.3, ragged));
+      // Nothing of the picture's square is left round the split: the hide there is singed dark under the coat that lies over it.
+      albedo = pelt * mix(0.5, 1.0, smoothstep(0.8, 2.4, d)) * (0.7 + 0.6 * dot(pic, vec3(0.333)));
       // The meat is the picture's own raw hide, seen nearer: its fibres run down the split.
       vec3 near = textureGrad(tBurn, 0.5 + (uv - 0.5) * vec2(3.1, 1.3), burnDx * vec2(3.1, 1.3), burnDy * vec2(3.1, 1.3)).rgb;
       float fibre = vnoise3(vRest * vec3(160.0, 22.0, 160.0));
-      vec3 meat = mix(vec3(0.34, 0.055, 0.045), vec3(0.09, 0.016, 0.016), smoothstep(0.25, 0.75, 0.6 * fibre + 0.4 * vnoise3(vRest * 44.0))) * (0.45 + 3.0 * dot(near, vec3(0.333)));
-      albedo = mix(albedo, (vec3(0.012, 0.01, 0.009) + 0.03 * grain) * (0.4 + 3.0 * dot(pic, vec3(0.333))), 0.92 * lips);
+      vec3 meat = mix(vec3(0.2, 0.075, 0.06), vec3(0.06, 0.022, 0.02), smoothstep(0.25, 0.75, 0.6 * fibre + 0.4 * vnoise3(vRest * 44.0))) * min(0.45 + 3.0 * dot(near, vec3(0.333)), 1.05);
+      albedo = mix(albedo, (vec3(0.012, 0.01, 0.009) + 0.03 * grain) * (0.5 + 1.2 * vnoise3(vRest * 70.0)), 0.7 * lips);
       albedo = mix(albedo, meat, core);
       rough = mix(rough, 0.34, core);
       rough = mix(rough, 0.8, lips * (1.0 - core));
@@ -242,6 +248,7 @@ ${LIGHT_GLSL}
 ${BONES_GLSL}
 uniform vec4 uCoat;
 uniform float uLockKind;
+uniform float uWhole;
 varying vec3 vLight;
 varying vec3 vFrostLight;
 varying vec4 vAt;
@@ -276,8 +283,9 @@ void main() {
   p += side * (position.x * w + 0.55 * w * kink * t);
   // It is lit as the body under it is, and a little as itself: the coat reads as the body's shape, with each lock catching its own light.
   vec3 nb = normalize(c - mix(r, e, 0.45) + vec3(0.0, 1e-4, 0.0));
-  // A lock of the herd on the side of the body turned from the lens is behind the body: it is not drawn.
-  if (uLockKind > 0.5 && dot(nb, normalize(cameraPosition - r)) < -0.25) {
+  // A lock on the side of the body turned from the lens is behind the body: it is not drawn. (The coat is drawn before the skin, so
+  // a hidden lock would be paid for in full.)
+  if ((uLockKind > 0.5 || uWhole > 0.5) && dot(nb, normalize(cameraPosition - r)) < (uWhole > 0.5 ? -0.4 : -0.25)) {
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
     return;
   }
@@ -407,7 +415,7 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   vec3 hangs = lead * (0.3 * t - 0.12 * t * t) + down * (0.25 * t + 0.6 * t * t) + across * (0.12 * wr * s1 + 0.09 * aHang.w * t + 0.05 * sin(t * 7.0 + seed * 50.0))
     + lead * (0.1 * wr * s2 - 0.35 * curl * t) + down * (-0.25 * curl * t);
   // Dead, it lies fanned over the rock where the head fell: slack, kinked like a root, arched off the ground and frozen so, its end curled.
-  float fan = 1.15 * aHang.w;
+  float fan = 1.3 * aHang.w;
   vec3 flatLead = normalize(vec3(lead.x, 0.0, lead.z));
   vec3 flatAcross = vec3(-flatLead.z, 0.0, flatLead.x);
   vec3 dir = flatLead * cos(fan) + flatAcross * sin(fan);
@@ -415,8 +423,8 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   float bend = (fract(seed * 7.3) - 0.5) * 2.0;
   float hook = aLimb.z * smoothstep(0.55, 1.0, t);
   float arch = fract(seed * 3.1);
-  vec3 spilled = dir * (t - 0.45 * hook * hook - 0.12 * bend * bend * t * t) + sideways * (0.8 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.12 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.45 * hook * hook * sign(bend))
-    + down * (0.25 * t + 1.1 * t * t) + vec3(0.0, 1.0, 0.0) * ((0.1 + 0.3 * arch) * sin(3.14159 * pow(t, 0.7)) + 0.03 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.14 * hook * hook * step(0.4, fract(seed * 11.0)));
+  vec3 spilled = dir * (t - 0.45 * hook * hook - 0.12 * bend * bend * t * t) + sideways * (0.4 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.12 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.45 * hook * hook * sign(bend))
+    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.17 * arch * arch * sin(3.14159 * pow(t, 0.8)) + 0.03 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.14 * hook * hook * step(0.4, fract(seed * 11.0)));
   return mix(hangs, spilled, uWrithe.y);
 }
 void main() {
@@ -478,7 +486,7 @@ void main() {
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
   albedo = mix(albedo, vec3(0.05, 0.04, 0.038) * (0.4 + 1.0 * blotch) * (0.7 + 0.5 * rings), 0.9 * uWrithe.y);
-  rime = mix(rime, 0.8 * smoothstep(0.72, 0.98, n.y * 0.5 + 0.5 + 0.45 * (crystals - 0.5) + 0.25 * (vnoise3(vWorld * 45.0) - 0.5)), uWrithe.y);
+  rime = mix(rime, 0.55 * smoothstep(0.8, 1.0, n.y * 0.5 + 0.5 + 0.45 * (crystals - 0.5) + 0.25 * (vnoise3(vWorld * 45.0) - 0.5)), uWrithe.y);
   // On a living one in the cold its own breath has frozen on them: they hang frosted, pale as the coat.
   rime = max(rime, (1.0 - uWrithe.y) * (0.45 + 0.4 * crystals));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
