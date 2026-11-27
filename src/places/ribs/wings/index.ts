@@ -50,7 +50,7 @@ const ROOKERY = 130;
 /** Those of them nearest the colony's lens that are bodies while its shot runs: the rest, and all of them in every other shot, are sheets. */
 const ROOSTING = 84;
 /** And those put down beside them on the same ledges. */
-const MATES = 56;
+const MATES = 136;
 /** Whether the crouched bodies of the colony are drawn in place of its nearest sheets: not until they sit right. */
 const ROOSTED: boolean = true;
 /** Which of them, counted from the colony's lens, are the large ones with their sails part open: not neighbours. */
@@ -737,20 +737,47 @@ export function create(ctx: Context): Piece {
     const stance: Stance = LARGE.includes(i) ? (i % 2 === 0 ? 2 : 0) : s.stands ? (k < 0.5 ? 2 : 0) : s.low ? (k < 0.45 ? 1 : 0) : k < 0.2 ? 1 : 0;
     return seated(s.x, s.y, s.z, s.size * (LARGE.includes(i) ? 0.8 : 0.66), s.seed, stance);
   });
-  // The ledges nearest the colony's lens are packed: beside each sitter there another is down on its nest, where the same ledge has room.
-  for (let j = 0, first = roosts.length; j < first && roosts.length < ROOSTING + MATES; j++) {
+  // The ledges nearest the colony's lens are packed: beside each sitter another is down on its nest where the same ledge has room, and on
+  // the ledge over it and the ledge under it, and beside those in their turn.
+  const room = (x: number, y: number, z: number, size: number): boolean =>
+    !roosts.some((o) => Math.hypot(o.x - x, o.z - z) < 0.72 * (o.size + size) + 0.5 && Math.abs(o.y - y) < 1.5) &&
+    // And only where the ledge is deep enough to hold it: one put on a narrow step hangs on the face.
+    Math.abs(ledgeUnder(x + ((x - COLONY.x) / Math.hypot(x - COLONY.x, z - COLONY.z)) * 0.7 * size, z + ((z - COLONY.z) / Math.hypot(x - COLONY.x, z - COLONY.z)) * 0.7 * size, y) - y) < 0.16;
+  for (let j = 0; j < roosts.length && roosts.length < ROOSTING + MATES; j++) {
     const by = roosts[j] as Roosting;
-    for (let n = 0; n < 2 && roosts.length < ROOSTING + MATES; n++) {
+    if (Math.hypot(by.x - colonyEye[0], by.y - colonyEye[1], by.z - colonyEye[2]) > 60) continue;
+    const angle = Math.atan2(by.z - COLONY.z, by.x - COLONY.x);
+    const ca = Math.cos(angle);
+    const sa = Math.sin(angle);
+    for (let n = 0; n < 4 && roosts.length < ROOSTING + MATES; n++) {
       const seed = (by.seed * 7.13 + 0.37 * (n + 1)) % 1;
-      const size = by.size * (0.78 + 0.2 * ((seed * 53) % 1));
-      const angle = Math.atan2(by.z - COLONY.z, by.x - COLONY.x);
-      const along = (n === 0 ? 1 : -1) * (1.25 + 0.7 * ((seed * 211) % 1)) * by.size;
-      const inward = (((seed * 131) % 1) - 0.35) * 0.5 * by.size;
-      const x = by.x - Math.sin(angle) * along - Math.cos(angle) * inward;
-      const z = by.z + Math.cos(angle) * along - Math.sin(angle) * inward;
-      if (Math.abs(ledgeUnder(x, z, by.y) - by.y) > 0.16) continue;
-      if (roosts.some((o) => Math.hypot(o.x - x, o.z - z) < 0.95 * (o.size + size) * 0.5 + 0.45 && Math.abs(o.y - by.y) < 1.5)) continue;
-      roosts.push(seated(x, by.y, z, size, seed, (seed * 977) % 1 < 0.6 ? 1 : 0));
+      const size = by.size * (0.74 + 0.3 * ((seed * 53) % 1)) * (by.size > 1.5 ? 0.85 : 1);
+      const stance: Stance = (seed * 977) % 1 < 0.5 ? 1 : (seed * 977) % 1 < 0.9 ? 0 : 2;
+      if (n < 2) {
+        const along = (n === 0 ? 1 : -1) * (1.2 + 0.7 * ((seed * 211) % 1)) * by.size;
+        const inward = (((seed * 131) % 1) - 0.35) * 0.5 * by.size;
+        const x = by.x - sa * along - ca * inward;
+        const z = by.z + ca * along - sa * inward;
+        if (Math.abs(ledgeUnder(x, z, by.y) - by.y) > 0.16 || !room(x, by.y, z, size)) continue;
+        roosts.push(seated(x, by.y, z, size, seed, stance));
+        continue;
+      }
+      // Up the crag or down it: to where the rock next stands a step higher or lower, and a little way onto that ledge.
+      const up = n === 2;
+      const slip = (((seed * 311) % 1) - 0.5) * 1.6 * by.size;
+      for (let d = 0.2; d < 3.4; d += 0.2) {
+        const out = up ? -d : d;
+        const x = by.x + ca * out - sa * slip;
+        const z = by.z + sa * out + ca * slip;
+        const rock = ledgeUnder(x, z, by.y + 3);
+        if (up ? rock < by.y + 0.6 : rock > by.y - 0.6) continue;
+        const on = (up ? -0.4 : 0.9) * size;
+        const x2 = x + ca * on;
+        const z2 = z + sa * on;
+        const y2 = ledgeUnder(x2, z2, rock + (up ? 0.6 : 0));
+        if (Math.abs(y2 - rock) < 0.35 && Math.abs(y2 - by.y) < 4 && room(x2, y2, z2, size)) roosts.push(seated(x2, y2, z2, size, seed, stance));
+        break;
+      }
     }
   }
   // Each that is down sits in a mat of weed, and most that stand have one under them.
@@ -758,6 +785,11 @@ export function create(ctx: Context): Piece {
     ctx,
     roosts
       .filter((r) => r.stance !== 2 || (r.seed * 613) % 1 < 0.6)
+      // Only where the ledge is deep enough to hold one: a mat that hangs off a narrow step is a dark rag on the face.
+      .filter((r) => {
+        const out = Math.atan2(r.z - COLONY.z, r.x - COLONY.x);
+        return Math.abs(ledgeUnder(r.x + Math.cos(out) * 0.75 * r.size, r.z + Math.sin(out) * 0.75 * r.size, r.y) - r.y) < 0.16;
+      })
       .map((r) => ({ x: r.x + Math.sin(r.yaw) * 0.38 * r.size, y: r.y, z: r.z + Math.cos(r.yaw) * 0.38 * r.size, size: r.size * (r.stance === 1 ? 1.15 : 1), seed: r.seed })),
     ledgeUnder,
   );

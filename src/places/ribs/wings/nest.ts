@@ -62,7 +62,7 @@ void main() {
   vec3 n = normalize(n0 - 0.03 * seen * smoothstep(0.0, 0.3, vMix.x) * vec3(slope.x, 0.0, slope.y));
   float lump = vnoise(p * 2.3 + vMix.z * 31.0);
   // Dark dried weed, the upper stalks bleached to straw; white where the sitter has fouled the rim.
-  vec3 weed = mix(vec3(0.045, 0.037, 0.026), vec3(0.1, 0.078, 0.046), lump);
+  vec3 weed = mix(vec3(0.075, 0.06, 0.042), vec3(0.15, 0.115, 0.07), lump);
   vec3 straw = mix(vec3(0.2, 0.155, 0.085), vec3(0.3, 0.255, 0.18), vnoise(p * 5.0));
   vec3 albedo = mix(weed, straw, mix(0.4, here, seen) * (0.3 + 0.7 * vMix.x) * (0.6 + 0.4 * lump));
   float fouled = smoothstep(0.62, 0.8, vnoise(p * 1.6 + vMix.z * 57.0)) * smoothstep(0.25, 0.7, vMix.x) * 0.35;
@@ -71,7 +71,7 @@ void main() {
   float hung = 1.0 - smoothstep(0.0, 0.3, vMix.x);
   vec2 fall = vec2(dot(vWorld.xz, vec2(0.8, 0.6)) * 9.0, vWorld.y * 0.8);
   float strand = vnoise(fall + vMix.z * 11.0) * 0.6 + vnoise(fall * vec2(2.3, 1.0) + 5.0) * 0.4;
-  albedo = mix(albedo, mix(vec3(0.02, 0.018, 0.013), vec3(0.085, 0.06, 0.03), mix(0.5, strand, seen)), hung);
+  albedo = mix(albedo, mix(vec3(0.05, 0.042, 0.03), vec3(0.14, 0.1, 0.055), mix(0.5, strand, seen)), hung);
   // Between the stalks it is dark, and darkest in the hollow and under the rim.
   float occ = vMix.y * mix(mix(0.7, 0.4 + 0.6 * here, seen), 1.0, 0.4);
   vec3 col = rigShade(vWorld, n, v, albedo, 0.9, occ);
@@ -109,7 +109,7 @@ export function nestMats(ctx: Context, at: NestAt[], under: (x: number, z: numbe
         const a = (s / SPOKES) * Math.PI * 2;
         const lobe = 1 + 0.2 * Math.sin(2 * a + k1 * 6.3) + 0.12 * Math.sin(5 * a + k2 * 6.3) + 0.08 * Math.sin(9 * a + k3 * 6.3);
         // The rim is ragged: every second stalk end stands out past its neighbours.
-        const ragged = r === RINGS - 1 ? (s % 2 === 0 ? 1 : 0.8) + 0.14 * frac(Math.sin(s * 12.99 + nest.seed * 78.2) * 43758.5) : 1;
+        const ragged = r === RINGS - 1 ? (s % 2 === 0 ? 1 : 0.9) + 0.1 * frac(Math.sin(s * 12.99 + nest.seed * 78.2) * 43758.5) : 1;
         const out = wide * lobe * part * ragged;
         const x = nest.x + Math.cos(a) * out;
         const z = nest.z + Math.sin(a) * out;
@@ -118,7 +118,7 @@ export function nestMats(ctx: Context, at: NestAt[], under: (x: number, z: numbe
         const heap = high * (Math.pow(Math.max(0, 1 - part * part), 0.5) - 0.3 * Math.exp(-(part * part) / 0.06)) * (0.8 + 0.4 * frac(Math.sin(s * 7.31 + r * 3.7 + nest.seed * 41.3) * 9631.7));
         // Past the ledge's edge it hangs, a hand or two down the face.
         const over = rock < nest.y - 0.15;
-        const y = over ? nest.y - Math.min(nest.y - rock, (0.5 + 0.9 * frac(Math.sin(s * 5.17 + nest.seed * 19.9) * 7717.3)) * nest.size) : nest.y - 0.03 + heap;
+        const y = over ? nest.y - Math.min(nest.y - rock, (0.25 + 0.45 * frac(Math.sin(s * 5.17 + nest.seed * 19.9) * 7717.3)) * nest.size) : nest.y - 0.03 + heap;
         put(v0 + 1 + r * SPOKES + s, x, y, z, over ? 0 : Math.min(1, 0.35 + heap / high), over ? 0.8 : 0.45 + 0.55 * Math.min(1, part * 1.2));
       }
     }
