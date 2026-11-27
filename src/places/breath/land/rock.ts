@@ -738,6 +738,116 @@ void main() {
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
+// A hoop of the main shaft (land/arches.ts): a thick bank of travertine, laid down bed on bed. Its face toward the shaft and every broken
+// end show the beds on edge: the sheet of a broken bedded face, laid by metres along the hoop and metres over its middle (so its beds run
+// with the hoop and are the same beds the mesh steps in and out), and on an end by metres from the axis. Its top and its belly are the
+// outer skin, laid flat. Both sheets have a height, which leans the normal, shuts the recesses and darkens the foot of an overhang.
+export const HOOP_FRAGMENT = /* glsl */ `
+${COMMON}
+uniform sampler2D tFace;
+uniform sampler2D tFaceH;
+uniform sampler2D tSkin;
+uniform sampler2D tSkinH;
+uniform vec3 uFaceMean;
+uniform vec3 uSkinMean;
+uniform vec4 uSheet;
+void main() {
+  vec3 p = vWorld;
+  vec3 v = normalize(cameraPosition - p);
+  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
+  float rad = length(p.xz);
+  vec3 er = vec3(p.x, 0.0, p.z) / max(rad, 1.0);
+  vec3 et = vec3(-er.z, 0.0, er.x);
+  float wt = abs(dot(n, et));
+  float wr = abs(dot(n, er));
+  float up = clamp(n.y, 0.0, 1.0);
+  float level = smoothstep(0.62, 0.86, abs(n.y));
+  bool ended = wt > 1.25 * wr;
+
+  vec4 a = texture2D(tRock, vUv / vec2(23.0, 19.0));
+  vec4 b = texture2D(tRock, vUv / vec2(8.3, 7.1) + 0.35 * a.ra);
+  vec4 c = texture2D(tRock, vec2(vUv.x / 3.1, p.y / 9.0) + 0.3 * b.ar);
+
+  // The face: beds on edge.
+  vec2 fa = vec2(vUv.x, vUv.y) / uSheet.xy;
+  vec2 fb = vec2(rad * 1.3 + 2.7, vUv.y) / uSheet.xy;
+  // Every screen derivative is taken here, before any choice that differs from pixel to pixel.
+  vec2 fax = dFdx(fa);
+  vec2 fay = dFdy(fa);
+  vec2 fbx = dFdx(fb);
+  vec2 fby = dFdy(fb);
+  vec2 suv = vec2(vUv.x, rad + vUv.y) / uSheet.z;
+  vec2 sdx = 1.2 * dFdx(suv);
+  vec2 sdy = 1.2 * dFdy(suv);
+  vec2 fuv = ended ? fb : fa;
+  vec2 fdx = 1.2 * (ended ? fbx : fax);
+  vec2 fdy = 1.2 * (ended ? fby : fay);
+  vec3 faceCol = textureGrad(tFace, fuv, fdx, fdy).rgb / uFaceMean;
+  float foot = max(length(fdx), length(fdy));
+  vec2 e = max(vec2(0.0014, 0.0021), vec2(foot));
+  float h0 = textureGrad(tFaceH, fuv, fdx, fdy).r;
+  float hu = textureGrad(tFaceH, fuv + vec2(e.x, 0.0), fdx, fdy).r;
+  float hv = textureGrad(tFaceH, fuv + vec2(0.0, e.y), fdx, fdy).r;
+  // The relief fades where a bed is finer than a pixel: there it would only be grain.
+  float seen = smoothstep(0.05, 0.012, foot);
+  vec3 lean = uSheet.w * seen * ((hu - h0) / (e.x * uSheet.x) * (ended ? er : et) + (hv - h0) / (e.y * uSheet.y) * vec3(0.0, 1.0, 0.0));
+  float height = h0;
+  // A bed under one that stands out is in its shade.
+  float under = seen * clamp(5.0 * (hv - h0) * 0.0021 / e.y, 0.0, 1.0);
+  vec3 tex = faceCol;
+  // Not all of the face is broken: where the outer skin is whole it lies over the beds, and they show through it at half strength.
+  float whole = ended ? 0.0 : 0.6 * smoothstep(0.44, 0.62, a.a + 0.4 * (c.r - 0.5));
+  level = max(level, whole);
+  if (level > 0.01) {
+    vec3 skinCol = textureGrad(tSkin, suv, sdx, sdy).rgb / uSkinMean;
+    float sfoot = max(length(sdx), length(sdy));
+    float es = max(0.002, sfoot);
+    float s0 = textureGrad(tSkinH, suv, sdx, sdy).r;
+    float su = textureGrad(tSkinH, suv + vec2(es, 0.0), sdx, sdy).r;
+    float sv = textureGrad(tSkinH, suv + vec2(0.0, es), sdx, sdy).r;
+    vec3 sl = 0.55 * uSheet.w * smoothstep(0.05, 0.012, sfoot) * ((su - s0) * et + (sv - s0) * mix(vec3(0.0, 1.0, 0.0), er, smoothstep(0.62, 0.86, abs(n.y)))) / (es * uSheet.z);
+    tex = mix(tex, skinCol, level);
+    lean = mix(lean, sl, level);
+    height = mix(height, s0, level);
+    under *= 1.0 - 0.7 * level;
+  }
+  n = normalize(n - (lean - n * dot(lean, n)));
+
+  // Ivory, with the sheet's own rust, pits and beds as tone and hue; paler on the beds that stand out.
+  float grey = dot(tex, vec3(0.3333));
+  vec3 hue = tex / max(grey, 0.05);
+  vec3 ivory = mix(vec3(0.6, 0.56, 0.49), vec3(0.83, 0.8, 0.73), clamp(0.45 + 1.4 * (a.r - 0.5) + 0.5 * (height - 0.5), 0.0, 1.0));
+  vec3 albedo = ivory * mix(vec3(1.0), hue, 0.8) * clamp(mix(1.0, grey, 0.85), 0.3, 1.5);
+  // Rust beyond the sheet's own: broad marbled patches with dark hearts, and runs down the face from them.
+  float patch0 = smoothstep(0.57, 0.7, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.3 * (height - 0.5) + 0.12 * (c.a - 0.5));
+  float heart = smoothstep(0.68, 0.8, b.a + 0.5 * (a.a - 0.5));
+  float runs = smoothstep(0.56, 0.74, c.r + 0.25 * patch0) * smoothstep(0.75, 0.2, n.y) * smoothstep(-0.95, -0.3, n.y);
+  vec3 rust = mix(vec3(0.5, 0.29, 0.12), vec3(0.24, 0.11, 0.04), heart);
+  albedo = mix(albedo, rust * clamp(grey, 0.5, 1.4), 0.5 * patch0);
+  albedo = mix(albedo, vec3(0.4, 0.21, 0.08) * clamp(grey, 0.5, 1.4), 0.5 * runs * (1.0 - 0.6 * patch0));
+  // Green and dark with damp where it meets the wall and under its belly, and in the recesses between the beds there.
+  float damp = smoothstep(0.8, 0.45, vOcc + 0.25 * (c.a - 0.5) + 0.2 * (height - 0.5));
+  albedo = mix(albedo, vec3(0.13, 0.15, 0.075) * (0.5 + 0.6 * grey), 0.75 * damp);
+  // Dust and grit lie on its top, in the lows of the skin.
+  float dust = smoothstep(0.86, 0.98, up) * smoothstep(0.55, 0.3, height + 0.4 * (a.a - 0.5));
+  albedo = mix(albedo, vec3(0.5, 0.47, 0.42) * clamp(grey, 0.6, 1.3), 0.5 * dust);
+  float rough = mix(mix(0.62, 0.4, level), 0.85, dust);
+  rough = mix(rough, 0.3, 0.6 * damp);
+  float occ = vOcc * mix(0.5, 1.08, smoothstep(0.12, 0.62, height)) * (1.0 - 0.5 * under);
+
+  vec4 land = landAt(p.xz);
+  float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);
+  float depth = max(-p.y, 0.0);
+  float openUp = 1.0 / (1.0 + depth * depth / 700.0);
+  float openSide = 0.6 / (1.0 + depth * depth / 1500.0);
+  float open = mix(1.0, mix(openSide, openUp, up), pit);
+  vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ * open);
+  vec3 bounce = (0.55 * uSkyHorizon * uFill + 0.3 * uGlowColour) * (pit * (1.0 - open) * (0.55 + 0.45 * smoothstep(-0.2, 0.6, -n.y + 0.4)));
+  bounce += uSunColour * (0.12 * pit * exp(-depth / 30.0));
+  colour += albedo * bounce * occ;
+  gl_FragColor = vec4(rigOut(colour), 1.0);
+}`;
+
 // The wall of the shaft and its ribs (land/wall.ts): the colour is the wall plate's picture on the mesh its relief shaped. What the mesh is
 // too coarse to hold (the chips, the cracks, the drips) is taken from the same relief as a lean of the normal and a shade in the folds,
 // at a low strength (the relief is a guess at form, not a measure). A top or an underside is seen edge on by the plate, so there the
@@ -918,6 +1028,8 @@ export interface RockKit {
   bone(amount: number, pale: [number, number, number], dark: [number, number, number], of: Surface, side?: THREE.Side): THREE.ShaderMaterial;
   /** The main shaft: 0 its wall, 1 its arches. */
   pit(amount: number, of: Surface): THREE.ShaderMaterial;
+  /** A hoop of the main shaft: the sheet of its bedded face (`metres` wide, `tall` high) and of its skin. */
+  hoop(face: Surface, tall: number, skin: Surface): THREE.ShaderMaterial;
   dispose(): void;
 }
 
@@ -969,6 +1081,21 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
       ),
     bone: (amount, pale, dark, surface, side) => make(BONE_FRAGMENT, { uBone: { value: amount }, uPale: { value: new THREE.Vector3(...pale) }, uDark: { value: new THREE.Vector3(...dark) }, ...of(surface) }, side),
     pit: (amount, surface) => make(PIT_FRAGMENT, { uBone: { value: amount }, ...of(surface) }, THREE.DoubleSide),
+    hoop: (face, tall, skin) =>
+      make(
+        HOOP_FRAGMENT,
+        {
+          tFace: { value: face.colour },
+          tFaceH: { value: face.data },
+          tSkin: { value: skin.colour },
+          tSkinH: { value: skin.data },
+          uFaceMean: { value: new THREE.Vector3(...face.mean) },
+          uSkinMean: { value: new THREE.Vector3(...skin.mean) },
+          // Metres the face's sheet is wide and tall, metres the skin's sheet is across, metres from the lowest of the relief to the highest.
+          uSheet: { value: new THREE.Vector4(face.metres, tall, skin.metres, face.relief) },
+        },
+        THREE.DoubleSide,
+      ),
     dispose: () => {
       for (const m of made) m.dispose();
       tile.dispose();
