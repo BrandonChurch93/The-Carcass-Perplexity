@@ -497,10 +497,10 @@ void main() {
   vec3 lit = FILM_BODY * fallsOn * (1.0 - through.g);
   // The far wall is lit from outside and shows its lit side through itself: a red lamp behind the near wall. The gas between is steam,
   // and holds a little of that light.
-  vec3 inside = FILM_BODY * fromAbove * (1.0 - throughFar.g) + vec3(0.74, 0.65, 0.63) * fromAbove * 0.075 * (0.3 + 0.7 * top) * whole;
+  vec3 inside = FILM_BODY * fromAbove * (1.0 - throughFar.g) + vec3(0.74, 0.65, 0.63) * fromAbove * 0.115 * (1.0 - 0.32 * top) * whole;
   // (Under the far wall's foot the line of sight comes down on the pool inside, which mirrors that lit wall: brightest at its foot,
   // dying toward the near side. Without it a dome seen from low and close stands on a dark drum.)
-  inside += FILM_BODY * fromAbove * 0.35 * (1.0 - far) * whole * smoothstep(-0.7, 0.0, leaves.y);
+  inside += FILM_BODY * fromAbove * 0.5 * (1.0 - far) * whole * smoothstep(-0.7, 0.0, leaves.y);
   // (The far wall is wet on the inside too: the window stands in it a second time, small and low on the other side.)
   float towardFar = max(dot(reflect(-v, nFar), ${DOME_KEY}), 0.0);
   inside += uSkyZenith * 0.12 * smoothstep(0.9, 0.995, towardFar) * far;
