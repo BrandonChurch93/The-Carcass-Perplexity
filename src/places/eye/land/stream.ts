@@ -123,7 +123,7 @@ void main() {
   float riffle = smoothstep(0.38, 0.7, vnoise(vec2(vFlow.x / 2.7, 7.0))) * smoothstep(1.9, 0.5, abs(vFlow.y + 0.9 * (vnoise(vec2(vFlow.x / 4.3, 2.0)) - 0.5)));
   float much = clamp(0.1 + 0.75 * riffle + 0.85 * max(fall, 0.85 * churned) + 0.5 * piled + 0.7 * wake + 0.12 * smoothstep(0.1, 0.03, depth), 0.0, 1.0);
   // Glass for the most part: the white is threads, and they thicken only where the water has been broken.
-  float white = smoothstep(0.96 - 0.56 * much, 1.0 - 0.44 * much, ridden) * smoothstep(0.02, 0.2, much);
+  float white = smoothstep(0.9 - 0.56 * much, 1.06 - 0.4 * much, ridden) * smoothstep(0.02, 0.2, much);
   // The skin of the water: small waves that go with it, higher where it runs fast.
   float rough = 0.07 + 0.3 * fall + 0.3 * piled + 0.25 * wake + 0.2 * riffle;
   vec2 lean = vec2(mix(vnoise(q2 * vec2(1.3, 3.9) + 5.0), vnoise(q1 * vec2(1.3, 3.9) + 5.0), w1), mix(vnoise(q2 * vec2(1.3, 3.9) + 21.0), vnoise(q1 * vec2(1.3, 3.9) + 21.0), w1)) - 0.5;
@@ -131,7 +131,7 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   // Under it the bed: wet stones, darker the deeper they lie.
   vec3 bed = textureLod(tGrit, vWorld.xz / 2.3 + lean * 0.04, AT(1024.0, 2.3)).rgb * vec3(0.1, 0.11, 0.115) * exp(-depth * 2.6);
-  vec3 albedo = mix(bed, vec3(1.1, 1.12, 1.15), white);
+  vec3 albedo = mix(bed, vec3(0.88, 0.92, 0.97), white);
   vec3 c = rigShade(vWorld, mix(vec3(0.0, 1.0, 0.0), n, white), v, albedo, 1.0, 1.0);
   // The sky lies on what is not white, more the lower the eye.
   float nv = clamp(dot(n, v), 0.0, 1.0);

@@ -18,12 +18,12 @@ export function onLip(x: number, z: number): boolean {
 /**
  * Metres the lip stands over the water at a place of the fan. The ground's own height here is a hand under the water and its coarse mesh
  * alone made it look dry, so the lip is a low beach of its own: its waterline runs from 10.8 m out at the left edge of the shore camera's
- * picture to its foot a little left of the middle, and it rises 30 mm a metre from there toward the eye.
+ * picture to its foot a little left of the middle, and it rises 14 mm a metre from there toward the eye.
  */
 function beach(ahead: number, tangent: number): number {
   const aside = tangent * ahead;
   const line = 10.8 - 5.3 * ((tangent + 0.39) / 0.35) + 0.45 * Math.sin(aside * 2.1 + ahead * 0.7) + 0.2 * Math.sin(aside * 5.3 - ahead * 1.9);
-  return 0.03 * (line - ahead);
+  return 0.014 * (line - ahead);
 }
 
 export function lipGeometry(): THREE.BufferGeometry {
@@ -78,8 +78,8 @@ vec2 lipLarge(vec2 xz) {
   return vec2(xz.x * 0.82 + xz.y * 0.57, -xz.x * 0.57 + xz.y * 0.82) / 5.0 + 0.37;
 }
 float lipHigh(vec2 xz, float level) {
-  float small = 0.085 * textureLod(tLipNh, xz / 1.25, level + 10.26).b;
-  float large = 0.24 * textureLod(tLipNh, lipLarge(xz), level + 8.26).b - 0.022;
+  float small = 0.05 * textureLod(tLipNh, xz / 1.25, level + 10.26).b;
+  float large = 0.12 * textureLod(tLipNh, lipLarge(xz), level + 8.26).b - 0.012;
   return max(small, large);
 }`;
 
@@ -92,7 +92,7 @@ void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
   // No stone stands out of the water: the lake's edge is drawn by the ground alone, and a stone in it would cut through its face.
   // Nor at the far end of the fan, where the plain ground takes over.
-  vStand = smoothstep(-0.02, 0.06, w.y) * smoothstep(${(LIP.ahead1 * LIP.cell).toFixed(5)}, ${((LIP.ahead1 - 3) * LIP.cell).toFixed(5)}, aCell);
+  vStand = smoothstep(0.0, 0.05, w.y) * smoothstep(${(LIP.ahead1 * LIP.cell).toFixed(5)}, ${((LIP.ahead1 - 3) * LIP.cell).toFixed(5)}, aCell);
   // A little over the ground, whose own mesh is coarser and would come up through the sand between the stones.
   w.y += vStand * lipHigh(w.xz, log2(aCell)) + 0.03;
   vWorld = w.xyz;
@@ -124,38 +124,40 @@ void main() {
   vec3 smTone = textureLod(tLipTone, p.xz / 1.25, la).rgb;
   vec3 lgTone = textureLod(tLipTone, at, lb).rgb;
   vec3 skin = textureLod(tShoreP, p.xz / vec2(2.0, 1.125), AT(1672.0, 2.0)).rgb;
-  float ha = 0.085 * sm.b;
-  float hb = 0.24 * lg.b - 0.022;
+  float ha = 0.05 * sm.b;
+  float hb = 0.12 * lg.b - 0.012;
   float big = smoothstep(-0.002, 0.002, hb - ha);
   float h = vStand * max(ha, hb);
   vec2 sa = sm.rg * 2.0 - 1.0;
   vec2 sb = lg.rg * 2.0 - 1.0;
-  // The stones stand a little higher than they were baked, and lie as much steeper.
-  vec2 ga = 1.4 * vStand * sa / sqrt(max(1.0 - sa * sa, 0.02));
-  vec2 gb = 1.0 * vStand * sb / sqrt(max(1.0 - sb * sb, 0.02));
+  // The stones stand a little lower than they were baked, and lie as much flatter.
+  vec2 ga = 0.82 * vStand * sa / sqrt(max(1.0 - sa * sa, 0.02));
+  vec2 gb = 0.5 * vStand * sb / sqrt(max(1.0 - sb * sb, 0.02));
   // The large sheet is turned, and its lie turns back with it.
   vec2 g = mix(ga, vec2(0.82 * gb.x - 0.57 * gb.y, 0.57 * gb.x + 0.82 * gb.y), big);
   vec3 n = normalize(vec3(-g.x, 1.0, -g.y));
   vec3 tone = mix(smTone, lgTone, big);
   // Limestone gravel: buff for the most part, some of it dark, some rusty, some cold; the shore sheet is its skin.
-  vec3 albedo = mix(vec3(0.36, 0.27, 0.18), vec3(0.86, 0.66, 0.43), tone.r);
+  vec3 albedo = mix(vec3(0.66, 0.58, 0.48), vec3(0.95, 0.86, 0.72), tone.r);
   // The sand between the stones is dark with wet, and the lens keeps that when it has taken every grain.
   albedo *= 0.82 + 0.18 * smoothstep(0.0, 0.012, h);
-  albedo = mix(albedo, albedo * vec3(1.22, 0.86, 0.6), smoothstep(0.62, 0.95, tone.g));
+  albedo = mix(albedo, albedo * vec3(1.08, 0.95, 0.84), smoothstep(0.62, 0.95, tone.g));
   albedo = mix(albedo, albedo * vec3(0.84, 0.93, 1.04), smoothstep(0.3, 0.05, tone.g));
   albedo *= 0.62 + 1.1 * dot(skin, vec3(0.333));
-  // Shreds of the mats lie in the grit where the water left them.
-  float shred = smoothstep(0.62, 0.74, 0.55 * vnoise(p.xz * 4.3) + 0.45 * vnoise(p.xz * 31.0)) * smoothstep(0.026, 0.01, h);
-  albedo = mix(albedo, vec3(0.62, 0.3, 0.07), 0.6 * shred);
   albedo *= warmSide(n);
   // Wet to a hand above the water, and damp in every hollow: dark there, with the sky's light lying on it.
   float wet = max(smoothstep(0.13, 0.03, p.y - 0.6 * h), 0.12 + 0.4 * smoothstep(0.01, 0.002, h));
-  albedo *= mix(1.0, 0.68, wet);
-  float occ = mix(1.0, tone.b, 0.8) * (0.8 + 0.2 * smoothstep(0.0, 0.015, h));
+  albedo *= mix(1.0, 0.88, wet);
+  float occ = mix(1.0, tone.b, 0.5) * (0.9 + 0.1 * smoothstep(0.0, 0.015, h));
   // A dry top is rough to the last grain: at this low an eye a smoother one mirrors the bright sky and reads as salt or snow.
   // The same of a wet one whose back lies flat: the eye is taken a little way up for the mirror alone.
   vec3 c = rigShade(p, n, normalize(v + 0.7 * n), clamp(albedo, 0.0, 0.9), mix(1.1, 0.5, wet), occ);
   // The sheen of what is wet through, in small points.
   c += smoothstep(0.6, 1.0, wet) * 0.35 * rigGlint(p, n, v, 0.22);
+  // At the water the sand is a film of it, and carries a little of the sky as the lake beside it does: the lip has no hard outline there.
+  vec3 r = reflect(-v, vec3(0.0, 1.0, 0.0));
+  r.y = abs(r.y) + 0.02;
+  float film = smoothstep(0.03, 0.0, p.y - 0.5 * h);
+  c = mix(c, 0.78 * skyRadiance(normalize(r)) * skyOpen(p), 0.22 * film);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
