@@ -300,8 +300,9 @@ void main() {
   vec3 lit = brineShade(p, n, v, s, froth, gX, gY) * (1.0 - 0.3 * sill);
   // The cloud is brightest overhead: a wavelet that leans to the lens far enough stands the high sky on its face. Small hard glints
   // on the crests, and the body between them stays its own red.
-  float high = reflect(-v, n).y;
-  float glint = smoothstep(0.48, 0.72, high);
+  // (Counted by how far the wavelet lifts the mirrored ray over the level pool's, or a lens that looks down would find the glint on all of it.)
+  float high = reflect(-v, n).y - v.y;
+  float glint = smoothstep(0.24, 0.48, high);
   lit += uSkyZenith * 0.17 * glint * glint * (1.0 - 0.7 * foam) * skyOpen(p) * smoothstep(60.0, 20.0, dist);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
