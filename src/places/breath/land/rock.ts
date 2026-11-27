@@ -751,7 +751,7 @@ void main() {
   float bearing = degrees(atan(p.x, -p.z));
   float band = smoothstep(0.03, 0.3, bandOn(bearing, p.y));
   float underBand = bandOn(bearing, p.y + 1.25) * (1.0 - band);
-  vec3 trav = mix(vec3(0.5, 0.45, 0.36), vec3(0.75, 0.69, 0.585), smoothstep(0.3, 0.7, a.r + 0.4 * (grey - 1.0)));
+  vec3 trav = mix(vec3(0.47, 0.42, 0.335), vec3(0.71, 0.65, 0.55), smoothstep(0.3, 0.7, a.r + 0.4 * (grey - 1.0)));
   // Its rust is flowstone's: marbled patches that wander, darker at the heart, and runs under the lip. Ruled bed by bed it was a striped sweet.
   vec4 lie = texture2D(tRock, vec2(vUv.x / 13.0, p.y / 4.6) + 0.3 * b.ar);
   float flow = smoothstep(0.46, 0.66, lie.a + 0.5 * (b.a - 0.5) + 0.2 * (c.a - 0.5));
