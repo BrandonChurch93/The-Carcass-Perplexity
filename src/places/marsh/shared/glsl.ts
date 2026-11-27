@@ -73,8 +73,8 @@ uniform vec3 uEmitterRadiance[8];`;
 // the merged keys beside their pictures; it changes on a cut and never inside a shot. Whites are left as they are.
 export const GRADE_SHOTS: { from: number; mid: number; dark: number }[] = [
   { from: 0, mid: 0.3, dark: -0.2 },
-  { from: (5833 - 5618) / 60, mid: 0.06, dark: 0 },
-  { from: (6048 - 5618) / 60, mid: -0.13, dark: -0.26 },
+  { from: (5833 - 5618) / 60, mid: 0.14, dark: 0 },
+  { from: (6048 - 5618) / 60, mid: -0.06, dark: -0.14 },
   { from: (6263 - 5618) / 60, mid: 0.5, dark: 0.08 },
   { from: (6586 - 5618) / 60, mid: 0.38, dark: -0.16 },
 ];
