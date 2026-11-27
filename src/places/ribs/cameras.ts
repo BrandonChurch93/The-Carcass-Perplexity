@@ -333,16 +333,20 @@ export const shots: Record<string, CameraPath> = {
   'ribs-06': through(gate, key('ribs-06'), { forward: 7 }, { forward: -5, up: 1.1, right: 2 }),
 };
 
-// The card loop: a heavy camera tracked out to the right of the establishing pose and back to it, with the lens held on the far cage.
-// Metres to the right of that pose and up, at the far end of the move. The part is folded into 0 to 1 first, so that a whole number of turns gives the numbers of the start exactly.
-const LOOP_TRACK = { right: 4, up: 0.45 };
+// The card loop: a heavy camera that stands at the establishing pose and drifts: a little to the right and up and back, and a little
+// forward and back a quarter of a turn behind that, so that it goes once round a small flat ring in the loop's eight seconds and is never
+// seen to swing out along a line and come back along it. The lens is held on the far cage. Nothing near the lens leaves the frame.
+// Metres to the right of that pose and up at the far side of the ring, and metres forward and back of it. The part is folded into
+// 0 to 1 first, so that a whole number of turns gives the numbers of the start exactly.
+const LOOP_TRACK = { right: 0.7, up: 0.1, forward: 0.3 };
 const LOOP_REACH = 500;
 export const loopPath: CameraPath = (part) => {
-  // Out along one line and back along it, slow away from each end.
-  const out = (1 - Math.cos(2 * Math.PI * (part - Math.floor(part)))) / 2;
+  const turn = 2 * Math.PI * (part - Math.floor(part));
+  const out = (1 - Math.cos(turn)) / 2;
   const along = heading(ARRIVAL_YAW, 0);
   const across: Vec3 = [-along[2], 0, along[0]];
-  const position = add(add(establish.position, scale(across, LOOP_TRACK.right * out)), [0, LOOP_TRACK.up * out, 0]);
+  const drifted = add(scale(across, LOOP_TRACK.right * out), scale(along, LOOP_TRACK.forward * Math.sin(turn)));
+  const position = add(add(establish.position, drifted), [0, LOOP_TRACK.up * out, 0]);
   const far = add(establish.position, scale(heading(ARRIVAL_YAW, ARRIVAL_PITCH), LOOP_REACH));
   const d: Vec3 = [far[0] - position[0], far[1] - position[1], far[2] - position[2]];
   const l = Math.hypot(d[0], d[1], d[2]);
