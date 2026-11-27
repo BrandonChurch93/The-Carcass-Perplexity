@@ -181,7 +181,7 @@ export function create(ctx: Context): Piece {
     // The dead one lies on its right side: the coat of that side is under it, in the snow, and is not grown, nor is the coat low on its
     // back, which is turned from the lens for as long as it is in the frame.
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 || (n[2] > 0.5 && n[1] < 0.45) : undefined;
-    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.13, 0.15, 0.115, 0.085, 0, 0.1] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
+    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.08, 0.15, 0.115, 0.085, 0, 0.035] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
@@ -299,15 +299,20 @@ export function create(ctx: Context): Piece {
     const ph = a.role.phase;
     const j = a.joints;
     still(a);
-    const breath = Math.sin(t * 2.5 + ph) + 0.25 * Math.sin(t * 5.0 + ph * 2);
+    // No two breathe at one rate: each has its own, and a deeper breath every so often.
+    const rate = 1.9 + 1.1 * ((ph * 0.618) % 1);
+    const breath = (Math.sin(t * rate + ph) + 0.25 * Math.sin(t * rate * 2 + ph * 2)) * (1 + 0.5 * Math.max(0, Math.sin(t * rate * 0.21 + ph * 1.3)) ** 3);
     const standing = a.role.act === 'stand';
     // A standing one carries its weight from one side to the other and back, slowly, and never evenly.
     const sway = calm * (standing ? 0.13 * Math.sin(t * 1.25 + ph * 3 + 0.8 * Math.sin(t * 0.5 + ph)) + 0.035 * Math.sin(t * 2.3 + ph) : 0.035 * Math.sin(t * 1.1 + ph * 3));
     const fore = standing ? calm * 0.08 * Math.sin(t * 0.9 + ph * 2) - 0.06 * start : 0;
     // At a flash it drops: a flinch of the whole body, and it comes up again slowly.
-    const settle = 0.018 * Math.sin(t * 1.3 + ph * 2) - (standing ? 0.05 : 0.025) * start;
-    (a.bones[0] as THREE.Matrix4).makeTranslation(fore, settle - 0.01 * breath, sway);
-    about(a.bones[1] as THREE.Matrix4, j.chest, sway * 0.5, 0, 0.012 * breath, [fore, settle, sway], v2.set(1 + 0.02 * breath, 1 + 0.065 * breath, 1 + 0.085 * breath));
+    // One that lies eases a shoulder now and then: a slow shift, each in its own time, and back.
+    const ease = standing ? 0 : calm * Math.max(0, Math.sin(t * 0.55 + ph * 2.3)) ** 4;
+    // The trunk of a standing one sinks a little onto the side that carries.
+    const settle = 0.018 * Math.sin(t * 1.3 + ph * 2) - (standing ? 0.05 : 0.025) * start - (standing ? 0.22 * Math.abs(sway) : 0.02 * ease);
+    (a.bones[0] as THREE.Matrix4).makeTranslation(fore, settle - 0.016 * breath, sway);
+    about(a.bones[1] as THREE.Matrix4, j.chest, sway * (standing ? 0.8 : 0.5) + 0.09 * ease, 0.05 * ease, 0.016 * breath, [fore + 0.03 * ease, settle, sway], v2.set(1 + 0.025 * breath, 1 + 0.09 * breath, 1 + 0.115 * breath));
     // Each lifts its head in its own time, holds it, and lets it down again; a standing one drops it to the ice between looks.
     const lift = Math.max(0, Math.sin(t * 1.0 + ph * 1.7)) ** 3;
     const ny = (standing ? 0.3 : 0.2) * Math.sin(t * 1.1 + ph * 2 + 0.7 * Math.sin(t * 0.45 + ph * 4)) + 0.07 * Math.sin(t * 1.9 + ph) + look;

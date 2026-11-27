@@ -211,7 +211,9 @@ void main() {
   float far = length(cameraPosition - c);
   // Where it has wound on itself it is gathered to a rope, and opens again.
   float neck = 1.0 - 0.78 * step(0.3, fract(kSeed * 6.1)) * exp(-pow((s - 0.22 - 0.5 * fract(kSeed * 4.7)) / 0.04, 2.0));
-  float wide = 2.1 * kHalf * neck * outline(s, kSeed);
+  // Far off the strip is the kite's own width and no more: a thin wisp, not a band.
+  float farOff = smoothstep(200.0, 450.0, length(cameraPosition - aAnchor) * uReach);
+  float wide = mix(2.1, 0.75, farOff) * kHalf * neck * outline(s, kSeed);
   // Far off a blade is never thinner than a pixel and a half: it does not come and go between the pixels.
   float half_ = max(wide, 0.75 * uPixel * far);
   // The section: an arc the wind fills and empties as the waves pass (curl is half the angle the arc turns through), and two edges that
@@ -422,8 +424,9 @@ void main() {
   // Lilac-grey, whatever the light: glass, not flesh.
   c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.97, 1.16), mix(0.2, 0.6, vFar));
   // The shine is on the film, not in it: it shows at its full strength however thin the film.
-  c = (c * cover + shine) / max(cover, 0.05);
-  float alpha = skin * cover;
+  c = (c * cover * (1.0 - 0.3 * distant) + shine * (1.0 - 0.6 * distant)) / max(cover, 0.05);
+  // Down the ridge it is a grey wisp against the cloud, nearer the sky's tone the farther it is.
+  float alpha = skin * cover * (1.0 - 0.45 * distant);
   if (alpha < 0.02) discard;
   gl_FragColor = vec4(rigOut(c), alpha * (1.0 - uSolo));
 }`;
