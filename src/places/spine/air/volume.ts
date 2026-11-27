@@ -322,6 +322,13 @@ ${SEA_SHADE_GLSL}
     vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.006, 0.009);
     light = light * (1.0 - veiled) + snowAir * veiled;
     through *= 1.0 - veiled;
+    // By the dead one the lens is low and close: the air behind the body is thick with blown snow, and the first spire and its mouth
+    // stand back in it, pale and soft, as far behind the body as they are.
+    if (uClear.z > 0.0 && far < 50000.0) {
+      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 300.0), 0.5) * uShow.x;
+      light = light * (1.0 - behind) + snowAir * 0.85 * behind;
+      through *= 1.0 - behind;
+    }
     // Scud: torn cloud that races low past the spires on the gale, paler than the storm behind it (staged by shot, uStage.w).
     if (uStage.w > 0.0 && far > 120.0) {
       float scud = 0.7 * noise(vec3(azV * 0.8 - uTime * 0.05, rd.y * 5.0 + uTime * 0.006, 0.61)).r + 0.3 * noise(vec3(azV * 2.6 - uTime * 0.14, rd.y * 15.0, 0.2)).b;
@@ -342,10 +349,12 @@ ${SEA_SHADE_GLSL}
     float driven = 0.0;
     float keptV = 1.0;
     for (int j = 0; j < 3; j++) {
-      float dist = (j == 0 ? 26.0 : j == 1 ? 95.0 : 340.0) / lensV;
+      // (By the dead one the first of them flies between the lens and the body, an arm's length off.)
+      bool dead = uClear.z > 0.0;
+      float dist = dead ? (j == 0 ? 2.2 : j == 1 ? 40.0 : 150.0) : (j == 0 ? 26.0 : j == 1 ? 95.0 : 340.0) / lensV;
       float before = smoothstep(dist, dist * 1.3, far);
       if (before <= 0.0) break;
-      float grain = (j == 0 ? 7.0 : j == 1 ? 20.0 : 56.0) / sqrt(lensV);
+      float grain = dead ? (j == 0 ? 1.6 : j == 1 ? 9.0 : 30.0) : (j == 0 ? 7.0 : j == 1 ? 20.0 : 56.0) / sqrt(lensV);
       vec3 at = ro + rd * dist;
       vec3 p = at - downV * (uWind.w * (0.8 + 0.12 * float(j)) * uTime);
       vec3 q = vec3(dot(p, downV) / (grain * 9.0), dot(p, upV) / grain, dot(p, acrossV) / (grain * 2.5));
@@ -354,12 +363,12 @@ ${SEA_SHADE_GLSL}
       float veil = smoothstep(0.36, 0.84, streak) * smoothstep(0.36, 0.7, gust) * before;
       // It thins with the height over the crest, and against the open sky it is the sky's own tone and all but lost.
       veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.2 : 1.0);
-      veil *= j == 0 ? (uClear.z > 0.0 ? 0.08 : 0.16) : j == 1 ? 0.3 : 0.4;
+      veil *= j == 0 ? (dead ? 0.11 : 0.16) : j == 1 ? 0.3 : 0.4;
       driven += keptV * veil;
       keptV *= 1.0 - veil;
     }
     driven *= uShow.w * uStage.x;
-    vec3 snowV = 0.85 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 60.0) * 0.2, vec3(0.1, 0.085, 0.17)));
+    vec3 snowV = 0.85 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * (95.0 / lensV)) * 0.2, vec3(0.1, 0.085, 0.17)));
     light = light * (1.0 - driven) + snowV * driven;
     through *= 1.0 - driven;
   }
