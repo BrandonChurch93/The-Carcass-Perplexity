@@ -256,15 +256,16 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
         const kinds = (sites.kind[bk] as number) + (sites.kind[other] as number);
         const pool = sites.pool[bk] as number;
         // Not every edge between two plates is a seam that lives: the rest stay shut, dark cracks.
-        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.7 : kinds < 3 ? 0.5 : 0.22) + 0.6 * pool;
+        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.7 : kinds < 3 ? 0.5 : 0.22) + 0.2 * pool;
         const h = hash(lo, hi, 41);
-        reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.4 : 0.24) * h * h + 0.25 * pool * h : 0;
+        reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.4 : 0.24) * h * h + 0.1 * pool * h : 0;
         // A joint dies out: along its length it narrows and shuts here and there, so the joints do not close into polygons.
-        // Round the pool at the foot of the fall they stay open.
+        // Only at the rim of the pool at the foot of the fall do they stay open: seen low from across the lake, rows of open
+        // joints round it stood as bands.
         let shut = false;
-        if (alive && pool < 0.3) {
+        if (alive && pool < 0.75) {
           const die = 0.7 * noise(tx / 21, z0 / 21, 71) + 0.3 * noise(tx / 6.5, z0 / 6.5, 72);
-          reach *= smooth(0.43, 0.57, die + 0.2 * pool);
+          reach *= smooth(0.43, 0.57, die + 0.1 * pool);
           if (reach < 0.004) {
             reach = 0;
             shut = true;
