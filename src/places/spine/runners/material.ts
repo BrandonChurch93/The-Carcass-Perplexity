@@ -169,6 +169,8 @@ void main() {
   if (vKind > 5.5) {
     // A claw: dark horn, ridged along its length, worn pale at the tip, wet.
     albedo = mix(vec3(0.03, 0.026, 0.024), vec3(0.12, 0.1, 0.08), smoothstep(0.45, 0.9, grain) * 0.6);
+    // The dead one's claws are seen close, on the ice before the lens: grey horn, paler along its ridges, not a black shape.
+    if (uWhole > 0.5) albedo = mix(vec3(0.075, 0.062, 0.054), vec3(0.3, 0.25, 0.2), smoothstep(0.3, 0.9, grain));
     rough = 0.62;
     occ = 0.9;
   }
@@ -345,8 +347,8 @@ void main() {
   float fineY = fine < 5.5 ? mix(0.019, 0.489, t) : mix(0.513, 0.978, t);
   vec2 fineUv = vec2(0.114 + 0.155 * mod(fine, 6.0) + 0.07 * u * flip, 1.0 - fineY);
   // The picture is read a little coarser than the screen asks: hair by hair it would be finer than a pixel of the film, and would only glitter.
-  vec2 uvDx = 1.8 * dFdx(fineUv);
-  vec2 uvDy = 1.8 * dFdy(fineUv);
+  vec2 uvDx = 2.4 * dFdx(fineUv);
+  vec2 uvDy = 2.4 * dFdy(fineUv);
   // The strands a lock parts into, and how much of one a pixel covers: found here too. No edge of a lock is cut: each is let go over a
   // pixel or two, and a strand finer than a pixel is drawn a pixel wide and fainter.
   float parts = (uWhole > 0.5 ? 2.0 : 3.0) + floor(3.0 * fract(seed * 2.71));
