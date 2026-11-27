@@ -103,6 +103,9 @@ function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid
   const way = alongX ? cx / Math.abs(hx) : cz / Math.abs(hz);
   const slip = alongX ? (hz * way) / cz : (hx * way) / cx;
   const cell = (line: number, k: number): number => (alongX ? k * w + line : line * w + k);
+  const cross = alongX ? cz : cx;
+  // How far the shade at a cell has been thrown, in metres.
+  const thrown = new Float32Array(w * h);
   for (let n = 0; n < lines; n++) {
     const line = toward > 0 ? lines - 1 - n : n;
     for (let k = 0; k < across; k++) {
@@ -110,14 +113,58 @@ function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid
         shade[cell(line, k)] = Math.max(-50, (heights[cell(line, k)] as number) - 5 * fall);
         continue;
       }
-      const f = Math.min(across - 1, Math.max(0, k + slip));
+      // The way to the sun bends a little from run to run, so the side of a long shadow is not ruled.
+      const bend = 0.15 * Math.sin(n * way * 0.0093 + 0.004 * k * cross + 0.7) + 0.1 * Math.sin(n * way * 0.0217 - 0.007 * k * cross + 2.9);
+      const f = Math.min(across - 1, Math.max(0, k + slip + bend));
       const k0 = Math.min(across - 2, Math.floor(f));
       const a0 = cell(line + toward, k0);
       const a1 = cell(line + toward, k0 + 1);
-      const v0 = Math.max(heights[a0] as number, shade[a0] as number);
-      const v1 = Math.max(heights[a1] as number, shade[a1] as number);
+      const own0 = (heights[a0] as number) >= (shade[a0] as number);
+      const own1 = (heights[a1] as number) >= (shade[a1] as number);
+      const v0 = own0 ? (heights[a0] as number) : (shade[a0] as number);
+      const v1 = own1 ? (heights[a1] as number) : (shade[a1] as number);
+      const t0 = own0 ? 0 : (thrown[a0] as number);
+      const t1 = own1 ? 0 : (thrown[a1] as number);
       shade[cell(line, k)] = Math.max(-50, v0 + (v1 - v0) * (f - k0) - fall * way);
+      thrown[cell(line, k)] = t0 + (t1 - t0) * (f - k0) + way;
     }
+  }
+  // The edge of a long shadow on the ground is as soft as the shadow is thrown far: the shade deepens inward from its edge over a width that
+  // grows with the way it has come, so no shadow from the far rim ends in a line. The way to the edge is measured in two passes over the grid.
+  const inward = new Float32Array(w * h);
+  const lit = (c: number): boolean => (shade[c] as number) <= Math.max(heights[c] as number, 0);
+  const diag = Math.hypot(cx, cz);
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      const c = j * w + i;
+      let d = lit(c) ? 0 : 1e9;
+      if (d > 0) {
+        if (i > 0) d = Math.min(d, (inward[c - 1] as number) + cx);
+        if (j > 0) d = Math.min(d, (inward[c - w] as number) + cz);
+        if (i > 0 && j > 0) d = Math.min(d, (inward[c - w - 1] as number) + diag);
+        if (i < w - 1 && j > 0) d = Math.min(d, (inward[c - w + 1] as number) + diag);
+      }
+      inward[c] = d;
+    }
+  }
+  for (let j = h - 1; j >= 0; j--) {
+    for (let i = w - 1; i >= 0; i--) {
+      const c = j * w + i;
+      let d = inward[c] as number;
+      if (d > 0) {
+        if (i < w - 1) d = Math.min(d, (inward[c + 1] as number) + cx);
+        if (j < h - 1) d = Math.min(d, (inward[c + w] as number) + cz);
+        if (i < w - 1 && j < h - 1) d = Math.min(d, (inward[c + w + 1] as number) + diag);
+        if (i > 0 && j < h - 1) d = Math.min(d, (inward[c + w - 1] as number) + diag);
+      }
+      inward[c] = d;
+    }
+  }
+  for (let c = 0; c < w * h; c++) {
+    const d = inward[c] as number;
+    if (d <= 0) continue;
+    const wide = Math.min(110, Math.max(8, 0.09 * (thrown[c] as number)));
+    if (d < wide) shade[c] = Math.min(shade[c] as number, Math.max(heights[c] as number, 0) - 1.6 + (3.2 * d) / wide);
   }
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
