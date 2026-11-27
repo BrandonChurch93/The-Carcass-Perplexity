@@ -97,6 +97,8 @@ void main() {
   float thick = 1.0 - smoothstep(-0.5, 0.0, y - tide);
   vec3 red = mix(vec3(0.06, 0.027, 0.018), vec3(0.04, 0.0175, 0.012), thick) * (0.55 + 0.9 * skinH);
   vec3 grey = mix(vec3(0.17, 0.125, 0.105), vec3(0.085, 0.06, 0.05), thick) * (0.55 + 0.9 * skinH);
+  // One coated to the top of its back lies open to the whole sky: its mud is the full rust of the vein and gives back less of the grey above it.
+  red = mix(red, vec3(0.05, 0.0168, 0.0103) * (0.55 + 0.9 * skinH), uCoat.z);
   albedo = mix(albedo, mix(red, grey, uCoat.w), mud);
   // What stands in the mud is mud.
   float wy = vWorld.y - vRaise;
@@ -119,7 +121,7 @@ void main() {
 
   // Wet mud shows the sky on the top of every fold; the skin is dull, the cake dead.
   float rough = mix(mix(0.9, 0.72, damp), 1.0, dry);
-  rough = mix(rough, mix(0.86, 0.5, smoothstep(0.5, 0.85, skinH)), mud);
+  rough = mix(rough, mix(0.86, mix(0.5, 0.72, uCoat.z), smoothstep(0.5, 0.85, skinH)), mud);
   rough = mix(rough, 0.3, deep);
   rough = mix(rough, 1.0, 0.7 * graze);
   float occ = vOpen * sqrt(vOpen) * (0.5 + 0.5 * smoothstep(0.0, 0.85, fold)) * mix(0.7 + 0.3 * smoothstep(0.15, 0.6, skinH), 0.7 + 0.3 * smoothstep(0.2, 0.6, cakeH), dry);
