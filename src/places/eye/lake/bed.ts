@@ -8,6 +8,13 @@ import { mirrored } from '../land/rock';
 /** Per metre of water: red goes first, so that the deep is blue and then black. */
 export const ABSORB: [number, number, number] = [0.12, 0.045, 0.03];
 
+/** A picture that is laid round the lake and meets itself from left to right: it runs on round and is turned over only the way in. */
+function round(t: THREE.Texture): THREE.Texture {
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.MirroredRepeatWrapping;
+  return t;
+}
+
 export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, THREE.IUniform> {
   return {
     tLip: { value: lip },
@@ -16,7 +23,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     tMat: { value: mirrored(ctx.assets.texture('mat/matplate.jpg', { anisotropy: 8 })) },
     tMatH: { value: mirrored(ctx.assets.texture('mat/matplate-h.png', { kind: 'data', anisotropy: 4 })) },
     tMatTile: { value: mirrored(ctx.assets.texture('mat/matdark.jpg', { anisotropy: 8 })) },
-    tComb: { value: mirrored(ctx.assets.texture('lake/matcomb.jpg', { anisotropy: 4 })) },
+    tComb: { value: round(ctx.assets.texture('lake/matcomb-round.jpg', { anisotropy: 4 })) },
     tLipPlate: { value: mirrored(ctx.assets.texture('mat/lip.jpg', { anisotropy: 8 })) },
     tLipPlateH: { value: mirrored(ctx.assets.texture('mat/lip-h.png', { kind: 'data', anisotropy: 4 })) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
@@ -124,6 +131,10 @@ vec3 lipNear(vec2 xz, vec2 from, vec3 lip) {
 const float MAT_REACH = 260.0;
 const float MAT_A = 6.5;
 const float MAT_B = 9.2;
+// Metres round the lake that one repeat of the combed picture covers, at its three sizes: 2 pi 640 over 61, 18 and 237.
+const float COMB_A = 65.9217;
+const float COMB_B = 223.4021;
+const float COMB_C = 16.9672;
 const float LIP_OUT = 0.9;
 const float LIP_DEEP = 5.63;
 vec2 lipPlateAt(vec2 xz, vec3 lip) {
@@ -142,16 +153,20 @@ float lipCover(vec2 xz, vec3 lip) {
 
 // Metres of water over the shelf: it shelves from nothing at the shore to knee-deep hollows, and comes up again to a crust at the lip
 // that stands out of the water in places (below nothing: negative).
-float shelfDepthAt(vec2 xz, float inShore, float w) {
+// The bars of pale rock that come up almost to the air, before they are given an edge: told once for a place, for its depth and for its slabs.
+float shelfBars(vec2 xz) {
+  return 0.6 * vnoise(xz / 7.3 + 2.0) + 0.4 * vnoise(xz / 2.2);
+}
+float shelfDepthAt(vec2 xz, float inShore, float w, float barsAt) {
   float hollows = 0.24 + 0.36 * (0.6 * vnoise(xz / 46.0) + 0.4 * vnoise(xz / 17.0 + 5.0));
-  // Bars of pale rock that come up almost to the air.
-  float bars = smoothstep(0.62, 0.8, 0.6 * vnoise(xz / 7.3 + 2.0) + 0.4 * vnoise(xz / 2.2));
+  float bars = smoothstep(0.62, 0.8, barsAt);
   float depth = min(inShore * 0.04, hollows * (1.0 - 0.85 * bars));
   float crust = -0.05 + 0.2 * vnoise(xz / 1.9) + 0.09 * vnoise(xz / 0.43 + 7.0) - 0.07 * smoothstep(1.6, 0.2, w);
   return mix(crust, depth, smoothstep(0.8, 9.0, w));
 }
 
-Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
+// barsAt: what shelfBars gives here (the depth was told from it, and the pale slabs are the same bars).
+Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt) {
   Bed o;
   float wLip = lip.x;
   float w = max(wLip, 0.0);
@@ -160,15 +175,16 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float a2 = atan(b.x, b.y);
   // The same crust again, larger and turned, in patches: no row of it comes round twice.
   vec2 turned = vec2(b.x * 0.74 - b.y * 0.67, b.x * 0.67 + b.y * 0.74) / 5.3 + 0.41;
-  float patchy = smoothstep(0.35, 0.65, vnoise(b / 2.9 + 11.0));
   // From the rim one read of the crust is all that can be told apart.
   vec3 sinter = readAt(tSinter, turned, mat2(0.74, 0.67, -0.67, 0.74) / 5.3).rgb;
-  if (cameraPosition.y < 20.0) sinter = mix(readAt(tSinter, b / 3.0, mat2(1.0 / 3.0)).rgb, sinter, patchy);
+#if EYE_NEAR > 0
+  sinter = mix(readAt(tSinter, b / 3.0, mat2(1.0 / 3.0)).rgb, sinter, smoothstep(0.35, 0.65, vnoise(b / 2.9 + 11.0)));
+#endif
   vec3 sinterFar = readAt(tSinter, b / 17.0 + 0.37, mat2(1.0 / 17.0)).rgb;
   // The lie of the crust is read from its own picture: its pale tops stand, its dark seams lie low.
   vec3 snh = vec3(0.5, 0.5, clamp(dot(sinter, vec3(0.5, 0.9, 0.6)) * 1.1, 0.0, 1.0));
   vec3 pale = sinter * (sinterFar / vec3(0.501, 0.351, 0.19)) * vec3(0.84, 1.02, 1.3);
-  float slabs = smoothstep(0.5, 0.68, 0.6 * vnoise(b / 7.3 + 2.0) + 0.4 * vnoise(b / 2.2)) * (1.0 - 0.85 * smoothstep(150.0, 230.0, w));
+  float slabs = smoothstep(0.5, 0.68, barsAt) * (1.0 - 0.85 * smoothstep(150.0, 230.0, w));
   float crust = smoothstep(9.0, 1.5, w);
   vec3 silt = mix(vec3(0.07, 0.05, 0.035), vec3(0.2, 0.185, 0.165), smoothstep(150.0, 230.0, w)) * (0.5 + 1.0 * snh.b);
   vec3 bare = mix(silt, pale * mix(vec3(1.0), vec3(0.36, 0.38, 0.42), smoothstep(8.0, 40.0, cameraPosition.y) * (1.0 - crust)), max(slabs, crust));
@@ -183,6 +199,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     vec3 gravel = plate * (readAt(tShore, b / vec2(43.0, 24.2) + 0.61, mat2(1.0 / 43.0, 0.0, 0.0, 1.0 / 24.2)).rgb / vec3(0.222, 0.161, 0.119)) * vec3(1.3, 1.36, 1.44);
     bare = mix(bare, gravel * 0.5, beach);
     // Under a low eye the same shingle the shore is made of goes on under the water, wet and dark, as far as the eye can tell one stone from the next.
+#if EYE_NEAR > 1
     float under = beach * smoothstep(40.0, 16.0, away) * smoothstep(12.0, 4.0, cameraPosition.y);
     if (under > 0.0) {
       // A stone taller than the water over it stands out of it, wet: the waterline goes in and out between the stones. The pale stones of the picture are its tall ones.
@@ -190,23 +207,37 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
       stands = under * smoothstep(0.0, 0.006, tall - depth);
       bare = mix(bare, plate * vec3(1.3, 1.36, 1.44) * mix(0.5, 0.85, stands), under);
     }
+#endif
   }
   // Where the mats lie: patches drawn out toward the centre, thick round the lip, torn and thin toward the shore, with lanes of open
   // water that run in to the deep. Counted in metres round the lake and metres out, both bent by the ground, so no patch has a straight side.
   vec2 bend = vec2(vnoise(b / 37.0 + 1.3), vnoise(b / 37.0 + 8.1)) - 0.5;
   vec2 pq = vec2(a2 * 640.0 + bend.x * 26.0, r + bend.y * 60.0);
   float blobs = 0.6 * vnoise(b / 48.0) + 0.4 * vnoise(b / 13.0 + 3.0);
-  float drawn = 0.55 * vnoise(pq / vec2(38.0, 190.0)) + 0.3 * vnoise(pq / vec2(12.0, 70.0) + 3.0) + 0.15 * vnoise(pq / vec2(3.5, 24.0) + 7.0);
   // From the rim the mats have no lie: they are mottled, patch by patch, with dark wet channels between and small pale pools.
+  // (Whatever is told by the way round is not worked out where the eye is wholly at the rim: it would be multiplied by nothing.)
   float rimEye = smoothstep(8.0, 40.0, cameraPosition.y);
-  if (rimEye > 0.0) drawn = mix(drawn, 0.5 * vnoise(b / 44.0 + 2.0) + 0.3 * vnoise(b / 17.0 + 3.0) + 0.2 * vnoise(b / 6.5 + 7.0), rimEye);
+  // (What only a low eye is told, and what only an eye at the rim is, is left out of the program of the frames that have no use for
+  // it: EYE_RIM, see variantOf in index.ts. The renderer works out both sides of a branch for every pixel.)
+  float drawn = 0.0;
+#if EYE_RIM < 2
+  drawn = 0.55 * vnoise(pq / vec2(38.0, 190.0)) + 0.3 * vnoise(pq / vec2(12.0, 70.0) + 3.0) + 0.15 * vnoise(pq / vec2(3.5, 24.0) + 7.0);
+#endif
+#if EYE_RIM > 0
+  drawn = mix(drawn, 0.5 * vnoise(b / 44.0 + 2.0) + 0.3 * vnoise(b / 17.0 + 3.0) + 0.2 * vnoise(b / 6.5 + 7.0), rimEye);
+#endif
   float field = 0.62 * drawn + 0.38 * blobs;
-  float lanes = smoothstep(0.035, 0.008, abs(vnoise(vec2(pq.x / 13.0, pq.y / 330.0) + 9.0) - 0.5)) * smoothstep(8.0, 50.0, w);
-  if (rimEye > 0.0) {
+  float lanes = 0.0;
+#if EYE_RIM < 2
+  lanes = smoothstep(0.035, 0.008, abs(vnoise(vec2(pq.x / 13.0, pq.y / 330.0) + 9.0) - 0.5)) * smoothstep(8.0, 50.0, w);
+#endif
+#if EYE_RIM > 0
+  {
     float channels = smoothstep(0.045, 0.012, abs(0.6 * vnoise(b / 31.0 + 9.0) + 0.4 * vnoise(b / 11.0 + 4.0) - 0.5)) * smoothstep(8.0, 50.0, w);
     float pools = smoothstep(0.66, 0.84, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
     lanes = mix(lanes, max(0.7 * channels * smoothstep(0.35, 0.6, vnoise(b / 57.0 + 13.0)), pools), rimEye);
   }
+#endif
   float toLip = smoothstep(MAT_REACH + uLipIn, 30.0, w);
   float thin = smoothstep(4.0, 46.0, inShore + 30.0 * (blobs - 0.5)) * (1.0 - 0.8 * slabs * (1.0 - crust));
   // And they lie thick toward the pool and thin away to bare grey silt at the shore.
@@ -234,17 +265,24 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     float px = gCovers;
     mat2 ma = mat2(0.951, -0.309, 0.309, 0.951) / MAT_A;
     mat2 mb = mat2(0.999, 0.035, -0.035, 0.999) / MAT_B;
-    // A slow sway, toward the centre and back: each tuft in its own time.
-    vec2 sway = (b / max(r, 1.0)) * (0.022 * sin(uTime * 0.9 + 6.28 * vnoise(b / 2.3)) + 0.008 * sin(uTime * 2.1 + 6.28 * vnoise(b / 0.5 + 4.0)));
-    vec2 qa = vec2(b.x * 0.951 + b.y * 0.309, -b.x * 0.309 + b.y * 0.951) / MAT_A + sway / MAT_A;
-    vec2 qb = vec2(b.x * 0.999 - b.y * 0.035, b.x * 0.035 + b.y * 0.999) / MAT_B + 0.37 + sway * 1.4 / MAT_B;
     // Further off than a strand can be told, the picture of the mats is not read at all: the patch has its tone and that is the whole of it.
     float mh = 0.5;
     vec3 near3 = vec3(0.27, 0.125, 0.035);
     if (px < 0.25) {
+      // A slow sway, toward the centre and back: each tuft in its own time.
+      vec2 sway = (b / max(r, 1.0)) * (0.022 * sin(uTime * 0.9 + 6.28 * vnoise(b / 2.3)) + 0.008 * sin(uTime * 2.1 + 6.28 * vnoise(b / 0.5 + 4.0)));
+      vec2 qa = vec2(b.x * 0.951 + b.y * 0.309, -b.x * 0.309 + b.y * 0.951) / MAT_A + sway / MAT_A;
+      vec2 qb = vec2(b.x * 0.999 - b.y * 0.035, b.x * 0.035 + b.y * 0.999) / MAT_B + 0.37 + sway * 1.4 / MAT_B;
       float ha = readAt(tMatH, qa, ma).r;
       float hb = readAt(tMatH, qb, mb).r;
-      float pick = smoothstep(-0.12, 0.12, hb - ha + 0.5 * (vnoise(b / 3.7 + 21.0) - 0.5));
+      // The picture turns over at each repeat, and along a line where it turns it is its own mirror image: a slab that lies on the line
+      // has its twin across it. Each of the two layings is let go as it nears its own lines, and the other, whose lines lie elsewhere,
+      // has the bed there.
+      vec2 ta = 0.5 - abs(fract(qa) - 0.5);
+      vec2 tb = 0.5 - abs(fract(qb) - 0.5);
+      float clearA = smoothstep(0.0, 0.2, min(ta.x, ta.y));
+      float clearB = smoothstep(0.0, 0.2, min(tb.x, tb.y));
+      float pick = smoothstep(-0.12, 0.12, hb - ha + 0.5 * (vnoise(b / 3.7 + 21.0) - 0.5) + 1.2 * (clearB - clearA));
       // Closer than the picture is fine it is let go soft, and the finer tile of the same weed lies over it as hair: every tuft is made of strands.
       float fine = smoothstep(0.012, 0.004, px);
       near3 = mix(readAt(tMat, qa, ma, 1.2 * fine).rgb, readAt(tMat, qb, mb, 1.2 * fine).rgb, pick);
@@ -259,7 +297,13 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
       }
     }
     // Rust in one bed, gold in the next; gold in the heart of a patch, rust at its torn edge.
-    float tone = mix(0.5 * vnoise(pq / vec2(9.0, 110.0) + 5.0) + 0.3 * vnoise(pq / vec2(2.6, 40.0)), 0.5 * vnoise(b / 27.0 + 5.0) + 0.3 * vnoise(b / 9.0), rimEye) + 0.2 * vnoise(b / 6.0);
+    float tone = 0.2 * vnoise(b / 6.0);
+#if EYE_RIM < 2
+    tone += (1.0 - rimEye) * (0.5 * vnoise(pq / vec2(9.0, 110.0) + 5.0) + 0.3 * vnoise(pq / vec2(2.6, 40.0)));
+#endif
+#if EYE_RIM > 0
+    tone += rimEye * (0.5 * vnoise(b / 27.0 + 5.0) + 0.3 * vnoise(b / 9.0));
+#endif
     float heart = smoothstep(edge, edge + 0.28, field);
     vec3 far3 = mix(vec3(0.17, 0.06, 0.02), vec3(0.31, 0.14, 0.035), smoothstep(0.3, 0.55, tone));
     far3 = mix(far3, vec3(0.46, 0.29, 0.065), smoothstep(0.5, 0.75, tone) * (0.35 + 0.65 * heart));
@@ -271,24 +315,38 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     // edge, with dark clear water between them. The picture of them is laid along the way in, twice, tresses within tresses.
     float fromRim = smoothstep(8.0, 40.0, cameraPosition.y);
     float combed = 0.5;
-    if (fromRim > 0.0) {
-      // Laid by the way round and the way in, hardly bent, so that every tress runs to the centre. The picture turns over at each repeat
-      // and all three sizes start from the same line, so the place where the way round begins again shows no seam.
+#if EYE_RIM > 0
+    {
+      // Laid by the way round and the way in, hardly bent, so that every tress runs to the centre. Round the lake the picture runs on
+      // into itself and is never turned over (turned over, the tresses either side of the turn were a butterfly). Each size goes round
+      // a whole number of times (61, 18 and 237), so the place where the way round begins again shows no seam.
       vec2 cq = vec2(a2 * 640.0 + bend.x * 9.0, r + bend.y * 16.0);
-      vec3 ca = readRound(tComb, cq / vec2(66.0, 44.0), b, 640.0 / 66.0, 1.0 / 44.0).rgb;
-      vec3 cb = readRound(tComb, cq / vec2(228.0, 152.0), b, 640.0 / 228.0, 1.0 / 152.0).rgb;
+      vec3 ca = readRound(tComb, cq / vec2(COMB_A, 44.0), b, 640.0 / COMB_A, 1.0 / 44.0).rgb;
+      vec3 cb = readRound(tComb, cq / vec2(COMB_B, 152.0), b, 640.0 / COMB_B, 1.0 / 152.0).rgb;
       float la = dot(ca, vec3(0.4, 0.5, 0.1));
       float lb = dot(cb, vec3(0.4, 0.5, 0.1));
       // The finest size is hair on the tresses, told only as near as a pixel can hold it.
       float hairy = smoothstep(0.5, 0.12, px);
       vec3 cc = vec3(0.34, 0.105, 0.0065);
-      if (hairy > 0.0) cc = readRound(tComb, cq / vec2(17.0, 11.3), b, 640.0 / 17.0, 1.0 / 11.3).rgb;
+      if (hairy > 0.0) cc = readRound(tComb, cq / vec2(COMB_C, 11.3), b, 640.0 / COMB_C, 1.0 / 11.3).rgb;
       float lc = dot(cc, vec3(0.4, 0.5, 0.1));
       combed = clamp(2.4 * la + 2.0 * lb - 0.14 + hairy * 1.6 * (lc - 0.19), 0.0, 1.0);
       vec3 strands = ca * (0.45 + 2.9 * lb) * mix(vec3(1.0), cc / vec3(0.34, 0.105, 0.0065) * vec3(1.0, 1.0, 0.25) + vec3(0.0, 0.0, 0.75), 0.6 * hairy) * vec3(0.92, 1.25, 3.4);
       far3 = mix(far3, mix(far3 * 0.7, strands, 0.8), fromRim);
     }
-    vec3 weed = mix(far3 * (0.75 + 0.5 * mix(vnoise(pq / vec2(1.3, 19.0) + 2.0), vnoise(b / 3.1 + 2.0), rimEye)), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
+#endif
+    // The streaks of the far patch are not worked out where every strand is told.
+    float streaks = 0.5;
+    if (told < 1.0) {
+      streaks = 0.0;
+#if EYE_RIM < 2
+      streaks += (1.0 - rimEye) * vnoise(pq / vec2(1.3, 19.0) + 2.0);
+#endif
+#if EYE_RIM > 0
+      streaks += rimEye * vnoise(b / 3.1 + 2.0);
+#endif
+    }
+    vec3 weed = mix(far3 * (0.75 + 0.5 * streaks), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
     float high = mix(mix(0.5, combed, fromRim), mh, told);
     // The strands that stand highest are the palest: gold where the low sun finds them.
     weed *= mix(vec3(1.0), vec3(1.5, 1.38, 0.95), told * smoothstep(0.42, 0.85, mh));

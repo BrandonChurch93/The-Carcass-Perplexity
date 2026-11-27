@@ -189,6 +189,18 @@ vec3 skyIrradiance(vec3 n);
 // The bank of mist at the foot of the far wall as a mirror holds it: a ray that leaves the water low ends in it. along is metres along the
 // far shore and up is metres over the water where the ray meets the wall. The march of the air is told here in one look: the same heaps
 // at the same places, summed through the depth of the bank by rule. rgb is its light and a how much of the wall it hides.
+// The light of the sky in the mist. The bank lies in the shade of the rim, so most of it is the cool light from overhead and only a
+// little is the warm low sky behind it.
+vec3 mistSkyLight(vec3 low) {
+  return 0.34 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(0.84, 0.95, 1.12) + 0.09 * low;
+}
+
+// How high on the far shore a mirror at ro would read if the water lay still: the mist is soft and stands low, so the water gives it
+// back where a flat mirror would, under the waterline as far as it stands over it, however the ripples draw out the wall behind it.
+float stillUp(vec3 ro, vec3 rd, float t) {
+  return ro.y + max(cameraPosition.y - ro.y, 0.0) / max(length(ro.xz - cameraPosition.xz), 1.0) * t * length(rd.xz);
+}
+
 vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   if (uMistOn <= 0.0 || uMistA.x <= 0.0) return vec4(0.0);
   vec4 big = texture(tMistNoise, vec3(along / 1300.0, 60.0 / 1300.0, uTime * 0.0042));
@@ -197,19 +209,22 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   if (uMistC.y > 0.0) cover *= smoothstep(uMistC.y, 0.3 * uMistC.y, abs(along - uMistC.x));
   float sheetTop = uMistA.y * (0.35 + 1.5 * mid.g);
   float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
+  stands = mix(stands, 1.0, 0.6);
+  cover = mix(cover, 1.0, 0.5);
   float top = uMistA.z * stands * (0.35 + 1.5 * mid.r) + sheetTop;
   vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
   float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
   // A bank that is not torn stands in the mirror as one soft bank, not as a row of heaps.
-  heap = mix(1.0, heap, uMistB.z);
+  // And water that is never quite flat gives back no single heap: in the mirror the bank is nearly whole, with a soft top.
+  heap = mix(1.0, heap, 0.3 * uMistB.z);
   float h = up / (top * heap);
-  float bank = uMistB.y * cover * stands * mix(1.0, smoothstep(0.2, 0.9, heap), uMistB.z) * 0.45 * uMistA.w * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
+  float bank = uMistB.y * cover * stands * 0.6 * min(uMistA.w, 320.0) * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
   float sheet = uMistB.x * cover * min(sheetTop / max(rd.y, 1e-3), 0.5 * uMistA.x) * exp(-up / max(sheetTop, 0.05));
   float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * uMistC.w * (1.0 - uSolo);
   float toSun = dot(rd, uSunDir);
   float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
-  vec3 lit = 0.36 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.4 * skyRadiance(normalize(vec3(rd.x, 0.05, rd.z)))
-    + uSunColour * (0.16 * 0.8 * sun * (0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun));
+  vec3 lit = mistSkyLight(skyRadiance(normalize(vec3(rd.x, 0.05, rd.z))))
+    + uSunColour * (0.2 * 0.8 * sun * (0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun));
   return vec4(lit * (2.5 / 3.14159), a);
 }
 
@@ -326,10 +341,10 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
       vec3 slate = skyRadiance(normalize(vec3(rd.x, max(rd.y, 0.35), rd.z))) * mix(0.62, 0.26, smoothstep(0.03, 0.3, rd.y));
       float lum = dot(plate, vec3(0.3, 0.5, 0.2));
       plate = mix(plate, slate, over * (1.0 - 0.75 * smoothstep(0.5, 1.6, lum / max(dot(slate, vec3(0.33)), 1e-3) * 0.25)));
-      vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, ro.y + rd.y * t, plate);
+      vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, stillUp(ro, rd, t), plate);
       return mix(plate, bank.rgb, bank.a);
     }
-    vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, ro.y + rd.y * t, plate);
+    vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, stillUp(ro, rd, t), plate);
     return mix(mix(plate, sky, smoothstep(0.9, 0.995, v)), bank.rgb, bank.a);
   }
   return mix(plate, sky, smoothstep(0.9, 0.995, v));
