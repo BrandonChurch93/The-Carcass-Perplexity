@@ -5,6 +5,7 @@
 import { DEAD, K1_AT, K1_DIR, STUCK, rel } from '../shared/anchors';
 import { BRINE_GLSL } from '../shared/brine-glsl';
 import { RIG_GLSL } from '../shared/glsl';
+import { FAR, NEAR } from './field';
 
 /** True: the fine patches are raised by the pictures' heights (their vertices read the height maps). False: they are level and only shaded. */
 export const RELIEF: boolean = true;
@@ -168,17 +169,21 @@ uniform sampler2D tFieldFar;
 // The steps of the ground from one pixel to the next, in metres, for fieldAt's reads. A fragment shader sets them ONCE, as the first
 // lines of main and outside every branch: fieldDx = dFdx(vWorld.xz); fieldDy = dFdy(vWorld.xz);. Left at zero the finest level is read.
 // (fieldAt branches, and is called from branches: a read that takes its level from the screen inside a branch is not the same twice
-// in the software renderer, which shades four pixels together. So the steps are given, never taken there.)
+// in the software renderer, which shades four pixels together. So the steps are given, never taken there. The level is worked out
+// from them here and read with textureLod: textureGrad costs the software renderer a quarter of the frame.)
 vec2 fieldDx = vec2(0.0);
 vec2 fieldDy = vec2(0.0);
 // r metres to the shore (negative in brine), g how thin the crust is, b how stained the ground is.
 vec3 fieldAt(vec2 xz) {
   vec2 a = abs(xz);
   float m = max(a.x, a.y);
-  if (m < 236.0) return textureGrad(tFieldNear, xz / 512.0 + 0.5, fieldDx / 512.0, fieldDy / 512.0).rgb;
+  // (Level 0 of the near sheet is ${(NEAR.n / (2 * NEAR.half)).toFixed(1)} texels a metre, of the far sheet ${(FAR.n / (2 * FAR.half)).toFixed(1)}.)
+  float level = 0.5 * log2(max(max(dot(fieldDx, fieldDx), dot(fieldDy, fieldDy)), 1e-12));
+  float levelNear = max(level + ${Math.log2(NEAR.n / (2 * NEAR.half)).toFixed(4)}, 0.0);
+  if (m < 236.0) return textureLod(tFieldNear, xz / ${(2 * NEAR.half).toFixed(1)} + 0.5, levelNear).rgb;
   vec3 far = vec3(6.0, 0.0, 0.3);
-  if (m < 2040.0) far = mix(textureGrad(tFieldFar, xz / 4096.0 + 0.5, fieldDx / 4096.0, fieldDy / 4096.0).rgb, far, smoothstep(1900.0, 2040.0, m));
-  if (m < 254.0) return mix(textureGrad(tFieldNear, xz / 512.0 + 0.5, fieldDx / 512.0, fieldDy / 512.0).rgb, far, smoothstep(236.0, 254.0, m));
+  if (m < 2040.0) far = mix(textureLod(tFieldFar, xz / ${(2 * FAR.half).toFixed(1)} + 0.5, max(level + ${Math.log2(FAR.n / (2 * FAR.half)).toFixed(4)}, 0.0)).rgb, far, smoothstep(1900.0, 2040.0, m));
+  if (m < 254.0) return mix(textureLod(tFieldNear, xz / ${(2 * NEAR.half).toFixed(1)} + 0.5, levelNear).rgb, far, smoothstep(236.0, 254.0, m));
   return far;
 }`;
 
@@ -238,6 +243,15 @@ ${FIELD_GLSL}
 ${PLATE_GLSL}
 ${BRINE_GLSL}
 
+// The level of a sheet's pyramid for given steps of its uv from one pixel to the next: what textureGrad would pick, worked out here
+// so the read is a textureLod (textureGrad costs the software renderer several times a plain read).
+float levelOf(sampler2D t, vec2 gx, vec2 gy) {
+  vec2 n = vec2(textureSize(t, 0));
+  gx *= n;
+  gy *= n;
+  return max(0.5 * log2(max(max(dot(gx, gx), dot(gy, gy)), 1e-12)), 0.0);
+}
+
 void main() {
   vec3 p = vWorld;
   vec3 toEye = cameraPosition - p;
@@ -245,7 +259,7 @@ void main() {
   vec3 v = toEye / dist;
   vec3 ng = normalize(vNormal);
   // The steps of the ground from one pixel to the next, taken here, once, before any branch. Every sheet read inside a branch below is
-  // given its steps from these (textureGrad): a step taken inside a branch is not the same twice in the software renderer.
+  // given its level from these (levelOf): a step taken inside a branch is not the same twice in the software renderer.
   vec3 px3 = dFdx(p);
   vec3 py3 = dFdy(p);
   vec2 px = px3.xz;
@@ -256,7 +270,7 @@ void main() {
   vec4 wide = texture2D(tGrain, p.xz / 97.0 + 0.11);
   vec4 mid = texture2D(tGrain, (p.xz + (wide.ba - 0.5) * 7.0) / 13.0 + 0.37);
   vec4 fine = vec4(0.5);
-  if (dist < 420.0) fine = textureGrad(tGrain, p.xz / 1.9, px / 1.9, py / 1.9);
+  if (dist < 420.0) fine = textureLod(tGrain, p.xz / 1.9, levelOf(tGrain, px / 1.9, py / 1.9));
   float s = f.r + (fine.r - 0.5) * 0.1;
   float t = max(s, 0.0);
   // Where the crust is thin it is broken slabs on wet mud. (A shore of the flats is the pans themselves, going under.)
@@ -306,16 +320,16 @@ void main() {
     float lo = min(la, lb) * 3.0;
     ax *= min(1.0, lo / max(la, 1e-7));
     ay *= min(1.0, lo / max(lb, 1e-7));
-    vec4 nA = textureGrad(tPanN, uv, ax, ay);
-    sheet = textureGrad(tPan, uv, ax, ay).rgb / PAN_MEAN;
+    vec4 nA = textureLod(tPanN, uv, levelOf(tPanN, ax, ay));
+    sheet = textureLod(tPan, uv, levelOf(tPan, ax, ay)).rgb / PAN_MEAN;
     sh = nA.b;
     vec2 sl = nA.rg - 0.5;
     // Under a lens the sheet's grain is coarser than a pixel: the same sheet lies on it again a fifth the size, as the crystals.
     float crystal = smoothstep(0.0016, 0.0006, min(length(px), length(py)));
     if (crystal > 0.0) {
       vec2 uc = uv * 5.3 + pr.yx;
-      vec4 nC = textureGrad(tPanN, uc, ax * 5.3, ay * 5.3);
-      sheet *= mix(vec3(1.0), 0.45 + 0.55 * textureGrad(tPan, uc, ax * 5.3, ay * 5.3).rgb / PAN_MEAN, crystal);
+      vec4 nC = textureLod(tPanN, uc, levelOf(tPanN, ax * 5.3, ay * 5.3));
+      sheet *= mix(vec3(1.0), 0.45 + 0.55 * textureLod(tPan, uc, levelOf(tPan, ax * 5.3, ay * 5.3)).rgb / PAN_MEAN, crystal);
       sl += (nC.rg - 0.5) * 0.7 * crystal;
       sh += (nC.b - 0.5) * 0.15 * crystal;
     }
@@ -323,7 +337,7 @@ void main() {
     // (The rim is knobbed: its edge follows the lumps of the crust.)
     ep = e + (sh - 0.5) * 0.06 * (1.0 - 0.75 * k) - panGap(thin, pr, pw - pc);
     // (A broken plate's edge is ragged.)
-    float rv = textureGrad(tGrain, p.xz / 0.9 + 0.13, px / 0.9, py / 0.9).r;
+    float rv = textureLod(tGrain, p.xz / 0.9 + 0.13, levelOf(tGrain, px / 0.9, py / 0.9)).r;
     float rv2 = textureLod(tGrain, p.xz / 2.3 + 0.5, 2.0).r;
     // (And chipped: here and there the top has flaked off the edge, and what shows is what the plate lies on.)
     if (k > 0.0) ep += (panRag(tGrain, p.xz) - 0.05 * smoothstep(0.5, 0.68, rv)) * k;
@@ -393,8 +407,8 @@ void main() {
   // Thin crust over mud: the same pans, loose. Each is a plate lying on wet mud, drawn back from its neighbours and tipped; the gaps
   // between them are a hand to a stride wide and brine stands in them. A lifted edge shows its broken section and throws its shade.
   if (k > 0.0) {
-    vec3 silt = textureGrad(tSilt, p.xz / 3.0, px / 3.0, py / 3.0).rgb;
-    vec4 nS = textureGrad(tSiltN, p.xz / 3.0, px / 3.0, py / 3.0);
+    vec3 silt = textureLod(tSilt, p.xz / 3.0, levelOf(tSilt, px / 3.0, py / 3.0)).rgb;
+    vec4 nS = textureLod(tSiltN, p.xz / 3.0, levelOf(tSiltN, px / 3.0, py / 3.0));
     // The wallow (painted into the fine patch): its mud is lower, wetter and darker than any other, and the slabs tipped round it are whole.
     float sunk = vPaint.x * k;
     float tipped = vPaint.y * k;
@@ -407,8 +421,8 @@ void main() {
     vec2 grain = -(nS.rg - 0.5) * 0.8;
     if (close > 0.0) {
       // Close to the lens the silt's own grain is on the mud.
-      vec4 nS2 = textureGrad(tSiltN, p.xz / 0.7 + 0.31, px / 0.7, py / 0.7);
-      mudCol *= mix(vec3(1.0), 0.6 + 0.4 * textureGrad(tSilt, p.xz / 0.7 + 0.31, px / 0.7, py / 0.7).rgb / vec3(0.32, 0.281, 0.257), close);
+      vec4 nS2 = textureLod(tSiltN, p.xz / 0.7 + 0.31, levelOf(tSiltN, px / 0.7, py / 0.7));
+      mudCol *= mix(vec3(1.0), 0.6 + 0.4 * textureLod(tSilt, p.xz / 0.7 + 0.31, levelOf(tSilt, px / 0.7, py / 0.7)).rgb / vec3(0.32, 0.281, 0.257), close);
       grain -= (nS2.rg - 0.5) * 0.5 * close;
     }
     mudCol *= mix(vec3(1.0), vec3(0.42, 0.2, 0.17), seep);
@@ -436,18 +450,18 @@ void main() {
     vec2 uTy = vec2(py.x * 0.8 - py.y * 0.6, py.x * 0.6 + py.y * 0.8) / 3.1;
     vec2 uVx = vec2(px.x * 0.6 + px.y * 0.8, px.y * 0.6 - px.x * 0.8) / 4.7;
     vec2 uVy = vec2(py.x * 0.6 + py.y * 0.8, py.y * 0.6 - py.x * 0.8) / 4.7;
-    vec4 nT = textureGrad(tRockN, uT, uTx, uTy);
-    vec4 nV = textureGrad(tRockN, uV, uVx, uVy);
+    vec4 nT = textureLod(tRockN, uT, levelOf(tRockN, uTx, uTy));
+    vec4 nV = textureLod(tRockN, uV, levelOf(tRockN, uVx, uVy));
     float pickT = smoothstep(-0.1, 0.1, (mid.a - 0.5) * 2.5 + nT.b - nV.b);
-    vec3 pat = mix(textureGrad(tRock, uV, uVx, uVy).rgb, textureGrad(tRock, uT, uTx, uTy).rgb, pickT);
+    vec3 pat = mix(textureLod(tRock, uV, levelOf(tRock, uVx, uVy)).rgb, textureLod(tRock, uT, levelOf(tRock, uTx, uTy)).rgb, pickT);
     float pitT = mix(nV.b, nT.b, pickT);
     vec2 lT = mix(vec2(0.6 * (nV.r - 0.5) - 0.8 * (nV.g - 0.5), 0.8 * (nV.r - 0.5) + 0.6 * (nV.g - 0.5)), vec2(0.8 * (nT.r - 0.5) + 0.6 * (nT.g - 0.5), 0.8 * (nT.g - 0.5) - 0.6 * (nT.r - 0.5)), pickT) * 2.2;
     if (seen > 0.0) {
       vec2 uU = vec2(p.x * 0.28 + p.z * 0.96, p.z * 0.28 - p.x * 0.96) / 0.83 + 0.37;
       vec2 uUx = vec2(px.x * 0.28 + px.y * 0.96, px.y * 0.28 - px.x * 0.96) / 0.83;
       vec2 uUy = vec2(py.x * 0.28 + py.y * 0.96, py.y * 0.28 - py.x * 0.96) / 0.83;
-      vec4 nU = textureGrad(tRockN, uU, uUx, uUy);
-      pat *= mix(vec3(1.0), 0.5 + 0.5 * textureGrad(tRock, uU, uUx, uUy).rgb / vec3(0.379, 0.317, 0.286), seen);
+      vec4 nU = textureLod(tRockN, uU, levelOf(tRockN, uUx, uUy));
+      pat *= mix(vec3(1.0), 0.5 + 0.5 * textureLod(tRock, uU, levelOf(tRock, uUx, uUy)).rgb / vec3(0.379, 0.317, 0.286), seen);
       pitT = mix(pitT, pitT * 0.6 + nU.b * 0.4, seen);
       lT += vec2(0.28 * (nU.r - 0.5) - 0.96 * (nU.g - 0.5), 0.96 * (nU.r - 0.5) + 0.28 * (nU.g - 0.5)) * 1.8 * seen;
     }
@@ -463,9 +477,9 @@ void main() {
       vec2 uXy = py3.zy / 1.7;
       vec2 uZx = px3.xy / 1.7;
       vec2 uZy = py3.xy / 1.7;
-      vec4 nX = textureGrad(tRockSN, uX, uXx, uXy);
-      vec4 nZ = textureGrad(tRockSN, uZ, uZx, uZy);
-      patS = mix(textureGrad(tRockS, uZ, uZx, uZy).rgb, textureGrad(tRockS, uX, uXx, uXy).rgb, ax);
+      vec4 nX = textureLod(tRockSN, uX, levelOf(tRockSN, uXx, uXy));
+      vec4 nZ = textureLod(tRockSN, uZ, levelOf(tRockSN, uZx, uZy));
+      patS = mix(textureLod(tRockS, uZ, levelOf(tRockS, uZx, uZy)).rgb, textureLod(tRockS, uX, levelOf(tRockS, uXx, uXy)).rgb, ax);
       pitS = mix(nZ.b, nX.b, ax);
       bendS = mix(vec3(nZ.r - 0.5, nZ.g - 0.5, 0.0), vec3(0.0, nX.g - 0.5, nX.r - 0.5), ax) * 2.6;
     }
@@ -495,7 +509,7 @@ void main() {
   vec3 gn = normalize(cross(px3, py3));
   float sheer = smoothstep(0.86, 0.62, min(abs(gn.y), ng.y)) * (1.0 - rock) * smoothstep(120.0, 60.0, dist) * (1.0 - k);
   if (sheer > 0.0) {
-    vec4 gb = textureGrad(tGrain, vec2(dot(p.xz, vec2(0.7, 0.71)) / 0.9, p.y / 0.11), vec2(dot(px, vec2(0.7, 0.71)) / 0.9, px3.y / 0.11), vec2(dot(py, vec2(0.7, 0.71)) / 0.9, py3.y / 0.11));
+    vec4 gb = textureLod(tGrain, vec2(dot(p.xz, vec2(0.7, 0.71)) / 0.9, p.y / 0.11), levelOf(tGrain, vec2(dot(px, vec2(0.7, 0.71)) / 0.9, px3.y / 0.11), vec2(dot(py, vec2(0.7, 0.71)) / 0.9, py3.y / 0.11)));
     vec3 section = mix(vec3(0.17, 0.085, 0.07), vec3(0.4, 0.365, 0.34), 0.35 * smoothstep(0.35, 0.65, gb.r) + 0.65 * smoothstep(0.03, 0.07, p.y - vBase + 0.02)) * (0.7 + 0.5 * gb.g);
     // (Its foot stands in the brine and is dark with it.)
     section = mix(vec3(0.085, 0.04, 0.032), section, smoothstep(0.02, 0.16, p.y + (gb.b - 0.5) * 0.08));
@@ -509,7 +523,7 @@ void main() {
     float rise = p.y - vBase;
     vec3 sect = mix(vec3(0.15, 0.07, 0.055), vec3(0.47, 0.44, 0.41), smoothstep(lift - 0.014, lift - 0.006, rise));
     // (Its beds lie level: the sheet laid from above would run down it in stripes.)
-    sect *= 0.8 + 0.4 * textureGrad(tGrain, vec2(dot(p.xz, vec2(0.7, 0.71)) / 0.6, p.y / 0.07), vec2(dot(px, vec2(0.7, 0.71)) / 0.6, px3.y / 0.07), vec2(dot(py, vec2(0.7, 0.71)) / 0.6, py3.y / 0.07)).r;
+    sect *= 0.8 + 0.4 * textureLod(tGrain, vec2(dot(p.xz, vec2(0.7, 0.71)) / 0.6, p.y / 0.07), levelOf(tGrain, vec2(dot(px, vec2(0.7, 0.71)) / 0.6, px3.y / 0.07), vec2(dot(py, vec2(0.7, 0.71)) / 0.6, py3.y / 0.07))).r;
     sect *= 0.5 + 0.5 * smoothstep(SUNK, lift, rise);
     colour = mix(colour, sect, cut);
     bend *= 1.0 - cut;
@@ -525,14 +539,14 @@ void main() {
     vec2 uAy = knobUv(py, KNOB_A, 1.0);
     vec2 uBx = knobUv(px, KNOB_B, 1.43);
     vec2 uBy = knobUv(py, KNOB_B, 1.43);
-    vec4 nA = textureGrad(tKnobN, uA, uAx, uAy);
-    vec4 nB = textureGrad(tKnobN, uB, uBx, uBy);
+    vec4 nA = textureLod(tKnobN, uA, levelOf(tKnobN, uAx, uAy));
+    vec4 nB = textureLod(tKnobN, uB, levelOf(tKnobN, uBx, uBy));
     float pick = smoothstep(-0.08, 0.08, nB.b - nA.b + (textureLod(tGrain, p.xz / 3.1 + 0.6, 3.0).r - 0.5) * 1.2);
     bool second = pick > 0.5;
     vec2 uP = second ? uB : uA;
     vec2 gx = second ? uBx : uAx;
     vec2 gy = second ? uBy : uAy;
-    knobCol = textureGrad(tKnob, uP, gx, gy).rgb;
+    knobCol = textureLod(tKnob, uP, levelOf(tKnob, gx, gy)).rgb;
     knobH = mix(nA.b, nB.b, pick);
     vec2 sA = nA.rg - 0.5;
     vec2 sB = nB.rg - 0.5;
@@ -541,8 +555,8 @@ void main() {
     float crystal = smoothstep(0.0016, 0.0005, min(length(px), length(py)));
     if (crystal > 0.0) {
       vec2 uC = uP * 6.1 + 0.23;
-      vec4 nC = textureGrad(tKnobN, uC, gx * 6.1, gy * 6.1);
-      vec3 cC = textureGrad(tKnob, uC, gx * 6.1, gy * 6.1).rgb;
+      vec4 nC = textureLod(tKnobN, uC, levelOf(tKnobN, gx * 6.1, gy * 6.1));
+      vec3 cC = textureLod(tKnob, uC, levelOf(tKnob, gx * 6.1, gy * 6.1)).rgb;
       knobCol *= mix(1.0, 0.55 + 0.45 * dot(cC, vec3(0.3333)) / 0.235, crystal * smoothstep(0.35, 0.6, knobH));
       vec2 sC = nC.rg - 0.5;
       kb += (second ? vec2(KNOB_B.x * sC.x + KNOB_B.y * sC.y, KNOB_B.x * sC.y - KNOB_B.y * sC.x) : vec2(KNOB_A.x * sC.x + KNOB_A.y * sC.y, KNOB_A.x * sC.y - KNOB_A.y * sC.x)) * 0.8 * crystal;
@@ -559,8 +573,8 @@ void main() {
     vec3 g = vec3(1.0);
     vec4 ng2 = vec4(0.5);
     if (muddy > 0.0) {
-      g = textureGrad(tSilt, uG, px / 0.62, py / 0.62).rgb / vec3(0.32, 0.281, 0.257);
-      ng2 = textureGrad(tSiltN, uG, px / 0.62, py / 0.62);
+      g = textureLod(tSilt, uG, levelOf(tSilt, px / 0.62, py / 0.62)).rgb / vec3(0.32, 0.281, 0.257);
+      ng2 = textureLod(tSiltN, uG, levelOf(tSiltN, px / 0.62, py / 0.62));
     }
     colour *= mix(vec3(1.0), 0.62 + 0.38 * g, muddy);
     // The rind at a waterline and the rims a stride back from it: salt grown in knobs a few fingers across, white on top, stained in
@@ -570,9 +584,9 @@ void main() {
       vec2 uK = vec2(p.x * 0.6 - p.z * 0.8, p.x * 0.8 + p.z * 0.6) / 0.55;
       vec2 uKx = vec2(px.x * 0.6 - px.y * 0.8, px.x * 0.8 + px.y * 0.6) / 0.55;
       vec2 uKy = vec2(py.x * 0.6 - py.y * 0.8, py.x * 0.8 + py.y * 0.6) / 0.55;
-      vec4 nk = textureGrad(tCrustN, uK, uKx, uKy);
-      float lit2 = textureGrad(tCrustN, uK + vec2(-0.86 * 0.6 - 0.5 * 0.8, -0.86 * 0.8 + 0.5 * 0.6) * 0.035, uKx, uKy).b;
-      vec3 ck = textureGrad(tCrust, uK, uKx, uKy).rgb / vec3(0.413, 0.304, 0.269);
+      vec4 nk = textureLod(tCrustN, uK, levelOf(tCrustN, uKx, uKy));
+      float lit2 = textureLod(tCrustN, uK + vec2(-0.86 * 0.6 - 0.5 * 0.8, -0.86 * 0.8 + 0.5 * 0.6) * 0.035, levelOf(tCrustN, uKx, uKy)).b;
+      vec3 ck = textureLod(tCrust, uK, levelOf(tCrust, uKx, uKy)).rgb / vec3(0.413, 0.304, 0.269);
       vec3 knob = mix(vec3(0.2, 0.075, 0.06), mix(vec3(0.52, 0.5, 0.48), vec3(0.42, 0.3, 0.26), exp(-t / 0.4)) * (0.6 + 0.4 * greyed(ck, 0.4)), smoothstep(0.4, 0.72, nk.b));
       colour = mix(colour, knob, knobby * 0.85);
       bend -= (nk.rg - 0.5) * 2.4 * knobby;
@@ -599,13 +613,13 @@ void main() {
     vec2 uAy = knobUv(py, KNOB_A, 1.5);
     vec2 uBx = knobUv(px, KNOB_B, 2.1);
     vec2 uBy = knobUv(py, KNOB_B, 2.1);
-    vec4 nA = textureGrad(tSlickN, uA, uAx, uAy);
-    vec4 nB = textureGrad(tSlickN, uB, uBx, uBy);
+    vec4 nA = textureLod(tSlickN, uA, levelOf(tSlickN, uAx, uAy));
+    vec4 nB = textureLod(tSlickN, uB, levelOf(tSlickN, uBx, uBy));
     float pick = smoothstep(-0.08, 0.08, nB.b - nA.b + (textureLod(tGrain, p.xz / 2.7 + 0.2, 3.0).r - 0.5) * 1.2);
     bool second = pick > 0.5;
     vec2 uP = second ? uB : uA;
-    vec3 cM = textureGrad(tSlick, uP, second ? uBx : uAx, second ? uBy : uAy).rgb / SLICK_MEAN;
-    vec4 nP = textureGrad(tGrain, p.xz / 3.7 + 0.21, px / 3.7, py / 3.7);
+    vec3 cM = textureLod(tSlick, uP, levelOf(tSlick, second ? uBx : uAx, second ? uBy : uAy)).rgb / SLICK_MEAN;
+    vec4 nP = textureLod(tGrain, p.xz / 3.7 + 0.21, levelOf(tGrain, px / 3.7, py / 3.7));
     float clod = mix(nA.b, nB.b, pick) * 0.5 + nP.g * 0.5;
     vec2 sA = nA.rg - 0.5;
     vec2 sB = nB.rg - 0.5;
@@ -659,8 +673,8 @@ void main() {
     vec2 uS = vec2(p.x * 0.6 + p.z * 0.8, p.z * 0.6 - p.x * 0.8) / 1.7;
     vec2 uSx = vec2(px.x * 0.6 + px.y * 0.8, px.y * 0.6 - px.x * 0.8) / 1.7;
     vec2 uSy = vec2(py.x * 0.6 + py.y * 0.8, py.y * 0.6 - py.x * 0.8) / 1.7;
-    vec3 cS = textureGrad(tSlick, uS, uSx, uSy).rgb / SLICK_MEAN;
-    vec2 sS = textureGrad(tSlickN, uS, uSx, uSy).rg - 0.5;
+    vec3 cS = textureLod(tSlick, uS, levelOf(tSlick, uSx, uSy)).rgb / SLICK_MEAN;
+    vec2 sS = textureLod(tSlickN, uS, levelOf(tSlickN, uSx, uSy)).rg - 0.5;
     float seenS = smoothstep(60.0, 20.0, dist);
     float m = soaked * (1.0 - 0.75 * churn);
     colour = mix(colour * mix(vec3(1.0), vec3(0.5, 0.3, 0.26), m), vec3(0.085, 0.04, 0.032) * mix(vec3(1.0), cS, seenS), m * 0.85);
@@ -762,7 +776,7 @@ void main() {
   // (And where the knob bank lies under the level, in its bays and pools: a hand of brine over the knobs.)
   under = max(under, bay);
   if (under > 0.0) {
-    vec2 run = (textureGrad(tGrain, p.xz / 7.3 + vec2(0.034, 0.019) * uTime, px / 7.3, py / 7.3).ba - 0.5) * 0.06 + (textureGrad(tGrain, p.xz / 4.1 - vec2(0.021, 0.05) * uTime, px / 4.1, py / 4.1).ba - 0.5) * 0.04;
+    vec2 run = (textureLod(tGrain, p.xz / 7.3 + vec2(0.034, 0.019) * uTime, levelOf(tGrain, px / 7.3, py / 7.3)).ba - 0.5) * 0.06 + (textureLod(tGrain, p.xz / 4.1 - vec2(0.021, 0.05) * uTime, levelOf(tGrain, px / 4.1, py / 4.1)).ba - 0.5) * 0.04;
     lit = mix(lit, brineShade(vec3(p.x, 0.0, p.z), normalize(vec3(run.x, 1.0, run.y)), v, mix(s, -0.1, bay), vec4(0.0), px, py), under);
   }
   // In the brine's mirror the ground under the brine's level is not there: it would stand between the mirror's lens and the world.
