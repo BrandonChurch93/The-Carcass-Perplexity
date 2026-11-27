@@ -85,7 +85,7 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
 varying vec3 vRestNormal;
-varying float vKind;
+flat varying float vKind;
 void main() {
   mat4 bone = boneOf(aBones);
   vec4 w = modelMatrix * bone * vec4(position, 1.0);
@@ -118,7 +118,7 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
 varying vec3 vRestNormal;
-varying float vKind;
+flat varying float vKind;
 const vec3 SHAG_MEAN = vec3(0.237, 0.215, 0.232);
 void main() {
   // Where the picture of the burn lies, and how fast that runs over the screen: worked out here, before any branch, so that the
@@ -279,7 +279,9 @@ void main() {
   vec3 side = normalize(cross(way, toCamera));
   // Broad where it leaves the body, drawn in to its end.
   // The herd's locks are the fine straight ones: narrower, so they read as hanging hair and not as leaves.
-  float w = aCard.x * size * (1.0 - 0.38 * uLockKind);
+  // The herd's lock pictures leave the outer fifth of a card empty: the card is drawn that much narrower and shows the same of its picture.
+  float trim = 1.0 - 0.22 * uLockKind;
+  float w = aCard.x * size * (1.0 - 0.38 * uLockKind) * trim;
   // No lock hangs straight: each is kinked and waved its own way, more toward its end.
   float kink = sin(t * (4.0 + 5.0 * fract(seed * 3.3)) + seed * 40.0) + 0.5 * sin(t * (11.0 + 6.0 * fract(seed * 5.9)) + seed * 71.0);
   p += side * (position.x * w + 0.55 * w * kink * t);
@@ -299,7 +301,7 @@ void main() {
   vLight = lit * occ;
   // Inside the canal the light is the mouth's whichever way a hair looks: the rime on a lock takes the lock's own light.
   vFrostLight = uLockKind > 0.5 ? lit * 1.1 : runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
-  vAt = vec4(position.x, t, seed, aCard.z);
+  vAt = vec4(position.x * trim, t, seed, aCard.z);
   // How much this lock is frosted: it looks up, and it is on the weather side.
   // Along the outline in the open the locks stand clear of the rime and dark against the snow behind them.
   float outline = pow(1.0 - abs(dot(nb, toCamera)), 3.0) * (1.0 - uDoor.w);
@@ -336,9 +338,11 @@ void main() {
     float y = which < 5.5 ? mix(0.019, 0.489, t) : mix(0.513, 0.978, t);
     vec2 uv = vec2(0.114 + 0.155 * col + 0.07 * u * flip, 1.0 - y);
     // Its outline is frayed by its own strands: the cut wanders with the hair's brightness, and the black the picture stands on is taken out of its edge.
-    float cut = texture2D(tLockBA, uv).r;
+    vec2 uvDx = dFdx(uv);
+    vec2 uvDy = dFdy(uv);
+    float cut = textureGrad(tLockBA, uv, uvDx, uvDy).r;
     if (cut < 0.5) discard;
-    pic = texture2D(tLockB, uv).rgb;
+    pic = textureGrad(tLockB, uv, uvDx, uvDy).rgb;
     float strand = max(pic.r, max(pic.g, pic.b));
     if (strand < 0.1 + 0.14 * t * t) discard;
     pic /= max(cut, 0.5);
@@ -359,6 +363,12 @@ void main() {
     own = fract(seed * 3.17);
     run = t;
     body = 0.55 + 0.45 * smoothstep(0.1, 0.5, max(pic.r, max(pic.g, pic.b)));
+    // It does not end square, as a card does: toward its end it parts into a few wet points, each ending where it ends.
+    float points = 2.0 + floor(3.0 * fract(seed * 2.71));
+    float k = (0.5 + 0.5 * u) * points + 0.35 * t * sin(t * 5.0 + seed * 23.0);
+    float f = abs(fract(k) - 0.5);
+    float ends = 0.7 + 0.3 * fract(sin(floor(k) * 12.9898 + seed * 78.233) * 43758.5453);
+    if (f > 0.5 * (1.0 - smoothstep(ends - 0.42, ends, t))) discard;
   } else {
     // A lock is not a blade: it is a few strands, matted into one at the root, that part toward their ends, and each ends where it ends.
     float strands = 3.0 + floor(3.0 * fract(seed * 2.71));
@@ -366,9 +376,10 @@ void main() {
     float f = fract(k) - 0.5;
     own = fract(sin(floor(k) * 12.9898 + seed * 78.233) * 43758.5453);
     run = t / (0.6 + 0.4 * own);
-    float halfW = mix(0.5, 0.15, smoothstep(0.15, 1.0, run));
+    // Each strand is drawn out to a point, not cut off.
+    float halfW = mix(0.5, 0.17, smoothstep(0.15, 0.8, run)) * (1.0 - smoothstep(0.72, 1.0, run));
     if (run > 1.0 || abs(f) > halfW) discard;
-    body = sqrt(max(0.0, 1.0 - (f / halfW) * (f / halfW)));
+    body = sqrt(max(0.0, 1.0 - (f / max(halfW, 1e-3)) * (f / max(halfW, 1e-3))));
   }
   float lum = dot(pic, vec3(0.333)) / dot(mean_, vec3(0.333));
   float singe = 1.0 - vInfo.w;
