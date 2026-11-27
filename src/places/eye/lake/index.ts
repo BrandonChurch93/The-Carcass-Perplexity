@@ -334,7 +334,11 @@ void main() {
 #if EYE_LAPS
   // The bed under a ring is never level: where the water is a hand deep a wave is slow and where it is knee deep it is quick, so a ring
   // that left a leg round is drawn out of round within a metre, each part of it by the bed it has crossed.
-  float uneven = vnoise(p.xz / 1.3 + 3.0) + 0.5 * vnoise(p.xz / 0.37 + 9.0) - 0.75;
+  // (Only a low eye can tell it: from the rim a ring is a pixel or two.)
+  float uneven = 0.0;
+#if EYE_NEAR > 1
+  uneven = vnoise(p.xz / 1.3 + 3.0) + 0.5 * vnoise(p.xz / 0.37 + 9.0) - 0.75;
+#endif
   bool lapsNear = uLapCount > 0 && length(p.xz - uLapZone.xy) < uLapZone.z && r > uLapZone.w && min(length(fx), length(fy)) < 0.45;
   for (int i = 0; i < ${LAPS}; i++) {
     if (!lapsNear || i >= uLapCount) break;
@@ -461,6 +465,10 @@ void main() {
   if (crusted < 1.0) {
     // Under the lip the bed falls away, steep and then steeper, ledge under ledge: pale rock, seen for as far down as the water lets the light go and come back.
     float inside = max(-shoalAt, 0.0) + 0.2;
+#if EYE_LEAVE
+    // From over it the wall does not fall at one rate all the way round: where it is steep the pale of it is a line, where it shelves a wide band.
+    inside *= mix(1.0, 0.35 + 1.9 * vnoise(p.xz / 85.0 + 2.0), uLeave.x);
+#endif
     float down = 0.3 + 3.2 * rimEye + uWallFall * (mix(1.7, 0.22, rimEye) * inside + mix(0.16, 0.004, rimEye) * inside * inside);
     vec2 b = p.xz + rf.xz * (min(down, 12.0) / fall) * 0.4;
     vec3 at = vec3(p.x, 0.0, p.z);
@@ -468,6 +476,10 @@ void main() {
     float open = mix(skyOpen(at), 0.92, smoothstep(4.0, 60.0, inside));
     // The low sun hardly enters the deep: what little does is the same everywhere, so the shade of the rim draws no edge on it.
     vec3 e = skyDown * open + uSunColour * 0.05;
+#if EYE_EDGE
+    // Beside the edge the sun that lights the lip goes on down its face for a few metres, bent steep by the surface: the top of the wall is pale.
+    e += uSunColour * (0.55 * exp(-down / 3.5));
+#endif
     // Down to the rock from the sky overhead, and up again along the look.
     vec3 through = exp(-uAbsorb * mix(1.5, uClear, rimEye) * down * (1.0 + 1.0 / fall));
     vec3 deep = uDeep * skyDown * open * (1.0 - through);
@@ -694,7 +706,7 @@ void main() {
 // as what it lets in. So whatever a whole frame has no use for (the looks of a low eye seen from the rim, the water from over its centre
 // before the camera leaves, rings where nothing drinks) is left out of the program itself, by these names. Each is told from the frame
 // alone, by the same test the shader would have made of its uniforms, so the picture is the same picture.
-function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean, edge: boolean): Record<string, number> {
+function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean, edge: boolean, shingle: boolean): Record<string, number> {
   const rim = eyeHeight <= 8 ? 0 : eyeHeight >= 40 ? 2 : 1;
   return {
     // rimEye: 0 where it is nothing, 2 where it is all, 1 between.
@@ -709,6 +721,8 @@ function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing:
     EYE_MIRRORED: mirrored ? 1 : 0,
     EYE_RUFFLED: ruffled ? 1 : 0,
     EYE_EDGE: edge ? 1 : 0,
+    // The shore's stones gone on under the water, each with its height: only the shot that stands on the shore can tell them.
+    EYE_SHINGLE: shingle ? 1 : 0,
   };
 }
 
@@ -795,7 +809,7 @@ export function create(ctx: Context): Piece {
   // Under the long lens of the climb the short lengths are finer than its pixels: the train is of longer ones.
   const ringsClimb = ringsOf([9, 15, 24, 36, 52, 97], [0.011, 0.011, 0.012, 0.012, 0.011, 0.01], 1);
   const material = new THREE.ShaderMaterial({
-    defines: variantOf(0, 0, false, false, false, false, false, false, false),
+    defines: variantOf(0, 0, false, false, false, false, false, false, false, false),
     uniforms: {
       ...rig,
       ...bed,
@@ -856,6 +870,7 @@ void main() {
   ctx.scene.add(ctx.parts.built('riser', risers));
   ctx.reflected.push(risers);
 
+  let onShore = false;
   const rise = ctx.events.rise;
   const end = ctx.events.end;
   const hidden: THREE.Object3D[] = [];
@@ -863,6 +878,7 @@ void main() {
   return {
     setTime: (t) => {
       waves.setTime(t);
+      onShore = during('eye-04');
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
       const overIt = during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0;
@@ -944,6 +960,7 @@ void main() {
         ctx.reflected.length > 0 && camera.position.y < 60,
         (material.uniforms.uRuffle as THREE.IUniform<number>).value > 0,
         (material.uniforms.uWallFall as THREE.IUniform<number>).value > 1,
+        onShore,
       );
       if (Object.entries(variant).some(([name, value]) => (material.defines as Record<string, number>)[name] !== value)) {
         material.defines = variant;
