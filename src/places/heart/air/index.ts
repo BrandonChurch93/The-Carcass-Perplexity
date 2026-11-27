@@ -96,8 +96,9 @@ const BODIES: readonly Body[] = [
   // The smoke that rises from the seam the hero feeds at, lit by the melt in it: it lies low behind the animal in the feeding shot, under the horizon of that lens, and what is behind the animal is the dark of the far smoke.
   { at: [-397, 181], radius: 11, height: 6.5, lean: BANK_LEAN, dense: 0.035, repeat: 9, hard: 2.6, climb: 1.6, colour: SOOT, foot: 0.1, lake: [1.1, 3], floor: [1.6, 3], lights: 0.6, tops: 0.7, solid: 0.4, shots: { 'heart-02': 1, rest: 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
+  // With the plume gone from in front of it to behind the buttress's west shoulder it stands whole, and at its old light it was a wide hot wall: it takes two thirds of that, lower.
   // It is thin enough to see into and lit through its own foot: orange at its base, dark smoke above, in lumps. As one thick mass lit by one read of the floor it stood as a flat pink block.
-  { at: [1200, 5], base: -25, radius: 185, height: 400, lean: [0.08, 0.1], dense: 0.016, widen: 0.25, repeat: 110, hard: 1.8, climb: 5, colour: AMBER, foot: 0.06, lake: [4.5, 60], floor: [19.0, 70], lights: 0.5, tops: 0.15, solid: 0.3, streak: 1.9, taper: 0.9, sparse: 0.03, through: 0.6 },
+  { at: [1200, 5], base: -25, radius: 185, height: 400, lean: [0.08, 0.1], dense: 0.016, widen: 0.25, repeat: 110, hard: 1.8, climb: 5, colour: AMBER, foot: 0.06, lake: [3.4, 50], floor: [13.0, 50], lights: 0.5, tops: 0.15, solid: 0.3, streak: 1.9, taper: 0.9, sparse: 0.03, through: 0.6 },
 ];
 
 /** Until the other folders push their own, the vapours and the hot air the pictures show. Used only when the lists are empty. */
@@ -250,13 +251,13 @@ export function create(ctx: HeartContext): HeartPiece {
         const { source: s, index } = order[i] as (typeof order)[number];
         const smoke = s.kind !== 'steam';
         // No two vents are alike. The sources of a row of pools come with one size, one height and no lean, and stood as the same upright puff
-        // drawn again at every pool. Each takes its own from its seed: half to one and a half times the height, a foot of its own, its own
+        // drawn again at every pool. Each takes its own from its seed: a half to one and a quarter times the height, a foot of its own, its own
         // strength, and the low wind's lean (the banks': to the west and a little south) by its own share and a little off its line.
         const seed = steamSeed[index % steamSeed.length] as number;
         const own = (k: number): number => steamOwn[(index % 64) * 5 + k - 1] as number;
         const vary = smoke ? 0 : 1;
         const radius = Math.max(0.05, s.radius * (1 + vary * (own(1) * 0.9 - 0.3)));
-        const rise = s.rise * (1 + vary * (own(2) * 1.0 - 0.45));
+        const rise = s.rise * (1 + vary * (own(2) * 0.7 - 0.45));
         const strength = s.strength * (1 + vary * (own(3) * 0.7 - 0.4));
         const drift = vary * (0.25 + 0.6 * own(4));
         const turn = (own(5) - 0.5) * 1.2;

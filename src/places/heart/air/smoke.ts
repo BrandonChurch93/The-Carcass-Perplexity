@@ -358,14 +358,14 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     q -= lean * (C.y * uTime);
     q = q / C.z + C.x + vec3(0.013, 0.0, 0.007) * uTime;
     // Steam is drawn out along its rise into strands; smoke is round lumps.
-    q.y *= mix(0.3, 1.0, kind);
+    q.y *= mix(0.42, 1.0, kind);
     // Its outline is ragged by the same lumps that fill it; it is thick at the vent, thinned by its own widening, and gone well before the top.
     float n1 = noise(q).r;
     vec4 small = noise(q * 3.7);
     float ragged = d + (n1 - 0.5) * mix(1.0, 1.1, kind) + (small.g - 0.5) * 0.35;
     if (ragged >= 1.0) continue;
     float thin = A.w / r;
-    float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, mix(1.8, 1.7, kind)) * mix(1.0, thin, 0.6);
+    float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, mix(3.2, 1.7, kind)) * mix(1.0, thin, 0.6);
     float fine = mix(0.5, 0.25, u);
     float wisps = smoothstep(mix(0.36, 0.48, kind), mix(0.82, 0.74, kind), n1 * (1.0 - fine) + small.b * fine);
     // Steam is a veil with knots in it; smoke is lumps with gaps between them.
@@ -374,7 +374,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     // Steam was the same lumps as smoke, thinner: a soft pale blob. It is strands: the thin sheets where the drawn-out field crosses its own
     // middle, which stand as curling threads when looked through, broken along their length by the fine field, with next to nothing between them.
     float strand = smoothstep(0.72, 0.97, 1.0 - abs(2.0 * n1 - 1.0) * 1.4) * smoothstep(0.25, 0.6, small.b);
-    float dens = body * puff * inside * mix(0.012 + 3.4 * strand + 0.5 * wisps * wisps, 4.0 * wisps, kind);
+    float dens = body * puff * inside * mix(0.008 + 1.7 * strand + 0.35 * wisps * wisps, 4.0 * wisps, kind);
     if (dens <= 0.0) continue;
     // A fountain, a pool or a crack lights the vapour that is close over it; the rest is lit by the sky, like any smoke.
     // The top of a smoke is thin and open to the sky: it is paler than its foot.
