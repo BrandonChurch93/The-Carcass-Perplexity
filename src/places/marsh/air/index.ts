@@ -34,9 +34,9 @@ export function create(ctx: Context): Piece {
   own.push({ at: [-7.1, 0, -5.1], radius: 1.4, strength: 0.8, rise: 12, kind: 'steam', lean });
   own.push({ at: [-2.5, 0, -6.5], radius: 1.3, strength: 0.55, rise: 10, kind: 'steam', lean });
   own.push({ at: [0.5, 0, -7.5], radius: 0.9, strength: 0.35, rise: 6, kind: 'steam', lean });
-  // The vapour of the small dome's seep, as the pool's lens has it at its left hand: low and wide, no higher than a stalk's waist. It
+  // The vapour of the small dome's seep, as the pool's lens has it at its left hand: a thin wisp no higher than a stalk's knee, left of the domes, which stay dark. It
   // stands only while that lens looks (setTime): from the first lens, high over the pool, the same vapour was a hard white wedge.
-  const seep: SteamSource = { at: [SMALL_DOME[0] - 0.45, 0, SMALL_DOME[1] + 0.05], radius: 0.5, strength: 0, rise: 2.0, kind: 'steam', lean };
+  const seep: SteamSource = { at: [SMALL_DOME[0] - 0.75, 0, SMALL_DOME[1] + 0.05], radius: 0.4, strength: 0, rise: 1.3, kind: 'steam', lean };
   own.push(seep);
   // The mist that lies low over the whole pool.
   own.push({ at: [-1, 0, -4], radius: 5, strength: 0.012, rise: 5, kind: 'steam', lean });
@@ -60,8 +60,6 @@ export function create(ctx: Context): Piece {
     new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),
     new THREE.Vector4(vein(11)[0], vein(11)[1], 12, 0.5),
     new THREE.Vector4(main[0] * 16, main[1] * 16, 11, 0.5),
-    // (The vapour the pool's lens has low on the brine at its left hand, round the small dome.)
-    new THREE.Vector4(SMALL_DOME[0] - 0.8, SMALL_DOME[1] - 0.6, 1.6, 1.6),
   ];
   while (mist.length < MAX_MIST) mist.push(new THREE.Vector4(0, 0, 1, 0));
   if (!SHEETS) for (const [x, z] of low) own.push({ at: [x, 0, z], radius: rng.range(3.4, 5), strength: rng.range(0.12, 0.2), rise: rng.range(1.7, 2.6), kind: 'steam', lean: drift });
@@ -92,7 +90,7 @@ export function create(ctx: Context): Piece {
       uSteamB: { value: steamB },
       uSteamC: { value: steamC },
       uRain: { value: rain },
-      uMistCount: { value: 7 },
+      uMistCount: { value: 6 },
       uMist: { value: mist },
       // No low steam stands between a lens and what it is set on: round the wallowers, and in front of the lens of the colony. Each zone
       // is kept only while its own lens looks (setTime), so that the pool steams for the lens that is set on the pool.
@@ -131,7 +129,7 @@ export function create(ctx: Context): Piece {
       steamCount.value = order.length;
     },
     setTime: (seconds) => {
-      seep.strength = seconds >= SEEP_SHOT[0] && seconds < SEEP_SHOT[1] ? 0.8 : 0;
+      seep.strength = seconds >= SEEP_SHOT[0] && seconds < SEEP_SHOT[1] ? 0.3 : 0;
       (clear[0] as THREE.Vector3).z = seconds >= CLEAR_FROM.wallow ? 12 : NONE;
       (clear[1] as THREE.Vector3).z = seconds >= CLEAR_FROM.colony[0] && seconds < CLEAR_FROM.colony[1] ? 8 : NONE;
     },
