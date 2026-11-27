@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 150, 2026-11-27 04:37 UTC:
+Status 151, 2026-11-27 05:07 UTC:
 
-- `01-s150-heart-3685-3156.jpg`: The Heart at 1:01 (frame 3685, above) and at 0:53 (frame 3156, below): the place at the start of wave 2 at left and the Heart team's branch at right (its commit 63c7e5a). Above, the crust round the sunk walker is broken into slabs with dark gaps and the far wall is in focus. Below, the far cliff and the feeding walkers are sharp where they were soft; the fine-detail measure there is still under its floor. From the lead's third report, drawn on its machine; not judged
-- `02-s150-marsh-6102.jpg`: The Blood Marsh at 1:42 (frame 6102): the place at the start of wave 2 at left and the Marsh team's branch at right, from the lead's third report. The domes are red and glossy with rings round them, red tufts stand on the far stalks and the pool's lip has a cream salt ridge over red earth. The wide low dome at left reads as a glassy block. Drawn on the lead's machine; not judged
-- `03-s150-eye-8600.jpg`: The Eye at 2:23 (frame 8600): the place at the start of wave 2 at left and the Eye team's branch at right (its commit 385c76c, from the lead's third report; the animals have had two more versions since, not shown here). A near animal, large and pale, drinks with rings on the water and its reflection under it, and the far water is a deep blue band. Its body is still smooth. Drawn on the lead's machine; not judged
-- `04-frame-9567-preview-draft.jpg`: Film frame 9567, preview, draft tier
+- `01-s151-reveal-10027.jpg`: The Reveal's titan frame at 2:47 (frame 10027): the film at the start of wave 2 at left and the Reveal team's last branch at right. The bones are broad pale ranges on rust and tan land where they were thin ridges on dark green, cloud lies in patches over the body and in streets over the sea, and the figure reads at once. Whether it still reads as a continent first on the way up is for the judged round. Drawn on the lead's machine; not judged
+- `02-s151-spine-7418.jpg`: The Spine at 2:03 (frame 7418): the start of wave 2 at left and the Spine team's last branch at right. The storm cloud has form, more kites fly and far spires stand at the foot of the frame. The cliff is further from its approved picture in its rock: browner, with blue-grey stripes that read as painted bands, which is the Spine's first item in the third wave. Drawn on the lead's machine; not judged
+- `03-s151-ribs-0.jpg`: The Ribs' first frame (0:00): the start of wave 2 at left and the Ribs team's last branch at right. The ribs are pale, curved and ringed like bone where they were leaning rock towers, a colony of small fliers circles them and a cliff closes the right side. The dark band with white dashes at the cliff's foot is a fault the Builder checks on the merged film. Drawn on the lead's machine; not judged
+- `04-s151-marsh-6424.jpg`: The Blood Marsh at 1:47 (frame 6424): the start of wave 2 at left and the Marsh team's last branch at right. The wallowers carry folds, a dark mud coat on legs and belly and longer claws, and the ground is red mud where it was white salt. Up close they still read as modelled bodies, in the team's own words. Drawn on the lead's machine; not judged
 
+Status 150, 2026-11-27 04:37 UTC, showed: The Heart at 1:01 (frame 3685, above) and at 0:53 (frame 3156, below): the place at the start of wave 2 at left and the Heart team's branch...
 Status 149, 2026-11-27 04:16 UTC, showed: The Eye at 2:26 (frame 8761): the place at the start of wave 2 at left and the Eye team's branch at right (its commit 385c76c).
 Status 148, 2026-11-27 03:56 UTC, showed: The Reveal at 2:42, 2:47 (the titan frame) and 3:15 (the last frame): the film now at left and the Reveal team's branch in wave 2 at right...
-Status 147, 2026-11-27 03:32 UTC, showed: The four hard moments the compression critics judged in round 29, from the film before wave 2. Left: the rendered frame.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T04:37:29Z
-phase 6: 7.80 h used of 24.00 h
-build: 52.77 h used of 72.00 h
+2026-11-27T05:07:57Z
+phase 6: 8.31 h used of 24.00 h
+build: 53.28 h used of 72.00 h
 extra rounds: no
-minutes since the last status: 21
+minutes since the last status: 30, status overdue
 ```
 
 ## Phases
