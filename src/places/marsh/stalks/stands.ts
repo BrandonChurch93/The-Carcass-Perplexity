@@ -511,7 +511,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const cls = upTo.findIndex((v) => roll0 <= v);
       const dead = cls === 4 || cls < 0;
       const shoot = cls === 3;
-      const h = (dead ? rng.range(0.7, 2.6) : shoot ? rng.range(0.2, 0.95) : cls === 0 ? rng.range(3.1, 4.6) : cls === 1 ? rng.range(2, 3.1) : rng.range(0.95, 2)) * (s.tall ?? 1) * (shoot ? 1 : grows);
+      const h = (dead ? rng.range(0.7, 2.6) : shoot ? rng.range(0.2, 0.95) : cls === 0 ? rng.range(2.2, 3.3) : cls === 1 ? rng.range(1.4, 2.3) : rng.range(0.7, 1.5)) * (s.tall ?? 1) * (shoot ? 1 : grows);
       const R = shoot ? rng.range(0.016, 0.03) * (0.7 + 0.6 * h) : rng.range(0.042, 0.075) * Math.pow(Math.max(h, 0.8) / 2.4, 0.45);
       const kinks = !shoot && rng.next() < habit.kink;
       const kind = dead ? 2 : shoot && rng.next() < 0.5 ? 1 : 0;
