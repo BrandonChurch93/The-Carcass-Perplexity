@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { DEG, HERO_DOME, K1_AT, K1_DIR, K2_AT, K2_DIR, POOL_R, SMALL_DOME, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
+import { DEG, HERO_DOME, K1_AT, K1_DIR, K2_AT, K2_DIR, POOL_R, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { bakeNoise } from './noise';
 import { createSky } from './sky';
@@ -27,12 +27,10 @@ export function create(ctx: Context): Piece {
   const lean: [number, number] = [-0.5, -0.12];
   const main = bearingDir(300);
   // Narrow columns over the seeps, dense at the foot and thinning as they climb, each set where the three near lenses see it as a
-  // column and none stands in it: by the west bank, over the left of the pool as the pool's lens sees it, and two lesser ones.
+  // column and none stands in it: by the west bank, over the left of the pool as the pool's lens sees it, and a lesser one. (A column set
+  // near the pool's lens stood as a hard white wedge in the first lens: before that lens the pool has its low sheets only.)
   own.push({ at: [-7.1, 0, -5.1], radius: 1.4, strength: 0.8, rise: 12, kind: 'steam', lean });
   own.push({ at: [-2.5, 0, -6.5], radius: 1.3, strength: 0.55, rise: 10, kind: 'steam', lean });
-  // (The third is the plume the pool's lens has at its left hand: it stands over the small dome, whose tearing that lens is set on, a
-  // stride behind it, so the drops fly before it.)
-  own.push({ at: [SMALL_DOME[0] - 0.5, 0, SMALL_DOME[1] - 0.6], radius: 0.9, strength: 0.75, rise: 5, kind: 'steam', lean });
   own.push({ at: [0.5, 0, -7.5], radius: 0.9, strength: 0.35, rise: 6, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
   own.push({ at: [-1, 0, -4], radius: 5, strength: 0.012, rise: 5, kind: 'steam', lean });
@@ -50,7 +48,7 @@ export function create(ctx: Context): Piece {
     return [node[0], node[1]];
   };
   const mist: THREE.Vector4[] = [
-    new THREE.Vector4(-1, -3, POOL_R * 0.6, 1.2),
+    new THREE.Vector4(-1, -3, POOL_R * 0.6, 0.7),
     new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 12 - 5, HERO_DOME[1] + K1_DIR[1] * 12, 7, 0.6),
     new THREE.Vector4(-3, -9, 7, 0.3),
     new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),
