@@ -217,7 +217,7 @@ void main() {
     float off = vUv.x * d.y - vUv.y * d.x;
     rays += exp(-off * off * 30000.0) * exp(-max(on, 0.0) * (9.0 + 5.0 * float(k))) * smoothstep(-0.005, 0.005, on);
   }
-  core += 0.12 * rays;
+  core += 0.05 * rays;
   float fall = (1.0 - r) * (1.0 - r);
   float glare = fall / (1.0 + r * r * 14.0);
   float power = max(uColour.r, max(uColour.g, uColour.b));

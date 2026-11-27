@@ -311,7 +311,11 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // Where the deck has climbed into the storm it is the storm's own cloud: dark, soft, without the dusk.
     // (Some way off only: close under the lens the deck on that side is the deck as on the other. Dark from the ridge's foot, it lay
     // at the foot of the first spire's cliff as a dark wedge.)
-    float inWall = smoothstep(150.0, 1400.0, ridgeAt(p.x).x - p.z) * smoothstep(500.0, 2000.0, t);
+    // (Not where the lens looks into the dusk itself: the deck beyond the ridge, seen there between two far spires, is lit by the dusk
+    // before it and takes the air's pale haze as they do. Dark as the wall's foot, it stood between them as a notch of blue water.)
+    float intoDusk = dot(rd.xz, vec2(cos(DUSK_AZ), sin(DUSK_AZ))) * inversesqrt(max(dot(rd.xz, rd.xz), 1e-6));
+    float wallAt = smoothstep(150.0, 1400.0, ridgeAt(p.x).x - p.z) * smoothstep(500.0, 2000.0, t);
+    float inWall = wallAt * (1.0 - smoothstep(0.6, 0.9, intoDusk));
     float inStorm = max(stormSide(rd), inWall);
     float head = mix(smoothstep(-0.2, 0.55, seaHead), 0.45, 0.5 * inWall);
     // The way a face of it looks, from the heights a little way off on two hands: wider with the distance, as the lens sees less of it.
@@ -387,9 +391,13 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     }
     // (What the air's own vapour does not pale is the deck in the dusk under a dark sky: slate, its banks told by a little light on
     // their tops. Paled whole, behind a long lens and far from any stroke it lay under the dark sky as a lit plane, like open water.)
+    // (Only behind the long lens of the strike, where the sky is the picture's: slate under the paler dusk of the plain it stood
+    // between the far spires as a notch of blue water.)
+    vec2 uvP = vec2(0.0);
+    float plate = uPlate.w > 0.0 ? plateAt(az, -dip, uvP) : 0.0;
     float paled = 0.8 * (1.0 - exp(-t / (6000.0 * seaLens * seaLens)));
     float hazed = max(paled, 0.85 * lowSeen);
-    vec3 farTone = mix(SEA_COLD * vec3(0.3, 0.34, 0.43) * (0.55 + 0.45 * farBank), (SEA_COLD * vec3(0.95, 1.0, 1.1) + 0.2 * SEA_WARM * (1.0 - inStorm)) * farBank, clamp(paled / max(hazed, 1e-4), 0.0, 1.0));
+    vec3 farTone = mix(SEA_COLD * vec3(0.3, 0.34, 0.43) * (0.55 + 0.45 * farBank), (SEA_COLD * vec3(0.95, 1.0, 1.1) + 0.2 * SEA_WARM * (1.0 - inStorm)) * farBank, mix(1.0, clamp(paled / max(hazed, 1e-4), 0.0, 1.0), plate));
     sea = mix(sea, farTone, hazed);
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * inStorm, 0.0, 1.5);
@@ -415,8 +423,6 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // (Read soft: read sharp, each mass of the sky's foot stood on the deck as an upright streak under itself, like a reflection in water.)
     vec3 domeFar = needFoot ? skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 2.5) : vec3(0.0);
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.
-    vec2 uvP = vec2(0.0);
-    float plate = uPlate.w > 0.0 ? plateAt(az, -dip, uvP) : 0.0;
 #if PLATE == 1
     if (plate > 0.0) {
       vec3 seaP = skyCloud(ro, rd, 0.0);
@@ -463,7 +469,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     lap *= 1.0 - inStorm * smoothstep(0.03, 0.15, rd.y);
     // And far along the ridge, where the lens looks down the wall's length, it is the sky's own dark foot and no more: kept whole there,
     // its top stood against the band of the dusk as a slab with a ruled edge.
-    lap *= 1.0 - inWall * smoothstep(3500.0, 8500.0, t) * smoothstep(-0.012, 0.012, rd.y);
+    lap *= 1.0 - wallAt * smoothstep(3500.0, 8500.0, t) * smoothstep(-0.012, 0.012, rd.y);
     light += through * sea * lap;
     through *= 1.0 - lap;
     // (And what is drawn after it, the scud and the glow of a stroke in the air, is drawn there as before the open sky.)
