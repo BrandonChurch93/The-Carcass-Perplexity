@@ -61,15 +61,16 @@ vec3 meltAt(vec2 p, float span, vec2 gx, vec2 gy, float seed) {
   return vec3(got.xy * (682.7 / span), got.z);
 }`;
 
-// The crust as it was poured: slabs three to ten metres across, each one whole reading of the slab sheet (coil-nh: r, g the
+// The crust as it was poured: slabs two to seven metres across, each one whole reading of the slab sheet (coil-nh: r, g the
 // slope of its height, b the height; coil-nt: the same slope, b the tone), turned, shifted and sized its own way, so the
-// sheet's own slabs (1 to 2 m) and rope festoons lie in it unbroken. Each slab has a level and a reach of its own, and where
+// sheet's own slabs (half a metre to a metre) and rope festoons lie in it unbroken. Each slab has a level and a reach of its own, and where
 // two meet the higher lies on the lower with a step and a black gap. Some slabs are bare satin (the sheet read blurred: its
 // ropes are gone, its swells stay), some are roped. GLSL; put NOISE_GLSL and SHEET_GLSL before it.
 export const POUR_GLSL = /* glsl */ `
-#define POUR_CELL 7.5
-#define POUR_TALL 0.26
-#define POUR_LEVEL 0.2
+#define POUR_CELL 4.6
+// Metres from the deepest furrow of a reading to its highest crest, for each metre of its span.
+#define POUR_TALL 0.05
+#define POUR_LEVEL 0.16
 #define POUR_HOLD 0.6
 // What pourCells leaves of the slab that holds a point: how its reading is turned and shifted, the span of its reading, its
 // level in metres, its kind (0 satin, 1 roped), a number of its own, the metres its hold on the point stands over the next
@@ -111,7 +112,7 @@ void pourCells(vec2 q) {
       float sa = sin(ang);
       gPourTurn = mat2(ca, sa, -sa, ca);
       gPourShift = fract(h1.yx * 13.7 + 0.31);
-      gPourSpan = mix(4.4, 7.4, h2.x);
+      gPourSpan = mix(2.6, 4.4, h2.x);
       gPourLevel = level;
       gPourKind = step(0.44, fract(h2.y * 7.3 + h1.x));
       gPourTag = h1.y;
@@ -130,7 +131,7 @@ float gPourSheet;
 float pourHigh(vec2 q, float apart) {
   pourCells(q);
   float lod = max(log2(apart * (2048.0 / gPourSpan)) + 0.5, 3.3 * (1.0 - gPourKind));
-  gPourSheet = POUR_TALL * (textureLod(tPourNh, (gPourTurn * q) * (vec2(1.0, 2.0) / gPourSpan) + gPourShift, lod).b - 0.5);
+  gPourSheet = POUR_TALL * gPourSpan * (textureLod(tPourNh, (gPourTurn * q) * (vec2(1.0, 2.0) / gPourSpan) + gPourShift, lod).b - 0.5);
   // The gap between two slabs is a groove a hand deep, as far as the samples can hold it.
   float groove = 0.07 * (1.0 - smoothstep(0.0, 0.012, gPourEdge)) * (1.0 - smoothstep(0.03, 0.07, apart));
   return gPourLevel + gPourSheet - groove;
