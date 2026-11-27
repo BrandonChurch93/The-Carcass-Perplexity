@@ -319,7 +319,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
       }
     }
     // Rust in one bed, gold in the next; gold in the heart of a patch, rust at its torn edge.
-    float tone = 0.2 * vnoise(b / 6.0);
+    float bunch = vnoise(b / 6.0);
+    float tone = 0.2 * bunch;
 #if EYE_RIM < 2
     tone += (1.0 - rimEye) * (0.5 * vnoise(pq / vec2(9.0, 110.0) + 5.0) + 0.3 * vnoise(pq / vec2(2.6, 40.0)));
 #endif
@@ -339,10 +340,11 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     float combed = 0.5;
 #if EYE_RIM > 0
     {
-      // Laid by the way round and the way in, hardly bent, so that every tress runs to the centre. Round the lake the picture runs on
+      // Laid by the way round and the way in, and bent by the ground as the patches are: a tress wanders and is crossed by the next.
+      // (Hardly bent, every tress ran straight to the centre and the mats were long parallel tongues, flames from the rim.) Round the lake the picture runs on
       // into itself and is never turned over (turned over, the tresses either side of the turn were a butterfly). Each size goes round
       // a whole number of times (61, 18 and 237), so the place where the way round begins again shows no seam.
-      vec2 cq = vec2(a2 * 640.0 + bend.x * 9.0, r + bend.y * 16.0);
+      vec2 cq = vec2(a2 * 640.0 + bend.x * 34.0, r + bend.y * 44.0);
       vec3 ca = readRound(tComb, cq / vec2(COMB_A, 44.0), b, 640.0 / COMB_A, 1.0 / 44.0).rgb;
       vec3 cb = readRound(tComb, cq / vec2(COMB_B, 152.0), b, 640.0 / COMB_B, 1.0 / 152.0).rgb;
       float la = dot(ca, vec3(0.4, 0.5, 0.1));
@@ -369,6 +371,11 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
 #endif
     }
     vec3 weed = mix(far3 * (0.75 + 0.5 * streaks), near3 * mix(vec3(1.0), far3 / vec3(0.27, 0.125, 0.035), 0.45), told);
+    // The weed is not of one dye: rust in most bunches, olive in one and ochre in another, as far as a bunch can be told from the next.
+    float dyed = smoothstep(1.6, 0.4, px);
+    float inIt = dot(weed, vec3(0.3, 0.6, 0.1));
+    weed = mix(weed, inIt * vec3(1.12, 1.06, 0.28), 0.55 * dyed * smoothstep(0.6, 0.8, bunch));
+    weed = mix(weed, inIt * vec3(1.86, 1.2, 0.26), 0.4 * dyed * smoothstep(0.4, 0.2, bunch));
     float high = mix(mix(0.5, combed, fromRim), mh, told);
     // The strands that stand highest are the palest: gold where the low sun finds them.
     weed *= mix(vec3(1.0), vec3(1.5, 1.38, 0.95), told * smoothstep(0.42, 0.85, mh));
