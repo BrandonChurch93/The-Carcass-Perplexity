@@ -8,7 +8,7 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { during } from '../shared/anchors';
 import { FAR_DATA, LEVELS, MID_DATA } from './body.data';
 import { createCards } from './cards';
-import { WADE, herd, standPose, type Drinker } from './herd';
+import { CLOSE_COUNT, WADE, herd, standPose, type Drinker } from './herd';
 import { BONES, solve, type Solved } from './skeleton';
 
 export const PARTS: readonly string[] = ['drinkers'];
@@ -44,6 +44,8 @@ void main() {
 const FRAGMENT = /* glsl */ `
 // x its own number, y its size, z the level of its feet, w how much of the sun the ground behind it keeps off it.
 uniform vec4 uOwn;
+// x how far its head is up, y how much of the low sun still reaches its back where the ground it stands on is in shade.
+uniform vec2 uPose;
 // The hide sheet: rgb its colour, a its relief.
 uniform sampler2D tHide;
 // The broad sheet: the loose folds, the scars and the dirt.
@@ -160,11 +162,12 @@ void main() {
   // ribs, the hip and the rump it is drawn tight.
   vec3 fromShoulder = (vRest - vec3(0.0, 1.62, 0.62)) / vec3(1.0, 0.42, 0.3);
   vec3 fromStifle = (vRest - vec3(0.0, 1.5, -0.5)) / vec3(1.0, 0.36, 0.26);
-  float loose = clamp(neck * root + exp(-dot(fromShoulder.yz, fromShoulder.yz)) + exp(-dot(fromStifle.yz, fromStifle.yz))
+  float slackNeck = neck * root * (1.0 - 0.7 * uPose.x);
+  float loose = clamp(slackNeck + exp(-dot(fromShoulder.yz, fromShoulder.yz)) + exp(-dot(fromStifle.yz, fromStifle.yz))
     + trunk * smoothstep(-0.1, -0.7, rn.y) + 0.8 * leg * joint, 0.0, 1.0);
   loose = mix(0.1, 1.0, loose * smoothstep(0.15, 0.8, n3(at * 1.9 + 7.0)) * 1.5);
   loose = min(loose, 1.0);
-  float relief = neck * root * 0.004 * rings
+  float relief = slackNeck * 0.004 * rings
     + leg * joint * 0.0026 * legRings
     + ribs * (1.0 - smoothstep(0.005, 0.016, px)) * 0.0022 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
   float groove = max(0.5 * neck * root * (1.0 - rings), 0.5 * leg * joint * (1.0 - legRings));
@@ -245,6 +248,11 @@ void main() {
   float sunward = dot(n, uSunDir);
   float rim = pow(1.0 - nv, 3.0) * smoothstep(-0.15, 0.5, sunward);
   c += albedo * uSunColour * (vec3(0.05, -0.01, -0.13) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim) * (sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
+  // The herd stands on a bank the evening shade has taken, and the dark gravel gives nothing back: a hide there is grey, and darkest at
+  // the belly and down the legs. Backs and necks stand up into the last of the sun.
+  c *= max(0.2, 1.0 - uPose.y * (0.5 + 0.8 * (1.0 - smoothstep(0.1, 1.0, above)) + 0.7 * max(-n.y, 0.0)));
+  c += albedo * uSunColour * (vec3(1.0, 0.9, 0.78) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim)
+    * (1.6 * uPose.y * (1.0 - sunHere) * smoothstep(0.25, 1.1, above) * (0.4 + 0.6 * occ) / 3.14159);
   // The wet of the leg takes the sun as a film of water does.
   c += 0.4 * wet * lit * rigGlint(p, n, v, 0.16);
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -299,11 +307,11 @@ interface Drawn {
   material: THREE.ShaderMaterial;
   bones: Float32Array;
   own: THREE.Vector4;
+  pose: THREE.Vector2;
   solved: Solved;
 }
 
-/** The first animals of the herd's list are the ones the close shots are about. */
-const CLOSE = 9;
+const CLOSE = CLOSE_COUNT;
 
 export function create(ctx: Context): Piece {
   // The animals a close shot is about are bodies while their shot runs: the four of the shore, the two under the last camera, the three beyond
@@ -323,8 +331,9 @@ export function create(ctx: Context): Piece {
     const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
     const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.45);
+    const pose = new THREE.Vector2(0, index < CLOSE ? 0 : 0.45);
     const material = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, tHide, tFolds, tSlope },
+      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, tHide, tFolds, tSlope },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       // The surface is wound with its outside as its back: only that side is drawn.
@@ -335,7 +344,7 @@ export function create(ctx: Context): Piece {
     mesh.visible = false;
     ctx.scene.add(mesh);
     ctx.reflected.push(mesh);
-    return { animal, index, mesh, material, bones, own, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
+    return { animal, index, mesh, material, bones, own, pose, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
   });
   // Each body darkens the ground it stands on, as its card did.
   const shade = ctx.rig.contactDiscs(drawn.length);
@@ -383,6 +392,7 @@ export function create(ctx: Context): Piece {
           continue;
         }
         const solved = poseAt(d, t, g.bones);
+        g.pose.x = Math.min(1, Math.max(0, 1 - d.down(t)));
         g.solved = solved;
         // Where it stands just now: the middle of its four hooves. One that walks is not where it was placed.
         const cx = 0.25 * solved.hooves.reduce((sum, h) => sum + h[0], 0);

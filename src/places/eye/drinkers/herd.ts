@@ -42,6 +42,8 @@ const SHORE_KEY = (9003 - 8305) / 60;
 const MATS_KEY = (8600 - 8305) / 60;
 /** And at the key of the wide shot (frame 8412). */
 const WIDE_KEY = (8412 - 8305) / 60;
+/** The first of the list are the animals the close shots are about; the herd of the wide shot follows them. */
+export const CLOSE_COUNT = 9;
 /** A walk: the part of its stride a hoof stands, and how far the body passes over it meanwhile, in the animal's sizes. */
 const STANCE = 0.68;
 const STRIDE = 0.44;
@@ -130,7 +132,11 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
       // Evenly up the bank inside the knot, then shaken: no two of a knot stand at one depth, which from this camera would be one row.
       const out = knot.lo + ((k + 0.5 + rng.range(-0.4, 0.4)) / knot.n) * (knot.hi - knot.lo);
       const bearing = 201.6 - (across - 0.3) * 19.2 + Math.max(0, -out) * 0.035 * (across - 0.5);
-      const [x, z] = at(bearing, shoreAt(bearing) + out);
+      let [x, z] = at(bearing, shoreAt(bearing) + out);
+      // None stands inside another: one that would is moved along the bank, away from the middle of its knot, until it has room.
+      for (let tries = 0; tries < 8 && list.slice(CLOSE_COUNT).some((o) => Math.hypot(o.x - x, o.z - z) < 6.5); tries++) {
+        [x, z] = at(bearing + (across < knot.across ? 0.5 : -0.5) * (tries + 1), shoreAt(bearing) + out);
+      }
       const period = rng.range(9, 17);
       const phase = rng.next();
       const way = rng.next() < 0.5 ? 1 : -1;
