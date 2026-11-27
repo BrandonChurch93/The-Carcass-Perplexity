@@ -221,6 +221,9 @@ ${SEA_SHADE_GLSL}
         float snake = 0.6 * noise(vec3(a.x / 9.0, a.y / 1.1, 0.5)).r + 0.4 * noise(vec3(a.x / 2.6, a.y / 0.33, 0.9)).b;
         column += smoothstep(0.47, 0.7, snake) * (0.5 + n) * 2.6 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 0.5) * smoothstep(90.0, 25.0, far) * met * (uClear.z > 0.0 ? smoothstep(0.8, 2.0, length(hit.xz - uClear.xy)) : 1.0);
       }
+      // About the body and its burn no snow runs on the ground: bands that cross the burn and take no notice of the body read as a
+      // surface that slides. It runs beyond, where the air behind the body softens it.
+      if (uClear.z > 0.0) column *= smoothstep(1.7 * uClear.z, 4.0 * uClear.z, length(hit.xz - uClear.xy));
       float kept = exp(-0.11 * column * smoothstep(1400.0, 500.0, far) * uShow.w * uStage.x);
       vec3 snow = 0.9 * (skyOn(1.0, rd) + min(strikeLight(hit) * 0.2, vec3(0.1, 0.085, 0.17)));
       light = light + through * (1.0 - kept) * snow;
@@ -325,7 +328,7 @@ ${SEA_SHADE_GLSL}
     // By the dead one the lens is low and close: the air behind the body is thick with blown snow, and the first spire and its mouth
     // stand back in it, pale and soft, as far behind the body as they are.
     if (uClear.z > 0.0 && far < 50000.0) {
-      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 300.0), 0.45) * uShow.x;
+      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 540.0), far > 50000.0 ? 0.4 : 0.72) * uShow.x;
       light = light * (1.0 - behind) + snowAir * 0.5 * behind;
       through *= 1.0 - behind;
     }
@@ -357,17 +360,20 @@ ${SEA_SHADE_GLSL}
       float grain = dead ? (j == 0 ? 2.4 : j == 1 ? 9.0 : 30.0) : (j == 0 ? 7.0 : j == 1 ? 20.0 : 56.0) / sqrt(lensV);
       vec3 at = ro + rd * dist;
       vec3 p = at - downV * (uWind.w * (0.8 + 0.12 * float(j)) * uTime);
-      vec3 q = vec3(dot(p, downV) / (grain * 9.0), dot(p, upV) / grain, dot(p, acrossV) / (grain * 2.5));
-      float streak = 0.86 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).r + 0.14 * noise(q * vec3(2.3, 2.7, 2.3) + 0.37).g;
+      // Sheets that lie flat on the gale, long down it and broad across it, soft: seen along the wind they are level bands, never lines that
+      // fall.
+      vec3 q = vec3(dot(p, downV) / (grain * 6.0), dot(p, upV) / (grain * 1.6), dot(p, acrossV) / (grain * 5.0));
+      float streak = 0.7 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).g + 0.3 * noise(q * vec3(2.1, 2.3, 2.1) + 0.37).a;
       float gust = noise(vec3(q.x * 0.21, 0.37 * float(j) + 0.13, q.z * 0.17)).b;
-      float veil = smoothstep(0.36, 0.84, streak) * smoothstep(0.36, 0.7, gust) * before;
+      float veil = smoothstep(0.42, 0.74, streak) * smoothstep(0.36, 0.7, gust) * before;
       // It thins with the height over the crest, and against the open sky it is the sky's own tone and all but lost.
       veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.2 : 1.0);
       veil *= dead ? (j == 0 ? 0.07 : j == 1 ? 0.14 : 0.18) : (j == 0 ? 0.16 : j == 1 ? 0.3 : 0.4);
       driven += keptV * veil;
       keptV *= 1.0 - veil;
     }
-    driven *= uShow.w * uStage.x;
+    // Through the strike's long lens the veils lie a kilometre deep before the spire: thinned there, or the spire is a ghost in milk.
+    driven *= uShow.w * uStage.x * (uSkyStage.z > 0.0 ? 0.3 : 1.0);
     vec3 snowV = 0.85 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * (95.0 / lensV)) * 0.2, vec3(0.1, 0.085, 0.17)));
     light = light * (1.0 - driven) + snowV * driven;
     through *= 1.0 - driven;
