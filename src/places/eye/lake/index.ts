@@ -102,6 +102,11 @@ uniform float uLens;
 uniform vec4 uLap[${LAPS}];
 uniform int uLapCount;
 uniform vec4 uMirror;
+// Metres from the eye over which the tone of uMirror comes on (x to y), and over which a share of it (uMirror.a) is let go again (z to w).
+uniform vec4 uMirrorSpan;
+// The far water of a low eye is never glass: a breath of air has it in small waves too fine to be told, and what it mirrors is drawn
+// out up and down by them. How much of that there is, a hundred metres and more from the eye.
+uniform float uRuffle;
 // x: seconds since the centre rose (negative before).
 uniform vec4 uCentre;
 // Where rings of what drinks can be: the middle of them all (x, z), how far from it the farthest reaches, and how near the centre of the lake the nearest comes.
@@ -380,6 +385,7 @@ void main() {
   // What the water mirrors: the far world. Where waves too fine for the pixels lie on it, the mirror is read three times, one above another:
   // a wave tips what it mirrors up and down and hardly at all to the side, so the wall in the water is drawn out in soft upright shapes.
   float lowEye = (1.0 - rimEye) * (1.0 - uLeave.x);
+  lost += uRuffle * smoothstep(25.0, 110.0, away);
   float spread = max(sqrt(0.5 * lost), 0.012 * lowDeep);
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.7 * lowEye + 1.5 * uLeave.x;
   vec3 rd = reflect(-v, n);
@@ -435,8 +441,10 @@ void main() {
     under = shelf * crusted;
     // Where a slab, the crust of the lip or the top of a mat stands out of the water it is wet stone and weed, not a mirror.
     dry = bed.dry * crusted * exp(-sunk * 5.0);
-    // A low eye that looks a long way along the water finds only the mirror: what stands a finger out of it far off is lost in the glance.
-    dry *= mix(1.0, smoothstep(520.0, 220.0, away), smoothstep(12.0, 4.0, cameraPosition.y));
+    // A low eye that looks along the water finds only the mirror: wet weed that lies a finger out of it throws the sky back as the water
+    // does once the look is within a few degrees of it. It goes by the angle of the look, not by metres: an eye a metre up loses the
+    // mats to the mirror at thirty metres, an eye at three at a hundred.
+    dry *= mix(1.0, smoothstep(0.022, 0.085, v.y), smoothstep(12.0, 4.0, cameraPosition.y));
     dry *= 1.0 - smoothstep(600.0, 1000.0, away) * (1.0 - smoothstep(0.03, 0.07, v.y));
   }
   if (crusted < 1.0) {
@@ -541,7 +549,16 @@ void main() {
 #endif
     refl *= mix(vec3(0.78, 0.8, 0.84), vec3(0.8, 0.86, 0.95), smoothstep(8.0, 40.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
     // Staged by shot: the far water of the shore shot lies under the shaded wall and the high sky, and is the colour of them.
-    refl *= mix(vec3(1.0), uMirror.rgb, smoothstep(12.0, 90.0, away));
+    float staged = smoothstep(uMirrorSpan.x, uMirrorSpan.y, away) * (1.0 - uMirror.a * smoothstep(uMirrorSpan.z, uMirrorSpan.w, away));
+#if EYE_RUFFLED
+    // Ruffled water does not hold the wall: every small wave on it looks up past the wall's top, and what the water gives back is the
+    // sky high overhead, dark and blue at this hour. Against the far shore the look is too flat for that and the wall is still there.
+    // The air does not lie on it evenly: it is ruffled in long lanes that lie across the look, and between them the water is still glass.
+    float lanesOfIt = vnoise(vec2(p.x / 14.0, p.z / 1.3) + 5.0) * 0.6 + vnoise(vec2(p.x / 4.5, p.z / 0.45)) * 0.4;
+    refl = mix(refl, skyRadiance(normalize(vec3(rd.x, 0.85, rd.z))) * uMirror.rgb, staged * (0.55 + 0.45 * smoothstep(0.32, 0.62, lanesOfIt)));
+#else
+    refl *= mix(vec3(1.0), uMirror.rgb, staged);
+#endif
     // Under the long lens the wall's gold lies on the water in long broken streaks, and the water between them is dark.
     if (uPlateTone.w > 1.5) refl *= clamp(pow(max(dot(refl, vec3(0.3, 0.5, 0.2)), 1e-4) / 0.2, 0.7), 0.4, 1.5);
     // Whatever stands in the water or at its edge, drawn once more from under it.
@@ -554,6 +571,10 @@ void main() {
       // Nothing is known of what lies outside the mirror's own frame.
       vec2 inside = smoothstep(vec2(0.0), vec2(0.03), uv) * smoothstep(vec2(1.0), vec2(0.97), uv);
       seen.a *= inside.x * inside.y;
+#if EYE_RUFFLED
+      // What stands in ruffled water is given back broken and dim.
+      seen.a *= 1.0 - 0.55 * staged;
+#endif
       refl = mix(refl, seen.rgb * 0.82, seen.a);
     }
 #endif
@@ -659,7 +680,7 @@ void main() {
 // as what it lets in. So whatever a whole frame has no use for (the looks of a low eye seen from the rim, the water from over its centre
 // before the camera leaves, rings where nothing drinks) is left out of the program itself, by these names. Each is told from the frame
 // alone, by the same test the shader would have made of its uniforms, so the picture is the same picture.
-function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean): Record<string, number> {
+function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean): Record<string, number> {
   const rim = eyeHeight <= 8 ? 0 : eyeHeight >= 40 ? 2 : 1;
   return {
     // rimEye: 0 where it is nothing, 2 where it is all, 1 between.
@@ -672,6 +693,7 @@ function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing:
     EYE_SWELL: swell ? 1 : 0,
     EYE_LAPS: lapping ? 1 : 0,
     EYE_MIRRORED: mirrored ? 1 : 0,
+    EYE_RUFFLED: ruffled ? 1 : 0,
   };
 }
 
@@ -754,7 +776,7 @@ export function create(ctx: Context): Piece {
   // Under the long lens of the climb the short lengths are finer than its pixels: the train is of longer ones.
   const ringsClimb = ringsOf([9, 15, 24, 36, 52, 97], [0.011, 0.011, 0.012, 0.012, 0.011, 0.01], 1);
   const material = new THREE.ShaderMaterial({
-    defines: variantOf(0, 0, false, false, false, false, false),
+    defines: variantOf(0, 0, false, false, false, false, false, false),
     uniforms: {
       ...rig,
       ...bed,
@@ -764,6 +786,8 @@ export function create(ctx: Context): Piece {
       uLap: { value: laps },
       uLapCount: { value: 0 },
       uMirror: { value: new THREE.Vector4(1, 1, 1, 1) },
+      uRuffle: { value: 0 },
+      uMirrorSpan: { value: new THREE.Vector4(12, 90, 1e6, 2e6) },
       uDome: { value: dome },
       uRiser: { value: RISERS.map((q) => new THREE.Vector3(q[0], q[1], q[3])) },
       uCentre: { value: centre },
@@ -831,8 +855,15 @@ void main() {
       const mirrorTone = material.uniforms.uMirror as THREE.IUniform<THREE.Vector4>;
       if (during('eye-04')) mirrorTone.value.set(0.56, 0.78, 1.0, 0.3);
       else if (during('eye-05')) mirrorTone.value.set(0.76, 0.78, 0.8, 1);
+      // Over the mats the far water is the pool: ruffled, it holds the high sky and the wall's shade more than the wall's gold, and is dark and blue.
+      // It comes on where the mats end, a few metres out, and against the far shore the wall is given back as it is.
+      else if (during('eye-02')) mirrorTone.value.set(0.24, 0.32, 0.5, 0.8);
       else if (during('eye-03')) mirrorTone.value.set(1.4, 1.26, 1.12, 1);
       else mirrorTone.value.set(1, 1, 1, 1);
+      (material.uniforms.uRuffle as THREE.IUniform<number>).value = during('eye-02') ? 0.0009 : 0;
+      const span = material.uniforms.uMirrorSpan as THREE.IUniform<THREE.Vector4>;
+      if (during('eye-02')) span.value.set(3, 9, 40, 150);
+      else span.value.set(12, 90, 1e6, 2e6);
       if (during('eye-03')) (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0.95, 0.55, 0);
       else (material.uniforms.uDeepTone as THREE.IUniform<THREE.Vector3>).value.set(0, 1, 0);
       centre.x = t - rise;
@@ -884,6 +915,7 @@ void main() {
         dome.x > 1.8,
         (material.uniforms.uLapCount as THREE.IUniform<number>).value > 0,
         ctx.reflected.length > 0 && camera.position.y < 60,
+        (material.uniforms.uRuffle as THREE.IUniform<number>).value > 0,
       );
       if (Object.entries(variant).some(([name, value]) => (material.defines as Record<string, number>)[name] !== value)) {
         material.defines = variant;

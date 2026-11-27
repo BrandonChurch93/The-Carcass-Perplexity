@@ -8,6 +8,13 @@ import { mirrored } from '../land/rock';
 /** Per metre of water: red goes first, so that the deep is blue and then black. */
 export const ABSORB: [number, number, number] = [0.12, 0.045, 0.03];
 
+/** A picture that is laid round the lake and meets itself from left to right: it runs on round and is turned over only the way in. */
+function round(t: THREE.Texture): THREE.Texture {
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.MirroredRepeatWrapping;
+  return t;
+}
+
 export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, THREE.IUniform> {
   return {
     tLip: { value: lip },
@@ -16,7 +23,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     tMat: { value: mirrored(ctx.assets.texture('mat/matplate.jpg', { anisotropy: 8 })) },
     tMatH: { value: mirrored(ctx.assets.texture('mat/matplate-h.png', { kind: 'data', anisotropy: 4 })) },
     tMatTile: { value: mirrored(ctx.assets.texture('mat/matdark.jpg', { anisotropy: 8 })) },
-    tComb: { value: mirrored(ctx.assets.texture('lake/matcomb.jpg', { anisotropy: 4 })) },
+    tComb: { value: round(ctx.assets.texture('lake/matcomb-round.jpg', { anisotropy: 4 })) },
     tLipPlate: { value: mirrored(ctx.assets.texture('mat/lip.jpg', { anisotropy: 8 })) },
     tLipPlateH: { value: mirrored(ctx.assets.texture('mat/lip-h.png', { kind: 'data', anisotropy: 4 })) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
@@ -124,6 +131,10 @@ vec3 lipNear(vec2 xz, vec2 from, vec3 lip) {
 const float MAT_REACH = 260.0;
 const float MAT_A = 6.5;
 const float MAT_B = 9.2;
+// Metres round the lake that one repeat of the combed picture covers, at its three sizes: 2 pi 640 over 61, 18 and 237.
+const float COMB_A = 65.9217;
+const float COMB_B = 223.4021;
+const float COMB_C = 16.9672;
 const float LIP_OUT = 0.9;
 const float LIP_DEEP = 5.63;
 vec2 lipPlateAt(vec2 xz, vec3 lip) {
@@ -264,7 +275,14 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
       vec2 qb = vec2(b.x * 0.999 - b.y * 0.035, b.x * 0.035 + b.y * 0.999) / MAT_B + 0.37 + sway * 1.4 / MAT_B;
       float ha = readAt(tMatH, qa, ma).r;
       float hb = readAt(tMatH, qb, mb).r;
-      float pick = smoothstep(-0.12, 0.12, hb - ha + 0.5 * (vnoise(b / 3.7 + 21.0) - 0.5));
+      // The picture turns over at each repeat, and along a line where it turns it is its own mirror image: a slab that lies on the line
+      // has its twin across it. Each of the two layings is let go as it nears its own lines, and the other, whose lines lie elsewhere,
+      // has the bed there.
+      vec2 ta = 0.5 - abs(fract(qa) - 0.5);
+      vec2 tb = 0.5 - abs(fract(qb) - 0.5);
+      float clearA = smoothstep(0.0, 0.2, min(ta.x, ta.y));
+      float clearB = smoothstep(0.0, 0.2, min(tb.x, tb.y));
+      float pick = smoothstep(-0.12, 0.12, hb - ha + 0.5 * (vnoise(b / 3.7 + 21.0) - 0.5) + 1.2 * (clearB - clearA));
       // Closer than the picture is fine it is let go soft, and the finer tile of the same weed lies over it as hair: every tuft is made of strands.
       float fine = smoothstep(0.012, 0.004, px);
       near3 = mix(readAt(tMat, qa, ma, 1.2 * fine).rgb, readAt(tMat, qb, mb, 1.2 * fine).rgb, pick);
@@ -299,17 +317,18 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     float combed = 0.5;
 #if EYE_RIM > 0
     {
-      // Laid by the way round and the way in, hardly bent, so that every tress runs to the centre. The picture turns over at each repeat
-      // and all three sizes start from the same line, so the place where the way round begins again shows no seam.
+      // Laid by the way round and the way in, hardly bent, so that every tress runs to the centre. Round the lake the picture runs on
+      // into itself and is never turned over (turned over, the tresses either side of the turn were a butterfly). Each size goes round
+      // a whole number of times (61, 18 and 237), so the place where the way round begins again shows no seam.
       vec2 cq = vec2(a2 * 640.0 + bend.x * 9.0, r + bend.y * 16.0);
-      vec3 ca = readRound(tComb, cq / vec2(66.0, 44.0), b, 640.0 / 66.0, 1.0 / 44.0).rgb;
-      vec3 cb = readRound(tComb, cq / vec2(228.0, 152.0), b, 640.0 / 228.0, 1.0 / 152.0).rgb;
+      vec3 ca = readRound(tComb, cq / vec2(COMB_A, 44.0), b, 640.0 / COMB_A, 1.0 / 44.0).rgb;
+      vec3 cb = readRound(tComb, cq / vec2(COMB_B, 152.0), b, 640.0 / COMB_B, 1.0 / 152.0).rgb;
       float la = dot(ca, vec3(0.4, 0.5, 0.1));
       float lb = dot(cb, vec3(0.4, 0.5, 0.1));
       // The finest size is hair on the tresses, told only as near as a pixel can hold it.
       float hairy = smoothstep(0.5, 0.12, px);
       vec3 cc = vec3(0.34, 0.105, 0.0065);
-      if (hairy > 0.0) cc = readRound(tComb, cq / vec2(17.0, 11.3), b, 640.0 / 17.0, 1.0 / 11.3).rgb;
+      if (hairy > 0.0) cc = readRound(tComb, cq / vec2(COMB_C, 11.3), b, 640.0 / COMB_C, 1.0 / 11.3).rgb;
       float lc = dot(cc, vec3(0.4, 0.5, 0.1));
       combed = clamp(2.4 * la + 2.0 * lb - 0.14 + hairy * 1.6 * (lc - 0.19), 0.0, 1.0);
       vec3 strands = ca * (0.45 + 2.9 * lb) * mix(vec3(1.0), cc / vec3(0.34, 0.105, 0.0065) * vec3(1.0, 1.0, 0.25) + vec3(0.0, 0.0, 0.75), 0.6 * hairy) * vec3(0.92, 1.25, 3.4);
