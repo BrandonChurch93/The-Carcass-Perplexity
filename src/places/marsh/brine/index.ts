@@ -297,12 +297,14 @@ export function create(ctx: Context): Piece {
       (u.uMirrorMatrix as THREE.IUniform<THREE.Matrix4>).value.copy(bias).multiply(under.projectionMatrix).multiply(under.matrixWorldInverse);
       (u.tMirror as THREE.IUniform<THREE.Texture>).value = blank;
       (u.uMirror as THREE.IUniform<number>).value = 1;
+      // (A still of one part alone has the surface switched off: it stays off after the mirror is drawn.)
+      const shown = water.visible;
       water.visible = false;
       renderer.setRenderTarget(mirror);
       renderer.clear(true, true, false);
       renderer.render(ctx.scene, under);
       renderer.setRenderTarget(null);
-      water.visible = true;
+      water.visible = shown;
       (u.uMirror as THREE.IUniform<number>).value = 0;
       (u.tMirror as THREE.IUniform<THREE.Texture>).value = mirror.texture;
     },
