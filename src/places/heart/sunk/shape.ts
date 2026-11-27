@@ -14,7 +14,7 @@ export const FIELD = { cx: -3.5, cz: 0.3, half: 14.5, size: 1024 };
 export const UNDER = -0.12;
 
 export const BODY = {
-  centre: new THREE.Vector3(-3.5, 0.8, -0.4),
+  centre: new THREE.Vector3(-3.5, 0.4, -0.4),
   radii: new THREE.Vector3(2.55, 1.75, 1.8),
   // Tilted: the back turned up toward the bench side, the neck end down in the crust.
   turn: new THREE.Euler(0.3, 0.2, 0.2, 'YXZ'),
@@ -87,7 +87,8 @@ function reach(x: number, z: number): number {
   const phi = (Math.atan2(z - FIELD.cz, x - FIELD.cx) * 180) / Math.PI;
   // The broad one has a flat front.
   const front = ((((phi - 85) % 360) + 540) % 360) - 180;
-  let best = 7.8 * Math.exp(-Math.pow(front / 64, 4));
+  // Toward the bench the folds go on to the end of the sheet: the ground before the lens is all thick rope.
+  let best = 17.5 * Math.exp(-Math.pow(front / 70, 4));
   for (const [at, wide, far] of LOBES) {
     const off = ((((phi - at) % 360) + 540) % 360) - 180;
     best = Math.max(best, far * Math.exp(-(off * off) / (wide * wide)));
@@ -425,6 +426,22 @@ interface Rope {
   parent?: Rope;
   /** The skin of this one is split along its flank and glows there, between these angles. */
   split?: [number, number];
+  /** One of the folds before the bench, beyond those round the body. */
+  far?: boolean;
+  /** Set by `ropeBand`: the least and the most its middle can be out, and the most its middle can turn for a radian. */
+  band?: [number, number, number];
+}
+
+// How far out the middle of a rope can lie, whatever the angle, and how steeply it can cross: the sums of ropeMiddle at their limits.
+// A point farther from this band than the rope is thick is not on the rope, and none of the rope's sums are done for it.
+function ropeBand(k: Rope): [number, number, number] {
+  if (k.band) return k.band;
+  const lo = Math.min(k.d0, k.d1) - 1.5 * Math.abs(k.sway);
+  const hi = Math.max(k.d0, k.d1) + 1.5 * Math.abs(k.sway);
+  const turn = Math.abs((k.d1 - k.d0) / (k.a1 - k.a0)) + Math.abs(k.sway * k.beat);
+  const up = k.parent ? ropeBand(k.parent) : [0, 0, 0];
+  k.band = [lo + (up[0] as number), hi + (up[1] as number), turn + (up[2] as number)];
+  return k.band;
 }
 
 const DEG = Math.PI / 180;
@@ -466,10 +483,40 @@ function makeRopes(): Rope[] {
     mean: about === 0 ? 2.4 + 0.5 * (d0 + d1) : Math.max(0.6, 0.5 * (d0 + d1)),
   }));
   (ropes[9] as Rope).split = [-95 * DEG, 55 * DEG];
+  const near = ropes.length;
+  // Before the bench the skin went on folding as it was pushed out: broad lobes 0.5 to 1.2 m thick that lie across the way to the body,
+  // each wandering in and out, lying over and under its neighbours, out to where the sheet ends.
+  const FAR = 26;
+  for (let i = 0; i < FAR; i++) {
+    const out = 5.0 + (7.6 * (i + hash(i, 21, 203))) / FAR;
+    // Every other one runs slantwise, out toward the bench as it goes round: the lens looks along those and sees their cords.
+    const slant = i % 2 === 1 ? (hash(i, 35, 203) < 0.5 ? -1 : 1) * (1.3 + 1.9 * hash(i, 36, 203)) : 0;
+    const wide = (slant === 0 ? 38 + 60 * hash(i, 22, 203) : 22 + 26 * hash(i, 22, 203)) * (5.5 / out + 0.45);
+    const mid = -105 + 210 * ((i * 0.618034 + 0.2 * hash(i, 23, 203)) % 1);
+    const flip = hash(i, 24, 203) < 0.5 ? -1 : 1;
+    const thick = 0.24 + 0.34 * Math.pow(hash(i, 25, 203), 1.3);
+    ropes.push({
+      about: 0,
+      a0: (mid - flip * 0.5 * wide) * DEG,
+      a1: (mid + flip * 0.5 * wide) * DEG,
+      d0: out + 1.5 * (hash(i, 26, 203) - 0.5) - slant,
+      d1: out + 1.5 * (hash(i, 27, 203) - 0.5) + slant,
+      r: thick,
+      level: 0.2 + 3.2 * hash(i, 28, 203),
+      sway: 0.2 + 0.3 * hash(i, 29, 203),
+      beat: (1.9 + 2.4 * hash(i, 30, 203)) * (0.6 + out / 4),
+      seed: 6.28 * hash(i, 31, 203),
+      tone: 0.1 + 0.8 * hash(i, 32, 203),
+      main: true,
+      far: true,
+      twist: (hash(i, 33, 203) < 0.5 ? -1 : 1) * (0.14 + 0.3 * hash(i, 34, 203)),
+      mean: 2.4 + out,
+    });
+  }
   // The second size, 0.1 to 0.2 m, only on the main ones and in the gaps beside them.
-  const count = ropes.length;
-  for (let i = 0; i < 24; i++) {
-    const parent = ropes[Math.floor(hash(i, 5, 202) * count * 0.999)] as Rope;
+  for (let i = 0; i < 24 + 2 * FAR; i++) {
+    // The first two dozen keep to the ropes round the body; the rest to those before the bench, two to each.
+    const parent = ropes[i < 24 ? Math.floor(hash(i, 5, 202) * near * 0.999) : near + ((i - 24) % FAR)] as Rope;
     const span = parent.a1 - parent.a0;
     const from = 0.05 + 0.75 * hash(i, 6, 202);
     const length = Math.min(0.95 - from, (0.5 + 1.0 * hash(i, 7, 202)) / Math.abs(span));
@@ -594,6 +641,9 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     const angEye = Math.atan2(-(wx - EYE[0]), wz - EYE[1]);
     // They die out over the last metres of the skin.
     const fade = smooth(0.2, 3.8, inside + 1.2) * smooth(0.3, 1.5, run);
+    // The folds before the bench stop short of the swirl with the glowing split, which stays as it was.
+    // Between the split and the bench they lie low, so the lens sees the fire over them.
+    const clearOfEye = smooth(2.8, 4.4, rhoEye) * (wz > EYE[1] - 1 ? 0.4 + 0.6 * smooth(1.0, 2.6, Math.abs(wx - EYE[0])) : 1);
     // A rope that crosses the body lies on it, but none climbs higher than the skin could push it.
     const lying = Math.max(h, Math.min(top, bare + 0.5));
     let hard = 0;
@@ -607,6 +657,10 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     if (fade > 0.01) {
       for (const k of ropes) {
         const ang = k.about === 0 ? angBody : angEye;
+        const band = ropeBand(k);
+        const out = k.about === 0 ? d : rhoEye;
+        const thick = 1.92 * k.r * Math.hypot(1, band[2] / (k.about === 0 ? rhoBody : Math.max(0.3, rhoEye))) + 0.001;
+        if (out < band[0] - thick || out > band[1] + thick) continue;
         const lo = Math.min(k.a0, k.a1);
         const hi = Math.max(k.a0, k.a1);
         for (let turn = -1; turn <= 1; turn++) {
@@ -617,7 +671,7 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
           const rho = k.about === 0 ? rhoBody : Math.max(0.3, rhoEye);
           const e = ((k.about === 0 ? d : rhoEye) - middle[0]) / Math.hypot(1, middle[1] / rho);
           // It thins to nothing at each end, where it goes under, and is not of one girth between.
-          const r = k.r * Math.sqrt(smooth(0, 0.1, t) * smooth(1, 0.9, t)) * (0.78 + 0.22 * Math.sin(a * 5.3 + k.seed * 3) + 0.2 * Math.sin(a * 2.1 + k.seed * 5)) * (0.7 + 0.3 * fade);
+          const r = k.r * Math.sqrt(smooth(0, 0.1, t) * smooth(1, 0.9, t)) * (0.78 + 0.22 * Math.sin(a * 5.3 + k.seed * 3) + 0.2 * Math.sin(a * 2.1 + k.seed * 5)) * (0.7 + 0.3 * fade) * (k.far ? clearOfEye : 1);
           const ae = Math.abs(e);
           if (ae > 1.6 * r || r < 0.01) continue;
           const stands = 1.25 * r * (0.5 + 0.5 * fade);

@@ -93,9 +93,16 @@ export interface Env {
   seam(x: number, z: number): { d: number; x: number; z: number };
 }
 
+/** How far the trunk gives under its own weight, in body sizes and radians: it sinks onto a pad that has just come down and on the three
+ *  that carry it while the fourth is in the air, and the corner over that fourth one drops. */
+const SAG = { dip: 0.5, lean: 0.38, roll: 0.16, landRoll: 0.085, pitch: 0.12, landPitch: 0.075 };
+
+/** The radius of a foot where it stands, as a part of the room its pad is given on the crust. */
+export const FOOT_SHARE = 0.8;
+
 export interface Stood {
-  /** `age` is the seconds since the pad last came down, `hard` how hard it came down (0 to 1). */
-  feet: { x: number; z: number; lift: number; age: number; hard: number }[];
+  /** `age` is the seconds since the pad last came down, `hard` how hard it came down (0 to 1), `load` the share of its full weight on it now. */
+  feet: { x: number; z: number; lift: number; age: number; hard: number; load: number }[];
   body: { x: number; z: number; yaw: number };
   tuft: { x: number; y: number; z: number };
 }
@@ -147,7 +154,7 @@ const GRIT = 12;
 const BODY_RINGS = 128;
 const BODY_SIDES = 48;
 const NECK_RINGS = 46;
-const NECK_SIDES = 16;
+const NECK_SIDES = 32;
 const NECK_END = 14;
 const LEG_SIDES = 24;
 /** How high over the lake the end of the neck is held when the tuft is down, in lengths of a root. */
@@ -324,7 +331,8 @@ export class Animal {
       const s = i / (NECK_RINGS - 1);
       // It thickens again over its last quarter, to the crown the roots splay from.
       // As thick as a thigh where it leaves the body, and thinner all the way down; a small crown where the roots start.
-      let r = b.neckR * (0.25 + 0.75 * Math.pow(1 - s, 2.1)) * (1 + 0.25 * gauss(s / 0.08)) + 0.2 * k * smooth(0.56, 0.93, s);
+      // The crown is a bulb of cords twice as thick as the neck that carries it, over its last metre and a half.
+      let r = b.neckR * (0.25 + 0.75 * Math.pow(1 - s, 2.1)) * (1 + 0.25 * gauss(s / 0.08)) + 0.1 * k * smooth(0.56, 0.9, s) + 0.24 * k * smooth(0.8, 0.96, s);
       // A few uneven swellings along its lower half, no two necks alike.
       for (let n = 0; n < 4; n++) {
         const at = 0.46 + 0.5 * ((n + 0.15 + 0.7 * hash(n, seed + 61)) / 4);
@@ -339,13 +347,16 @@ export class Animal {
         const a = (j / NECK_SIDES) * Math.PI * 2;
         // Ribbed lengthwise, like sinew.
         // Toward the crown the cords stand out of it and wind round it a little: they are what the roots are the ends of.
-        const m = 1 + 0.16 * (wrap(s * 16, a, 4, seed + 3) - 0.5) + 0.05 * Math.cos(a * 2 + s * 5) + lerp(0.06, 0.13, smooth(0.6, 0.95, s)) * Math.cos(a * 4 + s * 7 + seed) + 0.05 * smooth(0.6, 0.95, s) * Math.cos(a * 7 - s * 5 + seed * 2);
+        const cord = this.cordAt(a, s);
+        const m = 1 + 0.16 * (wrap(s * 16, a, 4, seed + 3) - 0.5) + 0.05 * Math.cos(a * 2 + s * 5) + 0.06 * Math.cos(a * 4 + s * 7 + seed) + 0.52 * smooth(0.6, 0.9, s) * (cord - 0.52);
         this.neckLocal[(i * NECK_SIDES + j) * 2] = Math.cos(a) * r * m;
         this.neckLocal[(i * NECK_SIDES + j) * 2 + 1] = Math.sin(a) * r * m * (1 - 0.12 * (1 - s));
       }
       for (let j = 0; j <= NECK_SIDES; j++) {
         const under = smooth(0.1, -0.8, Math.sin((j / NECK_SIDES) * Math.PI * 2));
-        skin.describe(this.neck, i, j, s * b.neckLen, (j / NECK_SIDES) * Math.PI * 2 * Math.max(r, 0.16 * k), lerp(0.32, 0.5, smooth(0, 0.2, s)) + 0.45 * Math.pow(s, 2.4) - 0.1 * under, lerp(0.35, 1, smooth(0, 0.14, s)), r, seed, 1, s);
+        // Between the cords of the crown it is dark: the gaps go deep, and no light gets into them.
+        const gap = smooth(0.62, 0.9, s) * (1 - this.cordAt((j / NECK_SIDES) * Math.PI * 2, s));
+        skin.describe(this.neck, i, j, s * b.neckLen, (j / NECK_SIDES) * Math.PI * 2 * Math.max(r, 0.16 * k), lerp(0.32, 0.5, smooth(0, 0.2, s)) + 0.45 * Math.pow(s, 2.4) - 0.1 * under - 0.3 * gap, lerp(0.35, 1, smooth(0, 0.14, s)) * (1 - 0.8 * gap), r, seed, 1, s);
       }
     }
 
@@ -396,11 +407,11 @@ export class Animal {
       // A brush of roots of every length: some reach the melt, some hang short of it.
       const whole = b.tendrilLen * (0.62 + 0.45 * hash(fork ? parent : i, seed + 2)) * (!fork && i % 4 === 3 ? 0.7 : 1);
       const length = fork ? whole * (1 - at / (TENDRIL_RINGS - 1)) * (0.7 + 0.5 * hash(i, seed + 7)) : whole;
-      const thick = (fork || big ? 0.085 + 0.035 * hash(fork ? parent : i, seed + 1) : 0.034 + 0.022 * hash(i, seed + 1)) * k * (fork ? 0.6 * (1 - (0.5 * at) / (TENDRIL_RINGS - 1)) : 1);
+      const thick = (fork || big ? 0.105 + 0.045 * hash(fork ? parent : i, seed + 1) : 0.034 + 0.022 * hash(i, seed + 1)) * k * (fork ? 0.5 * (1 - (0.5 * at) / (TENDRIL_RINGS - 1)) : 1);
       for (let r = 0; r < TENDRIL_RINGS; r++) {
         const u = r / (TENDRIL_RINGS - 1);
         // Round and fibrous: as thick as a wrist where it leaves the crown and half that at its end, knotted on the way.
-        const rad = r === TENDRIL_RINGS - 1 ? 0.012 * k : thick * (1 - 0.55 * Math.pow(u, 1.4)) * (1 + 0.36 * (hash(i * 3 + r, seed + 9) - 0.4));
+        const rad = r === TENDRIL_RINGS - 1 ? 0.012 * k : thick * (1 - 0.62 * Math.pow(u, 1.1)) * (1 + 0.36 * (hash(i * 3 + r, seed + 9) - 0.4));
         for (let side = 0; side < TENDRIL_SIDES; side++) {
           const a = (side / TENDRIL_SIDES) * Math.PI * 2;
           local[(r * TENDRIL_SIDES + side) * 2] = Math.cos(a) * rad;
@@ -429,6 +440,22 @@ export class Animal {
       });
     }
     this.roots = new Float32Array(mains * TENDRIL_RINGS * 6);
+  }
+
+  /** The cords of the crown: 1 on the back of a cord, 0 in the gap between two. Each cord is the upper end of one stout root; it comes
+   *  down the neck winding round it a little and stands out of the crown where the root leaves. */
+  private cordAt(a: number, s: number): number {
+    const { b } = this;
+    const stout = b.tendrils;
+    const wide = (0.3 * Math.PI * 2) / stout;
+    let best = 0;
+    for (let i = 0; i < stout; i++) {
+      const at = ((i + 0.6 * hash(i, b.seed)) / stout) * Math.PI * 2 + (1.1 + 1.4 * hash(i, b.seed + 31)) * (hash(i, b.seed + 32) < 0.3 ? -1 : 1) * (1 - s) * 2.2;
+      let da = a - at;
+      da -= Math.round(da / (2 * Math.PI)) * 2 * Math.PI;
+      best = Math.max(best, gauss(da / (wide * (0.75 + 0.5 * hash(i, b.seed + 33)))));
+    }
+    return best;
   }
 
   private rag(n: number, length: number, broad: number): Rag {
@@ -554,26 +581,27 @@ export class Animal {
     marks.sort((x, y) => x - y);
     const along: number[] = [];
     for (const s of marks) if (along.length === 0 || s - (along[along.length - 1] as number) > 0.045 * k) along.push(s);
-    // The pad: height above its sole and radius, in units of the pad's radius; the last rings close the sole.
-    // A clump caked on the end of the shin, a bell that widens all the way down to its toes.
+    // The pad: height above its sole and radius, in units of the foot's radius; the last rings close the sole.
+    // The shin flares like the foot of a tree into splayed toes, on a thin dark sole a little wider than they are.
     const PAD: [number, number][] = [
-      [1, 0.3],
-      [0.88, 0.34],
-      [0.76, 0.42],
-      [0.63, 0.52],
-      [0.5, 0.63],
-      [0.38, 0.74],
-      [0.27, 0.84],
-      [0.17, 0.92],
-      [0.08, 0.98],
-      // What it has pushed out from under itself: a low rim of ash round the foot, a hand high, that stays down when the foot goes up.
-      [0.07, 1.18],
-      [0.04, 1.42],
-      [0, 1.55],
+      [1, 0.4],
+      [0.86, 0.41],
+      [0.72, 0.43],
+      [0.58, 0.48],
+      [0.45, 0.55],
+      [0.34, 0.64],
+      [0.24, 0.75],
+      [0.18, 0.87],
+      [0.13, 0.97],
+      [0.1, 1.04],
+      // The sole: a plate that spreads under the weight and draws in when the foot is lifted.
+      [0.09, 1.24],
+      [0.04, 1.32],
+      [0, 1.3],
       [0, 0.02],
     ];
-    // The foot is a clump caked on the end of the shin, splayed wide where it takes the weight.
-    const footR = 0.7 * b.padR;
+    // The foot is 0.4 to 0.6 m across where it takes the weight, and its sole a little more.
+    const footR = FOOT_SHARE * b.padR;
     // Three or four toes, the fore ones longer, each leg its own.
     const toeN = hash(seed, 64) < 0.5 ? 3 : 4;
     const toeAt = hash(seed, 65) * 6.283;
@@ -613,7 +641,7 @@ export class Animal {
       r += 0.035 * head(s - S1, 0.34) + 0.04 * head(s - S2, 0.26) + 0.02 * head(s - S3, 0.16);
       r += 0.05 * heads2(s - S1, 0.3) + 0.046 * heads2(s - S2, 0.26) + 0.012 * heads2(s - S3, 0.16);
       // The shin thickens into the clump of the foot.
-      r += 0.035 * smooth(S3 - 1.1 * k, S3, s);
+      r += 0.018 * smooth(S3 - 0.8 * k, S3, s);
       // Dead wood: knots along each shaft, where it pleases, and a slow swell and waist between them.
       const knots: [number, number][] = [];
       for (let n = 0; n < 9; n++) {
@@ -622,6 +650,8 @@ export class Animal {
       }
       r *= 1 + 0.08 * Math.sin((s * 3.1) / k + p1 * 3);
       r *= k * b.legR;
+      // The last fifth of the leg widens into the foot as the foot of a tree does: a long cone, not a club on a stick.
+      if (!inPad) r = Math.max(r, lerp(r, 0.4 * footR, Math.pow(smooth(S3 - 1.6 * k, S3, s), 1.5)));
       // No bone is straight: each bows a little between its joints.
       const lens = [S1, this.tibia, this.meta];
       for (let n = 0; n < 3; n++) {
@@ -639,8 +669,8 @@ export class Animal {
       let shape = 0;
       if (inPad) {
         const row = PAD[i - pad] as [number, number];
-        const flare = smooth(0.24, 0.5, row[1]);
-        r = lerp(r, footR * row[1], Math.max(flare, row[1] < 0.1 ? 1 : 0));
+        const flare = smooth(0.4, 0.7, row[1]);
+        r = footR * row[1];
         shape = flare;
       }
       for (let n = 0; n < LEG_SIDES; n++) {
@@ -790,7 +820,7 @@ export class Animal {
     const aim = plan.neck(seconds);
 
     // The pads.
-    const feet: { x: number; z: number; lift: number; age: number; hard: number; pitch: number; unload: number; land: number; fx: number; fz: number; w: number; from: [number, number]; to: [number, number]; high: number; dur: number }[] = [];
+    const feet: { x: number; z: number; lift: number; age: number; hard: number; load: number; pitch: number; unload: number; land: number; fx: number; fz: number; w: number; from: [number, number]; to: [number, number]; high: number; dur: number }[] = [];
     const rate = (plan.sigma(seconds + 0.05) - plan.sigma(seconds - 0.05)) / 0.1;
     let shiftSide = 0;
     let shiftFore = 0;
@@ -883,7 +913,9 @@ export class Animal {
         }
       }
       const world = env.drift(px, pz, seconds);
-      feet.push({ x: world[0], z: world[1], lift, age: w >= 0 ? 1e3 : age, hard, pitch, unload, land, fx, fz, w, from, to: goes, high, dur: plan.fidget > 0 || stepsOut ? STEP : (1 - DUTY) / Math.max(rate, 0.02) });
+      // The weight comes onto a pad over a third of a second after it is down and goes off it before it lifts.
+      const load = w >= 0 ? 0 : (1 - unload) * smooth(0, 0.32, age);
+      feet.push({ x: world[0], z: world[1], lift, age: w >= 0 ? 1e3 : age, hard, load, pitch, unload, land, fx, fz, w, from, to: goes, high, dur: plan.fidget > 0 || stepsOut ? STEP : (1 - DUTY) / Math.max(rate, 0.02) });
       const heavy = plan.weight ? plan.weight(seconds) : 1;
       shiftSide -= leg.side * unload * heavy;
       shiftFore -= leg.fore * unload * heavy;
@@ -941,8 +973,8 @@ export class Animal {
     const cx = centre[0] + right[0] * sideways + fwd[0] * forwards;
     const cz = centre[1] + right[2] * sideways + fwd[2] * forwards;
     // The corner of the trunk over a pad that has just come down sinks onto it; the corner over a pad that is lifting has nothing under it.
-    const pitch = b.tilt - 0.1 * lead - 0.08 * shiftFore - 0.045 * landFore + 0.04 * idle2 + 0.05 * pull;
-    const roll = 0.1 * shiftSide - 0.05 * landSide + 0.045 * idle;
+    const pitch = b.tilt - 0.1 * lead - SAG.pitch * shiftFore - SAG.landPitch * landFore + 0.04 * idle2 + 0.05 * pull;
+    const roll = SAG.roll * shiftSide - SAG.landRoll * landSide + 0.045 * idle;
     // The body stands on stilts: it rides as high as the leg that is most stretched lets it, and sinks when a pad goes out far.
     // A soft least of the four, so that it does not jerk when another leg becomes the one that holds it down.
     const span = (this.femur + this.tibia + this.meta) * 0.992;
@@ -963,7 +995,7 @@ export class Animal {
     for (const top of tops) soft += Math.exp(-(top - least) / (0.12 * k));
     const ride = least - 0.12 * k * Math.log(soft);
     // It rides at the height it had: it sinks from a little over it and comes back up.
-    const cy = ride + 0.09 * k - 0.3 * k * dip - 0.2 * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9));
+    const cy = ride + 0.09 * k - SAG.dip * k * dip - SAG.lean * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9));
     this.om = om;
     this.gulp = gulp;
     this.puff = puff;
@@ -1031,7 +1063,8 @@ export class Animal {
       const [knee, hock, end] = this.bones(hip, ankle, out);
       // If the leg is at full stretch the ankle is where the bones put it, and the pad with it.
       const base: V3 = [end[0] - axis[0] * this.ankle, end[1] - axis[1] * this.ankle, end[2] - axis[2] * this.ankle];
-      this.writeLeg(table, [hip, knee, hock, end, base], fwd, 1 - 0.07 * smooth(0, 0.2 * k, foot.lift), 1 - 0.4 * smooth(0, 0.12 * k, foot.lift));
+      // The toes splay as the weight comes onto them and draw together as it goes off.
+      this.writeLeg(table, [hip, knee, hock, end, base], fwd, 0.84 + 0.16 * foot.load, 0.8 + 0.2 * foot.load);
       // Grit leaves the pad as it swings and falls to the crust.
       for (const g of this.grit) {
         if (g.leg !== j) continue;
@@ -1083,7 +1116,7 @@ export class Animal {
       const turnWas = om2 * (seconds - LATE) + plan.habit.phase * 6.283;
       const side = 0.8 * k * (was[0] - shiftSide) + 0.5 * k * (Math.sin(turnWas * 0.62 + b.seed * 4) - idle2);
       const fore = 0.4 * k * (was[1] - shiftFore) + 0.45 * k * (Math.sin(turnWas) - idle);
-      const drop = -0.3 * k * (was[2] - dip) - 0.2 * k * (was[3] - lean);
+      const drop = -SAG.dip * k * (was[2] - dip) - SAG.lean * k * (was[3] - lean);
       high[0] += 0.8 * (right[0] * side + fwd[0] * fore);
       high[1] += 0.8 * drop;
       high[2] += 0.8 * (right[2] * side + fwd[2] * fore);
@@ -1091,7 +1124,7 @@ export class Animal {
     const tip: V3 = [lerp(high[0], low[0], aim.down), lerp(high[1], low[1], aim.down), lerp(high[2], low[2], aim.down)];
     const tuft = this.writeNeck(root, tip, aim.shape, fwd, seconds, aim.down);
 
-    return { feet: feet.map((p) => ({ x: p.x, z: p.z, lift: p.lift, age: p.age, hard: p.hard })), body: { x: cx, z: cz, yaw: at.yaw }, tuft: { x: tuft[0], y: tuft[1], z: tuft[2] } };
+    return { feet: feet.map((p) => ({ x: p.x, z: p.z, lift: p.lift, age: p.age, hard: p.hard, load: p.load })), body: { x: cx, z: cz, yaw: at.yaw }, tuft: { x: tuft[0], y: tuft[1], z: tuft[2] } };
   }
 
   private writeLeg(table: LegTable, nodes: V3[], fwd: V3, spread: number, rim: number): void {
@@ -1339,7 +1372,8 @@ export class Animal {
       // The second axis of a ring may look up or down: the roots leave the side that looks down.
       const sign = (frames[fq + 4] as number) > 0 ? -1 : 1;
       const ca = Math.cos(t.angle);
-      const sa = Math.sin(t.angle) * sign;
+      // A stout root is the end of a cord of the crown, and leaves it where that cord is.
+      const sa = Math.sin(t.angle) * (t.big ? 1 : sign);
       tx = frames[fq + 6] as number;
       ty = frames[fq + 7] as number;
       tz = frames[fq + 8] as number;

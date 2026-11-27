@@ -808,6 +808,22 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     }
   }
 
+  // The shelf of the line view, 2 to 13 m from its lens: its picture has broken blocks of scoria of many sizes standing clear of a bed of grit,
+  // each with a top that takes the sky. The land draws the bed and what is lower than a hand; these are the blocks. A stream of their own.
+  rng = ctx.rng('land/heap');
+  for (let i = 0; i < 700; i++) {
+    const a = rng.range(2.4, 13);
+    const r = rng.range(-6.2, 2.6);
+    const size = sized(0.16, 0.9, 1.2);
+    const x = -510.5 + 0.788 * a + 0.616 * r;
+    const z = 215.5 - 0.616 * a + 0.788 * r;
+    // In huddles with open grit between; the large ones lie anywhere.
+    if (drift(x + 7, z + 3, 2.1) + 0.5 * (drift(x, z, 0.6) - 0.5) < 0.36 + 0.2 * rng.next() - 0.25 * size) continue;
+    if (benchDistance(x, z) < 0.4 + size / 2) continue;
+    if (Math.hypot(x - CRACK_FOOT[0], z - CRACK_FOOT[1]) < 0.9 + size / 2) continue;
+    put(i % 4 ? kinds.angular : kinds.lump, x, z, size, { sink: rng.range(0.2, 0.3), flat: rng.range(0.5, 0.9), tone: rng.range(0.75, 1.25) });
+  }
+
   const discs = ctx.rig.contactDiscs(shades.length);
   shades.forEach((s, i) => ctx.rig.setDisc(discs, i, s[0], s[1], s[2], s[3]));
 

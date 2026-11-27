@@ -89,6 +89,10 @@ vec3 blackbody(float kelvin) {
   return r * vec3(1.0, 2.87 * exp(-4386.0 / kelvin) + 0.6 * clip, 0.003 + 0.12 * clip);
 }
 
+// How much brighter the pale quarter of the dusk is than its mean, as a face that stands upright and looks at it takes it (skyIrradiance).
+// What a wet or glassy face mirrors (skyRadiance) is left even: toward the fume the sky is darker but the fume itself is lit, and the two about cancel.
+const float SKY_LEAN = 0.5;
+
 // Radiance of the dusk sky toward d, for lighting. The warm side is the fume lit by the lake.
 vec3 skyRadiance(vec3 d) {
   float up = clamp(d.y, -1.0, 1.0);
@@ -113,6 +117,10 @@ vec3 skyIrradiance(vec3 n) {
   vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.55 * max(n.y, 0.0)), up) * uFill;
   // The gain is the light's, not uFill's, because the air reads uFill for its haze: it sets rock under the thinned air to the tone of the pictures.
   e *= 1.9 + 0.1 * max(n.y, 0.0);
+  // The dusk is not even all round: the quarter of the sky away from the fume holds the last light and the quarter over the fume is the darker.
+  // A level face takes exactly what it took. A face that leans toward the pale quarter gains with its lean and one that leans away loses as much:
+  // so a ripple of the crust, a ledge, the side of a stone are told apart in the first order of their slope, and a butte has a lit face and a dull one.
+  e *= 1.0 - SKY_LEAN * dot(n.xz, normalize(uWarmDir.xz));
   float w = 0.5 + 0.5 * dot(n, uWarmDir);
   // The even warm fill is whole on a level face (as before, exactly) and falls to 0.45 of itself on an upright one: it is what tinted every far
   // wall brown. The warmth of a wall comes from the round lights, which have a place and a reach.
@@ -277,6 +285,10 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   }
   vec2 poolWay;
   vec3 poolLit = poolApron(p, n, 6.0, poolWay);
+  // On the ground the pool's fire lies at the level of the crust and rakes it. A level face took a third of what a face turned to the pool takes,
+  // whichever way its ripples ran, and the apron stood as one even orange wash with the relief of the crust lost in it. Now a level face takes an
+  // eighth, a face that leans a quarter toward the pool all of it and one that leans as much away none: each ripple has a lit side and a dark one.
+  poolLit *= clamp(0.4 + 2.4 * dot(n.xz, poolWay), 0.0, 1.0);
   e += poolLit;
   aim += vec3(poolWay, 1.0) * poolLit.r;
   // The stream of the fall (uRigStream: a row every few metres of z from the lip to the toe of the fan, each the middle of the stream, half the
@@ -306,6 +318,9 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     // A second read at 3 m, at half strength: the shade of a leg or a boulder runs on past its first metre and thins, as a thrown shade does.
     // The read costs nothing that can be measured (the whole frame at the wide key with and without the first: 20.87 and 20.93 s).
     float thrown = max(contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y)), 0.5 * contactDrawn(vec3(p.x + 2.15 * toward.x, p.y, p.z + 2.15 * toward.y)));
+    // And where the thing itself stands: the crust under a pad and round its edge is closed to the fire as it is to the sky. The thrown shade alone
+    // began a pace behind the foot, so a pad stood on lit crust and its shade lay apart from it.
+    thrown = max(thrown, contactDrawn(p));
     e *= 1.0 - low * EMITTER_SHADE * thrown;
   }
   return e * uCast;
