@@ -14,7 +14,7 @@ export const FIELD = { cx: -3.5, cz: 0.3, half: 14.5, size: 1024 };
 export const UNDER = -0.12;
 
 export const BODY = {
-  centre: new THREE.Vector3(-3.5, 0.8, -0.4),
+  centre: new THREE.Vector3(-3.5, 0.4, -0.4),
   radii: new THREE.Vector3(2.55, 1.75, 1.8),
   // Tilted: the back turned up toward the bench side, the neck end down in the crust.
   turn: new THREE.Euler(0.3, 0.2, 0.2, 'YXZ'),
@@ -428,6 +428,20 @@ interface Rope {
   split?: [number, number];
   /** One of the folds before the bench, beyond those round the body. */
   far?: boolean;
+  /** Set by `ropeBand`: the least and the most its middle can be out, and the most its middle can turn for a radian. */
+  band?: [number, number, number];
+}
+
+// How far out the middle of a rope can lie, whatever the angle, and how steeply it can cross: the sums of ropeMiddle at their limits.
+// A point farther from this band than the rope is thick is not on the rope, and none of the rope's sums are done for it.
+function ropeBand(k: Rope): [number, number, number] {
+  if (k.band) return k.band;
+  const lo = Math.min(k.d0, k.d1) - 1.5 * Math.abs(k.sway);
+  const hi = Math.max(k.d0, k.d1) + 1.5 * Math.abs(k.sway);
+  const turn = Math.abs((k.d1 - k.d0) / (k.a1 - k.a0)) + Math.abs(k.sway * k.beat);
+  const up = k.parent ? ropeBand(k.parent) : [0, 0, 0];
+  k.band = [lo + (up[0] as number), hi + (up[1] as number), turn + (up[2] as number)];
+  return k.band;
 }
 
 const DEG = Math.PI / 180;
@@ -475,7 +489,9 @@ function makeRopes(): Rope[] {
   const FAR = 26;
   for (let i = 0; i < FAR; i++) {
     const out = 5.0 + (7.6 * (i + hash(i, 21, 203))) / FAR;
-    const wide = (38 + 60 * hash(i, 22, 203)) * (5.5 / out + 0.45);
+    // Every other one runs slantwise, out toward the bench as it goes round: the lens looks along those and sees their cords.
+    const slant = i % 2 === 1 ? (hash(i, 35, 203) < 0.5 ? -1 : 1) * (1.3 + 1.9 * hash(i, 36, 203)) : 0;
+    const wide = (slant === 0 ? 38 + 60 * hash(i, 22, 203) : 22 + 26 * hash(i, 22, 203)) * (5.5 / out + 0.45);
     const mid = -105 + 210 * ((i * 0.618034 + 0.2 * hash(i, 23, 203)) % 1);
     const flip = hash(i, 24, 203) < 0.5 ? -1 : 1;
     const thick = 0.24 + 0.34 * Math.pow(hash(i, 25, 203), 1.3);
@@ -483,8 +499,8 @@ function makeRopes(): Rope[] {
       about: 0,
       a0: (mid - flip * 0.5 * wide) * DEG,
       a1: (mid + flip * 0.5 * wide) * DEG,
-      d0: out + 1.5 * (hash(i, 26, 203) - 0.5),
-      d1: out + 1.5 * (hash(i, 27, 203) - 0.5),
+      d0: out + 1.5 * (hash(i, 26, 203) - 0.5) - slant,
+      d1: out + 1.5 * (hash(i, 27, 203) - 0.5) + slant,
       r: thick,
       level: 0.2 + 3.2 * hash(i, 28, 203),
       sway: 0.2 + 0.3 * hash(i, 29, 203),
@@ -626,7 +642,8 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     // They die out over the last metres of the skin.
     const fade = smooth(0.2, 3.8, inside + 1.2) * smooth(0.3, 1.5, run);
     // The folds before the bench stop short of the swirl with the glowing split, which stays as it was.
-    const clearOfEye = smooth(2.8, 4.4, rhoEye);
+    // Between the split and the bench they lie low, so the lens sees the fire over them.
+    const clearOfEye = smooth(2.8, 4.4, rhoEye) * (wz > EYE[1] - 1 ? 0.4 + 0.6 * smooth(1.0, 2.6, Math.abs(wx - EYE[0])) : 1);
     // A rope that crosses the body lies on it, but none climbs higher than the skin could push it.
     const lying = Math.max(h, Math.min(top, bare + 0.5));
     let hard = 0;
@@ -640,6 +657,10 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     if (fade > 0.01) {
       for (const k of ropes) {
         const ang = k.about === 0 ? angBody : angEye;
+        const band = ropeBand(k);
+        const out = k.about === 0 ? d : rhoEye;
+        const thick = 1.92 * k.r * Math.hypot(1, band[2] / (k.about === 0 ? rhoBody : Math.max(0.3, rhoEye))) + 0.001;
+        if (out < band[0] - thick || out > band[1] + thick) continue;
         const lo = Math.min(k.a0, k.a1);
         const hi = Math.max(k.a0, k.a1);
         for (let turn = -1; turn <= 1; turn++) {
