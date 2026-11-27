@@ -111,7 +111,9 @@ def patch(cx, cy, rx, ry, turn_deg, warp):
 
 
 bend = (260.0 * (swell(22, 1) - 0.5), 260.0 * (swell(22, 2) - 0.5))
-broken = 0.55 + 0.45 * step(0.3, 0.62, swell(9, 3))
+# (Never full: toward its middle a deck closes into clumps with gaps between, toward its edge it thins through the level at which
+# the place draws scattered cells (shared/weather.ts, bankDepth), so no deck ends on the outline of its patch.)
+broken = 0.36 + 0.34 * step(0.36, 0.6, swell(5, 3))
 # The middle deck (px of the master: middle, half lengths, turn). Across the second lake of the skull massif, along the jaw coast,
 # across three ranges of the upper chest and two of the lower, and, so the far body is not bare beside the near, by the hip and
 # over the root of the far arm.
@@ -133,14 +135,12 @@ bank = np.maximum(0.7 * bank, deck)
 # Stratus: where it is pooled. The picture holds only the pools, wide and soft; the sheet that draws it (sky/index.ts) fills each
 # pool up to a level against the height of the land itself (land/relief-a.png), so the stratus lies in the valleys, laps the
 # flanks and lets the crests stand out of it, and its edge is the ground's own contour. A pool stands highest in its middle.
-near_land = step(0.62, 0.9, ndimage.gaussian_filter(land, 6))
+near_land = step(0.8, 0.97, ndimage.gaussian_filter(land, 10))
 # (Most about the head and the chest, which the rise sees alone and from low down; few toward the far end of the land, which is
 # only ever seen with the whole of it.)
 nearer = 1.0 - 0.75 * step(2900.0, 3900.0, px)
-pools = step(0.64, 0.8, swell(10, 4)) * near_land * nearer
-# (And two against coasts that face the wind, half on the water: px of the master.)
-for d in [(960, 1470, 190, 150, 70), (1750, 2290, 260, 120, 25), (2150, 520, 230, 110, -30)]:
-    pools = np.maximum(pools, 0.7 * patch(*d, (0.4 * bend[0], 0.4 * bend[1])) * (0.4 + 0.6 * step(0.35, 0.6, swell(7, 8))))
+pools = step(0.58, 0.76, swell(10, 4)) * near_land * nearer
+# (None on the coasts or over water: three that lay half on the sea read from orbit as cotton laid on the map.)
 fog = np.maximum(0.6 * fog, ndimage.gaussian_filter(pools, 3.0))
 
 # Ice: long swaths that cross the land at an angle unlike the ranges of the chest (those run steeply up and down the master:

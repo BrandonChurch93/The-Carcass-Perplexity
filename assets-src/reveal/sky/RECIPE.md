@@ -39,8 +39,8 @@ y -820 to 3961.25). Where the weather stands:
 Made by: `assets-src/reveal/sky/make_banks.py` (Python 3 with numpy, scipy and Pillow), committed here
 From: `public/assets/reveal/land/relief-a.png` (blue: the height of the land on its widest map)
 Prompt or command: `python3 assets-src/reveal/sky/make_banks.py`, from the root of the repo; no model and no prompt; the only noise is of a fixed seed
-Takes: 7 made (three in the first wave; in the second: the deck and the pools as lines, which read as white sausages; the pools as patches filled to a level; the ice in wide swaths; the ice in narrow swaths); the seventh is kept
-Why this one: the cloud breaks a part of the figure (a lake of the skull, the jaw coast, a few ribs) and from orbit the whole still reads; the ice lies in narrow swaths that cross the ranges and not along the spine
+Takes: 10 made (three in the first wave; in the second: the deck and the pools as lines, which read as white sausages; the pools as patches filled to a level; the ice in wide swaths; the ice in narrow swaths; no pools on the coasts and a deck broken finer, which left almost no deck; two more for how full the deck stands); the tenth is kept
+Why this one: the deck stands at the level where the place draws scattered cells, closing to clumps in its middle, so no patch ends on its outline; the stratus is pooled inland only; the ice lies in narrow swaths that cross the ranges and not along the spine
 Date: 2026-11-27
 
 2048 x 1152, on the rectangle `COVER_RECT` of `src/places/reveal/shared/weather.ts`, the same as `cover.png`.
@@ -49,10 +49,11 @@ Used by: `src/places/reveal/shared/weather.ts` (`bankDepth`, `fogDepth`, `highDe
 
 - red: banks. The rise of the ground along the wind of the low field, read at the size of a whole range (60 km): cloud piles on the
   flank that faces the wind. With it a broken middle deck in six patches: across the second lake of the skull massif, along the jaw
-  coast, across a few of the upper and of the lower ribs, and two on the far body.
-- green: stratus. The floors that lie under the ground round them (15 km), and pools near the land broken by a swell, with three
-  patches against the coasts that face the wind. The place fills each pool to a level against the land's own relief
-  (`land/relief-a.png`, read only), so the edge of the stratus is the contour of the valley it lies in.
+  coast, across a few of the upper and of the lower ribs, and two on the far body. A patch is never full: it stands at the level
+  at which the place draws scattered cells, and closes into clumps only in its middle.
+- green: stratus. The floors that lie under the ground round them (15 km), and pools well inland broken by a swell. The place
+  fills each pool to a low level against the land's own relief (`land/relief-a.png`, read only), so only the valley floors
+  fill and the edge of the stratus is the branching of the valley it lies in.
 - blue: ice. Five narrow swaths that cross the ranges at an angle unlike their own, where the high ice is drawn out in streaks.
   (Up to the second wave this channel held a pooled haze that nothing read.)
 

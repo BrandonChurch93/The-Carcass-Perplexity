@@ -90,21 +90,17 @@ void main() {
   // (The height is the land's own widest relief, so the edge of the stratus is the contour of the valley it lies in.)
   float pool = fogDepth(fogAt);
   vec2 uvGround = (fogAt - uGroundRect.xy) * uGroundRect.zw;
-  vec2 uvDrawnOut = LOW_A * (fogAt - uTime * vec2(0.9, -0.5)) / vec2(620.0, 330.0) + vec2(0.17, 0.58);
   // (The change of each place across the pixel, before the branch: see pic in shared/weather.ts.)
   uvGround = clamp(uvGround, 0.0, 1.0);
   vec4 gGround = GRADS(uvGround);
-  vec4 gDrawnOut = GRADS(uvDrawnOut);
   float fogIs = 0.0;
   if (pool > 0.0) {
     float height = pic(uGround, uvGround, gGround).b;
-    // (The relief holds the shelf and the sounds a little over its sea level: all of that is water, and level.)
-    fogIs = 6.0 * max(0.36 + 0.03 * smoothstep(0.0, 0.25, pool) + 0.3 * pool - max(height, 0.4), 0.0);
-    // (On open water nothing holds it to a level: there it is torn along the wind into the fibre of its own top and thins away.)
-    float drawnOut = cloudAt(uMatStreaks, uvDrawnOut, gDrawnOut, 0.31);
-    fogIs *= mix(1.0, clamp(1.5 * fogVeil * drawnOut - 1.0, 0.0, 1.0), 1.0 - smoothstep(0.34, 0.42, height));
+    // (Only the floors fill: the level stays under the flanks, so the stratus is the branching of the valley and never a
+    // sheet over a range. Nor over water: the relief holds the shelf and the sounds a little over its sea level.)
+    fogIs = 7.0 * max(0.415 + 0.14 * pool - height, 0.0) * smoothstep(0.34, 0.41, height) * (0.55 + 0.45 * smoothstep(0.7, 1.3, fogVeil));
   }
-  float fogA = 0.9 * (1.0 - exp(-1.2 * fogIs)) * uArrive;
+  float fogA = 0.8 * (1.0 - exp(-1.2 * fogIs)) * uArrive;
   vec2 fogSlope = vec2(0.0);
   if (fogIs > 0.0) fogSlope = (pic(uMatVeilNh, fogUv, fogG).rg * 2.0 - 1.0) * mat2(0.5, 0.87, -0.87, 0.5);
   float fogSelf = clamp(0.5 + 0.3 * dot(fogSlope, toSun), 0.0, 1.0);
@@ -117,7 +113,7 @@ void main() {
   vec3 bankColour = cloudLight(bankAt, 0.12 + 0.95 * bankSelf, 0.35 + 0.65 * bankA, 0.25) * (0.72 + 0.5 * clamp(bankIs / 3.5, 0.0, 1.0));
   // (Fog is seen from above as a level pale floor, a little blue, with no relief of its own.)
   // (Stratus has a top all the same: long low swells that the sun grazes, and it is thin and blue toward its edge.)
-  vec3 fogColour = cloudLight(fogAt, 0.22 + 0.6 * fogSelf, 0.4 + 0.5 * clamp(fogIs, 0.0, 1.0), 0.0) * mix(vec3(0.58, 0.7, 0.9), vec3(0.74, 0.8, 0.9), clamp(fogIs * 0.7, 0.0, 1.0));
+  vec3 fogColour = cloudLight(fogAt, 0.22 + 0.6 * fogSelf, 0.4 + 0.5 * clamp(fogIs, 0.0, 1.0), 0.0) * mix(vec3(0.5, 0.6, 0.78), vec3(0.62, 0.68, 0.78), clamp(fogIs * 0.7, 0.0, 1.0));
   // Over the sun's image on the sea the low air is lit from behind: it scatters the sun forward, warm, so the sheet of light
   // is gold through it and not the white of the bare glitter.
   // (No haze is laid over the low land: pooled there it read as grey smears on glass and flattened the ranges.)
@@ -137,7 +133,7 @@ void main() {
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   lowColour *= 1.0 - 0.4 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
-  float b = min(high * 0.46, 0.66);
+  float b = min(high * 0.46, 0.32);
   // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
   if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
   // From the ground up: the fog, the low field, the banks, the ice.

@@ -98,15 +98,20 @@ float cloudIn(sampler2D t, vec2 uv, float mean) {
 // and the fineness changes from one run to the next. So the change of every place across the pixel is taken before the first
 // such branch (GRADS) and handed to the read (pic, cloudAt), which is then the same read as texture2D would make, every run.
 #define GRADS(uv) vec4(dFdx(uv), dFdy(uv))
+float fineness(sampler2D t, vec4 g) {
+  vec2 size = vec2(textureSize(t, 0));
+  vec2 a = g.xy * size;
+  vec2 b = g.zw * size;
+  return 0.5 * log2(max(max(dot(a, a), dot(b, b)), 1e-12));
+}
 vec4 pic(sampler2D t, vec2 uv, vec4 g) {
-  return textureGrad(t, uv, g.xy, g.zw);
+  return textureLod(t, uv, fineness(t, g));
 }
 vec4 pic(sampler2D t, vec2 uv, vec4 g, float coarser) {
-  float k = exp2(coarser);
-  return textureGrad(t, uv, g.xy * k, g.zw * k);
+  return textureLod(t, uv, fineness(t, g) + coarser);
 }
 float cloudAt(sampler2D t, vec2 uv, vec4 g, float mean) {
-  return dot(textureGrad(t, uv, g.xy, g.zw).rgb, vec3(0.3, 0.55, 0.15)) / mean;
+  return dot(textureLod(t, uv, fineness(t, g)).rgb, vec3(0.3, 0.55, 0.15)) / mean;
 }
 
 // Where the five lays of the low field were last read, and how much of the field each one made there (set by lowDepth).
@@ -285,7 +290,9 @@ float highDepth(vec2 at) {
   highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
   highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1250.0, 900.0) + vec2(0.7, 0.2);
   // (Over the land the ice lies in long swaths across the ranges (sky/banks.png, blue), carried on its own wind with the rest.)
-  vec2 highUvFibre = mat2(0.97, 0.26, -0.26, 0.97) * hv / vec2(2300.0, 380.0) + vec2(0.43, 0.11);
+  // (The streaks bend as they go: drawn straight they were scratches on a glass.)
+  vec2 hw = hv + vec2(0.0, 55.0 * sin(hv.x / 330.0 + 1.3 * sin(hv.y / 410.0)) + 16.0 * sin(hv.x / 97.0 + 0.02 * hv.y + 2.0));
+  vec2 highUvFibre = mat2(0.97, 0.26, -0.26, 0.97) * hw / vec2(900.0, 110.0) + vec2(0.43, 0.11);
   vec2 uvSwath = clamp((hv - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0);
   highGSheet = GRADS(highUvSheet);
   highGThread = GRADS(highUvThread);
@@ -300,15 +307,15 @@ float highDepth(vec2 at) {
   vec2 h = mat2(0.5, 0.87, -0.87, 0.5) * hv;
   float wide = 0.5 + 0.5 * sin(g.x / 480.0 + 1.7 * sin(g.y / 620.0 + 0.4)) * sin(g.y / 530.0 + 1.3 * sin(g.x / 700.0 + 1.9));
   float fine = 0.5 + 0.5 * sin(h.x / 205.0 + 1.5 * sin(h.y / 260.0)) * sin(h.y / 225.0 + 1.2 * sin(h.x / 310.0 + 0.8));
-  float where = max(0.8 * smoothstep(0.56, 0.96, 0.6 * wide + 0.4 * fine), swath * (0.75 + 0.25 * fine)) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
-  if (where <= 0.0) return 0.0;
+  float where = 0.8 * smoothstep(0.56, 0.96, 0.6 * wide + 0.4 * fine) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
+  if (where <= 0.0 && swath <= 0.0) return 0.0;
   float sheet = cloudAt(uMatVeil, highUvSheet, highGSheet, 0.27);
   float thread = cloudAt(uMatStreaks, highUvThread, highGThread, 0.31);
-  // (In a swath over the land the ice is a little thicker, so its streaks and the shadow they throw are seen to cross the ranges.)
   float depth = sheet * mix(1.0, thread, 0.55) * where * 1.7 - 0.85;
-  // (There the same fibre is read drawn out six to one along the wind, so it comes as long thin streaks and not as a sheet.)
+  // (In a swath over the land the same fibre is read drawn out eight to one along the wind: long thin streaks that cross the
+  // ranges, with their shadow. Thickening the sheet itself there gave a smudge.)
   float fibre = cloudAt(uMatStreaks, highUvFibre, gFibre, 0.31);
-  float streaked = smoothstep(0.0, 0.3, swath) * clamp(0.9 * (fibre * (0.4 + 0.6 * thread) * (0.35 + 0.85 * swath) - 1.0), 0.0, 1.0);
+  float streaked = smoothstep(0.0, 0.3, swath) * clamp(0.7 * (fibre * (0.5 + 0.5 * thread) * (0.3 + 0.75 * swath) - 1.25), 0.0, 1.0);
   return max(1.0 - exp(-1.1 * max(depth, 0.0)), streaked) * far;
 }
 
@@ -331,8 +338,10 @@ vec4 bankGB = vec4(0.0);
 float bankNear = 0.0;
 const mat2 BANK_A = mat2(0.6, 0.8, -0.8, 0.6);
 const mat2 BANK_B = mat2(0.94, 0.34, -0.34, 0.94);
+float bankHeld = 0.0;
 float bankDepth(vec2 bankAt) {
   float held = texture2D(uBanks, clamp((bankAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).r;
+  bankHeld = 0.0;
   // (The sky stands clear over the lake of the Eye, where the rise begins.)
   float clear = smoothstep(100.0, 230.0, length(bankAt - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   bankNear = 0.0;
@@ -361,6 +370,7 @@ float bankDepth(vec2 bankAt) {
   // the edge of its hold, and the thin veil of the streak among them. What the range holds is how many knots stand, never
   // how bright one soft mass is: a bank has no outline to be a lump by.)
   float gather = held * today * clear;
+  bankHeld = gather;
   // (Where the range holds it hardest the bank is one body, as cloud piled on a windward slope is: the knots have closed up,
   // and what is left of them is the lumped top of the bank, which the sun models. Out from there the body opens into knots
   // again, so the bank has a torn edge and no outline. Knots alone, all the way in, read as specks of snow on the range.)
@@ -403,7 +413,10 @@ float cloudShade(vec2 xz) {
   float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * lift), 0.0));
   float high = highDepth(xz + toSun * ${HIGH_KM.toFixed(1)} * lift);
   // (The middle deck stands well off the ground, and its shadow is drawn well off it: that is what tells its height.)
-  float bank = 1.0 - exp(-1.3 * max(bankDepth(xz + toSun * ${BANK_KM.toFixed(1)} * 1.5 * lift), 0.0));
+  float bank = 1.0 - exp(-1.3 * max(bankDepth(xz + toSun * ${BANK_KM.toFixed(1)} * 2.2 * lift), 0.0));
+  // (Under a deck of small cells the ground is dimmed as a whole as well: between the shadows of the cells the sun comes through
+  // their thin, so the deck's shadow is one mottled body lying off it, not a scatter of dots lost among the cells.)
+  bank = max(bank, 0.6 * smoothstep(0.15, 0.4, bankHeld));
   float standing = coverAt(xz + toSun * 6.5 * lift).b;
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
