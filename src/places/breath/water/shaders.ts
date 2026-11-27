@@ -102,7 +102,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
     // Lanes many metres long of smooth water between ruffled water lie along the lines of the stream and go down with it too.
     vec4 f3 = textureLod(tRipple, vec2(ln.r / 11.0 + 0.61, 0.021 * xz.y - 0.004 * uTime), level - 2.6);
     lanes = clamp(0.5 + 2.0 * (f3.g + f3.a - 1.0), 0.0, 1.0);
-    float cut = mix(0.96, 0.5, load) - 0.3 * (lanes - 0.5);
+    float cut = mix(0.96, 0.66, load) - 0.3 * (lanes - 0.5);
     flecks = moving * seen * mix(smoothstep(cut, cut + 0.14, f2.r + f2.b - 1.0 + 0.5 * (f2.a - 0.5)),
                                  smoothstep(cut, cut + 0.14, f1.r + f1.b - 1.0 + 0.5 * (f1.a - 0.5)), w1);
     slick = smoothstep(0.55, 0.7, lanes) * moving;
@@ -196,7 +196,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float path = depth / max(nv, 0.25);
   // It is milky: the silt hides the bed a hand deep. With clearer water the wide view showed the gravel of the bed through the whole
   // channel as a speckle, where the picture has one soft opaque green.
-  float clear = exp(-path * 9.0);
+  float clear = exp(-path * 14.0);
   vec3 tone = mix(vec3(0.2, 0.245, 0.215), mix(vec3(0.125, 0.215, 0.195), vec3(0.065, 0.16, 0.165), smoothstep(0.2, 0.7, depth)), smoothstep(0.03, 0.2, depth));
   // Seen from low down and against the light the body of shallow water is not green: what comes back out of it is the low sun in its silt,
   // a dull warm olive, as under the feeding waders in the picture. From above it is the teal of the wide view.
@@ -226,18 +226,11 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // the water under it, so the silt there is in its shade and the bed is hidden by it.
   colour = mix(colour * (1.0 - 0.35 * image.a), mix(0.4, 0.26, low) * image.rgb, mix(0.5, 0.75, low) * image.a);
   alpha = mix(alpha, 1.0, 0.6 * image.a);
-  // What the water leaves at its edge: a broken line of scum and small bubbles, pale, that rides the ragged line of the bank.
-  float line = depth - ragged;
-  float scum = line > 0.1 || far > 60.0 ? 0.0 : smoothstep(0.012, 0.03, line) * smoothstep(0.075, 0.04, line) * smoothstep(0.4, 0.6, vnoise(xz * 3.1 + 0.2 * uTime * stream) + 0.25 * vnoise(xz * 17.0)) * smoothstep(60.0, 20.0, far);
-  if (scum > 0.0) {
-    float bubbles = 0.55 + 0.45 * smoothstep(0.35, 0.7, vnoise(xz * 70.0));
-    vec3 froth = vec3(0.62, 0.58, 0.5) * bubbles * skyUp * (0.6 + 0.8 * sunHere);
-    colour = mix(colour, froth, 0.7 * scum);
-    alpha = mix(alpha, 1.0, 0.7 * scum);
-  }
   // What the stream carries is drawn on the water: pale, matt, lit by the sky and the low sun.
   if (flecks > 0.0) {
     vec3 pale = vec3(0.6, 0.58, 0.52) * (skyUp * open + uSunColour * (0.22 * sunHere));
+    // Against the glare a raft of froth is still the paler thing: it is wet, and takes part of the shine of the water it rides.
+    pale = max(pale, 1.2 * colour);
     colour = mix(colour, pale, 0.6 * flecks);
     alpha = mix(alpha, 1.0, 0.6 * flecks);
   }

@@ -83,11 +83,12 @@ export function edgeGeometry(height: (x: number, z: number) => number, sea: numb
       const s = ROW[k] as number;
       const px = x + (gx / g) * s;
       const pz = z + (gz / g) * s;
-      const y = Math.max(height(px, pz), sea - LIFT + 0.004);
-      if (k > 0 && whole === ROW.length && y - last > 1.1 * (s - (ROW[k - 1] as number)) + 0.02) whole = k;
+      // On the water's side the skin lies level a hair over the sheet whatever stands there: a stone a step out is not this bank.
+      const y = s < 0 ? sea - LIFT + 0.004 : Math.max(height(px, pz), sea - LIFT + 0.004);
+      if (k > 0 && whole === ROW.length && Math.abs(y - last) > 1.1 * (s - (ROW[k - 1] as number)) + 0.02) whole = k;
       last = y;
       places.push(px, y + LIFT, pz);
-      outward.push(-gx / g, -gz / g);
+      outward.push(-gx / g, -gz / g, s);
     }
     reach.push(whole);
     rows.set(key, first);
@@ -119,7 +120,11 @@ export function edgeGeometry(height: (x: number, z: number) => number, sea: numb
             const p = cut[c] as number;
             const q = cut[c + 1] as number;
             const far = Math.min(reach[p / ROW.length] as number, reach[q / ROW.length] as number);
-            for (let k = 0; k + 1 < far; k++) index.push(p + k, q + k, p + k + 1, p + k + 1, q + k, q + k + 1);
+            for (let k = 0; k + 1 < far; k++) {
+              // Two rows a step apart along the bank that stand at different heights have a ledge between them: no skin across it.
+              if (Math.abs((places[(p + k + 1) * 3 + 1] as number) - (places[(q + k + 1) * 3 + 1] as number)) > 0.1) break;
+              index.push(p + k, q + k, p + k + 1, p + k + 1, q + k, q + k + 1);
+            }
           }
         }
       }
@@ -127,7 +132,7 @@ export function edgeGeometry(height: (x: number, z: number) => number, sea: numb
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(places), 3));
-  g.setAttribute('aOut', new THREE.BufferAttribute(new Float32Array(outward), 2));
+  g.setAttribute('aOut', new THREE.BufferAttribute(new Float32Array(outward), 3));
   g.setIndex(new THREE.BufferAttribute(new Uint32Array(index), 1));
   g.computeVertexNormals();
   return g;
@@ -136,8 +141,8 @@ export function edgeGeometry(height: (x: number, z: number) => number, sea: numb
 export const EDGE_VERTEX = /* glsl */ `
 varying vec3 vWorld;
 varying vec3 vFace;
-attribute vec2 aOut;
-varying vec2 vOut;
+attribute vec3 aOut;
+varying vec3 vOut;
 void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
   vWorld = w.xyz;
@@ -151,7 +156,7 @@ export const EDGE_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
 varying vec3 vFace;
-varying vec2 vOut;
+varying vec3 vOut;
 uniform float uSea;
 uniform sampler2D tCarried;
 uniform vec4 uFlowRect;
@@ -163,7 +168,7 @@ void main() {
   float far = length(toEye);
   // Metres above the still water: the skin's own height, which follows a ledge where the land map (a third of a metre a cell) cannot.
   float up = vWorld.y - uSea - ${LIFT.toFixed(3)};
-  if (up > 0.22 || far > 170.0) discard;
+  if (up > 0.32 || far > 170.0) discard;
   vec4 land = texture2D(tLand, (xz - uLandRect.xy) * uLandRect.zw);
   // Where the sheet is drawn (shaders.ts: the same ragged line). The sheet stops short of the rock by as much as its map is coarse: below
   // the water's level this skin is the water that reaches the rock, and under the sheet it is nothing.
@@ -174,7 +179,9 @@ void main() {
   vec3 face = normalize(vFace);
   face = face.y < 0.0 ? -face : face;
   // Which way the bank faces: out over the water.
-  vec2 out2 = vOut / max(length(vOut), 1e-3);
+  vec2 out2 = vOut.xy / max(length(vOut.xy), 1e-3);
+  // Metres in from the waterline across the bank. The skin ends half a metre in, and what is on it ends before that.
+  float inland = 1.0 - smoothstep(0.26, 0.46, vOut.z);
 
   // The swash: each stretch of bank on its own beat, quick up and slow back, a finger to a hand high. No two stretches lap together.
   float beat = uTime * 1.25 + 14.0 * vnoise(xz * 0.31) + 5.0 * vnoise(xz * 0.07 + 4.0);
@@ -193,7 +200,7 @@ void main() {
   float froth = clamp(front * bits * (0.25 + 0.75 * rising) + left * (0.3 + 0.7 * lee), 0.0, 1.0);
 
   // The rock the swash has been over stays wet a hand above the line, raggedly, and dries upward.
-  float reach = 0.04 + 0.07 * vnoise(xz * 0.6 + 9.0) + 0.025 * vnoise(xz * 4.7);
+  float reach = 0.05 + 0.13 * vnoise(xz * 0.6 + 9.0) + 0.03 * vnoise(xz * 4.7);
   float wet = 1.0 - smoothstep(0.45 * reach, reach, up);
 
   vec3 v = toEye / far;
@@ -218,7 +225,7 @@ void main() {
 
   float skin = max(wet, film);
   vec3 colour = gloss * skin;
-  float alpha = max(0.3 * wet, film * (0.3 + 0.7 * fresnel));
+  float alpha = max(0.45 * wet, film * (0.3 + 0.7 * fresnel));
   // The film ends on the rock as the sheet does: it climbs it a hair and turns the sky away, a thin dark line.
   alpha = max(alpha, 0.55 * front);
   colour *= 1.0 - 0.7 * front;
@@ -226,11 +233,12 @@ void main() {
   colour = mix(colour, pale, 0.8 * froth);
   alpha = mix(alpha, 1.0, 0.8 * froth);
   // Above the wet the water has left its salts as it dried: a pale crust, a broken line a finger wide along the top of the wet.
-  float crust = smoothstep(reach - 0.012, reach + 0.004, up) * (1.0 - smoothstep(reach + 0.01, reach + 0.04, up))
-    * smoothstep(0.4, 0.62, vnoise(xz * 2.1 + 7.0) * 0.55 + vnoise(xz * 11.0) * 0.45);
-  colour = mix(colour, 0.85 * pale, 0.5 * crust);
-  alpha = mix(alpha, 1.0, 0.5 * crust);
+  float crust = smoothstep(reach - 0.012, reach + 0.004, up) * (1.0 - smoothstep(reach + 0.012, reach + 0.045, up))
+    * smoothstep(0.4, 0.6, vnoise(xz * 2.1 + 7.0) * 0.4 + vnoise(xz * 11.0) * 0.35 + vnoise(xz * 37.0) * 0.25)
+    * (1.0 - smoothstep(0.1, 0.3, vOut.z));
+  colour = mix(colour, pale, 0.55 * crust);
+  alpha = mix(alpha, 1.0, 0.55 * crust);
   // Gone far off, where a hand of wet rock is less than a pixel.
-  float keep = (1.0 - sheet) * (1.0 - smoothstep(110.0, 170.0, far)) * (1.0 - uSolo);
+  float keep = (1.0 - sheet) * inland * (1.0 - smoothstep(110.0, 170.0, far)) * (1.0 - uSolo);
   gl_FragColor = vec4(colour * keep, alpha * keep);
 }`;
