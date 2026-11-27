@@ -81,8 +81,8 @@ const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 // with the pale near blade (L1) in the left third and the far cage between them. OR slides out through the right edge inside two seconds
 // (its near flank at 0.61 of the width in the first frame, 0.83 at 1 s, gone at 1.6 s) against blades that hardly move, and the right
 // row's blade (R1), whose point alone stands clear of it in the first frame, comes out from behind it: that is the one large thing that crosses the frame, and what says how far off the rest is.
-// The lens rides the long swell of sea/tide.ts under it: it is lifted from the trough over the crest before it through the first second
-// and a half (the shore and the strike come up over that crest), sinks toward the next trough at 3 s and is lifted again, its nose
+// The lens rides the long swell of sea/tide.ts under it: it is lifted from 2.6 m over a trough to 8.3 m on the crest before it through
+// the first second and a half, sinks toward the next trough at 3 s and is lifted again, its nose
 // rising and falling with it. L1 grows and slides against the far blades the whole way in.
 // From OPEN.seconds on (film frame 960) the pose is `arrival`'s own, to the bit, and the two join level in place, speed and acceleration.
 export const OPEN = {
@@ -106,13 +106,12 @@ export const OPEN = {
   round: 12,
   chop: 1,
   /**
-   * Once it is over the first crest the lens follows the water down only so far: under `floor` metres over the still sea it sinks by
-   * `sinks` of what the water does, taken softly; `floors`: the seconds between which that comes in. In a trough of this sea the crest
-   * ahead stands over a lens that rides the water, and hides the shore and the foot of every blade behind a black wall for half a second.
+   * The lens follows the water down only so far: under `floor` metres over the still sea it sinks by `sinks` of what the water does,
+   * taken softly. In a trough of this sea the crest ahead stands over a lens that rides the water, and hides the shore and the foot of
+   * every blade behind a black wall for half a second; and the spindrift off that crest stands as streaks before the lens.
    */
   floor: 3.8,
   sinks: 0.35,
-  floors: [1.2, 2.2] as [number, number],
   settles: [3.2, 8] as [number, number],
   /**
    * The last swell before the shore: the lens is carried this many metres higher over it, at its highest at the middle second of the
@@ -285,7 +284,7 @@ function openingHeight(seconds: number): number {
   for (const h of stands) sum += Math.exp(SHARP * (h - most));
   const rides = most + Math.log(sum / stands.length) / SHARP + OPEN.clears + OPEN.chop * CHOP * seaStands(seconds) * seaCalm(x, z);
   const SOFT = 1.5;
-  const ride = rides + (smoothed(OPEN.floors[0], OPEN.floors[1], seconds) * (1 - OPEN.sinks) * Math.log(1 + Math.exp(SOFT * (OPEN.floor - rides)))) / SOFT;
+  const ride = rides + ((1 - OPEN.sinks) * Math.log(1 + Math.exp(SOFT * (OPEN.floor - rides)))) / SOFT;
   // The higher of the ride and of the old move's height once it has settled, as softly; and the old move's own as the join comes (the
   // sea is long behind the lens by then: it crosses the shore's edge at 13 s).
   const over = smoother(OPEN.settles[0], OPEN.settles[1], seconds) * (settled - ride);
