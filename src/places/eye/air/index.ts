@@ -21,15 +21,21 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 // The form of the mist by the key it is seen from. a: reach over the water, sheet height, bank height, depth of the bank (metres).
 // b: thickness of the sheet, of the bank, how torn the sheet is, how much leaves the top in threads.
 // c: the middle and the half length of the stretch of far shore it lies along (metres from north round the picture's cylinder, 0 for all of
-// it), how much of that stretch is clear, and how much of it the mirror holds. d: how far the sheet's edge goes out in tongues.
+// it), how much of that stretch is clear, and how much of it the mirror holds. d: how far the sheet's edge goes out in tongues, how
+// far the sheet thins out from the wall, how close the tongues stand, and how far the heaps are as deep as they are long.
 type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre', { a: Four; b: Four; c: Four; d?: Four }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1] },
   low: { a: [600, 3.0, 70, 420], b: [0.4, 0.6, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
-  edge: { a: [560, 2.4, 24, 320], b: [0.2, 0.95, 1.0, 0.35], c: [0, 0, 0.1, 0.6], d: [1, 0, 0, 0] },
+  edge: { a: [560, 2.4, 34, 320], b: [0.25, 1.5, 0.75, 0.4], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
-  centre: { a: [520, 2.0, 10, 140], b: [0.75, 0.8, 1.0, 0.35], c: [0, 0, 0.3, 0.45], d: [0.8, 1, 1, 0] },
+  // The last shot is seen from the water and then from straight above, and it is one mist in both: banks that stand on the far half of
+  // the lake, out over the shallows, deep enough to be seen down through, with heaps as deep as they are long (d.w).
+  centre: { a: [900, 2.0, 13, 800], b: [0.6, 2.6, 1.0, 0.2], c: [0, 0, 0.3, 0.6], d: [0.8, 1, 1, 1] },
 };
+
+// The heights of the camera (metres over the water) between which the banks of the last shot are drawn thicker, and by how many times.
+const OVER = [15, 220, 8] as const;
 
 const SKY_VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -130,13 +136,14 @@ float mistAt(vec3 q, out float h) {
     // The grain: heaps and hollows read along the shore and by height, and drawn out the way the lens looks through the bank, so that a
     // look through its depth finds one heap and not the sum of many. They are carried up slowly and pushed through that depth, so what
     // is seen of them turns over and is never the same shape carried sideways.
-    vec4 g = texture(tMistNoise, vec3(q.x / 130.0, q.y / 50.0 - uTime * 0.01, q.z / 1100.0 + uTime * 0.004));
-    vec4 fine = texture(tMistNoise, vec3(q.x / 37.0 + 0.4, q.y / 21.0 - uTime * 0.022, q.z / 420.0 - uTime * 0.007));
+    // From above (uMistD.w) the same heaps are as deep as they are long, since the lens then looks down on them and not through them.
+    vec4 g = texture(tMistNoise, vec3(q.x / 130.0, q.y / 50.0 - uTime * 0.01, q.z / mix(1100.0, 150.0, uMistD.w) + uTime * 0.004));
+    vec4 fine = texture(tMistNoise, vec3(q.x / 37.0 + 0.4, q.y / 21.0 - uTime * 0.022, q.z / mix(420.0, 44.0, uMistD.w) - uTime * 0.007));
     float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
     h /= heap;
     float body = pow(clamp(1.0 - h - 0.45 * (fine.b - 0.3) * smoothstep(0.15, 0.9, h), 0.0, 1.0), 1.6);
     // What leaves the top: thin threads that stand up out of the bank and lean over as they go.
-    float thread = smoothstep(0.55, 0.8, texture(tMistNoise, vec3(q.x / 64.0 + 0.25 * h, q.y / 170.0 - uTime * 0.007, q.z / 800.0 + uTime * 0.003)).g + 0.3 * (fine.g - 0.5));
+    float thread = smoothstep(0.55, 0.8, texture(tMistNoise, vec3(q.x / 64.0 + 0.25 * h, q.y / 170.0 - uTime * 0.007, q.z / mix(800.0, 90.0, uMistD.w) + uTime * 0.003)).g + 0.3 * (fine.g - 0.5));
     d += uMistB.y * form.z * smoothstep(0.2, 0.9, heap) * (body + uMistB.w * thread * smoothstep(3.0, 0.9, h) * smoothstep(0.3, 0.9, h));
   }
   return d;
@@ -208,7 +215,7 @@ void main() {
       int steps = b1 > b0 ? 12 : 6;
       // The low sun comes through the mist from the side: forward of it the mist is bright, and a little again straight back.
       float phase = 0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun;
-      vec3 skyLight = 0.36 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.4 * low;
+      vec3 skyLight = mistSkyLight(low);
       // The mist stands in the light of the wall behind it: where the foot of the wall in the picture is in the sun the mist before it is, and
       // where the picture's wall is in shade the mist is the blue grey of the sky. The picture is read wide and soft, so no edge of it shows.
       float wallSun = 1.0;
@@ -247,7 +254,7 @@ void main() {
           float between = toward.x + uMistB.y * toward.z * smoothstep(1.0, 0.3, (q.y + sq.y * 45.0) / max(toward.y, 0.5));
           sun *= exp(-1.5 * between) * mix(0.7, 1.0, smoothstep(0.1, 1.0, h));
         }
-        vec3 lit = skyLight * mix(0.88, 1.0, smoothstep(0.0, 1.0, h)) + uSunColour * (0.16 * sun * phase);
+        vec3 lit = skyLight * mix(0.88, 1.0, smoothstep(0.0, 1.0, h)) + uSunColour * (0.2 * sun * phase);
         sum += tr * a * lit / 3.14159 * 2.5;
         tr *= 1.0 - a;
         if (tr < 0.02) break;
@@ -309,6 +316,9 @@ export function create(ctx: Context): Piece {
       const form = MIST[during('eye-01') ? 'wide' : during('eye-03') ? 'edge' : during('eye-04') ? 'shore' : during('eye-05') ? 'centre' : 'low'];
       (rig.uMistA as THREE.IUniform<THREE.Vector4>).value.fromArray(form.a);
       (rig.uMistB as THREE.IUniform<THREE.Vector4>).value.fromArray(form.b);
+      // A bank that is looked down through is a dozen metres deep and not a thousand: as the camera of the last shot climbs over it the
+      // bank is drawn thicker, so that the same banks that close the far shore from the water still show from above. Its form is not moved.
+      if (during('eye-05')) (rig.uMistB as THREE.IUniform<THREE.Vector4>).value.y *= 1 + OVER[2] * smooth(OVER[0], OVER[1], flight(FLIGHT.riseFrame + (t - end) * FPS, FLIGHT).y);
       (rig.uMistC as THREE.IUniform<THREE.Vector4>).value.fromArray(form.c);
       (rig.uMistD as THREE.IUniform<THREE.Vector4>).value.fromArray(form.d ?? [0, 0, 0, 0]);
       (rig.uMistOn as THREE.IUniform<number>).value = show.uThin.value;
