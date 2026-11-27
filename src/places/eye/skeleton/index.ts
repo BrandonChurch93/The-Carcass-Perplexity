@@ -150,8 +150,9 @@ void main() {
   vec3 m = textureLod(tShade, vUv, level).rgb;
   // Out of the sun the floor has the sky alone, and that is blue; close under a bone it has little of either, and it is damp there.
   // Where the cliffs have the sun already, the bones still stand between the floor and the bright west of the sky: a fainter shade.
-  vec3 f = mix(vec3(1.0), vec3(0.3, 0.37, 0.48), 0.92 * m.g * max(sunOver(land, vWorld), 0.6));
-  f *= 1.0 - 0.74 * smoothstep(0.0, 0.4, m.r);
+  vec3 f = mix(vec3(1.0), vec3(0.3, 0.36, 0.46), 0.92 * m.g * max(sunOver(land, vWorld), 0.6));
+  // Damp, not black: a bone that has gone under the crust leaves a dark line of wet, never a hole.
+  f *= mix(vec3(1.0), vec3(0.5, 0.43, 0.37), smoothstep(0.0, 0.32, m.r));
   gl_FragColor = vec4(mix(vec3(1.0), f, m.b), 1.0);
 }`;
 
@@ -249,9 +250,9 @@ function shadeMap(geometry: THREE.BufferGeometry, sun: V3, sunk: number, inFromL
 type V3 = [number, number, number];
 
 // The bones are built at the size of a small animal and laid half as large again: it was a grown one.
-const SCALE = 1.45;
+const SCALE = 1.95;
 /** How deep the bones are sunk in the floor, in their own measure. */
-const SUNK = 0.02;
+const SUNK = 0.025;
 
 /** A number from 0 to 1 that belongs to three others: the bones are the same bones in every frame. */
 function hash(a: number, b: number, c: number): number {
@@ -591,7 +592,7 @@ export function create(ctx: Context): Piece {
   const x = lx + (toCamera.x * back - along.x * 0.35) * SCALE;
   const z = lz + (toCamera.z * back - along.z * 0.35) * SCALE;
   mesh.matrixAutoUpdate = false;
-  // Sunk into the crust: the lowest third of every bone that lies on the floor is under it.
+  // Sunk into the crust: the lower half of every bone that lies on the floor is under it.
   mesh.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, -SUNK * SCALE, z);
   mesh.matrixWorldNeedsUpdate = true;
   // What the bones take from the floor: the sheet lies a hair over it and multiplies what is drawn there.

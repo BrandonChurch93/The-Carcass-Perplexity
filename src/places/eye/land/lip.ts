@@ -79,7 +79,7 @@ vec2 lipLarge(vec2 xz) {
 }
 float lipHigh(vec2 xz, float level) {
   float small = 0.085 * textureLod(tLipNh, xz / 1.25, level + 10.26).b;
-  float large = 0.33 * textureLod(tLipNh, lipLarge(xz), level + 8.26).b - 0.035;
+  float large = 0.24 * textureLod(tLipNh, lipLarge(xz), level + 8.26).b - 0.022;
   return max(small, large);
 }`;
 
@@ -125,33 +125,33 @@ void main() {
   vec3 lgTone = textureLod(tLipTone, at, lb).rgb;
   vec3 skin = textureLod(tShoreP, p.xz / vec2(2.0, 1.125), AT(1672.0, 2.0)).rgb;
   float ha = 0.085 * sm.b;
-  float hb = 0.33 * lg.b - 0.035;
+  float hb = 0.24 * lg.b - 0.022;
   float big = smoothstep(-0.002, 0.002, hb - ha);
   float h = vStand * max(ha, hb);
   vec2 sa = sm.rg * 2.0 - 1.0;
   vec2 sb = lg.rg * 2.0 - 1.0;
   // The stones stand a little higher than they were baked, and lie as much steeper.
   vec2 ga = 1.4 * vStand * sa / sqrt(max(1.0 - sa * sa, 0.02));
-  vec2 gb = 1.4 * vStand * sb / sqrt(max(1.0 - sb * sb, 0.02));
+  vec2 gb = 1.0 * vStand * sb / sqrt(max(1.0 - sb * sb, 0.02));
   // The large sheet is turned, and its lie turns back with it.
   vec2 g = mix(ga, vec2(0.82 * gb.x - 0.57 * gb.y, 0.57 * gb.x + 0.82 * gb.y), big);
   vec3 n = normalize(vec3(-g.x, 1.0, -g.y));
   vec3 tone = mix(smTone, lgTone, big);
   // Limestone gravel: buff for the most part, some of it dark, some rusty, some cold; the shore sheet is its skin.
-  vec3 albedo = mix(vec3(0.3, 0.24, 0.17), vec3(0.78, 0.63, 0.44), tone.r);
+  vec3 albedo = mix(vec3(0.36, 0.27, 0.18), vec3(0.86, 0.66, 0.43), tone.r);
   // The sand between the stones is dark with wet, and the lens keeps that when it has taken every grain.
-  albedo *= 0.7 + 0.3 * smoothstep(0.0, 0.05, h);
+  albedo *= 0.82 + 0.18 * smoothstep(0.0, 0.012, h);
   albedo = mix(albedo, albedo * vec3(1.22, 0.86, 0.6), smoothstep(0.62, 0.95, tone.g));
   albedo = mix(albedo, albedo * vec3(0.84, 0.93, 1.04), smoothstep(0.3, 0.05, tone.g));
   albedo *= 0.62 + 1.1 * dot(skin, vec3(0.333));
   // Shreds of the mats lie in the grit where the water left them.
   float shred = smoothstep(0.62, 0.74, 0.55 * vnoise(p.xz * 4.3) + 0.45 * vnoise(p.xz * 31.0)) * smoothstep(0.026, 0.01, h);
-  albedo = mix(albedo, vec3(0.6, 0.27, 0.06), 0.85 * shred);
+  albedo = mix(albedo, vec3(0.62, 0.3, 0.07), 0.6 * shred);
   albedo *= warmSide(n);
   // Wet to a hand above the water, and damp in every hollow: dark there, with the sky's light lying on it.
-  float wet = max(smoothstep(0.13, 0.03, p.y - 0.6 * h), 0.2 + 0.6 * smoothstep(0.03, 0.006, h));
+  float wet = max(smoothstep(0.13, 0.03, p.y - 0.6 * h), 0.12 + 0.4 * smoothstep(0.01, 0.002, h));
   albedo *= mix(1.0, 0.68, wet);
-  float occ = mix(1.0, tone.b, 0.8) * (0.6 + 0.4 * smoothstep(0.0, 0.05, h));
+  float occ = mix(1.0, tone.b, 0.8) * (0.8 + 0.2 * smoothstep(0.0, 0.015, h));
   // A dry top is rough to the last grain: at this low an eye a smoother one mirrors the bright sky and reads as salt or snow.
   // The same of a wet one whose back lies flat: the eye is taken a little way up for the mirror alone.
   vec3 c = rigShade(p, n, normalize(v + 0.7 * n), clamp(albedo, 0.0, 0.9), mix(1.1, 0.5, wet), occ);
