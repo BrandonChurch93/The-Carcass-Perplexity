@@ -260,7 +260,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
 #if EYE_RIM > 0
   {
     float channels = smoothstep(0.045, 0.012, abs(0.6 * vnoise(b / 31.0 + 9.0) + 0.4 * vnoise(b / 11.0 + 4.0) - 0.5)) * smoothstep(8.0, 50.0, w);
-    float pools = smoothstep(0.66, 0.84, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
+    float pools = smoothstep(0.58, 0.76, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
     lanes = mix(lanes, max(0.7 * channels * smoothstep(0.35, 0.6, vnoise(b / 57.0 + 13.0)), pools), rimEye);
   }
 #endif
@@ -268,7 +268,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
   float thin = smoothstep(4.0, 46.0, inShore + 30.0 * (blobs - 0.5)) * (1.0 - 0.8 * slabs * (1.0 - crust));
   // And they lie thick toward the pool and thin away to bare grey silt at the shore.
   thin = mix(thin, smoothstep(8.0, 60.0, inShore + 44.0 * (blobs - 0.5)), rimEye);
-  float edge = mix(0.53, 0.35, toLip) - 0.2 * smoothstep(8.0, 40.0, cameraPosition.y);
+  float edge = mix(0.53, 0.35, toLip) - 0.13 * smoothstep(8.0, 40.0, cameraPosition.y);
   float cover = smoothstep(edge - 0.02, edge + 0.07, field) * thin * (1.0 - 0.92 * lanes);
   // Toward the lip the weed thins to loose strands over the pale crust.
   // An eye that stands on the lip sees them run over the whole of it to the edge.
@@ -352,7 +352,10 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
       float isle = smoothstep(0.3, 0.55, flat3.b / max(flat3.r, 1e-3)) * smoothstep(0.2, 0.4, fl);
       // How thick the weed lies: its bright beds stand in the surface, its dark seams are under it.
       combed = clamp((fl - 0.06) / 0.2, 0.0, 1.0);
-      vec3 mottle = flat3 / vec3(0.354, 0.124, 0.0314);
+      // The same picture a quarter the size gives a bed its grain, as far as the frame can hold it.
+      mat2 mf = mat2(0.469, 0.883 / FLAT_SHAPE, -0.883, 0.469 / FLAT_SHAPE) / 43.0;
+      float grain = dot(readAt(tFlat, mf * b + 0.37, mf).rgb, vec3(0.3, 0.5, 0.2)) / 0.17;
+      vec3 mottle = flat3 / vec3(0.354, 0.124, 0.0314) * mix(1.0, clamp(grain, 0.4, 2.2), 0.55);
       mottle = pow(mix(vec3(dot(mottle, vec3(0.3333))), mottle, 0.5), vec3(0.65));
       vec3 flats = mix(far3 * mottle * vec3(1.3, 1.45, 1.7), mix(vec3(fl), flat3, 0.45) * vec3(1.0, 1.0, 1.05), isle);
       far3 = mix(far3, flats, fromRim);
