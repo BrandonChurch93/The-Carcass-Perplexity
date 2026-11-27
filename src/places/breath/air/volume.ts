@@ -145,6 +145,19 @@ float wispDetail(vec3 p) {
 float leanOut(float y, float way, float surge) {
   return smoothstep(-1.0, 3.0, y) * (5.0 * way + 5.0 * surge) + 0.9 * max(y, 0.0) * (0.25 + 0.75 * way);
 }
+// Where the top of the pool stands at a place before its heaps, and how near the place is to the two wells (where the vapour climbs; a
+// column widens as it climbs). The pool stands to the brim only against the west wall; over the middle and the east of the shaft it lies
+// deep, under the hoops, and the breath lifts it in the west and hardly at all in the east.
+float poolLevel(vec3 p, float surge, out float wells, out float west) {
+  west = smoothstep(6.0, -17.0, p.x);
+  float wide = max(p.y + 8.0, 0.0);
+  vec2 da = p.xz - vec2(-20.0, -10.0);
+  vec2 db = p.xz - vec2(-9.0, 13.0);
+  wells = min(exp(-dot(da, da) / (40.0 + 4.0 * wide)) + (0.1 + 0.85 * surge) * exp(-dot(db, db) / (36.0 + 4.0 * wide)), 1.0);
+  vec2 dh = p.xz - vec2(-27.0, -8.0);
+  float high = exp(-dot(dh, dh) / 400.0);
+  return uBreath.x + 0.5 + 4.5 * high - (9.0 + 5.0 * surge) * (1.0 - west) + 6.5 * surge * west * west;
+}
 // Thickness for a metre of path of the vapour in the shaft, over a span of height. Two things in one field:
 //   the pool: fog that lies deep in the shaft, with a soft heaped top far under the brim. It is deep on the east, where the wall, its beds
 //   and the hoops stand clear of it, and stands highest on the west over the two wells. The breath lifts it to the brim and over.
@@ -154,20 +167,13 @@ float leanOut(float y, float way, float surge) {
 float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under, out float core) {
   float surge = uBreath.y * uShow.w;
   float settled = uBreath.w * uShow.w;
-  float west = smoothstep(14.0, -12.0, p.x);
-  // The two wells: where it climbs. A column widens as it climbs.
-  float wide = max(p.y + 8.0, 0.0);
-  vec2 da = p.xz - vec2(-20.0, -10.0);
-  vec2 db = p.xz - vec2(-9.0, 13.0);
-  float wells = min(exp(-dot(da, da) / (40.0 + 4.0 * wide)) + (0.1 + 0.85 * surge) * exp(-dot(db, db) / (36.0 + 4.0 * wide)), 1.0);
-  // The pool has a surface: it is whole a stride under its top. The top is heaped, and the hollows between the heaps are in shade.
-  vec2 dh = p.xz - vec2(-27.0, -8.0);
-  float high = exp(-dot(dh, dh) / 400.0);
-  float level = uBreath.x + 2.0 + 6.5 * high - 9.0 * (1.0 - west) + 6.5 * surge * (0.15 + 0.85 * west);
+  float wells;
+  float west;
+  float level = poolLevel(p, surge, wells, west);
   float top = level + 12.0 * (n.x - 0.6) + 7.0 * (n.w - 0.5);
   under = top - p.y;
   float pool = (0.24 + 0.04 * surge) * layerMean(top, 1.6 - 0.8 * west + 2.5 * surge, p.y, hy) * mix(0.4, 1.0, west);
-  core = (0.2 + 0.6 * smoothstep(0.7, 0.4, 0.55 * n.x + 0.45 * n.w)) * smoothstep(-1.0, 1.0, under);
+  core = (0.12 + 0.5 * smoothstep(0.7, 0.4, 0.55 * n.x + 0.45 * n.w)) * smoothstep(-1.0, 1.0, under);
   // The columns climb from the pool's top over the wells: billows with an edge and clear air between them, fewer the higher they have climbed.
   float h = -under;
   float reach = 5.0 + 5.0 * wells + 4.0 * settled + 12.0 * surge;
@@ -182,13 +188,9 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under,
 // and, where a well is near, the highest its column can climb.
 float shaftCeiling(vec3 p) {
   float surge = uBreath.y * uShow.w;
-  float west = smoothstep(14.0, -12.0, p.x);
-  float wide = max(p.y + 8.0, 0.0);
-  vec2 da = p.xz - vec2(-20.0, -10.0);
-  vec2 db = p.xz - vec2(-9.0, 13.0);
-  float wells = min(exp(-dot(da, da) / (40.0 + 4.0 * wide)) + (0.1 + 0.85 * surge) * exp(-dot(db, db) / (36.0 + 4.0 * wide)), 1.0);
-  vec2 dh = p.xz - vec2(-27.0, -8.0);
-  float level = uBreath.x + 2.0 + 6.5 * exp(-dot(dh, dh) / 400.0) - 9.0 * (1.0 - west) + 6.5 * surge * (0.15 + 0.85 * west);
+  float wells;
+  float west;
+  float level = poolLevel(p, surge, wells, west);
   float ceiling = level + 10.0 + 2.5 * surge;
   if (wells > 0.1 - 0.28 * surge) ceiling += 5.0 + 5.0 * wells + 4.0 * uBreath.w * uShow.w + 12.0 * surge;
   return ceiling;
@@ -367,12 +369,12 @@ void main() {
         // The rim's shadow in the vapour is three metres deep and stands higher and lower by the heaps: light gets about in it.
         float sun = smoothstep(-2.6, 1.2, p.y - land.b) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead, and what lies deep under the pool's top is in the shade of what lies over it.
-        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 24.0, 0.2, 1.0);
+        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 40.0, 0.45, 1.0);
         float roofed = exp(-0.3 * max(under, 0.0));
         // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
         float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
         // The heart of a billow is in its own shade: its edge is what the sky lights.
-        vec3 light = (skyLight * sunk * sunk + uSunColour * (0.008 * facing * sunk * sunk)) * (0.25 + 0.75 * roofed) * (1.0 - core)
+        vec3 light = (skyLight * sunk + uSunColour * (0.008 * facing * sunk)) * (0.45 + 0.55 * roofed) * (1.0 - core)
           + sunLight * (sun * (0.09 * min(phase, 1.9) * exp(-1.5 * sunTau) + (0.012 + 0.04 * toSun * toSun) * exp(-0.22 * sunTau)));
         float gone = exp(-tau);
         float w = thru * (1.0 - gone);
