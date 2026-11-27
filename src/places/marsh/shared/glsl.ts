@@ -114,7 +114,9 @@ float rigCloud(vec2 xz) {
 // b distance to the edge of the brine in metres (positive on land, negative on the brine), a how thin the crust is there (0 firm, 1 thin over mud).
 // The map covers the ground the cameras stand on (uLandRect); outside it the flats are open and level.
 vec4 landAt(vec2 xz) {
-  return texture2D(tLand, (xz - uLandRect.xy) * uLandRect.zw);
+  // (Level 0 by name, here and below: the owners call these from inside their own branches, where a level picked from screen slopes is not
+  // the same from one draw to the next. Neither map has smaller levels, so nothing changes in the picture.)
+  return textureLod(tLand, (xz - uLandRect.xy) * uLandRect.zw, 0.0);
 }
 
 // What stands on the ground alone, as drawn in the contact map.
@@ -124,7 +126,7 @@ float contactDrawn(vec3 p) {
   float edge = min(e.x, e.y);
   // Outside the map nothing is drawn, and the map is not read: most of a wide frame is outside it.
   if (edge <= 0.0) return 0.0;
-  return texture2D(tContact, uv).r * smoothstep(0.0, 0.03, edge);
+  return textureLod(tContact, uv, 0.0).r * smoothstep(0.0, 0.03, edge);
 }
 
 // 0 open, 1 covered: how much of the sky is hidden at the ground by something standing over it. Drawn by whoever stands there.
@@ -170,7 +172,7 @@ float skyOpen(vec3 p) {
   vec2 e = min(uv, 1.0 - uv);
   // Outside the map the flats are open and level, and the map is not read.
   if (min(e.x, e.y) <= 0.0) return 1.0;
-  vec4 land = texture2D(tLand, uv);
+  vec4 land = textureLod(tLand, uv, 0.0);
   float above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 12.0, 0.0, 1.0));
   return vis * (1.0 - contactDrawn(p) * smoothstep(3.0, 0.0, above));
