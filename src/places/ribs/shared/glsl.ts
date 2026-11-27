@@ -92,8 +92,9 @@ float contactAt(vec3 p) {
 
 // The fine relief of the floor that the land texture is too coarse to carry, metres, within plus and minus 0.14.
 // The bed under a point is landAt(xz).r + bedFine(xz); on the processor it is rig.land.height.
+// Read at the one level the processor reads, whatever the lens: a level taken from the pixel moved the edge of every pool with the lens.
 float bedFine(vec2 xz) {
-  return 0.2 * (texture2D(tBedFine, xz / 37.0).r - 0.5) + 0.07 * (texture2D(tBedFine, xz.yx / 9.7).r - 0.5);
+  return 0.2 * (textureLod(tBedFine, xz / 37.0, 0.0).r - 0.5) + 0.07 * (textureLod(tBedFine, xz.yx / 9.7, 0.0).r - 0.5);
 }
 
 // How open the cloud sheet is over q, a place on the ground as the sun would strike it: under 0.42 closed, over 0.62 open.
