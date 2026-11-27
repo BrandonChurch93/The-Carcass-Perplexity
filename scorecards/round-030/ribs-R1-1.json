@@ -1,0 +1,119 @@
+{
+  "round": 30,
+  "unit": "ribs",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-27 07:39 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "central skyline and right-hand sea stacks",
+        "what": "The broad pale blades and long, uniformly tapering hooks replace rugged, broken, undercut formations. The interlocking central silhouettes and procession of progressively smaller distant stacks are less distinct, and the right arch is too smooth and submerged in fog.",
+        "fix": "Restore uneven layered faces, scalloped profiles, black tidal bases, a clearly cut right arch and more separation among the receding stacks."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "sky, upper cliff faces and water below the right stacks",
+        "what": "The storm opening lights the scene diffusely; the rock is broadly chalky rather than selectively lit, the lower cloud and surf merge into a gray band, and the right flats lack the target's brilliant reflected light.",
+        "fix": "Concentrate warm-white light through the upper-right break, carve it across a few facing ridges and the right flats, and keep darker storm cloud and a distinct broken white surf line behind."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "lower half, from the cliff foot across the tidal flats",
+        "what": "A deep-looking dark foreground channel and largely connected water plane replace shallow branching runnels through extensive coarse exposed shingle. The nearer rocks are sparse, smooth and isolated.",
+        "fix": "Break up the sheet of water with broad pebbly bars, much finer irregular gravel, clustered dark rocks and low warm kelp beds connected by shallow reflective channels."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "midground waders, especially on the right",
+        "what": "The population reads as regularly spaced, similarly posed foragers. It lacks the two conspicuous right-hand animals taking off or running, their extended silhouettes and the trail of spray that made the shore feel alive.",
+        "fix": "Stage more varied silhouette, scale and spacing; give the two prominent right-hand animals distinct running and wing-raised poses and connect their feet to bright spray."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the wet cliff from the far-left foreground through the carcass and down to the tide",
+        "what": "Cool silver-black ropes and repeated parallel grooves replace warm olive-brown, irregular blades over black wet rock. The cliff reads much drier and more uniform without the clear streams and dense pinpoints of reflected water.",
+        "fix": "Vary and flatten the kelp blades, restore brown olive color and irregular ledges, and add localized clear runoff, droplets and broken warm glints."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "foreground carcass and cliff behind it",
+        "what": "The prominent remains are narrower, paler, more bare and rigid, with hard exposed rib channels and shorter, bunched-looking hanging anatomy. Secondary ribs and bones farther down the cliff are missing.",
+        "fix": "Restore the broader decayed mass, translucent torn tissue and long separated hanging limbs and fibers, warm the wet highlights, and embed additional bones along the receding cliff."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "right opening from skyline to foreground shore",
+        "what": "A large pale wall, a few smooth hooks and a largely flooded blue-gray shore replace the distinct broken arch, repeated distant tips, exposed gravel bars and strong sun glints in shallow pools. The two angular black rocks at the cliff toe further crowd the view.",
+        "fix": "Bring back the layered distant silhouettes and defined surf, pull the large blocky walls and rocks out of the view, restore gravel and kelp bars, and pick up the target's directional patches of reflected light."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "background from upper left to upper right",
+        "what": "Near-vertical cropped wall faces and a tiered embankment dominate instead of the recognizable series of leaning hooks receding through shallow haze. The bright storm break is on the left and low rather than upper right, so there is less warm rim light and atmosphere.",
+        "fix": "Rebuild the curved receding silhouette progression, move the cloud break and directional light to upper right, and separate the distant stacks with localized sea haze and white surf."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the three waders, especially the head and feet of the front-right animal",
+        "what": "The three bodies sit higher and look like variations of a static rig. The nearest legs taper straight into the water without splayed toes, its ribbons hang in a tight curtain, and the conspicuous pink prey and arcing clear splash are gone. The middle bird has little water interaction and the left bird no longer reads as striding away.",
+        "fix": "Set the lead animal lower and open its tendrils around visible prey, give its feet contact and ripples, restore arcing spray and drips, and differentiate the middle forager and left runner with distinct poses and spray trails."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "foreground rocks and water across the lower half",
+        "what": "A sharp, dark, nearly bare rock ledge and long, coherent mirror images make the water look deep, still and cold. The target has a soft, warm kelp-fringed foreground and more broken reflections in shallow ripples over scattered stones.",
+        "fix": "Restore near-lens softness, wet ochre kelp and lower irregular rock clusters, disrupt the reflections with overlapping shallow ripples, and add warmer local specular highlights."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "left cliff face and attached remains",
+        "what": "The upper face is uniformly stippled and the lower face is ribbed in gray-black, losing the broken ledges, brown hanging kelp and wet highlights. The attached remains are smaller and more skeletal.",
+        "fix": "Introduce rough layered ledges and localized amber kelp and runoff, and make the hanging remains a fuller, longer silhouette against the wall."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "air between and above the stacks",
+        "what": "Most airborne animals read as sparse flattened flecks, with little of the target's variety in wing shapes or concentration around the high ridges.",
+        "fix": "Populate the ridges and the intervening air with layered clusters and some recognizable wing silhouettes at near and intermediate distances, keeping the farthest small."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "upper rim and descending right edge of the foreground carcass",
+        "what": "The visible scavengers are tiny pale specks rather than clearly rounded, legged crabs seen gripping the upper edge and moving down the carcass.",
+        "fix": "Restore several larger articulated crabs of varied sizes and warm shades; place their legs in contact with the damp tissue and pick them out with side light."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "sky through the right opening and distant feeding ground",
+        "what": "A single conspicuous flyby replaces much of the diffuse flock, and the still-visible waders are poorly separated from the expansive dark water.",
+        "fix": "Add small layers of distant flyers around the stack tips and stage the waders over separated pools and bars with faint brighter reflections."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "right animal's back, folded wing and belly",
+        "what": "The wing sits high and flat and reads as a thin, uniformly etched rust sheet. The target has deeper overlapping volumes, a lower silhouetted edge, darker belly modeling and a small bright transmitted amber edge.",
+        "fix": "Fold the wing farther down over the fuller belly, layer the plates and membrane irregularly, localize orange transmission to lit edges, and add wet specular highlights and drips below the body."
+      }
+    ]
+  }
+}

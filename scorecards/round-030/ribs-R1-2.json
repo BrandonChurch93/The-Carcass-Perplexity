@@ -1,0 +1,91 @@
+{
+  "round": 30,
+  "unit": "ribs",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-27 07:38 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "upper-left background and gap behind the colony",
+        "what": "A huge bright slab cuts in from the top left and fills the gap. In the target the hooked fin is smaller in frame, well behind the colony, with open slate-blue sky around its tip and mist softening its base.",
+        "fix": "Push that landform back and reduce its screen coverage; recover the open sky and let blue-gray haze separate it from the nesting cliff."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "rock fins beyond the strait",
+        "what": "The fins read as a close group of broad, sharply outlined slabs. The target has slimmer swept tips staggered at different depths, with the farther shapes nearly lost in spray and haze.",
+        "fix": "Reshape the silhouettes and stagger their apparent sizes and distances, softening their edges and contrast progressively into the sea air."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "sky, crest and tidal flat",
+        "what": "A broad pale cloud field lights the right side diffusely, while the target is dark and blue-gray except for a small warm break high at right. In the target that break catches the airborne spray and throws pale glints across the wet flat; those cues are largely missing.",
+        "fix": "Close down the bright part of the sky to a localized upper-right opening and carry its directional light through the mist onto the crest, wings and wet foreground."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "foreground tidal flat and water against the right cliff",
+        "what": "The foreground is a broad matte blue-gray sheet with bulky dark slabs. The target has a thin reflective wash over low, scattered rocks and seaweed, and a textured line of wash and foam where it meets the headland.",
+        "fix": "Lower and break up most of the exposed slabs, add low olive-brown weed and pooled reflections, and let lacy wash lap onto the rock instead of meeting it in a smooth band."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "middle and lower right nesting ledges",
+        "what": "The colony reads as evenly spaced, upright, often open-winged animals on bare steps. The target mixes crouched, folded and standing animals, clustered around dark nests, with more of that activity continuing up the right ledges.",
+        "fix": "Redistribute the perched colony in irregular clusters and give it more varied poses and dense nest pockets, especially mid-right and high on the cliff."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "center-right and upper-right cliff surfaces",
+        "what": "The ledges repeat as thin, squared gray shelves. Orange growth reads as flat patches and the white runoff as broad parallel strips. The target has bigger irregular blocks, granular ochre growth and much finer branching runs and splatter over the rock lips.",
+        "fix": "Vary the shape and thickness of the ledges, break the ochre into mottled textured growth, and break up and taper the white runoff over the rock relief."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "perched animals and their contact with the ledges",
+        "what": "Wing membranes look comparatively rigid, smooth and orange-edged; tendrils look uniformly bright and wiry. On the target the wings are thin, uneven and partly translucent, and the tendrils look irregular and drooping. Feet and bellies also sit more convincingly in shadow against the rock and nest material.",
+        "fix": "Add irregular folds and translucency to the membranes, vary the tendril bundles and their highlights, and ground feet and bodies in local shadow and nest material."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "storm opening and near cliff lighting",
+        "what": "The cliff and colony have comparatively flat gray light, while the pale background slab is the brightest element. In the target small openings in the storm light pick out ochre rock lips and wing edges above dark recesses and glossy hanging weed.",
+        "fix": "Give the near cliff and perched colony selective warm highlights and deeper ledge shadows, and restore subdued blue-gray fill through the background gap."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "near cliffs framing the strait",
+        "what": "The left wall bulges into the passage and the right wall drops to the water as a steep dark block. The target leaves more of the opening visible and shows wet stepped relief, long olive-brown weed and a sloped, wash-covered foot on the right.",
+        "fix": "Open the passage at the sides, restore stepped wet rock and hanging weed, and give the right-hand foot a sloping, irregular runout into the water."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "wave crest and air above it",
+        "what": "The foam reads as white flecks on a dark face and tall localized sprays. The target layers thicker rolling foam and finer windblown mist over the face and through the strait, with the cliff strike spilling outward on the left.",
+        "fix": "Keep the continuous wall if desired, but give the lip thicker curling foam, feather the airborne spray downwind, and spread finer mist and side wash through the passage."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "low-flying flock in front of the wave",
+        "what": "Several silhouettes stand tail-down with straight dangling legs and similarly triangular wings; the large center-right animal reads as nearly upright. The target flock banks and skims more horizontally, with swept legs, varied wing beats, and warm light showing through some of the membranes.",
+        "fix": "Pitch more animals into low forward flight, vary the swept-wing and leg poses, and bring back directional rim and membrane light."
+      }
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "round": 30,
+  "unit": "ribs",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-27 07:39 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the foreground feeding creature and the two wading creatures behind it (frames 1691 to 1866)",
+        "what": "the hero creature lowers its long neck without any weight shift in its torso or legs, then freezes completely like a static model for nearly two seconds as the camera pushes right up to it, while the two creatures behind it also hold rigid poses",
+        "fix": "add a weight shift through the hips and legs before the neck drops, keep subtle breathing, balance adjustments, and tentacle motion alive while feeding, and stagger independent head and step motion across the background creatures"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the feeding creature on the right and the smaller creatures across the tidal flat (frames 1259 to 1439)",
+        "what": "as the camera pushes in to a close-up over three seconds, the foreground creature stays locked in the exact same hunched pose with no leg shift, neck movement, or wing adjustment, reading as a rigid statue",
+        "fix": "animate continuous foraging motion, subtle leg and torso weight shifts, and gentle wing or tentacle movement throughout the push-in"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the top edge of the overcast sky (frames 2085, 2087, and 2092; also visible in set-A-05.png frames 1945 and 2061)",
+        "what": "a bright white circular dot flashes in and out for single frames along the upper border, creating a noticeable flicker against the dark clouds",
+        "fix": "remove the stray single-frame bright artifact or clip-plane particle along the top edge of the shot 5 render"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the top-right edge of the frame at the end of the push-in (frames 1788 to 1866)",
+        "what": "the camera pushes in too far and slices off the hero creature's back and wings at the upper-right border, ending on an awkward, cramped crop",
+        "fix": "ease the push-in to a stop earlier or reframe slightly right and up so the shot settles on a balanced full silhouette of the feeding creature"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the cliff runoff streak, tidal flat water, and distant creature (frames 1867 to 2294)",
+        "what": "across a seven-second push-in, the white water streak below the carcass, the surrounding wet flat, and the distant wading creature show almost no ongoing motion, making the environment feel nearly still",
+        "fix": "animate flowing runoff down the wet rock face, subtle wind-driven surface ripples and drifting mist, and natural foraging movement on the distant creature"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the massive vertical spray curtain and plume in the midground (frames 473 to 662)",
+        "what": "the wave impact erupts into a uniform, vertically streaked wall of spray and an oversized mist column that clears abruptly into calm, drained flats by frame 662, breaking the weight and continuity of real ocean water",
+        "fix": "break up the spray into heavier, arcing water sheets driven by gravity and let the surge wash out more gradually into the receding tide"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the perched colony along the lower and middle cliff ledges (frames 1440 to 1651)",
+        "what": "while a few birds fly overhead, the dozens of perched creatures on the rock terraces remain completely motionless like static props across the entire shot",
+        "fix": "add staggered idle motion—head turns, neck shifts, wing tucks, and small hops—across the perched flock so the cliff colony feels alive"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-09.png",
+        "where": "the shallow water surface around the hero creature's submerged tentacles (frames 1759 to 1770)",
+        "what": "small white splash dots pop around the tentacle tips while the surrounding glassy water reflection stays completely flat with no propagating ripples",
+        "fix": "add concentric expanding ripples distorting the reflection around the submerged tentacles to match the surface disturbance"
+      }
+    ]
+  }
+}

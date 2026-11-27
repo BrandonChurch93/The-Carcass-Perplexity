@@ -1,0 +1,91 @@
+{
+  "round": 30,
+  "unit": "ribs",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-27 07:39 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the splash at the feeding tentacles of the near wader and the spray beside the far-left wader (also seen in set-A-09.png left crop)",
+        "what": "spray and droplets are opaque white beads and dots with no transparency, refraction or motion blur, so they read as particles pasted on top",
+        "fix": "render droplets as clear refracting water with motion blur and varied size, add fine mist and broken ring ripples instead of solid white blobs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the kelp mat over the left cliff (x 0 to 17%, y 25 to 42%), same in set-A-01.png",
+        "what": "the kelp is stretched, smeared texture with a glossy plastic sheen and repeating strand shapes, it looks like melted vinyl rather than wet weed",
+        "fix": "use real blade geometry with varied width, translucency and wet specular breakup, and break up the repeating strand pattern"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the face of the bone arch at right (x 83 to 100%, y 25 to 42%)",
+        "what": "the surface texture is stretched into long uniform horizontal streaks with no pits, cracks or weathering scale change, one material across the whole arch",
+        "fix": "add multi-scale weathering, crevices and salt or lichen variation, and remap the texture so it is not stretched along the form"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the wet flat with pebbles at right (x 83 to 100%, y 58 to 75%)",
+        "what": "the sand carries an even, tiled-looking speckle and the stones sit on it with no wet edge, no scour or sand banked against them, so they look pasted and floating",
+        "fix": "vary the sand texture over distance, add contact shadow, wet darkening, scour pools and sand ridges at each stone"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the foreground rock where it enters the water (x 0 to 17%, y 58 to 75%)",
+        "what": "the submerged part of the rock and the water over it are smeared streaky texture, the rock texture is noisy and uniform, and there is no wet line, foam or film where water meets rock",
+        "fix": "render clean refraction of the submerged rock, add a darker wet band, thin foam or film at the waterline and less noisy rock detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the skull of the carcass on the kelp wall",
+        "what": "a dark round hole on the side of the head reads as an eye or eye socket, which these animals should not have",
+        "fix": "close the socket so the head has smooth, eyeless bone or hide"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the two dark boulders at the water edge, lower right",
+        "what": "the boulders are smooth soft-edged blobs with no surface detail, like clay or plastic, and have no foam or wet edge where the water touches them",
+        "fix": "give them real rock texture, barnacles or weed, a wet sheen line and swash foam at the base"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the kelp and carcass legs (x 42 to 58%, y 58 to 75%)",
+        "what": "the kelp blades are warped smeared texture with a melted glossy look and the legs merge into them with no clear contact",
+        "fix": "use proper blade geometry and wet translucency, and seat the legs with occlusion where they lie on the weed"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the flying debris in the sky (x 42 to 58%, y 25 to 42%)",
+        "what": "the specks in the air are flat grey blobs with no shape or motion blur, they read as cards",
+        "fix": "give the birds or debris silhouette, wing shape and motion blur"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-07.png",
+        "where": "the three waders",
+        "what": "all three share the same body, wing shape and colour with very similar poses, a cloned look",
+        "fix": "vary size, wing set, colour and pose between individuals"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "the small waterfall on the left cliff",
+        "what": "the fall is a thin flat white stripe with no spray or mist at its base",
+        "fix": "add volume, broken streams and mist where it lands"
+      }
+    ]
+  }
+}

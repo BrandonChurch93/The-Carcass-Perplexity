@@ -1,0 +1,229 @@
+{
+  "unit": "eye",
+  "tier": "final",
+  "format": "uhd",
+  "measures": [
+    "M1",
+    "M2",
+    "M3"
+  ],
+  "colour": {
+    "M1": "green",
+    "M2": "green",
+    "M3": "green"
+  },
+  "missing": [],
+  "frames": [
+    {
+      "id": "eye-0",
+      "frame": 8412,
+      "key": true
+    },
+    {
+      "id": "eye-1",
+      "frame": 9003,
+      "key": true
+    },
+    {
+      "id": "eye-2",
+      "frame": 8600,
+      "key": true
+    },
+    {
+      "id": "eye-3",
+      "frame": 8761,
+      "key": true
+    },
+    {
+      "id": "eye-4",
+      "frame": 9221,
+      "key": true
+    }
+  ],
+  "results": [
+    {
+      "measure": "M1",
+      "id": "eye-0",
+      "frame": 8412,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "eye-1",
+      "frame": 9003,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "eye-2",
+      "frame": 8600,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "eye-3",
+      "frame": 8761,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "eye-4",
+      "frame": 9221,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "eye-0",
+      "frame": 8412,
+      "status": "pass",
+      "share": 0.110959,
+      "floor": 0.03,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "eye-1",
+      "frame": 9003,
+      "status": "pass",
+      "share": 0.30393,
+      "floor": 0.03,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "eye-2",
+      "frame": 8600,
+      "status": "pass",
+      "share": 0.530868,
+      "floor": 0.03,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "eye-3",
+      "frame": 8761,
+      "status": "pass",
+      "share": 0.509936,
+      "floor": 0.03,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "eye-4",
+      "frame": 9221,
+      "status": "pass",
+      "share": 0.341817,
+      "floor": 0.03,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M3",
+      "id": "eye-0",
+      "frame": 8412,
+      "status": "pass",
+      "ratio": 1.8761,
+      "floor": 0.75,
+      "frameEnergy": 717.3336,
+      "approvedEnergy": 382.3567,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/6-eye/eye-0-establishing.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "eye-1",
+      "frame": 9003,
+      "status": "pass",
+      "ratio": 1.2848,
+      "floor": 0.75,
+      "frameEnergy": 240.5809,
+      "approvedEnergy": 187.256,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "eye-2",
+      "frame": 8600,
+      "status": "pass",
+      "ratio": 3.1445,
+      "floor": 0.75,
+      "frameEnergy": 711.5386,
+      "approvedEnergy": 226.2773,
+      "size": {
+        "width": 1671,
+        "height": 940
+      },
+      "approved": "references/approved/6-eye/eye-2-the-iris-amber-mats.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "eye-3",
+      "frame": 8761,
+      "status": "pass",
+      "ratio": 2.7812,
+      "floor": 0.75,
+      "frameEnergy": 666.091,
+      "approvedEnergy": 239.4957,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "eye-4",
+      "frame": 9221,
+      "status": "pass",
+      "ratio": 3.6786,
+      "floor": 0.75,
+      "frameEnergy": 319.041,
+      "approvedEnergy": 86.7295,
+      "size": {
+        "width": 1671,
+        "height": 940
+      },
+      "approved": "references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg"
+    }
+  ],
+  "usual": {
+    "tier": "final",
+    "format": "uhd"
+  },
+  "thresholds": {
+    "pixelThreshold": 4,
+    "checkGapSeconds": 1,
+    "minSharpnessRatio": 0.75
+  },
+  "sharpness": "The mean squared response of a four neighbour Laplacian on the Rec. 709 luminance of the 8 bit picture, over every pixel that is not on the border. The approved picture is cropped at its centre to the shape of the frame, and both pictures go through the same lanczos3 resize to the size of that crop.",
+  "state": {
+    "engine": "6714b45ff14a5941",
+    "units": {
+      "heart": "edd828f014825fc1",
+      "ribs": "7989fa55616e8c36",
+      "breath": "2f69b3dac181e760",
+      "marsh": "7b0b1a4c9471f28d",
+      "spine": "8bc3b24e83904cf8",
+      "eye": "80259486fd1cd93b",
+      "reveal": "90332486d66d1444",
+      "film": "51d802f37e2b75ab"
+    },
+    "browser": "147.0.7727.15"
+  }
+}

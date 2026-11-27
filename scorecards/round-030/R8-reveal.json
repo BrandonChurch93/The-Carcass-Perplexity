@@ -2,6 +2,50 @@
   "round": 30,
   "unit": "reveal",
   "question": "kit/07-QUALITY-BAR.md, R8, word for word",
-  "viewers": [],
-  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in."
+  "viewers": [
+    {
+      "viewer": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "The image shows a colossal, decaying humanoid skeleton sprawled across Earth’s ocean as seen from space.",
+      "answered": "07:40 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "b",
+      "model": "claude_opus_5_5",
+      "answer": "The image is an orbital view of Earth. In the ocean sits an island shaped like a giant skeleton lying on its back, with ribs, a skull and limbs formed by snowy mountain ridges and brown terrain, plus a small red mark on its pelvis area, and a hurricane swirls nearby.",
+      "answered": "07:40 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "c",
+      "model": "gemini_neon",
+      "answer": "Viewed from space, a colossal landmass shaped like a giant human skeleton lies across a planet's dark ocean, formed of rocky ridges, brown terrain, and pale bone-like mountains with red branching rivers in its pelvic area and swirling white clouds around it.",
+      "answered": "07:40 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "Seen from space, clouds over Earth’s ocean form a giant skeletal humanoid with a skull at the left and legs stretching to the right.",
+      "answered": "07:40 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "The image shows a view from space of an ocean planet with a huge island or continent shaped like a giant skeleton (skull, ribcage and spine, with a red mark on its chest), with a hurricane swirl at lower right and the sun glaring at upper right.",
+      "answered": "07:40 UTC",
+      "counts": true
+    }
+  ],
+  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in.",
+  "counts": 5,
+  "share": 1.0,
+  "control": {
+    "file": "scorecards/controls/reveal-R8.json",
+    "share": 1.0
+  },
+  "passes": true,
+  "marked": "2026-11-27 07:42 UTC by the Builder: all five answers name a giant skeleton or a skeletal humanoid as what the land or the island is (a: a colossal, decaying humanoid skeleton sprawled across the ocean; b: an island shaped like a giant skeleton lying on its back, with ribs, a skull and limbs; c: a landmass shaped like a giant human skeleton; d: a giant skeletal humanoid with a skull at the left and legs to the right, which it takes to be made of cloud; e: a huge island or continent shaped like a giant skeleton with skull, ribcage and spine), so all five are marked as counting by the rule of R8 and R8 passes at 1.00 against the 0.80 needed. Three say human or humanoid unasked (a, c and d); in round 29 one did. Viewer d reads the figure as cloud, not land; it still names a giant figure, which is what the rule counts. Rounds 19, 25 and 29 had five of five, round 13 one of five."
 }

@@ -1,0 +1,98 @@
+{
+  "round": 30,
+  "unit": "ribs",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-27 07:38 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the colony of perched animals across the terraces",
+        "what": "dozens of near-identical model copies in the same S-neck, wings-half-open pose with the same smooth grey skin; clearly instanced clones",
+        "fix": "vary pose, scale, wing state and skin tone per animal and break up the repeated silhouette"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the stepped cliff face on the right",
+        "what": "rock is a stack of regular slab terraces with one stretched grey material, same orange lichen dabs and same white drip streaks repeated on every step; reads as a procedural tiled block",
+        "fix": "break the regular stepping, vary strata and material, place guano/lichen by exposure instead of a uniform pattern"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the stone arches/horns behind the surf",
+        "what": "smooth tapered horn shapes with a single wood-grain-like stretched texture and no weathering; they read as plastic props, not sea stacks",
+        "fix": "give them fractured rock geometry, erosion, wet darkening at the base and atmospheric falloff"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "x 83-100%, y 25-42%, the near cliff",
+        "what": "texture smeared into long stretched streaks and faceted planes with reflective metallic smears; UV stretching obvious",
+        "fix": "fix projection/UVs on steep faces, use triplanar mapping and add real micro-detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "x 83-100%, y 58-75%, behind the animals",
+        "what": "vertical striped stretched-texture band in the rock and flat white ledge slabs with stretched streaks",
+        "fix": "repair UV stretching on vertical faces and give ledges thickness and wet/guano variation"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the animals' feet and wing tips on the ledges",
+        "what": "legs end in thin sticks that do not plant on the rock, no contact shadow, and the skin carries nothing of the place (no guano, wet or salt); wing edges have a smooth CG-model sheen",
+        "fix": "plant feet with contact shadows and occlusion, add grime/wet/salt to skin and roughen wing membranes"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the wading animals in the shallows",
+        "what": "animals are flat, low-detail silhouettes with identical outstretched wing poses, stick legs with no splash, wake, reflection or wet darkening where they meet the water",
+        "fix": "add ripples, splash and reflections at the legs, wet the plumage/skin, vary the poses"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "x 0-17% and x 83-100%, y 25-42%, the side rock pillars",
+        "what": "rock is a soft noisy smear with streaky stretched texture and a liquid-like flowing pattern, looks like clay rather than stone",
+        "fix": "rebuild with real fracture geometry and sharp rock texture at this close distance"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the wet flat and the water edge across the lower frame",
+        "what": "water is a flat grey-blue sheet with no depth, almost no foam line or wet edge where it meets the rocks and reflects neither the sky nor the stacks",
+        "fix": "add a foam/wash edge, reflections of rocks and sky, and depth/transparency variation"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "x 83-100%, y 58-75%, the far shore line",
+        "what": "the water plane meets the dark cliff on a hard straight cut with no surf, spray or contact",
+        "fix": "add breaking water, spray and a wet band at the cliff base"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "x 0-17%, y 58-75%, far stacks in haze",
+        "what": "fog is a uniform flat blue tint over flat silhouette cards with no light variation",
+        "fix": "add depth-varying haze density and light shafts/sky illumination in the vapour"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-05.png",
+        "where": "x 42-58%, y 25-42%, the surf spray",
+        "what": "spray partly breaks into flat white flecks pasted over a soft grey veil",
+        "fix": "give spray volume, droplet size variation and backlit translucency"
+      }
+    ]
+  }
+}

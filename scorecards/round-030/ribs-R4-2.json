@@ -1,0 +1,42 @@
+{
+  "round": 30,
+  "unit": "ribs",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-27 07:40 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the whole frame between frame 2404 and frame 2405",
+        "what": "an abrupt single-frame jump pops the foreground rocks forward, shifts the water from cool grey-blue to warm brown with a new curved highlight, shifts the background spray, and snaps the animals' wings to completely different poses",
+        "fix": "remove the single-frame discontinuity so camera motion, water shading, spray, and animal animation interpolate smoothly across frames 2404 and 2405"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the whole frame between frame 2403 and frame 2404",
+        "what": "the same abrupt single-frame pop jumps the camera and foreground rocks forward, changes the water surface color and reflections, shifts the breaking spray, and snaps the winged creatures to new poses",
+        "fix": "eliminate the state pop between frames 2403 and 2404 so the shot runs continuously without a jump"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "the foreground and midground tidal water and white foam shoreline across 0.00 s to 6.00 s",
+        "what": "with the camera held still for six seconds, the water surface, ripples, and curved foam edges stay completely frozen like a still picture while only the distant mist drifts",
+        "fix": "animate the tidal water with continuous wave travel, shifting foam lines, and moving surface reflections over the full hold"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the herd of long-legged animals along the midground shoreline and right edge across 0.00 s to 6.00 s",
+        "what": "the animals remain rooted in the same spots for six seconds without stepping, turning, or shifting weight, reading as static models",
+        "fix": "give the herd varied, staggered movement with weight shifts, occasional steps, head turns, and pauses so they read as living animals"
+      }
+    ]
+  }
+}

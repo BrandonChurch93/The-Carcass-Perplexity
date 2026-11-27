@@ -1,0 +1,255 @@
+{
+  "round": 30,
+  "unit": "ribs",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the same fine-grained rock texture repeats across the giant formations.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "alien coastline with curved rock arches and creatures is well composed but has flat water shading and repetitive procedural-looking rock and seaweed textures, more like a strong standalone CG render than film-grade work",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the mix of detailed wet-ground PBR reflections with stiff repeated alien bird models and visibly procedural rock and cliff textures",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 85,
+      "why": "The same horizontal rock texture stretches across every curved spire without following its shape.",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the alien scene is detailed and coherent, with atmospheric haze, believable wet-sand reflections, and many creatures at different distances, which looks like big-budget film or game-cinematic work, though the repeated rocks and flat wet-sand texture leave some doubt (c).",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the conspicuously faceted silhouettes of the foreground rocks.",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "polished fantastical CG scene (detailed kelp/creature) but simple, plain-shaded foreground rocks and generic fog suggest a strong individual/stock render rather than a top-budget film frame",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the faceted foreground rocks meeting a flat reflective water plane without realistic foam or shore interaction and the glossy ribbon-like seaweed",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the foreground tendrils have a uniformly glossy, plastic-like surface.",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 72,
+      "why": "the detailed carcass, wet kelp-like textures, and atmospheric depth with shallow depth of field read as high-end film or cinematic concept-level work.",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the repeated creature models have a uniformly embossed skin texture that makes them look like 3D assets.",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "well-made but plainly CG speculative-creature scene (uniform procedural rock/skin textures, flat clean water reflections) that reads as a polished hobbyist/stock render rather than film-grade VFX",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the simple water droplets and flat reflections around the cloned creatures look like a standard 3D render rather than top-budget film VFX.",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 86,
+      "why": "The foreground creature’s skin has the same dry, sculpted-clay texture from its belly to its legs.",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the detailed creature skin, the water reflections and ripples, and the atmospheric depth look like film-quality rendering.",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the same perched creature pose repeats conspicuously across the cliff.",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "repetitive instanced creature copies and tiled/procedural cliff texturing with flat lighting look like a hobbyist/stock 3D render rather than film-grade work.",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "flat overcast lighting and repetitive instanced creature models with weak contact shadows on the procedural rock ledges",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the same curled-neck creature pose repeats across the cliff like copies of a single 3D model.",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "The thing that most influenced my answer: the rock faces have a stretched, repeating streaky texture and the many winged creatures look like duplicated instances with muddy anatomy. That reads as a competent but unpolished CG render, not a film-grade frame. It is also detailed enough that I doubt it is a web demo (d).",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "The foreground creatures have stiff, angular wings and flat shading that make them look like simple 3D models.",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the low-detail untextured pterosaur models and smeared procedural rock textures that look like a hobbyist Blender render rather than film-grade work",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 65,
+      "why": "the crude faceted low-poly creature models with stick-like legs and pleated wings",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 95,
+      "why": "the winged creatures have flat, angular wings that look like folded paper.",
+      "answered": "07:40 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "the wave spray and atmosphere look film-grade, but the flat, simple pterosaur models and the smeared, repeating rock textures read as a good ordinary 3D render rather than top-budget work.",
+      "answered": "07:40 UTC"
+    }
+  ]
+}

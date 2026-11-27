@@ -124,6 +124,132 @@
       "confidence": 82,
       "why": "the foreground animal’s visibly sculpted anatomy and uniform surface texture.",
       "answered": "07:36 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the untextured clay-like llama/creature models placed in an otherwise photoreal terrain-and-water render, typical of a stock/hobbyist CG scene",
+      "answered": "07:37 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the stiff, simply shaded foreground creature with rigid legs and minimal fur detail contrasts with the detailed raytraced cliffs and water, looking like an ordinary 3D render rather than a top-budget production.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 79,
+      "why": "The foreground animal’s faceted neck silhouette stands out against the detailed cliffs.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "The cliffs and water are very convincing, but the smooth, clay-like, oddly proportioned animals are clearly CG and lack film-level detail.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the foreground skeleton’s uniformly smooth, molded-looking bones.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the plasticky, uniformly shaded skeleton and the blocky, stepped reflections look like a typical standalone landscape render (Terragen or Vue style), not film-grade work.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the overly smooth, simplified skeleton mesh sitting on procedural ground textures with otherwise standard raytraced water reflections and terrain lighting",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the uniformly smooth, beige bones look like a 3D model rather than a weathered skeleton.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the skeleton and the rock and water textures look like a hobbyist or stock 3D render (smeared, repeating shoreline texture, simple skeleton geometry, blocky reflection), even though the lighting and scene composition are strong.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the water bulges into a smooth mound without the turbulent wake you’d expect.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "realistic cliff and water lighting but simple, untextured creature necks and fins that look like a hobbyist path-traced render (Blender style)",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the smooth, foamless water dome and spikes poking cleanly through the water surface without realistic fluid interaction",
+      "answered": "07:39 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 94,
+      "why": "the central swell looks like a smooth rubber mound pasted onto flat water.",
+      "answered": "07:38 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the cliff lighting, mist and water reflections look film-grade, though the plain, smooth creature skin keeps it close to (c).",
+      "answered": "07:38 UTC"
     }
   ]
 }
