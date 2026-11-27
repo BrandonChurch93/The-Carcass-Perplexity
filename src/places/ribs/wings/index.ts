@@ -7,7 +7,8 @@ import { config } from '../../../config';
 import { resolve } from '../../../core/cameras';
 import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cut';
 import { approachAsScattered, approachEye, openingCamera, shots } from '../cameras';
-import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
+import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, WIND, keySeconds, shotSpan } from '../shared/anchors';
+import { CRAG } from '../shared/crag';
 import type { Context, Piece } from '../shared/context';
 import { FLOCK, OPENING_END, inOpening } from '../shared/opening';
 import { gone, leaving, type Leaver } from './leaving';
@@ -23,8 +24,10 @@ import { CONTACTS, MAX_CONTACTS } from './contacts';
 import type { Contact } from './contacts';
 import { FEEDER_C, FLIERS, Figures, PERCHED, figureMaterials, placed } from './figure';
 import type { Placed } from './figure';
-import { FLIER_FLANK, Flight, flying } from './flier';
+import { Flight, flierMaterials, flying } from './flier';
 import { footAt, ramp, wayAt } from './gait';
+import { SEAT, roostPose } from './roost';
+import type { Roosting, Stance } from './roost';
 import type { At, Step, Way } from './gait';
 
 /** The kite-wing of the approved pictures stands twice a man at the back: the old measure of its size, kept for the flock's scatter. */
@@ -43,6 +46,10 @@ const KICK_DROPS = 36;
 const COLONISTS = 40;
 /** With those that sit low round them in clumps. */
 const ROOKERY = 130;
+/** Those of them nearest the colony's lens that are bodies while its shot runs: the rest, and all of them in every other shot, are sheets. */
+const ROOSTING = 84;
+/** Whether the crouched bodies of the colony are drawn in place of its nearest sheets: not until they sit right. */
+const ROOSTED: boolean = false;
 /** Which of them, counted from the colony's lens, are the large ones with their sails part open: not neighbours. */
 const LARGE = [0, 3, 7, 12];
 const SKEIN = 22;
@@ -684,6 +691,48 @@ export function create(ctx: Context): Piece {
   sitters.sort((a, b) => a.d - b.d);
   const perchedSheet = figureMaterials(ctx, PERCHED, LEVELS.pool, 0.86);
   const colonyFigures = new Figures(perchedSheet, ROOKERY, { shade: true });
+
+  // The colony's own shot: those nearest its lens are bodies that sit, lie and stand on the ledge's own rows.
+  const colonySpan = shotSpan('ribs-03');
+  /** The top of the rock under a place of the crag, looked for from `from` down: the mesh's own rows. */
+  const ledgeUnder = (x: number, z: number, from: number): number => {
+    const angle = Math.atan2(z - COLONY.z, x - COLONY.x);
+    const out = Math.hypot(x - COLONY.x, z - COLONY.z);
+    for (let j = Math.round((from + 0.9) / CRAG.row); j * CRAG.row > from - 3; j--) if (COLONY.cragAt(angle, j * CRAG.row) >= out) return j * CRAG.row;
+    return from - 3;
+  };
+  const roostOrder = sitters.map((s, i) => ({ i, d: s.d % 1000 })).sort((a, b) => a.d - b.d).slice(0, ROOSTING);
+  const roosts: Roosting[] = roostOrder.map(({ i }) => {
+    const s = sitters[i] as Sitter;
+    const k = (s.seed * 977) % 1;
+    const stance: Stance = LARGE.includes(i) || s.stands ? 2 : s.low ? (k < 0.45 ? 1 : 0) : k < 0.2 ? 1 : 0;
+    const size = s.size * (LARGE.includes(i) ? 0.8 : 0.66);
+    // It sits along its ledge, one way or the other, its breast turned a little out to the open air.
+    const angle = Math.atan2(s.z - COLONY.z, s.x - COLONY.x);
+    const way = Math.floor(s.seed * 1000) % 2 === 1 ? 1 : -1;
+    const turned = 0.15 + 0.6 * ((s.seed * 331) % 1);
+    const fx = -Math.sin(angle) * way * Math.cos(turned) + Math.cos(angle) * Math.sin(turned);
+    const fz = Math.cos(angle) * way * Math.cos(turned) + Math.sin(angle) * Math.sin(turned);
+    const yaw = Math.atan2(fx, fz);
+    const seat = SEAT[stance] as (typeof SEAT)[number];
+    const y = ledgeUnder(s.x, s.z, s.y);
+    const feet = [0, 1].map((leg) => {
+      const left = (leg === 0 ? 0.19 : -0.19) * size;
+      // A foot is set ahead on the same ledge; where the ledge ends before it, nearer the body.
+      for (const part of [1, 0.6, 0.25, 0]) {
+        const ahead = (seat.ahead + (stance === 2 ? (leg === 0 ? 0.16 : -0.12) : 0.08 * (leg === 0 ? k : 1 - k))) * size * part;
+        const x = s.x + fx * ahead - fz * left;
+        const z = s.z + fz * ahead + fx * left;
+        const rock = ledgeUnder(x, z, y);
+        if (Math.abs(rock - y) < 0.4 * size || part === 0) return [x, part === 0 ? y : rock, z] as [number, number, number];
+      }
+      return [s.x, y, s.z] as [number, number, number];
+    }) as [[number, number, number], [number, number, number]];
+    return { x: s.x, y, z: s.z, yaw, size, seed: s.seed, stance, feet };
+  });
+  const roostBodies = new Bodies(bodyMaterials(ctx, LEVELS.pool, 0.5), ROOSTING);
+  const roosting = new Set(roostOrder.map((o) => o.i));
+  const R: Pose = pose();
   /** Which of the six a sitter is: most sit hunched or crouched, some stand, a few hold a sail out or both open. */
   const cellOf = (s: Sitter, rank: number): number => {
     // The nearest to the colony's lens stand with their sails part open.
@@ -715,9 +764,8 @@ export function create(ctx: Context): Piece {
     fig.tone = 0.74 + 0.36 * ((s.seed * 13.7) % 1);
     fig.shade = (s.seed * 7.3) % 1 < 0.3 ? 0.4 + 0.25 * ((s.seed * 3.1) % 1) : 0;
     // Those of a clump lay no shade of their own on the rock (below zero tells the sheet so): shades laid one over another are a black blot.
-    if (s.low) fig.shade = -1 - fig.shade;
-    // In the film none lays the sheet's shade: it is drawn on whatever stands nearer than the sheet, and was a dark blot on the rock in front.
-    if (lp === null) fig.shade = -1 - Math.abs(fig.shade);
+    // In the film none lays it: it is drawn on whatever stands nearer than the sheet, and was a dark blot on the rock in front.
+    if (s.low || lp === null) fig.shade = -1 - fig.shade;
   };
 
   // ---- The flock in the air ----
@@ -1030,7 +1078,7 @@ export function create(ctx: Context): Piece {
   // ---- The stream of the approach: bodies that leave a ledge of the near blade one after another, cross to the gap and wheel there; and the many that turn round the tips ----
   const STREAM = 110;
   const SWIRL = 260;
-  const airBodies = bodyMaterials(ctx, LEVELS.pool, 0.5, 'fliers', FLIER_FLANK);
+  const airBodies = flierMaterials(ctx, LEVELS.pool);
   const LEAD = 126;
   /** Of the leaders, those that stand in the first frame itself. */
   const FIRST = 14;
@@ -1099,32 +1147,39 @@ export function create(ctx: Context): Piece {
   // to a side and mostly over it, on a straight way from the ledge. They are what gives the blades their size.
   const leads = Array.from({ length: LEAD }, (_, k) => {
     // Where it is in the frame at its own time: ahead of the lens along its look, to a side, mostly over the middle.
-    const at = k < FIRST ? 0.2 * hash(k, 91) : -0.4 + (14 * (k - FIRST + hash(k, 91))) / (LEAD - FIRST);
+    // Of those in the first frame, four come near enough that the bent sail and the body read: no two side by side. The lens runs in
+    // at four times a flier's speed and crabs to its left, so one that meets it is gone in a third of a second and is cut by the frame
+    // as it goes. The four go its way instead, stooping ahead of it and to its left as it crabs: it comes up on them from behind, each
+    // holds its place against the sky of the gap and grows, whole from the first frame until it is at its nearest after the first second.
+    const slot = (k * 5) % FIRST;
+    const near = k < FIRST && slot < 4;
+    const at = near ? ([1.08, 1.3, 1.55, 1.8][slot] as number) : k < FIRST ? 0.2 * hash(k, 91) : -0.4 + (14 * (k - FIRST + hash(k, 91))) / (LEAD - FIRST);
     const cam = openingCamera(at);
     const ax = cam.aim[0] - cam.position[0];
     const ay = cam.aim[1] - cam.position[1];
     const az = cam.aim[2] - cam.position[2];
     const al = Math.hypot(ax, ay, az) || 1;
     const fl = Math.hypot(ax, az) || 1;
-    // Of those in the first frame, four are near enough that the bent sail and the body read: no two side by side.
-    const slot = (k * 5) % FIRST;
-    const far = k < FIRST ? (slot < 4 ? 22 + 6 * slot : 60 + 140 * slot / FIRST) : 60 + 95 * hash(k, 93);
-    const side = (k < FIRST ? ((k + 0.5) / FIRST) * 2 - 1 + 0.08 * (hash(k, 92) - 0.5) : 2 * hash(k, 92) - 1) * 0.42 * far;
-    const over = (-0.05 + 0.27 * hash(k, 94)) * far;
+    // One that meets the lens in the first second is far enough at its own time that it is still well ahead when that second is over.
+    const meets = 90 + 107 * (1.6 - at);
+    const far = near ? ([30, 33, 36, 40][slot] as number) : Math.max(meets, k < FIRST ? 60 + (140 * slot) / FIRST : 60 + 95 * hash(k, 93));
+    const side = near ? ([0.3, 0.2, 0.33, 0.36][slot] as number) * far : (k < FIRST ? ((k + 0.5) / FIRST) * 2 - 1 + 0.08 * (hash(k, 92) - 0.5) : 2 * hash(k, 92) - 1) * 0.42 * far;
+    const over = (near ? ([0.13, 0.05, -0.02, 0.14][slot] as number) : -0.05 + 0.27 * hash(k, 94)) * far;
     const x = cam.position[0] + (ax / al) * far - (az / fl) * side;
     const y = Math.max(cam.position[1] + (ay / al) * far + over, 9);
     const z = cam.position[2] + (az / al) * far + (ax / fl) * side;
-    const dx = x - FLOCK.from[0];
-    const dy = y - FLOCK.from[1];
-    const dz = z - FLOCK.from[2];
+    // The way of the four: forty degrees to the left of the lens's look, and down.
+    const dx = near ? (0.766 * ax + 0.643 * az) / fl : x - FLOCK.from[0];
+    const dz = near ? (0.766 * az - 0.643 * ax) / fl : z - FLOCK.from[2];
+    const dy = near ? -0.37 : y - FLOCK.from[1];
     const l = Math.hypot(dx, dy, dz) || 1;
     const flat = Math.hypot(dx, dz) || 1;
-    return { at, x, y, z, dx: dx / l, dy: dy / l, dz: dz / l, px: dz / flat, pz: -dx / flat, speed: FLOCK.speed * (0.85 + 0.3 * hash(k, 95)), seed: hash(k, 96) };
+    return { at, x, y, z, dx: dx / l, dy: dy / l, dz: dz / l, px: dz / flat, pz: -dx / flat, speed: near ? 27 + 2 * hash(k, 95) : FLOCK.speed * (0.85 + 0.3 * hash(k, 95)), seed: hash(k, 96), sway: near ? 0.25 : 1 };
   });
   const leadPlace = (k: number, t: number, out: Spot): void => {
     const b = leads[k] as (typeof leads)[number];
     const gone = b.speed * (t - b.at);
-    const aside = 5 * Math.sin(t * (0.35 + 0.3 * b.seed) + k * 2.1) + 2 * Math.sin(t * (0.9 + 0.4 * b.seed) + k);
+    const aside = b.sway * (5 * Math.sin(t * (0.35 + 0.3 * b.seed) + k * 2.1) + 2 * Math.sin(t * (0.9 + 0.4 * b.seed) + k));
     out.x = b.x + b.dx * gone + b.px * aside;
     out.y = b.y + b.dy * gone + 2.2 * Math.sin(t * (0.5 + 0.3 * b.seed) + k * 1.3);
     out.z = b.z + b.dz * gone + b.pz * aside;
@@ -1186,6 +1241,9 @@ export function create(ctx: Context): Piece {
     F.deep = 0.12 + 0.88 * bout;
     F.drawn = 0;
     F.legs = 0;
+    // The nose rides the stroke, and the neck is drawn back in a glide and reaches out in a bout, each to its own measure and in its own time.
+    F.pitch += 0.045 * F.deep * Math.sin(F.stroke - 0.7);
+    F.neck = (0.3 + 0.5 * ((seed * 7.13) % 1) + 0.18 * Math.sin(t * (0.31 + 0.4 * seed) + seed * 23)) * (1 - 0.45 * bout);
   };
 
   // ---- In the film the skein, those that cross before the colony's lens and the low ones round the colony are bodies, and a crowd wheels over the colony ----
@@ -1222,6 +1280,7 @@ export function create(ctx: Context): Piece {
     F.deep = 0.12 + 0.88 * amp;
     F.drawn = 0;
     F.legs = 0;
+    F.neck = (0.3 + 0.5 * ((seed * 7.13) % 1)) * (1 - 0.45 * amp);
   };
 
   const group = new THREE.Group();
@@ -1254,7 +1313,7 @@ export function create(ctx: Context): Piece {
     // Seen from under, against the bright of the sky, it is dark.
     fig.tone = 0.5 + 0.1 * hash(i, 9);
   };
-  group.add(colonyFigures.mesh, standers.mesh, flockFigures.mesh, skeinFigures.mesh, swoopFigures.mesh);
+  group.add(roostBodies.mesh, colonyFigures.mesh, standers.mesh, flockFigures.mesh, skeinFigures.mesh, swoopFigures.mesh);
   if (colonyFigures.shade) group.add(colonyFigures.shade);
   ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh), splash.mesh);
 
@@ -1314,9 +1373,22 @@ export function create(ctx: Context): Piece {
         }
         flight.commit();
       }
+      const roost = ROOSTED && lp === null && seconds >= colonySpan.from && seconds <= colonySpan.to;
       for (let i = 0; i < sitters.length; i++) {
+        if (roost && roosting.has(i)) {
+          colonyFigures.hide(i);
+          continue;
+        }
         sitterAt(sitters[i] as Sitter, i, seconds);
         colonyFigures.put(i, fig);
+      }
+      roostBodies.draw(roost ? roosts.length : 0);
+      if (roost) {
+        for (let i = 0; i < roosts.length; i++) {
+          roostPose(R, roosts[i] as Roosting, seconds, { wave, held: heldAt }, WIND.to);
+          roostBodies.put(i, R);
+        }
+        roostBodies.commit();
       }
       for (let i = sitters.length; i < ROOKERY; i++) colonyFigures.hide(i);
       colonyFigures.commit();
@@ -1504,6 +1576,7 @@ export function create(ctx: Context): Piece {
       bodySheet.mirror.dispose();
       bodies.dispose();
       for (const figures of [runners, colonyFigures, standers, flockFigures, skeinFigures, swoopFigures]) figures.dispose();
+      roostBodies.dispose();
       splash.dispose();
     },
   };
