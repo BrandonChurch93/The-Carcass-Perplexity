@@ -10,6 +10,7 @@ import { KEYS } from '../cameras';
 import { AXIS, axisOf, browCover, landHeight, onAxis, streamAcross, wallAt } from './height';
 import { PATCH, browGeometry, patchGeometry, pebbleGeometry, socketGeometry, stoneGeometry } from './meshes';
 import { BLOCK_FRAGMENT, BLOCK_VERTEX, ballGeometry, blockUniforms } from './blocks';
+import { LOD_GLSL } from './lod';
 import { ROCK_GLSL, rockUniforms } from './rock';
 import { createStream, standingStones } from './stream';
 import { CROP, CROP_FRAGMENT, CROP_VERTEX, cropGround, outcropAt } from './outcrop';
@@ -40,11 +41,13 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${LOD_GLSL}
 ${ROCK_GLSL}
 ${CUT_GLSL}
 void main() {
   gDx = dFdx(vWorld);
   gDy = dFdy(vWorld);
+  takeLod(gDx, gDy);
   if (inPatch(vWorld) || inCrop(vWorld) || beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -90,10 +93,12 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${LOD_GLSL}
 ${ROCK_GLSL}
 void main() {
   gDx = dFdx(vWorld);
   gDy = dFdy(vWorld);
+  takeLod(gDx, gDy);
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   Rock k = rockAt(vWorld, n, 1.0);
@@ -129,19 +134,18 @@ varying vec3 vTint;
 uniform sampler2D tScree;
 uniform sampler2D tScreeH;
 // Every sheet is read with the lie of the stone across the screen, taken first thing in main: see rock.ts.
-vec4 screeAt(vec2 xz, vec2 dx, vec2 dy) {
+${LOD_GLSL}
+vec4 screeAt(vec2 xz, float grain) {
   vec2 per = vec2(24.0, 13.51);
-  return vec4(textureGrad(tScree, xz / per, dx / per, dy / per).rgb, textureGrad(tScreeH, xz / per, dx / per, dy / per).r);
+  return vec4(textureLod(tScree, xz / per, AT(1671.0, 24.0) + grain).rgb, textureLod(tScreeH, xz / per, AT(1671.0, 24.0) + grain).r);
 }
-float screeHigh(vec2 xz, vec2 dx, vec2 dy) {
-  vec2 per = vec2(24.0, 13.51);
-  return textureGrad(tScreeH, xz / per, dx / per, dy / per).r;
+float screeHigh(vec2 xz, float grain) {
+  return textureLod(tScreeH, xz / vec2(24.0, 13.51), AT(1671.0, 24.0) + grain).r;
 }
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
-  vec3 gx = dFdx(vWorld);
-  vec3 gy = dFdy(vWorld);
+  takeLod(dFdx(vWorld), dFdy(vWorld));
   if (beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -154,6 +158,7 @@ void main() {
   vec2 at = vTint.yz * 40.0;
   // The plate is a slope of many stones: a block shows a small piece of it large, so that it is one stone with its own cracks, not a heap.
   float grain = mix(0.5, 1.0, smoothstep(12.0, 4.0, cameraPosition.y));
+  float finer = log2(grain);
   vec2 ux = vWorld.zy * grain + at;
   vec2 uy = vWorld.xz * grain + at.yx;
   vec2 uz = vWorld.xy * grain - at;
@@ -166,25 +171,19 @@ void main() {
   bool plate = lowEye < 0.99;
   if (!plate) col = vec4(vec3(0.3), 0.3 + 0.5 * vnoise(vLocal.xz * 9.0 + vLocal.y * 13.0));
   if (plate && w.x > 0.0) {
-    vec2 kx = gx.zy * grain;
-    vec2 ky = gy.zy * grain;
-    vec4 k = screeAt(ux, kx, ky);
+    vec4 k = screeAt(ux, finer);
     col += k * w.x;
-    d += vec2(screeHigh(ux + vec2(e, 0.0), kx, ky) - k.a, screeHigh(ux + vec2(0.0, e), kx, ky) - k.a) * w.x;
+    d += vec2(screeHigh(ux + vec2(e, 0.0), finer) - k.a, screeHigh(ux + vec2(0.0, e), finer) - k.a) * w.x;
   }
   if (plate && w.y > 0.0) {
-    vec2 kx = gx.xz * grain;
-    vec2 ky = gy.xz * grain;
-    vec4 k = screeAt(uy, kx, ky);
+    vec4 k = screeAt(uy, finer);
     col += k * w.y;
-    d += vec2(screeHigh(uy + vec2(e, 0.0), kx, ky) - k.a, screeHigh(uy + vec2(0.0, e), kx, ky) - k.a) * w.y;
+    d += vec2(screeHigh(uy + vec2(e, 0.0), finer) - k.a, screeHigh(uy + vec2(0.0, e), finer) - k.a) * w.y;
   }
   if (plate && w.z > 0.0) {
-    vec2 kx = gx.xy * grain;
-    vec2 ky = gy.xy * grain;
-    vec4 k = screeAt(uz, kx, ky);
+    vec4 k = screeAt(uz, finer);
     col += k * w.z;
-    d += vec2(screeHigh(uz + vec2(e, 0.0), kx, ky) - k.a, screeHigh(uz + vec2(0.0, e), kx, ky) - k.a) * w.z;
+    d += vec2(screeHigh(uz + vec2(e, 0.0), finer) - k.a, screeHigh(uz + vec2(0.0, e), finer) - k.a) * w.z;
   }
   vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x) * mix(vec3(1.32, 1.18, 0.98), vec3(1.0), smoothstep(12.0, 4.0, cameraPosition.y));
   vec3 nh = vec3(0.5, 0.5, col.a);

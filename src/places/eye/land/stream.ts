@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { LOD_GLSL } from './lod';
 import { smooth } from '../layout';
 import { vnoise } from '../shared/noise';
 import { landHeight, onAxis, streamAcross, streamFloor } from './height';
@@ -66,6 +67,7 @@ uniform vec3 uCells;
 uniform sampler2D tGrit;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${LOD_GLSL}
 // Froth as the flow draws it out: threads of it, long along the water and thin across it. This is 1 on the line of a thread.
 float froth(vec2 q) {
   float a = 1.0 - abs(2.0 * vnoise(q * vec2(0.45, 3.1)) - 1.0);
@@ -74,8 +76,7 @@ float froth(vec2 q) {
 }
 void main() {
   // Taken before any branch, and the bed read with it: see rock.ts.
-  vec2 gx = dFdx(vWorld.xz) / 2.3;
-  vec2 gy = dFdy(vWorld.xz) / 2.3;
+  takeLod(dFdx(vWorld), dFdy(vWorld));
   float depth = vWater.x;
   // The water's edge is where the ground comes up through it, and it is not a ruled line.
   if (depth < 0.07 * vnoise(vWorld.xz * 1.9) + 0.03 * vnoise(vWorld.xz * 7.3) - 0.02) discard;
@@ -127,7 +128,7 @@ void main() {
   vec3 n = normalize(vec3(lean.x * rough, 1.0, lean.y * rough));
   vec3 v = normalize(cameraPosition - vWorld);
   // Under it the bed: wet stones, darker the deeper they lie.
-  vec3 bed = textureGrad(tGrit, vWorld.xz / 2.3 + lean * 0.04, gx, gy).rgb * vec3(0.15, 0.16, 0.16) * exp(-depth * 2.6);
+  vec3 bed = textureLod(tGrit, vWorld.xz / 2.3 + lean * 0.04, AT(1024.0, 2.3)).rgb * vec3(0.15, 0.16, 0.16) * exp(-depth * 2.6);
   vec3 albedo = mix(bed, vec3(1.1, 1.12, 1.15), white);
   vec3 c = rigShade(vWorld, mix(vec3(0.0, 1.0, 0.0), n, white), v, albedo, 1.0, 1.0);
   // The sky lies on what is not white, more the lower the eye.

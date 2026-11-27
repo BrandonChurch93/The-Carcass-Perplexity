@@ -7,9 +7,10 @@ import { smooth } from '../layout';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { vnoise } from '../shared/noise';
 import { HEAPS, landHeight, onAxis, streamAcross } from './height';
+import { LOD_GLSL } from './lod';
 
 /** The stretch of the spur that is broken ground, in the frame of the axis: metres out from the shore, metres to the right. */
-export const CROP = { along0: 58, along1: 208, across0: -60, across1: 60 };
+export const CROP = { along0: 58, along1: 208, across0: -34, across1: 34 };
 /** One texel of the map, metres. */
 const TEXEL = 0.055;
 
@@ -177,8 +178,11 @@ function baseAt(along: number, across: number): number {
   return ((base[k] as number) * (1 - fu) + (base[k + 1] as number) * fu) * (1 - fv) + ((base[k + baseWide] as number) * (1 - fu) + (base[k + baseWide + 1] as number) * fu) * fv;
 }
 
-/** Metres of broken rock over the smooth ground at a place of the axis frame. */
-export function outcropAt(along: number, across: number): number {
+/**
+ * Metres of broken rock over the smooth ground at a place of the axis frame. `cell` is the size of the mesh that asks: a stone smaller
+ * than two of its cells is left to the map, which shades it, since a mesh too coarse for a stone draws a spike in its place.
+ */
+export function outcropAt(along: number, across: number, cell = 0): number {
   LAST.rock = 0;
   if (along <= CROP.along0 || along >= CROP.along1 || across <= CROP.across0 || across >= CROP.across1) return 0;
   if (!slabs) {
@@ -213,10 +217,11 @@ export function outcropAt(along: number, across: number): number {
     const lean = 0.2 * Math.min(1, 0.3 + amount);
     // A slab is a bed of the rock: its top lies nearly level at the height the ground has at its middle, so that a slope of them is
     // a flight of ledges and a mound of them stands in blocks.
-    const ledge = Math.max(-2.4, Math.min(2.4, 0.8 * (baseAt(S.px, S.py) - here)));
+    const ledge = Math.max(-1.2, Math.min(1.2, 0.6 * (baseAt(S.px, S.py) - here)));
     const top = tall + ledge + lean * (((S.d[S.id] as number) - 0.5) * S.ox + (key * 4.5 - Math.floor(key * 4.5) - 0.5) * S.oy);
-    // Worn round at its edge: a quarter turn from its top down to the joint, and the higher the face the further it leans back.
-    const bevel = 0.35 + 0.8 * tall + 0.75 * Math.abs(ledge);
+    // Worn round at its edge: a quarter turn from its top down to the joint, and the higher the face the further it leans back. No face
+    // is steeper than one in one: the map lies flat, and on a steeper face its texels are drawn out into streaks.
+    const bevel = Math.max(0.35 + 0.8 * tall + 0.75 * Math.abs(ledge), 2.1 * Math.abs(top) - 0.3);
     const r = Math.min(1, (S.f2 - S.f1) / bevel);
     // No face stands upright: a height field cuts an upright face into a saw's teeth, one to each cell of its mesh.
     const shape = r * (2 - r);
@@ -239,13 +244,13 @@ export function outcropAt(along: number, across: number): number {
   C.find(wx, wy);
   const grade = smooth(60, 138, along);
   const heaped = 0.6 * vnoise(along / 11 + 21, across / 11 + 4) + 0.4 * vnoise(along / 3.1 + 2, across / 3.1 + 15);
-  if (h < 0.15 && face < 0.2 && (C.a[C.id] as number) < 0.12 + 0.5 * grade + 0.45 * smooth(0.4, 0.7, heaped) + 0.2 * Math.min(1, amount)) {
+  if (cell < 0.3 && h < 0.15 && face < 0.2 && (C.a[C.id] as number) < 0.12 + 0.5 * grade + 0.45 * smooth(0.4, 0.7, heaped) + 0.2 * Math.min(1, amount)) {
     const size = (0.14 + 0.44 * (C.b[C.id] as number) ** 1.7) * (0.4 + 0.75 * grade);
     const d = C.f1 / size;
     if (d < 1) {
       // A broken stone has a top and sides, not a dome: its top leans its own way.
       const top = size * (0.55 + 0.5 * (C.d[C.id] as number)) * (1 + (0.9 * ((C.d[C.id] as number) - 0.5) * C.ox + 0.9 * ((C.b[C.id] as number) - 0.5) * C.oy) / size);
-      const lump = Math.max(0, top) * Math.min(1, (1 - d) / 0.32);
+      const lump = Math.max(0, top) * smooth(0, 0.7, 1 - d);
       if (lump > h) {
         h = lump;
         rock = Math.max(rock, smooth(0, 0.25, 1 - d));
@@ -256,10 +261,10 @@ export function outcropAt(along: number, across: number): number {
   R.find(wx, wy);
   const low = 1 - smooth(0.08, 0.5, h);
   const many = 0.12 + 0.55 * smooth(0.35, 0.7, drift) + 0.3 * Math.min(1, amount);
-  if (low > 0 && face < 0.2 && (R.a[R.id] as number) < many) {
+  if (cell < 0.05 && low > 0 && face < 0.2 && (R.a[R.id] as number) < many) {
     const size = 0.07 + 0.17 * (R.b[R.id] as number) ** 2;
     const d = R.f1 / size;
-    if (d < 1) h += low * size * 0.8 * Math.sqrt(1 - d * d);
+    if (d < 1) h += low * size * 0.8 * (1 - d * d);
   }
   LAST.rock = rock * edge * clear;
   return h * edge * clear;
@@ -326,7 +331,7 @@ export function cropGround(): Crop {
   const us: number[] = [];
   for (let a = CROP.along0; a < CROP.along1 + 1e-6; a += 0.2) us.push(a);
   const vs: number[] = [];
-  const FINE = 27;
+  const FINE = 26;
   for (let c = CROP.across0; c < -FINE - 1e-6; c += 0.45) vs.push(c);
   for (let c = -FINE; c < FINE - 1e-6; c += 0.16) vs.push(c);
   for (let c = FINE; c < CROP.across1 + 1e-6; c += 0.45) vs.push(c);
@@ -346,7 +351,7 @@ export function cropGround(): Crop {
       const rim = i === 0 || j === 0 || i === nu - 1 || j === nv - 1;
       base[j * nu + i] = y;
       positions[o] = x;
-      positions[o + 1] = y + outcropAt(along, across) - (rim ? 7 : 0);
+      positions[o + 1] = y + outcropAt(along, across, Math.abs(across) > FINE ? 0.45 : 0.16) - (rim ? 7 : 0);
       positions[o + 2] = z;
       // Wet beside the stream, and how much standing rock the place has.
       lay[(j * nu + i) * 2] = smooth(4.2, 1.4, Math.abs(across - streamAcross(along)) + 1.2 * (vnoise(along / 1.7, across / 1.7) - 0.5));
@@ -447,15 +452,15 @@ uniform sampler2D tGravel;
 uniform sampler2D tGravelNh;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${LOD_GLSL}
 void main() {
-  // The lie of the ground across the screen is taken before any branch, and every sheet is read with it: see rock.ts.
-  vec3 gx = dFdx(vWorld);
-  vec3 gy = dFdy(vWorld);
+  // The level every sheet is read at is taken before any branch: see rock.ts.
+  takeLod(dFdx(vWorld), dFdy(vWorld));
   if (beyondNear(vWorld)) discard;
   vec3 p = vWorld;
   vec2 q = p.xz - uAxis.xy;
   vec2 right = vec2(uAxis.w, -uAxis.z);
-  vec4 m = textureGrad(tCrop, (vec2(dot(q, uAxis.zw), dot(q, right)) - uCropRect.xy) * uCropRect.zw, vec2(dot(gx.xz, uAxis.zw), dot(gx.xz, right)) * uCropRect.zw, vec2(dot(gy.xz, uAxis.zw), dot(gy.xz, right)) * uCropRect.zw);
+  vec4 m = textureLod(tCrop, (vec2(dot(q, uAxis.zw), dot(q, right)) - uCropRect.xy) * uCropRect.zw, AT(1.0, ${TEXEL.toFixed(3)}));
   vec2 s = m.xy * 2.0 - 1.0;
   vec2 g = s / sqrt(max(1.0 - s * s, 0.02));
   vec2 gw = uAxis.zw * g.x + right * g.y;
@@ -478,30 +483,28 @@ void main() {
   float high = 0.0;
   if (w.x > 0.0) {
     vec2 u = p.zy / 1.5;
-    vec3 h = textureGrad(tFaceNh, u, gx.zy / 1.5, gy.zy / 1.5).rgb;
-    skin += textureGrad(tFace, u, gx.zy / 1.5, gy.zy / 1.5).rgb * w.x;
+    vec3 h = textureLod(tFaceNh, u, AT(1024.0, 1.5)).rgb;
+    skin += textureLod(tFace, u, AT(1024.0, 1.5)).rgb * w.x;
     lean += vec3(0.0, h.g - 0.5, h.r - 0.5) * w.x;
     high += h.b * w.x;
   }
   if (w.y > 0.0) {
     vec2 u = vec2(p.x * 0.92 - p.z * 0.39, p.x * 0.39 + p.z * 0.92) / 1.5 + 0.37;
-    vec2 ux = vec2(gx.x * 0.92 - gx.z * 0.39, gx.x * 0.39 + gx.z * 0.92) / 1.5;
-    vec2 uy = vec2(gy.x * 0.92 - gy.z * 0.39, gy.x * 0.39 + gy.z * 0.92) / 1.5;
-    vec3 h = textureGrad(tFaceNh, u, ux, uy).rgb;
-    skin += textureGrad(tFace, u, ux, uy).rgb * w.y;
+    vec3 h = textureLod(tFaceNh, u, AT(1024.0, 1.5)).rgb;
+    skin += textureLod(tFace, u, AT(1024.0, 1.5)).rgb * w.y;
     vec2 l = h.rg - 0.5;
     lean += vec3(0.92 * l.x + 0.39 * l.y, 0.0, -0.39 * l.x + 0.92 * l.y) * w.y;
     high += h.b * w.y;
   }
   if (w.z > 0.0) {
     vec2 u = p.xy / 1.5 + 0.71;
-    vec3 h = textureGrad(tFaceNh, u, gx.xy / 1.5, gy.xy / 1.5).rgb;
-    skin += textureGrad(tFace, u, gx.xy / 1.5, gy.xy / 1.5).rgb * w.z;
+    vec3 h = textureLod(tFaceNh, u, AT(1024.0, 1.5)).rgb;
+    skin += textureLod(tFace, u, AT(1024.0, 1.5)).rgb * w.z;
     lean += vec3(h.r - 0.5, h.g - 0.5, 0.0) * w.z;
     high += h.b * w.z;
   }
   // The same sheet four times larger, turned: the mottle of a whole slab, so that the small sheet's repeat is not found.
-  vec3 broad = textureGrad(tFace, vec2(p.x * 0.5 + p.z * 0.87, -p.x * 0.87 + p.z * 0.5) / 6.1 + p.y * 0.13, vec2(gx.x * 0.5 + gx.z * 0.87, -gx.x * 0.87 + gx.z * 0.5) / 6.1 + gx.y * 0.13, vec2(gy.x * 0.5 + gy.z * 0.87, -gy.x * 0.87 + gy.z * 0.5) / 6.1 + gy.y * 0.13).rgb / vec3(0.34, 0.33, 0.31);
+  vec3 broad = textureLod(tFace, vec2(p.x * 0.5 + p.z * 0.87, -p.x * 0.87 + p.z * 0.5) / 6.1 + p.y * 0.13, AT(1024.0, 6.1)).rgb / vec3(0.34, 0.33, 0.31);
 
   // Warm weathered limestone: buff and grey in fields of several metres, each stretch of its own tone, rust in the joints.
   float field = 0.6 * vnoise(p.xz / 3.7 + 11.0) + 0.4 * vnoise(p.xz / 1.3 + p.y * 0.7);
@@ -519,15 +522,13 @@ void main() {
 
   // Rubble and grit between: the gravel sheet at its true size, and again larger and turned.
   vec2 um = vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) / 7.9 + 0.37;
-  vec2 umx = vec2(gx.x * 0.8 - gx.z * 0.6, gx.x * 0.6 + gx.z * 0.8) / 7.9;
-  vec2 umy = vec2(gy.x * 0.8 - gy.z * 0.6, gy.x * 0.6 + gy.z * 0.8) / 7.9;
-  vec3 cm = textureGrad(tGravel, um, umx, umy).rgb;
-  vec3 hm = textureGrad(tGravelNh, um, umx, umy).rgb;
+  vec3 cm = textureLod(tGravel, um, AT(1024.0, 7.9)).rgb;
+  vec3 hm = textureLod(tGravelNh, um, AT(1024.0, 7.9)).rgb;
   vec3 cf = vec3(0.32);
   vec3 hf = vec3(0.5);
   if (close > 0.0) {
-    cf = textureGrad(tGravel, p.xz / 2.3, gx.xz / 2.3, gy.xz / 2.3).rgb;
-    hf = textureGrad(tGravelNh, p.xz / 2.3, gx.xz / 2.3, gy.xz / 2.3).rgb;
+    cf = textureLod(tGravel, p.xz / 2.3, AT(1024.0, 2.3)).rgb;
+    hf = textureLod(tGravelNh, p.xz / 2.3, AT(1024.0, 2.3)).rgb;
   }
   float aged = 0.6 * vnoise(p.xz / 23.0 + 5.0) + 0.4 * vnoise(p.xz / 6.0);
   vec3 grit = cm * mix(vec3(1.0), cf / vec3(0.32), 0.7 * close) * mix(vec3(1.1, 1.04, 0.96), vec3(1.5, 1.36, 1.14), aged);
