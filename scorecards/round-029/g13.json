@@ -1,0 +1,2203 @@
+{
+  "at": "2026-11-27T00:23:30.921Z",
+  "phase": 6,
+  "asked": [],
+  "cover": {
+    "all": true,
+    "units": [
+      "heart",
+      "ribs",
+      "breath",
+      "marsh",
+      "spine",
+      "eye",
+      "reveal",
+      "film"
+    ],
+    "why": {
+      "heart": "a unit of Phase 3, and the gate of Phase 6 named no unit",
+      "ribs": "a unit of Phase 4, and the gate of Phase 6 named no unit",
+      "breath": "a unit of Phase 4, and the gate of Phase 6 named no unit",
+      "marsh": "a unit of Phase 4, and the gate of Phase 6 named no unit",
+      "spine": "a unit of Phase 4, and the gate of Phase 6 named no unit",
+      "eye": "a unit of Phase 4, and the gate of Phase 6 named no unit",
+      "reveal": "a unit of Phase 4, and the gate of Phase 6 named no unit",
+      "film": "a unit of Phase 5, and the gate of Phase 6 named no unit"
+    },
+    "film": "film"
+  },
+  "ok": true,
+  "min": 8,
+  "parts": [
+    {
+      "id": "ribs/land",
+      "state": "built",
+      "live": {
+        "id": "ribs/land",
+        "unit": "ribs",
+        "name": "land",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 256243,
+        "total": 518400,
+        "mean": 32.732774488799045,
+        "now": "out/work/gate/g13/ribs/land.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/ribs",
+      "state": "built",
+      "live": {
+        "id": "ribs/ribs",
+        "unit": "ribs",
+        "name": "ribs",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 250391,
+        "total": 518400,
+        "mean": 93.30242567291423,
+        "now": "out/work/gate/g13/ribs/ribs.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/ledges",
+      "state": "built",
+      "live": {
+        "id": "ribs/ledges",
+        "unit": "ribs",
+        "name": "ledges",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 353932,
+        "total": 518400,
+        "mean": 73.02574882557478,
+        "now": "out/work/gate/g13/ribs/ledges.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/weed",
+      "state": "built",
+      "live": {
+        "id": "ribs/weed",
+        "unit": "ribs",
+        "name": "weed",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 315783,
+        "total": 518400,
+        "mean": 32.526299178022036,
+        "now": "out/work/gate/g13/ribs/weed.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/rocks",
+      "state": "built",
+      "live": {
+        "id": "ribs/rocks",
+        "unit": "ribs",
+        "name": "rocks",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 48574,
+        "total": 518400,
+        "mean": 41.93386722663702,
+        "now": "out/work/gate/g13/ribs/rocks.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/sea",
+      "state": "built",
+      "live": {
+        "id": "ribs/sea",
+        "unit": "ribs",
+        "name": "sea",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 272241,
+        "total": 518400,
+        "mean": 69.60899839970223,
+        "now": "out/work/gate/g13/ribs/sea.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/runnels",
+      "state": "built",
+      "live": {
+        "id": "ribs/runnels",
+        "unit": "ribs",
+        "name": "runnels",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 335540,
+        "total": 518400,
+        "mean": 82.50322465279848,
+        "now": "out/work/gate/g13/ribs/runnels.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/surf",
+      "state": "built",
+      "live": {
+        "id": "ribs/surf",
+        "unit": "ribs",
+        "name": "surf",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 77046,
+        "total": 518400,
+        "mean": 173.5364284539972,
+        "now": "out/work/gate/g13/ribs/surf.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/bore",
+      "state": "built",
+      "live": {
+        "id": "ribs/bore",
+        "unit": "ribs",
+        "name": "bore",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 380111,
+        "total": 518400,
+        "mean": 108.59809196085705,
+        "now": "out/work/gate/g13/ribs/bore.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/drowned",
+      "state": "built",
+      "live": {
+        "id": "ribs/drowned",
+        "unit": "ribs",
+        "name": "drowned",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 94011,
+        "total": 518400,
+        "mean": 80.65494817982292,
+        "now": "out/work/gate/g13/ribs/drowned.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/kite-wings",
+      "state": "built",
+      "live": {
+        "id": "ribs/kite-wings",
+        "unit": "ribs",
+        "name": "kite-wings",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 227837,
+        "total": 518400,
+        "mean": 136.0006466611364,
+        "now": "out/work/gate/g13/ribs/kite-wings.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/sky",
+      "state": "built",
+      "live": {
+        "id": "ribs/sky",
+        "unit": "ribs",
+        "name": "sky",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 18.920364583333335,
+        "now": "out/work/gate/g13/ribs/sky.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/air",
+      "state": "built",
+      "live": {
+        "id": "ribs/air",
+        "unit": "ribs",
+        "name": "air",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 258628,
+        "total": 518400,
+        "mean": 39.542371024534596,
+        "now": "out/work/gate/g13/ribs/air.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "ribs/cloud",
+      "state": "built",
+      "live": {
+        "id": "ribs/cloud",
+        "unit": "ribs",
+        "name": "cloud",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "b549c100acd88b70",
+      "frames": 11,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 259676,
+        "total": 518400,
+        "mean": 86.45110702054355,
+        "now": "out/work/gate/g13/ribs/cloud.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/land",
+      "state": "built",
+      "live": {
+        "id": "heart/land",
+        "unit": "heart",
+        "name": "land",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 516946,
+        "total": 518400,
+        "mean": 32.627756735390804,
+        "now": "out/work/gate/g13/heart/land.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/bench",
+      "state": "built",
+      "live": {
+        "id": "heart/bench",
+        "unit": "heart",
+        "name": "bench",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 265769,
+        "total": 518400,
+        "mean": 21.25881749439049,
+        "now": "out/work/gate/g13/heart/bench.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/sulphur-crack",
+      "state": "built",
+      "live": {
+        "id": "heart/sulphur-crack",
+        "unit": "heart",
+        "name": "sulphur-crack",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 7917,
+        "total": 518400,
+        "mean": 104.18348701107321,
+        "now": "out/work/gate/g13/heart/sulphur-crack.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/foundering",
+      "state": "built",
+      "live": {
+        "id": "heart/foundering",
+        "unit": "heart",
+        "name": "foundering",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 7721,
+        "total": 518400,
+        "mean": 66.81703578983723,
+        "now": "out/work/gate/g13/heart/foundering.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/crust",
+      "state": "built",
+      "live": {
+        "id": "heart/crust",
+        "unit": "heart",
+        "name": "crust",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 341110,
+        "total": 518400,
+        "mean": 18.895390538731398,
+        "now": "out/work/gate/g13/heart/crust.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/lava",
+      "state": "built",
+      "live": {
+        "id": "heart/lava",
+        "unit": "heart",
+        "name": "lava",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 310189,
+        "total": 518400,
+        "mean": 83.0272715451977,
+        "now": "out/work/gate/g13/heart/lava.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/vessel-mouth",
+      "state": "built",
+      "live": {
+        "id": "heart/vessel-mouth",
+        "unit": "heart",
+        "name": "vessel-mouth",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 96391,
+        "total": 518400,
+        "mean": 41.4829496529759,
+        "now": "out/work/gate/g13/heart/vessel-mouth.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/lava-fall",
+      "state": "built",
+      "live": {
+        "id": "heart/lava-fall",
+        "unit": "heart",
+        "name": "lava-fall",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 95320,
+        "total": 518400,
+        "mean": 50.68162680095118,
+        "now": "out/work/gate/g13/heart/lava-fall.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/surge",
+      "state": "built",
+      "live": {
+        "id": "heart/surge",
+        "unit": "heart",
+        "name": "surge",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 18824,
+        "total": 518400,
+        "mean": 144.5027978467205,
+        "now": "out/work/gate/g13/heart/surge.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/crust-walkers",
+      "state": "built",
+      "live": {
+        "id": "heart/crust-walkers",
+        "unit": "heart",
+        "name": "crust-walkers",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 172060,
+        "total": 518400,
+        "mean": 26.908043705684065,
+        "now": "out/work/gate/g13/heart/crust-walkers.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/sunk-walker",
+      "state": "built",
+      "live": {
+        "id": "heart/sunk-walker",
+        "unit": "heart",
+        "name": "sunk-walker",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 201856,
+        "total": 518400,
+        "mean": 43.65104496935109,
+        "now": "out/work/gate/g13/heart/sunk-walker.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/sky",
+      "state": "built",
+      "live": {
+        "id": "heart/sky",
+        "unit": "heart",
+        "name": "sky",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 43.45915895061729,
+        "now": "out/work/gate/g13/heart/sky.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/air",
+      "state": "built",
+      "live": {
+        "id": "heart/air",
+        "unit": "heart",
+        "name": "air",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 364972,
+        "total": 518400,
+        "mean": 39.107429245713824,
+        "now": "out/work/gate/g13/heart/air.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/fume",
+      "state": "built",
+      "live": {
+        "id": "heart/fume",
+        "unit": "heart",
+        "name": "fume",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 103145,
+        "total": 518400,
+        "mean": 58.494921388983144,
+        "now": "out/work/gate/g13/heart/fume.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "heart/ash",
+      "state": "built",
+      "live": {
+        "id": "heart/ash",
+        "unit": "heart",
+        "name": "ash",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d59ab305371fbcbd",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": null,
+      "faults": []
+    },
+    {
+      "id": "breath/land",
+      "state": "built",
+      "live": {
+        "id": "breath/land",
+        "unit": "breath",
+        "name": "land",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 463354,
+        "total": 518400,
+        "mean": 81.75432750481633,
+        "now": "out/work/gate/g13/breath/land.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/shaft",
+      "state": "built",
+      "live": {
+        "id": "breath/shaft",
+        "unit": "breath",
+        "name": "shaft",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 472327,
+        "total": 518400,
+        "mean": 68.2483547768107,
+        "now": "out/work/gate/g13/breath/shaft.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/hoops",
+      "state": "built",
+      "live": {
+        "id": "breath/hoops",
+        "unit": "breath",
+        "name": "hoops",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 324812,
+        "total": 518400,
+        "mean": 116.18416704637349,
+        "now": "out/work/gate/g13/breath/hoops.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/slabs",
+      "state": "built",
+      "live": {
+        "id": "breath/slabs",
+        "unit": "breath",
+        "name": "slabs",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 133448,
+        "total": 518400,
+        "mean": 110.74096277201606,
+        "now": "out/work/gate/g13/breath/slabs.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/cliff",
+      "state": "built",
+      "live": {
+        "id": "breath/cliff",
+        "unit": "breath",
+        "name": "cliff",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 103717,
+        "total": 518400,
+        "mean": 85.48077621476389,
+        "now": "out/work/gate/g13/breath/cliff.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/sea",
+      "state": "built",
+      "live": {
+        "id": "breath/sea",
+        "unit": "breath",
+        "name": "sea",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 380923,
+        "total": 518400,
+        "mean": 84.80102540408429,
+        "now": "out/work/gate/g13/breath/sea.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/gill-plumes",
+      "state": "built",
+      "live": {
+        "id": "breath/gill-plumes",
+        "unit": "breath",
+        "name": "gill-plumes",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 216318,
+        "total": 518400,
+        "mean": 64.7580660570703,
+        "now": "out/work/gate/g13/breath/gill-plumes.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/waders",
+      "state": "built",
+      "live": {
+        "id": "breath/waders",
+        "unit": "breath",
+        "name": "waders",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 104222,
+        "total": 518400,
+        "mean": 118.28734176405493,
+        "now": "out/work/gate/g13/breath/waders.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/dead-wader",
+      "state": "built",
+      "live": {
+        "id": "breath/dead-wader",
+        "unit": "breath",
+        "name": "dead-wader",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 35884,
+        "total": 518400,
+        "mean": 94.31241407498236,
+        "now": "out/work/gate/g13/breath/dead-wader.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/sky",
+      "state": "built",
+      "live": {
+        "id": "breath/sky",
+        "unit": "breath",
+        "name": "sky",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 37.19431905864197,
+        "now": "out/work/gate/g13/breath/sky.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/air",
+      "state": "built",
+      "live": {
+        "id": "breath/air",
+        "unit": "breath",
+        "name": "air",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 414184,
+        "total": 518400,
+        "mean": 41.569655837341216,
+        "now": "out/work/gate/g13/breath/air.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/fog",
+      "state": "built",
+      "live": {
+        "id": "breath/fog",
+        "unit": "breath",
+        "name": "fog",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 26312,
+        "total": 518400,
+        "mean": 126.5609227728793,
+        "now": "out/work/gate/g13/breath/fog.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/vapour",
+      "state": "built",
+      "live": {
+        "id": "breath/vapour",
+        "unit": "breath",
+        "name": "vapour",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 275482,
+        "total": 518400,
+        "mean": 86.80186969263569,
+        "now": "out/work/gate/g13/breath/vapour.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "breath/exhale",
+      "state": "built",
+      "live": {
+        "id": "breath/exhale",
+        "unit": "breath",
+        "name": "exhale",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "1a26212f7ac44a85",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 96320,
+        "total": 518400,
+        "mean": 179.13965946843854,
+        "now": "out/work/gate/g13/breath/exhale.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/land",
+      "state": "built",
+      "live": {
+        "id": "marsh/land",
+        "unit": "marsh",
+        "name": "land",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 420361,
+        "total": 518400,
+        "mean": 54.03613322834421,
+        "now": "out/work/gate/g13/marsh/land.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/crust",
+      "state": "built",
+      "live": {
+        "id": "marsh/crust",
+        "unit": "marsh",
+        "name": "crust",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 386754,
+        "total": 518400,
+        "mean": 61.01079497561758,
+        "now": "out/work/gate/g13/marsh/crust.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/brine",
+      "state": "built",
+      "live": {
+        "id": "marsh/brine",
+        "unit": "marsh",
+        "name": "brine",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 413391,
+        "total": 518400,
+        "mean": 38.087778882462366,
+        "now": "out/work/gate/g13/marsh/brine.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/domes",
+      "state": "built",
+      "live": {
+        "id": "marsh/domes",
+        "unit": "marsh",
+        "name": "domes",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 428835,
+        "total": 518400,
+        "mean": 76.28037745675299,
+        "now": "out/work/gate/g13/marsh/domes.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/burst",
+      "state": "built",
+      "live": {
+        "id": "marsh/burst",
+        "unit": "marsh",
+        "name": "burst",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 408768,
+        "total": 518400,
+        "mean": 76.77746871901257,
+        "now": "out/work/gate/g13/marsh/burst.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/stalks",
+      "state": "built",
+      "live": {
+        "id": "marsh/stalks",
+        "unit": "marsh",
+        "name": "stalks",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 427887,
+        "total": 518400,
+        "mean": 69.78501177491565,
+        "now": "out/work/gate/g13/marsh/stalks.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/insects",
+      "state": "built",
+      "live": {
+        "id": "marsh/insects",
+        "unit": "marsh",
+        "name": "insects",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 346403,
+        "total": 518400,
+        "mean": 60.09986730291982,
+        "now": "out/work/gate/g13/marsh/insects.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/wallowers",
+      "state": "built",
+      "live": {
+        "id": "marsh/wallowers",
+        "unit": "marsh",
+        "name": "wallowers",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 390939,
+        "total": 518400,
+        "mean": 61.64987717606412,
+        "now": "out/work/gate/g13/marsh/wallowers.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/dead",
+      "state": "built",
+      "live": {
+        "id": "marsh/dead",
+        "unit": "marsh",
+        "name": "dead",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 373744,
+        "total": 518400,
+        "mean": 80.22005793627011,
+        "now": "out/work/gate/g13/marsh/dead.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/fliers",
+      "state": "built",
+      "live": {
+        "id": "marsh/fliers",
+        "unit": "marsh",
+        "name": "fliers",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 202829,
+        "total": 518400,
+        "mean": 64.56410901136753,
+        "now": "out/work/gate/g13/marsh/fliers.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/sky",
+      "state": "built",
+      "live": {
+        "id": "marsh/sky",
+        "unit": "marsh",
+        "name": "sky",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 47.790302211934154,
+        "now": "out/work/gate/g13/marsh/sky.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/air",
+      "state": "built",
+      "live": {
+        "id": "marsh/air",
+        "unit": "marsh",
+        "name": "air",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 435021,
+        "total": 518400,
+        "mean": 25.654374539773176,
+        "now": "out/work/gate/g13/marsh/air.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/rain",
+      "state": "built",
+      "live": {
+        "id": "marsh/rain",
+        "unit": "marsh",
+        "name": "rain",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 46677,
+        "total": 518400,
+        "mean": 143.261249294799,
+        "now": "out/work/gate/g13/marsh/rain.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "marsh/steam",
+      "state": "built",
+      "live": {
+        "id": "marsh/steam",
+        "unit": "marsh",
+        "name": "steam",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "f5aa0d56643589fa",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 288746,
+        "total": 518400,
+        "mean": 114.03501693529954,
+        "now": "out/work/gate/g13/marsh/steam.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/land",
+      "state": "built",
+      "live": {
+        "id": "spine/land",
+        "unit": "spine",
+        "name": "land",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 509225,
+        "total": 518400,
+        "mean": 87.52177524669841,
+        "now": "out/work/gate/g13/spine/land.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/strike-1",
+      "state": "built",
+      "live": {
+        "id": "spine/strike-1",
+        "unit": "spine",
+        "name": "strike-1",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 113.3968409207819,
+        "now": "out/work/gate/g13/spine/strike-1.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/strike-2",
+      "state": "built",
+      "live": {
+        "id": "spine/strike-2",
+        "unit": "spine",
+        "name": "strike-2",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 111.86182291666667,
+        "now": "out/work/gate/g13/spine/strike-2.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/strike-3",
+      "state": "built",
+      "live": {
+        "id": "spine/strike-3",
+        "unit": "spine",
+        "name": "strike-3",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 110.98885223765433,
+        "now": "out/work/gate/g13/spine/strike-3.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/strike-4",
+      "state": "built",
+      "live": {
+        "id": "spine/strike-4",
+        "unit": "spine",
+        "name": "strike-4",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 105.22990612139918,
+        "now": "out/work/gate/g13/spine/strike-4.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/strike-5",
+      "state": "built",
+      "live": {
+        "id": "spine/strike-5",
+        "unit": "spine",
+        "name": "strike-5",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 124.52035622427984,
+        "now": "out/work/gate/g13/spine/strike-5.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/strike-6",
+      "state": "built",
+      "live": {
+        "id": "spine/strike-6",
+        "unit": "spine",
+        "name": "strike-6",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 113.05609889403293,
+        "now": "out/work/gate/g13/spine/strike-6.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/tether-kites",
+      "state": "built",
+      "live": {
+        "id": "spine/tether-kites",
+        "unit": "spine",
+        "name": "tether-kites",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 266707,
+        "total": 518400,
+        "mean": 107.04533689279496,
+        "now": "out/work/gate/g13/spine/tether-kites.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/ridge-runners",
+      "state": "built",
+      "live": {
+        "id": "spine/ridge-runners",
+        "unit": "spine",
+        "name": "ridge-runners",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 286262,
+        "total": 518400,
+        "mean": 95.26749155202809,
+        "now": "out/work/gate/g13/spine/ridge-runners.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/sky",
+      "state": "built",
+      "live": {
+        "id": "spine/sky",
+        "unit": "spine",
+        "name": "sky",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 40.80776234567901,
+        "now": "out/work/gate/g13/spine/sky.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/air",
+      "state": "built",
+      "live": {
+        "id": "spine/air",
+        "unit": "spine",
+        "name": "air",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 517280,
+        "total": 518400,
+        "mean": 51.263358335910915,
+        "now": "out/work/gate/g13/spine/air.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/cloud-sea",
+      "state": "built",
+      "live": {
+        "id": "spine/cloud-sea",
+        "unit": "spine",
+        "name": "cloud-sea",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 122511,
+        "total": 518400,
+        "mean": 99.08668881433776,
+        "now": "out/work/gate/g13/spine/cloud-sea.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/cloud",
+      "state": "built",
+      "live": {
+        "id": "spine/cloud",
+        "unit": "spine",
+        "name": "cloud",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 382657,
+        "total": 518400,
+        "mean": 117.33630030723772,
+        "now": "out/work/gate/g13/spine/cloud.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "spine/spindrift",
+      "state": "built",
+      "live": {
+        "id": "spine/spindrift",
+        "unit": "spine",
+        "name": "spindrift",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "9595964014454c9b",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 76604,
+        "total": 518400,
+        "mean": 54.16039632395175,
+        "now": "out/work/gate/g13/spine/spindrift.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/land",
+      "state": "built",
+      "live": {
+        "id": "eye/land",
+        "unit": "eye",
+        "name": "land",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 208513,
+        "total": 518400,
+        "mean": 146.84500246987,
+        "now": "out/work/gate/g13/eye/land.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/brow",
+      "state": "built",
+      "live": {
+        "id": "eye/brow",
+        "unit": "eye",
+        "name": "brow",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 55260,
+        "total": 518400,
+        "mean": 107.52106406080347,
+        "now": "out/work/gate/g13/eye/brow.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/scree",
+      "state": "built",
+      "live": {
+        "id": "eye/scree",
+        "unit": "eye",
+        "name": "scree",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 136915,
+        "total": 518400,
+        "mean": 96.45031588942044,
+        "now": "out/work/gate/g13/eye/scree.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/stream",
+      "state": "built",
+      "live": {
+        "id": "eye/stream",
+        "unit": "eye",
+        "name": "stream",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": null,
+      "faults": []
+    },
+    {
+      "id": "eye/drinkers",
+      "state": "built",
+      "live": {
+        "id": "eye/drinkers",
+        "unit": "eye",
+        "name": "drinkers",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 155428,
+        "total": 518400,
+        "mean": 153.77752828748146,
+        "now": "out/work/gate/g13/eye/drinkers.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/skeleton",
+      "state": "built",
+      "live": {
+        "id": "eye/skeleton",
+        "unit": "eye",
+        "name": "skeleton",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 29010,
+        "total": 518400,
+        "mean": 142.64453636677007,
+        "now": "out/work/gate/g13/eye/skeleton.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/lake",
+      "state": "built",
+      "live": {
+        "id": "eye/lake",
+        "unit": "eye",
+        "name": "lake",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 356728,
+        "total": 518400,
+        "mean": 33.54969145492738,
+        "now": "out/work/gate/g13/eye/lake.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/shallows",
+      "state": "built",
+      "live": {
+        "id": "eye/shallows",
+        "unit": "eye",
+        "name": "shallows",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 275125,
+        "total": 518400,
+        "mean": 108.1273760411934,
+        "now": "out/work/gate/g13/eye/shallows.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/shaft",
+      "state": "built",
+      "live": {
+        "id": "eye/shaft",
+        "unit": "eye",
+        "name": "shaft",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 358969,
+        "total": 518400,
+        "mean": 143.30874996633878,
+        "now": "out/work/gate/g13/eye/shaft.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/mats",
+      "state": "built",
+      "live": {
+        "id": "eye/mats",
+        "unit": "eye",
+        "name": "mats",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 308891,
+        "total": 518400,
+        "mean": 139.21687046023786,
+        "now": "out/work/gate/g13/eye/mats.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/riser",
+      "state": "built",
+      "live": {
+        "id": "eye/riser",
+        "unit": "eye",
+        "name": "riser",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 23216,
+        "total": 518400,
+        "mean": 92.57022455777624,
+        "now": "out/work/gate/g13/eye/riser.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/sky",
+      "state": "built",
+      "live": {
+        "id": "eye/sky",
+        "unit": "eye",
+        "name": "sky",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 74.87063528806584,
+        "now": "out/work/gate/g13/eye/sky.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/air",
+      "state": "built",
+      "live": {
+        "id": "eye/air",
+        "unit": "eye",
+        "name": "air",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 332977,
+        "total": 518400,
+        "mean": 20.4258402231986,
+        "now": "out/work/gate/g13/eye/air.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "eye/mist",
+      "state": "built",
+      "live": {
+        "id": "eye/mist",
+        "unit": "eye",
+        "name": "mist",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "24a291c0bd93ef72",
+      "frames": 6,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 111456,
+        "total": 518400,
+        "mean": 141.31643578332856,
+        "now": "out/work/gate/g13/eye/mist.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/continent",
+      "state": "built",
+      "live": {
+        "id": "reveal/continent",
+        "unit": "reveal",
+        "name": "continent",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 415583,
+        "total": 518400,
+        "mean": 82.40489144166148,
+        "now": "out/work/gate/g13/reveal/continent.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/sea",
+      "state": "built",
+      "live": {
+        "id": "reveal/sea",
+        "unit": "reveal",
+        "name": "sea",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 518400,
+        "total": 518400,
+        "mean": 28.967386188271604,
+        "now": "out/work/gate/g13/reveal/sea.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/salt",
+      "state": "built",
+      "live": {
+        "id": "reveal/salt",
+        "unit": "reveal",
+        "name": "salt",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 2160,
+        "total": 518400,
+        "mean": 62.902623456790124,
+        "now": "out/work/gate/g13/reveal/salt.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/lake",
+      "state": "built",
+      "live": {
+        "id": "reveal/lake",
+        "unit": "reveal",
+        "name": "lake",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 144032,
+        "total": 518400,
+        "mean": 28.880869066133453,
+        "now": "out/work/gate/g13/reveal/lake.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/lava",
+      "state": "built",
+      "live": {
+        "id": "reveal/lava",
+        "unit": "reveal",
+        "name": "lava",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 1442,
+        "total": 518400,
+        "mean": 84.61257512713823,
+        "now": "out/work/gate/g13/reveal/lava.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/vapour",
+      "state": "built",
+      "live": {
+        "id": "reveal/vapour",
+        "unit": "reveal",
+        "name": "vapour",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 22297,
+        "total": 518400,
+        "mean": 88.73884379064448,
+        "now": "out/work/gate/g13/reveal/vapour.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/cloud",
+      "state": "built",
+      "live": {
+        "id": "reveal/cloud",
+        "unit": "reveal",
+        "name": "cloud",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 116064,
+        "total": 518400,
+        "mean": 82.13460676867935,
+        "now": "out/work/gate/g13/reveal/cloud.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/storm",
+      "state": "built",
+      "live": {
+        "id": "reveal/storm",
+        "unit": "reveal",
+        "name": "storm",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 1220,
+        "total": 518400,
+        "mean": 53.89672131147541,
+        "now": "out/work/gate/g13/reveal/storm.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/cyclone",
+      "state": "built",
+      "live": {
+        "id": "reveal/cyclone",
+        "unit": "reveal",
+        "name": "cyclone",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 30156,
+        "total": 518400,
+        "mean": 76.96893929345183,
+        "now": "out/work/gate/g13/reveal/cyclone.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/space",
+      "state": "built",
+      "live": {
+        "id": "reveal/space",
+        "unit": "reveal",
+        "name": "space",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 9516,
+        "total": 518400,
+        "mean": 43.22747653075522,
+        "now": "out/work/gate/g13/reveal/space.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "reveal/atmosphere",
+      "state": "built",
+      "live": {
+        "id": "reveal/atmosphere",
+        "unit": "reveal",
+        "name": "atmosphere",
+        "kind": "solid",
+        "state": "built"
+      },
+      "hashNow": "d5cb0b494ce9d667",
+      "frames": 9,
+      "flagged": [],
+      "listed": false,
+      "picture": {
+        "pixels": 16734,
+        "total": 518400,
+        "mean": 40.24803792677582,
+        "now": "out/work/gate/g13/reveal/atmosphere.png"
+      },
+      "faults": []
+    },
+    {
+      "id": "film/opening",
+      "state": "built",
+      "live": {
+        "id": "film/opening",
+        "unit": "film",
+        "name": "opening",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "51d802f37e2b75ab",
+      "frames": 14,
+      "flagged": [],
+      "listed": false,
+      "picture": null,
+      "faults": []
+    },
+    {
+      "id": "film/handoff",
+      "state": "built",
+      "live": {
+        "id": "film/handoff",
+        "unit": "film",
+        "name": "handoff",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "51d802f37e2b75ab",
+      "frames": 14,
+      "flagged": [],
+      "listed": false,
+      "picture": null,
+      "faults": []
+    },
+    {
+      "id": "film/ending",
+      "state": "built",
+      "live": {
+        "id": "film/ending",
+        "unit": "film",
+        "name": "ending",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "51d802f37e2b75ab",
+      "frames": 14,
+      "flagged": [],
+      "listed": false,
+      "picture": null,
+      "faults": []
+    },
+    {
+      "id": "film/loop",
+      "state": "built",
+      "live": {
+        "id": "film/loop",
+        "unit": "film",
+        "name": "loop",
+        "kind": "effect",
+        "state": "built"
+      },
+      "hashNow": "51d802f37e2b75ab",
+      "frames": 14,
+      "flagged": [],
+      "listed": false,
+      "picture": null,
+      "faults": []
+    }
+  ]
+}

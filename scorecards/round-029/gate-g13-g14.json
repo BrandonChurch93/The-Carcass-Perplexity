@@ -1,0 +1,44 @@
+{
+  "phase": 6,
+  "at": "2026-11-27T00:51:55Z",
+  "only": [
+    "G13",
+    "G14"
+  ],
+  "ok": true,
+  "failed": [],
+  "results": [
+    {
+      "id": "G13",
+      "title": "No covered part is a stand-in",
+      "kind": "machine",
+      "phase": 3,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "G13 covers every part there is, 100 of them, because film is a unit of Phase 5, and the gate of Phase 6 named no unit.",
+        "All 100 covered parts pass."
+      ],
+      "skipped": [
+        "test 4 for eye/stream: it was never seen in the film as a stand-in, so it has no reference picture"
+      ],
+      "seconds": 614.9
+    },
+    {
+      "id": "G14",
+      "title": "The seam of the loop",
+      "kind": "machine",
+      "phase": 5,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "loop frame 480 is the same picture as frame 0 at the draft, review, final tiers",
+        "frame 479 to frame 0 is a step of 0.79 levels; the largest elsewhere is 6.95, between frames 116 and 117, and 2 times that is allowed"
+      ],
+      "skipped": [],
+      "seconds": 1704.1
+    }
+  ]
+}
