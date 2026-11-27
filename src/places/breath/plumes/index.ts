@@ -14,6 +14,8 @@ export const PARTS: readonly string[] = ['gill-plumes'];
 
 /** Staged, metres: see where the bushes are placed. */
 const HERO_WEST = 4.6;
+/** Which of `BUSHES` stands on the south lip at the right edge of the wide lens. */
+const SOUTH = 6;
 
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
@@ -81,7 +83,7 @@ export function create(ctx: Context): Piece {
     const [x, z] = i === 1 ? [-36.31, -1.13] : i === 0 ? [at[0] - 1.17, at[1] - 2.1] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
     // The one on the south-west lip is by the wide lens: there it is a low fountain, not a tall plume in the corner of that frame.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.17 : i === 0 ? tall * 1.3 : tall, lean: i === 1 ? Math.atan2(0.35, 0.94) : Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 1.0 } : i === 1 ? { full: 1.3 } : i === 5 ? { full: 0.5 } : {}) });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.11 : i === 0 ? tall * 1.3 : tall, lean: i === 1 ? Math.atan2(0.35, 0.94) : Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 1.0 } : i === 1 ? { full: 0.95 } : i === 5 ? { full: 0.4 } : {}) });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
@@ -156,10 +158,12 @@ export function create(ctx: Context): Piece {
   const hangGroup = new THREE.Group();
   const heroGroup = new THREE.Group();
   const domeGroup = new THREE.Group();
-  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : group, i < 2 ? 1.5 : 1));
+  // The one on the south lip stood cut by the right edge of the wide lens of breath-01 as a scarlet lump in the corner: it is off the set for that shot.
+  const southGroup = new THREE.Group();
+  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : i === SOUTH ? southGroup : group, i < 2 ? 1.5 : i === 5 ? 0.4 : 1));
   rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
   for (const g of hangGrown) meshes(g, hangGroup, 0.4);
-  group.add(rimGroup, hangGroup, heroGroup, domeGroup);
+  group.add(rimGroup, hangGroup, heroGroup, domeGroup, southGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
@@ -184,7 +188,7 @@ export function create(ctx: Context): Piece {
     lumps.push(g);
     const m = new THREE.Mesh(g, holdfastMaterial);
     m.frustumCulled = false;
-    (rimBushes.includes(b) ? (rimBushes.indexOf(b) >= RIM_GROWTH.length ? domeGroup : rimGroup) : bushes.indexOf(b) < 2 ? heroGroup : group).add(m);
+    (rimBushes.includes(b) ? (rimBushes.indexOf(b) >= RIM_GROWTH.length ? domeGroup : rimGroup) : bushes.indexOf(b) < 2 ? heroGroup : bushes.indexOf(b) === SOUTH ? southGroup : group).add(m);
   }
   lump.dispose();
 
@@ -295,6 +299,12 @@ export function create(ctx: Context): Piece {
       rimGroup.visible = shown || wide;
       heroGroup.visible = !low;
       domeGroup.visible = low;
+      southGroup.visible = !wide;
+      {
+        const b = bushes[SOUTH] as Bush;
+        rig.setDisc(discs, SOUTH * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, wide ? 0 : 0.7);
+        rig.setShadow(discs, SOUTH * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, wide ? 0 : 0.5);
+      }
       for (let i = 0; i < 2; i++) {
         const b = bushes[i] as Bush;
         rig.setDisc(discs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, low ? 0 : 0.7);

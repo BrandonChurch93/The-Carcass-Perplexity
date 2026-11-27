@@ -235,7 +235,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
 
   // What every fork of this bush does: how far the wet has combed it the way the bush leans, and how much its ends hang.
   const comb = habit === 'sweep' ? 0.42 : habit === 'hang' ? 0.12 : 0.1;
-  const wet = habit === 'hang' ? 1.4 : 1;
+  const wet = habit === 'hang' ? 1.25 : 1;
   /** Where a fork is heading by its end: on beside its limb, combed, and hanging by `hang`. */
   const heading = (t: V3, d0: V3, hang: number): V3 => unit([0.62 * t[0] + 0.3 * d0[0] + comb * leanDir[0] + rng.range(-0.22, 0.22), 0.62 * t[1] + 0.3 * d0[1] - hang * wet + rng.range(-0.15, 0.15), 0.62 * t[2] + 0.3 * d0[2] + comb * leanDir[2] + rng.range(-0.22, 0.22)]);
   /** The way a fork leaves a limb: forward, at a narrow angle. */
@@ -262,7 +262,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       const L = long2 * scale * rng.range(0.55, 1.25) * (tip ? 1.2 : 1 - (habit === 'sweep' ? 0.55 : 0.35) * v);
       const d1h = heading(g.t, d0, (habit === 'sweep' ? rng.range(0.15, 0.8) + 0.9 * v : rng.range(0.35, 1.1) + 0.5 * v));
       // On a plume the lens comes close to, an end does not hang straight: it curls under, back toward the limb it left.
-      const d1 = habit === 'sweep' && close && !tip ? unit([d1h[0] - 0.4 * g.t[0], d1h[1] - 0.15, d1h[2] - 0.4 * g.t[2]]) : d1h;
+      const d1 = (habit === 'sweep' || habit === 'hang') && close && !tip ? unit([d1h[0] - 0.4 * g.t[0], d1h[1] - 0.15, d1h[2] - 0.4 * g.t[2]]) : d1h;
       const tone = Math.min(0.999, Math.max(0, tone0 + rng.range(-0.2, 0.2)));
       const u1 = g.u + 0.22;
       // A branchlet that carries filaments does not tremble on its own: its filaments are rooted on where it is.
@@ -276,7 +276,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
         const s = rng.range(0.05, 0.6);
         const h = along(parent, s);
         // On a plume the lens comes close to, the finest hair is not combed: it stands off its branchlet and curls, each its own way.
-        const frizz = habit === 'sweep' && close;
+        const frizz = (habit === 'sweep' || habit === 'hang') && close;
         const e0 = frizz ? leave(h.t, 0.1, 0.42) : leave(h.t, 0.08, 0.3);
         const e2 = heading(h.t, e0, rng.range(0.5, 1.5));
         const curl = 0.35 + 0.7 * s;
@@ -327,7 +327,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     const thick = tall * 0.013 * (0.75 + 0.5 * (length / tall)) * rng.range(0.85, 1.15);
     tube(stalk, thick, tall * 0.0012, habit === 'fountain' ? 0.35 : 0.6, phase, close ? 9 : middle ? 6 : 4);
     // Its branches: none on the bare foot of the stalk, the longest a third of the way up, shorter to the end, as a feather's.
-    const bare = habit === 'hang' ? rng.range(0.38, 0.48) : rng.range(0.06, 0.11);
+    const bare = habit === 'hang' ? rng.range(0.42, 0.52) : rng.range(0.06, 0.11);
     const gap = (close ? 0.06 : middle ? 0.085 : 0.13) * (habit === 'fountain' ? 1.3 : 1) * rng.range(0.85, 1.15);
     for (let v = bare; v < 0.97; v += gap * rng.range(0.6, 1.4)) {
       const g = on(stalk, v);
