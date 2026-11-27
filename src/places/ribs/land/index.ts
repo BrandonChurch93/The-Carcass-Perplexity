@@ -51,6 +51,8 @@ const TUSK_MEAN: [number, number, number] = [0.466, 0.452, 0.428];
 // The linear mean of land/strata.jpg (one number: the mean of its three), as land/materials.json has it.
 const STRATA_MEAN = 0.174;
 const BED = 6.5;
+// How far along the wall from the drowned one the rivulet runs, metres.
+const RILL_ALONG = 2.4;
 // How far a face of a stack leans in and out with height. At 0.3 the right stack's outline before the bore was a head in profile
 // (brow, nose, mouth); at 0.1 the faces stand nearly straight.
 const STACK_SWAY = 0.1;
@@ -188,7 +190,7 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
   const gateAt = new THREE.Vector2(STATIONS.posts[0][0] + 64, STATIONS.posts[0][1] + 74 - 22);
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) }, uGate: { value: gateAt } });
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN }, tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) }, uGate: { value: gateAt } });
   {
     // A lane of standing water runs down the middle of the strait toward the gap, from where the wide lens stands: it holds the sky.
     const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
@@ -240,8 +242,14 @@ export function create(ctx: Context): Piece {
   const strataC = tex('land/strata.jpg', { anisotropy: 2 });
   const strataN = tex('land/strata-nh.jpg', { kind: 'data', anisotropy: 2 });
   const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tStrata: { value: strataC }, tStrataN: { value: strataN }, tLichen: { value: lichenC }, uStrataMean: { value: STRATA_MEAN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 46.3 } });
+  // The rivulet on the first left blade's weed: a line down the wall a few strides along it from where the drowned one hangs.
+  const hungAt = DROWNED.at(0);
+  const hungOut = DROWNED.at(1);
+  const outLen = Math.hypot(hungOut[0] - hungAt[0], hungOut[2] - hungAt[2]) || 1;
+  const wallAlong: [number, number] = [-(hungOut[2] - hungAt[2]) / outLen, (hungOut[0] - hungAt[0]) / outLen];
+  const rillAt = new THREE.Vector4(hungAt[0] + wallAlong[0] * RILL_ALONG, hungAt[2] + wallAlong[1] * RILL_ALONG, wallAlong[0], wallAlong[1]);
   const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
-    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare } });
+    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uRill: { value: rillAt } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
   const weedNear = hangs(0.6);
