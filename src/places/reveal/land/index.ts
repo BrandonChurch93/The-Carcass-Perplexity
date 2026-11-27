@@ -279,7 +279,7 @@ void main() {
     // (It is a lake as the others are: shut in, deep in its middle, its bed dark.)
     coastKm = mix(coastKm, min(coastKm, -(0.98 - upperR) * 37.0), upper);
     shut = max(shut, upper);
-    shallow = mix(shallow, 0.2 + 0.6 * vnoise(inUpper * 1.7 + 3.0), upper);
+    shallow = mix(shallow, 0.0, upper);
   }
   // (The bay east of the lake is an arm of the sea over a drowned valley: shoal and pale green far out from its shores, deep only
   // in the channel, so it is no twin of the lake.)
