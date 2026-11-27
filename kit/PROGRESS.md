@@ -24,28 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 192, 2026-11-27 22:56 UTC:
+Status 193, 2026-11-27 23:24 UTC:
 
-- `01-s192-breath-5510-native2.jpg`: The Breath at 1:32 (frame 5510): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: a pale cream and pink mass in soft folds like draped skin lies across the crop, speckled all over with small dark dashes and specks of one size; thin tapering limbs with swollen pink-brown joints run level along the ground before it; dark wet ground with pale pebbles at the bottom. The folds read as relief; the dashes read as a pattern laid over them. Right: a slope of dark wet ground with a fine cracked skin runs down to the right, with two small rounded stones on it; behind it, out of focus, a pale rock wall banded in cream and rust. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `02-s192-breath-4973-native2.jpg`: The Breath at 1:22 (frame 4973): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: dark red-black fronds sweep down from the upper left in bunches of thin strands, red where the light catches their edges; behind them pale ground out of focus with bright round specks of light. The strands are fine and stand apart; some are hard and wiry. Right: soft pale cream and tan shapes, out of focus, with a dark hollow at the right edge; nothing in it holds fine detail. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `03-s192-breath-4731-native2.jpg`: The Breath at 1:19 (frame 4731): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: grey-brown mist fills the crop, and a patch of brown wrinkled surface shows through it at the upper right; nothing else can be read. Right: brown rock in big blocks under a marbled pattern of cream veins and blotches; a boxy block in the middle has flat faces and straight hard edges, and a dark smudge of mist lies at its foot; the pattern keeps one scale on every face and reads as laid over simple shapes. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `01-s193-eye-9003-blocks.jpg`: The Eye at 2:30 (frame 9003): one crop at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture; the box is at the right edge of the frame, 83 to 100 percent from the left and 25 to 42 percent from the top. A pale stony shore lies along the top; under it a blue-grey band of water, then brown-red reflections drawn out in level streaks, with paler tan streaks at the bottom. A little under half way down, from about the middle to the right edge, a level row of small pale blocks sits on a dark band of the water: hard-edged grey and white rectangles that belong to nothing in the scene. No critic of round 30 names the row; the critic of fine detail gave this place 5 of 10. The Builder's reading. Below the bar.
+- `02-s193-eye-9221-blocks.jpg`: The Eye at 2:34 (frame 9221): one crop at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture; the box is at the right edge of the frame, 83 to 100 percent from the left and 25 to 42 percent from the top. A grey scree slope with a few larger rocks fills the top; a band of pale haze lies where it meets the water; under it brown-red water in level streaks, then a dark grey-brown stretch. On the very bottom edge of the crop, across the middle, runs a level row of small pale blocks like the one at 2:30. No critic of round 30 names the row; the critic of fine detail gave this place 5 of 10. The Builder's reading. Below the bar.
 
+Status 192, 2026-11-27 22:56 UTC, showed: The Breath at 1:32 (frame 5510): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the...
 Status 191, 2026-11-27 22:35 UTC, showed: The Ribs at 0:40 (frame 2401): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the...
 Status 190, 2026-11-27 22:19 UTC, showed: The Spine at 2:00 (frame 7234): the render helper's second sheet of draft stills at 960x540, the same crop as in Still 213 enlarged four...
-Status 189, 2026-11-27 22:01 UTC, showed: The Spine at 2:00 (frame 7234): the render helper's sheet of draft stills at 960x540, one crop enlarged four times, not film quality.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T22:56:19Z
-phase 6: 26.11 h used of 24.00 h
-build: 71.08 h used of 72.00 h
+2026-11-27T23:24:40Z
+phase 6: 26.58 h used of 24.00 h
+build: 71.56 h used of 72.00 h
 extra rounds: no
 half point: reached
 box end: reached
-minutes since the last status: 21
+minutes since the last status: 28
 ```
 
 ## Phases
