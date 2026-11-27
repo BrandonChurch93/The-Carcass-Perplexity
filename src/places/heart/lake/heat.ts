@@ -440,8 +440,9 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     float s2 = vnoise(run * 4.1 + 5.0);
     // The skin on it is ropy like the crust it will become: orange where it is thin, dark where it has thickened,
     // and the open lava shows brightest in the creases where it tears and where it shears against the lip.
-    float t = sqrt(texture2D(tRope, run / 2.3).g);
-    float t2 = sqrt(texture2D(tRope, vec2(run.y, -run.x) / 4.7 + 0.37).g);
+    // Read at the level the footprint asks for, by hand: inside a branch the sampler's own choice of level is not defined.
+    float t = sqrt(textureLod(tRope, run / 2.3, log2(max(gFoot * (1024.0 / 2.3), 1.0))).g);
+    float t2 = sqrt(textureLod(tRope, vec2(run.y, -run.x) / 4.7 + 0.37, log2(max(gFoot * (1024.0 / 4.7), 1.0))).g);
     // Yellow only down the middle of the stream, an orange body, dull red against the banks.
     float middle = 1.0 - smoothstep(0.12, 0.6, gAcross + 0.35 * (s1 - 0.5));
     float kFloor = mix(1165.0 + 70.0 * t2, 1250.0 + 55.0 * t, middle * smoothstep(0.25, 0.45, hotHalf));

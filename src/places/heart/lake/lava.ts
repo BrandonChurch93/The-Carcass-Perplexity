@@ -188,6 +188,7 @@ ${RIG_GLSL}
 ${HEAT_GLSL}
 ${SHEET_GLSL}
 
+uniform sampler2D tPour;
 ${MELT_GLSL}
 
 const float CYCLE = 12.0;
@@ -530,9 +531,9 @@ void main() {
   // what the stream carries whole. The plug in mid stream rides fast, the skin of the margins slowly, a coil turns as one,
   // and between plug and margin the skin is sheared open: no reading is ever dissolved into another.
   float photo = (1.0 - feeding) * (1.0 - stir);
+  vec2 hx = dFdx(here);
+  vec2 hy = dFdy(here);
   if (photo > 0.0) {
-    vec2 hx = dFdx(here);
-    vec2 hy = dFdy(here);
     float plugEdge = lean + 0.35 * (fixedBig - 0.5) - coreTo - 0.22;
     float inPlug = (1.0 - smoothstep(-0.04, 0.04, plugEdge)) * (1.0 - inCoil);
     vec3 plug = vec3(0.0);
@@ -548,7 +549,13 @@ void main() {
     float sideHeat = smoothstep(cut.x, cut.x + cut.y, side.z) * (0.55 + 0.45 * side.z);
     float plugHeat = smoothstep(cut.x, cut.x + cut.y, plug.z) * (0.55 + 0.45 * plug.z);
     // The bare melt is not one colour: the folds of the sheet show in it, yellow-white where it wells and orange between.
-    float heatPlug = clamp(0.34 + 0.3 * mid + 0.5 * plugHeat, 0.0, 1.0);
+    // Mid stream the skin is drawn into cords as the crust's is (the slab sheet, riding with the plug): a cord's top is
+    // dark red skin, and the furrow between two cords is torn open to the melt, a thread of yellow white.
+    vec2 coilScale = vec2(1.0, 2.0) / 1.7;
+    vec2 coilAt = vec2(here.x - CORE_SPEED * uTime, here.y);
+    float coil = textureGrad(tPour, coilAt * coilScale + 0.37, hx * coilScale, hy * coilScale).b;
+    float furrow = 1.0 - smoothstep(0.3, 0.58, coil);
+    float heatPlug = clamp(mix(0.22 + 0.2 * mid, 0.72 + 0.3 * mid, furrow) + 0.3 * plugHeat, 0.0, 1.0);
     float heatSide = mix(0.08, 1.0, sideHeat) * mix(0.95, 0.65, smoothstep(0.4, 1.0, lean));
     float heat = mix(heatSide, heatPlug, inPlug);
     // Where the sheet is bare the melt still shows how it runs: lines drawn out along the stream and films of new skin a shade

@@ -12,10 +12,10 @@ export const PARTS: readonly string[] = ['vessel-mouth', 'lava-fall', 'surge'];
 
 /** Seconds before the surge breaks over the lip in which the glow in the tube and the head at the lip come up. */
 const LEAD = 0.24;
-/** Metres from the lip of the front of the surge, `since` seconds after it breaks over the lip. It leaves at 25 m/s and gathers speed down the slope. */
-const surgeFront = (since: number): number => (since < 0 ? 0 : 25 * since + 5 * since * since);
+/** Metres from the lip of the front of the surge, `since` seconds after it breaks over the lip. It is lava, not water: it leaves at 9 m/s and gathers speed slowly down the slope. */
+const surgeFront = (since: number): number => (since < 0 ? 0 : 9 * since + 2 * since * since);
 /** The second after its start at which the front is `len` metres down the course. */
-const surgeReaches = (len: number): number => (len <= 0 ? 0 : (-25 + Math.sqrt(625 + 20 * len)) / 10);
+const surgeReaches = (len: number): number => (len <= 0 ? 0 : (-9 + Math.sqrt(81 + 8 * len)) / 4);
 
 export function create(ctx: HeartContext): HeartPiece {
   const land = (x: number, z: number): number => ctx.rig.land.height(x, z);

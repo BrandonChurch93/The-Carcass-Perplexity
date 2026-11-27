@@ -35,10 +35,10 @@ uniform vec4 uGroupSeam;
 // they meet the higher lies on the lower, as one toe of lava on the next. It is laid at three sizes, metres to the long side
 // of the sheet, and stands so many metres from its deepest furrow to its highest crest. The height carries the two larger
 // as far as its cells hold them; the skin paints all three at the same places.
-#define SHEET_D 1.6
+#define SHEET_D 0.9
 #define SHEET_M 6.4
 #define SHEET_L 25.6
-#define SHEET_TALL_D 0.012
+#define SHEET_TALL_D 0.01
 #define SHEET_TALL_M 0.06
 #define SHEET_TALL_L 0.24
 ${SHEET_GLSL}

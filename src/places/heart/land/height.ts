@@ -630,7 +630,10 @@ function shards(x: number, z: number, cell: number, share: number, seed: number)
       const uz = (-px * Math.sin(t) + pz * Math.cos(t)) * (1.1 + 0.5 * hash(i + 43, j + seed + 47));
       let h = r * (0.45 + 0.6 * hash(i + 31, j + 37 + seed)) + 0.6 * (hash(i + 59, j + 61 + seed) - 0.5) * ux + 0.6 * (hash(i + 67 + seed, j + 71) - 0.5) * uz;
       // Scoria breaks rough: the faces are not planed.
-      h += r * (0.1 * (noise(x / (0.33 * r) + seed, z / (0.33 * r)) - 0.5) + 0.05 * (noise(x / (0.11 * r), z / (0.11 * r) + seed) - 0.5));
+      h += r * (0.14 * (noise(x / (0.33 * r) + seed, z / (0.33 * r)) - 0.5) + 0.06 * (noise(x / (0.11 * r), z / (0.11 * r) + seed) - 0.5));
+      // And in steps: part of the top has spalled off along a joint.
+      const c = 6.283 * hash(i + 113, j + 127 + seed);
+      if (ux * Math.cos(c) + uz * Math.sin(c) > r * (0.5 * hash(i + 131 + seed, j + 137) - 0.1)) h -= r * (0.08 + 0.14 * hash(i + 139, j + 149 + seed));
       const sides = 5 + Math.floor(3 * hash(i + 73, j + 79 + seed));
       for (let k = 0; k < sides; k++) {
         const a = ((k + 0.7 * hash(i + 7 * k + seed, j + 41)) * 6.283) / sides;
