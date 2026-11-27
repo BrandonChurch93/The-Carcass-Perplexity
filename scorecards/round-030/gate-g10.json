@@ -1,0 +1,27 @@
+{
+  "phase": 6,
+  "at": "2026-11-27T07:41:27Z",
+  "only": [
+    "G10"
+  ],
+  "ok": true,
+  "failed": [],
+  "results": [
+    {
+      "id": "G10",
+      "title": "Only WebGL2 core and portable extensions, with a half float path",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "The page enabled 3 extensions, all marked portable in config/webgl-caps.json.",
+        "Frame 5930 with portable extensions only is pixel-identical to the same frame with all of them.",
+        "No file under src uses FloatType."
+      ],
+      "skipped": [],
+      "seconds": 49.5
+    }
+  ]
+}

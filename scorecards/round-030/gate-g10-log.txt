@@ -1,0 +1,8 @@
+
+> the-carcass@0.1.0 gate
+> node tools/gate.mjs --phase 6 --only G10
+
+G10 pass  Only WebGL2 core and portable extensions, with a half float path
+gate phase 6 (only G10): pass. 1 of 1 passed, 0 failed, 0 not built.
+gate: out/work/gate/phase-6-only.json
+ENDED 0

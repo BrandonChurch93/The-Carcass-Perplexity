@@ -1,0 +1,70 @@
+{
+  "round": 30,
+  "unit": "spine",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-27 07:43 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the lightning against the snow ridge and the cloud sea, frames 7231-7236",
+        "what": "bolts fire every 1-3 frames with no build or decay, so the sky strobes. Each strike lights nothing: the ridge, the snow and the cloud tops stay at the same brightness as in the frames without a bolt",
+        "fix": "space the strikes seconds apart, and give each one a single-frame flash that lights the whole ridge and the cloud under it, then a fast falloff"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the storm over the far peak, frames 7015-7024",
+        "what": "the same thing happens again: strikes at 7015 and 7019 leave the near ridge and the cloud sea unlit. A soft purple glow blob then sits in the cloud for many frames, like a pasted sprite rather than lit cloud",
+        "fix": "light the scene from the strike, and let the in-cloud glow flicker out within a few frames"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "the whole frame, camera held at 7234 for 6 s",
+        "what": "once the bolt is gone the place hardly moves. The cloud sea and the far spires are almost frozen across 6 s, and only the upper sky changes slightly, so it reads as a still picture",
+        "fix": "drive the cloud sea with its own slow roll and drift, send wisps across the ridge, and add a varied rhythm of distant flashes"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the spire just before the cut, frame 7874",
+        "what": "the spire and the sky jump brighter and wash out for one frame before the cut to the cave, which reads as a pop or a mismatched frame rather than a strike",
+        "fix": "either remove the frame, or make it a real strike that lights the spire from one direction and is matched by bolt and sky"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the animal in the cave mouth and the herd on the left, frames 8089-8100",
+        "what": "the standing animal holds almost the same leg pose for 12 frames with no weight shift. The herd lies like static lumps, and the flashes in the cave mouth (8091, 8094) do not light the ice floor or the animals",
+        "fix": "add breathing, head turns and offset weight shifts to each animal, and let the strike light spill in across the floor and the fur"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the white ribbon streaks across the storm sky",
+        "what": "the ribbons look like smeared texture strokes laid over the sky, not cloud at its own height. They hold their shape from frame to frame while the bolts go off in front of them unlit",
+        "fix": "replace them with volumetric cloud bands that shear and drift with parallax, and that the bolts light from inside"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the strike on the spire top, frames 7665 and 7668",
+        "what": "the bolt lands on the spire, but only a small spark shows and the rock face stays dark. The event does not land",
+        "fix": "flash the whole spire face and the nearby fume for an instant on contact"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-05.png",
+        "where": "the cave walls and roof, frames 7875-7883",
+        "what": "the fine ridged rock texture looks noisy and may crawl from frame to frame",
+        "fix": "stabilise the texture filtering, and add temporal anti-aliasing on the wall detail"
+      }
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "phase": 6,
+  "at": "2026-11-27T07:45:24Z",
+  "only": [
+    "G3",
+    "G4",
+    "G5"
+  ],
+  "ok": true,
+  "failed": [],
+  "results": [
+    {
+      "id": "G3",
+      "title": "npm run determinism passes",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "npm run determinism exited with code 0."
+      ],
+      "skipped": [],
+      "seconds": 97.2
+    },
+    {
+      "id": "G4",
+      "title": "Stills are the size of their format, and the film and the loop have the right frame counts",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "The uhd still is 3840 x 2160, the size of its format.",
+        "The hd still is 1920 x 1080, the size of its format.",
+        "The preview still is 960 x 540, the size of its format.",
+        "The film has 11861 frames and cut/CUTLIST.json has 11861.",
+        "The loop has 480 frames and deliver.cardLoop.seconds times film.fps is 480."
+      ],
+      "skipped": [],
+      "seconds": 58.2
+    },
+    {
+      "id": "G5",
+      "title": "No interface in a frame, and every frame is read from the canvas",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "In capture mode the page holds one canvas, no other element with a box and no text.",
+        "tools/film.mjs, tools/loop.mjs, tools/render-local.mjs, tools/still.mjs and the 11 files they load hold no screenshot call, and their frames come from tools/lib/render.mjs through grab."
+      ],
+      "skipped": [],
+      "seconds": 4.1
+    }
+  ]
+}

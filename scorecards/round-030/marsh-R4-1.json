@@ -1,0 +1,42 @@
+{
+  "round": 30,
+  "unit": "marsh",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-27 07:41 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the adult and juvenile across the middle row, frames 6380–6468",
+        "what": "Both hold almost the same head-down silhouette as the camera tracks past. The adult's later leg motion reads more as a soft bend under the body than as a foot taking weight, so the pair looks posed for much of the shot.",
+        "fix": "Plant the adult's supporting feet, shift weight through the shoulder and hip before the next step, and give the juvenile a separate pause or head turn."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the foreground animal as it lifts its head, frames 6781–6897",
+        "what": "The neck rises out of a nearly unchanged torso and the mud at its edge barely reacts. The lift looks hinged rather than driven by an animal bracing in wet ground.",
+        "fix": "Have the chest and shoulders load first, then let the head and tendrils follow with a slight lag. Displace the mud along the body's contact edge as it lifts and settles."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the large bubble at the center, frames 6126–6184",
+        "what": "The bubble swells as a very regular dome, then gives way to an almost circular red flap and concentric rings. The break reads like a preset shape change rather than a film tearing and dropping back into the pool.",
+        "fix": "Start the tear off center, let the film recoil unevenly into droplets and folds, and send a stronger first ripple out from the point of collapse."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the mist over the left pool and the dark haze near the horizon",
+        "what": "Across the wide move the two banks keep almost the same shape, so the camera parallax supplies most of the life in the air.",
+        "fix": "Break up the low mist with uneven curls that drift around the stalks, and let the distant haze drift more slowly on its own."
+      }
+    ]
+  }
+}

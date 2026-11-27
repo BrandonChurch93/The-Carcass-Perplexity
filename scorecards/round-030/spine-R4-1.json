@@ -1,0 +1,91 @@
+{
+  "round": 30,
+  "unit": "spine",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-27 07:43 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "the bolt behind the peak, frames 7234 to 7237",
+        "what": "the strike lights nothing: the peak, the snow and the cloud keep the same exposure while the bolt fades out over three frames, so the event does not land",
+        "fix": "flash the whole ridge and cloud base for one or two frames on the strike, with the snow catching the light, then decay"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the distant bolt and the sky above the creature, frames 7579 to 7590",
+        "what": "the strike lights neither the creature nor the mountain, and a small purple blob stays hanging in the sky where the bolt was for ten frames after it is gone",
+        "fix": "remove the leftover sprite and let the flash light the ice, the fur and the haze for an instant"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the ribbon cloud filling the sky",
+        "what": "the cloud is drawn as thin, even, glossy ribbons that all drift sideways at one rate, like a texture scrolling across the frame rather than vapour at its own height",
+        "fix": "build the cloud as volume with layered speeds, breaking and thinning edges, and parallax between the near and far banks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "end of the pan, frames 7454 to 7498",
+        "what": "the camera pans off the cliff and stops on empty ribbon sky and a flat horizon, a weak final picture with no subject",
+        "fix": "end the move on a framed subject, such as the cliff edge against the sea, or cut before the frame empties"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the peak and cloud sea, frames 7044 to 7337",
+        "what": "after the opening flash the shot hardly changes for about five seconds: the peak and the cloud sea read as a held still picture, the push in is barely there, and the near and far planes do not separate",
+        "fix": "give the cloud sea a slow visible roll and flow around the rock, add blowing snow off the ridge, and travel the camera so the foreground passes the far spires"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the furry creature on the ice, frames 7499 to 7659",
+        "what": "the push in ends on a creature that never moves, with no breath, fur or wind, and the frame crops it off on the right, so it reads as a placed model and a weak final picture",
+        "fix": "add breathing, wind in the fur, a slight head or limb shift, and end the push on a composed frame of the whole creature"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "frames 7699 to 7855",
+        "what": "a long dead hold: rock, sea and cloud are near identical across about three seconds, and the glowing horizontal threads in the sky sit still like painted wires",
+        "fix": "keep the sea breaking, the rain and fume moving, and let the sky discharge crawl and flicker as it travels"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-10.png",
+        "where": "the lightning in the cave mouth, frames 8091 and 8094",
+        "what": "the bolts outside light none of the cave interior: the ice floor, snow and the animals keep the same light",
+        "fix": "spill a cool flash through the mouth onto the floor, the wet ice and the rims of the animals"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-10.png",
+        "where": "the fur of the lying animals at the left, frames 8094 to 8101",
+        "what": "the fur outline and strand shapes change from frame to frame on animals lying still, reading as boiling fur",
+        "fix": "stabilise the fur groom and sampling across frames; use temporal filtering on the hair"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the end of the shot, frames 8187 to 8304",
+        "what": "the camera settles on the rear of one animal standing almost still in the centre for about two seconds, a weak, static final picture; the lying animals have no breath or shift",
+        "fix": "keep the animal walking out toward the light, or add small turns and a head lift, and give the resting herd breathing and staggered movement"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05.png",
+        "where": "the cave wall texture",
+        "what": "the even ripple pattern on the walls looks like tiled noise and may crawl as the camera moves",
+        "fix": "break up the repeat with larger-scale variation and check it for shimmer at speed"
+      }
+    ]
+  }
+}

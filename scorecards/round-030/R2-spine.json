@@ -1,0 +1,255 @@
+{
+  "round": 30,
+  "unit": "spine",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 92,
+      "why": "the wind is rendered as visibly flat, translucent polygon ribbons.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 60,
+      "why": "visible flat rectangular fog/billboard planes and stretched, low-detail procedural rock textures typical of a real-time web 3D demo",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the flat semi-transparent ribbon meshes for the wind streaks and visible hard-edged fog card behind the ridge that look like real-time low-budget 3D effects.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the translucent cloud layers have straight polygon edges that stand out against the sky.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "the rock and snow textures are stretched and smeared, and there are flat translucent panels and wispy cloud streaks that look like rendering artifacts, even though the lighting and mood are strong.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the foreground creature’s dense, uniformly lit fur reads like a rendered material.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "decent fur simulation but flat compositing, a simplistic lightning bolt and soft, generic terrain look like a hobbyist or stock 3D render rather than polished film work",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the flat lighting and coarse overlapping fur cards with low-poly rocks and unlit lightning that casts no illumination on the scene.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 92,
+      "why": "the creature’s fur breaks into flat, overlapping sheets along its silhouette.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "The scene is plainly CG and the fur and atmosphere are fairly good, but the creature's form is crude and the lightning looks like a flat overlay, so it reads as a competent ordinary render and not a top-budget cinematic.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the visibly repeated, hard-edged cliff geometry.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the cliff's procedural-looking texture and stretched texture mapping, plus the hobbyist-style surreal composition, point to an ordinary 3D render (Vue/Terragen-like) rather than film-grade work",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 72,
+      "why": "the blocky texture-stretched cliff geometry with visibly segmented polygonal tether lines and a flat blurry sea plane meeting a hard horizon",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the foreground cliff has sharp polygonal ledges with rock texture stretched across them.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the dense, detailed storm clouds and the translucent iridescent ribbons read as high-end cinematic fantasy rendering, though the repetitive cliff texture and the stiff pole and cone shapes keep it from being certain.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 74,
+      "why": "the fine rock texture looks pasted onto visibly faceted cliff geometry.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the rock's texture is stretched and banded in an obviously procedural way and the ribbon-like cloth shapes look simplistic, so it reads as an ordinary CG render rather than film-grade work",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the faceted low-poly rock geometry with stretched textures",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 93,
+      "why": "The cliff texture stretches across visibly angular facets on the central spire.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "the rock face has repeating horizontal banding and stretched, tiled texture with odd translucent ribbons, which reads as a competent but not top-budget CG render, though the dramatic clouds and lighting keep it from clearly being d.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 73,
+      "why": "the visibly faceted, sawtooth geometry of the distant cliffs.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 80,
+      "why": "stretched procedural fur/rock textures and simple stock-style ice geometry with a photo-backdrop sky typical of hobbyist/stock CG renders",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the crude low-poly background cliffs and simple cone-shaped icicles against stretched cave-wall textures",
+      "answered": "07:45 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the icicles look like repeated opaque polygon spikes rather than ice.",
+      "answered": "07:44 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the cave walls and creature fur use smeared, stretched procedural textures with weak lighting, which looks like an amateur or stock 3D render and not film or game-cinematic quality. d is the runner-up.",
+      "answered": "07:44 UTC"
+    }
+  ]
+}

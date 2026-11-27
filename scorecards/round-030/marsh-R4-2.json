@@ -1,0 +1,28 @@
+{
+  "round": 30,
+  "unit": "marsh",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-27 07:41 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the central bubble from frames 6158 to 6167",
+        "what": "The puncture opens clearly, but the remaining skin keeps a tidy arched outline as it sinks. The surrounding liquid shows a shallow ring without much displacement where the skin falls.",
+        "fix": "Let the torn rim retract unevenly and fall into the pool, with a stronger local ripple where it hits."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the mist across the midground channels during the six-second camera hold",
+        "what": "The low wisps change, but the broader veil mostly thickens in place across the view rather than visibly travelling along the channels or pooling behind the banks.",
+        "fix": "Keep the local wisps and give the heavier mist a distinct ground-hugging flow that splits around banks and collects in low spots."
+      }
+    ]
+  }
+}

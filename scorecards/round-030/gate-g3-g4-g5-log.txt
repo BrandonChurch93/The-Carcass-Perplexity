@@ -1,0 +1,10 @@
+
+> the-carcass@0.1.0 gate
+> node tools/gate.mjs --phase 6 --only G3,G4,G5
+
+G3 pass  npm run determinism passes
+G4 pass  Stills are the size of their format, and the film and the loop have the right frame counts
+G5 pass  No interface in a frame, and every frame is read from the canvas
+gate phase 6 (only G3, G4, G5): pass. 3 of 3 passed, 0 failed, 0 not built.
+gate: out/work/gate/phase-6-only.json
+ENDED 0

@@ -1,0 +1,70 @@
+{
+  "round": 30,
+  "unit": "marsh",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-27 07:43 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "bottom-right crop (x 0 to 17%, y 58 to 75%), the main creature's snout tentacles (also visible in set-B-01.png)",
+        "what": "the tentacles look like smooth, untextured clay or plastic tubes with faceted bends and blunt ends poking into the mud with no ripples, wet sheen, mud coating, or contact shadow",
+        "fix": "add organic surface detail and taper to the tentacles, coat their tips with wet mud, and add contact shadows and displaced mud or ripples where they meet the surface"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "both crops, the wavy brown surface around the central creature and its whiskers (also visible in set-B-04.png)",
+        "what": "the fluid or mud reads as a sculpted procedural-noise mesh with stretched textures along pinched ridges, no depth or reflection, and the creature and its stiff ribbon-like whiskers sink straight into it with no wet edge, foam, or displacement",
+        "fix": "replace the uniform noise mesh with a physically grounded wet mud or liquid surface with real reflections and depth, break up the whiskers with organic thickness and wetness, and add a wet rim, meniscus, and displaced mud where the body and whiskers enter"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%), the main creature's legs and the liquid between them (also visible in set-B-01.png around the legs and foreground submerged creature)",
+        "what": "the legs and submerged body cut cleanly into the reddish-brown liquid as hard mesh intersections with no meniscus, foam, ripples, or wet sheen on the hide, and the fluid between the legs is a flat matte brown with no depth or reflection",
+        "fix": "add sky and body reflections and depth attenuation to the liquid, build a wet darkened zone and clinging mud on the lower hide, and add ripples, meniscus, and foam at every contact line"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "both crops, the foreground ground and the smaller creature's feet in the right crop (x 83 to 100%, y 58 to 75%)",
+        "what": "the close foreground terrain has soft, stretched, low-resolution procedural shading on smooth geometry, and the smaller animal's feet lack crisp contact shadows and show a faint pale ghosted edge against the ground",
+        "fix": "add high-resolution micro-geometry and fine grit, pebbles, and wet mud detail to the foreground terrain, and ground the smaller creature's feet with proper ambient occlusion, contact shadows, and displaced mud"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "lower-left foreground mound",
+        "what": "the pale mound reads as a soft, blobby procedural-noise sculpt like clay or foam rather than real salt crust or rock",
+        "fix": "give the foreground crust crisp crystalline or rocky micro-detail, varied roughness, and sharper fracture edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "top-left crop (x 0 to 17%, y 25 to 42%), the tall plant trunks and salt flats (also visible in set-B-01.png)",
+        "what": "the trunks are smooth uniform cylinders with a simple repeated ring texture and no grounded roots, and the pale salt-crust lines on the reddish flats look like soft procedural strokes",
+        "fix": "add irregular taper, bark relief, and grounded mud-coated bases to the stems, and sharpen the salt crust with fine crystalline edges and wet margins"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "bottom-right crop (x 0 to 17%, y 58 to 75%), the foreground mud ridge",
+        "what": "the close ground shows a flat, mottled procedural shader transition with visibly stretched texture across the ridge",
+        "fix": "fix UV or triplanar projection to eliminate stretching and layer real sediment, wet specular variation, and fine surface relief"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-06.png",
+        "where": "right crop (x 83 to 100%, y 58 to 75%), top-center and lower-left of the brown wavy surface",
+        "what": "small stray white V-shaped flecks sit unnaturally on the procedural surface",
+        "fix": "remove the stray white particle or geometry artifacts from the mud surface"
+      }
+    ]
+  }
+}

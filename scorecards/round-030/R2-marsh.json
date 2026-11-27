@@ -1,0 +1,255 @@
+{
+  "round": 30,
+  "unit": "marsh",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the river surface has an unnaturally uniform, shader-like sheen.",
+      "answered": "07:42 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the repeated scattered plant clumps and flat, uniform salt-crust textures look like a decent but ordinary scattered-asset 3D environment render (a paleo-art style landscape), not a photo or top-tier film frame.",
+      "answered": "07:41 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 72,
+      "why": "the flat unreflective water surface with painted-looking white streaks and ungrounded reeds lacking contact shadows or reflections",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "The distant terrain looks like a flat plane painted with branching channels rather than banks with visible depth.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "The scene is a clearly CG salt flat with repeated plant and rock assets and a smeared vertical streak in the haze at top right. Its detail and lighting are good but not film-grade.",
+      "answered": "07:42 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the same dome shape repeats at different scales with nearly identical surface shading.",
+      "answered": "07:42 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the domes have clean, uniform CG shading and the repeated plants look procedurally scattered. It reads as a competent but ordinary render, not a film-quality frame.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the rigid mesh-like burst bubble crown and kinked procedural plant stalks rendered with standard 3D lighting and depth of field",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "The distant vegetation repeats the same sharply angled, sparse frond shapes across the entire shoreline.",
+      "answered": "07:42 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "the fluid water simulation with a splash, salt crust, volumetric haze and detailed reeds look like high-end film or documentary CG, but the odd stylised dome shapes keep it from being clearly big-budget (c is the runner-up)",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the near-identical red frond clusters look like copies of the same 3D asset.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "polished but generic alien-plant scene with repeated plant models and plain foggy lighting, which looks like an ordinary 3D render rather than a top-budget cinematic",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the flat CG lighting and simplistic procedural water with uniform foam rings around the bubbles",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 84,
+      "why": "The foreground plants repeat the same ringed trunk and ribbon-like fronds like copies of a single 3D asset.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 62,
+      "why": "detailed fine-strand fronds and trunk texture with believable atmospheric haze, depth and water droplets point to high-end film/cinematic CG, though the alien subject (not a real place) and some slightly soft/uniform shading leave (c) as the alternative.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the smaller creature looks like a scaled-down copy of the main one, down to the silhouette and pose.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "The creature skin is detailed but looks generic and procedural, and the ground looks flat and uniform with foggy, simple lighting. That reads as a good-quality personal or stock CG render, not film-grade compositing.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the flat unreactive water-to-body intersections and simple sculpted textures characteristic of an ordinary offline 3D render rather than a high-budget cinematic or real-time mobile engine",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 93,
+      "why": "The smaller creature looks like a scaled-down copy of the larger one, right down to the skin folds.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 62,
+      "why": "the detailed skin texture, atmospheric fog depth and cohesive art direction on the alien creatures read as high-end film/cinematic CG (though some soft ground and plant detail leaves c plausible).",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 85,
+      "why": "the water’s densely patterned ripples look procedural rather than naturally disturbed around the rocks.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "alien salt-flat creatures with procedural-looking displacement textures and soft uniform lighting read as a polished but ordinary 3D render (e.g., a Blender/artist piece), not film-grade or a photo.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the blobby procedurally displaced rocks and simple whisker-like spikes intersecting the ground mesh without natural contact under standard CG overcast lighting",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the foreground creature’s whiskers look like smooth tapered rods pushed into its textured skin.",
+      "answered": "07:43 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "The creature, salt crust and fine-grained surface detail with soft overcast lighting are very high-fidelity and cinematic, and the alien subject can't be a photograph. It could also be a polished solo-artist render (c).",
+      "answered": "07:43 UTC"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "round": 30,
+  "unit": "spine",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-27 07:43 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the broad translucent streamers across the right half of the sky",
+        "what": "the purple material reads as flat cellophane sheets, with conspicuous polygon boundaries and rainbow bands visible in the native crops in set-A-09.png",
+        "fix": "Remove hard sheet and facet boundaries. If these are membranes, give them variable thickness, finer edge breakup and light response that follows their curvature; if they are vapor, render them as volumes."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "just right of the main spire and across the sky above it",
+        "what": "a translucent slab has a straight vertical cutoff against the horizon, and thin purple strips have angular ends that stand out against the clouds",
+        "fix": "Remove the exposed card boundaries and blend the atmospheric elements by depth and density."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "both left-edge cliff crops, particularly the snow channels and projecting ledges",
+        "what": "large triangular rock faces, straight texture boundaries and stretched blue-white streaks expose the mesh",
+        "fix": "Break up the larger faces with fractured rock geometry, blend the texture projections and let snow follow ledges and recesses rather than forming uniform strips."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "near cliff in the left crop and the fog line beneath distant spires in the right crop",
+        "what": "a straight-sided brown wedge interrupts the near rock texture, while the distant spires meet smooth stacked layers of haze with little local variation",
+        "fix": "Blend the wedge into the surrounding rock and vary fog density around individual outcrops so their bases disappear at different depths."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the foreground creature's belly and appendages where they meet the dark glossy ground",
+        "what": "a nearly black gap runs under much of the body, with little surface disturbance or wet or frozen buildup to show where the weight rests",
+        "fix": "Seat the body at clear contact points, interrupt the black gap with bounced light, and add localized wetness, displaced slush or packed snow appropriate to the surface."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the lower-right crop immediately behind the creature's appendages",
+        "what": "nearby boulders have oversized planar facets and clipped-looking outlines against the soft snow",
+        "fix": "Add smaller fracture planes, irregular silhouettes and embedded snow at their bases."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the foreground creature's coat in both native crops",
+        "what": "broad areas of fur are smeared into almost continuous directional ridges, with few distinct tips or separations where the clumps overlap",
+        "fix": "Vary clump size and direction, separate the outer strands, and distinguish exposed fur from the snow or frost caught in it."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the mountain and fog directly below and beside the lightning",
+        "what": "the bolt has a bright halo, but the nearby ridge and surrounding haze receive little visible flash illumination",
+        "fix": "Let the flash briefly scatter through nearby fog and catch exposed snow and ice on the ridge."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "left sky crops, especially the upper-left vertical streaks",
+        "what": "soft vertical streaks and broad gray bands look layered over the clouds rather than embedded at different depths",
+        "fix": "Vary the density and scale of the streaks and let nearer cloud masses naturally occlude parts of them."
+      }
+    ]
+  }
+}

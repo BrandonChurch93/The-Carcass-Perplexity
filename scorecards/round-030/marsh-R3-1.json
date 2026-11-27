@@ -1,0 +1,91 @@
+{
+  "round": 30,
+  "unit": "marsh",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-27 07:43 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the bursting bubble crown on the left and the large dome bubble on the right",
+        "what": "the bursting bubble reads as a stiff, papery translucent geometric crown with sharp triangular peaks, while the large dome has a plastic specular highlight, blotchy stretched texture, and a hard dark cutout rim where it meets the surface",
+        "fix": "give the burst irregular wet fluid filaments and refractive droplets, blend the bubble base smoothly into the liquid with a meniscus, and reflect the overcast sky across the dome"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the rain curtain in the upper right sky",
+        "what": "the distant rain shaft reads as a flat dome-shaped card of uniform vertical dark streaks floating in the mist without a natural cloud base",
+        "fix": "connect the rain shaft to a darker overcast cloud deck with irregular wind-sheared density and softer atmospheric falloff"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the shallow red puddles on the central salt bar (left crop, x 42 to 58%, y 58 to 75%)",
+        "what": "the puddles appear as flat matte-pink solid-color patches with crisp mask edges, showing no depth, no sky reflection, and no darkened wet rim on the surrounding salt",
+        "fix": "add grazing-angle sky reflection, subtle depth variation, and a damp darkened wick zone into the adjacent salt crust"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the red brine channels and pools across the foreground and midground",
+        "what": "the liquid reads as opaque uniform muddy-red paint that barely reflects the bright overcast sky or the stalks standing in it, with dry abrupt edges against the salt flat",
+        "fix": "increase Fresnel reflection of the overcast sky and nearby reeds, add subtle depth and meniscus contact, and darken wet salt margins"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the salt-encrusted carcasses and cracked salt flat (right crop, x 83 to 100%, y 58 to 75%)",
+        "what": "the crusty white mounds look soft and sculpted like clay with smooth untextured white spines sticking out without shadows, over soft-edged ground cracks with flat painted red patches",
+        "fix": "add crisp crystalline salt micro-detail and contact occlusion to the carcasses, texture and shadow the spines, and sharpen the cracked salt-plate relief"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the foreground salt crust and protruding shards (right crop, x 83 to 100%, y 58 to 75%)",
+        "what": "the foreground bank looks soft and clay-like up close, and sharp faceted brown triangular spikes poke cleanly out of the fluid with no wet edge or surface detail",
+        "fix": "replace the faceted spikes with detailed irregular mineral formations, sharpen the foreground salt displacement, and add wet darkening along the waterline"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the brine surface and pale foam patches (left crop, x 42 to 58%, y 58 to 75%)",
+        "what": "the liquid surface is overly smooth and blurry with soft-edged flat grey-white noise blotches instead of fine bubbly foam and crisp ripples",
+        "fix": "add cellular bubble structure to the foam and sharper fine-scale capillary ripples catching the sky light"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the white moth-like insects on the foreground stalk (left crop, x 42 to 58%, y 58 to 75%)",
+        "what": "the insects read as flat untextured translucent cutouts with no body detail or contact shadows, and the lower insect wing clips into the stalk ring",
+        "fix": "add modeled bodies, legs, and subtle wing texture, keep the wings clear of the stalk geometry, and cast soft contact shadows onto the bark"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the water droplets on the red plumes and the bubbles in the pool behind the stalks",
+        "what": "the droplets look like uniform glass marbles stuck to the fronds rather than surface-tension water beads, and the background bubbles show the same hard dark-rimmed plastic dome look",
+        "fix": "vary droplet size and elongate them along the needles with wet sheen on the fronds, and blend the background bubbles into the water with proper meniscus and sky reflection"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05.png",
+        "where": "the airborne spray near the foreground stalk (top-left crop, x 0 to 17%, y 25 to 42%)",
+        "what": "spray droplets read as small dark blurred dots with soft halos rather than bright refractive liquid droplets",
+        "fix": "render airborne spray as varied refractive droplets catching the overcast sky light"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the foreground stalks entering the water (bottom-right crop, x 0 to 17%, y 58 to 75%)",
+        "what": "the stalks enter the red brine with no wet meniscus or clear reflection, and the bent middle stalk shows an abrupt geometric kink",
+        "fix": "smooth the bent stalk curvature and add wet base darkening, a subtle meniscus, and water reflection at the entry points"
+      }
+    ]
+  }
+}

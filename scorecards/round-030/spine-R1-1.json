@@ -1,0 +1,84 @@
+{
+  "round": 30,
+  "unit": "spine",
+  "pack": "R1-1",
+  "family": "gemini",
+  "answered": "2026-11-27 07:43 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the main spire, ridge to the right of the cave, and distant peaks",
+        "what": "a flat vertical fin with stretched textures juts out beside the cave, a translucent grey geometric plane artifact floats behind the ridge, and the distant peaks are detached terraced cones and thin hooks rather than a continuous jagged rocky spine",
+        "fix": "remove the floating plane and flat fin, rebuild the spire and receding ridge as one continuous fractured rock formation, and replace the terraced cones with sharp wind-carved peaks"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the cave mouth and upper spire rock face in -b",
+        "what": "the cave opening has blocky horizontal banding inside, icicles along the lip, and two smooth snow mounds blocking the entrance, while the spire rock shows wavy procedural ridges and smeared texture instead of sharp fractured stone",
+        "fix": "remodel the cave as a natural vaulted rock tunnel opening onto the snow path with no blocking mounds, and replace the wavy surface with crisp craggy granite facets and wind-packed snow"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the sky, lightning bolt, and right-hand horizon",
+        "what": "the clouds look like a flat high-contrast backdrop with a hard straight horizon line and a flat grey-purple patch behind the spire, the lightning is an overly thick tube that fails to light the surrounding clouds or branch down the struck peak, and the blowing snow is missing",
+        "fix": "soften the clouds with volumetric depth and a billowing cloud sea hiding the horizon, thin and fork the lightning so it lights the storm clouds and sends violet arcs down the struck peak, add warm sunset light onto the right-facing rock facets, and add wind-driven spindrift"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the midground snow terrain, background spire, and distant peaks",
+        "what": "the steep snowy ridge with footprints is replaced by a flat plain, the background spire is a pale featureless silhouette with a faint cave smudge, an unrelated curved arch and bulky peak block the sunset and cloud sea on the right, and shallow depth of field and blowing snow are missing",
+        "fix": "slope the foreground ridge up toward a clearly defined jagged spire with a dark cave mouth, open the right side to the receding spires, cloud sea, and bright orange sunset, and add photographic depth-of-field blur and wind-blown snow"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the creature's fur, side wound, and tentacles in -b",
+        "what": "the coat reads as coarse overlapping polygonal hair cards with hard edges rather than dense frost-crusted fur, the wound looks like flat dark-red paint on top of the fur, and the tendrils on the left are smooth bare tubes instead of rime-encrusted organic strands",
+        "fix": "replace the coarse hair cards with fine clumped fur dusted with snow and rime frost catching rim light, recess and detail the wound with wet dark tissue and ice, and coat the tendrils in rough frost"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the cliff face and clinging anchor clusters",
+        "what": "the cliff is low-poly with stretched brown-and-white textures, flat grey vertical bands, and no thick wind-packed rime frost on the left, while the clinging clusters look like repetitive glossy pinecone props mounted on rigid horizontal sticks poking out of the rock",
+        "fix": "rebuild the cliff with sharply fractured dark rock and heavy sculpted snow and rime on the left face, tuck organic frost-dusted clusters into rock crevices, and replace the stiff sticks and uniform wires with irregular ice-beaded tendrils"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "the close-up rock face and clinging clusters in -b",
+        "what": "the rock shows obvious faceted polygons and smeared UV streaks, and the clusters show smooth segmented shells with thin uniform grey wires and repeated conical icicles hanging straight down",
+        "fix": "add high-resolution fractured stone displacement and rime detail to the rock, break up the repetitive shell shapes with rough frost-coated organic forms, and give the tethers natural thickness, irregularity, and uneven ice buildup"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the trailing membranes, background sky, and horizon",
+        "what": "the membranes are overly numerous, glossy, and cluttered with artificial round holes instead of delicate taut iridescent ribbons, the background lacks depth of field and purple lightning, the clouds are overly dark and flat, and the cloud sea is replaced by a flat textured plane with a hard horizon",
+        "fix": "reduce the membranes to fewer wind-stretched translucent iridescent ribbons, blur the background with shallow depth of field, add the purple lightning glow in the storm clouds, restore the billowing cloud sea and vivid orange sunset glow, and add blowing snow across the air"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the foreground ice, creature ground contact, and overall colour",
+        "what": "the creature's underside floats over a dark gap on flat matte blue-grey ice, the glistening dark frozen slush and rocky foreground are gone, the footprints on the left slope are missing, and the whole frame is uniformly cool and flat",
+        "fix": "sink the creature into snow and wet refrozen slush with specular ice highlights, restore the footprints winding up the left snow slope, and add warm sunset rim highlights and stronger violet-lit cloud glow around the lightning"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the streamers trailing from the spire and foreground footprints",
+        "what": "the streamers look like dull flat grey-blue bands without iridescent translucency or smaller drifting pieces on the left, and the footprints in the snow are faint and stop well short of the cave",
+        "fix": "give the streamers thin translucent iridescence catching violet and warm light, add smaller drifting ribbons on the left and distant peaks, and deepen the footprints so they lead continuously into the cave mouth"
+      }
+    ]
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "round": 30,
+  "unit": "marsh",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-27 07:41 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the brine pool and shore across the lower half",
+        "what": "-a has wet, glossy dark-red water with reflections and ripples, wet mud banks and salt-crusted ledges; -b reads as a dry, matte, opaque pink-brown sheet of clay with no reflection, no wetness, and smeared streaky texture",
+        "fix": "make the pool liquid: deeper dark wine-red, glossy, reflecting the animals and sky, with ripples around bodies and wet mud/salt crust at the edges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the air and background beyond the animals",
+        "what": "-a is thick with steam/vapour, the background plants and far animal soft and dissolving into a bright hazy white; -b has a thin flat grey fog, crisp distant plants and a hard horizon line with low mounds, so the place reads open and dry rather than a steaming hot-spring marsh",
+        "fix": "add dense drifting vapour that lifts off the water, raise and brighten the haze so mid and far plants and animals soften and fade, remove the clear horizon"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the animals' bodies, legs and underside",
+        "what": "-a's animals are soaked: skin dark and glossy, red brine staining the lower body, drips and strings hanging from the belly, salt dusting the back, legs wading into water; -b's bodies are dry, pale grey-beige matte with a soft smudge of brown at the base, no drips, no wet sheen, and the legs end in dark blobs pressed onto a flat surface rather than in water",
+        "fix": "wet the skin with specular sheen, carry the red stain up from the waterline, hang drips and strands from the belly, dust salt on the back, sink the legs into liquid with ripples"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the shading and contact under the big animal and around the legs",
+        "what": "heavy dark brown smudges sit on the legs and belly like painted shadow; contact with the ground has no occlusion or displacement, and the ground under the body is the same flat plane",
+        "fix": "replace the smudges with soft overcast occlusion and wet darkening; give contact shadow and churned mud/water where limbs and bodies meet the ground"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the red plants at left and centre",
+        "what": "-a has dense clusters of tall pale stalks with red frond crowns at left, fading into vapour behind; -b has a few sparse, thin stalks with crowns like palms scattered over open ground, crisp even in the distance",
+        "fix": "cluster thicker stalks with dense red crowns at left and across the mid-distance, and let them fade in the steam"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "colour and light across the frame",
+        "what": "-a is warm and saturated, rusty reds and wet browns under a bright diffuse white haze; -b is desaturated, cool grey-pink and flat, losing the blood-red water against pale steam that sets the mood",
+        "fix": "warm the grade, deepen and saturate the reds in the water and stains, brighten the haze toward white"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the ground and pools across the whole lower frame",
+        "what": "-a has a wet salt-mud flat with shallow glossy grey water, broken salt-crust plates with crisp edges, and pockets of dark red brine; -b's ground is a matte pink-grey surface with stretched, streaky, procedural-looking ripple texture, no water sheen, no plates, almost no red brine pockets",
+        "fix": "build a wet flat: shallow reflective water between cracked salt plates with lifted edges, dark-red brine pools in the foreground, wet mud with glints"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the air and the far distance",
+        "what": "-a is soaked in vapour: the back half of the frame dissolves into bright white steam, far animals and plants soft; -b has clear air with a visible far shoreline and hills, distant plants and mounds sharp, so the depth and mood are lost",
+        "fix": "thicken the steam so it rises off the pools, wash the background to bright soft white, hide the horizon and hills"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the far and mid-distance animals",
+        "what": "-a has many animals in the middle and far distance (around eight) wading among the plants, softened by haze; -b has one large lump and a couple of shapes, so the herd is gone",
+        "fix": "add a scattered herd of animals of varied size at mid and far distance, half in the water, fading into the steam"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the central animal",
+        "what": "-a's animal sits in water with a wet glossy hide, salt dusting, and ripples where it meets the surface; -b's is a dry matte body sunk in a flat surface with no waterline, no ripple and no reflection, and the whiskers are long flat pale blades",
+        "fix": "wet the hide, add a waterline with ripples and reflection, salt dust on the back; make whiskers thick, wet, curved bristles"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the salt-crusted carcasses/mounds left and right",
+        "what": "-a shows salt-encrusted carcasses with exposed legs/ribs and wet crust; -b's are smooth pale lumps like snow or foam with little structure or wetness",
+        "fix": "give them crystalline salt crust, visible ribs or limbs, wet darkened bases sitting in the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the red plants",
+        "what": "-a has dense clumps of tall stalks with red crowns at upper left and in hazy rows behind; -b's plants are thin and sparse, sharply lit in clear air",
+        "fix": "denser, taller clusters, especially upper left, fading back into the steam"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03-b.png",
+        "where": "the air above the pools",
+        "what": "-a has small flying insects scattered in the mid-ground; -b has none",
+        "fix": "add a sparse swarm of small flies over the water"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03-b.png",
+        "where": "overall grade",
+        "what": "-b is flatter and more pink-grey; -a is a neutral warm grey with deep red accents in the brine",
+        "fix": "neutralise the pink cast and keep red only in the brine pools and stains"
+      }
+    ]
+  }
+}

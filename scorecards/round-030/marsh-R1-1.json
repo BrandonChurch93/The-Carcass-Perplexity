@@ -1,0 +1,112 @@
+{
+  "round": 30,
+  "unit": "marsh",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-27 07:42 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the animals across the mid-ground flats and channels",
+        "what": "the herd of wading, grazing creatures in -a (one large walker, several in the water, a sprawled one at right) is gone; -b has only lumpy boulder-like mounds with no legs or heads, so the scene reads as empty",
+        "fix": "put back several clearly animal creatures at the same scale, wading in and walking beside the red channels, lit by the same flat overcast light"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the steaming bubbling pool at left",
+        "what": "-a has a deep red pool with rising steam, concentric ripples and glossy domes swelling up; in -b it is a flat matte pinkish sheet with only a few faint pits and little steam",
+        "fix": "deepen it into a glossy wine-red pool with ripple rings, rising bubble domes and thick steam drifting through the stalks"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the shore and water across the foreground and middle",
+        "what": "-a is a low macro view of a seething pool: a splash with flying droplets, foam and bubble clusters on the salt rim, insects floating, a wading animal behind; -b has calm water with flat white glints, a glassy fan where the splash should be, no droplets, no bubbles, no insects and no animal",
+        "fix": "bring back the violent splash with airborne droplets, the clustered foam bubbles on the crust, the floating insects and the animal wading at the back of the pool"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the water surfaces everywhere",
+        "what": "the -a water is dark, glossy, deep red-brown with reflections; -b water is pale, opaque, chalky pink like painted ground",
+        "fix": "darken and saturate the water toward deep red-maroon and give it gloss and sky reflection"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the salt crust and the carcasses at right",
+        "what": "-a crust is cracked plates with wet red seams and the carcasses are hairy, salt-encrusted bodies with legs; -b crust is clean white polygon tiles and the carcasses are plain white ribcage shells; the whole flat is whiter and flatter in tone",
+        "fix": "stain the crust seams red and wet, roughen the plate edges, and make the carcasses whole salt-crusted bodies with visible limbs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the stalk stands and the foreground rock",
+        "what": "-a stalks are tall pale trunks topped with shaggy red crowns, standing in clumps; -b has thin grass-like reeds with sparse leaves, and the foreground rock is a puffy pitted lump with smeared texture instead of layered weathered stone with rust streaks",
+        "fix": "make the stalks taller, thicker-trunked with dense red crowns, and give the rock layered, cracked faces with orange-rust staining"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the horizon and distance",
+        "what": "-a has a defined ridge line and a hanging rain shaft, with the plain receding in layers of red pools and mounds; -b's far plain is a washed-out white blank and the rain shaft is a smeared vertical streak",
+        "fix": "keep more red pools and stalk clumps going into the distance and soften the rain shaft into a hanging grey veil under the cloud"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the stalks at the back of the pool",
+        "what": "-a stalks are palm-like, with red crowns standing close in a grove on the bank in steam; -b has a fence of thin, evenly spaced grasses with a hill behind, and the steam is nearly gone",
+        "fix": "turn them into a denser grove of crowned stalks and fill the gap between the pool and the grove with drifting steam"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the domes and water colour",
+        "what": "-a domes are glossy and translucent with highlights and ripples ringing them; -b domes are opaque blotchy plastic shells on a flat, uniform, saturated red sheet",
+        "fix": "make the domes thin, translucent and wet with reflections, and break up the water with wave texture, foam and colour variation"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the foreground bank",
+        "what": "-a has a wet, frothy salt rim with bubbles; -b has a dry heap of brown mud with a smeared white crust",
+        "fix": "make the near bank a wet foamy salt rim lapped by the pool"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the insects round the crown and in the air",
+        "what": "-a has a swarm of large lit winged insects all through and around the near crown; -b has only a few faint specks in the sky",
+        "fix": "put the swarm back, flying through and settled on the crown, in focus and at the same size"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the background beyond the stalks",
+        "what": "-a is thick steam over a red pool, with a salt mound and a wading animal on the right; -b has clear air, a field of thin grasses, a grey boulder where the animal stood, and smooth domes in the pool",
+        "fix": "fill the background with drifting steam, put the animal back in the water on the right, and set the salt mound behind it"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the crowns and the drops",
+        "what": "-a fronds are fine, branched and frayed with small clear drops; -b fronds are smooth ribbons beaded with large opaque white pearls",
+        "fix": "break the fronds into finer frayed filaments and make the drops small, clear and refractive"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05-b.png",
+        "where": "the water and the near ground",
+        "what": "-b water is a flat, matte, mottled red without ripples, and the cobbled salt-strewn ground in the -a foreground is missing",
+        "fix": "add soft ripples and reflection to the pool and lay salt-crusted pebbles along the near edge"
+      }
+    ]
+  }
+}
