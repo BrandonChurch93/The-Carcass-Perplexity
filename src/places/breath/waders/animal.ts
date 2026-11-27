@@ -321,7 +321,7 @@ const TENDRIL_SIDES = 5;
 const ROOTS = 24;
 const FINE_RINGS = 8;
 /** How a strand thins from where it starts (0) to its tip (1), as a part of its thickness: a root is a carrot drawn out to a thread, a fine end a thread, weed a ribbon. */
-const taper = (type: number, u: number): number => (type === 0 ? 0.16 + 0.84 * (1 - u) ** 1.7 : type === 1 ? 1 - 0.6 * u : 0.7 + 0.5 * Math.sin(u * 9)) * (1 - smooth(0.9, 1, u) * 0.85);
+const taper = (type: number, u: number): number => (type === 0 ? 0.2 + 0.8 * (1 - u) ** 1.3 : type === 1 ? 1 - 0.6 * u : 0.7 + 0.5 * Math.sin(u * 9)) * (1 - smooth(0.9, 1, u) * 0.85);
 
 export class Wader {
   private body: Tube | null = null;
@@ -504,7 +504,7 @@ export class Wader {
         lock: root ? hash(seed * 1.9 + n * 7.7) * 6.28 : (of as { lock: number }).lock + (hash(seed + n * 8.1) - 0.5) * 0.9,
         // Most root at the very end of the neck, the rest a little way back up it, so the neck frays into them.
         root: 1 - 0.1 * hash(seed * 1.7 + n * 8.9) ** 1.6,
-        thick: far ? 0.014 * k : root ? (0.0095 + 0.0085 * hash(seed + n * 12.7) ** 1.4) * k : weed ? 0.0022 * k : (0.0028 + 0.0018 * hash(seed + n * 12.7)) * k,
+        thick: far ? 0.014 * k : root ? (0.014 + 0.011 * hash(seed + n * 12.7) ** 1.4) * k : weed ? 0.003 * k : (0.0042 + 0.0026 * hash(seed + n * 12.7)) * k,
       };
       this.strands.push(strand);
       for (let i = 0; i < rings; i++) {
@@ -692,17 +692,22 @@ export class Wader {
     // The body rides over the feet that bear it. In the walk it is already over the other side when a hind foot comes up, stays there while
     // the fore foot of that side follows, and crosses back: once over and back a cycle, a little ahead of the feet.
     const o = this.along(walked);
-    const sway = walk ? Math.cos((cyc - 0.15) * Math.PI * 2) : -holdSide;
+    // The weight is over the bearing side before the foot of the other side leaves the ground, and is held there: the wave is flat on top.
+    const over = (c: number): number => {
+      const w = Math.cos((c - 0.12) * Math.PI * 2);
+      return w * (1.5 - 0.5 * w * w);
+    };
+    const sway = walk ? over(cyc) : -holdSide;
     const lurch = walk ? Math.cos((cyc - 0.15) * Math.PI * 4) : 0;
-    const side = (walk ? 0.07 : 0.085) * k * sway + (0.02 + 0.045 * still) * k * habit;
+    const side = (walk ? 0.125 : 0.1) * k * sway + (0.02 + 0.045 * still) * k * habit;
     const cx = o[0] + rx * side;
     const cz = o[1] + rz * side;
     const base4 = (feet[0]!.y - feet[0]!.lift + feet[1]!.y - feet[1]!.lift + feet[2]!.y - feet[2]!.lift + feet[3]!.y - feet[3]!.lift) / 4;
     // The legs are never locked: it stands a little under its full height, sinks as a foot leaves the ground and rises over the one that takes the weight.
-    const cy = base4 + b.standH * (1 - 0.8 * (plan.rest ?? 0)) - 0.012 * k - 0.02 * k * dipSum - 0.01 * k * lurch * (1 - still) - 0.012 * k * down + 0.006 * k * habit2;
-    const yaw = plan.heading + b.skew + (0.02 + 0.06 * still) * habit + (walk ? 0.028 * Math.sin((cyc - 0.02) * Math.PI * 2) : -0.02 * holdSide);
-    const pitch = (4 - 7 * down) * (Math.PI / 180) + 0.035 * nose + 0.012 * habit2 + (walk ? 0.012 * Math.sin((cyc + 0.1) * Math.PI * 4) : 0) - 0.04 * Math.max(-1, Math.min(1, gained / (0.15 * k)));
-    const lean = (walk ? 0.03 * Math.cos((cyc - 0.08) * Math.PI * 2) : -0.06 * holdSide) + 0.015 * habit;
+    const cy = base4 + b.standH * (1 - 0.8 * (plan.rest ?? 0)) - 0.012 * k - 0.036 * k * dipSum - 0.016 * k * lurch * (1 - still) - 0.012 * k * down + 0.006 * k * habit2;
+    const yaw = plan.heading + b.skew + (0.02 + 0.06 * still) * habit + (walk ? 0.046 * Math.sin((cyc - 0.02) * Math.PI * 2) : -0.03 * holdSide);
+    const pitch = (4 - 7 * down) * (Math.PI / 180) + 0.055 * nose + 0.012 * habit2 + (walk ? 0.018 * Math.sin((cyc + 0.1) * Math.PI * 4) : 0) - 0.04 * Math.max(-1, Math.min(1, gained / (0.15 * k)));
+    const lean = (walk ? 0.05 * Math.cos((cyc - 0.08) * Math.PI * 2) : -0.07 * holdSide) + 0.015 * habit;
 
     // The body's frame: F along the spine toward the chest, R to its right, U out of its back.
     const sy = Math.sin(yaw);
@@ -867,8 +872,8 @@ export class Wader {
     const baseZ = cz + F[2] * (0.5 * b.bodyLen - 0.2 * k) + U[2] * 0.1 * k;
     // It works the water from side to side when it is down, and looks about slowly when it is up.
     // The head is carried late: when the body goes over to one side or starts forward, the end of the neck stays where it was a moment longer.
-    const swayLate = walk ? Math.cos((walk.at(seconds - 0.4) + base + 1000 - 0.15) * Math.PI * 2) : 0;
-    const behind = walk ? (0.07 * k * (swayLate - sway)) / b.neckLen : 0;
+    const swayLate = walk ? over(walk.at(seconds - 0.45) + base + 1000) : 0;
+    const behind = walk ? (0.125 * k * (swayLate - sway)) / b.neckLen : 0;
     const work = 0.4 * wander(seconds * 0.62 + plan.phase * 7, b.seed + 2.1) + 0.2 * wander(seconds * 1.45 + plan.phase * 3, b.seed + 4.4);
     // Each feeds to its own side of its chest.
     const sided = (hash(b.seed * 2.7 + 5) - 0.5) * 1.1;
