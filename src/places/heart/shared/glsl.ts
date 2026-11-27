@@ -311,7 +311,9 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     vec2 bankWay;
     vec3 bankLit = lakeBank(p, n, bankWay);
     e += bankLit;
-    aim += vec3(bankWay, 1.0) * bankLit.r;
+    // Only where the bank's light is strong does it ask for the thrown shade below: the two reads of the contact map on every pixel of crust the
+    // bank lights at all, however faintly, were most of what this light cost (0.4 s a sample at the wide key), for a shade too faint to see.
+    aim += vec3(bankWay, 1.0) * max(bankLit.r - 0.1, 0.0);
   }
   // The stream of the fall (uRigStream: a row every few metres of z from the lip to the toe of the fan, each the middle of the stream, half the
   // width of its open lava, the height of its surface, and its lean and share in one number; uRigStreamSpan: z of the first row, rows in a metre,
