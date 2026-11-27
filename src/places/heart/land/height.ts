@@ -443,9 +443,25 @@ export function buttressAt(x: number, z: number): number {
   const top = (lerp(194, 84, fallen) * tilt + crown + 9 * smooth(0.14, -0.02, u)) * smooth(1.12, 0.9, u) * smooth(-0.13, -0.085, u);
   const g = ridge(x / 38 + 1.3, z / 38 + 4.1);
   const half = BUTTRESS.half * (1 - 0.35 * smooth(0.5, 1.1, u)) + 5 * wave(x * 2 + 40, z * 2) - 9 * g * g * g + 5 * (fbm(x / 17, z / 17, 2) - 0.5);
-  const edge = Math.abs(across) / half;
-  // The brow of the cliff is a corner, not a shoulder.
-  const cliff = Math.pow(Math.min(1, Math.max(0, (1 - edge) / 0.26)), 1.3);
+  // Alcoves are bitten out of its brow where a slab has come away, a stone's throw wide: seen along the cliff they notch its skyline.
+  const side = across < 0 ? 1.7 : 6.3;
+  const bite = Math.max(0, noise(along / 24 + 3.3, side) - 0.56) / 0.44;
+  const edge = Math.abs(across) / (half - 15 * bite * bite * (3 - 2 * bite));
+  // The brow of the cliff is a corner, not a shoulder; and the cliff is three flows with a ledge on each, the ledges rising, falling and
+  // pinching out along it. A face cut in one sweep from brow to foot read as a ruled wedge.
+  const run = Math.min(1, Math.max(0, (1 - edge) / 0.3));
+  const low = 0.34 + 0.16 * (noise(along / 47 + 8.1, side) - 0.5);
+  const high = 0.7 + 0.14 * (noise(along / 39 + 1.4, side + 2) - 0.5);
+  const wide = 0.2 * smooth(0.3, 0.6, noise(along / 21 + 5.2, side + 4));
+  const wider = 0.16 * smooth(0.35, 0.65, noise(along / 17 + 9.7, side + 6));
+  const a0 = 0.26;
+  const a1 = a0 + wide;
+  const a2 = a1 + 0.22;
+  const a3 = a2 + wider;
+  // A ledge climbs a quarter of its own width.
+  const b1 = low + 0.25 * wide;
+  const b2 = high + 0.25 * wider;
+  const cliff = run < a0 ? (low * run) / a0 : run < a1 ? low + 0.25 * (run - a0) : run < a2 ? b1 + ((high - b1) * (run - a1)) / 0.22 : run < a3 ? high + 0.25 * (run - a2) : Math.min(1, b2 + ((1 - b2) * (run - a3)) / Math.max(0.12, 0.74 - a3));
   // Talus lies against its near side as a skirt two fifths of the cliff high, hollow in section like any scree; the far side keeps the layout's.
   const lean = Math.min(1, Math.max(0, (1.85 - edge) / 0.9));
   const scree = across < 0 ? 0.4 * (0.3 * lean + 0.7 * lean * lean) : 0.3 * smooth(1.75, 0.95, edge);
@@ -634,6 +650,7 @@ function shards(x: number, z: number, cell: number, share: number, seed: number)
       // And in steps: part of the top has spalled off along a joint.
       const c = 6.283 * hash(i + 113, j + 127 + seed);
       if (ux * Math.cos(c) + uz * Math.sin(c) > r * (0.5 * hash(i + 131 + seed, j + 137) - 0.1)) h -= r * (0.08 + 0.14 * hash(i + 139, j + 149 + seed));
+      if (ux * Math.sin(c) - uz * Math.cos(c) > r * (0.6 * hash(i + 151, j + 157 + seed) - 0.2)) h -= r * (0.05 + 0.12 * hash(i + 163 + seed, j + 167));
       const sides = 5 + Math.floor(3 * hash(i + 73, j + 79 + seed));
       for (let k = 0; k < sides; k++) {
         const a = ((k + 0.7 * hash(i + 7 * k + seed, j + 41)) * 6.283) / sides;
@@ -663,7 +680,13 @@ export function rubbleBlocks(x: number, z: number): number {
  *  Drawn by a mesh of its own, far finer than the bench; nothing stands on it, so it is not in `landHeight`. */
 export function rubbleAt(x: number, z: number): number {
   const grit = 0.03 * noise(x / 0.35 + 2.7, z / 0.35 + 5.9);
-  return Math.max(rubbleBlocks(x, z), grit) + 0.02;
+  // Clinker is spiny all over: knobs a hand across on every face, the bed's and the blocks' alike.
+  return Math.max(rubbleBlocks(x, z), grit) + 0.02 + 0.018 * (fbm(x / 0.11 + 3.1, z / 0.11 + 7.7, 2) - 0.5);
+}
+
+/** The crust of crystals heaped at a vent, metres above the grit: crumbs of a fist and a finger lying on each other, with holes between. */
+export function crustAt(x: number, z: number): number {
+  return Math.max(1.3 * stones(x, z, 0.31, 0.85, 31), stones(x, z, 0.13, 0.85, 37)) + 0.025 * (noise(x / 0.07 + 1.9, z / 0.07 + 4.2) - 0.5);
 }
 
 // The butte of the feeding picture (shot heart-02 alone): the approved picture has a dark flat-topped mass over the right of its frame, close behind

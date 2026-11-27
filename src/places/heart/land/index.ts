@@ -6,7 +6,7 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { CRACK_FOOT, CRACK_TOP, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
-import { BUTTE, SPUR, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, widePath, type Crack } from './height';
+import { BUTTE, SPUR, buttressHeight, crackDip, crustAt, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, widePath, type Crack } from './height';
 import { fracture, type Joints } from './fracture';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
@@ -256,18 +256,30 @@ export function create(ctx: HeartContext): HeartPiece {
     return Math.min(s - RUBBLE.back, RUBBLE.front - s, t - RUBBLE.left, RUBBLE.right - t);
   };
   const unit = (v: number): number => Math.min(1, Math.max(0, v));
+  // Round the short crack the heap is no blocks but one low mound of crystal crumbs: sulphur painted on the top of a block was a decal.
+  const vent = cracks[1] as Crack;
+  const heapAt = (x: number, z: number): number => {
+    const ex = vent.bx - vent.ax;
+    const ez = vent.bz - vent.az;
+    const k = unit(((x - vent.ax) * ex + (z - vent.az) * ez) / (ex * ex + ez * ez));
+    const d = Math.hypot(x - vent.ax - ex * k, z - vent.az - ez * k) + 0.25 * (noise(x / 0.5 + 6.1, z / 0.5 + 2.3) - 0.5);
+    const by = unit((0.8 - d) / 0.4);
+    if (by <= 0) return rubbleAt(x, z);
+    const w = by * by * (3 - 2 * by);
+    return rubbleAt(x, z) * (1 - w) + w * (0.02 + 0.2 * unit((0.75 - d) / 0.6) + crustAt(x, z));
+  };
   const rubbleHeight = (x: number, z: number): number => {
     const base = benchUnder(x, z);
     // It sinks under the bench at its border and stays off the faces of the crag.
     const inside = unit(inPatch(x, z) / 0.8);
     const on = inside * unit((base - 0.08) / 0.14) * unit((2.4 - base) / 0.6);
-    const onBench = base - 0.06 + on * (0.06 + rubbleAt(x, z));
+    const onBench = base - 0.06 + on * (0.06 + heapAt(x, z));
     if (base > 0.3) return onBench;
     // The shore is no kerb: the rubble spills out over the crust, half a metre here and two there, and thins to single stones.
     const reach = 0.5 + 1.7 * noise(x / 1.7 + 3.3, z / 1.7 + 7.1) + 0.6 * (noise(x / 0.45 + 1.2, z / 0.45) - 0.5);
     const edge = 0.2 - 1.5 * reach;
     const t = unit((base - edge) / (0.2 - edge));
-    const spill = -0.07 + 0.27 * Math.sqrt(t) + rubbleAt(x, z) * (0.5 + 0.5 * t);
+    const spill = -0.07 + 0.27 * Math.sqrt(t) + heapAt(x, z) * (0.5 + 0.5 * t);
     return Math.max(onBench, base - 0.06 + inside * unit(t / 0.12) * (spill - base + 0.06));
   };
   // Where that lens rides and looks, a stone of the heap is hundreds of pixels across and a cell of 7.5 cm was a sliver of a face a finger thick,
