@@ -113,7 +113,7 @@ void main() {
   // as far as the picture says they are high: the ragged lips are the mesh, not paint.
   // No two ledges the same distance apart, and none level all the way round.
   float vy = y / (3.4 * D);
-  vy += 0.05 * sin(vy * 5.3 + seed * 20.0) + 0.022 * sin(vy * 13.7 + a + seed * 7.0);
+  vy += 0.17 * sin(vy * 2.1 + seed * 20.0) + 0.07 * sin(vy * 5.3 + seed * 47.0) + 0.022 * sin(vy * 13.7 + a + seed * 7.0);
   vec2 barkUv = vec2(a / 6.28318, vy) + seed * vec2(3.1, 7.7);
   float ledge = 0.0;
   if (close > 0.5) {
@@ -127,7 +127,7 @@ void main() {
     r += R * ((0.55 * lip + 0.08 * lump * ledge) * (0.2 + 0.8 * kept) + 0.25 * min(fineH - broadH, 0.0) + 0.08 * (broadH - 0.5)) * (1.0 - 0.5 * dead);
   }
   // The mouth flares a little, and its wall has a thickness.
-  r *= 1.0 + 0.16 * smoothstep(1.0 - 1.2 * R / h, 1.0, t) * (1.0 - dead);
+  r *= 1.0 + mix(0.16, 0.3, close) * smoothstep(1.0 - mix(1.2, 2.2, close) * R / h, 1.0, t) * (1.0 - dead);
   r *= 1.0 - cap * (cap > 0.75 ? 0.45 : 0.36);
   // Far off a stem is thinner than a pixel: it is kept that wide, or it would break into dashes.
   float px = pixelAt(c);
@@ -164,7 +164,7 @@ void main() {
   vec3 bark = texture2D(tBark, uv, 2.5 * plain).rgb;
   vec3 nh = texture2D(tBarkNh, uv, 2.0 * plain).rgb;
   // Read here, before the discard below: after it the software renderer has no sound slopes to choose a level of the sheet by.
-  float ledgeOver = texture2D(tBarkNh, uv + vec2(0.0, 0.04), 3.0).b;
+  float ledgeOver = texture2D(tBarkNh, uv + vec2(0.0, 0.035), 3.0).b;
   float rustK = mix(1.0, 0.45 * smoothstep(0.4, 0.75, fbm(vec2(vKind.w * 19.0, vUv.y * 0.5))), plain);
   if (uMirror > 0.5 && vWorld.y < -0.015) discard;
   vec3 v = normalize(cameraPosition - vWorld);
@@ -172,28 +172,31 @@ void main() {
   float away = smoothstep(8.0, 70.0, distance(cameraPosition, vWorld));
   float age = vLook.x;
   float deadStem = age > 1.5 ? 1.0 : 0.0;
-  // Chalk white salt over a horn-coloured tube: the picture of the bark gives the rings, the salt takes most of its colour out.
+  // The sheet is the stalk of the approved picture, unrolled: a grainy salt crust over a cream tube, lumps of crystal on the lips of its rings,
+  // and rust where the crust has flaked off. Under this sky the sheet at two thirds of its own value is the cream and tan of the picture.
   float luma = dot(bark, vec3(0.3, 0.5, 0.2));
-  vec3 albedo = mix(bark, vec3(luma), 0.2) * vec3(0.8, 0.74, 0.66);
-  // Salt: a crust on what stands highest, the lips of the ledges first, and in patches between them.
+  float flaked = smoothstep(0.6, 1.15, (bark.r - bark.b) / max(luma, 0.05));
+  vec3 albedo = mix(vec3(luma), bark, 0.9) * 0.66;
   float patchy = fbm(vec2(vUv.x * 5.0, vUv.y * 2.2) + seed * 11.0);
   float grain = fbm(vUv.xy * vec2(90.0, 60.0));
-  float crust = smoothstep(0.5, 0.78, nh.b + 0.3 * (patchy - 0.5) + 0.12 * (grain - 0.5));
-  // Far off the salt is not seen as white: a stem there is the cream of its bark.
+  // The lumps are crystal: whiter than the crust they stand on. Far off they are not seen as white.
+  float crust = smoothstep(0.66, 0.86, nh.b + 0.1 * (patchy - 0.5));
   float crustNear = 1.0 - 0.8 * smoothstep(4.0, 30.0, distance(cameraPosition, vWorld));
-  crust = max(crust, 0.8 * vLook.z);
-  albedo = mix(albedo, vec3(0.8, 0.79, 0.76) * (0.9 + 0.2 * grain), 0.75 * crust * crustNear);
+  crust = max(crust, 0.6 * vLook.z);
+  albedo = mix(albedo, vec3(0.62, 0.58, 0.55) * (0.9 + 0.2 * grain), 0.55 * crust * crustNear);
   // No two the same age: a young one is clean and warm, an old one grey with what has run down it, a dead one has lost its salt.
   albedo *= mix(vec3(1.06, 1.0, 0.95), vec3(0.8, 0.76, 0.74), smoothstep(0.2, 0.9, min(age, 1.0))) * (0.88 + 0.24 * fract(seed * 41.7));
-  // Rust gathers where the picture is lowest: under the lips of the ledges and in the cracks, more on one side of a trunk than the other.
-  float pit = 1.0 - smoothstep(0.12, 0.42, nh.b);
-  vec3 rust = vec3(0.36, 0.15, 0.07);
+  // No stretch of a trunk the same as the next: the crust is thick and pale over one span of it and thin, stained ochre and brown, over another.
+  float zone = smoothstep(0.3, 0.7, fbm(vec2(seed * 9.0 + vUv.x * 0.8, vUv.y * 0.42)));
+  albedo *= mix(vec3(0.74, 0.56, 0.45), vec3(1.06, 1.04, 1.02), zone);
+  // Where the crust has flaked the tube shows: rust, ochre and brown, more of it on an old trunk and in a thin span.
+  vec3 rust = bark * vec3(0.8, 0.5, 0.36);
+  albedo = mix(albedo, rust, flaked * (0.75 + 0.25 * min(age, 1.0)) * mix(1.0, 0.7, zone) * mix(1.0, 0.5, plain));
   float rusty = smoothstep(0.3, 0.7, fbm(vec2(vUv.x * 3.0, vUv.y * 1.3) + seed * 5.0));
-  albedo = mix(albedo, rust, clamp(pit * (0.35 + 0.55 * rusty) + 0.3 * rusty * (1.0 - crust) * smoothstep(0.3, 0.1, nh.b - 0.25), 0.0, 0.8) * (0.5 + 0.5 * min(age, 1.0)) * rustK);
-  // And it runs down from a ledge: the bark under one is stained orange, in tongues, on the side the brine dries last.
+  // And it runs down from a ring: the crust under one is stained orange, in tongues, on the side the brine dries last.
   float tongue = smoothstep(0.35, 0.75, fbm(vec2(vUv.x * 14.0, vUv.y * 1.6) + seed * 9.0));
-  float run = smoothstep(0.4, 0.56, ledgeOver) * (1.0 - 0.6 * crust) * (0.3 + 0.7 * tongue) * smoothstep(0.1, 0.5, rusty + 0.25);
-  albedo = mix(albedo, vec3(0.5, 0.19, 0.06), 0.8 * run * (1.0 - away) * rustK);
+  float run = smoothstep(0.62, 0.8, ledgeOver) * (1.0 - 0.8 * crust) * (0.3 + 0.7 * tongue) * smoothstep(0.1, 0.5, rusty + 0.25 - 0.3 * zone);
+  albedo = mix(albedo, vec3(0.4, 0.15, 0.055), 0.75 * run * (1.0 - away) * rustK);
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
   // Far off a stem is seen against pale ground and paler air: it is the horn colour of its tube, with its rings as bands, not chalk.
@@ -201,13 +204,17 @@ void main() {
   vec3 horn = vec3(1.12, 1.05, 0.97) * (0.9 + 0.12 * banded) * mix(0.55, 1.08, smoothstep(0.0, 0.6, vUv.w)) * (0.7 + 0.5 * fract(seed * 17.3));
   albedo = mix(albedo, mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))), 0.45) * horn, smoothstep(6.0, 28.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
+  // By the lens the mouth of a living trunk is its husk: brown and fibrous, ragged where the crust begins under it.
+  float under = (1.0 - vUv.w) * vKind.y;
+  float mouth = step(1.5, uLedgeF) * (1.0 - deadStem) * (1.0 - smoothstep(0.07, 0.15, under + 0.12 * (patchy - 0.5) + 0.03 * sin(vUv.x * 44.0 + seed * 60.0)));
+  albedo = mix(albedo, vec3(0.2, 0.105, 0.05) * (0.55 + 0.9 * grain) * (0.7 + 0.3 * sin(vUv.x * 150.0 + seed * 9.0)), 0.9 * mouth);
   float above = vWorld.y - vLook.w;
   // The foot stands in red brine and mud, and the stain of it climbs the foot, higher on one than on the next, and ragged.
   float wet = 1.0 - smoothstep(0.03, 0.03 + vLook.y, above + 0.09 * sin(vUv.x * 9.5 + seed * 30.0) + 0.05 * sin(vWorld.y * 31.0 + seed * 11.0));
   wet = max(wet, deadStem * (1.0 - smoothstep(0.02, 0.2, above)));
   // The ones at the lip of the seep stand in what it throws: wet and red brown to the mouth, the salt left on them in patches.
   float thrown = 1.0 - smoothstep(4.0, 6.5, distance(vWorld.xz, vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
-  wet = max(wet, thrown * (0.55 - 0.4 * smoothstep(0.5, 0.75, luma) * smoothstep(-0.2, 0.6, sin(vWorld.y * 5.3 + vUv.x * 15.0 + seed * 40.0))));
+  wet = max(wet, thrown * (0.6 - 0.45 * smoothstep(0.3, 0.55, luma) * smoothstep(-0.2, 0.6, sin(vWorld.y * 5.3 + vUv.x * 15.0 + seed * 40.0))));
   albedo = mix(albedo, albedo * vec3(0.5, 0.2, 0.16) + vec3(0.03, 0.005, 0.004), wet);
   // The relief of the bark turns the light, where it is near enough to be seen.
   vec3 up = vec3(0.0, 1.0, 0.0);
@@ -298,11 +305,14 @@ void main() {
   float s = position.y;
 #endif
   // The strap's line is the sum of its directions from its root: three places along it are enough to take the sum.
+  // A strap of a plume the lens stands by is told how late along its length it turns (aFr2.w, below zero), and may hook back under itself.
+  float late = aFr2.w < 0.0 ? -aFr2.w : 1.5;
+  float most = aFr2.w < 0.0 ? 4.3 : 3.02;
   vec3 at = s * vec3(0.1127, 0.5, 0.8873);
-  vec3 bends = clamp(bend0 + fall * at * sqrt(at), vec3(-1.2), vec3(3.02));
+  vec3 bends = clamp(bend0 + fall * pow(max(at, vec3(1e-5)), vec3(late)), vec3(-1.2), vec3(most));
   vec3 weigh = vec3(0.2778, 0.4444, 0.2778);
   vec3 acc = (A1 * dot(cos(bends), weigh) + O1 * dot(sin(bends), weigh)) * s;
-  float bend = clamp(bend0 + fall * s * sqrt(s), -1.2, 3.02);
+  float bend = clamp(bend0 + fall * pow(max(s, 1e-5), late), -1.2, most);
   vec3 d = A1 * cos(bend) + O1 * sin(bend);
   vec3 b = normalize(cross(A1, O1));
   vec3 n = cross(b, d);
@@ -404,7 +414,17 @@ void main() {
   albedo = mix(albedo, vec3(0.2, 0.12, 0.075), 1.0 - smoothstep(0.02, 0.14, s));
   // The rib is darker than the blade, and the blade is ruled along its length.
   albedo *= (0.8 + 0.2 * smoothstep(0.0, 0.35, abs(u))) * (0.93 + 0.07 * sin(u * 11.0 + seed * 50.0));
+  // By the lens the red is the approved picture's: a warm rose, brown red in the shade of the head, with pale strands among the dark.
+  float fine = step(0.75, uWet);
+  vec3 rose = mix(vec3(0.05, 0.006, 0.006), vec3(0.19, 0.022, 0.026), clamp(0.5 * own + 0.5 * plant + 0.3 * (s - 0.4), 0.0, 1.0));
+  rose = mix(rose, vec3(0.34, 0.1, 0.1), smoothstep(0.72, 0.95, fract(seed * 91.7)) * smoothstep(0.1, 0.5, s));
+  rose = mix(rose, vec3(0.17, 0.085, 0.05), 1.0 - smoothstep(0.02, 0.2 + 0.12 * own, s));
+  albedo = mix(albedo, rose, fine);
   albedo = mix(albedo, mix(vec3(0.085, 0.042, 0.034), vec3(0.15, 0.085, 0.06), own), spent);
+  // A husk of the mouth: dry, tan, ruled with fibre, darker and stained where it leaves the trunk.
+  float husk = fine * smoothstep(0.7, 0.75, spent) * (1.0 - smoothstep(0.85, 0.9, spent));
+  vec3 tan_ = mix(vec3(0.1, 0.05, 0.026), vec3(0.26, 0.15, 0.07), own) * (0.8 + 0.2 * sin(u * 9.0 + seed * 70.0)) * mix(0.5, 1.0, smoothstep(0.0, 0.5, s));
+  albedo = mix(albedo, mix(tan_, tan_ * vec3(1.0, 0.5, 0.4), 0.5 * smoothstep(0.5, 1.0, s) * step(0.5, own)), husk);
   // Salt has dried on them in grains: along the edges and toward the ends, more on one blade than on the next.
   float grainAt = floor(s * 140.0) + floor(u * 2.0 + 2.0) * 17.0;
   float grain = fract(sin(grainAt * 12.9898 + seed * 78.233) * 43758.5453);
@@ -418,7 +438,7 @@ void main() {
   // Wet, the film of brine on a blade is a mirror only where its fold turns the bright part of the sky to the lens: a thin line down its length.
   vec3 r = reflect(-v, n);
   float line = pow(clamp(dot(r, KEY), 0.0, 1.0), 32.0) + 0.4 * pow(clamp(r.y, 0.0, 1.0), 16.0);
-  c += step(0.5, uWet) * (1.0 - spent) * (0.3 + 0.7 * own) * 0.9 * line * skyRadiance(vec3(r.x, abs(r.y), r.z)) * occ * skyOpen(vWorld);
+  c += step(0.5, uWet) * (1.0 - spent) * (1.0 - husk) * (0.3 + 0.7 * own) * 0.9 * line * skyRadiance(vec3(r.x, abs(r.y), r.z)) * occ * skyOpen(vWorld);
   // A strap is thin: the sky behind it comes through.
   c += (1.0 - 0.6 * spent) * albedo * vec3(1.2, 0.6, 0.7) * skyIrradiance(-n) / 3.14159 * 0.35 * occ * skyOpen(vWorld);
   // One that is drawn wider than it is carries less of the picture's pixel: it is mixed toward what stands behind a head, which is more head.
@@ -568,33 +588,49 @@ export function matOf(list: Fronds, rng: Rng, ground: (x: number, z: number) => 
  */
 export function plumeOf(list: Fronds, drops: Fronds, w: Wild, rng: Rng, length: number, comb: number): void {
   const { end, aim } = endOf(w);
-  const n = w.kind === 1 ? 260 : w.kind === 3 ? 320 : 440;
-  // Wet blades hold to each other: the plume is some tens of locks, each with its own way out, its own length and its own fall, with gaps
-  // between them, and a few blades that have left their lock and stray.
-  const locks: [number, number, number, number][] = [];
-  const lockCount = w.kind === 1 ? 14 : 30;
+  const bud = w.kind === 1;
+  const n = bud ? 240 : w.kind === 3 ? 420 : 560;
+  // Wet filaments hold to each other: the plume is some tens of locks. A lock leaves the mouth close to the trunk's own line, stands for most of
+  // its length, then arches over and hangs or hooks at its end: how late it turns (the fourth number) is the lock's, so its filaments stay
+  // together. The locks on the side the air has combed them to leave wider and fall further; a few on the other side stand and hook back.
+  const locks: [number, number, number, number, number][] = [];
+  const lockCount = bud ? 14 : w.kind === 3 ? 22 : 34;
   for (let k = 0; k < lockCount; k++) {
-    const az = comb + rng.normal() * 1.15;
+    const az = comb + rng.normal() * 1.25;
     const toward = Math.max(0, Math.cos(az - comb));
-    locks.push([az, 0.08 + Math.abs(rng.normal()) * 0.3 + 0.3 * toward * rng.next(), rng.range(0.45, 1.08) * (0.78 + 0.3 * toward), rng.range(1.2, 2.5) + 0.6 * toward]);
+    const heart = rng.next() < 0.38;
+    const leave = heart ? 0.03 + Math.abs(rng.normal()) * 0.1 : 0.1 + Math.abs(rng.normal()) * 0.2 + 0.28 * toward * rng.next();
+    const reach = rng.range(0.5, 1.1) * (heart ? 1.05 : 0.8 + 0.25 * toward);
+    const fall = heart ? rng.range(1.2, 3.0) : rng.range(1.6, 2.8) + 1.4 * toward * rng.next();
+    locks.push([az, leave, reach, fall, rng.range(2.0, 3.6)]);
   }
   for (let k = 0; k < n; k++) {
-    const lock = locks[rng.int(locks.length)] as [number, number, number, number];
-    const stray = rng.next() < 0.12;
-    const az = lock[0] + rng.normal() * (stray ? 0.5 : 0.1);
-    const leave = Math.max(0.03, lock[1] + rng.normal() * (stray ? 0.2 : 0.05));
-    const len = length * lock[2] * (stray ? rng.range(0.5, 1.25) : rng.range(0.82, 1.06)) * (rng.next() < 0.08 ? rng.range(0.3, 0.6) : 1);
-    const fall = lock[3] + rng.normal() * (stray ? 0.5 : 0.14);
-    const half = rng.range(0.0045, 0.0095);
+    const lock = locks[rng.int(locks.length)] as [number, number, number, number, number];
+    // The first filaments are the cores of the locks, one each: broad, and as long as the lock is. The rest lie on a core; one in twelve strays.
+    const core = k < locks.length;
+    const own = core ? (locks[k] as [number, number, number, number, number]) : lock;
+    const stray = !core && rng.next() < 0.085;
+    const az = own[0] + (core ? 0 : rng.normal() * (stray ? 0.45 : 0.045));
+    const leave = Math.max(0.02, own[1] + (core ? 0 : rng.normal() * (stray ? 0.16 : 0.022)));
+    // A lock thins to its end: its filaments are of unlike length, and a few are short and young.
+    const len = length * own[2] * (core ? 1 : (stray ? rng.range(0.5, 1.2) : 1 - 0.55 * Math.pow(rng.next(), 1.6)) * (rng.next() < 0.07 ? rng.range(0.3, 0.6) : 1));
+    const fall = own[3] + (core ? 0 : rng.normal() * (stray ? 0.5 : 0.06));
+    const half = bud ? rng.range(0.006, 0.011) : core ? rng.range(0.0065, 0.0105) : rng.range(0.002, 0.0048);
     const seed = rng.next();
-    const from = w.R * 0.75 * Math.sqrt(rng.next());
-    list.add(w, end, aim, az, leave, len, half, seed, fall, 0, 0, false, w.seed, from);
-    if (w.kind !== 1 && rng.next() < 0.11) drops.add(w, end, aim, az, leave, len, half, seed, fall, 0, 0, false, w.seed, from);
+    const from = w.R * 0.7 * Math.sqrt(rng.next());
+    const late = -(own[4] + (core ? 0 : stray ? rng.range(-0.5, 0.5) : rng.range(-0.05, 0.05)));
+    list.add(w, end, aim, az, leave, len, half, seed, fall, 0, late, false, w.seed, from);
+    if (!bud && rng.next() < (core ? 0.5 : 0.06)) drops.add(w, end, aim, az, leave, len, half, seed, fall, 0, late, false, w.seed, from);
   }
-  for (let k = 0; k < 18; k++) {
-    list.add(w, end, aim, rng.range(0, TAU), rng.range(0.25, 0.6), length * rng.range(0.24, 0.42), rng.range(0.013, 0.021), rng.next(), rng.range(0.1, 0.6), 0.45, 0, false, w.seed, w.R * 0.85);
+  // The husks of the mouth: short dry tan straps round the roots of the filaments, that lean out and curl at their ends.
+  const husks = bud ? 12 : 19;
+  for (let k = 0; k < husks; k++) {
+    list.add(w, end, aim, (k / husks) * TAU + rng.range(-0.3, 0.3), rng.range(0.15, 0.65), w.R * rng.range(0.9, 2.6), w.R * rng.range(0.13, 0.24), rng.next(), rng.range(0.6, 2.6), HUSK, -rng.range(1.2, 2.4), false, w.seed, w.R * 0.95);
   }
 }
+
+/** What a husk of the mouth carries where a strap carries how spent it is. */
+const HUSK = 0.8;
 
 export interface GrowthUniforms {
   uSeconds: THREE.IUniform<number>;
@@ -706,8 +742,8 @@ export function stemMesh(ctx: Context, u: GrowthUniforms, count: number, lines: 
   const material = new THREE.ShaderMaterial({
     uniforms: {
       ...ctx.rig.uniforms, ...u, uLedge: { value: ledges }, uLedgeF: { value: ledges }, uCrowned: { value: 1 },
-      tBark: { value: ctx.assets.texture('mat/bark.jpg', { kind: 'colour', anisotropy: 4 }) },
-      tBarkNh: { value: ctx.assets.texture('mat/bark-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tBark: { value: ctx.assets.texture('growth/stalk.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tBarkNh: { value: ctx.assets.texture('growth/stalk-nh.jpg', { kind: 'data', anisotropy: 4 }) },
     },
     vertexShader: STEM_VERTEX,
     fragmentShader: STEM_FRAGMENT,

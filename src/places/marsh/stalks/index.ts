@@ -516,7 +516,7 @@ export function create(ctx: Context): Piece {
       if (s.kind === 2) continue;
       if (s.kind !== 1) perches.push(lineAt(w, 1));
       clings.push(w);
-      plumeOf(blades, beads, w, own, (s.kind === 0 ? 0.4 : s.kind === 3 ? 0.4 : 0.6) * s.size, want + own.range(-0.3, 0.3));
+      plumeOf(blades, beads, w, own, (s.kind === 0 ? 0.62 : s.kind === 3 ? 0.5 : 0.6) * s.size, want + own.range(-0.3, 0.3));
     }
     closeSet.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 28, 2), frondMesh(ctx, growth, blades, 14, { wet: 1 }), dropMesh(ctx, growth, beads));
     // Seen from the other shots they are far off, and are made as the far ones are.
