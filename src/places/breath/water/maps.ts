@@ -90,12 +90,13 @@ export function waveMap(rng: Rng, size = 256, least = 2, most = 24, fall = 1.15,
 /** One band of waves, as a square that repeats without a seam. Every wave in it is nearly of one length and runs within a quarter turn of +x,
  *  so all of them have nearly one frequency w, and the slope of the water at time t is A cos(wt) + B sin(wt): r and g hold A (on x and z),
  *  b and a hold B. The square stands for four times the root mean square of the slope either side of the middle grey. */
-export function bandMap(rng: Rng, size = 256, middle = 12, count = 56): THREE.DataTexture {
+export function bandMap(rng: Rng, size = 256, middle = 12, count = 56, fan = 1): THREE.DataTexture {
   const waves: { kx: number; kz: number; amp: number; phase: number }[] = [];
   for (let i = 0; i < count; i++) {
     const k = middle * rng.range(0.72, 1.4);
-    // Most run with the wind, a few well across it: the crests are short and do not line up.
-    const a = (rng.next() < 0.75 ? 0.5 : 1.15) * (rng.next() + rng.next() - 1);
+    // Most run with the wind, a few well across it: the crests are short and do not line up. A wider fan gives shorter crests: with the
+    // narrow one a gust on the channel stood in long level ridges, like rippled sand.
+    const a = Math.max(-1.35, Math.min(1.35, fan * (rng.next() < 0.75 ? 0.5 : 1.15) * (rng.next() + rng.next() - 1)));
     const kx = Math.round(k * Math.cos(a));
     const kz = Math.round(k * Math.sin(a));
     const len = Math.hypot(kx, kz) || 1;
