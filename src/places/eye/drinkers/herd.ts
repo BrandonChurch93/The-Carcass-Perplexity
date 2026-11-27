@@ -78,7 +78,7 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   let count = 0;
   const one = (x: number, z: number, facing: number, size: number, down: (t: number) => number, watches: boolean, close: boolean, calf = false): Drinker => {
     const own = hash(++count * 7.31);
-    return { x, z, facing, build: build(size, own, calf), down, watches, close, own, stepEvery: 9 + 9 * hash(own * 19), key: 0 };
+    return { x, z, facing, build: build(size, own, calf), down, watches, close, own, stepEvery: 5 + 6 * hash(own * 19), key: 0 };
   };
   const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, down: (t: number) => number, watches: boolean, calf = false): Drinker =>
     one(key.position[0] + Math.sin(bearing * DEG) * distance, key.position[2] - Math.cos(bearing * DEG) * distance, facing, size, down, watches, true, calf);
@@ -87,17 +87,19 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   const centre = KEYS.centre.position;
   const H = SHORE_HEADING;
   const list: Drinker[] = [
+    // Each of the close ones has a time of its own inside its shot: one lifts its head soon after the key, one late, one has only just come
+    // down to the water, one drinks on. The periods are short, for the shots are: five seconds, and under three.
     // The four of the shore shot: they stand off in the shallows, side on, the low sun behind them. One has its head up, a calf beside it, two drink.
     shore(from(KEYS.shore, H - 7.5, 31, H + 84, 1, up(0.3), true)),
-    shore(from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, sips(9, SHORE_KEY, 0.2), false, true)),
-    shore(from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(11, SHORE_KEY, 0.34), false)),
-    shore(from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(13, SHORE_KEY, 0.08), false)),
+    shore(from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, sips(4.6, SHORE_KEY, 0.36), false, true)),
+    shore(from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(7.5, SHORE_KEY, 0.14), false)),
+    shore(from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(6.2, SHORE_KEY, 0.27), false)),
     // The two of the last shot, below the camera with their backs to it, cut by the foot of the frame. Each lifts its head to the swell, not together.
     seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 8, 1.12, (t) => 0.8 - 0.5 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, key: riseAt + 1.7 }, 0.8),
     seenFromBehind({ ...one(centre[0] + 1.0, centre[2] - 18.5, -8, 0.82, (t) => 0.86 - 0.62 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, key: riseAt + 1.7 }, 1.0),
     // The ones of the mats shot: out on the shelf beyond the mats, small, side on. Both companions are down at the key.
-    mats(from(KEYS.mats, -13, 31, 80, 1, sips(10, MATS_KEY, 0.3), false)),
-    mats(from(KEYS.mats, -21, 44, 262, 1, sips(12, MATS_KEY, 0.12), false)),
+    mats(from(KEYS.mats, -13, 31, 80, 1, sips(5, MATS_KEY, 0.46), false)),
+    mats(from(KEYS.mats, -21, 44, 262, 1, sips(6, MATS_KEY, 0.0), false)),
     mats(from(KEYS.mats, -17.5, 52, 96, 0.9, sips(9, MATS_KEY, 0.42), false)),
   ];
   // The herd along the south shore, as the wide shot sees it: in the shallows and on the gravel.
@@ -146,6 +148,10 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const shift: V3 = [0, 0, 0];
   let roll = 0;
   const hooves: Hoof[] = [];
+  // It stands on three legs and rests the fourth, a hind one: that hock is slack and forward, the toe only touches, the hip on that side hangs
+  // and the trunk is carried over the three that bear. What takes its attention puts the leg back under it.
+  const restLeg = hash(o * 47) < 0.5 ? 0 : 1;
+  const rests = 0.8 * (d.alert === undefined ? 1 : 1 - ease(d.alert - 0.1, d.alert + 0.3, t));
   for (let k = 0; k < 4; k++) {
     const every = d.stepEvery * (0.75 + 0.6 * hash(o * 17 + k));
     const u = (t - d.key) / every + 0.22 + 0.56 * hash(o * 31 + k * 3.7);
@@ -171,18 +177,22 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
       weight = Math.max(weight, ease(start - 0.3, start - 0.04, t) * (1 - ease(start + 0.36, start + 0.75, t)));
       shift[2] -= 0.25 * d.gives * s * ease(start + 0.1, start + 0.7, t);
     }
+    const slack = k === restLeg ? rests * (1 - arcUp) : 0;
+    weight = Math.max(weight, slack);
+    hz += 0.07 * s * slack;
     // The ground under this hoof, in the world.
     const wx = d.x - cosB * hx + sinB * hz;
     const wz = d.z - sinB * hx - cosB * hz;
     const floor = d.level === undefined ? Math.max(WADE * s, ground(wx, wz)) - y : 0;
-    hooves.push({ at: [hx, floor + 0.17 * s * arcUp, hz], fold: arcUp });
+    hooves.push({ at: [hx, floor + 0.17 * s * arcUp + 0.012 * s * slack, hz], fold: Math.max(arcUp, 0.3 * slack) });
     // Its weight goes off the leg before the hoof leaves the ground and comes back on after it lands.
     const side = k % 2 === 0 ? 1 : -1;
     const hind = k < 2;
-    shift[0] -= side * 0.06 * s * weight;
+    shift[0] -= side * 0.08 * s * weight;
     shift[2] += (hind ? 1 : -1) * 0.03 * s * weight;
     shift[1] -= 0.012 * s * weight;
-    roll += side * 0.012 * weight;
+    roll += side * (0.018 * weight + 0.022 * slack);
+    shift[1] -= 0.01 * s * slack;
   }
   // What takes its attention sets it back on its haunches: the weight goes onto the hind legs and the croup sinks a little, then it eases.
   const taken = d.alert === undefined ? 0 : ease(d.alert - 0.05, d.alert + 0.5, t) * (1 - 0.45 * ease(d.alert + 1.6, d.alert + 4.2, t));
@@ -218,7 +228,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const fs = (fu - Math.floor(fu)) * flickEvery;
   const tail: [number, number] = [0.05 + 0.04 * Math.sin(t * 0.7 + o * 9), 0.07 * Math.sin(t * 1.3 + o * 20) + 0.55 * Math.sin(fs * 15) * Math.exp(-fs * 3.5)];
   const breathEvery = 2.7 + 1.2 * hash(o * 83);
-  const breath = 0.022 * Math.sin((t / breathEvery + o) * Math.PI * 2);
+  const breath = 0.034 * Math.sin((t / breathEvery + o) * Math.PI * 2);
   shift[0] += 0.012 * s * Math.sin(t * 0.47 + o * 12);
   shift[2] += 0.01 * s * Math.sin(t * 0.31 + o * 25) + 0.07 * s * low;
   shift[1] += 0.004 * s * Math.sin((t / breathEvery + o) * Math.PI * 2) - 0.045 * s * low - 0.02 * s;

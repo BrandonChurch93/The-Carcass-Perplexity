@@ -136,7 +136,7 @@ void main() {
   // The hide is pale and bare. Its tone drifts over the body: pinker where the skin is thin, greyer where it is thick.
   float drift = n3(at * 1.3);
   float blotch = 0.6 * n3(at * 3.1) + 0.4 * n3(at * 8.3);
-  vec3 skin = mix(vec3(0.75, 0.685, 0.6), vec3(0.8, 0.755, 0.69), drift) * (0.92 + 0.16 * blotch);
+  vec3 skin = mix(vec3(0.69, 0.6, 0.51), vec3(0.76, 0.69, 0.615), drift) * (0.92 + 0.16 * blotch);
   vec3 dpx = dFdx(vWorld);
   vec3 dpy = dFdy(vWorld);
   vec3 rx = dFdx(vRest);
@@ -162,10 +162,11 @@ void main() {
   vec3 fromStifle = (vRest - vec3(0.0, 1.5, -0.5)) / vec3(1.0, 0.36, 0.26);
   float loose = clamp(neck * root + exp(-dot(fromShoulder.yz, fromShoulder.yz)) + exp(-dot(fromStifle.yz, fromStifle.yz))
     + trunk * smoothstep(-0.1, -0.7, rn.y) + 0.8 * leg * joint, 0.0, 1.0);
-  loose = mix(0.3, 1.0, loose * (0.6 + 0.8 * n3(at * 1.9 + 7.0)));
+  loose = mix(0.1, 1.0, loose * smoothstep(0.15, 0.8, n3(at * 1.9 + 7.0)) * 1.5);
+  loose = min(loose, 1.0);
   float relief = neck * root * 0.004 * rings
     + leg * joint * 0.0026 * legRings
-    + ribs * 0.0055 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
+    + ribs * (1.0 - smoothstep(0.005, 0.016, px)) * 0.0022 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
   float groove = max(0.5 * neck * root * (1.0 - rings), 0.5 * leg * joint * (1.0 - legRings));
   // Every slope across the screen is taken here, above the first branch.
   vec2 slope = vec2(dFdx(relief), dFdy(relief));
@@ -184,7 +185,9 @@ void main() {
     float which = smoothstep(0.42, 0.58, n3(at * 0.8 + 3.0));
     vec3 folded = wornAt(at, dx, dy, ma.x, me.x, w, limb, which);
     float tone = dot(folded, vec3(0.3, 0.5, 0.2));
-    skin *= mix(vec3(1.0), mix(vec3(tone), folded, 0.75), 0.72 + 0.28 * loose);
+    skin *= mix(vec3(1.0), mix(vec3(tone), folded, 0.75), 0.5 + 0.5 * loose);
+    // The bottom of a fold holds its own shade and the dirt of years: it is dark, and darkest where the hide hangs loosest.
+    skin *= mix(vec3(1.0), vec3(0.5, 0.42, 0.38), 0.85 * loose * smoothstep(0.95, 0.6, tone));
     // The fine sheet, twice: the net of creases, and close to, the pores.
     vec4 broad = hideAt(at * 1.5, dx * 1.5, dy * 1.5, ma, me, w);
     vec4 fine = vec4(0.69, 0.41, 0.32, 0.5);
@@ -192,7 +195,7 @@ void main() {
     vec3 tiled = sqrt(broad.rgb * fine.rgb) / vec3(0.69, 0.41, 0.32);
     skin *= mix(vec3(1.0), tiled, 0.45) * mix(0.9, 1.0, smoothstep(0.22, 0.52, broad.a)) * (0.94 + 0.12 * fine.a);
     // The folds turn the light: the relief's slope across the screen leans the normal.
-    slope += 0.045 * loose * leanAt(at, rx, ry, ma.x, me.x, w, limb, which);
+    slope += 0.06 * loose * leanAt(at, rx, ry, ma.x, me.x, w, limb, which);
     vec3 r1 = cross(dpy, n);
     vec3 r2 = cross(n, dpx);
     float det = dot(dpx, r1);
@@ -204,7 +207,7 @@ void main() {
   // Dust and old mud dark along the spine and the withers, and smeared down the shoulder and the haunch.
   float top = trunk * smoothstep(0.45, 0.95, rn.y) * smoothstep(0.5, 0.2, abs(vRest.x) + 0.25 * (blotch - 0.5));
   float smear = trunk * smoothstep(0.5, 0.72, n3(at * vec3(2.2, 1.1, 2.2) + 11.0) + 0.25 * (vRest.y - 1.9));
-  float dirt = clamp(0.5 * top * smoothstep(0.3, 0.7, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.34 * smear, 0.0, 1.0);
+  float dirt = clamp(0.5 * top * smoothstep(0.3, 0.7, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear, 0.0, 1.0);
   skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt);
   // Each a tone of its own.
   skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3));
@@ -215,12 +218,12 @@ void main() {
   float knee = leg * (exp(-pow((vRest.y - 0.78) / 0.12, 2.0)) + exp(-pow((vRest.y - 0.14) / 0.07, 2.0)));
   skin *= 1.0 - 0.3 * knee * (0.4 + 0.6 * ragged);
   // Wet and dark where it has stood in the lake, and flecked with the mud it kicked up, thinning to the knee; dry above. The horn of the hoof is dark.
-  float wet = 1.0 - smoothstep(0.1, 0.34, above + 0.18 * ragged);
+  float wet = 1.0 - smoothstep(0.14, 0.42, above + 0.2 * ragged);
   float muddy = (1.0 - smoothstep(0.2, 1.25, above + 0.5 * ragged)) * leg;
   skin *= mix(vec3(1.0), vec3(0.62, 0.56, 0.52), 0.7 * muddy);
   float fleck = smoothstep(0.7, 0.78, n3(at * vec3(110.0, 70.0, 110.0)) * (0.7 + 0.6 * n3(at * 6.0))) * (1.0 - smoothstep(0.3, 1.4, above + 0.6 * ragged));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
-  vec3 albedo = mix(skin * mix(1.0, 0.55, wet), vec3(0.13, 0.1, 0.08), 0.55 * fleck);
+  vec3 albedo = mix(skin * mix(vec3(1.0), vec3(0.36, 0.33, 0.31), wet), vec3(0.13, 0.1, 0.08), 0.55 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.62, 1.0, vShade.x) * (1.0 - 0.35 * groove);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
@@ -238,8 +241,12 @@ void main() {
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float through = pow(1.0 - nv, 2.5) * (0.35 + 0.65 * max(dot(-v, uSunDir), 0.0));
   c += albedo * vec3(1.0, 0.62, 0.45) * uSunColour * (0.2 * through * sunHere * lit * occ / 3.14159);
+  // The low sun is warm in a bare hide, and lies along every outline that is turned to it.
+  float sunward = dot(n, uSunDir);
+  float rim = pow(1.0 - nv, 3.0) * smoothstep(-0.15, 0.5, sunward);
+  c += albedo * uSunColour * (vec3(0.07, -0.05, -0.15) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim) * (sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
   // The wet of the leg takes the sun as a film of water does.
-  c += wet * lit * rigGlint(p, n, v, 0.16);
+  c += 0.4 * wet * lit * rigGlint(p, n, v, 0.16);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
