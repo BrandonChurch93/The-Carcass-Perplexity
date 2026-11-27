@@ -486,9 +486,12 @@ void main() {
   float scum = 0.55 * smoothstep(0.6, 0.92, g.g * 0.75 + grit.r * 0.1 + 0.15 * scumTex.r + 0.12 * film.y) * smoothstep(0.03, 0.2, vLocal.y);
   float speck = smoothstep(0.86, 0.885, grit.g * 0.6 + fleck.b * 0.4) * smoothstep(0.25, 0.45, vLocal.y);
   float covered = max(max(scum, speck), rim);
+  // A lens down at the pool's level looks along the skin and not across it: the film stands thicker in the way from the crown down to
+  // the wall, and hides the far bank's straight line behind it. (From a stride up the skin is looked through, and stays glass.)
+  float veil = 0.42 * smoothstep(0.85, 0.3, vLocal.y) * smoothstep(0.2, 0.07, v.y) * whole;
 #ifdef THROUGH
   // (At its foot the skin stands in the meniscus the pool draws up it, which looks down at the dark pool: a dark line round the dome.)
-  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered) * mix(0.5, 1.0, smoothstep(0.01, 0.1, vLocal.y));
+  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered) * (1.0 - veil) * mix(0.5, 1.0, smoothstep(0.01, 0.1, vLocal.y));
   gl_FragColor = vec4(passes, 1.0);
 #else
   vec3 fallsOn = skyIrradiance(n) * (open / 3.14159);
@@ -505,6 +508,7 @@ void main() {
   float towardFar = max(dot(reflect(-v, nFar), ${DOME_KEY}), 0.0);
   inside += uSkyZenith * 0.12 * smoothstep(0.9, 0.995, towardFar) * far;
   lit += through * inside;
+  lit += veil * fromAbove * mix(vec3(0.23, 0.13, 0.125), vec3(0.12, 0.027, 0.023), smoothstep(0.75, 0.15, vLocal.y)) * mix(0.7, 1.1, through.g) * (1.0 - covered);
   lit *= mix(0.45, 1.0, smoothstep(0.01, 0.1, vLocal.y));
   vec3 r = reflect(-v, n);
   float horizon = r.y + (g.g - 0.5) * 0.05;

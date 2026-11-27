@@ -122,6 +122,10 @@ export function create(ctx: Context): Piece {
   const film = { vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms: domeUniforms, toneMapped: false, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor } as const;
   const skinThrough = new THREE.ShaderMaterial({ ...film, defines: { THROUGH: 1 }, blendSrc: THREE.ZeroFactor, blendDst: THREE.SrcColorFactor });
   const skin = new THREE.ShaderMaterial({ ...film, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor });
+  // The air is laid over the frame by depth. A skin that writes none takes the haze of whatever is behind it: over the far flats it
+  // was all but hazed away while over the pool it stood whole, a straight line across the dome at the far bank. So it is drawn a third
+  // time, for its depth alone.
+  const skinDepth = new THREE.ShaderMaterial({ ...film, defines: { THROUGH: 1 }, depthWrite: true, colorWrite: false, blending: THREE.NoBlending });
   const dropSkin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms: domeUniforms, defines: { DROP: 1 }, toneMapped: false });
   const ball = new THREE.SphereGeometry(1, 96, 32, 0, TAU, 0, Math.PI / 2);
   const domeLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
@@ -133,7 +137,10 @@ export function create(ctx: Context): Piece {
   domeMesh.frustumCulled = false;
   domeMesh.renderOrder = 2;
   const domeGroup = new THREE.Group();
-  domeGroup.add(domeShade, domeMesh);
+  const domeDepth = new THREE.InstancedMesh(ball, skinDepth, domes.length);
+  domeDepth.frustumCulled = false;
+  domeDepth.renderOrder = 3;
+  domeGroup.add(domeShade, domeMesh, domeDepth);
   ctx.scene.add(ctx.parts.built('domes', domeGroup));
 
   const dropCount = domes.reduce((n, d) => n + d.drops, 0);
@@ -191,6 +198,7 @@ export function create(ctx: Context): Piece {
       m.makeScale(r, tall, r).setPosition(d.x, -0.01, d.z);
       domeMesh.setMatrixAt(i, m);
       domeShade.setMatrixAt(i, m);
+      domeDepth.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
       // As the edge comes down on the pool the brine it gathered is thrown up in a wall of fingers.
@@ -294,6 +302,7 @@ export function create(ctx: Context): Piece {
     ringCount.value = ring;
     domeMesh.instanceMatrix.needsUpdate = true;
     domeShade.instanceMatrix.needsUpdate = true;
+    domeDepth.instanceMatrix.needsUpdate = true;
     domeLife.needsUpdate = true;
     crownMesh.instanceMatrix.needsUpdate = true;
     crownLife.needsUpdate = true;
@@ -343,6 +352,7 @@ export function create(ctx: Context): Piece {
       surface.dispose();
       skin.dispose();
       skinThrough.dispose();
+      skinDepth.dispose();
       dropSkin.dispose();
       crownMaterial.dispose();
     },
