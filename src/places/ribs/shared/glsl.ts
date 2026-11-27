@@ -33,6 +33,7 @@ uniform sampler2D tCloudShade;
 uniform vec4 uCloudShade;
 uniform vec4 uCloudBreak;
 uniform vec4 uCloudBreak2;
+uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
 uniform vec3 uSkyGround;
@@ -122,6 +123,9 @@ float cloudShadeMarched(vec3 p) {
 float cloudShade(vec3 p) {
   // The sun is not overhead: the shadow of a cloud 1500 m up lies where the ray to the sun leaves the cloud sheet.
   float c = cloudCover(p.xz - uSunDir.xz * (p.y / uSunDir.y));
+  // The sun is low and comes in under the cloud's far edge: what stands high takes it through thinner cloud than the ground does.
+  // The heads of the blades stand in travelling patches of it (uHeads: from this height, whole by this one, how much thinner).
+  c += uHeads.z * smoothstep(uHeads.x, uHeads.y, p.y);
   return mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, c));
 }
 
@@ -167,6 +171,24 @@ vec3 skyMirror(vec3 d, float level) {
   return domeTone(textureLod(tDome, uv, level).rgb, d, el);
 }
 
+// The dome itself: the same sky with the fine edges a picture laid round half the heaven has not at the lens's size (a texel of it is
+// three pixels of the widest frame). The picture is read through two finer workings of the cloud's own lumps, which tear its soft edges
+// into shreds, and its body takes their grain; the finest goes out by itself where the frame is small.
+vec3 skyDome(vec3 d) {
+  float el;
+  vec2 uv = domeAt(d, el);
+  vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
+  vec2 q = uv * vec2(5.0, 2.8);
+  vec2 a = vec2(texture2D(tCloudShade, q + 0.5 * uSkyTurn.yz).g, texture2D(tCloudShade, q.yx + vec2(0.37, 0.61) - 0.5 * uSkyTurn.zy).g) - 0.5;
+  vec2 b = vec2(texture2D(tCloudShade, q * 3.7 + 0.19).g, texture2D(tCloudShade, q.yx * 3.7 + 0.73).g) - 0.5;
+  float g = texture2D(tCloudShade, q * 13.0 + 0.41).g - 0.5;
+  vec3 c = texture2D(tDome, uv + 0.012 * work + (2.4 * a + 0.9 * b) * vec2(0.0022, 0.0039)).rgb;
+  // The grain is the cloud's, not the clear air's between the heads: it is given by how grey the place is.
+  float grey = dot(c, vec3(0.3, 0.5, 0.2));
+  c *= 1.0 + (0.1 * a.y + 0.16 * b.x + 0.12 * g) * smoothstep(0.75, 0.3, grey);
+  return domeTone(c, d, el);
+}
+
 // How much of the sun reaches p through the blades and the land (baked once) and the cloud (drifting).
 float sunBaked(vec3 p, vec4 land) {
   float baked = mix(land.b, land.a, clamp((p.y - land.r) / 60.0, 0.0, 1.0));
@@ -189,14 +211,19 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   // The baked land knows nothing finer than ten metres, and inside a blade's own foot it is dark: an upright face asks for the land in front of it.
   vec4 land = landAt(p.xz + n.xz * 14.0);
   float above = p.y - land.r;
-  float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above)) * occ;
+  float stood = 1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above);
+  float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * stood * occ;
   float gap = cloudShade(p);
   float sun = sunBaked(p, land) * gap * occ;
-  float nl = max(dot(n, uSunDir), 0.0);
+  // What stands high stands in the light of the break itself, which is wide: there the light goes round a blade past its edge
+  // (six tenths of the way), so its round shows from the lit side to the shade.
+  float wide = 0.6 * smoothstep(uHeads.x, uHeads.y, p.y);
+  float nl = max((dot(n, uSunDir) + wide) / (1.0 + wide), 0.0);
   // The lit flats throw the low sun back up: a face that looks down or stands upright over sunlit ground takes it warm, and the more of
   // it the higher it stands over its own shadow. This is what keeps a lee face from going to the sky's cold grey alone.
   vec3 bounce = uSunColour * uBounce * (uSunDir.y * (gap - uCloudShade.w) * (0.5 - 0.5 * n.y) * (0.3 + 0.7 * clamp(above / 90.0, 0.0, 1.0)));
-  vec3 e = (skyIrradiance(n) + bounce) * open + uSunColour * (nl * sun);
+  // No wall goes to nothing: wet ground and water all round it throw the sky back into its darkest fold (uHeads.w of the ground's light), but not under what stands on it.
+  vec3 e = (skyIrradiance(n) + bounce) * open + 3.14159 * uSkyGround * (uHeads.w * occ * stood) + uSunColour * (nl * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
