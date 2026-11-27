@@ -139,8 +139,6 @@ void main() {
   gFx = dFdx(p.xz);
   gFy = dFdy(p.xz);
   gCovers = max(length(gFx), length(gFy));
-  // The water ends where the picture of the far world stands on it.
-  if (uPlateTone.w > 0.5 && length(p.xz - uPlateAt.xz) > uPlateAt.w) discard;
   vec3 toCamera = cameraPosition - p;
   float away = length(toCamera);
   vec3 v = toCamera / away;
@@ -348,6 +346,11 @@ void main() {
   vec3 rd = reflect(-v, n);
   rd.y = max(abs(rd.y), 0.003);
   rd = normalize(rd);
+  // How much of the picture of the far world one pixel of the mirror holds, waves and all. It is measured here, where every pixel has come
+  // by the same way, and the looks below are read by it: taken under a branch it would not be the same twice.
+  vec2 held = plateUv(p, rd);
+  vec2 heldX = dFdx(held);
+  vec2 heldY = dFdy(held);
   vec3 refl;
   // Three looks are for the wall. Where the lowest of them still passes over its top all three find the sky, which one look tells as well.
   bool drawnOut = spread > 0.0045 && uPlateTone.w < 1.5;
@@ -378,14 +381,14 @@ void main() {
     rUp.y = max(abs(rUp.y), 0.003);
     vec3 rDown = reflect(-v, nDown);
     rDown.y = max(abs(rDown.y), 0.003);
-    refl = wUp * farRadiance(p, normalize(rUp), soft) + wDown * farRadiance(p, normalize(rDown), soft);
+    refl = wUp * farRadianceGrad(p, normalize(rUp), soft, heldX, heldY) + wDown * farRadianceGrad(p, normalize(rDown), soft, heldX, heldY);
     // From the rim the wall in the water is small: the two outer looks, each softer, tell it.
-    if (!twoLooks) refl += wMid * farRadiance(p, rd, soft);
+    if (!twoLooks) refl += wMid * farRadianceGrad(p, rd, soft, heldX, heldY);
     else wMid = 0.0;
     refl /= max(wUp + wMid + wDown, 1e-4);
   } else {
     // A little of it is no more than a softer mirror.
-    refl = farRadiance(p, rd, soft + log2(1.0 + spread * 420.0));
+    refl = farRadianceGrad(p, rd, soft + log2(1.0 + spread * 420.0), heldX, heldY);
   }
   // Deep water gives back the high sky, not the glow along the rim: under the wall it mirrors, the pool is the blue of the sky overhead and of its own depth.
   if (pool > 0.0) {
@@ -572,6 +575,9 @@ void main() {
   }
 
   gl_FragColor = vec4(rigOut(c), 1.0);
+  // The water ends where the picture of the far world stands on it. It ends here, at the foot of main, and not at its head: a pixel that
+  // had left would leave the three beside it measuring themselves against nothing.
+  if (uPlateTone.w > 0.5 && length(p.xz - uPlateAt.xz) > uPlateAt.w) discard;
 }`;
 
 function surfaceGeometry(): THREE.BufferGeometry {
