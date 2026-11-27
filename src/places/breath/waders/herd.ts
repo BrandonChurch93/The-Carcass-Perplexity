@@ -96,7 +96,7 @@ const TRIO: [number, number][] = [
 ];
 
 /** Staged: the herd is not one age: beyond the three in the channel there are young ones and old ones. The size of each, as a part of its own. */
-const AGES = [1, 1, 1, 0.62, 1.15, 0.84, 1.1, 0.7, 0.92, 1];
+const AGES = [1, 1, 1, 0.62, 1.15, 0.84, 1.1, 1, 0.7, 1];
 
 export function makeHerd(rng: Rng): Member[] {
   const herd: Member[] = [];
@@ -117,7 +117,7 @@ export function makeHerd(rng: Rng): Member[] {
       plan.z += 0.65;
     }
     // Staged: one of those far out on the flats has lain down.
-    if (i === 8) {
+    if (i === 7) {
       plan.rest = 1;
       plan.speed = 0;
     }
