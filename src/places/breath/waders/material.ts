@@ -255,7 +255,7 @@ void main() {
     albedo *= 1.0 + 0.22 * fold * (1.0 - 0.45 * smoothstep(0.0, 0.4, u)) * mid;
     thin = 0.7;
   } else if (kind < 2.5) {
-    // The mop: roots of the same bare flesh as the neck where they leave it, rose down their length and blood dark at the thread of the tip;
+    // The mop: roots of the same bare flesh as the neck where they leave it, rose down their length and dark tan at the thread of the tip;
     // the fine ends are redder; weed is weed. Wet, they are darker and shine. Thin as they are, the low sun comes through them.
     float type = floor(vInfo.x + 0.001);
     float tone = fract(vInfo.x);
@@ -265,13 +265,13 @@ void main() {
     float along = u + 0.16 * (vnoise(vec2(u * 6.0, seed * 13.0)) - 0.5);
     vec3 flesh = mix(vec3(0.8, 0.62, 0.57), vec3(0.72, 0.5, 0.47), own);
     vec3 rose = mix(vec3(0.66, 0.51, 0.46), vec3(0.78, 0.63, 0.55), tone);
-    vec3 blood = mix(vec3(0.27, 0.13, 0.12), vec3(0.4, 0.21, 0.18), tone);
+    vec3 blood = mix(vec3(0.27, 0.18, 0.13), vec3(0.4, 0.28, 0.2), tone);
     albedo = mix(flesh, rose, smoothstep(0.1, 0.55, along));
     albedo = mix(albedo, blood, 0.7 * smoothstep(0.66, 1.0, along));
     // Ringed and blotched like a worm, not one even colour down its length.
     albedo *= 0.86 + 0.28 * vnoise(vec2(vUv.x * 70.0, seed * 7.0));
     // No two strands are one colour: some are pale and some dark with blood.
-    albedo *= mix(vec3(0.66, 0.58, 0.56), vec3(1.08), hash12(vec2(seed * 3.7, 9.0)));
+    albedo *= mix(vec3(0.72, 0.66, 0.62), vec3(1.1), hash12(vec2(seed * 3.7, 9.0)));
     // The thick ones at the heart of the mop are not one cord each: each is a hank of fine ones stuck together, and reads as strands.
     float hank = smoothstep(0.008, 0.02, vInfo.z);
     float lines = vnoise(vec2(vUv.y * 900.0 + 2.0 * vnoise(vec2(vUv.x * 9.0, seed)), vUv.x * 4.0 + seed));
