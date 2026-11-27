@@ -525,6 +525,8 @@ export function claws(j: Joints): THREE.BufferGeometry {
   const RING = 7;
   const SEG = 6;
   for (let i = 0; i < 4; i++) {
+    // The hind paws of the dead one lie under its coat and the drift: no claw of theirs shows.
+    if (j.slump && i >= 2) continue;
     const ankle = j.ankles[i] as V3;
     const toe = j.toes[i] as V3;
     const along = norm(sub(toe, ankle));
@@ -653,7 +655,7 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
     if (fall[1] > 0.05) fall = norm([fall[0], 0.05, fall[2]]);
     if (flank > 0) fall = norm([fall[0] * (1 - 0.75 * flank), fall[1] - 1.3 * flank, fall[2] * (1 - 0.75 * flank)]);
     // Round the burn the melted coat froze again as it stood: clotted spikes, white with ice, standing off the hide.
-    const spike = burned >= 1.0 && burned < 1.55 && rng.next() < (o.lips ? 0.18 : 0.55);
+    const spike = burned >= 1.0 && burned < 1.55 && rng.next() < (o.lips ? 0 : 0.55);
     if (spike) fall = norm(add(scale(fall, 0.8), scale(at.n, 0.55)));
     const end = add(at.p, add(scale(at.n, long * 0.14), scale(fall, long * (spike ? 1.15 : 1))));
     const spread = 0.016 + 0.022 * rng.next();

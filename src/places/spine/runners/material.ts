@@ -225,6 +225,8 @@ void main() {
       n = normalize(n + 0.7 * core * vec3(vnoise3(vRest * 60.0) - 0.5, 0.0, vnoise3(vRest * 60.0 + 9.0) - 0.5));
     }
   }
+  // A limb that lies against the split is singed as the flank is: no pale hide stands beside the wound.
+  if (uWhole > 0.5 && vKind > 1.5) albedo *= mix(0.3, 1.0, smoothstep(0.7, 2.2, d));
   vec3 e = runnerLight(vWorld, n) * occ;
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);

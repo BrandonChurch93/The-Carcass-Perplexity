@@ -181,7 +181,7 @@ export function create(ctx: Context): Piece {
     // The dead one lies on its right side: the coat of that side is under it, in the snow, and is not grown, nor is the coat low on its
     // back, which is turned from the lens for as long as it is in the frame.
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 || (n[2] > 0.5 && n[1] < 0.45) : undefined;
-    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.13, 0.15, 0.115, 0.03, 0, 0.1] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
+    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.13, 0.15, 0.115, 0.085, 0, 0.1] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
@@ -253,7 +253,7 @@ export function create(ctx: Context): Piece {
   const dj = deadSkin.joints;
   const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.22 * (dj.fwd[d] as number) - 0.1 * (dj.up[d] as number) - 0.2 * (dj.right[d] as number);
   const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.5];
-  const dead = make({ act: 'dead', pose: DEAD, size: DEAD_SIZE, cell: 0.022, clumps: 1550, long: 0.85, tone: [1.1, 1.02, 0.88], phase: 0, inside: false, burn: wound, tendrils: 40 });
+  const dead = make({ act: 'dead', pose: DEAD, size: DEAD_SIZE, cell: 0.022, clumps: 1450, long: 0.85, tone: [1.1, 1.02, 0.88], phase: 0, inside: false, burn: wound, tendrils: 40 });
 
   // What the one that walks does to the floor: the dark under each foot that is down, the prints where it stood, and the snow a foot
   // kicks up as it leaves. Flat on the floor, or turned to the lens for the snow.
