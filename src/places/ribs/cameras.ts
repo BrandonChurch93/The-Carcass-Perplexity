@@ -74,17 +74,21 @@ function travelled(seconds: number): number {
 const TO_KEY = travelled(ARRIVAL.keySeconds);
 const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 
-// The film's first shot, restaged (the rung 2 restaging of the opening): not the old move seen from farther out on a long lens, but a
-// move of its own. It starts 880 m out and 400 m EAST of the old axis, low on the back of a heavy swell, and pushes in hard at 86 metres a
-// second, then sweeps west along the shore onto the old move in one arc, so that the near blade (L1) grows and slides against the far ones
-// the whole way in. The lens rides the long swell of sea/tide.ts under it: it tops the crest before it inside the first second, sinks into
-// the trough behind (the next crest stands up before the shore) and is lifted again, its nose rising and falling with it.
-// From the east the tips of L1 and R1 stand 8 degrees apart with the arch of L2 between them: they cross only once both have left the top of the frame.
+// The film's first shot, restaged a second time (rung 2 again: the first restaging stood two blades in a still plate with the right of
+// the frame empty). The lens now starts 880 m out and 770 m EAST of the old axis, close under the outer right blade (OR, 290 m off its
+// near flank), low in a trough of a heavy swell, and pushes in hard at 86 metres a second, then sweeps west along the shore onto the old
+// move in one arc. In the first frame OR stands as a dark wall over the right four tenths of the frame, from the sea out through the top,
+// with the pale near blade (L1) in the left third and the far cage between them. OR slides out through the right edge inside two seconds
+// (its near flank at 0.56 of the width in the first frame, 0.75 at 1 s, gone at 1.9 s) against blades that hardly move, and the right
+// row's blade (R1) comes out from behind it: that is the one large thing that crosses the frame, and what says how far off the rest is.
+// The lens rides the long swell of sea/tide.ts under it: it is lifted from the trough over the crest before it through the first second
+// and a half (the shore and the strike come up over that crest), sinks into the next trough at 2.9 s and is lifted again, its nose
+// rising and falling with it. L1 grows and slides against the far blades the whole way in.
 // From OPEN.seconds on (film frame 960) the pose is `arrival`'s own, to the bit, and the two join level in place, speed and acceleration.
 export const OPEN = {
   seconds: 16,
   /** Where the lens is as the film opens (x, z), the way it is going (degrees, 0 is north, negative is west) and its speed. */
-  from: [229, 880] as [number, number],
+  from: [600, 880] as [number, number],
   heading: -40,
   speed: 86,
   /** Once the lens has settled: metres over the old move's height as the film opens, and its heave: metres, seconds a turn. */
@@ -107,7 +111,7 @@ export const OPEN = {
   target: [-149, -193] as [number, number],
   /**
    * The slew: as the film opens the lens looks this many degrees to the right of that point (the right row's blade and the far cage stand
-   * well inside the frame, the strike a fifth in from the left) and is already coming round onto it, fastest in the first frame and at
+   * well inside the frame, the strike a sixth in from the left) and is already coming round onto it, fastest in the first frame and at
    * rest after this many seconds, as a hull does that is thrown across a crest. It is what slides the whole view through the second in
    * which the lens sits high on the swell.
    */
@@ -115,15 +119,15 @@ export const OPEN = {
   slewing: 2.4,
   /**
    * Degrees over the level as the film opens, how far it tilts up and between which seconds; the lens as the film opens, how far it widens
-   * and between which seconds. It widens late and tilts little: the near blade outgrows the frame, its tip gone through the top inside two
-   * seconds and ever farther out, while the tip of the right row's blade (6 degrees lower) is held inside the top by a clear margin.
+   * and between which seconds. It widens late and tilts little: the near blade outgrows the frame, its tip seen whole for three seconds,
+   * gone through the top at 3.5 s and ever farther out, while the tip of the right row's blade is held inside the top until 10 s.
    */
   pitch: 12.2,
   tilt: 1.6,
   tilting: [2.6, 5] as [number, number],
   /**
-   * Off the first crest the nose comes down with the fall and stays down: degrees, and the seconds between which it does. It is what
-   * throws the near blade's tip through the top of the frame in one move, and brings the sea up into the frame as the lens drops to it.
+   * On the first crest the nose comes down and stays down: degrees, and the seconds between which it does. It keeps the sea in the
+   * frame while the lens stands high, and is why the near blade's tip is not thrown out of the top as the lens is lifted.
    */
   nods: 1.2,
   nodding: [0.6, 1.45] as [number, number],

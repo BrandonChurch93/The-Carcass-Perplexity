@@ -122,7 +122,7 @@ export function create(ctx: Context): Piece {
   const shared = { tChop: { value: chop }, tFoam: { value: foamMap }, uWind: { value: new THREE.Vector2(WIND.to[0], WIND.to[1]) } };
 
   const foamPicture = ctx.assets.texture('mat/foam.jpg', { kind: 'colour' });
-  const seaUniforms = { ...rig.uniforms, ...shared, uEye: { value: eye }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture } };
+  const seaUniforms = { ...rig.uniforms, ...shared, uEye: { value: eye }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture }, tFoamNh: { value: ctx.assets.texture('mat/foam-nh.png', { kind: 'data' }) } };
   const seaMaterial = new THREE.ShaderMaterial({
     vertexShader: SEA_VERTEX,
     fragmentShader: SEA_FRAGMENT,
@@ -154,10 +154,13 @@ export function create(ctx: Context): Piece {
   const ringList: Ring[] = Array.from({ length: MAX_RINGS }, () => ({ x: 0, z: 0, phase: 0, strength: 0 }));
   const ringCount = { value: 0 };
   const front = { value: 0 };
+  // The depth of the solid things, drawn first by the engine, which hands it to every shader material as `tSeen` and says in `uSeen` when it holds this sample's.
+  const wetSeen: { value: THREE.Texture | null } = { value: null };
+  const wetOn = { value: 0 };
   const poolMaterial = new THREE.ShaderMaterial({
     vertexShader: POOL_VERTEX,
     fragmentShader: POOL_FRAGMENT(MAX_RINGS),
-    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uFront: front, uBoreHeight: { value: BORE_HEIGHT }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFoamPic: { value: foamPicture } },
+    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uFront: front, uBoreHeight: { value: BORE_HEIGHT }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFoamPic: { value: foamPicture }, tWetSeen: wetSeen, uWetSeen: wetOn },
     transparent: true,
     depthWrite: false,
     blending: THREE.CustomBlending,
@@ -170,6 +173,11 @@ export function create(ctx: Context): Piece {
   poolLoop.uniforms = poolMaterial.uniforms;
   poolLoop.fragmentShader = POOL_LOOP_FRAGMENT(MAX_RINGS);
   pools.renderOrder = 1;
+  pools.onBeforeRender = () => {
+    const seen = poolMaterial.uniforms.tSeen?.value as THREE.Texture | null | undefined;
+    wetSeen.value = seen ?? null;
+    wetOn.value = seen ? Number(poolMaterial.uniforms.uSeen?.value ?? 0) : 0;
+  };
   ctx.scene.add(ctx.parts.built('runnels', pools));
 
   const gate = resolve(shots['ribs-06'] as (typeof shots)[string], 0.5, 0).position;
