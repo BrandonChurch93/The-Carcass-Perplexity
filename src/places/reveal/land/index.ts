@@ -95,17 +95,18 @@ vec2 wideDx;
 vec2 wideDy;
 vec2 closeDx;
 vec2 closeDy;
+// (The level of a map at which one of its texels is a pixel, less the logarithm of its width: set once at the top of main.)
+float wideLevel = 0.0;
+float closeLevel = 0.0;
+float groundLevel = 0.0;
 vec4 readWide(sampler2D t, vec2 uv, float bias) {
-  float k = exp2(bias);
-  return textureGrad(t, uv, wideDx * k, wideDy * k);
+  return textureLod(t, uv, wideLevel + log2(float(textureSize(t, 0).x)) + bias);
 }
 vec4 readClose(sampler2D t, vec2 uv, float bias) {
-  float k = exp2(bias);
-  return textureGrad(t, uv, closeDx * k, closeDy * k);
+  return textureLod(t, uv, closeLevel + log2(float(textureSize(t, 0).x)) + bias);
 }
 vec4 readTile(sampler2D t, vec2 uv, float perKm, float bias) {
-  float k = perKm * exp2(bias);
-  return textureGrad(t, uv, groundDx * k, groundDy * k);
+  return textureLod(t, uv, groundLevel + log2(perKm * float(textureSize(t, 0).x)) + bias);
 }
 
 void main() {
@@ -128,6 +129,10 @@ void main() {
   closeDx = groundDx * uRectClose.zw;
   closeDy = groundDy * uRectClose.zw;
   float pixelKm = max(abs(groundDx.x) + abs(groundDy.x), abs(groundDx.y) + abs(groundDy.y));
+  // (The maps' texels are square on the ground: a map's rows are fewer than its columns as its rectangle is lower than wide.)
+  groundLevel = 0.5 * log2(max(max(dot(groundDx, groundDx), dot(groundDy, groundDy)), 1e-12));
+  wideLevel = groundLevel + log2(uRectWide.z);
+  closeLevel = groundLevel + log2(uRectClose.z);
 
   // ---- the maps: the colour of the ground, and its relief (slope in red and green, height in blue) ----
   vec2 uvWide = (xz - uRectWide.xy) * uRectWide.zw;
@@ -163,13 +168,15 @@ void main() {
   float worn = 0.0;
   if (inWide > 0.0 && uViewKm > 40.0 && uViewKm < 900.0) {
     float wornAt = 0.5 + 0.5 * sin(xz.x / 231.0 + 1.1 + 1.5 * sin(xz.y / 173.0 + 0.6)) * sin(xz.y / 197.0 + 2.9 + 1.2 * sin(xz.x / 311.0));
-    float open = smoothstep(40.0, 90.0, uViewKm) * (1.0 - smoothstep(560.0, 900.0, uViewKm)) * inWide * smoothstep(0.6, 1.5, length((real - uLakeMid) / uLakeSize));
+    float open = smoothstep(40.0, 90.0, uViewKm) * inWide * smoothstep(0.6, 1.5, length((real - uLakeMid) / uLakeSize));
     if (open > 0.0) {
       vec3 coarse = readWide(uReliefWide, clamp(uvWide, 0.0, 1.0), 4.8).rgb;
       vec3 coarseGround = readWide(uMapWide, clamp(uvWide, 0.0, 1.0), 4.8).rgb;
       // (The red plains are the flattest of them: old lava, level, with pits in it.)
       float red = smoothstep(0.3, 0.6, (coarseGround.r - coarseGround.b) / max(dot(coarseGround, vec3(0.3, 0.55, 0.15)), 0.02));
-      worn = open * max(0.8 * smoothstep(0.42, 0.6, wornAt), 0.9 * red) * smoothstep(0.3, 0.36, coarse.b) * (1.0 - smoothstep(0.5, 0.75, coarse.b));
+      // (And in some provinces the high ground too: broad smooth uplands, no fluting on them, beside ranges cut sharp.)
+      float upland = smoothstep(0.5, 0.66, 0.5 + 0.5 * sin(xz.x / 277.0 + 4.0 + 1.6 * sin(xz.y / 211.0 + 1.3)) * sin(xz.y / 163.0 + 0.7 + 1.3 * sin(xz.x / 349.0)));
+      worn = open * max(0.8 * smoothstep(0.42, 0.6, wornAt), 0.9 * red) * smoothstep(0.3, 0.36, coarse.b) * (1.0 - smoothstep(0.5 + 0.22 * upland, 0.75 + 0.2 * upland, coarse.b));
       relief = mix(relief, vec3(0.5 + 2.2 * (coarse.rg - 0.5), coarse.b), worn);
       ground = mix(ground, coarseGround, 0.9 * worn);
     }
@@ -242,6 +249,8 @@ void main() {
     float keep = smoothstep(0.93 - contact, 0.93 + contact, shoreR);
     shallow = max(shallow, 0.9 * max(land, smoothstep(0.98, 1.02, lakeFar)) * (1.0 - keep) * smoothstep(0.7, 0.95, lakeFar));
     land *= keep;
+    // (Where the map's own lake reaches past this shore its thin spits and islets are under water too: no sliver stands in the shallows.)
+    land *= mix(1.0, smoothstep(0.35, 0.6, coastKm), 1.0 - smoothstep(1.03, 1.1, shoreR));
     // (The map's own picture of this lake's margin, where it lies outside this shore, is dry ground: its blue is taken to sand.)
     float mapLum = dot(ground, vec3(0.3, 0.55, 0.15));
     ground = mix(ground, vec3(0.33, 0.27, 0.19) * (0.45 + 1.6 * mapLum), smoothstep(0.0, 0.22, (ground.b - ground.r) / max(mapLum, 0.02)) * keep * (1.0 - smoothstep(1.05, 1.3, shoreR)));
@@ -281,7 +290,8 @@ void main() {
   float enlarged = texel / max(pixelKm, 1e-5);
   // (A worn province has lost the map's relief: the ground photographs give it its own, finer and of another kind.)
   // (And near the ground the photographs are laid wherever the camera looks: the map is soft at its own size.)
-  float detail = max(max(smoothstep(0.9, 2.0, enlarged), worn), 0.8 * (1.0 - smoothstep(110.0, 200.0, uViewKm)));
+  // (From orbit the grain of the ground photographs is under a pixel: they are not read for the worn provinces there.)
+  float detail = max(max(smoothstep(0.9, 2.0, enlarged), worn * (1.0 - smoothstep(560.0, 900.0, uViewKm))), 0.8 * (1.0 - smoothstep(110.0, 200.0, uViewKm)));
 
   // ---- the ground photographs under the map ----
   // Each is laid by world position at the size at which one of its texels is about a pixel, in octaves of its real size and cross-faded
@@ -994,7 +1004,8 @@ void main() {
   if (uDusk > 0.0) colour = mix(colour, max(colour, water) * 0.35 + water * 0.95, 0.92 * (1.0 - smoothstep(0.04, 0.34, height)) * land * uEmber.x);
   // (A pale crust lies at the foot of the lake's rim, where the water has stood higher.)
   // (And below it, at the water, a narrow band of wet ground, dark, wide in one reach and a thread in the next.)
-  float wetW = 0.006 + 0.034 * vnoise(fromLake * 9.0 + 2.0) * vnoise(fromLake * 23.0 + 12.0);
+  float wetW = 0.02;
+  if (lakeFar < 1.4) wetW = 0.006 + 0.034 * vnoise(fromLake * 9.0 + 2.0) * vnoise(fromLake * 23.0 + 12.0);
   colour *= 1.0 + 0.4 * (1.0 - smoothstep(0.0, 0.035, abs(shoreR - 0.975 - wetW))) * land * (1.0 - smoothstep(150.0, 400.0, uViewKm));
   colour *= mix(vec3(1.0), vec3(0.5, 0.46, 0.42), (1.0 - smoothstep(0.93 + 0.5 * wetW, 0.93 + wetW, shoreR)) * land * (1.0 - smoothstep(250.0, 600.0, uViewKm)));
 
