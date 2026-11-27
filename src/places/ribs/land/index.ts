@@ -15,7 +15,7 @@ import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COBBLE_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
-import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
+import { FIN_VERTEX, STACK_FRAGMENT, TUSK_FRAGMENT } from './fin';
 import { CURTAIN_FRAGMENT, CURTAIN_VERTEX, curtainShape } from './curtain';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
@@ -46,6 +46,8 @@ interface Stack {
 
 // A stack of the gate is rock first: a pillar broken into flat faces, built of beds a few metres thick; each bed stands out or back from
 // the one under it, so that there are ledges for weed to hang from and overhangs with bare wet rock under them.
+// The linear mean colour of land/tusk.jpg, as land/materials.json has it.
+const TUSK_MEAN: [number, number, number] = [0.466, 0.452, 0.428];
 const BED = 6.5;
 // How far a face of a stack leans in and out with height. At 0.3 the right stack's outline before the bore was a head in profile
 // (brow, nose, mouth); at 0.1 the faces stand nearly straight.
@@ -171,9 +173,6 @@ export function create(ctx: Context): Piece {
     t.wrapS = THREE.MirroredRepeatWrapping;
     t.wrapT = THREE.MirroredRepeatWrapping;
   }
-  // The land's own pictures made from the Builder's sheets (assets-src/ribs/land/make-sheets.py): the fin drawn out flat, slopes of the plates.
-  const finC = tex('land/fin.jpg', { repeat: false });
-  const finN = tex('land/fin-nh.png', { kind: 'data', repeat: false });
   const boulderC = tex('mat/rock.jpg');
   const boulderN = tex('mat/rock-nh.png', { kind: 'data' });
 
@@ -193,9 +192,20 @@ export function create(ctx: Context): Piece {
   const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
   const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
   for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
+  // The tusk blades' own sheets (assets-src/ribs/land/make-materials.mjs): pale fractured stone with its slopes, and lichen crusts.
+  const tuskC = tex('land/tusk.jpg', { anisotropy: 2 });
+  const tuskN = tex('land/tusk-nh.jpg', { kind: 'data', anisotropy: 2 });
+  const lichenC = tex('land/lichen.jpg');
+  const tuskOf = (wide: number, fine: number): THREE.ShaderMaterial =>
+    material(FIN_VERTEX, TUSK_FRAGMENT, { tTusk: { value: tuskC }, tTuskN: { value: tuskN }, tLichen: { value: lichenC }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTuskMean: { value: new THREE.Vector3(...TUSK_MEAN) }, uSize: { value: new THREE.Vector2(wide, fine) } });
+  const tusk = tuskOf(84, 23);
+  // The near cliff, which the lens passes at arm's length: the same stone, laid smaller.
+  const tuskNear = tuskOf(47, 11);
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
-    grain > 0
-      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 }, uCap: { value: grain === 5 ? 1 : 0 } })
+    grain === 5
+      ? tuskNear
+      : grain > 0
+      ? tusk
       : material(ROCK_VERTEX, ROCK_FRAGMENT, {
           tRock: { value: rockC },
           tRockN: { value: rockN },
@@ -563,7 +573,7 @@ export function create(ctx: Context): Piece {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of [ground, roostRock, weed, weedNear, fronds, boulder, pebble, cobble, glass, glassLoop, ...stones.values()]) m.dispose();
+      for (const m of new Set([ground, roostRock, weed, weedNear, fronds, boulder, pebble, cobble, glass, glassLoop, ...stones.values()])) m.dispose();
     },
   };
 }
