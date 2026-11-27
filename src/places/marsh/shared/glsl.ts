@@ -72,10 +72,10 @@ uniform vec3 uEmitterRadiance[8];`;
 // gain `mid` (most at a scene-linear 0.1, the middle grey of the frame) and the darks gain `dark` (most at black). Set from the tones of
 // the merged keys beside their pictures; it changes on a cut and never inside a shot. Whites are left as they are.
 export const GRADE_SHOTS: { from: number; mid: number; dark: number }[] = [
-  { from: 0, mid: 0.12, dark: -0.1 },
+  { from: 0, mid: 0.2, dark: -0.1 },
   { from: (5833 - 5618) / 60, mid: 0.06, dark: 0 },
   { from: (6048 - 5618) / 60, mid: -0.13, dark: -0.26 },
-  { from: (6263 - 5618) / 60, mid: 0.35, dark: 0.15 },
+  { from: (6263 - 5618) / 60, mid: 0.5, dark: 0.08 },
   { from: (6586 - 5618) / 60, mid: 0.25, dark: -0.1 },
 ];
 const gradeShots = GRADE_SHOTS.map((shot) => `  g = mix(g, vec2(${shot.mid.toFixed(3)}, ${shot.dark.toFixed(3)}), step(${shot.from.toFixed(5)}, uTime));`).join('\n');

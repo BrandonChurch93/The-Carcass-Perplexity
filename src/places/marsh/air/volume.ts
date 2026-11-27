@@ -44,8 +44,13 @@ float duskAt(float t) {
 ${DUSK_SHOTS.map((shot) => `  d = mix(d, ${shot.share.toFixed(4)}, step(${shot.from.toFixed(5)}, t));`).join('\n')}
   return d;
 }`;
+// The lenses that stand low and close on the animals see the distance go out in the vapour of the flats: their pictures have no far
+// flats and no far hills, only a warm grey in which the nearer stalks stand faint. From the place's second `from` the air beyond the
+// animals takes up to `depth` (an optical depth) of what lies behind it, coming on between `reach` metres, and gives `light` for it.
+// Nothing of it lies between the lens and the animals. It changes on a cut and never inside a shot.
+export const SWALLOW = { shots: [{ from: (6263 - 5618) / 60, depth: 1.3 }, { from: (6586 - 5618) / 60, depth: 0.3 }], reach: [20, 140], light: [0.36, 0.33, 0.35] };
 // The cast shade of what stands over the ground: ways up into the sky, reads on each, reach in metres as a share of the distance, depth.
-export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.52 };
+export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.68 };
 
 /** The low air: the vapour that lies on the warm brine and the wet flats, lit from under by them, so warm and pink where the sky's air over it
  *  is cool. How much of a surface's light a metre of it takes at the ground, the height in metres at which it has thinned to a third,
@@ -53,13 +58,13 @@ export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.52 };
  *  escarpment is to be seen through this one), and how much of the dusk it takes. A lens that stands in it sees the distance
  *  close in it; a lens that stands over it sees through it to the near ground and loses the far flats in it. Near the lens it counts for
  *  the share `near`, and whole from the second of the two distances `whole` on (metres): the near ground keeps its darks. */
-export const LOW_AIR = { density: 0.0012, height: 9, light: [0.45, 0.375, 0.405], overSky: 4000, skyShare: 0.34, dusk: 0.9, near: 0.15, whole: [60, 900] };
+export const LOW_AIR = { density: 0.0012, height: 9, light: [0.45, 0.375, 0.405], overSky: 4000, skyShare: 0.28, dusk: 0.9, near: 0.15, whole: [60, 900] };
 /** Steam is vapour, never a wall: the most of the view a whole depth of it may take, the metres from the lens between which it comes in
  *  (a lens that stands in a column sees through it), the light of its foot over the brine, the height in metres at which it is the sky's, how much of the dusk it takes and how much of the
  *  sky's light its top gives back (vapour is greyer than the sheet it stands against). */
 export const STEAM_LOOK = { most: 0.7, near: [0.5, 2.5], foot: [0.56, 0.45, 0.46], whole: 1.6, dusk: 0.8, grey: 0.74 };
 /** The rain hangs from its cloud to the flats and no higher: the top of the curtain as the tangent of its height over the horizon. */
-export const RAIN_TOP = 0.12;
+export const RAIN_TOP = 0.1;
 /** The fourth shot (film frames 6263 to 6585 of a place that opens at 5618, 60 a second) stands low in the wallow's own vapour: the share
  *  of the view the near air takes there and nowhere else. It lifts that shot's darks to the picture's. */
 export const WALLOW_VEIL = { from: (6263 - 5618) / 60, to: (6586 - 5618) / 60, share: 0.016 };
@@ -92,6 +97,9 @@ precision highp float;
 #define CAST_REACH ${f(CAST.reach)}
 #define CAST_DEPTH ${f(CAST.depth)}
 #define RAIN_APART ${f(RAIN_APART)}
+#define SWALLOW_A ${f(SWALLOW.reach[0] as number)}
+#define SWALLOW_B ${f(SWALLOW.reach[1] as number)}
+#define SWALLOW_LIGHT ${v3(SWALLOW.light)}
 #define LOW_DENSITY ${f(LOW_AIR.density)}
 #define LOW_K ${f(1 / LOW_AIR.height)}
 #define LOW_LIGHT ${v3(LOW_AIR.light)}
@@ -229,7 +237,7 @@ float closedIn(ivec2 pixel) {
     }
   }
   open *= 1.0 - CAST_DEPTH * level * shaded / float(CAST_WAYS);
-  return mix(1.0, 0.5 + 0.5 * open, smoothstep(OCC_FAR, OCC_FAR * 0.4, dist));
+  return mix(1.0, 0.36 + 0.64 * open, smoothstep(OCC_FAR, OCC_FAR * 0.4, dist));
 }
 
 // How much of the haze counts at t metres: the near air is clear and the far closes, as over a salt flat on a still wet day.
@@ -473,15 +481,15 @@ void main() {
     // lesser part of the veil: where the gaps between them are narrow, the gaps are what is seen, as pale beams.
     float broad = textureLod(tNoise, vec3(lean * 15.0 + own * 3.0, el * 0.22 + uTime * 0.02, 0.7 + uTime * 0.01), 0.0).g;
     float fine = textureLod(tNoise, vec3(lean * 58.0, el * 0.5 + uTime * 0.045, 0.13), 0.0).b;
-    // The trails come down: each is made of heavier and lighter lengths, and those fall the height of the veil in eight seconds.
-    float fall = textureLod(tNoise, vec3(lean * 31.0 + 0.4, el * 20.0 + uTime * 0.3, 0.37 + uTime * 0.02), 0.0).g;
-    float streaks = smoothstep(0.3, 0.75, broad * 0.3 + fine * 0.38 + fall * 0.32);
+    // The trails come down: each is made of heavier and lighter lengths, and those fall the height of the veil in two and a half seconds.
+    float fall = textureLod(tNoise, vec3(lean * 31.0 + 0.4, el * 12.0 + uTime * 0.6, 0.37 + uTime * 0.02), 0.0).g;
+    float streaks = smoothstep(0.3, 0.75, broad * 0.24 + fine * 0.26 + fall * 0.5);
     float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
     // It hangs from the belly of its cloud, whole under it and thinner as it comes down: much of it never reaches the flats.
     // (Its top is the cloud's belly, soft and a little uneven; each trail is its own length, and few come all the way down.)
     float top = RAIN_TOP * (0.85 + 0.4 * (veils - 0.5));
     float reachDown = 0.3 + 0.6 * textureLod(tNoise, vec3(lean * 23.0 + 0.7, 0.21 + uTime * 0.05, 0.6 + uTime * 0.01), 0.0).g;
-    float base = smoothstep(top, top * 0.6, el) * mix(reachDown, 1.0, smoothstep(0.0, top * 0.9, el)) * mix(0.6, 1.0, smoothstep(0.0, top, el)) * smoothstep(-0.004, 0.012, el);
+    float base = smoothstep(top, top * 0.55, el) * mix(reachDown, 1.0, smoothstep(0.0, top * 0.45, el)) * smoothstep(-0.004, 0.012, el);
     rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.66 + 0.5 * streaks);
   }
   float show = uShow.x;
@@ -489,16 +497,24 @@ void main() {
   // over the picture's own ground, so the flats run out into white and have no last line.
   float reach = min(far, mix(60000.0, HAZE_OVER_SKY, open));
   float foot = 2.2 * exp(-max(elev, 0.0) / 0.006) * open * show;
-  // The far air is not one even sheet. The overcast lets more light down in one place than in another, so the air over the flats stands
-  // in lit and shaded stretches half a kilometre across that travel with the wind; and it lies in strata, thicker and thinner, which a
-  // level view sees as long bands along the horizon. Near the lens there is too little air for either to show.
-  float farShare = smoothstep(80.0, 700.0, far);
-  vec2 over = ro.xz + rd.xz / max(length(rd.xz), 0.05) * min(far * 0.7, 1400.0) - vec2(-0.96, -0.27) * 2.4 * uTime;
-  vec2 patchy = smoothstep(vec2(0.32), vec2(0.68), textureLod(tNoise, vec3(over / 900.0, 0.23 + uTime * 0.004), 0.0).rg);
+  // The far air is not one even sheet. The overcast lets more light down in one place than in another, and the vapour lies on the flats
+  // in banks: both stand in stretches, half a kilometre across and a hundred metres across, that travel with the wind, and a lens a few
+  // metres up sees them edge on, as band behind band to the horizon. The air also lies in strata, thicker and thinner, which a level
+  // view sees as long bands along the horizon. Near the lens there is too little air for any of it to show.
+  // (Each field is read no finer than the stretch of flat one row of a small screen covers there, by distance alone and not by the
+  // frame's size: far off the bands close into their mean, and nothing in them can flicker.)
+  float farShare = smoothstep(80.0, 500.0, far);
+  float along = mix(min(far, 5000.0), 1400.0, open);
+  vec2 over = ro.xz + rd.xz / max(length(rd.xz), 0.05) * along - vec2(-0.96, -0.27) * 2.4 * uTime;
+  float grain = along * along / max(ro.y, 1.0) * 0.0009;
+  vec2 patchy = smoothstep(vec2(0.32), vec2(0.68), textureLod(tNoise, vec3(over / 900.0, 0.23 + uTime * 0.004), clamp(log2(grain / 14.0), 0.0, 6.0)).rg);
+  vec2 banks = smoothstep(vec2(0.32), vec2(0.68), textureLod(tNoise, vec3(over / 240.0 + 0.37, 0.57 + uTime * 0.006), clamp(log2(grain / 3.75), 0.0, 6.0)).rg);
   float strata = smoothstep(0.32, 0.68, textureLod(tNoise, vec3(az * 1.3 + uTime * 0.003, elev * 22.0, 0.61 + uTime * 0.006), 0.0).b);
-  float airLit = mix(1.0, 0.8 + 0.4 * patchy.r, farShare);
-  float airBody = mix(1.0, 0.45 + 1.1 * mix(patchy.g, strata, 0.6), farShare);
-  vec3 farLight = airLight * airLit;
+  float lightField = 0.5 * patchy.r + 0.5 * banks.r;
+  float airLit = mix(1.0, 0.8 + 0.4 * lightField, farShare);
+  float airBody = mix(1.0, 0.25 + 1.5 * mix(0.5 * patchy.g + 0.5 * banks.g, strata, 0.4), farShare);
+  // (Low over the flats the far air takes the warm light of the low air: the flats fade into pink grey, not into white.)
+  vec3 farLight = mix(airLight, LOW_LIGHT * 1.18, 0.55 * exp(-abs(elev) / 0.03)) * airLit;
 
   // The ground mist. It lies on the flats a few strides deep, thick in banks and thin between them, and the banks travel with the wind.
   // The view is cut into stretches that lengthen with distance, and each stretch reads the banks no finer than its own length (the noise's
@@ -559,9 +575,15 @@ void main() {
   float lowTaken = (1.0 - exp(-low)) * show;
   sum = sum * (1.0 - lowTaken) + LOW_LIGHT * airLit * mix(1.0, dusk, LOW_DUSK) * lowTaken;
   trans *= 1.0 - lowTaken;
+  // The distance swallowed, for the lenses set close on the animals (SWALLOW). Over the sky it lies on the far picture's hills only.
+  float swallow = 0.0;
+${SWALLOW.shots.map((shot) => `  swallow = mix(swallow, ${shot.depth.toFixed(3)}, step(${shot.from.toFixed(5)}, uTime));`).join('\n')}
+  float swallowed = (1.0 - exp(-swallow * smoothstep(SWALLOW_A, SWALLOW_B, far) * mix(1.0, exp(-max(elev, 0.0) / 0.05), open))) * show;
+  sum = sum * (1.0 - swallowed) + SWALLOW_LIGHT * swallowed;
+  trans *= 1.0 - swallowed;
   // What the nearness of things takes from a surface's light is taken before the air lies over it.
   // So is the slow shade of the cloud that crosses the flats.
   // (And the far flats stand in the same lit and shaded stretches as the air over them: a white flat in shade is grey, and has distance.)
-  if (open < 0.5) trans *= closedIn(2 * here) * mix(rigCloud((ro + rd * far).xz), 1.0, smoothstep(2000.0, 6000.0, far)) * mix(1.0, 0.68 + 0.44 * patchy.r, farShare);
+  if (open < 0.5) trans *= closedIn(2 * here) * mix(rigCloud((ro + rd * far).xz), 1.0, smoothstep(2000.0, 6000.0, far)) * mix(1.0, 0.52 + 0.6 * lightField, farShare);
   gl_FragColor = vec4(sum, trans);
 }`;
