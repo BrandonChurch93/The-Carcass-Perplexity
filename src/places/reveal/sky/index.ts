@@ -6,7 +6,7 @@ import { AT, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, X, Z, driftAt } from 
 import { FPS } from '../../../config';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { BANK_KM, FOG_KM, GROUND_RECT, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
+import { BANK_KM, FOG_KM, GROUND_RECT, HIGH_KM, LOW_KM, SHELL_KM, WEATHER_GLSL } from '../shared/weather';
 
 export const PARTS = ['cloud', 'cyclone', 'storm', 'vapour', 'space', 'atmosphere'] as const;
 
@@ -63,6 +63,33 @@ ${CLOUD_LIGHT_GLSL}
 uniform sampler2D uGround;
 uniform vec4 uGroundRect;
 varying vec3 vWorld;
+// The shell: a deck of cloud at its own height, six kilometres up, between the low field and the ice, on a wind of its own that
+// crosses the wind of the low field. It is the photograph of wind-drawn streets read as it is, a repeat 1700 km long, so a
+// street is a thing the eye can follow, and it stands in bodies some hundreds of kilometres across (where the photograph of the
+// veil, read very soft, is bright), with open sea between them. Held from orbit it is seen to slide over the land and the sea
+// under it, and its shadow goes with it.
+// Where the shell is carried to at a point of its height, in the repeat of its photograph.
+vec2 shellPlace(vec2 at) {
+  vec2 sv = at + uTime * vec2(-5.0, 3.0) + uWx * vec2(-36.0, 17.0);
+  return mat2(0.94, -0.34, 0.34, 0.94) * sv / vec2(1700.0, 1250.0) + vec2(0.37, 0.81);
+}
+// How much of a body of the shell stands at a point (0: open sky), from orbit only: nearer than that its streets are wider
+// than the photograph can draw them.
+float shellBody(vec2 at) {
+  float seen = smoothstep(500.0, 1200.0, uViewKm);
+  if (seen <= 0.0) return 0.0;
+  vec2 sv = at + uTime * vec2(-5.0, 3.0) + uWx * vec2(-36.0, 17.0);
+  vec2 bodies = mat2(0.5, 0.87, -0.87, 0.5) * sv / vec2(3900.0, 4300.0) + vec2(0.12, 0.44);
+  float gather = dot(textureLod(uMatVeil, bodies, 5.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.264;
+  return seen * smoothstep(1.12, 1.62, gather);
+}
+// How thick the shell stands at a place of its photograph, in a body of it. (The streets are read only where a body stands, at a
+// fineness taken before this way out.)
+float shellDepth(vec2 uv, vec4 g, float body) {
+  if (body <= 0.0) return 0.0;
+  float depth = cloudAt(uMatStreaks, uv, g, 0.304) * (0.3 + 1.6 * body) - 0.95;
+  return (1.0 - exp(-1.2 * max(depth, 0.0))) * min(body * 8.0, 1.0);
+}
 void main() {
   vec2 xz = vWorld.xz;
   vec2 toSun = normalize(uSunDir.xz);
@@ -108,7 +135,33 @@ void main() {
   float fogSelf = clamp(0.5 + 0.3 * dot(fogSlope, toSun), 0.0, 1.0);
   // (Read in every pixel, cloud under it or not: read only under cloud, the pixels at the edge of a cloud took the fineness of
   // the read from neighbours that had not made it, and one of them came out a level different from one run to the next.)
-  float under = highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
+  // (From orbit the shadow of the ice on the low field is too faint to see, and it is not read: it is eased out on the way up.)
+  float under = 0.0;
+  if (uViewKm < 1200.0) under = (1.0 - smoothstep(850.0, 1200.0, uViewKm)) * highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
+
+  // The shell, where the ray meets it, and its shadow on what lies under it, thrown off it as far as it stands high.
+  vec2 shellAt = xz + lean * ${(SHELL_KM - LOW_KM).toFixed(1)};
+  vec2 shellUv = shellPlace(shellAt);
+  vec4 shellG = GRADS(shellUv);
+  // (A body of the shell is hundreds of kilometres across and its shadow falls some tens from it: one read of where the bodies
+  // stand serves the cloud and its shadow.)
+  float shellIs = shellBody(shellAt);
+  float shell = shellDepth(shellUv, shellG, shellIs);
+  float shellLift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
+  vec2 shadeUv = shellPlace(xz - lean * ${LOW_KM.toFixed(1)} + uSunDir.xz / max(uSunDir.y, 0.2) * ${SHELL_KM.toFixed(1)} * shellLift);
+  vec4 shadeG = GRADS(shadeUv);
+  vec3 shellColour = vec3(0.0);
+  float c = 0.0;
+  float shadeA = 0.0;
+  // (Nothing of it is worked out under open sky.)
+  if (shellIs > 0.0) {
+    // (Its tops are level from this far: the thick of a street is lit, its thin edge is grey.)
+    shellColour = cloudLight(shellAt, 0.2 + 0.85 * (0.3 + 0.6 * shell), 0.4 + 0.6 * shell, 0.5) * (0.74 + 0.4 * shell);
+    // (By night the moon is on the shell and it is seen to the last frame, crossing the dark land.)
+    if (uDusk > 0.0) shellColour *= 1.0 + 0.3 * uEmber.x;
+    c = 0.82 * shell * uArrive;
+    shadeA = 0.45 * shellDepth(shadeUv, shadeG, shellIs) * (1.0 - c) * dayAt(xz) * uArrive;
+  }
 
   vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
   vec3 highColour = cloudLight(up, 0.5 + 0.45 * highFlank, 0.5 + 0.5 * high, 1.0);
@@ -152,7 +205,7 @@ void main() {
   // From the ground up: the fog, the low field, the banks, the ice.
   vec3 colour = fogColour * fogA * (1.0 - a);
   colour = (colour + lowColour * a + beatOnCloud(xz) * a) * (1.0 - bankA) + bankColour * bankA;
-  colour = colour * (1.0 - b) + highColour * b;
+  colour = (colour * (1.0 - c) + shellColour * c) * (1.0 - b) + highColour * b;
   float heldA = 1.0 - (1.0 - fogA) * (1.0 - bankA);
   if (uDusk > 0.0) {
     // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
@@ -172,17 +225,19 @@ void main() {
     fogA *= heldNight;
     colour = fogColour * fogA * (1.0 - aNight);
     colour = (colour + lowColour * aNight + exposed(beatOnCloud(xz)) * a) * (1.0 - bankA) + bankColour * bankA;
-    colour = colour * (1.0 - bNight) + highColour * bNight;
+    colour = (colour * (1.0 - c) + shellColour * c) * (1.0 - bNight) + highColour * bNight;
     heldA = 1.0 - (1.0 - fogA) * (1.0 - bankA);
     a = aNight;
     b = bNight;
   }
-  float alpha = 1.0 - (1.0 - a) * (1.0 - b) * (1.0 - heldA);
+  float alpha = 1.0 - (1.0 - a) * (1.0 - b) * (1.0 - heldA) * (1.0 - c) * (1.0 - shadeA);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
-// The cyclone: drawn from the Builder's photographs of wind-drawn streaks and of small cumulus, wound round its eye (the cyclone of round 19:
-// the photograph of a whole cyclone that stood here in round 25 read soft and flat at native size).
+// The cyclone: the photograph of wind-drawn streaks of small cloud (mat/streaks.jpg) laid along a spiral round the eye, so its
+// bands are the photograph's own streaks: long, thin, unlike, with open sea between them. Where bands stand at all is the same
+// photograph read wide and soft on the same spiral. Third technique here: the whole-cyclone photograph of round 25 read flat,
+// and the lays cut at a level and filled with cumulus cells (rounds 19 to 30) read as a mass of broken white round a fuzzy eye.
 const CYCLONE_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
@@ -195,83 +250,66 @@ varying vec2 vUv;
 float lum(vec3 c) {
   return dot(c, vec3(0.3, 0.55, 0.15));
 }
-// How thick the storm stands at a point. It is cloud of the same kinds as the field round it, wound round the eye: the photograph
-// of soft drawn-out cloud (mat/veil.jpg) twice across one turn and read soft gives the arms, so they are unequal in number, width
-// and length as the photograph's own bands are, and the photograph of streaks of small cells (mat/streaks.jpg) fills them. Outward
-// only the strongest arms are left and they end where the photograph's bands end; between arms is open sea.
-float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
-  float r = max(length(p), 1e-3);
-  float around = atan(p.y, p.x) / 6.28318 - turn;
+// How thick the storm stands at a point of its sheet (p: -1 to 1, the eye at 0). px: the width of a pixel in the same unit.
+// The photographs are laid in the coordinates of a spiral: round the eye one way and the other in whole multiples, which keep
+// the winding without a seam, and the logarithm of the distance in the proportion that keeps the two at right angles. Along the
+// spiral the photograph is drawn out four times as long as across it, so its streaks are long and thin as the bands of a storm
+// are; a repeat is one and a half times the distance from the eye across, so they are fine at the eye and wide at the rim.
+float storm(vec2 p, float px, float shorter, float feed) {
+  float r = max(length(p), 2e-3);
+  // (Past its longest reach there is no storm, and nothing is read.)
+  if (r * shorter >= 1.0) return 0.0;
+  float around = atan(p.y, p.x) / 6.28318;
   float lr = log(r);
-  // (The photographs are laid in the coordinates of a spiral that keep a square square: twice round the eye one way, once the
-  // other, and the logarithm of the distance in the proportion that goes with those. Laid with any other proportion a cell is
-  // drawn out along the arm, three to six times its width, and the storm is strokes. Whole multiples of the angle keep the
-  // winding without a seam.)
-  float phase = around - 0.3183 * lr;
-  vec2 wound = vec2(2.0 * around + 0.1592 * lr, phase);
-  vec2 bend = texture2D(uCloudTile, p * 0.3 + 0.3, 3.0).rg - 0.5;
-  float grain = 1.0 / max(r, 0.05);
-  vec2 gx = dFdx(vUv) * grain;
-  vec2 gy = dFdy(vUv) * grain;
-  // (The arms are the one lay drawn out, two to one along the winding: a band of cloud is longer than it is wide.)
-  // (Watched, cloud is drawn in along the arms: the bands pass through the cells that fill them, so an arm swells, thins and
-  // breaks as it turns and no arm is the same a few seconds on.)
-  vec2 ua = vec2(wound.x + drawnIn, 2.0 * wound.y) + vec2(0.13, 0.41) + 0.03 * bend;
-  float arms = lum(textureGrad(uMatVeil, ua, gx * 2.0, gy * 2.0).rgb) / 0.262;
-  vec2 ub = wound + vec2(0.57, 0.22) + 0.02 * bend;
-  vec2 uc = 2.0 * wound + vec2(0.21, 0.73) + 0.02 * bend;
-  vec2 ud = 4.0 * wound + vec2(0.83, 0.37) + 0.02 * bend;
-  // (The same photograph at three sizes, the finer the farther out, where the winding has drawn the coarse one out to strokes.)
-  float outer = smoothstep(0.15, 0.65, r);
-  float clumps = lum(textureGrad(uStreaks, ub, gx * 0.75, gy * 0.75).rgb);
-  float fine = (mix(0.45, 0.2, outer) * clumps + mix(0.4, 0.5, outer) * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb)) / 0.304;
-  // (Near the eye the wound lays have shrunk under a pixel and the bands were smooth. There the same cells are laid in
-  // rings round the eye, a few pixels each, so the inner bands are crowds of tops.)
-  float ringed = lum(textureGrad(uStreaks, vec2(8.0 * around, 9.0 * r) + vec2(0.31, 0.57), gx * 3.0, gy * 3.0).rgb) / 0.304;
-  fine *= mix(1.0, 0.5 + 0.5 * ringed, 1.0 - smoothstep(0.12, 0.34, r));
-  // (Left whole, the arms read from far off as five bold strokes of one weight. A second lay of the bands, finer and at
-  // its own place along the winding, and the clumps of the cell photograph break each into lengths of unlike weight.)
-  vec2 ue = vec2(2.0 * wound.x - 1.7 * drawnIn, 3.0 * wound.y) + vec2(0.67, 0.09) + 0.03 * bend;
-  arms = (0.62 * arms + 0.38 * lum(textureGrad(uMatVeil, ue, gx * 3.0, gy * 3.0).rgb) / 0.262) * mix(1.0, clumps / 0.304, 0.45 * smoothstep(0.08, 0.3, r));
-  float core = 1.0 - smoothstep(0.02, 0.14, r);
-  // (A strong arm reaches farther out than a weak one, so the storm has no round rim.)
-  // (Nor is it a disc: it stands in a wind of its own, which draws it out on one side and cuts it short on the other.)
-  float reach = 1.0 - smoothstep(0.25, 0.8, r * shorter * (1.45 - 0.45 * min(arms, 2.0)));
-  float least = mix(0.7, 1.3, smoothstep(0.05, 0.75, r));
-  // (No storm is the same all the way round: as it is watched one side grows heavy and the side across from it thins.)
-  least -= 0.25 * lopsided * cos(6.28318 * phase + 0.6);
-  float band = smoothstep(least - 0.35, least + 0.35, arms);
-  float cover = max(0.8 * core, band * (0.1 + 0.9 * reach));
-  // (Outward the air between the cells widens, so an arm ends in separate cells and not in a drawn line.)
-  float cells = smoothstep(0.45 + 0.45 * smoothstep(0.3, 0.8, r * shorter), 1.85, fine);
-  // (Toward the eye a band is one body of cloud and its cells are the lumps of its top; outward it opens into rows of them.)
-  // (Inside a band the cells still show: a band is a crowd of tops, not a smooth sheet.)
-  float body = cover * mix(cells, 0.07 + 0.93 * cells, max(core, band * (1.0 - outer)));
-  return body * smoothstep(0.006, 0.036, r) * (1.0 - smoothstep(0.8, 0.98, r * shorter));
+  vec2 wound = vec2(around + 0.07958 * lr, 2.0 * around - 0.63662 * lr);
+  // (How fine each lay is read: the photograph is 1024 across and a repeat is 1.4 r wide, so every read sets its own level and
+  // none takes it from its neighbours. The seam of the angle would otherwise show as a line.)
+  float level = log2(729.0 * px / r);
+  float out2 = smoothstep(0.3, 0.75, r);
+  // (Cloud is fed in along the bands: the streaks slide inward along the winding as the storm is watched.)
+  vec2 along = vec2(feed, 0.0);
+  float a = lum(textureLod(uStreaks, wound + along + vec2(0.13, 0.41), max(level, 0.0)).rgb);
+  float b = lum(textureLod(uStreaks, 2.0 * wound + 1.6 * along + vec2(0.57, 0.22), max(level + 1.0, 0.0)).rgb);
+    // (And once more as it is, not drawn out, twice as fine: the tufts a band is made of.)
+  vec2 square = vec2(8.0 * around + 0.63662 * lr, 4.0 * around - 1.27324 * lr);
+  float tufts = lum(textureLod(uStreaks, square + 3.0 * along + vec2(0.21, 0.73), max(level + 1.0, 0.0)).rgb) / 0.304;
+  float fine = mix(a, b, mix(0.25, 0.6, out2)) / 0.304 * mix(1.0, 0.45 + 0.55 * tufts, smoothstep(0.08, 0.3, r));
+  // Where a band stands: the same streaks read four levels softer, so a band is a gathering of streaks some hundreds of
+  // kilometres long, of its own width and length, and between two bands the sea is open.
+  float bandsWide = lum(textureLod(uStreaks, wound + 0.5 * along + vec2(0.71, 0.09), max(level, 0.0) + 4.2).rgb) / 0.31;
+  float bands = bandsWide;
+  // (Toward the eye the bands close into one wound body; outward fewer and fewer of them are left, the strongest longest.)
+  float reach = r * shorter;
+  float need = mix(0.8, 1.42, smoothstep(0.06, 0.9, reach));
+  float gate = smoothstep(need - 0.2, need + 0.16, bands);
+  float core = 1.0 - smoothstep(0.03, 0.17, r);
+  float body = max(gate, core * core);
+  float depth = max(fine * (0.1 + 1.6 * body + 0.7 * core) - mix(0.7, 0.45, core), 0.0);
+  // The wall round the eye stands thick and whole, and the eye itself is clear to the sea.
+  float wall = smoothstep(0.01, 0.026, r) * (1.0 - smoothstep(0.03, 0.07, r));
+  depth += 1.1 * wall * (0.5 + 0.5 * fine);
+  depth *= smoothstep(0.006, 0.026, r) * (1.0 - smoothstep(0.82, 1.0, reach));
+  return depth;
 }
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
+  // (One footprint, taken before anything else.)
+  float px = max(length(dFdx(p)), length(dFdy(p)));
   float r = length(p);
-  // The whole storm turns, the middle faster than the rim, so its arms wind as the frame is held.
-  float turn = uTime * (0.009 + 0.05 / (1.0 + 14.0 * r)) / 6.28318;
-  // (Held from orbit it turns about its eye as one body, on the clock of the weather: every band, clump and gap goes round with it,
-  // the inner bands faster than the outer, so the arms keep their shape and wind tighter. The slide of the streaks along the arms
-  // stops where the body's own turn begins: a slide through arms that stand still is not seen as a turn.)
-  vec2 body = p;
-  float lopsided = 0.0;
-  float drawnIn = 0.0;
-  if (uLive > 0.0) {
-    drawnIn = 0.011 * uWx;
-    lopsided = smoothstep(0.0, 9.0, uWx);
-    turn = ${LIVE_FROM.toFixed(6)} * (0.009 + 0.05 / (1.0 + 14.0 * r)) / 6.28318;
-    float wound = uWx * (0.05 + 0.035 / (1.0 + 14.0 * r));
-    body = mat2(cos(wound), sin(wound), -sin(wound), cos(wound)) * p;
-  }
+  // The whole storm turns about its eye, the middle faster than the rim, so its bands wind as it is watched: on the clock of
+  // the place all through the rise, and from the titan frame on the clock of the weather as well, which gathers way from rest.
+  float inner = 0.043 / (1.0 + 9.0 * r);
+  // (Wound up without end the bands would close into rings: over the whole of the place the middle gains two fifths of a turn
+  // on the rim, half of it before the middle of the hold and half after.)
+  float wound = (0.03 + inner) * (0.6 * uTime + uWx) - 50.0 * inner;
+  float feed = -0.004 * uTime - 0.006 * uWx;
+  vec2 body = mat2(cos(wound), sin(wound), -sin(wound), cos(wound)) * p;
   vec2 sunStep = normalize(uSunDir.xz);
   // (How much shorter the storm stands on a side than on its longest: this stands on the planet and does not turn with it.)
   float side = atan(p.y, p.x);
-  float shorter = 1.32 - 0.3 * cos(side - 3.4) - 0.12 * cos(2.0 * side + 1.0) + 0.5 * (texture2D(uCloudTile, p * 0.17 + vec2(0.71, 0.38), 3.0).b - 0.5);
-  float thick = storm(body, turn, lopsided, max(shorter, 1.0), drawnIn);
+  float shorter = 1.2 - 0.26 * cos(side - 3.4) - 0.1 * cos(2.0 * side + 1.0) + 0.4 * (textureLod(uCloudTile, p * 0.17 + vec2(0.71, 0.38), 3.0).b - 0.5);
+  float depth = storm(body, px, max(shorter, 0.92), feed);
+  float thick = 1.0 - exp(-1.25 * depth);
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
   // (How its thickness falls toward the sun, from the change of it across the pixel.)
   vec2 across = vec2(dFdx(thick), dFdy(thick));
@@ -281,13 +319,12 @@ void main() {
   vec2 fall = abs(det) > 1e-12 ? vec2(sy.y * across.x - sx.y * across.y, sx.x * across.y - sy.x * across.x) / det : vec2(0.0);
   float self = clamp(0.62 - 0.6 * clamp(0.014 * dot(fall, sunStep), -0.6, 0.6), 0.0, 1.0);
   float tall = 1.0 - smoothstep(0.02, 0.2, r);
-  vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (0.74 + 0.34 * thick);
-  // (By night the cyclone is a dim wheel, no brighter than the bone.)
-  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
+  vec3 colour = cloudLight(vWorld.xz, 0.7 + 0.12 * thick + 0.22 * self, 0.86 + 0.14 * tall, 0.5 * tall) * (0.56 + 0.4 * thick);
+  // (By night the moon is on it: a pale wheel that is seen to turn, a little under the bone.)
+  if (uDusk > 0.0) colour *= 1.0 - 0.12 * uEmber.x;
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
-  // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
-  float veil = 0.04 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.5) + 0.1 * (1.0 - smoothstep(0.004, 0.05, r));
-  float bands = 0.96 * min(1.5 * thick, 1.0);
+  float veil = 0.05 * pow(1.0 - smoothstep(0.03, 0.8, r), 1.5) + 0.16 * (1.0 - smoothstep(0.012, 0.03, r));
+  float bands = 0.97 * thick;
   float alpha = bands + veil * (1.0 - bands);
   colour = mix(dot(colour, vec3(0.3, 0.55, 0.15)) * vec3(0.6, 0.74, 0.98), colour, bands / max(alpha, 1e-3));
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
@@ -399,7 +436,7 @@ void main() {
 }`;
 
 // The edge of the planet. Inside it the air thickens to a blue band; outside it thins into the black within a few tens of kilometres,
-// and behind the black stand a few stars.
+// and behind the black, once the day is over and the exposure opens, a few stars.
 const EDGE_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
@@ -420,7 +457,7 @@ void main() {
     float pick = hash12(cell);
     vec2 off = vec2(hash12(cell + 7.3), hash12(cell + 19.1)) - 0.5;
     float star = step(0.94, pick) * exp(-dot(within - 0.6 * off, within - 0.6 * off) * 520.0) * (0.25 + 0.75 * hash12(cell + 3.7)) * smoothstep(20.0, 90.0, km);
-    vec3 colour = (glow + vec3(0.85, 0.9, 1.0) * star * 0.3) * a;
+    vec3 colour = glow * a;
     if (uDusk > 0.0) {
       // The air at the edge keeps the sun longest, on the side the sun went: a twilight arc, warm against the planet and blue above,
       // and when that has gone a thin line of airglow all round. The stars come out as the exposure opens.

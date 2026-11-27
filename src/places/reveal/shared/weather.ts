@@ -12,6 +12,8 @@ export const LOW_KM = 2.6;
 export const HIGH_KM = 10.5;
 /** The banks a range holds on the flank that faces the wind, and the fog on the floors between ranges. */
 export const BANK_KM = 5.0;
+/** The shell of cloud between the low field and the ice, km: see sky/index.ts. */
+export const SHELL_KM = 6.0;
 export const FOG_KM = 0.7;
 /** Km a second: staged far faster than weather, so the held frame is seen to live. */
 export const LOW_DRIFT: [number, number] = [5.4, 1.5];
