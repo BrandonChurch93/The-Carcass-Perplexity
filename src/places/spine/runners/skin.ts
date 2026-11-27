@@ -594,6 +594,8 @@ export interface CoatOptions {
   lips?: boolean;
   /** The length of the coat by kind of place, where it is not the usual. */
   lengths?: number[];
+  /** How broad a lock is for its length, 1 the usual: less is finer hair. */
+  broad?: number;
 }
 
 export interface Coat {
@@ -704,7 +706,7 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
       root.set(p, count * 3);
       ctrl.set(mid, count * 3);
       tip.set(e, count * 3);
-      card.set([long * 0.115 * rng.range(0.85, 1.3) * (0.6 + 0.4 * singe), rng.next(), spike ? 2.2 : frost, spike ? 1 : singe * (0.4 + 0.6 * Math.min(1, Math.max(0, (burned - 0.7) / 1.4)))], count * 4);
+      card.set([long * 0.115 * (o.broad ?? 1) * rng.range(0.85, 1.3) * (0.6 + 0.4 * singe), rng.next(), spike ? 2.2 : frost, spike ? 1 : singe * (0.4 + 0.6 * Math.min(1, Math.max(0, (burned - 0.7) / 1.4)))], count * 4);
       bones.set([at.bones[0], at.bones[1], at.bones[2], at.kind], count * 4);
       count++;
     }
