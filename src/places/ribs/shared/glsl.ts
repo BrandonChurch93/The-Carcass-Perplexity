@@ -144,6 +144,8 @@ vec3 domeTone(vec3 c, vec3 d, float el) {
   float s2 = s * s;
   float near = s2 * s2;
   near = near * near * near;
+  near *= near;
+  near *= near;
   // One break: the picture's white heads stand where the rig's break is, and away from it they are shut down to the storm's grey.
   c *= mix(1.0 - uDome.w * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z, near);
   float veil = 1.0 - exp(-uDome.y / max(d.y, 0.008));
@@ -181,10 +183,20 @@ vec3 skyDome(vec3 d) {
   vec2 a = vec2(texture2D(tCloudShade, q + 0.5 * uSkyTurn.yz).g, texture2D(tCloudShade, q.yx + vec2(0.37, 0.61) - 0.5 * uSkyTurn.zy).g) - 0.5;
   vec2 b = vec2(texture2D(tCloudShade, q * 3.7 + 0.19).g, texture2D(tCloudShade, q.yx * 3.7 + 0.73).g) - 0.5;
   float g = texture2D(tCloudShade, q * 13.0 + 0.41).g - 0.5;
-  vec3 c = texture2D(tDome, uv + 0.012 * work + (2.4 * a + 0.9 * b) * vec2(0.0022, 0.0039)).rgb;
+  vec3 c = texture2D(tDome, uv + 0.012 * work + (2.4 * a + 0.5 * b) * vec2(0.0022, 0.0039)).rgb;
+  // Scud: lower, nearer shreds of the same storm cross before it three times as fast, so cloud goes across the blades' heads while
+  // a lens is held. They are the picture's own dark bodies read larger (a nearer cloud is a larger one), laid end to end mirrored;
+  // the picture is larger than the frame there at every size, so its finest level is named.
+  float along = uv.x * 0.55 + 0.23 - 0.0075 * uTime;
+  vec2 low = vec2(abs(fract(0.5 * along) * 2.0 - 1.0), 0.34 + 0.9 * el) + 0.02 * work + (2.4 * a + 0.5 * b) * vec2(0.003, 0.005);
+  vec3 scud = textureLod(tDome, low, 0.0).rgb;
+  float body = smoothstep(0.54, 0.32, dot(scud, vec3(0.3, 0.5, 0.2))) * smoothstep(0.0, 0.07, el) * smoothstep(0.75, 0.3, el);
+  // The break stands open: the scud thins toward it and is gone before it.
+  body *= smoothstep(0.985, 0.9, dot(d, uSkyBreak));
+  c = mix(c, scud * 0.85, 0.75 * body);
   // The grain is the cloud's, not the clear air's between the heads: it is given by how grey the place is.
   float grey = dot(c, vec3(0.3, 0.5, 0.2));
-  c *= 1.0 + (0.1 * a.y + 0.16 * b.x + 0.12 * g) * smoothstep(0.75, 0.3, grey);
+  c *= 1.0 + (0.09 * a.y + 0.07 * b.x + 0.04 * g) * smoothstep(0.75, 0.3, grey);
   return domeTone(c, d, el);
 }
 

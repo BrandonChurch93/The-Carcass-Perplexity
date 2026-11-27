@@ -48,7 +48,7 @@ export const STORM = { gain: -0.25, dim: 0.42, holds: 4.5, ends: 14, turn: -0.4,
 /** The gain of the first storm picture (`tSky`): no longer on the dome, kept for the sea's own copy of the mirror until it reads `skyMirror`. */
 const SKY_GAIN = 2.3;
 /** The dome's picture (`tDome`): the gain of the whole sky, the depth of air straight up that veils it (0.035 is three tenths of a veil at 6 degrees and two thirds at 2), what the break is given over the rest, how far the picture's white is shut away from the break, and the same under the storm of the approach. */
-export const DOME = { gain: 1.0, veil: 0.035, lift: 1.2, shut: 0.5, storm: 0.85 };
+export const DOME = { gain: 1.0, veil: 0.035, lift: 1.2, shut: 0.62, storm: 0.85 };
 /** The low sun on what stands high: from this height, whole by this one, how much thinner the cloud counts there (0.2 is a whole step of its edge); and the floor under every shade, as a share of the ground's light. */
 export const HEADS = { from: 60, to: 260, thin: 0.3, floor: 0.9 };
 /** The sun of the approach: the low warm light of the first wave on the first blade, going to the place's ivory as the storm ends. */
