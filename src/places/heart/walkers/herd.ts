@@ -59,7 +59,7 @@ const CAST: Character[] = [
   { role: 'turns', skater: 0.6, heavy: 0.85, neck: 0.8, wide: 0.95, long: 0.85, hump: 0.4, tall: 1.12, bulk: 0.78, young: 0.56, tuft: [0.7, 0.7], tilt: -0.06, knee: 0.9, carry: [0.5, 0.3, 0.7], pace: 1.25, trunk: 2 },
   { role: 'shifts', skater: 0.12, heavy: 0.82, neck: 1.08, wide: 0.7, long: 1.15, hump: 0.25, tall: 1.24, bulk: 0.8, young: 1, tuft: [1, 0.9], tilt: 0.1, knee: 1.12, carry: [0.86, 0.02, 0.55], pace: 0.9, trunk: 2 },
   { role: 'walks', skater: 0.8, heavy: 1.2, neck: 0.85, wide: 1.4, long: 1.15, hump: 1.5, tall: 0.76, bulk: 1.3, young: 1, tuft: [1.3, 0.8], tilt: 0.12, knee: 0.86, carry: [0.42, 0.46, 0.85], pace: 0.8, trunk: 1 },
-  { role: 'stands', skater: 0.05, heavy: 1.05, neck: 1.28, wide: 0.66, long: 0.8, hump: 0.6, tall: 1.18, bulk: 1.05, young: 1, tuft: [0.6, 0.8], tilt: 0.14, knee: 1.05, carry: [0.2, 0.84, 0.75], pace: 1, trunk: 0 },
+  { role: 'stands', skater: 0.05, heavy: 1.05, neck: 1.28, wide: 0.66, long: 0.8, hump: 0.6, tall: 1.18, bulk: 1.05, young: 1, tuft: [0.6, 0.8], tilt: 0.14, knee: 1.05, carry: [0.62, 0.3, 0.45], pace: 1, trunk: 0 },
   { role: 'walks', skater: 0.35, heavy: 0.9, neck: 1.3, wide: 1.2, long: 1.2, hump: 0.2, tall: 0.84, bulk: 0.72, young: 1, tuft: [1, 1.3], tilt: -0.1, knee: 0.92, carry: [0.78, -0.22, 0.3], pace: 1.2, trunk: 2 },
   { role: 'grazes', skater: 0.95, heavy: 0.8, neck: 1.1, wide: 1.45, long: 0.9, hump: 0.3, tall: 0.8, bulk: 0.9, young: 0.7, tuft: [0.8, 0.9], tilt: -0.04, knee: 0.84, carry: [0.62, 0.14, 0.6], pace: 1.1, trunk: 2 },
   { role: 'grazes', skater: 0.2, heavy: 1.25, neck: 0.9, wide: 1.05, long: 1.1, hump: 1.3, tall: 0.88, bulk: 1.3, young: 1, tuft: [1.2, 0.85], tilt: 0.06, knee: 1.0, carry: [0.45, -0.44, 0.3], pace: 0.75, trunk: 1 },
@@ -78,7 +78,10 @@ export function makeBuild(index: number, rng: Rng): Build {
   const k = w.size * c.young;
   const v = (a: number, b: number): number => rng.range(a, b);
   // The trunk is a carcass drawn over its bones: a heavy animal has thicker legs and neck, and a trunk only a little deeper.
-  const girth = c.bulk * (0.55 + 0.45 * c.heavy);
+  // The two a lens comes close to are stout, as their pictures have them. The rest of the herd is seen from far off and from above:
+  // slender, a small trunk carried high on thin legs.
+  const slim = index >= 2 ? 0.82 : index === 0 ? 0.88 : 1;
+  const girth = c.bulk * (0.55 + 0.45 * c.heavy) * slim;
   return {
     k,
     seed: index * 1.618 + 0.37,
@@ -99,11 +102,12 @@ export function makeBuild(index: number, rng: Rng): Build {
     standH: 9.3 * k * c.tall * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
     // The hero is stout for its length: a shin is a twentieth of the leg across. The others are leaner.
-    legR: lerp(1.08, 0.94, c.skater) * c.heavy * (index === 1 ? 1.22 : 1.12),
+    legR: lerp(1.08, 0.94, c.skater) * c.heavy * (index === 1 ? 1.22 : index === 0 ? 1.12 : 0.86),
     padR: 0.8 * k * v(0.9, 1.12),
     neckLen: 10.6 * k * c.neck,
-    neckR: 0.52 * k * c.heavy,
+    neckR: 0.52 * k * c.heavy * (index >= 2 ? 0.84 : 1),
     tendrils: Math.max(4, Math.round((7 + (index % 3)) * c.tuft[0])),
+    hairs: index <= 1 ? 2 * Math.max(4, Math.round((7 + (index % 3)) * c.tuft[0])) : 0,
     tendrilLen: 3.5 * k * c.tuft[1] * v(0.9, 1.15),
     stepH: 1.0 * k * v(0.8, 1.2),
     lean: index === 1 ? -0.5 * k : (v(0, 1) < 0.5 ? -1 : 1) * v(0.35, 1.0) * k,
