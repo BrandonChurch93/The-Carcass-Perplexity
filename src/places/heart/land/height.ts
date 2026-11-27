@@ -274,6 +274,51 @@ const LINE_PATH: [[number, number], [number, number]] = [
 ];
 const LINE_LENS: [number, number] = [-510.5, 215.5];
 const LINE_AHEAD: [number, number] = [0.788, -0.616];
+// Metres the shore draws back before that lens, over what the channel and its pools take of it: nothing. The picture keeps rubble
+// along the near bank to a third of the frame, and a bay of 0.7 m left a wedge of a fifth.
+const LINE_BAY = 0;
+// The channel of the line view as the lake runs it (lake/net.ts: the seam 'line' bent toward the shore), from where it leaves the far
+// bank to where it passes the lens, and its two pools. Numbers given by the lake's builder; if the lake moves its channel, these follow.
+const LINE_CHANNEL: [number, number][] = [
+  [-501.6, 201.3],
+  [-501.9, 203.0],
+  [-502.7, 204.6],
+  [-504.0, 206.0],
+  [-504.5, 207.0],
+  [-505.7, 209.0],
+  [-506.0, 210.8],
+  [-506.0, 213.5],
+  [-506.1, 214.3],
+];
+const LINE_POOLS: [number, number][] = [
+  [-506.0, 213.5],
+  [-504.5, 207.0],
+];
+
+/** Metres from (x, z) to the centre of the line view's channel. */
+export function lineChannelDistance(x: number, z: number): number {
+  let best = 1e9;
+  for (let i = 0; i + 1 < LINE_CHANNEL.length; i++) {
+    const a = LINE_CHANNEL[i] as [number, number];
+    const b = LINE_CHANNEL[i + 1] as [number, number];
+    const ex = b[0] - a[0];
+    const ez = b[1] - a[1];
+    const t = Math.min(1, Math.max(0, ((x - a[0]) * ex + (z - a[1]) * ez) / (ex * ex + ez * ez)));
+    const d = Math.hypot(x - a[0] - ex * t, z - a[1] - ez * t);
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+/** Metres by which (x, z) stands clear of the line view's channel and its pools: under nothing, the lake's. */
+export function lineChannelRoom(x: number, z: number): number {
+  let room = lineChannelDistance(x, z) - 1.5;
+  for (const [px, pz] of LINE_POOLS) room = Math.min(room, Math.hypot(x - px, z - pz) - 2.5);
+  return room;
+}
+
+// Set while `landHeightUncut` runs: the shore of the line view as it stood before it was drawn back for the channel.
+let uncut = false;
 
 /** Metres from (x, z) to the path of the line view. */
 export function linePathDistance(x: number, z: number): number {
@@ -360,7 +405,16 @@ export function routeDistance(x: number, z: number): number {
 export function benchAt(x: number, z: number, d0: number): number {
   if (d0 < -3) return -8;
   // The edge is bitten into bays and toes, within a metre of the layout's line.
-  const d = d0 + 1.7 * (fbm(x / 3.7 + 9, z / 3.7, 2) - 0.37) - 0.25;
+  let d = d0 + 1.7 * (fbm(x / 3.7 + 9, z / 3.7, 2) - 0.37) - 0.25;
+  // Before the line view's lens the shore draws back a stride, most where the lens stands: the channel and the crust show left of the
+  // frame's middle, as in the line's picture, and the heap is a wedge at the left and not half the frame.
+  const ls = (x - LINE_LENS[0]) * LINE_AHEAD[0] + (z - LINE_LENS[1]) * LINE_AHEAD[1];
+  const cd = uncut ? 99 : lineChannelDistance(x, z);
+  if (!uncut) {
+    if (ls > -4 && ls < 12) d -= LINE_BAY * smooth(-4, 0.5, ls) * smooth(12, 5, ls);
+    // The channel and its pools lie on the lake: the shore keeps a stride and a half off the channel's centre and clear of the pools.
+    if (cd < 5) d = Math.min(d, 0.8 * lineChannelRoom(x, z));
+  }
   if (d < 0) return Math.max(-8, 2.5 * d);
   const base = benchHeight(x, z);
   const in1 = smooth(0.4, 7, d);
@@ -416,6 +470,12 @@ export function benchAt(x: number, z: number, d0: number): number {
     const lump = 0.34 * (blocks(x / 1.15 + 0.37 * z, z / 1.3 - 0.29 * x) - 0.5) + 0.3 * (noise(x / 2.7 + 6.3, z / 2.7 + 1.1) - 0.5) + 0.16 * (noise(x / 0.75, z / 0.75 + 4.4) - 0.5);
     h += near * lump * (0.35 + 0.65 * smooth(0.6, 2.6, low)) * smooth(0.3, 1.5, d);
   }
+  // Within four metres of the line view's channel the bank lies low, a hand over the crust, so the channel shows over it from that lens
+  // and the heap on it stands no higher than a forearm. The crag keeps its face to within a stride or two of that.
+  if (cd < 5.5 && h > 0.2) {
+    const tall = smooth(0.8, 2, h);
+    h = lerp(0.2 + 0.05 * (1 - Math.exp(0.2 - h)), h, smooth(lerp(4.2, 2.5, tall), lerp(5.5, 4, tall), cd));
+  }
   // The lip at the line: a step of a few hand widths, not a ramp.
   return h * smooth(0, 0.3, d);
 }
@@ -443,9 +503,25 @@ export function buttressAt(x: number, z: number): number {
   const top = (lerp(194, 84, fallen) * tilt + crown + 9 * smooth(0.14, -0.02, u)) * smooth(1.12, 0.9, u) * smooth(-0.13, -0.085, u);
   const g = ridge(x / 38 + 1.3, z / 38 + 4.1);
   const half = BUTTRESS.half * (1 - 0.35 * smooth(0.5, 1.1, u)) + 5 * wave(x * 2 + 40, z * 2) - 9 * g * g * g + 5 * (fbm(x / 17, z / 17, 2) - 0.5);
-  const edge = Math.abs(across) / half;
-  // The brow of the cliff is a corner, not a shoulder.
-  const cliff = Math.pow(Math.min(1, Math.max(0, (1 - edge) / 0.26)), 1.3);
+  // Alcoves are bitten out of its brow where a slab has come away, a stone's throw wide: seen along the cliff they notch its skyline.
+  const side = across < 0 ? 1.7 : 6.3;
+  const bite = Math.max(0, noise(along / 24 + 3.3, side) - 0.56) / 0.44;
+  const edge = Math.abs(across) / (half - 15 * bite * bite * (3 - 2 * bite));
+  // The brow of the cliff is a corner, not a shoulder; and the cliff is three flows with a ledge on each, the ledges rising, falling and
+  // pinching out along it. A face cut in one sweep from brow to foot read as a ruled wedge.
+  const run = Math.min(1, Math.max(0, (1 - edge) / 0.3));
+  const low = 0.34 + 0.16 * (noise(along / 47 + 8.1, side) - 0.5);
+  const high = 0.7 + 0.14 * (noise(along / 39 + 1.4, side + 2) - 0.5);
+  const wide = 0.2 * smooth(0.3, 0.6, noise(along / 21 + 5.2, side + 4));
+  const wider = 0.16 * smooth(0.35, 0.65, noise(along / 17 + 9.7, side + 6));
+  const a0 = 0.26;
+  const a1 = a0 + wide;
+  const a2 = a1 + 0.22;
+  const a3 = a2 + wider;
+  // A ledge climbs a quarter of its own width.
+  const b1 = low + 0.25 * wide;
+  const b2 = high + 0.25 * wider;
+  const cliff = run < a0 ? (low * run) / a0 : run < a1 ? low + 0.25 * (run - a0) : run < a2 ? b1 + ((high - b1) * (run - a1)) / 0.22 : run < a3 ? high + 0.25 * (run - a2) : Math.min(1, b2 + ((1 - b2) * (run - a3)) / Math.max(0.12, 0.74 - a3));
   // Talus lies against its near side as a skirt two fifths of the cliff high, hollow in section like any scree; the far side keeps the layout's.
   const lean = Math.min(1, Math.max(0, (1.85 - edge) / 0.9));
   const scree = across < 0 ? 0.4 * (0.3 * lean + 0.7 * lean * lean) : 0.3 * smooth(1.75, 0.95, edge);
@@ -498,6 +574,15 @@ function compose(x: number, z: number, spur: boolean, alcove = true): number {
 
 export function landHeight(x: number, z: number): number {
   return compose(x, z, true);
+}
+
+/** `landHeight` with the shore of the line view as it stood before it was drawn back for the channel. The rocks are dealt by this,
+ *  so that drawing the shore back moves no rock anywhere else (rocks.ts). */
+export function landHeightUncut(x: number, z: number): number {
+  uncut = true;
+  const h = compose(x, z, true);
+  uncut = false;
+  return h;
 }
 
 /** The land as the wall's ring draws it: everything but the buttress, and the wall standing whole over the mouth.
@@ -634,6 +719,7 @@ function shards(x: number, z: number, cell: number, share: number, seed: number)
       // And in steps: part of the top has spalled off along a joint.
       const c = 6.283 * hash(i + 113, j + 127 + seed);
       if (ux * Math.cos(c) + uz * Math.sin(c) > r * (0.5 * hash(i + 131 + seed, j + 137) - 0.1)) h -= r * (0.08 + 0.14 * hash(i + 139, j + 149 + seed));
+      if (ux * Math.sin(c) - uz * Math.cos(c) > r * (0.6 * hash(i + 151, j + 157 + seed) - 0.2)) h -= r * (0.05 + 0.12 * hash(i + 163 + seed, j + 167));
       const sides = 5 + Math.floor(3 * hash(i + 73, j + 79 + seed));
       for (let k = 0; k < sides; k++) {
         const a = ((k + 0.7 * hash(i + 7 * k + seed, j + 41)) * 6.283) / sides;
@@ -663,7 +749,13 @@ export function rubbleBlocks(x: number, z: number): number {
  *  Drawn by a mesh of its own, far finer than the bench; nothing stands on it, so it is not in `landHeight`. */
 export function rubbleAt(x: number, z: number): number {
   const grit = 0.03 * noise(x / 0.35 + 2.7, z / 0.35 + 5.9);
-  return Math.max(rubbleBlocks(x, z), grit) + 0.02;
+  // Clinker is spiny all over: knobs a hand across on every face, the bed's and the blocks' alike.
+  return Math.max(rubbleBlocks(x, z), grit) + 0.02 + 0.018 * (fbm(x / 0.11 + 3.1, z / 0.11 + 7.7, 2) - 0.5);
+}
+
+/** The crust of crystals heaped at a vent, metres above the grit: crumbs of a fist and a finger lying on each other, with holes between. */
+export function crustAt(x: number, z: number): number {
+  return Math.max(1.3 * stones(x, z, 0.31, 0.85, 31), stones(x, z, 0.13, 0.85, 37)) + 0.025 * (noise(x / 0.07 + 1.9, z / 0.07 + 4.2) - 0.5);
 }
 
 // The butte of the feeding picture (shot heart-02 alone): the approved picture has a dark flat-topped mass over the right of its frame, close behind
