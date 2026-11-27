@@ -170,11 +170,11 @@ void main() {
   vec3 n = normalize(n0 - tx / max(length(tx), 1e-9) * slope.x);
   // Its colours: horn dark, hide a pale grey tan, paler under it, mottled; the skin of the sail paler yet and darker where it is thick.
   float mottle = sin(vPx.x * (sail > 0.5 ? 0.21 : 23.0) + 2.0 * sin(vPx.y * 3.0)) * sin(vPx.x * (sail > 0.5 ? 0.083 : 9.1) + vPx.y * 5.0);
-  vec3 horn = vec3(0.24, 0.215, 0.19);
-  vec3 pelt = mix(vec3(0.37, 0.34, 0.3), vec3(0.5, 0.465, 0.415), smoothstep(0.2, -0.8, cos(vPx.y))) * (1.0 + 0.12 * mottle - 0.16 * flank * ribFine * sin(vPx.x * 52.0));
+  vec3 horn = vec3(0.17, 0.15, 0.13);
+  vec3 pelt = mix(vec3(0.26, 0.235, 0.2), vec3(0.37, 0.34, 0.3), smoothstep(0.2, -0.8, cos(vPx.y))) * (1.0 + 0.12 * mottle - 0.16 * flank * ribFine * sin(vPx.x * 52.0));
   float thin = mix(0.4, 1.0, smoothstep(0.02, 0.55, vPx.y)) * mix(0.55, 1.0, smoothstep(10.0, 70.0, vPx.x));
-  vec3 web = mix(vec3(0.36, 0.325, 0.285), vec3(0.45, 0.41, 0.36), thin) * (1.0 + 0.07 * mottle);
-  web = mix(web, vec3(0.27, 0.24, 0.21), max(strut, 0.45 * vein));
+  vec3 web = mix(vec3(0.24, 0.215, 0.185), vec3(0.32, 0.29, 0.25), thin) * (1.0 + 0.07 * mottle);
+  web = mix(web, vec3(0.17, 0.15, 0.13), max(strut, 0.45 * vein));
   vec3 albedo = mix(mix(horn, pelt, hide), web, sail) * vMix.z;
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.45, vWorld.y);
   albedo *= 1.0 - 0.42 * wet;
@@ -201,7 +201,7 @@ void main() {
   // The wet flat and the sea send the sky back up at what flies over them.
   col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.3 * sail);
   // The sun behind a sail comes through its skin warm, and the sky behind it a little and pale.
-  col += through * (vec3(1.0, 0.56, 0.27) * uSunColour * (sun * 0.62 * max(dot(-n0, uSunDir), 0.0)) + vec3(0.72, 0.6, 0.5) * skyIrradiance(-n0) * 0.3) / 3.14159;
+  col += through * (vec3(1.0, 0.56, 0.27) * uSunColour * (sun * 0.62 * max(dot(-n0, uSunDir), 0.0)) + vec3(0.72, 0.6, 0.5) * skyIrradiance(-n0) * 0.16) / 3.14159;
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun * (1.0 - 0.6 * sail);
