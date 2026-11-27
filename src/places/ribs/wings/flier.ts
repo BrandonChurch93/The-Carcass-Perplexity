@@ -172,10 +172,10 @@ void main() {
   // Its colours: horn dark, hide a pale grey tan, paler under it, mottled; the skin of the sail paler yet and darker where it is thick.
   float mottle = sin(vPx.x * (sail > 0.5 ? 0.21 : 23.0) + 2.0 * sin(vPx.y * 3.0)) * sin(vPx.x * (sail > 0.5 ? 0.083 : 9.1) + vPx.y * 5.0);
   vec3 horn = vec3(0.17, 0.15, 0.13);
-  vec3 pelt = mix(vec3(0.26, 0.235, 0.2), vec3(0.37, 0.34, 0.3), smoothstep(0.2, -0.8, cos(vPx.y))) * (1.0 + 0.12 * mottle - 0.16 * flank * ribFine * sin(vPx.x * 52.0));
+  vec3 pelt = mix(vec3(0.26, 0.235, 0.2), vec3(0.37, 0.34, 0.3), smoothstep(0.2, -0.8, cos(vPx.y))) * (1.0 + 0.22 * mottle - 0.16 * flank * ribFine * sin(vPx.x * 52.0));
   float thin = mix(0.4, 1.0, smoothstep(0.02, 0.55, vPx.y)) * mix(0.55, 1.0, smoothstep(10.0, 70.0, vPx.x));
-  vec3 web = mix(vec3(0.24, 0.215, 0.185), vec3(0.32, 0.29, 0.25), thin) * (1.0 + 0.07 * mottle);
-  web = mix(web, vec3(0.13, 0.115, 0.1), max(0.8 * strut, 0.3 * vein));
+  vec3 web = mix(vec3(0.2, 0.18, 0.155), vec3(0.4, 0.35, 0.28), thin) * (1.0 + 0.16 * mottle);
+  web = mix(web, vec3(0.13, 0.115, 0.1), max(0.9 * strut, 0.45 * vein));
   vec3 albedo = mix(mix(horn, pelt, hide), web, sail) * vMix.z * 0.74;
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.45, vWorld.y);
   albedo *= 1.0 - 0.42 * wet;

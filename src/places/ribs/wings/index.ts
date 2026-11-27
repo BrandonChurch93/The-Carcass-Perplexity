@@ -50,7 +50,7 @@ const ROOKERY = 130;
 /** Those of them nearest the colony's lens that are bodies while its shot runs: the rest, and all of them in every other shot, are sheets. */
 const ROOSTING = 84;
 /** And those put down beside them on the same ledges. */
-const MATES = 116;
+const MATES = 50;
 /** Whether the crouched bodies of the colony are drawn in place of its nearest sheets: not until they sit right. */
 const ROOSTED: boolean = true;
 /** Which of them, counted from the colony's lens, are the large ones with their sails part open: not neighbours. */
@@ -376,16 +376,17 @@ export function create(ctx: Context): Piece {
     wayAt(way, s, hips);
     const along = (Math.PI * s) / f.step;
     const striding = Math.abs(Math.sin(along));
-    const idle = 0.022 * wave(t, 0.83, f.seed * 5) + 0.012 * wave(t, 1.9, f.seed * 17);
+    // Standing, it is never square on both feet: the weight goes slowly from one to the other, and the hips sink and tip as it goes.
+    const idle = 0.05 * wave(t, 0.83, f.seed * 5) + 0.016 * wave(t, 1.9, f.seed * 17) + 0.06 * wave(t, 3.1, f.seed * 11) * (0.5 + 0.5 * wave(t, 0.6, f.seed * 3));
     const aside = size * (0.05 * Math.cos(along) + 0.075 * lean.off + idle);
     const fore = size * (0.03 * wave(t, 0.61, f.seed * 23) + 0.05 * dipHead - 0.03 * up);
     p.yaw = hips.yaw + 0.04 * wave(t, 0.47, f.seed * 29) - 0.05 * lean.off;
     p.x = hips.x - Math.cos(hips.yaw) * aside + Math.sin(hips.yaw) * fore;
     p.z = hips.z + Math.sin(hips.yaw) * aside + Math.cos(hips.yaw) * fore;
-    p.y = bed + size * (HIPS_HIGH + 0.035 * Math.cos(2 * along) - 0.05 * lean.dip - 0.02 * Math.abs(lean.off) + 0.012 * wave(t, 1.3, f.seed * 3));
-    p.roll = -0.5 * (0.05 * Math.cos(along) + 0.06 * lean.off) + 0.01 * wave(t, 0.9, f.seed * 7);
+    p.y = bed + size * (HIPS_HIGH + 0.035 * Math.cos(2 * along) - 0.05 * lean.dip - 0.02 * Math.abs(lean.off) - 0.3 * Math.abs(idle) + 0.012 * wave(t, 1.3, f.seed * 3));
+    p.roll = -0.5 * (0.05 * Math.cos(along) + 0.06 * lean.off) - 0.7 * idle + 0.01 * wave(t, 0.9, f.seed * 7);
     p.size = size;
-    p.tone = 0.92 + 0.16 * f.seed;
+    p.tone = 0.56 + 0.12 * f.seed;
     p.seed = f.seed;
 
     // The head.
@@ -470,7 +471,7 @@ export function create(ctx: Context): Piece {
     p.roll = -0.05 * Math.cos(along);
     p.pitch = 0.16 + 0.04 * Math.cos(2 * along + 0.8);
     p.size = size;
-    p.tone = 0.92 + 0.16 * f.seed;
+    p.tone = 0.56 + 0.12 * f.seed;
     p.seed = f.seed;
     p.head[0] = 2.05 + 0.07 * Math.cos(2 * along + 0.5);
     p.head[1] = 0.62 + 0.07 * Math.cos(2 * along + 1.1);
@@ -725,7 +726,7 @@ export function create(ctx: Context): Piece {
         const x = sx + fx * ahead - fz * left;
         const z = sz + fz * ahead + fx * left;
         const rock = ledgeUnder(x, z, y);
-        if (Math.abs(rock - y) < 0.4 * size || part === 0) return [x, part === 0 ? y : rock, z] as [number, number, number];
+        if (Math.abs(rock - y) < 0.12 * size || part === 0) return [x, part === 0 ? y : rock, z] as [number, number, number];
       }
       return [sx, y, sz] as [number, number, number];
     }) as [[number, number, number], [number, number, number]];
@@ -737,10 +738,10 @@ export function create(ctx: Context): Piece {
   for (const { i } of roostOrder) {
     const s = sitters[i] as Sitter;
     const k = (s.seed * 977) % 1;
-    const size = s.size * (LARGE.includes(i) ? 0.8 : 0.52 + 0.3 * ((s.seed * 389) % 1));
+    const size = s.size * (LARGE.includes(i) ? 0.7 : 0.42 + 0.3 * ((s.seed * 389) % 1));
     if (!apart(s.x, s.y, s.z, size)) continue;
     // Most stand hunched with the neck arched over; some are down on the ledge with the neck up; a few stand tall with their sails part open.
-    const stance: Stance = LARGE.includes(i) ? (i % 2 === 0 ? 2 : 0) : k < 0.52 ? 0 : k < 0.84 ? 1 : 2;
+    const stance: Stance = LARGE.includes(i) ? (i % 2 === 0 ? 2 : 0) : k < 0.4 ? 0 : k < 0.78 ? 1 : 2;
     roosts.push(seated(s.x, s.y, s.z, size, s.seed, stance));
   }
   // The ledges nearest the colony's lens are packed: beside each sitter others stand, and on the ledges over it and under it, and beside
@@ -752,8 +753,8 @@ export function create(ctx: Context): Piece {
     const reach = Math.hypot(by.x - COLONY.x, by.z - COLONY.z);
     for (let n = 0; n < 6 && roosts.length < ROOSTING + MATES; n++) {
       const seed = (by.seed * 7.13 + 0.37 * (n + 1)) % 1;
-      const size = by.size * (0.7 + 0.42 * ((seed * 53) % 1)) * (by.size > 1.5 ? 0.8 : 1);
-      const stance: Stance = (seed * 977) % 1 < 0.5 ? 0 : (seed * 977) % 1 < 0.86 ? 1 : 2;
+      const size = by.size * (0.55 + 0.6 * ((seed * 53) % 1)) * (by.size > 1.5 ? 0.8 : 1);
+      const stance: Stance = (seed * 977) % 1 < 0.4 ? 0 : (seed * 977) % 1 < 0.78 ? 1 : 2;
       // Along the crag one way or the other, on its own ledge or one a step or two up or down: at the ledge's edge, where the lens under
       // it sees it whole, and only where the ledge is deep enough to stand on and open over it.
       const along = (n % 2 === 0 ? 1 : -1) * (1.3 * (by.size + size) + 0.35 + 1.6 * ((seed * 211) % 1) * by.size);
@@ -787,7 +788,7 @@ export function create(ctx: Context): Piece {
       .map((r) => ({ x: r.x + Math.sin(r.yaw) * 0.38 * r.size, y: r.y, z: r.z + Math.cos(r.yaw) * 0.38 * r.size, size: r.size * (r.stance === 1 ? 1.15 : 1), seed: r.seed })),
     ledgeUnder,
   );
-  const roostBodies = new Bodies(bodyMaterials(ctx, LEVELS.pool, 0.55, 'feeder-a', undefined, 0.12), ROOSTING + MATES);
+  const roostBodies = new Bodies(bodyMaterials(ctx, LEVELS.pool, 0.3, 'feeder-a', undefined, 0.12), ROOSTING + MATES);
   const roosting = new Set(roostOrder.map((o) => o.i));
   const R: Pose = pose();
   /** Which of the six a sitter is: most sit hunched or crouched, some stand, a few hold a sail out or both open. */
@@ -1468,6 +1469,10 @@ export function create(ctx: Context): Piece {
             borne(hero.size, (leads[k] as (typeof leads)[number]).seed, seconds, 0.35);
             // Banked into its turn from the first frame, and harder as it goes away.
             F.roll = hero.bank + 0.25 * smooth(hero.turns, hero.turns + 0.5, seconds) + 0.06 * Math.sin(seconds * 2.3 + k);
+            // The lens comes up behind it, and from behind a level flier is two edges: it climbs with its head held off its way, so that
+            // the lens has the under side of both sails, with their struts and the light through the skin.
+            F.pitch += 0.42;
+            F.yaw += 0.5;
             flight.put(STREAM + SWIRL + k, F);
             continue;
           }

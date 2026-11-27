@@ -22,9 +22,9 @@ export interface Roosting {
 const SHOULDER: [number, number] = [0.755, 0.531];
 /** By stance: the nose up (radians), the hips over the ledge and the feet ahead of them (metres at size 1), the neck's rise off the back, the folded sails' droop. */
 export const SEAT: { up: number; more: number; hips: number; ahead: number; rise: number; droop: number }[] = [
-  { up: 0.3, more: 0.18, hips: 1.02, ahead: 0.3, rise: 0.95, droop: 0.12 },
+  { up: 0.3, more: 0.18, hips: 0.84, ahead: 0.34, rise: 0.95, droop: 0.12 },
   { up: 0.2, more: 0.14, hips: 0.52, ahead: 0.85, rise: 1.25, droop: 0.03 },
-  { up: 0.3, more: 0.16, hips: 1.38, ahead: 0.12, rise: 0.8, droop: 0 },
+  { up: 0.3, more: 0.16, hips: 1.12, ahead: 0.16, rise: 0.8, droop: 0 },
 ];
 /** By stance, where the head is from the shoulder (ahead and up in the place, metres at size 1) and the way the neck ends (radians up from level): at rest, looking about, and working at its own breast. */
 const HEADS: { rest: [number, number, number]; look: [number, number, number]; preen: [number, number, number] }[] = [
@@ -77,7 +77,7 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.roll = (s.stance === 2 ? -0.05 : -0.025) * shift + 0.06 * (k2 - 0.5);
   p.size = size;
   // Weathered, each to its own grey-brown: none is clean.
-  p.tone = 0.4 + 0.2 * k3;
+  p.tone = 0.5 + 0.3 * k3;
   p.shade = 1;
   for (let leg = 0; leg < 2; leg++) {
     const foot = p.feet[leg] as Pose['feet'][number];
@@ -111,7 +111,7 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.shake = 0.04 * gust + 0.3 * row;
   p.clock = t;
   p.beat = 0;
-  p.sail = (s.stance === 2 ? 0.2 + 0.3 * k2 : -seat.droop * (0.6 + 0.8 * k3)) + 0.02 * breath + 0.03 * gust + row * (0.3 + 0.28 * cyc.wave(t, 9, s.seed * 9, 0.5));
+  p.sail = (s.stance === 2 ? 0.25 + 0.6 * k2 : -seat.droop * (0.6 + 0.8 * k3)) + 0.02 * breath + 0.03 * gust + row * (0.3 + 0.28 * cyc.wave(t, 9, s.seed * 9, 0.5));
   // Out of the water the strands are short and hang close.
   p.tuft = 0.5 + 0.2 * k2;
   // Its neck stands up off its back and arches over.
