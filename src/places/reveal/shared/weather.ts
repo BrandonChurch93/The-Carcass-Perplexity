@@ -267,8 +267,9 @@ float lowDepth(vec2 at) {
   float far = smoothstep(300.0, 900.0, uViewKm);
   float grouped = far > 0.0 ? smoothstep(0.43, 0.57, pic(uCloudTile, uvGroup, gGroup, 2.5).b) : 1.0;
   float dense = max(pow(streak, 0.15) * pow(knots * fine, 1.3) * level * mix(1.0, mix(0.35, 1.22, grouped), far) - mix(1.4, 0.85, gathered), 0.0);
-  float drawn = mix(0.1, 0.35, gathered) * max(pow(streak, 0.5) * mix(1.0, knots, 0.7) * level - 0.8, 0.0) * mix(1.0, lump, 0.4);
-  drawn *= mix(1.0, 0.2 + grouped, far);
+  // (And the thin body the wind draws out is wider inside a group from orbit: a veil with the tufts standing in it, so the
+  // group has form at many pixels and is not a scatter of flecks.)
+  float drawn = mix(0.1, 0.35, gathered) * max(pow(streak, mix(0.5, 0.2, far)) * mix(1.0, knots, mix(0.7, 1.0, far)) * level - 0.8 + 0.3 * far * grouped, 0.0) * mix(1.0, lump, 0.4) * mix(1.0, 0.15 + 2.0 * grouped, far);
   return (dense + drawn) * smoothstep(0.02, 0.3, share);
 }
 
@@ -433,5 +434,5 @@ float cloudShade(vec2 xz) {
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
   float stormShade = pow(1.0 - smoothstep(0.02, 0.48, fromStorm), 1.3) * uArrive;
-  return (1.0 - 0.55 * smoothstep(0.04, 0.6, low)) * (1.0 - 0.3 * high * uArrive) * (1.0 - 0.8 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
+  return (1.0 - mix(0.55, 0.36, smoothstep(500.0, 1300.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.3 * high * uArrive) * (1.0 - 0.8 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
 }`;

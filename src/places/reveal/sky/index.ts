@@ -72,6 +72,9 @@ void main() {
 
   // The low field. Its tops are relief: a flank that falls toward the sun is lit, the flank behind it is in its own shade, and the
   // ice above throws its shadow down on it.
+  // (From orbit the field is read a little softer than the pixel: its tufts then have form at several pixels, not a hard
+  // white fleck in one, which an encoder cannot hold.)
+  lowSoft = mix(1.0, 2.2, smoothstep(500.0, 1300.0, uViewKm));
   vec2 low = lowField(xz);
   float flank = dot(lowSlope, toSun);
   float self = clamp(0.5 + 1.25 * flank, 0.0, 1.0);
@@ -222,7 +225,7 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   // (The same photograph at three sizes, the finer the farther out, where the winding has drawn the coarse one out to strokes.)
   float outer = smoothstep(0.15, 0.65, r);
   float clumps = lum(textureGrad(uStreaks, ub, gx * 0.75, gy * 0.75).rgb);
-  float fine = (mix(0.3, 0.1, outer) * clumps + mix(0.5, 0.35, outer) * lum(textureGrad(uStreaks, uc, gx * 1.5, gy * 1.5).rgb) + mix(0.2, 0.55, outer) * lum(textureGrad(uStreaks, ud, gx * 3.0, gy * 3.0).rgb)) / 0.304;
+  float fine = (mix(0.35, 0.2, outer) * clumps + 0.5 * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb)) / 0.304;
   // (Left whole, the arms read from far off as five bold strokes of one weight. A second lay of the bands, finer and at
   // its own place along the winding, and the clumps of the cell photograph break each into lengths of unlike weight.)
   vec2 ue = vec2(2.0 * wound.x - 1.7 * drawnIn, 3.0 * wound.y) + vec2(0.67, 0.09) + 0.03 * bend;
