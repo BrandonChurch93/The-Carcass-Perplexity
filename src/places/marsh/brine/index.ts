@@ -216,7 +216,7 @@ export function create(ctx: Context): Piece {
         const own = thrown[drop * 5 + 4] as number;
         const size = (thrown[drop * 5 + 3] as number) * (0.6 + d.size);
         const c = ux * fx + uy * fy + uz * fz;
-        const fl = age < 0 ? -1 : age - ((-1.1 + Math.sqrt(1.21 + 3.6 * (1 - c))) / 1.8) * TEAR - 0.03 * own;
+        let fl = age < 0 ? -1 : age - ((-1.1 + Math.sqrt(1.21 + 3.6 * (1 - c))) / 1.8) * TEAR - 0.03 * own;
         let tx = ux * c - fx;
         let ty = uy * c - fy;
         let tz = uz * c - fz;
@@ -225,12 +225,25 @@ export function create(ctx: Context): Piece {
         ty = Math.abs(ty / tl) * 0.45 + uy * 0.5 + 0.3;
         tz = (tz / tl) * 0.75 + uz * 0.5;
         const speed0 = (3.1 * Math.sqrt(d.size / 0.4) * (0.25 + 0.75 * (thrown[drop * 5 + 2] as number))) / Math.hypot(tx, ty, tz);
-        const vx = tx * speed0;
-        const vy = ty * speed0;
-        const vz = tz * speed0;
-        const x0 = d.x + ux * d.size * 0.95;
-        const y0 = uy * d.size * 0.66;
-        const z0 = d.z + uz * d.size * 0.95;
+        let vx = tx * speed0;
+        let vy = ty * speed0;
+        let vz = tz * speed0;
+        let x0 = d.x + ux * d.size * 0.95;
+        let y0 = uy * d.size * 0.66;
+        let z0 = d.z + uz * d.size * 0.95;
+        // One in three is not the skin's: it is a bead the wall of fingers lets go from a tip as it stands, later, slower, up and a little
+        // out, to fall back beside the wall.
+        if (k >= 9 && k % 3 === 2) {
+          const big = Math.sqrt(d.size / 0.4);
+          const out = (0.35 + 0.9 * (thrown[drop * 5 + 2] as number)) * big;
+          fl = age < 0 ? -1 : age - TEAR * 0.2 - (0.08 + 0.3 * own) * big;
+          x0 = d.x + Math.cos(az) * d.size * 0.98;
+          y0 = d.size * (0.2 + 0.22 * own);
+          z0 = d.z + Math.sin(az) * d.size * 0.98;
+          vx = Math.cos(az) * out;
+          vy = (1.1 + 1.3 * (thrown[drop * 5 + 1] as number)) * big;
+          vz = Math.sin(az) * out;
+        }
         if (k < 9 && i < 3 && fl > 0) {
           const lands = (vy + Math.sqrt(vy * vy + 19.62 * y0)) / 9.81;
           if (fl > lands) landed.push(x0 + vx * lands, z0 + vz * lands, fl - lands);

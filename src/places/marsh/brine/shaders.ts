@@ -483,7 +483,7 @@ void main() {
   fres *= mix(0.15, 1.0, smoothstep(0.02, 0.12, vLocal.y)) * (1.0 - 0.8 * rim);
   // Scum rides on the skin where the runs have left it, and grit from the pool's floor: both hide what is behind them.
   // (Scum is a stain, soft at its edge and never whole: what the runs left behind, rust in the red. The lumps in it are few and pale.)
-  float scum = 0.55 * smoothstep(0.6, 0.92, g.g * 0.75 + grit.r * 0.1 + 0.15 * scumTex.r + 0.12 * film.y) * smoothstep(0.25, 0.6, vLocal.y);
+  float scum = 0.55 * smoothstep(0.6, 0.92, g.g * 0.75 + grit.r * 0.1 + 0.15 * scumTex.r + 0.12 * film.y) * smoothstep(0.03, 0.2, vLocal.y);
   float speck = smoothstep(0.86, 0.885, grit.g * 0.6 + fleck.b * 0.4) * smoothstep(0.25, 0.45, vLocal.y);
   float covered = max(max(scum, speck), rim);
 #ifdef THROUGH
