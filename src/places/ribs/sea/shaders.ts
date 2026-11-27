@@ -448,8 +448,8 @@ void main() {
   if (p.y - uFront < 460.0) {
     float ahead = p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3);
     drawn = smoothstep(190.0, 80.0, ahead);
-    // Under the wall the flat lies in its shade, dark slate, and only long slack bands across it still hold the sky.
-    under = smoothstep(430.0, 160.0, ahead) * (1.0 - 0.8 * smoothstep(0.5, 0.85, 0.5 + 0.5 * sin(p.y * 0.33 + 2.0 * sin(p.x * 0.017))));
+    // Under the wall the flat lies in its shade, dark slate, and only slack stretches of it still hold the sky: patches, as the bed and the wind leave them, no bands ruled across it.
+    under = smoothstep(430.0, 160.0, ahead) * (1.0 - 0.8 * smoothstep(0.4, 0.66, 0.55 * barA.a + 0.45 * barB.b));
   }
   bend.y += 14.0 * drawn * drawn;
   vec4 c1 = textureLod(tChop, (p + bend) / 3.1 - uTime * uWind * 0.16, rippleLevel(tChop, 3.1));
@@ -575,6 +575,41 @@ const WET_EDGE: [string, string][] = [
   // Only what stands up out of the bed: over the bed itself the water thins as the land's own height says, and that edge is drawn already.
   float stone = (1.0 - smoothstep(0.3, 0.8, standing * max(v.y, 0.02) / max(depth, 0.01))) * (1.0 - smoothstep(120.0, 260.0, dist));
   float film = 0.09 + 0.3 * under;`,
+  ],
+  [
+    '  float fineBed = 0.2 * (textureLod(tBedFine, p / 37.0, levelOf(tBedFine, 37.0)).r - 0.5) + 0.07 * (textureLod(tBedFine, p.yx / 9.7, levelOf(tBedFine, 9.7)).r - 0.5);',
+    // The bed is the world's, not the lens's: read by the pixel's foot its relief flattened with distance and every pool changed its outline
+    // as the lens came on. Its level is pinned at a hand and a half a texel, and gives way only where the foot is four times that.
+    '  float fineBed = 0.2 * (textureLod(tBedFine, p / 37.0, max(0.0, levelOf(tBedFine, 37.0) - 2.0)).r - 0.5) + 0.07 * (textureLod(tBedFine, p.yx / 9.7, max(2.0, levelOf(tBedFine, 9.7) - 2.0)).r - 0.5);',
+  ],
+  [
+    '  return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size) + 0.4;',
+    `  float longSide = max(dot(footX, footX), dot(footY, footY));
+  float between = 0.25 * log2(max(longSide * min(dot(footX, footX), dot(footY, footY)), 1e-12)) + log2(size) + 0.4;
+  // Never much finer than the long side: read finer, every crest jumped from one frame to the next as the lens moved and the flat boiled.
+  return max(between, 0.5 * log2(max(longSide, 1e-12)) + log2(size) - 0.5);`,
+  ],
+  [
+    '  depth += 0.004 * sin(uTime * 0.9 + tide * 19.0) + 0.004 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);',
+    // On a bed this flat a finger of level is metres of waterline: patches came and went. The line now works a hand's breadth.
+    '  depth += 0.0015 * sin(uTime * 0.9 + tide * 19.0) + 0.0015 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);',
+  ],
+  [
+    '  float ruffle = 0.2 + 0.8 * paw;',
+    `  // Before the wall the flat is not still: what it pushes ahead of it runs out over the sheet in low quick swells, crest after crest, bent by the bed, and dies in a hundred metres.
+  float run = p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3);
+  float pushed = exp(-max(run, 0.0) / 70.0) * smoothstep(-10.0, 5.0, run) * smoothstep(0.0, 0.06, depth);
+  float runPhase = run * 0.52 + 5.0 * (barA.b - 0.5) + 1.6 * (barB.b - 0.5) - uTime * 2.4;
+  float ruffle = max(0.2 + 0.8 * paw, pushed);`,
+  ],
+  [
+    '  slope += ringSlope;',
+    `  slope += ringSlope;
+  slope.y += 0.07 * pushed * (cos(runPhase) + 0.5 * cos(2.3 * runPhase + 1.0));`,
+  ],
+  [
+    '    ringSlope += (d / l) * wave * 0.13;',
+    '    ringSlope += (d / l) * wave * 0.2;',
   ],
   [
     '  float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));',
