@@ -52,7 +52,7 @@ const ROOSTING = 84;
 /** And those put down beside them on the same ledges. */
 const MATES = 136;
 /** Whether the crouched bodies of the colony are drawn in place of its nearest sheets: not until they sit right. */
-const ROOSTED: boolean = true;
+const ROOSTED: boolean = false;
 /** Which of them, counted from the colony's lens, are the large ones with their sails part open: not neighbours. */
 const LARGE = [0, 3, 7, 12];
 const SKEIN = 22;
