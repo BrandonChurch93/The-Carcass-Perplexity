@@ -55,7 +55,7 @@ ${SWELL.map(([dx, dz, length, amp], n) => {
     float keep = 1.0 - smoothstep(0.35, 1.0, ${f(k)} * px);
     // And not at every crest, nor evenly along one: whole stretches of the sea break and whole stretches do not.
     float where = textureLod(chop, lay.yx * 0.19 + ${f(0.61 * n + 0.2)}, log2(max(px * 256.0 / ${f(length * 2)}, 1e-6))).a;
-    float on = smoothstep(${f(0.45 + 0.02 * n)}, ${f(0.8 + 0.02 * n)}, torn + 0.9 * (where - 0.55)) * keep;
+    float on = smoothstep(${f(0.37 + 0.02 * n)}, ${f(0.74 + 0.02 * n)}, torn + 0.9 * (where - 0.55)) * keep;
     // Thickest in the middle of its length and thinning to nothing at its ends.
     cap.x = max(cap.x, on * smoothstep(-0.2 - 0.45 * on, -0.1, back) * (1.0 - smoothstep(0.05, 0.3, back)));
     cap.y = max(cap.y, on * smoothstep(-3.2, -0.6, back) * (1.0 - smoothstep(-0.2, 0.4, back)));
@@ -117,6 +117,7 @@ ${RIG_GLSL}
 uniform sampler2D tChop;
 uniform sampler2D tFeet;
 uniform sampler2D tFoamPic;
+uniform sampler2D tFoamNh;
 uniform vec2 uWind;
 uniform float uFeetReach;
 varying vec3 vWorld;
@@ -162,12 +163,12 @@ void main() {
   float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);
   // The smallest faces only where the lens can hold them.
   vec4 c4 = textureLod(tChop, (vec2(-p.y, p.x) + (c2.xy - 0.5) * 0.7) / 0.97 + uTime * uWind * 0.31, levelOf(tChop, 0.97));
-  float fineKeep = 1.0 - smoothstep(0.004, 0.03, px);
+  float fineKeep = 1.0 - smoothstep(0.006, 0.05, px);
   // Where the swell breaks on a shelving shore the water is all at work: no mirror lies between the breakers.
   // Its front is no ruled line: it runs ahead in one place and hangs back in the next, in fingers a few metres wide.
   vec4 surf = surfAt(p, uTime, depth, ragged + 2.2 * (c2.b - 0.5) + 1.2 * (c3.b - 0.5)) * smoothstep(3.0, 10.0, feet);
   lively = max(lively, 0.9 * surf.w);
-  vec2 chop = ((c1.xy - 0.5) * 0.55 + vec2(-s2.y, s2.x) * 0.5 + (c3.xy - 0.5) * 0.45 + (c4.xy - 0.5) * 0.4 * fineKeep) * lively;
+  vec2 chop = ((c1.xy - 0.5) * 0.55 + vec2(-s2.y, s2.x) * 0.5 + (c3.xy - 0.5) * 0.6 + (c4.xy - 0.5) * 0.6 * fineKeep) * lively;
   vec3 n = normalize(vec3(-(g.x + chop.x), 1.0, -(g.y + chop.y)));
 
   // What the lens cannot resolve it still sees: of all the small faces of a wind sea, the ones turned to it. Their mean leans to the eye,
@@ -192,8 +193,8 @@ void main() {
 
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
   // Slate grey-green, never teal: the water of a cold strait after a storm, full of sand where it shoals.
-  vec3 deep = vec3(0.027, 0.043, 0.039);
-  vec3 shallow = vec3(0.092, 0.098, 0.08);
+  vec3 deep = vec3(0.088, 0.122, 0.11);
+  vec3 shallow = vec3(0.17, 0.175, 0.14);
   vec3 body = mix(shallow, deep, smoothstep(0.0, 5.0, depth));
   // Light comes through the thin top of a tall wave: only the highest water of the heaviest crests, green where the sun is on it.
   float thin = smoothstep(1.3, 3.3, h + 1.6 * (c1.b - 0.5)) * calm;
@@ -217,15 +218,17 @@ void main() {
   // Close under the lens the same picture is read again small: foam is bubbles and holes down to a hand's width, not a soft patch.
   // Read by the short side of the pixel, as a break's outline is: by the long side the inside of a patch seen along the water was one flat white.
   float laceFine = dot(textureLod(tFoamPic, p.yx / 2.3 + uTime * uWind * 0.11, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 2.3, 1e-6))).rgb, vec3(0.3333));
-  // Foam stands a finger high on the water: the same picture read a hand's width toward the light says which way each clot of it faces.
-  vec2 key = normalize(mix(uSkyBreak.xz, uSunDir.xz, sun) + 1e-4);
-  float laceLit = dot(textureLod(tFoamPic, (p + key * 0.3) / 9.0 - uTime * uWind * 0.05, levelOf(tFoamPic, 9.0)).rgb, vec3(0.3333));
-  float lace = mix(0.72 * lacePic + 0.28 * fine, 0.5 * lacePic + 0.34 * laceFine + 0.16 * fine, 1.0 - smoothstep(0.02, 0.12, px));
+  float lace = mix(0.72 * lacePic + 0.28 * fine, 0.5 * lacePic + 0.4 * laceFine + 0.16 * fine, 1.0 - smoothstep(0.02, 0.12, px));
+  // And once more four times as large, drawn out down the wind: white water lies in rafts and rags many metres across with dark water
+  // between them, not in an even grain from here to the horizon.
+  vec2 across = vec2(-uWind.y, uWind.x);
+  float laceWide = dot(textureLod(tFoamPic, vec2(dot(p, across), 0.6 * dot(p, uWind)) / 34.0 + (c1.xy - 0.5) * 0.05 - uTime * 0.004, levelOf(tFoamPic, 34.0)).rgb, vec3(0.3333));
+  float rafts = smoothstep(0.42, 0.8, laceWide);
+  lace *= mix(0.86 + 0.26 * rafts, 0.5 + 0.95 * rafts, smoothstep(0.02, 0.3, px));
   // A patch of broken water is read by the short side of the pixel: by the long side, at a glance, every crest would be one band.
   // And never by more than a few pixels' width at this range: the back of a crest seen edge on read the break's picture as its mean, and one face of the mesh stood white.
   vec2 caps = whitecaps(p, uTime, min(min(length(footX), length(footY)), 2.5 * pixel), tChop) * calm;
   // Streaks down the wind: what the breakers leave is drawn out into long lines, in drifts, thick in one stretch of sea and absent in the next.
-  vec2 across = vec2(-uWind.y, uWind.x);
   float streak = dot(textureLod(tFoamPic, vec2(dot(p, across) / 13.0, dot(p, uWind) / 110.0 - uTime * 0.03), levelOf(tFoamPic, 13.0)).rgb, vec3(0.3333));
   float drift = smoothstep(0.38, 0.7, textureLod(tChop, p / 290.0 + 0.11, levelOf(tChop, 290.0)).b);
   float lane = smoothstep(0.5, 0.78, streak) * (0.15 + 0.85 * drift) * calm * (1.0 - 0.6 * far);
@@ -235,17 +238,23 @@ void main() {
   float surfZone = smoothstep(5.5, 1.2, shoal) * wet;
   float wash = smoothstep(1.7, 0.15, shoal) * wet;
   float amount = max(0.7 * caps.y * (1.0 - smoothstep(0.05, 0.4, px)), 0.55 * lane);
+  // What every break of the last minutes left: a web of old foam over the whole wind sea, in veins, thicker where the drifts lie.
+  amount = max(amount, (0.6 + 0.25 * drift) * (0.35 + 0.65 * rafts) * calm * (1.0 - 0.5 * far));
   amount = max(amount, surfZone * (0.3 + 0.7 * crest) + wash * (0.55 + 0.4 * sin(ph - 1.2)));
   // Within a stone's throw a break is no white tile laid on the water: it is the same lace, thick, with the water showing in its holes.
   float nearBreak = 1.0 - smoothstep(0.08, 0.3, pixel);
   amount = max(amount, 0.58 * caps.x * caps.x * nearBreak);
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
+  // Round white water and under it the sea is full of air: milky and pale green, lit from inside, where a break has just been.
+  float aired = smoothstep(0.08, 0.75, amount) * (0.3 + 0.7 * smoothstep(0.3, 0.8, lace));
+  col += (1.0 - fres) * vec3(0.25, 0.32, 0.3) * aired * eBody / 3.14159;
   // Thick where it is dense, thin and grey at its rim, where the water shows through it.
   float thick = smoothstep(1.25 - amount, 1.9 - amount, lace);
   float pic = lace;
   // The surf's white is read by the short side of the pixel: seen along the sand, by the long side, it was one pale band with a ruled edge.
   if (surf.w > 0.0) {
-    float laceS = dot(textureLod(tFoamPic, p / 7.0 + vec2(0.013, 0.02) * uTime, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 7.0, 1e-6))).rgb, vec3(0.3333));
+    // Never by less than a quarter of the long side: far along the sand the short side alone drew the white out into upright bars.
+    float laceS = dot(textureLod(tFoamPic, p / 7.0 + vec2(0.013, 0.02) * uTime, log2(max(max(2.0 * pixel, 0.25 * footLong) * float(textureSize(tFoamPic, 0).x) / 7.0, 1e-6))).rgb, vec3(0.3333));
     float standing = smoothstep(0.0, 0.05, vWorld.y + depth);
     float white = standing * max(surf.y * smoothstep(0.1, 0.45, laceS + 0.35 * surf.y), smoothstep(1.0 - 0.6 * surf.z, 1.3 - 0.6 * surf.z, laceS + 0.1) * smoothstep(0.0, 0.25, surf.z));
     pic = mix(pic, laceS, step(foam, white));
@@ -261,10 +270,26 @@ void main() {
   // Fresh white water is thick and white; what trails is thin, and the green shows through it.
   // Foam is white all through: it takes the sky from every side and the low sun as a standing thing does, and gives it back nearly white.
   vec3 eFoam = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * 1.15 + sunCool * ((0.3 + uSunDir.y) * sun);
-  // Each clot is lit on the side it turns to the light and dark on the other, and the foam on the top of a crest stands out of the trough's shade.
-  float relief = clamp((lacePic - laceLit) * 5.0, -1.0, 1.0);
-  vec3 foamCol = vec3(0.84, 0.87, 0.88) * (0.5 + 0.5 * mix(pic, 0.35 + 0.7 * lacePic, fresh)) * mix(0.82, 1.12, max(fresh, surfZone)) * mix(0.72, 1.12, thick) * (1.0 + 0.5 * relief) * (1.0 + 0.3 * thin) * eFoam / 3.14159;
-  col = mix(col, foamCol, clamp(foam, 0.0, 1.0));
+  float cover = clamp(foam, 0.0, 1.0);
+  if (cover > 0.002) {
+    // Foam is a standing thing with a height of its own: the picture's height and slope say where each clot stands and which way it faces.
+    // Read by the short side of the pixel: by the long side, on the face of a near crest, it went to its mean and the foam was a flat grey sheet.
+    float texels = float(textureSize(tFoamNh, 0).x);
+    vec3 big = textureLod(tFoamNh, p / 9.0 - uTime * uWind * 0.05, log2(max(2.0 * pixel * texels / 9.0, 1e-6))).rgb;
+    vec3 small = textureLod(tFoamNh, p.yx / 2.3 + uTime * uWind * 0.11, log2(max(2.0 * pixel * texels / 2.3, 1e-6))).rgb;
+    float close = 1.0 - smoothstep(0.03, 0.15, pixel);
+    vec2 tilt = (big.rg - 0.5) * vec2(2.0, -2.0) + (small.gr - 0.5) * vec2(-1.4, 1.4) * close;
+    float stands = mix(big.b, 0.6 * big.b + 0.4 * small.b, close);
+    vec3 nf = normalize(n + vec3(tilt.x, 0.0, tilt.y) * (0.5 + 1.1 * cover));
+    vec3 keyDir = normalize(mix(uSkyBreak, uSunDir, sun));
+    float turned = 1.0 + 0.5 * (dot(nf, keyDir) - dot(n, keyDir));
+    // The hollows between clots are in their shade; a thin rim is half water, and the green shows through it.
+    float hollow = 0.74 + 0.26 * smoothstep(0.12, 0.7, stands);
+    float dense = max(thick, fresh);
+    vec3 white = mix(vec3(0.62, 0.73, 0.71), vec3(0.93, 0.95, 0.95), dense);
+    vec3 foamCol = white * (0.88 + 0.12 * pic) * turned * hollow * mix(0.86, 1.08, max(fresh, surfZone)) * (1.0 + 0.3 * thin) * eFoam / 3.14159;
+    col = mix(col, foamCol, cover * mix(0.7, 1.0, dense));
+  }
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
@@ -304,6 +329,8 @@ export const SEA_OPENING_FRAGMENT = openingText(
     ],
     ['vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);', 'vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * uOpenSea.x + uSunColour * (uSunDir.y * sun);'],
     ['0.55 * lane);', '(0.55 + 0.35 * uOpenSea.z) * lane);'],
+    // The water's own body stands in that lifted light too: under the shut cloud it was lit as the ground under the blades is, and went black.
+    ['vec3 eBody = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + sunCool', 'vec3 eBody = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * uOpenSea.x + sunCool'],
     // The foam of the open sea stands in the same lifted light as the water it lies on.
     ['* open * 1.15 + sunCool', '* open * 1.15 * uOpenSea.x + sunCool'],
     [
@@ -332,13 +359,15 @@ export const POOL_VERTEX = /* glsl */ `
 attribute float aDepth;
 varying vec3 vWorld;
 varying float vDepth;
+varying vec2 vLens;
 void main() {
   vWorld = position;
   vDepth = aDepth;
+  vLens = vec2(projectionMatrix[2][2], projectionMatrix[3][2]);
   gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
 }`;
 
-export const POOL_FRAGMENT = (rings: number): string => /* glsl */ `
+const POOL_SHEET = (rings: number): string => /* glsl */ `
 precision highp float;
 ${RIG_GLSL}
 uniform sampler2D tChop;
@@ -518,6 +547,45 @@ void main() {
   gl_FragColor = vec4(rigOut(col), alpha) * (1.0 - uSolo) * toSea;
   if (dry) discard;
 }`;
+
+/**
+ * The film's sheet knows what stands in it. The engine draws the depth of every solid thing first (src/core/engine.ts, the place's
+ * `depthFirst`); the sheet reads it (index.ts hands it over as tWetSeen) and so has the metres of water that lie along the eye's line
+ * between its own surface and the first stone, weed or sand under it. Where that goes to nothing something breaks the surface: the water
+ * climbs it in a bright thread and leaves lace round it, in a line as ragged as the lace, not the ruled cut of a plane through a model.
+ * The card loop keeps the sheet's text as it was.
+ */
+const WET_EDGE: [string, string][] = [
+  ['uniform sampler2D tFoamPic;\nvarying vec3 vWorld;', 'uniform sampler2D tFoamPic;\nuniform highp sampler2D tWetSeen;\nuniform float uWetSeen;\nvarying vec2 vLens;\nvarying vec3 vWorld;'],
+  [
+    '  float film = 0.09 + 0.3 * under;',
+    `  float standing = 1e3;
+  if (uWetSeen > 0.5) {
+    float there = vLens.y / (2.0 * texelFetch(tWetSeen, ivec2(gl_FragCoord.xy), 0).r - 1.0 + vLens.x);
+    float here = vLens.y / (2.0 * gl_FragCoord.z - 1.0 + vLens.x);
+    standing = max(there - here, 0.0) * dist / here;
+  }
+  // Only what stands up out of the bed: over the bed itself the water thins as the land's own height says, and that edge is drawn already.
+  float stone = (1.0 - smoothstep(0.3, 0.8, standing * max(v.y, 0.02) / max(depth, 0.01))) * (1.0 - smoothstep(120.0, 260.0, dist));
+  float film = 0.09 + 0.3 * under;`,
+  ],
+  [
+    '  float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));',
+    `  float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
+  lip = max(lip, stone * (1.0 - smoothstep(0.0, 0.05, standing)));`,
+  ],
+  [
+    '  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);',
+    `  float collar = stone * (1.0 - smoothstep(0.02, 0.05 + 0.6 * barB.a * barA.a, standing)) * smoothstep(0.42, 0.7, lace + 0.6 * (c1.a - 0.5)) * (0.25 + 0.75 * stretch);
+  foamed = max(foamed, 0.8 * collar);
+  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);`,
+  ],
+];
+export const POOL_FRAGMENT = (rings: number): string =>
+  WET_EDGE.reduce((text, [from, to]) => {
+    if (text.split(from).length !== 2) throw new Error(`The sheet has no such line, or more than one: ${from}`);
+    return text.replace(from, () => to);
+  }, POOL_SHEET(rings));
 
 const BORE_SHAPE_GLSL = /* glsl */ `
 uniform float uFront;
@@ -737,7 +805,7 @@ const WASH = { rise: 0.12, late: 0.1, near: 0.14 };
  */
 const GUST = { at: [-172, 62] as const, way: [0.94, 0.34] as const, reach: 62, long: 36 };
 export const POOL_LOOP_FRAGMENT = (rings: number): string =>
-  loopText(POOL_FRAGMENT(rings), [
+  loopText(POOL_SHEET(rings), [
     ['uniform sampler2D tChop;', 'uniform sampler2D tChop;\nuniform vec2 uLoop;'],
     ['- uTime * uWind * 0.16', '- (uLoop.x * uWind * 0.16 + uLoop.y * vec2(1.0, 1.0))'],
     ['+ uTime * vec2(uWind.y, -uWind.x) * 0.3', '+ (uLoop.x * vec2(uWind.y, -uWind.x) * 0.3 + uLoop.y * vec2(2.0, -1.0))'],

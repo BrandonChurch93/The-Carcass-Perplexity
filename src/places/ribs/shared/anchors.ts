@@ -33,7 +33,7 @@ export const SUN = {
   // lays its shadows across the flats between the drowned one's cliff and the feeders' pools.
   toward: [0.8585, 0.4067, -0.3125] as [number, number, number],
   /** Radiance times solid angle of the low sun through the break, scene linear: what a face turned to it takes over and above the sky. */
-  colour: [7.0, 4.9, 2.9] as [number, number, number],
+  colour: [6.3, 5.35, 4.2] as [number, number, number],
 };
 
 /** The wind: where it blows to (x, z), unit length, and metres a second low over the water. Cloud shadow, spray and weed lean with it. */
