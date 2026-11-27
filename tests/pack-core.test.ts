@@ -184,9 +184,44 @@ describe('the plans of the other critics', () => {
 
   it('R3: every judged frame of the unit, each with its crops', () => {
     const plan = core.planR3({ cfg, cut, film: filled(), unit: reveal });
-    expect(plan.groups.length).toBe(cfg.keys.filter((k) => k.unit === reveal).length + 4);
+    const listed = judgedList(cfg, cut).filter((e) => e.unit === reveal);
+    expect(listed.length).toBe(cfg.keys.filter((k) => k.unit === reveal).length + 4);
+    expect(plan.groups.length).toBe(new Set(listed.map((e) => e.frame)).size);
     for (const g of plan.groups) expect(g.items.map((i) => i.kind)).toEqual(['still', 'crops']);
     expect(items(plan).some((i) => i.frame === cut.titanFrame)).toBe(true);
+  });
+
+  it('one frame under several judged entries is listed once and named for each of them', () => {
+    const list = [{ id: 'a', frame: 5 }, { id: 'b', frame: 7 }, { id: 'c', frame: 5 }, { id: 'd', loop: 5 }, { id: 'e', loop: 5 }, { id: 'f', frame: 5 }];
+    const copy = JSON.parse(JSON.stringify(list));
+    const once = core.oncePerFrame(list);
+    expect(once).toEqual([{ id: 'a', frame: 5, ids: ['a', 'c', 'f'] }, { id: 'b', frame: 7 }, { id: 'd', loop: 5, ids: ['d', 'e'] }]);
+    expect(once[1]).toBe(list[1]);
+    expect(list).toEqual(copy);
+    expect(once.map(core.entryNames)).toEqual(['a, c and f', 'b', 'd and e']);
+    expect(core.oncePerFrame(once)).toEqual(once);
+  });
+
+  it('R3: a judged frame that is both the last key of the rise and the titan frame is sent once, under both names', () => {
+    const keys = cfg.keys.filter((k) => k.unit === reveal).sort((a, b) => a.order - b.order);
+    const last = keys.at(-1).id;
+    const titan = `${reveal}-titan`;
+    const listed = judgedList(cfg, cut).filter((e) => e.unit === reveal).map((e) => e.id);
+    const stills = (film) => items(core.planR3({ cfg, cut, film, unit: reveal })).filter((i) => i.kind === 'still');
+    const together = filled();
+    together.judged = { ...together.judged, [last]: together.titanFrame, [titan]: together.titanFrame };
+    const one = stills(together);
+    expect(one.length).toBe(listed.length - 1);
+    expect(new Set(one.map((i) => i.frame)).size).toBe(one.length);
+    expect(one.flatMap((i) => i.ids ?? [i.id])).toEqual(listed);
+    const both = items(core.planR3({ cfg, cut, film: together, unit: reveal })).filter((i) => i.frame === together.titanFrame);
+    expect(both.map((i) => i.what)).toEqual([`The judged frames ${last} and ${titan}, film frame ${together.titanFrame}, resized to fit`, `Native size crops of the judged frames ${last} and ${titan}, film frame ${together.titanFrame}`]);
+    const apart = filled();
+    apart.judged = { ...apart.judged, [last]: apart.titanFrame - 1, [titan]: apart.titanFrame };
+    const two = stills(apart);
+    expect(two.map((i) => i.id)).toEqual(listed);
+    expect(two.every((i) => i.ids === undefined)).toBe(true);
+    expect(two.find((i) => i.id === titan).what).toBe(`The judged frame ${titan}, film frame ${apart.titanFrame}, resized to fit`);
   });
 
   it('R4 for a place: a sheet for each shot, consecutive frames at each key and event, and one sheet with the camera held at the establishing key', () => {
@@ -488,6 +523,33 @@ describe('the crops and the pictures of the other packs', () => {
     expect(m.format).toBe('png');
     expect(m.exif ?? m.icc ?? m.xmp ?? null).toBe(null);
   });
+});
+
+describe('the R3 packs of the reveal', () => {
+  it('hold no picture twice, name the shared frame for both entries, and are byte equal when built twice', async () => {
+    const run = async (name) => {
+      const base = path.join(dir, name);
+      const deps = { renderer: img.fakeRenderer(path.join(dir, 'stills')), outDir: path.join(base, 'packs'), keyDir: path.join(base, 'keys'), scratch: path.join(base, 'work'), root: base, print: () => {} };
+      const r = await cmd.packCommand({ round: '1', unit: reveal, critic: 'R3', tier: 'draft', format: 'preview' }, deps);
+      expect(r.code).toBe(0);
+      const files = r.entries[0].packs.flatMap((p) => p.files.map((f) => `${p.id}/${f}`));
+      const key = JSON.parse(fs.readFileSync(path.join(base, r.entries[0].key), 'utf8'));
+      return { files, hashes: files.map((f) => sha(path.join(base, 'packs', 'round-1', reveal, f))), key };
+    };
+    const a = await run('r3-one');
+    const b = await run('r3-two');
+    expect(new Set(a.hashes).size).toBe(a.hashes.length);
+    expect(b.files).toEqual(a.files);
+    expect(b.hashes).toEqual(a.hashes);
+    expect(b.key).toEqual(a.key);
+    const said = Object.values(a.key.packs).flatMap((p) => Object.values(p));
+    const listed = judgedList(cfg, cut).filter((e) => e.unit === reveal);
+    for (const e of listed) expect(said.filter((w) => /resized to fit$/.test(w) && new RegExp(`[ ,]${e.id}[ ,]`).test(w)).length).toBe(1);
+    const stills = said.filter((w) => /resized to fit$/.test(w));
+    expect(stills.length).toBe(new Set(listed.map((e) => e.frame)).size);
+    const shared = listed.filter((e) => e.frame === cut.titanFrame).map((e) => e.id);
+    if (shared.length > 1) expect(stills.filter((w) => w.startsWith(`The judged frames ${shared.slice(0, -1).join(', ')} and ${shared.at(-1)}, film frame `)).length).toBe(1);
+  }, 120000);
 });
 
 describe('the one picture packs of R2 and R8', () => {
