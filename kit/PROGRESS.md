@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 191, 2026-11-27 22:35 UTC:
+Status 192, 2026-11-27 22:56 UTC:
 
-- `01-s191-ribs-2401-native2.jpg`: The Ribs at 0:40 (frame 2401): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: grey-blue water in level ripples with long pale level streaks; a white burst of spray at the top; the tips of two grey shapes hang into the top left corner; a few small dark specks lie on the water, and a row of soft dark and pale lumps runs along the bottom, out of focus. The spray is the sharpest thing in the crop and the water is soft. Right: a pale flat shelf under a dark cliff streaked with white at the top; grey-blue water in level ripples below it; a tan pointed tip enters from the left edge; large dark rocks close to the lens fill the bottom, out of focus, the left one with a coarse grain. The critic of fine detail gave this place 3 of 10 in round 30. The Builder's reading. Below the bar.
-- `02-s191-heart-4006-native2.jpg`: The Heart at 1:07 (frame 4006): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: dark red-brown ledges of rock with a rough pitted face, lit orange from above; bright orange and yellow lava runs over the upper right and falls down the right side with dark flakes of crust in it; where the lava hangs over the dull hollow in the middle its lower edge is pulled down into long thin upright streaks, which reads as stretched and not as drips; the hollow itself is soft, with little detail. Right: a dull brown-grey rock face under orange haze with faint pale flecks and scratches, and a plain orange-brown area with a soft upright edge at the left; almost no fine detail anywhere. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
-- `03-s191-marsh-6800-native2.jpg`: The Blood Marsh at 1:53 (frame 6800): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: a dark red-brown rounded mass with a fine pebbled skin of pale cells fills the upper two thirds; several pale straw-coloured stalks stand before it at the left, thin and tapering, with soft edges; below, pale pink-grey ground in ridges whose pattern is pulled into zigzags; a pale rounded shape in the lower left corner; the hollow where the mass meets the ground is hazy. Right: pink-grey and brown ground in level wavy layers, the pattern drawn out level across the whole crop, with a few small white pointed marks; soft toward the bottom. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `01-s192-breath-5510-native2.jpg`: The Breath at 1:32 (frame 5510): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: a pale cream and pink mass in soft folds like draped skin lies across the crop, speckled all over with small dark dashes and specks of one size; thin tapering limbs with swollen pink-brown joints run level along the ground before it; dark wet ground with pale pebbles at the bottom. The folds read as relief; the dashes read as a pattern laid over them. Right: a slope of dark wet ground with a fine cracked skin runs down to the right, with two small rounded stones on it; behind it, out of focus, a pale rock wall banded in cream and rust. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `02-s192-breath-4973-native2.jpg`: The Breath at 1:22 (frame 4973): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: dark red-black fronds sweep down from the upper left in bunches of thin strands, red where the light catches their edges; behind them pale ground out of focus with bright round specks of light. The strands are fine and stand apart; some are hard and wiry. Right: soft pale cream and tan shapes, out of focus, with a dark hollow at the right edge; nothing in it holds fine detail. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
+- `03-s192-breath-4731-native2.jpg`: The Breath at 1:19 (frame 4731): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the film to one pixel of the picture, the second half of the standard boxes. Left: grey-brown mist fills the crop, and a patch of brown wrinkled surface shows through it at the upper right; nothing else can be read. Right: brown rock in big blocks under a marbled pattern of cream veins and blotches; a boxy block in the middle has flat faces and straight hard edges, and a dark smudge of mist lies at its foot; the pattern keeps one scale on every face and reads as laid over simple shapes. The critic of fine detail gave this place 4 of 10 in round 30. The Builder's reading. Below the bar.
 
+Status 191, 2026-11-27 22:35 UTC, showed: The Ribs at 0:40 (frame 2401): two crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of the...
 Status 190, 2026-11-27 22:19 UTC, showed: The Spine at 2:00 (frame 7234): the render helper's second sheet of draft stills at 960x540, the same crop as in Still 213 enlarged four...
 Status 189, 2026-11-27 22:01 UTC, showed: The Spine at 2:00 (frame 7234): the render helper's sheet of draft stills at 960x540, one crop enlarged four times, not film quality.
-Status 188, 2026-11-27 21:42 UTC, showed: The Breath at 1:32 (frame 5510): four crops at full size from the judged frame of round 30, drawn at 3840x2160, final tier, one pixel of...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T22:35:25Z
-phase 6: 25.76 h used of 24.00 h
-build: 70.73 h used of 72.00 h
+2026-11-27T22:56:19Z
+phase 6: 26.11 h used of 24.00 h
+build: 71.08 h used of 72.00 h
 extra rounds: no
 half point: reached
 box end: reached
-minutes since the last status: 15
+minutes since the last status: 21
 ```
 
 ## Phases
