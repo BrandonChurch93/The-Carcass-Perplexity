@@ -72,6 +72,13 @@ const riseKeys = keysOfRise();
 // rise.json may have the lens see more than a key's window at that key, about the same middle: the climb then spreads its speed.
 const wider = (w: RiseWindow, c: number): RiseWindow => ({ x: w.x - (w.w * (c - 1)) / 2, y: w.y - (w.h * (c - 1)) / 2, w: w.w * c, h: w.h * c });
 riseKeys.windows = riseKeys.windows.map((w, i) => wider(w, tuning.covers[i] ?? 1));
+// rise.json may give the climb knots between its keys: a frame, the middle of the view there and its width, px of the master. The lens passes through each as it passes through a key's window, so the climb between two keys can keep one rate and ease late.
+for (const k of (tuning as { knots?: { frame: number; x: number; y: number; w: number }[] }).knots ?? []) {
+  const at = riseKeys.frames.findIndex((f) => f > k.frame);
+  if (at < 1) throw new Error(`A knot of the rise must lie after its first key and before its last: frame ${k.frame}`);
+  riseKeys.frames.splice(at, 0, k.frame);
+  riseKeys.windows.splice(at, 0, { x: k.x - k.w / 2, y: k.y - k.w / FILM_ASPECT / 2, w: k.w, h: k.w / FILM_ASPECT });
+}
 export const RISE_FIRST = (riseShots[0] as (typeof riseShots)[number]).first;
 export const RISE_LAST = (riseShots[riseShots.length - 1] as (typeof riseShots)[number]).last;
 export const TITAN = riseKeys.frames[riseKeys.frames.length - 1] as number;
