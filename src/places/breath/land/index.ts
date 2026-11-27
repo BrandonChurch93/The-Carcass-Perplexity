@@ -90,8 +90,8 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('land', land));
 
   // The main shaft: the dark bedded wall, and the pale arches that stand out of it (land/wall.ts, land/arches.ts).
-  const mirrored = (name: string, kind: 'colour' | 'data'): THREE.Texture => {
-    const t = ctx.assets.texture(name, { kind, repeat: true, anisotropy: 2 });
+  const mirrored = (name: string, kind: 'colour' | 'data', anisotropy = 2): THREE.Texture => {
+    const t = ctx.assets.texture(name, { kind, repeat: true, anisotropy });
     t.wrapS = THREE.MirroredRepeatWrapping;
     t.wrapT = THREE.MirroredRepeatWrapping;
     return t;
@@ -100,8 +100,8 @@ export function create(ctx: Context): Piece {
   const wall = rock.pit(0, seep);
   // The hoops: the sheet of a broken bedded face and the sheet of the outer skin (assets-src/breath/land/RECIPE.md), mirrored at each repeat.
   const sheet = (name: string, mean: [number, number, number], metres: number, relief: number): Surface => ({
-    colour: mirrored(`land/${name}.jpg`, 'colour'),
-    data: mirrored(`land/${name}-h.png`, 'data'),
+    colour: mirrored(`land/${name}.jpg`, 'colour', 1),
+    data: mirrored(`land/${name}-h.png`, 'data', 1),
     mean,
     metres,
     relief,

@@ -241,6 +241,10 @@ void main() {
   vec2 pt = vec2(${PLATE_TURN.cos.toFixed(6)} * p.x + ${PLATE_TURN.sin.toFixed(6)} * p.z, ${PLATE_TURN.cos.toFixed(6)} * p.z - ${PLATE_TURN.sin.toFixed(6)} * p.x);
   vec2 pq = vec2(pt.x / ${PLATE.metres.toFixed(1)}, 1.0 - pt.y / ${PLATE.depth.toFixed(4)});
   // The hanging face of the brim is seen edge on by the plate: it takes the plate's broad colour, not its stretched picture.
+  vec2 dFdxPq = dFdx(pq);
+  vec2 dFdyPq = dFdy(pq);
+  vec3 dFdxP = dFdx(p);
+  vec3 dFdyP = dFdy(p);
   vec3 plate = mix(texture2D(tPlate, pq).rgb, texture2D(tPlate, pq, 5.0).rgb * 0.38, hang);
   vec4 a = texture2D(tRock, p.xz / 37.0);
   float near = smoothstep(26.0, 5.0, dist);
@@ -309,7 +313,7 @@ void main() {
     vec2 fall = vec2(-(cn.r - 0.5), cn.g - 0.5) * (116.0 * CRUST_DEEP / CRUST);
     crustLean = vec2(0.86 * fall.x - 0.51 * fall.y, 0.51 * fall.x + 0.86 * fall.y);
     // Loose gravel lies in the lows of the crust and in drifts across it.
-    float drift = texture2D(tRock, p.xz / 6.1 + 0.37).a;
+    float drift = textureGrad(tRock, p.xz / 6.1 + 0.37, dpx / 6.1, dpy / 6.1).a;
     loose = smoothstep(0.64, 0.72, drift + 0.4 * (0.5 - cn.b));
     if (loose > 0.0) {
       vec2 gq = p.xz / 1.35 + 0.19;
@@ -413,7 +417,7 @@ void main() {
   vec3 rock = plate * vec3(0.43, 0.52, 0.6) * tone * clamp(pow(mark, 1.3), 0.3, 1.6) * mix(broadStain, 1.2 / mix(1.0, tone, 0.5), dryPad);
   // At the lens the colour is the crust's own, at the broad brightness the plate has there.
   if (hand > 0.0) {
-    vec3 broad = texture2D(tPlate, pq, 5.0).rgb * vec3(0.43, 0.52, 0.6) * broadStain;
+    vec3 broad = textureGrad(tPlate, pq, 32.0 * dFdxPq, 32.0 * dFdyPq).rgb * vec3(0.43, 0.52, 0.6) * broadStain;
     // Clear of the tide it is dry travertine: pale, nearly half of the light that falls on it comes back.
     float pale = mix(clamp(dot(broad, vec3(0.3333)), 0.2, 0.4), 0.55 * mix(0.85 + 0.3 * a.r, 1.05, dryPad), smoothstep(0.3, 0.9, over + 0.3 * (a.a - 0.5)));
     rock = mix(rock, mix(crust, uCrustMean, 0.2) * (pale / dot(uCrustMean, vec3(0.3333))), hand);
@@ -424,8 +428,8 @@ void main() {
   float wx = n.x * n.x / max(n.x * n.x + n.z * n.z, 1e-4);
   vec3 side = uMean;
   if (steep > 0.0) {
-    vec3 ex = dFdx(p);
-    vec3 ey = dFdy(p);
+    vec3 ex = dFdxP;
+    vec3 ey = dFdyP;
     side = mix(textureGrad(tMat, vec2(p.x, p.y * 1.6) / 1.1, vec2(ex.x, ex.y * 1.6) / 1.1, vec2(ey.x, ey.y * 1.6) / 1.1).rgb, textureGrad(tMat, vec2(p.z, p.y * 1.6) / 1.1, vec2(ex.z, ex.y * 1.6) / 1.1, vec2(ey.z, ey.y * 1.6) / 1.1).rgb, wx);
   }
   vec3 face = texture2D(tPlate, pq, 4.0).rgb * vec3(0.62, 0.58, 0.52) * clamp(dot(side / uMean, vec3(0.3333)), 0.4, 1.7);
@@ -783,35 +787,29 @@ void main() {
   vec2 fdx = 1.2 * (ended ? fbx : fax);
   vec2 fdy = 1.2 * (ended ? fby : fay);
   vec3 faceCol = textureGrad(tFace, fuv, fdx, fdy).rgb / uFaceMean;
-  float foot = max(length(fdx), length(fdy));
-  vec2 e = max(vec2(0.0014, 0.0021), vec2(foot));
   float h0 = textureGrad(tFaceH, fuv, fdx, fdy).r;
-  float hu = textureGrad(tFaceH, fuv + vec2(e.x, 0.0), fdx, fdy).r;
-  float hv = textureGrad(tFaceH, fuv + vec2(0.0, e.y), fdx, fdy).r;
   // The relief fades where a bed is finer than a pixel: there it would only be grain.
-  float seen = smoothstep(0.05, 0.012, foot);
-  vec3 lean = uSheet.w * seen * ((hu - h0) / (e.x * uSheet.x) * (ended ? er : et) + (hv - h0) / (e.y * uSheet.y) * vec3(0.0, 1.0, 0.0));
-  float height = h0;
-  // A bed under one that stands out is in its shade.
-  float under = seen * clamp(5.0 * (hv - h0) * 0.0021 / e.y, 0.0, 1.0);
-  vec3 tex = faceCol;
+  float seen = smoothstep(0.05, 0.012, max(length(fdx), length(fdy)));
   // Not all of the face is broken: where the outer skin is whole it lies over the beds, and they show through it at half strength.
   float whole = ended ? 0.0 : 0.6 * smoothstep(0.44, 0.62, a.a + 0.4 * (c.r - 0.5));
   level = max(level, whole);
-  if (level > 0.01) {
-    vec3 skinCol = textureGrad(tSkin, suv, sdx, sdy).rgb / uSkinMean;
-    float sfoot = max(length(sdx), length(sdy));
-    float es = max(0.002, sfoot);
-    float s0 = textureGrad(tSkinH, suv, sdx, sdy).r;
-    float su = textureGrad(tSkinH, suv + vec2(es, 0.0), sdx, sdy).r;
-    float sv = textureGrad(tSkinH, suv + vec2(0.0, es), sdx, sdy).r;
-    vec3 sl = 0.55 * uSheet.w * smoothstep(0.05, 0.012, sfoot) * ((su - s0) * et + (sv - s0) * mix(vec3(0.0, 1.0, 0.0), er, smoothstep(0.62, 0.86, abs(n.y)))) / (es * uSheet.z);
-    tex = mix(tex, skinCol, level);
-    lean = mix(lean, sl, level);
-    height = mix(height, s0, level);
-    under *= 1.0 - 0.7 * level;
-  }
-  n = normalize(n - (lean - n * dot(lean, n)));
+  vec3 skinCol = textureGrad(tSkin, suv, sdx, sdy).rgb / uSkinMean;
+  float s0 = textureGrad(tSkinH, suv, sdx, sdy).r;
+  float seenSkin = smoothstep(0.05, 0.012, max(length(sdx), length(sdy)));
+  vec3 tex = mix(faceCol, skinCol, level);
+  float height = mix(h0, s0, level);
+  // One relief in metres, and the lean of the normal from its slope across the screen.
+  float relief = uSheet.w * mix(seen * h0, 0.55 * seenSkin * s0, level);
+  vec3 dpx = dFdx(p);
+  vec3 dpy = dFdy(p);
+  vec3 r1 = cross(dpy, n);
+  vec3 r2 = cross(n, dpx);
+  float det = dot(dpx, r1);
+  vec3 grad = sign(det) * (dFdx(relief) * r1 + dFdy(relief) * r2) / max(abs(det), 1e-9);
+  grad *= min(1.0, 2.5 / max(length(grad), 1e-4));
+  // A bed under one that stands out is in its shade.
+  float under = (1.0 - 0.7 * level) * clamp(0.25 * grad.y, 0.0, 1.0);
+  n = normalize(n - grad);
 
   // Ivory, with the sheet's own rust, pits and beds as tone and hue; paler on the beds that stand out.
   float grey = dot(tex, vec3(0.3333));
