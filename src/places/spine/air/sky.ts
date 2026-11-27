@@ -52,7 +52,7 @@ const float FLOW_RATE = 0.007;
 const float FLOW_PERIOD = 10.0;
 const float SCUD_HIGH = 1500.0;
 vec2 panoUv(float az, float el) {
-  return (vec2(wrapPi(az) - PANO_DRIFT * (uTime - 12.0), el) - PANO_FROM) / PANO_SPAN;
+  return (vec2(wrapPi(az) - uSkyStage.x - PANO_DRIFT * (uTime - 12.0), el) - PANO_FROM) / PANO_SPAN;
 }
 vec3 panoRead(vec2 uv, float lod) {
   return textureLod(tSkyPano, vec2(mirrored(uv.x), clamp(uv.y, 0.004, 0.996)), lod).rgb;
@@ -64,7 +64,7 @@ vec3 panoAtRest(vec3 c, float toLast, float el, float lit) {
   float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
   float glowing = clamp((0.5 * (c.r + c.b) - c.g) * 12.0 - 0.35, 0.0, 1.0) * (1.0 - warm);
   c = mix(c, body * vec3(0.8, 0.92, 1.16) * mix(1.0, 0.5, glowing), glowing * (1.0 - lit));
-  c *= 1.0 + 1.6 * lit;
+  c *= 1.0 + 0.8 * lit;
   c = mix(c, body * vec3(0.7, 0.84, 1.1), warm * max(max(1.0 - smoothstep(0.6, 0.9, toLast), 0.85 * smoothstep(0.025, 0.08, el)), 0.45));
   return c;
 }
@@ -254,8 +254,10 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   c += vec3(0.42, 0.33, 0.8) * clamp(near, 0.0, 3.0) * (0.03 + 1.3 * dot(c, vec3(0.33)));
   // Overhead the picture ends: the cloud closes over in its own dark.
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.6, 0.76, el));
-  c *= SKY_GAIN;
-  if (uStrikeTop.w > 0.0) c = strikeCloud(c, from, d);
+  // Where the lens is opened for the dark of the canal, the storm in its mouth is opened less: it stays a dark storm.
+  c *= SKY_GAIN / mix(1.0, 1.7, smoothstep(1.4, 1.8, uSkyStage.y));
+  // In a stroke the cloud keeps its forms: its darks take less of the light than its pale heads.
+  if (uStrikeTop.w > 0.0) c = mix(c, strikeCloud(c, from, d), 0.62);
   return c;
 }
 
@@ -307,7 +309,13 @@ void main() {
     c += vec3(0.62, 0.21, 0.045) * (side * line * lengths) * (1.0 - plateOn) * (1.0 + 0.6 * uSkyStage.y);
   }
   if (plateOn > 0.0) {
-    vec3 held = strikeCloud(plateCloud(uvQ, 0.0), cameraPosition, d);
+    vec3 held = plateCloud(uvQ, 0.0);
+    // On the storm's side of the long lens stands the wall of falling snow: the fall of the whole sky's picture, seen large and soft, where
+    // the strike's own picture is only dark.
+    vec2 uvW = vec2(0.03 + 0.3 * uvQ.x + 0.0006 * uTime, 0.1 + 0.75 * (uvQ.y - 0.32));
+    vec3 wall = panoAtRest(panoRead(uvW, 0.0), 0.0, el, 0.0) * (SKY_GAIN * 1.5);
+    held = mix(held, max(held, wall), (1.0 - smoothstep(0.12, 0.62, uvQ.x)) * smoothstep(0.33, 0.42, uvQ.y));
+    held = strikeCloud(held, cameraPosition, d);
     // Through a long lens the picture is seen larger than it was made: the same cloud, four times smaller, gives it the detail it lacks
     // there, as much as the lens asks for.
     vec2 uvT = vec2(az, el) * 2.3 + vec2(uTime * 0.0012, 0.0);
