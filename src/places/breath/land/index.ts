@@ -2,7 +2,7 @@
 // rock.ts is the surfaces, shapes.ts is the shapes. This folder also tells the rig the true height of the land, so that the low sun's long shadows are baked from it.
 import * as THREE from 'three';
 import { terrain } from '../../../core/blockout';
-import { DEPTH, FINE, NEAR, RAD, SEA, bearingOf, farGround, ground, lerp, midGround, rimRadius, smooth } from '../land';
+import { DEPTH, FINE, RAD, SEA, bearingOf, ground, lerp, rimRadius, smooth } from '../land';
 import { DEAD_WADER, SMALLER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { createCliff } from '../air/sky';
@@ -12,6 +12,7 @@ import { block } from './ribs';
 import { FACE, archTop } from './arches';
 import { buildWall } from './wall';
 import { collar, heap, mergeGeometries, open, talusHeight } from './shapes';
+import { farSheet, midSheet } from './sheets';
 import { scatter } from './stones';
 
 export const PARTS: readonly string[] = ['land', 'shaft', 'hoops', 'slabs', 'cliff'];
@@ -81,12 +82,8 @@ export function create(ctx: Context): Piece {
   // The shadow begins at the chip's far edge: laid under the chip it shades the chip itself (the rig shades whatever stands in a disc).
   const [wayX, wayZ] = ctx.rig.sun.shadowWay;
   loose.shades.forEach(([x, z, radius, tall], i) => ctx.rig.setShadow(thrown, i, x + wayX * radius * 0.9, z + wayZ * radius * 0.9, radius * 0.5, tall * 0.6, 0.6));
-  const mid = terrain(NEAR, NEAR, 300, 300, midGround);
-  mid.computeVertexNormals();
-  land.add(mesh(open(mid), rock.shelf));
-  const far = terrain(WORLD, WORLD, 160, 160, farGround);
-  far.computeVertexNormals();
-  land.add(mesh(open(far), rock.shelf));
+  land.add(mesh(open(midSheet(300, WORLD / 160)), rock.shelf));
+  land.add(mesh(open(farSheet(WORLD, 160)), rock.shelf));
   ctx.scene.add(ctx.parts.built('land', land));
 
   // The main shaft: the dark bedded wall, and the pale arches that stand out of it (land/wall.ts, land/arches.ts).
