@@ -1,7 +1,7 @@
 // The herd: who each wader is and what it does. Where they stand is the lead's (shared/anchors.ts).
 import type { Rng } from '../../../core/rng';
-import { FAR_FLOCK, FEED_AT, NEAR_WADERS, RIM_WADER, RIM_WADER_DOWN_FROM, keySeconds, type Wader as Anchor } from '../shared/anchors';
-import { makeBuild, type Build, type Plan } from './animal';
+import { FAR_FLOCK, FEED_AT, KEY_TIMES, NEAR_WADERS, RIM_WADER, RIM_WADER_DOWN_FROM, keySeconds, type Wader as Anchor } from '../shared/anchors';
+import { makeBuild, shuffle, type Build, type Plan } from './animal';
 
 const RAD = Math.PI / 180;
 const hash = (n: number): number => {
@@ -41,6 +41,7 @@ const MORE: [number, number, number, number, number, number, number][] = [
   [-97, -70, -32, 1.0, 0.25, 1.5, 0],
   [-66, -95, 160, 0.86, 0, 0.5, 0],
 ];
+const STRIDES: Record<number, number> = { 0: 0.94, 4: 0.8 };
 const MORE_UP: [number, number][][] = [[[3.4, 6.1], [16, 20]], [[-5, 2.8], [11, 14]], [[7, 9.6]], [[-5, 30]], [[-5, 4.4], [15, 30]], [[-5, 8]]];
 
 /** The three seen close in the channel are three animals: a deep-chested old one, a sway-backed one, a small one with a drawn-up belly. */
@@ -50,9 +51,20 @@ const OWN: Partial<Build>[] = [
   { chest: 0.94, belly: 1.05, sway: 0.3, gaunt: 0.55 },
 ];
 
+/** Staged: the far herd is laid out for the lens of the wide view (key breath-0), which stands here: a row across these bearings from it,
+ *  degrees, this many metres out at its two ends, and the way the row runs. The count in the row is the lead's far flock and a third more. */
+export const WIDE_EYE = { x: -41.5, z: 42.3 };
+const ROW = FAR_FLOCK.count + 16;
+const CROSSING = 7;
+const ROW_BEARING: [number, number] = [-18.5, 7];
+const ROW_DISTANCE: [number, number] = [186, 250];
+const ROW_HEADING = 59;
+
 export interface Member {
   build: Build;
   plan: Plan;
+  /** One of the far herd: staged by the view. */
+  row?: boolean;
   /** In the water of the channel: it gets rings round its legs and a reflection. */
   near: boolean;
 }
@@ -92,7 +104,7 @@ function planOf(a: Anchor, up: [number, number][], rng: Rng, slack = 0, reach = 
 const TRIO: [number, number][] = [
   [-1.35, -0.36],
   [-0.36, 1.35],
-  [-0.23, 2.01],
+  [-1.13, 3.76],
 ];
 
 /** Staged: the herd is not one age: beyond the three in the channel there are young ones and old ones. The size of each, as a part of its own. */
@@ -128,38 +140,92 @@ export function makeHerd(rng: Rng): Member[] {
   const lank = makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.14, belly: 0.9, sway: 0.7, gaunt: 0.7 });
   const stocky: Build = { ...lank, standH: lank.standH * 0.8, legLen: lank.legLen * 0.806, legR: lank.legR * 1.35, neckR: lank.neckR * 1.18, bodyLen: lank.bodyLen * 1.08 };
   herd.push({ build: stocky, plan: { ...planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5], [RIM_LIFTS, RIM_LIFTS + 60]], rng, 1, 1), feedAt: 0.31, carry: 0.5, restless: 7, restlessAt: 0.129 }, near: false });
-  // The far flock: grains of rice on the shallows. No two do the same thing at the same time.
-  const far = rng;
+  // The numbers the far flock once drew here are drawn still, so that those made after it are who they were.
   for (let i = 0; i < FAR_FLOCK.count; i++) {
-    const b = far.range(FAR_FLOCK.bearing[0], FAR_FLOCK.bearing[1]) * RAD;
-    const d = far.range(FAR_FLOCK.distance[0], FAR_FLOCK.distance[1]);
-    const anchor: Anchor = { x: Math.sin(b) * d, z: -Math.cos(b) * d, heading: far.range(0, 360), speed: far.range(0.15, 0.45), size: far.range(0.68, 1.14), up: far.next() < 0.35, phase: far.range(0, 6.28) };
-    // Most of them work along the shallows, across the line of sight from the shaft, so they are seen from the side; a few go their own way.
-    if (hash(i * 8.3 + 12) < 0.72) anchor.heading = b / RAD + (hash(i * 1.9 + 13) < 0.5 ? 90 : -90) + 110 * (hash(i * 2.7 + 14) - 0.5);
-    // They do not stand evenly: one in three keeps close to the one before it, a body's length or two off, going the same way; some of those are young.
-    const last = herd[herd.length - 1];
-    if (i > 0 && last && hash(i * 5.3 + 15) < 0.34) {
-      const off = (hash(i * 3.1 + 16) * 2 - 1) * Math.PI;
-      const gap = 2.2 + 3.4 * hash(i * 4.3 + 17);
-      anchor.x = last.plan.x + Math.sin(off) * gap;
-      anchor.z = last.plan.z - Math.cos(off) * gap;
-      anchor.heading = last.plan.heading / RAD + 50 * (hash(i * 6.7 + 18) - 0.5);
-      if (hash(i * 7.9 + 19) < 0.4) anchor.size = 0.56 + 0.14 * hash(i * 9.7 + 20);
-    }
-    const start = far.range(-8, 20);
-    const up: [number, number][] = far.next() < 0.14 ? [[-5, 30]] : [[start, start + far.range(2.5, 6)], [start + far.range(11, 16), start + far.range(17, 22)]];
-    // Some stand, one or two of them on three legs; the rest walk at their own pace and stop when they like.
-    const lot = hash(i * 7.13 + 3);
-    // A few have lain down on the flat with their legs folded under them, neck up or along the ground.
-    const lies = hash(i * 6.1 + 8) < 0.13;
-    const plan: Plan = { ...planOf(anchor, up, far), speed: lot < 0.3 || lies ? 0 : anchor.speed * PACE, pauses: 0.1 + 0.4 * hash(i * 3.3 + 1), carry: 2 * hash(i * 5.7 + 2), tuck: lot < 0.12 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0, feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4), reach: hash(i * 4.7 + 6) < 0.38 ? 0 : 1, rest: lies ? 1 : 0 };
-    herd.push({ build: makeBuild(anchor.size * 1.06, 301 + i * 3.77, true), plan, near: false });
+    for (let d = 0; d < 8; d++) rng.next();
+    if (rng.next() >= 0.14) for (let d = 0; d < 3; d++) rng.next();
+    for (let d = 0; d < 4; d++) rng.next();
   }
   MORE.forEach((m, i) => {
     const anchor: Anchor = { x: m[0], z: m[1], heading: m[2], speed: m[4] * PACE, size: m[3], up: false, phase: i };
     const own: Partial<Build> = { chest: 0.92 + 0.24 * hash(i * 4.1 + 7), belly: 0.85 + 0.4 * hash(i * 6.3 + 8), sway: -0.3 + 1.1 * hash(i * 8.7 + 9), gaunt: 0.55 + 0.25 * hash(i * 2.3 + 6) };
     const plan: Plan = { ...planOf(anchor, MORE_UP[i] ?? [], rng), pauses: 0.12 + 0.3 * hash(i * 3.9 + 5), pauseMax: 3, carry: m[5], tuck: m[6], feedAt: 0.4 + 0.3 * hash(i * 5.1 + 3), rest: i === 5 ? 1 : 0 };
+    // Staged: two of them are not feeding but crossing the flats, neck up, at a walk: a long stride, steady, with hardly a stop.
+    const pace = STRIDES[i];
+    if (pace !== undefined) {
+      own.stride = m[3] * 1.06 * 1.72;
+      plan.speed = pace * m[3];
+      plan.fits = 0.2;
+      plan.pauses = 0.03;
+      plan.pauseMax = 1;
+      plan.up = [[-5, 60]];
+    }
     herd.push({ build: makeBuild(m[3] * 1.06, 501 + i * 9.17, false, 0.024, own), plan, near: true });
   });
+  // The far herd, as the wide picture has it: a long loose row on the shallows, small and pale, most of them bent down feeding; a thin
+  // second rank behind it; and a few that cross the flats between the row and the channel at a walk. No two do the same thing at one time.
+  const far = rng;
+  const place = (i: number): [number, number] => {
+    const along = Math.min(1, Math.max(0, (i + 1.7 * (hash(i * 3.1 + 1) - 0.5)) / ROW));
+    const bearing = (ROW_BEARING[0] + (ROW_BEARING[1] - ROW_BEARING[0]) * along + 1.4 * (hash(i * 2.3 + 11) - 0.5)) * RAD;
+    const behind = hash(i * 5.3 + 15) < 0.22 ? 30 + 80 * hash(i * 6.1 + 12) : 0;
+    const d = ROW_DISTANCE[0] + (ROW_DISTANCE[1] - ROW_DISTANCE[0]) * along + 30 * (hash(i * 4.3 + 17) - 0.5) + behind;
+    return [WIDE_EYE.x + Math.sin(bearing) * d, WIDE_EYE.z - Math.cos(bearing) * d];
+  };
+  for (let i = 0; i < ROW + CROSSING; i++) {
+    const crosses = i >= ROW;
+    let [x, z] = place(i);
+    if (crosses) {
+      const bearing = (-17 + 21 * hash(i * 3.7 + 21)) * RAD;
+      const d = 84 + 50 * hash(i * 5.9 + 22);
+      x = WIDE_EYE.x + Math.sin(bearing) * d;
+      z = WIDE_EYE.z - Math.cos(bearing) * d;
+    }
+    // Most work along the row, either way, so they are seen from the side; a few go their own way.
+    const way = ROW_HEADING + (hash(i * 1.9 + 13) < 0.5 ? 0 : 180);
+    const anchor: Anchor = { x, z, heading: hash(i * 8.3 + 12) < 0.8 ? way + 70 * (hash(i * 2.7 + 14) - 0.5) : far.range(0, 360), speed: far.range(0.15, 0.4), size: far.range(0.6, 0.98), up: false, phase: far.range(0, 6.28) };
+    // One in five keeps at the heel of the one before it, and is young.
+    const last = herd[herd.length - 1];
+    if (!crosses && i > 0 && last && hash(i * 5.3 + 31) < 0.2) {
+      const off = (hash(i * 3.1 + 16) * 2 - 1) * Math.PI;
+      const gap = 1.8 + 2.4 * hash(i * 4.3 + 33);
+      anchor.x = last.plan.x + Math.sin(off) * gap;
+      anchor.z = last.plan.z - Math.cos(off) * gap;
+      anchor.heading = last.plan.heading / RAD + 40 * (hash(i * 6.7 + 18) - 0.5);
+      anchor.size = 0.54 + 0.16 * hash(i * 9.7 + 20);
+    }
+    // What it does: lies, stands (some of those turn about on the spot), crosses at a walk, or feeds along at a shuffle with stops.
+    const lot = hash(i * 7.13 + 3);
+    const lies = !crosses && lot < 0.05;
+    const stands = !crosses && lot >= 0.05 && lot < 0.2;
+    const strides = crosses || (lot >= 0.2 && lot < 0.36);
+    const k = anchor.size * 1.06;
+    const build = makeBuild(k, 301 + i * 3.77, true, 0.02, strides ? { stride: k * (1.55 + 0.4 * hash(i * 2.1 + 41)) } : {});
+    // Heads: most are down for the whole of the wide view; some lift once in it, each at its own moment; a few are up and go down.
+    const head = hash(i * 9.3 + 51);
+    const at = 0.2 + 4.6 * hash(i * 4.9 + 52);
+    const up: [number, number][] = strides ? [[-5, 60]] : head < 0.58 ? [[9 + 6 * hash(i * 1.3 + 53), 13 + 8 * hash(i * 1.3 + 54)]] : head < 0.84 ? [[at, at + 1.6 + 2.4 * hash(i * 6.3 + 55)]] : [[-5, at]];
+    const plan: Plan = {
+      ...planOf(anchor, up, far),
+      when: KEY_TIMES['breath-0'],
+      speed: lies || stands ? 0 : strides ? k * (0.78 + 0.34 * hash(i * 3.9 + 42)) : anchor.speed * PACE,
+      fits: strides ? 0.2 : far.range(0.72, 0.92),
+      pauses: strides ? 0.03 : 0.1 + 0.4 * hash(i * 3.3 + 1),
+      pauseMax: strides ? 1.2 : 2.6,
+      carry: strides ? 1.5 + 0.5 * hash(i * 5.7 + 2) : 2 * hash(i * 5.7 + 2),
+      tuck: stands && lot < 0.1 ? 1 + 2 * Math.floor(hash(i * 9.1) * 2) : 0,
+      feedAt: 0.38 + 0.36 * hash(i * 2.9 + 4),
+      reach: hash(i * 4.7 + 6) < 0.2 ? 0 : 1,
+      rest: lies ? 1 : 0,
+    };
+    if (stands && lot >= 0.1) {
+      // It turns about where it stands, a foot at a time, and a while later turns again.
+      const first = 0.3 + 2.6 * hash(i * 8.9 + 61);
+      const turn = (hash(i * 7.7 + 62) < 0.5 ? -1 : 1) * (0.45 + 0.5 * hash(i * 6.9 + 63));
+      plan.steps = [...shuffle(build, first, 0.3 * k, 0, turn, 0.6, 0.14, i % 2), ...shuffle(build, first + 4.4 + 2 * hash(i * 2.9 + 64), 0.2 * k, 0, -0.7 * turn, 0.6, 0.2, (i + 1) % 2)];
+      plan.stepsRef = KEY_TIMES['breath-0'];
+    }
+    herd.push({ build, plan, near: false, row: true });
+  }
   return herd;
 }

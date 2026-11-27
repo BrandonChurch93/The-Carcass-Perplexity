@@ -75,6 +75,33 @@ export interface Plan {
   /** One that stands and is seen for a long time: it goes from one hind leg to the other, looks about and carries its neck higher and lower. Seconds from one hind leg to the same again, and where in that it is at time zero. */
   restless?: number;
   restlessAt?: number;
+  /** One that stands and moves about: its own footfalls, one foot at a time. Its body is placed from its feet. */
+  steps?: Step[];
+  /** The second at which its feet are where the plan puts them: the steps before it led there, the steps after it lead away. */
+  stepsRef?: number;
+}
+
+/** One footfall of one that stands: the foot (0 left hind, 1 left fore, 2 right hind, 3 right fore) leaves the ground at `at`, is `take` seconds in
+ *  the air and comes down `fore` metres ahead and `side` metres to the right of where it stood, along the animal's planned heading. */
+export interface Step {
+  at: number;
+  take: number;
+  leg: number;
+  fore: number;
+  side: number;
+}
+
+/** Footfalls that carry a stander `fore` metres on and `side` to its right and turn it `turn` radians clockwise about its middle, from `at`:
+ *  hind, fore of that side, other hind, other fore, each `take` seconds, `gap` seconds of all four down between two. */
+export function shuffle(b: { hipFore: number; stanceSide: number }, at: number, fore: number, side: number, turn: number, take = 0.62, gap = 0.16, first = 0): Step[] {
+  const order = first === 0 ? [0, 1, 2, 3] : [2, 3, 0, 1];
+  const c = Math.cos(turn);
+  const sn = Math.sin(turn);
+  return order.map((leg, i) => {
+    const pf = (leg % 2 === 1 ? 1 : -1) * b.hipFore * 0.95;
+    const ps = (leg < 2 ? -1 : 1) * b.stanceSide;
+    return { at: at + i * (take + gap), take, leg, fore: fore + pf * c - ps * sn - pf, side: side + pf * sn + ps * c - ps };
+  });
 }
 
 export interface Env {
@@ -283,7 +310,8 @@ class Walk {
 export function makeBuild(k: number, seed: number, far: boolean, cell = 0.02, own: Partial<Build> = {}): Build {
   const j = (n: number, a: number, b: number): number => a + (b - a) * hash(seed * 7.3 + n);
   const standH = 2.28 * k * j(1, 0.95, 1.06);
-  const stride = 0.66 * k * j(2, 0.88, 1.12);
+  // One that crosses the flats at a walk takes a stride of its own, far longer than a feeding shuffle.
+  const stride = own.stride ?? 0.66 * k * j(2, 0.88, 1.12);
   return {
     k,
     seed,
@@ -587,6 +615,55 @@ export class Wader {
     return { down, since };
   }
 
+  /** One that stands and steps about, at a time: how far each foot is from its planned place (ahead, to the right), how high it is carried
+   *  as a part of a full step, how much of the weight is off it, the seconds since it came down; and the body, which follows its feet. */
+  private scripted(t: number): { df: number[]; ds: number[]; lift: number[]; off: number[]; since: number[]; carried: number[]; fore: number; side: number; yaw: number; hold: number } {
+    const b = this.b;
+    const steps = this.plan.steps ?? [];
+    const ref = this.plan.stepsRef ?? 0;
+    const ease = (u: number): number => {
+      const c = sat(u);
+      return c * c * c * (c * (c * 6 - 15) + 10);
+    };
+    const df = [0, 0, 0, 0];
+    const ds = [0, 0, 0, 0];
+    const bf = [0, 0, 0, 0];
+    const bs = [0, 0, 0, 0];
+    const lift = [0, 0, 0, 0];
+    const off = [0, 0, 0, 0];
+    const since = [1e3, 1e3, 1e3, 1e3];
+    const carried = [0, 0, 0, 0];
+    // The body leans into a step before the foot leaves the ground and settles after it is down.
+    const LEAD = 0.42;
+    const LAG = 0.5;
+    for (const s of steps) {
+      const j = s.leg;
+      const u = (t - s.at) / s.take;
+      const foot = ease(u) - ease((ref - s.at) / s.take);
+      const whole = s.take + LEAD + LAG;
+      const body = ease((t - s.at + LEAD) / whole) - ease((ref - s.at + LEAD) / whole);
+      df[j] = (df[j] as number) + s.fore * foot;
+      ds[j] = (ds[j] as number) + s.side * foot;
+      bf[j] = (bf[j] as number) + s.fore * body;
+      bs[j] = (bs[j] as number) + s.side * body;
+      if (u > 0 && u < 1) {
+        // A short step is lifted less than a long one, and no two alike.
+        const far = Math.hypot(s.fore, s.side) / (0.5 * b.k);
+        const high = (j % 2 === 1 ? 0.72 : 1) * (0.7 + 0.45 * hash(b.seed + s.at * 2.3 + j * 5.9)) * Math.min(1, 0.5 + 0.5 * far);
+        lift[j] = Math.max(lift[j] as number, high * Math.sin(Math.PI * Math.min(1, u * 1.04) ** 0.8) ** 1.25);
+        carried[j] = 1;
+      }
+      // The weight goes off a foot before it leaves the ground and comes back onto it only after it is down.
+      const w = smooth(s.at - 0.55, s.at - 0.1, t) * (1 - smooth(s.at + s.take - 0.04, s.at + s.take + 0.34, t));
+      off[j] = Math.max(off[j] as number, w);
+      if (t >= s.at + s.take) since[j] = Math.min(since[j] as number, t - s.at - s.take);
+    }
+    const span = 2 * b.hipFore * 0.95;
+    const yaw = Math.atan2(((bs[1] as number) + (bs[3] as number) - (bs[0] as number) - (bs[2] as number)) / 2, span + ((bf[1] as number) + (bf[3] as number) - (bf[0] as number) - (bf[2] as number)) / 2);
+    const hold = -(off[0] as number) - (off[1] as number) + (off[2] as number) + (off[3] as number);
+    return { df, ds, lift, off, since, carried, fore: ((bf[0] as number) + (bf[1] as number) + (bf[2] as number) + (bf[3] as number)) / 4, side: ((bs[0] as number) + (bs[1] as number) + (bs[2] as number) + (bs[3] as number)) / 4, yaw, hold };
+  }
+
   /** Where the body's place on its path is after `walked` metres. */
   private along(walked: number): [number, number] {
     const p = this.plan;
@@ -606,8 +683,15 @@ export class Wader {
     // How fast it goes now, and how that has changed: what hangs from it follows late.
     const late = walk ? walk.at(seconds - 0.45) * b.stride : 0;
     const later = walk ? walk.at(seconds - 0.9) * b.stride : 0;
-    const going = (walked - (plan.ahead ?? 0) - late) / 0.45;
-    const gained = walked - (plan.ahead ?? 0) - 2 * late + later;
+    let going = (walked - (plan.ahead ?? 0) - late) / 0.45;
+    let gained = walked - (plan.ahead ?? 0) - 2 * late + later;
+    // One that stands and steps about: where its own footfalls have put its feet and its body now, and a moment ago.
+    const script = stands && plan.steps && plan.steps.length > 0 ? this.scripted(seconds) : null;
+    const scriptLate = script ? this.scripted(seconds - 0.45) : null;
+    if (script && scriptLate) {
+      going = (script.fore - scriptLate.fore) / 0.45;
+      gained = script.fore - 2 * scriptLate.fore + this.scripted(seconds - 0.9).fore;
+    }
     const fx = Math.sin(plan.heading);
     const fz = -Math.cos(plan.heading);
     const rx = -fz;
@@ -663,9 +747,17 @@ export class Wader {
         off = Math.sin(Math.PI * u) ** 0.5;
         carried = 1;
       }
+      if (script) {
+        x += fx * (script.df[j] as number) + rx * (script.ds[j] as number);
+        z += fz * (script.df[j] as number) + rz * (script.ds[j] as number);
+        lift = b.stepH * (script.lift[j] as number);
+        off = script.off[j] as number;
+        since = script.since[j] as number;
+        carried = script.carried[j] as number;
+      }
       let groundY = env.ground(x, z);
       // The slack hind leg rests on its toe, drawn in under the body. A restless one changes legs: the foot is picked up and set down again.
-      const rests = !stands || leg.fore > 0 ? 0 : plan.restless ? sat(leg.side < 0 ? weightAt : -weightAt) : plan.slack === (leg.side < 0 ? 1 : 2) ? 1 : 0;
+      const rests = !stands || script || leg.fore > 0 ? 0 : plan.restless ? sat(leg.side < 0 ? weightAt : -weightAt) : plan.slack === (leg.side < 0 ? 1 : 2) ? 1 : 0;
       if (rests > 0) {
         x += (-rx * leg.side * 0.1 * k + fx * 0.22 * k) * rests;
         z += (-rz * leg.side * 0.1 * k + fz * 0.22 * k) * rests;
@@ -673,7 +765,7 @@ export class Wader {
         off = 0.75 * smooth(0, 0.5, rests);
         if (plan.restless) lift = 0.5 * b.stepH * Math.sin(Math.PI * rests) ** 1.5;
       }
-      if (stands) {
+      if (stands && !script) {
         // One that stands is never still on its feet. It draws a leg up under it and holds it there, like any wader at rest, or
         // now and then lifts a fore foot, holds it and sets it down again.
         const tucked = (plan.tuck ?? 0) === j + 1;
@@ -715,13 +807,14 @@ export class Wader {
     };
     const sway = walk ? over(cyc) : -holdSide;
     const lurch = walk ? Math.cos((cyc - 0.15) * Math.PI * 4) : 0;
-    const side = (walk ? 0.125 : 0.1) * k * sway + (0.02 + 0.045 * still) * k * habit;
-    const cx = o[0] + rx * side;
-    const cz = o[1] + rz * side;
+    const side = (walk ? 0.125 : script ? 0.2 : 0.1) * k * sway + (0.02 + 0.045 * still) * k * habit;
+    // The body of one that steps about is carried by its feet: it goes where they have gone, a little before each and settling after it.
+    const cx = o[0] + rx * (side + (script ? script.side : 0)) + fx * (script ? script.fore : 0);
+    const cz = o[1] + rz * (side + (script ? script.side : 0)) + fz * (script ? script.fore : 0);
     const base4 = (feet[0]!.y - feet[0]!.lift + feet[1]!.y - feet[1]!.lift + feet[2]!.y - feet[2]!.lift + feet[3]!.y - feet[3]!.lift) / 4;
     // The legs are never locked: it stands a little under its full height, sinks as a foot leaves the ground and rises over the one that takes the weight.
     const cy = base4 + b.standH * (1 - 0.8 * (plan.rest ?? 0)) - 0.012 * k - 0.036 * k * dipSum - 0.016 * k * lurch * (1 - still) - 0.012 * k * down + 0.006 * k * habit2;
-    const yaw = plan.heading + b.skew + 0.13 * weightAt + (0.02 + 0.06 * still) * habit + (walk ? 0.046 * Math.sin((cyc - 0.02) * Math.PI * 2) : -0.03 * holdSide);
+    const yaw = plan.heading + (script ? script.yaw : 0) + b.skew + 0.13 * weightAt + (0.02 + 0.06 * still) * habit + (walk ? 0.046 * Math.sin((cyc - 0.02) * Math.PI * 2) : -0.03 * holdSide);
     const pitch = (4 - 7 * down) * (Math.PI / 180) + 0.055 * nose + 0.012 * habit2 + (walk ? 0.018 * Math.sin((cyc + 0.1) * Math.PI * 4) : 0) - 0.04 * Math.max(-1, Math.min(1, gained / (0.15 * k)));
     const lean = (walk ? 0.05 * Math.cos((cyc - 0.08) * Math.PI * 2) : -0.07 * holdSide) + 0.015 * habit;
 
@@ -889,7 +982,7 @@ export class Wader {
     // It works the water from side to side when it is down, and looks about slowly when it is up.
     // The head is carried late: when the body goes over to one side or starts forward, the end of the neck stays where it was a moment longer.
     const swayLate = walk ? over(walk.at(seconds - 0.45) + base + 1000) : 0;
-    const behind = walk ? (0.125 * k * (swayLate - sway)) / b.neckLen : 0;
+    const behind = walk ? (0.125 * k * (swayLate - sway)) / b.neckLen : script && scriptLate ? (0.2 * k * (-scriptLate.hold - sway) + scriptLate.side - script.side) / b.neckLen : 0;
     const work = 0.42 * wander(seconds * 0.85 + plan.phase * 7, b.seed + 2.1) + 0.2 * wander(seconds * 1.9 + plan.phase * 3, b.seed + 4.4);
     // Each feeds to its own side of its chest.
     const sided = (hash(b.seed * 2.7 + 5) - 0.5) * 1.1;
