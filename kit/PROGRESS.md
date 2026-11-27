@@ -24,25 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 138, 2026-11-26 23:52 UTC:
+Status 139, 2026-11-27 00:18 UTC:
 
-- `01-s138-words-blood-red-ribs.jpg`: Words on screen, blood red, at the Ribs (frame 1395, the line Stone blades, taller than the storms.): warm off-white words on a soft blood red haze with a ragged edge, low in the frame. Made by the caption builder from the Solar System Fly-Through caption layer. The picture under the words is the older draft frame from before the polish; the shade is provisional until measured on the frozen build
-- `02-s138-words-ash-ember-heart.jpg`: Words on screen, ash and ember, at the Heart (frame 3225, the line The tall ones walk the skin, and drink from the cracks.): the same warm off-white words on a near-black haze with a few sparks fixed in place, set on two rows. The picture under the words is the older draft frame from before the polish
-- `03-s138-ribs-opening.jpg`: The Ribs' opening at the end of wave 1, from the Builder's own guard of the final head 1f228fa2, now in the Builder's main: before at left, after at right; frames 0, 120 and 600 from the top. After: stone with strata, a storm sky, fliers around the stack, arches behind. Still open: the ribs read as broken stone rather than smooth tapering bone, the sea is near black at 120 and 600, and one flier is cut by the left edge of frame 0. Draft tier; not judged
-- `04-s138-marsh-vs.jpg`: The Blood Marsh's keys beside their approved pictures, from the Builder's own guard of the final head 2948acb4, now in the Builder's main: the approved picture at left, before in the middle, after at right. The ground and trunks are whiter than the pictures hold, and the dome at 6102 is pale where the picture's is dark red glass: findings for wave 2. Draft tier; not judged
+- `01-s139-words-22-lines.jpg`: All 22 lines of the words on screen, each on its own frame of the merged picture, from the caption builder's second report: blood red at the Ribs, the Breath, the Spine, the Eye and the Reveal, ash and ember at the Heart and the Blood Marsh. Strips of the lower part of the frame, draft tier. Seen by the Builder: on pale ground (The pits., The ridge., The lake.) the blood red haze reads as a dark red lozenge too near a box, which note 25 does not want; it goes back to be made softer and more ragged
+- `02-s139-words-spine-strike.jpg`: Words on screen through a lightning strike at the Spine (frame 7231, as the line Above the cloud. Under the storm. is being spoken): the words hold through the flash, 8.4 to 1 STATED by the caption builder. The picture under the words is the merged build at the draft tier. Apart from the words the Builder sees smeared rock on the spire and smooth snow in front: findings for wave 2
+- `03-s139-breath-vs.jpg`: The Breath's five keys beside their approved pictures after wave 1: the approved picture at left, before in the middle, after at right. Nearer: the waders with ribs under the skin and rings on the water, the pit with strata and fallen blocks. Not nearer: the red growth in the fourth row reads as a conifer with a trunk where the picture shows low feathery fronds, and steam hides the pit wall in the third row. Draft tier; not judged
+- `04-s139-spine-vs.jpg`: The Spine's five keys beside their approved pictures after wave 1: the approved picture at left, before in the middle, after at right. Nearer: the spire with its cave, the storm sky and the lit horizon, the strike on the spire. Not nearer: the snow in front is smooth where the pictures show wind-cut drifts and rock, and the dead animal in the second row has lost its shape. Draft tier; not judged
 
+Status 138, 2026-11-26 23:52 UTC, showed: Words on screen, blood red, at the Ribs (frame 1395, the line Stone blades, taller than the storms.): warm off-white words on a soft blood...
 Status 137, 2026-11-26 23:27 UTC, showed: The Reveal's four keys on its team's final branch at 95cf52d0, from the Builder's own guard: the approved picture at left, before in the...
 Status 136, 2026-11-26 22:58 UTC, showed: The Ribs on its team's branch, from its lead's third report: before at left, after at right.
-Status 135, 2026-11-26 22:29 UTC, showed: The join from the Eye into the rise on the Reveal's branch at 508e5eb, before at left and after at right, from the Builder's own guard.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T23:52:54Z
-phase 6: 3.06 h used of 24.00 h
-build: 48.03 h used of 72.00 h
+2026-11-27T00:18:00Z
+phase 6: 3.47 h used of 24.00 h
+build: 48.44 h used of 72.00 h
 extra rounds: yes
 minutes since the last status: 25
 ```
