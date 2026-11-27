@@ -10,7 +10,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_STEAM = 16;
 export const MAX_BODIES = 13;
 /** March steps for each texel. Four texels with four offsets are averaged, so the march seen is four times as fine. */
-export const SMOKE_STEPS = { body: 8, most: 13, reach: 16, steam: 6 };
+export const SMOKE_STEPS = { body: 8, most: 11, reach: 14, steam: 6 };
 
 export const SMOKE_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -145,29 +145,11 @@ float bodyDensity(int i, vec3 p, out float above, out vec2 shade) {
   if (dome <= 0.0) return 0.0;
   above = A.w * sqrt(max(1.0 - d2, 0.0)) - yy;
   vec4 G = uBodyG[i];
-  // The lumps climb the lean, so the body shears as it rises. And the middle of a column climbs faster than its skin, which the still air holds
-  // back: so each billow is overtaken from inside and turns outward as it goes up. It rolls, where one block sliding upward only passed by.
-  // A shear that grows for ever tears any pattern to threads, so the block is read twice, each reading sheared for one period and begun again
-  // half a period after the other, and each counts for most while its shear is least: the two are cross faded and neither is seen to begin.
-  float period = 0.55 * D.z / max(D.x, 0.5);
-  float turn = uTime / period + B.z;
-  float pa = fract(turn);
-  float pb = fract(turn + 0.5);
-  float wa = 1.0 - abs(2.0 * pa - 1.0);
-  float wb = 1.0 - wa;
-  // Over one period the axis gains 0.45 of a repeat on the mean and the skin loses as much.
-  float gain = (0.45 - 0.9 * min(d2, 1.0)) * 0.55 / G.x;
+  // The lumps climb with the body, in one read of the block. Two reads sheared against each other and cross faded (the middle of the column
+  // overtaking its skin) cost a read at every pace of the widest body in the place and showed nothing in the length of a shot, and the fade
+  // took the edge off every billow: one read keeps the block's own contrast, and the billow's edge is as hard as the block has it.
   vec3 q = vec3(rel.x, (yy - D.x * uTime) / G.x, rel.y) / D.z + B.z + vec3(0.026, 0.0, 0.015) * uTime;
-  vec3 l;
-  if (D.x > 5.0) {
-    vec4 la = lumps(vec3(q.x, q.y - gain * (pa - 0.5), q.z));
-    vec4 lb = lumps(vec3(q.x + 0.37, q.y - gain * (pb - 0.5) + 0.61, q.z + 0.23));
-    // Two fields cross faded are flatter than either: the fade keeps the spread of one.
-    l = uLumpsMean + ((la.rgb - uLumpsMean) * wa + (lb.rgb - uLumpsMean) * wb) * inversesqrt(wa * wa + wb * wb);
-  } else {
-    // A bank that creeps (under 5 m a second) has no roll to show in the length of a shot: it is read once.
-    l = lumps(q).rgb;
-  }
+  vec3 l = lumps(q).rgb;
   float g = uBodyF[i].w;
   // A body that is less solid is more of its lumps: they are drawn out the stronger, so that its outline is billows and not the dome.
   float gainOf = mix(2.6, 1.0, clamp(g, 0.0, 1.0));
@@ -276,7 +258,7 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float rise = 1.0 - 0.95 * exp(-up / min(10.0, F.y)) * smoothstep(8.0, 20.0, A.w);
     // What of the body stands under the point is guessed from how it thickens downward: the underside of a billow takes the fire, its top is shaded from it by its own mass.
     float under = mix(1.35, 0.3, clamp(2.0 * dens - skyward, 0.0, 1.0));
-    vec3 fire = under * rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));
+    vec3 fire = under * rise * exp(-up / C.y) * (C.x > 0.0 ? C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y)) : vec3(0.0));
     fire += under * F.x * rise * exp(-up / F.y) * (0.35 + 0.65 * (1.0 - skyT)) * wide;
     // G.w: a body that stands over open lava is lit through its own foot. Each metre of it takes its share of the fire on the way up, so that its
     // base burns orange and its upper smoke is dark against it, lump by lump, and it is never one flat colour.

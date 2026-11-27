@@ -135,44 +135,48 @@ export function bakeLumps(noise: THREE.Data3DTexture): { texture: THREE.Data3DTe
     field[i] = (from[i * 4] as number) / 255;
     sum += field[i] as number;
   }
-  const wrap = (v: number): number => ((v % N) + N) % N;
-  const read = (x: number, y: number, z: number): number => {
-    const xi = Math.floor(x);
-    const yi = Math.floor(y);
-    const zi = Math.floor(z);
-    const fx = x - xi;
-    const fy = y - yi;
-    const fz = z - zi;
-    const x0 = wrap(xi);
-    const x1 = wrap(xi + 1);
-    const y0 = wrap(yi) * N;
-    const y1 = wrap(yi + 1) * N;
-    const z0 = wrap(zi) * N * N;
-    const z1 = wrap(zi + 1) * N * N;
-    const a = (field[z0 + y0 + x0] as number) * (1 - fx) + (field[z0 + y0 + x1] as number) * fx;
-    const b = (field[z0 + y1 + x0] as number) * (1 - fx) + (field[z0 + y1 + x1] as number) * fx;
-    const c = (field[z1 + y0 + x0] as number) * (1 - fx) + (field[z1 + y0 + x1] as number) * fx;
-    const d = (field[z1 + y1 + x0] as number) * (1 - fx) + (field[z1 + y1 + x1] as number) * fx;
-    return (a * (1 - fy) + b * fy) * (1 - fz) + (c * (1 - fy) + d * fy) * fz;
-  };
+  // The taps lie at the same offsets from every cell, so each tap's eight neighbours and their weights are worked out once: the block is baked
+  // in a few hundredths of a second where a read by floor and remainder for every tap of every cell took some tenths at every start.
   const TAPS = 6;
+  const M = N - 1;
+  const tap = (dx: number, dy: number, dz: number): { x: number; y: number; z: number; fx: number; fy: number; fz: number } => ({
+    x: Math.floor(dx), y: Math.floor(dy), z: Math.floor(dz), fx: dx - Math.floor(dx), fy: dy - Math.floor(dy), fz: dz - Math.floor(dz),
+  });
+  const nearTaps = Array.from({ length: TAPS }, (_, t) => {
+    const a = ((t + 0.5) / TAPS) * LUMPS_REACH.near * N;
+    return tap(LUMPS_SKY[0] * a, LUMPS_SKY[1] * a, LUMPS_SKY[2] * a);
+  });
+  const farTaps = Array.from({ length: TAPS }, (_, t) => {
+    const b = (LUMPS_REACH.near + ((t + 0.5) / TAPS) * (LUMPS_REACH.far - LUMPS_REACH.near)) * N;
+    return tap(LUMPS_SKY[0] * b, LUMPS_SKY[1] * b, LUMPS_SKY[2] * b);
+  });
+  const mean = (taps: typeof nearTaps, i: number, j: number, k: number): number => {
+    let total = 0;
+    for (let t = 0; t < TAPS; t++) {
+      const w = taps[t] as (typeof taps)[number];
+      const x0 = (i + w.x) & M;
+      const x1 = (x0 + 1) & M;
+      const y0 = ((j + w.y) & M) * N;
+      const y1 = ((j + w.y + 1) & M) * N;
+      const z0 = ((k + w.z) & M) * N * N;
+      const z1 = ((k + w.z + 1) & M) * N * N;
+      const a = (field[z0 + y0 + x0] as number) * (1 - w.fx) + (field[z0 + y0 + x1] as number) * w.fx;
+      const b = (field[z0 + y1 + x0] as number) * (1 - w.fx) + (field[z0 + y1 + x1] as number) * w.fx;
+      const c = (field[z1 + y0 + x0] as number) * (1 - w.fx) + (field[z1 + y0 + x1] as number) * w.fx;
+      const d = (field[z1 + y1 + x0] as number) * (1 - w.fx) + (field[z1 + y1 + x1] as number) * w.fx;
+      total += (a * (1 - w.fy) + b * w.fy) * (1 - w.fz) + (c * (1 - w.fy) + d * w.fy) * w.fz;
+    }
+    return total / TAPS;
+  };
   const data = new Uint8Array(N * N * N * 4);
   const byte = (v: number): number => Math.round(255 * Math.min(1, Math.max(0, v)));
   let o = 0;
   for (let k = 0; k < N; k++) {
     for (let j = 0; j < N; j++) {
       for (let i = 0; i < N; i++) {
-        let near = 0;
-        let far = 0;
-        for (let t = 0; t < TAPS; t++) {
-          const a = ((t + 0.5) / TAPS) * LUMPS_REACH.near * N;
-          const b = (LUMPS_REACH.near + ((t + 0.5) / TAPS) * (LUMPS_REACH.far - LUMPS_REACH.near)) * N;
-          near += read(i + LUMPS_SKY[0] * a, j + LUMPS_SKY[1] * a, k + LUMPS_SKY[2] * a);
-          far += read(i + LUMPS_SKY[0] * b, j + LUMPS_SKY[1] * b, k + LUMPS_SKY[2] * b);
-        }
         data[o] = from[o] as number;
-        data[o + 1] = byte(near / TAPS);
-        data[o + 2] = byte(far / TAPS);
+        data[o + 1] = byte(mean(nearTaps, i, j, k));
+        data[o + 2] = byte(mean(farTaps, i, j, k));
         data[o + 3] = from[o + 2] as number;
         o += 4;
       }
