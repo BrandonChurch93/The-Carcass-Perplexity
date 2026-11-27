@@ -210,16 +210,20 @@ void main() {
     // No two are one colour: one is chalk pale, the next ruddy, the next grey with old silt.
     float own = hash12(vec2(seed, 1.7));
     albedo *= mix(vec3(0.8, 0.77, 0.77), vec3(1.08, 1.02, 0.99), own) * mix(vec3(1.0), vec3(1.04, 0.95, 0.92), step(0.6, hash12(vec2(seed, 6.1))));
-    // Wet from the water up to where it last stood deeper, and dark with it. Above that line it has dried: a broken band of salt where the
-    // water stood, and pale silt caked on the shank above the salt.
-    float up = vWorld.y - uSea + 0.13 * (blotch - 0.5) + 0.04 * (scaled - 0.5);
+    // Wet from the foot up to where it last stood deeper, and dark with it: the line is on the leg and goes with it when the foot is lifted.
+    // Above it the leg has dried: salt in patches where the water stood, and pale silt caked on the shank above the salt. Only on those
+    // that stand in the water or by it.
+    float up = vWorld.y - uSea;
+    float along = legT + 0.05 * (blotch - 0.5) + 0.015 * (scaled - 0.5);
     float leg = smoothstep(0.3, 0.42, legT) * (1.0 - horn);
-    wet = leg * smoothstep(0.46, 0.4, up);
+    float below = smoothstep(0.775, 0.805, along) * smoothstep(0.95, 0.6, up);
+    wet = leg * below;
     float dry = leg - wet;
     albedo = mix(albedo, vec3(0.46, 0.42, 0.36) * (0.7 + 0.6 * scaled), 0.62 * dry * smoothstep(1.3, 0.5, up) * (0.4 + 0.6 * mottle));
-    albedo = mix(albedo, vec3(0.78, 0.76, 0.71), 0.6 * dry * smoothstep(0.58, 0.47, up) * smoothstep(0.35, 0.65, scaled + 0.3 * crack));
+    float salt = smoothstep(0.66, 0.76, along) * smoothstep(1.3, 0.8, up) * smoothstep(0.42, 0.7, 0.6 * blotch + 0.4 * scaled + 0.3 * crack);
+    albedo = mix(albedo, vec3(0.78, 0.76, 0.71), 0.6 * dry * salt);
     albedo *= 1.0 - 0.45 * wet;
-    wet = max(wet, smoothstep(0.3, 0.42, legT) * horn * smoothstep(0.46, 0.4, up));
+    wet = max(wet, smoothstep(0.3, 0.42, legT) * horn * smoothstep(0.95, 0.6, up));
     thin = mix(0.5, 0.75, smoothstep(0.1, 0.5, neckU)) * (1.0 - 0.3 * shank);
     // The back is damp with the breath of the shaft: it takes a sheen from the low sun.
     rough = mix(rough, 0.36, 0.7 * smoothstep(0.1, 0.8, n.y) * (1.0 - step(0.01, legT)));
