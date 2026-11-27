@@ -73,16 +73,18 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
 // scum on top and how much of it there is.
 // The brine is a clear dark liquid, not paint. Light goes into it, is taken by the red in it with every hand's breadth (Beer's law), and
 // comes back from the bed where it is shallow and from the silt in it where it is deep. On top of that lies a mirror, by Fresnel's law.
-vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
+// gx, gy: how p.xz falls across one pixel to the right and one up, taken by the caller of a varying before any branch of its own. The grain
+// is read with them: a read that picks its own level under a branch (or after a discard) picks it from a fall that is not the same twice.
+vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   float foam = froth.a;
   float away = length(cameraPosition - p);
   // The bed as the land lays it (land/field.ts, flats): a shelf a finger under the level, then down a hand in every two strides.
   float depth = clamp(max(-s * 0.5 - 0.02, 0.03 * (1.0 - smoothstep(0.12, 0.27, s))), 0.0, 0.7);
   // Slow clouds of paler silt carried in it, drawn out along the flow where the caller knows the flow.
-  float silt = texture2D(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006)).r;
+  float silt = textureGrad(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006), gx / 23.0, gy / 23.0).r;
   vec2 along = vec2(dot(p.xz, ${v2(F)}), dot(p.xz, ${v2(R)}));
   if (brineSilt >= 0.0) silt = mix(silt, brineSilt, 0.65);
-  else silt = mix(silt, texture2D(tGrain, vec2(along.x / 17.0 + uTime * 0.012, along.y / 5.0)).b, 0.5);
+  else silt = mix(silt, textureGrad(tGrain, vec2(along.x / 17.0 + uTime * 0.012, along.y / 5.0), vec2(dot(gx, ${v2(F)}) / 17.0, dot(gx, ${v2(R)}) / 5.0), vec2(dot(gy, ${v2(F)}) / 17.0, dot(gy, ${v2(R)}) / 5.0)).b, 0.5);
   // A light air crosses the basin in lanes some strides wide: where one passes, the skin is ruffled finer than a lens can see and gives
   // back more of the sky. Each lane wanders, swells and gives out.
   // (Only a lens that stands high over the brine sees the lanes so: from low over it they are lost in the glints, and are not looked up.)
@@ -90,9 +92,11 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   float gust = 0.0;
   if (aloft > 0.0) {
     vec2 wind = vec2(dot(p.xz, ${v2(WIND)}) - 1.6 * uTime, dot(p.xz, ${v2(CROSS)}));
-    vec4 wander = texture2D(tGrain, (p.xz - ${v2(WIND)} * (0.5 * uTime)) / 71.0);
+    vec4 wander = textureGrad(tGrain, (p.xz - ${v2(WIND)} * (0.5 * uTime)) / 71.0, gx / 71.0, gy / 71.0);
     wind.y += (wander.r - 0.5) * 9.0;
-    gust = aloft * smoothstep(0.4, 0.68, texture2D(tGrain, vec2(wind.x / 67.0, wind.y / 17.0)).g * 0.6 + texture2D(tGrain, vec2(wind.x / 29.0 + 0.4 * uTime / 29.0, wind.y / 6.1 + 0.37)).b * 0.25 + wander.b * 0.15);
+    vec2 wx = vec2(dot(gx, ${v2(WIND)}), dot(gx, ${v2(CROSS)}));
+    vec2 wy = vec2(dot(gy, ${v2(WIND)}), dot(gy, ${v2(CROSS)}));
+    gust = aloft * smoothstep(0.4, 0.68, textureGrad(tGrain, vec2(wind.x / 67.0, wind.y / 17.0), wx / vec2(67.0, 17.0), wy / vec2(67.0, 17.0)).g * 0.6 + textureGrad(tGrain, vec2(wind.x / 29.0 + 0.4 * uTime / 29.0, wind.y / 6.1 + 0.37), wx / vec2(29.0, 6.1), wy / vec2(29.0, 6.1)).b * 0.25 + wander.b * 0.15);
   }
 
   // The way light takes through the brine to the bed and back to the lens: down, and up along the bent line of sight.
@@ -120,4 +124,8 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   fres *= 1.0 - 0.55 * foam;
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
   return lit * (1.0 - fres) + brineMirror(p, n, v) * fres * mix(1.0, open, 0.35);
+}
+// For a caller that has not taken the fall itself: it is taken here of the varying (never of p, which the caller set under its own branch).
+vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
+  return brineShade(p, n, v, s, froth, dFdx(vWorld.xz), dFdy(vWorld.xz));
 }`;

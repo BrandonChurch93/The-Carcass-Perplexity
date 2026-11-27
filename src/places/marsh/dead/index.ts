@@ -183,8 +183,9 @@ void main() {
   // Yellowed horn, brown toward the point and in its cracks, crusted white where it comes out of the salt.
   vec3 albedo = mix(vec3(0.25, 0.205, 0.145), vec3(0.11, 0.075, 0.055), clamp(0.75 * smoothstep(0.5, 1.0, vAlong) + 0.3 * fleck, 0.0, 1.0));
   albedo = mix(albedo, vec3(0.3, 0.28, 0.26), 0.5 * smoothstep(0.34, 0.0, vAlong) * smoothstep(0.3, 0.55, fleck + 0.25));
-  if (uMirror > 0.5 && vWorld.y < -0.015) discard;
+  // (The discard comes last: a read that takes its level from the screen after a discard is not the same twice in the software renderer.)
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, 0.62, 0.6 + 0.4 * smoothstep(0.0, 0.3, vAlong))), 1.0);
+  if (uMirror > 0.5 && vWorld.y < -0.015) discard;
 }`;
 
 type Horn = { from: THREE.Vector3; over: THREE.Vector3; to: THREE.Vector3; thick: number };
