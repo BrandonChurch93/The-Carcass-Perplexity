@@ -372,7 +372,8 @@ ${SEA_SHADE_GLSL}
       driven += keptV * veil;
       keptV *= 1.0 - veil;
     }
-    driven *= uShow.w * uStage.x;
+    // Through the strike's long lens the veils lie a kilometre deep before the spire: thinned there, or the spire is a ghost in milk.
+    driven *= uShow.w * uStage.x * (uSkyStage.z > 0.0 ? 0.3 : 1.0);
     vec3 snowV = 0.85 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * (95.0 / lensV)) * 0.2, vec3(0.1, 0.085, 0.17)));
     light = light * (1.0 - driven) + snowV * driven;
     through *= 1.0 - driven;

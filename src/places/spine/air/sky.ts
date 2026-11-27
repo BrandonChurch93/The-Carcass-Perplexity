@@ -353,7 +353,7 @@ void main() {
     held = mix(held, max(held, wall), (1.0 - smoothstep(0.12, 0.62, uvQ.x)) * smoothstep(0.33, 0.42, uvQ.y));
     // The scud crosses the long lens too, large and soft: the sky behind the spire is weather that moves, not a picture hung there.
     vec4 scudP = scudOver(cameraPosition, d, 0.0, 0.0);
-    held = mix(held, scudP.rgb * SKY_GAIN, 0.6 * scudP.a);
+    held = mix(held, scudP.rgb * SKY_GAIN, 0.4 * scudP.a);
     held = strikeCloud(held, cameraPosition, d);
     // Through a long lens the picture is seen larger than it was made: the same cloud, four times smaller, gives it the detail it lacks
     // there, as much as the lens asks for.
