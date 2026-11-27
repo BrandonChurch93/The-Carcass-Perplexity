@@ -224,7 +224,7 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   // (The same photograph at three sizes, the finer the farther out, where the winding has drawn the coarse one out to strokes.)
   float outer = smoothstep(0.15, 0.65, r);
   float clumps = lum(textureGrad(uStreaks, ub, gx * 0.75, gy * 0.75).rgb);
-  float fine = (mix(0.35, 0.2, outer) * clumps + 0.5 * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb)) / 0.304;
+  float fine = (mix(0.45, 0.2, outer) * clumps + mix(0.4, 0.5, outer) * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb)) / 0.304;
   // (Left whole, the arms read from far off as five bold strokes of one weight. A second lay of the bands, finer and at
   // its own place along the winding, and the clumps of the cell photograph break each into lengths of unlike weight.)
   vec2 ue = vec2(2.0 * wound.x - 1.7 * drawnIn, 3.0 * wound.y) + vec2(0.67, 0.09) + 0.03 * bend;
@@ -241,7 +241,8 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   // (Outward the air between the cells widens, so an arm ends in separate cells and not in a drawn line.)
   float cells = smoothstep(0.45 + 0.45 * smoothstep(0.3, 0.8, r * shorter), 1.85, fine);
   // (Toward the eye a band is one body of cloud and its cells are the lumps of its top; outward it opens into rows of them.)
-  float body = cover * mix(cells, 0.2 + 0.8 * cells, max(core, band * (1.0 - outer)));
+  // (Inside a band the cells still show: a band is a crowd of tops, not a smooth sheet.)
+  float body = cover * mix(cells, 0.07 + 0.93 * cells, max(core, band * (1.0 - outer)));
   return body * smoothstep(0.006, 0.036, r) * (1.0 - smoothstep(0.8, 0.98, r * shorter));
 }
 void main() {
