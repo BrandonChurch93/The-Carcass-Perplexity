@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 162, 2026-11-27 10:37 UTC:
+Status 163, 2026-11-27 11:00 UTC:
 
-- `01-s162-marsh-stalks-5725.jpg`: The Blood Marsh at 1:35 (frame 5725), the stalks: the approved picture above and the judged frame of round 30 below, the same part of each at the same scale, with a line every 5 percent of the frame height. The picture's tallest stalks, the clump at the left by the steaming pool, span about 20 percent of the height; the frame's tallest span about 30. The picture's have thick pale trunks and shaggy red crowns and stand in clumps; the frame's are thin reeds spread as an even field. Measured by eye by the Builder on these lines
-- `02-s162-breath-5510.jpg`: The Breath at 1:32 (frame 5510), the rim: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has crimson bushes on the lip, a dead animal with sagging hide on dry dusty gravel and a pit of collapsed pale rock under steam; the frame has dark brown fans, a clean smooth carcass on wet rock and a banded arch over a dark hollow. The critics ask for the picture's growth, hide, ground and pit
-- `03-s162-spine-7668.jpg`: The Spine at 2:08 (frame 7668), the strike on the third spire: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has a strike that lights the tip of the spire, smoke and sparks, a few taut translucent ribbons and a snowy ridge in front; the frame has a bolt that lights nothing round it, glossy strips with hard edges, a banded spire and a dark blurred mass at left. The critics ask for the flash to light rock and cloud and for fewer, finer ribbons
+- `01-s163-ribs-1241.jpg`: The Ribs at 0:20 (frame 1241), the establishing view: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has weathered, stained rib arches, one worn through to a window, a cliff hung with black wet weed, and a tidal flat of gravel, pools and weed with a few feeders scattered across it; the frame has smooth pale ribs with little wear, a cliff face of striped texture, dark boulders dotted over the flat and the feeders standing in a row along the water. The Builder's reading of the two
+- `02-s163-breath-5242.jpg`: The Breath at 1:27 (frame 5242), the waders feeding in the channel: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has heavy waders with red feeding tassels that drip, sparkling shallow water, steam, and soft out-of-focus pebbles and red growth in front; the frame has thinner waders with striped skin, plainer water with fewer ripples and glints, and large dark boulders in front. The Builder's reading of the two. This is also the frame that one build does not draw the same twice at the small draft size, by 1 or 2 levels on up to 59 pixels, too small to see
+- `03-s163-eye-8412.jpg`: The Eye at 2:20 (frame 8412), the establishing view: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has a dark blue lake with a narrow band of orange shallows, a shore of broken rock with large boulders and a stream in front, and a small herd far off on the gravel; the frame has a wider band of orange drawn in long streaks, a flat shore dotted with round stones, and a larger, paler herd at the lower right. The Builder's reading of the two
 
+Status 162, 2026-11-27 10:37 UTC, showed: The Blood Marsh at 1:35 (frame 5725), the stalks: the approved picture above and the judged frame of round 30 below, the same part of each...
 Status 161, 2026-11-27 10:26 UTC, showed: The Spine at 2:00 (frame 7234), the top edge where the picture has invalid values: 80 by 45 pixels of the frame at 1920x1080, final tier...
 Status 160, 2026-11-27 10:00 UTC, showed: The Heart at 0:58 (frame 3477), the crusted channel: the approved picture at left and the judged frame of round 30 at right, drawn at...
-Status 159, 2026-11-27 09:40 UTC, showed: The Ribs at 0:34 (frame 2085) with the rib bones drawn alone at the review tier at 960x540, from the stills a render machine sent at 2:09...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T10:37:54Z
-phase 6: 13.80 h used of 24.00 h
-build: 58.78 h used of 72.00 h
+2026-11-27T11:00:54Z
+phase 6: 14.19 h used of 24.00 h
+build: 59.16 h used of 72.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 11
+minutes since the last status: 23
 ```
 
 ## Phases
