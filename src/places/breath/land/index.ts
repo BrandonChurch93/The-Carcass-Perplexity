@@ -177,7 +177,7 @@ export function create(ctx: Context): Piece {
   }
   // The fallen slabs are the tiers' own stone, broken: cream like the tiers they fell from, plain on their broken faces. Drawn with the
   // tiers' bedded sheet they were striped like a sweet.
-  const fallen = rock.bone(0.9, [0.74, 0.7, 0.62], [0.47, 0.43, 0.36], { ...tile('crust', [0.307, 0.255, 0.218], 5.5) }, THREE.DoubleSide);
+  const fallen = rock.bone(0.9, [0.74, 0.7, 0.62], [0.47, 0.43, 0.36], { ...tile('crust', [0.307, 0.255, 0.218], 5.5) }, THREE.FrontSide);
   slabs.add(mesh(mergeGeometries(blocks), fallen));
   slabs.add(mesh(heap(), rubble));
 
