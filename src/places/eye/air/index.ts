@@ -26,7 +26,7 @@ type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre', { a: Four; b: Four; c: Four; d?: Four }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1] },
   low: { a: [600, 3.0, 70, 420], b: [0.4, 0.6, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
-  edge: { a: [520, 2.0, 12, 300], b: [0.12, 0.6, 1.0, 0.3], c: [0, 0, 0.2, 0.6], d: [1, 0, 0, 0] },
+  edge: { a: [560, 2.4, 24, 320], b: [0.2, 0.95, 1.0, 0.35], c: [0, 0, 0.1, 0.6], d: [1, 0, 0, 0] },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   centre: { a: [520, 2.0, 10, 140], b: [0.75, 0.8, 1.0, 0.35], c: [0, 0, 0.3, 0.45], d: [0.8, 1, 1, 0] },
 };
@@ -46,11 +46,11 @@ ${RIG_GLSL}
 void main() {
   vec3 d = normalize(vDir);
   // The footprint of a pixel on the far picture, taken here before any branch so that the frame repeats.
-  vec2 plateSpot = plateUv(cameraPosition, d);
-  vec2 plateGx = dFdx(plateSpot);
-  vec2 plateGy = dFdy(plateSpot);
+  vec4 plateSpot = plateAt(cameraPosition, d);
+  vec2 plateGx = dFdx(plateSpot.xy);
+  vec2 plateGy = dFdy(plateSpot.xy);
   if (uPlateTone.w > 0.5) {
-    gl_FragColor = vec4(rigOut(farRadianceGrad(cameraPosition, d, 0.0, plateGx, plateGy)), 1.0);
+    gl_FragColor = vec4(rigOut(farRadianceAt(cameraPosition, d, 0.0, plateSpot, plateGx, plateGy)), 1.0);
     return;
   }
   vec3 c = skyRadiance(d);
@@ -125,7 +125,8 @@ float mistAt(vec3 q, out float h) {
   if (form.y <= 0.0) return 0.0;
   float d = form.x;
   h = q.y / form.y;
-  if (h < 3.0) {
+  // The grain is the bank's: the sheet on the water alone has none, and is not asked for it.
+  if (h < 3.0 && form.z > 0.0) {
     // The grain: heaps and hollows read along the shore and by height, and drawn out the way the lens looks through the bank, so that a
     // look through its depth finds one heap and not the sum of many. They are carried up slowly and pushed through that depth, so what
     // is seen of them turns over and is never the same shape carried sideways.
@@ -174,8 +175,12 @@ void main() {
   float through = exp(-od);
   vec3 low = skyRadiance(normalize(vec3(rd.x, 0.05, rd.z)));
   float toSun = dot(rd, uSunDir);
+  // Where the air is too thin to show, the sun in it is not asked after. Six looks along the way, which the samples of a frame fill in.
   float inSun = 0.0;
-  for (int i = 0; i < 10; i++) inSun += 0.1 * mistSun(ro + rd * (min(far, 2600.0) * (float(i) + jitter) / 10.0));
+  if (through < 0.997) {
+    for (int i = 0; i < 6; i++) inSun += mistSun(ro + rd * (min(far, 2600.0) * (float(i) + jitter) / 6.0));
+    inSun /= 6.0;
+  }
   vec3 light = (low * vec3(0.8, 0.8, 0.84) + uSunColour * (0.016 + 0.03 * toSun * toSun + 0.05 * pow(max(toSun, 0.0), 6.0)) * inSun) * (1.0 - through);
 
   // The mist, marched through the ring of water it lies on.
@@ -199,7 +204,8 @@ void main() {
     float t0 = max(a1 > a0 ? a0 : b0, 0.0);
     float t1 = b1 > b0 ? b1 : a1;
     if (t1 > t0) {
-      const int STEPS = 12;
+      // Twelve steps where the way goes through the bank before the wall, half of them where it meets only the thin sheet on the water.
+      int steps = b1 > b0 ? 12 : 6;
       // The low sun comes through the mist from the side: forward of it the mist is bright, and a little again straight back.
       float phase = 0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun;
       vec3 skyLight = 0.36 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.4 * low;
@@ -212,10 +218,11 @@ void main() {
       }
       vec3 sum = vec3(0.0);
       float tr = 1.0;
-      for (int i = 0; i < STEPS; i++) {
+      for (int i = 0; i < 12; i++) {
+        if (i >= steps) break;
         // The steps stand closer toward the wall, where the bank is.
-        float u0 = sqrt(float(i) / float(STEPS));
-        float u1 = sqrt(float(i + 1) / float(STEPS));
+        float u0 = sqrt(float(i) / float(steps));
+        float u1 = sqrt(float(i + 1) / float(steps));
         float dt = (t1 - t0) * (u1 - u0);
         vec3 p = ro + rd * (t0 + (t1 - t0) * mix(u0, u1, jitter));
         vec2 r = p.xz - shore.xy;
@@ -230,6 +237,8 @@ void main() {
         float thick = mistAt(q, h) * faced * 0.006 * mistOn;
         if (thick <= 0.0) continue;
         float a = 1.0 - exp(-thick * dt);
+        // A step that holds next to nothing is not lit.
+        if (a < 0.0015) continue;
         // The sun reaches a point of the mist through the mist that lies toward it, and the long shade of the rim lies in it too.
         float sun = mix(mistSun(p), wallSun, smoothstep(320.0, 60.0, q.z));
         if (sun > 0.01) {
@@ -321,6 +330,7 @@ export function create(ctx: Context): Piece {
         tone.set(p.tone[0], p.tone[1], p.tone[2], p.wall ? 2 : 1);
         (rig.uPlateAir as THREE.IUniform<THREE.Vector4>).value.fromArray(p.air ?? [1, 0.3, 0, 0.1]);
         (rig.uPlateSoft as THREE.IUniform<number>).value = p.soft ?? 0;
+        (rig.uPlateDraw as THREE.IUniform<number>).value = p.drawn ?? 1;
         // The streaks are given in the picture's u and v and handed on in tan from its middle and its waterline.
         const streaks = [rig.uCirrusA, rig.uCirrusB] as THREE.IUniform<THREE.Vector4>[];
         const shown = (rig.uCirrus as THREE.IUniform<THREE.Vector2>).value.set(0, 0);
