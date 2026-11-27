@@ -15,6 +15,62 @@ const WIND_LEN = Math.hypot(WIND_RAW[0] as number, WIND_RAW[1] as number);
 const WIND_N = [(WIND_RAW[0] as number) / WIND_LEN, (WIND_RAW[1] as number) / WIND_LEN];
 const v2 = (a: number[]): string => `vec2(${(a[0] as number).toFixed(4)}, ${(a[1] as number).toFixed(4)})`;
 
+/** How many of the animals the pool answers to with rings (shared/anchors.ts, BEASTS). */
+export const MAX_STIR = 16;
+
+const WIND_ANGLE = Math.atan2(WIND_N[1] as number, WIND_N[0] as number);
+const omega = (len: number): number => {
+  const k = (Math.PI * 2) / len;
+  return Math.sqrt(9.81 * k + 0.000074 * k * k * k);
+};
+// The standing ripple of the place, length by length: metres from crest to crest, the turn off the light air's way, the lean it gives
+// the skin, and which slow patch of the pool lets it through (a look at the grain that main has taken already). Each length runs at
+// its own speed, by gravity and the skin's tension, so the pattern never slides as one sheet.
+const AMBIENT: [number, number, number, string][] = [
+  [1.37, 0.72, 0.04, 'carried.b'],
+  [0.91, -0.38, 0.045, 'heave.g'],
+  [0.61, 0.1, 0.05, 'carried.g'],
+  [0.43, -0.75, 0.055, 'carried.a'],
+  [0.29, 0.47, 0.06, 'fine.g'],
+  [0.197, -1.12, 0.065, 'carriedFine.r'],
+  [0.131, 0.96, 0.065, 'heave.r'],
+  [0.089, -0.33, 0.06, 'fine.b'],
+  [0.061, 1.41, 0.05, 'carriedFine.a'],
+  [0.043, -1.52, 0.04, 'fine.a'],
+];
+// One wave is kept only where the lens can tell its crests apart along the way it runs: the pixel's footprint on the pool is long
+// toward the lens and short across, so a low lens keeps the crests that run toward it and loses the ones that lie across. What is
+// lost is not gone: it is counted, and widens what the pixel mirrors.
+const ambientWaves = AMBIENT.map(([len, turn, lean, patch], i) => {
+  const ang = WIND_ANGLE + turn;
+  const k = (Math.PI * 2) / len;
+  return `  {
+    vec2 d = vec2(${Math.cos(ang).toFixed(4)}, ${Math.sin(ang).toFixed(4)});
+    float seenAs = smoothstep(${(0.42 * len).toFixed(4)}, ${(0.14 * len).toFixed(4)}, max(abs(dot(gX, d)), abs(dot(gY, d))));
+    float lets = ${lean.toFixed(3)} * smoothstep(0.3, 0.68, ${patch});
+    ripples += d * (lets * seenAs * cos(${k.toFixed(3)} * dot(d, bent) - ${omega(len).toFixed(3)} * uTime + ${(i * 2.39).toFixed(2)}));
+    lost += lets * lets * (1.0 - seenAs * seenAs);
+  }`;
+}).join('\n');
+// What an animal sends out as it shifts in the brine: rings of three lengths, in packets that leave it one after another.
+const STIR: [number, number][] = [
+  [0.34, 0.13],
+  [0.19, 0.11],
+  [0.107, 0.075],
+];
+const stirWaves = STIR.map(([len, lean], j) => {
+  const k = (Math.PI * 2) / len;
+  const w = omega(len);
+  const group = (0.5 * w) / k;
+  return `      {
+        float seenAs = smoothstep(${(0.42 * len).toFixed(4)}, ${(0.14 * len).toFixed(4)}, across);
+        float packet = 0.5 + 0.5 * sin((0.8 + 0.5 * own) * (uTime - out2 / ${group.toFixed(4)}) + own * ${(19 + j * 7).toFixed(1)});
+        float lets = ${lean.toFixed(3)} * reachOut * packet;
+        ripples += u * (lets * seenAs * cos(${k.toFixed(3)} * out2 - ${w.toFixed(3)} * uTime + own * ${(31 + j * 11).toFixed(1)}));
+        lost += lets * lets * (1.0 - seenAs * seenAs);
+      }`;
+}).join('\n');
+
 export const BRINE_VERTEX = /* glsl */ `
 varying vec3 vWorld;
 void main() {
@@ -37,19 +93,12 @@ uniform int uRingCount;
 uniform vec4 uRings[${MAX_RINGS}];
 // Where gas comes up through the pool's floor all the time: x, z, a number of its own, strength.
 uniform vec4 uSeeps[${MAX_SEEPS}];
+// The animals that stand or lie in the brine: x, z, the reach of the body in metres, a number of its own.
+uniform vec4 uStir[${MAX_STIR}];
+uniform int uStirCount;
 ${RIG_GLSL}
 ${FIELD_GLSL}
 ${BRINE_GLSL}
-
-// One train of wavelets: its slope at q. Short waves on a liquid do not travel together: each length has its own speed (gravity and the skin's
-// tension), so the pattern never slides as one sheet.
-vec2 train(vec2 q, vec2 dir, float len, float bend, vec2 group) {
-  float k = 6.2832 / len;
-  float w = k * sqrt(9.81 / k + 0.000074 * k);
-  return dir * cos(k * dot(dir, q) - w * uTime + bend + group.y * 7.0) * smoothstep(0.38, 0.66, group.x) * 1.6;
-}
-// Wavelets go in groups: a few crests, each a few lengths long, that rise and die as the group passes at half the crests' speed. One
-// look for two trains of near lengths (rg for the one, ba for the other), read at the level a pixel of this width wants.
 
 // The renderer shades four pixels together, and a value set under a branch or after a discard is not set in the pixel that did not get
 // there: its fall across the four, and the level a mipmapped picture picks for itself from that fall, is then not the same twice. So the
@@ -63,13 +112,6 @@ float grainLod;
 vec4 grain(vec2 uv, float levels) {
   return textureLod(tGrain, uv, grainLod - levels);
 }
-vec4 groups(vec2 q, vec2 dir, float len, float levels) {
-  float k = 6.2832 / len;
-  float w = k * sqrt(9.81 / k + 0.000074 * k);
-  vec2 g = vec2(dot(dir, q) - 0.5 * w / k * uTime, dot(vec2(-dir.y, dir.x), q));
-  return textureLod(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)), max(grainLod - levels, 0.0));
-}
-
 void main() {
   gX = dFdx(vWorld.xz);
   gY = dFdy(vWorld.xz);
@@ -151,38 +193,39 @@ void main() {
   // Where the big ones wade the brine is churned: dark with mud and never still.
   brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
   brineSlurry = 1.0 - smoothstep(1.8, 4.2, length(p.xz - vec2(${STUCK_AT[0].toFixed(3)}, ${STUCK_AT[1].toFixed(3)})));
-  // A light air crosses in lanes (cat's paws): under one the skin is drawn into wavelets a hand long, five trains of them at five lengths,
-  // each bent by what is under it. Between the lanes it is glass. Over the seep pool the gas keeps it troubled.
-  vec2 wdir = ${v2(WIND_N)};
-  vec2 lane = vec2(dot(p.xz, wdir) - 1.6 * uTime, dot(p.xz, vec2(-wdir.y, wdir.x)));
-  vec2 wcross = vec2(-wdir.y, wdir.x);
-  float paw = smoothstep(0.5, 0.74, textureGrad(tGrain, vec2(lane.x / 41.0, lane.y / 11.0) + patchy.rb * 0.06, vec2(dot(gX, wdir) / 41.0, dot(gX, wcross) / 11.0), vec2(dot(gY, wdir) / 41.0, dot(gY, wcross) / 11.0)).g);
-  // Outside the lanes it is not glass either: the flow, the gas and what wades keep a low ripple on it, more here and less there.
-  float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 2.2 * speed + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
+  // The skin is never glass. A light air keeps a low ripple on it, more in this patch and less in that, and whatever lives in it
+  // sends its own rings out. Every wave is counted, not looked up: a length, a way and a speed of its own.
   vec4 bend = grain(p.xz / 0.83 + vec2(0.01, 0.007) * uTime, -0.2688);
+  // (No crest is ruled: the place a wave is asked at is pushed about a hand's breadth by the grain.)
+  vec2 bent = p.xz + (bend.rg - 0.5) * 0.05 + (fine.ba - 0.5) * 0.15;
   vec2 ripples = vec2(0.0);
-  // (A train comes in only where a crest is a dozen pixels and more across the way the lens squeezes it most: far off the few broad ones
-  // are left, never a hatching of thin lines.)
-  // (No train is everywhere: each comes and goes in patches of its own, or the six would weave one cloth. And a wave is drawn only where
-  // a lens can tell its crests apart: finer than that it would be grit.)
-  if (px < 0.12) {
-    vec4 e = groups(p.xz, wdir, 0.55, 2.8379);
-    ripples += train(p.xz, normalize(wdir - wcross * 0.17), 0.73, bend.b * 3.0 + 2.1, e.rg) * 0.1 * smoothstep(0.25, 0.7, carried.g) * smoothstep(0.12, 0.06, px);
-    ripples += train(p.xz, normalize(wdir + wcross * 0.31), 0.41, bend.r * 4.0, e.ba) * 0.1 * fine.g * smoothstep(0.045, 0.022, px);
-  }
-  if (px < 0.045) {
-    vec4 e = groups(p.xz, normalize(wdir + wcross * 0.2), 0.22, 1.5160);
-    ripples += train(p.xz, normalize(wdir - wcross * 0.47), 0.27, bend.g * 5.0, e.rg) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.028, 0.014, px);
-    ripples += train(p.xz, normalize(wdir + wcross * 0.83), 0.173, bend.b * 5.0, e.ba) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.018, 0.009, px);
-  }
-  if (px < 0.02) {
-    vec4 e = groups(p.xz, normalize(wdir - wcross * 0.6), 0.09, 0.2265);
-    ripples += train(p.xz, normalize(wdir - wcross * 1.3), 0.117, bend.a * 6.0, e.rg) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.012, 0.006, px);
-    ripples += train(p.xz, normalize(wdir + wcross * 2.4), 0.071, bend.r * 7.0 + 1.3, e.ba) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.0075, 0.0038, px);
+  float lost = 0.0;
+  float ruffle = 0.42 + 0.5 * smoothstep(0.35, 0.75, carried.a) + 2.2 * speed + 0.25 * inPool + 1.3 * brineMud;
+  if (dist < 120.0) {
+${ambientWaves}
+    ripples *= ruffle;
+    lost *= ruffle * ruffle;
+    for (int i = 0; i < ${MAX_STIR}; i++) {
+      if (i >= uStirCount) break;
+      vec4 beast = uStir[i];
+      vec2 dv = p.xz - beast.xy;
+      float r = length(dv);
+      if (r > beast.z + 8.0) continue;
+      vec2 u = dv / max(r, 0.05);
+      float own = beast.w;
+      // (Metres out from the hide, which is no circle.)
+      float out2 = r - beast.z * (0.72 + 0.2 * sin(atan(u.y, u.x) * 2.0 + own * 9.0)) + (bend.b - 0.5) * 0.28 + (fine.g - 0.5) * 0.36;
+      float reachOut = smoothstep(-0.15, 0.2, out2) * exp(-max(out2, 0.0) / 2.4) / (1.0 + 0.45 * max(out2, 0.0));
+      float across = max(abs(dot(gX, u)), abs(dot(gY, u)));
+${stirWaves}
+    }
   }
   // (Near the lens every wavelet is seen for itself and turns its own piece of the sky: far off they are averaged into the sheen.)
   float nearGain = 1.0 + 1.0 * smoothstep(14.0, 4.0, dist);
-  slope += ripples * ruffle * (0.6 + 0.8 * bend.g) * nearGain;
+  slope += ripples;
+  // (Only for a lens that stands in the place: from the far bank the wallow is one more red reach of the vein.)
+  brineSheen = 0.12 + 0.88 * max(brineMud, 1.0 - smoothstep(9.0, 24.0, length(p.xz - vec2(${STUCK_AT[0].toFixed(3)}, ${STUCK_AT[1].toFixed(3)})))) * smoothstep(40.0, 22.0, dist);
+  brineRough = clamp(sqrt(lost) * 4.0 + 0.5 * smoothstep(0.02, 0.3, px) + 0.6 * inPool, 0.0, 1.0);
 
   // How much froth the domes and the bursts have left here.
   float boil = 0.0;
@@ -307,15 +350,8 @@ void main() {
   vec3 bedTex = vec3(0.45, 0.4, 0.36);
   if (depth < 0.6) bedTex = textureGrad(tBed, bedAt / 2.6, fdx * (0.62 / 2.6), fdy * (0.62 / 2.6)).rgb;
   // (Wet and stained: the bed under the shallows is darker than the dry crust beside it, never paler.)
-  brineBed = bedTex * vec3(0.2, 0.1, 0.085) * (0.7 + 0.6 * fleck.b);
+  brineBed = bedTex * vec3(0.2, 0.1, 0.085) * (0.7 + 0.6 * fleck.b) * (1.0 - 0.62 * brineMud);
   vec3 lit = brineShade(p, n, v, s, froth, gX, gY) * (1.0 - 0.3 * sill);
-  // The cloud is brightest overhead: a wavelet that leans to the lens far enough stands the high sky on its face. Small hard glints
-  // on the crests, and the body between them stays its own red.
-  // (Counted by how far the wavelet lifts the mirrored ray over the level pool's, or a lens that looks down would find the glint on all of it.)
-  // (And by the wavelet alone: the long face of a ring wave leans to the lens along its whole front, and would carry one grey band.)
-  float high = reflect(-v, normalize(vec3(slope.x - 0.8 * swell.x, 1.0, slope.y - 0.8 * swell.y))).y - v.y;
-  // (Soft at its edge and broken along a crest: a long front carries it in pieces, never as one white band.)
-  float glint = smoothstep(0.2, 0.62, high + (bend.g - 0.5) * 0.3 + (fleck.r - 0.5) * 0.14);
   // Silt hangs in it in slow clouds a hand to a stride across, paler here and darker there: under a dome and in a thing's mirror image,
   // where no sky lies on it, the brine is still not one flat red.
   lit *= 1.0 + (0.24 * (heave.g - 0.5) + 0.16 * (fine.r - 0.5)) * smoothstep(40.0, 10.0, dist) * (1.0 - foam);
@@ -325,8 +361,6 @@ void main() {
   lit *= 1.0 - 0.5 * wetLine;
   lit += uSkyZenith * 0.045 * smoothstep(0.42, 0.58, stood) * smoothstep(0.74, 0.6, stood) * smoothstep(30.0, 10.0, dist) * (1.0 - foam);
   lit *= 1.0 + 0.16 * ringed * sin(stood * 30.0 + uTime * 5.5 + patchy.r * 9.0) * clamp(brineMud + brineSlurry, 0.0, 1.0);
-  // (Stirred mud is dull: it carries no glint. Nor is there much of one off the seep pool, where the brine runs smooth.)
-  lit += uSkyZenith * 0.12 * glint * glint * (1.0 - 0.7 * foam) * (1.0 - 0.85 * clamp(brineMud + brineSlurry, 0.0, 1.0)) * skyOpen(p) * smoothstep(60.0, 20.0, dist) * mix(0.3, 1.0, smoothstep(24.0, 14.0, pool));
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
