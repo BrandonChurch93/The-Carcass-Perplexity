@@ -28,3 +28,12 @@ Prompt or command: `python3 assets-src/eye/land/make_rocks.py`. It writes two at
 Takes: 2 made, take 2 kept (the first had too few broken faces).
 Why this one: lets the film raise a ball into a broken stone and light it with no unwrapping.
 Date: 2026-11-26
+
+## `public/assets/eye/land/outcrop-map.png`, `public/assets/eye/land/outcrop-rock.png` and `public/assets/eye/land/outcrop-mesh.png`
+
+Made by: `assets-src/eye/land/bake-outcrop.ts` on Node with tsx and sharp, from the film's own code. No picture goes in and no model is used.
+From: `cropMap()` and `cropMeshData()` in `src/places/eye/land/outcrop.ts`, which read `src/places/eye/land/height.ts`.
+Prompt or command: `npx tsx assets-src/eye/land/bake-outcrop.ts`, from the repository root.
+Takes: computed; the one result is kept. Run it again after any change to `outcrop.ts` or `height.ts`, or the relief drawn and the ground the stones stand on part company.
+Why this one: the relief of the outcrop took ten seconds to work out at the start of every render. The map holds its lie both ways (r, g) and how much sky each place sees (b); the rock picture holds rock or rubble at half the size; the mesh picture holds every corner of the mesh, a texel each, in two tiles side by side (left: height in r and g, standing rock in b; right: the smooth ground's normal in r and g, wet beside the stream in b).
+Date: 2026-11-26
