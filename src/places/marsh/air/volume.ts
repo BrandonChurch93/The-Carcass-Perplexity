@@ -30,6 +30,19 @@ export const HAZE_OVER_SKY = 500;
 export const RAIN_APART = 1.3;
 // The overcast thickens as the rain comes on: between these two seconds of the place the sky and the far air lose this share of their light.
 export const DUSK = { from: 3.2, to: 7, share: 0.6 };
+// After that the sheet is not one weight: each later shot looks another way under it and has the share of the light its approved picture
+// shows. From the place's second `from` (a cut of the film, frames 6048 and 6263 of a place that opens at 5618) the share is `share`.
+export const DUSK_SHOTS: { from: number; share: number }[] = [
+  { from: (6048 - 5618) / 60, share: 0.95 },
+  { from: (6263 - 5618) / 60, share: 0.56 },
+];
+/** GLSL: the share of its light the sky and the far air keep at the place's second t. Shared by the sky and the air pass. */
+export const DUSK_GLSL = /* glsl */ `
+float duskAt(float t) {
+  float d = mix(1.0, ${DUSK.share.toFixed(4)}, smoothstep(${DUSK.from.toFixed(4)}, ${DUSK.to.toFixed(4)}, t));
+${DUSK_SHOTS.map((shot) => `  d = mix(d, ${shot.share.toFixed(4)}, step(${shot.from.toFixed(5)}, t));`).join('\n')}
+  return d;
+}`;
 // The cast shade of what stands over the ground: ways up into the sky, reads on each, reach in metres as a share of the distance, depth.
 export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.52 };
 
@@ -40,8 +53,9 @@ export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.52 };
  *  the share `near`, and whole from the second of the two distances `whole` on (metres): the near ground keeps its darks. */
 export const LOW_AIR = { density: 0.0012, height: 9, light: [0.45, 0.375, 0.405], overSky: 4000, dusk: 0.9, near: 0.15, whole: [60, 900] };
 /** Steam is vapour, never a wall: the most of the view a whole depth of it may take, the metres from the lens between which it comes in
- *  (a lens that stands in a column sees through it), the light of its foot over the brine and the height in metres at which it is the sky's. */
-export const STEAM_LOOK = { most: 0.7, near: [0.5, 2.5], foot: [0.56, 0.45, 0.46], whole: 1.6, dusk: 0.8 };
+ *  (a lens that stands in a column sees through it), the light of its foot over the brine, the height in metres at which it is the sky's, how much of the dusk it takes and how much of the
+ *  sky's light its top gives back (vapour is greyer than the sheet it stands against). */
+export const STEAM_LOOK = { most: 0.7, near: [0.5, 2.5], foot: [0.56, 0.45, 0.46], whole: 1.6, dusk: 0.8, grey: 0.74 };
 /** The rain hangs from its cloud to the flats and no higher: the top of the curtain as the tangent of its height over the horizon. */
 export const RAIN_TOP = 0.12;
 /** The fourth shot (film frames 6263 to 6585 of a place that opens at 5618, 60 a second) stands low in the wallow's own vapour: the share
@@ -76,7 +90,6 @@ precision highp float;
 #define CAST_REACH ${f(CAST.reach)}
 #define CAST_DEPTH ${f(CAST.depth)}
 #define RAIN_APART ${f(RAIN_APART)}
-#define DUSK_FROM ${f(DUSK.from)}
 #define LOW_DENSITY ${f(LOW_AIR.density)}
 #define LOW_K ${f(1 / LOW_AIR.height)}
 #define LOW_LIGHT ${v3(LOW_AIR.light)}
@@ -91,12 +104,11 @@ precision highp float;
 #define STEAM_FOOT ${v3(STEAM_LOOK.foot)}
 #define STEAM_WHOLE ${f(STEAM_LOOK.whole)}
 #define STEAM_DUSK ${f(STEAM_LOOK.dusk)}
+#define STEAM_GREY ${f(STEAM_LOOK.grey)}
 #define RAIN_TOP ${f(RAIN_TOP)}
 #define VEIL_FROM ${f(WALLOW_VEIL.from)}
 #define VEIL_TO ${f(WALLOW_VEIL.to)}
 #define VEIL_SHARE ${f(WALLOW_VEIL.share)}
-#define DUSK_TO ${f(DUSK.to)}
-#define DUSK_SHARE ${f(DUSK.share)}
 precision highp sampler3D;
 uniform highp sampler2D tDepth;
 uniform mat4 uInvProjection;
@@ -121,6 +133,7 @@ uniform vec3 uClear[2];
 varying vec2 vUv;
 ${HASH_GLSL}
 ${RIG_GLSL}
+${DUSK_GLSL}
 
 void viewRay(out vec3 ro, out vec3 rd, out float far, out float open) {
   // The engine lays this half-size pass over the scene by depth, and takes each texel to have been marched to the depth of the full-size pixel at twice its index.
@@ -284,13 +297,13 @@ void main() {
   viewRay(ro, rd, far, open);
   vec3 airLight = uAirColour;
   // The far air greys with the sky as the rain comes on.
-  float dusk = mix(1.0, DUSK_SHARE, smoothstep(DUSK_FROM, DUSK_TO, uTime));
+  float dusk = duskAt(uTime);
   vec3 sum = vec3(0.0);
   float trans = 1.0;
 
   // Steam takes the sky's light, so it greys with the sky as the rain comes on: it is never brighter than the overcast behind it.
   // Its foot takes the light the brine throws up.
-  vec3 steamLit = (uSkyZenith * 0.6 + uSkyHorizon * 0.4) * 0.97 * mix(1.0, dusk, STEAM_DUSK);
+  vec3 steamLit = (uSkyZenith * 0.6 + uSkyHorizon * 0.4) * STEAM_GREY * mix(1.0, dusk, STEAM_DUSK);
   vec3 steamFoot = STEAM_FOOT * mix(1.0, dusk, STEAM_DUSK);
   ivec2 here = ivec2(gl_FragCoord.xy);
   // (Half a step of play, and a different one for each sample of a frame: the frame's samples together are smoother than any one.)

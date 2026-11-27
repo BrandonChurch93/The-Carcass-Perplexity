@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { DEG, HERO_DOME, K1_AT, K1_DIR, K2_AT, K2_DIR, POOL_R, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
+import { DEG, HERO_DOME, K1_AT, K1_DIR, K2_AT, K2_DIR, POOL_R, SMALL_DOME, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { bakeNoise } from './noise';
 import { createSky } from './sky';
@@ -30,8 +30,9 @@ export function create(ctx: Context): Piece {
   // column and none stands in it: by the west bank, over the left of the pool as the pool's lens sees it, and two lesser ones.
   own.push({ at: [-7.1, 0, -5.1], radius: 1.4, strength: 0.8, rise: 12, kind: 'steam', lean });
   own.push({ at: [-2.5, 0, -6.5], radius: 1.3, strength: 0.55, rise: 10, kind: 'steam', lean });
-  // (The third is the plume the pool's lens has at its left hand, before the stalks: narrow, dense at its foot.)
-  own.push({ at: [0.45, 0, 7.4], radius: 0.45, strength: 0.8, rise: 5, kind: 'steam', lean });
+  // (The third is the plume the pool's lens has at its left hand: it stands over the small dome, whose tearing that lens is set on, a
+  // stride behind it, so the drops fly before it.)
+  own.push({ at: [SMALL_DOME[0] - 0.5, 0, SMALL_DOME[1] - 0.6], radius: 0.9, strength: 0.75, rise: 5, kind: 'steam', lean });
   own.push({ at: [0.5, 0, -7.5], radius: 0.9, strength: 0.35, rise: 6, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
   own.push({ at: [-1, 0, -4], radius: 5, strength: 0.012, rise: 5, kind: 'steam', lean });

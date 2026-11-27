@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
-import { DUSK, RAIN_APART, RAIN_AT, RAIN_TURN, RAIN_WALK } from './volume';
+import { DUSK_GLSL, RAIN_APART, RAIN_AT, RAIN_TURN, RAIN_WALK } from './volume';
 
 const VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -27,6 +27,7 @@ const float RAIN_WALK = ${RAIN_WALK.toFixed(4)};
 const float RAIN_AT = ${RAIN_AT.toFixed(1)};
 const float RAIN_APART = ${RAIN_APART.toFixed(4)};
 ${RIG_GLSL}
+${DUSK_GLSL}
 
 void main() {
   vec3 d = normalize(vDir);
@@ -79,7 +80,7 @@ void main() {
   c *= mix(1.25, 1.7, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
   // The overcast thickens as the rain comes on (the air pass greys the far air with it).
-  c *= mix(1.0, ${DUSK.share.toFixed(3)}, smoothstep(${DUSK.from.toFixed(1)}, ${DUSK.to.toFixed(1)}, uTime));
+  c *= duskAt(uTime);
   gl_FragColor = vec4(rigPlain(c), 1.0);
 }`;
 
