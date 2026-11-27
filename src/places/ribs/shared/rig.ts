@@ -12,12 +12,19 @@ import { loopPhase, stagedSeconds } from './stage';
 export const LAND = { minX: -1200, maxX: 1300, minZ: -3500, maxZ: 1100, width: 512, height: 960 };
 export const CONTACT = { size: 1024, minRadius: 30, maxRadius: 220 };
 /** The cloud sheet: its height, metres of one repeat of the mask, and how much of the sun is left under a cloud. */
-export const CLOUD = { height: 1500, repeat: 5200, shade: 0.12, size: 256 };
+export const CLOUD = { height: 1500, repeat: 5200, shade: 0.12, size: 512 };
+/**
+ * The deck: the sun comes down only through the cloud's own gaps. Where the staged break stands the deck is thin, and the gaps of the
+ * mask's third field open in it: `shut` is what the break is given where the field is closed, `open` what it is given over that where a
+ * gap stands whole, `under` the share of the sky's own light a surface keeps under the shut deck, `from` and `to` the field's values a gap's edge runs between, `whole` how far the break is cut by the gaps (0 is the
+ * smooth pool of the first two waves). The gaps go with the cloud, so the lit patches cross blades, flats and water at the wind's pace.
+ */
+export const DECK = { shut: 0.3, open: 1.05, from: 0.36, to: 0.6, whole: 1, under: 0.4 };
 export const MAX_EMITTERS = 8;
 /** The fine relief of the floor, laid over the bed twice from one tiling picture: metres of a repeat and metres of relief, wide and small. */
 export const FINE = { size: 256, wide: 37, wideAmp: 0.2, small: 9.7, smallAmp: 0.07 };
 /** The one wide break in the cloud that lets the sun down on the strait: where its light falls on the ground at the establishing key, and its radius, metres. */
-export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62, bounce: 2.2 };
+export const BREAK = { x: 60, z: -560, radius: 760, gain: 0.8, cover: 0.62, bounce: 2.2 };
 /**
  * The break by shot: where the low sun comes down on the ground at the shot's key and how wide, metres, and where the break stands in the
  * sky, degrees right of north. The approach and the strait are one move and keep BREAK. Inside a shot the light goes with the wind; at a cut
@@ -26,8 +33,8 @@ export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62, bou
  * bore's spray in the gate. `sky` is what the cloud's own brightness is given in the shot: the bore comes in under a heavier sky.
  * `shade` is what the sky's own light on things is given: the colony's rock keeps its folds dark under a sun that only tops its ledges.
  */
-const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number }[] = [
-  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 1.6, sky: 0.54, shade: 0.5 },
+const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number }[] = [
+  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 1.6, sky: 0.54, shade: 0.5, deck: 0.5 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23, sky: 0.75 },
   { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4 },
   { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.54, heads: 0.4 },
@@ -226,8 +233,8 @@ function gridTexture(grid: Grid): THREE.DataTexture {
   return t;
 }
 
-/** The cloud mask: noise that repeats, so the sheet can drift for ever. r is the cover (0 to 1, about 0.5 at the edge of a cloud), g a finer field for the cloud's own lumps. */
-function cloudMask(): { texture: THREE.DataTexture; cover: (u: number, v: number) => number } {
+/** The cloud mask: noise that repeats, so the sheet can drift for ever. r is the cover (0 to 1, about 0.5 at the edge of a cloud), g a finer field for the cloud's own lumps, b the deck's gaps (DECK): it lies in the same texel as the cover, so the sun through the deck costs a surface one read. */
+function cloudMask(): { texture: THREE.DataTexture; cover: (u: number, v: number) => number; gaps: (u: number, v: number) => number } {
   const n = CLOUD.size;
   const rng = stream('ribs/rig/cloud');
   const layer = (cells: number): Float32Array => {
@@ -264,11 +271,12 @@ function cloudMask(): { texture: THREE.DataTexture; cover: (u: number, v: number
   };
   const cover = fbm([3, 6, 12, 24, 48], [1, 0.6, 0.34, 0.2, 0.12]);
   const lumps = fbm([10, 20, 40, 80], [1, 0.6, 0.36, 0.2]);
+  const gaps = fbm([7, 14, 28, 56, 112], [1, 0.66, 0.46, 0.32, 0.22]);
   const data = new Uint8Array(n * n * 4);
   for (let i = 0; i < n * n; i++) {
     data[i * 4] = Math.round(255 * Math.min(1, Math.max(0, ((cover[i] as number) - 0.5) * 2.2 + 0.5)));
     data[i * 4 + 1] = Math.round(255 * Math.min(1, Math.max(0, ((lumps[i] as number) - 0.5) * 2.2 + 0.5)));
-    data[i * 4 + 2] = 0;
+    data[i * 4 + 2] = Math.round(255 * Math.min(1, Math.max(0, ((gaps[i] as number) - 0.5) * 2.6 + 0.5)));
     data[i * 4 + 3] = 255;
   }
   const t = new THREE.DataTexture(data, n, n, THREE.RGBAFormat, THREE.UnsignedByteType);
@@ -279,12 +287,12 @@ function cloudMask(): { texture: THREE.DataTexture; cover: (u: number, v: number
   t.wrapT = THREE.RepeatWrapping;
   t.colorSpace = THREE.NoColorSpace;
   t.needsUpdate = true;
-  const read = (u: number, v: number): number => {
+  const read = (channel: number) => (u: number, v: number): number => {
     const i = ((Math.floor(u * n) % n) + n) % n;
     const j = ((Math.floor(v * n) % n) + n) % n;
-    return (data[(j * n + i) * 4] as number) / 255;
+    return (data[(j * n + i) * 4 + channel] as number) / 255;
   };
-  return { texture: t, cover: read };
+  return { texture: t, cover: read(0), gaps: read(2) };
 }
 
 /** One tiling picture of smooth relief, 0 to 1, and the same picture read on the processor exactly as the graphics card reads it. */
@@ -429,13 +437,15 @@ export function createRig(): Rig {
   const break2At = new THREE.Vector4(0, 0, 1 / (BREAK2.radius * BREAK2.radius), BREAK2.gain);
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
+  const deck = new THREE.Vector4(DECK.shut, DECK.open, DECK.whole, DECK.under);
+  const deckEdge = new THREE.Vector2(DECK.from, DECK.to);
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 0);
   const dome = new THREE.Vector4(DOME.gain, DOME.veil, DOME.lift, DOME.shut);
   const straitSpan = shotSpan('ribs-02');
   const staging = BREAK_BY_SHOT.map((b) => ({ ...b, span: shotSpan(b.shot), at: keySeconds(b.key) }));
   /** The break's staging for the shot the camera stands in: its own, or the strait's. */
-  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number } => {
+  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number } => {
     const staged = stagedSeconds();
     const own = loopPhase() === null ? staging.find((b) => staged >= b.span.from && staged < b.span.to) : undefined;
     return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0, bounce: BREAK.bounce };
@@ -509,6 +519,9 @@ export function createRig(): Rig {
     uCloudBreak: { value: breakAt },
     uCloudBreak2: { value: break2At },
     uCloudShade: { value: cloudShade },
+    // The deck's gaps: what the break is given where they are shut, what over that where one is open, how far they cut the break; and the edge of a gap.
+    uDeck: { value: deck },
+    uDeckEdge: { value: deckEdge },
     // The sky after the storm, scene linear: slate overhead, pale and a little warm at the horizon where the cloud is thin.
     uSkyZenith: { value: skyZenith },
     uSkyHorizon: { value: skyHorizon },
@@ -588,9 +601,12 @@ export function createRig(): Rig {
       const ez = z - b[1];
       const along2 = ex * sun.x + ez * sun.z;
       const dark = storm(world);
+      const g = Math.min(1, Math.max(0, (mask.gaps(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]) - DECK.from) / (DECK.to - DECK.from)));
+      const gate = 1 + DECK.whole * (stagedBreak().deck ?? 1) * (DECK.shut + DECK.open * g * g * (3 - 2 * g) - 1);
+      const wideGain = BREAK.gain + (STORM.gain - BREAK.gain) * dark;
       const c =
         mask.cover(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]) * BREAK.cover +
-        (BREAK.gain + (STORM.gain - BREAK.gain) * dark) * Math.exp(-(bx * bx + bz * bz) / wr) +
+        (wideGain > 0 ? wideGain * gate : wideGain) * Math.exp(-(bx * bx + bz * bz) / wr) +
         BREAK2.gain * Math.exp(-(ex * ex + ez * ez - (0.94 * along2 * along2) / (1 - sun.y * sun.y)) / (b[2] * b[2]));
       const k = Math.min(1, Math.max(0, (c - 0.42) / 0.2));
       return CLOUD.shade + (1 - CLOUD.shade) * k * k * (3 - 2 * k);
@@ -652,6 +668,7 @@ export function createRig(): Rig {
       bounce.set(...BOUNCE).multiplyScalar((stagedBreak().bounce ?? 1) * (held ? HELD.bounce : 1));
       dome.set(DOME.gain * (stagedBreak().sky ?? 1), DOME.veil, DOME.lift, DOME.shut);
       heads.z = HEADS.thin * (stagedBreak().heads ?? 1);
+      deck.z = DECK.whole * (stagedBreak().deck ?? 1);
       sunColour.set(...SUN.colour);
       if (weight !== 0) {
         // The burning break stands in the right of the frame as the film opens, and drifts to its own place.

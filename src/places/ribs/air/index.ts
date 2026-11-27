@@ -105,8 +105,8 @@ vec2 fogAt(vec2 x, float far) {
   vec2 f = fogFlow(x, pool, tail);
   vec2 q = vec2(f.x - ${glslFloat(WIND.speed)} * uFog.y, f.y);
   // The level of the picture is named: read by the screen's own slope it would change from one block of pixels to the next.
-  float level = clamp(log2(far / 5.0), 0.0, 8.0);
-  float big = textureLod(tCloudShade, q / 1500.0 + 0.13, 0.0).r;
+  float level = clamp(log2(far / 2.5), 1.0, 9.0);
+  float big = textureLod(tCloudShade, q / 1500.0 + 0.13, 1.0).r;
   float sheet = smoothstep(0.36, 0.7, big);
   float body = 0.16 * sheet + pool * (0.3 + 0.7 * sheet) + 1.2 * tail;
   if (body < 0.02) return vec2(0.0, 1.0);
@@ -185,7 +185,7 @@ void main() {
       // tip. The low mist lies on the wet floor and the water, uAir.w deep, in banks that go with the wind (a bank passes a blade in
       // some ten seconds): thick under a bank and taller there, nearly gone between two. Each is summed whole along the stride by its
       // own fall with height, so neither has a top that shows, and the bank is read at the level a stride can follow.
-      float level = clamp(log2(dt) - 3.6, 2.5, 8.0);
+      float level = clamp(log2(dt) - 2.6, 3.5, 9.0);
       float banks = textureLod(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019), level).r;
       // The gusts cross the strait faster than the banks go down it: where the two meet the mist stands up, and it works as it goes,
       // so no bank keeps its shape for longer than a few seconds.
@@ -200,7 +200,7 @@ void main() {
         + uAir.z * (0.06 + 2.6 * bank * bank + ${glslFloat(AIR.pool)} * foot) * smoothstep(30.0, 380.0, tm) * layerDepth(y0, rd.y, dt, uAir.w * (0.4 + max(${glslFloat(AIR.bankHigh)} * bank * bank, ${glslFloat(AIR.poolHigh)} * foot)));
       float a = 1.0 - exp(-tau);
       // Under the shut cloud the air is the storm's slate; where the break stands over it, it takes the sky's light and the sun.
-      float gap = cloudShadeMarched(p);
+      float gap = deckShade(p, clamp(log2(dt) - 4.4, 1.0, 8.0));
       // A stride longer than a blade's shadow is wide takes the shadows' mean, not the one it happens to stand in, which would lay the
       // screen's weave over the air; and the shadow on the ground under a stride is only part of the shade in the air over it.
       float lit = mix(sunBaked(p, land), 0.55, max(0.6, smoothstep(30.0, 140.0, dt))) * gap;

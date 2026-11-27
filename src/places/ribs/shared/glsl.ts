@@ -33,6 +33,8 @@ uniform sampler2D tCloudShade;
 uniform vec4 uCloudShade;
 uniform vec4 uCloudBreak;
 uniform vec4 uCloudBreak2;
+uniform vec4 uDeck;
+uniform vec2 uDeckEdge;
 uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
@@ -108,16 +110,34 @@ float cloudBreaks(vec2 q) {
   float along2 = dot(e, uSunDir.xz);
   return uCloudBreak.w * exp(-(dot(d, d) - 0.84 * along * along / sun2) * uCloudBreak.z) + uCloudBreak2.w * exp(-(dot(e, e) - 0.94 * along2 * along2 / sun2) * uCloudBreak2.z);
 }
+// The deck over q, read at a named level of the mask: its cover and, where the wide break stands, the cloud's own gaps. The break thins
+// the deck and the gaps let the sun through it, so the light lies in patches with the cloud's torn edge, not in one pool; the small
+// break is a hole of its own and is whole. Cover and gaps lie in one texel: one read.
+float deckCover(vec2 q, float level) {
+  vec3 m = textureLod(tCloudShade, q * uCloudShade.z - uCloudShade.xy, level).rgb;
+  vec2 d = q - uCloudBreak.xy;
+  vec2 e = q - uCloudBreak2.xy;
+  float sun2 = 1.0 - uSunDir.y * uSunDir.y;
+  float along = dot(d, uSunDir.xz);
+  float along2 = dot(e, uSunDir.xz);
+  float wide = uCloudBreak.w * exp(-(dot(d, d) - 0.84 * along * along / sun2) * uCloudBreak.z);
+  float gate = mix(1.0, uDeck.x + uDeck.y * smoothstep(uDeckEdge.x, uDeckEdge.y, m.b), uDeck.z);
+  return m.r * 0.62 + (wide > 0.0 ? wide * gate : wide) + uCloudBreak2.w * exp(-(dot(e, e) - 0.94 * along2 * along2 / sun2) * uCloudBreak2.z);
+}
 float cloudCover(vec2 q) {
-  return texture2D(tCloudShade, q * uCloudShade.z - uCloudShade.xy).r * 0.62 + cloudBreaks(q);
+  return deckCover(q, 0.0);
 }
 
 // The moving shadow of the broken cloud at a point: 1 in a gap, uCloudShade.w under cloud. One sheet for the whole place, drifting with the wind.
 // The same inside a march of the air, where the places read jump from pixel to pixel: the level of the picture is named.
 float cloudShadeMarched(vec3 p) {
   vec2 q = p.xz - uSunDir.xz * (p.y / uSunDir.y);
-  float c = textureLod(tCloudShade, q * uCloudShade.z - uCloudShade.xy, 1.5).r * 0.62 + cloudBreaks(q);
-  return mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, c));
+  return mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, deckCover(q, 2.5)));
+}
+// The same for a stride of the march: the deck is read at the level a stride can follow, so a long stride takes the mean of the patches
+// it crosses and a short one stands in one of them.
+float deckShade(vec3 p, float level) {
+  return mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, deckCover(p.xz - uSunDir.xz * (p.y / uSunDir.y), level)));
 }
 float cloudShade(vec3 p) {
   // The sun is not overhead: the shadow of a cloud 1500 m up lies where the ray to the sun leaves the cloud sheet.
@@ -226,6 +246,9 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * stood * occ;
   float gap = cloudShade(p);
   float sun = sunBaked(p, land) * gap * occ;
+  // Under the shut deck the sky itself is the storm's: a surface takes uDeck.w of the sky's light there, and all of it where a gap
+  // stands over it. This is what lays the lit patches beside real shade: the sky's even light was most of what a blade showed.
+  float under = mix(uDeck.w, 1.0, (gap - uCloudShade.w) / (1.0 - uCloudShade.w));
   // What stands high stands in the light of the break itself, which is wide: there the light goes round a blade past its edge
   // (six tenths of the way), so its round shows from the lit side to the shade.
   float wide = 0.6 * smoothstep(uHeads.x, uHeads.y, p.y);
@@ -234,7 +257,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   // it the higher it stands over its own shadow. This is what keeps a lee face from going to the sky's cold grey alone.
   vec3 bounce = uSunColour * uBounce * (uSunDir.y * (gap - uCloudShade.w) * (0.5 - 0.5 * n.y) * (0.3 + 0.7 * clamp(above / 90.0, 0.0, 1.0)));
   // No wall goes to nothing: wet ground and water all round it throw the sky back into its darkest fold (uHeads.w of the ground's light), but not under what stands on it.
-  vec3 e = (skyIrradiance(n) + bounce) * open + 3.14159 * uSkyGround * (uHeads.w * occ * stood) + uSunColour * (nl * sun);
+  vec3 e = (skyIrradiance(n) * under + bounce) * open + 3.14159 * uSkyGround * (uHeads.w * occ * stood * (0.5 + 0.5 * under)) + uSunColour * (nl * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
