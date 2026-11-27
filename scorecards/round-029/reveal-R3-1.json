@@ -1,0 +1,84 @@
+{
+  "round": 29,
+  "unit": "reveal",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the central lake, especially its west and south banks",
+        "what": "the broad brown border swells into soft, smooth lobes while the dark interior has a large smeared swirl; the lake reads like pigment poured into a relief map",
+        "fix": "tie the shallows and sediment to basin depth and inflows, then give the open water irregular wind texture and a narrow shore transition"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the western sea and the coastal strip just right of center",
+        "what": "the clouds break into a broad field of bright, similarly sized flecks with repeated diagonal spacing, turning a large part of the image into a granular overlay",
+        "fix": "build cloud banks with varied footprint, altitude and optical thickness, with softer thin edges and shadows that match each group's height"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the tan valley floors in the upper-left and lower-left crops",
+        "what": "the mountain texture breaks into angular, flat patches on the valley floors, with smeared streaks on the adjacent slopes",
+        "fix": "replace the patchy base texture with finer terrain-aligned erosion and distinct talus, bedrock and sediment detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "across the ranges surrounding the large jagged lake at right",
+        "what": "the same pale branching ribs cover almost every slope at similar contrast, so the wide view reads like a relief map rather than terrain seen through air",
+        "fix": "vary the material and erosion scale between slopes and valleys, and let atmospheric scattering soften relief contrast with distance"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the lower-left crop around the dark circular basins",
+        "what": "the basins sit inside stacked, clean contour-like rings with near-black interiors, like holes cut into a heightfield",
+        "fix": "break up the terraces with irregular rock, debris and drainage, and retain some reflected or ambient light in the basin interiors"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "both native-size mountain crops, strongest along the pale crests at right",
+        "what": "repeated parallel gullies and rounded crests have a uniformly soft, molded surface even where slopes are well lit",
+        "fix": "mix erosion patterns and ridge profiles and add relief detail at the native sampling scale rather than sharpening the existing blur"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "upper-right crop, red-brown upland beside the branching blue channels",
+        "what": "the land breaks into a visibly square, blocky grid across the plateau and around the channel margins",
+        "fix": "remove the grid from the terrain or mask inputs and render the texture and channel edges at a finer sampling scale"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "right crop, blue streams running down neighboring valleys",
+        "what": "the streams look like thin cyan outlines inked onto the terrain, with bright rims on both banks and little material transition into the valley floors",
+        "fix": "seat the channels in the relief, vary width and reflectance, and blend wet sediment or gravel into the banks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "upper-right mountains, around the orange points",
+        "what": "several isolated orange lights look pinned on top of the terrain; the strongest has a halo but no clear emitting feature or corresponding light on nearby rock",
+        "fix": "anchor each point to a visible emitter and make its glow and local spill follow the terrain and haze"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop, the curved shore of the small lake entering at upper left",
+        "what": "the dark fill meets the terrain at a narrow, nearly uniform pale outline, with little variation in nearshore depth or bank material",
+        "fix": "vary the shoreline by local slope and substrate and show a shallow-water gradient where the bank allows it"
+      }
+    ]
+  }
+}

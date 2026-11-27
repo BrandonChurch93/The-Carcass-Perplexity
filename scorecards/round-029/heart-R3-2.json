@@ -1,0 +1,84 @@
+{
+  "round": 29,
+  "unit": "heart",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-27 01:41 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the lava stream running down the bench below the cave mouth (crop x 42-58%, y 58-75% in set-B-06.png)",
+        "what": "the lava is edged by repeated wavy contour bands, like offset strokes, around every edge. It reads as a procedural outline, not a crust or a cooling skin, and it shows in motion",
+        "fix": "remove the banded rim. Give the flow a dark cooled crust that breaks up, with glowing cracks and a wet, shiny bright core"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the lava at upper left in the background (crop x 0-17%, y 25-42% in set-B-02.png)",
+        "what": "smooth, blobby metaball shapes of flat orange hang in the fog with no surface, no crust and nothing to hold them up. The glow lights neither the cliff nor the fume around it",
+        "fix": "anchor the flow on the cliff face with crusted texture, and let it light the rock and the fume near it"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the base of the lava fall, where it fans across the floor",
+        "what": "the lava spreads as a spiky fan of thin flat streaks with no thickness, no levee and no crust edge. The small creatures stand in it with no contact, no heat shimmer and no glow on their legs",
+        "fix": "make the lava a thick lobed flow with crusted margins, and light the creatures' legs and the fume from below"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the fume on the right third and the fog over the cliff (crops x 83-100% in set-B-05.png and set-B-06.png)",
+        "what": "the fume is a flat brown-orange tint with faint vertical streaks, like stacked cards. It has no billowing volume and no light scattered inside it",
+        "fix": "use volumetric fume with turbulent structure, lit from below by the lava and fading in density"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the legs and feet of the near creature (crop x 42-58%, y 58-75% in set-B-03.png)",
+        "what": "a stretched wood-grain texture runs along the legs like bark or a plastic model. The feet barely touch the ground, with no contact shadow, no displaced ash and no dust on them",
+        "fix": "add a contact shadow and ash pressed in under the feet, break the stretched grain, and put dust and soot on the lower legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the head of the near creature (crop x 42-58%, y 25-42% in set-B-02.png)",
+        "what": "a small red point on the head reads as an eye",
+        "fix": "remove the red spot so the head has no eye"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the lava cracks and pools across the floor (crop x 83-100%, y 58-75% in set-B-03.png)",
+        "what": "the cracks are thin glowing lines and the pools are flat glossy fills. The glow barely lights the ash next to it or the steam rising from it",
+        "fix": "give the cracks depth and crusted edges, and spill warm light onto the ash next to them and into the steam"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the cliff face at left (crop x 0-17%, y 25-42% in set-B-05.png)",
+        "what": "the rock texture is smeared and soft, with triangular facets and a projected look, and the same material covers the whole wall",
+        "fix": "use higher-frequency rock detail with real strata, varied materials and sharper fractures"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-04.png",
+        "where": "the cave interior and the arch rim",
+        "what": "the inside of the cave is close to pure black, while the rim of the arch glows evenly orange with no visible source high enough to light it",
+        "fix": "add bounce light into the cave and tie the brightness of the rim to the lava below it"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the three creatures",
+        "what": "all three share the same body and the same splayed stance, which reads as one model repeated",
+        "fix": "vary their poses, proportions and gaits"
+      }
+    ]
+  }
+}

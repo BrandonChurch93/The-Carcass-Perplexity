@@ -1,0 +1,84 @@
+{
+  "round": 29,
+  "unit": "heart",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-27 01:41 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the walls of the lava channel in the foreground, centre to right",
+        "what": "the crust walls break into flat triangular facets with hard-edged polygon shadows and stretched, smeared texture; the bank reads as low-poly geometry, not rock (clear in set-A-06 right crop)",
+        "fix": "add displacement or subdivision to the channel banks, re-project the texture so it doesn't stretch on steep faces, and soften the shadow terminators"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the glowing cracks across the whole lava plain",
+        "what": "the cracks are thin, even-width neon lines that light nothing next to them; no warm bounce on the crust, no heat haze, and the same stroke width near and far",
+        "fix": "vary the crack width, add a falloff glow and emission bounce onto the crust beside each crack, and add some heat shimmer"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop, lava line and pools at x 83-100%, y 58-75%",
+        "what": "the glowing line breaks into a dashed gap, and the pool edges above it are stepped and pixelated like a thresholded mask",
+        "fix": "close the gap in the crack mask and anti-alias or blend the pool edges into the crust"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "right crop, ground around the creature's foot",
+        "what": "the pahoehoe texture smears into horizontal streaks where it is stretched across the slope, and a smooth clay-like disc of ground surrounds the creature",
+        "fix": "fix the UV stretch on that patch and break up the moulded ring with real crust folds and cracks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the ground across all frames",
+        "what": "one swirly brush-stroke lava texture is used everywhere at the same scale, from the foreground to the far plain, so the land reads as a single material with no rubble, a'a or ash variation",
+        "fix": "mix in a'a, ash drifts, rubble and dull or glassy crust variation, and change texture scale with distance"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "bottom-right crop, rocks and sulphur at x 0-17%, y 58-75%",
+        "what": "the rock texture is soft and smeared, and the yellow sulphur deposit shows a repeating fine pattern that looks like a tiled decal",
+        "fix": "raise the texture resolution on the near rock and replace the sulphur with crystalline crust, without a tiled pattern"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the stilt-legged creatures on the plain",
+        "what": "the feet barely touch the ground, contact shadows are faint or missing, and the bodies get no warm underlight from the lava they stand over; the poses are nearly identical",
+        "fix": "add contact shadows and ground deformation at the feet, add lava bounce light on the undersides, and vary the poses and gaits"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the creatures' feet in the middle distance and in set-A-07 at left",
+        "what": "the feet end in bright orange glowing tendrils that light nothing on the ground around them",
+        "fix": "let the foot glow cast light onto the crust, or reduce the emission"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "lava fountain at right",
+        "what": "the spatter reads as sharp separate dots with no motion blur or light on the fume",
+        "fix": "add motion blur to the spatter and let it light the surrounding smoke"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "steam vents at left",
+        "what": "the steam is low-contrast and thin, with no light from the warm sky or lava in it",
+        "fix": "give the steam some warm rim light and more internal density variation"
+      }
+    ]
+  }
+}

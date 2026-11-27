@@ -1,0 +1,91 @@
+{
+  "round": 29,
+  "unit": "reveal",
+  "pack": "R1-1",
+  "family": "gemini",
+  "answered": "2026-11-27 01:47 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "river channel entering the upper-left shore of the main crater lake (also visible in set-A-01-b.png)",
+        "what": "the river is a uniform flat teal ribbon that cuts straight into the ochre shore on a hard edge with no braided delta or carved canyon integration",
+        "fix": "carve the channel naturally into the slope and fan it out into a delicate braided silt delta as it meets the lake"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "ochre sediment band and water surface inside the main crater lake",
+        "what": "the amber-ochre shore band is smooth and airbrushed, missing the intricate swirling tendrils and the hooked lower-left eddy of the target, and the dark lake interior shows faint concentric banding",
+        "fix": "break up the ochre shore into organic wispy swirls and eddies extending into clean, deep navy water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "upper-right rim and water of the main crater lake",
+        "what": "the translucent diagonal plume of mist drifting off the upper-right rim across the dark water is completely absent",
+        "fix": "restore a soft, wispy veil of vapour blowing diagonally from the upper-right rim over the lake"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "northern inner crater rim and surrounding rocky slopes (also visible in set-A-02.png)",
+        "what": "lighting is harsher and cooler than the target, casting a heavy dark shadow across the upper-left inner rim onto the ochre shore and shifting the warm dusty taupe slopes to cooler blue-slate with dark black valley shadows",
+        "fix": "soften the directional shadows to remove the heavy dark cast on the north shore and warm the rock midtones toward dusty taupe and tan"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "upper-right quadrant curving toward the rust-red plain (and the matching region in set-A-05-b.png)",
+        "what": "the sweeping, luminous ribbon of wispy vapour streaming from the upper-right edge down into the red plain is missing, leaving only small disconnected clouds",
+        "fix": "add the long, curving, translucent vapour plume sweeping from the upper-right across the red plain"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "far-right plain above the large bay (and the neck region in set-A-05-b.png)",
+        "what": "the broad rust-red plain dotted with dark circular craters is mostly replaced by dark grey-black ridged mountains, losing both the terracotta colour and the dense crater field",
+        "fix": "restore the warm rust-red plain and populate it with dark, varied circular craters and basins"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "coastal lowlands along the western and southern margins and lower valleys (also visible in set-A-06.png)",
+        "what": "broad patches of olive and moss green vegetation appear across the lowlands and coastal slopes, whereas the target is a completely barren, arid rock and volcanic landscape",
+        "fix": "remove the green vegetation and return the coastal lowlands to arid dusty tan, bone-grey, and rust-toned rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "western and southern coastal shallows and interior landmass ridges",
+        "what": "olive-green tinting appears along the coast, shallow water shifts to bright cyan-emerald, and interior ridges show harsh charcoal-black shadows against stark white crests instead of the softer, warmer dusty-bone palette of the target",
+        "fix": "desaturate the emerald shallows toward deeper muted teal, remove coastal greening, and warm and soften the ridge contrast to match the target"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "upper crater north of the main lake and the cluster of small dark lakes to its upper right",
+        "what": "the upper crater shrinks to a much smaller pool under a heavy dark shadow, and the three-lake cluster beside the main lake collapses into a single small pond",
+        "fix": "widen the upper basin with a softer rim and restore the multi-lobed cluster of dark basins beside the main lake"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01-b.png",
+        "where": "upper-right and lower-right secondary lakes and bottom-right sea inlet",
+        "what": "the upper-right lake lacks the warm ochre sediment swirls, the lower-right lake is an overly smooth geometric oval, and the bottom-right sea inlet is overly bright emerald without thin cloud streaks",
+        "fix": "add ochre sediment trails to the upper-right lake, give the lower-right lake a more irregular shoreline, and deepen the bottom-right sea to muted navy-teal"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05-b.png",
+        "where": "valleys between the upper-right mountain ribs",
+        "what": "only one bright orange point and a few tiny specks remain, losing the wider scatter of warm glowing volcanic vents and their soft halos on the dark plain",
+        "fix": "restore the small cluster of glowing orange vents with soft warm halos across the adjacent upper-right valleys"
+      }
+    ]
+  }
+}

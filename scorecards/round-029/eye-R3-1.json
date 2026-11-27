@@ -1,0 +1,63 @@
+{
+  "round": 29,
+  "unit": "eye",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "foreground pebbles across the lower third (also shown at full size in set-A-06.png and set-A-05.png bottom right)",
+        "what": "pebbles are visibly low-poly and faceted with smooth, blurry procedural banded clay/plastic textures and hard clipping intersections where they meet the flat water and mud plane without any wet rim, meniscus, or mud buildup",
+        "fix": "replace foreground pebbles with high-resolution displaced rock geometry featuring crisp micro-roughness and varied natural materials, and add wet darkening, meniscus, and contact occlusion where they meet water and mud"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "lower-left-center foreground water (pale tan patches around x 30 to 55%, y 70 to 95%)",
+        "what": "an unmistakable bilateral mirror-symmetry seam creates a butterfly-like Rorschach reflection in the water texture",
+        "fix": "eliminate texture mirroring and generate non-repeating flow-aligned algal/mineral patterns across the water surface"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%), water beneath the three wading animals",
+        "what": "vertical mirror-symmetry seam runs through the orange water swirls, and the three animals sit on top of the flat painted pattern with no ripples, meniscus, or submersion",
+        "fix": "remove the mirroring in the water pattern and add physical water depth, ripples, and leg submersion around the wading animals"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop (x 83 to 100%, y 58 to 75%) and set-A-02.png bottom right, foreground boulders",
+        "what": "close foreground boulders show straight polygonal facets along their silhouettes against the water and a soft, uniform grainy gray texture lacking crisp rock micro-detail",
+        "fix": "increase geometry subdivision and displacement detail on the foreground boulders and add sharper high-frequency rock texture, fractures, and surface variation"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "top right crop (x 42 to 58%, y 25 to 42%), lower legs of the drinking animals",
+        "what": "lower legs transition abruptly from textured hide to smooth, glossy plastic/clay surfaces and pierce the water surface with no meniscus or splash",
+        "fix": "blend wet fur/skin detail naturally down the lower legs with organic wet clumping and mud/mineral residue, and add subtle meniscus and water disturbance at the waterline"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top left crop (x 0 to 17%, y 25 to 42%), animals standing in the water",
+        "what": "legs terminate at a hard horizontal cut against completely undisturbed mirror-flat water with no ripples, meniscus, or wet darkening up the legs",
+        "fix": "add localized ripples, meniscus rings, and wet capillary darkening on the lower legs where they enter the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "both crops (x 42 to 58% and x 83 to 100%, y 58 to 75%) and set-A-08.png bottom right, foreground water",
+        "what": "water reads as a flat procedural texture of thin orange veins over a blurry brown surface rather than a deep refractive fluid with suspended matter and micro-wave specular breakup",
+        "fix": "add layered subsurface depth, refraction, varied turbidity, and fine wind-driven surface ripples so the filaments sit inside a physical fluid volume"
+      }
+    ]
+  }
+}

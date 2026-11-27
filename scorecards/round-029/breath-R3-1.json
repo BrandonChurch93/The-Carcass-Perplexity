@@ -1,0 +1,84 @@
+{
+  "round": 29,
+  "unit": "breath",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the far rim of the crater, crop x 83 to 100%, y 25 to 42%",
+        "what": "the flat water plane cuts across the top of the cliff on a jagged, broken line, so a geometry seam shows where the lake meets the rock",
+        "fix": "blend the water into the rim, add a wet edge or crust line, and clean the intersection"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the carcass on the bench, crop x 42 to 58%, y 58 to 75%",
+        "what": "the carcass reads as a crumpled cloth or plastic sheet with a stretched, smeared texture and no bone or skin structure under it",
+        "fix": "model real collapsed anatomy with bone points and sunken hide, and use a carcass texture at the right scale"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the near shore slabs and water, crop x 0 to 17%, y 58 to 75%",
+        "what": "the rock slabs look like soft extruded clay, and the water over them is a glossy rubbery sheet with blobby highlights; there is no wet line, foam or crust where water meets rock",
+        "fix": "give the rock sharp fracture edges and grain, and give the shallow water transparency, a wet darkening band and mineral crust at the waterline"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the two rock arches in the steaming crater",
+        "what": "the arches look like smooth clay tubes, all one material with soft rounded forms and no fracture or layering, unlike the strata in the crater wall behind them",
+        "fix": "break up the arch forms with bedding, cracks and erosion, and match them to the layered wall rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the bench rock in the foreground right, crop x 83 to 100%, y 58 to 75%",
+        "what": "the rock texture is stretched into long smeared streaks across the surface, so the UV stretching shows at close range",
+        "fix": "reproject or triplanar-map the rock texture so it keeps its scale on the slope"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the ripples around the feet and muzzle fringes of the drinking animals",
+        "what": "each contact makes perfect concentric rings of the same spacing, so the water looks procedural; the ripples also do not break the reflections",
+        "fix": "vary the ripple amplitude and spacing, let the rings interfere and decay, and distort the reflections they cross"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the herd in the shallows, crop x 0 to 17%, y 25 to 42%",
+        "what": "the animals share near-identical poses and a smooth, uniform model look, several look semi-transparent or ghosted against the glare, and they carry no wet, salt or mud on the legs",
+        "fix": "vary pose, gait and scale, fix the opacity, and add wet darkening and mud on the lower legs"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-07.png",
+        "where": "the steam over the crater and the fume plumes on the left horizon",
+        "what": "the steam is mostly a flat grey tint with little internal light or shape, and the sunlit plumes do not scatter warm light",
+        "fix": "add volumetric density variation and forward scattering from the low sun"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-08.png",
+        "where": "the arch rock in the fog, crop x 83 to 100%, y 25 to 42%",
+        "what": "the rock surface is soft and low in detail, like a blurred texture rather than depth haze",
+        "fix": "keep the micro detail in the rock and let the fog reduce contrast instead of resolution"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-07.png",
+        "where": "the loose fringe strands lying on the ground left of the carcass",
+        "what": "the strands sit on the ground like a flat card, with no contact shadow and no link to the body",
+        "fix": "attach the strands to the carcass, or give them thickness and contact shadows"
+      }
+    ]
+  }
+}

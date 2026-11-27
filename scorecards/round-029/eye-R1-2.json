@@ -1,0 +1,84 @@
+{
+  "round": 29,
+  "unit": "eye",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the skeleton on the shelf edge",
+        "what": "the ribcage is a collapsed heap of shredded, smeared bone sheets with broken, stretched geometry, browned like the weed; -a has a clean, pale, articulated skeleton lying along the edge, skull to hind legs",
+        "fix": "rebuild the skeleton as intact articulated bone: separate ribs, clear spine, skull and limbs, pale bleached bone lit warm from the low sun"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the far cliffs and the sky",
+        "what": "the cliffs are a low, distant, even band under a big pink-to-lilac sky; in -a they are tall, near, sunlit cliffs with caves and overhangs that fill the top of frame, under a thin pale sky",
+        "fix": "bring the cliffs much closer and taller, cut the sky back to a thin strip, and keep the warm side light on the cliff faces"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the lake surface, middle and far",
+        "what": "the water carries no mirror reflection of the cliffs and no rings of ripples; it is a flat pink-grey sheen with a dark blank band; -a shows a strong golden reflection of the cliffs and wide concentric ripple rings",
+        "fix": "reflect the sunlit cliffs in the still water and add the wide ripple rings across the middle distance"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the drop-off below the shelf",
+        "what": "the sunken cliff wall seen through clear water is gone; the shelf edge falls into smooth wavy turquoise bands of sand that look like a different, shallow place",
+        "fix": "show a steep underwater rock wall dropping into deep blue-green water, with the faint vertical shapes in the depths"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the shelf in the foreground and left",
+        "what": "the rock reads as a flat procedural texture of tan patches under orange strands, with a pink sky sheen over the left half; -a has a raised, lumpy travertine ledge with green-gold algae and soft depth of field",
+        "fix": "give the ledge relief and wet travertine form, tone the weed toward gold-olive, remove the pink wash and restore the shallow focus falloff"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the far water at the foot of the cliffs",
+        "what": "small white sticks stand out of the water near the horizon with nothing like them in -a, and the low mist on the water is thinner",
+        "fix": "remove the white objects and thicken the low mist lying on the far water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the water across the frame",
+        "what": "the water is a muddy brown-mauve with dull reflections and long horizontal streaks; -a is a cool grey water with bright broken orange reflections of the cliffs and many crisp concentric ripple rings",
+        "fix": "cool the water toward grey-blue, brighten and break up the orange cliff reflections, and add the concentric rings spreading out from the swell"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the cliffs and cave behind the lake",
+        "what": "the cliff wall is pulled much closer and fills the top third; in -a it sits further back above a scree slope and a mist bank, with sky-free top and lit pale crags left",
+        "fix": "push the cliffs back, open the scree slope and shoreline at their foot, and lay a deeper mist bank on the far water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the swell and the fins around it",
+        "what": "the swell is a smooth dark dome with no breaking water and no ripple train; fins are fewer and far right, missing the lit fin centre-right and the spread across the lake",
+        "fix": "break the water over the swell with highlights and spreading rings, and scatter the fins across the lake as in -a"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03-b.png",
+        "where": "the two foreground necks",
+        "what": "the skin is smooth and evenly lit, without the scuffs, scars and warm rim light seen in -a",
+        "fix": "add skin wear and marks and a warm rim of low sun on the tops of the necks"
+      }
+    ]
+  }
+}

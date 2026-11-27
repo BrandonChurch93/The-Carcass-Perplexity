@@ -1,0 +1,42 @@
+{
+  "round": 29,
+  "unit": "breath",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the broad water channel in the foreground and the sunlit water flats on the left",
+        "what": "across the full 6-second hold, every ripple, current band, and specular highlight stays completely frozen, reading as a still photograph rather than moving water",
+        "fix": "animate continuous surface ripples, slow current drift, and shifting sunlit reflections across the entire water surface"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the white quadruped standing on the rock ridge left of the sinkhole",
+        "what": "the animal holds the exact same silhouette and position for all 6 seconds with no weight shift, head turn, or subtle motion, reading as a static model",
+        "fix": "add natural idle animation such as a slight weight shift, neck or head turn, ear or tail motion, or a deliberate step"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the tall white steam plume on the upper left and the low clouds along the far mountain ridge",
+        "what": "the background plume and clouds keep the exact same shape and position from 0.00 s to 6.00 s, reinforcing the sense of a static backdrop",
+        "fix": "give the distant plume continuous upward billow and drift, and add slow lateral movement to the mountain clouds at their own height"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the midground mist above the left side of the sinkhole from 4.36 s to 6.00 s",
+        "what": "the air stays nearly motionless for the first 4 seconds and then abruptly surges with dense white vapour in the final 2 seconds without affecting the light on the ground or water beneath it",
+        "fix": "keep the vapour pouring and pooling continuously across the full 6 seconds and soften the ground light slightly where thick mist passes over"
+      }
+    ]
+  }
+}

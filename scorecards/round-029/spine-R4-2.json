@@ -1,0 +1,35 @@
+{
+  "round": 29,
+  "unit": "spine",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "the dark cloud wall left of the storm core and the low fog around the distant spires, 0.55–6.00 s with the camera held",
+        "what": "The bright upper wisps change and the sky lights up again, but the broad storm shapes and the low bank retain almost the same silhouettes. Between flashes the landscape reads like a still backdrop with motion laid over it.",
+        "fix": "Give the high cloud masses and low bank separate motion: let the high contours drift and deform, and let fog spill around and intermittently uncover the lower spires."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the standing shaggy animal and the resting group on the left, frames 8089–8100",
+        "what": "The standing animal makes a small head and foreleg movement, but its trunk barely settles over the supporting feet. The resting animals hold almost exactly the same silhouettes throughout the flash.",
+        "fix": "Carry the foreleg motion through the shoulder and torso before the foot settles, and give the resting animals different breathing or ear movements and staggered reactions."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the pale streamers across the sky to the right of the near cliff, frames 7448–7459",
+        "what": "The long parallel bands hold their overall stretched outlines while their edges ripple, so the motion reads more like distortion along a strip than material bending in a gust.",
+        "fix": "Let each strand bow and twist by a different amount, with motion travelling down its length and arriving at the loose ends at different times."
+      }
+    ]
+  }
+}

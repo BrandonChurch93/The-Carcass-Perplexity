@@ -1,0 +1,105 @@
+{
+  "round": 29,
+  "unit": "marsh",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the domes in the red pool, centre right and centre left",
+        "what": "the domes are perfect smooth shells with an even satin sheen, so they read as CG primitives or plastic. The left one is a thin, see-through half-shell with a hard rim that floats on the surface. Nothing of the pool is on them: no salt crust, no wet line, no staining",
+        "fix": "break up the shape and give them a salt-crusted, uneven skin with a wet, darker band at the waterline. Replace the hollow left shell with a solid form that meets the water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the salt plates and ridges on the right side, also seen in the set-A-03 right crop",
+        "what": "the plates are flat slabs with stretched, smeared texture. The ridges are extruded, faceted spikes with dark pits, and white hair-like strands stick out of them. It reads as geometry, not crust",
+        "fix": "rebuild the crust with real thickness, rounded and crystalline edges and texture at the proper scale. Remove the strand artifacts"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top-left crop, the trunk on the left edge around x 115",
+        "what": "the trunk and its frond are cut off by a hard vertical line. It reads as a seam or a clipped card",
+        "fix": "fix the clipping or depth-of-field edge so the trunk ends naturally"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top-right crop, centre background, in the fog",
+        "what": "thin dark squiggled strokes look like faint handwriting or text in the mist",
+        "fix": "remove the stray line geometry or texture"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "flying insects in the top-right crop and in set-A-09 next to the trunk",
+        "what": "the insects are flat grey, translucent cards with no shading or detail",
+        "fix": "use shaded, volumetric insect models with motion blur, or remove them from the close range"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the droplets around the fronds and between the trunks",
+        "what": "water drops hang in the air away from any frond. The close-up fronds look waxy and plastic, with even dots for drops (set-A-08 bottom-right crop)",
+        "fix": "attach the drops to the leaf surfaces and give the fronds varied, rougher material response"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "bottom-right crop, the trunks standing in the pool",
+        "what": "every trunk shares the same ring banding and the same texture. The same repeat shows in set-A-04 and set-A-07",
+        "fix": "vary the trunk textures, the ring spacing and the weathering on each instance"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the left crop, the salt island",
+        "what": "the salt is one smeared, repeated noise with flat red holes, and its edge is a clean extruded rim",
+        "fix": "use higher-resolution, scale-correct salt texture with crusted, irregular edges and wetness where it meets the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the right crop, the foreground salt crust",
+        "what": "close to the camera the crust is soft, low-detail and clay-like, with no crystal structure",
+        "fix": "raise the texture and displacement resolution for close-range crust"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the cracked block in the left foreground and the striped pole with the red ball",
+        "what": "the block has an even polygon crack pattern that looks like a tiled texture on a clay-like mass. The pole is a clean cylinder with regular rings and reads as a prop",
+        "fix": "vary the crack scale and the depth of the block, and give the pole irregular form and weathering"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the bottom-left crop, the far shore",
+        "what": "the shore edge is a flat white sheet with stretched texture that looks like a tarp",
+        "fix": "give the shoreline crust real thickness and wet edges"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the top-left crop, the mist",
+        "what": "the fog is a flat, even white tint over the plants with no light structure in it",
+        "fix": "add variation in density and light scattering to the mist"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-07.png",
+        "where": "the mound at the right and the steam patch at centre",
+        "what": "the mound is smooth with no contact detail. The steam patch reads as a flat, soft card",
+        "fix": "add contact and crust detail to the mound and volumetric structure to the steam"
+      }
+    ]
+  }
+}

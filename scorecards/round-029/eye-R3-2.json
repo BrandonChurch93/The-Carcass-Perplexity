@@ -1,0 +1,70 @@
+{
+  "round": 29,
+  "unit": "eye",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the two animal bodies/tails in the lower foreground",
+        "what": "they read as smooth clay or rubber 3D models with a blurry, stretched procedural skin texture, overly uniform silhouettes, and no fine skin detail or wetness from the lake",
+        "fix": "add high-frequency skin micro-detail, natural anatomical irregularity, and wet sheen or spray matching the lakeside environment"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the dark emerging mound and surrounding white spikes in the center of the lake",
+        "what": "the mound looks like a smooth glossy CG blob intersecting the water with no foam, splash, water runoff, or radiating wake, and the white spikes pierce the surface cleanly with no meniscus or ripples",
+        "fix": "add realistic surface detail to the mound, breaking foam, dripping sheen, and concentric wake ripples around both the mound and each spike"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the deep blue-teal water on the right and its shoreline against the orange crust",
+        "what": "the foreground water has no surface reflection, specular glints, or ripples—reading as an invisible void over a blurry stretched diagonal slope that abruptly turns into mirror-like water in the midground—while the crust edge looks like a paper-thin cutout with a thin bright outline and no wet rim or foam",
+        "fix": "render a continuous water surface with Fresnel reflections, subtle ripples, and refraction across the foreground, and give the crust real thickness, a darkened wet edge, and mineral foam where it meets the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the lake water across all four native crops (and set-B-06.png)",
+        "what": "the water surface reads as flat, horizontally stretched noise streaks and straight horizontal lines rather than three-dimensional wavelets and organic reflections",
+        "fix": "replace the stretched horizontal noise with multi-scale 3D wave geometry and normal detail that breaks up reflections naturally"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the foreground crust in the bottom-right crop (and set-B-03.png left)",
+        "what": "at native size the shelf is geometrically flat with a soft, smeared procedural orange-and-beige texture that lacks sharp micro-relief, grit, or crusted mineral fractures",
+        "fix": "add fine displacement, crisp mineral grain, varied roughness between wet and dry patches, and real micro-shadowing"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the skeleton resting on the crust in the left crop",
+        "what": "the bones look like smooth, slightly faceted clay meshes sitting on top of a flat plane with weak contact grounding and no mineral crust, wetness, or orange staining tying them to the shelf",
+        "fix": "add weathered bone porosity and cracks, sharper contact occlusion where bones press into the ground, and matching mineral deposits and dampness along their lower edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the mist band along the base of the far cliffs in the top-left, top-right, and bottom-left crops",
+        "what": "the vapour reads as a flat, uniform airbrushed grey-white stripe with no wisps, depth variation, or warm golden sunlight scattering from the lit cliffs behind it",
+        "fix": "replace the uniform mist band with layered volumetric vapour that catches warm sunlight on the lit side and breaks into organic plumes over the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the deep water in the bottom-left crop (x 83 to 100%, y 25 to 42%)",
+        "what": "the water crushes to near-pure featureless black with faint gradient banding and no sky reflection or surface detail",
+        "fix": "lift the deepest water with subtle grazing sky reflections, fine surface ripples, and natural water absorption rather than pure black"
+      }
+    ]
+  }
+}

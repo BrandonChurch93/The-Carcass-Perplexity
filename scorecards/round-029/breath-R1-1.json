@@ -1,0 +1,126 @@
+{
+  "round": 29,
+  "unit": "breath",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-27 01:42 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "foreground channel and left mineral flats",
+        "what": "A wide, uninterrupted pool replaces the shallower channel broken up by broad, low mineral shelves. The result reads as deeper water and puts the near shore in a different place.",
+        "fix": "Narrow the open water and carry broad, thin, irregular shelves into it, with shallow flooded patches between them."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "right foreground sinkhole",
+        "what": "The pit reads as an open excavation with a straight high wall and two oversized, fairly uniform pale ribs. The target has a more rounded, overhanging rim, more broken and closely layered ribs, and boulders visible down in the shadow.",
+        "fix": "Round and break up the rim, layer the ribs into darker mineral-stained rock, and leave windows through the steam onto the fallen blocks."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "left and middle flats",
+        "what": "A cluster of large, bright animals and their long reflections pulls the herd toward the camera. The target spreads mainly small, low-contrast silhouettes much farther across the flat.",
+        "fix": "Reduce the near concentration and move more of the herd out into the shallow, broken flats; keep the closest rim animal distinct."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "pool around and between the three main animals",
+        "what": "The target's shallow, rock-interrupted, sun-flecked water becomes a broad, dark mirror with very regular wave bands and clean circular rings. The impacts under the central dripping head and at its feet scarcely disturb the water.",
+        "fix": "Restore low submerged and exposed rock, break up the reflections and ripples, and make the falling water throw up small lit impacts where it lands."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "left, center and right animals",
+        "what": "The left animal is far more fully in frame, the center animal's head rises higher and its feet sit farther back, and the right one moves inward with its fringe hanging above the surface instead of foraging in it. The composition loses the target's cropped near animal and wide separation in depth.",
+        "fix": "Let the left animal run off frame, lower and bring the center interaction forward in the pool, and put the right animal farther right with the fringe touching water."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "foreground body from lower left to center right",
+        "what": "The neck ends before the separate-looking fan of tendrils. The torso is thin and suspended in spots above a large dark patch, rather than lying as a weighty folded body with a continuous neck and leg contacts.",
+        "fix": "Join the neck visibly into the fan, give the folded torso and legs volume and grounded contact, and reduce the dark patch to less conspicuous staining."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "right pit and the distant cliff behind it",
+        "what": "A nearly continuous beige steam veil hides most of the void and the distant cave, leaving broad pale arcs where the target has a dark, legible layered wall and banks of steam low in the pit.",
+        "fix": "Separate the pit steam into localized drifting banks, reveal the dark intervals and broken rock between the ribs, and keep the far cave mouth legible above its own low fog."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "growth around the standing animal and on the left bench",
+        "what": "Broad, almost black fern-like masses replace the target's fine red branching sprays and widely spaced small tufts. Their scale, silhouettes and hard shadows dominate the bank.",
+        "fix": "Use thinner reddish strands with warm rim light and put the largest sprays back on the rim behind the animal; leave small isolated plants on the near bench."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "sky, distant escarpment and steam vents",
+        "what": "A defined white sun, heavier pale haze on the left and a broader steam column make the distance flatter and brighter. The snowy cliff is also visibly higher and less recessed, and the middle vent is less distinct.",
+        "fix": "Diffuse the solar disk, step the cliff back into layered haze, and restore a narrower warm-lit left plume and a readable low vent in the middle distance."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "left flats and water, top two crops",
+        "what": "Uniform wavelets under a broad hot reflection replace the little broken glints from wet mineral plates and narrow intervening puddles.",
+        "fix": "Localize the strongest highlights onto uneven water and rough, low rock shelves rather than running one continuous striped reflection across the pool."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "rim plants and the pair of near animals",
+        "what": "The dense wine-red branching growth at the left lip of the pit is reduced to small scattered sprays. The standing animal has a lowered dark tassel instead of an upturned pink fringe, and the prone silhouette is less fully articulated.",
+        "fix": "Build a fuller, fine-branched red rim cluster and restore the raised, backlit pink fringe and readable folded outline of the foreground pair."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the animals' bodies, joints and head fringes",
+        "what": "The bodies are more uniformly chalky and ribbed, their legs more like smooth thin rods, and the head strands much darker. The target has warmer mottled folds, stronger joint and foot detail, and pinker damp filaments.",
+        "fix": "Keep the silhouette but add irregular warm skin shading, darker wet lower legs with joint definition, and finer pink-tan fringes catching the backlight."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "behind the animals, from the left vent to the right bank",
+        "what": "The whole background becomes a broad pale haze. The sharper left steam column, localized ground vapour, low resting silhouette and layered rocky bank with dense reddish growth are missing or replaced by upright silhouettes and sparse sprigs.",
+        "fix": "Separate the vent and near vapour from the clear gaps between them, return the low silhouette, and put layered stone and clustered low growth back behind the right animal."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "bottom edge and far ridge",
+        "what": "Large angular cobbles form a more solid foreground border, while a brighter, larger and snowier-looking ridge crowds the background. The target has a lower, softer foreground edge and a more distant cave with better contrast against the warm sky.",
+        "fix": "Lower and soften the foreground rocks, then restore recession and a darker cave silhouette without making the ridge fill more of the sky."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the standing animal, distant herd and left glare",
+        "what": "The standing animal reads in side profile with a long diagonal reach rather than a rear three-quarter stance with the neck curling down. The distant herd is larger and closer to the left edge, and the large white sun disk pushes the shot into a much brighter wash.",
+        "fix": "Turn the nearby animal away and bring the fringe close to the ledge, scale the distant animals back into the flats, and soften the bright disk and gold wash while retaining left backlight."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "foreground mineral bench under and left of the prone animal",
+        "what": "The target's layered cracked rock, wet glints and embedded grit become a uniformly pitted tan surface with isolated angular stones and harder contact shadows.",
+        "fix": "Rebuild broad gray mineral slabs with cracks, wet ridges, and mixed pebbly deposits; place glints along those relief features and seat scattered stones in the surface."
+      }
+    ]
+  }
+}

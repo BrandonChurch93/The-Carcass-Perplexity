@@ -1,0 +1,28 @@
+{
+  "round": 29,
+  "unit": "heart",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-27 01:41 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "foreground strider on the left-center and the midground herd across the lava plain",
+        "what": "over the full 6-second hold, the foreground creature and every strider in the midground herd stay locked in place with no weight shift, stepping, turning, or pose variation, reading as static models",
+        "fix": "animate weight shifts, asynchronous stepping, pauses, and subtle body or head turns across the foreground strider and midground herd"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "lava fall pouring from the cavern mouth and glowing lava cracks on the plain",
+        "what": "the bright molten ribbons and dark crust islands stay in nearly the same pattern across all 6 seconds rather than visibly pouring, advancing, and folding",
+        "fix": "add slow, viscous downward flow and folding crust motion to the lava fall and channels, with subtle corresponding glow variation on nearby rock"
+      }
+    ]
+  }
+}

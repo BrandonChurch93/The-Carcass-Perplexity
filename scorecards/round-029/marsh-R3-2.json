@@ -1,0 +1,84 @@
+{
+  "round": 29,
+  "unit": "marsh",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-27 01:42 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the red mud foreground around the standing animal's feet and the lower-left ground",
+        "what": "the mud is a faceted low-poly mesh with stretched, smeared texture; it reads as CG terrain at playing speed",
+        "fix": "raise mesh density and displacement, use a proper wet-mud material with fine detail and specular wetness"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the brine pools and the salt crust plates centre-right and lower-right",
+        "what": "the crust plates are flat slabs with hard extruded edges like cut cards, and the ground under the animal is a faceted mesh with blurred stretched texture",
+        "fix": "give the crust irregular broken edges, thickness variation and crystal growth; replace faceted ground with displaced wet sediment"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "right crop, salt crust beside the standing animal's foot (x 83-100%, y 58-75%)",
+        "what": "stair-step aliasing / terraced steps along the crust edge and a smeared, stretched crust texture",
+        "fix": "fix the displacement resolution and UV stretching on the crust edge"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "bottom-right crop, mud around the claws (x 0-17%, y 58-75%)",
+        "what": "triangular facets and a visible hard-edged polygon plane of white crust over the mud; claws sit on the surface with no displacement, wet ring or mud on them",
+        "fix": "subdivide the terrain, let the claws sink and pick up mud"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "bottom-right crop (x 0-17%, y 58-75%) and bottom-left crust mound",
+        "what": "crust slab edge is a thin sheet with small spike triangles poking up; the salt mound texture is streaked and smeared like a stretched projection",
+        "fix": "model the crust edge with thickness and crystal fringe, re-project the mound texture"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "both crops at the animal's base and the right-hand ground",
+        "what": "the ground is jagged faceted mesh with blurry, stretched texture; a rectangular flat patch shows on the right; the animal shows no mud contact line or wetness",
+        "fix": "higher-res displaced terrain, remove the flat patch, add contact mud and wet darkening on the animal"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the animals",
+        "what": "the animals have a smooth uniform model look with the same skin texture everywhere and nothing of the place on them: no mud, salt crust or wet sheen on the legs and bellies standing in red brine",
+        "fix": "add mud and salt buildup, wet darkening up the legs and belly, and varied skin detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the red fluid",
+        "what": "the brine is a flat red tint with little depth, almost no reflection of the bright sky and no wet edge or foam where it meets the white crust",
+        "fix": "add sky reflection, depth darkening, a wet margin and crust froth at the shoreline"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-04.png",
+        "where": "the far distance and fog",
+        "what": "the haze is a fairly even flat white tint over the horizon with no structure",
+        "fix": "give the mist density variation and drifting structure"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the tree trunks in the left crop of set-B-02",
+        "what": "the trunk bark texture repeats evenly along the trunk",
+        "fix": "break the repeat with variation along the trunk"
+      }
+    ]
+  }
+}

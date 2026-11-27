@@ -1,0 +1,56 @@
+{
+  "round": 29,
+  "unit": "reveal",
+  "pack": "R1-2",
+  "family": "gemini",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the mountain ridges and valleys across the entire continent (also shown in set-B-02.png bottom crop)",
+        "what": "the arid dusty tan and rust-red rock surfaces of -a are replaced by dark olive-green terrain with stark pale-cream ridges, and the valley shadows are crushed to near-black without the soft blue orbital atmospheric veil of -a",
+        "fix": "warm the landmass palette back toward dusty tan and rust-brown rock, reduce the ridge-to-valley contrast, and lift the dark shadows with subtle blue atmospheric scatter"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the cyclone in the lower-right ocean (top crop, also visible in set-B-01-b.png)",
+        "what": "the spiral cloud bands look overly sharp, fibrous, and noisy with jagged splintered streaks along the outer left flank, and the eye is a tiny hard-edged black pinprick instead of the soft feathery clouds and wider blue eye in -a",
+        "fix": "soften the cyclone into cohesive, volumetric satellite-style cloud bands, remove the jagged streak artifacts on the left side, and widen and soften the eye with blue atmospheric fill"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the scattered clouds over the ocean, especially on the left and lower-left",
+        "what": "the ocean clouds are broken into overly sharp, high-contrast white speckles and thin streaks over a darker navy sea, losing the softer diffuse cloud veils and orbital haze of -a",
+        "fix": "soften the sea clouds into gentler, more diffuse wispy bands and slightly lift the dark ocean blacks to match -a"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the sun glint along the upper-right ocean edge near the upper leg and foot",
+        "what": "the specular sun reflection is much brighter, broader, and harsher beige-white than in -a, creating a heavy glare that washes out the upper foot and coastline",
+        "fix": "reduce the intensity and spread of the upper-right sun glint so it fades softly into the dark sea without washing out the upper foot"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the white pelvic salt basin and the coastal/ocean area around the legs",
+        "what": "the white pelvic basin is noticeably smaller and more broken up than in -a with cramped red channels, and the swirling golden-ochre currents seen in the sea below the pelvis and legs in -a are missing",
+        "fix": "enlarge and clean up the white pelvic basin with clearer crimson branching channels and reintroduce subtle ochre-gold sediment swirls in the bays and ocean below the legs"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "the skull landform on the far left and the neck region just above it",
+        "what": "the eye sockets and mouth read as flat dark-blue pools without the warm ochre rim on the lower eye, and the pale wispy tendrils streaming up-right from the skull in -a are absent",
+        "fix": "add warmer dusty-ochre rim detail to the shadowed eye sockets and restore subtle pale wispy streams trailing up-right from the skull"
+      }
+    ]
+  }
+}

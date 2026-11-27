@@ -1,0 +1,49 @@
+{
+  "round": 29,
+  "unit": "eye",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the drinking animals from roughly frame 8930 through 9164, also visible in set-A-07.png",
+        "what": "The near animal lowers its neck early, but after that the herd holds essentially the same poses for several seconds as the camera and reflections keep moving. The bodies and planted legs read as posed models rather than animals bearing weight.",
+        "fix": "Keep the quiet drinking beat, but give each animal a different rhythm of breathing, swallowing, head adjustments, and weight transfer through planted feet."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the central upwelling at frames 9165–9370, with the detail held in set-A-10.png",
+        "what": "The surface holds a smooth hump for much of the approach and then releases broad, evenly spaced rings. The buildup and release read as a water-surface deformation rather than a mass of water breaking or falling back.",
+        "fix": "Build a visibly advancing front, let parts of the raised skin break and fall back at different times, and carry that displacement into the outgoing waves."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the orange shallows in the bottom row, especially the straight-sided gray strip at frames 8651–8680",
+        "what": "The foreground filaments travel mainly as a fixed pattern under the camera, and the unusually straight gray strip cuts through them with little disturbance at its sides. This reads as a layer boundary, not flow over a bed.",
+        "fix": "Break up the strip and let small waves and changing refraction cross it continuously; keep any stationary bed detail distinct from moving surface detail."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the blue drop-off and the horizontal mist belt across the lake, also visible in set-A-09.png",
+        "what": "The bank passes the far wall with good parallax, but the blue streaks stay attached to the bank and the mist keeps almost exactly the same thin, level profile. The main visible motion comes from the camera.",
+        "fix": "Give the open water subtle independent reflection and ripple motion, and let the low mist gather, separate, and drift at different speeds along the shore."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the last three views of the crater, frames 9472–9540",
+        "what": "The crater pulls from nearly filling the shot to a small dark opening surrounded by a soft pale field. The loss of recognizable rim and surrounding terrain makes the last view read as a soft mask around a hole rather than a convincing higher-altitude view.",
+        "fix": "Carry recognizable rim and exterior terrain landmarks through the faster part of the ascent and bring the cloud or haze in as a separate depth layer."
+      }
+    ]
+  }
+}

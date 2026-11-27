@@ -1,0 +1,49 @@
+{
+  "round": 29,
+  "unit": "marsh",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "all four animals across frames 6263 to 6585 (confirmed in set-A-09.png)",
+        "what": "the large standing creature, the smaller standing creature, the foreground lying creature, and the distant lying creature remain completely frozen like static models for over five seconds while the camera mechanically orbits around them",
+        "fix": "animate asynchronous breathing, subtle weight shifts, head and neck turns, and slight limb adjustments across all four creatures, and motivate the camera move around a living action rather than an empty orbit"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "foreground red-plumed stalks across frames 5833 to 5989 (confirmed in set-A-08.png)",
+        "what": "the feathery red fronds and tall stalks stay completely rigid with zero wind sway or flutter as the camera tracks closely past them under visible rain shafts",
+        "fix": "add staggered wind sway to the stalks and secondary flutter to the individual feathery fronds so the vegetation feels alive in the weather"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the mud wallow around the rising creature and the surrounding creatures across frames 6586 to 7014",
+        "what": "the hero creature lifts and lowers its torso smoothly, but the mud around its belly never displaces, ripples, or drips in response to its weight, and the other creatures in the foreground right and background center stay completely motionless like statues",
+        "fix": "add mud displacement, slumping, and subtle dripping where the rising creature shifts its weight, and give the other creatures slow asynchronous breathing and posture shifts"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "red brine channels, mist, and sky rain shafts across frames 5618 to 5832 (confirmed in set-A-06.png)",
+        "what": "aside from the smooth camera glide and tiny distant flying specks, the red brine surface shows no flow or raindrop impacts and the rain shafts read as near-static slanted bands rather than falling rain",
+        "fix": "animate subtle surface current and raindrop micro-ripples on the brine pools and give the rain shafts continuous downward fall with drifting mist"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "the calm brine surface outside the bursting bubble and the distant stalks across frames 6048 to 6262 (confirmed in set-A-07.png)",
+        "what": "the bubble inflation, burst droplets, and expanding ripples land well, but the rest of the pool stays glassy with no raindrop disturbance despite the rain visible in the background sky, and the distant stalks do not sway",
+        "fix": "add light raindrop impacts across the surrounding brine surface and subtle wind motion in the background stalks"
+      }
+    ]
+  }
+}

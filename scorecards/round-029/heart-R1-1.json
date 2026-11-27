@@ -1,0 +1,133 @@
+{
+  "round": 29,
+  "unit": "heart",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-27 01:41 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "main lava channel, from center-left to lower right",
+        "what": "The prominent winding run of molten lava and broad yellow-white pools become a thinner, straighter orange trench under a long sheer cut. Much more dark foreground rock covers the flow, and the melt reads as flat smooth patches rather than curling crust on a moving surface.",
+        "fix": "Open up the near side of the channel, recover its winding stepped course and bright pools, and put fine incandescent strands through the rolling dark skin."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "half-buried animal in the right foreground",
+        "what": "The torso sits higher and reads as a freestanding ridged shell, with a rounded main arch and a high, almost parallel rear arch. The target is sunk much deeper, with a sharper high knee and a lower receding limb.",
+        "fix": "Sink the torso into the crust, sharpen the bend of the main leg and drop the rear leg farther behind it."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "center and near half of the basin floor",
+        "what": "A dense orange web and long straight glowing seams make the floor look much more continuously active than the target's broad dark plates with sparse branching breaks.",
+        "fix": "Extinguish much of the near web, break up the straight seams and recover wide quiet dark plates with localized bright breaks."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "skyline, cave and main rampart",
+        "what": "The skyline is more serrated, the cave is longer and lower, and the right-hand landmark reads as a broad slab with a dark sheer front instead of the target's more clearly separated, stratified and sloping promontory.",
+        "fix": "Smooth the far rim into broader tiers, round up the cave crown and give the promontory a more distinct layered face and sloping rubble foot."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "from the cave mouth down to the basin",
+        "what": "The lip and the upper falls are dimmer and the lower run is thinner and more fragmented; the mouth reads as a flat dark cut rather than a cavern with an incandescent rim.",
+        "fix": "Broaden the hottest part of the flow, restore several linked yellow-orange runs and carry their light around the mouth and out onto adjacent rock."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "background air and the right-hand breakout",
+        "what": "The smoke is a broad low gray blanket with a tall concentrated plume and an almost continuous bright orange wall at far right. At the nearer breakout, a dense steam puff partly replaces the target's more extended, visibly sparking seam.",
+        "fix": "Let more depth show through the middle of the valley, use softer overlapping wisps, localize the far orange backlight and spread the sparks along the nearer seam."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "left ledge and lower-left rock and vent, shown in set-A-02.png",
+        "what": "The ledge is bulkier and runs into a smoother, pebble-strewn incline; the target cuts away in broken shelves with angular, warm-edged rubble and a coarser ground grain. The vent rises in several upright gray tufts instead of one low drifting wisp.",
+        "fix": "Step the ledge back into broken shelves, add fractured faces and warm edge detail, vary the bed grain, and lean the vent plume across the rocks."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "animals across the basin and around the nearest feeding contacts",
+        "what": "The center silhouettes are dispersed over the plain instead of reading primarily as a close group on one lit seam. The nearest animal's contact glow is a small isolated patch and lights less of the trailing filaments than in the target.",
+        "fix": "Concentrate more activity around a shared seam and extend the orange bounce through the filaments and immediate ground; keep the intended variation in size and stance."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "half-buried form in the lower right",
+        "what": "Its exposed back is more sharply ribbed and slightly more prominent, with less crust lapping over it than in the target.",
+        "fix": "Settle the back deeper and blend some of its exposed ribs into the encroaching crust."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "banks and broad right foreground plate, shown in set-A-04.png",
+        "what": "The static rock is darker, muddier and more uniformly fibrous. It lacks the target's larger rope folds, finer coherent grain and cooler gray highlights, and the strongly red-lit inner cut is visually abrupt against the dark top surface.",
+        "fix": "Build broader coherent coils with fine rock detail, bring back subdued cool highlights and let the warm reflection fall across the newly exposed edges and nearby air."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "left frame edge, vent and near foreground berm",
+        "what": "The angular wall and dark berm occupy more of the scene; the vent is more opaque and upright over a broader yellow bed instead of a lower, looser plume around a smaller crust patch.",
+        "fix": "Pull back the berm and wall, confine the yellow deposits to broken patches and feather the steam into the side drift."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "far cave, mesa and right horizon",
+        "what": "The cave is larger and farther left, with a heavier lip and a thin angular descent. The mesa is more sheer and defined, while a flatter orange veil fills the far right instead of a localized soft glow in layered haze.",
+        "fix": "Move the cave back toward center and soften its rim; give its fall a wider heated footprint, soften the mesa through layered haze and keep the brightest orange air near the vents."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "animals above the center and right horizon",
+        "what": "The right animals are larger, more distinct and posed more upright than the target's smaller bent silhouettes, and the central animal reads more angular with weaker fine bright filaments where it meets the lava.",
+        "fix": "Set the right animals farther back, bias them toward lower feeding silhouettes and restore the central animal's warm branching contact and softer depth falloff."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "foreground animal material and its join to the ground, shown in set-A-06.png",
+        "what": "The flatter brown bands and broad flakes look more like carved bark than the target's overlapping charcoal scales with sharp warm rim highlights. A scalloped edge and dark undercut make the body look detached from the substrate.",
+        "fix": "Use darker broken layered plates, bring out selective warm catches on their edges and carry the surrounding cooled ropes into and partially over the body without a visible seam."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "left and middle ground animals",
+        "what": "The nearest standing animal is too high and far left, with stacked angular joints and blunt glowing tips. The others are larger and more separated above the floor, including a conspicuous upright form, where the target reads as a lower distant feeding group.",
+        "fix": "Set the nearest animal down and inward with more splayed legs and fine orange filaments, then lower, recede and cluster more of the other silhouettes along the molten seam."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "distant cave, right mesa, sky and basin glow",
+        "what": "The elongated cave and thin stepped fall lack the target's hot broad outlet. The right mesa is more slab-like and smoky, more blue sky is exposed at left, and the right background loses the target's local orange plume in favor of a more even washed veil.",
+        "fix": "Open the cave into a rounder arch, strengthen the fall and apron, recover the warm local plume and preserve the layered mesa through a less evenly filled haze."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "lower foreground crust and the fissure left of the body, shown in set-A-06.png",
+        "what": "A conspicuous black crack and a broad, finely streaked cool-gray floor pull attention away from the target's heavier linked folds. The glowing vent looks like separate flat red marks under diffuse gray steam rather than a narrow hot slit with a small wisp.",
+        "fix": "Close or quiet the black cut, rebuild larger ropey folds with varied highlights, and put the vent glow inside a continuous hairline opening with thinner drifting vapor."
+      }
+    ]
+  }
+}

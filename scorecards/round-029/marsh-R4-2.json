@@ -1,0 +1,35 @@
+{
+  "round": 29,
+  "unit": "marsh",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the large translucent bubble at center across frames 6156 to 6167",
+        "what": "instead of rupturing as a thin fluid film, the dome squashes straight down like a deflating solid cap while dark spray droplets spawn above an still-intact membrane, and the surrounding red liquid shows no splash crown or expanding ring wave around the base",
+        "fix": "tear the dome open from a rupture point so the film retracts rapidly into droplets, and drive a splash rim and outward concentric wave across the surrounding liquid surface"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the tall slender stalk on the foreground left and the red shrubs in the center over 6 seconds",
+        "what": "the stalk and fine branches stay completely rigid across the entire 6-second held shot even as mist drifts sideways and rain curtains sweep across the sky",
+        "fix": "add subtle, wind-driven sway and tip flex to the tall stalk and shrub branches that matches the drift direction of the mist and rain"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the red liquid channels in the foreground and right midground",
+        "what": "the fluid motion reads as a broad shifting surface ripple texture with no lapping, wake, or shoreline disturbance where the liquid meets the cracked crust banks and submerged ledges",
+        "fix": "add directional current flow with subtle edge lapping, foam drift, and ripple deflection around the crust banks and protruding rocks"
+      }
+    ]
+  }
+}

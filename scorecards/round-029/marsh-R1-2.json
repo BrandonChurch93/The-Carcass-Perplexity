@@ -1,0 +1,98 @@
+{
+  "round": 29,
+  "unit": "marsh",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-27 01:42 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "upper half, from the nearby left plants through the rear animal to the horizon",
+        "what": "The frame holds sharp foliage, a readable rear animal, a distinct ridgeline and diagonal gray streaks together. The target is a close view with the distance swallowed by soft warm haze and shallow focus.",
+        "fix": "Keep the main animal in focus, let the rear animal and plants fall off more rapidly, and dissolve the ridge and streaks into diffuse haze."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "foreground pool, left feeding bank and right bank beneath the small animal",
+        "what": "Broad flat white crust and opaque brick-red mud replace the target's uneven low banks and reflective reddish water. The foreground animal sits against a flat opaque surface with little sign of displacement.",
+        "fix": "Break the white layer into irregular deposits on low, wet banks; restore reflective open water in the foreground, with ripples and a wet, disturbed edge where each animal enters it."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "central animal and small animal on its right",
+        "what": "Cool chalky backs and nearly black legs replace the target's warm brown bodies, softly lit legs and rusty wet undersides. The result reads much drier and more contrasty even though both skies are overcast.",
+        "fix": "Soften the leg shadows with warm reflected light, warm the gray highlight and recover the rusty wet sheen just above the water and mud."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "foreground and right half of the main pool",
+        "what": "Large level plates with straight, upright rims and broad bands of repetitive crumpled water replace the target's broken mineral shelves, scattered lumps, and finer, glinting silt-water ripples.",
+        "fix": "Make the crust thinner, rougher and more fragmented at the edges, with smaller debris and shallow interconnected pools; reduce the height and repetition of the ripples and restore small glints and broken reflections."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "main animal and immediate foreground",
+        "what": "The main animal sits farther left and lower, and its back stops well short of the right edge. A high, fairly defined white foreground mound crowds its feelers where the target gives them open water and only a soft foreground lip.",
+        "fix": "Move the main animal right and slightly up so its back fills the right side of the pool, and lower and defocus the foreground mound to reopen the water around the feelers."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "midground herd, sparse stalks and distant skyline",
+        "what": "Most of the large animals cluster at upper right, leaving an empty left pool. The upper-left stand is a row of thin bare poles, and distant ridges and streaked vapor are conspicuous. The target distributes the herd and leafier growth across the width and lets them fade into warm, even haze.",
+        "fix": "Spread several small silhouettes through the left and center pools, restore loosely grouped red crowns through the midground, and soften the distant plants and ridge into even haze without obvious streaks."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "lower body, feet and the feeding edge",
+        "what": "The bellies and feet lack the visible strands of muddy runoff and varied wet highlights that connect the bodies to the marsh in the target.",
+        "fix": "Add irregular mud drips and wet contact marks, preserving darker creases and broken highlights where the legs enter the shallows."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "still skin on the main flank and back",
+        "what": "A fine, fairly even gray pebbling covers the flank, where the target combines broader folds with patchy rough deposits and finer grain between them.",
+        "fix": "Vary the scale and distribution of the detail and put the pale mineral flakes in uneven patches along the crest."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "lower center foreground animal and right-hand small animal",
+        "what": "The partly submerged animal extends far to the left compared with the target's low center-right hump, and the smaller animal sits down on the level flat rather than up on a distinct raised bank.",
+        "fix": "Move the foreground animal's visible mass to the right and lift the small animal's feeding patch on a rough low shelf above the water."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "main animal's back, throat and waterline",
+        "what": "The back lacks the target's broad, irregular crusted patches; the lower body shadows go dark and cool, and the water at the face and flank lacks distinct fine runoff, reflections and contact ripples.",
+        "fix": "Patch rough pale mineral deposits onto the back, bring warmer diffuse bounce into the lower folds, and add fine wet reflections and interrupted ripples around the feelers and flank."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "left-center mound and rear-right low bank",
+        "what": "The left feature is a sharp jagged rock trough rather than a rounded crusted mound with embedded strands, while the larger bright rear mound pulls toward center-right instead of anchoring the far right edge.",
+        "fix": "Round the left mound, coat it with irregular mineral buildup that partly buries the strands, and move the rear mound toward the right edge and back into softer focus."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "air immediately above the main animal and middle pool",
+        "what": "The small dark airborne specks that make the target's still air feel alive are mostly absent; the few visible marks read pale against the lower pool instead.",
+        "fix": "Add a few tiny irregular dark flying specks in the air at varying depths, keeping them unobtrusive."
+      }
+    ]
+  }
+}

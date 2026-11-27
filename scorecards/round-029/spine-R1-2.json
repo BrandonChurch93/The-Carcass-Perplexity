@@ -1,0 +1,126 @@
+{
+  "round": 29,
+  "unit": "spine",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the main spire, whole face from summit to base",
+        "what": "the rock is an evenly lit grey CG surface with stretched, smeared texture and almost no snow; -a has dark, storm-shadowed rock with snow packed on ledges and a snowy shoulder at lower left of the spire",
+        "fix": "darken the face into storm shadow lit mainly by the bolt, add snow on ledges and the lower snowfield, and replace the stretched texture with sharp fractured rock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the whole air of the frame",
+        "what": "no blowing snow or spindrift, no sparks spraying off the strike, no fume at the summit; -a is full of driven snow streaks, orange sparks and a smoke plume from the strike",
+        "fix": "add wind-driven snow across the frame, a spark burst at the strike point and a pale plume pouring off the summit"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the far distance below the horizon",
+        "what": "-a looks down on a sea of cloud with several sharp spires standing out of it receding into haze; -b shows a flat dark plane and two blocky pale rock slabs at mid-distance, so the sense of height and scale is lost",
+        "fix": "replace the flat ground with a cloud sea below and set several hazed, darker, sharper spires at increasing distance"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the foreground rock at left",
+        "what": "a uniform blurred brown slab with no snow; -a has a defocused snowy ridge with dark rock showing through",
+        "fix": "cover the near ridge with snow, keep dark rock breaks, keep it defocused"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the ribbons streaming off the summit",
+        "what": "stiff, cut-out lavender sheets with jagged hard edges and no glow; -a has thin, translucent, glowing veils with crackling electric threads",
+        "fix": "make the ribbons thinner, translucent and lit from within, with small electric filaments trailing off them"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the lightning strike at the summit",
+        "what": "the bolt meets the rock with no bright burst and lights nothing around it; the rock top does not glow",
+        "fix": "add a hot white-violet flash at the strike that lights the summit rock and the nearby fume"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the sunset band on the horizon",
+        "what": "the orange band is a thin hard stripe cut by grey smoke; in -a it is a soft warm glow under the cloud deck",
+        "fix": "soften the warm band and let it glow under the cloud base"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the spire's edges against the sky",
+        "what": "hard cut-out edges with visible faceted seams and patchy tile repeats (seen in the crops); -a edges sit in atmosphere",
+        "fix": "remove the seams and tiling and let haze soften the silhouette"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the cave walls and roof",
+        "what": "walls are a smeared, streaked fur-like texture in flat grey-brown; -a has smooth layered rock with ice glaze, wet highlights and warm-cool colour variation",
+        "fix": "replace with sharp layered rock glazed with ice, with violet highlights from the mouth and warm tones deeper in"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the icicles at the cave mouth",
+        "what": "rigid dark cone spikes hanging in lines; -a has clear, glassy, irregular icicles and ice curtains catching the violet light",
+        "fix": "make the icicles translucent and irregular, lit from the mouth"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the view out of the cave",
+        "what": "the snowy valley with a lit spire, footprints and rocks is replaced by a low grey flat-shaded hill with blocky trees and indistinct ribbon shapes; no sense of the storm-lashed peak",
+        "fix": "restore the snowy slope with the tall spire and its streaming ribbons, footprints and rocks receding into blowing snow"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the cave floor",
+        "what": "a flat, clean grey-white plane with no ice, no wet sheen, no rocks or snow edging; -a has a glossy frozen stream with reflections and snow banks",
+        "fix": "make the floor a glossy frozen meltwater channel reflecting the mouth light, with snow and stones along its edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the pack huddled at left",
+        "what": "the cluster of frost-covered sleeping animals with long claws is reduced to a few flat-lit brown hair mounds; frost, claws and the huddle mass are gone",
+        "fix": "rebuild the huddle as several frosted shaggy bodies pressed together against the wall, with frost on the fur tips"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the standing animal and the pack's lighting",
+        "what": "fur is evenly lit brown with no violet rim light or frost from the mouth; -a rims the coats in cool violet and keeps the interior dimmer",
+        "fix": "darken the interior and rim the animals in violet light from the cave mouth, with frosted tips"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "air inside and outside the cave",
+        "what": "almost no blowing snow; -a has driven snow and haze outside the mouth",
+        "fix": "add wind-blown snow and haze beyond the mouth"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "overall exposure and mood",
+        "what": "the cave is bright and evenly lit, losing the dark, cold, sheltered mood of -a",
+        "fix": "lower interior exposure and let light fall off from the mouth"
+      }
+    ]
+  }
+}

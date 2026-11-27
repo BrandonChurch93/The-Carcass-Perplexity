@@ -1,0 +1,84 @@
+{
+  "round": 29,
+  "unit": "heart",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-27 01:41 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the background from the left cave mouth to the center of the basin",
+        "what": "The broad luminous switchback and its bright spill across the basin nearly vanish behind the left animal. The right bluff also projects much farther down into the center, closing off the smoky gap behind the foreground animal.",
+        "fix": "Carry a continuous hot fall from the left into a wide glowing spill behind the foreground animal, and pull back the bluff's lower left flank to reopen that gap."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the foreground lava bed below the central tendrils and across to the lower right",
+        "what": "Most of the lava reads as dim red outlines or smooth orange cutouts in wavy brown rock. The target has bright broken yellow-orange edges, black crust plates and a sustained hot channel extending to the right.",
+        "fix": "Extend the live channel rightward and build irregular hot cores, cooling crust edges and local spill on rough charcoal plates."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the cave mouth and the stepped falls below it",
+        "what": "The opening reads as a taller, flatter-black cutout under a thick folded rim, and the main descent is a narrow chute displaced to the right. The target has a receding arched interior and broad lava curtains across prominent stair-step ledges farther left.",
+        "fix": "Recover the receding arch and visible shadowed ribs, move the main falls left, and spread the brightest sheets over distinct broad ledge faces."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the basin air between the three animals and above the foreground fissures",
+        "what": "A uniform low brown veil washes out the distance and several narrow upright steam puffs stand apart from the lava. The target has a clearer basin floor and patchier haze with low orange-lit vapor where the rock is hottest.",
+        "fix": "Thin the uniform veil, keep the ground plane readable and break the plumes into low wisps lit by nearby molten cracks."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the central animal's muzzle and tendrils, and the right animal's hanging tips",
+        "what": "The central tendrils look uniformly orange and the main appendage carries a broad orange strip, while the far-right tips disappear into the brown air. The target keeps dark fibrous strands with selective hot edges and gives the far tips a visible warm rim.",
+        "fix": "Retain dark fibrous material between the highlights, concentrate the strongest uplight at the lava contact, and restore the light catching the right-hand strands."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the two nearer animals' feet and the crust directly beneath them",
+        "what": "The contact points read weakly: the planted feet blend into brown rock and the raised foot lacks the detached crumbs beneath it that show the target's brittle ground.",
+        "fix": "Give the planted feet firmer contact shadows and let a few separated, backlit fragments fall under the raised foot without changing the stance."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the left scree slope and the middle ledge faces alongside the cascade",
+        "what": "The native-size patches show a flatter dusty scree face and softer, lumpier rock at the falls, where the target separates fine angular scree, shadowed strata and distinct lava-lit vertical fractures.",
+        "fix": "Restore the small sharp scree, define fractured bedrock faces and add directional orange light from the falls while preserving cool dark shadows."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the right side of the basin and the lava fan around the two animals",
+        "what": "A thick brown-orange veil fills much of the right half, and the hot base hugs the right side in a densely glowing fan. The target shows more of the cool far wall through the haze and a lower, wider black-crusted fan cut by hot seams.",
+        "fix": "Break the veil into translucent plumes rooted in the fan, show more of the wall, and spread the flow over dark crust with concentrated bright edges."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the out-of-focus foreground along the bottom edge",
+        "what": "A broad dark mound blocks much of the lower left and multiple horizontal red streaks collect on the right, replacing the target's flatter framing and single bright diagonal fissure leading in from left-center.",
+        "fix": "Lower the left obstruction and favor one brighter diagonal fissure with quieter surrounding cracks, keeping the near plane defocused."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the two silhouettes at the foot of the flow",
+        "what": "Their legs and hanging appendages are partly lost against the busier hot fan and nearby clasts, especially on the left figure. The target reads both forms clearly at the basin's scale.",
+        "fix": "Keep both figures small but give their legs and tendrils a clean backlit outline against a simpler patch of glow."
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "round": 29,
+  "unit": "ribs",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-27 01:39 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the foreground animal's legs and feeding tendrils where they enter the water",
+        "what": "the limbs end abruptly at an almost undisturbed surface; the strong, nearly intact mirror image makes the contact look like a model placed on glass",
+        "fix": "Show feet or tendrils continuing beneath the surface with refraction, and break up the reflection locally with menisci, ripples, and a wake where they move."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the close wall around the clinging animal",
+        "what": "the wall is covered with smooth, angular ribbons that look like folded plastic against the rough rock, with deep black gaps between them",
+        "fix": "Break up the repeated ribbon profiles, roughen their surfaces at close range, and let reflected sky light reach the deepest folds."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the arch tips in the upper-right crop",
+        "what": "several rock forms end in broad polygonal faces, and the same striation treatment bends around their profiles in much the same way",
+        "fix": "Vary the fracture planes and silhouettes across formations, and give the exposed end faces their own broken strata and erosion detail."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "water wrapping around the rocks in the lower-right crop",
+        "what": "the rock pattern smears into broad transparent bands at the waterline, with little local change to the ripples",
+        "fix": "Use depth-dependent refraction and shorter, irregular ripples around each rock, with a narrow wet contact edge."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the exposed pebbly shelf beside the water in both crops",
+        "what": "the pebble detail is smeared sideways over much of the shelf, reading like a stretched texture rather than individual stones of different sizes",
+        "fix": "Correct the texture stretch and use a mix of pebble sizes with actual relief and differing wetness at the edge."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the white spray around the left animal's feet",
+        "what": "the spray reads as a scatter of bright dots and blobs, with no continuous splash at the point of contact",
+        "fix": "Tie the droplets to short splash sheets and thinner arcs originating where the foot strikes, with matching ripples below."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the clinging animal's back in the upper-right crop",
+        "what": "the same long grooves run across the back with soft, stretched-looking detail, making the body read more like a carved model than skin",
+        "fix": "Give the back finer, directionally varied surface detail and add localized grime or moisture along the side touching the wall."
+      }
+    ]
+  }
+}

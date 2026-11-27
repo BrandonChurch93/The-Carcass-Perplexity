@@ -1,0 +1,84 @@
+{
+  "round": 29,
+  "unit": "ribs",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-27 01:39 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-08.png",
+        "where": "whole frame, frames 2083, 2087, 2091",
+        "what": "a brightness pop every fourth frame: the tree, creature and sky jump brighter and a white speck flashes at the top edge, then drop back. In the playing video this reads as a regular strobe",
+        "fix": "find the periodic source (a light, the exposure or a sky sample) and make it steady or ease it over many frames"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the wet flats and dark pools in the foreground, frames 1241-1252",
+        "what": "the pools and wet patches change shape and brightness from one frame to the next, and the pebble detail crawls, while the camera barely moves. The ground boils instead of reflecting",
+        "fix": "lock the ground's displacement and wetness to world space with no time input, and stabilise the reflection sampling and denoise"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "the cliff face and the roosting creatures, the whole shot",
+        "what": "the cliff is built from stacked semi-transparent layers that show through each other, with a flat textured card on the left. The roosting creatures are see-through ghosts piled on top of each other, and the camera slides across what reads as a layered still picture",
+        "fix": "make the cliff and creatures solid, opaque geometry, and give the roost real parallax and separate, staggered creature motion"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-10.png",
+        "where": "the roosting creatures and the flyer at mid-left, frames 1546-1557",
+        "what": "the perched creatures barely change and look like overlaid sprites. Fine cliff texture shimmers between frames",
+        "fix": "give each perched creature its own small offset motion (head turns, wing shifts) and filter the fine cliff texture so it stops shimmering"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the foreground creature, frames 1730-1866",
+        "what": "once the camera arrives, the near creature holds one feeding pose with no weight shift, step or head movement for over a second, so it reads as a posed model. The far creatures are translucent and wade in unison",
+        "fix": "add breathing, a weight shift and a step or head lift, give the herd different phases, and make the background animals opaque"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the three creatures, frames 1759-1770",
+        "what": "almost no motion across 12 frames. The midground pair look like copies posed alike, and the far one is a ghost with splashes that do not follow its feet",
+        "fix": "vary the pose and timing of each animal, and tie splashes to actual foot contacts"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the sea surface during the push, frames 662-1041",
+        "what": "open, rough sea gradually turns into a flat wet stone floor with no shoreline or swell breaking, so the place swaps under the camera rather than the camera travelling to land",
+        "fix": "carry the swell through to a visible surf line and beach so that near water passes the far stacks as the camera moves in"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the foreground flats, frames 1078-1295",
+        "what": "wet patches appear and vanish between samples and the creatures pop in at mid-distance, so the ground does not read as a fixed place the camera passes over",
+        "fix": "fix the ground features in world space and have the herd present from the start of the shot"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-06.png",
+        "where": "the closing frames 2468-2506",
+        "what": "the wave lands well as one wall, but the push ends on a frame filled with spray and a single flyer, which is a weak final picture",
+        "fix": "end on a held frame where the wave's break and the stacks stay readable"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05.png",
+        "where": "the creature on the tree trunk",
+        "what": "the creature is fully still while the camera pushes in, and the air and water behind it barely change",
+        "fix": "add a slight breathing or twitch and some drifting mist behind it so the place stays alive"
+      }
+    ]
+  }
+}

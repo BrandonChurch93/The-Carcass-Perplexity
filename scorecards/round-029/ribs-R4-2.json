@@ -1,0 +1,56 @@
+{
+  "round": 29,
+  "unit": "ribs",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-27 01:39 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the flying reptiles crossing in front of the breaking wave, all frames",
+        "what": "the animals are semi-transparent; rock, spray and sky show through their wings and bodies, so they read as ghosted layers composited over the plate, not solid animals with weight",
+        "fix": "render the animals fully opaque with proper occlusion and motion blur, lit by the same storm light"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the breaking wave and spray between the two sea stacks",
+        "what": "the wave does not land as one heavy wall; the white water is a see-through veil that fades in and out over the rocks and far arches behind it, moving like a cross-faded texture rather than water with mass that breaks and throws spray",
+        "fix": "simulate the wave as one opaque body that rises, curls and breaks forward, with spray that occludes what is behind it and falls back under gravity"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "the whole frame over the 6 s hold",
+        "what": "with the camera held still the place hardly changes: the foreground pools, wet rocks, mist and stone arches stay frozen, the clouds shift only slightly, and the small animals on the right barely move; it reads as a still picture",
+        "fix": "add living motion at the hold: ripples and wash in the pools, drifting low mist at its own height, cloud moving across the arches, light changing, and animals that walk, pause and turn"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the foreground tide pool and wet rocks",
+        "what": "the water in front of the camera stays flat and still while a large wave breaks just behind; there is no surge, backwash or ripple reaching it",
+        "fix": "drive surge and ripples from the wave into the foreground water, with foam running across the rocks"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the flying animals' wing motion, frames 2401-2412",
+        "what": "the several animals flap with near-matched poses and spacing, close to an identical cycle; no individual timing",
+        "fix": "offset each animal's wingbeat phase, speed and path; let some glide, bank or turn"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "frame labels compared with set-B-01",
+        "what": "set-B-02 frame 2400 matches set-B-01 frame 2401 image for image, so one sheet's numbering is off by one frame; could hide a duplicated or dropped frame",
+        "fix": "check the frame numbering and that no frame is repeated in the render"
+      }
+    ]
+  }
+}

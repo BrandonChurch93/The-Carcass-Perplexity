@@ -1,0 +1,49 @@
+{
+  "round": 29,
+  "unit": "breath",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the red weeping plant in the foreground, frames 4983 to 5080",
+        "what": "the hanging fronds stay completely rigid with no wind sway while the camera eases to a near-stop on the bush, making the last third of the shot read like a frozen still",
+        "fix": "add gentle, asynchronous wind sway to the hanging fronds and keep a subtle camera drift through the end of the shot"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the dark red fronds across frames 4973 to 4984",
+        "what": "bright white pinpoint specular fireflies pop on and off at different spots from frame to frame, creating shimmer in the fine foliage detail",
+        "fix": "clamp specular highlights or increase sampling and temporal denoising on the fine red frond shader"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-10.png",
+        "where": "the dark red hanging strands on the left half, frames 4731 to 4742",
+        "what": "tiny bright white specks flicker and jump across consecutive frames inside the close-up foliage",
+        "fix": "clamp firefly highlights and improve temporal stability on the thin frond strands"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the solitary pale creature on the rocky spit, frames 4221 to 4596",
+        "what": "the animal stays locked in the exact same stance and head pose across the entire 6-second push-in, reading as a static model rather than a living creature",
+        "fix": "add subtle living motion such as a slow weight shift, breathing, or a slight head turn and tendril sway during the approach"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the red foliage on the left rim (frames 4597 to 4768) and the pit wall at the end (frames 4792 to 4865)",
+        "what": "the hanging fronds remain rigid despite heavy mist pouring past them, and after they clear frame the push-in settles on a relatively plain, fog-obscured rock wall",
+        "fix": "add subtle wind movement to the passing fronds and maintain stronger compositional interest as the camera glides over the chasm"
+      }
+    ]
+  }
+}

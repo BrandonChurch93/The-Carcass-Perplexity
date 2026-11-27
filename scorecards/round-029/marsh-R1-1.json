@@ -1,0 +1,112 @@
+{
+  "round": 29,
+  "unit": "marsh",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the basin from the foreground channel through the left pool to the far flats",
+        "what": "The much broader, straighter red waterway and large central island replace the narrow curving channel, separate round vent pool, and finely layered mineral flats. The raised outcrop left of center barely stands out.",
+        "fix": "Bring back the vent pool's enclosing rim, narrow and bend the main channel, break the flats into shallow terraces and pans, and raise the left outcrop."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the central banks and left foreground vegetation",
+        "what": "A dense, tall stand crowds the center and an isolated cut-looking pole dominates the left edge, where the target has shorter, spaced clusters and open sightlines across the banks.",
+        "fix": "Thin and lower the central stand, break it into smaller uneven clumps, and replace the dominant cut pole with the lower leafy foreground growth."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the middle channel and right mudflat animals",
+        "what": "Most animals read as undifferentiated humps or exposed rib cages, and the near swimmer is gone. The target has a clearer foreground-to-distance spread, a recognizable walking adult with young, and partly buried pale limbed animals.",
+        "fix": "Restore the foreground swimmer and the adult-and-young group; show a varied amount of head, limbs and folds above the water, and integrate the pale animals into the mud rather than exposing long bare ribs."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the close vent pool and its main bubbles",
+        "what": "A broad nearly flat red sheet holds smooth, opaque domes and a dark arch. The target has a translucent, locally highlighted large bubble, a collapsing splash with spray, surrounding wave rings and small bubbling vents near the bank. The loss is in geometry and material, not motion blur.",
+        "fix": "Give the domes thin translucent walls and localized reflections, make the collapse disturb the surrounding liquid with broken crests and drops, and restore the smaller bubble clusters and concentric waves."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the opposite bank, skyline and close left stalk",
+        "what": "Large isolated poles and a crisp near trunk frame an open pale horizon, while the target uses a softer near stalk and a more continuous receding band of red growth behind the pool. The far animal is a low hump instead of a full-bodied wader.",
+        "fix": "Restore the near-stalk defocus, move the tall background poles back into a denser but graduated bank of red crowns, and show the wader's head, legs and contact with the water."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the back of the pool and right bank behind the hero stalks",
+        "what": "Unbroken red water, tall bare poles, a broad chalk mound and a partly hidden animal hump replace the target's stepped mineral banks, textured low knoll and clearly legged animal standing in shallows.",
+        "fix": "Bring the uneven mineral rim and shallow shelves into view, lower and roughen the knoll, shift the tall background poles out of the animal's silhouette, and restore its standing body and reflections."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the steam behind the foreground stalks and the distance",
+        "what": "A bright, thick white blanket wipes out much of the middle ground, and distinct slanted streaks cross the sky. The target has warm, low patches of vapour with a more readable basin and soft rain farther back.",
+        "fix": "Confine the steam to lower uneven wisps, recover the layered flats behind it, and soften the high streaks into distant rain curtains."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the lower-left ledge, exposed flat and water surface",
+        "what": "The ledge is uniformly chalky and blocky, the right crust is broken into stark plates, and broad streaks flatten the red water. The target has warmer variegated rock, thin layered mineral rims and a finer reflective water surface.",
+        "fix": "Introduce rust staining, irregular granular rock and layered grey-beige crust, and replace broad water streaks with finer reflections and ripples."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the sky, distant ridge, birds and vapour over the left pool",
+        "what": "Strong central slanted rain, a higher right-hand ridge and a more conspicuous bird line flatten or shift the depth cues, while white steam pools at the far left rather than lifting in wisps across the vent.",
+        "fix": "Lower and soften the ridge to the right, disperse and slightly lower the flock toward the far flats, move the diffuse rain farther right, and spread thinner steam over the pool."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the near mineral lip and the front-right waterline",
+        "what": "The near rim is a broad uniform chalky shelf; the target has warmer, jagged porous encrustation interleaved with wet red material and scattered small insects near the edge.",
+        "fix": "Break the shelf into irregular cream and rust deposits with wet gaps and place a few small insects along the front-right waterline."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the atmosphere over the pool and the diffuse light on the water",
+        "what": "A cool white veil and distinct high diagonal streaks take the place of the target's low warm mist and fine spray. The highlights on the water are broader and duller.",
+        "fix": "Keep the vapour low and uneven, allow the bank to show through, and restore small bright reflections in the wet surface under soft overcast light."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the three foreground stems and the broken one on the right",
+        "what": "The trunks have evenly spaced chalky rings with comparatively little mineral buildup or wetness, and the broken stem ends in a pointed split rather than a rough hollow rim. The fiber and bead treatment is visually repetitive independent of the settled stalk shape.",
+        "fix": "Add irregular cream and rust deposits, darker wet seams, varied droplet sizes and more fibrous tearing around an open hollow tip."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the air beside and above the main red crown",
+        "what": "The insects are spread widely in the sky as generic gray silhouettes rather than concentrated around the wet tips with discernible golden bodies and translucent wings. This is a placement and appearance difference, not a request to remove motion blur.",
+        "fix": "Bring the swarm closer to the crown and vary the positions, scales and warm body tones, letting transmitted light show through the wings where visible."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the central and lower red pool",
+        "what": "Several bright, smooth bubbles become prominent behind the stems, and the water lacks the target's finer ripples, reflections and edge texture.",
+        "fix": "Let the quieter reflective pool and shallow mineral edge dominate, subsume the bright domes into the surface, and give the ripples local variation around the wader and banks."
+      }
+    ]
+  }
+}

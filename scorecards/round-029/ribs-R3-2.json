@@ -1,0 +1,70 @@
+{
+  "round": 29,
+  "unit": "ribs",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-27 01:39 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the dark foreground ledges along the bottom edge",
+        "what": "the ledge faces melt into long glossy black and olive streaks with the same wavy profile repeated across steps; they read as stretched material rather than erosion or runoff",
+        "fix": "give the ledges broken stone geometry and granular texture; confine wet streaks to irregular runoff paths"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "the shallow water across both crops, particularly behind the legs on the right",
+        "what": "long, straight black gaps and pale strips split the shallows into separate sheets just in front of the breaking wave",
+        "fix": "join the shoaling water into one continuous surface and break the shore edge with uneven run-up, foam, and wet rock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the flock on the center and right terraces, clearest in set-B-03.png at left",
+        "what": "the same tucked head, ribbed wing silhouette and dry beige surface repeat across adjacent ledges, making the colony look like rows of copies",
+        "fix": "vary poses, wing folds, body shapes, and local wetness or staining; place each animal individually on its ledge"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the close cliff in the lower-left crop",
+        "what": "orange and gray texture stretches into ribbons over sharply faceted faces and changes direction abruptly at mesh edges",
+        "fix": "break up the facets and use scale-consistent stone detail that wraps over the ledge edges without stretching"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the exposed head near the bottom left of the right-hand crop",
+        "what": "a distinct dark oval in the eye position reads as an eye on the otherwise eyeless animal",
+        "fix": "remove the eye-like recess and contrast while retaining continuous skin detail across the head"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "where the right-hand animal's legs enter the shallows",
+        "what": "the reflected legs meet the real legs at sharp mirrored elbows, without a visible foot, meniscus, or ripple to establish contact",
+        "fix": "show the feet through the shallow water with refraction and add small contact ripples that disturb the reflection"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the left wall above the waterline and the rock below the wing",
+        "what": "large parts of the wall go nearly pure black except for disconnected blue-gray glints, making the wet rock look lacquered under the bright sky and surf",
+        "fix": "restore bounce light and diffuse rock detail in shadow, and vary wet specular response by surface angle and roughness"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the center of the breaker in the upper-right crop",
+        "what": "hard white spray flecks stand in front of a mostly uniform gray veil, with little depth or directional light connecting the two",
+        "fix": "grade the mist by thickness and depth, and blend the spray into the breaking crest with a range of droplet sizes and light response"
+      }
+    ]
+  }
+}

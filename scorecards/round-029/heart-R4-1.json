@@ -1,0 +1,70 @@
+{
+  "round": 29,
+  "unit": "heart",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-27 01:42 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "the molten lava channel running across the foreground and midground",
+        "what": "the bright lava ribbons and dark crust islands stay completely locked to the ground geometry across the entire shot, so the river reads as a static glowing surface that the camera glides over rather than thick flowing lava",
+        "fix": "animate slow downstream flow and folding skin on the lava crust plates so the channel visibly moves independently of the camera"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the foreground strider at left-center and the midground herd",
+        "what": "the prominent foreground creature and the surrounding herd hold completely frozen poses for over seven seconds with no weight shift, stepping, or neck motion, reading as rigid models",
+        "fix": "add subtle idle weight shifts, asynchronous stepping, and slow neck or tendril movement across the foreground strider and background herd"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the bright lava fall pouring from the cliff cave in the upper-left background (also frozen in set-A-02.png, set-A-03.png, set-A-04.png, and frames 3791 to 3986 of set-A-05.png)",
+        "what": "the zig-zag shape and bright hotspots of the lava fall remain frozen in place across multiple seconds, making the distant cliff read like a static painting",
+        "fix": "drive continuous slow downward flow, crust breakup, and heat-shimmer variation along the lava fall in every shot where it appears"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the lava surge pouring from the cave lip down to the plain in frames 4064 to 4220",
+        "what": "the surge drops down a cliff hundreds of feet tall in about two and a half seconds and splashes into a wide thin fan at the base, behaving like fast water rather than heavy viscous lava at that scale",
+        "fix": "slow the descent and thicken the surge front so heavy lobes roll and fold down the talus slope instead of spraying and splashing outward"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the three striders at the base of the cliff in frames 3986 to 4220",
+        "what": "the creatures stand completely motionless even as a massive lava surge crashes onto the plain right behind them",
+        "fix": "have the striders shift, turn, or begin moving away as the surge arrives"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the giant strider and two smaller striders on the far horizon",
+        "what": "all three horizon silhouettes remain completely frozen across the shot, reading as static props",
+        "fix": "give the horizon striders slow, staggered strides or neck bends so the distant plain feels alive"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the dark smoke plumes rising in the upper-right sky",
+        "what": "the plume shapes barely drift or evolve over seven seconds, reinforcing a still-backdrop feel",
+        "fix": "add steady upward drift and slow billowing turbulence to the background plumes"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the right-side strider's arched neck and the center strider's stepping legs around frames 3056 and 3295",
+        "what": "the right strider's upper body and neck stay stiffly locked in one arch for most of the shot, and the center strider's lifted leg bends with a slightly mechanical silhouette mid-step",
+        "fix": "add gentle counter-sway to the right strider's neck and soften the knee arc and weight transfer on the center strider's steps"
+      }
+    ]
+  }
+}

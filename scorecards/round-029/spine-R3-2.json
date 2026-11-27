@@ -1,0 +1,91 @@
+{
+  "round": 29,
+  "unit": "spine",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "the main mountain rock face in the left crop (also visible across the peak in set-B-01.png)",
+        "what": "blatant low-poly flat facets, hard UV seams, stretched snow patches, and a visibly mirrored texture pattern on the lower right rock surface",
+        "fix": "rebuild the peak with high-resolution displaced rock geometry, eliminate UV seams and mirroring, and blend snow naturally into crevices"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the translucent purple-grey streamers trailing right from the ridge (and in set-B-02.png top-right crop)",
+        "what": "the streamers read as flat, papery CG ribbon meshes with jagged, aliased thin white tether lines rather than physical vapour or organic membranes",
+        "fix": "replace the flat ribbon strips with volumetric simulation or physically shaded translucent membranes with soft edges and natural thickness"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-05.png",
+        "where": "the cave walls in the top-left, top-right, and bottom-left crops (also visible across set-B-04.png)",
+        "what": "rock texture is heavily stretched, blurry, and smeared over a smooth curved tunnel surface with polygonal silhouette edges at the cave opening",
+        "fix": "add real multi-scale rock displacement and sharp high-resolution triplanar or non-stretched textures, and break up the cave mouth silhouette"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "the distant mountains outside the cave mouth in the right crop (also visible through the opening in set-B-04.png)",
+        "what": "the peaks are flat, untextured uniform grey polygons with razor-straight geometric edges and no surface relief or layered aerial perspective",
+        "fix": "give the distant peaks real silhouette crags, subtle rock and snow detail, and graded atmospheric haze"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-05.png",
+        "where": "the foreground creature's fur in the bottom-right crop (and the walking creature's coat in set-B-06.png left crop and set-B-04.png)",
+        "what": "the fur visibly reads as stiff, flat alpha-masked hair cards with harsh jagged cutout edges intersecting at rigid angles",
+        "fix": "use higher-density strand-based fur or finer, softer layered clumps with natural gravity, snow dusting, and anti-aliased alpha edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the lightning strike at the summit tip and the upper ridge below it",
+        "what": "the bolt creates only a tiny localized bright spot and fails to cast intense purple-white light, bounce, or atmospheric bloom across the rock face and nearby clouds",
+        "fix": "drive strong local illumination and bloom from the lightning bolt onto the upper peak, streamers, and surrounding storm clouds"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the hanging icicles in the top-right crop (also visible across the cave ceiling in set-B-04.png)",
+        "what": "the icicles look like thin, opaque grey geometric cones stuck onto the rock with no internal ice refraction, specular highlights, or frozen base transition",
+        "fix": "shade the icicles with translucent refractive ice, varied thickness, wet specular highlights, and ice crusts where they meet the ceiling"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the cluster of small rounded creatures along the ridge in the top-right crop",
+        "what": "they look like smooth low-poly pebbles with no contact shadows, and a small piece floats detached above the cluster",
+        "fix": "ground every creature onto the rock with contact occlusion and add surface detail and weather matching the ridge"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the snow bank in the right crop and the snow-to-wall edge in the left crop",
+        "what": "the snow reads as a smooth plastic-like undulating mesh with soft featureless shading and a hard straight intersection against the cave wall",
+        "fix": "add wind-sculpted snow micro-detail, subsurface scattering, and drifted accumulation where the snow meets the rock wall"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the walking creature's feet and lower legs on the icy cave floor",
+        "what": "no footprints, disturbed frost, or wet/snowy matting on the lower fur, and the contact shadow looks soft and ungrounded against the glossy ice",
+        "fix": "add sharp contact occlusion under each foot, tracks or frost disturbance on the ice, and packed snow and dampness on the lower fur"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the horizon line in the right crop (also visible on the right of set-B-01.png)",
+        "what": "the boundary between the orange sunset band and the dark cloud sea is an unnaturally razor-straight horizontal line",
+        "fix": "soften the horizon with atmospheric haze and uneven distant cloud tops"
+      }
+    ]
+  }
+}

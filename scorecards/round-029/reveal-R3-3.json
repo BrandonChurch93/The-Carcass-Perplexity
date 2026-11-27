@@ -1,0 +1,49 @@
+{
+  "round": 29,
+  "unit": "reveal",
+  "pack": "R3-3",
+  "family": "gpt",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-C-04.png",
+        "where": "the main basin, especially its left half and lower shore",
+        "what": "Broad diagonal streaks cross the dark blue surface, while a wide ochre band follows the shore like a painted border. The effect is visible in the full frame and reads as texture rather than water over a changing lake bed.",
+        "fix": "Replace the long streaks with varied, finer surface ripples and subtle sky reflections. Tie the brown-to-blue transition to actual depth and sediment, and break up the shore with irregular wet edges."
+      },
+      {
+        "severity": "major",
+        "file": "set-C-05.png",
+        "where": "the ridges in the lower-left crop",
+        "what": "Large rounded patches and stretched grooves repeat across adjacent slopes, making the exposed rock look molded rather than fractured.",
+        "fix": "Break up the repeating surface with distinct strata, sharper fracture edges, and loose scree that collects in gullies."
+      },
+      {
+        "severity": "major",
+        "file": "set-C-06.png",
+        "where": "the small lake in the right crop",
+        "what": "The thin teal rim is nearly uniform, and the dark interior is mostly flat apart from large soft patches. The banks look cut out against it rather than submerged at the edge.",
+        "fix": "Vary the width and clarity of the shallows with the bank slope, then add a narrow wet margin and subtle reflected light."
+      },
+      {
+        "severity": "major",
+        "file": "set-C-03.png",
+        "where": "the cloud over the small lake at the right edge",
+        "what": "The cloud has a smooth, blurred silhouette and a nearly uniform interior, so it looks laid over the terrain rather than occupying space above it.",
+        "fix": "Give the cloud uneven density, wispy gaps, and gradual light falloff so the basin disappears through it in layers."
+      },
+      {
+        "severity": "major",
+        "file": "set-C-05.png",
+        "where": "just inside the main shore, near the bottom of the upper-left crop",
+        "what": "A small dark double-loop has a hard, drawn outline that does not follow the surrounding water texture.",
+        "fix": "Remove the outlined mark and blend the spot into the surrounding shallow-water detail."
+      }
+    ]
+  }
+}

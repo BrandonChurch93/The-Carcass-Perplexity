@@ -1,0 +1,56 @@
+{
+  "round": 29,
+  "unit": "reveal",
+  "pack": "R4",
+  "family": "claude",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the whole frame with the camera held at frame 10027: the cloud field over the ocean, the cloud lines along the ridges, the cyclone at lower right",
+        "what": "across 6 s nothing visibly changes. The cyclone does not turn, the cloud streets do not drift, and the light and haze at the right edge stay fixed, so the world reads as a still picture",
+        "fix": "give the cloud layer its own slow drift and evolution, separate from the ground, and turn the cyclone slowly. Let the cloud shadows and the sun glint shift"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the island from frame 9837 to 10027: the ribbed valleys either side of the central steam line",
+        "what": "at this height the drainage reads as an even, repeating rib pattern, regular enough to look like a skeleton, so the ground stops reading as a real view from orbit",
+        "fix": "break up the ridge and valley spacing and the valley lengths, and let erosion and vegetation vary more at large scale"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the climb from frame 9604 to 9668",
+        "what": "the apparent climb speeds up sharply here. The crater shrinks to about half its size between frames 9626 and 9647 after a slow stretch at 9583 to 9604, so the pull lurches",
+        "fix": "keep the altitude curve on one smooth exponential so the scale changes at a constant rate per frame"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "frames 9541 to 9583, the cloud deck round the crater",
+        "what": "the cloud acts as one flat sheet with a hole that peels away to the edges, not as volume the camera rises through. There is little parallax between the cloud and the crater rim",
+        "fix": "give the cloud depth and some layers above the camera's start height, so that near wisps pass the far ground"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "the crater lake surface, frames 9578 to 9589",
+        "what": "the dark water is almost uniform and static, with no visible wind texture or glint change, so the lake reads as a painted fill",
+        "fix": "add faint wind ripples and a moving specular glint on the lake"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the cyclone at lower right, frames 9900 to 9942",
+        "what": "the storm fades in at the frame edge instead of being carried in clearly by the camera move",
+        "fix": "have it present in the world earlier, so it enters by parallax"
+      }
+    ]
+  }
+}

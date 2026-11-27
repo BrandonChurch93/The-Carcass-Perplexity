@@ -1,0 +1,105 @@
+{
+  "round": 29,
+  "unit": "eye",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the middle band of the lake, between the far shore and the near weed",
+        "what": "a cut-off copy of the lit cliff reflection floats in the middle of the water with a hard lower edge, like a second shoreline. In -a this band is dark blue reflective water with ripple rings",
+        "fix": "keep the cliff reflection against the far shore and let it fade into dark, rippled blue water toward the camera"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the foreground boulders on the left and right",
+        "what": "huge, clean, pale granite blocks with drawn-on stripes now frame the shot. -a has low, weathered grey limestone scree with lichen and moss, and a small rushing stream at bottom left that is gone in -b",
+        "fix": "go back to low, broken, weathered grey scree at the scale in -a, and bring back the stream with white water at bottom left"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the whole foreground shore",
+        "what": "smooth, glossy blue-grey pebbles with a cool CG sheen fill the lower half. -a has warm, wet, gritty gravel with flecks of orange mat, softened by shallow depth of field",
+        "fix": "replace them with small, rough, warm-lit wet gravel and orange mat debris, and soften the nearest stones out of focus"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the underwater weed and ledges in the lower two-thirds",
+        "what": "the weed is all rust-orange in fine tangled threads, with none of the golden-yellow and ochre strands of -a. The pale limestone ledges are flat blobs with hard edges that look stuck on. The rising bubble trails are gone",
+        "fix": "bring the weed back to a gold-yellow-red mix in thicker, combed strands, give the ledges rounded, textured, partly covered edges, and add the rising bubble columns"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the far shore under the cliffs",
+        "what": "the thick fog bank over the far water in -a has thinned to a light haze, so the cliff base reads hard and close",
+        "fix": "thicken the low mist along the far shore so it hides the cliff base the way it does in -a"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the orange mat across the shallows",
+        "what": "the mat is turned into saturated flame-like streaks. -a has terraced bands of orange and ochre mat broken by pale salt-crust flats",
+        "fix": "lower the saturation, lay the mat out in flat terraces, and bring back the pale crusted patches between them"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the herd on the shore and in the shallows",
+        "what": "the animals are dark brown and look unlit. In -a they are pale cream and catch the warm low light, so they read clearly against the gravel",
+        "fix": "make their coats pale cream and give them warm light from the left with a rim on the sunward side"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the three adults and the calf",
+        "what": "the coats are dark tan-brown with fur. -a has pale, bare, cream-pink skin that takes a warm glow from the low sun",
+        "fix": "lighten the animals to the pale cream of -a and put the warm low-sun highlight on their backs and necks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the shallow water around the animals' legs and in the middle of the frame",
+        "what": "the gold strands of floating mat on the water are gone, and the leg reflections are smeared and blotchy",
+        "fix": "put back the scattered gold mat strands on the surface and make the leg reflections clean and broken by ripples"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the three animals at far left",
+        "what": "the bodies are dark brown, against the pale cream bodies in -a",
+        "fix": "make them pale cream like the animals in -a"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01-b.png",
+        "where": "the lake surface in the middle distance",
+        "what": "the ripple rings in the middle of the lake are gone, and the mist lying on the water is thinner than in -a",
+        "fix": "add a few soft ripple rings and thicken the low mist on the water a little"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01-b.png",
+        "where": "the foreground rocks and the gravel",
+        "what": "the light on them is flat and cool, with no warm side-light from the low sun at left",
+        "fix": "warm the sun-facing sides of the rocks and give them longer shadows to the right"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03-b.png",
+        "where": "the cliffs and the sky",
+        "what": "the cliffs and sky are slightly pinker and more salmon than the warm gold of -a",
+        "fix": "move the grade toward gold and away from pink"
+      }
+    ]
+  }
+}

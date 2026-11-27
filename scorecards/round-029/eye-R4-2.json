@@ -1,0 +1,28 @@
+{
+  "round": 29,
+  "unit": "eye",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the small herd along the near bank, just right of center",
+        "what": "the animals hold essentially the same spacing and silhouettes through the six-second hold; no clear weight shift, step, or turn breaks the tableau",
+        "fix": "Give a few animals independent head turns and weight shifts, and have one or two take a planted step while the rest pause."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the orange tracery across the near shallows",
+        "what": "the reflections shift farther out, but the bright branching pattern near shore keeps nearly the same shape and placement, making that part of the surface look pinned down",
+        "fix": "Let small ripples deform and break up the visible highlights at the edge without moving the underlying bed detail."
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "round": 29,
+  "unit": "spine",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the dark flow along the front and right edge of the central mound, frames 7579–7590",
+        "what": "The dark ridges sweep past in long parallel bands. They barely react to the mound, so the flow reads like a moving surface texture rather than water forced around an obstacle.",
+        "fix": "Break up the flow at the mound with a small buildup, a curling edge and a slower wake that sheds uneven ripples."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the resting animals against the left cave wall as the camera passes, frames 7992–8148",
+        "what": "The standing animal steps, but the resting group holds its poses through the pass. The camera brings them close enough that the lack of any independent movement makes them look like set dressing.",
+        "fix": "Give the resting animals staggered breathing and one or two small head or shoulder shifts. Let most of the herd stay settled."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the dark cloud bank left of and above the spire, frames 7044–7337",
+        "what": "The bank retains almost the same contours as the foreground moves in. The bright streamers and flashes change, but the bulk of the storm reads as a fixed backdrop.",
+        "fix": "Give the main bank slow drift and evolving edges, with higher and lower layers moving independently of the streamers."
+      }
+    ]
+  }
+}

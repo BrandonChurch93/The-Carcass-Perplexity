@@ -1,0 +1,56 @@
+{
+  "round": 29,
+  "unit": "reveal",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-27 01:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "the central lake and the brown band around its rim",
+        "what": "the lake reads as a dark painted oval; the diagonal smears do not read as water, and the broad brown fringe follows the rim without a distinct wet edge or convincing shallows",
+        "fix": "vary the width and depth of the shallows with the basin shape, resolve the contact line, and replace the smeared streaks with wind-driven surface texture and a restrained sky reflection"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the central mountain ranges on both sides of the main valley",
+        "what": "the matching rows of regularly spaced pale ridges make the continent look like a stamped relief map at full-frame scale",
+        "fix": "break up the ridge spacing, height, and alignment, and vary the rock and snow coverage independently of the ridge pattern"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-09.png",
+        "where": "right crop, where the pale cloud bank ends against the blue-gray opening",
+        "what": "the cloud ends on a smooth scalloped contour while its interior is a nearly flat cream fill, making it read like a mask laid over the terrain",
+        "fix": "vary the cloud density and lighting through its depth and break the silhouette with translucent wisps at several scales"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "upper-right crop, on the flanks of the parallel mountains",
+        "what": "the crests and gullies smear into soft, nearly identical grooves with the same gray highlight and dark green troughs, like molded clay",
+        "fix": "add distinct rock, scree, and snow detail at different scales, and vary how sharply each valley erodes and falls into shadow"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "left crop, where the dark inland water meets the brighter blue bay",
+        "what": "the water changes color at a conspicuously straight diagonal boundary that reads as a material seam rather than a change in depth or suspended sediment",
+        "fix": "remove the straight boundary and blend the water color along bathymetry and currents across the join"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "upper-left and lower-right crops over open ocean",
+        "what": "many white cloud flecks have small dark cutout-like companions and recur in the same diagonal grain, making the cloud field read like a texture stuck to the ocean",
+        "fix": "vary cloud height, size, and density, and soften and offset shadows according to cloud altitude and sun direction"
+      }
+    ]
+  }
+}
