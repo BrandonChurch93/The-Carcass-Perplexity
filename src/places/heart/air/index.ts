@@ -60,10 +60,11 @@ const UMBER = [0.4, 0.31, 0.27] as const;
 /** The haze over the open lava of the east: it is lit from below and little by the sky. */
 const AMBER = [0.55, 0.45, 0.2] as const;
 const ROSE = [0.5, 0.42, 0.33] as const;
-/** The smoke of the feeding shot: dark, grey-brown, a little mauve where the sky lights it. */
-const SOOT = [0.4, 0.34, 0.32] as const;
+/** The smoke of the feeding shot: dark, grey-brown. It carries ash and sends on a fifth of what falls on it: at twice that it stood paler than the
+ * crust under it, as one pale veil across the middle of the picture, where the picture has dark smoke with the fire behind it. */
+const SOOT = [0.21, 0.165, 0.145] as const;
 /** The far smoke of that shot, where the last of the sky lights it: pale and a little peach. */
-const PALE = [0.64, 0.42, 0.36] as const;
+const PALE = [0.2, 0.15, 0.13] as const;
 /** The view of the walkers' key runs along this (x, z); its right is the second. */
 const ALONG = [0.7, -0.71] as const;
 const RIGHT = [0.71, 0.7] as const;
@@ -82,9 +83,9 @@ const BODIES: readonly Body[] = [
   { at: behind(240, 6), radius: 55, height: 32, lean: BANK_LEAN, dense: 0.05, repeat: 44, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.95, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
   // What stands behind them in the feeding picture: grey-brown smoke over the open lake, warm only in its lowest metres. The far one on the right stands behind the butte: it is the pale smoke its dark top is cut against. Staged for that shot.
   { at: behind(430, -110), radius: 140, height: 34, lean: [-0.2, 0.08], dense: 0.004, repeat: 60, hard: 2.6, climb: 1.2, colour: SOOT, foot: 0, floor: [0.9, 6], tops: 0.75, solid: 0.3, shots: { 'heart-02': 1, rest: 0 } },
-  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.022, repeat: 110, hard: 2.6, climb: 1.6, colour: PALE, foot: 0.15, floor: [3.0, 40], tops: 1.2, solid: 0.35, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.022, repeat: 110, hard: 2.6, climb: 1.6, colour: PALE, foot: 0.15, floor: [2.0, 14], tops: 1.2, solid: 0.35, shots: { 'heart-02': 1, rest: 0 } },
   // And what lies on the lake between the lens and those banks: a thin sheet of lumps, so that the far crust goes into the smoke and no line stands where the lake ends.
-  { at: behind(250, 0), radius: 230, height: 13, lean: [0, 0], dense: 0.0032, repeat: 36, hard: 2.2, climb: 1.2, colour: SOOT, foot: 0, lake: [0.1, 8], floor: [0.2, 7], lights: 0.2, tops: 0.55, solid: 0.3, streak: 1.8, taper: 1.6, sparse: 0.08, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(250, 0), radius: 230, height: 13, lean: [0, 0], dense: 0.001, repeat: 36, hard: 2.2, climb: 1.2, colour: SOOT, foot: 0, lake: [0.1, 8], floor: [0.2, 7], lights: 0.2, tops: 0.55, solid: 0.3, streak: 1.8, taper: 1.6, sparse: 0.08, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
   // The first is the tall lit smoke that stands east of the fan and a little behind its toe, so that the face of the fan is clear of it: streaks that climb fast, thickest and brightest low, thinning as they rise. The two beside it are low and thin.
   { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.042, widen: 0.85, repeat: 84, hard: 4, climb: 13, colour: ROSE, foot: 0.05, lake: [1.25, 12], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.15, streak: 2.6, taper: 1.0, sparse: 0.2, through: 0.4, shots: { 'heart-05': 1, rest: 0.08 } },
@@ -218,7 +219,7 @@ export function create(ctx: HeartContext): HeartPiece {
         (bodyC[i] as THREE.Vector4).x = (b.lake?.[0] ?? 0) * swell;
         (bodyF[i] as THREE.Vector4).x = (b.floor?.[0] ?? 0) * swell;
       }
-      hang.w = shot === 'heart-02' ? 0.008 : 0;
+      hang.w = shot === 'heart-02' ? 0.003 : 0;
       fumeShare.value = shot === 'heart-05' ? 0.15 : 1;
       // Where the near sheet of smoke ends and the far one begins, shot by shot: the banks go with the vapours at hand wherever rock stands between them and the far plume.
       (su.uSplit as THREE.IUniform<number>).value = shot === 'heart-05' ? 450 : shot === 'heart-02' ? 110 : 60;
