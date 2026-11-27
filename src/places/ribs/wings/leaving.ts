@@ -49,7 +49,8 @@ export const leaving = (l: Leaver, seconds: number, out: Flying): number => {
   const lean = pitchAt(onGround);
   const stand = -(foot[0] * Math.sin(lean) + foot[1] * Math.cos(lean)) * l.size;
   const air = Math.max(0, tau - PUSH);
-  const rise = (1.3 + 0.7 * l.seed) * l.size * (1 - Math.exp(-air * 2.2)) + 0.5 * air + 0.25 * Math.sin(air * (1.1 + 0.6 * l.seed) + l.seed * 9) * smooth(0.5, 1.5, air);
+  // It keeps low: a wing's length over the water and no more, until it is well away.
+  const rise = (0.75 + 0.55 * l.seed) * l.size * (1 - Math.exp(-air * 2.2)) + 0.3 * air + 0.25 * Math.sin(air * (1.1 + 0.6 * l.seed) + l.seed * 9) * smooth(0.5, 1.5, air);
   // Shifting its weight while it waits: it rocks, each in its own time.
   const rock = tau < 0 ? 0.03 * Math.sin(seconds * (1.3 + 0.9 * l.seed) + l.seed * 30) * (1 - dip) : 0;
   const d = gone(l, tau);
@@ -60,11 +61,11 @@ export const leaving = (l: Leaver, seconds: number, out: Flying): number => {
   out.pitch = pitch + rock;
   out.roll = 0.06 * Math.sin(seconds * (0.8 + 0.5 * l.seed) + l.seed * 17) * smooth(0.3, 1.2, tau);
   out.size = l.size;
-  out.tone = 0.8 + 0.18 * l.seed;
+  out.tone = 0.66 + 0.2 * l.seed;
   // The sails come out and up as it dips; the first stroke down is the push, and the strokes slow as it gathers way.
   out.drawn = 1 - smooth(-0.6, -0.08, tau);
   out.deep = smooth(-0.6, -0.05, tau);
-  out.stroke = tau < 0 ? -0.5 * (1 - smooth(-0.6, 0, tau)) : (8.2 + 2.2 * l.seed) * tau + 3.4 * (1 - Math.exp(-tau * 1.6));
+  out.stroke = tau < 0 ? -0.5 * (1 - smooth(-0.6, 0, tau)) : (7.2 + 3.8 * l.seed) * tau + 3.4 * (1 - Math.exp(-tau * 1.6)) + 6.283 * ((l.seed * 7.3) % 1) * smooth(0.15, 1.1, tau);
   out.neck = 0.55 - 0.4 * smooth(-0.3, 0.15, tau) + 0.25 * smooth(0.8, 2.2, tau);
   out.legs = tau < PUSH ? legsDown(tau) : 1.1 * (1 - smooth(PUSH, 0.75 + 0.3 * l.seed, tau));
   return tau;

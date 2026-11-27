@@ -245,6 +245,12 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
       const k = j * cols + i;
       rel.fromBufferAttribute(position, k).sub(c);
       n.fromBufferAttribute(normal, k);
+      // Where a ring has closed to a point (the tip) the sheet has no normal of its own: it looks out along the spine there. A normal of
+      // no length would be a pixel of no value under the shader's normalize, and the lens blooms that into a white disc.
+      if (!(n.lengthSq() > 1e-8)) {
+        n.copy(T);
+        normal.setXYZ(k, n.x, n.y, n.z);
+      }
       blade[k * 4] = (along[r] as number) + rel.dot(T) + rib.z * 0.37;
       blade[k * 4 + 1] = rel.dot(N) + rib.x * 0.53;
       blade[k * 4 + 2] = rel.dot(B);
