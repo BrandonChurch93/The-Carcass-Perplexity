@@ -86,9 +86,9 @@ const smax = (a: number, b: number, k: number): number => -smin(-a, -b, k);
 
 // The trunk in side view, rump (0) to chest (1), for a size of 1: the line of the back, the line of the belly, the half width.
 // A plucked bird's: one full egg, round behind, the back a low arch, the belly a full curve, closing to the root of the neck.
-const TOP: [number, number][] = [[0, 0.07], [0.05, 0.235], [0.15, 0.345], [0.32, 0.395], [0.58, 0.375], [0.82, 0.31], [1, 0.17]];
-const BOTTOM: [number, number][] = [[0, -0.04], [0.05, -0.18], [0.18, -0.3], [0.42, -0.375], [0.66, -0.405], [0.86, -0.33], [1, -0.09]];
-const WIDTH: [number, number][] = [[0, 0.07], [0.06, 0.22], [0.22, 0.32], [0.48, 0.34], [0.72, 0.305], [0.9, 0.22], [1, 0.12]];
+const TOP: [number, number][] = [[0, 0.09], [0.05, 0.29], [0.15, 0.415], [0.32, 0.455], [0.58, 0.405], [0.82, 0.3], [1, 0.15]];
+const BOTTOM: [number, number][] = [[0, -0.03], [0.05, -0.2], [0.18, -0.335], [0.42, -0.405], [0.66, -0.415], [0.86, -0.32], [1, -0.08]];
+const WIDTH: [number, number][] = [[0, 0.08], [0.06, 0.25], [0.22, 0.35], [0.48, 0.365], [0.72, 0.315], [0.9, 0.215], [1, 0.11]];
 
 /** How far under the middle of the trunk the heads of the thighs sit, for a size of 1. */
 export const HIP_DROP = 0.1;
@@ -98,11 +98,11 @@ const THIGH_TOP = -0.085;
 // A leg from above the hip (t below 0, inside the trunk: the drumstick lies on the flank) to the ground (1):
 // half thickness fore and aft, half thickness across, and how far the middle of the section stands aft (-) or fore (+) of the bone. For a leg whose joint is at 0.47.
 // Sturdy: a full drumstick, a knob at the joint twice the shank, a shank as thick as a wrist, a knuckle over a cloven hoof.
-const HIND_F: [number, number][] = [[-0.085, 0.12], [-0.03, 0.185], [0.05, 0.205], [0.15, 0.175], [0.27, 0.11], [0.38, 0.054], [0.47, 0.072], [0.53, 0.0416], [0.7, 0.0344], [0.87, 0.0328], [0.935, 0.0528], [0.965, 0.0387], [1, 0.0662]];
-const HIND_S: [number, number][] = [[-0.085, 0.07], [-0.03, 0.105], [0.05, 0.12], [0.15, 0.105], [0.27, 0.075], [0.38, 0.045], [0.47, 0.061], [0.53, 0.0368], [0.7, 0.0312], [0.87, 0.0296], [0.935, 0.0458], [0.965, 0.0352], [1, 0.0534]];
+const HIND_F: [number, number][] = [[-0.085, 0.12], [-0.03, 0.185], [0.05, 0.205], [0.15, 0.175], [0.27, 0.11], [0.38, 0.0605], [0.47, 0.0936], [0.53, 0.0499], [0.7, 0.0392], [0.87, 0.0374], [0.935, 0.0612], [0.965, 0.0387], [1, 0.0662]];
+const HIND_S: [number, number][] = [[-0.085, 0.07], [-0.03, 0.105], [0.05, 0.12], [0.15, 0.105], [0.27, 0.075], [0.38, 0.0504], [0.47, 0.0793], [0.53, 0.0442], [0.7, 0.0356], [0.87, 0.0337], [0.935, 0.0531], [0.965, 0.0352], [1, 0.0534]];
 const HIND_C: [number, number][] = [[-0.085, -0.06], [0.05, -0.045], [0.3, -0.008], [0.4, 0], [0.47, -0.026], [0.535, -0.004], [0.9, 0], [0.965, 0.01], [1, 0.03]];
-const FORE_F: [number, number][] = [[-0.085, 0.1], [-0.03, 0.145], [0.05, 0.16], [0.15, 0.138], [0.27, 0.092], [0.38, 0.0495], [0.47, 0.07], [0.53, 0.04], [0.7, 0.0336], [0.87, 0.032], [0.935, 0.051], [0.965, 0.0387], [1, 0.0662]];
-const FORE_S: [number, number][] = [[-0.085, 0.062], [-0.03, 0.092], [0.05, 0.105], [0.15, 0.094], [0.27, 0.07], [0.38, 0.0432], [0.47, 0.059], [0.53, 0.036], [0.7, 0.0304], [0.87, 0.0288], [0.935, 0.044], [0.965, 0.0352], [1, 0.0534]];
+const FORE_F: [number, number][] = [[-0.085, 0.1], [-0.03, 0.145], [0.05, 0.16], [0.15, 0.138], [0.27, 0.092], [0.38, 0.0554], [0.47, 0.091], [0.53, 0.048], [0.7, 0.0383], [0.87, 0.0365], [0.935, 0.0592], [0.965, 0.0387], [1, 0.0662]];
+const FORE_S: [number, number][] = [[-0.085, 0.062], [-0.03, 0.092], [0.05, 0.105], [0.15, 0.094], [0.27, 0.07], [0.38, 0.0484], [0.47, 0.0767], [0.53, 0.0432], [0.7, 0.0347], [0.87, 0.0328], [0.935, 0.051], [0.965, 0.0352], [1, 0.0534]];
 const FORE_C: [number, number][] = [[-0.085, 0.03], [0.05, 0.018], [0.3, 0], [0.4, 0.004], [0.47, 0.022], [0.535, 0.004], [0.9, 0], [0.965, 0.01], [1, 0.03]];
 
 // The side view picture of a wader (1536 x 1024, head to the right): the box of its trunk (left, top, right, bottom), the line of each leg
@@ -194,20 +194,20 @@ export class Fields {
       const gap = 0.062 * k;
       const fm = Math.round(f / gap) * gap;
       const tm = sat((fm + this.L / 2) / this.L);
-      const dk = Math.hypot(f - fm, u - (this.top(tm) - 0.016 * k), r * 1.2) - 0.021 * k * g;
-      d = smin(d, dk, 0.035 * k);
+      const dk = Math.hypot(f - fm, u - (this.top(tm) - 0.016 * k), r * 1.2) - 0.012 * k * g;
+      d = smin(d, dk, 0.045 * k);
     }
     // The points of the hips, the pins beside the tail, the hollow of the flank behind the last rib, the blades of the shoulders.
     const fh = (0.25 - 0.5) * this.L;
     const hipTop = this.top(0.25);
-    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.6) - 0.02 * k * g, 0.13 * k);
+    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.6) - 0.008 * k * g, 0.13 * k);
     const fp = (0.035 - 0.5) * this.L;
-    d = smin(d, Math.hypot(f - fp, u - (this.top(0.035) - 0.05 * k), ar - 0.06 * k) - 0.03 * k * g, 0.09 * k);
+    d = smin(d, Math.hypot(f - fp, u - (this.top(0.035) - 0.05 * k), ar - 0.06 * k) - 0.016 * k * g, 0.09 * k);
     const fo = (0.37 - 0.5) * this.L;
     const hollow = Math.hypot((f - fo) / (0.13 * k), (u - (u0 + 0.3 * a)) / (0.16 * k), (ar - (w + 0.035 * k)) / (0.085 * k));
-    d = smax(d, -(hollow - 1) * 0.04 * k * g, 0.08 * k);
+    d = smax(d, -(hollow - 1) * 0.022 * k * g, 0.08 * k);
     const fb = (0.82 - 0.5) * this.L;
-    d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.56) / (0.04 * k)) - 1) * 0.03 * k, 0.09 * k);
+    d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.56) / (0.04 * k)) - 1) * 0.018 * k, 0.09 * k);
     // The ribs.
     const [phase, cage] = this.ribs(f, u, r);
     if (cage > 0) {
@@ -243,7 +243,7 @@ export class Fields {
 
   neckRadius(u: number): number {
     const s = this.s;
-    return s.neckR * (0.55 + 0.45 * (1 - u) ** 1.6 + 0.1 * smooth(0.88, 0.96, u) - 0.16 * smooth(0.97, 1, u)) * (1 + 0.5 * smooth(0.3, 0, u) ** 1.2);
+    return s.neckR * (0.55 + 0.45 * (1 - u) ** 1.6 + 0.1 * smooth(0.88, 0.96, u) - 0.16 * smooth(0.97, 1, u)) * (1 + 0.2 * smooth(0.3, 0, u) ** 1.2);
   }
 
   neck(f: number, u: number, r: number): number {
@@ -258,7 +258,7 @@ export class Fields {
     // Across the neck: ventral (v, down and forward of the axis) and sideways.
     const v = pf * d0[1] - pu * d0[0];
     const rad = this.neckRadius(uc);
-    const tall = 1 + 0.22 * smooth(0.5, 0, uc);
+    const tall = 1 + 0.12 * smooth(0.5, 0, uc);
     const q = Math.hypot(v / (rad * tall), r / rad);
     let d = (q - 1) * rad;
     // The windpipe stands off the underside, and two cords beside the spine of the neck.
@@ -370,7 +370,7 @@ export function buildBody(s: Shape, cell: number): Body {
     fill([h[0] - 0.36 * k, h[0] + 0.32 * k], [h[1] - s.legLen - 0.02, h[1] + 0.16 * s.legLen], [h[2] - 0.26 * k, h[2] + 0.26 * k], (f, u, r) => fields.leg(j, f, u, r), 0.09 * k);
   }
   const nr = s.neckR * 2.6;
-  fill([nb[0] - nr, nb[0] + d0[0] * s.neckLen + nr], [nb[1] - nr, nb[1] + d0[1] * s.neckLen + nr], [-nr, nr], (f, u, r) => fields.neck(f, u, r), 0.09 * k);
+  fill([nb[0] - nr, nb[0] + d0[0] * s.neckLen + nr], [nb[1] - nr, nb[1] + d0[1] * s.neckLen + nr], [-nr, nr], (f, u, r) => fields.neck(f, u, r), 0.05 * k);
 
   const mesh = surface(field, nx, ny, nz, x0, y0, -z1, cell);
   const count = mesh.position.length / 3;
