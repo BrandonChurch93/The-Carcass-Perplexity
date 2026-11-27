@@ -742,7 +742,7 @@ export function create(ctx: Context): Piece {
   const room = (x: number, y: number, z: number, size: number): boolean =>
     !roosts.some((o) => Math.hypot(o.x - x, o.z - z) < 0.72 * (o.size + size) + 0.5 && Math.abs(o.y - y) < 1.5) &&
     // And only where the ledge is deep enough to hold it: one put on a narrow step hangs on the face.
-    Math.abs(ledgeUnder(x + ((x - COLONY.x) / Math.hypot(x - COLONY.x, z - COLONY.z)) * 0.7 * size, z + ((z - COLONY.z) / Math.hypot(x - COLONY.x, z - COLONY.z)) * 0.7 * size, y) - y) < 0.16;
+    Math.abs(ledgeUnder(x + ((x - COLONY.x) / Math.hypot(x - COLONY.x, z - COLONY.z)) * 0.4 * size, z + ((z - COLONY.z) / Math.hypot(x - COLONY.x, z - COLONY.z)) * 0.4 * size, y) - y) < 0.16;
   for (let j = 0; j < roosts.length && roosts.length < ROOSTING + MATES; j++) {
     const by = roosts[j] as Roosting;
     if (Math.hypot(by.x - colonyEye[0], by.y - colonyEye[1], by.z - colonyEye[2]) > 60) continue;
