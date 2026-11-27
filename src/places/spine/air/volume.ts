@@ -358,7 +358,7 @@ ${SEA_SHADE_GLSL}
       vec3 at = ro + rd * dist;
       vec3 p = at - downV * (uWind.w * (0.8 + 0.12 * float(j)) * uTime);
       vec3 q = vec3(dot(p, downV) / (grain * 9.0), dot(p, upV) / grain, dot(p, acrossV) / (grain * 2.5));
-      float streak = 0.74 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).r + 0.26 * noise(q * vec3(2.3, 2.7, 2.3) + 0.37).g;
+      float streak = 0.86 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).r + 0.14 * noise(q * vec3(2.3, 2.7, 2.3) + 0.37).g;
       float gust = noise(vec3(q.x * 0.21, 0.37 * float(j) + 0.13, q.z * 0.17)).b;
       float veil = smoothstep(0.36, 0.84, streak) * smoothstep(0.36, 0.7, gust) * before;
       // It thins with the height over the crest, and against the open sky it is the sky's own tone and all but lost.

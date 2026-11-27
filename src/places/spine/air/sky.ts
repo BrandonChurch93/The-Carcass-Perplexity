@@ -208,7 +208,9 @@ vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
   float shape = smoothstep(0.025, 0.13, body);
-  return c * (1.0 + 3.0 * lit * (1.0 - 0.8 * warm) * vec3(0.78, 0.5, 1.0)) + vec3(0.62, 0.32, 1.0) * (lit * (0.012 + 0.11 * shape) * (1.0 - warm));
+  // Violet is the stroke's own, close round it; the storm it lights from afar goes pale grey violet, as the pictures have it.
+  float core = smoothstep(0.12, 0.7, lit);
+  return c * (1.0 + 3.0 * lit * (1.0 - 0.8 * warm) * mix(vec3(0.84, 0.8, 0.98), vec3(0.78, 0.5, 1.0), core)) + mix(vec3(0.78, 0.74, 0.98), vec3(0.62, 0.32, 1.0), core) * (lit * (0.012 + 0.11 * shape) * (1.0 - warm));
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   vec3 c = skyAtRest(from, d, lod);
@@ -279,8 +281,9 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   // Out of the canal's mouth it is the light itself: there it is as open as the land, and the cloud lit from inside shows whole.
   float mouth = smoothstep(1.4, 1.8, uSkyStage.y);
   c *= SKY_GAIN * mix(vec3(1.0 / (1.0 + 0.37 * uSkyStage.y)), vec3(0.8, 0.72, 0.92), mouth);
-  // In a stroke the cloud keeps its forms: its darks take less of the light than its pale heads.
-  if (uStrikeTop.w > 0.0) c = mix(c, strikeCloud(c, from, d), mix(0.38, 1.0, mouth));
+  // In a stroke the cloud keeps its forms: its darks take less of the light than its pale heads. (Out of the mouth the lit cloud is the
+  // light of the canal, and stands at more than its share.)
+  if (uStrikeTop.w > 0.0) c = mix(c, strikeCloud(c, from, d), mix(0.38, 2.3, mouth));
   return c;
 }
 
