@@ -78,6 +78,14 @@ export const GRADE_SHOTS: { from: number; mid: number; dark: number }[] = [
   { from: (6263 - 5618) / 60, mid: 0.5, dark: 0.08 },
   { from: (6586 - 5618) / 60, mid: 0.38, dark: -0.16 },
 ];
+// What the ground throws back up, shot by shot, as a share of uSkyGround: the lenses that stand low among the animals stand on pale
+// salt and wet red mud, and a flank or a belly there is lit from below, warm. (Level ground takes none of it.)
+export const BOUNCE_SHOTS: { from: number; share: [number, number, number] }[] = [
+  { from: 0, share: [1, 1, 1] },
+  { from: (6263 - 5618) / 60, share: [1.75, 1.5, 1.4] },
+  { from: (6586 - 5618) / 60, share: [1.35, 1.22, 1.16] },
+];
+const bounceShots = BOUNCE_SHOTS.map((shot) => `  b = mix(b, vec3(${shot.share.map((v) => v.toFixed(3)).join(', ')}), step(${shot.from.toFixed(5)}, uTime));`).join('\n');
 const gradeShots = GRADE_SHOTS.map((shot) => `  g = mix(g, vec2(${shot.mid.toFixed(3)}, ${shot.dark.toFixed(3)}), step(${shot.from.toFixed(5)}, uTime));`).join('\n');
 
 export const RIG_GLSL = /* glsl */ `
@@ -107,7 +115,9 @@ vec3 skyIrradiance(vec3 n) {
   float lean = 1.0 + min(n.y, 0.0);
   float seen = lean * lean * lean;
   float up = n.y >= 0.0 ? 0.5 + 0.5 * n.y : 0.5 * seen;
-  vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.6 * max(n.y, 0.0)), up) * uFill;
+  vec3 b = vec3(1.0);
+${bounceShots}
+  vec3 e = mix(uSkyGround * b, mix(uSkyHorizon, uSkyZenith, 0.6 * max(n.y, 0.0)), up) * uFill;
   // The overcast has a brighter side, where the sun stands behind it: a face turned to it takes more, one turned away less, and level
   // ground the same as before. This is what gives a body, a trunk and a bank a light side and a dull one.
   e *= 1.0 + RIG_KEY_SHARE * dot(n.xz, RIG_KEY);
