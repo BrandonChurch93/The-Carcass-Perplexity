@@ -48,13 +48,17 @@ float brineSilt = -1.0;
 float brineFresnel(vec3 n, vec3 v) {
   float nv = max(dot(n, v), 0.02);
   // (Seen from high above, the fine ruffle on it turns a share of the skin to the sky: a lens low over it sees the body and the glints.)
-  return 0.022 + 0.03 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.2 * pow(1.0 - nv, 8.0);
+  // (And the mirror falls with the angle of the look itself, not only with the wavelet's: near a low lens, where it looks down into
+  // the brine, the pool is its own red.)
+  return 0.016 + 0.036 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.15 * pow(1.0 - nv, 8.0) * mix(1.0, 0.25, smoothstep(0.04, 0.24, v.y));
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
 vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   float away = length(cameraPosition - p);
-  vec2 swing = n.xz * 2.0 * clamp(away * 0.3, 0.15, 12.0);
+  // (How far a leaning wavelet throws the ray goes with the height of what it finds, not with the way to the lens: a dome or a stalk
+  // standing in the pool lies in the mirror at its own foot, shaken, never strewn over the pool in pieces.)
+  vec2 swing = n.xz * 2.0 * clamp(away * 0.11, 0.1, 12.0);
   // (A slope that leans to the lens would mirror the brine before it, which mirrors the sky in its turn: it is not swung under the level.)
   vec2 toLens = normalize(cameraPosition.xz - p.xz);
   swing -= toLens * max(dot(swing, toLens), 0.0) * 0.75;
@@ -62,12 +66,14 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   // Ripples finer than the lens can see answer for every pixel, each swinging the ray its own way: what stands in the mirror is soft,
   // never a sharp cut-out. (The mirror's picture is read some levels down, the same share of the frame at every size.)
   float soft = max(log2(float(textureSize(tMirror, 0).x) / 170.0), 0.0);
-  vec3 seen = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), soft).rgb;
+  // (And a wavelet that leans hard throws the ray far: what it brings back is a wider piece of the picture, softer, or a thing that
+  // stands in the mirror would lie on the pool in hard-cut flakes.)
+  vec3 seen = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), soft + min(length(n.xz) * 9.0, 1.6)).rgb;
   // (The air lies between the brine and what it mirrors too: what stands in the mirror is as pale as it stands over it.)
   seen = rigAir(seen, 3.0 + away * 0.8, 0.5);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
-  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.77, 0.71);
+  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.73, 0.67);
 }
 // s: metres to the shore, negative in the brine. n: the surface's normal (ripples and rings laid in by the caller). froth: the colour of the
 // scum on top and how much of it there is.
