@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import type { Context, Piece } from '../shared/context';
 import { FRAGMENT, VERTEX } from './shaders';
 import { bandMap, bedMap } from './maps';
-import { SEA_LEVEL, WIND, shotSpan } from '../shared/anchors';
+import { flowMap } from './flow';
+import { SEA_LEVEL, WIND, channelX, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { MIRROR } from '../waders/mirror';
 import { RIPPLES } from '../waders/ripples';
@@ -20,8 +21,10 @@ export function create(ctx: Context): Piece {
   const height = (x: number, z: number): number => ctx.rig.land.height(x, z);
   const far = bedMap(height, SEA_LEVEL, FAR.x, FAR.z, FAR.half, FAR.cells);
   // Two squares of waves; the shader lays each down several times over at unlike sizes and bearings, each size with its own speed (shaders.ts).
-  const waves = bandMap(ctx.rng('water-waves'));
-  const ripples = bandMap(ctx.rng('water-ripples'));
+  const waves = bandMap(ctx.rng('water-waves'), 256, 12, 72, 1.5);
+  const ripples = bandMap(ctx.rng('water-ripples'), 256, 12, 72, 1.7);
+
+  const flow = flowMap(height, SEA_LEVEL, channelX);
 
   const frame = new THREE.Vector2(3840, 2160);
   // Staged by shot: the wide view from above (breath-01) sees the channel as green water over pale silt from its first frame to its last.
@@ -42,6 +45,9 @@ export function create(ctx: Context): Piece {
       tMirror: MIRROR.texture,
       tRings: RIPPLES.texture,
       uFrame: { value: frame },
+      tLines: { value: flow.lines },
+      tCarried: { value: flow.carried },
+      uFlowRect: { value: flow.rect },
     },
     transparent: true,
     depthWrite: true,
@@ -79,6 +85,8 @@ export function create(ctx: Context): Piece {
       far.dispose();
       waves.dispose();
       ripples.dispose();
+      flow.lines.dispose();
+      flow.carried.dispose();
     },
   };
 }
