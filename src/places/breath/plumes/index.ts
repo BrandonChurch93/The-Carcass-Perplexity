@@ -18,11 +18,10 @@ const HERO_WEST = 4.6;
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
 const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
-  [-28.3, 11.5, 4.6, 0.5],
-  [-27.2, 13.2, 3.4, 0.5],
-  [-31.0, 12.5, 3.4, 0.5],
-  [-32.8, 14.4, 2.6, 0.5],
-  [-30.6, 18.0, 1.6, 0.5],
+  [-30.4, 11.0, 5.2, 0.5],
+  [-28.0, 9.0, 4.0, 0.5],
+  [-34.0, 13.5, 2.4, 0.5],
+  [-30.6, 18.0, 0.9, 0.45],
   [-32.4, 19.3, 0.7, 0.45],
   [-30.8, 21.6, 0.55, 0.45],
   [-33.6, 16.6, 0.8, 0.45],
@@ -31,8 +30,8 @@ const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
 
 /** Staged for shot breath-02: where each hanging one is rooted (x, z), how tall, and the point on the ground it leans over (x, z). */
 const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
-  [-14.1, 27.6, 4.2, -9.9, 25.8],
-  [-15.0, 26.0, 3.8, -10.8, 24.2],
+  [-14.1, 27.6, 4.2, -9.5, 25.2],
+  [-15.0, 26.0, 3.8, -10.6, 23.6],
 ];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
@@ -81,7 +80,8 @@ export function create(ctx: Context): Piece {
     // left and behind it, out of its frame; what hangs into that frame is grown for that shot alone (HANG).
     const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] - 0.55, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.68 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 || i === 5 ? 'sweep' : 'fountain' });
+    // The one on the south-west lip is by the wide lens: there it is a low fountain, not a tall plume in the corner of that frame.
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.17 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 0.8 } : i === 5 ? { full: 0.5 } : {}) });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
@@ -103,13 +103,13 @@ export function create(ctx: Context): Piece {
     bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain' });
   }
   // A seedling whose anchor is under the water is not grown: nothing of this kind roots in the channel.
-  for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4, habit: 'sweep' });
+  for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall: tall * 0.7, lean: Math.atan2(-x, z), detail: 0.5, habit: 'fountain', full: 0.45 });
 
   const grown: Grown[] = bushes.map((bush) => grow(bush, rng, floor));
 
   const rimRng = ctx.rng('gill-plume-rim');
-  // The low ones on the plate are sprigs: a few swept stalks. The tall ones are fountains of brush.
-  const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, habit: tall < 1 ? 'sweep' : 'fountain', full: tall < 1 ? 0.6 : 1 }));
+  // The low ones on the plate are sprigs: a few stalks. The tall ones are fountains of brush.
+  const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, habit: 'fountain', full: tall < 1 ? 0.4 : 1 }));
   // In that shot the two tall ones by the lens of breath-03 are low domes too (see setTime).
   for (let i = 0; i < 2; i++) {
     const b = bushes[i] as Bush;
@@ -121,7 +121,7 @@ export function create(ctx: Context): Piece {
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
-    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 1.7 };
+    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 1.9 };
   });
   const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 
@@ -138,8 +138,9 @@ export function create(ctx: Context): Piece {
   // Opaque and whole: the engine lays their depth first, and a strip behind another costs only that. Each bush has its own two
   // materials (one program for all of them), because its sway is worked from its own root.
   const materials: THREE.ShaderMaterial[] = [];
-  const meshes = (g: Grown, into: THREE.Group): void => {
-    const own = { ...uniforms, uBush: { value: g.root }, uTall: { value: g.tall } };
+  const meshes = (g: Grown, into: THREE.Group, glow = 1): void => {
+    // `glow`: how much of the sun comes through its hair. The ones that hang into the pit are seen from above, in the pit's shade.
+    const own = { ...uniforms, uBush: { value: g.root }, uTall: { value: g.tall }, uGlow: { value: glow } };
     const threadMaterial = new THREE.ShaderMaterial({ vertexShader: THREAD_VERTEX, fragmentShader: THREAD_FRAGMENT, uniforms: own, side: THREE.DoubleSide });
     const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms: own });
     materials.push(threadMaterial, stemMaterial);
@@ -157,7 +158,7 @@ export function create(ctx: Context): Piece {
   const domeGroup = new THREE.Group();
   grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : group));
   rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
-  for (const g of hangGrown) meshes(g, hangGroup);
+  for (const g of hangGrown) meshes(g, hangGroup, 0.4);
   group.add(rimGroup, hangGroup, heroGroup, domeGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
@@ -173,7 +174,7 @@ export function create(ctx: Context): Piece {
       const round = Math.atan2(z, x);
       const roots = Math.pow(0.5 + 0.5 * Math.sin(round * 5 + seed + 1.3 * Math.sin(round * 2 + seed * 0.7)), 2);
       const swell = 0.8 + 0.6 * roots * (1 - 0.6 * Math.max(y, 0)) + 0.12 * Math.sin(y * 4 + x * 2 + seed * 2.1);
-      const r = 0.055 * b.tall * swell;
+      const r = 0.075 * b.tall * swell;
       // A foot spread on the rock: wide, low, and set as low as the lowest rock under it, so that it never hangs over a hollow.
       at.setXYZ(i, b.x + x * r * 1.9, low - 0.004 * b.tall + y * r * 0.75, b.z + z * r * 1.9);
       // The lump is smooth: its normal is the ball's, flattened as the lump is.
@@ -216,10 +217,13 @@ export function create(ctx: Context): Piece {
       // Only a point with open air under it drips where it can be seen: the others drip into the bush. `share` is how many drip, a bush.
       const open = g.tips.filter((tip) => tip.under > 0.9);
       for (const tip of open) {
-        if (drops.next() > share / Math.max(1, open.length)) continue;
+        // They gather: the locks of one part of the bush run with water and their neighbours hold none. Most are small, a few heavy.
+        const cell = Math.sin(Math.floor(tip.a[0] * 2.6) * 12.9898 + Math.floor(tip.a[1] * 2.6) * 78.233 + Math.floor(tip.a[2] * 2.6) * 37.719) * 43758.5453;
+        const run = cell - Math.floor(cell) < 0.3 ? 3.3 : 0;
+        if (drops.next() > (run * share) / Math.max(1, open.length)) continue;
         const every = drops.range(2.2, 8);
         const offset = drops.range(0, 11);
-        const size = drops.range(0.009, 0.02);
+        const size = 0.005 + 0.016 * drops.next() ** 2.2;
         const x = tip.a[0] + tip.b[0] + tip.c[0];
         const z = tip.a[2] + tip.b[2] + tip.c[2];
         const ground = floor(x, z);
@@ -227,7 +231,6 @@ export function create(ctx: Context): Piece {
         quad(g, tip, every, offset, size, 1, ground);
         // A drop seldom falls alone: a smaller one follows it off the same point.
         quad(g, tip, every, offset - 0.17, size * 0.7, 1, ground);
-        quad(g, tip, every, offset - 0.36, size * 0.55, 1, ground);
       }
     }
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
@@ -280,14 +283,16 @@ export function create(ctx: Context): Piece {
     setTime: (t) => {
       seconds.value = t;
       surge.value = surgeAt(t);
-      // Staged by shot: the growth by the rim wader is on the set for breath-05 alone.
+      // Staged by shot: the growth by the rim wader is on the set for breath-05, and for the wide lens of breath-01.
       const at = stagedSeconds();
       const shown = at >= rimSpan[0] && at <= rimSpan[1];
-      rimGroup.visible = shown;
+      const wide = at >= wideSpan[0] && at <= wideSpan[1];
       // The two tall ones are grown for the lens that stands among them (breath-03). From the rim's lens they stood over the wader as
       // two trees, and from the wide lens they were two dark lumps on the lip, where the pictures have low spreading brush: in those
       // two shots low domes stand in their place (the last two of the rim's bushes).
-      const low = shown || (at >= wideSpan[0] && at <= wideSpan[1]);
+      const low = shown || wide;
+      // The mounds at the rim are the dark red mass on the lip that the wide lens sees.
+      rimGroup.visible = shown || wide;
       heroGroup.visible = !low;
       domeGroup.visible = low;
       for (let i = 0; i < 2; i++) {
@@ -299,7 +304,7 @@ export function create(ctx: Context): Piece {
       hangGroup.visible = hung;
       hangBushes.forEach((b, i) => rig.setShadow(hangDiscs, i, b.x, b.z, 0.2 * b.tall, 0.4 * b.tall, hung ? 0.5 : 0));
       rimBushes.forEach((b, i) => {
-        const here = i >= RIM_GROWTH.length ? low : shown;
+        const here = low;
         rig.setDisc(rimDiscs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, here ? 0.7 : 0);
         rig.setShadow(rimDiscs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, here ? 0.5 : 0);
       });

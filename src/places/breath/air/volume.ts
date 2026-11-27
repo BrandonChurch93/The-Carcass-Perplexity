@@ -143,7 +143,20 @@ float wispDetail(vec3 p) {
 }
 // How far past the wall the vapour may stand at a height: over the brim it leans out on the west and, the higher it has climbed, down the wind.
 float leanOut(float y, float way, float surge) {
-  return smoothstep(-1.0, 3.0, y) * (8.0 * way + 5.0 * surge) + 0.9 * max(y, 0.0) * (0.25 + 0.75 * way);
+  return smoothstep(-1.0, 3.0, y) * (5.0 * way + 5.0 * surge) + 0.9 * max(y, 0.0) * (0.25 + 0.75 * way);
+}
+// Where the top of the pool stands at a place before its heaps, and how near the place is to the two wells (where the vapour climbs; a
+// column widens as it climbs). The pool stands to the brim only against the west wall; over the middle and the east of the shaft it lies
+// deep, under the hoops, and the breath lifts it in the west and hardly at all in the east.
+float poolLevel(vec3 p, float surge, out float wells, out float west) {
+  west = smoothstep(6.0, -17.0, p.x);
+  float wide = max(p.y + 8.0, 0.0);
+  vec2 da = p.xz - vec2(-20.0, -10.0);
+  vec2 db = p.xz - vec2(-9.0, 13.0);
+  wells = min(exp(-dot(da, da) / (40.0 + 4.0 * wide)) + (0.1 + 0.85 * surge) * exp(-dot(db, db) / (36.0 + 4.0 * wide)), 1.0);
+  vec2 dh = p.xz - vec2(-27.0, -8.0);
+  float high = exp(-dot(dh, dh) / 400.0);
+  return uBreath.x + 0.5 + 4.5 * high - (9.0 + 5.0 * surge) * (1.0 - west) + 6.5 * surge * west * west;
 }
 // Thickness for a metre of path of the vapour in the shaft, over a span of height. Two things in one field:
 //   the pool: fog that lies deep in the shaft, with a soft heaped top far under the brim. It is deep on the east, where the wall, its beds
@@ -154,27 +167,33 @@ float leanOut(float y, float way, float surge) {
 float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under, out float core) {
   float surge = uBreath.y * uShow.w;
   float settled = uBreath.w * uShow.w;
-  float west = smoothstep(6.0, -17.0, p.x);
-  // The two wells: where it climbs. A column widens as it climbs.
-  float wide = max(p.y + 8.0, 0.0);
-  vec2 da = p.xz - vec2(-20.0, -10.0);
-  vec2 db = p.xz - vec2(-9.0, 13.0);
-  float wells = min(exp(-dot(da, da) / (40.0 + 4.0 * wide)) + (0.1 + 0.85 * surge) * exp(-dot(db, db) / (36.0 + 4.0 * wide)), 1.0);
-  // The pool has a surface: it is whole a stride under its top. The top is heaped, and the hollows between the heaps are in shade.
-  float level = uBreath.x + 6.5 - 11.0 * (1.0 - west) + 1.5 * wells + 6.5 * surge * (0.15 + 0.85 * west);
-  float top = level + 7.0 * (n.x - 0.6) + 5.0 * (n.w - 0.6);
+  float wells;
+  float west;
+  float level = poolLevel(p, surge, wells, west);
+  float top = level + 12.0 * (n.x - 0.6) + 7.0 * (n.w - 0.5);
   under = top - p.y;
-  float pool = (0.11 + 0.03 * surge) * layerMean(top, 1.0 + 2.5 * surge, p.y, hy) * mix(0.4, 1.0, west);
-  core = (0.2 + 0.6 * smoothstep(0.7, 0.4, 0.55 * n.x + 0.45 * n.w)) * smoothstep(-1.0, 1.0, under);
+  float pool = (0.24 + 0.04 * surge) * layerMean(top, 1.6 - 0.8 * west + 2.5 * surge, p.y, hy) * mix(0.4, 1.0, west);
+  core = (0.12 + 0.5 * smoothstep(0.7, 0.4, 0.55 * n.x + 0.45 * n.w)) * smoothstep(-1.0, 1.0, under);
   // The columns climb from the pool's top over the wells: billows with an edge and clear air between them, fewer the higher they have climbed.
   float h = -under;
-  float reach = 12.0 + 8.0 * wells + 4.0 * settled + 10.0 * surge;
+  float reach = 5.0 + 5.0 * wells + 4.0 * settled + 12.0 * surge;
   float f = clamp(h / reach, 0.0, 1.0);
-  float inside = 0.8 * n.x + 0.2 * n.w + 0.44 * (wells - 0.55) + 0.2 * surge + 0.04 * settled - 0.2 * f - 0.52;
+  float inside = 0.8 * n.x + 0.2 * n.w + 0.9 * (wells - 0.6) + 0.25 * surge + 0.04 * settled - 0.2 * f - 0.52;
   float body = smoothstep(0.0, 0.1, inside) * (1.0 - f * f) * smoothstep(-3.0, 0.5, h);
   core = max(core, 0.55 * smoothstep(0.08, 0.3, inside) * step(0.0, h));
   // Inside the wall; over the brim it leans out.
-  return (pool + (0.045 + 0.03 * surge) * body) * smoothstep(0.8, -1.5, out0 - leanOut(p.y, way, surge));
+  return (pool + (0.022 + 0.05 * surge) * body) * smoothstep(0.8, -1.5, out0 - leanOut(p.y, way, surge));
+}
+// The height over which there is none of it at a place, from the same numbers as shaftRho and no picture: the highest a heap can stand
+// and, where a well is near, the highest its column can climb.
+float shaftCeiling(vec3 p) {
+  float surge = uBreath.y * uShow.w;
+  float wells;
+  float west;
+  float level = poolLevel(p, surge, wells, west);
+  float ceiling = level + 10.0 + 2.5 * surge;
+  if (wells > 0.1 - 0.28 * surge) ceiling += 5.0 + 5.0 * wells + 4.0 * uBreath.w * uShow.w + 12.0 * surge;
+  return ceiling;
 }
 // The ground the sheet lies on at a place: the rock, or the tide. Inside the brim the land is the pit, so there it is the lip beside it.
 float pourFoot(vec2 xz, float out0) {
@@ -269,7 +288,7 @@ void main() {
   vec2 middle = vec2(-9.0, -3.0);
   float drum = 47.0;
   float surge = uBreath.y * uShow.w;
-  float roof = 15.0 + 8.0 * surge;
+  float roof = 11.0 + 10.0 * surge;
   // The light of the place on vapour, from the rig: the sky's own grey with the glow of the sun's half of it, and the low sun, warm.
   vec3 skyLight = 0.52 * uSkyHorizon + 0.1 * uSkyZenith + (0.16 + 0.3 * toSun * toSun) * uGlowColour;
   vec3 sunLight = mix(uSunColour, vec3(2.5), 0.45);
@@ -312,24 +331,16 @@ void main() {
         float out0;
         float way;
         if (!vapourNear(p, out0, way)) continue;
-        vec4 land = landAt(p.xz);
         float rho = 0.0;
         float sunTau = 0.0;
         float under = 0.0;
         float core = 0.0;
-        if (out0 < 9.0 + 0.9 * max(p.y, 0.0) + 5.0 * uBreath.y) {
+        float pooled = 0.0;
+        // No picture is read where the place stands clear over all the pool and its columns can reach.
+        if (out0 < 9.0 + 0.9 * max(p.y, 0.0) + 5.0 * uBreath.y && p.y < shaftCeiling(p)) {
           vec4 n = risingNoise(p, 1.0);
-          rho = shaftRho(p, hy, out0, way, n, under, core);
-          if (rho > 0.0004 && p.y - land.b > -2.6) {
-            // Toward the sun, five metres on: the sun is low, so this is the next wisp along.
-            vec3 ps = p + uSunDir * 5.0;
-            float unders;
-            float os = length(ps.xz) - rimAt(atan(ps.x, -ps.z));
-            float cores;
-            sunTau = 7.0 * shaftRho(ps, 1.0, os, way, risingNoise(ps, 0.0), unders, cores);
-            // The sun is low: to reach a place a metre under the pool's top its light has come seven metres through the fog.
-            sunTau += 3.2 * rho * clamp(min(under, unders + 1.0), 0.0, 8.0) + 2.5 * rho;
-          }
+          pooled = shaftRho(p, hy, out0, way, n, under, core);
+          rho = pooled;
         }
         if (way >= 0.02 && out0 > -2.0) {
           vec3 lay = pourAt(p, way, out0, 1.0);
@@ -343,16 +354,27 @@ void main() {
         }
         rho *= smoothstep(roof, roof - 5.0, p.y) * smoothstep(2.0, 14.0, t) * uShow.z;
         if (rho <= 0.0004) continue;
+        vec4 land = landAt(p.xz);
+        if (pooled > 0.0004 && p.y - land.b > -2.6) {
+          // Toward the sun, five metres on: the sun is low, so this is the next heap along.
+          vec3 ps = p + uSunDir * 5.0;
+          float unders;
+          float os = length(ps.xz) - rimAt(atan(ps.x, -ps.z));
+          float cores;
+          sunTau += 7.0 * shaftRho(ps, 1.0, os, way, risingNoise(ps, 0.0), unders, cores);
+          // The sun is low: to reach a place a metre under the pool's top its light has come seven metres through the fog.
+          sunTau += 3.2 * pooled * clamp(min(under, unders + 1.0), 0.0, 8.0) + 2.5 * pooled;
+        }
         float tau = rho * dl;
         // The rim's shadow in the vapour is three metres deep and stands higher and lower by the heaps: light gets about in it.
         float sun = smoothstep(-2.6, 1.2, p.y - land.b) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead, and what lies deep under the pool's top is in the shade of what lies over it.
-        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 24.0, 0.2, 1.0);
-        float roofed = exp(-0.1 * max(under, 0.0));
+        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 40.0, 0.45, 1.0);
+        float roofed = exp(-0.3 * max(under, 0.0));
         // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
         float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
         // The heart of a billow is in its own shade: its edge is what the sky lights.
-        vec3 light = (skyLight * sunk * sunk + uSunColour * (0.008 * facing * sunk * sunk)) * (0.25 + 0.75 * roofed) * (1.0 - core)
+        vec3 light = (skyLight * sunk + uSunColour * (0.008 * facing * sunk)) * (0.45 + 0.55 * roofed) * (1.0 - core)
           + sunLight * (sun * (0.09 * min(phase, 1.9) * exp(-1.5 * sunTau) + (0.012 + 0.04 * toSun * toSun) * exp(-0.22 * sunTau)));
         float gone = exp(-tau);
         float w = thru * (1.0 - gone);
@@ -377,7 +399,7 @@ void main() {
 
   // The damp air up the light: the more air a pixel looks through toward the low sun, the more of its glow it carries, so what is
   // near stands dark before it. No bars are drawn in it: the wisps themselves are what the light is seen in.
-  float glare = smoothstep(0.3, 0.85, toSun) * smoothstep(-0.5, -0.2, rd.y);
+  float glare = smoothstep(0.5, 0.97, toSun) * smoothstep(-0.5, -0.2, rd.y);
   if (glare > 0.01 && uShow.z > 0.5) {
     colour += through * mix(uSunColour, vec3(2.4), 0.3) * ((0.012 + 0.03 * uBreath.w * uShow.w) * 1.6 * glare * (1.0 - exp(-far / 220.0)));
   }
@@ -466,11 +488,11 @@ void main() {
         float girth = 0.72 + 0.28 * up;
         // It leaves the water in heaves, and each heave climbs as a swelling of the column: its edge is a pile of them, never a ruled line.
         float rise = qn.y * uBodyB[i].y / uBodyB[i].x;
-        girth *= 0.82 + 0.2 * sin(1.7 * rise - 0.5 * uTime + 40.0 * D.y) + 0.12 * sin(3.1 * rise - 0.8 * uTime + 17.0 * D.y);
+        girth *= 0.8 + 0.24 * sin(1.7 * rise - 1.25 * uTime + 40.0 * D.y) + 0.14 * sin(3.1 * rise - 2.1 * uTime + 17.0 * D.y);
         float m = clamp(min(1.0 - dot(qn, qn), 1.0 - dot(qn.xz, qn.xz) / (girth * girth)), 0.0, 1.0);
         if (m <= 0.0) continue;
         vec3 q = (pw - vec3(0.0, uBodyD[i].w * uTime, 0.0)) / C.z + D.y;
-        q.xz -= WINDV * (uTime * 2.0 / C.z) * up;
+        q.xz -= WINDV * (uTime * 6.0 / C.z) * up;
         vec4 n0 = textureLod(tNoise, q * 0.5, 0.0);
         float fineN = textureLod(tNoise, q * 0.85 + 0.37, 0.0).b;
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
@@ -481,7 +503,7 @@ void main() {
         if (tau <= 0.0005) continue;
         // Backlit: where a billow is thin the sun comes through it and it burns, where it is thick it stands grey against its own rim.
         float glow = (0.3 + 1.0 * exp(-3.2 * body * m * (1.3 - up))) * clamp(0.55 + 1.5 * (fineN - 0.45), 0.25, 1.4);
-        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.6) * (sunHere * min(phase, 2.4) * 0.5 * glow * D.z);
+        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.35) * (sunHere * min(phase, 2.4) * 0.5 * glow * D.z);
         float gone = exp(-tau);
         lit += thru * (1.0 - gone) * light;
         thru *= gone;
@@ -493,7 +515,7 @@ void main() {
       continue;
     }
     vec3 q = (mid - vec3(0.0, uBodyD[i].w * uTime, 0.0)) / C.z + D.y;
-    q.xz -= WINDV * (uTime * 2.0 / C.z);
+    q.xz -= WINDV * (uTime * (D.x > 0.5 && D.x < 1.5 ? 9.0 : 2.0) / C.z);
     vec4 n0 = textureLod(tNoise, q, 0.0);
     vec4 n1 = textureLod(tNoise, q * 3.1 + 0.37, 0.0);
     // The fine lumps are for far off: near the lens they are smaller than a pixel's step along the ray and would boil.
