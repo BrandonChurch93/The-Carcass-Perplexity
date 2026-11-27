@@ -281,6 +281,27 @@ void main() {
     shut = max(shut, upper);
     shallow = mix(shallow, 0.2 + 0.6 * vnoise(inUpper * 1.7 + 3.0), upper);
   }
+  // (The bay east of the lake is an arm of the sea over a drowned valley: shoal and pale green far out from its shores, deep only
+  // in the channel, so it is no twin of the lake.)
+  vec2 inBay = (xz - uLakeMid - vec2(195.0, 45.0)) / vec2(160.0, 100.0);
+  if (dot(inBay, inBay) < 1.6) shallow = max(shallow, (1.0 - smoothstep(0.8, 1.25, length(inBay))) * (1.0 - land) * (1.0 - smoothstep(3.0, 14.0 + 34.0 * vnoise(xz / 27.0 + 5.0), -coastKm)));
+  // (East and north of the skull the red country is old lava with its roof fallen in: pools stand in the pits of it, a few
+  // kilometres to fifty across, each of its own size and outline, none in line.)
+  vec2 fromPitted = (xz - uThroat - vec2(-40.0, -60.0)) / vec2(400.0, 430.0);
+  float pittedAt = exp(-dot(fromPitted, fromPitted)) * smoothstep(0.95, 1.2, length(fromSkull));
+  if (pittedAt > 0.05 && uViewKm > 120.0 && uViewKm < 1300.0 && land > 0.0) {
+    vec2 wg = mat2(0.8, -0.6, 0.6, 0.8) * xz / 44.0;
+    vec2 wid = floor(wg);
+    vec2 wat = 0.5 + 0.5 * (vec2(hash12(wid + 13.1), hash12(wid + 27.7)) - 0.5);
+    vec2 wd = (fract(wg) - wat) * vec2(1.0, 1.0 + 0.7 * hash12(wid + 4.3));
+    float wsize = mix(0.12, 0.46, hash12(wid + 19.2) * hash12(wid + 2.2));
+    float wr = length(wd) + 0.12 * (vnoise(wg * 4.0 + 3.0) - 0.5) + 0.05 * (vnoise(wg * 13.0 + 8.0) - 0.5);
+    float pool = step(hash12(wid + 8.5), 0.8) * (1.0 - smoothstep(0.03, 0.12, height - broad)) * (1.0 - smoothstep(0.32, 0.42, broad)) * min(1.0, 2.0 * pittedAt) * smoothstep(120.0, 220.0, uViewKm) * (1.0 - smoothstep(900.0, 1300.0, uViewKm)) * smoothstep(1.25, 1.6, lakeFar) * land * (1.0 - smoothstep(0.86 * wsize, wsize, wr));
+    land *= 1.0 - pool;
+    coastKm = mix(coastKm, min(coastKm, -(wsize - wr) * 44.0), pool);
+    shut = max(shut, pool);
+    shallow = mix(shallow, 0.1 + 0.5 * hash12(wid + 6.1), pool);
+  }
   if (land > 0.0) kind = 0.5 + 0.5 * vec3(
     sin(xz.x / 143.0 + 0.9 + 1.7 * sin(xz.y / 201.0)) * sin(xz.y / 117.0 + 2.2),
     sin(xz.x / 187.0 + 3.1) * sin(xz.y / 97.0 + 0.3 + 1.4 * sin(xz.x / 263.0)),
@@ -521,21 +542,6 @@ void main() {
   float lesser = (1.0 - smoothstep(0.38, 0.48, (greatB - 0.3) / 0.7)) * smoothstep(0.3, 0.55, height) * land * smoothstep(150.0, 320.0, uViewKm) * smoothstep(0.9, 1.2, length(fromSkull));
   ground = mix(ground, vec3(0.5, 0.455, 0.39) * (0.5 + 1.1 * min(lowLum, 0.45)) * (1.0 + 0.2 * chestAt), mix(0.7, 0.9, chestAt) * great * smoothstep(0.34 - 0.06 * chestAt, 0.62 - 0.1 * chestAt, max(height, (greatB - 0.3) / 0.7 + 0.06)) * (1.0 - min(1.0, 1.4 * rust)));
   ground *= mix(vec3(1.0), vec3(0.62, 0.58, 0.56), lesser);
-  // (East and north of the skull the red country is pitted, far past the throat: old lava with its roof fallen in.)
-  vec2 fromPitted = (xz - uThroat - vec2(-40.0, -60.0)) / vec2(400.0, 430.0);
-  float pitted = exp(-dot(fromPitted, fromPitted)) * land * (1.0 - great) * smoothstep(0.95, 1.2, length(fromSkull));
-  if (pitted > 0.03 && uViewKm > 120.0) {
-    // (And among them pools and wider craters, a few to a hundred kilometres, each with a pale lip on its sunward side.)
-    vec2 wg = mat2(0.8, -0.6, 0.6, 0.8) * xz / 78.0;
-    vec2 wid = floor(wg);
-    vec2 wat = 0.5 + 0.5 * (vec2(hash12(wid + 13.1), hash12(wid + 27.7)) - 0.5);
-    vec2 wd = (fract(wg) - wat) * vec2(1.0, 1.0 + 0.7 * hash12(wid + 4.3));
-    float wsize = mix(0.1, 0.34, hash12(wid + 19.2) * hash12(wid + 2.2));
-    float wr = length(wd) + 0.05 * (vnoise(wg * 5.0 + 3.0) - 0.5);
-    float wider = step(hash12(wid + 8.5), 0.7) * (1.0 - smoothstep(0.4, 0.56, height)) * pitted * smoothstep(120.0, 220.0, uViewKm) * (1.0 - smoothstep(900.0, 1300.0, uViewKm)) * smoothstep(1.25, 1.6, lakeFar);
-    ground *= 1.0 + 0.5 * wider * (1.0 - smoothstep(0.0, 0.3 * wsize, abs(wr - 1.12 * wsize))) * smoothstep(-0.4, 0.6, dot(normalize(wd + 1e-4), vec2(-0.7, -0.7)));
-    ground = mix(ground, vec3(0.006, 0.02, 0.026), 0.95 * wider * (1.0 - smoothstep(0.8 * wsize, wsize, wr)));
-  }
   float lowCountry = top * (1.0 - smoothstep(0.22, 0.5, height)) * (1.0 - min(1.0, 1.4 * rust)) * (1.0 - 0.85 * great);
   // (The same low country as on the way up, a little darker under the air of orbit: no change of colour at the top of the rise.)
   vec3 countryColour = 0.55 * floorTone * (0.34 + 2.3 * lowLum);
@@ -561,12 +567,12 @@ void main() {
   // The pan of the pelvis: salt, white under the sun, and the red brine that veins it. East of it the red runs out over the low ground
   // and into the sea, in streaks drawn along the fall of the land.
   vec2 fromPan = xz - uSalt;
-  float panAt = dot(fromPan, fromPan) < 90000.0 ? (1.0 - smoothstep(0.6, 1.15, length(fromPan / vec2(175.0, 140.0)) + 0.5 * (readTile(uCloudTile, xz / 420.0, 1.0 / 420.0, 1.0).b - 0.5))) * land : 0.0;
-  float brine = smoothstep(0.22, 0.48, rawBrine);
+  float panAt = dot(fromPan, fromPan) < 90000.0 ? (1.0 - smoothstep(0.6, 1.15, length(fromPan / vec2(212.0, 168.0)) + 0.36 * (readTile(uCloudTile, xz / 420.0, 1.0 / 420.0, 1.0).b - 0.5))) * land : 0.0;
+  float brine = smoothstep(0.17, 0.42, rawBrine);
   float saltFlat = panAt * (1.0 - brine);
   // (Salt in the air of the land round it: white where it is new, grey and tan where the crust is old or wet, never a blank.)
   if (saltFlat > 0.0) ground = mix(ground, mix(vec3(0.5, 0.47, 0.41), vec3(0.7, 0.7, 0.67), smoothstep(0.3, 0.7, vnoise(xz / 31.0 + 6.0) + 0.5 * (vnoise(xz / 7.0 + 2.0) - 0.5))) * (0.78 + 0.5 * lum), 0.92 * saltFlat);
-  ground = mix(ground, vec3(0.22, 0.02, 0.02), 0.9 * panAt * brine);
+  ground = mix(ground, vec3(0.27, 0.014, 0.022), 0.94 * panAt * brine);
   vec2 run = vec2(0.965, 0.26);
   float alongRun = dot(fromPan, run) / 1150.0;
   float grown = clamp((uTime - 6.0) / 30.0, 0.0, 1.0);
@@ -748,6 +754,8 @@ void main() {
 
   // The lava of the Heart: vents in the black crust of the chest. The great one is the Heart, and it swells with the beat; the heat shows
   // along the cracks round it. Each is a few kilometres of molten rock: from orbit a point of orange light, and its light on the slopes that face it.
+  // (Between beats the fire does not keep time: its glow wanders, slow and uneven, so nothing in the chest pulses like a lamp.)
+  float pulse = 1.1 * max(uBeat - 0.12, 0.0) + 0.12 * (0.25 + 0.5 * vnoise(vec2(uTime * 0.21, 77.0)) + 0.3 * vnoise(vec2(uTime * 0.53, 13.0)));
   vec2 fromLava = xz - uLava;
   // (The molten rock works: its light wavers, never the same from one second to the next.)
   float waver = 1.0;
@@ -756,26 +764,26 @@ void main() {
   // (While the frame is held the fire is seen to breathe, slow and uneven.)
   if (uLive > 0.0) waver *= mix(1.0, 0.62 + 0.76 * vnoise(vec2(uTime * 0.6, 21.0)), smoothstep(0.0, 1.5, uLive));
   if (uDusk > 0.0) waver = mix(1.0, waver, uCalm.w);
-  float swell = (0.8 + 0.9 * uBeat) * waver;
+  float swell = (0.8 + 0.9 * pulse) * waver;
   float seenFar = 1.0 + 2.2 * smoothstep(500.0, 1380.0, uViewKm);
   float d0 = dot(fromLava, fromLava);
   float heat = exp(-d0 / (26.0 * seenFar)) * 1.5 * swell;
-  float halo = exp(-d0 / (700.0 * seenFar)) * (0.5 + 1.5 * uBeat) * waver;
+  float halo = exp(-d0 / (700.0 * seenFar)) * (0.5 + 1.5 * pulse) * waver;
   if (d0 < 160000.0) for (int i = 0; i < 6; i++) {
     vec3 vent = VENTS[i];
     vec2 q = fromLava - vent.xy;
     float dd = dot(q, q);
-    // The lesser vents answer the beat a little late, each in its turn.
-    float answer = 0.75 + 0.5 * uBeat * (0.5 + 0.5 * sin(float(i) * 2.4));
+    // (The lesser vents work each on its own, slow and out of step.)
+    float answer = 0.72 + 0.2 * vnoise(vec2(uTime * (0.17 + 0.06 * float(i)), 31.0 + 7.3 * float(i))) + 0.3 * pulse * (0.5 + 0.5 * sin(float(i) * 2.4));
     heat += exp(-dd / (11.0 * vent.z * seenFar)) * 2.2 * vent.z * answer;
     halo += exp(-dd / (260.0 * vent.z)) * 0.3 * vent.z * answer;
   }
-  float vein = d0 < 18000.0 ? cracks(xz / 7.0) * exp(-d0 / 2200.0) * (0.2 + 0.6 * uBeat) : 0.0;
+  float vein = d0 < 18000.0 ? cracks(xz / 7.0) * exp(-d0 / 2200.0) * (0.2 + 0.6 * pulse) : 0.0;
   heat = (heat + vein) * land;
   vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.17 * smoothstep(0.03, 0.6, heat);
   vec3 glowCore = glow;
   // (The beat itself: a dull red swell in the whole chest, on the ground and on the flanks of the ribs that face the Heart.)
-  glow += vec3(1.0, 0.16, 0.03) * 0.09 * max(uBeat - 0.12, 0.0) * exp(-d0 / 30000.0) * land * (0.6 + 0.8 * clamp(0.5 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.0));
+  glow += vec3(1.0, 0.16, 0.03) * 0.09 * max(pulse - 0.12, 0.0) * exp(-d0 / 30000.0) * land * (0.6 + 0.8 * clamp(0.5 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.0));
   vec3 glowSwell = glow;
   glow += vec3(1.0, 0.3, 0.06) * 0.26 * halo * land * clamp(0.4 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
 
@@ -788,8 +796,8 @@ void main() {
   if (uDusk > 0.0 && uEmber.x > 0.0) {
     float far0 = sqrt(d0);
     // The beat starts at the middle of the lake and runs outward: the net of cracks in a few frames, the fume and the flanks after it.
-    float breath = min(uBeat, 0.12);
-    float hit = max(uBeat - 0.12, 0.0);
+    float breath = min(pulse, 0.12);
+    float hit = max(pulse - 0.12, 0.0);
     float beatNear = breath + hit * (uEmber.y > 0.0 ? smoothstep(0.0, 1.0, (uEmber.y * 420.0 - far0) / 60.0 + 1.0) : 1.0);
     float beatFar = breath + hit * (uEmber.y > 0.0 ? smoothstep(0.0, 1.0, (uEmber.y * 1100.0 - far0) / 150.0 + 1.0) : 1.0);
     float facing = clamp(0.35 + 3.0 * dot(slope, fromLava / (far0 + 1.0)), 0.0, 2.0);
@@ -872,12 +880,18 @@ void main() {
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
   bed = mix(bed, vec3(0.3, 0.06, 0.02), 0.85 * plume * (1.0 - land));
   // (South of it, round the lower leg, the currents carry ochre silt: long curling threads of it, drawn out by the water.)
-  vec2 fromSilt = (xz - uSalt - vec2(330.0, 330.0)) / vec2(520.0, 330.0);
+  vec2 fromSilt = (xz - uSalt - vec2(300.0, 330.0)) / vec2(640.0, 380.0);
   float siltAt = exp(-dot(fromSilt, fromSilt)) * smoothstep(680.0, 1100.0, uViewKm);
   if (siltAt > 0.02) {
     vec2 sc = xz / 520.0 + 0.5 * (readTile(uCloudTile, xz / 900.0 + vec2(0.2, 0.7) + uTime * vec2(0.0006, -0.0004), 1.0 / 900.0, 1.0).rg - 0.5);
     float thread = readTile(uCloudTile, sc * vec2(0.8, 1.7) + vec2(0.4, 0.1), 1.7 / 520.0, 0.5).b;
-    bed = mix(bed, vec3(0.16, 0.1, 0.02), 0.75 * siltAt * smoothstep(0.42, 0.7, thread) * (1.0 - land));
+    // (Drawn out long: curling lines of it, a few kilometres wide and hundreds long, one beside the next.)
+    vec2 calm = xz / 520.0 + uTime * vec2(0.0005, -0.0003);
+    vec2 drawn = calm * vec2(1.5, 3.4) + 1.1 * vec2(vnoise(calm * 2.1 + 3.0), vnoise(calm * 2.1 + 41.0)) + 0.25 * vec2(vnoise(calm * 6.3 + 13.0), vnoise(calm * 6.3 + 29.0));
+    float lines = 1.0 - abs(2.0 * vnoise(drawn) - 1.0);
+    float lines2 = 1.0 - abs(2.0 * vnoise(drawn * 2.3 + 9.0) - 1.0);
+    thread = 0.12 * thread + 0.55 * smoothstep(0.6, 0.97, lines) + 0.35 * smoothstep(0.7, 0.97, lines2);
+    bed = mix(bed, vec3(0.21, 0.125, 0.02), 0.85 * min(1.0, 1.5 * siltAt) * smoothstep(0.4, 0.68, thread) * (1.0 - land));
   }
   // The lake of the Eye: black in the middle, and round it a margin of amber shallows, uneven, with tongues of it curling in.
   vec2 lakeAt = (xz - uLakeMid) / uLakeSize;
@@ -900,16 +914,19 @@ void main() {
     vec2 turned = mat2(cos(twist), sin(twist), -sin(twist), cos(twist)) * lakeAt;
     float wisp = 0.55 * vnoise(turned * 5.0 + 1.0 * warp) + 0.31 * vnoise(turned * 11.0 + 5.0 + 0.6 * warp) + 0.14 * vnoise(turned * 21.0 + 11.0);
     float reach = 0.5 + 1.3 * vnoise(lakeDir * 2.6 + 21.0);
-    float silt = smoothstep(0.0, 1.0, 0.2 + 1.7 * wisp - 0.9 * depth / reach);
+    // (Fine threads of it lie along the shore, one beside the next, and fray the edge of the band.)
+    float rThread = (shoreR + 0.05 * warp + 0.03 * wisp) * 64.0;
+    float thread = mix(vnoise(vec2(lakeDir.x * 3.0 + 7.0, rThread)), vnoise(vec2(lakeDir.y * 3.0 + 19.0, rThread + 5.0)), smoothstep(0.3, 0.7, abs(lakeDir.x)));
+    float silt = smoothstep(0.0, 1.0, 0.12 + 1.7 * wisp - 1.05 * depth / reach + 1.0 * (thread - 0.5));
     // (Two eddies off the shelf wind a plume of it round into a hook.)
     vec2 bent = lakeAt + 0.09 * (vec2(vnoise(lakeAt * 4.3 + 31.0), vnoise(lakeAt * 4.3 + 57.0)) - 0.5) + 0.03 * (vec2(vnoise(lakeAt * 13.0 + 3.0), vnoise(lakeAt * 13.0 + 17.0)) - 0.5);
     vec2 eddyA = (bent - vec2(-0.45, 0.47)) / vec2(0.27, 0.2);
     vec2 eddyB = (bent - vec2(0.62, 0.3)) / vec2(0.1, 0.15);
-    float hookA = smoothstep(0.3, 0.95, sin(atan(eddyA.y, eddyA.x) + 3.4 * length(eddyA) + 1.9)) * exp(-1.3 * dot(eddyA, eddyA)) * smoothstep(0.15, 0.5, length(eddyA));
-    float hookB = smoothstep(0.3, 0.95, sin(-atan(eddyB.y, eddyB.x) + 2.6 * length(eddyB) + 2.6)) * exp(-1.6 * dot(eddyB, eddyB)) * smoothstep(0.2, 0.6, length(eddyB));
+    float hookA = smoothstep(0.62, 0.97, sin(atan(eddyA.y, eddyA.x) + 3.4 * length(eddyA) + 1.9)) * exp(-1.3 * dot(eddyA, eddyA)) * smoothstep(0.15, 0.5, length(eddyA));
+    float hookB = smoothstep(0.62, 0.97, sin(-atan(eddyB.y, eddyB.x) + 2.6 * length(eddyB) + 2.6)) * exp(-1.6 * dot(eddyB, eddyB)) * smoothstep(0.2, 0.6, length(eddyB));
     silt = max(silt, max(0.75 * hookA, 0.5 * hookB) * smoothstep(0.15, 0.6, wisp + 0.25));
     float fine = vnoise(lakeAt * 46.0 + 4.0 * warp);
-    vec3 eye = mix(vec3(0.002, 0.0065, 0.017), mix(vec3(0.12, 0.056, 0.007), vec3(0.35, 0.195, 0.034), exp(-2.2 * depth)) * (0.75 + 0.5 * fine), silt);
+    vec3 eye = mix(vec3(0.002, 0.0065, 0.017), mix(vec3(0.075, 0.031, 0.004), vec3(0.24, 0.112, 0.014), exp(-2.2 * depth)) * (0.75 + 0.5 * fine) * (0.55 + 0.9 * thread), silt);
     // (Where the stream meets the lake it has built a delta: pale bars of silt that fan out from its mouth, dark channels between.)
     float into = dot(fromMouth, -runIn);
     float fanAt = dot(fromMouth, vec2(-runIn.y, runIn.x)) / (into + 0.05);
