@@ -47,30 +47,34 @@ export function openingLight(seconds: number): number {
 }
 
 // ---- The staging of the restaged opening: the facts every folder keys off. World metres and seconds of the place (the film's first frame is 0). ----
-// The lens itself is `openingCamera(seconds)` and `approachEye(seconds)` in ../cameras: it opens at (229, 880), 4.7 m up behind the crest
-// of a heavy swell, looking north-north-west (yaw -14 degrees, 13 degrees up) on a 29.5 degree lens (50 degrees wide), and slews 5 degrees
-// left onto its mark through the first 2.4 s. It runs 40 degrees west of north at 86 m/s and rides the long swell: over that first crest
-// inside 0.2 s and up to 8.8 m at 0.8 s, its nose coming down, then down to 0.2 m in the next trough at 2.3 s with the next swell standing
-// up before it from 1.9 s, over that one by 2.8 s, and so on, slowing onto the old move (its own from 16 s) and crossing the shore's edge
-// at x = -207 at 13 s. It never comes nearer than 1.4 m to the water within 12 m of it. The tip of L1 leaves the top of the frame at
-// 1.1 s; R1's stays inside it until 9.7 s. The lens widens from 3 s to 10 s.
-// In the first frame L1 stands in the left half from the sea to the top, R1 leans in from the right edge, their tips 8 degrees apart.
+// The lens itself is `openingCamera(seconds)` and `approachEye(seconds)` in ../cameras: it opens at (600, 880), 0.8 m up in a trough of a
+// heavy swell and 290 m off the near flank of the outer right blade (OR), looking north-west (yaw -30 degrees, 13 degrees up) on a 29.5
+// degree lens (50 degrees wide), and slews 5 degrees left onto its mark through the first 2.4 s. It runs 40 degrees west of north at
+// 86 m/s and rides the long swell: lifted to 7.7 m at 1.5 s, down to 1.2 m in the next trough at 2.9 s, up to 7.7 m again at 5.7 s, and
+// so on, slowing onto the old move (its own from 16 s) and crossing the shore's edge at x = -190 at 13.2 s.
+// In the first frame OR is a dark wall over the right four tenths of the frame, L1 stands pale in the left third from the sea to a quarter
+// from the top, and the far cage stands between them. OR is gone through the right edge at 1.9 s and R1 has come out from behind it. The
+// tip of L1 is inside the frame until 3.5 s; R1's until 10 s. The lens widens from 3 s to 10 s.
 
 /**
- * The strike: a heavy swell breaks on the shore's edge before the seaward foot of the near blade. `foot` is the middle of the burst (a
- * fifth in from the left edge of the first frame, three tenths in by 2 s, and 630 m from the lens: before L1's foot as the lens sees it, and it slides right
- * against the blade as the lens sweeps west, to the middle of the frame by 6 s), `half` its half length
- * along the shore (x), `times` the seconds its water first leaves the sea, `height` the metres the first burst climbs (three tenths of the
- * frame's height in the first frame; L1 is 430 m), `rises` the seconds its head takes to stand at full height (thrown water slowed by the
- * air, not a stone), `hangs` the seconds from leaving the sea to all of it being down, and `lesser` the second burst's height as a part
- * of the first. The crest ahead of the lens hides the shore until 0.3 s. The lens passes 115 m west of `foot` at 13 s: both bursts are down by then.
+ * The strike: a heavy swell breaks on the shore's edge before the seaward foot of the near blade. `foot` is the middle of the burst (on
+ * the line from the lens to L1's foot the whole way in from the east: a sixth in from the left edge of the first frame and 790 m from
+ * the lens, a quarter in at 1 s, a fifth in at 4 s, and from 5 s it slides right against the blade as the lens sweeps west, out of the
+ * right edge at 9.3 s), `half` its half length along the shore (x), `times` the seconds its water first leaves the sea, `height` the
+ * metres the first burst climbs (a quarter of the frame's height in the first second; L1 is 430 m), `rises` the seconds its head takes
+ * to stand at full height (thrown water slowed by the air, not a stone), `hangs` the seconds from leaving the sea to all of it being
+ * down, and `lesser` the second burst's height as a part of the first.
+ * The first burst left the sea before the film opens: the crest ahead of the lens hides the shore in the first frame, the lens is lifted
+ * over it, and the burst comes up over the crest already climbing and stands at its full height at 0.9 s, inside the first second.
+ * The second goes up through its fall. The lens passes 141 m south of `foot` at 9.2 s: the first burst is down by then and the second
+ * is thin air, off to the right.
  * The sun is behind the lens' left shoulder: the burst is lit from the front, pale against the blade's shaded foot and the dark sky.
  */
 export const STRIKE = {
   blade: 'L1',
-  foot: [-90, 0, 335] as [number, number, number],
+  foot: [25, 0, 335] as [number, number, number],
   half: 60,
-  times: [0.35, 4.4] as [number, number],
+  times: [-1.2, 2.8] as [number, number],
   height: 100,
   rises: 2.1,
   hangs: 9,
