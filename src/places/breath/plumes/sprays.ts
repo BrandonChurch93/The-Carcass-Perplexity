@@ -112,7 +112,7 @@ function strip(segments: number): { position: THREE.BufferAttribute; index: numb
   return { position: new THREE.Float32BufferAttribute(position, 3), index };
 }
 
-export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => number): Grown {
+export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => number, hairOnly = false): Grown {
   const { tall, lean, habit } = bush;
   const extent = tall * (bush.reach ?? 1);
   const close = bush.detail >= 1;
@@ -128,6 +128,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   const tC: number[] = [];
   const tSway: number[] = [];
   const tTint: number[] = [];
+  const tFace: number[] = [];
   const tipAt: number[] = [];
   const stemPosition: number[] = [];
   const stemNormal: number[] = [];
@@ -212,7 +213,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   };
 
   /** One strip: it leaves `a` along `d0`, `long` metres of it, and has turned to `d1` by its end. Returns where its numbers start. */
-  const lay = (a: V3, d0: V3, d1: V3, long: number, half: number, tone: number, u0: number, u1: number, tremble: number, phase: number, level: number): number => {
+  const lay = (a: V3, d0: V3, d1: V3, long: number, half: number, tone: number, u0: number, u1: number, tremble: number, phase: number, level: number, face: V3 = [0, 1, 0], thick = 1): number => {
     const at = tA.length;
     // a + b s + c s s: its tangent is b at the root and b + 2 c at the end.
     const b: V3 = [d0[0] * long, d0[1] * long, d0[2] * long];
@@ -226,6 +227,8 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     tC.push(c[0], c[1], c[2], rng.next());
     tSway.push(u0, u1, tremble, phase);
     tTint.push(1, 1, level, 0);
+    // A blade: the normal of the frond it lies in, and how thick it is against its width. 1 is a round thread.
+    tFace.push(face[0], face[1], face[2], thick);
     return at;
   };
   const along = (at: number, s: number): { p: V3; t: V3 } => ({
@@ -249,20 +252,75 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   const long2 = tall * (habit === 'fountain' ? 0.16 : 0.2);
   const half2 = tall * 0.00105 * Math.sqrt(coarse);
   const half3 = tall * 0.0007;
+  // A plume the lens comes close to is not hair: its limbs carry flat fleshy blades in two ranks, close set, so that a limb with what it
+  // carries is one wet feather with a body, frayed to points at its edge. Between the blades a few fine hairs stand off.
+  const bladed = close && habit === 'sweep' && !hairOnly;
   /** The branchlets along a limb from `v0` of the way, each with its filaments. `scale`: how long they are against the bush's longest. */
   const feather = (c: Path, v0: number, phase: number, scale: number, tone0: number): void => {
-    const spacing = 0.013 * tall * coarse;
+    const spacing = bladed ? 0.0042 * tall : 0.013 * tall * coarse;
     const n = Math.max(2, Math.round((c.length * (1 - v0)) / spacing));
+    // The plane this frond lies in: nearer level than upright, each frond tilted its own way.
+    const tilt: V3 = bladed ? [rng.range(-0.6, 0.6), 1, rng.range(-0.6, 0.6)] : [0, 1, 0];
+    const turnOver = bladed ? rng.range(0, 6.283) : 0;
+    const planeAt = (t: V3): V3 => {
+      const d = tilt[0] * t[0] + tilt[1] * t[1] + tilt[2] * t[2];
+      const q: V3 = [tilt[0] - t[0] * d, tilt[1] - t[1] * d, tilt[2] - t[2] * d];
+      return Math.hypot(q[0], q[1], q[2]) < 0.25 ? aside(t, turnOver) : unit(q);
+    };
+    // Wet, the blades gather into locks: those of one stretch of the limb run to one point, a lock on each side, no two stretches alike.
+    let lockEnd = -1;
+    const lockTo: [V3, V3] = [[0, 0, 0], [0, 0, 0]];
     for (let i = 0; i <= n; i++) {
       // The last one is the end of the limb itself, which thins into a branchlet.
       const tip = i === n;
       const v = tip ? 1 : v0 + (1 - v0) * ((i + rng.next()) / n);
       const g = on(c, v);
+      if (bladed) {
+        const plane = planeAt(g.t);
+        const out = cross(plane, g.t);
+        const rank = i % 2 === 0 ? 1 : -1;
+        if (i > lockEnd) {
+          const size = 5 + Math.floor(rng.next() * 10);
+          lockEnd = i + size - 1;
+          const ve = Math.min(1, v0 + (1 - v0) * ((i + size * rng.range(0.5, 1.0)) / n));
+          const e = on(c, ve);
+          const ep = planeAt(e.t);
+          const eo = cross(ep, e.t);
+          for (let r = 0; r < 2; r++) {
+            const theta = rng.range(0.3, 0.75);
+            const lift = rng.range(-0.3, 0.3);
+            const far = long2 * 0.5 * scale * rng.range(0.5, 1.2) * (0.5 + 0.5 * smooth(0, 0.3, ve)) * (1 - 0.5 * ve);
+            const side = r === 0 ? 1 : -1;
+            lockTo[r] = [e.p[0] + (e.t[0] * Math.cos(theta) + eo[0] * Math.sin(theta) * side + ep[0] * lift) * far, e.p[1] + (e.t[1] * Math.cos(theta) + eo[1] * Math.sin(theta) * side + ep[1] * lift) * far - 0.25 * far * wet, e.p[2] + (e.t[2] * Math.cos(theta) + eo[2] * Math.sin(theta) * side + ep[2] * lift) * far];
+          }
+        }
+        const to = lockTo[rank > 0 ? 0 : 1] as V3;
+        const reach: V3 = [to[0] - g.p[0], to[1] - g.p[1], to[2] - g.p[2]];
+        const span = Math.hypot(reach[0], reach[1], reach[2]);
+        const stray = 0.16;
+        const d0: V3 = tip ? g.t : unit([reach[0] / span + rng.range(-stray, stray) + 0.1 * out[0] * rank, reach[1] / span + rng.range(-stray, stray) + 0.12, reach[2] / span + rng.range(-stray, stray) + 0.1 * out[2] * rank]);
+        const L = tip ? long2 * 0.6 * scale : span * rng.range(0.8, 1.12);
+        // It leaves its limb a little outward and comes in to the point of its lock, hanging at its end.
+        const d1h: V3 = unit([reach[0] / span - 0.1 * out[0] * rank + 0.25 * comb * leanDir[0], reach[1] / span - (habit === 'sweep' ? rng.range(0.15, 0.6) + 0.5 * v : rng.range(0.4, 1.0) + 0.4 * v) * wet, reach[2] / span - 0.1 * out[2] * rank + 0.25 * comb * leanDir[2]]);
+        const d1 = tip ? heading(g.t, d0, 0.6) : d1h;
+        const tone = Math.min(0.999, Math.max(0, tone0 + rng.range(-0.2, 0.2)));
+        const face: V3 = unit([plane[0] + rng.range(-0.35, 0.35), plane[1] + rng.range(-0.35, 0.35), plane[2] + rng.range(-0.35, 0.35)]);
+        const blade = lay(g.p, d0, d1, L, tall * 0.0033 * rng.range(0.6, 1.4), tone, g.u, g.u + 0.16, rng.range(0, 6.283), phase, 2, face, rng.range(0.24, 0.4));
+        if (i % 3 === 0) tipAt.push(blade);
+        if (rng.next() < 0.4) {
+          const e0 = leave(d0, 0.1, 0.42);
+          const e2 = heading(g.t, e0, rng.range(0.5, 1.5));
+          const e1: V3 = unit([e2[0] - 0.6 * g.t[0] + rng.range(-0.32, 0.32), e2[1] + rng.range(-0.45, 0.1), e2[2] - 0.6 * g.t[2] + rng.range(-0.32, 0.32)]);
+          lay(g.p, e0, e1, L * rng.range(0.7, 1.25), half3 * rng.range(0.8, 1.3), Math.min(0.999, Math.max(0, tone + rng.range(-0.12, 0.12))), g.u, g.u + 0.2, rng.range(0, 6.283), phase, 3);
+        }
+        continue;
+      }
       const d0 = tip ? g.t : leave(g.t, 0.16, 0.5);
       const L = long2 * scale * rng.range(0.55, 1.25) * (tip ? 1.2 : 1 - (habit === 'sweep' ? 0.55 : 0.35) * v);
       const d1h = heading(g.t, d0, (habit === 'sweep' ? rng.range(0.15, 0.8) + 0.9 * v : rng.range(0.35, 1.1) + 0.5 * v));
-      // On a plume the lens comes close to, an end does not hang straight: it curls under, back toward the limb it left.
-      const d1 = (habit === 'sweep' || habit === 'hang') && close && !tip ? unit([d1h[0] - 0.4 * g.t[0], d1h[1] - 0.15, d1h[2] - 0.4 * g.t[2]]) : d1h;
+      // On a mass of hair by the lens, an end does not hang straight: it curls under, back toward the limb it left.
+      const frizz = (habit === 'sweep' || habit === 'hang') && close;
+      const d1 = frizz && !tip ? unit([d1h[0] - 0.4 * g.t[0], d1h[1] - 0.15, d1h[2] - 0.4 * g.t[2]]) : d1h;
       const tone = Math.min(0.999, Math.max(0, tone0 + rng.range(-0.2, 0.2)));
       const u1 = g.u + 0.22;
       // A branchlet that carries filaments does not tremble on its own: its filaments are rooted on where it is.
@@ -275,8 +333,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       for (let k = 0; k < twigs; k++) {
         const s = rng.range(0.05, 0.6);
         const h = along(parent, s);
-        // On a plume the lens comes close to, the finest hair is not combed: it stands off its branchlet and curls, each its own way.
-        const frizz = (habit === 'sweep' || habit === 'hang') && close;
+        // There the finest hair is not combed either: it stands off its branchlet and curls, each its own way.
         const e0 = frizz ? leave(h.t, 0.1, 0.42) : leave(h.t, 0.08, 0.3);
         const e2 = heading(h.t, e0, rng.range(0.5, 1.5));
         const curl = 0.35 + 0.7 * s;
@@ -463,7 +520,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   }
 
   const threads = new THREE.InstancedBufferGeometry();
-  const made = strip(close ? 5 : 3);
+  const made = strip(bladed ? 8 : close ? 5 : 3);
   threads.setAttribute('position', made.position);
   threads.setIndex(made.index);
   threads.setAttribute('aA', new THREE.InstancedBufferAttribute(new Float32Array(tA), 4));
@@ -471,6 +528,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   threads.setAttribute('aC', new THREE.InstancedBufferAttribute(new Float32Array(tC), 4));
   threads.setAttribute('aSway', new THREE.InstancedBufferAttribute(new Float32Array(tSway), 4));
   threads.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(tTint), 4));
+  threads.setAttribute('aFace', new THREE.InstancedBufferAttribute(new Float32Array(tFace), 4));
   threads.instanceCount = count;
   // A bush that is out of the frame is not drawn. The sphere holds it with its sway.
   const sphere = new THREE.Sphere(new THREE.Vector3(bush.x, bush.y + 0.3 * extent, bush.z), 1.9 * extent + 1);

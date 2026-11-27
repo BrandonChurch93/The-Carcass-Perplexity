@@ -17,6 +17,14 @@ const HERO_WEST = 4.6;
 /** Which of `BUSHES` stands on the south lip at the right edge of the wide lens. */
 const SOUTH = 6;
 
+/** Staged for shot breath-01 only: which of the bushes of the lip stay on the set as the few tufts of key breath-0 (the index in the list
+ *  of bushes as it is built in `create`), and how much of the sun comes through the mass there. */
+const WIDE_TUFTS: readonly number[] = [];
+const WIDE_GLOW = 0.3;
+const WIDE_SHADE = 0.6;
+/** Metres round the bush of the south lip within which the growth is part of its clump. */
+const SOUTH_CLUMP = 6;
+
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
 const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
@@ -107,7 +115,16 @@ export function create(ctx: Context): Piece {
   // A seedling whose anchor is under the water is not grown: nothing of this kind roots in the channel.
   for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall: tall * 0.7, lean: Math.atan2(-x, z), detail: 0.5, habit: 'fountain', full: 0.45 });
 
-  const grown: Grown[] = bushes.map((bush) => grow(bush, rng, floor));
+  // The two tall ones are grown as blades from a stream of their own. The stream of the rest is first run on as far as the two took of
+  // it when they were hair, so that every other bush on the lip is grown as it was.
+  const nearRng = ctx.rng('gill-plume-near');
+  const grown: Grown[] = bushes.map((bush, i) => {
+    if (i >= 2) return grow(bush, rng, floor);
+    const was = grow(bush, rng, floor, true);
+    was.threads.dispose();
+    was.stems.dispose();
+    return grow(bush, nearRng, floor);
+  });
 
   const rimRng = ctx.rng('gill-plume-rim');
   // The low ones on the plate are sprigs: a few stalks. The tall ones are fountains of brush.
@@ -136,17 +153,21 @@ export function create(ctx: Context): Piece {
     uSeconds: seconds,
     uSurge: surge,
     uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) },
+    uStagger: { value: 0 },
   };
   // Opaque and whole: the engine lays their depth first, and a strip behind another costs only that. Each bush has its own two
   // materials (one program for all of them), because its sway is worked from its own root.
   const materials: THREE.ShaderMaterial[] = [];
-  const meshes = (g: Grown, into: THREE.Group, glow = 1): void => {
+  const meshes = (g: Grown, into: THREE.Group, glow = 1, stagger = 0): { glow: { value: number }; shade: { value: number } } => {
     // `glow`: how much of the sun comes through its hair. The ones that hang into the pit are seen from above, in the pit's shade.
-    const own = { ...uniforms, uBush: { value: g.root }, uTall: { value: g.tall }, uGlow: { value: glow } };
+    const glowOf = { value: glow };
+    const shadeOf = { value: 1 };
+    const own = { ...uniforms, uBush: { value: g.root }, uTall: { value: g.tall }, uGlow: glowOf, uShade: shadeOf, uStagger: { value: stagger } };
     const threadMaterial = new THREE.ShaderMaterial({ vertexShader: THREAD_VERTEX, fragmentShader: THREAD_FRAGMENT, uniforms: own, side: THREE.DoubleSide });
     const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms: own });
     materials.push(threadMaterial, stemMaterial);
     into.add(new THREE.Mesh(g.threads, threadMaterial), new THREE.Mesh(g.stems, stemMaterial));
+    return { glow: glowOf, shade: shadeOf };
   };
 
   // The holdfasts: a knotted lump in the rock under every bush, lumpier than round, half sunk.
@@ -160,10 +181,20 @@ export function create(ctx: Context): Piece {
   const domeGroup = new THREE.Group();
   // The one on the south lip is cut by the right edge of the wide lens of breath-01, as in its picture: it is kept dark there, as the others are.
   const southGroup = new THREE.Group();
-  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : i === SOUTH ? southGroup : group, i < 2 ? 1.5 : i === 5 || i === SOUTH ? 0.4 : 1));
-  rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
+  // Staged for shot breath-01 alone: the wide lens has one dark mass on the lip, behind the wader, and a few tufts (key breath-0). The rest
+  // of the growth on the lip is off the set for that shot and stands in every other.
+  const lipGroup = new THREE.Group();
+  // The clump at the right edge of that lens is the one on the south lip with what stands round it: all of it stays as it is.
+  const bySouth = (i: number): boolean => {
+    const b = bushes[i] as Bush;
+    const s = bushes[SOUTH] as Bush;
+    return Math.hypot(b.x - s.x, b.z - s.z) < SOUTH_CLUMP;
+  };
+  const homeOf = (i: number): THREE.Group => (i < 2 ? heroGroup : i === SOUTH ? southGroup : WIDE_TUFTS.includes(i) || bySouth(i) ? group : lipGroup);
+  grown.forEach((g, i) => meshes(g, homeOf(i), i < 2 ? 1.5 : i === 5 || i === SOUTH ? 0.4 : 1, i < 2 ? 1 : 0));
+  const massGlow = rimGrown.map((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
   for (const g of hangGrown) meshes(g, hangGroup, 0.4);
-  group.add(rimGroup, hangGroup, heroGroup, domeGroup, southGroup);
+  group.add(rimGroup, hangGroup, heroGroup, domeGroup, southGroup, lipGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
@@ -188,7 +219,7 @@ export function create(ctx: Context): Piece {
     lumps.push(g);
     const m = new THREE.Mesh(g, holdfastMaterial);
     m.frustumCulled = false;
-    (rimBushes.includes(b) ? (rimBushes.indexOf(b) >= RIM_GROWTH.length ? domeGroup : rimGroup) : bushes.indexOf(b) < 2 ? heroGroup : bushes.indexOf(b) === SOUTH ? southGroup : group).add(m);
+    (rimBushes.includes(b) ? (rimBushes.indexOf(b) >= RIM_GROWTH.length ? domeGroup : rimGroup) : homeOf(bushes.indexOf(b))).add(m);
   }
   lump.dispose();
 
@@ -247,10 +278,10 @@ export function create(ctx: Context): Piece {
   // Only the bushes a lens comes close to have drops that can be seen.
   const nearOnes = grown.filter((_g, i) => (bushes[i] as Bush).detail >= 1);
   const dropGeometries = [dropsOf(nearOnes, 150), dropsOf([], 0), dropsOf(hangGrown, 90)];
-  const dropMaterial = new THREE.ShaderMaterial({
+  const dropMaterialOf = (stagger: number): THREE.ShaderMaterial => new THREE.ShaderMaterial({
     vertexShader: DROP_VERTEX,
     fragmentShader: DROP_FRAGMENT,
-    uniforms,
+    uniforms: { ...uniforms, uStagger: { value: stagger } },
     transparent: true,
     depthWrite: false,
     blending: THREE.CustomBlending,
@@ -260,8 +291,10 @@ export function create(ctx: Context): Piece {
     blendSrcAlpha: THREE.OneFactor,
     blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
   });
+  // The drops of the two tall ones leave limbs that move stalk by stalk, as those do.
+  const dropMaterials = [dropMaterialOf(1), dropMaterialOf(0)];
   [heroGroup, rimGroup, hangGroup].forEach((into, i) => {
-    const dropMesh = new THREE.Mesh(dropGeometries[i] as THREE.BufferGeometry, dropMaterial);
+    const dropMesh = new THREE.Mesh(dropGeometries[i] as THREE.BufferGeometry, dropMaterials[i === 0 ? 0 : 1] as THREE.ShaderMaterial);
     dropMesh.frustumCulled = false;
     dropMesh.renderOrder = 20;
     into.add(dropMesh);
@@ -295,6 +328,17 @@ export function create(ctx: Context): Piece {
       // two trees, and from the wide lens they were two dark lumps on the lip, where the pictures have low spreading brush: in those
       // two shots low domes stand in their place (the last two of the rim's bushes).
       const low = shown || wide;
+      lipGroup.visible = !wide;
+      // From the wide lens the mass is dark crimson, not lit through.
+      for (const m of massGlow) {
+        m.glow.value = wide ? WIDE_GLOW : 1;
+        m.shade.value = wide ? WIDE_SHADE : 1;
+      }
+      bushes.forEach((b, i) => {
+        if (i < 2 || homeOf(i) !== lipGroup) return;
+        rig.setDisc(discs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, wide ? 0 : 0.7);
+        rig.setShadow(discs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, wide ? 0 : 0.5);
+      });
       // The mounds at the rim are the dark red mass on the lip that the wide lens sees.
       rimGroup.visible = shown || wide;
       heroGroup.visible = !low;
@@ -327,7 +371,7 @@ export function create(ctx: Context): Piece {
       }
       for (const m of materials) m.dispose();
       for (const g of dropGeometries) g.dispose();
-      dropMaterial.dispose();
+      for (const m of dropMaterials) m.dispose();
       holdfastMaterial.dispose();
       for (const g of lumps) g.dispose();
     },
