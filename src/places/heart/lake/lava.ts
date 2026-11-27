@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import type { HeartContext } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { SEAMS, seamLine } from '../shared/anchors';
-import { AUTHORED, OWN as NET_OWN, type Net } from './net';
+import { AUTHORED, LINE_POOLS, OWN as NET_OWN, lineBend, type Net } from './net';
 import { MELT_GLSL, SHEET_GLSL } from './sheet';
 import { HEAT_GLSL } from './heat';
 
@@ -25,6 +25,7 @@ const POOLS: { seam: string; x: number; z: number; add: number; reach2: number }
   { seam: 'group', x: -403.4, z: 202.6, add: 1.25, reach2: 5.0 },
   { seam: 'nearA', x: -493.8, z: 225.6, add: 1.1, reach2: 4.0 },
   { seam: 'nearB', x: -491.6, z: 241.0, add: 1.1, reach2: 4.0 },
+  ...LINE_POOLS.map((pool) => ({ seam: 'line', ...pool })),
 ];
 
 const smooth = (a: number, b: number, x: number): number => {
@@ -37,7 +38,7 @@ const levelOf = (heat: number): number => {
   if (heat >= 1.3) return -0.2;
   const full = smooth(0.01, 0.04, heat);
   const k = smooth(0, 0.2, heat);
-  const low = 0.3 + (0.1 - 0.3) * full;
+  const low = 0.17 + (0.1 - 0.17) * full;
   const string = smooth(0.06, 0.075, heat) * (1 - smooth(0.105, 0.115, heat));
   const level = low + (0.08 - low) * k;
   return -(level + (0.045 - level) * string);
@@ -60,7 +61,19 @@ function ribbons(): Ribbon[] {
   for (const name of Object.keys(SEAMS)) {
     const shape = AUTHORED[name];
     if (!shape) continue;
-    out.push({ name, line: seamLine(name, name === 'group' ? 160 : 80), half: shape.half, lumps: shape.lumps, heat: shape.heat, speed: speeds[name] ?? 0.6 });
+    const line = seamLine(name, name === 'group' ? 160 : 80);
+    if (name === 'line') {
+      // The channel at the line runs left of its drawn line, as the net lays it.
+      const head = line[0] as [number, number];
+      const tail = line[line.length - 1] as [number, number];
+      const l = Math.hypot(tail[0] - head[0], tail[1] - head[1]) || 1;
+      line.forEach((p, i) => {
+        const k = lineBend(i / (line.length - 1)) / l;
+        p[0] -= (tail[1] - head[1]) * k;
+        p[1] += (tail[0] - head[0]) * k;
+      });
+    }
+    out.push({ name, line, half: shape.half, lumps: shape.lumps, heat: shape.heat, speed: speeds[name] ?? 0.6 });
   }
   for (const own of OWN) {
     const a = own.line[0] as [number, number];
@@ -72,7 +85,7 @@ function ribbons(): Ribbon[] {
   return out;
 }
 
-const MAX_POOLS = 4;
+const MAX_POOLS = 6;
 const TONGUE = { at: 25.4, half: 3.4 };
 
 function build(all: Ribbon[]): { geometry: THREE.BufferGeometry; pools: THREE.Vector4[] } {
@@ -412,7 +425,7 @@ void main() {
   // centimetre or two, and here and there, for a while, a tear opens between them and closes again.
   // From far the core is narrower and darker at its edge: a streak of yellow in dark skin, not a field of orange.
   float farAway = smoothstep(12.0, 20.0, length(vWorld.xz - cameraPosition.xz)) * onLine;
-  float coreTo = (0.16 + 0.3 * max(reachOpen, 0.35 * onLine)) * (1.0 - 0.45 * farAway);
+  float coreTo = (0.16 + 0.3 * max(reachOpen, 0.35 * onLine) + 0.25 * pool * onLine) * (1.0 - 0.45 * farAway);
   float present = max(smoothstep(-0.03, 0.03, leanMid - coreTo - 0.12 * (plateHash.x - 0.5)), inCoil);
   // The plates are welded into sheets and lie over one another at their rims: nothing glows inside a sheet. A plate burns only
   // where it meets the open melt: one rim, 2 to 5 cm wide.
@@ -556,6 +569,11 @@ void main() {
     float coil = textureGrad(tPour, coilAt * coilScale + 0.37, hx * coilScale, hy * coilScale).b;
     float furrow = 1.0 - smoothstep(0.3, 0.58, coil);
     float heatPlug = clamp(mix(0.22 + 0.2 * mid, 0.72 + 0.3 * mid, furrow) + 0.3 * plugHeat, 0.0, 1.0);
+    // In the slack of a pool of the line, and along its open tongue, the melt lies bare and broad, yellow white, and what skin
+    // there is rides on it as dark wrinkled islands with the cords of the sheet on them.
+    float broad = onLine * max(smoothstep(0.2, 0.6, pool), 0.55 * reachOpen);
+    float isle = smoothstep(0.5, 0.58, vnoise(coilAt * vec2(0.55, 1.5) + 41.0) + 0.3 * (coil - 0.45));
+    heatPlug = mix(heatPlug, mix(0.9 + 0.1 * mid, mix(0.06, 0.4, furrow * furrow), isle), broad);
     float heatSide = mix(0.08, 1.0, sideHeat) * mix(0.95, 0.65, smoothstep(0.4, 1.0, lean));
     float heat = mix(heatSide, heatPlug, inPlug);
     // Where the sheet is bare the melt still shows how it runs: lines drawn out along the stream and films of new skin a shade
