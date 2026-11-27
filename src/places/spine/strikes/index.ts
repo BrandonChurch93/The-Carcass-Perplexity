@@ -4,9 +4,10 @@
 import * as THREE from 'three';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
-import { breakdown, envelope, figure, restruck, strokeAt, timingOf, type Line } from './bolt';
+import { breakdown, envelope, figure, restruck, strokeAt, timingOf, type Line, type Strokes } from './bolt';
 import { createChannel } from './channel';
-import { WIND, WIND_SPEED, strikeTip } from '../shared/anchors';
+import { UNIT, WIND, WIND_SPEED, carcassBody, carcassView, step, strikeTip } from '../shared/anchors';
+import { cut, secondsInPlace } from '../../../film/cut';
 import { STRIKES, during, type StrikeSite } from './where';
 
 /** The fifth strike falls on the last frame of the long lens's shot, close before that lens: there its channel would stand as a white bar
@@ -67,6 +68,18 @@ const FUME_WIDE = 30;
 const FUME_GLOW = 0.5;
 const ROOT_WIDE = 1500;
 const ROOT_GLOW = 1.1;
+/** A strike far off in the storm, which the lens beside the dead one sees over the saddle (key spine-1): it comes to ground beyond the
+ * last spires, lights the cloud about its own head and nothing on the ridge. Where it stands from that lens: degrees to the right of
+ * its heading, metres off, metres over and under the lens for its head and its foot; and its two strokes, the second on the key. */
+const FAR_BEARING = 6.6;
+const FAR_OFF = 9000;
+const FAR_HEAD = 1250;
+const FAR_FOOT = -260;
+const FAR_STROKES: Strokes = { at: [0, 3 / 60], share: [1, 0.72], fore: null };
+const FAR_WIDE = 1150;
+/** Nine kilometres of the storm's air stand before it: its heart is violet, not white, and a tenth as hot. */
+const FAR_HEART = new THREE.Vector3(0.62, 0.47, 1);
+const FAR_CORE = 110;
 const ROOT_VERTEX = /* glsl */ `
 uniform vec3 uAt;
 uniform vec4 uLay;
@@ -237,6 +250,28 @@ export function create(ctx: Context): Piece {
   const wind = new THREE.Vector3(WIND[0], WIND[1], WIND[2]).multiplyScalar(WIND_SPEED / 26);
 
   const rootPicture = ctx.assets.texture('mat/litcloud.jpg', { kind: 'colour', repeat: false });
+  // The far strike of key spine-1: a channel and the cloud about its head. It is drawn with the first strike's part.
+  const farKey = (cut.keyFrames as Record<string, number>)['spine-1'];
+  const farSeconds = farKey === undefined ? -1e9 : secondsInPlace(UNIT, farKey) - (FAR_STROKES.at[1] as number);
+  const farFoot = step(carcassBody, carcassView + FAR_BEARING, FAR_OFF, FAR_FOOT);
+  const farSite: StrikeSite = { id: 'far', seconds: farSeconds, to: farFoot, rise: FAR_HEAD - FAR_FOOT, lean: [260, 0, -180], branch: null, spire: 0 };
+  const farLines = figure(ctx.rng('strikes/far'), farSite);
+  const farChannel = createChannel(farLines, ctx.rig.uniforms, lens, FAR_HEART, FAR_CORE, 1);
+  const farGroup = new THREE.Group();
+  farGroup.add(farChannel.group);
+  const farGlow = new THREE.Vector3();
+  const farDie = new THREE.Vector2();
+  {
+    const head = (farLines[0] as Line).points[0] as [number, number, number];
+    const at = new THREE.Vector3(head[0], head[1], head[2]).lerp(new THREE.Vector3(farFoot[0], farFoot[1], farFoot[2]), 0.08);
+    const card = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: ROOT_VERTEX, fragmentShader: ROOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, tRoot: { value: rootPicture }, uAt: { value: at }, uLay: { value: new THREE.Vector4(0.5 * FAR_WIDE, 0.2, -1, 0) }, uGlow: { value: farGlow }, uDie: { value: farDie } }, side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor }));
+    card.renderOrder = 11;
+    card.frustumCulled = false;
+    farGroup.add(card);
+  }
+  farGroup.visible = false;
+  ctx.scene.add(farGroup);
+
   const bolts: Bolt[] = STRIKES.map((site, index) => {
     const rng = ctx.rng(`strikes/${site.id}`);
     const lines = figure(rng, site);
@@ -306,7 +341,7 @@ export function create(ctx: Context): Piece {
     group.add(sparks);
 
     group.visible = false;
-    ctx.scene.add(ctx.parts.built(site.id, group));
+    ctx.scene.add(index === 0 ? ctx.parts.built(site.id, group, farGroup) : ctx.parts.built(site.id, group));
     // Where the flash is cast from: a point on the channel, and never lower over the tip than CAST_UP, so that level snow a kilometre
     // off is lit from above as the lit cloud lights it and not grazed.
     const cast = new THREE.Vector3().lerpVectors(tip, top, 0.28);
@@ -370,6 +405,21 @@ export function create(ctx: Context): Piece {
         // It bursts out with the stroke and thins over the next six seconds.
         for (const at of p.strikes) if (seconds > at) most = Math.max(most, (1 - Math.exp(-(seconds - at) / 0.04)) * Math.exp(-(seconds - at) / 6));
         p.source.strength = most * (p.source.radius < 10 ? 2 : 1);
+      }
+      {
+        // The far strike: its channel on its two strokes, and the cloud about its head coming up before the first and dying after the last.
+        const age = seconds - farSeconds;
+        const live = age > -0.1 && age < 0.6;
+        farGroup.visible = live;
+        if (live) {
+          const e = envelope(FAR_STROKES, age);
+          const level = 0.4 * Math.min(1.2, e.channel);
+          farChannel.env.set(level, strokeAt(FAR_STROKES, age) === 0 ? e.branch : 0.6 * level, 0, 0);
+          farChannel.group.visible = level > 0.0005;
+          const rising = age < 0 ? Math.max(0, 1 + age / PRE_OVER) : 0;
+          farGlow.copy(TINT).multiplyScalar(ROOT_GLOW * 2.2 * Math.max(Math.max(0, e.main - 0.09), 0.8 * e.glow, 0.6 * PRE_CLOUD * rising * rising));
+          farDie.set(Math.min(1, Math.max(0, 1 - Math.max(e.main, e.glow))), strokeAt(FAR_STROKES, age));
+        }
       }
       channelLight.radiance.set(0, 0, 0);
       cloudLight.radiance.set(0, 0, 0);

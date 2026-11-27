@@ -427,7 +427,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
       float turnP = az * 1.27324 + uTime * 0.0011;
       // (A long lens sees a few degrees of it: the picture is laid finer for it, or one bank filled the frame.)
       float finer = pow(seaLens, 0.6);
-      float downP = 0.03 + 3.3 * finer * tan(dip);
+      float downP = 0.13 + 3.0 * finer * tan(dip);
       vec2 uvLow = vec2(abs(fract(0.5 * turnP * finer) * 2.0 - 1.0), 1.0 - abs(fract(0.5 * downP) * 2.0 - 1.0));
       float bankP = dot(textureLod(tDeck, uvLow, 1.5).rgb, vec3(0.3, 0.5, 0.2)) / 0.135;
       farBank = mix(farBank, 0.15 + 0.95 * bankP * bankP, lowSeen);
@@ -456,7 +456,10 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     bool needFoot = gone > 0.003 || toWall > 0.003 || uPlate.w > 0.0;
     // (Read soft: read sharp, each mass of the sky's foot stood on the deck as an upright streak under itself, like a reflection in water.)
     // (Where the deck has climbed over the horizon, into the storm, it goes into the sky that stands behind it there.)
-    vec3 domeFar = needFoot ? skyCloud(ro, normalize(vec3(rd.x, max(rd.y, 0.0003), rd.z)), 2.5) : vec3(0.0);
+    // (On the dusk side a little over its foot: the foot itself is the dark under the band, and the deck ended there as a dark sea's horizon.)
+    vec3 domeFar = needFoot ? skyCloud(ro, normalize(vec3(rd.x, max(rd.y, mix(0.007, 0.0003, inStorm)), rd.z)), 2.5) : vec3(0.0);
+    // (And paler than that foot: the far deck is cloud seen through its own vapour, lighter than the near, never a dark level.)
+    if (needFoot) domeFar = mix(domeFar, SEA_COLD * vec3(0.6, 0.65, 0.78) + 0.22 * SEA_WARM, 0.6 * (1.0 - inStorm));
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.
     vec2 uvP = vec2(0.0);
     float plate = uPlate.w > 0.0 ? plateAt(az, -dip, uvP) : 0.0;
