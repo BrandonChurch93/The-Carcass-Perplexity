@@ -118,7 +118,9 @@ export function create(ctx: Context): Piece {
           stood.feet.forEach((foot, j) => {
             if (foot.wet < 0.02) return;
             // A leg that stands sends a faint ring as the animal shifts; one that has just come down or is drawn through the water sends strong ones.
-            ripples.add(foot.x, foot.z, 1.5, 0.3 + 0.5 * foot.carried, foot.since, seed + j * 1.9);
+            // Where the shank crosses the water's level the water is told of it: none while the foot is carried clear.
+            const inWater = Math.min(1, Math.max(0, (SEA_LEVEL + 0.02 - foot.y) / 0.05));
+            ripples.add(foot.x, foot.z, 1.5, 0.3 + 0.5 * foot.carried, foot.since, seed + j * 1.9, 26, 0.36, 0.034 * animal.b.k, inWater);
             // A foot that has just come down throws a crown of drops; each is where the time since it landed puts it.
             if (foot.since < 0.6) {
               for (let d = 0; d < 18; d++) {
@@ -141,7 +143,7 @@ export function create(ctx: Context): Piece {
           const sea = SEA_LEVEL;
           if (stood.tuft.y < sea + 0.35 && footing(stood.tuft.x, stood.tuft.z) < sea) {
             // The tuft is worked through the water: the water round it is never still.
-            ripples.add(stood.tuft.x, stood.tuft.z, 2.0, 0.75, 0.4, seed * 2.3, 21, 0.42);
+            ripples.add(stood.tuft.x, stood.tuft.z, 2.0, 0.75, 0.4, seed * 2.3, 21, 0.42, 0.2 * animal.b.k, Math.min(1, Math.max(0, (sea + 0.35 - stood.tuft.y) / 0.2)));
             // And it throws water: small drops in short arcs, a few at any moment, each where the time since it was thrown puts it.
             for (let d = 0; d < 26; d++) {
               const period = 0.3 + 0.45 * hash(seed + d * 4.7);
