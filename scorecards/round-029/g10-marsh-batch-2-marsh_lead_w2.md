@@ -17,3 +17,10 @@ MEASURED 2026-11-27 01:23 to 01:24 UTC, browser 147.0.7727.15: `718a24a`, `eab41
 - The tree was put back and built again after the test (no file under `src/` changed). 6 renders.
 
 Sent to the lead with the note `out/work/tmp/r29/note-marsh-tester.txt` at 01:26 UTC.
+
+## Result 2 · the cure, 01:32 to 01:38 UTC
+
+- The team's test machine (`film_chunk_renderer_1`, browser 147.0.7727.15, picture code of `1718ba08`), STATED by it: baseline, 2 byte results in 6 draws of 5930 (one draw differs at (153,182) and (156,183)); the lead's first candidate was skipped; with `718a24a`, `eab411d`, `c68339f` and `f1d8718` (which holds `3a28ee5`) 12 of 12 draws of 5930 are byte-equal; with the ground's `3a28ee5` alone, 6 results of 6, each pair differing by 2 to 8 pixels of 1 level. So the cure is the water's `f1d8718` (the derivatives and the grain reads after the shore's `discard` in `brine/shaders.ts`, and `brineShade`), which needs `3a28ee5` under it for `fieldAt` (the lead, 01:36 UTC).
+- The Builder's machine, MEASURED: the diff `4e84d7b5..435022a` under `src/` applied on main, built, frames 5930 and 5725 drawn six times each on two pages at the draft tier, 960x540: `DISTINCT byte results 1 ; distinct pixel results 1` for both (01:33 to 01:36 UTC). The tree was put back and built again after it. 12 renders.
+- The picture, base against cured at 5930, MEASURED: 1,316 of 518,400 pixels differ, 63 by more than 2 levels, 8 by more than 8, the largest 27. The same to the eye.
+- Merged into main as `9e217b12` at 01:37 UTC. `npm run gate -- --phase 6 --only G10` on it: pass at 01:38 UTC (54.6 s; frame 5930 with portable extensions only is pixel-identical to the same frame with all of them). Attempt 1 of 5.
