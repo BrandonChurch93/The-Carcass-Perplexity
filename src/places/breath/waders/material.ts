@@ -18,6 +18,7 @@ varying vec3 vRestN;
 uniform float uPixel;
 uniform float uMirror;
 uniform float uSea;
+uniform vec3 uVeiled;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
@@ -31,6 +32,8 @@ void main() {
   float far = length(cameraPosition - p);
   bool strand = aLook.x > 1.5 && aLook.x < 2.5;
   float least = strand ? 0.6 : 0.55;
+  // The one lit far off in the vapour is out of focus there: its legs and neck would be lost in the blur at a pixel wide.
+  least += 1.2 * uVeiled.z * step(length(p.xz - uVeiled.xy), 8.0);
   p += n * max(0.0, least * uPixel * far - aInfo.z);
   vWorld = p;
   vNormal = n;
@@ -46,7 +49,7 @@ void main() {
   if (uMirror > 0.5) p.y = 2.0 * uSea - p.y;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
   // Beyond sixty metres a mop is smaller than a pixel and, drawn at a pixel, is a red dot: there it is left off.
-  if (strand && far > 60.0) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+  if (strand && far > 60.0 + 90.0 * uVeiled.z * step(length(p.xz - uVeiled.xy), 8.0)) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
 }`;
 
 /** The skin cuts no holes in the film's own picture (only in the water's mirror), so its depth can be laid before the picture, where the fog reads it. */
@@ -65,6 +68,7 @@ varying vec3 vRestN;
 uniform float uSea;
 uniform float uPixel;
 uniform float uDead;
+uniform vec3 uVeiled;
 uniform float uMirror;
 uniform sampler2D tHide;
 uniform sampler2D tHideNh;
@@ -260,16 +264,16 @@ void main() {
     float under = clamp(vWet * 2.0 - 1.0, 0.0, 1.0);
     float along = u + 0.16 * (vnoise(vec2(u * 6.0, seed * 13.0)) - 0.5);
     vec3 flesh = mix(vec3(0.8, 0.62, 0.57), vec3(0.72, 0.5, 0.47), own);
-    vec3 rose = mix(vec3(0.66, 0.42, 0.37), vec3(0.76, 0.54, 0.46), tone);
-    vec3 blood = mix(vec3(0.42, 0.12, 0.11), vec3(0.56, 0.2, 0.17), tone);
+    vec3 rose = mix(vec3(0.66, 0.51, 0.46), vec3(0.78, 0.63, 0.55), tone);
+    vec3 blood = mix(vec3(0.27, 0.13, 0.12), vec3(0.4, 0.21, 0.18), tone);
     albedo = mix(flesh, rose, smoothstep(0.1, 0.55, along));
-    albedo = mix(albedo, blood, 0.6 * smoothstep(0.6, 1.0, along));
+    albedo = mix(albedo, blood, 0.7 * smoothstep(0.66, 1.0, along));
     // Ringed and blotched like a worm, not one even colour down its length.
     albedo *= 0.86 + 0.28 * vnoise(vec2(vUv.x * 70.0, seed * 7.0));
     // No two strands are one colour: some are pale and some dark with blood.
-    albedo *= mix(vec3(0.5, 0.42, 0.42), vec3(1.08), hash12(vec2(seed * 3.7, 9.0)));
+    albedo *= mix(vec3(0.66, 0.58, 0.56), vec3(1.08), hash12(vec2(seed * 3.7, 9.0)));
     // The thick ones at the heart of the mop are not one cord each: each is a hank of fine ones stuck together, and reads as strands.
-    float hank = smoothstep(0.012, 0.026, vInfo.z);
+    float hank = smoothstep(0.008, 0.02, vInfo.z);
     float lines = vnoise(vec2(vUv.y * 900.0 + 2.0 * vnoise(vec2(vUv.x * 9.0, seed)), vUv.x * 4.0 + seed));
     albedo *= mix(1.0, 0.55 + 0.9 * lines, hank);
     occ *= mix(1.0, 0.6 + 0.4 * smoothstep(0.3, 0.6, lines), hank);
@@ -280,10 +284,10 @@ void main() {
     albedo = mix(albedo, mix(vec3(0.05, 0.055, 0.02), vec3(0.12, 0.105, 0.04), tone), weed);
     rough = mix(0.5, 0.88, weed);
     // Far off the mop is one mass: no strand of it is seen for itself.
-    albedo = mix(mix(vec3(0.6, 0.3, 0.29), vec3(0.42, 0.2, 0.19), soaked), albedo, smoothstep(0.03, 0.008, px));
+    albedo = mix(mix(vec3(0.62, 0.42, 0.37), vec3(0.42, 0.25, 0.22), soaked), albedo, smoothstep(0.03, 0.008, px));
     wet = soaked * (0.55 + 0.45 * under);
     occ *= 0.72 + 0.28 * u;
-    thin = mix(mix(0.3, 0.75, smoothstep(0.15, 0.8, u)), 0.08, weed);
+    thin = mix(mix(0.3, 0.55, smoothstep(0.15, 0.8, u)), 0.08, weed);
   } else {
     // A leg: the thigh is the skin of the trunk; below the joint it is hard, scaled and grey with dried silt, the joints knotted and raw.
     float shank = smoothstep(0.36, 0.5, u + 0.08 * (blotch - 0.5));
@@ -339,12 +343,12 @@ void main() {
     thin *= 0.3;
   }
   albedo *= 1.0 - (0.62 - 0.44 * tendril) * wet;
-  rough = mix(rough, mix(0.22, max(rough, 0.66), tendril), wet);
+  rough = mix(rough, mix(0.22, max(rough, 0.45), tendril), wet);
   // The slope is taken for every pixel, not behind a test that differs from one pixel to the next.
   vec3 turned = relief(vWorld, n, height);
   if (mid > 0.01 && tendril < 0.5) n = turned;
   // The mop is matted: it takes the light as one wet mass, not strand by strand.
-  if (tendril > 0.5) n = normalize(mix(n, v, 0.4));
+  if (tendril > 0.5) n = normalize(mix(n, v, 0.25));
 
   // The shade an animal throws on the water under it is not on the animal: the light is asked for above the reach of that shade.
   vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, rough, occ);
@@ -366,7 +370,10 @@ void main() {
   vec3 through = mix(vec3(1.0, 0.52, 0.36), vec3(1.0, 0.5, 0.36), tendril);
   // A strand is thin all through, not only at its edge.
   edge = mix(edge, 0.5, tendril);
-  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.28, tendril));
+  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.17, tendril));
+  // Staged: the sun breaks through on the one far off in the vapour, so it is paler than the vapour it stands in.
+  float veil = uVeiled.z * smoothstep(8.0, 5.0, length(vWorld.xz - uVeiled.xy));
+  colour = mix(colour, max(colour * 8.0, (0.66 * albedo + vec3(0.2, 0.16, 0.14) * (1.0 - tendril)) * fogColour * 15.0 * (0.82 + 0.18 * n.y) * (0.8 + 0.2 * occ)), veil);
   if (uMirror > 0.5) {
     gl_FragColor = vec4(colour * (1.0 - uSolo), 1.0);
     return;

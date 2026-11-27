@@ -51,7 +51,7 @@ void main() {
   float w0 = fbm(q);
   n = normalize(n + 1.6 * vec3(w0 - fbm(q + vec2(0.3, 0.0)), 0.0, w0 - fbm(q + vec2(0.0, 0.3))));
   float crease = smoothstep(0.3, 0.55, w0);
-  vec3 albedo = mix(vec3(0.11, 0.04, 0.045), vec3(0.42, 0.21, 0.2), fold) * (0.8 + 0.4 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0)) * (0.4 + 0.6 * crease);
+  vec3 albedo = mix(vec3(0.1, 0.03, 0.035), vec3(0.46, 0.2, 0.19), fold) * (0.8 + 0.4 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0)) * (0.4 + 0.6 * crease);
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.28, 0.3 + 0.7 * fold);
   // Under the bush the lit rock throws its warm light back up into it.
   colour += albedo * uSunColour * (0.07 * sunAt(vec3(vWorld.x, vWorld.y + 4.0, vWorld.z)) * (0.6 - 0.4 * n.y));
@@ -78,10 +78,10 @@ export function create(ctx: Context): Piece {
     // The farther stops short of the right third of that frame, which is the pit's and the steam's; the nearer is kept low beside it.
     // Staged: the one on the south-west lip stands where the lens of key breath-4 now does. It is rooted five metres to that lens's
     // left and behind it, out of its frame; what hangs into that frame is grown for that shot alone (HANG).
-    const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] - 0.55, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
+    const [x, z] = i === 1 ? [-36.31, -1.13] : i === 0 ? [at[0] - 1.17, at[1] - 2.1] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
     // The one on the south-west lip is by the wide lens: there it is a low fountain, not a tall plume in the corner of that frame.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.17 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 0.8 } : i === 5 ? { full: 0.5 } : {}) });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.17 : i === 0 ? tall * 1.3 : tall, lean: i === 1 ? Math.atan2(0.35, 0.94) : Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 1.0 } : i === 1 ? { full: 1.3 } : i === 5 ? { full: 0.5 } : {}) });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
@@ -156,7 +156,7 @@ export function create(ctx: Context): Piece {
   const hangGroup = new THREE.Group();
   const heroGroup = new THREE.Group();
   const domeGroup = new THREE.Group();
-  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : group));
+  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : group, i < 2 ? 1.5 : 1));
   rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
   for (const g of hangGrown) meshes(g, hangGroup, 0.4);
   group.add(rimGroup, hangGroup, heroGroup, domeGroup);
@@ -219,7 +219,7 @@ export function create(ctx: Context): Piece {
       for (const tip of open) {
         // They gather: the locks of one part of the bush run with water and their neighbours hold none. Most are small, a few heavy.
         const cell = Math.sin(Math.floor(tip.a[0] * 2.6) * 12.9898 + Math.floor(tip.a[1] * 2.6) * 78.233 + Math.floor(tip.a[2] * 2.6) * 37.719) * 43758.5453;
-        const run = cell - Math.floor(cell) < 0.3 ? 3.3 : 0;
+        const run = cell - Math.floor(cell) < 0.4 ? 2.5 : 0;
         if (drops.next() > (run * share) / Math.max(1, open.length)) continue;
         const every = drops.range(2.2, 8);
         const offset = drops.range(0, 11);
@@ -242,7 +242,7 @@ export function create(ctx: Context): Piece {
   };
   // Only the bushes a lens comes close to have drops that can be seen.
   const nearOnes = grown.filter((_g, i) => (bushes[i] as Bush).detail >= 1);
-  const dropGeometries = [dropsOf(nearOnes, 45), dropsOf([], 0), dropsOf(hangGrown, 90)];
+  const dropGeometries = [dropsOf(nearOnes, 150), dropsOf([], 0), dropsOf(hangGrown, 90)];
   const dropMaterial = new THREE.ShaderMaterial({
     vertexShader: DROP_VERTEX,
     fragmentShader: DROP_FRAGMENT,
