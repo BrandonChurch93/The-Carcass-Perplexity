@@ -260,7 +260,9 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       const g = on(c, v);
       const d0 = tip ? g.t : leave(g.t, 0.16, 0.5);
       const L = long2 * scale * rng.range(0.55, 1.25) * (tip ? 1.2 : 1 - 0.35 * v);
-      const d1 = heading(g.t, d0, (habit === 'sweep' ? rng.range(0.15, 0.8) + 0.9 * v : rng.range(0.35, 1.1) + 0.5 * v));
+      const d1h = heading(g.t, d0, (habit === 'sweep' ? rng.range(0.15, 0.8) + 0.9 * v : rng.range(0.35, 1.1) + 0.5 * v));
+      // On a plume the lens comes close to, an end does not hang straight: it curls under, back toward the limb it left.
+      const d1 = habit === 'sweep' && close && !tip ? unit([d1h[0] - 0.4 * g.t[0], d1h[1] - 0.15, d1h[2] - 0.4 * g.t[2]]) : d1h;
       const tone = Math.min(0.999, Math.max(0, tone0 + rng.range(-0.2, 0.2)));
       const u1 = g.u + 0.22;
       // A branchlet that carries filaments does not tremble on its own: its filaments are rooted on where it is.
@@ -277,7 +279,8 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
         const frizz = habit === 'sweep' && close;
         const e0 = frizz ? leave(h.t, 0.1, 0.42) : leave(h.t, 0.08, 0.3);
         const e2 = heading(h.t, e0, rng.range(0.5, 1.5));
-        const e1 = frizz ? unit([e2[0] + rng.range(-0.32, 0.32), e2[1] + rng.range(-0.45, 0.1), e2[2] + rng.range(-0.32, 0.32)]) : e2;
+        const curl = 0.35 + 0.7 * s;
+        const e1 = frizz ? unit([e2[0] - curl * h.t[0] + rng.range(-0.32, 0.32), e2[1] + rng.range(-0.45, 0.1), e2[2] - curl * h.t[2] + rng.range(-0.32, 0.32)]) : e2;
         const us = g.u + 0.22 * s;
         const child = lay(h.p, e0, e1, L * rng.range(0.55, 1.0) * (1 - 0.5 * s), half3 * rng.range(0.8, 1.3) * (close ? 1 : 1.5), Math.min(0.999, Math.max(0, tone + rng.range(-0.12, 0.12))), us, us + 0.1, rng.range(0, 6.283), phase, 3);
         if (k === 0) tipAt.push(child);

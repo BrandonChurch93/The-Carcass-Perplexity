@@ -217,7 +217,7 @@ void main() {
   // The flesh is sinew: cords run along it, mauve on their backs and wine in the creases between them, with a vein here and there.
   float cords = 0.5 + 0.5 * sin(vVane.y * 19.0 + vVane.z + 2.5 * vnoise(vec2(vVane.x * 5.0 + vVane.z, vVane.y * 2.0)));
   float vein = smoothstep(0.12, 0.0, abs(vnoise(vec2(vVane.x * 4.0 + vVane.z * 3.0, vVane.y * 5.0)) - 0.5));
-  vec3 fleshy = mix(vec3(0.09, 0.022, 0.03), vec3(0.27, 0.065, 0.07), strings * (0.35 + 0.65 * cords));
+  vec3 fleshy = mix(vec3(0.13, 0.035, 0.04), vec3(0.46, 0.2, 0.19), strings * (0.35 + 0.65 * cords));
   fleshy = mix(fleshy, vec3(0.2, 0.035, 0.07), 0.5 * vein);
   vec3 albedo = mix(dark, fleshy, flesh * (0.55 + 0.45 * strings)) * (1.0 - 0.45 * knots);
   n = normalize(n + (0.25 * (strings - 0.5) + 0.3 * flesh * (cords - 0.5)) * cross(n, vec3(0.0, 1.0, 0.0)));
