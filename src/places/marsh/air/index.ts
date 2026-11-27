@@ -28,12 +28,13 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('air/steam');
   const lean: [number, number] = [-0.5, -0.12];
   const main = bearingDir(300);
+  // (Narrow: three wide ones ran together, from the first lens, into one even wedge of grey with no form in it.)
   // Narrow columns over the seeps, dense at the foot and thinning as they climb, each set where the three near lenses see it as a
   // column and none stands in it: by the west bank, over the left of the pool as the pool's lens sees it, and a lesser one. (A column set
   // near the pool's lens stood as a hard white wedge in the first lens: before that lens the pool has its low sheets only.)
-  own.push({ at: [-7.1, 0, -5.1], radius: 1.4, strength: 0.8, rise: 12, kind: 'steam', lean });
-  own.push({ at: [-2.5, 0, -6.5], radius: 1.3, strength: 0.55, rise: 10, kind: 'steam', lean });
-  own.push({ at: [0.5, 0, -7.5], radius: 0.9, strength: 0.35, rise: 6, kind: 'steam', lean });
+  own.push({ at: [-7.1, 0, -5.1], radius: 0.85, strength: 0.62, rise: 9, kind: 'steam', lean });
+  own.push({ at: [-2.5, 0, -6.5], radius: 0.75, strength: 0.4, rise: 7, kind: 'steam', lean });
+  own.push({ at: [0.5, 0, -7.5], radius: 0.55, strength: 0.22, rise: 4, kind: 'steam', lean });
   // The vapour of the small dome's seep, as the pool's lens has it at its left hand: a thin wisp no higher than a stalk's knee, left of the domes, which stay dark. It
   // stands only while that lens looks (setTime): from the first lens, high over the pool, the same vapour was a hard white wedge.
   const seep: SteamSource = { at: [SMALL_DOME[0] - 0.75, 0, SMALL_DOME[1] + 0.05], radius: 0.4, strength: 0, rise: 1.3, kind: 'steam', lean };

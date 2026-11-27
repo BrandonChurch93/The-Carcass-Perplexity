@@ -44,11 +44,11 @@ float duskAt(float t) {
 ${DUSK_SHOTS.map((shot) => `  d = mix(d, ${shot.share.toFixed(4)}, step(${shot.from.toFixed(5)}, t));`).join('\n')}
   return d;
 }`;
-// The lenses that stand low and close on the animals see the distance go out in the vapour of the flats: their pictures have no far
+// The lenses that stand low and close (on the colony, the pool and the animals) see the distance go out in the vapour of the flats: their pictures have no far
 // flats and no far hills, only a warm grey in which the nearer stalks stand faint. From the place's second `from` the air beyond the
 // animals takes up to `depth` (an optical depth) of what lies behind it, coming on between `reach` metres, and gives `light` for it.
 // Nothing of it lies between the lens and the animals. It changes on a cut and never inside a shot.
-export const SWALLOW = { shots: [{ from: (6263 - 5618) / 60, depth: 1.3 }, { from: (6586 - 5618) / 60, depth: 0.3 }], reach: [20, 140], light: [0.36, 0.33, 0.35] };
+export const SWALLOW = { shots: [{ from: (5833 - 5618) / 60, depth: 0.6 }, { from: (6048 - 5618) / 60, depth: 0.5 }, { from: (6263 - 5618) / 60, depth: 1.3 }, { from: (6586 - 5618) / 60, depth: 0.3 }], reach: [20, 140], light: [0.36, 0.33, 0.35] };
 // The cast shade of what stands over the ground: ways up into the sky, reads on each, reach in metres as a share of the distance, depth.
 export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.68 };
 
@@ -392,10 +392,12 @@ void main() {
         cover *= smoothstep(uClear[0].z, uClear[0].z + 7.0, length(p.xz - uClear[0].xy)) * smoothstep(uClear[1].z, uClear[1].z + 7.0, length(p.xz - uClear[1].xy));
         if (cover < 0.004) continue;
         // Carried downwind at the pace of a walk, the upper sheets faster than the lower; pushed about by a second, slower field.
-        vec2 at = p.xz - wind * uTime * (0.34 + 0.16 * fl);
-        vec2 push = (textureLod(tNoise, vec3(at / 23.0, 0.13 * fl + uTime * 0.017), 0.0).ga - 0.5) * 5.0;
-        float big = textureLod(tNoise, vec3((at + push) / 9.5, 0.21 * fl + uTime * 0.03), 0.0).g;
-        float small = textureLod(tNoise, vec3((at + push * 1.6) / 2.7, 0.33 * fl - uTime * 0.05), 0.0).b;
+        // (One sheet's wisps stand nearly over the next one's, a little downwind: together they are plumes that lean, with clear brine
+        // between them. Sheets torn each its own way lay one over another into an even film, a flat soft card.)
+        vec2 at = p.xz - wind * (uTime * (0.34 + 0.05 * fl) + 1.1 * y);
+        vec2 push = (textureLod(tNoise, vec3(at / 23.0, 0.13 + 0.04 * fl + uTime * 0.017), 0.0).ga - 0.5) * 5.0;
+        float big = textureLod(tNoise, vec3((at + push) / 9.5, 0.21 + 0.05 * fl + uTime * 0.03), 0.0).g;
+        float small = textureLod(tNoise, vec3((at + push * 1.6) / 2.7, 0.33 + 0.09 * fl - uTime * 0.05), 0.0).b;
         float wisp = smoothstep(0.66, 0.92, big * 0.72 + small * 0.4 + 0.1 * min(cover, 1.0));
         if (wisp <= 0.0) continue;
         // How much of a sheet the view crosses: more the flatter it looks along it, and nothing where a solid stands in it.
@@ -476,19 +478,21 @@ void main() {
     // It has no side: it thins away to either hand, and what is seen of it is slanting trails in veils of unlike weight, each veil
     // its own width and its own height. The veils walk with the shaft, change as they go, and their trails come down.
     float veils = textureLod(tNoise, vec3(lean * 2.3 + own, el * 0.9 + uTime * 0.018, 0.4 + uTime * 0.03), 0.0).g;
-    float torn = textureLod(tNoise, vec3(lean * 7.0 + uTime * 0.005, el * 2.6 + 0.3 + uTime * 0.05, 0.8 + uTime * 0.04), 0.0).b;
+    float torn = textureLod(tNoise, vec3(lean * 7.0 + uTime * 0.005, el * 2.6 + 0.3 + uTime * 0.05, 0.8 + uTime * 0.04 + lean * 1.47), 0.0).b;
     // The trails: broad ones a degree or two across, which a small screen still shows, and fine ones inside them. They are the
     // lesser part of the veil: where the gaps between them are narrow, the gaps are what is seen, as pale beams.
-    float broad = textureLod(tNoise, vec3(lean * 15.0 + own * 3.0, el * 0.22 + uTime * 0.02, 0.7 + uTime * 0.01), 0.0).g;
-    float fine = textureLod(tNoise, vec3(lean * 58.0, el * 0.5 + uTime * 0.045, 0.13), 0.0).b;
+    // (The noise is a tile, and a trail is a small part of it: each field slides through the tile's depth as it goes along the horizon,
+    // so that no trail comes again a tile further on. Read flat, the veil was a comb of the same few teeth.)
+    float broad = textureLod(tNoise, vec3(lean * 15.0 + own * 3.0, el * 0.22 + uTime * 0.02, 0.7 + uTime * 0.01 + lean * 2.55), 0.0).g;
+    float fine = textureLod(tNoise, vec3(lean * 58.0, el * 0.5 + uTime * 0.045, 0.13 + lean * 9.86), 0.0).b;
     // The trails come down: each is made of heavier and lighter lengths, and those fall the height of the veil in two and a half seconds.
-    float fall = textureLod(tNoise, vec3(lean * 31.0 + 0.4, el * 12.0 + uTime * 0.6, 0.37 + uTime * 0.02), 0.0).g;
-    float streaks = smoothstep(0.3, 0.75, broad * 0.24 + fine * 0.26 + fall * 0.5);
+    float fall = textureLod(tNoise, vec3(lean * 31.0 + 0.4, el * 12.0 + uTime * 0.6, 0.37 + uTime * 0.02 + lean * 5.89), 0.0).g;
+    float streaks = smoothstep(0.3, 0.75, broad * 0.14 + fine * 0.36 + fall * 0.5);
     float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
     // It hangs from the belly of its cloud, whole under it and thinner as it comes down: much of it never reaches the flats.
     // (Its top is the cloud's belly, soft and a little uneven; each trail is its own length, and few come all the way down.)
     float top = RAIN_TOP * (0.85 + 0.4 * (veils - 0.5));
-    float reachDown = 0.3 + 0.6 * textureLod(tNoise, vec3(lean * 23.0 + 0.7, 0.21 + uTime * 0.05, 0.6 + uTime * 0.01), 0.0).g;
+    float reachDown = 0.3 + 0.6 * textureLod(tNoise, vec3(lean * 61.0 + 0.7, 0.21 + uTime * 0.05 + lean * 7.93, 0.6 + uTime * 0.01 + lean * 14.03), 0.0).g;
     float base = smoothstep(top, top * 0.55, el) * mix(reachDown, 1.0, smoothstep(0.0, top * 0.45, el)) * smoothstep(-0.004, 0.012, el);
     rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.66 + 0.5 * streaks);
   }
