@@ -247,7 +247,7 @@ export function create(ctx: Context): Piece {
       const grown = anchored || lowly ? wild.range(0.86, 1.14) : cls < 0.15 ? wild.range(1.25, 1.65) : cls < 0.7 ? wild.range(0.85, 1.2) : cls < 0.9 ? wild.range(0.55, 0.8) : wild.range(0.3, 0.5);
       const grow = backdrop ? Math.min(grown, 1.15) : grown;
       // Short clumps, not groves: what no key's lens stands by is grown lower, each by its own measure.
-      const squat = anchored || lowly ? 1 : 0.55 + 0.35 * ((seed * 67.1) % 1);
+      const squat = anchored || lowly ? 1 : 0.72 + 0.28 * ((seed * 67.1) % 1);
       const tall = s.h * (0.45 + 0.75 * r1) * grow * squat;
       const girth = anchored ? wild.range(0.95, 1.08) : Math.pow(grow, 0.5) * wild.range(0.95, 1.35);
       const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * r3 * girth;
@@ -276,7 +276,7 @@ export function create(ctx: Context): Piece {
       // The ones at the left of the wallowers' picture end inside its frame, each under an open head that weeps into it.
       const from3 = Math.hypot(s.x - k3[0], s.z - k3[1]);
       const framed = from3 < 12.5 && s.kind !== 2 && w.h > 1.8;
-      if (framed) w.h = from3 < 7 ? 1.4 + 0.4 * ((seed * 7.7) % 1) : 2.5 + 0.3 * ((seed * 7.7) % 1);
+      if (framed) w.h = from3 < 7 ? 1.15 + 0.7 * ((seed * 7.7) % 1) : 2.2 + 0.7 * ((seed * 7.7) % 1);
       if (!anchored) {
         // No two alike: from its own seed, so that what `wild` gives the others stays what it gave, a stalk leans further and may kink where it did not.
         w.lean += 0.3 * Math.pow((seed * 23.1) % 1, 2);
@@ -289,8 +289,12 @@ export function create(ctx: Context): Piece {
       // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
       if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
       if (framed) {
-        const turn = -0.2 + 0.7 * ((seed * 3.3) % 1);
-        w.cards = [[turn, 0.4, 0.5, 1.2, 0, 0, 0], [turn, 0.6, 0.55, 0.2, 0, 0.1, 0], [turn - 0.8, 0.8, 0.4, 0.2, 0, 0.3, 0.3]];
+        // Each its own: the size of the head, how far it hangs, which way it is turned, and whether it has a third lock at all.
+        const turn = -0.6 + 1.5 * ((seed * 3.3) % 1);
+        const big = 0.6 + 0.8 * ((seed * 19.7) % 1);
+        const hangs = 0.5 + 1.2 * ((seed * 43.1) % 1);
+        w.cards = [[turn, 0.4 * hangs, 0.5 * big, 1.2, 0, 0, 0], [turn, 0.6 * hangs, 0.55 * big, 0.2, 0, 0.1, 0]];
+        if ((seed * 61.3) % 1 < 0.6) w.cards.push([turn - 0.8, 0.8 * hangs, 0.4 * big, 0.2, 0, 0.3, 0.3]);
       }
       // A fork: a second trunk that leaves this one part of the way up, goes out and turns up.
       if (!lowly && tall > 1.5 && wild.next() < 0.2 && !anchored) {
@@ -379,22 +383,25 @@ export function create(ctx: Context): Piece {
       for (const w of wilds.filter((v) => v.foot && v.kind !== 2 && v.h > 1.2 && v.low === 0 && v.cards.length > 0)) {
         // Round the seep they stand thickest: its key's picture has a thicket there.
         const dense = Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) < 45;
-        const n = dense ? 3 + thick.int(3) : 1 + thick.int(3);
+        // In clumps with room between them: one stalk in three stands alone.
+        const n = thick.next() < 0.33 ? 0 : dense ? 1 + thick.int(3) : Math.min(2, 1 + thick.int(3));
         for (let k = 0; k < n; k++) {
           const a = thick.range(0, TAU);
-          const d = thick.range(0.12, 0.75) * (dense ? 2.4 : 1);
+          const d = thick.range(0.12, 0.75) * (dense ? 1.2 : 1);
           const x = w.x + Math.cos(a) * d;
           const z = w.z + Math.sin(a) * d;
           const yaw = a + thick.range(-1.2, 1.2);
-          const h = w.h * thick.range(0.3, 1.05);
+          const part = thick.range(0.45, 1.05);
+          const h = w.h * part;
           const state = thick.next();
-          const kind = state < (dense ? 0.17 : 0.24) ? 2 : state < (dense ? 0.29 : 0.38) ? 1 : 0;
+          // The red is at the top of a clump: a short one under the heads of its kin is a bare stick or a bud more often than a head.
+          const kind = part < 0.6 ? (state < 0.45 ? 2 : state < 0.75 ? 1 : 0) : state < (dense ? 0.12 : 0.2) ? 2 : state < (dense ? 0.22 : 0.32) ? 1 : 0;
           const kinks = thick.next() < 0.6;
           const level = levelAt(x, z);
           const c: Wild = {
-            ...w, x, y: Math.abs(level - w.y) < 0.3 ? Math.min(level, w.y + 0.05) : w.y, z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: thick.range(0.05, 0.55), R: w.R * thick.range(0.45, 0.8),
+            ...w, x, y: Math.abs(level - w.y) < 0.3 ? Math.min(level, w.y + 0.05) : w.y, z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: thick.range(0.03, 0.32), R: w.R * thick.range(0.6, 0.9),
             kind, phase: thick.range(0, TAU), seed: thick.next(), bowA: thick.range(0, TAU), bowM: thick.range(0.05, 0.3),
-            kinkT: kinks ? thick.range(0.25, 0.8) : 2, kinkM: kinks ? thick.range(0.15, 0.5) : 0, kinkA: thick.range(0, TAU), swayA: thick.range(0, TAU),
+            kinkT: kinks ? thick.range(0.25, 0.8) : 2, kinkM: kinks ? thick.range(0.08, 0.3) : 0, kinkA: thick.range(0, TAU), swayA: thick.range(0, TAU),
             age: kind === 2 ? 2 : thick.range(0, 0.6), stain: thick.range(0.12, 1.1), uvo: thick.range(0, 2), fork: [0, 0, 0], collar: thick.range(0.5, 1.2), cards: [], foot: true,
           };
           if (kind !== 2) c.cards = [[thick.range(0, TAU), 0.3, (0.8 + 0.35 * thick.next()) * headFor(h) * (kind === 1 ? 0.5 : 1), 0.2, 0, thick.next() < 0.3 ? thick.range(0.2, 0.6) : 0, thick.next() < 0.15 ? 0.5 : 0, 0]];
@@ -403,8 +410,8 @@ export function create(ctx: Context): Piece {
       }
     }
     {
-      // STAGED for the lens at the seep: its key's picture has a dense band of stalks on the far shore of the pool, of every height, most
-      // under a red head. They stand in clumps on the ground there, none in the brine.
+      // STAGED for the wide of the marsh: clumps of tall upright stalks on the shores to either side of the seep pool, each under a full red
+      // head. Cast over the pool and its sides from the lens at the seep; those that fall in the brine are not grown, which is most of them.
       const band = ctx.rng('stalks-band');
       const like = wilds.find((v) => v.foot && v.kind === 0 && v.low === 0 && v.cards.length > 0);
       for (let c = 0; like && c < 20; c++) {
@@ -425,7 +432,50 @@ export function create(ctx: Context): Piece {
           const kind = state < 0.16 ? 2 : state < 0.27 ? 1 : 0;
           const kinks = band.next() < 0.5;
           const seed = band.next();
-          const head = (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
+          const head = 1.25 * (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
+          const turn = band.range(0, TAU);
+          // Spaced groups of a few, not a thicket: fewer than half of those cast are grown.
+          if (seed > 0.36 || ctx.rig.land.height(x, z) < -0.1) continue;
+          wilds.push({
+            ...like, x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: 0.6 * band.range(0.03, 0.45), R: band.range(0.02, 0.042) * Math.pow(h / 2.2, 0.4),
+            kind, phase: band.range(0, TAU), seed, bowA: band.range(0, TAU), bowM: band.range(0.04, 0.28),
+            kinkT: kinks ? band.range(0.25, 0.8) : 2, kinkM: kinks ? 0.6 * band.range(0.12, 0.45) : 0, kinkA: band.range(0, TAU), swayA: band.range(0, TAU),
+            age: kind === 2 ? 2 : band.range(0, 0.7), stain: band.range(0.12, 1.1), uvo: band.range(0, 2), fork: [0, 0, 0], collar: band.range(0.5, 1.2),
+            cards: kind === 2 ? [] : [[turn, 0.3, head, 0.2, 0, 0, band.next() < 0.12 ? 0.5 : 0, 0]], foot: true, bare: false,
+          });
+        }
+      }
+    }
+    {
+      // STAGED for the lens at the seep: its key's picture has a dense band of stalks on the far shore of the pool, of every height, most
+      // under a red head. They stand in clumps on the ground there, none in the brine.
+      const band = ctx.rng('stalks-band');
+      const like = wilds.find((v) => v.foot && v.kind === 0 && v.low === 0 && v.cards.length > 0);
+      for (let c = 0; like && c < 24; c++) {
+        // Thickest and reddest along the shore, thinning into the haze behind it.
+        const back = Math.pow(band.next(), 2);
+        const bearing = band.range(-0.5, 0.5);
+        // The pool is long: its far shore is found, not assumed, along this clump's own bearing from the lens.
+        let shore = 11.5;
+        while (shore < 34 && ctx.rig.land.height(K1_AT[0] + (K1_DIR[0] - K1_DIR[1] * bearing) * shore, K1_AT[1] + (K1_DIR[1] + K1_DIR[0] * bearing) * shore) < -0.03) shore += 0.5;
+        const ahead = shore + 0.4 + 9 * back;
+        const across = bearing * ahead;
+        const cx = K1_AT[0] + K1_DIR[0] * ahead - K1_DIR[1] * across;
+        const cz = K1_AT[1] + K1_DIR[1] * ahead + K1_DIR[0] * across;
+        const grows = band.range(0.55, 1.2);
+        const n = 2 + band.int(6) + (back < 0.25 ? 2 : 0);
+        for (let k = 0; k < n; k++) {
+          const a = band.range(0, TAU);
+          const d = band.range(0.1, 1.5);
+          const x = cx + Math.cos(a) * d;
+          const z = cz + Math.sin(a) * d;
+          const yaw = band.range(0, TAU);
+          const h = grows * band.range(0.9, 2.6);
+          const state = band.next();
+          const kind = state < 0.06 + 0.16 * back ? 2 : state < 0.15 + 0.2 * back ? 1 : 0;
+          const kinks = band.next() < 0.5;
+          const seed = band.next();
+          const head = (1.25 - 0.5 * back) * (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
           const turn = band.range(0, TAU);
           if (ctx.rig.land.height(x, z) < -0.1) continue;
           wilds.push({
@@ -600,9 +650,9 @@ export function create(ctx: Context): Piece {
       if (s.kind === 2) continue;
       if (s.kind !== 1) perches.push(lineAt(w, 1));
       clings.push(w);
-      const comb = want + own.range(-0.3, 0.3);
+      const comb = want + own.range(-0.7, 0.7);
       plumeDrawn(w, own);
-      plumeOf(blades, beads, w, ctx.rng('stalks-plume-' + closeW.length), (s.kind === 0 ? 0.52 : s.kind === 3 ? 0.46 : 0.6) * s.size, comb);
+      plumeOf(blades, beads, w, ctx.rng('stalks-plume-' + closeW.length), (s.kind === 0 ? 0.52 : s.kind === 3 ? 0.46 : 0.6) * s.size * (0.75 + 0.5 * ((seed * 71.3) % 1)), comb);
     }
     closeSet.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 28, 2), frondMesh(ctx, growth, blades, 24, { wet: 1 }), dropMesh(ctx, growth, beads));
     // Seen from the other shots they are far off, and are made as the far ones are.

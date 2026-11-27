@@ -217,10 +217,10 @@ void main() {
   float ringF = ringQ - ringId;
   float ringK = (0.3 + 0.7 * step(0.33, fract(sin(ringId * 12.9898 + seed * 78.233) * 43758.5453))) * byLens;
   float side = smoothstep(0.25, 0.65, fbm(vec2(vUv.x * 3.0 + seed * 3.0, vUv.y * 0.8)));
-  float ran = smoothstep(0.3 + 0.5 * (1.0 - side), 0.88, ringF + 0.16 * (tongue - 0.5));
-  albedo *= mix(vec3(1.0), vec3(1.05, 0.95, 0.84), byLens);
-  albedo = mix(albedo, mix(vec3(0.6, 0.3, 0.12), vec3(0.4, 0.15, 0.07), tongue) * (0.7 + 0.6 * luma), 0.92 * ran * (0.35 + 0.65 * side) * ringK);
-  albedo *= mix(vec3(1.0), vec3(0.26, 0.17, 0.13), smoothstep(0.8, 0.92, ringF) * ringK * (0.7 + 0.3 * tongue));
+  float ran = smoothstep(0.2 + 0.5 * (1.0 - side), 0.85, ringF + 0.5 * (tongue - 0.5));
+  albedo *= mix(vec3(1.0), vec3(0.95, 0.87, 0.73), byLens);
+  albedo = mix(albedo, mix(vec3(0.2, 0.062, 0.01), vec3(0.085, 0.026, 0.007), tongue) * (0.7 + 0.6 * luma), clamp(1.5 * ran, 0.0, 1.0) * (0.65 + 0.35 * side) * max(ringK, 0.6 * byLens));
+  albedo *= mix(vec3(1.0), vec3(0.22, 0.09, 0.04), smoothstep(0.72, 0.9, ringF) * ringK * (0.7 + 0.3 * tongue));
   albedo = mix(albedo, vec3(0.68, 0.65, 0.62) * (0.9 + 0.2 * grain), 0.75 * (1.0 - smoothstep(0.06, 0.2, ringF)) * ringK * smoothstep(0.3, 0.5, patchy));
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
@@ -371,10 +371,10 @@ void main() {
   // A bead gathers at the end of a strap, swells, lets go and falls; the next gathers. Most only hang.
   float period = 4.0 + 7.0 * fract(seed * 3.1);
   float cyc = fract(uSeconds / period + seed * 7.0);
-  float falls = step(fract(seed * 11.0), 0.4);
+  float falls = step(fract(seed * 11.0), 0.55);
   float grown = mix(1.0, smoothstep(0.0, 0.5, cyc), falls);
   float since = max(cyc - 0.88, 0.0) * period * falls;
-  float size = (0.0024 + 0.0026 * fract(seed * 17.0)) * grown * step(0.5, kept) * smoothstep(0.55, 0.9, open);
+  float size = (0.0028 + 0.003 * fract(seed * 17.0)) * grown * step(0.5, kept) * smoothstep(0.55, 0.9, open);
   vec3 ball = position;
   ball.y = ball.y > 0.0 ? ball.y * 1.45 : ball.y;
   p += vec3(0.0, -0.75 * size - 4.9 * since * since, 0.0) + ball * size;
@@ -462,10 +462,10 @@ void main() {
   vec3 tan_ = mix(vec3(0.1, 0.05, 0.026), vec3(0.26, 0.15, 0.07), own) * (0.8 + 0.2 * sin(u * 9.0 + seed * 70.0)) * mix(0.5, 1.0, smoothstep(0.0, 0.5, s));
   albedo = mix(albedo, mix(tan_, tan_ * vec3(1.0, 0.5, 0.4), 0.5 * smoothstep(0.5, 1.0, s) * step(0.5, own)), husk);
   // Salt has dried on them in grains: along the edges and toward the ends, more on one blade than on the next.
-  float grainAt = floor(s * 140.0) + floor(u * 2.0 + 2.0) * 17.0;
+  float grainAt = floor(s * 330.0) + floor(u * 2.0 + 2.0) * 17.0;
   float grain = fract(sin(grainAt * 12.9898 + seed * 78.233) * 43758.5453);
-  float salted = uWet * step(0.5, uWet) * smoothstep(0.25, 0.9, s) * smoothstep(0.3, 0.9, abs(u)) * step(1.0 - 0.3 * own, grain);
-  albedo = mix(albedo, vec3(0.5, 0.46, 0.45), 0.7 * salted);
+  float salted = uWet * step(0.5, uWet) * smoothstep(0.25, 0.9, s) * smoothstep(0.3, 0.9, abs(u)) * step(1.0 - 0.14 * own, grain);
+  albedo = mix(albedo, vec3(0.5, 0.46, 0.45), 0.45 * salted);
   // Dark at the heart of the head, where the straps stand close, and under it.
   float occ = mix(0.3, 1.0, smoothstep(0.0, 0.75, vG.x)) * mix(1.0, 0.8, smoothstep(1.2, 2.4, vG.w));
   // Near the lens the straps are seen to be wet: the white sky lies along them.
@@ -542,23 +542,28 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
     const q = (w.seed * 29.3) % 1;
     // Seen from far a head is a small tuft at the tip of a pale stalk, and the stalk below it is bare: no head longer than its stalk can show.
     const off = fine <= 13;
-    const wide = Math.min(1.5, (19 * 2 * w.R * size) / slim, (off ? 0.42 : 0.5) * w.h) * (1.15 + 0.9 * u * u + 0.25 * swept);
+    const girth = (19 * 2 * w.R * size) / slim;
+    const more = 1.15 + 0.9 * u * u + 0.25 * swept;
+    const wide = off ? Math.min(1.5, girth, 0.42 * w.h) * more : Math.min(1.0, girth * more, 0.5 * w.h);
     // How far a head arches over to its side is the plant's own: one stands swept up, the next hangs its ends.
-    const arch = (off ? 0.45 : 1) * (0.6 + 1.0 * ((w.seed * 41.3) % 1));
+    const arch = (off ? 0.9 : 1) * (0.6 + 1.0 * ((w.seed * 41.3) % 1));
+    // Its sprays stand to one side of the first, never either side of it: a head has no middle to be even about.
+    const hand = (w.seed * 53.9) % 1 < 0.5 ? -1 : 1;
     const sprays = off || v < 0.4 ? 1 : v < 0.82 ? 2 : 3;
-    const each = Math.max(sprays === 1 ? 3 : 2, Math.round(fine * (0.75 + 0.6 * q) * (1 - 0.4 * ragged)));
+    // A far head is a mop all the same: full enough to be one red shape on its stalk, that rises from the tip and hangs by its ends.
+    const each = Math.max(sprays === 1 ? 3 : 2, Math.round(fine * (off ? 1.2 : 1) * (0.75 + 0.6 * q) * (1 - 0.4 * ragged)));
     let first = true;
     for (let j = 0; j < sprays; j++) {
-      const turn = (c0[0] as number) + (j - (sprays - 1) / 2) * rng.range(0.5, 0.95) + rng.normal() * 0.12;
+      const turn = (c0[0] as number) + hand * j * rng.range(0.45, 0.85) + rng.normal() * 0.12;
       const tilt = rng.range(0.22, 0.6) + (j > 0 ? 0.15 : 0);
-      const reach = j === 0 ? 1 : rng.range(0.55, 0.9);
+      const reach = j === 0 ? 1 : rng.range(0.4, 0.8) / j;
       for (let k = 0; k < each; k++) {
         const sp = spent > 0.5 ? (rng.next() < spent ? 1 : 0) : rng.next() < spent ? 1 : 0;
         // A mop that hangs to its side, never a crown that droops evenly all round.
-        const az = turn + rng.normal() * 0.55;
+        const az = turn + rng.normal() * (off ? 0.55 : 0.4);
         const leave = sp ? rng.range(1.2, 1.9) : Math.max(0.06, tilt + 0.15 + rng.normal() * 0.25);
         const length = 0.95 * wide * reach * rng.range(0.5, 1.1) * (1 - ragged * rng.range(0, 0.6));
-        const fall = sp ? rng.range(1.2, 2.2) : arch + rng.range(-0.2, off ? 0.4 : 0.7);
+        const fall = sp ? rng.range(1.2, 2.2) : arch + rng.range(off ? 0 : -0.2, off ? 0.6 : 0.7);
         // The first strap of a head is the last to go when the head is thinned for distance: no head thins to nothing.
         list.add(w, end, aim, az, leave, length, Math.min(0.026, Math.max(0.008, length * rng.range(0.026, 0.042))) * broad, rng.next(), fall, sp, first ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
         first = false;
@@ -644,19 +649,22 @@ export function matOf(list: Fronds, rng: Rng, ground: (x: number, z: number) => 
 export function plumeOf(list: Fronds, drops: Fronds, w: Wild, rng: Rng, length: number, comb: number): void {
   const { end, aim } = endOf(w);
   const bud = w.kind === 1;
-  const n = bud ? 240 : w.kind === 3 ? 380 : 500;
+  // No two heads by the lens of one make: each has its own fullness, and hangs its locks its own way.
+  const full = 0.6 + 0.6 * ((w.seed * 47.3) % 1);
+  const hang = 0.65 + 0.8 * ((w.seed * 23.7) % 1);
+  const n = Math.round((bud ? 240 : w.kind === 3 ? 380 : 500) * full);
   // Wet filaments hold to each other: the plume is some tens of locks. A lock leaves the mouth close to the trunk's own line, stands for most of
   // its length, then arches over and hangs or hooks at its end: how late it turns (the fourth number) is the lock's, so its filaments stay
   // together. The locks on the side the air has combed them to leave wider and fall further; a few on the other side stand and hook back.
   const locks: [number, number, number, number, number][] = [];
-  const lockCount = bud ? 14 : w.kind === 3 ? 22 : 34;
+  const lockCount = Math.round((bud ? 14 : w.kind === 3 ? 22 : 34) * full);
   for (let k = 0; k < lockCount; k++) {
     const az = comb + rng.normal() * 1.25;
     const toward = Math.max(0, Math.cos(az - comb));
     const heart = rng.next() < 0.38;
     const leave = heart ? 0.03 + Math.abs(rng.normal()) * 0.1 : 0.1 + Math.abs(rng.normal()) * 0.2 + 0.28 * toward * rng.next();
     const reach = rng.range(0.5, 1.1) * (heart ? 1.05 : 0.8 + 0.25 * toward);
-    const fall = heart ? rng.range(1.2, 3.0) : rng.range(1.6, 2.8) + 1.4 * toward * rng.next();
+    const fall = (heart ? rng.range(1.2, 3.0) : rng.range(1.6, 2.8) + 1.4 * toward * rng.next()) * hang;
     locks.push([az, leave, reach, fall, rng.range(2.0, 3.6)]);
   }
   for (let k = 0; k < n; k++) {
@@ -675,7 +683,7 @@ export function plumeOf(list: Fronds, drops: Fronds, w: Wild, rng: Rng, length: 
     const from = w.R * 0.7 * Math.sqrt(rng.next());
     const late = -(own[4] + (core ? 0 : stray ? rng.range(-0.5, 0.5) : rng.range(-0.05, 0.05)));
     list.add(w, end, aim, az, leave, len, half, seed, fall, 0, late, false, w.seed, from);
-    if (!bud && rng.next() < (core ? 0.5 : 0.06)) drops.add(w, end, aim, az, leave, len, half, seed, fall, 0, late, false, w.seed, from);
+    if (!bud && rng.next() < (core ? 0.6 : 0.07)) drops.add(w, end, aim, az, leave, len, half, seed, fall, 0, late, false, w.seed, from);
   }
   // The husks of the mouth: short dry tan straps round the roots of the filaments, that lean out and curl at their ends.
   const husks = bud ? 12 : 19;
