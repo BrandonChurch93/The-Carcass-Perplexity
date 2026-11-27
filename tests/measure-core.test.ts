@@ -186,6 +186,29 @@ describe('measuring a unit', () => {
     expect(lines.filter((l) => /FAIL/.test(l)).length).toBe(15);
   });
 
+  it('with only, measures the named judged frames and no other', async () => {
+    const still = await picture('frame-only.png', 320, 180);
+    const key = cfg.keys.filter((k) => k.unit === 'heart').sort((a, b) => a.order - b.order)[3];
+    const renderer = fakeRenderer({ film: realFilm(), still });
+    const out = await core.measureUnit({ cfg, cut, film: realFilm(), unit: 'heart', tier: 'final', format: 'uhd', only: core.onlyOf(key.id), renderer, approvedPath: () => still });
+    expect(out.only).toEqual([key.id]);
+    expect(out.results.map((r) => `${r.measure} ${r.id}`)).toEqual([`M1 ${key.id}`, `M2 ${key.id}`, `M3 ${key.id}`]);
+    expect(out.colour).toEqual({ M1: 'green', M2: 'green', M3: 'green' });
+    expect(renderer.calls.length).toBe(3);
+    expect(renderer.calls.every((c) => c.frame === out.frames[0].frame)).toBe(true);
+    const lines = core.reportLines(out, { tier: 'final', format: 'uhd' });
+    expect(lines[1]).toBe(`measure: only ${key.id}: the other judged frames of heart were not measured`);
+    const byFrame = await core.measureUnit({ cfg, cut, film: realFilm(), unit: 'heart', tier: 'final', format: 'uhd', only: core.onlyOf(String(out.frames[0].frame)), renderer: fakeRenderer({ film: realFilm(), still }), approvedPath: () => still });
+    expect(byFrame.results.map((r) => r.id)).toEqual([key.id, key.id, key.id]);
+    await expect(core.measureUnit({ cfg, cut, film: realFilm(), unit: 'heart', tier: 'final', format: 'uhd', only: ['heart-9'], renderer: fakeRenderer({ film: realFilm(), still }), approvedPath: () => still })).rejects.toThrow(/No judged frame of heart is named heart-9/);
+    expect(core.onlyOf(undefined)).toEqual([]);
+    expect(core.onlyOf(['heart-1,heart-3', '3156'])).toEqual(['heart-1', 'heart-3', '3156']);
+    const full = await core.measureUnit({ cfg, cut, film: realFilm(), unit: 'heart', tier: 'final', format: 'uhd', renderer: fakeRenderer({ film: realFilm(), still }), approvedPath: () => still });
+    expect('only' in full).toBe(false);
+    expect(core.outFile('d', 'heart')).toBe(path.join('d', 'heart.json'));
+    expect(core.outFile('d', 'heart', [key.id])).toBe(path.join('d', 'heart-only.json'));
+  });
+
   it('measures the loop frames of the film by their loop index, with M1 only', async () => {
     const renderer = fakeRenderer({ film: realFilm() });
     const out = await core.measureUnit({ cfg, cut, film: realFilm(), unit: filmUnit, tier: 'final', format: 'uhd', renderer, approvedPath: () => '' });

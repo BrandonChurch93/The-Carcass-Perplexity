@@ -123,15 +123,24 @@ export function givenFrames(value, film) {
   });
 }
 
+export function onlyOf(value) {
+  if (value === undefined || value === null || value === true) return [];
+  return (Array.isArray(value) ? value : [value]).flatMap((v) => String(v).split(',')).filter(Boolean);
+}
+
 const at = (e) => (e.loop !== undefined ? { loop: e.loop } : { frame: e.frame });
 const first = (e) => String(e?.message ?? e).split('\n')[0].replace(/^page\.evaluate: (Error: )?/, '');
 const round = (v, d = 6) => (v === null ? null : Number(Number(v).toFixed(d)));
 
-export async function measureUnit({ cfg, cut, film, unit, tier, format, frames = [], renderer, approvedPath }) {
+export async function measureUnit({ cfg, cut, film, unit, tier, format, frames = [], only = [], renderer, approvedPath }) {
   const measures = measuresOf(cfg, unit);
   const { entries, missing } = judgedOf(cfg, cut, film, unit);
-  const all = [...entries, ...frames.filter((f) => !entries.some((e) => e.frame === f.frame))];
-  if (!all.length) throw new Error(`${missing.join(' ')} Give frames with --frames to measure them.`.trim());
+  const every = [...entries, ...frames.filter((f) => !entries.some((e) => e.frame === f.frame))];
+  if (!every.length) throw new Error(`${missing.join(' ')} Give frames with --frames to measure them.`.trim());
+  const named = (e, o) => e.id === o || (e.frame !== undefined && String(e.frame) === o);
+  const unknown = only.filter((o) => !every.some((e) => named(e, o)));
+  if (unknown.length) throw new Error(`No judged frame of ${unit} is named ${unknown.join(' ')}. It has: ${every.map((e) => e.id).join(' ')}.`);
+  const all = only.length ? every.filter((e) => only.some((o) => named(e, o))) : every;
   const results = [];
   const down = {};
   const run = async (measure, e, work) => {
@@ -167,6 +176,7 @@ export async function measureUnit({ cfg, cut, film, unit, tier, format, frames =
     for (const key of cfg.keys.filter((k) => k.unit === unit).sort((a, b) => a.order - b.order)) {
       const e = all.find((x) => x.id === key.id);
       if (!e) {
+        if (only.length) continue;
         results.push({ measure: 'M3', id: key.id, status: 'not measured', why: `The key ${key.id} has no frame on the page.` });
         continue;
       }
@@ -184,7 +194,7 @@ export async function measureUnit({ cfg, cut, film, unit, tier, format, frames =
       return [m, mine.some((r) => r.status === 'fail') ? 'red' : mine.some((r) => r.status === 'pass') && mine.every((r) => r.status === 'pass') ? 'green' : 'not measured'];
     }),
   );
-  return { unit, tier, format, measures, colour, missing, frames: all, results };
+  return { unit, tier, format, measures, colour, missing, ...(only.length ? { only } : {}), frames: all, results };
 }
 
 export function resultLine(r) {
@@ -200,10 +210,11 @@ export function reportLines(out, usual) {
   const lines = [];
   const quick = out.tier !== usual.tier || out.format !== usual.format;
   lines.push(`measure: ${out.unit}, ${out.tier} tier in ${out.format}${quick ? `, a quick look: the judged frames are measured at the ${usual.tier} tier in ${usual.format}` : ''}`);
+  if (out.only?.length) lines.push(`measure: only ${out.only.join(' ')}: the other judged frames of ${out.unit} were not measured`);
   for (const m of out.missing) lines.push(`measure: not found: ${m}`);
   for (const r of out.results) lines.push(resultLine(r));
   lines.push(`measure: ${out.measures.map((m) => `${m} ${out.colour[m]}`).join(', ')}`);
   return lines;
 }
 
-export const outFile = (dir, unit) => path.join(dir, `${unit}.json`);
+export const outFile = (dir, unit, only = []) => path.join(dir, `${unit}${only.length ? '-only' : ''}.json`);

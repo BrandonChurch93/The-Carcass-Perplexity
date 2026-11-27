@@ -1,8 +1,8 @@
 import { rel, args, config, readJson, writeJson } from './lib/paths.mjs';
 import { isMain, one, relPath } from './lib/img.mjs';
-import { measureUnit, givenFrames, reportLines, outFile, SHARPNESS } from './lib/measure-core.mjs';
+import { measureUnit, givenFrames, onlyOf, reportLines, outFile, SHARPNESS } from './lib/measure-core.mjs';
 
-export const USAGE = 'usage: npm run measure -- --unit ID [--tier T] [--format F] [--frames N N ...]';
+export const USAGE = 'usage: npm run measure -- --unit ID [--tier T] [--format F] [--frames N N ...] [--only KEY KEY ...]';
 
 export async function measureCommand(a, deps = {}) {
   const print = deps.print ?? ((l) => console.log(l));
@@ -23,11 +23,12 @@ export async function measureCommand(a, deps = {}) {
     const cut = deps.cut ?? readJson(rel('cut', 'CUTLIST.json'));
     const film = await renderer.filmInfo();
     const frames = givenFrames(a.frames, film);
+    const only = onlyOf(a.only);
     if (renderer.holdRenderer) {
       await renderer.holdRenderer();
       held = true;
     }
-    const out = await measureUnit({ cfg, cut, film, unit, tier, format, frames, renderer, approvedPath: (p) => rel(p) });
+    const out = await measureUnit({ cfg, cut, film, unit, tier, format, frames, only, renderer, approvedPath: (p) => rel(p) });
     const state = renderer.rendererState ? await renderer.rendererState() : null;
     const record = {
       ...out,
@@ -36,7 +37,7 @@ export async function measureCommand(a, deps = {}) {
       sharpness: SHARPNESS,
       state: state ? { engine: state.built.engine, units: state.built.units, browser: state.browser } : null,
     };
-    const file = outFile(deps.dir ?? rel('out', 'work', 'measure'), unit);
+    const file = outFile(deps.dir ?? rel('out', 'work', 'measure'), unit, only);
     writeJson(file, record);
     reportLines(out, usual).forEach(print);
     print(`measure: ${relPath(file)}`);
