@@ -125,29 +125,39 @@ varying float vSize;
 ${CUT}
 ${NOISE_GLSL}
 ${RIG_GLSL}
+// The sheet's step across one pixel, taken at the top of main: every read below the cut is given it, for the software renderer does not
+// repeat a read that finds its own level after a pixel of its four has left.
+vec2 stepX;
+vec2 stepY;
+vec4 readAt(sampler2D sheet, vec2 uv, float finer) {
+  float k = exp2(finer);
+  return textureGrad(sheet, uv, stepX * k, stepY * k);
+}
 void main() {
+  stepX = dFdx(vUv);
+  stepY = dFdy(vUv);
   float h = coverAt(vUv);
   if (h < 0.16) discard;
-  vec3 skin = texture2D(tSkin, vUv, -2.5).rgb;
+  vec3 skin = readAt(tSkin, vUv, -2.5).rgb;
   // The form of the body, from the relief read soft: it turns away toward every outline.
   // Seen from behind and close, only the great forms are read: the barrel, the hips, the root of the neck.
   float broad = uSheet.y == 0.0 ? 1.0 : 0.0;
   vec2 e = uTexel * mix(12.0, 44.0, broad);
   float lod = mix(4.0, 6.0, broad);
-  float hx = (texture2D(tRelief, vUv + vec2(e.x, 0.0), lod).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), lod).r) * mix(1.0, 0.5, broad);
-  float hy = (texture2D(tRelief, vUv + vec2(0.0, e.y), lod).r - texture2D(tRelief, vUv - vec2(0.0, e.y), lod).r) * mix(1.0, 0.5, broad);
-  float soft = texture2D(tRelief, vUv, 3.0).r;
+  float hx = (readAt(tRelief, vUv + vec2(e.x, 0.0), lod).r - readAt(tRelief, vUv - vec2(e.x, 0.0), lod).r) * mix(1.0, 0.5, broad);
+  float hy = (readAt(tRelief, vUv + vec2(0.0, e.y), lod).r - readAt(tRelief, vUv - vec2(0.0, e.y), lod).r) * mix(1.0, 0.5, broad);
+  float soft = readAt(tRelief, vUv, 3.0).r;
   vec3 axis = normalize(vAxis);
   vec3 face = normalize(vFace);
   // The hide over the form, from the relief read sharp: the ribs, the points of the hip and the shoulder, the folds at the neck and the knee,
   // and the lie of the short coat. Each fold is dark in its hollow.
   vec2 e2 = uTexel * 2.0;
-  float fx = texture2D(tRelief, vUv + vec2(e2.x, 0.0), 0.5).r - texture2D(tRelief, vUv - vec2(e2.x, 0.0), 0.5).r;
-  float fy = texture2D(tRelief, vUv + vec2(0.0, e2.y), 0.5).r - texture2D(tRelief, vUv - vec2(0.0, e2.y), 0.5).r;
+  float fx = readAt(tRelief, vUv + vec2(e2.x, 0.0), 0.5).r - readAt(tRelief, vUv - vec2(e2.x, 0.0), 0.5).r;
+  float fy = readAt(tRelief, vUv + vec2(0.0, e2.y), 0.5).r - readAt(tRelief, vUv - vec2(0.0, e2.y), 0.5).r;
   // A back seen close from behind is a short coat lying smooth over the spine and the hips: its folds are faint.
   float creased = uSheet.y == 0.0 ? 0.14 : 0.3;
   // The picture's own shading of the ribs is not the hide's colour: half of it is taken out, and each animal has a coat of its own tone, with dust and marks in it.
-  skin = mix(skin, texture2D(tSkin, vUv, 4.5).rgb, uSheet.y == 0.0 ? 0.2 : 0.55);
+  skin = mix(skin, readAt(tSkin, vUv, 4.5).rgb, uSheet.y == 0.0 ? 0.2 : 0.55);
   float coat = 0.6 * vnoise(vUv * vec2(9.0, 6.0) + vOwn * 40.0) + 0.4 * vnoise(vUv * vec2(70.0, 34.0) + vOwn * 17.0);
 
   // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the coat is one pale tan.
@@ -162,7 +172,7 @@ void main() {
     skin *= 1.0 - 0.3 * spine * (0.55 + 0.45 * sin(vUv.y * 260.0));
   }
   skin *= mix(vec3(0.78, 0.76, 0.74), vec3(1.12, 1.08, 1.02), vOwn) * (0.84 + 0.32 * coat);
-  float fold = clamp(1.0 + 5.0 * creased * (texture2D(tRelief, vUv, 0.0).r - texture2D(tRelief, vUv, 2.5).r), 0.45, 1.35);
+  float fold = clamp(1.0 + 5.0 * creased * (readAt(tRelief, vUv, 0.0).r - readAt(tRelief, vUv, 2.5).r), 0.45, 1.35);
   vec3 n = normalize(face * 0.42 - axis * (hx + 2.2 * creased * fx) - vec3(0.0, 1.0, 0.0) * (hy + 2.2 * creased * fy));
   vec3 v = normalize(cameraPosition - vWorld);
   // Wet and dark below, where it has stood in the lake; dry and dusty above.

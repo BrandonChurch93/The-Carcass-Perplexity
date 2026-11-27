@@ -60,8 +60,8 @@ ${RIG_GLSL}
 // The sheet laid on the body as it was made, from the two sides that face a point best, so it neither swims nor stretches as the animal moves.
 vec4 hideAt(vec3 p, vec3 dx, vec3 dy, ivec3 ma, ivec3 me, vec2 w) {
   vec4 a = textureGrad(tHide, vec2(p[ma.y], p[ma.z]), vec2(dx[ma.y], dx[ma.z]), vec2(dy[ma.y], dy[ma.z]));
-  vec4 b = textureGrad(tHide, vec2(p[me.y], p[me.z]), vec2(dx[me.y], dx[me.z]), vec2(dy[me.y], dy[me.z]));
-  return a * w.x + b * w.y;
+  if (w.y > 0.04) a = a * w.x + textureGrad(tHide, vec2(p[me.y], p[me.z]), vec2(dx[me.y], dx[me.z]), vec2(dy[me.y], dy[me.z])) * w.y;
+  return a;
 }
 // The broad sheet on one face of the body. Its folds run across the sheet: on the trunk they are laid to hang down the flank and run on over
 // the back, on the neck and the legs to ring the limb.
@@ -69,8 +69,10 @@ vec2 faceUv(vec3 p, int axis, bool across) {
   return (axis == 0 ? (across ? p.zy : p.yz) : axis == 1 ? p.xz : p.xy) * vec2(0.4545, 0.606);
 }
 vec3 foldsOn(vec3 p, vec3 dx, vec3 dy, int a, int b, vec2 w, bool across) {
-  return textureGrad(tFolds, faceUv(p, a, across), faceUv(dx, a, across), faceUv(dy, a, across)).rgb * w.x
-    + textureGrad(tFolds, faceUv(p, b, across), faceUv(dx, b, across), faceUv(dy, b, across)).rgb * w.y;
+  // Where one side faces the point almost alone, it alone is read.
+  vec3 c = textureGrad(tFolds, faceUv(p, a, across), faceUv(dx, a, across), faceUv(dy, a, across)).rgb;
+  if (w.y > 0.04) c = c * w.x + textureGrad(tFolds, faceUv(p, b, across), faceUv(dx, b, across), faceUv(dy, b, across)).rgb * w.y;
+  return c;
 }
 vec3 foldsAt(vec3 p, vec3 dx, vec3 dy, int a, int b, vec2 w, float limb) {
   vec3 c = vec3(0.0);
@@ -89,9 +91,12 @@ vec3 wornAt(vec3 p, vec3 dx, vec3 dy, int a, int b, vec2 w, float limb, float wh
 // under a branch, which the software renderer does not repeat. rx and ry are the body's own step across one pixel.
 vec2 slopeOn(vec3 p, vec3 rx, vec3 ry, int a, int b, vec2 w, bool across) {
   vec2 ga = (textureGrad(tSlope, faceUv(p, a, across), faceUv(rx, a, across), faceUv(ry, a, across)).rg - 0.5) * vec2(120.67, -90.5);
-  vec2 gb = (textureGrad(tSlope, faceUv(p, b, across), faceUv(rx, b, across), faceUv(ry, b, across)).rg - 0.5) * vec2(120.67, -90.5);
-  return w.x * vec2(dot(ga, faceUv(rx, a, across)), dot(ga, faceUv(ry, a, across)))
-    + w.y * vec2(dot(gb, faceUv(rx, b, across)), dot(gb, faceUv(ry, b, across)));
+  vec2 c = vec2(dot(ga, faceUv(rx, a, across)), dot(ga, faceUv(ry, a, across)));
+  if (w.y > 0.04) {
+    vec2 gb = (textureGrad(tSlope, faceUv(p, b, across), faceUv(rx, b, across), faceUv(ry, b, across)).rg - 0.5) * vec2(120.67, -90.5);
+    c = w.x * c + w.y * vec2(dot(gb, faceUv(rx, b, across)), dot(gb, faceUv(ry, b, across)));
+  }
+  return c;
 }
 vec2 slopeAt(vec3 p, vec3 rx, vec3 ry, int a, int b, vec2 w, float limb) {
   vec2 c = vec2(0.0);
@@ -294,9 +299,9 @@ export function create(ctx: Context): Piece {
   const animals = cast.map((index) => all[index] as Drinker);
   const cards = createCards(ctx);
   const mid = bodyGeometry(MID_DATA, LEVELS.mid);
-  const tHide = { value: ctx.assets.texture('drinker/hide.png', { repeat: true, anisotropy: 4 }) };
-  const tFolds = { value: ctx.assets.texture('drinker/folds.jpg', { repeat: true, anisotropy: 4 }) };
-  const tSlope = { value: ctx.assets.texture('drinker/folds-n.png', { kind: 'data', repeat: true, anisotropy: 4 }) };
+  const tHide = { value: ctx.assets.texture('drinker/hide.png', { repeat: true, anisotropy: 1 }) };
+  const tFolds = { value: ctx.assets.texture('drinker/folds.jpg', { repeat: true, anisotropy: 1 }) };
+  const tSlope = { value: ctx.assets.texture('drinker/folds-n.png', { kind: 'data', repeat: true, anisotropy: 1 }) };
   const drawn: Drawn[] = animals.map((animal, i) => {
     const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
