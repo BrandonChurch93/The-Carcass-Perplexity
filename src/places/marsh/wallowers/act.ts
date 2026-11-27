@@ -65,7 +65,8 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
   out.bob += k * 0.008 * out.breath;
   out.bend += near * (0.017 + 0.07 * swing * (1 - 0.6 * ease(2.0, 3.2, t)) - 0.03 * (1 - ease(-2.3, -0.3, t)));
   const rooting = (1 - up) * (1 - 0.6 * pulse(0.15, 2.6, t));
-  out.headYaw = near * (0.24 - 0.55 * ease(-2.3, -0.3, t) + 0.8 * swing - 0.3 * ease(2.2, 3.6, t)) - 2.2 * w.yaw + 0.05 * rooting * Math.sin(seconds * 2.1 + b.seed * 11) + 0.05 * up * Math.sin(seconds * 0.9 + b.seed * 4);
+  // It roots with the side of its face to the lens, and works the lip from side to side through the mud: a slow sweep with a quicker one on it.
+  out.headYaw = near * (0.3 - 0.12 * ease(-2.3, -0.3, t) + 0.45 * swing - 0.3 * ease(2.2, 3.6, t)) - 2.2 * w.yaw + rooting * (0.13 * Math.sin(seconds * 1.15 + b.seed * 11) + 0.05 * Math.sin(seconds * 2.9 + b.seed * 3)) + 0.05 * up * Math.sin(seconds * 0.9 + b.seed * 4);
   // The head hangs from the shoulders and is late: it nods as they come down on a foot. It comes a little out of the mud as it swings and goes back in where it stops.
   out.headPitch = plan.hang - 0.5 * up + 0.07 * shove * (1 - back) - 0.13 * pulse(0.1, 2.2, t) - 0.9 * w.fore + 0.025 * rooting * Math.sin(seconds * 1.9 + b.seed * 5);
   out.splay = 0.55 + 0.25 * shove * (1 - up);
@@ -78,7 +79,7 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
 export function young(plan: Plan, b: Build, seconds: number, t: number, toward: number, out: Drive): Drive {
   const { k } = b;
   rest(out, plan, b);
-  const pace: Stride = { length: 0.8 * k, duty: 0.8, lift: 0.26 * k, phase: 0.275, lead: 1 };
+  const pace: Stride = { length: 0.8 * k, duty: 0.8, lift: 0.18 * k, phase: 0.275, lead: 1 };
   const cycle = 1.45;
   // It walks on again once it has looked: a cycle and more, from a stand.
   const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.6 - 0.5 - 1.25 * cycle, -0.6, 0.5) - 1.25 * cycle + runUp(v, 1.5, 0.5));
