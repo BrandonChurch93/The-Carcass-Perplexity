@@ -123,6 +123,8 @@ export interface SkirtOptions {
   rows: number;
   /** The angle round the blade and the height of a place where the weed keeps to its smooth skirt. */
   calm?: [number, number];
+  /** The foot is broken rock: blocks of unlike width and height stand out from it in three steps, the weed over them. */
+  broken?: boolean;
 }
 
 /** Evenly spaced angles, with a finer run between `from` and `to`. */
@@ -187,7 +189,21 @@ export function skirtShape(rib: Rib, options: SkirtOptions): THREE.BufferGeometr
     // The foot spreads over the rock and rubble the blade stands on.
     const plinth = 2.5 * smooth(5, 0, y) * (0.4 + 1.2 * noise2(foot.x / 11 + 5, foot.z / 11)) * calm;
     const tier = weedTier(foot.x, y, foot.z);
-    const pad = skirtPad(yy) * (1 - tuck) - 3 * tuck + ((0.6 * weedLump(foot.x, y, foot.z) + 0.3 * tier[0]) * calm + plinth) * (1 - tuck) * smooth(-5, 2, y);
+    // Broken rock under the weed: the foot stands on blocks some 11 m and 5 m along it, each with its own reach and its own top, so
+    // that the skirt goes down in steps with corners and not as one smooth cone.
+    let blocks = 0;
+    if (options.broken) {
+      const wide = Math.floor(u / 11);
+      const small = Math.floor(u / 5 + 0.5);
+      const base = 5 + 0.1 * Math.min(a0, b0);
+      for (let n = 0; n < 3; n++) {
+        const id = n === 2 ? small : wide + (n === 1 ? 0.5 : 0);
+        const h = (n === 0 ? 5 : n === 1 ? 13 : 21) + 9 * noise2(id * 3.17 + rib.x * 0.07, n * 5.3 + rib.z * 0.07);
+        const reachOut = base * (n === 2 ? 0.45 : 0.8) * (0.25 + 1.5 * noise2(id * 1.93 + 7 + rib.z * 0.05, n * 3.1 + rib.x * 0.05));
+        blocks += reachOut * smooth(h + 0.7, h - 0.7, y);
+      }
+    }
+    const pad = skirtPad(yy) * (1 - tuck) - 3 * tuck + ((0.6 * weedLump(foot.x, y, foot.z) + 0.3 * tier[0]) * calm + plinth + blocks) * (1 - tuck) * smooth(-5, 2, y);
     p.copy(surface(rib, t, phi, a + pad, b + pad));
     if (y < 0) p.y = y;
     if (j > 0) run[i] = (run[i] as number) + Math.hypot(p.x - (last[i * 3] as number), p.y - (last[i * 3 + 1] as number), p.z - (last[i * 3 + 2] as number));
