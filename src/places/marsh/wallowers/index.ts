@@ -57,7 +57,7 @@ export function create(ctx: Context): Piece {
     const wet = sink > 0.5 ? (herd.length === 2 ? rng.range(1.0, 1.4) : 0.4 * rng.range(1.0, 1.4) - 0.05) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is wet all over its back: skin, with the mud of the brine low on it.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 2.1 } : herd.length === 1 ? { droop: 1.8 } : {}), ...(near ? { coat: (herd.length === 2 ? [1.45, 9, 0, 0] : [0.84, 1.95, 0, 0]) as [number, number, number, number], tendrils: 10, hang: 0, ...(herd.length === 2 ? { tint: 0.4 } : {}), thick: hero ? 5.2 : herd.length === 2 ? 3.4 : 5.0, long: hero ? 0.72 : herd.length === 1 ? 0.7 : 0.8 } : {}) }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 2.1 } : herd.length === 1 ? { droop: 1.8 } : {}), ...(near ? { coat: (herd.length === 2 ? [1.45, 9, 0, 0] : [0.84, 1.95, 0, 0]) as [number, number, number, number], tendrils: 10, hang: 0, ...(herd.length === 2 ? { tint: 0.4, fan: 0.5, skip: 2 } : {}), thick: hero ? 5.2 : herd.length === 2 ? 3.4 : 5.0, long: hero ? 0.72 : herd.length === 1 ? 0.7 : 0.8 } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,

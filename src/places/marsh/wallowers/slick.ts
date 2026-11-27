@@ -63,12 +63,16 @@ void main() {
   float snout = smoothstep(0.95, 1.6, vRest.x) * (1.0 - leg);
   // The line it leaves is no line: the mud stands higher in every crease, runs down between, and is thrown up in tongues where the legs churn it.
   float lane = vnoise(vec2(vRest.x * 6.5 + vRest.z * 2.0, uSeed)) - 0.5;
-  float tide = mix(uCoat.x + 0.3 * leg - 0.42 * snout + 0.75 * (patchy - 0.5) + 0.3 * (mid - 0.5) + 0.07 * (fine - 0.5) + 0.3 * lane + 0.22 * (1.0 - smoothstep(0.1, 0.7, fold)), 9.0, uCoat.z);
+  // And it runs up the hide in strands where the animal has shaken and rolled: narrow tongues, each to its own height, none level with the next.
+  float strandA = smoothstep(0.5, 0.92, vnoise(vec2(vRest.x * 17.0 + vRest.z * 6.0 + 0.6 * y, uSeed * 2.0 + 3.0)));
+  float strandB = smoothstep(0.45, 0.95, vnoise(vec2(vRest.x * 41.0 - vRest.z * 13.0 + 1.1 * y, uSeed * 4.0 + 7.0)));
+  float tide = mix(uCoat.x + 0.3 * leg - 0.42 * snout + 0.75 * (patchy - 0.5) + 0.3 * (mid - 0.5) + 0.07 * (fine - 0.5) + 0.3 * lane + 0.22 * (1.0 - smoothstep(0.1, 0.7, fold)) + 0.4 * strandA * (0.4 + 0.9 * patchy) + 0.18 * strandB, 9.0, uCoat.z);
   float wet = 1.0 - smoothstep(-0.03, 0.03, y - tide);
   // Thrown up the flank as it wades: clots, thick by the line and thinning to nothing a stride above it.
   float above = clamp((y - tide) / 0.75, 0.0, 1.0);
   float clot = smoothstep(0.6, 0.63, 0.6 * mid + 0.4 * fine + 0.3 * (1.0 - above) * (1.0 - above)) * (1.0 - above);
-  float mud = max(wet, clot) * (1.0 - horn * (1.0 - leg));
+  // (The horn at the lip roots in it all day and is never clean: a pale one on a dark muzzle reads as an eye.)
+  float mud = max(max(wet, clot), horn * (1.0 - leg));
   float damp = (1.0 - smoothstep(0.0, 0.25 + 0.4 * patchy, y - tide)) * (1.0 - mud);
   // The cake of other days lies on what looks at the sky, and breaks off at an edge.
   float up = smoothstep(uCoat.y - 0.45, uCoat.y + 0.45, y) + 0.5 * nr.y - 0.4 * leg;
@@ -77,26 +81,26 @@ void main() {
 
   // The skin: brown with pink in it, every crease of the tile dark, and darker still in the deep folds the body is built with.
   vec3 tone = skin / HIDE_MEAN;
-  vec3 albedo = vec3(0.172, 0.122, 0.092) * mix(vec3(dot(tone, LUMA)), tone, 0.6);
+  vec3 albedo = vec3(0.165, 0.127, 0.088) * mix(vec3(dot(tone, LUMA)), tone, 0.6);
   // The head is the darkest of it: heavy and grey.
   albedo *= 1.0 - 0.35 * smoothstep(1.0, 1.7, vRest.x) * (1.0 - leg);
   albedo *= mix(0.42, 1.06, smoothstep(0.05, 0.8, fold));
   albedo = mix(albedo, albedo * vec3(0.6, 0.46, 0.4), damp);
   // The cake: pale and matt, each plate dark at the edge where it has lifted, and the salt has come out of it white on the spine.
-  vec3 plate = vec3(0.25, 0.205, 0.17) * mix(vec3(dot(cake, LUMA) / dot(CAKE_MEAN, LUMA)), cake / CAKE_MEAN, 0.7);
+  vec3 plate = vec3(0.2, 0.17, 0.122) * mix(vec3(dot(cake, LUMA) / dot(CAKE_MEAN, LUMA)), cake / CAKE_MEAN, 0.7);
   plate *= 0.62 + 0.38 * smoothstep(0.525, 0.6, lie);
   float salt = smoothstep(0.62, 0.7, cakeH + 0.3 * (fine - 0.5)) * smoothstep(0.35, 0.9, nr.y) * smoothstep(0.56, 0.7, lie);
-  plate = mix(plate, vec3(0.5, 0.48, 0.46), 0.8 * salt);
+  plate = mix(plate, vec3(0.5, 0.48, 0.46), 0.6 * salt);
   albedo = mix(albedo, plate, dry);
   // The mud: blood red where it is thick and fresh, rust where it thins out toward the line.
   float thick = 1.0 - smoothstep(-0.5, 0.0, y - tide);
-  vec3 red = mix(vec3(0.085, 0.024, 0.015), vec3(0.056, 0.016, 0.011), thick) * (0.55 + 0.9 * skinH);
+  vec3 red = mix(vec3(0.06, 0.027, 0.018), vec3(0.04, 0.0175, 0.012), thick) * (0.55 + 0.9 * skinH);
   vec3 grey = mix(vec3(0.17, 0.125, 0.105), vec3(0.085, 0.06, 0.05), thick) * (0.55 + 0.9 * skinH);
   albedo = mix(albedo, mix(red, grey, uCoat.w), mud);
   // What stands in the mud is mud.
   float wy = vWorld.y - vRaise;
   float deep = 1.0 - smoothstep(0.0, 0.1, wy - uMud + 0.08 * (mid - 0.5));
-  albedo = mix(albedo, mix(vec3(0.08, 0.023, 0.015), vec3(0.06, 0.043, 0.036), uCoat.w) * (0.6 + 0.8 * skinH), max(deep, 0.9 * horn * leg));
+  albedo = mix(albedo, mix(vec3(0.05, 0.021, 0.0145), vec3(0.06, 0.043, 0.036), uCoat.w) * (0.6 + 0.8 * skinH), max(deep, 0.9 * horn * leg));
 
   // The slope of each coat: the grain of the skin, the plates of the cake, and the mud lying thick enough to fill the pores.
   float grainK = mix(mix(2.0, 0.8, mud), 0.5, dry) * (1.0 - 0.5 * leg);
@@ -114,7 +118,7 @@ void main() {
 
   // Wet mud shows the sky on the top of every fold; the skin is dull, the cake dead.
   float rough = mix(mix(0.9, 0.72, damp), 1.0, dry);
-  rough = mix(rough, mix(0.78, 0.42, smoothstep(0.5, 0.85, skinH)), mud);
+  rough = mix(rough, mix(0.86, 0.5, smoothstep(0.5, 0.85, skinH)), mud);
   rough = mix(rough, 0.3, deep);
   rough = mix(rough, 1.0, 0.7 * graze);
   float occ = vOpen * sqrt(vOpen) * (0.5 + 0.5 * smoothstep(0.0, 0.85, fold)) * mix(0.7 + 0.3 * smoothstep(0.15, 0.6, skinH), 0.7 + 0.3 * smoothstep(0.2, 0.6, cakeH), dry);
