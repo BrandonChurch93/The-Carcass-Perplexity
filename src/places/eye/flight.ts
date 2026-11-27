@@ -83,7 +83,7 @@ const LEAVE = {
   /** Frames over which the old tilt is caught and brought onto that line. */
   catch: 28,
   /** Between these frames the lens lets the far shore go and turns straight down. */
-  release: [258, 314],
+  release: [214, 318],
   /** The frame at which the lens stands over the centre, and the frame at which the lens is as wide as it gets. */
   over: 279,
   wide: 259,

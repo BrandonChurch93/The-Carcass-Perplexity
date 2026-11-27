@@ -139,8 +139,11 @@ void main() {
   vec2 uvClose = (xz - uRectClose.xy) * uRectClose.zw;
   float inWide = inside(uvWide, 0.04);
   float inClose = inside(uvClose, 0.1) * uClose;
-  vec3 ground = readWide(uMapWide, clamp(uvWide, 0.0, 1.0), 0.0).rgb;
-  vec3 relief = readWide(uReliefWide, clamp(uvWide, 0.0, 1.0), 0.0).rgb;
+  // (From orbit a texel of the wide map is about a pixel, and its grain sparkled from pixel to pixel: there the maps are read a
+  // little coarser, at the size the picture can hold.)
+  float orbitBias = 0.6 * smoothstep(700.0, 1300.0, uViewKm);
+  vec3 ground = readWide(uMapWide, clamp(uvWide, 0.0, 1.0), orbitBias).rgb;
+  vec3 relief = readWide(uReliefWide, clamp(uvWide, 0.0, 1.0), orbitBias).rgb;
   // (Below 100 km the baked light, the surf, the shelf and the places are not in the picture: they are not read.)
   bool high = uViewKm > 100.0;
   vec3 bake = vec3(0.0, 0.5, 0.0);
@@ -221,7 +224,12 @@ void main() {
   // West and south of the skull the map's low islands are under the sea: open deep water there, as the picture has it, and the
   // pale of the skull stands out of it alone. (The sea stands higher the farther out: so the coast it leaves follows the land.)
   vec2 fromSkull = (xz - vec2(${X(1350).toFixed(1)}, ${Z(1566).toFixed(1)})) / vec2(${(330 * KM).toFixed(1)}, ${(270 * KM).toFixed(1)});
-  float west = xz.x < ${X(2700).toFixed(1)} ? westSea(xz + 150.0 * (readTile(uCloudTile, xz / 900.0 + 0.3, 1.0 / 900.0, 5.0).rg - 0.5)) * smoothstep(50.0, 120.0, uViewKm) : 0.0;
+  // (North of the skull the limit of that sea is a straight line, and it showed: as a ruled coast off the far shoulder and as an
+  // edge in open water. There it is bent into bays and headlands, and far out to the north it is let go.)
+  float ragged = 0.0;
+  if (xz.y < ${Z(1330).toFixed(1)} && abs(xz.x - ${X(1700).toFixed(1)}) < 480.0) ragged = smoothstep(0.0, 250.0, ${Z(1330).toFixed(1)} - xz.y) * (300.0 * (vnoise(xz / 260.0 + 3.0) - 0.5) + 120.0 * (vnoise(xz / 80.0 + 11.0) - 0.5));
+  float west = xz.x < ${X(2700).toFixed(1)} ? westSea(xz + vec2(ragged, 0.0) + 150.0 * (readTile(uCloudTile, xz / 900.0 + 0.3, 1.0 / 900.0, 5.0).rg - 0.5)) * smoothstep(50.0, 120.0, uViewKm) : 0.0;
+  if (west > 0.0 && xz.y < ${Z(900).toFixed(1)}) west *= 1.0 - smoothstep(-900.0, -150.0, xz.x - ragged - ${X(1700).toFixed(1)}) * smoothstep(0.0, 250.0, ${Z(900).toFixed(1)} - xz.y);
   float shelf = 0.0;
   if (west > 0.0) {
     float stand = 0.3 * height + broad;
@@ -284,7 +292,7 @@ void main() {
   // (The bay east of the lake is an arm of the sea over a drowned valley: shoal and pale green far out from its shores, deep only
   // in the channel, so it is no twin of the lake.)
   vec2 inBay = (xz - uLakeMid - vec2(195.0, 45.0)) / vec2(160.0, 100.0);
-  if (dot(inBay, inBay) < 1.6) shallow = max(shallow, (1.0 - smoothstep(0.8, 1.25, length(inBay))) * (1.0 - land) * smoothstep(2.15, 2.5, lakeFar) * (1.0 - smoothstep(3.0, 14.0 + 34.0 * vnoise(xz / 27.0 + 5.0), -coastKm)));
+  if (dot(inBay, inBay) < 1.6) shallow = max(shallow, (1.0 - smoothstep(0.8, 1.25, length(inBay))) * (1.0 - land) * smoothstep(2.15, 2.5, lakeFar) * (1.0 - smoothstep(8.0, 30.0 + 60.0 * vnoise(xz / 27.0 + 5.0), -coastKm)));
   // (East and north of the skull the red country is old lava with its roof fallen in: pools stand in the pits of it, a few
   // kilometres to fifty across, each of its own size and outline, none in line.)
   vec2 fromPitted = (xz - uThroat - vec2(-40.0, -60.0)) / vec2(400.0, 430.0);
@@ -735,6 +743,8 @@ void main() {
   if (uDusk > 0.0) shade = mix(shade, 1.0, min(1.0, 1.7 * uEmber.x));
   float mu = limbCos(xz);
   vec3 level = vec3(0.0, 1.0, 0.0);
+  // (By night the pale rock of the ranges is not a white line on black: under the moon it is grey stone, the palest of it most taken down.)
+  if (uDusk > 0.0) ground *= 1.0 - 0.34 * uEmber.x * smoothstep(0.1, 0.4, dot(ground, vec3(0.3, 0.55, 0.15)));
   vec3 earth = rigShade(vWorld, mix(level, n, land), view, ground, 0.92, shade);
   if (forms > 0.0) {
     float earthLum = dot(earth, vec3(0.3, 0.55, 0.15));
@@ -1034,7 +1044,7 @@ void main() {
   water = mix(water, vec3(0.62, 0.66, 0.68) * light / 3.14159, 0.7 * surf);
   vec3 colour = mix(water, earth + 0.4 * glare, land);
   // (By night the low coast has no line: the wet plain is a shade over the sea beside it and the land rises out of that into the moon's light.)
-  if (uDusk > 0.0) colour = mix(colour, max(colour, water) * 0.35 + water * 0.95, 0.92 * (1.0 - smoothstep(0.04, 0.34, height)) * land * uEmber.x);
+  if (uDusk > 0.0) colour = mix(colour, max(colour, water) * 0.35 + water * 0.95, 0.8 * (1.0 - smoothstep(0.04, 0.34, height)) * land * uEmber.x);
   // (A pale crust lies at the foot of the lake's rim, where the water has stood higher.)
   // (And below it, at the water, a narrow band of wet ground, dark, wide in one reach and a thread in the next.)
   float wetW = 0.02;
