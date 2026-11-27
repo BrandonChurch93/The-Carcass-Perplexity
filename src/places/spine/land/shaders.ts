@@ -488,7 +488,10 @@ void main() {
       // is read up to a level finer than that, by how thin the patch is.)
       float longS = max(dot(gSx, gSx), dot(gSy, gSy));
       float thinS = abs(gSx.x * gSy.y - gSx.y * gSy.x) / max(longS, 1e-12);
-      lodA -= min(0.9, -0.3 * log2(clamp(thinS, 1e-4, 1.0)));
+      // (Under the lens it is read a level coarser instead: what is finer than a pixel of the film's frame is lost in its encoding, and takes
+      // the form of the slabs with it.)
+      float under = smoothstep(1.2, -0.6, lodA - min(0.9, -0.3 * log2(clamp(thinS, 1e-4, 1.0))));
+      lodA += mix(-min(0.9, -0.3 * log2(clamp(thinS, 1e-4, 1.0))), 0.9, under);
       // Far off its joints would be finer than a pixel and the face a smooth skin: there the same rock is laid three times larger, so a far
       // spire is cut by joints it can show.
       float which = smoothstep(1.6, 2.2, lodA);
@@ -512,15 +515,17 @@ void main() {
       }
       // Under the lens a texel of that lay is many pixels wide: there the same rock is laid again six times finer, as the grain, the cracks
       // and the small edges of the blocks, in colour and in relief.
-      float fine = smoothstep(1.2, -0.6, lodA);
+      float fine = under;
       fineRock = fine;
       vec2 tFine = vec2(0.0);
       if (fine > 0.01) {
         // (The picture of broken blocks, which has no grain: the face photograph again at this size would hatch the rock like wood.)
         vec2 atD = vec2(atS.x - 0.31 * atS.y, atS.y + 0.31 * atS.x);
-        Lay d = lay(tRubble, tRubbleNh, atD / 6.5 + vec2(0.13, 0.71), gSx / 6.5, gSy / 6.5);
+        Lay d = lay(tRubble, tRubbleNh, atD / 6.5 + vec2(0.13, 0.71), gSx / 3.6, gSy / 3.6);
         cF *= mix(vec3(1.0), clamp(d.c / RUBBLE_MEAN, 0.35, 1.8), 0.6 * fine);
-        tFine = d.t * 1.1 * fine;
+        // (Its tilt is kept low: under a light that comes from one side, a face tilted every way at the size of a few pixels is a stipple of
+        // dark blots, and the slabs are lost in it.)
+        tFine = d.t * 0.45 * fine;
         hF.x = mix(hF.x, 0.5 * hF.x + 0.5 * d.pit, fine);
       }
       // The photograph's own snow lies on its ledges: pale and without colour.
@@ -530,7 +535,7 @@ void main() {
       rock = mix(cF, vec3(dot(cF, vec3(0.3, 0.5, 0.2))) * vec3(1.03, 0.99, 0.93), 0.75) * 1.15;
       // Its relief, from the photograph's height: the joints are cut a hand deep at this size, the plates between them stand flat.
       t = vec2(hF.y - hF.x, hF.z - hF.x) * (-0.55 / (eps.x * 50.0));
-      t = clamp(t, vec2(-1.6), vec2(1.6)) + tFine;
+      t = clamp(t, vec2(-1.6), vec2(1.6)) * (1.0 - 0.5 * fine) + tFine;
       pit = hF.x;
       // Under the lens a block of the mesh is metres across and flat, and what a hand could grip is finer than the mesh: the rock is
       // shattered into pieces of a metre and of a hand's breadth, each tilted its own way, with a hairline crack between them, and its
@@ -544,14 +549,14 @@ void main() {
         vec3 big = shards(atG / vec2(0.9, 1.9));
         float hand = grip * smoothstep(0.07, 0.03, span);
         vec3 small = hand > 0.01 ? shards(atG / vec2(0.21, 0.34) + 7.7 + 3.0 * big.yz) : vec3(1.0, 0.5, 0.5);
-        // (Not every side of a piece is an open crack: most are closed, and a crack that runs on from piece to piece is rare.)
-        float open = smoothstep(0.35, 0.75, fract(big.y * 7.0 + big.z * 3.0));
-        float crack = max(smoothstep(0.02 + 1.6 * span / 0.9, 0.6 * span / 0.9, big.x) * grip * (0.25 + 0.75 * open), 0.8 * smoothstep(0.035 + 1.6 * span / 0.21, 0.6 * span / 0.21, small.x) * hand * (1.0 - 0.5 * open) * step(0.4, small.y));
-        t += grip * (big.yz - 0.5) * 1.0 + hand * (small.yz - 0.5) * 0.7;
+        // (No crack is drawn between the pieces: a hairline is contrast at the size of one pixel, which no encoding of the film holds, and
+        // drawn wider it rules the face into boxes. The breaks of the face are the mesh's, and each piece's own tilt and tone.)
+        float crack = 0.0;
+        t += grip * (big.yz - 0.5) * 0.7 + hand * (small.yz - 0.5) * 0.3;
         // So near, the photograph's own light and dark are blots many pixels wide: they are drawn toward their mean, and the pieces carry the face.
         rock = mix(rock, vec3(dot(rock, vec3(0.3, 0.5, 0.2))) * vec3(1.03, 0.99, 0.93) * 0.5 + 0.5 * SPIRE_MEAN * 1.6, 0.5 * hand);
         ledgeSnow *= 1.0 - hand;
-        float shade = mix(1.0, (0.78 + 0.44 * big.y) * (0.86 + 0.28 * small.z), grip) * (1.0 - 0.62 * crack);
+        float shade = mix(1.0, (0.78 + 0.44 * big.y) * (0.86 + 0.28 * small.z), grip) * (1.0 - 0.45 * crack);
         rock *= shade;
         gripCrack = crack;
         gripHand = hand;
@@ -559,8 +564,8 @@ void main() {
         float skin = grip * smoothstep(0.035, 0.012, span);
         if (skin > 0.01) {
           float pits = vnoise(atS * 31.0 + 3.1) - 0.5;
-          t += skin * 0.8 * vec2(pits, (small.z - 0.5) * pits * 2.0);
-          rock *= 1.0 + skin * 0.6 * pits;
+          t += skin * 0.25 * vec2(pits, (small.z - 0.5) * pits * 2.0);
+          rock *= 1.0 + skin * 0.15 * pits;
         }
       }
     }
@@ -651,7 +656,7 @@ void main() {
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
   // Close to, the cracks of a spire are dark.
-  if (spire) albedo *= mix(1.0, 1.25 * (0.3 + 0.7 * smoothstep(0.06, 0.32, pit)), near);
+  if (spire) albedo *= mix(1.0, 1.25 * (0.5 + 0.5 * smoothstep(0.06, 0.32, pit)), near);
 
   // The burn: the top of a spire is black glass where the lightning has come to it, time after time, and streaked below.
   float burn = 0.0;
@@ -717,7 +722,7 @@ void main() {
     // dark: frost and snow lie in them (below), and the dark is kept for the joints.
     occ *= mix(0.4 + 0.6 * proud, 0.72 + 0.28 * proud, fineRock);
     albedo *= mix(0.75 + 0.25 * proud, 0.92 + 0.08 * proud, fineRock);
-    albedo = mix(albedo, min(albedo * 1.25 + vec3(0.085, 0.075, 0.06), vec3(0.9)), fineRock * (1.0 - 0.8 * gripCrack));
+    albedo = mix(albedo, min(albedo * vec3(1.3, 1.16, 0.98) + vec3(0.07, 0.05, 0.03), vec3(0.9)), fineRock * (1.0 - 0.8 * gripCrack));
   }
   if (!spire) snow *= 1.0 - sheet;
   snow *= 1.0 - burn;
@@ -754,6 +759,8 @@ void main() {
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
     float thick = fineRock * (1.0 - burn);
+    // (Under the lens a slab's own side that looks into the gale is crusted too, whichever way the body of the rock looks.)
+    windward = max(windward, thick * smoothstep(0.05, 0.55, -dot(n0.xz, uWind.xz)));
     // (The lee is bare rock: the gale lays no frost on a face it does not reach, and what stands in its cracks is thin.)
     float bare = 1.0 - 0.7 * smoothstep(-0.05, 0.4, dot(smoothN.xz, uWind.xz));
     float cover = clamp(0.5 * rime + (0.34 + 0.62 * thick) * windward * (1.0 - burn) + bare * (0.3 * thick * smoothstep(1.0, -6.0, vRelief) + 0.14 * thick * smoothstep(0.3, 0.6, smoothN.y) + 0.42 * (1.0 - 0.6 * gripHand) * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn)), 0.0, 0.95) * mix(crystals, 1.0, (0.25 + 0.65 * thick) * windward);
@@ -766,14 +773,19 @@ void main() {
     cover = min(cover * mix(gripFrost, 1.0, 0.6 * white), 0.95) * (1.0 - 0.85 * cut);
     albedo *= 1.0 - 0.45 * cut;
     // (Near the lens the windward rime is thick and white, feather on feather: the frost picture gives its feathers, not its dark.)
-    vec3 frostA = min(frostC * (1.6 + 0.3 * thick), vec3(0.9)) * mix(vec3(0.93, 0.97, 1.06), vec3(0.98, 0.99, 1.03), thick);
-    frostA = mix(frostA, min(vec3(0.84, 0.86, 0.89) * (0.78 + 0.5 * smoothstep(0.1, 0.5, frostL)), vec3(0.9)), 0.75 * white);
+    // (Under the lens the rime is there or it is not, in masses, and it is cold white on the tan rock: the low warm light makes one brown
+    // of a rock and a frost that are both pale.)
+    cover = mix(cover, 0.95 * smoothstep(0.38, 0.62, cover + 0.25 * (frostL - 0.3)), thick);
+    vec3 frostA = min(frostC * (1.6 + 0.3 * thick), vec3(0.9)) * mix(vec3(0.93, 0.97, 1.06), vec3(0.86, 0.95, 1.12), thick);
+    frostA = mix(frostA, min(vec3(0.8, 0.87, 0.97) * (0.78 + 0.5 * smoothstep(0.1, 0.5, frostL)), vec3(0.95)), 0.75 * max(white, 0.8 * thick));
     albedo = mix(albedo, frostA, cover);
     // The feathers stand out of the rock: their own relief, from the frost picture's light and dark across the face.
     vec3 dPx = wX;
     vec3 dPy = wY;
     vec3 gradF = dFdx(frostL) * dPx / max(dot(dPx, dPx), 1e-8) + dFdy(frostL) * dPy / max(dot(dPy, dPy), 1e-8);
     nRock = normalize(nRock - cover * (1.0 - 0.65 * thick) * clamp(0.5 * gradF, vec3(-1.5), vec3(1.5)));
+    // (Thick rime is a heap of feathers on the slab, not its flat side: it takes the light as the round of the rock does, and from above.)
+    nRock = normalize(mix(nRock, normalize(smoothN + vec3(0.0, 0.7, 0.0)), 0.75 * cover * thick));
     rough = mix(rough, 0.55, cover);
     occ = mix(occ, mix(0.55, 0.95, white) + 0.45 * smoothstep(0.2, 0.6, frostL), 0.7 * cover);
     rime = 0.0;

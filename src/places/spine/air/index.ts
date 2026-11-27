@@ -162,7 +162,7 @@ export function create(ctx: Context): Piece {
       // The picture drifts down the gale fast enough to be seen to move; each shot's turn is set so that at its key frame the storm stands
       // where its approved picture has it.
       const keyAt = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 8090 : inStrike ? 7668 : inCarcass ? 7579 : inKites ? 7418 : 7234;
-      skyStage.x = (inKites ? 0.33 : stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.25 : 0) - 0.0041 * (secondsInPlace(UNIT, keyAt) - 12);
+      skyStage.x = (inKites ? 0.33 : stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.25 : 0) - 0.0069 * (secondsInPlace(UNIT, keyAt) - 12);
       // Staged by shot: in the long lens of the strike (spine-04) the bloom about the stroke is a sixth of the lights' own size, as its picture has it.
       skyStage.z = inStrike ? 0.085 : 0;
       // Staged by shot: for that lens the dome's pictures are laid four times smaller, so that its cloud has masses and edges at the size the lens sees.

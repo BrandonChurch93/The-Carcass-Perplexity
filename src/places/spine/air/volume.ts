@@ -328,8 +328,13 @@ ${SEA_SHADE_GLSL}
     // By the dead one the lens is low and close: the air behind the body is thick with blown snow, and the first spire and its mouth
     // stand back in it, pale and soft, as far behind the body as they are.
     if (uClear.z > 0.0 && far < 50000.0) {
-      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 540.0), far > 50000.0 ? 0.4 : 0.72) * uShow.x;
-      light = light * (1.0 - behind) + snowAir * 0.5 * behind;
+      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 540.0), 0.72);
+      // And low over the ground the drift stands thick: what is seen along the ground (the snowfield, the feet of the far spires) is seen
+      // through the whole of it, what stands up out of it through a few metres.
+      float lowPath = rd.y > 0.001 ? min(far, 4.0 / rd.y) : far;
+      float drift = min(1.0 - exp(-max(lowPath - 9.0, 0.0) / 170.0), 0.45);
+      behind = (1.0 - (1.0 - behind) * (1.0 - drift)) * uShow.x;
+      light = light * (1.0 - behind) + snowAir * 0.55 * behind;
       through *= 1.0 - behind;
     }
     // Scud: torn cloud that races low past the spires on the gale, paler than the storm behind it (staged by shot, uStage.w).
