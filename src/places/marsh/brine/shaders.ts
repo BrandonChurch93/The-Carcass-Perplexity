@@ -272,6 +272,9 @@ void main() {
     float dense = smoothstep(0.2, 0.75, want);
     float over = high - 1.1 + dense * (1.12 + 0.12 * graze);
     foam = smoothstep(0.0, 0.1, over);
+    // (Where little gathers only the pale bubbles stand: the red between them in the froth's picture is the brine, and is left to it,
+    // or a thin clump would lie on the pool as a flat red flake.)
+    foam *= mix(smoothstep(0.4, 0.58, scum.g), 1.0, smoothstep(0.5, 0.9, want));
     // (Round every clump the brine is drawn up to it and lies in its shade: a dark wet line, which is what sets it on the surface.)
     sill = smoothstep(-0.06, 0.0, over) * (1.0 - foam);
     // Its own colours, as the picture has them: cream where the bubbles are small and dry, red where the brine stands in them. Dark down
@@ -494,9 +497,11 @@ void main() {
 #endif
 }`;
 
-// What the pool does when a dome's skin is gone: its floor comes back up through the middle as a low mound, which falls and spreads.
-// A unit tube (radius 1, y 0 to 1) folded into a cap; aLife.x is seconds since it began to rise, aLife.y the dome's own number, aLife.z its
-// size in metres.
+// What the pool throws up when a dome's skin is gone: the film's edge comes down on the pool all round and the brine it had gathered is
+// flung up and out in a thin wall, higher in a few fingers than between them, which stands a moment, leans out and falls back. A unit
+// tube (radius 1, y 0 at the pool to 1 at the wall's edge); aLife.x is seconds since it left the pool, aLife.y the dome's own number,
+// aLife.z its size in metres.
+export const CROWN_LIFE = 0.62;
 export const CROWN_VERTEX = /* glsl */ `
 attribute vec4 aLife;
 varying vec3 vWorld;
@@ -504,25 +509,31 @@ varying vec3 vNormal;
 varying vec3 vLocal;
 varying vec4 vLife;
 void main() {
-  float age = aLife.x;
   float size = aLife.z;
   float a = atan(position.z, position.x);
   float k = aLife.y * 6.283;
-  // Level where it joins the pool and round on top: the brine heaving up, not a spout.
-  float v0 = 1.2 * sqrt(size / 0.4);
-  float tall = max(v0 * age - 4.905 * age * age, 0.0);
-  float dur = v0 / 4.905;
-  float spread = 0.6 + 0.7 * age / dur;
-  float rho = 1.0 - position.y;
-  float wob = 1.0 + 0.1 * sin(a * 3.0 + k * 5.0) * rho + 0.05 * sin(a * 5.0 - k * 3.0);
-  float wide = rho * size * spread * wob;
-  float hill = (1.0 - rho * rho) * (1.0 - rho * rho);
-  float fall = 4.0 * rho * (1.0 - rho * rho) * tall;
-  vec4 w = modelMatrix * instanceMatrix * vec4(cos(a) * wide, tall * hill - 0.01, sin(a) * wide, 1.0);
+  float dur = ${CROWN_LIFE.toFixed(2)} * sqrt(size / 0.4);
+  float x = clamp(aLife.x / dur, 0.0, 1.0);
+  // Seven to nine fingers, never evenly set and no two as tall. (Each is where the edge's bead was thickest when it came down.)
+  float count = 7.0 + floor(fract(aLife.y * 7.3) * 3.0);
+  float turn = count * a + k * 3.0 + 0.8 * sin(a * 2.0 + k) + 0.5 * sin(a * 3.0 - k * 2.0);
+  float finger = pow(0.5 + 0.5 * cos(turn), 9.0);
+  float own = 0.62 + 0.38 * sin(a * 3.0 + k * 5.0) * sin(a + k * 2.0);
+  // Thrown, it only rises and falls. The side the tear reached first is up first.
+  float lead = 0.12 * (0.5 + 0.5 * cos(a - aLife.y * 40.0));
+  float xa = clamp((x - lead) / (1.0 - lead), 0.0, 1.0);
+  float rise = 4.0 * xa * (1.0 - xa);
+  float tall = size * rise * (0.13 + 0.62 * finger * own) * (0.8 + 0.2 * sin(a * 5.0 + k));
+  float h = position.y * tall;
+  // It leaves the pool leaning out and leans further as it falls; a finger leans more than the wall between.
+  float lean = 0.25 + 0.6 * xa + 0.2 * finger;
+  float foot = size * (0.78 + 0.3 * xa) * (1.0 + 0.06 * sin(a * 2.0 + k * 3.0) + 0.04 * sin(a * 5.0 - k));
+  float out2 = foot + lean * h * (0.6 + 0.4 * position.y);
+  vec4 w = modelMatrix * instanceMatrix * vec4(cos(a) * out2, h - 0.004, sin(a) * out2, 1.0);
   vWorld = w.xyz;
-  vLocal = vec3(a, position.y, rho);
-  vLife = vec4(tall > 0.0 && age > 0.0 ? clamp(age / dur, 0.001, 1.0) : 0.0, aLife.yzw);
-  vNormal = normalize(vec3(cos(a) * fall, size * spread, sin(a) * fall));
+  vLocal = vec3(a, position.y, finger);
+  vLife = vec4(tall > 0.0 && aLife.x > 0.0 ? clamp(xa, 0.001, 1.0) : 0.0, aLife.y, tall, own);
+  vNormal = normalize(vec3(cos(a), -lean, sin(a)));
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -537,30 +548,40 @@ ${RIG_GLSL}
 
 void main() {
   // (Taken before the discard: see the surface.)
-  vec2 gx = dFdx(vWorld.xz) / 0.9;
-  vec2 gy = dFdy(vWorld.xz) / 0.9;
+  float level = log2(max(max(length(dFdx(vWorld)), length(dFdy(vWorld))) * float(textureSize(tGrain, 0).x), 1e-6));
   if (vLife.x <= 0.0) discard;
-  vec4 g = textureLod(tGrain, vWorld.xz / 0.9 + vLife.y, log2(max(max(length(gx), length(gy)) * float(textureSize(tGrain, 0).x), 1e-6)));
+  // The wall is a sheet of brine a finger thick at the pool and thin as a film at its edge, where it is rolled into a bead again. The
+  // grain runs up it: it was drawn out as it was thrown.
+  float up01 = vLocal.y;
+  // (Round it by whole tiles, read off the normal: the turn itself has a seam across one strip of the tube.)
+  float around = atan(vNormal.z, vNormal.x) / 6.2832;
+  vec4 g = textureLod(tGrain, vec2(around * 12.0 + vLife.y * 3.0, vWorld.y * 0.9), level + 2.0);
+  vec4 fine = textureLod(tGrain, vec2(around * 33.0 + vLife.y, vWorld.y * 4.1 + 0.3), level + 3.4);
+  // (Between the fingers the sheet is thinnest, and as it falls it breaks there into holes: what is left is the fingers and the bead.)
+  float web = smoothstep(0.2, 0.9, up01) * (1.0 - vLocal.z);
+  float holed = smoothstep(0.42, 0.5, g.r * 0.7 + fine.g * 0.3 + 0.55 * web * smoothstep(0.35, 0.9, vLife.x) - 0.25);
+  float bead = smoothstep(0.9, 0.97, up01 + 0.03 * (fine.r - 0.5));
+  if (holed > 0.5 && bead < 0.5) discard;
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   if (dot(n, v) < 0.0) n = -n;
-  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.08);
+  n = normalize(n + vec3(g.b - 0.5, (fine.b - 0.5) * 0.6, g.a - 0.5) * 0.3);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   float open = skyOpen(vWorld);
-  // The brine itself, heaved up.
-  vec3 body = vec3(0.07, 0.011, 0.0085);
-  vec3 lit = body * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
-  // It is wet: the sky stands in it over the mirrored horizon, the dark pool under.
-  vec3 pond = vec3(0.05, 0.012, 0.01) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
+  vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
+  float thick = mix(1.0, 0.3, smoothstep(0.05, 0.7, up01)) + 0.2 * bead + 0.6 * vLocal.z;
+  // The brine itself, and the light that comes through the thin of it from the sky behind: red where it is thick, pale where it is film.
+  vec3 takes = exp(-vec3(0.95, 2.9, 3.2) * thick * 1.6);
+  vec3 lit = vec3(0.07, 0.011, 0.0085) * above * (1.0 - takes.g) + above * takes * 0.05;
+  // It is wet on both sides: the sky stands in it over the mirrored horizon, the dark pool under, and the cloud's window on every bend.
+  vec3 pond = vec3(0.05, 0.012, 0.01) * above + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
   vec3 env = mix(pond, skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z))), smoothstep(-0.05, 0.08, r.y + (g.g - 0.5) * 0.1));
-  float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
-  env *= 1.0 + 0.6 * smoothstep(0.8, 0.99, toward);
-  // (The same held-back mirror as the pool's own skin, so that what the pool throws up is the pool's colour.)
-  float fres = 0.022 + 0.015 * (1.0 - nv) + 0.24 * pow(1.0 - nv, 24.0);
-  vec3 mirrored = env * vec3(1.0, 0.8, 0.75) * fres * mix(1.0, open, 0.5);
-  // It runs out into the pool with no edge.
-  // (And it comes up out of the level and goes back into it: at both ends of its life it is the pool.)
-  float cover = smoothstep(1.0, 0.7, vLocal.z) * smoothstep(0.0, 0.12, vLife.x) * smoothstep(1.0, 0.7, vLife.x);
-  gl_FragColor = vec4((lit + mirrored) * cover * (1.0 - uSolo), cover);
+  float toward = max(dot(r, ${DOME_KEY}), 0.0);
+  env += uSkyZenith * 6.0 * pow(smoothstep(0.86, 1.0, toward), 3.0);
+  float fres = min(0.025 + 0.97 * pow(1.0 - nv, 5.0), 0.1);
+  vec3 mirrored = env * vec3(1.0, 0.92, 0.9) * fres * mix(1.0, open, 0.5);
+  // It comes up out of the level and goes back into it: at its foot and at both ends of its life it is the pool.
+  float cover = (1.0 - 0.85 * takes.r * (1.0 - 0.5 * bead)) * smoothstep(0.0, 0.08, up01) * smoothstep(0.0, 0.06, vLife.x) * smoothstep(1.0, 0.9, vLife.x);
+  gl_FragColor = vec4((lit * cover + mirrored * smoothstep(0.0, 0.08, up01)) * (1.0 - uSolo), cover);
 }`;
