@@ -242,6 +242,9 @@ void main() {
     float keep = smoothstep(0.93 - contact, 0.93 + contact, shoreR);
     shallow = max(shallow, 0.9 * max(land, smoothstep(0.98, 1.02, lakeFar)) * (1.0 - keep) * smoothstep(0.7, 0.95, lakeFar));
     land *= keep;
+    // (The map's own picture of this lake's margin, where it lies outside this shore, is dry ground: its blue is taken to sand.)
+    float mapLum = dot(ground, vec3(0.3, 0.55, 0.15));
+    ground = mix(ground, vec3(0.33, 0.27, 0.19) * (0.45 + 1.6 * mapLum), smoothstep(0.0, 0.22, (ground.b - ground.r) / max(mapLum, 0.02)) * keep * (1.0 - smoothstep(1.05, 1.3, shoreR)));
   }
   if (lakeFar > 0.8 && lakeFar < 4.2 && uViewKm < 420.0) {
     vec2 run = normalize(vec2(-0.3, -0.95));
@@ -866,9 +869,9 @@ void main() {
     // (The silt that stands in the shallows is drawn out along the shore by the slow turning of the water, in wisps of many sizes,
     // and thins with depth: soft plumes, some reaching out over the deep.)
     float warp = vnoise(lakeAt * 6.0 + 3.0 + vec2(uTime * 0.012, 0.0));
-    float twist = 6.0 * lakeR + 0.5 * warp;
+    float twist = 4.6 * lakeR + 0.5 * warp;
     vec2 turned = mat2(cos(twist), sin(twist), -sin(twist), cos(twist)) * lakeAt;
-    float wisp = 0.5 * vnoise(turned * 5.0 + 1.0 * warp) + 0.3 * vnoise(turned * 11.0 + 5.0 + 0.6 * warp) + 0.2 * vnoise(turned * 23.0 + 11.0);
+    float wisp = 0.55 * vnoise(turned * 5.0 + 1.0 * warp) + 0.31 * vnoise(turned * 11.0 + 5.0 + 0.6 * warp) + 0.14 * vnoise(turned * 21.0 + 11.0);
     float reach = 0.5 + 1.3 * vnoise(lakeDir * 2.6 + 21.0);
     float silt = smoothstep(0.0, 1.0, 0.2 + 1.7 * wisp - 0.9 * depth / reach);
     // (Two eddies off the shelf wind a plume of it round into a hook.)
@@ -922,8 +925,8 @@ void main() {
     float l1 = mix(dot(readTile(uMatLakewater, la / layL + 0.37 * lakeLower, 1.0 / layL, 0.0).rgb, vec3(0.3, 0.55, 0.15)), dot(readTile(uMatLakewater, la / (2.0 * layL) + 0.37 * (lakeLower + 1.0), 0.5 / layL, 0.0).rgb, vec3(0.3, 0.55, 0.15)), lakeShare) / 0.0138;
     float l2 = mix(dot(readTile(uMatLakewater, lb / (1.6 * layL) + 0.4 + 0.21 * lakeLower, 0.625 / layL, 0.0).rgb, vec3(0.3, 0.55, 0.15)), dot(readTile(uMatLakewater, lb / (3.2 * layL) + 0.4 + 0.21 * (lakeLower + 1.0), 0.3125 / layL, 0.0).rgb, vec3(0.3, 0.55, 0.15)), lakeShare) / 0.0138;
     // (And broad lanes where the wind lies on the water, a few kilometres across.)
-    float lanes = readTile(uCloudTile, mat2(0.9, 0.44, -0.44, 0.9) * (xz - uTime * vec2(0.3, 0.1)) / vec2(64.0, 47.0), 1.0 / 47.0, 2.0).b;
-    float lakeLight = clamp(0.7 + 0.3 * (0.55 * l1 + 0.45 * l2) * (0.6 + 0.8 * lanes), 0.6, 1.9);
+    float lanes = readTile(uCloudTile, mat2(0.9, 0.44, -0.44, 0.9) * (xz - uTime * vec2(0.3, 0.1)) / vec2(64.0, 47.0), 1.0 / 47.0, 3.5).b;
+    float lakeLight = clamp(0.7 + 0.3 * (0.55 * l1 + 0.45 * l2) * (0.85 + 0.3 * lanes), 0.6, 1.9);
     ruffle = inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm));
     sparkle = mix(sparkle, lakeLight, ruffle);
   }
