@@ -608,10 +608,59 @@ function stones(x: number, z: number, cell: number, share: number, seed: number)
   return top;
 }
 
-/** The rubble of the last metres of shore under the line view's lens, metres above `landHeight`: stones a hand to a forearm across
- *  lying against each other. Drawn by a mesh of its own, far finer than the bench; nothing stands on it, so it is not in `landHeight`. */
+// One size of broken blocks: each is the least of a tilted top and five to seven steep sides, with one corner struck off, so it has
+// flat faces and sharp arrises where `stones` gives a dome. The line's picture has scoria broken square, not cobbles.
+function shards(x: number, z: number, cell: number, share: number, seed: number): number {
+  const gx = x / cell;
+  const gz = z / cell;
+  const i0 = Math.floor(gx);
+  const j0 = Math.floor(gz);
+  let top = 0;
+  for (let j = j0 - 1; j <= j0 + 1; j++) {
+    for (let i = i0 - 1; i <= i0 + 1; i++) {
+      if (hash(i + seed, j - seed) > share) continue;
+      const cx = (i + 0.2 + 0.6 * hash(i + 7 * seed, j + 3)) * cell;
+      const cz = (j + 0.2 + 0.6 * hash(i + 5, j + 11 * seed)) * cell;
+      const r = cell * (0.3 + 0.34 * hash(i + 13, j + 17 + seed));
+      const px = x - cx;
+      const pz = z - cz;
+      if (px * px + pz * pz > r * r * 1.3) continue;
+      const t = 6.283 * hash(i + 23 + seed, j + 29);
+      const ux = px * Math.cos(t) + pz * Math.sin(t);
+      const uz = (-px * Math.sin(t) + pz * Math.cos(t)) * (1.1 + 0.5 * hash(i + 43, j + seed + 47));
+      let h = r * (0.45 + 0.6 * hash(i + 31, j + 37 + seed)) + 0.6 * (hash(i + 59, j + 61 + seed) - 0.5) * ux + 0.6 * (hash(i + 67 + seed, j + 71) - 0.5) * uz;
+      // Scoria breaks rough: the faces are not planed.
+      h += r * (0.1 * (noise(x / (0.33 * r) + seed, z / (0.33 * r)) - 0.5) + 0.05 * (noise(x / (0.11 * r), z / (0.11 * r) + seed) - 0.5));
+      const sides = 5 + Math.floor(3 * hash(i + 73, j + 79 + seed));
+      for (let k = 0; k < sides; k++) {
+        const a = ((k + 0.7 * hash(i + 7 * k + seed, j + 41)) * 6.283) / sides;
+        const d = r * (0.6 + 0.4 * hash(i + 53, j + 11 * k + seed));
+        const side = (d - ux * Math.cos(a) - uz * Math.sin(a)) * (3 + 5 * hash(i + 3 * k, j + 83 + seed));
+        if (side < h) h = side;
+      }
+      const b = 6.283 * hash(i + 89 + seed, j + 97);
+      const struck = (r * (0.25 + 0.4 * hash(i + 101, j + 103 + seed)) - ux * Math.cos(b) - uz * Math.sin(b)) * (0.8 + 0.9 * hash(i + 107 + seed, j + 109)) + 0.15 * r;
+      if (struck < h) h = struck;
+      if (h > top) top = h;
+    }
+  }
+  return top;
+}
+
+/** The broken blocks of the last metres of shore under the line view's lens, metres above the grit they lie in: a finger to a forearm across. */
+export function rubbleBlocks(x: number, z: number): number {
+  // Where the big ones lie: in drifts a few strides across, with open grit between.
+  const drift = noise(x / 2.3 + 4.4, z / 2.3 + 9.1);
+  const many = Math.min(1, Math.max(0, (drift - 0.3) / 0.3));
+  // Only the larger are broken square: a face smaller than the sheet's cells would be drawn as a row of teeth, so the small ones are cobbles.
+  return Math.max(shards(x, z, 0.66, 0.2 + 0.4 * many, 13), shards(x, z, 0.34, 0.35 + 0.4 * many, 1), 0.7 * stones(x, z, 0.17, 0.5 + 0.3 * many, 4), 0.7 * stones(x, z, 0.085, 0.7, 9));
+}
+
+/** The rubble of the last metres of shore under the line view's lens, metres above `landHeight`: broken blocks on a bed of grit and pebbles.
+ *  Drawn by a mesh of its own, far finer than the bench; nothing stands on it, so it is not in `landHeight`. */
 export function rubbleAt(x: number, z: number): number {
-  return Math.max(0.85 * stones(x, z, 0.66, 0.5, 1), stones(x, z, 0.34, 0.75, 4), 0.6 * stones(x, z, 0.17, 0.8, 9)) + 0.02;
+  const grit = 0.03 * noise(x / 0.35 + 2.7, z / 0.35 + 5.9);
+  return Math.max(rubbleBlocks(x, z), grit) + 0.02;
 }
 
 // The butte of the feeding picture (shot heart-02 alone): the approved picture has a dark flat-topped mass over the right of its frame, close behind
