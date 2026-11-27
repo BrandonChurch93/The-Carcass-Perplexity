@@ -1,5 +1,5 @@
 // The gill-plumes: crimson feathered growths on the lip of the shaft and a few seedlings away from it.
-// Every bush is grown once from the seeded stream (fronds.ts): limbs that lean from one holdfast and fork, hung with wet threads in locks.
+// Every bush is grown once from the seeded stream (sprays.ts): stalks that leave one holdfast and fork, and fork again, down to wet filaments.
 // Each bush is its own two meshes, so one that is out of the frame costs nothing. The sway and the drops are in the vertex shaders (shaders.ts).
 import * as THREE from 'three';
 import { BUSHES, SEA_LEVEL, SEEDLINGS, WIND, bushAt, onRim, shotSpan } from '../shared/anchors';
@@ -7,7 +7,7 @@ import { stagedSeconds } from '../shared/stage';
 import { surgeAt } from '../shared/blockout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
-import { grow, type Bush, type Grown, type Tip } from './fronds';
+import { grow, type Bush, type Grown, type Tip } from './sprays';
 import { DROP_FRAGMENT, DROP_VERTEX, STEM_FRAGMENT, STEM_VERTEX, THREAD_FRAGMENT, THREAD_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['gill-plumes'];
@@ -18,21 +18,21 @@ const HERO_WEST = 4.6;
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
 const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
-  [-28.3, 11.5, 4.6, 1],
-  [-27.2, 13.2, 3.4, 1],
-  [-31.0, 12.5, 3.4, 1],
-  [-32.8, 14.4, 2.6, 1],
-  [-30.6, 18.0, 2.2, 1],
-  [-32.4, 19.3, 1.0, 0.5],
-  [-30.8, 21.6, 0.75, 0.5],
-  [-33.6, 16.6, 1.2, 0.5],
-  [-34.9, 20.4, 0.8, 0.5],
+  [-28.3, 11.5, 4.6, 0.5],
+  [-27.2, 13.2, 3.4, 0.5],
+  [-31.0, 12.5, 3.4, 0.5],
+  [-32.8, 14.4, 2.6, 0.5],
+  [-30.6, 18.0, 1.6, 0.5],
+  [-32.4, 19.3, 0.7, 0.45],
+  [-30.8, 21.6, 0.55, 0.45],
+  [-33.6, 16.6, 0.8, 0.45],
+  [-34.9, 20.4, 0.6, 0.45],
 ];
 
 /** Staged for shot breath-02: where each hanging one is rooted (x, z), how tall, and the point on the ground it leans over (x, z). */
 const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
-  [-13.1, 30.4, 7.6, -11.4, 28.3],
-  [-14.5, 28.4, 6.6, -12.5, 26.2],
+  [-14.1, 27.6, 4.2, -9.9, 25.8],
+  [-15.0, 26.0, 3.8, -10.8, 24.2],
 ];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
@@ -81,7 +81,7 @@ export function create(ctx: Context): Piece {
     // left and behind it, out of its frame; what hangs into that frame is grown for that shot alone (HANG).
     const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] - 0.55, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.68 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, mound: i < 2 ? 0 : i === 5 ? 0.3 : 0.6, tidy: i === 5 });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.68 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 || i === 5 ? 'sweep' : 'fountain' });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
@@ -89,7 +89,7 @@ export function create(ctx: Context): Piece {
   for (let j = 0; j < 16; j++) {
     const bearing = -72 + (j + fill.next()) * (50 / 16);
     const [x, z] = onRim(bearing, fill.range(0.8, 5.5));
-    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4, mound: 0.7 });
+    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain' });
   }
   // And on the lip west of the first tall one, toward the channel: the low end of the crescent, left of every lens that stands at the lip
   // (the breath-03 lens at x -32.5 looks north past it; from the rim's lens it is small red tufts at the left).
@@ -100,19 +100,20 @@ export function create(ctx: Context): Piece {
     const tall = fill.range(0.9, 1.9);
     const y = floor(x, z);
     if (y < SEA_LEVEL + 0.12) continue;
-    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, mound: 0.7 });
+    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain' });
   }
   // A seedling whose anchor is under the water is not grown: nothing of this kind roots in the channel.
-  for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
+  for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4, habit: 'sweep' });
 
   const grown: Grown[] = bushes.map((bush) => grow(bush, rng, floor));
 
   const rimRng = ctx.rng('gill-plume-rim');
-  const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, mound: 1 }));
+  // The low ones on the plate are sprigs: a few swept stalks. The tall ones are fountains of brush.
+  const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, habit: tall < 1 ? 'sweep' : 'fountain', full: tall < 1 ? 0.6 : 1 }));
   // In that shot the two tall ones by the lens of breath-03 are low domes too (see setTime).
   for (let i = 0; i < 2; i++) {
     const b = bushes[i] as Bush;
-    rimBushes.push({ x: b.x, y: b.y, z: b.z, tall: i === 0 ? 3.0 : 3.4, lean: b.lean, detail: 0.5, mound: 1 });
+    rimBushes.push({ x: b.x, y: b.y, z: b.z, tall: i === 0 ? 3.0 : 3.4, lean: b.lean, detail: 0.5, habit: 'fountain' });
   }
   const rimGrown: Grown[] = rimBushes.map((bush) => grow(bush, rimRng, floor));
   // Staged by shot (breath-02): two tall weeping ones on the south-west lip, rooted to the left of that lens and leaning across its upper left
@@ -120,7 +121,7 @@ export function create(ctx: Context): Piece {
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
-    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, mound: 0, weep: 1, tidy: true };
+    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 1.7 };
   });
   const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 
@@ -134,10 +135,14 @@ export function create(ctx: Context): Piece {
     uSurge: surge,
     uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) },
   };
-  // Opaque and whole: the engine lays their depth first, and a thread behind another costs only that.
-  const threadMaterial = new THREE.ShaderMaterial({ vertexShader: THREAD_VERTEX, fragmentShader: THREAD_FRAGMENT, uniforms, side: THREE.DoubleSide });
-  const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms });
+  // Opaque and whole: the engine lays their depth first, and a strip behind another costs only that. Each bush has its own two
+  // materials (one program for all of them), because its sway is worked from its own root.
+  const materials: THREE.ShaderMaterial[] = [];
   const meshes = (g: Grown, into: THREE.Group): void => {
+    const own = { ...uniforms, uBush: { value: g.root }, uTall: { value: g.tall } };
+    const threadMaterial = new THREE.ShaderMaterial({ vertexShader: THREAD_VERTEX, fragmentShader: THREAD_FRAGMENT, uniforms: own, side: THREE.DoubleSide });
+    const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms: own });
+    materials.push(threadMaterial, stemMaterial);
     into.add(new THREE.Mesh(g.threads, threadMaterial), new THREE.Mesh(g.stems, stemMaterial));
   };
 
@@ -187,19 +192,20 @@ export function create(ctx: Context): Piece {
   const drops = ctx.rng('gill-plume-drops');
   const dropsOf = (all: Grown[], share: number): THREE.BufferGeometry => {
     const geometry = new THREE.BufferGeometry();
-    const fields: Record<'aA' | 'aB' | 'aC' | 'aSway' | 'aTint' | 'aDrop', number[]> = { aA: [], aB: [], aC: [], aSway: [], aTint: [], aDrop: [] };
+    const fields: Record<'aA' | 'aB' | 'aC' | 'aSway' | 'aTint' | 'aDrop' | 'aBush', number[]> = { aA: [], aB: [], aC: [], aSway: [], aTint: [], aDrop: [], aBush: [] };
     const position: number[] = [];
     const corner: number[] = [];
     const index: number[] = [];
     let count = 0;
-    const quad = (tip: Tip, every: number, offset: number, size: number, falls: number, ground: number): void => {
+    const quad = (g: Grown, tip: Tip, every: number, offset: number, size: number, falls: number, ground: number): void => {
       for (const [cx, cy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]] as const) {
         position.push(tip.a[0], tip.a[1], tip.a[2]);
         fields.aA.push(...tip.a);
         fields.aB.push(...tip.b);
         fields.aC.push(...tip.c);
         fields.aSway.push(...tip.sway);
-        fields.aTint.push(...tip.tint);
+        fields.aTint.push(tip.tint[0], tip.tint[1], tip.tint[2], g.tall);
+        fields.aBush.push(g.root.x, g.root.y, g.root.z, g.root.w);
         fields.aDrop.push(every, offset, size, falls);
         corner.push(cx, cy, ground);
       }
@@ -207,20 +213,21 @@ export function create(ctx: Context): Piece {
       count += 4;
     };
     for (const g of all) {
-      for (const tip of g.tips) {
-        // Only a point with open air under it drips where it can be seen: the others drip into the bush.
-        if (tip.under < 0.8 || drops.next() > share) continue;
+      // Only a point with open air under it drips where it can be seen: the others drip into the bush. `share` is how many drip, a bush.
+      const open = g.tips.filter((tip) => tip.under > 0.9);
+      for (const tip of open) {
+        if (drops.next() > share / Math.max(1, open.length)) continue;
         const every = drops.range(2.2, 8);
         const offset = drops.range(0, 11);
         const size = drops.range(0.009, 0.02);
         const x = tip.a[0] + tip.b[0] + tip.c[0];
         const z = tip.a[2] + tip.b[2] + tip.c[2];
         const ground = floor(x, z);
-        quad(tip, every, offset, size, 0, ground);
-        quad(tip, every, offset, size, 1, ground);
+        quad(g, tip, every, offset, size, 0, ground);
+        quad(g, tip, every, offset, size, 1, ground);
         // A drop seldom falls alone: a smaller one follows it off the same point.
-        quad(tip, every, offset - 0.17, size * 0.7, 1, ground);
-        quad(tip, every, offset - 0.36, size * 0.55, 1, ground);
+        quad(g, tip, every, offset - 0.17, size * 0.7, 1, ground);
+        quad(g, tip, every, offset - 0.36, size * 0.55, 1, ground);
       }
     }
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
@@ -232,7 +239,7 @@ export function create(ctx: Context): Piece {
   };
   // Only the bushes a lens comes close to have drops that can be seen.
   const nearOnes = grown.filter((_g, i) => (bushes[i] as Bush).detail >= 1);
-  const dropGeometries = [dropsOf(nearOnes, 0.16), dropsOf([], 0), dropsOf(hangGrown, 0.2)];
+  const dropGeometries = [dropsOf(nearOnes, 45), dropsOf([], 0), dropsOf(hangGrown, 90)];
   const dropMaterial = new THREE.ShaderMaterial({
     vertexShader: DROP_VERTEX,
     fragmentShader: DROP_FRAGMENT,
@@ -309,8 +316,7 @@ export function create(ctx: Context): Piece {
         g.threads.dispose();
         g.stems.dispose();
       }
-      threadMaterial.dispose();
-      stemMaterial.dispose();
+      for (const m of materials) m.dispose();
       for (const g of dropGeometries) g.dispose();
       dropMaterial.dispose();
       holdfastMaterial.dispose();
