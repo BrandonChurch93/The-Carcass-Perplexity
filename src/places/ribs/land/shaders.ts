@@ -457,7 +457,7 @@ void main() {
   }
   // The hanks that stand proud are olive and gold brown, and wet.
   float hem = smoothstep(0.42, 0.72, wn.z + 0.25 * (fine - 1.0));
-  albedo = mix(albedo, vec3(0.06, 0.046, 0.018) * (0.5 + 0.6 * fine), (0.45 + 0.3 * closeW) * hem);
+  albedo = mix(albedo, vec3(0.06, 0.046, 0.018) * (0.5 + 0.6 * fine) * (1.0 + 0.9 * closeW), (0.45 + 0.35 * closeW) * hem);
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
   // One place on the wall where the water of the shelf above runs off: a band a stride or two wide that wanders as it comes down.
@@ -467,7 +467,7 @@ void main() {
   float fall = smoothstep(0.55, 0.85, vnoise(vec2(wander * 9.0, vWorld.y * 0.5 + uTime * 6.0))) * (0.45 + 0.55 * vnoise(vec2(wander * 3.1, vWorld.y * 2.3 + uTime * 9.0)));
   float runs = rill * smoothstep(0.42, 0.7, vnoise(vec2(wander * 6.0, vWorld.y * 0.4 + uTime * 4.0)));
   albedo *= 1.0 - 0.4 * rill;
-  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), mix(0.62, 0.3, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
+  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), mix(0.66, 0.4, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
   float occ = (0.25 + 0.75 * smoothstep(0.08, 0.5, wn.z)) * (0.6 + 0.4 * smoothstep(0.2, 0.7, nh.z)) * (0.6 + 0.4 * vShade);
   // On a wall of beds the weed hangs in clumps from each ledge and thins toward the next one down: between the clumps the wall is bare
   // wet rock with its barnacles, dark under the ledge it hangs from.
