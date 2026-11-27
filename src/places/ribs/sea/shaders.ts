@@ -359,13 +359,15 @@ export const POOL_VERTEX = /* glsl */ `
 attribute float aDepth;
 varying vec3 vWorld;
 varying float vDepth;
+varying vec2 vLens;
 void main() {
   vWorld = position;
   vDepth = aDepth;
+  vLens = vec2(projectionMatrix[2][2], projectionMatrix[3][2]);
   gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
 }`;
 
-export const POOL_FRAGMENT = (rings: number): string => /* glsl */ `
+const POOL_SHEET = (rings: number): string => /* glsl */ `
 precision highp float;
 ${RIG_GLSL}
 uniform sampler2D tChop;
@@ -545,6 +547,45 @@ void main() {
   gl_FragColor = vec4(rigOut(col), alpha) * (1.0 - uSolo) * toSea;
   if (dry) discard;
 }`;
+
+/**
+ * The film's sheet knows what stands in it. The engine draws the depth of every solid thing first (src/core/engine.ts, the place's
+ * `depthFirst`); the sheet reads it (index.ts hands it over as tWetSeen) and so has the metres of water that lie along the eye's line
+ * between its own surface and the first stone, weed or sand under it. Where that goes to nothing something breaks the surface: the water
+ * climbs it in a bright thread and leaves lace round it, in a line as ragged as the lace, not the ruled cut of a plane through a model.
+ * The card loop keeps the sheet's text as it was.
+ */
+const WET_EDGE: [string, string][] = [
+  ['uniform sampler2D tFoamPic;\nvarying vec3 vWorld;', 'uniform sampler2D tFoamPic;\nuniform highp sampler2D tWetSeen;\nuniform float uWetSeen;\nvarying vec2 vLens;\nvarying vec3 vWorld;'],
+  [
+    '  float film = 0.09 + 0.3 * under;',
+    `  float standing = 1e3;
+  if (uWetSeen > 0.5) {
+    float there = vLens.y / (2.0 * texelFetch(tWetSeen, ivec2(gl_FragCoord.xy), 0).r - 1.0 + vLens.x);
+    float here = vLens.y / (2.0 * gl_FragCoord.z - 1.0 + vLens.x);
+    standing = max(there - here, 0.0) * dist / here;
+  }
+  // Only what stands up out of the bed: over the bed itself the water thins as the land's own height says, and that edge is drawn already.
+  float stone = (1.0 - smoothstep(0.3, 0.8, standing * max(v.y, 0.02) / max(depth, 0.01))) * (1.0 - smoothstep(120.0, 260.0, dist));
+  float film = 0.09 + 0.3 * under;`,
+  ],
+  [
+    '  float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));',
+    `  float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
+  lip = max(lip, stone * (1.0 - smoothstep(0.0, 0.05, standing)));`,
+  ],
+  [
+    '  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);',
+    `  float collar = stone * (1.0 - smoothstep(0.02, 0.05 + 0.6 * barB.a * barA.a, standing)) * smoothstep(0.42, 0.7, lace + 0.6 * (c1.a - 0.5)) * (0.25 + 0.75 * stretch);
+  foamed = max(foamed, 0.8 * collar);
+  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);`,
+  ],
+];
+export const POOL_FRAGMENT = (rings: number): string =>
+  WET_EDGE.reduce((text, [from, to]) => {
+    if (text.split(from).length !== 2) throw new Error(`The sheet has no such line, or more than one: ${from}`);
+    return text.replace(from, () => to);
+  }, POOL_SHEET(rings));
 
 const BORE_SHAPE_GLSL = /* glsl */ `
 uniform float uFront;
@@ -764,7 +805,7 @@ const WASH = { rise: 0.12, late: 0.1, near: 0.14 };
  */
 const GUST = { at: [-172, 62] as const, way: [0.94, 0.34] as const, reach: 62, long: 36 };
 export const POOL_LOOP_FRAGMENT = (rings: number): string =>
-  loopText(POOL_FRAGMENT(rings), [
+  loopText(POOL_SHEET(rings), [
     ['uniform sampler2D tChop;', 'uniform sampler2D tChop;\nuniform vec2 uLoop;'],
     ['- uTime * uWind * 0.16', '- (uLoop.x * uWind * 0.16 + uLoop.y * vec2(1.0, 1.0))'],
     ['+ uTime * vec2(uWind.y, -uWind.x) * 0.3', '+ (uLoop.x * vec2(uWind.y, -uWind.x) * 0.3 + uLoop.y * vec2(2.0, -1.0))'],
