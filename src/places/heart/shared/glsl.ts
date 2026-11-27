@@ -198,14 +198,15 @@ vec3 lakeLip(vec3 p, float h) {
 // crust beside it stood as cold as ground a hundred metres off. But the fire of a channel lies at the level of its bank and comes to it along
 // the ground, and what takes it is whatever leans toward it, by how far it leans (a face leaning a half all of it, a ripple of the
 // crust two fifths, a level face a tenth, by the grains of rough ground that face the fire): one tap 3.5 m out the way the face leans (a level face:
-// where it lies), over a disc that holds 1 to 6 m. The side of a block that is turned to the fire burns and its top does not: the rim is hard. It is gone by
-// 5 m above the lake. It goes with the round lights (emitterIrradiance), which every owner takes whole, and under their shade: a pad or a
+// where it lies), over a disc that holds 1 to 6 m. The side of a block that is turned to the fire burns and its top does not: the rim is hard. It is whole to
+// 0.9 m above the lake and gone by 2.2 m: at 5 m it lit the whole flank of a mound that stands by a seam, and the mound at the lens's feet in the
+// view of the mouth stood as a red slab where it is dark. It goes with the round lights (emitterIrradiance), which every owner takes whole, and under their shade: a pad or a
 // body that stands between cuts it. The out argument is the way to the fire along the ground.
 vec3 lakeBank(vec3 p, vec3 n, out vec2 toward) {
   float h = max(p.y, 0.0);
   float side = length(n.xz);
   toward = n.xz / max(side, 0.25);
-  return lakeGlow(p.xz + toward * 3.5, 2.5) * (3.14159 * LAKE_BANK * (0.1 + 0.9 * smoothstep(0.0, 0.5, side)) * smoothstep(5.0, 2.0, h));
+  return lakeGlow(p.xz + toward * 3.5, 2.5) * (3.14159 * LAKE_BANK * (0.1 + 0.9 * smoothstep(0.0, 0.5, side)) * smoothstep(2.2, 0.9, h));
 }
 vec3 lakeIrradiance(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);
@@ -306,7 +307,7 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   poolLit *= clamp(0.4 + 2.4 * dot(n.xz, poolWay), 0.0, 1.0);
   e += poolLit;
   aim += vec3(poolWay, 1.0) * poolLit.r;
-  if (p.y < 5.0) {
+  if (p.y < 2.2) {
     vec2 bankWay;
     vec3 bankLit = lakeBank(p, n, bankWay);
     e += bankLit;
