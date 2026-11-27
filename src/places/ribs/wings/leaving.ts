@@ -65,6 +65,7 @@ export const leaving = (l: Leaver, seconds: number, out: Flying): number => {
   out.drawn = 1 - smooth(-0.6, -0.08, tau);
   out.deep = smooth(-0.6, -0.05, tau);
   out.stroke = tau < 0 ? -0.5 * (1 - smooth(-0.6, 0, tau)) : (8.2 + 2.2 * l.seed) * tau + 3.4 * (1 - Math.exp(-tau * 1.6));
+  out.neck = 0.55 - 0.4 * smooth(-0.3, 0.15, tau) + 0.25 * smooth(0.8, 2.2, tau);
   out.legs = tau < PUSH ? legsDown(tau) : 1.1 * (1 - smooth(PUSH, 0.75 + 0.3 * l.seed, tau));
   return tau;
 };

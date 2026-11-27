@@ -3,7 +3,7 @@
 // the blade, in metres (along the spine, across it in the blade's plane, through it), and its normal in that space, and the shader lays the
 // stone on three axes of that space. The grooves of the stone picture so run the length of the blade, as the approved picture has them.
 import * as THREE from 'three';
-import { partAtHeight, radii, surface, type Rib } from '../layout';
+import { TIDE, partAtHeight, radii, surface, type Rib } from '../layout';
 import { cells3, noise2, noise3, smooth } from './noise';
 import { sheet } from './shapes';
 
@@ -28,12 +28,63 @@ export interface Crag {
 const CELL = { id: 0, edge: 0 };
 
 /**
- * The rock of a blade is broken, not turned: it has come away in plates that lie along the spine (a hall long, a house wide), each standing
- * at its own depth with a crack round it; smaller plates on those; beds across the blade of unlike thickness that end in a ledge and die out;
- * and bites out of the thin edges, which is where its outline against the sky is broken. Nothing here runs level round the blade.
+ * The rock of a blade is one clean sweep, as a tusk's is: what breaks it is small. Long flutes run with the spine; thin plates a hall long
+ * and a room wide stand a hand or two proud of their neighbours, each with a crack round it; here and there a plate has spalled away
+ * and left a shallow scar with a crisp rim; beds cross the blade and end in a low ledge. The thin edges are the blade's outline against
+ * the sky: they keep their line and are only nicked, a stride or two, where a bed steps or a block has gone.
  * s runs along the spine, u across the blade in its plane, w through it (metres); x, y, z are the world; edge is 0 on a broad face, 1 on a thin edge.
  */
 export function bladeCrag(s: number, u: number, w: number, x: number, y: number, z: number, edge: number, out: Crag): void {
+  const face = 1 - edge;
+  // The face swells and sinks a little over the size of a hall: it is no machined plane.
+  let d = face * (2.0 * (noise3(x / 80, y / 95, z / 80) - 0.5) + 0.8 * (noise3(x / 29, y / 33, z / 29) - 0.5));
+  // The plates are bent: their walls wander.
+  const bx = 26 * (noise3(s / 60, u / 31, w / 31) - 0.5) + 7 * (noise3(s / 19 + 4.4, u / 11, w / 11) - 0.5);
+  const bu = 9 * (noise3(s / 43 + 9.1, u / 17, w / 17) - 0.5) + 2.4 * (noise3(s / 13, u / 6 + 2.2, w / 6) - 0.5);
+  // Broken ground lies in fields; between them the face is quiet.
+  const rough = smooth(0.4, 0.62, noise3(s / 150 + 2.2, u / 80, w / 80));
+  // Flutes with the spine, a few strides across, long as the blade: their crests are sharp, their beds round.
+  const fl = noise3(s / 170 + 1.7, (u + 0.4 * bu) / 6.5, w / 6.5);
+  const flute = 1 - Math.abs(2 * fl - 1);
+  d += face * 0.55 * (flute * flute - 0.35);
+  cells3((s + bx) / 54, (u + bu) / 15, w / 15, CELL);
+  const toneA = CELL.id * 2 - 1;
+  const wallA = (0.3 + 0.7 * rough) * (1 - smooth(0.0, 1.5, CELL.edge * 15));
+  // One plate in five has spalled, and left a scar the depth of a stride.
+  const gone = CELL.id > 0.8 ? 0.35 + 0.65 * rough : 0;
+  d += face * ((0.32 + 0.3 * rough) * toneA - 0.85 * gone) - 0.3 * wallA;
+  cells3((s + bx) / 15 + 7.7, (u + bu) / 5.2 + 3.3, w / 5.2, CELL);
+  const toneB = CELL.id * 2 - 1;
+  const wallB = 1 - smooth(0.0, 0.9, CELL.edge * 5.2);
+  const small = 0.12 + 0.88 * rough;
+  d += small * (0.26 * toneB * face - 0.2 * wallB);
+  // Beds across the blade, of unlike thickness: each stands a little over the one under it and ends in a low ledge, and a ledge dies out.
+  const bed = (s + 13 * (noise3(s / 95, u / 36, w / 36) - 0.5) + 0.22 * u) / 9.5;
+  const c = bed + 0.34 * Math.sin(bed * 2.1) + 0.14 * Math.sin(bed * 5.3 + 1);
+  const k = Math.floor(c);
+  const f = c - k;
+  const strong = smooth(0.46, 0.72, noise3(k * 1.7 + 0.5, u / 28, w / 28 + s / 140));
+  d += strong * face * (0.45 * (f - 0.45) - 0.4 * (1 - smooth(0, 0.07, f)));
+  // Broken at the size of a boat.
+  d += (0.35 + 0.65 * rough) * 0.3 * (noise3(x / 7, y / 5, z / 7) - 0.5);
+  // The outline: every tower's height or so a course steps in or out by a stride, and where a block has gone the edge is nicked.
+  const course = (s + 24 * (noise3(s / 160, u / 60, w / 60) - 0.5) + 0.3 * u) / 37;
+  const ck = Math.floor(course);
+  const cf = course - ck;
+  const stepped = noise2(ck * 3.7 + 0.5, 11.5) - 0.5;
+  const bite = smooth(0.6, 0.7, noise3(s / 46 + 3.1, u / 70, w / 25 + 5.5)) + 0.5 * smooth(0.58, 0.7, noise3(s / 13 + 1.3, u / 30, w / 12));
+  d += edge * (1.5 * stepped - 0.5 * (1 - smooth(0, 0.05, cf)) - 2.2 * bite + 0.7 * (noise3(s / 6, u / 9, w / 9) - 0.5));
+  out.d = d;
+  out.crack = Math.max(wallA, 0.5 * small * wallB, 0.9 * strong * (1 - smooth(0, 0.1, f)));
+  out.tone = 0.6 * toneA + 0.4 * toneB;
+  out.deep = Math.min(1, Math.max(0, 0.6 * gone + 0.3 * Math.max(0, -toneA) + 0.2 * small * Math.max(0, -toneB) + 0.5 * wallA + 0.35 * small * wallB + 0.3 * edge * bite));
+}
+
+/**
+ * The near cliff is no tusk: it is a broken, bedded wall with an overhanging lip, plates the depth of a house and beds that end in
+ * ledges. It keeps the relief and the stone it had.
+ */
+function cliffCrag(s: number, u: number, w: number, x: number, y: number, z: number, edge: number, out: Crag): void {
   // Masses the size of a hall and of a house.
   let d = 7 * (noise3(x / 80, y / 95, z / 80) - 0.5) + 2.4 * (noise3(x / 29, y / 33, z / 29) - 0.5);
   // The plates are bent: their walls wander.
@@ -118,6 +169,7 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
   const base = new THREE.Vector3();
   const out = new THREE.Vector3();
   const crag: Crag = { d: 0, crack: 0, tone: 0, deep: 0 };
+  const keeled = rib.taper !== undefined && rib.cut === undefined && rib.name !== 'OL' && rib.name !== 'OR';
   const crags = new Float32Array(rows * cols * 3);
   const rowOf = (j: number): number => (j === 0 ? 0 : Math.min(j - 1, body - 1));
   const g = sheet(rows, cols, true, 'out', (j, i, p) => {
@@ -132,12 +184,16 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
     const tr = ts[r] as number;
     const [a0r, b0r] = radii(rib, tr);
     // Notched along its length, a little: what breaks the blade is its rock, not its turning.
-    const notch = 1 + smooth(0.06, 0.2, tr) * (0.06 * (noise2(tr * 8 + rib.x * 0.013, 1.5) - 0.5) + 0.04 * (noise2(tr * 23 + rib.z * 0.01, 4.5) - 0.5));
+    const notch = 1 + smooth(0.06, 0.2, tr) * (0.03 * (noise2(tr * 8 + rib.x * 0.013, 1.5) - 0.5) + 0.015 * (noise2(tr * 23 + rib.z * 0.01, 4.5) - 0.5));
     const a = a0r * notch;
     const b = b0r * (1 + 0.3 * (notch - 1));
     const shrink = j - 1 < body ? 1 : (cap[j - 1 - body] as number);
-    base.copy(surface(rib, tr, phi, a * shrink, b * shrink));
-    out.copy(surface(rib, tr, phi, a * shrink + 1, b * shrink + 1)).sub(base);
+    // Above the weed a tusk is keeled: its section is a lens that comes to an edge on both sides, not an oval. The foot keeps its
+    // oval, which the weed, the sea and the rocks stand round.
+    const keel = keeled ? smooth(TIDE + 8, TIDE + 80, (centres[r] as THREE.Vector3).y) : 0;
+    const lens = 1 + keel * (Math.abs(Math.sin(phi)) - 1);
+    base.copy(surface(rib, tr, phi, a * shrink, b * shrink * lens));
+    out.copy(surface(rib, tr, phi, a * shrink + 1, (b * shrink + 1) * lens)).sub(base).normalize();
     if (shrink < 1) {
       // The tip, or the broken top of a stump: closed over, a little proud of the last ring.
       const lift = (1 - shrink) * Math.min(a, b) * (rib.cut === undefined ? 0.7 : 0.25);
@@ -155,11 +211,11 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
     const cphi = Math.cos(phi);
     const s0 = (along[r] as number) + rib.z * 0.11;
     if (options.plain) {
-      crag.d = 7 * (noise3(base.x / 80, base.y / 95, base.z / 80) - 0.5);
+      crag.d = 2 * (noise3(base.x / 80, base.y / 95, base.z / 80) - 0.5);
       crag.crack = 0;
       crag.tone = 0;
       crag.deep = 0;
-    } else bladeCrag(s0, a * shrink * cphi + rib.x * 0.37, b * shrink * Math.sin(phi), base.x, base.y, base.z, cphi * cphi * cphi * cphi, crag);
+    } else (rib.name === 'L1' ? cliffCrag : bladeCrag)(s0, a * shrink * cphi + rib.x * 0.37, b * shrink * Math.sin(phi), base.x, base.y, base.z, cphi * cphi * cphi * cphi, crag);
     const d = crag.d * slim * (0.3 + 0.7 * low) * (shrink < 1 ? 0.5 + 0.5 * shrink : 1);
     const k3 = (j * cols + i) * 3;
     crags[k3] = crag.crack * low;
