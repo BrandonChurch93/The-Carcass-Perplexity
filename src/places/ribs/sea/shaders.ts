@@ -246,7 +246,8 @@ void main() {
   amount = max(amount, 0.58 * caps.x * caps.x * nearBreak);
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
   // Round white water and under it the sea is full of air: milky and pale green, lit from inside, where a break has just been.
-  float aired = smoothstep(0.08, 0.75, amount) * (0.3 + 0.7 * smoothstep(0.3, 0.8, lace));
+  // Less of it close under the lens: there the holes in the lace are seen each for itself, and they are dark water.
+  float aired = smoothstep(0.08, 0.75, amount) * (0.3 + 0.7 * smoothstep(0.3, 0.8, lace)) * (1.0 - 0.55 * nearBreak);
   col += (1.0 - fres) * vec3(0.25, 0.32, 0.3) * aired * eBody / 3.14159;
   // Thick where it is dense, thin and grey at its rim, where the water shows through it.
   float thick = smoothstep(1.25 - amount, 1.9 - amount, lace);
@@ -282,9 +283,9 @@ void main() {
     float stands = mix(big.b, 0.6 * big.b + 0.4 * small.b, close);
     vec3 nf = normalize(n + vec3(tilt.x, 0.0, tilt.y) * (0.5 + 1.1 * cover));
     vec3 keyDir = normalize(mix(uSkyBreak, uSunDir, sun));
-    float turned = 1.0 + 0.5 * (dot(nf, keyDir) - dot(n, keyDir));
+    float turned = 1.0 + mix(0.5, 0.85, close) * (dot(nf, keyDir) - dot(n, keyDir));
     // The hollows between clots are in their shade; a thin rim is half water, and the green shows through it.
-    float hollow = 0.74 + 0.26 * smoothstep(0.12, 0.7, stands);
+    float hollow = mix(0.74, 0.6, close) + mix(0.26, 0.4, close) * smoothstep(0.12, 0.7, stands);
     float dense = max(thick, fresh);
     vec3 white = mix(vec3(0.62, 0.73, 0.71), vec3(0.93, 0.95, 0.95), dense);
     vec3 foamCol = white * (0.88 + 0.12 * pic) * turned * hollow * mix(0.86, 1.08, max(fresh, surfZone)) * (1.0 + 0.3 * thin) * eFoam / 3.14159;
@@ -336,14 +337,27 @@ export const SEA_OPENING_FRAGMENT = openingText(
     [
       '  float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);',
       `  // The heaviest crests of the long swell topple at their tops and leave white water behind them in lace.
-  float topple = smoothstep(2.9, 4.4, h + 1.4 * (c1.b - 0.5) + 0.8 * (lacePic - 0.5)) * uOpenSea.z * calm;
-  amount = max(amount, 0.85 * topple);
+  float toppleAt = h + 1.4 * (c1.b - 0.5) + 0.8 * (lacePic - 0.5);
+  float topple = smoothstep(2.9, 4.4, toppleAt) * uOpenSea.z * calm;
+  // The gale draws what they leave out down the wind: close by the lace lies in torn lines with dark water between, not in an even sheet.
+  float drawn = dot(textureLod(tFoamPic, vec2(dot(p, across) / 5.0, dot(p, uWind) / 21.0 - uTime * 0.06) + (c1.xy - 0.5) * 0.14 + (c2.xy - 0.5) * 0.05, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 5.0, 1e-6))).rgb, vec3(0.3333));
+  lace *= mix(1.0, 0.56 + 0.95 * smoothstep(0.24, 0.8, drawn), uOpenSea.z * (1.0 - smoothstep(0.05, 0.4, px)));
+  amount = max(amount, 0.7 * topple);
   // Where a sea of the set has struck a foot the water is white round it: the wash goes out from the stone over the swell and thins to lace.
   for (int i = 0; i < 2; i++) {
     float off = length((p - uWash[i].xy) * vec2(1.0, 1.8)) / uWash[i].z;
     amount = max(amount, uWash[i].w * (1.0 - smoothstep(0.3, 1.0, off + 0.5 * (lacePic - 0.5) + 0.25 * (c1.b - 0.5))));
   }
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);`,
+    ],
+    [
+      '  foam = max(foam, 0.82 * fresh);',
+      `  // In rafts on the top, and down the face the swell runs toward, the water is heaped white: thick, in clots, the one thing in the sea that is white all through.
+  float spill = max(topple * smoothstep(0.46, 0.76, laceWide + 0.6 * (c1.b - 0.5)), smoothstep(3.2, 4.2, toppleAt) * smoothstep(-0.03, 0.03, -dot(g, vec2(0.06, -0.998)))) * uOpenSea.z * calm;
+  float heaped = spill * smoothstep(0.34, 0.62, 0.5 * lacePic + 0.5 * laceFine + 0.3 * spill);
+  fresh = max(fresh, heaped);
+  foam = max(foam, 0.82 * fresh);
+  foam = max(foam, 0.95 * heaped);`,
     ],
   ],
 );
