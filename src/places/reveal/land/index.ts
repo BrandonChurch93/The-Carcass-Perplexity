@@ -891,16 +891,22 @@ void main() {
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
   bed = mix(bed, vec3(0.3, 0.06, 0.02), 0.85 * plume * (1.0 - land));
   // (South of it, round the lower leg, the currents carry ochre silt: long curling threads of it, drawn out by the water.)
-  vec2 fromSilt = (xz - uSalt - vec2(300.0, 330.0)) / vec2(640.0, 380.0);
+  vec2 fromSilt = (xz - uSalt - vec2(240.0, 350.0)) / vec2(760.0, 400.0);
   float siltAt = exp(-dot(fromSilt, fromSilt)) * smoothstep(680.0, 1100.0, uViewKm);
   if (siltAt > 0.05 && land < 1.0) {
     vec2 sc = xz / 520.0 + 0.5 * (readTile(uCloudTile, xz / 900.0 + vec2(0.2, 0.7) + uTime * vec2(0.0006, -0.0004), 1.0 / 900.0, 1.0).rg - 0.5);
     float thread = readTile(uCloudTile, sc * vec2(0.8, 1.7) + vec2(0.4, 0.1), 1.7 / 520.0, 0.5).b;
-    // (Faint plumes of it off the shores, soft and of unlike widths, thinning out to sea.)
-    vec2 calm = xz / 520.0 + uTime * vec2(0.0005, -0.0003);
-    vec2 drawn = calm * vec2(1.3, 2.6) + 1.1 * vec2(vnoise(calm * 2.1 + 3.0), vnoise(calm * 2.1 + 41.0));
-    float plumes = smoothstep(0.45, 0.9, 0.7 * vnoise(drawn) + 0.3 * vnoise(drawn * 2.7 + 9.0) + 0.15 * thread);
-    bed = mix(bed, vec3(0.16, 0.1, 0.02), 0.5 * min(1.0, 1.5 * siltAt) * plumes * exp(min(coastKm, 0.0) / 70.0) * (1.0 - land));
+    // (The currents wind it into filaments: thin threads of unlike strength that curl, part and thin out to sea, some reaches clear.)
+    vec2 calm = xz / 300.0 + uTime * vec2(0.0008, -0.0005);
+    vec2 wound = calm * vec2(1.0, 1.7);
+    wound += 0.9 * vec2(vnoise(wound * 1.3 + 3.0), vnoise(wound * 1.3 + 41.0));
+    wound += 0.3 * vec2(vnoise(wound * 3.3 + 7.0), vnoise(wound * 3.3 + 19.0));
+    float wide = 1.0 - abs(2.0 * vnoise(wound * 2.1) - 1.0);
+    float fine = 1.0 - abs(2.0 * vnoise(wound * 4.7 + 13.0) - 1.0);
+    float reach = smoothstep(0.2, 0.62, vnoise(calm * 0.9 + 8.0));
+    float swirl = smoothstep(0.8, 0.97, wide) * reach + 0.6 * smoothstep(0.84, 0.98, fine) * (1.0 - 0.6 * reach) * smoothstep(0.3, 0.6, thread);
+    swirl += 0.22 * smoothstep(0.5, 0.9, wide) * reach;
+    bed = mix(bed, vec3(0.24, 0.15, 0.028), min(0.7, 0.75 * min(1.0, 1.6 * siltAt) * swirl) * exp(min(coastKm, 0.0) / 420.0) * (1.0 - land));
   }
   // The lake of the Eye: black in the middle, and round it a margin of amber shallows, uneven, with tongues of it curling in.
   vec2 lakeAt = (xz - uLakeMid) / uLakeSize;
