@@ -1124,13 +1124,14 @@ export class Wader {
         let dx = sx * (1 - g) + (lagX + swX * way + ox * (flare + drift)) * g;
         let dy = sy0 * (1 - g) - g * (1 - 0.55 * under);
         let dz = sz * (1 - g) + (lagZ + swZ * way + oz * (flare + drift)) * g;
-        if (y < lieY + 0.025) {
-          // On the water, the bed or the rock: it lies along it, fanned; on the water it wavers.
+        // On the water, the bed or the rock it lies along it, fanned. It comes to lie on the water by degrees as it nears it, and wavers there.
+        const lying = afloat ? smooth(lieY + 0.07, lieY + 0.015, y) : y < lieY + 0.025 ? 1 : 0;
+        if (lying > 0) {
           const fan = Math.atan2(oz, ox) + 0.2 * Math.sin(st.phase) + (afloat ? 0.5 * Math.sin(seconds * 0.7 + st.phase * 5 + u * 5) : 0);
           const lie = afloat ? 0.8 : wet ? 0.4 : 0.9;
-          dx = Math.cos(fan) * lie + lagX * 2;
-          dz = Math.sin(fan) * lie + lagZ * 2;
-          dy = (lieY - y) * 4;
+          dx += (Math.cos(fan) * lie + lagX * 2 - dx) * lying;
+          dz += (Math.sin(fan) * lie + lagZ * 2 - dz) * lying;
+          dy += ((lieY - y) * 4 - dy) * lying;
         }
         // No strand hangs straight: a root is kinked a little, a fine end curls, more toward its tip.
         const kink = isRoot ? 0.5 : st.type === 2 ? 1.5 : 1.1;
