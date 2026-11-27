@@ -9,7 +9,6 @@ import { during } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { BED_GLSL, bedUniforms } from './bed';
-import { createBefore } from './before';
 import { createMirror } from './water';
 import { WAVES_GLSL, WAVE_TILES, createWaves } from './waves';
 
@@ -19,8 +18,6 @@ export const PARTS: readonly string[] = ['lake', 'shallows', 'shaft', 'mats', 'r
 const LEAVE_FROM = (9330 - 9221) / 60;
 
 const LAPS = 22;
-// While the swell is reworked the climb can be drawn with the water as it was.
-const CLIMB_AS_BEFORE = false;
 
 // The water the centre lifts. x: its height, y: its reach, z: the time, w: how hard the water round it is churned.
 // It is no solid of revolution: its foot wanders in and out, and its back is a slow boil of swellings that come up and go down in place.
@@ -97,7 +94,6 @@ void main() {
 
 const WATER_FRAGMENT = /* glsl */ `
 varying vec3 vWorld;
-uniform sampler2D tRipple;
 uniform vec3 uRiser[9];
 uniform sampler2D tMirror;
 uniform mat4 uMirrorMatrix;
@@ -131,35 +127,35 @@ ${WAVES_GLSL}
 ${DOME_GLSL}
 
 // Metres in from the shore. Where the built land has given way to the picture of the far world the water runs on, shallow, to the picture's own shore.
-float shoreIn(vec2 xz) {
-  float s = -landAt(xz).b;
+float shoreOf(vec4 land, vec2 xz) {
+  float s = -land.b;
   if (uNear.w > 0.5 && length(xz - uNear.xy) > uNear.z) s = max(s, 14.0);
   return s;
 }
-
-// The slope of the water from a field of small waves that repeats: two reads of it that cross make water that never comes round.
-vec2 waves(vec2 q, vec2 drift) {
-  return texture2D(tRipple, q + drift).rg + texture2D(tRipple, q * 0.73 + vec2(0.31, 0.57) - drift.yx * 1.3).rg;
+float shoreIn(vec2 xz) {
+  return shoreOf(landAt(xz), xz);
 }
 
 void main() {
   vec3 p = vWorld;
-  // The water ends where the picture of the far world stands on it.
-  if (uPlateTone.w > 0.5 && length(p.xz - uPlateAt.xz) > uPlateAt.w) discard;
+  // The one place a pixel is measured against its neighbours: here, before the water can end or any branch be taken (see gFx in the bed).
+  gFx = dFdx(p.xz);
+  gFy = dFdy(p.xz);
+  gCovers = max(length(gFx), length(gFy));
   vec3 toCamera = cameraPosition - p;
   float away = length(toCamera);
   vec3 v = toCamera / away;
   float r = length(p.xz);
   vec2 out2 = p.xz / max(r, 1e-3);
   vec4 land = landAt(p.xz);
-  float inShore = shoreIn(p.xz);
+  float inShore = shoreOf(land, p.xz);
 
   // The surface. The lake is still: what moves on it is the long breathing of a mirror, and the rings of whatever has touched it.
   // Each wave is drawn as a slope only where the pixels can hold it. What they cannot hold is not thrown away: it is counted in lost
   // and comes back as a mirror that is drawn out up and down, which is what water too fine to be seen does to what it mirrors.
-  vec2 fx = dFdx(p.xz);
-  vec2 fy = dFdy(p.xz);
-  float covers = max(length(fx), length(fy));
+  vec2 fx = gFx;
+  vec2 fy = gFy;
+  float covers = gCovers;
   vec2 level = normalize(-v.xz + vec2(1e-5, 0.0));
   vec2 slope = vec2(0.0);
   // The rings of what drinks, kept apart: they are read on the whole of the water, the mirror and what lies under it.
@@ -175,10 +171,10 @@ void main() {
     float k1 = waveKept(covers * 4.0, ${WAVE_TILES[1].toFixed(1)});
     float k2 = waveKept(covers * 4.0, ${WAVE_TILES[2].toFixed(1)});
     vec3 breath = uBreath.xyz * alive;
-    if (k0 > 0.02) slope += breath.x * waveRead(tWave0, p.xz, ${WAVE_TILES[0].toFixed(1)}, 2.0);
-    if (k1 > 0.02) slope += breath.y * waveRead(tWave1, p.xz, ${WAVE_TILES[1].toFixed(1)}, 2.0);
+    if (k0 > 0.02) slope += breath.x * waveRead(tWave0, p.xz, ${WAVE_TILES[0].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[0].toFixed(1)}) + 2.0);
+    if (k1 > 0.02) slope += breath.y * waveRead(tWave1, p.xz, ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[1].toFixed(1)}) + 2.0);
     // The longest field is as wide as the lake: it is read once, there is no second tile of it to hide.
-    slope += breath.z * texture2D(tWave2, p.xz / ${WAVE_TILES[2].toFixed(1)}, 2.0).rg;
+    slope += breath.z * textureLod(tWave2, p.xz / ${WAVE_TILES[2].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[2].toFixed(1)}) + 2.0).rg;
     lost += breath.x * breath.x * (1.0 - k0) + breath.y * breath.y * (1.0 - k1) + breath.z * breath.z * (1.0 - k2);
   }
   // Rings that leave the centre. Whatever heaves there sends out waves of four lengths, each at the speed water gives a wave of that length,
@@ -250,8 +246,8 @@ void main() {
         float beatA = fract(uTime / 2.3);
         float beatB = fract(uTime / 2.3 + 0.5);
         float share = 1.0 - abs(2.0 * beatA - 1.0);
-        vec2 runA = waveRead(tWave1, (p.xz - way * carry * beatA), ${WAVE_TILES[1].toFixed(1)}, 0.0);
-        vec2 runB = waveRead(tWave1, (p.xz - way * carry * beatB) + 19.0, ${WAVE_TILES[1].toFixed(1)}, 0.0);
+        vec2 runA = waveRead(tWave1, (p.xz - way * carry * beatA), ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[1].toFixed(1)}));
+        vec2 runB = waveRead(tWave1, (p.xz - way * carry * beatB) + 19.0, ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[1].toFixed(1)}));
         slope += mix(runB, runA, share) * (lifted * (0.07 + 0.1 * min(uDome.w, 1.0)) * inversesqrt(share * share + (1.0 - share) * (1.0 - share)));
       }
       // Where the water it has lifted runs off it and meets the lake, the lake is churned: a torn band of short steep water round its foot,
@@ -265,7 +261,7 @@ void main() {
         churn = mix(churn, uDome.w * blotch * (0.3 + 1.2 * torn), uLeave.x);
       }
       if (churn > 0.0) {
-        slope += churn * 0.1 * waveRead(tWave0, p.xz * 2.25, ${WAVE_TILES[0].toFixed(1)}, 0.0);
+        slope += churn * 0.1 * waveRead(tWave0, p.xz * 2.25, ${WAVE_TILES[0].toFixed(1)}, waveLevel(covers * 2.25, ${WAVE_TILES[0].toFixed(1)}));
         lost += churn * churn * 0.01 * (1.0 - waveKept(covers, ${(WAVE_TILES[0] / 2.25).toFixed(1)}));
       }
     }
@@ -353,6 +349,11 @@ void main() {
   vec3 rd = reflect(-v, n);
   rd.y = max(abs(rd.y), 0.003);
   rd = normalize(rd);
+  // How much of the picture of the far world one pixel of the mirror holds, waves and all. It is measured here, where every pixel has come
+  // by the same way, and the looks below are read by it: taken under a branch it would not be the same twice.
+  vec2 held = plateUv(p, rd);
+  vec2 heldX = dFdx(held);
+  vec2 heldY = dFdy(held);
   vec3 refl;
   // Three looks are for the wall. Where the lowest of them still passes over its top all three find the sky, which one look tells as well.
   bool drawnOut = spread > 0.0045 && uPlateTone.w < 1.5;
@@ -383,14 +384,14 @@ void main() {
     rUp.y = max(abs(rUp.y), 0.003);
     vec3 rDown = reflect(-v, nDown);
     rDown.y = max(abs(rDown.y), 0.003);
-    refl = wUp * farRadiance(p, normalize(rUp), soft) + wDown * farRadiance(p, normalize(rDown), soft);
+    refl = wUp * farRadianceGrad(p, normalize(rUp), soft, heldX, heldY) + wDown * farRadianceGrad(p, normalize(rDown), soft, heldX, heldY);
     // From the rim the wall in the water is small: the two outer looks, each softer, tell it.
-    if (!twoLooks) refl += wMid * farRadiance(p, rd, soft);
+    if (!twoLooks) refl += wMid * farRadianceGrad(p, rd, soft, heldX, heldY);
     else wMid = 0.0;
     refl /= max(wUp + wMid + wDown, 1e-4);
   } else {
     // A little of it is no more than a softer mirror.
-    refl = farRadiance(p, rd, soft + log2(1.0 + spread * 420.0));
+    refl = farRadianceGrad(p, rd, soft + log2(1.0 + spread * 420.0), heldX, heldY);
   }
   // Deep water gives back the high sky, not the glow along the rim: under the wall it mirrors, the pool is the blue of the sky overhead and of its own depth.
   if (pool > 0.0) {
@@ -472,7 +473,10 @@ void main() {
     noRock = 1.0 - smoothstep(0.08, 0.6, through.b);
     // Where no light comes back from the rock it is not looked for.
     if (through.b > 0.015) {
-      Bed bed = wallAt(b, down, inside);
+      // How fast the wall falls across this pixel: its depth is counted from the line of the lip, square to it, and stops where its picture ends.
+      float falls = (mix(1.7, 0.22, rimEye) + 2.0 * mix(0.16, 0.004, rimEye) * inside) * step(down, 16.6);
+      vec2 square = vec2(lip.z, -lip.y);
+      Bed bed = wallAt(b, down, inside, falls * vec2(dot(square, fx), dot(square, fy)));
       deep += bed.albedo * e * (bed.occ / 3.14159) * through * runs;
     }
     // What rises: a pale shape under the dome, never the whole of it.
@@ -523,16 +527,15 @@ void main() {
     float downward = uLeave.x * smoothstep(0.3, 0.8, v.y);
     float lanes = vnoise(p.xz / 90.0 + 9.0);
     float along = vnoise(p.xz / 37.0 + 4.0);
-    // How much water one pixel covers, in metres: no wave shorter than a few of them is drawn, so none can beat against the pixels.
-    float covers = max(length(dFdx(p.xz)), length(dFdy(p.xz)));
+    // No wave shorter than a few pixels is drawn, so none can beat against them.
     // Over the place where it went down the water lies smooth, a slick with a torn edge: the wind has no hold on it yet.
     float slick = smoothstep(0.0, 9.0, length((p.xz - vec2(9.0, -6.0)) * vec2(1.0, 1.5)) - 13.0 - 22.0 * along);
     // The wind lays a fine ripple on the rest, in patches. Two reads of the field of small waves, the second turned against the first, so that no row of them shows.
     float patches = smoothstep(0.3, 0.78, lanes + 0.5 * (along - 0.5)) * slick;
     float keepFine = smoothstep(4.0, 8.0, 1.15 / covers);
     float keepMid = smoothstep(4.0, 8.0, 2.1 / covers);
-    vec2 ripple = keepMid * 0.6 * waveRead(tWave1, p.xz * 2.6, ${WAVE_TILES[1].toFixed(1)}, 0.0);
-    if (keepFine > 0.0) ripple += keepFine * 0.6 * waveRead(tWave0, p.xz * 0.6, ${WAVE_TILES[0].toFixed(1)}, 0.0);
+    vec2 ripple = keepMid * 0.6 * waveRead(tWave1, p.xz * 2.6, ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers * 2.6, ${WAVE_TILES[1].toFixed(1)}));
+    if (keepFine > 0.0) ripple += keepFine * 0.6 * waveRead(tWave0, p.xz * 0.6, ${WAVE_TILES[0].toFixed(1)}, waveLevel(covers * 0.6, ${WAVE_TILES[0].toFixed(1)}));
     ripple *= 0.075 * (0.12 + 0.88 * patches);
     // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east:
     // a crest is a bright line toward the sun with a dark one behind it.
@@ -575,6 +578,9 @@ void main() {
   }
 
   gl_FragColor = vec4(rigOut(c), 1.0);
+  // The water ends where the picture of the far world stands on it. It ends here, at the foot of main, and not at its head: a pixel that
+  // had left would leave the three beside it measuring themselves against nothing.
+  if (uPlateTone.w > 0.5 && length(p.xz - uPlateAt.xz) > uPlateAt.w) discard;
 }`;
 
 function surfaceGeometry(): THREE.BufferGeometry {
@@ -610,53 +616,6 @@ function surfaceGeometry(): THREE.BufferGeometry {
   return g;
 }
 
-/** A field of small waves that repeats: red and green are its slope, with a spread of one. Summed from waves of whole numbers of turns, so its edges meet. */
-function rippleTexture(seed: () => number): THREE.DataTexture {
-  const N = 256;
-  const waves: [number, number, number, number][] = [];
-  for (let i = 0; i < 28; i++) {
-    const k = 3 + Math.floor(seed() * 11);
-    const a = seed() * Math.PI * 2;
-    const kx = Math.round(Math.cos(a) * k);
-    const ky = Math.round(Math.sin(a) * k);
-    waves.push([kx, ky, seed() * Math.PI * 2, 1 / Math.max(1, Math.hypot(kx, ky)) ** 0.5]);
-  }
-  const sx = new Float32Array(N * N);
-  const sy = new Float32Array(N * N);
-  let sum = 0;
-  for (let j = 0; j < N; j++) {
-    for (let i = 0; i < N; i++) {
-      let dx = 0;
-      let dy = 0;
-      for (const [kx, ky, ph, amp] of waves) {
-        const c = amp * Math.cos(((kx * i + ky * j) / N) * Math.PI * 2 + ph);
-        dx += c * kx;
-        dy += c * ky;
-      }
-      sx[j * N + i] = dx;
-      sy[j * N + i] = dy;
-      sum += dx * dx + dy * dy;
-    }
-  }
-  const spread = Math.sqrt(sum / (N * N));
-  const data = new Uint16Array(N * N * 4);
-  for (let i = 0; i < N * N; i++) {
-    data[i * 4] = THREE.DataUtils.toHalfFloat((sx[i] as number) / spread);
-    data[i * 4 + 1] = THREE.DataUtils.toHalfFloat((sy[i] as number) / spread);
-    data[i * 4 + 3] = THREE.DataUtils.toHalfFloat(1);
-  }
-  const t = new THREE.DataTexture(data, N, N, THREE.RGBAFormat, THREE.HalfFloatType);
-  // Far off, where one pixel holds many waves, the slopes average out: the water there is smooth, not noise.
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.generateMipmaps = true;
-  t.magFilter = THREE.LinearFilter;
-  t.wrapS = THREE.RepeatWrapping;
-  t.wrapT = THREE.RepeatWrapping;
-  t.colorSpace = THREE.NoColorSpace;
-  t.needsUpdate = true;
-  return t;
-}
-
 /** The lip of the shaft all round, metres from the centre, by bearing: the bed in the shader and the lip of the land are the same line. */
 function lipTexture(): THREE.DataTexture {
   const N = 4096;
@@ -690,8 +649,6 @@ function ringsOf(lengths: number[], slopes: number[], pace: number): THREE.Vecto
 export function create(ctx: Context): Piece {
   const rig = ctx.rig.uniforms;
   const mirror = createMirror();
-  const seed = ctx.rng('ripple');
-  const ripple = rippleTexture(() => seed.next());
   const lip = lipTexture();
   const waveSeed = ctx.rng('waves');
   const waves = createWaves(() => waveSeed.next());
@@ -709,7 +666,6 @@ export function create(ctx: Context): Piece {
       ...rig,
       ...bed,
       ...mirror.uniforms,
-      tRipple: { value: ripple },
       uMirrorOn: { value: 0 },
       uLens: { value: 1 },
       uLap: { value: laps },
@@ -743,8 +699,6 @@ void main() {
 }`;
   const surface = new THREE.Mesh(surfaceGeometry(), material);
   surface.frustumCulled = false;
-  // The climb out of the Eye is drawn with the water as it was: the same sheet takes its old material for that shot alone.
-  const before = createBefore(ctx, mirror.uniforms);
   ctx.scene.add(ctx.parts.built('lake', surface));
   for (const name of ['shallows', 'shaft', 'mats']) ctx.parts.effect(name, 'built');
 
@@ -771,8 +725,6 @@ void main() {
 
   return {
     setTime: (t) => {
-      before.setTime(t);
-      surface.material = CLIMB_AS_BEFORE && during('eye-05') ? before.material : material;
       waves.setTime(t);
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
@@ -834,10 +786,8 @@ void main() {
       const reflected = ctx.reflected;
       const on = reflected.length > 0 && camera.position.y < 60;
       (material.uniforms.uMirrorOn as THREE.IUniform<number>).value = on ? 1 : 0;
-      (before.material.uniforms.uMirrorOn as THREE.IUniform<number>).value = on ? 1 : 0;
       if (!on) return;
       (material.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
-      (before.material.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
       // Only what stands in or at the water is drawn into the mirror: the far world the water takes from the rig.
       hidden.length = 0;
       for (const o of ctx.scene.children) if (!reflected.includes(o)) hidden.push(o);
@@ -846,9 +796,7 @@ void main() {
     resize: (width, height) => mirror.resize(width, height),
     dispose: () => {
       mirror.dispose();
-      before.dispose();
       waves.dispose();
-      ripple.dispose();
       lip.dispose();
       surface.geometry.dispose();
       material.dispose();
