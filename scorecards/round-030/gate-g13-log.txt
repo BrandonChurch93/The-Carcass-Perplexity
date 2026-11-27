@@ -1,0 +1,9 @@
+
+> the-carcass@0.1.0 gate
+> node tools/gate.mjs --phase 6 --only G13
+
+G13 pass  No covered part is a stand-in
+    not checked: test 4 for eye/stream: it was never seen in the film as a stand-in, so it has no reference picture
+gate phase 6 (only G13): pass. 1 of 1 passed, 0 failed, 0 not built.
+gate: out/work/gate/phase-6-only.json
+ENDED 0

@@ -1,0 +1,28 @@
+{
+  "phase": 6,
+  "at": "2026-11-27T07:27:23Z",
+  "only": [
+    "G13"
+  ],
+  "ok": true,
+  "failed": [],
+  "results": [
+    {
+      "id": "G13",
+      "title": "No covered part is a stand-in",
+      "kind": "machine",
+      "phase": 3,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "G13 covers every part there is, 100 of them, because film is a unit of Phase 5, and the gate of Phase 6 named no unit.",
+        "All 100 covered parts pass."
+      ],
+      "skipped": [
+        "test 4 for eye/stream: it was never seen in the film as a stand-in, so it has no reference picture"
+      ],
+      "seconds": 664.8
+    }
+  ]
+}
