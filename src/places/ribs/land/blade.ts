@@ -34,7 +34,7 @@ const CELL = { id: 0, edge: 0 };
  * the sky: they keep their line and are only nicked, a stride or two, where a bed steps or a block has gone.
  * s runs along the spine, u across the blade in its plane, w through it (metres); x, y, z are the world; edge is 0 on a broad face, 1 on a thin edge.
  */
-export function bladeCrag(s: number, u: number, w: number, x: number, y: number, z: number, edge: number, out: Crag): void {
+export function bladeCrag(s: number, u: number, w: number, x: number, y: number, z: number, edge: number, out: Crag, gain = 1): void {
   const face = 1 - edge;
   // The face swells and sinks a little over the size of a hall: it is no machined plane.
   let d = face * (2.0 * (noise3(x / 80, y / 95, z / 80) - 0.5) + 0.8 * (noise3(x / 29, y / 33, z / 29) - 0.5));
@@ -67,13 +67,16 @@ export function bladeCrag(s: number, u: number, w: number, x: number, y: number,
   d += strong * face * (0.45 * (f - 0.45) - 0.4 * (1 - smooth(0, 0.07, f)));
   // Broken at the size of a boat.
   d += (0.35 + 0.65 * rough) * 0.3 * (noise3(x / 7, y / 5, z / 7) - 0.5);
-  // The outline: every tower's height or so a course steps in or out by a stride, and where a block has gone the edge is nicked.
-  const course = (s + 24 * (noise3(s / 160, u / 60, w / 60) - 0.5) + 0.3 * u) / 37;
+  // The outline is the stone's, not a tusk's: the beds lie level in the world (as the stone is drawn, fin.ts), and every fourth bed or
+  // so a course of them steps in or out at the thin edge by a house's height, with a notch under it; where a block has gone the
+  // edge is bitten.
+  const course = (y + 0.16 * x + 0.4 * z + 9 * (noise3(x / 160, y / 90, z / 160) - 0.5)) / 20.8;
   const ck = Math.floor(course);
   const cf = course - ck;
-  const stepped = noise2(ck * 3.7 + 0.5, 11.5) - 0.5;
+  const stepped = Math.max(-0.5, Math.min(0.5, 2.4 * (noise2(ck * 3.7 + 0.5, 11.5) - 0.5)));
   const bite = smooth(0.6, 0.7, noise3(s / 46 + 3.1, u / 70, w / 25 + 5.5)) + 0.5 * smooth(0.58, 0.7, noise3(s / 13 + 1.3, u / 30, w / 12));
-  d += edge * (1.5 * stepped - 0.5 * (1 - smooth(0, 0.05, cf)) - 2.2 * bite + 0.7 * (noise3(s / 6, u / 9, w / 9) - 0.5));
+  // A broad blade is stepped and bitten deeper than a slight one: the relief is the stone's, in measure with the blade.
+  d += gain * edge * (7.5 * stepped - 1.6 * (1 - smooth(0, 0.12, cf)) - 6.0 * bite + 2.2 * (noise3(s / 6, u / 9, w / 9) - 0.5));
   out.d = d;
   out.crack = Math.max(wallA, 0.5 * small * wallB, 0.9 * strong * (1 - smooth(0, 0.1, f)));
   out.tone = 0.6 * toneA + 0.4 * toneB;
@@ -84,7 +87,7 @@ export function bladeCrag(s: number, u: number, w: number, x: number, y: number,
  * The near cliff is no tusk: it is a broken, bedded wall with an overhanging lip, plates the depth of a house and beds that end in
  * ledges. It keeps the relief and the stone it had.
  */
-function cliffCrag(s: number, u: number, w: number, x: number, y: number, z: number, edge: number, out: Crag): void {
+function cliffCrag(s: number, u: number, w: number, x: number, y: number, z: number, edge: number, out: Crag, _gain = 1): void {
   // Masses the size of a hall and of a house.
   let d = 7 * (noise3(x / 80, y / 95, z / 80) - 0.5) + 2.4 * (noise3(x / 29, y / 33, z / 29) - 0.5);
   // The plates are bent: their walls wander.
@@ -215,7 +218,7 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
       crag.crack = 0;
       crag.tone = 0;
       crag.deep = 0;
-    } else (rib.name === 'L1' ? cliffCrag : bladeCrag)(s0, a * shrink * cphi + rib.x * 0.37, b * shrink * Math.sin(phi), base.x, base.y, base.z, cphi * cphi * cphi * cphi, crag);
+    } else (rib.name === 'L1' ? cliffCrag : bladeCrag)(s0, a * shrink * cphi + rib.x * 0.37, b * shrink * Math.sin(phi), base.x, base.y, base.z, cphi * cphi * cphi * cphi, crag, Math.min(2.4, Math.max(1, a0r / 50)));
     const d = crag.d * slim * (0.3 + 0.7 * low) * (shrink < 1 ? 0.5 + 0.5 * shrink : 1);
     const k3 = (j * cols + i) * 3;
     crags[k3] = crag.crack * low;
