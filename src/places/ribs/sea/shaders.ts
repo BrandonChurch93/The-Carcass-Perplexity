@@ -492,7 +492,7 @@ void main() {
   // The wind works the sheet in cats' paws: ruffled dark stretches and slack bright ones, a few metres each, that drift.
   float paw = smoothstep(0.3, 0.7, 0.6 * barA.a + 0.4 * barB.a + 0.25 * sin(uTime * 0.35 + barA.r * 12.0));
   float gust = 0.35 + 0.65 * paw;
-  float ruffle = 0.2 + 0.8 * paw;
+  float ruffle = 0.45 + 0.55 * paw;
   vec2 slope = ((c1.xy - 0.5) * 0.3 + vec2(-s2.y, s2.x) * 0.26) * ruffle * smoothstep(0.0, 0.07, depth);
   slope += ringSlope;
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
@@ -505,7 +505,11 @@ void main() {
   float sun = sunOn(vWorld, land);
   // The water of the flat is full of sand: what it mirrors it mirrors warm and a little dulled.
   // A ruffled sheet holds no sharp picture of the cloud: each ripple throws a different piece of sky at the lens, and what is seen is their sum.
-  vec3 refl = skyMirror(r, 3.0 + 2.0 * ruffle) * mix(1.0, open, 0.5) * vec3(0.86, 0.82, 0.78);
+  // Read sharp: each ripple throws its own piece of the sky at the lens, and the piece that is the break in the cloud it throws as silver.
+  vec3 refl = skyMirror(r, 1.0);
+  float piece = dot(refl, vec3(0.3333)) / max(dot(skyIrradiance(vec3(0.0, 1.0, 0.0)), vec3(0.3333)) / 3.14159, 1e-4);
+  float glint = smoothstep(1.25, 2.4, piece);
+  refl = mix(refl, vec3(dot(refl, vec3(0.3333))), 0.6 * glint) * (0.55 + 0.35 * smoothstep(0.3, 1.0, piece) + 1.7 * glint) * mix(1.0, open, 0.5) * vec3(0.86, 0.82, 0.78);
   // The lead draws each blade's true image on the water after this sheet (land/, MIRROR).
   // The wall of the bore stands in it as it comes: white at the foot, the dark lifted water, the white crest and the spray over it.
   float toWall = (uFront + 20.0 * sin(p.x * 0.0076 + 1.3) - p.y) / min(r.z, -1e-3);
@@ -518,7 +522,7 @@ void main() {
     refl = mix(refl, mix(vec3(0.2, 0.25, 0.24), vec3(0.9), white) * lit, 0.8 * wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
   }
   // Sparkle: here and there a ripple's flank finds the break in the cloud and throws it at the lens, a point at a time.
-  refl += uSunColour * 0.22 * smoothstep(0.8, 0.95, c2.a) * smoothstep(0.5, 0.75, c1.a) * ruffle * sun * smoothstep(0.02, 0.08, depth);
+  refl += mix(uSunColour, vec3(dot(uSunColour, vec3(0.3333))), 0.75) * 0.22 * smoothstep(0.8, 0.95, c2.a) * smoothstep(0.5, 0.75, c1.a) * ruffle * sun * smoothstep(0.02, 0.08, depth);
   vec3 hv = normalize(v + uSunDir);
   // The glare path toward the sun: a hard core, and the broken glitter of the ripples round it.
   refl += uSunColour * (pow(max(dot(n, hv), 0.0), 500.0) * 4.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
@@ -587,7 +591,7 @@ const WET_EDGE: [string, string][] = [
     `  float longSide = max(dot(footX, footX), dot(footY, footY));
   float between = 0.25 * log2(max(longSide * min(dot(footX, footX), dot(footY, footY)), 1e-12)) + log2(size) + 0.4;
   // Never much finer than the long side: read finer, every crest jumped from one frame to the next as the lens moved and the flat boiled.
-  return max(between, 0.5 * log2(max(longSide, 1e-12)) + log2(size) - 0.5);`,
+  return max(between, 0.5 * log2(max(longSide, 1e-12)) + log2(size) - 1.2);`,
   ],
   [
     '  depth += 0.004 * sin(uTime * 0.9 + tide * 19.0) + 0.004 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);',
@@ -595,12 +599,18 @@ const WET_EDGE: [string, string][] = [
     '  depth += 0.0015 * sin(uTime * 0.9 + tide * 19.0) + 0.0015 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);',
   ],
   [
-    '  float ruffle = 0.2 + 0.8 * paw;',
+    '  float murk = 1.0 - exp(-max(depth, 0.0) * 1.3);',
+    `  float murk = 1.0 - exp(-max(depth, 0.0) * 1.3);
+  // The water is full of sand: a stone's drowned foot is veiled by the length of water the eye looks through to it.
+  murk = max(murk, stone * (1.0 - exp(-standing * 2.0)));`,
+  ],
+  [
+    '  float ruffle = 0.45 + 0.55 * paw;',
     `  // Before the wall the flat is not still: what it pushes ahead of it runs out over the sheet in low quick swells, crest after crest, bent by the bed, and dies in a hundred metres.
   float run = p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3);
   float pushed = exp(-max(run, 0.0) / 70.0) * smoothstep(-10.0, 5.0, run) * smoothstep(0.0, 0.06, depth);
   float runPhase = run * 0.52 + 5.0 * (barA.b - 0.5) + 1.6 * (barB.b - 0.5) - uTime * 2.4;
-  float ruffle = max(0.2 + 0.8 * paw, pushed);`,
+  float ruffle = max(0.45 + 0.55 * paw, pushed);`,
   ],
   [
     '  slope += ringSlope;',
