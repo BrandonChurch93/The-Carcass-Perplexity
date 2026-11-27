@@ -212,11 +212,11 @@ void main() {
   float strings = vnoise(vec2(vVane.y * 9.0 + vVane.z, vVane.x * 3.0)) * 0.6 + 0.4 * vnoise(vec2(vVane.y * 23.0, vVane.x * 11.0 + vVane.z));
   float knots = smoothstep(0.55, 0.8, vnoise(vec2(vVane.x * 14.0 + vVane.z, vVane.y * 3.0)));
   float flesh = vVane.w;
-  vec3 dark = mix(vec3(0.1, 0.02, 0.024), vec3(0.3, 0.06, 0.055), strings);
+  vec3 dark = mix(vec3(0.06, 0.012, 0.016), vec3(0.2, 0.035, 0.04), strings);
   // The flesh is sinew: cords run along it, mauve on their backs and wine in the creases between them, with a vein here and there.
   float cords = 0.5 + 0.5 * sin(vVane.y * 19.0 + vVane.z + 2.5 * vnoise(vec2(vVane.x * 5.0 + vVane.z, vVane.y * 2.0)));
   float vein = smoothstep(0.12, 0.0, abs(vnoise(vec2(vVane.x * 4.0 + vVane.z * 3.0, vVane.y * 5.0)) - 0.5));
-  vec3 fleshy = mix(vec3(0.15, 0.05, 0.06), vec3(0.33, 0.1, 0.1), strings * (0.35 + 0.65 * cords));
+  vec3 fleshy = mix(vec3(0.09, 0.022, 0.03), vec3(0.27, 0.065, 0.07), strings * (0.35 + 0.65 * cords));
   fleshy = mix(fleshy, vec3(0.2, 0.035, 0.07), 0.5 * vein);
   vec3 albedo = mix(dark, fleshy, flesh * (0.55 + 0.45 * strings)) * (1.0 - 0.45 * knots);
   n = normalize(n + (0.25 * (strings - 0.5) + 0.3 * flesh * (cords - 0.5)) * cross(n, vec3(0.0, 1.0, 0.0)));
@@ -235,7 +235,7 @@ void main() {
   colour += f * min(skyRadiance(r), vec3(1.5)) * open * occ * 0.45 + uSunColour * ((f + 0.05) * sunLobe(n, v, 0.22) * nl * lit * occ);
   // Wet flesh is not opaque: against the low sun the light comes through its edges, pink.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
-  colour += mix(vec3(0.7, 0.08, 0.07), vec3(0.88, 0.26, 0.2), flesh) * uSunColour * (0.16 * against * against * pow(1.0 - nv, 1.5) * lit * smoothstep(0.1, 0.4, vTint.z));
+  colour += mix(vec3(0.7, 0.08, 0.07), vec3(0.8, 0.14, 0.1), flesh) * uSunColour * (0.045 * against * against * pow(1.0 - nv, 1.5) * lit * smoothstep(0.1, 0.4, vTint.z));
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
