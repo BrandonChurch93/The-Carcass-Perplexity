@@ -49,7 +49,7 @@ export function scatter(rng: Rng, heightAt: (x: number, z: number) => number, ke
     if (Math.abs(heightAt(x + 0.3, z) - heightAt(x - 0.3, z)) + Math.abs(heightAt(x, z + 0.3) - heightAt(x, z - 0.3)) > 0.22) return;
     // A chip is a flat thing: as wide as it is long or a little less, a third to a half as thick. It is what a few breaks leave.
     const wide = long * rng.range(0.55, 0.95);
-    const thick = long * rng.range(0.28, 0.55);
+    const thick = long * rng.range(0.2, 0.42);
     planes.length = 0;
     for (let k = 0; k < 9; k++) {
       const a = rng.range(0, 2 * Math.PI);
@@ -63,7 +63,7 @@ export function scatter(rng: Rng, heightAt: (x: number, z: number) => number, ke
     const sy = Math.sin(yaw);
     const ct = Math.cos(tilt);
     const st = Math.sin(tilt);
-    const sink = thick * rng.range(0.1, 0.45);
+    const sink = thick * rng.range(0.3, 0.62);
     for (let i = 0; i < count; i++) {
       const d = dirs[i] as [number, number, number];
       let r = 1;
@@ -130,7 +130,7 @@ export function scatter(rng: Rng, heightAt: (x: number, z: number) => number, ke
       }
       // And one or two that lie alone.
       for (let i = 0; i < 2; i++) lay(cx + rng.range(-3, 3), cz + rng.range(-3, 3), rng.range(0.05, 0.2));
-      for (let i = 0; i < 22; i++) {
+      for (let i = 0; i < 14; i++) {
         const b = rng.range(0, 2 * Math.PI);
         const e = 1.5 * spread * rng.next();
         lay(cx + Math.cos(b) * e, cz + Math.sin(b) * e, rng.range(0.018, 0.06));
