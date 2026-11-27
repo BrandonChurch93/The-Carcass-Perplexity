@@ -315,13 +315,15 @@ void main() {
     // and the torn flakes of the torso sheet over them at its own contrast. Far off they are gone before they can flicker.
     float near = smoothstep(0.035, 0.009, px) * (1.0 - pole) * (1.0 - rag);
     if (near > 0.0) {
-      vec2 fb = vec2(vUv.x * 0.55 + 0.5 * vnoise(vUv * vec2(0.6, 1.4) + seed * 6.0), vUv.y * 46.0 + 9.0 * vnoise(vUv * vec2(0.8, 1.7) + seed * 4.0) + 3.0 * fold);
+      // The fibre of the hide runs along the trunk and wanders: a faint tone only, since drawn as lines it reads as stripes.
+      vec2 fb = vec2(vUv.x * 0.5 + 0.5 * vnoise(vUv * vec2(0.6, 1.4) + seed * 6.0), vUv.y * 21.0 + 5.0 * vnoise(vUv * vec2(0.8, 1.7) + seed * 4.0) + 2.0 * fold);
       float thread = 0.6 * vnoise(fb + seed) + 0.4 * vnoise(fb * vec2(2.1, 2.3) + 3.0);
-      float torn = smoothstep(0.22, 0.7, nh.b);
-      // The hide between the threads is nearly black; the back of a thread and the lifted edge of a flake carry the ash, as thin pale lines.
-      albedo *= mix(1.0, mix(0.4, 1.0, smoothstep(0.3, 0.6, thread)) * mix(0.5, 1.0, torn), near * (1.0 - 0.6 * bald));
-      float edge = smoothstep(0.6, 0.72, thread) + 0.7 * smoothstep(0.62, 0.8, nh.b) * (1.0 - smoothstep(0.8, 0.95, nh.b));
-      albedo = mix(albedo, vec3(0.24, 0.22, 0.2) * (0.7 + 0.5 * nhF.b), clamp(edge, 0.0, 1.0) * 0.6 * near * (1.0 - 0.6 * bald) * smoothstep(-0.5, 0.3, ng.y));
+      // What carries the fine structure is the torso sheet's own relief, at the contrast a dry torn hide has: its pits and the cracks between
+      // its flakes are black, its flakes charcoal, and the lifted edge of a flake holds the ash, pale.
+      float keep = near * (1.0 - 0.6 * bald);
+      albedo *= mix(1.0, mix(0.26, 1.3, smoothstep(0.2, 0.72, nh.b)) * mix(0.7, 1.08, smoothstep(0.3, 0.65, thread)), keep);
+      float edge = smoothstep(0.64, 0.82, nh.b) * (0.5 + 0.5 * smoothstep(0.4, 0.7, nhF.b));
+      albedo = mix(albedo, vec3(0.34, 0.31, 0.28) * (0.7 + 0.5 * nhF.b), edge * 0.6 * keep * smoothstep(-0.6, 0.2, ng.y));
     }
     // Dry sinew and torn flesh: the pits of the grain are black, its ridges worn pale, and ash is caked on it in scabs with hard edges.
     float rough = (1.0 - tendril) * (1.0 - rag) * (1.0 - pole) * fine * (1.0 - 0.75 * neck * smoothstep(0.3, 0.9, vLook.y));
@@ -349,9 +351,9 @@ void main() {
   float crownPale = neck * mix(0.04, 1.0, smoothstep(0.28, 0.93, vLook.y));
   // The lower neck and the crown are dry wood, brown, with pale worn cords that run down them into the roots and dark gaps between.
   // The grain runs along the neck: each cord holds for metres, so that none steps across to the next in a zigzag.
-  float cord = 0.55 * vnoise(vec2(vUv.x * 0.3, vUv.y * 26.0) + seed * 1.3) + 0.45 * vnoise(vec2(vUv.x * 0.7, vUv.y * 60.0) + seed * 2.1);
+  float cord = 0.55 * vnoise(vec2(vUv.x * 0.3, vUv.y * 44.0) + seed * 1.3) + 0.45 * vnoise(vec2(vUv.x * 0.7, vUv.y * 110.0) + seed * 2.1);
   vec3 wood = vec3(0.2, 0.158, 0.122) * mix(1.0, 0.6, stain) * (0.6 + 0.4 * crack);
-  albedo = mix(albedo, wood * mix(0.36, 1.55, smoothstep(0.32, 0.62, cord)) * (0.8 + 0.2 * ridge) * (0.8 + 0.24 * vnoise(vUv * vec2(2.6, 15.0) + seed)) * (0.55 + 0.9 * pit), 0.6 * crownPale);
+  albedo = mix(albedo, wood * mix(0.4, 1.25, smoothstep(0.26, 0.5, cord)) * (0.8 + 0.2 * ridge) * (0.8 + 0.24 * vnoise(vUv * vec2(2.6, 15.0) + seed)) * (0.55 + 0.9 * pit), 0.6 * crownPale);
   // A root is dark where it leaves the crown and tan below, where the pool finds it.
   // A tuft that is not over a pool has nothing to light it from below: its roots are dull and brown there, not pale specks under the sky.
   float fed = uPools[int(vWho + 0.5)].z;
@@ -364,7 +366,7 @@ void main() {
   float streakUp = 0.65 * vnoise(rootAt + vec2(0.0, 0.3)) + 0.35 * vnoise(vec2(vUv.x * 2.0, vUv.y * 55.0 + 0.3) + seed);
   n = normalize(n + hv * (streakUp - streak) * 2.4 * tendril * fine);
   float groove = smoothstep(0.3, 0.56, streak);
-  albedo = mix(albedo, mix(vec3(0.2, 0.158, 0.122), fibre * vec3(1.5, 1.55, 1.6), smoothstep(0.1, 0.55, vLook.y)) * mix(0.28, 1.4, groove) * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)), tendril);
+  albedo = mix(albedo, mix(vec3(0.2, 0.158, 0.122), fibre * vec3(1.5, 1.55, 1.6), smoothstep(0.1, 0.55, vLook.y)) * mix(0.14, 1.35, groove) * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)), tendril);
 
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
@@ -396,7 +398,7 @@ void main() {
   // The pool it feeds at lights it from below at any reach (the rig's apron): the belly takes it, the legs and the neck a little less, the back and the flanks next to none.
   // The roots and the crown have the pool's own glare already (poolLight below).
   vec2 poolWay;
-  e += poolApron(vWorld, normalize(mix(ng, n, 0.3)), 14.0, poolWay) * own * mix(0.1, 0.09 * mix(0.1, 1.0, under), body) * (1.0 - 0.85 * tendril) * (1.0 - 0.7 * crown);
+  e += poolApron(vWorld, normalize(mix(ng, n, 0.3)), 14.0, poolWay) * own * mix(0.1, 0.045 * mix(0.1, 1.0, under), body) * (1.0 - 0.85 * tendril) * (1.0 - 0.7 * crown);
   // The grey crust under it sends some of the sky back up at what faces down or sideways: without it a flank has only the red of the lake.
   e += CRUST_BOUNCE * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 - 0.5 * n.y) * open;
   vec3 c = albedo * e / 3.14159;
@@ -431,7 +433,14 @@ void main() {
     float lum = dot(c, vec3(0.3, 0.5, 0.2));
     // Fire at its foot, cream over its middle, brown where it leaves the crown.
     float up2 = smoothstep(0.15, 1.1, vWorld.y);
-    c = mix(c, mix(c, lum * vec3(1.3, 0.96, 0.78), 0.45 * up2) * round2 * mix(0.75, 0.5, up2) * (0.75 + 0.5 * vnoise(vec2(vUv.x * 1.3, seed * 7.0))), tendril);
+    c = mix(c, mix(c, lum * vec3(1.5, 0.9, 0.56), 0.7 * up2) * round2 * mix(0.7, 0.24, up2) * (0.75 + 0.5 * vnoise(vec2(vUv.x * 1.3, seed * 7.0))), tendril);
+  }
+  // The crown is worn wood, grey and tan: the pool warms it and does not paint it.
+  if (crownPale > 0.01) {
+    float lumC = dot(c, vec3(0.3, 0.5, 0.2));
+    c = mix(c, lumC * vec3(1.22, 0.97, 0.8), 0.55 * crownPale * (1.0 - tendril));
+    // Brown along the neck, and pale only at the knot, where the cords part into roots.
+    c *= mix(1.0, mix(0.5, 0.9, smoothstep(0.8, 0.98, vLook.y)), crownPale * (1.0 - tendril));
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
