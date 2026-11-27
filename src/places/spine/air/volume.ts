@@ -325,8 +325,8 @@ ${SEA_SHADE_GLSL}
     // By the dead one the lens is low and close: the air behind the body is thick with blown snow, and the first spire and its mouth
     // stand back in it, pale and soft, as far behind the body as they are.
     if (uClear.z > 0.0 && far < 50000.0) {
-      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 300.0), 0.5) * uShow.x;
-      light = light * (1.0 - behind) + snowAir * 0.85 * behind;
+      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 300.0), 0.45) * uShow.x;
+      light = light * (1.0 - behind) + snowAir * 0.5 * behind;
       through *= 1.0 - behind;
     }
     // Scud: torn cloud that races low past the spires on the gale, paler than the storm behind it (staged by shot, uStage.w).
@@ -354,7 +354,7 @@ ${SEA_SHADE_GLSL}
       float dist = dead ? (j == 0 ? 2.2 : j == 1 ? 40.0 : 150.0) : (j == 0 ? 26.0 : j == 1 ? 95.0 : 340.0) / lensV;
       float before = smoothstep(dist, dist * 1.3, far);
       if (before <= 0.0) break;
-      float grain = dead ? (j == 0 ? 1.6 : j == 1 ? 9.0 : 30.0) : (j == 0 ? 7.0 : j == 1 ? 20.0 : 56.0) / sqrt(lensV);
+      float grain = dead ? (j == 0 ? 2.4 : j == 1 ? 9.0 : 30.0) : (j == 0 ? 7.0 : j == 1 ? 20.0 : 56.0) / sqrt(lensV);
       vec3 at = ro + rd * dist;
       vec3 p = at - downV * (uWind.w * (0.8 + 0.12 * float(j)) * uTime);
       vec3 q = vec3(dot(p, downV) / (grain * 9.0), dot(p, upV) / grain, dot(p, acrossV) / (grain * 2.5));
@@ -363,7 +363,7 @@ ${SEA_SHADE_GLSL}
       float veil = smoothstep(0.36, 0.84, streak) * smoothstep(0.36, 0.7, gust) * before;
       // It thins with the height over the crest, and against the open sky it is the sky's own tone and all but lost.
       veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.2 : 1.0);
-      veil *= j == 0 ? (dead ? 0.11 : 0.16) : j == 1 ? 0.3 : 0.4;
+      veil *= dead ? (j == 0 ? 0.07 : j == 1 ? 0.14 : 0.18) : (j == 0 ? 0.16 : j == 1 ? 0.3 : 0.4);
       driven += keptV * veil;
       keptV *= 1.0 - veil;
     }
