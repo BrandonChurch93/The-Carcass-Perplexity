@@ -38,8 +38,8 @@ export function create(ctx: Context): Piece {
   const geometry = skin.build();
 
   const pixel = { value: 0.001 };
-  // Staged: in the view of the plumes the one far off stands in thick vapour with the sun behind it, and is a shape darker than the vapour.
-  const veiled = { value: 0 };
+  // Staged: in the view of the plumes the sun breaks through the vapour on the one far off. Where it stands, and whether.
+  const veiled = { value: new THREE.Vector3() };
   const pictures = {
     tHide: { value: ctx.assets.texture('waders/hide.jpg') },
     tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
@@ -94,7 +94,7 @@ export function create(ctx: Context): Piece {
   const AWAY = { x: -58, z: -98 };
   // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
   // Staged: in the view of the plumes it is a whole animal far off in the vapour, seen in the gap between the fronds, as the picture has it.
-  const MIST = { x: -36.6, z: -46.8, heading: -95 };
+  const MIST = { x: -41.1, z: -74.5, heading: -95 };
   // Staged: in the view of the rim it stands clear of the growth, before it, where the picture of the rim has it.
   const RIM_NEAR = { x: -28.0, z: 17.4, heading: 38 };
   const rimUp = rim.plan.up;
@@ -120,8 +120,8 @@ export function create(ctx: Context): Piece {
       rim.plan.z = away ? AWAY.z : misted ? MIST.z : nearRim ? RIM_NEAR.z : RIM_WADER.z;
       rim.plan.heading = (misted ? MIST.heading : nearRim ? RIM_NEAR.heading : RIM_WADER.heading) * RAD;
       rim.plan.up = misted ? MIST_UP : rimUp;
-      rim.plan.carry = misted ? 1 : nearRim ? 2.3 : rimCarry;
-      veiled.value = misted ? 1 : 0;
+      rim.plan.carry = misted ? 0.55 : nearRim ? 2.3 : rimCarry;
+      veiled.value.set(MIST.x, MIST.z, misted ? 1 : 0);
       const out = at >= wide[0] && at <= wide[1] ? 1.5 : 1;
       for (const o of outer) {
         o.animal.plan.x = WIDE_FROM.x + (o.x - WIDE_FROM.x) * out;

@@ -1087,6 +1087,9 @@ export class Wader {
         sz = (path[o + 5] as number) + oz * 0.55;
       }
       const each = st.len / (tube.rings - 1);
+      // Most of what reaches the water does not sink: it lies in the surface and trails there.
+      const afloat = wet && st.stiff < 0.7;
+      const lieY = afloat ? env.sea + 0.003 : rest;
       // How far a strand stands off before it falls: thick roots hold their line longer than threads do.
       const hold = isRoot ? 0.16 + 0.3 * st.stiff + 0.3 * down * (wet ? 1 : 0.2) : 0.3 + 0.3 * st.stiff;
       // Lifted, the mop swings on from the lift and comes to rest, every strand at the beat of its own length; so the mop spreads and gathers.
@@ -1121,13 +1124,13 @@ export class Wader {
         let dx = sx * (1 - g) + (lagX + swX * way + ox * (flare + drift)) * g;
         let dy = sy0 * (1 - g) - g * (1 - 0.55 * under);
         let dz = sz * (1 - g) + (lagZ + swZ * way + oz * (flare + drift)) * g;
-        if (y < rest + 0.025) {
-          // On the bed or the rock: it lies along it, fanned.
-          const fan = Math.atan2(oz, ox) + 0.2 * Math.sin(st.phase);
-          const lie = wet ? 0.4 : 0.9;
+        if (y < lieY + 0.025) {
+          // On the water, the bed or the rock: it lies along it, fanned; on the water it wavers.
+          const fan = Math.atan2(oz, ox) + 0.2 * Math.sin(st.phase) + (afloat ? 0.5 * Math.sin(seconds * 0.7 + st.phase * 5 + u * 5) : 0);
+          const lie = afloat ? 0.8 : wet ? 0.4 : 0.9;
           dx = Math.cos(fan) * lie + lagX * 2;
           dz = Math.sin(fan) * lie + lagZ * 2;
-          dy = (rest - y) * 4;
+          dy = (lieY - y) * 4;
         }
         // No strand hangs straight: a root is kinked a little, a fine end curls, more toward its tip.
         const kink = isRoot ? 0.5 : st.type === 2 ? 1.5 : 1.1;
@@ -1142,7 +1145,7 @@ export class Wader {
         dz /= dl;
         if (i > 0) {
           x = px + dx * each;
-          y = Math.max(rest - 0.02, py + dy * each);
+          y = Math.max(lieY - 0.02, py + dy * each);
           z = pz + dz * each;
         }
         if (isRoot) {
