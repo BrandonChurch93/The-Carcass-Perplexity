@@ -42,7 +42,7 @@ ${RIG_GLSL}
 ${WARM_GLSL}
 // The grain of weathered bone: pits, and the long lines it splits along.
 float grain(vec3 q) {
-  return 0.22 * vnoise(q.xz * 70.0 + q.y * 53.0) + 0.36 * vnoise(q.xy * 190.0 + q.z * 170.0) + 0.42 * vnoise(q.zy * 420.0 + q.x * 310.0);
+  return 0.45 * vnoise(q.xz * 36.0 + q.y * 27.0) + 0.4 * vnoise(q.xy * 95.0 + q.z * 85.0) + 0.15 * vnoise(q.zy * 210.0 + q.x * 155.0);
 }
 void main() {
   vec3 n = normalize(vNormal);
@@ -79,18 +79,18 @@ void main() {
   vec3 r2 = cross(n, dx);
   float det = dot(dx, r1);
   vec3 lean = sign(det) * (hLie.x * r1 + hLie.y * r2);
-  n = normalize(abs(det) * n - 0.006 * lean);
+  n = normalize(abs(det) * n - 0.0045 * lean);
 
   // Old bone: ivory where the air has had it, bleached on what looks up, yellow and brown where it has lain.
   float tone = vBone.x;
   vec3 bone = mix(vec3(0.7, 0.63, 0.5), vec3(0.96, 0.93, 0.84), tone);
   bone = mix(bone, vec3(0.86, 0.84, 0.76), 0.5 * smoothstep(0.2, 0.9, n.y));
   float stain = 0.6 * vnoise(q.xz * 11.0 + q.y * 7.0 + tone * 40.0) + 0.4 * vnoise(q.xy * 37.0 + q.z * 29.0);
-  bone = mix(bone, bone * vec3(0.62, 0.45, 0.27), 0.55 * smoothstep(0.46, 0.66, stain));
+  bone = mix(bone, bone * vec3(0.62, 0.45, 0.27), 0.7 * smoothstep(0.42, 0.64, stain));
   // Grey where lichen and lime have taken it in patches.
   bone = mix(bone, vec3(0.56, 0.56, 0.5) * (0.7 + 0.6 * h), 0.3 * smoothstep(0.6, 0.74, vnoise(q.xz * 23.0 + q.y * 17.0 + 40.0 + tone * 13.0)));
   // Its ends are spongy and hold the dirt; its shafts are split along fine dark lines.
-  float porous = vBone.y * smoothstep(0.45, 0.6, vnoise(q.xz * 260.0 + q.y * 210.0));
+  float porous = vBone.y * smoothstep(0.45, 0.6, vnoise(q.xz * 130.0 + q.y * 105.0));
   bone *= 1.0 - 0.32 * porous;
   float split = smoothstep(0.03, 0.0, abs(vnoise(q.xz * 33.0 + q.y * 27.0 + 5.0) - 0.5)) * smoothstep(0.25, 0.5, vnoise(q.xz * 6.0 + 3.0 + tone * 9.0));
   bone *= 1.0 - 0.8 * split;
@@ -275,13 +275,13 @@ function lumpy(g: THREE.BufferGeometry, much: number, grainSize: number, seed: n
 }
 
 /** Marks a finished body: its tone, how near its ends each point is (from `ends`), and how much sky it sees. */
-function mark(g: THREE.BufferGeometry, tone: number, ends: (i: number) => number, open: number): THREE.BufferGeometry {
+function mark(g: THREE.BufferGeometry, tone: number, ends: (i: number) => number, open: number | ((i: number) => number)): THREE.BufferGeometry {
   const count = (g.getAttribute('position') as THREE.BufferAttribute).count;
   const a = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     a[i * 3] = tone;
     a[i * 3 + 1] = ends(i);
-    a[i * 3 + 2] = open;
+    a[i * 3 + 2] = typeof open === 'number' ? open : open(i);
   }
   g.setAttribute('aBone', new THREE.BufferAttribute(a, 3));
   if (g.getAttribute('uv')) g.deleteAttribute('uv');
@@ -376,8 +376,9 @@ function lump(at: V3, size: V3, turn: V3, seed: number, detail = 2, open = 1): T
 
 /** The skull: small, long in the snout, lying on its cheek. It has no hollow in it that looks out. */
 function skull(at: V3, heading: number, seed: number): THREE.BufferGeometry[] {
-  const g = mergeVertices(new THREE.IcosahedronGeometry(1, 7).deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
+  const g = mergeVertices(new THREE.IcosahedronGeometry(1, 16).deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
   const p = g.getAttribute('position') as THREE.BufferAttribute;
+  const shaded: number[] = [];
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i);
     const y = p.getY(i);
@@ -387,7 +388,18 @@ function skull(at: V3, heading: number, seed: number): THREE.BufferGeometry[] {
     const girth = 0.34 + 0.66 * Math.exp(-(((t - 0.24) / 0.3) ** 2)) - 0.1 * Math.exp(-(((t - 0.52) / 0.1) ** 2));
     // The crown is ridged, the cheek below it flat.
     const ridge = 1 + 0.12 * Math.max(0, y) * Math.exp(-(((t - 0.3) / 0.25) ** 2));
-    p.setXYZ(i, x * 0.25, y * 0.105 * girth * ridge, z * 0.085 * girth);
+    // Blunt at both ends, not drawn to a point, and wide at the cheeks.
+    const blunt = Math.max(1 - x * x, 0.03) ** -0.3;
+    const cheek = 1 + 0.2 * Math.exp(-(((t - 0.44) / 0.07) ** 2)) * (1 - 0.6 * Math.abs(y));
+    // Hollows of shade on the side that lies up: the long one behind the cheek, where the jaw's muscle sat, the notch of the nose, and
+    // the line the jaw closed along. None is round and none is deep, so that none looks out.
+    const side = Math.max(0, -z);
+    const fossa = side * Math.exp(-(((t - 0.36) / 0.13) ** 2) - ((y - 0.3) / 0.28) ** 2);
+    const nose = side * Math.exp(-(((t - 0.86) / 0.07) ** 2) - ((y - 0.25) / 0.3) ** 2);
+    const jaw = side * Math.exp(-(((y + 0.42 - 0.3 * (t - 0.6)) / 0.07) ** 2)) * Math.min(1, Math.max(0, (t - 0.3) / 0.12));
+    const hollow = Math.min(1, 0.55 * fossa + 0.4 * nose + 0.22 * jaw);
+    shaded.push(1 - Math.min(0.72, 1.2 * fossa + 0.9 * nose + 0.75 * jaw));
+    p.setXYZ(i, x * 0.25, y * 0.105 * girth * ridge * blunt, z * 0.085 * girth * blunt * cheek * (1 - hollow));
   }
   g.computeVertexNormals();
   lumpy(g, 0.004, 0.035, seed);
@@ -395,7 +407,7 @@ function skull(at: V3, heading: number, seed: number): THREE.BufferGeometry[] {
   const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(1.35, heading, -0.12, 'YXZ'));
   g.applyQuaternion(q).translate(...at);
   const mp = g.getAttribute('position') as THREE.BufferAttribute;
-  const head = mark(g, 0.62, (i) => 0.25 + 0.5 * hash(mp.getX(i) * 40, mp.getZ(i) * 40, seed), 1);
+  const head = mark(g, 0.62, (i) => 0.25 + 0.5 * hash(mp.getX(i) * 40, mp.getZ(i) * 40, seed), (i) => shaded[i] as number);
   // The jaw has come away and lies beside it.
   const c = Math.cos(heading);
   const s = Math.sin(heading);
