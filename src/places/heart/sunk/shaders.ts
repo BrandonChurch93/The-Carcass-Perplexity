@@ -210,9 +210,9 @@ void main() {
   vec2 lean = abs(grad);
   float faces = step(lean.x, lean.y);
   vec2 wallAt = vec2(mix(l.y, l.x, faces), vWorld.y * 1.4) + 11.0;
-  // Along a rope the ropy skin is laid 1.6 times shorter than round it: its fibres run 15 to 25 cm and not half a metre, which
-  // seen from low down was one long streak across the view.
-  vec2 uvA = mix(mix(q / 6.1, ropeAt * vec2(1.15, 1.0) / 1.7, onRope), wallAt / 2.2, steep);
+  // Along a rope the ropy skin is drawn out to nearly twice its length: its fibres run half a metre and more along the rope, as the
+  // picture's do, and do not curl like knit.
+  vec2 uvA = mix(mix(q / 6.1, ropeAt * vec2(0.55, 1.0) / 1.7, onRope), wallAt / 2.2, steep);
   vec4 nhA = texture2D(tRopyNh, uvA);
   vec2 qd = mix(mix(q, ropeAt, onRope), wallAt, steep);
   vec2 uvD = vec2(qd.x * 0.8 - qd.y * 0.6, qd.x * 0.6 + qd.y * 0.8) / 1.37 + 0.13;
@@ -226,7 +226,8 @@ void main() {
   // Each sheet of the folded skin is of its own age.
   age = clamp(age + folded * (0.9 * (sheet - 0.5) + 0.25 * (broad - 0.5)), 0.0, 1.0);
   // Where the skin is not folded it is the plain crust of the lake as the lake draws it now: grey, and grained all over.
-  vec3 plain = mix(vec3(0.066, 0.067, 0.07), vec3(0.128, 0.129, 0.133), age) * clamp(1.0 + 1.5 * (nhA.b - 0.5) + 0.5 * (small - 0.5) + 0.8 * (grainNh.b - 0.5), 0.4, 1.8);
+  // From far off it is a shade under the lake's plates as the lake paints them now: the sheet lay on them as a pale disc.
+  vec3 plain = mix(vec3(0.052, 0.053, 0.056), vec3(0.128, 0.129, 0.133), age) * (1.0 - 0.2 * smoothstep(28.0, 75.0, length(cameraPosition - vWorld))) * clamp(1.0 + 1.5 * (nhA.b - 0.5) + 0.5 * (small - 0.5) + 0.8 * (grainNh.b - 0.5), 0.4, 1.8);
   // Seen close the folded skin between the ropes is the lake's young black skin; from afar that was a dark apron round the heap,
   // which the picture has not: there it stays the plain crust.
   vec3 albedo = mix(plain * dry, mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age), folded * (1.0 - 0.8 * wideView)) * tone;
@@ -241,7 +242,12 @@ void main() {
   // Toward the bench the old skin goes on to where the folds end; round the back it gives way to the lake's plates sooner.
   // From far off the folds before the bench are the lake's own grey: an apron of old skin as wide as that would stand pale on the lake.
   float benchward = smoothstep(-0.2, 0.5, fromBody.y / max(length(fromBody), 1e-3)) * (1.0 - wideView);
-  float ashed = smoothstep(mix(8.0, 10.5, benchward), mix(3.5, 5.5, benchward), length(fromBody) + 2.0 * (broad - 0.5));
+  // The old skin does not end on a circle round the body: it runs out in three unequal tongues and breaks up at its edge, and from far
+  // off it goes over to the lake's own tone, so that no round pale patch lies on the crust in the wide view.
+  float round_ = atan(fromBody.y, fromBody.x);
+  float tongues = 1.0 + 0.3 * sin(3.0 * round_ + 1.3) + 0.2 * sin(5.0 * round_ + 0.4) + 0.12 * sin(11.0 * round_ + 2.1);
+  float ashed = smoothstep(mix(8.0, 10.5, benchward), mix(3.5, 5.5, benchward), length(fromBody) * tongues + 3.2 * (broad - 0.5) + 1.2 * (vnoise(l * 0.9 + 17.0) - 0.5));
+  ashed *= 1.0 - 0.75 * smoothstep(28.0, 75.0, far);
   // A rope is old skin, greyer than the plates of the lake. They die out before the rim, so nothing of this reaches it.
   // The skin that stands up against the hull without being a rope is of the same old brown stuff.
   float roped = max(clamp(ln.a, 0.0, 1.0), smoothstep(0.15, 0.45, vWorld.y)) * ashed * folded;
@@ -266,7 +272,7 @@ void main() {
   lum = mix(lum, 0.42, 0.85 * graze);
   // On a rope the tone of the laid skin is held back: its short curls over a rope a third of a metre thick read as wool. The rope's own
   // cords, drawn below, carry it.
-  albedo *= mix(1.0, mix(0.35 + 0.65 * lum, mix(0.2 + 0.9 * lum * lum, 0.5 + 0.45 * lum, onRope * (1.0 - steep)), max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
+  albedo *= mix(1.0, mix(0.35 + 0.65 * lum, mix(0.2 + 0.9 * lum * lum, 0.32 + 0.72 * lum, onRope * (1.0 - steep)), max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
 
   // Grit of 1 to 3 cm on all of the folded skin, and a pale fleck here and there: seen where the lens is sharp, gone where a
   // pixel is wider than a grain.
