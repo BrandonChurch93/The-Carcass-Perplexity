@@ -82,17 +82,12 @@ export function create(ctx: Context): Piece {
       uSheetShear: { value: sp.shear },
     };
   };
-  // The first spire's baked rock (assets-src/spine/land/bake-hero.mts): its normals, its occlusion, height and tone, and which slab a texel is on.
-  const heroMaps = {
-    tHeroN: { value: ctx.assets.texture('land/hero-n.jpg', { kind: 'data', anisotropy: ANISOTROPY, repeat: false }) },
-    tHeroM: { value: ctx.assets.texture('land/hero-m.jpg', { kind: 'data', anisotropy: 4, repeat: false }) },
-  };
-  const material = (kind: number, side: THREE.Side = THREE.FrontSide, sp: Spire = first, hero = false): THREE.ShaderMaterial =>
+  const material = (kind: number, side: THREE.Side = THREE.FrontSide, sp: Spire = first): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_FRAGMENT,
-      defines: { KIND: kind, SCORCH: 0, HERO: hero ? 1 : 0 },
-      uniforms: { ...ctx.rig.uniforms, ...pictures, ...sheetOf(sp), ...(hero ? heroMaps : {}) },
+      defines: { KIND: kind, SCORCH: 0 },
+      uniforms: { ...ctx.rig.uniforms, ...pictures, ...sheetOf(sp) },
       side,
       toneMapped: false,
       // The depth is already there (see LAND_DEPTH_FRAGMENT): colour is shaded only where this is the nearest surface.
@@ -112,7 +107,7 @@ export function create(ctx: Context): Piece {
   const depthOf = new Map<THREE.Material, THREE.ShaderMaterial>();
   const groundMaterial = material(0);
   const spireDepth = depthMaterial(1, THREE.DoubleSide);
-  const spireMaterials = spires.map((sp, i) => material(1, THREE.DoubleSide, sp, i === FIRST));
+  const spireMaterials = spires.map((sp) => material(1, THREE.DoubleSide, sp));
   const wallMaterial = material(2, THREE.DoubleSide);
   const iceMaterial = new THREE.ShaderMaterial({
     vertexShader: ICE_VERTEX,

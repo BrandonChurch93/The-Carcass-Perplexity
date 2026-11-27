@@ -60,30 +60,3 @@ Seamless tiling material texture, straight-on view of rime ice on rock: feathery
 Takes: 1 made, take 1 kept.
 Why this one: the frost on the steep rock of the ground that looks into the gale.
 Date: 2026-11-26
-
-## `public/assets/spine/land/hero-n.jpg`
-
-Made by: `assets-src/spine/land/bake-hero.mts`, run with vite-node 6.0.0 on Node 20.20.2, written out with the repo's own sharp. Computed: no picture and no model is behind it.
-From: nothing but the layout of the first spire (`src/places/spine/ridge.ts`, read through `src/places/spine/land/heroShape.ts`) and the fracture model in the script, seeded 7015.
-Prompt or command: `npx vite-node assets-src/spine/land/bake-hero.mts 4096 2048` from the repo's root. The same run writes `hero-m.jpg`, `hero-id.png` and `src/places/spine/land/heroRelief.ts`.
-Takes: 1 kept (the script is the take: change it and run it again).
-Why this one: the tangent normals of the first spire's rock, 4096 by 2048 round the blade and up it: tall plates that run the whole lean, cut by rare cross joints into slabs, split again into strips with stepped faces. The mesh is displaced by the same model, so the light and the outline agree.
-Date: 2026-11-26
-
-## `public/assets/spine/land/hero-m.jpg`
-
-Made by: `assets-src/spine/land/bake-hero.mts`, as `hero-n.jpg` above. Computed.
-From: the same fracture model.
-Prompt or command: `npx vite-node assets-src/spine/land/bake-hero.mts 4096 2048`.
-Takes: 1 kept.
-Why this one: red is the occlusion of the rock (how far a texel lies under the mean of the rock about it, at 0.6, 2.5 and 9 m), green is how far it stands out of its neighbour to windward (where the rime grows), blue is the tone of its slab (grey to split tan).
-Date: 2026-11-26
-
-## `public/assets/spine/land/hero-id.png`
-
-Made by: `assets-src/spine/land/bake-hero.mts`, as `hero-n.jpg` above. Computed.
-From: the same fracture model.
-Prompt or command: `npx vite-node assets-src/spine/land/bake-hero.mts 4096 2048`.
-Takes: 1 kept.
-Why this one: which slab a texel is on, one byte, read without filtering: each slab takes its own piece of the granite sheet, so no joint of the sheet runs on across a split.
-Date: 2026-11-26
