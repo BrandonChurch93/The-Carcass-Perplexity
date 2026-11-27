@@ -187,14 +187,14 @@ export function create(ctx: Context): Piece {
       const tear = age >= 0 && age < TEAR ? age / TEAR : 0;
       const full = age >= 0 && age < TEAR ? 1 : grow;
       const r = d.size * (0.35 + 0.65 * full) * (swell > 0 || tear > 0 || (age >= 0 && age < TEAR) ? 1 : 0);
-      const tall = r * (0.22 + 0.5 * full) * (1 - 0.3 * tear * tear);
+      const tall = r * (0.22 + 0.5 * full);
       m.makeScale(r, tall, r).setPosition(d.x, -0.01, d.z);
       domeMesh.setMatrixAt(i, m);
       domeShade.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
       // As the edge comes down on the pool the brine it gathered is thrown up in a wall of fingers.
-      const back = age - TEAR * 0.3;
+      const back = age - TEAR * 0.2;
       const risen = back > 0 && back < CROWN_LIFE * Math.sqrt(d.size / 0.4);
       m.makeScale(risen ? 1 : 0, risen ? 1 : 0, risen ? 1 : 0).setPosition(d.x, 0, d.z);
       crownMesh.setMatrixAt(i, m);
@@ -202,10 +202,10 @@ export function create(ctx: Context): Piece {
 
       // The drops are the edge's beads let go: each leaves the place on the skin where the edge found it, at the moment the edge came by,
       // along the way the edge was running and a little off the skin, and then it only falls.
-      const fh = Math.hypot(0.35, 0.94);
-      const fx = (Math.cos(d.seed * 40) * 0.35) / fh;
-      const fy = 0.94 / fh;
-      const fz = (Math.sin(d.seed * 40) * 0.35) / fh;
+      const fh = Math.hypot(0.72, 0.69);
+      const fx = (Math.cos(d.seed * 40) * 0.72) / fh;
+      const fy = 0.69 / fh;
+      const fz = (Math.sin(d.seed * 40) * 0.72) / fh;
       const landed: number[] = [];
       for (let k = 0; k < d.drops; k++, drop++) {
         const az = thrown[drop * 5] as number;

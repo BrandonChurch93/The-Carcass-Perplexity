@@ -8,7 +8,7 @@ import { FIELD_GLSL } from '../land/shaders';
 
 export const MAX_RINGS = 24;
 /** Seconds the skin of a dome takes to draw back from the point it tore at: twenty frames. */
-export const TEAR = 0.34;
+export const TEAR = 0.2;
 
 const WIND_RAW = [R[0] * 0.8 + F[0] * 0.6, R[1] * 0.8 + F[1] * 0.6];
 const WIND_LEN = Math.hypot(WIND_RAW[0] as number, WIND_RAW[1] as number);
@@ -302,8 +302,10 @@ void main() {
   // on the crests, and the body between them stays its own red.
   // (Counted by how far the wavelet lifts the mirrored ray over the level pool's, or a lens that looks down would find the glint on all of it.)
   float high = reflect(-v, n).y - v.y;
-  float glint = smoothstep(0.24, 0.48, high);
-  lit += uSkyZenith * 0.17 * glint * glint * (1.0 - 0.7 * foam) * skyOpen(p) * smoothstep(60.0, 20.0, dist);
+  // (Soft at its edge and broken along a crest: a long front carries it in pieces, never as one white band.)
+  float glint = smoothstep(0.2, 0.62, high + (bend.g - 0.5) * 0.3 + (fleck.r - 0.5) * 0.14);
+  // (Stirred mud is dull: it carries no glint.)
+  lit += uSkyZenith * 0.12 * glint * glint * (1.0 - 0.7 * foam) * (1.0 - 0.85 * clamp(brineMud + brineSlurry, 0.0, 1.0)) * skyOpen(p) * smoothstep(60.0, 20.0, dist);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -420,7 +422,7 @@ void main() {
   float whole = 1.0;
   if (vLife.w > 0.0) {
     whole = 0.0;
-    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.35, 0.94, sin(vLife.y * 40.0) * 0.35));
+    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.72, 0.69, sin(vLife.y * 40.0) * 0.72));
     // The film that has drawn back is rolled up in the hole's edge, and the edge runs ahead here and hangs back there: no two parts alike.
     vec4 ragged = grainAt(vLocal.xz * 0.13 + vLife.y * 3.0, 0.13);
     float gap = dot(at, from) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w + (grit.b - 0.5) * 0.03;
@@ -431,7 +433,9 @@ void main() {
     rim = smoothstep(gone - fat, gone - fat * 0.6, gap);
     glint = smoothstep(gone - fat * 0.75, gone - fat * 0.5, gap) * smoothstep(gone - fat * 0.1, gone - fat * 0.4, gap);
     // (Behind the edge the film is gathered: thicker for a hand's breadth.)
-    film.x += 0.6 * smoothstep(gone - 4.0 * fat, gone - fat, gap);
+    film.x += 0.3 * smoothstep(gone - 2.5 * fat, gone - fat, gap);
+    // (What still stands is the same thin skin, seen from inside on the far side: it is not a wall of brine.)
+    film.x *= gl_FrontFacing ? 0.75 : 0.45;
   }
   // The skin is never smooth as blown glass: it carries the pool's small waves up with it, and they run down it.
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.07 + vec3(grit.b - 0.5, 0.0, grit.a - 0.5) * 0.05 * (1.0 - 0.5 * top));
@@ -528,8 +532,8 @@ void main() {
   float own = 0.62 + 0.38 * sin(a * 3.0 + k * 5.0) * sin(a + k * 2.0);
   float jet = pow(0.5 + 0.5 * cos(turn), 6.0) * smoothstep(0.55, 0.85, own);
   float finger = max(lobe * 0.6, jet);
-  // Thrown, it only rises and falls. The side the tear reached first is up first.
-  float lead = 0.12 * (0.5 + 0.5 * cos(a - aLife.y * 40.0));
+  // Thrown, it only rises and falls. The side the tear reached first is up first, the far side a third of a second after it.
+  float lead = ${(0.7 * TEAR).toFixed(3)} / dur * (0.5 - 0.5 * cos(a - aLife.y * 40.0));
   float xa = clamp((x - lead) / (1.0 - lead), 0.0, 1.0);
   float rise = 4.0 * xa * (1.0 - xa);
   float tall = size * rise * (0.2 + 0.24 * lobe * own + 0.14 * jet) * (0.8 + 0.2 * sin(a * 5.0 + k));
