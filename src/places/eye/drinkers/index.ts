@@ -42,7 +42,7 @@ void main() {
 }`;
 
 const FRAGMENT = /* glsl */ `
-// x its own number, y its size, z the level of its feet.
+// x its own number, y its size, z the level of its feet, w how much of the sun the ground behind it keeps off it.
 uniform vec4 uOwn;
 // The hide sheet: rgb its colour, a its relief.
 uniform sampler2D tHide;
@@ -192,7 +192,7 @@ void main() {
     vec3 tiled = sqrt(broad.rgb * fine.rgb) / vec3(0.69, 0.41, 0.32);
     skin *= mix(vec3(1.0), tiled, 0.45) * mix(0.9, 1.0, smoothstep(0.22, 0.52, broad.a)) * (0.94 + 0.12 * fine.a);
     // The folds turn the light: the relief's slope across the screen leans the normal.
-    slope += 0.06 * loose * leanAt(at, rx, ry, ma.x, me.x, w, limb, which);
+    slope += 0.045 * loose * leanAt(at, rx, ry, ma.x, me.x, w, limb, which);
     vec3 r1 = cross(dpy, n);
     vec3 r2 = cross(n, dpx);
     float det = dot(dpx, r1);
@@ -225,17 +225,21 @@ void main() {
   float occ = mix(0.62, 1.0, vShade.x) * (1.0 - 0.35 * groove);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
   vec3 c = rigShade(p, n, v, albedo, mix(0.78, 0.45, wet), occ);
+  // The two under the last camera stand in the shade of the bluff it looks from. The rig knows no such shade: their feet are at a level of
+  // their own. The sun the rig gave them is taken back.
+  float sunHere = sunAt(p);
+  float lit = 1.0 - uOwn.w;
+  c -= albedo * uSunColour * (uOwn.w * max(dot(n, uSunDir), 0.0) * sunHere * (0.4 + 0.6 * occ) / 3.14159);
   // The pale gravel and the water under it throw the sky back up at it, and the lit wall across the lake warms the side turned from the sun.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 / 3.14159) * (0.75 - 0.25 * n.y);
   c += rigBounce(p, n, albedo) * occ;
   // A bare hide has a dull sheen, and the low sun comes a little way through it wherever it turns from sight.
-  float sunHere = sunAt(p);
-  c += rigGlint(p, n, v, 0.5) * (0.35 * occ * (1.0 - dirt));
+  c += rigGlint(p, n, v, 0.5) * (0.35 * occ * (1.0 - dirt) * lit);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float through = pow(1.0 - nv, 2.5) * (0.35 + 0.65 * max(dot(-v, uSunDir), 0.0));
-  c += albedo * vec3(1.0, 0.62, 0.45) * uSunColour * (0.2 * through * sunHere * occ / 3.14159);
+  c += albedo * vec3(1.0, 0.62, 0.45) * uSunColour * (0.2 * through * sunHere * lit * occ / 3.14159);
   // The wet of the leg takes the sun as a film of water does.
-  c += wet * rigGlint(p, n, v, 0.16);
+  c += wet * lit * rigGlint(p, n, v, 0.16);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -292,9 +296,11 @@ interface Drawn {
 }
 
 export function create(ctx: Context): Piece {
-  // The four of the shore shot are bodies while that shot runs; every other animal, and these four in every other shot, is still a card.
+  // The animals a close shot is about are bodies while their shot runs: the four of the shore, the two under the last camera, the three beyond
+  // the mats. Every other animal, and these in every other shot, is still a card.
   const all = herd(ctx.rng('drinkers-bodies'), ctx.events.rise - 1.7);
-  const cast = [0, 1, 2, 3];
+  const cast = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  const shotOf = (index: number): string => (index < 4 ? 'eye-04' : index < 6 ? 'eye-05' : 'eye-02');
   const animals = cast.map((index) => all[index] as Drinker);
   const cards = createCards(ctx);
   const mid = bodyGeometry(MID_DATA, LEVELS.mid);
@@ -304,7 +310,7 @@ export function create(ctx: Context): Piece {
   const drawn: Drawn[] = animals.map((animal, i) => {
     const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
-    const own = new THREE.Vector4(animal.own, animal.build.size, 0, 0);
+    const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.8);
     const material = new THREE.ShaderMaterial({
       uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, tHide, tFolds, tSlope },
       vertexShader: VERTEX,
@@ -319,6 +325,9 @@ export function create(ctx: Context): Piece {
     ctx.reflected.push(mesh);
     return { animal, index, mesh, material, bones, own, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
   });
+  // Each body darkens the ground it stands on, as its card did.
+  const shade = ctx.rig.contactDiscs(drawn.length);
+  const sun = ctx.rig.sun;
   ctx.parts.built('drinkers', (cards.meshes[0] as THREE.Mesh), ...cards.meshes.slice(1), ...drawn.map((d) => d.mesh));
   for (let i = 0; i < 22; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
   const scratch = new Float32Array(BONES * 12);
@@ -341,9 +350,8 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: (t) => {
-      // The four of the shore are bodies while the shore shot runs.
-      const shore = during('eye-04');
-      const isBody = (index: number): boolean => shore && index < 4;
+      const running = ['eye-02', 'eye-04', 'eye-05'].find((id) => during(id));
+      const isBody = (index: number): boolean => index < cast.length && shotOf(index) === running;
       let lap = cards.setTime(t, isBody);
       const ring = (x: number, z: number, strength: number): void => {
         const slot = ctx.laps[lap];
@@ -357,10 +365,13 @@ export function create(ctx: Context): Piece {
         const d = g.animal;
         const bodies = isBody(g.index);
         g.mesh.visible = bodies;
+        const size = d.build.size;
+        const off = size * 1.2;
+        ctx.rig.setDisc(shade, g.index, d.x - sun.direction.x * off, d.z - sun.direction.z * off, bodies ? size * 1.2 : 0, d.level === undefined ? 0.7 : 0, 2.6, sun.shadowYaw);
         if (!bodies) continue;
         const solved = poseAt(d, t, g.bones);
         g.solved = solved;
-        g.own.z = Math.max(WADE * d.build.size, ground(d.x, d.z));
+        g.own.z = d.level ?? Math.max(WADE * d.build.size, ground(d.x, d.z));
         // Rings where its mouth is in the water, and round a hoof that has just come down or is about to leave.
         const low = d.down(t);
         if (wetAt(solved.muzzle[0], solved.muzzle[2])) ring(solved.muzzle[0], solved.muzzle[2], 1.3 * Math.min(1, Math.max(0, (low - 0.86) / 0.1)));

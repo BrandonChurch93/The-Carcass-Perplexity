@@ -23,6 +23,8 @@ export interface Drinker {
   level?: number;
   /** When something ahead of it takes its whole attention: from then it looks nowhere else. */
   alert?: number;
+  /** How far it gives ground when that takes it, in its own sizes: it steps back, one hoof after another. */
+  gives?: number;
   /** A number of its own, 0 to 1: its coat, its clocks. */
   own: number;
   /** Seconds between the steps of one leg, about. */
@@ -60,6 +62,9 @@ const build = (size: number, own: number, calf = false): Build =>
         head: 0.94 + 0.14 * hash(own * 13),
       };
 
+/** The two the last shot looks past: a small head on a long neck, as the approved picture has them. */
+const seenFromBehind = (d: Drinker, neck: number): Drinker => ({ ...d, build: { ...d.build, head: 0.74, neck, girth: 1.12 } });
+
 export function herd(rng: Rng, riseAt: number): Drinker[] {
   // One that drinks: mouth in the water and sipping, then the head comes half up and it swallows, then it stands and looks, then down again.
   // `at` is where in the period it is at the key of its shot, so the key is drawn as the approved picture has it.
@@ -88,8 +93,8 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     shore(from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(11, SHORE_KEY, 0.34), false)),
     shore(from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(13, SHORE_KEY, 0.08), false)),
     // The two of the last shot, below the camera with their backs to it, cut by the foot of the frame. Each lifts its head to the swell, not together.
-    { ...one(centre[0] - 1.22, centre[2] - 13.5, 6, 1.12, (t) => 0.78 - 0.46 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.83, alert: riseAt + 0.9, key: riseAt + 1.7 },
-    { ...one(centre[0] + 0.72, centre[2] - 16.5, -8, 1.0, (t) => 0.84 - 0.54 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.9, alert: riseAt + 1.15, key: riseAt + 1.7 },
+    seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 8, 1.12, (t) => 0.8 - 0.5 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, key: riseAt + 1.7 }, 0.8),
+    seenFromBehind({ ...one(centre[0] + 1.0, centre[2] - 18.5, -8, 0.82, (t) => 0.86 - 0.62 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, key: riseAt + 1.7 }, 1.0),
     // The ones of the mats shot: out on the shelf beyond the mats, small, side on. Both companions are down at the key.
     mats(from(KEYS.mats, -13, 31, 80, 1, sips(10, MATS_KEY, 0.3), false)),
     mats(from(KEYS.mats, -21, 44, 262, 1, sips(12, MATS_KEY, 0.12), false)),
@@ -154,15 +159,24 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     const c = offset(m);
     const rest = restHoof(b, k);
     const hx = rest[0] + a[0] + (c[0] - a[0]) * e;
-    const hz = rest[2] + a[1] + (c[1] - a[1]) * e;
-    const arcUp = Math.sin(Math.PI * e);
+    let hz = rest[2] + a[1] + (c[1] - a[1]) * e;
+    let arcUp = Math.sin(Math.PI * e);
+    let weight = Math.max(ease(1.0, 0.2, until), 1 - ease(swing * 0.6, swing + 0.7, since));
+    // One that gives ground: a hind hoof goes back, then the fore hoof across from it, then the other two. The trunk goes back with them.
+    if (d.alert !== undefined && d.gives) {
+      const start = d.alert + ([1.0, 0.32, 0.62, 1.3][k] as number);
+      const g = ease(start, start + 0.42, t);
+      hz -= d.gives * s * g;
+      arcUp = Math.max(arcUp, Math.sin(Math.PI * g));
+      weight = Math.max(weight, ease(start - 0.3, start - 0.04, t) * (1 - ease(start + 0.36, start + 0.75, t)));
+      shift[2] -= 0.25 * d.gives * s * ease(start + 0.1, start + 0.7, t);
+    }
     // The ground under this hoof, in the world.
     const wx = d.x - cosB * hx + sinB * hz;
     const wz = d.z - sinB * hx - cosB * hz;
     const floor = d.level === undefined ? Math.max(WADE * s, ground(wx, wz)) - y : 0;
     hooves.push({ at: [hx, floor + 0.17 * s * arcUp, hz], fold: arcUp });
     // Its weight goes off the leg before the hoof leaves the ground and comes back on after it lands.
-    const weight = Math.max(ease(1.0, 0.2, until), 1 - ease(swing * 0.6, swing + 0.7, since));
     const side = k % 2 === 0 ? 1 : -1;
     const hind = k < 2;
     shift[0] -= side * 0.06 * s * weight;
@@ -170,6 +184,10 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     shift[1] -= 0.012 * s * weight;
     roll += side * 0.012 * weight;
   }
+  // What takes its attention sets it back on its haunches: the weight goes onto the hind legs and the croup sinks a little, then it eases.
+  const taken = d.alert === undefined ? 0 : ease(d.alert - 0.05, d.alert + 0.5, t) * (1 - 0.45 * ease(d.alert + 1.6, d.alert + 4.2, t));
+  shift[2] -= 0.075 * s * taken;
+  shift[1] -= 0.018 * s * taken;
   // The neck: each joint follows the one below it a little late, the head last.
   const drive = (i: number): number => d.down(t - 0.075 * i);
   const low = Math.min(1, Math.max(0, d.down(t)));
@@ -210,7 +228,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     z: d.z,
     bearing,
     shift,
-    pitch: 0.05 * low + 0.004 * Math.sin(t * 0.53 + o * 7),
+    pitch: 0.05 * low + 0.004 * Math.sin(t * 0.53 + o * 7) - 0.03 * taken,
     roll,
     yaw: 0.01 * Math.sin(t * 0.37 + o * 3),
     chest: [0.04 * neckTurn * free, 0.03 * low],
