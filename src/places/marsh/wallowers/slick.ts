@@ -77,20 +77,20 @@ void main() {
 
   // The skin: brown with pink in it, every crease of the tile dark, and darker still in the deep folds the body is built with.
   vec3 tone = skin / HIDE_MEAN;
-  vec3 albedo = vec3(0.15, 0.1, 0.078) * mix(vec3(dot(tone, LUMA)), tone, 0.7);
+  vec3 albedo = vec3(0.088, 0.068, 0.057) * mix(vec3(dot(tone, LUMA)), tone, 0.6);
   // The head is the darkest of it: heavy and grey.
   albedo *= 1.0 - 0.35 * smoothstep(1.0, 1.7, vRest.x) * (1.0 - leg);
   albedo *= mix(0.42, 1.06, smoothstep(0.05, 0.8, fold));
-  albedo = mix(albedo, albedo * vec3(0.6, 0.4, 0.33), damp);
+  albedo = mix(albedo, albedo * vec3(0.6, 0.46, 0.4), damp);
   // The cake: pale and matt, each plate dark at the edge where it has lifted, and the salt has come out of it white on the spine.
-  vec3 plate = vec3(0.2, 0.165, 0.142) * mix(vec3(dot(cake, LUMA) / dot(CAKE_MEAN, LUMA)), cake / CAKE_MEAN, 0.7);
+  vec3 plate = vec3(0.16, 0.138, 0.122) * mix(vec3(dot(cake, LUMA) / dot(CAKE_MEAN, LUMA)), cake / CAKE_MEAN, 0.7);
   plate *= 0.62 + 0.38 * smoothstep(0.525, 0.6, lie);
   float salt = smoothstep(0.62, 0.7, cakeH + 0.3 * (fine - 0.5)) * smoothstep(0.35, 0.9, nr.y) * smoothstep(0.56, 0.7, lie);
   plate = mix(plate, vec3(0.5, 0.48, 0.46), 0.8 * salt);
   albedo = mix(albedo, plate, dry);
   // The mud: blood red where it is thick and fresh, rust where it thins out toward the line.
   float thick = 1.0 - smoothstep(-0.5, 0.0, y - tide);
-  vec3 red = mix(vec3(0.095, 0.024, 0.014), vec3(0.055, 0.014, 0.009), thick) * (0.55 + 0.9 * skinH);
+  vec3 red = mix(vec3(0.046, 0.02, 0.014), vec3(0.027, 0.012, 0.009), thick) * (0.55 + 0.9 * skinH);
   vec3 grey = mix(vec3(0.17, 0.125, 0.105), vec3(0.085, 0.06, 0.05), thick) * (0.55 + 0.9 * skinH);
   albedo = mix(albedo, mix(red, grey, uCoat.w), mud);
   // What stands in the mud is mud.
@@ -114,12 +114,12 @@ void main() {
 
   // Wet mud shows the sky on the top of every fold; the skin is dull, the cake dead.
   float rough = mix(mix(0.9, 0.72, damp), 1.0, dry);
-  rough = mix(rough, mix(0.85, 0.36, smoothstep(0.6, 0.9, skinH)), mud);
+  rough = mix(rough, mix(0.72, 0.3, smoothstep(0.5, 0.85, skinH)), mud);
   rough = mix(rough, 0.3, deep);
   rough = mix(rough, 1.0, 0.7 * graze);
   float occ = vOpen * sqrt(vOpen) * (0.5 + 0.5 * smoothstep(0.0, 0.85, fold)) * mix(0.7 + 0.3 * smoothstep(0.15, 0.6, skinH), 0.7 + 0.3 * smoothstep(0.2, 0.6, cakeH), dry);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it.
-  c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.72, 0.42, 0.34) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (0.4 + 0.6 * vOpen);
+  c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.4, 0.26, 0.21) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (0.4 + 0.6 * vOpen);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

@@ -529,6 +529,7 @@ varying vec3 vLook;
 uniform float uWet;
 uniform float uHang;
 uniform float uSalted;
+uniform float uTint;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -554,7 +555,7 @@ void main() {
   float knobs = smoothstep(0.42, 0.6, vnoise(vec2(s * 14.0 + vLook.z * 50.0, vLook.y * 2.0)) + 0.25 * n.y);
   albedo = mix(albedo, mix(vec3(0.26, 0.17, 0.105) * (0.6 + 0.5 * groove), vec3(0.33, 0.29, 0.27), knobs), uSalted);
   // No two alike: each its own tone, and the grooves and rings break the light along it.
-  albedo *= 0.78 + 0.44 * fract(vLook.z * 7.31 + 0.2);
+  albedo *= (0.78 + 0.44 * fract(vLook.z * 7.31 + 0.2)) * uTint;
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   float rough = mix(0.95, mix(0.9, 0.58, groove * ring * 2.0), wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
@@ -742,7 +743,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? 0.4 : 1 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
