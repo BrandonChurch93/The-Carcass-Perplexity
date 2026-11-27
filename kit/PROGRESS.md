@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 164, 2026-11-27 12:22 UTC:
+Status 165, 2026-11-27 12:44 UTC:
 
-- `01-s164-breath-repeat.jpg`: The Breath, the two frames that one build does not draw the same twice. Top left: 1:27 (frame 5242) at the small draft size, one of three drawings. Top right: the same frame darkened, with a mark on each of the 63 pixels that differ between the three drawings, by 1 or 2 levels of 255; each mark is far larger than its pixel. All of them lie along the waterline, at the waders' feet and in their reflections. Bottom: the same small part of 1:10 (frame 4221) at 3840x2160, final tier, in three drawings, shown at twice its size; the circles mark the 3 pixels that differ, by 1 level. Nothing here can be seen by eye. It matters because the film is rendered in pieces on several machines and must come out the same every time
-- `02-s164-heart-2722.jpg`: The Heart at 0:45 (frame 2722), the establishing view: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has heavy warm smoke lit orange from below over the whole basin, a braided stream of lava spilling from the glowing cave, and a floor of rough ropy crust broken by wide glowing cracks and patches of flame; the frame has the same layout (the cave and its fall, the block of rock at centre right, the striders, the sunk one in front) under a clear blue-grey sky with one grey plume, a flatter floor with thin straight cracks and a regular pattern of plates at lower right, and a taller, blockier bank at left. The Builder's reading of the two
-- `03-s164-marsh-6800.jpg`: The Blood Marsh at 1:53 (frame 6800), the wallower on the thin crust: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has a heavy wallower with a wet, salt-caked hide lying in mud and red brine among broken plates of crust, with a herd and tall stalks fading into mist behind it; the frame has the wallower and the salt mounds in the same places but on smooth, dry-looking ground with little standing liquid, a paler and cleaner hide, thin sparse stalks, and one animal far behind where the picture has several. The Builder's reading of the two
+- `01-s165-heart-4006.jpg`: The Heart at 1:07 (frame 4006), the vessel mouth and its lava fall: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has a deep dark tunnel lit only on its inner lip, lava that braids over a stepped ledge into rivulets and fans out at the foot, and thick warm smoke over everything; the frame has the cave in the same place with a banded orange shell inside it, one narrower stream that runs off to the right, smoke as a flat brown tint at the right, and a flat dark foreground with thin glowing lines where the picture has a soft near mound with one glowing crack. The Builder's reading of the two pictures; the critic that compares with the approved pictures gave this place 4 of 10. Below the bar.
+- `02-s165-spine-7579.jpg`: The Spine at 2:06 (frame 7579), where lightning came to ground: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has the dead walker frosted and half sunk in snow on a steep ridge, footprints leading up to a cave in a rock spire, a vivid orange band of sunset and a thin bolt far off; the frame has the body in the same pose with its wound and its tendrils, but the coat is coarse and combed into ridges, a bulky pale peak stands where the spire and its cave were, the ridge with the footprints is a flat plain, the sunset is a faint glow at the right edge and the bolt is thicker and lights nothing. The Builder's reading of the two pictures; the critic that compares with the approved pictures gave this place 3 of 10. Below the bar.
+- `03-s165-eye-9003.jpg`: The Eye at 2:30 (frame 9003), drinkers at the shore: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. The picture has the herd close to the lens, one animal cut by the right edge, with wet dark lower legs, rings round every leg and muzzle, warm light on their backs and the far cliffs softened by haze; the frame has three adults and a young one grouped further off and smaller, dry and pale down to the waterline, on mirror-flat water with clean reflections, a wide band of pebbles in front and sharp far cliffs. The Builder's reading of the two pictures; the critic that compares with the approved pictures gave this place 3 of 10. Below the bar.
 
+Status 164, 2026-11-27 12:22 UTC, showed: The Breath, the two frames that one build does not draw the same twice.
 Status 163, 2026-11-27 11:00 UTC, showed: The Ribs at 0:20 (frame 1241), the establishing view: the approved picture at left and the judged frame of round 30 at right, drawn at...
 Status 162, 2026-11-27 10:37 UTC, showed: The Blood Marsh at 1:35 (frame 5725), the stalks: the approved picture above and the judged frame of round 30 below, the same part of each...
-Status 161, 2026-11-27 10:26 UTC, showed: The Spine at 2:00 (frame 7234), the top edge where the picture has invalid values: 80 by 45 pixels of the frame at 1920x1080, final tier...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T12:22:04Z
-phase 6: 15.54 h used of 24.00 h
-build: 60.51 h used of 72.00 h
+2026-11-27T12:44:17Z
+phase 6: 15.91 h used of 24.00 h
+build: 60.88 h used of 72.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 81, status overdue
+minutes since the last status: 22
 ```
 
 ## Phases
