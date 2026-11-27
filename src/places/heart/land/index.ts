@@ -59,13 +59,14 @@ export function create(ctx: HeartContext): HeartPiece {
     tTalusNh: fine('mat/talus-nh.png', true),
   };
   const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '' } });
+  const rubbleMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', RUBBLE: '' } });
   const crackMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', CRACK: '' } });
   // The bank under the wide view: read at the scale of a hand, and at its rim handed over to the camera's bench.
   const handMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', HAND: '', CORE: '' } });
   const rimMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', HAND: '' } });
   const lipMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: LIP_FRAGMENT, uniforms: shared });
   const butteMaterial = ground({ FAR_LIGHT: '', STAGED: '' });
-  const materials: THREE.Material[] = [wallMaterial, benchMaterial, nearMaterial, crackMaterial, handMaterial, rimMaterial, lipMaterial, butteMaterial];
+  const materials: THREE.Material[] = [wallMaterial, benchMaterial, nearMaterial, rubbleMaterial, crackMaterial, handMaterial, rimMaterial, lipMaterial, butteMaterial];
   const geometries: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
     geometries.push(g);
@@ -277,10 +278,16 @@ export function create(ctx: HeartContext): HeartPiece {
     const t = -(x + 510.5) * AHEAD[1] + (z - 215.5) * AHEAD[0];
     return Math.min(s - FINE.back, FINE.front - s, t - FINE.left, FINE.right - t);
   };
-  const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0 && inFine(x, z) < 0.16, 0, 0.04, [0.2, 0.6]), nearMaterial);
+  const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0 && inFine(x, z) < 0.16, 0, 0.04, [0.2, 0.6]), rubbleMaterial);
   rubble.renderOrder = -5.4;
-  const rubbleFine = mesh(sheet(-516.6, 205.7, -501.7, 219.5, 0.035, rubbleHeight, (x, z) => inFine(x, z) > 0, 0, 0.03, [0.2, 0.6]), nearMaterial);
+  const rubbleFine = mesh(sheet(-516.6, 205.7, -501.7, 219.5, 0.035, rubbleHeight, (x, z) => inFine(x, z) > 0, 0, 0.03, [0.2, 0.6]), rubbleMaterial);
   rubbleFine.renderOrder = -5.6;
+  // The shader is told, corner by corner, what stands over the bed of grit: a block's face is read as broken scoria, the bed as grit under ash.
+  for (const g of [rubble.geometry, rubbleFine.geometry]) {
+    const p = g.getAttribute('position') as THREE.BufferAttribute;
+    const l = g.getAttribute('aLand') as THREE.BufferAttribute;
+    for (let i = 0; i < p.count; i++) l.setY(i, unit((p.getY(i) - benchUnder(p.getX(i), p.getZ(i)) - 0.04) / 0.05));
+  }
   // Both are seen along themselves from a man's height: drawn nearest first, a lump hides what lies behind it before it is shaded.
   nearFirst(rubble.geometry, AHEAD);
   nearFirst(rubbleFine.geometry, AHEAD);
