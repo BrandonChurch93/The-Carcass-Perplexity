@@ -1,0 +1,28 @@
+{
+  "round": 30,
+  "unit": "breath",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-27 07:50 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the pale long-necked animal beside the central red shrubs and the animals on the far left flats, over the six-second hold",
+        "what": "the near animal lifts its head, but its body and feet stay pinned; the distant animals hold nearly the same silhouettes and spacing, so the group reads as posed models",
+        "fix": "Give the near animal a visible weight transfer and a planted step, and stagger the distant animals' steps, turns and pauses."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the near teal pool and its contact with the rock shelves, before the steam overtakes it",
+        "what": "the broad surface and shoreline read nearly fixed while the mist moves; the small changes in sparkle do not show water disturbing the edge",
+        "fix": "Send uneven ripples across the open water and let them reflect and break against the shelves, deforming the highlights as they pass."
+      }
+    ]
+  }
+}

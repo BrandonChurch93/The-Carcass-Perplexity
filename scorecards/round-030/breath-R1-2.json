@@ -1,0 +1,105 @@
+{
+  "round": 30,
+  "unit": "breath",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-27 07:51 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the red fronded plants, foreground and left",
+        "what": "fronds are thin, dry, dark wiry strands with only faint red rim light; -a has thick, wet, glossy crimson fronds strung with water beads and dripping drops, strongly backlit to glowing red-orange",
+        "fix": "thicken the fronds, make them wet and translucent with bead droplets and falling drips, and let the low sun backlight them to a saturated crimson glow"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the ground under the plant",
+        "what": "pale grey pitted sinter crust with no stones; -a has wet, dark rock with rounded pebbles, a pale bone and runoff water glinting in the light",
+        "fix": "replace with wet dark rock and pebbles, add the bone and wet sheen catching the sun"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the creature in the haze, upper left",
+        "what": "the long-necked animal is tiny, faint and pushed to the far plain; in -a it is a clear, large white silhouette standing in the sun-glare at mid-distance",
+        "fix": "bring the animal closer and larger, a crisp backlit white figure against the glare"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the far hills, upper right",
+        "what": "a sharp snow-streaked mountain wall is visible; in -a the distance dissolves in warm steam and haze with only soft pale terraces",
+        "fix": "remove the snow, push the far landforms back into warm steam so visibility drops"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the rock ledges and chasm, right",
+        "what": "smooth bright cream rounded boulders, evenly lit; -a has darker layered ledges with a dripping overhang above a deep steaming chasm",
+        "fix": "darken and layer the ledges, add the dripping overhang and denser steam rising from the gorge"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "overall light and colour",
+        "what": "cooler, greyer, flatter grade with the sun disc washed out; -a is a warm golden low sun with strong rim light and specular glints everywhere",
+        "fix": "warm the grade toward gold, lift contrast and add specular glints on wet surfaces"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the arched ribs of the sinkhole wall",
+        "what": "ribs read as flat, dry, mottled stone slabs; in -a they are smooth wet bone-like arches, cream with rust streaks, glistening and dripping",
+        "fix": "reshape into smooth curved rib arches, give them a wet sheen, rust-orange staining and water dripping off their edges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the red plant, upper left",
+        "what": "only a sliver of dry dark fronds at the frame edge; in -a a large wet crimson plant fills the left with droplets falling into the pit",
+        "fix": "bring in the full wet crimson plant with hanging drops on the left"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the far plain and horizon, top",
+        "what": "the far shallows, grazing animals, small red plants on the rim and the hazy golden sun glare are almost all cropped out or missing",
+        "fix": "open the top to show the glinting shallows with distant animals and red tufts along the rim in warm haze"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the pit walls between the ribs",
+        "what": "crisp horizontally banded strata with streaky low-res texture; -a has dark wet mossy walls with vertical seep streaks and green tint",
+        "fix": "wet the walls, add green moss tones and vertical water seeps, soften the strata banding"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the steam, left half",
+        "what": "a heavy, dense grey wall of steam covers almost half the frame; in -a the vapour rises in softer, thinner wisps lit warm by the sun",
+        "fix": "thin the steam and let it catch warm sidelight so the pit depth reads through it"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "foreground rock, bottom right",
+        "what": "a pale speckled boulder intrudes; -a has wet rock with moss and droplets in the bottom-left foreground",
+        "fix": "replace with wet, mossy foreground rock catching sun glints"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "overall light",
+        "what": "flat, cool, low-contrast light without golden rim highlights; -a has a warm low sun raking across wet surfaces",
+        "fix": "warm the light and add strong specular highlights on the wet bone and rock"
+      }
+    ]
+  }
+}

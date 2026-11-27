@@ -1,0 +1,35 @@
+{
+  "round": 30,
+  "unit": "breath",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-27 07:51 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 8,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "standing animal behind the prone animal, frames 5403–5578",
+        "what": "The standing animal holds nearly the same lowered pose through most of the push, with little visible weight transfer before it finally raises its neck. The camera supplies most of the change in the encounter.",
+        "fix": "Give the standing animal a small, asymmetric shift onto a planted leg and a brief head adjustment before the lift; keep the prone animal still if it is meant to be dead."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the center animal's swinging and supporting feet, frames 5242–5253",
+        "what": "The leg swing reads more clearly than the weight on the supporting foot, and the feet do not distinctly disturb the water around them. The step feels light despite the moving reflections.",
+        "fix": "Settle the body over the planted foot before the swing and add a small, localized water displacement at lift and contact."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the large red plant in the closing frames",
+        "what": "The canopy stays in almost one bent shape in the sustained gust. Most visible movement is at the tips rather than successive flex and recovery in the branches.",
+        "fix": "Stagger the gust response through the larger branches and let individual fronds recover at different rates."
+      }
+    ]
+  }
+}

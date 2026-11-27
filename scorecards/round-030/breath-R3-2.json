@@ -1,0 +1,70 @@
+{
+  "round": 30,
+  "unit": "breath",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-27 07:51 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the three pale rock arches spanning the pit and the boulders on the right wall",
+        "what": "the arches read as sculpted clay ribbons with repeated wavy strata and the boulders look like pasted blocky low-poly shapes rather than fractured rock",
+        "fix": "rebuild the arches and rim boulders with realistic geological fracture detail, varied materials, and scree or rubble where loose rocks rest on ledges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the mist filling the left and lower pit",
+        "what": "the vapour reads as a flat, muddy grey-brown veil with almost no internal scattering from the bright upper-left sun",
+        "fix": "render volumetric vapour with directional light scattering, bright sunlit edges near the rim, and depth-dependent density variation"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "right crop (x 83 to 100%, y 58 to 75%), foreground cliff and central boulder",
+        "what": "the central rock is a sharply faceted rectangular block and the surrounding cliff has blurry, stretched procedural brown-and-tan blotches with no fine rock grain",
+        "fix": "replace the low-poly block geometry with high-detail sculpted rock and apply high-resolution triplanar micro-detail textures without UV stretching"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "top-left crop (x 0 to 17%, y 25 to 42%), overhanging red plant fronds",
+        "what": "the thin strands break into straight polygonal segments with angular kinks, harsh aliasing, and dotted dark ghosting along the edges",
+        "fix": "increase curve subdivision on the fronds, add organic thickness variation, and render with clean anti-aliasing and proper motion blur"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "top-right crop (x 42 to 58%, y 25 to 42%), boulders on top of the middle arch",
+        "what": "the loose rocks sit on a soft, stretched procedural bridge surface with hard ungrounded edges and no dust, gravel, or contact integration",
+        "fix": "sharpen the bridge top texture with fine mineral detail and blend the boulders into the ledge with ambient occlusion, debris, and weathered contact"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%), upper-right rock arch seen through the mist",
+        "what": "a vertical mirrored symmetry seam is visible in the rock texture",
+        "fix": "remove mirrored UV mapping on the lower arch and use non-repeating procedural or varied scanned textures"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "lower left, base and thick stems of the foreground red plant",
+        "what": "the stems and bulbous base look like smooth, untextured clay or plastic tubes intersecting the rocky ledge along a hard seam",
+        "fix": "add fibrous botanical surface detail and roughness variation to the stems and seat the root base into a crevice with grit and contact shadow"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-05.png",
+        "where": "top-left crop (x 0 to 17%, y 25 to 42%), grey mist behind the red fronds",
+        "what": "faint tonal banding and contour lines appear across the smooth vapour gradient",
+        "fix": "render the mist at higher bit depth with fine film grain or dithering to eliminate banding"
+      }
+    ]
+  }
+}

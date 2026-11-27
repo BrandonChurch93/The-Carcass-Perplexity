@@ -1,0 +1,70 @@
+{
+  "round": 30,
+  "unit": "heart",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-27 07:56 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%), along the foreground lava channel bank (also visible in set-A-04.png)",
+        "what": "the lava edge breaks into sharp rectangular glowing yellow blocks, the rock bank shows a visible checkerboard tiling grid and a smooth vertically stretched lip, and a flat procedural Voronoi crackle pattern is pasted over the crust with no physical depth",
+        "fix": "replace the low-resolution channel mask and procedural Voronoi overlay with high-resolution displaced crust geometry, continuous fluid lava flow, and physically recessed glowing fissures"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "left and right crops (x 42 to 58% and x 83 to 100%, y 58 to 75%), foreground ropy lava mounds around the buried skeleton (also visible in set-A-07.png)",
+        "what": "the glowing orange cracks at bottom-left render as blocky, pixelated 90-degree square segments, and the close-up ropy lava tubes suffer from heavy horizontal texture stretching and smearing over smooth clay-like forms",
+        "fix": "increase the emission and displacement map resolution to remove pixelated crack edges, and re-project UVs or use triplanar detail shading on the foreground lava mounds to eliminate stretching"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop (x 83 to 100%, y 58 to 75%), lava spatter and fissure on the right side of frame 2722",
+        "what": "the spattering lava reads as smooth, blobby glowing clay domes beside pixelated stair-stepped orange cracks, and the foreground fissure is an unnaturally uniform thin glowing line across soft muddy rock",
+        "fix": "replace the blobby spatter geometry with fractured fluid splashes, raise the crack mask resolution, and add sharp basalt relief and crusting along the fissure"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "bottom-right crop (x 0 to 17%, y 58 to 75%) and top-left crop (x 0 to 17%, y 25 to 42%), left foreground rocky slope",
+        "what": "close foreground basalt looks soft, clay-like, and smeared in stretched areas, while the grey steam wisps read as faint flat patches with no lighting from the environment",
+        "fix": "add high-frequency rock micro-displacement and varied mineral roughness on the foreground slope, and render volumetric steam that catches ambient sky and lava light"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "bottom-right crop (x 0 to 17%, y 58 to 75%), foreground lava flat",
+        "what": "the basalt crust repeats a uniform procedural swirl pattern across one flat material, and the glowing orange patch in the upper left reads as flat speckled noise that casts no light onto the rock around it",
+        "fix": "break up the pahoehoe crust with varied material roughness, ash, and rubble, and seat the glow inside real crevices so it illuminates the surrounding basalt"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "foreground left strider and midground striders across the lava flat (also visible in set-A-07.png and set-A-08.png)",
+        "what": "the animals have a smooth, uniform dark CG surface with no ash, dust, or warm bounce light from nearby lava on their legs, and lack clear contact shadows where their feet meet the crust",
+        "fix": "add ambient occlusion and contact shadows under every foot, weather the lower legs with ash and crusting, and let nearby lava fissures cast warm rim and bounce light onto the limbs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "upper right sky above the dark cliff",
+        "what": "the massive grey smoke plume reads as a smooth, soft, painterly shape lacking crisp volumetric detail and warm underlighting from the bright orange glow below it",
+        "fix": "increase volumetric detail in the plume and scatter warm orange bounce light into its lower folds"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%), center lava crack",
+        "what": "the small vertical puff of grey vapour reads as a single soft blob with almost no warm illumination from the glowing lava directly beneath it",
+        "fix": "give the vapour finer turbulent structure and strong warm underlighting from the fissure below"
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "round": 30,
+  "unit": "heart",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-27 07:55 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the large foreground creature, frames 3136–3374",
+        "what": "The long reaching leg swings and folds while the trunk stays pitched over the molten crack with little visible transfer of weight. The stride reads as a leg animation on a held body.",
+        "fix": "Shift the trunk over the supporting feet before the reach, lock those contacts to the ground, and let the body settle onto the new foot after it lands."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the bright foreground lava against the grey slab, frames 3477–3488",
+        "what": "Fine hot streaks change along a largely fixed edge, but the cooling skin itself shows little displacement. The motion reads more strongly as brightness moving over a surface than as thick material folding against a bank.",
+        "fix": "Carry visible crust fragments downstream at varied speeds and let the skin bunch and tear where it catches the slab."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the ramp directly below the cave lip, frames 4025–4142",
+        "what": "The source flares and broadens, but much of the surrounding ramp keeps the same value. The event reads more like the channel brightening than an increased volume arriving down the slope.",
+        "fix": "Give the surge a thick front that travels downhill, and time the local light on the ramp and fume to its passage."
+      }
+    ]
+  }
+}

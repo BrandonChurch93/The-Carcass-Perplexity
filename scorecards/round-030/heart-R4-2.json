@@ -1,0 +1,35 @@
+{
+  "round": 30,
+  "unit": "heart",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-27 07:55 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "nearest long-legged animal just right of the left foreground rocks, across the six-second hold",
+        "what": "the head and neck dip and return while the feet and torso stay almost in the same pose, making it read like a parked model with a hinged neck",
+        "fix": "shift weight through the shoulders and hips before the dip, give one foot a planted adjustment, and vary pauses and head turns across the herd"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "bright cascade beneath the overhang and its fan at the foot of the slope",
+        "what": "the bright flecks change but the branching sheet and fan hold nearly the same shape, so the movement reads more as shimmer than as molten rock coming down the slope",
+        "fix": "move coherent lobes down the steps, roll darker crust over them, and let the lobes deform and spread at the foot"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "low orange fume over the vent on the right of the field",
+        "what": "the fume swells and fades around the same pocket without a clear trail of heavier vapor gathering or flowing away along the ground",
+        "fix": "advect irregular puffs across the crust and let them collect in low areas instead of mostly brightening and fading at the vent"
+      }
+    ]
+  }
+}

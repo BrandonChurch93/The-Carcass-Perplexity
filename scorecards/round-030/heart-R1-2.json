@@ -1,0 +1,113 @@
+{
+  "round": 30,
+  "unit": "heart",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-27 07:54 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the lava river behind the left animal, upper left",
+        "target": "",
+        "what": "-a has a broad, bright lava flow pouring down the far slope and spreading across the plain behind the animals, which is the main light source; -b keeps only a thin, short squiggle that stops high on the slope, so the backdrop is dark rock with no orange source",
+        "fix": "bring back the wide falling lava stream and its pool across the mid-ground, glowing strongly and lighting the fume around it"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the whole sky and background cliffs",
+        "what": "-a is filled with thick warm smoke and an orange-lit haze that softens the cliffs; -b is clearer and greyer, the left cliff wall reads as a flat, sharp grey texture and the right butte is crisp and cool",
+        "fix": "add dense warm volcanic fume across the background, lit orange from below, and push the cliffs back into it"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the foreground and mid ground floor",
+        "what": "-a has many bright molten cracks and pools across the floor, glowing hot under the feeding mouth and in a long seam at lower right; -b has fewer, thinner, dimmer cracks and the floor reads as cool grey crust with rocks",
+        "fix": "widen and brighten the molten seams, add a glowing pool under the mouth and the lower-right seam, and warm the crust near them"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the floor surface in the lower right and centre (see set-B-02 crops)",
+        "what": "the -b crust shows a repeating, combed, wavy stripe texture with a silvery sheen and scattered tiled rocks; -a is a soft, rough, matte basalt",
+        "fix": "replace with an irregular matte basalt crust without the striated pattern or the cold highlights"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the central animal's mouth tendrils",
+        "what": "in -a the root-like mouthparts glow bright orange from the lava they touch; in -b they are pale grey-white and lit only at the very tips",
+        "fix": "let the lava under-light the tendrils up their length in warm orange"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the right animal and its lifted foot",
+        "what": "-a shows the lifted foot as a disc shedding falling grit and the animal sits in orange haze; -b loses the falling grit and the animal stands against a crisp grey cliff",
+        "fix": "restore the debris falling from the raised foot and set the animal in warm fume"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "steam vents across the floor",
+        "what": "-b adds several distinct white steam plumes rising from the ground which are not in -a, and they read cool against the warm scene",
+        "fix": "remove the isolated white plumes or replace them with low warm drifting fume as in -a"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "bodies of the animals",
+        "what": "-a bodies catch warm rim light from the lava; -b bodies are lit flatly and greyer",
+        "fix": "add warm orange rim light on the lava-facing sides"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the cave mouth and cliff face",
+        "what": "in -a the cave is a deep dark tunnel framed by rock glowing orange only on its inner lip; in -b the arch is a smooth, banded orange shell like a lit bowl, and the cliff above is a flat, sharp, cool grey texture with no haze",
+        "fix": "make the arch rough rock lit only near the lava, deepen the tunnel, and soften the cliff with warm haze"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the lava cascade down the bench",
+        "what": "-a has a lava fall that splits into many fine braided rivulets down a stepped ledge and fans into a wide, crackled delta; -b is a narrower, smeared stream with wavy stretched texture and a smaller fan",
+        "fix": "break the flow into braided, branching channels over stepped rock and widen the delta at the base"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the rock bench beside the lava (see set-B-04 top crops)",
+        "what": "-a has glowing lava threads running through the rock to the left of the main fall and a warm cast on the stone; -b rock beside the flow is grey and unlit, with a stretched wavy lava edge",
+        "fix": "add the side seams of lava through the rock and let the flow warm the stone around it"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the left scree slope (see set-B-04 bottom crops)",
+        "what": "-a slope is crisp dark basalt with light-edged angular fragments; -b slope is a muddy, low-contrast brown with a few large smooth blocks",
+        "fix": "add contrast and small angular light-edged rubble, darker basalt tone"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the foreground floor",
+        "what": "-a has a dark soft foreground with one long glowing crack leading in; -b has a flat reflective band with horizontal orange streaks and no lead-in crack",
+        "fix": "restore the single glowing crack across the foreground and a dark matte rough floor"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03-b.png",
+        "where": "the far animals at the lava's edge",
+        "what": "-b animals are slightly larger and placed further right on the delta; the left one is half lost in the lava glow",
+        "fix": "set them smaller at the delta's right edge, silhouetted against the glowing haze"
+      }
+    ]
+  }
+}

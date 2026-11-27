@@ -1,0 +1,112 @@
+{
+  "round": 30,
+  "unit": "heart",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-27 07:55 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the sky and the plume at upper right",
+        "what": "the plume is one dense, hard-edged grey column standing apart from the scene, and the sky above the cliffs is a clean blue; in -a the fume is a soft, wide drift lit orange from below that hazes the whole right side and the far rim",
+        "fix": "break the column into a broad, low, translucent drift, warm its underside with lava light, and let it veil the far rim and sky"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the lava channel across the foreground and middle",
+        "what": "the lava is a flat, even, pale-yellow pour with smooth sheet edges sitting in a cut trench; in -a it is a narrow, crusted channel with swirled skin, dark crust plates over it and glow only in the cracks and the hottest core",
+        "fix": "narrow the channel, put dark, swirled crust over most of it, and keep the bright yellow to a thin core and the cracks, falling to deep orange and red at the edges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the dead animal in the foreground",
+        "what": "the body is a bulging, fabric-like mound with pale scale patches and a smooth CG skin; in -a it is a charred, bark-textured carcass half-sunk into ropy lava, dark and cracked with flaking ash-grey bark",
+        "fix": "char and darken the body, give it cracked bark-like skin that flakes, and sink it into the lava so the flow wraps it"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the crust on the right half of the floor",
+        "what": "the crust is light grey with a busy, repeating swirl pattern and hard straight cracks, like a tiled texture; in -a it is dark, ropy pāhoehoe with broad folds and soft depth-of-field falloff",
+        "fix": "darken the crust to near black-brown, replace the repeat pattern with large ropy folds, and soften it with distance"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the lava floor from mid-ground to the bottom edge",
+        "what": "the floor is a uniform grey with a small repeating swirl stamp and little depth softness; in -a it is dark, ropy, uneven crust that drops out of focus toward the camera and the distance",
+        "fix": "darken and vary the crust, use larger ropy flow forms, and add shallow depth-of-field like -a"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the far cliff wall and sky",
+        "what": "the wall is sharp, high-contrast, evenly lit grey stone, the sky clean blue, and the haze thin; in -a the wall is dim and soft behind thick smoke, the sky grey, and the right side glows orange through fume",
+        "fix": "lower contrast on the wall, add dense warm-lit haze across the back, and grey down the sky"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the ember glow under the carcass",
+        "what": "the glow is a few thin, saturated orange zigzag lines that light nothing around them; in -a the ember is a soft, warm spot that tints the fume and crust near it",
+        "fix": "soften the glow, let it spill onto the nearby crust and the wisp of smoke"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the cliffs and the mesa",
+        "what": "the rim walls are taller, sharper and more evenly lit, with crisp ledges and less atmospheric falloff; in -a they are dim, low-contrast and softened by haze, with the mesa glowing orange at its right base",
+        "fix": "lower the wall contrast, push haze into the rim, and warm the mesa's right side from the lava field"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the foreground rocks and fumaroles at left",
+        "what": "the rocks are scattered rounded boulders with a soft CG look and the steam is two small, clumped puffs; in -a the slope is jagged, broken black lava with a wide, soft steam drift rising across it",
+        "fix": "replace the boulders with angular broken lava, and widen the steam into a soft, translucent drift"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the lava floor in the middle and right",
+        "what": "the floor is pale grey with a regular polygon crack pattern like dried mud, and the glowing cracks are thin, even lines; in -a it is dark, ropy crust with irregular glowing seams",
+        "fix": "darken the floor, drop the mud-crack tiling, and make the glowing seams irregular and varied in width"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the rock pile at left",
+        "what": "the left rocks are red-brown and sharp with no yellow sulphur, and the steam is a thin wash; in -a they are black lava with yellow sulphur crust and a soft white plume rising",
+        "fix": "darken the rocks, add the sulphur crust, and thicken the steam into a soft rising plume"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the far cliffs and sky",
+        "what": "the back wall is sharper and brighter and the sky bluer, with a dark plume; in -a the back is lost in warm haze and the sky is grey",
+        "fix": "soften and dim the back wall, add warm haze, and grey the sky"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03-b.png",
+        "where": "the tall animals",
+        "what": "the animals are sharp against the haze and the near one stands on thin legs with a straight back; in -a they are slightly hazed and the near one has the drooping, dragging trunk lit orange at its tip",
+        "fix": "haze them to match their distance and give the near one the lit, dragging trunk"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01-b.png",
+        "where": "the fire at right",
+        "what": "the fire is a puff of smoke with a spray of sparks; in -a it is a low line of flame along a crack",
+        "fix": "lay the fire along the crack as a low flame line"
+      }
+    ]
+  }
+}

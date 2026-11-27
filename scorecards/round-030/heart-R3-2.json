@@ -1,0 +1,98 @@
+{
+  "round": 30,
+  "unit": "heart",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-27 07:56 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the cave arch, its interior ceiling, and the grey ledges flanking the lava mouth",
+        "what": "the cave reads as a smooth sculpted clay shell pasted into the cliff with a visible seam and jagged shards along the rim, while the ledges flanking the lava mouth and at the lower-left base are flat matte-grey clay-like blocks with none of the surrounding rock detail",
+        "fix": "integrate the cave arch into the cliff rock with fractured basalt geometry, remove the seam and rim shards, and replace the smooth grey berms with detailed, dark volcanic rock matching the cliff"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "the lava cascade in the left crop (x 42 to 58%, y 58 to 75%)",
+        "what": "the lava reads as a procedural noise shader mapped onto a mesh with sharp red contour outlines, stretched polygonal drips, flat intersecting shards, and faceted rock-shelf edges, with no realistic bloom on the white-hot core",
+        "fix": "rebuild the cascade with physical viscous flow, dark cooling crust plates, clean rock-to-lava contact without intersecting shards, and optical halation around the hottest cores"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the upper-left lava river on the cliff wall (also shown in set-B-02.png top-left)",
+        "what": "the distant lava looks like flat painted emissive orange and yellow with a uniform soft red halo rather than glowing magma with depth and cooling crust",
+        "fix": "add dark broken crust islands, varied incandescent temperature, and subtle bounce light onto the adjacent cliff rock and fume"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the left cave rim and cliff face in the top-left crop (x 0 to 17%, y 25 to 42%)",
+        "what": "hard low-poly triangular facets are visible where orange light hits the cave rim, and thin spiky stretched-geometry needles protrude across the dark rock face",
+        "fix": "subdivide and re-sculpt the cave rim to eliminate visible polygons and clean up the displacement spikes on the cliff mesh"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the cave ceiling in the top-right crop (x 42 to 58%, y 25 to 42%)",
+        "what": "the interior rock surface is soft, smooth, marbled clay-like noise with no sharp fracture or micro-detail",
+        "fix": "add high-frequency fractured basalt displacement and varied roughness to the cave ceiling"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the two small vertical steam plumes rising from the foreground lava cracks",
+        "what": "the vapour puffs look like flat wispy 2D cards sitting abruptly on the cracks with weak warm illumination from the lava directly beneath them",
+        "fix": "replace with volumetric heat-driven plumes strongly underlit in warm orange by the cracks below"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the foreground creature's tendrils dipping into the lava crack",
+        "what": "the tendrils splay out like stiff rigid twigs poking into molten rock with no heat distortion, charring, or natural contact",
+        "fix": "give the tendrils varied organic curvature, subtle heat shimmer, and stronger incandescent wrap where they near the magma"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the foreground creature's lower front legs in the left crop (x 42 to 58%, y 58 to 75%)",
+        "what": "the ankle joints appear pinched and faceted like a low-poly model, with a stray floating sliver/artifact below the right joint",
+        "fix": "smooth the joint topology, remove the detached mesh artifact, and add ash and dust accumulation on the lower legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the right creature's planted foot and the lava cracks in the right crop (x 83 to 100%, y 58 to 75%)",
+        "what": "the foot sits on the ground like a flat dark cone with a soft generic blotch shadow and no ground indentation or dust, while the lava cracks look like flat orange paint flush with the rock",
+        "fix": "sink the foot into ash with crisp contact occlusion and dust on the hide, and recess the lava cracks with dark crusted edges and depth"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the far-left creature's raised foot in the bottom-right crop (x 0 to 17%, y 58 to 75%)",
+        "what": "the foot reads as a stiff, awkwardly angled wedge hovering above the terrain",
+        "fix": "refine the foot anatomy and pose so the weight and articulation read naturally"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the right-hand smoke bank (also in set-B-05.png bottom-left and set-B-06.png right) and upper-right cliff wall",
+        "what": "the smoke reads as a flat featureless brown-orange tint with no internal turbulence, and the tall background cliff shows vertical texture stretching",
+        "fix": "add turbulent layered volumetric detail with internal warm light scatter to the smoke, and fix vertical UV stretching on the cliff rock"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the distant cliff wall behind the foreground creature's back",
+        "what": "the rock texture shows vertical stretching and smearing",
+        "fix": "reproject or use triplanar rock textures so vertical cliff strata hold up without stretching"
+      }
+    ]
+  }
+}

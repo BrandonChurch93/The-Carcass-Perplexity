@@ -1,0 +1,56 @@
+{
+  "round": 30,
+  "unit": "film",
+  "pack": "R6",
+  "family": "claude",
+  "answered": "2026-11-27 08:00 UTC",
+  "answer": {
+    "critic": "R6",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "whole first frame, especially the right third",
+        "what": "the opening frame is mostly grey-on-grey: a flat cliff face takes the right third and the giant spires are pale against a pale storm sky, so at phone size in a feed the first read is 'grey seascape' rather than 'giant bones rising from the sea'; nothing has strong contrast or a single focal point",
+        "fix": "open on a frame where one spire is silhouetted against a brighter break in the cloud, or push contrast and add a warm or bright accent; cut or shorten the cliff wipe so the spires are framed from frame 1"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the large winged creature in the centre between the spires",
+        "what": "the one living subject is low-contrast and the same grey-brown as the sky, so at phone size it reads as a smudge, not a flying creature; the opening's best hook is lost",
+        "fix": "put the creature against a lighter patch of sky or darken its silhouette and bring it closer so its wing shape reads at thumbnail size"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "frame format",
+        "what": "the frame is a wide 16:9 landscape; in a vertical phone feed it plays as a thin strip, which shrinks the spires and the flock to specks and weakens the stop",
+        "fix": "deliver a 9:16 or 4:5 crop centred on the left spire and arch, letting the spires fill the height"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png to set-A-10.png",
+        "where": "the motion across the ten frames",
+        "what": "the only change is a slow lateral drift that slides the cliff out of frame and some small birds moving; there is no event (no breach, wave hit, swoop toward camera), so nothing rewards staying past the first second",
+        "fix": "add a clear beat inside the opening: a wave slamming a spire, a creature diving toward the lens, or lightning lighting the bones"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "top-left corner",
+        "what": "a pale slab-shaped object pops into the top-left edge for this frame and is not in neighbouring frames",
+        "fix": "remove the stray element or keep it consistent across frames"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05.png to set-A-10.png",
+        "where": "the white spray at the base of the left spire",
+        "what": "the spray holds almost the same shape across frames and looks frozen rather than moving water",
+        "fix": "animate the spray so it rises and falls with the swell"
+      }
+    ]
+  }
+}

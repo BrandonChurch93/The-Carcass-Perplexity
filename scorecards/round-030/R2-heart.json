@@ -1,0 +1,255 @@
+{
+  "round": 30,
+  "unit": "heart",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 77,
+      "why": "the lava reads as thin, uniformly glowing seams painted onto the rock surface.",
+      "answered": "07:54 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "polished but generic CG lava scene with repeated, uniformly lit creature models and tiling ground texture, which looks like a game-engine environment render rather than a film-grade frame",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the flat tiled lava-crust plane and simple smoke sprites paired with moderately detailed rock displacement typical of an ordinary 3D render",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the lava reads as thin orange lines drawn across a flat surface rather than molten rock with depth.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the layered atmospheric haze, detailed rock and cracked-lava textures, and the cohesive cinematic lighting of the creature-filled volcanic scene read as big-budget film or game-cinematic quality.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 74,
+      "why": "the cooled lava’s swirl texture repeats too uniformly across the foreground slabs.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the repetitive procedural lava-crust texture and generic stylized creatures look like a competent standalone 3D render rather than top-budget cinematic polish",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the stretched mesh seam and procedural displacement artifacts along the in-focus foreground lava channel edge",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 87,
+      "why": "The foreground lava crust repeats the same wood-grain swirls across otherwise distinct slabs.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the high-fidelity pahoehoe lava texture, atmospheric haze and depth of field combined with the surreal stilt-legged creatures read as a high-end film or AAA cinematic.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the visibly repeating ridges in the cooled-lava texture.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the lava ground has repeating procedural swirl/noise texture patterns and simple creature models, typical of an ordinary 3D render rather than film-grade VFX.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the flat normal-mapped lava ground and weak bounce-light integration between the glowing magma and the creatures fall short of top-budget film or AAA cinematic fidelity while exceeding a web 3D or mobile-game look.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the same finely rippled texture repeats across the foreground lava slabs.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 62,
+      "why": "the detailed volumetric haze, lava glow and richly textured ropy basalt with a filmic depth of field read as high-end cinematic CG, though the slightly repetitive texture and odd creature shapes leave real doubt against c.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 77,
+      "why": "the lava casts convincing localized light onto the creature’s fine tendrils.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "polished creature-and-lava artist render, but the sparse, simple backdrop rocks and plain ground lack film-level density and detail",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the simple repetitive steam puffs and procedural background cliffs alongside solid path-traced lighting and creature detail",
+      "answered": "07:56 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the creature’s neck ends in a bundle of smooth, uniform strands that looks distinctly modeled.",
+      "answered": "07:56 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 72,
+      "why": "the cinematic atmospheric haze, depth of field, and detailed lava-lit ground and creature textures look like big-budget film or game cinematic work, though the slightly soft rendering and odd creature anatomy leave some chance of c.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the lava’s glossy, ribbon-like surface looks shader-generated rather than naturally molten.",
+      "answered": "07:55 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "stretched procedural textures on the cave and lava with simple placeholder-like creature figures look like a typical hobbyist/stock 3D render rather than a film-grade frame",
+      "answered": "07:56 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the abrupt mesh seams and faceted rock geometry around the cave opening combined with the simplistic spindly figures in the lava feel like a standard 3D concept render rather than a top-budget film or game cinematic.",
+      "answered": "07:56 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the lava looks like a flat orange texture stretched over angular rock ledges.",
+      "answered": "07:56 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "The image is clearly computer-generated: the rock and lava textures look smeared and stretched, and the tiny spindly creatures at the lava's edge look like CG filler. The atmosphere and lighting are good, but the surface detail isn't film-grade, so it reads as an ordinary 3D render. (d) is the close second.",
+      "answered": "07:56 UTC"
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "round": 30,
+  "unit": "breath",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 80,
+      "why": "the identical red shrubs repeated across the terrain.",
+      "answered": "07:50 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "polished but generic environment-art render: the alien creatures are simple, and the foreground rock textures are soft and stretched, which looks like a portfolio or stock render rather than top-budget cinematic detail.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the flat smooth water plane with hard shoreline intersections alongside repetitive rock and foliage assets looks like a standard 3D render rather than top-budget film or AAA cinematic VFX.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 79,
+      "why": "The same red fern clump appears repeatedly along the shoreline, making it look like a placed 3D asset.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "the rendering is detailed and cohesive (atmospheric haze, believable water reflections, layered rock strata, designed alien creatures and plants), but the muddy rock textures and uniform repeated creatures keep it from clearly beating a mid-tier real-time engine.",
+      "answered": "07:50 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 89,
+      "why": "the creatures’ reflections break convincingly across the rippling water.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "polished single-artist creature-concept render: invented skeletal creatures with clean, uniform shading in a generic misty landscape, without the dense detail or compositing of a film frame",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 82,
+      "why": "cinematic golden-hour lighting with realistic subsurface scattering, atmospheric mist, and detailed water reflections around the alien creatures",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the same distinctive sequence of raised ribs repeats across all three foreground creatures, making them look like copies of one textured model.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 72,
+      "why": "the detailed creature design, volumetric haze and sun glow, and water reflections and ripples with film-like depth of field all look like a high-budget cinematic or film-quality render.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 78,
+      "why": "the way low sunlight catches the drifting mist and gives the ravine convincing depth.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the creature skin looks smooth and rubbery and the ground textures are fairly simple, which reads more like a well-lit Blender-style 3D render than film-grade VFX.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 82,
+      "why": "the cinematic volumetric lighting and atmospheric depth combined with bespoke alien creature sculpting and detailed rocky terrain",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the standing creature’s rigid hooves appear to hover just above the uneven ground.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the atmospheric haze, sun glow and detailed rock and creature surfaces look like a high-end cinematic render, though the creature anatomy and plain ground textures keep me from being surer (c is the runner-up).",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 74,
+      "why": "the foreground tree’s smooth trunks and repeated hairlike sprays look procedurally modeled.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "highly detailed volumetric fog and fine strand-level alien foliage with ghostly long-necked creatures in the haze read as a high-end cinematic/film VFX frame rather than a stock render",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "The smooth plasticky 3D geometry at the base of the foreground red plant stems and soft procedural rock surfaces look like a standard 3D environment render rather than a real photo, top-budget VFX, or a low-budget demo.",
+      "answered": "07:52 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the foreground tree’s smooth trunks taper into repeated hairlike fronds that look procedurally modeled.",
+      "answered": "07:52 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 72,
+      "why": "the alien fine-stranded red foliage with volumetric mist, rim lighting and ground detail reads as a high-end cinematic or game render, not a photo or a cheap render.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the repeating rock strata across the stacked arches look like reused 3D assets.",
+      "answered": "07:51 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the rocks have tiled, repeating stone textures and smooth, blobby shapes, and the volumetric fog looks like a typical real-time or stock 3D scene, not film-grade.",
+      "answered": "07:52 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the repetitive kitbashed rock ledges and abrupt water-to-rim edge look cleanly rendered like an ordinary 3D environment rather than a real place or a top-budget production.",
+      "answered": "07:52 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the two central rock shelves repeat the same distinctive bends and layered contours like reused game assets.",
+      "answered": "07:52 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "the volumetric fog and lighting are good, but the rock forms are smooth, blobby, repeating-texture CG assets, so it reads as a competent real-time or ordinary 3D render rather than a photo or top-budget cinematic.",
+      "answered": "07:52 UTC"
+    }
+  ]
+}

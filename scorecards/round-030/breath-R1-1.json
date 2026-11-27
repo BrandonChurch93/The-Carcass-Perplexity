@@ -1,0 +1,140 @@
+{
+  "round": 30,
+  "unit": "breath",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-27 07:51 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the haze over the whole flat and the far cliffs",
+        "what": "the air is far clearer than in -a; the cliffs read crisp and close, the far flats sharp, and the low steam banks that veil the middle distance in -a are thin or gone",
+        "fix": "bring back dense warm haze and low drifting steam across the flats and the cliff foot so distance falls off softly as in -a"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the pit and the rock bench on the right",
+        "what": "the pit is a clean dark hollow with tan, cut-looking banded ledges and little steam; in -a it is a pale grey collapsed limestone cavern filled with rising fume that veils the creature standing at its lip",
+        "fix": "make the pit rock pale grey and broken like -a and fill it with steam that rises past the standing creature"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the creatures on the far flats, left",
+        "what": "they are dark, sharply drawn silhouettes standing upright and widely spaced; in -a they are pale, small, softened by haze and many are bent down feeding in a long row",
+        "fix": "make them pale and haze-softened, smaller, more numerous, and mostly heads-down in a loose line across the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the red growth",
+        "what": "many separate bright red clumps scattered across the bench and foreground, including a large one at bottom right; -a has one main dark crimson mass behind the creature and a few small tufts",
+        "fix": "cut the clumps back to one main muted crimson mass behind the creature plus a few small tufts"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the foreground rock and the near water, left and bottom",
+        "what": "the near rock is chunky, dark-edged and plasticky with a smooth glassy pool; -a has low pale travertine shelves with thin film water glinting over them (see set-A-02)",
+        "fix": "lower and pale the near shelves and break the water into thin flowing sheets with many small glints"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the sky and sun, top left",
+        "what": "the sun area is blown out to a broad flat white glow and the steam plume is faint; -a has a defined low sun disc in a pink-amber sky with a strong lit plume",
+        "fix": "lower the sky exposure, keep a small sun disc and a strong backlit steam column"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the far creatures at x 4-21%, y 29-46%",
+        "what": "crop shows hard-edged, rib-lined dark bodies with sharp reflections; -a's are soft and pale in the haze",
+        "fix": "soften and lift them into the haze"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the background behind the three creatures",
+        "what": "the steam vents, low sun plume and the red growth on the lit rocks at right are gone; the cliff is a hazy snow-streaked wall instead of the dark ridge with a cave mouth, and the mid-ground is open flat water with distant standing creatures",
+        "fix": "restore the steam plume by the sun, the fume rising from the flats, the mossy rocks with red growth behind the right creature, and the dark close ridge"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the water around the legs (see set-A-04)",
+        "what": "the water is a calm smooth brown with soft ripples; -a has bright backlit splashes, droplets and rings of sparkle where legs and dripping heads meet the water",
+        "fix": "add splash, droplets and backlit sparkle at every leg and dripping head, with ring ripples spreading out"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the three creatures",
+        "what": "they are darker, greyer-brown and leaner with knobby pink joints; in -a they are pale cream-pink with warm rim light from the sun and wet, stringy head fringes trailing long drips",
+        "fix": "lighten the hides to pale cream-pink, add warm back rim light and make the head fringes wetter and longer with heavy drips"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the foreground",
+        "what": "big dark wet boulders fill the bottom; -a has a soft out-of-focus low ledge with warm bokeh glints and a red tuft",
+        "fix": "replace with a low, defocused, warm-lit ledge with sparkle bokeh and a hint of red growth"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the sun and sky, top left",
+        "what": "the sun spreads into a wide washed-out white glare; -a has a tight sun disc in a deeper amber haze",
+        "fix": "tighten the sun and deepen the sky toward amber"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the cavern on the right",
+        "what": "it is a dark open pit under one smooth tan arch with little fume; -a has pale grey bony rock ribs and slabs half-buried in thick rolling steam that spills over the edge",
+        "fix": "rebuild the pit as pale grey ribbed collapsed rock and fill it with dense steam that rolls over the lip"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the dead creature",
+        "what": "the carcass is clean, smooth and pale tan with an even skin pattern and short legs; -a's is ragged with loose torn hide, bloody stains and a dark blood patch on the ground, long splayed legs with hooves",
+        "fix": "add torn sagging hide, red staining on the body and a dark blood stain under it, and lengthen the splayed legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the ground under the creatures (see set-A-06)",
+        "what": "the ground is wet, glossy rock with puddles and plasticky sheen; -a has dry, dusty pale gravel and crust",
+        "fix": "dry the ground into matte dusty crust with fine pebbles"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the red growth and the far shore, left",
+        "what": "the growth is dark brown-black grass-like fans; -a has bright crimson branching coral-like bushes, and -a's lit shoreline with feeding creatures beyond is lost in glare",
+        "fix": "make the growth crimson and branching and bring back the sunlit water with small creatures on the left"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the sky and the cliffs",
+        "what": "the sun is a wide white wash and the far cliffs read as a snowy wall; -a has a sun disc in a pink-grey sky over a dark close ridge",
+        "fix": "tighten the sun, warm the sky to pink-grey, darken and close the ridge"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-06.png",
+        "where": "the carcass tail at x 29-46%, y 54-71%",
+        "what": "the tail is a smooth rubbery tube; -a shows a fibrous, ragged, stained surface",
+        "fix": "add fibrous texture and staining to the tail"
+      }
+    ]
+  }
+}

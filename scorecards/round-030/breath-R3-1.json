@@ -1,0 +1,91 @@
+{
+  "round": 30,
+  "unit": "breath",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-27 07:52 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "top-right crop (x 42 to 58%, y 25 to 42%) across the flat terrain behind the crater rim",
+        "what": "a straight, razor-sharp horizontal seam line cuts all the way across the water and ground plane",
+        "fix": "weld or blend the terrain and water tile boundary so no straight seam is visible"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%) where the three legs enter the water",
+        "what": "the legs clip straight into the water plane with no meniscus, concentric ripples, or foam, and tiny vertical white streak artifacts appear beside the legs",
+        "fix": "add displacement ripples, meniscus, and subtle foam where each leg breaks the surface, and replace the vertical streak drip artifacts with natural refracted droplets"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "bottom-right crop (x 0 to 17%, y 58 to 75%) on the lower legs of the left wading animal",
+        "what": "the lower legs look smooth and rubbery compared to the textured torso, with an abrupt painted-looking horizontal cutoff between dry pale skin and dark brown",
+        "fix": "carry fine skin micro-detail down to the feet and replace the sharp colour band with a gradual, glossy capillary wet-line transition"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%) on the body and legs of the fallen animal",
+        "what": "the torso reads as smooth sculpted clay stamped with blurry, blocky dark noise speckles, and the waxy legs rest on the dirt with no dust, grime, or skin compression",
+        "fix": "increase skin texture resolution with organic pores and creases, break up the blocky speckles, and add ground dust and heavier contact shading where the body meets the rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top-left crop (x 0 to 17%, y 25 to 42%) along the backlit red plant fronds",
+        "what": "stippled, dithered pixel noise and bright dot halos break up the fine fronds against the sunlit mist",
+        "fix": "increase transparency and volume sampling quality so thin backlit foliage resolves cleanly without dithered halos"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%) along the foreground rock ledge and water edge",
+        "what": "the rock surface is soft, smeared, and clay-like, and clips into the water with no wet shoreline darkening, foam, or mineral crust",
+        "fix": "add high-frequency rock micro-displacement and grain, and build a darkened wet band and subtle foam or crust where the water laps the ledge"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "bottom-right crop (x 0 to 17%, y 58 to 75%) on the foreground rock slab",
+        "what": "the close rock ledge has smooth, blobby specular bumps that read like melted plastic or wet clay rather than fractured stone",
+        "fix": "replace the low-frequency glossy bump with sharp mineral micro-detail, varied roughness, and crisper rock edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "bottom center-left teal pool and distant wading animals on the left",
+        "what": "the foreground pool has a flat, uniform teal colour with little depth or shoreline transition, and the wading animals leave no ripples around their feet",
+        "fix": "add depth-based absorption and subtle bottom variation to the pool, a wet mineral edge along the bank, and faint rings around the wading legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "bottom-right crop (x 0 to 17%, y 58 to 75%) around the small red plant and foreground rock",
+        "what": "the rock looks glossy and clay-like and the plant emerges from a smooth, pasted-on brown lump while the animal tendrils beside it read as stiff uniform wires",
+        "fix": "roughen the rock shader, blend the plant roots into real grit and crevices, and vary the thickness, droop, and ground shadow of the tendrils"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "center animal's raised tendrils and lifted hind leg",
+        "what": "water dripping from the raised tendrils reads as stiff straight vertical lines and the water directly under the newly lifted foot shows no splash or ring ripples",
+        "fix": "break the drips into varied falling droplets and streaks, and add expanding ring ripples and small splashes beneath the lifted foot"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-09.png",
+        "where": "right crop (x 83 to 100%, y 58 to 75%) on the two small pebbles near the bottom right",
+        "what": "the pebbles look pasted onto the crust with an artificial sharp two-tone colour split on the right stone",
+        "fix": "nestle the pebbles into the surface grit with softer ambient occlusion and natural rock colour variation"
+      }
+    ]
+  }
+}
