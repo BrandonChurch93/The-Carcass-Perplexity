@@ -7,6 +7,7 @@ import { great, lying, trod, young } from './act';
 import { newDrive, type Build, type Plan } from './animal';
 import { Beast } from './body';
 import { mudWallow } from '../dead/mud';
+import { Mire } from './mire';
 import { roam } from './roam';
 import { Tread } from './tread';
 import { Wet } from './wet';
@@ -49,14 +50,14 @@ export function create(ctx: Context): Piece {
     const hero = herd.length === 0;
     const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.05 * b.k : 0);
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.95 : 0.6) * b.k;
-    const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.87 : 0.6) * b.k;
+    const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.16 * b.k - under) / (1.59 * b.k)))) - 0.633);
     const near = herd.length < 3;
     // The one by the lens of the wallowers has rolled and is wet all over; the rest that lie in the brine have dried down to a hand above it.
     const wet = sink > 0.5 ? (herd.length === 2 ? rng.range(1.0, 1.4) : 0.4 * rng.range(1.0, 1.4) - 0.05) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is shaggy: the photographed matted hair is its hide.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}) }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}), ...(near && herd.length < 2 ? { coat: [0.8, 1.75, 0, 0] as [number, number, number, number], tendrils: hero ? 10 : 8, hang: 0, thick: hero ? 3.4 : 3.0, long: hero ? 0.9 : 0.8 } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
@@ -101,7 +102,17 @@ export function create(ctx: Context): Piece {
   const wallows = herd
     .filter((h) => h.onBank && ctx.rig.land.shore(h.plan.at[0], h.plan.at[1]) > -0.02)
     .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.beast.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.beast.b.k, h.plan.dir, 1.05 * h.beast.b.k, [0.08, 0.052, 0.042], 'wallowers-mud-' + i, 1));
-  const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh), tread.mesh];
+  // The great one and the young one stand in the wallow they have trodden: liquid mud to the shin (mire.ts), level, over the bed of churned mud.
+  const great0 = herd[0] as (typeof herd)[number];
+  const young0 = herd[1] as (typeof herd)[number];
+  const mireLevel = great0.plan.ground + 0.26 * great0.beast.b.k;
+  const mire = new Mire(ctx, great0.plan.at[0] - great0.plan.dir[0] * 0.2, great0.plan.at[1] - great0.plan.dir[1] * 0.2, great0.plan.dir, 4.4, 2.0, mireLevel);
+  // The young one stands in the same sheet, where it is shallow, to its own shin.
+  young0.plan.ground = Math.max(mireLevel, ctx.rig.land.height(young0.plan.at[0], young0.plan.at[1]) + 0.025) - 0.2 * young0.beast.b.k;
+  // Their feelers rake the top of it.
+  great0.floor = mireLevel - 0.02;
+  young0.floor = Math.max(mireLevel, ctx.rig.land.height(young0.plan.at[0], young0.plan.at[1]) + 0.025) - 0.01;
+  const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh), tread.mesh, mire.mesh];
   ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
 
@@ -165,10 +176,16 @@ export function create(ctx: Context): Piece {
         ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, on ? (ctx.rig.land.shore(stood.x, stood.z) > 0.05 ? 0.6 : 0.3) : 0, 1.9, stood.yaw);
         wet.set(i, stood, k, seconds, on ? 1 : 0);
         if (i < 2) {
+          for (let j = 0; j < 4; j++) {
+            const foot = stood.feet[j] as (typeof stood.feet)[number];
+            mire.leg(i * 4 + j, foot.x, foot.z, on ? foot.lift / (0.12 * k) : 0, 0.15 * k);
+          }
+          mire.snout(i, stood.muzzle.x, stood.muzzle.z, on ? (mireLevel + 0.1 * k - stood.muzzle.y) / (0.12 * k) : 0, 0.2 * k);
           if (acted) tread.set(i, h.plan, h.beast.b, (trod[i] as (typeof trod)[number]).s, (trod[i] as (typeof trod)[number]).pace, on ? 1 : 0);
           else tread.hide(i);
         }
       });
+      mire.set(seconds, 1);
       wet.touch();
       tread.touch();
     },
@@ -176,6 +193,7 @@ export function create(ctx: Context): Piece {
       for (const h of herd) h.beast.dispose();
       wet.dispose();
       tread.dispose();
+      mire.dispose();
       for (const w of wallows) w.dispose();
     },
   };
