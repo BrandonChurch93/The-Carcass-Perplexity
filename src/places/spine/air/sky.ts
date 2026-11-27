@@ -208,7 +208,7 @@ vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
   float lit = uStrikeTop.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y) * mix(0.22, 1.0, smoothstep(0.0, 0.06, d.y)) * (0.35 + 0.9 * masses);
   // Far from the channel the storm stays dark in a stroke: the light is about the bolt, and the land takes the flash, not the whole sky.
   // (Out of the canal's mouth the lit cloud is all the sky there is, and keeps its breadth.)
-  lit = mix(lit * lit / (lit + 0.3), lit, smoothstep(1.4, 1.8, uSkyStage.y));
+  lit = mix(lit * lit / (lit + 1.4), lit, smoothstep(1.4, 1.8, uSkyStage.y));
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
   float shape = smoothstep(0.025, 0.13, body);
@@ -272,7 +272,7 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   c = mix(c, soft, 0.8 * smoothstep(0.06, 0.45, near));
   float toLast = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
   // The whole storm takes a little of a strike; the bloom about the bolt is the light, and the rest of the storm stays dark.
-  float lit = near * near / (near + 0.4) + 0.04 * min(dot(uFlash, vec3(0.33)), 1.0) * (1.0 - smoothstep(0.7, 0.95, toLast));
+  float lit = near * near / (near + 1.0) + 0.03 * min(dot(uFlash, vec3(0.33)), 1.0) * (1.0 - smoothstep(0.7, 0.95, toLast));
   // The cloud's heads stand out of its dark: a little more between them than the picture holds.
   c *= clamp(pow(max(dot(c, vec3(0.3, 0.5, 0.2)) / 0.078, 0.01), 0.3), 0.75, 1.4);
   c = panoAtRest(c, toLast, el, clamp(lit, 0.0, 1.0));
@@ -280,7 +280,7 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   c = mix(c, scud.rgb, scud.a);
   c = stormMist(c, d, el);
   // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
-  c += mix(vec3(0.46, 0.45, 0.58), vec3(0.42, 0.33, 0.8), smoothstep(0.35, 1.3, near)) * clamp(near * near / (near + 0.4), 0.0, 3.0) * (0.03 + 1.3 * dot(c, vec3(0.33)));
+  c += mix(vec3(0.46, 0.45, 0.58), vec3(0.42, 0.33, 0.8), smoothstep(0.35, 1.3, near)) * clamp(near * near / (near + 1.0), 0.0, 3.0) * (0.03 + 1.3 * dot(c, vec3(0.33)));
   // Overhead the picture ends: the cloud closes over in its own dark.
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.6, 0.76, el));
   // Where the lens is opened (by the dead one, in the canal), the storm is opened less than the land: it stays a dark storm.
