@@ -13,6 +13,30 @@
         "width": 1024,
         "height": 1024,
         "dataAs": "jpg"
+      },
+      {
+        "name": "tusk",
+        "from": "land/tusk-take1.jpg",
+        "to": "land",
+        "width": 1536,
+        "height": 1024,
+        "dataAs": "jpg"
+      },
+      {
+        "name": "strata",
+        "from": "land/strata-take1.jpg",
+        "to": "land",
+        "width": 1536,
+        "height": 864,
+        "dataAs": "jpg"
+      },
+      {
+        "name": "lichen",
+        "from": "land/lichen-take1.jpg",
+        "to": "land",
+        "width": 1536,
+        "height": 1024,
+        "colourOnly": true
       }
     ]
   },
@@ -24,6 +48,30 @@
         0.106,
         0.104,
         0.1
+      ]
+    },
+    {
+      "name": "tusk",
+      "mean": [
+        0.466,
+        0.452,
+        0.428
+      ]
+    },
+    {
+      "name": "strata",
+      "mean": [
+        0.181,
+        0.176,
+        0.166
+      ]
+    },
+    {
+      "name": "lichen",
+      "mean": [
+        0.311,
+        0.209,
+        0.137
       ]
     }
   ]
