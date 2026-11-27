@@ -18,7 +18,7 @@ const LENS: V3 = [-28.5, 2.6, 28.3];
 /** Where the animal's own middle is from the anchor: metres across that line of sight and metres away along it. */
 const OFF: [number, number] = [0.15, 0.5];
 /** The hide's sheet: metres across and up, its mean colour (linear), metres from its lowest crease to its highest fold. */
-const SHEET = { wide: 1.3, tall: 0.867, mean: [0.351, 0.284, 0.232] as const, relief: 0.026 };
+const SHEET = { wide: 1.3, tall: 0.867, mean: [0.351, 0.284, 0.232] as const, relief: 0.019 };
 
 const VERTEX = /* glsl */ `
 attribute vec3 aData;
@@ -57,7 +57,8 @@ void main() {
   float lift = vData.z;
 
   // The sheet of the hide, by the metres along the part and round it. Its height leans the skin.
-  vec2 uv = vUv / uHide.xy;
+  // Its creases wander: laid straight along the part they were ruled lines from hip to shoulder.
+  vec2 uv = (vUv + 0.08 * hide * (vec2(fbm(vWorld.xz * 5.1 + 3.0), fbm(vWorld.zx * 5.1 + 9.0)) - 0.5)) / uHide.xy;
   vec2 dx = dFdx(uv);
   vec2 dy = dFdy(uv);
   vec3 px = dFdx(vWorld);
@@ -87,7 +88,7 @@ void main() {
   // Never one tone for a hand's width: the dried hide is mottled.
   albedo *= mix(1.0, 0.8 + 0.42 * fbm(vUv * 23.0 + 4.0), hide);
   // Dirt: yellow-brown where it has lain and leaked, in blotches a hand to an arm across, and grey dust on what faces up.
-  float dirt = smoothstep(0.35, 0.75, fbm(vWorld.xz * 3.7 + vWorld.y * 5.0 + 11.0) + 0.1 * (0.5 - h0));
+  float dirt = smoothstep(0.26, 0.66, fbm(vWorld.xz * 3.7 + vWorld.y * 5.0 + 11.0) + 0.1 * (0.5 - h0));
   albedo = mix(albedo, albedo * vec3(0.6, 0.47, 0.34), 0.8 * dirt * hide);
   float dust = smoothstep(0.3, 0.7, fbm(vWorld.xz * 6.3 + 2.0)) * smoothstep(0.2, 0.9, n.y);
   albedo = mix(albedo, vec3(0.4, 0.35, 0.29), 0.45 * dust * hide);
@@ -103,8 +104,8 @@ void main() {
   float bruise = smoothstep(0.62, 0.8, fbm(vWorld.xz * 5.1 + 7.0) + 0.25 * (0.5 - h0));
   albedo = mix(albedo, vec3(0.42, 0.2, 0.17) * (0.6 + 0.6 * grey), 0.4 * bruise * hide);
   // What lies on the rock is dark with what ran out of it and with damp, and grit sticks to it.
-  float low = smoothstep(0.17, 0.02, lift + 0.06 * (broad - 0.5));
-  albedo = mix(albedo, albedo * mix(vec3(0.5, 0.36, 0.3), vec3(0.74, 0.68, 0.62), shank), 0.75 * low * hide);
+  float low = smoothstep(0.27, 0.03, lift + 0.06 * (broad - 0.5));
+  albedo = mix(albedo, albedo * mix(vec3(0.5, 0.36, 0.3), vec3(0.74, 0.68, 0.62), shank), 0.85 * low * hide);
   float salt = smoothstep(0.55, 0.8, fbm(vWorld.xz * 11.0 + 3.0) + 0.25 * n.y - 0.1);
   albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.16 * salt * hide);
   // The cords of the mop have bled out and dried: dull red at the root, paler and browner toward their ends.
@@ -114,7 +115,7 @@ void main() {
   // The hoofs: horn, dark and worn pale at the edge.
   albedo = mix(albedo, mix(vec3(0.2, 0.15, 0.1), vec3(0.45, 0.36, 0.26), smoothstep(0.3, 0.9, fbm(vUv * 40.0))), hoof);
   float occ = mix(vData.y, 0.9, cord) * mix(1.0, mix(0.74, 1.04, smoothstep(0.2, 0.7, h0)), hide) * (0.6 + 0.4 * smoothstep(0.0, 0.06, lift));
-  float rough = mix(0.86, 0.5, hoof);
+  float rough = mix(0.97, 0.5, hoof);
 
   // The shade it throws on the rock under it is not on it: the light is asked for above the reach of that shade.
   vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, rough, occ);

@@ -359,7 +359,7 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     // The fan opens away from the neck's end: toward the low end of the animal and toward the lens. The cords leave the neck as one
     // matted bundle as thick as it is.
     const bearing = Math.PI * lerp(0.3, 1.02, u ** 1.3) + 0.1 * (random() - 0.5);
-    const thick = 0.025 + 0.022 * random();
+    const thick = 0.011 + 0.03 * random() ** 2.2;
     cord([root[0] + 0.05 * (random() - 0.5), root[1] + 0.05 * random(), root[2] - 0.12 + 0.07 * (random() - 0.5)], bearing, 1.0 + 0.9 * random(), thick, 0.05 * random(), 2);
   }
 

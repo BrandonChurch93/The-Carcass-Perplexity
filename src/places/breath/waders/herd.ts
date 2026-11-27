@@ -95,6 +95,9 @@ const TRIO: [number, number][] = [
   [-0.23, 2.01],
 ];
 
+/** Staged: the herd is not one age: beyond the three in the channel there are young ones and old ones. The size of each, as a part of its own. */
+const AGES = [1, 1, 1, 0.62, 1.15, 0.84, 1.1, 1, 0.7, 1];
+
 export function makeHerd(rng: Rng): Member[] {
   const herd: Member[] = [];
   NEAR_WADERS.forEach((a, i) => {
@@ -113,7 +116,12 @@ export function makeHerd(rng: Rng): Member[] {
       plan.x += 2.4;
       plan.z += 0.65;
     }
-    herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false, i < 3 ? 0.0125 : 0.022, OWN[i] ?? {}), plan, near: true });
+    // Staged: one of those far out on the flats has lain down.
+    if (i === 7) {
+      plan.rest = 1;
+      plan.speed = 0;
+    }
+    herd.push({ build: makeBuild(a.size * 1.06 * (AGES[i] ?? 1), 11 + i * 7.31, false, i < 3 ? 0.0125 : 0.022, OWN[i] ?? {}), plan, near: true });
   });
   // The one at the rim: it stands with its weight on three legs and looks down the shaft, then lets its neck hang.
   // It is the stocky one of the herd: short in the leg, deep in the barrel, its back arched, and when its neck is down the tuft lies on the rock.

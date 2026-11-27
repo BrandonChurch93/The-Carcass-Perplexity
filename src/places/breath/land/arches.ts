@@ -231,10 +231,11 @@ export function bandAt(deg: number, y: number): number {
       (h[5] - h[4]) * sat((deg - b.d1 - 10) / 10) +
       0.9 * Math.sin(Math.PI * f) * Math.sin(7 * f + b.seed);
     const held = Math.max(1 - smooth(f / 0.1), 1 - smooth((1 - f) / 0.1));
-    const gate = Math.max(held, smooth((Math.sin(10 * f + 2.1 * b.seed) + 0.45 * Math.sin(27 * f + b.seed) + 1.0) / 0.45)) * smooth((deg - (b.d0 - 20)) / 10) * smooth((b.d1 + 20 - deg) / 10);
-    // As thick as the hoop where it takes over from it, a third of that along the wall, and it thins to nothing where it is broken.
-    const half = (0.85 + 0.25 * Math.sin(13 * f + 1.7 * b.seed) + 0.9 * held) * (0.25 + 0.75 * gate);
-    const t = (y - mid) / half;
+    const gate = Math.max(held, smooth((Math.sin(10 * f + 2.1 * b.seed) + 0.45 * Math.sin(27 * f + b.seed) + 1.0 + 0.3 * Math.sin(deg * 0.9 + b.seed)) / 0.2)) * smooth((deg - (b.d0 - 20)) / 10) * smooth((b.d1 + 20 - deg) / 10);
+    // As thick as the hoop where it takes over from it, a third of that along the wall, its top and its underside notched every few
+    // paces, and where it is broken it ends in a blunt face: thinned to a point there, each piece was a smooth lens on the wall.
+    const half = (0.85 + 0.25 * Math.sin(13 * f + 1.7 * b.seed) + 0.9 * held + 0.2 * Math.sin(deg * 0.83 + 3 * b.seed) + 0.13 * Math.sin(deg * 1.9 + b.seed) * Math.sin(deg * 0.41 + 2 * b.seed)) * (0.6 + 0.4 * gate);
+    const t = (y - mid - 0.22 * Math.sin(deg * 1.1 + 2 * b.seed) * Math.sin(deg * 0.29 + b.seed)) / half;
     // A shelf, not a roll: its top stands out square to a lip, and under the lip it falls back into the wall.
     if (Math.abs(t) < 1) most = Math.max(most, gate * (t > 0 ? Math.sqrt(1 - t ** 4) : 1 - t * t));
   }
@@ -249,9 +250,9 @@ float bandOne(float deg, float y, float d0, float d1, float ya, float yb, float 
   float mid = ya + (yb - ya) * clamp((deg - (d0 - 20.0)) / 10.0, 0.0, 1.0) + (yc - yb) * clamp((deg - (d0 - 10.0)) / 10.0, 0.0, 1.0) + (yd - yc) * f
     + (ye - yd) * clamp((deg - d1) / 10.0, 0.0, 1.0) + (yf - ye) * clamp((deg - d1 - 10.0) / 10.0, 0.0, 1.0) + 0.9 * sin(3.14159265 * f) * sin(7.0 * f + seed);
   float held = max(1.0 - smoothstep(0.0, 0.1, f), 1.0 - smoothstep(0.0, 0.1, 1.0 - f));
-  float gate = max(held, smoothstep(0.0, 0.45, sin(10.0 * f + 2.1 * seed) + 0.45 * sin(27.0 * f + seed) + 1.0)) * smoothstep(d0 - 20.0, d0 - 10.0, deg) * smoothstep(d1 + 20.0, d1 + 10.0, deg);
-  float halfTall = (0.85 + 0.25 * sin(13.0 * f + 1.7 * seed) + 0.9 * held) * (0.25 + 0.75 * gate);
-  float t = (y - mid) / halfTall;
+  float gate = max(held, smoothstep(0.0, 0.2, sin(10.0 * f + 2.1 * seed) + 0.45 * sin(27.0 * f + seed) + 1.0 + 0.3 * sin(deg * 0.9 + seed))) * smoothstep(d0 - 20.0, d0 - 10.0, deg) * smoothstep(d1 + 20.0, d1 + 10.0, deg);
+  float halfTall = (0.85 + 0.25 * sin(13.0 * f + 1.7 * seed) + 0.9 * held + 0.2 * sin(deg * 0.83 + 3.0 * seed) + 0.13 * sin(deg * 1.9 + seed) * sin(deg * 0.41 + 2.0 * seed)) * (0.6 + 0.4 * gate);
+  float t = (y - mid - 0.22 * sin(deg * 1.1 + 2.0 * seed) * sin(deg * 0.29 + seed)) / halfTall;
   float tt = t * t;
   return gate * (t > 0.0 ? sqrt(max(0.0, 1.0 - tt * tt)) : max(0.0, 1.0 - tt));
 }
