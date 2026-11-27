@@ -158,9 +158,9 @@ export function create(ctx: Context): Piece {
   const hangGroup = new THREE.Group();
   const heroGroup = new THREE.Group();
   const domeGroup = new THREE.Group();
-  // The one on the south lip stood cut by the right edge of the wide lens of breath-01 as a scarlet lump in the corner: it is off the set for that shot.
+  // The one on the south lip is cut by the right edge of the wide lens of breath-01, as in its picture: it is kept dark there, as the others are.
   const southGroup = new THREE.Group();
-  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : i === SOUTH ? southGroup : group, i < 2 ? 1.5 : i === 5 ? 0.4 : 1));
+  grown.forEach((g, i) => meshes(g, i < 2 ? heroGroup : i === SOUTH ? southGroup : group, i < 2 ? 1.5 : i === 5 || i === SOUTH ? 0.4 : 1));
   rimGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
   for (const g of hangGrown) meshes(g, hangGroup, 0.4);
   group.add(rimGroup, hangGroup, heroGroup, domeGroup, southGroup);
@@ -299,12 +299,6 @@ export function create(ctx: Context): Piece {
       rimGroup.visible = shown || wide;
       heroGroup.visible = !low;
       domeGroup.visible = low;
-      southGroup.visible = !wide;
-      {
-        const b = bushes[SOUTH] as Bush;
-        rig.setDisc(discs, SOUTH * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, wide ? 0 : 0.7);
-        rig.setShadow(discs, SOUTH * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, wide ? 0 : 0.5);
-      }
       for (let i = 0; i < 2; i++) {
         const b = bushes[i] as Bush;
         rig.setDisc(discs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, low ? 0 : 0.7);
