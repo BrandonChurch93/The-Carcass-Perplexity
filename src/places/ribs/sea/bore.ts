@@ -189,6 +189,9 @@ void main() {
   vNormalW = normalize(cross(aa, ax));
   vRide = vec3(x, a, at.w);
   vLift = ${f(SWELL)} * boreHigh(x) * ${f(UNDER)} * max(exp(min(a, 0.0) / ${f(SWELL_RUN)}) - 0.05, 0.0);
+  // The lifted sea ahead of the foot is cut away where it has hardly lifted, and its cut rim hung a hand over the flat: along the flat the
+  // lens saw under it, the feet of the bursts behind as pale strips and the shade as black gaps. Its rim now goes down into the flat.
+  if (a < 0.0) vWorld.y -= 0.25 * (1.0 - smoothstep(0.25, 1.0, vLift));
 #endif
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;

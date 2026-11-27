@@ -167,6 +167,14 @@ void main() {
   // Where the swell breaks on a shelving shore the water is all at work: no mirror lies between the breakers.
   // Its front is no ruled line: it runs ahead in one place and hangs back in the next, in fingers a few metres wide.
   vec4 surf = surfAt(p, uTime, depth, ragged + 2.2 * (c2.b - 0.5) + 1.2 * (c3.b - 0.5)) * smoothstep(3.0, 10.0, feet);
+  // The swash: where the sea lies thin on the sand at the floor's rim it is white, a rim of worked water against the sand and lace behind it,
+  // further out in one place than the next and coming and going with the swell. Without it the waterline was the ruled cut of a plane through the shore.
+  float swashDepth = depth + 0.5 * (c2.b - 0.5) + 0.3 * (c3.b - 0.5) + 0.12 * ragged;
+  float swash = (1.0 - smoothstep(0.15, 1.5, swashDepth)) * smoothstep(-0.7, -0.25, depth) * smoothstep(3.0, 10.0, feet);
+  float swashBeat = 0.7 + 0.3 * sin(uTime * 0.8 + 9.0 * c1.b + 0.05 * p.x);
+  surf.z = max(surf.z, swash * swashBeat);
+  surf.y = max(surf.y, (1.0 - smoothstep(0.0, 0.45, swashDepth)) * swash * swashBeat);
+  surf.w = max(surf.w, swash);
   lively = max(lively, 0.9 * surf.w);
   vec2 chop = ((c1.xy - 0.5) * 0.55 + vec2(-s2.y, s2.x) * 0.5 + (c3.xy - 0.5) * 0.6 + (c4.xy - 0.5) * 0.6 * fineKeep) * lively;
   vec3 n = normalize(vec3(-(g.x + chop.x), 1.0, -(g.y + chop.y)));
@@ -602,7 +610,7 @@ const WET_EDGE: [string, string][] = [
     '  float murk = 1.0 - exp(-max(depth, 0.0) * 1.3);',
     `  float murk = 1.0 - exp(-max(depth, 0.0) * 1.3);
   // The water is full of sand: a stone's drowned foot is veiled by the length of water the eye looks through to it.
-  murk = max(murk, stone * (1.0 - exp(-standing * 2.0)));`,
+  murk = max(murk, 0.4 * stone * (1.0 - exp(-standing * 1.2)));`,
   ],
   [
     '  float ruffle = 0.45 + 0.55 * paw;',
