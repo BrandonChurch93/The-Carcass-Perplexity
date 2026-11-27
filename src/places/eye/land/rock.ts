@@ -13,15 +13,15 @@ export function mirrored(t: THREE.Texture): THREE.Texture {
 
 export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
   return {
-    tCliff: { value: ctx.assets.texture('mat/cliff.jpg', { anisotropy: 2 }) },
+    tCliff: { value: ctx.assets.texture('mat/cliff.jpg', { anisotropy: 1 }) },
     tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
-    tTalus: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 8 }) },
-    tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 4 }) },
-    tShoreP: { value: mirrored(ctx.assets.texture('mat/shoreplate.jpg', { anisotropy: 8 })) },
-    tShorePH: { value: mirrored(ctx.assets.texture('mat/shoreplate-h.png', { kind: 'data', anisotropy: 4 })) },
-    tScree: { value: mirrored(ctx.assets.texture('mat/screeplate.jpg', { anisotropy: 6 })) },
-    tScreeH: { value: mirrored(ctx.assets.texture('mat/screeplate-h.png', { kind: 'data', anisotropy: 3 })) },
-    tGravel: { value: ctx.assets.texture('land/gravel.jpg', { anisotropy: 4 }) },
+    tTalus: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 1 }) },
+    tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 1 }) },
+    tShoreP: { value: mirrored(ctx.assets.texture('mat/shoreplate.jpg', { anisotropy: 1 })) },
+    tShorePH: { value: mirrored(ctx.assets.texture('mat/shoreplate-h.png', { kind: 'data', anisotropy: 1 })) },
+    tScree: { value: mirrored(ctx.assets.texture('mat/screeplate.jpg', { anisotropy: 1 })) },
+    tScreeH: { value: mirrored(ctx.assets.texture('mat/screeplate-h.png', { kind: 'data', anisotropy: 1 })) },
+    tGravel: { value: ctx.assets.texture('land/gravel.jpg', { anisotropy: 1 }) },
     tGravelNh: { value: ctx.assets.texture('land/gravel-nh.jpg', { kind: 'data', anisotropy: 2 }) },
   };
 }
@@ -39,9 +39,12 @@ uniform sampler2D tGravel;
 uniform sampler2D tGravelNh;
 
 // The plate of the scree slope, 24 m by 13.5 m of broken grey stone seen from above, laid on the ground as it lies. Returns colour and, in a, its height.
+vec3 gDx;
+vec3 gDy;
+// Every sheet is read at the one level taken first thing in main and before any branch: see lod.ts.
 vec4 screeAt(vec2 xz) {
-  vec2 uv = xz / vec2(24.0, 13.51);
-  return vec4(texture2D(tScree, uv).rgb, texture2D(tScreeH, uv).r);
+  vec2 per = vec2(24.0, 13.51);
+  return vec4(textureLod(tScree, xz / per, AT(1671.0, 24.0)).rgb, textureLod(tScreeH, xz / per, AT(1671.0, 24.0)).r);
 }
 
 struct Rock {
@@ -77,10 +80,10 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   float fh = 0.5;
   float arch = 0.0;
   if (face > 0.01 && wall >= 0.5) {
-    vec3 ca = texture2D(tCliff, ua).rgb;
-    vec3 cb = texture2D(tCliff, ub).rgb;
-    vec3 nb = texture2D(tCliffNh, ua).rgb;
-    vec3 na = texture2D(tCliffNh, ub).rgb;
+    vec3 ca = textureLod(tCliff, ua, wall < 0.5 ? AT(1024.0, 23.0) : AT(1024.0, 120.0)).rgb;
+    vec3 cb = textureLod(tCliff, ub, wall < 0.5 ? AT(1024.0, 7.0) : AT(1024.0, 41.0)).rgb;
+    vec3 nb = textureLod(tCliffNh, ua, wall < 0.5 ? AT(1024.0, 23.0) : AT(1024.0, 120.0)).rgb;
+    vec3 na = textureLod(tCliffNh, ub, wall < 0.5 ? AT(1024.0, 7.0) : AT(1024.0, 41.0)).rgb;
     fh = mix(nb.b, na.b, 0.45);
     // The face: wrapped around the lake, so that the beds lie level.
     vec3 tu = normalize(vec3(-p.z, 0.0, p.x) + vec3(1e-4, 0.0, 0.0));
@@ -130,9 +133,9 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   vec3 bentFlat = vec3(0.0);
   float gh = 0.5;
   if (face < 0.99 && wall >= 0.5) {
-    vec3 ta = texture2D(tTalus, ga).rgb;
-    vec3 tb = texture2D(tTalus, gb).rgb;
-    vec3 ha = texture2D(tTalusNh, ga).rgb;
+    vec3 ta = textureLod(tTalus, ga, AT(1024.0, 4.0)).rgb;
+    vec3 tb = textureLod(tTalus, gb, AT(1024.0, 21.0)).rgb;
+    vec3 ha = textureLod(tTalusNh, ga, AT(1024.0, 4.0)).rgb;
     gh = ha.b;
     // The flat: gravel, at two sizes so that it does not repeat.
     vec2 gd = (ha.xy * 2.0 - 1.0) * 1.5;
@@ -144,8 +147,8 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     float close = smoothstep(26.0, 7.0, length(cameraPosition - p));
     if (close > 0.0) {
       vec2 gc = p.xz / 1.37 + vec2(0.4, 0.8);
-      vec3 tc = texture2D(tTalus, gc).rgb * vec3(0.92, 1.02, 1.14);
-      vec3 hc = texture2D(tTalusNh, gc).rgb;
+      vec3 tc = textureLod(tTalus, gc, AT(1024.0, 1.37)).rgb * vec3(0.92, 1.02, 1.14);
+      vec3 hc = textureLod(tTalusNh, gc, AT(1024.0, 1.37)).rgb;
       gravel = mix(gravel, tc * (0.7 + 0.5 * smoothstep(0.1, 0.6, hc.b)), 0.6 * close);
       bentFlat = mix(bentFlat, vec3(hc.x * 2.0 - 1.0, 0.0, hc.y * 2.0 - 1.0) * 1.1, 0.75 * close);
       gh = mix(gh, hc.b, close);
@@ -155,7 +158,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   if (wall < 0.5 && lowEye < 0.01) {
     // Seen from the spur, the slope is graded scree: the sheet of broken gravel at its true size, three metres a repeat, and through it
     // the stones of the same sheet laid three times larger and turned, more of them the higher the ground. Four reads in all.
-    vec3 gn = normalize(cross(dFdx(p), dFdy(p)));
+    vec3 gn = normalize(cross(gDx, gDy));
     vec3 an = abs(gn);
     float lie = an.y > 0.8 * max(an.x, an.z) ? 0.0 : an.x > an.z ? 1.0 : 2.0;
     vec2 at = lie < 0.5 ? p.xz : lie < 1.5 ? p.zy + 11.0 : p.xy + 23.0;
@@ -164,16 +167,16 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     // the blocks that stand through it, and three the grit under the lens, read only where the lens is near enough to see it.
     vec2 um = vec2(at.x * 0.8 - at.y * 0.6, at.x * 0.6 + at.y * 0.8) / 11.3 + 0.37;
     vec2 uh = vec2(at.x * 0.28 + at.y * 0.96, -at.x * 0.96 + at.y * 0.28) / 23.0 + 0.61;
-    vec3 cm = texture2D(tGravel, um).rgb;
-    vec3 hm = texture2D(tGravelNh, um).rgb;
-    vec3 cb = texture2D(tGravel, uh).rgb;
-    vec3 hb = texture2D(tGravelNh, uh).rgb;
+    vec3 cm = textureLod(tGravel, um, AT(1024.0, 11.3)).rgb;
+    vec3 hm = textureLod(tGravelNh, um, AT(1024.0, 11.3)).rgb;
+    vec3 cb = textureLod(tGravel, uh, AT(1024.0, 23.0)).rgb;
+    vec3 hb = textureLod(tGravelNh, uh, AT(1024.0, 23.0)).rgb;
     float close = 1.0 - smoothstep(14.0, 32.0, away);
     vec3 cf = vec3(0.32);
     vec3 hf = vec3(0.5);
     if (close > 0.0) {
-      cf = texture2D(tGravel, at / 3.1).rgb;
-      hf = texture2D(tGravelNh, at / 3.1).rgb;
+      cf = textureLod(tGravel, at / 3.1, AT(1024.0, 3.1)).rgb;
+      hf = textureLod(tGravelNh, at / 3.1, AT(1024.0, 3.1)).rgb;
     }
     // Coarse at the spur, fine at the water, and in drifts of its own between.
     float drift = 0.55 * vnoise(p.xz / 19.0 + 2.0) + 0.45 * vnoise(p.xz / 5.3 + 7.0);
@@ -205,7 +208,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     // The spur and the beach under it are one slope of broken grey stone: the plate of the scree, laid on the ground at its own size,
     // and again larger and turned so that the eye finds no repeat. Its relief gives every stone its faces.
     // Which way each face of the ground truly looks, from the ground itself, so that no face has the plate pulled long over it.
-    vec3 gn = normalize(cross(dFdx(p), dFdy(p)));
+    vec3 gn = normalize(cross(gDx, gDy));
     vec3 w3 = pow(abs(gn), vec3(4.0));
     w3 /= w3.x + w3.y + w3.z;
     vec4 a = screeAt(p.xz) * w3.y;
@@ -226,27 +229,28 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     float shingle = 0.0;
     vec3 pebbleBent = vec3(0.0);
     if (fine > 0.02) {
-      // The picture of the shore itself, eight metres of it at its own size: stones of every size in wet grit, with weed dried on them.
+      // The picture of the shore itself, two metres of it, a quarter of its own size, as the lip has it (lip.ts): stones of every size in wet grit, with weed dried on them.
       // From the rim the same picture is laid two and a half times larger and turned: cobbles are boulders there, in beds of gravel.
-      vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6, p.xz, lowEye) / vec2(8.0, 4.5);
+      vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6, p.xz * 4.0, lowEye) / vec2(8.0, 4.5);
       float seen = fine;
-      vec3 sc = texture2D(tShoreP, su).rgb;
+      float sl = AT(1672.0, mix(20.8, 2.0, lowEye));
+      vec3 sc = textureLod(tShoreP, su, sl).rgb;
       // The lie of each stone is read only by an eye that stands among them; from the rim the picture's own tone is all that is seen of it.
       float sh = a.a;
       vec2 lean = vec2(0.0);
       if (lowEye > 0.01) {
-        sh = texture2D(tShorePH, su).r;
-        float es = 0.012;
-        lean = 2.0 * vec2(texture2D(tShorePH, su + vec2(es / 8.0, 0.0)).r - sh, texture2D(tShorePH, su + vec2(0.0, es / 4.5)).r - sh);
+        sh = textureLod(tShorePH, su, sl).r;
+        float es = 0.004;
+        lean = 2.0 * vec2(textureLod(tShorePH, su + vec2(es / 2.0, 0.0), sl).r - sh, textureLod(tShorePH, su + vec2(0.0, es / 1.125), sl).r - sh);
       } else {
         // Its grit is finer gravel of the same stone, read from the picture again at its own size.
-        vec3 grit = texture2D(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37).rgb;
+        vec3 grit = textureLod(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37, AT(1672.0, 8.0)).rgb;
         sc *= 0.55 + 0.45 * grit / vec3(0.222, 0.161, 0.119);
       }
       sc = mix(sc, vec3(dot(sc, vec3(0.333))), 0.45 * (1.0 - lowEye));
       // Dry gravel in the last light is pale: its grit is hardly darker than its stones.
       sc = mix(sc * 0.6 + 0.16, sc, lowEye);
-      gravel = mix(gravel, sc * mix(vec3(2.3, 2.14, 1.96), vec3(1.5, 1.56, 1.66), lowEye), seen);
+      gravel = mix(gravel, sc * mix(vec3(2.3, 2.14, 1.96), vec3(1.12, 0.93, 0.72), lowEye), seen);
       pebbleBent = vec3(-lean.x, 0.0, -lean.y) * 3.0 * seen;
       a.a = mix(a.a, sh, seen);
       shingle = seen;
@@ -254,9 +258,10 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     stone = gravel;
     // The relief of the plate turns the faces of each stone.
     float e = 0.08;
-    float h0 = texture2D(tScreeH, p.xz / vec2(24.0, 13.51)).r;
-    float hx = texture2D(tScreeH, (p.xz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - h0;
-    float hz = texture2D(tScreeH, (p.xz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - h0;
+    vec2 per = vec2(24.0, 13.51);
+    float h0 = textureLod(tScreeH, p.xz / per, AT(1671.0, 24.0)).r;
+    float hx = textureLod(tScreeH, (p.xz + vec2(e, 0.0)) / per, AT(1671.0, 24.0)).r - h0;
+    float hz = textureLod(tScreeH, (p.xz + vec2(0.0, e)) / per, AT(1671.0, 24.0)).r - h0;
     bentFlat = pebbleBent + vec3(-hx, 0.0, -hz) * 5.0 * (1.0 - shingle) * (1.0 - 0.85 * beds) * (1.0 - smoothstep(120.0, 260.0, length(cameraPosition - p)));
     bentFace = bentFlat;
     gh = mix(a.a, b.a, 0.35);

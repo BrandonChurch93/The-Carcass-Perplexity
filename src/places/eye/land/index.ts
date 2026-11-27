@@ -7,11 +7,14 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { vnoise } from '../shared/noise';
 import { KEYS } from '../cameras';
-import { AXIS, axisOf, browCover, landHeight, onAxis, streamAcross, wallAt } from './height';
+import { AXIS, axisOf, browCover, landHeight, onAxis, streamAcross, wallAt, BAY } from './height';
 import { PATCH, browGeometry, patchGeometry, pebbleGeometry, socketGeometry, stoneGeometry } from './meshes';
 import { BLOCK_FRAGMENT, BLOCK_VERTEX, ballGeometry, blockUniforms } from './blocks';
+import { LIP_FRAGMENT, LIP_VERTEX, lipGeometry, onLip } from './lip';
+import { LOD_GLSL, WARM_GLSL } from './lod';
 import { ROCK_GLSL, rockUniforms } from './rock';
 import { createStream, standingStones } from './stream';
+import { CROP, CROP_FRAGMENT, CROP_VERTEX, cropGround, outcropAt } from './outcrop';
 
 export const PARTS: readonly string[] = ['land', 'brow', 'scree', 'stream'];
 
@@ -24,6 +27,14 @@ bool inPatch(vec3 p) {
   float along = dot(q, uAxis.zw);
   float across = dot(q, vec2(uAxis.w, -uAxis.z));
   return uCut > 0.5 && along > uPatch.x + 1.2 && along < uPatch.y - 1.2 && across > uPatch.z + 1.2 && across < uPatch.w - 1.2;
+}
+// The broken ground of the spur has its own fine mesh: the patch is cut out under it.
+uniform vec4 uCrop;
+bool inCrop(vec3 p) {
+  vec2 q = p.xz - uAxis.xy;
+  float along = dot(q, uAxis.zw);
+  float across = dot(q, vec2(uAxis.w, -uAxis.z));
+  return uCut < 0.5 && along > uCrop.x + 1.2 && along < uCrop.y - 1.2 && across > uCrop.z + 1.2 && across < uCrop.w - 1.2;
 }`;
 
 const LAND_FRAGMENT = /* glsl */ `
@@ -31,10 +42,14 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${LOD_GLSL}
 ${ROCK_GLSL}
 ${CUT_GLSL}
 void main() {
-  if (inPatch(vWorld) || beyondNear(vWorld)) discard;
+  gDx = dFdx(vWorld);
+  gDy = dFdy(vWorld);
+  takeLod(gDx, gDy);
+  if (inPatch(vWorld) || inCrop(vWorld) || beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float face = smoothstep(0.8, 0.52, n.y);
@@ -62,7 +77,7 @@ varying vec3 vWorld;
 uniform vec4 uNear;
 ${CUT_GLSL}
 void main() {
-  if (inPatch(vWorld) || (uNear.w > 0.5 && length(vWorld.xz - uNear.xy) > uNear.z)) discard;
+  if (inPatch(vWorld) || inCrop(vWorld) || (uNear.w > 0.5 && length(vWorld.xz - uNear.xy) > uNear.z)) discard;
   gl_FragColor = vec4(0.0);
 }`;
 
@@ -79,8 +94,12 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${LOD_GLSL}
 ${ROCK_GLSL}
 void main() {
+  gDx = dFdx(vWorld);
+  gDy = dFdy(vWorld);
+  takeLod(gDx, gDy);
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   Rock k = rockAt(vWorld, n, 1.0);
@@ -115,13 +134,20 @@ varying vec3 vLocal;
 varying vec3 vTint;
 uniform sampler2D tScree;
 uniform sampler2D tScreeH;
-vec4 screeAt(vec2 xz) {
-  vec2 uv = xz / vec2(24.0, 13.51);
-  return vec4(texture2D(tScree, uv).rgb, texture2D(tScreeH, uv).r);
+// Every sheet is read at the level taken first thing in main: see lod.ts.
+${LOD_GLSL}
+vec4 screeAt(vec2 xz, float grain) {
+  vec2 per = vec2(24.0, 13.51);
+  return vec4(textureLod(tScree, xz / per, AT(1671.0, 24.0) + grain).rgb, textureLod(tScreeH, xz / per, AT(1671.0, 24.0) + grain).r);
+}
+float screeHigh(vec2 xz, float grain) {
+  return textureLod(tScreeH, xz / vec2(24.0, 13.51), AT(1671.0, 24.0) + grain).r;
 }
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${WARM_GLSL}
 void main() {
+  takeLod(dFdx(vWorld), dFdy(vWorld));
   if (beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -134,6 +160,7 @@ void main() {
   vec2 at = vTint.yz * 40.0;
   // The plate is a slope of many stones: a block shows a small piece of it large, so that it is one stone with its own cracks, not a heap.
   float grain = mix(0.5, 1.0, smoothstep(12.0, 4.0, cameraPosition.y));
+  float finer = log2(grain);
   vec2 ux = vWorld.zy * grain + at;
   vec2 uy = vWorld.xz * grain + at.yx;
   vec2 uz = vWorld.xy * grain - at;
@@ -146,19 +173,19 @@ void main() {
   bool plate = lowEye < 0.99;
   if (!plate) col = vec4(vec3(0.3), 0.3 + 0.5 * vnoise(vLocal.xz * 9.0 + vLocal.y * 13.0));
   if (plate && w.x > 0.0) {
-    vec4 k = screeAt(ux);
+    vec4 k = screeAt(ux, finer);
     col += k * w.x;
-    d += vec2(texture2D(tScreeH, (ux + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (ux + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.x;
+    d += vec2(screeHigh(ux + vec2(e, 0.0), finer) - k.a, screeHigh(ux + vec2(0.0, e), finer) - k.a) * w.x;
   }
   if (plate && w.y > 0.0) {
-    vec4 k = screeAt(uy);
+    vec4 k = screeAt(uy, finer);
     col += k * w.y;
-    d += vec2(texture2D(tScreeH, (uy + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uy + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.y;
+    d += vec2(screeHigh(uy + vec2(e, 0.0), finer) - k.a, screeHigh(uy + vec2(0.0, e), finer) - k.a) * w.y;
   }
   if (plate && w.z > 0.0) {
-    vec4 k = screeAt(uz);
+    vec4 k = screeAt(uz, finer);
     col += k * w.z;
-    d += vec2(texture2D(tScreeH, (uz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.z;
+    d += vec2(screeHigh(uz + vec2(e, 0.0), finer) - k.a, screeHigh(uz + vec2(0.0, e), finer) - k.a) * w.z;
   }
   vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x) * mix(vec3(1.32, 1.18, 0.98), vec3(1.0), smoothstep(12.0, 4.0, cameraPosition.y));
   vec3 nh = vec3(0.5, 0.5, col.a);
@@ -188,9 +215,10 @@ void main() {
   // The last half metre of shore before the water is wet: its stones are dark.
   damp = max(damp, 0.75 * lowEye * smoothstep(0.1, 0.03, max(land.r, 0.0)));
   albedo *= mix(1.0, 0.5, damp);
-  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.9, 0.4, damp), (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
+  vec3 c = rigShade(vWorld, n, v, clamp(albedo * mix(warmSide(n), vec3(1.0), lowEye), 0.0, 0.9), mix(0.9, 0.4, damp), (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
   // A wet pebble carries the low sun on its crown.
-  if (lowEye * damp > 0.02) c += lowEye * damp * 0.5 * rigGlint(vWorld, n, v, 0.35);
+  // Not under a branch: see blocks.ts.
+  c += lowEye * damp * 0.5 * rigGlint(vWorld, n, v, 0.35);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -210,6 +238,7 @@ export function create(ctx: Context): Piece {
   const cut = {
     uPatch: { value: new THREE.Vector4(PATCH.along0, PATCH.along1, PATCH.across0, PATCH.across1) },
     uAxis: { value: new THREE.Vector4(ox, oz, ux - ox, uz - oz) },
+    uCrop: { value: new THREE.Vector4(CROP.along0, CROP.along1, CROP.across0, CROP.across1) },
   };
 
   const socketMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...rock, ...cut, uCut: { value: 1 } }, vertexShader: RIG_VERTEX, fragmentShader: LAND_FRAGMENT });
@@ -219,8 +248,33 @@ export function create(ctx: Context): Piece {
   const socket = new THREE.Mesh(socketGeometry(), socketMaterial);
   const patch = new THREE.Mesh(patchGeometry(), patchMaterial);
   socket.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('land', socket, patch));
+  // The broken ground of the spur, on its own fine mesh.
+  const crop = cropGround();
+  const block = blockUniforms(ctx);
+  const cropMaterial = new THREE.ShaderMaterial({
+    uniforms: { ...ctx.rig.uniforms, uAxis: cut.uAxis, tCrop: { value: crop.map }, uCropRect: { value: crop.rect }, tFace: block.tFace as THREE.IUniform, tFaceNh: block.tFaceNh as THREE.IUniform, tGravel: rock.tGravel as THREE.IUniform, tGravelNh: rock.tGravelNh as THREE.IUniform },
+    vertexShader: CROP_VERTEX,
+    fragmentShader: CROP_FRAGMENT,
+  });
+  cropMaterial.userData.depthFragment = NEAR_DEPTH;
+  const cropMesh = new THREE.Mesh(crop.geometry, cropMaterial);
+  // The wet lip before the shore camera.
+  const lipMaterial = new THREE.ShaderMaterial({
+    uniforms: { ...ctx.rig.uniforms, tShoreP: rock.tShoreP as THREE.IUniform, tShorePH: rock.tShorePH as THREE.IUniform },
+    vertexShader: LIP_VERTEX,
+    fragmentShader: LIP_FRAGMENT,
+  });
+  lipMaterial.userData.depthFragment = NEAR_DEPTH;
+  const lipMesh = new THREE.Mesh(lipGeometry(), lipMaterial);
+  ctx.scene.add(ctx.parts.built('land', socket, patch, cropMesh, lipMesh));
+  ctx.scene.add(lipMesh);
   ctx.scene.add(patch);
+  ctx.scene.add(cropMesh);
+  /** The ground a stone lies on: the smooth land and the broken rock over it. */
+  const groundAt = (x: number, z: number): number => {
+    const [along, across] = axisOf(x, z);
+    return landHeight(x, z) + outcropAt(along, across);
+  };
 
   const browMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...rock }, vertexShader: RIG_VERTEX, fragmentShader: BROW_FRAGMENT, side: THREE.DoubleSide });
   const brow = new THREE.Mesh(browGeometry(), browMaterial);
@@ -231,6 +285,10 @@ export function create(ctx: Context): Piece {
   const stones: Stone[][] = [[], [], []];
   const put = (x: number, z: number, size: number): void => {
     if (landHeight(x, z) < -0.3) return;
+    // No loose stone lies in the near field of the shore camera: the ground there is the lip's and the plate's, stone by stone.
+    const ahead = (x - BAY.x) * BAY.fx + (z - BAY.z) * BAY.fz;
+    const aside = (z - BAY.z) * BAY.fx - (x - BAY.x) * BAY.fz;
+    if (ahead > 0 && ahead < 16 && Math.abs(aside) < 4 + 0.6 * ahead) return;
     (stones[size > 2.2 ? 0 : size > 0.5 ? 1 : 2] as Stone[]).push({ x, z, size });
   };
   for (let i = 0; i < 2600; i++) {
@@ -366,7 +424,8 @@ export function create(ctx: Context): Piece {
       const x = from[0] + fx * ahead - fz * aside;
       const z = from[2] + fz * ahead + fx * aside;
       const ground = landHeight(x, z);
-      if (ground < -0.1 - 0.4 * size) continue;
+      // Before the shore camera the stones are the lip's own (lip.ts), and none is laid in the water.
+      if (ground < 0.02 || ahead < 16 || onLip(x, z)) continue;
       // In the flooded shallows only the stones that stand out of the water are kept, and fewer of them.
       if (ground < 0.0 && (size < 0.05 || vnoise(x / 0.9 + 3, z / 0.9 + 8) < (ahead < 13 ? 0.3 : 0.55))) continue;
       const flooded = ground < 0.0 && ahead < 13;
@@ -420,7 +479,7 @@ export function create(ctx: Context): Piece {
       const mesh = new THREE.InstancedMesh(geometry, stoneMaterial, mine.length);
       mine.forEach((s, i) => {
         const sink = rng.range(0.18, 0.5);
-        dummy.position.set(s.x, landHeight(s.x, s.z) - sink * s.size * 0.72 + 0.3 * s.size, s.z);
+        dummy.position.set(s.x, groundAt(s.x, s.z) - sink * s.size * 0.72 + 0.3 * s.size, s.z);
         dummy.rotation.set(rng.range(-0.35, 0.35), rng.range(0, Math.PI * 2), rng.range(-0.35, 0.35));
         dummy.scale.set(s.size * rng.range(0.75, 1.25), s.size * rng.range(0.6, 1.1), s.size * rng.range(0.75, 1.25));
         dummy.updateMatrix();
@@ -440,7 +499,6 @@ export function create(ctx: Context): Piece {
   // The blocks: each a broken stone raised from the atlas. How finely one is cut goes by how near a camera ever comes to it.
   const blockMaterials: THREE.ShaderMaterial[] = [];
   const balls: THREE.BufferGeometry[] = [];
-  const block = blockUniforms(ctx);
   {
     const eyes = [KEYS.wide.position, KEYS.mats.position, KEYS.edge.position, KEYS.shore.position, KEYS.centre.position];
     // How finely a block is cut goes by its size and by how near the wide camera ever passes: that camera comes down the axis.
@@ -452,6 +510,9 @@ export function create(ctx: Context): Piece {
       { detail: 1, smoothing: 3, list: [] },
     ];
     for (const s of [...(stones[0] as Stone[]), ...(stones[1] as Stone[]), ...inStream]) {
+      // On the broken ground the large blocks are the bedrock's own slabs: only loose stone lies on it.
+      const [sa, sc] = axisOf(s.x, s.z);
+      if (s.size > 0.9 && !s.wet && sa > CROP.along0 + 6 && sa < CROP.along1 - 6 && sc > CROP.across0 + 6 && sc < CROP.across1 - 6) continue;
       let reach = Infinity;
       for (const e of eyes) reach = Math.min(reach, Math.hypot(s.x - e[0], s.z - e[2]));
       const [along, across] = axisOf(s.x, s.z);
@@ -473,7 +534,7 @@ export function create(ctx: Context): Piece {
         // A stone of the atlas is about 0.8 from its middle to its faces.
         const half = s.size * 0.58;
         const sy = half * rng.range(0.6, 1.0);
-        const ground = landHeight(s.x, s.z);
+        const ground = groundAt(s.x, s.z);
         const e = Math.max(0.4, s.size * 0.5);
         // It lies bedded in the slope: a third of it and more is under the ground.
         const gx = (landHeight(s.x + e, s.z) - landHeight(s.x - e, s.z)) / (2 * e);
@@ -554,9 +615,10 @@ export function create(ctx: Context): Piece {
       brow.visible = (ctx.rig.uniforms.uNear as THREE.IUniform<THREE.Vector4>).value.w < 0.5;
     },
     dispose: () => {
-      for (const m of [socket, patch, brow, ...scree]) m.geometry.dispose();
+      for (const m of [socket, patch, cropMesh, lipMesh, brow, ...scree]) m.geometry.dispose();
+      crop.map.dispose();
       for (const b of balls) b.dispose();
-      for (const m of [socketMaterial, patchMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
+      for (const m of [socketMaterial, patchMaterial, cropMaterial, lipMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
       stream.dispose();
     },
   };
