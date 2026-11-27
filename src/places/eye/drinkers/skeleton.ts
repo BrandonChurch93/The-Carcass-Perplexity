@@ -57,6 +57,8 @@ export interface Build {
   /** Depth of the trunk from the back to the belly. */
   depth: number;
   neck: number;
+  /** How thick the neck is where it meets the head, of what it was made with: under 1 it tapers. */
+  stem?: number;
   leg: number;
   head: number;
 }
@@ -180,7 +182,11 @@ export function solve(b: Build, p: Pose, out: Float32Array): Solved {
     const along = unit(sub(to, from));
     const isHead = i === 4;
     const swell = isHead ? 1 : 1 + (p.gulp[i] as number);
-    const shape = isHead ? diag(s * b.head, s * b.head, s * b.head) : mul(diag(s * b.girth * swell * (NECK_SLIM[i] as number), s, s * swell), stretch(along, b.neck));
+    // A neck that tapers is thinner joint by joint toward the head, and no shorter for it.
+    const thin = 1 + ((b.stem ?? 1) - 1) * ((i + 1) / 4);
+    const shape = isHead
+      ? diag(s * b.head, s * b.head, s * b.head)
+      : mul(diag(s * thin * b.girth * swell * (NECK_SLIM[i] as number), s * thin, s * thin * swell), stretch(along, b.neck / thin));
     const m = mul(turnOf, shape);
     put(3 + i, m, at, from);
     const next = add(at, apply(m, sub(to, from)));
