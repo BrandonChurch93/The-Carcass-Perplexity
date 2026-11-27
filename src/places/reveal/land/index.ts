@@ -277,15 +277,15 @@ void main() {
     shallow = mix(shallow, 0.5, stream);
   }
   // (North of the lake of the Eye a second crater holds water: a long dark lake, its shore uneven.)
-  vec2 inUpper = (xz - uLakeMid - vec2(40.0, -146.0)) / vec2(62.0, 37.0);
+  vec2 inUpper = (xz - uLakeMid - vec2(40.0, -146.0)) / vec2(50.0, 29.0);
   float upperR = 9.0;
   float upper = 0.0;
   if (dot(inUpper, inUpper) < 2.5) {
-    upperR = length(inUpper) + 0.3 * (vnoise(xz / 11.0 + 4.0) - 0.5) + 0.34 * (vnoise(xz / 31.0 + 14.0) - 0.5);
+    upperR = length(inUpper) + 0.34 * (vnoise(xz / 11.0 + 4.0) - 0.5) + 0.62 * (vnoise(xz / 27.0 + 14.0) - 0.5);
     upper = (1.0 - smoothstep(0.86, 0.98, upperR)) * smoothstep(120.0, 200.0, uViewKm);
     land *= 1.0 - upper;
     // (It is a lake as the others are: shut in, deep in its middle, its bed dark.)
-    coastKm = mix(coastKm, min(coastKm, -(0.98 - upperR) * 37.0), upper);
+    coastKm = mix(coastKm, min(coastKm, -(0.98 - upperR) * 29.0), upper);
     shut = max(shut, upper);
     shallow = mix(shallow, 0.0, upper);
   }
