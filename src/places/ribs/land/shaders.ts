@@ -644,10 +644,14 @@ void main() {
   occ = mix(occ, mix(0.4 + 0.6 * smoothstep(0.1, 0.55, nearN.z), 1.0, filmN), nearBy);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The film of water shows the cloud, not only the smooth sky; ruffled, it shows the sky a hand higher than a still one would.
-  // The sky's picture is read at a named level and the land's before the branch: a level taken from the pixel inside it is not defined
-  // at the edge of a film, and the edge of every pool would take another level with every move of the lens.
-  float openF = skyOpen(vWorld);
+  // The sky's picture and the land's are read at named levels (skyOpen, spelled out): a level taken from the pixel inside a branch is
+  // not defined at the edge of a film, and the edge of every pool would take another level with every move of the lens.
   if (film > 0.02) {
+    vec4 landF = textureLod(tLand, (xz - uLandRect.xy) * uLandRect.zw, 0.0);
+    vec2 uc = (xz - uContactRect.xy) * uContactRect.zw;
+    vec2 ue = min(uc, 1.0 - uc);
+    float aboveF = vWorld.y - landF.r;
+    float openF = mix(landF.g, 1.0, clamp(aboveF / 120.0, 0.0, 1.0)) * (1.0 - textureLod(tContact, uc, 0.0).r * smoothstep(0.0, 0.03, min(ue.x, ue.y)) * smoothstep(4.0, 0.0, aboveF));
     vec3 r = reflect(-v, n);
     r.y = abs(r.y) + 0.06;
     r = normalize(r);

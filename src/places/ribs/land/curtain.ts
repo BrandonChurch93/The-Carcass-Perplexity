@@ -186,8 +186,7 @@ void main() {
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The low sun through a thin wet frond.
   float thru = (max(dot(-n0, uSunDir), 0.0) + 0.12 * max(dot(n0, uSunDir), 0.0)) * (0.08 + 0.92 * vTone.y) * occ;
-  // The sun's reach is read before the branch: a picture read by the pixel's own level inside one is not defined at its edge.
-  float sunK = sunAt(vWorld, landAt(vWorld.xz));
-  if (thru > 0.06) c += amber * uSunColour * (0.3 * thru * sunK);
+  // The sun's reach is read at named levels: a picture read by the pixel's own level inside a branch is not defined at its edge.
+  if (thru > 0.06) c += amber * uSunColour * (0.3 * thru * sunBaked(vWorld, textureLod(tLand, (vWorld.xz - uLandRect.xy) * uLandRect.zw, 0.0)) * cloudShadeMarched(vWorld));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
