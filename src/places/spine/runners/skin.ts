@@ -60,6 +60,8 @@ export interface Joints {
   knees: V3[];
   ankles: V3[];
   toes: V3[];
+  /** Flesh that has slumped out of the trunk's own shape onto the ground: round cones from a to b. Only the dead have any. */
+  slump?: [V3, V3, number, number][];
 }
 
 const add = (a: V3, b: V3): V3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -176,6 +178,50 @@ export function joints(pose: Pose): Joints {
   return out;
 }
 
+/** The dead one as it lies in its picture, set joint by joint and not bent out of a standing animal: on its right side and rolled a little
+ * onto its belly, so the back stands up behind and the flank looks at the lens; the neck let down along the rock and the head fallen on
+ * its side; the upper foreleg thrown forward over the chest with its paw flat on the snow, the under one out along the body, the hind
+ * legs drawn up under the belly. Metres of the animal: x toward the head, y up from the ground, z away from the lens. */
+export function carcassJoints(): Joints {
+  const a = 0.42;
+  const fwd: V3 = [1, 0, 0];
+  const up: V3 = [0, Math.sin(a), Math.cos(a)];
+  const right: V3 = [0, -Math.cos(a), Math.sin(a)];
+  // Dead weight: the trunk has sunk on itself and into the snow, and the neck and the head lie on the ground.
+  const hip: V3 = [0, 0.12, 0.02];
+  const chest: V3 = [0.62, 0.15, 0];
+  const neck: V3 = [0.86, 0.12, -0.05];
+  const head: V3 = [1.1, 0.1, -0.15];
+  const face: V3 = [1.32, 0.075, -0.27];
+  const chain = (top: V3, d1: V3, d2: V3, d3: V3): [V3, V3, V3, V3] => {
+    const knee = add(top, scale(norm(d1), UPPER));
+    const ankle = add(knee, scale(norm(d2), LOWER));
+    return [top, knee, ankle, add(ankle, scale(norm(d3), PAW))];
+  };
+  const legs = [
+    // The upper foreleg has fallen off the shoulder and lies along the ground toward the lens, its paw flat and its claws on the ice.
+    chain([0.62, 0.2, -0.2], [0.3, -0.42, -0.85], [0.22, -0.06, -0.97], [0.3, -0.05, -0.95]),
+    // The under foreleg: out from under the chest and back along the body, its claws toward the tail.
+    chain([0.64, 0.08, -0.08], [-0.45, 0, -0.9], [-0.8, -0.03, -0.6], [-0.97, -0.03, -0.25]),
+    // The upper hind leg lies on the under one: the thigh forward along the belly, the shank back along the ground.
+    chain([-0.02, 0.2, -0.14], [0.78, -0.25, -0.58], [-0.55, -0.1, -0.83], [-0.3, -0.04, -0.95]),
+    // The under hind leg, flat under it.
+    chain([-0.04, 0.08, -0.05], [0.35, 0, -0.94], [-0.85, -0.02, -0.5], [-0.95, -0.02, -0.3]),
+  ];
+  // The belly has run out toward the legs and lies on the ground between them; the flank has sunk between the hips and the shoulder.
+  const slump: [V3, V3, number, number][] = [
+    [[0.02, 0.07, -0.2], [0.5, 0.08, -0.24], 0.15, 0.17],
+    [[0.2, 0.05, -0.3], [0.42, 0.05, -0.33], 0.1, 0.1],
+    [[0.66, 0.07, -0.16], [0.9, 0.06, -0.14], 0.14, 0.11],
+    [[-0.22, 0.06, -0.02], [0.0, 0.07, -0.12], 0.13, 0.16],
+  ];
+  const out: Joints = { hip, chest, neck, head, face, lead: norm(sub(face, head)), fwd, up, right, tops: legs.map((l) => l[0]), knees: legs.map((l) => l[1]), ankles: legs.map((l) => l[2]), toes: legs.map((l) => l[3]), slump };
+  // Nothing of a leg is under the ground: each lies on it.
+  const floor: [V3[], number][] = [[out.knees, 0.07], [out.ankles, 0.055], [out.toes, 0.04]];
+  for (const [list, r] of floor) for (const p of list) if (p[1] < r) p[1] = r;
+  return out;
+}
+
 function prims(j: Joints, pose: Pose): Prim[] {
   const s = pose.slack;
   const out: Prim[] = [];
@@ -195,6 +241,7 @@ function prims(j: Joints, pose: Pose): Prim[] {
     cone(off(j.hip, 0.03, 0.14 * s, side * 0.13), off(j.hip, 0.12, 0.1 * s, side * 0.17), 0.06, 0.045, 0, KIND.trunk, 0.05);
     cone(off(j.chest, 0.02, 0.16 * s, side * 0.12), off(j.chest, 0.07, -0.02, side * 0.2), 0.07, 0.08, 1, KIND.trunk, 0.06);
   }
+  for (const [a, b, ra, rb] of j.slump ?? []) cone(a, b, ra, rb, 0, KIND.trunk, 0.12);
   // A stump of a tail.
   cone(off(j.hip, -0.2, 0.1 * s, 0), off(j.hip, -0.31, 0.0, 0), 0.07, 0.035, 0, KIND.trunk, 0.06);
   // The neck, thick and short, and a blunt head that droops to the stump the tendrils grow from. No eyes, no ears, no muzzle.
@@ -263,8 +310,8 @@ export interface Skin {
 }
 
 /** The skin of a pose. `cell` is the size of the cells its surface is taken on: 0.016 for an animal the lens comes close to. */
-export function skin(pose: Pose, cell: number): Skin {
-  const j = joints(pose);
+export function skin(pose: Pose, cell: number, given?: Joints): Skin {
+  const j = given ?? joints(pose);
   const list = prims(j, pose);
   let lo: V3 = [Infinity, Infinity, Infinity];
   let hi: V3 = [-Infinity, -Infinity, -Infinity];
@@ -478,6 +525,8 @@ export function claws(j: Joints): THREE.BufferGeometry {
   const RING = 7;
   const SEG = 6;
   for (let i = 0; i < 4; i++) {
+    // The hind paws of the dead one lie under its coat and the drift: no claw of theirs shows.
+    if (j.slump && i >= 2) continue;
     const ankle = j.ankles[i] as V3;
     const toe = j.toes[i] as V3;
     const along = norm(sub(toe, ankle));
@@ -541,6 +590,10 @@ export interface CoatOptions {
   wind: V3;
   /** Where no clump is grown: the side an animal lies on, that no lens sees. */
   skip?: (p: V3, n: V3) => boolean;
+  /** True where the coat lies over the lips of the burn and is not cut short there. */
+  lips?: boolean;
+  /** The length of the coat by kind of place, where it is not the usual. */
+  lengths?: number[];
 }
 
 export interface Coat {
@@ -574,13 +627,19 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
   };
   for (let c = 0; c < o.clumps; c++) {
     const at = body.pick(rng);
-    const base = LENGTH[at.kind] as number;
+    const base = (o.lengths ?? LENGTH)[at.kind] as number;
     if (base <= 0) continue;
     if (o.skip && o.skip(at.p, at.n)) continue;
     // The face end of the head is bare; under the belly and inside the legs the coat hangs long.
-    const burned = burnAt(at.p);
-    const singe = Math.min(1, Math.max(0, (burned - 0.75) / 0.8));
-    if (burned < 0.75 || (burned < 1.0 && rng.next() < 0.5)) continue;
+    // The burn is on the trunk; a leg that lies in front of it keeps its coat. With the lips kept, the bare split closes toward its ends.
+    const reach = o.burn[3] > 0 ? Math.hypot(at.p[0] - o.burn[0], at.p[1] - o.burn[1], at.p[2] - o.burn[2]) / o.burn[3] : 0;
+    const ends = Math.min(1, Math.max(0, (reach - 0.45) / 0.55));
+    const burned = o.lips && at.kind >= KIND.upper ? 9 : burnAt(at.p) + (o.lips ? 0.5 * ends * ends * (3 - 2 * ends) : 0);
+    // Behind the split the coat is combed away from it and grows to its very lip; ahead of it the coat lies over it.
+    const behind = o.lips === true && ((at.p[0] - o.burn[0]) * (o.burnAxis?.[0] ?? 0) + (at.p[1] - o.burn[1]) * (o.burnAxis?.[1] ?? 0) + (at.p[2] - o.burn[2]) * (o.burnAxis?.[2] ?? 0)) < 0;
+    const bare = behind ? 0.55 : 0.75;
+    const singe = Math.min(1, Math.max(0, (burned - bare) / (behind ? 0.45 : 0.8)));
+    if (burned < bare || (burned < bare + 0.25 && rng.next() < 0.5)) continue;
     // On the flanks of one that rests the coat hangs in long matted curtains to the floor.
     const flank = (o.hang ?? 0) * Math.max(0, 1 - 1.3 * Math.abs(at.n[1])) * (at.p[1] > 0.25 ? 1 : 0.4);
     const long = base * o.long * rng.range(0.7, 1.35) * (0.12 + 0.88 * singe) * (1 + 0.5 * Math.max(0, -at.n[1])) * (1 + 1.6 * flank);
@@ -596,7 +655,7 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
     if (fall[1] > 0.05) fall = norm([fall[0], 0.05, fall[2]]);
     if (flank > 0) fall = norm([fall[0] * (1 - 0.75 * flank), fall[1] - 1.3 * flank, fall[2] * (1 - 0.75 * flank)]);
     // Round the burn the melted coat froze again as it stood: clotted spikes, white with ice, standing off the hide.
-    const spike = burned >= 1.0 && burned < 1.55 && rng.next() < 0.55;
+    const spike = burned >= 1.0 && burned < 1.55 && rng.next() < (o.lips ? 0 : 0.55);
     if (spike) fall = norm(add(scale(fall, 0.8), scale(at.n, 0.55)));
     const end = add(at.p, add(scale(at.n, long * 0.14), scale(fall, long * (spike ? 1.15 : 1))));
     const spread = 0.016 + 0.022 * rng.next();
@@ -632,9 +691,9 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
       // The ground stops a lock.
       if (e[1] < 0.012) e[1] = 0.012 + 0.01 * rng.next();
       if (o.burn[3] > 0) {
-        const over = burnAt(e);
+        const over = burned > 8 ? 9 : burnAt(e);
         if (over < 0.8 && !spike) {
-          const keep = 0.25 + 0.3 * rng.next();
+          const keep = o.lips ? 0.5 + 0.35 * rng.next() : 0.25 + 0.3 * rng.next();
           e[0] = p[0] + (e[0] - p[0]) * keep;
           e[1] = p[1] + (e[1] - p[1]) * keep;
           e[2] = p[2] + (e[2] - p[2]) * keep;
