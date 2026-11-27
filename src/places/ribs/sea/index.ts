@@ -178,6 +178,9 @@ export function create(ctx: Context): Piece {
   const answers = contactRings({ ...rig.uniforms, uPoolLevel: poolMaterial.uniforms.uPoolLevel as THREE.IUniform });
   answers.mesh.renderOrder = 4;
   pools.add(answers.mesh);
+  // After the animals' images (3), before the rings (4).
+  answers.veil.renderOrder = 3.5;
+  pools.add(answers.veil);
   pools.onBeforeRender = () => {
     const seen = poolMaterial.uniforms.tSeen?.value as THREE.Texture | null | undefined;
     wetSeen.value = seen ?? null;
