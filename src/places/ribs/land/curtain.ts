@@ -17,7 +17,7 @@ export interface CurtainOptions {
   next: () => number;
 }
 
-const SEGMENTS = 12;
+const SEGMENTS = 8;
 
 export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeometry {
   const tTide = partAtHeight(rib, 30);
@@ -54,15 +54,15 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
       const phi = near ? options.focus[0] + 0.22 * (options.next() + options.next() - 1) : options.from + (options.to - options.from) * options.next();
       foot.copy(surface(rib, tTide, phi, at, bt));
       const top = weedTop(foot.x, foot.z) - 1.5;
-      hank = { phi, top: 3 + (top - 3) * Math.sqrt(options.next()), length: 4 + 7 * options.next() ** 1.5, layer: options.next(), tone: options.next(), amber: options.next() < 0.24 ? 0.5 + 0.5 * options.next() : 0 };
+      hank = { phi, top: 3 + (top - 3) * Math.sqrt(options.next()), length: 1.5 + 4.5 * options.next() ** 1.5, layer: options.next(), tone: options.next(), amber: options.next() < 0.42 ? 0.5 + 0.5 * options.next() : 0 };
     }
-    const phi0 = hank.phi + (1.1 * (options.next() - 0.5)) / reach;
+    const phi0 = hank.phi + (0.9 * (options.next() - 0.5)) / reach;
     const yTop = hank.top - 0.9 * options.next();
     const length = hank.length * (0.55 + 0.45 * options.next());
-    const breadth = 0.34 + 0.6 * options.next();
+    const breadth = 0.12 + 0.3 * options.next();
     const layer = Math.min(1, hank.layer * 0.8 + 0.25 * options.next());
     const twist = 0.7 * (options.next() - 0.5);
-    const drift = 1.2 * (options.next() - 0.5);
+    const drift = 0.6 * (options.next() - 0.5);
     const wave = options.next() * 6.283;
     const tone = Math.min(1, Math.max(0, hank.tone + 0.3 * (options.next() - 0.5)));
     const amber = Math.max(hank.amber * options.next(), 0.07 * options.next());
@@ -74,8 +74,8 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
     for (let k = 0; k < rows; k++) {
       const f = k / SEGMENTS;
       const y = yTop + (yEnd - yTop) * f;
-      const phi = phi0 + (drift * f + 0.3 * Math.sin(wave + 4.4 * f) + 0.12 * Math.sin(wave * 2.3 + 11 * f)) / reach;
-      const out = 0.3 + 0.9 * layer + 0.25 * Math.sin(Math.PI * f) * (0.3 + layer);
+      const phi = phi0 + (drift * f + 0.14 * Math.sin(wave + 4.4 * f) + 0.05 * Math.sin(wave * 2.3 + 11 * f)) / reach;
+      const out = 0.15 + 0.6 * layer + 0.12 * Math.sin(Math.PI * f) * (0.3 + layer);
       face(phi, y, out, c);
       face(phi + 0.01, y, out, c2);
       side.copy(c2).sub(c).normalize();
@@ -174,13 +174,15 @@ void main() {
   vec3 across = normalize(du - n0 * dot(du, n0) + vec3(1e-7, 0.0, 0.0)) * sign(dFdx(vUv.x) * dFdy(vUv.y) - dFdy(vUv.x) * dFdx(vUv.y) + 1e-12);
   float ruffle = sin(vUv.y * 60.0 + vTone.x * 40.0 + 3.0 * wr) * smoothstep(0.3, 0.9, edge);
   vec3 n = normalize(n0 + across * ((vUv.x * 2.0 - 1.0) * 0.28) + 0.5 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5) + 0.6 * ruffle, wr2 - 0.5));
-  vec3 olive = mix(vec3(0.008, 0.007, 0.004), vec3(0.026, 0.02, 0.0075), vTone.x);
-  vec3 amber = vec3(0.13, 0.062, 0.011);
-  float gold = vTone.y * (0.35 + 0.65 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
+  vec3 olive = mix(vec3(0.006, 0.006, 0.004), vec3(0.02, 0.018, 0.008), vTone.x);
+  vec3 amber = vec3(0.12, 0.075, 0.014);
+  // Brown only toward the thin end of a frond and at its edges: the body of it is olive black.
+  float gold = vTone.y * smoothstep(0.25, 1.0, vUv.y) * (0.35 + 0.65 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
   vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
-  float rough = 0.44 + 0.25 * wr;
+  // Wet through: it shows the sky in narrow lights along its troughs.
+  float rough = 0.16 + 0.22 * wr;
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The low sun through a thin wet frond.
   float thru = (max(dot(-n0, uSunDir), 0.0) + 0.12 * max(dot(n0, uSunDir), 0.0)) * (0.08 + 0.92 * vTone.y) * occ;

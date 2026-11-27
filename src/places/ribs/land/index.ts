@@ -297,7 +297,7 @@ export function create(ctx: Context): Piece {
   fronds.side = THREE.DoubleSide;
   {
     const hang = ctx.rng('curtain');
-    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 4400, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 9000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
   }
 
   // The two stacks of the gate, and the arch rock.
