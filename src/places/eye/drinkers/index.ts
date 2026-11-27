@@ -221,16 +221,18 @@ void main() {
   float knee = leg * (exp(-pow((vRest.y - 0.78) / 0.12, 2.0)) + exp(-pow((vRest.y - 0.14) / 0.07, 2.0)));
   skin *= 1.0 - 0.3 * knee * (0.4 + 0.6 * ragged);
   // Wet and dark where it has stood in the lake, and flecked with the mud it kicked up, thinning to the knee; dry above. The horn of the hoof is dark.
-  float wet = 1.0 - smoothstep(0.14, 0.42, above + 0.2 * ragged);
+  float wet = 1.0 - smoothstep(0.14, 0.4, above + 0.2 * ragged);
+  // Where the leg goes into the lake the water climbs it a finger's width and is dark with the leg's own shade.
+  float waterline = (1.0 - smoothstep(0.0, 0.035, above)) * step(uOwn.z, -0.02);
   float muddy = (1.0 - smoothstep(0.2, 1.25, above + 0.5 * ragged)) * leg;
   skin *= mix(vec3(1.0), vec3(0.62, 0.56, 0.52), 0.7 * muddy);
   float fleck = smoothstep(0.7, 0.78, n3(at * vec3(110.0, 70.0, 110.0)) * (0.7 + 0.6 * n3(at * 6.0))) * (1.0 - smoothstep(0.3, 1.4, above + 0.6 * ragged));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
-  vec3 albedo = mix(skin * mix(vec3(1.0), vec3(0.36, 0.33, 0.31), wet), vec3(0.13, 0.1, 0.08), 0.55 * fleck);
+  vec3 albedo = mix(skin * mix(vec3(1.0), vec3(0.17, 0.15, 0.14), wet) * (1.0 - 0.6 * waterline), vec3(0.13, 0.1, 0.08), 0.55 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.62, 1.0, vShade.x) * (1.0 - 0.35 * groove);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
-  vec3 c = rigShade(p, n, v, albedo, mix(0.78, 0.45, wet), occ);
+  vec3 c = rigShade(p, n, v, albedo, mix(0.78, 0.6, wet), occ);
   // The two under the last camera stand in the shade of the bluff it looks from. The rig knows no such shade: their feet are at a level of
   // their own. The sun the rig gave them is taken back.
   float sunHere = sunAt(p);
@@ -254,7 +256,7 @@ void main() {
   c += albedo * uSunColour * (vec3(1.0, 0.9, 0.78) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim)
     * (1.6 * uPose.y * (1.0 - sunHere) * smoothstep(0.25, 1.1, above) * (0.4 + 0.6 * occ) / 3.14159);
   // The wet of the leg takes the sun as a film of water does.
-  c += 0.4 * wet * lit * rigGlint(p, n, v, 0.16);
+  c += 0.25 * wet * lit * rigGlint(p, n, v, 0.16);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -314,12 +316,12 @@ interface Drawn {
 const CLOSE = CLOSE_COUNT;
 
 export function create(ctx: Context): Piece {
-  // The animals a close shot is about are bodies while their shot runs: the four of the shore, the two under the last camera, the three beyond
-  // the mats. The herd is bodies in the wide shot, on the coarsest mesh, each with its own build, pose and time. In every other shot an animal
-  // is still a card.
+  // The animals a close shot is about are bodies while their shot runs: the four of the shore and the three beyond the mats. The herd is
+  // bodies in the wide shot, on the coarsest mesh, each with its own build, pose and time. In every other shot an animal is still a card.
   const all = herd(ctx.rng('drinkers-bodies'), ctx.events.rise - 1.7);
   const cast = all.map((_, index) => index);
-  const shotOf = (index: number): string => (index < 4 ? 'eye-04' : index < 6 ? 'eye-05' : index < CLOSE ? 'eye-02' : 'eye-01');
+  // The two under the last camera stay cards in every shot: their slender necks are the approved picture's, and the unit keeps them as they are.
+  const shotOf = (index: number): string => (index < 4 ? 'eye-04' : index < 6 ? 'none' : index < CLOSE ? 'eye-02' : 'eye-01');
   const animals = cast.map((index) => all[index] as Drinker);
   const cards = createCards(ctx);
   const mid = bodyGeometry(MID_DATA, LEVELS.mid);
