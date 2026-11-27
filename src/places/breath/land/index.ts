@@ -162,8 +162,10 @@ export function create(ctx: Context): Piece {
       blocks.push(block(60 + k + bearing * 0.21, [size * rs.range(0.9, 1.5), size * 0.55, size], [at[0] - Math.sin(b) * out, at[1] + size * 0.2, at[2] + Math.cos(b) * out], [rs.range(-0.2, 0.2), rs.range(0, 6.28), rs.range(-0.2, 0.2)], 70));
     }
   }
-  // The fallen slabs are the tiers' own stone, broken: the same bedded travertine, rust in it, damp and dark at their feet.
-  slabs.add(mesh(mergeGeometries(blocks), arches));
+  // The fallen slabs are the tiers' own stone, broken: cream like the tiers they fell from, plain on their broken faces. Drawn with the
+  // tiers' bedded sheet they were striped like a sweet.
+  const fallen = rock.bone(0.9, [0.74, 0.7, 0.62], [0.47, 0.43, 0.36], { ...tile('crust', [0.307, 0.255, 0.218], 2.6) }, THREE.DoubleSide);
+  slabs.add(mesh(mergeGeometries(blocks), fallen));
   slabs.add(mesh(heap(), rubble));
 
   ctx.scene.add(ctx.parts.built('slabs', slabs));

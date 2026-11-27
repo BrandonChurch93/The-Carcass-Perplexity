@@ -134,7 +134,8 @@ function limb(skin: Skin, path: readonly V3[], thick: [number, number], joints: 
       // A joint is raw: the hide has worn through on the knob.
       let raw = 0;
       for (const [at] of joints) raw = Math.max(raw, bell(t, at, 0.04));
-      return KIND.limb + 0.2 * raw;
+      // Below the first joint it is shank: a little over the limb's own kind, under what counts as raw.
+      return KIND.limb + 0.012 * smooth((t - 0.34) / 0.12) + 0.2 * raw;
     },
     (t) => {
       let r = lerp(thick[0], thick[1], smooth((t - 0.1) / 0.4));
@@ -144,7 +145,7 @@ function limb(skin: Skin, path: readonly V3[], thick: [number, number], joints: 
     },
     (t, ang) => {
       // Tendons stand along it under the skin, and the skin has creased round it.
-      const cord = 0.004 * Math.cos(3 * ang + seed) * smooth((t - 0.2) / 0.2);
+      const cord = (0.0045 * Math.cos(3 * ang + seed) + 0.004 * Math.cos(2 * ang + 1.7 * seed)) * smooth((t - 0.2) / 0.2);
       const crease = 0.004 * noise3(t * 38 + seed, ang * 1.5, seed * 3.1);
       return [(cord + crease) * closed(t, 0.03, 0.04), 0.82 + 30 * (cord + crease)];
     },
@@ -351,13 +352,13 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
       (t) => [0, 0.55 + 0.45 * t],
     );
   };
-  const mains = 19;
+  const mains = 26;
   for (let i = 0; i < mains; i++) {
     const u = (i + 0.2 + 0.6 * random()) / mains;
     // The fan opens away from the neck's end: toward the low end of the animal and toward the lens. The cords leave the neck as one
     // matted bundle as thick as it is.
     const bearing = Math.PI * lerp(0.3, 1.02, u ** 1.3) + 0.1 * (random() - 0.5);
-    const thick = 0.034 + 0.026 * random();
+    const thick = 0.025 + 0.022 * random();
     cord([root[0] + 0.05 * (random() - 0.5), root[1] + 0.05 * random(), root[2] - 0.12 + 0.07 * (random() - 0.5)], bearing, 1.0 + 0.9 * random(), thick, 0.05 * random(), 2);
   }
 

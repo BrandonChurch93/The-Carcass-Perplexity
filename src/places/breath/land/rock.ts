@@ -424,7 +424,7 @@ void main() {
     rock = mix(rock, mix(crust, uCrustMean, 0.2) * (pale / dot(uCrustMean, vec3(0.3333))), hand);
     // Round the dead one the crust stands dry and bleached: grey-cream, its darks lifted, as old travertine is.
     float bright = dot(rock, vec3(0.3333));
-    rock = mix(rock, vec3(1.05, 1.0, 0.91) * mix(bright, pale, 0.4), 0.6 * dryPad * hand);
+    rock = mix(rock, vec3(0.99, 1.0, 0.96) * mix(bright, pale, 0.45), 0.72 * dryPad * hand);
   }
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
@@ -796,10 +796,10 @@ void main() {
   // Ivory, with the sheet's own rust, pits and beds as tone and hue; paler on the beds that stand out.
   float grey = dot(tex, vec3(0.3333));
   vec3 hue = tex / max(grey, 0.05);
-  vec3 ivory = mix(vec3(0.6, 0.56, 0.49), vec3(0.83, 0.8, 0.73), clamp(0.45 + 1.4 * (a.r - 0.5) + 0.5 * (height - 0.5), 0.0, 1.0));
-  vec3 albedo = ivory * mix(vec3(1.0), hue, 0.8) * clamp(mix(1.0, grey, 0.85), 0.3, 1.5);
+  vec3 ivory = mix(vec3(0.66, 0.62, 0.55), vec3(0.85, 0.82, 0.75), clamp(0.45 + 1.4 * (a.r - 0.5) + 0.5 * (height - 0.5), 0.0, 1.0));
+  vec3 albedo = ivory * mix(vec3(1.0), hue, 0.35) * clamp(mix(1.0, grey, 0.4), 0.5, 1.3);
   // Rust beyond the sheet's own: broad marbled patches with dark hearts, and runs down the face from them.
-  float patch0 = smoothstep(0.5, 0.66, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.3 * (height - 0.5) + 0.12 * (c.a - 0.5));
+  float patch0 = smoothstep(0.5, 0.66, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.1 * (height - 0.5) + 0.12 * (c.a - 0.5));
   float heart = smoothstep(0.66, 0.8, b.a + 0.5 * (a.a - 0.5));
   float runs = smoothstep(0.5, 0.7, c.r + 0.25 * patch0) * smoothstep(0.75, 0.2, n.y) * smoothstep(-0.95, -0.3, n.y);
   vec3 rust = mix(vec3(0.52, 0.29, 0.11), vec3(0.24, 0.11, 0.04), heart);
@@ -813,7 +813,7 @@ void main() {
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42) * clamp(grey, 0.6, 1.3), 0.5 * dust);
   float rough = mix(mix(0.56, 0.33, level), 0.85, dust);
   rough = mix(rough, 0.26, 0.6 * damp);
-  float occ = vOcc * mix(0.5, 1.08, smoothstep(0.12, 0.62, height)) * (1.0 - 0.5 * under);
+  float occ = vOcc * mix(0.66, 1.06, smoothstep(0.12, 0.62, height)) * (1.0 - 0.4 * under);
 
   vec4 land = landAt(p.xz);
   float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);

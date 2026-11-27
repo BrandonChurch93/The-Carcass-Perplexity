@@ -18,7 +18,7 @@ const LENS: V3 = [-28.5, 2.6, 28.3];
 /** Where the animal's own middle is from the anchor: metres across that line of sight and metres away along it. */
 const OFF: [number, number] = [0.15, 0.5];
 /** The hide's sheet: metres across and up, its mean colour (linear), metres from its lowest crease to its highest fold. */
-const SHEET = { wide: 1.3, tall: 0.867, mean: [0.351, 0.284, 0.232] as const, relief: 0.016 };
+const SHEET = { wide: 1.3, tall: 0.867, mean: [0.351, 0.284, 0.232] as const, relief: 0.026 };
 
 const VERTEX = /* glsl */ `
 attribute vec3 aData;
@@ -83,7 +83,7 @@ void main() {
   // bruise of old red here and there where it has split.
   float grey = dot(tex, vec3(0.3333));
   float broad = fbm(vWorld.xz * 2.3 + vWorld.y * 3.1);
-  vec3 albedo = mix(vec3(0.43, 0.325, 0.285), vec3(0.64, 0.53, 0.475), clamp(0.2 + 0.9 * broad + 0.5 * (vData.y - 0.8), 0.0, 1.0)) * mix(vec3(1.0), tex / max(grey, 0.05), 0.7) * clamp(mix(1.0, grey, 0.32), 0.6, 1.25);
+  vec3 albedo = mix(vec3(0.4, 0.33, 0.3), vec3(0.66, 0.585, 0.54), clamp(0.2 + 0.9 * broad + 0.5 * (vData.y - 0.8), 0.0, 1.0)) * mix(vec3(1.0), tex / max(grey, 0.05), 0.7) * clamp(mix(1.0, grey, 0.6), 0.5, 1.3);
   // Dirt: yellow-brown where it has lain and leaked, in blotches a hand to an arm across, and grey dust on what faces up.
   float dirt = smoothstep(0.35, 0.75, fbm(vWorld.xz * 3.7 + vWorld.y * 5.0 + 11.0) + 0.1 * (0.5 - h0));
   albedo = mix(albedo, albedo * vec3(0.6, 0.47, 0.34), 0.8 * dirt * hide);
@@ -92,6 +92,9 @@ void main() {
   // Raw places: the knobs of the joints and the end of the neck, where the cords leave it, are the red of old meat under dust.
   albedo = mix(albedo, vec3(0.46, 0.25, 0.21) * (0.6 + 0.5 * grey), 0.7 * raw);
   albedo *= mix(1.0, 0.8, hide * smoothstep(0.25, 0.3, kind) * smoothstep(0.4, 0.7, broad));
+  // The shanks are skin dried onto the bone: bone-pale under dust, with what is left of the dark scaled skin the living ones have.
+  float shank = hide * smoothstep(0.303, 0.311, kind) * (1.0 - raw);
+  albedo = mix(albedo, mix(vec3(0.27, 0.22, 0.185), vec3(0.64, 0.6, 0.53), smoothstep(0.25, 0.75, vnoise(vUv * vec2(31.0, 90.0)))) * (0.7 + 0.5 * grey), 0.6 * shank);
   // Bristles and specks of dried matter, each a pin's head, thick where the hide is slack.
   float speck = smoothstep(0.74, 0.84, vnoise(vUv * 150.0)) * smoothstep(0.2, 0.55, vnoise(vUv * 9.0 + 3.0));
   albedo = mix(albedo, vec3(0.16, 0.11, 0.08), 0.6 * speck * hide * smoothstep(0.02, 0.006, foot * uHide.x));
@@ -99,12 +102,12 @@ void main() {
   albedo = mix(albedo, vec3(0.42, 0.2, 0.17) * (0.6 + 0.6 * grey), 0.4 * bruise * hide);
   // What lies on the rock is dark with what ran out of it and with damp, and grit sticks to it.
   float low = smoothstep(0.17, 0.02, lift + 0.06 * (broad - 0.5));
-  albedo = mix(albedo, albedo * vec3(0.5, 0.36, 0.3), 0.75 * low * hide);
+  albedo = mix(albedo, albedo * mix(vec3(0.5, 0.36, 0.3), vec3(0.74, 0.68, 0.62), shank), 0.75 * low * hide);
   float salt = smoothstep(0.55, 0.8, fbm(vWorld.xz * 11.0 + 3.0) + 0.25 * n.y - 0.1);
   albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.16 * salt * hide);
   // The cords of the mop have bled out and dried: dull red at the root, paler and browner toward their ends.
   float along = vData.y;
-  vec3 cordColour = mix(vec3(0.36, 0.17, 0.15), vec3(0.58, 0.42, 0.37), smoothstep(0.6, 1.0, along)) * (0.75 + 0.5 * vnoise(vUv * vec2(60.0, 9.0)));
+  vec3 cordColour = mix(vec3(0.34, 0.15, 0.13), vec3(0.52, 0.32, 0.28), smoothstep(0.6, 1.0, along)) * (0.75 + 0.5 * vnoise(vUv * vec2(60.0, 9.0)));
   albedo = mix(albedo, cordColour, cord);
   // The hoofs: horn, dark and worn pale at the edge.
   albedo = mix(albedo, mix(vec3(0.2, 0.15, 0.1), vec3(0.45, 0.36, 0.26), smoothstep(0.3, 0.9, fbm(vUv * 40.0))), hoof);
