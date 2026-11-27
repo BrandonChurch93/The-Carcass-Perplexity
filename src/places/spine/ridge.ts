@@ -329,6 +329,9 @@ export const FIN_ROOT = 110;
 /** The power of a blade's section: 2 would be an ellipse, 1 a diamond. Between them: two faces that meet in an edge at each end and are full in the middle. */
 export const FIN_SECTION = 3;
 
+/** How much of its depth along the ridge a blade loses above its foot: 0 would be the old round tower. */
+const BLADE = 0.8;
+
 function notchHash(n: number, seed: number): number {
   const v = Math.sin(n * 127.1 + seed * 311.7) * 43758.5453;
   return v - Math.floor(v);
@@ -376,8 +379,11 @@ export function fin(sp: Spire, t: number): FinPoint {
   const lo = Math.min(l1, l2) - nA;
   const hi = Math.max(l1, l2) + nB;
   const wide = Math.max(1.5, 0.5 * (hi - lo)) + 0.3 * (under - low);
-  const thin = Math.min(0.45 * wide + 2, sp.thick);
-  const thick = thin + (sp.thick - thin) * Math.pow(q, 1.05) * (1 - 0.3 * smooth(0.3, 0.8, h)) + 0.2 * under;
+  // A blade, not a cone: over the canal's roof it thins fast to under half its breadth, so its two faces are near flat and its ends are edges.
+  // (Its foot keeps its depth: the canal runs 232 m through it along the ridge.)
+  const blade = 1 - BLADE * smooth(0.1, 0.4, h);
+  const thin = Math.min((0.22 + 0.23 * blade) * wide + 2, sp.thick);
+  const thick = thin + (sp.thick - thin) * Math.pow(q, 1.05) * (1 - 0.3 * smooth(0.3, 0.8, h)) * blade + 0.2 * under;
   return { centre: 0.5 * (lo + hi), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t };
 }
 

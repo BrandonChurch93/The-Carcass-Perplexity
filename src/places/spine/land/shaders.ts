@@ -2,6 +2,7 @@
 import { CANAL_L, EXIT, EXIT_FLARE, EXIT_R, FLARE, FLOOR, MOUTH_R, MOUTH_S, THROAT, canalL, first, frameAt, world } from '../ridge';
 import { DUSK, WIND } from '../shared/anchors';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { HERO_MAIN } from './hero';
 import { OPEN_UNIFORMS, openMain } from './open';
 
 const v3 = (p: readonly number[]): string => `vec3(${p.map((k) => k.toFixed(3)).join(', ')})`;
@@ -99,10 +100,12 @@ varying float vTop;
 varying vec2 vSL;
 varying float vRelief;
 varying vec3 vUp;
+varying vec2 vUv;
 void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
   vWorld = w.xyz;
   vNormal = normalize(mat3(modelMatrix) * normal);
+  vUv = uv;
   vTop = aTop;
   vSL = aSL;
   vRelief = aRelief;
@@ -327,8 +330,13 @@ Lay lay(sampler2D colour, sampler2D nh, vec2 at, vec2 gx, vec2 gy) {
   return Lay(textureLod(colour, at, lod).rgb, (k.rg - 0.5) * vec2(1.0, -1.0), k.b);
 }
 
-// The spires and the canal keep this main; the ground has its own (open.ts).
-#if KIND != 0
+// The first spire has its own main (hero.ts); the other spires and the canal keep this one; the ground has its own (open.ts).
+#ifndef HERO
+#define HERO 0
+#endif
+#if HERO == 1
+${HERO_MAIN}
+#elif KIND != 0
 void main() {
   float dCanal = vSL.x - MOUTH_S;
   vec3 smoothN = normalize(vNormal);
