@@ -339,10 +339,10 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     vec2 toward = aim.xy * (1.4 / aim.z);
     // A second read at 3 m, at half strength: the shade of a leg or a boulder runs on past its first metre and thins, as a thrown shade does.
     // The read costs nothing that can be measured (the whole frame at the wide key with and without the first: 20.87 and 20.93 s).
-    float thrown = max(contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y)), 0.5 * contactDrawn(vec3(p.x + 2.15 * toward.x, p.y, p.z + 2.15 * toward.y)));
-    // And where the thing itself stands: the crust under a pad and round its edge is closed to the fire as it is to the sky. The thrown shade alone
-    // began a pace behind the foot, so a pad stood on lit crust and its shade lay apart from it.
-    thrown = max(thrown, contactDrawn(p));
+    // The first read lies 0.85 m toward the light (it lay 1.4 m off, and the shade began a pace behind the foot, so a pad stood on lit crust
+    // with its shade apart from it; a further read where the thing stands closed that, and cost a read on every pixel of the crust). So near,
+    // the shade begins at the edge of the pad and the crust under its rim is closed to the fire as it is to the sky.
+    float thrown = max(contactDrawn(vec3(p.x + 0.6 * toward.x, p.y, p.z + 0.6 * toward.y)), 0.5 * contactDrawn(vec3(p.x + 2.15 * toward.x, p.y, p.z + 2.15 * toward.y)));
     e *= 1.0 - low * EMITTER_SHADE * thrown;
   }
   return e * uCast;
