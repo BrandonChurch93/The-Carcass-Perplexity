@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, keyTime, rel } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { landShared } from '../land';
-import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS, TEAR } from './shaders';
+import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_LIFE, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS, TEAR } from './shaders';
 
 export const PARTS = ['brine', 'domes', 'burst'] as const;
 
@@ -33,7 +33,7 @@ export function create(ctx: Context): Piece {
 
   const domes: Dome[] = [
     { x: HERO_DOME[0], z: HERO_DOME[1], size: 0.62, period: 10.4, burst: BURST, seed: 0.37, drops: 220 },
-    { x: SMALL_DOME[0], z: SMALL_DOME[1], size: 0.4, period: 7.6, burst: SMALL_BURST, seed: 0.81, drops: 80 },
+    { x: SMALL_DOME[0], z: SMALL_DOME[1], size: 0.4, period: 7.6, burst: SMALL_BURST - 0.2, seed: 0.81, drops: 80 },
     // The one the second lens ends on: it stands full in the middle of that pool and tears a second after the key frame.
     { x: -4.0, z: 0.6, size: 0.6, period: 12.4, burst: keyTime('marsh-2') + 1, seed: 0.53, drops: 100 },
   ];
@@ -193,9 +193,9 @@ export function create(ctx: Context): Piece {
       domeShade.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
-      // Then the pool's floor comes back up through the middle.
-      const back = age - TEAR * 0.8;
-      const risen = back > 0 && back < (1.2 * Math.sqrt(d.size / 0.4)) / 4.905;
+      // As the edge comes down on the pool the brine it gathered is thrown up in a wall of fingers.
+      const back = age - TEAR * 0.3;
+      const risen = back > 0 && back < CROWN_LIFE * Math.sqrt(d.size / 0.4);
       m.makeScale(risen ? 1 : 0, risen ? 1 : 0, risen ? 1 : 0).setPosition(d.x, 0, d.z);
       crownMesh.setMatrixAt(i, m);
       crownLife.setXYZW(i, risen ? back : 0, d.seed, d.size, 0);
