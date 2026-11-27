@@ -26,9 +26,10 @@ vec3 mirrorAt(vec3 p, vec3 n) {
   // Three ripples answer for a pixel, each swinging the ray its own way: what stands in the mirror is drawn out toward the lens and broken.
   vec4 q1 = uMirrorMatrix * vec4(p.x + swing.x * 2.3 - swing.y * 0.6, p.y, p.z + swing.y * 2.3 + swing.x * 0.6, 1.0);
   vec4 q2 = uMirrorMatrix * vec4(p.x - swing.x * 0.7 + swing.y * 0.8, p.y, p.z - swing.y * 0.7 - swing.x * 0.8, 1.0);
-  vec3 seen = (textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), 0.0).rgb
-    + textureLod(tMirror, clamp(q1.xy / q1.w, 0.003, 0.997), 0.0).rgb
-    + textureLod(tMirror, clamp(q2.xy / q2.w, 0.003, 0.997), 0.0).rgb) / 3.0;
+  vec3 seen = (textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), 0.0).rgb
+    + textureLod(tMirror, clamp(q1.xy / max(q1.w, 1e-3), 0.003, 0.997), 0.0).rgb
+    + textureLod(tMirror, clamp(q2.xy / max(q2.w, 1e-3), 0.003, 0.997), 0.0).rgb) / 3.0;
+  seen = clamp(seen, vec3(0.0), vec3(8.0));
   // Far off, what stands in the mirror is smaller than the mirror's picture can hold (a bird there is one dark square): the mirror
   // gives way to the sky alone.
   vec3 d = (p - cameraPosition) / away;
@@ -48,13 +49,18 @@ float brineSilt = -1.0;
 float brineFresnel(vec3 n, vec3 v) {
   float nv = max(dot(n, v), 0.02);
   // (Seen from high above, the fine ruffle on it turns a share of the skin to the sky: a lens low over it sees the body and the glints.)
-  return 0.022 + 0.06 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.24 * pow(1.0 - nv, 24.0);
+  // (And the mirror falls with the angle of the look itself, not only with the wavelet's: near a low lens, where it looks down into
+  // the brine, the pool is its own red.)
+  // (A lens at the height of the stalks' heads looks down on the pool at a slant: the sky lies in it as a pale sheen, the red under it.)
+  return 0.02 + 0.04 * smoothstep(1.2, 2.6, cameraPosition.y) * smoothstep(0.08, 0.3, v.y) + 0.036 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.15 * pow(1.0 - nv, 8.0) * mix(1.0, 0.25, smoothstep(0.04, 0.24, v.y));
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
 vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   float away = length(cameraPosition - p);
-  vec2 swing = n.xz * 2.0 * clamp(away * 0.3, 0.15, 12.0);
+  // (How far a leaning wavelet throws the ray goes with the height of what it finds, not with the way to the lens: a dome or a stalk
+  // standing in the pool lies in the mirror at its own foot, shaken, never strewn over the pool in pieces.)
+  vec2 swing = n.xz * 2.0 * clamp(away * 0.11, 0.1, 12.0);
   // (A slope that leans to the lens would mirror the brine before it, which mirrors the sky in its turn: it is not swung under the level.)
   vec2 toLens = normalize(cameraPosition.xz - p.xz);
   swing -= toLens * max(dot(swing, toLens), 0.0) * 0.75;
@@ -62,12 +68,17 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   // Ripples finer than the lens can see answer for every pixel, each swinging the ray its own way: what stands in the mirror is soft,
   // never a sharp cut-out. (The mirror's picture is read some levels down, the same share of the frame at every size.)
   float soft = max(log2(float(textureSize(tMirror, 0).x) / 170.0), 0.0);
-  vec3 seen = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), soft).rgb;
+  // (And a wavelet that leans hard throws the ray far: what it brings back is a wider piece of the picture, softer, or a thing that
+  // stands in the mirror would lie on the pool in hard-cut flakes.)
+  vec3 seen = textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), soft + min(length(n.xz) * 9.0, 1.6)).rgb;
   // (The air lies between the brine and what it mirrors too: what stands in the mirror is as pale as it stands over it.)
+  // (What is drawn into the mirror is not always a colour: a part that puts out less than nothing there, or far more than the sky,
+  // would stand on the pool as black and glowing dots.)
+  seen = clamp(seen, vec3(0.0), vec3(8.0));
   seen = rigAir(seen, 3.0 + away * 0.8, 0.5);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
-  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.8, 0.75);
+  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.75, 0.69);
 }
 // s: metres to the shore, negative in the brine. n: the surface's normal (ripples and rings laid in by the caller). froth: the colour of the
 // scum on top and how much of it there is.
@@ -81,7 +92,8 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   // The bed as the land lays it (land/field.ts, flats): a shelf a finger under the level, then down a hand in every two strides.
   float depth = clamp(max(-s * 0.5 - 0.02, 0.03 * (1.0 - smoothstep(0.12, 0.27, s))), 0.0, 0.7);
   // Slow clouds of paler silt carried in it, drawn out along the flow where the caller knows the flow.
-  float silt = textureGrad(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006), gx / 23.0, gy / 23.0).r;
+  float lod = log2(max(max(length(gx), length(gy)) * float(textureSize(tGrain, 0).x), 1e-6));
+  float silt = textureLod(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006), lod - ${Math.log2(23).toFixed(4)}).r;
   vec2 along = vec2(dot(p.xz, ${v2(F)}), dot(p.xz, ${v2(R)}));
   if (brineSilt >= 0.0) silt = mix(silt, brineSilt, 0.65);
   else silt = mix(silt, textureGrad(tGrain, vec2(along.x / 17.0 + uTime * 0.012, along.y / 5.0), vec2(dot(gx, ${v2(F)}) / 17.0, dot(gx, ${v2(R)}) / 5.0), vec2(dot(gy, ${v2(F)}) / 17.0, dot(gy, ${v2(R)}) / 5.0)).b, 0.5);
@@ -92,7 +104,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   float gust = 0.0;
   if (aloft > 0.0) {
     vec2 wind = vec2(dot(p.xz, ${v2(WIND)}) - 1.6 * uTime, dot(p.xz, ${v2(CROSS)}));
-    vec4 wander = textureGrad(tGrain, (p.xz - ${v2(WIND)} * (0.5 * uTime)) / 71.0, gx / 71.0, gy / 71.0);
+    vec4 wander = textureLod(tGrain, (p.xz - ${v2(WIND)} * (0.5 * uTime)) / 71.0, lod - ${Math.log2(71).toFixed(4)});
     wind.y += (wander.r - 0.5) * 9.0;
     vec2 wx = vec2(dot(gx, ${v2(WIND)}), dot(gx, ${v2(CROSS)}));
     vec2 wy = vec2(dot(gy, ${v2(WIND)}), dot(gy, ${v2(CROSS)}));
@@ -107,8 +119,8 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   vec3 taken = vec3(3.4, 19.0, 23.0) * (0.75 + 0.5 * silt) + vec3(14.0) * brineMud + vec3(30.0) * brineSlurry;
   vec3 through = exp(-taken * path);
   // What the liquid itself gives back where no bed shows: a dark rust red, paler and browner where silt hangs in it.
-  vec3 body = mix(vec3(0.052, 0.0072, 0.0055), vec3(0.095, 0.018, 0.0135), smoothstep(0.25, 0.8, silt));
-  body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6);
+  vec3 body = mix(vec3(0.038, 0.0085, 0.0065), vec3(0.072, 0.021, 0.016), smoothstep(0.25, 0.8, silt));
+  body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6) * 1.16;
   body = mix(body, vec3(0.045, 0.02, 0.014), brineMud * 0.85);
   body = mix(body, vec3(0.118, 0.086, 0.072) * (0.8 + 0.4 * silt), brineSlurry * 0.92);
   vec3 albedo = brineBed * through + body * (1.0 - through);
@@ -119,7 +131,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   // Under a gust the skin is ruffled finer than a pixel and leans every way: seen from above, that lane gives back more of the sky than the
   // glass beside it. Broad pale lanes on dark brine.
   float fres = brineFresnel(n, v);
-  fres = mix(fres, max(fres, 0.26), gust * (0.7 + 0.2 * smoothstep(8.0, 40.0, away)) * smoothstep(0.22, 0.45, v.y));
+  fres = mix(fres, max(fres, 0.17), gust * (0.7 + 0.2 * smoothstep(8.0, 40.0, away)) * smoothstep(0.22, 0.45, v.y));
   // (Froth is wet too: each bubble carries its own small piece of the sky.)
   fres *= 1.0 - 0.55 * foam;
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.

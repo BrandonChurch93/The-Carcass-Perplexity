@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
-import { DUSK, RAIN_APART, RAIN_AT, RAIN_WALK } from './volume';
+import { DUSK_GLSL, RAIN_APART, RAIN_AT, RAIN_TURN, RAIN_WALK } from './volume';
 
 const VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -27,6 +27,7 @@ const float RAIN_WALK = ${RAIN_WALK.toFixed(4)};
 const float RAIN_AT = ${RAIN_AT.toFixed(1)};
 const float RAIN_APART = ${RAIN_APART.toFixed(4)};
 ${RIG_GLSL}
+${DUSK_GLSL}
 
 void main() {
   vec3 d = normalize(vDir);
@@ -43,7 +44,7 @@ void main() {
   c *= 1.0 + (n - 0.5) * 0.9 * seen;
   // The raining cloud: a darker belly over the curtain.
   float az = atan(d.x, -d.z);
-  float walk = az - uRain.x + RAIN_WALK * (uTime - RAIN_AT);
+  float walk = az - uRain.x - ${RAIN_TURN.toFixed(4)} + RAIN_WALK * (uTime - RAIN_AT);
   walk -= floor(walk / RAIN_APART + 0.5) * RAIN_APART;
   float side = abs(walk) / uRain.y;
   float el = d.y / max(length(d.xz), 0.05);
@@ -64,9 +65,11 @@ void main() {
   // from them, as the first lens sees them. It stands round the whole horizon (turned over at each end, so it has no seam) and gives way to
   // the sheet above it eleven degrees up. (Its painted shaft of rain is taken out; see assets-src/marsh/air/dry.py.)
   // (It was taken with the first lens: 44 degrees high, so its whole height is 0.808 in tangent and its width 1.436.)
-  float fu = 0.68 + (az - uRain.x) / 1.436;
+  float fu = 0.68 + (az - uRain.x - ${RAIN_TURN.toFixed(4)}) / 1.436;
   fu = 1.0 - abs(1.0 - mod(fu, 2.0));
-  float fv = 0.574 + max(el, 0.0) / 0.808;
+  // (Its hills stand lower in the first lens's approved picture than it has them: a ridge 0.037 high in tangent, not 0.06. The picture
+  // is read closer set near the horizon, and as it was taken higher up.)
+  float fv = 0.574 + max(el, 0.0) * (1.0 + 0.9 * exp(-max(el, 0.0) / 0.1)) / 0.808;
   vec3 far = texture2D(tFar, vec2(fu, min(fv, 0.995))).rgb;
   float low = smoothstep(0.3, 0.14, el);
   // The picture is as a screen shows it; the film's own curve (exposure 2, then AgX) is undone here so that it comes out as it went in:
@@ -79,7 +82,7 @@ void main() {
   c *= mix(1.25, 1.7, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
   // The overcast thickens as the rain comes on (the air pass greys the far air with it).
-  c *= mix(1.0, ${DUSK.share.toFixed(3)}, smoothstep(${DUSK.from.toFixed(1)}, ${DUSK.to.toFixed(1)}, uTime));
+  c *= duskAt(uTime);
   gl_FragColor = vec4(rigPlain(c), 1.0);
 }`;
 

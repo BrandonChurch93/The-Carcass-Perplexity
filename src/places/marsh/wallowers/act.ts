@@ -60,16 +60,22 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
   const w = walk(out, plan, b, far(t), far(t - 0.3), push(t), pace);
   trod[0].s = far(t);
   trod[0].pace = pace;
-  out.breath = 1.6 * Math.sin(seconds * 1.85 + b.seed * 9);
-  out.pitch += -0.03 * up + 0.03 * shove * (1 - back) + 0.006 * out.breath;
-  out.bob += k * 0.008 * out.breath;
+  // It blows: two breaths and more in the shot, the flanks going out and in, and the last of each a little deeper.
+  out.breath = 1.7 * Math.sin(seconds * 2.7 + b.seed * 9) + 0.5 * Math.sin(seconds * 1.1 + b.seed * 2);
+  out.pitch += -0.03 * up + 0.03 * shove * (1 - back) + 0.007 * out.breath;
+  // Its weight goes from one side to the other as it stands and roots: the trunk leans over the legs that carry it and sinks on them.
+  const lean = Math.sin(seconds * 1.45 + b.seed * 13) + 0.35 * Math.sin(seconds * 2.3 + b.seed * 5);
+  out.roll += 0.045 * lean;
+  out.sway += k * 0.06 * lean;
+  out.bob += k * (0.008 * out.breath - 0.035 * lean * lean);
   out.bend += near * (0.017 + 0.07 * swing * (1 - 0.6 * ease(2.0, 3.2, t)) - 0.03 * (1 - ease(-2.3, -0.3, t)));
   const rooting = (1 - up) * (1 - 0.6 * pulse(0.15, 2.6, t));
-  out.headYaw = near * (0.24 - 0.55 * ease(-2.3, -0.3, t) + 0.8 * swing - 0.3 * ease(2.2, 3.6, t)) - 2.2 * w.yaw + 0.05 * rooting * Math.sin(seconds * 2.1 + b.seed * 11) + 0.05 * up * Math.sin(seconds * 0.9 + b.seed * 4);
+  // It roots with the side of its face to the lens, and works the lip from side to side through the mud: a slow sweep with a quicker one on it.
+  out.headYaw = near * (0.85 - 0.12 * ease(-2.3, -0.3, t) + 0.3 * swing - 0.3 * ease(2.2, 3.6, t)) - 2.2 * w.yaw + rooting * (0.24 * Math.sin(seconds * 1.9 + b.seed * 11) + 0.08 * Math.sin(seconds * 4.3 + b.seed * 3)) + 0.05 * up * Math.sin(seconds * 0.9 + b.seed * 4);
   // The head hangs from the shoulders and is late: it nods as they come down on a foot. It comes a little out of the mud as it swings and goes back in where it stops.
-  out.headPitch = plan.hang - 0.5 * up + 0.07 * shove * (1 - back) - 0.13 * pulse(0.1, 2.2, t) - 0.9 * w.fore + 0.025 * rooting * Math.sin(seconds * 1.9 + b.seed * 5);
+  out.headPitch = plan.hang - 0.5 * up + 0.07 * shove * (1 - back) - 0.13 * pulse(0.1, 2.2, t) - 0.9 * w.fore + 0.09 * rooting * Math.sin(seconds * 3.8 + b.seed * 5);
   out.splay = 0.55 + 0.25 * shove * (1 - up);
-  rake(out, b, seconds, 0.95 + 0.3 * shove * (1 - back) - 0.2 * up);
+  rake(out, b, seconds, 0.5 + 0.25 * shove * (1 - back) - 0.1 * up);
   return out;
 }
 
@@ -78,7 +84,7 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
 export function young(plan: Plan, b: Build, seconds: number, t: number, toward: number, out: Drive): Drive {
   const { k } = b;
   rest(out, plan, b);
-  const pace: Stride = { length: 0.8 * k, duty: 0.8, lift: 0.26 * k, phase: 0.275, lead: 1 };
+  const pace: Stride = { length: 0.8 * k, duty: 0.8, lift: 0.18 * k, phase: 0.275, lead: 1 };
   const cycle = 1.45;
   // It walks on again once it has looked: a cycle and more, from a stand.
   const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.6 - 0.5 - 1.25 * cycle, -0.6, 0.5) - 1.25 * cycle + runUp(v, 1.5, 0.5));
@@ -89,14 +95,17 @@ export function young(plan: Plan, b: Build, seconds: number, t: number, toward: 
   const w = walk(out, plan, b, far(t), far(t - 0.16), k * 0.1 * dig(t), pace);
   trod[1].s = far(t);
   trod[1].pace = pace;
-  out.breath = 1.4 * Math.sin(seconds * 3.1 + b.seed * 9);
+  out.breath = 1.6 * Math.sin(seconds * 4.3 + b.seed * 9);
+  const lean = Math.sin(seconds * 2.6 + b.seed * 13);
+  out.roll += 0.05 * lean;
+  out.sway += k * 0.05 * lean;
   out.pitch += 0.04 * shove - 0.03 * up + 0.006 * out.breath;
   out.bob += k * 0.01 * out.breath;
   out.bend += 0.1 * turn * toward + 0.03 * (1 - up) * Math.sin(seconds * 1.5 + b.seed * 21);
-  out.headYaw = (1 - up) * (0.3 * Math.sin(seconds * 2.4 + b.seed * 11) + 0.1 * Math.sin(seconds * 5.1 + b.seed * 3)) + toward * 0.6 * turn - 2.2 * w.yaw + 0.06 * up * Math.sin(seconds * 2.2 + b.seed * 4);
+  out.headYaw = (1 - up) * (0.42 * Math.sin(seconds * 3.1 + b.seed * 11) + 0.12 * Math.sin(seconds * 6.3 + b.seed * 3)) + toward * 0.6 * turn - 2.2 * w.yaw + 0.06 * up * Math.sin(seconds * 2.2 + b.seed * 4);
   out.headPitch = plan.hang - 0.45 * up - 0.2 * turn + 0.07 * shove - 1.1 * w.fore * up + 0.035 * Math.sin(seconds * 3.2 + b.seed * 5);
   out.splay = 0.55 + 0.25 * shove;
-  rake(out, b, seconds, 0.95 + 0.3 * shove - 0.15 * up);
+  rake(out, b, seconds, 0.5 + 0.25 * shove - 0.1 * up);
   return out;
 }
 
@@ -107,7 +116,7 @@ export function lying(plan: Plan, b: Build, seconds: number, t: number, near: nu
   rest(out, plan, b);
   const over = ease(0.2, 2.5, t) - ease(3.2, 5.8, t);
   const r = near * (-0.16 * (1 - ease(-2.9, -0.7, t)) + 0.04 + 0.92 * over);
-  const breath = Math.sin(seconds * 1.6 + b.seed * 9);
+  const breath = Math.sin(seconds * 2.2 + b.seed * 9);
   // It turns about the middle of its trunk, not about its feet: the trunk is carried back over the place it lies in.
   out.roll = r;
   // The brine stands at the world's 0 and it lies with its feet on the floor of it.
@@ -115,7 +124,7 @@ export function lying(plan: Plan, b: Build, seconds: number, t: number, near: nu
   out.shift = -MID * k * Math.sin(r);
   // Before it goes over it lifts its head clear of the brine and looks about, and lets it down again.
   const look = pulse(-2.5, -0.2, t);
-  out.bob = MID * k * (1 - Math.cos(r)) - 0.07 * k * over - 0.05 * k + k * (0.045 * breath + 0.015 * Math.sin(seconds * 0.7 + b.seed * 2)) + 0.03 * k * look;
+  out.bob = MID * k * (1 - Math.cos(r)) - 0.07 * k * over - 0.05 * k + k * (0.07 * breath + 0.015 * Math.sin(seconds * 0.7 + b.seed * 2)) + 0.03 * k * look;
   // Its legs go over with it, folded: they stay under the brine.
   const fr = 0.6 * r;
   for (let l = 0; l < 4; l++) {
@@ -126,7 +135,7 @@ export function lying(plan: Plan, b: Build, seconds: number, t: number, near: nu
   }
   out.surge = 0.05 * k * Math.sin(seconds * 0.8 + b.seed);
   out.sway = 0;
-  out.breath = 1.5 * breath;
+  out.breath = 2.2 * breath;
   out.pitch = 0.02 + 0.03 * over - 0.05 * look;
   out.bend = near * 0.06 * over + 0.03 * Math.sin(seconds * 0.9 + b.seed * 21);
   // It rakes the top of the brine with its head while it lies still, and holds the head up clear of it as it goes over.

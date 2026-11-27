@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, keyTime, rel } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { landShared } from '../land';
-import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS, TEAR } from './shaders';
+import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_LIFE, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS, TEAR } from './shaders';
 
 export const PARTS = ['brine', 'domes', 'burst'] as const;
 
@@ -33,7 +33,7 @@ export function create(ctx: Context): Piece {
 
   const domes: Dome[] = [
     { x: HERO_DOME[0], z: HERO_DOME[1], size: 0.62, period: 10.4, burst: BURST, seed: 0.37, drops: 220 },
-    { x: SMALL_DOME[0], z: SMALL_DOME[1], size: 0.4, period: 7.6, burst: SMALL_BURST, seed: 0.81, drops: 80 },
+    { x: SMALL_DOME[0], z: SMALL_DOME[1], size: 0.4, period: 7.6, burst: SMALL_BURST - 0.2, seed: 0.81, drops: 80 },
     // The one the second lens ends on: it stands full in the middle of that pool and tears a second after the key frame.
     { x: -4.0, z: 0.6, size: 0.6, period: 12.4, burst: keyTime('marsh-2') + 1, seed: 0.53, drops: 100 },
   ];
@@ -70,10 +70,11 @@ export function create(ctx: Context): Piece {
   const ahead = new THREE.Vector3();
   const upward = new THREE.Vector3();
 
+  const frothSheet = ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 });
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFrothN: { value: ctx.assets.texture('mat/froth-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) }, tBed: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
+    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFrothN: { value: ctx.assets.texture('mat/froth-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) }, tBed: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) }, tFroth: { value: frothSheet } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;
@@ -115,19 +116,32 @@ export function create(ctx: Context): Piece {
   water.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('brine', water));
 
-  // The skin of a dome is a film: drawn over what is behind it, premultiplied, after everything solid.
-  const skin = new THREE.ShaderMaterial({
-    vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, toneMapped: false, transparent: true, depthWrite: false,
-    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
-  });
-  const dropSkin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms, defines: { DROP: 1 }, toneMapped: false });
-  skin.side = THREE.DoubleSide;
+  // The skin of a dome is a film, drawn after everything solid and twice: first what it lets through of what is behind it (the frame is
+  // multiplied by it), then the light it gives back itself (added).
+  const domeUniforms = { ...uniforms, tFroth: { value: frothSheet } };
+  const film = { vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms: domeUniforms, toneMapped: false, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor } as const;
+  const skinThrough = new THREE.ShaderMaterial({ ...film, defines: { THROUGH: 1 }, blendSrc: THREE.ZeroFactor, blendDst: THREE.SrcColorFactor });
+  const skin = new THREE.ShaderMaterial({ ...film, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor });
+  // The air is laid over the frame by depth. A skin that writes none takes the haze of whatever is behind it: over the far flats it
+  // was all but hazed away while over the pool it stood whole, a straight line across the dome at the far bank. So it is drawn a third
+  // time, for its depth alone.
+  const skinDepth = new THREE.ShaderMaterial({ ...film, defines: { THROUGH: 1 }, depthWrite: true, colorWrite: false, blending: THREE.NoBlending });
+  const dropSkin = new THREE.ShaderMaterial({ vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT, uniforms: domeUniforms, defines: { DROP: 1 }, toneMapped: false });
   const ball = new THREE.SphereGeometry(1, 96, 32, 0, TAU, 0, Math.PI / 2);
   const domeLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
   ball.setAttribute('aLife', domeLife);
+  const domeShade = new THREE.InstancedMesh(ball, skinThrough, domes.length);
+  domeShade.frustumCulled = false;
+  domeShade.renderOrder = 1;
   const domeMesh = new THREE.InstancedMesh(ball, skin, domes.length);
   domeMesh.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('domes', domeMesh));
+  domeMesh.renderOrder = 2;
+  const domeGroup = new THREE.Group();
+  const domeDepth = new THREE.InstancedMesh(ball, skinDepth, domes.length);
+  domeDepth.frustumCulled = false;
+  domeDepth.renderOrder = 3;
+  domeGroup.add(domeShade, domeMesh, domeDepth);
+  ctx.scene.add(ctx.parts.built('domes', domeGroup));
 
   const dropCount = domes.reduce((n, d) => n + d.drops, 0);
   const bead = new THREE.SphereGeometry(1, 12, 8);
@@ -180,24 +194,26 @@ export function create(ctx: Context): Piece {
       const tear = age >= 0 && age < TEAR ? age / TEAR : 0;
       const full = age >= 0 && age < TEAR ? 1 : grow;
       const r = d.size * (0.35 + 0.65 * full) * (swell > 0 || tear > 0 || (age >= 0 && age < TEAR) ? 1 : 0);
-      const tall = r * (0.22 + 0.5 * full) * (1 - 0.3 * tear * tear);
+      const tall = r * (0.22 + 0.5 * full);
       m.makeScale(r, tall, r).setPosition(d.x, -0.01, d.z);
       domeMesh.setMatrixAt(i, m);
+      domeShade.setMatrixAt(i, m);
+      domeDepth.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
-      // Then the pool's floor comes back up through the middle.
-      const back = age - TEAR * 0.8;
-      const risen = back > 0 && back < (1.2 * Math.sqrt(d.size / 0.4)) / 4.905;
+      // As the edge comes down on the pool the brine it gathered is thrown up in a wall of fingers.
+      const back = age - TEAR * 0.2;
+      const risen = back > 0 && back < CROWN_LIFE * Math.sqrt(d.size / 0.4);
       m.makeScale(risen ? 1 : 0, risen ? 1 : 0, risen ? 1 : 0).setPosition(d.x, 0, d.z);
       crownMesh.setMatrixAt(i, m);
       crownLife.setXYZW(i, risen ? back : 0, d.seed, d.size, 0);
 
       // The drops are the edge's beads let go: each leaves the place on the skin where the edge found it, at the moment the edge came by,
       // along the way the edge was running and a little off the skin, and then it only falls.
-      const fh = Math.hypot(0.35, 0.94);
-      const fx = (Math.cos(d.seed * 40) * 0.35) / fh;
-      const fy = 0.94 / fh;
-      const fz = (Math.sin(d.seed * 40) * 0.35) / fh;
+      const fh = Math.hypot(0.72, 0.69);
+      const fx = (Math.cos(d.seed * 40) * 0.72) / fh;
+      const fy = 0.69 / fh;
+      const fz = (Math.sin(d.seed * 40) * 0.72) / fh;
       const landed: number[] = [];
       for (let k = 0; k < d.drops; k++, drop++) {
         const az = thrown[drop * 5] as number;
@@ -208,7 +224,7 @@ export function create(ctx: Context): Piece {
         const own = thrown[drop * 5 + 4] as number;
         const size = (thrown[drop * 5 + 3] as number) * (0.6 + d.size);
         const c = ux * fx + uy * fy + uz * fz;
-        const fl = age < 0 ? -1 : age - ((-1.1 + Math.sqrt(1.21 + 3.6 * (1 - c))) / 1.8) * TEAR - 0.03 * own;
+        let fl = age < 0 ? -1 : age - ((-1.1 + Math.sqrt(1.21 + 3.6 * (1 - c))) / 1.8) * TEAR - 0.03 * own;
         let tx = ux * c - fx;
         let ty = uy * c - fy;
         let tz = uz * c - fz;
@@ -217,12 +233,25 @@ export function create(ctx: Context): Piece {
         ty = Math.abs(ty / tl) * 0.45 + uy * 0.5 + 0.3;
         tz = (tz / tl) * 0.75 + uz * 0.5;
         const speed0 = (3.1 * Math.sqrt(d.size / 0.4) * (0.25 + 0.75 * (thrown[drop * 5 + 2] as number))) / Math.hypot(tx, ty, tz);
-        const vx = tx * speed0;
-        const vy = ty * speed0;
-        const vz = tz * speed0;
-        const x0 = d.x + ux * d.size * 0.95;
-        const y0 = uy * d.size * 0.66;
-        const z0 = d.z + uz * d.size * 0.95;
+        let vx = tx * speed0;
+        let vy = ty * speed0;
+        let vz = tz * speed0;
+        let x0 = d.x + ux * d.size * 0.95;
+        let y0 = uy * d.size * 0.66;
+        let z0 = d.z + uz * d.size * 0.95;
+        // One in three is not the skin's: it is a bead the wall of fingers lets go from a tip as it stands, later, slower, up and a little
+        // out, to fall back beside the wall.
+        if (k >= 9 && k % 3 === 2) {
+          const big = Math.sqrt(d.size / 0.4);
+          const out = (0.35 + 0.9 * (thrown[drop * 5 + 2] as number)) * big;
+          fl = age < 0 ? -1 : age - TEAR * 0.2 - (0.08 + 0.3 * own) * big;
+          x0 = d.x + Math.cos(az) * d.size * 0.98;
+          y0 = d.size * (0.2 + 0.22 * own);
+          z0 = d.z + Math.sin(az) * d.size * 0.98;
+          vx = Math.cos(az) * out;
+          vy = (1.1 + 1.3 * (thrown[drop * 5 + 1] as number)) * big;
+          vz = Math.sin(az) * out;
+        }
         if (k < 9 && i < 3 && fl > 0) {
           const lands = (vy + Math.sqrt(vy * vy + 19.62 * y0)) / 9.81;
           if (fl > lands) landed.push(x0 + vx * lands, z0 + vz * lands, fl - lands);
@@ -259,15 +288,21 @@ export function create(ctx: Context): Piece {
           (rings[ring++] as THREE.Vector4).set(d.x, d.z, d.size * 0.9 + RING_SPEED * since, fade * (0.4 + d.size));
         }
       } else if (ring < MAX_RINGS && swell > 0.5) {
-        // A swelling dome pushes a low ripple ahead of its foot.
-        (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.14, 0.55 * grow);
-        // And, round the three great ones (every pixel of the pool asks every ring), a second, wider and lower, that left it a breath ago.
-        if (ring < MAX_RINGS && i < 3) (rings[ring++] as THREE.Vector4).set(d.x, d.z, r * 1.7 + 0.5, 0.3 * grow);
-        if (ring < MAX_RINGS && i < 3) (rings[ring++] as THREE.Vector4).set(d.x, d.z, r * 2.5 + 1.1, 0.18 * grow);
+        // A swelling dome pushes a ripple ahead of its foot.
+        // (Its height is written below nothing: the pool's shader knows the foot ring by that, and lays the froth line there.)
+        (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.12, -0.65 * grow);
+        // And, round the three great ones (every pixel of the pool asks every ring), ring after ring leaves it as the skin heaves: each
+        // runs out some strides and dies, the next already on its way.
+        for (let k = 0; k < 3 && ring < MAX_RINGS && i < 3; k++) {
+          const gone = fract(t * 0.42 + k / 3 + d.seed);
+          (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.25 + 2.3 * gone, 0.7 * grow * Math.min(1, gone * 7) * Math.pow(1 - gone, 1.4));
+        }
       }
     });
     ringCount.value = ring;
     domeMesh.instanceMatrix.needsUpdate = true;
+    domeShade.instanceMatrix.needsUpdate = true;
+    domeDepth.instanceMatrix.needsUpdate = true;
     domeLife.needsUpdate = true;
     crownMesh.instanceMatrix.needsUpdate = true;
     crownLife.needsUpdate = true;
@@ -297,12 +332,14 @@ export function create(ctx: Context): Piece {
       (u.uMirrorMatrix as THREE.IUniform<THREE.Matrix4>).value.copy(bias).multiply(under.projectionMatrix).multiply(under.matrixWorldInverse);
       (u.tMirror as THREE.IUniform<THREE.Texture>).value = blank;
       (u.uMirror as THREE.IUniform<number>).value = 1;
+      // (A still of one part alone has the surface switched off: it stays off after the mirror is drawn.)
+      const shown = water.visible;
       water.visible = false;
       renderer.setRenderTarget(mirror);
       renderer.clear(true, true, false);
       renderer.render(ctx.scene, under);
       renderer.setRenderTarget(null);
-      water.visible = true;
+      water.visible = shown;
       (u.uMirror as THREE.IUniform<number>).value = 0;
       (u.tMirror as THREE.IUniform<THREE.Texture>).value = mirror.texture;
     },
@@ -314,6 +351,8 @@ export function create(ctx: Context): Piece {
       tube.dispose();
       surface.dispose();
       skin.dispose();
+      skinThrough.dispose();
+      skinDepth.dispose();
       dropSkin.dispose();
       crownMaterial.dispose();
     },

@@ -67,6 +67,27 @@ uniform int uEmitterCount;
 uniform vec4 uEmitters[8];
 uniform vec3 uEmitterRadiance[8];`;
 
+// The grade by shot. Each lens of the place has its own approved picture, and the same surfaces sit lighter or darker in each: from the
+// place's second `from` (the cuts of the film at frames 5833, 6048, 6263 and 6586 of a place that opens at 5618) the mids of every surface
+// gain `mid` (most at a scene-linear 0.1, the middle grey of the frame) and the darks gain `dark` (most at black). Set from the tones of
+// the merged keys beside their pictures; it changes on a cut and never inside a shot. Whites are left as they are.
+export const GRADE_SHOTS: { from: number; mid: number; dark: number }[] = [
+  { from: 0, mid: 0.3, dark: -0.2 },
+  { from: (5833 - 5618) / 60, mid: 0.14, dark: 0 },
+  { from: (6048 - 5618) / 60, mid: -0.06, dark: -0.14 },
+  { from: (6263 - 5618) / 60, mid: 0.5, dark: 0.08 },
+  { from: (6586 - 5618) / 60, mid: 0.38, dark: -0.16 },
+];
+// What the ground throws back up, shot by shot, as a share of uSkyGround: the lenses that stand low among the animals stand on pale
+// salt and wet red mud, and a flank or a belly there is lit from below, warm. (Level ground takes none of it.)
+export const BOUNCE_SHOTS: { from: number; share: [number, number, number] }[] = [
+  { from: 0, share: [1, 1, 1] },
+  { from: (6263 - 5618) / 60, share: [1.75, 1.5, 1.4] },
+  { from: (6586 - 5618) / 60, share: [1.35, 1.22, 1.16] },
+];
+const bounceShots = BOUNCE_SHOTS.map((shot) => `  b = mix(b, vec3(${shot.share.map((v) => v.toFixed(3)).join(', ')}), step(${shot.from.toFixed(5)}, uTime));`).join('\n');
+const gradeShots = GRADE_SHOTS.map((shot) => `  g = mix(g, vec2(${shot.mid.toFixed(3)}, ${shot.dark.toFixed(3)}), step(${shot.from.toFixed(5)}, uTime));`).join('\n');
+
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 // Toward the brighter side of the overcast, on x and z (bearing 320 degrees), and how much more a face turned to it takes.
@@ -94,7 +115,9 @@ vec3 skyIrradiance(vec3 n) {
   float lean = 1.0 + min(n.y, 0.0);
   float seen = lean * lean * lean;
   float up = n.y >= 0.0 ? 0.5 + 0.5 * n.y : 0.5 * seen;
-  vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.6 * max(n.y, 0.0)), up) * uFill;
+  vec3 b = vec3(1.0);
+${bounceShots}
+  vec3 e = mix(uSkyGround * b, mix(uSkyHorizon, uSkyZenith, 0.6 * max(n.y, 0.0)), up) * uFill;
   // The overcast has a brighter side, where the sun stands behind it: a face turned to it takes more, one turned away less, and level
   // ground the same as before. This is what gives a body, a trunk and a bank a light side and a dull one.
   e *= 1.0 + RIG_KEY_SHARE * dot(n.xz, RIG_KEY);
@@ -209,6 +232,11 @@ vec3 rigGrade(vec3 c) {
   // The darks and mids lifted to the milk of the place: a gain that falls from 1.27 in the darks to 0.955 at white. (It stands in for
   // RIG_PIVOT * pow(l / RIG_PIVOT, RIG_CONTRAST), which costs every surface of every folder a power for each texel it draws.)
   float m = l * (0.94 + 0.0156 / (l + 0.042));
+  // The shot's own lift or fall of the mids and of the darks (GRADE_SHOTS).
+  vec2 g = vec2(0.0);
+${gradeShots}
+  float s = m / (m + 0.1);
+  m *= 1.0 + g.x * 4.0 * s * (1.0 - s) + g.y * (1.0 - s) * (1.0 - s);
   // The whites are held under the sky's: salt in an overcast is pale, not lit.
   float over = max(m - 0.4, 0.0);
   m -= 0.3 * over * over / (over + 0.15);
