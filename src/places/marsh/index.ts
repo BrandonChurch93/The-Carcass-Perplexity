@@ -13,6 +13,7 @@ import * as fliers from './fliers';
 import * as land from './land';
 import * as stalks from './stalks';
 import * as wallowers from './wallowers';
+import { RESTAGE, RESTAGED } from './wallowers/restage';
 import { BURST, DEG, EYE_HEIGHT, K1_AT, K1_DIR, K2_AT, K2_DIR, T0, UNIT, at, keyTime } from './shared/anchors';
 import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
@@ -45,6 +46,19 @@ const K1: Pose = {
 
 /** marsh-3, the wallowers in the vein. */
 const K3: Pose = { position: at(27.7, 3, 1.5), aim: at(37.7, 3.2, 0.2), fov: 30, aperture: 0.00455 };
+/** The shot of the wallowers from lower and further off, when the switch of wallowers/restage.ts is on; as given when it is off. */
+const restaged = (p: Pose): Pose => {
+  if (!RESTAGED) return p;
+  const dx = p.position[0] - p.aim[0];
+  const dz = p.position[2] - p.aim[2];
+  const n = Math.hypot(dx, dz);
+  return {
+    ...p,
+    position: [p.position[0] + (dx / n) * RESTAGE.back, p.position[1] - RESTAGE.down, p.position[2] + (dz / n) * RESTAGE.back],
+    aim: [p.aim[0], p.aim[1] + RESTAGE.aim, p.aim[2]],
+    fov: RESTAGE.fov,
+  };
+};
 /** marsh-4, the one on the thin crust. */
 const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), fov: 35, focus: 5.7, aperture: 0.00825 };
 
@@ -59,10 +73,10 @@ const shots: Record<string, CameraPath> = {
   'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.6, right: -1.2, up: 0.6, turn: 5 }, { forward: 0.6, right: 0.5, up: 0.5, turn: 14, tilt: 3 }),
   // Left along the vein to the wallowers.
   'marsh-04': [
-    { at: 0, pose: { position: at(26.9, 6.3, 1.8), aim: at(36.4, 4.6, 0.25), fov: 30, aperture: 0.00715 } },
-    { at: Math.min(0.98, Math.max(0.02, keyPart(shotById('marsh-04')))), pose: K3 },
+    { at: 0, pose: restaged({ position: at(26.9, 6.3, 1.8), aim: at(36.4, 4.6, 0.25), fov: 30, aperture: 0.00715 }) },
+    { at: Math.min(0.98, Math.max(0.02, keyPart(shotById('marsh-04')))), pose: restaged(K3) },
     // After the key it goes on left with the great one and gives ground: the lens is never nearer than at the key, and the whole walk stays in frame.
-    { at: 1, pose: { position: at(26.8, 2.3, 1.6), aim: at(37.7, 2.7, 0.25), fov: 30, aperture: 0.00715 } },
+    { at: 1, pose: restaged({ position: at(26.8, 2.3, 1.6), aim: at(37.7, 2.7, 0.25), fov: 30, aperture: 0.00715 }) },
   ],
   // From over the thin crust, wide, with the vein, the pool and its stalks behind the stuck one, down and in to it.
   'marsh-05': through(K4, keyPart(shotById('marsh-05')), { forward: -9, up: 2.2, right: 1.5, turn: 14, tilt: -6 }, { forward: 1.7, up: 0.15, right: 0.5 }),

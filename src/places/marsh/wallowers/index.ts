@@ -50,13 +50,13 @@ export function create(ctx: Context): Piece {
     const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.05 * b.k : 0);
     // The head hangs to the mud that is under it, or to the top of the brine.
     const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.95 : 0.6) * b.k;
-    const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
+    const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.16 * b.k - under) / (1.59 * b.k)))) - 0.633);
     const near = herd.length < 3;
     // The one by the lens of the wallowers has rolled and is wet all over; the rest that lie in the brine have dried down to a hand above it.
     const wet = sink > 0.5 ? (herd.length === 2 ? rng.range(1.0, 1.4) : 0.4 * rng.range(1.0, 1.4) - 0.05) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is shaggy: the photographed matted hair is its hide.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}) }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}), ...(near && herd.length < 2 ? { coat: [0.8, 1.75, 0, 0] as [number, number, number, number] } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
