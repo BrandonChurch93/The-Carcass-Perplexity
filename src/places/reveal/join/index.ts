@@ -7,6 +7,9 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { LID_GLSL, lidAt, lidUniforms } from './lid';
 
+// The Eye's finish is warmer than the rise's: the lid is weighed by this here so a bank has one colour on both sides of the cut.
+const EYE_GRADE = [1.09, 1.0, 0.9];
+
 // The lid is cloud, and the rise has a part for cloud: it is drawn inside that part.
 export const PARTS: readonly string[] = [];
 
@@ -50,7 +53,7 @@ const SMALLER = 2.5;
 export function create(ctx: Context): Piece {
   // The banks stand under the lens on the first frame of the rise, wherever rise.json has put it over the lake.
   const [offX, offZ] = startOffsetAt(RISE_FIRST);
-  const lid = lidUniforms(handoff.lid, [X(AT.lake.x) + offX, Z(AT.lake.y) + offZ], handoff.revealHalfHeightKm, handoff.revealHalfHeightKm / HALF_TAN);
+  const lid = lidUniforms(handoff.lid, [X(AT.lake.x) + offX, Z(AT.lake.y) + offZ], handoff.revealHalfHeightKm, handoff.revealHalfHeightKm / HALF_TAN, EYE_GRADE);
   const target = new THREE.WebGLRenderTarget(8, 8, {
     type: THREE.HalfFloatType,
     format: THREE.RGBAFormat,
@@ -111,7 +114,6 @@ export function create(ctx: Context): Piece {
     },
     resize: (width, height) => {
       target.setSize(Math.max(8, Math.ceil(width / SMALLER)), Math.max(8, Math.ceil(height / SMALLER)));
-      (lid.uLidRows as THREE.IUniform<number>).value = Math.max(8, Math.ceil(height / SMALLER));
     },
     dispose: () => {
       sheet.geometry.dispose();

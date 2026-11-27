@@ -77,6 +77,9 @@ function judged(frame: number, plan: FlightPlan): FlightState {
 const LEAVE = {
   /** The ground line held at the top edge while the shore is in view, metres north of the centre. */
   hold: 1180,
+  /** The nearer line the top edge is brought down to between these frames, inside the far shore: the cliffs and the rim leave by the top of the frame before the lens is high. */
+  near: 560,
+  lower: [164, 240],
   /** Frames over which the old tilt is caught and brought onto that line. */
   catch: 28,
   /** Between these frames the lens lets the far shore go and turns straight down. */
@@ -116,7 +119,8 @@ export function flight(frame: number, plan: FlightPlan): FlightState {
   // The top edge of the frame, by the distance at which it meets the water: caught from where the judged move left it and held on the foot of the north cliffs.
   const far = (s: FlightState): number => Math.log(s.y / Math.tan(top(s)) / (s.z + LEAVE.hold));
   const caught = frame < from + LEAVE.catch ? run(frame, from, from + LEAVE.catch, far(a), far(b) - far(a), 0, 0) : 0;
-  const held = Math.atan2(y, (z + LEAVE.hold) * Math.exp(caught)) + (fov * RAD) / 2;
+  const line = run(frame, plan.keyFrame + (LEAVE.lower[0] as number), plan.keyFrame + (LEAVE.lower[1] as number), LEAVE.hold, 0, LEAVE.near, 0);
+  const held = Math.atan2(y, (z + line) * Math.exp(caught)) + (fov * RAD) / 2;
   const down = smoother((frame - plan.keyFrame - (LEAVE.release[0] as number)) / ((LEAVE.release[1] as number) - (LEAVE.release[0] as number)));
   const pitch = held + (Math.PI / 2 - held) * down;
   const sin = down >= 1 ? 1 : Math.sin(pitch);
