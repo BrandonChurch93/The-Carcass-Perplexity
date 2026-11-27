@@ -284,12 +284,12 @@ void main() {
   // (The bay east of the lake is an arm of the sea over a drowned valley: shoal and pale green far out from its shores, deep only
   // in the channel, so it is no twin of the lake.)
   vec2 inBay = (xz - uLakeMid - vec2(195.0, 45.0)) / vec2(160.0, 100.0);
-  if (dot(inBay, inBay) < 1.6) shallow = max(shallow, (1.0 - smoothstep(0.8, 1.25, length(inBay))) * (1.0 - land) * (1.0 - smoothstep(3.0, 14.0 + 34.0 * vnoise(xz / 27.0 + 5.0), -coastKm)));
+  if (dot(inBay, inBay) < 1.6) shallow = max(shallow, (1.0 - smoothstep(0.8, 1.25, length(inBay))) * (1.0 - land) * smoothstep(2.15, 2.5, lakeFar) * (1.0 - smoothstep(3.0, 14.0 + 34.0 * vnoise(xz / 27.0 + 5.0), -coastKm)));
   // (East and north of the skull the red country is old lava with its roof fallen in: pools stand in the pits of it, a few
   // kilometres to fifty across, each of its own size and outline, none in line.)
   vec2 fromPitted = (xz - uThroat - vec2(-40.0, -60.0)) / vec2(400.0, 430.0);
-  float pittedAt = exp(-dot(fromPitted, fromPitted)) * smoothstep(0.95, 1.2, length(fromSkull));
-  if (pittedAt > 0.05 && uViewKm > 120.0 && uViewKm < 1300.0 && land > 0.0) {
+  float pittedAt = uViewKm > 120.0 && uViewKm < 1300.0 && land > 0.0 ? exp(-dot(fromPitted, fromPitted)) * smoothstep(0.95, 1.2, length(fromSkull)) : 0.0;
+  if (pittedAt > 0.05) {
     vec2 wg = mat2(0.8, -0.6, 0.6, 0.8) * xz / 44.0;
     vec2 wid = floor(wg);
     vec2 wat = 0.5 + 0.5 * (vec2(hash12(wid + 13.1), hash12(wid + 27.7)) - 0.5);
@@ -755,7 +755,8 @@ void main() {
   // The lava of the Heart: vents in the black crust of the chest. The great one is the Heart, and it swells with the beat; the heat shows
   // along the cracks round it. Each is a few kilometres of molten rock: from orbit a point of orange light, and its light on the slopes that face it.
   // (Between beats the fire does not keep time: its glow wanders, slow and uneven, so nothing in the chest pulses like a lamp.)
-  float pulse = 1.1 * max(uBeat - 0.12, 0.0) + 0.12 * (0.25 + 0.5 * vnoise(vec2(uTime * 0.21, 77.0)) + 0.3 * vnoise(vec2(uTime * 0.53, 13.0)));
+  float pulse = 1.1 * max(uBeat - 0.12, 0.0) + 0.06;
+  if (dot(xz - uLava, xz - uLava) < 640000.0) pulse += 0.12 * (0.5 * vnoise(vec2(uTime * 0.21, 77.0)) + 0.3 * vnoise(vec2(uTime * 0.53, 13.0)) - 0.25);
   vec2 fromLava = xz - uLava;
   // (The molten rock works: its light wavers, never the same from one second to the next.)
   float waver = 1.0;
@@ -882,16 +883,14 @@ void main() {
   // (South of it, round the lower leg, the currents carry ochre silt: long curling threads of it, drawn out by the water.)
   vec2 fromSilt = (xz - uSalt - vec2(300.0, 330.0)) / vec2(640.0, 380.0);
   float siltAt = exp(-dot(fromSilt, fromSilt)) * smoothstep(680.0, 1100.0, uViewKm);
-  if (siltAt > 0.02) {
+  if (siltAt > 0.05 && land < 1.0) {
     vec2 sc = xz / 520.0 + 0.5 * (readTile(uCloudTile, xz / 900.0 + vec2(0.2, 0.7) + uTime * vec2(0.0006, -0.0004), 1.0 / 900.0, 1.0).rg - 0.5);
     float thread = readTile(uCloudTile, sc * vec2(0.8, 1.7) + vec2(0.4, 0.1), 1.7 / 520.0, 0.5).b;
-    // (Drawn out long: curling lines of it, a few kilometres wide and hundreds long, one beside the next.)
+    // (Faint plumes of it off the shores, soft and of unlike widths, thinning out to sea.)
     vec2 calm = xz / 520.0 + uTime * vec2(0.0005, -0.0003);
-    vec2 drawn = calm * vec2(1.5, 3.4) + 1.1 * vec2(vnoise(calm * 2.1 + 3.0), vnoise(calm * 2.1 + 41.0)) + 0.25 * vec2(vnoise(calm * 6.3 + 13.0), vnoise(calm * 6.3 + 29.0));
-    float lines = 1.0 - abs(2.0 * vnoise(drawn) - 1.0);
-    float lines2 = 1.0 - abs(2.0 * vnoise(drawn * 2.3 + 9.0) - 1.0);
-    thread = 0.12 * thread + 0.55 * smoothstep(0.6, 0.97, lines) + 0.35 * smoothstep(0.7, 0.97, lines2);
-    bed = mix(bed, vec3(0.21, 0.125, 0.02), 0.85 * min(1.0, 1.5 * siltAt) * smoothstep(0.4, 0.68, thread) * (1.0 - land));
+    vec2 drawn = calm * vec2(1.3, 2.6) + 1.1 * vec2(vnoise(calm * 2.1 + 3.0), vnoise(calm * 2.1 + 41.0));
+    float plumes = smoothstep(0.45, 0.9, 0.7 * vnoise(drawn) + 0.3 * vnoise(drawn * 2.7 + 9.0) + 0.15 * thread);
+    bed = mix(bed, vec3(0.16, 0.1, 0.02), 0.5 * min(1.0, 1.5 * siltAt) * plumes * exp(min(coastKm, 0.0) / 70.0) * (1.0 - land));
   }
   // The lake of the Eye: black in the middle, and round it a margin of amber shallows, uneven, with tongues of it curling in.
   vec2 lakeAt = (xz - uLakeMid) / uLakeSize;
