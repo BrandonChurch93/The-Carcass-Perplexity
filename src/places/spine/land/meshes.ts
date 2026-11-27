@@ -161,6 +161,34 @@ const ease = (a: number, b: number, v: number): number => {
   return t * t * (3 - 2 * t);
 };
 
+
+/** A place in a field of broken pieces: two numbers of its own piece, and how far it lies from that piece's edge (in cells). */
+function shard(x: number, y: number): { a: number; b: number; edge: number } {
+  const of = (i: number, j: number, k: number): number => {
+    const t = Math.sin(i * 127.1 + j * 311.7 + k * 74.7) * 43758.5453;
+    return t - Math.floor(t);
+  };
+  const xi = Math.floor(x);
+  const yi = Math.floor(y);
+  let best = 1e9;
+  let next = 1e9;
+  let bi = 0;
+  let bj = 0;
+  for (let j = -1; j <= 1; j++) {
+    for (let i = -1; i <= 1; i++) {
+      const d = Math.hypot(xi + i + of(xi + i, yi + j, 1) - x, yi + j + of(xi + i, yi + j, 2) - y);
+      if (d < best) {
+        next = best;
+        best = d;
+        bi = xi + i;
+        bj = yi + j;
+      } else if (d < next) next = d;
+    }
+  }
+  return { a: of(bi, bj, 3), b: of(bi, bj, 4), edge: 0.5 * (next - best) };
+}
+
+const AROUND: readonly (readonly [number, number])[] = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 /**
  * The bed of rock where the bolt came to ground: under the dead one and out to the lens of its shot the snow is burned off, and what
  * stands there is the rock's own broken beds. A lens that stands a hand over the ground sees no picture laid on it, only what stands
@@ -190,17 +218,26 @@ export function scorchBed(at: readonly [number, number], view: number): THREE.Bu
       const rag = 0.5 * (vnoise(u * 0.7 + 3.1, v * 0.7 + 8.3) - 0.5);
       // (Full under the lens of the shot, which stands 2.9 m back from the middle, and low right at it.)
       const inside = ease(0, 1, (Math.min(u - U0, U1 - u, v - V0, V1 - v) + rag) / 0.8) * (0.3 + 0.7 * ease(0.3, 1.1, Math.hypot(u, v + 2.9)));
-      // The beds strike across the view, a little turned.
-      const p = 0.82 * u + 0.57 * v;
-      const q = -0.57 * u + 0.82 * v;
-      const big = slab(p, q, 0.95, 0.6, 31, 0.06);
-      const small = slab(p + 0.2 * q, q, 0.33, 0.21, 37, 0.02);
-      const stands = big > -0.18 ? 1 : 0;
+      // The beds strike across the view, a little turned. Each slab is a piece of its own: a joint as wide as a hand and more parts it from
+      // the next, and the snow lies in the joints; one in five is gone to the snow, and one in seven carries a cap of it.
+      // (They are long toward the lens of the shot, which looks low across them: a slab that lies across the view is a dark line in it.)
+      const p = 0.94 * u + 0.34 * v;
+      const q = -0.34 * u + 0.94 * v;
+      const c = shard(p / 0.3, q / 0.56);
+      const edge = c.edge * 0.55;
+      const joint = 0.022 + 0.025 * vnoise(u * 2.9 + 1.7, v * 2.9 + 4.3);
+      const on = c.a > 0.2 ? ease(joint, joint + 0.03, edge) : 0;
+      const capped = c.b > 0.85;
       // Under the dead one they lie low: it rests on the layout's ground.
-      const low = 0.15 + 0.85 * ease(0.9, 2.1, Math.abs(v - 0.2));
-      const h = stands * low * (0.03 + 0.085 * (big + 0.18) + 0.022 * (small + 0.4)) + 0.008 * (vnoise(u * 11.3, v * 11.3) - 0.5);
-      pos.push(x, height(x, z) + 0.03 + inside * Math.max(0, h), z);
-      top.push(stands * Math.min(1, 3 * inside));
+      const low = 0.25 + 0.75 * ease(0.9, 2.1, Math.abs(v - 0.2));
+      const h = on * low * (0.03 + 0.035 * c.b + (capped ? 0.03 : 0) + 0.02 * slab(p, q, 0.42, 0.8, 31, 0)) + 0.006 * (vnoise(u * 11.3, v * 11.3) - 0.5);
+      // (The crest's own mesh is laid at half a metre and stands over the true ground wherever that dips between its points: the bed lies on
+      // the highest ground within a cell of it, and goes under the crest at its own rim.)
+      let ground = height(x, z);
+      for (let k = 0; k < 8; k++) ground = Math.max(ground, height(x + 0.5 * AROUND[k][0], z + 0.5 * AROUND[k][1]));
+      const rim = ease(0, 1, (Math.min(u - U0, U1 - u, v - V0, V1 - v) + rag) / 0.8);
+      pos.push(x, ground + 0.08 - 0.26 * (1 - rim) + inside * Math.max(0, h), z);
+      top.push(capped ? 0 : on * Math.min(1, 3 * inside));
       const here = locate(x, z);
       sl.push(here.s, here.l);
     }
