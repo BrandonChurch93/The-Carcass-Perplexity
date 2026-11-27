@@ -110,6 +110,13 @@ export function create(ctx: Context): Piece {
   const WIDE_FROM = { x: -41.5, z: 42.3 };
   const outer = herd.map((animal, i) => (i >= 3 && i !== NEAR_WADERS.length && wading.includes(i) ? { animal, x: animal.plan.x, z: animal.plan.z } : null)).filter((o) => o !== null);
 
+  // Staged: in the wide view the three in the channel do not stand in a row all one way: two of them have turned and stand apart.
+  const TURNED: [number, number, number][] = [[0, 0, 0], [-1.5, -5.5, -80], [3.5, 2, 140]];
+  const trio = TURNED.map((_, i) => {
+    const animal = herd[i] as Wader;
+    return { animal, x: animal.plan.x, z: animal.plan.z, heading: animal.plan.heading };
+  });
+
   return {
     setTime: (seconds) => {
       const at = stagedSeconds();
@@ -127,6 +134,12 @@ export function create(ctx: Context): Piece {
         o.animal.plan.x = WIDE_FROM.x + (o.x - WIDE_FROM.x) * out;
         o.animal.plan.z = WIDE_FROM.z + (o.z - WIDE_FROM.z) * out;
       }
+      trio.forEach((o, i) => {
+        const turn = out > 1 ? (TURNED[i] as [number, number, number]) : [0, 0, 0];
+        o.animal.plan.x = o.x + (turn[0] as number);
+        o.animal.plan.z = o.z + (turn[1] as number);
+        o.animal.plan.heading = o.heading + (turn[2] as number) * RAD;
+      });
       ripples.begin();
       drips.begin();
       herd.forEach((animal, i) => {

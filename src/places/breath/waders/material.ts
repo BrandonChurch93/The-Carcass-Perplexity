@@ -210,8 +210,16 @@ void main() {
     // No two are one colour: one is chalk pale, the next ruddy, the next grey with old silt.
     float own = hash12(vec2(seed, 1.7));
     albedo *= mix(vec3(0.8, 0.77, 0.77), vec3(1.08, 1.02, 0.99), own) * mix(vec3(1.0), vec3(1.04, 0.95, 0.92), step(0.6, hash12(vec2(seed, 6.1))));
-    // Wet from the water up to where it last stood deeper, and dark with it.
-    wet = smoothstep(0.3, 0.42, legT) * smoothstep(uSea + 0.8, uSea + 0.15, vWorld.y + 0.3 * (blotch - 0.5));
+    // Wet from the water up to where it last stood deeper, and dark with it. Above that line it has dried: a broken band of salt where the
+    // water stood, and pale silt caked on the shank above the salt.
+    float up = vWorld.y - uSea + 0.13 * (blotch - 0.5) + 0.04 * (scaled - 0.5);
+    float leg = smoothstep(0.3, 0.42, legT) * (1.0 - horn);
+    wet = leg * smoothstep(0.46, 0.4, up);
+    float dry = leg - wet;
+    albedo = mix(albedo, vec3(0.46, 0.42, 0.36) * (0.7 + 0.6 * scaled), 0.62 * dry * smoothstep(1.3, 0.5, up) * (0.4 + 0.6 * mottle));
+    albedo = mix(albedo, vec3(0.78, 0.76, 0.71), 0.6 * dry * smoothstep(0.58, 0.47, up) * smoothstep(0.35, 0.65, scaled + 0.3 * crack));
+    albedo *= 1.0 - 0.45 * wet;
+    wet = max(wet, smoothstep(0.3, 0.42, legT) * horn * smoothstep(0.46, 0.4, up));
     thin = mix(0.5, 0.75, smoothstep(0.1, 0.5, neckU)) * (1.0 - 0.3 * shank);
     // The back is damp with the breath of the shaft: it takes a sheen from the low sun.
     rough = mix(rough, 0.36, 0.7 * smoothstep(0.1, 0.8, n.y) * (1.0 - step(0.01, legT)));
@@ -370,10 +378,10 @@ void main() {
   vec3 through = mix(vec3(1.0, 0.52, 0.36), vec3(1.0, 0.5, 0.36), tendril);
   // A strand is thin all through, not only at its edge.
   edge = mix(edge, 0.5, tendril);
-  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.17, tendril));
+  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.3, tendril));
   // Staged: the sun breaks through on the one far off in the vapour, so it is paler than the vapour it stands in.
   float veil = uVeiled.z * smoothstep(8.0, 5.0, length(vWorld.xz - uVeiled.xy));
-  colour = mix(colour, max(colour * 8.0, (0.66 * albedo + vec3(0.2, 0.16, 0.14) * (1.0 - tendril)) * fogColour * 15.0 * (0.82 + 0.18 * n.y) * (0.8 + 0.2 * occ)), veil);
+  colour = mix(colour, max(colour * 8.0, (0.66 * albedo + vec3(0.2, 0.16, 0.14) * (1.0 - tendril)) * fogColour * 16.0 * (0.76 + 0.3 * n.y) * (0.62 + 0.38 * occ)), veil);
   if (uMirror > 0.5) {
     gl_FragColor = vec4(colour * (1.0 - uSolo), 1.0);
     return;
