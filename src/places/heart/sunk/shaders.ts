@@ -378,6 +378,11 @@ void main() {
   c = mix(c * (1.0 - 0.7 * onFace), blackbody(mix(faceKelvin, max(faceKelvin, seamKelvin), standing)), max(flaring, standing));
   #endif
 
+  #ifdef AFAR
+  // From afar only the folded heap is the sheet's: the thin skin round it is left to the lake's own crust, slabs, cracks and all,
+  // so no patch with an outline lies on the lake. Up close this material is not used.
+  alpha = mix(1.0, max(smoothstep(0.04, 0.4, folded), 1.0 - smoothstep(0.3, 1.2, abs(vBreak.y))), smoothstep(45.0, 70.0, far));
+  #endif
   gl_FragColor = vec4(rigOut(c), alpha);
   // Last, so the pixels beside a dropped one still have their derivatives.
   #ifdef RIM
@@ -453,6 +458,9 @@ void main() {
   // On a limb they are pale and grey, as ash caked on hide; on the hull darker.
   vec3 scab = mix(vec3(0.235, 0.175, 0.115), vec3(0.225, 0.168, 0.11) * 0.9, isBody) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone;
 
+  // From across the lake the plates are not pale slats on a dark hull: the fume between takes their ash tone down to the hull's, and
+  // the carcass is one dark grey-brown thing, as the wide picture has it.
+  scab *= mix(0.4, 1.0, smoothstep(60.0, 28.0, far));
   float plated = smoothstep(0.35, 0.6, vSurf.y);
   float furrow = isBody * vSurf.w;
   vec3 albedo = mix(bark, scab, plated);
@@ -499,7 +507,7 @@ void main() {
   albedo *= 1.0 + mix(0.7, 1.0, isBody) * close * fine;
   float up = mix(smoothstep(0.1, 0.7, nl.y), smoothstep(-0.1, 0.45, nl.y), isLeg);
   float dust = up * (0.2 + 0.8 * smoothstep(0.3, 0.65, 1.0 - lump + 0.4 * (grit - 0.5) + 0.5 * (flakeNh.b - 0.5))) * mix(0.3, 1.0, plated) * (1.0 - 0.7 * furrow) * (1.0 - 0.5 * coat) * (1.0 - 0.85 * isBody * (1.0 - plated));
-  albedo = mix(albedo, mix(ASH, uAsh * plateTone, plated) * (0.7 + 0.5 * grit) * (0.7 + 0.6 * mix(hideNh.b, flakeNh.b, plated)), dust * mix(0.4, 0.6, plated));
+  albedo = mix(albedo, mix(ASH, uAsh * plateTone, plated) * (0.7 + 0.5 * grit) * (0.7 + 0.6 * mix(hideNh.b, flakeNh.b, plated)), dust * mix(0.4, 0.6, plated) * mix(0.4, 1.0, smoothstep(60.0, 28.0, far)));
 
   // The bump is laid on the surface along its own directions.
   vec3 along = normalize(cross(n, vec3(0.31, 0.9, 0.29)));
