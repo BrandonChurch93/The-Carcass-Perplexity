@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
-import { DUSK, RAIN_APART, RAIN_AT, RAIN_WALK } from './volume';
+import { DUSK, RAIN_APART, RAIN_AT, RAIN_TURN, RAIN_WALK } from './volume';
 
 const VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -43,7 +43,7 @@ void main() {
   c *= 1.0 + (n - 0.5) * 0.9 * seen;
   // The raining cloud: a darker belly over the curtain.
   float az = atan(d.x, -d.z);
-  float walk = az - uRain.x + RAIN_WALK * (uTime - RAIN_AT);
+  float walk = az - uRain.x - ${RAIN_TURN.toFixed(4)} + RAIN_WALK * (uTime - RAIN_AT);
   walk -= floor(walk / RAIN_APART + 0.5) * RAIN_APART;
   float side = abs(walk) / uRain.y;
   float el = d.y / max(length(d.xz), 0.05);

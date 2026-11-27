@@ -7,14 +7,14 @@ import { DEG, HERO_DOME, K1_AT, K1_DIR, K2_AT, K2_DIR, POOL_R, TAU, VEIN, bearin
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { bakeNoise } from './noise';
 import { createSky } from './sky';
-import { MAX_MIST, MAX_STEAM, SHEETS, VOLUME_FRAGMENT } from './volume';
+import { CLEAR_FROM, MAX_MIST, MAX_STEAM, SHEETS, VOLUME_FRAGMENT } from './volume';
 
 export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   // The rain: middle bearing and half width in radians, distance in metres, thickness.
-  const rain = new THREE.Vector4(4 * DEG, 8 * DEG, 1800, 1.5);
+  const rain = new THREE.Vector4(4 * DEG, 8 * DEG, 1800, 2.0);
   const sky = createSky(ctx, noise, rain);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
@@ -30,7 +30,8 @@ export function create(ctx: Context): Piece {
   // column and none stands in it: by the west bank, over the left of the pool as the pool's lens sees it, and two lesser ones.
   own.push({ at: [-7.1, 0, -5.1], radius: 1.4, strength: 0.8, rise: 12, kind: 'steam', lean });
   own.push({ at: [-2.5, 0, -6.5], radius: 1.3, strength: 0.55, rise: 10, kind: 'steam', lean });
-  own.push({ at: [-3.4, 0, -1.6], radius: 0.8, strength: 0.3, rise: 4.5, kind: 'steam', lean });
+  // (The third is the plume the pool's lens has at its left hand, before the stalks: narrow, dense at its foot.)
+  own.push({ at: [0.45, 0, 7.4], radius: 0.45, strength: 0.8, rise: 5, kind: 'steam', lean });
   own.push({ at: [0.5, 0, -7.5], radius: 0.9, strength: 0.35, rise: 6, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
   own.push({ at: [-1, 0, -4], radius: 5, strength: 0.012, rise: 5, kind: 'steam', lean });
@@ -48,7 +49,7 @@ export function create(ctx: Context): Piece {
     return [node[0], node[1]];
   };
   const mist: THREE.Vector4[] = [
-    new THREE.Vector4(-1, -3, POOL_R * 0.6, 0.05),
+    new THREE.Vector4(-1, -3, POOL_R * 0.6, 1.2),
     new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 12 - 5, HERO_DOME[1] + K1_DIR[1] * 12, 7, 0.6),
     new THREE.Vector4(-3, -9, 7, 0.3),
     new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),
@@ -69,6 +70,7 @@ export function create(ctx: Context): Piece {
   const steamC = Array.from({ length: MAX_STEAM }, () => new THREE.Vector4());
   const steamCount = { value: 0 };
   const show = new THREE.Vector3(1, 1, 1);
+  const clear = [new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12), new THREE.Vector3(K2_AT[0] + K2_DIR[0] * 6, K2_AT[1] + K2_DIR[1] * 6, 8)];
 
   const volume = new THREE.ShaderMaterial({
     vertexShader: QUAD_VERTEX,
@@ -85,8 +87,9 @@ export function create(ctx: Context): Piece {
       uRain: { value: rain },
       uMistCount: { value: 6 },
       uMist: { value: mist },
-      // No low steam stands between a lens and what it is set on: round the wallowers, and in front of the lens of the colony.
-      uClear: { value: [new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12), new THREE.Vector3(K2_AT[0] + K2_DIR[0] * 6, K2_AT[1] + K2_DIR[1] * 6, 8)] },
+      // No low steam stands between a lens and what it is set on: round the wallowers, and in front of the lens of the colony. Each zone
+      // is kept only while its own lens looks (setTime), so that the pool steams for the lens that is set on the pool.
+      uClear: { value: clear },
     },
     defines: SHEETS ? { SHEETS: 1 } : {},
     depthTest: false,
@@ -96,6 +99,8 @@ export function create(ctx: Context): Piece {
   });
 
   const order: { source: SteamSource; index: number; far: number; small: number }[] = [];
+  // (A radius far under zero is no zone at all.)
+  const NONE = -100;
 
   return {
     volume,
@@ -117,6 +122,10 @@ export function create(ctx: Context): Piece {
         (steamC[i] as THREE.Vector4).set(seeds[index % seeds.length] as number, Math.min(2.2, 0.6 + s.rise * 0.08), Math.max(1.3, Math.min(radius * 1.5, s.rise * 1.2)), 0);
       });
       steamCount.value = order.length;
+    },
+    setTime: (seconds) => {
+      (clear[0] as THREE.Vector3).z = seconds >= CLEAR_FROM.wallow ? 12 : NONE;
+      (clear[1] as THREE.Vector3).z = seconds >= CLEAR_FROM.colony[0] && seconds < CLEAR_FROM.colony[1] ? 8 : NONE;
     },
     solo: (part) => {
       show.set(part === null || part === 'marsh/air' ? 1 : 0, part === null || part === 'marsh/rain' ? 1 : 0, part === null || part === 'marsh/steam' ? 1 : 0);
