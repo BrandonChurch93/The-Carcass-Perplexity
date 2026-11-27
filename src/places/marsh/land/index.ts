@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { F, K1_AT, K1_DIR, R, STUCK, TAU, rel, smooth } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { createField, fbm, vnoise, type Field } from './field';
+import { ROCK, createField, fbm, vnoise, type Field } from './field';
 import { patchGeometry, ringsGeometry } from './mesh';
 import { LAND_FRAGMENT, LAND_VERTEX, RELIEF } from './shaders';
 import { bakeGrain, bakePlates } from './tiles';
@@ -15,7 +15,6 @@ const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [numbe
 /** The foot of the rock rise the first lens looks down on, built finely for the same reason. */
 /** The bank the third lens lies on, a hand above the salt. */
 const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.018 };
-const ROCK = { at: [9.25, -8.5] as [number, number], half: [10.75, 8.0] as [number, number], cell: 0.05 };
 
 /** How many reads across a slanting pixel the pictures of heights and slopes get: 4 as the colours do, or 1, which is cheaper and softer far off. */
 const DATA_SHARP: number = 1;
@@ -102,7 +101,7 @@ export function create(ctx: Context): Piece {
   };
   // The land's own mesh lies a little under the fine patch, so the patch is what is seen there.
   const landHeight = (x: number, z: number): number =>
-    field.height(x, z) - 0.3 * smooth(0.3, 0.7, Math.max(inPatch(x, z), inside(x, z, bankCentre, BANK.half, K1_DIR))) - 0.6 * smooth(0.3, 0.9, inside(x, z, rockCentre, ROCK.half));
+    field.height(x, z) - 0.3 * smooth(0.3, 0.7, Math.max(inPatch(x, z), inside(x, z, bankCentre, BANK.half, K1_DIR))) - 1.1 * smooth(0.3, 0.9, inside(x, z, rockCentre, ROCK.half));
   // How deep a point sits among its neighbours, near and wide: clefts are dark because the sky does not reach into them.
   // (The neighbours are taken along the patch's own rows, whole cells away, and every height is kept once it is worked out: a neighbour
   // is then a vertex the patch has already asked for.)
@@ -149,6 +148,8 @@ export function create(ctx: Context): Piece {
       tRockN: { value: ctx.assets.texture('mat/rocktop-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tRockS: { value: ctx.assets.texture('mat/rockside.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
       tRockSN: { value: ctx.assets.texture('mat/rockside-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
+      tRiseN: { value: ctx.assets.texture('mat/rise-nh.jpg', { kind: 'data', anisotropy: 1 }) },
+      tRiseM: { value: ctx.assets.texture('mat/rise-m.jpg', { kind: 'data', anisotropy: 1 }) },
     },
     toneMapped: false,
   });
