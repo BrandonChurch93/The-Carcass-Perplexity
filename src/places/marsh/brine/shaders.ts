@@ -274,7 +274,7 @@ void main() {
     foam = smoothstep(0.0, 0.1, over);
     // (Where little gathers only the pale bubbles stand: the red between them in the froth's picture is the brine, and is left to it,
     // or a thin clump would lie on the pool as a flat red flake.)
-    foam *= mix(smoothstep(0.4, 0.58, scum.g), 1.0, smoothstep(0.5, 0.9, want));
+    foam *= mix(smoothstep(0.4, 0.58, scum.g), 1.0, smoothstep(0.2, 0.55, want));
     // (Round every clump the brine is drawn up to it and lies in its shade: a dark wet line, which is what sets it on the surface.)
     sill = smoothstep(-0.06, 0.0, over) * (1.0 - foam);
     // Its own colours, as the picture has them: cream where the bubbles are small and dry, red where the brine stands in them. Dark down
@@ -298,6 +298,11 @@ void main() {
   // (Wet and stained: the bed under the shallows is darker than the dry crust beside it, never paler.)
   brineBed = bedTex * vec3(0.2, 0.1, 0.085) * (0.7 + 0.6 * fleck.b);
   vec3 lit = brineShade(p, n, v, s, froth, gX, gY) * (1.0 - 0.3 * sill);
+  // The cloud is brightest overhead: a wavelet that leans to the lens far enough stands the high sky on its face. Small hard glints
+  // on the crests, and the body between them stays its own red.
+  float high = reflect(-v, n).y;
+  float glint = smoothstep(0.48, 0.72, high);
+  lit += uSkyZenith * 0.17 * glint * glint * (1.0 - 0.7 * foam) * skyOpen(p) * smoothstep(60.0, 20.0, dist);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
