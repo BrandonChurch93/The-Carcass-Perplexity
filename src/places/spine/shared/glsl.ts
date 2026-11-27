@@ -202,7 +202,8 @@ vec3 strikeIrradiance(vec3 p, vec3 n) {
     lit = min(lit, smoothstep(-0.6 - 0.015 * t, 0.3 + 0.004 * t, q.y - landAt(q.xz).r + 0.5 + 0.008 * t));
     if (lit <= 0.0) return near;
   }
-  return near + STRIKE_COLOUR * (uStrikeAt.w * facing * lit / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
+  // (The struck spire takes the stroke at its tip, from the foot of the channel; of the channel's length over it, it sees little.)
+  return near + STRIKE_COLOUR * (uStrikeAt.w * mix(0.16, 1.0, under) * facing * lit / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));
 }
 
 // Irradiance from the round lights: the lightning. Each is a ball of real size (a bolt a kilometre long is a row of them, or one tall one) and falls
