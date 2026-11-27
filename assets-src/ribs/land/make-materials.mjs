@@ -17,6 +17,10 @@ export const RECIPE = {
   jpegQuality: 92,
   materials: [
     { name: 'shingle', from: 'land/shingle-take1.jpg', to: 'land', width: 1024, height: 1024, dataAs: 'jpg' },
+    // The tusk blades' stone, the colony crag's bedded rock and the lichen of both: one generated take each, kept at the take's own shape.
+    { name: 'tusk', from: 'land/tusk-take1.jpg', to: 'land', width: 1536, height: 1024, dataAs: 'jpg' },
+    { name: 'strata', from: 'land/strata-take1.jpg', to: 'land', width: 1536, height: 864, dataAs: 'jpg' },
+    { name: 'lichen', from: 'land/lichen-take1.jpg', to: 'land', width: 1536, height: 1024, colourOnly: true },
     // The storm sky is laid on the dome whole and mirrored round it: it is not made to tile.
   ],
 };

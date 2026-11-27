@@ -50,13 +50,14 @@ void main() {
   vec2 way = (next.xy * (centre.z / min(next.z, -1.0)) - centre.xy) * 0.5;
   float across = length(way);
   vec2 along = across > 0.03 ? way / across : vec2(1.0, 0.0);
-  float size = (0.6 + 0.7 * aSeed.x) * (0.5 + 1.3 * age);
+  // Near the lens a card is a wisp, not a stroke across the picture: its size goes with its range.
+  float range = -centre.z;
+  float size = (0.6 + 0.7 * aSeed.x) * (0.5 + 1.3 * age) * clamp(range / 120.0, 0.2, 1.0);
   float drawn = 1.0 + 2.4 * min(across, 1.0);
   centre.xy += (along * position.x * drawn + vec2(-along.y, along.x) * position.y * 0.62) * size;
   vUv = position.xy;
-  float range = -centre.z;
   float alpha = smoothstep(0.0, 0.12, age) * pow(1.0 - age / life, 1.4) * crest * (1.0 - smoothstep(0.7, 1.0, max(off.x, off.y)));
-  alpha *= smoothstep(7.0, 26.0, range) * uGale.y * 0.7;
+  alpha *= smoothstep(12.0, 60.0, range) * uGale.y * 0.7;
   vLook = vec4(alpha, aSeed.w * 17.0 + turn * 0.37, age / life, drawn);
   float sun = sunAt(at, land);
   vec3 sunCool = mix(uSunColour, vec3(dot(uSunColour, vec3(0.3333))), 0.6);

@@ -33,6 +33,7 @@ uniform sampler2D tCloudShade;
 uniform vec4 uCloudShade;
 uniform vec4 uCloudBreak;
 uniform vec4 uCloudBreak2;
+uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
 uniform vec3 uSkyGround;
@@ -41,9 +42,9 @@ uniform vec3 uSunColour;
 uniform vec3 uHaze;
 uniform vec3 uBounce;
 uniform vec3 uSkyBreak;
-uniform sampler2D tSky;
-uniform sampler2D tSkyFine;
-uniform vec4 uSkyTurn;`;
+uniform vec4 uSkyTurn;
+uniform sampler2D tDome;
+uniform vec4 uDome;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -90,8 +91,9 @@ float contactAt(vec3 p) {
 
 // The fine relief of the floor that the land texture is too coarse to carry, metres, within plus and minus 0.14.
 // The bed under a point is landAt(xz).r + bedFine(xz); on the processor it is rig.land.height.
+// Read at the one level the processor reads, whatever the lens: a level taken from the pixel moved the edge of every pool with the lens.
 float bedFine(vec2 xz) {
-  return 0.2 * (texture2D(tBedFine, xz / 37.0).r - 0.5) + 0.07 * (texture2D(tBedFine, xz.yx / 9.7).r - 0.5);
+  return 0.2 * (textureLod(tBedFine, xz / 37.0, 0.0).r - 0.5) + 0.07 * (textureLod(tBedFine, xz.yx / 9.7, 0.0).r - 0.5);
 }
 
 // How open the cloud sheet is over q, a place on the ground as the sun would strike it: under 0.42 closed, over 0.62 open.
@@ -120,39 +122,82 @@ float cloudShadeMarched(vec3 p) {
 float cloudShade(vec3 p) {
   // The sun is not overhead: the shadow of a cloud 1500 m up lies where the ray to the sun leaves the cloud sheet.
   float c = cloudCover(p.xz - uSunDir.xz * (p.y / uSunDir.y));
+  // The sun is low and comes in under the cloud's far edge: what stands high takes it through thinner cloud than the ground does.
+  // The heads of the blades stand in travelling patches of it (uHeads: from this height, whole by this one, how much thinner).
+  c += uHeads.z * smoothstep(uHeads.x, uHeads.y, p.y);
   return mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, c));
 }
 
 // The sky with its cloud, toward d: what the dome draws, and what a mirror (a pool, the sea) should show. from is where it is seen from.
-// One picture of a storm sky laid round the dome and mirrored behind, turning slowly with the wind while its lumps work; three texture reads.
-// For light on a rough surface skyRadiance is enough.
-vec3 skyCloud(vec3 from, vec3 d) {
-  float az = atan(d.x, -d.z);
-  float el = asin(clamp(d.y, 0.0, 1.0));
-  vec2 uv = vec2(0.5 + (az - uSkyTurn.x) / 2.62, 1.0 - exp(-el / 0.82));
-  vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
-  vec3 c = texture2D(tSky, uv + 0.022 * work).rgb * uSkyTurn.w;
-  // The picture has a sixth of a texel for a pixel of the widest lens: its own lumps, read four times smaller and against their own
-  // local mean, are laid into it as the fine structure a cloud has at every size.
-  vec2 fineAt = uv * 4.0 + vec2(0.31, 0.17) + 0.05 * work;
-  c *= mix(1.0, clamp(texture2D(tSkyFine, fineAt).r * 1.992, 0.6, 1.22), 0.7);
-  // The storm's cloud is slate: the brown of the picture's bases is taken out.
+// One picture of a breaking storm sky (tDome) laid round the dome by heading and height and mirrored behind, turning slowly with the wind
+// while its lumps work. The picture is a bright afternoon's: domeTone makes it the storm's (slate, heavy bases, the white heads kept) and
+// lays the air over it, thick at the horizon and thin overhead, so that the dome, the far sea and the last blades end in one colour.
+// uDome: x the shot's gain of the whole sky, y the depth of air straight up (the veil at a height is 1 - exp(-y / sin)), z what the
+// break is given, w how far the white is shut away from the break.
+vec3 domeTone(vec3 c, vec3 d, float el, float mirror) {
   float grey = dot(c, vec3(0.3, 0.5, 0.2));
-  c = mix(c, grey * vec3(0.87, 0.98, 1.13), 0.55);
-  // The break is silver, not gold: what burns in the picture is cooled to the white of light through thin cloud; a little of its warmth stays.
-  float burning = dot(c, vec3(0.333));
-  c = mix(c, burning * vec3(0.93, 0.99, 1.08), 0.82 * smoothstep(0.12, 0.7, burning));
-  // The bases are heavy and the break burns: what is dark in the picture is darker here and what is bright is brighter, by one smooth
-  // curve, so that the break keeps the soft edge it has in the picture.
-  burning = dot(c, vec3(0.333));
-  c *= 0.55 + 1.9 * burning / (burning + 1.6);
+  c = mix(vec3(grey), c, 0.8);
+  c *= 0.18 + 0.72 * smoothstep(0.1, 0.6, grey);
   // Straight overhead the picture runs out: the slate of the cloud's base.
   c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
-  // Toward the horizon the cloud is seen through more and more air.
   float s = max(dot(d, uSkyBreak), 0.0);
   float s2 = s * s;
-  float low = 0.7 * smoothstep(0.07, 0.0, d.y);
-  return mix(c, uHaze * (1.0 + 0.5 * s2 * s2), low);
+  float near = s2 * s2;
+  near = near * near * near;
+  near *= near;
+  // Water is ruffled: what mirrors the sky sees the break wider and its white less shut (mirror toward 1) than the dome shows them (0).
+  near *= mix(near, 1.0, mirror);
+  // One break: the picture's white heads stand where the rig's break is, and away from it they are shut down to the storm's grey.
+  c *= mix(1.0 - uDome.w * (1.0 - 0.2 * mirror) * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z, near);
+  float veil = 1.0 - exp(-uDome.y / max(d.y, 0.008));
+  return uDome.x * mix(c, uHaze * (0.85 + 0.5 * s2 * s2), veil);
+}
+vec2 domeAt(vec3 d, out float el) {
+  float az = atan(d.x, -d.z);
+  el = asin(clamp(d.y, 0.0, 1.0));
+  // The picture's own pale foot stands under the horizon: the air's veil is the horizon's light, and cloud comes down to it.
+  // The picture's break lies 0.47 radians right of its middle; the rig turns it as if it lay 0.715 right (the first picture's place).
+  return vec2(0.5 + (az - uSkyTurn.x - 0.245) / 2.62, 1.0 - 0.91 * exp(-el / 0.82));
+}
+vec3 skyCloud(vec3 from, vec3 d) {
+  float el;
+  vec2 uv = domeAt(d, el);
+  vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
+  return domeTone(texture2D(tDome, uv + 0.012 * work).rgb, d, el, 0.0);
+}
+// The same sky for a mirror that names the level of the picture it reads (a rippled sheet read by its own slopes costs several times
+// more): the cloud's slow working is left out, the ripples bend the picture far more than it does.
+vec3 skyMirror(vec3 d, float level) {
+  float el;
+  vec2 uv = domeAt(d, el);
+  return domeTone(textureLod(tDome, uv, level).rgb, d, el, 0.6);
+}
+
+// The dome itself: the same sky with the fine edges a picture laid round half the heaven has not at the lens's size (a texel of it is
+// three pixels of the widest frame). The picture is read through two finer workings of the cloud's own lumps, which tear its soft edges
+// into shreds, and its body takes their grain; the finest goes out by itself where the frame is small.
+vec3 skyDome(vec3 d) {
+  float el;
+  vec2 uv = domeAt(d, el);
+  vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
+  vec2 q = uv * vec2(5.0, 2.8);
+  vec2 a = texture2D(tCloudShade, q + 0.5 * uSkyTurn.yz).rg - 0.5;
+  vec2 b = texture2D(tCloudShade, q * 3.7 + 0.19).rg - 0.5;
+  vec3 c = texture2D(tDome, uv + 0.012 * work + (2.4 * a + 0.5 * b) * vec2(0.0022, 0.0039)).rgb;
+  // Scud: lower, nearer shreds of the same storm cross before it three times as fast, so cloud goes across the blades' heads while
+  // a lens is held. They are the picture's own dark bodies read larger (a nearer cloud is a larger one), laid end to end mirrored;
+  // the picture is larger than the frame there at every size, so its finest level is named.
+  float along = uv.x * 0.55 + 0.23 - 0.0075 * uTime;
+  vec2 low = vec2(abs(fract(0.5 * along) * 2.0 - 1.0), 0.34 + 0.9 * el) + 0.02 * work + (2.4 * a + 0.5 * b) * vec2(0.003, 0.005);
+  vec3 scud = textureLod(tDome, low, 0.0).rgb;
+  float body = smoothstep(0.54, 0.32, dot(scud, vec3(0.3, 0.5, 0.2))) * smoothstep(0.0, 0.07, el) * smoothstep(0.75, 0.3, el);
+  // The break stands open: the scud thins toward it and is gone before it.
+  body *= smoothstep(0.985, 0.9, dot(d, uSkyBreak));
+  c = mix(c, scud * 0.85, 0.75 * body);
+  // The grain is the cloud's, not the clear air's between the heads: it is given by how grey the place is.
+  float grey = dot(c, vec3(0.3, 0.5, 0.2));
+  c *= 1.0 + (0.09 * a.y + 0.08 * b.x) * smoothstep(0.75, 0.3, grey);
+  return domeTone(c, d, el, 0.0);
 }
 
 // How much of the sun reaches p through the blades and the land (baked once) and the cloud (drifting).
@@ -177,14 +222,19 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   // The baked land knows nothing finer than ten metres, and inside a blade's own foot it is dark: an upright face asks for the land in front of it.
   vec4 land = landAt(p.xz + n.xz * 14.0);
   float above = p.y - land.r;
-  float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above)) * occ;
+  float stood = 1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above);
+  float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * stood * occ;
   float gap = cloudShade(p);
   float sun = sunBaked(p, land) * gap * occ;
-  float nl = max(dot(n, uSunDir), 0.0);
+  // What stands high stands in the light of the break itself, which is wide: there the light goes round a blade past its edge
+  // (six tenths of the way), so its round shows from the lit side to the shade.
+  float wide = 0.6 * smoothstep(uHeads.x, uHeads.y, p.y);
+  float nl = max((dot(n, uSunDir) + wide) / (1.0 + wide), 0.0);
   // The lit flats throw the low sun back up: a face that looks down or stands upright over sunlit ground takes it warm, and the more of
   // it the higher it stands over its own shadow. This is what keeps a lee face from going to the sky's cold grey alone.
   vec3 bounce = uSunColour * uBounce * (uSunDir.y * (gap - uCloudShade.w) * (0.5 - 0.5 * n.y) * (0.3 + 0.7 * clamp(above / 90.0, 0.0, 1.0)));
-  vec3 e = (skyIrradiance(n) + bounce) * open + uSunColour * (nl * sun);
+  // No wall goes to nothing: wet ground and water all round it throw the sky back into its darkest fold (uHeads.w of the ground's light), but not under what stands on it.
+  vec3 e = (skyIrradiance(n) + bounce) * open + 3.14159 * uSkyGround * (uHeads.w * occ * stood) + uSunColour * (nl * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
@@ -195,7 +245,9 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   vec3 h = normalize(v + uSunDir);
   float gloss = 2.0 / max(rough * rough * rough * rough, 2e-4);
   float spec = pow(max(dot(n, h), 0.0), gloss) * (gloss + 8.0) * 0.0398;
-  return c + f * (env * open + uSunColour * (spec * nl * sun));
+  // The glint is the sun on water: silver-white, with a third of the light's own warmth.
+  vec3 glint = mix(vec3(dot(uSunColour, vec3(0.3, 0.5, 0.2))), uSunColour, 0.35);
+  return c + f * (env * open + glint * (spec * nl * sun));
 }
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.

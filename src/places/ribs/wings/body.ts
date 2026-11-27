@@ -215,13 +215,19 @@ export interface Pose {
   beat: number;
   /** A folded sail lifted off the back, radians. */
   sail: number;
+  /** How long the strands of the tuft are: 1 as the feeder's, which reach the pool. */
+  tuft: number;
+  /** The neck leaves the shoulder turned up from the line of the back by this, radians: 0 as the feeder's. */
+  rise: number;
+  /** How dark it is close over its floor (0 to 1): the shade of one that stands on rock, where no shade is laid for it. */
+  shade: number;
   /** Each animal's own number, for what differs strand by strand. */
   seed: number;
 }
 export const pose = (): Pose => ({
   x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, size: 1, tone: 1,
   feet: [{ x: 0, y: 0, z: 0, yaw: 0, droop: 0 }, { x: 0, y: 0, z: 0, yaw: 0, droop: 0 }],
-  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, seed: 0,
+  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, tuft: 1, rise: 0, shade: 0, seed: 0,
 });
 
 /** The body's frame in the place: the columns ahead, up and left of a pose. */
@@ -255,7 +261,7 @@ export function inPlace(p: Pose, at: V3): V3 {
 
 /** The neck: a curve from the shoulder to the head that keeps its length. Fills `curve` with NECK_RINGS points and ways, in the body's frame. */
 const curve = { p: new Float32Array((NECK_RINGS + 1) * 3), t: new Float32Array((NECK_RINGS + 1) * 3) };
-function bend(head: V3, pitch: number, yaw: number): void {
+function bend(head: V3, pitch: number, yaw: number, rise = 0): void {
   let hx = head[0] - SHOULDER[0];
   let hy = head[1] - SHOULDER[1];
   let hz = head[2] - SHOULDER[2];
@@ -266,7 +272,8 @@ function bend(head: V3, pitch: number, yaw: number): void {
   hy *= reach;
   hz *= reach;
   const d1: V3 = [Math.cos(pitch) * Math.cos(yaw), Math.sin(pitch), Math.cos(pitch) * Math.sin(yaw)];
-  const d0 = SHOULDER_WAY;
+  // The way it leaves the shoulder: along the back, or turned up from it where the animal carries its neck high.
+  const d0: V3 = [SHOULDER_WAY[0] * Math.cos(rise) - SHOULDER_WAY[1] * Math.sin(rise), SHOULDER_WAY[0] * Math.sin(rise) + SHOULDER_WAY[1] * Math.cos(rise), 0];
   const point = (h: number, u: number, out: V3, way: V3 | null): void => {
     const a = 1 - u;
     for (let k = 0; k < 3; k++) {
@@ -316,7 +323,7 @@ function bend(head: V3, pitch: number, yaw: number): void {
 
 /** Where the root of the tuft is in the place for a pose, and the way the neck ends there. */
 export function headInPlace(p: Pose): { at: V3; way: V3 } {
-  bend(p.head, p.headPitch, p.headYaw);
+  bend(p.head, p.headPitch, p.headYaw, p.rise);
   const n = NECK_RINGS * 3;
   const at = inPlace(p, [curve.p[n] as number, curve.p[n + 1] as number, curve.p[n + 2] as number]);
   frame(p, basis);
@@ -363,6 +370,7 @@ uniform vec2 uSize;
 uniform vec4 uFlank;
 uniform float uPool;
 uniform float uGrey;
+uniform float uThrough;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vPx;
@@ -418,8 +426,12 @@ void main() {
   // Where the picture is amber it is the skin of a sail, and light comes through it.
   float amber = smoothstep(0.4, 0.62, (skinPic.r - skinPic.b) / max(skinPic.r, 0.05));
   float skin = sail ? mix(0.3 * free, 1.0, amber) * mix(0.35, 1.0, free) : 0.0;
-  vec3 albedo = (sail ? pow(skinPic, vec3(0.92)) : min(pow(skinPic, vec3(0.8)) * 1.22, vec3(0.94))) * vMix.z;
+  // A sail that lies folded and dry on a back is as pale as the hide: only one held up to the light keeps the picture's deep amber.
+  vec3 pale = min(pow(skinPic, vec3(0.8)) * 1.22, vec3(0.94));
+  vec3 albedo = (sail ? mix(pale, pow(skinPic, vec3(0.92)), 0.3 + 0.7 * uThrough) : pale) * vMix.z;
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.02, 0.98, 0.93), uGrey * (1.0 - skin * (1.0 - uGrey)));
+  // And a folded, dry one has lost most of its colour.
+  if (sail) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.05, 0.98, 0.9), 0.32 * (1.0 - uThrough));
   // Wet where it stands in the pool, and a hand over it.
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.45, vWorld.y);
   albedo *= 1.0 - 0.42 * wet;
@@ -444,12 +456,12 @@ void main() {
   // The wet flat and the pool send the sky back up at what stands over them.
   col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 1.0 + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
-  col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
+  col = mix(col, vec3(dot(col, vec3(0.3333))), 0.8 * far * skin);
   // The light that comes through a sail from the sun and the sky behind it.
-  col += mix(albedo, vec3(dot(albedo, vec3(0.3333))), 0.5 * (1.0 - amber)) * skin * mix(vec3(1.0, 0.74, 0.48), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * (0.45 + 0.9 * max(dot(-n0, uSunDir), 0.0)) + skyIrradiance(-n0) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
+  col += uThrough * mix(albedo, vec3(dot(albedo, vec3(0.3333))), 0.5 * (1.0 - amber)) * skin * mix(vec3(1.0, 0.74, 0.48), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * (0.1 + 1.25 * max(dot(-n0, uSunDir), 0.0)) + skyIrradiance(-n0) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
-  col += (albedo * 0.6 + 0.04) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun;
+  col += (albedo * 0.6 + 0.04 * vMix.z) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun;
   // And the low sun wraps a little way round what it lights: the edge turned to it is warm.
   col += albedo * uSunColour * (pow(clamp(dot(n, uSunDir) + 0.45, 0.0, 1.0), 2.0) * (0.12 + 0.5 * rim) * sun * vMix.y * (1.0 - skin)) / 3.14159;
   col *= 1.0 - 0.3 * far;
@@ -462,7 +474,7 @@ export interface BodyMaterials {
   mirror: THREE.ShaderMaterial;
 }
 /** `sheet` is the picture the skin is thrown from (its cover and relief beside it) and `flank` the evenly lit patch of it laid where it cannot be thrown. */
-export function bodyMaterials(ctx: Context, pool: number, grey: number, sheet = 'feeder-a', flank: [number, number, number, number] = FLANK): BodyMaterials {
+export function bodyMaterials(ctx: Context, pool: number, grey: number, sheet = 'feeder-a', flank: [number, number, number, number] = FLANK, through = 1): BodyMaterials {
   const uniforms = {
     ...ctx.rig.uniforms,
     tPic: { value: ctx.assets.texture(`mat/${sheet}.jpg`, { kind: 'colour', repeat: false, anisotropy: 4 }) },
@@ -472,6 +484,8 @@ export function bodyMaterials(ctx: Context, pool: number, grey: number, sheet = 
     uFlank: { value: new THREE.Vector4(...flank) },
     uPool: { value: pool },
     uGrey: { value: grey },
+    // How much of the light behind a sail comes through it: 1 where it is held up to the sun, less where it lies folded on a back.
+    uThrough: { value: through },
   };
   const folded = sheet === 'feeder-a' ? { FOLDED: 1 } : {};
   const body = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines: { ...folded }, side: THREE.DoubleSide });
@@ -605,6 +619,12 @@ export class Bodies {
     }
   }
 
+  /** Only the first `many` of them are drawn from here on: those after them cost nothing. */
+  draw(many: number): void {
+    const each = (this.mesh.geometry.index?.count ?? 0) / this.count;
+    this.mesh.geometry.setDrawRange(0, Math.min(this.count, Math.max(0, many)) * each);
+  }
+
   private fold(i: number): void {
     const from = i * VERTS * 3;
     this.at.fill(0, from, from + VERTS * 3);
@@ -658,7 +678,7 @@ export class Bodies {
       const up = turn(ring.ty, ring.tx, 0);
       this.ring(c[0], c[1], c[2], up[0], up[1], up[2], l[0], l[1], l[2], (ring.r / PX) * size, ((ring.r * (WIDE[0] as number)) / PX) * size, SIDES, COS.trunk, SIN.trunk);
     }
-    bend(p.head, p.headPitch, p.headYaw);
+    bend(p.head, p.headPitch, p.headYaw, p.rise);
     // The ring keeps its top as the neck bends: carried along the curve from the shoulder, never spun about it.
     let ux = (torso[TORSO_RINGS - 1] as (typeof torso)[number]).ty;
     let uy = (torso[TORSO_RINGS - 1] as (typeof torso)[number]).tx;
@@ -817,7 +837,7 @@ export class Bodies {
       dx /= dl;
       dy /= dl;
       dz /= dl;
-      const long = (1.2 + 0.6 * k3) * size;
+      const long = (1.2 + 0.6 * k3) * size * p.tuft;
       const each = long / (STRAND_RINGS - 1);
       const thick = ((9.5 - 3.5 * k2) / PX) * size;
       // Each curls its own way as it hangs: a slow turn about its own line, and in towards the animal at its end.
@@ -898,6 +918,14 @@ export class Bodies {
         this.way[n + 1] = w[1];
         this.way[n + 2] = w[2];
         n += 3;
+      }
+    }
+    // One that stands on rock shades itself there: its feet, its legs and its belly are dark where they are close over the ledge.
+    if (p.shade > 0) {
+      for (let v = 0; v < VERTS; v++) {
+        const h = ((this.at[(v0 + v) * 3 + 1] as number) - p.floor) / (1.5 * size);
+        const k = h <= 0 ? 0 : h >= 1 ? 1 : h * h * (3 - 2 * h);
+        this.mix[(v0 + v) * 3 + 2] = p.tone * (1 - p.shade * 0.8 * (1 - k));
       }
     }
   }

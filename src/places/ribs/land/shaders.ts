@@ -38,6 +38,15 @@ vec3 bump(vec3 n, vec3 p, vec2 uv, vec2 g) {
   vec3 b = dp2perp * du1.y + dp1perp * du2.y;
   float inv = inversesqrt(max(max(dot(t, t), dot(b, b)), 1e-12));
   return normalize(n + (t * g.x - b * g.y) * inv);
+}
+// The same with the slopes of the place and of the picture handed in: for use inside a branch, where no slope may be taken.
+vec3 bumpD(vec3 n, vec3 dp1, vec3 dp2, vec2 du1, vec2 du2, vec2 g) {
+  vec3 dp2perp = cross(dp2, n);
+  vec3 dp1perp = cross(n, dp1);
+  vec3 t = dp2perp * du1.x + dp1perp * du2.x;
+  vec3 b = dp2perp * du1.y + dp1perp * du2.y;
+  float inv = inversesqrt(max(max(dot(t, t), dot(b, b)), 1e-12));
+  return normalize(n + (t * g.x - b * g.y) * inv);
 }`;
 
 const HEAD = /* glsl */ `
@@ -232,24 +241,42 @@ void main() {
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
-// The colony's crag. Its two stones are laid by the world's own position on three axes at one size each (ten metres for the bedded
-// ledge stone, three for the shore rock over it), so that no picture is drawn out down a face. Mid grey-brown, wet and darker low
-// down, rust lichen in patches on what leans to the sky and the sun, thin white runs down the faces under the perches. What hangs
-// over is never black: it takes the sky and the floor's bounce, a quarter of the lit rock.
+// The colony's crag. Its rock is one generated sheet of thin level beds broken by upright joints (land/strata.jpg, with its slopes),
+// laid on each face by the level way across it and the height, and on each top by the floor's plan, at two sizes, so that a texel is
+// about a pixel where the lens stands by it and nothing is drawn out. Lichen is a second sheet (land/lichen.jpg): its crusts are the
+// patches' own shapes. White lies on the tops and hangs in short strings from the lips of the ledges. What hangs over is never black.
 export const COLONY_FRAGMENT = /* glsl */ `
 ${HEAD}
 varying vec4 vBlade;
 varying vec3 vNb;
 varying vec2 vLay;
 varying float vShade;
-uniform sampler2D tRock;
-uniform sampler2D tColony;
-uniform sampler2D tColonyN;
+uniform sampler2D tStrata;
+uniform sampler2D tStrataN;
+uniform sampler2D tLichen;
 uniform sampler2D tWeed;
 uniform float uTide;
 uniform float uKelp;
-// The colony's rock is the Builder's own stretch of it (40 m of stepped pale stone with its lichen, its white and its weed), laid round
-// the crag by the metres round it and the height: each laying 31 m tall, shifted along from the one under it, mirrored where it meets itself.
+uniform float uStrataMean;
+// The bedded stone at one place of a face: its colour over the sheet's mean, its slopes (along the face, up it) and its height.
+vec3 bedded(vec2 at, float foot, out vec2 slopes, out float hgt) {
+  const float FINE = 6.4;
+  const float WIDE = 23.0;
+  vec2 uf = at / vec2(FINE, FINE * 0.5625);
+  // Each course of the sheet is shifted along from the one under it: the seam between two courses is a bed, and no joint runs up the crag.
+  uf.x += 0.37 * floor(uf.y);
+  vec2 uw = at / vec2(WIDE, WIDE * 0.5625) + vec2(0.37, 0.61);
+  uw.x += 0.41 * floor(uw.y);
+  float lf = log2(max(foot * 1536.0 / FINE, 1e-6));
+  float lw = log2(max(foot * 1536.0 / WIDE, 1e-6));
+  vec3 cf = textureLod(tStrata, uf, lf).rgb;
+  vec3 df = textureLod(tStrataN, uf, lf).rgb;
+  vec3 cw = textureLod(tStrata, uw, lw).rgb;
+  vec3 dw = textureLod(tStrataN, uw, lw).rgb;
+  slopes = (df.xy - 0.5) * 1.5 + (dw.xy - 0.5) * 1.1;
+  hgt = mix(dw.z, df.z, 0.5);
+  return (cf / uStrataMean) * (0.4 + 0.6 * dot(cw, vec3(0.333)) / uStrataMean);
+}
 void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -257,90 +284,84 @@ void main() {
   vec3 ng = normalize(cross(dFdx(vWorld), dFdy(vWorld)) + vec3(0.0, 1e-9, 0.0));
   ng *= sign(dot(ng, v) + 1e-6);
   vec3 nf = normalize(mix(n0, ng, 0.5) + vec3(0.0, 1e-6, 0.0));
+  float foot = max(length(dFdx(vWorld)), length(dFdy(vWorld)));
   float y = vWorld.y;
-  float arc = vBlade.y;
-  float up = (y - uTide + 3.0 * (vnoise(vec2(arc / 17.0, 1.5)) - 0.5)) / 31.0;
-  float row = floor(up);
+  float top = smoothstep(0.45, 0.8, nf.y);
   // A face is laid by the level way across it: by z where it looks along x, by x where it looks along z, so that no wall is drawn out.
-  float facing = smoothstep(0.3, 0.7, n0.x * n0.x / (n0.x * n0.x + n0.z * n0.z + 1e-5));
-  float vq = 0.14 + 0.78 * (up - row);
-  vec2 flatA = vec2(vWorld.z / 40.0, 0.78 * up);
-  vec2 flatB = vec2(vWorld.x / 40.0, 0.78 * up);
-  float lv = max(footLevel(tColony, dFdx(flatA), dFdy(flatA), 3.0) * step(0.001, facing), footLevel(tColony, dFdx(flatB), dFdy(flatB), 3.0) * step(facing, 0.999));
-  vec2 ucA = vec2(vWorld.z / 40.0 + 0.37 * row, vq);
-  vec2 ucB = vec2(vWorld.x / 40.0 + 0.37 * row + 0.5, vq);
-  vec2 uc = facing > 0.5 ? ucA : ucB;
-  float mirror = (1.0 - 2.0 * mod(floor(uc.x), 2.0)) * (facing > 0.5 ? sign(n0.x) : -sign(n0.z));
-  vec3 pic = mix(textureLod(tColony, ucB, lv).rgb, textureLod(tColony, ucA, lv).rgb, facing);
-  vec3 nhp = textureLod(tColonyN, uc, lv).rgb;
-  arc = facing > 0.5 ? vWorld.z : vWorld.x;
-  vec2 ud = vec2(arc, y) / 3.0;
-  vec3 det = textureLod(tRock, ud, footLevel(tRock, dFdx(ud), dFdy(ud), 3.0)).rgb;
-  float grain = dot(det, vec3(3.8));
-  float hgt = nhp.z;
-  // The slopes of the picture, turned into the world: round the crag and up it.
+  float facing = smoothstep(0.35, 0.65, n0.x * n0.x / (n0.x * n0.x + n0.z * n0.z + 1e-5));
+  float arc = facing > 0.5 ? vWorld.z : vWorld.x;
+  vec3 wayAcross = facing > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
   vec3 round0 = normalize(cross(vec3(0.0, 1.0, 0.0), n0) + vec3(1e-6, 0.0, 0.0));
   vec3 rise = normalize(cross(n0, round0));
-  vec2 g = (nhp.xy - 0.5) * vec2(mirror, 1.0);
-  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 0.36);
-  float top = smoothstep(0.45, 0.8, nf.y);
+  vec2 slopes;
+  float hgt;
+  vec3 stone;
+  vec3 lean;
+  vec2 at = vec2(arc, y);
+  if (top > 0.5) {
+    at = vWorld.xz;
+    stone = bedded(at, foot, slopes, hgt);
+    lean = vec3(1.0, 0.0, 0.0) * slopes.x - vec3(0.0, 0.0, 1.0) * slopes.y;
+  } else {
+    stone = bedded(at, foot, slopes, hgt);
+    // Where a face turns from one way to the other the two layings cross over each other.
+    if (facing > 0.02 && facing < 0.98) {
+      vec2 s2;
+      float h2;
+      vec3 other = bedded(vec2(facing > 0.5 ? vWorld.x : vWorld.z, y), foot, s2, h2);
+      float k = facing > 0.5 ? 1.0 - facing : facing;
+      stone = mix(stone, other, k);
+    }
+    lean = wayAcross * slopes.x - rise * slopes.y;
+  }
+  lean -= n0 * dot(lean, n0);
+  vec3 n = normalize(n0 + lean);
   float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
-  // The stone is a mid grey: the sheet's own rust is taken out of it, and its lichen is laid again below, in patches.
-  float picLum = dot(pic, vec3(0.333));
-  pic = mix(vec3(mix(0.26, max(picLum, 0.16), 0.62)) * vec3(1.02, 1.0, 0.96), max(pic, vec3(0.13)), 0.22);
-  vec3 albedo = pic * 1.05 * mix(1.0, grain, 0.5) * (0.88 + 0.24 * macro);
-  // A top is no face: it takes the broad colour of the stone under it, with white where the colony stands and lichen in crusts.
-  vec3 broad = textureLod(tColony, uc, lv + 4.0).rgb;
-  float splash = smoothstep(0.5, 0.66, vnoise(vWorld.xz * 0.45 + 3.0) * 0.6 + vnoise(vWorld.xz * 1.7) * 0.4 + 0.25 * (grain - 1.0));
-  float crust = smoothstep(0.6, 0.66, vnoise(vWorld.xz * 0.21 + 9.0) * 0.55 + vnoise(vWorld.xz * 0.9 + 2.0) * 0.45 + 0.2 * (grain - 1.0));
-  vec3 topC = mix(vec3(dot(broad, vec3(0.333))), broad, 0.3) * 0.9 * (0.6 + 0.4 * grain);
-  topC = mix(topC, vec3(0.42, 0.17, 0.02) * (0.6 + 0.5 * grain), 0.85 * crust);
-  topC = mix(topC, vec3(0.6, 0.6, 0.57) * (0.75 + 0.3 * grain), 0.7 * splash);
-  albedo = mix(albedo, topC, 0.8 * top);
-  // The white runs only under a shelf deep enough to hold a roost: in drips from its lip, a stride or two down the face, none on a bare face.
-  float drip = smoothstep(0.65, 0.9, vLay.y) * smoothstep(0.05, 0.25, vLay.x) * exp(-vLay.x / (0.8 + 3.2 * vnoise(vec2(arc * 0.9, 3.5)))) * smoothstep(0.38, 0.6, vnoise(vec2(arc * 5.0, y * 0.25 + 7.0)) * 0.6 + vnoise(vec2(arc * 14.0, y * 0.6)) * 0.4 + 0.25 * (hgt - 0.5)) * smoothstep(0.44, 0.6, vnoise(vec2(arc * 0.3, y * 0.11) + 17.0)) * (1.0 - top);
-  albedo = mix(albedo, vec3(0.66, 0.655, 0.62) * (0.6 + 0.45 * grain), 0.9 * drip);
-  // And white runs down the open faces from the roosts above them: thin, in fields, broken by the stone's own relief.
-  float runs = smoothstep(0.52, 0.66, vnoise(vec2(arc * 2.3, y * 0.09 + 2.0)) * 0.65 + vnoise(vec2(arc * 6.0, y * 0.35)) * 0.35 + 0.2 * (hgt - 0.5)) * smoothstep(0.36, 0.52, vnoise(vec2(arc, y) * 0.07 + 21.0)) * (1.0 - top);
-  albedo = mix(albedo, vec3(0.62, 0.62, 0.59) * (0.6 + 0.45 * grain), 0.75 * runs);
-  drip = max(drip, runs);
-  // Orange lichen in patches some strides across, on the faces that take the weather, never under the white.
-  float patchL = smoothstep(0.64, 0.72, vnoise(vec2(arc, y) * 0.16 + 13.0) * 0.7 + vnoise(vec2(arc, y) * 0.9 + 4.0) * 0.3 + 0.12 * (grain - 1.0));
-  albedo = mix(albedo, vec3(0.52, 0.2, 0.022) * (0.55 + 0.6 * grain), 0.85 * patchL * (1.0 - drip) * (1.0 - 0.6 * top));
+  float grain = clamp(dot(stone, vec3(0.333)), 0.3, 1.9);
+  // Dry broken grey rock: darker on its faces, pale and dusted on its tops.
+  vec3 albedo = mix(vec3(0.265, 0.255, 0.24), vec3(0.35, 0.345, 0.325), top) * mix(vec3(grain), stone, 0.7) * (0.82 + 0.36 * macro);
+  // A seam of the sheet is a dark crack; the joints and bed lines stand at more than their own strength.
+  albedo *= 0.62 + 0.38 * smoothstep(0.12, 0.5, hgt);
+  // Lichen: rust and ochre crusts in patches some strides across, their edges the sheet's own, on faces and tops alike.
+  vec2 ul = at / vec2(3.6, 2.4) + 0.23;
+  vec3 crust = textureLod(tLichen, ul, log2(max(foot * 1536.0 / 3.6, 1e-6))).rgb;
+  float crusted = smoothstep(0.04, 0.2, crust.r - crust.b);
+  float field = vnoise(at * 0.31 + 13.0) * 0.55 + vnoise(at * 0.9 + 4.0) * 0.3 + 0.15 * vnoise(vWorld.xz * 0.11 + y * 0.07);
+  float patchL = smoothstep(0.575, 0.635, field + 0.1 * (crusted - 0.5) + 0.05 * top) * crusted;
+  // White on the tops where the colony stands, in splashes; never one sheet of it.
+  float splash = smoothstep(0.42, 0.58, vnoise(vWorld.xz * 0.45 + 3.0) * 0.5 + vnoise(vWorld.xz * 1.7) * 0.3 + 0.2 * hgt + 0.1 * grain);
+  // The white hangs from the lip of a ledge deep enough to hold a roost: a rim at the lip and thin strings of unlike length under it.
+  float lip = smoothstep(0.55, 0.9, vLay.y);
+  float reach = 0.4 + 3.4 * pow(vnoise(vec2(arc * 1.9, 3.5)), 2.0);
+  float strings = smoothstep(0.46, 0.58, vnoise(vec2(arc * 9.0, y * 0.3 + 7.0)) * 0.6 + vnoise(vec2(arc * 23.0, y * 0.8)) * 0.4 + 0.3 * smoothstep(0.35, 0.0, vLay.x));
+  float drip = lip * strings * smoothstep(reach, 0.35 * reach, vLay.x) * smoothstep(0.22, 0.42, vnoise(vec2(arc * 0.6, 11.5))) * (1.0 - top);
+  float roost = smoothstep(0.34, 0.56, vnoise(vWorld.xz * 0.17 + y * 0.13 + 7.0));
+  float white = max(0.8 * splash * top * (0.4 + 0.6 * roost), 0.9 * drip * (0.5 + 0.5 * roost));
+  albedo = mix(albedo, mix(crust, vec3(0.4, 0.26, 0.07), 0.45) * vec3(0.8, 0.78, 0.7) * (0.75 + 0.25 * grain), 0.9 * patchL * (1.0 - white));
+  albedo = mix(albedo, vec3(0.68, 0.675, 0.64) * (0.7 + 0.3 * grain), white);
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (hgt - 0.5);
   float band = smoothstep(tide + 5.0, tide + 0.5, y);
   // Wet and darker low down: the spray of every tide stands in it.
   float low = smoothstep(uKelp + 5.0 + 4.0 * (macro - 0.5), uKelp - 1.5, y);
   albedo *= mix(1.0, 0.62, low) * mix(1.0, 0.45, band);
   // The weed: the picture's own hanks hang from the weed line, and under them the dark weed of the shore.
-  float line = uKelp + 3.6 * (vnoise(vec2(arc / 6.0, 4.5)) - 0.5) + 1.6 * (vnoise(vec2(arc / 1.3, 9.5)) - 0.5);
+  float line = uKelp + 8.0 * (vnoise(vec2(arc / 9.0, 4.5)) - 0.5) + 3.0 * (vnoise(vec2(arc / 1.7, 9.5)) - 0.5);
   float down = line - y;
-  vec2 uk = vec2(arc / 40.0, 0.125 - down / 40.0);
-  // The shore weed is olive, gold brown where a strap turns up: never a black band.
-  vec3 wk = texture2D(tWeed, mix(vec2(arc / 2.6, y / 5.5), vWorld.xz / 3.0, step(0.5, top))).rgb;
-  // On a face it hangs: dark strands, drawn down, a few of them amber. The sheet's own weed is a black glass at this size and is not used.
-  float aw = arc + 0.5 * (vnoise(vec2(arc * 0.8, y * 0.6)) - 0.5);
-  float strand = vnoise(vec2(aw * 7.0, y * 2.2 + 3.0)) * 0.6 + vnoise(vec2(aw * 19.0, y * 5.0)) * 0.4;
-  vec3 hank = mix(vec3(0.075, 0.066, 0.032), vec3(0.15, 0.09, 0.026), smoothstep(0.6, 0.85, strand)) * (0.7 + 0.6 * vnoise(vec2(aw * 23.0, y * 6.0)));
-  // It hangs in tiers, each over the next: dark where a tier goes under the one above, its tips the lightest.
-  float tier = fract(y * 1.2 + 1.6 * vnoise(vec2(aw * 1.7, 6.5)) + 0.7 * vnoise(vec2(aw * 6.1, 2.5)) + 0.35 * strand);
-  hank *= 0.55 + 0.8 * tier * tier;
-  vec3 kelp = top < 0.5 ? hank : wk * 2.0 + vec3(0.07, 0.048, 0.014) * smoothstep(0.02, 0.07, wk.g);
-  float weed = smoothstep(-0.2, 0.5, down + 1.5 * (strand - 0.5));
+  // The weed is the Builder's own sheet of hanging wrack, laid by the face at its own size (3.2 m): limp straps, olive black, a few amber.
+  vec2 uk = top > 0.5 ? vWorld.xz / 3.2 : vec2(arc, y) / 3.2;
+  vec3 wk = textureLod(tWeed, uk, log2(max(foot * 1024.0 / 3.2, 1e-6))).rgb;
+  float wl = dot(wk, vec3(0.333));
+  vec3 kelp = wk * 1.5 + vec3(0.05, 0.034, 0.008) * smoothstep(0.03, 0.09, wl);
+  // Its upper edge is ragged by the hank: a hank hangs lower or higher than its neighbour, and its tips are the sheet's own.
+  float weed = smoothstep(-0.25, 0.35, down + 1.1 * (vnoise(vec2(arc * 2.9, 2.5 + y * 0.15)) - 0.5) + 6.0 * (wl - 0.05));
   albedo = mix(albedo, kelp, weed);
-  // The weed is no mirror: it keeps its own olive, and the rock's slopes are not its slopes.
-  n = normalize(mix(n, n0 + 0.6 * round0 * (vnoise(vec2(aw * 17.0 + 0.4, y * 2.0)) - vnoise(vec2(aw * 17.0 - 0.4, y * 2.0))), weed));
-  // Close, the sheet is a smear: there the stone takes its own pits and grit, a thumb across, in colour and in slope.
-  float closeC = smoothstep(60.0, 16.0, length(cameraPosition - vWorld)) * (1.0 - weed);
-  if (closeC > 0.01) {
-    vec2 up2 = vec2(arc, y) * 11.0;
-    float pit = vnoise(up2);
-    vec2 slopeP = vec2(vnoise(up2 + vec2(0.35, 0.0)), vnoise(up2 + vec2(0.0, 0.35))) - pit;
-    n = normalize(n - (round0 * slopeP.x + rise * slopeP.y) * 1.4 * closeC);
-    albedo *= mix(1.0, 0.72 + 0.56 * pit, closeC);
-  }
-  float rough = mix(mix(0.9, 0.68, max(band, 0.7 * low)), 0.4, weed);
-  float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4);
+  // The weed is no mirror of the rock: it lies over the stone's cracks, and its straps catch the sky each its own way.
+  n = normalize(mix(n, n0 + (round0 * (wk.g - wk.r) + rise * (wl - 0.06)) * 3.0, weed));
+  float rough = mix(mix(mix(0.74, 0.88, top), 0.6, max(band, 0.7 * low)), 0.56, weed);
+  // Ledges of unequal depth: here and there, for some strides along the crag, a ledge overhangs deep and the face under its lip stands in its shade.
+  float deep = smoothstep(0.42, 0.6, vnoise(vec2(arc * 0.09, y * 0.19) + 21.0)) * (1.0 - top) * smoothstep(2.8, 0.2, vLay.x) * (1.0 - white);
+  albedo *= 1.0 - 0.4 * deep;
+  float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4) * (1.0 - 0.6 * deep);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
   vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * vec3(dot(uSunColour, vec3(0.36, 0.36, 0.28))) * cloudShade(vWorld)) * (0.3 / 3.14159) * (0.75 + 0.25 * occ);
@@ -388,6 +409,7 @@ uniform sampler2D tWeedN;
 uniform sampler2D tBare;
 uniform sampler2D tBareN;
 uniform float uBare;
+uniform vec4 uRill;
 void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -407,30 +429,45 @@ void main() {
   // no hank comes round again; the wall's sheet gives only where it is thick and where thin.
   float closeW = smoothstep(90.0, 30.0, length(cameraPosition - vWorld));
   vec3 nc = n;
+  // Slopes are taken here, before the branch: taken inside it they differ from one run to the next.
+  vec3 dpx = dFdx(vWorld);
+  vec3 dpy = dFdy(vWorld);
+  vec2 dux = dFdx(vUv);
+  vec2 duy = dFdy(vUv);
   if (closeW > 0.001) {
     // Fronds a stride wide and two long: the lens that comes this close looks along the wall, and narrower ones close up to threads.
     vec2 u1 = vUv / vec2(17.0, 8.0) + vec2(0.17, 0.0);
     vec2 u2 = vUv / vec2(26.0, 12.6) + vec2(0.61, 0.43);
     float pickW = smoothstep(0.42, 0.58, vnoise(vUv / vec2(9.0, 5.1) + 5.0));
-    vec3 w1 = mix(texture2D(tWeed, u1).rgb, texture2D(tWeed, u2).rgb, pickW);
-    vec3 n1 = mix(texture2D(tWeedN, u1).rgb, texture2D(tWeedN, u2).rgb, pickW);
+    vec2 s1 = 1.0 / vec2(17.0, 8.0);
+    vec2 s2 = 1.0 / vec2(26.0, 12.6);
+    vec2 s3 = 1.0 / vec2(11.0, 5.3);
+    vec3 w1 = mix(textureGrad(tWeed, u1, dux * s1, duy * s1).rgb, textureGrad(tWeed, u2, dux * s2, duy * s2).rgb, pickW);
+    vec3 n1 = mix(textureGrad(tWeedN, u1, dux * s1, duy * s1).rgb, textureGrad(tWeedN, u2, dux * s2, duy * s2).rgb, pickW);
     vec2 u3 = vUv / vec2(11.0, 5.3) + vec2(0.3, 0.7);
-    vec3 n3 = texture2D(tWeedN, u3).rgb;
+    vec3 n3 = textureGrad(tWeedN, u3, dux * s3, duy * s3).rgb;
     // The sheet gives only the broad tone here, read soft: its hanks a stride wide are not this weed's.
     float tone = dot(textureLod(tWall, uw, 5.0).rgb, vec3(0.333)) / 0.1;
-    vec3 strap = w1 * vec3(0.45, 0.38, 0.26) * (0.6 + 0.4 * tone) * (0.6 + 0.4 * dot(texture2D(tWeed, u3).rgb, vec3(0.333)) / 0.039);
+    vec3 strap = w1 * vec3(0.3, 0.25, 0.11) * (0.6 + 0.4 * tone) * (0.6 + 0.4 * dot(textureGrad(tWeed, u3, dux * s3, duy * s3).rgb, vec3(0.333)) / 0.039);
     albedo = mix(albedo, strap, closeW);
-    nc = normalize(n0 + 0.12 * (n - n0) + (bump(n0, vWorld, u1, (n1.xy - 0.5) * 1.5) - n0) + (bump(n0, vWorld, u3, (n3.xy - 0.5) * 0.7) - n0));
+    nc = normalize(n0 + 0.12 * (n - n0) + (bumpD(n0, dpx, dpy, dux * s1, duy * s1, (n1.xy - 0.5) * 1.5) - n0) + (bumpD(n0, dpx, dpy, dux * s3, duy * s3, (n3.xy - 0.5) * 0.7) - n0));
     n = normalize(mix(n, nc, closeW));
     fine = mix(fine, dot(w1, vec3(0.333)) / 0.039, closeW);
     wn.z = mix(wn.z, 0.25 + 0.5 * n1.z, closeW);
   }
   // The hanks that stand proud are olive and gold brown, and wet.
   float hem = smoothstep(0.42, 0.72, wn.z + 0.25 * (fine - 1.0));
-  albedo = mix(albedo, vec3(0.06, 0.046, 0.018) * (0.5 + 0.6 * fine), 0.45 * hem);
+  albedo = mix(albedo, vec3(0.06, 0.046, 0.018) * (0.5 + 0.6 * fine) * (1.0 + 0.9 * closeW), (0.45 + 0.35 * closeW) * hem);
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
-  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), 0.7, closeW), 0.12, thread * (1.0 - closeW));
+  // One place on the wall where the water of the shelf above runs off: a band a stride or two wide that wanders as it comes down.
+  float along = dot(vWorld.xz - uRill.xy, uRill.zw);
+  float wander = along + 1.1 * (vnoise(vec2(vWorld.y * 0.3, 3.0)) - 0.5) + 0.3 * (vnoise(vec2(vWorld.y * 1.3, 7.0)) - 0.5);
+  float rill = smoothstep(1.0, 0.15, abs(wander)) * smoothstep(50.0, 25.0, length(vWorld.xz - uRill.xy));
+  float fall = smoothstep(0.55, 0.85, vnoise(vec2(wander * 9.0, vWorld.y * 0.5 + uTime * 6.0))) * (0.45 + 0.55 * vnoise(vec2(wander * 3.1, vWorld.y * 2.3 + uTime * 9.0)));
+  float runs = rill * smoothstep(0.42, 0.7, vnoise(vec2(wander * 6.0, vWorld.y * 0.4 + uTime * 4.0)));
+  albedo *= 1.0 - 0.4 * rill;
+  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), mix(0.66, 0.4, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
   float occ = (0.25 + 0.75 * smoothstep(0.08, 0.5, wn.z)) * (0.6 + 0.4 * smoothstep(0.2, 0.7, nh.z)) * (0.6 + 0.4 * vShade);
   // On a wall of beds the weed hangs in clumps from each ledge and thins toward the next one down: between the clumps the wall is bare
   // wet rock with its barnacles, dark under the ledge it hangs from.
@@ -457,7 +494,8 @@ void main() {
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
   c = max(c, albedo * above * (0.36 / 3.14159) * (0.6 + 0.4 * occ));
   // Close, the wet shows as small glints on the blades of weed that turn to the sky, not as a sheen over the whole wall.
-  c += above * vec3(1.0, 0.86, 0.6) * (0.045 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 40.0) * (0.4 + 0.6 * occ));
+  c += above * vec3(1.0, 0.9, 0.7) * (0.1 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 60.0) * (0.4 + 0.6 * occ));
+  c += above * (rill * (0.02 + 1.8 * fall * fall));
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
   float run = smoothstep(0.8, 0.96, vnoise(vec2(vUv.x * 9.0, vUv.y * 0.3 + uTime * 1.6))) * smoothstep(0.55, 0.8, vnoise(vec2(vUv.x * 1.1, vUv.y * 0.13 - uTime * 0.07) + 3.0));
   c += above * (0.05 * closeW * run * (0.4 + 0.6 * occ));
@@ -476,6 +514,8 @@ uniform sampler2D tShingleN;
 uniform sampler2D tSand;
 uniform sampler2D tNear;
 uniform sampler2D tNearN;
+uniform sampler2D tWeed;
+uniform sampler2D tWeedN;
 uniform float uPool;
 uniform vec4 uPath;
 uniform vec2 uGate;
@@ -494,6 +534,12 @@ void plateAt(vec2 xz, vec2 cs, vec2 size, vec2 shift, out vec3 colour, out vec3 
   vec2 g = (nh.xy - 0.5) * m;
   slope = vec3(g.x * cs.x + g.y * cs.y, g.x * cs.y - g.y * cs.x, nh.z);
 }
+// The height of one laying of the plate, read at one level whatever the lens: the map of the wet is drawn from it, and a map that took
+// the lens's level would move its pools as the lens moved.
+float plateHigh(vec2 xz, vec2 cs, vec2 size, vec2 shift) {
+  vec2 uv = vec2(xz.x * cs.x + xz.y * cs.y, xz.y * cs.x - xz.x * cs.y) / size + shift;
+  return textureLod(tPlateN, uv, 3.0).b;
+}
 void main() {
   vec2 xz = vWorld.xz;
   vec3 v = normalize(cameraPosition - vWorld);
@@ -505,7 +551,11 @@ void main() {
   vec3 sb;
   plateAt(xz, vec2(0.966, 0.259), vec2(48.0, 27.0), vec2(0.31, 0.12), ca, sa);
   plateAt(xz, vec2(0.342, -0.94), vec2(86.0, 48.4), vec2(0.77, 0.43), cb, sb);
-  float pick = smoothstep(-0.1, 0.1, 0.45 * (sa.z - sb.z) + vnoise(xz / 23.0 + 3.0) - 0.5);
+  float ha = plateHigh(xz, vec2(0.966, 0.259), vec2(48.0, 27.0), vec2(0.31, 0.12));
+  float hb = plateHigh(xz, vec2(0.342, -0.94), vec2(86.0, 48.4), vec2(0.77, 0.43));
+  float pick = smoothstep(-0.1, 0.1, 0.45 * (ha - hb) + vnoise(xz / 23.0 + 3.0) - 0.5);
+  // The plate's height as the map of the wet has it: nothing of the lens in it.
+  float pz = mix(hb, ha, pick);
   vec3 plate = mix(cb, ca, pick);
   vec3 ps = mix(sb, sa, pick);
   // Under the plate's reach (a thumb to the pixel) the stones and the sand are their own pictures.
@@ -524,21 +574,22 @@ void main() {
   // Close under a lens the floor is the Builder's own stretch of it, stones, grit and cast weed laid at their true size and mirrored
   // where it meets itself: no stone comes round again within a stride, and each stands a little out of the bed toward the eye.
   // The stones lie in drifts drawn out across the strait, bare wet sand between them: a third of the flat at most.
-  float driftN = smoothstep(0.56, 0.63, vnoise(vec2(xz.x / 27.0 + 0.2 * xz.y / 19.0, xz.y / 5.5) + 31.0) * 0.62 + vnoise(xz / 2.3 + 17.0) * 0.38);
+  float driftAt = vnoise(vec2(xz.x / 27.0 + 0.2 * xz.y / 19.0, xz.y / 5.5) + 31.0) * 0.62 + vnoise(xz / 2.3 + 17.0) * 0.38;
+  float driftN = smoothstep(0.64, 0.7, driftAt);
   float nearBy = smoothstep(60.0, 28.0, length(cameraPosition - vWorld)) * driftN;
-  vec2 un = vec2(xz.x * 0.94 + xz.y * 0.342, xz.y * 0.94 - xz.x * 0.342) / 3.4 + vec2(0.13, 0.41);
+  vec2 un = vec2(xz.x * 0.94 + xz.y * 0.342, xz.y * 0.94 - xz.x * 0.342) / 1.9 + vec2(0.13, 0.41);
   float ln = footLevel(tNear, dFdx(un), dFdy(un), 2.5);
   vec3 nearC = vec3(0.13);
   vec3 nearN = vec3(0.5);
   if (reach > 0.0) {
     det = mix(det, textureLod(tShingle, ud, footLevel(tShingle, udx, udy, 3.0)).rgb, (0.35 + 0.65 * close0) * reach);
     nh = mix(nh, textureLod(tShingleN, ud, footLevel(tShingleN, udx, udy, 3.0)).rgb, (0.35 + 0.65 * close0) * reach);
-    sand = mix(sand, textureLod(tSand, us, footLevel(tSand, usx, usy, 2.0)).rgb, reach);
+    // Silt, not rippled sand: the picture gives its grain and little of its ripple.
+    sand = mix(sand, textureLod(tSand, us, footLevel(tSand, usx, usy, 2.0)).rgb, 0.4 * reach);
     if (nearBy > 0.0) {
-      vec2 lift = v.xz / max(v.y, 0.3);
-      lift = vec2(lift.x * 0.94 + lift.y * 0.342, lift.y * 0.94 - lift.x * 0.342);
+      // No lift of a stone toward the eye: laid on by one step it made the stones swim as the lens went by.
       vec2 mirror = 1.0 - 2.0 * mod(floor(un), 2.0);
-      vec2 up = un + lift * ((textureLod(tNearN, un, ln + 1.0).b - 0.6) * 0.035 / 3.4);
+      vec2 up = un;
       vec3 nn = textureLod(tNearN, up, ln).rgb;
       vec2 gn = (nn.xy - 0.5) * mirror;
       // The slopes of the picture, turned back to the floor's own way.
@@ -548,7 +599,7 @@ void main() {
   }
   float fine = bedFine(xz);
   // The bed is the rig's: the same one the sheets of water are laid on. The plate's own relief stands on it.
-  float h = landAt(xz).r + fine + 0.2 * (ps.z - 0.35) + 0.03 * (nh.z - 0.5);
+  float h = landAt(xz).r + fine + 0.2 * (pz - 0.35);
   float over = h - uPool;
   // The map of the wet comes first: sheets of soaked sand drawn out toward the sea, with hard edges, between the bars of gravel. Soaked,
   // the floor is dark and a mirror; dry, it is pale and matt.
@@ -559,13 +610,16 @@ void main() {
   float along = dot(rel, uPath.zw);
   float across = dot(rel, vec2(-uPath.w, uPath.z)) + (7.0 + 0.08 * along) * (vnoise(vec2(along / 37.0, 2.5)) - 0.5) + 2.0 * (vnoise(xz / 3.1 + 8.0) - 0.5);
   float lane = smoothstep(1.0, 0.35, abs(across) / (3.5 + 0.075 * max(along, 0.0))) * smoothstep(-4.0, 12.0, along);
-  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 1.5 * clamp(over - 0.06, 0.0, 0.25) + 0.05 * (nh.z - 0.5) * close0 + 0.34 + 0.45 * lane - 0.25 * driftN);
+  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (pz - 0.35) - 1.5 * clamp(over - 0.06, 0.0, 0.25) + 0.34 + 0.45 * lane - 0.25 * driftN);
   // Stones where the floor stands proud, rippled sand where it lies low.
-  float bar = smoothstep(0.3, 0.52, ps.z + 0.5 * clamp(over, -0.2, 0.3) + 0.1 * (nh.z - 0.5) + 0.3 * close0);
+  // Gravel lies in bars a few strides long, where the floor stands proud; between them the floor is silt.
+  float bar = smoothstep(0.4, 0.6, pz + 0.5 * clamp(over, -0.2, 0.3) + 0.5 * (vnoise(vec2(xz.x / 14.0, xz.y / 5.0) + 2.0) - 0.42));
   bar *= 1.0 - 0.8 * soaked;
+  // Gravel shows only round the drifts of stones: everywhere else the stones lie under silt, and the floor is dark wet mud.
+  bar *= smoothstep(0.54, 0.64, driftAt);
   vec3 grain = mix(sand / 0.128, det / 0.122, bar);
   // Wet grey shingle: slate more than sand.
-  grain = mix(vec3(dot(grain, vec3(0.333))), grain, 0.22) * vec3(0.84, 0.97, 1.12);
+  grain = mix(vec3(dot(grain, vec3(0.333))), grain, 0.22) * vec3(0.94, 0.98, 1.04);
   // Close under the lens the plate is a smear: there it gives only its broad tone, and the stones and the sand carry the floor.
   float close = smoothstep(70.0, 8.0, length(cameraPosition - vWorld));
   vec3 broad = mix(plate, vec3(0.123, 0.13, 0.136), 0.8 * close) * 0.86;
@@ -573,44 +627,68 @@ void main() {
   // Cast weed lies in dark patches on the bars and at the edge of the pools.
   // Before the gate the flat is the weed's: dark mats of it between the sheets of standing water.
   float gateNear = smoothstep(90.0, 25.0, length(xz - uGate));
-  float castWeed = smoothstep(0.6, 0.66, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * nh.z + 0.1 * bar + 0.25 * gateNear);
-  albedo = mix(albedo, vec3(0.04, 0.03, 0.012) * (0.5 + nh.z), 0.9 * castWeed);
+  float castWeed = smoothstep(0.58, 0.625, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * vnoise(xz / 0.45 + 3.0) + 0.14 * bar + 0.06 * gateNear) * smoothstep(0.36, 0.5, vnoise(xz / 1.3 + 5.0) * 0.7 + 0.3 * vnoise(xz / 0.31 + 2.0));
+  // Wrack, not ripples: where weed is cast the floor is the Builder's own sheet of strap weed laid flat at its true size, olive and
+  // brown straps over black gaps. Its level is taken here, outside the branch that reads it.
+  vec2 uwf = vec2(xz.x * 0.8 + xz.y * 0.6, xz.y * 0.8 - xz.x * 0.6) / 2.6 + vec2(0.37, 0.11);
+  float lwf = footLevel(tWeed, dFdx(uwf), dFdy(uwf), 3.0);
+  vec3 wk = vec3(0.03);
+  vec3 wkn = vec3(0.5);
+  if (castWeed > 0.01) {
+    wk = textureLod(tWeed, uwf, lwf).rgb;
+    wkn = textureLod(tWeedN, uwf, lwf).rgb;
+  }
+  float wl = dot(wk, vec3(0.333));
+  vec3 weedC = wk * vec3(1.0, 1.05, 1.0);
+  albedo = mix(albedo, weedC, 0.9 * castWeed);
   // What lies under the sheets is dark drowned sand; the plate's hollows hold a film that shows the sky; every stone above is wet.
   float under = smoothstep(0.01, -0.05, over);
-  float low = smoothstep(0.24, 0.12, ps.z + 0.08 * (nh.z - 0.5));
+  float low = smoothstep(0.24, 0.12, pz);
   float wet = max(smoothstep(0.08, 0.01, over), 0.7 * low);
   wet = max(wet, soaked * (1.0 - castWeed));
   float film = wet * (1.0 - under) * (1.0 - castWeed);
   float damp = smoothstep(0.4, 0.1, over);
   float rough = mix(mix(0.6, 0.45, damp), 0.06, film);
-  rough = mix(rough, 0.9, max(under, 0.8 * castWeed));
+  rough = mix(rough, 0.9, under);
+  rough = mix(rough, mix(0.9, 0.55, smoothstep(0.03, 0.1, wl)), castWeed * (1.0 - under));
   // Dry shingle under a break in the cloud stays slate: the sun's warmth is taken out of it.
-  albedo *= mix(1.25, 0.5, max(wet, 0.35 * damp)) * mix(1.0, 0.55, under) * mix(vec3(0.68, 0.92, 1.2), vec3(0.78, 0.95, 1.14), max(wet, under));
+  albedo *= mix(1.25, 0.5, max(wet, 0.35 * damp)) * mix(1.0, 0.55, under) * mix(vec3(0.86, 0.95, 1.08), vec3(0.88, 0.96, 1.07), max(wet, under));
   // Close under the lens the stones are the picture's own: each keeps its colour and its slope, wet and dark where it lies low in the film.
   float lowN = smoothstep(0.5, 0.3, nearN.z);
   float filmN = film * lowN;
   vec3 nearAlbedo = nearC * mix(1.0, 0.55, max(filmN, under)) * mix(1.0, 0.78, damp) * vec3(0.93, 0.98, 1.05);
+  // Few stones: only the tall ones of the picture stand out of the silt, which lies between them as it lies on the open floor.
+  float siltN = smoothstep(0.62, 0.4, nearN.z);
+  nearAlbedo = mix(nearAlbedo, albedo, max(0.85 * siltN, castWeed));
   albedo = mix(albedo, nearAlbedo, nearBy);
   // Before the gate what is not a sheet of water is dark: soaked sand and mats of weed that show no sky.
   float sunk = gateNear * (1.0 - film * mix(1.0, lowN, nearBy));
   albedo = mix(albedo, albedo * vec3(0.42, 0.4, 0.34), sunk);
-  albedo = mix(albedo, vec3(0.04, 0.03, 0.012) * (0.5 + nh.z), 0.9 * castWeed * gateNear);
-  rough = mix(rough, mix(mix(0.7, 0.5, damp), 0.08, filmN), nearBy * (1.0 - under));
+  albedo = mix(albedo, weedC, 0.9 * castWeed * gateNear);
+  rough = mix(rough, mix(mix(0.7, 0.5, damp), 0.08, filmN), nearBy * (1.0 - under) * (1.0 - castWeed));
   film = mix(film, filmN, nearBy);
   rough = mix(rough, 0.95, gateNear * (1.0 - film));
-  vec2 g = mix((nh.xy - 0.5) * 2.2 * max(bar, 0.5 * close) * mix(1.0, 0.05, wet), (nearN.xy - 0.5) * 1.7 * (1.0 - 0.9 * filmN), nearBy);
+  vec2 g = mix((nh.xy - 0.5) * 2.2 * max(bar, 0.1 * close) * mix(1.0, 0.05, wet), (nearN.xy - 0.5) * 1.7 * (1.0 - 0.9 * filmN) * (1.0 - 0.8 * siltN), nearBy);
+  g = mix(g, (wkn.xy - 0.5) * 0.55, castWeed);
   vec3 n = normalize(vNormal + vec3(ps.x, 0.0, ps.y) * 2.6 * (1.0 - 0.85 * film) * (1.0 - 0.7 * close) * (1.0 - 0.8 * under) * (1.0 - 0.6 * nearBy) + vec3(g.x, 0.0, -g.y));
   float cavity = 0.55 + 0.45 * smoothstep(0.08, 0.4, ps.z);
   float occ = mix(cavity * (0.5 + 0.5 * smoothstep(0.1, 0.55, nh.z)), 1.0, wet);
   occ = mix(occ, mix(0.4 + 0.6 * smoothstep(0.1, 0.55, nearN.z), 1.0, filmN), nearBy);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The film of water shows the cloud, not only the smooth sky; ruffled, it shows the sky a hand higher than a still one would.
+  // The sky's picture and the land's are read at named levels (skyOpen, spelled out): a level taken from the pixel inside a branch is
+  // not defined at the edge of a film, and the edge of every pool would take another level with every move of the lens.
   if (film > 0.02) {
+    vec4 landF = textureLod(tLand, (xz - uLandRect.xy) * uLandRect.zw, 0.0);
+    vec2 uc = (xz - uContactRect.xy) * uContactRect.zw;
+    vec2 ue = min(uc, 1.0 - uc);
+    float aboveF = vWorld.y - landF.r;
+    float openF = mix(landF.g, 1.0, clamp(aboveF / 120.0, 0.0, 1.0)) * (1.0 - textureLod(tContact, uc, 0.0).r * smoothstep(0.0, 0.03, min(ue.x, ue.y)) * smoothstep(4.0, 0.0, aboveF));
     vec3 r = reflect(-v, n);
     r.y = abs(r.y) + 0.06;
     r = normalize(r);
     float f = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
-    c = max(c + film * f * (skyCloud(vWorld, r) * (1.0 + 1.6 * lane) - skyRadiance(r)) * skyOpen(vWorld), vec3(0.0));
+    c = max(c + film * f * (skyMirror(r, 3.0) * (1.0 + 1.6 * lane) - skyRadiance(r)) * openF, vec3(0.0));
     // Before the gate the sheets lie under the wall of water and the stacks: they show those, dark, and the bright of the sky only in
     // long bands across, where the ruffled film turns up to it.
     float band = smoothstep(0.5, 0.74, vnoise(vec2(xz.x / 11.0, xz.y / 1.3) + 5.0) * 0.7 + vnoise(vec2(xz.x / 2.7, xz.y / 0.4)) * 0.3);

@@ -15,7 +15,7 @@ import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COBBLE_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
-import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
+import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT, TUSK_FRAGMENT } from './fin';
 import { CURTAIN_FRAGMENT, CURTAIN_VERTEX, curtainShape } from './curtain';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
@@ -46,7 +46,13 @@ interface Stack {
 
 // A stack of the gate is rock first: a pillar broken into flat faces, built of beds a few metres thick; each bed stands out or back from
 // the one under it, so that there are ledges for weed to hang from and overhangs with bare wet rock under them.
+// The linear mean colour of land/tusk.jpg, as land/materials.json has it.
+const TUSK_MEAN: [number, number, number] = [0.466, 0.452, 0.428];
+// The linear mean of land/strata.jpg (one number: the mean of its three), as land/materials.json has it.
+const STRATA_MEAN = 0.174;
 const BED = 6.5;
+// How far along the wall from the drowned one the rivulet runs, metres.
+const RILL_ALONG = 2.4;
 // How far a face of a stack leans in and out with height. At 0.3 the right stack's outline before the bore was a head in profile
 // (brow, nose, mouth); at 0.1 the faces stand nearly straight.
 const STACK_SWAY = 0.1;
@@ -171,9 +177,12 @@ export function create(ctx: Context): Piece {
     t.wrapS = THREE.MirroredRepeatWrapping;
     t.wrapT = THREE.MirroredRepeatWrapping;
   }
-  // The land's own pictures made from the Builder's sheets (assets-src/ribs/land/make-sheets.py): the fin drawn out flat, slopes of the plates.
+  // The near cliff's own pictures made from the Builder's sheets (assets-src/ribs/land/make-sheets.py): the fin drawn out flat.
   const finC = tex('land/fin.jpg', { repeat: false });
   const finN = tex('land/fin-nh.png', { kind: 'data', repeat: false });
+  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
+  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
+  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
   const boulderC = tex('mat/rock.jpg');
   const boulderN = tex('mat/rock-nh.png', { kind: 'data' });
 
@@ -181,7 +190,7 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
   const gateAt = new THREE.Vector2(STATIONS.posts[0][0] + 64, STATIONS.posts[0][1] + 74 - 22);
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) }, uGate: { value: gateAt } });
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN }, tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) }, uGate: { value: gateAt } });
   {
     // A lane of standing water runs down the middle of the strait toward the gap, from where the wide lens stands: it holds the sky.
     const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
@@ -190,12 +199,19 @@ export function create(ctx: Context): Piece {
     const l = Math.hypot(dx, dz) || 1;
     (ground.uniforms.uPath as THREE.IUniform).value.set(pose.position[0], pose.position[2], dx / l, dz / l);
   }
-  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
-  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
-  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
+  // The tusk blades' own sheets (assets-src/ribs/land/make-materials.mjs): pale fractured stone with its slopes, and lichen crusts.
+  const tuskC = tex('land/tusk.jpg', { anisotropy: 2 });
+  const tuskN = tex('land/tusk-nh.jpg', { kind: 'data', anisotropy: 2 });
+  const lichenC = tex('land/lichen.jpg');
+  const tusk = material(FIN_VERTEX, TUSK_FRAGMENT, { tTusk: { value: tuskC }, tTuskN: { value: tuskN }, tLichen: { value: lichenC }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTuskMean: { value: new THREE.Vector3(...TUSK_MEAN) }, uSize: { value: new THREE.Vector2(84, 23) }, uLichen: { value: 0 } });
+  // The near cliff (grain 5) keeps its own stone and its cap: it is a bedded cliff with a lip, not a tusk.
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
-    grain > 0
-      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 }, uCap: { value: grain === 5 ? 1 : 0 } })
+    grain === 5
+      ? material(FIN_VERTEX, TUSK_FRAGMENT, { tTusk: { value: tuskC }, tTuskN: { value: tuskN }, tLichen: { value: lichenC }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTuskMean: { value: new THREE.Vector3(...TUSK_MEAN) }, uSize: { value: new THREE.Vector2(62, 17) }, uLichen: { value: 0.05 } })
+      : grain === 6
+      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 }, uCap: { value: 1 } })
+      : grain > 0
+      ? tusk
       : material(ROCK_VERTEX, ROCK_FRAGMENT, {
           tRock: { value: rockC },
           tRockN: { value: rockN },
@@ -222,9 +238,18 @@ export function create(ctx: Context): Piece {
   // A grain below zero is stone that is no blade: it has no sheet of its own.
   const rock = stoneOf(-12);
   // Staged: on the colony's rock the weed line stands at the foot of the colony's frame, where the picture of it has its weed.
-  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 46.3 } });
+  // The colony's own sheets (assets-src/ribs/land/make-materials.mjs): thin level beds broken by upright joints, with their slopes.
+  const strataC = tex('land/strata.jpg', { anisotropy: 2 });
+  const strataN = tex('land/strata-nh.jpg', { kind: 'data', anisotropy: 2 });
+  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tStrata: { value: strataC }, tStrataN: { value: strataN }, tLichen: { value: lichenC }, uStrataMean: { value: STRATA_MEAN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 46.3 } });
+  // The rivulet on the first left blade's weed: a line down the wall a few strides along it from where the drowned one hangs.
+  const hungAt = DROWNED.at(0);
+  const hungOut = DROWNED.at(1);
+  const outLen = Math.hypot(hungOut[0] - hungAt[0], hungOut[2] - hungAt[2]) || 1;
+  const wallAlong: [number, number] = [-(hungOut[2] - hungAt[2]) / outLen, (hungOut[0] - hungAt[0]) / outLen];
+  const rillAt = new THREE.Vector4(hungAt[0] + wallAlong[0] * RILL_ALONG, hungAt[2] + wallAlong[1] * RILL_ALONG, wallAlong[0], wallAlong[1]);
   const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
-    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare } });
+    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uRill: { value: rillAt } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
   const weedNear = hangs(0.6);
@@ -272,7 +297,7 @@ export function create(ctx: Context): Piece {
     const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
     add(blades, bladeShape(rib, cut), stoneOf(cut.grain, rib.name === 'L1' ? 4 : Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
-    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
+    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 40, broken: rib.name !== 'L1' && rib.name !== 'OR', ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }
 
   // The near cliff's curtain: real fronds over the sheet, on the side the lenses see.
@@ -280,7 +305,7 @@ export function create(ctx: Context): Piece {
   fronds.side = THREE.DoubleSide;
   {
     const hang = ctx.rng('curtain');
-    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 4400, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 7000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -563,7 +588,7 @@ export function create(ctx: Context): Piece {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of [ground, roostRock, weed, weedNear, fronds, boulder, pebble, cobble, glass, glassLoop, ...stones.values()]) m.dispose();
+      for (const m of new Set([ground, roostRock, weed, weedNear, fronds, boulder, pebble, cobble, glass, glassLoop, ...stones.values()])) m.dispose();
     },
   };
 }
