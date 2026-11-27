@@ -59,6 +59,24 @@ Turn the reference picture into its height map (displacement map) for a 3D mater
 ```
 
 Takes: 1 picture of the crust made, take 1 kept; 1 picture of its height made, take 1 kept; 1 run of the script.
-Why this one: slabs of unlike size that lap over one another, rope festoons on some that bunch at one side and die out into smooth skin at the other, as the approved picture of the lava surface shows them; and a height drawn form for form on it, so that a slab stands over the next by its own height and not by its brightness. It is 2048 x 1024, linear, edges wrapped by the script: r, g the slope of the height, b the height. The crust reads it once a slab (`src/places/heart/lake/sheet.ts`, `POUR_GLSL`).
+Why this one: slabs of unlike size that lap over one another, rope festoons on some that bunch at one side and die out into smooth skin at the other, as the approved picture of the lava surface shows them; and a height drawn form for form on it, so that a slab stands over the next by its own height and not by its brightness. It is 2048 x 1024, linear, edges wrapped by the script: r, g the slope of the height, b the height. The crust's relief reads it once a slab (`src/places/heart/lake/sheet.ts`, `POUR_GLSL`).
+Date: 2026-11-26
+
+## `public/assets/heart/mat/coil-nt.jpg`
+
+Made by: the image tool `generate_image` with its default model (through Perplexity), twice, then `assets-src/heart/make-coil-sheet.py` (Python 3 with numpy, scipy and Pillow).
+From: `assets-src/heart/gen/coil-t1.png` (the crust seen straight down; picture passed to the model with the prompt: `references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg`) and `assets-src/heart/gen/coil-h1.png` (its height, drawn by the model from `coil-t1.png` passed as the reference picture). Both committed.
+Prompt or command: the two prompts below (aspect 16:9, 1672 x 941 given), then `python3 assets-src/heart/make-coil-sheet.py`.
+
+```
+A material texture seen straight down from above in an orthographic view, about 4 metres across: cooled ropy pahoehoe lava crust, the same dark crust as in the reference picture. Several smooth satin slabs and billowy toes of different sizes lap over one another; on some of them thick coiled rope festoons: bundles of 5 to 12 parallel cords, each cord 3 to 8 cm thick, bent into concentric arcs and tight coils like draped cloth pushed into folds, the arcs bunch together at one side and die out into smooth skin at the other. Between the rope bundles wide areas of smooth, gently swelling glassy skin with only faint stretch lines. A few thin black cracks at slab edges. Dark charcoal to graphite basalt, faint satin sheen. No glowing lava, no fire, no dust, no pebbles. Flat, even, shadowless overcast light, nothing cast, no highlights from one side. The surface fills the whole frame edge to edge at one even scale, no vignette, no border, no text, no perspective, no horizon. Photographic, very sharp, high micro detail.
+```
+
+```
+Turn the reference picture into its height map (displacement map) for a 3D material, keeping every form in exactly the same place, pixel for pixel, same framing and scale: a greyscale image in which brightness is only the height of the surface. The tops of the ropes, cords and swollen slabs are light grey to white, the furrows between ropes are dark grey, cracks and the low skin under an overlapping slab edge are black. Smooth gradients across each slab according to how it swells; where one slab laps over another the upper one is clearly lighter along its edge. No lighting, no shading, no shadows, no highlights, no colour, no texture grain other than the real relief. 16-bit look, clean and sharp.
+```
+
+Takes: 1 picture of the crust made, take 1 kept; 1 picture of its height made, take 1 kept; 1 run of the script.
+Why this one: slabs of unlike size that lap over one another, rope festoons on some that bunch at one side and die out into smooth skin at the other, as the approved picture of the lava surface shows them; and a height drawn form for form on it, so that a slab stands over the next by its own height and not by its brightness. It is 2048 x 1024, linear, edges wrapped by the script: r, g the slope of the height, b the tone (a furrow dark, a crest pale, a crack black, with the photograph's own grain; 0.5 the mean). The crust's paint reads it once a slab, from the same script and the same two pictures as `coil-nh.jpg`, so the paint and the relief of a cord lie on each other.
 Date: 2026-11-26
 

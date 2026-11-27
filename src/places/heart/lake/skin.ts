@@ -182,34 +182,33 @@ void main() {
   gy *= min(1.0, 2.5 * lx / ly);
   float fpS = max(min(lx, ly), 0.025 * blurred);
   vec3 skinM = pourAt(qg, gx, gy);
-  int top = gPourTop;
-  float roped = top == 0 ? gPourCell[0].z : top == 1 ? gPourCell[1].z : gPourCell[2].z;
-  float slabTag = top == 0 ? gPourTag[0] : top == 1 ? gPourTag[1] : gPourTag[2];
-  mat2 topTurn = top == 0 ? gPourTurn[0] : top == 1 ? gPourTurn[1] : gPourTurn[2];
-  vec2 topShift = top == 0 ? gPourShift[0] : top == 1 ? gPourShift[1] : gPourShift[2];
+  float roped = gPourKind;
+  float slabTag = gPourTag;
   // The black gap where a slab ends on the next: a hand wide or a pixel and dimmer. The lower slab lies in the shade of
   // the upper for a hand or two.
-  float gapWide = max(0.012, 0.6 * fpS);
-  float pourGap = (1.0 - smoothstep(0.35 * gapWide, gapWide, gPourEdge)) * min(1.0, 0.03 / gapWide) * (1.0 - steep);
-  float pourShade = (1.0 - gPourOver) * exp(-gPourEdge / 0.045) * (1.0 - smoothstep(0.05, 0.2, fpS)) * (1.0 - steep);
-  // Under the lens the skin of a slab has wrinkles of its own: the sheet once more, a sixth of its size, laid as its slab is.
+  float gapWide = max(0.009, 0.2 * fpS);
+  // It is open along some of its run and shut along the rest, and from afar it is gone: the far lake is no net of lines.
+  float pourGap = (1.0 - smoothstep(0.35 * gapWide, gapWide, gPourEdge)) * min(1.0, 0.009 / gapWide) * (1.0 - steep) * (1.0 - smoothstep(0.012, 0.035, fpS)) * mix(0.3, 1.0, smoothstep(0.35, 0.55, vnoise(q / 1.9 + 23.0)));
+  float pourShade = (1.0 - gPourOver) * exp(-gPourEdge / 0.03) * (1.0 - smoothstep(0.05, 0.2, fpS)) * (1.0 - steep);
+  // Under the lens the skin of a slab has wrinkles of its own: the sheet once more, a quarter of its size, laid as its slab is.
   float nearOn = 1.0 - smoothstep(0.004, 0.012, fpS);
   vec3 skinD = vec3(0.0, 0.0, 0.5);
   if (nearOn > 0.0) {
-    mat2 turnD = topTurn * TURN_A;
+    mat2 turnD = gPourTurn * TURN_A;
     vec2 scaleD = vec2(1.0, 2.0) / SHEET_D;
-    vec3 nh = textureGrad(tPour, (turnD * qg) * scaleD + topShift.yx, (turnD * gx) * scaleD, (turnD * gy) * scaleD).rgb;
-    skinD = mix(skinD, vec3((vec2(nh.r - 0.5, 0.5 - nh.g) * turnD) * (819.2 / SHEET_D), nh.b), nearOn * mix(0.35, 0.8, roped));
+    vec3 nt = textureGrad(tPour, (turnD * qg) * scaleD + gPourShift.yx, (turnD * gx) * scaleD, (turnD * gy) * scaleD).rgb;
+    skinD = mix(skinD, vec3((vec2(nt.r - 0.5, 0.5 - nt.g) * turnD) * (819.2 / SHEET_D), nt.b), nearOn * mix(0.35, 0.8, roped));
   }
   vec3 skinL = vec3(0.0, 0.0, 0.5);
-  // A crest is worn pale, a furrow is black glass, and each slab is of its own day.
   // From afar the lake is one dark field: no slab is told from the next by its tone.
   float slabSeen = 1.0 - smoothstep(0.015, 0.06, fpS);
-  float tone = mix(0.4, 0.92, smoothstep(0.15, 0.95, skinM.z)) * (1.0 - 0.85 * pourGap) * (1.0 + 0.36 * (slabTag - 0.5) * slabSeen);
-  vec2 fine = POUR_TALL * skinM.xy + SHEET_TALL_D * skinD.xy;
+  // A crest is worn pale, a furrow is black glass, and each slab is of its own day.
+  float tone = clamp(0.78 + 2.4 * (skinM.z - 0.5), 0.1, 1.7) * (1.0 - 0.85 * pourGap) * (1.0 + 0.36 * (slabTag - 0.5) * slabSeen);
+  // The light on the crust is the flat light of an overcast sky: the paint leans a cord half again as steep as it stands.
+  vec2 fine = 1.5 * POUR_TALL * skinM.xy + SHEET_TALL_D * skinD.xy;
   float grainA = skinM.z - 0.5;
   // A furrow sees a sixth of the sky, a crest all of it.
-  crease *= mix(1.0, smoothstep(0.04, 0.5, skinM.z), 0.85) * mix(1.0, smoothstep(0.1, 0.5, skinD.z), 0.4) * (1.0 - 0.6 * pourShade) * (1.0 - 0.8 * pourGap);
+  crease *= mix(1.0, smoothstep(0.05, 0.5, skinM.z), 0.85) * mix(1.0, smoothstep(0.1, 0.5, skinD.z), 0.4) * (1.0 - 0.6 * pourShade) * (1.0 - 0.8 * pourGap);
   float crest = smoothstep(0.55, 0.85, skinM.z);
   crease *= max(lines, 0.75);
   // Under a loaded pad the crust is pressed dark, and the line where the dish breaks from the crust round it is a crack.
