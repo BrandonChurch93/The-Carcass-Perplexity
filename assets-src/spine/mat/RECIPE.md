@@ -484,46 +484,6 @@ Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: the face of the first spire behind the kites: pale jointed rock with rime on the windward edge and a burned top, where the built face is dark blotches (asked for by `spine_ground_owner_3`).
 Date: 2026-11-26
 
-## `public/assets/spine/mat/kitefilm-a.jpg` and `public/assets/spine/mat/kitefilm-a-h.png` and `public/assets/spine/mat/kitefilm-a-a.png`
-
-Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
-From: `assets-src/spine/mat/src/kitefilm-a.png`, the generated picture, and `assets-src/spine/mat/src/kitefilm-a-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg`, `references/drafts/working/real/ref-tissue-1.jpg`.
-Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs spine`.
-
-```
-One ribbon of a tether-kite, a growth of an unknown world, laid flat and seen square on: 30 metres long and 3 metres at its widest, lying level across the frame from left to right. A glassy translucent membrane, pale as the skin of a fish, with a sheen of violet and pink that changes along it, a fine net of branching veins, and frayed edges. At both ends it is drawn out to a thread. This one is whole. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. It is lit evenly from behind, like a film laid on a light table in a dark room, so that it shows only by the light that passes through it: thin parts glow pale, thick parts and veins are darker, and nothing is lit from the front. Black means nothing is there. The first reference image is where the subject comes from: take its colours, its sheen and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
-```
-
-The prompt of the relief:
-
-```
-The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
-```
-
-Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
-Why this one: one kite as a glassy film lit from behind, as the kite picture has them, where the built kites are opaque lilac sheets (asked for by `spine_storm_owner_3`).
-Date: 2026-11-26
-
-## `public/assets/spine/mat/kitefilm-b.jpg` and `public/assets/spine/mat/kitefilm-b-h.png` and `public/assets/spine/mat/kitefilm-b-a.png`
-
-Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
-From: `assets-src/spine/mat/src/kitefilm-b.png`, the generated picture, and `assets-src/spine/mat/src/kitefilm-b-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg`, `references/drafts/working/real/ref-tissue-1.jpg`.
-Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs spine`.
-
-```
-One ribbon of a tether-kite, a growth of an unknown world, laid flat and seen square on: 30 metres long and 3 metres at its widest, lying level across the frame from left to right. A glassy translucent membrane, pale as the skin of a fish, with a sheen of violet and pink that changes along it, a fine net of branching veins, and frayed edges. At both ends it is drawn out to a thread. This one is torn half way through near its middle, and a ragged flap of membrane hangs down from the tear. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. It is lit evenly from behind, like a film laid on a light table in a dark room, so that it shows only by the light that passes through it: thin parts glow pale, thick parts and veins are darker, and nothing is lit from the front. Black means nothing is there. The first reference image is where the subject comes from: take its colours, its sheen and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
-```
-
-The prompt of the relief:
-
-```
-The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
-```
-
-Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
-Why this one: a second kite film, torn half through with a hanging flap (asked for by `spine_storm_owner_3`).
-Date: 2026-11-26
-
 ## `public/assets/spine/mat/bolt-b.jpg`
 
 Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
