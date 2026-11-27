@@ -1,0 +1,42 @@
+{
+  "round": 30,
+  "unit": "film",
+  "pack": "R7-2",
+  "family": "gemini",
+  "answered": "2026-11-27 08:30 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the dark cloud band and warm sunset sky just above the horizon in the -b crop",
+        "what": "visible rectangular macroblocks step across the dark horizon smudge and pale orange-gray sky gradient, and the mist over the water turns mushy",
+        "fix": "raise the video bitrate (or lower CRF) and use 10-bit encoding with gentle dithering so low-contrast horizon gradients do not block"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the lightning forks, translucent ribbon edges, and dark storm clouds in the center -b crop",
+        "what": "fine secondary lightning branches and lacy ribbon outlines soften and smear with faint ringing, while the dark clouds behind them flatten into blotchy patches",
+        "fix": "reduce compression strength and preserve fine high-frequency edges with gentler quantization and adaptive quantization tuned for dark areas"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the dark storm clouds and thin wires with hanging icicles in the top-left -b crop",
+        "what": "cloud gradients smooth into slightly blocky patches and the thin wires and tiny icicles blur and lose crispness with mild mosquito noise",
+        "fix": "allocate more bits to dark cloud texture and thin high-contrast lines by lowering CRF or increasing bitrate"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-05.png",
+        "where": "the thin wire stretching to the distant peak and the sea mist below it in the bottom-center -b crop",
+        "what": "tiny icicles along the wire soften into faint smudges and the misty water loses fine detail compared to the uncompressed frame",
+        "fix": "use a higher bitrate or slower encoder preset to retain fine edge detail and subtle mist texture"
+      }
+    ]
+  }
+}

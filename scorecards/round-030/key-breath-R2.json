@@ -1,0 +1,37 @@
+{
+  "round": "30",
+  "unit": "breath",
+  "critic": "R2",
+  "packs": {
+    "R2-1": {
+      "set-A-01.png": "Judged image: breath-0, film frame 4409"
+    },
+    "R2-2": {
+      "set-B-01.png": "Judged image: breath-1, film frame 5242"
+    },
+    "R2-3": {
+      "set-C-01.png": "Judged image: breath-2, film frame 5510"
+    },
+    "R2-4": {
+      "set-D-01.png": "Judged image: breath-3, film frame 4973"
+    },
+    "R2-5": {
+      "set-E-01.png": "Judged image: breath-4, film frame 4731"
+    },
+    "R2-6": {
+      "set-F-01.png": "Control: the approved picture of breath-0, references/approved/3-breath/breath-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-7": {
+      "set-G-01.png": "Control: the approved picture of breath-1, references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg, resized and encoded like the judged images"
+    },
+    "R2-8": {
+      "set-H-01.png": "Control: the approved picture of breath-2, references/approved/3-breath/breath-2-the-rim.jpg, resized and encoded like the judged images"
+    },
+    "R2-9": {
+      "set-I-01.png": "Control: the approved picture of breath-3, references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg, resized and encoded like the judged images"
+    },
+    "R2-10": {
+      "set-J-01.png": "Control: the approved picture of breath-4, references/approved/3-breath/breath-4-down-the-shaft.jpg, resized and encoded like the judged images"
+    }
+  }
+}

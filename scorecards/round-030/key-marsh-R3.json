@@ -1,0 +1,26 @@
+{
+  "round": "30",
+  "unit": "marsh",
+  "critic": "R3",
+  "packs": {
+    "R3-1": {
+      "set-A-01.png": "The judged frame marsh-0, film frame 5725, resized to fit",
+      "set-A-02.png": "Native size crops of the judged frame marsh-0, film frame 5725, part 1 of 2",
+      "set-A-03.png": "Native size crops of the judged frame marsh-0, film frame 5725, part 2 of 2",
+      "set-A-04.png": "The judged frame marsh-1, film frame 6102, resized to fit",
+      "set-A-05.png": "Native size crops of the judged frame marsh-1, film frame 6102, part 1 of 2",
+      "set-A-06.png": "Native size crops of the judged frame marsh-1, film frame 6102, part 2 of 2",
+      "set-A-07.png": "The judged frame marsh-2, film frame 5940, resized to fit",
+      "set-A-08.png": "Native size crops of the judged frame marsh-2, film frame 5940, part 1 of 2",
+      "set-A-09.png": "Native size crops of the judged frame marsh-2, film frame 5940, part 2 of 2"
+    },
+    "R3-2": {
+      "set-B-01.png": "The judged frame marsh-3, film frame 6424, resized to fit",
+      "set-B-02.png": "Native size crops of the judged frame marsh-3, film frame 6424, part 1 of 2",
+      "set-B-03.png": "Native size crops of the judged frame marsh-3, film frame 6424, part 2 of 2",
+      "set-B-04.png": "The judged frame marsh-4, film frame 6800, resized to fit",
+      "set-B-05.png": "Native size crops of the judged frame marsh-4, film frame 6800, part 1 of 2",
+      "set-B-06.png": "Native size crops of the judged frame marsh-4, film frame 6800, part 2 of 2"
+    }
+  }
+}

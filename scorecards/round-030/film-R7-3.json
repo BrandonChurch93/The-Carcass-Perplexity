@@ -1,0 +1,35 @@
+{
+  "round": 30,
+  "unit": "film",
+  "pack": "R7-3",
+  "family": "claude",
+  "answered": "2026-11-27 08:30 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 9,
+    "pass": true,
+    "issues": [
+      {
+        "severity": "minor",
+        "file": "set-C-05.png",
+        "where": "the flat, out-of-focus red water in the upper left of the near foreground (x 0 to 33%, y 67 to 100%)",
+        "what": "the smooth red area takes on a faint blocky, mottled texture after compression that is not in the source; it only shows on a close look",
+        "fix": "give more bits to flat, defocused areas (lower the quantiser or raise adaptive quantisation strength) or add a little grain before encoding"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-02.png",
+        "where": "the thin ripple rings on the water at the shoreline below the far reeds (x 0 to 33%, y 0 to 33%)",
+        "what": "the fine concentric ripple lines soften and partly smear into the water tone, although they still read as ripples",
+        "fix": "raise the bitrate a little, or use a slower preset, so low-contrast moving edges on the water survive"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-03.png",
+        "where": "the faint crack-like ripple lines in the mid water right of the dome (x 67 to 100%, y 33 to 67%)",
+        "what": "the thin dark streaks lose definition and turn slightly smeary",
+        "fix": "same as above: a bit more bitrate or psycho-visual tuning to keep low-contrast detail"
+      }
+    ]
+  }
+}

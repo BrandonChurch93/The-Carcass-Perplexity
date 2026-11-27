@@ -1,0 +1,13 @@
+{
+  "round": 30,
+  "unit": "film",
+  "pack": "R7-4",
+  "family": "gemini",
+  "answered": "2026-11-27 08:30 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 10,
+    "pass": true,
+    "issues": []
+  }
+}
