@@ -27,6 +27,7 @@ uniform float uMud;
 // x: how high the wet mud stands on the trunk, metres on the body as built. y: the height the dry cake begins at. z: 1 for one that is wet all over.
 // w: the grey of the mud it is in, 0 the red of the vein, 1 the grey slurry of the thin crust.
 uniform vec4 uCoat;
+uniform float uStrand;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 const vec3 HIDE_MEAN = vec3(0.163, 0.103, 0.075);
@@ -66,7 +67,7 @@ void main() {
   // And it runs up the hide in strands where the animal has shaken and rolled: narrow tongues, each to its own height, none level with the next.
   float strandA = smoothstep(0.5, 0.92, vnoise(vec2(vRest.x * 17.0 + vRest.z * 6.0 + 0.6 * y, uSeed * 2.0 + 3.0)));
   float strandB = smoothstep(0.45, 0.95, vnoise(vec2(vRest.x * 41.0 - vRest.z * 13.0 + 1.1 * y, uSeed * 4.0 + 7.0)));
-  float tide = mix(uCoat.x + 0.3 * leg - 0.42 * snout + 0.75 * (patchy - 0.5) + 0.3 * (mid - 0.5) + 0.07 * (fine - 0.5) + 0.3 * lane + 0.22 * (1.0 - smoothstep(0.1, 0.7, fold)) + 0.4 * strandA * (0.4 + 0.9 * patchy) + 0.18 * strandB, 9.0, uCoat.z);
+  float tide = mix(uCoat.x + 0.3 * leg - 0.42 * snout + 0.75 * (patchy - 0.5) + 0.3 * (mid - 0.5) + 0.07 * (fine - 0.5) + 0.3 * lane + 0.22 * (1.0 - smoothstep(0.1, 0.7, fold)) + uStrand * (0.4 * strandA * (0.4 + 0.9 * patchy) + 0.18 * strandB), 9.0, uCoat.z);
   float wet = 1.0 - smoothstep(-0.03, 0.03, y - tide);
   // Thrown up the flank as it wades: clots, thick by the line and thinning to nothing a stride above it.
   float above = clamp((y - tide) / 0.75, 0.0, 1.0);

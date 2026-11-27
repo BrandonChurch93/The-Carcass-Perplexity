@@ -644,6 +644,8 @@ export interface Look {
   /** The three coats of slick.ts in place of the flank picture: how high the wet mud stands on the trunk and where the dry cake begins, metres on the body
    * as built; 1 for one that is wet all over; 0 for the red mud of the vein, 1 for the grey slurry of the thin crust. */
   coat?: [number, number, number, number];
+  /** How far the strands of mud stand up its hide above the line, against what the coat gives; 1 when not given. */
+  strand?: number;
 }
 
 const m = new THREE.Matrix4();
@@ -719,6 +721,7 @@ export class Beast {
         ...(look.coat
           ? {
               uCoat: { value: new THREE.Vector4(...look.coat) },
+              uStrand: { value: look.strand ?? 1 },
               tCake: { value: ctx.assets.texture('mat/mudhide.jpg', { kind: 'colour', anisotropy: 4 }) },
               tCakeNh: { value: ctx.assets.texture('mat/mudhide-nh.png', { kind: 'data', anisotropy: 4 }) },
             }
