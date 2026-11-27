@@ -502,6 +502,8 @@ uniform sampler2D tShingleN;
 uniform sampler2D tSand;
 uniform sampler2D tNear;
 uniform sampler2D tNearN;
+uniform sampler2D tWeed;
+uniform sampler2D tWeedN;
 uniform float uPool;
 uniform vec4 uPath;
 uniform vec2 uGate;
@@ -560,7 +562,8 @@ void main() {
   // Close under a lens the floor is the Builder's own stretch of it, stones, grit and cast weed laid at their true size and mirrored
   // where it meets itself: no stone comes round again within a stride, and each stands a little out of the bed toward the eye.
   // The stones lie in drifts drawn out across the strait, bare wet sand between them: a third of the flat at most.
-  float driftN = smoothstep(0.6, 0.66, vnoise(vec2(xz.x / 27.0 + 0.2 * xz.y / 19.0, xz.y / 5.5) + 31.0) * 0.62 + vnoise(xz / 2.3 + 17.0) * 0.38);
+  float driftAt = vnoise(vec2(xz.x / 27.0 + 0.2 * xz.y / 19.0, xz.y / 5.5) + 31.0) * 0.62 + vnoise(xz / 2.3 + 17.0) * 0.38;
+  float driftN = smoothstep(0.64, 0.7, driftAt);
   float nearBy = smoothstep(60.0, 28.0, length(cameraPosition - vWorld)) * driftN;
   vec2 un = vec2(xz.x * 0.94 + xz.y * 0.342, xz.y * 0.94 - xz.x * 0.342) / 1.9 + vec2(0.13, 0.41);
   float ln = footLevel(tNear, dFdx(un), dFdy(un), 2.5);
@@ -600,6 +603,8 @@ void main() {
   // Gravel lies in bars a few strides long, where the floor stands proud; between them the floor is silt.
   float bar = smoothstep(0.4, 0.6, pz + 0.5 * clamp(over, -0.2, 0.3) + 0.5 * (vnoise(vec2(xz.x / 14.0, xz.y / 5.0) + 2.0) - 0.42));
   bar *= 1.0 - 0.8 * soaked;
+  // Gravel shows only round the drifts of stones: everywhere else the stones lie under silt, and the floor is dark wet mud.
+  bar *= smoothstep(0.54, 0.64, driftAt);
   vec3 grain = mix(sand / 0.128, det / 0.122, bar);
   // Wet grey shingle: slate more than sand.
   grain = mix(vec3(dot(grain, vec3(0.333))), grain, 0.22) * vec3(0.94, 0.98, 1.04);
@@ -610,9 +615,19 @@ void main() {
   // Cast weed lies in dark patches on the bars and at the edge of the pools.
   // Before the gate the flat is the weed's: dark mats of it between the sheets of standing water.
   float gateNear = smoothstep(90.0, 25.0, length(xz - uGate));
-  float castWeed = smoothstep(0.58, 0.625, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * vnoise(xz / 0.45 + 3.0) + 0.14 * bar + 0.25 * gateNear);
-  // Its straps lie one way in a clump, olive and brown, not one black.
-  vec3 weedC = mix(vec3(0.022, 0.02, 0.008), vec3(0.07, 0.054, 0.018), vnoise(vec2(xz.x * 7.0 + 2.0 * vnoise(xz / 1.3), xz.y * 1.6))) * (0.5 + nh.z);
+  float castWeed = smoothstep(0.58, 0.625, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * vnoise(xz / 0.45 + 3.0) + 0.14 * bar + 0.06 * gateNear) * smoothstep(0.36, 0.5, vnoise(xz / 1.3 + 5.0) * 0.7 + 0.3 * vnoise(xz / 0.31 + 2.0));
+  // Wrack, not ripples: where weed is cast the floor is the Builder's own sheet of strap weed laid flat at its true size, olive and
+  // brown straps over black gaps. Its level is taken here, outside the branch that reads it.
+  vec2 uwf = vec2(xz.x * 0.8 + xz.y * 0.6, xz.y * 0.8 - xz.x * 0.6) / 2.6 + vec2(0.37, 0.11);
+  float lwf = footLevel(tWeed, dFdx(uwf), dFdy(uwf), 3.0);
+  vec3 wk = vec3(0.03);
+  vec3 wkn = vec3(0.5);
+  if (castWeed > 0.01) {
+    wk = textureLod(tWeed, uwf, lwf).rgb;
+    wkn = textureLod(tWeedN, uwf, lwf).rgb;
+  }
+  float wl = dot(wk, vec3(0.333));
+  vec3 weedC = wk * vec3(1.0, 1.05, 1.0);
   albedo = mix(albedo, weedC, 0.9 * castWeed);
   // What lies under the sheets is dark drowned sand; the plate's hollows hold a film that shows the sky; every stone above is wet.
   float under = smoothstep(0.01, -0.05, over);
@@ -622,22 +637,27 @@ void main() {
   float film = wet * (1.0 - under) * (1.0 - castWeed);
   float damp = smoothstep(0.4, 0.1, over);
   float rough = mix(mix(0.6, 0.45, damp), 0.06, film);
-  rough = mix(rough, 0.9, max(under, 0.8 * castWeed));
+  rough = mix(rough, 0.9, under);
+  rough = mix(rough, mix(0.9, 0.55, smoothstep(0.03, 0.1, wl)), castWeed * (1.0 - under));
   // Dry shingle under a break in the cloud stays slate: the sun's warmth is taken out of it.
   albedo *= mix(1.25, 0.5, max(wet, 0.35 * damp)) * mix(1.0, 0.55, under) * mix(vec3(0.86, 0.95, 1.08), vec3(0.88, 0.96, 1.07), max(wet, under));
   // Close under the lens the stones are the picture's own: each keeps its colour and its slope, wet and dark where it lies low in the film.
   float lowN = smoothstep(0.5, 0.3, nearN.z);
   float filmN = film * lowN;
   vec3 nearAlbedo = nearC * mix(1.0, 0.55, max(filmN, under)) * mix(1.0, 0.78, damp) * vec3(0.93, 0.98, 1.05);
+  // Few stones: only the tall ones of the picture stand out of the silt, which lies between them as it lies on the open floor.
+  float siltN = smoothstep(0.62, 0.4, nearN.z);
+  nearAlbedo = mix(nearAlbedo, albedo, max(0.85 * siltN, castWeed));
   albedo = mix(albedo, nearAlbedo, nearBy);
   // Before the gate what is not a sheet of water is dark: soaked sand and mats of weed that show no sky.
   float sunk = gateNear * (1.0 - film * mix(1.0, lowN, nearBy));
   albedo = mix(albedo, albedo * vec3(0.42, 0.4, 0.34), sunk);
   albedo = mix(albedo, weedC, 0.9 * castWeed * gateNear);
-  rough = mix(rough, mix(mix(0.7, 0.5, damp), 0.08, filmN), nearBy * (1.0 - under));
+  rough = mix(rough, mix(mix(0.7, 0.5, damp), 0.08, filmN), nearBy * (1.0 - under) * (1.0 - castWeed));
   film = mix(film, filmN, nearBy);
   rough = mix(rough, 0.95, gateNear * (1.0 - film));
-  vec2 g = mix((nh.xy - 0.5) * 2.2 * max(bar, 0.5 * close) * mix(1.0, 0.05, wet), (nearN.xy - 0.5) * 1.7 * (1.0 - 0.9 * filmN), nearBy);
+  vec2 g = mix((nh.xy - 0.5) * 2.2 * max(bar, 0.1 * close) * mix(1.0, 0.05, wet), (nearN.xy - 0.5) * 1.7 * (1.0 - 0.9 * filmN) * (1.0 - 0.8 * siltN), nearBy);
+  g = mix(g, (wkn.xy - 0.5) * 0.55, castWeed);
   vec3 n = normalize(vNormal + vec3(ps.x, 0.0, ps.y) * 2.6 * (1.0 - 0.85 * film) * (1.0 - 0.7 * close) * (1.0 - 0.8 * under) * (1.0 - 0.6 * nearBy) + vec3(g.x, 0.0, -g.y));
   float cavity = 0.55 + 0.45 * smoothstep(0.08, 0.4, ps.z);
   float occ = mix(cavity * (0.5 + 0.5 * smoothstep(0.1, 0.55, nh.z)), 1.0, wet);

@@ -188,7 +188,7 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
   const gateAt = new THREE.Vector2(STATIONS.posts[0][0] + 64, STATIONS.posts[0][1] + 74 - 22);
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) }, uGate: { value: gateAt } });
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN }, tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) }, uGate: { value: gateAt } });
   {
     // A lane of standing water runs down the middle of the strait toward the gap, from where the wide lens stands: it holds the sky.
     const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
