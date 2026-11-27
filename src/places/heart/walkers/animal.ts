@@ -98,7 +98,7 @@ export interface Env {
 const SAG = { dip: 0.5, lean: 0.38, roll: 0.16, landRoll: 0.085, pitch: 0.12, landPitch: 0.075 };
 
 /** The radius of a foot where it stands, as a part of the room its pad is given on the crust. */
-export const FOOT_SHARE = 0.36;
+export const FOOT_SHARE = 0.8;
 
 export interface Stood {
   /** `age` is the seconds since the pad last came down, `hard` how hard it came down (0 to 1), `load` the share of its full weight on it now. */
@@ -584,23 +584,23 @@ export class Animal {
     // The pad: height above its sole and radius, in units of the foot's radius; the last rings close the sole.
     // The shin flares like the foot of a tree into splayed toes, on a thin dark sole a little wider than they are.
     const PAD: [number, number][] = [
-      [1, 0.38],
-      [0.86, 0.4],
+      [1, 0.4],
+      [0.86, 0.41],
       [0.72, 0.43],
       [0.58, 0.48],
       [0.45, 0.55],
       [0.34, 0.64],
       [0.24, 0.75],
-      [0.15, 0.87],
-      [0.085, 0.97],
-      [0.05, 1.04],
+      [0.18, 0.87],
+      [0.13, 0.97],
+      [0.1, 1.04],
       // The sole: a plate that spreads under the weight and draws in when the foot is lifted.
-      [0.045, 1.24],
-      [0.02, 1.32],
+      [0.09, 1.24],
+      [0.04, 1.32],
       [0, 1.3],
       [0, 0.02],
     ];
-    // The foot is 0.5 to 0.7 m across where it takes the weight.
+    // The foot is 0.4 to 0.6 m across where it takes the weight, and its sole a little more.
     const footR = FOOT_SHARE * b.padR;
     // Three or four toes, the fore ones longer, each leg its own.
     const toeN = hash(seed, 64) < 0.5 ? 3 : 4;
@@ -650,6 +650,8 @@ export class Animal {
       }
       r *= 1 + 0.08 * Math.sin((s * 3.1) / k + p1 * 3);
       r *= k * b.legR;
+      // The last fifth of the leg widens into the foot as the foot of a tree does: a long cone, not a club on a stick.
+      if (!inPad) r = Math.max(r, lerp(r, 0.4 * footR, Math.pow(smooth(S3 - 1.6 * k, S3, s), 1.5)));
       // No bone is straight: each bows a little between its joints.
       const lens = [S1, this.tibia, this.meta];
       for (let n = 0; n < 3; n++) {
@@ -668,7 +670,7 @@ export class Animal {
       if (inPad) {
         const row = PAD[i - pad] as [number, number];
         const flare = smooth(0.4, 0.7, row[1]);
-        r = lerp(r, footR * row[1], Math.max(flare, row[1] < 0.1 ? 1 : 0));
+        r = footR * row[1];
         shape = flare;
       }
       for (let n = 0; n < LEG_SIDES; n++) {

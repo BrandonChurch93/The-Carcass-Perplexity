@@ -110,7 +110,8 @@ void main() {
   float hang = smoothstep(1.15, 0.0, sd);
   // Before it breaks off the slab already stands a thumb's width low along the line: a fine seam.
   float fall = (0.035 + 0.095 * uSlab) * span;
-  vBreak = vec3(side, sd, side * fall * step(sd, 1.15) / 1.15);
+  // Past the ends of the line there is no seam: the distance to it is put out of reach there.
+  vBreak = vec3(side, mix(9.0, sd, step(0.02, tb) * step(tb, 0.98)), side * fall * step(sd, 1.15) / 1.15);
   // The corners of the sheet beside the line are drawn onto it, so the seam runs as the line does and not in the steps of the sheet.
   float drawn = (1.0 - step(0.045, abs(sd))) * step(0.02, tb) * step(tb, 0.98);
   vec2 onLine = l - vec2(-ba.y, ba.x) / bl * (sd - sign(sd) * 0.004) * drawn;
@@ -237,7 +238,9 @@ void main() {
   float sheer = smoothstep(1.4, 2.6, length(grad)) * onRope;
   float flat2 = folded * mid * (1.0 - 0.5 * wall) * (1.0 - 0.6 * sheer);
   vec2 fromBody = l - vec2(${BODY.centre.x.toFixed(2)}, ${BODY.centre.z.toFixed(2)});
-  float ashed = smoothstep(8.0, 3.5, length(fromBody) + 2.0 * (broad - 0.5));
+  // Toward the bench the old skin goes on to where the folds end; round the back it gives way to the lake's plates sooner.
+  float benchward = smoothstep(-0.2, 0.5, fromBody.y / max(length(fromBody), 1e-3));
+  float ashed = smoothstep(mix(8.0, 13.5, benchward), mix(3.5, 9.5, benchward), length(fromBody) + 2.0 * (broad - 0.5));
   // A rope is old skin, greyer than the plates of the lake. They die out before the rim, so nothing of this reaches it.
   // The skin that stands up against the hull without being a rope is of the same old brown stuff.
   float roped = max(clamp(ln.a, 0.0, 1.0), smoothstep(0.15, 0.45, vWorld.y)) * ashed * folded;
@@ -274,7 +277,7 @@ void main() {
   float count = cordCount(ln.r + sheet * 94.0);
   float seen = smoothstep(0.7, 0.25, fwidth(count));
   // A fibre does not run the whole length of a rope: it shows for a way and is lost again.
-  float amp = clamp(ln.a, 0.0, 1.0) * seen * (0.3 + 0.7 * smoothstep(0.3, 0.65, vnoise(lr * 2.7 + 31.0))) * (1.0 - 0.6 * lumpSeen * smoothstep(0.55, 0.35, lumps)) * (1.0 - 0.7 * graze);
+  float amp = clamp(ln.a, 0.0, 1.0) * seen * (0.5 + 0.5 * smoothstep(0.3, 0.65, vnoise(lr * 2.7 + 31.0))) * (1.0 - 0.6 * lumpSeen * smoothstep(0.55, 0.35, lumps)) * (1.0 - 0.7 * graze);
   float x = 2.0 * fract(count) - 1.0;
   float k = 1.0 - x * x;
   float cordTone = fract(sin(floor(count) * 12.9898) * 43758.5453);
@@ -283,16 +286,17 @@ void main() {
   float x2 = x * x;
   float crease = x2 * x2 * abs(x) * amp;
   float crown = k * k * amp;
-  albedo *= (1.0 - 0.35 * crease) * (1.0 + amp * 0.35 * (cordTone - 0.5));
+  // Between two cords the skin is black, and no two cords are of one tone: seen sharp, a rope is a bundle and not a roll.
+  albedo *= (1.0 - 0.8 * crease) * (1.0 + amp * 0.7 * (cordTone - 0.5));
 
   // What stands up and lies level has gone grey and carries the ash that fell since; what is down in a crease is black.
   float lying = smoothstep(0.15, 0.6, inversesqrt(1.0 + dot(grad, grad)));
   float stood = smoothstep(0.4, 0.55, mk.b);
-  albedo *= mix(1.0, 0.6 + 0.4 * smoothstep(0.3, 0.5, mk.b), folded);
+  albedo *= mix(1.0, 0.38 + 0.62 * smoothstep(0.27, 0.5, mk.b), folded);
   // On a rope it lies on the backs of the fibres and not between them.
   float backs = mix(1.0, 1.25 * smoothstep(0.45, 0.7, nhA.b), onRope);
   float ash = folded * ashed * (1.0 - crease) * clamp(lying * stood * backs * (0.6 + 0.4 * smoothstep(0.25, 0.7, small + 0.5 * (broad - 0.5))) + crown * 0.7 * smoothstep(0.35, 0.5, mk.b) * (0.4 + 0.6 * small), 0.0, 1.0);
-  ash *= 0.5;
+  ash *= 0.6;
   albedo = mix(albedo, ASH_SKIN * (0.75 + 0.5 * grainNh.b), ash);
 
   vec2 nd = nhA.rg - 0.5;
@@ -308,7 +312,7 @@ void main() {
   vec2 ss = sw * mix(1.0, 0.45, folded);
   vec3 ns = normalize(vec3(-ss.x, 1.0 + 0.6 * folded, -ss.y));
 
-  float occ = mix(1.0, mix(0.5 + 0.5 * rl.b, 0.25 + 0.75 * rl.b, close) * (0.8 + 0.2 * nhA.b) * (1.0 - 0.45 * crease), folded);
+  float occ = mix(1.0, mix(0.5 + 0.5 * rl.b, 0.1 + 0.9 * rl.b * rl.b, close) * (0.8 + 0.2 * nhA.b) * (1.0 - 0.45 * crease), folded);
   // Where a foot stands in the skin the skin is dark against it: a rim of shade a hand wide, so the foot is in the ground.
   float atFoot = min(length(l - vec2(${FOOT_A[0].toFixed(2)}, ${FOOT_A[1].toFixed(2)})) - 0.3, length(l - vec2(${FOOT_B[0].toFixed(2)}, ${FOOT_B[1].toFixed(2)})) - 0.2);
   occ *= 1.0 - 0.6 * smoothstep(0.3, 0.02, atFoot);

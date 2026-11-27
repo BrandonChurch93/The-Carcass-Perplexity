@@ -426,6 +426,8 @@ interface Rope {
   parent?: Rope;
   /** The skin of this one is split along its flank and glows there, between these angles. */
   split?: [number, number];
+  /** One of the folds before the bench, beyond those round the body. */
+  far?: boolean;
 }
 
 const DEG = Math.PI / 180;
@@ -490,6 +492,7 @@ function makeRopes(): Rope[] {
       seed: 6.28 * hash(i, 31, 203),
       tone: 0.1 + 0.8 * hash(i, 32, 203),
       main: true,
+      far: true,
       twist: (hash(i, 33, 203) < 0.5 ? -1 : 1) * (0.14 + 0.3 * hash(i, 34, 203)),
       mean: 2.4 + out,
     });
@@ -622,6 +625,8 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     const angEye = Math.atan2(-(wx - EYE[0]), wz - EYE[1]);
     // They die out over the last metres of the skin.
     const fade = smooth(0.2, 3.8, inside + 1.2) * smooth(0.3, 1.5, run);
+    // The folds before the bench stop short of the swirl with the glowing split, which stays as it was.
+    const clearOfEye = smooth(2.8, 4.4, rhoEye);
     // A rope that crosses the body lies on it, but none climbs higher than the skin could push it.
     const lying = Math.max(h, Math.min(top, bare + 0.5));
     let hard = 0;
@@ -645,7 +650,7 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
           const rho = k.about === 0 ? rhoBody : Math.max(0.3, rhoEye);
           const e = ((k.about === 0 ? d : rhoEye) - middle[0]) / Math.hypot(1, middle[1] / rho);
           // It thins to nothing at each end, where it goes under, and is not of one girth between.
-          const r = k.r * Math.sqrt(smooth(0, 0.1, t) * smooth(1, 0.9, t)) * (0.78 + 0.22 * Math.sin(a * 5.3 + k.seed * 3) + 0.2 * Math.sin(a * 2.1 + k.seed * 5)) * (0.7 + 0.3 * fade);
+          const r = k.r * Math.sqrt(smooth(0, 0.1, t) * smooth(1, 0.9, t)) * (0.78 + 0.22 * Math.sin(a * 5.3 + k.seed * 3) + 0.2 * Math.sin(a * 2.1 + k.seed * 5)) * (0.7 + 0.3 * fade) * (k.far ? clearOfEye : 1);
           const ae = Math.abs(e);
           if (ae > 1.6 * r || r < 0.01) continue;
           const stands = 1.25 * r * (0.5 + 0.5 * fade);

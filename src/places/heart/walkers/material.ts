@@ -386,10 +386,11 @@ void main() {
     c += tendril * 0.35 * (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * skyRadiance(rs) * smoothstep(0.15, 0.7, rs.y) * own;
   }
   // The pool under its tuft lights what faces it: the roots, the lower neck, the inside of the legs, the belly.
+  // A root takes the pool's glare over its last metre only: higher up it is pale fibre under the sky, as the picture has it.
   vec4 pool = uPools[int(vWho + 0.5)];
-  if (pool.z > 0.0) c += blackbody(1350.0) * poolLight(pool, vWorld, normalize(mix(ng, n, 0.3 + 0.7 * tendril)), v, albedo, 0.25 * tendril, tendril) * own * POOL * (1.0 - 0.2 * tendril) * (1.0 - 0.75 * flank);
+  if (pool.z > 0.0) c += blackbody(1350.0) * poolLight(pool, vWorld, normalize(mix(ng, n, 0.3 + 0.7 * tendril)), v, albedo, 0.25 * tendril, tendril) * own * POOL * (1.0 - 0.2 * tendril) * (1.0 - 0.75 * flank) * mix(1.0, 0.2 + 0.8 * smoothstep(1.0, 0.12, vWorld.y), tendril);
   // The roots are thin: the heat under them shows through them.
-  float thin = tendril * 0.4 * smoothstep(2.5, 0.3, vWorld.y);
+  float thin = tendril * 0.3 * smoothstep(1.6, 0.2, vWorld.y);
   if (thin > 0.01) c += thin * albedo * lakeIrradianceFar(vWorld, vec3(0.0, -1.0, 0.0)) * occ / 3.14159;
   // Nothing on the animal glows by itself but the tips of the roots that are in the melt. The pose says which rings are down in a seam;
   // the lake's own map must agree that it is open there: a texel of it must carry at least a sixth of what lava under a thin skin sends out.
