@@ -219,14 +219,16 @@ export function streamFloor(along: number): number {
   return filled * (1 - back) + cutFloor(along) * back;
 }
 
-const BAY = { x: -19.277, z: 638.209, fx: 0.087155, fz: -0.996195 };
-const HEAPS: [number, number, number, number][] = [
-  [135, 8.8, 3.4, 3.8],
-  [129.5, 13.5, 4.5, 2.8],
-  [131, -8.4, 4.8, 5.6],
-  // Its back, toward the spur: the mass is a ridge of rubble, not a cone.
-  [136.8, -8.2, 4.4, 3.4],
-  [131, -20, 4.6, 1.8],
+/** The key place of the shore camera and its line of sight on the ground: the flooded bay and the lip are laid out from it. */
+export const BAY = { x: -19.277, z: 638.209, fx: 0.087155, fz: -0.996195 };
+export const HEAPS: [number, number, number, number][] = [
+  // Broad and low: the outcrop is cut from them as a height field (outcrop.ts), which cannot hold a face that stands upright.
+  // Low too: the wide camera stands a few metres from them, and one swell of a man's height fills a third of its picture with one back.
+  [135, 8.8, 5.4, 1.5],
+  [129.5, 13.5, 6.5, 1.7],
+  [131, -8.4, 7.0, 1.9],
+  [136.8, -8.2, 6.2, 1.3],
+  [131, -20, 6.5, 1.4],
 ];
 
 export function landHeight(x: number, z: number): number {
@@ -247,12 +249,19 @@ export function landHeight(x: number, z: number): number {
       if (bed < y) y = y * (1 - from) + (bed * (1 - open) + y * open) * from;
       // Where the ground falls away beside it, the stones it has thrown out stand as a low bank and keep it in.
       const bank = floor + 0.6 * smooth(1.5, 3.2, off) * (1 - smooth(4.6, reach, off)) * smooth(26, 40, along) * (1 - smooth(130, 140, along));
-      if (y < bank) y = bank;
+      // Beyond its crest the bank goes down to the ground it lies on as a slope of its own stones, here and past the reach (below).
+      // Held level out to the reach and stopped there, it stood as a wall as high as the ground lies below the bed.
+      const fill = bank - 0.75 * Math.max(0, off - 4.6);
+      if (y < fill) y = fill;
+    } else if (off < reach + 10) {
+      const fill = streamFloor(along) - 0.75 * (off - 4.6);
+      if (y < fill) y = fill;
     }
   }
   // Heaps of fallen rock stand at the corners of the wide picture, right and left of the camera's way, and the blocks lie on them.
   // They are laid after the stream has cut its bed, and keep clear of the water itself.
-  const clear = smooth(2.6, 4.6, Math.abs(across - streamAcross(along)));
+  // They fall to the stream over several metres: over two, the side of a heap is a wall along the water.
+  const clear = smooth(2.2, 7.5, Math.abs(across - streamAcross(along)));
   for (const [a, c, wide, tall] of HEAPS) {
     const d = Math.hypot(along - a, across - c) / wide;
     if (d < 2.5) y += clear * tall * Math.exp(-d * d) * (0.8 + 0.4 * vnoise(x / 3.1 + 7, z / 3.1));
