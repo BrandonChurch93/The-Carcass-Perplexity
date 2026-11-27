@@ -265,7 +265,7 @@ export function create(ctx: HeartContext): HeartPiece {
     const h = rubbleAt(x, z);
     if (near <= 0) return h;
     const bed = 0.035 + 0.03 * noise(x / 0.35 + 2.7, z / 0.35 + 5.9);
-    return h <= bed ? h : bed + Math.max(0, h - bed - 0.25 * near) * (1 - 0.4 * near);
+    return h <= bed ? h : bed + Math.max(0, h - bed - 0.15 * near) * (1 - 0.3 * near);
   };
   const heapAt = (x: number, z: number): number => {
     const ex = vent.bx - vent.ax;

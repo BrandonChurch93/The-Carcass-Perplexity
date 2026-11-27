@@ -648,8 +648,10 @@ void main() {
     float seen2 = loose * smoothstep(0.55, 0.22, px / 0.028);
     float gap1 = smoothstep(0.0, 0.1, g1.w);
     float gap2 = smoothstep(0.0, 0.1, g2.w);
-    bed *= mix(1.0, (0.5 + 1.1 * g1.z) * (0.2 + 0.8 * gap1), seen1) * mix(1.0, (0.6 + 0.8 * g2.z) * (0.3 + 0.7 * gap2), seen2);
-    bed = mix(bed, vec3(0.17, 0.158, 0.143) * (0.6 + 0.8 * pits), 0.8 * seen1 * gap1 * smoothstep(0.86, 0.9, g1.z));
+    // Most are near black and a few are ash grey: the picture's bed is black gravel with pale grains all through it.
+    bed *= mix(1.0, (0.35 + 1.9 * g1.z * g1.z) * (0.2 + 0.8 * gap1), seen1) * mix(1.0, (0.45 + 1.5 * g2.z * g2.z) * (0.3 + 0.7 * gap2), seen2);
+    bed = mix(bed, vec3(0.17, 0.158, 0.143) * (0.6 + 0.8 * pits), 0.8 * seen1 * gap1 * smoothstep(0.8, 0.84, g1.z));
+    bed = mix(bed, vec3(0.15, 0.14, 0.128) * (0.6 + 0.8 * pits), 0.7 * seen2 * gap2 * smoothstep(0.84, 0.88, g2.z));
     bent += 0.55 * seen1 * (tb * g1.x - ta * g1.y) + 0.35 * seen2 * gap1 * (tb * (g2.xy * TURN).x - ta * (g2.xy * TURN).y);
     clinker = mix(bed, clinker, block) * mix(1.0, 0.5 + 1.0 * ves.b, sharp);
     occ *= mix(1.0, 0.35 + 0.65 * gap1, seen1 * byLens);

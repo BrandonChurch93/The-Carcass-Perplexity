@@ -404,8 +404,10 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     const flat = height(...near(a, -2.8));
     let r = -2.8;
     while (r > most && height(...near(a, r - half - 0.1)) < flat + 0.8) r -= 0.1;
+    // The shore was drawn back for the channel since (see `put`): a boulder left standing over the lake is walked on to the ground as it is now.
+    while (r > most - 3 && landHeight(...near(a, r + half * 0.6)) < 0.1) r -= 0.1;
     const [x, z] = near(a, r);
-    const g = Math.max(height(x, z), 0.04);
+    const g = Math.max(landHeight(x, z), 0.04);
     stand(shape, x, z, g + rise, half, rise * 1.35, rng.range(0.6, 0.72));
     shades.push([x, z, half * 1.5, 0.6]);
   }
@@ -834,6 +836,17 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (benchDistance(x, z) < 0.4 + size / 2) continue;
     if (Math.hypot(x - CRACK_FOOT[0], z - CRACK_FOOT[1]) < 0.9 + size / 2) continue;
     put(i % 4 ? kinds.angular : kinds.lump, x, z, size, { sink: rng.range(0.2, 0.3), flat: rng.range(0.5, 0.9), tone: rng.range(0.75, 1.25) });
+  }
+  // Its picture keeps clinker along the near bank to a third of the frame, black blocks standing before the channel's glow. The shore was
+  // drawn back for the channel after the heap was dealt, and the rules above keep the scatter off its edge: these are stood along the shore
+  // as it is now, a row two deep, small near the lens where the channel must show over them. Last in the stream, so nothing else moves.
+  for (let i = 0; i < 22; i++) {
+    const a = 3.3 + 0.27 * i + rng.range(-0.1, 0.1);
+    let r = 1.5;
+    while (r > -7 && landHeight(-510.5 + 0.788 * a + 0.616 * r, 215.5 - 0.616 * a + 0.788 * r) < 0.15) r -= 0.05;
+    const size = (a < 5 ? 0.3 : 0.42) * Math.pow(1.9, rng.next());
+    r -= size * (i % 2 ? rng.range(0.9, 1.7) : rng.range(0.25, 0.5));
+    put(kinds.angular, -510.5 + 0.788 * a + 0.616 * r, 215.5 - 0.616 * a + 0.788 * r, size, { sink: rng.range(0.2, 0.26), flat: rng.range(0.6, 0.9), tone: rng.range(0.5, 0.8), stand: true });
   }
 
   const discs = ctx.rig.contactDiscs(shades.length);

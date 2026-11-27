@@ -274,8 +274,9 @@ const LINE_PATH: [[number, number], [number, number]] = [
 ];
 const LINE_LENS: [number, number] = [-510.5, 215.5];
 const LINE_AHEAD: [number, number] = [0.788, -0.616];
-// Metres the shore draws back before that lens.
-const LINE_BAY = 0.7;
+// Metres the shore draws back before that lens, over what the channel and its pools take of it: nothing. The picture keeps rubble
+// along the near bank to a third of the frame, and a bay of 0.7 m left a wedge of a fifth.
+const LINE_BAY = 0;
 // The channel of the line view as the lake runs it (lake/net.ts: the seam 'line' bent toward the shore), from where it leaves the far
 // bank to where it passes the lens, and its two pools. Numbers given by the lake's builder; if the lake moves its channel, these follow.
 const LINE_CHANNEL: [number, number][] = [
