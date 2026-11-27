@@ -286,15 +286,16 @@ export function outcrop(x: number, z: number, axisOf: (x: number, z: number) => 
 
 export interface Crop {
   geometry: THREE.BufferGeometry;
-  /** r, g: the fall of the relief along and across the axis, as the sine of its angle; b: how much of the sky a place sees; a: rock or rubble. */
-  map: THREE.DataTexture;
+  /** How many corners the mesh has along the axis: the width of one tile of its picture. */
+  columns: number;
   /** along0, across0, one over its length, one over its width. */
   rect: THREE.Vector4;
 }
 
 /** The fine mesh of the broken ground and its map. */
-export function cropGround(): Crop {
-  // The map.
+/** The map of the relief: its lie both ways, how much sky each place sees, and how much of it is standing rock. Ten seconds of work,
+ * so it is done once by `assets-src/eye/land/bake-outcrop.ts` and kept as two pictures: run that again after any change to the relief. */
+export function cropMap(): { data: Uint8Array; W: number; H: number } {
   const W = Math.round((CROP.along1 - CROP.along0) / TEXEL);
   const H = Math.round((CROP.across1 - CROP.across0) / TEXEL);
   const high = new Float32Array(W * H);
@@ -326,44 +327,49 @@ export function cropGround(): Crop {
       data[k * 4 + 2] = Math.round(255 * Math.max(0.12, 1 - Math.min(1, under)));
     }
   }
-  const map = new THREE.DataTexture(data, W, H, THREE.RGBAFormat, THREE.UnsignedByteType);
-  map.minFilter = THREE.LinearMipmapLinearFilter;
-  map.magFilter = THREE.LinearFilter;
-  map.wrapS = THREE.ClampToEdgeWrapping;
-  map.wrapT = THREE.ClampToEdgeWrapping;
-  map.generateMipmaps = true;
-  map.anisotropy = 1;
-  map.needsUpdate = true;
+  return { data, W, H };
+}
 
-  // The mesh: a hand and a half a cell where the wide camera passes close, coarser out on the shoulders.
+// The mesh: a hand and a half a cell where the wide camera passes close, coarser out on the shoulders.
+const FINE = 26;
+function cropGrid(): { us: number[]; vs: number[] } {
   const us: number[] = [];
   for (let a = CROP.along0; a < CROP.along1 + 1e-6; a += 0.2) us.push(a);
   const vs: number[] = [];
-  const FINE = 26;
   for (let c = CROP.across0; c < -FINE - 1e-6; c += 0.45) vs.push(c);
   for (let c = -FINE; c < FINE - 1e-6; c += 0.16) vs.push(c);
   for (let c = FINE; c < CROP.across1 + 1e-6; c += 0.45) vs.push(c);
+  return { us, vs };
+}
+/** The heights the mesh's picture can hold, in metres: sixteen bits from `low` over `span`. */
+const HELD = { low: -16, span: 128 };
+
+/** What every corner of the mesh carries, as the picture `land/outcrop-mesh.png` holds it: two tiles side by side, each a texel a
+ * corner. Left: the height in r and g (sixteen bits), how much standing rock the place has in b. Right: the lie of the smooth ground
+ * in r and g (x and z of its normal), wet beside the stream in b. Three seconds of work, so it is baked with the map. */
+export function cropMeshData(): { data: Uint8Array; W: number; H: number } {
+  const { us, vs } = cropGrid();
   const nu = us.length;
   const nv = vs.length;
   const base = new Float32Array(nu * nv);
-  const lay = new Float32Array(nu * nv * 2);
-  const positions = new Float32Array(nu * nv * 3);
-  const normals = new Float32Array(nu * nv * 3);
+  const data = new Uint8Array(2 * nu * nv * 3);
   for (let j = 0; j < nv; j++) {
     for (let i = 0; i < nu; i++) {
       const along = us[i] as number;
       const across = vs[j] as number;
       const [x, z] = onAxis(along, across);
-      const y = Math.max(-0.6, landHeight(x, z));
-      const o = (j * nu + i) * 3;
+      const ground = Math.max(-0.6, landHeight(x, z));
       const rim = i === 0 || j === 0 || i === nu - 1 || j === nv - 1;
-      base[j * nu + i] = y;
-      positions[o] = x;
-      positions[o + 1] = y + outcropAt(along, across, Math.abs(across) > FINE ? 0.45 : 0.16) - (rim ? 7 : 0);
-      positions[o + 2] = z;
-      // Wet beside the stream, and how much standing rock the place has.
-      lay[(j * nu + i) * 2] = smooth(4.2, 1.4, Math.abs(across - streamAcross(along)) + 1.2 * (vnoise(along / 1.7, across / 1.7) - 0.5));
-      lay[(j * nu + i) * 2 + 1] = Math.min(1, bank(along, across));
+      base[j * nu + i] = ground;
+      const y = ground + outcropAt(along, across, Math.abs(across) > FINE ? 0.45 : 0.16) - (rim ? 7 : 0);
+      const held = Math.round(((y - HELD.low) / HELD.span) * 65535);
+      if (held < 0 || held > 65535) throw new Error(`The outcrop's mesh is at ${y} m, outside what its picture holds.`);
+      const o = (j * 2 * nu + i) * 3;
+      data[o] = held >> 8;
+      data[o + 1] = held & 255;
+      data[o + 2] = Math.round(255 * Math.min(1, bank(along, across)));
+      // Wet beside the stream.
+      data[o + nu * 3 + 2] = Math.round(255 * smooth(4.2, 1.4, Math.abs(across - streamAcross(along)) + 1.2 * (vnoise(along / 1.7, across / 1.7) - 0.5)));
     }
   }
   // The normal each corner carries is that of the smooth ground: the relief's own lie comes from the map, finer than the mesh.
@@ -381,10 +387,30 @@ export function cropGround(): Crop {
       const nx = -du * (ax - ox) - dv * (bx - ox);
       const nz = -du * (az - oz) - dv * (bz - oz);
       const l = Math.hypot(nx, 1, nz);
+      const o = (j * 2 * nu + nu + i) * 3;
+      data[o] = Math.round(127.5 + (127.5 * nx) / l);
+      data[o + 1] = Math.round(127.5 + (127.5 * nz) / l);
+    }
+  }
+  return { data, W: 2 * nu, H: nv };
+}
+
+/** The mesh the relief stands on: flat here, and raised in its vertex shader from `land/outcrop-mesh.png`. Its map is read from
+ * `land/outcrop-map.png` and `land/outcrop-rock.png`. */
+export function cropGround(): Crop {
+  const { us, vs } = cropGrid();
+  const nu = us.length;
+  const nv = vs.length;
+  const positions = new Float32Array(nu * nv * 3);
+  const cells = new Float32Array(nu * nv * 2);
+  for (let j = 0; j < nv; j++) {
+    for (let i = 0; i < nu; i++) {
+      const [x, z] = onAxis(us[i] as number, vs[j] as number);
       const o = (j * nu + i) * 3;
-      normals[o] = nx / l;
-      normals[o + 1] = 1 / l;
-      normals[o + 2] = nz / l;
+      positions[o] = x;
+      positions[o + 2] = z;
+      cells[(j * nu + i) * 2] = i;
+      cells[(j * nu + i) * 2 + 1] = j;
     }
   }
   const index = new Uint32Array((nu - 1) * (nv - 1) * 6);
@@ -403,10 +429,9 @@ export function cropGround(): Crop {
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-  geometry.setAttribute('aLay', new THREE.BufferAttribute(lay, 2));
+  geometry.setAttribute('aCell', new THREE.BufferAttribute(cells, 2));
   geometry.setIndex(new THREE.BufferAttribute(index, 1));
-  return { geometry, map, rect: new THREE.Vector4(CROP.along0, CROP.across0, 1 / (CROP.along1 - CROP.along0), 1 / (CROP.across1 - CROP.across0)) };
+  return { geometry, columns: nu, rect: new THREE.Vector4(CROP.along0, CROP.across0, 1 / (CROP.along1 - CROP.along0), 1 / (CROP.across1 - CROP.across0)) };
 }
 
 /** The mean over a square of `reach` cells each way, by running sums. */
@@ -435,15 +460,23 @@ function blurred(src: Float32Array, W: number, H: number, reach: number): Float3
 }
 
 export const CROP_VERTEX = /* glsl */ `
-attribute vec2 aLay;
+attribute vec2 aCell;
+uniform sampler2D tCropMesh;
+uniform float uCropColumns;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vLay;
 void main() {
-  vec4 w = modelMatrix * vec4(position, 1.0);
+  // What the corner carries, from its own texel of each tile: see cropMeshData.
+  ivec2 cell = ivec2(aCell + 0.5);
+  vec3 a = texelFetch(tCropMesh, cell, 0).rgb;
+  vec3 b = texelFetch(tCropMesh, cell + ivec2(int(uCropColumns + 0.5), 0), 0).rgb;
+  float y = ${HELD.low.toFixed(1)} + ${HELD.span.toFixed(1)} * (floor(a.r * 255.0 + 0.5) * 256.0 + floor(a.g * 255.0 + 0.5)) / 65535.0;
+  vec2 lie = b.rg * 2.0 - 1.0;
+  vec4 w = modelMatrix * vec4(position.x, y, position.z, 1.0);
   vWorld = w.xyz;
-  vNormal = normalize(mat3(modelMatrix) * normal);
-  vLay = aLay;
+  vNormal = normalize(mat3(modelMatrix) * vec3(lie.x, sqrt(max(1.0 - dot(lie, lie), 0.01)), lie.y));
+  vLay = vec2(b.b, a.b);
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -452,6 +485,7 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vLay;
 uniform sampler2D tCrop;
+uniform sampler2D tCropRock;
 uniform vec4 uCropRect;
 uniform vec4 uAxis;
 uniform sampler2D tFace;
@@ -469,7 +503,10 @@ void main() {
   vec3 p = vWorld;
   vec2 q = p.xz - uAxis.xy;
   vec2 right = vec2(uAxis.w, -uAxis.z);
-  vec4 m = textureLod(tCrop, (vec2(dot(q, uAxis.zw), dot(q, right)) - uCropRect.xy) * uCropRect.zw, AT(1.0, ${TEXEL.toFixed(3)}));
+  vec2 cropAt = (vec2(dot(q, uAxis.zw), dot(q, right)) - uCropRect.xy) * uCropRect.zw;
+  // tCrop: r, g: the fall of the relief along and across the axis, as the sine of its angle; b: how much of the sky a place sees.
+  // tCropRock: rock or rubble, at half the size.
+  vec4 m = textureLod(tCrop, cropAt, AT(1.0, ${TEXEL.toFixed(3)}));
   vec2 s = m.xy * 2.0 - 1.0;
   vec2 g = s / sqrt(max(1.0 - s * s, 0.02));
   vec2 gw = uAxis.zw * g.x + right * g.y;
@@ -477,7 +514,7 @@ void main() {
   vec3 n = normalize(vec3(nb.x / nb.y - gw.x, 1.0, nb.z / nb.y - gw.y));
   // A standing face is seen edge on by the map, which lies flat: its shade there is evened out.
   float ao = mix(m.b, 0.62, 0.7 * smoothstep(0.62, 0.3, n.y));
-  float rock = m.a;
+  float rock = textureLod(tCropRock, cropAt, AT(1.0, ${(2 * TEXEL).toFixed(3)})).r;
   vec3 v = normalize(cameraPosition - p);
   float away = length(cameraPosition - p);
   float close = 1.0 - smoothstep(18.0, 46.0, away);

@@ -9,6 +9,7 @@ import { lipAt } from '../land/height';
 import { vnoise } from '../shared/noise';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { WARM_GLSL } from '../land/lod';
 
 export const PARTS: readonly string[] = ['skeleton'];
 
@@ -16,7 +17,7 @@ export const PARTS: readonly string[] = ['skeleton'];
 export const BONES = { ahead: 6.4, right: 16, along: 112 };
 
 const VERTEX = /* glsl */ `
-// aBone: the tone of the bone (below nothing: a strand of weed; two: the rag of hide), how near its end the point is, and how much of the sky it sees.
+// aBone: the tone of the bone (below nothing: a strand of weed), how near its end the point is, and how much of the sky it sees.
 attribute vec3 aBone;
 varying vec3 vWorld;
 varying vec3 vLocal;
@@ -38,9 +39,10 @@ varying vec3 vNormal;
 varying vec3 vBone;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${WARM_GLSL}
 // The grain of weathered bone: pits, and the long lines it splits along.
 float grain(vec3 q) {
-  return 0.5 * vnoise(q.xz * 70.0 + q.y * 53.0) + 0.3 * vnoise(q.xy * 190.0 + q.z * 170.0) + 0.2 * vnoise(q.zy * 420.0 + q.x * 310.0);
+  return 0.22 * vnoise(q.xz * 70.0 + q.y * 53.0) + 0.36 * vnoise(q.xy * 190.0 + q.z * 170.0) + 0.42 * vnoise(q.zy * 420.0 + q.x * 310.0);
 }
 void main() {
   vec3 n = normalize(vNormal);
@@ -48,48 +50,30 @@ void main() {
   vec3 q = vLocal;
   float lift = vWorld.y;
   // The software renderer shades four pixels together, and a screen derivative taken under a branch takes stale memory from the pixels
-  // that did not go that way: no frame then renders the same twice. So the grain of bone and the creases of hide are both worked out
-  // here, for every point, and their lie across the screen taken before any branch.
+  // that did not go that way: no frame then renders the same twice. So the grain of bone is worked out here, for every point,
+  // and its lie across the screen taken before any branch.
   float h = grain(q);
-  vec2 hu = vec2(q.x + 0.37 * q.y, q.z + 1.4 * q.y);
-  float crease = 0.5 * vnoise(vec2(hu.x * 38.0 + 3.0 * vnoise(hu * 15.0), hu.y * 24.0 + 4.0 * vnoise(hu * 9.0 + 5.0))) + 0.5 * vnoise(hu * 70.0 + 2.0);
   vec3 dx = dFdx(vWorld);
   vec3 dy = dFdy(vWorld);
   vec2 hLie = vec2(dFdx(h), dFdy(h));
-  vec2 creaseLie = vec2(dFdx(crease), dFdy(crease));
   if (dot(n, v) < 0.0) n = -n;
+  vec3 albedo;
+  float rough;
+  float occ;
+  float glint;
+  // Weed and bone part only in what they are made of: the rig is asked once, after the branch, since it reads its maps and a read
+  // under a branch a pixel decides is not the same twice.
   if (vBone.x < 0.0) {
     // Weed: the dark amber of the mats, wet where it lies in the water.
     vec3 weed = mix(vec3(0.36, 0.15, 0.035), vec3(0.62, 0.3, 0.07), vnoise(q.xz * 9.0 + vBone.y * 31.0)) * (0.75 + 0.5 * vnoise(q.xz * 160.0 + q.y * 90.0));
     float wet = smoothstep(0.05, 0.0, lift);
     // A strand is too thin to have a dark side: it is lit as the floor it lies on.
     n = normalize(n + vec3(0.0, 2.0, 0.0));
-    vec3 c = rigShade(vWorld, n, v, weed * mix(1.0, 0.8, wet), mix(0.7, 0.3, wet), 0.85 + 0.15 * smoothstep(0.0, 0.1, lift));
-    c += wet * 0.5 * rigGlint(vWorld, n, v, 0.2);
-    gl_FragColor = vec4(rigOut(c), 1.0);
-    return;
-  }
-  if (vBone.x > 1.5) {
-    // The rag of hide: dried hard and dark, drawn tight over what is left of the cage, with mats of pale hair on it yet and a rim of
-    // salt where it lies on the floor.
-    // On its flanks it hangs straight down: its marks are laid by a co-ordinate that runs down it too.
-    vec2 u = hu;
-    vec3 r1 = cross(dy, n);
-    vec3 r2 = cross(n, dx);
-    float det = dot(dx, r1);
-    n = normalize(abs(det) * n - 0.008 * sign(det) * (creaseLie.x * r1 + creaseLie.y * r2));
-    vec3 skin = mix(vec3(0.13, 0.095, 0.07), vec3(0.3, 0.21, 0.14), vnoise(u * 17.0 + 3.0));
-    float hair = smoothstep(0.46, 0.66, vnoise(u * 11.0 + 21.0)) * (0.5 + 0.5 * vnoise(vec2(u.x * 420.0 + 30.0 * vnoise(u * 40.0), u.y * 55.0)));
-    skin = mix(skin, vec3(0.5, 0.4, 0.27), 0.75 * hair);
-    skin *= 0.55 + 0.8 * crease;
-    float salt = smoothstep(0.05, 0.012, lift + 0.03 * (vnoise(u * 31.0) - 0.5)) * smoothstep(0.3, 0.6, vnoise(u * 90.0 + 4.0));
-    skin = mix(skin, vec3(0.66, 0.63, 0.56), 0.7 * salt);
-    float wetted = smoothstep(0.026, 0.01, lift);
-    skin *= mix(1.0, 0.55, wetted);
-    vec3 c = rigShade(vWorld, n, v, clamp(skin, 0.0, 0.9), mix(0.7, 0.4, wetted), vBone.z * (0.55 + 0.45 * smoothstep(0.0, 0.08, lift)));
-    gl_FragColor = vec4(rigOut(c), 1.0);
-    return;
-  }
+    albedo = weed * mix(1.0, 0.8, wet);
+    rough = mix(0.7, 0.3, wet);
+    occ = 0.85 + 0.15 * smoothstep(0.0, 0.1, lift);
+    glint = wet * 0.5;
+  } else {
   // The relief of its surface turns the light: the lie of the grain, taken across the screen.
   vec3 r1 = cross(dy, n);
   vec3 r2 = cross(n, dx);
@@ -99,18 +83,18 @@ void main() {
 
   // Old bone: ivory where the air has had it, bleached on what looks up, yellow and brown where it has lain.
   float tone = vBone.x;
-  vec3 bone = mix(vec3(0.56, 0.48, 0.34), vec3(0.96, 0.93, 0.83), tone);
+  vec3 bone = mix(vec3(0.7, 0.63, 0.5), vec3(0.96, 0.93, 0.84), tone);
   bone = mix(bone, vec3(0.86, 0.84, 0.76), 0.5 * smoothstep(0.2, 0.9, n.y));
   float stain = 0.6 * vnoise(q.xz * 11.0 + q.y * 7.0 + tone * 40.0) + 0.4 * vnoise(q.xy * 37.0 + q.z * 29.0);
-  bone = mix(bone, bone * vec3(0.55, 0.37, 0.19), smoothstep(0.42, 0.62, stain));
+  bone = mix(bone, bone * vec3(0.62, 0.45, 0.27), 0.55 * smoothstep(0.46, 0.66, stain));
   // Grey where lichen and lime have taken it in patches.
-  bone = mix(bone, vec3(0.5, 0.5, 0.46) * (0.7 + 0.6 * h), 0.55 * smoothstep(0.58, 0.72, vnoise(q.xz * 23.0 + q.y * 17.0 + 40.0 + tone * 13.0)));
+  bone = mix(bone, vec3(0.56, 0.56, 0.5) * (0.7 + 0.6 * h), 0.3 * smoothstep(0.6, 0.74, vnoise(q.xz * 23.0 + q.y * 17.0 + 40.0 + tone * 13.0)));
   // Its ends are spongy and hold the dirt; its shafts are split along fine dark lines.
   float porous = vBone.y * smoothstep(0.45, 0.6, vnoise(q.xz * 260.0 + q.y * 210.0));
-  bone *= 1.0 - 0.7 * porous;
+  bone *= 1.0 - 0.32 * porous;
   float split = smoothstep(0.03, 0.0, abs(vnoise(q.xz * 33.0 + q.y * 27.0 + 5.0) - 0.5)) * smoothstep(0.25, 0.5, vnoise(q.xz * 6.0 + 3.0 + tone * 9.0));
   bone *= 1.0 - 0.8 * split;
-  bone *= 0.72 + 0.56 * h;
+  bone *= 0.9 + 0.2 * h;
   // Where it lies in the floor the floor has taken it: a pale crust of lime up its sides, and the rust of the mats on it below that.
   float crusted = smoothstep(0.06, 0.015, lift + 0.07 * (vnoise(q.xz * 19.0 + 2.0) - 0.5)) * smoothstep(0.35, 0.55, vnoise(q.xz * 43.0 + q.y * 31.0 + 8.0) + 0.25 * (0.05 - lift) / 0.05);
   bone = mix(bone, vec3(0.7, 0.67, 0.58) * (0.75 + 0.5 * h), 0.7 * crusted);
@@ -120,10 +104,13 @@ void main() {
   float damp = smoothstep(0.028, 0.01, lift + 0.012 * (vnoise(q.xz * 60.0) - 0.5));
   bone *= mix(1.0, 0.5, damp);
   // Low down and inside the cage little of the sky is seen.
-  float occ = vBone.z * (0.6 + 0.4 * smoothstep(0.0, 0.1, lift)) * (0.75 + 0.25 * smoothstep(0.3, 0.6, h));
-  vec3 c = rigShade(vWorld, n, v, clamp(bone, 0.0, 0.95), mix(0.8, 0.35, damp), occ);
-  // Not under a branch: the glint reads the rig's maps, and a read under a branch a pixel decides is not the same twice.
-  c += damp * 0.6 * rigGlint(vWorld, n, v, 0.3);
+  occ = vBone.z * (0.6 + 0.4 * smoothstep(0.0, 0.1, lift)) * (0.87 + 0.13 * smoothstep(0.3, 0.6, h));
+  albedo = clamp(bone * mix(vec3(1.0), warmSide(n), 0.45), 0.0, 0.95);
+  rough = mix(0.8, 0.35, damp);
+  glint = damp * 0.6;
+  }
+  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
+  c += glint * rigGlint(vWorld, n, v, 0.3);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -143,6 +130,9 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
+// The sheet's map: what it covers in the frame of the bones, and its size.
+const MAP = { x0: -1.7, x1: 2.3, z0: -1.0, z1: 1.0, wide: 1536, tall: 768 };
+
 // tShade: r, how closely a bone lies over the floor there; g, whether a bone stands between it and the sun; b, 1 on the floor and 0
 // past the lip, where there is no floor to darken.
 const SHADE_FRAGMENT = /* glsl */ `
@@ -153,14 +143,19 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
   vec4 land = landAt(vWorld.xz);
-  vec3 m = texture2D(tShade, vUv).rgb;
+  // The sheet is seen nearly edge on, and a level chosen by its long way across the screen would wash a thin bone's shade out: the
+  // level is taken from the short way. The map is soft already and does not shimmer for it.
+  vec2 texel = vUv * vec2(${MAP.wide}.0, ${MAP.tall}.0);
+  float level = log2(max(1.0, min(length(dFdx(texel)), length(dFdy(texel)))));
+  vec3 m = textureLod(tShade, vUv, level).rgb;
   // Out of the sun the floor has the sky alone, and that is blue; close under a bone it has little of either, and it is damp there.
-  vec3 f = mix(vec3(1.0), vec3(0.3, 0.37, 0.48), 0.92 * m.g * sunOver(land, vWorld));
-  f *= 1.0 - 0.72 * smoothstep(0.0, 0.8, m.r);
+  // Where the cliffs have the sun already, the bones still stand between the floor and the bright west of the sky: a fainter shade.
+  vec3 f = mix(vec3(1.0), vec3(0.3, 0.36, 0.46), 0.92 * m.g * max(sunOver(land, vWorld), 0.6));
+  // Damp, not black: a bone that has gone under the crust leaves a dark line of wet, never a hole.
+  f *= mix(vec3(1.0), vec3(0.5, 0.43, 0.37), smoothstep(0.0, 0.32, m.r));
   gl_FragColor = vec4(mix(vec3(1.0), f, m.b), 1.0);
 }`;
 
-const MAP = { x0: -1.7, x1: 2.3, z0: -1.0, z1: 1.0, wide: 1536, tall: 768 };
 
 /** The map the sheet reads, worked out once from the bones themselves: `sun` points to the sun in the frame of the bones. */
 function shadeMap(geometry: THREE.BufferGeometry, sun: V3, sunk: number, inFromLip: (x: number, z: number) => number): THREE.DataTexture {
@@ -255,9 +250,9 @@ function shadeMap(geometry: THREE.BufferGeometry, sun: V3, sunk: number, inFromL
 type V3 = [number, number, number];
 
 // The bones are built at the size of a small animal and laid half as large again: it was a grown one.
-const SCALE = 1.45;
+const SCALE = 1.95;
 /** How deep the bones are sunk in the floor, in their own measure. */
-const SUNK = 0.02;
+const SUNK = 0.025;
 
 /** A number from 0 to 1 that belongs to three others: the bones are the same bones in every frame. */
 function hash(a: number, b: number, c: number): number {
@@ -304,7 +299,7 @@ function longBone(a: V3, b: V3, radius: number, seed: number): THREE.BufferGeome
     const t = i / CUTS;
     const knuckle = 1.25 * Math.exp(-((t / 0.085) ** 2)) + 1.0 * Math.exp(-(((1 - t) / 0.075) ** 2));
     const cap = Math.sqrt(Math.max(0, 1 - (1 - Math.min(1, Math.min(t, 1 - t) / 0.035)) ** 2));
-    profile.push(new THREE.Vector2(Math.max(1e-4, radius * (0.82 + knuckle) * cap), t * length));
+    profile.push(new THREE.Vector2(Math.max(1e-4, radius * (0.56 + 1.05 * knuckle) * cap), t * length));
   }
   const g = new THREE.LatheGeometry(profile, 9);
   const p = g.getAttribute('position') as THREE.BufferAttribute;
@@ -344,7 +339,7 @@ function bent(points: V3[], radius: number, seed: number, open: number): THREE.B
   }
   const merged = mergeVertices(g.deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
   merged.computeVertexNormals();
-  lumpy(merged, radius * 0.18, radius * 2.2, seed);
+  lumpy(merged, radius * 0.11, radius * 2.2, seed);
   const mp = merged.getAttribute('position') as THREE.BufferAttribute;
   const first = new THREE.Vector3(...(points[0] as V3));
   const last = new THREE.Vector3(...(points[points.length - 1] as V3));
@@ -392,7 +387,7 @@ function skull(at: V3, heading: number, seed: number): THREE.BufferGeometry[] {
     const girth = 0.34 + 0.66 * Math.exp(-(((t - 0.24) / 0.3) ** 2)) - 0.1 * Math.exp(-(((t - 0.52) / 0.1) ** 2));
     // The crown is ridged, the cheek below it flat.
     const ridge = 1 + 0.12 * Math.max(0, y) * Math.exp(-(((t - 0.3) / 0.25) ** 2));
-    p.setXYZ(i, x * 0.165, y * 0.062 * girth * ridge, z * 0.05 * girth);
+    p.setXYZ(i, x * 0.25, y * 0.105 * girth * ridge, z * 0.085 * girth);
   }
   g.computeVertexNormals();
   lumpy(g, 0.004, 0.035, seed);
@@ -438,9 +433,9 @@ function bones(next: () => number): THREE.BufferGeometry[] {
   const full = (i: number): number => 0.62 + 0.38 * Math.sin((Math.PI * (i + 1.5)) / (RIBS + 2));
   const stands: number[] = [];
   for (let i = 0; i < RIBS; i++) {
-    // Most stand yet; some have sunk; two have fallen out of the cage and one is gone.
+    // The cage is whole: every rib stands, each to its own height.
     const r = next();
-    stands.push(i === 7 ? -1 : r < 0.16 ? 0.12 : r < 0.42 ? range(0.5, 0.7) : range(0.8, 1.0));
+    stands.push(0.86 + 0.14 * r);
   }
   for (let i = 0; i < RIBS; i++) {
     const x = ribX(i);
@@ -457,10 +452,10 @@ function bones(next: () => number): THREE.BufferGeometry[] {
     out.push(bent([[x, sy + 0.01, sz - 0.02], [x + 0.012, sy + 0.03, sz - 0.07], [x + 0.03, sy + 0.035 * range(0.4, 1), sz - 0.085 - 0.05 * s]], 0.0075, i + 31, 1));
     if (up < 0) continue;
     // They have slumped together toward the hips, each a little out of step with the next.
-    const lean = 0.05 + 0.04 * Math.sin(i * 0.9 + 1) + range(-0.025, 0.025) + 0.13 * (own(2) - 0.42);
+    const lean = 0.05 + 0.03 * Math.sin(i * 0.9 + 1) + range(-0.01, 0.01) + 0.04 * (own(2) - 0.42);
     const w = 0.8 + 0.3 * own(3);
     const tw = 0.05 * (own(4) - 0.5);
-    const short = next() < 0.25 ? range(0.55, 0.8) : 1;
+    const short = next() < 0.0 ? range(0.55, 0.8) : 1;
     const pts: V3[] = [
       [x, sy + 0.012, sz + 0.015],
       [x + lean * 0.3, sy + 0.14 * s * up + 0.02, sz + 0.035],
@@ -469,11 +464,11 @@ function bones(next: () => number): THREE.BufferGeometry[] {
       [x + lean * 1.25 - 2 * tw, 0.035 + 0.15 * s * up, sz + 0.39 * s * w],
       [x + lean * 1.4 - tw, 0.02 + 0.04 * s * up, sz + 0.44 * s * w],
     ];
-    const snapped = own(5) < 0.3;
+    const snapped = own(5) < 0.1;
     const kept = short < 1 ? pts.slice(0, 4 + (short > 0.68 ? 1 : 0)) : snapped ? pts.slice(0, 5) : pts;
-    out.push(bent(kept, 0.012 + 0.002 * s, i + 51, 0.85));
+    out.push(bent(kept, 0.0085 + 0.0015 * s, i + 51, 0.85));
     // The rib of the side it lies on shows only where it comes out from under.
-    if (next() < 0.35) out.push(bent([[x + 0.01, 0.04, sz + 0.1], [x + 0.04, 0.048, sz + 0.26 * s], [x + 0.1, 0.044, sz + 0.4 * s], [x + 0.18, 0.03, sz + 0.47 * s]], 0.012, i + 71, 0.9));
+    if (next() < 0.35) out.push(bent([[x + 0.01, 0.04, sz + 0.1], [x + 0.04, 0.048, sz + 0.26 * s], [x + 0.1, 0.044, sz + 0.4 * s], [x + 0.18, 0.03, sz + 0.47 * s]], 0.009, i + 71, 0.9));
   }
   // The loins and the hips.
   for (let i = 0; i < 6; i++) {
@@ -501,7 +496,7 @@ function bones(next: () => number): THREE.BufferGeometry[] {
     nx -= Math.cos(heading) * (len + 0.012);
     nz += Math.sin(heading) * (len + 0.012);
   }
-  out.push(...skull([nx - 0.15, 0.036, nz + 0.1], -heading - 0.5, 141));
+  out.push(...skull([nx - 0.14, 0.055, nz + 0.06], -heading - 0.5, 141));
   // The shoulder blade has slid off the cage and lies on it.
   out.push(lump([-0.2, 0.2, -0.03], [0.1, 0.008, 0.05], [0.5, 0.5, -0.5], 151, 3, 0.9));
   // The limbs. The hind ones trail along the lip; one fore limb lies out before the cage and the other is under it.
@@ -510,8 +505,8 @@ function bones(next: () => number): THREE.BufferGeometry[] {
       const a = joints[i] as V3;
       const b = joints[i + 1] as V3;
       // The joints have come apart: each bone lies a little off the last.
-      const gap: V3 = [range(-0.015, 0.015), 0, range(-0.02, 0.02)];
-      const t = 0.07;
+      const gap: V3 = [range(-0.006, 0.006), 0, range(-0.008, 0.008)];
+      const t = 0.025;
       out.push(
         longBone(
           [a[0] + (b[0] - a[0]) * t + gap[0], a[1], a[2] + (b[2] - a[2]) * t + gap[2]],
@@ -524,12 +519,12 @@ function bones(next: () => number): THREE.BufferGeometry[] {
     const end = joints[joints.length - 1] as V3;
     for (let i = 0; i < 3; i++) out.push(lump([end[0] + 0.03 + i * 0.035 + range(-0.01, 0.01), 0.014, end[2] + range(-0.03, 0.03)], [0.017, 0.01, 0.011], [0, range(-0.8, 0.8), 0], seed + 10 + i, 1));
   };
-  limb([[hip + 0.08, 0.06, -0.04], [hip + 0.36, 0.035, 0.13], [hip + 0.7, 0.028, 0.02], [hip + 0.99, 0.022, 0.1], [hip + 1.1, 0.018, 0.13]], 0.021, 161);
-  limb([[hip + 0.1, 0.035, -0.17], [hip + 0.33, 0.03, -0.3], [hip + 0.66, 0.024, -0.22], [hip + 0.93, 0.02, -0.31], [hip + 1.02, 0.016, -0.3]], 0.02, 171);
-  limb([[-0.19, 0.035, 0.26], [-0.07, 0.03, 0.47], [0.24, 0.024, 0.55], [0.5, 0.02, 0.5], [0.58, 0.016, 0.52]], 0.019, 181);
-  limb([[-0.3, 0.03, 0.2], [-0.5, 0.026, 0.33], [-0.52, 0.022, 0.62]], 0.018, 191);
+  limb([[hip + 0.08, 0.06, -0.04], [hip + 0.36, 0.035, 0.13], [hip + 0.7, 0.028, 0.02], [hip + 0.99, 0.022, 0.1], [hip + 1.1, 0.018, 0.13]], 0.03, 161);
+  limb([[hip + 0.1, 0.035, -0.17], [hip + 0.33, 0.03, -0.3], [hip + 0.66, 0.024, -0.22], [hip + 0.93, 0.02, -0.31], [hip + 1.02, 0.016, -0.3]], 0.028, 171);
+  limb([[-0.19, 0.035, 0.26], [-0.07, 0.03, 0.47], [0.24, 0.024, 0.55], [0.5, 0.02, 0.5], [0.58, 0.016, 0.52]], 0.026, 181);
+  limb([[-0.3, 0.03, 0.2], [-0.5, 0.026, 0.33], [-0.52, 0.022, 0.62]], 0.024, 191);
 
-  // The weed of the shelf: strands come up out of the water before it, lie over the limbs and the low bones and hang across the cage.
+  // The weed of the shelf: strands come up out of the water before it and lie over the limbs and the low bones.
   const cage = (x: number, z: number): number => {
     const i = Math.max(0, Math.min(RIBS - 1, Math.round((x + 0.31) / 0.066)));
     if (x < -0.34 || x > ribX(RIBS - 1) + 0.03) return 0;
@@ -538,7 +533,7 @@ function bones(next: () => number): THREE.BufferGeometry[] {
     return w < 0 || w > 1 ? 0 : 0.27 * full(i) * up * Math.sin(Math.PI * Math.min(1, w * 1.15)) ** 0.7;
   };
   let lock = 0;
-  for (let k = 0; k < 44; k++) {
+  for (let k = 0; k < 18; k++) {
     // They lie in locks of a few strands each.
     if (k % 4 === 0) lock = range(-1.0, 1.5);
     const x0 = lock + range(-0.06, 0.06);
@@ -552,65 +547,10 @@ function bones(next: () => number): THREE.BufferGeometry[] {
       const t = i / CUTS;
       const z = z0 + (z1 - z0) * t;
       const x = x0 + drift * t * t + 0.07 * Math.sin(t * 5 + wave);
-      // It lies on the floor and over the low bones; where the cage stands it hangs on a rib or two and no higher.
-      pts.push([x, 0.008 + 0.006 * hash(k, i, 3) + Math.min(0.11, 0.55 * cage(x, z)) * (k % 2 === 0 ? 1 : 0), z]);
+      // It lies on the floor and over the low bones, and under the cage on the ribs of the side that is down: none hangs on the cage.
+      pts.push([x, 0.008 + 0.006 * hash(k, i, 3) + (cage(x, z) > 0.02 ? 0.03 : 0), z]);
     }
     out.push(strand(pts, range(0.006, 0.012), k));
-  }
-  // The rag of hide: what is left of the flank lies over the hind ribs and the loins and trails on the floor toward the hips. It is a
-  // sheet laid over the cage and let sag between the ribs; its outline and its holes are torn by a noise, cell by cell.
-  {
-    const CELL = 0.009;
-    const x0 = 0.1;
-    const z0 = -0.27;
-    const NX = 72;
-    const NZ = 66;
-    const over = (x: number, z: number): number => {
-      const f = (x + 0.31) / 0.066;
-      const i = Math.floor(f);
-      const t = f - i;
-      const a = cage(ribX(Math.max(0, Math.min(RIBS - 1, i))), z);
-      const b = i + 1 > RIBS - 1 ? 0 : cage(ribX(i + 1), z);
-      const ribs = a + (b - a) * t - 0.02 * Math.sin(Math.PI * t) * Math.min(1, (a + b) * 6);
-      const hips = 0.1 * Math.exp(-(((x - hip - 0.07) / 0.13) ** 2) - ((z + 0.1) / 0.1) ** 2);
-      const back = 0.07 * Math.exp(-(((z + 0.17) / 0.05) ** 2)) * (x < hip + 0.05 ? 1 : 0);
-      return 0.014 + Math.max(1.12 * ribs + (ribs > 0.01 ? 0.016 : 0), hips, back) + 0.014 * vnoise(x * 13 + 2, z * 13);
-    };
-    const kept = (x: number, z: number): boolean => {
-      const d = Math.hypot((x - 0.42) / 0.3, (z + 0.02) / 0.26);
-      const torn = 0.55 * vnoise(x * 7 + 3, z * 7 + 9) + 0.3 * vnoise(x * 19, z * 19 + 4) + 0.15 * vnoise(x * 53 + 8, z * 53);
-      return torn + 0.62 - d * 0.75 > 0.6 && vnoise(x * 13 + 31, z * 13 + 17) + 0.3 * vnoise(x * 41, z * 41 + 3) > 0.42;
-    };
-    const flat: number[] = [];
-    const corner = (i: number, j: number): V3 => {
-      const x = x0 + i * CELL;
-      const z = z0 + j * CELL;
-      return [x, over(x, z), z];
-    };
-    for (let i = 0; i < NX; i++) {
-      for (let j = 0; j < NZ; j++) {
-        if (!kept(x0 + (i + 0.5) * CELL, z0 + (j + 0.5) * CELL)) continue;
-        const a = corner(i, j);
-        const b = corner(i + 1, j);
-        const c = corner(i + 1, j + 1);
-        const d = corner(i, j + 1);
-        flat.push(...a, ...d, ...c, ...a, ...c, ...b);
-      }
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(flat), 3));
-    const welded = mergeVertices(g, 1e-5);
-    welded.computeVertexNormals();
-    const rag = welded.toNonIndexed();
-    const count = (rag.getAttribute('position') as THREE.BufferAttribute).count;
-    const tag = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      tag[i * 3] = 2;
-      tag[i * 3 + 1] = 0;
-      tag[i * 3 + 2] = 0.9;
-    }
-    rag.setAttribute('aBone', new THREE.BufferAttribute(tag, 3));
-    out.push(rag);
   }
   return out;
 }
@@ -652,7 +592,7 @@ export function create(ctx: Context): Piece {
   const x = lx + (toCamera.x * back - along.x * 0.35) * SCALE;
   const z = lz + (toCamera.z * back - along.z * 0.35) * SCALE;
   mesh.matrixAutoUpdate = false;
-  // Sunk into the crust: the lowest third of every bone that lies on the floor is under it.
+  // Sunk into the crust: the lower half of every bone that lies on the floor is under it.
   mesh.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, -SUNK * SCALE, z);
   mesh.matrixWorldNeedsUpdate = true;
   // What the bones take from the floor: the sheet lies a hair over it and multiplies what is drawn there.
