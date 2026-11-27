@@ -167,6 +167,12 @@ void airAt(vec3 p, float part, float ya, float yb, vec3 glow, out float sigma, o
   // The fume: its share of a stretch is worked out as the heavy layer's is. Thinner over the bench the lens stands on, thicker over the lake and east.
   float fumeLayer = hi - lo < 1.0 ? exp(-0.5 * (lo + hi) / FUME_HIGH) : FUME_HIGH * (exp(-lo / FUME_HIGH) - exp(-hi / FUME_HIGH)) / (hi - lo);
   float fume = uShowAir * uFumeShare * FUME * fumeLayer * (0.4 + 0.6 * overLake) * (0.4 + 1.0 * east) * (0.25 + 1.5 * n.g);
+  // The lens stands in a clear place: the smoke round it has been stirred thin by whatever walks there, and what it does carry is too little, over
+  // the few metres to the ground at its feet, to be seen. Lit by the fire under it, that little stood as an even red veil over the nearest ground
+  // and took the dark out of every pad and seam. So the old smoke begins some metres out and is whole at seventy: haze by distance, none at hand.
+  float clearing = smoothstep(6.0, 70.0, length(p - uCameraWorld[3].xyz));
+  fume *= clearing;
+  heavy *= clearing;
   // It is lit by the fire under it: glow is the lake's own light under this stretch of the view (main reads it at four places along the view).
   vec3 fire = fireOnSmoke(glow) * (0.85 * exp(-y / 14.0) + 0.15 * exp(-y / 70.0));
   float haze = thin + heavy + hang + fume;
@@ -292,7 +298,7 @@ void main() {
     // Only over open melt: the air over dark crust beside it takes no red of its own, so a black groove stays black and not red.
     l1 *= smoothstep(0.12, 0.5, lum(l1) / (5.0 * uCast));
     l2 *= smoothstep(0.12, 0.5, lum(l2) / (5.0 * uCast));
-    sum += trans * (l1 * exp(-y1 / 5.0) + l2 * exp(-y2 / 5.0)) * ((1.0 - exp(-slant * 0.05)) * 0.035);
+    sum += trans * (l1 * exp(-y1 / 5.0) + l2 * exp(-y2 / 5.0)) * ((1.0 - exp(-slant * 0.05)) * 0.035 * smoothstep(6.0, 70.0, far));
   }
   // Air seen against the sky sends some of the sky's light on toward the camera: the sky behind a haze is paler, not darker, by less than the haze takes.
   // A high thin veil of old smoke stands over the whole caldera, behind all else: it is seen only against the sky, denser toward the lava plains in the east.

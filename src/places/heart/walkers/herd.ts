@@ -99,7 +99,7 @@ export function makeBuild(index: number, rng: Rng): Build {
     standH: 9.3 * k * c.tall * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
     // The hero is stout for its length: a shin is a twentieth of the leg across. The others are leaner.
-    legR: lerp(1.08, 0.94, c.skater) * c.heavy * (index === 1 ? 1.4 : 1.12),
+    legR: lerp(1.08, 0.94, c.skater) * c.heavy * (index === 1 ? 1.22 : 1.12),
     padR: 0.8 * k * v(0.9, 1.12),
     neckLen: 10.6 * k * c.neck,
     neckR: 0.52 * k * c.heavy,

@@ -12,7 +12,7 @@ import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
 import { createLava } from './lava';
 import { skinFragment } from './skin';
-import { SHEET_GLSL } from './sheet';
+import { POUR_GLSL, SHEET_GLSL } from './sheet';
 
 export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
 
@@ -30,7 +30,6 @@ uniform vec4 uHill;
 uniform vec4 uRidge[2];
 uniform vec2 uRidgeSize[2];
 uniform vec4 uGroupSeam;
-uniform sampler2D tSheetNh;
 // The photographed crust (rope-nh: r, g the slope of its height, b the height), laid without a repeat. The lake is cut into
 // three-cornered patches a third of the sheet across; each corner reads the sheet turned and shifted its own way, and where
 // they meet the higher lies on the lower, as one toe of lava on the next. It is laid at three sizes, metres to the long side
@@ -43,22 +42,7 @@ uniform sampler2D tSheetNh;
 #define SHEET_TALL_M 0.06
 #define SHEET_TALL_L 0.24
 ${SHEET_GLSL}
-// The height of the sheet, 0 to 1, read at one mip.
-float sheetHigh(vec2 q, float span, float seed, float lod) {
-  sheetGrid(q, span);
-  float got = 0.0;
-  float sum = 0.0;
-  for (int i = 0; i < 3; i++) {
-    mat2 turn;
-    vec2 shift;
-    float w = sheetCorner(i, seed, 1.0, turn, shift);
-    float high = textureLod(tSheetNh, (turn * q) * (vec2(1.0, 2.0) / span) + shift, lod).b;
-    float k = w * exp(7.0 * high);
-    got += k * high;
-    sum += k;
-  }
-  return got / sum;
-}
+${POUR_GLSL}
 // What of the height is the sheet's, metres: the lattice leaves it out of its own normal, for the skin has the sheet's slope whole.
 float gSheetHigh = 0.0;
 // Lobes: the skin is poured in broad overlapping tongues 3 to 10 m across, each a low dome with a soft rounded front, each lying
@@ -391,6 +375,23 @@ float lineFar(vec2 q) {
 float calmAt(vec2 q) {
   return smoothstep(uMound.z - 0.4, uMound.z + 4.0, length(q - uMound.xy));
 }
+// The pads that press the crust now (PAD_DENTS: x, z in the world, radius, load). Under a loaded pad the young crust sags
+// into a dish 7 cm deep and is pushed up into a low lip round it. Returns the metres to add, how much of the point is dish
+// and how much of it is the cracked line round the dish. p is a point of the world; edge bends the line.
+uniform vec4 uPadDents[16];
+vec3 dentAt(vec2 p, float edge) {
+  vec3 got = vec3(0.0);
+  for (int i = 0; i < 16; i++) {
+    vec4 d = uPadDents[i];
+    float t = length(p - d.xy) / max(d.z, 0.01);
+    float dish = (1.0 - smoothstep(0.5, 1.2, t)) * d.w;
+    float lip = exp(-(t - 1.4) * (t - 1.4) / 0.06) * d.w;
+    got.x += 0.022 * lip - 0.07 * dish;
+    got.y = max(got.y, dish);
+    got.z = max(got.z, (1.0 - smoothstep(0.0, 0.07, abs(t - 1.08 - 0.3 * edge))) * d.w);
+  }
+  return got;
+}
 // Where pads stand (x, z, radius): there the crust is broken only a little, so that a pad has ground under it.
 uniform vec3 uPads[5];
 // How broken the crust is out on the lake, 0 to 1: in patches within 40 m of the seam the group feeds at, in bands along
@@ -648,23 +649,13 @@ float heightAt(vec2 q, float c) {
     float floorLevel = mix(0.2, 1.0, smoothstep(36.0, 54.0, gFar));
     float swell = floorLevel * mix(0.42, 0.62, smoothstep(20.0, 45.0, gFar)) * mix(0.12, 1.0, smoothstep(1.5, 8.0, gFar));
     h += off * (swell * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.22 * floorLevel * smoothstep(1.5, 8.0, gFar) * (vnoise(q / 1.7 + 27.0) - 0.5) * (1.0 - smoothstep(0.35, 0.7, c)) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
-    h += off * lobeAt(q) * (1.0 - smoothstep(0.5, 1.2, c)) * calm * (1.0 - 0.5 * shoreUp);
-    if (gFine < 0.16) {
-      float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
-      gLapCell = c;
-      foldAt(q);
-      fine = smoothSkin * gToeBest * toeHeld(gFine);
-      // The lobes at the line: sheets that lap, with their steps and creases.
-      fine += off * calm * (1.0 - shoreUp) * gLapHigh * (1.0 - smoothstep(0.1, 0.3, c)) * (1.0 - smoothstep(0.09, 0.16, gFine));
-    }
-    // The ropes and billows of the photographed sheet, as far as the cells hold them: a mip whose texel is a cell and a half.
+    // The poured slabs, their steps and gaps, and the ropes and swells of the sheet as far as the cells hold them: a mip
+    // whose texel is a cell and a half.
     float sheetOn = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
-    float lodM = log2(gFine * (2048.0 / SHEET_M)) + 0.5;
-    gSheetHigh = 0.0;
-    if (lodM < 9.0) gSheetHigh = SHEET_TALL_L * (sheetHigh(q, SHEET_L, 83.0, lodM - 2.0) - 0.5) * (1.0 - smoothstep(7.0, 9.0, lodM));
-    if (lodM < 7.0) gSheetHigh += SHEET_TALL_M * (sheetHigh(q, SHEET_M, 11.0, lodM) - 0.5) * (1.0 - smoothstep(5.0, 7.0, lodM));
-    gSheetHigh *= sheetOn;
-    fine += gSheetHigh;
+    float held = 1.0 - smoothstep(0.6, 1.5, c);
+    float pour = pourHigh(q, gFine);
+    gSheetHigh = gPourSheet * sheetOn * held;
+    fine += (pour - gPourSheet) * sheetOn * held + gSheetHigh;
   }
 
   // Where crust has been broken, at the ridges and against the rock, it lies in upturned slabs with rubble between them.
@@ -755,6 +746,7 @@ float heightAt(vec2 q, float c) {
     h += fine;
   }
   if (c < 3.0) h += ridgeAt(q, c) * (1.0 - smoothstep(1.0, 3.0, c));
+  h += dentAt(q + flowVelocity(q) * (uTime - uFlowT0), 0.0).x * smoothstep(0.05, 0.4, bank) * (1.0 - smoothstep(0.1, 0.3, c));
   // The swell of crust beside the lens of the long shot at the fall (uHill: x, z, how much of it stands): a tumulus 3 m high,
   // its top level with the bottom of that frame, out of focus.
   if (uHill.z > 0.0) {
@@ -1014,8 +1006,8 @@ export function create(ctx: HeartContext): HeartPiece {
     uSunk: { value: new THREE.Vector3(SUNK[0], SUNK[2], 14) },
     tRopeNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data' }) },
     tRope: { value: ctx.assets.texture('mat/pahoehoe.jpg') },
-    tSheet: { value: ctx.assets.texture('mat/rope-nt.jpg', { kind: 'data' }) },
-    tSheetNh: { value: ctx.assets.texture('mat/rope-nh.jpg', { kind: 'data' }) },
+    tPour: { value: ctx.assets.texture('mat/coil-nt.jpg', { kind: 'data', anisotropy: 4 }) },
+    tPourNh: { value: ctx.assets.texture('mat/coil-nh.jpg', { kind: 'data' }) },
     tMeltNh: { value: ctx.assets.texture('mat/melt-nh.jpg', { kind: 'data', anisotropy: 2 }) },
     uRidge: { value: RIDGES.map((r) => new THREE.Vector4(r.from[0], r.from[1], r.to[0], r.to[1])) },
     uRidgeSize: { value: RIDGES.map((r) => new THREE.Vector2(r.tall, r.reach)) },
