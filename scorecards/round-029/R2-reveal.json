@@ -136,12 +136,120 @@
     },
     {
       "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the overly uniform parallel mountain ridges and repetitive procedural erosion patterns on the right side",
+      "answered": "02:03 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 79,
+      "why": "The same comb-like pattern of gullies repeats across otherwise different mountain ridges.",
+      "answered": "02:03 UTC"
+    },
+    {
+      "image": "R2-3",
       "juror": "e",
       "model": "claude_sonnet_5_5",
       "answer": "c",
       "confidence": 40,
       "why": "The terrain is clearly procedural (repetitive, evenly spaced erosion ridges and odd crater lakes), but the shading and cloud layer are fairly polished, so it could also be (b) or (d).",
       "answered": "02:03 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the evenly patterned mountain ridges forming a skeleton look procedurally sculpted.",
+      "answered": "02:03 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "procedural-looking real-time planet terrain: repetitive erosion ridges, and blocky, pixelated cloud artifacts near the sun glare, like a web or real-time procedural demo",
+      "answered": "02:03 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 78,
+      "why": "the film-grade orbital lighting and atmospheric realism combined with the bespoke skeleton-shaped continent",
+      "answered": "02:03 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 80,
+      "why": "the evenly spaced mountain ridges look stamped into the continent to form the skeleton’s ribs.",
+      "answered": "02:04 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "the island's repetitive, stylized procedural erosion ridges and blocky cloud and glare patches near the sun look like a generated terrain render, not a photo or a film-grade frame.",
+      "answered": "02:03 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the uniformly sharp, repetitive rib-shaped mountain ridges look procedurally sculpted.",
+      "answered": "02:04 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "procedurally generated planet with repetitive erosion ridges and blocky real-time cloud/glare artifacts near the sun, typical of a web/real-time terrain demo",
+      "answered": "02:04 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 78,
+      "why": "the intricate geological sculpting of the skeleton-shaped continent combined with cinematic orbital lighting and atmospheric scattering",
+      "answered": "02:04 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the evenly spaced mountain ridges trace a rib cage with the uniform sharpness of a rendered height map.",
+      "answered": "02:04 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "The landmass is a procedurally generated island with repetitive, unrealistic ridge stripes, and the blocky, tiled cloud artifacts near the sun glare look like a procedural planet demo, not a film or AAA cinematic.",
+      "answered": "02:04 UTC"
     }
   ]
 }

@@ -2,6 +2,50 @@
   "round": 29,
   "unit": "reveal",
   "question": "kit/07-QUALITY-BAR.md, R8, word for word",
-  "viewers": [],
-  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in."
+  "viewers": [
+    {
+      "viewer": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "An orbital view shows a skull-and-rib-cage-shaped island in a deep blue ocean, with wisps of cloud overhead and a spiral storm at the lower right.",
+      "answered": "02:04 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "b",
+      "model": "claude_opus_5_5",
+      "answer": "The image shows an orbital view of Earth with an island landmass whose mountains and ridges form the shape of a giant animal skeleton (skull, ribcage, spine, and legs) set in a cloud-dotted ocean, with a spiral storm in the lower right and sunlight glare in the upper right.",
+      "answered": "02:04 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "c",
+      "model": "gemini_neon",
+      "answer": "An orbital view from space shows a massive landmass in a blue ocean shaped like a giant human skeleton formed by mountain ridges, valleys, and lakes, surrounded by scattered clouds and a swirling cyclone in the lower right.",
+      "answered": "02:05 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "Seen from space, a mountainous island resembles a giant fossilized creature, with a skull on the left and curved ribs stretching across its body.",
+      "answered": "02:05 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "The image shows Earth from space with an island whose terrain is shaped like a giant animal skeleton (skull, ribcage and spine), surrounded by ocean, with a hurricane swirl at the lower right.",
+      "answered": "02:05 UTC",
+      "counts": true
+    }
+  ],
+  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in.",
+  "counts": 5,
+  "share": 1.0,
+  "control": {
+    "file": "scorecards/controls/reveal-R8.json",
+    "share": 1.0
+  },
+  "passes": true,
+  "marked": "2026-11-27 02:07 UTC by the Builder: all five answers name a skeleton or a giant creature as what the land is (one a giant human skeleton, two a giant animal skeleton with skull, ribcage and spine, one a giant fossilized creature with a skull and curved ribs, one a skull-and-rib-cage-shaped island), so all five are marked as counting by the rule of R8. The weakest is viewer a, which names the shape by its parts, a skull and a rib cage, and calls the thing an island; if it were not counted the share would be 0.80, which is the share needed, so R8 passes in this round on either reading. No viewer says a human body unasked except viewer c. Rounds 19 and 25 had five of five, round 13 one of five."
 }
