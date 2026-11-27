@@ -1,10 +1,10 @@
 {
   "what": "The Builder's tuning of the rise. cover: how much wider than its window the camera sees at each key. covers: how much wider again at each key in turn (the titan frame last, which stays 1): the lens is already past the first and the third when their beats fall, so the climb between the keys is spread over more frames and no stretch of it lurches. after: how many film frames after its key frame in the cut list the lens meets each widened window. A key frame in the cut list is the frame where the camera is closest to that key's view, so the first and the third, which the lens meets wider, are met that much later; the path of the climb does not move when a key frame is set to its closest frame, because this number changes with it. settlePerFrame: the rate the climb has on the titan frame (natural log of the width, per film frame). holdPerFrame: the steady rate it eases down to and then keeps until the cut to black, so the hold is never a still. settleFrames: how long that easing takes. holdCentre: where the middle of the frame ends the hold, in px of the master: the middle of the land's bounding box, so the body ends with clear space on every side. lakeShorePx and lakeDeepPx: the half axes of the lake's amber ring and of its deep water, in px of the master. startOffsetKm: where the lens stands off the path on the first frame of the rise, km (x, z), over the middle of the lake's deep water; it eases to nothing by the first key.",
   "cover": 1.001,
-  "covers": [1.178, 1, 1.178, 1],
-  "after": [6, 0, 17, 0],
+  "covers": [1.318, 1, 1.126, 1],
+  "after": [8, 0, 10, 0],
   "settlePerFrame": 0.0002,
-  "holdPerFrame": 0.0001,
+  "holdPerFrame": 0.00014,
   "settleFrames": 300,
   "holdCentre": {"x": 3361.6, "y": 1570.3},
   "lakeShorePx": [62, 54],
