@@ -3,18 +3,20 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { DEG, HERO_DOME, K1_AT, K1_DIR, K2_AT, K2_DIR, POOL_R, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
+import { DEG, HERO_DOME, K1_AT, K1_DIR, K2_AT, K2_DIR, POOL_R, SMALL_DOME, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { bakeNoise } from './noise';
 import { createSky } from './sky';
-import { MAX_MIST, MAX_STEAM, SHEETS, VOLUME_FRAGMENT } from './volume';
+import { CLEAR_FROM, MAX_MIST, MAX_STEAM, SHEETS, VOLUME_FRAGMENT } from './volume';
 
+// The seconds of the place in which the pool's lens looks (the cuts at frames 6048 and 6263 of a place that opens at 5618).
+const SEEP_SHOT = [(6048 - 5618) / 60, (6263 - 5618) / 60] as const;
 export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   // The rain: middle bearing and half width in radians, distance in metres, thickness.
-  const rain = new THREE.Vector4(4 * DEG, 8 * DEG, 1800, 1.5);
+  const rain = new THREE.Vector4(4 * DEG, 10.5 * DEG, 1800, 2.2);
   const sky = createSky(ctx, noise, rain);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
@@ -27,11 +29,15 @@ export function create(ctx: Context): Piece {
   const lean: [number, number] = [-0.5, -0.12];
   const main = bearingDir(300);
   // Narrow columns over the seeps, dense at the foot and thinning as they climb, each set where the three near lenses see it as a
-  // column and none stands in it: by the west bank, over the left of the pool as the pool's lens sees it, and two lesser ones.
+  // column and none stands in it: by the west bank, over the left of the pool as the pool's lens sees it, and a lesser one. (A column set
+  // near the pool's lens stood as a hard white wedge in the first lens: before that lens the pool has its low sheets only.)
   own.push({ at: [-7.1, 0, -5.1], radius: 1.4, strength: 0.8, rise: 12, kind: 'steam', lean });
   own.push({ at: [-2.5, 0, -6.5], radius: 1.3, strength: 0.55, rise: 10, kind: 'steam', lean });
-  own.push({ at: [-3.4, 0, -1.6], radius: 0.8, strength: 0.3, rise: 4.5, kind: 'steam', lean });
   own.push({ at: [0.5, 0, -7.5], radius: 0.9, strength: 0.35, rise: 6, kind: 'steam', lean });
+  // The vapour of the small dome's seep, as the pool's lens has it at its left hand: a thin wisp no higher than a stalk's knee, left of the domes, which stay dark. It
+  // stands only while that lens looks (setTime): from the first lens, high over the pool, the same vapour was a hard white wedge.
+  const seep: SteamSource = { at: [SMALL_DOME[0] - 0.75, 0, SMALL_DOME[1] + 0.05], radius: 0.4, strength: 0, rise: 1.3, kind: 'steam', lean };
+  own.push(seep);
   // The mist that lies low over the whole pool.
   own.push({ at: [-1, 0, -4], radius: 5, strength: 0.012, rise: 5, kind: 'steam', lean });
   // The low steam that drifts off the warm brine. With SHEETS it lies in sheets over these patches (x, z, radius, thickness); without, it
@@ -48,7 +54,7 @@ export function create(ctx: Context): Piece {
     return [node[0], node[1]];
   };
   const mist: THREE.Vector4[] = [
-    new THREE.Vector4(-1, -3, POOL_R * 0.6, 0.05),
+    new THREE.Vector4(-1, -3, POOL_R * 0.6, 0.7),
     new THREE.Vector4(HERO_DOME[0] + K1_DIR[0] * 12 - 5, HERO_DOME[1] + K1_DIR[1] * 12, 7, 0.6),
     new THREE.Vector4(-3, -9, 7, 0.3),
     new THREE.Vector4(vein(10)[0], vein(10)[1], 9, 0.5),
@@ -69,6 +75,7 @@ export function create(ctx: Context): Piece {
   const steamC = Array.from({ length: MAX_STEAM }, () => new THREE.Vector4());
   const steamCount = { value: 0 };
   const show = new THREE.Vector3(1, 1, 1);
+  const clear = [new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12), new THREE.Vector3(K2_AT[0] + K2_DIR[0] * 6, K2_AT[1] + K2_DIR[1] * 6, 8)];
 
   const volume = new THREE.ShaderMaterial({
     vertexShader: QUAD_VERTEX,
@@ -85,8 +92,9 @@ export function create(ctx: Context): Piece {
       uRain: { value: rain },
       uMistCount: { value: 6 },
       uMist: { value: mist },
-      // No low steam stands between a lens and what it is set on: round the wallowers, and in front of the lens of the colony.
-      uClear: { value: [new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12), new THREE.Vector3(K2_AT[0] + K2_DIR[0] * 6, K2_AT[1] + K2_DIR[1] * 6, 8)] },
+      // No low steam stands between a lens and what it is set on: round the wallowers, and in front of the lens of the colony. Each zone
+      // is kept only while its own lens looks (setTime), so that the pool steams for the lens that is set on the pool.
+      uClear: { value: clear },
     },
     defines: SHEETS ? { SHEETS: 1 } : {},
     depthTest: false,
@@ -96,6 +104,8 @@ export function create(ctx: Context): Piece {
   });
 
   const order: { source: SteamSource; index: number; far: number; small: number }[] = [];
+  // (A radius far under zero is no zone at all.)
+  const NONE = -100;
 
   return {
     volume,
@@ -117,6 +127,11 @@ export function create(ctx: Context): Piece {
         (steamC[i] as THREE.Vector4).set(seeds[index % seeds.length] as number, Math.min(2.2, 0.6 + s.rise * 0.08), Math.max(1.3, Math.min(radius * 1.5, s.rise * 1.2)), 0);
       });
       steamCount.value = order.length;
+    },
+    setTime: (seconds) => {
+      seep.strength = seconds >= SEEP_SHOT[0] && seconds < SEEP_SHOT[1] ? 0.3 : 0;
+      (clear[0] as THREE.Vector3).z = seconds >= CLEAR_FROM.wallow ? 12 : NONE;
+      (clear[1] as THREE.Vector3).z = seconds >= CLEAR_FROM.colony[0] && seconds < CLEAR_FROM.colony[1] ? 8 : NONE;
     },
     solo: (part) => {
       show.set(part === null || part === 'marsh/air' ? 1 : 0, part === null || part === 'marsh/rain' ? 1 : 0, part === null || part === 'marsh/steam' ? 1 : 0);

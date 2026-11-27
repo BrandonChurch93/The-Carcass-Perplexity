@@ -67,6 +67,19 @@ uniform int uEmitterCount;
 uniform vec4 uEmitters[8];
 uniform vec3 uEmitterRadiance[8];`;
 
+// The grade by shot. Each lens of the place has its own approved picture, and the same surfaces sit lighter or darker in each: from the
+// place's second `from` (the cuts of the film at frames 5833, 6048, 6263 and 6586 of a place that opens at 5618) the mids of every surface
+// gain `mid` (most at a scene-linear 0.1, the middle grey of the frame) and the darks gain `dark` (most at black). Set from the tones of
+// the merged keys beside their pictures; it changes on a cut and never inside a shot. Whites are left as they are.
+export const GRADE_SHOTS: { from: number; mid: number; dark: number }[] = [
+  { from: 0, mid: 0.12, dark: -0.1 },
+  { from: (5833 - 5618) / 60, mid: 0.06, dark: 0 },
+  { from: (6048 - 5618) / 60, mid: -0.13, dark: -0.26 },
+  { from: (6263 - 5618) / 60, mid: 0.35, dark: 0.15 },
+  { from: (6586 - 5618) / 60, mid: 0.25, dark: -0.1 },
+];
+const gradeShots = GRADE_SHOTS.map((shot) => `  g = mix(g, vec2(${shot.mid.toFixed(3)}, ${shot.dark.toFixed(3)}), step(${shot.from.toFixed(5)}, uTime));`).join('\n');
+
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 // Toward the brighter side of the overcast, on x and z (bearing 320 degrees), and how much more a face turned to it takes.
@@ -209,6 +222,11 @@ vec3 rigGrade(vec3 c) {
   // The darks and mids lifted to the milk of the place: a gain that falls from 1.27 in the darks to 0.955 at white. (It stands in for
   // RIG_PIVOT * pow(l / RIG_PIVOT, RIG_CONTRAST), which costs every surface of every folder a power for each texel it draws.)
   float m = l * (0.94 + 0.0156 / (l + 0.042));
+  // The shot's own lift or fall of the mids and of the darks (GRADE_SHOTS).
+  vec2 g = vec2(0.0);
+${gradeShots}
+  float s = m / (m + 0.1);
+  m *= 1.0 + g.x * 4.0 * s * (1.0 - s) + g.y * (1.0 - s) * (1.0 - s);
   // The whites are held under the sky's: salt in an overcast is pale, not lit.
   float over = max(m - 0.4, 0.0);
   m -= 0.3 * over * over / (over + 0.15);
