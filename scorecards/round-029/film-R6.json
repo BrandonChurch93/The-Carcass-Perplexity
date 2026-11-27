@@ -1,0 +1,28 @@
+{
+  "round": 29,
+  "unit": "film",
+  "pack": "R6",
+  "family": "gpt",
+  "answered": "2026-11-27 02:20 UTC",
+  "answer": {
+    "critic": "R6",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-10.png",
+        "where": "the central arches and rising foreground wave",
+        "what": "After the close flyer clears, the opening settles into nearly the same rock-and-sky view. The swell and spray build, but neither produces a distinct reveal or payoff.",
+        "fix": "Make the rising swell culminate in one unmistakable breaker against the left spire before the opening ends."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the flyers across the center sky",
+        "what": "The sea and giant stone shapes read immediately, but most of the flyers are tiny marks. The first frame does not give the eye one clear living subject to follow.",
+        "fix": "Bring one readable winged silhouette into the bright gap in the opening frame, then let it lead into the close flyby."
+      }
+    ]
+  }
+}

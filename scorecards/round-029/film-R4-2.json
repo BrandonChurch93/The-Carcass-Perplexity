@@ -1,0 +1,56 @@
+{
+  "round": 29,
+  "unit": "film",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-27 02:21 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the whole orbital view, the pale skeleton figure laid over the planet",
+        "what": "from orbit the ground reads as a white line drawing of a skeleton, with a spiral glyph beside it, stamped on a dark globe; it does not look like a real view of land, sea and cloud from that height, and across 120 frames nothing changes except a small red glow that pulses evenly in the ribs",
+        "fix": "render the end as real terrain under drifting cloud, with a terminator and atmosphere limb; if the figure must stay, build it from coastlines, ridges and lava fields so it reads as geography, and let the cloud and the glow change unevenly"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the full frame across 3:13 to 3:15",
+        "what": "the frame is almost a held still: no camera drift, no cloud motion, no light change, so the climb ends on a dead picture rather than a living planet",
+        "fix": "keep the pull out going with a slow ease to rest, and let the weather systems and the day-night line move"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the large pterosaurs near the lens, frames 0 to 22",
+        "what": "the two big foreground pterosaurs are there at frame 11 and gone by frame 22 with no exit path, so they read as a pop rather than a flyby",
+        "fix": "carry them out of frame over several more frames, or bank them away behind the left tower"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the camera, judged by the dark rock at lower left and the cliff edge",
+        "what": "the camera slides sideways and back over the 8 s loop like a pendulum: the rock leaves frame around loop 174 and returns by 435, a move made to close the loop, not a travel through the place",
+        "fix": "hold the camera near still with only a slight drift, or move it on a single path and hide the return in a slower ease"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the surf at the foot of the left tower, frames 44 to 120",
+        "what": "the white water at the tower base grows steadily and sits as one soft patch; it does not break and fall back between swells",
+        "fix": "time the spray to the swell crests so it bursts and drains in pulses of different size"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03.png",
+        "where": "the far wading animals along the waterline",
+        "what": "at this size the animals glide along the shore at similar speeds with little sign of pause or turn",
+        "fix": "give each a different pace, with stops to feed and turns of the head"
+      }
+    ]
+  }
+}

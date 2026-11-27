@@ -1,0 +1,77 @@
+{
+  "round": 29,
+  "unit": "film",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-27 02:21 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-10.png",
+        "where": "the crater and cloud field across frames 9535 to 9546 of the climb",
+        "what": "the rim and crater outline jump from frame to frame instead of shrinking smoothly, with a visible pop in brightness and scale at 9540 to 9541 and again at 9544 to 9545. That breaks the one unbroken pull",
+        "fix": "drive the climb from a single eased altitude curve and render the crater from one continuous level of detail, without swapping tiles or exposure partway"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the orbit hold from frame 10094 to 11103",
+        "what": "about 17 seconds in which the planet, the cloud cover and the hurricane spiral barely change. The storm keeps the same arms in every frame, so the view reads as a still picture rather than a living planet",
+        "fix": "let the cloud decks drift and the cyclone turn and evolve, and let the terminator and the sun glint creep across the view during the hold"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "frames 9589 to 9841 of the rise",
+        "what": "the ground stops looking like a real view from that height. At 9589 the crater lake sits in what reads as a cloud texture, and by 9841 the land is a stylised skeleton relief with no believable scale of terrain, haze or cloud shadow",
+        "fix": "keep real terrain detail, atmospheric haze and cloud shadows at each altitude, and let the skeleton shape emerge from believable geology"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the lightning strikes at frames 7015 and 7019",
+        "what": "the bolt brightens a patch of cloud, but the snow ridge, the spire and the cloud sea below stay at almost the same exposure. The strike does not light the whole ridge for an instant",
+        "fix": "tie a short, sharp key and fill flash to each bolt so that the ridge, the spire and the cloud tops flare and then decay over a few frames"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the wave break at frames 2501 to 2506",
+        "what": "the spray reads as a layered sprite: the white water redraws in place with no thrown droplets falling and no heavy water sheet collapsing, and the flying creature holds the same wing pose for six frames",
+        "fix": "simulate the break with a collapsing water sheet, spray arcs that fall back under gravity and drifting mist, and keep the wing cycle moving"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the colony of creatures on the stack at frame 1514, and the wading creatures at 1766",
+        "what": "the creatures sit in near-identical poses and spacing like placed cards, with no individual variation that would show a living colony or a herd out of step",
+        "fix": "vary the pose, timing and action of each animal (preening, turning, taking off) and give the waders offset gaits with weight shifts and ripples at their feet"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the ice cave animal at 8075, and the walking herd at 8580",
+        "what": "the shaggy animal stands like a static model, and the herd crossing the lake leaves almost no wake and no reflection disturbance, so the feet read as sliding",
+        "fix": "add breathing, head turns and weight shifts to the cave animal, and give each wader a footfall ripple and splash"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-07.png",
+        "where": "the rain over the red flats at frames 5618 to 5623",
+        "what": "the rain streaks sit as an even overlay that barely changes between frames, so they read as a texture rather than falling rain",
+        "fix": "animate the falling streaks at a fall speed that matches the camera, and vary their density with wind gusts"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the lava channels at 3533 and the lava fall at 4037",
+        "what": "the channels glow evenly with little sign of crusting or of a folding skin, and read closer to an animated emissive texture than to thick, slow flow",
+        "fix": "add a dark cooling crust that wrinkles and splits slowly over the glowing core, and let the flow light the fume above it"
+      }
+    ]
+  }
+}

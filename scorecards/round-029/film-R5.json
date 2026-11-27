@@ -1,0 +1,49 @@
+{
+  "round": 29,
+  "unit": "film",
+  "pack": "R5",
+  "family": "gemini",
+  "answered": "2026-11-27 02:25 UTC",
+  "answer": {
+    "critic": "R5",
+    "score": 8,
+    "pass": true,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "frame 7015 and the snowy spine sequence (also set-A-03.png frames 7066-7823 and set-A-09.png frame 7234)",
+        "what": "the fifth place looks noticeably less finished and stylistically out of step with the rest of the film: the saturated violet storm sky, wispy painted cloud streaks, and glowing lightning clash with the naturalistic documentary palette of the other five landscapes, while the foreground snow ridge looks smoothly procedural and the horizon band to the left reads as a flat untextured plane",
+        "fix": "re-grade the sky to a restrained, naturalistic storm palette, dial back the lightning bloom, add fine wind-sculpted detail to the snow ridge, and replace the flat horizon band with layered atmospheric cloud depth"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "frame 9541, the cloud ring around the crater lake during the vertical pull-back",
+        "what": "the clouds framing the dark blue lake look overly soft and airbrushed compared to the crisp detail in the ground shots and orbital reveal, briefly undercutting the realism at the start of the final move",
+        "fix": "add sharper volumetric cloud structure, layered wisps, and finer edge detail so the ascent through the cloud deck matches the photographic crispness of frames 9589 and 10027"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-09.png",
+        "where": "frame 10027, the orbital wide view of the continent (also set-A-07.png frame 10027)",
+        "what": "while the eye crater, coastal rib arches, glowing volcanic heart, red pelvis brine flats, and white snowy spine are all clearly locatable on the skeleton, the sunlit geothermal travertine chasm from frames 4221-5551 is hard to pinpoint as a distinct landmark",
+        "fix": "make a recognizable trace of the pale travertine terraces and steaming turquoise sinkhole legible on the torso so all six visited places map cleanly onto the final wide frame"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-06.png",
+        "where": "frame 8305, foreground rock mounds and far-right cliff wall (also set-A-09.png frame 8412)",
+        "what": "the angular rock chunks scattered over smooth foreground mounds read as slightly faceted CG next to the convincing lake and cliffs behind them, and the far-right cliff face shows a faint vertical texture mirroring seam",
+        "fix": "ground the foreground rubble with finer scree and natural sediment blending, and break up the mirrored texture seam on the right cliff edge"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "frames 6309 and 6561, the red brine flats where the large creatures stand",
+        "what": "the red brine looks flatter and more matte than the reflective water in the other wet environments, with minimal wet darkening or surface disturbance where the creatures' legs enter the mud",
+        "fix": "add subtle overcast sky reflections, wet sheen on the lower legs, and fine ripples or displaced mud at the contact points"
+      }
+    ]
+  }
+}

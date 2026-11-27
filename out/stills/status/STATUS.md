@@ -1,8 +1,7 @@
-# Status 143
+# Status 144
 
-2026-11-27 02:09 UTC. Phase 6, polish and deliver.
+2026-11-27 02:26 UTC. Phase 6, polish and deliver.
 
-- `01-s143-breath.jpg`: The Breath: the film now, after wave 1, at left, and the same two frames with the Breath team's wave 2 work so far at right (its branch at 6:54 PM). Top, 1:13: a fuller far flock, wind ripples on the pool, thinner vapour so the pit's far wall shows. Bottom, 1:27: the waders have a warmer mottled hide, jointed legs, a slimmer neck and a finer red mop; the rings round the legs are fainter, which the Builder has asked the team about. Drawn by the Builder at 960x540, draft tier; not judged
-- `02-s143-eye.jpg`: The Eye: the film now at left, with the Eye team's wave 2 work so far at right (its branch at 6:59 PM). Top, 2:26: the far wall is now the approved picture's own wall, taller, lit and level, with its reflection in the shallows. Bottom, 2:30: the drinkers' hide is pale and creased where it was brown. Drawn by the Builder at 960x540, draft tier; not judged
-- `03-s143-heart.jpg`: The Heart: the film now at left, with the Heart team's wave 2 work so far at right (its branch at 6:58 PM). Top, 0:45: little change; the sunk walker now sits in a pale round patch, which the Builder has asked the team about. Bottom, 0:58: ropy coils in the near crust and sharper sulphur, aimed at the fine detail measure that is red at this key. Drawn by the Builder at 960x540, draft tier; not judged
-- `04-s143-spine-sky.jpg`: The Spine at 2:00 (frame 7234): the film now at left and with the sky builder's first merge at right, a softer flowing sky with a rain shaft and no ruled level line at far left. From the Spine team's first report, drawn on its machine; not judged
+- `01-s144-heart.jpg`: The Heart at 0:58 (frame 3477): the film now at left and the Heart team's branch at right (its commit 37ce7fb, 7:17 PM). The near bank is broken blocks, and the crust beyond the channel has ropy coils and cracks where it was one even pattern. From the Heart team's first report, drawn on its machine; not judged
+- `02-s144-reveal.jpg`: The Reveal at 2:42 (frame 9756, the head and shoulders): the film now at left and with the sky builder's first merge at right (commit ee46d718). Cloud and haze at more heights: thin veils, small cloud over the land and mist along the central valley. From the Reveal team's first report, drawn on its machine; not judged
+- `03-s144-marsh.jpg`: The Blood Marsh at 1:42 (frame 6102): the film now at left and the Blood Marsh team's work at right. The two domes in the brine carry the brine's red and a wet shine where they were pale and glassy, and the salt crust in front has deeper relief. From the Blood Marsh team's first report, drawn on its machine; not judged

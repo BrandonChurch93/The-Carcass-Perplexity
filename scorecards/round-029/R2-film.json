@@ -1,0 +1,255 @@
+{
+  "round": 29,
+  "unit": "film",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "The foreground pterosaurs have a stiff, repeated stock-model look.",
+      "answered": "02:20 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "stock-style fantasy CG composite: repeated pterosaur models with flat lighting over generic procedural rock textures and a simple water surface",
+      "answered": "02:20 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the procedural tubular rock arches and repeated stiffly shaded winged creature models lack the detail and fluid-interaction realism of a top-budget cinematic while looking more like a standard 3D render than a mobile game.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "The foreground flying creatures have visibly angular wing silhouettes that repeat across the flock.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the pterosaurs and rock spires are well detailed but look like a stock-style CG composite (generic flat-lit creatures, plain water surface, stock-looking sky) rather than film-grade integration.",
+      "answered": "02:20 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the foreground waves have a glossy, repeating surface pattern that looks like a CG water shader.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "repetitive procedural rock texturing and simple CG ocean/splash with sprite-like birds, typical of a hobbyist/stock fantasy render rather than film-grade VFX",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the flat sprite-like water splash and smooth procedural tube-shaped rock arches look like an ordinary 3D render rather than a real photo or top-budget VFX.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 84,
+      "why": "The distant stone arches look like the same blocky rock segment bent and reused at different scales.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the dramatic cinematic lighting and the large fantasy scale with detailed rock, clouds and flocks of pterosaurs, though the repetitive rock texture and simple water spray leave some chance it is c",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 74,
+      "why": "The nearly identical long-legged creatures look like duplicated 3D assets.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "photoreal lava terrain and atmosphere, but the creatures are simple and repeated and the cliff textures look procedural, which reads as a polished environment render or concept piece, not film-grade compositing.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the flat procedural lava-crack plane and blobby low-detail smoke plume contrasting with otherwise solid 3D rock textures",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 77,
+      "why": "The cave mouth has a hard, nearly straight lower edge that makes it look cut out of the cliff mesh.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 68,
+      "why": "the detailed rock and lava-field textures with atmospheric haze and the cinematic composition of the stilt-legged creatures read as a high-budget film or game cinematic, though the creatures look slightly soft and the rocks a little repetitive.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the near-identical pale creatures scattered across the flats look like repeated 3D assets.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the alien creatures and smooth, uniformly textured procedural-looking terrain read like a polished standalone CG landscape render (e.g., speculative-biology art), not a film frame or a photo",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "visibly stretched textures and simple low-detail geometry inside the sinkhole and midground despite the cinematic lighting",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 82,
+      "why": "The crater wall looks like a rock texture stretched vertically over a smooth cutout.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "detailed rock and water surfaces with rich atmospheric haze and sun glow look high-end, but the fantasy creatures and slightly repetitive rock textures could also point to c.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the repeated clumps of nearly identical alien plants look like instanced 3D assets.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the scene looks like a polished CGI paleo-landscape (it reads as scientific or documentary concept art): the plants are instanced and repeat, the cracked salt plates look procedural, and it doesn't have the detail of a hero film frame.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 70,
+      "why": "The flat real-time-style lighting with weak ground-contact shadows.",
+      "answered": "02:22 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 92,
+      "why": "The same spindly plant model visibly repeats in clumps across the landscape.",
+      "answered": "02:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the scene looks like a clean, detailed offline 3D render with scattered repeated assets (plants, rocks, cracked-salt plates) and soft atmospheric haze, which reads as a polished but non-cinematic render rather than a photo or top-budget film frame.",
+      "answered": "02:21 UTC"
+    }
+  ]
+}
