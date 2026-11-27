@@ -3,7 +3,7 @@
 // thin fluted ledges on striped strata, three rounds running. The wall is the part `shaft`, the arches are the part `hoops`.
 import * as THREE from 'three';
 import { DEPTH, RAD, rimRadius, sat, smooth } from '../land';
-import { ARCHES, arch, archTop, archesOver, brim, cap } from './arches';
+import { ARCHES, arch, archTop, archesOver, bandAt, brim, cap } from './arches';
 import { noise3 } from './ribs';
 
 /** The join, degrees: where the mesh of the wall begins and ends, under the south rim. */
@@ -65,7 +65,9 @@ export function wallPoint(b: number, depth: number): WallPoint {
   // Flowstone: where water has run down the face it has left upright ribs a pace or two wide that drape over the courses.
   const fold = 1 - Math.abs(noise3(deg * 0.42, y * 0.05, 5.5));
   const drape = 0.55 * smooth(depth / 2.5) * fold * fold * fold * (0.55 + 0.45 * noise3(deg * 0.11, y * 0.09, 1.1));
-  const r = r0 + 0.03 - inset * 0.6 - 12 * down + back * (1 - 0.5 * over.back) * (1 - 0.6 * fold * fold) + 2.3 * over.back + broad - drape;
+  // The tiers carried on round the side that fell: each a band that stands a stride out of the wall.
+  const band = bandAt(deg, y);
+  const r = r0 + 0.03 - inset * 0.6 - 12 * down + back * (1 - 0.5 * over.back) * (1 - 0.6 * fold * fold) * (1 - band) + 2.3 * over.back + broad - drape * (1 - band) - 0.95 * band;
   return { at: [Math.sin(b) * r, y, -Math.cos(b) * r], u: deg * RAD * 30, v: y, relief: over.on, open: (1 - 0.88 * over.shut) * (1 - 0.3 * sat(back / 0.9)) };
 }
 
