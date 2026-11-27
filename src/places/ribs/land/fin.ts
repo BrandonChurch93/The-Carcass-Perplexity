@@ -224,6 +224,7 @@ uniform sampler2D tWeed;
 uniform float uTide;
 uniform vec3 uTuskMean;
 uniform vec2 uSize;
+uniform float uLichen;
 // One laying of the sheet, size metres along the spine: its colour and (slope along, slope across, height).
 void laid(vec2 at, float size, float lod, out vec3 colour, out vec3 slopes) {
   vec2 uc = vec2(at.x / size, at.y / (size * 0.6667));
@@ -244,9 +245,15 @@ void main() {
   float crack = vCrag.x;
   float tone = vCrag.y;
   float deep = vCrag.z;
-  // The seams wander a little across the blade, so that no line of the sheet runs ruled for its whole length.
-  float bedY = mix(vBlade.y, vBlade.z + 31.0, thin) + 5.0 * (vnoise(vec2(vBlade.x * 0.006, vBlade.y * 0.02 + 3.0)) - 0.5);
-  vec2 lay = vec2(vBlade.x, bedY);
+  // The stone is bedded in the world, not along the blade: its beds lie near level, dip one way over the whole reef, and the sweep
+  // of a blade cuts across them. A sheet laid along the spine made grooves the length of the blade, which read as grain or as horn.
+  // The sheet is laid on the upright plane a face looks out of most squarely, x or z, and on a top by the ground; the height of a
+  // bed is the same in each, so that the beds join round a corner. One plane for all would smear on the faces that lie along it.
+  float warp = 6.0 * (vnoise(vWorld.xz * 0.011 + vWorld.y * 0.006 + 2.0) - 0.5);
+  vec3 an = abs(n0);
+  float top = step(0.8, an.y);
+  float side = step(an.z, an.x) * (1.0 - top);
+  vec2 lay = vec2(mix(vWorld.x, vWorld.z + 13.0, side), vWorld.y + 0.16 * vWorld.x + mix(0.4, 1.0, top) * vWorld.z + warp);
   float WIDE = uSize.x;
   float FINE = uSize.y;
   float lw = log2(max(foot * 1536.0 / WIDE, 1e-6));
@@ -257,21 +264,45 @@ void main() {
   float nearF = 1.0 - smoothstep(3.0, 5.0, lf);
   vec3 cF = uTuskMean;
   vec3 sF = vec3(0.0, 0.0, 0.5);
-  if (nearF > 0.001) laid(lay * mat2(0.978, 0.208, -0.208, 0.978) + vec2(17.0, 5.0), FINE, lf, cF, sF);
+  if (nearF > 0.001) laid(lay * mat2(0.995, 0.1, -0.1, 0.995) + vec2(17.0, 5.0), FINE, lf, cF, sF);
   float meanLum = dot(uTuskMean, vec3(0.333));
   float lumW = dot(cW, vec3(0.333)) / meanLum;
   float lumF = mix(1.0, dot(cF, vec3(0.333)) / meanLum, nearF);
-  // The marks of both sheets at more than their own strength: a seam is a dark line from a mile off.
-  float marks = clamp(1.0 + 1.25 * (lumW - 1.0), 0.4, 1.4) * clamp(1.0 + 1.7 * (lumF - 1.0), 0.35, 1.5);
-  // Long fine grooves along the sweep, computed: narrow across the blade, a blade's width long, at two sizes, each gone before it is finer than a pixel.
-  float grooveA = (vnoise(vec2(vBlade.x * 0.035, bedY * 2.6)) - 0.5) * (1.0 - smoothstep(0.12, 0.4, foot));
-  float grooveB = (vnoise(vec2(vBlade.x * 0.013 + 3.0, bedY * 0.62)) - 0.5) * (1.0 - smoothstep(0.5, 1.6, foot));
-  float grooveC = (vnoise(vec2(vBlade.x * 0.005 + 7.0, bedY * 0.17)) - 0.5) * (1.0 - smoothstep(2.0, 6.0, foot));
-  marks *= 1.0 + 0.3 * grooveA + 0.3 * grooveB + 0.28 * grooveC;
-  vec3 alongW = normalize(vAlong + vec3(0.0, 1e-5, 0.0));
-  vec3 acrossW = thin > 0.5 ? normalize(cross(vAlong, vAcross) + vec3(0.0, 0.0, 1e-5)) : normalize(vAcross + vec3(1e-5, 0.0, 0.0));
-  vec2 g = sW.xy * 2.6 + sF.xy * 1.9 * nearF;
-  vec3 lean = alongW * g.x - acrossW * g.y;
+  float marks = clamp(1.0 + 1.5 * (lumW - 1.0), 0.4, 1.4) * clamp(1.0 + 1.9 * (lumF - 1.0), 0.35, 1.5);
+  // The same sheet stood on end: there its seams are joints that stand across the beds, and with them cut the stone into angular blocks.
+  float CROSS = uSize.x * 0.45;
+  vec2 layX = vec2(lay.y + 0.3 * lay.x, lay.x + 4.0 * (vnoise(lay.yx * vec2(0.05, 0.016)) - 0.5)) + vec2(31.0, 7.0);
+  vec3 cX;
+  vec3 sX;
+  laid(layX, CROSS, log2(max(foot * 1536.0 / CROSS, 1e-6)), cX, sX);
+  marks *= clamp(1.0 + 1.3 * (dot(cX, vec3(0.333)) / meanLum - 1.0), 0.45, 1.35);
+  // Beds of unlike thickness, each of its own tone; a strong one stands out as a low ledge with a dark line under it, and a ledge
+  // dies out along the face. Gone before a bed is finer than two pixels.
+  float BED = 5.2;
+  float bedAt = lay.y / BED;
+  float bc = bedAt + 0.34 * sin(bedAt * 2.1) + 0.14 * sin(bedAt * 5.3 + 1.0);
+  float bk = floor(bc);
+  float bf = bc - bk;
+  float bedPx = foot / BED;
+  float bedShow = 1.0 - smoothstep(0.2, 0.5, bedPx);
+  float bedStrong = smoothstep(0.4, 0.66, vnoise(vec2(bk * 1.7 + 0.5, lay.x * 0.021))) * bedShow;
+  float bedAbove = smoothstep(0.4, 0.66, vnoise(vec2((bk + 1.0) * 1.7 + 0.5, lay.x * 0.021))) * bedShow;
+  // bf runs upward: the lip of the bed below is at bf 0, and the dark under a ledge lies at the top of a bed, under the next.
+  float lip = bedStrong * (1.0 - smoothstep(0.0, max(0.06, 1.5 * bedPx), bf));
+  float ledge = bedAbove * smoothstep(1.0 - max(0.1, 2.0 * bedPx), 1.0, bf);
+  marks *= (1.0 + 0.24 * (hash12(vec2(bk, 3.5)) - 0.5) * bedShow) * (1.0 - 0.55 * ledge) * (1.0 + 0.16 * lip);
+  // Under a ledge the white of what roosts on it has run down the face in thin streaks, a bed or less long.
+  float strings = smoothstep(0.5, 0.7, vnoise(vec2(lay.x * 1.3, bk * 7.3)) * 0.6 + 0.4 * vnoise(vec2(lay.x * 4.1, bk * 3.1 + bc * 0.7)));
+  float streaked = bedAbove * smoothstep(0.25, 0.95, bf) * strings;
+  // The ways the sheet's x and y run on this face.
+  vec3 du = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), side);
+  vec3 dv = vec3(0.16, 1.0, mix(0.4, 1.0, top));
+  vec3 alongW = du - n0 * dot(du, n0);
+  alongW *= inversesqrt(max(dot(alongW, alongW), 1e-6));
+  vec3 acrossW = dv - n0 * dot(dv, n0);
+  acrossW *= inversesqrt(max(dot(acrossW, acrossW), 1e-6));
+  vec2 g = sW.xy * 2.8 + sF.xy * 2.1 * nearF;
+  vec3 lean = alongW * (g.x - 2.0 * sX.y) - acrossW * (g.y - 2.0 * sX.x + 1.2 * ledge - 0.5 * lip);
   lean -= n0 * dot(lean, n0);
   vec3 n = normalize(n0 + lean);
   float shelf = smoothstep(0.3, 0.7, n0.y);
@@ -279,7 +310,7 @@ void main() {
 
   // Pale stone: ivory where it is dry and sunned, cold grey in its hollows and on its lee. Each plate has its own tone.
   vec3 hue = mix(cW / max(dot(cW, vec3(0.333)), 1e-3), vec3(1.0), 0.35);
-  vec3 albedo = hue * vec3(0.56, 0.545, 0.5) * marks * (0.8 + 0.4 * macro) * (1.0 + 0.3 * tone);
+  vec3 albedo = hue * vec3(0.6, 0.59, 0.555) * marks * (0.8 + 0.4 * macro) * (1.0 + 0.3 * tone);
   albedo *= mix(vec3(0.95, 0.98, 1.03), vec3(1.07, 1.0, 0.9), smoothstep(0.3, 0.7, macro));
   float sunny = 0.5 + 0.5 * dot(n0, uSunDir);
   float field = vnoise(vWorld.xz * 0.019 + vWorld.y * 0.027 + 9.0) * 0.6 + vnoise(vWorld.xz * 0.11 + vWorld.y * 0.09) * 0.4;
@@ -289,14 +320,14 @@ void main() {
   float ll = log2(max(foot * 1536.0 / LICH, 1e-6));
   vec3 crust = textureLod(tLichen, ul, ll).rgb;
   float crusted = smoothstep(0.06, 0.3, crust.r - crust.b);
-  float lichen = smoothstep(0.6, 0.66, 0.95 * field + 0.2 * n0.y + 0.22 * (sunny - 0.5) + 0.1 * shelf + 0.14 * (crusted - 0.5) + 0.08 * edge - 0.2 * deep);
+  float lichen = smoothstep(0.57 + uLichen, 0.63 + uLichen, 0.95 * field + 0.2 * n0.y + 0.22 * (sunny - 0.5) + 0.1 * shelf + 0.14 * (crusted - 0.5) + 0.08 * edge - 0.2 * deep);
   lichen *= 0.7 + 0.3 * crusted;
   albedo = mix(albedo, mix(vec3(0.5, 0.25, 0.06), crust * vec3(1.2, 1.0, 0.75), 0.5) * clamp(marks, 0.6, 1.3), 0.85 * lichen);
   // What runs down a face runs by the level way across it and the height.
   vec2 fall = vec2(mix(vBlade.w, vBlade.z, edge), vWorld.y);
   // White lies on what looks up, where things roost, and runs down from it in thin streaks.
   float runs = smoothstep(0.58, 0.8, vnoise(vec2(fall.x * 0.55, fall.y * 0.035 + 3.0)) * 0.65 + 0.35 * vnoise(vec2(fall.x * 1.9, fall.y * 0.11)));
-  float white = max(0.6 * shelf, 0.45 * runs * (1.0 - under)) * smoothstep(0.42, 0.62, field + 0.1 * tone) * (1.0 - 0.6 * crack);
+  float white = max(max(0.6 * shelf, 0.45 * runs * (1.0 - under)), 0.75 * streaked * (1.0 - under)) * smoothstep(0.42, 0.62, field + 0.1 * tone) * (1.0 - 0.6 * crack);
   albedo = mix(albedo, vec3(0.7, 0.69, 0.66) * clamp(marks, 0.7, 1.2), white * (1.0 - 0.8 * lichen));
   // A crack between two plates is dark, and what lies deep among its neighbours is stained.
   albedo *= mix(1.0, 0.86, crack * crack) * mix(1.0, 0.9, deep * deep);
@@ -310,7 +341,7 @@ void main() {
   float wetTop = tide + 40.0 + 44.0 * (macro - 0.5) + 14.0 * (far2 - 1.0);
   float damp = max(smoothstep(tide + 36.0 + 30.0 * (macro - 0.5), tide + 2.0, y), 1.2 * smoothstep(wetTop + 6.0, wetTop - 6.0, y));
   // Seep: dark wet bands that follow the seams, a few to a blade, each broken along its length.
-  float seep = smoothstep(0.62, 0.8, vnoise(vec2(bedY * 0.021, 7.0 + fall.x * 0.004)) * 0.7 + 0.3 * macro) * smoothstep(0.35, 0.6, field);
+  float seep = smoothstep(0.62, 0.8, vnoise(vec2(lay.x * 0.004 + 7.0, lay.y * 0.05)) * 0.7 + 0.3 * macro) * smoothstep(0.35, 0.6, field);
   albedo *= mix(vec3(1.0), vec3(0.8, 0.81, 0.82), 0.5 * seep);
   albedo *= mix(1.0, 0.5, min(damp, 1.2)) * mix(1.0, 0.14, band);
   albedo = mix(albedo, textureLod(tWeed, fall / 7.0, log2(max(foot * 1024.0 / 7.0, 1.0))).rgb * 0.9, weed);

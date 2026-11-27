@@ -75,20 +75,20 @@ const TO_KEY = travelled(ARRIVAL.keySeconds);
 const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 
 // The film's first shot, restaged a second time (rung 2 again: the first restaging stood two blades in a still plate with the right of
-// the frame empty). The lens now starts 880 m out and 770 m EAST of the old axis, close under the outer right blade (OR, 290 m off its
+// the frame empty). The lens now starts 885 m out and 750 m EAST of the old axis, close under the outer right blade (OR, 280 m off its
 // near flank), low in a trough of a heavy swell, and pushes in hard at 86 metres a second, then sweeps west along the shore onto the old
-// move in one arc. In the first frame OR stands as a dark wall over the right four tenths of the frame, from the sea out through the top,
+// move in one arc. In the first frame OR stands as a wall over the right four tenths of the frame, from the sea out through the top,
 // with the pale near blade (L1) in the left third and the far cage between them. OR slides out through the right edge inside two seconds
-// (its near flank at 0.56 of the width in the first frame, 0.75 at 1 s, gone at 1.9 s) against blades that hardly move, and the right
-// row's blade (R1) comes out from behind it: that is the one large thing that crosses the frame, and what says how far off the rest is.
+// (its near flank at 0.61 of the width in the first frame, 0.83 at 1 s, gone at 1.6 s) against blades that hardly move, and the right
+// row's blade (R1), whose point alone stands clear of it in the first frame, comes out from behind it: that is the one large thing that crosses the frame, and what says how far off the rest is.
 // The lens rides the long swell of sea/tide.ts under it: it is lifted from the trough over the crest before it through the first second
-// and a half (the shore and the strike come up over that crest), sinks into the next trough at 2.9 s and is lifted again, its nose
+// and a half (the shore and the strike come up over that crest), sinks toward the next trough at 3 s and is lifted again, its nose
 // rising and falling with it. L1 grows and slides against the far blades the whole way in.
 // From OPEN.seconds on (film frame 960) the pose is `arrival`'s own, to the bit, and the two join level in place, speed and acceleration.
 export const OPEN = {
   seconds: 16,
   /** Where the lens is as the film opens (x, z), the way it is going (degrees, 0 is north, negative is west) and its speed. */
-  from: [600, 880] as [number, number],
+  from: [580, 885] as [number, number],
   heading: -40,
   speed: 86,
   /** Once the lens has settled: metres over the old move's height as the film opens, and its heave: metres, seconds a turn. */
@@ -105,7 +105,22 @@ export const OPEN = {
   clears: 1.6,
   round: 12,
   chop: 1,
+  /**
+   * Once it is over the first crest the lens follows the water down only so far: under `floor` metres over the still sea it sinks by
+   * `sinks` of what the water does, taken softly; `floors`: the seconds between which that comes in. In a trough of this sea the crest
+   * ahead stands over a lens that rides the water, and hides the shore and the foot of every blade behind a black wall for half a second.
+   */
+  floor: 3.8,
+  sinks: 0.35,
+  floors: [1.2, 2.2] as [number, number],
   settles: [3.2, 8] as [number, number],
+  /**
+   * The last swell before the shore: the lens is carried this many metres higher over it, at its highest at the middle second of the
+   * three, and is down on the old move's height as it crosses the shore's edge. From the height of the water the crest ahead hides the
+   * shore's edge and the feet of the blades behind a dark wall just as they come near; from over it the surf line and the feet are seen.
+   */
+  carried: 4.5,
+  carrying: [6, 9.6, 13.6] as [number, number, number],
   noses: 0.1,
   /** The point on the strait floor the lens is held on through the arc: under the gap between the tips of L1 and R1. */
   target: [-149, -193] as [number, number],
@@ -268,12 +283,15 @@ function openingHeight(seconds: number): number {
   for (const h of stands) most = Math.max(most, h);
   let sum = 0;
   for (const h of stands) sum += Math.exp(SHARP * (h - most));
-  const ride = most + Math.log(sum / stands.length) / SHARP + OPEN.clears + OPEN.chop * CHOP * seaStands(seconds) * seaCalm(x, z);
+  const rides = most + Math.log(sum / stands.length) / SHARP + OPEN.clears + OPEN.chop * CHOP * seaStands(seconds) * seaCalm(x, z);
+  const SOFT = 1.5;
+  const ride = rides + (smoothed(OPEN.floors[0], OPEN.floors[1], seconds) * (1 - OPEN.sinks) * Math.log(1 + Math.exp(SOFT * (OPEN.floor - rides)))) / SOFT;
   // The higher of the ride and of the old move's height once it has settled, as softly; and the old move's own as the join comes (the
   // sea is long behind the lens by then: it crosses the shore's edge at 13 s).
   const over = smoother(OPEN.settles[0], OPEN.settles[1], seconds) * (settled - ride);
   const rode = ride + Math.max(over, 0) + Math.log(1 + Math.exp(-SHARP * Math.abs(over))) / SHARP;
-  return settled + (rode - settled) * (1 - smoother(13.6, 15.6, seconds));
+  const carried = OPEN.carried * smoother(OPEN.carrying[0], OPEN.carrying[1], seconds) * (1 - smoother(OPEN.carrying[1], OPEN.carrying[2], seconds));
+  return settled + (rode - settled) * (1 - smoother(13.6, 15.6, seconds)) + carried;
 }
 
 /** The lens of the film's first shot at `seconds` of the place: where it is and how it looks. The old move's own from OPEN.seconds on. */
