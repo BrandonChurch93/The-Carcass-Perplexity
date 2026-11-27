@@ -285,6 +285,10 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   }
   vec2 poolWay;
   vec3 poolLit = poolApron(p, n, 6.0, poolWay);
+  // On the ground the pool's fire lies at the level of the crust and rakes it. A level face took a third of what a face turned to the pool takes,
+  // whichever way its ripples ran, and the apron stood as one even orange wash with the relief of the crust lost in it. Now a level face takes an
+  // eighth, a face that leans a quarter toward the pool all of it and one that leans as much away none: each ripple has a lit side and a dark one.
+  poolLit *= clamp(0.4 + 2.4 * dot(n.xz, poolWay), 0.0, 1.0);
   e += poolLit;
   aim += vec3(poolWay, 1.0) * poolLit.r;
   // The stream of the fall (uRigStream: a row every few metres of z from the lip to the toe of the fan, each the middle of the stream, half the
