@@ -94,17 +94,20 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
     float p2 = turn2 - n2;
     float w1 = 1.0 - abs(2.0 * p1 - 1.0);
     float level = log2(max(foot, 1e-5) * 256.0 / 1.7);
-    // Froth: small pale rafts a hand long, few, in drifts, thick below a stone or a bar and thin in open water.
-    vec4 f1 = textureLod(tWave, (xz - vel * (3.2 * (p1 - 0.5))) / 1.7 + vec2(0.37, 0.61) * n1, level);
-    vec4 f2 = textureLod(tRipple, (xz - vel * (3.2 * (p2 - 0.5))) / 1.7 + vec2(0.37, 0.61) * n2 + 0.5, level);
     float load = min(ca.g * 2.0, 1.0);
-    float seen = 1.0 - smoothstep(0.03, 0.12, foot);
     // Lanes many metres long of smooth water between ruffled water lie along the lines of the stream and go down with it too.
     vec4 f3 = textureLod(tRipple, vec2(ln.r / 11.0 + 0.61, 0.021 * xz.y - 0.004 * uTime), level - 2.6);
     lanes = clamp(0.5 + 2.0 * (f3.g + f3.a - 1.0), 0.0, 1.0);
-    float cut = mix(0.96, 0.66, load) - 0.3 * (lanes - 0.5);
-    flecks = moving * seen * mix(smoothstep(cut, cut + 0.14, f2.r + f2.b - 1.0 + 0.5 * (f2.a - 0.5)),
-                                 smoothstep(cut, cut + 0.14, f1.r + f1.b - 1.0 + 0.5 * (f1.a - 0.5)), w1);
+    // Froth: small pale rafts a hand long, few, in drifts, thick below a stone or a bar. Open water that nothing has broken carries
+    // none, and its two readings are not made there.
+    float there = moving * (1.0 - smoothstep(0.03, 0.12, foot)) * smoothstep(0.03, 0.14, load);
+    if (there > 0.0) {
+      vec4 f1 = textureLod(tWave, (xz - vel * (3.2 * (p1 - 0.5))) / 1.7 + vec2(0.37, 0.61) * n1, level);
+      vec4 f2 = textureLod(tRipple, (xz - vel * (3.2 * (p2 - 0.5))) / 1.7 + vec2(0.37, 0.61) * n2 + 0.5, level);
+      float cut = mix(0.96, 0.66, load) - 0.3 * (lanes - 0.5);
+      flecks = there * mix(smoothstep(cut, cut + 0.14, f2.r + f2.b - 1.0 + 0.5 * (f2.a - 0.5)),
+                           smoothstep(cut, cut + 0.14, f1.r + f1.b - 1.0 + 0.5 * (f1.a - 0.5)), w1);
+    }
     slick = smoothstep(0.55, 0.7, lanes) * moving;
   }
 
@@ -141,6 +144,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // A second, slower push aside makes their spacing uneven, and they stand only in arcs: where the wind's ripples are high a ring is lost.
   vec2 aside = vec2(vnoise(xz * 4.3 + 0.3 * gone), vnoise(xz * 4.3 + 31.0 - 0.3 * gone)) - 0.5;
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame + (slope * vec2(0.012, 0.03) + aside * vec2(0.012, 0.01)) * min(1.0, 8.0 / far));
+  float held = clamp(rings.a, 0.0, 1.0);
   float arcs = smoothstep(0.28, 0.62, vnoise(xz * 2.3 - 0.5 * gone + 5.0));
   slope += rings.rg * (2.6 * (0.35 + 0.65 * arcs));
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
@@ -201,7 +205,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // It is milky: the silt hides the bed a hand deep. With clearer water the wide view showed the gravel of the bed through the whole
   // channel as a speckle, where the picture has one soft opaque green.
   float clear = exp(-path * 14.0);
-  vec3 tone = mix(vec3(0.2, 0.245, 0.215), mix(vec3(0.125, 0.215, 0.195), vec3(0.065, 0.16, 0.165), smoothstep(0.2, 0.7, depth)), smoothstep(0.03, 0.2, depth));
+  vec3 tone = mix(vec3(0.25, 0.3, 0.26), mix(vec3(0.16, 0.265, 0.235), vec3(0.085, 0.2, 0.2), smoothstep(0.2, 0.7, depth)), smoothstep(0.03, 0.2, depth));
   // Seen from low down and against the light the body of shallow water is not green: what comes back out of it is the low sun in its silt,
   // a dull warm olive, as under the feeding waders in the picture. From above it is the teal of the wide view.
   // Only where the eye is low and the look is flat: looked down on by more than a quarter of a right angle the teal comes through again,
@@ -223,10 +227,9 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   alpha = max(alpha, 0.6 * meet);
   colour *= 1.0 - 0.7 * meet;
   // The same round a leg or a wet mop that stands in it (the waders folder says where): a dark line where the water climbs it.
-  float held = clamp(rings.a, 0.0, 1.0);
-  float touch = smoothstep(0.14, 0.55, held);
+  float touch = smoothstep(0.1, 0.55, held);
   alpha = max(alpha, 0.9 * touch);
-  colour *= 1.0 - 0.8 * touch;
+  colour *= 1.0 - 0.85 * touch;
   // Looked down on, the water mirrors little, and still the image of what stands in it is seen: the animal is between the sky and
   // the water under it, so the silt there is in its shade and the bed is hidden by it.
   colour = mix(colour * (1.0 - 0.35 * image.a), mix(0.4, 0.26, low) * image.rgb, mix(0.5, 0.75, low) * image.a);
