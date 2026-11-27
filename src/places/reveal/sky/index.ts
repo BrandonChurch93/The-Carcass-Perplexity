@@ -82,8 +82,8 @@ void main() {
   vec2 fogAt = xz - lean * ${(LOW_KM - FOG_KM).toFixed(1)};
   float bankIs = max(bankDepth(bankAt), 0.0);
   vec2 bankSlope = vec2(0.0);
-  if (bankIs > 0.0) bankSlope = 0.8 * (texture2D(uMatPopcornNh, bankUvA).rg * 2.0 - 1.0) * BANK_A;
-  if (bankIs > 0.0 && bankNear > 0.0) bankSlope += bankNear * 0.7 * (texture2D(uMatSpecksNh, bankUvB).rg * 2.0 - 1.0) * BANK_B;
+  if (bankIs > 0.0) bankSlope = 0.8 * (pic(uMatPopcornNh, bankUvA, bankGA).rg * 2.0 - 1.0) * BANK_A;
+  if (bankIs > 0.0 && bankNear > 0.0) bankSlope += bankNear * 0.7 * (pic(uMatSpecksNh, bankUvB, bankGB).rg * 2.0 - 1.0) * BANK_B;
   float bankSelf = clamp(0.5 + 1.25 * dot(bankSlope, toSun), 0.0, 1.0);
   float bankA = (1.0 - exp(-1.3 * bankIs)) * uArrive;
   // Stratus fills its pools to a level: what stands in the way of the light is how far the ground lies under that level.
@@ -91,18 +91,22 @@ void main() {
   float pool = fogDepth(fogAt);
   vec2 uvGround = (fogAt - uGroundRect.xy) * uGroundRect.zw;
   vec2 uvDrawnOut = LOW_A * (fogAt - uTime * vec2(0.9, -0.5)) / vec2(620.0, 330.0) + vec2(0.17, 0.58);
+  // (The change of each place across the pixel, before the branch: see pic in shared/weather.ts.)
+  uvGround = clamp(uvGround, 0.0, 1.0);
+  vec4 gGround = GRADS(uvGround);
+  vec4 gDrawnOut = GRADS(uvDrawnOut);
   float fogIs = 0.0;
   if (pool > 0.0) {
-    float height = texture2D(uGround, clamp(uvGround, 0.0, 1.0)).b;
+    float height = pic(uGround, uvGround, gGround).b;
     // (The relief holds the shelf and the sounds a little over its sea level: all of that is water, and level.)
     fogIs = 6.0 * max(0.36 + 0.03 * smoothstep(0.0, 0.25, pool) + 0.3 * pool - max(height, 0.4), 0.0);
     // (On open water nothing holds it to a level: there it is torn along the wind into the fibre of its own top and thins away.)
-    float drawnOut = cloudIn(uMatStreaks, uvDrawnOut, 0.31);
+    float drawnOut = cloudAt(uMatStreaks, uvDrawnOut, gDrawnOut, 0.31);
     fogIs *= mix(1.0, clamp(1.5 * fogVeil * drawnOut - 1.0, 0.0, 1.0), 1.0 - smoothstep(0.34, 0.42, height));
   }
   float fogA = 0.9 * (1.0 - exp(-1.2 * fogIs)) * uArrive;
   vec2 fogSlope = vec2(0.0);
-  if (fogIs > 0.0) fogSlope = (texture2D(uMatVeilNh, fogUv).rg * 2.0 - 1.0) * mat2(0.5, 0.87, -0.87, 0.5);
+  if (fogIs > 0.0) fogSlope = (pic(uMatVeilNh, fogUv, fogG).rg * 2.0 - 1.0) * mat2(0.5, 0.87, -0.87, 0.5);
   float fogSelf = clamp(0.5 + 0.3 * dot(fogSlope, toSun), 0.0, 1.0);
   // (Read in every pixel, cloud under it or not: read only under cloud, the pixels at the edge of a cloud took the fineness of
   // the read from neighbours that had not made it, and one of them came out a level different from one run to the next.)

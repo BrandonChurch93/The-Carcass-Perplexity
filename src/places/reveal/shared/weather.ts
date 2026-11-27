@@ -93,12 +93,33 @@ float cloudIn(sampler2D t, vec2 uv, float mean) {
   return dot(texture2D(t, uv).rgb, vec3(0.3, 0.55, 0.15)) / mean;
 }
 
+// A picture read past a way out that not every pixel takes. The renderer shades four pixels together and works out how fine to
+// read a picture from the places its neighbours read at: past a branch one of the four has not taken, that place is stale memory
+// and the fineness changes from one run to the next. So the change of every place across the pixel is taken before the first
+// such branch (GRADS) and handed to the read (pic, cloudAt), which is then the same read as texture2D would make, every run.
+#define GRADS(uv) vec4(dFdx(uv), dFdy(uv))
+vec4 pic(sampler2D t, vec2 uv, vec4 g) {
+  return textureGrad(t, uv, g.xy, g.zw);
+}
+vec4 pic(sampler2D t, vec2 uv, vec4 g, float coarser) {
+  float k = exp2(coarser);
+  return textureGrad(t, uv, g.xy * k, g.zw * k);
+}
+float cloudAt(sampler2D t, vec2 uv, vec4 g, float mean) {
+  return dot(textureGrad(t, uv, g.xy, g.zw).rgb, vec3(0.3, 0.55, 0.15)) / mean;
+}
+
 // Where the five lays of the low field were last read, and how much of the field each one made there (set by lowDepth).
 vec2 lowUvA = vec2(0.0);
 vec2 lowUvB = vec2(0.0);
 vec2 lowUvC = vec2(0.0);
 vec2 lowUvD = vec2(0.0);
 vec2 lowUvE = vec2(0.0);
+vec4 lowGA = vec4(0.0);
+vec4 lowGB = vec4(0.0);
+vec4 lowGC = vec4(0.0);
+vec4 lowGD = vec4(0.0);
+vec4 lowGE = vec4(0.0);
 vec3 lowWeigh = vec3(0.0);
 vec2 lowNear = vec2(0.0);
 
@@ -164,14 +185,24 @@ float lowDepth(vec2 at) {
   vec2 uvLane = LOW_A * wLane / vec2(4200.0, 1150.0) + vec2(0.52, 0.18);
   vec2 uvFlow = mat2(0.92, 0.39, -0.39, 0.92) * wFlow / vec2(4200.0, 1500.0) + vec2(0.62, 0.35);
   vec2 uvGrown = w / 1700.0 + vec2(0.44, 0.08);
+  lowGA = GRADS(lowUvA);
+  lowGB = GRADS(lowUvB);
+  lowGC = GRADS(lowUvC);
+  lowGD = GRADS(lowUvD);
+  lowGE = GRADS(lowUvE);
+  vec4 gTorn = GRADS(uvTorn);
+  vec4 gSlow = GRADS(uvSlow);
+  vec4 gLane = GRADS(uvLane);
+  vec4 gFlow = GRADS(uvFlow);
+  vec4 gGrown = GRADS(uvGrown);
   // (Where the sky stands clear nothing more is read: most of the cost of the field is its photographs.)
   lowWeigh = vec3(0.0);
   lowNear = vec2(0.0);
   if (amount <= 0.0) return 0.0;
   // (Where it is thick and where torn is carried by winds of its own, a little off the wind of the field: the banks change as they go.)
-  float torn = texture2D(uCloudTile, uvTorn, 3.5).b;
-  float slow = 0.6 * texture2D(uCloudTile, uvSlow, 4.0).b + 0.4 * torn;
-  float lane = texture2D(uCloudTile, uvLane, 2.0).b;
+  float torn = pic(uCloudTile, uvTorn, gTorn, 3.5).b;
+  float slow = 0.6 * pic(uCloudTile, uvSlow, gSlow, 4.0).b + 0.4 * torn;
+  float lane = pic(uCloudTile, uvLane, gLane, 2.0).b;
   float banked = 0.45 + 0.55 * smoothstep(0.3, 0.52, lane);
   if (uLive > 0.0) banked = mix(banked, (0.05 + 1.1 * smoothstep(0.34, 0.6, lane)) * (0.1 + 1.3 * smoothstep(0.36, 0.62, torn)), 0.3 * smoothstep(0.0, 14.0, uWx));
   float share = amount * (0.34 + 0.66 * smoothstep(0.3, 0.66, slow + 0.2 * (amount - 0.6))) * banked * (0.45 + 0.55 * smoothstep(0.12, 0.45, limbCos(at)));
@@ -179,23 +210,23 @@ float lowDepth(vec2 at) {
   // (The field is gathered in flows: long lanes of cloud that bend as the wind bends, a thousand kilometres and more, with open
   // sea between them. The lanes are the streak photograph's own, read wide and soft so only where its streaks are gathered is
   // left, on ground that the wind has bent; the cloud inside a lane is the fine field as before.)
-  float flow = dot(texture2D(uMatStreaks, uvFlow, 2.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.31;
+  float flow = dot(pic(uMatStreaks, uvFlow, gFlow, 2.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.31;
   share *= 0.1 + 0.9 * smoothstep(0.6, 1.4, flow);
   if (share <= 0.02) return 0.0;
-  float streak = cloudIn(uMatStreaks, lowUvA, 0.31);
+  float streak = cloudAt(uMatStreaks, lowUvA, lowGA, 0.31);
   // (The streaks are gathered in flows a thousand kilometres long, with open sea between: the same photograph, three times as wide, on a wind of its own.)
   streak *= mix(1.0, flow, 0.6);
-  float cluster = cloudIn(uMatPopcorn, lowUvB, 0.34);
-  float puff = cloudIn(uMatSpecks, lowUvC, 0.2);
+  float cluster = cloudAt(uMatPopcorn, lowUvB, lowGB, 0.34);
+  float puff = cloudAt(uMatSpecks, lowUvC, lowGC, 0.2);
   // (The two finest lays are finer than a pixel from high up, where each has fallen to its mean: they are read only while the
   // camera is near enough to see them, and come in from that mean, so nothing is switched.)
   float lump = 1.0;
   float grain = 1.0;
   lowNear = vec2(1.0 - smoothstep(240.0, 360.0, uViewKm), 1.0 - smoothstep(85.0, 130.0, uViewKm));
-  if (lowNear.x > 0.0) lump = mix(1.0, cloudIn(uMatPopcorn, lowUvD, 0.34), lowNear.x);
-  if (lowNear.y > 0.0) grain = mix(1.0, cloudIn(uMatSpecks, lowUvE, 0.2), lowNear.y);
+  if (lowNear.x > 0.0) lump = mix(1.0, cloudAt(uMatPopcorn, lowUvD, lowGD, 0.34), lowNear.x);
+  if (lowNear.y > 0.0) grain = mix(1.0, cloudAt(uMatSpecks, lowUvE, lowGE, 0.2), lowNear.y);
   // (A field is not one kind of cloud: here it is all fine specks along the wind, there the clusters have grown.)
-  float grown = smoothstep(0.35, 0.65, texture2D(uCloudTile, uvGrown, 3.0).b);
+  float grown = smoothstep(0.35, 0.65, pic(uCloudTile, uvGrown, gGrown, 3.0).b);
   float byCluster = mix(0.35, 0.9, grown);
   float byPuff = mix(1.0, 0.7, grown);
   float knots = mix(1.0, cluster, byCluster) * mix(1.0, puff, byPuff);
@@ -222,13 +253,13 @@ vec2 lowField(vec2 at) {
   lowSlope = vec2(0.0);
   // (The fall of the tops is read only where there is cloud to light.)
   if (depth <= 0.0) return vec2(0.0);
-  vec3 a = texture2D(uMatStreaksNh, lowUvA).rgb;
-  vec3 b = texture2D(uMatPopcornNh, lowUvB).rgb;
-  vec3 c = texture2D(uMatSpecksNh, lowUvC).rgb;
+  vec3 a = pic(uMatStreaksNh, lowUvA, lowGA).rgb;
+  vec3 b = pic(uMatPopcornNh, lowUvB, lowGB).rgb;
+  vec3 c = pic(uMatSpecksNh, lowUvC, lowGC).rgb;
   vec3 d = vec3(0.5);
   vec3 e = vec3(0.5);
-  if (lowNear.x > 0.0) d = mix(d, texture2D(uMatPopcornNh, lowUvD).rgb, lowNear.x);
-  if (lowNear.y > 0.0) e = mix(e, texture2D(uMatSpecksNh, lowUvE).rgb, lowNear.y);
+  if (lowNear.x > 0.0) d = mix(d, pic(uMatPopcornNh, lowUvD, lowGD).rgb, lowNear.x);
+  if (lowNear.y > 0.0) e = mix(e, pic(uMatSpecksNh, lowUvE, lowGE).rgb, lowNear.y);
   lowSlope = 0.3 * ((a.rg * 2.0 - 1.0) * vec2(1.0, 1.5)) * LOW_A + 0.75 * lowWeigh.x * (b.rg * 2.0 - 1.0) * LOW_B + 0.75 * lowWeigh.y * (c.rg * 2.0 - 1.0) * LOW_C
     + 0.6 * (d.rg * 2.0 - 1.0) * LOW_D + 0.45 * (e.rg * 2.0 - 1.0) * LOW_E;
   float thick = 1.0 - exp(-1.3 * max(depth, 0.0));
@@ -240,6 +271,8 @@ vec2 lowField(vec2 at) {
 // thickened by a finer lay of wind streaks, and it fades to nothing through its own fibre.
 vec2 highUvSheet = vec2(0.0);
 vec2 highUvThread = vec2(0.0);
+vec4 highGSheet = vec4(0.0);
+vec4 highGThread = vec4(0.0);
 // The ice without the fall of its tops (what a shadow needs).
 float highDepth(vec2 at) {
   float far = smoothstep(240.0, 520.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
@@ -254,8 +287,12 @@ float highDepth(vec2 at) {
   // (Over the land the ice lies in long swaths across the ranges (sky/banks.png, blue), carried on its own wind with the rest.)
   vec2 highUvFibre = mat2(0.97, 0.26, -0.26, 0.97) * hv / vec2(2300.0, 380.0) + vec2(0.43, 0.11);
   vec2 uvSwath = clamp((hv - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0);
+  highGSheet = GRADS(highUvSheet);
+  highGThread = GRADS(highUvThread);
+  vec4 gFibre = GRADS(highUvFibre);
+  vec4 gSwath = GRADS(uvSwath);
   if (far <= 0.0) return 0.0;
-  float swath = texture2D(uBanks, uvSwath).b;
+  float swath = pic(uBanks, uvSwath, gSwath).b;
   // (Where the ice stands at all: two soft swells that cross, carried with it. They are waves and not a picture or a noise of
   // cells, so the pattern has no corner, no step and no flat for the last sun to redden: the fibre of the photographs is all the
   // outline the ice has.)
@@ -265,12 +302,12 @@ float highDepth(vec2 at) {
   float fine = 0.5 + 0.5 * sin(h.x / 205.0 + 1.5 * sin(h.y / 260.0)) * sin(h.y / 225.0 + 1.2 * sin(h.x / 310.0 + 0.8));
   float where = max(0.8 * smoothstep(0.56, 0.96, 0.6 * wide + 0.4 * fine), swath * (0.75 + 0.25 * fine)) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
   if (where <= 0.0) return 0.0;
-  float sheet = cloudIn(uMatVeil, highUvSheet, 0.27);
-  float thread = cloudIn(uMatStreaks, highUvThread, 0.31);
+  float sheet = cloudAt(uMatVeil, highUvSheet, highGSheet, 0.27);
+  float thread = cloudAt(uMatStreaks, highUvThread, highGThread, 0.31);
   // (In a swath over the land the ice is a little thicker, so its streaks and the shadow they throw are seen to cross the ranges.)
   float depth = sheet * mix(1.0, thread, 0.55) * where * 1.7 - 0.85;
   // (There the same fibre is read drawn out six to one along the wind, so it comes as long thin streaks and not as a sheet.)
-  float fibre = cloudIn(uMatStreaks, highUvFibre, 0.31);
+  float fibre = cloudAt(uMatStreaks, highUvFibre, gFibre, 0.31);
   float streaked = smoothstep(0.0, 0.3, swath) * clamp(0.9 * (fibre * (0.4 + 0.6 * thread) * (0.35 + 0.85 * swath) - 1.0), 0.0, 1.0);
   return max(1.0 - exp(-1.1 * max(depth, 0.0)), streaked) * far;
 }
@@ -279,7 +316,7 @@ float highField(vec2 at) {
   float thick = highDepth(at);
   highSlope = vec2(0.0);
   if (thick <= 0.0) return 0.0;
-  highSlope = 0.6 * (texture2D(uMatVeilNh, highUvSheet).rg * 2.0 - 1.0) * mat2(0.9, 0.44, -0.44, 0.9) + 0.8 * (texture2D(uMatStreaksNh, highUvThread).rg * 2.0 - 1.0) * mat2(0.84, 0.54, -0.54, 0.84);
+  highSlope = 0.6 * (pic(uMatVeilNh, highUvSheet, highGSheet).rg * 2.0 - 1.0) * mat2(0.9, 0.44, -0.44, 0.9) + 0.8 * (pic(uMatStreaksNh, highUvThread, highGThread).rg * 2.0 - 1.0) * mat2(0.84, 0.54, -0.54, 0.84);
   return thick;
 }
 
@@ -289,6 +326,8 @@ float highField(vec2 at) {
 // the photographs it is made of are carried by the wind, the place it shows in is not. Not every range holds a bank on one day.
 vec2 bankUvA = vec2(0.0);
 vec2 bankUvB = vec2(0.0);
+vec4 bankGA = vec4(0.0);
+vec4 bankGB = vec4(0.0);
 float bankNear = 0.0;
 const mat2 BANK_A = mat2(0.6, 0.8, -0.8, 0.6);
 const mat2 BANK_B = mat2(0.94, 0.34, -0.34, 0.94);
@@ -304,16 +343,20 @@ float bankDepth(vec2 bankAt) {
   bankUvB = BANK_B * w / 130.0 + vec2(0.29, 0.73);
   vec2 uvToday = bankAt / 2600.0 + vec2(0.21, 0.67);
   vec2 uvDrawn = LOW_A * w / vec2(560.0, 300.0) + vec2(0.71, 0.36);
+  bankGA = GRADS(bankUvA);
+  bankGB = GRADS(bankUvB);
+  vec4 gToday = GRADS(uvToday);
+  vec4 gDrawn = GRADS(uvDrawn);
   if (held * clear <= 0.004) return -0.6;
-  float body = cloudIn(uMatPopcorn, bankUvA, 0.34);
+  float body = cloudAt(uMatPopcorn, bankUvA, bankGA, 0.34);
   float fine = 1.0;
   bankNear = 1.0 - smoothstep(420.0, 600.0, uViewKm);
-  if (bankNear > 0.0) fine = mix(1.0, cloudIn(uMatSpecks, bankUvB, 0.2), bankNear);
+  if (bankNear > 0.0) fine = mix(1.0, cloudAt(uMatSpecks, bankUvB, bankGB, 0.2), bankNear);
   // (The middle deck, the strongest of the picture, stands on every day.)
-  float today = max(smoothstep(0.32, 0.6, texture2D(uCloudTile, uvToday, 3.0).b), smoothstep(0.4, 0.62, held));
+  float today = max(smoothstep(0.32, 0.6, pic(uCloudTile, uvToday, gToday, 3.0).b), smoothstep(0.4, 0.62, held));
   // (A bank is the wind's own cloud, caught: it is drawn out along the wind in streaks as the low field is, torn where the streak
   // photograph is clear and thin round its clusters, so no bank has the outline of the range that holds it.)
-  float drawn = cloudIn(uMatStreaks, uvDrawn, 0.31);
+  float drawn = cloudAt(uMatStreaks, uvDrawn, gDrawn, 0.31);
   // (And it is made as the field is: knots of cumulus with air between them, crowded where the range holds them and few at
   // the edge of its hold, and the thin veil of the streak among them. What the range holds is how many knots stand, never
   // how bright one soft mass is: a bank has no outline to be a lump by.)
@@ -328,6 +371,7 @@ float bankDepth(vec2 bankAt) {
   return (dense + thin) * smoothstep(0.02, 0.2, gather) - 0.001;
 }
 vec2 fogUv = vec2(0.0);
+vec4 fogG = vec4(0.0);
 float fogVeil = 1.0;
 float fogDepth(vec2 fogAt) {
   float held = texture2D(uBanks, clamp((fogAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).g;
@@ -338,11 +382,13 @@ float fogDepth(vec2 fogAt) {
   vec2 uvVeil = mat2(0.5, 0.87, -0.87, 0.5) * w / 520.0 + vec2(0.4, 0.9);
   vec2 uvToday = fogAt / 1900.0 + vec2(0.83, 0.37);
   fogUv = uvVeil;
+  fogG = GRADS(uvVeil);
+  vec4 gToday = GRADS(uvToday);
   if (held * clear <= 0.004) return 0.0;
   // (Fog lies level: its top has the soft fibre of a veil and no lumps, and it thins up the slopes through that fibre.)
-  float veil = cloudIn(uMatVeil, uvVeil, 0.27);
+  float veil = cloudAt(uMatVeil, uvVeil, fogG, 0.27);
   fogVeil = veil;
-  float today = 0.55 + 0.45 * smoothstep(0.34, 0.62, texture2D(uCloudTile, uvToday, 3.0).b);
+  float today = 0.55 + 0.45 * smoothstep(0.34, 0.62, pic(uCloudTile, uvToday, gToday, 3.0).b);
   // (How far a pool is filled, 0 to 1, with the fibre of its top: the sheet that draws it sets this against the height of the
   // ground, so the stratus lies in the valleys and its edge is the ground's own contour.)
   return held * today * clear * (0.8 + 0.3 * veil);
