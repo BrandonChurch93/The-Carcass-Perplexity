@@ -163,8 +163,9 @@ export function create(ctx: Context): Piece {
     const b = bearing * RAD;
     const seat = archTop(bearing, nth);
     if (!seat) continue;
-    // A block, not a plank: as deep as a man is tall, tipped where it stopped, a corner of it down in the grit.
-    blocks.push(block(20 + bearing * 0.37, [w * 0.62, 2.5, d * 0.8], [seat[0], seat[1] + 0.75, seat[2]], [lean * 0.6, -b + yaw, lean * 0.45], 80));
+    // A slab of the tier above, twice a man's height long and as thick as his chest is high, tipped where it stopped, a corner of it down in
+    // the grit. As deep as it was wide it was a brick set on the hoop.
+    blocks.push(block(20 + bearing * 0.37, [w * 0.74, 1.5 + 0.08 * w, d * 0.86], [seat[0], seat[1] + 0.45, seat[2]], [lean * 0.7, -b + yaw, lean * 0.5], 26));
     for (let k = 0; k < 4; k++) {
       const side = (k % 2 === 0 ? 1 : -1) * (w * 0.3 + 0.6 + 1.1 * rs.next() + k * 0.5);
       const at = archTop(bearing + (side / Math.hypot(seat[0], seat[2])) / RAD, nth);

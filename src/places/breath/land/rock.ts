@@ -474,6 +474,8 @@ void main() {
     rock *= mix(1.0, mix(0.82, 1.14, slabOwn), slabbed);
     rock = mix(rock, rock * vec3(0.3, 0.28, 0.27), slabCrack);
   }
+  // From a far lens the same pad is the same bleached stone: grey-cream, not the plate's tan.
+  rock = mix(rock, vec3(0.97, 1.0, 1.03) * (1.14 * dot(rock, vec3(0.3333))), 0.65 * dryPad * (1.0 - hand));
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
   // It takes the grain of wet rock laid square on its own face (not the plate's picture pulled down it), in level bands as the beds lie.
