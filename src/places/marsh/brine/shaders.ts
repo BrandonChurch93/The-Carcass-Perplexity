@@ -173,7 +173,9 @@ void main() {
     ripples += train(p.xz, normalize(wdir - wcross * 1.3), 0.117, bend.a * 6.0, e.rg) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.02, 0.01, px);
     ripples += train(p.xz, normalize(wdir + wcross * 2.4), 0.071, bend.r * 7.0 + 1.3, e.ba) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.012, 0.006, px);
   }
-  slope += ripples * ruffle * (0.6 + 0.8 * bend.g);
+  // (Near the lens every wavelet is seen for itself and turns its own piece of the sky: far off they are averaged into the sheen.)
+  float nearGain = 1.0 + 1.0 * smoothstep(14.0, 4.0, dist);
+  slope += ripples * ruffle * (0.6 + 0.8 * bend.g) * nearGain;
 
   // How much froth the domes and the bursts have left here.
   float boil = 0.0;
@@ -184,7 +186,7 @@ void main() {
       vec2 d = p.xz - seep.xy;
       float r = length(d);
       float beat = 0.6 + 0.4 * sin(uTime * 0.9 + seep.z * 17.0);
-      slope += d / max(r, 0.03) * cos(r * 15.0 - uTime * 10.5 + seep.z * 40.0 + (bend.r - 0.5) * 1.2) * seep.w * beat * smoothstep(0.05, 0.35, r) / (1.0 + 0.55 * r * r);
+      slope += d / max(r, 0.03) * cos(r * 15.0 - uTime * 10.5 + seep.z * 40.0 + (bend.r - 0.5) * 1.2) * seep.w * beat * nearGain * smoothstep(0.05, 0.35, r) / (1.0 + 0.55 * r * r);
     }
     for (int i = 0; i < ${MAX_RINGS}; i++) {
       if (i >= uRingCount) break;
@@ -205,7 +207,7 @@ void main() {
       float env = exp(-q * q / (wide * wide)) * ring.w * (0.45 + 1.1 * clamp(thrown, 0.0, 1.0));
       if (env < 0.003) continue;
       // The long waves lead and the short ones follow: the crests are closer behind the front than before it.
-      slope += d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3;
+      slope += d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3 * nearGain;
       boil = max(boil, env * smoothstep(1.5, 0.25, ring.z));
     }
   }

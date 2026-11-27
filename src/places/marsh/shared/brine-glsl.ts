@@ -48,7 +48,7 @@ float brineSilt = -1.0;
 float brineFresnel(vec3 n, vec3 v) {
   float nv = max(dot(n, v), 0.02);
   // (Seen from high above, the fine ruffle on it turns a share of the skin to the sky: a lens low over it sees the body and the glints.)
-  return 0.022 + 0.06 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.24 * pow(1.0 - nv, 24.0);
+  return 0.022 + 0.06 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.2 * pow(1.0 - nv, 8.0);
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
@@ -67,7 +67,7 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   seen = rigAir(seen, 3.0 + away * 0.8, 0.5);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
-  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.8, 0.75);
+  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.77, 0.71);
 }
 // s: metres to the shore, negative in the brine. n: the surface's normal (ripples and rings laid in by the caller). froth: the colour of the
 // scum on top and how much of it there is.
@@ -107,7 +107,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   vec3 taken = vec3(3.4, 19.0, 23.0) * (0.75 + 0.5 * silt) + vec3(14.0) * brineMud + vec3(30.0) * brineSlurry;
   vec3 through = exp(-taken * path);
   // What the liquid itself gives back where no bed shows: a dark rust red, paler and browner where silt hangs in it.
-  vec3 body = mix(vec3(0.052, 0.0072, 0.0055), vec3(0.095, 0.018, 0.0135), smoothstep(0.25, 0.8, silt));
+  vec3 body = mix(vec3(0.038, 0.0085, 0.0065), vec3(0.072, 0.021, 0.016), smoothstep(0.25, 0.8, silt));
   body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6);
   body = mix(body, vec3(0.045, 0.02, 0.014), brineMud * 0.85);
   body = mix(body, vec3(0.118, 0.086, 0.072) * (0.8 + 0.4 * silt), brineSlurry * 0.92);
