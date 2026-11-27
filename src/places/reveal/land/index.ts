@@ -900,7 +900,7 @@ void main() {
   if (siltAt > 0.05 && land < 1.0) {
     vec2 sc = xz / 520.0 + 0.5 * (readTile(uCloudTile, xz / 900.0 + vec2(0.2, 0.7) + uTime * vec2(0.0006, -0.0004), 1.0 / 900.0, 1.0).rg - 0.5);
     float thread = readTile(uCloudTile, sc * vec2(0.8, 1.7) + vec2(0.4, 0.1), 1.7 / 520.0, 0.5).b;
-    // (The currents wind it into filaments: thin threads of unlike strength that curl, part and thin out to sea, some reaches clear.)
+    // (The currents wind it into plumes: soft threads of unlike width and strength that curl, part and thin out to sea, some reaches clear.)
     vec2 calm = xz / 300.0 + uTime * vec2(0.0008, -0.0005);
     vec2 wound = calm * vec2(1.0, 1.7);
     wound += 0.9 * vec2(vnoise(wound * 1.3 + 3.0), vnoise(wound * 1.3 + 41.0));
@@ -908,8 +908,12 @@ void main() {
     float wide = 1.0 - abs(2.0 * vnoise(wound * 2.1) - 1.0);
     float fine = 1.0 - abs(2.0 * vnoise(wound * 4.7 + 13.0) - 1.0);
     float reach = smoothstep(0.2, 0.62, vnoise(calm * 0.9 + 8.0));
-    float swirl = smoothstep(0.8, 0.97, wide) * reach + 0.6 * smoothstep(0.84, 0.98, fine) * (1.0 - 0.6 * reach) * smoothstep(0.3, 0.6, thread);
-    swirl += 0.22 * smoothstep(0.5, 0.9, wide) * reach;
+    // (Each has a dense core and a skirt of thinner water, and its strength comes and goes along its length: silt, not a line.)
+    float along = 0.25 + 0.75 * smoothstep(0.3, 0.7, vnoise(wound * 1.1 + 23.0));
+    float core = smoothstep(0.6, 0.97, wide);
+    float swirl = (0.45 * core + 0.85 * core * core) * reach * along;
+    core = smoothstep(0.6, 0.98, fine);
+    swirl += 0.38 * core * core * (1.0 - 0.6 * reach) * smoothstep(0.3, 0.6, thread);
     bed = mix(bed, vec3(0.24, 0.15, 0.028), min(0.7, 0.75 * min(1.0, 1.6 * siltAt) * swirl) * exp(min(coastKm, 0.0) / 420.0) * (1.0 - land));
   }
   // The lake of the Eye: black in the middle, and round it a margin of amber shallows, uneven, with tongues of it curling in.
