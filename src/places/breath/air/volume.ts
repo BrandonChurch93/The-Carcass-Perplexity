@@ -162,10 +162,10 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec4 n, out float under,
   float wells = min(exp(-dot(da, da) / (40.0 + 4.0 * wide)) + (0.1 + 0.85 * surge) * exp(-dot(db, db) / (36.0 + 4.0 * wide)), 1.0);
   // The pool has a surface: it is whole a stride under its top. The top is heaped, and the hollows between the heaps are in shade.
   float level = uBreath.x + 6.5 - 11.0 * (1.0 - west) + 1.5 * wells + 6.5 * surge * (0.15 + 0.85 * west);
-  float top = level + 8.0 * (n.x - 0.6) + 2.5 * (n.w - 0.6);
+  float top = level + 7.0 * (n.x - 0.6) + 5.0 * (n.w - 0.6);
   under = top - p.y;
   float pool = (0.11 + 0.03 * surge) * layerMean(top, 1.0 + 2.5 * surge, p.y, hy) * mix(0.4, 1.0, west);
-  core = (0.25 + 0.5 * smoothstep(0.72, 0.42, n.x)) * smoothstep(-1.0, 1.0, under);
+  core = (0.2 + 0.6 * smoothstep(0.7, 0.4, 0.55 * n.x + 0.45 * n.w)) * smoothstep(-1.0, 1.0, under);
   // The columns climb from the pool's top over the wells: billows with an edge and clear air between them, fewer the higher they have climbed.
   float h = -under;
   float reach = 12.0 + 8.0 * wells + 4.0 * settled + 10.0 * surge;
@@ -367,7 +367,7 @@ void main() {
         // The grain of its skin: small billows lit and creased on a whole fog, threads with air between them where it is a thin veil.
         float grain = wispDetail(ro + rd * (depthSum / weightSum));
         float cut = clamp(veiled * mix(0.3 + 1.4 * smoothstep(0.25, 0.8, grain), 1.0, smoothstep(0.3, 0.75, veiled)), 0.0, 1.0);
-        lit *= (cut / veiled) * (0.72 + 0.56 * grain);
+        lit *= (cut / veiled) * (0.55 + 0.9 * grain);
         thru = 1.0 - cut;
       }
       colour = lit;
@@ -379,7 +379,7 @@ void main() {
   // near stands dark before it. No bars are drawn in it: the wisps themselves are what the light is seen in.
   float glare = smoothstep(0.3, 0.85, toSun) * smoothstep(-0.5, -0.2, rd.y);
   if (glare > 0.01 && uShow.z > 0.5) {
-    colour += through * mix(uSunColour, vec3(2.4), 0.3) * ((0.012 + 0.03 * uBreath.w * uShow.w) * glare * min(far, 90.0) / 90.0);
+    colour += through * mix(uSunColour, vec3(2.4), 0.3) * ((0.012 + 0.03 * uBreath.w * uShow.w) * 1.6 * glare * (1.0 - exp(-far / 220.0)));
   }
 
   // The mist on the ground: banks a knee to a head deep that lie on the water and the wet shelf and drift with the wind, torn at their
