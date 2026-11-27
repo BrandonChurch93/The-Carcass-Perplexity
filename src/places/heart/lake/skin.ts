@@ -84,7 +84,7 @@ void main() {
   float blurred = 0.0;
   if (uHill.z > 0.0) {
     vec2 dh = q - uHill.xy;
-    blurred = uHill.z * (1.0 - smoothstep(6.4, 7.6, length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582)) / 1.65))));
+    blurred = uHill.z * (1.0 - smoothstep(6.4, 7.6, length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582))))));
     fpLong = max(fpLong, 0.45 * blurred);
     fpShort = max(fpShort, 0.2 * blurred);
   }

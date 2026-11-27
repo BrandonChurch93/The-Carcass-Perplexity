@@ -752,16 +752,18 @@ float heightAt(vec2 q, float c) {
   // its top level with the bottom of that frame, out of focus.
   if (uHill.z > 0.0) {
     vec2 dh = q - uHill.xy;
-    // It lies across the view as a pressure ridge does, and is no dome: a little lower than it was, and it runs on to the right.
-    float hr = length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582)) / 1.65));
+    float hillA = dot(dh, vec2(0.582, -0.813));
+    float hillB = dot(dh, vec2(0.813, 0.582));
+    float hr = length(vec2(hillA / 1.6, hillB));
     if (hr < 7.6) {
       float over = max(hr - 2.0, 0.0);
-      float top = 2.9 - 0.096 * over * over;
-      // Its top line is broken: slabs two to three metres long tilted up against each other, and knobs 0.8 to 1.4 m across on
-      // them. Through the blur it reads as a ridge of crust.
-      float slabUp = abs(fract(dot(dh, vec2(0.813, 0.582)) / 2.6 + 0.35 * vnoise(q / 3.1 + 4.0)) - 0.5);
-      float knob = (0.2 * smoothstep(0.35, 0.75, vnoise(q / 0.9 + 9.0)) + 0.34 * slabUp - 0.1) * smoothstep(0.3, 1.2, top);
-      h = mix(h, top + knob + 0.05 * (vnoise(q / 0.8 + 9.0) - 0.5) * smoothstep(2.0, 4.0, hr), smoothstep(0.0, 0.8, top) * uHill.z);
+      // It is no dome with a level top: one crest runs across the view, half a metre above the rest, and the crest is broken into
+      // blocks 0.3 to 0.9 m across that stand a hand to a forearm proud. Through the blur its outline reads as heaped crust.
+      float crest = exp(-hillA * hillA / 1.7);
+      float top = 2.4 - 0.096 * over * over + 0.5 * crest;
+      float knob = crest * (0.36 * (vnoise(vec2(hillB / 0.7, 3.0)) - 0.5) + 0.2 * (vnoise(vec2(hillB / 0.28, 7.0)) - 0.5)) + 0.12 * (vnoise(q / 0.9 + 9.0) - 0.5);
+      knob *= smoothstep(0.3, 1.2, top);
+      h = mix(h, top + knob, smoothstep(0.0, 0.8, top) * uHill.z);
       gSheetHigh *= 1.0 - smoothstep(0.0, 0.8, top) * uHill.z;
     }
   }
