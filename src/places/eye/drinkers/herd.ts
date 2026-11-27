@@ -191,7 +191,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   // and the trunk is carried over the three that bear. What takes its attention puts the leg back under it.
   // It does not rest one leg for ever: every few seconds, each at its own time, it sets that hoof down flat, stands square a moment, and lets
   // the other hind leg go.
-  const change = (t - d.key) / (5.5 + 3.5 * hash(o * 53)) + hash(o * 59);
+  const change = (t - d.key) / (5.5 + 3.5 * hash(o * 53)) + hash(o * 29);
   const swapped = Math.floor(change);
   const into = change - swapped;
   const restLeg = Math.abs(swapped + (hash(o * 47) < 0.5 ? 0 : 1)) % 2;

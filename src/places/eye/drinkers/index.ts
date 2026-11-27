@@ -165,7 +165,7 @@ void main() {
   float root = 1.0 - smoothstep(0.2, 1.3, along);
   float joint = exp(-pow((vRest.y - 0.78) / 0.17, 2.0)) + exp(-pow((vRest.y - 0.14) / 0.09, 2.0)) + 0.6 * exp(-pow((vRest.y - 1.36) / 0.14, 2.0));
   float legRings = crease(vRest.y * 46.0 + 3.0 * w1 + 1.2 * w2, 46.0 * px);
-  float ribs = flank * smoothstep(-0.12, 0.05, vRest.z) * smoothstep(0.6, 0.42, vRest.z) * smoothstep(1.42, 1.6, vRest.y) * smoothstep(2.2, 2.0, vRest.y);
+  float ribs = flank * smoothstep(-0.12, 0.05, vRest.z) * smoothstep(0.6, 0.42, vRest.z) * smoothstep(1.42, 1.62, vRest.y) * smoothstep(2.16, 1.86, vRest.y);
   // The hide hangs loose where the body bends: at the root of the neck, behind the shoulder, in front of the stifle, under the belly. Over the
   // ribs, the hip and the rump it is drawn tight.
   vec3 fromShoulder = (vRest - vec3(0.0, 1.62, 0.62)) / vec3(1.0, 0.42, 0.3);
@@ -182,12 +182,12 @@ void main() {
   // last rib and the hip.
   vec2 side = vRest.yz;
   vec2 onBlade = side - vec2(1.86, 0.66);
-  float blade = exp(-pow(dot(onBlade, vec2(0.966, -0.259)) / 0.035, 2.0) - pow(dot(onBlade, vec2(0.259, 0.966)) / 0.24, 2.0));
-  float bone = trunk * smoothstep(0.25, 0.6, abs(rn.x)) * (exp(-dot(side - vec2(2.02, -0.46), side - vec2(2.02, -0.46)) / 0.0064)
+  float blade = exp(-pow(dot(onBlade, vec2(0.259, 0.966)) / 0.04, 2.0) - pow(dot(onBlade, vec2(0.966, -0.259)) / 0.24, 2.0));
+  float bone = trunk * smoothstep(0.25, 0.6, abs(rn.x)) * (exp(-dot(side - vec2(2.02, -0.46), side - vec2(2.02, -0.46)) / 0.011)
     + 0.7 * exp(-dot(side - vec2(1.56, 0.8), side - vec2(1.56, 0.8)) / 0.0081) + 0.6 * blade);
   float hollow = trunk * smoothstep(0.25, 0.6, abs(rn.x)) * exp(-dot((side - vec2(1.88, -0.2)) / vec2(0.17, 0.13), (side - vec2(1.88, -0.2)) / vec2(0.17, 0.13)));
   float ribbed = ribs * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
-  relief += (1.0 - smoothstep(0.022, 0.05, px)) * (0.02 * bone - 0.022 * hollow + 0.0045 * ribbed);
+  relief += (1.0 - smoothstep(0.022, 0.05, px)) * (0.02 * bone - 0.022 * hollow + 0.0034 * ribbed);
   float groove = max(0.5 * neck * root * (1.0 - rings), 0.5 * leg * joint * (1.0 - legRings));
   // Every slope across the screen is taken here, above the first branch.
   vec2 slope = vec2(dFdx(relief), dFdy(relief));
@@ -235,7 +235,7 @@ void main() {
   float dirt = clamp(0.85 * top * smoothstep(0.2, 0.6, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear + 0.4 * run + 0.8 * saddle, 0.0, 1.0);
   skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt);
   // The hide is rubbed pale on the bones and lies in its own shade between the ribs and in the hollow of the flank.
-  skin *= 1.0 + (1.0 - smoothstep(0.022, 0.05, px)) * (0.2 * bone - 0.3 * hollow - 0.2 * ribs * (0.5 - 0.5 * ribbed / (0.5 + w1)));
+  skin *= 1.0 + (1.0 - smoothstep(0.022, 0.05, px)) * (0.2 * bone - 0.3 * hollow - 0.11 * (0.4 + 1.2 * w2) * (ribs * (0.5 + w1) - ribbed));
   // Each a tone of its own.
   skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3));
   // The belly and the inside of the legs are paler; the joints of the legs are rubbed dark.
