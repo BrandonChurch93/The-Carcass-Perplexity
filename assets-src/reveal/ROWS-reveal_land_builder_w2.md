@@ -1,0 +1,10 @@
+# Asset rows, reveal_land_builder_w2
+
+| file | what | tool or model | prompt | take | date |
+| --- | --- | --- | --- | --- | --- |
+| assets-src/reveal/land/chest/chest.jpg | the chest of map a (master px 1950, 1022 to 3486, 2046) drawn again as basin and range country, 1536 x 1024 | image model behind generate_image (Perplexity, default model, name not returned); pictures passed: that crop of map-a.jpg, references/drafts/working/real/orb-modis-arabia.jpg | in assets-src/reveal/land/RECIPE.md, section chest (two orders of mountains, six great ranges a side of unlike length, spacing and bend, two broken, lower snowless country between) | 3 of 4 made (6 allowed) | 2026-11-26 |
+| assets-src/reveal/land/chest/chest-h.png | height of chest.jpg, 8 bit grey | same model; picture passed: chest.jpg | prompt h of assets-src/reveal/maps/prompt-levels.json | 1 | 2026-11-26 |
+| assets-src/reveal/land/lakes/lakes.jpg | the massif above the lake of the Eye (map c px 1300, 330 to 2836, 1354) with a lake district of four lakes, 1536 x 1024 | same model; pictures passed: that crop of map-c.jpg, references/approved/7-reveal/reveal-2-skull-massif.jpg | in assets-src/reveal/land/RECIPE.md, section lakes | 1 of 2 made (6 allowed) | 2026-11-26 |
+| assets-src/reveal/land/lakes/lakes-h.png | height of lakes.jpg, 8 bit grey, black on the lakes | same model; picture passed: lakes.jpg | prompt h of assets-src/reveal/maps/prompt-levels.json | 1 | 2026-11-26 |
+| public/assets/reveal/maps/map-a.jpg, map-b.jpg, map-c.jpg, map-a-h.png, map-b-h.png, map-c-h.png | the Builder's maps with the two pictures above laid in | assets-src/reveal/land/make_country.py (numpy, scipy, OpenCV, Pillow) from the maps at commit 6e539cf | none, computed | 1 | 2026-11-26 |
+| public/assets/reveal/land/relief-a.png, relief-b.png, relief-c.png, shore-a.png, shore-b.png, shore-c.png, light-a.jpg, light-b.jpg, light-c.jpg | relief, shore and light made again from the changed maps | assets-src/reveal/land/make_relief.py, make_bake.py | none, computed | 1 | 2026-11-26 |
