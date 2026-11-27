@@ -169,7 +169,7 @@ void main() {
   // Ash settles on what looks up, thickest in the hollows and thin on the knobs, in patches. None on a rock just out of the lake.
   float dust = smoothstep(0.25, 0.8, n0.y + 0.3 * (0.5 - vCave)) * smoothstep(0.25, 0.65, patch3 + 0.5 * (0.5 - vCave)) * (1.0 - 0.75 * rind) * smoothstep(0.4, 0.6, vSeed.w);
   // Under the line view's lens the picture's stones are near black with a little ash on their crowns only.
-  dust *= mix(1.0, 0.45, smoothstep(26.0, 12.0, distance(vWorld.xz, vec2(-510.5, 215.5))) * (1.0 - afloat));
+  dust *= mix(1.0, 0.8, smoothstep(26.0, 12.0, distance(vWorld.xz, vec2(-510.5, 215.5))) * (1.0 - afloat));
   // The ash lies in specks a centimetre or two across, paler than the rock: a speckled top over a black side.
   float speck = smoothstep(0.42, 0.62, vnoise3(vObject * 31.0 + 2.7));
   albedo = mix(albedo, vec3(0.15, 0.141, 0.13) * (0.5 + 0.9 * height) * (0.72 + 0.5 * speck), (0.7 - 0.25 * afloat) * dust);
