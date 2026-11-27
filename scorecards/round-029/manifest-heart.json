@@ -1,0 +1,310 @@
+{
+  "round": "29",
+  "unit": "heart",
+  "critics": [
+    {
+      "critic": "R1",
+      "family": null,
+      "rendered": [
+        "final tier in uhd"
+      ],
+      "key": "out/work/packs-keys/round-29/heart/R1.json",
+      "packs": [
+        {
+          "id": "R1-1",
+          "folder": "out/work/packs/round-29/heart/R1-1",
+          "pairs": 3,
+          "files": [
+            "set-A-01-a.png",
+            "set-A-01-b.png",
+            "set-A-02.png",
+            "set-A-03-a.png",
+            "set-A-03-b.png",
+            "set-A-04.png",
+            "set-A-05-a.png",
+            "set-A-05-b.png",
+            "set-A-06.png",
+            "settled.txt"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R1-1/set-A-01-a.png",
+            "out/work/packs/round-29/heart/R1-1/set-A-01-b.png",
+            "out/work/packs/round-29/heart/R1-1/set-A-02.png",
+            "out/work/packs/round-29/heart/R1-1/set-A-03-a.png",
+            "out/work/packs/round-29/heart/R1-1/set-A-03-b.png",
+            "out/work/packs/round-29/heart/R1-1/set-A-04.png",
+            "out/work/packs/round-29/heart/R1-1/set-A-05-a.png",
+            "out/work/packs/round-29/heart/R1-1/set-A-05-b.png",
+            "out/work/packs/round-29/heart/R1-1/set-A-06.png",
+            "out/work/packs/round-29/heart/R1-1/settled.txt"
+          ]
+        },
+        {
+          "id": "R1-2",
+          "folder": "out/work/packs/round-29/heart/R1-2",
+          "pairs": 2,
+          "files": [
+            "set-B-01-a.png",
+            "set-B-01-b.png",
+            "set-B-02.png",
+            "set-B-03-a.png",
+            "set-B-03-b.png",
+            "set-B-04.png",
+            "settled.txt"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R1-2/set-B-01-a.png",
+            "out/work/packs/round-29/heart/R1-2/set-B-01-b.png",
+            "out/work/packs/round-29/heart/R1-2/set-B-02.png",
+            "out/work/packs/round-29/heart/R1-2/set-B-03-a.png",
+            "out/work/packs/round-29/heart/R1-2/set-B-03-b.png",
+            "out/work/packs/round-29/heart/R1-2/set-B-04.png",
+            "out/work/packs/round-29/heart/R1-2/settled.txt"
+          ]
+        }
+      ],
+      "notes": [],
+      "leftOut": []
+    },
+    {
+      "critic": "R2",
+      "family": null,
+      "rendered": [
+        "final tier in uhd"
+      ],
+      "key": "out/work/packs-keys/round-29/heart/R2.json",
+      "packs": [
+        {
+          "id": "R2-1",
+          "folder": "out/work/packs/round-29/heart/R2-1",
+          "pairs": 0,
+          "files": [
+            "set-A-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-1/set-A-01.png"
+          ]
+        },
+        {
+          "id": "R2-2",
+          "folder": "out/work/packs/round-29/heart/R2-2",
+          "pairs": 0,
+          "files": [
+            "set-B-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-2/set-B-01.png"
+          ]
+        },
+        {
+          "id": "R2-3",
+          "folder": "out/work/packs/round-29/heart/R2-3",
+          "pairs": 0,
+          "files": [
+            "set-C-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-3/set-C-01.png"
+          ]
+        },
+        {
+          "id": "R2-4",
+          "folder": "out/work/packs/round-29/heart/R2-4",
+          "pairs": 0,
+          "files": [
+            "set-D-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-4/set-D-01.png"
+          ]
+        },
+        {
+          "id": "R2-5",
+          "folder": "out/work/packs/round-29/heart/R2-5",
+          "pairs": 0,
+          "files": [
+            "set-E-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-5/set-E-01.png"
+          ]
+        },
+        {
+          "id": "R2-6",
+          "folder": "out/work/packs/round-29/heart/R2-6",
+          "pairs": 0,
+          "files": [
+            "set-F-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-6/set-F-01.png"
+          ]
+        },
+        {
+          "id": "R2-7",
+          "folder": "out/work/packs/round-29/heart/R2-7",
+          "pairs": 0,
+          "files": [
+            "set-G-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-7/set-G-01.png"
+          ]
+        },
+        {
+          "id": "R2-8",
+          "folder": "out/work/packs/round-29/heart/R2-8",
+          "pairs": 0,
+          "files": [
+            "set-H-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-8/set-H-01.png"
+          ]
+        },
+        {
+          "id": "R2-9",
+          "folder": "out/work/packs/round-29/heart/R2-9",
+          "pairs": 0,
+          "files": [
+            "set-I-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-9/set-I-01.png"
+          ]
+        },
+        {
+          "id": "R2-10",
+          "folder": "out/work/packs/round-29/heart/R2-10",
+          "pairs": 0,
+          "files": [
+            "set-J-01.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R2-10/set-J-01.png"
+          ]
+        }
+      ],
+      "notes": [],
+      "leftOut": [
+        "Each pack is one picture for one call. Each goes to 5 jurors. The votes on a control are collected once and reused."
+      ]
+    },
+    {
+      "critic": "R3",
+      "family": null,
+      "rendered": [
+        "final tier in uhd"
+      ],
+      "key": "out/work/packs-keys/round-29/heart/R3.json",
+      "packs": [
+        {
+          "id": "R3-1",
+          "folder": "out/work/packs/round-29/heart/R3-1",
+          "pairs": 0,
+          "files": [
+            "set-A-01.png",
+            "set-A-02.png",
+            "set-A-03.png",
+            "set-A-04.png",
+            "set-A-05.png",
+            "set-A-06.png",
+            "set-A-07.png",
+            "set-A-08.png",
+            "set-A-09.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R3-1/set-A-01.png",
+            "out/work/packs/round-29/heart/R3-1/set-A-02.png",
+            "out/work/packs/round-29/heart/R3-1/set-A-03.png",
+            "out/work/packs/round-29/heart/R3-1/set-A-04.png",
+            "out/work/packs/round-29/heart/R3-1/set-A-05.png",
+            "out/work/packs/round-29/heart/R3-1/set-A-06.png",
+            "out/work/packs/round-29/heart/R3-1/set-A-07.png",
+            "out/work/packs/round-29/heart/R3-1/set-A-08.png",
+            "out/work/packs/round-29/heart/R3-1/set-A-09.png"
+          ]
+        },
+        {
+          "id": "R3-2",
+          "folder": "out/work/packs/round-29/heart/R3-2",
+          "pairs": 0,
+          "files": [
+            "set-B-01.png",
+            "set-B-02.png",
+            "set-B-03.png",
+            "set-B-04.png",
+            "set-B-05.png",
+            "set-B-06.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R3-2/set-B-01.png",
+            "out/work/packs/round-29/heart/R3-2/set-B-02.png",
+            "out/work/packs/round-29/heart/R3-2/set-B-03.png",
+            "out/work/packs/round-29/heart/R3-2/set-B-04.png",
+            "out/work/packs/round-29/heart/R3-2/set-B-05.png",
+            "out/work/packs/round-29/heart/R3-2/set-B-06.png"
+          ]
+        }
+      ],
+      "notes": [],
+      "leftOut": []
+    },
+    {
+      "critic": "R4",
+      "family": null,
+      "rendered": [
+        "review tier in preview"
+      ],
+      "key": "out/work/packs-keys/round-29/heart/R4.json",
+      "packs": [
+        {
+          "id": "R4-1",
+          "folder": "out/work/packs/round-29/heart/R4-1",
+          "pairs": 0,
+          "files": [
+            "set-A-01.png",
+            "set-A-02.png",
+            "set-A-03.png",
+            "set-A-04.png",
+            "set-A-05.png",
+            "set-A-06.png",
+            "set-A-07.png",
+            "set-A-08.png",
+            "set-A-09.png",
+            "set-A-10.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R4-1/set-A-01.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-02.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-03.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-04.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-05.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-06.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-07.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-08.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-09.png",
+            "out/work/packs/round-29/heart/R4-1/set-A-10.png"
+          ]
+        },
+        {
+          "id": "R4-2",
+          "folder": "out/work/packs/round-29/heart/R4-2",
+          "pairs": 0,
+          "files": [
+            "set-B-01.png",
+            "set-B-02.png"
+          ],
+          "attach": [
+            "out/work/packs/round-29/heart/R4-2/set-B-01.png",
+            "out/work/packs/round-29/heart/R4-2/set-B-02.png"
+          ]
+        }
+      ],
+      "notes": [],
+      "leftOut": [
+        "The sheets of each moving thing are consecutive frames from each key frame and across each event: the interface does not say where each fluid, weather or animal of kit/02-SUBJECT.md is in frame."
+      ]
+    }
+  ]
+}

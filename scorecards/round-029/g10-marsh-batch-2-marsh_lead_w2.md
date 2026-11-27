@@ -16,4 +16,4 @@ MEASURED 2026-11-27 01:23 to 01:24 UTC, browser 147.0.7727.15: `718a24a`, `eab41
 - The six pictures differ by one level at four pixels only (x, y from the top left): (787,195) and (788,195) in 8 of the 13 differing pairs, (870,159) and (153,182) in 5 each.
 - The tree was put back and built again after the test (no file under `src/` changed). 6 renders.
 
-Sent to the lead with the note `out/work/tmp/r29/note-marsh-tester.txt` at 01:27 UTC.
+Sent to the lead with the note `out/work/tmp/r29/note-marsh-tester.txt` at 01:26 UTC.
