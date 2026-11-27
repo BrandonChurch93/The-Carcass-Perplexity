@@ -115,9 +115,9 @@ export function create(ctx: Context): Piece {
   // A seedling whose anchor is under the water is not grown: nothing of this kind roots in the channel.
   for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall: tall * 0.7, lean: Math.atan2(-x, z), detail: 0.5, habit: 'fountain', full: 0.45 });
 
-  // The two tall ones are grown as blades from a stream of their own. The stream of the rest is first run on as far as the two took of
-  // it when they were hair, so that every other bush on the lip is grown as it was.
-  const nearRng = ctx.rng('gill-plume-near');
+  // The two tall ones are grown as blades from a second run of the stream. The stream of the rest is first run on as far as the two took
+  // of it when they were hair, so that every other bush on the lip is grown as it was.
+  const nearRng = ctx.rng('gill-plumes');
   const grown: Grown[] = bushes.map((bush, i) => {
     if (i >= 2) return grow(bush, rng, floor);
     const was = grow(bush, rng, floor, true);
