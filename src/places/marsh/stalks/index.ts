@@ -4,7 +4,7 @@ import { EYE, F as AHEAD, R as ASIDE, K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU
 import type { Context, Piece } from '../shared/context';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
-import { Fronds, SLIM, crownOf, dropMesh, frondMesh, matOf, plumeDrawn, plumeOf, stemMesh, tuftOf, type GrowthUniforms } from './grown';
+import { Fronds, crownOf, dropMesh, frondMesh, matOf, plumeDrawn, plumeOf, stemMesh, trunkOf, tuftOf, type GrowthUniforms } from './grown';
 import { COLLAR_FRAGMENT, COLLAR_VERTEX } from './palms';
 import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX } from './shaders';
 import { growStands, lineAt, type Wild } from './stands';
@@ -105,7 +105,8 @@ export function create(ctx: Context): Piece {
   // STAGED for the lens of the wallowers: three groups stand in the haze behind the great one, on the banks of the vein, fading out as the approved picture has them.
   {
     const back = ctx.rng('stalks-back');
-    for (const g of [[50, 5.2], [57.5, 0.6], [66, 8.5]] as [number, number][]) {
+    // They stand to the sides of it, none over its back.
+    for (const g of [[50, 11.5], [57.5, -11], [66, 18]] as [number, number][]) {
       const p = rel(g[0], g[1]);
       const h = back.range(2.4, 3.3);
       for (let n = 0; n < 5; n++) {
@@ -405,7 +406,8 @@ export function create(ctx: Context): Piece {
             age: kind === 2 ? 2 : thick.range(0, 0.6), stain: thick.range(0.12, 1.1), uvo: thick.range(0, 2), fork: [0, 0, 0], collar: thick.range(0.5, 1.2), cards: [], foot: true,
           };
           if (kind !== 2) c.cards = [[thick.range(0, TAU), 0.3, (0.8 + 0.35 * thick.next()) * headFor(h) * (kind === 1 ? 0.5 : 1), 0.2, 0, thick.next() < 0.3 ? thick.range(0.2, 0.6) : 0, thick.next() < 0.15 ? 0.5 : 0, 0]];
-          wilds.push(c);
+          // Trunks, each with room for its head: half of the kin that were cast are grown.
+          if (c.seed < 0.6) wilds.push(c);
         }
       }
     }
@@ -435,9 +437,9 @@ export function create(ctx: Context): Piece {
           const head = 1.25 * (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
           const turn = band.range(0, TAU);
           // Spaced groups of a few, not a thicket: fewer than half of those cast are grown.
-          if (seed > 0.36 || ctx.rig.land.height(x, z) < -0.1) continue;
+          if (seed > 0.27 || ctx.rig.land.height(x, z) < -0.1) continue;
           wilds.push({
-            ...like, x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: 0.6 * band.range(0.03, 0.45), R: band.range(0.02, 0.042) * Math.pow(h / 2.2, 0.4),
+            ...like, x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: 0.4 * band.range(0.03, 0.45), R: band.range(0.02, 0.042) * Math.pow(h / 2.2, 0.4),
             kind, phase: band.range(0, TAU), seed, bowA: band.range(0, TAU), bowM: band.range(0.04, 0.28),
             kinkT: kinks ? band.range(0.25, 0.8) : 2, kinkM: kinks ? 0.6 * band.range(0.12, 0.45) : 0, kinkA: band.range(0, TAU), swayA: band.range(0, TAU),
             age: kind === 2 ? 2 : band.range(0, 0.7), stain: band.range(0.12, 1.1), uvo: band.range(0, 2), fork: [0, 0, 0], collar: band.range(0.5, 1.2),
@@ -477,9 +479,9 @@ export function create(ctx: Context): Piece {
           const seed = band.next();
           const head = (1.25 - 0.5 * back) * (0.8 + 0.35 * band.next()) * headFor(h) * (kind === 1 ? 0.5 : 1);
           const turn = band.range(0, TAU);
-          if (ctx.rig.land.height(x, z) < -0.1) continue;
+          if (seed > 0.68 || ctx.rig.land.height(x, z) < -0.1) continue;
           wilds.push({
-            ...like, x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: band.range(0.03, 0.45), R: band.range(0.02, 0.042) * Math.pow(h / 2.2, 0.4),
+            ...like, x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: 0.45 * band.range(0.03, 0.45), R: band.range(0.02, 0.042) * Math.pow(h / 2.2, 0.4),
             kind, phase: band.range(0, TAU), seed, bowA: band.range(0, TAU), bowM: band.range(0.04, 0.28),
             kinkT: kinks ? band.range(0.25, 0.8) : 2, kinkM: kinks ? band.range(0.12, 0.45) : 0, kinkA: band.range(0, TAU), swayA: band.range(0, TAU),
             age: kind === 2 ? 2 : band.range(0, 0.7), stain: band.range(0.12, 1.1), uvo: band.range(0, 2), fork: [0, 0, 0], collar: band.range(0.5, 1.2),
@@ -488,9 +490,16 @@ export function create(ctx: Context): Piece {
         }
       }
     }
+    // Nothing stands over the great wallower's back in its picture but the three groups staged for it in the haze.
+    for (let i = wilds.length - 1; i >= 0; i--) {
+      const w = wilds[i] as Wild;
+      const ahead = (w.x - k3[0]) * AHEAD[0] + (w.z - k3[1]) * AHEAD[1];
+      const aside = ((w.x - k3[0]) * ASIDE[0] + (w.z - k3[1]) * ASIDE[1]) / Math.max(ahead, 1);
+      if (!w.bare && ahead > 7.5 && ahead < 70 && aside > -0.42 && aside < 0.28 && (w.h + 0.6) / ahead > 0.1) wilds.splice(i, 1);
+    }
     // The red of the brine climbs a foot, not a stalk: on a short one it stops low, and the stalk above it is pale.
     for (const w of wilds) {
-      w.R *= SLIM;
+      w.R = trunkOf(w);
       w.stain = Math.min(w.stain, 0.16 * w.h);
     }
     const feet = wilds.filter((w) => w.foot || w.quiver === 0);
@@ -566,7 +575,7 @@ export function create(ctx: Context): Piece {
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
         const farW = wilds.filter((w) => from(w) >= 22);
         const meshes = [
-          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 3, { small: true }),
+          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 4, { small: true }),
           stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 6, 5, 0, true),
         ];
         crowns[which] = meshes;
@@ -575,7 +584,7 @@ export function create(ctx: Context): Piece {
     }
     // The stands of the wide shot: more stems and their heads, the leaf that hangs down the stems, and the growth at their feet.
     const stands = growStands(ctx, wilds, uSeconds);
-    for (const w of stands.stems) w.R *= SLIM;
+    for (const w of stands.stems) w.R = trunkOf(w);
     {
       // The wide lens walks 16 m forward and turns 23 degrees in all: what stands behind it or beyond the sides of all it sees is not made.
       const seen = (x: number, z: number): boolean => {
@@ -617,7 +626,7 @@ export function create(ctx: Context): Piece {
         matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 42 : d < 40 ? 15 : 6, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3.6 : 5.5);
       }
       wide.add(frondMesh(ctx, growth, creep, 2, { dry: true, small: true, low: true }));
-      wide.add(frondMesh(ctx, growth, nearF, 4), frondMesh(ctx, growth, midF, 3, { small: true }), frondMesh(ctx, growth, farF, 2, { dry: true, small: true }), frondMesh(ctx, growth, low, 2, { dry: true, small: true, low: true }), stands.group);
+      wide.add(frondMesh(ctx, growth, nearF, 5), frondMesh(ctx, growth, midF, 4, { small: true }), frondMesh(ctx, growth, farF, 3, { dry: true, small: true }), frondMesh(ctx, growth, low, 2, { dry: true, small: true, low: true }), stands.group);
     }
     wideShade = stands.shade;
     group.add(wide);
@@ -660,7 +669,7 @@ export function create(ctx: Context): Piece {
     const less = ctx.rng('stalks-close-far');
     // From there they are slender stalks like the rest, and one that is shut is no ringed post with a knob on it: it stands broken, and leans.
     const slender = closeW.map((w): Wild => ({
-      ...w, R: w.R * SLIM, lean: w.lean + (w.kind === 1 ? 0.35 : 0.12 * ((w.seed * 23.1) % 1)), h: w.kind === 1 ? w.h * 0.62 : w.h,
+      ...w, R: w.R * 0.95, lean: w.lean + (w.kind === 1 ? 0.35 : 0.12 * ((w.seed * 23.1) % 1)), h: w.kind === 1 ? w.h * 0.62 : w.h,
       kinkT: 0.35 + 0.4 * ((w.seed * 91.7) % 1), kinkM: w.kind === 1 ? 0.45 : 0.3 * ((w.seed * 17.9) % 1), kinkA: w.seed * 61, age: w.kind === 1 ? 2 : w.age, kind: w.kind === 1 ? 2 : w.kind,
     }));
     for (const w of slender) if (w.kind !== 2) crownOf(plain, w, less, 12, 1.3, false);
