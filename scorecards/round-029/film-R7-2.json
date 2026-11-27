@@ -1,0 +1,35 @@
+{
+  "round": 29,
+  "unit": "film",
+  "pack": "R7-2",
+  "family": "gpt",
+  "answered": "2026-11-27 02:42 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "lower pair, lavender cloud around the lightning",
+        "what": "Broad rectangular patches interrupt the smooth falloff from the bright cloud into the purple sky.",
+        "fix": "Lower quantization through the flash so the cloud gradient stays continuous."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "dark strip below the orange horizon and diagonal strand crossing it",
+        "what": "The smooth horizon breaks into dark tiles, and a stretch of the thin strand disappears against them.",
+        "fix": "Give the horizon more bits and preserve the strand as a continuous edge."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "lower pair, pale curling strands silhouetted against the sunset to the right of the rocks",
+        "what": "Separate loops merge into a blurry patch rather than tracing distinct curves.",
+        "fix": "Reduce quantization around the distant strands until the loops remain separable at delivery size."
+      }
+    ]
+  }
+}

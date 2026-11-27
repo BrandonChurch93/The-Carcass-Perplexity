@@ -1,0 +1,28 @@
+{
+  "round": 29,
+  "unit": "film",
+  "pack": "R7-4",
+  "family": "gpt",
+  "answered": "2026-11-27 02:43 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 8,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-D-05.png",
+        "where": "upper pair, in the diagonal cloud streaks over dark water",
+        "what": "Several small cloud tufts merge into soft gray streaks, closing the dark gaps between them. The larger cloud groups remain recognizable.",
+        "fix": "Give this shot more bits to preserve the separation between cloud tufts."
+      },
+      {
+        "severity": "major",
+        "file": "set-D-03.png",
+        "where": "upper pair, near the far right edge of the pale haze",
+        "what": "The smooth haze gradient picks up faint horizontal steps, clearest in the lower half of the pale area.",
+        "fix": "Reduce quantization in the haze and check the gradient at native size."
+      }
+    ]
+  }
+}

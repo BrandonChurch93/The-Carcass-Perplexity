@@ -1,0 +1,28 @@
+{
+  "round": 29,
+  "unit": "film",
+  "pack": "R7-3",
+  "family": "gpt",
+  "answered": "2026-11-27 02:42 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-C-03.png",
+        "where": "lower pair, across the light reflections in the left mid-distance water",
+        "what": "Thin, continuous ripple lines merge into broad patchy streaks in the compressed crop. The loss affects the shape of the reflections, not just their grain.",
+        "fix": "Allocate more bits to the moving water so adjacent ripple lines remain distinct."
+      },
+      {
+        "severity": "major",
+        "file": "set-C-04.png",
+        "where": "upper pair, dark red water directly below the dome",
+        "what": "The smooth red shading breaks into faint rectangular patches, especially beside the lighter reflection.",
+        "fix": "Reduce quantization in the low-contrast water and check this crop at native size."
+      }
+    ]
+  }
+}

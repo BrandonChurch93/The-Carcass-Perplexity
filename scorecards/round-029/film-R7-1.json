@@ -1,0 +1,35 @@
+{
+  "round": 29,
+  "unit": "film",
+  "pack": "R7-1",
+  "family": "gpt",
+  "answered": "2026-11-27 02:42 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "bottom pair, in the shadow beneath the arch",
+        "what": "The smooth falloff under the arch breaks into broad, flat patches with squared edges.",
+        "fix": "Lower quantization in the cave shadows so the gradient survives encoding."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "top pair, across the dark out-of-focus foreground",
+        "what": "The soft foreground gradient picks up rectangular tonal patches, especially near the bottom center of the compressed crop.",
+        "fix": "Allocate more bits to this low-contrast foreground and check the re-encode at native size."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "bottom pair, in the brown vapor to the right of the cliff",
+        "what": "Faint rectangular patches interrupt the gradual change from gray to warm brown in the plume.",
+        "fix": "Reduce quantization in the plume to retain its low-contrast shading."
+      }
+    ]
+  }
+}
