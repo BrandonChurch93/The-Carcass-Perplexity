@@ -58,7 +58,7 @@ void main() {
 
   // The sheet of the hide, by the metres along the part and round it. Its height leans the skin.
   // Its creases wander: laid straight along the part they were ruled lines from hip to shoulder.
-  vec2 uv = (vUv + 0.08 * hide * (vec2(fbm(vWorld.xz * 5.1 + 3.0), fbm(vWorld.zx * 5.1 + 9.0)) - 0.5)) / uHide.xy;
+  vec2 uv = (vUv + vec2(0.1, 0.2) * hide * (vec2(fbm(vWorld.xz * 5.1 + 3.0), fbm(vWorld.zx * 3.7 + 9.0)) - 0.5)) / uHide.xy;
   vec2 dx = dFdx(uv);
   vec2 dy = dFdy(uv);
   vec3 px = dFdx(vWorld);
@@ -74,7 +74,8 @@ void main() {
   vec3 tu = r1 * dx.x + r2 * dy.x;
   vec3 tv = r1 * dx.y + r2 * dy.y;
   float inv = inversesqrt(max(max(dot(tu, tu), dot(tv, tv)), 1e-12));
-  float slack = 0.35 + 0.65 * smoothstep(0.35, 0.65, fbm(vWorld.xz * 2.9 + 5.0));
+  // The creases come and go: deep in one place, gone a hand farther on, and filled with dust on what faces up.
+  float slack = (0.48 + 0.52 * smoothstep(0.3, 0.6, fbm(vWorld.xz * 2.9 + 5.0))) * (1.0 - 0.4 * smoothstep(0.35, 0.9, n.y));
   vec3 lean = (uHide.z * slack * hide * smoothstep(0.06, 0.012, foot) / e) * ((hu - h0) / uHide.x * tu + (hv - h0) / uHide.y * tv) * inv;
   n = normalize(n - lean);
   // A fold steeper than the skin can turn is turned back toward the eye: never lit from behind itself.
@@ -84,14 +85,14 @@ void main() {
   // bruise of old red here and there where it has split.
   float grey = dot(tex, vec3(0.3333));
   float broad = fbm(vWorld.xz * 2.3 + vWorld.y * 3.1);
-  vec3 albedo = mix(vec3(0.4, 0.33, 0.3), vec3(0.66, 0.585, 0.54), clamp(0.2 + 0.9 * broad + 0.5 * (vData.y - 0.8), 0.0, 1.0)) * mix(vec3(1.0), tex / max(grey, 0.05), 0.7) * clamp(mix(1.0, grey, 0.6), 0.5, 1.3);
+  vec3 albedo = mix(vec3(0.44, 0.38, 0.35), vec3(0.72, 0.66, 0.61), clamp(0.2 + 0.9 * broad + 0.5 * (vData.y - 0.8), 0.0, 1.0)) * mix(vec3(1.0), tex / max(grey, 0.05), 0.7) * clamp(mix(1.0, grey, 0.6 * slack), 0.5, 1.3);
   // Never one tone for a hand's width: the dried hide is mottled.
   albedo *= mix(1.0, 0.8 + 0.42 * fbm(vUv * 23.0 + 4.0), hide);
   // Dirt: yellow-brown where it has lain and leaked, in blotches a hand to an arm across, and grey dust on what faces up.
   float dirt = smoothstep(0.32, 0.72, fbm(vWorld.xz * 3.7 + vWorld.y * 5.0 + 11.0) + 0.1 * (0.5 - h0));
   albedo = mix(albedo, albedo * vec3(0.6, 0.47, 0.34), 0.8 * dirt * hide);
-  float dust = smoothstep(0.3, 0.7, fbm(vWorld.xz * 6.3 + 2.0)) * smoothstep(0.2, 0.9, n.y);
-  albedo = mix(albedo, vec3(0.4, 0.35, 0.29), 0.45 * dust * hide);
+  float dust = (0.4 + 0.6 * smoothstep(0.3, 0.7, fbm(vWorld.xz * 6.3 + 2.0))) * smoothstep(0.15, 0.85, n.y);
+  albedo = mix(albedo, vec3(0.56, 0.51, 0.44), 0.36 * dust * hide);
   // Raw places: the knobs of the joints and the end of the neck, where the cords leave it, are the red of old meat under dust.
   albedo = mix(albedo, vec3(0.46, 0.25, 0.21) * (0.6 + 0.5 * grey), 0.7 * raw);
   albedo *= mix(1.0, 0.8, hide * smoothstep(0.25, 0.3, kind) * smoothstep(0.4, 0.7, broad));
@@ -114,7 +115,7 @@ void main() {
   albedo = mix(albedo, cordColour, cord);
   // The hoofs: horn, dark and worn pale at the edge.
   albedo = mix(albedo, mix(vec3(0.2, 0.15, 0.1), vec3(0.45, 0.36, 0.26), smoothstep(0.3, 0.9, fbm(vUv * 40.0))), hoof);
-  float occ = mix(vData.y, 0.9, cord) * mix(1.0, mix(0.74, 1.04, smoothstep(0.2, 0.7, h0)), hide) * (0.6 + 0.4 * smoothstep(0.0, 0.06, lift));
+  float occ = mix(vData.y, 0.9, cord) * mix(1.0, mix(0.74, 1.04, smoothstep(0.2, 0.7, h0)), hide * slack) * (0.6 + 0.4 * smoothstep(0.0, 0.06, lift));
   float rough = mix(0.97, 0.5, hoof);
 
   // The shade it throws on the rock under it is not on it: the light is asked for above the reach of that shade.
