@@ -19,3 +19,14 @@ void takeLod(vec3 dx, vec3 dy) {
 }
 #define AT(texels, metres) (gLod + log2((texels) / (metres)))
 `;
+
+/**
+ * The near ground lies in the shade of the wall, and the rig lights it from the sky alone, cool and flat. In the approved pictures every
+ * face turned to the low sun is warm with what the lit wall throws back: that is laid here on the colour of the stone itself.
+ */
+export const WARM_GLSL = /* glsl */ `
+vec3 warmSide(vec3 n) {
+  float toSun = smoothstep(-0.15, 0.75, dot(n, normalize(vec3(uSunDir.x, 0.3, uSunDir.z))));
+  return mix(vec3(0.9, 0.96, 1.04), vec3(1.34, 1.12, 0.84), toSun);
+}
+`;

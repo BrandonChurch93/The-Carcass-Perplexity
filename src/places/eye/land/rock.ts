@@ -229,19 +229,19 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     float shingle = 0.0;
     vec3 pebbleBent = vec3(0.0);
     if (fine > 0.02) {
-      // The picture of the shore itself, eight metres of it at its own size: stones of every size in wet grit, with weed dried on them.
+      // The picture of the shore itself, two metres of it, a quarter of its own size, as the lip has it (lip.ts): stones of every size in wet grit, with weed dried on them.
       // From the rim the same picture is laid two and a half times larger and turned: cobbles are boulders there, in beds of gravel.
-      vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6, p.xz, lowEye) / vec2(8.0, 4.5);
+      vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6, p.xz * 4.0, lowEye) / vec2(8.0, 4.5);
       float seen = fine;
-      float sl = AT(1672.0, mix(20.8, 8.0, lowEye));
+      float sl = AT(1672.0, mix(20.8, 2.0, lowEye));
       vec3 sc = textureLod(tShoreP, su, sl).rgb;
       // The lie of each stone is read only by an eye that stands among them; from the rim the picture's own tone is all that is seen of it.
       float sh = a.a;
       vec2 lean = vec2(0.0);
       if (lowEye > 0.01) {
         sh = textureLod(tShorePH, su, sl).r;
-        float es = 0.012;
-        lean = 2.0 * vec2(textureLod(tShorePH, su + vec2(es / 8.0, 0.0), sl).r - sh, textureLod(tShorePH, su + vec2(0.0, es / 4.5), sl).r - sh);
+        float es = 0.004;
+        lean = 2.0 * vec2(textureLod(tShorePH, su + vec2(es / 2.0, 0.0), sl).r - sh, textureLod(tShorePH, su + vec2(0.0, es / 1.125), sl).r - sh);
       } else {
         // Its grit is finer gravel of the same stone, read from the picture again at its own size.
         vec3 grit = textureLod(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37, AT(1672.0, 8.0)).rgb;
@@ -250,7 +250,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
       sc = mix(sc, vec3(dot(sc, vec3(0.333))), 0.45 * (1.0 - lowEye));
       // Dry gravel in the last light is pale: its grit is hardly darker than its stones.
       sc = mix(sc * 0.6 + 0.16, sc, lowEye);
-      gravel = mix(gravel, sc * mix(vec3(2.3, 2.14, 1.96), vec3(1.5, 1.56, 1.66), lowEye), seen);
+      gravel = mix(gravel, sc * mix(vec3(2.3, 2.14, 1.96), vec3(1.12, 0.93, 0.72), lowEye), seen);
       pebbleBent = vec3(-lean.x, 0.0, -lean.y) * 3.0 * seen;
       a.a = mix(a.a, sh, seen);
       shingle = seen;

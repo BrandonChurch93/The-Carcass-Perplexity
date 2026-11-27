@@ -7,7 +7,7 @@ import { smooth } from '../layout';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { vnoise } from '../shared/noise';
 import { HEAPS, landHeight, onAxis, streamAcross } from './height';
-import { LOD_GLSL } from './lod';
+import { LOD_GLSL, WARM_GLSL } from './lod';
 
 /** The stretch of the spur that is broken ground, in the frame of the axis: metres out from the shore, metres to the right. */
 export const CROP = { along0: 58, along1: 208, across0: -34, across1: 34 };
@@ -199,8 +199,8 @@ export function outcropAt(along: number, across: number, cell = 0): number {
   const edge = smooth(CROP.along0, CROP.along0 + 6, along) * smooth(CROP.along1, CROP.along1 - 6, along) * smooth(CROP.across0, CROP.across0 + 6, across) * smooth(CROP.across1, CROP.across1 - 6, across);
   const clear = smooth(1.5, 3.4, Math.abs(across - streamAcross(along)));
   // The joints are not straight: the ground is pulled about before it is cut.
-  const wx = along + 1.5 * (vnoise(along / 4.7 + 9, across / 4.7 + 2) - 0.5) + 0.35 * (vnoise(along / 0.9, across / 0.9 + 4) - 0.5);
-  const wy = across + 1.5 * (vnoise(along / 4.7 + 31, across / 4.7 + 17) - 0.5) + 0.35 * (vnoise(along / 0.9 + 13, across / 0.9) - 0.5);
+  const wx = along + 1.5 * (vnoise(along / 4.7 + 9, across / 4.7 + 2) - 0.5) + 0.14 * (vnoise(along / 0.9, across / 0.9 + 4) - 0.5);
+  const wy = across + 1.5 * (vnoise(along / 4.7 + 31, across / 4.7 + 17) - 0.5) + 0.14 * (vnoise(along / 0.9 + 13, across / 0.9) - 0.5);
 
   let h = 0;
   let rock = 0;
@@ -212,16 +212,19 @@ export function outcropAt(along: number, across: number, cell = 0): number {
   // Where the ground is steep no rubble lies on it: it is bedrock there whatever else.
   const here = baseAt(along, across);
   const steep = Math.hypot(baseAt(along + 1, across) - baseAt(along - 1, across), baseAt(along, across + 1) - baseAt(along, across - 1)) / 2;
-  if (key < 0.22 + 0.62 * Math.min(1, amount) + 0.7 * smooth(0.5, 0.95, steep) * edge) {
+  // Whether a slab stands is asked at its own middle, once for the whole of it: asked place by place, the answer changes part way
+  // across a slab and cuts it off there in a wall.
+  const steepThere = Math.hypot(baseAt(S.px + 1, S.py) - baseAt(S.px - 1, S.py), baseAt(S.px, S.py + 1) - baseAt(S.px, S.py - 1)) / 2;
+  if (key < 0.22 + 0.62 * Math.min(1, bank(S.px, S.py)) + 0.7 * smooth(0.5, 0.95, steepThere)) {
     const tall = (0.18 + 1.05 * (S.b[S.id] as number) ** 1.6) * (0.2 + 0.8 * Math.max(amount, smooth(0.5, 0.95, steep)));
     const lean = 0.2 * Math.min(1, 0.3 + amount);
     // A slab is a bed of the rock: its top lies nearly level at the height the ground has at its middle, so that a slope of them is
     // a flight of ledges and a mound of them stands in blocks.
-    const ledge = Math.max(-1.2, Math.min(1.2, 0.6 * (baseAt(S.px, S.py) - here)));
+    const ledge = Math.max(-0.35, Math.min(1.2, 0.6 * (baseAt(S.px, S.py) - here)));
     const top = tall + ledge + lean * (((S.d[S.id] as number) - 0.5) * S.ox + (key * 4.5 - Math.floor(key * 4.5) - 0.5) * S.oy);
     // Worn round at its edge: a quarter turn from its top down to the joint, and the higher the face the further it leans back. No face
     // is steeper than one in one: the map lies flat, and on a steeper face its texels are drawn out into streaks.
-    const bevel = Math.max(0.35 + 0.8 * tall + 0.75 * Math.abs(ledge), 2.1 * Math.abs(top) - 0.3);
+    const bevel = Math.max(0.35 + 0.8 * tall + 0.75 * Math.abs(ledge), 3.4 * Math.abs(top) - 0.3);
     const r = Math.min(1, (S.f2 - S.f1) / bevel);
     // No face stands upright: a height field cuts an upright face into a saw's teeth, one to each cell of its mesh.
     const shape = r * (2 - r);
@@ -232,8 +235,9 @@ export function outcropAt(along: number, across: number, cell = 0): number {
     // It is broken again inside itself: each piece stands a little higher or lower than the next, a thin crack between.
     B.find(wx, wy);
     const gap = B.f2 - B.f1;
-    const piece = ((B.a[B.id] as number) - 0.5) * 0.3 * Math.min(1, tall * 1.4);
-    h += flat * shape * (piece * smooth(0, 0.12, gap) - 0.09 * Math.min(1, tall * 2) * (1 - smooth(0, 0.05, gap)));
+    // A tall slab is a stack of blocks, not one back: the taller it stands the further its pieces have parted, on its face as on its top.
+    const piece = ((B.a[B.id] as number) - 0.5) * (0.3 + 0.45 * smooth(0.5, 1.3, tall)) * Math.min(1, tall * 1.4);
+    h += (0.35 + 0.65 * flat) * shape * (piece * smooth(0, 0.22, gap) - (0.09 + 0.1 * smooth(0.5, 1.3, tall)) * Math.min(1, tall * 2) * (1 - smooth(0, 0.12, gap)));
     // Its top is not planed: it dips and rises by a few fingers.
     h += flat * shape * 0.07 * (vnoise(along / 0.33 + 5, across / 0.33) - 0.5) * Math.min(1, tall * 2);
     if (h < -2.4) h = -2.4;
@@ -244,15 +248,18 @@ export function outcropAt(along: number, across: number, cell = 0): number {
   C.find(wx, wy);
   const grade = smooth(60, 138, along);
   const heaped = 0.6 * vnoise(along / 11 + 21, across / 11 + 4) + 0.4 * vnoise(along / 3.1 + 2, across / 3.1 + 15);
-  if (cell < 0.3 && h < 0.15 && face < 0.2 && (C.a[C.id] as number) < 0.12 + 0.5 * grade + 0.45 * smooth(0.4, 0.7, heaped) + 0.2 * Math.min(1, amount)) {
+  // A stone gives way to a slab by degrees: one that stops short where the slab begins is cut off there in a row of teeth.
+  const room = (1 - smooth(0.03, 0.15, h)) * (1 - smooth(0.05, 0.2, face));
+  if (cell < 0.3 && room > 0 && (C.a[C.id] as number) < 0.12 + 0.5 * grade + 0.45 * smooth(0.4, 0.7, heaped) + 0.2 * Math.min(1, amount)) {
     const size = (0.14 + 0.44 * (C.b[C.id] as number) ** 1.7) * (0.4 + 0.75 * grade);
     const d = C.f1 / size;
     if (d < 1) {
       // A broken stone has a top and sides, not a dome: its top leans its own way.
       const top = size * (0.55 + 0.5 * (C.d[C.id] as number)) * (1 + (0.9 * ((C.d[C.id] as number) - 0.5) * C.ox + 0.9 * ((C.b[C.id] as number) - 0.5) * C.oy) / size);
-      const lump = Math.max(0, top) * smooth(0, 0.7, 1 - d);
-      if (lump > h) {
-        h = lump;
+      // A stone ends where the next one's ground begins, and comes down to nothing there: else the larger are cut off in a wall.
+      const lump = room * Math.min(0.75 * size, Math.max(0, top)) * smooth(0, 0.7, 1 - d) * smooth(0, 0.3, C.f2 - C.f1);
+      if (Math.min(h, 0) + lump > h) {
+        h = Math.min(h, 0) + lump;
         rock = Math.max(rock, smooth(0, 0.25, 1 - d));
       }
     }
@@ -262,9 +269,10 @@ export function outcropAt(along: number, across: number, cell = 0): number {
   const low = 1 - smooth(0.08, 0.5, h);
   const many = 0.12 + 0.55 * smooth(0.35, 0.7, drift) + 0.3 * Math.min(1, amount);
   if (cell < 0.05 && low > 0 && face < 0.2 && (R.a[R.id] as number) < many) {
+    const lie = 1 - smooth(0.05, 0.2, face);
     const size = 0.07 + 0.17 * (R.b[R.id] as number) ** 2;
     const d = R.f1 / size;
-    if (d < 1) h += low * size * 0.8 * (1 - d * d);
+    if (d < 1) h += lie * low * size * 0.8 * (1 - d * d) * smooth(0, 0.1, R.f2 - R.f1);
   }
   LAST.rock = rock * edge * clear;
   return h * edge * clear;
@@ -453,6 +461,7 @@ uniform sampler2D tGravelNh;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${LOD_GLSL}
+${WARM_GLSL}
 void main() {
   // The level every sheet is read at is taken before any branch: see rock.ts.
   takeLod(dFdx(vWorld), dFdy(vWorld));
@@ -552,7 +561,8 @@ void main() {
   float damp = vLay.x * smoothstep(0.2, 0.6, 0.5 + 0.5 * (stain - 0.5) + vLay.x - 0.5);
   albedo *= mix(1.0, 0.45, damp);
   float occ = ao * (0.6 + 0.4 * smoothstep(0.1, 0.6, fine)) * mix(1.0, 0.55, smoothstep(0.7, 0.3, n.y) * (1.0 - ao * 0.5));
-  vec3 c = rigShade(p, n, v, clamp(albedo, 0.0, 0.9), mix(0.92, 0.38, damp), occ);
-  if (damp > 0.02) c += damp * 0.5 * rigGlint(p, n, v, 0.4);
+  vec3 c = rigShade(p, n, v, clamp(albedo * warmSide(n), 0.0, 0.9), mix(0.92, 0.38, damp), occ);
+  // Not under a branch: see blocks.ts.
+  c += damp * 0.5 * rigGlint(p, n, v, 0.4);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

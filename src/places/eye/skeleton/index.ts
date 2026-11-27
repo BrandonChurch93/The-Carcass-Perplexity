@@ -122,7 +122,8 @@ void main() {
   // Low down and inside the cage little of the sky is seen.
   float occ = vBone.z * (0.6 + 0.4 * smoothstep(0.0, 0.1, lift)) * (0.75 + 0.25 * smoothstep(0.3, 0.6, h));
   vec3 c = rigShade(vWorld, n, v, clamp(bone, 0.0, 0.95), mix(0.8, 0.35, damp), occ);
-  if (damp > 0.02) c += damp * 0.6 * rigGlint(vWorld, n, v, 0.3);
+  // Not under a branch: the glint reads the rig's maps, and a read under a branch a pixel decides is not the same twice.
+  c += damp * 0.6 * rigGlint(vWorld, n, v, 0.3);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Context } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { LOD_GLSL } from './lod';
+import { LOD_GLSL, WARM_GLSL } from './lod';
 
 export function blockUniforms(ctx: Context): Record<string, THREE.IUniform> {
   const data = (file: string): THREE.Texture => {
@@ -97,6 +97,7 @@ uniform sampler2D tGrit;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${LOD_GLSL}
+${WARM_GLSL}
 ${ATLAS_GLSL}
 void main() {
   // The lie of the stone across the screen is taken before any branch, and every sheet is read at the level it gives: see lod.ts.
@@ -197,7 +198,8 @@ void main() {
   // By the lake its foot is wet, and in the stream it is wet as high as the water throws.
   float damp = max(smoothstep(1.15, 0.5, vWorld.y + 0.7 * vnoise(vWorld.xz * 0.11)), vSeat.w * smoothstep(0.75, 0.4, above + 0.2 * stain));
   albedo *= mix(1.0, 0.42, damp);
-  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.92, 0.4, damp), occ);
-  if (damp > 0.02) c += damp * 0.5 * rigGlint(vWorld, n, v, 0.4);
+  vec3 c = rigShade(vWorld, n, v, clamp(albedo * warmSide(n), 0.0, 0.9), mix(0.92, 0.4, damp), occ);
+  // Not under a branch: the glint reads the rig's maps, and a read under a branch a pixel decides is not the same twice.
+  c += damp * 0.5 * rigGlint(vWorld, n, v, 0.4);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

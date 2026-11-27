@@ -7,10 +7,11 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { vnoise } from '../shared/noise';
 import { KEYS } from '../cameras';
-import { AXIS, axisOf, browCover, landHeight, onAxis, streamAcross, wallAt } from './height';
+import { AXIS, axisOf, browCover, landHeight, onAxis, streamAcross, wallAt, BAY } from './height';
 import { PATCH, browGeometry, patchGeometry, pebbleGeometry, socketGeometry, stoneGeometry } from './meshes';
 import { BLOCK_FRAGMENT, BLOCK_VERTEX, ballGeometry, blockUniforms } from './blocks';
-import { LOD_GLSL } from './lod';
+import { LIP_FRAGMENT, LIP_VERTEX, lipGeometry, onLip } from './lip';
+import { LOD_GLSL, WARM_GLSL } from './lod';
 import { ROCK_GLSL, rockUniforms } from './rock';
 import { createStream, standingStones } from './stream';
 import { CROP, CROP_FRAGMENT, CROP_VERTEX, cropGround, outcropAt } from './outcrop';
@@ -133,7 +134,7 @@ varying vec3 vLocal;
 varying vec3 vTint;
 uniform sampler2D tScree;
 uniform sampler2D tScreeH;
-// Every sheet is read with the lie of the stone across the screen, taken first thing in main: see rock.ts.
+// Every sheet is read at the level taken first thing in main: see lod.ts.
 ${LOD_GLSL}
 vec4 screeAt(vec2 xz, float grain) {
   vec2 per = vec2(24.0, 13.51);
@@ -144,6 +145,7 @@ float screeHigh(vec2 xz, float grain) {
 }
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${WARM_GLSL}
 void main() {
   takeLod(dFdx(vWorld), dFdy(vWorld));
   if (beyondNear(vWorld)) discard;
@@ -213,9 +215,10 @@ void main() {
   // The last half metre of shore before the water is wet: its stones are dark.
   damp = max(damp, 0.75 * lowEye * smoothstep(0.1, 0.03, max(land.r, 0.0)));
   albedo *= mix(1.0, 0.5, damp);
-  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.9, 0.4, damp), (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
+  vec3 c = rigShade(vWorld, n, v, clamp(albedo * mix(warmSide(n), vec3(1.0), lowEye), 0.0, 0.9), mix(0.9, 0.4, damp), (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
   // A wet pebble carries the low sun on its crown.
-  if (lowEye * damp > 0.02) c += lowEye * damp * 0.5 * rigGlint(vWorld, n, v, 0.35);
+  // Not under a branch: see blocks.ts.
+  c += lowEye * damp * 0.5 * rigGlint(vWorld, n, v, 0.35);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -255,7 +258,16 @@ export function create(ctx: Context): Piece {
   });
   cropMaterial.userData.depthFragment = NEAR_DEPTH;
   const cropMesh = new THREE.Mesh(crop.geometry, cropMaterial);
-  ctx.scene.add(ctx.parts.built('land', socket, patch, cropMesh));
+  // The wet lip before the shore camera.
+  const lipMaterial = new THREE.ShaderMaterial({
+    uniforms: { ...ctx.rig.uniforms, tShoreP: rock.tShoreP as THREE.IUniform, tShorePH: rock.tShorePH as THREE.IUniform },
+    vertexShader: LIP_VERTEX,
+    fragmentShader: LIP_FRAGMENT,
+  });
+  lipMaterial.userData.depthFragment = NEAR_DEPTH;
+  const lipMesh = new THREE.Mesh(lipGeometry(), lipMaterial);
+  ctx.scene.add(ctx.parts.built('land', socket, patch, cropMesh, lipMesh));
+  ctx.scene.add(lipMesh);
   ctx.scene.add(patch);
   ctx.scene.add(cropMesh);
   /** The ground a stone lies on: the smooth land and the broken rock over it. */
@@ -273,6 +285,10 @@ export function create(ctx: Context): Piece {
   const stones: Stone[][] = [[], [], []];
   const put = (x: number, z: number, size: number): void => {
     if (landHeight(x, z) < -0.3) return;
+    // No loose stone lies in the near field of the shore camera: the ground there is the lip's and the plate's, stone by stone.
+    const ahead = (x - BAY.x) * BAY.fx + (z - BAY.z) * BAY.fz;
+    const aside = (z - BAY.z) * BAY.fx - (x - BAY.x) * BAY.fz;
+    if (ahead > 0 && ahead < 16 && Math.abs(aside) < 4 + 0.6 * ahead) return;
     (stones[size > 2.2 ? 0 : size > 0.5 ? 1 : 2] as Stone[]).push({ x, z, size });
   };
   for (let i = 0; i < 2600; i++) {
@@ -408,7 +424,8 @@ export function create(ctx: Context): Piece {
       const x = from[0] + fx * ahead - fz * aside;
       const z = from[2] + fz * ahead + fx * aside;
       const ground = landHeight(x, z);
-      if (ground < -0.1 - 0.4 * size) continue;
+      // Before the shore camera the stones are the lip's own (lip.ts), and none is laid in the water.
+      if (ground < 0.02 || ahead < 16 || onLip(x, z)) continue;
       // In the flooded shallows only the stones that stand out of the water are kept, and fewer of them.
       if (ground < 0.0 && (size < 0.05 || vnoise(x / 0.9 + 3, z / 0.9 + 8) < (ahead < 13 ? 0.3 : 0.55))) continue;
       const flooded = ground < 0.0 && ahead < 13;
@@ -598,10 +615,10 @@ export function create(ctx: Context): Piece {
       brow.visible = (ctx.rig.uniforms.uNear as THREE.IUniform<THREE.Vector4>).value.w < 0.5;
     },
     dispose: () => {
-      for (const m of [socket, patch, cropMesh, brow, ...scree]) m.geometry.dispose();
+      for (const m of [socket, patch, cropMesh, lipMesh, brow, ...scree]) m.geometry.dispose();
       crop.map.dispose();
       for (const b of balls) b.dispose();
-      for (const m of [socketMaterial, patchMaterial, cropMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
+      for (const m of [socketMaterial, patchMaterial, cropMaterial, lipMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
       stream.dispose();
     },
   };
