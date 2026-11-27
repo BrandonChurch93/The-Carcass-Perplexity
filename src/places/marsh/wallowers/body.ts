@@ -551,6 +551,8 @@ void main() {
   albedo = mix(albedo, mix(vec3(0.1, 0.06, 0.035), vec3(0.2, 0.14, 0.07), smoothstep(0.05, 0.4, s)) * (0.7 + 0.5 * groove), min(1.0, 1.6 * uHang));
   albedo = mix(albedo, vec3(0.1, 0.075, 0.06), 0.5 * smoothstep(0.45, 0.7, vnoise(vec2(s * 9.0 + vLook.z * 30.0, vLook.y * 1.5))));
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
+  // One that wades rakes the mud all day: they carry it when the head comes up, thinner toward the root.
+  wet = max(wet, (0.55 + 0.45 * smoothstep(0.08, 0.4, s)) * (1.0 - smoothstep(0.6, 0.9, uTint)));
   albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.45 * wet);
   // The mud they rake clings to them in clots, thickest toward the tips.
   albedo = mix(albedo, vec3(0.1, 0.064, 0.05) * (0.6 + 0.8 * groove), wet * (1.0 - uHang) * smoothstep(0.3, 0.55, vnoise(vec2(s * 7.0 + vLook.z * 40.0, vLook.y * 1.2)) + 0.35 * s));
@@ -564,7 +566,7 @@ void main() {
   albedo *= mix(vec3(1.0, 0.8, 0.62), vec3(1.0), smoothstep(0.6, 0.9, uTint));
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   // (On one that wades they are wet with mud, not with water: no white sheen stands on them.)
-  float rough = mix(0.95, mix(0.9, mix(0.74, 0.58, smoothstep(0.6, 0.9, uTint)), clamp(groove * ring * 2.0, 0.0, 1.0)), wet);
+  float rough = mix(0.95, mix(0.9, mix(0.93, 0.58, smoothstep(0.6, 0.9, uTint)), clamp(groove * ring * 2.0, 0.0, 1.0)), wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   c = clamp(c, 0.0, 8.0);
@@ -758,7 +760,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.44) : 1 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.3) : 1 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
