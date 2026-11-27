@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 156, 2026-11-27 08:11 UTC:
+Status 157, 2026-11-27 08:41 UTC:
 
-- `01-s156-breath-4409.jpg`: The Breath at 1:13 (frame 4409), the wide view: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. One pixel of this frame holds an invalid value at 4K, too small to see here. What the critics name can be seen: the air is clearer and the far cliffs crisper than in the picture, the pit is a dark hollow with a pale smooth rim where the picture has broken grey rock full of steam, and the far animals are dark and upright where the picture has pale ones bent to feed
-- `02-s156-heart-3156.jpg`: The Heart at 0:52 (frame 3156), crust walkers feeding at a seam: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160, final tier, and shown smaller here. Fine detail in this frame rose from 0.385 of the picture in round 29 to 0.727 against a floor of 0.75, the last frame of the Heart under it. The walkers and the seam match. The film has a thin lava stream high on the slope where the picture has a broad flow behind the animals, a greyer and clearer background, and fewer and dimmer molten cracks in the floor
-- `03-s156-spine-7234-panel.jpg`: The Spine at 2:00 (frame 7234), the wide view: the approved picture at left, the judged frame of round 30 in the middle, drawn at 3840x2160, final tier, and shown smaller here, and a part of the same frame enlarged at right. Twelve pixels of this frame hold an invalid value at 4K, too small to see here. The enlarged part shows the fault two critics named: a flat grey see-through panel with straight edges behind the ridge, and beside it a brown wall whose texture is stretched straight down
-- `04-s156-stress-titan-spine.jpg`: Two hard moments under compression at 1920x1080, final tier: round 29 at left and round 30 at right, the titan frame at 2:47 above and the storm on the Spine at 2:04 below. In each block the left half is the film as it will be delivered and the right half the same second squeezed to 10 megabits a second, with the part that changed most enlarged under it. Against the rendered frames the titan holds 35.76 dB at 10 megabits where round 29 had 32.66, and the Spine 32.09 dB where round 29 had 28.87
+- `01-s157-invalid-where.jpg`: Where the invalid pixels of round 30 are, enlarged from the judged frames drawn at 3840x2160, final tier. Top: the Spine at 2:00 (frame 7234); the 12 pixels are one block 3 wide and 4 high at the very top edge, inside the circle, where the leaning spire and a kite ribbon leave the frame. Bottom: the Breath at 1:13 (frame 4409); the 1 pixel is in the bottom row, inside the circle, on the foreground rock. Both are on the border of the frame and too small to see at this size without the circle
+- `02-s157-ribs-white-dot.jpg`: The Ribs at 0:34: the top of twelve frames in a row (2081 to 2092, a fifth of a second), enlarged from a motion sheet drawn at the review tier at the preview size. A white dot shows at the top edge in frames 2085 and 2092, at the same spot, and at the right edge in frame 2087, and in no frame between. A critic reported it as a flash; three render machines are now checking whether it is the same fault as the invalid pixels of the Spine
+- `03-s157-heart-compression.jpg`: The Heart at 1:06 (frame 4010) at 1920x1080, final tier, as the compression critic saw it. Top: the frame as rendered at left and the same frame out of an encode at 10 megabits a second at right. Bottom: parts at full size, each before the encode beside after it; the vessel mouth and the wall at left, the lava fall at right. The critic gave this moment 9 of 10 with three minor issues: the haze is a little flatter and the faint rock texture behind it is smoothed. Against the rendered frames it holds 35.54 dB at 10 megabits, where round 29 had 36.39
+- `04-s157-ribs-consecutive.jpg`: The Ribs at 0:40: the twelve frames in a row (2400 to 2411) in which a critic reported a jump of one frame, drawn at the review tier at the preview size. Measured over this sheet and its twin (frames 2400 to 2412), the change from each frame to the next is 3.4 to 4.35 levels of 255 with no pair standing out, and the place the critic names is where one row of the sheet ends and the next begins. The jump is not in the film
 
+Status 156, 2026-11-27 08:11 UTC, showed: The Breath at 1:13 (frame 4409), the wide view: the approved picture at left and the judged frame of round 30 at right, drawn at 3840x2160...
 Status 155, 2026-11-27 07:53 UTC, showed: The Ribs at 0:29 (frame 1759), the feeders at low tide: the approved picture at left and the judged frame of round 30 at right, drawn at...
 Status 154, 2026-11-27 07:29 UTC, showed: The join from the Eye into the rise in the merged film, 2:38 to 2:41. Top three rows: every tenth frame from 9500 to 9640.
-Status 153, 2026-11-27 05:52 UTC, showed: Sixteen frames across Preview 06, the whole film with wave 2 merged and the words on screen, from the opening at the Ribs to the last view...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T08:11:16Z
-phase 6: 11.36 h used of 24.00 h
-build: 56.33 h used of 72.00 h
+2026-11-27T08:41:05Z
+phase 6: 11.86 h used of 24.00 h
+build: 56.83 h used of 72.00 h
 extra rounds: no
-minutes since the last status: 17
+minutes since the last status: 30
 ```
 
 ## Phases
