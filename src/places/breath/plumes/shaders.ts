@@ -232,7 +232,7 @@ void main() {
   float f = 0.04 + 0.96 * pow(1.0 - nv, 5.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  colour += f * min(skyRadiance(r), vec3(1.5)) * open * occ * 0.8 + uSunColour * ((f + 0.05) * sunLobe(n, v, 0.22) * nl * lit * occ);
+  colour += f * min(skyRadiance(r), vec3(1.5)) * open * occ * 0.45 + uSunColour * ((f + 0.05) * sunLobe(n, v, 0.22) * nl * lit * occ);
   // Wet flesh is not opaque: against the low sun the light comes through its edges, pink.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   colour += mix(vec3(0.7, 0.08, 0.07), vec3(0.88, 0.26, 0.2), flesh) * uSunColour * (0.16 * against * against * pow(1.0 - nv, 1.5) * lit * smoothstep(0.1, 0.4, vTint.z));

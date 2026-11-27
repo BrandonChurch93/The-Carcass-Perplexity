@@ -81,7 +81,7 @@ export function create(ctx: Context): Piece {
     const [x, z] = i === 1 ? [at[0] - HERO_WEST, at[1] + 0.6] : i === 0 ? [at[0] - 0.55, at[1] - 0.7] : i === 5 ? onBrim(-13.5, 33.5) : at;
     // Two stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
     // The one on the south-west lip is by the wide lens: there it is a low fountain, not a tall plume in the corner of that frame.
-    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.25 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 0.8 } : i === 5 ? { full: 0.5 } : {}) });
+    bushes.push({ x, y: floor(x, z), z, tall: i === 1 ? tall * 0.6 : i === 5 ? tall * 0.17 : tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5, habit: i < 2 ? 'sweep' : 'fountain', ...(i === 0 ? { spread: 0.85, full: 0.8 } : i === 5 ? { full: 0.5 } : {}) });
   });
   // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
   // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
