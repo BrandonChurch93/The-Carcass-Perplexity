@@ -66,8 +66,8 @@ vec4 pebbleAt(vec2 x) {
 // The shingle of the shore at xz, stone by stone: its colour and, in a, the dome of the stone (0 in the grit). xs is the same ground counted
 // in fist-sized stones, lean the way each dome turns its face, tall the metres the stone stands above the grit. Four sizes lie on one
 // another, the large ones fewest, and a size smaller than the pixel that looks at it is left out. One shore above the water and under it.
-vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean, out float tall) {
-  float foot = length(fwidth(xs));
+// foot is length(fwidth(xs)), taken at the top of main: a derivative under a branch does not repeat from render to render.
+vec4 shingleFoot(vec2 xz, vec2 xs, float foot, out vec2 lean, out float tall) {
   // Beds of larger and smaller stone.
   float bed = vnoise(xz / 1.9 + 11.0);
   float dome = 0.0;
@@ -99,6 +99,10 @@ vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean, out float tall) {
   vec3 grit = vec3(0.2, 0.185, 0.165) * (0.2 + 0.7 * vnoise(xz * 110.0));
   lean = -to * (2.4 * (1.0 - dome) * step(0.01, dome) + 0.9 * dome);
   return vec4(mix(grit, shade, step(0.001, dome)), dome);
+}
+// The old name. Only at the top of main, before any branch.
+vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean, out float tall) {
+  return shingleFoot(xz, xs, length(fwidth(xs)), lean, tall);
 }
 `;
 
@@ -219,9 +223,10 @@ float cirrus(vec2 xy, vec4 c) {
   return body * pow(1.0 - along * along, 1.5) * smoothstep(0.22, 0.62, 0.7 * fibre.g + 0.5 * lie.b);
 }
 
-vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
-  vec3 sky = skyRadiance(rd);
-  if (uPlateTone.w < 0.5) return sky;
+// Where a ray meets the picture of the far world. xy: the picture's u and v there, z: the bearing folded into the picture's field,
+// w: metres along the ray. No texture is read and no derivative taken: it may be called anywhere.
+vec4 plateAt(vec3 ro, vec3 rd) {
+  if (uPlateTone.w < 0.5) return vec4(0.0);
   vec2 o = ro.xz - uPlateAt.xz;
   vec2 d = rd.xz;
   float a = max(dot(d, d), 1e-6);
@@ -234,19 +239,36 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   float halfField = atan(uPlateLens.y);
   float k = az / halfField;
   float phi = (1.0 - abs(mod(k + 1.0, 4.0) - 2.0)) * halfField;
-  float u = 0.5 + 0.5 * tan(phi) / uPlateLens.y;
-  float v = uPlateLens.w + 0.5 * (q.y / (uPlateAt.w * cos(phi))) / uPlateLens.z;
-  // Above a picture of a wall alone (w is 2) a mirror still holds rock, the wall told over again, dimmed toward the slate of the dusk over the rim.
+  return vec4(0.5 + 0.5 * tan(phi) / uPlateLens.y, uPlateLens.w + 0.5 * (q.y / (uPlateAt.w * cos(phi))) / uPlateLens.z, phi, t);
+}
+vec2 plateUv(vec3 ro, vec3 rd) {
+  return plateAt(ro, rd).xy;
+}
+
+// The far world along a ray, with the screen gradients of plateUv(ro, rd) handed in: gx = dFdx(uv), gy = dFdy(uv), both taken at the
+// top of main before any branch. Nothing in here takes a derivative or reads a mipmapped picture at an implicit level, so it may be
+// called under a branch, in a loop or after a discard and repeats from render to render. bias softens it by that many mip levels.
+vec3 farRadianceGrad(vec3 ro, vec3 rd, float bias, vec2 gx, vec2 gy) {
+  vec3 sky = skyRadiance(rd);
+  if (uPlateTone.w < 0.5) return sky;
+  vec4 at = plateAt(ro, rd);
+  float u = at.x;
+  float v = at.y;
+  float phi = at.z;
+  float t = at.w;
+  vec3 q = ro + rd * t - uPlateAt.xyz;
   bool tall = uPlateTone.w > 1.5 && bias > 0.0;
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
   // The water at the far shore holds the foot of the wall nearly as it stands; the higher on the wall a mirror reads, the more it is drawn out.
   float drawn = tall ? smoothstep(0.015, 0.22, v - uPlateLens.w) : 0.0;
-  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + uPlateSoft + 2.5 * over + 2.0 * drawn).rgb) * uPlateTone.rgb;
+  float wide = exp2(bias + uPlateSoft + 2.5 * over + 2.0 * drawn);
+  vec3 plate = ungrade(textureGrad(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), gx * wide, gy * wide).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
   if (tall) {
-    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), bias + 3.2 * drawn + 2.5 * over).rgb)
-      + ungrade(texture2D(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), bias + 3.2 * drawn + 2.5 * over).rgb));
+    float wider = exp2(bias + 3.2 * drawn + 2.5 * over);
+    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(textureGrad(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), gx * wider, gy * wider).rgb)
+      + ungrade(textureGrad(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), gx * wider, gy * wider).rgb));
   }
   // The low sun comes through thin high cloud: what it lights on the far wall swells and fades a little where it stands, the shade never.
   float lit = smoothstep(0.2, 0.4, (plate.r - plate.b) / max(plate.r + plate.b, 1e-3));
@@ -292,6 +314,20 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
     return mix(mix(plate, sky, smoothstep(0.9, 0.995, v)), bank.rgb, bank.a);
   }
   return mix(plate, sky, smoothstep(0.9, 0.995, v));
+}
+
+// The same for a look that does not follow the screen (the mist asking what light the wall's foot stands in): the footprint is one
+// texel of the picture, softened by bias levels as in farRadiance. Safe under a branch, and the same at every size of frame.
+vec3 farRadianceLevel(vec3 ro, vec3 rd, float bias) {
+  vec2 texel = 1.0 / vec2(textureSize(tPlate, 0));
+  return farRadianceGrad(ro, rd, bias, vec2(texel.x, 0.0), vec2(0.0, texel.y));
+}
+
+// The old name: it takes the gradients itself, so it is only for the top of main, before any branch, loop or discard.
+// Under a branch the derivative of a pixel that did not take the branch is whatever was left in memory, and the frame does not repeat.
+vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
+  vec2 uv = plateUv(ro, rd);
+  return farRadianceGrad(ro, rd, bias, dFdx(uv), dFdy(uv));
 }
 
 // Metres along a ray to the picture of the far world.
