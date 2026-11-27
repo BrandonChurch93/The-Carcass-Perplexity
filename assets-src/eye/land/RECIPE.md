@@ -37,3 +37,12 @@ Prompt or command: `npx tsx assets-src/eye/land/bake-outcrop.ts`, from the repos
 Takes: computed; the one result is kept. Run it again after any change to `outcrop.ts` or `height.ts`, or the relief drawn and the ground the stones stand on part company.
 Why this one: the relief of the outcrop took ten seconds to work out at the start of every render. The map holds its lie both ways (r, g) and how much sky each place sees (b); the rock picture holds rock or rubble at half the size; the mesh picture holds every corner of the mesh, a texel each, in two tiles side by side (left: height in r and g, standing rock in b; right: the smooth ground's normal in r and g, wet beside the stream in b).
 Date: 2026-11-26
+
+## `public/assets/eye/land/lip-nh.jpg` and `public/assets/eye/land/lip-tone.jpg`
+
+Made by: `assets-src/eye/land/make_gravel_lip.py` on Python 3 with numpy, Pillow and scipy. No picture goes in and no model is used.
+From: no input file: worn and broken stones of mixed size are laid on sand from a fixed seed.
+Prompt or command: `python3 assets-src/eye/land/make_gravel_lip.py`, from the repository root. It writes one sheet 1.25 m square that repeats: `lip-nh.jpg` holds the lie of the surface both ways (r, g) and its height (b); `lip-tone.jpg` holds the tone of each stone (r), its hue from cold to rusty (g) and how much sky each place sees (b).
+Takes: computed; the one result is kept.
+Why this one: the lip at the shore camera's feet was the shore plate's picture raised by its own height sheet, which gave tufts and no stones. `land/lip.ts` lays this sheet twice, once at its size and once four times as large and turned, and raises its mesh by the higher of the two.
+Date: 2026-11-26
