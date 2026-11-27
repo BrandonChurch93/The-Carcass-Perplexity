@@ -68,6 +68,9 @@ function keysOfRise(): { frames: number[]; windows: RiseWindow[] } {
 
 export const riseShots = shotsOf(UNIT).filter((s) => s.picture !== 'black');
 const riseKeys = keysOfRise();
+// rise.json may have the lens see more than a key's window at that key, about the same middle: the climb then spreads its speed.
+const wider = (w: RiseWindow, c: number): RiseWindow => ({ x: w.x - (w.w * (c - 1)) / 2, y: w.y - (w.h * (c - 1)) / 2, w: w.w * c, h: w.h * c });
+riseKeys.windows = riseKeys.windows.map((w, i) => wider(w, tuning.covers[i] ?? 1));
 export const RISE_FIRST = (riseShots[0] as (typeof riseShots)[number]).first;
 export const RISE_LAST = (riseShots[riseShots.length - 1] as (typeof riseShots)[number]).last;
 export const TITAN = riseKeys.frames[riseKeys.frames.length - 1] as number;
