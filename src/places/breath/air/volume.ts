@@ -12,7 +12,7 @@ import { SEA } from '../land';
 export const MAX_BODIES = 32;
 
 /** March steps of the vapour of the main shaft. The cost of the pass is close to linear in this wherever the vapour is in view. */
-export const STEPS = 28;
+export const STEPS = 24;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -71,8 +71,12 @@ vec3 hazeColour(vec3 d) {
 // Thickness of the air from the camera to t along the ray: two layers that thin with height.
 float hazeDepth(vec3 ro, vec3 rd, float t) {
   float dy = abs(rd.y) < 1e-4 ? 1e-4 : rd.y;
-  float y0 = max(ro.y, -6.0);
-  float y1 = max(ro.y + dy * t, -6.0);
+  // Only a shaft lies under the tide, and the air in a shaft is in the shadow of its rim: it carries none of the dawn's glow, so the
+  // part of a ray that runs down in one is not counted and the drop stands dark.
+  float low = ro.y + dy * t;
+  if (low < -0.5 && ro.y > -0.5) t *= (ro.y + 0.5) / (ro.y - low);
+  float y0 = max(ro.y, -0.5);
+  float y1 = max(low, -0.5);
   float span = max(abs(y1 - y0), 1e-3);
   float ka = uHaze.y * abs(exp(-y0 / uHaze.y) - exp(-y1 / uHaze.y)) / span;
   float kb = uHaze.w * abs(exp(-y0 / uHaze.w) - exp(-y1 / uHaze.w)) / span;
@@ -386,7 +390,7 @@ void main() {
         float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
         // The heart of a billow is in its own shade: its edge is what the sky lights.
         float open = exp(-14.0 * skyTau);
-        vec3 light = ((skyGrey * (0.42 + 0.63 * open) + skyGlow * (0.25 + 1.15 * open)) * sunk + uSunColour * (0.008 * facing * sunk)) * (0.45 + 0.55 * roofed) * (1.0 - core)
+        vec3 light = ((skyGrey * (0.42 + 0.55 * open) + skyGlow * (0.25 + 1.5 * open)) * sunk + uSunColour * (0.008 * facing * sunk)) * (0.45 + 0.55 * roofed) * (1.0 - core)
           + sunLight * (sun * (0.09 * min(phase, 1.9) * exp(-1.5 * sunTau) + (0.012 + 0.04 * toSun * toSun) * exp(-0.22 * sunTau)));
         float gone = exp(-tau);
         float w = thru * (1.0 - gone);
@@ -406,6 +410,19 @@ void main() {
       }
       colour = lit;
       through = thru;
+    }
+  }
+
+  // The rock under the sheet: the low sun comes down to it through six times the sheet's depth of fog, so the ground is dimmer where the
+  // sheet lies thick and the dimness slides with it. Asked once where the ray ends, a stride toward the sun, of the sheet without its shreds.
+  if (uShow.z > 0.5 && far < 400.0) {
+    vec3 pe = ro + rd * far;
+    vec3 ps = vec3(pe.x + 2.5 * uSunDir.x, pe.y, pe.z + 2.5 * uSunDir.z);
+    float oe;
+    float we;
+    if (vapourNear(ps, oe, we) && we >= 0.02 && oe > -2.0) {
+      vec3 lay = pourAt(ps, we, oe, 0.0);
+      through *= 1.0 - 0.3 * (1.0 - exp(-6.0 * lay.z * clamp(lay.x - pe.y, 0.0, 4.0)));
     }
   }
 
