@@ -64,20 +64,20 @@ function cloudTile(): THREE.DataTexture {
  * The uniforms of the lid. `unit` is the world length of one unit across, `tall` the world height of the camera at the cut. `grade` is
  * how a place must weigh the colours of the lid for them to come out of its own finish as they come out of the other's.
  */
-export function lidUniforms(n: LidNumbers, centre: [number, number], unit: number, tall: number, grade: number[] = [1, 1, 1]): Record<string, THREE.IUniform> {
+export function lidUniforms(n: LidNumbers, centre: [number, number], unit: number, tall: number, grade: number[] = [1, 1, 1], deep: number[] = grade, lit: number[] = grade): Record<string, THREE.IUniform> {
   const v = (a: number[]): THREE.Vector3 => new THREE.Vector3((a[0] as number) * (grade[0] as number), (a[1] as number) * (grade[1] as number), (a[2] as number) * (grade[2] as number));
   return {
     // x: 1 while the lid is drawn (0: no surface reads it). y: seconds since the cut. z: how far it has broken up. w: how dark its shade lies on the water.
     uLid: { value: new THREE.Vector4(0, 0, 0, 0) },
     uLidFrame: { value: new THREE.Vector4(centre[0], centre[1], unit, tall) },
     uLidSun: { value: new THREE.Vector3(n.sun[0], n.sun[1], n.sun[2]).normalize() },
-    uLidSunlit: { value: v(n.sunlit) },
+    uLidSunlit: { value: new THREE.Vector3((n.sunlit[0] as number) * (lit[0] as number), (n.sunlit[1] as number) * (lit[1] as number), (n.sunlit[2] as number) * (lit[2] as number)) },
     uLidShade: { value: v(n.shade) },
     uLidInside: { value: v(n.inside) },
     uLidWarm: { value: v(n.insideWarm) },
     uLidDrift: { value: new THREE.Vector2(n.drift[0], n.drift[1]) },
     uLidShadow: { value: n.shadow },
-    uLidWater: { value: new THREE.Vector4(v(n.water).x, v(n.water).y, v(n.water).z, n.waterReach) },
+    uLidWater: { value: new THREE.Vector4((n.water[0] as number) * (deep[0] as number), (n.water[1] as number) * (deep[1] as number), (n.water[2] as number) * (deep[2] as number), n.waterReach) },
     uLidMap: { value: cloudTile() },
     // The rows of pixels the cloud is read for. Both places keep this one number, whatever the size of the frame, so the banks are as
     // fine on one side of the cut as on the other: it suits the full frame, where both draw the lid on about a thousand rows.
@@ -110,7 +110,7 @@ export const LID_LAKE = [1.17, 0.84];
  * How much of its height each deck has lost when it has sunk, from the top down. The lens climbs slowly on the first frames of the rise;
  * the decks fall away under it instead, the lowest most, so each keeps its own height and its own speed against the ground.
  */
-export const LID_SINK = [0.18, 0.4, 0.52, 0.64];
+export const LID_SINK = [0.1, 0.2, 0.26, 0.32];
 
 /**
  * Between which shares of the breaking up each deck goes, from the top down. The lowest goes first: far under the lens its banks are
@@ -267,6 +267,8 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     }
     if (met < 0.0) continue;
     float alpha = 1.0 - exp(-thin * LID_THICK * thick / (down * sunk));
+    // A bank the lens is about to enter is a haze before the glass, not a white wall: it does not flash past from one frame to the next.
+    alpha *= 0.3 + 0.7 * smoothstep(0.0, 0.05, camA - met);
     vec2 q = from + lean * (met - camA);
     float up = (met - deck.x) / tall;
     float lod = log2(max(reach * (camA - met) * deck.z * LID_TILE, 1.0));
@@ -300,7 +302,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     if (tr < 0.04) break;
   }
   // How much of the one water under the banks is drawn: all of it on the frames about the cut.
-  float about = smoothstep(0.955, 0.99, camA) * (1.0 - smoothstep(0.03, 0.3, uLid.z));
+  float about = smoothstep(0.8, 0.99, camA) * (1.0 - smoothstep(0.03, 0.7, uLid.z));
   // The shade of the banks lies on the water and the shore under them, thrown away from the sun and farther the higher the bank.
   float shadeIn = uLidShadow * smoothstep(LID_FOOT, LID_FOOT + 0.05, camA) * (1.0 - smoothstep(0.94, 1.0, uLid.z));
   vec2 g = from + lean * (floorA - camA);
@@ -321,13 +323,18 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   // shore on one side of the cut and the rise's on the other is seen through it, and neither is seen bare on those frames.
   if (about > 0.0 && tr > 0.02 && floorA < 0.02) {
     float patches = textureLod(uLidMap, g * 0.9 + 0.3, max(log2(max(reach * camA * 0.9 * LID_TILE, 1.0)), 4.5)).g;
-    // It begins where the deep water of both lakes ends: the rise's lake is longer than it is wide.
+    // It stands thick wherever the one water is not drawn whole, so neither place shows its own shore under it on the frames of the cut.
     // Its edge is no oval: tongues of it lie out over the water, some far, some not at all.
     float tongues = smoothstep(0.3, 0.75, 0.6 * vnoise(g * 1.7 + 3.1) + 0.4 * vnoise(g * 4.3 + 8.2));
     float torn = 0.6 * vnoise(g * 9.0 + 6.1) + 0.4 * vnoise(g * 21.0 + 0.9);
-    float mist = about * smoothstep(0.97, 1.2, length(g / (LID_LAKE * uLidWater.w)) * (1.0 + 0.32 * tongues + 0.1 * (torn - 0.5))) * (0.93 + 0.06 * patches);
+    float cover = smoothstep(0.8, 0.93, length(g / (LID_LAKE * uLidWater.w)) * (1.0 + 0.3 * tongues + 0.08 * (torn - 0.5)));
+    // Banks of it lie on the water as well, so the water is seen in several places of unlike shape and not as one dark round.
+    cover = max(cover, smoothstep(0.55, 0.65, 0.55 * vnoise(g * 2.9 + 11.3) + 0.3 * vnoise(g * 6.7 + 4.9) + 0.15 * torn));
     // Seen from above it is a low sheet of cloud with heads of its own, which the sun finds.
-    float heads = smoothstep(0.3, 0.8, 0.5 * vnoise(g * 3.7 + 1.9) + 0.3 * vnoise(g * 8.9 + 5.3) + 0.2 * vnoise(g * 19.0 + 2.7));
+    float lumps = 0.5 * vnoise(g * 3.7 + 1.9) + 0.3 * vnoise(g * 8.9 + 5.3) + 0.2 * vnoise(g * 19.0 + 2.7);
+    float heads = smoothstep(0.3, 0.8, lumps);
+    // It comes and goes in patches, the thin places first, not all at once as a picture fades.
+    float mist = cover * (1.0 - smoothstep(0.0, 0.3, (1.0 - about) * 1.35 - lumps)) * (0.975 + 0.025 * patches);
     vec3 fog = mix(uLidShade * (0.42 + 0.3 * patches), uLidSunlit * 0.8, 0.35 * heads);
     sum += clear * mist * fog * mix(1.0, lightLeft, 0.4);
     tr *= 1.0 - mist;
@@ -335,7 +342,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   // One water under the banks. On the frames about the cut the deep water of the lake is drawn here, the same in both places, with the wind
   // on it and the shade of the banks: the Eye's own water goes over to it as the lens nears the cut, and it goes over to the rise's after.
   // It has no edge: toward the shores each place keeps its own lake, and the banks hide what differs.
-  float water = about * (1.0 - smoothstep(0.78, 1.02, length(g / (LID_LAKE * uLidWater.w))));
+  float water = about * (1.0 - smoothstep(0.93, 1.02, length(g / (LID_LAKE * uLidWater.w))));
   if (water > 0.0 && tr > 0.02 && floorA < 0.02) {
     vec2 wind = normalize(uLidDrift);
     vec2 along = vec2(wind.x * g.x + wind.y * g.y, -wind.y * g.x + wind.x * g.y) * vec2(0.3, 1.0);
