@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Country drawn again once, for every height of the rise, and laid into the maps.
 
-Two regions of the Builder's maps read as anatomy long before the top of the rise, and the image model drew each again as
+Three regions of the Builder's maps read as anatomy or as paint long before the top of the rise, and the image model drew each again as
 country (the pictures and their heights are under assets-src/reveal/land/, recipes in RECIPE.md):
   chest   each rib was one even, unbroken pale range, all of one spacing: from 600 km up, a comb. Drawn again as basin and range
           country: great ranges of unlike length, spacing and bend, two broken, lower oblique ranges and foothills between.
+  hip     south of the spine by the pelvis a field of sand lay as one smooth cream dome, and the thigh beside it as one soft pale
+          slope: from orbit, airbrushed. Drawn again as an eroded massif and a rugged range, with crests, spurs and gullies.
   lakes   the massif above the lake of the Eye held one dark basin beside that lake: two sockets. Drawn again as a lake
           district, four lakes of unlike sizes with pale frilled rims.
 This script lays each picture into every map that holds its region, as those maps stood at the commit named in BASE, and writes
@@ -34,6 +36,7 @@ SHORE = 22 / 255.0
 # make water, and the window of the picture that is laid (fractions of it: left, top, right, bottom).
 PATCHES = [
     {'take': os.environ.get('CHEST_TAKE', os.path.join(HERE, 'chest', 'chest')), 'rect': (1950.0, 1022.0, 3486.0, 2046.0), 'levels': 'ab', 'water': False, 'window': (0.0, 0.0, 1.0, 1.0)},
+    {'take': os.environ.get('HIP_TAKE', os.path.join(HERE, 'hip', 'hip')), 'rect': (2999.18, 1699.33, 3999.87, 2449.2), 'levels': 'a', 'water': False, 'window': (0.0, 0.17, 1.0, 1.0)},
     {'take': os.environ.get('LAKES_TAKE', os.path.join(HERE, 'lakes', 'lakes')), 'rect': (1066.49, 1354.03, 1490.24, 1636.53), 'levels': 'abc', 'water': True, 'window': (0.17, 0.0, 0.7, 0.42)},
 ]
 BANDS = 6
