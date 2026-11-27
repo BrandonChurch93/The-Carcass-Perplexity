@@ -29,7 +29,8 @@ uniform vec4 uShow;
 // x the level of the vapour in the shaft, y how far the breath has come over the lip (0 to 1), z how much lies on the apron, w how far it has spread in the channel.
 uniform vec4 uBreath;
 uniform float uSpent;
-// x thickness of the high haze for a metre at sea level, y its scale height, z the same for the low sea fog, w its scale height.
+// The air in three layers that thin with height. x thickness for a metre at sea level of the low steam of the flats, y its scale height,
+// z and w the same for the damp air over it. The third, the high haze, is HIGH_HAZE below.
 uniform vec4 uHaze;
 uniform int uBodyCount;
 uniform vec4 uBodyA[${MAX_BODIES}];
@@ -44,6 +45,13 @@ const vec2 WINDV = vec2(-0.94, 0.34);
 const vec3 VAPOUR_ALBEDO = vec3(0.93, 0.92, 0.9);
 const float SEA_Y = -0.4;
 
+// How far off the far cliff stands toward a bearing, metres: its near end 2.2 km off in the north east, its far end 7 km off a little
+// east of north, and past that end the open flats to the horizon. The far picture is flat on the sky: this is what sets it in the air.
+float cliffFar(vec3 rd) {
+  float b = atan(rd.x, -rd.z);
+  return mix(30000.0, mix(7000.0, 2200.0, smoothstep(-0.05, 0.87, b)), smoothstep(-0.2, -0.04, b));
+}
+
 // The ray of this pixel: where it starts, where it goes, and how far it gets before it meets the scene.
 void viewRay(out vec3 ro, out vec3 rd, out float far, out float veil) {
   ivec2 pixel = 2 * ivec2(gl_FragCoord.xy);
@@ -56,33 +64,74 @@ void viewRay(out vec3 ro, out vec3 rd, out float far, out float veil) {
   far = length(rd);
   rd /= far;
   veil = far;
-  // The sky stands behind everything: a plume or a bank is seen whole against it. The haze over the sky itself is that of the far ground's
-  // end and thins to nothing a degree over the horizon: the far picture holds its own mist, and a second veil over it was a ruled band.
+  // The sky stands behind everything: a plume or a bank is seen whole against it. The air over the sky is counted as far as the far
+  // cliff stands toward that bearing: each layer thins with height, so the cliff's foot is lost in it, its top stands clear, and no
+  // level band is ruled anywhere.
   if (depth >= 1.0) {
     far = 30000.0;
-    veil = 3200.0 * smoothstep(0.022, 0.0, rd.y);
+    veil = cliffFar(rd);
   }
 }
 
 // The colour the haze has toward d: the sky of that bearing at the horizon, so that the dome and the air meet without a line.
+// Air that is looked through toward the low sun throws its light forward and burns; away from the sun it stands in its own shade.
 vec3 hazeColour(vec3 d) {
-  return skyRadiance(normalize(vec3(d.x, clamp(d.y, 0.0, 1.0), d.z)));
+  float sunward = dot(normalize(d.xz + vec2(1e-5, 0.0)), normalize(uSunDir.xz));
+  return skyRadiance(normalize(vec3(d.x, clamp(d.y, 0.0, 1.0), d.z))) * (0.7 + 0.6 * smoothstep(0.2, 1.0, sunward));
 }
 
-// Thickness of the air from the camera to t along the ray: two layers that thin with height.
-float hazeDepth(vec3 ro, vec3 rd, float t) {
+// The low steam of the flats is not even: it lies in banks a hundred metres and more across that drift down the wind and change as
+// they go. 0.15 where the air is nearly clear between two banks, near 3 in the heart of one.
+float bankAt(vec2 xz) {
+  vec2 w = xz - WINDV * (1.7 * uTime);
+  float broad = textureLod(tNoise, vec3(w / 310.0, 0.27 + 0.006 * uTime), 0.0).g;
+  float torn = textureLod(tNoise, vec3(w / 97.0 + 0.3, 0.64 + 0.012 * uTime), 0.0).a;
+  return 0.15 + 2.6 * smoothstep(0.4, 0.68, 0.62 * broad + 0.38 * torn);
+}
+const vec2 HIGH_HAZE = vec2(1.5e-5, 420.0);
+// One layer between two heights: its mean thickness against its thickness at sea level.
+float layerOver(float y0, float y1, float scale) {
+  return scale * abs(exp(-y0 / scale) - exp(-y1 / scale)) / max(abs(y1 - y0), 1e-3);
+}
+// The part of a ray to t that the air is counted on, and the heights of its ends. Only a shaft lies under the tide, and the air in a
+// shaft is in the shadow of its rim: it carries none of the dawn's glow, so the part of a ray that runs down in one is not counted and
+// the drop stands dark.
+float airSpan(vec3 ro, vec3 rd, float t, out float y0, out float y1) {
   float dy = abs(rd.y) < 1e-4 ? 1e-4 : rd.y;
-  // Only a shaft lies under the tide, and the air in a shaft is in the shadow of its rim: it carries none of the dawn's glow, so the
-  // part of a ray that runs down in one is not counted and the drop stands dark.
   float low = ro.y + dy * t;
   if (low < -0.5 && ro.y > -0.5) t *= (ro.y + 0.5) / (ro.y - low);
-  float y0 = max(ro.y, -0.5);
-  float y1 = max(low, -0.5);
-  float span = max(abs(y1 - y0), 1e-3);
-  float ka = uHaze.y * abs(exp(-y0 / uHaze.y) - exp(-y1 / uHaze.y)) / span;
-  float kb = uHaze.w * abs(exp(-y0 / uHaze.w) - exp(-y1 / uHaze.w)) / span;
-  // The low layer is the damp of the flats: past a kilometre and a half it counts a quarter, or the far cliff's foot is lost in a level band.
-  return t * uHaze.x * ka + (min(t, 1500.0) + 0.25 * max(t - 1500.0, 0.0)) * uHaze.z * kb;
+  y0 = max(ro.y, -0.5);
+  y1 = max(low, -0.5);
+  return t;
+}
+// How thick the banks are along a ray to t, against even steam: the mean of bankAt at four places, each a quarter of the low layer's
+// own thickness on from the last (the layer thins with height, so they stand where the ray is low). Smooth from pixel to pixel: the
+// places move with the ray and are never shaken.
+float banksAlong(vec3 ro, vec3 rd, float t) {
+  float y0;
+  float y1;
+  float span = airSpan(ro, rd, t, y0, y1);
+  float e0 = exp(-y0 / uHaze.y);
+  float e1 = exp(-y1 / uHaze.y);
+  float level = smoothstep(0.02, 0.2, abs(y1 - y0));
+  float sum = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float q = (float(i) + 0.5) / 4.0;
+    float yq = -uHaze.y * log(max(mix(e0, e1, q), 1e-12));
+    float tq = mix(q, clamp((yq - y0) / (y1 - y0 + (y1 >= y0 ? 1e-4 : -1e-4)), 0.0, 1.0), level) * span;
+    sum += bankAt(ro.xz + rd.xz * tq);
+  }
+  return 0.25 * sum;
+}
+// Thickness of the air from the camera to t along the ray: three layers that thin with height, the lowest in banks.
+// The low steam is not counted over the first forty metres or so: what stands near the lens (the ground, the glints, an animal) stays
+// crisp, and the distance takes the haze.
+float hazeDepth(vec3 ro, vec3 rd, float t, float banks) {
+  float y0;
+  float y1;
+  float span = airSpan(ro, rd, t, y0, y1);
+  float low = span - 40.0 * (1.0 - exp(-span / 40.0));
+  return low * uHaze.x * banks * layerOver(y0, y1, uHaze.y) + span * (uHaze.z * layerOver(y0, y1, uHaze.w) + HIGH_HAZE.x * layerOver(y0, y1, HIGH_HAZE.y));
 }
 
 float bumpAt(float b, float centre, float width) {
@@ -307,7 +356,10 @@ void main() {
   float surge = uBreath.y * uShow.w;
   float roof = 11.0 + 10.0 * surge;
   // The light of the place on vapour, from the rig: the sky's own grey with the glow of the sun's half of it, and the low sun, warm.
-  vec3 skyGrey = 0.52 * uSkyHorizon + 0.1 * uSkyZenith;
+  // The vapour of the shaft and the mist on the ground take the light the sky gives a face (the rig's sky times its fill, a cold grey),
+  // not the warm sky as it is seen: lit by that they were brown.
+  vec3 skyGiven = uSkyHorizon * uFill * vec3(1.955, 1.483, 1.0);
+  vec3 skyGrey = 0.595 * skyGiven;
   vec3 skyGlow = (0.16 + 0.3 * toSun * toSun) * uGlowColour;
   vec3 skyLight = skyGrey + skyGlow;
   vec3 sunLight = mix(uSunColour, vec3(2.5), 0.45);
@@ -486,6 +538,7 @@ void main() {
   // The haze and the far bodies, nearest first: each body stands in the haze at its own distance.
   vec3 haze = hazeColour(rd);
   float air = uShow.x;
+  float banks = banksAlong(ro, rd, veil);
   float done = 0.0;
   for (int i = 0; i < ${MAX_BODIES}; i++) {
     if (i >= uBodyCount || through < 0.01) break;
@@ -510,7 +563,7 @@ void main() {
       float tauAll = 0.0;
       vec3 lit = vec3(0.0);
       float thru = 1.0;
-      float here = air * hazeDepth(ro, rd, at);
+      float here = air * hazeDepth(ro, rd, at, banks);
       float seg = exp(-max(here - done, 0.0));
       colour += through * (1.0 - seg) * haze;
       through *= seg;
@@ -545,14 +598,14 @@ void main() {
         float tau = rho * span / 5.0;
         if (tau <= 0.0005) continue;
         // Backlit: where a billow is thin the sun comes through it and it burns, where it is thick it stands grey against its own rim.
-        float glow = (0.3 + 1.0 * exp(-3.2 * body * m * (1.3 - up))) * clamp(0.55 + 1.5 * (fineN - 0.45), 0.25, 1.4);
-        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.35) * (sunHere * min(phase, 2.4) * 0.5 * glow * D.z);
+        float glow = (0.14 + 1.25 * exp(-3.6 * body * m * (1.3 - up))) * clamp(0.55 + 1.5 * (fineN - 0.45), 0.25, 1.4);
+        vec3 light = ambient * (0.3 + 0.6 * n0.r) + mix(uSunColour, vec3(2.2), 0.18) * (sunHere * min(phase, 3.2) * 0.5 * glow * D.z);
         float gone = exp(-tau);
         lit += thru * (1.0 - gone) * light;
         thru *= gone;
       }
       // Far off it stands in the same haze as the ground under it and takes half its colour from that: never a white cut-out on the sky.
-      float seat = 0.55 * smoothstep(250.0, 700.0, at);
+      float seat = 0.3 * smoothstep(250.0, 700.0, at);
       colour += through * mix(VAPOUR_ALBEDO * lit, (1.0 - thru) * haze, seat);
       through *= thru;
       continue;
@@ -566,7 +619,7 @@ void main() {
     // Billows: the body is whole in its middle and eaten by its own lumps toward its edge. sunward carries how deep the ray runs in it.
     float tau = thick * sunward * sunward * smoothstep(0.0, 0.7, sunward - (0.55 + 1.1 * C.w) * (1.0 - 1.35 * lumps));
     if (tau <= 0.002) continue;
-    float here = air * hazeDepth(ro, rd, at);
+    float here = air * hazeDepth(ro, rd, at, banks);
     float seg = exp(-max(here - done, 0.0));
     colour += through * (1.0 - seg) * haze;
     through *= seg;
@@ -575,14 +628,14 @@ void main() {
     // Toward the sun a body burns warm; away from it it is thin and blue grey.
     // What stands down in the shaft is under its own wall: it takes the sky from a disc overhead, and no sun.
     float sunkBody = clamp(1.0 + min(mid.y - 1.0, 0.0) / 14.0, 0.0, 1.0);
-    vec3 tint = D.x > 1.5 ? vec3(0.86, 0.78, 0.68) : D.x > 0.5 ? vec3(0.72, 0.8, 0.92) * 0.85 : vec3(1.0);
+    vec3 tint = D.x > 1.5 ? vec3(0.86, 0.78, 0.68) : D.x > 0.5 ? vec3(0.86, 0.88, 0.93) : vec3(1.0);
     // White steam: gold only on its side toward the sun, and grey in its own shade.
     vec3 light = ambient * tint * (0.5 + 0.5 * tops) * (0.25 + 0.75 * sunkBody) + mix(uSunColour, vec3(2.2), 0.8) * (sunAt(mid) * sunkBody * min(phase, 1.6) * 0.3 * (0.1 + 0.9 * tops * tops) * D.z);
     float gone = exp(-tau);
     colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
     through *= gone;
   }
-  float all = air * hazeDepth(ro, rd, veil);
+  float all = air * hazeDepth(ro, rd, veil, banks);
   float seg = exp(-max(all - done, 0.0));
   colour += through * (1.0 - seg) * haze;
   through *= seg;
