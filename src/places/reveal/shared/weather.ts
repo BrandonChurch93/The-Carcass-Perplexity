@@ -289,17 +289,9 @@ float highDepth(vec2 at) {
   }
   highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
   highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1250.0, 900.0) + vec2(0.7, 0.2);
-  // (Over the land the ice lies in long swaths across the ranges (sky/banks.png, blue), carried on its own wind with the rest.)
-  // (The streaks bend as they go: drawn straight they were scratches on a glass.)
-  vec2 hw = hv + vec2(0.0, 55.0 * sin(hv.x / 330.0 + 1.3 * sin(hv.y / 410.0)) + 16.0 * sin(hv.x / 97.0 + 0.02 * hv.y + 2.0));
-  vec2 highUvFibre = mat2(0.97, 0.26, -0.26, 0.97) * hw / vec2(900.0, 110.0) + vec2(0.43, 0.11);
-  vec2 uvSwath = clamp((hv - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0);
   highGSheet = GRADS(highUvSheet);
   highGThread = GRADS(highUvThread);
-  vec4 gFibre = GRADS(highUvFibre);
-  vec4 gSwath = GRADS(uvSwath);
   if (far <= 0.0) return 0.0;
-  float swath = pic(uBanks, uvSwath, gSwath).b;
   // (Where the ice stands at all: two soft swells that cross, carried with it. They are waves and not a picture or a noise of
   // cells, so the pattern has no corner, no step and no flat for the last sun to redden: the fibre of the photographs is all the
   // outline the ice has.)
@@ -308,15 +300,12 @@ float highDepth(vec2 at) {
   float wide = 0.5 + 0.5 * sin(g.x / 480.0 + 1.7 * sin(g.y / 620.0 + 0.4)) * sin(g.y / 530.0 + 1.3 * sin(g.x / 700.0 + 1.9));
   float fine = 0.5 + 0.5 * sin(h.x / 205.0 + 1.5 * sin(h.y / 260.0)) * sin(h.y / 225.0 + 1.2 * sin(h.x / 310.0 + 0.8));
   float where = 0.8 * smoothstep(0.56, 0.96, 0.6 * wide + 0.4 * fine) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
-  if (where <= 0.0 && swath <= 0.0) return 0.0;
+  if (where <= 0.0) return 0.0;
   float sheet = cloudAt(uMatVeil, highUvSheet, highGSheet, 0.27);
   float thread = cloudAt(uMatStreaks, highUvThread, highGThread, 0.31);
   float depth = sheet * mix(1.0, thread, 0.55) * where * 1.7 - 0.85;
-  // (In a swath over the land the same fibre is read drawn out eight to one along the wind: long thin streaks that cross the
-  // ranges, with their shadow. Thickening the sheet itself there gave a smudge.)
-  float fibre = cloudAt(uMatStreaks, highUvFibre, gFibre, 0.31);
-  float streaked = smoothstep(0.0, 0.3, swath) * clamp(0.7 * (fibre * (0.5 + 0.5 * thread) * (0.3 + 0.75 * swath) - 1.25), 0.0, 1.0);
-  return max(1.0 - exp(-1.1 * max(depth, 0.0)), streaked) * far;
+  // (Ice in swaths over the land (sky/banks.png, blue) is not drawn: as straight drawn-out fibre it read as scratches on the plate.)
+  return (1.0 - exp(-1.1 * max(depth, 0.0))) * far;
 }
 
 float highField(vec2 at) {
