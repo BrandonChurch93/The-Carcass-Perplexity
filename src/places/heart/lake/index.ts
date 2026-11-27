@@ -16,6 +16,10 @@ import { SHEET_GLSL } from './sheet';
 
 export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
 
+/** The pads that press the crust now: x, z, the radius of the pad in metres, and its load from 0 (lifted) to 1 (the full weight on it).
+ *  The walkers fill it in their setTime, each sample; the crust sags, cracks and darkens under each. Sixteen at most, all nought by default. */
+export const PAD_DENTS: THREE.Vector4[] = Array.from({ length: 16 }, () => new THREE.Vector4(0, 0, 0, 0));
+
 // The height of the crust in metres, one function for every cell of the sheet. `c` is the size of the cells that carry it there:
 // every part of the relief fades out before the cells get too coarse to hold it, so nothing swims and nothing pops.
 // A billow, broad lobes poured on each other, festoons of cords where the skin was gathered, then the lips, the gaps cut down
@@ -1022,6 +1026,7 @@ export function create(ctx: HeartContext): HeartPiece {
     // The hero at its pool, walker 0 in its two shots, walker 13.
     // The swell beside the lens of key heart-4: 10.5 m ahead of it and 4 m to its left. On the set for shot heart-05 only.
     uHill: { value: new THREE.Vector4(-455 + 10.5 * 0.582 - 4 * 0.813, 178 - 10.5 * 0.813 - 4 * 0.582, 0, 0) },
+    uPadDents: { value: PAD_DENTS },
     uPads: { value: [new THREE.Vector3(-410, 197, 7), new THREE.Vector3(-508.7, 226.8, 7), new THREE.Vector3(-494.3, 209.8, 7), new THREE.Vector3(-423.5, 166.1, 7), new THREE.Vector3(-407.6, 206.5, 4.5)] },
   };
   const foundering = createFoundering(ctx);
