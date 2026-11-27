@@ -26,9 +26,10 @@ vec3 mirrorAt(vec3 p, vec3 n) {
   // Three ripples answer for a pixel, each swinging the ray its own way: what stands in the mirror is drawn out toward the lens and broken.
   vec4 q1 = uMirrorMatrix * vec4(p.x + swing.x * 2.3 - swing.y * 0.6, p.y, p.z + swing.y * 2.3 + swing.x * 0.6, 1.0);
   vec4 q2 = uMirrorMatrix * vec4(p.x - swing.x * 0.7 + swing.y * 0.8, p.y, p.z - swing.y * 0.7 - swing.x * 0.8, 1.0);
-  vec3 seen = (textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), 0.0).rgb
-    + textureLod(tMirror, clamp(q1.xy / q1.w, 0.003, 0.997), 0.0).rgb
-    + textureLod(tMirror, clamp(q2.xy / q2.w, 0.003, 0.997), 0.0).rgb) / 3.0;
+  vec3 seen = (textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), 0.0).rgb
+    + textureLod(tMirror, clamp(q1.xy / max(q1.w, 1e-3), 0.003, 0.997), 0.0).rgb
+    + textureLod(tMirror, clamp(q2.xy / max(q2.w, 1e-3), 0.003, 0.997), 0.0).rgb) / 3.0;
+  seen = clamp(seen, vec3(0.0), vec3(8.0));
   // Far off, what stands in the mirror is smaller than the mirror's picture can hold (a bird there is one dark square): the mirror
   // gives way to the sky alone.
   vec3 d = (p - cameraPosition) / away;
@@ -50,7 +51,8 @@ float brineFresnel(vec3 n, vec3 v) {
   // (Seen from high above, the fine ruffle on it turns a share of the skin to the sky: a lens low over it sees the body and the glints.)
   // (And the mirror falls with the angle of the look itself, not only with the wavelet's: near a low lens, where it looks down into
   // the brine, the pool is its own red.)
-  return 0.016 + 0.036 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.15 * pow(1.0 - nv, 8.0) * mix(1.0, 0.25, smoothstep(0.04, 0.24, v.y));
+  // (A lens at the height of the stalks' heads looks down on the pool at a slant: the sky lies in it as a pale sheen, the red under it.)
+  return 0.02 + 0.04 * smoothstep(1.2, 2.6, cameraPosition.y) * smoothstep(0.08, 0.3, v.y) + 0.036 * smoothstep(0.22, 0.45, v.y) * smoothstep(3.0, 6.5, cameraPosition.y) + 0.015 * (1.0 - nv) + 0.15 * pow(1.0 - nv, 8.0) * mix(1.0, 0.25, smoothstep(0.04, 0.24, v.y));
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
@@ -68,12 +70,15 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   float soft = max(log2(float(textureSize(tMirror, 0).x) / 170.0), 0.0);
   // (And a wavelet that leans hard throws the ray far: what it brings back is a wider piece of the picture, softer, or a thing that
   // stands in the mirror would lie on the pool in hard-cut flakes.)
-  vec3 seen = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), soft + min(length(n.xz) * 9.0, 1.6)).rgb;
+  vec3 seen = textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), soft + min(length(n.xz) * 9.0, 1.6)).rgb;
   // (The air lies between the brine and what it mirrors too: what stands in the mirror is as pale as it stands over it.)
+  // (What is drawn into the mirror is not always a colour: a part that puts out less than nothing there, or far more than the sky,
+  // would stand on the pool as black and glowing dots.)
+  seen = clamp(seen, vec3(0.0), vec3(8.0));
   seen = rigAir(seen, 3.0 + away * 0.8, 0.5);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
-  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.73, 0.67);
+  return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.75, 0.69);
 }
 // s: metres to the shore, negative in the brine. n: the surface's normal (ripples and rings laid in by the caller). froth: the colour of the
 // scum on top and how much of it there is.
@@ -115,7 +120,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   vec3 through = exp(-taken * path);
   // What the liquid itself gives back where no bed shows: a dark rust red, paler and browner where silt hangs in it.
   vec3 body = mix(vec3(0.038, 0.0085, 0.0065), vec3(0.072, 0.021, 0.016), smoothstep(0.25, 0.8, silt));
-  body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6);
+  body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6) * 1.16;
   body = mix(body, vec3(0.045, 0.02, 0.014), brineMud * 0.85);
   body = mix(body, vec3(0.118, 0.086, 0.072) * (0.8 + 0.4 * silt), brineSlurry * 0.92);
   vec3 albedo = brineBed * through + body * (1.0 - through);
