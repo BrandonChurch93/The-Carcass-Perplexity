@@ -16,11 +16,13 @@ attribute float aDepth;
 varying vec3 vWorld;
 varying float vEdge;
 varying float vDepth;
+uniform float uMirror;
 void main() {
   vEdge = aEdge;
   vDepth = aDepth;
   vWorld = position;
-  gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
+  // It is not drawn into the mirror: there it would read the picture it is being drawn into, and what comes back is not a number.
+  gl_Position = mix(projectionMatrix * viewMatrix * vec4(position, 1.0), vec4(2.0, 2.0, 2.0, 1.0), step(0.5, uMirror));
 }`;
 
 const FRAGMENT = /* glsl */ `
@@ -104,7 +106,8 @@ void main() {
   vec3 c = albedo * skyIrradiance(n) * (open * mix(0.6 + 0.4 * smoothstep(0.25, 0.6, clod.b), 1.0, liquid) / 3.14159);
   vec3 up = reflect(-v, n);
   up.y = abs(up.y);
-  c += 0.014 * (1.0 - smoothstep(0.25, 0.5, clod.b)) * (1.0 - liquid) * skyRadiance(up) * open;
+  // (Never the sun itself: a clod that throws the sun at the lens is a white dot, and past what the picture can hold a black one.)
+  c += 0.014 * (1.0 - smoothstep(0.25, 0.5, clod.b)) * (1.0 - liquid) * min(skyRadiance(up), vec3(3.0)) * open;
   // The mirror. The sheet lies uLevel above the brine the picture was drawn for: a ray it throws up is the ray the brine would throw
   // from the same place that far under its level again.
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -112,12 +115,13 @@ void main() {
   vec2 swing = n.xz * 2.0 * clamp(away * 0.22, 0.2, 6.0);
   vec4 q = uMirrorMatrix * vec4(p.x + swing.x, -uLevel, p.y + swing.y, 1.0);
   float soft = max(log2(float(textureSize(tMirror, 0).x) / 240.0), 0.0);
-  vec3 seen = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), soft).rgb * vec3(0.92, 0.8, 0.76);
+  vec3 seen = min(textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), soft).rgb, vec3(8.0)) * vec3(0.92, 0.8, 0.76);
   c += share * seen * (1.0 - uMirror);
   // The dark wet line where it stands against a leg.
   c *= 1.0 - 0.35 * sleeve * liquid;
   // Its edge thins out over the bed clod by clod: no line anywhere.
   float a = smoothstep(0.0, 0.1, reach - 0.03) * smoothstep(0.0, 0.03, vEdge);
+  c = clamp(c, 0.0, 8.0);
   gl_FragColor = vec4(rigOut(c), a * uShown * (1.0 - uMirror));
 }`;
 

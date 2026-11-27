@@ -153,8 +153,8 @@ export class Wet {
     this.b[o + 3] = seed;
   }
 
-  /** The drops and rings of animal `i`, standing as `stood` at `seconds`. `alive` 0 leaves it dry. */
-  set(i: number, stood: Stood, k: number, seconds: number, alive = 1): void {
+  /** The drops and rings of animal `i`, standing as `stood` at `seconds`. `alive` 0 leaves it dry. One caked in mud does not drip: `drips` false. */
+  set(i: number, stood: Stood, k: number, seconds: number, alive = 1, drips = true): void {
     const land = this.ctx.rig.land;
     const fx = Math.cos(stood.yaw);
     const fz = -Math.sin(stood.yaw);
@@ -175,7 +175,7 @@ export class Wet {
       const drop = y0 - level;
       const c = fract(seconds / period + (this.drops[q + 3] as number));
       const SWELL = 0.3;
-      if (alive < 0.5 || drop < 0.06) {
+      if (alive < 0.5 || !drips || drop < 0.06) {
         this.put(o, 0, -1000, 0, 0, 0, 0, 0, 0);
         this.put(o + 4, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       } else if (c < SWELL) {

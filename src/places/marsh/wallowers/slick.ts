@@ -77,13 +77,13 @@ void main() {
 
   // The skin: brown with pink in it, every crease of the tile dark, and darker still in the deep folds the body is built with.
   vec3 tone = skin / HIDE_MEAN;
-  vec3 albedo = vec3(0.088, 0.068, 0.057) * mix(vec3(dot(tone, LUMA)), tone, 0.6);
+  vec3 albedo = vec3(0.158, 0.124, 0.105) * mix(vec3(dot(tone, LUMA)), tone, 0.6);
   // The head is the darkest of it: heavy and grey.
   albedo *= 1.0 - 0.35 * smoothstep(1.0, 1.7, vRest.x) * (1.0 - leg);
   albedo *= mix(0.42, 1.06, smoothstep(0.05, 0.8, fold));
   albedo = mix(albedo, albedo * vec3(0.6, 0.46, 0.4), damp);
   // The cake: pale and matt, each plate dark at the edge where it has lifted, and the salt has come out of it white on the spine.
-  vec3 plate = vec3(0.16, 0.138, 0.122) * mix(vec3(dot(cake, LUMA) / dot(CAKE_MEAN, LUMA)), cake / CAKE_MEAN, 0.7);
+  vec3 plate = vec3(0.255, 0.222, 0.198) * mix(vec3(dot(cake, LUMA) / dot(CAKE_MEAN, LUMA)), cake / CAKE_MEAN, 0.7);
   plate *= 0.62 + 0.38 * smoothstep(0.525, 0.6, lie);
   float salt = smoothstep(0.62, 0.7, cakeH + 0.3 * (fine - 0.5)) * smoothstep(0.35, 0.9, nr.y) * smoothstep(0.56, 0.7, lie);
   plate = mix(plate, vec3(0.5, 0.48, 0.46), 0.8 * salt);

@@ -166,9 +166,10 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   if (dot(n, v) < 0.0) n = -n;
-  vec3 albedo = mix(vec3(0.035, 0.026, 0.02), vec3(0.07, 0.06, 0.055), step(0.5, vWing));
-  vec3 c = rigShade(vWorld, n, v, albedo, 0.7, 1.0);
-  gl_FragColor = vec4(rigOut(c), 1.0);
+  // Pale and half clear: a straw body and wings the sky shows through. Lit by the sky alone: at a pixel wide a glint is a white dot and a dark body a black one.
+  vec3 albedo = mix(vec3(0.2, 0.165, 0.12), vec3(0.34, 0.32, 0.29), step(0.5, vWing));
+  vec3 c = albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.7 + 0.3 * n.y) / 3.14159;
+  gl_FragColor = vec4(rigOut(c), mix(0.6, 0.28, step(0.5, vWing)));
 }`;
 
 const WALLOW_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-04');
@@ -181,11 +182,10 @@ function makeMidges(ctx: Context): { mesh: THREE.Mesh; material: THREE.ShaderMat
   const normal = [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
   const uv = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0];
   const index = [0, 2, 4, 0, 4, 3, 0, 3, 5, 0, 5, 2, 1, 4, 2, 1, 3, 4, 1, 5, 3, 1, 2, 5, 6, 7, 8, 9, 11, 10];
-  // STAGED for the lens of the wallowers: columns over the brine beyond the young one and low over the brine before the one that lies in it.
+  // STAGED for the lens of the wallowers: columns over the brine beyond the young one. None before the one that lies in it: so near the lens they drew as specks on the brine.
   const columns: { d: number; l: number; y: number; r: number; n: number }[] = [
     { d: 38.6, l: 7.6, y: 1.1, r: 0.5, n: 90 },
     { d: 41.5, l: 5.2, y: 1.3, r: 0.6, n: 80 },
-    { d: 31.4, l: 5.4, y: 0.55, r: 0.3, n: 46 },
   ];
   const count = columns.reduce((sum, c) => sum + c.n, 0);
   const home = new Float32Array(count * 4);
@@ -211,9 +211,12 @@ function makeMidges(ctx: Context): { mesh: THREE.Mesh; material: THREE.ShaderMat
     vertexShader: MIDGE_VERTEX,
     fragmentShader: MIDGE_FRAGMENT,
     side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: false,
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
+  mesh.renderOrder = 3;
   return { mesh, material, geometry };
 }
 

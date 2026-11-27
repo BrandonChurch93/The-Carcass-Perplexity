@@ -488,6 +488,7 @@ uniform float uCurl;
 uniform float uFloor;
 uniform float uHang;
 uniform float uDroop;
+uniform float uTint;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLook;
@@ -511,10 +512,12 @@ void main() {
   vec3 n2 = cross(tangent, n1);
   // Thick where it leaves the lip, a long taper, a blunt tip.
   float knuckle = exp(-pow((s - 0.3) / 0.05, 2.0)) + 0.7 * exp(-pow((s - 0.58) / 0.045, 2.0));
-  float radius = iShape.y * (mix(0.035, 0.1, uHang) + 0.9 * pow(1.0 - s, mix(1.15, 0.7, uHang))) * (1.0 + 0.06 * sin(s * 23.0 + a) + 0.16 * knuckle * (1.0 - uHang) + uHang * (0.22 * sin(s * 11.0 + a * 5.0) + 0.14 * sin(s * 29.0 + a * 2.0)));
+  float radius = iShape.y * (mix(0.035, 0.1, uHang) + 0.9 * pow(1.0 - s, mix(mix(1.15, 0.7, uHang), 0.4, 1.0 - smoothstep(0.6, 0.9, uTint)))) * (1.0 + 0.06 * sin(s * 23.0 + a) + 0.16 * knuckle * (1.0 - uHang) + uHang * (0.22 * sin(s * 11.0 + a * 5.0) + 0.14 * sin(s * 29.0 + a * 2.0)));
   vec3 rim = n1 * position.y + n2 * position.z;
-  vec4 world = uHead * vec4(centre + rim * radius, 1.0);
-  world.y = max(world.y, uFloor + 0.004 * position.y);
+  // Where it has gone under the mud it is not there: a tube pressed flat on the surface draws as specks at a low lens.
+  float sunk = smoothstep(0.0, 0.5 * radius + 0.004, uFloor - (uHead * vec4(centre, 1.0)).y);
+  vec4 world = uHead * vec4(centre + rim * radius * (1.0 - sunk), 1.0);
+  world.y = max(world.y, uFloor + 0.004 * position.y * (1.0 - sunk));
   vWorld = world.xyz;
   vNormal = normalize(mat3(uHead) * rim);
   vLook = vec3(s, atan(position.z, position.y), iShape.w);
@@ -556,6 +559,8 @@ void main() {
   albedo = mix(albedo, mix(vec3(0.26, 0.17, 0.105) * (0.6 + 0.5 * groove), vec3(0.33, 0.29, 0.27), knobs), uSalted);
   // No two alike: each its own tone, and the grooves and rings break the light along it.
   albedo *= (0.78 + 0.44 * fract(vLook.z * 7.31 + 0.2)) * uTint;
+  // On one that wades in mud they are the brown of the mud, not ivory.
+  albedo *= mix(vec3(1.0, 0.8, 0.62), vec3(1.0), smoothstep(0.6, 0.9, uTint));
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   float rough = mix(0.95, mix(0.9, 0.58, groove * ring * 2.0), wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
@@ -647,6 +652,8 @@ export class Beast {
   private readonly world = new THREE.Matrix4();
   private readonly trunk = new THREE.Matrix4();
   private readonly head = new THREE.Matrix4();
+  /** The one stuck in the crust holds its head up clear of it, the fan hanging from the snout: how far above what its Drive asks, in radians. */
+  private readonly rise: number;
 
   constructor(
     ctx: Context,
@@ -655,6 +662,7 @@ export class Beast {
   ) {
     const hide = hideOf(b.young > 0.5 ? 1 : 0, 1, look.cell * (b.young > 0.5 ? 1.3 : 1));
     this.skeleton = hide.skeleton;
+    this.rise = look.mudded ? 0.6 : 0;
     const seed = b.seed;
     const lx = b.young > 0.5 ? 0.9 : 1;
     this.material = new THREE.ShaderMaterial({
@@ -720,7 +728,8 @@ export class Beast {
           const row = (i % 3) * 0.045;
           return {
             at: [a.at[0] + (b2.at[0] - a.at[0]) * w - row, a.at[1] + (b2.at[1] - a.at[1]) * w + rng.range(-0.02, 0.05) + row * 0.6, a.at[2] + (b2.at[2] - a.at[2]) * w] as V3,
-            out: [a.out[0] + (b2.out[0] - a.out[0]) * w + rng.range(-0.45, 0.45), a.out[1] + (b2.out[1] - a.out[1]) * w - rng.range(0, 0.3), a.out[2] + (b2.out[2] - a.out[2]) * w + rng.range(-0.45, 0.45)] as V3,
+            // On one that wades the fan is broad: the outer ones stand out to the sides like the fingers of a spread hand.
+            out: [a.out[0] + (b2.out[0] - a.out[0]) * w + rng.range(-0.45, 0.45), a.out[1] + (b2.out[1] - a.out[1]) * w - rng.range(0, 0.3), a.out[2] + (b2.out[2] - a.out[2]) * w + rng.range(-0.45, 0.45) + (look.coat || look.mudded ? 1.5 * (i / (many - 1) - 0.5) : 0)] as V3,
           };
         })
       : base;
@@ -732,7 +741,8 @@ export class Beast {
       out.set(l.out, i * 3);
       const mid = 1 - Math.abs(i / (lip.length - 1) - 0.5) * 0.6;
       // Thin as a finger and long: a fan of them, never the four tusks of a walrus.
-      if (many) shape.set([rng.range(0.6, 1.15) * mid * (look.long ?? 1), (0.0065 + 0.004 * rng.next()) * (look.thick ?? 1), rng.next(), rng.next()], i * 4);
+      // The stuck one's are a third longer and half as thick again than it asks: its head is held up now and they hang clear to the crust.
+      if (many) shape.set([rng.range(0.6, 1.15) * mid * (look.long ?? 1) * (look.mudded ? 1.35 : 1), (0.0065 + 0.004 * rng.next()) * (look.thick ?? 1) * (look.mudded ? 1.5 : 1), rng.next(), rng.next()], i * 4);
       else shape.set([rng.range(0.56, 0.86) * mid * (1 - 0.25 * b.young) * (look.reach ?? 1), (0.042 + 0.016 * rng.next()) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
     });
     const geometry = new THREE.InstancedBufferGeometry();
@@ -743,7 +753,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? 0.4 : 1 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? 0.55 : 1 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
@@ -768,8 +778,8 @@ export class Beast {
     (M[PELVIS] as THREE.Matrix4).copy(this.trunk).multiply(about(t1, sk.joint[BELLY] as V3, m.makeRotationY(-d.bend)));
     (M[BELLY] as THREE.Matrix4).copy(this.trunk).multiply(t1.makeTranslation(0, 0, d.sway / k));
     (M[CHEST] as THREE.Matrix4).copy(this.trunk).multiply(about(t1, sk.joint[CHEST] as V3, m.makeRotationY(d.bend)));
-    (M[NECK] as THREE.Matrix4).copy(M[CHEST] as THREE.Matrix4).multiply(about(t1, sk.joint[NECK] as V3, m.makeRotationFromEuler(euler.set(0, d.headYaw * 0.4, -d.headPitch * 0.4, 'YZX'))));
-    (M[HEAD] as THREE.Matrix4).copy(M[NECK] as THREE.Matrix4).multiply(about(t1, sk.joint[HEAD] as V3, m.makeRotationFromEuler(euler.set(0, d.headYaw * 0.6, -d.headPitch * 0.6, 'YZX'))));
+    (M[NECK] as THREE.Matrix4).copy(M[CHEST] as THREE.Matrix4).multiply(about(t1, sk.joint[NECK] as V3, m.makeRotationFromEuler(euler.set(0, d.headYaw * 0.4, -(d.headPitch - this.rise) * 0.4, 'YZX'))));
+    (M[HEAD] as THREE.Matrix4).copy(M[NECK] as THREE.Matrix4).multiply(about(t1, sk.joint[HEAD] as V3, m.makeRotationFromEuler(euler.set(0, d.headYaw * 0.6, -(d.headPitch - this.rise) * 0.6, 'YZX'))));
 
     for (let l = 0; l < 4; l++) {
       const hind = l % 2 === 0;
