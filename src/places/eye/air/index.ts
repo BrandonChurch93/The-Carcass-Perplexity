@@ -28,7 +28,7 @@ type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: Four; b: Four; c: Four; d?: Four; tone?: number }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1] },
   low: { a: [600, 4.0, 45, 420], b: [0.9, 1.1, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
-  edge: { a: [560, 2.4, 34, 320], b: [0.25, 1.1, 0.5, 0.4], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0], tone: 0.6 },
+  edge: { a: [560, 2.4, 34, 320], b: [0.25, 1.1, 0.5, 0.4], c: [0, 0, 0.1, 0.3], d: [1, 0, 0, 0], tone: 0.6 },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   // The last shot is seen from the water and then from straight above. From the water it is a low torn bank at the foot of the far wall.
   centre: { a: [520, 2.0, 22, 200], b: [0.6, 1.5, 1.0, 0.5], c: [0, 0, 0.3, 0.6], d: [0.8, 1, 1, 1] },

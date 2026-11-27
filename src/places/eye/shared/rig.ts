@@ -358,7 +358,7 @@ export function createRig(): Rig {
     uSunDir: { value: sunDirection },
     uSunColour: { value: new THREE.Vector3(9.0, 4.3, 1.5) },
     uGlowDir: { value: new THREE.Vector3(Math.sin(glowBearing), 0, -Math.cos(glowBearing)) },
-    uGlowColour: { value: new THREE.Vector3(3.2, 1.9, 0.8) },
+    uGlowColour: { value: new THREE.Vector3(2.8, 2.05, 1.05) },
     uFill: { value: new THREE.Vector3(0.58, 0.66, 0.82) },
     // The far world: one picture of the rim and the sky beyond the lake, hung on a cylinder round the camera of the shot it belongs to.
     // The air folder sets it by shot. uPlateAt: the middle of the cylinder (y is the level of the picture's horizon) and its radius.
