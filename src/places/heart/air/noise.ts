@@ -115,3 +115,83 @@ export function bakeNoise(rng: Rng): THREE.Data3DTexture {
   t.needsUpdate = true;
   return t;
 }
+
+/** Toward the pale quarter of the sky, in the block's own space: the way the smoke is lit from. */
+export const LUMPS_SKY: readonly [number, number, number] = [-0.58, 0.75, -0.29];
+/** How far toward the sky the two shades of the block look, as shares of one repeat: the near one is the billow's own top and underside, the far one the mass over it. */
+export const LUMPS_REACH = { near: 0.16, far: 0.5 };
+
+// The block the bodies of smoke are cut from, lit before the film starts. red: the billows of the first block, as they are. green: the mean of
+// those billows over the first tenth of a repeat toward the sky, blue: over the next third. alpha: the fine billows.
+// A body reads its thickness and what stands between each point and the sky in one read, where it marched a second point toward the sky for
+// every point it drew and knew nothing of the mass farther up. The means are taken of the field, not of a body cut from it: a body's own
+// threshold is laid on each of the three alike.
+export function bakeLumps(noise: THREE.Data3DTexture): { texture: THREE.Data3DTexture; mean: number } {
+  const N = NOISE_SIZE;
+  const from = noise.image.data as Uint8Array;
+  const field = new Float32Array(N * N * N);
+  let sum = 0;
+  for (let i = 0; i < field.length; i++) {
+    field[i] = (from[i * 4] as number) / 255;
+    sum += field[i] as number;
+  }
+  // The taps lie at the same offsets from every cell, so each tap's eight neighbours and their weights are worked out once: the block is baked
+  // in a few hundredths of a second where a read by floor and remainder for every tap of every cell took some tenths at every start.
+  const TAPS = 6;
+  const M = N - 1;
+  const tap = (dx: number, dy: number, dz: number): { x: number; y: number; z: number; fx: number; fy: number; fz: number } => ({
+    x: Math.floor(dx), y: Math.floor(dy), z: Math.floor(dz), fx: dx - Math.floor(dx), fy: dy - Math.floor(dy), fz: dz - Math.floor(dz),
+  });
+  const nearTaps = Array.from({ length: TAPS }, (_, t) => {
+    const a = ((t + 0.5) / TAPS) * LUMPS_REACH.near * N;
+    return tap(LUMPS_SKY[0] * a, LUMPS_SKY[1] * a, LUMPS_SKY[2] * a);
+  });
+  const farTaps = Array.from({ length: TAPS }, (_, t) => {
+    const b = (LUMPS_REACH.near + ((t + 0.5) / TAPS) * (LUMPS_REACH.far - LUMPS_REACH.near)) * N;
+    return tap(LUMPS_SKY[0] * b, LUMPS_SKY[1] * b, LUMPS_SKY[2] * b);
+  });
+  const mean = (taps: typeof nearTaps, i: number, j: number, k: number): number => {
+    let total = 0;
+    for (let t = 0; t < TAPS; t++) {
+      const w = taps[t] as (typeof taps)[number];
+      const x0 = (i + w.x) & M;
+      const x1 = (x0 + 1) & M;
+      const y0 = ((j + w.y) & M) * N;
+      const y1 = ((j + w.y + 1) & M) * N;
+      const z0 = ((k + w.z) & M) * N * N;
+      const z1 = ((k + w.z + 1) & M) * N * N;
+      const a = (field[z0 + y0 + x0] as number) * (1 - w.fx) + (field[z0 + y0 + x1] as number) * w.fx;
+      const b = (field[z0 + y1 + x0] as number) * (1 - w.fx) + (field[z0 + y1 + x1] as number) * w.fx;
+      const c = (field[z1 + y0 + x0] as number) * (1 - w.fx) + (field[z1 + y0 + x1] as number) * w.fx;
+      const d = (field[z1 + y1 + x0] as number) * (1 - w.fx) + (field[z1 + y1 + x1] as number) * w.fx;
+      total += (a * (1 - w.fy) + b * w.fy) * (1 - w.fz) + (c * (1 - w.fy) + d * w.fy) * w.fz;
+    }
+    return total / TAPS;
+  };
+  const data = new Uint8Array(N * N * N * 4);
+  const byte = (v: number): number => Math.round(255 * Math.min(1, Math.max(0, v)));
+  let o = 0;
+  for (let k = 0; k < N; k++) {
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        data[o] = from[o] as number;
+        data[o + 1] = byte(mean(nearTaps, i, j, k));
+        data[o + 2] = byte(mean(farTaps, i, j, k));
+        data[o + 3] = from[o + 2] as number;
+        o += 4;
+      }
+    }
+  }
+  const t = new THREE.Data3DTexture(data, N, N, N);
+  t.format = THREE.RGBAFormat;
+  t.type = THREE.UnsignedByteType;
+  t.minFilter = THREE.LinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.wrapR = THREE.RepeatWrapping;
+  t.colorSpace = THREE.NoColorSpace;
+  t.unpackAlignment = 1;
+  t.needsUpdate = true;
+  return { texture: t, mean: sum / field.length };
+}

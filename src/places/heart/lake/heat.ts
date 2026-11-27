@@ -159,12 +159,12 @@ float bankAt(vec2 q, vec4 n) {
 }
 
 // The height of the melt in the gap of a seam the pictures show, metres (the brim is zero). One level for a seam, so the liquid
-// lies level. The channel at the line and its fingers lie in a trench, 0.3 m down: the near bank hides the near edge of the melt
+// lies level. The channel at the line and its fingers lie in a shallow trench, 0.17 m down: the near bank hides the near edge of the melt
 // and the far bank stands over it as a wall. The other gaps are nearly full: the long seam of the group at 0.045 m, the narrow
 // near seams highest (0.08 m), the fountain lines at 0.2 m.
 float meltLevel(vec4 n) {
   float c = n.g - 2.0;
-  float level = mix(mix(mix(0.3, 0.1, smoothstep(0.01, 0.04, c)), 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
+  float level = mix(mix(mix(0.17, 0.1, smoothstep(0.01, 0.04, c)), 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
   // The pools of the string stand brimful: a long lens five degrees over the crust sees into them.
   return -mix(level, 0.045, smoothstep(0.06, 0.075, c) * (1.0 - smoothstep(0.105, 0.115, c)));
 }
@@ -440,8 +440,9 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     float s2 = vnoise(run * 4.1 + 5.0);
     // The skin on it is ropy like the crust it will become: orange where it is thin, dark where it has thickened,
     // and the open lava shows brightest in the creases where it tears and where it shears against the lip.
-    float t = sqrt(texture2D(tRope, run / 2.3).g);
-    float t2 = sqrt(texture2D(tRope, vec2(run.y, -run.x) / 4.7 + 0.37).g);
+    // Read at the level the footprint asks for, by hand: inside a branch the sampler's own choice of level is not defined.
+    float t = sqrt(textureLod(tRope, run / 2.3, log2(max(gFoot * (1024.0 / 2.3), 1.0))).g);
+    float t2 = sqrt(textureLod(tRope, vec2(run.y, -run.x) / 4.7 + 0.37, log2(max(gFoot * (1024.0 / 4.7), 1.0))).g);
     // Yellow only down the middle of the stream, an orange body, dull red against the banks.
     float middle = 1.0 - smoothstep(0.12, 0.6, gAcross + 0.35 * (s1 - 0.5));
     float kFloor = mix(1165.0 + 70.0 * t2, 1250.0 + 55.0 * t, middle * smoothstep(0.25, 0.45, hotHalf));

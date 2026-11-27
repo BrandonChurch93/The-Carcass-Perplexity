@@ -10,7 +10,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_STEAM = 16;
 export const MAX_BODIES = 13;
 /** March steps for each texel. Four texels with four offsets are averaged, so the march seen is four times as fine. */
-export const SMOKE_STEPS = { body: 8, most: 14, steam: 6 };
+export const SMOKE_STEPS = { body: 8, most: 11, reach: 14, steam: 6 };
 
 export const SMOKE_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -25,6 +25,8 @@ uniform vec2 uSmokeFull;
 uniform float uPhase;
 uniform float uSplit;
 uniform highp sampler3D tNoise;
+uniform highp sampler3D tLumps;
+uniform float uLumpsMean;
 uniform vec3 uSkyMean;
 uniform int uSteamCount;
 uniform vec4 uSteamA[${MAX_STEAM}];
@@ -47,6 +49,10 @@ const vec2 SKY_SIDE = vec2(-0.895, -0.446);
 
 vec4 noise(vec3 p) {
   return textureLod(tNoise, p, 0.0);
+}
+// The block the bodies are cut from (noise.ts, bakeLumps): r the billows, g and b their mean toward the sky near and far, a the fine billows.
+vec4 lumps(vec3 p) {
+  return textureLod(tLumps, p, 0.0);
 }
 // The fire's light as smoke hands it on (the same as the air's, volume.ts): orange, not the pink of pure red over a blue dusk.
 vec3 fireOnSmoke(vec3 g) {
@@ -118,32 +124,45 @@ vec3 skyLight(float y) {
 // F: how strongly the whole glowing floor of the caldera lights it, to what height above its base, how much brighter than its body its sky-lit top is,
 //    and how solid it is (1.4 is one mass with a lumpy skin, 0.6 is separate billows with gaps).
 // G: how far its lumps are drawn out along its rise (1 is round, 2.5 is streaks), how fast it thins with height (0 not at all), how sparse its lumps are (0 as they come).
-float bodyDensity(int i, vec3 p, bool fine, out float above) {
+float bodyDensity(int i, vec3 p, out float above, out vec2 shade) {
   vec4 A = uBodyA[i];
   vec4 B = uBodyB[i];
   vec4 D = uBodyD[i];
   above = 0.0;
+  shade = vec2(0.0);
   float yy = p.y - uBodyC[i].w;
   float u = yy / A.w;
   if (u < 0.0 || u >= 1.0) return 0.0;
   vec2 rel = p.xz - A.xy - B.xy * yy;
   float wide = A.z * (1.0 + D.y * u);
+  // The push below moves a point by less than 0.45 of the width: what lies further out than that from the dome is empty, and is not read.
+  float out0 = length(rel) / wide - 0.45;
+  if (out0 > 0.0 && out0 * out0 + u * u >= 1.0) return 0.0;
   // Its outline is pushed in and out by slow drifts that climb with it: no body shows the dome it is made in.
   rel += (noise(vec3(rel.x, yy - D.x * uTime, rel.y) / (D.z * 1.7) + B.z * 1.3).ga - 0.5) * wide * 0.9;
   float d2 = dot(rel, rel) / (wide * wide);
   float dome = 1.0 - d2 - u * u;
   if (dome <= 0.0) return 0.0;
   above = A.w * sqrt(max(1.0 - d2, 0.0)) - yy;
-  // The lumps climb the lean, so the body shears as it rises; and they change slowly as they go, so that it billows and does not only slide.
   vec4 G = uBodyG[i];
+  // The lumps climb with the body, in one read of the block. Two reads sheared against each other and cross faded (the middle of the column
+  // overtaking its skin) cost a read at every pace of the widest body in the place and showed nothing in the length of a shot, and the fade
+  // took the edge off every billow: one read keeps the block's own contrast, and the billow's edge is as hard as the block has it.
   vec3 q = vec3(rel.x, (yy - D.x * uTime) / G.x, rel.y) / D.z + B.z + vec3(0.026, 0.0, 0.015) * uTime;
+  vec3 l = lumps(q).rgb;
   float g = uBodyF[i].w;
   // A body that is less solid is more of its lumps: they are drawn out the stronger, so that its outline is billows and not the dome.
-  float body = 0.5 + (noise(q).r - 0.5) * mix(2.6, 1.0, clamp(g, 0.0, 1.0)) + dome * g - (0.25 + 0.43 * g) - G.z;
-  if (fine && body > -0.25 && body < 0.5) body += (noise(q * 2.3 + 0.37 + vec3(0.0, -0.02, 0.013) * uTime).r - 0.45) * 0.42;
+  float gainOf = mix(2.6, 1.0, clamp(g, 0.0, 1.0));
+  float lift = 0.5 + dome * g - (0.25 + 0.43 * g) - G.z;
+  float body = (l.r - 0.5) * gainOf + lift;
+  if (body > -0.25 && body < 0.5) body += (lumps(q * 2.3 + 0.37 + vec3(0.0, -0.02, 0.013) * uTime).r - 0.45) * 0.42;
+  // What stands between the point and the sky, near (the billow's own top) and far (the mass over it): the block's means under the body's own threshold.
+  // Half where the smoke toward the sky is as thick as the body's edge, none where it is clear, whole where it is deep: a billow's sky side is lit,
+  // its far side is dark, and the turn between is as round as the billow.
+  shade = clamp(0.5 + ((l.gb - 0.5) * gainOf + lift) * vec2(2.2, 1.6), 0.0, 1.0);
   float foot = uBodyE[i].w;
-  // A body of separate billows still ends at its dome: softly, so that no outline of the dome is seen.
-  return clamp(body * D.w, 0.0, 1.0) * smoothstep(0.0, mix(0.6, 0.22, clamp(g, 0.0, 1.0)), dome) * (foot > 0.0 ? smoothstep(0.0, foot, u) : 1.0) * (G.y > 0.0 ? pow(1.0 - u, G.y) : 1.0);
+  // A body of separate billows still ends at its dome: softly, so that no outline of the dome is seen. A hard body ends in less room: its billows are its edge.
+  return clamp(body * D.w, 0.0, 1.0) * smoothstep(0.0, mix(0.6, 0.22, clamp(g, 0.0, 1.0)) * min(1.0, 3.2 / D.w), dome) * (foot > 0.0 ? smoothstep(0.0, foot, u) : 1.0) * (G.y > 0.0 ? pow(1.0 - u, G.y) : 1.0);
 }
 void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   vec4 A = uBodyA[i];
@@ -193,26 +212,44 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   // A long way through a body of small lumps is taken in more paces, so that the lumps are met and not stepped over.
   float count = clamp(ceil((t1 - t0) / (0.2 * D.z)), float(${SMOKE_STEPS.body}), float(${SMOKE_STEPS.most}));
   float dt = (t1 - t0) / count;
-  float probe = D.z * 0.09;
   float through = 1.0;
   vec3 wide = F.x > 0.0 ? 4.0 * lakeGlow(A.xy + B.xy * 0.4 * A.w, 450.0) : vec3(0.0);
   vec4 G = uBodyG[i];
-  for (int k = 0; k < ${SMOKE_STEPS.most}; k++) {
-    if (float(k) >= count) break;
-    float t = t0 + (float(k) + jitter) * dt;
+  // The paces are long (a fifth of a repeat at best) and each begins at a chance place in its length, so the face of the body was met anywhere in
+  // a pace and its billows were averaged away: every body had a soft edge. Now the first pace that finds smoke is taken again from a quarter past
+  // the last empty place in quarter paces, which lengthen as they go in: the face is found to a quarter of a pace and lit as what it is, and the
+  // depth behind it, which is seen through it or not at all, is walked as before. The paces left always reach the far bound.
+  float t = t0 + jitter * dt;
+  float pace = dt;
+  bool met = false;
+  for (int k = 0; k < ${SMOKE_STEPS.reach}; k++) {
+    if (t >= t1) break;
+    pace = max(pace, (t1 - t) / float(${SMOKE_STEPS.reach} - k));
     vec3 p = ro + rd * t;
     float above;
-    float dens = bodyDensity(i, p, true, above);
-    if (dens <= 0.0) continue;
-    // Its own shade: what of it stands between the point and the sky.
-    float over;
-    float skyward = bodyDensity(i, p + SKY_DIR * probe, false, over);
+    // Its own shade: what of it stands between the point and the sky, near and far. It comes with the thickness, in the same reads.
+    vec2 shade;
+    float dens = bodyDensity(i, p, above, shade);
+    if (dens <= 0.0) {
+      t += pace;
+      continue;
+    }
+    if (!met) {
+      met = true;
+      if (k > 0) {
+        t -= 0.75 * dt;
+        pace = 0.25 * dt;
+        continue;
+      }
+    }
+    float skyward = shade.x;
     float skyT = exp(-B.w * 2.0 * above);
     // The top of each billow is open to the sky and its underside is not: the lumps read as lumps.
     // And the side of the whole body that faces the brighter west of the sky is paler than the side that faces away.
     vec2 off = (p.xz - A.xy - B.xy * (p.y - C.w)) / (A.z * (1.0 + D.y * clamp((p.y - C.w) / A.w, 0.0, 1.0)));
     float flank = clamp(0.5 + 0.5 * dot(off, SKY_SIDE), 0.0, 1.0);
-    vec3 light = skyLight(p.y) * F.z * (0.3 + 0.55 * (1.0 - skyward) + 0.3 * skyT) * mix(0.9, 1.3, flank);
+    // A billow under the mass of others is darker again than one that is only turned from the sky: the creases of the body go deep.
+    vec3 light = skyLight(p.y) * F.z * (0.2 + 0.75 * (1.0 - skyward) * (1.0 - 0.6 * shade.y) + 0.25 * skyT) * mix(0.9, 1.3, flank);
     // Lit from below: the open lava under it, the whole glowing floor round it, and the round lights where it stands by them. Its underside takes it, its top does not.
     // The lowest metres take the least: the crust right under them is dark, and it is the smoke a little higher that sees the open lava all round.
     float up = p.y - C.w;
@@ -221,17 +258,19 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float rise = 1.0 - 0.95 * exp(-up / min(10.0, F.y)) * smoothstep(8.0, 20.0, A.w);
     // What of the body stands under the point is guessed from how it thickens downward: the underside of a billow takes the fire, its top is shaded from it by its own mass.
     float under = mix(1.35, 0.3, clamp(2.0 * dens - skyward, 0.0, 1.0));
-    vec3 fire = under * rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));
+    vec3 fire = under * rise * exp(-up / C.y) * (C.x > 0.0 ? C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y)) : vec3(0.0));
     fire += under * F.x * rise * exp(-up / F.y) * (0.35 + 0.65 * (1.0 - skyT)) * wide;
     // G.w: a body that stands over open lava is lit through its own foot. Each metre of it takes its share of the fire on the way up, so that its
     // base burns orange and its upper smoke is dark against it, lump by lump, and it is never one flat colour.
     if (G.w > 0.0) fire *= exp(-G.w * B.w * up * (0.4 + 1.2 * dens));
     light += fireOnSmoke(fire);
     if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
-    float a = 1.0 - exp(-dens * B.w * dt);
+    float a = 1.0 - exp(-dens * B.w * pace);
     lay(close, t, mid, E.rgb * light, a);
     through *= 1.0 - a;
     if (through < 0.015) break;
+    t += pace;
+    pace = min(pace * 1.5, dt);
   }
 }
 
@@ -300,21 +339,24 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     vec3 q = p - A.xyz;
     q -= lean * (C.y * uTime);
     q = q / C.z + C.x + vec3(0.013, 0.0, 0.007) * uTime;
-    // Steam is drawn out along its rise into streaks; smoke is round lumps.
-    q.y *= mix(0.6, 1.0, kind);
+    // Steam is drawn out along its rise into strands; smoke is round lumps.
+    q.y *= mix(0.42, 1.0, kind);
     // Its outline is ragged by the same lumps that fill it; it is thick at the vent, thinned by its own widening, and gone well before the top.
     float n1 = noise(q).r;
     vec4 small = noise(q * 3.7);
     float ragged = d + (n1 - 0.5) * mix(1.0, 1.1, kind) + (small.g - 0.5) * 0.35;
     if (ragged >= 1.0) continue;
     float thin = A.w / r;
-    float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, mix(1.8, 1.7, kind)) * mix(1.0, thin, 0.6);
+    float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, mix(3.2, 1.7, kind)) * mix(1.0, thin, 0.6);
     float fine = mix(0.5, 0.25, u);
     float wisps = smoothstep(mix(0.36, 0.48, kind), mix(0.82, 0.74, kind), n1 * (1.0 - fine) + small.b * fine);
     // Steam is a veil with knots in it; smoke is lumps with gaps between them.
     vec2 off = (p.xz - A.xz) - B.xy * shear * h;
     float inside = (1.0 - smoothstep(0.55, 0.9, length(off) / tower)) * (1.0 - smoothstep(0.75 * top, 0.97 * top, h));
-    float dens = body * puff * inside * mix(0.03 + 2.2 * wisps * wisps, 4.0 * wisps, kind);
+    // Steam was the same lumps as smoke, thinner: a soft pale blob. It is strands: the thin sheets where the drawn-out field crosses its own
+    // middle, which stand as curling threads when looked through, broken along their length by the fine field, with next to nothing between them.
+    float strand = smoothstep(0.72, 0.97, 1.0 - abs(2.0 * n1 - 1.0) * 1.4) * smoothstep(0.25, 0.6, small.b);
+    float dens = body * puff * inside * mix(0.008 + 1.7 * strand + 0.35 * wisps * wisps, 4.0 * wisps, kind);
     if (dens <= 0.0) continue;
     // A fountain, a pool or a crack lights the vapour that is close over it; the rest is lit by the sky, like any smoke.
     // The top of a smoke is thin and open to the sky: it is paler than its foot.
@@ -326,7 +368,11 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float sigma = dens * B.w * mix(mix(vent, 1.0, hot), 1.0, kind);
     vec3 light = mix(1.05, mix(0.8, 1.5, u), kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0)) * (1.0 - 0.5 * hot);
     float near = max(lit * exp(-h / fall) - 0.03, 0.0);
-    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + roundLights(p));
+    // And the lava beside it: a vapour two paces from a channel stood grey against it. What lies within a few metres all round lights it as well,
+    // less than what lies under it, and to the same height.
+    // A vent in the rock of the bank stands over no lava and takes none of this: it is pale. Only a vapour whose foot is on the lake does.
+    float onLake = smoothstep(2.0, 0.6, A.y);
+    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + (onLake > 0.0 ? onLake * mix(0.3, 0.2, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) : vec3(0.0)) + roundLights(p));
     float a = 1.0 - exp(-sigma * dt);
     lay(close, t, mid, albedo * light, a);
   }
@@ -392,7 +438,7 @@ export interface Smoke {
   dispose(): void;
 }
 
-export function createSmoke(rig: Record<string, THREE.IUniform>, noise: THREE.Data3DTexture, skyMean: THREE.Vector3): Smoke {
+export function createSmoke(rig: Record<string, THREE.IUniform>, noise: THREE.Data3DTexture, lumps: { texture: THREE.Data3DTexture; mean: number }, skyMean: THREE.Vector3): Smoke {
   const target = (): THREE.WebGLRenderTarget => {
     const t = new THREE.WebGLRenderTarget(4, 4, {
       count: 4,
@@ -421,6 +467,8 @@ export function createSmoke(rig: Record<string, THREE.IUniform>, noise: THREE.Da
   const uniforms: Record<string, THREE.IUniform> = {
     ...rig,
     tNoise: { value: noise },
+    tLumps: { value: lumps.texture },
+    uLumpsMean: { value: lumps.mean },
     uInvProjection: { value: new THREE.Matrix4() },
     uCameraWorld: { value: new THREE.Matrix4() },
     uSmokeFull: { value: full },

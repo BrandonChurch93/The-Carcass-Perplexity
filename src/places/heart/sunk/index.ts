@@ -115,6 +115,8 @@ export function create(ctx: HeartContext): HeartPiece {
   };
 
   const fieldMaterial = new THREE.ShaderMaterial({ vertexShader: FIELD_VERTEX, fragmentShader: FIELD_FRAGMENT, uniforms: shared });
+  // The same sheet for a camera a long way off: its thin skin is let go to the lake's crust under it.
+  const afarMaterial = new THREE.ShaderMaterial({ vertexShader: FIELD_VERTEX, fragmentShader: FIELD_FRAGMENT, uniforms: shared, defines: { AFAR: 1 }, transparent: true });
   // The sheet is drawn wherever the skin is: where it is not, the field lies under the lake's crust (UNDER) and is left out, so
   // the front of the skin meets the crust as one body meets another.
   const skin = (x: number, z: number): boolean => baked.at(x, z) > UNDER + 0.04;
@@ -128,7 +130,7 @@ export function create(ctx: HeartContext): HeartPiece {
     fieldGeometry(baked, 0.07, (x, z) => !(Math.abs(x + 1.5) < 8.66 && z > -2.86 && z < 6.96) && skin(x, z)),
     fieldMaterial,
   );
-  const farSheet = new THREE.Mesh(fieldGeometry(baked, 0.14, skin), fieldMaterial);
+  const farSheet = new THREE.Mesh(fieldGeometry(baked, 0.14, skin), afarMaterial);
 
   const carcassMaterial = new THREE.ShaderMaterial({
     vertexShader: CARCASS_VERTEX,
@@ -274,6 +276,9 @@ export function create(ctx: HeartContext): HeartPiece {
     const staged = stagedSeconds();
     const nearShot = staged >= NEAR_SHOT.from && staged <= NEAR_SHOT.to;
     shared.uLift.value = nearShot ? LIFT : WIDE_LIFT;
+    // Outside its own shot the thin skin round the heap is the lake's own crust, seen through the sheet: one choice a shot, so nothing
+    // comes or goes while the lens moves.
+    fine.material = coarse.material = nearShot ? fieldMaterial : afarMaterial;
     // From the wide view the smoke of the split gathered into a pale ball beside the hull: there it is thin.
     const smoky = nearShot ? 1 : 0.25;
     const now = settling(seconds);
@@ -319,13 +324,15 @@ export function create(ctx: HeartContext): HeartPiece {
   return {
     setTime: place,
     beforeSample: (_renderer, camera) => {
-      const close = camera.position.distanceTo(here.set(group.position.x, 2, group.position.z)) < FAR;
+      const away = camera.position.distanceTo(here.set(group.position.x, 2, group.position.z));
+      const close = away < FAR;
       near.visible = close;
       far.visible = !close;
     },
     dispose: () => {
       for (const m of meshes) m.geometry.dispose();
       fieldMaterial.dispose();
+      afarMaterial.dispose();
       carcassMaterial.dispose();
       glowGeometry.dispose();
       glowMaterial.dispose();

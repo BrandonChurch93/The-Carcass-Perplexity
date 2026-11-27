@@ -171,7 +171,7 @@ export const OWN: { line: [number, number][]; half: [number, number, number]; lu
 ];
 
 export const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; heat: number }> = {
-  line: { half: [0.55, 0.85, 0.3], lumps: 0.45, heat: 0.0 },
+  line: { half: [0.6, 1.05, 0.5], lumps: 0.55, heat: 0.0 },
   group: { half: [0.45, 1.05, 0.4], lumps: 0.75, heat: 0.08 },
   nearA: { half: [0.1, 0.3, 0.14], lumps: 0.55, heat: 0.2 },
   nearB: { half: [0.14, 0.26, 0.08], lumps: 0.55, heat: 0.25 },
@@ -180,6 +180,23 @@ export const AUTHORED: Record<string, { half: [number, number, number]; lumps: n
   sunk: { half: [0.05, 0.16, 0.04], lumps: 0.4, heat: 0.75 },
   lead: { half: [0.3, 0.6, 0.3], lumps: 0.6, heat: 0.1 },
 };
+
+/** The channel at the line runs wide of its drawn line, toward the shore the lens of key heart-1 stands on, and winds:
+ *  metres to the left of the run, by how far along it. The same in GLSL below. */
+export const lineBend = (t: number): number => {
+  const mid = smooth(0.12, 0.38, t) * (1 - 0.8 * smooth(0.72, 0.95, t));
+  return 2.7 * mid + 0.6 * Math.sin(t * 13 + 1.0) * smooth(0.1, 0.3, t) * (1 - smooth(0.8, 1, t));
+};
+export const LINE_BEND_GLSL = /* glsl */ `
+float lineBend(float t) {
+  float mid = smoothstep(0.12, 0.38, t) * (1.0 - 0.8 * smoothstep(0.72, 0.95, t));
+  return 2.7 * mid + 0.6 * sin(t * 13.0 + 1.0) * smoothstep(0.1, 0.3, t) * (1.0 - smoothstep(0.8, 1.0, t));
+}`;
+/** Pools of the channel at the line: the middle, metres added to the half width, the square of the reach. */
+export const LINE_POOLS: { x: number; z: number; add: number; reach2: number }[] = [
+  { x: -506.0, z: 213.5, add: 0.7, reach2: 4.5 },
+  { x: -504.5, z: 207.0, add: 0.7, reach2: 5.0 },
+];
 
 function toTexture(data: Float32Array, width: number, height: number): THREE.DataTexture {
   const half = new Uint16Array(data.length);
@@ -256,15 +273,16 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
         const kinds = (sites.kind[bk] as number) + (sites.kind[other] as number);
         const pool = sites.pool[bk] as number;
         // Not every edge between two plates is a seam that lives: the rest stay shut, dark cracks.
-        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.7 : kinds < 3 ? 0.5 : 0.22) + 0.6 * pool;
+        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.7 : kinds < 3 ? 0.5 : 0.22) + 0.2 * pool;
         const h = hash(lo, hi, 41);
-        reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.4 : 0.24) * h * h + 0.25 * pool * h : 0;
+        reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.4 : 0.24) * h * h + 0.1 * pool * h : 0;
         // A joint dies out: along its length it narrows and shuts here and there, so the joints do not close into polygons.
-        // Round the pool at the foot of the fall they stay open.
+        // Only at the rim of the pool at the foot of the fall do they stay open: seen low from across the lake, rows of open
+        // joints round it stood as bands.
         let shut = false;
-        if (alive && pool < 0.3) {
+        if (alive && pool < 0.75) {
           const die = 0.7 * noise(tx / 21, z0 / 21, 71) + 0.3 * noise(tx / 6.5, z0 / 6.5, 72);
-          reach *= smooth(0.43, 0.57, die + 0.2 * pool);
+          reach *= smooth(0.43, 0.57, die + 0.1 * pool);
           if (reach < 0.004) {
             reach = 0;
             shut = true;
@@ -307,6 +325,12 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
     }
     for (const { name, shape, seed, line } of all) {
       const count = line.length - 1;
+      const head = line[0] as [number, number];
+      const tail = line[count] as [number, number];
+      const runX = tail[0] - head[0];
+      const runZ = tail[1] - head[1];
+      const run2 = runX * runX + runZ * runZ || 1;
+      const bent = name === 'line';
       for (let s = 0; s < count; s++) {
         const a = line[s] as [number, number];
         const b = line[s + 1] as [number, number];
@@ -322,8 +346,13 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
             const wx = spec.minX + (i + 0.5) * cell;
             const wz = spec.minZ + (j + 0.5) * cell;
             // A real seam is crooked at every size: bend the ground under the line.
-            const x = wx + 2.2 * (noise(wx / 6.5, wz / 6.5, seed) - 0.5) + 0.9 * (noise(wx / 1.9, wz / 1.9, seed + 1) - 0.5);
-            const z = wz + 2.2 * (noise(wx / 6.5, wz / 6.5, seed + 2) - 0.5) + 0.9 * (noise(wx / 1.9, wz / 1.9, seed + 3) - 0.5);
+            let x = wx + 2.2 * (noise(wx / 6.5, wz / 6.5, seed) - 0.5) + 0.9 * (noise(wx / 1.9, wz / 1.9, seed + 1) - 0.5);
+            let z = wz + 2.2 * (noise(wx / 6.5, wz / 6.5, seed + 2) - 0.5) + 0.9 * (noise(wx / 1.9, wz / 1.9, seed + 3) - 0.5);
+            if (bent) {
+              const k = lineBend(Math.min(1, Math.max(0, ((x - head[0]) * runX + (z - head[1]) * runZ) / run2))) / Math.sqrt(run2);
+              x += runZ * k;
+              z -= runX * k;
+            }
             const t = Math.min(1, Math.max(0, ((x - a[0]) * ex + (z - a[1]) * ez) / l2));
             const d = Math.hypot(x - a[0] - ex * t, z - a[1] - ez * t);
             const u = (s + t) / count;
@@ -334,6 +363,7 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
             if (name === 'group') half += 1.25 * Math.exp(-((wx + 403.4) ** 2 + (wz - 202.6) ** 2) / 5.0);
             if (name === 'nearA') half += 1.1 * Math.exp(-((wx + 493.8) ** 2 + (wz - 225.6) ** 2) / 4.0);
             if (name === 'nearB') half += 1.1 * Math.exp(-((wx + 491.6) ** 2 + (wz - 241.0) ** 2) / 4.0);
+            if (bent) for (const pool of LINE_POOLS) half += pool.add * Math.exp(-((wx - pool.x) ** 2 + (wz - pool.z) ** 2) / pool.reach2);
             const o = (j * width + i) * 4;
             const had = out[o] as number;
             const hadReach = out[o + 3] as number;

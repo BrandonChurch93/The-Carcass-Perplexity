@@ -357,7 +357,10 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const rock = lerp(rock0, Math.max(rock0, TUBE.floor - 2 + 1.2 * (fbm2(x / 3.7, z / 3.7) - 0.5)), far * smooth(7, 2, -d));
     // None in the first 20 m: under the lip the stream is one body.
     const isle = island(n.len, n.distance * n.side, n.half) * (1 - sheet) * smooth(18, 28, n.len);
-    const stream = top + 0.2 * (1 - Math.min(1, u * u)) * (1 - sheet) + isle * (0.45 + 0.6 * noise2(x / 2.3, z / 2.3)) + 0.3 * sheet * (fbm2(x / 3.1, z / 3.1) - 0.5);
+    // The stream has body: below the lip it stands a metre proud of its bed, flat on top and rounded at its margins, and it swells
+    // and thins along its length, so it goes over a ledge as a thick drape and not as a film laid on the step.
+    const proud = lerp(0.2, 0.75 + 0.5 * noise2(n.len / 9 + 4.7, 2.3), smooth(2, 14, n.len));
+    const stream = top + proud * (1 - Math.min(1, u * u * u * u)) * (1 - sheet) + isle * (0.45 + 0.6 * noise2(x / 2.3, z / 2.3)) + 0.3 * sheet * (fbm2(x / 3.1, z / 3.1) - 0.5);
     const outside = lerp(stream, rock, smooth(0.9, 1.06, u));
     // The lip is broken: roof fall and spatter lie heaped along it either side of where the lava leaves, so its edge is no ruled line.
     const lipHeap = (3.2 * Math.pow(noise2(x / 11 + 6.3, 1.7), 1.6) + 1.5 * noise2(x / 3.7 + 2.1, 4.4) + 1.3 * Math.max(0, blocks(x + 7, z + 3, 4.6, 13))) * smooth(-4.5, -0.5, d) * smooth(7, 1.5, d) * smooth(3, 11, side);

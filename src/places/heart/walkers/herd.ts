@@ -2,7 +2,7 @@
 // The staging in shared/anchors.ts says where each one is seen. The crust drifts under them, so each plan is made on the crust
 // as it lay at the reference time, and is fitted so that the animal, carried by the crust, is where the staging wants it at the key frames.
 import type { Rng } from '../../../core/rng';
-import { KEY_TIMES, WALKERS, walkerAt } from '../shared/anchors';
+import { KEY_TIMES, WALKERS, walkerAt, SURGE } from '../shared/anchors';
 import { REST, TUFT_UP, type Build, type Env, type NeckAim, type Plan, type V3 } from './animal';
 
 const smooth = (a: number, b: number, x: number): number => {
@@ -59,7 +59,7 @@ const CAST: Character[] = [
   { role: 'turns', skater: 0.6, heavy: 0.85, neck: 0.8, wide: 0.95, long: 0.85, hump: 0.4, tall: 1.12, bulk: 0.78, young: 0.56, tuft: [0.7, 0.7], tilt: -0.06, knee: 0.9, carry: [0.5, 0.3, 0.7], pace: 1.25, trunk: 2 },
   { role: 'shifts', skater: 0.12, heavy: 0.82, neck: 1.08, wide: 0.7, long: 1.15, hump: 0.25, tall: 1.24, bulk: 0.8, young: 1, tuft: [1, 0.9], tilt: 0.1, knee: 1.12, carry: [0.86, 0.02, 0.55], pace: 0.9, trunk: 2 },
   { role: 'walks', skater: 0.8, heavy: 1.2, neck: 0.85, wide: 1.4, long: 1.15, hump: 1.5, tall: 0.76, bulk: 1.3, young: 1, tuft: [1.3, 0.8], tilt: 0.12, knee: 0.86, carry: [0.42, 0.46, 0.85], pace: 0.8, trunk: 1 },
-  { role: 'stands', skater: 0.05, heavy: 1.05, neck: 1.28, wide: 0.66, long: 0.8, hump: 0.6, tall: 1.18, bulk: 1.05, young: 1, tuft: [0.6, 0.8], tilt: 0.14, knee: 1.05, carry: [0.2, 0.84, 0.75], pace: 1, trunk: 0 },
+  { role: 'stands', skater: 0.05, heavy: 1.05, neck: 1.28, wide: 0.66, long: 0.8, hump: 0.6, tall: 1.18, bulk: 1.05, young: 1, tuft: [0.6, 0.8], tilt: 0.14, knee: 1.05, carry: [0.62, 0.3, 0.45], pace: 1, trunk: 0 },
   { role: 'walks', skater: 0.35, heavy: 0.9, neck: 1.3, wide: 1.2, long: 1.2, hump: 0.2, tall: 0.84, bulk: 0.72, young: 1, tuft: [1, 1.3], tilt: -0.1, knee: 0.92, carry: [0.78, -0.22, 0.3], pace: 1.2, trunk: 2 },
   { role: 'grazes', skater: 0.95, heavy: 0.8, neck: 1.1, wide: 1.45, long: 0.9, hump: 0.3, tall: 0.8, bulk: 0.9, young: 0.7, tuft: [0.8, 0.9], tilt: -0.04, knee: 0.84, carry: [0.62, 0.14, 0.6], pace: 1.1, trunk: 2 },
   { role: 'grazes', skater: 0.2, heavy: 1.25, neck: 0.9, wide: 1.05, long: 1.1, hump: 1.3, tall: 0.88, bulk: 1.3, young: 1, tuft: [1.2, 0.85], tilt: 0.06, knee: 1.0, carry: [0.45, -0.44, 0.3], pace: 0.75, trunk: 1 },
@@ -78,7 +78,10 @@ export function makeBuild(index: number, rng: Rng): Build {
   const k = w.size * c.young;
   const v = (a: number, b: number): number => rng.range(a, b);
   // The trunk is a carcass drawn over its bones: a heavy animal has thicker legs and neck, and a trunk only a little deeper.
-  const girth = c.bulk * (0.55 + 0.45 * c.heavy);
+  // The two a lens comes close to are stout, as their pictures have them. The rest of the herd is seen from far off and from above:
+  // slender, a small trunk carried high on thin legs.
+  const slim = index >= 2 ? 0.82 : index === 0 ? 0.88 : 1;
+  const girth = c.bulk * (0.55 + 0.45 * c.heavy) * slim;
   return {
     k,
     seed: index * 1.618 + 0.37,
@@ -99,11 +102,12 @@ export function makeBuild(index: number, rng: Rng): Build {
     standH: 9.3 * k * c.tall * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
     // The hero is stout for its length: a shin is a twentieth of the leg across. The others are leaner.
-    legR: lerp(1.08, 0.94, c.skater) * c.heavy * (index === 1 ? 1.4 : 1.12),
+    legR: lerp(1.08, 0.94, c.skater) * c.heavy * (index === 1 ? 1.22 : index === 0 ? 1.12 : 0.86),
     padR: 0.8 * k * v(0.9, 1.12),
     neckLen: 10.6 * k * c.neck,
-    neckR: 0.52 * k * c.heavy,
+    neckR: 0.52 * k * c.heavy * (index >= 2 ? 0.84 : 1),
     tendrils: Math.max(4, Math.round((7 + (index % 3)) * c.tuft[0])),
+    hairs: index <= 1 ? 2 * Math.max(4, Math.round((7 + (index % 3)) * c.tuft[0])) : 0,
     tendrilLen: 3.5 * k * c.tuft[1] * v(0.9, 1.15),
     stepH: 1.0 * k * v(0.8, 1.2),
     lean: index === 1 ? -0.5 * k : (v(0, 1) < 0.5 ? -1 : 1) * v(0.35, 1.0) * k,
@@ -215,8 +219,8 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     b.neckLen * (low + 0.13 * Math.sin(seconds * om * 0.8 + phase * 5)),
     b.neckLen * 0.2 * Math.sin(seconds * om * 0.6 + phase * 7),
   ];
-  // One that feeds lifts its tuft out of the heat and lowers it again, each in a time of its own (5 to 10 s), the tuft out for a third of it.
-  const lifts = 5 + 5 * hash(index, 31);
+  // One that feeds lifts its tuft out of the heat and lowers it again, each in a time of its own (3.6 to 7 s; the one the long lens looks at, 5 to 10), the tuft out for a third of it.
+  const lifts = index === 1 ? 5 + 5 * hash(index, 31) : 3.6 + 3.4 * hash(index, 31);
   const pulse = (seconds: number, t0: number, t1: number, t2: number, t3: number): number => smooth(t0, t1, seconds) * (1 - smooth(t2, t3, seconds));
   const working = (seconds: number): number => {
     const beat = fract(seconds / lifts + hash(index, 33));
@@ -295,7 +299,10 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       const hero = Math.max(pulse(seconds, 13.0, 14.2, 14.9, 16.2), working(seconds) * (1 - smooth(5, 6.2, seconds) * (1 - smooth(16.2, 17.2, seconds))));
       // As the long lens comes to it, it has its tuft out of the heat, well clear of the melt, and holds it there; it lowers it into the pool before the key looks.
       const held = index === 1 ? pulse(seconds, 5.4, 7.9, 9.4, 10.8) : 0;
-      const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : index === 1 ? hero : working(seconds) * (index === 0 || index === 13 ? atKey(seconds) : 1);
+      // The lead at the line is not still while its shot looks: it has its tuft out as the shot opens, lowers it into the seam before the key
+      // and takes it out again after.
+      const line = index === 13 ? smooth(12.4, 13.4, seconds) * (1 - smooth(14.4, 15.6, seconds)) + smooth(16.75, 17.8, seconds) * (1 - smooth(19, 20.2, seconds)) : 0;
+      const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : index === 1 ? hero : Math.max(line, working(seconds) * (index === 0 || index === 13 ? atKey(seconds) : 1));
       return {
         down: 1 - Math.max((turning ? 0.85 : index === 1 ? 0.5 : 0.85) * up, 0.8 * held),
         target: twice && seconds >= twice.cut ? second.target : target,
@@ -304,7 +311,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       };
     };
     // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
-    const fidget = turning ? 0 : index === 1 ? 4 : c.role === 'stands' ? 9.5 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
+    const fidget = turning ? 0 : index === 1 ? 4 : c.role === 'stands' ? 5.2 : 2.9 + 2.2 * (((index * 3 + 1) % 14) / 13);
     const lag = index === 1 ? -2.2 : hash(index, 19) * 4 * fidget;
     // The one the long lens looks at is seen on other feet through that shot. Its hind pad goes early and higher than its build has it, is held
     // up for a moment and comes down with weight just before the key: the body sinks on it a beat late. Its fore pad goes early after
@@ -318,6 +325,9 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   }
 
   // One that walks: on a line on the crust, a few steps and a rest, so that its mean speed is the staged one.
+  // It picks its way over the plates in short steps: a stride of well under half its height, so that at the slow pace the staging gives it
+  // a pad is in the air most of the time it is seen. The second of the feeding picture keeps the stride its three steps were set to.
+  const stride = b.stride * (index === 2 ? 1 : 0.62);
   const dx = ux / speed;
   const dz = uz / speed;
   const yaw = Math.atan2(dx, -dz);
@@ -325,15 +335,15 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const ramp = 0.25;
   const quickest = (3.4 * Math.sqrt(k)) / c.pace;
   const settled = c.role === 'walks' ? 0.16 : c.role === 'grazes' ? 0.52 : 0.6;
-  const rest = Math.max(0.06, Math.min(settled, 1 - (speed * quickest) / (b.stride * (1 - ramp))));
+  const rest = Math.max(0.06, Math.min(settled, 1 - (speed * quickest) / (stride * (1 - ramp))));
   // The near one feeds where the wide view sees it and again where the view of the one that sank sees it, and walks between.
   const bout = index === 0 ? KEY_TIMES['heart-2'] - KEY_TIMES['heart-0'] : 12.5;
   let per = 0.5;
-  for (let q = 0.5; q <= 4; q += 0.25) if (Math.abs((b.stride * q) / speed - bout) < Math.abs((b.stride * per) / speed - bout)) per = q;
-  const period = (b.stride * per) / speed;
+  for (let q = 0.5; q <= 4; q += 0.25) if (Math.abs((stride * q) / speed - bout) < Math.abs((stride * per) / speed - bout)) per = q;
+  const period = (stride * per) / speed;
   // The one that shifts its weight rests while the long lens looks at the group.
   // The two at the fall's foot are alive while the last shot looks: the larger lifts its tuft and starts off, the smaller is in mid walk.
-  const shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : index === 9 ? 1 - fract(26.3 / period) + rest / 2 : index === 10 ? 1.5 - fract(27.0 / period) : phase;
+  const shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : index === 9 ? 1 - fract(24.3 / period) + rest / 2 : index === 10 ? 1.5 - fract(27.0 / period) : phase;
   const area = 1 - ramp;
   const gone = (u: number): number => ramp * (u * u * u - 0.5 * u * u * u * u);
   const ease = (f: number): number => {
@@ -359,12 +369,12 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   let low = 1e9;
   let high = -1e9;
   for (const t of Object.values(KEY_TIMES)) {
-    const e = b.stride * sigma(t) - speed * (t - T1);
+    const e = stride * sigma(t) - speed * (t - T1);
     low = Math.min(low, e);
     high = Math.max(high, e);
   }
   const bias = -(low + high) / 2;
-  const body = (s: number): { x: number; z: number; yaw: number } => ({ x: a[0] + dx * (b.stride * s + bias), z: a[1] + dz * (b.stride * s + bias), yaw });
+  const body = (s: number): { x: number; z: number; yaw: number } => ({ x: a[0] + dx * (stride * s + bias), z: a[1] + dz * (stride * s + bias), yaw });
   const neck = (seconds: number): NeckAim => {
     if (index === 2) {
       // It carries its tuft while it walks, and lowers it where it comes to stand.
@@ -386,8 +396,11 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     // The tuft starts down over the last steps and is in the heat soon after it stands.
     const settle = 0.7 / period;
     const depth = c.role === 'walks' ? 0.35 : 1;
-    const down = depth * smooth(rest / 2 + 1.6 / period, Math.max(0.01, rest / 2 - settle), away);
-    return { down, target, raised: carried(seconds, c.carry[1], c.carry[0]), shape: lerp(c.carry[2], FEED_SHAPE, down) };
+    // The two at the fall's foot start at the surge: a third of a second after it the larger throws its tuft up and back, the smaller a beat
+    // later, and they hold it high while the fall runs. The key of the fall is before the surge and sees them as they were.
+    const startle = index === 9 || index === 10 ? smooth(SURGE + 0.3 + 0.4 * (index - 9), SURGE + 1.3 + 0.4 * (index - 9), seconds) * (1 - smooth(SURGE + 6, SURGE + 9, seconds)) : 0;
+    const down = depth * smooth(rest / 2 + 1.6 / period, Math.max(0.01, rest / 2 - settle), away) * (1 - startle);
+    return { down, target, raised: carried(seconds, c.carry[1] + 0.5 * startle, c.carry[0] - 0.18 * startle), shape: lerp(c.carry[2], FEED_SHAPE, down) };
   };
   void t0;
   // In a long rest it re-places one fore pad: it leans off it, puts it down a step off and settles over it.
@@ -405,5 +418,5 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   };
   // The second of the feeding picture lifts the pad of its first step in that shot high, so that it is seen in mid stride. That pad swings once, 7.2 to 9.4 s.
   const stepUp = index === 2 ? (s: number, j: number): number => (j === 3 ? 2.6 * pulse(s, 7.15, 7.6, 9.4, 9.6) : 0) : undefined;
-  return { sigma, body, neck, fidget: 0, lag: 0, stepUp, halfStep, habit, dig, dip: 0.25 * k, range: 0.4 * b.stride + 0.55 * k };
+  return { sigma, body, neck, fidget: 0, lag: 0, stepUp, halfStep, habit, dig, dip: 0.25 * k, range: 0.4 * stride + 0.55 * k };
 }

@@ -7,14 +7,18 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { SEAMS, SUNK, UNIT } from '../shared/anchors';
-import { NET, NET_FINE, POOL, RIDGES, bakeNet } from './net';
+import { LINE_BEND_GLSL, NET, NET_FINE, POOL, RIDGES, bakeNet } from './net';
 import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
 import { createLava } from './lava';
 import { skinFragment } from './skin';
-import { SHEET_GLSL } from './sheet';
+import { POUR_GLSL, SHEET_GLSL } from './sheet';
 
 export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
+
+/** The pads that press the crust now: x, z, the radius of the pad in metres, and its load from 0 (lifted) to 1 (the full weight on it).
+ *  The walkers fill it in their setTime, each sample; the crust sags, cracks and darkens under each. Sixteen at most, all nought by default. */
+export const PAD_DENTS: THREE.Vector4[] = Array.from({ length: 16 }, () => new THREE.Vector4(0, 0, 0, 0));
 
 // The height of the crust in metres, one function for every cell of the sheet. `c` is the size of the cells that carry it there:
 // every part of the relief fades out before the cells get too coarse to hold it, so nothing swims and nothing pops.
@@ -26,35 +30,19 @@ uniform vec4 uHill;
 uniform vec4 uRidge[2];
 uniform vec2 uRidgeSize[2];
 uniform vec4 uGroupSeam;
-uniform sampler2D tSheetNh;
 // The photographed crust (rope-nh: r, g the slope of its height, b the height), laid without a repeat. The lake is cut into
 // three-cornered patches a third of the sheet across; each corner reads the sheet turned and shifted its own way, and where
 // they meet the higher lies on the lower, as one toe of lava on the next. It is laid at three sizes, metres to the long side
 // of the sheet, and stands so many metres from its deepest furrow to its highest crest. The height carries the two larger
 // as far as its cells hold them; the skin paints all three at the same places.
-#define SHEET_D 1.6
+#define SHEET_D 0.9
 #define SHEET_M 6.4
 #define SHEET_L 25.6
-#define SHEET_TALL_D 0.012
+#define SHEET_TALL_D 0.01
 #define SHEET_TALL_M 0.06
 #define SHEET_TALL_L 0.24
 ${SHEET_GLSL}
-// The height of the sheet, 0 to 1, read at one mip.
-float sheetHigh(vec2 q, float span, float seed, float lod) {
-  sheetGrid(q, span);
-  float got = 0.0;
-  float sum = 0.0;
-  for (int i = 0; i < 3; i++) {
-    mat2 turn;
-    vec2 shift;
-    float w = sheetCorner(i, seed, 1.0, turn, shift);
-    float high = textureLod(tSheetNh, (turn * q) * (vec2(1.0, 2.0) / span) + shift, lod).b;
-    float k = w * exp(7.0 * high);
-    got += k * high;
-    sum += k;
-  }
-  return got / sum;
-}
+${POUR_GLSL}
 // What of the height is the sheet's, metres: the lattice leaves it out of its own normal, for the skin has the sheet's slope whole.
 float gSheetHigh = 0.0;
 // Lobes: the skin is poured in broad overlapping tongues 3 to 10 m across, each a low dome with a soft rounded front, each lying
@@ -367,6 +355,7 @@ float groupFar(vec2 q) {
 }
 // Metres from the middle of the channel at the line (the same crooked line the net lays down), and which way is away from it.
 uniform vec4 uLineSeam;
+${LINE_BEND_GLSL}
 vec2 gLineAway;
 // How far along the channel at the line the point lies, 0 where it leaves the shore to 1 past the lens of key heart-1.
 float gLineT = 0.0;
@@ -375,7 +364,7 @@ float lineFar(vec2 q) {
   vec2 ab = uLineSeam.zw - uLineSeam.xy;
   float l = length(ab);
   float t = clamp(dot(q - uLineSeam.xy, ab) / (l * l), 0.0, 1.0);
-  float k = 0.9 * (sin(t * 9.0 + 2.1) + 0.6 * sin(t * 23.0 + 6.3)) * sin(3.14159 * t);
+  float k = 0.9 * (sin(t * 9.0 + 2.1) + 0.6 * sin(t * 23.0 + 6.3)) * sin(3.14159 * t) + lineBend(t);
   vec2 d = q - uLineSeam.xy - ab * t - vec2(-ab.y, ab.x) / l * k;
   float far = length(d);
   gLineAway = d / max(far, 1e-3);
@@ -386,6 +375,23 @@ float lineFar(vec2 q) {
 // The mound of the one that sank: the crust lies flat under it and is itself again a few metres out (uMound: x, z, the flat radius).
 float calmAt(vec2 q) {
   return smoothstep(uMound.z - 0.4, uMound.z + 4.0, length(q - uMound.xy));
+}
+// The pads that press the crust now (PAD_DENTS: x, z in the world, radius, load). Under a loaded pad the young crust sags
+// into a dish 7 cm deep and is pushed up into a low lip round it. Returns the metres to add, how much of the point is dish
+// and how much of it is the cracked line round the dish. p is a point of the world; edge bends the line.
+uniform vec4 uPadDents[16];
+vec3 dentAt(vec2 p, float edge) {
+  vec3 got = vec3(0.0);
+  for (int i = 0; i < 16; i++) {
+    vec4 d = uPadDents[i];
+    float t = length(p - d.xy) / max(d.z, 0.01);
+    float dish = (1.0 - smoothstep(0.5, 1.2, t)) * d.w;
+    float lip = exp(-(t - 1.4) * (t - 1.4) / 0.06) * d.w;
+    got.x += 0.022 * lip - 0.07 * dish;
+    got.y = max(got.y, dish);
+    got.z = max(got.z, (1.0 - smoothstep(0.0, 0.07, abs(t - 1.08 - 0.3 * edge))) * d.w);
+  }
+  return got;
 }
 // Where pads stand (x, z, radius): there the crust is broken only a little, so that a pad has ground under it.
 uniform vec3 uPads[5];
@@ -644,23 +650,13 @@ float heightAt(vec2 q, float c) {
     float floorLevel = mix(0.2, 1.0, smoothstep(36.0, 54.0, gFar));
     float swell = floorLevel * mix(0.42, 0.62, smoothstep(20.0, 45.0, gFar)) * mix(0.12, 1.0, smoothstep(1.5, 8.0, gFar));
     h += off * (swell * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.22 * floorLevel * smoothstep(1.5, 8.0, gFar) * (vnoise(q / 1.7 + 27.0) - 0.5) * (1.0 - smoothstep(0.35, 0.7, c)) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
-    h += off * lobeAt(q) * (1.0 - smoothstep(0.5, 1.2, c)) * calm * (1.0 - 0.5 * shoreUp);
-    if (gFine < 0.16) {
-      float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
-      gLapCell = c;
-      foldAt(q);
-      fine = smoothSkin * gToeBest * toeHeld(gFine);
-      // The lobes at the line: sheets that lap, with their steps and creases.
-      fine += off * calm * (1.0 - shoreUp) * gLapHigh * (1.0 - smoothstep(0.1, 0.3, c)) * (1.0 - smoothstep(0.09, 0.16, gFine));
-    }
-    // The ropes and billows of the photographed sheet, as far as the cells hold them: a mip whose texel is a cell and a half.
+    // The poured slabs, their steps and gaps, and the ropes and swells of the sheet as far as the cells hold them: a mip
+    // whose texel is a cell and a half.
     float sheetOn = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
-    float lodM = log2(gFine * (2048.0 / SHEET_M)) + 0.5;
-    gSheetHigh = 0.0;
-    if (lodM < 9.0) gSheetHigh = SHEET_TALL_L * (sheetHigh(q, SHEET_L, 83.0, lodM - 2.0) - 0.5) * (1.0 - smoothstep(7.0, 9.0, lodM));
-    if (lodM < 7.0) gSheetHigh += SHEET_TALL_M * (sheetHigh(q, SHEET_M, 11.0, lodM) - 0.5) * (1.0 - smoothstep(5.0, 7.0, lodM));
-    gSheetHigh *= sheetOn;
-    fine += gSheetHigh;
+    float held = 1.0 - smoothstep(0.6, 1.5, c);
+    float pour = pourHigh(q, gFine);
+    gSheetHigh = gPourSheet * sheetOn * held;
+    fine += (pour - gPourSheet) * sheetOn * held + gSheetHigh;
   }
 
   // Where crust has been broken, at the ridges and against the rock, it lies in upturned slabs with rubble between them.
@@ -751,17 +747,23 @@ float heightAt(vec2 q, float c) {
     h += fine;
   }
   if (c < 3.0) h += ridgeAt(q, c) * (1.0 - smoothstep(1.0, 3.0, c));
+  h += dentAt(q + flowVelocity(q) * (uTime - uFlowT0), 0.0).x * smoothstep(0.05, 0.4, bank) * (1.0 - smoothstep(0.1, 0.3, c));
   // The swell of crust beside the lens of the long shot at the fall (uHill: x, z, how much of it stands): a tumulus 3 m high,
   // its top level with the bottom of that frame, out of focus.
   if (uHill.z > 0.0) {
     vec2 dh = q - uHill.xy;
-    float hr = length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582))));
+    float hillA = dot(dh, vec2(0.582, -0.813));
+    float hillB = dot(dh, vec2(0.813, 0.582));
+    float hr = length(vec2(hillA / 1.6, hillB));
     if (hr < 7.6) {
       float over = max(hr - 2.0, 0.0);
-      float top = 2.96 - 0.096 * over * over;
-      // Its top line is lumpy, knobs 0.8 to 1.4 m across and up to 0.22 m high: through the blur it reads as a ridge of crust.
-      float knob = 0.22 * smoothstep(0.35, 0.75, vnoise(q / 0.9 + 9.0)) * smoothstep(0.3, 1.2, top);
-      h = mix(h, top + knob + 0.05 * (vnoise(q / 0.8 + 9.0) - 0.5) * smoothstep(2.0, 4.0, hr), smoothstep(0.0, 0.8, top) * uHill.z);
+      // It is no dome with a level top: one crest runs across the view, half a metre above the rest, and the crest is broken into
+      // blocks 0.3 to 0.9 m across that stand a hand to a forearm proud. Through the blur its outline reads as heaped crust.
+      float crest = exp(-hillA * hillA / 1.7);
+      float top = 2.4 - 0.096 * over * over + 0.5 * crest;
+      float knob = crest * (0.36 * (vnoise(vec2(hillB / 0.7, 3.0)) - 0.5) + 0.2 * (vnoise(vec2(hillB / 0.28, 7.0)) - 0.5)) + 0.12 * (vnoise(q / 0.9 + 9.0) - 0.5);
+      knob *= smoothstep(0.3, 1.2, top);
+      h = mix(h, top + knob, smoothstep(0.0, 0.8, top) * uHill.z);
       gSheetHigh *= 1.0 - smoothstep(0.0, 0.8, top) * uHill.z;
     }
   }
@@ -907,8 +909,12 @@ void main() {
   vec2 xz = vWorld.xz;
   float shore = landAt(xz).b;
   vec2 q = xz - vDrift;
-  vec4 heat = heatAt(q, -shore, netAt(q), 1.0 / uGlowTexels);
-  gl_FragColor = vec4(blackbody(heat.y) * heat.x, 1.0);
+  vec4 net = netAt(q);
+  vec4 heat = heatAt(q, -shore, net, 1.0 / uGlowTexels);
+  // The channel at the line is drawn wider than its seam was, with pools, and nearer its bank: what it gives the rig is what
+  // the narrower one gave.
+  float onLine = step(1.5, net.g) * (1.0 - smoothstep(0.01, 0.04, net.g - 2.0));
+  gl_FragColor = vec4(blackbody(heat.y) * heat.x * mix(1.0, 0.28, onLine), 1.0);
   if (shore > 1.5) discard;
 }`;
 
@@ -1010,8 +1016,8 @@ export function create(ctx: HeartContext): HeartPiece {
     uSunk: { value: new THREE.Vector3(SUNK[0], SUNK[2], 14) },
     tRopeNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data' }) },
     tRope: { value: ctx.assets.texture('mat/pahoehoe.jpg') },
-    tSheet: { value: ctx.assets.texture('mat/rope-nt.jpg', { kind: 'data' }) },
-    tSheetNh: { value: ctx.assets.texture('mat/rope-nh.jpg', { kind: 'data' }) },
+    tPour: { value: ctx.assets.texture('mat/coil-nt.jpg', { kind: 'data', anisotropy: 4 }) },
+    tPourNh: { value: ctx.assets.texture('mat/coil-nh.jpg', { kind: 'data' }) },
     tMeltNh: { value: ctx.assets.texture('mat/melt-nh.jpg', { kind: 'data', anisotropy: 2 }) },
     uRidge: { value: RIDGES.map((r) => new THREE.Vector4(r.from[0], r.from[1], r.to[0], r.to[1])) },
     uRidgeSize: { value: RIDGES.map((r) => new THREE.Vector2(r.tall, r.reach)) },
@@ -1022,6 +1028,7 @@ export function create(ctx: HeartContext): HeartPiece {
     // The hero at its pool, walker 0 in its two shots, walker 13.
     // The swell beside the lens of key heart-4: 10.5 m ahead of it and 4 m to its left. On the set for shot heart-05 only.
     uHill: { value: new THREE.Vector4(-455 + 10.5 * 0.582 - 4 * 0.813, 178 - 10.5 * 0.813 - 4 * 0.582, 0, 0) },
+    uPadDents: { value: PAD_DENTS },
     uPads: { value: [new THREE.Vector3(-410, 197, 7), new THREE.Vector3(-508.7, 226.8, 7), new THREE.Vector3(-494.3, 209.8, 7), new THREE.Vector3(-423.5, 166.1, 7), new THREE.Vector3(-407.6, 206.5, 4.5)] },
   };
   const foundering = createFoundering(ctx);

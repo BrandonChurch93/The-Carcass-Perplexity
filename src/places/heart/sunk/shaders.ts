@@ -110,7 +110,8 @@ void main() {
   float hang = smoothstep(1.15, 0.0, sd);
   // Before it breaks off the slab already stands a thumb's width low along the line: a fine seam.
   float fall = (0.035 + 0.095 * uSlab) * span;
-  vBreak = vec3(side, sd, side * fall * step(sd, 1.15) / 1.15);
+  // Past the ends of the line there is no seam: the distance to it is put out of reach there.
+  vBreak = vec3(side, mix(9.0, sd, step(0.02, tb) * step(tb, 0.98)), side * fall * step(sd, 1.15) / 1.15);
   // The corners of the sheet beside the line are drawn onto it, so the seam runs as the line does and not in the steps of the sheet.
   float drawn = (1.0 - step(0.045, abs(sd))) * step(0.02, tb) * step(tb, 0.98);
   vec2 onLine = l - vec2(-ba.y, ba.x) / bl * (sd - sign(sd) * 0.004) * drawn;
@@ -209,20 +210,24 @@ void main() {
   vec2 lean = abs(grad);
   float faces = step(lean.x, lean.y);
   vec2 wallAt = vec2(mix(l.y, l.x, faces), vWorld.y * 1.4) + 11.0;
-  // Along a rope the ropy skin is laid 1.6 times shorter than round it: its fibres run 15 to 25 cm and not half a metre, which
-  // seen from low down was one long streak across the view.
-  vec2 uvA = mix(mix(q / 6.1, ropeAt * vec2(1.6, 1.0) / 1.7, onRope), wallAt / 2.2, steep);
+  // Along a rope the ropy skin is drawn out to nearly twice its length: its fibres run half a metre and more along the rope, as the
+  // picture's do, and do not curl like knit.
+  vec2 uvA = mix(mix(q / 6.1, ropeAt * vec2(0.55, 1.0) / 1.7, onRope), wallAt / 2.2, steep);
   vec4 nhA = texture2D(tRopyNh, uvA);
   vec2 qd = mix(mix(q, ropeAt, onRope), wallAt, steep);
   vec2 uvD = vec2(qd.x * 0.8 - qd.y * 0.6, qd.x * 0.6 + qd.y * 0.8) / 1.37 + 0.13;
   vec4 grainNh = vec4(0.5);
-  if (near > 0.0) grainNh = texture2D(tSkinNh, uvD, -0.7);
+  // The derivatives are taken out here, not in the branch, and the sheet is read a little finer than they ask.
+  vec2 uvDx = dFdx(uvD) * 0.6156;
+  vec2 uvDy = dFdy(uvD) * 0.6156;
+  if (near > 0.0) grainNh = textureGrad(tSkinNh, uvD, uvDx, uvDy);
   vec2 lr = mix(l, ropeAt, onRope);
   float small = vnoise(lr * 2.0 + 7.0);
   // Each sheet of the folded skin is of its own age.
   age = clamp(age + folded * (0.9 * (sheet - 0.5) + 0.25 * (broad - 0.5)), 0.0, 1.0);
   // Where the skin is not folded it is the plain crust of the lake as the lake draws it now: grey, and grained all over.
-  vec3 plain = mix(vec3(0.066, 0.067, 0.07), vec3(0.128, 0.129, 0.133), age) * clamp(1.0 + 1.5 * (nhA.b - 0.5) + 0.5 * (small - 0.5) + 0.8 * (grainNh.b - 0.5), 0.4, 1.8);
+  // From far off it is a shade under the lake's plates as the lake paints them now: the sheet lay on them as a pale disc.
+  vec3 plain = mix(vec3(0.052, 0.053, 0.056), vec3(0.128, 0.129, 0.133), age) * (1.0 - 0.2 * smoothstep(28.0, 75.0, length(cameraPosition - vWorld))) * clamp(1.0 + 1.5 * (nhA.b - 0.5) + 0.5 * (small - 0.5) + 0.8 * (grainNh.b - 0.5), 0.4, 1.8);
   // Seen close the folded skin between the ropes is the lake's young black skin; from afar that was a dark apron round the heap,
   // which the picture has not: there it stays the plain crust.
   vec3 albedo = mix(plain * dry, mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age), folded * (1.0 - 0.8 * wideView)) * tone;
@@ -234,7 +239,15 @@ void main() {
   float sheer = smoothstep(1.4, 2.6, length(grad)) * onRope;
   float flat2 = folded * mid * (1.0 - 0.5 * wall) * (1.0 - 0.6 * sheer);
   vec2 fromBody = l - vec2(${BODY.centre.x.toFixed(2)}, ${BODY.centre.z.toFixed(2)});
-  float ashed = smoothstep(8.0, 3.5, length(fromBody) + 2.0 * (broad - 0.5));
+  // Toward the bench the old skin goes on to where the folds end; round the back it gives way to the lake's plates sooner.
+  // From far off the folds before the bench are the lake's own grey: an apron of old skin as wide as that would stand pale on the lake.
+  float benchward = smoothstep(-0.2, 0.5, fromBody.y / max(length(fromBody), 1e-3)) * (1.0 - wideView);
+  // The old skin does not end on a circle round the body: it runs out in three unequal tongues and breaks up at its edge, and from far
+  // off it goes over to the lake's own tone, so that no round pale patch lies on the crust in the wide view.
+  float round_ = atan(fromBody.y, fromBody.x);
+  float tongues = 1.0 + 0.3 * sin(3.0 * round_ + 1.3) + 0.2 * sin(5.0 * round_ + 0.4) + 0.12 * sin(11.0 * round_ + 2.1);
+  float ashed = smoothstep(mix(8.0, 10.5, benchward), mix(3.5, 5.5, benchward), length(fromBody) * tongues + 3.2 * (broad - 0.5) + 1.2 * (vnoise(l * 0.9 + 17.0) - 0.5));
+  ashed *= 1.0 - 0.75 * smoothstep(28.0, 75.0, far);
   // A rope is old skin, greyer than the plates of the lake. They die out before the rim, so nothing of this reaches it.
   // The skin that stands up against the hull without being a rope is of the same old brown stuff.
   float roped = max(clamp(ln.a, 0.0, 1.0), smoothstep(0.15, 0.45, vWorld.y)) * ashed * folded;
@@ -257,7 +270,9 @@ void main() {
   // across the view, so there they go to their mean and the relief alone speaks.
   float graze = smoothstep(0.17, 0.07, gritSize / max(grainSize, 1e-5)) * folded;
   lum = mix(lum, 0.42, 0.85 * graze);
-  albedo *= mix(1.0, mix(0.35 + 0.65 * lum, 0.2 + 0.9 * lum * lum, max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
+  // On a rope the tone of the laid skin is held back: its short curls over a rope a third of a metre thick read as wool. The rope's own
+  // cords, drawn below, carry it.
+  albedo *= mix(1.0, mix(0.35 + 0.65 * lum, mix(0.2 + 0.9 * lum * lum, 0.32 + 0.72 * lum, onRope * (1.0 - steep)), max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
 
   // Grit of 1 to 3 cm on all of the folded skin, and a pale fleck here and there: seen where the lens is sharp, gone where a
   // pixel is wider than a grain.
@@ -271,7 +286,7 @@ void main() {
   float count = cordCount(ln.r + sheet * 94.0);
   float seen = smoothstep(0.7, 0.25, fwidth(count));
   // A fibre does not run the whole length of a rope: it shows for a way and is lost again.
-  float amp = clamp(ln.a, 0.0, 1.0) * seen * (0.3 + 0.7 * smoothstep(0.3, 0.65, vnoise(lr * 2.7 + 31.0))) * (1.0 - 0.6 * lumpSeen * smoothstep(0.55, 0.35, lumps)) * (1.0 - 0.7 * graze);
+  float amp = clamp(ln.a, 0.0, 1.0) * seen * (0.5 + 0.5 * smoothstep(0.3, 0.65, vnoise(lr * 2.7 + 31.0))) * (1.0 - 0.6 * lumpSeen * smoothstep(0.55, 0.35, lumps)) * (1.0 - 0.7 * graze);
   float x = 2.0 * fract(count) - 1.0;
   float k = 1.0 - x * x;
   float cordTone = fract(sin(floor(count) * 12.9898) * 43758.5453);
@@ -280,17 +295,23 @@ void main() {
   float x2 = x * x;
   float crease = x2 * x2 * abs(x) * amp;
   float crown = k * k * amp;
-  albedo *= (1.0 - 0.35 * crease) * (1.0 + amp * 0.35 * (cordTone - 0.5));
+  // Between two cords the skin is black, and no two cords are of one tone: seen sharp, a rope is a bundle and not a roll.
+  albedo *= (1.0 - 0.8 * crease) * (1.0 + amp * 0.7 * (cordTone - 0.5));
 
   // What stands up and lies level has gone grey and carries the ash that fell since; what is down in a crease is black.
   float lying = smoothstep(0.15, 0.6, inversesqrt(1.0 + dot(grad, grad)));
   float stood = smoothstep(0.4, 0.55, mk.b);
-  albedo *= mix(1.0, 0.6 + 0.4 * smoothstep(0.3, 0.5, mk.b), folded);
+  // Before the bench, where the lens is nearest and least sharp, what lies low between two folds is black and wide enough to stay black
+  // through the blur, and the old skin is darker than the lake's plates: without that the folds were one pale heap.
+  float outer = smoothstep(5.0, 7.5, length(fromBody)) * (1.0 - wideView);
+  albedo *= mix(1.0, mix(0.38 + 0.62 * smoothstep(0.27, 0.5, mk.b), 0.62 * (0.16 + 0.84 * smoothstep(0.34, 0.6, mk.b)), outer), folded);
   // On a rope it lies on the backs of the fibres and not between them.
   float backs = mix(1.0, 1.25 * smoothstep(0.45, 0.7, nhA.b), onRope);
   float ash = folded * ashed * (1.0 - crease) * clamp(lying * stood * backs * (0.6 + 0.4 * smoothstep(0.25, 0.7, small + 0.5 * (broad - 0.5))) + crown * 0.7 * smoothstep(0.35, 0.5, mk.b) * (0.4 + 0.6 * small), 0.0, 1.0);
-  ash *= 0.5;
+  ash *= 0.6;
   albedo = mix(albedo, ASH_SKIN * (0.75 + 0.5 * grainNh.b), ash);
+  // The old skin under the ash is darker than the lake's plates: by the picture the folds are black with pale backs.
+  albedo *= mix(1.0, 0.8, folded * ashed * (1.0 - ash));
 
   vec2 nd = nhA.rg - 0.5;
   // Laid on a rope, the slopes of the texture lie along it and round it; round it they are steeper on the ground than on the rope.
@@ -305,7 +326,7 @@ void main() {
   vec2 ss = sw * mix(1.0, 0.45, folded);
   vec3 ns = normalize(vec3(-ss.x, 1.0 + 0.6 * folded, -ss.y));
 
-  float occ = mix(1.0, mix(0.5 + 0.5 * rl.b, 0.25 + 0.75 * rl.b, close) * (0.8 + 0.2 * nhA.b) * (1.0 - 0.45 * crease), folded);
+  float occ = mix(1.0, mix(0.5 + 0.5 * rl.b, 0.1 + 0.9 * rl.b * rl.b, close) * (0.8 + 0.2 * nhA.b) * (1.0 - 0.45 * crease), folded);
   // Where a foot stands in the skin the skin is dark against it: a rim of shade a hand wide, so the foot is in the ground.
   float atFoot = min(length(l - vec2(${FOOT_A[0].toFixed(2)}, ${FOOT_A[1].toFixed(2)})) - 0.3, length(l - vec2(${FOOT_B[0].toFixed(2)}, ${FOOT_B[1].toFixed(2)})) - 0.2);
   occ *= 1.0 - 0.6 * smoothstep(0.3, 0.02, atFoot);
@@ -357,6 +378,11 @@ void main() {
   c = mix(c * (1.0 - 0.7 * onFace), blackbody(mix(faceKelvin, max(faceKelvin, seamKelvin), standing)), max(flaring, standing));
   #endif
 
+  #ifdef AFAR
+  // From afar only the folded heap is the sheet's: the thin skin round it is left to the lake's own crust, slabs, cracks and all,
+  // so no patch with an outline lies on the lake. In the carcass's own shot this material is not used.
+  alpha = max(smoothstep(0.04, 0.4, folded), 1.0 - smoothstep(0.3, 1.2, abs(vBreak.y)));
+  #endif
   gl_FragColor = vec4(rigOut(c), alpha);
   // Last, so the pixels beside a dropped one still have their derivatives.
   #ifdef RIM
@@ -432,6 +458,9 @@ void main() {
   // On a limb they are pale and grey, as ash caked on hide; on the hull darker.
   vec3 scab = mix(vec3(0.235, 0.175, 0.115), vec3(0.225, 0.168, 0.11) * 0.9, isBody) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone;
 
+  // From across the lake the plates are not pale slats on a dark hull: the fume between takes their ash tone down to the hull's, and
+  // the carcass is one dark grey-brown thing, as the wide picture has it.
+  scab *= mix(0.4, 1.0, smoothstep(60.0, 28.0, far));
   float plated = smoothstep(0.35, 0.6, vSurf.y);
   float furrow = isBody * vSurf.w;
   vec3 albedo = mix(bark, scab, plated);
@@ -478,7 +507,7 @@ void main() {
   albedo *= 1.0 + mix(0.7, 1.0, isBody) * close * fine;
   float up = mix(smoothstep(0.1, 0.7, nl.y), smoothstep(-0.1, 0.45, nl.y), isLeg);
   float dust = up * (0.2 + 0.8 * smoothstep(0.3, 0.65, 1.0 - lump + 0.4 * (grit - 0.5) + 0.5 * (flakeNh.b - 0.5))) * mix(0.3, 1.0, plated) * (1.0 - 0.7 * furrow) * (1.0 - 0.5 * coat) * (1.0 - 0.85 * isBody * (1.0 - plated));
-  albedo = mix(albedo, mix(ASH, uAsh * plateTone, plated) * (0.7 + 0.5 * grit) * (0.7 + 0.6 * mix(hideNh.b, flakeNh.b, plated)), dust * mix(0.4, 0.6, plated));
+  albedo = mix(albedo, mix(ASH, uAsh * plateTone, plated) * (0.7 + 0.5 * grit) * (0.7 + 0.6 * mix(hideNh.b, flakeNh.b, plated)), dust * mix(0.4, 0.6, plated) * mix(0.4, 1.0, smoothstep(60.0, 28.0, far)));
 
   // The bump is laid on the surface along its own directions.
   vec3 along = normalize(cross(n, vec3(0.31, 0.9, 0.29)));

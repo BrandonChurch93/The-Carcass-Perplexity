@@ -5,9 +5,9 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { AWAY as STAGED_AWAY, SEAMS, UNIT, WALKERS, seamLine } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { HeartContext, HeartPiece, SteamSource } from '../shared/context';
-import { Animal, TUFT_UP, type Env } from './animal';
+import { Animal, FOOT_SHARE, TUFT_UP, type Env } from './animal';
 import { makeBuild, makePlan } from './herd';
-import { CRUST_HEIGHT_GLSL, crustUniforms } from '../lake/index';
+import { CRUST_HEIGHT_GLSL, PAD_DENTS, crustUniforms } from '../lake/index';
 import { FRAGMENT, GROUND_FRAGMENT, GROUND_VERTEX, PUFF_FRAGMENT, PUFF_VERTEX, VERTEX } from './material';
 import { Skin } from './skin';
 
@@ -199,6 +199,8 @@ export function create(ctx: HeartContext): HeartPiece {
   ctx.scene.add(ctx.parts.built('crust-walkers', mesh, puffMesh), puffMesh);
 
   const discs = rig.contactDiscs(herd.length * DISCS);
+  // The pads whose dent in the crust the lake draws: those of the hero and of the three that come nearest a lens.
+  const DENT_ORDER = [1, 0, 13, 2];
   // Where a tuft is in the melt, the pool gives off ash and vapour: a source for the air to draw, for the three whose pictures show them feeding.
   const WISPS = [0, 1, 13];
   const wisps = WISPS.map((i): SteamSource => {
@@ -229,13 +231,16 @@ export function create(ctx: HeartContext): HeartPiece {
         }
         stood.feet.forEach((foot, j) => {
           (feet[i * 4 + j] as THREE.Vector4).set(foot.x, foot.z, foot.lift / b.k, b.padR);
-          // The ash it threw up when it came down: it spreads for a second and a half and thins away.
+          // The dust it threw up when it came down: it rolls out low for a second and a half and thins away.
           const life = foot.age / PUFF_LIFE;
           const thick = life < 1 ? here * foot.hard * smooth(0, 0.07, life) * (1 - life) * (1 - life) : 0;
           (puffs[i * 4 + j] as THREE.Vector4).set(foot.x, 0.12, foot.z, Math.min(1, life));
-          (puffSize[i * 4 + j] as THREE.Vector4).set(b.padR * (1.5 + 2.6 * Math.sqrt(Math.min(1, life))), b.padR * (1.3 + 2.0 * Math.min(1, life)), 2.2 * thick * PUFF_SHOWN, i * 4 + j);
+          (puffSize[i * 4 + j] as THREE.Vector4).set(b.padR * (1.0 + 3.2 * Math.sqrt(Math.min(1, life))), b.padR * (0.55 + 0.6 * Math.min(1, life)), 1.5 * thick * PUFF_SHOWN, i * 4 + j);
           const off = Math.min(1, foot.lift / (1.2 * b.k));
-          rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (1.7 + 1.9 * off), here * (1 - 0.75 * off));
+          // Its shade on the crust: close and dark under a pad that stands, wide and faint under one in the air.
+          rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (0.8 + 2.4 * off), here * (1 - 0.8 * off));
+          const rank = DENT_ORDER.indexOf(i);
+          if (rank >= 0) (PAD_DENTS[rank * 4 + j] as THREE.Vector4).set(foot.x, foot.z, FOOT_SHARE * b.padR, here * foot.load);
         });
         rig.setDisc(discs, i * DISCS + 4, stood.body.x, stood.body.z, 3.4 * b.k, here * 0.35, 1.5, -stood.body.yaw + Math.PI / 2);
         const low = Math.min(1, Math.max(0, 1 - (stood.tuft.y - TUFT_UP * b.tendrilLen) / (2 * b.k)));

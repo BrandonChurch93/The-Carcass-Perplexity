@@ -143,21 +143,21 @@ const ARM_TAIL: [number, number][] = [
 /** Metres from the lip of the places where the stream parts round a rock and joins again. */
 export const SPLITS = [16, 30, 47, 63, 77, 92];
 
-/** Half the width of the stream by metres from the lip: a thread on the slope, a sheet only in the fan. */
+/** Half the width of the stream by metres from the lip: a river of several strands on the slope, a sheet in the fan. */
 const HALF: [number, number][] = [
   [-200, 6],
   [-70, 7],
   [-30, 11],
   [-3, 12],
   [5, 10.5],
-  [14, 9.5],
-  [26, 8.5],
-  [46, 6.6],
-  [70, 5.2],
-  [100, 4.8],
-  [FAN_FROM - 16, 3.6],
-  [FAN_FROM - 4, 4.4],
-  [FAN_FROM + 4, 5.4],
+  [14, 10.5],
+  [26, 11.5],
+  [46, 10.5],
+  [70, 9],
+  [100, 8.2],
+  [FAN_FROM - 16, 6.6],
+  [FAN_FROM - 4, 7],
+  [FAN_FROM + 4, 7.6],
   [FAN_FROM + 9, 24],
   [FAN_FROM + 14, 44],
   [FAN_FROM + 22, 60],

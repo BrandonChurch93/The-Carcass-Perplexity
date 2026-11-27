@@ -139,6 +139,32 @@ vec2 plates(vec2 p) {
 }
 #endif
 const mat2 TURN = mat2(0.7986, -0.6018, 0.6018, 0.7986);
+#ifdef RUBBLE
+// Gravel: every cell is one stone. xy: from the stone's middle to p, in cells. z: a number of the stone's own. w: how far p lies from the
+// gap round the stone, in cells.
+vec4 gravel(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = p - i;
+  float d1 = 8.0;
+  float d2 = 8.0;
+  vec2 to = vec2(0.0);
+  float own = 0.0;
+  for (int b = -1; b <= 1; b++) {
+    for (int a = -1; a <= 1; a++) {
+      vec2 c = vec2(float(a), float(b));
+      vec2 h = hash22(i + c);
+      vec2 r = c + 0.1 + 0.8 * h - f;
+      float d = dot(r, r);
+      float nearer = step(d, d1);
+      d2 = mix(min(d2, d), d1, nearer);
+      to = mix(to, -r, nearer);
+      own = mix(own, fract(h.x * 7.31 + h.y * 3.17), nearer);
+      d1 = min(d1, d);
+    }
+  }
+  return vec4(to, own, 0.5 * (sqrt(d2) - sqrt(d1)));
+}
+#endif
 
 void main() {
   vec3 n0 = normalize(vNormal);
@@ -197,6 +223,12 @@ void main() {
   // Which upright plane a face's pictures are laid on, from the smooth normal of the land and not from the triangle's own:
   // the two layings cross over a quarter turn of the face, so no triangle's edge shows as a change of grain.
   float kx = smoothstep(0.26, 0.74, n0.x * n0.x / (n0.x * n0.x + n0.z * n0.z + 1e-5));
+  #ifndef BENCH
+  // But the side of a block that stands out of the wall looks a quarter turn away from the wall's own face: laid on the wall's plane its
+  // picture is drawn out into streaks. Such a face is laid by its own direction.
+  float kg = smoothstep(0.26, 0.74, ng.x * ng.x / (ng.x * ng.x + ng.z * ng.z + 1e-5));
+  kx = mix(kx, kg, smoothstep(0.45, 0.8, abs(kg - kx)) * smoothstep(0.75, 0.5, abs(ng.y)));
+  #endif
   #ifndef FLAT
   if (steep > 0.003 && byLens < 0.999) {
     // The wall: each lava flow reads the cliff picture at its own place, so the bands run level and no two repeat.
@@ -402,8 +434,8 @@ void main() {
     float baked = onSpur * smoothstep(-0.2, 0.5, dot(n0.xz, vec2(-0.97, 0.25)) + 0.3 * (big - 0.5)) * smoothstep(0.25, 0.7, toTip) * smoothstep(130.0, 20.0, vWorld.y + 40.0 * (mid - 0.5));
     // A butte of the darkest rock in the caldera, eroded and sooted; only the flank the fountains bake is paler.
     // Measured against the wide picture: its butte is the darkest rock of the far shore.
-    albedo *= mix(1.0, 0.54, onSpur);
-    albedo = mix(albedo, (albedo + 0.015) * vec3(2.9, 1.7, 1.15), 0.4 * baked);
+    albedo *= mix(1.0, 0.62, onSpur);
+    albedo = mix(albedo, (albedo + 0.015) * vec3(2.9, 1.7, 1.15), 0.55 * baked);
   }
   #endif
   #ifdef BENCH
@@ -564,21 +596,66 @@ void main() {
       relief += tw.z * r.b;
       bent += tw.z * (vec3(0.0, -1.0, 0.0) * (r.g - 0.5) + vec3(1.0, 0.0, 0.0) * (r.r - 0.5));
     }
-    vec3 f;
+    // The pits are read on the nearest plane alone.
+    vec2 pc = vWorld.xy;
+    vec2 pgx = wx.xy;
+    vec2 pgy = wy.xy;
+    vec3 ta = vec3(0.0, -1.0, 0.0);
+    vec3 tb = vec3(1.0, 0.0, 0.0);
+    float shift = 0.41;
     if (tw.y >= tw.x && tw.y >= tw.z) {
-      f = PICK(tBoulderNh, vWorld.xz / PIT + 0.19, wx.xz / PIT, wy.xz / PIT).rgb;
-      bent += 0.8 * sharp * (vec3(0.0, 0.0, -1.0) * (f.g - 0.5) + vec3(1.0, 0.0, 0.0) * (f.r - 0.5));
+      pc = vWorld.xz;
+      pgx = wx.xz;
+      pgy = wy.xz;
+      ta = vec3(0.0, 0.0, -1.0);
+      shift = 0.19;
     } else if (tw.x >= tw.z) {
-      f = PICK(tBoulderNh, vWorld.zy / PIT + 0.67, wx.zy / PIT, wy.zy / PIT).rgb;
-      bent += 0.8 * sharp * (vec3(0.0, -1.0, 0.0) * (f.g - 0.5) + vec3(0.0, 0.0, 1.0) * (f.r - 0.5));
-    } else {
-      f = PICK(tBoulderNh, vWorld.xy / PIT + 0.41, wx.xy / PIT, wy.xy / PIT).rgb;
-      bent += 0.8 * sharp * (vec3(0.0, -1.0, 0.0) * (f.g - 0.5) + vec3(1.0, 0.0, 0.0) * (f.r - 0.5));
+      pc = vWorld.zy;
+      pgx = wx.zy;
+      pgy = wy.zy;
+      tb = vec3(0.0, 0.0, 1.0);
+      shift = 0.67;
     }
+    vec3 f = PICK(tBoulderNh, pc / PIT + shift, pgx / PIT, pgy / PIT).rgb;
+    bent += 0.8 * sharp * (ta * (f.g - 0.5) + tb * (f.r - 0.5));
+    #ifdef RUBBLE
+    // And once more at the size of a fingernail, for the lens that lies on the heap: the vesicles of the scoria, which the lens resolves
+    // and the reading above does not reach.
+    const float VESICLE = 0.058;
+    vec3 ves = PICK(tBoulderNh, pc.yx / VESICLE + shift + 0.23, pgx.yx / VESICLE, pgy.yx / VESICLE).rgb;
+    bent += 0.5 * sharp * (ta * (ves.r - 0.5) + tb * (ves.g - 0.5));
+    #endif
     float pits = f.b;
     float grain = mix(relief, 0.5 * (relief + pits), sharp);
     // Near black clinker, measured against the picture, a little brown, black in its pits.
     vec3 clinker = vec3(0.06, 0.052, 0.047) * (0.35 + 1.1 * smoothstep(0.1, 0.75, grain)) * (0.7 + 0.6 * pits);
+    #ifdef RUBBLE
+    // The heap is blocks on a bed (vLand.y: what stands over the bed). A block's broken sides are the black of fresh scoria and its top
+    // carries ash and takes the sky.
+    float block = smoothstep(0.1, 0.6, vLand.y);
+    // The ash lies in the hollows of the top and the knobs of scoria stand black out of it: a top is never one tone.
+    float topAsh = block * smoothstep(0.6, 0.88, n0.y) * (0.5 + 0.5 * smoothstep(0.3, 0.6, vnoise(vWorld.xz / 0.23 + 3.7))) * smoothstep(0.72, 0.38, grain + 0.35 * (pits - 0.5));
+    clinker = mix(clinker * mix(1.0, 0.75, block), vec3(0.23, 0.218, 0.2) * (0.6 + 0.6 * pits), 0.85 * topAsh);
+    // The bed between them is grit, black in its pits, with ash lying on it in drifts.
+    vec3 bed = vec3(0.046, 0.041, 0.038) * (0.3 + 1.4 * grain);
+    bed = mix(bed, vec3(0.13, 0.122, 0.114) * (0.6 + 0.8 * pits), 0.3 * smoothstep(0.35, 0.6, vnoise(vWorld.xz / 0.8 + 9.3)) * smoothstep(0.7, 0.4, grain));
+    // The bed is gravel, as the picture's is: stones a thumb to a fist across, each with its own shade and its own round back, black
+    // between them and one in eight a pale chip. Two sizes, each left out where a pixel is no smaller than its stones.
+    float loose = 1.0 - block;
+    vec4 g1 = gravel(pc / 0.07 + shift);
+    vec4 g2 = gravel(TURN * pc / 0.028 + shift);
+    float seen1 = loose * smoothstep(0.55, 0.22, px / 0.07);
+    float seen2 = loose * smoothstep(0.55, 0.22, px / 0.028);
+    float gap1 = smoothstep(0.0, 0.1, g1.w);
+    float gap2 = smoothstep(0.0, 0.1, g2.w);
+    // Most are near black and a few are ash grey: the picture's bed is black gravel with pale grains all through it.
+    bed *= mix(1.0, (0.35 + 1.9 * g1.z * g1.z) * (0.2 + 0.8 * gap1), seen1) * mix(1.0, (0.45 + 1.5 * g2.z * g2.z) * (0.3 + 0.7 * gap2), seen2);
+    bed = mix(bed, vec3(0.17, 0.158, 0.143) * (0.6 + 0.8 * pits), 0.8 * seen1 * gap1 * smoothstep(0.8, 0.84, g1.z));
+    bed = mix(bed, vec3(0.15, 0.14, 0.128) * (0.6 + 0.8 * pits), 0.7 * seen2 * gap2 * smoothstep(0.84, 0.88, g2.z));
+    bent += 0.55 * seen1 * (tb * g1.x - ta * g1.y) + 0.35 * seen2 * gap1 * (tb * (g2.xy * TURN).x - ta * (g2.xy * TURN).y);
+    clinker = mix(bed, clinker, block) * mix(1.0, 0.5 + 1.0 * ves.b, sharp);
+    occ *= mix(1.0, 0.35 + 0.65 * gap1, seen1 * byLens);
+    #endif
     albedo = mix(albedo, clinker, byLens);
     n = normalize(n + bent * 2.4 * byLens);
     occ *= mix(1.0, 0.3 + 0.7 * smoothstep(0.15, 0.6, grain), byLens);
@@ -616,7 +693,7 @@ void main() {
     albedo = mix(albedo, albedo * vec3(1.55, 1.4, 0.7) + vec3(0.025, 0.022, 0.005), stain);
     // Crystals stand on the crust: pale points a finger across.
     yellow = mix(yellow, vec3(1.0, 0.92, 0.5), smoothstep(0.62, 0.82, vnoise(sp / 0.045 + 7.3)) * sharp);
-    albedo = mix(albedo, mix(sul * 1.4, yellow, 0.85) * (1.1 + 0.5 * grain) * mix(1.0, 1.7, byLens), crust);
+    albedo = mix(albedo, mix(sul * 1.4, yellow, 0.85) * (1.1 + 0.5 * grain), crust);
     rough = mix(rough, 0.95, crust);
   }
   #endif
@@ -645,8 +722,16 @@ void main() {
   float gap = smoothstep(0.38, 0.56, vnoise(vWorld.xz / 0.33 + vWorld.y * vec2(1.1, 0.8) + 6.4));
   // A heap of crumbs, whole within a forearm of the crack and ragged at its edge: each crumb its own tone, a dark one here and there.
   float crumbTone = vnoise(vWorld.xz / 0.021 + vWorld.y * vec2(31.0, 23.0) + 3.9);
+  #ifdef RUBBLE
+  // On the heap the mound is built: lumps of crystal crust with holes between them. A lump is lemon on its crown and olive down its sides,
+  // and the holes are the dark rock under it: no tone is drawn that the shape does not carry.
+  float crown = smoothstep(0.5, 0.96, n0.y + 0.12 * (knob - 0.5));
+  float mound = smoothstep(0.36, 0.18, segmentDistance(vWorld.xz, vec4(mix(uCrackB.xy, uCrackB.zw, 0.3), mix(uCrackB.xy, uCrackB.zw, 0.7))) + 0.3 * (knob - 0.5) + 0.2 * (1.0 - gap)) * smoothstep(0.1, 0.5, vLand.y) * (0.75 + 0.25 * smoothstep(0.25, 0.45, crumbTone));
+  albedo = mix(albedo, mix(vec3(0.11, 0.09, 0.025), vec3(0.42, 0.36, 0.09), crown) * (0.6 + 0.6 * crumbTone), mound);
+  #else
   float mound = smoothstep(0.42, 0.2, segmentDistance(vWorld.xz, uCrackB) + 0.2 * (knob - 0.5) + 0.25 * (1.0 - gap)) * (0.55 + 0.45 * smoothstep(0.25, 0.45, crumbTone));
   albedo = mix(albedo, mix(vec3(0.6, 0.48, 0.1), vec3(1.0, 0.88, 0.36), smoothstep(0.35, 0.8, knob)) * (0.45 + 0.9 * crumbTone), mound);
+  #endif
   rough = mix(rough, 0.95, mound);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
@@ -701,6 +786,13 @@ void main() {
   #ifdef BUTTRESS
   // The buttress, measured on the wide picture: darker and warmer than the wall behind it, its table paler than its cliffs.
   albedo *= vec3(0.8, 0.71, 0.67) * mix(1.15, 0.78, steep);
+  // Its cliffs are flows, one on another: a pale bed and a dark one every few metres of height, not level to the metre.
+  float beds = vnoise(vec2((vWorld.y + 5.0 * (big - 0.5)) / 6.5, 3.3 + 0.02 * dot(vWorld.xz, vec2(0.6, 0.8))));
+  albedo *= mix(1.0, 0.7 + 0.65 * smoothstep(0.3, 0.7, beds), steep);
+  // Ash lies on whatever of it looks up: the table and every ledge are the palest of it, and take the sky. The wide picture's butte has a
+  // pale line along its brow, which is this.
+  float cap = smoothstep(0.62, 0.9, n0.y) * smoothstep(34.0, 60.0, vWorld.y) * (0.6 + 0.4 * smoothstep(0.3, 0.6, mid));
+  albedo = mix(albedo, vec3(0.25, 0.228, 0.2) * (0.5 + 1.0 * height), 0.7 * cap);
   // A skirt of talus lies against its near side, in the shape and in cones of tone above it: paler than the cliffs and without their joints.
   float coneRun = dot(vWorld.xz, vec2(0.25, 0.97));
   float coneTop = 16.0 + 30.0 * vnoise(vec2(coneRun / 34.0, 1.7)) + 6.0 * (mid - 0.5);
@@ -710,7 +802,7 @@ void main() {
   float offAxis = ((vWorld.x - axis.x) * axisRun.y - (vWorld.z - axis.y) * axisRun.x) / length(axisRun);
   float skirt = max(smoothstep(coneTop + 6.0, coneTop - 6.0, vWorld.y) * smoothstep(-0.25, 0.25, dot(n0.xz, vec2(-0.87, 0.5))), (1.0 - steep) * smoothstep(84.0, 66.0, vWorld.y) * smoothstep(-40.0, -54.0, offAxis));
   float grit = vnoise(vWorld.xz / 2.7 + vWorld.y * vec2(0.5, 0.3) + 8.1);
-  albedo = mix(albedo, vec3(0.1, 0.086, 0.076) * (0.7 + 0.4 * mid + 0.3 * grit) * (0.9 + 0.2 * big), 0.8 * skirt);
+  albedo = mix(albedo, vec3(0.14, 0.122, 0.106) * (0.7 + 0.4 * mid + 0.3 * grit) * (0.9 + 0.2 * big), 0.8 * skirt);
   #endif
   #ifdef STAGED
   // The staged butte of the feeding picture stands dark against its smoke: sooted brown rock, a little paler on its ledges and its talus.

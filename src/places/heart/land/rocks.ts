@@ -8,7 +8,7 @@ import { CRUST_HEIGHT_GLSL, crustUniforms } from '../lake/index';
 import { CRACK_FOOT, SEAMS, UNIT, keySeconds } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { HeartContext } from '../shared/context';
-import { ROPY, SKERRY, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
+import { ROPY, SKERRY, landHeight, lineChannelDistance, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
 import { CARPET_BAKE_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, carpetBakeFragment } from './rock-shader';
 import { ROCK_LEVELS, rockShape, type RockKind, type RockShape } from './rock-shape';
 
@@ -110,7 +110,11 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     return new THREE.Quaternion(Math.sqrt(1 - u) * Math.sin(a), Math.sqrt(1 - u) * Math.cos(a), Math.sqrt(u) * Math.sin(b), Math.sqrt(u) * Math.cos(b));
   };
   const put = (k: Kind, x: number, z: number, size: number, o: Options = {}): boolean => {
+    // Round the line view's lens the shore was drawn back for the channel after the rocks were dealt. `height` is the land with the shore
+    // as it stood (index.ts), so that every draw of the stream falls as it did and no rock anywhere else moves; a rock there then follows
+    // the ground down, and is left out where the ground under it is the lake's now.
     const g = height(x, z) + (o.feet ? feetLift(x, z) : 0);
+    const now = o.feet ? g : landHeight(x, z);
     if (g < 0.05 && !o.onLake) return false;
     const base = Math.max(g, 0.04);
     const half = size / 2;
@@ -158,7 +162,15 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     // Nor does anything lie on the shore's rind or beyond it where that view looks down on the shore.
     if (!o.stand && benchDistance(x, z) < 0.75 + half && Math.hypot(x + 510.5, z - 215.5) < 70) return false;
     const [from, to] = o.only ?? ALWAYS;
-    rocks.push({ m: new THREE.Matrix4().compose(at, q, scale), seed: [rng.next(), size, base, o.tone ?? rng.range(0.6, 1.25)], shape, part: k.part, from, to });
+    const seed: [number, number, number, number] = [rng.next(), size, base, o.tone ?? rng.range(0.6, 1.25)];
+    if (now < g - 0.005 && !o.onLake) {
+      if (now < 0.05) return true;
+      at.y -= g - Math.max(now, 0.04);
+      seed[2] = Math.max(now, 0.04);
+    }
+    // Beside that channel nothing stands over a forearm above the crust: a boulder there shows its crown only.
+    if (!o.stand && at.y + tall > 0.4 && lineChannelDistance(x, z) < 4.5) at.y = 0.4 - tall;
+    rocks.push({ m: new THREE.Matrix4().compose(at, q, scale), seed, shape, part: k.part, from, to });
     if (o.shade ?? size > 0.3) shades.push([x, z, half * 1.5, Math.min(0.75, 0.35 + 0.25 * size)]);
     return true;
   };
@@ -392,8 +404,10 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     const flat = height(...near(a, -2.8));
     let r = -2.8;
     while (r > most && height(...near(a, r - half - 0.1)) < flat + 0.8) r -= 0.1;
+    // The shore was drawn back for the channel since (see `put`): a boulder left standing over the lake is walked on to the ground as it is now.
+    while (r > most - 3 && landHeight(...near(a, r + half * 0.6)) < 0.1) r -= 0.1;
     const [x, z] = near(a, r);
-    const g = Math.max(height(x, z), 0.04);
+    const g = Math.max(landHeight(x, z), 0.04);
     stand(shape, x, z, g + rise, half, rise * 1.35, rng.range(0.6, 0.72));
     shades.push([x, z, half * 1.5, 0.6]);
   }
@@ -806,6 +820,33 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     ] as [number, number, number, number, number][]) {
       stand(shape, -520 + Math.sin(yaw) * ahead - Math.cos(yaw) * left, 287 - Math.cos(yaw) * ahead - Math.sin(yaw) * left, lensY - under, half, lensY - under + 0.5, rng.range(0.5, 0.58), staged);
     }
+  }
+
+  // The shelf of the line view, 2 to 13 m from its lens: its picture has broken blocks of scoria of many sizes standing clear of a bed of grit,
+  // each with a top that takes the sky. The land draws the bed and what is lower than a hand; these are the blocks. A stream of their own.
+  rng = ctx.rng('land/heap');
+  for (let i = 0; i < 300; i++) {
+    const a = rng.range(2.4, 13);
+    const r = rng.range(-6.2, 2.6);
+    const size = sized(0.16, 0.9, 1.2);
+    const x = -510.5 + 0.788 * a + 0.616 * r;
+    const z = 215.5 - 0.616 * a + 0.788 * r;
+    // In huddles with open grit between; the large ones lie anywhere.
+    if (drift(x + 7, z + 3, 2.1) + 0.5 * (drift(x, z, 0.6) - 0.5) < 0.36 + 0.2 * rng.next() - 0.25 * size) continue;
+    if (benchDistance(x, z) < 0.4 + size / 2) continue;
+    if (Math.hypot(x - CRACK_FOOT[0], z - CRACK_FOOT[1]) < 0.9 + size / 2) continue;
+    put(i % 4 ? kinds.angular : kinds.lump, x, z, size, { sink: rng.range(0.2, 0.3), flat: rng.range(0.5, 0.9), tone: rng.range(0.75, 1.25) });
+  }
+  // Its picture keeps clinker along the near bank to a third of the frame, black blocks standing before the channel's glow. The shore was
+  // drawn back for the channel after the heap was dealt, and the rules above keep the scatter off its edge: these are stood along the shore
+  // as it is now, a row two deep, small near the lens where the channel must show over them. Last in the stream, so nothing else moves.
+  for (let i = 0; i < 22; i++) {
+    const a = 3.3 + 0.27 * i + rng.range(-0.1, 0.1);
+    let r = 1.5;
+    while (r > -7 && landHeight(-510.5 + 0.788 * a + 0.616 * r, 215.5 - 0.616 * a + 0.788 * r) < 0.15) r -= 0.05;
+    const size = (a < 5 ? 0.3 : 0.42) * Math.pow(1.9, rng.next());
+    r -= size * (i % 2 ? rng.range(0.9, 1.7) : rng.range(0.25, 0.5));
+    put(kinds.angular, -510.5 + 0.788 * a + 0.616 * r, 215.5 - 0.616 * a + 0.788 * r, size, { sink: rng.range(0.2, 0.26), flat: rng.range(0.6, 0.9), tone: rng.range(0.5, 0.8), stand: true });
   }
 
   const discs = ctx.rig.contactDiscs(shades.length);
