@@ -83,12 +83,9 @@ export function create(ctx: Context): Piece {
     };
   };
   // The first spire's baked rock (assets-src/spine/land/bake-hero.mts): its normals, its occlusion, height and tone, and which slab a texel is on.
-  const firstAxes = finAxes(first);
   const heroMaps = {
     tHeroN: { value: ctx.assets.texture('land/hero-n.jpg', { kind: 'data', anisotropy: ANISOTROPY, repeat: false }) },
     tHeroM: { value: ctx.assets.texture('land/hero-m.jpg', { kind: 'data', anisotropy: 4, repeat: false }) },
-    tHeroId: { value: ctx.assets.texture('land/hero-id.png', { kind: 'data', repeat: false }) },
-    uHeroTurn: { value: firstAxes.az * firstAxes.bx - firstAxes.ax * firstAxes.bz > 0 ? 1 : -1 },
   };
   const material = (kind: number, side: THREE.Side = THREE.FrontSide, sp: Spire = first, hero = false): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({

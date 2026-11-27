@@ -70,31 +70,6 @@ export function sectionArcs(n: number, half: number, thickBack: number, thickFro
 /** How far the plates of the rock run to windward for a metre of height: the lean of the lee edge between the canal's roof and the tip. */
 export const HERO_LEAN = 0.85;
 
-/**
- * Where the first spire's face is across the blade, metres, q of the way round its section at a height over its foot: the section's own
- * outline, and on the windward side the notch of the plate that ends there (`back`, metres: how far short of the edge it has broken off).
- */
-export function heroAcross(sp: Spire, q: number, y: number, back: number): number {
-  const p = fin(sp, (y + FIN_ROOT) / (sp.tip + FIN_ROOT));
-  const c = Math.cos(2 * Math.PI * q);
-  const ln = Math.sign(c) * Math.pow(Math.abs(c), 2 / FIN_SECTION);
-  const edge = p.centre + ln * p.half;
-  return ln < 0 ? edge + Math.min(0.5 * p.half, back) * Math.pow(-ln, 2.5) * Math.min(1, Math.max(0, (sp.tip - y) / 24)) : edge;
-}
-
-/** Which plate of the rock a place is on, by where the plates begin: `from` ascending. */
-export function plateAt(from: readonly number[], l: number, y: number): number {
-  const s = l + HERO_LEAN * y;
-  let lo = 0;
-  let hi = from.length - 2;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
-    if ((from[mid] as number) <= s) lo = mid;
-    else hi = mid - 1;
-  }
-  return lo;
-}
-
 /** The rings of the first spire's mesh: so many under the crest and over it, closer where the lens of the kites is on the face. */
 export const HERO_DOWN = 50;
 export const HERO_UP = 230;

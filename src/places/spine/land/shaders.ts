@@ -101,11 +101,17 @@ varying vec2 vSL;
 varying float vRelief;
 varying vec3 vUp;
 varying vec2 vUv;
+attribute vec2 aSlab;
+attribute vec3 aFace;
+flat varying vec2 vSlab;
+flat varying vec3 vFace;
 void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
   vWorld = w.xyz;
   vNormal = normalize(mat3(modelMatrix) * normal);
   vUv = uv;
+  vSlab = aSlab;
+  vFace = mat3(modelMatrix) * aFace;
   vTop = aTop;
   vSL = aSL;
   vRelief = aRelief;
