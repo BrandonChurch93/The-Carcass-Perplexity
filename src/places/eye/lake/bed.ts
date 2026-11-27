@@ -232,7 +232,9 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
   float field = 0.62 * drawn + 0.38 * blobs;
   float lanes = 0.0;
 #if EYE_RIM < 2
-  lanes = smoothstep(0.035, 0.008, abs(vnoise(vec2(pq.x / 13.0, pq.y / 330.0) + 9.0) - 0.5)) * smoothstep(8.0, 50.0, w);
+  // A lane wanders with the bars of rock it runs between and is closed where the mats lie thick: drawn by the way round and the way out
+  // alone it was a ruled grey strip from the lip to the shore.
+  lanes = smoothstep(0.035, 0.008, abs(vnoise(vec2((pq.x + 11.0 * (barsAt - 0.5)) / 13.0, pq.y / 330.0) + 9.0) - 0.5)) * smoothstep(8.0, 50.0, w) * smoothstep(0.62, 0.4, blobs);
 #endif
 #if EYE_RIM > 0
   {
@@ -283,8 +285,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
       // has the bed there.
       vec2 ta = 0.5 - abs(fract(qa) - 0.5);
       vec2 tb = 0.5 - abs(fract(qb) - 0.5);
-      float clearA = smoothstep(0.0, 0.2, min(ta.x, ta.y));
-      float clearB = smoothstep(0.0, 0.2, min(tb.x, tb.y));
+      float clearA = smoothstep(0.0, 0.1, min(ta.x, ta.y));
+      float clearB = smoothstep(0.0, 0.1, min(tb.x, tb.y));
       float pick = smoothstep(-0.12, 0.12, hb - ha + 0.5 * (vnoise(b / 3.7 + 21.0) - 0.5) + 1.2 * (clearB - clearA));
       // Closer than the picture is fine it is let go soft, and the finer tile of the same weed lies over it as hair: every tuft is made of strands.
       float fine = smoothstep(0.012, 0.004, px);
@@ -398,7 +400,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
 // fell: how fast the wall falls for a metre out from the lip here, across and up the frame (told at the top of the branch that calls this, from gFx and gFy).
 Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   Bed o;
-#if EYE_EDGE
+#if EYE_EDGE || EYE_LEAVE
   // From beside the edge the wall is rock under the eye, a few metres off: broken pale stone that falls away in ledges, seen from over it.
   // The Builder's picture of the wall is a face seen from in front; laid down under the eye its beds are the lines of a map and its shading
   // is a hanging cloth. So here it is the pale stone of the shelf itself, seen from above as the eye sees it, that goes down into the water.
@@ -407,7 +409,11 @@ Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   o.albedo = clamp(c * 1.45, 0.0, 0.95) * vec3(0.9, 0.95, 0.94);
   float ledge = (0.35 + 0.65 * smoothstep(0.25, 0.6, great)) * (0.6 + 0.4 * smoothstep(0.1, 0.45, dot(c, vec3(0.33))));
   // Ledge under ledge it turns to a wall that the sky overhead no longer lights: past a few metres down only its highest ledges are seen.
+#if EYE_LEAVE
+  ledge *= 1.0 - smoothstep(3.5, 17.0, down - 5.0 * great);
+#else
   ledge *= 1.0 - smoothstep(1.5, 9.0, down - 3.0 * great);
+#endif
 #else
   float along = atan(b.x, b.y) * 480.0;
   // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip. From over it its beds would lie as lines round
