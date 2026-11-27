@@ -381,7 +381,8 @@ export function fin(sp: Spire, t: number): FinPoint {
   const wide = Math.max(1.5, 0.5 * (hi - lo)) + 0.3 * (under - low);
   // A blade, not a cone: over the canal's roof it thins fast to under half its breadth, so its two faces are near flat and its ends are edges.
   // (Its foot keeps its depth: the canal runs 232 m through it along the ridge.)
-  const blade = 1 - BLADE * smooth(0.1, 0.4, h);
+  // (The first spire only: the others keep the ledges that hold their snow.)
+  const blade = 1 - (sp === first ? BLADE : 0) * smooth(0.1, 0.4, h);
   const thin = Math.min((0.22 + 0.23 * blade) * wide + 2, sp.thick);
   const thick = thin + (sp.thick - thin) * Math.pow(q, 1.05) * (1 - 0.3 * smooth(0.3, 0.8, h)) * blade + 0.2 * under;
   return { centre: 0.5 * (lo + hi), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t };

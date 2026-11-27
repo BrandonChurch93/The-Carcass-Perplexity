@@ -271,7 +271,7 @@ void main() {
   float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
   float snow = show > 0.01 ? smoothstep(hold, hold + (ground ? 0.035 : 0.1), lie) : 1.0;
   snow *= 1.0 - burn;
-  if (spire) snow *= mix(1.0, smoothstep(-0.15, 0.3, lee), uWet);
+  if (spire) snow *= mix(1.0, smoothstep(-0.5, 0.05, lee), uWet);
   // Just above the snow the rock is wet and dark, and frost stands in its cracks.
   float brim = show > 0.01 ? smoothstep(hold - 0.22, hold, lie) * (1.0 - snow) : 0.0;
   albedo *= 1.0 - 0.2 * brim;
