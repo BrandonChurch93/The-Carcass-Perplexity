@@ -515,7 +515,9 @@ export function create(ctx: Context): Piece {
   // The breath of the throat: it leaves the neck and is carried up the picture and to the left by the wind.
   const wind = new THREE.Vector2(-0.43, -0.9).normalize();
   const throat = new THREE.Vector2(X(AT.throat.x), Z(AT.throat.y));
-  sheet('vapour', quad({ x: AT.throat.x + (wind.x * 330) / KM, y: AT.throat.y + (wind.y * 330) / KM }, 560 / KM, 560 / KM, 1.5, 0), VAPOUR_FRAGMENT, {
+  // (The sheet lies along the wind and is no wider than the trail: every pixel of it pays for the six ribbons.)
+  const trailAt = { x: AT.throat.x + (wind.x * 320 - wind.y * 70) / KM, y: AT.throat.y + (wind.y * 320 + wind.x * 70) / KM };
+  sheet('vapour', quad(trailAt, 310 / KM, 350 / KM, 1.5, Math.atan2(wind.x, wind.y)), VAPOUR_FRAGMENT, {
     uPicture: { value: data('mat/wisps.jpg', false) },
     uThroat: { value: throat },
     uWind: { value: wind },
