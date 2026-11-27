@@ -172,20 +172,25 @@ void main() {
 }`;
 
 /** The bloom at the struck tip: its radius in pixels of a 4K frame, and the glare's radiance as a share of the hot spot's. */
-const BLOOM_PIXELS = 90;
-const BLOOM_GLARE = 0.005;
+const BLOOM_PIXELS = 190;
+const BLOOM_GLARE = 0.03;
 const HALO_VERTEX = /* glsl */ `
 #define BLOOM_PIXELS ${BLOOM_PIXELS.toFixed(1)}
 uniform vec3 uAt;
 uniform vec2 uSize;
 uniform float uLens;
 varying vec2 vUv;
+varying float vNear;
 void main() {
   vec4 c = viewMatrix * vec4(uAt, 1.0);
   // Brought toward the lens, so that the rock it sits on does not hide it and the glare lies over the top of the spire.
   c.z += 40.0;
   // The bloom is the lens's: as wide in the frame whatever the lens, never smaller than the hot spot itself.
-  c.xy += position.xy * max(uSize, vec2(BLOOM_PIXELS * uLens * -c.z));
+  // (At its widest only where the lens stands close on the tip, fifteen pixels of a 4K frame to the metre: from across the ridge it
+  // is under half as wide and its glare a sixth, a spark and no orb.)
+  float near = clamp(1.0 / (uLens * -c.z * 15.0), 0.47, 1.0);
+  vNear = (near - 0.47) / 0.53;
+  c.xy += position.xy * max(uSize, vec2(BLOOM_PIXELS * near * uLens * -c.z));
   vUv = position.xy;
   gl_Position = projectionMatrix * c;
 }`;
@@ -195,13 +200,14 @@ const HALO_FRAGMENT = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 uniform vec3 uColour;
 varying vec2 vUv;
+varying float vNear;
 void main() {
   // The white-hot spot where the channel meets the rock: small, solid at its heart. Its bloom is the air's, lit by the rig's light at the tip.
   float r = length(vUv);
   // White where the channel lands, burning out the tip under it; round that the glare the lens makes of it, violet, falling to nothing
   // inside the card. It hides what is behind it only as far as it outshines it.
   // (Taller than wide and small: it is the foot of the channel swollen where it meets the rock. Round and larger it stood as a bead.)
-  float core = exp(-(vUv.x * vUv.x * 300.0 + vUv.y * vUv.y * 170.0));
+  float core = exp(-(vUv.x * vUv.x * 900.0 + vUv.y * vUv.y * 560.0));
   // And the arc's own rays where it meets the rock: a few short uneven spikes, thin as the channel, no disc.
   float rays = 0.0;
   for (int k = 0; k < 5; k++) {
@@ -209,14 +215,14 @@ void main() {
     vec2 d = vec2(cos(turn), sin(turn));
     float on = dot(vUv, d);
     float off = vUv.x * d.y - vUv.y * d.x;
-    rays += exp(-off * off * 9000.0) * exp(-max(on, 0.0) * (11.0 + 5.0 * float(k))) * smoothstep(-0.01, 0.01, on);
+    rays += exp(-off * off * 30000.0) * exp(-max(on, 0.0) * (9.0 + 5.0 * float(k))) * smoothstep(-0.005, 0.005, on);
   }
-  core += 0.05 * rays;
+  core += 0.12 * rays;
   float fall = (1.0 - r) * (1.0 - r);
   float glare = fall / (1.0 + r * r * 14.0);
   float power = max(uColour.r, max(uColour.g, uColour.b));
   if (r >= 1.0 || power < 1.0) discard;
-  vec3 c = uColour * core + vec3(0.64, 0.5, 1.0) * (power * BLOOM_GLARE * glare);
+  vec3 c = uColour * core + vec3(0.64, 0.5, 1.0) * (power * BLOOM_GLARE * mix(0.17, 1.0, vNear) * glare);
   // Light added to what is behind it; where it is white hot it hides it.
   float cover = clamp(dot(c, vec3(0.333)) / 4.0 - 0.25, 0.0, 1.0);
   gl_FragColor = vec4(c, cover) * (1.0 - uSolo);
