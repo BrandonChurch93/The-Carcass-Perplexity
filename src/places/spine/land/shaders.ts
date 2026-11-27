@@ -621,8 +621,10 @@ void main() {
     vec2 uv = sheetUv;
     vec3 sc = sheetC;
     if (sheet > 0.0) {
-      vec2 px = 3.0 / vec2(textureSize(tSheetH, 0));
-      float lodH = lodOf(tSheetH, sheetUvX, sheetUvY);
+      // (Its relief is read broad: at the size of a texel a hairline joint of the sheet turns the light like a wire, and a row of them down
+      // a steep face is pale rain on the rock.)
+      vec2 px = 8.0 / vec2(textureSize(tSheetH, 0));
+      float lodH = lodOf(tSheetH, sheetUvX, sheetUvY) + 2.0;
       float h0 = textureLod(tSheetH, uv, lodH).r;
       float da = (textureLod(tSheetH, uv + vec2(px.x, 0.0), lodH).r - h0) / px.x * uSheetMap.x;
       float dy = (textureLod(tSheetH, uv + vec2(0.0, px.y), lodH).r - h0) / px.y * uSheetMap.z;
@@ -690,7 +692,9 @@ void main() {
     upPix = mix(upPix, upLens, gripHand);
     float upFace = mix(n0.y, upPix, fineRock);
     float upRock = mix(nRock.y, upPix, fineRock);
-    float held = 0.55 * smoothN.y + 0.45 * upFace + 0.2 * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
+    // (A joint that stands upright on a steep face holds no snow of its own: snow standing all along it is a pale run down the rock, like rain.)
+    float gully = smoothstep(0.3, 0.65, smoothN.y);
+    float held = 0.55 * smoothN.y + 0.45 * upFace + 0.2 * gully * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
     snow = smoothstep(0.62, 0.76, held) * (1.0 - sheet);
     // Close to, the sheet's own snow is gone with its picture: snow lies on what the broken rock turns up to the sky, block by block.
     snow = mix(snow, max(ledgeSnow, smoothstep(0.78, 0.9, 0.4 * held + 0.6 * upRock + 0.25 * (pit - 0.5))), near * sheet);
@@ -701,7 +705,7 @@ void main() {
     float low = smoothstep(280.0, 20.0, above);
     // (the lee faces keep their rock: the gale lays its snow on what looks into it)
     low *= smoothstep(-0.25, 0.45, -dot(smoothN.xz, uWind.xz));
-    float deep = fineRock * (0.05 + 0.12 * smoothstep(1.0, -5.0, vRelief));
+    float deep = fineRock * (0.05 + 0.12 * gully * smoothstep(1.0, -5.0, vRelief));
     snow = max(snow, smoothstep(0.5 - 0.3 * low - deep, 0.7 - 0.3 * low - deep, 0.7 * upRock + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
     // Under the lens snow lies only on what the rock itself turns up to the sky; a slab's side keeps none.
     snow *= mix(1.0, smoothstep(0.3 + 0.12 * gripHand, 0.55 + 0.06 * gripHand, upPix + 0.5 * deep), fineRock) * (1.0 - 0.8 * gripCrack);
