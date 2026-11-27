@@ -201,10 +201,12 @@ export function create(ctx: Context): Piece {
   const tuskC = tex('land/tusk.jpg', { anisotropy: 2 });
   const tuskN = tex('land/tusk-nh.jpg', { kind: 'data', anisotropy: 2 });
   const lichenC = tex('land/lichen.jpg');
-  const tusk = material(FIN_VERTEX, TUSK_FRAGMENT, { tTusk: { value: tuskC }, tTuskN: { value: tuskN }, tLichen: { value: lichenC }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTuskMean: { value: new THREE.Vector3(...TUSK_MEAN) }, uSize: { value: new THREE.Vector2(84, 23) } });
+  const tusk = material(FIN_VERTEX, TUSK_FRAGMENT, { tTusk: { value: tuskC }, tTuskN: { value: tuskN }, tLichen: { value: lichenC }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTuskMean: { value: new THREE.Vector3(...TUSK_MEAN) }, uSize: { value: new THREE.Vector2(84, 23) }, uLichen: { value: 0 } });
   // The near cliff (grain 5) keeps its own stone and its cap: it is a bedded cliff with a lip, not a tusk.
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
     grain === 5
+      ? material(FIN_VERTEX, TUSK_FRAGMENT, { tTusk: { value: tuskC }, tTuskN: { value: tuskN }, tLichen: { value: lichenC }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTuskMean: { value: new THREE.Vector3(...TUSK_MEAN) }, uSize: { value: new THREE.Vector2(62, 17) }, uLichen: { value: 0.05 } })
+      : grain === 6
       ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 }, uCap: { value: 1 } })
       : grain > 0
       ? tusk
@@ -287,7 +289,7 @@ export function create(ctx: Context): Piece {
     const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
     add(blades, bladeShape(rib, cut), stoneOf(cut.grain, rib.name === 'L1' ? 4 : Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
-    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
+    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 40, broken: rib.name !== 'L1' && rib.name !== 'OR', ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }
 
   // The near cliff's curtain: real fronds over the sheet, on the side the lenses see.
