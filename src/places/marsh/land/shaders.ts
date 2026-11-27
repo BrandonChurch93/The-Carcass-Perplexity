@@ -80,6 +80,12 @@ float bankAt(sampler2D grain, vec2 xz) {
   float n = textureLod(grain, xz / 11.0 + 0.3, 2.0).r + 0.5 * textureLod(grain, xz / 4.3 + 0.7, 2.0).r - 0.75;
   return smoothstep(8.5, 5.0, r + n * 9.0 * smoothstep(2.0, 5.0, r));
 }
+// The bank's salt is a ragged line of crystals three hands wide along the waterline, broken along its run: the rest of the bank is wet
+// red mud. t is the metres to the brine.
+float bankCrest(sampler2D grain, vec2 xz, float t) {
+  float w = t + (textureLod(grain, xz / 1.7 + 0.4, 2.0).r - 0.5) * 0.44 + (textureLod(grain, xz / 0.45 + 0.9, 1.0).g - 0.5) * 0.16;
+  return smoothstep(0.0, 0.07, w) * smoothstep(0.64, 0.4, w) * smoothstep(0.2, 0.38, textureLod(grain, xz / 0.9 + 0.15, 2.0).b);
+}
 // How far a spot is from the strip of bank the third lens stands on and looks along (that strip is kept as it was approved).
 float bankFar(vec2 xz) {
   vec2 d = xz - BANK_AT;
@@ -157,7 +163,7 @@ vec3 reliefAt(vec2 xz, float y0) {
     float b = textureLod(tKnobN, knobUv(xz, KNOB_B, 1.43) + 0.37, lod).b;
     float pick = smoothstep(-0.08, 0.08, b - a + (textureLod(tGrain, xz / 3.1 + 0.6, 3.0).r - 0.5) * 1.2);
     // (The knobs stand a hand high, in the brine as on the bank: the waterline is theirs.)
-    up = mix(up, (mix(a, b, pick) - 0.45) * 0.1, bank);
+    up = mix(up, (mix(a, b, pick) - 0.45) * 0.1 * mix(0.3, 1.0, bankCrest(tGrain, xz, max(fieldAt(xz).r, 0.0))), bank);
     // (Away from the third lens the bank is not one bed: it has sunk in places, and the brine stands in them and comes in from the shore.)
     up -= bankSunk(tGrain, xz) * 0.2 * bank;
   }
@@ -365,6 +371,12 @@ void main() {
     ea = max(abs(dot(pdir, px)) + abs(dot(pdir, py)), 0.002);
     // (No rim is one width all the way round: it swells, thins and gives out.)
     float rimW = (0.03 + 0.04 * pr.x) * (1.0 - 0.6 * k) * mix(0.45 + 1.1 * rv2, 0.1 + 1.1 * smoothstep(0.35, 0.75, rv2), k);
+    // (A thin plate's edge is not the line the mesh can follow: the last fingers of it are broken away in bites, drawn here, and the
+    // mud shows dark in each bite.)
+    if (k > 0.0) {
+      vec4 bite = textureLod(tGrain, p.xz / 0.41 + 0.13, levelOf(tGrain, px / 0.41, py / 0.41));
+      ep -= k * (0.05 * smoothstep(0.45, 0.8, bite.g) + 0.012 * smoothstep(0.3, 0.7, bite.a));
+    }
     slab = smoothstep(-ea, ea, ep);
     rim = smoothstep(rimW + ea, rimW * 0.5 - ea, ep) * slab;
     prof = (1.0 - smoothstep(0.0, rimW * 1.6, ep)) * slab;
@@ -436,7 +448,8 @@ void main() {
     slab = max(slab, tipped);
     // (Rust under the plates; grey where the stuck one has stirred it.)
     seep = deadSeep(p.xz + (nS.rg - 0.5) * 2.2) * k;
-    crack = smoothstep(-0.22, -0.03, ep) * (1.0 - slab) * k;
+    // (The red is what seeps along a plate's edge, a few fingers wide and not all the way round: the gaps themselves hold grey mud.)
+    crack = smoothstep(-0.1, -0.02, ep) * smoothstep(0.62, 0.38, nS.b + (mid.b - 0.5) * 0.5) * (1.0 - slab) * k;
     float stirred = 1.0 - smoothstep(2.0, 5.5, length(p.xz - vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)})));
     vec3 mudCol = silt * mix(vec3(0.25, 0.17, 0.145), vec3(0.27, 0.205, 0.18), stirred) * mix(vec3(1.0), vec3(0.5, 0.42, 0.38), sunk);
     vec2 grain = -(nS.rg - 0.5) * 0.8;
@@ -566,14 +579,21 @@ void main() {
     // (Its beds lie level: the sheet laid from above would run down it in stripes.)
     sect *= 0.8 + 0.4 * textureLod(tGrain, vec2(dot(p.xz, vec2(0.7, 0.71)) / 0.6, p.y / 0.07), levelOf(tGrain, vec2(dot(px, vec2(0.7, 0.71)) / 0.6, px3.y / 0.07), vec2(dot(py, vec2(0.7, 0.71)) / 0.6, py3.y / 0.07))).r;
     sect *= 0.5 + 0.5 * smoothstep(SUNK, lift, rise);
-    colour = mix(colour, sect, cut);
+    // (The mesh's sheer face is a stair where an edge turns: it is given the dark only in part, and the shade on the mud under the
+    // edge, drawn from the edge's own line, does the rest.)
+    colour = mix(colour, sect, 0.45 * cut);
     bend *= 1.0 - cut;
     hgt = mix(hgt, 1.0, cut);
-    occ = mix(occ, 0.4, cut);
+    occ = mix(occ, 0.55, cut);
   }
   // The bank the third lens lies on is salt thrown up by the pool: it stands dry over the level and is knobbed all over.
   vec3 knobCol = vec3(0.0);
   float knobH = 0.5;
+  float crest = 0.0;
+  float bankMud = 0.0;
+  float bankKept = 0.0;
+  float knobFine = 0.5;
+  float knobPale = 1.0;
   if (bankDry > 0.0) {
     vec2 uA = knobUv(p.xz, KNOB_A, 1.0);
     vec2 uB = knobUv(p.xz, KNOB_B, 1.43) + 0.37;
@@ -600,9 +620,12 @@ void main() {
       vec4 nC = textureLod(tKnobN, uC, levelOf(tKnobN, gx * 6.1, gy * 6.1));
       vec3 cC = textureLod(tKnob, uC, levelOf(tKnob, gx * 6.1, gy * 6.1)).rgb;
       knobCol *= mix(1.0, 0.55 + 0.45 * dot(cC, vec3(0.3333)) / 0.235, crystal * smoothstep(0.35, 0.6, knobH));
+      knobFine = mix(0.5, nC.b, crystal);
+      knobPale = mix(1.0, dot(cC, vec3(0.3333)) / 0.235, crystal);
       vec2 sC = nC.rg - 0.5;
       kb += (second ? vec2(KNOB_B.x * sC.x + KNOB_B.y * sC.y, KNOB_B.x * sC.y - KNOB_B.y * sC.x) : vec2(KNOB_A.x * sC.x + KNOB_A.y * sC.y, KNOB_A.x * sC.y - KNOB_A.y * sC.x)) * 0.8 * crystal;
     }
+    crest = bankCrest(tGrain, p.xz, max(f.r, 0.0));
     bend = mix(bend, kb, bankDry);
     hgt = mix(hgt, knobH, bankDry);
     occ = mix(occ, 0.5 + 0.5 * smoothstep(0.2, 0.6, knobH), bankDry);
@@ -700,8 +723,9 @@ void main() {
   flood *= mix(1.0, smoothstep(0.05, 0.005, p.y), smoothstep(0.6, 0.2, t) * (1.0 - smoothstep(0.0, 0.5, f.g)) * (1.0 - churn)) * (1.0 - bankDry);
   float damp = smoothstep(0.34, 0.03, over);
   // Damp ground is darker and redder, and what the brine has soaked is stained by it.
-  // (Damp salt is grey, not pink: the red is only in what the brine itself has soaked, a stride from it.)
-  colour = mix(colour, colour * mix(vec3(0.62, 0.575, 0.55), vec3(0.5, 0.33, 0.29), clamp(exp(-t / 0.9) * 0.8, 0.0, 1.0) * (1.0 - 0.6 * smoothstep(0.0, 0.5, thin))), damp * (1.0 - 0.8 * churn));
+  // (Damp salt is grey, not pink: the red is only in what the brine itself has soaked, a foot from it. A stride made every island
+  // and spit one salmon patch.)
+  colour = mix(colour, colour * mix(vec3(0.62, 0.575, 0.55), vec3(0.5, 0.33, 0.29), clamp(exp(-t / 0.38) * 0.8, 0.0, 1.0) * (1.0 - 0.6 * smoothstep(0.0, 0.5, thin))), damp * (1.0 - 0.8 * churn));
   rough = mix(rough, mix(0.95, 0.86, smoothstep(0.0, 0.5, thin) * (1.0 - slab)), damp * (1.0 - rock) * (1.0 - churn));
   // The last hand's breadths before the brine are soaked with it: dark, red and shining.
   // (Seen from far the band is wider than a hand: the wet margin of a channel is strides of dark mud, and no shore is a cut line.)
@@ -754,12 +778,37 @@ void main() {
     wetK = max(wetK, max(0.9 * stood, smoothstep(0.16, 0.02, p.y) * smoothstep(0.95, 0.5, knobH)));
     knobCol *= 0.82 + 0.36 * wide.r;
     // (The bank is salt grown on wet red mud: stained through, and pale only on the tops of its knobs.)
-    vec3 kc = knobCol * mix(vec3(0.5, 0.36, 0.31), vec3(0.8, 0.74, 0.7), smoothstep(0.55, 0.85, knobH)) * mix(vec3(1.0), vec3(0.52, 0.3, 0.27) * (1.0 - 0.35 * stood), wetK);
-    kc *= 1.0 + clamp(0.3 * dot(bend, bright), -0.35, 0.3);
-    // (Where the animals tread, the bank is trodden under: mud, like the rest.)
-    colour = mix(colour, kc, bankDry * (1.0 - rock) * (1.0 - churn));
-    rough = mix(rough, mix(1.0, 0.55, wetK), bankDry * (1.0 - churn));
-    wetK *= bankDry * (1.0 - churn);
+    // (The crystals stand dry on the mud: only those the brine itself laps, or that stand in a sunk place, are wet through.)
+    float wetS = max(0.9 * stood, smoothstep(0.035, 0.0, p.y) * smoothstep(0.95, 0.5, knobH));
+    // (The sheet is a picture of white knobs on red mud. Its white is the salt, sharpened by its own fine grain; its red is not used:
+    // the mud is laid in below.)
+    // (From some strides off the crystals are no longer apart: the bank is then a low pale bank of salt, stained, with the mud dark
+    // in its lows.)
+    float apart = smoothstep(18.0, 7.0, dist);
+    float pale = mix(0.5, dot(knobCol, vec3(0.3333)) * mix(1.0, knobPale, 0.5), apart);
+    // (The salt is one body along the line, not flecks: it clothes each knob there from its top down its sides, thinning to nothing in
+    // the hollows and off the line, so its clumps are shaded by the knobs' own lie. Cream, never white; sugar grained by the sheet's
+    // fine grain; pink low on each clump and at its margin, where the mud's wet has come up into it. All the rest of the bank is mud:
+    // dark, red and wet, lumped by the same knobs, matte to the rig and glinting.)
+    float high = knobH + (knobFine - 0.5) * 0.22;
+    float body = smoothstep(0.1, 0.5, crest) * smoothstep(0.5 - 0.42 * crest, 1.0 - 0.36 * crest, high);
+    float tip = mix((0.5 + 0.4 * smoothstep(0.2, 0.7, knobH)) * (0.6 + 0.4 * crest), body, apart);
+    float sugar = clamp(0.3 + 0.7 * knobPale, 0.72, 1.3) * (0.74 + 0.26 * smoothstep(0.3, 0.9, knobH));
+    float pink = max(max(wetS, 0.75 * (1.0 - smoothstep(0.35, 0.8, body * (0.4 + 0.6 * knobH)))), 0.6 * smoothstep(0.95, 0.55, knobPale));
+    vec3 near = vec3(0.56, 0.45, 0.33) * sugar * mix(vec3(1.0), vec3(0.78, 0.47, 0.42) * (1.0 - 0.35 * stood), pink);
+    vec3 far = mix(vec3(0.32, 0.17, 0.115), vec3(0.44, 0.36, 0.32), smoothstep(0.32, 0.56, pale)) * (0.8 + 0.25 * pale) * mix(vec3(1.0), vec3(0.52, 0.3, 0.27) * (1.0 - 0.35 * stood), wetS);
+    vec3 kc = mix(far, near, apart);
+    kc *= 1.0 + clamp(mix(0.3, 0.6, apart) * dot(bend, bright), -0.45, 0.3);
+    // (Where the animals tread, the bank is trodden under, mud like the rest: all but the strip before the third lens, which they skirt.)
+    float kept = bankDry * (1.0 - rock) * (1.0 - churn * away);
+    bankMud = kept * (1.0 - tip);
+    bankKept = kept;
+    kc = mix(vec3(0.07, 0.022, 0.016) * (0.5 + knobH) * mix(0.7, 1.25, smoothstep(0.03, 0.3, pale)), kc, tip);
+    wetK = wetS * tip;
+    colour = mix(colour, kc, kept);
+    rough = mix(rough, mix(1.0, 0.55, wetK), kept);
+    occ *= 1.0 - 0.35 * bankMud * smoothstep(0.55, 0.25, knobH);
+    wetK *= kept;
   }
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
   // (A broken edge is lit as one face along its plate's side, not facet by facet of the mesh that follows it.)
@@ -768,7 +817,7 @@ void main() {
   if (rock > 0.0) n = normalize(mix(n, normalize(rockN + rockBend), rock));
   // (Dark mud under a white sky is grey the moment the rig gives it any sheen at all: over the churned mud the rig is told the view is
   // square on, and the wet is given below as glints.)
-  vec3 lit = rigShade(p, n, normalize(mix(v, n, 0.92 * churn)), colour, rough, occ);
+  vec3 lit = rigShade(p, n, normalize(mix(v, n, 0.92 * max(churn, bankMud))), colour, rough, occ);
   // (The trodden mud is wet: every clod that leans from the lens shows a little of the sky, sharp and small, never a sheet of it.)
   // (So is the mud between the slabs of the thin crust, and the bare mud back from the rims.)
   float wetMud = max(max(max(churn, wetK), soaked * 0.7), max(smoothstep(0.0, 0.5, thin) * (1.0 - slab) * 0.85, mudShare * 0.5)) * (1.0 - rock) * step(0.0, s);
@@ -782,14 +831,16 @@ void main() {
     // throw it to the lens.)
     vec3 nc = normalize(ng + vec3(bend.x, 0.0, bend.y));
     vec3 hc = normalize(v + normalize(vec3(-0.86, 0.9, 0.5)));
-    lit += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.86, 0.8) * churn * occ * 0.5 * pow(max(dot(nc, hc), 0.0), 90.0);
+    lit += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.86, 0.8) * churn * (1.0 - bankKept) * occ * 0.5 * pow(max(dot(nc, hc), 0.0), 90.0);
+    // (The bank's mud is at the lens: a glint the size of a grain there reads as a loose crystal, so its wet is the clods' broad shine.)
+    lit += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.9, 0.86) * bankMud * occ * 0.07 * pow(max(dot(normalize(ng + vec3(bend.x, 0.0, bend.y) * 0.45), hc), 0.0), 24.0);
   }
   // What is under the level: a film of brine over the ground, clear where it is a hair deep and blood where it is a finger, and a mirror.
   if (flood > 0.0) {
     float deep = max(-over, 0.0) * mix(0.3, 0.1, smoothstep(0.0, 0.5, f.g)) * (1.0 - 0.88 * wet);
     // On the thin crust what stands in the lows is slurry, grey brown with the mud in it; the red is only where it is deepest.
     float slurry = smoothstep(0.0, 0.5, f.g) * (1.0 - churn);
-    vec3 body = mix(mix(vec3(0.12, 0.045, 0.036), vec3(0.13, 0.078, 0.064), slurry), mix(vec3(0.085, 0.014, 0.011), vec3(0.095, 0.027, 0.021), slurry), 1.0 - exp(-deep * mix(26.0, 60.0, slurry)));
+    vec3 body = mix(mix(vec3(0.12, 0.045, 0.036), vec3(0.13, 0.078, 0.064), slurry), mix(vec3(0.085, 0.014, 0.011), vec3(0.105, 0.07, 0.058), slurry), 1.0 - exp(-deep * mix(26.0, 60.0, slurry)));
     // (A hair of brine over salt is clear: the salt shows through it grey and wet, and only depth brings the red.)
     body = mix(body, colour * mix(mix(vec3(0.46, 0.36, 0.34), vec3(0.6, 0.53, 0.5), wet), vec3(0.5), slurry), exp(-deep * mix(60.0, 25.0, slurry)));
     // (Round the stuck one the film is its own slurry: grey brown, the mud of its pocket stirred into it.)

@@ -126,7 +126,12 @@ void main() {
   float nearBy = 1.0 - smoothstep(4.0, 12.0, length(cameraPosition - vWorld));
   vec4 kn2 = texture2D(tKnobN, uk * 6.1 + 0.23);
   float k2 = dot(texture2D(tKnob, uk * 6.1 + 0.23).rgb, THIRD) / 0.235;
-  vec2 lean = ((kn.rg - 0.5) * 1.7 + (kn2.rg - 0.5) * 1.1 * nearBy) * salt;
+  // (Old salt is fine grained, like sugar: its lumps are soft and what the lens sees close is the grain, the sheet again at a
+  // twentieth the size.)
+  vec4 kn3 = texture2D(tKnobN, uk * 21.7 + 0.61);
+  float k3 = dot(texture2D(tKnob, uk * 21.7 + 0.61).rgb, THIRD) / 0.235;
+  float grainy = 1.0 - smoothstep(1.5, 5.0, length(cameraPosition - vWorld));
+  vec2 lean = ((kn.rg - 0.5) * 0.9 + (kn2.rg - 0.5) * 1.1 * nearBy + (kn3.rg - 0.5) * 1.3 * grainy) * salt;
   // The hide where it shows: dried hard, creased along the body, the rime's grain in it.
   vec2 uh = vec2(xz.x * uTurn.x + xz.y * uTurn.y, -xz.x * uTurn.y + xz.y * uTurn.x) * vec2(0.7, 2.6) + uLumps.x;
   vec3 hideN = texture2D(tSaltNh, uh).rgb;
@@ -137,7 +142,7 @@ void main() {
   // Salt: grey white on the knobs, the red of the brine dried in its hollows.
   // (It is old salt, grown thick: dirty grey white all through, its hollows a shade darker and faintly pink, never the wet red of the bank.)
   float kl = clamp(dot(kc, THIRD) / 0.235, 0.55, 1.35);
-  vec3 saltC = vec3(0.325, 0.295, 0.268) * (0.5 + 0.5 * kl) * mix(1.0, 0.62 + 0.38 * k2, nearBy);
+  vec3 saltC = vec3(0.3, 0.268, 0.24) * (0.72 + 0.28 * kl) * mix(1.0, 0.7 + 0.3 * k2, nearBy) * mix(1.0, 0.72 + 0.28 * k3, grainy);
   saltC *= mix(vec3(1.0), vec3(0.8, 0.62, 0.56), 0.6 * smoothstep(0.5, 0.26, kn.b));
   vec3 hide = vec3(0.085, 0.06, 0.049) * (0.45 + 0.65 * crease) * (1.0 - 0.6 * m.y);
   // (Sunk between the ribs it is dark, damp and stained by what was under it.)
@@ -151,7 +156,7 @@ void main() {
   float above = vWorld.y - uGround;
   float stain = (1.0 - smoothstep(0.0, 0.22, above + 0.14 * (vnoise(xz * 3.0 + uLumps.x) - 0.5))) * (0.45 + 0.55 * vnoise(xz * 1.3 + uLumps.x * 2.0));
   albedo = mix(albedo, albedo * vec3(0.7, 0.4, 0.36), 0.75 * stain);
-  float occ = mix((1.0 - 0.5 * m.y) * (1.0 - 0.6 * m.w), 0.68 + 0.32 * smoothstep(0.2, 0.6, kn.b), salt) * (0.7 + 0.3 * smoothstep(0.0, 0.15, above));
+  float occ = mix((1.0 - 0.5 * m.y) * (1.0 - 0.6 * m.w), 0.8 + 0.2 * smoothstep(0.2, 0.6, kn.b), salt) * (0.7 + 0.3 * smoothstep(0.0, 0.15, above));
   vec3 c = rigShade(vWorld, n, v, albedo, mix(mix(0.78, 0.4, m.w), mix(0.96, 0.6, 0.5 * stain), salt), occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
