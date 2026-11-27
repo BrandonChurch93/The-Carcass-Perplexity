@@ -53,7 +53,7 @@ const FRAGMENT = /* glsl */ `
 // x its own number, y its size, z the level of its feet, w how much of the sun the ground behind it keeps off it.
 uniform vec4 uOwn;
 // x how far its head is up, y how much of the low sun still reaches its back where the ground it stands on is in shade.
-uniform vec2 uPose;
+uniform vec3 uPose;
 // The hide sheet: rgb its colour, a its relief.
 uniform sampler2D tHide;
 // The broad sheet: the loose folds, the scars and the dirt.
@@ -233,6 +233,12 @@ void main() {
   // And it lies as a ragged grey saddle from the spine down onto the ribs and the rump, where the animal cannot rub it off.
   float saddle = trunk * smoothstep(1.8, 2.14, vRest.y + 0.5 * (n3(at * vec3(1.6, 1.0, 3.4) + 17.0) - 0.5)) * (0.5 + 0.5 * blotch);
   float dirt = clamp(0.85 * top * smoothstep(0.2, 0.6, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear + 0.4 * run + 0.8 * saddle, 0.0, 1.0);
+  // Old on the shore: broad streaks of dried mud down the ribs and the haunch, and the long thin scars of thorn and horn, healed dark.
+  float aged = uPose.z * trunk * (1.0 - smoothstep(0.05, 0.1, px));
+  float streak = smoothstep(1.45, 2.1, vRest.y) * smoothstep(0.5, 0.72, n3(vec3(at.x * 0.6, at.y * 0.45, at.z * 13.0) + 3.0));
+  float torn = n3(vec3(at.x * 0.5, (at.y * 0.94 + at.z * 0.34) * 1.2, (at.z * 0.94 - at.y * 0.34) * 9.0) + 23.0);
+  float scar = (1.0 - smoothstep(0.0, 0.1, abs(torn - 0.5))) * smoothstep(0.52, 0.68, n3(at * 1.7 + 31.0));
+  dirt = clamp(dirt + aged * (0.9 * streak + 0.9 * scar), 0.0, 1.0);
   skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt);
   // The hide is rubbed pale on the bones and lies in its own shade between the ribs and in the hollow of the flank.
   skin *= 1.0 + (1.0 - smoothstep(0.022, 0.05, px)) * (0.2 * bone - 0.3 * hollow - 0.11 * (0.4 + 1.2 * w2) * (ribs * (0.5 + w1) - ribbed));
@@ -336,7 +342,7 @@ interface Drawn {
   material: THREE.ShaderMaterial;
   bones: Float32Array;
   own: THREE.Vector4;
-  pose: THREE.Vector2;
+  pose: THREE.Vector3;
   solved: Solved;
 }
 
@@ -360,7 +366,8 @@ export function create(ctx: Context): Piece {
     const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
     const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.45);
-    const pose = new THREE.Vector2(0, index < CLOSE ? 0 : 0.45);
+    // z: the four of the shore shot, the first four of the list, are seen long and near: they carry the marks of their years.
+    const pose = new THREE.Vector3(0, index < CLOSE ? 0 : 0.45, index < 4 ? 1 : 0);
     const material = new THREE.ShaderMaterial({
       uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, tHide, tFolds, tSlope },
       vertexShader: VERTEX,
