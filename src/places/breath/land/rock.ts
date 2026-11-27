@@ -404,8 +404,8 @@ void main() {
   float slabCrack = 0.0;
   float slabOwn = 0.5;
   float slabbed = hand * smoothstep(8.5, 5.0, length(p.xz - vec2(-27.3, 22.6))) * smoothstep(0.2, 0.4, over) * (1.0 - shingle);
-  vec2 slabWarp = texture2D(tRock, p.xz / 5.3 + 0.61).rg - 0.5;
   if (slabbed > 0.0) {
+    vec2 slabWarp = textureLod(tRock, p.xz / 5.3 + 0.61, 0.0).rg - 0.5;
     vec2 sq = (p.xz + 1.3 * slabWarp) / 1.7 + 7.3;
     vec2 ci = floor(sq);
     vec2 cf = sq - ci;
@@ -468,10 +468,14 @@ void main() {
     rock = mix(rock, mix(crust, uCrustMean, 0.2) * (pale / dot(uCrustMean, vec3(0.3333))), hand);
     // Round the dead one the crust stands dry and bleached: grey-cream, its darks lifted, as old travertine is.
     float bright = dot(rock, vec3(0.3333));
-    rock = mix(rock, vec3(0.99, 1.0, 0.96) * mix(bright, pale, 0.45), 0.72 * dryPad * hand);
+    // The same bleach reaches out over the bench to the lens of the rim, a little weaker.
+    float bench = smoothstep(15.0, 9.0, length(fromPad)) * smoothstep(0.2, 0.4, field.r - (${SEA.toFixed(3)}));
+    rock = mix(rock, vec3(0.9, 0.96, 1.0) * mix(bright, pale, 0.45), 0.85 * max(dryPad, 0.9 * bench) * hand);
     rock *= mix(1.0, mix(0.82, 1.14, slabOwn), slabbed);
     rock = mix(rock, rock * vec3(0.3, 0.28, 0.27), slabCrack);
   }
+  // From a far lens the same pad is the same bleached stone: grey-cream, not the plate's tan.
+  rock = mix(rock, vec3(0.97, 1.0, 1.03) * (1.14 * dot(rock, vec3(0.3333))), 0.65 * dryPad * (1.0 - hand));
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
   // It takes the grain of wet rock laid square on its own face (not the plate's picture pulled down it), in level bands as the beds lie.
@@ -506,10 +510,13 @@ void main() {
   vec2 fromBody = fromPad - vec2(-1.09, 0.33);
   vec2 lain = vec2(0.979 * fromBody.x + 0.206 * fromBody.y, 0.206 * fromBody.x - 0.979 * fromBody.y);
   float ragged = 0.6 + 0.8 * a.a;
-  float stain = exp(-(lain.x * lain.x / 1.7 + lain.y * lain.y / 0.5) / ragged) * smoothstep(0.0, 0.45, a.r + 0.7 * (1.0 - crustHigh)) + 0.9 * exp(-((lain.x - 0.15) * (lain.x - 0.15) / 1.3 + (lain.y - 0.3) * (lain.y - 0.3) / 0.45) / ragged);
-  // Under the mop the rock is damp and in its shade.
-  stain = max(stain, 0.45 * exp(-((lain.x + 1.55) * (lain.x + 1.55) + (lain.y - 0.25) * (lain.y - 0.25)) / 0.9));
-  stain = clamp(stain, 0.0, 1.0);
+  float stain = 0.0;
+  if (dot(lain, lain) < 36.0) {
+    stain = exp(-(lain.x * lain.x / 1.7 + lain.y * lain.y / 0.5) / ragged) * smoothstep(0.0, 0.45, a.r + 0.7 * (1.0 - crustHigh)) + 0.9 * exp(-((lain.x - 0.15) * (lain.x - 0.15) / 1.3 + (lain.y - 0.3) * (lain.y - 0.3) / 0.45) / ragged);
+    // Under the mop the rock is damp and in its shade.
+    stain = max(stain, 0.45 * exp(-((lain.x + 1.55) * (lain.x + 1.55) + (lain.y - 0.25) * (lain.y - 0.25)) / 0.9));
+    stain = clamp(stain, 0.0, 1.0);
+  }
   // The dry ground is pale rough rock. Its picture is laid 12 m wide and is soft at the lens, so it gives only the broad lights and darks;
   // the grain of the rock at two sizes and grit a hand across (the shingle's tile, a third of its size) carry the rest.
   vec3 padSoft = mix(vec3(dot(padColour, vec3(0.3333))), padColour, 0.7);
@@ -518,7 +525,7 @@ void main() {
   padSoft *= mix(1.0, 0.4, padCrack) * mix(1.0, 0.78, padLow);
   albedo = mix(albedo, padSoft, inPad);
   albedo = mix(albedo, pebColour, shingle);
-  albedo = mix(albedo, albedo * vec3(0.2, 0.09, 0.08), 0.92 * stain);
+  albedo = mix(albedo, albedo * vec3(0.33, 0.19, 0.19), 0.82 * stain);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
   // From the water's edge: an ankle's depth of bed with the rock's own sheen on it was a beach of wet sand along both banks.
   float under = smoothstep(0.01, -0.05, over);
@@ -700,7 +707,7 @@ void main() {
   // is what makes a vein wander.
   vec4 a = texture2D(tRock, vUv / mix(vec2(41.0, 17.0), vec2(23.0, 19.0), uBone));
   vec4 b = texture2D(tRock, vUv / mix(vec2(19.0, 7.3), vec2(8.3, 7.1), uBone) + 0.35 * a.ra);
-  vec4 c = texture2D(tRock, vec2(vUv.x / 3.1, p.y / 9.0) + 0.3 * b.ar);
+  vec4 c = texture2D(tRock, vec2(vUv.x / 3.1, p.y / 4.2) + 0.3 * b.ar);
   vec3 albedo;
   float rough;
   float occ = vOcc;
@@ -717,7 +724,7 @@ void main() {
   // Slime where the seep keeps the rock wet, rust below the foot of an arch, pale lime where water has dried.
   float slime = smoothstep(0.42, 0.62, b.a + 0.3 * (c.r - 0.5));
   base = mix(base, vec3(0.05, 0.062, 0.034) * tone, 0.6 * slime);
-  float iron = smoothstep(0.55, 0.75, c.a + 0.3 * (a.a - 0.5)) * (1.0 - up);
+  float iron = smoothstep(0.55, 0.75, 0.45 * c.a + 0.55 * b.r + 0.3 * (a.a - 0.5)) * (1.0 - up);
   base = mix(base, vec3(0.15, 0.075, 0.035) * tone, 0.32 * iron);
   float lime = smoothstep(0.7, 0.85, c.r + 0.3 * (b.r - 0.5)) * (1.0 - up);
   base = mix(base, vec3(0.3, 0.31, 0.26) * tone, 0.2 * lime);
@@ -727,7 +734,7 @@ void main() {
   // Runs: where water comes down the face the rock is black and shines, and between the runs lime has dried pale on it.
   // A run is a few paces long and an arm wide, and a bed's lip breaks it: drawn out twenty times its width, as it was, the face was
   // combed into upright stripes a finger apart from top to bottom.
-  float streak = texture2D(tRock, vec2(vUv.x / 5.3, p.y / 23.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 2.9 + 0.3, p.y / 9.0)).a - 0.5);
+  float streak = texture2D(tRock, vec2(vUv.x / 5.3, p.y / 8.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 2.9 + 0.3, p.y / 4.0)).a - 0.5);
   float wetRun = smoothstep(0.52, 0.36, streak + 0.12 * (bedLone - 0.5)) * (1.0 - up);
   albedo *= mix(1.0, 0.5, wetRun);
   albedo = mix(albedo, vec3(0.3, 0.27, 0.2) * tone, 0.16 * smoothstep(0.66, 0.8, streak) * (1.0 - up));
@@ -744,15 +751,16 @@ void main() {
   float bearing = degrees(atan(p.x, -p.z));
   float band = smoothstep(0.03, 0.3, bandOn(bearing, p.y));
   float underBand = bandOn(bearing, p.y + 1.25) * (1.0 - band);
-  vec3 trav = mix(vec3(0.45, 0.4, 0.31), vec3(0.7, 0.64, 0.53), smoothstep(0.3, 0.7, a.r + 0.4 * (grey - 1.0)));
-  // Its rust lies along it, bed by bed, not down it.
-  vec4 lie = texture2D(tRock, vec2(vUv.x / 13.0, p.y / 1.9) + 0.2 * a.ar);
-  trav = mix(trav, vec3(0.4, 0.19, 0.07), 0.6 * smoothstep(0.42, 0.64, lie.a + 0.25 * (lie.r - 0.5)));
-  trav *= 0.8 + 0.4 * lie.g;
-  trav *= tone * mix(1.0, 0.6, bedFoot) * mix(1.0, 0.72 + 0.56 * bedLone, 0.5 * bedSeen) * mix(1.0, 0.6, wetRun);
+  vec3 trav = mix(vec3(0.5, 0.46, 0.38), vec3(0.76, 0.72, 0.63), smoothstep(0.3, 0.7, a.r + 0.4 * (grey - 1.0)));
+  // Its rust is flowstone's: marbled patches that wander, darker at the heart, and runs under the lip. Ruled bed by bed it was a striped sweet.
+  vec4 lie = texture2D(tRock, vec2(vUv.x / 13.0, p.y / 4.6) + 0.3 * b.ar);
+  float flow = smoothstep(0.46, 0.66, lie.a + 0.5 * (b.a - 0.5) + 0.2 * (c.a - 0.5));
+  trav = mix(trav, mix(vec3(0.46, 0.25, 0.1), vec3(0.22, 0.1, 0.04), smoothstep(0.62, 0.8, lie.a + 0.5 * (b.a - 0.5))), 0.66 * flow);
+  trav *= 0.86 + 0.28 * lie.g;
+  trav *= tone * mix(1.0, 0.8, bedFoot) * mix(1.0, 0.86 + 0.28 * bedLone, 0.5 * bedSeen) * mix(1.0, 0.7, wetRun);
   albedo = mix(albedo, trav, band);
   albedo = mix(albedo, vec3(0.15, 0.07, 0.03) * tone, 0.6 * underBand);
-  rough = mix(rough, mix(0.34, 0.62, smoothstep(0.35, 0.65, lie.g)), band);
+  rough = mix(rough, mix(0.2, 0.5, smoothstep(0.35, 0.65, lie.g)), band);
   rough = mix(rough, 0.14, 0.7 * underBand);
 
   // Down the shaft: the land map says where the pit is. A face there sees the sky as a disc overhead, smaller the deeper it is.
@@ -819,7 +827,7 @@ void main() {
   // The relief fades where a bed is finer than a pixel: there it would only be grain.
   float seen = smoothstep(0.05, 0.012, max(length(fdx), length(fdy)));
   // Not all of the face is broken: where the outer skin is whole it lies over the beds, and they show through it at half strength.
-  float whole = ended ? 0.0 : 0.6 * smoothstep(0.44, 0.62, a.a + 0.4 * (c.r - 0.5));
+  float whole = ended ? 0.0 : 0.72 * smoothstep(0.36, 0.56, a.a + 0.4 * (c.r - 0.5));
   level = max(level, whole);
   vec3 skinCol = textureGrad(tSkin, suv, sdx, sdy).rgb / uSkinMean;
   float s0 = textureGrad(tSkinH, suv, sdx, sdy).r;
@@ -842,8 +850,8 @@ void main() {
   // Ivory, with the sheet's own rust, pits and beds as tone and hue; paler on the beds that stand out.
   float grey = dot(tex, vec3(0.3333));
   vec3 hue = tex / max(grey, 0.05);
-  vec3 ivory = mix(vec3(0.66, 0.62, 0.55), vec3(0.85, 0.82, 0.75), clamp(0.45 + 1.4 * (a.r - 0.5) + 0.5 * (height - 0.5), 0.0, 1.0));
-  vec3 albedo = ivory * mix(vec3(1.0), hue, 0.35) * clamp(mix(1.0, grey, 0.4), 0.5, 1.3);
+  vec3 ivory = mix(vec3(0.68, 0.645, 0.575), vec3(0.88, 0.855, 0.79), clamp(0.45 + 1.4 * (a.r - 0.5) + 0.5 * (height - 0.5), 0.0, 1.0));
+  vec3 albedo = ivory * mix(vec3(1.0), hue, 0.24) * clamp(mix(1.0, grey, 0.3), 0.5, 1.3);
   // Rust beyond the sheet's own: broad marbled patches with dark hearts, and runs down the face from them.
   float patch0 = smoothstep(0.5, 0.66, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.1 * (height - 0.5) + 0.12 * (c.a - 0.5));
   float heart = smoothstep(0.66, 0.8, b.a + 0.5 * (a.a - 0.5));
@@ -857,9 +865,9 @@ void main() {
   // Dust and grit lie on its top, in the lows of the skin.
   float dust = smoothstep(0.86, 0.98, up) * smoothstep(0.55, 0.3, height + 0.4 * (a.a - 0.5));
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42) * clamp(grey, 0.6, 1.3), 0.5 * dust);
-  float rough = mix(mix(0.56, 0.33, level), 0.85, dust);
+  float rough = mix(mix(0.46, 0.24, level), 0.85, dust);
   rough = mix(rough, 0.26, 0.6 * damp);
-  float occ = vOcc * mix(0.66, 1.06, smoothstep(0.12, 0.62, height)) * (1.0 - 0.4 * under);
+  float occ = vOcc * mix(0.74, 1.04, smoothstep(0.12, 0.62, height)) * (1.0 - 0.4 * under);
 
   vec4 land = landAt(p.xz);
   float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);
@@ -1009,9 +1017,10 @@ void main() {
   // Stains: rust runs down the wall and the faces of the ribs in streaks an arm to a pace wide, and the damp holds dark green in patches
   // between the ribs. Both are laid by the bearing round the shaft and the depth (whole repeats round it: no seam), so they run true down.
   float bear = atan(p.x, -p.z) / 6.28318;
-  float run = 0.6 * textureLod(tRock, vec2(bear * 61.0, p.y / 23.0), 0.0).r + 0.4 * textureLod(tRock, vec2(bear * 113.0 + 0.4, p.y / 9.0), 1.0).a;
-  float rust = smoothstep(0.5, 0.7, run) * (1.0 - 0.6 * top) * (1.0 - under);
-  albedo = mix(albedo, albedo * vec3(1.3, 0.72, 0.38), 0.7 * rust);
+  // A run is as long as two or three beds are deep and no more: drawn out from top to bottom it was a smear down the wall.
+  float run = 0.6 * textureLod(tRock, vec2(bear * 43.0, p.y / 6.5), 0.0).r + 0.4 * textureLod(tRock, vec2(bear * 97.0 + 0.4, p.y / 3.1), 1.0).a;
+  float rust = smoothstep(0.52, 0.72, run) * (1.0 - 0.6 * top) * (1.0 - under);
+  albedo = mix(albedo, albedo * vec3(0.95, 0.6, 0.36), 0.45 * rust);
   float mossy = smoothstep(0.56, 0.74, textureLod(tRock, vec2(bear * 37.0 + 0.61, p.y / 6.0 + 0.2), 0.0).r) * face * (1.0 - rib);
   albedo = mix(albedo, albedo * vec3(0.5, 0.68, 0.42), 0.6 * mossy);
   float wet = clamp(smoothstep(0.14, 0.04, lum) * face + 0.6 * under, 0.0, 1.0) * smoothstep(-1.0, -5.0, p.y);

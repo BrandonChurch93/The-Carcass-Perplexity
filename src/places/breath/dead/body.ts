@@ -139,7 +139,7 @@ function limb(skin: Skin, path: readonly V3[], thick: [number, number], joints: 
     },
     (t) => {
       let r = lerp(thick[0], thick[1], smooth((t - 0.1) / 0.4));
-      for (const [at, knob] of joints) r = Math.max(r, lerp(r, knob, bell(t, at, 0.045)));
+      for (const [at, knob] of joints) r = Math.max(r, lerp(r, 1.2 * knob, bell(t, at, 0.04)));
       r *= closed(t, 0.02, 0.03);
       return { wide: r * 1.08, tall: r * 0.92 };
     },
@@ -217,22 +217,23 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
       const round = closed(t, 0.16, 0.13);
       // The ribs: nine of them, each leaning back as it comes down from the spine, the hide sunk between each two.
       const cage = smooth((t - 0.1) / 0.08) * smooth((0.6 - t) / 0.1) * smooth((ang - 0.15) / 0.5) * smooth((3.55 - ang) / 0.6);
-      const phase = ((t - 0.1) / 0.5) * 6.4 - 0.5 * (ang - 1.2) + 0.5 * noise3(t * 5.3, ang * 0.5, 1.7);
+      const phase = ((t - 0.1) / 0.5) * 6.4 - 0.5 * (ang - 1.2) + 1.25 * noise3(t * 5.3, ang * 1.1, 1.7) + 0.5 * noise3(t * 2.1, ang * 0.4, 5.9);
       const wave = 0.5 + 0.5 * Math.cos(2 * Math.PI * phase);
-      const each = 0.5 + 0.5 * Math.sin(Math.floor(phase + 0.5) * 2.4 + 1.0) ** 2;
+      // No two alike: one stands proud, the next is half under the slack, and each fades and comes back along its length.
+      const each = (0.12 + 0.88 * Math.sin(Math.floor(phase + 0.5) * 2.4 + 1.0) ** 2) * smooth(0.45 + 1.9 * noise3(t * 6.1, ang * 1.7, 3.3));
       const sag = 0.6 + 0.4 * noise3(t * 7, ang * 1.3, 8.2);
-      const rib = cage * (each * 0.028 * wave ** 4 - 0.036 * sag * (1 - wave) ** 1.5);
+      const rib = cage * (each * 0.02 * wave ** 3 - 0.017 * sag * (0.3 + 0.7 * each) * (1 - wave) ** 1.5);
       // The spine: a ridge of knuckles along the far edge of the top.
       const spine = bell(ang, 1.25, 0.16) * smooth((t - 0.06) / 0.1) * smooth((0.97 - t) / 0.1) * (0.02 + 0.012 * Math.cos(2 * Math.PI * t * 21));
       // The flank between the last rib and the hip has fallen in, and the belly under it lies on the rock.
       const flank = -0.075 * bell(t, 0.64, 0.13) * smooth((ang - 0.7) / 0.5) * smooth((3.3 - ang) / 0.6) - 0.04 * bell(t, 0.45, 0.2) * bell(ang, 2.6, 0.5);
       // The hip's point and the blade of the shoulder, each with the hide drawn tight over it.
-      const hipPoint = 0.1 * bell(t, 0.84, 0.05) * bell(ang, 1.5, 0.45);
-      const blade = 0.05 * bell(t, 0.15, 0.07) * bell(ang, 1.5, 0.6);
+      const hipPoint = 0.13 * bell(t, 0.84, 0.042) * bell(ang, 1.5, 0.36) + 0.055 * bell(t, 0.75, 0.035) * bell(ang, 2.1, 0.3);
+      const blade = 0.085 * bell(t, 0.17, 0.05) * bell(ang, 1.75, 0.5) + 0.05 * bell(t, 0.1, 0.035) * bell(ang, 2.5, 0.3);
       // Slack hide: long folds that hang down the side, deepest low on it.
       // They lean toward the shoulder as they come down, and a skirt of it lies out on the rock on the side of the lens.
       const drape = 1 - 2 * Math.abs(noise3(t * 3.1 + 0.9 * (ang - 1.5), ang * 0.9, 4.4));
-      const fold = (0.008 + 0.024 * smooth((ang - 1.5) / 1.3) * smooth((4.3 - ang) / 0.6)) * drape * (1 - 0.85 * cage) + 0.006 * noise3(t * 31, ang * 6, 9.1);
+      const fold = (0.008 + 0.024 * smooth((ang - 1.5) / 1.3) * smooth((4.3 - ang) / 0.6)) * drape * (1 - 0.4 * cage) + 0.006 * noise3(t * 31, ang * 6, 9.1);
       const skirt = 0.07 * bell(ang, 3.45, 0.32) * (0.6 + 0.4 * noise3(t * 9, 2.2, 6.6)) * smooth((t - 0.12) / 0.1) * smooth((0.9 - t) / 0.1);
       const out = (rib + spine + flank + hipPoint + blade + fold + skirt) * round;
       return [out, sat(0.86 + 9 * (rib + flank * 0.6 + fold))];
@@ -329,7 +330,7 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     const forkAt = forks > 0 ? [2 + Math.floor(random() * 2), 4 + Math.floor(random() * 2), 6 + Math.floor(random() * 2)] : [];
     for (let i = 0; i <= count; i++) {
       const f = i / count;
-      const girth = thick * lerp(1, 0.3, Math.sqrt(f));
+      const girth = thick * lerp(1, 0.16, Math.sqrt(f));
       pts.push([x, lerp(from[1], 0.04 + girth * 0.5 + lift * (1 - f) ** 2, smooth(f / 0.25)) + 0.008 * Math.max(0, noise3(wander, f * 5, 3.3)), z]);
       turn += 0.3 * noise3(wander, f * 3.1, 1.1) + 0.14 * Math.sin(f * 11 + wander);
       x += (Math.cos(turn) * reach) / count;
@@ -346,7 +347,7 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
       forks > 1 ? 7 : 5,
       KIND.cord,
       (t) => {
-        const r = 0.5 * thick * lerp(1, 0.3, Math.sqrt(t)) * Math.sqrt(sat((1 - t) / 0.06));
+        const r = 0.5 * thick * lerp(1, 0.16, Math.sqrt(t)) * Math.sqrt(sat((1 - t) / 0.06));
         return { wide: r, tall: r * 0.85 };
       },
       (t) => [0, 0.55 + 0.45 * t],

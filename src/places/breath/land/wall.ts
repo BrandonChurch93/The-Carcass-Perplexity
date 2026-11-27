@@ -55,19 +55,24 @@ export function wallPoint(b: number, depth: number): WallPoint {
   const top = brim(deg) - 0.12;
   const y = top - depth;
   const over = archesOver(deg, y);
-  // The courses dip a little and wander.
-  const hang = smooth(depth / 7) * (1.7 * noise3(deg * 0.031, 4.4, 1.2) + 0.7 * noise3(deg * 0.09, 9.1, 3.3));
   const down = sat(depth / (top + DEPTH));
   const inset = smooth(depth / 0.9);
-  const back = smooth((depth - 0.25) / 0.5) * courseBack(deg * RAD * 30, depth + 0.6 * hang + 0.5 * noise3(deg * 0.11, 2.2, 8.1));
-  // The wall is no cone: it has broad buttresses and hollows some metres across, and upright breaks where a sheet of it has come away.
-  const broad = smooth(depth / 4) * (0.8 * noise3(deg * 0.06, y * 0.08, 3.3) + 0.45 * (1 - 2 * Math.abs(noise3(deg * 0.21 + 5, y * 0.11, 8.8))));
-  // Flowstone: where water has run down the face it has left upright ribs a pace or two wide that drape over the courses.
-  const fold = 1 - Math.abs(noise3(deg * 0.42, y * 0.05, 5.5));
-  const drape = 0.55 * smooth(depth / 2.5) * fold * fold * fold * (0.55 + 0.45 * noise3(deg * 0.11, y * 0.09, 1.1));
+  const shaped = (deg: number): [number, number, number] => {
+    // The courses dip a little and wander.
+    const hang = smooth(depth / 7) * (1.7 * noise3(deg * 0.031, 4.4, 1.2) + 0.7 * noise3(deg * 0.09, 9.1, 3.3));
+    const back = smooth((depth - 0.25) / 0.5) * courseBack(deg * RAD * 30, depth + 0.6 * hang + 0.5 * noise3(deg * 0.11, 2.2, 8.1));
+    // The wall is no cone: it has broad buttresses and hollows some metres across, and breaks where a sheet of it has come away.
+    const broad = smooth(depth / 4) * (0.8 * noise3(deg * 0.06, y * 0.08, 3.3) + 0.45 * (1 - 2 * Math.hypot(noise3(deg * 0.21 + 5, y * 0.27, 8.8), 0.12)));
+    // Flowstone: where water has run down the face it has left low swells a pace or two wide that drape over a few courses and end. Run
+    // from the brim to the mist as upright ribs they were a smear down the wall.
+    const fold = 1 - Math.hypot(noise3(deg * 0.42, y * 0.24, 5.5), 0.15);
+    const drape = 0.24 * smooth(depth / 2.5) * fold * fold * (0.55 + 0.45 * noise3(deg * 0.11, y * 0.2, 1.1));
+    return [back * (1 - 0.3 * fold * fold), broad, drape];
+  };
+  const [back, broad, drape] = shaped(deg);
   // The tiers carried on round the side that fell: each a band that stands a stride out of the wall.
   const band = bandAt(deg, y);
-  const r = r0 + 0.03 - inset * 0.6 - 12 * down + back * (1 - 0.5 * over.back) * (1 - 0.6 * fold * fold) * (1 - band) + 2.3 * over.back + broad - drape * (1 - band) - 0.95 * band;
+  const r = r0 + 0.03 - inset * 0.6 - 12 * down + back * (1 - 0.5 * over.back) * (1 - band) + 2.3 * over.back + broad - drape * (1 - band) - 0.95 * band;
   return { at: [Math.sin(b) * r, y, -Math.cos(b) * r], u: deg * RAD * 30, v: y, relief: over.on, open: (1 - 0.88 * over.shut) * (1 - 0.3 * sat(back / 0.9)) };
 }
 

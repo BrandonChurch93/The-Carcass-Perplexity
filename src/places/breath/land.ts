@@ -317,9 +317,10 @@ export function poolStone(x: number, z: number): number {
     if (Math.abs(dx) > 3.4 || Math.abs(dz) > 3.4) continue;
     const c = Math.cos(st.turn);
     const sn = Math.sin(st.turn);
-    const e = Math.hypot((dx * c + dz * sn) / st.long, -dx * sn + dz * c) / st.radius + 0.3 * (noise2(x / 0.45 + 3.1 * st.turn, z / 0.45 + 1.5) - 0.5);
+    // No disc: its outline is broken into lobes and bays, and its top is in lumps a hand high, not a dome.
+    const e = Math.hypot((dx * c + dz * sn) / st.long, -dx * sn + dz * c) / st.radius + 0.55 * (noise2(x / 0.7 + 3.1 * st.turn, z / 0.7 + 1.5) - 0.5) + 0.22 * (noise2(x / 0.23 + 1.3 * st.turn, z / 0.23 + 4.5) - 0.5);
     if (e >= 1) continue;
-    high = Math.max(high, SEA + st.top - 0.6 * (1 - Math.sqrt(1 - e * e)) + 0.03 * (noise2(x / 0.12 + 7.7, z / 0.12 + 2.2) - 0.5));
+    high = Math.max(high, SEA + st.top - 0.6 * (1 - Math.sqrt(1 - e * e)) + 0.09 * (noise2(x / 0.38 + 7.7, z / 0.38 + 2.2) - 0.6) * (1 - e) + 0.03 * (noise2(x / 0.12 + 7.7, z / 0.12 + 2.2) - 0.5));
   }
   return high;
 }

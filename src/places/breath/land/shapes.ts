@@ -46,7 +46,9 @@ export function talusHeight(x: number, z: number): number {
   const down = smooth((rim - r) / (rim - 9));
   // Its head lies two tiers under the brim: the wall and its ribs stand over it, and no block stands at the level of a lens on the rim.
   const top = ground(Math.sin(b) * rim * 1.002, -Math.cos(b) * rim * 1.002) - 11;
-  return lerp(top, -30, down ** 0.8) - 44 * (1 - across) - 40 * smooth((11 - r) / 5) + 1.1 * drift(x * 0.33, 1, z * 0.33) + 0.5 * drift(x * 0.9, 4, z * 0.9);
+  // Part way down it a band of the old tiers still holds: a ledge four metres deep, where the largest of the blocks stopped.
+  const stepped = down < 0.2 ? down : down < 0.38 ? 0.2 + (down - 0.2) * 0.15 : 0.227 + (down - 0.38) * 1.247;
+  return lerp(top, -30, stepped ** 0.8) - 44 * (1 - across) - 40 * smooth((11 - r) / 5) + 1.1 * drift(x * 0.33, 1, z * 0.33) + 0.5 * drift(x * 0.9, 4, z * 0.9);
 }
 
 /** The rubble itself: a fan from the broken rim down into the shaft. */
@@ -57,7 +59,7 @@ export function heap(): THREE.BufferGeometry {
     const x = Math.sin(b) * r;
     const z = -Math.cos(b) * r;
     // Broken stone of every size, not a ramp: lumps a few metres across with ridges where two of them meet, and smaller ones on those.
-    const lumps = 0.9 * (1 - 2 * Math.abs(drift(x * 0.21, 2.5, z * 0.21))) + 0.45 * (1 - 2 * Math.abs(drift(x * 0.55, 6.5, z * 0.55))) + 0.2 * drift(x * 1.6, 8.5, z * 1.6);
+    const lumps = 1.25 * (1 - 2 * Math.abs(drift(x * 0.21, 2.5, z * 0.21))) + 0.6 * (1 - 2 * Math.abs(drift(x * 0.55, 6.5, z * 0.55))) + 0.2 * drift(x * 1.6, 8.5, z * 1.6);
     return { at: [x, talusHeight(x, z) + lumps * smooth(v * 12), z], uv: [x, z], occ: lerp(0.95, 0.5, smooth(v * 1.3)) * lerp(0.6, 1, smooth(0.5 + 0.6 * lumps)) };
   });
 }
