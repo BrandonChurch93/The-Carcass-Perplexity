@@ -49,7 +49,7 @@ const vec2 PANO_SPAN = vec2(${PANO_SPAN[0].toFixed(5)}, ${PANO_SPAN[1].toFixed(5
 const float PANO_DOT = ${(PANO_SPAN[0] / 4096).toFixed(7)};
 const float PANO_DRIFT = 0.009;
 const float FLOW_RATE = 0.014;
-const float FLOW_PERIOD = 10.0;
+const float FLOW_PERIOD = 6.5;
 const float SCUD_OVER = 650.0;
 vec2 panoUv(float az, float el) {
   return (vec2(wrapPi(az) - uSkyStage.x - PANO_DRIFT * (uTime - 12.0), el) - PANO_FROM) / PANO_SPAN;
@@ -145,6 +145,11 @@ vec3 stratus(vec3 c, vec3 from, vec3 d) {
 }
 // On the storm's side the snow it drops and the sea's own vapour stand low as a pale mist, in banks that the gale carries: the foot of the
 // storm wall goes into it, and so does the far end of the sea under it.
+float mistHeads(float az, float el) {
+  return 0.52 * textureLod(tNoise, vec3(az * 2.6 - uTime * 0.007, el * 5.5 + 0.3, 0.41), 0.0).r
+    + 0.3 * textureLod(tNoise, vec3(az * 6.5 - uTime * 0.012, el * 13.0 + 0.7, 0.17), 0.0).r
+    + 0.18 * textureLod(tNoise, vec3(az * 15.0 - uTime * 0.02, el * 30.0 + 0.2, 0.59), 0.0).b;
+}
 vec3 stormMist(vec3 c, vec3 d, float el) {
   float toStorm = -dot(d.xz, GALE) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
   float side = smoothstep(0.05, 0.75, toStorm);
@@ -153,12 +158,13 @@ vec3 stormMist(vec3 c, vec3 d, float el) {
   float banks = textureLod(tNoise, vec3(az * 0.7 - uTime * 0.004, el * 2.2, 0.83), 0.0).r;
   // It stands in heads, not as a wall: each bank has a top that the gale tears, pale where it rises and dark at its foot, where the far
   // sea goes into it.
-  float heads = smoothstep(0.3, 0.7, 0.62 * textureLod(tNoise, vec3(az * 2.6 - uTime * 0.007, el * 5.5 + 0.3, 0.41), 0.0).r
-    + 0.38 * textureLod(tNoise, vec3(az * 6.5 - uTime * 0.012, el * 13.0 + 0.7, 0.17), 0.0).r);
+  float heads = smoothstep(0.3, 0.7, mistHeads(az, el));
+  // Lit from over it by the sky: a head is pale on its top, where it thins upward, and dark under its overhang.
+  float crown = clamp(0.5 + 3.0 * (mistHeads(az, el - 0.014) - mistHeads(az, el + 0.014)), 0.0, 1.0);
   float top = 0.03 + 0.1 * banks + 0.1 * heads;
   float body = 1.0 - smoothstep(0.55 * top, 1.2 * top, max(el, 0.0) + 0.05 * (heads - 0.5));
   float mist = side * mix(exp(-max(el, 0.0) / (0.06 + 0.1 * banks)), body, 0.8) * (0.45 + 0.5 * banks);
-  vec3 pale = vec3(0.19, 0.2, 0.25) * mix(0.74, 1.12, smoothstep(0.0, 0.8 * top, max(el, 0.0) + 0.02 * (heads - 0.5))) * (0.5 + 0.95 * heads * smoothstep(0.004, 0.03, el));
+  vec3 pale = vec3(0.19, 0.2, 0.25) * mix(0.74, 1.12, smoothstep(0.0, 0.8 * top, max(el, 0.0) + 0.02 * (heads - 0.5))) * (0.5 + 0.95 * heads * smoothstep(0.004, 0.03, el)) * mix(0.72, 1.3, crown);
   return mix(c, pale, 0.75 * mist);
 }
 // The storm with none of its billows, for what fades into the sky: its dark where it stands, and the rig's lights on it.
