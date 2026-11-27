@@ -56,10 +56,11 @@ broad = gaussian_filter(lum, (90, 110))
 above = np.clip((0.8 - np.linspace(0, 1, FH)) / 0.06, 0, 1)[:, None]
 gain = 1 + above * (np.clip(0.56 / np.maximum(broad, 0.05), 0.7, 1.8) - 1)
 fin = fin * gain[..., None]
-# The fin sheet is retired (the blades are drawn from land/tusk.jpg): it is worked out as before and no longer written.
+Image.fromarray((np.clip(fin, 0, 1) * 255 + 0.5).astype(np.uint8)).save(OUT + 'fin.jpg', quality=92)
 fr = map_coordinates(relief, [yy, xx], order=1, mode='nearest')
 fr = fr - gaussian_filter(fr, (60, 90)) + 0.5
 fr = np.clip(0.5 + (fr - 0.5) * 2.2, 0, 1)
+slopes(fr, 7.0, (FW, FH), 3.5).save(OUT + 'fin-nh.png')
 print('fin', top, bottom, 'weed line at', 'see picture')
 
 # The plates: slope and height from the Builder's relief.

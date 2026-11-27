@@ -15,7 +15,7 @@ import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COBBLE_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
-import { FIN_VERTEX, STACK_FRAGMENT, TUSK_FRAGMENT } from './fin';
+import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT, TUSK_FRAGMENT } from './fin';
 import { CURTAIN_FRAGMENT, CURTAIN_VERTEX, curtainShape } from './curtain';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
@@ -48,6 +48,8 @@ interface Stack {
 // the one under it, so that there are ledges for weed to hang from and overhangs with bare wet rock under them.
 // The linear mean colour of land/tusk.jpg, as land/materials.json has it.
 const TUSK_MEAN: [number, number, number] = [0.466, 0.452, 0.428];
+// The linear mean of land/strata.jpg (one number: the mean of its three), as land/materials.json has it.
+const STRATA_MEAN = 0.174;
 const BED = 6.5;
 // How far a face of a stack leans in and out with height. At 0.3 the right stack's outline before the bore was a head in profile
 // (brow, nose, mouth); at 0.1 the faces stand nearly straight.
@@ -173,6 +175,12 @@ export function create(ctx: Context): Piece {
     t.wrapS = THREE.MirroredRepeatWrapping;
     t.wrapT = THREE.MirroredRepeatWrapping;
   }
+  // The near cliff's own pictures made from the Builder's sheets (assets-src/ribs/land/make-sheets.py): the fin drawn out flat.
+  const finC = tex('land/fin.jpg', { repeat: false });
+  const finN = tex('land/fin-nh.png', { kind: 'data', repeat: false });
+  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
+  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
+  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
   const boulderC = tex('mat/rock.jpg');
   const boulderN = tex('mat/rock-nh.png', { kind: 'data' });
 
@@ -189,21 +197,15 @@ export function create(ctx: Context): Piece {
     const l = Math.hypot(dx, dz) || 1;
     (ground.uniforms.uPath as THREE.IUniform).value.set(pose.position[0], pose.position[2], dx / l, dz / l);
   }
-  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
-  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
-  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
   // The tusk blades' own sheets (assets-src/ribs/land/make-materials.mjs): pale fractured stone with its slopes, and lichen crusts.
   const tuskC = tex('land/tusk.jpg', { anisotropy: 2 });
   const tuskN = tex('land/tusk-nh.jpg', { kind: 'data', anisotropy: 2 });
   const lichenC = tex('land/lichen.jpg');
-  const tuskOf = (wide: number, fine: number): THREE.ShaderMaterial =>
-    material(FIN_VERTEX, TUSK_FRAGMENT, { tTusk: { value: tuskC }, tTuskN: { value: tuskN }, tLichen: { value: lichenC }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTuskMean: { value: new THREE.Vector3(...TUSK_MEAN) }, uSize: { value: new THREE.Vector2(wide, fine) } });
-  const tusk = tuskOf(84, 23);
-  // The near cliff, which the lens passes at arm's length: the same stone, laid smaller.
-  const tuskNear = tuskOf(47, 11);
+  const tusk = material(FIN_VERTEX, TUSK_FRAGMENT, { tTusk: { value: tuskC }, tTuskN: { value: tuskN }, tLichen: { value: lichenC }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTuskMean: { value: new THREE.Vector3(...TUSK_MEAN) }, uSize: { value: new THREE.Vector2(84, 23) } });
+  // The near cliff (grain 5) keeps its own stone and its cap: it is a bedded cliff with a lip, not a tusk.
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
     grain === 5
-      ? tuskNear
+      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 }, uCap: { value: 1 } })
       : grain > 0
       ? tusk
       : material(ROCK_VERTEX, ROCK_FRAGMENT, {
@@ -232,7 +234,10 @@ export function create(ctx: Context): Piece {
   // A grain below zero is stone that is no blade: it has no sheet of its own.
   const rock = stoneOf(-12);
   // Staged: on the colony's rock the weed line stands at the foot of the colony's frame, where the picture of it has its weed.
-  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 46.3 } });
+  // The colony's own sheets (assets-src/ribs/land/make-materials.mjs): thin level beds broken by upright joints, with their slopes.
+  const strataC = tex('land/strata.jpg', { anisotropy: 2 });
+  const strataN = tex('land/strata-nh.jpg', { kind: 'data', anisotropy: 2 });
+  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tStrata: { value: strataC }, tStrataN: { value: strataN }, tLichen: { value: lichenC }, uStrataMean: { value: STRATA_MEAN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 46.3 } });
   const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
     material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
