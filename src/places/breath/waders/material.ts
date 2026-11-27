@@ -123,7 +123,7 @@ void main() {
   vec3 hideF = hideC;
   float grain = 0.5;
   float swell = 0.5;
-  if (whole > 0.5 && mid > 0.0) {
+  if (whole > 0.5) {
     vec3 r6 = vRest / 0.6 + seed * 0.731;
     vec3 r2 = vRest / 0.19 + seed * 0.417;
     hideC = tw.x * texture2D(tHide, r6.zy).rgb + tw.y * texture2D(tHide, r6.xz).rgb + tw.z * texture2D(tHide, r6.xy).rgb;
@@ -131,7 +131,7 @@ void main() {
     vec2 one = tw.z > max(tw.x, tw.y) ? r2.xy : tw.y > tw.x ? r2.xz : r2.zy;
     hideF = texture2D(tHide, one).rgb;
     grain = texture2D(tHideNh, one).b;
-  } else if (tendril < 0.5 && mid > 0.0) {
+  } else if (tendril < 0.5) {
     hideC = texture2D(tHide, uvH).rgb;
     hideF = texture2D(tHide, uvF).rgb;
     swell = texture2D(tHideNh, uvH).b;
@@ -191,7 +191,7 @@ void main() {
     // The picture is of a whole animal and gives out before the lens is close: the sheet of bare skin, pores, creases, veins and blotches, is laid over it.
     albedo = mix(albedo, mix(shot, dot(shot, vec3(0.333)) * vec3(1.04, 1.0, 0.93), 0.66) * 3.0 * (0.92 + 0.16 * mottle) * mix(vec3(1.0), clamp(told, 0.0, 2.0), 0.8), 0.88 * shown);
     // Bare skin with little blood in it: grey cream, the red left to the blotches and the creases.
-    albedo = mix(dot(albedo, vec3(0.3, 0.5, 0.2)) * vec3(1.06, 0.97, 0.93), albedo, 0.7) * 0.92;
+    albedo = mix(dot(albedo, vec3(0.3, 0.5, 0.2)) * vec3(1.06, 0.97, 0.93), albedo, 0.7);
     height = height * (1.0 - 0.3 * shown) + 0.0035 * (dot(shot, vec3(0.333)) - 0.3) * shown * fine;
     // Below the joint the leg is hard, scaled and grey with silt; the joints are knotted and raw; the foot is dark horn.
     float scaled = vnoise(q * vec2(70.0, 110.0));
@@ -199,7 +199,7 @@ void main() {
     albedo = mix(albedo, shankC, 0.86 * shank * (1.0 - 0.6 * min(joint, 1.0)));
     // The skin over a joint is slack and creased across the leg.
     float knuckle = vnoise(vec2(legT * 150.0, q.x * 12.0 + seed));
-    albedo = mix(albedo, vec3(0.34, 0.17, 0.15) * (0.5 + 0.95 * knuckle), 0.6 * min(joint, 1.0));
+    albedo = mix(albedo, vec3(0.52, 0.2, 0.17) * (0.5 + 0.95 * knuckle), 0.7 * min(joint, 1.0));
     height += 0.003 * (knuckle - 0.5) * min(joint, 1.0) * mid;
     albedo = mix(albedo, vec3(0.07, 0.055, 0.05) * (0.7 + 0.6 * crack), horn);
     height += 0.0016 * (scaled - 0.5) * shank * fine;
@@ -333,7 +333,9 @@ void main() {
   }
   albedo *= 1.0 - (0.62 - 0.3 * tendril) * wet;
   rough = mix(rough, mix(0.22, max(rough, 0.5), tendril), wet);
-  if (mid > 0.01 && tendril < 0.5) n = relief(vWorld, n, height);
+  // The slope is taken for every pixel, not behind a test that differs from one pixel to the next.
+  vec3 turned = relief(vWorld, n, height);
+  if (mid > 0.01 && tendril < 0.5) n = turned;
 
   // The shade an animal throws on the water under it is not on the animal: the light is asked for above the reach of that shade.
   vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, rough, occ);

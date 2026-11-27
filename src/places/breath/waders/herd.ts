@@ -45,9 +45,9 @@ const MORE_UP: [number, number][][] = [[[3.4, 6.1], [16, 20]], [[-5, 2.8], [11, 
 
 /** The three seen close in the channel are three animals: a deep-chested old one, a sway-backed one, a small one with a drawn-up belly. */
 const OWN: Partial<Build>[] = [
-  { chest: 1.14, belly: 0.85, sway: 0.5, gaunt: 1.1 },
-  { chest: 0.98, belly: 1.2, sway: -0.9, gaunt: 1.15 },
-  { chest: 0.9, belly: 1.3, sway: 0.2, gaunt: 0.95 },
+  { chest: 1.12, belly: 0.85, sway: 0.5, gaunt: 0.7 },
+  { chest: 1.0, belly: 0.95, sway: 0.7, gaunt: 0.62 },
+  { chest: 0.94, belly: 1.05, sway: 0.3, gaunt: 0.55 },
 ];
 
 export interface Member {
@@ -104,7 +104,7 @@ export function makeHerd(rng: Rng): Member[] {
   });
   // The one at the rim: it stands with its weight on three legs and looks down the shaft, then lets its neck hang.
   // It is the stocky one of the herd: short in the leg, deep in the barrel, its back arched, and when its neck is down the tuft lies on the rock.
-  const lank = makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.14, belly: 0.9, sway: 0.7, gaunt: 1.15 });
+  const lank = makeBuild(RIM_WADER.size * 1.06, 97.3, false, 0.014, { chest: 1.14, belly: 0.9, sway: 0.7, gaunt: 0.7 });
   const stocky: Build = { ...lank, standH: lank.standH * 0.8, legLen: lank.legLen * 0.806, legR: lank.legR * 1.35, neckR: lank.neckR * 1.18, bodyLen: lank.bodyLen * 1.08 };
   herd.push({ build: stocky, plan: planOf(RIM_WADER, [[-5, RIM_WADER_DOWN_FROM - 1.5], [RIM_LIFTS, RIM_LIFTS + 60]], rng, 1, 1), near: false });
   // The far flock: grains of rice on the shallows. No two do the same thing at the same time.
@@ -136,7 +136,7 @@ export function makeHerd(rng: Rng): Member[] {
   }
   MORE.forEach((m, i) => {
     const anchor: Anchor = { x: m[0], z: m[1], heading: m[2], speed: m[4] * PACE, size: m[3], up: false, phase: i };
-    const own: Partial<Build> = { chest: 0.92 + 0.24 * hash(i * 4.1 + 7), belly: 0.85 + 0.4 * hash(i * 6.3 + 8), sway: -0.8 + 1.5 * hash(i * 8.7 + 9), gaunt: 0.95 + 0.2 * hash(i * 2.3 + 6) };
+    const own: Partial<Build> = { chest: 0.92 + 0.24 * hash(i * 4.1 + 7), belly: 0.85 + 0.4 * hash(i * 6.3 + 8), sway: -0.3 + 1.1 * hash(i * 8.7 + 9), gaunt: 0.55 + 0.25 * hash(i * 2.3 + 6) };
     const plan: Plan = { ...planOf(anchor, MORE_UP[i] ?? [], rng), pauses: 0.12 + 0.3 * hash(i * 3.9 + 5), pauseMax: 3, carry: m[5], tuck: m[6], feedAt: 0.4 + 0.3 * hash(i * 5.1 + 3), rest: i === 5 ? 1 : 0 };
     herd.push({ build: makeBuild(m[3] * 1.06, 501 + i * 9.17, false, 0.024, own), plan, near: true });
   });
