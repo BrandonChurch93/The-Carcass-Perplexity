@@ -163,6 +163,8 @@ void main() {
   float plain = 1.0 - step(0.5, uLedgeF);
   vec3 bark = texture2D(tBark, uv, 2.5 * plain).rgb;
   vec3 nh = texture2D(tBarkNh, uv, 2.0 * plain).rgb;
+  // Read here, before the discard below: after it the software renderer has no sound slopes to choose a level of the sheet by.
+  float ledgeOver = texture2D(tBarkNh, uv + vec2(0.0, 0.04), 3.0).b;
   float rustK = mix(1.0, 0.45 * smoothstep(0.4, 0.75, fbm(vec2(vKind.w * 19.0, vUv.y * 0.5))), plain);
   if (uMirror > 0.5 && vWorld.y < -0.015) discard;
   vec3 v = normalize(cameraPosition - vWorld);
@@ -189,7 +191,6 @@ void main() {
   float rusty = smoothstep(0.3, 0.7, fbm(vec2(vUv.x * 3.0, vUv.y * 1.3) + seed * 5.0));
   albedo = mix(albedo, rust, clamp(pit * (0.35 + 0.55 * rusty) + 0.3 * rusty * (1.0 - crust) * smoothstep(0.3, 0.1, nh.b - 0.25), 0.0, 0.8) * (0.5 + 0.5 * min(age, 1.0)) * rustK);
   // And it runs down from a ledge: the bark under one is stained orange, in tongues, on the side the brine dries last.
-  float ledgeOver = texture2D(tBarkNh, uv + vec2(0.0, 0.04), 3.0).b;
   float tongue = smoothstep(0.35, 0.75, fbm(vec2(vUv.x * 14.0, vUv.y * 1.6) + seed * 9.0));
   float run = smoothstep(0.4, 0.56, ledgeOver) * (1.0 - 0.6 * crust) * (0.3 + 0.7 * tongue) * smoothstep(0.1, 0.5, rusty + 0.25);
   albedo = mix(albedo, vec3(0.5, 0.19, 0.06), 0.8 * run * (1.0 - away) * rustK);

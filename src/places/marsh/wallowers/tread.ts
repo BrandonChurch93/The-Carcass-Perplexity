@@ -77,18 +77,19 @@ void main() {
   float churn = 1.0 - smoothstep(0.45, 1.0, r + 0.5 * (fine.b - 0.5));
   // Seen: the print, the lumps thrown up round it, and a wet stain of the mud between that thins out into the ground.
   float shown = vB.w * max(max(hole, smoothstep(0.12, 0.3, vRise)), 0.55 * churn);
-  if (shown < 0.004) discard;
   // The mud itself is drawn as the wallow it lies in is drawn (dead/mud.ts), so that only what the foot has done to it shows.
+  // Read, and the slope of the face taken, before any pixel is dropped: a pixel dropped beside one kept would leave it no neighbour to pick a level from.
   vec3 mw = texture2D(tMudNh, p / 2.0).rgb;
   vec3 mf = texture2D(tMudNh, vec2(p.x * 0.8 - p.y * 0.6, p.x * 0.6 + p.y * 0.8) / 1.37 + 0.3).rgb;
   vec3 tone = texture2D(tMud, p / 2.0).rgb / MUD_MEAN;
+  vec3 dx = dFdx(vWorld);
+  vec3 dz = dFdy(vWorld);
+  if (shown < 0.004) discard;
   tone = mix(vec3(1.0), mix(vec3(dot(tone, vec3(0.3, 0.5, 0.2))), tone, 0.5), 0.6) * (0.9 + 0.2 * mf.b);
   float h0 = 0.62 * mw.b + 0.38 * mf.b;
   vec2 slope = (textureLod(tMudNh, p / 2.0, 2.5).rg - 0.5) * 0.9 + (mw.rg - 0.5) * 0.25 + (mf.rg - 0.5) * 0.1;
   float low = smoothstep(0.5, 0.34, h0);
   slope *= 1.0 - 0.85 * low;
-  vec3 dx = dFdx(vWorld);
-  vec3 dz = dFdy(vWorld);
   vec3 flat_ = normalize(cross(dx, dz));
   if (flat_.y < 0.0) flat_ = -flat_;
   vec3 n = normalize(flat_ + vec3(-slope.x, 0.0, slope.y));
