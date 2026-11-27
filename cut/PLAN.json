@@ -50,9 +50,9 @@
     "eye-4": { "shot": "eye-05", "part": 0.15 },
     "spine-0": { "hit": 120.516, "plus": 0.05 },
     "spine-3": { "hit": 127.7553, "plus": 0.05 },
-    "reveal-1": { "music": 160.45 },
+    "reveal-1": { "music": 160.35 },
     "reveal-2": { "music": 161.25 },
-    "reveal-3": { "music": 162.6 },
+    "reveal-3": { "music": 162.3167 },
     "reveal-4": { "landmark": "revealHit" }
   },
   "lines": [

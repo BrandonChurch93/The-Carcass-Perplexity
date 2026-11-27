@@ -60,7 +60,8 @@ function keysOfRise(): { frames: number[]; windows: RiseWindow[] } {
     const at = cut.keyFrames[id];
     if (!Number.isFinite(at)) throw new Error(`The cut list has no key frame for ${id}`);
     const w = f.window_in_master_px;
-    frames.push(at as number);
+    // rise.json may have the lens meet a widened window some frames after the key's own frame in the cut list, which is the frame where the camera is closest to the key's view.
+    frames.push((at as number) + (tuning.after[windows.length] ?? 0));
     windows.push({ x: w.x0, y: w.y0, w: w.w, h: w.h });
   }
   return { frames, windows };
@@ -111,7 +112,7 @@ export function poseAt(frame: number): Pose {
   const [startX, startZ] = startOffsetAt(frame);
   return { position: [x + startX, height, z + startZ], aim: [x + startX, 0, z + startZ], fov: FOV, up: [0, 0, -1] };
 }
-/** The first key of the rise (reveal-1, film frame 9627): from it on the camera stands where the rise puts it. */
+/** The frame at which the lens meets the first widened window of the rise (reveal-1's, film frame 9627, six frames after its key frame): from it on the camera stands where the rise puts it. */
 const START_OFFSET_UNTIL = riseKeys.frames[0] as number;
 /** Where the camera stands off the path of the rise as the rise begins, km on the ground (x, z): rise.json gives it (the climb's file), nothing if it gives none. */
 const startOffsetGiven: number[] = (tuning as { startOffsetKm?: number[] }).startOffsetKm ?? [];
