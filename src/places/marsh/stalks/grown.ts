@@ -197,7 +197,7 @@ void main() {
   float zone = smoothstep(0.3, 0.7, fbm(vec2(seed * 9.0 + vUv.x * 0.8, vUv.y * 0.42)));
   albedo *= mix(vec3(0.74, 0.56, 0.45), vec3(1.06, 1.04, 1.02), zone);
   // And no two stalks of one crust: away from the lens one is ivory, the next tan, the next stained brown.
-  albedo *= mix(vec3(1.0), mix(vec3(0.8, 0.62, 0.5), vec3(1.04, 1.02, 1.0), smoothstep(0.1, 0.8, fract(seed * 29.1))), 1.0 - step(1.5, uLedgeF));
+  albedo *= mix(vec3(1.0), mix(vec3(0.92, 0.8, 0.7), vec3(1.05, 1.03, 1.0), smoothstep(0.1, 0.8, fract(seed * 29.1))), 1.0 - step(1.5, uLedgeF));
   // Where the crust has flaked the tube shows: rust, ochre and brown, more of it on an old trunk and in a thin span.
   vec3 rust = bark * vec3(0.95, 0.5, 0.3);
   albedo = mix(albedo, rust, flaked * (0.75 + 0.25 * min(age, 1.0)) * mix(1.0, 0.7, zone) * mix(1.0, 0.5, plain));
@@ -226,7 +226,7 @@ void main() {
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
   // Far off a stem is seen against pale ground and paler air: it is the horn colour of its tube, with its rings as bands, not chalk.
   float banded = (0.5 + 0.5 * sin(vUv.y * (18.0 + 46.0 * fract(seed * 37.7)) + 2.2 * sin(vUv.y * 5.3 + seed * 17.0) + seed * 30.0)) * smoothstep(0.15, 0.6, fract(seed * 53.1));
-  vec3 horn = mix(vec3(1.12, 1.05, 0.97), vec3(1.0, 0.76, 0.6), pow(fract(seed * 29.1), 1.5)) * (0.9 + 0.12 * banded) * mix(0.55, 1.08, smoothstep(0.0, 0.6, vUv.w)) * (0.7 + 0.5 * fract(seed * 17.3));
+  vec3 horn = mix(vec3(1.12, 1.05, 0.97), vec3(1.08, 0.92, 0.8), pow(fract(seed * 29.1), 1.5)) * (0.9 + 0.12 * banded) * mix(0.55, 1.08, smoothstep(0.0, 0.6, vUv.w)) * (0.7 + 0.5 * fract(seed * 17.3));
   albedo = mix(albedo, mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))), 0.45) * horn, smoothstep(6.0, 28.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
   // By the lens the mouth of a living trunk is its husk: brown and fibrous, ragged where the crust begins under it.
@@ -442,6 +442,8 @@ void main() {
   vec3 albedo = mix(vec3(0.04, 0.003, 0.009), vec3(0.15, 0.011, 0.026), clamp(0.55 * own + 0.45 * plant + 0.25 * (s - 0.5), 0.0, 1.0));
   // Far off a head is a few pixels of it against pale ground: there it is the red of the lit blade, not of the shade between blades.
   albedo = mix(albedo, albedo * vec3(1.25, 0.7, 0.8), (1.0 - uLowly) * smoothstep(10.0, 34.0, distance(cameraPosition, vWorld)));
+  // Further off the red goes dusty: a far head is rose in the haze, not a berry.
+  albedo = mix(albedo, vec3(dot(albedo, vec3(0.5, 0.3, 0.2))) * vec3(1.3, 0.85, 0.85), 0.5 * smoothstep(22.0, 60.0, distance(cameraPosition, vWorld)));
   albedo = mix(albedo, vec3(0.2, 0.06, 0.06), 0.45 * smoothstep(0.55, 1.0, s) * fract(seed * 5.1));
   albedo = mix(albedo, vec3(0.2, 0.12, 0.075), 1.0 - smoothstep(0.02, 0.14, s));
   // The rib is darker than the blade, and the blade is ruled along its length.
@@ -536,11 +538,13 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
     const u = (w.seed * 7.31) % 1;
     const v = (w.seed * 13.7) % 1;
     const q = (w.seed * 29.3) % 1;
-    const wide = Math.min(1.5, (19 * 2 * w.R * size) / slim) * (1.15 + 0.9 * u * u + 0.25 * swept);
+    // Seen from far a head is a small tuft at the tip of a pale stalk, and the stalk below it is bare: no head longer than its stalk can show.
+    const off = fine <= 13;
+    const wide = Math.min(1.5, (19 * 2 * w.R * size) / slim, (off ? 0.26 : 0.5) * w.h) * (1.15 + 0.9 * u * u + 0.25 * swept);
     // How far a head arches over to its side is the plant's own: one stands swept up, the next hangs its ends.
-    const arch = 0.6 + 1.0 * ((w.seed * 41.3) % 1);
-    const sprays = v < 0.4 ? 1 : v < 0.82 ? 2 : 3;
-    const each = Math.max(sprays === 1 ? 3 : 2, Math.round(fine * (1.0 + 0.8 * q) * (1 - 0.4 * ragged)));
+    const arch = (off ? 0.45 : 1) * (0.6 + 1.0 * ((w.seed * 41.3) % 1));
+    const sprays = off || v < 0.4 ? 1 : v < 0.82 ? 2 : 3;
+    const each = Math.max(sprays === 1 ? 3 : 2, Math.round(fine * (0.75 + 0.6 * q) * (1 - 0.4 * ragged)));
     let first = true;
     for (let j = 0; j < sprays; j++) {
       const turn = (c0[0] as number) + (j - (sprays - 1) / 2) * rng.range(0.5, 0.95) + rng.normal() * 0.12;
@@ -552,7 +556,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
         const az = turn + rng.normal() * 0.55;
         const leave = sp ? rng.range(1.2, 1.9) : Math.max(0.06, tilt + 0.15 + rng.normal() * 0.25);
         const length = 0.95 * wide * reach * rng.range(0.5, 1.1) * (1 - ragged * rng.range(0, 0.6));
-        const fall = sp ? rng.range(1.2, 2.2) : arch + rng.range(-0.2, 0.7);
+        const fall = sp ? rng.range(1.2, 2.2) : arch + rng.range(-0.2, off ? 0.4 : 0.7);
         // The first strap of a head is the last to go when the head is thinned for distance: no head thins to nothing.
         list.add(w, end, aim, az, leave, length, Math.min(0.026, Math.max(0.008, length * rng.range(0.026, 0.042))) * broad, rng.next(), fall, sp, first ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
         first = false;

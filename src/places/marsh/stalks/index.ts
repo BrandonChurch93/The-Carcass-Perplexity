@@ -379,7 +379,7 @@ export function create(ctx: Context): Piece {
       for (const w of wilds.filter((v) => v.foot && v.kind !== 2 && v.h > 1.2 && v.low === 0 && v.cards.length > 0)) {
         // Round the seep they stand thickest: its key's picture has a thicket there.
         const dense = Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) < 45;
-        const n = dense ? 5 + thick.int(5) : 1 + thick.int(3);
+        const n = dense ? 3 + thick.int(3) : 1 + thick.int(3);
         for (let k = 0; k < n; k++) {
           const a = thick.range(0, TAU);
           const d = thick.range(0.12, 0.75) * (dense ? 2.4 : 1);
@@ -538,7 +538,7 @@ export function create(ctx: Context): Piece {
       const wideOf = lensOf['marsh-01'] ?? reach;
       for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
       // Most stems are bare below the head: one in four keeps an old leaf hanging.
-      for (const w of stands.leaves) if (seen(w.x, w.z) && wideOf(w) < 38 && (w.phase * 7.3) % 1 < 0.25) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)) * 0.35, broadOf(wideOf(w)) * 1.2, true);
+      // No leaf hangs down these stems in the wide: its picture has pale bare stalks under a small red tuft.
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
       const t1 = stands.tufts[1] as number[];
