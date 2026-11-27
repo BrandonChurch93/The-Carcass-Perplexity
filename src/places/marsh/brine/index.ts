@@ -187,14 +187,14 @@ export function create(ctx: Context): Piece {
       const tear = age >= 0 && age < TEAR ? age / TEAR : 0;
       const full = age >= 0 && age < TEAR ? 1 : grow;
       const r = d.size * (0.35 + 0.65 * full) * (swell > 0 || tear > 0 || (age >= 0 && age < TEAR) ? 1 : 0);
-      const tall = r * (0.22 + 0.5 * full) * (1 - 0.3 * tear * tear);
+      const tall = r * (0.22 + 0.5 * full);
       m.makeScale(r, tall, r).setPosition(d.x, -0.01, d.z);
       domeMesh.setMatrixAt(i, m);
       domeShade.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
       // As the edge comes down on the pool the brine it gathered is thrown up in a wall of fingers.
-      const back = age - TEAR * 0.3;
+      const back = age - TEAR * 0.2;
       const risen = back > 0 && back < CROWN_LIFE * Math.sqrt(d.size / 0.4);
       m.makeScale(risen ? 1 : 0, risen ? 1 : 0, risen ? 1 : 0).setPosition(d.x, 0, d.z);
       crownMesh.setMatrixAt(i, m);
@@ -202,10 +202,10 @@ export function create(ctx: Context): Piece {
 
       // The drops are the edge's beads let go: each leaves the place on the skin where the edge found it, at the moment the edge came by,
       // along the way the edge was running and a little off the skin, and then it only falls.
-      const fh = Math.hypot(0.35, 0.94);
-      const fx = (Math.cos(d.seed * 40) * 0.35) / fh;
-      const fy = 0.94 / fh;
-      const fz = (Math.sin(d.seed * 40) * 0.35) / fh;
+      const fh = Math.hypot(0.72, 0.69);
+      const fx = (Math.cos(d.seed * 40) * 0.72) / fh;
+      const fy = 0.69 / fh;
+      const fz = (Math.sin(d.seed * 40) * 0.72) / fh;
       const landed: number[] = [];
       for (let k = 0; k < d.drops; k++, drop++) {
         const az = thrown[drop * 5] as number;
@@ -267,11 +267,14 @@ export function create(ctx: Context): Piece {
           (rings[ring++] as THREE.Vector4).set(d.x, d.z, d.size * 0.9 + RING_SPEED * since, fade * (0.4 + d.size));
         }
       } else if (ring < MAX_RINGS && swell > 0.5) {
-        // A swelling dome pushes a low ripple ahead of its foot.
-        (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.14, 0.55 * grow);
-        // And, round the three great ones (every pixel of the pool asks every ring), a second, wider and lower, that left it a breath ago.
-        if (ring < MAX_RINGS && i < 3) (rings[ring++] as THREE.Vector4).set(d.x, d.z, r * 1.7 + 0.5, 0.3 * grow);
-        if (ring < MAX_RINGS && i < 3) (rings[ring++] as THREE.Vector4).set(d.x, d.z, r * 2.5 + 1.1, 0.18 * grow);
+        // A swelling dome pushes a ripple ahead of its foot.
+        (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.12, 0.65 * grow);
+        // And, round the three great ones (every pixel of the pool asks every ring), ring after ring leaves it as the skin heaves: each
+        // runs out some strides and dies, the next already on its way.
+        for (let k = 0; k < 3 && ring < MAX_RINGS && i < 3; k++) {
+          const gone = fract(t * 0.42 + k / 3 + d.seed);
+          (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.25 + 2.3 * gone, 0.45 * grow * Math.min(1, gone * 7) * Math.pow(1 - gone, 1.4));
+        }
       }
     });
     ringCount.value = ring;
