@@ -186,35 +186,43 @@ float lum(vec3 c) {
 // of soft drawn-out cloud (mat/veil.jpg) twice across one turn and read soft gives the arms, so they are unequal in number, width
 // and length as the photograph's own bands are, and the photograph of streaks of small cells (mat/streaks.jpg) fills them. Outward
 // only the strongest arms are left and they end where the photograph's bands end; between arms is open sea.
-float storm(vec2 p, float turn, float lopsided) {
+float storm(vec2 p, float turn, float lopsided, float shorter) {
   float r = max(length(p), 1e-3);
   float around = atan(p.y, p.x) / 6.28318 - turn;
   float lr = log(r);
-  // (The same along an arm. Whole multiples of the angle keep the winding without a seam.)
-  float phase = around - 0.33 * lr;
+  // (The photographs are laid in the coordinates of a spiral that keep a square square: twice round the eye one way, once the
+  // other, and the logarithm of the distance in the proportion that goes with those. Laid with any other proportion a cell is
+  // drawn out along the arm, three to six times its width, and the storm is strokes. Whole multiples of the angle keep the
+  // winding without a seam.)
+  float phase = around - 0.3183 * lr;
+  vec2 wound = vec2(2.0 * around + 0.1592 * lr, phase);
   vec2 bend = texture2D(uCloudTile, p * 0.3 + 0.3, 3.0).rg - 0.5;
   float grain = 1.0 / max(r, 0.05);
   vec2 gx = dFdx(vUv) * grain;
   vec2 gy = dFdy(vUv) * grain;
-  vec2 ua = vec2(0.55 * lr, phase) + vec2(0.13, 0.41) + 0.03 * bend;
-  float arms = lum(textureGrad(uMatVeil, ua, gx * 1.5, gy * 1.5).rgb) / 0.262;
-  vec2 ub = vec2(around + 0.9 * lr, 2.0 * phase) + vec2(0.57, 0.22) + 0.02 * bend;
-  vec2 uc = vec2(2.0 * around + 1.8 * lr, 4.0 * phase) + vec2(0.21, 0.73) + 0.02 * bend;
-  vec2 ud = vec2(4.0 * around + 3.6 * lr, 8.0 * phase) + vec2(0.83, 0.37) + 0.02 * bend;
+  // (The arms are the one lay drawn out, two to one along the winding: a band of cloud is longer than it is wide.)
+  vec2 ua = vec2(wound.x, 2.0 * wound.y) + vec2(0.13, 0.41) + 0.03 * bend;
+  float arms = lum(textureGrad(uMatVeil, ua, gx * 2.0, gy * 2.0).rgb) / 0.262;
+  vec2 ub = wound + vec2(0.57, 0.22) + 0.02 * bend;
+  vec2 uc = 2.0 * wound + vec2(0.21, 0.73) + 0.02 * bend;
+  vec2 ud = 4.0 * wound + vec2(0.83, 0.37) + 0.02 * bend;
   // (The same photograph at three sizes, the finer the farther out, where the winding has drawn the coarse one out to strokes.)
   float outer = smoothstep(0.15, 0.65, r);
-  float fine = (mix(0.5, 0.12, outer) * lum(textureGrad(uStreaks, ub, gx * 1.2, gy * 1.2).rgb) + mix(0.5, 0.43, outer) * lum(textureGrad(uStreaks, uc, gx * 2.4, gy * 2.4).rgb) + 0.45 * outer * lum(textureGrad(uStreaks, ud, gx * 4.8, gy * 4.8).rgb)) / 0.304;
+  float fine = (mix(0.3, 0.1, outer) * lum(textureGrad(uStreaks, ub, gx * 0.75, gy * 0.75).rgb) + mix(0.5, 0.35, outer) * lum(textureGrad(uStreaks, uc, gx * 1.5, gy * 1.5).rgb) + mix(0.2, 0.55, outer) * lum(textureGrad(uStreaks, ud, gx * 3.0, gy * 3.0).rgb)) / 0.304;
   float core = 1.0 - smoothstep(0.02, 0.14, r);
   // (A strong arm reaches farther out than a weak one, so the storm has no round rim.)
-  float reach = 1.0 - smoothstep(0.25, 0.8, r * (1.45 - 0.45 * min(arms, 2.0)));
-  float least = mix(0.62, 1.25, smoothstep(0.05, 0.75, r));
+  // (Nor is it a disc: it stands in a wind of its own, which draws it out on one side and cuts it short on the other.)
+  float reach = 1.0 - smoothstep(0.25, 0.8, r * shorter * (1.45 - 0.45 * min(arms, 2.0)));
+  float least = mix(0.7, 1.3, smoothstep(0.05, 0.75, r));
   // (No storm is the same all the way round: as it is watched one side grows heavy and the side across from it thins.)
-  least -= 0.25 * lopsided * cos(6.28318 * (around - 0.33 * lr) + 0.6);
+  least -= 0.25 * lopsided * cos(6.28318 * phase + 0.6);
   float band = smoothstep(least - 0.35, least + 0.35, arms);
   float cover = max(0.8 * core, band * (0.1 + 0.9 * reach));
-  float cells = smoothstep(0.45, 1.85, fine);
-  float body = cover * mix(cells, 0.15 + 0.85 * cells, core);
-  return body * smoothstep(0.006, 0.036, r) * (1.0 - smoothstep(0.8, 0.98, r));
+  // (Outward the air between the cells widens, so an arm ends in separate cells and not in a drawn line.)
+  float cells = smoothstep(0.45 + 0.45 * smoothstep(0.3, 0.8, r * shorter), 1.85, fine);
+  // (Toward the eye a band is one body of cloud and its cells are the lumps of its top; outward it opens into rows of them.)
+  float body = cover * mix(cells, 0.2 + 0.8 * cells, max(core, band * (1.0 - outer)));
+  return body * smoothstep(0.006, 0.036, r) * (1.0 - smoothstep(0.8, 0.98, r * shorter));
 }
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
@@ -233,7 +241,10 @@ void main() {
     body = mat2(cos(wound), sin(wound), -sin(wound), cos(wound)) * p;
   }
   vec2 sunStep = normalize(uSunDir.xz);
-  float thick = storm(body, turn, lopsided);
+  // (How much shorter the storm stands on a side than on its longest: this stands on the planet and does not turn with it.)
+  float side = atan(p.y, p.x);
+  float shorter = 1.32 - 0.3 * cos(side - 3.4) - 0.12 * cos(2.0 * side + 1.0) + 0.5 * (texture2D(uCloudTile, p * 0.17 + vec2(0.71, 0.38), 3.0).b - 0.5);
+  float thick = storm(body, turn, lopsided, max(shorter, 1.0));
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
   // (How its thickness falls toward the sun, from the change of it across the pixel.)
   vec2 across = vec2(dFdx(thick), dFdy(thick));

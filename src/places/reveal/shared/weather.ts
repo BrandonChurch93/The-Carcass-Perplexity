@@ -73,7 +73,7 @@ float sunImage(vec2 xz) {
 // streaks of the low field curve into its arms.
 vec2 roundStorm(vec2 at) {
   vec2 from = at - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))});
-  float turned = 1.1 * exp(-length(from) / ${f(1100 * KM)});
+  float turned = 0.5 * exp(-length(from) / ${f(1100 * KM)});
   return vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))}) + mat2(cos(turned), sin(turned), -sin(turned), cos(turned)) * from;
 }
 
@@ -162,13 +162,16 @@ float lowDepth(vec2 at) {
   // the lanes curve, the dashes turn with them, and cloud carried through a bend is seen to turn.)
   vec2 bendAt = at / ${f(KM)};
   w += ${f(KM)} * vec2(
-    360.0 * sin(bendAt.y / 1300.0 + 1.3 * sin(bendAt.x / 2300.0) + 0.6) + 100.0 * sin((bendAt.y + 0.5 * bendAt.x) / 520.0 + 2.1),
-    520.0 * sin(bendAt.x / 1150.0 + 1.1 * sin(bendAt.y / 1900.0) + 1.9) + 130.0 * sin((bendAt.x - 0.6 * bendAt.y) / 560.0 + 0.4));
+    180.0 * sin(bendAt.y / 1300.0 + 1.3 * sin(bendAt.x / 2300.0) + 0.6) + 50.0 * sin((bendAt.y + 0.5 * bendAt.x) / 520.0 + 2.1),
+    260.0 * sin(bendAt.x / 1150.0 + 1.1 * sin(bendAt.y / 1900.0) + 1.9) + 65.0 * sin((bendAt.x - 0.6 * bendAt.y) / 560.0 + 0.4));
   // (And within a few hundred kilometres it meanders: laid straight, the grain of the photographs stood at one angle over a
-  // whole ocean. The filaments of specks now wander by twenty degrees either way.)
+  // whole ocean. The filaments of specks now wander by a few degrees either way.)
+  // (All the bends together must not draw a photograph out more than three to one, or its cells are strokes and, where the
+  // ground folds on itself, straight hairlines that cross. As they stand the worst is 2.7 to 1 and the middle 1.3,
+  // measured over the sea of the widest view by the change of the ground across ten kilometres. Whoever adds a bend measures again.)
   w += vec2(
-    20.0 * sin(at.y / 61.0 + 1.4 * sin(at.x / 173.0 + 0.7) + 2.3) + 6.0 * sin((at.y - 0.7 * at.x) / 29.0 + 1.1),
-    18.0 * sin(at.x / 67.0 + 1.2 * sin(at.y / 151.0 + 2.9) + 0.5) + 5.5 * sin((at.x + 0.6 * at.y) / 33.0 + 4.0));
+    6.0 * sin(at.y / 61.0 + 1.4 * sin(at.x / 173.0 + 0.7) + 2.3) + 1.8 * sin((at.y - 0.7 * at.x) / 29.0 + 1.1),
+    5.4 * sin(at.x / 67.0 + 1.2 * sin(at.y / 151.0 + 2.9) + 0.5) + 1.65 * sin((at.x + 0.6 * at.y) / 33.0 + 4.0));
   vec2 wSlow = w;
   vec2 wLane = w;
   vec2 wCell = w;
