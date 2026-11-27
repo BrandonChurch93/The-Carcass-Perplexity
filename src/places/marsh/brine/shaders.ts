@@ -334,6 +334,13 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
+// Where the overcast is thinnest over the pool: its window stands on the upper side of every wet round thing, to the right of the third lens.
+const DOME_KEY = 'vec3(0.5075, 0.8374, 0.2030)';
+
+// The skin of a dome is drawn twice over what is behind it. With THROUGH it gives the share of that light the film lets pass, red, green
+// and blue each for itself (the mesh multiplies what is there by it); without, the light the film itself sends to the lens (added on top).
+// One alpha could not do it: a red film takes the green and the blue of what is behind it and leaves the red.
+// With DROP it is a bead of the same brine, solid.
 export const DOME_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
@@ -341,94 +348,136 @@ varying vec3 vNormal;
 varying vec3 vLocal;
 varying vec4 vLife;
 uniform sampler2D tGrain;
+uniform sampler2D tFroth;
 ${RIG_GLSL}
 
+// What a unit of the film's thickness takes of red, green and blue.
+const vec3 FILM_TAKES = vec3(0.42, 2.5, 2.9);
+// The colour the brine in the film gives back to the light that falls on it.
+const vec3 FILM_BODY = vec3(0.035, 0.008, 0.0065);
+
+// How wide a pixel lies on the unit dome, set in the first line of main of the varying: every picture is read at the level that width
+// asks for, never at one it picks for itself (which is not the same twice after a discard or under a branch).
+float pxDome = 0.0;
+vec4 grainAt(vec2 uv, float turns) {
+  return textureLod(tGrain, uv, log2(max(pxDome * turns * float(textureSize(tGrain, 0).x), 1.0)));
+}
+// How thick the film is at a place on the unit dome. It drains from the crown to the foot: thin on top, thinner the more the dome has
+// swollen, thick where it meets the pool, and thick in the runs that go down its sides. b: how much of a run is here.
+vec2 filmAt(vec3 at, vec4 life) {
+  float top = smoothstep(0.05, 1.0, at.y);
+  // (A run keeps to its meridian: the picture is read along the way out from the crown, which has no seam.)
+  vec2 mer = at.xz / max(length(at.xz), 0.08);
+  vec4 a = grainAt(mer * 0.43 + life.y * 3.0 + at.y * 0.05, 0.6);
+  vec4 c = grainAt(mer * 1.31 + life.y * 5.0 - at.y * 0.11, 1.8);
+  vec4 b = grainAt(at.xz * 0.7 + life.y, 0.7);
+  float runs = max(smoothstep(0.45, 0.8, a.r) * (1.0 - 0.7 * top), 0.7 * smoothstep(0.5, 0.8, c.g) * (1.0 - top) * (1.0 - top));
+  float film = mix(0.8, 0.16 + 0.22 * (1.0 - life.x), top) + 0.2 * runs + (b.r - 0.5) * 0.3 * (1.0 - 0.5 * top) + 0.5 * smoothstep(0.2, 0.0, at.y);
+  return vec2(clamp(film, 0.05, 2.0), runs);
+}
+
 void main() {
-  // (The fall of the skin's own place across the pixel, taken before any branch: every read of the grain below is given it.)
-  vec3 lx = dFdx(vLocal);
-  vec3 ly = dFdy(vLocal);
+  pxDome = max(length(dFdx(vLocal)), length(dFdy(vLocal)));
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   // (The far wall is drawn only while the skin is open, when it is seen through the hole.)
   if (!gl_FrontFacing && vLife.w <= 0.0) discard;
   if (dot(n, v) < 0.0) n = -n;
-  // The skin drains from the crown toward the foot: thin and clear on top, thick and dark where it meets the pool. Through the thin top the
-  // far wall of the dome shows, paler; across it lies the sky, as on any wet bubble.
+  float open = skyOpen(vWorld);
+  vec3 up = vec3(0.0, 1.0, 0.0);
+#ifdef DROP
+  // A bead of dark brine: one small window of the sky on its upper side and no pale limb.
+  vec3 rd = reflect(-v, n);
+  float td = max(dot(rd, ${DOME_KEY}), 0.0);
+  vec3 bead = vec3(0.085, 0.011, 0.008) * skyIrradiance(n) * (open / 3.14159);
+  bead += skyRadiance(normalize(vec3(rd.x, abs(rd.y) + 0.02, rd.z))) * (0.03 + 0.5 * smoothstep(0.9, 0.99, td)) * mix(1.0, open, 0.5);
+  gl_FragColor = vec4(bead * (1.0 - uSolo), 1.0);
+#else
+  vec3 at = normalize(vLocal);
   float top = smoothstep(0.1, 1.0, vLocal.y);
-  vec4 g = textureGrad(tGrain, vLocal.xz * 0.9 + vLife.y, lx.xz * 0.9, ly.xz * 0.9);
-  float round2 = max(dot(vLocal.xz, vLocal.xz), 1e-4);
-  vec4 run = textureGrad(tGrain, vec2(atan(vLocal.z, vLocal.x) * 0.9 + vLife.y, vLocal.y * 0.35), vec2((vLocal.x * lx.z - vLocal.z * lx.x) / round2 * 0.9, lx.y * 0.35), vec2((vLocal.x * ly.z - vLocal.z * ly.x) / round2 * 0.9, ly.y * 0.35));
-  // (The skin drains in runs down its sides: thick dark streaks between thinner panes.)
-  float thin = clamp(top * (0.35 + 0.65 * vLife.x) + (g.r - 0.5) * 0.45 + (run.r - 0.5) * 0.5 * (1.0 - top), 0.0, 1.0);
-  // The skin is a clear film of thick liquid: what is behind it shows through it, stained. It is thick and dark only where it is seen
-  // edge on and where it meets the pool.
-  // (Cloudy: the brine in the film is milky where it is stretched, and red runs stand in it where it drains.)
-  vec3 albedo = mix(vec3(0.075, 0.011, 0.009), vec3(0.25, 0.08, 0.066), thin * (0.55 + 0.45 * smoothstep(0.35, 0.65, g.g)));
-  albedo = mix(albedo, vec3(0.09, 0.013, 0.01), smoothstep(0.52, 0.72, run.r) * (1.0 - 0.6 * top) * 0.8);
-  vec4 grit = textureGrad(tGrain, vLocal.xz * 3.3 + vLife.y * 7.0, lx.xz * 3.3, ly.xz * 3.3);
-  float solid = 0.0;
+  vec2 film = filmAt(at, vLife);
+  vec4 g = grainAt(vLocal.xz * 0.9 + vLife.y, 0.9);
+  vec4 grit = grainAt(vLocal.xz * 3.3 + vLife.y * 7.0, 3.3);
+  vec4 fleck = grainAt(vLocal.xz * 9.1 + vLife.y * 11.0, 9.1);
+  vec3 scumTex = textureLod(tFroth, vLocal.xz * 0.8 + vLife.y * 2.0, log2(max(pxDome * 0.8 * float(textureSize(tFroth, 0).x), 1.0))).rgb;
   // Torn: the skin opens from one point on its side, the hole's edge ragged and rolled thick, until nothing of it stands.
   float rim = 0.0;
   float glint = 0.0;
+  float whole = 1.0;
   if (vLife.w > 0.0) {
+    whole = 0.0;
     vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.35, 0.94, sin(vLife.y * 40.0) * 0.35));
-    vec3 at = normalize(vLocal);
     // The film that has drawn back is rolled up in the hole's edge, and the edge runs ahead here and hangs back there: no two parts alike.
-    vec4 ragged = textureGrad(tGrain, vLocal.xz * 0.13 + vLife.y * 3.0, lx.xz * 0.13, ly.xz * 0.13);
-    float open = dot(at, from) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w;
+    vec4 ragged = grainAt(vLocal.xz * 0.13 + vLife.y * 3.0, 0.13);
+    float gap = dot(at, from) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w + (grit.b - 0.5) * 0.03;
     float gone = 1.0 - 2.0 * vLife.w * (0.55 + 0.45 * vLife.w);
-    if (open > gone) discard;
+    if (gap > gone) discard;
     // A rolled bead, thicker the further it has run: dark, and round enough to carry a line of the sky along its back.
     float fat = 0.035 + 0.07 * vLife.w;
-    rim = smoothstep(gone - fat, gone - fat * 0.6, open);
-    albedo = mix(albedo, vec3(0.05, 0.008, 0.006), rim);
-    thin *= 1.0 - rim;
-    glint = smoothstep(gone - fat * 0.75, gone - fat * 0.5, open) * smoothstep(gone - fat * 0.1, gone - fat * 0.4, open);
+    rim = smoothstep(gone - fat, gone - fat * 0.6, gap);
+    glint = smoothstep(gone - fat * 0.75, gone - fat * 0.5, gap) * smoothstep(gone - fat * 0.1, gone - fat * 0.4, gap);
+    // (Behind the edge the film is gathered: thicker for a hand's breadth.)
+    film.x += 0.6 * smoothstep(gone - 4.0 * fat, gone - fat, gap);
   }
-  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.03);
+  // The skin is never smooth as blown glass: it carries the pool's small waves up with it, and they run down it.
+  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.07 + vec3(grit.b - 0.5, 0.0, grit.a - 0.5) * 0.05 * (1.0 - 0.5 * top));
   float nv = clamp(dot(n, v), 0.0, 1.0);
+  // The near wall. Light crosses it once on the way to the lens: the longer its way through the film (a thick place, or the film seen
+  // along itself at the dome's edge), the more is taken, the green and the blue first.
+  vec3 through = exp(-FILM_TAKES * film.x / max(nv, 0.2));
+  // The far wall, seen through the near one while the dome is whole: the line of sight goes on through the gas and leaves by the far
+  // side of the skin, or comes down on the pool inside. (The dome is a ball pressed flat: in its own measure the line is straight.)
+  float wide = vLife.z * (0.35 + 0.65 * vLife.x);
+  float tall = wide * (0.22 + 0.5 * vLife.x);
+  vec3 dl = vec3(-v.x / wide, -v.y / tall, -v.z / wide);
+  vec3 leaves = at - dl * (2.0 * dot(at, dl) / dot(dl, dl));
+  float far = smoothstep(-0.03, 0.06, leaves.y) * whole;
+  vec3 atFar = normalize(vec3(leaves.x, max(leaves.y, 0.0), leaves.z));
+  vec2 filmFar = filmAt(atFar, vLife);
+  vec3 nFar = normalize(vec3(atFar.x / wide, atFar.y / tall, atFar.z / wide));
+  vec3 throughFar = mix(vec3(1.0), exp(-FILM_TAKES * filmFar.x / max(abs(dot(nFar, v)), 0.25)), far);
+  // What the wet skin mirrors, by Fresnel's law: the sky above the mirrored horizon, the stand and the bank as a dark broken band on
+  // it, the pool under it. That band and the dark under it are what make a bubble read as glass and not as a ball.
+  float fres = min(0.03 + 0.97 * pow(1.0 - nv, 5.0), 0.32);
+  // (Where the skin runs out into the pool it mirrors no more than the pool does, and scum on it mirrors nothing.)
+  fres *= mix(0.15, 1.0, smoothstep(0.04, 0.26, vLocal.y)) * (1.0 - 0.8 * rim);
+  // Scum rides on the skin where the runs have left it, and grit from the pool's floor: both hide what is behind them.
+  float scum = smoothstep(0.73, 0.78, g.g * 0.55 + grit.r * 0.45 + 0.1 * film.y) * smoothstep(0.3, 0.5, vLocal.y);
+  float speck = smoothstep(0.84, 0.87, grit.g * 0.6 + fleck.b * 0.4) * smoothstep(0.25, 0.45, vLocal.y);
+  float covered = max(max(scum, speck), rim);
+#ifdef THROUGH
+  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered);
+  gl_FragColor = vec4(passes, 1.0);
+#else
+  vec3 fallsOn = skyIrradiance(n) * (open / 3.14159);
+  vec3 fromAbove = skyIrradiance(up) * (open / 3.14159);
+  // What the film itself gives back: the brine's own red, more of it where more of it stands.
+  vec3 lit = FILM_BODY * fallsOn * (1.0 - through.g);
+  // The far wall is lit from outside and shows its lit side through itself: a red lamp behind the near wall. The gas between is steam,
+  // and holds a little of that light.
+  vec3 inside = FILM_BODY * fromAbove * (1.0 - throughFar.g) + vec3(0.8, 0.62, 0.58) * fromAbove * 0.05 * (0.4 + 0.6 * top) * whole;
+  lit += through * inside;
   vec3 r = reflect(-v, n);
-  float open = skyOpen(vWorld);
-  // A film of a clear red liquid over gas. Light crosses it once on the way to the lens: the longer its way through the film (a thick
-  // place, or the film seen along itself at the dome's edge), the more is taken, the green and the blue first.
-  float thick = (1.0 - thin) * 0.75 + 0.5 * smoothstep(0.25, 0.02, vLocal.y) + 0.1;
-  float way = thick / max(nv, 0.22);
-  vec3 through = exp(-vec3(0.55, 2.6, 3.0) * way);
-#ifdef DROP
-  through = vec3(0.0);
-  albedo = vec3(0.085, 0.011, 0.008);
+  float horizon = r.y + (g.g - 0.5) * 0.05;
+  vec3 sky = skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z)));
+  vec4 stand = grainAt(r.xz / max(length(r.xz), 0.05) * 0.9 + 0.31, 2.0);
+  // (The pool lies in a ring of stalks and bank: only the skin's crown looks over them at the sky. The ring is dark and soft-topped.)
+  float overRing = smoothstep(0.0, 0.3, horizon + (stand.r - 0.5) * 0.16);
+  sky = mix(vec3(0.3, 0.265, 0.26) * fromAbove, sky, overRing);
+  vec3 pond = vec3(0.05, 0.012, 0.01) * fromAbove + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.08;
+  vec3 env = mix(pond, sky, smoothstep(-0.02, 0.02, horizon));
+  // The overcast is not even: its brighter quarter stands in the skin as one soft window with a hot middle, cut by the runs.
+  float toward = max(dot(r, ${DOME_KEY}), 0.0);
+  env += uSkyZenith * (2.2 * smoothstep(0.7, 0.975, toward) + 14.0 * smoothstep(0.976, 0.994, toward)) * (1.0 - 0.6 * film.y) * (0.6 + 0.4 * g.r);
+  lit += env * fres * mix(1.0, open, 0.5) * vec3(1.0, 0.95, 0.93);
+  lit += skyRadiance(up) * 0.035 * glint * smoothstep(0.35, 0.7, grit.r) * mix(1.0, open, 0.5);
+  vec3 onTop = mix(vec3(0.3, 0.2, 0.16) * (0.5 + fleck.r), vec3(0.26, 0.17, 0.13) * (0.5 + 0.9 * scumTex.g), scum * (1.0 - speck) * (1.0 - rim));
+  // (The rolled edge of a torn skin is the brine itself, gathered: dark.)
+  onTop = mix(onTop, vec3(0.05, 0.008, 0.006), rim);
+  lit = mix(lit, onTop * fallsOn, covered);
+  gl_FragColor = vec4(lit * (1.0 - uSolo), 0.0);
 #endif
-  float kept = dot(through, vec3(0.333));
-  // What the film itself gives back: the brine's own red where it is thick, a pale milk where it is stretched over the gas.
-  vec3 lit = albedo * skyIrradiance(n) * (open / 3.14159) * (1.0 - kept);
-  // The gas under it is steam: a white veil, most through the middle of the dome.
-  float veil = 0.11 * sqrt(nv) * (0.4 + 0.6 * top) * kept;
-  lit += vec3(0.9, 0.84, 0.82) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159) * veil;
-  // What the wet skin mirrors, by Fresnel's law for both its faces: the sky above the mirrored horizon, the stand and the flats in a
-  // pale band along it, the dark pool under it. That band and the dark under it are what make a bubble read as glass and not as a ball.
-  vec3 pond = vec3(0.05, 0.012, 0.01) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
-  float horizon = r.y + (run.g - 0.5) * 0.06;
-  vec3 env = mix(pond, skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z))), smoothstep(-0.03, 0.035, horizon));
-  // (Only a whole dome carries that band: on the torn skin and on its far wall it would be a drawn line.)
-  float whole = gl_FrontFacing ? 1.0 - smoothstep(0.0, 0.2, vLife.w) : 0.0;
-  env = mix(env, uSkyGround * 0.75, smoothstep(0.09, 0.0, abs(horizon - 0.02)) * 0.55 * whole);
-  // The overcast is not even: its brighter quarter stands in the skin as one soft window, cut by the runs.
-  float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
-  env *= 1.0 + (0.5 * smoothstep(0.75, 0.99, toward) + 0.5 * smoothstep(0.972, 0.995, toward)) * (0.6 + 0.8 * run.g);
-  float fres = min(1.0, (0.035 + 0.965 * pow(1.0 - nv, 5.0)) * 1.7);
-  // (Where the skin runs out into the pool it mirrors no more than the pool does.)
-  fres *= mix(0.1, 1.0, smoothstep(0.06, 0.32, vLocal.y));
-#ifdef DROP
-  // (A bead of dark brine: one small window of the sky on its upper side and no pale limb.)
-  fres = 0.03 + 0.45 * smoothstep(0.93, 0.99, toward);
 #endif
-  vec3 mirrored = env * fres * mix(1.0, open, 0.5) * (1.0 - 0.75 * rim) + skyRadiance(vec3(0.0, 1.0, 0.0)) * 0.035 * glint * smoothstep(0.35, 0.7, grit.r) * mix(1.0, open, 0.5);
-  // Grit and scum ride on the skin and slide down it with the runs.
-  float speck = smoothstep(0.79, 0.84, grit.g * 0.6 + run.b * 0.4) * (1.0 - 0.6 * top);
-  lit = mix(lit, vec3(0.05, 0.016, 0.012) * skyIrradiance(n) * (open / 3.14159), speck);
-  float cover = clamp(1.0 - kept * (1.0 - fres) * (1.0 - veil * 2.0), 0.0, 1.0);
-  cover = max(max(cover, rim), speck);
-  gl_FragColor = vec4((lit + mirrored) * (1.0 - uSolo), cover);
 }`;
 
 // What the pool does when a dome's skin is gone: its floor comes back up through the middle as a low mound, which falls and spreads.
