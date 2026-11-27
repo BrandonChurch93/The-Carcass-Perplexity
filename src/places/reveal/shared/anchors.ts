@@ -68,6 +68,9 @@ function keysOfRise(): { frames: number[]; windows: RiseWindow[] } {
 
 export const riseShots = shotsOf(UNIT).filter((s) => s.picture !== 'black');
 const riseKeys = keysOfRise();
+// rise.json may have the lens see more than a key's window at that key, about the same middle: the climb then spreads its speed.
+const wider = (w: RiseWindow, c: number): RiseWindow => ({ x: w.x - (w.w * (c - 1)) / 2, y: w.y - (w.h * (c - 1)) / 2, w: w.w * c, h: w.h * c });
+riseKeys.windows = riseKeys.windows.map((w, i) => wider(w, tuning.covers[i] ?? 1));
 export const RISE_FIRST = (riseShots[0] as (typeof riseShots)[number]).first;
 export const RISE_LAST = (riseShots[riseShots.length - 1] as (typeof riseShots)[number]).last;
 export const TITAN = riseKeys.frames[riseKeys.frames.length - 1] as number;
@@ -193,8 +196,8 @@ function gathered(t: number, from: number, over: number): number {
 }
 /**
  * The clock of the weather, seconds: the cloud, the cyclone and the vapour are carried by it. The light of the ending runs hours
- * in seconds, and the weather runs on the same clock: nothing up to LIVE_FROM, the pace of liveAt at first, then it gathers way
- * through the hold (2.5 times by film frame 10880), runs faster while the terminator crosses (3.5 times from film frame 11050)
+ * in seconds, and the weather runs on the same clock: nothing up to LIVE_FROM, then it gathers way from rest with liveAt
+ * (2.5 times the clock three seconds in: held six seconds, the field is seen to cross the sea and the cyclone to turn), runs faster while the terminator crosses (3.5 times from film frame 11050)
  * and fastest through the night (4 times from film frame 11240 to the end). Its pace never falls and it never turns back.
  */
 /** Seconds after LIVE_FROM at which the day ends (film frame 10880): the weather gathers its last way from here. */
@@ -202,7 +205,7 @@ const WX_DUSK = (10880 - 10028) / FPS;
 export function weatherAt(seconds: number): number {
   const t = seconds - LIVE_FROM;
   if (!(t > 0)) return 0;
-  return liveAt(seconds) + 1.5 * gathered(t, 2, 12) + gathered(t, 12, 5) + 0.5 * gathered(t, WX_DUSK, 6);
+  return liveAt(seconds) + 1.5 * gathered(t, 0, 3) + gathered(t, 12, 5) + 0.5 * gathered(t, WX_DUSK, 6);
 }
 
 /** The rings on the lake that the Eye hands over fade out between these widths of the view, in units of the width at the first frame. */

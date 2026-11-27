@@ -5,9 +5,16 @@ src/places/reveal/shared/weather.ts (the same rectangle as cover.png).
   red    banks: where the wind of the low field (from the left of the master, a little down) is lifted by a range, cloud piles on
          the flank that faces it and thins over the crest
   green  fog: the low floors between ranges, shut in by high ground on two sides, where cold air lies
-  blue   haze: the low ground, plains and wide valley floors, read wide and soft, where haze pools under the ranges
+  blue   ice: where the thin ice far above (HIGH_KM) crosses the land, in long swaths that lie across the ranges
+         (it held the pooled haze up to the second wave; nothing read it)
 
-It is read from the relief of the widest map of the land (public/assets/reveal/land/relief-a.png, blue: the height). Nothing random.
+Since the second wave the red and the green hold more than the relief gives by itself. Red also holds a broken middle deck that
+lies across one lake of the skull massif, the jaw coast and a few of the long ranges of the chest; green also holds stratus pooled
+in some of the narrow valleys between those ranges and against the coasts that face the wind. A part of the land alone is then
+not seen whole from low down; from orbit the patches are small beside the whole.
+
+It is read from the relief of the widest map of the land (public/assets/reveal/land/relief-a.png, blue: the height). The swells that break the patches are a noise of a fixed seed: the same
+picture every run.
 Run: python3 assets-src/reveal/sky/make_banks.py   (Python 3 with numpy, scipy and Pillow)
 """
 import os
@@ -81,6 +88,74 @@ fog = ndimage.gaussian_filter(fog, 1.6)
 # (Low is told against the ground round it, as for the fog, but wider and without its limit: every floor that lies under its
 # neighbours holds some, the high plateaus none.)
 soft = ndimage.gaussian_filter(land * step(-0.01, 0.04, wide - near) * (1.0 - step(0.2, 0.45, near)), 8) * ndimage.gaussian_filter(land, 5)
-out = np.stack([bank, fog, soft], axis=-1)
+
+# The second wave: weather at three heights over the land.
+
+
+def swell(size, seed_shift=0):
+    """A smooth field, 0 to 1, of features about size texels across. Seeded: the same picture every run."""
+    raw = np.random.default_rng(7 + seed_shift).standard_normal((H, W)).astype(np.float32)
+    g = ndimage.gaussian_filter(raw, size)
+    g = (g - g.mean()) / (g.std() + 1e-9)
+    return np.clip(0.5 + 0.28 * g, 0, 1)
+
+
+def patch(cx, cy, rx, ry, turn_deg, warp):
+    """A soft patch in px of the master: 1 in its middle, 0 outside, its outline bent by a swell."""
+    t = np.deg2rad(turn_deg)
+    dx = px - cx + warp[0]
+    dy = py - cy + warp[1]
+    u = (dx * np.cos(t) + dy * np.sin(t)) / rx
+    v = (-dx * np.sin(t) + dy * np.cos(t)) / ry
+    return 1.0 - step(0.45, 1.0, np.sqrt(u * u + v * v))
+
+
+bend = (260.0 * (swell(22, 1) - 0.5), 260.0 * (swell(22, 2) - 0.5))
+# (Never full: toward its middle a deck closes into clumps with gaps between, toward its edge it thins through the level at which
+# the place draws scattered cells (shared/weather.ts, bankDepth), so no deck ends on the outline of its patch.)
+broken = 0.36 + 0.34 * step(0.36, 0.6, swell(5, 3))
+# The middle deck (px of the master: middle, half lengths, turn). Across the second lake of the skull massif, along the jaw coast,
+# across three ranges of the upper chest and two of the lower, and, so the far body is not bare beside the near, by the hip and
+# over the root of the far arm.
+DECK = [
+    (1610, 1510, 250, 150, -25),
+    (1330, 1860, 340, 115, 14),
+    (2520, 1170, 340, 125, 22),
+    (2360, 1810, 270, 105, -16),
+    (4250, 1930, 300, 110, 10),
+    (2850, 640, 260, 90, -8),
+]
+deck = np.zeros((H, W), np.float32)
+for d in DECK:
+    deck = np.maximum(deck, patch(*d, bend))
+deck = ndimage.gaussian_filter(deck * broken, 2.0)
+# (The banks the ranges make stay, a little thinner: the bank on the collar stood as one bright patch from orbit.)
+bank = np.maximum(0.7 * bank, deck)
+
+# Stratus: where it is pooled. The picture holds only the pools, wide and soft; the sheet that draws it (sky/index.ts) fills each
+# pool up to a level against the height of the land itself (land/relief-a.png), so the stratus lies in the valleys, laps the
+# flanks and lets the crests stand out of it, and its edge is the ground's own contour. A pool stands highest in its middle.
+near_land = step(0.8, 0.97, ndimage.gaussian_filter(land, 10))
+# (Most about the head and the chest, which the rise sees alone and from low down; few toward the far end of the land, which is
+# only ever seen with the whole of it.)
+nearer = 1.0 - 0.75 * step(2900.0, 3900.0, px)
+pools = step(0.58, 0.76, swell(10, 4)) * near_land * nearer
+# (None on the coasts or over water: three that lay half on the sea read from orbit as cotton laid on the map.)
+fog = np.maximum(0.6 * fog, ndimage.gaussian_filter(pools, 3.0))
+
+# Ice: long swaths that cross the land at an angle unlike the ranges of the chest (those run steeply up and down the master:
+# these lie along it, a little turned).
+ICE = [
+    (1750, 1330, 700, 75, -17),
+    (2650, 1450, 800, 70, 27),
+    (2100, 2100, 620, 65, -12),
+    (3700, 1250, 760, 75, 16),
+    (4300, 2250, 600, 65, -14),
+]
+ice = np.zeros((H, W), np.float32)
+for d in ICE:
+    ice = np.maximum(ice, patch(*d, (0.5 * bend[0], 0.5 * bend[1])))
+ice = ndimage.gaussian_filter(ice * (0.5 + 0.5 * step(0.3, 0.6, swell(12, 6))), 3.0)
+out = np.stack([bank, fog, ice], axis=-1)
 Image.fromarray((np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGB').save(os.path.join(PUB, 'sky', 'banks.png'), optimize=True)
 print('banks.png', out.shape, 'means', out.reshape(-1, 3).mean(0).round(3))

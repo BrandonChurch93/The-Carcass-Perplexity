@@ -1,9 +1,11 @@
-// The lid: the evening cumulus that stands over the socket of the Eye, in banks at three heights with a gap over the middle of the lake.
-// The camera climbs up through the gap looking straight down, and over the highest bank the Eye hands over to the rise. Both places draw
+// The lid: the evening cumulus that stands over the socket of the Eye, a broken deck in banks at three heights, each with its own open air.
+// The camera climbs up between the banks, and over the highest of them the Eye hands over to the rise. The banks are read from
+// photographs of cloud (cloud.data.ts), each deck at its own size, turn and place, so the gaps are many, unlike and off the middle. Both places draw
 // the banks with this one function, from the numbers of handoff.json, in the lid's own measure: one unit across is half the height of the
 // view on the water at the cut, and one unit up is the height of the camera at the cut. A ray straight down through the same point of the frame is then the same ray
 // in both places, so each layer slides against the water as it does on the other side of the cut.
 import * as THREE from 'three';
+import { CLOUD_BYTES, CLOUD_SIZE } from './cloud.data';
 
 export interface LidNumbers {
   sun: number[];
@@ -17,7 +19,7 @@ export interface LidNumbers {
   shadow: number;
   /** The deep water of the lake as both places show it under the gap on the frames about the cut. */
   water: number[];
-  /** How far from the middle that water is laid, in units across: inside the deep water of both places. */
+  /** How far from the middle that water is laid, in LID_LAKE: inside the deep water of both places. */
   waterReach: number;
 }
 
@@ -34,42 +36,102 @@ export function lidAt(tau: number, n: LidNumbers, fps: number): LidState {
   return { tau, eroded: u ** n.erodePower };
 }
 
-/** The uniforms of the lid. `unit` is the world length of one unit across, `tall` the world height of the camera at the cut. */
-export function lidUniforms(n: LidNumbers, centre: [number, number], unit: number, tall: number): Record<string, THREE.IUniform> {
-  const v = (a: number[]): THREE.Vector3 => new THREE.Vector3(a[0], a[1], a[2]);
+let cloudMap: THREE.DataTexture | null = null;
+
+/** The photographs of cloud as one tile that repeats: red is how high a bank stands, green how high a field of small cloud stands. */
+function cloudTile(): THREE.DataTexture {
+  if (cloudMap) return cloudMap;
+  const raw = atob(CLOUD_BYTES);
+  const data = new Uint8Array(CLOUD_SIZE * CLOUD_SIZE * 4);
+  for (let i = 0; i < CLOUD_SIZE * CLOUD_SIZE; i++) {
+    data[4 * i] = raw.charCodeAt(2 * i);
+    data[4 * i + 1] = raw.charCodeAt(2 * i + 1);
+    data[4 * i + 3] = 255;
+  }
+  const map = new THREE.DataTexture(data, CLOUD_SIZE, CLOUD_SIZE, THREE.RGBAFormat, THREE.UnsignedByteType);
+  map.wrapS = THREE.RepeatWrapping;
+  map.wrapT = THREE.RepeatWrapping;
+  map.magFilter = THREE.LinearFilter;
+  map.minFilter = THREE.LinearMipmapLinearFilter;
+  map.generateMipmaps = true;
+  map.colorSpace = THREE.NoColorSpace;
+  map.needsUpdate = true;
+  cloudMap = map;
+  return map;
+}
+
+/**
+ * The uniforms of the lid. `unit` is the world length of one unit across, `tall` the world height of the camera at the cut. `grade` is
+ * how a place must weigh the colours of the lid for them to come out of its own finish as they come out of the other's.
+ */
+export function lidUniforms(n: LidNumbers, centre: [number, number], unit: number, tall: number, grade: number[] = [1, 1, 1], deep: number[] = grade, lit: number[] = grade): Record<string, THREE.IUniform> {
+  const v = (a: number[]): THREE.Vector3 => new THREE.Vector3((a[0] as number) * (grade[0] as number), (a[1] as number) * (grade[1] as number), (a[2] as number) * (grade[2] as number));
   return {
     // x: 1 while the lid is drawn (0: no surface reads it). y: seconds since the cut. z: how far it has broken up. w: how dark its shade lies on the water.
     uLid: { value: new THREE.Vector4(0, 0, 0, 0) },
     uLidFrame: { value: new THREE.Vector4(centre[0], centre[1], unit, tall) },
-    uLidSun: { value: v(n.sun).normalize() },
-    uLidSunlit: { value: v(n.sunlit) },
+    uLidSun: { value: new THREE.Vector3(n.sun[0], n.sun[1], n.sun[2]).normalize() },
+    uLidSunlit: { value: new THREE.Vector3((n.sunlit[0] as number) * (lit[0] as number), (n.sunlit[1] as number) * (lit[1] as number), (n.sunlit[2] as number) * (lit[2] as number)) },
     uLidShade: { value: v(n.shade) },
     uLidInside: { value: v(n.inside) },
     uLidWarm: { value: v(n.insideWarm) },
     uLidDrift: { value: new THREE.Vector2(n.drift[0], n.drift[1]) },
     uLidShadow: { value: n.shadow },
-    uLidWater: { value: new THREE.Vector4(n.water[0], n.water[1], n.water[2], n.waterReach) },
+    uLidWater: { value: new THREE.Vector4((n.water[0] as number) * (deep[0] as number), (n.water[1] as number) * (deep[1] as number), (n.water[2] as number) * (deep[2] as number), n.waterReach) },
+    uLidMap: { value: cloudTile() },
+    // The rows of pixels the cloud is read for. Both places keep this one number, whatever the size of the frame, so the banks are as
+    // fine on one side of the cut as on the other: it suits the full frame, where both draw the lid on about a thousand rows.
+    uLidRows: { value: 720 },
   };
 }
 
 /**
- * The gap the lens climbs through, in the lid's measure. foot: the height at which the Eye begins to draw the banks. narrow: the gap's
- * least half width, which it has from the foot up. widen: how much wider it is for each unit of height under the foot. least: the least
- * the bend of its edge can shrink a distance. long: how much longer than wide it is. ragged: how far past its edge the lumps of the
- * banks can still leave air. off: where its middle lies. lowest: the foot of the
- * highest deck, the edge through which the water is seen from the cut. lean: how far its middle moves for each unit of height under the
- * foot, so the rims of the decks do not lie one inside the other like rings.
+ * The decks, from the top down. foot and top: between which heights the banks stand. across: how many tiles of the photograph lie on one
+ * unit across. open: how bright the photograph must be for cloud to stand. at: the place in the tile that lies on the line of the climb
+ * when the lens passes, a place of open air with a bank near it. turn: how the tile is turned. passed: the seconds before the cut at
+ * which the lens passes the deck. wind: how far the deck drifts in a second, each deck its own way, so the open air the lens came up
+ * through has moved off by the cut and no hole stands over the middle of the lake.
  */
-export const LID_GAP = { foot: 0.79, narrow: 0.04, widen: 2.7, least: 0.8, long: 1.15, ragged: 0.055, off: [0.003, -0.003], lowest: 0.835, lean: [-0.5, 0.33] };
+export const LID_DECKS = [
+  // Shreds over the height of the cut: neither place sees them on the frames of the cut, and the rise climbs through them after it.
+  { foot: 1.02, top: 1.075, across: 0.9, open: 0.3, at: [0.58, 0.16], turn: 1.3, passed: -0.6, wind: [-0.05, -0.06] },
+  { foot: 0.905, top: 0.965, across: 2.2, open: 0.15, at: [0.69, 0.455], turn: 0.5, passed: 1.07, wind: [0.035, 0.07] },
+  { foot: 0.85, top: 0.895, across: 1.6, open: 0.14, at: [0.885, 0.34], turn: 2.2, passed: 1.69, wind: [-0.06, 0.045] },
+  { foot: 0.795, top: 0.84, across: 1.2, open: 0.12, at: [0.31, 0.955], turn: 4.1, passed: 2.1, wind: [0.075, -0.03] },
+];
 
-/** The farthest from the middle of the frame, in halves of its height, that anything under the banks is seen through the gap from the height of the cut. */
+/** foot: the height at which the Eye begins to draw the banks. lowest: the foot of the lowest deck: no bank stands where the lens could have seen it from under the foot. */
+export const LID_GAP = { foot: 0.79, lowest: LID_DECKS[LID_DECKS.length - 1]!.foot };
+
+/** The half axes, in units across, of the water both places share about the cut, for a reach of 1: the rise's lake is longer than it is wide. */
+export const LID_LAKE = [1.17, 0.84];
+
+/**
+ * How much of its height each deck has lost when it has sunk, from the top down. The lens climbs slowly on the first frames of the rise;
+ * the decks fall away under it instead, the lowest most, so each keeps its own height and its own speed against the ground.
+ */
+export const LID_SINK = [0.1, 0.2, 0.26, 0.32];
+
+/**
+ * Between which shares of the breaking up each deck goes, from the top down. The lowest goes first: far under the lens its banks are
+ * too small to read as cloud over a country, and the higher decks are left to pass over shore and land alike.
+ */
+export const LID_GOES = [
+  [0.72, 1.0],
+  [0.4, 0.68],
+  [0.3, 0.56],
+  [0.2, 0.44],
+];
+
+/** How far from the line of the climb, in units across, the air of the highest deck under the cut is open where the lens passes it. */
 export function lidGapSeen(): number {
-  return (((LID_GAP.narrow + LID_GAP.ragged) / LID_GAP.least) * LID_GAP.long + Math.hypot(LID_GAP.off[0] as number, LID_GAP.off[1] as number)) / (1 - LID_GAP.lowest);
+  return 0.06 / LID_DECKS[1]!.across;
 }
 
 const G = (n: number): string => n.toFixed(4);
+const deckRow = (d: (typeof LID_DECKS)[number]): string => `vec4(${G(d.foot)}, ${G(d.top)}, ${G(d.across)}, ${G(d.open)})`;
+const layRow = (d: (typeof LID_DECKS)[number]): string => `vec4(${G(d.at[0] as number)}, ${G(d.at[1] as number)}, ${G(Math.cos(d.turn))}, ${G(Math.sin(d.turn))})`;
 
-// Needs vnoise before it.
 export const LID_GLSL = /* glsl */ `
 uniform vec4 uLid;
 uniform vec4 uLidFrame;
@@ -81,91 +143,70 @@ uniform vec3 uLidWarm;
 uniform vec2 uLidDrift;
 uniform float uLidShadow;
 uniform vec4 uLidWater;
+uniform sampler2D uLidMap;
+uniform float uLidRows;
 
-const int LID_DECKS = 3;
-const int LID_CUTS = 9;
-// From the top down. x: the flat foot of the banks. y: the height of their highest heads. z: lumps to a unit across. w: how much of the deck is open air.
-const vec4 LID_DECK[3] = vec4[3](vec4(${G(LID_GAP.lowest)}, 0.895, 8.0, 0.35), vec4(0.675, 0.74, 5.0, 0.41), vec4(0.52, 0.595, 5.5, 0.47));
+const int LID_DECKS = ${LID_DECKS.length};
+const int LID_CUTS = 8;
+// From the top down. x: the flat foot of the banks. y: the height of their highest heads. z: tiles of the photograph to a unit across. w: how bright the photograph must be for cloud to stand.
+const vec4 LID_DECK[LID_DECKS] = vec4[LID_DECKS](${LID_DECKS.map(deckRow).join(', ')});
+// xy: the place in the tile on the line of the climb. zw: the turn of the tile.
+const vec4 LID_LAY[LID_DECKS] = vec4[LID_DECKS](${LID_DECKS.map(layRow).join(', ')});
+// The seconds before the cut at which the lens passes each deck: the wind has the open air on the line of the climb then.
+const vec4 LID_SINK = vec4(${LID_SINK.map(G).join(', ')});
+const vec2 LID_GOES[LID_DECKS] = vec2[LID_DECKS](${LID_GOES.map((g) => `vec2(${G(g[0] as number)}, ${G(g[1] as number)})`).join(', ')});
+const vec2 LID_LAKE = vec2(${LID_LAKE.map(G).join(', ')});
+const vec4 LID_PASSED = vec4(${LID_DECKS.map((d) => G(d.passed)).join(', ')});
+const vec2 LID_WIND[LID_DECKS] = vec2[LID_DECKS](${LID_DECKS.map((d) => `vec2(${G(d.wind[0] as number)}, ${G(d.wind[1] as number)})`).join(', ')});
 // The Eye begins to draw the banks when its lens is this high. No bank stands where the lens could have seen it from lower down.
 const float LID_FOOT = ${G(LID_GAP.foot)};
-const float LID_HAZE = 0.3;
-// How far the gap opens after the cut, in halves of the frame's height as the lens sees its rim, and the height over which no lens of the rise stands while the banks are drawn.
-const float LID_OPENS = 0.6;
-const float LID_OVER = 1.15;
-const float LID_RAGGED = ${G(LID_GAP.ragged)};
+const float LID_TILE = ${G(512)};
+const float LID_THICK = 44.0;
 
-// How far a place is outside the gap the lens climbs through, at a height: under 0 is open air. The gap is long, bent, off the middle, and it
-// widens downward, so that every bank comes into the frame over its edge and none is switched on inside it.
-// After the cut the gap opens: its rim runs out faster than the frame grows, from rest, and the banks leave by the edges of the frame.
-float lidWider() {
-  return LID_OPENS * pow(clamp(uLid.z, 0.0, 1.0), 1.667);
+// After the cut the lens leaves the banks under it faster than the land grows: every height of the lid is this much of what it was at the cut.
+// It leaves from rest, so the cut has one rate of climb on both sides, and ends where cloud stands over land seen from so high.
+// How much brighter the photograph must be for cloud to stand, as a deck goes: a bank loses its edges first.
+float lidLess(int i) {
+  return 0.06 * smoothstep(0.1, 0.7, uLid.z) + 0.3 * smoothstep(LID_GOES[i].x, LID_GOES[i].y, uLid.z);
 }
 
-float lidOutside(vec2 q, float a) {
-  vec2 w = q - vec2(${G(LID_GAP.off[0] as number)}, ${G(LID_GAP.off[1] as number)}) - vec2(${G(LID_GAP.lean[0] as number)}, ${G(LID_GAP.lean[1] as number)}) * max(LID_FOOT - a, 0.0);
-  w = vec2(0.8 * w.x + 0.6 * w.y, -0.6 * w.x + 0.8 * w.y);
-  w.x /= ${G(LID_GAP.long)};
-  float r = length(w);
-  float wider = lidWider();
-  float gap = ${G(LID_GAP.widen)} * max(LID_FOOT - a, 0.0) + ${G(LID_GAP.narrow)} + wider;
-  // Well inside the gap and well outside it the bend of its edge changes nothing.
-  if (r <= gap) return r - gap;
-  float least = ${G(LID_GAP.least)};
-  if (least * r - gap >= LID_RAGGED * (1.0 + 2.0 * wider)) return least * r - gap;
-  // The wider the gap, the longer the bends of its rim.
-  return r * (least + (1.0 - least) * vnoise(q * 9.0 / (1.0 + 4.0 * wider) + vec2(3.7, 8.2) + a * vec2(5.0, 3.0))) - gap;
+// How much of a deck is left: what stands of a bank thins to a veil and is gone, it does not shrink to a fleck.
+float lidLeft(int i) {
+  return 1.0 - smoothstep(mix(LID_GOES[i].x, LID_GOES[i].y, 0.25), LID_GOES[i].y, uLid.z);
 }
 
-// How much less open air a deck has at a place. Over the lake the banks stand closest, a cap of cloud with the gap in it, as much of each deck
-// as the lens sees from the height of the cut; farther out they stand apart. At the edge of the gap the air opens lump by lump.
-float lidClose(vec2 q, float a, float outside) {
-  float reach = 2.2 * (1.0 - a);
-  float cap = 0.25 * (1.0 - smoothstep(reach, reach + 0.3, length(q)));
-  float ragged = 1.9 * LID_RAGGED * (1.0 + 2.0 * lidWider());
-  if (outside >= ragged) return cap;
-  // The open edge is not one band round the gap: here it is a bay, there the bank stands to the rim.
-  ragged *= 0.12 + 0.88 * vnoise(q * 5.0 + vec2(8.4, 2.6) + a * vec2(3.0, 5.0));
-  return cap - 0.75 * (1.0 - smoothstep(0.0, ragged, outside));
+float lidSunk(int i) {
+  float gone = smoothstep(0.0, 0.8, uLid.z);
+  return 1.0 - LID_SINK[i] * gone * sqrt(gone);
 }
 
-// How high the bank stands over a place, 0 to 1 of the deck: lumps drawn out along the wind, steep at their sides and heaped on top, with air
-// between them. 'near' is how far under the lens the place is: the closer, the finer the grain the eye can see. 'rough' leaves the finest out.
-float lidBank(vec2 q, vec4 deck, float open, float near, bool rough) {
-  vec2 wind = normalize(uLidDrift);
-  vec2 p = q + uLidDrift * uLid.y * (0.6 + deck.x);
-  vec2 f = vec2(wind.x * p.x + wind.y * p.y, -wind.y * p.x + wind.x * p.y) * vec2(0.7, 1.0) * deck.z + deck.x * 41.0;
-  float big = vnoise(f);
-  if (0.56 * big + 0.44 <= open) return 0.0;
-  vec2 f2 = vec2(0.8 * f.x - 0.6 * f.y, 0.6 * f.x + 0.8 * f.y);
-  float n = 0.56 * big + 0.27 * vnoise(f2 * 2.7 + 5.3);
-  if (rough) {
-    n += 0.085;
-  } else {
-    vec2 f3 = vec2(0.33 * f.x - 0.94 * f.y, 0.94 * f.x + 0.33 * f.y);
-    n += 0.17 * vnoise(f3 * 6.9 + 1.9);
-    if (near < 0.45) {
-      n += 0.1 * (1.0 - near / 0.45) * (vnoise(f * 17.0 + 9.1) - 0.5);
-      if (near < 0.14) n += 0.06 * (1.0 - near / 0.14) * (vnoise(f2 * 43.0 + 2.3) - 0.5);
-    }
-  }
-  return smoothstep(open, open + 0.3, n) * clamp(0.25 + 1.5 * (n - 0.25), 0.2, 1.3);
+// Where a place lies in the photograph of a deck.
+vec2 lidTile(vec2 q, int i) {
+  vec4 lay = LID_LAY[i];
+  // After the cut the lens is soon too high to see a bank drift.
+  vec2 p = q + LID_WIND[i] * (uLid.y / (1.0 + 1.2 * max(uLid.y, 0.0)) + LID_PASSED[i]);
+  return vec2(lay.z * p.x - lay.w * p.y, lay.w * p.x + lay.z * p.y) * LID_DECK[i].z + lay.xy;
 }
 
-// The grain of a bank's top: small heads with folds between them, at three sizes, the finest for the lens that is close. 0 in a fold, 1 on a head.
-float lidGrain(vec2 q, vec4 deck, float near) {
-  vec2 wind = normalize(uLidDrift);
-  vec2 p = q + uLidDrift * uLid.y * (0.6 + deck.x);
-  vec2 f = vec2(wind.x * p.x + wind.y * p.y, -wind.y * p.x + wind.x * p.y) * deck.z + deck.x * 23.0;
-  float a = abs(2.0 * vnoise(f * 5.3 + 7.7) - 1.0);
-  float b = abs(2.0 * vnoise(vec2(0.8 * f.x - 0.6 * f.y, 0.6 * f.x + 0.8 * f.y) * 12.7 + 2.9) - 1.0);
-  float c = abs(2.0 * vnoise(vec2(0.33 * f.x - 0.94 * f.y, 0.94 * f.x + 0.33 * f.y) * 31.0 + 4.1) - 1.0);
-  float fine = 1.0 - smoothstep(0.25, 0.6, near);
-  return (0.4 * a * (1.5 - 0.5 * a) + 0.35 * b * (1.5 - 0.5 * b) + 0.25 * fine * c * (1.5 - 0.5 * c)) / (0.75 + 0.25 * fine);
+// How high the bank stands over a place, 0 to 1 of the deck, read from the photograph: its banks, and the same banks smaller, which
+// tear the edges and heap the tops. 'lod' is how coarse the eye sees the place: nothing finer than a pixel is read, so nothing swims.
+float lidBank(vec2 q, int i, float open, float lod, bool rough) {
+  vec2 p = lidTile(q, i);
+  // The banks stand in fields with thinner cloud between the fields, wider than a bank, so no deck repeats itself to the eye. Each deck
+  // has its fields in other places: no height has its cloud gathered over the lake. As the lens climbs the fields draw apart, and what
+  // is left of a deck stands in unlike patches with clear air between.
+  open += (0.2 + 0.25 * smoothstep(0.2, 0.5, uLid.z)) * (1.0 - smoothstep(0.05, 0.3, textureLod(uLidMap, (p - LID_LAY[i].xy) * 0.37 + vec2(0.656, 0.719) + float(i) * vec2(0.37, 0.21), 5.0).r));
+  float big = textureLod(uLidMap, p, lod).r;
+  if (big <= open) return 0.0;
+  vec2 p2 = vec2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y) * 3.3 + 0.37;
+  float n = big * (0.68 + 0.32 * textureLod(uLidMap, p2, lod + 1.72).r);
+  if (!rough) n -= 0.1 * (1.0 - textureLod(uLidMap, p.yx * 9.7 + 0.11, lod + 3.28).g) * (1.0 - smoothstep(1.0, 3.0, lod));
+  return clamp((n - open) / max(1.0 - open, 0.2), 0.0, 1.0);
 }
 
 // How far inside a bank a point is, by the height of the bank over it and its own height in the deck: a bank is widest at its foot.
 float lidBody(float h, float up) {
-  return h - 0.07 - 0.85 * up * sqrt(up);
+  return h - 0.05 - 0.8 * up * sqrt(up);
 }
 
 // The cloud between the eye and whatever lies at 'far' along the ray: rgb is its light, a is how much of what lies behind comes through.
@@ -174,26 +215,30 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   vec2 from = (ro.xz - uLidFrame.xy) / uLidFrame.z;
   // The ray in the lid's measure, by the height it has come down to.
   vec2 lean = rd.xz / uLidFrame.z / (rd.y / uLidFrame.w);
+  // How far a pixel reaches across, for each unit of height under the lens: reckoned from the lens and the rows of the picture, not
+  // measured between neighbouring pixels, which under a branch is not the same twice.
+  float narrow = uLidFrame.w / uLidFrame.z;
+  float reach = min((2.0 / uLidRows) * (1.0 + dot(lean, lean) / (narrow * narrow)), 0.2);
   float floorA = camA + rd.y * far / uLidFrame.w;
   vec3 ld = normalize(vec3(rd.x, rd.y * uLidFrame.z / uLidFrame.w, rd.z));
   float down = max(-ld.y, 0.3);
   vec2 sunSide = normalize(uLidSun.xz);
-  // After the cut the air between the banks widens a little as they leave, and nothing of them is drawn at the end.
-  float loose = 0.05 * smoothstep(0.04, 0.5, uLid.z);
-  float thin = 1.0 - smoothstep(0.9, 1.0, uLid.z);
   vec3 sum = vec3(0.0);
   float tr = 1.0;
   for (int i = 0; i < LID_DECKS; i++) {
     vec4 deck = LID_DECK[i];
+    float sunk = lidSunk(i);
+    deck.xy *= sunk;
     float top = min(deck.y, camA);
     float foot = max(deck.x, floorA);
     if (top <= foot) continue;
-    float open = deck.w + loose;
+    float open = deck.w + lidLess(i);
+    float thin = lidLeft(i);
+    if (thin <= 0.0) continue;
     float tall = deck.y - deck.x;
-    // The more the ray leans, the farther it slides across the lumps on its way down through the deck, and the more cuts it takes to find them.
-    // Under a bank that already hides most of it a deck is found with fewer.
-    float least = tr < 0.5 ? 2.0 : 3.0;
-    int cuts = int(clamp(ceil(least + 3.0 * length(lean) * (top - foot) * deck.z), least, float(LID_CUTS)));
+    // The more the ray leans, the farther it slides across the banks on its way down through the deck, and the more cuts it takes to find them.
+    float least = 3.0;
+    int cuts = int(clamp(ceil(least + 4.0 * length(lean) * (top - foot) * deck.z), least, float(LID_CUTS)));
     float each = (top - foot) / float(cuts);
     float thick = 0.0;
     // Where the ray first meets the bank: between the last cut in the air and the first in the cloud, so the face it sees has no terraces.
@@ -205,82 +250,109 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       if (k >= cuts) break;
       float a = top - (float(k) + 0.5) * each;
       vec2 q = from + lean * (a - camA);
-      float outside = lidOutside(q, a);
-      float body = -1.0;
-      float h = 0.0;
-      if (outside > 0.0) {
-        h = lidBank(q, deck, open - lidClose(q, a, outside), camA - a, false) * smoothstep(0.0, 0.001 + 0.25 * lidWider(), outside);
-        body = lidBody(h, (a - deck.x) / tall);
-      }
+      float lod = log2(max(reach * (camA - a) * deck.z * LID_TILE, 1.0));
+      float h = lidBank(q, i, open, lod, false);
+      float body = lidBody(h, (a - deck.x) / tall);
       if (body > 0.0) {
         if (met < 0.0) {
           float back = k == 0 ? 0.0 : clamp(body / (body - was), 0.0, 1.0);
           met = a + back * each;
           metH = mix(h, wasH, back);
         }
-        thick += smoothstep(0.0, 0.4, body) * each;
-        if (thick * thin * 38.0 > 4.0 * down) break;
+        thick += smoothstep(0.0, 0.6, body) * each;
+        if (thick * thin * LID_THICK > 4.0 * down * sunk) break;
       }
       was = min(body, 0.0);
       wasH = h;
     }
     if (met < 0.0) continue;
-    float alpha = 1.0 - exp(-thin * 38.0 * thick / down);
+    float alpha = 1.0 - exp(-thin * LID_THICK * thick / (down * sunk));
+    // A bank the lens is about to enter is a haze before the glass, not a white wall: it does not flash past from one frame to the next.
+    alpha *= 0.3 + 0.7 * smoothstep(0.0, 0.05, camA - met);
     vec2 q = from + lean * (met - camA);
     float up = (met - deck.x) / tall;
+    float lod = log2(max(reach * (camA - met) * deck.z * LID_TILE, 1.0));
     // One low sun: a bank is lit where the cloud a little way toward the sun stands no higher, and in its own shade on the other side.
-    vec2 toSun = q + sunSide * 0.4 / deck.z;
-    float outSun = lidOutside(toSun, met);
-    float hs = outSun > 0.0 ? lidBank(toSun, deck, open - lidClose(toSun, met, outSun), camA - met, true) : 0.0;
-    float grain = lidGrain(q, deck, camA - met);
-    float lit = clamp(0.5 + 3.5 * (metH - hs) + 0.9 * (grain - 0.42), 0.0, 1.0);
-    lit = lit * lit * (3.0 - 2.0 * lit);
-    // The heads stand in the light and the feet in the shade of the bank over them. A head is as high as the bank heaps it, past the last
-    // cut that met it, so the top of a bank is modelled and not one flat sheet.
-    float crest = pow(max(metH - 0.07, 0.0) / 0.85, 0.667);
-    float high = clamp(0.25 * up + 0.6 * min(crest, 1.25), 0.0, 1.0);
-    high = high * high * (3.0 - 2.0 * high);
+    float hs = lidBank(q + sunSide * 0.06 / deck.z, i, open, lod + 1.0, true);
+    // The heads and folds of the photograph, as far as the eye is near enough to see them.
+    vec2 p = lidTile(q, i);
+    float fine = textureLod(uLidMap, p, lod).r;
+    float grain = clamp(0.5 + 2.2 * (fine - textureLod(uLidMap, p, lod + 2.5).r), 0.0, 1.0);
+    // The photograph is of cloud in the light: where it is bright a head stands in the sun, where it is dark lies a fold or a thin edge.
+    // The side toward the sun is brighter than the side away from it, and the heads brighter than the feet.
+    float lit = clamp(0.1 + 0.75 * fine + 5.5 * (metH - hs) + 0.6 * (grain - 0.5) + 0.3 * (up - 0.4), 0.0, 1.0);
+    lit = smoothstep(0.12, 0.9, lit);
     // The shade of a bank is not one blue: the light that comes through the cloud warms it where the bank is heaped.
-    vec3 shade = mix(uLidShade, uLidInside * 1.25, 0.55 * smoothstep(0.35, 0.95, metH));
-    vec3 colour = mix(shade * (0.5 + 0.7 * high), uLidSunlit * (0.72 + 0.5 * high), lit * (0.3 + 0.7 * high));
-    // A deck under another stands in its shade, and the folds between the heads are darker than the heads.
-    colour *= (0.72 + 0.28 * tr) * (0.84 + 0.16 * smoothstep(0.3, 0.8, metH)) * (0.7 + 0.6 * grain);
+    vec3 shade = mix(uLidShade, uLidInside * 1.25, 0.5 * smoothstep(0.35, 0.95, metH));
+    vec3 colour = mix(shade, uLidSunlit * 1.3, lit);
+    // A deck under another stands in the shade the higher one throws away from the sun, and the folds between the heads are darker than the heads.
+    float over = 1.0;
+    if (i > 0) {
+      vec4 higher = LID_DECK[i - 1];
+      float a = lidSunk(i - 1) * mix(higher.x, higher.y, 0.3);
+      over = 1.0 - 0.5 * lidLeft(i - 1) * smoothstep(0.0, 0.5, lidBank(q + sunSide * 0.42 * (a - met), i - 1, higher.w + lidLess(i - 1), lod + 1.0, true));
+    }
+    colour *= over;
     // Where a bank is thin the light goes through it: a veil is pale, not a sheet of shade.
-    colour = mix(colour, mix(uLidShade, uLidSunlit, 0.62), 0.7 * (1.0 - smoothstep(0.1, 0.9, alpha)));
+    colour = mix(colour, mix(uLidShade, uLidSunlit, 0.42 + 0.4 * lit), 0.7 * (1.0 - smoothstep(0.1, 0.9, alpha)));
     // Seen close, the cloud is paler and its lumps are soft.
-    colour = mix(colour, mix(uLidInside, uLidWarm, lit) * 1.5, 0.35 * (1.0 - smoothstep(0.0, 0.12, camA - met)));
+    colour = mix(colour, mix(uLidInside, uLidWarm, lit) * 1.5, 0.35 * (1.0 - smoothstep(0.0, 0.05, camA - met)));
     sum += tr * alpha * colour;
     tr *= 1.0 - alpha;
     if (tr < 0.04) break;
   }
-  // About the cut the air under the banks is thick: through the small holes between them the eye meets haze in shade, not the ground, which
-  // is the Eye's on one side of the cut and the rise's on the other. Its edge lies outside all that the gap shows from the height of the cut.
-  float about = smoothstep(0.93, 0.99, camA) * (1.0 - smoothstep(0.03, 0.55, uLid.z));
-  if (about > 0.0 && tr > 0.02 && floorA < LID_HAZE) {
-    vec2 q = from + lean * (LID_HAZE - camA);
-    float lumps = lidBank(q * 0.6, LID_DECK[2], 0.2, 1.0, true);
-    float haze = about * smoothstep(${G(0.92)} * (1.0 - LID_HAZE), ${G(0.98)} * (1.0 - LID_HAZE), length(q) - 1.6 * lidWider());
-    sum += tr * haze * uLidShade * (0.5 + 0.3 * lumps);
-    tr *= 1.0 - haze;
-  }
-  // The shade of the banks lies on the water and the shore under them, thrown away from the sun and farther the higher the bank. It goes as the banks leave the frame.
-  float shadeIn = uLidShadow * thin * smoothstep(LID_FOOT, 0.93, camA) * (1.0 - smoothstep(0.5, 0.85, uLid.z));
+  // How much of the one water under the banks is drawn: all of it on the frames about the cut.
+  float about = smoothstep(0.8, 0.99, camA) * (1.0 - smoothstep(0.03, 0.7, uLid.z));
+  // The shade of the banks lies on the water and the shore under them, thrown away from the sun and farther the higher the bank.
+  float shadeIn = uLidShadow * smoothstep(LID_FOOT, LID_FOOT + 0.05, camA) * (1.0 - smoothstep(0.94, 1.0, uLid.z));
   vec2 g = from + lean * (floorA - camA);
   float lightLeft = 1.0;
+  // What comes through the banks before their shade is laid on the ground: the mist stands over the ground and takes little of that shade.
+  float clear = tr;
   if (shadeIn > 0.0 && tr > 0.06 && floorA < 0.45) {
+    float lod = log2(max(reach * (camA - floorA) * LID_TILE, 1.0));
     for (int i = 0; i < LID_DECKS; i++) {
       vec4 deck = LID_DECK[i];
-      float a = deck.x + 0.3 * (deck.y - deck.x);
+      float a = lidSunk(i) * (deck.x + 0.3 * (deck.y - deck.x));
       vec2 q = g + sunSide * 0.42 * (a - floorA);
-      float outside = lidOutside(q, a);
-      if (outside <= 0.0) continue;
-      lightLeft *= 1.0 - 0.45 * smoothstep(0.0, 0.7, lidBank(q, deck, deck.w + loose - lidClose(q, a, outside), 1.0, true));
+      lightLeft *= 1.0 - 0.75 * lidLeft(i) * smoothstep(0.12, 0.6, lidBank(q, i, deck.w + lidLess(i), lod + log2(deck.z), true));
     }
     tr *= 1.0 - shadeIn * (1.0 - lightLeft);
   }
-  // One water under the gap. On the frames about the cut the deep water of the lake is drawn here, the same in both places, with the wind
+  // About the cut the land round the lake lies in the shade of the banks and in the evening mist under them, in patches: what is the Eye's
+  // shore on one side of the cut and the rise's on the other is seen through it, and neither is seen bare on those frames.
+  if (about > 0.0 && tr > 0.02 && floorA < 0.02) {
+    float patches = textureLod(uLidMap, g * 0.9 + 0.3, max(log2(max(reach * camA * 0.9 * LID_TILE, 1.0)), 4.5)).g;
+    // The mist rides the wind, and the gaps in it widen from the moment the lens is over it: by the clock, the same on both sides of the cut.
+    float tm = uLid.y;
+    vec2 gm = g - normalize(uLidDrift) * 0.05 * tm;
+    // Its edges are those of the photographed heads, not of a blur.
+    float rag = 0.65 * textureLod(uLidMap, gm * 4.3 + vec2(0.41, 0.13), log2(max(reach * camA * 4.3 * LID_TILE, 1.0))).r + 0.35 * textureLod(uLidMap, gm * 1.9 + vec2(0.77, 0.52), log2(max(reach * camA * 1.9 * LID_TILE, 1.0))).r;
+    // It stands thick wherever the one water is not drawn whole, so neither place shows its own shore under it on the frames of the cut.
+    // Its edge is no oval: tongues of it lie out over the water, some far, some not at all.
+    float tongues = smoothstep(0.3, 0.75, 0.6 * vnoise(gm * 1.7 + 3.1) + 0.4 * vnoise(gm * 4.3 + 8.2));
+    float torn = 0.6 * vnoise(gm * 9.0 + 6.1) + 0.4 * vnoise(gm * 21.0 + 0.9);
+    float grown = 1.0 + (0.5 + 1.2 * max(tm, 0.0)) * tm;
+    float stands = clamp((length(g / (LID_LAKE * uLidWater.w)) / grown * (1.0 + 0.3 * tongues + 0.08 * (torn - 0.5)) - 0.8) / 0.13, 0.0, 1.0);
+    // Banks of it lie on the water as well, so the water is seen in several places of unlike shape and not as one dark round: they shrink as the gaps widen.
+    stands = max(stands, clamp((0.55 * vnoise(gm * 2.9 + 11.3) + 0.3 * vnoise(gm * 6.7 + 4.9) + 0.15 * torn - 0.6 - 0.2 * tm) / 0.2, 0.0, 1.0));
+    // After the cut new gaps open over the land and grow until none of it is left.
+    float gaps = 0.6 * vnoise(gm * 4.1 + 7.7) + 0.4 * vnoise(gm * 9.3 + 2.2);
+    stands -= 1.5 * smoothstep(0.0, 0.12, tm) * clamp((0.15 + 1.1 * tm - gaps) / 0.3, 0.0, 1.0);
+    float cover = smoothstep(0.25, 0.65, stands + 0.9 * rag - 0.35);
+    // Seen from above it is a low sheet of cloud with heads of its own, which the sun finds.
+    float lumps = 0.5 * vnoise(gm * 3.7 + 1.9) + 0.3 * vnoise(gm * 8.9 + 5.3) + 0.2 * vnoise(gm * 19.0 + 2.7);
+    float heads = smoothstep(0.3, 0.8, lumps);
+    // It comes in patches as the lens climbs over it, the thin places first.
+    float mist = cover * (1.0 - smoothstep(0.0, 0.3, (1.0 - smoothstep(0.8, 0.99, camA)) * 1.35 - lumps)) * (0.975 + 0.025 * patches);
+    vec3 fog = mix(uLidShade * (0.42 + 0.3 * patches), uLidSunlit * 0.8, 0.35 * heads) * (0.8 + 0.4 * rag);
+    sum += clear * mist * fog * mix(1.0, lightLeft, 0.4);
+    tr *= 1.0 - mist;
+  }
+  // One water under the banks. On the frames about the cut the deep water of the lake is drawn here, the same in both places, with the wind
   // on it and the shade of the banks: the Eye's own water goes over to it as the lens nears the cut, and it goes over to the rise's after.
-  float water = smoothstep(LID_FOOT, 0.96, camA) * (1.0 - smoothstep(0.03, 0.55, uLid.z)) * (1.0 - smoothstep(0.88, 1.0, length(g) / uLidWater.w));
+  // It has no edge: toward the shores each place keeps its own lake, and the banks hide what differs.
+  float water = about * (1.0 - smoothstep(0.93, 1.02, length(g / (LID_LAKE * uLidWater.w))));
   if (water > 0.0 && tr > 0.02 && floorA < 0.02) {
     vec2 wind = normalize(uLidDrift);
     vec2 along = vec2(wind.x * g.x + wind.y * g.y, -wind.y * g.x + wind.x * g.y) * vec2(0.3, 1.0);

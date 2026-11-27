@@ -69,18 +69,21 @@ function judged(frame: number, plan: FlightPlan): FlightState {
 }
 
 /**
- * The climb off the lake, from the last judged frame to the cut. One crane move: the lens rises fast and tilts down slowly, with the foot
- * of the north cliffs held at the top edge of the frame, so the far shore and the rim of the deep stay in view; then it comes over the
- * centre, turns straight down and eases to the slow rate the rise begins with, the whole dark disc inside the frame. Frames are counted
- * from the key.
+ * The climb off the lake, from the last judged frame to the cut. One crane move: the lens rises fast with the foot of the north cliffs
+ * held at the top edge of the frame, so the far shore and the cliff stay in view at a slant until the cloud takes them. Only inside the
+ * banks does it turn straight down, and it eases to the slow rate the rise begins with: the lake is never seen bare from straight above.
+ * Frames are counted from the key.
  */
 const LEAVE = {
   /** The ground line held at the top edge while the shore is in view, metres north of the centre. */
   hold: 1180,
+  /** The nearer line the top edge is brought down to between these frames, inside the far shore: the cliffs and the rim leave by the top of the frame before the lens is high. */
+  near: 560,
+  lower: [164, 240],
   /** Frames over which the old tilt is caught and brought onto that line. */
   catch: 28,
   /** Between these frames the lens lets the far shore go and turns straight down. */
-  release: [195, 300],
+  release: [214, 318],
   /** The frame at which the lens stands over the centre, and the frame at which the lens is as wide as it gets. */
   over: 279,
   wide: 259,
@@ -116,7 +119,8 @@ export function flight(frame: number, plan: FlightPlan): FlightState {
   // The top edge of the frame, by the distance at which it meets the water: caught from where the judged move left it and held on the foot of the north cliffs.
   const far = (s: FlightState): number => Math.log(s.y / Math.tan(top(s)) / (s.z + LEAVE.hold));
   const caught = frame < from + LEAVE.catch ? run(frame, from, from + LEAVE.catch, far(a), far(b) - far(a), 0, 0) : 0;
-  const held = Math.atan2(y, (z + LEAVE.hold) * Math.exp(caught)) + (fov * RAD) / 2;
+  const line = run(frame, plan.keyFrame + (LEAVE.lower[0] as number), plan.keyFrame + (LEAVE.lower[1] as number), LEAVE.hold, 0, LEAVE.near, 0);
+  const held = Math.atan2(y, (z + line) * Math.exp(caught)) + (fov * RAD) / 2;
   const down = smoother((frame - plan.keyFrame - (LEAVE.release[0] as number)) / ((LEAVE.release[1] as number) - (LEAVE.release[0] as number)));
   const pitch = held + (Math.PI / 2 - held) * down;
   const sin = down >= 1 ? 1 : Math.sin(pitch);

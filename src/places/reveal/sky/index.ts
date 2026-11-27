@@ -6,7 +6,7 @@ import { AT, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, X, Z, driftAt } from 
 import { FPS } from '../../../config';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { BANK_KM, FOG_KM, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
+import { BANK_KM, FOG_KM, GROUND_RECT, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
 
 export const PARTS = ['cloud', 'cyclone', 'storm', 'vapour', 'space', 'atmosphere'] as const;
 
@@ -60,6 +60,8 @@ ${RIG_GLSL}
 ${NOISE_GLSL}
 ${WEATHER_GLSL}
 ${CLOUD_LIGHT_GLSL}
+uniform sampler2D uGround;
+uniform vec4 uGroundRect;
 varying vec3 vWorld;
 void main() {
   vec2 xz = vWorld.xz;
@@ -70,6 +72,8 @@ void main() {
 
   // The low field. Its tops are relief: a flank that falls toward the sun is lit, the flank behind it is in its own shade, and the
   // ice above throws its shadow down on it.
+  // (From orbit the field is read half again softer than the pixel: a tuft has form at two pixels and more.)
+  lowSoft = mix(1.0, 1.5, smoothstep(500.0, 1300.0, uViewKm));
   vec2 low = lowField(xz);
   float flank = dot(lowSlope, toSun);
   float self = clamp(0.5 + 1.25 * flank, 0.0, 1.0);
@@ -80,11 +84,28 @@ void main() {
   vec2 fogAt = xz - lean * ${(LOW_KM - FOG_KM).toFixed(1)};
   float bankIs = max(bankDepth(bankAt), 0.0);
   vec2 bankSlope = vec2(0.0);
-  if (bankIs > 0.0) bankSlope = 0.8 * (texture2D(uMatPopcornNh, bankUvA).rg * 2.0 - 1.0) * BANK_A;
-  if (bankIs > 0.0 && bankNear > 0.0) bankSlope += bankNear * 0.7 * (texture2D(uMatSpecksNh, bankUvB).rg * 2.0 - 1.0) * BANK_B;
+  if (bankIs > 0.0) bankSlope = 0.8 * (pic(uMatPopcornNh, bankUvA, bankGA).rg * 2.0 - 1.0) * BANK_A;
+  if (bankIs > 0.0 && bankNear > 0.0) bankSlope += bankNear * 0.7 * (pic(uMatSpecksNh, bankUvB, bankGB).rg * 2.0 - 1.0) * BANK_B;
   float bankSelf = clamp(0.5 + 1.25 * dot(bankSlope, toSun), 0.0, 1.0);
   float bankA = (1.0 - exp(-1.3 * bankIs)) * uArrive;
-  float fogA = 0.5 * (1.0 - exp(-1.2 * max(fogDepth(fogAt), 0.0))) * uArrive;
+  // Stratus fills its pools to a level: what stands in the way of the light is how far the ground lies under that level.
+  // (The height is the land's own widest relief, so the edge of the stratus is the contour of the valley it lies in.)
+  float pool = fogDepth(fogAt);
+  vec2 uvGround = (fogAt - uGroundRect.xy) * uGroundRect.zw;
+  // (The change of each place across the pixel, before the branch: see pic in shared/weather.ts.)
+  uvGround = clamp(uvGround, 0.0, 1.0);
+  vec4 gGround = GRADS(uvGround);
+  float fogIs = 0.0;
+  if (pool > 0.0) {
+    float height = pic(uGround, uvGround, gGround).b;
+    // (Only the floors fill: the level stays under the flanks, so the stratus is the branching of the valley and never a
+    // sheet over a range. Nor over water: the relief holds the shelf and the sounds a little over its sea level.)
+    fogIs = 7.0 * max(0.415 + 0.14 * pool - height, 0.0) * smoothstep(0.34, 0.41, height) * (0.55 + 0.45 * smoothstep(0.7, 1.3, fogVeil));
+  }
+  float fogA = 0.8 * (1.0 - exp(-1.2 * fogIs)) * uArrive;
+  vec2 fogSlope = vec2(0.0);
+  if (fogIs > 0.0) fogSlope = (pic(uMatVeilNh, fogUv, fogG).rg * 2.0 - 1.0) * mat2(0.5, 0.87, -0.87, 0.5);
+  float fogSelf = clamp(0.5 + 0.3 * dot(fogSlope, toSun), 0.0, 1.0);
   // (Read in every pixel, cloud under it or not: read only under cloud, the pixels at the edge of a cloud took the fineness of
   // the read from neighbours that had not made it, and one of them came out a level different from one run to the next.)
   float under = highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
@@ -93,12 +114,24 @@ void main() {
   vec3 highColour = cloudLight(up, 0.5 + 0.45 * highFlank, 0.5 + 0.5 * high, 1.0);
   vec3 bankColour = cloudLight(bankAt, 0.12 + 0.95 * bankSelf, 0.35 + 0.65 * bankA, 0.25) * (0.72 + 0.5 * clamp(bankIs / 3.5, 0.0, 1.0));
   // (Fog is seen from above as a level pale floor, a little blue, with no relief of its own.)
-  vec3 fogColour = cloudLight(fogAt, 0.5, 0.5, 0.0) * vec3(0.84, 0.9, 0.98);
+  // (Stratus has a top all the same: long low swells that the sun grazes, and it is thin and blue toward its edge.)
+  vec3 fogColour = cloudLight(fogAt, 0.22 + 0.6 * fogSelf, 0.4 + 0.5 * clamp(fogIs, 0.0, 1.0), 0.0) * mix(vec3(0.5, 0.6, 0.78), vec3(0.62, 0.68, 0.78), clamp(fogIs * 0.7, 0.0, 1.0));
   // Over the sun's image on the sea the low air is lit from behind: it scatters the sun forward, warm, so the sheet of light
   // is gold through it and not the white of the bare glitter.
   // (No haze is laid over the low land: pooled there it read as grey smears on glass and flattened the ranges.)
   float image = sunImage(fogAt);
   float goldA = 0.7 * smoothstep(0.05, 0.7, image) * uArrive;
+  // (The lit air is not one smooth ramp, which an encoder cuts into bands: it lies in layers the wind has drawn out, thin
+  // cloud and thicker air, a few percent either way, and they pass in the hold.)
+  vec2 hazeAt = fogAt - uWx * vec2(9.0, 3.0);
+  vec2 hazeUvA = mat2(0.91, 0.42, -0.42, 0.91) * hazeAt / vec2(1500.0, 520.0) + vec2(0.23, 0.61);
+  vec2 hazeUvB = mat2(0.97, -0.24, 0.24, 0.97) * hazeAt / vec2(560.0, 230.0) + vec2(0.74, 0.12);
+  vec4 hazeGA = GRADS(hazeUvA);
+  vec4 hazeGB = GRADS(hazeUvB);
+  if (goldA > 0.0) {
+    float layers = dot(0.6 * pic(uMatVeil, hazeUvA, hazeGA, 1.0).rgb + 0.4 * pic(uMatVeil, hazeUvB, hazeGB, 1.0).rgb, vec3(0.3, 0.55, 0.15));
+    goldA *= 0.76 + 0.24 * smoothstep(0.1, 0.42, layers) + 0.2 * (layers - 0.262);
+  }
   vec3 gold = uSunColour * vec3(1.0, 0.8, 0.52) * (0.08 + 0.34 * image);
   if (uDusk > 0.0) {
     gold = exposed(gold * sunTint(max(uSunDir.y, 0.0)));
@@ -113,7 +146,7 @@ void main() {
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   lowColour *= 1.0 - 0.4 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
-  float b = high * 0.4;
+  float b = min(high * 0.46, 0.32);
   // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
   if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
   // From the ground up: the fog, the low field, the banks, the ice.
@@ -155,58 +188,66 @@ ${RIG_GLSL}
 ${NOISE_GLSL}
 ${CLOUD_LIGHT_GLSL}
 uniform sampler2D uStreaks;
-uniform sampler2D uMatPopcorn;
+uniform sampler2D uMatVeil;
 uniform sampler2D uCloudTile;
 varying vec3 vWorld;
 varying vec2 vUv;
-// The fibre of the storm: the photograph of wind-drawn cloud streaks (mat/streaks.jpg), wound round the eye and read soft, at two
-// sizes, so each band is real cloud drawn out along the wind and none has a hard edge. 0 to 1, about 0.3 on the mean.
-float fibre(vec2 p, float turn) {
-  float r = max(length(p), 1e-3);
-  float around = atan(p.y, p.x) / 6.28318 - turn;
-  float lr = log(r);
-  vec2 uv = vec2(3.0 * around + 0.318 * lr, 1.432 * lr - 6.0 * around);
-  uv += 0.014 * (texture2D(uCloudTile, p * 0.22 + 0.3, 3.0).rg - 0.5);
-  float grain = 0.75 / max(r, 0.05);
-  vec2 gx = dFdx(vUv) * grain * 3.3;
-  vec2 gy = dFdy(vUv) * grain * 3.3;
-  // (Read five times along the band: the wind draws the cloud out.)
-  vec3 c = textureGrad(uStreaks, uv, gx, gy).rgb * 0.3;
-  c += (textureGrad(uStreaks, uv + vec2(0.012, 0.0), gx, gy).rgb + textureGrad(uStreaks, uv - vec2(0.012, 0.0), gx, gy).rgb) * 0.2;
-  c += (textureGrad(uStreaks, uv + vec2(0.027, 0.0), gx, gy).rgb + textureGrad(uStreaks, uv - vec2(0.027, 0.0), gx, gy).rgb) * 0.15;
-  vec2 uf = vec2(7.0 * around + 0.743 * lr, 1.671 * lr - 7.0 * around) + 0.37;
-  float finer = dot(textureGrad(uStreaks, uf, gx * 0.8, gy * 0.8).rgb, vec3(0.3, 0.55, 0.15));
-  return 0.5 * dot(c, vec3(0.3, 0.55, 0.15)) + 0.5 * finer;
+float lum(vec3 c) {
+  return dot(c, vec3(0.3, 0.55, 0.15));
 }
-// How thick the storm stands at a point: a dense mass round a small clear eye, two long arms wound out of it with sea between
-// them, and all of it thinning to torn cirrus at the rim.
-float storm(vec2 p, float turn, float lopsided) {
+// How thick the storm stands at a point. It is cloud of the same kinds as the field round it, wound round the eye: the photograph
+// of soft drawn-out cloud (mat/veil.jpg) twice across one turn and read soft gives the arms, so they are unequal in number, width
+// and length as the photograph's own bands are, and the photograph of streaks of small cells (mat/streaks.jpg) fills them. Outward
+// only the strongest arms are left and they end where the photograph's bands end; between arms is open sea.
+float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   float r = max(length(p), 1e-3);
   float around = atan(p.y, p.x) / 6.28318 - turn;
   float lr = log(r);
-  float wander = vnoise(p * 2.6 + 4.0) + 0.5 * vnoise(p * 6.1 + 9.0) - 0.75;
-  float arm = (0.5 + 0.5 * cos(6.28318 * 5.0 * (around - 0.239 * lr) + 3.2 * wander)) * (0.78 + 0.22 * cos(6.28318 * 2.0 * (around - 0.239 * lr) + 1.0));
-  float mass = pow(1.0 - smoothstep(0.01, 0.06, r), 1.3);
-  arm = pow(arm, 1.25);
-  float outward = pow(1.0 - smoothstep(0.08, 0.9, r), 1.25);
-  if (lopsided > 0.0) {
-    // (No storm is the same all the way round. As it is watched one arm of the five grows heavy and the one across from it thins,
-    // and the rim is torn back on one side: these are what the eye follows round when the body turns.)
-    float heavy = 0.5 + 0.5 * cos(6.28318 * (around - 0.239 * lr) + 0.6);
-    arm *= mix(1.0, 0.45 + 1.1 * heavy, lopsided);
-    outward = pow(1.0 - smoothstep(0.08, 0.9 - 0.2 * lopsided * (0.5 + 0.5 * cos(6.28318 * around + 2.2)), r), 1.25);
-  }
-  float cover = clamp(0.45 * mass + (0.24 + 0.8 * arm) * outward, 0.0, 1.0);
-  float f = fibre(p, turn);
-  // Near the eye the bands are fine lines in a white mass; toward the rim only the fibres themselves are left.
-  float torn = smoothstep(0.01, 0.2, r);
-  float least = mix(0.02, 0.17, torn);
-  float lines = smoothstep(least, least + mix(0.42, 0.4, torn), f);
-  // (The bands are strings of cells, clump after clump with gaps between: the photograph of a field of small cumulus, wound the same way.)
-  vec2 cu = vec2(3.0 * around + 0.318 * lr, 1.432 * lr - 6.0 * around) * 2.0 + 0.045 * (texture2D(uCloudTile, p * 0.9 + 0.6, 2.0).rg - 0.5);
-  float cells = smoothstep(0.1, 0.42, dot(textureGrad(uMatPopcorn, cu, dFdx(vUv) * 9.0 / max(r, 0.05), dFdy(vUv) * 9.0 / max(r, 0.05)).rgb, vec3(0.3, 0.55, 0.15)));
-  lines = mix(lines, 1.35 * sqrt(lines) * cells, 0.8 * torn);
-  return max(cover * lines, 0.5 * mass * (0.15 + 0.85 * smoothstep(0.05, 0.42, f))) * smoothstep(0.004, 0.016, r);
+  // (The photographs are laid in the coordinates of a spiral that keep a square square: twice round the eye one way, once the
+  // other, and the logarithm of the distance in the proportion that goes with those. Laid with any other proportion a cell is
+  // drawn out along the arm, three to six times its width, and the storm is strokes. Whole multiples of the angle keep the
+  // winding without a seam.)
+  float phase = around - 0.3183 * lr;
+  vec2 wound = vec2(2.0 * around + 0.1592 * lr, phase);
+  vec2 bend = texture2D(uCloudTile, p * 0.3 + 0.3, 3.0).rg - 0.5;
+  float grain = 1.0 / max(r, 0.05);
+  vec2 gx = dFdx(vUv) * grain;
+  vec2 gy = dFdy(vUv) * grain;
+  // (The arms are the one lay drawn out, two to one along the winding: a band of cloud is longer than it is wide.)
+  // (Watched, cloud is drawn in along the arms: the bands pass through the cells that fill them, so an arm swells, thins and
+  // breaks as it turns and no arm is the same a few seconds on.)
+  vec2 ua = vec2(wound.x + drawnIn, 2.0 * wound.y) + vec2(0.13, 0.41) + 0.03 * bend;
+  float arms = lum(textureGrad(uMatVeil, ua, gx * 2.0, gy * 2.0).rgb) / 0.262;
+  vec2 ub = wound + vec2(0.57, 0.22) + 0.02 * bend;
+  vec2 uc = 2.0 * wound + vec2(0.21, 0.73) + 0.02 * bend;
+  vec2 ud = 4.0 * wound + vec2(0.83, 0.37) + 0.02 * bend;
+  // (The same photograph at three sizes, the finer the farther out, where the winding has drawn the coarse one out to strokes.)
+  float outer = smoothstep(0.15, 0.65, r);
+  float clumps = lum(textureGrad(uStreaks, ub, gx * 0.75, gy * 0.75).rgb);
+  float fine = (mix(0.45, 0.2, outer) * clumps + mix(0.4, 0.5, outer) * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb)) / 0.304;
+  // (Near the eye the wound lays have shrunk under a pixel and the bands were smooth. There the same cells are laid in
+  // rings round the eye, a few pixels each, so the inner bands are crowds of tops.)
+  float ringed = lum(textureGrad(uStreaks, vec2(8.0 * around, 9.0 * r) + vec2(0.31, 0.57), gx * 3.0, gy * 3.0).rgb) / 0.304;
+  fine *= mix(1.0, 0.5 + 0.5 * ringed, 1.0 - smoothstep(0.12, 0.34, r));
+  // (Left whole, the arms read from far off as five bold strokes of one weight. A second lay of the bands, finer and at
+  // its own place along the winding, and the clumps of the cell photograph break each into lengths of unlike weight.)
+  vec2 ue = vec2(2.0 * wound.x - 1.7 * drawnIn, 3.0 * wound.y) + vec2(0.67, 0.09) + 0.03 * bend;
+  arms = (0.62 * arms + 0.38 * lum(textureGrad(uMatVeil, ue, gx * 3.0, gy * 3.0).rgb) / 0.262) * mix(1.0, clumps / 0.304, 0.45 * smoothstep(0.08, 0.3, r));
+  float core = 1.0 - smoothstep(0.02, 0.14, r);
+  // (A strong arm reaches farther out than a weak one, so the storm has no round rim.)
+  // (Nor is it a disc: it stands in a wind of its own, which draws it out on one side and cuts it short on the other.)
+  float reach = 1.0 - smoothstep(0.25, 0.8, r * shorter * (1.45 - 0.45 * min(arms, 2.0)));
+  float least = mix(0.7, 1.3, smoothstep(0.05, 0.75, r));
+  // (No storm is the same all the way round: as it is watched one side grows heavy and the side across from it thins.)
+  least -= 0.25 * lopsided * cos(6.28318 * phase + 0.6);
+  float band = smoothstep(least - 0.35, least + 0.35, arms);
+  float cover = max(0.8 * core, band * (0.1 + 0.9 * reach));
+  // (Outward the air between the cells widens, so an arm ends in separate cells and not in a drawn line.)
+  float cells = smoothstep(0.45 + 0.45 * smoothstep(0.3, 0.8, r * shorter), 1.85, fine);
+  // (Toward the eye a band is one body of cloud and its cells are the lumps of its top; outward it opens into rows of them.)
+  // (Inside a band the cells still show: a band is a crowd of tops, not a smooth sheet.)
+  float body = cover * mix(cells, 0.07 + 0.93 * cells, max(core, band * (1.0 - outer)));
+  return body * smoothstep(0.006, 0.036, r) * (1.0 - smoothstep(0.8, 0.98, r * shorter));
 }
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
@@ -218,14 +259,19 @@ void main() {
   // stops where the body's own turn begins: a slide through arms that stand still is not seen as a turn.)
   vec2 body = p;
   float lopsided = 0.0;
+  float drawnIn = 0.0;
   if (uLive > 0.0) {
+    drawnIn = 0.011 * uWx;
     lopsided = smoothstep(0.0, 9.0, uWx);
     turn = ${LIVE_FROM.toFixed(6)} * (0.009 + 0.05 / (1.0 + 14.0 * r)) / 6.28318;
-    float wound = uWx * (0.0192 + 0.0454 / (1.0 + 14.0 * r));
+    float wound = uWx * (0.05 + 0.035 / (1.0 + 14.0 * r));
     body = mat2(cos(wound), sin(wound), -sin(wound), cos(wound)) * p;
   }
   vec2 sunStep = normalize(uSunDir.xz);
-  float thick = storm(body, turn, lopsided);
+  // (How much shorter the storm stands on a side than on its longest: this stands on the planet and does not turn with it.)
+  float side = atan(p.y, p.x);
+  float shorter = 1.32 - 0.3 * cos(side - 3.4) - 0.12 * cos(2.0 * side + 1.0) + 0.5 * (texture2D(uCloudTile, p * 0.17 + vec2(0.71, 0.38), 3.0).b - 0.5);
+  float thick = storm(body, turn, lopsided, max(shorter, 1.0), drawnIn);
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
   // (How its thickness falls toward the sun, from the change of it across the pixel.)
   vec2 across = vec2(dFdx(thick), dFdy(thick));
@@ -235,15 +281,13 @@ void main() {
   vec2 fall = abs(det) > 1e-12 ? vec2(sy.y * across.x - sx.y * across.y, sx.x * across.y - sy.x * across.x) / det : vec2(0.0);
   float self = clamp(0.62 - 0.6 * clamp(0.014 * dot(fall, sunStep), -0.6, 0.6), 0.0, 1.0);
   float tall = 1.0 - smoothstep(0.02, 0.2, r);
-  vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (0.86 + 0.1 * thick);
+  vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (0.74 + 0.34 * thick);
   // (By night the cyclone is a dim wheel, no brighter than the bone.)
-  if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
+  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
   // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
-  float side = smoothstep(-0.2, 0.9, dot(p / max(r, 1e-3), vec2(-0.5, -0.86)));
-  float threads = smoothstep(0.05, 0.75, fibre(p * 0.8 + 0.07, turn * 0.5));
-  float veil = 0.012 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.1) + 0.1 * side * side * threads * smoothstep(0.25, 0.5, r) * (1.0 - smoothstep(0.55, 1.0, r));
-  float bands = 0.93 * smoothstep(0.03, 0.62, thick);
+  float veil = 0.04 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.5) + 0.1 * (1.0 - smoothstep(0.004, 0.05, r));
+  float bands = 0.96 * min(1.5 * thick, 1.0);
   float alpha = bands + veil * (1.0 - bands);
   colour = mix(dot(colour, vec3(0.3, 0.55, 0.15)) * vec3(0.6, 0.74, 0.98), colour, bands / max(alpha, 1e-3));
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
@@ -313,7 +357,7 @@ void main() {
   if (uLive > 0.0) glow *= 1.0 + 1.8 * smoothstep(0.0, 2.0, uLive);
   if (uDusk > 0.0) glow *= uCalm.x;
   // (The storm dies down with the day: by night its towers are no brighter than the bone.)
-  if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
+  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
   if (uDusk > 0.0) colour += exposed(beatOnCloud(vWorld.xz)) - beatOnCloud(vWorld.xz);
   colour += glow * 1.6 + beatOnCloud(vWorld.xz);
   float alpha = clamp(thick, 0.0, 0.98);
@@ -462,7 +506,10 @@ export function create(ctx: Context): Piece {
     uThroat: { value: throat },
     uWind: { value: wind },
   });
+  // (The stratus is filled against the land's own widest relief, blue the height: the picture and its rectangle are the land's, read only.)
   sheet('cloud', new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2).translate(0, LOW_KM, 0), CLOUD_FRAGMENT, {
+    uGround: { value: data('land/relief-a.png', false) },
+    uGroundRect: { value: new THREE.Vector4(...GROUND_RECT) },
   });
   sheet('storm', quad({ x: AT.storm.x - 40, y: AT.storm.y }, 256, 80, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
   sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uStreaks: { value: data('mat/streaks.jpg', true) } });

@@ -1,7 +1,7 @@
 // Proposed in place of 'starts with nothing in frame but the deep water and the rings' in tests/rise-core.test.ts.
 // The join in the restaged climb: on the last frame of the Eye and the first frame of the rise both places draw the banks of cloud over
 // the lake with one function from one set of numbers, from straight above its centre, one step of one climb apart, and what is seen
-// through the gap in the banks is deep water in both.
+// between the banks over the lake is one deep water in both.
 import { describe, expect, it } from 'vitest';
 import eyeHandoff from '../../../src/places/eye/handoff.json';
 import handoff from '../../../src/places/reveal/handoff.json';
@@ -9,7 +9,7 @@ import tuning from '../../../src/places/reveal/rise.json';
 import { FLIGHT } from '../../../src/places/eye/cameras';
 import { flight } from '../../../src/places/eye/flight';
 import { FOV, KM, RISE_FIRST, halfHeightAt, poseAt } from '../../../src/places/reveal/shared/anchors';
-import { LID_GAP, lidAt, lidGapSeen } from '../../../src/places/reveal/join/lid';
+import { LID_DECKS, LID_GAP, LID_LAKE, LID_SINK, lidAt, lidGapSeen } from '../../../src/places/reveal/join/lid';
 import { FPS } from '../../../src/config';
 
 // The radius of the deep water of the Eye's lake, in metres, as the test this replaces had it.
@@ -57,7 +57,7 @@ describe('the join of the Eye and the rise', () => {
     expect(LID_GAP.lowest).toBeGreaterThan(LID_GAP.foot);
   });
 
-  it('shows only deep water through the gap in the banks, in both places', () => {
+  it('shows only deep water under the lens where it comes up through the highest deck, in both places', () => {
     const seen = lidGapSeen();
     expect(seen).toBeLessThan(1);
     expect(seen * handoff.eyeHalfHeightMetres).toBeLessThan(EYE_DEEP);
@@ -65,12 +65,21 @@ describe('the join of the Eye and the rise', () => {
     expect(seen * handoff.revealHalfHeightKm).toBeLessThan(Math.min(rx, ry) * KM);
   });
 
-  it('lays one water under the gap in both places, inside the deep water of both lakes', () => {
+  it('lays one water under the banks in both places, inside the deep water of both lakes', () => {
     const reach = handoff.lid.waterReach;
+    const [ax, ay] = LID_LAKE as [number, number];
     expect(handoff.lid.water).toHaveLength(3);
-    expect(lidGapSeen()).toBeLessThan(reach);
-    expect(reach * handoff.eyeHalfHeightMetres).toBeLessThan(EYE_DEEP);
+    expect(lidGapSeen()).toBeLessThan(reach * Math.min(ax, ay));
+    // The Eye's deep water is round, the rise's longer than it is wide: the shared water lies inside both.
+    expect(reach * Math.max(ax, ay) * handoff.eyeHalfHeightMetres).toBeLessThan(EYE_DEEP);
     const [rx, ry] = tuning.lakeDeepPx as [number, number];
-    expect(reach * handoff.revealHalfHeightKm).toBeLessThan(Math.min(rx, ry) * KM);
+    expect(reach * ax * handoff.revealHalfHeightKm).toBeLessThan(rx * KM);
+    expect(reach * ay * handoff.revealHalfHeightKm).toBeLessThan(ry * KM);
+  });
+
+  it('lets each deck fall away under the lens by its own measure, the lowest most', () => {
+    expect(LID_SINK).toHaveLength(LID_DECKS.length);
+    for (let i = 1; i < LID_SINK.length; i++) expect(LID_SINK[i] as number).toBeGreaterThan(LID_SINK[i - 1] as number);
+    for (const sink of LID_SINK) expect(sink).toBeLessThan(1);
   });
 });
