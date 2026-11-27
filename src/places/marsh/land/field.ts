@@ -9,6 +9,9 @@ import { stream } from '../../../core/rng';
 /** The two baked maps: 512 m round the seep pool in cells of a quarter metre, and 4 km in cells of two metres. */
 export const NEAR = { half: 256, n: 2048 };
 export const FAR = { half: 2048, n: 2048 };
+/** The fine patch of the rock rise, and the one sheet baked for it (mat/rise-nh, mat/rise-m): where it lies ahead and left of the first
+ * camera, its half sizes, its cell, and the metres the whole of the sheet's height stands for. */
+export const ROCK = { at: [9.25, -8.5] as [number, number], half: [10.75, 8.0] as [number, number], cell: 0.05, span: 1.8 };
 /** Metres of dry ground the distance to brine is kept for. Farther than this it reads as this. */
 export const DRY = 6;
 
@@ -405,8 +408,7 @@ export function createField(): Field {
     return h;
   };
 
-  // The rock rise the first camera leaves: massive pale rock broken along its joints into blocks, each with its own level and lean, stepped
-  // down to a broken foot that runs out toward the vein as low ledges. The blocks are real steps in the mesh: a riser stands a hand wide.
+  // The rock rise the first camera leaves: a body of weathered bedded rock with a broken foot that runs out toward the vein.
   const spur = rel(9, -7.5);
   const rockBase = (x: number, z: number): number => {
     const base = rockHeight(x, z) * 0.8;
@@ -415,79 +417,16 @@ export function createField(): Field {
     const q = ((dx * F[0] + dz * F[1]) / 7.5) ** 2 + ((dx * R[0] + dz * R[1]) / 6) ** 2 + 0.5 * (fbm(x / 3.1 + 9, z / 3.1, 3) - 0.5);
     return Math.max(base, 2.9 * (1 - smooth(0.15, 1.05, q)) - 0.5 * smooth(0.6, 1.05, q));
   };
-  // The two nearest blocks of a joint pattern: for each its level at the point, and the metres to the joint between them.
-  const blockCache = new Map<number, [number, number, number, number, number]>();
-  const blockOf = (i: number, j: number, size: number, seed: number, drop: number, lean: number, flat: number): [number, number, number, number, number] => {
-    const key = ((i + 4096) * 8192 + (j + 4096)) * 4 + seed;
-    let b = blockCache.get(key);
-    if (!b) {
-      const cx = (i + 0.14 + 0.72 * hash(i + seed * 131, j + 17)) * size;
-      const cz = (j + 0.14 + 0.72 * hash(i + 71, j + seed * 57 + 3)) * size;
-      const level = flat > 0 ? rockBase(cx, cz) : 0;
-      b = [cx, cz, level * flat + drop * (hash(i + seed * 19 + 5, j + 91) - 0.5), lean * (hash(i + 33, j + seed * 23 + 7) - 0.5), lean * (hash(i + seed * 29 + 49, j + 59) - 0.5)];
-      blockCache.set(key, b);
-    }
-    return b;
-  };
-  const joints = (x: number, z: number, size: number, seed: number, drop: number, lean: number, flat: number): [number, number, number] => {
-    const iu = Math.floor(x / size);
-    const iv = Math.floor(z / size);
-    let d1 = 1e9;
-    let d2 = 1e9;
-    let b1 = blockOf(iu, iv, size, seed, drop, lean, flat);
-    let b2 = b1;
-    for (let j = -1; j <= 1; j++) {
-      for (let i = -1; i <= 1; i++) {
-        const b = blockOf(iu + i, iv + j, size, seed, drop, lean, flat);
-        const d = (x - b[0]) ** 2 + (z - b[1]) ** 2;
-        if (d < d1) {
-          d2 = d1;
-          b2 = b1;
-          d1 = d;
-          b1 = b;
-        } else if (d < d2) {
-          d2 = d;
-          b2 = b;
-        }
-      }
-    }
-    const edge = (d2 - d1) / (2 * Math.max(1e-3, Math.hypot(b2[0] - b1[0], b2[1] - b1[1])));
-    const h1 = b1[2] + b1[3] * (x - b1[0]) + b1[4] * (z - b1[1]);
-    const h2 = b2[2] + b2[3] * (x - b2[0]) + b2[4] * (z - b2[1]);
-    return [h1, h2, edge];
-  };
   const ridge = (u: number, v: number): number => {
     const r = 1 - Math.abs(2 * fbm(u, v, 3) - 1);
     return r * r;
   };
+  // (The processor knows the rise as a smooth body with a little weather on it. Its masses, clefts and ledges are one baked sheet,
+  // mat/rise-nh, that the fine patch's vertices are raised by: assets-src/marsh/mat/make-rise.py.)
   const rockAt = (x: number, z: number): number => {
     const base = rockBase(x, z);
     if (base < -0.45) return base;
-    const on = smooth(-0.4, 0.7, base);
-    // The joints wander: no block has a ruled edge.
-    const wx = x + 0.5 * (fbm(x / 1.7 + 3, z / 1.7, 2) - 0.5) + 0.09 * (fbm(x / 0.3, z / 0.3 + 9, 2) - 0.5);
-    const wz = z + 0.5 * (fbm(x / 1.7, z / 1.7 + 8, 2) - 0.5) + 0.09 * (fbm(x / 0.3 + 5, z / 0.3, 2) - 0.5);
-    const big = joints(wx, wz, 2.7, 1, 0.5, 0.2, 0.72);
-    const own = big[0] + 0.28 * base;
-    const other = big[1] + 0.28 * base;
-    const tall = Math.abs(other - own);
-    // A riser between two blocks is stepped once where it is tall: the bed under the top one stands out a hand.
-    const reach = 0.1 + 0.14 * smooth(0.5, 1.4, tall);
-    let t = smooth(reach, 0, big[2]);
-    if (tall > 0.55) {
-      const two = t * 2;
-      const part = two - Math.floor(two);
-      t = (Math.floor(two) + smooth(0.3, 0.9, part)) / 2;
-    }
-    let h = own + (other - own) * 0.5 * t;
-    // Its shoulders are worn round, and the joint itself is a cleft.
-    h -= 0.11 * (1 - smooth(0, 0.55, big[2])) ** 2 + 0.14 * smooth(0.075, 0, big[2]);
-    // Each block is split again into slabs a stride across, a finger or two apart in level, and pitted by the salt.
-    const small = joints(wx * 1.03 + 11, wz * 1.03 + 5, 0.62, 2, 0.085, 0.1, 0);
-    const split = smooth(0.3, 0.55, fbm(x / 2.9 + 21, z / 2.9, 2));
-    h += split * (small[0] + (small[1] - small[0]) * 0.5 * smooth(0.05, 0, small[2]) - 0.05 * smooth(0.06, 0, small[2]));
-    h += 0.05 * (ridge(x / 0.9 + 5, z / 0.9) - 0.45) + 0.022 * (ridge(x / 0.31, z / 0.31 + 2) - 0.45);
-    return base + on * (h - base);
+    return base + smooth(-0.4, 0.7, base) * (0.05 * (ridge(x / 0.9 + 5, z / 0.9) - 0.45) + 0.022 * (ridge(x / 0.31, z / 0.31 + 2) - 0.45));
   };
 
   // The flats: a bed under the brine, a shelf a finger under its level at the shore (the brine's own edge is cut for each pixel, on this shelf),
