@@ -268,12 +268,13 @@ export function create(ctx: Context): Piece {
         }
       } else if (ring < MAX_RINGS && swell > 0.5) {
         // A swelling dome pushes a ripple ahead of its foot.
-        (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.12, 0.65 * grow);
+        // (Its height is written below nothing: the pool's shader knows the foot ring by that, and lays the froth line there.)
+        (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.12, -0.65 * grow);
         // And, round the three great ones (every pixel of the pool asks every ring), ring after ring leaves it as the skin heaves: each
         // runs out some strides and dies, the next already on its way.
         for (let k = 0; k < 3 && ring < MAX_RINGS && i < 3; k++) {
           const gone = fract(t * 0.42 + k / 3 + d.seed);
-          (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.25 + 2.3 * gone, 0.45 * grow * Math.min(1, gone * 7) * Math.pow(1 - gone, 1.4));
+          (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.25 + 2.3 * gone, 0.7 * grow * Math.min(1, gone * 7) * Math.pow(1 - gone, 1.4));
         }
       }
     });

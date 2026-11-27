@@ -187,6 +187,7 @@ void main() {
   // How much froth the domes and the bursts have left here.
   float boil = 0.0;
   vec2 swell = vec2(0.0);
+  float footFoam = 0.0;
   // (Rings whose crests the lens cannot tell apart are not drawn: far off and seen low they would run together into streaks.)
   float told = smoothstep(0.2, 0.07, px);
   if (pool < 16.0) {
@@ -204,6 +205,9 @@ void main() {
       vec2 d = p.xz - ring.xy;
       float r = length(d);
       float wide = 0.16 + 0.07 * ring.z;
+      // (A ring with its height below nothing is the one that stands at a dome's foot: froth gathers in a thin line against the skin.)
+      float amp = abs(ring.w);
+      if (ring.w < 0.0) footFoam = max(footFoam, exp(-(r - ring.z + 0.07) * (r - ring.z + 0.07) / 0.0064) * smoothstep(0.0, 0.3, amp));
       if (abs(r - ring.z) > 3.2 * wide + 0.25) continue;
       // No ring is a circle drawn with a compass: the front runs ahead here and lags there, and is higher where more was thrown.
       // (Its unevenness is a few slow turns round it, each ring's own: counted, not looked up, for a pixel asks every ring.)
@@ -214,7 +218,7 @@ void main() {
       float lag = 0.2 * two * own.x + 0.2 * (2.0 * u.x * u.y) * own.y + 0.16 * three * own.z + 0.14 * u.y * (3.0 - 4.0 * u.y * u.y) * own.w;
       float thrown = 0.5 + 0.3 * u.x * own.w + 0.3 * u.y * own.z + 0.2 * two * own.y - 0.2 * three * own.x;
       float q = r - ring.z - lag * (0.1 + 0.22 * ring.z);
-      float env = exp(-q * q / (wide * wide)) * ring.w * (0.45 + 1.1 * clamp(thrown, 0.0, 1.0));
+      float env = exp(-q * q / (wide * wide)) * amp * (0.45 + 1.1 * clamp(thrown, 0.0, 1.0));
       if (env < 0.003) continue;
       // The long waves lead and the short ones follow: the crests are closer behind the front than before it.
       vec2 front = d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3 * nearGain * mix(0.4, 1.0, told);
@@ -257,7 +261,7 @@ void main() {
   // What the flow carries off the banks goes down the channel in thin strings.
   float strings = max(smoothstep(0.66, 0.76, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, speed) * 0.7, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
   // (And scum catches on whatever stands in it.)
-  want = max(max(want, strings), max(min(boil * 0.8, 0.45), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
+  want = max(max(want, strings), max(max(min(boil * 0.8, 0.45), footFoam * 0.7), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
   // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
   float foam = 0.0;
   vec4 froth = vec4(0.0);
@@ -405,7 +409,7 @@ vec2 filmAt(vec3 at, vec4 life) {
   vec4 c = grainAt(mer * 1.31 + life.y * 5.0 - at.y * 0.11, 1.8);
   vec4 b = grainAt(at.xz * 0.7 + life.y, 0.7);
   float runs = max(smoothstep(0.45, 0.8, a.r) * (1.0 - 0.7 * top), 0.7 * smoothstep(0.5, 0.8, c.g) * (1.0 - top) * (1.0 - top));
-  float film = mix(0.85, 0.06 + 0.14 * (1.0 - life.x), smoothstep(0.0, 0.7, at.y)) + 0.2 * runs + (b.r - 0.5) * 0.3 * (1.0 - 0.5 * top) + 0.5 * smoothstep(0.2, 0.0, at.y);
+  float film = mix(0.85, 0.06 + 0.14 * (1.0 - life.x), smoothstep(0.0, mix(0.7, 0.34, life.x), at.y)) + 0.2 * runs + (b.r - 0.5) * 0.3 * (1.0 - 0.5 * top) + 0.5 * smoothstep(0.2, 0.0, at.y);
   return vec2(clamp(film, 0.05, 2.0), runs);
 }
 
@@ -476,7 +480,7 @@ void main() {
   // it, the pool under it. That band and the dark under it are what make a bubble read as glass and not as a ball.
   float fres = min(0.03 + 0.97 * pow(1.0 - nv, 5.0), 0.32);
   // (Where the skin runs out into the pool it mirrors no more than the pool does, and scum on it mirrors nothing.)
-  fres *= mix(0.15, 1.0, smoothstep(0.04, 0.26, vLocal.y)) * (1.0 - 0.8 * rim);
+  fres *= mix(0.15, 1.0, smoothstep(0.02, 0.12, vLocal.y)) * (1.0 - 0.8 * rim);
   // Scum rides on the skin where the runs have left it, and grit from the pool's floor: both hide what is behind them.
   // (Scum is a stain, soft at its edge and never whole: what the runs left behind, rust in the red. The lumps in it are few and pale.)
   float scum = 0.55 * smoothstep(0.6, 0.92, g.g * 0.75 + grit.r * 0.1 + 0.15 * scumTex.r + 0.12 * film.y) * smoothstep(0.25, 0.6, vLocal.y);
@@ -484,7 +488,7 @@ void main() {
   float covered = max(max(scum, speck), rim);
 #ifdef THROUGH
   // (At its foot the skin stands in the meniscus the pool draws up it, which looks down at the dark pool: a dark line round the dome.)
-  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered) * mix(0.5, 1.0, smoothstep(0.02, 0.26, vLocal.y));
+  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered) * mix(0.5, 1.0, smoothstep(0.01, 0.1, vLocal.y));
   gl_FragColor = vec4(passes, 1.0);
 #else
   vec3 fallsOn = skyIrradiance(n) * (open / 3.14159);
@@ -494,11 +498,14 @@ void main() {
   // The far wall is lit from outside and shows its lit side through itself: a red lamp behind the near wall. The gas between is steam,
   // and holds a little of that light.
   vec3 inside = FILM_BODY * fromAbove * (1.0 - throughFar.g) + vec3(0.74, 0.65, 0.63) * fromAbove * 0.075 * (0.3 + 0.7 * top) * whole;
+  // (Under the far wall's foot the line of sight comes down on the pool inside, which mirrors that lit wall: brightest at its foot,
+  // dying toward the near side. Without it a dome seen from low and close stands on a dark drum.)
+  inside += FILM_BODY * fromAbove * 0.35 * (1.0 - far) * whole * smoothstep(-0.7, 0.0, leaves.y);
   // (The far wall is wet on the inside too: the window stands in it a second time, small and low on the other side.)
   float towardFar = max(dot(reflect(-v, nFar), ${DOME_KEY}), 0.0);
   inside += uSkyZenith * 0.12 * smoothstep(0.9, 0.995, towardFar) * far;
   lit += through * inside;
-  lit *= mix(0.45, 1.0, smoothstep(0.02, 0.26, vLocal.y));
+  lit *= mix(0.45, 1.0, smoothstep(0.01, 0.1, vLocal.y));
   vec3 r = reflect(-v, n);
   float horizon = r.y + (g.g - 0.5) * 0.05;
   vec3 sky = skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z)));
