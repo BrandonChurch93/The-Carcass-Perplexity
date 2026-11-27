@@ -22,15 +22,15 @@ export interface Roosting {
 const SHOULDER: [number, number] = [0.755, 0.531];
 /** By stance: the nose up (radians), the hips over the ledge and the feet ahead of them (metres at size 1). */
 export const SEAT: { up: number; more: number; hips: number; ahead: number }[] = [
-  { up: 0.6, more: 0.32, hips: 0.8, ahead: 0.72 },
-  { up: 0.1, more: 0.14, hips: 0.6, ahead: 0.94 },
-  { up: 0.42, more: 0.2, hips: 1.6, ahead: 0.05 },
+  { up: 0.3, more: 0.22, hips: 0.74, ahead: 0.72 },
+  { up: 0.06, more: 0.12, hips: 0.56, ahead: 0.94 },
+  { up: 0.26, more: 0.16, hips: 1.28, ahead: 0.1 },
 ];
 /** By stance, where the head is from the shoulder (ahead and up in the place, metres at size 1) and the way the neck ends (radians up from level): at rest, looking about, and working at its own breast. */
 const HEADS: { rest: [number, number, number]; look: [number, number, number]; preen: [number, number, number] }[] = [
-  { rest: [0.62, 0.4, -1.85], look: [0.72, 0.85, -0.8], preen: [0.32, -0.15, -2.3] },
-  { rest: [0.95, 0.08, -1.35], look: [0.85, 0.7, -0.55], preen: [0.5, -0.1, -2.1] },
-  { rest: [0.5, 1.3, -0.45], look: [0.3, 1.7, 0.35], preen: [0.45, 0.2, -2.0] },
+  { rest: [0.62, 0.4, -1.85], look: [0.72, 0.8, -1.15], preen: [0.32, -0.15, -2.3] },
+  { rest: [0.95, 0.08, -1.45], look: [0.85, 0.62, -1.0], preen: [0.5, -0.1, -2.1] },
+  { rest: [0.62, 1.05, -1.5], look: [0.5, 1.45, -0.95], preen: [0.45, 0.2, -2.0] },
 ];
 
 const frac = (x: number): number => x - Math.floor(x);
@@ -74,7 +74,8 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.pitch = -(seat.up + seat.more * k1) - 0.012 * breath - 0.05 * look - 0.1 * row;
   p.roll = (s.stance === 2 ? -0.05 : -0.025) * shift + 0.06 * (k2 - 0.5);
   p.size = size;
-  p.tone = 0.8 + 0.3 * k3;
+  // Weathered, each to its own grey-brown: none is clean.
+  p.tone = 0.36 + 0.2 * k3;
   for (let leg = 0; leg < 2; leg++) {
     const foot = p.feet[leg] as Pose['feet'][number];
     const at = s.feet[leg] as [number, number, number];
@@ -101,12 +102,14 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.floor = s.y + 0.02;
   // The strands hang in the wind, which comes in gusts that cross the rock, and are thrown as the head turns.
   const gust = 0.5 + 0.5 * cyc.wave(t, 0.9, (s.x * wind[0] + s.z * wind[1]) * -0.06, s.y * 0.05);
-  p.trail[0] = wind[0] * (0.1 + 0.22 * gust) * size;
-  p.trail[1] = 0.03 * gust * size;
-  p.trail[2] = wind[1] * (0.1 + 0.22 * gust) * size;
-  p.shake = 0.15 * gust + 0.5 * row;
+  p.trail[0] = wind[0] * (0.04 + 0.1 * gust) * size;
+  p.trail[1] = 0;
+  p.trail[2] = wind[1] * (0.04 + 0.1 * gust) * size;
+  p.shake = 0.04 * gust + 0.3 * row;
   p.clock = t;
   p.beat = 0;
   p.sail = (s.stance === 2 ? 0.2 + 0.3 * k2 : s.stance === 0 ? 0.04 + 0.1 * k3 : 0) + 0.02 * breath + 0.03 * gust + row * (0.3 + 0.28 * cyc.wave(t, 9, s.seed * 9, 0.5));
+  // Out of the water the strands are short and hang close.
+  p.tuft = 0.42 + 0.16 * k2;
   p.seed = s.seed;
 }
