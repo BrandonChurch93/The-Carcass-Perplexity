@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 147, 2026-11-27 03:32 UTC:
+Status 148, 2026-11-27 03:56 UTC:
 
-- `01-s147-heat.jpg`: The four hard moments the compression critics judged in round 29, from the film before wave 2. Left: the rendered frame. Middle: where it carries fine detail, contrast from one pixel to the next (blue none, red strong). Right: what the 10 Mbps encode loses, on the same scale. The loss sits where the fine detail sits: the lava at the Heart, the horizon and stalks at the Blood Marsh, the whole rock slope and the strands at the Spine, nearly all of the titan frame. MEASURED by the Builder
-- `02-s147-breath-4731.jpg`: The Breath at 1:19 (frame 4731): the film now at left and the team's branch in wave 2 at right (its commit cb4bb5a). Fog lying low in the pit, banded hoops of rock, finer red growth. Its lead still calls the fog one grey mass and the growth flat tassels. From the team; not judged
-- `03-s147-spine-7234.jpg`: The Spine at 2:01 (frame 7234): the film now at left and the team's branch in wave 2 at right (its commit 7c2ee51). The violet over the whole sky is gone: grey storm cloud with form, rime and snow on the spire, a narrower sunset band, violet only round the bolt as in the approved pictures. The rock texture is still stretched. From the team; not judged
-- `04-s147-eye-8412.jpg`: The Eye at 2:20 (frame 8412): the film now at left and the team's branch in wave 2 at right (its commit 1b799b8, before its newest animals). Low scree in place of the big clean blocks, as the realism critic asked against the approved picture, and the mats reach further. The stream at the lower left of the approved picture is still missing and the herd is small. From the team; not judged
+- `01-s148-reveal-land.jpg`: The Reveal at 2:42, 2:47 (the titan frame) and 3:15 (the last frame): the film now at left and the Reveal team's branch in wave 2 at right (its commit 6718500). Rust and tan land in place of olive green, higher and paler chest ranges, the hip as a dome and the thigh as an eroded massif. The comb of rib ridges is now uneven ranges; the figure still reads as a body in the titan frame and in the last frame. Drawn by the Builder at 960x540, draft tier; not judged
+- `02-s148-heart.jpg`: The Heart at 0:58 (frame 3477) and 1:07 (frame 4006): the film now at left and the Heart team's branch in wave 2 at right (its commit 6bb7202). Cracked plates of ropy crust and rubble in the foreground; a finer, braided fall under the cave. The foreground rubble is still rough. Drawn by the Builder at 960x540, draft tier; not judged
+- `03-s148-ribs-spine.jpg`: Upper row, the Ribs at 0:03 (frame 168): the film now at left and the Ribs team's branch at right (its commit 6860a60), with smoother, paler arches under a darker sky, a flock, and a smaller breaker. Lower row, the Spine at 2:01 (frame 7234): the film now and the Spine team's branch (its commit 31356e4), with grey storm cloud, snow on the spire, a glow about the head of the bolt and a narrower sunset band; the rock is still streaked. Drawn by the Builder at 960x540, draft tier; not judged
+- `04-s148-marsh-5930.jpg`: The Blood Marsh at 1:38 (frame 5930): the film at the end of wave 1 at left and the Blood Marsh team's branch in wave 2 at right (its commit cc996b4). Darker, finer rippled water with mist lying on it, sheaths under the fronds, thinner far stalks, the far hills lower and nearer the approved picture. From the team's test machine, where this frame now gives 1 result in 12 draws; not judged
 
+Status 147, 2026-11-27 03:32 UTC, showed: The four hard moments the compression critics judged in round 29, from the film before wave 2. Left: the rendered frame.
 Status 146, 2026-11-27 03:12 UTC, showed: The titan frame at 2:47 (frame 10027): the film now at left and the Reveal team's branch in wave 2 at right (its commit 9a2ab85).
 Status 145, 2026-11-27 02:52 UTC, showed: The join from the Eye into the rise, frames 9535 to 9546 (2:38.9 to 2:39.1). Upper two rows: the film now.
-Status 144, 2026-11-27 02:26 UTC, showed: The Heart at 0:58 (frame 3477): the film now at left and the Heart team's branch at right (its commit 37ce7fb, 7:17 PM).
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T03:32:09Z
-phase 6: 6.71 h used of 24.00 h
-build: 51.68 h used of 72.00 h
-extra rounds: yes
-minutes since the last status: 20
+2026-11-27T03:56:27Z
+phase 6: 7.11 h used of 24.00 h
+build: 52.09 h used of 72.00 h
+extra rounds: no
+minutes since the last status: 24
 ```
 
 ## Phases
