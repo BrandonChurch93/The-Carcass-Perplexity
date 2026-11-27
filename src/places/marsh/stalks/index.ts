@@ -454,12 +454,12 @@ export function create(ctx: Context): Piece {
     const lensOf: Record<string, (w: Wild) => number> = {
       'marsh-01': (w) => distToSegment(w.x, w.z, eyeA, eyeB),
       'marsh-02': (w) => distToSegment(w.x, w.z, k2a, k2b),
-      'marsh-03': (w) => Math.max(0, Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) - 8),
+      'marsh-03': (w) => Math.max(0, Math.hypot(w.x - K1_AT[0], w.z - K1_AT[1]) - 5),
       'marsh-04': (w) => Math.hypot(w.x - k3[0], w.z - k3[1]),
       'marsh-05': (w) => Math.hypot(w.x - k4[0], w.z - k4[1]),
     };
     const fineOf = (d: number): number => (d < 9 ? 40 : d < 18 ? 28 : d < 36 ? 13 : d < 80 ? 5 : 3);
-    const broadOf = (d: number): number => (d < 18 ? 0.62 : d < 36 ? 1.4 : d < 80 ? 2.5 : 3.6);
+    const broadOf = (d: number): number => (d < 9 ? 0.62 : d < 18 ? 1.05 : d < 36 ? 1.6 : d < 80 ? 2.5 : 3.6);
     {
       const footed = wilds.filter((w) => w.foot && !w.bare);
       const foot = new Float32Array(footed.length * 4);
