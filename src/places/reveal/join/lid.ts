@@ -323,19 +323,29 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   // shore on one side of the cut and the rise's on the other is seen through it, and neither is seen bare on those frames.
   if (about > 0.0 && tr > 0.02 && floorA < 0.02) {
     float patches = textureLod(uLidMap, g * 0.9 + 0.3, max(log2(max(reach * camA * 0.9 * LID_TILE, 1.0)), 4.5)).g;
+    // The mist rides the wind, and the gaps in it widen from the moment the lens is over it: by the clock, the same on both sides of the cut.
+    float tm = uLid.y;
+    vec2 gm = g - normalize(uLidDrift) * 0.05 * tm;
+    // Its edges are those of the photographed heads, not of a blur.
+    float rag = 0.65 * textureLod(uLidMap, gm * 4.3 + vec2(0.41, 0.13), log2(max(reach * camA * 4.3 * LID_TILE, 1.0))).r + 0.35 * textureLod(uLidMap, gm * 1.9 + vec2(0.77, 0.52), log2(max(reach * camA * 1.9 * LID_TILE, 1.0))).r;
     // It stands thick wherever the one water is not drawn whole, so neither place shows its own shore under it on the frames of the cut.
     // Its edge is no oval: tongues of it lie out over the water, some far, some not at all.
-    float tongues = smoothstep(0.3, 0.75, 0.6 * vnoise(g * 1.7 + 3.1) + 0.4 * vnoise(g * 4.3 + 8.2));
-    float torn = 0.6 * vnoise(g * 9.0 + 6.1) + 0.4 * vnoise(g * 21.0 + 0.9);
-    float cover = smoothstep(0.8, 0.93, length(g / (LID_LAKE * uLidWater.w)) * (1.0 + 0.3 * tongues + 0.08 * (torn - 0.5)));
-    // Banks of it lie on the water as well, so the water is seen in several places of unlike shape and not as one dark round.
-    cover = max(cover, smoothstep(0.55, 0.65, 0.55 * vnoise(g * 2.9 + 11.3) + 0.3 * vnoise(g * 6.7 + 4.9) + 0.15 * torn));
+    float tongues = smoothstep(0.3, 0.75, 0.6 * vnoise(gm * 1.7 + 3.1) + 0.4 * vnoise(gm * 4.3 + 8.2));
+    float torn = 0.6 * vnoise(gm * 9.0 + 6.1) + 0.4 * vnoise(gm * 21.0 + 0.9);
+    float grown = 1.0 + (0.5 + 1.2 * max(tm, 0.0)) * tm;
+    float stands = clamp((length(g / (LID_LAKE * uLidWater.w)) / grown * (1.0 + 0.3 * tongues + 0.08 * (torn - 0.5)) - 0.8) / 0.13, 0.0, 1.0);
+    // Banks of it lie on the water as well, so the water is seen in several places of unlike shape and not as one dark round: they shrink as the gaps widen.
+    stands = max(stands, clamp((0.55 * vnoise(gm * 2.9 + 11.3) + 0.3 * vnoise(gm * 6.7 + 4.9) + 0.15 * torn - 0.6 - 0.2 * tm) / 0.2, 0.0, 1.0));
+    // After the cut new gaps open over the land and grow until none of it is left.
+    float gaps = 0.6 * vnoise(gm * 4.1 + 7.7) + 0.4 * vnoise(gm * 9.3 + 2.2);
+    stands -= 1.5 * smoothstep(0.0, 0.12, tm) * clamp((0.15 + 1.1 * tm - gaps) / 0.3, 0.0, 1.0);
+    float cover = smoothstep(0.25, 0.65, stands + 0.9 * rag - 0.35);
     // Seen from above it is a low sheet of cloud with heads of its own, which the sun finds.
-    float lumps = 0.5 * vnoise(g * 3.7 + 1.9) + 0.3 * vnoise(g * 8.9 + 5.3) + 0.2 * vnoise(g * 19.0 + 2.7);
+    float lumps = 0.5 * vnoise(gm * 3.7 + 1.9) + 0.3 * vnoise(gm * 8.9 + 5.3) + 0.2 * vnoise(gm * 19.0 + 2.7);
     float heads = smoothstep(0.3, 0.8, lumps);
-    // It comes and goes in patches, the thin places first, not all at once as a picture fades.
-    float mist = cover * (1.0 - smoothstep(0.0, 0.3, (1.0 - about) * 1.35 - lumps)) * (0.975 + 0.025 * patches);
-    vec3 fog = mix(uLidShade * (0.42 + 0.3 * patches), uLidSunlit * 0.8, 0.35 * heads);
+    // It comes in patches as the lens climbs over it, the thin places first.
+    float mist = cover * (1.0 - smoothstep(0.0, 0.3, (1.0 - smoothstep(0.8, 0.99, camA)) * 1.35 - lumps)) * (0.975 + 0.025 * patches);
+    vec3 fog = mix(uLidShade * (0.42 + 0.3 * patches), uLidSunlit * 0.8, 0.35 * heads) * (0.8 + 0.4 * rag);
     sum += clear * mist * fog * mix(1.0, lightLeft, 0.4);
     tr *= 1.0 - mist;
   }
