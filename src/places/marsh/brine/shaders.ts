@@ -8,7 +8,7 @@ import { FIELD_GLSL } from '../land/shaders';
 
 export const MAX_RINGS = 24;
 /** Seconds the skin of a dome takes to draw back from the point it tore at: twenty frames. */
-export const TEAR = 0.34;
+export const TEAR = 0.2;
 
 const WIND_RAW = [R[0] * 0.8 + F[0] * 0.6, R[1] * 0.8 + F[1] * 0.6];
 const WIND_LEN = Math.hypot(WIND_RAW[0] as number, WIND_RAW[1] as number);
@@ -161,22 +161,24 @@ void main() {
   float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 2.2 * speed + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
   vec4 bend = grain(p.xz / 0.83 + vec2(0.01, 0.007) * uTime, -0.2688);
   vec2 ripples = vec2(0.0);
+  // (A train comes in only where a crest is a dozen pixels and more across the way the lens squeezes it most: far off the few broad ones
+  // are left, never a hatching of thin lines.)
   // (No train is everywhere: each comes and goes in patches of its own, or the six would weave one cloth. And a wave is drawn only where
   // a lens can tell its crests apart: finer than that it would be grit.)
   if (px < 0.12) {
     vec4 e = groups(p.xz, wdir, 0.55, 2.8379);
     ripples += train(p.xz, normalize(wdir - wcross * 0.17), 0.73, bend.b * 3.0 + 2.1, e.rg) * 0.1 * smoothstep(0.25, 0.7, carried.g) * smoothstep(0.12, 0.06, px);
-    ripples += train(p.xz, normalize(wdir + wcross * 0.31), 0.41, bend.r * 4.0, e.ba) * 0.1 * fine.g * smoothstep(0.068, 0.034, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 0.31), 0.41, bend.r * 4.0, e.ba) * 0.1 * fine.g * smoothstep(0.045, 0.022, px);
   }
   if (px < 0.045) {
     vec4 e = groups(p.xz, normalize(wdir + wcross * 0.2), 0.22, 1.5160);
-    ripples += train(p.xz, normalize(wdir - wcross * 0.47), 0.27, bend.g * 5.0, e.rg) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.045, 0.022, px);
-    ripples += train(p.xz, normalize(wdir + wcross * 0.83), 0.173, bend.b * 5.0, e.ba) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.029, 0.0145, px);
+    ripples += train(p.xz, normalize(wdir - wcross * 0.47), 0.27, bend.g * 5.0, e.rg) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.028, 0.014, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 0.83), 0.173, bend.b * 5.0, e.ba) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.018, 0.009, px);
   }
   if (px < 0.02) {
     vec4 e = groups(p.xz, normalize(wdir - wcross * 0.6), 0.09, 0.2265);
-    ripples += train(p.xz, normalize(wdir - wcross * 1.3), 0.117, bend.a * 6.0, e.rg) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.02, 0.01, px);
-    ripples += train(p.xz, normalize(wdir + wcross * 2.4), 0.071, bend.r * 7.0 + 1.3, e.ba) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.012, 0.006, px);
+    ripples += train(p.xz, normalize(wdir - wcross * 1.3), 0.117, bend.a * 6.0, e.rg) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.012, 0.006, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 2.4), 0.071, bend.r * 7.0 + 1.3, e.ba) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.0075, 0.0038, px);
   }
   // (Near the lens every wavelet is seen for itself and turns its own piece of the sky: far off they are averaged into the sheen.)
   float nearGain = 1.0 + 1.0 * smoothstep(14.0, 4.0, dist);
@@ -184,6 +186,9 @@ void main() {
 
   // How much froth the domes and the bursts have left here.
   float boil = 0.0;
+  vec2 swell = vec2(0.0);
+  // (Rings whose crests the lens cannot tell apart are not drawn: far off and seen low they would run together into streaks.)
+  float told = smoothstep(0.2, 0.07, px);
   if (pool < 16.0) {
     // Each seep sends out ring after ring: half a stride from crest to crest, 0.7 m a second, dying with the way they have come.
     for (int i = 0; i < ${MAX_SEEPS}; i++) {
@@ -191,7 +196,7 @@ void main() {
       vec2 d = p.xz - seep.xy;
       float r = length(d);
       float beat = 0.6 + 0.4 * sin(uTime * 0.9 + seep.z * 17.0);
-      slope += d / max(r, 0.03) * cos(r * 15.0 - uTime * 10.5 + seep.z * 40.0 + (bend.r - 0.5) * 1.2) * seep.w * beat * nearGain * smoothstep(0.05, 0.35, r) / (1.0 + 0.55 * r * r);
+      slope += d / max(r, 0.03) * cos(r * 15.0 - uTime * 10.5 + seep.z * 40.0 + (bend.r - 0.5) * 1.2) * seep.w * beat * nearGain * told * smoothstep(0.05, 0.35, r) / (1.0 + 0.55 * r * r);
     }
     for (int i = 0; i < ${MAX_RINGS}; i++) {
       if (i >= uRingCount) break;
@@ -212,7 +217,9 @@ void main() {
       float env = exp(-q * q / (wide * wide)) * ring.w * (0.45 + 1.1 * clamp(thrown, 0.0, 1.0));
       if (env < 0.003) continue;
       // The long waves lead and the short ones follow: the crests are closer behind the front than before it.
-      slope += d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3 * nearGain;
+      vec2 front = d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3 * nearGain * mix(0.4, 1.0, told);
+      slope += front;
+      swell += front;
       boil = max(boil, env * smoothstep(1.5, 0.25, ring.z));
     }
   }
@@ -227,7 +234,7 @@ void main() {
     float ll = length(lean);
     vec2 off = ll > 1e-4 ? lean / ll : vec2(0.0);
     slope *= 1.0 + 1.3 * ringed;
-    slope += off * (0.1 * ringed * sin(stood * 30.0 + uTime * 5.5 + patchy.r * 9.0) + 0.75 * smoothstep(0.6, 0.92, stood)) * smoothstep(30.0, 10.0, dist);
+    slope += off * (0.32 * ringed * sin(stood * 30.0 + uTime * 5.5 + patchy.r * 9.0) + 0.75 * smoothstep(0.6, 0.92, stood)) * smoothstep(30.0, 10.0, dist);
     collar = smoothstep(0.45, 0.8, stood) * (1.0 - brineMud);
   }
   // The meniscus: in the last two fingers before the bank the brine climbs it, and that lip looks the other way from the rest of the surface.
@@ -301,9 +308,21 @@ void main() {
   // The cloud is brightest overhead: a wavelet that leans to the lens far enough stands the high sky on its face. Small hard glints
   // on the crests, and the body between them stays its own red.
   // (Counted by how far the wavelet lifts the mirrored ray over the level pool's, or a lens that looks down would find the glint on all of it.)
-  float high = reflect(-v, n).y - v.y;
-  float glint = smoothstep(0.24, 0.48, high);
-  lit += uSkyZenith * 0.17 * glint * glint * (1.0 - 0.7 * foam) * skyOpen(p) * smoothstep(60.0, 20.0, dist);
+  // (And by the wavelet alone: the long face of a ring wave leans to the lens along its whole front, and would carry one grey band.)
+  float high = reflect(-v, normalize(vec3(slope.x - 0.8 * swell.x, 1.0, slope.y - 0.8 * swell.y))).y - v.y;
+  // (Soft at its edge and broken along a crest: a long front carries it in pieces, never as one white band.)
+  float glint = smoothstep(0.2, 0.62, high + (bend.g - 0.5) * 0.3 + (fleck.r - 0.5) * 0.14);
+  // Silt hangs in it in slow clouds a hand to a stride across, paler here and darker there: under a dome and in a thing's mirror image,
+  // where no sky lies on it, the brine is still not one flat red.
+  lit *= 1.0 + (0.24 * (heave.g - 0.5) + 0.16 * (fine.r - 0.5)) * smoothstep(40.0, 10.0, dist) * (1.0 - foam);
+  // Where a thing stands in it the brine is drawn up it in a lip: under the lip it looks down into itself, dark and wet, and the lip's
+  // back carries a line of the sky. In stirred mud, which mirrors little, the rings it sends out show as light and dark.
+  float wetLine = smoothstep(0.62, 0.9, stood) * smoothstep(30.0, 10.0, dist) * (1.0 - foam);
+  lit *= 1.0 - 0.5 * wetLine;
+  lit += uSkyZenith * 0.045 * smoothstep(0.42, 0.58, stood) * smoothstep(0.74, 0.6, stood) * smoothstep(30.0, 10.0, dist) * (1.0 - foam);
+  lit *= 1.0 + 0.16 * ringed * sin(stood * 30.0 + uTime * 5.5 + patchy.r * 9.0) * clamp(brineMud + brineSlurry, 0.0, 1.0);
+  // (Stirred mud is dull: it carries no glint. Nor is there much of one off the seep pool, where the brine runs smooth.)
+  lit += uSkyZenith * 0.12 * glint * glint * (1.0 - 0.7 * foam) * (1.0 - 0.85 * clamp(brineMud + brineSlurry, 0.0, 1.0)) * skyOpen(p) * smoothstep(60.0, 20.0, dist) * mix(0.3, 1.0, smoothstep(24.0, 14.0, pool));
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -420,7 +439,7 @@ void main() {
   float whole = 1.0;
   if (vLife.w > 0.0) {
     whole = 0.0;
-    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.35, 0.94, sin(vLife.y * 40.0) * 0.35));
+    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.72, 0.69, sin(vLife.y * 40.0) * 0.72));
     // The film that has drawn back is rolled up in the hole's edge, and the edge runs ahead here and hangs back there: no two parts alike.
     vec4 ragged = grainAt(vLocal.xz * 0.13 + vLife.y * 3.0, 0.13);
     float gap = dot(at, from) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w + (grit.b - 0.5) * 0.03;
@@ -431,14 +450,17 @@ void main() {
     rim = smoothstep(gone - fat, gone - fat * 0.6, gap);
     glint = smoothstep(gone - fat * 0.75, gone - fat * 0.5, gap) * smoothstep(gone - fat * 0.1, gone - fat * 0.4, gap);
     // (Behind the edge the film is gathered: thicker for a hand's breadth.)
-    film.x += 0.6 * smoothstep(gone - 4.0 * fat, gone - fat, gap);
+    film.x += 0.3 * smoothstep(gone - 2.5 * fat, gone - fat, gap);
+    // (What still stands is the same thin skin, seen from inside on the far side: it is not a wall of brine.)
+    // (And it is stretched as it goes: the further the hole has run, the thinner and the paler what is left of it.)
+    film.x *= (gl_FrontFacing ? 0.75 : 0.45) * mix(1.0, 0.3, smoothstep(0.1, 0.8, vLife.w));
   }
   // The skin is never smooth as blown glass: it carries the pool's small waves up with it, and they run down it.
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.07 + vec3(grit.b - 0.5, 0.0, grit.a - 0.5) * 0.05 * (1.0 - 0.5 * top));
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // The near wall. Light crosses it once on the way to the lens: the longer its way through the film (a thick place, or the film seen
   // along itself at the dome's edge), the more is taken, the green and the blue first.
-  vec3 through = exp(-FILM_TAKES * film.x / max(nv, 0.2));
+  vec3 through = exp(-FILM_TAKES * film.x / max(nv, mix(0.5, 0.2, whole)));
   // The far wall, seen through the near one while the dome is whole: the line of sight goes on through the gas and leaves by the far
   // side of the skin, or comes down on the pool inside. (The dome is a ball pressed flat: in its own measure the line is straight.)
   float wide = vLife.z * (0.35 + 0.65 * vLife.x);
@@ -528,8 +550,8 @@ void main() {
   float own = 0.62 + 0.38 * sin(a * 3.0 + k * 5.0) * sin(a + k * 2.0);
   float jet = pow(0.5 + 0.5 * cos(turn), 6.0) * smoothstep(0.55, 0.85, own);
   float finger = max(lobe * 0.6, jet);
-  // Thrown, it only rises and falls. The side the tear reached first is up first.
-  float lead = 0.12 * (0.5 + 0.5 * cos(a - aLife.y * 40.0));
+  // Thrown, it only rises and falls. The side the tear reached first is up first, the far side a third of a second after it.
+  float lead = ${(0.7 * TEAR).toFixed(3)} / dur * (0.5 - 0.5 * cos(a - aLife.y * 40.0));
   float xa = clamp((x - lead) / (1.0 - lead), 0.0, 1.0);
   float rise = 4.0 * xa * (1.0 - xa);
   float tall = size * rise * (0.2 + 0.24 * lobe * own + 0.14 * jet) * (0.8 + 0.2 * sin(a * 5.0 + k));
