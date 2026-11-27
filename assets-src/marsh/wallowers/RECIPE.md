@@ -43,3 +43,31 @@ node assets-src/marsh/wallowers/make-materials.mjs
 Takes: 1 made, take 1 kept.
 Why this one: it records the recipe of the script and the linear mean colour of each picture, which the shaders divide by.
 Date: 2026-11-25
+
+## `public/assets/marsh/wallowers/churn.jpg`
+
+Made by: the image tool `generate_image` of Perplexity Computer with its default model (the tool did not report the model's name), aspect 1:1 asked, then `assets-src/marsh/wallowers/make-churn.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/wallowers/churn-source.jpg`, the generated picture. Picture passed to the model with the prompt, for colour and character only: `references/approved/4-marsh/marsh-3-mud-wallowers.jpg`. No approved picture and no photograph is drawn into the place.
+Prompt or command: the prompt below, then `node assets-src/marsh/wallowers/make-churn.mjs`.
+
+```
+Seamless tiling material texture, top-down orthographic photograph looking straight down, about two metres across: churned wet mud trampled by heavy animals on a blood-red salt marsh. Dark red-brown clay clods and ridges, deep footprints and pits holding standing dark wine-red water with small bright sky glints, wet slick mud between them, a few pale grey-pink salt crumbs on the highest clod tops. Material and colours taken from the mud at the animals' feet in the reference picture. Evenly lit under flat overcast, no cast shadows, no horizon, no animals, no plants, no objects, sharp focus edge to edge, uniform density across the whole frame so that it tiles.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: clods, pits with red water standing in them and pale crumbs on the tops, at one scale from edge to edge: the mud at the feet of the animals in the approved picture. It is the colour of the wallow the near three stand in (`mire.ts`).
+Date: 2026-11-27
+
+## `public/assets/marsh/wallowers/churn-nh.jpg`
+
+Made by: `assets-src/marsh/wallowers/make-churn.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/wallowers/churn-source.jpg`, the same crop and the same fade into itself as `churn.jpg`.
+Prompt or command: `node assets-src/marsh/wallowers/make-churn.mjs`
+
+```
+node assets-src/marsh/wallowers/make-churn.mjs
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: slope in red and green and height in blue, read from the picture itself (the red water lies low, the pale clods stand high), so the mesh of the wallow and its shading stand where the colour says they do.
+Date: 2026-11-27
