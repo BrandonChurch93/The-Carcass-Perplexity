@@ -143,7 +143,7 @@ void main() {
   albedo *= 0.82 + 0.18 * smoothstep(0.0, 0.012, h);
   albedo = mix(albedo, albedo * vec3(1.08, 0.95, 0.84), smoothstep(0.62, 0.95, tone.g));
   albedo = mix(albedo, albedo * vec3(0.84, 0.93, 1.04), smoothstep(0.3, 0.05, tone.g));
-  albedo *= 0.62 + 1.1 * dot(skin, vec3(0.333));
+  albedo *= 0.76 + 1.1 * dot(skin, vec3(0.333));
   albedo *= warmSide(n);
   // Wet to a hand above the water, and damp in every hollow: dark there, with the sky's light lying on it.
   float wet = max(smoothstep(0.13, 0.03, p.y - 0.6 * h), 0.12 + 0.4 * smoothstep(0.01, 0.002, h));
@@ -158,6 +158,6 @@ void main() {
   vec3 r = reflect(-v, vec3(0.0, 1.0, 0.0));
   r.y = abs(r.y) + 0.02;
   float film = smoothstep(0.03, 0.0, p.y - 0.5 * h);
-  c = mix(c, 0.78 * skyRadiance(normalize(r)) * skyOpen(p), 0.22 * film);
+  c = mix(c, 0.78 * skyRadiance(normalize(r)) * skyOpen(p), 0.12 * film);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
