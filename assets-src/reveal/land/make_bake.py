@@ -191,7 +191,7 @@ def main():
     lines, cells = rivers(up_a, land_a)
     print('rivers', len(lines))
     ra = LEVELS['a']
-    for level in 'abcd':
+    for level in os.environ.get('LEVELS', 'abcd'):
         h, land, up = load(level)
         rect = LEVELS[level]
         H, W = h.shape
