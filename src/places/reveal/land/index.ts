@@ -550,7 +550,9 @@ void main() {
   float greatB = textureLod(uReliefWide, clamp(uvWide, 0.0, 1.0), log2(30.0 / uTexelKm.x)).b;
   // (The chest is the highest country of all: more of its ranges are great, so each side carries five or six, unlike and broken.)
   float chestAt = (1.0 - smoothstep(0.7, 1.1, length((xz - vec2(-339.0, -123.0)) / vec2(560.0, 470.0)))) * (1.0 - 0.75 * provinceRed);
-  float great = smoothstep(0.43, 0.53, (greatB - 0.3) / 0.7 + 0.05 * chestAt) * inWide * land * smoothstep(150.0, 320.0, uViewKm);
+  // (Of the chest's ranges some stand higher and carry pale rock, some do not, and each for a part of its length only.)
+  float pick = chestAt > 0.0 ? vnoise(vec2(xz.x / 95.0 + xz.y / 600.0, xz.y / 330.0) + 31.0) - 0.5 : 0.0;
+  float great = smoothstep(0.43, 0.53, (greatB - 0.3) / 0.7 + chestAt * (0.04 + 0.22 * pick)) * inWide * land * smoothstep(150.0, 320.0, uViewKm);
   float lesser = (1.0 - smoothstep(0.38, 0.48, (greatB - 0.3) / 0.7)) * smoothstep(0.3, 0.55, height) * land * smoothstep(150.0, 320.0, uViewKm) * smoothstep(0.9, 1.2, length(fromSkull));
   ground = mix(ground, vec3(0.5, 0.455, 0.39) * (0.5 + 1.1 * min(lowLum, 0.45)) * (1.0 + 0.2 * chestAt), mix(0.7, 0.9, chestAt) * great * smoothstep(0.34 - 0.06 * chestAt, 0.62 - 0.1 * chestAt, max(height, (greatB - 0.3) / 0.7 + 0.06)) * (1.0 - min(1.0, 1.4 * rust)));
   ground *= mix(vec3(1.0), vec3(0.62, 0.58, 0.56), lesser);

@@ -10,7 +10,8 @@ Branch `agent/p7-reveal-land`. Code in `src/places/reveal/land/index.ts`. Pictur
 ## What was changed, and where
 
 - One land at every height, nothing switches with the camera: `RIB_BURIAL` stays 0.
-- Chest (`chest/`), lake district (`lakes/`), hip massif and thigh range (`hip/`) drawn again by the image model and laid into maps a, b, c.
+- Chest (`chest/`): the first map's parallel ranges on the western three fifths, the image model's take 3 on the east (`chest/blend_first.py`), laid into maps a and b. With take 3 laid whole the ranges splayed from the neck and no ribcage was read at 400 px. `pick` (shader) lets pale rock stand on some ranges and on part of their length, so the ribs are unequal.
+- Lake district (`lakes/`), hip massif and thigh range (`hip/`) drawn again by the image model and laid into maps a, b, c.
 - `great` and `lesser`: the height of the country drawn together over 30 km decides which ranges carry pale rock. `chestAt` lets more of the chest's ranges be great, so each side holds five or six unlike ranges.
 - Provinces (`provinceRed`, `provinceWet`, `provinceSand`) tint the low country; palette tan, rust, dark teal.
 - Map reads use `textureLod` with levels taken from derivatives at the top of `main`: no derivative is taken inside a branch.
@@ -25,7 +26,7 @@ Branch `agent/p7-reveal-land`. Code in `src/places/reveal/land/index.ts`. Pictur
 ## Tried, and not worth trying again
 
 - `textureGrad` for the map reads: 15.2 s a sample at 10027 against 12.8 s with `textureLod`.
-- Chest takes 1, 2 and 4: the ribs were lost or the figure broken at 10027 (see `RECIPE.md`).
+- Chest takes 1, 2, 4 and 5: the ribs were lost or the figure broken at 10027 (see `RECIPE.md`). The image model does not keep the direction of ranges: it turns them along the valley. One take of six is left.
 - Ochre lines in the sea drawn from ridged noise with a hard threshold: brush strokes of one width, and thin closed rings like contours. Soft cores with skirts read as silt.
 - A wider soft edge on the thrown shadow (`softEdge`) from orbit: no change, the hard edge is in the baked horizon, texel to texel.
 - A shallow floor in the upper crater lake: it turned amber all over.
@@ -33,6 +34,7 @@ Branch `agent/p7-reveal-land`. Code in `src/places/reveal/land/index.ts`. Pictur
 ## Still wrong beside the approved pictures, worst first
 
 - 9700 to 9760: the lake of the Eye and the teal bay still stand side by side in the pale massif; the approved picture holds them so, and some will still read a face.
+- The chest's ribs are again of one spacing and one flute (the first map's): unequal in length and in pale rock only. From 9700 to 9800 they read as a ribcage early, as in reveal-3.
 - The same flute on most ranges.
 - 9627: the silt band is still broad on the south west; approved is thinner.
 - 10027: the ochre plumes lie in the bay between the legs only; approved carries them all round the pelvis and both legs, thinner and longer.
