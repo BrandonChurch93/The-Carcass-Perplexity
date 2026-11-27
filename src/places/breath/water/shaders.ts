@@ -140,7 +140,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   vec2 aside = vec2(vnoise(xz * 4.3 + 0.3 * gone), vnoise(xz * 4.3 + 31.0 - 0.3 * gone)) - 0.5;
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame + (slope * vec2(0.012, 0.03) + aside * vec2(0.012, 0.01)) * min(1.0, 8.0 / far));
   float arcs = smoothstep(0.28, 0.62, vnoise(xz * 2.3 - 0.5 * gone + 5.0));
-  slope += rings.rg * (2.6 * (0.2 + 0.8 * arcs));
+  slope += rings.rg * (2.6 * (0.35 + 0.65 * arcs));
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float rough = sqrt(lost);
 
@@ -219,9 +219,11 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   alpha = max(alpha, 0.6 * meet);
   colour *= 1.0 - 0.7 * meet;
   // The same round a leg or a wet mop that stands in it (the waders folder says where): a dark line where the water climbs it.
-  float touch = smoothstep(0.2, 0.75, clamp(rings.a, 0.0, 1.0));
-  alpha = max(alpha, 0.8 * touch);
-  colour *= 1.0 - 0.65 * touch;
+  // It is read where it is, not aside as the rings are: pushed about by the ripples it smeared to a haze round the leg.
+  float held = clamp(texture2D(tRings, gl_FragCoord.xy / uFrame).a, 0.0, 1.0);
+  float touch = smoothstep(0.14, 0.55, held);
+  alpha = max(alpha, 0.9 * touch);
+  colour *= 1.0 - 0.8 * touch;
   // Looked down on, the water mirrors little, and still the image of what stands in it is seen: the animal is between the sky and
   // the water under it, so the silt there is in its shade and the bed is hidden by it.
   colour = mix(colour * (1.0 - 0.35 * image.a), mix(0.4, 0.26, low) * image.rgb, mix(0.5, 0.75, low) * image.a);
