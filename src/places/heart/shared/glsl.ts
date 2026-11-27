@@ -188,7 +188,7 @@ float lakePath(float path) {
 // the fire). It is read at the map's finest level and is gone two metres from a gap and four metres above the lake. Nothing reads the lake wide for
 // a level face any more: that wash is what turned a kilometre of crust maroon.
 const float LAKE_LIP = 0.5;
-const float LAKE_BANK = 0.9;
+const float LAKE_BANK = 1.3;
 vec3 lakeLip(vec3 p, float h) {
   if (h >= 4.0) return vec3(0.0);
   return lakeGlow(p.xz, 0.9) * (LAKE_LIP * smoothstep(4.0, 1.0, h));
@@ -196,16 +196,16 @@ vec3 lakeLip(vec3 p, float h) {
 // The bank. The taps of lakeIrradiance look down from a face by its height, so a face half a metre over the lake saw the lava under it and no
 // further, and the owners give the lake's light on the crust a hundredth: a channel lit nothing two metres from its brim, and its bank and the
 // crust beside it stood as cold as ground a hundred metres off. But the fire of a channel lies at the level of its bank and comes to it along
-// the ground, and what takes it is whatever leans toward it, by how far it leans (a face leaning a quarter all of it, a level face a quarter,
-// by the grains of rough ground that face the fire): one tap 3 m out the way the face leans (a level face: where it lies), over a disc that
-// holds some 4 m. Only the side of each rock and ripple that is turned to the fire is lit whole, so the bank keeps its relief. It is gone by
+// the ground, and what takes it is whatever leans toward it, by how far it leans (a face leaning a half all of it, a ripple of the
+// crust two fifths, a level face a tenth, by the grains of rough ground that face the fire): one tap 3.5 m out the way the face leans (a level face:
+// where it lies), over a disc that holds 1 to 6 m. The side of a block that is turned to the fire burns and its top does not: the rim is hard. It is gone by
 // 5 m above the lake. It goes with the round lights (emitterIrradiance), which every owner takes whole, and under their shade: a pad or a
 // body that stands between cuts it. The out argument is the way to the fire along the ground.
 vec3 lakeBank(vec3 p, vec3 n, out vec2 toward) {
   float h = max(p.y, 0.0);
   float side = length(n.xz);
   toward = n.xz / max(side, 0.25);
-  return lakeGlow(p.xz + toward * 3.0, 2.0) * (3.14159 * LAKE_BANK * (0.25 + 0.75 * min(side * 4.0, 1.0)) * smoothstep(5.0, 2.0, h));
+  return lakeGlow(p.xz + toward * 3.5, 2.5) * (3.14159 * LAKE_BANK * (0.1 + 0.9 * smoothstep(0.0, 0.5, side)) * smoothstep(5.0, 2.0, h));
 }
 vec3 lakeIrradiance(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);

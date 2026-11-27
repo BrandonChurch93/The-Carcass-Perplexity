@@ -18,7 +18,7 @@ import { MAX_HEAT, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
 export const PARTS: readonly string[] = ['sky', 'air', 'fume', 'ash'];
 
 /** The open lava under the fume, as one round light of the rig: where it is, how wide, and what part of its face is open at 1400 K. */
-const FUME_LIGHT = { at: [960, 20, 0] as const, radius: 200, open: 1.0 };
+const FUME_LIGHT = { at: [960, 20, 0] as const, radius: 200, open: 0.6 };
 
 /** A body of smoke: a leaning dome of lumps that stands on a level base. Lengths in metres, densities for a metre of path. */
 interface Body {
@@ -128,6 +128,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const local = standIns(ctx);
   const seeds = ctx.rng('air/steam');
   const steamSeed = Array.from({ length: 64 }, () => seeds.next() * 7);
+  const steamOwn = Array.from({ length: 64 * 5 }, () => seeds.next());
 
   const u = ctx.rig.uniforms;
   const zenith = (u.uSkyZenith as THREE.IUniform<THREE.Vector3>).value;
@@ -248,14 +249,26 @@ export function create(ctx: HeartContext): HeartPiece {
       for (let i = 0; i < drawn; i++) {
         const { source: s, index } = order[i] as (typeof order)[number];
         const smoke = s.kind !== 'steam';
-        const radius = Math.max(0.05, s.radius);
+        // No two vents are alike. The sources of a row of pools come with one size, one height and no lean, and stood as the same upright puff
+        // drawn again at every pool. Each takes its own from its seed: half to one and a half times the height, a foot of its own, its own
+        // strength, and the low wind's lean (the banks': to the west and a little south) by its own share and a little off its line.
+        const seed = steamSeed[index % steamSeed.length] as number;
+        const own = (k: number): number => steamOwn[(index % 64) * 5 + k - 1] as number;
+        const vary = smoke ? 0 : 1;
+        const radius = Math.max(0.05, s.radius * (1 + vary * (own(1) * 0.9 - 0.3)));
+        const rise = s.rise * (1 + vary * (own(2) * 1.0 - 0.45));
+        const strength = s.strength * (1 + vary * (own(3) * 0.7 - 0.4));
+        const drift = vary * (0.25 + 0.6 * own(4));
+        const turn = (own(5) - 0.5) * 1.2;
+        const leanX = (s.lean?.[0] ?? 0) + drift * (BANK_LEAN[0] * Math.cos(turn) - BANK_LEAN[1] * Math.sin(turn)) * (s.lean ? 0.3 : 1.6);
+        const leanZ = (s.lean?.[1] ?? 0) + drift * (BANK_LEAN[0] * Math.sin(turn) + BANK_LEAN[1] * Math.cos(turn)) * (s.lean ? 0.3 : 1.6);
         (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], radius);
         // Thickness for a metre of path: a source of strength 1 is all but opaque across its own foot.
         // Smoke is held thin enough to see through across its own foot: no source stands as a dark trunk.
-        (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (smoke ? Math.min(s.strength * 2.4, 1) : s.strength * 1.4) / radius);
+        (steamB[i] as THREE.Vector4).set(leanX, leanZ, rise, (smoke ? Math.min(s.strength * 2.4, 1) : strength * 1.4) / radius);
         // Steam is quick, smoke is slow; the grain of each is set by the size of its foot.
-        const speed = s.kind === 'fume' ? 4.5 : smoke ? Math.min(9, 2 + s.rise * 0.09) : Math.min(3, 1.2 + s.rise * 0.16);
-        (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, speed, s.kind === 'fume' ? radius * 2.5 : smoke ? Math.max(3.5, radius * 3) : Math.max(2.2, radius * 6), s.kind === 'fume' ? 2 : smoke ? 1 : 0);
+        const speed = s.kind === 'fume' ? 4.5 : smoke ? Math.min(9, 2 + s.rise * 0.09) : Math.min(3, 1.2 + rise * 0.16);
+        (steamC[i] as THREE.Vector4).set(seed, speed, s.kind === 'fume' ? radius * 2.5 : smoke ? Math.max(3.5, radius * 3) : Math.max(2.2, radius * 6), s.kind === 'fume' ? 2 : smoke ? 1 : 0);
       }
       (su.uSteamCount as THREE.IUniform<number>).value = drawn;
       if (show.fume.value > 0.5) smoke.render(renderer, camera, phase);

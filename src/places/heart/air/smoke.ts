@@ -158,10 +158,16 @@ float bodyDensity(int i, vec3 p, out float above, out vec2 shade) {
   // Over one period the axis gains 0.45 of a repeat on the mean and the skin loses as much.
   float gain = (0.45 - 0.9 * min(d2, 1.0)) * 0.55 / G.x;
   vec3 q = vec3(rel.x, (yy - D.x * uTime) / G.x, rel.y) / D.z + B.z + vec3(0.026, 0.0, 0.015) * uTime;
-  vec4 la = lumps(vec3(q.x, q.y - gain * (pa - 0.5), q.z));
-  vec4 lb = lumps(vec3(q.x + 0.37, q.y - gain * (pb - 0.5) + 0.61, q.z + 0.23));
-  // Two fields cross faded are flatter than either: the fade keeps the spread of one.
-  vec3 l = uLumpsMean + ((la.rgb - uLumpsMean) * wa + (lb.rgb - uLumpsMean) * wb) * inversesqrt(wa * wa + wb * wb);
+  vec3 l;
+  if (D.x > 5.0) {
+    vec4 la = lumps(vec3(q.x, q.y - gain * (pa - 0.5), q.z));
+    vec4 lb = lumps(vec3(q.x + 0.37, q.y - gain * (pb - 0.5) + 0.61, q.z + 0.23));
+    // Two fields cross faded are flatter than either: the fade keeps the spread of one.
+    l = uLumpsMean + ((la.rgb - uLumpsMean) * wa + (lb.rgb - uLumpsMean) * wb) * inversesqrt(wa * wa + wb * wb);
+  } else {
+    // A bank that creeps (under 5 m a second) has no roll to show in the length of a shot: it is read once.
+    l = lumps(q).rgb;
+  }
   float g = uBodyF[i].w;
   // A body that is less solid is more of its lumps: they are drawn out the stronger, so that its outline is billows and not the dome.
   float gainOf = mix(2.6, 1.0, clamp(g, 0.0, 1.0));
@@ -351,8 +357,8 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     vec3 q = p - A.xyz;
     q -= lean * (C.y * uTime);
     q = q / C.z + C.x + vec3(0.013, 0.0, 0.007) * uTime;
-    // Steam is drawn out along its rise into streaks; smoke is round lumps.
-    q.y *= mix(0.6, 1.0, kind);
+    // Steam is drawn out along its rise into strands; smoke is round lumps.
+    q.y *= mix(0.3, 1.0, kind);
     // Its outline is ragged by the same lumps that fill it; it is thick at the vent, thinned by its own widening, and gone well before the top.
     float n1 = noise(q).r;
     vec4 small = noise(q * 3.7);
@@ -365,7 +371,10 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     // Steam is a veil with knots in it; smoke is lumps with gaps between them.
     vec2 off = (p.xz - A.xz) - B.xy * shear * h;
     float inside = (1.0 - smoothstep(0.55, 0.9, length(off) / tower)) * (1.0 - smoothstep(0.75 * top, 0.97 * top, h));
-    float dens = body * puff * inside * mix(0.03 + 2.2 * wisps * wisps, 4.0 * wisps, kind);
+    // Steam was the same lumps as smoke, thinner: a soft pale blob. It is strands: the thin sheets where the drawn-out field crosses its own
+    // middle, which stand as curling threads when looked through, broken along their length by the fine field, with next to nothing between them.
+    float strand = smoothstep(0.72, 0.97, 1.0 - abs(2.0 * n1 - 1.0) * 1.4) * smoothstep(0.25, 0.6, small.b);
+    float dens = body * puff * inside * mix(0.012 + 3.4 * strand + 0.5 * wisps * wisps, 4.0 * wisps, kind);
     if (dens <= 0.0) continue;
     // A fountain, a pool or a crack lights the vapour that is close over it; the rest is lit by the sky, like any smoke.
     // The top of a smoke is thin and open to the sky: it is paler than its foot.
@@ -379,7 +388,9 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float near = max(lit * exp(-h / fall) - 0.03, 0.0);
     // And the lava beside it: a vapour two paces from a channel stood grey against it. What lies within a few metres all round lights it as well,
     // less than what lies under it, and to the same height.
-    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + mix(0.8, 0.3, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) + roundLights(p));
+    // A vent in the rock of the bank stands over no lava and takes none of this: it is pale. Only a vapour whose foot is on the lake does.
+    float onLake = smoothstep(2.0, 0.6, A.y);
+    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + onLake * mix(0.3, 0.2, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) + roundLights(p));
     float a = 1.0 - exp(-sigma * dt);
     lay(close, t, mid, albedo * light, a);
   }
