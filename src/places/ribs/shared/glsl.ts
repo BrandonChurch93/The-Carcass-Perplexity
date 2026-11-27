@@ -180,9 +180,8 @@ vec3 skyDome(vec3 d) {
   vec2 uv = domeAt(d, el);
   vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
   vec2 q = uv * vec2(5.0, 2.8);
-  vec2 a = vec2(texture2D(tCloudShade, q + 0.5 * uSkyTurn.yz).g, texture2D(tCloudShade, q.yx + vec2(0.37, 0.61) - 0.5 * uSkyTurn.zy).g) - 0.5;
-  vec2 b = vec2(texture2D(tCloudShade, q * 3.7 + 0.19).g, texture2D(tCloudShade, q.yx * 3.7 + 0.73).g) - 0.5;
-  float g = texture2D(tCloudShade, q * 13.0 + 0.41).g - 0.5;
+  vec2 a = texture2D(tCloudShade, q + 0.5 * uSkyTurn.yz).rg - 0.5;
+  vec2 b = texture2D(tCloudShade, q * 3.7 + 0.19).rg - 0.5;
   vec3 c = texture2D(tDome, uv + 0.012 * work + (2.4 * a + 0.5 * b) * vec2(0.0022, 0.0039)).rgb;
   // Scud: lower, nearer shreds of the same storm cross before it three times as fast, so cloud goes across the blades' heads while
   // a lens is held. They are the picture's own dark bodies read larger (a nearer cloud is a larger one), laid end to end mirrored;
@@ -196,7 +195,7 @@ vec3 skyDome(vec3 d) {
   c = mix(c, scud * 0.85, 0.75 * body);
   // The grain is the cloud's, not the clear air's between the heads: it is given by how grey the place is.
   float grey = dot(c, vec3(0.3, 0.5, 0.2));
-  c *= 1.0 + (0.09 * a.y + 0.07 * b.x + 0.04 * g) * smoothstep(0.75, 0.3, grey);
+  c *= 1.0 + (0.09 * a.y + 0.08 * b.x) * smoothstep(0.75, 0.3, grey);
   return domeTone(c, d, el);
 }
 
