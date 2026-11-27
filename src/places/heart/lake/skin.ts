@@ -227,6 +227,8 @@ void main() {
   float slabSeen = 1.0 - smoothstep(0.012, 0.04, fpS);
   // A crest is worn pale, a furrow is black glass, and each slab is of its own day.
   float tone = clamp(0.78 + mix(2.4, 0.5, smoothstep(0.004, 0.02, fpS)) * (skinM.z - 0.5), 0.1, 1.7) * (1.0 - 0.85 * pourGap) * (1.0 + 0.22 * (slabTag - 0.5) * slabSeen);
+  // Round the one that sank the picture's ropes stand out hard: crests worn pale, furrows black, wherever a cord is told at all.
+  tone *= mix(1.0, 0.4 + 1.9 * smoothstep(0.25, 0.8, skinM.z), coilMound * (1.0 - smoothstep(0.03, 0.1, fpS)));
   // The light on the crust is the flat light of an overcast sky: the paint leans a cord half again as steep as it stands.
   vec2 fine = 1.5 * POUR_TALL * gPourSpan * skinM.xy + SHEET_TALL_D * skinD.xy;
   float grainA = skinM.z - 0.5;
@@ -295,7 +297,7 @@ void main() {
   // The banks of the line are dark charcoal brown, not ash.
   // The crust at the line is as the picture has it under that sky: a lit grey with a breath of violet, not charcoal. Round
   // the one that sank it is a third paler than it was.
-  albedo *= mix(vec3(1.0), vec3(3.2, 2.9, 3.05), coil * (1.0 - coilMound) * (1.0 - fresh)) * mix(1.0, 1.3, coilMound);
+  albedo *= mix(vec3(1.0), vec3(3.2, 2.9, 3.05), coil * (1.0 - coilMound) * (1.0 - fresh)) * mix(1.0, 1.08, coilMound);
   albedo *= mix(vec3(1.0), vec3(0.86, 0.8, 0.77), wide);
   albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * skinD.z + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
