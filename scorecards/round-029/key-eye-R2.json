@@ -1,0 +1,37 @@
+{
+  "round": "29",
+  "unit": "eye",
+  "critic": "R2",
+  "packs": {
+    "R2-1": {
+      "set-A-01.png": "Judged image: eye-0, film frame 8412"
+    },
+    "R2-2": {
+      "set-B-01.png": "Judged image: eye-1, film frame 9003"
+    },
+    "R2-3": {
+      "set-C-01.png": "Judged image: eye-2, film frame 8600"
+    },
+    "R2-4": {
+      "set-D-01.png": "Judged image: eye-3, film frame 8761"
+    },
+    "R2-5": {
+      "set-E-01.png": "Judged image: eye-4, film frame 9221"
+    },
+    "R2-6": {
+      "set-F-01.png": "Control: the approved picture of eye-0, references/approved/6-eye/eye-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-7": {
+      "set-G-01.png": "Control: the approved picture of eye-1, references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg, resized and encoded like the judged images"
+    },
+    "R2-8": {
+      "set-H-01.png": "Control: the approved picture of eye-2, references/approved/6-eye/eye-2-the-iris-amber-mats.jpg, resized and encoded like the judged images"
+    },
+    "R2-9": {
+      "set-I-01.png": "Control: the approved picture of eye-3, references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg, resized and encoded like the judged images"
+    },
+    "R2-10": {
+      "set-J-01.png": "Control: the approved picture of eye-4, references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg, resized and encoded like the judged images"
+    }
+  }
+}

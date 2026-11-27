@@ -25,5 +25,231 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the giant rock arches look like repeated variants of the same 3D asset.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "procedural-looking fantasy landscape (repeated stone-arch textures, scattered pebble instancing, simple creature models) typical of a Vue/Terragen-style stock CG render rather than film-grade detail",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the visibly faceted and stretched geometry of the giant curved rock arches despite detailed PBR foreground reflections",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the giant stone arches repeat the same blocky surface pattern at visibly different scales.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "The cinematic composition and atmosphere are strong, but the rock surfaces have stretched, repetitive procedural-looking texture and the creatures are simple, which reads as a high-end hobbyist or stock-style render (Terragen-like) rather than a film frame.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 77,
+      "why": "the foreground roots have a uniform rubbery sheen that makes the scene look rendered.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "cinematic-quality fantasy environment (detailed desiccated creature carcass on root-covered cliff, atmospheric depth haze with giant arching rock formations) suggests a high-end film/cinematic, though it could be a polished standalone render.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the combination of a detailed sculpted alien carcass and atmospheric lighting with unpolished low-poly foreground rocks and smooth ribbon-like seaweed that fall short of top-budget film or AAA cinematic quality.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the foreground vines look like smooth, sharply folded plastic ribbons rather than organic growth.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 72,
+      "why": "the dense, detailed art direction (desiccated creature draped in roots, giant rock arches in atmospheric haze, wet-sand reflections) with filmic depth of field and lighting reads as a big-budget game cinematic or film frame, though some soft, repeated textures keep it from being certain.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the three creatures look like copies of the same 3D model posed at different distances.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "polished but hobbyist-style creature render (Blender-like) with repeated duplicated creatures and somewhat generic rock/water materials rather than film-grade integration",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the foreground creature's tendrils and legs pierce the shallow water with no ripples, meniscus, or wetness on the skin despite the otherwise polished lighting and sculpting.",
+      "answered": "01:53 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 87,
+      "why": "the creatures’ legs meet the water without visibly disturbing it, as if the models were placed on a reflective surface.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the alien wading creatures have detailed skin, wing and feather textures, and the wet sand reflects the light with cinematic atmospheric depth, which looks like film-quality concept or cinematic work. The slightly soft reflections and some CG look keep me from being surer.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 79,
+      "why": "the visibly stretched textures along the foreground cliff ledges.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "stretched procedural textures and smeared displacement artifacts on the cliffs and instanced creatures look like an ordinary hobbyist/stock 3D render, not film-grade or photographic.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the flat lighting and weak contact shadows where the repeated creature models meet the procedural rock ledges",
+      "answered": "01:53 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "the foreground ledges have visibly stretched textures that smear down their vertical faces.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "the rock and ground textures are stretched and smeared like procedural or displacement artifacts, and the bird models are crude, which fits an ordinary or hobbyist 3D render rather than a film or photo. The soft sky and offline-render lighting keep it out of (d).",
+      "answered": "01:53 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the foreground creatures look like duplicated models with the same pale, plasticky shading.",
+      "answered": "01:52 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "decent water simulation but the plain, flatly shaded creatures and repeated rock textures look like a hobbyist/stock 3D render rather than film-level integration.",
+      "answered": "01:53 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the stiff plastic-looking winged creatures with thin stick-like legs and the abrupt seam where the crashing wave meets the flat reflective shore",
+      "answered": "01:53 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 81,
+      "why": "the repeated winged creatures look like stiff models pasted in front of the surf.",
+      "answered": "01:53 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "The creatures are stiff, semi-transparent and pasted-looking, and the rocks are blurry and repetitive. The spray and cloud work is good, so it reads as a competent but unpolished CG render, not a top-budget production.",
+      "answered": "01:53 UTC"
+    }
+  ]
 }

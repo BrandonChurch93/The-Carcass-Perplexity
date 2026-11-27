@@ -25,5 +25,231 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the conspicuously repeated long-necked creature models across the flats.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "polished but generic CG alien landscape (repetitive rock textures, simple uniform creature models) that reads as a skilled standalone render rather than film/cinematic-grade asset work.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "The simple sculpted rock arches and stretched vertical wall textures inside the sinkhole look like an ordinary 3D render rather than top-budget film or AAA cinematic quality.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the herd looks assembled from copies of the same stiffly posed creature model.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "the volumetric steam, backlit haze and water reflections look cinematic-grade, though the smeared rock textures and crude creatures keep it from being clearly top-budget.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 81,
+      "why": "the detailed water ripples and reflections where the creatures step into the shallows.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "polished but artist-style creature scene with repeated near-identical creature models and rather uniform procedural ripple rings, suggesting a high-end personal/stock CG render rather than film-VFX integration",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 75,
+      "why": "the cinematic backlit volumetric atmosphere and realistic subsurface scattering on the alien creatures",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 80,
+      "why": "the nearly identical concentric ripples beneath each creature’s feet look like repeated effects rather than water reacting to its movements.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "the polished creature design with realistic water ripples, reflections, atmospheric haze and cinematic depth of field looks like a high-end film or AAA cinematic frame.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the repeated, uniformly shiny rock texture across the foreground.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the creatures and ferns look decent but plainly CG, with flat, repeated rock textures and generic fog, like a capable artist's render rather than film-grade work.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 75,
+      "why": "the cohesive narrative alien-ecosystem staging paired with cinematic backlit volumetric mist and high-detail wet terrain shading typical of a AAA game cinematic or big-budget sci-fi film.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the foreground carcass looks like a stretched mesh, with its ribbed surface pulled flat against the ground.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "the atmospheric fog and lighting are cinematic, but the smeared ground texture and the simple, stiff creature models read as a competent CG render rather than top-budget film work.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the sharply faceted base of the foreground plant contrasts with its finely rendered fronds.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "blobby low-detail smooth rocks and card-like fern foliage suggest a real-time engine demo despite nice volumetric fog",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the combination of decent atmospheric lighting and fine foliage strands with an unpolished low-poly plant base and sharp-edged cliff geometry",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 91,
+      "why": "the foreground tree trunk ends in conspicuous angular facets instead of textured bark.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 62,
+      "why": "volumetric fog, dense detailed foliage and a distant sauropod silhouette give a polished cinematic look. The soft, blobby rock geometry keeps it from being surely top-budget.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the visibly stretched, repeating texture on the canyon wall.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the simple, repeated rock shapes with smeared, low-detail textures sitting in fog, next to dense hair-rendered red fronds, which looks like an ordinary 3D render and not film-level polish.",
+      "answered": "01:54 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 68,
+      "why": "visibly low-poly blocky boulders and stretched vertical textures on the cliff wall",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 96,
+      "why": "the foreground fronds bend in sharp polygonal segments like bundles of wire.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the detailed strand-like red foliage with volumetric mist and god rays looks like a high-end real-time render, but the repeated, blobby floating rock arches look slightly procedural, so it could be (d) or (c).",
+      "answered": "01:55 UTC"
+    }
+  ]
 }

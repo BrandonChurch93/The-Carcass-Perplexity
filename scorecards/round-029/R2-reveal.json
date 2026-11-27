@@ -25,5 +25,123 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 76,
+      "why": "the same fine erosion texture repeats across almost every ridge.",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "procedural-looking terrain with uniform erosion ridges and flat, featureless lake surfaces typical of a generic CG terrain render rather than real aerial imagery",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the uniform procedural-looking terrain erosion and smooth shader-like orange depth gradient along the crater shoreline",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 83,
+      "why": "The brown shallows at the lake’s left edge form smooth overlapping lobes that look painted onto the terrain.",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "The terrain looks procedurally generated: the ridge texture repeats and looks mushy, and the lake shorelines and brown shallows are too smooth and uniform for a real photograph, but the resolution and lighting are too clean for a low-budget production.",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the same finely branching ridge pattern repeats across almost the entire landscape.",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the uniform, repeating procedural-erosion ridge pattern and perfectly round crater lakes look like a generated terrain render, not real satellite imagery",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the uniform procedural hydraulic-erosion ridges and shadowless noise-like clouds look like a generated 3D terrain render rather than a real photograph or cinematic frame.",
+      "answered": "02:03 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 86,
+      "why": "The mountain ridges repeat the same comb-like erosion pattern across the landscape.",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 40,
+      "why": "The ridges look like uniform procedural noise, and the speckled cloud scatter and oddly round lakes look generated, so I read it as a procedural-terrain demo, not a photograph or a big-budget frame.",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the mountain ridges repeat the same finely etched erosion pattern across the terrain.",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the overly regular, repetitive procedural erosion ridges and noise-like cloud scatter read as a generated planet/terrain render rather than real satellite imagery",
+      "answered": "02:02 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "The terrain is clearly procedural (repetitive, evenly spaced erosion ridges and odd crater lakes), but the shading and cloud layer are fairly polished, so it could also be (b) or (d).",
+      "answered": "02:03 UTC"
+    }
+  ]
 }

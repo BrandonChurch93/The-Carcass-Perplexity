@@ -25,5 +25,231 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 77,
+      "why": "The foreground snow and rock have visibly stretched textures that make the terrain look like a lightweight real-time asset.",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "stretched procedural rock/snow textures and flat sky-photo backdrop typical of a hobbyist terrain render",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the flat ribbon-like cloud meshes and stretched low-poly cliff textures floating against a static skybox",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 93,
+      "why": "the rock texture stretches into long parallel streaks around the foreground cave mouth.",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 62,
+      "why": "the rock and snow textures are stretched and smeared with no real geometric detail, and the wispy cloud streaks look like flat sprites. The lightning and sky are strong, but the terrain looks like a procedural or game-engine scene, not a big-budget one.",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the foreground ice texture stretches into unnaturally smooth horizontal bands.",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "hobbyist-style CG scene: stretched rock textures, painted-backdrop sky and crude fur cards on the creature look like an ordinary 3D render, not film quality.",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the flat lighting lacking contact shadows where the creature and rocks meet the snow",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the cliff behind the foreground subject has a visibly stretched texture that turns into long vertical streaks.",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "The most influential thing: the scene is clearly computer-generated (a fur-card creature lump, stretched rock textures, smeared water surface), but it has a decent amount of detail and lighting, so it falls short of film or cinematic polish while looking better than a web demo.",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the cliff’s visibly faceted geometry beneath its photographic-looking texture.",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "stretched procedural rock textures on simple low-detail cliff geometry with a flat HDRI sky typical of a hobbyist render",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the low-poly faceted cliff geometry with stretched rock textures and a flat procedural water plane",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 96,
+      "why": "the cliff texture stretches across visibly faceted, repeating ledges.",
+      "answered": "01:59 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the rock texture is a stretched, noisy procedural/photo-scan map with visible tiling and faceted low-detail geometry, and the prayer-flag cloth and ropes look like simple CG, which is more like an ordinary 3D render than a top-budget film frame or a low-budget web demo.",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 77,
+      "why": "The translucent ribbons have jagged polygonal edges that give away the 3D mesh.",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "stretched procedural rock texture and flat ribbon-like wind/cloth shapes over a stock sky backdrop look like a typical hobbyist/stock 3D render",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the visibly faceted low-poly rock geometry and flat jagged alpha-cut ribbon meshes streaming from the ridge",
+      "answered": "01:59 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 89,
+      "why": "the streamers trailing from the peak have jagged polygonal outlines that make them look like flat mesh strips.",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the rock has stretched, smeared procedural texture and the translucent ribbons are crude, so it reads as a decent but ordinary 3D render and not film or game-cinematic polish. Its dramatic sky keeps it from clearly being (d).",
+      "answered": "02:01 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the distant mountain has a visibly low-poly silhouette with large, flat facets.",
+      "answered": "01:59 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "stretched procedural cave textures, flat low-poly mountain cutouts and clumpy card-like fur look like a typical hobbyist/stock 3D render rather than film-grade work.",
+      "answered": "01:58 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the flat low-poly cutout mountains visible through the cave opening",
+      "answered": "01:59 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the icicles look like repeated untextured polygon spikes.",
+      "answered": "01:59 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "the cave walls have smeared, stretched procedural texture and the creatures are crude clumps of fur strands, which reads as an amateur or hobbyist 3D render (not a photo or top-budget work), though the polish and dramatic sky keep it from clearly being (d).",
+      "answered": "01:59 UTC"
+    }
+  ]
 }

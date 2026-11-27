@@ -25,5 +25,231 @@
     }
   ],
   "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
-  "votes": []
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the same palm-like plant models repeat conspicuously across the landscape.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "repeated, uniform alien plants and tiled-looking salt-crust textures under flat, even lighting look like a competent but ordinary 3D environment render (for example, a paleo-scene illustration), not film-grade or photographic.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 65,
+      "why": "flat overcast lighting paired with procedural terrain textures and repetitive segmented plant geometry that read as standard CG rather than film-grade VFX or photography.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 85,
+      "why": "The same thin, sparsely fronded palm model appears in clusters across the entire landscape.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "the soft atmospheric depth (rain curtain, ground mist, hazy mountains) and detailed salt-crust and mud surfaces look cinematic-grade, though the repeated plant and rock assets keep it close to c.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the unnaturally smooth domes intersect the water with almost no convincing disturbance.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "The clean, plain domes and the repeated, procedural-looking palm trees look like a typical scientific-illustration 3D render, not film-grade detail or a photo.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "The simple smooth geometry of the giant bubbles and repetitive spindly trees combined with standard offline-style overcast lighting and reflections.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 91,
+      "why": "the palm trees repeat the same sparse, spindly frond model across the shoreline.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "offline-style CG render with decent water shading and fog, but simple repeated palm and dome assets and a mushy foreground texture, so it looks like an ordinary 3D render rather than film-grade work.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the foreground palm fronds have a uniformly molded, plastic sheen.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "stylized alien palm trees with repeated, uniform trunk textures and simple fog: a polished but ordinary artist CG render rather than film-grade.",
+      "answered": "01:55 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the flat procedural red liquid surface with simple, overly uniform glossy bubbles and repetitive plant-stalk geometry that look like a standard 3D render rather than a real place or top-budget film frame.",
+      "answered": "01:56 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 89,
+      "why": "the same cylindrical palm trunk and ribbon-like fronds repeat conspicuously across the landscape.",
+      "answered": "01:56 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "high-fidelity surreal art direction (red palms, red water, volumetric fog, depth of field, water droplets) looks like a polished film or cinematic frame rather than a stock render, though the repetitive palms and simple background hold it back from full certainty.",
+      "answered": "01:56 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the creatures meet the water with almost no visible disturbance.",
+      "answered": "01:56 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "detailed creature skin but repetitive cloned palm trees and simple flat terrain read as an independent/stock 3D render rather than film-grade compositing",
+      "answered": "01:56 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 70,
+      "why": "the foreground creature clips cleanly into a flat brown mud plane with no wetness transition or displacement alongside low-poly background trees and flat real-time-style shading.",
+      "answered": "01:56 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 90,
+      "why": "The foreground creature intersects the red liquid with a sharp cutout edge and no visible displacement.",
+      "answered": "01:56 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the creature skin detail, atmospheric haze and the fine claws look like polished, high-end CGI, but the odd stubby leg anatomy and simple palm shapes keep it from being clearly top-budget.",
+      "answered": "01:56 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the uniformly thick, sharply beveled edges on the floating slabs look procedural.",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "high-end creature detail (wrinkled skin, tusks) with atmospheric fog, like a big-budget documentary/film VFX shot, though the flat ice slab edges look somewhat CG.",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the procedural water ripples and flat angular ice plates meeting the creature's body cleanly without realistic fluid interaction or top-budget film detail",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 82,
+      "why": "The ice floes have uniformly thick, vertically extruded edges that look like modeled slabs.",
+      "answered": "01:57 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "Detailed creature skin, salt-crust and blood-red water shading, and atmospheric haze look like high-end cinematic CGI, though the odd stylized layout and slightly soft repeated textures keep it from being a sure top-budget frame (c is the main alternative).",
+      "answered": "01:57 UTC"
+    }
+  ]
 }

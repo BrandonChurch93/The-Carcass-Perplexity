@@ -1,0 +1,26 @@
+{
+  "round": "29",
+  "unit": "spine",
+  "critic": "R1",
+  "packs": {
+    "R1-1": {
+      "set-A-01-a.png": "The key spine-0: its approved picture references/approved/5-spine/spine-0-establishing.jpg as -a and film frame 7234 as -b (the approved picture)",
+      "set-A-01-b.png": "The key spine-0: its approved picture references/approved/5-spine/spine-0-establishing.jpg as -a and film frame 7234 as -b (the frame)",
+      "set-A-02.png": "Matching crops of the key spine-0: references/approved/5-spine/spine-0-establishing.jpg beside film frame 7234 at native size",
+      "set-A-03-a.png": "The key spine-1: its approved picture references/approved/5-spine/spine-1-where-lightning-came-to-ground.jpg as -a and film frame 7579 as -b (the approved picture)",
+      "set-A-03-b.png": "The key spine-1: its approved picture references/approved/5-spine/spine-1-where-lightning-came-to-ground.jpg as -a and film frame 7579 as -b (the frame)",
+      "set-A-04.png": "Matching crops of the key spine-1: references/approved/5-spine/spine-1-where-lightning-came-to-ground.jpg beside film frame 7579 at native size",
+      "set-A-05-a.png": "The key spine-2: its approved picture references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg as -a and film frame 7418 as -b (the approved picture)",
+      "set-A-05-b.png": "The key spine-2: its approved picture references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg as -a and film frame 7418 as -b (the frame)",
+      "set-A-06.png": "Matching crops of the key spine-2: references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg beside film frame 7418 at native size"
+    },
+    "R1-2": {
+      "set-B-01-a.png": "The key spine-3: its approved picture references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg as -a and film frame 7668 as -b (the approved picture)",
+      "set-B-01-b.png": "The key spine-3: its approved picture references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg as -a and film frame 7668 as -b (the frame)",
+      "set-B-02.png": "Matching crops of the key spine-3: references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg beside film frame 7668 at native size",
+      "set-B-03-a.png": "The key spine-4: its approved picture references/approved/5-spine/spine-4-inside-the-canal.jpg as -a and film frame 8090 as -b (the approved picture)",
+      "set-B-03-b.png": "The key spine-4: its approved picture references/approved/5-spine/spine-4-inside-the-canal.jpg as -a and film frame 8090 as -b (the frame)",
+      "set-B-04.png": "Matching crops of the key spine-4: references/approved/5-spine/spine-4-inside-the-canal.jpg beside film frame 8090 at native size"
+    }
+  }
+}

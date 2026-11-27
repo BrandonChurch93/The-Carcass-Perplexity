@@ -1,0 +1,23 @@
+{
+  "round": "29",
+  "unit": "heart",
+  "critic": "R4",
+  "packs": {
+    "R4-1": {
+      "set-A-01.png": "One sheet across the shot heart-01, frames 2507 to 2936",
+      "set-A-02.png": "One sheet across the shot heart-02, frames 2937 to 3374",
+      "set-A-03.png": "One sheet across the shot heart-03, frames 3375 to 3578",
+      "set-A-04.png": "One sheet across the shot heart-04, frames 3579 to 3790",
+      "set-A-05.png": "One sheet across the shot heart-05, frames 3791 to 4220",
+      "set-A-06.png": "Consecutive frames from the key frame of heart-0, for what moves in that view",
+      "set-A-07.png": "Consecutive frames from the key frame of heart-1, for what moves in that view",
+      "set-A-08.png": "Consecutive frames from the key frame of heart-2, for what moves in that view",
+      "set-A-09.png": "Consecutive frames from the key frame of heart-3, for what moves in that view",
+      "set-A-10.png": "Consecutive frames from the key frame of heart-4, for what moves in that view"
+    },
+    "R4-2": {
+      "set-B-01.png": "Consecutive frames across the event surge at frame 4010",
+      "set-B-02.png": "One sheet across 6 seconds with the camera held still at the establishing key heart-0, film frame 2722"
+    }
+  }
+}
