@@ -50,7 +50,7 @@ export function openingLight(seconds: number): number {
 // The lens itself is `openingCamera(seconds)` and `approachEye(seconds)` in ../cameras: it opens at (600, 880), 0.8 m up in a trough of a
 // heavy swell and 290 m off the near flank of the outer right blade (OR), looking north-west (yaw -30 degrees, 13 degrees up) on a 29.5
 // degree lens (50 degrees wide), and slews 5 degrees left onto its mark through the first 2.4 s. It runs 40 degrees west of north at
-// 86 m/s and rides the long swell: lifted to 7.7 m at 1.5 s, down to 1.2 m in the next trough at 2.9 s, up to 7.7 m again at 5.7 s, and
+// 86 m/s and rides the long swell: lifted to 7.7 m at 1.5 s, down to 3.0 m over the next trough at 3.0 s (it follows the water down only a third of the way there: OPEN.floor), up to 7.7 m again at 5.7 s, and
 // so on, slowing onto the old move (its own from 16 s) and crossing the shore's edge at x = -190 at 13.2 s.
 // In the first frame OR is a dark wall over the right four tenths of the frame, L1 stands pale in the left third from the sea to a quarter
 // from the top, and the far cage stands between them. OR is gone through the right edge at 1.9 s and R1 has come out from behind it. The
