@@ -139,8 +139,8 @@ const float FAR_FIRE = 0.08;
 // The share of the lake's light under it that a down face takes, and the share of the sky that the crust sends back up. Measured on the
 // flank of the feeding picture's hero: 36 26 23 there.
 const float LAKE_UNDER = 0.25;
-const float LEG_RIM = 0.8;
-const float CRUST_BOUNCE = 1.0;
+const float LEG_RIM = 0.5;
+const float CRUST_BOUNCE = 0.45;
 // How hard the pool lights the animal that feeds at it, against a bare round light of its size.
 const float POOL = 1.6;
 void main() {
@@ -181,6 +181,9 @@ void main() {
   vec2 bakeUv = vec2(vBake.x, (clamp(vBake.y, 0.003, 0.997) + floor(vBake.z + 0.5)) / 3.0);
   vec2 bx = dFdx(bakeUv);
   vec2 by = dFdy(bakeUv);
+  vec2 uvP = vUv / vec2(1.9, 1.5) + seed * 5.3;
+  vec2 px = dFdx(uvP);
+  vec2 py = dFdy(uvP);
   float fine = smoothstep(260.0, 60.0, far);
   vec3 skinC;
   vec3 nh;
@@ -192,9 +195,6 @@ void main() {
     // Across the sheet is round the limb, down the sheet is along it.
     slopeW = (gv * (nh.r - 0.5) - gu * (nh.g - 0.5)) * 2.6 * fine;
     // Over the cords what is left of the hide: plates with cracks between them, some lifted at an edge, the cords bare where a plate has gone.
-    vec2 uvP = vUv / vec2(1.9, 1.5) + seed * 5.3;
-    vec2 px = dFdx(uvP);
-    vec2 py = dFdy(uvP);
     vec3 plateN = textureGrad(tTorsoNh, uvP, px, py).rgb;
     vec3 plateC = textureGrad(tTorso, uvP, px, py).rgb;
     plate = smoothstep(0.42, 0.58, plateN.b + 0.25 * (vnoise(vUv * vec2(0.5, 0.9) + seed * 3.0) - 0.5)) * (1.0 - tendril);
@@ -226,7 +226,7 @@ void main() {
   float pale = vInfo.x;
   vec3 tone = mix(vec3(1.07, 1.0, 0.93), vec3(0.95, 1.0, 1.06), warm) * (0.78 + 0.5 * sooty);
   // The trunk is ash grey and umber; a leg is darker and browner (45 29 23 in its shade on the picture's hero, about 70 50 40 where the sky finds it).
-  vec3 albedo = skinC * tone * mix(vec3(0.44), vec3(0.2), onLimb) * (0.9 + 0.25 * (pale - 0.4));
+  vec3 albedo = skinC * tone * mix(vec3(0.37), vec3(0.17), onLimb) * (0.9 + 0.25 * (pale - 0.4));
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
   // The pits of the grain are black and its ridges worn pale.
   float pit = smoothstep(0.2, 0.62, high);
@@ -346,14 +346,11 @@ void main() {
   float ash = up * smoothstep(0.95, 0.35, high + 0.4 * grit - 0.6 * up) * (1.0 - tendril) * (0.55 - 0.1 * body);
   float dust = smoothstep(2.6, 0.1, vWorld.y) * (0.25 + 0.5 * grit) * (1.0 - tendril);
   albedo = mix(albedo, vec3(0.146, 0.146, 0.15) * (0.7 + 0.3 * grit), 0.55 * ash * smoothstep(0.4, 3.0, vWorld.y));
-  // The dust is the crust's own: a foot is as dark as what it stands on.
-  albedo = mix(albedo, vec3(0.115, 0.108, 0.1) * (0.6 + 0.6 * grit), dust * (0.45 + 0.4 * (1.0 - pit)));
-  // Ash from the ground on the shins: pale, in patches, thick low down and ragged where it ends.
-  float shin = smoothstep(2.6 + 1.8 * (grit - 0.5), 0.4, vWorld.y) * (1.0 - tendril) * (1.0 - body);
-  float caked = shin * smoothstep(0.3, 0.6, 0.55 * vnoise(vUv * vec2(4.0, 17.0) + seed * 1.7) + 0.45 * grit + 0.3 * shin - 0.15);
-  albedo = mix(albedo, vec3(0.2, 0.188, 0.172) * (0.65 + 0.5 * grit) * (0.6 + 0.5 * pit), 0.7 * caked);
-  // The foot itself is caked dark with what it treads in.
-  albedo = mix(albedo, vec3(0.058, 0.05, 0.045) * (0.6 + 0.6 * grit), 0.4 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
+  // The dust is the crust's own: a foot is as dark as what it stands on, and the shin over it is stained with it.
+  albedo = mix(albedo, vec3(0.07, 0.062, 0.056) * (0.6 + 0.6 * grit), dust * (0.45 + 0.4 * (1.0 - pit)));
+  // The foot itself is caked black with what it treads in: wet crust, not ash.
+  float foot = max(smoothstep(0.9, 0.25, vWorld.y) * (1.0 - body), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril);
+  albedo = mix(albedo, vec3(0.034, 0.03, 0.028) * (0.55 + 0.7 * grit) * (0.6 + 0.5 * pit), 0.85 * foot);
 
   float own = ownBody * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
   float occ = vInfo.y * own;
@@ -403,7 +400,7 @@ void main() {
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
-// The ash a pad throws up as it comes down: a low soft ring that spreads and thins. One card a pad, turned to the camera.
+// The dust a pad throws up as it comes down: a low dark roll that creeps out along the crust and thins. One card a pad, turned to the camera.
 export const PUFF_VERTEX = /* glsl */ `
 attribute vec2 aCorner;
 attribute float aFoot;
@@ -435,16 +432,18 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
   float life = vPuff.x;
-  // Thick low down and at the middle; its edge is broken and rolls outward as it ages.
+  // It hugs the crust: thick at its foot, a ragged top no higher than the ankle, and it rolls outward both ways as it ages.
   vec2 c = vec2(vCard.x, vCard.y * 0.5 + 0.5);
-  float body = (1.0 - smoothstep(0.15, 1.0, abs(c.x))) * (1.0 - smoothstep(0.1, 1.0, c.y)) * smoothstep(0.0, 0.1, c.y);
-  // Hollow in the middle once it has spread: the ash goes out from under the pad in a ring.
-  body *= mix(1.0, 0.45 + 0.55 * smoothstep(0.1, 0.6, abs(c.x)), smoothstep(0.2, 0.7, life));
-  float n = vnoise(vec2(c.x * 2.6 + vPuff.z * 7.0, c.y * 3.0 - life * 1.4)) * 0.6 + vnoise(vec2(c.x * 6.5 - vPuff.z * 3.0, c.y * 7.0 - life * 2.2)) * 0.4;
-  float a = smoothstep(0.1, 1.0, body * (0.5 + 1.0 * n)) * min(vPuff.y, 0.8);
+  float out_ = abs(c.x);
+  float roll = vnoise(vec2(out_ * 3.2 - life * 2.4 + vPuff.z * 7.0, c.y * 2.2 + vPuff.z * 3.0)) * 0.6 + vnoise(vec2(out_ * 8.0 - life * 3.6 - vPuff.z * 3.0, c.y * 5.5 - life * 0.8)) * 0.4;
+  float top = 0.35 + 0.65 * roll;
+  float body = (1.0 - smoothstep(0.35, 1.0, out_)) * (1.0 - smoothstep(0.15 * top, top, c.y)) * smoothstep(0.0, 0.06, c.y);
+  // Hollow in the middle once it has spread: the dust goes out from under the pad in a ring.
+  body *= mix(1.0, 0.3 + 0.7 * smoothstep(0.05, 0.5, out_), smoothstep(0.15, 0.6, life));
+  float a = smoothstep(0.08, 0.9, body * (0.55 + 0.9 * roll)) * min(vPuff.y, 0.8);
   if (a < 0.003) discard;
-  // Grey ash in the light of the place: the sky on it from above, the lake under it.
-  vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * skyOpen(vWorld) * 0.8 + 0.5 * lakeIrradianceFar(vWorld, vec3(0.0, -1.0, 0.0));
-  vec3 col = vec3(0.36, 0.33, 0.3) * e / 3.14159;
+  // The crust's own dust, dark, in the light of the place: the sky on it from above, the lake under it.
+  vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * skyOpen(vWorld) * 0.8 + 0.35 * lakeIrradianceFar(vWorld, vec3(0.0, -1.0, 0.0));
+  vec3 col = vec3(0.17, 0.155, 0.145) * e / 3.14159;
   gl_FragColor = vec4(rigOut(col) * a, a);
 }`;

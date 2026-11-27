@@ -87,7 +87,8 @@ function reach(x: number, z: number): number {
   const phi = (Math.atan2(z - FIELD.cz, x - FIELD.cx) * 180) / Math.PI;
   // The broad one has a flat front.
   const front = ((((phi - 85) % 360) + 540) % 360) - 180;
-  let best = 7.8 * Math.exp(-Math.pow(front / 64, 4));
+  // Toward the bench the folds go on to the end of the sheet: the ground before the lens is all thick rope.
+  let best = 17.5 * Math.exp(-Math.pow(front / 70, 4));
   for (const [at, wide, far] of LOBES) {
     const off = ((((phi - at) % 360) + 540) % 360) - 180;
     best = Math.max(best, far * Math.exp(-(off * off) / (wide * wide)));
@@ -466,10 +467,37 @@ function makeRopes(): Rope[] {
     mean: about === 0 ? 2.4 + 0.5 * (d0 + d1) : Math.max(0.6, 0.5 * (d0 + d1)),
   }));
   (ropes[9] as Rope).split = [-95 * DEG, 55 * DEG];
+  const near = ropes.length;
+  // Before the bench the skin went on folding as it was pushed out: broad lobes 0.5 to 1.2 m thick that lie across the way to the body,
+  // each wandering in and out, lying over and under its neighbours, out to where the sheet ends.
+  const FAR = 26;
+  for (let i = 0; i < FAR; i++) {
+    const out = 5.0 + (7.6 * (i + hash(i, 21, 203))) / FAR;
+    const wide = (38 + 60 * hash(i, 22, 203)) * (5.5 / out + 0.45);
+    const mid = -105 + 210 * ((i * 0.618034 + 0.2 * hash(i, 23, 203)) % 1);
+    const flip = hash(i, 24, 203) < 0.5 ? -1 : 1;
+    const thick = 0.24 + 0.34 * Math.pow(hash(i, 25, 203), 1.3);
+    ropes.push({
+      about: 0,
+      a0: (mid - flip * 0.5 * wide) * DEG,
+      a1: (mid + flip * 0.5 * wide) * DEG,
+      d0: out + 1.5 * (hash(i, 26, 203) - 0.5),
+      d1: out + 1.5 * (hash(i, 27, 203) - 0.5),
+      r: thick,
+      level: 0.2 + 3.2 * hash(i, 28, 203),
+      sway: 0.2 + 0.3 * hash(i, 29, 203),
+      beat: (1.9 + 2.4 * hash(i, 30, 203)) * (0.6 + out / 4),
+      seed: 6.28 * hash(i, 31, 203),
+      tone: 0.1 + 0.8 * hash(i, 32, 203),
+      main: true,
+      twist: (hash(i, 33, 203) < 0.5 ? -1 : 1) * (0.14 + 0.3 * hash(i, 34, 203)),
+      mean: 2.4 + out,
+    });
+  }
   // The second size, 0.1 to 0.2 m, only on the main ones and in the gaps beside them.
-  const count = ropes.length;
-  for (let i = 0; i < 24; i++) {
-    const parent = ropes[Math.floor(hash(i, 5, 202) * count * 0.999)] as Rope;
+  for (let i = 0; i < 24 + 2 * FAR; i++) {
+    // The first two dozen keep to the ropes round the body; the rest to those before the bench, two to each.
+    const parent = ropes[i < 24 ? Math.floor(hash(i, 5, 202) * near * 0.999) : near + ((i - 24) % FAR)] as Rope;
     const span = parent.a1 - parent.a0;
     const from = 0.05 + 0.75 * hash(i, 6, 202);
     const length = Math.min(0.95 - from, (0.5 + 1.0 * hash(i, 7, 202)) / Math.abs(span));

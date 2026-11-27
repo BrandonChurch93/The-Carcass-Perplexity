@@ -216,7 +216,10 @@ void main() {
   vec2 qd = mix(mix(q, ropeAt, onRope), wallAt, steep);
   vec2 uvD = vec2(qd.x * 0.8 - qd.y * 0.6, qd.x * 0.6 + qd.y * 0.8) / 1.37 + 0.13;
   vec4 grainNh = vec4(0.5);
-  if (near > 0.0) grainNh = texture2D(tSkinNh, uvD, -0.7);
+  // The derivatives are taken out here, not in the branch, and the sheet is read a little finer than they ask.
+  vec2 uvDx = dFdx(uvD) * 0.6156;
+  vec2 uvDy = dFdy(uvD) * 0.6156;
+  if (near > 0.0) grainNh = textureGrad(tSkinNh, uvD, uvDx, uvDy);
   vec2 lr = mix(l, ropeAt, onRope);
   float small = vnoise(lr * 2.0 + 7.0);
   // Each sheet of the folded skin is of its own age.
