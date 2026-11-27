@@ -93,23 +93,84 @@ function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid
   const fall = Math.tan((SUN.elevation * Math.PI) / 180);
   let shade: Float32Array = new Float32Array(w * h);
   const under = new Float32Array(w * h).fill(-Infinity);
+  // The shade is carried from cell to cell away from the sun: a cell is in the shade of the cell next to it toward the sun, or of whatever
+  // that cell is in the shade of, lowered by the fall of the light over the way between them. Every crest is met, whatever its distance,
+  // so the edge of a long shadow has no steps; a march with far steps met a far crest in one cell and missed it in the next.
+  const alongX = Math.abs(hx) * cz >= Math.abs(hz) * cx;
+  const lines = alongX ? w : h;
+  const across = alongX ? h : w;
+  const toward = (alongX ? hx : hz) > 0 ? 1 : -1;
+  const way = alongX ? cx / Math.abs(hx) : cz / Math.abs(hz);
+  const slip = alongX ? (hz * way) / cz : (hx * way) / cx;
+  const cell = (line: number, k: number): number => (alongX ? k * w + line : line * w + k);
+  // How far the shade at a cell has been thrown, in metres.
+  const thrown = new Float32Array(w * h);
+  for (let n = 0; n < lines; n++) {
+    const line = toward > 0 ? lines - 1 - n : n;
+    for (let k = 0; k < across; k++) {
+      if (n === 0) {
+        shade[cell(line, k)] = Math.max(-50, (heights[cell(line, k)] as number) - 5 * fall);
+        continue;
+      }
+      const f = Math.min(across - 1, Math.max(0, k + slip));
+      const k0 = Math.min(across - 2, Math.floor(f));
+      const a0 = cell(line + toward, k0);
+      const a1 = cell(line + toward, k0 + 1);
+      const own0 = (heights[a0] as number) >= (shade[a0] as number);
+      const own1 = (heights[a1] as number) >= (shade[a1] as number);
+      const v0 = own0 ? (heights[a0] as number) : (shade[a0] as number);
+      const v1 = own1 ? (heights[a1] as number) : (shade[a1] as number);
+      const t0 = own0 ? 0 : (thrown[a0] as number);
+      const t1 = own1 ? 0 : (thrown[a1] as number);
+      shade[cell(line, k)] = Math.max(-50, v0 + (v1 - v0) * (f - k0) - fall * way);
+      thrown[cell(line, k)] = t0 + (t1 - t0) * (f - k0) + way;
+    }
+  }
+  // The edge of a long shadow on the ground is as soft as the shadow is thrown far: the shade deepens inward from its edge over a width that
+  // grows with the way it has come, so no shadow from the far rim ends in a line. The way to the edge is measured in two passes over the grid.
+  const inward = new Float32Array(w * h);
+  const lit = (c: number): boolean => (shade[c] as number) <= Math.max(heights[c] as number, 0);
+  const diag = Math.hypot(cx, cz);
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
-      const x = spec.minX + (i + 0.5) * cx;
-      const z = spec.minZ + (j + 0.5) * cz;
-      let top = -50;
-      for (let d = 5; d < 2700; d += Math.max(4, d * 0.045)) {
-        const c = at(x + hx * d, z + hz * d) - d * fall;
-        if (c > top) top = c;
+      const c = j * w + i;
+      let d = lit(c) ? 0 : 1e9;
+      if (d > 0) {
+        if (i > 0) d = Math.min(d, (inward[c - 1] as number) + cx);
+        if (j > 0) d = Math.min(d, (inward[c - w] as number) + cz);
+        if (i > 0 && j > 0) d = Math.min(d, (inward[c - w - 1] as number) + diag);
+        if (i < w - 1 && j > 0) d = Math.min(d, (inward[c - w + 1] as number) + diag);
       }
-      if (cover) {
-        const c = cover(x, z);
-        if (c > top) {
-          under[j * w + i] = c;
-          open[j * w + i] = (open[j * w + i] as number) * (1 - 0.55 * Math.min(1, Math.max(0, (c - (heights[j * w + i] as number)) / 40)));
-        }
+      inward[c] = d;
+    }
+  }
+  for (let j = h - 1; j >= 0; j--) {
+    for (let i = w - 1; i >= 0; i--) {
+      const c = j * w + i;
+      let d = inward[c] as number;
+      if (d > 0) {
+        if (i < w - 1) d = Math.min(d, (inward[c + 1] as number) + cx);
+        if (j < h - 1) d = Math.min(d, (inward[c + w] as number) + cz);
+        if (i < w - 1 && j < h - 1) d = Math.min(d, (inward[c + w + 1] as number) + diag);
+        if (i > 0 && j < h - 1) d = Math.min(d, (inward[c + w - 1] as number) + diag);
       }
-      shade[j * w + i] = top;
+      inward[c] = d;
+    }
+  }
+  for (let c = 0; c < w * h; c++) {
+    const d = inward[c] as number;
+    if (d <= 0) continue;
+    const wide = Math.min(110, Math.max(8, 0.09 * (thrown[c] as number)));
+    if (d < wide) shade[c] = Math.min(shade[c] as number, Math.max(heights[c] as number, 0) - 1.6 + (3.2 * d) / wide);
+  }
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      if (!cover) continue;
+      const c = cover(spec.minX + (i + 0.5) * cx, spec.minZ + (j + 0.5) * cz);
+      if (c > (shade[j * w + i] as number)) {
+        under[j * w + i] = c;
+        open[j * w + i] = (open[j * w + i] as number) * (1 - 0.55 * Math.min(1, Math.max(0, (c - (heights[j * w + i] as number)) / 40)));
+      }
     }
   }
   // The shade of what hangs over the ground has no ruled edge: it deepens over the first hundred and seventy metres in from the edge of the cover,
@@ -297,7 +358,7 @@ export function createRig(): Rig {
     uSunDir: { value: sunDirection },
     uSunColour: { value: new THREE.Vector3(9.0, 4.3, 1.5) },
     uGlowDir: { value: new THREE.Vector3(Math.sin(glowBearing), 0, -Math.cos(glowBearing)) },
-    uGlowColour: { value: new THREE.Vector3(3.2, 1.9, 0.8) },
+    uGlowColour: { value: new THREE.Vector3(2.8, 2.05, 1.05) },
     uFill: { value: new THREE.Vector3(0.58, 0.66, 0.82) },
     // The far world: one picture of the rim and the sky beyond the lake, hung on a cylinder round the camera of the shot it belongs to.
     // The air folder sets it by shot. uPlateAt: the middle of the cylinder (y is the level of the picture's horizon) and its radius.
@@ -325,6 +386,7 @@ export function createRig(): Rig {
     uMistB: { value: new THREE.Vector4() },
     uMistC: { value: new THREE.Vector4() },
     uMistD: { value: new THREE.Vector4() },
+    uMistTone: { value: 1 },
     uMistOn: { value: 0 },
   };
 
