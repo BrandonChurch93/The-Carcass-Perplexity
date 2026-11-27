@@ -10,6 +10,7 @@ import { STRIKE, cloudShut, inOpening, openingLight, openingWeight } from '../sh
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
+import { contactRings } from './contacts';
 import { POOL_FRAGMENT, POOL_LOOP_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_OPENING_FRAGMENT, SEA_OPENING_VERTEX, SEA_VERTEX } from './shaders';
 import { Spray, rand } from './spray';
 import { Spindrift } from './spindrift';
@@ -173,6 +174,10 @@ export function create(ctx: Context): Piece {
   poolLoop.uniforms = poolMaterial.uniforms;
   poolLoop.fragmentShader = POOL_LOOP_FRAGMENT(MAX_RINGS);
   pools.renderOrder = 1;
+  // The rings round what stands in the pools, over the animals' mirror image (wings/, renderOrder 3). Not in the card loop: its seam is closed.
+  const answers = contactRings({ ...rig.uniforms, uPoolLevel: poolMaterial.uniforms.uPoolLevel as THREE.IUniform });
+  answers.mesh.renderOrder = 4;
+  pools.add(answers.mesh);
   pools.onBeforeRender = () => {
     const seen = poolMaterial.uniforms.tSeen?.value as THREE.Texture | null | undefined;
     wetSeen.value = seen ?? null;
@@ -316,6 +321,7 @@ export function create(ctx: Context): Piece {
         ring.stand = undefined;
       }
       RING_SOURCE.at?.(seconds, ringList);
+      answers.setTime(seconds, loopPhase() === null && ringCount.value > 0);
       ringList.forEach((ring, i) => {
         (rings[i] as THREE.Vector4).set(ring.x, ring.z, ring.phase, ring.strength);
       });
@@ -388,6 +394,7 @@ export function create(ctx: Context): Piece {
       pools.geometry.dispose();
       poolMaterial.dispose();
       poolLoop.dispose();
+      answers.dispose();
       bore.dispose();
       surf.dispose();
       breaker.dispose();
