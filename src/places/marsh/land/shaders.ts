@@ -792,15 +792,16 @@ void main() {
     // mud: dark, red and wet, lumped by the same knobs, matte to the rig and glinting.)
     float topAt = mix(0.86, 0.52, crest);
     float high = knobH + (knobFine - 0.5) * 0.7;
-    float tip = mix((0.5 + 0.4 * smoothstep(0.2, 0.7, knobH)) * (0.6 + 0.4 * crest), smoothstep(topAt, topAt + 0.06, high) * smoothstep(0.3, 0.4, pale), apart) * (1.0 - churn * (1.0 - crest));
-    bankMud = bankDry * (1.0 - tip) * (1.0 - rock);
+    float tip = mix((0.5 + 0.4 * smoothstep(0.2, 0.7, knobH)) * (0.6 + 0.4 * crest), smoothstep(topAt, topAt + 0.06, high) * smoothstep(0.3, 0.4, pale), apart);
+    // (Where the animals tread, the bank is trodden under, mud like the rest: all but the strip before the third lens, which they skirt.)
+    float kept = bankDry * (1.0 - rock) * (1.0 - churn * away);
+    bankMud = kept * (1.0 - tip);
     kc = mix(vec3(0.07, 0.022, 0.016) * (0.5 + knobH) * mix(0.7, 1.25, smoothstep(0.03, 0.3, pale)), kc, tip);
     wetK = wetS * tip;
-    // (Where the animals tread, the bank keeps its mud and its line of crystals and loses the rest of its salt.)
-    colour = mix(colour, kc, bankDry * (1.0 - rock));
-    rough = mix(rough, mix(1.0, 0.55, wetK), bankDry);
+    colour = mix(colour, kc, kept);
+    rough = mix(rough, mix(1.0, 0.55, wetK), kept);
     occ *= 1.0 - 0.35 * bankMud * smoothstep(0.55, 0.25, knobH);
-    wetK *= bankDry;
+    wetK *= kept;
   }
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
   // (A broken edge is lit as one face along its plate's side, not facet by facet of the mesh that follows it.)
