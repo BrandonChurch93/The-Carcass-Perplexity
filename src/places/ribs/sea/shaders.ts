@@ -147,7 +147,7 @@ void main() {
   // Under the floor of the strait no lens ever sees the sea: nothing is worked out for it there.
   vec3 col = vec3(0.03, 0.034, 0.03);
   if (land.r < 0.6) {
-  float feet = texture2D(tFeet, (p - uLandRect.xy) * uLandRect.zw).r * uFeetReach;
+  float feet = textureLod(tFeet, (p - uLandRect.xy) * uLandRect.zw, 0.0).r * uFeetReach;
   // Water shoals toward the sand and toward the foot of a blade alike.
   float ragged = (textureLod(tChop, p / 173.0, levelOf(tChop, 173.0)).b - 0.5) * 5.0 + (textureLod(tChop, p.yx / 39.0, levelOf(tChop, 39.0)).b - 0.5) * 2.0;
   float shoal = min(depth + ragged * smoothstep(0.0, 3.0, depth), 0.2 + feet * 0.4);
@@ -186,7 +186,10 @@ void main() {
   float open = land.g;
   float sun = sunAt(vWorld, land);
   // Near, the water mirrors the cloud's shapes; far, where a pixel holds a thousand faces, the mean sky.
-  vec3 refl = mix(skyCloud(vWorld, r), skyRadiance(r), far) * mix(1.0, open, 0.6);
+  // The picture is read at a named level: a wind sea is no glass, and a read by the screen's own slopes inside this branch differs from one render to the next.
+  // And the faces of a rough sea look many ways: at a glance half of what it mirrors is the low sky, where the light is, and not the cloud over it.
+  vec3 rLow = normalize(vec3(r.x, 0.3 * r.y + 0.01, r.z));
+  vec3 refl = mix(mix(skyMirror(r, 6.5), skyMirror(rLow, 7.0), 0.5 * (1.0 - smoothstep(0.1, 0.5, graze))), skyRadiance(r), far) * mix(1.0, open, 0.6);
   vec3 hv = normalize(v + uSunDir);
   float gl = pow(max(dot(n, hv), 0.0), mix(700.0, 60.0, far));
   refl += uSunColour * gl * sun * mix(6.0, 0.8, far);
@@ -223,7 +226,7 @@ void main() {
   // between them, not in an even grain from here to the horizon.
   vec2 across = vec2(-uWind.y, uWind.x);
   float laceWide = dot(textureLod(tFoamPic, vec2(dot(p, across), 0.6 * dot(p, uWind)) / 34.0 + (c1.xy - 0.5) * 0.05 - uTime * 0.004, levelOf(tFoamPic, 34.0)).rgb, vec3(0.3333));
-  float rafts = smoothstep(0.42, 0.8, laceWide);
+  float rafts = smoothstep(0.34, 0.68, laceWide);
   lace *= mix(0.86 + 0.26 * rafts, 0.5 + 0.95 * rafts, smoothstep(0.02, 0.3, px));
   // A patch of broken water is read by the short side of the pixel: by the long side, at a glance, every crest would be one band.
   // And never by more than a few pixels' width at this range: the back of a crest seen edge on read the break's picture as its mean, and one face of the mesh stood white.
@@ -341,8 +344,10 @@ export const SEA_OPENING_FRAGMENT = openingText(
   float topple = smoothstep(2.9, 4.4, toppleAt) * uOpenSea.z * calm;
   // The gale draws what they leave out down the wind: close by the lace lies in torn lines with dark water between, not in an even sheet.
   float drawn = dot(textureLod(tFoamPic, vec2(dot(p, across) / 5.0, dot(p, uWind) / 21.0 - uTime * 0.06) + (c1.xy - 0.5) * 0.14 + (c2.xy - 0.5) * 0.05, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 5.0, 1e-6))).rgb, vec3(0.3333));
-  lace *= mix(1.0, 0.56 + 0.95 * smoothstep(0.24, 0.8, drawn), uOpenSea.z * (1.0 - smoothstep(0.05, 0.4, px)));
+  lace *= mix(1.0, 0.45 + 1.3 * smoothstep(0.25, 0.7, drawn), uOpenSea.z * (1.0 - smoothstep(0.05, 0.4, px)));
   amount = max(amount, 0.7 * topple);
+  // And a gale leaves no stretch of water clean: between the rafts the whole sea is lined with it.
+  amount = max(amount, (0.6 + 0.16 * drift) * uOpenSea.z * calm * (1.0 - 0.5 * far));
   // Where a sea of the set has struck a foot the water is white round it: the wash goes out from the stone over the swell and thins to lace.
   for (int i = 0; i < 2; i++) {
     float off = length((p - uWash[i].xy) * vec2(1.0, 1.8)) / uWash[i].z;
@@ -408,21 +413,8 @@ float rippleLevel(sampler2D t, float metres) {
   float size = float(textureSize(t, 0).x) / metres;
   return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size) + 0.4;
 }
-// The rig's sky, cloud shadow and contact, word for word (shared/glsl.ts: skyCloud, cloudShade, contactDrawn), but each picture read at a
-// stated level: over the rippled sheet a read by its own slopes is several times the cost for the same picture. Keep in step with the rig.
-vec3 mirrorSky(vec3 d) {
-  float az = atan(d.x, -d.z);
-  float el = asin(clamp(d.y, 0.0, 1.0));
-  vec2 uv = vec2(0.5 + (az - uSkyTurn.x) / 2.62, 1.0 - exp(-el / 0.3));
-  // The cloud's slow working is left out: the ripples bend the picture far more than it does.
-  vec3 c = textureLod(tSky, uv, 1.0).rgb * uSkyTurn.w;
-  c *= 0.5 + 0.5 * smoothstep(0.08, 0.3, dot(c, vec3(0.333))) + 2.4 * smoothstep(0.3, 0.85, dot(c, vec3(0.333)));
-  c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
-  float s = max(dot(d, uSkyBreak), 0.0);
-  float s2 = s * s;
-  float low = 0.7 * smoothstep(0.07, 0.0, d.y);
-  return mix(c, uHaze * (1.0 + 0.5 * s2 * s2), low);
-}
+// The rig's cloud shadow and contact, word for word (shared/glsl.ts: cloudShade, contactDrawn), but each picture read at a stated level:
+// over the rippled sheet a read by its own slopes is several times the cost for the same picture. Keep in step with the rig.
 float sunOn(vec3 at, vec4 land) {
   vec2 q = at.xz - uSunDir.xz * (at.y / uSunDir.y);
   vec2 d = q - uCloudBreak.xy;
@@ -512,7 +504,8 @@ void main() {
   float open = land.g * (1.0 - stoodOver(vWorld));
   float sun = sunOn(vWorld, land);
   // The water of the flat is full of sand: what it mirrors it mirrors warm and a little dulled.
-  vec3 refl = mirrorSky(r) * mix(1.0, open, 0.5) * vec3(0.86, 0.79, 0.72);
+  // A ruffled sheet holds no sharp picture of the cloud: each ripple throws a different piece of sky at the lens, and what is seen is their sum.
+  vec3 refl = skyMirror(r, 3.0 + 2.0 * ruffle) * mix(1.0, open, 0.5) * vec3(0.86, 0.82, 0.78);
   // The lead draws each blade's true image on the water after this sheet (land/, MIRROR).
   // The wall of the bore stands in it as it comes: white at the foot, the dark lifted water, the white crest and the spray over it.
   float toWall = (uFront + 20.0 * sin(p.x * 0.0076 + 1.3) - p.y) / min(r.z, -1e-3);
