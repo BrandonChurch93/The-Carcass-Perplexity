@@ -216,23 +216,23 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     (t, ang) => {
       const round = closed(t, 0.16, 0.13);
       // The ribs: nine of them, each leaning back as it comes down from the spine, the hide sunk between each two.
-      const cage = smooth((t - 0.1) / 0.08) * smooth((0.6 - t) / 0.1) * smooth((ang - 0.15) / 0.5) * smooth((3.0 - ang) / 0.9);
+      const cage = smooth((t - 0.1) / 0.08) * smooth((0.6 - t) / 0.1) * smooth((ang - 0.15) / 0.5) * smooth((3.55 - ang) / 0.6);
       const phase = ((t - 0.1) / 0.5) * 6.4 - 0.5 * (ang - 1.2) + 0.5 * noise3(t * 5.3, ang * 0.5, 1.7);
       const wave = 0.5 + 0.5 * Math.cos(2 * Math.PI * phase);
       const each = 0.5 + 0.5 * Math.sin(Math.floor(phase + 0.5) * 2.4 + 1.0) ** 2;
       const sag = 0.6 + 0.4 * noise3(t * 7, ang * 1.3, 8.2);
-      const rib = cage * (each * 0.02 * wave ** 4 - 0.024 * sag * (1 - wave) ** 1.5);
+      const rib = cage * (each * 0.028 * wave ** 4 - 0.036 * sag * (1 - wave) ** 1.5);
       // The spine: a ridge of knuckles along the far edge of the top.
       const spine = bell(ang, 1.25, 0.16) * smooth((t - 0.06) / 0.1) * smooth((0.97 - t) / 0.1) * (0.02 + 0.012 * Math.cos(2 * Math.PI * t * 21));
       // The flank between the last rib and the hip has fallen in, and the belly under it lies on the rock.
-      const flank = -0.055 * bell(t, 0.64, 0.13) * smooth((ang - 0.7) / 0.5) * smooth((3.3 - ang) / 0.6) - 0.04 * bell(t, 0.45, 0.2) * bell(ang, 2.6, 0.5);
+      const flank = -0.075 * bell(t, 0.64, 0.13) * smooth((ang - 0.7) / 0.5) * smooth((3.3 - ang) / 0.6) - 0.04 * bell(t, 0.45, 0.2) * bell(ang, 2.6, 0.5);
       // The hip's point and the blade of the shoulder, each with the hide drawn tight over it.
       const hipPoint = 0.1 * bell(t, 0.84, 0.05) * bell(ang, 1.5, 0.45);
       const blade = 0.05 * bell(t, 0.15, 0.07) * bell(ang, 1.5, 0.6);
       // Slack hide: long folds that hang down the side, deepest low on it.
       // They lean toward the shoulder as they come down, and a skirt of it lies out on the rock on the side of the lens.
       const drape = 1 - 2 * Math.abs(noise3(t * 3.1 + 0.9 * (ang - 1.5), ang * 0.9, 4.4));
-      const fold = (0.008 + 0.03 * smooth((ang - 1.5) / 1.3) * smooth((4.3 - ang) / 0.6)) * drape * (1 - 0.6 * cage) + 0.006 * noise3(t * 31, ang * 6, 9.1);
+      const fold = (0.008 + 0.024 * smooth((ang - 1.5) / 1.3) * smooth((4.3 - ang) / 0.6)) * drape * (1 - 0.85 * cage) + 0.006 * noise3(t * 31, ang * 6, 9.1);
       const skirt = 0.07 * bell(ang, 3.45, 0.32) * (0.6 + 0.4 * noise3(t * 9, 2.2, 6.6)) * smooth((t - 0.12) / 0.1) * smooth((0.9 - t) / 0.1);
       const out = (rib + spine + flank + hipPoint + blade + fold + skirt) * round;
       return [out, sat(0.86 + 9 * (rib + flank * 0.6 + fold))];

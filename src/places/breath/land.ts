@@ -282,6 +282,48 @@ export function lumps(x: number, z: number): number {
   return 0.42 * within + top * smooth((within - 0.05) / 0.3);
 }
 
+/** Low stones in the shallows where the waders feed (shot breath-04): lumps of the bed that stand a hand out of the tide, each with its
+ *  own shape, between the lens and the far bank. Metres ahead of the lens and to its right, the radius at the bed, the top over the tide. */
+const FEED_LENS = { x: -50.7, z: -19.5, ahead: [0.2588, -0.9659] as const, right: [0.9659, 0.2588] as const };
+const POOL_STONES: [number, number, number, number][] = [
+  [6.5, -0.5, 0.9, 0.07],
+  [7.5, 1.4, 1.25, 0.1],
+  [8.5, 2.3, 0.7, 0.05],
+  [9.5, 0.3, 0.6, 0.04],
+  [10, -3.4, 1.4, 0.09],
+  [11, -2.2, 0.65, 0.05],
+  [12.5, 3.9, 1.7, 0.13],
+  [13.5, 5.2, 0.95, 0.08],
+  [15, -5.5, 1.25, 0.08],
+  [16, 0.6, 1.1, 0.06],
+  [18, 7.2, 2.1, 0.16],
+  [19, 5.4, 1.1, 0.1],
+];
+const poolStones = POOL_STONES.map(([d, s, radius, top], i) => ({
+  x: FEED_LENS.x + FEED_LENS.ahead[0] * d + FEED_LENS.right[0] * s,
+  z: FEED_LENS.z + FEED_LENS.ahead[1] * d + FEED_LENS.right[1] * s,
+  radius,
+  top,
+  turn: 1.7 * i + 0.4,
+  long: 1 + 0.5 * hash2(i * 7 + 3, 11),
+}));
+/** The height of the stone at a place, or far below the bed where none stands. */
+export function poolStone(x: number, z: number): number {
+  if (x < -60 || x > -36 || z < -42 || z > -22) return -100;
+  let high = -100;
+  for (const st of poolStones) {
+    const dx = x - st.x;
+    const dz = z - st.z;
+    if (Math.abs(dx) > 3.4 || Math.abs(dz) > 3.4) continue;
+    const c = Math.cos(st.turn);
+    const sn = Math.sin(st.turn);
+    const e = Math.hypot((dx * c + dz * sn) / st.long, -dx * sn + dz * c) / st.radius + 0.3 * (noise2(x / 0.45 + 3.1 * st.turn, z / 0.45 + 1.5) - 0.5);
+    if (e >= 1) continue;
+    high = Math.max(high, SEA + st.top - 0.6 * (1 - Math.sqrt(1 - e * e)) + 0.03 * (noise2(x / 0.12 + 7.7, z / 0.12 + 2.2) - 0.5));
+  }
+  return high;
+}
+
 /** Where the dead wader lies (DEAD_WADER of shared/anchors.ts) the rock is one dry plate, level to a few centimetres for 3.2 m round, standing
  *  clear of the tide: 1 on it, 0 off it. */
 const PAD: [number, number] = [-27.3, 22.6];
@@ -325,7 +367,7 @@ export function ground(x: number, z: number): number {
   const feed = smooth((x + 58.5) / 3) * smooth((-38.5 - x) / 3) * smooth((-19.5 - z) / 3) * smooth((z + 44.5) / 3);
   const floor = feed > 0 ? lerp(relief, Math.min(relief, SEA - 0.22 - 0.05 * plateAt(x, z)), feed) : relief;
   const pad = padAt(x, z);
-  if (pad <= 0) return floor + lumps(x, z);
+  if (pad <= 0) return Math.max(floor, poolStone(x, z)) + lumps(x, z);
   return pad > 0 ? lerp(relief, padLevel() - 0.03 * sat(Math.hypot(x - PAD[0], z - PAD[1]) / 3.2) ** 2, pad) : relief;
 }
 

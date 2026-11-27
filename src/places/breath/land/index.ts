@@ -124,7 +124,7 @@ export function create(ctx: Context): Piece {
   const rs = ctx.rng('land/slabs');
   const blocks: THREE.BufferGeometry[] = [];
   // On the rubble: each lies on the slope where it stopped, long side across the fall.
-  for (let i = 0; i < 46; i++) {
+  for (let i = 0; i < 34; i++) {
     const k = rs.next();
     const b = (108 + (rs.next() - 0.5) * 44) * RAD;
     const r = lerp(rimRadius(b) - 4.5, 13, k ** 0.8) + rs.range(-1.5, 1.5);
@@ -133,7 +133,7 @@ export function create(ctx: Context): Piece {
     // A few great slabs and many lesser blocks.
     const big = i < 2 ? 0.8 : 0.6 * rs.next() ** 2.2;
     const h = lerp(0.7, 3.2, big) * rs.range(0.8, 1.2);
-    const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) + h * 0.16;
+    const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) + h * 0.03;
     const slope = r > rimRadius(b) - 1 ? 0.12 : 0.62;
     blocks.push(block(i + 1, [lerp(1.6, 11, big) * rs.range(0.8, 1.25), h, lerp(1.2, 6.5, big) * rs.range(0.8, 1.2)], [x, y, z], [slope + rs.range(-0.25, 0.35), -b + rs.range(-0.9, 0.9), rs.range(-0.3, 0.3)]));
   }
