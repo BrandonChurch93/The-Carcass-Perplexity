@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 142, 2026-11-27 01:33 UTC:
+Status 143, 2026-11-27 02:09 UTC:
 
-- `01-s142-heart-marsh-before.jpg`: The film before and after polish wave 1, with the words on screen: Preview 04 at left, Preview 05 at right. Top: the Heart at 0:51, ash and ember haze under the words. Bottom: the Blood Marsh at 1:39. Frames taken from the two previews at 960x540, draft tier; not judged
-- `02-s142-spine-reveal-before.jpg`: The same for the Spine at 2:07 and the Reveal at 2:47, blood red haze under the words. At the Reveal the polished picture has more land around the bones, coasts and cloud at several heights, and the body is still plain to see. Frames taken from the two previews at 960x540, draft tier; not judged
-- `03-s142-fourteen-frames.jpg`: Fourteen frames across Preview 05, from 0:04 to 3:14, which the Builder looked at before sending it: every place, the rise and the last frames, with the words where a line is being spoken
-- `04-frame-9659-preview-draft.jpg`: Film frame 9659, preview, draft tier
+- `01-s143-breath.jpg`: The Breath: the film now, after wave 1, at left, and the same two frames with the Breath team's wave 2 work so far at right (its branch at 6:54 PM). Top, 1:13: a fuller far flock, wind ripples on the pool, thinner vapour so the pit's far wall shows. Bottom, 1:27: the waders have a warmer mottled hide, jointed legs, a slimmer neck and a finer red mop; the rings round the legs are fainter, which the Builder has asked the team about. Drawn by the Builder at 960x540, draft tier; not judged
+- `02-s143-eye.jpg`: The Eye: the film now at left, with the Eye team's wave 2 work so far at right (its branch at 6:59 PM). Top, 2:26: the far wall is now the approved picture's own wall, taller, lit and level, with its reflection in the shallows. Bottom, 2:30: the drinkers' hide is pale and creased where it was brown. Drawn by the Builder at 960x540, draft tier; not judged
+- `03-s143-heart.jpg`: The Heart: the film now at left, with the Heart team's wave 2 work so far at right (its branch at 6:58 PM). Top, 0:45: little change; the sunk walker now sits in a pale round patch, which the Builder has asked the team about. Bottom, 0:58: ropy coils in the near crust and sharper sulphur, aimed at the fine detail measure that is red at this key. Drawn by the Builder at 960x540, draft tier; not judged
+- `04-s143-spine-sky.jpg`: The Spine at 2:00 (frame 7234): the film now at left and with the sky builder's first merge at right, a softer flowing sky with a rain shaft and no ruled level line at far left. From the Spine team's first report, drawn on its machine; not judged
 
+Status 142, 2026-11-27 01:33 UTC, showed: The film before and after polish wave 1, with the words on screen: Preview 04 at left, Preview 05 at right.
 Status 141, 2026-11-27 01:17 UTC, showed: Words on screen on dark ground at the Ribs (frame 1005, the line All of it is.), from the caption builder's third report: warm off-white...
 Status 140, 2026-11-27 00:40 UTC, showed: Words on screen, third version, on pale ground at the Breath (frame 4300, the line The pits.), from the caption builder's third report: the...
-Status 139, 2026-11-27 00:18 UTC, showed: All 22 lines of the words on screen, each on its own frame of the merged picture, from the caption builder's second report: blood red at...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-27T01:33:39Z
-phase 6: 4.73 h used of 24.00 h
-build: 49.71 h used of 72.00 h
+2026-11-27T02:09:49Z
+phase 6: 5.34 h used of 24.00 h
+build: 50.31 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 36, status overdue
 ```
 
 ## Phases
