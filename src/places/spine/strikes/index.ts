@@ -146,7 +146,8 @@ void main() {
   float size = max(0.06 + 0.1 * aSeed.z, (0.7 + 0.7 * aSeed.z) * uPixel * far);
   // A streak as long as the fragment flies while the shutter is open.
   vec2 dir = normalize(along.xy + vec2(1e-4));
-  float reach = max(size, min(length(along.xy) * 0.0042, size * 9.0));
+  // (Short: drawn as long as they fly in a shutter they stood round the tip as pale dashes, a scribble.)
+  float reach = max(size, min(length(along.xy) * 0.0042, size * 3.0));
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
   // A fragment far smaller than a pixel is not seen: from across the ridge the spray is no dot of light at the tip.
@@ -164,9 +165,9 @@ void main() {
   float r = length(vUv);
   float a = exp(-vUv.y * vUv.y * 3.0) * (1.0 - smoothstep(0.5, 1.0, abs(vUv.x))) * (1.0 - smoothstep(0.8, 1.0, r));
   // Hot rock: white at first, orange as it cools.
-  vec3 c = mix(vec3(1.0, 0.3, 0.05), vec3(1.0, 0.8, 0.55), smoothstep(0.45, 1.0, vHeat));
+  vec3 c = mix(vec3(1.0, 0.3, 0.05), vec3(1.0, 0.56, 0.2), smoothstep(0.45, 1.0, vHeat));
   // A fragment is there or it is not: no pattern of dots.
-  if (uGlow * vHeat * a < 0.5) discard;
+  if (uGlow * vHeat * a < 0.35) discard;
   gl_FragColor = vec4(c * (uGlow * vHeat * a) * (1.0 - uSolo), 1.0);
 }`;
 
@@ -336,7 +337,7 @@ export function create(ctx: Context): Piece {
     sparkGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 4));
     sparkGeometry.setAttribute('aGo', new THREE.InstancedBufferAttribute(go, 3));
     sparkGeometry.instanceCount = SPARKS;
-    const sparks = new THREE.Mesh(sparkGeometry, new THREE.ShaderMaterial({ vertexShader: SPOT_VERTEX, fragmentShader: SPOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uAge: age, uPixel: pixel, uGale: { value: wind }, uGlow: { value: 90 } }, side: THREE.DoubleSide }));
+    const sparks = new THREE.Mesh(sparkGeometry, new THREE.ShaderMaterial({ vertexShader: SPOT_VERTEX, fragmentShader: SPOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uAge: age, uPixel: pixel, uGale: { value: wind }, uGlow: { value: 9 } }, side: THREE.DoubleSide }));
     sparks.frustumCulled = false;
     group.add(sparks);
 
