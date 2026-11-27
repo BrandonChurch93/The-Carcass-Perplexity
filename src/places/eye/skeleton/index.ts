@@ -45,9 +45,19 @@ float grain(vec3 q) {
 void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
-  if (dot(n, v) < 0.0) n = -n;
   vec3 q = vLocal;
   float lift = vWorld.y;
+  // The software renderer shades four pixels together, and a screen derivative taken under a branch takes stale memory from the pixels
+  // that did not go that way: no frame then renders the same twice. So the grain of bone and the creases of hide are both worked out
+  // here, for every point, and their lie across the screen taken before any branch.
+  float h = grain(q);
+  vec2 hu = vec2(q.x + 0.37 * q.y, q.z + 1.4 * q.y);
+  float crease = 0.5 * vnoise(vec2(hu.x * 38.0 + 3.0 * vnoise(hu * 15.0), hu.y * 24.0 + 4.0 * vnoise(hu * 9.0 + 5.0))) + 0.5 * vnoise(hu * 70.0 + 2.0);
+  vec3 dx = dFdx(vWorld);
+  vec3 dy = dFdy(vWorld);
+  vec2 hLie = vec2(dFdx(h), dFdy(h));
+  vec2 creaseLie = vec2(dFdx(crease), dFdy(crease));
+  if (dot(n, v) < 0.0) n = -n;
   if (vBone.x < 0.0) {
     // Weed: the dark amber of the mats, wet where it lies in the water.
     vec3 weed = mix(vec3(0.36, 0.15, 0.035), vec3(0.62, 0.3, 0.07), vnoise(q.xz * 9.0 + vBone.y * 31.0)) * (0.75 + 0.5 * vnoise(q.xz * 160.0 + q.y * 90.0));
@@ -63,14 +73,11 @@ void main() {
     // The rag of hide: dried hard and dark, drawn tight over what is left of the cage, with mats of pale hair on it yet and a rim of
     // salt where it lies on the floor.
     // On its flanks it hangs straight down: its marks are laid by a co-ordinate that runs down it too.
-    vec2 u = vec2(q.x + 0.37 * q.y, q.z + 1.4 * q.y);
-    float crease = 0.5 * vnoise(vec2(u.x * 38.0 + 3.0 * vnoise(u * 15.0), u.y * 24.0 + 4.0 * vnoise(u * 9.0 + 5.0))) + 0.5 * vnoise(u * 70.0 + 2.0);
-    vec3 dx = dFdx(vWorld);
-    vec3 dy = dFdy(vWorld);
+    vec2 u = hu;
     vec3 r1 = cross(dy, n);
     vec3 r2 = cross(n, dx);
     float det = dot(dx, r1);
-    n = normalize(abs(det) * n - 0.008 * sign(det) * (dFdx(crease) * r1 + dFdy(crease) * r2));
+    n = normalize(abs(det) * n - 0.008 * sign(det) * (creaseLie.x * r1 + creaseLie.y * r2));
     vec3 skin = mix(vec3(0.13, 0.095, 0.07), vec3(0.3, 0.21, 0.14), vnoise(u * 17.0 + 3.0));
     float hair = smoothstep(0.46, 0.66, vnoise(u * 11.0 + 21.0)) * (0.5 + 0.5 * vnoise(vec2(u.x * 420.0 + 30.0 * vnoise(u * 40.0), u.y * 55.0)));
     skin = mix(skin, vec3(0.5, 0.4, 0.27), 0.75 * hair);
@@ -84,13 +91,10 @@ void main() {
     return;
   }
   // The relief of its surface turns the light: the lie of the grain, taken across the screen.
-  float h = grain(q);
-  vec3 dx = dFdx(vWorld);
-  vec3 dy = dFdy(vWorld);
   vec3 r1 = cross(dy, n);
   vec3 r2 = cross(n, dx);
   float det = dot(dx, r1);
-  vec3 lean = sign(det) * (dFdx(h) * r1 + dFdy(h) * r2);
+  vec3 lean = sign(det) * (hLie.x * r1 + hLie.y * r2);
   n = normalize(abs(det) * n - 0.006 * lean);
 
   // Old bone: ivory where the air has had it, bleached on what looks up, yellow and brown where it has lain.

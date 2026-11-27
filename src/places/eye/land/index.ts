@@ -12,6 +12,7 @@ import { PATCH, browGeometry, patchGeometry, pebbleGeometry, socketGeometry, sto
 import { BLOCK_FRAGMENT, BLOCK_VERTEX, ballGeometry, blockUniforms } from './blocks';
 import { ROCK_GLSL, rockUniforms } from './rock';
 import { createStream, standingStones } from './stream';
+import { CROP, CROP_FRAGMENT, CROP_VERTEX, cropGround, outcropAt } from './outcrop';
 
 export const PARTS: readonly string[] = ['land', 'brow', 'scree', 'stream'];
 
@@ -24,6 +25,14 @@ bool inPatch(vec3 p) {
   float along = dot(q, uAxis.zw);
   float across = dot(q, vec2(uAxis.w, -uAxis.z));
   return uCut > 0.5 && along > uPatch.x + 1.2 && along < uPatch.y - 1.2 && across > uPatch.z + 1.2 && across < uPatch.w - 1.2;
+}
+// The broken ground of the spur has its own fine mesh: the patch is cut out under it.
+uniform vec4 uCrop;
+bool inCrop(vec3 p) {
+  vec2 q = p.xz - uAxis.xy;
+  float along = dot(q, uAxis.zw);
+  float across = dot(q, vec2(uAxis.w, -uAxis.z));
+  return uCut < 0.5 && along > uCrop.x + 1.2 && along < uCrop.y - 1.2 && across > uCrop.z + 1.2 && across < uCrop.w - 1.2;
 }`;
 
 const LAND_FRAGMENT = /* glsl */ `
@@ -34,7 +43,9 @@ ${RIG_GLSL}
 ${ROCK_GLSL}
 ${CUT_GLSL}
 void main() {
-  if (inPatch(vWorld) || beyondNear(vWorld)) discard;
+  gDx = dFdx(vWorld);
+  gDy = dFdy(vWorld);
+  if (inPatch(vWorld) || inCrop(vWorld) || beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float face = smoothstep(0.8, 0.52, n.y);
@@ -62,7 +73,7 @@ varying vec3 vWorld;
 uniform vec4 uNear;
 ${CUT_GLSL}
 void main() {
-  if (inPatch(vWorld) || (uNear.w > 0.5 && length(vWorld.xz - uNear.xy) > uNear.z)) discard;
+  if (inPatch(vWorld) || inCrop(vWorld) || (uNear.w > 0.5 && length(vWorld.xz - uNear.xy) > uNear.z)) discard;
   gl_FragColor = vec4(0.0);
 }`;
 
@@ -81,6 +92,8 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 ${ROCK_GLSL}
 void main() {
+  gDx = dFdx(vWorld);
+  gDy = dFdy(vWorld);
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   Rock k = rockAt(vWorld, n, 1.0);
@@ -115,13 +128,20 @@ varying vec3 vLocal;
 varying vec3 vTint;
 uniform sampler2D tScree;
 uniform sampler2D tScreeH;
-vec4 screeAt(vec2 xz) {
-  vec2 uv = xz / vec2(24.0, 13.51);
-  return vec4(texture2D(tScree, uv).rgb, texture2D(tScreeH, uv).r);
+// Every sheet is read with the lie of the stone across the screen, taken first thing in main: see rock.ts.
+vec4 screeAt(vec2 xz, vec2 dx, vec2 dy) {
+  vec2 per = vec2(24.0, 13.51);
+  return vec4(textureGrad(tScree, xz / per, dx / per, dy / per).rgb, textureGrad(tScreeH, xz / per, dx / per, dy / per).r);
+}
+float screeHigh(vec2 xz, vec2 dx, vec2 dy) {
+  vec2 per = vec2(24.0, 13.51);
+  return textureGrad(tScreeH, xz / per, dx / per, dy / per).r;
 }
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
+  vec3 gx = dFdx(vWorld);
+  vec3 gy = dFdy(vWorld);
   if (beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -146,19 +166,25 @@ void main() {
   bool plate = lowEye < 0.99;
   if (!plate) col = vec4(vec3(0.3), 0.3 + 0.5 * vnoise(vLocal.xz * 9.0 + vLocal.y * 13.0));
   if (plate && w.x > 0.0) {
-    vec4 k = screeAt(ux);
+    vec2 kx = gx.zy * grain;
+    vec2 ky = gy.zy * grain;
+    vec4 k = screeAt(ux, kx, ky);
     col += k * w.x;
-    d += vec2(texture2D(tScreeH, (ux + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (ux + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.x;
+    d += vec2(screeHigh(ux + vec2(e, 0.0), kx, ky) - k.a, screeHigh(ux + vec2(0.0, e), kx, ky) - k.a) * w.x;
   }
   if (plate && w.y > 0.0) {
-    vec4 k = screeAt(uy);
+    vec2 kx = gx.xz * grain;
+    vec2 ky = gy.xz * grain;
+    vec4 k = screeAt(uy, kx, ky);
     col += k * w.y;
-    d += vec2(texture2D(tScreeH, (uy + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uy + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.y;
+    d += vec2(screeHigh(uy + vec2(e, 0.0), kx, ky) - k.a, screeHigh(uy + vec2(0.0, e), kx, ky) - k.a) * w.y;
   }
   if (plate && w.z > 0.0) {
-    vec4 k = screeAt(uz);
+    vec2 kx = gx.xy * grain;
+    vec2 ky = gy.xy * grain;
+    vec4 k = screeAt(uz, kx, ky);
     col += k * w.z;
-    d += vec2(texture2D(tScreeH, (uz + vec2(e, 0.0)) / vec2(24.0, 13.51)).r - k.a, texture2D(tScreeH, (uz + vec2(0.0, e)) / vec2(24.0, 13.51)).r - k.a) * w.z;
+    d += vec2(screeHigh(uz + vec2(e, 0.0), kx, ky) - k.a, screeHigh(uz + vec2(0.0, e), kx, ky) - k.a) * w.z;
   }
   vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x) * mix(vec3(1.32, 1.18, 0.98), vec3(1.0), smoothstep(12.0, 4.0, cameraPosition.y));
   vec3 nh = vec3(0.5, 0.5, col.a);
@@ -210,6 +236,7 @@ export function create(ctx: Context): Piece {
   const cut = {
     uPatch: { value: new THREE.Vector4(PATCH.along0, PATCH.along1, PATCH.across0, PATCH.across1) },
     uAxis: { value: new THREE.Vector4(ox, oz, ux - ox, uz - oz) },
+    uCrop: { value: new THREE.Vector4(CROP.along0, CROP.along1, CROP.across0, CROP.across1) },
   };
 
   const socketMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...rock, ...cut, uCut: { value: 1 } }, vertexShader: RIG_VERTEX, fragmentShader: LAND_FRAGMENT });
@@ -219,8 +246,24 @@ export function create(ctx: Context): Piece {
   const socket = new THREE.Mesh(socketGeometry(), socketMaterial);
   const patch = new THREE.Mesh(patchGeometry(), patchMaterial);
   socket.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('land', socket, patch));
+  // The broken ground of the spur, on its own fine mesh.
+  const crop = cropGround();
+  const block = blockUniforms(ctx);
+  const cropMaterial = new THREE.ShaderMaterial({
+    uniforms: { ...ctx.rig.uniforms, uAxis: cut.uAxis, tCrop: { value: crop.map }, uCropRect: { value: crop.rect }, tFace: block.tFace as THREE.IUniform, tFaceNh: block.tFaceNh as THREE.IUniform, tGravel: rock.tGravel as THREE.IUniform, tGravelNh: rock.tGravelNh as THREE.IUniform },
+    vertexShader: CROP_VERTEX,
+    fragmentShader: CROP_FRAGMENT,
+  });
+  cropMaterial.userData.depthFragment = NEAR_DEPTH;
+  const cropMesh = new THREE.Mesh(crop.geometry, cropMaterial);
+  ctx.scene.add(ctx.parts.built('land', socket, patch, cropMesh));
   ctx.scene.add(patch);
+  ctx.scene.add(cropMesh);
+  /** The ground a stone lies on: the smooth land and the broken rock over it. */
+  const groundAt = (x: number, z: number): number => {
+    const [along, across] = axisOf(x, z);
+    return landHeight(x, z) + outcropAt(along, across);
+  };
 
   const browMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...rock }, vertexShader: RIG_VERTEX, fragmentShader: BROW_FRAGMENT, side: THREE.DoubleSide });
   const brow = new THREE.Mesh(browGeometry(), browMaterial);
@@ -420,7 +463,7 @@ export function create(ctx: Context): Piece {
       const mesh = new THREE.InstancedMesh(geometry, stoneMaterial, mine.length);
       mine.forEach((s, i) => {
         const sink = rng.range(0.18, 0.5);
-        dummy.position.set(s.x, landHeight(s.x, s.z) - sink * s.size * 0.72 + 0.3 * s.size, s.z);
+        dummy.position.set(s.x, groundAt(s.x, s.z) - sink * s.size * 0.72 + 0.3 * s.size, s.z);
         dummy.rotation.set(rng.range(-0.35, 0.35), rng.range(0, Math.PI * 2), rng.range(-0.35, 0.35));
         dummy.scale.set(s.size * rng.range(0.75, 1.25), s.size * rng.range(0.6, 1.1), s.size * rng.range(0.75, 1.25));
         dummy.updateMatrix();
@@ -440,7 +483,6 @@ export function create(ctx: Context): Piece {
   // The blocks: each a broken stone raised from the atlas. How finely one is cut goes by how near a camera ever comes to it.
   const blockMaterials: THREE.ShaderMaterial[] = [];
   const balls: THREE.BufferGeometry[] = [];
-  const block = blockUniforms(ctx);
   {
     const eyes = [KEYS.wide.position, KEYS.mats.position, KEYS.edge.position, KEYS.shore.position, KEYS.centre.position];
     // How finely a block is cut goes by its size and by how near the wide camera ever passes: that camera comes down the axis.
@@ -452,6 +494,9 @@ export function create(ctx: Context): Piece {
       { detail: 1, smoothing: 3, list: [] },
     ];
     for (const s of [...(stones[0] as Stone[]), ...(stones[1] as Stone[]), ...inStream]) {
+      // On the broken ground the large blocks are the bedrock's own slabs: only loose stone lies on it.
+      const [sa, sc] = axisOf(s.x, s.z);
+      if (s.size > 0.9 && !s.wet && sa > CROP.along0 + 6 && sa < CROP.along1 - 6 && sc > CROP.across0 + 6 && sc < CROP.across1 - 6) continue;
       let reach = Infinity;
       for (const e of eyes) reach = Math.min(reach, Math.hypot(s.x - e[0], s.z - e[2]));
       const [along, across] = axisOf(s.x, s.z);
@@ -473,7 +518,7 @@ export function create(ctx: Context): Piece {
         // A stone of the atlas is about 0.8 from its middle to its faces.
         const half = s.size * 0.58;
         const sy = half * rng.range(0.6, 1.0);
-        const ground = landHeight(s.x, s.z);
+        const ground = groundAt(s.x, s.z);
         const e = Math.max(0.4, s.size * 0.5);
         // It lies bedded in the slope: a third of it and more is under the ground.
         const gx = (landHeight(s.x + e, s.z) - landHeight(s.x - e, s.z)) / (2 * e);
@@ -554,9 +599,10 @@ export function create(ctx: Context): Piece {
       brow.visible = (ctx.rig.uniforms.uNear as THREE.IUniform<THREE.Vector4>).value.w < 0.5;
     },
     dispose: () => {
-      for (const m of [socket, patch, brow, ...scree]) m.geometry.dispose();
+      for (const m of [socket, patch, cropMesh, brow, ...scree]) m.geometry.dispose();
+      crop.map.dispose();
       for (const b of balls) b.dispose();
-      for (const m of [socketMaterial, patchMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
+      for (const m of [socketMaterial, patchMaterial, cropMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
       stream.dispose();
     },
   };

@@ -73,6 +73,9 @@ float froth(vec2 q) {
   return 0.6 * a + 0.4 * b;
 }
 void main() {
+  // Taken before any branch, and the bed read with it: see rock.ts.
+  vec2 gx = dFdx(vWorld.xz) / 2.3;
+  vec2 gy = dFdy(vWorld.xz) / 2.3;
   float depth = vWater.x;
   // The water's edge is where the ground comes up through it, and it is not a ruled line.
   if (depth < 0.07 * vnoise(vWorld.xz * 1.9) + 0.03 * vnoise(vWorld.xz * 7.3) - 0.02) discard;
@@ -124,7 +127,7 @@ void main() {
   vec3 n = normalize(vec3(lean.x * rough, 1.0, lean.y * rough));
   vec3 v = normalize(cameraPosition - vWorld);
   // Under it the bed: wet stones, darker the deeper they lie.
-  vec3 bed = texture2D(tGrit, vWorld.xz / 2.3 + lean * 0.04).rgb * vec3(0.15, 0.16, 0.16) * exp(-depth * 2.6);
+  vec3 bed = textureGrad(tGrit, vWorld.xz / 2.3 + lean * 0.04, gx, gy).rgb * vec3(0.15, 0.16, 0.16) * exp(-depth * 2.6);
   vec3 albedo = mix(bed, vec3(1.1, 1.12, 1.15), white);
   vec3 c = rigShade(vWorld, mix(vec3(0.0, 1.0, 0.0), n, white), v, albedo, 1.0, 1.0);
   // The sky lies on what is not white, more the lower the eye.

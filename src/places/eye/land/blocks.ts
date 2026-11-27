@@ -97,10 +97,16 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 ${ATLAS_GLSL}
 void main() {
-  if (beyondNear(vWorld)) discard;
+  // The lie of the stone across the screen is taken before any branch, and every sheet is read with it: see rock.ts.
   vec3 d = normalize(vDir);
+  float spread = length(fwidth(d));
+  vec3 qx = dFdx(vLocal);
+  vec3 qy = dFdy(vLocal);
+  vec3 gx = dFdx(vWorld);
+  vec3 gy = dFdy(vWorld);
+  if (beyondNear(vWorld)) discard;
   // The atlas is read at the fineness the eye can use: its folds would otherwise ask for the coarsest.
-  float small = log2(max(length(fwidth(d)) * 300.0, 1.0));
+  float small = log2(max(spread * 300.0, 1.0));
   float lod = clamp(small, 0.0, 3.0);
   vec2 uv = rockUv(d, vSeat.x, 0.004 * exp2(lod));
   vec3 no = textureLod(tRockN, uv, lod).rgb * 2.0 - 1.0;
@@ -126,29 +132,31 @@ void main() {
   }
   if (w.x > 0.0) {
     vec2 u = q.zy / 1.5;
-    vec3 h = texture2D(tFaceNh, u).rgb;
-    skin += texture2D(tFace, u).rgb * w.x;
+    vec3 h = textureGrad(tFaceNh, u, qx.zy / 1.5, qy.zy / 1.5).rgb;
+    skin += textureGrad(tFace, u, qx.zy / 1.5, qy.zy / 1.5).rgb * w.x;
     lean += vec3(0.0, h.g - 0.5, h.r - 0.5) * w.x;
     high += h.b * w.x;
   }
   if (w.y > 0.0) {
     vec2 u = q.xz / 1.5 + 0.37;
-    vec3 h = texture2D(tFaceNh, u).rgb;
-    skin += texture2D(tFace, u).rgb * w.y;
+    vec3 h = textureGrad(tFaceNh, u, qx.xz / 1.5, qy.xz / 1.5).rgb;
+    skin += textureGrad(tFace, u, qx.xz / 1.5, qy.xz / 1.5).rgb * w.y;
     lean += vec3(h.r - 0.5, 0.0, h.g - 0.5) * w.y;
     high += h.b * w.y;
   }
   if (w.z > 0.0) {
     vec2 u = q.xy / 1.5 + 0.71;
-    vec3 h = texture2D(tFaceNh, u).rgb;
-    skin += texture2D(tFace, u).rgb * w.z;
+    vec3 h = textureGrad(tFaceNh, u, qx.xy / 1.5, qy.xy / 1.5).rgb;
+    skin += textureGrad(tFace, u, qx.xy / 1.5, qy.xy / 1.5).rgb * w.z;
     lean += vec3(h.r - 0.5, h.g - 0.5, 0.0) * w.z;
     high += h.b * w.z;
   }
   // A block the size of a hut is broken at a scale of its own as well: the same sheet laid five metres a repeat on the face it shows most.
   if (vSeat.z > 1.7) {
     float which = w.x > max(w.y, w.z) ? 0.0 : w.y > w.z ? 1.0 : 2.0;
-    vec3 h = texture2D(tFaceNh, (which < 0.5 ? q.zy : which < 1.5 ? q.xz : q.xy) / 5.3 + 0.19).rgb;
+    vec2 bx = (which < 0.5 ? qx.zy : which < 1.5 ? qx.xz : qx.xy) / 5.3;
+    vec2 by = (which < 0.5 ? qy.zy : which < 1.5 ? qy.xz : qy.xy) / 5.3;
+    vec3 h = textureGrad(tFaceNh, (which < 0.5 ? q.zy : which < 1.5 ? q.xz : q.xy) / 5.3 + 0.19, bx, by).rgb;
     vec2 g = (h.rg - 0.5) * 1.8;
     lean += which < 0.5 ? vec3(0.0, g.y, g.x) : which < 1.5 ? vec3(g.x, 0.0, g.y) : vec3(g.x, g.y, 0.0);
     skin *= 0.72 + 0.56 * h.b;
@@ -183,7 +191,7 @@ void main() {
   float size = vSeat.z;
   float grit = smoothstep(0.1 * size + 0.08, 0.0, above - 0.1 * size * vnoise(vWorld.xz * 3.0 / max(size, 0.4)) - 0.04 * high);
   if (grit > 0.0) {
-    vec3 dust = texture2D(tGrit, vWorld.xz / 3.1 + vWorld.y * 0.31).rgb * vec3(1.5, 1.42, 1.3);
+    vec3 dust = textureGrad(tGrit, vWorld.xz / 3.1 + vWorld.y * 0.31, gx.xz / 3.1 + gx.y * 0.31, gy.xz / 3.1 + gy.y * 0.31).rgb * vec3(1.5, 1.42, 1.3);
     albedo = mix(albedo, dust, 0.8 * grit * smoothstep(-0.3, 0.3, up));
   }
   float foot = smoothstep(-0.02, 0.22 * size + 0.1, above);
