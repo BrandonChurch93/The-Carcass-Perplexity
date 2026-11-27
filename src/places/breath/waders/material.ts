@@ -373,7 +373,7 @@ void main() {
   colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.17, tendril));
   // Staged: the sun breaks through on the one far off in the vapour, so it is paler than the vapour it stands in.
   float veil = uVeiled.z * smoothstep(8.0, 5.0, length(vWorld.xz - uVeiled.xy));
-  colour = mix(colour, max(colour * 8.0, (0.66 * albedo + vec3(0.2, 0.16, 0.14) * (1.0 - tendril)) * fogColour * 14.0 * (0.62 + 0.38 * n.y) * (0.75 + 0.25 * occ)), veil);
+  colour = mix(colour, max(colour * 8.0, (0.66 * albedo + vec3(0.2, 0.16, 0.14) * (1.0 - tendril)) * fogColour * 15.0 * (0.82 + 0.18 * n.y) * (0.8 + 0.2 * occ)), veil);
   if (uMirror > 0.5) {
     gl_FragColor = vec4(colour * (1.0 - uSolo), 1.0);
     return;
