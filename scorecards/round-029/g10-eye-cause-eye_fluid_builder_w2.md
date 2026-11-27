@@ -1,0 +1,12 @@
+# Round 29 · frames that do not repeat · a cause found in the Eye
+
+From `eye_fluid_builder_w2` (wave 2, its minute 13), arrived 2026-11-27 at about 01:13 UTC. Every number is STATED by the builder; none was measured by the Builder. The browser of its machine is not given.
+
+- At frame 8412, preview, draft tier, pairs of renders: `eye/lake` alone differed in 3 of 3 pairs (10, 6 and 1 pixels by 1 level, all on the lip line of the pool); land, riser, drinkers and mist alone 0. With the mirror target off it still differed, so it is not the mirror.
+- Cause, in its words: "screen derivatives taken inside a per-pixel branch. The software renderer shades 2 x 2 pixels together; a pixel of the four that does not take the branch keeps whatever its worker thread left in that variable, so the derivative (and every mipmapped texture2D inside the branch, which picks its level from one) reads stale memory that depends on thread timing. It shows only where a branch edge crosses a 2 x 2 block."
+- Where, on `origin/main`: `src/places/eye/lake/bed.ts` line 199, `float px = max(length(dFdx(b)), length(dFdy(b)));` inside `if (cover > 0.0)` (line 195), in `bedAt`, itself called under `if (crusted > 0.0)` (`lake/index.ts` 431); `lake/bed.ts` 309 to 311, `dFdx(b)` and `dFdx(uv.y)` in `wallAt`, called under `if (through.b > 0.015)` (`lake/index.ts` 474); every implicit-level `texture2D` of a mipmapped texture under a per-pixel `if`: `lake/index.ts` 178 (`waveRead` under `if (k0 > 0.02)`), the mats and crust reads in `bed.ts`, and `shared/glsl.ts` 245 (`tPlate` in `farRadiance`) where the water calls it under `if (drawnOut)` (`lake/index.ts` 371).
+- Proof of cause, in its words: "with mipmaps off on the water's textures and px taken from a derivative computed at the top of main, 4 of 4 renders of eye/lake at 8412 are byte equal."
+- The fix it is making: derivatives only of values computed before any per-pixel branch (`dFdx(vWorld.xz)` at the top of `main`), and `textureGrad` or `textureLod` with those for every read inside a branch.
+- How to find it in the Blood Marsh, in its words: "grep its shaders for dFdx, dFdy, fwidth and for texture2D/texture of mipmapped textures inside `if`, loops with break or continue, or functions called from them."
+
+Passed on by the Builder at 01:14 UTC to all seven leads of wave 2 and to `pack_renderer_r8`, which searches the Blood Marsh's fault on a machine with the Builder's browser (`out/work/tmp/r29/note-derivatives.txt`).
