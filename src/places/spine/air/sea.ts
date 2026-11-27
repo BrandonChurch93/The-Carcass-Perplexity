@@ -418,7 +418,22 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // (Kept flat there, the far deck was a plain: its crowns stay pale and a little warm from the band, its hollows dark, to the last.)
     float crownFar = clamp(0.45 + 1.0 * seaHead + 2.6 * (seaSwell - 0.5), 0.0, 1.0);
     float farBank = mix(0.62 + 0.76 * clamp(0.5 + 1.2 * seaHead, 0.0, 1.0), 0.3 + 1.7 * crownFar * crownFar, 1.0 - inStorm);
-    sea = mix(sea, (SEA_COLD * vec3(0.5, 0.54, 0.62) + (0.1 + 0.22 * crownFar) * SEA_WARM * (1.0 - inStorm)) * farBank, 0.8 * (1.0 - exp(-t / (6000.0 * seaLens * seaLens))));
+    // Kilometres out the lens looks along the deck, and heads laid on a level lie down there to dashes: ripples on water. There the
+    // deck is the real deck's own picture, which was taken as low, laid round the lens by bearing and by dip: its banks stand row
+    // behind row as they stood for that camera, large and soft, and drift down the gale. (Four pictures round the circle, each the mirror
+    // of the next, so no seam stands anywhere.)
+    float lowSeen = smoothstep(3000.0, 8500.0, t) * (1.0 - inStorm);
+    if (lowSeen > 0.0) {
+      float turnP = az * 1.27324 + uTime * 0.0011;
+      // (A long lens sees a few degrees of it: the picture is laid finer for it, or one bank filled the frame.)
+      float finer = pow(seaLens, 0.6);
+      float downP = 0.03 + 3.3 * finer * tan(dip);
+      vec2 uvLow = vec2(abs(fract(0.5 * turnP * finer) * 2.0 - 1.0), 1.0 - abs(fract(0.5 * downP) * 2.0 - 1.0));
+      float bankP = dot(textureLod(tDeck, uvLow, 1.5).rgb, vec3(0.3, 0.5, 0.2)) / 0.135;
+      farBank = mix(farBank, 0.15 + 0.95 * bankP * bankP, lowSeen);
+      crownFar = mix(crownFar, clamp(bankP - 0.45, 0.0, 1.0), lowSeen);
+    }
+    sea = mix(sea, (SEA_COLD * vec3(0.5, 0.54, 0.62) + (0.1 + 0.22 * crownFar) * SEA_WARM * (1.0 - inStorm)) * farBank, max(0.8 * (1.0 - exp(-t / (6000.0 * seaLens * seaLens))), 0.85 * lowSeen));
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * inStorm, 0.0, 1.5);
     sea = sea * (1.0 - 0.5 * inStorm) * mix(vec3(1.0), vec3(0.8, 0.88, 1.06), inStorm) * (1.0 + 0.7 * lit * (1.0 - 0.7 * nearFog)) + vec3(0.05, 0.035, 0.1) * lit * 0.5 * (1.0 - 0.7 * nearFog) + min(strikeLight(p) * 0.02, vec3(0.01));
@@ -448,9 +463,10 @@ export const SEA_SHADE_GLSL = /* glsl */ `
 #if PLATE == 1
     if (plate > 0.0) {
       vec3 seaP = skyCloud(ro, rd, 0.0);
-      sea = mix(sea, seaP * (0.55 + 0.9 * head * head) * (0.75 + 0.5 * dusk), plate);
+      // (A share of it: the picture's own sea is a dark level, and the deck's banks stand in it to the last.)
+      sea = mix(sea, seaP * (0.55 + 0.9 * head * head) * (0.75 + 0.5 * dusk), 0.35 * plate);
       domeFar = mix(domeFar, seaP, plate);
-      gone = mix(gone, smoothstep(2500.0, 7000.0, t), plate);
+      gone = mix(gone, smoothstep(6000.0, 16000.0, t), plate);
     }
 #endif
     // The last rows are the sky's own value at its foot, read as sharp as the sky over them, and keep a little of their shape under
@@ -462,7 +478,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     if (needFoot) {
       sea = mix(sea, mix(SEA_COLD * vec3(0.55, 0.6, 0.72), domeFar, 0.3) * shape * mix(farBank, 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens))), gone);
       // (Under the storm the foot is the dark wall's and the deck goes into it whole: kept pale there it stood as a ruled line against it.)
-      sea = mix(sea, domeFar, plate > 0.0 ? gone : mix(1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)), gone, inStorm));
+      sea = mix(sea, domeFar, plate > 0.0 ? 0.4 * gone : mix(1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)), gone, inStorm));
     }
     // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
     if (needFoot) sea = mix(sea, domeFar, toWall);
@@ -505,7 +521,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     float bankS = smoothstep(topS, 0.55 * topS - 0.002, rd.y) * (1.0 - stormSide(rd)) * 0.9 * clamp(2.6 - 1.6 * lensS, 0.0, 1.0);
     // They are the sky's own foot, a little darker, and their tops take the band.
     vec3 footS = skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 2.5);
-    vec3 toneS = footS * (0.72 + 0.4 * smoothstep(0.4 * topS, topS, rd.y));
+    vec3 toneS = mix(footS, SEA_COLD * vec3(0.5, 0.55, 0.66) + 0.3 * SEA_WARM, 0.55) * (0.85 + 0.3 * smoothstep(0.4 * topS, topS, rd.y));
     light += through * toneS * bankS;
     through *= 1.0 - bankS;
   } else if (seaMist > 0.0 && through > 0.01) {
