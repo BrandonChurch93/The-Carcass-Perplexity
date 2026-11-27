@@ -32,7 +32,7 @@ vec3 swayAt(vec3 p, vec4 bush, float tall, float u, float phase, float t, float 
   float beat = 1.5 + 0.5 * fract(phase * 3.7);
   float own = sin(t * beat - u * 2.6 + phase) + 0.4 * sin(t * beat * 2.3 - u * 5.0 + phase * 1.9);
   float whole = sin(t * 0.83 + bush.w - r * 1.7);
-  float bend = (0.13 * (g - 0.4) + 0.025 * whole) * a + 0.024 * own * (0.35 + g) * uu;
+  float bend = (0.2 * (g - 0.4) + 0.04 * whole) * a + 0.036 * own * (0.35 + g) * uu;
   vec2 push = lee * (bend * tall);
   // Leaning over, an arched limb goes down; let go, it comes up again.
   float lift = (-0.45 * bend + 0.012 * own * (0.35 + g) * uu) * tall;

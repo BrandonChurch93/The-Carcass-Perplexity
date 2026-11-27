@@ -30,8 +30,8 @@ const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
 
 /** Staged for shot breath-02: where each hanging one is rooted (x, z), how tall, and the point on the ground it leans over (x, z). */
 const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
-  [-14.1, 27.6, 4.2, -9.5, 25.2],
-  [-15.0, 26.0, 3.8, -10.6, 23.6],
+  [-14.1, 27.6, 4.2, -8.9, 24.6],
+  [-15.0, 26.0, 3.8, -10.0, 23.0],
 ];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
@@ -89,7 +89,7 @@ export function create(ctx: Context): Piece {
   for (let j = 0; j < 16; j++) {
     const bearing = -72 + (j + fill.next()) * (50 / 16);
     const [x, z] = onRim(bearing, fill.range(0.8, 5.5));
-    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain' });
+    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain', full: 0.92 });
   }
   // And on the lip west of the first tall one, toward the channel: the low end of the crescent, left of every lens that stands at the lip
   // (the breath-03 lens at x -32.5 looks north past it; from the rim's lens it is small red tufts at the left).
@@ -100,7 +100,7 @@ export function create(ctx: Context): Piece {
     const tall = fill.range(0.9, 1.9);
     const y = floor(x, z);
     if (y < SEA_LEVEL + 0.12) continue;
-    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain' });
+    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, habit: 'fountain', full: 0.92 });
   }
   // A seedling whose anchor is under the water is not grown: nothing of this kind roots in the channel.
   for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall: tall * 0.7, lean: Math.atan2(-x, z), detail: 0.5, habit: 'fountain', full: 0.45 });
@@ -121,7 +121,7 @@ export function create(ctx: Context): Piece {
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
-    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 1.9 };
+    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 2.4 };
   });
   const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 
@@ -223,7 +223,7 @@ export function create(ctx: Context): Piece {
         if (drops.next() > (run * share) / Math.max(1, open.length)) continue;
         const every = drops.range(2.2, 8);
         const offset = drops.range(0, 11);
-        const size = 0.005 + 0.016 * drops.next() ** 2.2;
+        const size = 0.007 + 0.022 * drops.next() ** 2.2;
         const x = tip.a[0] + tip.b[0] + tip.c[0];
         const z = tip.a[2] + tip.b[2] + tip.c[2];
         const ground = floor(x, z);
