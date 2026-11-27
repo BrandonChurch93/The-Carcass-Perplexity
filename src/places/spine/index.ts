@@ -156,7 +156,7 @@ async function create(): Promise<Place> {
     unit: UNIT,
     scene,
     camera,
-    look: { ...neutralLook(), exposure: 1.7, bloom: 0.006, vignette: 0.14, grain: 0.006, contrast: 1.1, tint: [1.015, 1, 0.955] },
+    look: { ...neutralLook(), exposure: 1.7, bloom: 0.006, vignette: 0.14, grain: 0.006, contrast: 1.1, tint: [0.985, 1, 1.03] },
     volume,
     depthFirst: true,
     parts,
