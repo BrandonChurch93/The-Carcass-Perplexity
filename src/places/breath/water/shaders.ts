@@ -1,6 +1,7 @@
 // The water in the light of the rig: what the sky puts on it, what shows through it, and the low sun's glitter.
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { FASTEST } from './flow';
+import { COLLAR_GLSL } from './collar';
 
 export const VERTEX = /* glsl */ `
 varying vec3 vWorld;
@@ -28,6 +29,14 @@ uniform sampler2D tCarried;
 uniform vec4 uFlowRect;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+// Drawn twice: as the level sheet, and with COLLAR as the lifted discs round what stands in the water (collar.ts).
+#ifdef COLLAR
+varying vec2 vAway;
+varying vec4 vSrc;
+varying vec2 vDrift;
+varying float vFade;
+${COLLAR_GLSL}
+#endif
 // One band of waves (maps.ts): waves of nearly one length that run nearly one way. The square is read where the band's group has been carried to,
 // at the band's group speed and with the stream, and its two halves are turned against each other at what is left of the band's frequency:
 // so every crest runs at its own phase speed, which is the speed water gives a wave of that length. Nothing is slid as a picture.
@@ -164,6 +173,23 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float stirred = min(1.0, smoothstep(0.04, 0.2, rings.b) + smoothstep(0.0, 0.25, held));
   // From the high wide view a ring is a faint thing: whole circles metres wide round every animal read as a pressed record.
   slope += rings.rg * (2.4 * (0.05 + 0.95 * arcs) * (1.0 - 0.55 * uHigh));
+#ifdef COLLAR
+  // The lifted surface: its slope is taken from the same height the vertex stage lifted it by.
+  float h0 = collarHeight(vAway, vSrc, vDrift, uTime);
+  vec2 lifted = vec2(collarHeight(vAway + vec2(0.003, 0.0), vSrc, vDrift, uTime) - h0, collarHeight(vAway + vec2(0.0, 0.003), vSrc, vDrift, uTime) - h0) / 0.003;
+  slope += lifted;
+  // Froth: a broken line where the water parts round the leg, thicker in its lee, and bits of it carried off down the stream.
+  float cd = length(vAway);
+  float cOut = max(cd - vSrc.x, 0.0);
+  float cLee = dot(vAway / max(cd, 1e-4), vDrift);
+  float cLeg = 1.0 - smoothstep(0.07, 0.12, vSrc.x);
+  float cAng = atan(vAway.y, vAway.x);
+  float cBits = vnoise(vec2(cAng * 2.2 + vSrc.w, cOut * 55.0 - 0.7 * uTime)) * 0.6 + 0.4 * vnoise(xz * 61.0 + 0.4 * uTime);
+  float cTail = smoothstep(0.45, 0.95, cLee) * exp(-cOut / 0.3);
+  float cHug = cLeg * exp(-cOut / (0.03 + 0.03 * max(cLee, 0.0))) + (1.0 - cLeg) * (1.0 - smoothstep(0.5 * vSrc.x, 1.3 * vSrc.x, cd)) * 0.75;
+  flecks = max(flecks, vSrc.y * smoothstep(0.52, 0.74, cBits * (0.35 + 0.65 * max(cHug, 0.8 * cTail)) + 0.42 * cHug));
+  stirred = max(stirred, vSrc.y * min(1.0, 3.0 * length(lifted)));
+#endif
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float rough = sqrt(lost);
 
@@ -264,7 +290,11 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   alpha *= cover;
   colour *= cover;
   float keep = 1.0 - uSolo;
+#ifdef COLLAR
+  return vec4(rigOut(colour), alpha * keep) * vFade;
+#else
   return vec4(rigOut(colour), alpha * keep);
+#endif
 }
 void main() {
   vec2 xz = vWorld.xz;
