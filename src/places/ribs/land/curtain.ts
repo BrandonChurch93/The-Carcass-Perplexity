@@ -174,18 +174,20 @@ void main() {
   vec3 across = normalize(du - n0 * dot(du, n0) + vec3(1e-7, 0.0, 0.0)) * sign(dFdx(vUv.x) * dFdy(vUv.y) - dFdy(vUv.x) * dFdx(vUv.y) + 1e-12);
   float ruffle = sin(vUv.y * 60.0 + vTone.x * 40.0 + 3.0 * wr) * smoothstep(0.3, 0.9, edge);
   vec3 n = normalize(n0 + across * ((vUv.x * 2.0 - 1.0) * 0.28) + 0.5 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5) + 0.6 * ruffle, wr2 - 0.5));
-  vec3 olive = mix(vec3(0.006, 0.006, 0.004), vec3(0.02, 0.018, 0.008), vTone.x);
+  vec3 olive = mix(vec3(0.012, 0.012, 0.006), vec3(0.046, 0.04, 0.014), vTone.x);
   vec3 amber = vec3(0.12, 0.075, 0.014);
   // Brown only toward the thin end of a frond and at its edges: the body of it is olive black.
   float gold = vTone.y * smoothstep(0.25, 1.0, vUv.y) * (0.35 + 0.65 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
   vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
-  // Wet through: it shows the sky in narrow lights along its troughs.
-  float rough = 0.16 + 0.22 * wr;
+  // Wet through, but no hose: the film on it stands in beads and patches, so the sky on it is a broken line of lights along its troughs.
+  float rough = 0.17 + 0.55 * smoothstep(0.35, 0.65, wr2) * (0.4 + 0.6 * wr);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The low sun through a thin wet frond.
   float thru = (max(dot(-n0, uSunDir), 0.0) + 0.12 * max(dot(n0, uSunDir), 0.0)) * (0.08 + 0.92 * vTone.y) * occ;
-  if (thru > 0.06) c += amber * uSunColour * (0.3 * thru * sunAt(vWorld, landAt(vWorld.xz)));
+  // The sun's reach is read before the branch: a picture read by the pixel's own level inside one is not defined at its edge.
+  float sunK = sunAt(vWorld, landAt(vWorld.xz));
+  if (thru > 0.06) c += amber * uSunColour * (0.3 * thru * sunK);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

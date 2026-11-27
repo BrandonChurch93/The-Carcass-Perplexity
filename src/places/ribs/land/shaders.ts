@@ -345,7 +345,7 @@ void main() {
   float low = smoothstep(uKelp + 5.0 + 4.0 * (macro - 0.5), uKelp - 1.5, y);
   albedo *= mix(1.0, 0.62, low) * mix(1.0, 0.45, band);
   // The weed: the picture's own hanks hang from the weed line, and under them the dark weed of the shore.
-  float line = uKelp + 3.6 * (vnoise(vec2(arc / 6.0, 4.5)) - 0.5) + 1.6 * (vnoise(vec2(arc / 1.3, 9.5)) - 0.5);
+  float line = uKelp + 8.0 * (vnoise(vec2(arc / 9.0, 4.5)) - 0.5) + 3.0 * (vnoise(vec2(arc / 1.7, 9.5)) - 0.5);
   float down = line - y;
   // The weed is the Builder's own sheet of hanging wrack, laid by the face at its own size (3.2 m): limp straps, olive black, a few amber.
   vec2 uk = top > 0.5 ? vWorld.xz / 3.2 : vec2(arc, y) / 3.2;
@@ -356,8 +356,8 @@ void main() {
   float weed = smoothstep(-0.25, 0.35, down + 1.1 * (vnoise(vec2(arc * 2.9, 2.5 + y * 0.15)) - 0.5) + 6.0 * (wl - 0.05));
   albedo = mix(albedo, kelp, weed);
   // The weed is no mirror of the rock: it lies over the stone's cracks, and its straps catch the sky each its own way.
-  n = normalize(mix(n, n0 + (round0 * (wk.g - wk.r) + rise * (wl - 0.06)) * 6.0, weed));
-  float rough = mix(mix(mix(0.74, 0.88, top), 0.6, max(band, 0.7 * low)), 0.4, weed);
+  n = normalize(mix(n, n0 + (round0 * (wk.g - wk.r) + rise * (wl - 0.06)) * 3.0, weed));
+  float rough = mix(mix(mix(0.74, 0.88, top), 0.6, max(band, 0.7 * low)), 0.56, weed);
   float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
@@ -598,7 +598,7 @@ void main() {
   float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (pz - 0.35) - 1.5 * clamp(over - 0.06, 0.0, 0.25) + 0.34 + 0.45 * lane - 0.25 * driftN);
   // Stones where the floor stands proud, rippled sand where it lies low.
   // Gravel lies in bars a few strides long, where the floor stands proud; between them the floor is silt.
-  float bar = smoothstep(0.3, 0.52, pz + 0.5 * clamp(over, -0.2, 0.3) + 0.5 * (vnoise(vec2(xz.x / 14.0, xz.y / 5.0) + 2.0) - 0.42));
+  float bar = smoothstep(0.4, 0.6, pz + 0.5 * clamp(over, -0.2, 0.3) + 0.5 * (vnoise(vec2(xz.x / 14.0, xz.y / 5.0) + 2.0) - 0.42));
   bar *= 1.0 - 0.8 * soaked;
   vec3 grain = mix(sand / 0.128, det / 0.122, bar);
   // Wet grey shingle: slate more than sand.
@@ -610,7 +610,7 @@ void main() {
   // Cast weed lies in dark patches on the bars and at the edge of the pools.
   // Before the gate the flat is the weed's: dark mats of it between the sheets of standing water.
   float gateNear = smoothstep(90.0, 25.0, length(xz - uGate));
-  float castWeed = smoothstep(0.595, 0.64, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * vnoise(xz / 0.45 + 3.0) + 0.1 * bar + 0.25 * gateNear);
+  float castWeed = smoothstep(0.58, 0.625, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * vnoise(xz / 0.45 + 3.0) + 0.14 * bar + 0.25 * gateNear);
   // Its straps lie one way in a clump, olive and brown, not one black.
   vec3 weedC = mix(vec3(0.022, 0.02, 0.008), vec3(0.07, 0.054, 0.018), vnoise(vec2(xz.x * 7.0 + 2.0 * vnoise(xz / 1.3), xz.y * 1.6))) * (0.5 + nh.z);
   albedo = mix(albedo, weedC, 0.9 * castWeed);
@@ -644,12 +644,15 @@ void main() {
   occ = mix(occ, mix(0.4 + 0.6 * smoothstep(0.1, 0.55, nearN.z), 1.0, filmN), nearBy);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The film of water shows the cloud, not only the smooth sky; ruffled, it shows the sky a hand higher than a still one would.
+  // The sky's picture is read at a named level and the land's before the branch: a level taken from the pixel inside it is not defined
+  // at the edge of a film, and the edge of every pool would take another level with every move of the lens.
+  float openF = skyOpen(vWorld);
   if (film > 0.02) {
     vec3 r = reflect(-v, n);
     r.y = abs(r.y) + 0.06;
     r = normalize(r);
     float f = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
-    c = max(c + film * f * (skyCloud(vWorld, r) * (1.0 + 1.6 * lane) - skyRadiance(r)) * skyOpen(vWorld), vec3(0.0));
+    c = max(c + film * f * (skyMirror(r, 3.0) * (1.0 + 1.6 * lane) - skyRadiance(r)) * openF, vec3(0.0));
     // Before the gate the sheets lie under the wall of water and the stacks: they show those, dark, and the bright of the sky only in
     // long bands across, where the ruffled film turns up to it.
     float band = smoothstep(0.5, 0.74, vnoise(vec2(xz.x / 11.0, xz.y / 1.3) + 5.0) * 0.7 + vnoise(vec2(xz.x / 2.7, xz.y / 0.4)) * 0.3);
