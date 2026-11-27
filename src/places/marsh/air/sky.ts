@@ -67,7 +67,9 @@ void main() {
   // (It was taken with the first lens: 44 degrees high, so its whole height is 0.808 in tangent and its width 1.436.)
   float fu = 0.68 + (az - uRain.x - ${RAIN_TURN.toFixed(4)}) / 1.436;
   fu = 1.0 - abs(1.0 - mod(fu, 2.0));
-  float fv = 0.574 + max(el, 0.0) / 0.808;
+  // (Its hills stand lower in the first lens's approved picture than it has them: a ridge 0.037 high in tangent, not 0.06. The picture
+  // is read closer set near the horizon, and as it was taken higher up.)
+  float fv = 0.574 + max(el, 0.0) * (1.0 + 0.9 * exp(-max(el, 0.0) / 0.1)) / 0.808;
   vec3 far = texture2D(tFar, vec2(fu, min(fv, 0.995))).rgb;
   float low = smoothstep(0.3, 0.14, el);
   // The picture is as a screen shows it; the film's own curve (exposure 2, then AgX) is undone here so that it comes out as it went in:
