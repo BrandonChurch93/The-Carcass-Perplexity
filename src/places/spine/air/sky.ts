@@ -48,9 +48,9 @@ const vec2 PANO_FROM = vec2(${PANO_FROM[0].toFixed(5)}, ${PANO_FROM[1].toFixed(5
 const vec2 PANO_SPAN = vec2(${PANO_SPAN[0].toFixed(5)}, ${PANO_SPAN[1].toFixed(5)});
 const float PANO_DOT = ${(PANO_SPAN[0] / 4096).toFixed(7)};
 const float PANO_DRIFT = 0.0021;
-const float FLOW_RATE = 0.007;
+const float FLOW_RATE = 0.0095;
 const float FLOW_PERIOD = 10.0;
-const float SCUD_HIGH = 1500.0;
+const float SCUD_OVER = 650.0;
 vec2 panoUv(float az, float el) {
   return (vec2(wrapPi(az) - uSkyStage.x - PANO_DRIFT * (uTime - 12.0), el) - PANO_FROM) / PANO_SPAN;
 }
@@ -60,10 +60,13 @@ vec3 panoRead(vec2 uv, float lod) {
 // The picture as the storm stands between strokes: what glows violet in it is the cloud lit from inside, which is dark until a light
 // reaches it; what is orange in it is the last light, and stands only toward the last light.
 vec3 panoAtRest(vec3 c, float toLast, float el, float lit) {
+  // The storm is slate and violet, never green: where the flow's fade has left more green than the picture has, it is taken back.
+  c.g = min(c.g, 0.5 * (c.r + c.b));
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
   float glowing = clamp((0.5 * (c.r + c.b) - c.g) * 12.0 - 0.35, 0.0, 1.0) * (1.0 - warm);
-  c = mix(c, body * vec3(0.8, 0.92, 1.16) * mix(1.0, 0.5, glowing), glowing * (1.0 - lit));
+  c = mix(c, body * vec3(0.88, 0.9, 1.14) * mix(1.0, 0.5, glowing), glowing * (1.0 - lit));
+  c = mix(c, body * vec3(0.94, 0.9, 1.13), 0.3 * (1.0 - warm));
   c *= 1.0 + 0.8 * lit;
   c = mix(c, body * vec3(0.7, 0.84, 1.1), warm * max(max(1.0 - smoothstep(0.6, 0.9, toLast), 0.9 * smoothstep(0.012, 0.05, el)), 0.7));
   return c;
@@ -140,6 +143,17 @@ vec3 stratus(vec3 c, vec3 from, vec3 d) {
   }
   return c;
 }
+// On the storm's side the snow it drops and the sea's own vapour stand low as a pale mist, in banks that the gale carries: the foot of the
+// storm wall goes into it, and so does the far end of the sea under it.
+vec3 stormMist(vec3 c, vec3 d, float el) {
+  float toStorm = -dot(d.xz, GALE) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
+  float side = smoothstep(0.05, 0.75, toStorm);
+  if (side <= 0.0) return c;
+  float az = atan(d.z, d.x);
+  float banks = textureLod(tNoise, vec3(az * 0.7 - uTime * 0.004, el * 2.2, 0.83), 0.0).r;
+  float mist = side * exp(-max(el, 0.0) / (0.06 + 0.1 * banks)) * (0.45 + 0.5 * banks);
+  return mix(c, vec3(0.19, 0.2, 0.25), 0.75 * mist);
+}
 // The storm with none of its billows, for what fades into the sky: its dark where it stands, and the rig's lights on it.
 const float FOOT_AIR = 0.8;
 vec3 skyBroad(vec3 from, vec3 d) {
@@ -152,6 +166,7 @@ vec3 skyBroad(vec3 from, vec3 d) {
   // The whole sky's picture read very soft, cold: the storm's dark where it stands and the dusk where it is clear.
   vec3 c = panoAtRest(panoRead(panoUv(atan(d.z, d.x), max(el, 0.1)), 6.5), 0.0, el, lit);
   c = dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.8, 0.92, 1.16);
+  c = stormMist(c, d, asin(clamp(d.y, -1.0, 1.0)));
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.6, 0.76, el));
   return c * (SKY_GAIN * low);
 }
@@ -192,8 +207,10 @@ vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
   float lit = uStrikeTop.w * strikeReach(from, d) * smoothstep(-0.03, 0.05, d.y) * mix(0.22, 1.0, smoothstep(0.0, 0.06, d.y)) * (0.35 + 0.9 * masses);
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
-  float shape = smoothstep(0.004, 0.05, body);
-  return c * (1.0 + 3.0 * lit * (1.0 - 0.8 * warm) * vec3(0.78, 0.5, 1.0)) + vec3(0.62, 0.32, 1.0) * (lit * (0.012 + 0.11 * shape) * (1.0 - warm));
+  float shape = smoothstep(0.025, 0.13, body);
+  // Violet is the stroke's own, close round it; the storm it lights from afar goes pale grey violet, as the pictures have it.
+  float core = smoothstep(0.12, 0.7, lit);
+  return c * (1.0 + 3.0 * lit * (1.0 - 0.8 * warm) * mix(vec3(0.84, 0.8, 0.98), vec3(0.78, 0.5, 1.0), core)) + mix(vec3(0.78, 0.74, 0.98), vec3(0.62, 0.32, 1.0), core) * (lit * (0.012 + 0.11 * shape) * (1.0 - warm));
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   vec3 c = skyAtRest(from, d, lod);
@@ -211,6 +228,22 @@ uniform sampler2D tStorm;
 uniform vec4 uStormFrame;
 ${RIG_GLSL}
 ${SKY_GLSL}
+
+// Under the storm's base runs scud: torn cloud a few hundred metres over the lens, carried on the gale and changing as it goes. It is
+// near: it crosses the storm behind it, and shifts against it as the lens moves. xyz its colour, w how much of the sky it hides.
+vec4 scudOver(vec3 from, vec3 d, float toLast, float lit) {
+  if (d.y <= 0.02) return vec4(0.0);
+  float t = SCUD_OVER / d.y;
+  vec2 p = (from.xz + d.xz * t - GALE * (34.0 * uTime)) / 2500.0;
+  float far = smoothstep(9000.0, 3500.0, t);
+  float lumps = textureLod(tNoise, vec3(p, 0.43 + 0.006 * uTime), 0.0).r;
+  float ragged = textureLod(tNoise, vec3(p * 3.3 + 0.21, 0.17 + 0.011 * uTime), 0.0).b;
+  float thick = smoothstep(0.53, 0.8, lumps + 0.26 * (ragged - 0.5) * smoothstep(6000.0, 2000.0, t));
+  float cover = thick * far * smoothstep(0.02, 0.08, d.y) * (1.0 - smoothstep(0.72, 0.95, toLast));
+  // Thin at its torn edge it is pale vapour; where it is thick it is darker than the storm behind it.
+  vec3 c = mix(vec3(0.15, 0.155, 0.19), vec3(0.036, 0.04, 0.058), smoothstep(0.25, 1.0, thick)) * (1.0 + 2.0 * lit);
+  return vec4(c, 0.85 * cover);
+}
 
 // The sky is one picture of the whole of it as the ridge's lenses see it (mat/skypano): the storm with its heads and its fall of snow on
 // the gale's side, the clear dusk on the lee. It turns over: every place of it is carried along its own flow (mat/skyflow), out of the
@@ -233,31 +266,24 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   float near = cloudLit(from, d);
   float toLast = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
   // The whole storm takes a little of a strike; the bloom about the bolt is the light, and the rest of the storm stays dark.
-  float lit = near + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * (1.0 - smoothstep(0.7, 0.95, toLast));
+  float lit = near + 0.08 * min(dot(uFlash, vec3(0.33)), 1.0) * (1.0 - smoothstep(0.7, 0.95, toLast));
+  // The cloud's heads stand out of its dark: a little more between them than the picture holds.
+  c *= clamp(pow(max(dot(c, vec3(0.3, 0.5, 0.2)) / 0.078, 0.01), 0.3), 0.75, 1.4);
   c = panoAtRest(c, toLast, el, clamp(lit, 0.0, 1.0));
-  // Under the storm's base runs scud, torn cloud a kilometre and a half up and carried on the gale: it is near, and shifts against the
-  // storm behind it as the lens moves.
-  if (d.y > 0.015) {
-    float t = (SCUD_HIGH - from.y) / d.y;
-    vec2 p = (from.xz + d.xz * t - GALE * (26.0 * uTime)) / 5200.0;
-    float lodS = clamp(log2(max(foot * t / d.y, 1.0) * (0.3 * 4096.0 / 5200.0)), 0.0, 7.0);
-    vec2 uvS = vec2(0.32 + 0.3 * mirrored(p.x + 0.37), 0.4 + 0.44 * mirrored(p.y * 0.8 + 0.11));
-    float body = dot(textureLod(tSkyPano, uvS, lodS + 2.5).rgb, vec3(0.3, 0.5, 0.2));
-    float bodyBroad = dot(textureLod(tSkyPano, uvS, 6.0).rgb, vec3(0.3, 0.5, 0.2));
-    float clump = textureLod(tNoise, vec3(p * 0.21, 0.43), 0.0).r;
-    float thick = smoothstep(-0.012, 0.04, body - bodyBroad + 0.05 * (clump - 0.45)) * smoothstep(0.4, 0.6, clump);
-    thick *= smoothstep(0.015, 0.07, d.y) * exp(-t / 7000.0) * (1.0 - smoothstep(0.75, 0.95, toLast));
-    vec3 torn = mix(vec3(0.024, 0.027, 0.04), vec3(0.07, 0.074, 0.1), smoothstep(0.0, 0.07, body - bodyBroad)) * (1.0 + 2.0 * clamp(lit, 0.0, 1.0));
-    c = mix(c, mix(torn, c, 0.25), 0.7 * thick);
-  }
+  vec4 scud = scudOver(from, d, toLast, clamp(lit, 0.0, 1.0));
+  c = mix(c, scud.rgb, scud.a);
+  c = stormMist(c, d, el);
   // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
   c += vec3(0.42, 0.33, 0.8) * clamp(near, 0.0, 3.0) * (0.03 + 1.3 * dot(c, vec3(0.33)));
   // Overhead the picture ends: the cloud closes over in its own dark.
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.6, 0.76, el));
-  // Where the lens is opened for the dark of the canal, the storm in its mouth is opened less: it stays a dark storm.
-  c *= SKY_GAIN / mix(1.0, 1.7, smoothstep(1.4, 1.8, uSkyStage.y));
-  // In a stroke the cloud keeps its forms: its darks take less of the light than its pale heads.
-  if (uStrikeTop.w > 0.0) c = mix(c, strikeCloud(c, from, d), 0.62);
+  // Where the lens is opened (by the dead one, in the canal), the storm is opened less than the land: it stays a dark storm.
+  // Out of the canal's mouth it is the light itself: there it is as open as the land, and the cloud lit from inside shows whole.
+  float mouth = smoothstep(1.4, 1.8, uSkyStage.y);
+  c *= SKY_GAIN * mix(vec3(1.0 / (1.0 + 0.37 * uSkyStage.y)), vec3(0.8, 0.72, 0.92), mouth);
+  // In a stroke the cloud keeps its forms: its darks take less of the light than its pale heads. (Out of the mouth the lit cloud is the
+  // light of the canal, and stands at more than its share.)
+  if (uStrikeTop.w > 0.0) c = mix(c, strikeCloud(c, from, d), mix(0.38, 2.3, mouth));
   return c;
 }
 
@@ -306,7 +332,7 @@ void main() {
     float cutBy = textureLod(tNoise, vec3(az * 3.7 + uTime * 0.0006, d.y * 52.0 + az * 1.3, 0.11), 0.0).b;
     float lengths = (0.2 + 1.0 * smoothstep(0.3, 1.0, lumps)) * (0.22 + 0.78 * smoothstep(0.36, 0.62, cutBy));
     // (Where the lens is opened for the dark, the band is opened with the sky.)
-    c += vec3(0.62, 0.21, 0.045) * (side * line * lengths) * (1.0 - plateOn) * (1.0 + 0.6 * uSkyStage.y);
+    c += vec3(0.56, 0.235, 0.075) * (side * line * lengths) * (1.0 - plateOn) * (1.0 + 0.6 * uSkyStage.y);
   }
   if (plateOn > 0.0) {
     vec3 held = plateCloud(uvQ, 0.0);
@@ -315,6 +341,9 @@ void main() {
     vec2 uvW = vec2(0.03 + 0.3 * uvQ.x + 0.0006 * uTime, 0.1 + 0.75 * (uvQ.y - 0.32));
     vec3 wall = panoAtRest(panoRead(uvW, 0.0), 0.0, el, 0.0) * (SKY_GAIN * 1.5);
     held = mix(held, max(held, wall), (1.0 - smoothstep(0.12, 0.62, uvQ.x)) * smoothstep(0.33, 0.42, uvQ.y));
+    // The scud crosses the long lens too, large and soft: the sky behind the spire is weather that moves, not a picture hung there.
+    vec4 scudP = scudOver(cameraPosition, d, 0.0, 0.0);
+    held = mix(held, scudP.rgb * SKY_GAIN, 0.6 * scudP.a);
     held = strikeCloud(held, cameraPosition, d);
     // Through a long lens the picture is seen larger than it was made: the same cloud, four times smaller, gives it the detail it lacks
     // there, as much as the lens asks for.
@@ -328,7 +357,10 @@ void main() {
     c = mix(c, held, plateOn);
     // Behind the long lens the band is the picture's own: what is orange in it is the last light, and is as bright as on the open ridge.
     float heatP = clamp((held.r - held.b) * 9.0, 0.0, 1.0);
-    c = mix(c, c * vec3(2.9, 1.75, 0.9) + vec3(0.05, 0.014, 0.0) * heatP, plateOn * heatP);
+    c = mix(c, c * vec3(2.2, 1.5, 0.95) + vec3(0.04, 0.014, 0.002) * heatP, plateOn * heatP);
+    // And it is a glow under the cloud's deck, not a stripe: the warm of the picture read soft stands in the air about the band.
+    vec3 heldSoft = plateCloud(uvQ, 5.0);
+    c += vec3(0.085, 0.036, 0.014) * (plateOn * clamp((heldSoft.r - heldSoft.b) * 14.0, 0.0, 1.0));
   }
   // The ridge runs on beyond what is built: a row of far spires stands out of the sea toward the last light, each smaller and bluer than
   // the one before it. They are too far to shift with the lens, so they are of the dome.
