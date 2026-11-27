@@ -6,9 +6,9 @@ import { landHeight } from '../land/height';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { during } from '../shared/anchors';
-import { LEVELS, MID_DATA } from './body.data';
+import { FAR_DATA, LEVELS, MID_DATA } from './body.data';
 import { createCards } from './cards';
-import { WADE, herd, standPose, type Drinker } from './herd';
+import { CLOSE_COUNT, WADE, herd, standPose, type Drinker } from './herd';
 import { BONES, solve, type Solved } from './skeleton';
 
 export const PARTS: readonly string[] = ['drinkers'];
@@ -42,8 +42,10 @@ void main() {
 }`;
 
 const FRAGMENT = /* glsl */ `
-// x its own number, y its size, z the level of its feet.
+// x its own number, y its size, z the level of its feet, w how much of the sun the ground behind it keeps off it.
 uniform vec4 uOwn;
+// x how far its head is up, y how much of the low sun still reaches its back where the ground it stands on is in shade.
+uniform vec2 uPose;
 // The hide sheet: rgb its colour, a its relief.
 uniform sampler2D tHide;
 // The broad sheet: the loose folds, the scars and the dirt.
@@ -133,10 +135,10 @@ void main() {
   bool mirrored = cameraPosition.y < 0.0;
   vec3 at = vRest + own * vec3(13.7, 9.1, 25.3);
   vec3 rn = normalize(vRestNormal);
-  // The hide is pale and bare. Its tone drifts over the body: pinker where the skin is thin, greyer where it is thick.
+  // The hide is pale and bare. Its tone drifts over the body: warmer where the skin is thin, greyer where it is thick.
   float drift = n3(at * 1.3);
   float blotch = 0.6 * n3(at * 3.1) + 0.4 * n3(at * 8.3);
-  vec3 skin = mix(vec3(0.75, 0.685, 0.6), vec3(0.8, 0.755, 0.69), drift) * (0.92 + 0.16 * blotch);
+  vec3 skin = mix(vec3(0.67, 0.615, 0.5), vec3(0.75, 0.705, 0.6), drift) * (0.92 + 0.16 * blotch);
   vec3 dpx = dFdx(vWorld);
   vec3 dpy = dFdy(vWorld);
   vec3 rx = dFdx(vRest);
@@ -160,12 +162,14 @@ void main() {
   // ribs, the hip and the rump it is drawn tight.
   vec3 fromShoulder = (vRest - vec3(0.0, 1.62, 0.62)) / vec3(1.0, 0.42, 0.3);
   vec3 fromStifle = (vRest - vec3(0.0, 1.5, -0.5)) / vec3(1.0, 0.36, 0.26);
-  float loose = clamp(neck * root + exp(-dot(fromShoulder.yz, fromShoulder.yz)) + exp(-dot(fromStifle.yz, fromStifle.yz))
+  float slackNeck = neck * root * (1.0 - 0.7 * uPose.x);
+  float loose = clamp(slackNeck + exp(-dot(fromShoulder.yz, fromShoulder.yz)) + exp(-dot(fromStifle.yz, fromStifle.yz))
     + trunk * smoothstep(-0.1, -0.7, rn.y) + 0.8 * leg * joint, 0.0, 1.0);
-  loose = mix(0.3, 1.0, loose * (0.6 + 0.8 * n3(at * 1.9 + 7.0)));
-  float relief = neck * root * 0.004 * rings
+  loose = mix(0.1, 1.0, loose * smoothstep(0.15, 0.8, n3(at * 1.9 + 7.0)) * 1.5);
+  loose = min(loose, 1.0);
+  float relief = slackNeck * 0.004 * rings
     + leg * joint * 0.0026 * legRings
-    + ribs * 0.0055 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
+    + ribs * (1.0 - smoothstep(0.005, 0.016, px)) * 0.0022 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
   float groove = max(0.5 * neck * root * (1.0 - rings), 0.5 * leg * joint * (1.0 - legRings));
   // Every slope across the screen is taken here, above the first branch.
   vec2 slope = vec2(dFdx(relief), dFdy(relief));
@@ -184,7 +188,9 @@ void main() {
     float which = smoothstep(0.42, 0.58, n3(at * 0.8 + 3.0));
     vec3 folded = wornAt(at, dx, dy, ma.x, me.x, w, limb, which);
     float tone = dot(folded, vec3(0.3, 0.5, 0.2));
-    skin *= mix(vec3(1.0), mix(vec3(tone), folded, 0.75), 0.72 + 0.28 * loose);
+    skin *= mix(vec3(1.0), mix(vec3(tone), folded, 0.75), 0.5 + 0.5 * loose);
+    // The bottom of a fold holds its own shade and the dirt of years: it is dark, and darkest where the hide hangs loosest.
+    skin *= mix(vec3(1.0), vec3(0.5, 0.42, 0.38), 0.85 * loose * smoothstep(0.95, 0.6, tone));
     // The fine sheet, twice: the net of creases, and close to, the pores.
     vec4 broad = hideAt(at * 1.5, dx * 1.5, dy * 1.5, ma, me, w);
     vec4 fine = vec4(0.69, 0.41, 0.32, 0.5);
@@ -204,7 +210,7 @@ void main() {
   // Dust and old mud dark along the spine and the withers, and smeared down the shoulder and the haunch.
   float top = trunk * smoothstep(0.45, 0.95, rn.y) * smoothstep(0.5, 0.2, abs(vRest.x) + 0.25 * (blotch - 0.5));
   float smear = trunk * smoothstep(0.5, 0.72, n3(at * vec3(2.2, 1.1, 2.2) + 11.0) + 0.25 * (vRest.y - 1.9));
-  float dirt = clamp(0.5 * top * smoothstep(0.3, 0.7, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.34 * smear, 0.0, 1.0);
+  float dirt = clamp(0.5 * top * smoothstep(0.3, 0.7, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear, 0.0, 1.0);
   skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt);
   // Each a tone of its own.
   skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3));
@@ -215,27 +221,42 @@ void main() {
   float knee = leg * (exp(-pow((vRest.y - 0.78) / 0.12, 2.0)) + exp(-pow((vRest.y - 0.14) / 0.07, 2.0)));
   skin *= 1.0 - 0.3 * knee * (0.4 + 0.6 * ragged);
   // Wet and dark where it has stood in the lake, and flecked with the mud it kicked up, thinning to the knee; dry above. The horn of the hoof is dark.
-  float wet = 1.0 - smoothstep(0.1, 0.34, above + 0.18 * ragged);
+  float wet = 1.0 - smoothstep(0.14, 0.4, above + 0.2 * ragged);
+  // Where the leg goes into the lake the water climbs it a finger's width and is dark with the leg's own shade.
+  float waterline = (1.0 - smoothstep(0.0, 0.035, above)) * step(uOwn.z, -0.02);
   float muddy = (1.0 - smoothstep(0.2, 1.25, above + 0.5 * ragged)) * leg;
   skin *= mix(vec3(1.0), vec3(0.62, 0.56, 0.52), 0.7 * muddy);
   float fleck = smoothstep(0.7, 0.78, n3(at * vec3(110.0, 70.0, 110.0)) * (0.7 + 0.6 * n3(at * 6.0))) * (1.0 - smoothstep(0.3, 1.4, above + 0.6 * ragged));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
-  vec3 albedo = mix(skin * mix(1.0, 0.55, wet), vec3(0.13, 0.1, 0.08), 0.55 * fleck);
+  vec3 albedo = mix(skin * mix(vec3(1.0), vec3(0.17, 0.15, 0.14), wet) * (1.0 - 0.6 * waterline), vec3(0.13, 0.1, 0.08), 0.55 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.62, 1.0, vShade.x) * (1.0 - 0.35 * groove);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
-  vec3 c = rigShade(p, n, v, albedo, mix(0.78, 0.45, wet), occ);
+  vec3 c = rigShade(p, n, v, albedo, mix(0.78, 0.6, wet), occ);
+  // The two under the last camera stand in the shade of the bluff it looks from. The rig knows no such shade: their feet are at a level of
+  // their own. The sun the rig gave them is taken back.
+  float sunHere = sunAt(p);
+  float lit = 1.0 - uOwn.w;
+  c -= albedo * uSunColour * (uOwn.w * max(dot(n, uSunDir), 0.0) * sunHere * (0.4 + 0.6 * occ) / 3.14159);
   // The pale gravel and the water under it throw the sky back up at it, and the lit wall across the lake warms the side turned from the sun.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 / 3.14159) * (0.75 - 0.25 * n.y);
   c += rigBounce(p, n, albedo) * occ;
   // A bare hide has a dull sheen, and the low sun comes a little way through it wherever it turns from sight.
-  float sunHere = sunAt(p);
-  c += rigGlint(p, n, v, 0.5) * (0.35 * occ * (1.0 - dirt));
+  c += rigGlint(p, n, v, 0.5) * (0.35 * occ * (1.0 - dirt) * lit);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float through = pow(1.0 - nv, 2.5) * (0.35 + 0.65 * max(dot(-v, uSunDir), 0.0));
-  c += albedo * vec3(1.0, 0.62, 0.45) * uSunColour * (0.2 * through * sunHere * occ / 3.14159);
+  c += albedo * vec3(1.0, 0.62, 0.45) * uSunColour * (0.2 * through * sunHere * lit * occ / 3.14159);
+  // The low sun is warm in a bare hide, and lies along every outline that is turned to it.
+  float sunward = dot(n, uSunDir);
+  float rim = pow(1.0 - nv, 3.0) * smoothstep(-0.15, 0.5, sunward);
+  c += albedo * uSunColour * (vec3(0.05, -0.01, -0.13) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim) * (sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
+  // The herd stands on a bank the evening shade has taken, and the dark gravel gives nothing back: a hide there is grey, and darkest at
+  // the belly and down the legs. Backs and necks stand up into the last of the sun.
+  c *= max(0.2, 1.0 - uPose.y * (0.5 + 0.8 * (1.0 - smoothstep(0.1, 1.0, above)) + 0.7 * max(-n.y, 0.0)));
+  c += albedo * uSunColour * (vec3(1.0, 0.9, 0.78) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim)
+    * (1.6 * uPose.y * (1.0 - sunHere) * smoothstep(0.25, 1.1, above) * (0.4 + 0.6 * occ) / 3.14159);
   // The wet of the leg takes the sun as a film of water does.
-  c += wet * rigGlint(p, n, v, 0.16);
+  c += 0.25 * wet * lit * rigGlint(p, n, v, 0.16);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -288,37 +309,48 @@ interface Drawn {
   material: THREE.ShaderMaterial;
   bones: Float32Array;
   own: THREE.Vector4;
+  pose: THREE.Vector2;
   solved: Solved;
 }
 
+const CLOSE = CLOSE_COUNT;
+
 export function create(ctx: Context): Piece {
-  // The four of the shore shot are bodies while that shot runs; every other animal, and these four in every other shot, is still a card.
+  // The animals a close shot is about are bodies while their shot runs: the four of the shore and the three beyond the mats. The herd is
+  // bodies in the wide shot, on the coarsest mesh, each with its own build, pose and time. In every other shot an animal is still a card.
   const all = herd(ctx.rng('drinkers-bodies'), ctx.events.rise - 1.7);
-  const cast = [0, 1, 2, 3];
+  const cast = all.map((_, index) => index);
+  // The two under the last camera stay cards in every shot: their slender necks are the approved picture's, and the unit keeps them as they are.
+  const shotOf = (index: number): string => (index < 4 ? 'eye-04' : index < 6 ? 'none' : index < CLOSE ? 'eye-02' : 'eye-01');
   const animals = cast.map((index) => all[index] as Drinker);
   const cards = createCards(ctx);
   const mid = bodyGeometry(MID_DATA, LEVELS.mid);
+  const far = bodyGeometry(FAR_DATA, LEVELS.far);
   const tHide = { value: ctx.assets.texture('drinker/hide.png', { repeat: true, anisotropy: 1 }) };
   const tFolds = { value: ctx.assets.texture('drinker/folds.jpg', { repeat: true, anisotropy: 1 }) };
   const tSlope = { value: ctx.assets.texture('drinker/folds-n.png', { kind: 'data', repeat: true, anisotropy: 1 }) };
   const drawn: Drawn[] = animals.map((animal, i) => {
     const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
-    const own = new THREE.Vector4(animal.own, animal.build.size, 0, 0);
+    const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.45);
+    const pose = new THREE.Vector2(0, index < CLOSE ? 0 : 0.45);
     const material = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, tHide, tFolds, tSlope },
+      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, tHide, tFolds, tSlope },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       // The surface is wound with its outside as its back: only that side is drawn.
       side: THREE.BackSide,
     });
-    const mesh = new THREE.Mesh(mid, material);
+    const mesh = new THREE.Mesh(index < CLOSE ? mid : far, material);
     mesh.frustumCulled = false;
     mesh.visible = false;
     ctx.scene.add(mesh);
     ctx.reflected.push(mesh);
-    return { animal, index, mesh, material, bones, own, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
+    return { animal, index, mesh, material, bones, own, pose, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
   });
+  // Each body darkens the ground it stands on, as its card did.
+  const shade = ctx.rig.contactDiscs(drawn.length);
+  const sun = ctx.rig.sun;
   ctx.parts.built('drinkers', (cards.meshes[0] as THREE.Mesh), ...cards.meshes.slice(1), ...drawn.map((d) => d.mesh));
   for (let i = 0; i < 22; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
   const scratch = new Float32Array(BONES * 12);
@@ -341,9 +373,8 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: (t) => {
-      // The four of the shore are bodies while the shore shot runs.
-      const shore = during('eye-04');
-      const isBody = (index: number): boolean => shore && index < 4;
+      const running = ['eye-01', 'eye-02', 'eye-04', 'eye-05'].find((id) => during(id));
+      const isBody = (index: number): boolean => index < cast.length && shotOf(index) === running;
       let lap = cards.setTime(t, isBody);
       const ring = (x: number, z: number, strength: number): void => {
         const slot = ctx.laps[lap];
@@ -357,10 +388,29 @@ export function create(ctx: Context): Piece {
         const d = g.animal;
         const bodies = isBody(g.index);
         g.mesh.visible = bodies;
-        if (!bodies) continue;
+        const size = d.build.size;
+        if (!bodies) {
+          ctx.rig.setDisc(shade, g.index, d.x, d.z, 0, 0);
+          continue;
+        }
         const solved = poseAt(d, t, g.bones);
+        g.pose.x = Math.min(1, Math.max(0, 1 - d.down(t)));
         g.solved = solved;
-        g.own.z = Math.max(WADE * d.build.size, ground(d.x, d.z));
+        // Where it stands just now: the middle of its four hooves. One that walks is not where it was placed.
+        const cx = 0.25 * solved.hooves.reduce((sum, h) => sum + h[0], 0);
+        const cz = 0.25 * solved.hooves.reduce((sum, h) => sum + h[2], 0);
+        // Its shade on the ground, long the way the low sun throws it. Far off it is all that sets the animal on the gravel, so it is full there.
+        const herdOf = g.index >= CLOSE;
+        const long = herdOf ? 1.6 : 2.6;
+        const off = size * 1.5 * (long - 1) * 0.5;
+        ctx.rig.setDisc(shade, g.index, cx - sun.direction.x * off, cz - sun.direction.z * off, size * (herdOf ? 1.5 : 1.2), d.level === undefined ? (herdOf ? 1 : 0.7) : 0, long, sun.shadowYaw);
+        g.own.z = d.level ?? Math.max(WADE * d.build.size, ground(cx, cz));
+        // The herd is far off: one ring round each that wades, and one where a mouth is in the water, while there are rings to give.
+        if (herdOf) {
+          if (wetAt(cx, cz) && g.own.z < -0.02) ring(cx, cz, 0.7);
+          if (wetAt(solved.muzzle[0], solved.muzzle[2]) && d.down(t) > 0.9) ring(solved.muzzle[0], solved.muzzle[2], 1.0);
+          continue;
+        }
         // Rings where its mouth is in the water, and round a hoof that has just come down or is about to leave.
         const low = d.down(t);
         if (wetAt(solved.muzzle[0], solved.muzzle[2])) ring(solved.muzzle[0], solved.muzzle[2], 1.3 * Math.min(1, Math.max(0, (low - 0.86) / 0.1)));
@@ -377,7 +427,7 @@ export function create(ctx: Context): Piece {
       }
       // And a faint ring round every leg that stands in the lake: the animal breathes and shifts, and the water at its legs is never quite still.
       for (const g of drawn) {
-        if (!g.mesh.visible || g.own.z > -0.02) continue;
+        if (!g.mesh.visible || g.own.z > -0.02 || g.index >= CLOSE) continue;
         for (const h of g.solved.hooves) if (wetAt(h[0], h[2]) && h[1] - g.own.z < 0.02) ring(h[0], h[2], 0.3);
       }
       for (; lap < ctx.laps.length; lap++) {
@@ -388,6 +438,7 @@ export function create(ctx: Context): Piece {
     dispose: () => {
       cards.dispose();
       mid.dispose();
+      far.dispose();
       for (const g of drawn) g.material.dispose();
     },
   };
