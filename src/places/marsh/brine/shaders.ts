@@ -4,7 +4,6 @@ import { F, K1_AT, POOL_R, R, STUCK, rel } from '../shared/anchors';
 const STUCK_AT = rel(STUCK[0], STUCK[1]);
 import { BRINE_GLSL } from '../shared/brine-glsl';
 import { RIG_GLSL } from '../shared/glsl';
-import { CONTACT } from '../shared/rig';
 import { FIELD_GLSL } from '../land/shaders';
 
 export const MAX_RINGS = 24;
@@ -60,12 +59,15 @@ vec4 groups(vec2 q, vec2 dir, float len, float px) {
 
 // The renderer shades four pixels together, and a value set under a branch or after a discard is not set in the pixel that did not get
 // there: its fall across the four, and the level a mipmapped picture picks for itself from that fall, is then not the same twice. So the
-// fall of the place on the level is taken once, of the varying, before any branch, and every mipmapped read is given it.
+// fall of the place on the level is taken once, of the varying, before any branch, and every mipmapped read is given it: as one level,
+// worked out once, wherever the grain is laid as wide as it is long (a read that works its level out of two falls costs more).
 vec2 gX;
 vec2 gY;
-// The grain, laid per metres to the tile.
-vec4 grain(vec2 uv, float per) {
-  return textureGrad(tGrain, uv, gX / per, gY / per);
+// The level of the grain a pixel wants where one tile of it is one metre.
+float grainLod;
+// The grain, laid so many metres to the tile: levels is the base two logarithm of that.
+vec4 grain(vec2 uv, float levels) {
+  return textureLod(tGrain, uv, grainLod - levels);
 }
 
 void main() {
@@ -73,12 +75,20 @@ void main() {
   gY = dFdy(vWorld.xz);
   fieldDx = gX;
   fieldDy = gY;
+  float grainSize = float(textureSize(tGrain, 0).x);
+  grainLod = log2(max(max(length(gX), length(gY)) * grainSize, 1e-6));
   vec3 p = vWorld;
+  // (Two things are wanted with their own fall across the pixel, so they are read here, before the shore's discard, where all four
+  // pixels read them: how soon each place turns over what the flow carries, and what stands in the brine.)
+  vec4 patchy = grain(p.xz / 37.0, 5.2095);
+  vec2 turns = vec2(dFdx(patchy.g), dFdy(patchy.g));
+  float stood = contactDrawn(p);
+  vec2 stoodFall = vec2(dFdx(stood), dFdy(stood));
   vec3 toEye = cameraPosition - p;
   float dist = length(toEye);
   vec3 v = toEye / dist;
   vec3 f = fieldAt(p.xz);
-  vec4 fine = grain(p.xz / 1.9, 1.9);
+  vec4 fine = grain(p.xz / 1.9, 0.9260);
   // The same shore the land paints: one line for both.
   float s = f.r + (fine.r - 0.5) * 0.1;
   // The surface is laid over the whole shelf, to where the bank comes up through the level: the bank itself cuts the waterline.
@@ -109,7 +119,6 @@ void main() {
   }
   // What the flow carries is looked up where it came from: twice, half a turn apart, each fading out as the other fades in, so that the
   // carried pattern never snaps back. No two places turn over together.
-  vec4 patchy = grain(p.xz / 37.0, 37.0);
   float turn = uTime / 9.0 + patchy.g * 2.0;
   float pa = fract(turn);
   float pb = fract(turn + 0.5);
@@ -117,25 +126,21 @@ void main() {
   vec2 qa = p.xz - flow * 9.0 * (pa - 0.5);
   vec2 qb = p.xz - flow * 9.0 * (pb - 0.5) + vec2(3.7, 1.9);
   // (The turn-over is not the same in two neighbours, so what is carried is drawn out across a pixel by more than the pixel's own width:
-  // how much is read off the turn-over a pixel on, and the carried grain is read that much softer.)
-  vec2 qx = gX;
-  vec2 qy = gY;
-  if (flow.x != 0.0 || flow.y != 0.0) {
-    vec2 turns = vec2(grain((p.xz + gX) / 37.0, 37.0).g, grain((p.xz + gY) / 37.0, 37.0).g) - patchy.g;
-    qx -= flow * (18.0 * turns.x);
-    qy -= flow * (18.0 * turns.y);
-  }
-  vec4 ca = textureGrad(tGrain, qa / 7.3, qx / 7.3, qy / 7.3);
-  vec4 cb = textureGrad(tGrain, qb / 7.3, qx / 7.3, qy / 7.3);
-  vec4 fa = textureGrad(tGrain, qa / 1.7, qx / 1.7, qy / 1.7);
-  vec4 fb = textureGrad(tGrain, qb / 1.7, qx / 1.7, qy / 1.7);
+  // by the turn-over's own fall, and the carried grain is read that much softer.)
+  vec2 qx = gX - flow * (18.0 * turns.x);
+  vec2 qy = gY - flow * (18.0 * turns.y);
+  float carriedLod = log2(max(max(length(qx), length(qy)) * grainSize, 1e-6));
+  vec4 ca = textureLod(tGrain, qa / 7.3, carriedLod - ${Math.log2(7.3).toFixed(4)});
+  vec4 cb = textureLod(tGrain, qb / 7.3, carriedLod - ${Math.log2(7.3).toFixed(4)});
+  vec4 fa = textureLod(tGrain, qa / 1.7, carriedLod - ${Math.log2(1.7).toFixed(4)});
+  vec4 fb = textureLod(tGrain, qb / 1.7, carriedLod - ${Math.log2(1.7).toFixed(4)});
   vec4 carried = mix(cb, ca, wa);
   vec4 carriedFine = mix(fb, fa, wa);
   brineSilt = clamp(carried.r * 0.7 + carriedFine.g * 0.3 + 0.25 * (carried.b - 0.5), 0.0, 1.0);
 
   // There is no wind to speak of: the brine lies near to glass, and what moves on it has a cause.
   // A slow heave of the whole surface, too low to see but in what it mirrors.
-  vec4 heave = grain(p.xz / 4.1 + vec2(0.013, 0.008) * uTime, 4.1);
+  vec4 heave = grain(p.xz / 4.1 + vec2(0.013, 0.008) * uTime, 2.0356);
   vec2 slope = (heave.ba - 0.5) * 0.035 + (heave.rg - 0.5) * 0.025;
   // The flow dimples the skin where it runs: low boils and seams that go down the channel with it.
   float speed = length(flow);
@@ -154,7 +159,7 @@ void main() {
   float paw = smoothstep(0.5, 0.74, textureGrad(tGrain, vec2(lane.x / 41.0, lane.y / 11.0) + patchy.rb * 0.06, vec2(dot(gX, wdir) / 41.0, dot(gX, wcross) / 11.0), vec2(dot(gY, wdir) / 41.0, dot(gY, wcross) / 11.0)).g);
   // Outside the lanes it is not glass either: the flow, the gas and what wades keep a low ripple on it, more here and less there.
   float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 2.2 * speed + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
-  vec4 bend = grain(p.xz / 0.83 + vec2(0.01, 0.007) * uTime, 0.83);
+  vec4 bend = grain(p.xz / 0.83 + vec2(0.01, 0.007) * uTime, -0.2688);
   vec2 ripples = vec2(0.0);
   // (No train is everywhere: each comes and goes in patches of its own, or the six would weave one cloth. And a wave is drawn only where
   // a lens can tell its crests apart: finer than that it would be grit.)
@@ -213,14 +218,12 @@ void main() {
   }
   // Whatever stands in the brine (the contact map has it) is met by it: the brine climbs the thing in a tight lip, the wavelets that reach it
   // are turned and stand steeper, and it sends its own small rings out as it sways.
-  float stood = contactDrawn(p);
   float ringed = smoothstep(0.0, 0.12, stood) * smoothstep(0.85, 0.35, stood);
   float collar = 0.0;
   if (stood > 0.01) {
-    // (Which way the thing stands from here is read off the map itself, a pixel's width on along x and along z: never off the fall of
-    // stood across the four pixels, which is set after the shore's discard.)
-    float reach = max(px, 1.0 / (uContactRect.z * ${CONTACT.size.toFixed(1)}));
-    vec2 lean = -vec2(contactDrawn(p + vec3(reach, 0.0, 0.0)) - stood, contactDrawn(p + vec3(0.0, 0.0, reach)) - stood) / reach;
+    // (Which way the thing stands from here is read off the map's fall across the pixel, taken at the top.)
+    float det = gX.x * gY.y - gX.y * gY.x;
+    vec2 lean = abs(det) > 1e-12 ? -vec2(gY.y * stoodFall.x - gX.y * stoodFall.y, gX.x * stoodFall.y - gY.x * stoodFall.x) / det : vec2(0.0);
     float ll = length(lean);
     vec2 off = ll > 1e-4 ? lean / ll : vec2(0.0);
     slope *= 1.0 + 1.3 * ringed;
@@ -233,8 +236,8 @@ void main() {
 
   // Scum: froth gathers against the bank where the bank holds it, in clumps and strings, never a band. It is the froth's own picture and
   // relief: the tallest bubbles show first, and more of them where more gathers.
-  vec4 raft = grain(p.xz / 6.1, 6.1);
-  vec4 fleck = grain(p.xz / 0.57, 0.57);
+  vec4 raft = grain(p.xz / 6.1, 2.6088);
+  vec4 fleck = grain(p.xz / 0.57, -0.8110);
   float seen = smoothstep(70.0, 20.0, dist);
   // Where the big ones wade the bed lies a hand under the brine for metres: that is not a bank, and no scum gathers on it.
   float wade = smoothstep(4.0, 6.5, length(p.xz - uWade));
@@ -307,7 +310,7 @@ void main() {
   vec2 gy = dFdy(vWorld.xz);
   fieldDx = gx;
   fieldDy = gy;
-  float s = fieldAt(vWorld.xz).r + (textureGrad(tGrain, vWorld.xz / 1.9, gx / 1.9, gy / 1.9).r - 0.5) * 0.1;
+  float s = fieldAt(vWorld.xz).r + (textureLod(tGrain, vWorld.xz / 1.9, log2(max(max(length(gx), length(gy)) * float(textureSize(tGrain, 0).x), 1e-6)) - log2(1.9)).r - 0.5) * 0.1;
   if (s > 0.3) discard;
   gl_FragColor = vec4(0.0);
 }`;
@@ -528,7 +531,7 @@ void main() {
   vec2 gx = dFdx(vWorld.xz) / 0.9;
   vec2 gy = dFdy(vWorld.xz) / 0.9;
   if (vLife.x <= 0.0) discard;
-  vec4 g = textureGrad(tGrain, vWorld.xz / 0.9 + vLife.y, gx, gy);
+  vec4 g = textureLod(tGrain, vWorld.xz / 0.9 + vLife.y, log2(max(max(length(gx), length(gy)) * float(textureSize(tGrain, 0).x), 1e-6)));
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   if (dot(n, v) < 0.0) n = -n;

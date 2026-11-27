@@ -81,7 +81,8 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   // The bed as the land lays it (land/field.ts, flats): a shelf a finger under the level, then down a hand in every two strides.
   float depth = clamp(max(-s * 0.5 - 0.02, 0.03 * (1.0 - smoothstep(0.12, 0.27, s))), 0.0, 0.7);
   // Slow clouds of paler silt carried in it, drawn out along the flow where the caller knows the flow.
-  float silt = textureGrad(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006), gx / 23.0, gy / 23.0).r;
+  float lod = log2(max(max(length(gx), length(gy)) * float(textureSize(tGrain, 0).x), 1e-6));
+  float silt = textureLod(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006), lod - ${Math.log2(23).toFixed(4)}).r;
   vec2 along = vec2(dot(p.xz, ${v2(F)}), dot(p.xz, ${v2(R)}));
   if (brineSilt >= 0.0) silt = mix(silt, brineSilt, 0.65);
   else silt = mix(silt, textureGrad(tGrain, vec2(along.x / 17.0 + uTime * 0.012, along.y / 5.0), vec2(dot(gx, ${v2(F)}) / 17.0, dot(gx, ${v2(R)}) / 5.0), vec2(dot(gy, ${v2(F)}) / 17.0, dot(gy, ${v2(R)}) / 5.0)).b, 0.5);
@@ -92,7 +93,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   float gust = 0.0;
   if (aloft > 0.0) {
     vec2 wind = vec2(dot(p.xz, ${v2(WIND)}) - 1.6 * uTime, dot(p.xz, ${v2(CROSS)}));
-    vec4 wander = textureGrad(tGrain, (p.xz - ${v2(WIND)} * (0.5 * uTime)) / 71.0, gx / 71.0, gy / 71.0);
+    vec4 wander = textureLod(tGrain, (p.xz - ${v2(WIND)} * (0.5 * uTime)) / 71.0, lod - ${Math.log2(71).toFixed(4)});
     wind.y += (wander.r - 0.5) * 9.0;
     vec2 wx = vec2(dot(gx, ${v2(WIND)}), dot(gx, ${v2(CROSS)}));
     vec2 wy = vec2(dot(gy, ${v2(WIND)}), dot(gy, ${v2(CROSS)}));
