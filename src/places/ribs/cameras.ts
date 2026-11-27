@@ -75,12 +75,12 @@ const TO_KEY = travelled(ARRIVAL.keySeconds);
 const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 
 // The film's first shot, restaged a second time (rung 2 again: the first restaging stood two blades in a still plate with the right of
-// the frame empty). The lens now starts 880 m out and 770 m EAST of the old axis, close under the outer right blade (OR, 290 m off its
+// the frame empty). The lens now starts 885 m out and 750 m EAST of the old axis, close under the outer right blade (OR, 280 m off its
 // near flank), low in a trough of a heavy swell, and pushes in hard at 86 metres a second, then sweeps west along the shore onto the old
-// move in one arc. In the first frame OR stands as a dark wall over the right four tenths of the frame, from the sea out through the top,
+// move in one arc. In the first frame OR stands as a wall over the right four tenths of the frame, from the sea out through the top,
 // with the pale near blade (L1) in the left third and the far cage between them. OR slides out through the right edge inside two seconds
-// (its near flank at 0.56 of the width in the first frame, 0.75 at 1 s, gone at 1.9 s) against blades that hardly move, and the right
-// row's blade (R1) comes out from behind it: that is the one large thing that crosses the frame, and what says how far off the rest is.
+// (its near flank at 0.61 of the width in the first frame, 0.83 at 1 s, gone at 1.6 s) against blades that hardly move, and the right
+// row's blade (R1), whose point alone stands clear of it in the first frame, comes out from behind it: that is the one large thing that crosses the frame, and what says how far off the rest is.
 // The lens rides the long swell of sea/tide.ts under it: it is lifted from the trough over the crest before it through the first second
 // and a half (the shore and the strike come up over that crest), sinks toward the next trough at 3 s and is lifted again, its nose
 // rising and falling with it. L1 grows and slides against the far blades the whole way in.
@@ -88,7 +88,7 @@ const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 export const OPEN = {
   seconds: 16,
   /** Where the lens is as the film opens (x, z), the way it is going (degrees, 0 is north, negative is west) and its speed. */
-  from: [600, 880] as [number, number],
+  from: [580, 885] as [number, number],
   heading: -40,
   speed: 86,
   /** Once the lens has settled: metres over the old move's height as the film opens, and its heave: metres, seconds a turn. */
