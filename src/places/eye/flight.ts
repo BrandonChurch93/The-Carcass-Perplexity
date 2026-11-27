@@ -69,10 +69,10 @@ function judged(frame: number, plan: FlightPlan): FlightState {
 }
 
 /**
- * The climb off the lake, from the last judged frame to the cut. One crane move: the lens rises fast and tilts down slowly, with the foot
- * of the north cliffs held at the top edge of the frame, so the far shore and the rim of the deep stay in view; then it comes over the
- * centre, turns straight down and eases to the slow rate the rise begins with, the whole dark disc inside the frame. Frames are counted
- * from the key.
+ * The climb off the lake, from the last judged frame to the cut. One crane move: the lens rises fast with the foot of the north cliffs
+ * held at the top edge of the frame, so the far shore and the cliff stay in view at a slant until the cloud takes them. Only inside the
+ * banks does it turn straight down, and it eases to the slow rate the rise begins with: the lake is never seen bare from straight above.
+ * Frames are counted from the key.
  */
 const LEAVE = {
   /** The ground line held at the top edge while the shore is in view, metres north of the centre. */
@@ -80,7 +80,7 @@ const LEAVE = {
   /** Frames over which the old tilt is caught and brought onto that line. */
   catch: 28,
   /** Between these frames the lens lets the far shore go and turns straight down. */
-  release: [195, 300],
+  release: [258, 314],
   /** The frame at which the lens stands over the centre, and the frame at which the lens is as wide as it gets. */
   over: 279,
   wide: 259,
