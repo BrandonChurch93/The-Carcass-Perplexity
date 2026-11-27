@@ -694,7 +694,7 @@ void main() {
 // as what it lets in. So whatever a whole frame has no use for (the looks of a low eye seen from the rim, the water from over its centre
 // before the camera leaves, rings where nothing drinks) is left out of the program itself, by these names. Each is told from the frame
 // alone, by the same test the shader would have made of its uniforms, so the picture is the same picture.
-function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean, edge: boolean): Record<string, number> {
+function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean, edge: boolean, shingle: boolean): Record<string, number> {
   const rim = eyeHeight <= 8 ? 0 : eyeHeight >= 40 ? 2 : 1;
   return {
     // rimEye: 0 where it is nothing, 2 where it is all, 1 between.
@@ -709,6 +709,8 @@ function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing:
     EYE_MIRRORED: mirrored ? 1 : 0,
     EYE_RUFFLED: ruffled ? 1 : 0,
     EYE_EDGE: edge ? 1 : 0,
+    // The shore's stones gone on under the water, each with its height: only the shot that stands on the shore can tell them.
+    EYE_SHINGLE: shingle ? 1 : 0,
   };
 }
 
@@ -795,7 +797,7 @@ export function create(ctx: Context): Piece {
   // Under the long lens of the climb the short lengths are finer than its pixels: the train is of longer ones.
   const ringsClimb = ringsOf([9, 15, 24, 36, 52, 97], [0.011, 0.011, 0.012, 0.012, 0.011, 0.01], 1);
   const material = new THREE.ShaderMaterial({
-    defines: variantOf(0, 0, false, false, false, false, false, false, false),
+    defines: variantOf(0, 0, false, false, false, false, false, false, false, false),
     uniforms: {
       ...rig,
       ...bed,
@@ -856,6 +858,7 @@ void main() {
   ctx.scene.add(ctx.parts.built('riser', risers));
   ctx.reflected.push(risers);
 
+  let onShore = false;
   const rise = ctx.events.rise;
   const end = ctx.events.end;
   const hidden: THREE.Object3D[] = [];
@@ -863,6 +866,7 @@ void main() {
   return {
     setTime: (t) => {
       waves.setTime(t);
+      onShore = during('eye-04');
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
       const overIt = during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0;
@@ -944,6 +948,7 @@ void main() {
         ctx.reflected.length > 0 && camera.position.y < 60,
         (material.uniforms.uRuffle as THREE.IUniform<number>).value > 0,
         (material.uniforms.uWallFall as THREE.IUniform<number>).value > 1,
+        onShore,
       );
       if (Object.entries(variant).some(([name, value]) => (material.defines as Record<string, number>)[name] !== value)) {
         material.defines = variant;

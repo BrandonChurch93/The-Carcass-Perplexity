@@ -28,6 +28,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     tLipPlateH: { value: mirrored(ctx.assets.texture('mat/lip-h.png', { kind: 'data', anisotropy: 4 })) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
     tShore: { value: mirrored(ctx.assets.texture('mat/shoreplate.jpg', { anisotropy: 8 })) },
+    tShoreH: { value: mirrored(ctx.assets.texture('mat/shoreplate-h.png', { kind: 'data', anisotropy: 1 })) },
     tWall: { value: mirrored(ctx.assets.texture('mat/shaftwall.jpg', { anisotropy: 4 })) },
     uWallFall: { value: 1 },
     uAbsorb: { value: new THREE.Vector3(...ABSORB) },
@@ -48,6 +49,7 @@ uniform sampler2D tLipPlate;
 uniform sampler2D tLipPlateH;
 uniform sampler2D tSinter;
 uniform sampler2D tShore;
+uniform sampler2D tShoreH;
 uniform sampler2D tWall;
 // How steeply the wall falls from the lip, against the wide shot's.
 uniform float uWallFall;
@@ -202,13 +204,28 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     vec3 gravel = plate * (readAt(tShore, b / vec2(43.0, 24.2) + 0.61, mat2(1.0 / 43.0, 0.0, 0.0, 1.0 / 24.2)).rgb / vec3(0.222, 0.161, 0.119)) * vec3(1.3, 1.36, 1.44);
     bare = mix(bare, gravel * 0.5, beach);
     // Under a low eye the same shingle the shore is made of goes on under the water, wet and dark, as far as the eye can tell one stone from the next.
-#if EYE_NEAR > 1
-    float under = beach * smoothstep(40.0, 16.0, away) * smoothstep(12.0, 4.0, cameraPosition.y);
+#if EYE_SHINGLE
+    float under = beach * smoothstep(40.0, 16.0, away);
     if (under > 0.0) {
-      // A stone taller than the water over it stands out of it, wet: the waterline goes in and out between the stones. The pale stones of the picture are its tall ones.
-      float tall = 0.09 * smoothstep(0.12, 0.42, dot(plate, vec3(0.333)));
+      // The shore's lip (land/lip.ts) goes on under the water as the same ground: its sheet at its size and place (two metres a repeat,
+      // not turned, not moved) and its height sheet read as it reads it, so a stone half in the water is one stone. The height is read
+      // three times, a finger apart, for the lean of each stone's side: it is what the light and the rings have to tell the bed by.
+      const mat2 laid = mat2(0.5, 0.0, 0.0, 1.0 / 1.125);
+      vec2 q = b / vec2(2.0, 1.125);
+      vec3 grit = readAt(tShore, q, laid).rgb;
+      float fine = readAt(tShoreH, q, laid, 3.0).r;
+      vec2 lean = vec2(readAt(tShoreH, q + vec2(0.0125, 0.0), laid, 3.0).r, readAt(tShoreH, q + vec2(0.0, 0.0222), laid, 3.0).r) - fine;
+      vec2 t = vec2(b.x * 0.82 + b.y * 0.57, -b.x * 0.57 + b.y * 0.82);
+      float stand = smoothstep(0.42, 0.9, readAt(tShoreH, t / vec2(6.4, 3.6) + 0.37, mat2(0.82 / 6.4, -0.57 / 3.6, 0.57 / 6.4, 0.82 / 3.6), 4.0).r);
+      // Under the water they are lower than on the lip, where the wash has not laid them: fine gravel, and a cobble here and there.
+      float tall = 0.03 * fine + 0.05 * stand * (0.6 + 0.8 * fine);
+      // A stone taller than the water over it stands out of it, wet: the waterline goes in and out between the stones.
       stands = under * smoothstep(0.0, 0.006, tall - depth);
-      bare = mix(bare, plate * vec3(1.3, 1.36, 1.44) * mix(0.5, 0.85, stands), under);
+      stoneLean = -under * lean * ((0.03 + 0.04 * stand) / 0.025);
+      // Grit lies in the shade of the stones round it.
+      float hollow = 0.55 + 0.45 * smoothstep(0.1, 0.55, fine + 0.5 * stand);
+      bare = mix(bare, grit * vec3(1.3, 1.36, 1.44) * mix(0.5, 0.85, stands) * hollow, under);
+      depth -= under * min(tall, max(depth, 0.0));
     }
 #endif
   }
@@ -256,7 +273,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
   // The crust of the lip keeps a strand here and there.
   cover = max(cover, mix(0.8, 1.0, onFoot) * thin * smoothstep(mix(0.42, 0.4, onFoot), mix(0.56, 0.54, onFoot), field) * smoothstep(9.0, 3.0, wLip) * smoothstep(-0.6, 0.6, wLip));
   o.albedo = bare;
-  o.tilt = (snh.xy * 2.0 - 1.0) * 0.5;
+  o.tilt = (snh.xy * 2.0 - 1.0) * 0.5 + stoneLean;
   o.occ = 0.55 + 0.45 * smoothstep(0.1, 0.6, snh.b);
   o.glow = 0.0;
   o.depth = depth;
