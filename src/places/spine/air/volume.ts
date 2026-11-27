@@ -229,7 +229,7 @@ ${SEA_SHADE_GLSL}
       if (tr < 0.0 || tr > far) continue;
       vec3 at = ro + rd * tr;
       vec3 off = at - on;
-      float wide = (3.0 + 0.16 * x) * (0.5 + 0.5 * size);
+      float wide = (5.0 + 0.2 * x) * (0.5 + 0.5 * size);
       // A lens standing in a plume sees through it, not a wall of it.
       float clearOf = smoothstep(0.5 * wide, 5.0 * wide, tr);
       float d2 = dot(off, off) / (wide * wide);
@@ -242,7 +242,7 @@ ${SEA_SHADE_GLSL}
       float gust = noise(vec3(along / 260.0, float(i) * 0.37, 0.11)).g;
       float k = x / reach;
       float body = exp(-d2) * (1.0 - k) * (1.0 - k) * smoothstep(0.0, 0.05, k + 0.01);
-      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 1.6, 0.0, 0.32) * uShow.w * uStage.x * clearOf;
+      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 2.3, 0.0, 0.46) * uShow.w * uStage.x * clearOf;
       // Staged by shot: before the long lens of the strike a plume is a thin smoke of snow, not a bank.
       thick *= 1.0 - 0.75 * uPlate.w;
       vec3 pale = 0.95 * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
@@ -286,6 +286,14 @@ ${SEA_SHADE_GLSL}
     float azV = atan(rd.z, rd.x);
     float bands = noise(vec3(azV * 0.9 - uTime * 0.013, rd.y * 2.6 + uTime * 0.004, 0.37)).g;
     depthV *= (0.65 + 0.7 * bands) * uShow.x * uStage.y;
+    // Mist stands in banks between one spire and the next, and lies low: each spire is in more or less of it by where it stands, its foot
+    // more than its tip.
+    if (far < 50000.0 && uStage.z >= 0.75) {
+      vec3 hitV = ro + rd * far;
+      float bank = noise(vec3(hitV.xz / 800.0 - uWind.xz * (uTime * 0.012), 0.21)).r;
+      float lowV = exp(-max(hitV.y - crestY + 50.0, 0.0) / 140.0);
+      depthV *= (0.5 + 1.0 * bank) * (0.65 + 1.1 * lowV);
+    }
     float veiled = 1.0 - exp(-depthV);
     // On the ridge a far spire is never the veil alone: it keeps a fifth of its own light and shade, and more in a flash, when the veil
     // is lit and would be a flat fill.
@@ -305,6 +313,39 @@ ${SEA_SHADE_GLSL}
       light = light * (1.0 - wisp) + (snowAir * 1.5 + vec3(0.008, 0.008, 0.012)) * wisp;
       through *= 1.0 - wisp;
     }
+  }
+
+  // The driven snow of the ridge: veils of it at three depths, each a place in the world that the gale carries, drawn out down the wind and
+  // torn into gusts. A veil is metres across and thin, never a flake; the lens moves through them, and the near one crosses it fastest.
+  if (uShow.w * uStage.x > 0.0) {
+    float lensV = uInvProjection[1][1] / 0.466;
+    vec3 downV = normalize(vec3(uWind.x, -0.1, uWind.z));
+    vec3 acrossV = normalize(vec3(-uWind.z, 0.0, uWind.x));
+    vec3 upV = cross(acrossV, downV);
+    float crestV = ridgeAt(ro.x).y;
+    float driven = 0.0;
+    float keptV = 1.0;
+    for (int j = 0; j < 3; j++) {
+      float dist = (j == 0 ? 26.0 : j == 1 ? 95.0 : 340.0) / lensV;
+      float before = smoothstep(dist, dist * 1.3, far);
+      if (before <= 0.0) break;
+      float grain = (j == 0 ? 3.0 : j == 1 ? 9.0 : 27.0) / sqrt(lensV);
+      vec3 at = ro + rd * dist;
+      vec3 p = at - downV * (uWind.w * (0.8 + 0.12 * float(j)) * uTime);
+      vec3 q = vec3(dot(p, downV) / (grain * 16.0), dot(p, upV) / grain, dot(p, acrossV) / (grain * 3.0));
+      float streak = 0.6 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).r + 0.4 * noise(q * vec3(2.3, 2.7, 2.3) + 0.37).g;
+      float gust = noise(vec3(q.x * 0.21, 0.37 * float(j) + 0.13, q.z * 0.17)).b;
+      float veil = smoothstep(0.4, 0.8, streak) * smoothstep(0.36, 0.7, gust) * before;
+      // It thins with the height over the crest, and against the open sky it is the sky's own tone and half lost.
+      veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.5 : 1.0);
+      veil *= j == 0 ? (uClear.z > 0.0 ? 0.05 : 0.1) : j == 1 ? 0.16 : 0.22;
+      driven += keptV * veil;
+      keptV *= 1.0 - veil;
+    }
+    driven *= uShow.w * uStage.x;
+    vec3 snowV = 0.85 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 60.0) * 0.2, vec3(0.1, 0.085, 0.17)));
+    light = light * (1.0 - driven) + snowV * driven;
+    through *= 1.0 - driven;
   }
 
   // The snow before the lens: streaks in the gale, soft and few, each many times longer than it is wide, in gusts, at three depths. Each depth
