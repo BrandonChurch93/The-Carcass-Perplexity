@@ -7,9 +7,10 @@ const a = args();
 const tier = typeof a.tier === 'string' ? a.tier : 'review';
 const format = typeof a.format === 'string' ? a.format : config().formats.preview.id;
 const DIR = rel('out', 'work', 'determinism');
-// To find what differs: one part of a unit alone (UNIT/NAME, as `npm run still -- --diag solo --part` takes it), and only some of the three frames.
+// To find what differs: one part of a unit alone (UNIT/NAME, as `npm run still -- --diag solo --part` takes it), and only some of the four frames.
 const part = typeof a.part === 'string' ? a.part : null;
-const KINDS = ['still', 'late', 'loop'];
+const KINDS = ['still', 'late', 'loop', 'breath'];
+const BREATH_KEY = 'breath-1';
 const only = typeof a.only === 'string' ? a.only.split(',') : KINDS;
 
 async function difference(x, y) {
@@ -34,10 +35,14 @@ try {
   const still = film.keyFrames && Object.keys(film.keyFrames).length ? Object.values(film.keyFrames)[0] : Math.min(film.frameCount - 1, Math.round(film.frameCount * 0.31));
   const late = Math.max(0, film.frameCount - 1 - Math.round(film.frameCount * 0.04));
   const loop = Math.round(film.loop.frameCount * 0.6);
+  // The Breath's key frame: its sea reads a mirror of the waders, and that mirror did not repeat while the three frames above did.
+  const breath = film.keyFrames?.[BREATH_KEY];
+  if (only.includes('breath') && !Number.isInteger(breath)) throw new Error(`The film has no key frame ${BREATH_KEY}, the Breath frame this check draws.`);
   const jobs = [
     { name: 'still', what: { frame: still }, label: `film frame ${still}` },
     { name: 'late', what: { frame: late }, label: `late film frame ${late}` },
     { name: 'loop', what: { loop }, label: `loop frame ${loop}` },
+    { name: 'breath', what: { frame: breath }, label: `Breath film frame ${breath}` },
   ].filter((j) => only.includes(j.name));
   const unknown = only.filter((k) => !KINDS.includes(k));
   if (unknown.length || !jobs.length) throw new Error(`--only takes ${KINDS.join(', ')} or a list of them with commas, not "${a.only}".`);
