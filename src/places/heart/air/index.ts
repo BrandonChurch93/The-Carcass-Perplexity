@@ -9,7 +9,7 @@ import { CRACK_FOOT, CRACK_TOP, FALL_FOOT, GROUP, SPATTER_LEFT, SPATTER_RIGHT, S
 import { stagedSeconds } from '../shared/stage';
 import type { HeartContext, HeartPiece, HeatSource, SteamSource } from '../shared/context';
 import { blackbody, breath } from '../shared/rig';
-import { bakeNoise } from './noise';
+import { bakeLumps, bakeNoise } from './noise';
 import { createAsh } from './ash';
 import { createSky } from './sky';
 import { createSmoke, MAX_BODIES, MAX_STEAM } from './smoke';
@@ -18,7 +18,7 @@ import { MAX_HEAT, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
 export const PARTS: readonly string[] = ['sky', 'air', 'fume', 'ash'];
 
 /** The open lava under the fume, as one round light of the rig: where it is, how wide, and what part of its face is open at 1400 K. */
-const FUME_LIGHT = { at: [960, 20, 0] as const, radius: 200, open: 0.6 };
+const FUME_LIGHT = { at: [960, 20, 0] as const, radius: 200, open: 1.0 };
 
 /** A body of smoke: a leaning dome of lumps that stands on a level base. Lengths in metres, densities for a metre of path. */
 interface Body {
@@ -56,7 +56,7 @@ interface Body {
 }
 
 /** The plume's own: darker and browner, so that it is brown where the wall is behind it and pale only where the sky lights its tops. */
-const UMBER = [0.4, 0.31, 0.27] as const;
+const UMBER = [0.46, 0.33, 0.25] as const;
 /** The haze over the open lava of the east: it is lit from below and little by the sky. */
 const AMBER = [0.55, 0.45, 0.2] as const;
 const ROSE = [0.5, 0.42, 0.33] as const;
@@ -92,7 +92,7 @@ const BODIES: readonly Body[] = [
   { at: fromFoot(14, -4), radius: 26, height: 62, lean: [0.5, 0.2], dense: 0.007, widen: 0.9, repeat: 64, hard: 3.2, climb: 9, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(58, 44), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.005, widen: 0.3, repeat: 64, hard: 3.2, climb: 7, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, streak: 1.6, shots: { 'heart-05': 1, rest: 0.08 } },
   // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture. Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
-  { at: [530, -262], radius: 70, height: 700, lean: [0.1, 0.3], dense: 0.034, widen: 3, foot: 0.22, repeat: 240, hard: 4.5, climb: 14, colour: UMBER, floor: [0.5, 220], tops: 1.25, solid: 0.8, streak: 0.8, shots: { 'heart-02': 0, 'heart-05': 0 } },
+  { at: [571, -400], radius: 50, height: 1000, lean: [0.3, 0.4], dense: 0.03, widen: 10, foot: 0.1, repeat: 260, hard: 7, climb: 28, colour: UMBER, floor: [0.3, 120], tops: 2.2, solid: 0.6, streak: 0.8, shots: { 'heart-02': 0, 'heart-05': 0 } },
   // The smoke that rises from the seam the hero feeds at, lit by the melt in it: it lies low behind the animal in the feeding shot, under the horizon of that lens, and what is behind the animal is the dark of the far smoke.
   { at: [-397, 181], radius: 11, height: 6.5, lean: BANK_LEAN, dense: 0.035, repeat: 9, hard: 2.6, climb: 1.6, colour: SOOT, foot: 0.1, lake: [1.1, 3], floor: [1.6, 3], lights: 0.6, tops: 0.7, solid: 0.4, shots: { 'heart-02': 1, rest: 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
@@ -145,7 +145,8 @@ export function create(ctx: HeartContext): HeartPiece {
     // The span holds the open shutter of its first and last frame.
     return { id, from: secondsInPlace(UNIT, shot.first) - 0.3 / 60, to: secondsInPlace(UNIT, shot.last) + 0.7 / 60 };
   });
-  const smoke = createSmoke(ctx.rig.uniforms, noise, skyMean);
+  const lumps = bakeLumps(noise);
+  const smoke = createSmoke(ctx.rig.uniforms, noise, lumps, skyMean);
   const su = smoke.uniforms;
   const steamA = (su.uSteamA as THREE.IUniform<THREE.Vector4[]>).value;
   const steamB = (su.uSteamB as THREE.IUniform<THREE.Vector4[]>).value;
@@ -283,6 +284,7 @@ export function create(ctx: HeartContext): HeartPiece {
       smoke.dispose();
       warp.dispose();
       noise.dispose();
+      lumps.texture.dispose();
     },
   };
 }
