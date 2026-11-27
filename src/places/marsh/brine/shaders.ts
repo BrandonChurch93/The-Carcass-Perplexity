@@ -50,12 +50,6 @@ vec2 train(vec2 q, vec2 dir, float len, float bend, vec2 group) {
 }
 // Wavelets go in groups: a few crests, each a few lengths long, that rise and die as the group passes at half the crests' speed. One
 // look for two trains of near lengths (rg for the one, ba for the other), read at the level a pixel of this width wants.
-vec4 groups(vec2 q, vec2 dir, float len, float px) {
-  float k = 6.2832 / len;
-  float w = k * sqrt(9.81 / k + 0.000074 * k);
-  vec2 g = vec2(dot(dir, q) - 0.5 * w / k * uTime, dot(vec2(-dir.y, dir.x), q));
-  return textureLod(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)), log2(max(px / (len * 13.0) * float(textureSize(tGrain, 0).x), 1.0)));
-}
 
 // The renderer shades four pixels together, and a value set under a branch or after a discard is not set in the pixel that did not get
 // there: its fall across the four, and the level a mipmapped picture picks for itself from that fall, is then not the same twice. So the
@@ -68,6 +62,12 @@ float grainLod;
 // The grain, laid so many metres to the tile: levels is the base two logarithm of that.
 vec4 grain(vec2 uv, float levels) {
   return textureLod(tGrain, uv, grainLod - levels);
+}
+vec4 groups(vec2 q, vec2 dir, float len, float levels) {
+  float k = 6.2832 / len;
+  float w = k * sqrt(9.81 / k + 0.000074 * k);
+  vec2 g = vec2(dot(dir, q) - 0.5 * w / k * uTime, dot(vec2(-dir.y, dir.x), q));
+  return textureLod(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)), max(grainLod - levels, 0.0));;
 }
 
 void main() {
@@ -164,17 +164,17 @@ void main() {
   // (No train is everywhere: each comes and goes in patches of its own, or the six would weave one cloth. And a wave is drawn only where
   // a lens can tell its crests apart: finer than that it would be grit.)
   if (px < 0.12) {
-    vec4 e = groups(p.xz, wdir, 0.55, px);
+    vec4 e = groups(p.xz, wdir, 0.55, 2.8379);
     ripples += train(p.xz, normalize(wdir - wcross * 0.17), 0.73, bend.b * 3.0 + 2.1, e.rg) * 0.1 * smoothstep(0.25, 0.7, carried.g) * smoothstep(0.12, 0.06, px);
     ripples += train(p.xz, normalize(wdir + wcross * 0.31), 0.41, bend.r * 4.0, e.ba) * 0.1 * fine.g * smoothstep(0.068, 0.034, px);
   }
   if (px < 0.045) {
-    vec4 e = groups(p.xz, normalize(wdir + wcross * 0.2), 0.22, px);
+    vec4 e = groups(p.xz, normalize(wdir + wcross * 0.2), 0.22, 1.5160);
     ripples += train(p.xz, normalize(wdir - wcross * 0.47), 0.27, bend.g * 5.0, e.rg) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.045, 0.022, px);
     ripples += train(p.xz, normalize(wdir + wcross * 0.83), 0.173, bend.b * 5.0, e.ba) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.029, 0.0145, px);
   }
   if (px < 0.02) {
-    vec4 e = groups(p.xz, normalize(wdir - wcross * 0.6), 0.09, px);
+    vec4 e = groups(p.xz, normalize(wdir - wcross * 0.6), 0.09, 0.2265);
     ripples += train(p.xz, normalize(wdir - wcross * 1.3), 0.117, bend.a * 6.0, e.rg) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.02, 0.01, px);
     ripples += train(p.xz, normalize(wdir + wcross * 2.4), 0.071, bend.r * 7.0 + 1.3, e.ba) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.012, 0.006, px);
   }
