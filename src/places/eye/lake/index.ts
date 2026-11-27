@@ -122,6 +122,8 @@ uniform vec4 uBreath;
 uniform vec4 uRing[6];
 uniform vec4 uRiserRing[3];
 uniform vec4 uLapRing[3];
+// How far a ring round a leg goes before it dies, as a share of what a low eye is shown.
+uniform float uLapReach;
 uniform float uRise;
 uniform float uRingsOn;
 // How clear the water of the shaft is beside the amber water of the shelf.
@@ -354,7 +356,7 @@ void main() {
         vec4 ring = uLapRing[j];
         float sent = uTime + l.z - m / ring.z;
         float bursts = 0.3 + 1.1 * vnoise(vec2(sent * 1.1 + l.z * 5.3, l.z * 3.3 + float(j) * 4.1));
-        float amp = l.w * ring.w * bursts * exp(-m / (2.6 + 1.6 * float(j))) * inversesqrt(m + 0.25) * smoothstep(0.03, 0.3, m);
+        float amp = l.w * ring.w * bursts * exp(-m / (uLapReach * (2.6 + 1.6 * float(j)))) * inversesqrt(m + 0.25) * smoothstep(0.03, 0.3, m);
         float told = smoothstep(2.4, 0.9, ring.x * fp);
         dm += amp * told * sin(ring.x * m - ring.y * (uTime + l.z));
         lost += 0.5 * amp * amp * (1.0 - told * told);
@@ -377,10 +379,10 @@ void main() {
   // Seen from the rim the shelf does not end at its crust: it shoals away under deepening water over a hundred metres, in tongues.
   float shoalAt = w;
 #if EYE_RIM > 0
-  shoalAt += rimEye * (46.0 * (vnoise(p.xz / 57.0 + 6.0) - 0.5) + 18.0 * (vnoise(p.xz / 17.0) - 0.5));
+  shoalAt += rimEye * (30.0 * (vnoise(p.xz / 57.0 + 6.0) - 0.5) + 12.0 * (vnoise(p.xz / 17.0) - 0.5));
 #endif
-  float shoal = rimEye * smoothstep(95.0, 0.0, shoalAt);
-  float crusted = mix(lipCover(p.xz, lip), smoothstep(-14.0, 10.0, shoalAt), rimEye);
+  float shoal = rimEye * smoothstep(60.0, 0.0, shoalAt);
+  float crusted = mix(lipCover(p.xz, lip), smoothstep(-7.0, 5.0, shoalAt), rimEye);
   // From straight over it the pale water inside the lip is no even band round the deep: it lies in runs of its own length, wide here and gone there.
   float runs = 1.0;
 #if EYE_LEAVE
@@ -805,6 +807,9 @@ export function create(ctx: Context): Piece {
   // Forty metres off and a metre up, a ring shorter than a metre is finer than any frame holds along the look: what is seen round the legs
   // of what stands beyond the mats are the longer waves it sends.
   const lapRingsFar = ringsOf([1.1, 1.9, 3.1], [0.03, 0.035, 0.03], 0.75);
+  // From the rim a ring is told only if it is some metres from crest to crest, and a ring round a leg only if it is a metre or more.
+  const ringsRim = ringsOf([9, 14, 22, 34, 60, 110], [0.018, 0.018, 0.017, 0.015, 0.012, 0.012], 1);
+  const lapRingsRim = ringsOf([2.2, 3.6, 5.8], [0.15, 0.16, 0.14], 0.75);
   const ringsLake = ringsOf([3.2, 6, 11, 21, 48, 97], [0.013, 0.012, 0.011, 0.011, 0.012, 0.012], 1);
   // Under the long lens of the climb the short lengths are finer than its pixels: the train is of longer ones.
   const ringsClimb = ringsOf([9, 15, 24, 36, 52, 97], [0.011, 0.011, 0.012, 0.012, 0.011, 0.01], 1);
@@ -831,6 +836,7 @@ export function create(ctx: Context): Piece {
       uRing: { value: ringsLake },
       uRiserRing: { value: ringsOf([1.1, 2.0, 3.6], [0.03, 0.03, 0.025], 0.8) },
       uLapRing: { value: lapRingsNear },
+      uLapReach: { value: 1 },
       uRise: { value: ctx.events.rise },
       uRingsOn: { value: 1 },
       uClear: { value: 0.55 },
@@ -914,8 +920,9 @@ void main() {
       centre.y = during('eye-05') ? 3.2 - 2.7 * over : 1;
       centre.z = during('eye-05') ? 0.55 * (1 - over) : 0;
       centre.w = during('eye-05') ? 1.6 * (1 - over) : 0;
-      (material.uniforms.uRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-05') ? ringsClimb : ringsLake;
-      (material.uniforms.uLapRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-02') ? lapRingsFar : lapRingsNear;
+      (material.uniforms.uRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-05') ? ringsClimb : during('eye-01') ? ringsRim : ringsLake;
+      (material.uniforms.uLapRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-01') ? lapRingsRim : during('eye-02') ? lapRingsFar : lapRingsNear;
+      (material.uniforms.uLapReach as THREE.IUniform<number>).value = during('eye-01') ? 2.2 : 1;
       // The camera leaves: from the frame it begins to look down, the water is drawn as it is from over it.
       leave.set(during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0, t - (rise + 1.0), during('eye-05') ? 0 : 0, 0);
       laps.forEach((lap, i) => {
