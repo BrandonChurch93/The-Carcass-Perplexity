@@ -291,7 +291,7 @@ float steamAt(vec3 p, int i) {
   float lumps = textureLod(tNoise, q, 0.0).r * 0.55 + textureLod(tNoise, q * 3.1 + 0.31, 0.0).b * 0.45;
   // Torn: there is clear air between the strands, more of it the higher they are.
   // (Soft strands: a hard edge on them is cut into dots by the few steps a view takes through a column.)
-  float shape = smoothstep(0.27 + 0.26 * h, 0.82, lumps * (0.75 + 0.6 * body));
+  float shape = smoothstep(0.27 + 0.26 * h + C.w, 0.82, lumps * (0.75 + 0.6 * body));
   // How deep in the column's heart this is: low and on the axis is deep, the top and the rim are not.
   steamShade = body * (1.0 - h) * (0.45 + 0.55 * shape);
   // The rim toward the brighter side of the overcast is the lit one.
@@ -473,7 +473,7 @@ void main() {
   float lean = walk + 0.02 * elev;
   float side = abs(lean) / (uRain.y * (0.8 + 0.5 * own) * (1.0 + 1.6 * max(elev, 0.0)));
   float rain = 0.0;
-  if (uShow.y > 0.5 && far > curtain && side < 2.6 && rd.y > -0.02 && elev < RAIN_TOP && abs(shaft) < 0.5) {
+  if (uShow.y > 0.5 && far > curtain && side < 2.6 && rd.y > -0.02 && elev < RAIN_TOP * 1.9 && abs(shaft) < 0.5) {
     float el = elev;
     // It has no side: it thins away to either hand, and what is seen of it is slanting trails in veils of unlike weight, each veil
     // its own width and its own height. The veils walk with the shaft, change as they go, and their trails come down.
@@ -490,10 +490,11 @@ void main() {
     float streaks = smoothstep(0.3, 0.75, broad * 0.14 + fine * 0.36 + fall * 0.5);
     float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
     // It hangs from the belly of its cloud, whole under it and thinner as it comes down: much of it never reaches the flats.
-    // (Its top is the cloud's belly, soft and a little uneven; each trail is its own length, and few come all the way down.)
-    float top = RAIN_TOP * (0.85 + 0.4 * (veils - 0.5));
+    // (Its top is the cloud's belly, soft and ragged: a veil stands half as tall again as its neighbour, and the tears in it go up into
+    // the cloud. Each trail is its own length, and few come all the way down.)
+    float top = RAIN_TOP * (0.9 + 0.9 * (veils - 0.5) + 0.4 * (torn - 0.5));
     float reachDown = 0.3 + 0.6 * textureLod(tNoise, vec3(lean * 61.0 + 0.7, 0.21 + uTime * 0.05 + lean * 7.93, 0.6 + uTime * 0.01 + lean * 14.03), 0.0).g;
-    float base = smoothstep(top, top * 0.55, el) * mix(reachDown, 1.0, smoothstep(0.0, top * 0.45, el)) * smoothstep(-0.004, 0.012, el);
+    float base = smoothstep(top * 1.2, top * 0.5, el) * mix(reachDown, 1.0, smoothstep(0.0, top * 0.45, el)) * smoothstep(-0.004, 0.012, el);
     rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.66 + 0.5 * streaks);
   }
   float show = uShow.x;
