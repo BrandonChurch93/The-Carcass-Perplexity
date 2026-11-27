@@ -357,7 +357,7 @@ uniform sampler2D tFroth;
 ${RIG_GLSL}
 
 // What a unit of the film's thickness takes of red, green and blue.
-const vec3 FILM_TAKES = vec3(0.42, 2.5, 2.9);
+const vec3 FILM_TAKES = vec3(0.95, 2.9, 3.2);
 // The colour the brine in the film gives back to the light that falls on it.
 const vec3 FILM_BODY = vec3(0.035, 0.008, 0.0065);
 
@@ -377,7 +377,7 @@ vec2 filmAt(vec3 at, vec4 life) {
   vec4 c = grainAt(mer * 1.31 + life.y * 5.0 - at.y * 0.11, 1.8);
   vec4 b = grainAt(at.xz * 0.7 + life.y, 0.7);
   float runs = max(smoothstep(0.45, 0.8, a.r) * (1.0 - 0.7 * top), 0.7 * smoothstep(0.5, 0.8, c.g) * (1.0 - top) * (1.0 - top));
-  float film = mix(0.8, 0.16 + 0.22 * (1.0 - life.x), top) + 0.2 * runs + (b.r - 0.5) * 0.3 * (1.0 - 0.5 * top) + 0.5 * smoothstep(0.2, 0.0, at.y);
+  float film = mix(0.85, 0.06 + 0.14 * (1.0 - life.x), smoothstep(0.0, 0.7, at.y)) + 0.2 * runs + (b.r - 0.5) * 0.3 * (1.0 - 0.5 * top) + 0.5 * smoothstep(0.2, 0.0, at.y);
   return vec2(clamp(film, 0.05, 2.0), runs);
 }
 
@@ -447,11 +447,13 @@ void main() {
   // (Where the skin runs out into the pool it mirrors no more than the pool does, and scum on it mirrors nothing.)
   fres *= mix(0.15, 1.0, smoothstep(0.04, 0.26, vLocal.y)) * (1.0 - 0.8 * rim);
   // Scum rides on the skin where the runs have left it, and grit from the pool's floor: both hide what is behind them.
-  float scum = smoothstep(0.73, 0.78, g.g * 0.55 + grit.r * 0.45 + 0.1 * film.y) * smoothstep(0.3, 0.5, vLocal.y);
-  float speck = smoothstep(0.84, 0.87, grit.g * 0.6 + fleck.b * 0.4) * smoothstep(0.25, 0.45, vLocal.y);
+  // (Scum is a stain, soft at its edge and never whole: what the runs left behind, rust in the red. The lumps in it are few and pale.)
+  float scum = 0.7 * smoothstep(0.56, 0.84, g.g * 0.62 + grit.r * 0.2 + 0.18 * scumTex.r + 0.12 * film.y) * smoothstep(0.25, 0.6, vLocal.y);
+  float speck = smoothstep(0.86, 0.885, grit.g * 0.6 + fleck.b * 0.4) * smoothstep(0.25, 0.45, vLocal.y);
   float covered = max(max(scum, speck), rim);
 #ifdef THROUGH
-  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered);
+  // (At its foot the skin stands in the meniscus the pool draws up it, which looks down at the dark pool: a dark line round the dome.)
+  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered) * mix(0.5, 1.0, smoothstep(0.02, 0.26, vLocal.y));
   gl_FragColor = vec4(passes, 1.0);
 #else
   vec3 fallsOn = skyIrradiance(n) * (open / 3.14159);
@@ -460,8 +462,12 @@ void main() {
   vec3 lit = FILM_BODY * fallsOn * (1.0 - through.g);
   // The far wall is lit from outside and shows its lit side through itself: a red lamp behind the near wall. The gas between is steam,
   // and holds a little of that light.
-  vec3 inside = FILM_BODY * fromAbove * (1.0 - throughFar.g) + vec3(0.8, 0.62, 0.58) * fromAbove * 0.05 * (0.4 + 0.6 * top) * whole;
+  vec3 inside = FILM_BODY * fromAbove * (1.0 - throughFar.g) + vec3(0.74, 0.65, 0.63) * fromAbove * 0.075 * (0.3 + 0.7 * top) * whole;
+  // (The far wall is wet on the inside too: the window stands in it a second time, small and low on the other side.)
+  float towardFar = max(dot(reflect(-v, nFar), ${DOME_KEY}), 0.0);
+  inside += uSkyZenith * 0.12 * smoothstep(0.9, 0.995, towardFar) * far;
   lit += through * inside;
+  lit *= mix(0.45, 1.0, smoothstep(0.02, 0.26, vLocal.y));
   vec3 r = reflect(-v, n);
   float horizon = r.y + (g.g - 0.5) * 0.05;
   vec3 sky = skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z)));
@@ -472,11 +478,14 @@ void main() {
   vec3 pond = vec3(0.05, 0.012, 0.01) * fromAbove + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.08;
   vec3 env = mix(pond, sky, smoothstep(-0.02, 0.02, horizon));
   // The overcast is not even: its brighter quarter stands in the skin as one soft window with a hot middle, cut by the runs.
-  float toward = max(dot(r, ${DOME_KEY}), 0.0);
-  env += uSkyZenith * (2.2 * smoothstep(0.7, 0.975, toward) + 14.0 * smoothstep(0.976, 0.994, toward)) * (1.0 - 0.6 * film.y) * (0.6 + 0.4 * g.r);
+  // (Soft: a window in cloud has no edge, and the skin it stands in is not smooth.)
+  float toward = max(dot(r, ${DOME_KEY}), 0.0) + (grit.r - 0.5) * 0.012;
+  float window = smoothstep(0.55, 0.97, toward);
+  float hot = smoothstep(0.93, 1.0, toward);
+  env += uSkyZenith * (2.4 * window * window + 26.0 * hot * hot * hot) * (1.0 - 0.6 * film.y) * (0.6 + 0.4 * g.r);
   lit += env * fres * mix(1.0, open, 0.5) * vec3(1.0, 0.95, 0.93);
   lit += skyRadiance(up) * 0.035 * glint * smoothstep(0.35, 0.7, grit.r) * mix(1.0, open, 0.5);
-  vec3 onTop = mix(vec3(0.3, 0.2, 0.16) * (0.5 + fleck.r), vec3(0.26, 0.17, 0.13) * (0.5 + 0.9 * scumTex.g), scum * (1.0 - speck) * (1.0 - rim));
+  vec3 onTop = mix(vec3(0.34, 0.25, 0.2) * (0.5 + fleck.r), vec3(0.17, 0.062, 0.034) * (0.5 + 0.9 * scumTex.g), (1.0 - speck) * (1.0 - rim));
   // (The rolled edge of a torn skin is the brine itself, gathered: dark.)
   onTop = mix(onTop, vec3(0.05, 0.008, 0.006), rim);
   lit = mix(lit, onTop * fallsOn, covered);
