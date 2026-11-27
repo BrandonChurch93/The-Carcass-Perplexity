@@ -7,3 +7,13 @@ Received by the Builder from `marsh_lead_w2` at about 01:18 UTC on 2026-11-27, w
 Its first change, received about 01:17 UTC: `agent/p7-marsh-life` 718a24a (`wallowers/tread.ts`).
 
 What the Builder did with it: the three changes are tested together on the Builder's machine (browser 147.0.7727.15), and from 01:26 UTC the team has its own test machine with that browser, `film_chunk_renderer_1` (brief `out/work/tmp/r29/g10-tester.txt`). Results are added below as they come.
+
+## Result 1 · the first three changes together, on the Builder's machine
+
+MEASURED 2026-11-27 01:23 to 01:24 UTC, browser 147.0.7727.15: `718a24a`, `eab411d` and `c68339f` applied together on `1718ba08` (each as its change under `src/` since `4e84d7b5`), built, frame 5930 drawn six times in two pages at the draft tier, 960 x 540.
+
+- `DISTINCT byte results 4 ; distinct pixel results 4`. None of the three is the cure, alone or together.
+- The six pictures differ by one level at four pixels only (x, y from the top left): (787,195) and (788,195) in 8 of the 13 differing pairs, (870,159) and (153,182) in 5 each.
+- The tree was put back and built again after the test (no file under `src/` changed). 6 renders.
+
+Sent to the lead with the note `out/work/tmp/r29/note-marsh-tester.txt` at 01:27 UTC.
