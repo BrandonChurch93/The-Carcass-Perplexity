@@ -176,6 +176,42 @@ export function joints(pose: Pose): Joints {
   return out;
 }
 
+/** The dead one as it lies in its picture, set joint by joint and not bent out of a standing animal: on its right side and rolled a little
+ * onto its belly, so the back stands up behind and the flank looks at the lens; the neck let down along the rock and the head fallen on
+ * its side; the upper foreleg thrown forward over the chest with its paw flat on the snow, the under one out along the body, the hind
+ * legs drawn up under the belly. Metres of the animal: x toward the head, y up from the ground, z away from the lens. */
+export function carcassJoints(): Joints {
+  const a = 0.42;
+  const fwd: V3 = [1, 0, 0];
+  const up: V3 = [0, Math.sin(a), Math.cos(a)];
+  const right: V3 = [0, -Math.cos(a), Math.sin(a)];
+  const hip: V3 = [0, 0.17, 0.02];
+  const chest: V3 = [0.62, 0.2, 0];
+  const neck: V3 = [0.85, 0.2, -0.05];
+  const head: V3 = [1.1, 0.16, -0.15];
+  const face: V3 = [1.3, 0.1, -0.27];
+  const chain = (top: V3, d1: V3, d2: V3, d3: V3): [V3, V3, V3, V3] => {
+    const knee = add(top, scale(norm(d1), UPPER));
+    const ankle = add(knee, scale(norm(d2), LOWER));
+    return [top, knee, ankle, add(ankle, scale(norm(d3), PAW))];
+  };
+  const legs = [
+    // The upper foreleg: off the shoulder, forward and down to the snow before the chest, the paw toward the lens.
+    chain([0.67, 0.32, -0.15], [0.3, -0.5, -0.8], [-0.05, -0.42, -0.9], [-0.25, -0.2, -0.95]),
+    // The under foreleg: out from under the chest and back along the body, its claws toward the tail.
+    chain([0.64, 0.1, -0.06], [-0.45, 0, -0.9], [-0.8, -0.05, -0.6], [-0.97, -0.05, -0.25]),
+    // The upper hind leg: the thigh forward along the belly, the shank back down to the snow.
+    chain([-0.02, 0.31, -0.1], [0.62, -0.42, -0.66], [-0.5, -0.5, -0.7], [-0.35, -0.25, -0.9]),
+    // The under hind leg, flat under it.
+    chain([-0.04, 0.1, -0.03], [0.35, 0, -0.94], [-0.85, -0.03, -0.5], [-0.95, -0.03, -0.3]),
+  ];
+  const out: Joints = { hip, chest, neck, head, face, lead: norm(sub(face, head)), fwd, up, right, tops: legs.map((l) => l[0]), knees: legs.map((l) => l[1]), ankles: legs.map((l) => l[2]), toes: legs.map((l) => l[3]) };
+  // Nothing of it is under the ground.
+  const floor: [V3[], number][] = [[out.knees, 0.08], [out.ankles, 0.06], [out.toes, 0.04]];
+  for (const [list, r] of floor) for (const p of list) if (p[1] < r) p[1] = r;
+  return out;
+}
+
 function prims(j: Joints, pose: Pose): Prim[] {
   const s = pose.slack;
   const out: Prim[] = [];
@@ -263,8 +299,8 @@ export interface Skin {
 }
 
 /** The skin of a pose. `cell` is the size of the cells its surface is taken on: 0.016 for an animal the lens comes close to. */
-export function skin(pose: Pose, cell: number): Skin {
-  const j = joints(pose);
+export function skin(pose: Pose, cell: number, given?: Joints): Skin {
+  const j = given ?? joints(pose);
   const list = prims(j, pose);
   let lo: V3 = [Infinity, Infinity, Infinity];
   let hi: V3 = [-Infinity, -Infinity, -Infinity];
@@ -541,6 +577,8 @@ export interface CoatOptions {
   wind: V3;
   /** Where no clump is grown: the side an animal lies on, that no lens sees. */
   skip?: (p: V3, n: V3) => boolean;
+  /** The length of the coat by kind of place, where it is not the usual. */
+  lengths?: number[];
 }
 
 export interface Coat {
@@ -574,7 +612,7 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
   };
   for (let c = 0; c < o.clumps; c++) {
     const at = body.pick(rng);
-    const base = LENGTH[at.kind] as number;
+    const base = (o.lengths ?? LENGTH)[at.kind] as number;
     if (base <= 0) continue;
     if (o.skip && o.skip(at.p, at.n)) continue;
     // The face end of the head is bare; under the belly and inside the legs the coat hangs long.
