@@ -191,8 +191,8 @@ export function carcassJoints(): Joints {
   const hip: V3 = [0, 0.12, 0.02];
   const chest: V3 = [0.62, 0.15, 0];
   const neck: V3 = [0.86, 0.12, -0.05];
-  const head: V3 = [1.1, 0.085, -0.15];
-  const face: V3 = [1.3, 0.06, -0.27];
+  const head: V3 = [1.1, 0.1, -0.15];
+  const face: V3 = [1.32, 0.075, -0.27];
   const chain = (top: V3, d1: V3, d2: V3, d3: V3): [V3, V3, V3, V3] => {
     const knee = add(top, scale(norm(d1), UPPER));
     const ankle = add(knee, scale(norm(d2), LOWER));

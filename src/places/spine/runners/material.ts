@@ -425,8 +425,8 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   float bend = (fract(seed * 7.3) - 0.5) * 2.0;
   float hook = aLimb.z * smoothstep(0.55, 1.0, t);
   float arch = fract(seed * 3.1);
-  vec3 spilled = dir * (t - 0.45 * hook * hook - 0.12 * bend * bend * t * t) + sideways * (0.4 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.12 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.45 * hook * hook * sign(bend))
-    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.17 * arch * arch * sin(3.14159 * pow(t, 0.8)) + 0.03 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.14 * hook * hook * step(0.4, fract(seed * 11.0)));
+  vec3 spilled = dir * (t - 0.2 * hook * hook - 0.06 * bend * bend * t * t) + sideways * (0.25 * bend * t * t + 0.05 * sin(t * 8.0 + seed * 20.0) * t + 0.02 * sin(t * 21.0 + seed * 31.0) + 0.06 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.2 * hook * hook * sign(bend))
+    + down * (0.3 * t + 0.5 * t * t) + vec3(0.0, 1.0, 0.0) * ((0.03 + 0.17 * arch) * sin(3.14159 * pow(t, 0.7)) + 0.02 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.06 * hook * hook * step(0.4, fract(seed * 11.0)));
   return mix(hangs, spilled, uWrithe.y);
 }
 void main() {
@@ -444,7 +444,7 @@ void main() {
   vec3 across = normalize(cross(lead, vec3(0.0, 1.0, 0.0)) + vec3(1e-4, 0.0, 0.0));
   float len = aLimb.x * size * (1.0 + 0.1 * uWrithe.y);
   // Thick where it leaves the face, knuckled along its length, a point at its end.
-  float r = aLimb.y * size * (1.0 - 0.97 * pow(t, mix(1.6, 1.25, uWrithe.y))) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
+  float r = aLimb.y * size * mix(1.0, 0.68, uWrithe.y) * (1.0 - 0.97 * pow(t, mix(1.6, 0.9, uWrithe.y))) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
   vec3 centre = root + len * pathAt(t, lead, across, seed);
   vec3 ahead = root + len * pathAt(t + 0.03, lead, across, seed);
   float bed = r * 0.85 + 0.01;
