@@ -91,10 +91,10 @@ void main() {
   bone = mix(bone, vec3(0.56, 0.56, 0.5) * (0.7 + 0.6 * h), 0.3 * smoothstep(0.6, 0.74, vnoise(q.xz * 23.0 + q.y * 17.0 + 40.0 + tone * 13.0)));
   // Its ends are spongy and hold the dirt; its shafts are split along fine dark lines.
   float porous = vBone.y * smoothstep(0.45, 0.6, vnoise(q.xz * 260.0 + q.y * 210.0));
-  bone *= 1.0 - 0.5 * porous;
+  bone *= 1.0 - 0.32 * porous;
   float split = smoothstep(0.03, 0.0, abs(vnoise(q.xz * 33.0 + q.y * 27.0 + 5.0) - 0.5)) * smoothstep(0.25, 0.5, vnoise(q.xz * 6.0 + 3.0 + tone * 9.0));
   bone *= 1.0 - 0.8 * split;
-  bone *= 0.84 + 0.32 * h;
+  bone *= 0.9 + 0.2 * h;
   // Where it lies in the floor the floor has taken it: a pale crust of lime up its sides, and the rust of the mats on it below that.
   float crusted = smoothstep(0.06, 0.015, lift + 0.07 * (vnoise(q.xz * 19.0 + 2.0) - 0.5)) * smoothstep(0.35, 0.55, vnoise(q.xz * 43.0 + q.y * 31.0 + 8.0) + 0.25 * (0.05 - lift) / 0.05);
   bone = mix(bone, vec3(0.7, 0.67, 0.58) * (0.75 + 0.5 * h), 0.7 * crusted);
@@ -104,7 +104,7 @@ void main() {
   float damp = smoothstep(0.028, 0.01, lift + 0.012 * (vnoise(q.xz * 60.0) - 0.5));
   bone *= mix(1.0, 0.5, damp);
   // Low down and inside the cage little of the sky is seen.
-  occ = vBone.z * (0.6 + 0.4 * smoothstep(0.0, 0.1, lift)) * (0.75 + 0.25 * smoothstep(0.3, 0.6, h));
+  occ = vBone.z * (0.6 + 0.4 * smoothstep(0.0, 0.1, lift)) * (0.87 + 0.13 * smoothstep(0.3, 0.6, h));
   albedo = clamp(bone * mix(vec3(1.0), warmSide(n), 0.45), 0.0, 0.95);
   rough = mix(0.8, 0.35, damp);
   glint = damp * 0.6;
@@ -339,7 +339,7 @@ function bent(points: V3[], radius: number, seed: number, open: number): THREE.B
   }
   const merged = mergeVertices(g.deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
   merged.computeVertexNormals();
-  lumpy(merged, radius * 0.18, radius * 2.2, seed);
+  lumpy(merged, radius * 0.11, radius * 2.2, seed);
   const mp = merged.getAttribute('position') as THREE.BufferAttribute;
   const first = new THREE.Vector3(...(points[0] as V3));
   const last = new THREE.Vector3(...(points[points.length - 1] as V3));
@@ -387,7 +387,7 @@ function skull(at: V3, heading: number, seed: number): THREE.BufferGeometry[] {
     const girth = 0.34 + 0.66 * Math.exp(-(((t - 0.24) / 0.3) ** 2)) - 0.1 * Math.exp(-(((t - 0.52) / 0.1) ** 2));
     // The crown is ridged, the cheek below it flat.
     const ridge = 1 + 0.12 * Math.max(0, y) * Math.exp(-(((t - 0.3) / 0.25) ** 2));
-    p.setXYZ(i, x * 0.215, y * 0.08 * girth * ridge, z * 0.066 * girth);
+    p.setXYZ(i, x * 0.25, y * 0.105 * girth * ridge, z * 0.085 * girth);
   }
   g.computeVertexNormals();
   lumpy(g, 0.004, 0.035, seed);
@@ -496,7 +496,7 @@ function bones(next: () => number): THREE.BufferGeometry[] {
     nx -= Math.cos(heading) * (len + 0.012);
     nz += Math.sin(heading) * (len + 0.012);
   }
-  out.push(...skull([nx - 0.17, 0.046, nz + 0.07], -heading - 0.5, 141));
+  out.push(...skull([nx - 0.14, 0.055, nz + 0.06], -heading - 0.5, 141));
   // The shoulder blade has slid off the cage and lies on it.
   out.push(lump([-0.2, 0.2, -0.03], [0.1, 0.008, 0.05], [0.5, 0.5, -0.5], 151, 3, 0.9));
   // The limbs. The hind ones trail along the lip; one fore limb lies out before the cage and the other is under it.
@@ -519,10 +519,10 @@ function bones(next: () => number): THREE.BufferGeometry[] {
     const end = joints[joints.length - 1] as V3;
     for (let i = 0; i < 3; i++) out.push(lump([end[0] + 0.03 + i * 0.035 + range(-0.01, 0.01), 0.014, end[2] + range(-0.03, 0.03)], [0.017, 0.01, 0.011], [0, range(-0.8, 0.8), 0], seed + 10 + i, 1));
   };
-  limb([[hip + 0.08, 0.06, -0.04], [hip + 0.36, 0.035, 0.13], [hip + 0.7, 0.028, 0.02], [hip + 0.99, 0.022, 0.1], [hip + 1.1, 0.018, 0.13]], 0.021, 161);
-  limb([[hip + 0.1, 0.035, -0.17], [hip + 0.33, 0.03, -0.3], [hip + 0.66, 0.024, -0.22], [hip + 0.93, 0.02, -0.31], [hip + 1.02, 0.016, -0.3]], 0.02, 171);
-  limb([[-0.19, 0.035, 0.26], [-0.07, 0.03, 0.47], [0.24, 0.024, 0.55], [0.5, 0.02, 0.5], [0.58, 0.016, 0.52]], 0.019, 181);
-  limb([[-0.3, 0.03, 0.2], [-0.5, 0.026, 0.33], [-0.52, 0.022, 0.62]], 0.018, 191);
+  limb([[hip + 0.08, 0.06, -0.04], [hip + 0.36, 0.035, 0.13], [hip + 0.7, 0.028, 0.02], [hip + 0.99, 0.022, 0.1], [hip + 1.1, 0.018, 0.13]], 0.03, 161);
+  limb([[hip + 0.1, 0.035, -0.17], [hip + 0.33, 0.03, -0.3], [hip + 0.66, 0.024, -0.22], [hip + 0.93, 0.02, -0.31], [hip + 1.02, 0.016, -0.3]], 0.028, 171);
+  limb([[-0.19, 0.035, 0.26], [-0.07, 0.03, 0.47], [0.24, 0.024, 0.55], [0.5, 0.02, 0.5], [0.58, 0.016, 0.52]], 0.026, 181);
+  limb([[-0.3, 0.03, 0.2], [-0.5, 0.026, 0.33], [-0.52, 0.022, 0.62]], 0.024, 191);
 
   // The weed of the shelf: strands come up out of the water before it and lie over the limbs and the low bones.
   const cage = (x: number, z: number): number => {

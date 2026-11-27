@@ -10,7 +10,7 @@ import { KEYS } from '../cameras';
 import { AXIS, axisOf, browCover, landHeight, onAxis, streamAcross, wallAt, BAY } from './height';
 import { PATCH, browGeometry, patchGeometry, pebbleGeometry, socketGeometry, stoneGeometry } from './meshes';
 import { BLOCK_FRAGMENT, BLOCK_VERTEX, ballGeometry, blockUniforms } from './blocks';
-import { LIP, LIP_FRAGMENT, LIP_VERTEX, lipGeometry, onLip } from './lip';
+import { LIP_FRAGMENT, LIP_VERTEX, lipGeometry, onLip } from './lip';
 import { LOD_GLSL, WARM_GLSL } from './lod';
 import { ROCK_GLSL, rockUniforms } from './rock';
 import { createStream, standingStones } from './stream';
@@ -35,13 +35,6 @@ bool inCrop(vec3 p) {
   float along = dot(q, uAxis.zw);
   float across = dot(q, vec2(uAxis.w, -uAxis.z));
   return uCut < 0.5 && along > uCrop.x + 1.2 && along < uCrop.y - 1.2 && across > uCrop.z + 1.2 && across < uCrop.w - 1.2;
-}
-// And under the lip of the shore, where it stands dry: the coarse cells of the ground lie over the lip's fine ones wherever it is hollow.
-bool inLip(vec3 p) {
-  vec2 q = p.xz - vec2(${BAY.x}, ${BAY.z});
-  float ahead = dot(q, vec2(${BAY.fx}, ${BAY.fz}));
-  float aside = dot(q, vec2(${-BAY.fz}, ${BAY.fx}));
-  return p.y > -0.08 && ahead > ${LIP.ahead0 + 0.1} && ahead < ${LIP.ahead1 - 0.1} && aside > ${LIP.side0} * ahead + 0.1 && aside < ${LIP.side1} * ahead - 0.1;
 }`;
 
 const LAND_FRAGMENT = /* glsl */ `
@@ -56,7 +49,7 @@ void main() {
   gDx = dFdx(vWorld);
   gDy = dFdy(vWorld);
   takeLod(gDx, gDy);
-  if (inPatch(vWorld) || inCrop(vWorld) || inLip(vWorld) || beyondNear(vWorld)) discard;
+  if (inPatch(vWorld) || inCrop(vWorld) || beyondNear(vWorld)) discard;
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float face = smoothstep(0.8, 0.52, n.y);
@@ -84,7 +77,7 @@ varying vec3 vWorld;
 uniform vec4 uNear;
 ${CUT_GLSL}
 void main() {
-  if (inPatch(vWorld) || inCrop(vWorld) || inLip(vWorld) || (uNear.w > 0.5 && length(vWorld.xz - uNear.xy) > uNear.z)) discard;
+  if (inPatch(vWorld) || inCrop(vWorld) || (uNear.w > 0.5 && length(vWorld.xz - uNear.xy) > uNear.z)) discard;
   gl_FragColor = vec4(0.0);
 }`;
 
@@ -267,7 +260,7 @@ export function create(ctx: Context): Piece {
   const cropMesh = new THREE.Mesh(crop.geometry, cropMaterial);
   // The wet lip before the shore camera.
   const lipMaterial = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, tShoreP: rock.tShoreP as THREE.IUniform, tLipNh: { value: ctx.assets.texture('land/lip-nh.jpg', { kind: 'data' }) }, tLipTone: { value: ctx.assets.texture('land/lip-tone.jpg', { kind: 'data' }) } },
+    uniforms: { ...ctx.rig.uniforms, tShoreP: rock.tShoreP as THREE.IUniform, tShorePH: rock.tShorePH as THREE.IUniform },
     vertexShader: LIP_VERTEX,
     fragmentShader: LIP_FRAGMENT,
   });
