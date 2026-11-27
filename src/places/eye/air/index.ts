@@ -242,7 +242,9 @@ void main() {
       // The mist stands in the light of the wall behind it: where the foot of the wall in the picture is in the sun the mist before it is, and
       // where the picture's wall is in shade the mist is the blue grey of the sky. The picture is read wide and soft, so no edge of it shows.
       float wallSun = 1.0;
-      if (uPlateTone.w > 0.5) {
+      // It is asked only by a way that comes within 320 m of the wall: nearer the lens the mist stands in the sun of the place alone.
+      float nearest = shore.z - sqrt(max(max(qa * t0 * t0 + 2.0 * qb * t0 + qc, qa * t1 * t1 + 2.0 * qb * t1 + qc), 0.0));
+      if (uPlateTone.w > 0.5 && nearest < 320.0) {
         vec3 foot = farRadianceLevel(ro, normalize(vec3(rd.x, 0.0, rd.z) * wall + vec3(0.0, 0.05 * shore.z - ro.y, 0.0)), 7.5);
         wallSun = smoothstep(0.06, 0.34, (foot.r - foot.b) / max(foot.r + foot.b, 1e-3)) * smoothstep(0.04, 0.2, foot.r);
       }
