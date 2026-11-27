@@ -135,6 +135,9 @@ function sectionAt(a: Arch, deg: number): Section {
   // It keeps its full section until it is under the rock: closing to a point over five metres, its tip stood free of the wall's courses.
   const into = (d: number): number => 3.4 * a.thick * (1 - sat(d / 22)) ** 2;
   let end = Math.min(sat(s / 1.6), sat((length - s) / 1.6)) ** 0.6;
+  // Once its face is a stride inside the rock nothing of it is left: beds of it stood out through the wall further on, as chips in the air.
+  const sunk = into(s) + into(length - s);
+  end = Math.min(end, 1 - smooth((sunk - 1.35 * a.thick) / (0.5 * a.thick)));
   let broke = 99;
   let lost = 0;
   if (a.gap) {
@@ -203,6 +206,57 @@ export function arch(a: Arch, fine: number): THREE.BufferGeometry {
     };
   });
 }
+
+/** Each tier is carried on round the side that fell as a narrower band of the same stone, standing a stride out of the wall, from where
+ *  the hoop goes under the rock at one end to where it comes out at the other: bearings of the two ends, six heights along it, a seed. */
+export const BANDS: { d0: number; d1: number; y: number[]; seed: number }[] = ARCHES.map((a) => {
+  const d0 = a.to - 360;
+  return { d0, d1: a.from, y: [a.to - 20, a.to - 10, a.to, a.from, a.from + 10, a.from + 20].map((deg) => sectionAt(a, deg).y), seed: a.seed };
+});
+
+/** How far a band stands out of the wall at a bearing (degrees, -180 to 180) and a height, 0 to 1. The wall's shader asks the same (BAND_GLSL). */
+export function bandAt(deg: number, y: number): number {
+  let most = 0;
+  for (const b of BANDS) {
+    if (deg < b.d0 - 20 || deg > b.d1 + 20) continue;
+    const h = b.y as [number, number, number, number, number, number];
+    const span = b.d1 - b.d0;
+    const f = sat((deg - b.d0) / span);
+    const mid =
+      h[0] +
+      (h[1] - h[0]) * sat((deg - (b.d0 - 20)) / 10) +
+      (h[2] - h[1]) * sat((deg - (b.d0 - 10)) / 10) +
+      (h[3] - h[2]) * f +
+      (h[4] - h[3]) * sat((deg - b.d1) / 10) +
+      (h[5] - h[4]) * sat((deg - b.d1 - 10) / 10) +
+      0.9 * Math.sin(Math.PI * f) * Math.sin(7 * f + b.seed);
+    const half = 0.85 + 0.25 * Math.sin(13 * f + 1.7 * b.seed);
+    const held = Math.max(1 - smooth(f / 0.1), 1 - smooth((1 - f) / 0.1));
+    const gate = Math.max(held, smooth((Math.sin(10 * f + 2.1 * b.seed) + 0.45 * Math.sin(27 * f + b.seed) + 0.55) / 0.45)) * smooth((deg - (b.d0 - 20)) / 10) * smooth((b.d1 + 20 - deg) / 10);
+    const t = (y - mid) / half;
+    if (Math.abs(t) < 1) most = Math.max(most, gate * Math.sqrt(1 - t * t));
+  }
+  return most;
+}
+
+const glsl = (v: number): string => v.toFixed(4);
+/** The same in the wall's shader. */
+export const BAND_GLSL = /* glsl */ `
+float bandOne(float deg, float y, float d0, float d1, float ya, float yb, float yc, float yd, float ye, float yf, float seed) {
+  float f = clamp((deg - d0) / (d1 - d0), 0.0, 1.0);
+  float mid = ya + (yb - ya) * clamp((deg - (d0 - 20.0)) / 10.0, 0.0, 1.0) + (yc - yb) * clamp((deg - (d0 - 10.0)) / 10.0, 0.0, 1.0) + (yd - yc) * f
+    + (ye - yd) * clamp((deg - d1) / 10.0, 0.0, 1.0) + (yf - ye) * clamp((deg - d1 - 10.0) / 10.0, 0.0, 1.0) + 0.9 * sin(3.14159265 * f) * sin(7.0 * f + seed);
+  float halfTall = 0.85 + 0.25 * sin(13.0 * f + 1.7 * seed);
+  float held = max(1.0 - smoothstep(0.0, 0.1, f), 1.0 - smoothstep(0.0, 0.1, 1.0 - f));
+  float gate = max(held, smoothstep(0.0, 0.45, sin(10.0 * f + 2.1 * seed) + 0.45 * sin(27.0 * f + seed) + 0.55)) * smoothstep(d0 - 20.0, d0 - 10.0, deg) * smoothstep(d1 + 20.0, d1 + 10.0, deg);
+  float t = (y - mid) / halfTall;
+  return gate * sqrt(max(0.0, 1.0 - t * t));
+}
+float bandOn(float deg, float y) {
+  float most = 0.0;
+${BANDS.map((b) => `  most = max(most, bandOne(deg, y, ${glsl(b.d0)}, ${glsl(b.d1)}, ${b.y.map(glsl).join(', ')}, ${glsl(b.seed)}));`).join('\n')}
+  return most;
+}`;
 
 /** What the arches do to the wall at a bearing (degrees) and a height: `back` is how far the wall is eaten back there, 0 to 1 (the recess
  *  under an arch), `shut` how much of the sky an arch overhead takes from it, 0 to 1, and `on` how near the place is to the foot or the

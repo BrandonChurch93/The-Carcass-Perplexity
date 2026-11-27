@@ -56,7 +56,7 @@ interface Cut {
 
 /** A closed skin swept along a line. `cut` gives its section at t; `push` moves the skin out (metres) at t and an angle round the section
  *  (0 on the side away from the lens for a line that runs along x, a quarter turn at the top) and says how shut in the place is. */
-function sweep(skin: Skin, path: readonly V3[], rings: number, sides: number, kind: number, cut: (t: number) => Cut, push: (t: number, ang: number) => [number, number], swap = false): void {
+function sweep(skin: Skin, path: readonly V3[], rings: number, sides: number, kind: number | ((t: number) => number), cut: (t: number) => Cut, push: (t: number, ang: number) => [number, number], swap = false, tent = 1): void {
   const first = skin.position.length / 3;
   let run = 0;
   let last: V3 | null = null;
@@ -91,8 +91,12 @@ function sweep(skin: Skin, path: readonly V3[], rings: number, sides: number, ki
     const q = cut(t);
     for (let j = 0; j <= sides; j++) {
       const ang = ((j % sides) / sides) * 2 * Math.PI;
-      const ca = Math.cos(ang);
-      const sa = Math.sin(ang);
+      const c0 = Math.cos(ang);
+      const s0 = Math.sin(ang);
+      // A tented section: over its middle the skin hangs from a ridge in two planes, as a cloth does from a pole.
+      const e = s0 > 0 ? tent : 1;
+      const ca = Math.sign(c0) * Math.abs(c0) ** e;
+      const sa = Math.sign(s0) * Math.abs(s0) ** e;
       const [out, occ] = push(t, ang);
       const w = q.wide + out;
       const h = q.tall + out;
@@ -103,7 +107,7 @@ function sweep(skin: Skin, path: readonly V3[], rings: number, sides: number, ki
       const round = (j / sides) * 2 * Math.PI * 0.5 * (q.wide + q.tall + 0.02);
       if (swap) skin.uv.push(round, run);
       else skin.uv.push(run, round);
-      skin.data.push(kind, occ * lerp(0.5, 1, smooth(0.62 + 0.5 * sa)), 0);
+      skin.data.push(typeof kind === 'number' ? kind : kind(t), occ * lerp(0.5, 1, smooth(0.62 + 0.5 * s0)), 0);
     }
   }
   for (let i = 0; i < rings; i++) {
@@ -126,9 +130,14 @@ function limb(skin: Skin, path: readonly V3[], thick: [number, number], joints: 
     path,
     Math.max(24, path.length * 14),
     12,
-    KIND.limb,
     (t) => {
-      let r = lerp(thick[0], thick[1], smooth(t / 0.45));
+      // A joint is raw: the hide has worn through on the knob.
+      let raw = 0;
+      for (const [at] of joints) raw = Math.max(raw, bell(t, at, 0.04));
+      return KIND.limb + 0.2 * raw;
+    },
+    (t) => {
+      let r = lerp(thick[0], thick[1], smooth((t - 0.1) / 0.4));
       for (const [at, knob] of joints) r = Math.max(r, lerp(r, knob, bell(t, at, 0.045)));
       r *= closed(t, 0.02, 0.03);
       return { wide: r * 1.08, tall: r * 0.92 };
@@ -199,50 +208,58 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     KIND.trunk,
     (t) => {
       const round = closed(t, 0.16, 0.13);
-      const chest = bell(t, 0.24, 0.2);
-      const hip = bell(t, 0.82, 0.13);
-      return { wide: (0.33 + 0.07 * chest + 0.05 * hip) * round, tall: (0.15 + 0.11 * chest + 0.1 * hip) * round };
+      const chest = bell(t, 0.3, 0.24);
+      const hip = bell(t, 0.82, 0.1);
+      return { wide: (0.34 + 0.07 * chest + 0.05 * hip) * round, tall: (0.19 + 0.1 * chest + 0.09 * hip) * round };
     },
     (t, ang) => {
       const round = closed(t, 0.16, 0.13);
       // The ribs: nine of them, each leaning back as it comes down from the spine, the hide sunk between each two.
-      const cage = smooth((t - 0.1) / 0.08) * smooth((0.6 - t) / 0.1) * smooth((ang - 0.15) / 0.5) * smooth((3.5 - ang) / 0.7);
-      const phase = ((t - 0.1) / 0.5) * 9 - 0.55 * (ang - 1.2);
+      const cage = smooth((t - 0.1) / 0.08) * smooth((0.6 - t) / 0.1) * smooth((ang - 0.15) / 0.5) * smooth((3.0 - ang) / 0.9);
+      const phase = ((t - 0.1) / 0.5) * 6.4 - 0.5 * (ang - 1.2) + 0.5 * noise3(t * 5.3, ang * 0.5, 1.7);
       const wave = 0.5 + 0.5 * Math.cos(2 * Math.PI * phase);
-      const rib = cage * (0.03 * wave ** 3 - 0.026 * (1 - wave) ** 2);
+      const each = 0.5 + 0.5 * Math.sin(Math.floor(phase + 0.5) * 2.4 + 1.0) ** 2;
+      const sag = 0.6 + 0.4 * noise3(t * 7, ang * 1.3, 8.2);
+      const rib = cage * (each * 0.02 * wave ** 4 - 0.024 * sag * (1 - wave) ** 1.5);
       // The spine: a ridge of knuckles along the far edge of the top.
-      const spine = bell(ang, 0.75, 0.2) * smooth((t - 0.06) / 0.1) * smooth((0.97 - t) / 0.1) * (0.03 + 0.014 * Math.cos(2 * Math.PI * t * 21));
+      const spine = bell(ang, 1.25, 0.16) * smooth((t - 0.06) / 0.1) * smooth((0.97 - t) / 0.1) * (0.02 + 0.012 * Math.cos(2 * Math.PI * t * 21));
       // The flank between the last rib and the hip has fallen in, and the belly under it lies on the rock.
-      const flank = -0.085 * bell(t, 0.67, 0.1) * smooth((ang - 0.9) / 0.5) * smooth((3.3 - ang) / 0.6);
+      const flank = -0.055 * bell(t, 0.64, 0.13) * smooth((ang - 0.7) / 0.5) * smooth((3.3 - ang) / 0.6) - 0.04 * bell(t, 0.45, 0.2) * bell(ang, 2.6, 0.5);
       // The hip's point and the blade of the shoulder, each with the hide drawn tight over it.
-      const hipPoint = 0.075 * bell(t, 0.84, 0.055) * bell(ang, 1.45, 0.5);
+      const hipPoint = 0.1 * bell(t, 0.84, 0.05) * bell(ang, 1.5, 0.45);
       const blade = 0.05 * bell(t, 0.15, 0.07) * bell(ang, 1.5, 0.6);
       // Slack hide: long folds that hang down the side, deepest low on it.
-      const fold = (0.012 + 0.014 * smooth((ang - 1.7) / 1.2)) * (1 - 2 * Math.abs(noise3(t * 7.5 + 0.6 * Math.sin(ang * 2), ang * 1.3, 4.4))) + 0.006 * noise3(t * 31, ang * 6, 9.1);
-      const out = (rib + spine + flank + hipPoint + blade + fold) * round;
+      // They lean toward the shoulder as they come down, and a skirt of it lies out on the rock on the side of the lens.
+      const drape = 1 - 2 * Math.abs(noise3(t * 3.1 + 0.9 * (ang - 1.5), ang * 0.9, 4.4));
+      const fold = (0.008 + 0.03 * smooth((ang - 1.5) / 1.3) * smooth((4.3 - ang) / 0.6)) * drape * (1 - 0.6 * cage) + 0.006 * noise3(t * 31, ang * 6, 9.1);
+      const skirt = 0.07 * bell(ang, 3.45, 0.32) * (0.6 + 0.4 * noise3(t * 9, 2.2, 6.6)) * smooth((t - 0.12) / 0.1) * smooth((0.9 - t) / 0.1);
+      const out = (rib + spine + flank + hipPoint + blade + fold + skirt) * round;
       return [out, sat(0.86 + 9 * (rib + flank * 0.6 + fold))];
     },
-    true,
+    false,
+    1.25,
   );
+  for (let i = 0; i < skin.uv.length; i++) skin.uv[i] = (skin.uv[i] as number) * 0.62;
 
   // The neck: from the shoulder along the rock in a slack curve to the root of the mop. The knuckles of its spine stand along its top.
   const neck: V3[] = [
     [-0.6, 0.17, -0.3],
-    [-0.86, 0.14, -0.08],
-    [-1.1, 0.1, -0.1],
-    [-1.34, 0.09, -0.46],
-    [-1.56, 0.085, -0.62],
-    [-1.74, 0.075, -0.42],
-    [-1.8, 0.065, -0.1],
+    [-0.9, 0.14, 0.08],
+    [-1.2, 0.1, 0.14],
+    [-1.5, 0.09, -0.32],
+    [-1.75, 0.085, -0.8],
+    [-2.0, 0.075, -0.74],
+    [-2.13, 0.065, -0.36],
+    [-2.1, 0.055, -0.02],
   ];
   sweep(
     skin,
     neck,
-    110,
+    130,
     28,
-    KIND.limb,
+    (t) => KIND.limb + 0.2 * smooth((t - 0.72) / 0.25),
     (t) => {
-      const r = lerp(0.17, 0.085, smooth(t / 0.9)) * closed(t, 0.02, 0.06) * (1 + 0.16 * bell(t, 0.95, 0.05));
+      const r = lerp(0.14, 0.06, smooth(t / 0.9)) * closed(t, 0.02, 0.1);
       return { wide: r * 1.12, tall: r * 0.86 };
     },
     (t, ang) => {
@@ -250,6 +267,7 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
       const ring = 0.007 * (1 - 2 * Math.abs(noise3(t * 24, Math.sin(ang) * 0.8, 2.2))) + 0.004 * noise3(t * 60, ang * 3, 7.7);
       return [(knuckle + ring) * closed(t, 0.04, 0.05), sat(0.85 + 22 * ring)];
     },
+    true,
   );
 
   // The legs. The upper hind leg stands highest: its thigh comes down from the hip to a knee on the rock toward the lens, and its shank
@@ -261,21 +279,21 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     [0.44, 0.1, 0.36],
     [0.4, 0.075, 0.44],
     [0.62, 0.07, 0.4],
-    [1.12, 0.12, 0.2],
-    [1.6, 0.06, 0.2],
-    [2.02, 0.045, 0.24],
+    [0.95, 0.12, 0.24],
+    [1.3, 0.06, 0.2],
+    [1.62, 0.045, 0.24],
   ];
-  limb(skin, hindOver, [0.1, 0.034], [[0.13, 0.085], [0.49, 0.062], [0.74, 0.05], [0.985, 0.043]], 1.3);
-  hoof(skin, [2.05, 0.04, 0.245], [1, 0.1], 1.15);
+  limb(skin, hindOver, [0.13, 0.036], [[0.13, 0.085], [0.49, 0.062], [0.74, 0.05], [0.985, 0.043]], 1.3);
+  hoof(skin, [1.65, 0.04, 0.245], [1, 0.1], 1.15);
   const hindUnder: V3[] = [
     [0.8, 0.13, -0.2],
     [0.95, 0.075, -0.02],
     [1.07, 0.055, 0.1],
-    [1.42, 0.045, 0.5],
-    [1.78, 0.04, 0.92],
+    [1.3, 0.045, 0.42],
+    [1.52, 0.04, 0.74],
   ];
   limb(skin, hindUnder, [0.08, 0.032], [[0.5, 0.052], [0.985, 0.042]], 4.1);
-  hoof(skin, [1.8, 0.036, 0.945], [0.65, 0.76], 1.15);
+  hoof(skin, [1.54, 0.036, 0.765], [0.57, 0.82], 1.15);
   const fore: V3[] = [
     [-0.5, 0.15, -0.14],
     [-0.54, 0.1, 0.16],
@@ -298,44 +316,49 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
 
   // The mop: cords from the end of the neck, matted where they leave it and spread in a fan on the rock, each in its own slack curve, some
   // of them forked. They lie on one another near the root and singly at the ends.
-  const root: V3 = [-1.8, 0.05, -0.1];
+  const root: V3 = [-2.1, 0.045, -0.02];
   const cord = (from: V3, bearing: number, reach: number, thick: number, lift: number, forks: number): void => {
     const wander = random() * 40;
     const pts: V3[] = [];
-    const count = 7;
+    const count = 10;
     let turn = bearing;
     let x = from[0];
     let z = from[2];
+    // It forks as a root does: twice or three times along it, each fork thinner and shorter, and each of those forks again.
+    const forkAt = forks > 0 ? [2 + Math.floor(random() * 2), 4 + Math.floor(random() * 2), 6 + Math.floor(random() * 2)] : [];
     for (let i = 0; i <= count; i++) {
       const f = i / count;
-      pts.push([x, lerp(from[1], thick * 0.5 + lift * (1 - f) ** 2, smooth(f / 0.25)) + 0.006 * Math.max(0, noise3(wander, f * 5, 3.3)), z]);
-      turn += 0.36 * noise3(wander, f * 3.1, 1.1) + 0.1 * Math.sin(f * 9 + wander);
+      const girth = thick * lerp(1, 0.3, Math.sqrt(f));
+      pts.push([x, lerp(from[1], 0.04 + girth * 0.5 + lift * (1 - f) ** 2, smooth(f / 0.25)) + 0.008 * Math.max(0, noise3(wander, f * 5, 3.3)), z]);
+      turn += 0.3 * noise3(wander, f * 3.1, 1.1) + 0.14 * Math.sin(f * 11 + wander);
       x += (Math.cos(turn) * reach) / count;
       z += (Math.sin(turn) * reach) / count;
-      if (forks > 0 && i === 3 + Math.floor(random() * 2)) {
-        cord([x, thick * 0.5, z], turn + (random() < 0.5 ? -1 : 1) * (0.3 + 0.4 * random()), reach * (0.3 + 0.3 * random()), thick * 0.7, 0, forks - 1);
-        forks = 0;
+      if (forkAt.includes(i)) {
+        const side = random() < 0.5 ? -1 : 1;
+        cord([x, 0.04 + girth * 0.4, z], turn + side * (0.25 + 0.45 * random()), reach * (1 - f) * (0.7 + 0.5 * random()), girth * 0.62, 0, forks - 1);
       }
     }
     sweep(
       skin,
       pts,
-      18,
-      5,
+      forks > 1 ? 26 : 16,
+      forks > 1 ? 7 : 5,
       KIND.cord,
       (t) => {
-        const r = 0.5 * thick * lerp(1, 0.38, t) * Math.sqrt(sat((1 - t) / 0.06));
-        return { wide: r, tall: r };
+        const r = 0.5 * thick * lerp(1, 0.3, Math.sqrt(t)) * Math.sqrt(sat((1 - t) / 0.06));
+        return { wide: r, tall: r * 0.85 };
       },
       (t) => [0, 0.55 + 0.45 * t],
     );
   };
-  for (let i = 0; i < 84; i++) {
-    const u = (i + random()) / 84;
-    // The fan opens away from the neck's end: toward the low end of the animal and toward the lens.
-    const bearing = Math.PI * lerp(0.42, 1.12, u) + 0.12 * (random() - 0.5);
-    const thick = 0.02 + 0.02 * random() ** 2;
-    cord([root[0] + 0.05 * (random() - 0.5), root[1] + 0.05 * random(), root[2] + 0.07 * (random() - 0.5)], bearing, 0.7 + 0.8 * random(), thick, 0.05 * random(), random() < 0.6 ? 1 : 0);
+  const mains = 13;
+  for (let i = 0; i < mains; i++) {
+    const u = (i + 0.2 + 0.6 * random()) / mains;
+    // The fan opens away from the neck's end: toward the low end of the animal and toward the lens. The cords leave the neck as one
+    // matted bundle as thick as it is.
+    const bearing = Math.PI * lerp(0.4, 1.08, u) + 0.1 * (random() - 0.5);
+    const thick = 0.034 + 0.026 * random();
+    cord([root[0] + 0.05 * (random() - 0.5), root[1] + 0.05 * random(), root[2] - 0.12 + 0.07 * (random() - 0.5)], bearing, 1.0 + 0.9 * random(), thick, 0.05 * random(), 2);
   }
 
   // Into the world: every point at its height over the rock under it, sunk a little, the low points more.
@@ -377,24 +400,24 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     geometry,
     lines: [
       [s([-0.8, 0, 0.02]), s([-0.4, 0, 0.1]), s([0.1, 0, 0.02]), s([0.5, 0, 0.0]), s([0.9, 0, -0.05])],
-      [s([-0.9, 0, -0.1]), s([-1.2, 0, -0.14]), s([-1.35, 0, -0.3]), s([-1.6, 0, -0.45]), s([-1.8, 0, 0.05])],
-      [s([0.4, 0, 0.5]), s([1.1, 0, 0.3]), s([1.6, 0, 0.3]), s([2.0, 0, 0.3])],
-      [s([1.0, 0, 0.1]), s([1.4, 0, 0.55]), s([1.8, 0, 0.98])],
+      [s([-0.9, 0, 0.2]), s([-1.2, 0, 0.26]), s([-1.5, 0, -0.15]), s([-1.8, 0, -0.6]), s([-2.1, 0, -0.2])],
+      [s([0.4, 0, 0.5]), s([0.95, 0, 0.32]), s([1.3, 0, 0.3]), s([1.62, 0, 0.3])],
+      [s([1.0, 0, 0.1]), s([1.3, 0, 0.48]), s([1.52, 0, 0.8])],
     ],
     spots: [
       [s([-0.5, 0, -0.3]), 0.5, 0.95],
       [s([0, 0, -0.33]), 0.52, 0.95],
       [s([0.5, 0, -0.3]), 0.52, 0.95],
       [s([0.85, 0, -0.2]), 0.4, 0.85],
-      [s([-1.0, 0, -0.27]), 0.28, 0.8],
-      [s([-1.4, 0, -0.45]), 0.24, 0.75],
-      [s([-1.6, 0, -0.5]), 0.24, 0.7],
-      [s([-2.2, 0, 0.35]), 0.6, 0.45],
+      [s([-1.0, 0, 0.1]), 0.28, 0.8],
+      [s([-1.45, 0, -0.25]), 0.24, 0.75],
+      [s([-1.85, 0, -0.78]), 0.24, 0.7],
+      [s([-2.5, 0, 0.4]), 0.7, 0.4],
       [s([0.5, 0, 0.3]), 0.3, 0.7],
       [s([1.1, 0, 0.2]), 0.22, 0.6],
-      [s([1.6, 0, 0.45]), 0.25, 0.5],
+      [s([1.4, 0, 0.4]), 0.25, 0.5],
       [s([-0.2, 0, 0.3]), 0.3, 0.65],
     ],
-    flies: [s([-0.3, 0.42, -0.33]), s([0.2, 0.34, -0.36]), s([0.7, 0.5, -0.25]), s([-0.8, 0.3, -0.28]), s([-2.2, 0.1, 0.35]), s([1.1, 0.2, 0.2])],
+    flies: [s([-0.3, 0.42, -0.33]), s([0.2, 0.34, -0.36]), s([0.7, 0.5, -0.25]), s([-0.8, 0.3, -0.28]), s([-2.5, 0.1, 0.4]), s([1.1, 0.2, 0.2])],
   };
 }

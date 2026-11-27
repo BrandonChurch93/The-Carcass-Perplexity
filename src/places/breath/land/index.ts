@@ -133,7 +133,7 @@ export function create(ctx: Context): Piece {
     // A few great slabs and many lesser blocks.
     const big = i < 2 ? 0.8 : 0.6 * rs.next() ** 2.2;
     const h = lerp(0.7, 3.2, big) * rs.range(0.8, 1.2);
-    const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) + h * 0.3;
+    const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) + h * 0.16;
     const slope = r > rimRadius(b) - 1 ? 0.12 : 0.62;
     blocks.push(block(i + 1, [lerp(1.6, 11, big) * rs.range(0.8, 1.25), h, lerp(1.2, 6.5, big) * rs.range(0.8, 1.2)], [x, y, z], [slope + rs.range(-0.25, 0.35), -b + rs.range(-0.9, 0.9), rs.range(-0.3, 0.3)]));
   }
@@ -151,14 +151,15 @@ export function create(ctx: Context): Piece {
     const b = bearing * RAD;
     const seat = archTop(bearing, nth);
     if (!seat) continue;
-    blocks.push(block(20 + bearing * 0.37, [w, 1.5, d], [seat[0], seat[1] + 0.55, seat[2]], [lean * 0.3, -b + yaw, lean * 0.22]));
+    // A block, not a plank: as deep as a man is tall, tipped where it stopped, a corner of it down in the grit.
+    blocks.push(block(20 + bearing * 0.37, [w * 0.62, 2.5, d * 0.8], [seat[0], seat[1] + 0.75, seat[2]], [lean * 0.6, -b + yaw, lean * 0.45], 80));
     for (let k = 0; k < 4; k++) {
-      const side = (k % 2 === 0 ? 1 : -1) * (w * 0.5 + 0.8 + 1.1 * rs.next() + k * 0.5);
+      const side = (k % 2 === 0 ? 1 : -1) * (w * 0.3 + 0.6 + 1.1 * rs.next() + k * 0.5);
       const at = archTop(bearing + (side / Math.hypot(seat[0], seat[2])) / RAD, nth);
       const size = rs.range(0.7, 1.9);
       if (!at) continue;
       const out = rs.range(-0.6, 0.9);
-      blocks.push(block(60 + k + bearing * 0.21, [size * rs.range(0.9, 1.5), size * 0.55, size], [at[0] - Math.sin(b) * out, at[1] + size * 0.2, at[2] + Math.cos(b) * out], [rs.range(-0.2, 0.2), rs.range(0, 6.28), rs.range(-0.2, 0.2)]));
+      blocks.push(block(60 + k + bearing * 0.21, [size * rs.range(0.9, 1.5), size * 0.55, size], [at[0] - Math.sin(b) * out, at[1] + size * 0.2, at[2] + Math.cos(b) * out], [rs.range(-0.2, 0.2), rs.range(0, 6.28), rs.range(-0.2, 0.2)], 70));
     }
   }
   // The fallen slabs are the rim's own stone, broken: pale grey-cream like the tiers they fell from, their beds showing on their sides.
