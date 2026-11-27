@@ -83,6 +83,8 @@ const float APRON_TONE = 0.48;
 const float WALL_TONE = 0.6;
 // How much brighter than its plain geometry the melt lights the rim: the fume in the mouth glows and lights it too.
 const float RIM_LIGHT = 5.0;
+// How much of the open pool's light the crusted river in the tube gives the roof over it.
+const float TUBE_GLOW = 0.085;
 uniform float uFlare;
 float tubeAxis(float d) {
   float k = smoothstep(25.0, 200.0, d);
@@ -124,6 +126,8 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   float e = poolLight(p, n, vec3(${f(MOUTH.x - 34)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 9)}), 13.0) * uFlare * shade * reach;
   // The crusted shelf east of the pool gives the east wall just enough to show it as rock against the dark.
   e += 0.009 * poolLight(p, n, vec3(${f(MOUTH.x + 16)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 26.0) * smoothstep(46.0, 8.0, d) * smoothstep(0.6, 3.5, d);
+  // The river further in runs under a broken crust and lights the roof and the ribs over it from below, less with every rib.
+  e += TUBE_GLOW * poolLight(p, n, vec3(riverX(d), ${f(TUBE.floor)}, p.z), 24.0) * exp(-d / 22.0) * smoothstep(1.5, 9.0, d);
   return blackbody(1390.0) * 3.14159 * RIM_LIGHT * e;
 }
 // What is left in the dark of the tube: the glow of the river far in, on soot. It shows the rock as rock and no more.
@@ -224,12 +228,21 @@ void main() {
   // What the wall hides is thrown away at the end and is not worked out: every picture is read with the slopes taken above.
   bool hidden = hiddenByWall(vWorld, vSkin.z);
   // Far inside no light reaches and there is no rock to draw; between, only the melt's light on plain dark rock.
+  // Deep in, the same ribs go on round the tube: layers a metre or two deep, each a little proud of the one behind, their under
+  // sides turned to the river and their hollows sooted. They take the river's light and nothing else.
+  vec3 deepC = vec3(0.0);
+  float deepOn = inside * smoothstep(18.0, 26.0, d);
+  if (deepOn > 0.0 && d < 130.0) {
+    float deepLay = vSkin.y / 2.1 + 2.4 * vnoise(vSkin.xy / 13.0) + 0.6 * vnoise(vSkin.xy / 3.3 + 4.0);
+    float deepAlong = vSkin.x / 17.0;
+    float deepRib = 0.7 * vnoise(vec2(deepAlong, deepLay)) + 0.3 * vnoise(vec2(deepAlong * 3.1 + 3.0, deepLay * 2.6));
+    float deepRibIn = 0.7 * vnoise(vec2(deepAlong, deepLay + 0.22)) + 0.3 * vnoise(vec2(deepAlong * 3.1 + 3.0, (deepLay + 0.22) * 2.6));
+    vec3 deepN = normalize(n + vec3(0.0, 0.0, 1.0) * (deepRibIn - deepRib) * 7.0);
+    float deepRough = (0.75 + 0.5 * vnoise(vSkin.xy / 1.7 + 11.0)) * (0.8 + 0.4 * vnoise(vSkin.xy / 0.45 + 5.0));
+    deepC = vec3(0.075) * (0.25 + 1.5 * smoothstep(0.3, 0.72, deepRib)) * deepRough * (tubeDark(d) + riverLight(vWorld, deepN, d)) / 3.14159 * (1.0 - smoothstep(95.0, 130.0, d));
+  }
   if (inside > 0.5 && d > 26.0) {
-    // The same ribs go on round the tube, and only their fronts show.
-    if (d < 110.0 && !hidden) {
-      float deepRib = vnoise(vec2(vSkin.x / 17.0, vSkin.y / 2.1 + 2.4 * vnoise(vSkin.xy / 13.0)));
-      c = vec3(0.06) * (0.12 + 1.6 * smoothstep(0.3, 0.72, deepRib)) * (tubeDark(d) + (d < 64.0 ? riverLight(vWorld, n, d) : vec3(0.0))) / 3.14159;
-    }
+    if (!hidden) c = deepC;
   } else if (!ragged && !hidden) {
     if (collar < 1.0) {
       // The rim and the tube have no upright direction (the roof, the bevel): the picture is laid on from the axis the face looks along.
@@ -254,7 +267,7 @@ void main() {
       float crack = smoothstep(0.03, 0.0, abs(vnoise(vec2(vSkin.x / 4.3, lay * 0.9 + 7.0)) - 0.5)) * smoothstep(0.35, 0.6, vnoise(vSkin.xy / 8.0 + 21.0));
       cliff *= 1.0 - broken * max(0.8 * hollow, 0.7 * crack);
       cliff *= mix(1.0, (0.62 + 0.8 * rib) * (0.6 + 0.8 * vnoise(vSkin.xy / 14.0 + 7.0)), broken);
-      c = rockShade(vWorld, n, v, cliff, 1.0, vec3(0.0), d);
+      c = mix(rockShade(vWorld, n, v, cliff, 1.0, vec3(0.0), d), deepC, deepOn);
     }
     if (collar > 0.0) {
       // The land's rock, read with the slopes taken at the top: the same rock under the same light as the wall.
@@ -446,7 +459,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   // Open melt from bank to bank, yellow down the middle and orange toward the margins, a little hotter where a drop stirs it.
   float thread = mk.y;
   // Its marks are drawn out along the flow: streaks of hotter and cooler melt, a hand to a metre wide.
-  float kelvin = mix(1390.0, 1290.0, smoothstep(0.2, 0.85, u)) - 95.0 * (streak - 0.5) - 55.0 * seenAt(0.38) * (vnoise(vec2(s * 2.6 + 7.0, age * 0.7)) - 0.5) + fast * (8.0 + 10.0 * wave);
+  float kelvin = mix(1415.0, 1335.0, smoothstep(0.3, 0.95, u)) - 95.0 * (streak - 0.5) - 55.0 * seenAt(0.38) * (vnoise(vec2(s * 2.6 + 7.0, age * 0.7)) - 0.5) + fast * (8.0 + 10.0 * wave);
   kelvin = mix(kelvin, 1430.0, clamp(thread * (0.35 + 0.65 * fast), 0.0, 1.0) * (0.25 + 0.75 * streak) * (1.0 - 0.7 * smoothstep(0.35, 0.95, u)));
   // The core: the fastest melt runs in a few threads, half a metre to a metre and a half wide, that split and join again as
   // they come down. They are near white at the lip and down each drop and cool to orange on the flat treads between.
@@ -465,7 +478,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     float b1 = vnoise(vec2(s * 0.36 + 3.0, age * 0.47 + 1.0));
     float b2 = vnoise(vec2(s * 0.62 + 17.0, age * 0.72 + 5.0));
     // On a tread they are strands a metre wide; down a drop and at the lip they swell and run together.
-    float wide = (0.17 + 0.1 * smoothstep(1.9, 3.4, speed)) * (1.0 + 1.6 * bright - 0.25 * dark) + 0.2 * lipHot + 0.07 * pour;
+    float wide = (0.21 + 0.1 * smoothstep(1.9, 3.4, speed)) * (1.0 + 1.6 * bright - 0.25 * dark) + 0.2 * lipHot + 0.07 * pour;
     float d1 = abs(b1 - 0.5);
     float d2 = abs(b2 - 0.47);
     core = max(1.0 - smoothstep(0.55 * wide, wide, d1), 1.0 - smoothstep(0.45 * wide, 0.85 * wide, d2));
@@ -503,7 +516,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     // crack or two alight along the flow. A drop tears it up, the lip has none yet, and the surge breaks most of it.
     // The skin is no lid from strand to strand: it is floes two to four metres long that ride down at the speed of the melt, crowd
     // the margins and leave the body of the stream open between them, orange from bank to bank.
-    float floe = smoothstep(0.44, 0.58, 0.7 * vnoise(vec2(s * 0.55 + 7.0, ride * 1.1)) + 0.3 * vnoise(vec2(s * 1.6 + 3.0, ride * 3.1)) + 0.22 * smoothstep(0.5, 0.95, u) - 0.08);
+    float floe = smoothstep(0.5, 0.62, 0.7 * vnoise(vec2(s * 0.55 + 7.0, ride * 1.1)) + 0.3 * vnoise(vec2(s * 1.6 + 3.0, ride * 3.1)) + 0.22 * smoothstep(0.5, 0.95, u) - 0.08);
     float skinOn = smoothstep(1.5, 2.3, strandFar) * floe * (1.0 - 0.92 * smoothstep(1.9, 3.2, speed)) * smoothstep(3.0, 10.0, len) * (1.0 - 0.97 * behind) * (1.0 - lay);
     float crustK = mix(790.0, 1030.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)) + 260.0 * smoothstep(3.1, 1.7, strandFar) + 190.0 * clamp(thread, 0.0, 1.0);
     // A pack is skin from bank to bank, torn here and there, and a drop does not tear all of it up.
