@@ -169,6 +169,8 @@ void main() {
   if (vKind > 5.5) {
     // A claw: dark horn, ridged along its length, worn pale at the tip, wet.
     albedo = mix(vec3(0.03, 0.026, 0.024), vec3(0.12, 0.1, 0.08), smoothstep(0.45, 0.9, grain) * 0.6);
+    // The dead one's claws are seen close, on the ice before the lens: grey horn, paler along its ridges, not a black shape.
+    if (uWhole > 0.5) albedo = mix(vec3(0.075, 0.062, 0.054), vec3(0.3, 0.25, 0.2), smoothstep(0.3, 0.9, grain));
     rough = 0.62;
     occ = 0.9;
   }
@@ -344,8 +346,9 @@ void main() {
   float fine = floor(fract(seed * 9.73) * 12.0);
   float fineY = fine < 5.5 ? mix(0.019, 0.489, t) : mix(0.513, 0.978, t);
   vec2 fineUv = vec2(0.114 + 0.155 * mod(fine, 6.0) + 0.07 * u * flip, 1.0 - fineY);
-  vec2 uvDx = dFdx(fineUv);
-  vec2 uvDy = dFdy(fineUv);
+  // The picture is read a little coarser than the screen asks: hair by hair it would be finer than a pixel of the film, and would only glitter.
+  vec2 uvDx = 2.4 * dFdx(fineUv);
+  vec2 uvDy = 2.4 * dFdy(fineUv);
   // The strands a lock parts into, and how much of one a pixel covers: found here too. No edge of a lock is cut: each is let go over a
   // pixel or two, and a strand finer than a pixel is drawn a pixel wide and fainter.
   float parts = (uWhole > 0.5 ? 2.0 : 3.0) + floor(3.0 * fract(seed * 2.71));
@@ -401,9 +404,10 @@ void main() {
   float singe = 1.0 - vInfo.w;
   vec3 albedo = uTone.rgb * pic / mean_ * 0.8 * (0.85 + 0.3 * fract(seed * 7.31));
   // Wet and dark toward the root, where the coat is matted.
-  albedo *= mix(uLockKind > 0.5 ? 0.5 : mix(0.45, 0.78, uWhole), 1.0, smoothstep(0.0, 0.55, t)) * (0.8 + 0.4 * own);
+  albedo *= mix(uLockKind > 0.5 ? 0.62 : mix(0.45, 0.78, uWhole), 1.0, smoothstep(0.0, 0.55, t)) * (uLockKind > 0.5 ? 0.9 + 0.2 * own : 0.8 + 0.4 * own);
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
-  vec3 c = albedo * vLight * (0.55 + 0.45 * body);
+  // The herd is seen from metres off: a strand of its coat is a pixel or two across, and is not shaded dark at its edges.
+  vec3 c = albedo * vLight * (uLockKind > 0.5 ? 0.75 + 0.25 * body : 0.55 + 0.45 * body);
   // Rime and packed snow: on the locks that look up it lies thick on the bright hairs, on the others it beads the ends.
   // Rime gathers on the fur round the burn, where the steam of it froze.
   float ring = smoothstep(0.02, 0.2, singe) * (1.0 - smoothstep(0.4, 0.75, singe));
