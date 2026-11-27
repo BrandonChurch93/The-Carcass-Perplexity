@@ -148,7 +148,8 @@ void main() {
   bool high = uViewKm > 100.0;
   vec3 bake = vec3(0.0, 0.5, 0.0);
   // (Where the close map covers the ground whole, the wide one's light and coast are not read.)
-  if (high && inClose < 1.0) bake = readWide(uLightWide, clamp(uvWide, 0.0, 1.0), 0.0).rgb;
+  // (From orbit the baked horizon is read a level coarser than the country: the shadows keep a soft edge, the rock its grain.)
+  if (high && inClose < 1.0) bake = readWide(uLightWide, clamp(uvWide, 0.0, 1.0), 2.0 * orbitBias).rgb;
   float coastKm = 0.0;
   if (inClose < 1.0) coastKm = shoreKm(readWide(uShoreWide, clamp(uvWide, 0.0, 1.0), 0.0).r, uBakeKm.x);
   float texel = uTexelKm.x;
@@ -282,6 +283,9 @@ void main() {
   float upper = 0.0;
   if (dot(inUpper, inUpper) < 2.5) {
     upperR = length(inUpper) + 0.34 * (vnoise(xz / 11.0 + 4.0) - 0.5) + 0.62 * (vnoise(xz / 27.0 + 14.0) - 0.5);
+    // (A bar of rock and scree crosses it aslant: two unlike waters, not one round one.)
+    float bar = inUpper.x * 0.8 + inUpper.y * 0.6 - 0.12 + 0.3 * (vnoise(xz / 17.0 + 2.0) - 0.5);
+    upperR += 0.8 * exp(-bar * bar / 0.03);
     upper = (1.0 - smoothstep(0.86, 0.98, upperR)) * smoothstep(120.0, 200.0, uViewKm);
     land *= 1.0 - upper;
     // (It is a lake as the others are: shut in, deep in its middle, its bed dark.)
