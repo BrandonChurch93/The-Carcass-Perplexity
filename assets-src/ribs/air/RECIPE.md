@@ -1,6 +1,6 @@
 # Recipes of the Ribs: air
 
-The air folder loads two pictures of its own, both made from one generated take of a storm sky, and the far strait `public/assets/ribs/mat/far.jpg` (recipe in `assets-src/ribs/mat/RECIPE.md`). The sky is laid on the dome by heading and height in `skyCloud` (`src/places/ribs/shared/glsl.ts`), mirrored where it repeats, turning with the wind. `public/assets/ribs/mat/sky.jpg` is no longer read by the air folder.
+The air folder loads two pictures of its own, each one generated take of a storm sky, and the far strait `public/assets/ribs/mat/far.jpg` (recipe in `assets-src/ribs/mat/RECIPE.md`). `sky.jpg` is the sky on the dome, laid by heading and height in `skyCloud` (`src/places/ribs/shared/glsl.ts`), mirrored where it repeats, turning with the wind; `storm.jpg` is the first wave's sky, kept only for the sea's own copy of the mirror until the sea reads the rig's `skyMirror`. `public/assets/ribs/mat/sky.jpg` is no longer read by the air folder.
 
 ## `public/assets/ribs/air/storm.jpg`
 Made by: `assets-src/ribs/air/sheet.py` (Python 3.14.8, Pillow 13.0.0, numpy 2.5.5), from a picture made by `generate_image`, default model, aspect 4:3
@@ -10,10 +10,10 @@ Takes: 1 made, 1 kept (`storm-1.png`)
 Why this one: dark slate cloud with real structure and one burning break, the sky of the approved establishing picture, with no horizon and no sun disc in it
 Date: 2026-11-26
 
-## `public/assets/ribs/air/storm-fine.jpg`
-Made by: `assets-src/ribs/air/fine.py` (Python 3.14.8, Pillow 13.0.0, numpy 2.5.5); computed, no model
-From: `assets-src/ribs/air/src/storm-1.png`
-Prompt or command: `python3 assets-src/ribs/air/fine.py` from the repo's root (the take's brightness over its own local mean of 14 px, smoothed by 1.6 px, flat where the local mean is bright, one grey picture, JPEG quality 95)
-Takes: computed, no take
-Why this one: the sheet has a sixth of a texel for a pixel of the widest lens at 3840 wide; this map, laid in four times smaller, gives the cloud structure at that size without the break's edges, which read as veins
-Date: 2026-11-26
+## `public/assets/ribs/air/sky.jpg`
+Made by: `assets-src/ribs/air/sky.cjs` (Node, sharp), from a picture made by `generate_image`, model `nano_banana_pro`, aspect 16:9
+From: `assets-src/ribs/air/src/sky2-1.png` (the generated take, 2752 by 1536); the take itself was made with `references/approved/1-ribs/ribs-0-establishing.jpg` passed as reference
+Prompt or command: `node assets-src/ribs/air/sky.cjs` from the repo's root (JPEG quality 92, 4:4:4, no other change). The prompt of the take: "A very wide photograph of SKY ONLY filling the whole frame, shot over open sea in the late afternoon as a violent storm breaks up. No land, no sea, no horizon line, no birds, no sun disc, no rays, no text. Image 1 is the colour and mood reference: match the sky of image 1 (cool steel blue-grey storm cloud, mid-toned, never black) and ignore everything in it that is not sky. Layout: the upper left is the heaviest cloud, slate blue-grey ragged masses with real folds, shelves and volume. About three quarters of the way across from the left and two fifths up from the bottom stands a broad break in the cloud: tall brilliant silver-white sunlit cumulus heads with blue-grey shadowed sides, and small patches of pale washed blue sky between them. Along the entire bottom edge the cloud thins into a pale, luminous, even silver-blue haze, brightest low in the centre. The left edge and the right edge of the frame are similar mid slate cloud so the picture could wrap around. Crisp natural detail in every cloud edge at every scale, soft diffuse light, photographic, 35 mm full frame, no vignette, no lens flare, no grain. Wide 16:9 frame."
+Takes: 1 made, 1 kept (`sky2-1.png`)
+Why this one: the sky of the approved establishing picture, which the first wave's take was not: slate-blue cloud in depth and never black, white cumulus heads at one break, no burned hole, and nearly twice the texels across
+Date: 2026-11-27
