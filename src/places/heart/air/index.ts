@@ -97,8 +97,10 @@ const BODIES: readonly Body[] = [
   { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.045, widen: 0.85, repeat: 120, hard: 7, climb: 13, colour: ROSE, foot: 0.22, lake: [0.7, 14], floor: [0.18, 22], lights: 0.9, tops: 0.6, solid: 0.2, streak: 1.4, taper: 1.0, sparse: 0.32, through: 1.0, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(14, -4), radius: 26, height: 62, lean: [0.5, 0.2], dense: 0.007, widen: 0.9, repeat: 64, hard: 3.2, climb: 9, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(58, 44), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.005, widen: 0.3, repeat: 64, hard: 3.2, climb: 7, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, streak: 1.6, shots: { 'heart-05': 1, rest: 0.08 } },
-  // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture. Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
-  { at: [571, -400], radius: 50, height: 1000, lean: [0.3, 0.4], dense: 0.05, widen: 10, foot: 0.1, repeat: 260, hard: 11, climb: 42, colour: UMBER, floor: [0.3, 120], tops: 2.2, solid: 0.6, streak: 0.8, shots: { 'heart-02': 0, 'heart-05': 0 } },
+  // The plume of the wide view: it stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture into the deck of smoke the sky draws (sky.ts). Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
+  // As one dense mass with a hard edge it stood as a grey column cut out against the sky. It is smoke that is seen into: separate billows with air between them, thin enough to pass the sky at its rim,
+  // and the glowing floor lights its lower third, so that it is warm where it leaves the buttress and grey where it joins the deck.
+  { at: [571, -400], radius: 50, height: 1000, lean: [0.3, 0.4], dense: 0.024, widen: 10, foot: 0.1, repeat: 260, hard: 4, climb: 42, colour: UMBER, floor: [1.1, 240], tops: 1.4, solid: 0.38, streak: 0.8, shots: { 'heart-02': 0, 'heart-05': 0 } },
   // The smoke that rises from the seam the hero feeds at, lit by the melt in it: it lies low behind the animal in the feeding shot, under the horizon of that lens, and what is behind the animal is the dark of the far smoke.
   { at: [-397, 181], radius: 11, height: 6.5, lean: BANK_LEAN, dense: 0.035, repeat: 9, hard: 2.6, climb: 1.6, colour: SOOT, foot: 0.1, lake: [1.1, 3], floor: [1.6, 3], lights: 0.6, tops: 0.7, solid: 0.4, shots: { 'heart-02': 1, rest: 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
@@ -263,7 +265,7 @@ export function create(ctx: HeartContext): HeartPiece {
           const windX = GROUND_WIND[0] * Math.cos(turn) - GROUND_WIND[1] * Math.sin(turn);
           const windZ = GROUND_WIND[0] * Math.sin(turn) + GROUND_WIND[1] * Math.cos(turn);
           (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], Math.max(0.3, s.radius * (1 + 0.5 * own(1))));
-          (steamB[i] as THREE.Vector4).set(windX, windZ, Math.min(18, s.rise * (2.6 + 1.2 * own(2))), s.strength * (0.8 + 0.5 * own(3)));
+          (steamB[i] as THREE.Vector4).set(windX, windZ, Math.min(18, s.rise * (2.6 + 1.2 * own(2))), s.strength * (1.7 + 1.0 * own(3)));
           (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, 0.9 + 0.5 * own(4), 2.4, 3);
           continue;
         }

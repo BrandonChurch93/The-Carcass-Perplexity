@@ -164,14 +164,17 @@ float bodyDensity(int i, vec3 p, out float above, out vec2 shade) {
   // A body of separate billows still ends at its dome: softly, so that no outline of the dome is seen. A hard body ends in less room: its billows are its edge.
   return clamp(body * D.w, 0.0, 1.0) * smoothstep(0.0, mix(0.6, 0.22, clamp(g, 0.0, 1.0)) * min(1.0, 3.2 / D.w), dome) * (foot > 0.0 ? smoothstep(0.0, foot, u) : 1.0) * (G.y > 0.0 ? pow(1.0 - u, G.y) : 1.0);
 }
-void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
+// The renderer of the film draws four pixels at a time and runs every branch for all four, hidden or not: the march of a body or a vapour was paid
+// once on every pixel for every one of them, met or not (a second and more a sample of the mouth's view). So what a view meets is listed first, by
+// its bounds alone, and marched in a second loop that turns once for each thing on the list. This is the bounds of a body: the stretch of the view inside them.
+bool bodySpan(int i, vec3 ro, vec3 rd, float far, out float t0, out float t1) {
+  t0 = 0.0;
+  t1 = far;
   vec4 A = uBodyA[i];
   vec4 B = uBodyB[i];
-  if (B.w <= 0.0) return;
+  if (B.w <= 0.0) return false;
   vec4 C = uBodyC[i];
   vec4 D = uBodyD[i];
-  vec4 E = uBodyE[i];
-  vec4 F = uBodyF[i];
   float oy = ro.y - C.w;
   vec2 oxz = ro.xz - A.xy - B.xy * oy;
   vec2 dxz = rd.xz - B.xy * rd.y;
@@ -180,33 +183,41 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   float qa = dot(dxz, dxz);
   float qb = dot(oxz, dxz);
   float qc = dot(oxz, oxz) - reach * reach;
-  float t0 = 0.0;
-  float t1 = far;
   if (qa > 1e-8) {
     float qh = qb * qb - qa * qc;
-    if (qh < 0.0) return;
+    if (qh < 0.0) return false;
     qh = sqrt(qh);
     t0 = max(t0, (-qb - qh) / qa);
     t1 = min(t1, (-qb + qh) / qa);
-  } else if (qc > 0.0) return;
+  } else if (qc > 0.0) return false;
   if (abs(rd.y) > 1e-5) {
     float ya = -oy / rd.y;
     float yb = (A.w - oy) / rd.y;
     t0 = max(t0, min(ya, yb));
     t1 = min(t1, max(ya, yb));
-  } else if (oy < 0.0 || oy > A.w) return;
-  if (t1 <= t0) return;
+  } else if (oy < 0.0 || oy > A.w) return false;
+  if (t1 <= t0) return false;
   // A body that widens upward is narrow where the view meets it low: the bounds are drawn in to the widest it is over the heights the view crosses.
   if (D.y > 0.0 && qa > 1e-8) {
     float top = clamp(max(oy + rd.y * t0, oy + rd.y * t1) / A.w, 0.0, 1.0);
     float less = A.z * (1.0 + D.y * top) * 1.45;
     float qh = qb * qb - qa * (dot(oxz, oxz) - less * less);
-    if (qh < 0.0) return;
+    if (qh < 0.0) return false;
     qh = sqrt(qh);
     t0 = max(t0, (-qb - qh) / qa);
     t1 = min(t1, (-qb + qh) / qa);
-    if (t1 <= t0) return;
+    if (t1 <= t0) return false;
   }
+  return true;
+}
+
+void bodyOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
+  vec4 A = uBodyA[i];
+  vec4 B = uBodyB[i];
+  vec4 C = uBodyC[i];
+  vec4 D = uBodyD[i];
+  vec4 E = uBodyE[i];
+  vec4 F = uBodyF[i];
   float mid = 0.5 * (t0 + t1);
   bool close = mid < uSplit;
   // A long way through a body of small lumps is taken in more paces, so that the lumps are met and not stepped over.
@@ -275,7 +286,10 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
 }
 
 // One of the vapours the other folders ask for: a column that widens and thins as it rises and bends with the wind.
-void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
+// The bounds of a column of vapour (see bodySpan).
+bool steamSpan(int i, vec3 ro, vec3 rd, float far, out float t0, out float t1) {
+  t0 = 0.0;
+  t1 = far;
   vec4 A = uSteamA[i];
   vec4 B = uSteamB[i];
   vec4 C = uSteamC[i];
@@ -295,22 +309,35 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   float qa = dot(dxz, dxz);
   float qb = dot(oxz, dxz);
   float qc = dot(oxz, oxz) - tower * tower;
-  float t0 = 0.0;
-  float t1 = far;
   if (qa > 1e-8) {
     float qh = qb * qb - qa * qc;
-    if (qh < 0.0) return;
+    if (qh < 0.0) return false;
     qh = sqrt(qh);
     t0 = max(t0, (-qb - qh) / qa);
     t1 = min(t1, (-qb + qh) / qa);
-  } else if (qc > 0.0) return;
+  } else if (qc > 0.0) return false;
   if (abs(rd.y) > 1e-5) {
     float ya = -o.y / rd.y;
     float yb = (top - o.y) / rd.y;
     t0 = max(t0, min(ya, yb));
     t1 = min(t1, max(ya, yb));
-  } else if (o.y < 0.0 || o.y > top) return;
-  if (t1 <= t0) return;
+  } else if (o.y < 0.0 || o.y > top) return false;
+  if (t1 <= t0) return false;
+  return true;
+}
+
+void steamOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
+  vec4 A = uSteamA[i];
+  vec4 B = uSteamB[i];
+  vec4 C = uSteamC[i];
+  float rise = B.z;
+  vec3 lean = vec3(B.x, 1.0, B.y);
+  float kind = min(C.w, 1.0);
+  float spread = mix(0.34, 0.3, kind);
+  // Steam is gone well before its top and smoke a little before: the bounds stop where there is nothing left to see.
+  float top = rise * mix(0.92, 0.86, kind);
+  float shear = mix(0.6, 1.2, kind);
+  float tower = 1.25 * (1.4 * (A.w + top * spread) + rise * mix(0.12, 0.16, kind) * length(B.xy) + (A.w * 0.3 + top * 0.125));
   float mid = 0.5 * (t0 + t1);
   bool close = mid < uSplit;
   vec3 albedo = mix(STEAM_ALBEDO, SMOKE_ALBEDO, kind);
@@ -384,39 +411,45 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
 // A: its foot and the radius of it. B: the wind along the ground (x, z, a unit), the metres its trail runs, thickness for a metre.
 // C: seed, metres a second it is carried, metres of one of its lumps, 3.
 const vec3 GROUND_ALBEDO = vec3(0.5, 0.42, 0.37);
-void groundOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
+// Keeps of a stretch of a view (t0 to t1) the part where f0 + t * f1 is not below zero.
+void clipTo(float f0, float f1, inout float t0, inout float t1) {
+  float t = -f0 / (abs(f1) < 1e-6 ? 1e-6 : f1);
+  if (f1 >= 1e-6 || abs(f1) < 1e-6) t0 = max(t0, t);
+  else t1 = min(t1, t);
+}
+bool groundSpan(int i, vec3 ro, vec3 rd, float far, out float t0, out float t1) {
+  t0 = 0.0;
+  t1 = far;
+  vec4 A = uSteamA[i];
+  vec4 B = uSteamB[i];
+  float len = B.z;
+  float top = 0.61 + 1.52 * A.w + 0.183 * len;
+  // Bounds: the wedge of the lake that holds the trail with all its swing (it opens downwind from the foot), and the slab of air it lies in.
+  // Every pixel inside the bounds pays for the whole march, so they are drawn close.
+  vec2 side = vec2(-B.y, B.x);
+  vec2 oxz = ro.xz - A.xz;
+  float s0 = dot(oxz, B.xy);
+  float s1 = dot(rd.xz, B.xy);
+  float c0 = dot(oxz, side);
+  float c1 = dot(rd.xz, side);
+  clipTo(s0 + A.w, s1, t0, t1);
+  clipTo(len - s0, -s1, t0, t1);
+  clipTo(3.4 * A.w + 0.65 * s0 - c0, 0.65 * s1 - c1, t0, t1);
+  clipTo(3.4 * A.w + 0.65 * s0 + c0, 0.65 * s1 + c1, t0, t1);
+  clipTo(ro.y, rd.y, t0, t1);
+  clipTo(top - ro.y, -rd.y, t0, t1);
+  return t1 > t0;
+}
+
+void groundOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
   vec4 A = uSteamA[i];
   vec4 B = uSteamB[i];
   vec4 C = uSteamC[i];
   float len = B.z;
-  float top = 0.61 + 1.52 * A.w + 0.183 * len;
-  // Bounds: a round of the lake that holds the whole trail, and the slab of air it lies in.
-  vec2 mid = A.xz + B.xy * (0.5 * len);
-  float reach = 0.9 * len + 2.0 * A.w;
-  vec2 oxz = ro.xz - mid;
-  float qa = dot(rd.xz, rd.xz);
-  float qb = dot(oxz, rd.xz);
-  float qc = dot(oxz, oxz) - reach * reach;
-  float t0 = 0.0;
-  float t1 = far;
-  if (qa > 1e-8) {
-    float qh = qb * qb - qa * qc;
-    if (qh < 0.0) return;
-    qh = sqrt(qh);
-    t0 = max(t0, (-qb - qh) / qa);
-    t1 = min(t1, (-qb + qh) / qa);
-  } else if (qc > 0.0) return;
-  if (abs(rd.y) > 1e-5) {
-    float ya = -ro.y / rd.y;
-    float yb = (top - ro.y) / rd.y;
-    t0 = max(t0, min(ya, yb));
-    t1 = min(t1, max(ya, yb));
-  } else if (ro.y < 0.0 || ro.y > top) return;
-  if (t1 <= t0) return;
+  vec2 side = vec2(-B.y, B.x);
   float mid1 = 0.5 * (t0 + t1);
   bool close = mid1 < uSplit;
   float dt = (t1 - t0) / float(${SMOKE_STEPS.steam});
-  vec2 side = vec2(-B.y, B.x);
   for (int k = 0; k < ${SMOKE_STEPS.steam}; k++) {
     float t = t0 + (float(k) + jitter) * dt;
     vec3 p = ro + rd * t;
@@ -444,11 +477,10 @@ void groundOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     // It thins as it widens and is gone before the end of its run.
     float dens = shape * (0.2 + 1.1 * wisps) * puff * smoothstep(0.0, 0.08, u) * pow(1.0 - u, 1.3) * mix(1.0, 1.7 * A.w / wide, 0.75);
     if (dens <= 0.0) continue;
-    // The fire under it and round it: what is open right under the point, and what lies within a few metres.
-    vec3 below = lakeGlow(p.xz, max(1.5 * h, 1.2));
-    vec3 round1 = lakeGlow(p.xz, 6.0);
+    // The fire under it and round it: what is open within a few metres of the point, most where it lies low.
+    vec3 below = lakeGlow(p.xz, 2.5 + 1.5 * h);
     vec3 light = skyLight(h) * (0.85 - 0.3 * min(dens, 1.0));
-    light += fireOnSmoke(1.5 * below * exp(-h / 2.5) + 0.6 * round1 + 0.8 * roundLights(p));
+    light += fireOnSmoke((0.7 + 1.4 * exp(-h / 2.5)) * below + 0.8 * roundLights(p));
     float a = 1.0 - exp(-dens * B.w * dt);
     lay(close, t, mid1, GROUND_ALBEDO * light, a);
   }
@@ -466,14 +498,44 @@ void main() {
   float order = px.y == 0 ? (px.x == 0 ? 0.0 : 2.0) : (px.x == 0 ? 3.0 : 1.0);
   float jitter = (order + uPhase) * 0.25;
   findLights(ro, rd, min(far, 3400.0));
+  // What this view meets, in the order it is laid: the vapours, then the bodies.
+  int listed[${MAX_STEAM}];
+  vec2 spans[${MAX_STEAM}];
+  int count = 0;
   for (int i = 0; i < ${MAX_STEAM}; i++) {
     if (i >= uSteamCount) break;
-    if (uSteamC[i].w > 2.5) groundOne(i, ro, rd, far, fract(jitter + 0.618 * float(i + 1)));
-    else steamOne(i, ro, rd, far, fract(jitter + 0.618 * float(i + 1)));
+    float t0;
+    float t1;
+    bool low = uSteamC[i].w > 2.5;
+    bool hit = groundSpan(i, ro, rd, far, t0, t1);
+    float u0;
+    float u1;
+    bool hitColumn = steamSpan(i, ro, rd, far, u0, u1);
+    if (low ? hit : hitColumn) {
+      listed[count] = i;
+      spans[count] = low ? vec2(t0, t1) : vec2(u0, u1);
+      count++;
+    }
   }
+  for (int j = 0; j < count; j++) {
+    int i = listed[j];
+    if (uSteamC[i].w > 2.5) groundOne(i, ro, rd, spans[j].x, spans[j].y, fract(jitter + 0.618 * float(i + 1)));
+    else steamOne(i, ro, rd, spans[j].x, spans[j].y, fract(jitter + 0.618 * float(i + 1)));
+  }
+  count = 0;
   for (int i = 0; i < ${MAX_BODIES}; i++) {
     if (i >= uBodyCount) break;
-    bodyOne(i, ro, rd, far, fract(jitter + 0.382 * float(i + 1)));
+    float t0;
+    float t1;
+    if (bodySpan(i, ro, rd, far, t0, t1)) {
+      listed[count] = i;
+      spans[count] = vec2(t0, t1);
+      count++;
+    }
+  }
+  for (int j = 0; j < count; j++) {
+    int i = listed[j];
+    bodyOne(i, ro, rd, spans[j].x, spans[j].y, fract(jitter + 0.382 * float(i + 1)));
   }
   oNear = vec4(sumN, transN);
   oFar = vec4(sumF, transF);
