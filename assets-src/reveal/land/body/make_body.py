@@ -284,11 +284,17 @@ def outputs():
     near_heart = np.exp(-(((fx - HEART[0]) / 330.0) ** 2 + ((fy - HEART[1]) / 250.0) ** 2))
     near_throat = np.exp(-(((fx - THROAT[0] + 50.0) / 220.0) ** 2 + ((fy - THROAT[1] + 25.0) / 260.0) ** 2))
     east_hips = np.exp(-(((fx - PAN[0] - 420.0) / 520.0) ** 2 + ((fy - PAN[1] - 60.0) / 210.0) ** 2))
-    w_lava = np.clip(smooth(0.56, 0.7, p1) + 0.95 * smooth(0.25, 0.6, near_heart * (0.6 + 0.8 * mott)), 0.0, 1.0)
+    # (A lava plain is a flood: it stands to a level, fills the low ground of its province and laps up the valleys of the ranges
+    # round it, so its edge is a contour of the land, sharp, with bays and islands, and no soft patch. A dune field lies in a
+    # basin the same way, its edge against the rock sharp and its edge on the plain soft.)
+    e_low = ndimage.gaussian_filter(e, 1.2 * px)
+    s_lava = np.clip(smooth(0.5, 0.7, p1) + 0.95 * smooth(0.25, 0.6, near_heart * (0.6 + 0.8 * mott)), 0.0, 1.0)
+    w_lava = smooth(-0.008, 0.008, 0.015 + 0.15 * s_lava + 0.03 * (mott - 0.5) - e_low) * smooth(0.0, 0.12, s_lava)
     w_rust = np.clip(smooth(0.57, 0.7, p3) + smooth(0.3, 0.7, near_throat) + 0.8 * smooth(0.3, 0.7, east_hips * (0.5 + mott)), 0.0, 1.0) * (1.0 - w_lava)
-    w_dune = smooth(0.56, 0.7, p2) * (1.0 - w_lava) * (1.0 - w_rust)
+    s_dune = smooth(0.5, 0.7, p2)
+    w_dune = smooth(-0.008, 0.008, 0.01 + 0.1 * s_dune + 0.03 * (mott - 0.5) - e_low) * smooth(0.0, 0.25, s_dune) * (1.0 - w_lava) * (1.0 - 0.7 * w_rust)
     w_olive = smooth(0.5, 0.64, 1.0 - p1) * (1.0 - w_dune) * (1.0 - w_rust)
-    lava = srgb(31, 30, 33)
+    lava = srgb(40, 38, 40)
     rust = srgb(98, 55, 41)
     dune = srgb(146, 121, 86)
     olive = srgb(57, 61, 47)
@@ -313,7 +319,7 @@ def outputs():
     apron = smooth(0.1, 0.22, broad) * (1.0 - smooth(0.22, 0.4, broad)) * (1.0 - smooth(0.06, 0.2, slope)) * (1.0 - w_lava)
     country = mixc(country, fan * 1.18, 0.55 * apron * smooth(0.4, 0.6, mott))
     # Salt pans in the lowest closed ground of the dry provinces.
-    pan = (1.0 - smooth(0.03, 0.07, e)) * smooth(0.6, 0.72, fbm((H, W), rng, 70 * px, 3)) * (w_dune + w_rust + 0.4 * (1.0 - w_olive)) * smooth(6.0, 14.0, d_shore)
+    pan = (1.0 - smooth(0.03, 0.07, e)) * smooth(0.6, 0.72, fbm((H, W), rng, 70 * px, 3)) * (w_dune + w_rust + 0.4 * (1.0 - w_olive)) * (1.0 - w_lava) * smooth(6.0, 14.0, d_shore)
     country = mixc(country, salt, 0.8 * np.clip(pan, 0.0, 1.0))
     # Rivers: where much land drains through a cell the valley floor is damp and dark, or a pale dry wash in the dry provinces.
     channel = smooth(2.6, 3.8, wet) * (1.0 - smooth(0.25, 0.5, e))

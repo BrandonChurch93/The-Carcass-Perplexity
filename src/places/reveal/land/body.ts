@@ -11,8 +11,15 @@ uniform sampler2D uBodyMap;
 uniform sampler2D uBodyRelief;
 uniform sampler2D uBodyLight;
 #endif
-// How strongly the relief of the body is lit from orbit, and how long its ranges' shadows are drawn.
-uniform vec2 uBodyRelief2;
+// How strongly the relief of the body is lit from orbit, how long its ranges' shadows are drawn, and how much finer it is read.
+uniform vec3 uBodyRelief2;
+`;
+
+/** The body's pictures are worked at the size the picture holds: from orbit they are read nearly at their own grain. */
+export const BODY_BIAS = /* glsl */ `
+#ifdef BODY
+  orbitBias *= 1.0 - uBodyRelief2.z * smoothstep(940.0, 1380.0, uViewKm);
+#endif
 `;
 
 /** After the maps are read: how far the body has come together, and its own colour, relief and light. */

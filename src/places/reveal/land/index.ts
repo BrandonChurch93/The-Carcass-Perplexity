@@ -9,7 +9,7 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
 import { LEVELS, pairFor, type Level } from './levels';
-import { BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_READ, BODY_UNIFORMS } from './body';
+import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_READ, BODY_UNIFORMS } from './body';
 
 // The window of the first approved picture in the master (references/approved/7-reveal/pullback.json): the bed map covers it.
 const BED = { x: 1126.18, y: 1498.28, w: 293.34, h: 165.09 };
@@ -18,9 +18,11 @@ const BASINS = { x: 737.71, y: 1279.65, w: 1070.28, h: 602.35 };
 // The feeder of the lake, traced on that picture from its head in the valley to its mouth on the upper left shore: master px.
 const FEEDER: [number, number][] = [[1224.0, 1440.0], [1226.8, 1468.5], [1221.0, 1484.0], [1218.81, 1498.28], [1220.92, 1508.81], [1224.25, 1518.81], [1229.87, 1524.95], [1233.2, 1532.14], [1234.95, 1542.32], [1235.3, 1550.91], [1233.55, 1558.81], [1233.9, 1562.4]];
 
-// How strongly the relief of the body is lit from orbit (1 is the old maps' strength), and how far its ranges throw their shadows.
+// How strongly the relief of the body is lit from orbit (1 is the old maps' strength), how far its ranges throw their shadows, and
+// how much of the old maps' coarser reading from orbit is taken off for the body's pictures.
 const BODY_RELIEF = Number(import.meta.env.VITE_BODY_RELIEF ?? 1.6);
 const BODY_SHADOW = Number(import.meta.env.VITE_BODY_SHADOW ?? 1.0);
+const BODY_FINE = Number(import.meta.env.VITE_BODY_FINE ?? 0.7);
 
 export const PARTS = ['sea', 'continent', 'salt', 'lake', 'lava'] as const;
 
@@ -164,6 +166,7 @@ void main() {
   // (From orbit a texel of the wide map is about a pixel, and its grain sparkled from pixel to pixel: there the maps are read a
   // little coarser, at the size the picture can hold.)
   float orbitBias = 0.6 * smoothstep(700.0, 1300.0, uViewKm);
+${BODY_BIAS}
   vec3 ground = readWide(uMapWide, clamp(uvWide, 0.0, 1.0), orbitBias).rgb;
   vec3 relief = readWide(uReliefWide, clamp(uvWide, 0.0, 1.0), orbitBias).rgb;
   // (Below 100 km the baked light, the surf, the shelf and the places are not in the picture: they are not read.)
@@ -1320,7 +1323,7 @@ export function create(ctx: Context): Piece {
   uniforms.uBodyMap = { value: bodyMap };
   uniforms.uBodyRelief = { value: bodyRelief };
   uniforms.uBodyLight = { value: bodyLight };
-  uniforms.uBodyRelief2 = { value: new THREE.Vector2(BODY_RELIEF, BODY_SHADOW) };
+  uniforms.uBodyRelief2 = { value: new THREE.Vector3(BODY_RELIEF, BODY_SHADOW, BODY_FINE) };
   const crossing = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT, defines: { ORBIT: 1, BODY: 1 } });
   const whole = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT, defines: { ORBIT: 1, BODY: 1, BODYONLY: 1 } });
   const wholeNight = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT, defines: { ORBIT: 1, NIGHT: 1, BODY: 1, BODYONLY: 1 } });
