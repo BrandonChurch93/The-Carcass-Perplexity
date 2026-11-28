@@ -303,7 +303,7 @@ ${BODY_COARSE}
     if (abs(bedKm) < 16.0) {
       // (Under the east wall, where the picture's shore is one smooth line, it is broken into coves and spurs of fallen rock.)
       float east = smoothstep(-0.25, 0.5, fromLake.x) * (1.0 - smoothstep(1.3, 1.6, lakeFar)) * (1.0 - smoothstep(8.0, 16.0, abs(bedKm)));
-      if (east > 0.0) bedKm += east * (13.0 * (nWide - 0.5) + 8.0 * (nBay - 0.5));
+      if (east > 0.0) bedKm += east * (20.0 * (nWide - 0.5) + 9.0 * (nBay - 0.5));
       // (The fine notches of a shore are worked only near it: farther off they move nothing that is seen.)
       float fine = 1.0 - smoothstep(1.8, 2.6, abs(bedKm));
       if (fine > 0.0) {
