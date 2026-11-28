@@ -283,11 +283,11 @@ export function create(ctx: Context): Piece {
     material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uDark: { value: dark }, uRill: { value: rillAt } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
-  const weedNear = hangs(0.6, 0, 0.5);
+  const weedNear = hangs(0.6, 0, 0.4);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.15, 0);
   const feedLens = resolve(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 0).position;
-  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uWarm: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt }, uFeed: { value: new THREE.Vector3(feedLens[0] as number, feedLens[2] as number, 1) } });
+  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uWarm: { value: 0 }, uDry: { value: 0.5 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt }, uFeed: { value: new THREE.Vector3(feedLens[0] as number, feedLens[2] as number, 1) } });
   // The same rock under the feeders' lens, where the low sun comes through the weed on it: its straps are gold and amber, not black.
   const kelpRock = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uWarm: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
   const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uWarm: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
@@ -346,7 +346,7 @@ export function create(ctx: Context): Piece {
   {
     const hang = ctx.rng('curtain');
     // Drawn before the sheet they hang on: what a frond hides of it is not shaded.
-    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 9000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds).renderOrder = -1;
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 5000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds).renderOrder = -1;
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -637,20 +637,22 @@ export function create(ctx: Context): Piece {
       list.push({ x, z, size, yaw: wade.range(0, 6.283), tilt: wade.range(-0.3, 0.3), kind, high, out: rise * shown, tone });
     };
     // Stones of a fist to a forearm, thickest where the lens is sharp (from ten metres on), thinning toward the far cage.
-    for (let i = 0; i < 30000; i++) {
+    for (let i = 0; i < 42000; i++) {
       const band = i % 10 < 7;
       const f = band ? 7 + 62 * Math.pow(wade.next(), 1.5) : -16 + 170 * Math.pow(wade.next(), 1.4);
       // The first lens of the shot stands 24 m behind the key's: what it sees is a wedge from there.
       const r = wade.range(-1, 1) * (3 + 0.37 * (f + 24));
       const far = 0.75 + Math.max(0, f) / 55;
-      const size = (0.013 + 0.055 * Math.pow(wade.next(), 2) + 0.24 * Math.pow(wade.next(), 5)) * far;
+      let size = (0.013 + 0.055 * Math.pow(wade.next(), 2) + 0.24 * Math.pow(wade.next(), 5)) * far;
       const shown = 0.95 + 0.25 * wade.next();
       const pick = wade.next();
       const x = (pose.position[0] as number) + ahead[0] * f + right[0] * r;
       const z = (pose.position[2] as number) + ahead[1] * f + right[1] * r;
-      // Bars lie across the view, a few strides deep and many long.
-      const bar = 0.6 * noise3(x / 9 + 3.7, 0.5, z / 2.8) + 0.4 * noise3(x / 1.9, 2.5, z / 1.3);
-      if (bar < 0.5 + 0.22 * pick || onWay(x, z, 1.1 + size) || !clearOf(x, z, 3.2)) continue;
+      // The tide leaves them in drifts, a few strides deep and many long across the view, with bare wet sand between: a stray one here and there.
+      const drift = 0.75 * noise3(x / 6 + 21.3, 0.5, z / 2.4 + 9.1) + 0.25 * noise3(x / 1.5, 4.5, z / 1.1);
+      if (drift < (pick < 0.03 ? 0.4 : 0.575 + 0.05 * pick) || onWay(x, z, 1.1 + size) || !clearOf(x, z, 3.2)) continue;
+      // Cobbles in the heart of a drift, shingle at its edge.
+      size *= 0.65 + 0.9 * smooth(0.575, 0.72, drift);
       // The broad ones are slabs, barely out of the film.
       put(stones, f, r, size, (0.3 + 0.7 * wade.next()) * (size > 0.1 * far ? 0.6 : 1), shown);
     }
@@ -672,7 +674,7 @@ export function create(ctx: Context): Piece {
       }
     }
     // Close under the key's lens, at its left: a heap of rock with weed over it, soft before the sharp band, as the picture has it.
-    const heap: [number, number, number][] = [[3.5, -1.4, 0.8], [3.9, -0.45, 0.55], [3.2, -2.1, 0.9], [4.6, -2.7, 1.05], [5.6, -1.75, 0.8], [6.3, -3.4, 1.2], [5.2, -3.9, 0.9], [6.6, -0.7, 0.55], [7.4, -2.2, 0.7], [7.0, 0.5, 0.36], [8.3, -1.2, 0.42], [6.1, 1.6, 0.3], [8.8, -3.6, 0.8], [7.7, 2.6, 0.26]];
+    const heap: [number, number, number][] = [[3.5, -1.4, 0.8], [3.9, -0.45, 0.55], [3.2, -2.1, 0.9], [4.6, -2.7, 1.05], [5.6, -1.75, 0.8], [6.3, -3.4, 1.2], [5.2, -3.9, 0.9], [6.6, -0.7, 0.55], [7.4, -2.2, 0.7], [7.0, 0.5, 0.14], [8.3, -1.2, 0.42], [6.1, 1.6, 0.3], [8.8, -3.6, 0.8], [7.7, 2.6, 0.26]];
     for (const [f, r, size] of heap) put(knots, f, r, size, 0.62, 0.95);
     const bars: { x: number; z: number; size: number; yaw: number; lift: number }[] = [];
     // The crown of a bar where a stone lies on one: the stone lies on the sand, not under it.

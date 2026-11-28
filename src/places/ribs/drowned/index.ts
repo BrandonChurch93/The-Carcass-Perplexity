@@ -325,13 +325,13 @@ void main() {
   albedo = mix(albedo, mix(vec3(0.1, 0.085, 0.025), vec3(0.2, 0.12, 0.03), fract(vStrand.z * 3.7)) * (0.7 + 0.5 * blister + 0.4 * rib), over);
   // Wet, but no mirror: a strand seen along itself does not give back the break in the cloud. Its wet stands on it in beads.
   n = normalize(n + v * max(0.0, 0.55 - dot(n, v)));
-  // A bead here and there, in no row: one cell in twelve of the strand holds one.
+  // A bead here and there, in no row: one cell in fifty of the strand holds one.
   vec2 cell = vec2(vStrand.x * 1.5 + vStrand.z * 9.0, vStrand.y * 70.0 + vStrand.z * 40.0);
   float lot = fract(sin(dot(floor(cell), vec2(12.9898, 78.233))) * 43758.5453);
-  float bead = step(0.92, lot) * smoothstep(0.4, 0.15, length(fract(cell) - 0.5 - 0.2 * vec2(lot - 0.96, fract(lot * 57.0) - 0.5)));
+  float bead = step(0.98, lot) * smoothstep(0.4, 0.15, length(fract(cell) - 0.5 - 0.2 * vec2(lot - 0.99, fract(lot * 57.0) - 0.5)));
   float occ = 0.55 + 0.45 * rib;
-  vec3 col = rigShade(vWorld, n, v, albedo, mix(0.93, 0.7, over) - 0.3 * bead, occ);
-  col += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.3 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
+  vec3 col = rigShade(vWorld, n, v, albedo, mix(0.93, 0.7, over) - 0.15 * bead, occ);
+  col += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.12 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
 

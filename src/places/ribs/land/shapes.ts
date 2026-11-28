@@ -142,10 +142,13 @@ export function turns(coarse: number, fine?: { from: number; to: number; count: 
 
 /** How far the weed hangs proud of its smooth skirt, metres: great hanks that hang straight down, 6 m across and 2 m across, fuller at the hem, and strands of 1 m. */
 export function weedLump(x: number, y: number, z: number): number {
-  const hang = 3.4 * (fbm3(x / 7, y / 45, z / 7, 2) - 0.5) + 1.5 * (noise3(x / 2.2, y / 16, z / 2.2) - 0.5);
+  // No fold of it runs the height of the wall: a hank is some strides high, and another hangs under it. (Reckoned from 6 m up, where
+  // the lens of the one who hangs there comes close, so that the wall stands there as it stood.)
+  const h = y - 6;
+  const hang = 3.4 * (fbm3(x / 7, (6 + 4 * h) / 45, z / 7, 2) - 0.5) + 1.5 * (noise3(x / 2.2, (6 + 3.2 * h) / 16, z / 2.2) - 0.5);
   const hem = 1.2 * smooth(0.35, 0.65, noise3(x / 6, y / 7 + 0.4 * noise3(x / 3, 0, z / 3), z / 6));
   // Straps a hand wide that stand off the mass and hang straight.
-  const strap = 0.5 * Math.abs(noise3(x / 0.42, y / 5.5, z / 0.42) - 0.5);
+  const strap = 0.5 * Math.abs(noise3(x / 0.42, (6 + 2.5 * h) / 5.5, z / 0.42) - 0.5);
   return hang + hem - 0.5 + 0.5 * (noise3(x / 0.9, y / 3.6, z / 0.9) - 0.5) + strap;
 }
 
