@@ -456,10 +456,10 @@ Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   // is a hanging cloth. So here it is the pale stone of the shelf itself, seen from above as the eye sees it, that goes down into the water.
 #if EYE_EDGE
   // Beside the edge it is a face: the stone is laid on it by its length round the lip and its depth, and it is ribbed down its fall.
-  vec2 face = vec2(atan(b.x, b.y) * 480.0, down);
-  vec3 c = readAt(tSinter, face / 4.1 + 0.3, mat2(1.0 / 4.1)).rgb;
+  vec2 face = vec2(atan(b.x, b.y) * 480.0, down * 1.3);
+  vec3 c = readAt(tSinter, face / 4.1 + 0.3, mat2(1.0 / 4.1), 2.8).rgb;
   float great = dot(readAt(tSinter, face / 13.0 + 0.6, mat2(1.0 / 13.0)).rgb, vec3(0.33));
-  o.albedo = clamp(c * 1.45, 0.0, 0.95) * vec3(0.9, 0.95, 0.94) * (0.55 + 0.6 * vnoise(vec2(face.x / 2.3, down / 11.0 + 3.0)) + 0.25 * (vnoise(vec2(face.x / 0.7 + 11.0, down / 4.0)) - 0.5));
+  o.albedo = clamp(c * 1.45, 0.0, 0.95) * vec3(0.9, 0.95, 0.94) * (0.5 + 0.4 * vnoise(vec2(face.x / 2.6, down / 3.0 + 3.0)) + 0.4 * vnoise(vec2(face.x / 9.0 + 5.0, down / 1.1)) * vnoise(vec2(face.x / 1.3 + 9.0, down / 7.0)));
 #else
   vec3 c = readAt(tSinter, b / 4.1 + 0.3, mat2(1.0 / 4.1)).rgb;
   float great = dot(readAt(tSinter, b / 13.0 + 0.6, mat2(1.0 / 13.0)).rgb, vec3(0.33));
@@ -474,7 +474,7 @@ Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   // The weed of the lip hangs over its edge into the water: strands a hand wide and a metre or two long, each of its own length.
   float alongLip = atan(b.x, b.y) * 480.0;
   float strand = vnoise(vec2(alongLip / 0.22, down / 3.5 + 2.0));
-  float hangs = smoothstep(0.52, 0.7, strand + 0.25 * (vnoise(vec2(alongLip / 1.9 + 5.0, 0.5)) - 0.5)) * smoothstep(1.5 + 4.5 * vnoise(vec2(alongLip / 0.6, 7.0)), 0.2, down);
+  float hangs = smoothstep(0.52, 0.7, strand + 0.25 * (vnoise(vec2(alongLip / 1.9 + 5.0, 0.5)) - 0.5)) * smoothstep(0.7 + 2.2 * vnoise(vec2(alongLip / 0.6, 7.0)), 0.2, down);
   o.albedo = mix(o.albedo, vec3(0.3, 0.14, 0.04), 0.85 * hangs);
   ledge = mix(ledge, 0.8, hangs);
 #endif
