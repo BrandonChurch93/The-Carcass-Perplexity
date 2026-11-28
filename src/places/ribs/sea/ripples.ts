@@ -15,12 +15,12 @@ const PACE = 0.8;
  * off the wind's way. The two cross, so crests are short and lie in diamonds, and their beat sends them out in packets.
  */
 const PAIRS: readonly [number, number, number, number][] = [
-  [1.31, 0.022, -38, 19],
-  [0.72, 0.032, 33, -14],
-  [0.39, 0.044, -22, 41],
-  [0.22, 0.055, 12, -44],
-  [0.12, 0.06, -35, 27],
-  [0.066, 0.055, 47, -9],
+  [1.31, 0.026, -38, 19],
+  [0.72, 0.04, 33, -14],
+  [0.39, 0.056, -22, 41],
+  [0.22, 0.07, 12, -44],
+  [0.12, 0.074, -35, 27],
+  [0.066, 0.066, 47, -9],
 ];
 
 interface Wave {
@@ -79,5 +79,5 @@ float flatBreak(vec2 slope, vec3 v, float high) {
   float back = high / max(v.y, 0.03);
   // A slope along the eye's line only slides the image along itself: it counts for less than one across it.
   float thrown = length(vec2(dot(slope, side), 0.4 * dot(slope, vec2(side.y, -side.x)))) * 2.0 * (0.15 + back / (1.0 + 0.25 * back));
-  return smoothstep(0.1, 0.32, thrown);
+  return smoothstep(0.13, 0.42, thrown);
 }`;
