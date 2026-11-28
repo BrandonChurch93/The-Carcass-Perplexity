@@ -2,8 +2,9 @@
 
   public/assets/reveal/land/ocean-land.jpg   red, green: the slope of the ground (0.5 is level); blue: its height, the body's own
                                              convention (over 0.3 land, 0.3 the waterline, under it how shallow the water is by a coast)
-  public/assets/reveal/land/ocean-bed.jpg    red: the sea bed (0 the deepest basin, 1 a shoal); green: bloom drawn out along one
-                                             current field; blue: under 0.45 how cold the water is, over 0.5 pack ice (floes, leads)
+  public/assets/reveal/land/ocean-bed.jpg    red: the sea bed (0 the deepest basin, 1 a shoal); green: under a half bloom drawn out along
+                                             one current field, over a half the silt of three rivers carried by it; blue: under 0.45 how
+                                             cold the water is, over 0.5 pack ice (floes, leads)
   assets-src/reveal/land/ocean/ocean-mask.png  for the weather: red other land, green ice (1024 px wide, the same rectangle)
 
 All cover one rectangle of the master picture (px): x -1800 to 7416, y -800 to 4834.
@@ -21,6 +22,7 @@ def arg(name, default):
 
 
 QUICK = '--quick' in sys.argv
+FAST = QUICK or '--fast' in sys.argv      # no erosion and short streaks: for trying the layout, the bed or the silt
 AMOUNT = arg('--amount', 'C')
 ICE = float(arg('--ice', '1.0'))
 W, H = (1024, 626) if QUICK else (4096, 2504)
@@ -197,7 +199,7 @@ def erode(h, mask, rounds):
 
 
 # (Only the land that is ever seen: the far coast beyond the planet's edge is left as it is.)
-if not QUICK:
+if not FAST:
     height = erode(height, is_land & (inside > -150.0), 9)
 
 # ---- ocean-land: slope and height ----
@@ -218,7 +220,15 @@ bed = 0.27 + 0.1 * fbm(1500, 4, 51) + 0.03 * fbm(300, 4, 52, ridged=True)
 # (The floor climbs to the body from far out, on one side early and on another late.)
 bed += 0.17 * np.exp(-body_px / (200.0 * (0.4 + 1.2 * sstep(-1.0, 1.0, fbm(1100, 2, 53)))))
 # (The deepest basin lies west of the skull, which stands out of it alone, and another off the far coast's shelf.)
-bed -= 0.24 * spot(330, 1500, 700, 560) + 0.16 * spot(1500, 3350, 560, 400) + 0.18 * spot(4700, 3900, 1000, 560) + 0.12 * spot(6800, 900, 700, 700) + 0.16 * spot(2300, 250, 520, 330) + 0.14 * spot(4700, 600, 380, 300)
+# (No basin is an oval: each is drawn through a slow bend of the floor, and its depth is uneven.)
+BX, BY = MX + 260.0 * fbm(1000, 3, 58), MY + 260.0 * fbm(1000, 3, 59)
+
+
+def basin(cx, cy, rx, ry):
+    return np.exp(-(((BX - cx) / rx) ** 2 + ((BY - cy) / ry) ** 2) ** 0.8)
+
+
+bed -= (0.26 * basin(330, 1500, 700, 560) + 0.17 * basin(1500, 3350, 560, 400) + 0.2 * basin(4700, 3900, 1000, 560) + 0.13 * basin(6800, 900, 700, 700) + 0.17 * basin(2300, 250, 520, 330) + 0.15 * basin(4700, 600, 380, 300)) * (0.75 + 0.5 * sstep(-1.0, 1.0, fbm(420, 3, 60)))
 arc_on = sstep(-22.0, -8.0, ang) * sstep(118.0, 104.0, ang)
 # (The trench on the body's side of the arc, and the platform the islands stand on; behind them a shallow sea.)
 bed -= 0.34 * np.exp(-((rad - ARC[2] - 190.0 - 30.0 * fbm(500, 2, 54)) / 60.0) ** 2) * arc_on
@@ -231,7 +241,8 @@ for bx, by, br, bh in [(2560, 3560, 150, 0.3), (2260, 3690, 90, 0.24), (2850, 34
 bed += 0.42 * np.exp(-np.maximum(inside - reach, 0.0) / (120.0 + 60.0 * sstep(-1.0, 1.0, fbm(500, 2, 56)))) * ends
 bed = np.clip(bed, 0.02, 0.78)
 # (Every coast of the other land stands on its own shelf, uneven.)
-bed = np.maximum(bed, np.exp(-land_px / (70.0 + 60.0 * sstep(-1.0, 1.0, fbm(260, 3, 57)))))
+# (Wide enough that an island is found by its pale water before its rock is, as the body is.)
+bed = np.maximum(bed, np.exp(-land_px / (95.0 + 110.0 * sstep(-1.0, 1.0, fbm(260, 3, 57)))))
 bed = blur(bed.astype(np.float32), 3.0)
 
 # ---- ocean-bed blue: the ice. A pack off the far coast, widest in its bays; floes, and leads that widen to its margin ----
@@ -262,8 +273,17 @@ loose = sstep(0.75, 0.0, pack)                       # how far toward the margin
 # (The margin is torn by the swell at every size: tongues and bights of some tens of km, and the floes themselves.)
 there = sstep(0.0, 0.1, pack + 0.55 * (rnd_small - 0.5) * loose + 0.3 * fbm(260, 5, 73, gain=0.62) + 0.22 * loose * fbm(34, 3, 74))
 # (Leads in master px: hair lines in the sheet, open water between the floes of the margin.)
-ice = there * sstep(0.2 + 1.2 * loose, 2.4 + 1.6 * loose, lead_big * S) * sstep(-0.6 + 2.6 * loose, 1.0 + 3.2 * loose, lead_small * S)
-ice *= (1.0 - is_land) * (inside > reach - 12.0)
+part_big = sstep(0.1, 0.7, loose)
+part_small = np.clip((loose - 0.25) / 0.75, 0.0, 1.0)
+ice = there * sstep(-2.0 + 3.4 * part_big, 0.3 + 3.7 * part_big, lead_big * S) * sstep(-1.5 + 3.6 * part_small, 0.2 + 4.2 * part_small, lead_small * S)
+# (The sheet itself is whole but for a few long fractures, and it is not one white: old ice is thicker than new.)
+crack = np.minimum(np.abs(fbm(420, 5, 75, gain=0.55)), np.abs(fbm(300, 5, 76, gain=0.55)) + 0.02 * loose)
+ice *= 1.0 - 0.8 * (1.0 - sstep(0.004, 0.03, crack)) * sstep(0.1, 0.4, pack)
+ice *= 0.72 + 0.28 * sstep(-1.0, 1.0, fbm(190, 4, 77))
+# (The sheet lies on over the far land to the planet's edge: only some headlands of its coast stand bare. No ice on the islands.)
+on_far = is_land & (far_land >= isle)
+# (On the sea it is young and thin, a blue grey skin with some thicker floes in it: the white is on the land.)
+ice = np.where(on_far, ice * sstep(-30.0, 90.0, reach - inside + 70.0 * fbm(240, 4, 78)), ice * (1.0 - is_land) * (0.42 + 0.3 * rnd_big * sstep(0.2, 0.9, pack)))
 cold = sstep(-2.6, 0.2, pack) * (1.0 - is_land)
 ice_map = np.where(ice > 0.02, 0.5 + 0.5 * ice, 0.45 * cold * (1.0 - ice / 0.02))
 
@@ -284,7 +304,7 @@ gx2, gy2 = np.meshgrid(np.arange(w2, dtype=np.float32), np.arange(h2, dtype=np.f
 acc = grain.copy()
 for way in (1.0, -1.0):
     px_, py_ = gx2.copy(), gy2.copy()
-    for k in range(4 if QUICK else 44):
+    for k in range(4 if FAST else 44):
         sx = cv2.remap(vx, px_, py_, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         sy = cv2.remap(vy, px_, py_, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         px_ += way * sx
@@ -299,6 +319,53 @@ for ex, ey, er, es in [(520, 1130, 210, 260.0), (1560, 2960, 170, -220.0), (3350
 where *= sstep(200.0, 420.0, body_px) * (1.0 - is_land)
 bloom = blur(np.clip(where * (0.4 + 0.42 * threads), 0.0, 1.0).astype(np.float32), 4.0)
 
+# ---- silt: three rivers of the body's lower leg reach the sea, and the one current field carries each away. A plume is the
+# water of its river: it leaves the mouth, is turned along the coast by the current, and widens and thins as it goes. ----
+MOUTHS = [(3900.0, 2500.0, 1.0), (4230.0, 2400.0, 0.8), (4750.0, 2450.0, 0.9)]
+off = cv2.resize(blur(np.minimum(body_px, 400.0).astype(np.float32), 40.0), (w2, h2), interpolation=cv2.INTER_AREA)
+ox = cv2.Sobel(off, cv2.CV_32F, 1, 0, ksize=5)
+oy = cv2.Sobel(off, cv2.CV_32F, 0, 1, ksize=5)
+on = np.hypot(ox, oy) + 1e-6
+ox, oy = ox / on, oy / on
+# (The current is slow and uneven: it meanders, the same for every plume.)
+wander = cv2.resize(fbm(420, 3, 91), (w2, h2), interpolation=cv2.INTER_AREA) * 55.0 * (4.5 / (2.0 * S))
+mx_ = cv2.Sobel(wander, cv2.CV_32F, 0, 1, ksize=5)
+my_ = -cv2.Sobel(wander, cv2.CV_32F, 1, 0, ksize=5)
+# (And it is full of small eddies, which draw a plume out into threads.)
+eddy = cv2.resize(fbm(130, 3, 92), (w2, h2), interpolation=cv2.INTER_AREA) * 17.0 * (4.5 / (2.0 * S))
+mx_ = 1.1 * mx_ + 0.9 * cv2.Sobel(eddy, cv2.CV_32F, 0, 1, ksize=5)
+my_ = 1.1 * my_ - 0.9 * cv2.Sobel(eddy, cv2.CV_32F, 1, 0, ksize=5)
+water2 = cv2.resize((body_px > 3.0).astype(np.float32), (w2, h2), interpolation=cv2.INTER_AREA) * cv2.resize(1.0 - is_land.astype(np.float32), (w2, h2), interpolation=cv2.INTER_AREA)
+near2 = cv2.resize(body_px.astype(np.float32), (w2, h2), interpolation=cv2.INTER_AREA)
+S2 = S * 2.0
+# (The river's own push dies out within some tens of km of the shore; from there the current has it.)
+push = 1.3 * np.exp(-near2 / 70.0) + 0.12
+ux = 0.8 * vx + push * ox + mx_
+uy = 0.8 * vy + push * oy + my_
+un = np.hypot(ux, uy) + 1e-6
+pace = np.clip(un, 0.45, 1.6) / un
+ux, uy = ux * pace, uy * pace
+source = np.zeros((h2, w2), np.float32)
+for sx_, sy_, strength in MOUTHS:
+    # (The mouth is the water nearest that place.)
+    cand = np.argwhere((near2 > 10.0) & (near2 < 22.0))
+    k = np.argmin((cand[:, 1] * S2 + X0 - sx_) ** 2 + (cand[:, 0] * S2 + Y0 - sy_) ** 2)
+    source += strength * np.exp(-((gx2 - cand[k, 1]) ** 2 + (gy2 - cand[k, 0]) ** 2) / (2.0 * (13.0 / S2) ** 2))
+# (The water is followed back up the current one step at a time: what was upstream is here now, a little thinner and a little
+# wider. Run until the plume stands still.)
+silt2 = np.zeros((h2, w2), np.float32)
+fade = float(np.exp(-S2 / 750.0))
+for age in range(int(2400.0 / S2)):
+    silt2 = cv2.remap(silt2, gx2 - ux, gy2 - uy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0.0) * fade * water2 + 0.3 * source
+    if age % 3 == 0:
+        silt2 = cv2.GaussianBlur(silt2, (0, 0), 2.0)
+silt2 = silt2 / (1.0 + silt2)
+silt = cv2.resize(silt2, (W, H), interpolation=cv2.INTER_CUBIC)
+# (Threads along the current, and patches: a plume is never even.)
+silt = np.clip(1.5 * silt * (0.8 + 0.3 * threads + 0.35 * fbm(150, 4, 94)), 0.0, 1.0) ** 0.6 * (1.0 - is_land)
+# (Green holds both: over a half silt, under it bloom, and where the silt is there is no bloom.)
+bloom = 0.5 + 0.5 * silt - 0.5 * bloom * (1.0 - sstep(0.0, 0.2, silt))
+
 bed_map = np.stack([bed, bloom, ice_map], axis=-1)
 
 
@@ -311,7 +378,7 @@ save('ocean-bed.jpg', bed_map)
 small = (1024, 626)
 mask = np.zeros((626, 1024, 3), np.uint8)
 mask[..., 0] = cv2.resize(is_land.astype(np.float32), small, interpolation=cv2.INTER_AREA) * 255
-mask[..., 1] = cv2.resize((ice > 0.3).astype(np.float32), small, interpolation=cv2.INTER_AREA) * 255
+mask[..., 1] = cv2.resize(((ice > 0.3) & (inside > -40.0)).astype(np.float32), small, interpolation=cv2.INTER_AREA) * 255
 Image.fromarray(mask).save('assets-src/reveal/land/ocean/ocean-mask.png' if not QUICK and '--out' not in sys.argv else f'{OUT}/ocean-mask.png')
 # (For the sketch of the layout on a frame: out/work/sketch.py.)
 if OUT.startswith('out/work'):

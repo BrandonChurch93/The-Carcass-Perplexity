@@ -29,7 +29,8 @@ uniform vec4 uOceanRect;
 float oceanSeen(float viewKm) {
   return smoothstep(640.0, 1150.0, viewKm);
 }
-// red: the bed, 0 the deepest basin and 1 a shoal; green: bloom; blue: under 0.45 the cold of the water, over 0.5 ice.
+// red: the bed, 0 the deepest basin and 1 a shoal; green: under a half bloom, over it silt; blue: under 0.45 the cold of the
+// water, over 0.5 ice.
 vec3 oceanBedAt(vec2 xz) {
   vec2 uv = clamp((xz - uOceanRect.xy) * uOceanRect.zw, 0.0, 1.0);
   return textureLod(uOceanBed, uv, groundLevel + log2(uOceanRect.z * float(textureSize(uOceanBed, 0).x))).rgb;
@@ -48,16 +49,21 @@ vec3 oceanDeep(vec3 bedAt, float seen) {
   c = mix(c, vec3(0.014, 0.07, 0.078), ${(0.9 * SHELF_STRENGTH).toFixed(3)} * smoothstep(0.68, 1.0, depth));
   float cold = min(bedAt.b / 0.45, 1.0);
   c = mix(c, vec3(0.0058, 0.014, 0.0155), 0.7 * cold * cold);
-  c += vec3(0.003, 0.02, 0.015) * bedAt.g * (1.0 - 0.6 * cold);
+  c += vec3(0.003, 0.02, 0.015) * max(1.0 - 2.0 * bedAt.g, 0.0) * (1.0 - 0.6 * cold);
   return mix(DEEP, c, seen);
+}
+// The silt of three rivers, carried by the current: pale tan where it is thick at the mouth, a grey green veil where it has thinned.
+vec3 oceanSilt(vec3 bed, vec3 bedAt, float seen) {
+  float silt = max(2.0 * bedAt.g - 1.0, 0.0);
+  return mix(bed, mix(vec3(0.05, 0.08, 0.055), vec3(0.2, 0.15, 0.075), smoothstep(0.2, 0.9, silt)), 0.85 * smoothstep(0.02, 0.6, silt) * seen);
 }
 // (The blue of the air over the sea stands for the water's own scatter too: over a basin less of it comes back.)
 float oceanAir(vec3 bedAt, float seen) {
   return 1.0 - 0.85 * seen * (1.0 - smoothstep(0.1, 0.32, bedAt.r));
 }
 // The other land and the ice, laid into the water after the sky and the sun are on it: neither takes the sun's image, so an island
-// in the glint is dark in the light. Lit by the light of the sheet (sun, sky, cloud shadow, moon) and by its own slope.
-vec3 oceanOther(vec3 water, vec3 landAt, vec3 bedAt, vec3 light, vec2 xz, float seen) {
+// in the glint is darker than the sea round it. Lit by the light of the sheet (sun, sky, cloud shadow, moon) and by its own slope.
+vec3 oceanOther(vec3 water, vec3 landAt, vec3 bedAt, vec3 light, vec3 glare, vec2 xz, float mu, float seen) {
   float height = clamp((landAt.b - 0.3) / 0.7, 0.0, 1.0);
   float isle = smoothstep(0.292, 0.312, landAt.b) * seen;
   vec2 slope = (landAt.rg - 0.5) * 3.2;
@@ -65,18 +71,22 @@ vec3 oceanOther(vec3 water, vec3 landAt, vec3 bedAt, vec3 light, vec2 xz, float 
   float lit = mix(1.0, clamp(facing / max(uSunDir.y, 0.2), 0.0, 2.2), 0.92);
   // (The body's own lowland colours, muted: dun plain by the shore, olive where it holds water, dark rock on the high ground.)
   float mottle = vnoise(xz / 46.0 + 5.0);
-  vec3 ground = mix(mix(vec3(0.13, 0.1, 0.07), vec3(0.07, 0.076, 0.05), smoothstep(0.35, 0.7, mottle)), vec3(0.056, 0.05, 0.046), smoothstep(0.12, 0.62, height));
+  vec3 ground = mix(mix(vec3(0.17, 0.132, 0.092), vec3(0.092, 0.1, 0.066), smoothstep(0.35, 0.7, mottle)), vec3(0.076, 0.067, 0.06), smoothstep(0.12, 0.62, height));
   // (Surf where the open sea meets it, on some reaches and not on others.)
   float surf = smoothstep(0.262, 0.296, landAt.b) * (1.0 - isle) * smoothstep(0.3, 0.62, vnoise(xz / 19.0 + 31.0)) * seen;
   water = mix(water, vec3(0.6, 0.65, 0.68) * light / 3.14159, 0.5 * surf * surf);
   // (By night the land is a shade on the sea, no more: no light stands on it.)
-  vec3 groundLit = ground * light * lit / 3.14159;
+  // (The air over the sun's image is bright: land that stands in it is seen through that light, as the body is.)
+  vec3 groundLit = ground * light * lit / 3.14159 + 0.4 * glare;
   water = mix(water, mix(groundLit, 0.6 * water + 2.2 * groundLit, uEmber.x), isle);
-  // (The pack: blue grey where it is thin and in its leads, blue white where it is thick. Never the bone's ivory.)
-  float ice = smoothstep(0.52, 0.8, bedAt.b) * (1.0 - isle) * seen;
-  vec3 pack = mix(vec3(0.2, 0.3, 0.37), vec3(0.5, 0.57, 0.62), smoothstep(0.7, 0.98, bedAt.b)) * (0.9 + 0.2 * vnoise(xz / 31.0 + 9.0));
-  // (Under the moon it is a grey no brighter than the cloud.)
-  return mix(water, pack * light * (1.0 - 0.6 * uEmber.x) / 3.14159, ice);
+  // (The pack and the sheet on the far land: blue grey where it is thin and in its leads, blue white where it is thick, blue in
+  // the shade of its own relief. Never the bone's ivory. Into the air of the planet's edge it goes bluer and dimmer.)
+  float ice = smoothstep(0.52, 0.8, bedAt.b) * seen;
+  vec3 pack = mix(vec3(0.2, 0.3, 0.37), vec3(0.4, 0.47, 0.53), smoothstep(0.7, 0.98, bedAt.b)) * (0.9 + 0.2 * vnoise(xz / 31.0 + 9.0));
+  pack *= mix(vec3(1.0), mix(vec3(0.5, 0.64, 0.84), vec3(1.0), clamp(lit, 0.0, 1.0)) * min(lit, 1.25), isle);
+  pack *= mix(vec3(0.42, 0.56, 0.74), vec3(1.0), smoothstep(0.04, 0.3, mu));
+  // (Under the moon it is a grey well under the cloud's.)
+  return mix(water, pack * light * (1.0 - 0.93 * uEmber.x) / 3.14159, ice);
 }
 #endif
 `;
