@@ -14,7 +14,9 @@ export const MIRE_LEGS = 8;
 /** Metres one churn sheet covers, the broad lay and the fine one, and how high a clod stands at most. */
 const TILE_A = 1.7;
 const TILE_B = 0.53;
-const CLOD = 0.075;
+const CLOD = 0.07;
+/** The level of the churn sheet the clods of the mesh are read at: a clod is a hand and more across. */
+const CLOD_LOD = 5.6;
 
 // The height the brine stands at in the sheet's own measure (0 the deepest pit, 1 the highest crumb): high in the middle of the wallow,
 // where only islands of mud stand out, and low at the rim, where it lies in the deepest pits alone.
@@ -53,10 +55,10 @@ uniform sampler2D tChurnNh;
 ${NOISE_GLSL}
 ${CHURN_GLSL}
 float lift(vec2 lay, vec2 p, float cut) {
-  float h = textureLod(tChurnNh, lay / ${TILE_A.toFixed(3)}, 4.6).b + churnCollar(p);
-  // A clod is no peak: it stands up from the brine with a short bank and is round on top.
+  float h = textureLod(tChurnNh, lay / ${TILE_A.toFixed(3)}, ${CLOD_LOD.toFixed(1)}).b + churnCollar(p);
+  // A clod is no peak: it stands up from the brine with a short bank, is round on top and has slumped.
   float over = max(h - cut, 0.0);
-  return (1.0 - exp(-5.0 * over) + 0.6 * over) * ${CLOD.toFixed(3)};
+  return (1.0 - exp(-7.0 * over) + 0.2 * over) * ${CLOD.toFixed(3)};
 }
 void main() {
   vEdge = aEdge;
@@ -118,7 +120,9 @@ void main() {
   float mid = vnoise(p * 4.7 + 1.9);
 
   // The height of the mud here against the line of the brine.
-  float h = nhA.b + 0.2 * (nhB.b - 0.5) + churnCollar(p);
+  // (The brine lies where the mesh is not lifted: the line is taken from the height the mesh read, with the fine height laid on it.)
+  float hMesh = textureLod(tChurnNh, ua, max(lodA, ${CLOD_LOD.toFixed(1)})).b;
+  float h = mix(hMesh, nhA.b, 0.4) + 0.12 * (nhB.b - 0.5) + churnCollar(p);
   float cut = churnCut(p, vEdge, vDepth);
   float over = h - cut;
   float liquid = 1.0 - smoothstep(-0.012, 0.012 + 2.0 * foot, over);
@@ -155,7 +159,9 @@ void main() {
   vec3 mud = colA * mix(vec3(1.0), min(mix(vec3(dot(tone, LUMA)), tone, 0.5), vec3(1.7)), 0.6) * 0.27;
   mud = max(mix(vec3(dot(mud, LUMA)), mud, 1.25), vec3(0.0));
   float wetLine = 1.0 - smoothstep(0.0, 0.16, over);
-  mud *= mix(1.0, 0.5, wetLine);
+  // (Down the fall it is wet from the brine it falls to: the brine stands at the world's 0.)
+  float foot2 = 1.0 - smoothstep(0.03, 0.3, vWorld.y + 0.1 * (broad - 0.5));
+  mud *= mix(1.0, 0.5, max(wetLine, 0.8 * foot2));
   vec2 sa = (nhA.rg - 0.5) * 2.2;
   vec2 sb = (nhB.rg - 0.5) * 1.3;
   // (The fine lay is turned: its slope is turned back.)
@@ -165,9 +171,11 @@ void main() {
   // Wet mud is no mirror: it is lit as a rough thing, and what shines on it is the sky caught on the few faces turned to it.
   vec3 cMud = rigShade(vWorld, nMud, v, mud, 1.0, 0.4 + 0.6 * pit);
   vec3 rMud = reflect(-v, nMud);
-  float wetMud = mix(1.0, 0.3, smoothstep(0.05, 0.35, over) * smoothstep(0.4, 0.7, nhB.b));
+  float wetMud = max(mix(1.0, 0.3, smoothstep(0.05, 0.35, over) * smoothstep(0.4, 0.7, nhB.b)), foot2);
   float catchSky = pow(clamp(dot(rMud, SKY_SIDE), 0.0, 1.0), 60.0);
-  cMud += skyRadiance(SKY_SIDE) * skyOpen(vWorld) * (0.13 * catchSky * wetMud);
+  float open = skyOpen(vWorld);
+  vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
+  cMud += above * (0.16 * catchSky * wetMud);
 
   // The brine: level, dark with the mud stirred into it where a leg works, the bed showing through its first finger of depth.
   float depth = max(-over, 0.0);
@@ -179,8 +187,7 @@ void main() {
   vec2 ruffle = vec2(vnoise(p * 9.0 + 5.0 + vec2(e * 9.0, 0.0)) - l0, vnoise(p * 9.0 + 5.0 + vec2(0.0, e * 9.0)) - l0) / e * 0.006;
   vec2 tilt = lean + ruffle;
   vec3 nWet = normalize(vec3(-tilt.x, 1.0, -tilt.y));
-  float open = skyOpen(vWorld);
-  vec3 cWet = under * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
+  vec3 cWet = under * above;
   // The mirror. The wallow lies uLevel above the brine the picture was drawn for: a ray it throws up is the ray the brine would throw
   // from the same place that far under its level again.
   float nv = clamp(dot(nWet, v), 0.0, 1.0);
@@ -195,8 +202,9 @@ void main() {
 
   vec3 c = mix(cMud, cWet, liquid);
   // Its edge thins out over the bed clod by clod: no line anywhere.
-  float reach = vEdge + 0.12 * (broad - 0.5) + 0.06 * (mid - 0.5) + 0.1 * (nhA.b - 0.5);
-  float a = smoothstep(0.0, 0.1, reach - 0.03) * smoothstep(0.0, 0.03, vEdge);
+  // (It is whole down the fall to the bed, so the fall is its own mud, and breaks up over the last hand.)
+  float reach = vEdge + 0.03 * (broad - 0.5) + 0.02 * (mid - 0.5) + 0.07 * (nhA.b - 0.5);
+  float a = smoothstep(0.0, 0.035, reach - 0.02) * smoothstep(0.0, 0.02, vEdge);
   c = clamp(c, 0.0, 8.0);
   gl_FragColor = vec4(rigOut(c), a * uShown * (1.0 - uMirror));
 }`;
@@ -223,29 +231,52 @@ export class Mire {
     const index: number[] = [];
     const spoke: [number, number, number][] = Array.from({ length: SIDES + 1 }, () => [0, 0, level]);
     const wobble = Array.from({ length: 9 }, () => [rng.range(0.03, 0.1), rng.range(0, Math.PI * 2)] as [number, number]);
+    const place = (u: number, a: number): [number, number] => {
+      let reach = 1;
+      wobble.forEach((w, n) => {
+        reach += w[0] * Math.sin(a * (n + 2) + w[1]);
+      });
+      const along = Math.cos(a) * long * reach * u;
+      const across = Math.sin(a) * wide * reach * u;
+      return [x + dir[0] * along - dir[1] * across, z + dir[1] * along + dir[0] * across];
+    };
+    // The bed is asked for at every third ring and fourth side, about as many places as the sheet of wave 2 asked, and laid between them:
+    // the land answers slowly, and asked at every vertex it showed in the cost of frames the sheet is not in.
+    const CI = 3;
+    const CJ = 4;
+    const NI = RINGS / CI;
+    const NJ = SIDES / CJ;
+    const bed = new Float32Array((NI + 1) * (NJ + 1) * 2);
+    for (let i = 0; i <= NI; i++) {
+      for (let j = 0; j <= NJ; j++) {
+        const [px, pz] = place((i * CI) / RINGS, ((j * CJ) / SIDES) * Math.PI * 2);
+        bed[(i * (NJ + 1) + j) * 2] = ctx.rig.land.height(px, pz);
+        bed[(i * (NJ + 1) + j) * 2 + 1] = ctx.rig.land.shore(px, pz);
+      }
+    }
+    const laid = (i: number, j: number, c: number): number => {
+      const fi = Math.min(NI - 1, Math.floor(i / CI));
+      const fj = Math.min(NJ - 1, Math.floor(j / CJ));
+      const ti = i / CI - fi;
+      const tj = j / CJ - fj;
+      const at = (a: number, b: number): number => bed[(a * (NJ + 1) + b) * 2 + c] as number;
+      return (at(fi, fj) * (1 - tj) + at(fi, fj + 1) * tj) * (1 - ti) + (at(fi + 1, fj) * (1 - tj) + at(fi + 1, fj + 1) * tj) * ti;
+    };
     for (let i = 0; i <= RINGS; i++) {
       const u = i / RINGS;
       for (let j = 0; j <= SIDES; j++) {
         const a = (j / SIDES) * Math.PI * 2;
-        let reach = 1;
-        wobble.forEach((w, n) => {
-          reach += w[0] * Math.sin(a * (n + 2) + w[1]);
-        });
-        const along = Math.cos(a) * long * reach * u;
-        const across = Math.sin(a) * wide * reach * u;
-        const px = x + dir[0] * along - dir[1] * across;
-        const pz = z + dir[1] * along + dir[0] * across;
-        const land = ctx.rig.land.height(px, pz);
+        const [px, pz] = place(u, a);
+        const land = laid(i, j, 0);
         const over = level - land;
         // It does not run out over the brine: its rim stands on the bank before the shore.
-        const e = Math.min(1 - u, Math.max(0, (ctx.rig.land.shore(px, pz) - 0.05) / 0.8));
+        const e = Math.min(1 - u, Math.max(0, (laid(i, j, 1) - 0.05) / 0.8));
         // Level inside the rim; the rim is mud pushed up a little over the sheet, and falls from there to the bed it lies on.
         const w = Math.min(1, e / 0.3);
         const fall = w * w * (3 - 2 * w);
         const rim = 0.035 * Math.exp(-(((e - 0.27) / 0.07) ** 2)) * (0.6 + 0.4 * Math.sin(a * 5 + (wobble[0] as [number, number])[1]));
         const py = Math.max(land + 0.02 + (level - land - 0.02) * fall + rim, land + 0.025);
         position.push(px, py, pz);
-        // Where the sheet falls to the bed its mud is laid down the fall and not over the ground plan.
         // (Each spoke is measured along the surface, and the mud is laid by that measure.)
         const plan = Math.hypot(px - x, pz - z);
         const was = spoke[j] as [number, number, number];
@@ -278,7 +309,9 @@ export class Mire {
       transparent: true,
     });
     this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.frustumCulled = false;
+    // Nothing of it is drawn where no lens sees it: the clods stand at most a hand over the sheet, and the sphere is that much wider.
+    geometry.computeBoundingSphere();
+    if (geometry.boundingSphere) geometry.boundingSphere.radius += 0.3;
     this.mesh.renderOrder = 2;
   }
 

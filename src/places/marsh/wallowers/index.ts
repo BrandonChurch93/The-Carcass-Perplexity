@@ -110,8 +110,9 @@ export function create(ctx: Context): Piece {
   // The young one stands in the same sheet, where it is shallow, to its own shin.
   young0.plan.ground = Math.max(mireLevel, ctx.rig.land.height(young0.plan.at[0], young0.plan.at[1]) + 0.025) - 0.2 * young0.beast.b.k;
   // Their feelers rake the top of it.
-  great0.floor = mireLevel - 0.02;
-  young0.floor = Math.max(mireLevel, ctx.rig.land.height(young0.plan.at[0], young0.plan.at[1]) + 0.025) - 0.01;
+  // (The sheet has a body of its own now and hides what goes into it: the tips go a hand under its level and are sunk in it, not laid on it.)
+  great0.floor = mireLevel - 0.09;
+  young0.floor = Math.max(mireLevel, ctx.rig.land.height(young0.plan.at[0], young0.plan.at[1]) + 0.025) - 0.06;
   const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh), tread.mesh, mire.mesh];
   ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);

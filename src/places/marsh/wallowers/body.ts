@@ -500,8 +500,10 @@ void main() {
   float curl = max(0.3, 1.15 * uCurl + 0.16 * sin(uSeconds * (1.3 + 1.2 * fract(a)) + a) + 0.05 * sin(uSeconds * 3.3 + a * 2.3));
   // They hang: whatever way the head is held, each bends toward the ground under it.
   vec3 down = normalize(transpose(mat3(uHead)) * vec3(0.0, -1.0, 0.0));
-  vec3 dir = normalize(iOut + vec3(0.5, 0.35, 0.0) * uSplay + down * (0.9 * uHang + uDroop));
-  vec3 c = down + vec3(-0.25, 0.0, -0.25 * iOut.z);
+  // On one that wades they are the fingers of a spread hand: each goes out to its own side of the lip, and its tip turns out, not in.
+  float wading = 1.0 - smoothstep(0.6, 0.9, uTint);
+  vec3 dir = normalize(iOut * vec3(1.0, 1.0, 1.0 + 1.3 * wading) + vec3(0.5, 0.35, 0.0) * uSplay + down * (0.9 * uHang + uDroop));
+  vec3 c = down + vec3(-0.25, 0.0, mix(-0.25, 0.45, wading) * iOut.z);
   vec3 bend = normalize(c - dir * dot(c, dir));
   curl *= 1.0 + 0.5 * uHang;
   float t = curl * s;
@@ -513,7 +515,7 @@ void main() {
   vec3 n2 = cross(tangent, n1);
   // Thick where it leaves the lip, a long taper, a blunt tip.
   float knuckle = exp(-pow((s - 0.3) / 0.05, 2.0)) + 0.7 * exp(-pow((s - 0.58) / 0.045, 2.0));
-  float radius = iShape.y * (mix(0.035, 0.1, uHang) + 0.9 * pow(1.0 - s, mix(mix(1.15, 0.7, uHang), 0.22, 1.0 - smoothstep(0.6, 0.9, uTint)))) * (1.0 + 0.06 * sin(s * 23.0 + a) + mix(0.16, 0.34, 1.0 - smoothstep(0.6, 0.9, uTint)) * knuckle * (1.0 - uHang) + uHang * (0.22 * sin(s * 11.0 + a * 5.0) + 0.14 * sin(s * 29.0 + a * 2.0)));
+  float radius = iShape.y * (mix(0.035, 0.1, uHang) + 0.9 * pow(1.0 - s, mix(mix(1.15, 0.7, uHang), 0.62, wading))) * (1.0 + mix(0.06, 0.1, wading) * sin(s * mix(23.0, 34.0, wading) + a) + mix(0.16, 0.22, wading) * knuckle * (1.0 - uHang) + uHang * (0.22 * sin(s * 11.0 + a * 5.0) + 0.14 * sin(s * 29.0 + a * 2.0)));
   vec3 rim = n1 * position.y + n2 * position.z;
   // Where it has gone under the mud it is not there: a tube pressed flat on the surface draws as specks at a low lens.
   float sunk = smoothstep(0.0, 0.5 * radius + 0.004, uFloor - (uHead * vec4(centre, 1.0)).y);
@@ -521,7 +523,7 @@ void main() {
   world.y = max(world.y, uFloor + 0.004 * position.y * (1.0 - sunk));
   vWorld = world.xyz;
   // The end of a blunt finger faces along it, not out from it: without this the tip of one that points at the lens takes the sky at a skim and stands white.
-  vec3 facing = rim + tangent * (1.3 * smoothstep(0.7, 1.0, s) * (1.0 - smoothstep(0.6, 0.9, uTint)));
+  vec3 facing = rim + tangent * (1.3 * smoothstep(0.7, 1.0, s) * wading);
   // The middle of an end has no way out from the line: it faces along it. (Left without one, it has no direction at all, and the end of a finger
   // seen from behind stood on the muzzle as a white tooth.)
   if (dot(facing, facing) < 1e-6) facing = s > 0.5 ? tangent : -tangent;
@@ -557,7 +559,7 @@ void main() {
   albedo = mix(albedo, vec3(0.1, 0.075, 0.06), 0.5 * smoothstep(0.45, 0.7, vnoise(vec2(s * 9.0 + vLook.z * 30.0, vLook.y * 1.5))));
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
   // One that wades rakes the mud all day: they carry it when the head comes up, thinner toward the root.
-  wet = max(wet, (0.55 + 0.45 * smoothstep(0.08, 0.4, s)) * (1.0 - smoothstep(0.6, 0.9, uTint)));
+  wet = max(wet, (0.25 + 0.75 * smoothstep(0.4, 0.85, s)) * (1.0 - smoothstep(0.6, 0.9, uTint)));
   albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.45 * wet);
   // The mud they rake clings to them in clots, thickest toward the tips.
   albedo = mix(albedo, vec3(0.1, 0.064, 0.05) * (0.6 + 0.8 * groove), wet * (1.0 - uHang) * smoothstep(0.3, 0.55, vnoise(vec2(s * 7.0 + vLook.z * 40.0, vLook.y * 1.2)) + 0.35 * s));
@@ -571,10 +573,13 @@ void main() {
   albedo *= mix(vec3(1.0, 0.8, 0.62), vec3(1.0), smoothstep(0.6, 0.9, uTint));
   // Fingers of hide, not horn: the brown of the animal, and the red of the liquid mud where they carry it.
   float wade = 1.0 - smoothstep(0.6, 0.9, uTint);
-  albedo = mix(albedo, mix(vec3(0.165, 0.127, 0.088) * (0.6 + 0.6 * groove) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.058, 0.026, 0.017) * (0.75 + 0.6 * groove), wet), wade);
+  // (Paler than the wet hide they hang from, ringed where they grew and grooved along; the mud they stand in is on the last third.)
+  float grown = 0.5 + 0.5 * sin(s * 34.0 + vLook.z * 40.0);
+  albedo = mix(albedo, mix(vec3(0.19, 0.142, 0.108) * (0.5 + 0.55 * groove + 0.3 * ring) * (0.72 + 0.28 * grown) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.058, 0.026, 0.017) * (0.75 + 0.6 * groove), wet), wade);
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   // (On one that wades they are wet with mud, not with water: no white sheen stands on them.)
   float rough = mix(0.95, mix(0.9, mix(0.93, 0.58, smoothstep(0.6, 0.9, uTint)), clamp(groove * ring * 2.0, 0.0, 1.0)), wet);
+  rough = mix(rough, 0.62, 0.6 * wade);
   rough = mix(rough, 1.0, wade * 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.0));
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   // The head stands over them and shuts off most of the sky: darkest at the lip, more open toward the tips.
@@ -584,8 +589,9 @@ void main() {
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
-const FEELER_RINGS = 14;
-const FEELER_SIDES = 9;
+// (Enough rings for the bend of one near the lens to be a curve and for the growth rings to stand in its outline.)
+const FEELER_RINGS = 36;
+const FEELER_SIDES = 12;
 let feelerTube: THREE.BufferGeometry | null = null;
 function tube(): THREE.BufferGeometry {
   if (feelerTube) return feelerTube;
