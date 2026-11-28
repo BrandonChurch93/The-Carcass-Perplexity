@@ -27,16 +27,16 @@ const CLUSTERS: [number, number, number, number][] = [
 ];
 /** The faintest star drawn and the brightest, as the peak radiance of its point at 3840 wide. */
 const FAINTEST = 0.0035;
-const BRIGHTEST = 6;
+const BRIGHTEST = 9;
 /** Stars to a square half height of sky that stand out alone, at RICH 1. */
 const BRIGHT = 100;
 /** Five set by hand in the corner the day shows, so that the small wedge of sky reads as sky at once: where, and how bright. */
 const FIRST: [number, number, number][] = [
-  [-1.72, -0.87, 5],
-  [-1.56, -0.775, 3.2],
-  [-1.22, -0.955, 6],
-  [-1.06, -0.99, 2.6],
-  [-1.47, -0.985, 2.2],
+  [-1.72, -0.87, 8],
+  [-1.56, -0.775, 6],
+  [-1.22, -0.955, 9],
+  [-1.06, -0.985, 5],
+  [-1.47, -0.975, 4.5],
 ];
 
 /** A number from 0 to 1 that depends only on the index and the channel. */
@@ -104,10 +104,11 @@ void main() {
   float sigma = max(aTint.a * scale, 0.62);
   float peak = position.z * (aTint.a * scale / sigma) * (aTint.a * scale / sigma);
   // (The camera is closed down for the day; as the light goes it opens, and the faint stars come out. They go out with the picture.)
-  float open = uDusk > 0.0 ? pow(uGain, 0.36) * mix(0.3, 1.0, uEmber.w) : 1.0;
+  float open = uDusk > 0.0 ? pow(uGain, 0.42) * mix(0.3, 1.0, uEmber.w) : 1.0;
   // (However far the camera opens, a bright star stays a point: its light is held under a ceiling, so it never swells to a disc.)
-  // (The wider a point is drawn the lower its ceiling: the wide ones are soft and coloured, the tight ones hard and white.)
-  float ceiling = 2.2 / (aTint.a * aTint.a);
+  // (The wider a point is drawn the lower its ceiling: the wide ones are soft and coloured, the tight ones hard and white. The
+  // ceiling is set so that the brightest still read as points when the picture is shown a quarter of its size.)
+  float ceiling = 6.0 / (aTint.a * aTint.a);
   float held = ceiling * (1.0 - exp(-peak * open / ceiling));
   vStar = tint * held * seen * (1.0 - uSolo);
   gl_PointSize = ceil(6.0 * sigma) + 1.0;
@@ -204,7 +205,7 @@ export function createSpace(ctx: Context, space: THREE.Mesh): { geometry: THREE.
     }
   }
   // And a few that the eye finds first, alone in the field: they are what is left of the sky on a small screen.
-  for (let k = 0; k < Math.round(BRIGHT * Math.sqrt(RICH) * SIDE * SIDE); k++, n++) put((hash(n, 0) - 0.5) * SIDE, (hash(n, 1) - 0.5) * SIDE, n, 0.8 * Math.pow(BRIGHTEST / 0.8, hash(n, 3)));
+  for (let k = 0; k < Math.round(BRIGHT * Math.sqrt(RICH) * SIDE * SIDE); k++, n++) put((hash(n, 0) - 0.5) * SIDE, (hash(n, 1) - 0.5) * SIDE, n, 1.5 * Math.pow(BRIGHTEST / 1.5, hash(n, 3)));
   for (const [x, y, peak] of FIRST) put(x, y, n++, peak);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(place, 3));
@@ -342,7 +343,7 @@ float layerOver(float x, float deep, float w) {
 // The dense air seen edge on, by day: a deep clear blue, never white.
 const vec3 LINE = vec3(0.035, 0.27, 1.0);
 // How bright the aurora stands, before the camera's exposure: an edge, not a show.
-const float AURORA = 0.003;
+const float AURORA = 0.0042;
 // The thin line the dense air still shows against the black by night, before the camera's exposure.
 const vec3 NIGHT_LINE = vec3(0.1, 0.32, 1.0) * 0.0042;
 `;
@@ -387,18 +388,18 @@ void main() {
     vec2 away = vWorld.xz - uLimb.xy;
     float along = atan(away.y, away.x) * uLimb.z / 100.0;
     float fold = vnoise(vec2(along * 0.8 - uTime * 0.06, 3.0 + uTime * 0.03));
-    float rays = 0.7 + 0.3 * vnoise(vec2(along * 8.0 - uTime * 0.4, 11.0));
+    float rays = 0.45 + 0.55 * vnoise(vec2(along * 9.0 - uTime * 0.4, 11.0));
     // (Rays finer than the picture can hold are drawn as their mean.)
-    rays = mix(0.85, rays, 1.0 - smoothstep(4.0, 11.0, w));
+    rays = mix(0.725, rays, 1.0 - smoothstep(4.0, 11.0, w));
     float over = km - 100.0 - 34.0 * (vnoise(vec2(along * 0.3 + uTime * 0.04, 7.0)) - 0.5);
-    float curtain = smoothstep(-5.0 - w, 5.0 + w, over) * exp(-max(over, 0.0) / mix(45.0, 95.0, rays)) * rays * smoothstep(0.38, 0.7, fold);
+    float curtain = smoothstep(-5.0 - w, 5.0 + w, over) * exp(-max(over, 0.0) / mix(40.0, 130.0, rays * rays)) * rays * smoothstep(0.3, 0.62, fold);
     float deep = (1.0 - smoothstep(-0.34, -0.12, sunH)) * smoothstep(0.45, 1.0, uDusk);
     high += mix(vec3(0.2, 1.0, 0.45), vec3(0.8, 0.12, 0.3), smoothstep(30.0, 150.0, over)) * AURORA * curtain * deep;
     colour = exposed(arc * uEmber.w * pow(uGain, -0.88) + (vec3(0.2, 0.36, 0.8) * 0.0011 * airglow + (high + NIGHT_LINE * layerOver(km, 6.0, w)) * mix(0.35, 1.0, uEmber.w)) * uDusk * a);
   }
   // (By day the camera is closed down and the band is all but lost; as it opens the band comes up, and it goes out with the picture.
   // The air at the edge hides it as it hides the stars.)
-  float open = uDusk > 0.0 ? pow(uGain, 0.55) * mix(0.3, 1.0, uEmber.w) : 1.0;
+  float open = uDusk > 0.0 ? pow(uGain, 0.55) * mix(0.5, 1.0, uEmber.w) : 1.0;
   // (Its colour is held back: the far crowd is pale, warm only at its core.)
   band = mix(vec3(dot(band, vec3(0.3, 0.5, 0.2))) * vec3(0.82, 0.95, 1.22), band, 0.3);
   colour += band * 0.021 * open * smoothstep(16.0, 90.0, km);
