@@ -3,8 +3,7 @@
 // rises the planet's edge draws back over them, and they turn only with the camera. The band and the moon stand with them.
 // A place in the sky is given in the sky's own measure: x to the right and y down the master picture, in half heights of the view.
 import * as THREE from 'three';
-import { FPS } from '../../../config';
-import { FILM_ASPECT, HALF_TAN, KM, LIMB, LIMB_FOLLOW, RISE_FIRST, RISE_LAST, X, Z, driftAt, poseAt } from '../shared/anchors';
+import { FILM_ASPECT, HALF_TAN, KM, LIMB, LIMB_FOLLOW, RISE_LAST, X, Z, driftAt, poseAt } from '../shared/anchors';
 import type { Context } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { BAND_CELLS } from './space-band';
@@ -18,14 +17,10 @@ const FIELD = 9000;
 const BAND = { x: -1.0, y: -0.93, alongX: 0.834, alongY: -0.551, more: 8 };
 /** Its picture (sky/space-band.jpg, 1216 x 320): where the picture begins along the band, how long and how wide it lies, half heights. */
 const BAND_LIES = { from: -1.08, long: 1.92, wide: 0.5, texels: 640 };
-/** The moon: where it stands in the sky, and how wide it is in pixels of a picture 3840 wide: by day, when the sky is a small wedge
- * over the edge, and late, when the sky is a fifth of the picture. It grows from the one to the other as slowly as the camera rises
- * (less than a pixel in ten frames), so that it is a disc on a small screen where there is room for one. */
-const MOON = { x: -1.38, y: -0.93 };
-const MOON_WIDE: number = 96;
-const MOON_LATE: number = 156;
-/** The seconds of the place between which it grows: frames 10027 and 11100. */
-const MOON_GROWS = [(10027 - RISE_FIRST) / FPS, (11100 - RISE_FIRST) / FPS];
+/** The moon: where it stands in the sky, and how wide it is in pixels of a picture 3840 wide. One size from the first frame to the
+ * last: as wide as the wedge of sky at 10027 holds clear of the edge and of the frame, so that it is a disc on a small screen too. */
+const MOON = { x: -1.38, y: -0.911 };
+const MOON_WIDE: number = 140;
 /** Two loose clusters: where, how wide (half heights), how many stars. */
 const CLUSTERS: [number, number, number, number][] = [
   [-1.63, -0.925, 0.022, 70],
@@ -247,10 +242,9 @@ export function createSpace(ctx: Context, space: THREE.Mesh): { geometry: THREE.
 
   // The moon: a small disc in front of the stars, lit by the scene's own sun.
   const moonRadius = MOON_WIDE / 2160;
-  const moonLate = MOON_LATE / 2160;
   const moonGeometry = new THREE.PlaneGeometry(2, 2);
   const moonMaterial = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, uSky: { value: sky }, uMoon: { value: new THREE.Vector4(MOON.x, MOON.y, moonRadius, moonLate) }, uMoonGrows: { value: new THREE.Vector2(MOON_GROWS[0], MOON_GROWS[1]) }, uMoonMap: { value: ctx.assets.texture('sky/space-moon.png', { kind: 'data', repeat: false }) } },
+    uniforms: { ...ctx.rig.uniforms, uSky: { value: sky }, uMoon: { value: new THREE.Vector3(MOON.x, MOON.y, moonRadius) }, uMoonMap: { value: ctx.assets.texture('sky/space-moon.png', { kind: 'data', repeat: false }) } },
     vertexShader: MOON_VERTEX,
     fragmentShader: MOON_FRAGMENT,
     transparent: true,
@@ -289,31 +283,27 @@ export function createSpace(ctx: Context, space: THREE.Mesh): { geometry: THREE.
 // under it thins to a crescent. Its dark side is black: it only hides the stars behind it.
 const MOON_VERTEX = /* glsl */ `
 uniform vec4 uSky;
-uniform vec4 uMoon;
-uniform vec2 uMoonGrows;
-uniform float uTime;
+uniform vec3 uMoon;
 varying vec2 vDisc;
 varying vec2 vOver;
-varying float vRadius;
 void main() {
   vDisc = position.xy * 1.06;
-  vRadius = mix(uMoon.z, uMoon.w, smoothstep(uMoonGrows.x, uMoonGrows.y, uTime));
-  vOver = uSky.xy + (uMoon.xy + vDisc * vRadius) * uSky.z;
+  vOver = uSky.xy + (uMoon.xy + vDisc * uMoon.z) * uSky.z;
   gl_Position = projectionMatrix * viewMatrix * vec4(vOver.x, 12.0, vOver.y, 1.0);
 }`;
 
 const MOON_FRAGMENT = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 uniform vec4 uSky;
+uniform vec3 uMoon;
 uniform sampler2D uMoonMap;
 varying vec2 vDisc;
 varying vec2 vOver;
-varying float vRadius;
 void main() {
   float r = length(vDisc);
   // (The rim of the disc is softened over a pixel of this picture. And the moon is behind the planet: it is not there where the
   // planet or its lit air stands before it, as the stars are not.)
-  float pixel = 1.0 / (vRadius * uSky.w);
+  float pixel = 1.0 / (uMoon.z * uSky.w);
   float km = (length(vOver - uLimb.xy) * uLimb.w - 1.0) * uLimb.z;
   float a = (1.0 - smoothstep(1.0 - pixel, 1.0 + pixel, r)) * smoothstep(16.0, 90.0, km);
   vec3 face = textureLod(uMoonMap, vDisc * (252.0 / 512.0) + 0.5, max(log2(252.0 * pixel), 0.0)).rgb;
@@ -329,8 +319,9 @@ void main() {
   float shade = max(mix(lit, 2.0 * lit / (lit + max(pz, 0.08)), 0.6) + 1.25 * (max(dot(ground, sun), 0.0) - lit), 0.0) * smoothstep(-0.03, 0.1, dot(ball, sun));
   // (The camera opens as the light goes, and the lit part of the moon brightens with it, held short of white. It goes out with the picture.)
   float open = uDusk > 0.0 ? pow(uGain, 0.3) * mix(0.45, 1.0, uEmber.w) : 1.0;
-  // (Its dark side is not quite black: the planet's day lights it faintly and blue, so the whole disc is read against the stars.)
-  vec3 colour = (vec3(1.0, 0.97, 0.92) * shade * 0.42 * open + vec3(0.42, 0.6, 1.0) * 0.011 * (0.4 + 0.6 * pz)) * face.r;
+  // (Its dark side is not quite black: the planet lights it faintly and blue, more while the planet's day faces it, so the whole
+  // disc is read against the stars and it is a ball and not a chip.)
+  vec3 colour = (vec3(1.0, 0.97, 0.92) * shade * 0.42 * open + vec3(0.42, 0.6, 1.0) * mix(0.026, 0.011, uDusk) * (0.4 + 0.6 * pz)) * face.r;
   gl_FragColor = vec4(colour * a * (1.0 - uSolo), a * (1.0 - uSolo));
 }`;
 
@@ -410,10 +401,11 @@ void main() {
   }
   // (By day the camera is closed down and the band is all but lost; as it opens the band comes up, and it goes out with the picture.
   // The air at the edge hides it as it hides the stars.)
-  float open = uDusk > 0.0 ? pow(uGain, 0.5) * mix(0.65, 1.0, uEmber.w) : 1.0;
+  float open = uDusk > 0.0 ? pow(uGain, 0.5) * mix(0.9, 1.0, uEmber.w) : 1.0;
   // (Its colour is held back: the far crowd is pale, warm only at its core.)
   band = mix(vec3(dot(band, vec3(0.3, 0.5, 0.2))) * vec3(0.82, 0.95, 1.22), band, 0.3);
-  colour += band * 0.026 * open * smoothstep(16.0, 90.0, km);
+  // (And its far arm is lifted toward its core, so that it is one long band across the corner and not a patch.)
+  colour += band * 0.026 * open * mix(1.0, 1.9, smoothstep(0.3, 0.7, lies.x)) * smoothstep(16.0, 90.0, km);
   gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
 }`;
 
