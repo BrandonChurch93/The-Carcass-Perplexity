@@ -103,7 +103,7 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
   const strip = lockGeometry(5);
   // The dead one's coat is seen from three metres: every lock of it is drawn as its hairs.
-  const hairs = strandGeometry(6, 5);
+  const hairs = strandGeometry(6, 8);
   const tendril = tendrilGeometry();
   // The dead one's are seen close: round, and bent in many places.
   const tendrilFine = tendrilGeometry(10, 44);
@@ -168,7 +168,7 @@ export function create(ctx: Context): Piece {
       uFace: { value: new THREE.Vector4(j.face[0], j.face[1], j.face[2], 0) },
       uLead: { value: new THREE.Vector4(j.lead[0], j.lead[1], j.lead[2], 0) },
       uWrithe: { value: writhe },
-      uStrand: { value: new THREE.Vector4(0.1, 1.0, 0.3, 0.5) },
+      uStrand: { value: new THREE.Vector4(0.1, 1.0, 0.16, 0.4) },
     };
     const group = new THREE.Group();
     const hide = new THREE.ShaderMaterial({ vertexShader: SKIN_VERTEX, fragmentShader: SKIN_FRAGMENT, uniforms: shared });
@@ -663,11 +663,12 @@ export function create(ctx: Context): Piece {
       ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, mid[0], mid[2], 0.6 * dead.role.size, 0.75, 2.0, -DEAD_HEADING * RAD);
       // And where its weight is on the snow the shade is close and dark: under the trunk, under the head and its tendrils, under the limbs
       // that lie toward the lens.
-      ctx.rig.setDisc(discs, DEAD_DISC, mid[0], mid[2], 0.27 * dead.role.size, 1, 2.7, -DEAD_HEADING * RAD);
+      ctx.rig.setDisc(discs, DEAD_DISC, mid[0], mid[2], 0.24 * dead.role.size, 0.8, 2.7, -DEAD_HEADING * RAD);
       const brow = step(BODY_AT, DEAD_HEADING, 1.3 * dead.role.size);
       ctx.rig.setDisc(discs, DEAD_DISC + 1, brow[0], brow[2], 0.3 * dead.role.size, 0.85, 1.5, -DEAD_HEADING * RAD);
-      const limbs = step(mid, carcassView, -0.42 * dead.role.size);
-      ctx.rig.setDisc(discs, DEAD_DISC + 2, limbs[0], limbs[2], 0.24 * dead.role.size, 0.9, 2.6, -DEAD_HEADING * RAD);
+      // Toward the lens the coat lies out over the snow: the shade there is under it, and no black band stands between belly and snow.
+      const limbs = step(mid, carcassView, -0.3 * dead.role.size);
+      ctx.rig.setDisc(discs, DEAD_DISC + 2, limbs[0], limbs[2], 0.18 * dead.role.size, 0.5, 2.6, -DEAD_HEADING * RAD);
     },
   };
 }

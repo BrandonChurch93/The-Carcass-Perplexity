@@ -81,6 +81,8 @@ export const SKIN_VERTEX = /* glsl */ `
 attribute vec3 aBones;
 attribute float aKind;
 ${BONES_GLSL}
+${BURN_GLSL}
+uniform float uWhole;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
@@ -89,8 +91,14 @@ flat varying float vKind;
 void main() {
   mat4 bone = boneOf(aBones);
   vec4 w = modelMatrix * bone * vec4(position, 1.0);
-  vWorld = w.xyz;
   vNormal = normalize(mat3(modelMatrix) * mat3(bone) * normal);
+  // The dead one's wound is a hollow in its flank, not a mark on it: the hide is gone there and the lens looks into the body.
+  if (uWhole > 0.5 && aKind < 1.5) {
+    float into = burnAt(position) + 0.5 * smoothstep(0.45, 1.0, length(position - uBurn.xyz) / uBurn.w);
+    float sink = 1.0 - smoothstep(0.25, 0.85, into);
+    w.xyz -= vNormal * (0.05 * length(modelMatrix[0].xyz) * sink * sink * (3.0 - 2.0 * sink));
+  }
+  vWorld = w.xyz;
   vRest = position;
   vRestNormal = normal;
   vKind = aKind;
@@ -127,6 +135,9 @@ void main() {
   vec2 burnUv = 0.5 + vec2(dot(fromBurn, uBurnU), dot(fromBurn, uBurnV)) / (max(uBurn.w, 0.001) * 2.3);
   vec2 burnDx = dFdx(burnUv);
   vec2 burnDy = dFdy(burnUv);
+  // The way the surface itself faces, hollow and all.
+  vec3 faceRaw = cross(dFdx(vWorld), dFdy(vWorld));
+  vec3 faceN = faceRaw / max(length(faceRaw), 1e-9);
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   // The close coat under the locks, from the picture of the coat, laid by place on three axes so that it is pulled long nowhere.
@@ -225,14 +236,23 @@ void main() {
       // The meat is the picture's own raw hide, seen nearer: its fibres run down the split.
       vec3 near = textureGrad(tBurn, 0.5 + (uv - 0.5) * vec2(3.1, 1.3), burnDx * vec2(3.1, 1.3), burnDy * vec2(3.1, 1.3)).rgb;
       float fibre = vnoise3(vRest * vec3(160.0, 22.0, 160.0));
-      vec3 meat = mix(vec3(0.2, 0.075, 0.06), vec3(0.06, 0.022, 0.02), smoothstep(0.25, 0.75, 0.6 * fibre + 0.4 * vnoise3(vRest * 44.0))) * min(0.45 + 3.0 * dot(near, vec3(0.333)), 1.05);
-      albedo = mix(albedo, (vec3(0.012, 0.01, 0.009) + 0.03 * grain) * (0.5 + 1.2 * vnoise3(vRest * 70.0)), 0.7 * lips);
+      // What is in it: dark wet tissue, nearly black in its depth, a dull red only where a fibre stands up into the light; and ice,
+      // where what ran out of it froze: grey glaze in patches, and hoar on its upper lip.
+      float deep = 1.0 - smoothstep(0.1, 0.45, ragged);
+      float lump = vnoise3(vRest * 44.0);
+      vec3 meat = mix(vec3(0.2, 0.042, 0.034), vec3(0.045, 0.014, 0.012), smoothstep(0.25, 0.75, 0.6 * fibre + 0.4 * lump)) * min(0.5 + 2.4 * dot(near, vec3(0.333)), 1.1) * mix(1.0, 0.5, deep);
+      float glaze = smoothstep(0.58, 0.78, vnoise3(vRest * 21.0 + 3.0) + 0.25 * (vnoise3(vRest * 120.0) - 0.5));
+      float hoar = smoothstep(0.55, 0.8, vnoise3(vRest * 260.0) + 0.5 * glaze - 0.25) * glaze;
+      meat = mix(meat, vec3(0.2, 0.2, 0.22) * (0.5 + 0.8 * lump), 0.55 * glaze);
+      meat = mix(meat, vec3(0.42, 0.45, 0.5), 0.55 * hoar);
+      albedo = mix(albedo, (vec3(0.02, 0.015, 0.013) + 0.05 * grain) * (0.5 + 1.2 * vnoise3(vRest * 70.0)), 0.8 * lips);
       albedo = mix(albedo, meat, core);
-      rough = mix(rough, 0.34, core);
+      rough = mix(rough, mix(0.22, 0.12, glaze) + 0.5 * hoar, core);
       rough = mix(rough, 0.8, lips * (1.0 - core));
-      occ = mix(occ, 0.5, core);
-      // The meat lies under the lips of the hide.
-      n = normalize(n + 0.7 * core * vec3(vnoise3(vRest * 60.0) - 0.5, 0.0, vnoise3(vRest * 60.0 + 9.0) - 0.5));
+      occ = mix(occ, mix(0.8, 0.45, deep), core);
+      // The meat lies under the lips of the hide: lit as the hollow faces, its fibres standing in it.
+      vec3 inN = dot(faceN, toCamera) < 0.0 ? -faceN : faceN;
+      n = normalize(mix(n, inN, 0.45 * max(core, 0.6 * lips)) + 0.55 * core * vec3(vnoise3(vRest * 60.0) - 0.5, 0.35 * (fibre - 0.5), vnoise3(vRest * 60.0 + 9.0) - 0.5));
     }
   }
   // A limb that lies against the split is singed as the flank is: no pale hide stands beside the wound.
@@ -473,7 +493,7 @@ void main() {
   e.y = max(e.y, groundY(e) + 0.012);
   // Each hair has its own length; a few are long and stand off the lock.
   float stray = step(0.86, hairOut);
-  float reach = mix(0.62, 1.0, hairLong) * (1.0 + 0.12 * stray);
+  float reach = mix(0.5, 1.0, hairLong) * (1.0 + 0.12 * stray);
   float t = position.y * reach;
   vec3 p = mix(mix(r, c, t), mix(c, e, t), t);
   vec3 way = normalize(mix(c - r, e - c, t) + vec3(0.0, 1e-5, 0.0));
@@ -490,26 +510,34 @@ void main() {
   float bendB = sin(t * (7.0 + 6.0 * fract(hair * 5.9)) + hair * 71.0 + seed * 23.0);
   float lockKink = sin(t * (4.0 + 5.0 * fract(seed * 3.3)) + seed * 40.0) + 0.5 * sin(t * (11.0 + 6.0 * fract(seed * 5.9)) + seed * 71.0);
   float wander = uStrand.w * w * t * (1.0 + 1.5 * stray);
-  p += side * (cos(ang) * rad * together + 0.55 * w * lockKink * t + wander * (bendA + 0.4 * bendB))
+  // And crimped, as a matted coat is: short waves down its length, its own.
+  float crimp = 0.22 * w * smoothstep(0.05, 0.4, t) * sin(t * (23.0 + 14.0 * fract(hair * 8.3 + seed)) + hair * 90.0 + seed * 31.0);
+  p += side * (cos(ang) * rad * together + 0.55 * w * lockKink * t + wander * (bendA + 0.4 * bendB) + crimp)
      + off * (sin(ang) * rad * together * 0.6 + wander * 0.6 * (bendB - 0.3 * bendA) + 0.5 * w * stray * t);
   // How broad it is: it thins to its end, and is never finer than a pixel of the film.
   float far = length(cameraPosition - p);
   float pixel = 2.0 * far / (projectionMatrix[1][1] * 1080.0);
   float taper = 1.0 - smoothstep(0.55, 1.0, position.y);
-  float own = uStrand.x * w * (0.7 + 0.6 * fract(hair * 7.7)) * (0.25 + 0.75 * taper);
+  // How much this lock is frosted: it looks up, and it is on the weather side. Rime is not paint on a hair: it stands on it, in
+  // clots, and the hair is that much the thicker under it.
+  float outline = pow(max(1.0 - abs(dot(nb, toCamera)), 0.0), 3.0) * (1.0 - uDoor.w);
+  float up = nb.y - 0.7 * outline;
+  float rimed = smoothstep(0.7, 1.2, up + uCoat.w + 0.7 * (min(aCard.z, 1.0) - 0.5)) * aCard.w;
+  float clot = rimed * step(0.45, fract(hair * 5.1 + seed * 2.3)) * smoothstep(0.2, 0.5, t) * (0.6 + 0.4 * sin(t * (17.0 + 9.0 * fract(hair * 2.9)) + hair * 50.0));
+  float own = uStrand.x * w * (0.7 + 0.6 * fract(hair * 7.7)) * (0.25 + 0.75 * taper) * (1.0 + 1.5 * max(clot, 0.0));
   float drawn = max(own, 0.75 * pixel);
   p += side * (position.x * drawn);
   // Hair takes light from all round: it is lit as something between its lock's way out of the body and the open sky, and each hair
   // a little its own way.
   vec3 n = normalize(nb + vec3(0.0, 0.3, 0.0) + side * (0.3 * cos(ang)) + toCamera * 0.2);
-  float occ = mix(0.12 + 0.43 * uDoor.w, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77)) * (0.82 + 0.36 * fract(hair * 9.1));
+  float occ = mix(0.34 + 0.2 * uDoor.w, 1.0, smoothstep(0.0, 0.7, t)) * (0.7 + 0.5 * fract(seed * 3.77)) * (0.82 + 0.36 * fract(hair * 9.1));
   vec3 lit = runnerLight(p, n) / 3.14159;
   vLight = lit * occ;
   vFrostLight = lit * (uLockKind > 0.5 ? 1.1 : 1.25);
   // x across the strand, y along the lock, z the hair's own number, w how much of the pixel it fills.
   vAt = vec4(position.x, t, fract(hair * 13.7 + seed), clamp(own / drawn, 0.0, 1.0) * (1.0 - smoothstep(0.93, 1.0, position.y)));
-  float outline = pow(max(1.0 - abs(dot(nb, toCamera)), 0.0), 3.0) * (1.0 - uDoor.w);
-  vInfo = vec4(aCard.z, position.y, nb.y - 0.7 * outline, aCard.w);
+  // The loose hairs that stand off the coat where it looks up are hoar from their middle: the outline bristles white.
+  vInfo = vec4(max(aCard.z, 2.2 * stray * step(0.15, up) * step(0.3, fract(hair * 3.7 + seed))), position.y, up, aCard.w);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
@@ -532,15 +560,17 @@ void main() {
   float alpha = vAt.w * smoothstep(0.0, 0.55, 1.0 - abs(u));
   float singe = 1.0 - vInfo.w;
   // Cream, each hair its own shade; wet and dark toward the root, where the coat is matted, and paler at its dry end.
-  vec3 albedo = uTone.rgb * mix(vec3(0.56, 0.5, 0.44), vec3(0.96, 0.93, 0.88), smoothstep(0.0, 0.8, t)) * (0.62 + 0.6 * own);
-  albedo *= mix(uLockKind > 0.5 ? 0.62 : mix(0.45, 0.7, uWhole), 1.0, smoothstep(0.0, 0.55, t));
+  vec3 albedo = uTone.rgb * mix(vec3(0.74, 0.68, 0.6), vec3(1.0, 0.97, 0.92), smoothstep(0.0, 0.8, t)) * (0.8 + 0.5 * own);
+  albedo *= mix(uLockKind > 0.5 ? 0.62 : mix(0.45, 0.82, uWhole), 1.0, smoothstep(0.0, 0.55, t));
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
   vec3 c = albedo * vLight * (0.6 + 0.4 * round_);
   // Rime: on the hair that looks up it lies along the outer half; on the rest it sits at the ends. The clotted spikes round the burn
   // are white from their middle.
   float ring = smoothstep(0.02, 0.2, singe) * (1.0 - smoothstep(0.4, 0.75, singe));
   float frost = smoothstep(0.7, 1.2, vInfo.z + uCoat.w + 0.7 * (min(vInfo.x, 1.0) - 0.5) + 0.9 * ring);
-  float lies = frost * smoothstep(0.15, 0.6, t) * smoothstep(0.25, 0.75, own + 0.5 * frost);
+  // It is in grains along a hair, not a coat of paint on it.
+  float grains = 0.5 + 0.5 * sin(vInfo.y * (38.0 + 30.0 * own) + own * 90.0);
+  float lies = frost * smoothstep(0.12, 0.5, t) * smoothstep(0.2, 0.6, own + 0.6 * frost) * (0.45 + 0.55 * smoothstep(0.2, 0.7, grains));
   float bead = smoothstep(0.78, 0.97, vInfo.y) * step(0.35, fract(own * 7.7));
   float white = clamp(max(max(lies, 0.8 * bead) * (1.0 - singe), smoothstep(1.5, 2.0, vInfo.x) * smoothstep(0.15, 0.6, t)), 0.0, 1.0);
   c = mix(c, vec3(0.86, 0.89, 0.94) * vFrostLight * (0.75 + 0.25 * round_), white);
@@ -614,10 +644,14 @@ void main() {
   vec3 u = normalize(cross(way, abs(way.y) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0)));
   vec3 v = cross(way, u);
   vec3 ring = u * position.x + v * position.z;
-  vec3 p = centre + ring * r;
+  // The dead one's are not smooth: cords run down them as down a root, and rime stands on the side that looks up, in crusts.
+  float around = atan(position.z, position.x);
+  float cords = sin(around * 3.0 + t * (7.0 + 9.0 * fract(seed * 4.1)) + seed * 30.0) + 0.5 * sin(around * 5.0 - t * 13.0 + seed * 11.0);
+  float crust = max(ring.y, 0.0) * (0.5 + 0.5 * sin(t * (61.0 + 30.0 * fract(seed * 6.7)) + seed * 90.0) * sin(t * 23.0 + seed * 17.0)) * smoothstep(0.03, 0.15, t);
+  vec3 p = centre + ring * r * (1.0 + uWrithe.y * (0.17 * cords + 0.9 * crust));
   vWorld = p;
   vNormal = normalize(ring);
-  vAt = vec3(t, atan(position.z, position.x), seed);
+  vAt = vec3(t, around, seed);
   // Its light is worked out at its rings, not at every point of it: it is round and finely cut, and the light on it is broad.
   vec3 toCamera = normalize(cameraPosition - p);
   vLit = runnerLight(p, vNormal);
@@ -647,13 +681,16 @@ void main() {
   float crystals = vnoise3(vWorld * 520.0);
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
-  albedo = mix(albedo, vec3(0.05, 0.04, 0.038) * (0.4 + 1.0 * blotch) * (0.7 + 0.5 * rings), 0.9 * uWrithe.y);
-  rime = mix(rime, 0.55 * smoothstep(0.8, 1.0, n.y * 0.5 + 0.5 + 0.45 * (crystals - 0.5) + 0.25 * (vnoise3(vWorld * 45.0) - 0.5)), uWrithe.y);
+  // It is corded like a root: dark in the furrows between the cords, a dry grey on them.
+  float cords = sin(vAt.y * 3.0 + t * (7.0 + 9.0 * fract(vAt.z * 4.1)) + vAt.z * 30.0) + 0.5 * sin(vAt.y * 5.0 - t * 13.0 + vAt.z * 11.0);
+  float furrow = smoothstep(-0.9, 0.5, cords);
+  albedo = mix(albedo, mix(vec3(0.035, 0.028, 0.025), vec3(0.3, 0.26, 0.23), furrow) * (0.55 + 0.7 * blotch) * (0.75 + 0.4 * rings), 0.92 * uWrithe.y);
+  rime = mix(rime, 0.9 * smoothstep(0.66, 0.92, n.y * 0.5 + 0.5 + 0.4 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 45.0) - 0.5) + 0.1 * cords), uWrithe.y);
   // On a living one in the cold its own breath has frozen on them: they hang frosted, pale as the coat.
   rime = max(rime, (1.0 - uWrithe.y) * (0.45 + 0.4 * crystals));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, max(rime, 0.3 * uWrithe.y));
-  vec3 e = vLit * (0.55 + 0.45 * t);
+  vec3 e = vLit * (0.55 + 0.45 * t) * mix(1.0, 0.5 + 0.5 * furrow, uWrithe.y * (1.0 - rime));
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   c += (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough) * vGleam / 3.14159;
