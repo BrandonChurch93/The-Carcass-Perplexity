@@ -24,26 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 238, 2026-11-28 18:25 UTC:
+Status 239, 2026-11-28 18:46 UTC:
 
-- `01-s238-ribs-0m20-4k-half.jpg`: The Ribs at 0:20 (frame 1241), the whole frame at half size, 1920x1080: drawn by the Ribs' measurer on the film's picture code as it is now, at the final tier in 3840x2160, and brought to half size by the Builder. Seen by the Builder in two halves at this size before sending: a dark weed slope at the left under a pale banded cliff, a pale body hung on it with its ribs showing and a thread of water running down beside it; great pale rib arches rising from the sea into mist under a dark sky, small flyers around them; long-legged waders with orange-tan sails across a wide tidal flat, the nearest cut by the right edge; wet sand, foam lines, dark stones and brown weed mats in front. Faults that show at this size: the weed on the slope hangs as one combed coat of one length, the brown weed mats carry a fine regular wave pattern like a printed texture, the stones lie rather evenly and every rib carries the same fine lines. Not yet seen at full 4K size
-- `02-s238-ribs-0m25-4k-half.jpg`: The Ribs at 0:25 (frame 1546), the whole frame at half size, 1920x1080: drawn by the Ribs' measurer on the film's picture code as it is now, at the final tier in 3840x2160, and brought to half size by the Builder. Seen by the Builder in two halves at this size before sending: the roost, a stepped dark rock stack with orange-brown patches and pale streaks hanging from every ledge, some twenty or more pale winged animals perched on it, wings folded like fans, long necks ending in a fringe, two large ones with spread tan wings in front; at the left a huge pale banded rib leaning across the sky, flyers in the air, one large wing blurred by its motion, and dark hanging weed on the lowest ledges. Faults that show at this size: two far ribs at the left edge are flat blue cut-outs with hard edges, the rock is busy and grainy, the pale streaks repeat in one form everywhere, the wings are flat with painted stripes, pale smeared streaks lie on the lowest ledges at the right, and many animals of one kind sit in like poses, some hard to tell from the rock. Not yet seen at full 4K size
+- `01-s239-preview-07-sixteen.jpg`: Sixteen frames across Preview 07 with its words on screen, one sheet, 2560x1616: each frame cut by the Builder from the file that is sent, at its own size, 960x540, and brought to 640x360 for the sheet, under a label with its time and place. Top row: the opening at 0:03 and 0:12, the Ribs at 0:21 and at 0:34. Second row: the Heart at 0:46 and 0:51, the Breath at 1:15, the Blood Marsh at 1:39. Third row: the Blood Marsh at 1:46, the Spine at 2:00 and 2:07, the Eye at 2:23. Bottom row: the rise at 2:41, the titan frame at 2:47, the Reveal at 2:58 and the ending at 3:13. Seen by the Builder in eight crops at the sheet's own size before sending: every tile is the right place at the right time, none black, blank or torn; fourteen carry the words of the line due at that second, near white on a soft haze, blood red everywhere but at the Heart and the Blood Marsh, where the haze is dark ash and hardly shows; the two without words, 0:34 and 3:13, lie between lines and after the last. A fault shows at 0:21: a flat pale four-sided plate on the water at the lower right. Frames of a quick preview, not the finished picture
+- `02-s239-p07-titan-0247-words.jpg`: The titan frame at 2:47 in Preview 07 with its words on screen, one frame at its own size, 960x540, cut by the Builder from the file that is sent. Seen by the Builder at this size before sending: the whole body as a continent, the skull at the left with dark sockets, pale rib ridges, arms and legs spread, a red branching patch right of the middle; a teal ocean with many small clouds; other land at the top right, at the left edge and at the bottom left; a spiral storm at the bottom right; the planet's edge with a blue line of air at the top left, stars and a small grey moon beyond it; sun glare at the right edge. The words It was a stand low in the middle, near white on a blood-red haze, the last word still dim as it comes on. This is the Reveal with the work for note 30 in it. A frame of a quick preview, not the finished picture
+- `03-s239-p07-spine-0207-words.jpg`: The Spine at 2:07 in Preview 07 with its words on screen, one frame at its own size, 960x540, cut by the Builder from the file that is sent. Seen by the Builder at this size before sending: the dead furred body fills the front, pale tan fur with snow in it, an open dark red wound along its back, banded strands at its left end and dark claws at the lower right; behind it a snowy spire in cloud, far spires and a band of orange light at the right. The words Every night the lightning walks stand low in the middle, near white on a wide blood-red haze over the fur and the snow. They are easy to read in this frame; the haze is strong here and reads like blood under the words, which is noted beside the open point on the caption contrast at the Spine. A frame of a quick preview, not the finished picture
 
+Status 238, 2026-11-28 18:25 UTC, showed: The Ribs at 0:20 (frame 1241), the whole frame at half size, 1920x1080: drawn by the Ribs' measurer on the film's picture code as it is...
 Status 237, 2026-11-28 18:00 UTC, showed: The Ribs at 0:34 (frame 2081), the whole frame at half size, 1920x1080: drawn by the Ribs' measurer on the film's picture code as it is...
 Status 236, 2026-11-28 17:43 UTC, showed: The Ribs at 0:34 (frame 2081), 960x540: the first draw of this frame by the first hash prover, on the film's picture code as it is now, at...
-Status 235, 2026-11-28 17:21 UTC, showed: The Reveal at 2:42 (frame 9739) in four crops at full 4K size, cut by the Builder without resizing from the picture a helper drew at the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-28T18:25:50Z
-phase 6: 16.75 h used of 24.00 h
-build: 16.75 h used of 24.00 h
+2026-11-28T18:46:26Z
+phase 6: 17.10 h used of 24.00 h
+build: 17.10 h used of 24.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 25
+minutes since the last status: 21
 ```
 
 ## Phases
