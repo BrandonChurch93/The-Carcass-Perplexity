@@ -124,7 +124,7 @@ uniform sampler2D tSpireNh;
 uniform sampler2D tFace;
 uniform sampler2D tFaceH;
 // The part of the face photograph that is laid: its bare jointed rock, right of its rimed edge and under its burned top.
-const vec4 FACE_RECT = vec4(0.3, 0.0, 0.7, 0.68);
+const vec4 FACE_RECT = vec4(0.305, 0.01, 0.69, 0.665);
 uniform sampler2D tCrust;
 uniform sampler2D tCrustH;
 // The ground's photograph (mat/crustfield, 40 m by 22 m from straight above): the part of it that has no prints, 40 m by 14.5 m.
@@ -359,10 +359,9 @@ void main() {
   vec3 facet = normalize(cross(wX, wY));
   if (dot(facet, smoothN) < 0.0) facet = -facet;
   // (Only a little: the two triangles of every quad of the mesh lean two ways, and more of the facet would comb the face along their diagonals.)
-  // A spire's blocks are flat faces of whole quads (meshes.ts, jointing): its light is the face's own, so a block has edges. Far off, where a
-  // quad is no larger than a pixel, the round of the mesh stands in for it.
-  float flatFace = 0.55 * smoothstep(1.6, 0.5, length(fwidth(vWorld)) * uTall / 1080.0);
-  vec3 n0 = inside ? smoothN : normalize(mix(smoothN, facet, spire ? flatFace : 0.25 * clamp(vTop, 0.0, 1.0)));
+  // (A spire takes none of it: its blocks are slopes of the mesh (meshes.ts, spireMesh), and the triangle's own face there lit every
+  // block as a rectangle and its sides as shards.)
+  vec3 n0 = inside || spire ? smoothN : normalize(mix(smoothN, facet, 0.25 * clamp(vTop, 0.0, 1.0)));
 
   // The rock is read from the material pictures of the place, each at one size in metres whatever way the face looks: a picture is laid
   // on the two upright planes it can lie flat on and on the level one, and each face takes them by how squarely it looks at each. Nothing
@@ -461,7 +460,8 @@ void main() {
     if (spire) {
       // A spire's slabs stand metres out of its face, and the side of a slab looks another way than the face it stands on: each flat
       // of the rock takes the plane it is itself most square to, the level one too, so no slab's side is a picture pulled long.
-      vec3 nc = normalize(mix(smoothN, facet, 0.75));
+      // (By the round of the mesh: by the triangle's own face the planes changed along every edge of the mesh, in level and upright seams.)
+      vec3 nc = smoothN;
       vec3 wc = abs(vec3(dot(nc, ax), dot(nc, up), dot(nc, bx)));
       if (wc.y > max(wc.x, wc.z)) {
         atS = vec2(pa, pb) + 41.7;
