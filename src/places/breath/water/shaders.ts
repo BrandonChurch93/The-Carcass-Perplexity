@@ -149,6 +149,18 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   a04 *= 0.45 + 1.1 * bend1;
   a016 *= 0.45 + 1.1 * bend2;
   a008 *= 0.45 + 1.1 * bend2;
+  // Toward a bank, a bar or a shelf the ripples slow: their crests fall behind there and swing round to face it, and they shorten and
+  // stand up before the shelf takes them. Seen from the high view the margins are the busier, brighter water.
+  float shore = 1.0 - smoothstep(0.08, 0.6, around);
+  bent += uWind * (1.5 * shore / max(length(uWind), 1e-3));
+  float shoal = uHigh * shore;
+  a04 *= 1.0 + 0.9 * shoal;
+  a016 *= 1.0 + 1.4 * shoal;
+  a008 *= 1.0 + 1.4 * shoal;
+  // A film of water over a low shelf is not glass either: it runs in thin sheets, finely ruffled.
+  float thin = smoothstep(0.003, 0.012, depth) * (1.0 - smoothstep(0.03, 0.1, depth));
+  a016 += 0.03 * thin;
+  a008 += 0.06 * thin;
   float k5 = 1.0 - smoothstep(1.3, 5.3, foot);
   float k1 = 1.0 - smoothstep(0.36, 1.42, foot);
   float k04 = 1.0 - smoothstep(0.1, 0.42, foot);
@@ -226,19 +238,21 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // Near the lens the gold is in points: the smallest ripples, a thumb long, each turn a face to the sun for a moment. They are too small to
   // bend the mirror and are read for the sun alone.
   vec2 facet = slope;
+  float many = vnoise(xz * 2.3 - 0.9 * gone);
   float kPoint = 1.0 - smoothstep(0.004, 0.016, foot);
   // Read only where a facet could reach the sun's slope at all: a band is the dearest thing in this shader.
   vec2 miss0 = -slope - want;
   // Stirred water has many more of them and steeper: some face the sun from well off its path, so what stands or falls in the water is
   // ringed with lit points.
-  if (kPoint > 0.0 && dot(miss0, miss0) < 0.25 + 1.5 * stirred) facet += band(tRipple, xz, turned(uWind, 1.1), 0.33, 0.18, 14.0, stream, foot) * (4.0 * kPoint * (0.05 + 0.07 * gust + 0.45 * stirred) * deep);
+  if (kPoint > 0.0 && dot(miss0, miss0) < 0.25 + 1.5 * stirred) facet += band(tRipple, xz, turned(uWind, 1.1), 0.33, 0.18, 14.0, stream, foot) * (4.0 * kPoint * (0.05 + 0.07 * gust + 0.45 * stirred) * deep * (0.3 + 1.5 * many));
   vec2 miss = -facet - want;
-  float spread = 0.0022 + lost;
+  // Not every face is one size: here the water throws needle points, a pace on a broad soft flare, and the patches go with the wind.
+  float spread = (0.0022 + lost) * mix(0.5, 3.0, many * many);
   float faces = exp(-dot(miss, miss) / spread) / (3.14159 * spread);
   float hy2 = max(h.y * h.y, 0.01);
   float vh = clamp(dot(v, h), 0.0, 1.0);
   float glint = (0.02 + 0.98 * pow(1.0 - vh, 5.0)) * faces / (4.0 * max(v.y, 0.04) * hy2 * hy2);
-  mirror += uSunColour * vec3(1.0, 0.66, 0.3) * (min(glint, 11.0) * sunHere * (1.0 - hit));
+  mirror += uSunColour * vec3(1.0, 0.66, 0.3) * (min(glint, mix(5.0, 24.0, vnoise(xz * 7.0 + 1.3 * gone))) * sunHere * (1.0 - hit));
 
   // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
   float low = 1.0 - smoothstep(3.0, 7.0, cameraPosition.y - uSea);
