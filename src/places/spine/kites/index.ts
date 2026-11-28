@@ -165,7 +165,7 @@ vec3 kiteCentre(float d) {
   float k = 6.2832 / kWave;
   // Gusts go down the line at the wind's own speed and the waves swell where one passes: the outline is never the same a second later.
   float gust = 0.62 + 0.3 * sin(3.3 * (t - x / uWind.w) + kPhase * 4.0) + 0.2 * sin(1.9 * (t - x / uWind.w) + kPhase * 1.3);
-  float env = s * sqrt(s);
+  float env = s * sqrt(max(s, 0.0));
   // No two bow alike: each by its own amount, and each with one long slow bend of its own that travels down it.
   float ownAmp = 0.55 + 0.9 * fract(kSeed * 7.7);
   float amp = 0.05 * kBlade * uStageMore.w * gust * ownAmp;
@@ -205,7 +205,7 @@ float outline(float s, float sd) {
   float rise = smoothstep(0.0, 0.2 + 0.14 * h1, s);
   float tail = 1.0 - smoothstep(0.45 + 0.25 * h2, 1.0, s);
   float wander = 0.9 + 0.1 * sin(s * 7.0 + sd * 30.0);
-  return pow(rise, 1.3) * pow(tail, 0.85 + 0.6 * h3) * wander;
+  return pow(max(rise, 1e-6), 1.3) * pow(max(tail, 1e-6), 0.85 + 0.6 * h3) * wander;
 }
 float sWide;
 float sHalf;
@@ -262,9 +262,9 @@ void main() {
   vec3 pa = skinAt(s + ds, v);
   vec3 pb = skinAt(s, v + dv);
   vec3 p = skinAt(s, v);
-  vec3 n = cross(pa - p, pb - p) * (ds * dv);
+  vec3 n = cross(pa - p, pb - p) * sign(ds * dv);
   vWorld = p;
-  vNormal = normalize(n + vec3(0.0, 1e-9, 0.0));
+  vNormal = dot(n, n) > 1e-24 ? normalize(n) : vec3(0.0, 1.0, 0.0);
   vAt = vec4(s, v, s * kBlade, sHalf);
   vKite = vec4(kSeed, aSeed.z, smoothstep(200.0, 450.0, length(cameraPosition - aAnchor) * uReach), sWide / sHalf);
   vSkin = vec3(4.2 * kHalf, kBlade, outline(s, kSeed));
@@ -312,13 +312,14 @@ void main() {
   // Which way across the skin lies in the world, from how the point and v run over the screen.
   vec3 acrossWay = (dFdx(vWorld) * dFdy(s) - dFdy(vWorld) * dFdx(s)) * sign(dFdx(v) * dFdy(s) - dFdy(v) * dFdx(s));
   vec3 toCamera = normalize(cameraPosition - vWorld);
-  vec3 n = normalize(vNormal);
+  // A normal that came out nothing (two faces met in one pixel) looks at the lens: nothing here divides by nothing.
+  vec3 n = dot(vNormal, vNormal) > 1e-10 ? normalize(vNormal) : toCamera;
   // Creases: the skin is drawn long by the gale and wrinkles down its length, finely. The light catches along them.
   float broad = vnoise(q * vec2(1.1, 2.0) + seed);
   float crease = vnoise(vec2(q.x * 0.7 + seed * 3.0, v * 7.0 + 2.5 * broad));
   float creaseB = vnoise(vec2(q.x * 0.7 + seed * 3.0, (v + 0.06) * 7.0 + 2.5 * broad));
   float creaseOn = (1.0 - vKite.z) * (1.0 - smoothstep(0.02, 0.09, vW));
-  n = normalize(n - normalize(acrossWay + vec3(1e-9)) * ((creaseB - crease) * 2.2 * creaseOn));
+  n = normalize(n - (dot(acrossWay, acrossWay) > 1e-20 ? normalize(acrossWay) : vec3(0.0)) * ((creaseB - crease) * 2.2 * creaseOn));
   n *= dot(n, toCamera) < 0.0 ? -1.0 : 1.0;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   // How much of the fine work of the skin a pixel can hold: none far off.
@@ -376,11 +377,12 @@ void main() {
 
   // The sheen: the sky the skin gives back, most aslant. Its colour is the film's thickness and the angle, as on a soap film: violet,
   // rose and a pale green that slide over it as it turns, and only where the light catches.
-  float fres = 0.035 + 0.965 * pow(1.0 - nv, 5.0);
+  float aslant = clamp(1.0 - nv, 0.0, 1.0);
+  float fres = 0.035 + 0.965 * aslant * aslant * aslant * aslant * aslant;
   vec3 r = reflect(-toCamera, n);
   vec3 mirror = skyRadiance(normalize(r));
   mirror /= 1.0 + dot(mirror, vec3(0.3, 0.5, 0.2)) / 0.8;
-  float depth = (0.7 + 1.3 * broad + 0.5 * swell) * sqrt(1.0 - (1.0 - nv * nv) / 1.9);
+  float depth = (0.7 + 1.3 * broad + 0.5 * swell) * sqrt(max(1.0 - (1.0 - nv * nv) / 1.9, 0.0));
   vec3 pearl = 0.5 + 0.5 * cos(6.2832 * (depth * vec3(1.0, 1.22, 1.5) + vec3(0.0, 0.33, 0.6) + seed));
   pearl = mix(vec3(dot(pearl, vec3(0.34, 0.33, 0.33))), pearl, 0.5) * vec3(1.02, 0.84, 1.14) + 0.25;
   vec3 above = normalize(vec3(-0.45, 0.72, 0.5));
@@ -389,10 +391,10 @@ void main() {
   float ndh = clamp(dot(n, normalize(above + toCamera)), 0.0, 1.0);
   float ndw = clamp(dot(n, normalize(uWarmDir + vec3(0.0, 0.25, 0.0) + toCamera)), 0.0, 1.0);
   vec3 shine = mirror * fres * mix(vec3(1.0), pearl, 0.5 * uFilm.z)
-    + key * pearl * uFilm.z * (0.55 * pow(ndh, 9.0) + 0.3 * pow(1.0 - nv, 2.5))
+    + key * pearl * uFilm.z * (0.55 * pow(max(ndh, 1e-4), 9.0) + 0.3 * aslant * aslant * sqrt(aslant))
     + key * (0.3 * rolled * fine)
-    + key * uFilm.w * (1.6 * pow(ndh, 90.0) + 0.9 * pow(ndw, 60.0) * vec3(1.3, 0.9, 0.6))
-    + stroke * (0.2 * pow(1.0 - nv, 2.0) + 0.25 * pow(ndh, 9.0)) * mix(vec3(1.0), pearl, 0.4);
+    + key * uFilm.w * (1.6 * pow(max(ndh, 1e-4), 90.0) + 0.9 * pow(max(ndw, 1e-4), 60.0) * vec3(1.3, 0.9, 0.6))
+    + stroke * (0.2 * aslant * aslant + 0.25 * pow(max(ndh, 1e-4), 9.0)) * mix(vec3(1.0), pearl, 0.4);
   shine *= (1.0 - 0.5 * vFar) * (1.0 - 0.45 * uVeil);
   // The sheen is on the film, not in it: it shows at its full strength however thin the film.
   c = (c * cover + shine) / max(cover, 0.05);
@@ -438,7 +440,7 @@ void main() {
   float far = length(cameraPosition - c);
   // Sinew as thick as a wrist, lumped with ice, knotted where the skin grows from it.
   float lumps = 0.5 * smoothstep(0.45, 0.85, vnoise(vec2(d * 0.55, kSeed * 31.0))) + 0.22 * vnoise(vec2(d * 2.3, kSeed * 17.0));
-  float knot = (1.0 - kThread) * exp(-pow((d - kCord) / 0.6, 2.0));
+  float knot = (1.0 - kThread) * exp(-((d - kCord) / 0.6) * ((d - kCord) / 0.6));
   float r = mix(0.03, 0.02, kThread) * (1.0 + lumps + 2.6 * knot) * (1.0 + 1.6 * uStageMore.x);
   r *= kThread > 0.5 ? 1.0 - 0.85 * clamp(d / whole, 0.0, 1.0) : 1.0 - 0.9 * smoothstep(kCord + 0.4, whole, d);
   // The holdfast: the cord's own root, swollen where it grips the rock, knuckled, and a little of it inside the stone.
@@ -472,7 +474,7 @@ varying float vAcross;
 uniform float uInside;
 void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
-  vec3 n = normalize(vNormal);
+  vec3 n = normalize(vNormal + vec3(0.0, 1e-7, 0.0));
   float d = vAt.x;
   float seed = vKite.x * 97.0;
   // Twisted fibre, dark and wet, wound round itself at the knot.
@@ -525,7 +527,7 @@ void main() {
   if (fract(aIce.z * 7.7) < 0.45) len = 0.0;
   vec3 hang = normalize(vec3(0.05 * sin(uTime * 2.3 + aIce.z * 40.0), -1.0, 0.25 * uWind.z / max(uWind.w, 1.0) + 0.05 * sin(uTime * 1.9 + aIce.z * 70.0)));
   float t = position.y;
-  float girth = (len * 0.09 + 0.02 + 0.4 * uPixel * far) * step(0.001, len) * (1.0 - 0.85 * t) + 0.07 * len * exp(-pow((t - 0.93) / 0.06, 2.0));
+  float girth = (len * 0.09 + 0.02 + 0.4 * uPixel * far) * step(0.001, len) * (1.0 - 0.85 * t) + 0.07 * len * exp(-((t - 0.93) / 0.06) * ((t - 0.93) / 0.06));
   vec3 u = normalize(cross(hang, vec3(1.0, 0.0, 0.0)));
   vec3 w = cross(hang, u);
   vec3 ring = u * position.x + w * position.z;
@@ -598,7 +600,7 @@ varying vec3 vNormal;
 varying vec3 vPod;
 void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
-  vec3 n = normalize(vNormal);
+  vec3 n = normalize(vNormal + vec3(0.0, 1e-7, 0.0));
   float seed = vPod.z * 97.0;
   // The scales: five rows down it, each row set half a scale round from the last, every scale dark at its root under the one above
   // and worn pale at its lip.
