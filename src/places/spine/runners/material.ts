@@ -421,6 +421,134 @@ void main() {
   gl_FragColor = vec4(c * (1.0 - uSolo), alpha);
 }`;
 
+// The coat as hair: every lock is a handful of strands. Each strand leaves the hide at its own place round the lock's root, runs down
+// the lock's curve with its own bends, and is drawn toward the others at the end, as a wet coat mats: so a lock is a clump with loose
+// hairs round it and not a blade. A strand is never finer than a pixel of the film: finer, it is drawn a pixel wide and fainter.
+export const STRAND_VERTEX = /* glsl */ `
+attribute vec3 aRoot;
+attribute vec3 aCtrl;
+attribute vec3 aTip;
+attribute vec4 aCard;
+attribute vec4 aLockBones;
+attribute vec4 aStrand;
+${RIG_GLSL}
+${LIGHT_GLSL}
+${BONES_GLSL}
+uniform vec4 uCoat;
+uniform float uLockKind;
+uniform float uWhole;
+// x: how broad a strand is, as a share of its lock. y: how far the strands of a lock stand apart at the root, in locks' widths.
+// z: how much of that is left at the end. w: how much a strand wanders off its lock.
+uniform vec4 uStrand;
+varying vec3 vLight;
+varying vec3 vFrostLight;
+varying vec4 vAt;
+varying vec4 vInfo;
+void main() {
+  mat4 bone = modelMatrix * boneOf(aLockBones.xyz);
+  float size = length(modelMatrix[0].xyz);
+  vec3 r = (bone * vec4(aRoot, 1.0)).xyz;
+  vec3 c = (bone * vec4(aCtrl, 1.0)).xyz;
+  vec3 e = (bone * vec4(aTip, 1.0)).xyz;
+  float seed = aCard.y;
+  float hair = aStrand.x;
+  float hairAng = fract(aStrand.y + seed * 7.0);
+  float hairLong = fract(aStrand.z + seed * 3.1);
+  float hairOut = fract(aStrand.w + seed * 5.3);
+  float span = distance(r, e);
+  // The body under the lock, as the lens sees it: a lock on the side turned from the lens is behind the body and is not drawn.
+  vec3 nb = normalize(c - mix(r, e, 0.45) + vec3(0.0, 1e-4, 0.0));
+  if (dot(nb, normalize(cameraPosition - r)) < (uWhole > 0.5 ? -0.4 : -0.25)) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
+  // The wind in the coat: a gust is a front that crosses the animal, slowly; the coat lifts as it passes and falls back behind it, the
+  // end of a lock most, and each hair a moment after its lock. Nothing in it shakes of itself: with no gust the coat is still.
+  float front = max(0.0, sin(uTime * 1.7 - dot(r, uWind.xyz) * 1.4 + 0.8 * sin(uTime * 0.6) - 0.5 * hair));
+  float sway = sin(uTime * (1.3 + 0.9 * seed) + seed * 40.0 + 2.0 * hair);
+  float gust = 2.4 * front * front * (1.0 + 0.25 * sway) - 0.4 * front;
+  vec3 blow = (uWind.xyz * (0.2 * uCoat.y) + vec3(0.0, 0.05 * uCoat.y, 0.0) * sway) * gust;
+  e += blow * span;
+  c += blow * span * 0.35;
+  e.y = max(e.y, groundY(e) + 0.012);
+  // Each hair has its own length; a few are long and stand off the lock.
+  float stray = step(0.86, hairOut);
+  float reach = mix(0.62, 1.0, hairLong) * (1.0 + 0.12 * stray);
+  float t = position.y * reach;
+  vec3 p = mix(mix(r, c, t), mix(c, e, t), t);
+  vec3 way = normalize(mix(c - r, e - c, t) + vec3(0.0, 1e-5, 0.0));
+  vec3 toCamera = normalize(cameraPosition - p);
+  vec3 side = normalize(cross(way, toCamera));
+  vec3 off = normalize(cross(side, way));
+  float w = aCard.x * size * (1.0 - 0.38 * uLockKind);
+  // Round the root they stand apart, on a disc; toward the end they are drawn together, the strays less.
+  float ang = 6.2832 * hairAng;
+  float rad = sqrt(0.08 + 0.92 * hairOut) * uStrand.y * w;
+  float together = mix(1.0, mix(uStrand.z, 0.75, stray), smoothstep(0.0, 1.0, t));
+  // No hair is straight: each is bent its own way, more toward its end.
+  float bendA = sin(t * (3.0 + 5.0 * fract(hair * 3.3)) + hair * 40.0 + seed * 9.0);
+  float bendB = sin(t * (7.0 + 6.0 * fract(hair * 5.9)) + hair * 71.0 + seed * 23.0);
+  float lockKink = sin(t * (4.0 + 5.0 * fract(seed * 3.3)) + seed * 40.0) + 0.5 * sin(t * (11.0 + 6.0 * fract(seed * 5.9)) + seed * 71.0);
+  float wander = uStrand.w * w * t * (1.0 + 1.5 * stray);
+  p += side * (cos(ang) * rad * together + 0.55 * w * lockKink * t + wander * (bendA + 0.4 * bendB))
+     + off * (sin(ang) * rad * together * 0.6 + wander * 0.6 * (bendB - 0.3 * bendA) + 0.5 * w * stray * t);
+  // How broad it is: it thins to its end, and is never finer than a pixel of the film.
+  float far = length(cameraPosition - p);
+  float pixel = 2.0 * far / (projectionMatrix[1][1] * 1080.0);
+  float taper = 1.0 - smoothstep(0.55, 1.0, position.y);
+  float own = uStrand.x * w * (0.7 + 0.6 * fract(hair * 7.7)) * (0.25 + 0.75 * taper);
+  float drawn = max(own, 0.75 * pixel);
+  p += side * (position.x * drawn);
+  // Hair takes light from all round: it is lit as something between its lock's way out of the body and the open sky, and each hair
+  // a little its own way.
+  vec3 n = normalize(nb + vec3(0.0, 0.3, 0.0) + side * (0.3 * cos(ang)) + toCamera * 0.2);
+  float occ = mix(0.12 + 0.43 * uDoor.w, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77)) * (0.82 + 0.36 * fract(hair * 9.1));
+  vec3 lit = runnerLight(p, n) / 3.14159;
+  vLight = lit * occ;
+  vFrostLight = lit * (uLockKind > 0.5 ? 1.1 : 1.25);
+  // x across the strand, y along the lock, z the hair's own number, w how much of the pixel it fills.
+  vAt = vec4(position.x, t, fract(hair * 13.7 + seed), clamp(own / drawn, 0.0, 1.0) * (1.0 - smoothstep(0.93, 1.0, position.y)));
+  float outline = pow(max(1.0 - abs(dot(nb, toCamera)), 0.0), 3.0) * (1.0 - uDoor.w);
+  vInfo = vec4(aCard.z, position.y, nb.y - 0.7 * outline, aCard.w);
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`;
+
+export const STRAND_FRAGMENT = /* glsl */ `
+${RIG_UNIFORMS_GLSL}
+uniform float uLockKind;
+uniform float uWhole;
+uniform vec4 uTone;
+uniform vec4 uCoat;
+varying vec3 vLight;
+varying vec3 vFrostLight;
+varying vec4 vAt;
+varying vec4 vInfo;
+void main() {
+  float u = vAt.x;
+  float t = vAt.y;
+  float own = vAt.z;
+  // Round: lit across its middle, let go at its edges.
+  float round_ = sqrt(max(0.0, 1.0 - u * u));
+  float alpha = vAt.w * smoothstep(0.0, 0.55, 1.0 - abs(u));
+  float singe = 1.0 - vInfo.w;
+  // Cream, each hair its own shade; wet and dark toward the root, where the coat is matted, and paler at its dry end.
+  vec3 albedo = uTone.rgb * mix(vec3(0.56, 0.5, 0.44), vec3(0.96, 0.93, 0.88), smoothstep(0.0, 0.8, t)) * (0.62 + 0.6 * own);
+  albedo *= mix(uLockKind > 0.5 ? 0.62 : mix(0.45, 0.7, uWhole), 1.0, smoothstep(0.0, 0.55, t));
+  albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
+  vec3 c = albedo * vLight * (0.6 + 0.4 * round_);
+  // Rime: on the hair that looks up it lies along the outer half; on the rest it sits at the ends. The clotted spikes round the burn
+  // are white from their middle.
+  float ring = smoothstep(0.02, 0.2, singe) * (1.0 - smoothstep(0.4, 0.75, singe));
+  float frost = smoothstep(0.7, 1.2, vInfo.z + uCoat.w + 0.7 * (min(vInfo.x, 1.0) - 0.5) + 0.9 * ring);
+  float lies = frost * smoothstep(0.15, 0.6, t) * smoothstep(0.25, 0.75, own + 0.5 * frost);
+  float bead = smoothstep(0.78, 0.97, vInfo.y) * step(0.35, fract(own * 7.7));
+  float white = clamp(max(max(lies, 0.8 * bead) * (1.0 - singe), smoothstep(1.5, 2.0, vInfo.x) * smoothstep(0.15, 0.6, t)), 0.0, 1.0);
+  c = mix(c, vec3(0.86, 0.89, 0.94) * vFrostLight * (0.75 + 0.25 * round_), white);
+  if (alpha < 0.03) discard;
+  gl_FragColor = vec4(c * (1.0 - uSolo), alpha);
+}`;
+
+
 export const TENDRIL_VERTEX = /* glsl */ `
 attribute vec4 aHang;
 attribute vec4 aLimb;
