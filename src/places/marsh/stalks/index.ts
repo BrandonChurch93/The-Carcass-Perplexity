@@ -626,7 +626,7 @@ export function create(ctx: Context): Piece {
         matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 42 : d < 40 ? 15 : 6, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3.6 : 5.5);
       }
       wide.add(frondMesh(ctx, growth, creep, 2, { dry: true, small: true, low: true }));
-      wide.add(frondMesh(ctx, growth, nearF, 5), frondMesh(ctx, growth, midF, 4, { small: true }), frondMesh(ctx, growth, farF, 3, { dry: true, small: true }), frondMesh(ctx, growth, low, 2, { dry: true, small: true, low: true }), stands.group);
+      wide.add(frondMesh(ctx, growth, nearF, 5), frondMesh(ctx, growth, midF, 3, { small: true }), frondMesh(ctx, growth, farF, 2, { dry: true, small: true }), frondMesh(ctx, growth, low, 2, { dry: true, small: true, low: true }), stands.group);
     }
     wideShade = stands.shade;
     group.add(wide);

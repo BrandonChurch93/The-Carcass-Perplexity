@@ -566,7 +566,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
     const long = 0.5 * Math.pow(Math.min(w.h, 3.8), 0.85) * (0.8 + 0.45 * u) * share;
     const lop = Math.min(0.97, 0.66 + 0.26 * v + 0.2 * swept);
     const arch = 1.25 + 1.0 * ((w.seed * 41.3) % 1);
-    const strands = Math.round((fine >= 40 ? 170 : fine >= 28 ? 120 : fine >= 13 ? 84 : fine >= 5 ? 60 : 36) * (0.8 + 0.4 * q) * (1 - 0.4 * ragged) * (w.kind === 1 ? 0.5 : 1));
+    const strands = Math.round((fine >= 40 ? 170 : fine >= 28 ? 120 : fine >= 13 ? 72 : fine >= 5 ? 38 : 20) * (0.8 + 0.4 * q) * (1 - 0.4 * ragged) * (w.kind === 1 ? 0.5 : 1));
     const skirt = Math.min(0.75, 0.08 + 0.16 * ((w.seed * 53.9) % 1) + 0.6 * spent);
     // The head is a mop, not a crown: a short brush stands at its heart, and round and over it long strands leave in locks, go over
     // at once and hang by most of their length, most of them to the one side the head has gone over to. Under it, a skirt of spent ones.
@@ -586,7 +586,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
       const fall = sp ? rng.range(0.4, 1.2) : up ? 20 + rng.range(0.5, 1.7) : 2.75 - leave + rng.range(-0.3, 0.3);
       const length = long * (sp ? rng.range(0.4, 0.9) : up ? rng.range(0.28, 0.5 + 0.3 * u) : lock[2] * rng.range(0.4, 1.15)) * (1 - ragged * rng.range(0, 0.5));
       // The first strand of a head is the last to go when the head is thinned for distance: no head thins to nothing.
-      list.add(w, end, aim, az, leave, length, Math.min(0.026, Math.max(0.006, length * rng.range(0.018, 0.034))) * broad, rng.next(), fall + 10, sp, k === 0 ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
+      list.add(w, end, aim, az, leave, length, Math.min(0.026, Math.max(0.006, length * rng.range(0.018, 0.034))) * broad * (fine >= 13 ? 1 : 1.3), rng.next(), fall + 10, sp, k === 0 ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
     }
     return;
   }
