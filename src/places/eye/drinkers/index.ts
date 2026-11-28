@@ -507,9 +507,12 @@ export function create(ctx: Context): Piece {
       const isBody = (index: number): boolean => index < cast.length && shotOf(index) === running;
       let lap = cards.setTime(t, isBody);
       drips.begin();
+      // The two under the last camera stand with their legs under the frame's foot: the rings at them would be worked out over all the near
+      // water and never seen.
+      let unseen = false;
       const ring = (x: number, z: number, strength: number): void => {
         const slot = ctx.laps[lap];
-        if (!slot || strength <= 0) return;
+        if (unseen || !slot || strength <= 0) return;
         slot.x = x;
         slot.z = z;
         slot.strength = strength;
@@ -517,6 +520,7 @@ export function create(ctx: Context): Piece {
       };
       for (const g of drawn) {
         const d = g.animal;
+        unseen = d.level !== undefined;
         const bodies = isBody(g.index);
         g.mesh.visible = bodies;
         const size = d.build.size;
@@ -622,10 +626,11 @@ export function create(ctx: Context): Piece {
           if (wetAt(at[0], at[2]) && g.own.z < -0.02) ring(at[0], at[2], Math.max(0.4, Math.min(1.2, 9 * Math.max(stir, before))));
         }
       }
+      unseen = false;
       drips.end();
       // And a faint ring round every leg that stands in the lake: the animal breathes and shifts, and the water at its legs is never quite still.
       for (const g of drawn) {
-        if (!g.mesh.visible || g.own.z > -0.02 || g.index >= CLOSE) continue;
+        if (!g.mesh.visible || g.own.z > -0.02 || g.index >= CLOSE || g.animal.level !== undefined) continue;
         for (const h of g.solved.hooves) if (wetAt(h[0], h[2]) && h[1] - g.own.z < 0.02) ring(h[0], h[2], 0.3);
       }
       for (; lap < ctx.laps.length; lap++) {
