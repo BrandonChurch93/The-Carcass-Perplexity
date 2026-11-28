@@ -31,7 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, '..', '..', '..', '..'))
 MAPS = os.path.join(ROOT, 'public', 'assets', 'reveal', 'maps')
 LAND = os.path.join(ROOT, 'public', 'assets', 'reveal', 'land')
-WORK = os.path.join(ROOT, 'out', 'work', 'body')
+WORK = os.environ.get('BODYWORK', os.path.join(ROOT, 'out', 'work', 'body'))
 os.makedirs(WORK, exist_ok=True)
 F = int(os.environ.get('F', '1'))
 SHORE = 22 / 255.0
@@ -40,7 +40,7 @@ MASTER = {'cx': 2983.67, 'cy': 1727.13, 'width': 5295.59}
 KM_PER_MASTER_PX = 4536.0 / 5295.59
 RELIEF_KM = float(os.environ.get('RELIEF_KM', '16'))
 # How much of a bone's whole body is pale, beside its crest line: the width of bone against country.
-BODYW = float(os.environ.get('BODYW', '0.6'))
+BODYW = float(os.environ.get('BODYW', '1.0'))
 ONLY = os.environ.get('ONLY', '')
 TURN = math.atan2(-0.2, 0.78) - math.radians(3.0)
 SUN = (math.sin(TURN), -math.cos(TURN))
@@ -169,6 +169,14 @@ HEART = (1502.6, 841.3)
 THROAT = (1100.6, 929.5)
 
 
+def pan_reach(W, H):
+    """How far each cell lies from the middle of the pan of the hips, in its radius, the radius uneven round it: the floor of the
+    pan is a basin with a broken shore, headlands of the ranges standing into it, and no disc."""
+    y, x = np.mgrid[0:H, 0:W].astype(np.float32)
+    r = np.hypot((x * F - PAN[0]) / PAN[2], (y * F - PAN[1]) / PAN[3])
+    return r + 1.1 * (fbm((H, W), np.random.default_rng(SEED + 7), 110.0 / F, 4) - 0.5)
+
+
 def zone(W, H, at, inner, outer):
     """1 inside an ellipse given in px of the full map, falling to 0 between inner and outer of its radius."""
     y, x = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -269,7 +277,7 @@ def outputs():
     # ---- colour: the country, with no light in it ----
     slope = np.hypot(gx, gy) * top * 0.5  # about the true fall, cell for cell
     # (The bones themselves, as the old map has them: a range that is a bone is pale in its whole body, stained, its valleys dark.)
-    body = smooth(0.4, 0.74, ndimage.gaussian_filter(h_old, 4.0 * px))
+    body = smooth(float(os.environ.get('BODY0', '0.36')), float(os.environ.get('BODY1', '0.68')), ndimage.gaussian_filter(h_old, 5.0 * px))
     ridge = e - ndimage.gaussian_filter(e, 5.0 * px)
     broad = ndimage.gaussian_filter(e, 14.0 * px)
     wet = np.log10(np.maximum(area, 1.0))
@@ -294,20 +302,29 @@ def outputs():
     s_dune = smooth(0.5, 0.7, p2)
     w_dune = smooth(-0.03, 0.03, 0.01 + 0.1 * s_dune + 0.03 * (mott - 0.5) - e_low) * smooth(0.0, 0.25, s_dune) * (1.0 - w_lava) * (1.0 - 0.7 * w_rust)
     w_olive = smooth(0.5, 0.64, 1.0 - p1) * (1.0 - w_dune) * (1.0 - w_rust)
-    lava = srgb(30, 30, 34)
-    rust = srgb(74, 43, 35)
-    dune = srgb(88, 72, 52)
-    olive = srgb(44, 50, 38)
-    fan = srgb(60, 50, 43)
-    growth = srgb(22, 34, 31)
-    slate = srgb(46, 48, 52)
+    lava = srgb(40, 36, 37)
+    rust = srgb(88, 52, 40)
+    dune = srgb(100, 82, 58)
+    olive = srgb(60, 63, 45)
+    fan = srgb(80, 62, 49)
+    growth = srgb(30, 44, 35)
+    slate = srgb(60, 58, 57)
     salt = srgb(206, 201, 190)
     bone = srgb(205, 192, 166)
     stained = srgb(96, 76, 61)
-    dull = srgb(52, 46, 43)
+    dull = srgb(70, 57, 48)
     scree = srgb(62, 58, 56)
     sand = srgb(202, 186, 152)
     cliff = srgb(64, 58, 54)
+    if os.environ.get('PAL', 'a') == 'b':
+        # (The second palette of the low country, for the choice: green and slate in place of brown and rust.)
+        rust = srgb(74, 52, 44)
+        dune = srgb(84, 80, 60)
+        olive = srgb(50, 64, 44)
+        fan = srgb(62, 64, 52)
+        growth = srgb(24, 48, 38)
+        slate = srgb(54, 60, 64)
+        dull = srgb(58, 58, 52)
     country = np.broadcast_to(fan, (H, W, 3)).copy()
     # (The low country is dark: growth where the ground is low and wet, olive plain, ochre dry ground, slate toward the ranges.
     # Pale is the bone's alone.)
@@ -343,9 +360,15 @@ def outputs():
     upper = smooth(1790.0, 1850.0, fx - 0.33 * (900.0 - fy)) * smooth(45.0, 80.0, 1010.0 - fy) * (1.0 - smooth(2050.0, 2150.0, fx))
     lower = smooth(1740.0, 1800.0, fx - 0.4 * (fy - 1050.0)) * smooth(45.0, 80.0, fy - 1010.0) * (1.0 - smooth(2150.0, 2250.0, fx - 0.4 * (fy - 1050.0)))
     lesser = np.clip(upper + lower, 0.0, 1.0)
-    rock = mixc(rock, bone, np.clip(0.85 * crest + 0.5 * smooth(0.6, 0.95, e) + BODYW * body * smooth(0.16, 0.42, e) * (0.6 + 0.8 * mott), 0.0, 1.0) * (1.0 - 0.8 * lesser))
+    # (A bone keeps its mass: its whole body is pale, as broad as the old map has it, ridged by the relief, and stained where
+    # water gathers in its gullies and where the rock is rotten.)
+    gully = smooth(2.3, 3.3, wet) * (1.0 - smooth(0.5, 0.8, e))
+    rot = smooth(0.52, 0.7, fbm((H, W), rng, 22 * px, 4)) * (1.0 - smooth(0.35, 0.7, e))
+    mass = BODYW * body * (0.8 + 0.4 * mott) * (1.0 - 0.6 * gully) * (1.0 - 0.45 * rot) * (1.0 - 0.3 * smooth(0.0, 0.05, -ridge))
+    paleness = np.clip(np.maximum(0.85 * crest + 0.5 * smooth(0.6, 0.95, e), mass), 0.0, 1.0) * (1.0 - 0.8 * lesser)
+    rock = mixc(rock, bone, paleness)
     rock = mixc(rock, srgb(232, 232, 228), smooth(0.88, 0.98, e) * smooth(0.0, 0.05, ridge))
-    colour = mixc(country, rock, smooth(0.13, 0.36, e + 0.25 * np.maximum(ridge, 0.0) * 4.0))
+    colour = mixc(country, rock, np.maximum(smooth(0.13, 0.36, e + 0.25 * np.maximum(ridge, 0.0) * 4.0), np.clip(BODYW * 1.2 * body, 0.0, 1.0) * (1.0 - 0.8 * lesser)))
     # The coast: a pale hairline of beach on low shores, dark rock where the land meets the sea steep.
     low_shore = (1.0 - smooth(0.02, 0.07, ndimage.gaussian_filter(e, 2.0 * px))) * smooth(0.42, 0.56, fbm((H, W), rng, 120 * px, 3))
     beach = (1.0 - smooth(0.6, 2.2, d_shore)) * low_shore * dom
@@ -354,7 +377,7 @@ def outputs():
     colour = mixc(colour, cliff, 0.7 * steep_shore * dom)
     colour *= (0.93 + 0.14 * grain)[..., None]
     # The pan of the hips keeps the old map's own salt and brine.
-    pan_zone = zone(W, H, PAN, 0.6, 1.05)
+    pan_zone = 1.0 - smooth(0.62, 0.86, pan_reach(W, H))
     colour = mixc(colour, old_colour, pan_zone)
     # Where there is no land the old map stands, so the water's own reading of it is not moved.
     colour = np.where(dom[..., None], colour, old_colour)
@@ -401,7 +424,7 @@ def terrain():
     U = 0.035 + 0.16 * hills + 0.2 * smooth(0.3, 0.62, mid) + 0.85 * bone ** 1.5 + 1.5 * line * smooth(0.5, 0.7, hs)
     U *= 0.75 + 0.5 * lith
     # (The pan of the hips is a pan: level ground, its salt and brine those of the old map.)
-    U *= 1.0 - 0.9 * zone(W, H, PAN, 1.0, 1.25)
+    U *= 1.0 - 0.92 * (1.0 - smooth(0.72, 0.95, pan_reach(W, H)))
     U = np.where(dom, U, 0.0).astype(np.float32)
     K = (0.5 + 1.0 * fbm((H, W), rng, 60 * px, 4)).astype(np.float32)
     K = np.where(river, 40.0, K).astype(np.float32)

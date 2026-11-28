@@ -10,7 +10,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
 import { LEVELS, pairFor, type Level } from './levels';
 import { OCEAN_GLSL, oceanUniforms } from './ocean';
-import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_WET } from './body';
+import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PAN, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_WET } from './body';
 
 // The window of the first approved picture in the master (references/approved/7-reveal/pullback.json): the bed map covers it.
 const BED = { x: 1126.18, y: 1498.28, w: 293.34, h: 165.09 };
@@ -24,7 +24,7 @@ const FEEDER: [number, number][] = [[1224.0, 1440.0], [1226.8, 1468.5], [1221.0,
 const BODY_RELIEF = Number(import.meta.env.VITE_BODY_RELIEF ?? 1.6);
 const BODY_SHADOW = Number(import.meta.env.VITE_BODY_SHADOW ?? 1.0);
 const BODY_FINE = Number(import.meta.env.VITE_BODY_FINE ?? 0.7);
-const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.028);
+const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.018);
 
 export const PARTS = ['sea', 'continent', 'salt', 'lake', 'lava'] as const;
 
@@ -687,6 +687,7 @@ ${BODY_GROUND}
   // and into the sea, in streaks drawn along the fall of the land.
   vec2 fromPan = xz - uSalt;
   float panAt = dot(fromPan, fromPan) < 90000.0 ? (1.0 - smoothstep(0.6, 1.15, length(fromPan / vec2(212.0, 168.0)) + 0.36 * (readTile(uCloudTile, xz / 420.0, 1.0 / 420.0, 1.0).b - 0.5))) * land : 0.0;
+${BODY_PAN}
   float brine = smoothstep(0.17, 0.42, rawBrine);
   float saltFlat = panAt * (1.0 - brine);
   // (Salt in the air of the land round it: white where it is new, grey and tan where the crust is old or wet, never a blank.)
