@@ -24,26 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 233, 2026-11-28 16:43 UTC:
+Status 234, 2026-11-28 17:03 UTC:
 
-- `01-s233-ending-3m11-film-and.jpg`: The ending at 3:11 (frame 11504), before the trial's slow beat, in two versions, cut and labelled by the Builder from the two helpers' clips as they came (960x540, draft tier): the film as it is above, the trial with the moving chest glow below, which is not in the film. The view from orbit, alike in both halves: the planet's limb curves from the left edge up to the top middle with a thin warm line of light on it at the left; beyond it black space with many small white stars, a faint dusty band and a small pale crescent moon. The planet is dim: a dark blue sea, blue-white cloud at the lower left edge, dim green-brown land along the top, at the lower left and in the lower right corner, and one white spiral storm at the right edge. In the middle lies the titan in pale grey: the skull with its dark holes at the lower left of centre, the ribs, one arm up to the upper left with the fingers spread, the hips and the legs out to the right. Between the ribs a red-orange fire with a bright streaked core: in the trial a touch brighter and redder at its core than in the film, and the same size.
-- `02-s233-ending-3m14-film-and.jpg`: The ending at 3:14 (frame 11642), after the trial's swell, in two versions, cut and labelled by the Builder from the two helpers' clips as they came (960x540, draft tier): the film as it is above, the trial with the moving chest glow below, which is not in the film. The view has drifted on and is darker than at 3:11: more black space at the upper left with many small white stars, a wider dusty band and a thin crescent moon; the sea is near black-blue with dim blue-grey cloud in patches, dim land at the top, at the lower left where a net of dark lines shows on it, at the bottom edge and in the lower right corner, and the spiral storm at the right edge. The titan lies in the middle in pale grey and reads as a body in both halves: the skull with its dark holes, the ribs, one arm up, the hips and the legs. Between the ribs the fire with a small bright core: in the trial a little brighter and wider than in the film.
+- `01-s234-reveal-2m42-4k-half.jpg`: The Reveal at 2:42 (frame 9739), drawn at the final tier in 3840x2160 by a helper and brought to half size by the Builder (1920x1080). The view straight down. At the left a dark blue sea with many small white cloud tufts, thin grey streaks of cloud and small brown islands. Left of the middle the skull: a rounded pale tan mass of fine ridges with dark blue holes in it, one round hole ringed in ochre, and a teal lake beside it. The right half is land: long pale ridges fan out to both sides of a teal river that runs across the middle, the ribs, with red-brown low land, white cloud tufts and one small bright point of fire above the middle. Faults seen: thin pale lines like rings in the water round the islands below the skull, and pale net-like lines in the sea at the bottom.
+- `02-s234-titan-2m47-4k-half.jpg`: The Reveal's titan frame at 2:47 (frame 10027), drawn at the final tier in 3840x2160 by a helper and brought to half size by the Builder (1920x1080). At the top left black space with small white stars, a grey cratered moon and the planet's limb with a thin blue line of air; under it pale ice or cloud with a net of thin lines. The sea is dark blue and teal with small white cloud tufts. The titan lies across the frame in pale tan ridges on brown land: the skull with its round dark holes left of the middle, the ribs fanning out to the right of it with a small bright fire among them, then a white patch with a blood-red branching shape, the hips and the limbs, one long ridge reaching to the right. Grey-green other land at the lower left and along the top right, a white spiral storm in the lower right corner, and a wide soft beige glare over the sea at the upper right, which reads as a flat veil more than a glint.
+- `03-s234-reveal-3m05-4k-half.jpg`: The Reveal at 3:05 (frame 11100), drawn at the final tier in 3840x2160 by a helper and brought to half size by the Builder (1920x1080). The view has pulled back and the sun is low. At the upper left black space with many white stars of several sizes, a faint dusty band and a half-lit grey moon; the limb with its thin blue line runs from the left edge up to the top. Under it a wide pale blue-white field of ice with a crumpled relief and a net of dark cracks. The sea is teal and dark blue. The titan lies in the middle and right in brown with lit pale crests: the skull and the ribs with the fire as a small point, the red patch under white cloud, the limbs. Grey-green islands along the bottom left, a warm beige glare at the top, and the spiral storm at the right in dim blue-grey.
 
+Status 233, 2026-11-28 16:43 UTC, showed: The ending at 3:11 (frame 11504), before the trial's slow beat, in two versions, cut and labelled by the Builder from the two helpers'...
 Status 232, 2026-11-28 16:26 UTC, showed: The ending at 3:10 (frame 11420), before the trial acts, in two versions, cut and labelled by the Builder from the two helpers' clips as...
 Status 231, 2026-11-28 16:05 UTC, showed: The film's ending at 3:08 (frame 11330), one of the frames around the last beat, drawn as a still by a helper on the film as it is...
-Status 230, 2026-11-28 15:38 UTC, showed: The film's ending at 3:13 (frame 11582) in two versions, cut by the Builder from the two helpers' clips as they came (960x540, draft tier)...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-28T16:43:02Z
-phase 6: 15.04 h used of 24.00 h
-build: 15.04 h used of 24.00 h
+2026-11-28T17:03:23Z
+phase 6: 15.38 h used of 24.00 h
+build: 15.38 h used of 24.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 17
+minutes since the last status: 20
 ```
 
 ## Phases
