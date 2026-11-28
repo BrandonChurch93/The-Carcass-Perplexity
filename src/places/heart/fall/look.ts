@@ -84,7 +84,7 @@ const float WALL_TONE = 0.6;
 // How much brighter than its plain geometry the melt lights the rim: the fume in the mouth glows and lights it too.
 const float RIM_LIGHT = 5.0;
 // How much of the open pool's light the crusted river in the tube gives the roof over it.
-const float TUBE_GLOW = 0.06;
+const float TUBE_GLOW = 0.028;
 uniform float uFlare;
 float tubeAxis(float d) {
   float k = smoothstep(25.0, 200.0, d);
@@ -116,9 +116,9 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   // The pool lies under the west third of the arch, so the lit band is broad at the west and the upper west, thins over the crown
   // and is gone along the east side, which stands behind the heaps on the floor.
   float east = smoothstep(${f(MOUTH.x - 58)}, ${f(MOUTH.x + 34)}, p.x);
-  float deepest = mix(21.0, 4.0, east);
+  float deepest = mix(9.0, 3.0, east);
   // Past the cut the light falls away into the dark over a few metres more; it does not stop at an edge.
-  float shade = max(smoothstep(deepest, 0.3 * deepest, d), 0.22 * smoothstep(64.0, 20.0, d)) * smoothstep(0.6, 3.5, d);
+  float shade = max(smoothstep(deepest, 0.3 * deepest, d), 0.06 * smoothstep(64.0, 20.0, d)) * smoothstep(0.6, 3.5, d);
   // The light is on the upper west of the cut and thins as it climbs: at the crown a third of it is left. The foot of the cut, where
   // it meets the cone in a comb of broken blocks, stays dark: lit, the comb stood as a row of bright spikes. East of the
   // stream's side it is gone within the first third of the arch.
@@ -127,12 +127,12 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   // The crusted shelf east of the pool gives the east wall just enough to show it as rock against the dark.
   e += 0.009 * poolLight(p, n, vec3(${f(MOUTH.x + 16)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 26.0) * smoothstep(46.0, 8.0, d) * smoothstep(0.6, 3.5, d);
   // The river further in runs under a broken crust and lights the roof and the ribs over it from below, less with every rib.
-  e += TUBE_GLOW * poolLight(p, n, vec3(riverX(d), ${f(TUBE.floor)}, p.z), 24.0) * exp(-d / 19.0) * smoothstep(1.5, 9.0, d);
+  e += TUBE_GLOW * poolLight(p, n, vec3(riverX(d), ${f(TUBE.floor)}, p.z), 24.0) * exp(-d / 8.0) * smoothstep(1.5, 9.0, d);
   return blackbody(1390.0) * 3.14159 * RIM_LIGHT * e;
 }
 // What is left in the dark of the tube: the glow of the river far in, on soot. It shows the rock as rock and no more.
 vec3 tubeDark(float d) {
-  return blackbody(1250.0) * 0.011 * exp(-max(d, 0.0) / 70.0);
+  return blackbody(1250.0) * 0.006 * exp(-max(d, 0.0) / 70.0);
 }
 // The rig's shading, with the day and the lake shut out as the tube goes in.
 vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float d) {
@@ -298,11 +298,11 @@ ${WINDOW_VERTEX}
 void main() {
   // The surge has height: behind its front the stream stands fuller in its bed, and the front itself is a rounded head a man's height proud of it.
   float full = smoothstep(uSurge.x + 4.0, uSurge.x - 8.0, aFlow.w) * uSurge.y;
-  float head = max(exp(-max(uSurge.x - aFlow.w, 0.0) / 7.0) * smoothstep(uSurge.x + 3.0, uSurge.x, aFlow.w) * uSurge.y, uSurge.z * smoothstep(7.0, -5.0, aFlow.w));
-  float across = aIn.y / max(aFlow.z * (1.0 + 0.4 * full + 0.9 * head), 0.1);
+  float head = max(exp(-max(uSurge.x - aFlow.w, 0.0) / 11.0) * smoothstep(uSurge.x + 7.0, uSurge.x, aFlow.w) * uSurge.y, uSurge.z * smoothstep(7.0, -5.0, aFlow.w));
+  float across = aIn.y / max(aFlow.z * (1.0 + 0.5 * full + 1.0 * head), 0.1);
   vec3 p = position;
   // The stream has a body: it stands a forearm proud of its bed at any time.
-  p.y += (0.32 * smoothstep(1.0, 6.0, aFlow.w) + 0.45 * full + 1.5 * head) * sqrt(max(1.0 - across * across, 0.0)) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, aFlow.w)) * (1.0 - aIn.z);
+  p.y += (0.32 * smoothstep(1.0, 6.0, aFlow.w) + 0.7 * full + 1.8 * head) * sqrt(max(1.0 - across * across, 0.0)) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, aFlow.w)) * (1.0 - aIn.z);
   vWorld = p;
   vNormal = normal;
   vFlow = aFlow;
@@ -320,6 +320,12 @@ const STREAM_GLSL = /* glsl */ `
 const float STREAM_RIDE = 2.4;
 const float DELTA_CREEP = 0.3;
 uniform vec4 uSurge;
+uniform vec4 uPass;
+// How much of the stream is under a pack of crust where the lava that left the lip so many seconds ago is. The lights of the
+// fall read the same wave (packWave of index.ts) and dim as a pack passes under them.
+float packWave(float ride) {
+  return 0.5 + 0.5 * sin(ride * 0.62 + 1.4 * sin(ride * 0.21 + 0.7));
+}
 // Metres from the lip of the middle of each drop of the main stream, and 1e4 for the rest.
 uniform float uFalls[12];
 // Metres of the surface under one pixel. Marks finer than about two pixels are faded out: drawn, they would crawl as they ride.
@@ -425,6 +431,8 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float half_ = flow.z * ragged * (1.0 + 0.55 * (lobe - 0.5) * smoothstep(2.0, 8.0, len) * (1.0 - smoothstep(${f(FAN_FROM - 4)}, ${f(FAN_FROM + 6)}, len)) + behind * (0.3 + 0.7 * lobe) * (1.0 - 0.8 * smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, len)) + front * (0.6 + 0.6 * lobe));
   // At a drop the stream necks as it quickens.
   half_ *= 1.0 - 0.12 * smoothstep(2.4, 5.2, speed) * (1.0 - smoothstep(${f(FAN_FROM - 4)}, ${f(FAN_FROM + 6)}, len));
+  // Behind the feeding group the fall is small and far: there it runs full, twice as broad, and its fan stands open as a pool.
+  half_ *= 1.0 + 1.1 * uPass.x;
   gHalf = half_;
   float cover = (1.0 - smoothstep(0.9, 1.0, away.x / max(half_, 0.1))) * (1.0 - smoothstep(0.3, 0.5, away.y));
   if (cover <= 0.0) return vec2(0.0, 600.0);
@@ -434,9 +442,9 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   // packs some metres long with open melt between them. They ride at the speed of the lava, so they crowd where it slows and are
   // drawn out where it drops; the middle of each runs ahead of its margins and none ends on a line straight across.
   float ride = flow.x - uTime + 0.5 * u * u + 0.4 * (vnoise(vec2(s * 0.45 + 3.0, (flow.x - uTime) * 0.6)) - 0.5);
-  float stretch = vnoise(vec2(ride * 0.27, 2.0)) + 0.3 * (vnoise(vec2(ride * 0.8 + 5.0, 7.0)) - 0.5);
+  float stretch = vnoise(vec2(ride * 0.27, 2.0)) + 0.3 * (vnoise(vec2(ride * 0.8 + 5.0, 7.0)) - 0.5) + 0.22 * (packWave(flow.x - uTime) - 0.5);
   float run = smoothstep(3.0, 10.0, len) * (1.0 - smoothstep(${f(FAN_FROM - 6)}, ${f(FAN_FROM + 2)}, len));
-  float dark = smoothstep(0.56, 0.74, stretch) * run;
+  float dark = smoothstep(0.56, 0.74, stretch) * run * (1.0 - 0.6 * uPass.x);
   float bright = smoothstep(0.47, 0.27, stretch) * run;
   // The foot of each drop: the sheet lands and churns there, and what skin came over with it is broken up.
   float pool = 0.0;
@@ -494,6 +502,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     kelvin += drop * smoothstep(1.0, 7.0, len) * 190.0 * (veil - 0.9) * (1.0 - 0.6 * core);
   }
   kelvin -= 150.0 * smoothstep(0.0, 0.3, away.y);
+  kelvin += uPass.x * (60.0 + 60.0 * lay);
   kelvin = min(kelvin, 1560.0);
   // A side channel is a thread of the stream and cooler than it: orange down its middle and red at its banks, never a pale panel.
   float thin = smoothstep(2.9, 2.5, flow.z) * (1.0 - lay) * smoothstep(2.0, 6.0, len);
@@ -610,7 +619,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     vec2 fx = vec2(72.0 * (out_.y * gDx.x - out_.x * gDx.z) / rr, dot(out_, gDx.xz) / max(r, 1.0));
     vec2 fy = vec2(72.0 * (out_.y * gDy.x - out_.x * gDy.z) / rr, dot(out_, gDy.xz) / max(r, 1.0));
     vec3 fm = meltAt(fp, 32.0, fx, fy, 21.0);
-    float fz = clamp(fm.z + 0.5 * smoothstep(0.1, 0.7, lane) * (1.0 - 0.6 * crusted) - 0.03 + 0.22 * behind + 0.25 * smoothstep(26.0, 8.0, r) - 0.3 * smoothstep(40.0, 95.0, r), 0.0, 1.0);
+    float fz = clamp(fm.z + 0.45 * uPass.x + 0.5 * smoothstep(0.1, 0.7, lane) * (1.0 - 0.6 * crusted) - 0.03 + 0.22 * behind + 0.25 * smoothstep(26.0, 8.0, r) - 0.3 * smoothstep(40.0, 95.0, r), 0.0, 1.0);
     // A plate ends at a hard edge and the melt is alight beyond it, orange at once: never a glow that fades into the crust.
     float gap = smoothstep(0.17, 0.22, fz);
     float fheat = max(gap * (0.5 + 0.5 * smoothstep(0.25, 0.8, fz)), 0.08);
@@ -889,6 +898,8 @@ uniform vec4 uSurge;
 attribute vec4 aFrom;
 attribute vec4 aLife;
 attribute vec4 aSeed;
+attribute vec2 aWind;
+uniform vec4 uPass;
 varying vec2 vDisc;
 varying vec4 vPuff;
 varying float vHigh;
@@ -898,8 +909,10 @@ void main() {
   float k = age / aLife.y;
   // It leaves fast over the melt and slows as it cools, and the wind has more of it the higher it stands.
   float rise = aLife.z * age * (1.0 - 0.4 * k);
-  float size = mix(1.3, 5.0 + 4.5 * aLife.w, pow(k, 0.75));
-  vec3 centre = aFrom.xyz + vec3(0.65 * rise * (0.35 + 0.65 * k), rise, 0.12 * rise) + vec3(sin(age * 0.9 + aSeed.x * 6.28), 0.0, cos(age * 0.7 + aSeed.y * 6.28)) * 0.5 * k * size;
+  // A puff leaves small; a veil is broad and faint from the first, or it would stand as a pale knot where it leaves.
+  float big = 5.0 + 4.5 * aLife.w;
+  float size = mix(aWind.y > 1.6 ? 0.55 * big : 1.3, big, pow(k, 0.75)) * aWind.y;
+  vec3 centre = aFrom.xyz + vec3(0.65 * rise * (0.35 + 0.65 * k) + aWind.x * age, rise, 0.12 * rise + 0.18 * aWind.x * age) + vec3(sin(age * 0.9 + aSeed.x * 6.28), 0.0, cos(age * 0.7 + aSeed.y * 6.28)) * 0.5 * k * size;
   vec4 view = viewMatrix * vec4(centre, 1.0);
   view.xy += position.xy * 2.0 * size;
   gl_Position = projectionMatrix * view;
@@ -908,9 +921,10 @@ void main() {
   float more = 1.0 + 1.2 * smoothstep(uSurge.x + 4.0, uSurge.x - 12.0, aFrom.w) * uSurge.y;
   // Before the dark of the opening a puff would stand as a pale disc: by the height of the lip it has thinned to nothing.
   float below = smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor - 9)}, centre.y + 0.5 * size);
-  vPuff = vec4(k, aSeed.z, smoothstep(0.0, 0.14, k) * pow(1.0 - k, 1.4) * more * aSeed.w * below, age);
+  vPuff = vec4(k, aSeed.z, smoothstep(0.0, aWind.y > 1.6 ? 0.3 : 0.14, k) * pow(1.0 - k, 1.4) * more * aSeed.w * below, age);
   vCentre = centre;
-  vHigh = rise + position.y * 2.0 * size;
+  // A veil is lit by the fall it drifts before, less the higher it stands and less while crust passes under it.
+  vHigh = (rise + position.y * 2.0 * size) / aWind.y + 6.0 * log(1.0 / max(uPass.y, 0.05));
 }`;
 
 export const FUME_FRAGMENT = /* glsl */ `

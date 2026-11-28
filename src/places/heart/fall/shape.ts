@@ -131,7 +131,7 @@ const rimShape = (k: number): number => smooth(1.5, 1.08, k) * (0.78 + 0.22 * sm
 const outline = (phi: number, rho: number): number =>
   1 + 0.075 * (noise2(phi * 1.5 + 3.1, 0.7 + rho / 140) - 0.5) * 2 + 0.035 * (noise2(phi * 5 + 1.3, 2.2 + rho / 60) - 0.5) * 2 + 0.014 * blocks(phi * 62, rho, 4.5, 3);
 /** The lip is cut back most at the upper west, above the pool, and that broad bevel is what the melt lights. Metres. */
-const flare = (phi: number): number => 2 + 24 * Math.exp(-Math.pow((phi - 0.68 * Math.PI) / 0.6, 2)) + 5 * Math.exp(-Math.pow((phi - 0.3 * Math.PI) / 0.5, 2));
+const flare = (phi: number): number => 2 + 8 * Math.exp(-Math.pow((phi - 0.68 * Math.PI) / 0.6, 2)) + 2 * Math.exp(-Math.pow((phi - 0.3 * Math.PI) / 0.5, 2));
 /** The roof goes back as a few big ribs: at each the tube steps in, more on one flank than the other, and partly opens again behind it. */
 const RIBS = [
   { at: 13, step: 0.15 },
