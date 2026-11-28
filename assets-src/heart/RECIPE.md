@@ -137,6 +137,17 @@ Takes: 1 run.
 Why this one: it records the numbers of the script and the linear mean colour of each picture, which the surfaces use to keep their albedo in a real range.
 Date: 2026-11-25
 
+## `public/assets/heart/mat/char.jpg` and `public/assets/heart/mat/char-nh.jpg`
+
+Made by: `assets-src/heart/make-char.py` on Python 3 with numpy and Pillow. No picture went in and no model was asked: the script computes both files from one seed (3685).
+From: nothing but the script.
+Prompt or command: `/home/user/bpyenv/bin/python assets-src/heart/make-char.py`.
+
+Takes: 3 runs of the script while it was tuned, the last kept.
+Why this one: the hide of the one that sank, burnt through. Blocks a hand to a forearm long as burnt timber splits into, their edges bent and frayed so none is straight, some lifted and curled, some gone, small checks inside them, soot in the splits, a grey bloom on the edges that stand up and no pale patch. The first run had straight edges and read as stained glass; the second bent them; the third took the ash on the edges down.
+What it does: places the blocks on a jittered grid that wraps (so the sheet tiles), finds for each pixel how far it is from the edge of its block on a page bent by smooth noise, builds a height from the blocks, their lift, their curl, the checks and a fibre along the limb, writes the colour as JPEG and the two slopes of the height with the height as the second JPEG (slopes in red and green, height in blue, as `make-skins.py` packs them). 1024 px square.
+Date: 2026-11-28
+
 ## `public/assets/heart/mat/aa-nh.jpg`
 
 Made by: Blender 5.0.1 as a Python module (`bpy`), Cycles on the CPU, then `numpy` and Pillow. No picture and no image model.
