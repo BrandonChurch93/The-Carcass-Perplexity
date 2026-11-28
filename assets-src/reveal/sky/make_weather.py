@@ -74,14 +74,14 @@ def weather():
     wide = noise(rng, 30.0, 16.0, turn)
     mid = noise(rng, 11.0, 6.0, turn)
     small = noise(rng, 4.0, 2.5, turn)
-    field = 0.6 * wide + 0.4 * mid
+    field = 0.45 * wide + 0.55 * mid
     # (None near the body: it is the subject. The body lies about (3000, 1750), 2900 by 1700 px of the master.)
-    clear_of_body = 0.45 + 0.55 * smooth(0.95, 1.3, np.hypot((mx - BODY[0]) / BODY[2], (my - BODY[1]) / BODY[3]))
-    patch = smooth(0.55, 0.63, field) * clear_of_body
-    fringe = smooth(0.48, 0.55, field) * smooth(0.42, 0.6, small)
+    clear_of_body = 0.7 + 0.3 * smooth(0.95, 1.3, np.hypot((mx - BODY[0]) / BODY[2], (my - BODY[1]) / BODY[3]))
+    patch = smooth(0.45, 0.53, field) * clear_of_body
+    fringe = smooth(0.38, 0.45, field) * smooth(0.42, 0.6, small)
     red = np.maximum(patch * (0.62 + 0.38 * smooth(0.3, 0.7, small)), 0.5 * fringe)
     kind = 0.5 + 0.5 * smooth(0.25, 0.75, patch)
-    green = 0.8 * smooth(0.45, 0.55, field) * smooth(0.4, 0.7, noise(rng, 7.0, 3.0, turn))
+    green = 0.8 * smooth(0.36, 0.46, field) * smooth(0.4, 0.7, noise(rng, 7.0, 3.0, turn))
 
     # The far low is a storm drawn by its own sheet (OTHER_STORMS of weather.ts), front and all: the sea stands clear under and
     # round it, as round the cyclone, so nothing of this map is on a storm's disc.
@@ -105,9 +105,12 @@ def weather():
         lands = np.maximum(lands, (ndimage.map_coordinates(mask, [v, u], order=1, mode='constant', cval=0.0) > 0.3).astype(np.float32))
     px = WIDE / W
     under = lands.copy()
+    under_body = body.astype(np.float32)
     for back in np.arange(0.0, TRAVEL + 1.0, px):
         under = np.maximum(under, ndimage.shift(lands, (-WIND[1] * back / px, -WIND[0] * back / px), order=1, mode='constant'))
-    off_land = 1.0 - smooth(0.03, 0.3, ndimage.gaussian_filter(under, 75.0 / px))
+        under_body = np.maximum(under_body, ndimage.shift(body.astype(np.float32), (-WIND[1] * back / px, -WIND[0] * back / px), order=1, mode='constant'))
+    # (The body is the subject: its water is kept clear a little wider than the water of the other land.)
+    off_land = 1.0 - smooth(0.03, 0.3, np.maximum(ndimage.gaussian_filter(under, 55.0 / px), ndimage.gaussian_filter(under_body, 85.0 / px)))
     red, green = red * off_land, green * off_land
 
     # None in the glare of the sun's image either (about px 5875, 703): cloud there is a grey smudge on the light.
@@ -116,7 +119,7 @@ def weather():
 
     # Nothing of this map stands over the cyclone's disc, nor crowds it: clear water round it.
     away = np.hypot(mx - CYCLONE[0], my - CYCLONE[1])
-    keep = smooth(850.0, 1450.0, away)
+    keep = smooth(1150.0, 1750.0, away)
     red, green = red * keep, green * keep
     kind = 0.5 + (kind - 0.5) * keep
 
@@ -187,7 +190,9 @@ def held():
     # (Clear over the cyclone, as the map of the systems is.)
     ys, xs = np.mgrid[0:CH, 0:CW].astype(np.float32)
     away = np.hypot(CX0 + (xs + 0.5) * px - CYCLONE[0], CY0 + (ys + 0.5) * px - CYCLONE[1])
-    red *= smooth(850.0, 1450.0, away)
+    red *= smooth(1150.0, 1750.0, away)
+    # (And clear in the glare of the sun's image, as the map of the systems is: a thin street there is a grey smudge on the light.)
+    red *= smooth(1300.0, 2000.0, np.hypot(CX0 + (xs + 0.5) * px - 5875.0, CY0 + (ys + 0.5) * px - 703.0))
     # (Past its border the cover is read at its border: nothing is held there.)
     red *= smooth(2.0, 60.0, np.minimum.reduce([xs, CW - 1.0 - xs, ys, CH - 1.0 - ys]))
     cover[..., 0] = (np.clip(ndimage.gaussian_filter(red, 1.5), 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)

@@ -5,8 +5,8 @@ src/places/reveal/shared/weather.ts (the same rectangle as cover.png).
   red    banks: where the wind of the low field (from the left of the master, a little down) is lifted by a range, cloud piles on
          the flank that faces it and thins over the crest
   green  fog: the low floors between ranges, shut in by high ground on two sides, where cold air lies
-  blue   ice: where the thin ice far above (HIGH_KM) crosses the land, in long swaths that lie across the ranges
-         (it held the pooled haze up to the second wave; nothing read it)
+  blue   crests: the pale bone of the ranges, where a bank is not drawn from orbit (up to the third wave it held swaths of
+         ice that nothing read)
 
 Since the second wave the red and the green hold more than the relief gives by itself. Red also holds a broken middle deck that
 lies across one lake of the skull massif, the jaw coast and a few of the long ranges of the chest; green also holds stratus pooled
@@ -156,6 +156,19 @@ ice = np.zeros((H, W), np.float32)
 for d in ICE:
     ice = np.maximum(ice, patch(*d, (0.5 * bend[0], 0.5 * bend[1])))
 ice = ndimage.gaussian_filter(ice * (0.5 + 0.5 * step(0.3, 0.6, swell(12, 6))), 3.0)
-out = np.stack([bank, fog, ice], axis=-1)
+# The crests: the pale bone of a range, where it stands over the ground round it. From orbit a bank is kept off them (bankDepth of
+# shared/weather.ts reads this in the blue, which nothing else reads: the swaths of ice above are no longer written), so cloud
+# lies in the valleys and on the flanks and no white puff sits on a white bone. Below orbit the blue is not used.
+fine = ndimage.gaussian_filter(high, 1.2)
+crest = step(0.36, 0.56, fine) * step(-0.02, 0.05, fine - ndimage.gaussian_filter(high, 9))
+crest = ndimage.gaussian_filter(np.maximum(crest, ndimage.maximum_filter(crest, 3) * 0.8), 1.5)
+out = np.stack([bank, fog, crest], axis=-1)
+# (The red and the green that are committed stay as they are, to the last bit: the rise below orbit is drawn from them and is not
+# to change. Only the blue is written. ALL=1 before the command computes the red and the green again from the relief as well.)
+kept = os.path.join(PUB, 'sky', 'banks.png')
+if os.environ.get('ALL', '0') == '0' and os.path.exists(kept):
+    was = np.asarray(Image.open(kept).convert('RGB'), dtype=np.float32) / 255.0
+    out[..., 0] = was[..., 0]
+    out[..., 1] = was[..., 1]
 Image.fromarray((np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGB').save(os.path.join(PUB, 'sky', 'banks.png'), optimize=True)
 print('banks.png', out.shape, 'means', out.reshape(-1, 3).mean(0).round(3))
