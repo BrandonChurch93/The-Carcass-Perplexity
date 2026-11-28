@@ -24,6 +24,8 @@ const WIDE_GLOW = 0.3;
 const WIDE_SHADE = 0.6;
 /** Metres round the bush of the south lip within which the growth is part of its clump. */
 const SOUTH_CLUMP = 6;
+/** Staged for shot breath-05 only: the lens of that shot, the radius of the lens in metres and the distance of sharp focus in metres. */
+const RIM_LENS: readonly [number, number] = [0.0084, 6.2];
 
 /** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
  *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
@@ -40,8 +42,10 @@ const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
 
 /** Staged for shot breath-02: where each hanging one is rooted (x, z), how tall, and the point on the ground it leans over (x, z). */
 const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
-  [-14.1, 27.6, 4.2, -8.9, 24.6],
-  [-15.0, 26.0, 3.8, -10.0, 23.0],
+  [-18.3, 24.8, 7.9, -9.1, 19.5],
+  [-19.9, 22.0, 7.0, -11.1, 16.7],
+  // A lower one: the mass goes on down the left edge of that frame, as key breath-4 has it, and no nearer its middle.
+  [-16.5, 28.0, 5.9, -11.0, 26.6],
 ];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
@@ -118,7 +122,7 @@ export function create(ctx: Context): Piece {
   const grown: Grown[] = bushes.map((bush) => grow(bush, rng, floor));
 
   const rimRng = ctx.rng('gill-plume-rim');
-  // The low ones on the plate are sprigs: a few stalks. The tall ones are fountains of brush.
+  // The low ones on the plate are sprigs: a few stems. The tall ones are bushes of coral, each of its own build.
   const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, habit: 'fountain', full: tall < 1 ? 0.4 : 1 }));
   // In that shot the two tall ones by the lens of breath-03 are low domes too (see setTime).
   for (let i = 0; i < 2; i++) {
@@ -126,18 +130,23 @@ export function create(ctx: Context): Piece {
     rimBushes.push({ x: b.x, y: b.y, z: b.z, tall: i === 0 ? 3.0 : 3.4, lean: b.lean, detail: 0.5, habit: 'fountain' });
   }
   const rimGrown: Grown[] = rimBushes.map((bush) => grow(bush, rimRng, floor));
+  // Those fountains are the dark mass the wide lens of breath-01 sees. For the lens at the rim (breath-05) the same places carry bushes of
+  // coral, each grown of its own numbers: forking stems clothed in short brush, no two of one build.
+  const coralRng = ctx.rng('gill-plume-coral');
+  const coralGrown: Grown[] = rimBushes.map((bush) => grow({ ...bush, habit: 'coral' }, coralRng, floor));
   // Staged by shot (breath-02): two tall weeping ones on the south-west lip, rooted to the left of that lens and leaning across its upper left
   // corner, so that their locks hang into the frame from above and from the left, as the picture has them. No other shot has them.
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
-    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: 2.4 };
+    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: tall < 6.5 ? 1 : 2.4 };
   });
   const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 
   const pixel = { value: 0.001 };
   const seconds = { value: 0 };
   const surge = { value: 0 };
+  const lensOf = { value: new THREE.Vector2(0, 1) };
   const uniforms = {
     ...rig.uniforms,
     uPixel: pixel,
@@ -145,6 +154,7 @@ export function create(ctx: Context): Piece {
     uSurge: surge,
     uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) },
     uStagger: { value: 0 },
+    uLens: lensOf,
   };
   // Opaque and whole: the engine lays their depth first, and a strip behind another costs only that. Each bush has its own two
   // materials (one program for all of them), because its sway is worked from its own root.
@@ -183,9 +193,11 @@ export function create(ctx: Context): Piece {
   };
   const homeOf = (i: number): THREE.Group => (i < 2 ? heroGroup : i === SOUTH ? southGroup : WIDE_TUFTS.includes(i) || bySouth(i) ? group : lipGroup);
   grown.forEach((g, i) => meshes(g, homeOf(i), i < 2 ? 1.5 : i === 5 || i === SOUTH ? 0.4 : 1, i < 2 ? 1 : 0));
-  const massGlow = rimGrown.map((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
+  const wideGroup = new THREE.Group();
+  const massGlow = rimGrown.map((g) => meshes(g, wideGroup));
+  coralGrown.forEach((g, i) => meshes(g, i >= RIM_GROWTH.length ? domeGroup : rimGroup));
   for (const g of hangGrown) meshes(g, hangGroup, 0.4);
-  group.add(rimGroup, hangGroup, heroGroup, domeGroup, southGroup, lipGroup);
+  group.add(rimGroup, hangGroup, heroGroup, domeGroup, southGroup, lipGroup, wideGroup);
   for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
@@ -319,6 +331,7 @@ export function create(ctx: Context): Piece {
       // two trees, and from the wide lens they were two dark lumps on the lip, where the pictures have low spreading brush: in those
       // two shots low domes stand in their place (the last two of the rim's bushes).
       const low = shown || wide;
+      lensOf.value.set(shown ? RIM_LENS[0] : 0, shown ? 1 / RIM_LENS[1] : 1);
       lipGroup.visible = !wide;
       // From the wide lens the mass is dark crimson, not lit through.
       for (const m of massGlow) {
@@ -331,9 +344,10 @@ export function create(ctx: Context): Piece {
         rig.setShadow(discs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, wide ? 0 : 0.5);
       });
       // The mounds at the rim are the dark red mass on the lip that the wide lens sees.
-      rimGroup.visible = shown || wide;
+      rimGroup.visible = shown;
+      wideGroup.visible = wide;
       heroGroup.visible = !low;
-      domeGroup.visible = low;
+      domeGroup.visible = shown;
       for (let i = 0; i < 2; i++) {
         const b = bushes[i] as Bush;
         rig.setDisc(discs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, low ? 0 : 0.7);
@@ -356,7 +370,7 @@ export function create(ctx: Context): Piece {
       height = h;
     },
     dispose: () => {
-      for (const g of [...grown, ...rimGrown, ...hangGrown]) {
+      for (const g of [...grown, ...rimGrown, ...coralGrown, ...hangGrown]) {
         g.threads.dispose();
         g.stems.dispose();
       }
