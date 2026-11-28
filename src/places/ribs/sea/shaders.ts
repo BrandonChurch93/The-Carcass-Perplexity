@@ -422,13 +422,10 @@ float rippleLevel(sampler2D t, float metres) {
   float size = float(textureSize(t, 0).x) / metres;
   return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size) + 0.4;
 }
-// The rig's cloud shadow and contact, word for word (shared/glsl.ts: cloudShade, contactDrawn), but each picture read at a stated level:
-// over the rippled sheet a read by its own slopes is several times the cost for the same picture. Keep in step with the rig.
+// The rig's cloud shadow on the ground (shared/glsl.ts: the cover is the rig's own cloudCover, read at a stated level) and its contact,
+// word for word (contactDrawn) but read at a stated level: over the rippled sheet a read by its own slopes is several times the cost.
 float sunOn(vec3 at, vec4 land) {
-  vec2 q = at.xz - uSunDir.xz * (at.y / uSunDir.y);
-  vec2 d = q - uCloudBreak.xy;
-  vec2 e = q - uCloudBreak2.xy;
-  float c = textureLod(tCloudShade, q * uCloudShade.z - uCloudShade.xy, 0.0).r * 0.62 + uCloudBreak.w * exp(-dot(d, d) * uCloudBreak.z) + uCloudBreak2.w * exp(-dot(e, e) * uCloudBreak2.z);
+  float c = cloudCover(at.xz - uSunDir.xz * (at.y / uSunDir.y));
   return land.b * mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, c));
 }
 float stoodOver(vec3 at) {
