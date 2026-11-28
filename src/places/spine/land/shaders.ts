@@ -1094,19 +1094,20 @@ ${NOISE_GLSL}
 void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
-  vec2 at = vec2(vWorld.x * 0.8 + vWorld.z * 0.6, vWorld.y);
-  float broad = fbm(at * 1.7 + 4.0);
-  float fine = fbm(at * 6.5 + 11.0);
-  // Snow lies where the rock is level and in its hollows; the faces between are bare.
-  // (In its hollows: the rock's edges stand dark out of it, as veins between the drifts, and it is thin old snow, not white.)
-  float veins = smoothstep(0.07, 0.025, abs(fine - 0.5)) + smoothstep(0.05, 0.02, abs(broad - 0.52));
-  float snow = smoothstep(0.5, 0.42, 0.55 * broad + 0.45 * fbm(at * 3.4 + 7.0)) * smoothstep(-0.25, 0.25, n.y) * (1.0 - min(veins, 1.0)) * 0.75;
-  vec3 rock = mix(vec3(0.07, 0.052, 0.045), vec3(0.34, 0.23, 0.16), smoothstep(0.3, 0.75, fine) * smoothstep(0.35, 0.6, broad + 0.2));
-  vec3 albedo = mix(rock, vec3(0.5, 0.53, 0.6), snow);
-  n = normalize(n + (1.0 - snow) * 0.9 * (vec3(fine, broad, 1.0 - fine) - 0.5));
+  // Out of focus an even grain is a dotted hide: the rock is in a few tall blocks, each of one tone, read in three dimensions so that
+  // no face stretches it. The snow is on sloping ledges; little of it shows at the strike, where the faces seen lean out.
+  vec3 p = vWorld;
+  float mass = 0.6 * vnoise3(p * vec3(3.4, 1.3, 3.4) + 4.0) + 0.4 * vnoise3(p * vec3(8.0, 3.4, 8.0) + 9.0);
+  vec3 ledge = vec3(p.x, 2.6 * p.y + 0.9 * p.x + 0.7 * p.z, p.z);
+  float broad = 0.65 * vnoise3(ledge * 1.9 + 11.0) + 0.35 * vnoise3(ledge * 4.6 + 3.0);
+  float ragged = vnoise3(p * 12.0 + 7.0);
+  float snow = smoothstep(0.37, 0.44, 0.66 * broad + 0.16 * ragged + 0.22 * n.y + 0.12 * (0.5 - mass)) * smoothstep(-0.35, 0.1, n.y);
+  vec3 rock = mix(vec3(0.085, 0.064, 0.055), vec3(0.36, 0.24, 0.16), smoothstep(0.3, 0.7, mass));
+  vec3 albedo = mix(rock, vec3(0.7, 0.8, 0.95), snow);
+  n = normalize(n + (1.0 - snow) * 0.7 * (vec3(mass, broad, 1.0 - mass) - 0.5));
   // It stands in the open off the spire's edge: the sky lights it whole (the land's own shelter is of the ground under it, far below),
   // and the stroke lights the side that looks at it.
-  float occ = mix(0.55 + 0.45 * fine, 1.0, snow);
+  float occ = mix(0.6 + 0.4 * smoothstep(0.3, 0.65, mass), 1.0, snow);
   // Its tone is set by number against its picture, where it is lit brown stone and pale snow: the snow of the spire's shoulder under it
   // throws the sky back up at it.
   vec3 c = albedo * (skyIrradiance(n) * 3.6 + emitterIrradiance(vWorld, n)) * occ / 3.14159;
