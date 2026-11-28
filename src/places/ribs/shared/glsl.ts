@@ -37,6 +37,7 @@ uniform vec4 uDeck;
 uniform vec3 uDeckEdge;
 uniform vec3 uScud;
 uniform vec3 uBreakWarm;
+uniform float uDomeCut;
 uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
@@ -205,14 +206,40 @@ vec3 skyMirror(vec3 d, float level) {
 // The dome itself: the same sky with the fine edges a picture laid round half the heaven has not at the lens's size (a texel of it is
 // three pixels of the widest frame). The picture is read through two finer workings of the cloud's own lumps, which tear its soft edges
 // into shreds, and its body takes their grain; the finest goes out by itself where the frame is small.
+// The lumps read larger than the frame: one of their texels is near four of the widest frame's, and read plainly the picture they
+// push about is stretched by one amount inside a texel and by another in the next, which lays the texels' own weave over the sky.
+// Read as a smooth curve through four texels each way (four reads, each between two texels), the push has no corner in it.
+vec2 lumpsSmooth(vec2 uv) {
+  vec2 n = vec2(textureSize(tCloudShade, 0));
+  vec2 x = uv * n - 0.5;
+  vec2 f = fract(x);
+  vec2 i = x - f;
+  vec2 w0 = (1.0 - f) * (1.0 - f) * (1.0 - f) / 6.0;
+  vec2 w1 = (4.0 - 6.0 * f * f + 3.0 * f * f * f) / 6.0;
+  vec2 w2 = (1.0 + 3.0 * f + 3.0 * f * f - 3.0 * f * f * f) / 6.0;
+  vec2 w3 = f * f * f / 6.0;
+  vec2 ga = w0 + w1;
+  vec2 gb = w2 + w3;
+  vec2 ha = (i - 0.5 + w1 / ga) / n;
+  vec2 hb = (i + 1.5 + w3 / gb) / n;
+  return gb.y * (gb.x * textureLod(tCloudShade, hb, 0.0).rg + ga.x * textureLod(tCloudShade, vec2(ha.x, hb.y), 0.0).rg)
+    + ga.y * (gb.x * textureLod(tCloudShade, vec2(hb.x, ha.y), 0.0).rg + ga.x * textureLod(tCloudShade, ha, 0.0).rg);
+}
+
 vec3 skyDome(vec3 d) {
   float el;
   vec2 uv = domeAt(d, el);
   vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
   vec2 q = uv * vec2(5.0, 2.8);
-  vec2 a = texture2D(tCloudShade, q + 0.5 * uSkyTurn.yz).rg - 0.5;
+  vec2 a = lumpsSmooth(q + 0.5 * uSkyTurn.yz) - 0.5;
   vec2 b = texture2D(tCloudShade, q * 3.7 + 0.19).rg - 0.5;
-  vec3 c = texture2D(tDome, uv + 0.012 * work + (2.4 * a + 0.5 * b) * vec2(0.0022, 0.0039)).rgb;
+  vec2 at = uv + 0.012 * work + (2.4 * a + 0.5 * b) * vec2(0.0022, 0.0039);
+  vec3 c = texture2D(tDome, at).rgb;
+  // The picture's edges are soft at the widest frame, where one of its texels is over three of the frame's. What it holds finer than
+  // eight texels is given back stronger (the picture less its own coarser level), and the lumps say where: a cloud's edge is then
+  // crisp in one place and soft in the next, as a torn edge is, and no line is drawn that the picture does not hold.
+  vec3 coarse = textureLod(tDome, at, 3.0).rgb;
+  c = max(c + uDomeCut * (0.75 + 1.5 * (a.y + b.y)) * (c - coarse), 0.0);
   // Scud: lower, nearer shreds of the same storm cross before it three times as fast, so cloud goes across the blades' heads while
   // a lens is held. They are the picture's own dark bodies read larger (a nearer cloud is a larger one), laid end to end mirrored;
   // the picture is larger than the frame there at every size, so its finest level is named.

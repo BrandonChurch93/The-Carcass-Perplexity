@@ -17,7 +17,7 @@ const MAX_SOURCES = 20;
 const STEPS = 6;
 const FOG_STEPS = 14;
 /** The air of the strait: haze in a metre at the sea and the height it thins over, low mist in a metre under a bank and its depth, how much thicker the haze stands in the colony's shot, how much thicker the mist lies round a blade's foot and how many of its own depths taller, and how much of the sky the land sees where that begins and where it is whole. */
-const AIR = { haze: 0.00036, high: 280, mist: 0.0022, low: 14, colony: 4, pool: 1.8, poolHigh: 3.5, bankHigh: 3, poolFrom: 0.85, poolTo: 0.5 };
+const AIR = { haze: 0.00036, high: 280, mist: 0.0022, low: 14, colony: 4, pool: 0.5, poolHigh: 2, bankHigh: 3, poolFrom: 0.85, poolTo: 0.5, clearTo: 150, wholeAt: 800 };
 /** The opening's sea fog in a metre at the water, where it lies whole. */
 const FOG_THICK = 0.011;
 /** The blades whose feet the opening's sea fog pools round and peels off: the two the lens opens on, and the two that stand out in the sea. */
@@ -70,6 +70,8 @@ uniform vec3 uFogHole;
 // The colony's shot: how many times thicker the haze stands past the colony's rock (0 elsewhere).
 uniform float uFarAir;
 uniform vec3 uDrift;
+// The low mist is thin round the lens: where it begins and where it is whole, metres.
+uniform vec2 uNearMist;
 ${RIG_GLSL}
 
 // The sea fog goes with the wind as water goes round a pile: the field is read in the coordinates of the flow itself (how far along the
@@ -206,7 +208,7 @@ void main() {
       float y0 = ro.y + rd.y * t0;
       // What stands within a stone's throw keeps its blacks: the low mist is thin round the lens.
       float tau = uAir.x * (1.0 + uFarAir * smoothstep(140.0, 460.0, tm)) * layerDepth(y0, rd.y, dt, uAir.y)
-        + uAir.z * (0.06 + 2.6 * bank * bank + ${glslFloat(AIR.pool)} * foot) * smoothstep(30.0, 380.0, tm) * layerDepth(y0, rd.y, dt, uAir.w * (0.4 + max(${glslFloat(AIR.bankHigh)} * bank * bank, ${glslFloat(AIR.poolHigh)} * foot)));
+        + uAir.z * (0.06 + 2.6 * bank * bank + ${glslFloat(AIR.pool)} * foot) * smoothstep(uNearMist.x, uNearMist.y, tm) * layerDepth(y0, rd.y, dt, uAir.w * (0.4 + max(${glslFloat(AIR.bankHigh)} * bank * bank, ${glslFloat(AIR.poolHigh)} * foot)));
       float a = 1.0 - exp(-tau);
       // Under the shut cloud the air is the storm's slate; where the break stands over it, it takes the sky's light and the sun.
       float gap = deckShade(p, clamp(log2(dt) - 4.4, 1.0, 8.0));
@@ -342,6 +344,9 @@ export function create(ctx: Context): Piece {
   // Staged for the colony's shot only: the air itself stands thicker, so that the blade behind the colony's rock is a pale shape far off
   // and the roosts read against it. (It was a column of mist round that blade, which read as a flat card.)
   const colonyShot = shotSpan('ribs-03');
+  // The bore's shot: the spray's own air stands round the lens, and the low mist with it.
+  const boreShot = shotSpan('ribs-06');
+  const nearMist = new THREE.Vector2(AIR.clearTo, AIR.wholeAt);
   const air = new THREE.Vector4(AIR.haze, AIR.high, AIR.mist, AIR.low);
   const volume = new THREE.ShaderMaterial({
     vertexShader: QUAD_VERTEX,
@@ -359,6 +364,7 @@ export function create(ctx: Context): Piece {
       uFeet: { value: feet },
       uFogHole: { value: fogHole },
       uFarAir: farAir,
+      uNearMist: { value: nearMist },
       uDrift: { value: driftAt },
       uSourceCount: count,
       uSourceA: { value: sourceA },
@@ -394,6 +400,8 @@ export function create(ctx: Context): Piece {
       const phase = loopPhase();
       const mist = phase === null ? 1 : 1 + LOOP_MIST * (1 - Math.cos(phase * Math.PI * 2)) * 0.5;
       farAir.value = thick ? AIR.colony - 1 : 0;
+      if (staged >= boreShot.from && staged < boreShot.to) nearMist.set(30, 380);
+      else nearMist.set(AIR.clearTo, AIR.wholeAt);
       if (phase === null) driftAt.set(seconds, 0, 0);
       else driftAt.set(T0 + LOOP_BANKS * config.deliver.cardLoop.seconds * phase, T0 + LOOP_BANKS * config.deliver.cardLoop.seconds * (phase - 1), phase);
       air.set(AIR.haze * mist, AIR.high, AIR.mist * mist, AIR.low);
