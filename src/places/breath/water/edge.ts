@@ -194,7 +194,10 @@ void main() {
   // The rock the swash has been over stays wet a hand above the line, raggedly, and dries upward.
   float reach = 0.05 + 0.13 * vnoise(xz * 0.6 + 9.0) + 0.03 * vnoise(xz * 4.7);
   // Only a hand or two in from the line: the flat top of a low stone is wet round its rim and dry in the middle.
-  float wet = (1.0 - smoothstep(0.45 * reach, reach, up)) * (1.0 - smoothstep(0.1, 0.24, vOut.z));
+  // Far off that rim is under a pixel, and what the eye has of a low bank is a wet shelf along the water: there the wet lies as far in
+  // as the skin goes, on rock that is low enough.
+  float shelfy = smoothstep(12.0, 40.0, far);
+  float wet = (1.0 - smoothstep(0.45 * reach, reach * (1.0 + 0.6 * shelfy), up)) * (1.0 - smoothstep(0.1 + 0.12 * shelfy, 0.24 + 0.18 * shelfy, vOut.z));
   // Its front carries a line of froth up the rock and leaves it there in bits as it falls back.
   float front = smoothstep(run - 0.009, run - 0.003, up) * (1.0 - smoothstep(run, run + 0.003, up));
   // Froth gathers where the stream lays it against the bank: thick in the lee of a stone or a bar, none on a clean reach.
@@ -238,7 +241,7 @@ void main() {
 
   float skin = max(wet, film);
   vec3 colour = gloss * skin;
-  float alpha = max(0.45 * wet, film * (0.3 + 0.7 * fresnel));
+  float alpha = max((0.45 + 0.15 * shelfy) * wet, film * (0.3 + 0.7 * fresnel));
   // The film ends on the rock as the sheet does: it climbs it a hair and turns the sky away, a thin dark line.
   alpha = max(alpha, 0.55 * front);
   colour *= 1.0 - 0.7 * front;
