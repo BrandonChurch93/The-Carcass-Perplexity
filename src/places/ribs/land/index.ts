@@ -279,11 +279,11 @@ export function create(ctx: Context): Piece {
   const outLen = Math.hypot(hungOut[0] - hungAt[0], hungOut[2] - hungAt[2]) || 1;
   const wallAlong: [number, number] = [-(hungOut[2] - hungAt[2]) / outLen, (hungOut[0] - hungAt[0]) / outLen];
   const rillAt = new THREE.Vector4(hungAt[0] + wallAlong[0] * RILL_ALONG, hungAt[2] + wallAlong[1] * RILL_ALONG, wallAlong[0], wallAlong[1]);
-  const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
-    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uRill: { value: rillAt } });
+  const hangs = (proud: number, bare = 0, dark = 0.78): THREE.ShaderMaterial =>
+    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uDark: { value: dark }, uRill: { value: rillAt } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
-  const weedNear = hangs(0.6);
+  const weedNear = hangs(0.6, 0, 0.5);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.15, 0);
   const feedLens = resolve(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 0).position;
@@ -662,7 +662,7 @@ export function create(ctx: Context): Piece {
       }
     }
     // Close under the key's lens, at its left: a heap of rock with weed over it, soft before the sharp band, as the picture has it.
-    const heap: [number, number, number][] = [[4.6, -2.7, 1.05], [5.6, -1.75, 0.8], [6.3, -3.4, 1.2], [5.2, -3.9, 0.9], [6.6, -0.7, 0.55], [7.4, -2.2, 0.7], [7.0, 0.5, 0.36], [8.3, -1.2, 0.42], [6.1, 1.6, 0.3], [8.8, -3.6, 0.8], [7.7, 2.6, 0.26]];
+    const heap: [number, number, number][] = [[3.5, -1.4, 0.8], [3.9, -0.45, 0.55], [3.2, -2.1, 0.9], [4.6, -2.7, 1.05], [5.6, -1.75, 0.8], [6.3, -3.4, 1.2], [5.2, -3.9, 0.9], [6.6, -0.7, 0.55], [7.4, -2.2, 0.7], [7.0, 0.5, 0.36], [8.3, -1.2, 0.42], [6.1, 1.6, 0.3], [8.8, -3.6, 0.8], [7.7, 2.6, 0.26]];
     for (const [f, r, size] of heap) put(knots, f, r, size, 0.62, 0.95);
     const bars: { x: number; z: number; size: number; yaw: number; lift: number }[] = [];
     // The crown of a bar where a stone lies on one: the stone lies on the sand, not under it.

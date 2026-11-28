@@ -186,11 +186,12 @@ void main() {
   float ruffle = sin(vUv.y * 60.0 + vTone.x * 40.0 + 3.0 * wr) * smoothstep(0.3, 0.9, edge);
   vec3 n = normalize(n0 + across * ((vUv.x * 2.0 - 1.0) * 0.28) + 0.5 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5) + 0.6 * ruffle, wr2 - 0.5));
   // Olive brown where it is thick, amber toward its thin end and its edges, where the day comes through it.
-  vec3 olive = mix(vec3(0.016, 0.012, 0.004), vec3(0.075, 0.052, 0.014), vTone.x);
+  vec3 olive = mix(vec3(0.03, 0.021, 0.006), vec3(0.075, 0.052, 0.014), vTone.x);
   vec3 amber = vec3(0.21, 0.12, 0.02);
   float thin = smoothstep(0.1, 0.9, vUv.y) * (0.4 + 0.6 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
   float gold = (0.22 + 0.78 * vTone.y) * thin;
-  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2);
+  // From far off the curtain is one dark mass: each frond stands in the shade of the rest, and no day comes through it.
+  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.34, 1.0, close);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
   // Wet through, but no hose and no mirror: the film on it stands in beads, so the sky on it is a scatter of points and not a sheen.
@@ -202,7 +203,7 @@ void main() {
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
   c += above * (0.5 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
   // The day through a frond that hangs free of the wall.
-  c += amber * above * (0.07 * thin * smoothstep(0.45, 0.95, vTone.z) * occ);
+  c += amber * above * (0.07 * close * thin * smoothstep(0.45, 0.95, vTone.z) * occ);
   // The low sun through a thin wet frond.
   float thru = (max(dot(-n0, uSunDir), 0.0) + 0.12 * max(dot(n0, uSunDir), 0.0)) * (0.08 + 0.92 * vTone.y) * occ;
   // The sun's reach is read at named levels: a picture read by the pixel's own level inside a branch is not defined at its edge.
