@@ -23,7 +23,7 @@ npm run subs -- contrast T FRAME.png      the text against what lies round the l
 npm run subs -- step T0 T1 W H FPS        the layer's mean change from frame to frame over mid grey
 ```
 
-Frames are 960 by 540, 1920 by 1080 or 3840 by 2160. `burn` takes the size and the rate from the film, 30 or 60 frames a second. `burn` and `layer` take a start in seconds and a length after their arguments, for a part of the film.
+Frames are 960 by 540, 1920 by 1080 or 3840 by 2160. `burn` takes the size and the rate from the film, 30 or 60 frames a second. `burn` and `layer` take a start in seconds and a length after their arguments, for a part of the film. `burn` keeps every frame of the film: the sound is cut to the film's span and never ends the picture early.
 
 ## To change the look
 

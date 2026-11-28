@@ -650,7 +650,7 @@ def proof_summary(res):
 # ---- files -------------------------------------------------------------------------------------------------
 def probe(path):
     j = json.loads(subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries',
-                                   'stream=width,height,r_frame_rate,color_space', '-of', 'json', path], capture_output=True, text=True).stdout)['streams'][0]
+                                   'stream=width,height,r_frame_rate,color_space,duration', '-of', 'json', path], capture_output=True, text=True).stdout)['streams'][0]
     a, b = j['r_frame_rate'].split('/')
     j['fps'] = float(a) / float(b)
     return j
@@ -719,11 +719,15 @@ def main(argv):
         check_size(Wd, Ht)
         R = Renderer(load(), Wd, Ht)
         cut = (['-ss', '%.4f' % t0] if t0 else []) + (['-t', '%.4f' % dur] if dur else [])
+        # The sound is cut to the picture's span and never ends the picture. With -shortest the last frame was lost
+        # whenever the sound ended inside it (the mix is 197.683 s long, the film's last frame ends at 197.700 s).
+        left = dur if dur else max(0.0, float(pr.get('duration') or 0) - t0)
+        acut = (['-ss', '%.4f' % t0] if t0 else []) + (['-t', '%.4f' % left] if left else [])
         dec = subprocess.Popen(['ffmpeg', '-v', 'error'] + cut + ['-i', film, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], stdout=subprocess.PIPE, bufsize=Wd * Ht * 3 * 4)
         tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709'] if pr.get('color_space') == 'bt709' else []
-        enc = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', '%dx%d' % (Wd, Ht), '-r', '%g' % fps, '-i', '-'] + cut + ['-i', audio,
+        enc = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', '%dx%d' % (Wd, Ht), '-r', '%g' % fps, '-i', '-'] + acut + ['-i', audio,
                                 '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'medium', '-crf', os.environ.get('CRF', '16'), '-pix_fmt', 'yuv420p'] + tags +
-                               ['-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-shortest', '-movflags', '+faststart', out], stdin=subprocess.PIPE)
+                               ['-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-movflags', '+faststart', out], stdin=subprocess.PIPE)
         n = 0; nb = Wd * Ht * 3
         import time; T0 = time.time()
         while True:
