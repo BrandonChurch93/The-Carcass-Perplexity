@@ -788,70 +788,96 @@ void main() {
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
-// A hoop of the main shaft (land/arches.ts): a rib, round and smooth, wet with the mist. Its skin was sculpted and baked once
-// (assets-src/breath/land/rib_bake.py): plates of mineral that have come away in sheets, cracks between them, breaks across the rib, pits,
-// cords hanging under its belly. Two pictures hold it, unwrapped along the rib and once round it with no mirror: land/ribskin-n.jpg (the
-// lean of the skin and its baked occlusion) and land/ribskin-m.jpg (height, rust, hollows). The colour is made here from them.
+// A hoop of the main shaft (land/arches.ts): a thick bank of travertine, laid down bed on bed. Its face toward the shaft and every broken
+// end show the beds on edge: the sheet of a broken bedded face, laid by metres along the hoop and metres over its middle (so its beds run
+// with the hoop and are the same beds the mesh steps in and out), and on an end by metres from the axis. Its top and its belly are the
+// outer skin, laid flat. Both sheets have a height, which leans the normal, shuts the recesses and darkens the foot of an overhang.
 export const HOOP_FRAGMENT = /* glsl */ `
 ${COMMON}
-uniform sampler2D tRibN;
-uniform sampler2D tRibM;
-// The size of the skin's two pictures, the metres one repeat of it is long, and the metres round the rib it was sculpted on.
-uniform vec4 uRib;
+uniform sampler2D tFace;
+uniform sampler2D tFaceH;
+uniform sampler2D tSkin;
+uniform sampler2D tSkinH;
+uniform vec3 uFaceMean;
+uniform vec3 uSkinMean;
+uniform vec4 uSheet;
 void main() {
   vec3 p = vWorld;
-  // One footprint, taken before anything else, and every picture of the skin is read at the level it gives.
+  vec3 v = normalize(cameraPosition - p);
+  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
+  float rad = length(p.xz);
+  vec3 er = vec3(p.x, 0.0, p.z) / max(rad, 1.0);
+  vec3 et = vec3(-er.z, 0.0, er.x);
+  float wt = abs(dot(n, et));
+  float wr = abs(dot(n, er));
+  float up = clamp(n.y, 0.0, 1.0);
+  float level = smoothstep(0.62, 0.86, abs(n.y));
+  bool ended = wt > 1.25 * wr;
+
+  vec4 a = texture2D(tRock, vUv / vec2(23.0, 19.0));
+  vec4 b = texture2D(tRock, vUv / vec2(8.3, 7.1) + 0.35 * a.ra);
+  vec4 c = texture2D(tRock, vec2(vUv.x / 3.1, p.y / 9.0) + 0.3 * b.ar);
+
+  // The face: beds on edge.
+  vec2 fa = vec2(vUv.x, vUv.y) / uSheet.xy;
+  vec2 fb = vec2(rad * 1.3 + 2.7, vUv.y) / uSheet.xy;
+  // Every screen derivative is taken here, before any choice that differs from pixel to pixel.
+  vec2 fax = dFdx(fa);
+  vec2 fay = dFdy(fa);
+  vec2 fbx = dFdx(fb);
+  vec2 fby = dFdy(fb);
+  vec2 suv = vec2(vUv.x, rad + vUv.y) / uSheet.z;
+  vec2 sdx = 1.2 * dFdx(suv);
+  vec2 sdy = 1.2 * dFdy(suv);
+  vec2 fuv = ended ? fb : fa;
+  vec2 fdx = 1.2 * (ended ? fbx : fax);
+  vec2 fdy = 1.2 * (ended ? fby : fay);
+  vec3 faceCol = textureGrad(tFace, fuv, fdx, fdy).rgb / uFaceMean;
+  float h0 = textureGrad(tFaceH, fuv, fdx, fdy).r;
+  // The relief fades where a bed is finer than a pixel: there it would only be grain.
+  float seen = smoothstep(0.05, 0.012, max(length(fdx), length(fdy)));
+  // Not all of the face is broken: where the outer skin is whole it lies over the beds, and they show through it at half strength.
+  float whole = ended ? 0.0 : 0.72 * smoothstep(0.36, 0.56, a.a + 0.4 * (c.r - 0.5));
+  level = max(level, whole);
+  vec3 skinCol = textureGrad(tSkin, suv, sdx, sdy).rgb / uSkinMean;
+  float s0 = textureGrad(tSkinH, suv, sdx, sdy).r;
+  float seenSkin = smoothstep(0.05, 0.012, max(length(sdx), length(sdy)));
+  vec3 tex = mix(faceCol, skinCol, level);
+  float height = mix(h0, s0, level);
+  // One relief in metres, and the lean of the normal from its slope across the screen.
+  float relief = uSheet.w * mix(seen * h0, 0.55 * seenSkin * s0, level);
   vec3 dpx = dFdx(p);
   vec3 dpy = dFdy(p);
-  vec2 ux = dFdx(vUv);
-  vec2 uy = dFdy(vUv);
-  vec4 a = texture2D(tRock, vec2(vUv.x * 1.39, vUv.y));
-  vec4 b = texture2D(tRock, vec2(vUv.x * 3.86, vUv.y * 2.0) + 0.35 * a.ra);
-  vec4 c = texture2D(tRock, vec2(vUv.x * 10.3, vUv.y * 3.0) + 0.3 * b.ar);
-  float level = log2(max(max(length(ux * uRib.xy), length(uy * uRib.xy)), 1.0)) - 0.5;
-  vec4 tn = textureLod(tRibN, vUv, level);
-  vec4 tm = textureLod(tRibM, vUv, level);
-  vec3 v = normalize(cameraPosition - p);
-  vec3 n = vNormal * (inversesqrt(max(dot(vNormal, vNormal), 1e-12)) * (gl_FrontFacing ? 1.0 : -1.0));
-  float up = clamp(n.y, 0.0, 1.0);
-
-  // The lean of the sculpted skin, along the rib and round it, turned into the world by how the two run across the pixel.
-  vec2 lean = tn.xy * 2.0 - 1.0;
-  vec2 slope = -lean * inversesqrt(max(1.0 - dot(lean, lean), 0.05));
   vec3 r1 = cross(dpy, n);
   vec3 r2 = cross(n, dpx);
   float det = dot(dpx, r1);
-  float inv = abs(det) > 1e-12 ? 1.0 / det : 0.0;
-  vec3 grad = ((ux.x * r1 + uy.x * r2) * (slope.x * uRib.z) + (ux.y * r1 + uy.y * r2) * (slope.y * uRib.w)) * (2.0 * inv);
-  float steepness = dot(grad, grad);
-  grad = steepness < 1e8 ? grad * min(1.0, 3.5 * inversesqrt(max(steepness, 1e-8))) : vec3(0.0);
+  vec3 grad = sign(det) * (dFdx(relief) * r1 + dFdy(relief) * r2) / max(abs(det), 1e-9);
+  grad *= min(1.0, 2.5 / max(length(grad), 1e-4));
+  // A bed under one that stands out is in its shade.
+  float under = (1.0 - 0.7 * level) * clamp(0.25 * grad.y, 0.0, 1.0);
   n = normalize(n - grad);
 
-  float hollow = tm.b;
-  float baked = tn.b;
-  // Ivory: paler where the skin stands out, deeper in its lows.
-  vec3 albedo = mix(vec3(0.6, 0.555, 0.47), vec3(0.9, 0.87, 0.795), clamp(0.5 + 1.1 * (a.r - 0.5) + 0.9 * (hollow - 0.5), 0.0, 1.0));
-  // Rust: it starts at the cracks and the bare places and runs down round the nose and under the belly, where the water runs. The top
-  // keeps its cream, with a wash of it here and there.
-  float face = 1.0 - up;
-  float broad = b.a + 0.5 * (a.a - 0.5);
-  // Veined, as marble is: thin wandering lines of it, which swell to blotches with dark hearts where the broad stain lies.
-  float vein = 1.0 - smoothstep(0.0, 0.12 + 0.18 * smoothstep(0.35, 0.7, broad), abs(c.a + 0.6 * (b.r - 0.5) - 0.5));
-  float blotch = smoothstep(0.46, 0.66, broad + 0.25 * (c.r - 0.5));
-  float stain = clamp(max(0.85 * vein * (0.35 + 0.65 * smoothstep(0.3, 0.6, broad)), blotch * (0.55 + 0.45 * c.a)) + 0.18 * smoothstep(0.6, 1.0, tm.g), 0.0, 1.0);
-  float heart = stain * smoothstep(0.6, 0.85, broad + 0.35 * (c.r - 0.5));
-  albedo = mix(albedo, mix(vec3(0.62, 0.36, 0.15), vec3(0.3, 0.13, 0.05), heart), 0.9 * stain * (0.55 + 0.45 * face));
-  // Dirt in the cracks.
-  albedo *= mix(0.58, 1.0, smoothstep(0.1, 0.8, baked));
-  // Green and dark with damp where it meets the wall and under its belly.
-  float damp = smoothstep(0.8, 0.45, vOcc + 0.25 * (c.a - 0.5) + 0.25 * (hollow - 0.5));
-  albedo = mix(albedo, vec3(0.13, 0.15, 0.075) * (0.6 + 0.5 * a.r), 0.75 * damp);
+  // Ivory, with the sheet's own rust, pits and beds as tone and hue; paler on the beds that stand out.
+  float grey = dot(tex, vec3(0.3333));
+  vec3 hue = tex / max(grey, 0.05);
+  vec3 ivory = mix(vec3(0.68, 0.645, 0.575), vec3(0.88, 0.855, 0.79), clamp(0.45 + 1.4 * (a.r - 0.5) + 0.5 * (height - 0.5), 0.0, 1.0));
+  vec3 albedo = ivory * mix(vec3(1.0), hue, 0.24) * clamp(mix(1.0, grey, 0.3), 0.5, 1.3);
+  // Rust beyond the sheet's own: broad marbled patches with dark hearts, and runs down the face from them.
+  float patch0 = smoothstep(0.5, 0.66, b.a + 0.5 * (a.a - 0.5) + 0.14 * (1.0 - up) - 0.1 * (height - 0.5) + 0.12 * (c.a - 0.5));
+  float heart = smoothstep(0.66, 0.8, b.a + 0.5 * (a.a - 0.5));
+  float runs = smoothstep(0.5, 0.7, c.r + 0.25 * patch0) * smoothstep(0.75, 0.2, n.y) * smoothstep(-0.95, -0.3, n.y);
+  vec3 rust = mix(vec3(0.52, 0.29, 0.11), vec3(0.24, 0.11, 0.04), heart);
+  albedo = mix(albedo, rust * clamp(grey, 0.5, 1.4), 0.72 * patch0);
+  albedo = mix(albedo, vec3(0.42, 0.21, 0.08) * clamp(grey, 0.5, 1.4), 0.62 * runs * (1.0 - 0.6 * patch0));
+  // Green and dark with damp where it meets the wall and under its belly, and in the recesses between the beds there.
+  float damp = smoothstep(0.8, 0.45, vOcc + 0.25 * (c.a - 0.5) + 0.2 * (height - 0.5));
+  albedo = mix(albedo, vec3(0.13, 0.15, 0.075) * (0.5 + 0.6 * grey), 0.75 * damp);
   // Dust and grit lie on its top, in the lows of the skin.
-  float dust = smoothstep(0.8, 0.97, up) * smoothstep(0.65, 0.3, hollow + 0.5 * (a.a - 0.5));
-  albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.5 * dust);
-  // The mist settles on it and runs: a smooth wet skin, duller where a plate has gone and where the dust lies.
-  float rough = mix(mix(0.2, 0.36, smoothstep(0.55, 0.25, hollow)), 0.8, dust);
-  float occ = vOcc * mix(0.4, 1.0, baked) * mix(0.82, 1.06, hollow);
+  float dust = smoothstep(0.86, 0.98, up) * smoothstep(0.55, 0.3, height + 0.4 * (a.a - 0.5));
+  albedo = mix(albedo, vec3(0.5, 0.47, 0.42) * clamp(grey, 0.6, 1.3), 0.5 * dust);
+  float rough = mix(mix(0.46, 0.24, level), 0.85, dust);
+  rough = mix(rough, 0.26, 0.6 * damp);
+  float occ = vOcc * mix(0.74, 1.04, smoothstep(0.12, 0.62, height)) * (1.0 - 0.4 * under);
 
   vec4 land = landAt(p.xz);
   float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);
@@ -1047,8 +1073,8 @@ export interface RockKit {
   bone(amount: number, pale: [number, number, number], dark: [number, number, number], of: Surface, side?: THREE.Side): THREE.ShaderMaterial;
   /** The main shaft: 0 its wall, 1 its arches. */
   pit(amount: number, of: Surface): THREE.ShaderMaterial;
-  /** A hoop of the main shaft: the two pictures of its sculpted skin, `long` metres to a repeat, sculpted on a rib `round` metres round. */
-  hoop(lean: THREE.Texture, matter: THREE.Texture, long: number, round: number): THREE.ShaderMaterial;
+  /** A hoop of the main shaft: the sheet of its bedded face (`metres` wide, `tall` high) and of its skin. */
+  hoop(face: Surface, tall: number, skin: Surface): THREE.ShaderMaterial;
   dispose(): void;
 }
 
@@ -1100,7 +1126,21 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
       ),
     bone: (amount, pale, dark, surface, side) => make(BONE_FRAGMENT, { uBone: { value: amount }, uPale: { value: new THREE.Vector3(...pale) }, uDark: { value: new THREE.Vector3(...dark) }, ...of(surface) }, side),
     pit: (amount, surface) => make(PIT_FRAGMENT, { uBone: { value: amount }, ...of(surface) }, THREE.DoubleSide),
-    hoop: (lean, matter, long, round) => make(HOOP_FRAGMENT, { tRibN: { value: lean }, tRibM: { value: matter }, uRib: { value: new THREE.Vector4(2048, 512, long, round) } }, THREE.DoubleSide),
+    hoop: (face, tall, skin) =>
+      make(
+        HOOP_FRAGMENT,
+        {
+          tFace: { value: face.colour },
+          tFaceH: { value: face.data },
+          tSkin: { value: skin.colour },
+          tSkinH: { value: skin.data },
+          uFaceMean: { value: new THREE.Vector3(...face.mean) },
+          uSkinMean: { value: new THREE.Vector3(...skin.mean) },
+          // Metres the face's sheet is wide and tall, metres the skin's sheet is across, metres from the lowest of the relief to the highest.
+          uSheet: { value: new THREE.Vector4(face.metres, tall, skin.metres, face.relief) },
+        },
+        THREE.DoubleSide,
+      ),
     dispose: () => {
       for (const m of made) m.dispose();
       tile.dispose();

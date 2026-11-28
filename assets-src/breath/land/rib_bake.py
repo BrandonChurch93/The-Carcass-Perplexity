@@ -1,7 +1,7 @@
 # The skin of a rib of the main shaft, sculpted and baked: one length of 32 m by one turn round it, which closes on itself both ways.
 # The sculpt is a height in metres over a round rib (numpy), the occlusion is baked from the sculpted rib itself in Blender (Cycles, CPU).
 # Run: /home/user/bpyenv/bin/python assets-src/breath/land/rib_bake.py <seed> <name>
-# Writes out/work/rib/<name>-h.npy (height, metres), <name>-ao.png, <name>-rust.npy and the previews; rib_pack.py packs them for the film.
+# Writes out/work/rib/<name>-h.npy (height, metres), <name>-ao.png, <name>-rust.npy and the previews; rib_pack.cjs packs them for the film.
 import sys
 import os
 import numpy as np

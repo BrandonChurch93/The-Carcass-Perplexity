@@ -4,34 +4,32 @@
 // one and dark there.
 import * as THREE from 'three';
 import { DEPTH, RAD, ground, lerp, rimRadius, sat, smooth } from '../land';
-import { RELIEF_DATA, RELIEF_H, RELIEF_HIGH, RELIEF_LONG, RELIEF_LOW, RELIEF_W } from './ribrelief';
+import { BEDS_DATA, BEDS_H, BEDS_W } from './hoopbeds';
 import { noise3, tube } from './ribs';
 
-let relief: Uint8Array | null = null;
-/** The sculpted skin of a rib (land/ribrelief.ts): metres it stands over the round rib, at metres along it and the part of a turn round
- *  it (0 the side toward the shaft, a quarter its top). It closes on itself both ways. */
-function reliefAt(s: number, turn: number): number {
-  if (!relief) {
-    const raw = atob(RELIEF_DATA);
-    relief = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) relief[i] = raw.charCodeAt(i);
+/** The sheet of the bedded face of a hoop (land/travface.jpg) as it is laid on it: metres along and metres up, mirrored at each repeat. */
+export const FACE = { wide: 6, tall: 4 };
+let beds: Uint8Array | null = null;
+const mirrored = (t: number): number => {
+  const f = t - 2 * Math.floor(t / 2);
+  return f > 1 ? 2 - f : f;
+};
+/** The height of the bedded face, 0 to 1, at metres along a hoop and metres over its middle: the sheet's own beds, as coarse as the mesh
+ *  can hold them, so that a ledge of the mesh is a pale bed of the picture. */
+function bedAt(s: number, h: number): number {
+  if (!beds) {
+    const raw = atob(BEDS_DATA);
+    beds = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) beds[i] = raw.charCodeAt(i);
   }
-  const x = (s / RELIEF_LONG) * RELIEF_W - 0.5;
-  const y = turn * RELIEF_H - 0.5;
-  const ix = Math.floor(x);
-  const iy = Math.floor(y);
-  const fx = x - ix;
-  const fy = y - iy;
-  const wrap = (i: number, n: number): number => ((i % n) + n) % n;
-  const at = (i: number, j: number): number => (relief as Uint8Array)[wrap(j, RELIEF_H) * RELIEF_W + wrap(i, RELIEF_W)] as number;
-  return lerp(RELIEF_LOW, RELIEF_HIGH, lerp(lerp(at(ix, iy), at(ix + 1, iy), fx), lerp(at(ix, iy + 1), at(ix + 1, iy + 1), fx), fy) / 255);
-}
-
-/** The skin is laid by the part of a turn round the rib, and the last row of a tube is its first again: it is the whole turn there. */
-function closed(g: THREE.BufferGeometry, columns: number, rows: number): THREE.BufferGeometry {
-  const uv = g.getAttribute('uv') as THREE.BufferAttribute;
-  for (let i = 0; i <= columns; i++) uv.setY(rows * (columns + 1) + i, 1);
-  return g;
+  const x = mirrored(s / FACE.wide) * BEDS_W - 0.5;
+  const y = (1 - mirrored(h / FACE.tall)) * BEDS_H - 0.5;
+  const ix = Math.max(0, Math.min(BEDS_W - 2, Math.floor(x)));
+  const iy = Math.max(0, Math.min(BEDS_H - 2, Math.floor(y)));
+  const fx = sat(x - ix);
+  const fy = sat(y - iy);
+  const at = (i: number, j: number): number => (beds as Uint8Array)[j * BEDS_W + i] as number;
+  return lerp(lerp(at(ix, iy), at(ix + 1, iy), fx), lerp(at(ix, iy + 1), at(ix + 1, iy + 1), fx), fy) / 255;
 }
 
 export interface Arch {
@@ -58,12 +56,12 @@ export interface Arch {
  *  came down, bearing 112, land.ts) and turns into the rock there. None runs level: each is tilted and wavers its own way, and three of
  *  them are broken through at one place. Laid as fifteen shorter arches, each with two ends in sight, they read as loaves on a wall. */
 export const ARCHES: Arch[] = [
-  { tier: 0, y: -4.4, from: 150, to: 431, thick: 2.09, drop: 1.6, sag: 0.6, seed: 1, wave: [1.3, 3, 0.4], gap: [318, 5] },
-  { tier: 1, y: -12.6, from: 147, to: 434, thick: 2.40, drop: -3.0, sag: 1.2, seed: 4, wave: [1.9, 2, 2.1] },
-  { tier: 2, y: -20.6, from: 152, to: 430, thick: 2.26, drop: 3.4, sag: 0.8, seed: 7, wave: [1.6, 3, 4.0], gap: [226, 4] },
-  { tier: 3, y: -29.4, from: 149, to: 433, thick: 2.45, drop: -2.4, sag: 1.4, seed: 10, wave: [2.0, 2, 5.2] },
-  { tier: 4, y: -38.6, from: 151, to: 429, thick: 2.31, drop: 2.8, sag: 1.0, seed: 12, wave: [1.7, 3, 1.3], gap: [372, 5] },
-  { tier: 5, y: -49.5, from: 148, to: 432, thick: 2.45, drop: -2.0, sag: 1.6, seed: 15, wave: [1.5, 2, 3.3] },
+  { tier: 0, y: -4.4, from: 150, to: 431, thick: 2.25, drop: 1.6, sag: 0.6, seed: 1, wave: [1.3, 3, 0.4], gap: [318, 5] },
+  { tier: 1, y: -12.6, from: 147, to: 434, thick: 2.6, drop: -3.0, sag: 1.2, seed: 4, wave: [1.9, 2, 2.1] },
+  { tier: 2, y: -20.6, from: 152, to: 430, thick: 2.45, drop: 3.4, sag: 0.8, seed: 7, wave: [1.6, 3, 4.0], gap: [226, 4] },
+  { tier: 3, y: -29.4, from: 149, to: 433, thick: 2.65, drop: -2.4, sag: 1.4, seed: 10, wave: [2.0, 2, 5.2] },
+  { tier: 4, y: -38.6, from: 151, to: 429, thick: 2.5, drop: 2.8, sag: 1.0, seed: 12, wave: [1.7, 3, 1.3], gap: [372, 5] },
+  { tier: 5, y: -49.5, from: 148, to: 432, thick: 2.65, drop: -2.0, sag: 1.6, seed: 15, wave: [1.5, 2, 3.3] },
 ];
 
 // The height of the brim round the shaft, kept for every quarter of a degree: the ground is costly to ask and the wall asks it for every point.
@@ -152,36 +150,32 @@ function sectionAt(a: Arch, deg: number): Section {
   return { s, length, run, near: s, far: length - s, centre: centre + into(s) + into(length - s) + lost, y, end, broke };
 }
 
-/** One arch as a closed skin. `fine` is the size of a cell along it, metres. It is a rib: a ledge with a round nose, smooth, its skin the one
- *  sculpted and baked for it (assets-src/breath/land/rib_bake.py), which the mesh takes as far as its cells hold and the light takes whole.
- *  As a thick bank with the beds of a sheet stepped in and out of its face it read as a ribbon of banded clay. */
-/** How far the sculpted skin stands in the mesh, against the metres it was sculpted at. */
-const SKIN_DEEP = 1.2;
-
+/** One arch as a closed skin. `fine` is the size of a cell along it, metres. Its section is a thick bank, not a pipe: a top that falls a
+ *  little toward the shaft, a tall face that the sheet's beds step in and out, a lip that hangs, and a belly cut back under it. Bites a
+ *  pace or three wide are out of the face where a piece came away. */
 export function arch(a: Arch, fine: number): THREE.BufferGeometry {
   const whole = sectionAt(a, a.to).length;
   const columns = Math.max(24, Math.round(whole / fine));
-  const rows = Math.max(32, Math.round((2 * Math.PI * a.thick * 1.5) / (fine * 1.25)));
+  const rows = Math.max(28, Math.round((2 * Math.PI * a.thick * 1.15) / (fine * 1.25)));
   const s0 = a.seed * 7.31;
   const E = 0.6;
   const g = tube(columns, rows, (t, turn) => {
     const deg = lerp(a.from, a.to, t);
     const b = deg * RAD;
     const q = sectionAt(a, deg);
-    // More of the rows on the side toward the shaft, which is the side that is seen: the other is in the rock.
-    const ang = turn - 0.55 * Math.sin(turn);
+    // More of the rows on the side toward the shaft, which is the side that is seen.
+    const ang = turn - 0.5 * Math.sin(turn);
     const ca = Math.cos(ang);
     const sa = Math.sin(ang);
     const end = q.end;
-    const k = (1 + 0.35 * (q.run - 1)) * (0.01 + 0.99 * end);
-    // A ledge with a round nose: flat on top, its belly deepest at its root. Round as a pipe it was a worm laid along the wall, and
-    // twice as far out as it is thick it was a blank dome under the lens of the second shot.
+    const k = q.run * (0.01 + 0.99 * end);
     const cx = Math.sign(ca) * Math.abs(ca) ** E;
     const cy = Math.sign(sa) * Math.abs(sa) ** E;
-    // Its lip is not a ruled line: it stands out in lobes, and lengths of it have broken off back toward the wall.
-    const bite = smooth((noise3(q.s * 0.17, s0 + 3.1, 3.3) - 0.2) / 0.16) * smooth(Math.min(q.near, q.far) / 12 - 0.5);
-    const wide = a.thick * (1.2 + 1.2 * (q.run - 1) + 0.16 * noise3(q.s * 0.42, s0, 8.8) - 0.45 * bite) * (0.01 + 0.99 * end);
-    const tall = a.thick * k * (sa > 0 ? 0.77 : 0.8 + 0.45 * smooth(0.5 - 0.5 * cx));
+    const out = sat(cx);
+    const wide = a.thick * 1.12 * k;
+    // The lip hangs lower than the belly behind it, by its own amount along the run.
+    const lip = 0.16 + 0.2 * noise3(q.s * 0.23, s0, 3.3) + 0.12 * noise3(q.s * 0.71, s0, 8.1);
+    const tall = a.thick * k * (sa > 0 ? 0.8 - 0.1 * out : 0.86 * (1 + lip * smooth(out / 0.7)) * (1 - 0.3 * smooth(-cx / 0.8)));
     // The way the skin faces here, in the section's own plane.
     const nx0 = Math.sign(ca) * Math.abs(ca) ** (2 - E) * tall;
     const ny0 = Math.sign(sa) * Math.abs(sa) ** (2 - E) * wide;
@@ -190,25 +184,27 @@ export function arch(a: Arch, fine: number): THREE.BufferGeometry {
     const ny = ny0 / nl;
     const h = cy * tall;
     const along = q.s + s0 * 3;
-    // Long low swells along it, the sculpted skin (its plates, its breaks across and the cords under its belly), and chips at a break.
-    const lobe = 0.07 * noise3(q.s * 0.11 + 2 * ca, s0 + 2 * sa, 5.5) + 0.04 * (1 - 2 * Math.abs(noise3(q.s * 0.05, s0 + 2.2 * ca, 2.2 * sa)));
+    // The beds of the sheet, on the face; a bite out of the face, with the beds bare in it; long lobes on the top and the belly.
+    const faced = smooth((nx - 0.25) / 0.5);
+    const bite = smooth((noise3(q.s * 0.21 + 3, s0 + h * 0.3, 1.7) + 0.5 * noise3(q.s * 0.6, s0 + h * 0.8, 6.1) - 0.3) / 0.14);
+    const bed = bedAt(along, h) - 0.5;
+    const lobe = 0.09 * noise3(q.s * 0.11 + 2 * ca, s0 + 2 * sa, 5.5) + 0.05 * (1 - 2 * Math.abs(noise3(q.s * 0.05, s0 + 2.2 * ca, 2.2 * sa)));
     const px = Math.sin(b) * (q.centre - cx * wide);
     const pz = -Math.cos(b) * (q.centre - cx * wide);
     const face = 1 - Math.min(1, Math.max(0, q.broke) / 1.6);
-    const push = (SKIN_DEEP * reliefAt(along, ang / (2 * Math.PI)) + 0.2 * face * broken(px, q.y + h, pz) + lobe * a.thick) * Math.min(1, k * 2.2);
+    const push = (faced * ((0.42 + 0.3 * bite) * bed - 0.42 * bite) + (0.05 + 0.14 * face) * broken(px, q.y + h, pz) + lobe * a.thick * (1 - 0.6 * faced)) * Math.min(1, k * 2.2);
     const rr = q.centre - cx * wide - nx * push;
     // The face of a break is not flat: its points stand in and out along the run by a hand or two.
     const toward = a.gap && deg > a.gap[0] ? 1 : -1;
-    const b2 = b + (toward * face * (1 - end) * (0.3 + 0.7 * noise3(cx * a.thick * 0.9 + s0, cy * a.thick * 0.9, 7.7))) / q.centre;
+    const b2 = b + (toward * face * (1 - end) * (0.3 + 0.5 * noise3(cx * a.thick * 0.9 + s0, cy * a.thick * 0.9, 7.7) + 0.5 * bed)) / q.centre;
     return {
       at: [Math.sin(b2) * rr, q.y + h + ny * push, -Math.cos(b2) * rr],
-      // The sculpted skin is laid by these: repeats along it, and the part of a turn round it.
-      uv: [along / RELIEF_LONG, ang / (2 * Math.PI)],
-      // Its belly and the side against the wall are in its own shade.
-      occ: lerp(0.38, 1, smooth(0.6 + 0.5 * sa + 0.3 * ca)),
+      // Metres along it and metres over its middle: the sheet of its face is laid by these.
+      uv: [along, h],
+      // Its belly and the side against the wall are in its own shade, and a recess between two beds more than a bed that stands out.
+      occ: lerp(0.38, 1, smooth(0.6 + 0.5 * sa + 0.3 * ca)) * lerp(0.62, 1.06, smooth(0.5 + 1.4 * push)),
     };
   });
-  closed(g, columns, rows);
   // Where the arch has closed (in a break, and under the rock at its two ends) nothing of it is drawn. Kept, it was a thread of skin a
   // thumb wide and metres long, sunk in the rock: faces a twentieth of a pixel across from the far lens, the normals on their two sides
   // opposed, so that between them the normal passes through nothing and has no direction to be given. One such face came out as the
@@ -340,8 +336,7 @@ export function cap(fine: number): THREE.BufferGeometry {
   const to = 436;
   const back = 1.1;
   const columns = Math.round(((to - from) * RAD * 30) / fine);
-  return closed(
-    tube(columns, 22, (t, ang) => {
+  return tube(columns, 22, (t, ang) => {
     const deg = lerp(from, to, t);
     const b = deg * RAD;
     const arc = b * 30;
@@ -379,11 +374,8 @@ export function cap(fine: number): THREE.BufferGeometry {
     const y = sa > 0 ? top + 0.5 * chip * sa : top - (0.06 + droop * body) * Math.abs(sa) ** 0.7 - chip;
     return {
       at: [x + Math.sin(b) * -chip * 0.6 * hung, y, z + Math.cos(b) * chip * 0.6 * hung],
-      uv: [(arc + 40) / RELIEF_LONG, ang / (2 * Math.PI)],
+      uv: [arc + 40, ang * 1.6 + 7],
       occ: lerp(0.4, 1, smooth(0.62 + 0.55 * sa + 0.2 * ca)) * lerp(0.75, 1.05, smooth(0.5 + 3 * chip)),
     };
-    }),
-    columns,
-    22,
-  );
+  });
 }
