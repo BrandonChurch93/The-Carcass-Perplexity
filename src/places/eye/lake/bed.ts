@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { KEYS } from '../cameras';
 import { mirrored } from '../land/rock';
+import { SHORE_LAY_GLSL } from '../land/lay';
 
 /** Per metre of water: red goes first, so that the deep is blue and then black. */
 export const ABSORB: [number, number, number] = [0.12, 0.045, 0.03];
@@ -43,6 +44,7 @@ uniform sampler2D tLipPlateH;
 uniform sampler2D tSinter;
 uniform sampler2D tShore;
 uniform sampler2D tShoreH;
+${SHORE_LAY_GLSL}
 uniform sampler2D tWall;
 // How steeply the wall falls from the lip, against the wide shot's.
 uniform float uWallFall;
@@ -214,13 +216,15 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     float under = beach * smoothstep(40.0, 16.0, away);
     if (under > 0.0) {
       // The shore's lip (land/lip.ts) goes on under the water as the same ground: its sheet at its size and place (two metres a repeat,
-      // not turned, not moved) and its height sheet read as it reads it, so a stone half in the water is one stone. The height is read
+      // turned and shifted band by band as land/lay.ts lays it) and its height sheet read as it reads it, so a stone half in the water is one stone. The height is read
       // three times, a finger apart, for the lean of each stone's side: it is what the light and the rings have to tell the bed by.
-      const mat2 laid = mat2(0.5, 0.0, 0.0, 1.0 / 1.125);
-      vec2 q = b / vec2(2.0, 1.125);
+      vec4 lay = shoreLay(tShoreH, b);
+      vec2 q = lay.xy;
+      mat2 laid = mat2(lay.z * 0.5, -lay.w / 1.125, lay.w * 0.5, lay.z / 1.125);
       vec3 grit = readAt(tShore, q, laid).rgb;
       float fine = readAt(tShoreH, q, laid, 3.0).r;
       vec2 lean = vec2(readAt(tShoreH, q + vec2(0.0125, 0.0), laid, 3.0).r, readAt(tShoreH, q + vec2(0.0, 0.0222), laid, 3.0).r) - fine;
+      lean = shoreLean(lay, lean);
       vec2 t = vec2(b.x * 0.82 + b.y * 0.57, -b.x * 0.57 + b.y * 0.82);
       float stand = smoothstep(0.42, 0.9, readAt(tShoreH, t / vec2(6.4, 3.6) + 0.37, mat2(0.82 / 6.4, -0.57 / 3.6, 0.57 / 6.4, 0.82 / 3.6), 4.0).r);
       // Under the water they are lower than on the lip, where the wash has not laid them: fine gravel, and a cobble here and there.
