@@ -220,6 +220,8 @@ void main() {
   }
   // A plate is paler than its joints, a lump paler than the pit beside it, a crumb than its shadow: about the mean of the stone.
   float roughTone = clamp(0.2 + 1.6 * roughC.z, 0.25, 1.9) * clamp(2.0 * roughF.z, 0.3, 2.0) * clamp(0.4 + 1.2 * roughG.z, 0.5, 1.6);
+  // Seen close its grain is strong: the crumbs and pits stand further from the mean than the plates do.
+  roughTone = clamp(1.0 + 1.4 * (roughTone - 1.0), 0.18, 2.4);
   float roughJoint = 1.0 - smoothstep(0.2, 0.36, roughC.z);
   float roped = gPourKind;
   float slabTag = gPourTag;
@@ -353,7 +355,7 @@ void main() {
   albedo *= mix(vec3(1.0), vec3(0.95, 0.99, 1.05), fresh) * mix(1.0, min(1.0, 0.045 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
   // The tone of the rough floor lies about that dark mean: its plates and crumbs are told from its joints and pits.
   // It is dark grey, a shade to the blue of neutral: no tan in it, and no pale dust on its plates.
-  albedo = mix(albedo, vec3(0.93, 0.99, 1.08) * dot(albedo, vec3(0.3, 0.5, 0.2)) * min(0.98 * roughTone, 1.45), rf);
+  albedo = mix(albedo, vec3(0.93, 0.99, 1.08) * dot(albedo, vec3(0.3, 0.5, 0.2)) * min(0.98 * roughTone, 1.8), rf);
   // Satin only where fresh glass faces the sky, on the tops of ropes and on the smooth slabs: everything else is dead matte.
   float glass = (1.0 - steep) * (1.0 - smoothstep(mix(0.3, 0.6, crest), mix(0.75, 1.0, crest), age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - rubble) * max(crest, 0.35 * (1.0 - smoothstep(0.08, 0.35, fpLong)));
   glass *= (1.0 - vesicle) * (1.0 - crackle) * (1.0 + 0.6 * chip);
