@@ -90,17 +90,17 @@ export const BANKS = {
   near: 10,
   far: 420,
   top: 11,
-  thick: 0.07,
+  thick: 0.095,
   across: 170,
-  lit: [0.42, 0.385, 0.4] as [number, number, number],
-  deep: [0.33, 0.285, 0.28] as [number, number, number],
+  lit: [0.45, 0.412, 0.426] as [number, number, number],
+  deep: [0.3, 0.256, 0.25] as [number, number, number],
   drift: 0.9,
   rise: 0.3,
   shots: [
-    { from: 0, amount: 0.2, start: [70, 260] },
+    { from: 0, amount: 0.15, start: [70, 260] },
     { from: (5833 - 5618) / 60, amount: 0.7, start: [16, 60] },
-    { from: (6048 - 5618) / 60, amount: 0.2, start: [60, 220] },
-    { from: (6263 - 5618) / 60, amount: 1.0, start: [20, 70] },
+    { from: (6048 - 5618) / 60, amount: 0.15, start: [60, 220] },
+    { from: (6263 - 5618) / 60, amount: 1.0, start: [26, 80] },
     { from: (6586 - 5618) / 60, amount: 0.85, start: [20, 64] },
   ] as { from: number; amount: number; start: [number, number] }[],
 };
@@ -530,9 +530,9 @@ void main() {
     float torn = textureLod(tNoise, vec3(lean * 8.5, el * 1.3 + 0.3 + uTime * 0.02, 0.8 + uTime * 0.016 + lean * 1.47), 0.0).a;
     float body = exp(-u * u * 0.9) * smoothstep(0.26, 0.7, veils * 0.62 + torn * 0.38 + 0.26 * exp(-u * u * 2.5));
     // The trails inside a veil: soft, each its own weight, and they come down (the height of the veil in some twenty seconds: it is far off).
-    float fine = textureLod(tNoise, vec3(lean * 29.0, el * 0.8 + uTime * 0.012, 0.13 + lean * 9.86), 0.0).g;
-    float fall = textureLod(tNoise, vec3(lean * 13.0 + 0.4, el * 5.0 + uTime * 0.06, 0.37 + uTime * 0.008 + lean * 5.89), 0.0).a;
-    float trails = 0.62 + 0.75 * smoothstep(0.3, 0.72, fine * 0.55 + fall * 0.45);
+    float fine = textureLod(tNoise, vec3(lean * 12.0, el * 4.0 + uTime * 0.03, 0.13 + lean * 4.86), 0.0).g;
+    float fall = textureLod(tNoise, vec3(lean * 5.5 + 0.4, el * 7.0 + uTime * 0.06, 0.37 + uTime * 0.008 + lean * 2.89), 0.0).a;
+    float trails = 0.72 + 0.56 * smoothstep(0.25, 0.75, fine * 0.5 + fall * 0.5);
     // How far down a veil comes: few come all the way, and each ends in a fringe.
     float reachDown = smoothstep(0.25, 0.7, torn * 0.6 + fine * 0.4);
     float hang = mix(0.25 + 0.75 * reachDown, 1.0, smoothstep(0.0, base * 0.8, el)) * smoothstep(-0.006, 0.012, el);
@@ -594,27 +594,33 @@ ${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${
     for (int k = 0; k < BANK_STEPS; k++) {
       float t1 = t0 * ratio;
       float dt = t1 - t0;
-      float tk = t0 + dt * where;
+      // (A near stretch is read about its middle, so that its banks keep their shape: read anywhere along it, the samples of a frame
+      // made one even fog of them. A far stretch is read all along, and comes out as the mean of what it crosses.)
+      float spread = mix(0.3, 1.0, smoothstep(36.0, 120.0, t0));
+      float tk = t0 + dt * (0.5 + (where - 0.5) * spread);
       vec3 p = ro + rd * tk;
       vec2 at = p.xz - wind;
-      vec4 big = textureLod(tNoise, vec3(at / BANK_ACROSS, 0.37 + uTime * 0.0018), clamp(log2(dt / (BANK_ACROSS / 28.0)), 0.0, 6.0));
+      vec4 big = textureLod(tNoise, vec3(at / BANK_ACROSS, 0.37 + uTime * 0.0018), clamp(log2(dt * spread / (BANK_ACROSS / 28.0)), 0.0, 6.0));
       // Where a bank stands and how high: the banks gather into masses with open flat between them, and no two are one height.
       // (Far off the banks close up: between two of them stands a third.)
-      float stand = max(smoothstep(0.38, 0.6, big.g * 0.72 + big.a * 0.28), 0.55 * smoothstep(90.0, 320.0, tk));
+      float stand = max(smoothstep(0.42, 0.57, big.g * 0.72 + big.a * 0.28), 0.5 * smoothstep(110.0, 340.0, tk));
       float top = BANK_TOP * (0.12 + 0.88 * stand) * (0.4 + 1.0 * big.a);
       // Its lumps, which climb: the crown is cut by them, and so is its side. (Never read at the tile's finest: a lump is metres across.)
-      vec4 lump = textureLod(tNoise, vec3(at.x, p.y * 1.5 - uTime * BANK_RISE, at.y) / 60.0 + vec3(0.0, 0.0, uTime * 0.004), clamp(log2(dt / 7.5), 1.0, 6.0));
+      vec4 lump = textureLod(tNoise, vec3(at.x, p.y * 1.3 - uTime * BANK_RISE, at.y) / 28.0 + vec3(0.0, 0.0, uTime * 0.004), clamp(log2(dt * spread / 3.5), 1.0, 6.0));
       float h = max(p.y, 0.0) / top;
       // Some banks have left the ground: under them the flat is seen, and the bank shows its underside.
-      float lift = top * 0.3 * smoothstep(0.5, 0.75, big.r);
-      float body = smoothstep(1.0, 0.3, h + (0.5 - lump.r) * 0.9) * smoothstep(0.0, 0.5, stand + (lump.r - 0.45) * 0.5) * smoothstep(lift * 0.4, lift * 1.2 + 0.01, p.y + (lump.b - 0.5) * lift);
+      float lift = top * 0.38 * smoothstep(0.28, 0.5, big.r);
+      float body = smoothstep(1.0, mix(0.66, 0.15, spread * spread), h + (0.5 - lump.r) * 0.9) * smoothstep(0.0, 0.5, stand * 0.55 + (lump.r - 0.38) * 1.3) * smoothstep(lift * 0.4, lift * 1.2 + 0.01, p.y + (lump.b - 0.5) * lift);
       float sigma = weather.x * BANK_THICK * body * smoothstep(weather.y, weather.z, tk);
       float tau = sigma * dt + hazeBetween(ro, rd, t0, t1) * nearThin(t0 + 0.5 * dt);
       float a = 1.0 - exp(-tau);
       past *= exp(-sigma * dt);
       // The sky lights the crown; the heart and the underside have the bank's own body over them and are grey and warm.
-      float lit = smoothstep(0.3, 1.0, h + (0.5 - lump.r) * 0.5) * (0.85 + 0.3 * lump.b);
-      vec3 light = mix(bankDeep, bankLit, lit) * airLit;
+      // (Far off a bank is seen whole and from outside, in the sky's light all through: the distance goes out pale, with no dark band
+      // over the horizon.)
+      float lit = mix(smoothstep(0.3, 1.0, h + (0.5 - lump.r) * 0.5) * (0.85 + 0.3 * lump.b), 0.9, smoothstep(60.0, 240.0, tk));
+      // (No two banks stand in one light: the sheet over one is thinner than over the next.)
+      vec3 light = mix(bankDeep, bankLit, lit) * airLit * (0.8 + 0.4 * lump.a);
       // (What of the stretch is plain haze takes the haze's light.)
       float share = sigma * dt / max(tau, 1e-6);
       sum += trans * a * mix(mix(LOW_LIGHT * 1.12, airLight, smoothstep(0.0, 10.0, p.y)) * airLit * mix(1.0, dusk, smoothstep(200.0, 2000.0, t0)), light, share);
