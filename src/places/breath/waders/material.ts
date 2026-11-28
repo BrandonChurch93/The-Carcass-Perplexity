@@ -215,8 +215,8 @@ void main() {
     vec3 shankC = mix(vec3(0.4, 0.3, 0.27), vec3(0.64, 0.52, 0.47), mottle) * (0.7 + 0.6 * scaled);
     albedo = mix(albedo, shankC, 0.6 * shank * (1.0 - 0.6 * min(joint, 1.0)) * (1.0 - 0.7 * smoothstep(55.0, 140.0, far)));
     // The skin over a joint is slack and creased across the leg.
-    float knuckle = vnoise(vec2(legT * 150.0, q.x * 12.0 + seed));
-    albedo = mix(albedo, vec3(0.52, 0.2, 0.17) * (0.5 + 0.95 * knuckle), 0.7 * min(joint, 1.0));
+    float knuckle = vnoise(vec2(legT * 60.0, q.x * 30.0 + seed));
+    albedo = mix(albedo, vec3(0.56, 0.25, 0.22) * (0.75 + 0.5 * knuckle), 0.6 * min(joint, 1.0));
     height += 0.003 * (knuckle - 0.5) * min(joint, 1.0) * mid;
     albedo = mix(albedo, vec3(0.07, 0.055, 0.05) * (0.7 + 0.6 * crack), horn);
     height += 0.0016 * (scaled - 0.5) * shank * fine;
@@ -386,7 +386,7 @@ void main() {
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
   // Far off across the bright shallows the light comes at them from the water and the vapour on every side: they are pale there, not cut-outs.
   float across = smoothstep(55.0, 140.0, far) * (1.0 - uVeiled.z);
-  float fogLight = 0.5 * max(0.05, mix(0.54, 0.4, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y) * (1.0 + 2.2 * across);
+  float fogLight = 0.5 * max(0.05, mix(0.54, 0.4, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y) * (1.0 + 3.0 * across);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.14, 1.0, 0.86) / 3.14159;
   colour += albedo * (uSunColour * (0.2 * wrap * wrap + 3.0 * (1.0 - 0.3 * tendril) * halo * halo * halo) + fogColour * (4.9 * (1.0 - 0.45 * tendril) * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
