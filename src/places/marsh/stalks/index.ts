@@ -498,6 +498,10 @@ export function create(ctx: Context): Piece {
       const aside = ((w.x - k3[0]) * ASIDE[0] + (w.z - k3[1]) * ASIDE[1]) / Math.max(ahead, 1);
       if (!w.bare && ahead > 7.5 && ahead < 70 && aside > -0.42 && aside < 0.28 && (w.h + 0.6) / ahead > 0.1) wilds.splice(i, 1);
     }
+    // None stands far over the rest: the tallest are held nearer the others.
+    for (const w of wilds) if (w.foot && w.h > 4.2) w.h = 4.2 + 0.3 * (w.h - 4.2);
+    // A standing stalk that has lost its head has lost most of its length with it: it is a broken stump, not a bare post.
+    for (const w of wilds) if (w.foot && w.cards.length === 0 && w.h > 0.9 && w.lean < 1.2) w.h = 0.35 + 0.55 * ((w.seed * 67.3) % 1);
     // The red of the brine climbs a foot, not a stalk: on a short one it stops low, and the stalk above it is pale.
     for (const w of wilds) {
       w.R = trunkOf(w);
@@ -586,17 +590,20 @@ export function create(ctx: Context): Piece {
         const farF = new Fronds();
         const own = ctx.rng('stalks-fronds-' + shot.id);
         const sees = seesOf[shot.id] ?? ((): boolean => true);
+        // Across a pool a head is a mop of threads, not a fan of blades: there its strands are kept thin. Further off it is a soft red tuft
+        // and keeps its breadth; the lens of the wide shot sees a head as a few pixels and keeps them as they were.
+        const slim = (w: Wild): number => (shot.id === 'marsh-01' || from(w) < 14 || from(w) >= 36 ? 1 : 0.6);
         const fineIn = (w: Wild): number => (shot.id === 'marsh-01' ? wideFine(from(w)) : fineOf(from(w)));
         // A head outside the wedge is still grown, into a list that is never drawn, so that every head that is seen keeps its own strands.
         const unseen = new Fronds();
-        for (const w of wilds) crownOf(from(w) < 22 ? nearF : !sees(w) ? unseen : from(w) < 60 ? midF : farF, w, own, fineIn(w), broadOf(from(w)), false);
+        for (const w of wilds) crownOf(from(w) < 22 ? nearF : !sees(w) ? unseen : from(w) < 60 ? midF : farF, w, own, fineIn(w), broadOf(from(w)) * slim(w), false);
         // The stems the same way: by the lens of the shot the ledges of the bark are the mesh, far off a stem is a plain tube.
         const closeW = wilds.filter((w) => from(w) < 7);
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
         const farW = wilds.filter((w) => from(w) >= 22 && from(w) < 90 && sees(w));
         const awayW = wilds.filter((w) => from(w) >= 90 && sees(w));
         const meshes = [
-          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, midF, 4, { small: true }), frondMesh(ctx, growth, farF, 2, { small: true }),
+          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, midF, 4, { small: true, blunt: true }), frondMesh(ctx, growth, farF, 2, { small: true, blunt: true }),
           stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 6, 5, 0, true), stemMesh(ctx, growth, awayW.length, lines(awayW), 3, 4, 0, true),
         ];
         crowns[which] = meshes;
@@ -605,6 +612,16 @@ export function create(ctx: Context): Piece {
     }
     // The stands of the wide shot: more stems and their heads, the leaf that hangs down the stems, and the growth at their feet.
     const stands = growStands(ctx, wilds, uSeconds);
+    {
+      // STAGED for the wide: at its key no stalk of a stand is taller on the picture than a fifth of its height, head and all. What would be
+      // is cut back toward that, the tallest most, so that they still differ.
+      const cam = rel(3, -1.5);
+      for (const w of stands.stems) {
+        const d = Math.hypot(w.x - cam[0], w.z - cam[1]);
+        const tall = (w.h * d) / (0.808 * (d * d + (7.6 - w.y - w.h / 2) ** 2));
+        if (tall > 0.165) w.h *= (0.165 + 0.2 * (tall - 0.165)) / tall;
+      }
+    }
     for (const w of stands.stems) w.R = trunkOf(w);
     {
       // The wide lens walks 16 m forward and turns 23 degrees in all: what stands behind it or beyond the sides of all it sees is not made.

@@ -70,14 +70,15 @@ void main() {
     // A wing: position.x is how far along it from its hinge, position.y where along the body, and it turns about the body's line.
     float side = sign(aPiece);
     float hind = step(1.5, abs(aPiece));
-    float beat = sin(uSeconds * (38.0 + 14.0 * fract(aPhase.x)) + aPhase.y - 0.7 * hind);
+    float turn = uSeconds * (38.0 + 14.0 * fract(aPhase.x)) + aPhase.y - 0.7 * hind;
+    float beat = sin(turn);
     float ang = 0.3 + 0.85 * beat - 0.15 * hind;
-    // At rest the wings stand up together and open a little now and then, slowly, each insect in its own time.
+    // At rest the wings lie out flat to either side and lift a little now and then, slowly, each insect in its own time.
     float fan = smoothstep(0.6, 1.0, sin(uSeconds * (0.9 + 0.6 * fract(aPhase.z)) + aPhase.y));
-    if (perched > 0.5) ang = 1.36 - 0.5 * fan - 0.2 * hind;
+    if (perched > 0.5) ang = 0.1 + 0.35 * fan - 0.12 * hind;
     float span = abs(position.x);
-    // It is not a board: it cups a little along its length as it beats.
-    float cup = ang + 0.25 * span * beat * (1.0 - perched);
+    // It is not a board: it bends along its length as it beats, the tip after the root, and its hind edge trails its fore edge.
+    float cup = ang + (0.7 * span * span * beat - 0.45 * uv.y * cos(turn)) * (1.0 - perched);
     local = vec3(side * (0.035 + span * cos(cup)), position.y, 0.05 + span * sin(cup));
     nl = vec3(-side * sin(cup), 0.0, cos(cup));
   }
@@ -89,7 +90,7 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
-/** What of a wing is there: its veins, and most of the panes of skin between them; the rest of the panes are clear and let the lens through. */
+/** What of a wing is there: its veins, and some of the panes of skin between them; most of the panes are clear and let the lens through. */
 const INSECT_PANES = /* glsl */ `
   float isWing = step(0.5, abs(vPiece)) * step(abs(vPiece), 2.5);
   // Veins run out from the root and fork; short ones cross between them, each row set off from the next.
@@ -101,7 +102,7 @@ const INSECT_PANES = /* glsl */ `
   float vein = max(smoothstep(0.36, 0.46, along), 0.8 * smoothstep(0.39, 0.47, across));
   vein = max(vein, 1.0 - smoothstep(0.03, 0.07, vUv.y));
   float cell = fract(sin(dot(vec2(floor(lane), floor(rung)), vec2(127.1, 311.7))) * 43758.5453);
-  float clear = step(cell, 0.3) * (1.0 - step(0.5, vein)) * isWing;
+  float clear = step(cell, 0.72) * (1.0 - step(0.5, vein)) * isWing;
   if (clear > 0.5) discard;
 `;
 
@@ -119,14 +120,14 @@ ${INSECT_PANES}
   if (dot(n, v) < 0.0) n = -n;
   vec3 c;
   if (isWing > 0.5) {
-    // A clear skin on pale veins: the sky comes through it, so it is lit from both sides, and it glints where it turns to the sky.
-    vec3 skin = mix(vec3(0.27, 0.26, 0.24), vec3(0.36, 0.32, 0.26), cell) * (0.7 + 0.3 * smoothstep(0.0, 0.5, vUv.x));
+    // A clear amber skin on dark veins: the sky comes through it, so it is lit from both sides, and it glints where it turns to the sky.
+    vec3 skin = mix(vec3(0.15, 0.12, 0.08), vec3(0.22, 0.16, 0.09), cell) * (0.7 + 0.3 * smoothstep(0.0, 0.5, vUv.x));
     vec3 rib = vec3(0.1, 0.06, 0.035);
     vec3 albedo = mix(skin, rib, vein);
-    c = rigShade(vWorld, n, v, albedo, mix(0.25, 0.6, vein), 1.0);
-    c += (1.0 - 0.6 * vein) * 0.75 * rigShade(vWorld, -n, v, skin * vec3(1.0, 0.9, 0.75), 0.9, 1.0);
+    c = rigShade(vWorld, n, v, albedo, mix(0.55, 0.7, vein), 1.0);
+    c += (1.0 - 0.6 * vein) * 0.4 * rigShade(vWorld, -n, v, skin * vec3(1.0, 0.9, 0.75), 0.9, 1.0);
     vec3 r = reflect(-v, n);
-    c += (1.0 - vein) * skyRadiance(vec3(r.x, abs(r.y), r.z)) * (0.04 + 0.5 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 4.0));
+    c += (1.0 - vein) * skyRadiance(vec3(r.x, abs(r.y), r.z)) * (0.02 + 0.12 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 4.0));
   } else {
     // Amber and brown, darker on the back than beneath, with a dark seam where one segment meets the next; legs and tails are darker still.
     float seam = smoothstep(0.66, 0.94, abs(fract(vUv.x) - 0.5) * 2.0);
@@ -230,11 +231,11 @@ function insectGeometry(): THREE.BufferGeometry {
     thin(t2, t3, 0.003, 0.0012);
     thin([side * 0.025, 0.43, 0.015], [side * 0.075, 0.56, 0.05], 0.004, 0.0015);
   }
-  // Two pairs of wings: the fore pair as long as the body, the hind pair small behind it. x is the distance from the hinge.
+  // Two pairs of wings, long and narrow: the fore pair longer than the body, the hind pair shorter behind it. x is the distance from the hinge.
   const S = [0, 0.1, 0.25, 0.42, 0.6, 0.78, 0.92, 1];
   const LEAD = [0.015, 0.06, 0.1, 0.115, 0.11, 0.085, 0.045, 0.0];
   const TRAIL = [-0.015, -0.1, -0.22, -0.275, -0.25, -0.17, -0.08, 0.0];
-  for (const [kind, long, wide, hinge] of [[1, 0.98, 1, 0.15], [2, 0.42, 0.9, 0.02]] as [number, number, number, number][]) {
+  for (const [kind, long, wide, hinge] of [[1, 1.2, 0.5, 0.15], [2, 0.8, 0.5, 0.02]] as [number, number, number, number][]) {
     for (const side of [-1, 1]) {
       const start = pos.length / 3;
       S.forEach((s, i) => {

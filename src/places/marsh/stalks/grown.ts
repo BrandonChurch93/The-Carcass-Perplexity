@@ -127,11 +127,15 @@ void main() {
     float lump = 0.5 + 0.5 * sin(a * 9.0 + vy * 40.0 + seed * 50.0) * sin(a * 4.0 - vy * 71.0);
     r += R * ((0.55 * lip + 0.08 * lump * ledge) * (0.2 + 0.8 * kept) + 0.25 * min(fineH - broadH, 0.0) + 0.08 * (broadH - 0.5)) * (1.0 - 0.5 * dead);
     // The segments of the trunk (the fragment shader paints the same ones): each swells to a ridge at its foot and draws in under the next.
-    float ringQ = barkUv.y * (4.6 + 4.4 * fract(seed * 37.7)) + 0.3 * sin(barkUv.y * 4.3 + seed * 17.0) + 0.06 * sin(barkUv.x * 6.28318 + barkUv.y * 3.0) + 0.035 * sin(barkUv.x * 18.84954 + seed * 23.0);
+    float ringQ = barkUv.y * (4.6 + 4.4 * fract(seed * 37.7)) + 0.3 * sin(barkUv.y * 4.3 + seed * 17.0) + 0.55 * sin(barkUv.y * 1.9 + seed * 71.0) + 0.2 * sin(barkUv.x * 6.28318 + barkUv.y * 3.0 + seed * 9.0) + 0.09 * sin(barkUv.x * 18.84954 + barkUv.y * 5.0 + seed * 23.0);
     float ringId = floor(ringQ);
     float ringF = ringQ - ringId;
-    float ringK = 0.3 + 0.7 * step(0.33, fract(sin(ringId * 12.9898 + seed * 78.233) * 43758.5453));
-    r += R * ringK * (0.13 * (1.0 - smoothstep(0.0, 0.3, ringF)) * (0.5 + 0.5 * kept) - 0.06 * smoothstep(0.7, 0.95, ringF)) * (1.0 - dead);
+    float ringK = 0.25 + 0.95 * smoothstep(0.2, 0.9, fract(sin(ringId * 12.9898 + seed * 78.233) * 43758.5453));
+    r += R * ringK * (0.16 * (1.0 - smoothstep(0.0, 0.3, ringF)) * (0.35 + 0.65 * kept) - 0.06 * smoothstep(0.7, 0.95, ringF)) * (1.0 - dead);
+    // The crust has grown on it in slabs and has come away in places: the line of the trunk against the air is broken, not ruled.
+    float slab = sin(a * 2.0 + vy * 5.0 + seed * 11.0) * sin(a * 3.0 - vy * 8.0 + seed * 5.0);
+    float bite = 0.5 + 0.5 * sin(a * 5.0 + vy * 23.0 + seed * 3.0) * sin(a * 2.0 - vy * 13.0 + seed * 19.0);
+    r += R * (0.085 * slab - 0.1 * smoothstep(0.62, 0.92, bite)) * (1.0 - dead);
   }
   // The mouth flares a little, and its wall has a thickness.
   r *= 1.0 + mix(0.16, 0.3, close) * smoothstep(1.0 - mix(1.2, 2.2, close) * R / h, 1.0, t) * (1.0 - dead);
@@ -212,10 +216,10 @@ void main() {
   // No two trunks the same either: each has its own count of segments to a metre.
   float byLens = step(1.5, uLedgeF) * (1.0 - deadStem);
   float ringA = vUv.x * 6.28318;
-  float ringQ = vUv.y * (4.6 + 4.4 * fract(seed * 37.7)) + 0.3 * sin(vUv.y * 4.3 + seed * 17.0) + 0.06 * sin(ringA + vUv.y * 3.0) + 0.035 * sin(ringA * 3.0 + seed * 23.0);
+  float ringQ = vUv.y * (4.6 + 4.4 * fract(seed * 37.7)) + 0.3 * sin(vUv.y * 4.3 + seed * 17.0) + 0.55 * sin(vUv.y * 1.9 + seed * 71.0) + 0.2 * sin(ringA + vUv.y * 3.0 + seed * 9.0) + 0.09 * sin(ringA * 3.0 + vUv.y * 5.0 + seed * 23.0);
   float ringId = floor(ringQ);
   float ringF = ringQ - ringId;
-  float ringK = (0.3 + 0.7 * step(0.33, fract(sin(ringId * 12.9898 + seed * 78.233) * 43758.5453))) * byLens;
+  float ringK = (0.25 + 0.95 * smoothstep(0.2, 0.9, fract(sin(ringId * 12.9898 + seed * 78.233) * 43758.5453))) * byLens;
   float side = smoothstep(0.25, 0.65, fbm(vec2(vUv.x * 3.0 + seed * 3.0, vUv.y * 0.8)));
   float ran = smoothstep(0.2 + 0.5 * (1.0 - side), 0.85, ringF + 0.5 * (tongue - 0.5));
   albedo *= mix(vec3(1.0), vec3(0.95, 0.87, 0.73), byLens);
@@ -233,7 +237,7 @@ void main() {
   float segQ = vUv.y * (2.3 + 1.6 * fract(seed * 37.7)) + 0.22 * sin(vUv.y * 3.1 + seed * 17.0) + 0.05 * sin(ringA + seed * 23.0);
   float segF = fract(segQ);
   float segK = (0.35 + 0.65 * step(0.3, fract(sin(floor(segQ) * 12.9898 + seed * 78.233) * 43758.5453))) * (1.0 - smoothstep(45.0, 120.0, distance(cameraPosition, vWorld)));
-  vec3 pale = vec3(0.6, 0.5, 0.455) * (0.8 + 0.3 * fract(seed * 17.3)) * mix(vec3(1.0), vec3(0.88, 0.66, 0.6), smoothstep(0.3, 0.75, rusty) * (0.5 + 0.5 * fract(seed * 61.3)));
+  vec3 pale = vec3(0.55, 0.44, 0.4) * (0.8 + 0.3 * fract(seed * 17.3)) * mix(vec3(1.0), vec3(0.88, 0.66, 0.6), smoothstep(0.3, 0.75, rusty) * (0.5 + 0.5 * fract(seed * 61.3)));
   pale *= 1.0 - segK * (0.42 * smoothstep(0.8, 0.93, segF) - 0.1 * (1.0 - smoothstep(0.0, 0.2, segF)));
   albedo = mix(albedo, pale, 0.8 * smoothstep(8.0, 26.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
@@ -397,6 +401,10 @@ void main() {
 #else
   // A strap: narrow where it leaves the sheath, widest a fifth of the way out, and drawn out to a point.
   float shape = (0.35 + 0.65 * smoothstep(0.0, 0.2, s)) * (1.0 - pow(s, 2.6));
+#ifdef BLUNT
+  // Far off the end of a strand is lost among the strands beside it: there a lock ends blunt, not in a point.
+  shape = (0.35 + 0.65 * smoothstep(0.0, 0.2, s)) * (1.0 - 0.6 * pow(s, 6.0));
+#endif
   float halfW = max(half0 * shape, 0.55 * px * (1.0 - pow(s, 6.0))) * step(0.001, kept);
   p += side * (position.x * halfW);
   vWorld = p;
@@ -565,8 +573,9 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
     const u = (w.seed * 7.31) % 1;
     const v = (w.seed * 13.7) % 1;
     const q = (w.seed * 29.3) % 1;
-    const share = Math.min(1.25, Math.max(0.45, size / Math.pow(Math.min(1.1, Math.max(0.12, w.h / 2.6)), 0.9)));
-    const long = 0.5 * Math.pow(Math.min(w.h, 3.8), 0.85) * (0.8 + 0.45 * u) * share;
+    // The taller the stalk that stands alone the fuller its head: a tall one under a small tuft is a post.
+    const share = Math.min(1.25, Math.max(swept === 0 && w.h > 3.4 ? 0.95 : 0.45, size / Math.pow(Math.min(1.1, Math.max(0.12, w.h / 2.6)), 0.9)));
+    const long = 0.5 * Math.pow(Math.min(w.h, 5.2), 0.85) * (0.8 + 0.45 * u) * share;
     const lop = Math.min(0.97, 0.66 + 0.26 * v + 0.2 * swept);
     const arch = 1.25 + 1.0 * ((w.seed * 41.3) % 1);
     const strands = Math.round((fine >= 40 ? 170 : fine >= 28 ? 120 : fine >= 13 ? 64 : fine >= 9 ? 44 : fine >= 5 ? 34 : fine >= 4 ? 24 : fine >= 3 ? 18 : fine >= 2.5 ? 12 : fine >= 2 ? 8 : 6) * (0.8 + 0.4 * q) * (1 - 0.4 * ragged) * (w.kind === 1 ? 0.5 : 1));
@@ -580,6 +589,8 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
       locks.push([az, 0.25 + 0.7 * Math.pow(rng.next(), 1.2), rng.range(0.6, 1.1) * (with_ ? 1 : 0.62)]);
     }
     const heart = 0.18 + 0.5 * u * u;
+    // Where the lens is near enough to tell one strand from the next, a strand is a thread and not a blade.
+    const thread = fine >= 28 ? 0.75 : fine >= 13 ? 0.85 : 1;
     for (let k = 0; k < strands; k++) {
       const sp = k > 0 && rng.next() < skirt ? 1 : 0;
       const up = !sp && rng.next() < heart;
@@ -589,7 +600,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
       const fall = sp ? rng.range(0.4, 1.2) : up ? 20 + rng.range(0.5, 1.7) : 2.75 - leave + rng.range(-0.3, 0.3);
       const length = long * (sp ? rng.range(0.4, 0.9) : up ? rng.range(0.28, 0.5 + 0.3 * u) : lock[2] * (rng.next() < 0.18 ? rng.range(0.15, 0.45) : rng.range(0.45, 1.2))) * (1 - ragged * rng.range(0, 0.5));
       // The first strand of a head is the last to go when the head is thinned for distance: no head thins to nothing.
-      list.add(w, end, aim, az, leave, length, Math.min(0.03, Math.max(0.005, length * rng.range(0.012, 0.04))) * broad * (fine >= 5 ? 1 : fine >= 3 ? 1.15 : 1.3), rng.next(), fall + 10, sp, k === 0 ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
+      list.add(w, end, aim, az, leave, length, Math.min(0.03, Math.max(0.005, length * rng.range(0.012, 0.04))) * broad * thread * (fine >= 5 ? 1 : fine >= 3 ? 1.15 : 1.3), rng.next(), fall + 10, sp, k === 0 ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
     }
     return;
   }
@@ -808,6 +819,8 @@ export interface FrondLook {
   wet?: number;
   small?: boolean;
   low?: boolean;
+  /** Its strands end blunt: for heads far from the lens. */
+  blunt?: boolean;
 }
 
 function frondGeometry(base: THREE.BufferGeometry, list: Fronds): THREE.InstancedBufferGeometry {
@@ -824,6 +837,7 @@ export function frondMesh(ctx: Context, u: GrowthUniforms, list: Fronds, segment
     vertexShader: FROND_VERTEX,
     fragmentShader: FROND_FRAGMENT,
     side: THREE.DoubleSide,
+    defines: look.blunt ? { BLUNT: 1 } : {},
   });
   if (!look.small) material.userData.depthFragment = PLAIN_DEPTH;
   const mesh = new THREE.Mesh(frondGeometry(strip(segments), list), material);
