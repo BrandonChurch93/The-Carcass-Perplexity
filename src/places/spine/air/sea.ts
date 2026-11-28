@@ -49,6 +49,11 @@ const float GRAIN_TILT = 0.5;
 const float GRAIN_HEAD = 0.9;
 // Metres of the mist over the tops that hide two thirds of what lies behind.
 const float MIST_LONG = 240.0;
+// What the deck takes of a stroke's key (the land's uStrikeAt): its share, the metres past which it falls off with the square of
+// the distance, and the radiance it closes on.
+const float SEA_KEY = 0.05;
+const float SEA_KEY_REACH = 1800.0;
+const float SEA_KEY_CEIL = 0.3;
 float seaLod = 1.0;
 // Laid a little turned from the ridge, so that no row of heads runs along it or straight away from the lens.
 vec2 heapUv(vec2 at) {
@@ -410,7 +415,16 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     if (uStrikeTop.w > 0.0) {
       vec2 toStroke = uStrikeTop.xz - p.xz;
       float span2 = dot(toStroke, toStroke);
-      flare = STRIKE_COLOUR * vec3(0.86, 0.84, 1.0) * min(uStrikeTop.w * 0.05 * (0.2 + 0.8 * head) * (0.6 + 0.6 * facing.y) * (0.35 + 0.65 / (1.0 + span2 / 9.0e6)), 0.09);
+      // The stroke's key, from the channel by direction as the land takes it (uStrikeAt): cloud is lit through, so it goes more
+      // than half round a head, and the hollows behind the heads stay in the dusk. It closes on a ceiling: the deck goes pale in a
+      // stroke and never white.
+      vec3 toKey = uStrikeAt.xyz - p;
+      float key2 = dot(toKey, toKey);
+      float faceS = clamp((dot(facing, toKey) * inversesqrt(max(key2, 1.0)) + 0.6) / 1.6, 0.0, 1.0);
+      float keyS = uStrikeAt.w * SEA_KEY * faceS * faceS * (0.08 + 0.92 * head * head) / (1.0 + key2 / (SEA_KEY_REACH * SEA_KEY_REACH));
+      float fillS = min(uStrikeTop.w * 0.05 * (0.2 + 0.8 * head) * (0.6 + 0.6 * facing.y) * (0.35 + 0.65 / (1.0 + span2 / 9.0e6)), 0.09);
+      float sumS = keyS + fillS;
+      flare = STRIKE_COLOUR * vec3(0.86, 0.84, 1.0) * (sumS / (1.0 + sumS / SEA_KEY_CEIL));
       sea += flare;
     }
     // At the horizon it goes into the dome's own cloud.

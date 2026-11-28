@@ -52,7 +52,8 @@ void viewRay(out vec3 ro, out vec3 rd, out float far) {
   vec3 world = (uCameraWorld * vec4(view.xyz / view.w, 1.0)).xyz;
   ro = uCameraWorld[3].xyz;
   rd = world - ro;
-  far = length(rd);
+  // (A surface on the near plane itself leaves a ray of no length: it is given one, so that nothing after it divides by none.)
+  far = max(length(rd), 1e-3);
   rd /= far;
   if (depth >= 1.0) far = 60000.0;
 }
@@ -371,8 +372,10 @@ ${SEA_SHADE_GLSL}
       float streak = 0.7 * noise(q + vec3(0.0, 0.0, 0.31 * float(j))).g + 0.3 * noise(q * vec3(2.1, 2.3, 2.1) + 0.37).a;
       float gust = noise(vec3(q.x * 0.21, 0.37 * float(j) + 0.13, q.z * 0.17)).b;
       float veil = smoothstep(0.42, 0.74, streak) * smoothstep(0.36, 0.7, gust) * before;
-      // It thins with the height over the crest, and against the open sky it is the sky's own tone and all but lost.
-      veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.2 : 1.0);
+      // It thins with the height over the crest, and against the open sky it is the sky's own tone and all but lost. The deck goes into
+      // the sky's foot by degrees and the veil over it thins by the same degrees: thinned at one stroke where the deck was taken for the
+      // wall, it stood beside the first spire as a pale sheet with a ruled upright edge.
+      veil *= exp(-max(at.y - crestV - 30.0, 0.0) / 170.0) * (far > 50000.0 ? 0.2 : mix(1.0, 0.2, seaGone));
       veil *= dead ? (j == 0 ? 0.07 : j == 1 ? 0.14 : 0.18) : (j == 0 ? 0.16 : j == 1 ? 0.3 : 0.4);
       driven += keptV * veil;
       keptV *= 1.0 - veil;
@@ -470,5 +473,7 @@ ${SEA_SHADE_GLSL}
   through *= clear;
 
   light += strikeGlow(ro, rd, min(far, 30000.0)) * uShow.x;
-  gl_FragColor = vec4(light, through);
+  // No ray hands on what is not a colour, whatever depth it was given: such a texel is clear air.
+  bool sound = !(any(isnan(light)) || any(isinf(light)) || isnan(through) || isinf(through));
+  gl_FragColor = sound ? vec4(light, through) : vec4(0.0, 0.0, 0.0, 1.0);
 }`;
