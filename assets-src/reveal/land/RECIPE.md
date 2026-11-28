@@ -2,7 +2,7 @@
 
 The ground of the rise is drawn from the Builder's four nested satellite maps (`public/assets/reveal/maps/`, recipe in `assets-src/reveal/maps/RECIPE.md`). This folder makes what the shader needs beside them: the relief of each map as slopes, the shore and the light. In the second wave it also holds two regions of the maps drawn again as country (the last two sections), which `make_country.py` lays into maps a, b and c before the relief is made.
 
-## `public/assets/reveal/land/relief-{a,b,c,d}.png`
+## `public/assets/reveal/land/relief-a.png`
 
 Made by: `assets-src/reveal/land/make_relief.py` on Python 3 with numpy, scipy and Pillow.
 From: `public/assets/reveal/maps/map-<level>-h.png` (the height) and `public/assets/reveal/maps/map-<level>.jpg` (only how light the water is).
@@ -12,6 +12,26 @@ Why this one: the shader lights the land from a slope and never differences a st
 Date: 2026-11-26
 
 Each file has the size of its map: when a larger copy of a map arrives under the same name, run the script again.
+
+Third wave: the land no longer reads this file (it reads `relief-<level>.jpg`, next heading) and levels b, c and d of it are removed. Level a stays as it was, byte for byte, because the sky reads its blue channel (`src/places/reveal/sky/index.ts`, `assets-src/reveal/sky/make_banks.py`, `make_cover.py`). The script still writes all four; only `relief-a.png` is kept.
+
+## `public/assets/reveal/land/relief-{a,b,c,d}.jpg`
+
+Made by: `assets-src/reveal/land/make_relief_native.py` on Python 3 with numpy, scipy and Pillow.
+From: `public/assets/reveal/maps/map-<level>-h.png` (the height), `public/assets/reveal/maps/map-<level>.jpg` (only how light the water is) and `public/assets/reveal/land/basins.png` (the pools, cut as bowls).
+Prompt or command: `python3 assets-src/reveal/land/make_relief_native.py` from the root of the repo (about six minutes for the four levels; `LEVELS=ab` bakes some, `PREVIEW=1` also writes a lit picture of each under `out/work/`).
+Takes: not generated. Five passes of the numbers at the top of the script (the size worked at, the unevenness, the depth of the cut), each judged on a lit preview and on frames 9675, 9739 and 10027.
+Why this one: the second wave's relief was the slope of an enlarged 1672 px painted height, so every level was soft and the only fine structure was the colour map's combed strokes. Here each level is worked at 3072 x 1728: the height is made uneven at sizes that are a few texels to a few hundred texels of that level and anchored in the world (so two levels agree where they overlap), the pools of `basins.png` are sunk as bowls with a low rim, water is traced down it (pits closed, eight neighbours, the count of cells that drain through each) and the land is cut where water gathers, deeper where more gathers and less on the crests. The slopes are then taken as before: red and green the slope on x and y (0.5 is level), blue over 0.3 the height of the land, blue under 0.25 water and how shallow. Stored as JPEG at quality 86 with no chroma subsampling: 3.4 MB for the four against 10.3 MB for the PNGs, and at that quality the coast code in blue shows no speckle (looked at on 9675 and 10027 at uhd).
+Date: 2026-11-28
+
+## `public/assets/reveal/land/basins.png`
+
+Made by: `assets-src/reveal/land/basins/make_basins.py` on Python 3 with numpy, scipy and Pillow.
+From: `references/approved/7-reveal/reveal-2-skull-massif.jpg` and its window in the master from `references/approved/7-reveal/pullback.json`. The picture is measured, not copied: where it has dark round water. No pixel of it is read as colour.
+Prompt or command: `python3 assets-src/reveal/land/basins/make_basins.py` from the root of the repo (a few seconds; `PREVIEW=1` writes what it found over the picture under `out/work/basins/`).
+Takes: not generated. Three passes: a detector of dark blobs (it took mountain shade for water), then 20 seed ovals measured on the picture and each traced by a threshold of its own, then 19 (the great north basin is the shader's own crater lake and was drawn twice).
+Why this one: the second approved picture is a field of dark round basins and the film had long ridges there. This is where those pools lie, 2048 x 1152 over that picture's window (0.45 km a texel), as one channel in the code of `shore-*.png`: the signed distance to the shore, 0.5 on it. The shader draws them with the lake's water model and `make_relief_native.py` sinks the ground under them. The lake of the Eye and its two pools are left out (they are `lakebed.png`).
+Date: 2026-11-28
 
 ## `public/assets/reveal/land/lakebed.png`
 
