@@ -409,7 +409,7 @@ ${SEA_SHADE_GLSL}
     // A long lens sees the same snow farther off and larger: every length here is in the lens's own measure.
     float unitS = 0.466 / uInvProjection[1][1];
     // Nothing is finer than the encode can carry or than this pass can draw: a streak thinner than that is drawn that wide and as much fainter.
-    float fine = max(1.5 * uInvProjection[1][1] / 540.0, 5.0 * uInvProjection[1][1] / float(textureSize(tDepth, 0).y));
+    float fine = max(1.5 * uInvProjection[1][1] / 540.0, 2.5 * uInvProjection[1][1] / float(textureSize(tDepth, 0).y));
     float facing = abs(dot(uCameraWorld[2].xyz, acrossS));
     // (One family or the other, whole: a ray goes through two sheets and no more.)
     bool level = facing < 0.15;
@@ -418,11 +418,11 @@ ${SEA_SHADE_GLSL}
     float hidS = 1.0;
     vec3 n = level ? upS : acrossS;
     vec3 e = level ? acrossS : upS;
-    float gap = (level ? 0.6 : 6.0) * unitS;
+    float gap = (level ? 0.6 : 4.0) * unitS;
     float side = dot(rd, n);
     float sheet0 = dot(ro, n) / gap;
     float roE = dot(ro, e), rdE = dot(rd, e);
-    float reachS = 12.0 * unitS;
+    float reachS = 10.0 * unitS;
     for (int j = 0; j < 2; j++) {
       if (abs(side) < 0.02) break;
       float m = side > 0.0 ? floor(sheet0) + 1.0 + float(j & 1) : ceil(sheet0) - 1.0 - float(j & 1);
@@ -434,30 +434,30 @@ ${SEA_SHADE_GLSL}
       // The gale tumbles: the lanes of a sheet weave as they go.
       float carried = (a - uWind.w * 0.8 * uTime) / unitS;
       b += unitS * 0.11 * sin(carried / 2.3 + m * 1.7);
-      float lane = floor(b / (0.22 * unitS));
+      float lane = floor(b / (0.12 * unitS));
       ivec2 laneAt = ivec2(int(lane), int(m) + (level ? 977 : 0));
-      float cellS = 1.1 * unitS;
+      float cellS = 0.7 * unitS;
       float al = (a - uWind.w * (0.7 + 0.45 * rnd(laneAt, 7u)) * uTime) / cellS + 37.0 * rnd(laneAt, 11u);
       float ac = floor(al);
       ivec2 cell = ivec2(int(lane) + 4099 * laneAt.y, int(ac));
       float chance = rnd(cell, 23u);
-      if (chance > 0.7) continue;
-      float lengthOf = (0.22 + 0.5 * rnd(cell, 41u)) * unitS;
+      if (chance > 0.8) continue;
+      float lengthOf = (0.12 + 0.3 * rnd(cell, 41u)) * unitS;
       float fa = ((al - ac) * cellS - 0.04 * unitS - (cellS - lengthOf - 0.08 * unitS) * rnd(cell, 31u)) / lengthOf;
       if (fa <= 0.0 || fa >= 1.0) continue;
       // A streak is brightest a little behind its head and trails off: drawn out by the open shutter, not a dash.
       float ends = fa * fa * (1.0 - fa) * 6.75;
       float sizeOf = rnd(cell, 67u);
-      float wide = (0.014 + 0.026 * sizeOf * sizeOf) * unitS;
+      float wide = (0.005 + 0.011 * sizeOf * sizeOf) * unitS;
       float drawn = max(wide, fine * t);
-      float db = b - (lane + 0.34 + 0.32 * rnd(cell, 59u)) * 0.22 * unitS + (rnd(cell, 83u) - 0.5) * 0.3 * (fa - 0.5) * lengthOf;
+      float db = b - (lane + 0.34 + 0.32 * rnd(cell, 59u)) * 0.12 * unitS + (rnd(cell, 83u) - 0.5) * 0.3 * (fa - 0.5) * lengthOf;
       if (abs(db) > 2.6 * drawn) continue;
       // They come in gusts that travel down the sheet slower than the snow: a clump of them, then none.
       float gust = noise(vec3((a - uWind.w * 0.45 * uTime) / (55.0 * unitS), b / (9.0 * unitS), m * 0.37 + (level ? 0.5 : 0.0) + uTime * 0.05)).g;
-      if (chance > 0.7 * smoothstep(0.36, 0.6, gust)) continue;
+      if (chance > 0.8 * smoothstep(0.36, 0.6, gust)) continue;
       // Most are faint, a few are bright; the broad ones are the nearest to the lens and the softest.
       float bright = rnd(cell, 61u);
-      float flake = exp(-db * db / (drawn * drawn)) * ends * (wide / drawn) * (0.2 + 0.45 * bright * bright) * (1.0 - 0.4 * sizeOf) * seen;
+      float flake = exp(-db * db / (drawn * drawn)) * ends * (wide / drawn) * (0.13 + 0.4 * bright * bright) * (1.0 - 0.4 * sizeOf) * seen;
       fly += hidS * flake;
       hidS *= 1.0 - flake;
     }

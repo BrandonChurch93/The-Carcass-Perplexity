@@ -5,6 +5,8 @@ import { ground, locate } from '../ridge';
 import { CARCASS_FROM, DUSK, INSIDE_FROM, STRIKES, STRIKE_FROM, WIND, WIND_SPEED } from './anchors';
 import { stagedSeconds } from './stage';
 
+/** How much of the sky's light counts inside the canal (shot spine-05): the level of the cave. */
+const CANAL_LEVEL = 0.4;
 // The coarse map holds the first four spires and the ground every camera stands on; beyond it the land is taken as open.
 export const LAND = { minX: -1800, maxX: 3800, minZ: -1100, maxZ: 1700, width: 1024, height: 512 };
 // The fine map holds the saddle before the first spire, where three of the five cameras stand, and the near mouth of the canal.
@@ -382,7 +384,8 @@ export function createRig(): Rig {
         (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.085, 0.088, 0.118);
       } else {
         // Before the long lens of the strike the spire stands in the storm's shadow: the sky gives less, and the stroke is the light.
-        const shade = stagedSeconds() >= STRIKE_FROM && stagedSeconds() < INSIDE_FROM ? 0.4 : 1;
+        // Inside the canal the lens is set for the mouth: what the mouths let in is half of what it was, and the rock goes dark away from them.
+        const shade = stagedSeconds() >= INSIDE_FROM ? CANAL_LEVEL : stagedSeconds() >= STRIKE_FROM ? 0.4 : 1;
         (uniforms.uSkyZenith as THREE.IUniform<THREE.Vector3>).value.set(0.03, 0.037, 0.066).multiplyScalar(shade);
         (uniforms.uSkyHorizon as THREE.IUniform<THREE.Vector3>).value.set(0.096, 0.11, 0.156).multiplyScalar(shade);
         (uniforms.uSkyGround as THREE.IUniform<THREE.Vector3>).value.set(0.027, 0.033, 0.05).multiplyScalar(shade);
