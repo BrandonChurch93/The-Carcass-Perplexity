@@ -329,7 +329,7 @@ void main() {
   vec2 rsz = (rz.rg - 0.5) * 1.6 * saltOn;
   bump = bump * (1.0 - 0.8 * saltOn) + w.x * vec3(0.0, rsx.y, rsx.x) + w.y * vec3(rsy.x, 0.0, rsy.y) + w.z * vec3(rsz.x, rsz.y, 0.0);
   #endif
-  vec3 nb = normalize(nr - (bump - nr * dot(bump, nr)) * (1.0 - 0.7 * horn));
+  vec3 nb = normalize(nr - (bump - nr * dot(bump, nr)) * (1.0 - 0.7 * horn) * (1.0 - 0.85 * uMudded * smoothstep(0.03, 0.3, vInfo.z) * (1.0 - smoothstep(0.35, 0.75, vWorld.y - vRaise - uLine))));
   mat3 r = mat3(vR0, vR1, vR2);
   vec3 ng = normalize(r * nr);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -474,6 +474,8 @@ void main() {
   rough = mix(rough, min(rough, 0.6), 0.8 * near1 * (1.0 - 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0)));
   #endif
   if (vRaise > 0.0) rough = mix(max(rough, 0.5), mix(0.72, 0.96, smoothstep(0.3, 0.7, clod)), carried);
+  // One stuck in mud shows the root of a leg as it rears, and the hide there is pulled long: it wears the mud whole, with no grain to be drawn out into streaks.
+  albedo = mix(albedo, vec3(0.062, 0.046, 0.037) * (0.75 + 0.5 * patchy), 0.92 * uMudded * smoothstep(0.03, 0.3, vInfo.z) * (1.0 - horn) * (1.0 - smoothstep(0.35, 0.75, wy - uLine)));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it: the belly and the insides of the legs are red brown, not black.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.72, 0.42, 0.34) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (1.0 - 0.6 * uMudded);
@@ -582,7 +584,7 @@ void main() {
   // (A line and not a band: bands of dark and pale read as the stripes of a tiger.)
   float folds = 1.0 - smoothstep(0.86, 0.98, sin(s * 150.0 + 14.0 * vnoise(vec2(vLook.y * 1.1 + vLook.z * 20.0, s * 9.0))));
   folds = mix(1.0, folds, wade * smoothstep(0.3, 0.6, vnoise(vec2(vLook.y * 0.9 + vLook.z * 11.0, s * 6.0)) + 0.1));
-  albedo = mix(albedo, mix(vec3(0.125, 0.096, 0.073) * (0.5 + 0.55 * groove + 0.3 * ring) * (0.72 + 0.28 * grown) * (0.6 + 0.4 * folds) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.058, 0.026, 0.017) * (0.75 + 0.6 * groove), wet), wade);
+  albedo = mix(albedo, mix(vec3(0.092, 0.068, 0.05) * (0.5 + 0.55 * groove + 0.3 * ring) * (0.72 + 0.28 * grown) * (0.6 + 0.4 * folds) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.042, 0.021, 0.015) * (0.75 + 0.6 * groove), wet), wade);
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   // (On one that wades they are wet with mud, not with water: no white sheen stands on them.)
   float rough = mix(0.95, mix(0.9, mix(0.93, 0.58, smoothstep(0.6, 0.9, uTint)), clamp(groove * ring * 2.0, 0.0, 1.0)), wet);
