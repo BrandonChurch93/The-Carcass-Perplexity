@@ -266,9 +266,10 @@ export function create(ctx: Context): Piece {
         let x0 = d.x + ux * d.size * 0.95;
         let y0 = uy * d.size * 0.66;
         let z0 = d.z + uz * d.size * 0.95;
-        let r0 = (0.007 + 2.0 * (thrown[base * 5 + 3] as number)) * (0.6 + d.size);
+        let r0 = (0.007 + 2.0 * (thrown[base * 5 + 3] as number)) * (0.6 + d.size) * (0.5 + 0.95 * own * own);
         let breaksAt = (0.16 + 0.4 * r3) * big;
         let taper = 0.56;
+        let column = false;
         // The last of a great dome's strings is the column: the pool closes over the place the gas left and throws one thick jet
         // straight up out of its middle, which stands, necks and lets its head go.
         if (i < 3 && g === ligs - 1) {
@@ -284,6 +285,7 @@ export function create(ctx: Context): Piece {
           z0 = d.z;
           r0 = 0.066 * (d.size / 0.6);
           taper = -0.5;
+          column = true;
           breaksAt = 0.62 * big;
         }
         const dx = ax - bx;
@@ -304,8 +306,13 @@ export function create(ctx: Context): Piece {
           // The tip parts first, the root last.
           const parts = (breaksAt / drawn) * (1.15 - 0.3 * f);
           const joined = Math.min(Math.max(since, 0), parts);
-          const thin = r0 * Math.sqrt(0.18 / (0.18 + drawn * joined)) * (1 - 0.5 * taper + taper * f);
-          const halfJoined = ((drawn * joined) / LIG_BEADS) * 0.85 + thin;
+          // (A string is never even: it swells and necks along its length, each string its own way, and the column carries a head.)
+          const swells = column ? 1 + 0.75 * Math.max(0, f - 0.7) * 3.3 : 1 + 0.38 * Math.sin(j * 2.6 + own * 23 + g);
+          const thin = r0 * Math.sqrt(0.18 / (0.18 + drawn * joined)) * (1 - 0.5 * taper + taper * f) * swells;
+          // (The necks between the swellings draw in as the moment of parting comes.)
+          const nearing = Math.min(1, joined / Math.max(parts, 1e-3));
+          const necks = 0.95 - 0.33 * nearing * nearing;
+          const halfJoined = ((drawn * joined) / LIG_BEADS) * necks + thin;
           const round = Math.cbrt(1.5 * thin * thin * halfJoined);
           if (since < 0 || since > LIG_LIFE || y < -round) {
             m.makeScale(0, 0, 0);
