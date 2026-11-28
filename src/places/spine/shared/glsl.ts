@@ -299,6 +299,8 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   // Inside the canal the mouths are the light: what faces the nearer mouth takes it, what is turned from it stands in the dark of the
   // rock and is seen against the mouth, not lit like the open ridge.
   if (!outside) {
+    // (What the sky gives this face, before the canal's own fall is laid on it: the rim is read from it, not from a second read of the sky.)
+    vec3 open0 = skyE;
     vec3 toFar = CANAL_FAR - p;
     vec3 toNear = CANAL_NEAR - p;
     vec3 toLight = normalize(normalize(toFar) / (dot(toFar, toFar) + 400.0) + 0.35 * normalize(toNear) / (dot(toNear, toNear) + 400.0));
@@ -312,7 +314,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     skyE += vec3(0.34, 0.2, 0.105) * ((1.0 - reach) * (1.0 - reach) * rigUnderRoof);
     // What stands edge on to the lens between it and the mouth is rimmed by the mouth: a line of violet on a back, a lip of rock.
     float edge = 1.0 - clamp(dot(n, v), 0.0, 1.0);
-    skyE += skyIrradiance(toLight) * vec3(0.95, 0.8, 1.5) / CANAL_SKY * (edge * edge * edge * smoothstep(-0.25, 0.45, dot(n, toLight)) * (0.25 + 1.2 * reach));
+    skyE += open0 * vec3(0.95, 0.8, 1.5) / CANAL_SKY * (edge * edge * edge * smoothstep(-0.25, 0.45, dot(n, toLight)) * (0.25 + 1.2 * reach));
   }
   vec3 warm = uWarmColour * (outside ? 0.4 * rim * rim * sqrt(sky) * mix(0.15, 1.0, paleOf) : 0.0);
   vec3 e = skyE * shut + warm * (0.35 + 0.65 * occ) + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
