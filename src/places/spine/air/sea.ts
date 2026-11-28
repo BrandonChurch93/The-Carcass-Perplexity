@@ -552,6 +552,10 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // And far along the ridge, where the lens looks down the wall's length, it is the sky's own dark foot and no more: kept whole there,
     // its top stood against the band of the dusk as a slab with a ruled edge.
     lap *= 1.0 - wallAt * smoothstep(3500.0, 8500.0, t) * smoothstep(-0.012, 0.012, rd.y);
+    // (Seen toward the dusk through an opening in the land, the wall's deck takes the air's haze as the land beside it does: left the
+    // storm's blue, it stood in the opening as a patch of water.)
+    float hazedW = wallAt * smoothstep(0.2, 0.5, intoDusk) * (1.0 - plate);
+    sea = mix(sea, dot(sea, vec3(0.3, 0.5, 0.2)) * vec3(0.92, 0.97, 1.13) + 0.03 * SEA_WARM, 0.85 * hazedW);
     light += through * sea * lap;
     through *= 1.0 - lap;
     // (And what is drawn after it, the scud and the glow of a stroke in the air, is drawn there as before the open sky.)
