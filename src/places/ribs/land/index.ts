@@ -674,7 +674,7 @@ export function create(ctx: Context): Piece {
       }
     }
     // Close under the key's lens, at its left: a heap of rock with weed over it, soft before the sharp band, as the picture has it.
-    const heap: [number, number, number][] = [[3.5, -1.4, 0.8], [3.9, -0.45, 0.55], [3.2, -2.1, 0.9], [4.6, -2.7, 1.05], [5.6, -1.75, 0.8], [6.3, -3.4, 1.2], [5.2, -3.9, 0.9], [6.6, -0.7, 0.55], [7.4, -2.2, 0.7], [7.0, 0.5, 0.36], [8.3, -1.2, 0.42], [6.1, 1.6, 0.3], [8.8, -3.6, 0.8], [7.7, 2.6, 0.26]];
+    const heap: [number, number, number][] = [[3.5, -1.4, 0.8], [3.9, -0.45, 0.55], [3.2, -2.1, 0.9], [4.6, -2.7, 1.05], [5.6, -1.75, 0.8], [6.3, -3.4, 1.2], [5.2, -3.9, 0.9], [6.6, -0.7, 0.55], [7.4, -2.2, 0.7], [7.0, 0.5, 0.14], [8.3, -1.2, 0.42], [6.1, 1.6, 0.3], [8.8, -3.6, 0.8], [7.7, 2.6, 0.26]];
     for (const [f, r, size] of heap) put(knots, f, r, size, 0.62, 0.95);
     const bars: { x: number; z: number; size: number; yaw: number; lift: number }[] = [];
     // The crown of a bar where a stone lies on one: the stone lies on the sand, not under it.
