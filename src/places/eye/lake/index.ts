@@ -7,7 +7,7 @@ import { DEG, smooth } from '../layout';
 import { LIP_BAY, lipAt } from '../land/height';
 import { during } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { NOISE_GLSL, RIG_GLSL, farNames } from '../shared/glsl';
 import { BED_GLSL, bedUniforms } from './bed';
 import { createMirror } from './water';
 import { WAVES_GLSL, WAVE_TILES, createWaves } from './waves';
@@ -47,13 +47,21 @@ float domeAt(vec2 xz) {
     + 0.5 * ((domeNoise(xz / 6.0 + 2.0) - 0.5) * sin(t * 1.7) + (domeNoise(xz / 6.0 + 17.0) - 0.5) * cos(t * 1.7));
   // What stands up does not stand smooth: the water piled on it folds into a few sharp crests that wander, taller on one side than
   // the other, and they are what breaks.
+#if EYE_CREST
   float stood = clamp((uDome.x - 2.5) / 3.5, 0.0, 1.0);
   float fold = 1.0 - abs(2.0 * domeNoise(xz / 10.0 + vec2(51.0, 23.0 + t * 0.1)) - 1.0);
   gCrest = stood * k * smoothstep(0.5, 0.97, fold) * smoothstep(0.25, 0.7, domeNoise(xz / 31.0 + 77.0));
   return uDome.x * k * k * (0.74 + 0.26 * k + 0.3 * boil) + 0.7 * k * gCrest;
+#else
+  // Under 2.5 m nothing of it stands (stood is 0 and the crest with it): the two reads of the fold are left out of the program.
+  return uDome.x * k * k * (0.74 + 0.26 * k + 0.3 * boil);
+#endif
 }`;
 
 const WATER_VERTEX = /* glsl */ `
+// The surface itself is always raised with its crest, whatever the fragment program leaves out: its depth twin keeps the names it was made with.
+#undef EYE_CREST
+#define EYE_CREST 1
 ${DOME_GLSL}
 varying vec3 vWorld;
 void main() {
@@ -139,6 +147,8 @@ uniform float uWake;
 uniform float uClear;
 uniform vec3 uDeepTone;
 uniform vec4 uDeepMirror;
+// Whether the picture hung is a wall alone is known for the whole frame (EYE_LONG): the far world is read as that frame has it.
+#define EYE_TALL EYE_LONG
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${BED_GLSL}
@@ -265,7 +275,9 @@ void main() {
       // No ring goes all the way round: each is a run of arcs, and where an arc ends changes as the ring travels.
       amp *= mix(smoothstep(0.3, 0.62, vnoise(out2 * (3.0 + 1.3 * fj) + vec2(fj * 11.0, sent * 0.35))), 1.0, uCentre.z);
       // Far from the swell a train is in patches, each length in patches of its own: what reaches the near water is torn, never ruled.
+#if EYE_WAKE
       if (uWake > 0.0) amp *= mix(1.0, 1.8 * smoothstep(0.2, 0.6, abs(fract(bentA * 2.3 + bentB * 1.7 + turn) - 0.5) * 2.0), (1.0 - uLeave.x) * smoothstep(0.5, 2.5, from / rim));
+#endif
       float turns = ring.x * r - ring.y * uTime + bent;
       // Round the swell the rings are steep: a narrow crest and a long trough, so each is a thin line of light.
       float crest = uCentre.w > 0.0 ? sin(turns) * exp(1.6 * (cos(turns) - 1.0)) * 1.6 : sin(turns);
@@ -279,7 +291,9 @@ void main() {
 #endif
     dr *= smoothstep(rim * 0.25, rim * 0.8, middle) * alive * uRingsOn;
     slope += out2 * dr;
+#if EYE_WAKE
     wake += out2 * dr;
+#endif
     // Round the foot of the swell the faces of its rings lean to the eye as its own face does, and are as dark: it has no edge.
     skirt = smoothstep(1.8, 4.5, uDome.x) * smoothstep(1.7, 0.9, r / rim + 0.5 * (bentA - 0.5)) * (1.0 - uLeave.x);
     // The swell itself, by its own lie.
@@ -361,7 +375,9 @@ void main() {
           lost += 0.5 * amp * amp * (1.0 - told * told);
         }
         slope += dir * dm * alive;
+#if EYE_WAKE
         wake += dir * dm * alive;
+#endif
         // Where it breaks the surface the water is white with it, most as it comes up.
         if (m < 9.0) splash += smoothstep(8.0, 1.0, m + 4.0 * vnoise(p.xz * 0.9 + uTime * vec2(0.7, 0.4) + at.z)) * (0.55 + 0.45 * cos(uTime * 0.7 + at.z * 3.0));
       }
@@ -608,6 +624,7 @@ void main() {
     }
 #endif
     // What rises: a pale shape under the dome, never the whole of it.
+#if EYE_PALE
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
     deep += vec3(0.11, 0.12, 0.115) * skyDown * pale * (0.5 + 0.5 * smoothstep(0.1, 0.6, v.y));
@@ -617,6 +634,7 @@ void main() {
       * smoothstep(0.56, 0.72, vnoise(out2 * 10.0 + vec2(0.022, -0.016) * r + 3.1) + 0.3 * (vnoise(p.xz / 9.0 + 9.0) - 0.5));
     // Only a low eye, looking along the water, has them: from over it the deep is the deep.
     deep += vec3(0.17, 0.2, 0.185) * skyDown * ribs * smoothstep(0.75, 1.15, trail) * smoothstep(0.2, 0.09, v.y) * (1.0 - uLeave.x);
+#endif
     // Seen low, what comes up out of the shaft is green and blue: the warm of the evening does not go down there.
     deep *= mix(vec3(1.0), vec3(0.55, 0.84, 0.98), smoothstep(12.0, 4.0, cameraPosition.y));
     under += deep * (1.0 - crusted);
@@ -725,6 +743,7 @@ void main() {
     refl *= mix(vec3(1.0), mix(uMirror.rgb, vec3(1.0), step(uMirror.r, uMirror.b) * smoothstep(1.45, 2.2, refl.r / max(refl.b, 1e-4))), staged);
 #endif
     // Under the long lens the wall's gold lies on the water in long broken streaks, and the water between them is dark.
+#if EYE_LONG
     if (uPlateTone.w > 1.5) {
       float held = dot(refl, vec3(0.3, 0.5, 0.2)) / 0.2;
       refl *= clamp(pow(max(held * 1.25, 1e-4), 0.9), 0.4, 1.9);
@@ -734,6 +753,7 @@ void main() {
       // Between the streaks the water holds the sky over the wall: a cool slate, not the wall's brown let run.
       if (held < 0.55) refl = mix(refl, skyRadiance(normalize(vec3(rd.x, 0.6, rd.z))) * vec3(0.15, 0.2, 0.26), 0.7 * (1.0 - smoothstep(0.2, 0.55, held)));
     }
+#endif
     // Whatever stands in the water or at its edge, drawn once more from under it.
 #if EYE_MIRRORED
     {
@@ -770,6 +790,7 @@ void main() {
   }
   // A ring is told by its two faces: the one that leans to the eye lets it into the dark of the water, the one that leans away is bright
   // with what stands beyond it, the wall's gold where the water holds the wall and the cool of the sky where it does not.
+#if EYE_WAKE
   if (uWake > 0.0) {
     float lean = -uWake * dot(wake, normalize(v.xz)) / max(v.y, 0.05);
     lean *= (1.0 - uLeave.x) / (1.0 + abs(lean));
@@ -787,6 +808,7 @@ void main() {
       c += uSunColour * vec3(0.3, 0.14, 0.02) * spark * sunAt(vec3(p.x, 0.5, p.z));
     }
   }
+#endif
 #if EYE_SWELL
   if (runnel > 0.0) c = mix(c, skyDown * (0.8 / 3.14159), min(0.5 * runnel, 0.5) * (1.0 - uLeave.x));
 #endif
@@ -877,7 +899,7 @@ void main() {
 // as what it lets in. So whatever a whole frame has no use for (the looks of a low eye seen from the rim, the water from over its centre
 // before the camera leaves, rings where nothing drinks) is left out of the program itself, by these names. Each is told from the frame
 // alone, by the same test the shader would have made of its uniforms, so the picture is the same picture.
-function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean, edge: boolean, shingle: boolean): Record<string, number> {
+function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing: boolean, swell: boolean, lapping: boolean, mirrored: boolean, ruffled: boolean, edge: boolean, shingle: boolean, dome = 0, wake = false): Record<string, number> {
   const rim = eyeHeight <= 8 ? 0 : eyeHeight >= 40 ? 2 : 1;
   return {
     // rimEye: 0 where it is nothing, 2 where it is all, 1 between.
@@ -894,6 +916,13 @@ function variantOf(eyeHeight: number, plate: number, leaving: boolean, climbing:
     EYE_EDGE: edge ? 1 : 0,
     // The shore's stones gone on under the water, each with its height: only the shot that stands on the shore can tell them.
     EYE_SHINGLE: shingle ? 1 : 0,
+    // What only one shot or one height of the swell has, by the test the shader itself makes of its uniforms: the two faces of a ring
+    // (uWake), the gold streaks under the long lens (uPlateTone.w over 1.5), the pale shape under the swell and its trail (uDome.x over
+    // 1.5, under which both are 0) and the crest of the swell (uDome.x over 2.5, under which it is 0).
+    EYE_WAKE: wake ? 1 : 0,
+    EYE_LONG: plate > 1.5 ? 1 : 0,
+    EYE_PALE: dome > 1.5 ? 1 : 0,
+    EYE_CREST: dome > 2.5 ? 1 : 0,
   };
 }
 
@@ -1144,7 +1173,11 @@ void main() {
         (material.uniforms.uRuffle as THREE.IUniform<number>).value > 0,
         (material.uniforms.uWallFall as THREE.IUniform<number>).value > 1,
         onShore,
+        dome.x,
+        (material.uniforms.uWake as THREE.IUniform<number>).value > 0,
       );
+      // And what the picture hung in this frame never asks of the far world.
+      Object.assign(variant, farNames(material.uniforms));
       if (Object.entries(variant).some(([name, value]) => (material.defines as Record<string, number>)[name] !== value)) {
         material.defines = variant;
         material.needsUpdate = true;

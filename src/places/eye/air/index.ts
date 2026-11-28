@@ -15,7 +15,7 @@ import { MIST_SUN_GLSL, mistSunTexture } from './light';
 import { mistNoise } from './noise';
 import { PLATES, plateFor } from './plates';
 import type { Context, Piece } from '../shared/context';
-import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { NOISE_GLSL, RIG_GLSL, farNames } from '../shared/glsl';
 
 export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 
@@ -58,6 +58,8 @@ void main() {
 
 const SKY_FRAGMENT = /* glsl */ `
 varying vec3 vDir;
+// The sky asks for the far world straight on and never in a mirror: what only a mirror reads of it is left out of this program.
+#define EYE_FAR_STRAIGHT 1
 ${NOISE_GLSL}
 ${RIG_GLSL}
 #ifdef WALL_LAYERS
@@ -97,6 +99,8 @@ void main() {
     gl_FragColor = vec4(rigOut(farRadianceAt(cameraPosition, d, 0.0, plateSpot, plateGx, plateGy)), 1.0);
     return;
   }
+  // With a picture hung (EYE_PLATE, the test above made of the frame) the sky worked out below is never reached.
+#if !EYE_PLATE
   vec3 c = skyRadiance(d);
   // One thin streak of high cloud, lit from under by the sun that has left the ground.
   float az = atan(d.x, -d.z);
@@ -110,6 +114,7 @@ void main() {
     c += (uSunColour * 0.085 + uSkyHorizon * 0.25) * streak * 0.45;
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
+#endif
 }`;
 
 const VOLUME_FRAGMENT = /* glsl */ `
@@ -183,6 +188,7 @@ vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
   // Seen from above, the shallows and the mats all round the lake hold a low veil in wide soft patches. It laps the rim of the deep
   // water of the middle and leaves the middle itself clear, so the pool is seen whole. It lies where it lies: it comes into sight as the lens climbs over it and
   // does not travel.
+#if EYE_MIST_ROUND
   if (uMistRound > 0.0) {
     // Its patches are wide and torn: each is drawn out in strands that bend round one another, and the thinnest of them reach in
     // over the rim of the pool. The patches themselves are told by the reads the bank has already made.
@@ -191,6 +197,7 @@ vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
     float rim = mix(0.3 * smoothstep(120.0, 400.0, ROUND - q.z), 1.0, smoothstep(290.0, 520.0, ROUND - q.z));
     sheet += uMistRound * 3.8 * lying * rim * exp(-q.y / 6.0);
   }
+#endif
   return vec3(sheet, top, uThin * cover * ramp * stands * stretch.y);
 }
 
@@ -199,7 +206,12 @@ vec3 mistForm(vec3 q) {
   // Past the ends of a bank that has ends there is nothing to read.
   if (uMistC.y > 0.0 && abs(q.x - uMistC.x) >= uMistC.y) return vec3(0.0);
   // uMistD.z draws the tongues closer together (a long lens holds only a short run of shore) and leaves the water bare between them.
+#if EYE_MIST_TONGUES
   keptTongue = uMistD.x > 0.0 ? smoothstep(0.3, 0.68, texture(tMistNoise, vec3(q.x / (520.0 / (1.0 + 2.0 * uMistD.z)) + 0.6, 0.21, 0.25 + stretch.z * 0.004)).b) : 1.0;
+#else
+  // No tongues (uMistD.x is 0): their read is left out of the program.
+  keptTongue = 1.0;
+#endif
   keptBig = texture(tMistNoise, vec3(lie.x / 1300.0, lie.y / 1300.0, stretch.z * 0.0042));
   return mistShape(q, keptBig, keptTongue);
 }
@@ -381,12 +393,12 @@ void main() {
 }`;
 
 export function create(ctx: Context): Piece {
-  const skyMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, side: THREE.BackSide });
+  const skyMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, defines: { EYE_PLATE: 0, EYE_TALL: -1 }, side: THREE.BackSide });
   // The sky of a shot whose far wall is cut into layers is a program of its own: this renderer pays for every line of a program on
   // every pixel, taken or not, and the other shots are not to pay for the layers.
   const layered = PLATES.find((p) => p.cut);
   const cutUniforms = { tPlateCut: { value: layered?.cut ? ctx.assets.texture(layered.cut.file, { kind: 'data', repeat: false, anisotropy: 1 }) : null }, uPlateKey: { value: new THREE.Vector4() } };
-  const skyLayered = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...cutUniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, defines: { WALL_LAYERS: 1 }, side: THREE.BackSide });
+  const skyLayered = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...cutUniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, defines: { WALL_LAYERS: 1, EYE_PLATE: 1, EYE_TALL: -1 }, side: THREE.BackSide });
   const sky = new THREE.Mesh(new THREE.SphereGeometry(20000, 64, 32), skyMaterial);
   sky.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('sky', sky));
@@ -402,6 +414,7 @@ export function create(ctx: Context): Piece {
     vertexShader: QUAD_VERTEX,
     fragmentShader: VOLUME_FRAGMENT,
     uniforms: { ...ctx.rig.uniforms, ...volumeUniforms(), ...show, ...lid },
+    defines: { EYE_MIST_ROUND: 1, EYE_MIST_TONGUES: 1, EYE_TALL: -1 },
     depthTest: false,
     depthWrite: false,
     blending: THREE.NoBlending,
@@ -479,6 +492,28 @@ export function create(ctx: Context): Piece {
           shown.setComponent(k, c[4]);
         });
         near.set(KEYS[p.key].position[0], KEYS[p.key].position[2], p.near, 1);
+      }
+      // This renderer pays for every line of a program on every pixel, taken or not. What this frame's own numbers rule out is left out
+      // of its programs by name: each name is the test the shader itself makes of the uniform set above, made here of the value the
+      // shader is handed (a 32 bit float), so the picture is the same picture.
+      const on = (value: number): number => (Math.fround(value) > 0 ? 1 : 0);
+      const far = farNames(rig);
+      const skyNames: Record<string, number> = { EYE_PLATE: tone.w > 0.5 ? 1 : 0, EYE_TALL: tone.w > 1.5 ? 1 : 0, ...far };
+      if (sky.material === skyLayered) skyNames.WALL_LAYERS = 1;
+      const drawnSky = sky.material as THREE.ShaderMaterial;
+      if (Object.keys(skyNames).length !== Object.keys(drawnSky.defines).length || Object.entries(skyNames).some(([name, value]) => (drawnSky.defines as Record<string, number>)[name] !== value)) {
+        drawnSky.defines = skyNames;
+        drawnSky.needsUpdate = true;
+      }
+      const names: Record<string, number> = {
+        EYE_MIST_ROUND: on(show.uMistRound.value),
+        EYE_MIST_TONGUES: on((rig.uMistD as THREE.IUniform<THREE.Vector4>).value.x),
+        EYE_TALL: tone.w > 1.5 ? 1 : 0,
+        ...far,
+      };
+      if (Object.entries(names).some(([name, value]) => (volume.defines as Record<string, number>)[name] !== value)) {
+        volume.defines = names;
+        volume.needsUpdate = true;
       }
     },
     beforeSample: (_renderer, camera) => {
