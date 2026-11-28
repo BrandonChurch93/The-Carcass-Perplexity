@@ -960,7 +960,7 @@ export function create(ctx: Context): Piece {
       else if (inClose) stage.set(0.62, 0.5, 1.05, 1);
       else if (inWide) stage.set(1.25, 1.5, 1, 1);
       else stage.set(1, 1, 1, 0);
-      stageMore.set(inStrike ? 1 : 0, inClose ? 0.1 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0, inStrike ? 1.2 : inClose ? 0.6 : 1);
+      stageMore.set(inStrike ? 1 : 0, inClose ? 0.1 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0, inStrike ? 1.2 : inClose ? 0.85 : 1);
       fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0, wideShot.from);
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
       // Seen close the film shows its oil colours.

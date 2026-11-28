@@ -169,7 +169,7 @@ void main() {
   n = normalize(n + 0.9 * (lie.x - 0.5) * normalize(cross(n, vec3(0.0, 1.0, 0.001))) + 0.9 * (lie.y - 0.5) * vec3(0.0, 1.0, 0.0));
   // Under the locks the roots are in each other's shade.
   // Under the herd's hair the hide is its under-coat, even in tone: no dark of the picture stands between the hairs as a spot.
-  vec3 albedo = uTone.rgb * mix(shag, vec3(dot(shag, vec3(0.333))) * 0.9 + 0.25, 0.65 * uLockKind) * mix(0.45, 0.95, smoothstep(0.2, 0.7, lie.b));
+  vec3 albedo = uTone.rgb * mix(shag, vec3(dot(shag, vec3(0.333))) * 0.9 + 0.25, 0.65 * uLockKind) * mix(mix(0.45, 0.8, uLockKind), 0.95, smoothstep(0.2, 0.7, lie.b));
   float rough = 0.95;
   float occ = 0.55;
   vec3 pelt = albedo;
@@ -489,7 +489,7 @@ void main() {
   float around = atan(position.z, position.x);
   float cords = sin(around * 3.0 + t * (7.0 + 9.0 * fract(seed * 4.1)) + seed * 30.0) + 0.5 * sin(around * 5.0 - t * 13.0 + seed * 11.0);
   float crust = max(ring.y, 0.0) * (0.5 + 0.5 * sin(t * (37.0 + 16.0 * fract(seed * 6.7)) + seed * 90.0) * sin(t * 17.0 + seed * 17.0)) * smoothstep(0.03, 0.15, t);
-  vec3 p = centre + ring * r * (1.0 + uWrithe.y * (0.17 * cords + 0.45 * crust));
+  vec3 p = centre + ring * r * (1.0 + uWrithe.y * (0.07 * cords + 0.3 * crust));
   vWorld = p;
   vNormal = normalize(ring);
   vAt = vec3(t, around, seed);
@@ -525,14 +525,14 @@ void main() {
   // It is corded like a root: dark in the furrows between the cords, a dry grey on them.
   float cords = sin(vAt.y * 3.0 + t * (7.0 + 9.0 * fract(vAt.z * 4.1)) + vAt.z * 30.0) + 0.5 * sin(vAt.y * 5.0 - t * 13.0 + vAt.z * 11.0);
   float furrow = smoothstep(-0.9, 0.5, cords);
-  albedo = mix(albedo, mix(vec3(0.035, 0.028, 0.025), vec3(0.3, 0.26, 0.23), furrow) * (0.55 + 0.7 * blotch) * (0.75 + 0.4 * rings), 0.92 * uWrithe.y);
+  albedo = mix(albedo, mix(vec3(0.13, 0.115, 0.11), vec3(0.24, 0.215, 0.2), furrow) * (0.75 + 0.35 * blotch), 0.92 * uWrithe.y);
   // On the dead one's the rime lies in grains and broken patches along what looks up, and the dark cord shows through it.
-  rime = mix(rime, 0.78 * smoothstep(0.74, 0.98, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5) + 0.65 * (vnoise3(vWorld * 45.0) - 0.5) + 0.4 * (vnoise3(vWorld * 9.0) - 0.5)), uWrithe.y);
+  rime = mix(rime, 0.6 * smoothstep(0.76, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5) + 0.65 * (vnoise3(vWorld * 45.0) - 0.5) + 0.4 * (vnoise3(vWorld * 9.0) - 0.5)), uWrithe.y);
   // On a living one in the cold its own breath has frozen on them: they hang frosted, pale as the coat.
   rime = max(rime, (1.0 - uWrithe.y) * (0.45 + 0.4 * crystals));
-  albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
+  albedo = mix(albedo, mix(vec3(0.74, 0.78, 0.84), vec3(0.5, 0.52, 0.55), uWrithe.y), rime);
   float rough = mix(0.32, 0.85, max(rime, 0.3 * uWrithe.y));
-  vec3 e = vLit * (0.55 + 0.45 * t) * mix(1.0, 0.5 + 0.5 * furrow, uWrithe.y * (1.0 - rime));
+  vec3 e = vLit * (0.55 + 0.45 * t) * mix(1.0, 0.8 + 0.2 * furrow, uWrithe.y * (1.0 - rime));
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   c += (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough) * vGleam / 3.14159;

@@ -99,6 +99,9 @@ const smooth = (a: number, b: number, v: number): number => {
   return t * t * (3 - 2 * t);
 };
 
+// The coat of the one that stands and walks, by kind of place: short on its legs, so that the legs are seen under the trunk's coat.
+const STAND_LENGTHS = [0.17, 0.16, 0.15, 0.08, 0.035, 0, 0, 0.09];
+
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
   // The dead one's coat is seen from three metres: every lock of it is drawn as its hairs.
@@ -181,7 +184,7 @@ export function create(ctx: Context): Piece {
     // The dead one lies on its right side: the coat of that side is under it, in the snow, and is not grown, nor is the coat low on its
     // back, which is turned from the lens for as long as it is in the frame.
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 || (n[2] > 0.5 && n[1] < 0.45) : undefined;
-    const c = coat(body, rng, { clumps: role.clumps, locks: role.act === 'dead' ? 6 : 4, broad: role.act === 'dead' ? 0.55 : role.inside ? 0.62 : 1, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.08, 0.15, 0.115, 0.085, 0, 0.035] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.65) : 0, droop: role.inside ? (role.act === 'stand' ? 0.55 : 1) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
+    const c = coat(body, rng, { clumps: role.clumps, locks: role.act === 'dead' ? 6 : 4, broad: role.act === 'dead' ? 0.55 : role.inside ? 0.62 : 1, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.08, 0.15, 0.115, 0.085, 0, 0.035] : role.inside && role.act === 'stand' ? STAND_LENGTHS : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.12 : 0.65) : 0, droop: role.inside ? (role.act === 'stand' ? 0.55 : 1) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
     const locks = new THREE.InstancedBufferGeometry();
     const lockShape = role.act === 'dead' ? hairs : hairsFar;
     locks.index = lockShape.index;
