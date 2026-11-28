@@ -24,26 +24,26 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 228, 2026-11-28 14:55 UTC:
+Status 229, 2026-11-28 15:13 UTC:
 
-- `01-s228-ribs-0m20-whole-mend.jpg`: The Ribs at 0:20 (frame 1241) as the film has it since 7:48 AM, with the mended fix for its fine detail: the whole frame, drawn by the fix's prover at the draft tier in 3840x2160 on a fresh machine, sent at 1920x1080 and shown as it came. Left: a pale striated cliff over a dark slope hung with brown and olive weed, a thin white trickle of water, and on the slope the hung body, pale and dried, its ribs showing as a cage, with no eye and no ear. Middle and right: giant pale rib bones with rust stains leaning and arching into haze under storm cloud, small flyers in the air, a low arch far off. At the waterline several waders on long thin legs with orange fans on their backs, necks bent to the water. Front: a dark wet flat with reflections and foam streaks, rounded stones, boulders with brown weed at the lower left and golden-brown weed mats at the lower right, which are drawn as fine even hatching, a fault on the list for round 31. The Builder looked at it in two halves at its own size.
-- `02-s228-ribs-0m40-whole-mend.jpg`: The Ribs at 0:40 (frame 2401) as the film has it since 7:48 AM, with the mended fix: the whole frame, drawn by the prover at the draft tier in 3840x2160, sent at 1920x1080 and shown as it came. A low close view over the wet flat, which is out of focus in front. A wave breaks across the middle with white spray thrown high over dark green water; behind the spray stand giant pale rib bones, curved like horns, with rust stains, under bright cloud at the right and dark storm at the left. Eight waders stand in the surf with grey-tan wings spread like fans, one in the right half with its wings wide and its neck up. At the far left the foot of a big dark rock with wet weed, soft and out of focus; at the right a big rock with pale ridged streaks over rust-brown, dark at its foot; rounded stones at the waterline. Faults seen, for round 31: the spread wings read as flat paper fans and the pale streaks on the right rock a little like melted wax. The Builder looked at it in two halves at its own size.
+- `01-s229-ribs-wall-0m34-frame.jpg`: One patch of the Ribs' wall at 0:34 (frame 2078), at full 4K size, as the film has it since 7:48 AM with the mended fix for its fine detail: the first of eight frames in a row that the fix's prover drew at the draft tier in 3840x2160 on a fresh machine and cut at full size, not scaled, shown as it came. A dark wet rock wall hung with brown and olive weed in fine strands that run from the upper left to the lower right; the left third is soft, out of focus, the middle and the right are sharp. At the upper right grey-brown ridged rock and a pale limb like bleached bone, which hangs in from the top edge and ends in a blunt foot with short toes; two small pale things with a fringe of fine legs sit on the rock at the top. Thin wet glints at the top middle and at the lower right. The fault: many small pale dots lie scattered over the weed and read as a dusting of specks; they are on the list for round 31. The Builder looked at it at its own size.
+- `02-s229-ribs-wall-0m34-frame.jpg`: The same patch of the Ribs' wall seven frames later (frame 2085), the last of the eight in a row, drawn and cut the same way by the prover and shown as it came. Against Still 331 the whole patch has slid a few pixels down and to the left with the camera, the end of the pale limb stands a little lower, and the wet glints at the lower right are a little brighter and longer. The strands keep their shape and their place on the wall and the pale dots travel with it: in the seven frames of the row that the Builder looked at, each at its own size, nothing jumps, nothing boils and there is no block of wrong colour. The dots are the open fault here.
 
+Status 228, 2026-11-28 14:55 UTC, showed: The Ribs at 0:20 (frame 1241) as the film has it since 7:48 AM, with the mended fix for its fine detail: the whole frame, drawn by the...
 Status 227, 2026-11-28 14:33 UTC, showed: The Ribs at 0:34 (frame 2081) with the mended fix for its fine detail, on the trial merge that is not in the film yet: one patch of the...
 Status 226, 2026-11-28 12:03 UTC, showed: The Reveal at 2:40 (frame 9621) on the trial merge of the team's work for note 30, which is not in the film yet: one frame drawn by the...
-Status 225, 2026-11-28 11:44 UTC, showed: One patch of the Ribs' wall at the lower left of the frame at 0:34 (frame 2081), at full size, in two versions: one sheet made by the Ribs'...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-28T14:55:12Z
-phase 6: 13.24 h used of 24.00 h
-build: 13.24 h used of 24.00 h
+2026-11-28T15:13:03Z
+phase 6: 13.54 h used of 24.00 h
+build: 13.54 h used of 24.00 h
 extra rounds: no
 half point: reached
-minutes since the last status: 22
+minutes since the last status: 18
 ```
 
 ## Phases
