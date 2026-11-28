@@ -296,6 +296,7 @@ void main() {
   float gritTall = 0.002 * chip + 0.001 * speck - 0.0035 * vesicle - 0.002 * crackle;
   fine += clamp(onCrust(vec2(dFdx(gritTall), dFdy(gritTall)), qx, qy, det), -1.0, 1.0);
   tone *= (1.0 + 0.6 * chip + 0.4 * speck + 0.55 * mottle) * (1.0 - 0.65 * vesicle);
+  float faceTone = 1.0;
   // A standing face is the broken edge of the skin: its layers show, a finger thick, and it is rough.
   tone *= mix(1.0, 0.55 + 0.9 * vnoise(vec2(dot(q, vec2(0.71, 0.71)) / 0.07, vWorld.y / 0.012)), steep * (1.0 - smoothstep(0.014, 0.04, fpG)));
   crease *= (1.0 - 0.5 * vesicle) * (1.0 - 0.35 * crackle);
@@ -303,6 +304,20 @@ void main() {
   vec3 nShape = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
   slope += fine;
   n = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
+  // It is broken, not moulded: blocks a hand or two long and half as high, each with a face of its own, read along the
+  // face and up it so that nothing on it is drawn out down the wall.
+  float faceOn = steep * (1.0 - smoothstep(0.02, 0.06, fpG));
+  if (faceOn > 0.0) {
+    vec2 run = normalize(vec2(-nShape.z, nShape.x) + vec2(1e-4, 0.0));
+    vec2 wq = vec2(dot(q, run), vWorld.y);
+    vec2 w1 = wq / vec2(0.19, 0.085) + 7.0;
+    vec2 w2 = wq / vec2(0.06, 0.035) + 31.0;
+    float b0 = 0.65 * vnoise(w1) + 0.35 * vnoise(w2);
+    float bA = 0.65 * vnoise(w1 + vec2(0.25, 0.0)) + 0.35 * vnoise(w2 + vec2(0.25, 0.0));
+    float bU = 0.65 * vnoise(w1 + vec2(0.0, 0.25)) + 0.35 * vnoise(w2 + vec2(0.0, 0.25));
+    n = normalize(n + faceOn * 3.6 * ((b0 - bA) * vec3(run.x, 0.0, run.y) + (b0 - bU) * vec3(0.0, 1.0, 0.0)));
+    faceTone = mix(1.0, 0.3 + 1.3 * b0, faceOn);
+  }
 
   // Ash: pale dust lies in the hollows of the billow, in grooves and pits, and thick on old plates.
   float hollow = 1.0 - smoothstep(0.2, 0.42, vnoise(q / 2.6 + 1.0));
@@ -312,7 +327,7 @@ void main() {
   // Old skin is grey and rough, young skin black and glassy: by patch, by plate and by lobe. Grain on all of it.
   vec3 albedo = mix(vec3(0.034, 0.035, 0.037), vec3(0.125, 0.126, 0.129), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
   // The tone within a patch is the photograph's: pale worn crests, black furrows, glass and grit.
-  albedo *= 0.85 * clamp(tone, 0.1, 4.0) * (1.0 + 0.8 * (skinD.z - 0.5));
+  albedo *= 0.85 * clamp(tone, 0.1, 4.0) * (1.0 + 0.8 * (skinD.z - 0.5)) * faceTone;
   // The mean of what is left out on the blurred swell: its grooves and its spall darken and warm it by a tenth.
   albedo *= mix(vec3(1.0), vec3(0.99, 0.9, 0.885), blurred);
   // The banks of the line are dark charcoal brown, not ash.
@@ -503,11 +518,14 @@ void main() {
     c *= 1.0 - ember;
     hot += blackbody(1000.0 + 90.0 * nearMelt) * ember;
   }
-  // At the lip itself the skin is a hand thick and crazed, and the melt under it shows in the crazing: sparks of orange,
-  // most at the brim, none a metre back.
-  float lipGlow = crackLine * live * smoothstep(0.05, 0.25, gape) * (1.0 - smoothstep(0.03, 0.45, beside)) * smoothstep(0.0, 0.04, beside) * (1.0 - rubble) * calm * (1.0 - heat.x) * smoothstep(0.56, 0.7, 0.6 * vnoise(q / 0.06 + 43.0) + 0.4 * vnoise(q / 0.31 + 17.0));
+  // At the lip the skin is a hand thick and broken. The melt lights its broken edge from under: a thin line of orange along
+  // the brim, of unlike width, alight here and dark there. No net of even chips is alight on it.
+  float lipOn = live * smoothstep(0.05, 0.25, gape) * smoothstep(0.0, 0.03, beside) * (1.0 - rubble) * calm * (1.0 - heat.x) * (1.0 - smoothstep(0.03, 0.09, fpS));
+  float lipWide = mix(0.035, 0.12, pow(vnoise(q / 0.31 + 7.0), 2.0)) + 0.03 * (vnoise(q / 0.07 + 13.0) - 0.5);
+  float lipLit = smoothstep(0.4, 0.54, 0.6 * vnoise(q / 0.47 + 43.0) + 0.4 * vnoise(q / 0.13 + 17.0));
+  float lipGlow = lipOn * (1.0 - smoothstep(0.6 * lipWide, lipWide, beside)) * lipLit;
   c *= 1.0 - lipGlow;
-  hot += blackbody(1120.0 + 220.0 * gritL.z) * lipGlow;
+  hot += blackbody(1090.0 + 230.0 * lipLit * (1.0 - smoothstep(0.0, lipWide, beside))) * lipGlow;
   gl_FragColor = vec4(rigOut(c * (1.0 - heat.x)) + hot * uLava, 1.0);
   // Last, after every derivative is taken. Far off the crust runs on under the rock, which hides it.
   if (land.b > 1.5 + 0.6 * max(far - 150.0, 0.0)) discard;

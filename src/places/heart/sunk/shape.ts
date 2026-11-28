@@ -829,6 +829,30 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
       tone[j * n + i] = p.tone;
     }
   }
+  // The rent is 1 to 3 cells of the field wide and lies on the steep flank of a rope, where the sheet itself is in facets a
+  // cell wide: a line that thin is drawn along them in steps, as a zigzag, however its own edge is eased. Its heat is spread
+  // over the skin beside it by a bell 3 cells wide, a hand each way, so what is seen is a patch of skin that glows dull from
+  // under, as it does beside a real rent, and the picture breaks the bright of it into cracks by its own grain. Where it
+  // lights from is left as it was.
+  const reach = 8;
+  const bell = Array.from({ length: 2 * reach + 1 }, (_, t) => Math.exp(-((t - reach) * (t - reach)) / 18));
+  const whole = bell.reduce((a, b) => a + b, 0);
+  const across = new Float32Array(n * n);
+  const glow = new Float32Array(n * n);
+  for (let j = 0; j < n; j++) {
+    for (let i = reach; i < n - reach; i++) {
+      let sum = 0;
+      for (let t = -reach; t <= reach; t++) sum += (bell[t + reach] as number) * (heat[j * n + i + t] as number);
+      across[j * n + i] = sum / whole;
+    }
+  }
+  for (let j = reach; j < n - reach; j++) {
+    for (let i = 0; i < n; i++) {
+      let sum = 0;
+      for (let t = -reach; t <= reach; t++) sum += (bell[t + reach] as number) * (across[(j + t) * n + i] as number);
+      glow[j * n + i] = Math.min(1, (3.4 * sum) / whole);
+    }
+  }
   // A hollow is a place lower than the ground round it, at the width of a rope and at the width of a fold.
   const near = blur(height, n, 3);
   const mid = blur(height, n, 10);
@@ -857,7 +881,7 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
       // Ash lies where the ground is low and level.
       const level = 1 / (1 + 6 * (hx * hx + hz * hz));
       const ash = smooth(0.012, 0.07, (mid[k] as number) - h + 0.03 * (noise2(x * 1.7, z * 1.7) - 0.5)) * level;
-      mask[k * 4] = byte(heat[k] as number);
+      mask[k * 4] = byte(glow[k] as number);
       mask[k * 4 + 1] = byte(ash);
       mask[k * 4 + 2] = byte(0.5 + 4 * (h - (near[k] as number)) + 1.5 * (h - (mid[k] as number)));
       const px = ((phase[j * n + Math.min(n - 1, i + 1)] as number) - (phase[j * n + Math.max(0, i - 1)] as number)) / (2 * cell);

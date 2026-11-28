@@ -1027,8 +1027,10 @@ export class Animal {
     const cx = centre[0] + right[0] * sideways + fwd[0] * forwards;
     const cz = centre[1] + right[2] * sideways + fwd[2] * forwards;
     // The corner of the trunk over a pad that has just come down sinks onto it; the corner over a pad that is lifting has nothing under it.
-    const pitch = b.tilt - 0.1 * lead - SAG.pitch * shiftFore * (1 + g) - SAG.landPitch * landFore * (1 + 1.5 * g) + 0.04 * idle2 + 0.05 * pull + 0.14 * rock;
-    const roll = SAG.roll * shiftSide * (1 + g) - SAG.landRoll * landSide * (1 + 1.5 * g) + 0.045 * idle;
+    // The weight tips the trunk toward a pad as it is unloaded, by a seventh more than the step alone does. Twice the tip, held
+    // for as long as a pad is held up, set the whole body a metre low: a crouch, where the animal only stands on three.
+    const pitch = b.tilt - 0.1 * lead - SAG.pitch * shiftFore * (1 + 0.15 * g) - SAG.landPitch * landFore * (1 + 1.5 * g) + 0.04 * idle2 + 0.05 * pull + 0.14 * rock;
+    const roll = SAG.roll * shiftSide * (1 + 0.15 * g) - SAG.landRoll * landSide * (1 + 1.5 * g) + 0.045 * idle;
     // The body stands on stilts: it rides as high as the leg that is most stretched lets it, and sinks when a pad goes out far.
     // A soft least of the four, so that it does not jerk when another leg becomes the one that holds it down.
     const span = (this.femur + this.tibia + this.meta) * 0.992;
@@ -1049,7 +1051,7 @@ export class Animal {
     for (const top of tops) soft += Math.exp(-(top - least) / (0.12 * k));
     const ride = least - 0.12 * k * Math.log(soft);
     // It rides at the height it had: it sinks from a little over it and comes back up.
-    const cy = ride + 0.09 * k - SAG.dip * k * dip * (1 + 0.8 * g) - SAG.lean * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9)) - 0.15 * k * g * hang + 0.22 * k * g * spring - 0.25 * k * rock + (plan.tall ? plan.tall(seconds) : 0);
+    const cy = ride + 0.09 * k - SAG.dip * k * dip * (1 + 0.5 * g) - SAG.lean * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9)) - 0.08 * k * g * hang + 0.22 * k * g * spring - 0.15 * k * rock + (plan.tall ? plan.tall(seconds) : 0);
     this.om = om;
     this.gulp = gulp;
     this.puff = puff;

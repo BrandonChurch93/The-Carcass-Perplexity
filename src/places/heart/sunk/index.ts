@@ -14,7 +14,7 @@ export const PARTS: readonly string[] = ['sunk-walker'];
 /** Kelvin of the hottest of the split, where the skin of a rope tore: 1100 to 1200 K along it. */
 const TEAR_KELVIN = 1180;
 /** How hard the tear lights what is near it, over what its size alone would give. */
-const TEAR_GAIN = 1.6;
+const TEAR_GAIN = 2.4;
 /** The albedo of the ash caked on a plate of hide: set so the plates on the upper side of the big arch read about 120 105 90 on the display. */
 const ASH_ON_HIDE: [number, number, number] = [0.27, 0.205, 0.135];
 /** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
@@ -143,7 +143,22 @@ export function create(ctx: HeartContext): HeartPiece {
       tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 2 }) },
     },
   });
+  // The hull is burnt through: its hide is the charred one, split into blocks as burnt timber is, dark, with soot in the splits.
+  // It is the same shader with the charred sheet in the place of the dried one, so it reads no more of the textures than it did.
+  const hullMaterial = new THREE.ShaderMaterial({
+    vertexShader: CARCASS_VERTEX,
+    fragmentShader: CARCASS_FRAGMENT,
+    defines: { HULL: 1 },
+    uniforms: {
+      ...shared,
+      tHide: { value: ctx.assets.texture('mat/char.jpg', anis) },
+      tHideNh: { value: ctx.assets.texture('mat/char-nh.jpg', { kind: 'data', anisotropy: 2 }) },
+      tFlake: { value: ctx.assets.texture('mat/flake.jpg', anis) },
+      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 2 }) },
+    },
+  });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
+  const hull = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, hullMaterial);
   const legShapeA = { points: LEG_A, knee: 0.455, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
   const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0, cover: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
@@ -159,7 +174,7 @@ export function create(ctx: HeartContext): HeartPiece {
   ];
   const hanging = RAGS.map(([at, length, half, yaw, seed]) => carcass(ragGeometry(at, length, half, yaw, seed)));
   const near = new THREE.Group();
-  const bodies = [carcass(bodyGeometry(baked, 290, 240, true)), carcass(bodyGeometry(baked, 180, 150))] as const;
+  const bodies = [hull(bodyGeometry(baked, 290, 240, true)), hull(bodyGeometry(baked, 180, 150))] as const;
   // The hull is the subject of the near shot: it stands a third larger than the shape the skin was laid round, grown from a point
   // low in its middle, so it comes up out of the nearest ropes and the drape as a bulk and its footprint in the field is as it was.
   for (const body of bodies) {
@@ -180,7 +195,7 @@ export function create(ctx: HeartContext): HeartPiece {
   // Drawn from the front to the back, so what is hidden is not shaded: the carcass before its folds, the folds before the lake
   // under them. The sheets are sorted the same way in themselves, the bench side first (shape.ts).
   group.traverse((o) => {
-    if (o instanceof THREE.Mesh) o.renderOrder = o.material === carcassMaterial ? -3 : -2;
+    if (o instanceof THREE.Mesh) o.renderOrder = o.material === carcassMaterial || o.material === hullMaterial ? -3 : -2;
   });
   coarse.renderOrder = -1;
   const meshes: THREE.Mesh[] = [];
@@ -334,6 +349,7 @@ export function create(ctx: HeartContext): HeartPiece {
       fieldMaterial.dispose();
       afarMaterial.dispose();
       carcassMaterial.dispose();
+      hullMaterial.dispose();
       glowGeometry.dispose();
       glowMaterial.dispose();
       baked.relief.dispose();
