@@ -100,7 +100,7 @@ const smooth = (a: number, b: number, v: number): number => {
 };
 
 // The coat of the one that stands and walks, by kind of place: short on its legs, so that the legs are seen under the trunk's coat.
-const STAND_LENGTHS = [0.17, 0.16, 0.15, 0.08, 0.035, 0, 0, 0.09];
+const STAND_LENGTHS = [0.115, 0.1, 0.085, 0.07, 0.035, 0, 0, 0.06];
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
