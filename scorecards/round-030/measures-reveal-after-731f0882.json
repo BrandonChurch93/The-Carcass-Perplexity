@@ -1,0 +1,206 @@
+{
+  "unit": "reveal",
+  "tier": "final",
+  "format": "uhd",
+  "measures": [
+    "M1",
+    "M3"
+  ],
+  "colour": {
+    "M1": "green",
+    "M3": "green"
+  },
+  "missing": [],
+  "frames": [
+    {
+      "id": "reveal-1",
+      "frame": 9621,
+      "key": true
+    },
+    {
+      "id": "reveal-2",
+      "frame": 9675,
+      "key": true
+    },
+    {
+      "id": "reveal-3",
+      "frame": 9739,
+      "key": true
+    },
+    {
+      "id": "reveal-4",
+      "frame": 10027,
+      "key": true
+    },
+    {
+      "id": "reveal-titan",
+      "frame": 10027,
+      "key": false
+    },
+    {
+      "id": "reveal-handoff-1",
+      "frame": 9561,
+      "key": false
+    },
+    {
+      "id": "reveal-handoff-2",
+      "frame": 9581,
+      "key": false
+    },
+    {
+      "id": "reveal-handoff-3",
+      "frame": 9601,
+      "key": false
+    }
+  ],
+  "results": [
+    {
+      "measure": "M1",
+      "id": "reveal-1",
+      "frame": 9621,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "reveal-2",
+      "frame": 9675,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "reveal-3",
+      "frame": 9739,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "reveal-4",
+      "frame": 10027,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "reveal-titan",
+      "frame": 10027,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "reveal-handoff-1",
+      "frame": 9561,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "reveal-handoff-2",
+      "frame": 9581,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "reveal-handoff-3",
+      "frame": 9601,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M3",
+      "id": "reveal-1",
+      "frame": 9621,
+      "status": "pass",
+      "ratio": 1.9429,
+      "floor": 0.75,
+      "frameEnergy": 585.5796,
+      "approvedEnergy": 301.3897,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/7-reveal/reveal-1-above-the-lake.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "reveal-2",
+      "frame": 9675,
+      "status": "pass",
+      "ratio": 1.9789,
+      "floor": 0.75,
+      "frameEnergy": 1292.32,
+      "approvedEnergy": 653.0521,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/7-reveal/reveal-2-skull-massif.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "reveal-3",
+      "frame": 9739,
+      "status": "pass",
+      "ratio": 2.8906,
+      "floor": 0.75,
+      "frameEnergy": 1676.7757,
+      "approvedEnergy": 580.0837,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/7-reveal/reveal-3-head-and-shoulders.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "reveal-4",
+      "frame": 10027,
+      "status": "pass",
+      "ratio": 1.6532,
+      "floor": 0.75,
+      "frameEnergy": 1859.0642,
+      "approvedEnergy": 1124.555,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/7-reveal/reveal-4-titan-from-orbit.jpg"
+    }
+  ],
+  "usual": {
+    "tier": "final",
+    "format": "uhd"
+  },
+  "thresholds": {
+    "pixelThreshold": 4,
+    "checkGapSeconds": 1,
+    "minSharpnessRatio": 0.75
+  },
+  "sharpness": "The mean squared response of a four neighbour Laplacian on the Rec. 709 luminance of the 8 bit picture, over every pixel that is not on the border. The approved picture is cropped at its centre to the shape of the frame, and both pictures go through the same lanczos3 resize to the size of that crop.",
+  "state": {
+    "engine": "6714b45ff14a5941",
+    "units": {
+      "heart": "e26939d6334ba7c1",
+      "ribs": "b102a8a12e581c38",
+      "breath": "faeff2bfbd6618f8",
+      "marsh": "85689939a752b171",
+      "spine": "b141536f55a18b99",
+      "eye": "e224102a93b17dc2",
+      "reveal": "a285a6223a7f47ea",
+      "film": "51d802f37e2b75ab"
+    },
+    "browser": "147.0.7727.15"
+  }
+}
