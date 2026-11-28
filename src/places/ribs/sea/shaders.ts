@@ -317,7 +317,7 @@ export const SEA_OPENING_FRAGMENT = openingText(
   // More of the wind sea breaks: a gale's sea, white to the horizon in drifts.
   SEA_FRAGMENT.replace(/float on = smoothstep\(([0-9.]+), ([0-9.]+), torn/g, (_m, lo: string, hi: string) => `float on = smoothstep(${lo} - 0.3 * uOpenSea.z, ${hi} - 0.3 * uOpenSea.z, torn`),
   [
-    ['uniform float uFeetReach;', 'uniform float uFeetReach;\nuniform vec4 uOpenSea;\nuniform float uOpenGlint;\nuniform vec4 uWash[2];'],
+    ['uniform float uFeetReach;', 'uniform float uFeetReach;\nuniform vec4 uOpenSea;\nuniform float uOpenGlint;\nuniform vec4 uWash[3];'],
     ['  float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm;\n  g *= calm;', '  float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm * uOpenSea.w;\n  g *= calm * uOpenSea.w;'],
     [
       '  float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);',
@@ -358,7 +358,7 @@ export const SEA_OPENING_FRAGMENT = openingText(
   // And a gale leaves no stretch of water clean: between the rafts the whole sea is lined with it.
   amount = max(amount, (0.6 + 0.16 * drift) * uOpenSea.z * calm * (1.0 - 0.5 * far));
   // Where a sea of the set has struck a foot the water is white round it: the wash goes out from the stone over the swell and thins to lace.
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 3; i++) {
     float off = length((p - uWash[i].xy) * vec2(1.0, 1.8)) / uWash[i].z;
     amount = max(amount, uWash[i].w * (1.0 - smoothstep(0.3, 1.0, off + 0.5 * (lacePic - 0.5) + 0.25 * (c1.b - 0.5))));
   }
@@ -656,7 +656,8 @@ const WET_EDGE: [string, string][] = [
     '  vec2 slope = ((c1.xy - 0.5) * 0.3 + vec2(-s2.y, s2.x) * 0.26) * ruffle * smoothstep(0.0, 0.07, depth);',
     `  vec3 rip = flatRipple(p, uTime, footX, footY);
   // Thin water carries no wave: the ripples die out toward every bar and stone.
-  float worked = ruffle * smoothstep(0.0, 0.03, depth);
+  // And the wind works it in patches: a ruffled stretch, and beside it one nearly slack.
+  float worked = max(0.34 + 0.9 * paw, pushed) * smoothstep(0.0, 0.03, depth);
   vec2 slope = rip.xy * worked;
   float sigma = sqrt(rip.z) * worked;`,
   ],
