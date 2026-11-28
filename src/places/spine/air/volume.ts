@@ -336,7 +336,11 @@ ${SEA_SHADE_GLSL}
     // By the dead one the lens is low and close: the air behind the body is thick with blown snow, and the first spire and its mouth
     // stand back in it, pale and soft, as far behind the body as they are.
     if (uClear.z > 0.0 && far < 50000.0) {
-      float behind = min(1.0 - exp(-max(far - 14.0, 0.0) / 540.0), 0.72);
+      // (That air stands behind the first spire, not before it: the spire and its mouth are seen sharp across the snowfield, a breath of
+      // the drift on them and no more, and the far field behind them is the ghost. With all of it laid from the body on, the spire
+      // itself was a pale shape in milk.)
+      float pastB = max(far - startV, 0.0);
+      float behind = min(0.1 * (1.0 - exp(-max(far - 14.0, 0.0) / 540.0)) + 1.0 - exp(-pastB / 540.0), 0.72);
       // And low over the ground the drift stands thick: what is seen along the ground (the snowfield, the feet of the far spires) is seen
       // through the whole of it, what stands up out of it through a few metres.
       float lowPath = rd.y > 0.001 ? min(far, 4.0 / rd.y) : far;

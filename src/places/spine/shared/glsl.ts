@@ -309,7 +309,10 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     // little that is left has come off the stone and is the stone's own warm; at the mouth it is the storm's violet.
     float reach = min(1.0 / (1.0 + dot(toFar, toFar) / CANAL_REACH) + 0.3 / (1.0 + dot(toNear, toNear) / CANAL_REACH), 1.0);
     // (Only under the roof. The ridge beyond the mouth stands in the open and keeps the level it had: the lens is set for the mouth.)
-    skyE *= mix(vec3(0.36, 0.25, 0.17), vec3(1.3, 1.16, 1.62), faces * faces * mix(0.35, 1.0, reach)) * mix(2.5, 0.2 + 1.25 * reach, rigUnderRoof) / CANAL_SKY;
+    // What is pale (rime on a coat, drifted snow) holds the mouth's light far better than the rock does: it is the brightest thing in
+    // the canal, as in the approved picture, and falls off by the root of what the rock keeps. Dimmed as the rock, the coats went grey.
+    float paleIn = smoothstep(0.5, 0.75, dot(albedo, vec3(0.3, 0.5, 0.2)));
+    skyE *= mix(vec3(0.36, 0.25, 0.17), vec3(1.3, 1.16, 1.62), faces * faces * mix(0.35, 1.0, reach)) * mix(2.5, mix(0.2 + 1.25 * reach, 0.5 + 1.6 * sqrt(reach), paleIn), rigUnderRoof) / CANAL_SKY;
     // Deep in, the stone lights the stone: a low warm with no direction, most where the mouth's light is least.
     skyE += vec3(0.34, 0.2, 0.105) * ((1.0 - reach) * (1.0 - reach) * rigUnderRoof);
     // What stands edge on to the lens between it and the mouth is rimmed by the mouth: a line of violet on a back, a lip of rock.
