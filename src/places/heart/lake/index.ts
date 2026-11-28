@@ -6,13 +6,13 @@ import * as THREE from 'three';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { secondsInPlace, shotById } from '../../../film/cut';
-import { SEAMS, SUNK, UNIT } from '../shared/anchors';
+import { LINE, SEAMS, SUNK, UNIT } from '../shared/anchors';
 import { LINE_BEND_GLSL, NET, NET_FINE, POOL, RIDGES, bakeNet } from './net';
 import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
 import { createLava } from './lava';
 import { skinFragment } from './skin';
-import { POUR_GLSL, SHEET_GLSL } from './sheet';
+import { POUR_GLSL, ROUGH_GLSL, SHEET_GLSL } from './sheet';
 
 export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
 
@@ -43,6 +43,7 @@ uniform vec4 uGroupSeam;
 #define SHEET_TALL_L 0.24
 ${SHEET_GLSL}
 ${POUR_GLSL}
+${ROUGH_GLSL}
 // What of the height is the sheet's, metres: the lattice leaves it out of its own normal, for the skin has the sheet's slope whole.
 float gSheetHigh = 0.0;
 // Lobes: the skin is poured in broad overlapping tongues 3 to 10 m across, each a low dome with a soft rounded front, each lying
@@ -353,6 +354,14 @@ float groupFar(vec2 q) {
   vec2 gab = uGroupSeam.zw - uGroupSeam.xy;
   return length(q - uGroupSeam.xy - gab * clamp(dot(q - uGroupSeam.xy, gab) / dot(gab, gab), 0.0, 1.0));
 }
+// How much the crust at a point is the youngest of the lake, the floor the group feeds on (0 to 1): it does not reach the
+// line at the shore. Where it is, the skin is the rough broken basalt of sheet.ts and no rope.
+float freshAt(vec2 q) {
+  return (1.0 - smoothstep(12.0, 55.0, groupFar(q) + 14.0 * (vnoise(q / 17.0 + 8.0) - 0.5))) * smoothstep(20.0, 42.0, length(q - vec2(${LINE[0].toFixed(1)}, ${LINE[1].toFixed(1)})));
+}
+float roughOn(float fresh) {
+  return smoothstep(0.05, 0.45, fresh);
+}
 // Metres from the middle of the channel at the line (the same crooked line the net lays down), and which way is away from it.
 uniform vec4 uLineSeam;
 ${LINE_BEND_GLSL}
@@ -657,6 +666,14 @@ float heightAt(vec2 q, float c) {
     float pour = pourHigh(q, gFine);
     gSheetHigh = gPourSheet * sheetOn * held;
     fine += (pour - gPourSheet) * sheetOn * held + gSheetHigh;
+    // The plates and joints of the rough floor, as far as the cells hold them: a joint lies lower than the plates it parts,
+    // so a pad that stands on it meets broken ground and not a level line.
+    float roughHeld = roughOn(freshAt(q)) * (1.0 - smoothstep(0.05, 0.12, c)) * off * calm * (1.0 - shoreUp);
+    if (roughHeld > 0.0) {
+      float roughHigh = (ROUGH_TALL_C * (roughAt(q, ROUGH_C, 1.5 * gFine, 3.0).z - 0.5) + ROUGH_TALL_F * (roughAt(q, ROUGH_F, 1.5 * gFine, 41.0).z - 0.5)) * roughHeld;
+      gSheetHigh += roughHigh;
+      fine += roughHigh;
+    }
   }
 
   // Where crust has been broken, at the ridges and against the rock, it lies in upturned slabs with rubble between them.
@@ -1018,6 +1035,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tRope: { value: ctx.assets.texture('mat/pahoehoe.jpg') },
     tPour: { value: ctx.assets.texture('mat/coil-nt.jpg', { kind: 'data', anisotropy: 4 }) },
     tPourNh: { value: ctx.assets.texture('mat/coil-nh.jpg', { kind: 'data' }) },
+    tRough: { value: ctx.assets.texture('mat/rough-nt.jpg', { kind: 'data' }) },
     tMeltNh: { value: ctx.assets.texture('mat/melt-nh.jpg', { kind: 'data', anisotropy: 2 }) },
     uRidge: { value: RIDGES.map((r) => new THREE.Vector4(r.from[0], r.from[1], r.to[0], r.to[1])) },
     uRidgeSize: { value: RIDGES.map((r) => new THREE.Vector2(r.tall, r.reach)) },
