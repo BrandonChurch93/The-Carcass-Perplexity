@@ -378,6 +378,82 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   }
 }
 
+// A vapour whose foot is on the lake stands as no column: the heat of the crust is spent in its first metre and the low wind lays it down. It leaves
+// its crack in uneven puffs and is carried off along the ground as a trail that widens, lifts a little and thins, and the fire under it lights it:
+// orange over open melt, a dim brown veil over dark crust. As an upright white strand lit by the sky it read cool against the place.
+// A: its foot and the radius of it. B: the wind along the ground (x, z, a unit), the metres its trail runs, thickness for a metre.
+// C: seed, metres a second it is carried, metres of one of its lumps, 3.
+const vec3 GROUND_ALBEDO = vec3(0.5, 0.42, 0.37);
+void groundOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
+  vec4 A = uSteamA[i];
+  vec4 B = uSteamB[i];
+  vec4 C = uSteamC[i];
+  float len = B.z;
+  float top = 0.61 + 1.52 * A.w + 0.183 * len;
+  // Bounds: a round of the lake that holds the whole trail, and the slab of air it lies in.
+  vec2 mid = A.xz + B.xy * (0.5 * len);
+  float reach = 0.9 * len + 2.0 * A.w;
+  vec2 oxz = ro.xz - mid;
+  float qa = dot(rd.xz, rd.xz);
+  float qb = dot(oxz, rd.xz);
+  float qc = dot(oxz, oxz) - reach * reach;
+  float t0 = 0.0;
+  float t1 = far;
+  if (qa > 1e-8) {
+    float qh = qb * qb - qa * qc;
+    if (qh < 0.0) return;
+    qh = sqrt(qh);
+    t0 = max(t0, (-qb - qh) / qa);
+    t1 = min(t1, (-qb + qh) / qa);
+  } else if (qc > 0.0) return;
+  if (abs(rd.y) > 1e-5) {
+    float ya = -ro.y / rd.y;
+    float yb = (top - ro.y) / rd.y;
+    t0 = max(t0, min(ya, yb));
+    t1 = min(t1, max(ya, yb));
+  } else if (ro.y < 0.0 || ro.y > top) return;
+  if (t1 <= t0) return;
+  float mid1 = 0.5 * (t0 + t1);
+  bool close = mid1 < uSplit;
+  float dt = (t1 - t0) / float(${SMOKE_STEPS.steam});
+  vec2 side = vec2(-B.y, B.x);
+  for (int k = 0; k < ${SMOKE_STEPS.steam}; k++) {
+    float t = t0 + (float(k) + jitter) * dt;
+    vec3 p = ro + rd * t;
+    float h = p.y;
+    vec2 rel = p.xz - A.xz;
+    float s = dot(rel, B.xy);
+    float u = (s + A.w) / (len + A.w);
+    if (u <= 0.0 || u >= 1.0) continue;
+    float out1 = max(s, 0.0);
+    // The gusts that leave the crack ride the wind, and each carries its own swing and its own lift with it: the pattern travels, it does not swell in place.
+    vec4 w = noise(vec3(C.x, (s - C.y * uTime) / 11.0, C.x * 1.7 + 0.04 * s));
+    float wide = 1.7 * A.w + 0.3 * out1;
+    float c = dot(rel, side) - (w.g - 0.5) * (1.2 * A.w + 0.55 * out1);
+    float roof = (0.3 + 0.75 * A.w + 0.09 * out1) * (0.55 + 0.9 * w.a);
+    if (abs(c) >= 1.25 * wide || h >= 1.4 * roof) continue;
+    vec3 q = vec3(s - C.y * uTime, 2.2 * h + 0.35 * s, c) / C.z + C.x;
+    float n1 = noise(q).r;
+    vec4 small = noise(q * 3.3 + 0.37);
+    float edge = abs(c) / wide + (n1 - 0.5) * 0.9 + (small.g - 0.5) * 0.3;
+    float lid = h / roof + (small.a - 0.5) * 0.5 + (n1 - 0.5) * 0.3;
+    if (edge >= 1.0 || lid >= 1.0) continue;
+    float shape = (1.0 - smoothstep(0.25, 1.0, edge)) * (1.0 - smoothstep(0.35, 1.0, lid));
+    float wisps = smoothstep(0.34, 0.72, n1 * 0.6 + small.b * 0.4);
+    float puff = mix(0.3, 1.45, smoothstep(0.3, 0.62, w.r));
+    // It thins as it widens and is gone before the end of its run.
+    float dens = shape * (0.2 + 1.1 * wisps) * puff * smoothstep(0.0, 0.08, u) * pow(1.0 - u, 1.3) * mix(1.0, 1.7 * A.w / wide, 0.75);
+    if (dens <= 0.0) continue;
+    // The fire under it and round it: what is open right under the point, and what lies within a few metres.
+    vec3 below = lakeGlow(p.xz, max(1.5 * h, 1.2));
+    vec3 round1 = lakeGlow(p.xz, 6.0);
+    vec3 light = skyLight(h) * (0.85 - 0.3 * min(dens, 1.0));
+    light += fireOnSmoke(1.5 * below * exp(-h / 2.5) + 0.6 * round1 + 0.8 * roundLights(p));
+    float a = 1.0 - exp(-dens * B.w * dt);
+    lay(close, t, mid1, GROUND_ALBEDO * light, a);
+  }
+}
+
 void main() {
   vec2 uv = gl_FragCoord.xy / uSmokeFull;
   vec4 view = uInvProjection * vec4(uv * 2.0 - 1.0, 1.0, 1.0);
@@ -392,7 +468,8 @@ void main() {
   findLights(ro, rd, min(far, 3400.0));
   for (int i = 0; i < ${MAX_STEAM}; i++) {
     if (i >= uSteamCount) break;
-    steamOne(i, ro, rd, far, fract(jitter + 0.618 * float(i + 1)));
+    if (uSteamC[i].w > 2.5) groundOne(i, ro, rd, far, fract(jitter + 0.618 * float(i + 1)));
+    else steamOne(i, ro, rd, far, fract(jitter + 0.618 * float(i + 1)));
   }
   for (int i = 0; i < ${MAX_BODIES}; i++) {
     if (i >= uBodyCount) break;

@@ -69,6 +69,9 @@ const PALE = [0.2, 0.15, 0.13] as const;
 const ALONG = [0.7, -0.71] as const;
 const RIGHT = [0.71, 0.7] as const;
 const behind = (along: number, right: number): [number, number] => [GROUP[0] + along * ALONG[0] + right * RIGHT[0], GROUP[2] + along * ALONG[1] + right * RIGHT[1]];
+/** The wind along the crust, for the vapours it lays down: across the view of the walkers' key to its right and a little away from its lens, so that
+ * a trail lies beside and behind what stands at a seam and never between it and the lens. A unit (x, z). */
+const GROUND_WIND = [0.966, 0.259] as const;
 /** They lean with the low wind. */
 const BANK_LEAN = [-0.35, 0.12] as const;
 /** The long lens on the mouth looks along (0.582, -0.813): this is its right, and toward the camera. */
@@ -253,6 +256,17 @@ export function create(ctx: HeartContext): HeartPiece {
       for (let i = 0; i < drawn; i++) {
         const { source: s, index } = order[i] as (typeof order)[number];
         const smoke = s.kind !== 'steam';
+        // A vapour whose foot is on the lake is laid down by the low wind and carried along the crust (smoke.ts, groundOne). One on the land stands as it did.
+        if (!smoke && s.at[1] < 0.6 && ctx.rig.land.height(s.at[0], s.at[2]) <= 0) {
+          const own = (k: number): number => steamOwn[(index % 64) * 5 + k - 1] as number;
+          const turn = (own(5) - 0.5) * 0.5;
+          const windX = GROUND_WIND[0] * Math.cos(turn) - GROUND_WIND[1] * Math.sin(turn);
+          const windZ = GROUND_WIND[0] * Math.sin(turn) + GROUND_WIND[1] * Math.cos(turn);
+          (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], Math.max(0.3, s.radius * (1 + 0.5 * own(1))));
+          (steamB[i] as THREE.Vector4).set(windX, windZ, Math.min(18, s.rise * (2.6 + 1.2 * own(2))), s.strength * (0.8 + 0.5 * own(3)));
+          (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, 0.9 + 0.5 * own(4), 2.4, 3);
+          continue;
+        }
         // No two vents are alike. The sources of a row of pools come with one size, one height and no lean, and stood as the same upright puff
         // drawn again at every pool. Each takes its own from its seed: a half to one and a quarter times the height, a foot of its own, its own
         // strength, and the low wind's lean (the banks': to the west and a little south) by its own share and a little off its line.
