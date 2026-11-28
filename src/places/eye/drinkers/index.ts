@@ -8,8 +8,9 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { during } from '../shared/anchors';
 import { FAR_DATA, LEVELS, MID_DATA } from './body.data';
 import { createCards } from './cards';
+import { createDrips, fallen } from './drips';
 import { CLOSE_COUNT, footfalls, herd, standPose, wadeOf, type Drinker } from './herd';
-import { BONES, solve, type Solved } from './skeleton';
+import { BONES, solve, standing, type Solved } from './skeleton';
 
 export const PARTS: readonly string[] = ['drinkers'];
 
@@ -56,6 +57,8 @@ uniform vec4 uOwn;
 uniform vec3 uPose;
 // The tone of its hide: the herd is of three.
 uniform vec3 uTone;
+// x 1 for one a close shot is about, y the seconds of the place.
+uniform vec2 uKin;
 // The hide sheet: rgb its colour, a its relief.
 uniform sampler2D tHide;
 // The broad sheet: the loose folds, the scars and the dirt.
@@ -164,7 +167,9 @@ void main() {
   float w1 = n3(at * 4.3);
   float w2 = n3(at * 11.0);
   float rings = crease(along * 19.0 + 2.6 * w1 + 0.7 * w2, 19.0 * px);
-  float root = 1.0 - smoothstep(0.2, 1.3, along);
+  float near = uKin.x;
+  // Seen close, the hide of the neck is gathered all the way up it, not at its root alone.
+  float root = 1.0 - smoothstep(0.2, 1.3 + 1.2 * near, along);
   float joint = exp(-pow((vRest.y - 0.78) / 0.17, 2.0)) + exp(-pow((vRest.y - 0.14) / 0.09, 2.0)) + 0.6 * exp(-pow((vRest.y - 1.36) / 0.14, 2.0));
   float legRings = crease(vRest.y * 46.0 + 3.0 * w1 + 1.2 * w2, 46.0 * px);
   float ribs = flank * smoothstep(-0.12, 0.05, vRest.z) * smoothstep(0.6, 0.42, vRest.z) * smoothstep(1.42, 1.62, vRest.y) * smoothstep(2.16, 1.86, vRest.y);
@@ -177,7 +182,7 @@ void main() {
     + trunk * smoothstep(-0.1, -0.7, rn.y) + 0.8 * leg * joint, 0.0, 1.0);
   loose = mix(0.1, 1.0, loose * smoothstep(0.15, 0.8, n3(at * 1.9 + 7.0)) * 1.5);
   loose = min(loose, 1.0);
-  float relief = slackNeck * 0.004 * rings
+  float relief = slackNeck * (0.004 + 0.002 * near) * rings
     + leg * joint * 0.0026 * legRings
     + ribs * (1.0 - smoothstep(0.005, 0.016, px)) * 0.0022 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
   // The bones under a thin hide: the point of the hip, the blade and the point of the shoulder stand out, and the flank falls in between the
@@ -246,6 +251,18 @@ void main() {
   skin *= 1.0 + (1.0 - smoothstep(0.022, 0.05, px)) * (0.2 * bone - 0.3 * hollow - 0.11 * (0.4 + 1.2 * w2) * (ribs * (0.5 + w1) - ribbed));
   // Each a tone of its own.
   skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3)) * uTone;
+  // The herd, far off in the shade, is pale: cream to grey. What warmth the close ones show is the sun's, and there is none on the bank.
+  skin = mix(skin, dot(skin, vec3(0.3, 0.5, 0.2)) * vec3(1.03, 1.0, 0.97), 0.8 * step(0.001, uPose.y)) * (1.0 + 0.55 * uPose.y);
+  // Seen close in the evening the bare hide is a grey going to rose, not a cream: the warmth it has is the sun's.
+  skin = mix(skin, dot(skin, vec3(0.3, 0.5, 0.2)) * vec3(1.02, 0.95, 0.97), 0.45 * near);
+  // And it is not of one colour: broad patches where the skin is darker and greyer, and the small dark spots of age over the back and the haunch.
+  float patchy = 0.0;
+  float spots = 0.0;
+  if (near > 0.0) {
+    patchy = smoothstep(0.46, 0.7, n3(at * vec3(3.1, 4.3, 3.1) + 9.0));
+    spots = smoothstep(0.7, 0.78, n3(at * 21.0 + 3.0)) * smoothstep(0.35, 0.6, n3(at * 2.3 + 13.0)) * (1.0 - smoothstep(0.006, 0.02, px));
+  }
+  skin *= mix(vec3(1.0), vec3(0.8, 0.74, 0.75), near * 0.7 * patchy) * (1.0 - 0.38 * near * spots);
   // The belly and the inside of the legs are paler; the joints of the legs are rubbed dark.
   skin *= 1.0 + 0.1 * smoothstep(0.2, -0.6, rn.y) * trunk;
   float above = (vWorld.y - max(uOwn.z, 0.0)) / uOwn.y;
@@ -253,18 +270,36 @@ void main() {
   float knee = leg * (exp(-pow((vRest.y - 0.78) / 0.12, 2.0)) + exp(-pow((vRest.y - 0.14) / 0.07, 2.0)));
   skin *= 1.0 - 0.3 * knee * (0.4 + 0.6 * ragged);
   // Wet and dark where it has stood in the lake, and flecked with the mud it kicked up, thinning to the knee; dry above. The horn of the hoof is dark.
-  float wet = 1.0 - smoothstep(0.14, 0.4, above + 0.2 * ragged);
+  float wet = 1.0 - smoothstep(0.14 + 0.16 * near, 0.4 + 0.4 * near, above + 0.2 * ragged);
   // Where the leg goes into the lake the water climbs it a finger's width and is dark with the leg's own shade.
   float waterline = (1.0 - smoothstep(0.0, 0.06, above + 0.03 * ragged)) * step(uOwn.z, -0.02);
   float muddy = (1.0 - smoothstep(0.2, 1.25, above + 0.5 * ragged)) * leg;
   skin *= mix(vec3(1.0), vec3(0.5, 0.44, 0.39), 0.85 * muddy * (0.55 + 0.9 * ragged));
   float fleck = smoothstep(0.7, 0.78, n3(at * vec3(110.0, 70.0, 110.0)) * (0.7 + 0.6 * n3(at * 6.0))) * (1.0 - smoothstep(0.3, 1.4, above + 0.6 * ragged));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
-  vec3 albedo = mix(skin * mix(vec3(1.0), vec3(0.17, 0.15, 0.14), wet) * (1.0 - 0.78 * waterline), vec3(0.13, 0.1, 0.08), 0.55 * fleck);
+  // Above the wet the leg is damp to the hock and the knee from the wading, and the belly from what the legs threw up: darker, with a sheen.
+  float under = trunk * smoothstep(-0.15, -0.7, rn.y);
+  float damp = 0.0;
+  float drop = 0.0;
+  float spatter = 0.0;
+  if (near > 0.0) {
+    damp = max((1.0 - smoothstep(0.7, 1.25, above + 0.4 * ragged)) * leg, under * smoothstep(0.3, 0.6, n3(at * vec3(2.0, 2.0, 5.0) + 41.0) + 0.5 * under));
+    // Drops hang under the belly and at the back of the legs, swell, and fall: each in a place of its own, each at its own time.
+    vec2 cell = vec2(vRest.z * 34.0, vRest.x * 34.0 + vRest.y * 9.0);
+    vec2 inCell = fract(cell) - 0.5;
+    float which1 = hash12(floor(cell) + own * 91.0);
+    float life = fract(uKin.y * (0.28 + 0.3 * which1) + which1 * 7.0);
+    float grown = smoothstep(0.0, 0.7, life) * (1.0 - smoothstep(0.86, 0.9, life));
+    drop = step(0.62, which1) * max(under * smoothstep(-0.55, -0.9, rn.y), 0.6 * leg * smoothstep(0.75, 1.3, vRest.y) * smoothstep(0.1, -0.4, rn.z))
+      * (1.0 - smoothstep(0.1, 0.24, length(inCell) / max(grown, 0.05))) * (1.0 - smoothstep(0.004, 0.012, px));
+    // Seen close, the mud it kicked up is on the leg in spatters a finger wide, thick at the fetlock and thinning to the hock.
+    spatter = leg * smoothstep(0.6, 0.72, n3(at * vec3(37.0, 23.0, 37.0)) * (0.75 + 0.5 * n3(at * 5.0))) * (1.0 - smoothstep(0.35, 1.3, above + 0.5 * ragged));
+  }
+  vec3 albedo = mix(skin * mix(vec3(1.0), mix(vec3(0.17, 0.15, 0.14), vec3(0.2, 0.175, 0.17), near), wet) * (1.0 - 0.78 * waterline) * mix(vec3(1.0), vec3(0.45, 0.4, 0.4), damp * (1.0 - wet)), vec3(0.13, 0.1, 0.08), max(0.55 * fleck, 0.6 * spatter));
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.48, 1.0, vShade.x) * (1.0 - 0.35 * groove);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
-  vec3 c = rigShade(p, n, v, albedo, mix(0.78, 0.6, wet), occ);
+  vec3 c = rigShade(p, n, v, albedo, mix(mix(0.78, 0.6, wet), 0.3, max(0.75 * damp, drop)), occ);
   // The two under the last camera stand in the shade of the bluff it looks from. The rig knows no such shade: their feet are at a level of
   // their own. The sun the rig gave them is taken back.
   float sunHere = sunAt(p);
@@ -272,7 +307,7 @@ void main() {
   c -= albedo * uSunColour * (uOwn.w * max(dot(n, uSunDir), 0.0) * sunHere * (0.4 + 0.6 * occ) / 3.14159);
   // The pale gravel and the water under it throw the sky back up at it, and the lit wall across the lake warms the side turned from the sun.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 / 3.14159) * (0.75 - 0.25 * n.y);
-  c += rigBounce(p, n, albedo) * occ;
+  c += rigBounce(p, n, albedo) * occ * (1.0 - 0.55 * near);
   // A bare hide has a dull sheen, and the low sun comes a little way through it wherever it turns from sight.
   c += rigGlint(p, n, v, 0.5) * (0.35 * occ * (1.0 - dirt) * lit);
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -281,17 +316,21 @@ void main() {
   // The low sun is warm in a bare hide, and lies along every outline that is turned to it.
   float sunward = dot(n, uSunDir);
   float rim = pow(1.0 - nv, 3.0) * smoothstep(-0.15, 0.5, sunward);
-  c += albedo * uSunColour * (vec3(0.05, -0.01, -0.13) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim) * (sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
-  // The herd stands on a bank the evening shade has taken, and the dark gravel gives nothing back: a hide there is grey, and darkest at
-  // the belly and down the legs. Backs and necks stand up into the last of the sun.
-  c *= max(0.14, 1.0 - uPose.y * (0.5 + 1.15 * (1.0 - smoothstep(0.15, 1.15, above)) + 0.9 * max(-n.y, 0.0)));
-  c += albedo * uSunColour * (vec3(1.0, 0.9, 0.78) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim)
-    * (1.6 * uPose.y * (1.0 - sunHere) * smoothstep(0.25, 1.1, above) * (0.4 + 0.6 * occ) / 3.14159);
+  c += albedo * uSunColour * (vec3(0.05, -0.01, -0.13) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim * (1.0 + 1.6 * near)) * (sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
+  // Seen close, a rough hide the low sun only grazes holds little of it: the flank turned half from the sun falls to the sky's cool light, and
+  // the sun keeps the faces turned full to it and the outline.
+  c -= albedo * uSunColour * (0.62 * near * (1.0 - smoothstep(0.2, 0.75, sunward)) * max(sunward, 0.0) * sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
+  // The herd stands on a bank the evening shade has taken: a hide there has the sky's light alone, and is pale in it, cream to grey. It is
+  // darker at the belly and down the legs, where the dark gravel gives nothing back.
+  c *= max(0.14, 1.0 - uPose.y * (0.7 * (1.0 - smoothstep(0.15, 1.15, above)) + 0.6 * max(-n.y, 0.0)));
   // A hide is not chalk: where it turns from the sun the light goes a little way round and into it, and comes out red.
   float turned = max((sunward + 0.42) / 1.42, 0.0) - max(sunward, 0.0);
-  c += albedo * uSunColour * vec3(1.0, 0.7, 0.52) * (0.4 * turned * sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
+  c += albedo * uSunColour * vec3(1.0, 0.7, 0.52) * (0.4 * (1.0 - 0.6 * near) * turned * sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
   // The wet of the leg takes the sun as a film of water does.
-  c += 0.25 * wet * lit * rigGlint(p, n, v, 0.16);
+  c += ((0.25 + 0.35 * near) * wet + 0.24 * damp * (1.0 - wet) + 0.5 * drop) * lit * rigGlint(p, n, v, 0.16);
+  // Seen close, what is turned from the sun is lit by the sky and the lake and not by the warm wall: cool against the rim.
+  c *= mix(vec3(1.0), vec3(0.84, 0.93, 1.08), near * smoothstep(0.25, -0.35, sunward));
+  c *= 1.0 - 0.25 * drop;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -345,6 +384,7 @@ interface Drawn {
   bones: Float32Array;
   own: THREE.Vector4;
   pose: THREE.Vector3;
+  near: THREE.Vector2;
   solved: Solved;
 }
 
@@ -372,9 +412,10 @@ export function create(ctx: Context): Piece {
     const pose = new THREE.Vector3(0, index < CLOSE ? 0 : 0.45, index < 4 ? 1 : 0);
     // Three hides in the herd: pale cream, sand going to rust, and a grey dun. Together they are as light as the one hide was.
     const kindOf = (animal.own * 37.7) % 1;
-    const tone = index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.09, 1.07, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.05, 0.93, 0.78) : new THREE.Vector3(0.86, 0.87, 0.9);
+    const tone = index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.1, 1.08, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.0, 0.95, 0.88) : new THREE.Vector3(0.86, 0.87, 0.9);
+    const near = new THREE.Vector2(index < CLOSE && index !== 4 && index !== 5 ? 1 : 0, 0);
     const material = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, uTone: { value: tone }, tHide, tFolds, tSlope },
+      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, uTone: { value: tone }, uKin: { value: near }, tHide, tFolds, tSlope },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       // The surface is wound with its outside as its back: only that side is drawn.
@@ -385,12 +426,18 @@ export function create(ctx: Context): Piece {
     mesh.visible = false;
     ctx.scene.add(mesh);
     ctx.reflected.push(mesh);
-    return { animal, index, mesh, material, bones, own, pose, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
+    return { animal, index, mesh, material, bones, own, pose, near, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
   });
   // Each body darkens the ground it stands on, as its card did.
   const shade = ctx.rig.contactDiscs(drawn.length);
   const sun = ctx.rig.sun;
-  ctx.parts.built('drinkers', (cards.meshes[0] as THREE.Mesh), ...cards.meshes.slice(1), ...drawn.map((d) => d.mesh));
+  const drips = createDrips(ctx, 160);
+  ctx.reflected.push(drips.mesh);
+  ctx.parts.built('drinkers', (cards.meshes[0] as THREE.Mesh), ...cards.meshes.slice(1), ...drawn.map((d) => d.mesh), drips.mesh);
+  const part = (n: number): number => {
+    const v = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+    return v - Math.floor(v);
+  };
   for (let i = 0; i < 22; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
   const scratch = new Float32Array(BONES * 12);
   const ground = (x: number, z: number): number => landHeight(x, z);
@@ -418,6 +465,7 @@ export function create(ctx: Context): Piece {
       const running = ['eye-01', 'eye-02', 'eye-04', 'eye-05'].find((id) => during(id));
       const isBody = (index: number): boolean => index < cast.length && shotOf(index) === running;
       let lap = cards.setTime(t, isBody);
+      drips.begin();
       const ring = (x: number, z: number, strength: number): void => {
         const slot = ctx.laps[lap];
         if (!slot || strength <= 0) return;
@@ -437,6 +485,7 @@ export function create(ctx: Context): Piece {
         }
         const solved = poseAt(d, t, g.bones);
         g.pose.x = Math.min(1, Math.max(0, 1 - d.down(t)));
+        g.near.y = t;
         g.solved = solved;
         // Where it stands just now: the middle of its four hooves. One that walks is not where it was placed.
         const cx = 0.25 * solved.hooves.reduce((sum, h) => sum + h[0], 0);
@@ -460,17 +509,79 @@ export function create(ctx: Context): Piece {
         // Rings where its mouth is in the water, and round a hoof that has just come down or is about to leave.
         const low = d.down(t);
         if (wetAt(solved.muzzle[0], solved.muzzle[2])) ring(solved.muzzle[0], solved.muzzle[2], 1.3 * Math.min(1, Math.max(0, (low - 0.86) / 0.1)));
+        // A hoof set down sends rings out for a second and a half after, each fainter than the last.
         const was = poseAt(d, t - 0.45, scratch).hooves.map((h) => h[1]);
+        const earlier = poseAt(d, t - 0.95, scratch).hooves.map((h) => h[1]);
+        const oldest = poseAt(d, t - 1.5, scratch).hooves.map((h) => h[1]);
+        if (g.near.x > 0) {
+          // The water it carries falls from it. Drops leave at moments of their own; each is where its fall from where it left has brought it.
+          const every = 0.11;
+          const first = Math.floor(t / every);
+          for (let j = 0; j < 8; j++) {
+            const slot = first - j;
+            const mark = slot * 0.731 + d.own * 57.3;
+            const left = (slot + part(mark)) * every;
+            const age = t - left;
+            if (age < 0) continue;
+            const [fall, speed] = fallen(age);
+            const then = poseAt(d, left, scratch);
+            // From a muzzle that has come up out of the lake: a run of drops at first, thinning as the head goes up.
+            let since = 9;
+            for (const a of [0.12, 0.35, 0.65, 1.0, 1.4, 1.9]) {
+              if (d.down(left - a) > 0.93) {
+                since = a;
+                break;
+              }
+            }
+            if (d.down(left) < 0.93 && since < 9 && part(mark * 3.7) > since / 2.1 && wetAt(then.muzzle[0], then.muzzle[2])) {
+              const y = then.muzzle[1] - 0.02 * size - fall;
+              if (y > 0) drips.put(then.muzzle[0], y, then.muzzle[2], size * (0.006 + 0.005 * part(mark * 9.1)), speed);
+            }
+            // From a hoof lifted out of the lake, while it is in the air.
+            if (g.own.z < -0.02) {
+              then.hooves.forEach((h, k) => {
+                if (h[1] - g.own.z < 0.03 * size || !wetAt(h[0], h[2])) return;
+                for (let n = 0; n < 2; n++) {
+                  const o = mark * (2.3 + k) + n * 0.377;
+                  const y = h[1] + 0.03 * size - fall;
+                  if (y > 0) drips.put(h[0] + (part(o) - 0.5) * 0.07 * size, y, h[2] + (part(o * 1.9) - 0.5) * 0.07 * size, size * (0.005 + 0.005 * part(o * 4.3)), speed);
+                }
+              });
+            }
+          }
+          // From the belly of one that wades: now one drop, now another, from under the trunk between the legs.
+          if (g.own.z < -0.02) {
+            const slow = 0.31;
+            const from = g.own.z + standing(d.build) - 0.5 * size * d.build.depth;
+            for (let j = 0; j < 3; j++) {
+              const slot = Math.floor(t / slow) - j;
+              const mark = slot * 0.577 + d.own * 91.7;
+              const age = t - (slot + part(mark)) * slow;
+              if (age < 0 || part(mark * 5.3) > 0.7) continue;
+              const [fall, speed] = fallen(age);
+              const along = 0.15 + 0.7 * part(mark * 2.9);
+              const across = 0.3 + 0.4 * part(mark * 7.7);
+              const hooves = solved.hooves;
+              const hind = [hooves[0][0] + (hooves[1][0] - hooves[0][0]) * across, hooves[0][2] + (hooves[1][2] - hooves[0][2]) * across];
+              const fore = [hooves[2][0] + (hooves[3][0] - hooves[2][0]) * across, hooves[2][2] + (hooves[3][2] - hooves[2][2]) * across];
+              const y = from - fall;
+              if (y > 0) drips.put((hind[0] as number) + ((fore[0] as number) - (hind[0] as number)) * along, y, (hind[1] as number) + ((fore[1] as number) - (hind[1] as number)) * along, size * (0.006 + 0.004 * part(mark * 11.3)), speed);
+            }
+          }
+        }
         for (let pair = 0; pair < 2; pair++) {
           const a = solved.hooves[pair * 2] as [number, number, number];
           const b = solved.hooves[pair * 2 + 1] as [number, number, number];
           const stir = Math.max(a[1], b[1]) - g.own.z;
           const at = a[1] > b[1] ? a : b;
           // A hoof that stands still leaves the water still: the ring is there while it lifts and for a moment after it is set down.
-          const before = Math.max(was[pair * 2] as number, was[pair * 2 + 1] as number) - g.own.z;
-          if (wetAt(at[0], at[2]) && g.own.z < -0.02) ring(at[0], at[2], Math.min(1.2, 9 * Math.max(stir, 0.7 * before)));
+          const lifted = (from: number[]): number => Math.max(from[pair * 2] as number, from[pair * 2 + 1] as number) - g.own.z;
+          const before = Math.max(0.7 * lifted(was), 0.45 * lifted(earlier), 0.25 * lifted(oldest));
+          // And a leg that stands in the lake is never quite still in it: the animal breathes and shifts, and the water laps at the leg.
+          if (wetAt(at[0], at[2]) && g.own.z < -0.02) ring(at[0], at[2], Math.max(0.4, Math.min(1.2, 9 * Math.max(stir, before))));
         }
       }
+      drips.end();
       // And a faint ring round every leg that stands in the lake: the animal breathes and shifts, and the water at its legs is never quite still.
       for (const g of drawn) {
         if (!g.mesh.visible || g.own.z > -0.02 || g.index >= CLOSE) continue;
@@ -483,6 +594,7 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       cards.dispose();
+      drips.dispose();
       mid.dispose();
       far.dispose();
       for (const g of drawn) g.material.dispose();

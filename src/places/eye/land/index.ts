@@ -407,7 +407,8 @@ export function create(ctx: Context): Piece {
     const size = 0.45 + 4.2 * rng.next() ** 2.6;
     if (along > 84 && Math.abs(across) < 3.2 + size) continue;
     if (Math.abs(across - streamAcross(along)) < 1.4 + size * 0.7) continue;
-    if (vnoise(along / 16 + 31, across / 16 + 7) < 0.3 + 0.2 * smooth(40, 8, Math.abs(across)) && size < 2.4) continue;
+    // The middle of the beach is open gravel where the herd stands: the stone lies in drifts toward the two crags.
+    if (vnoise(along / 16 + 31, across / 16 + 7) < 0.3 + 0.34 * smooth(38, 12, Math.abs(across)) && size < 3.0) continue;
     const [x, z] = onAxis(along, across);
     put(x, z, size);
   }

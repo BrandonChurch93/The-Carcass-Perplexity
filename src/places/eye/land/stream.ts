@@ -24,7 +24,7 @@ const CELL = 2.2;
 export const streamDepth = (along: number): number => 0.14 + 0.2 * smooth(24, 44, along);
 // The ribbon is laid wider than the water: the ground that comes up through it is its edge.
 const halfWidth = (along: number): number => 4.3 + 2.4 * smooth(40, 26, along);
-const wetWidth = (along: number): number => 1.5 + 0.9 * vnoise(along / 9, 3.3);
+const wetWidth = (along: number): number => 1.5 + 0.9 * vnoise(along / 9, 3.3) + 1.5 * smooth(66, 78, along) * smooth(124, 110, along);
 const levelAt = (along: number): number => Math.max(0.012, streamFloor(along) + streamDepth(along));
 
 /** One stone or none to each stretch of the stream, larger where it falls steeply. */
@@ -35,8 +35,10 @@ export function standingStones(next: () => number, to: number): Standing[] {
     const along = FROM + (c + 0.25 + 0.5 * next()) * CELL;
     const steep = smooth(0.04, 0.3, (levelAt(along + 0.8) - levelAt(along - 0.8)) / 1.6);
     const off = (next() * 2 - 1) * 0.8 * wetWidth(along);
-    const radius = 0.26 + (0.42 + 0.3 * steep) * next() ** 1.6;
-    const there = next() < 0.5 + 0.4 * steep && along > 4;
+    // On the bench the water runs thin over bedrock and round the stones that have come to rest on it: they are larger there, and many.
+    const bench = smooth(66, 76, along) * smooth(124, 112, along);
+    const radius = 0.26 + (0.42 + 0.3 * steep + 0.7 * bench) * next() ** (1.6 - 0.5 * bench);
+    const there = next() < 0.5 + 0.4 * Math.max(steep, bench) && along > 4;
     stones.push({ along, off, radius: there ? radius : 0 });
   }
   return stones;
@@ -126,6 +128,13 @@ void main() {
   float much = clamp(0.03 + 0.75 * riffle * (0.35 + 0.65 * lumps) + 0.85 * max(fall, 0.85 * churned) + 0.5 * piled + 0.7 * wake + 0.12 * smoothstep(0.1, 0.03, depth), 0.0, 1.0);
   // Glass for the most part: the white is threads, and they thicken only where the water has been broken.
   float white = smoothstep(0.9 - 0.56 * much, 1.06 - 0.4 * much, ridden) * smoothstep(0.02, 0.2, much);
+  // A rapid is white water from bank to bank, with dark only in its tongues.
+  white = max(white, smoothstep(0.3, 0.75, fall) * smoothstep(0.16, 0.5, ridden + 0.3 * lumps));
+  // On the bench it is broken riffle by riffle: bars of white water across it a few metres apart, and dark glass in the tongues between.
+  float bench = smoothstep(66.0, 76.0, vFlow.x) * smoothstep(124.0, 112.0, vFlow.x);
+  float bar = vnoise(vec2(vFlow.x / 1.7, vFlow.y / 2.6) + 3.0) + 0.25 * (piled + wake);
+  white *= 1.0 - 0.9 * bench * smoothstep(0.46, 0.34, bar);
+  white = max(white, bench * smoothstep(0.44, 0.6, bar) * smoothstep(0.1, 0.42, ridden + 0.3 * lumps));
   // The skin of the water: small waves that go with it, higher where it runs fast.
   float rough = 0.07 + 0.3 * fall + 0.3 * piled + 0.25 * wake + 0.2 * riffle;
   vec2 lean = vec2(mix(vnoise(q2 * vec2(1.3, 3.9) + 5.0), vnoise(q1 * vec2(1.3, 3.9) + 5.0), w1), mix(vnoise(q2 * vec2(1.3, 3.9) + 21.0), vnoise(q1 * vec2(1.3, 3.9) + 21.0), w1)) - 0.5;
@@ -133,7 +142,8 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   // Under it the bed: wet stones, darker the deeper they lie.
   vec3 bed = textureLod(tGrit, vWorld.xz / 2.3 + lean * 0.04, AT(1024.0, 2.3)).rgb * vec3(0.1, 0.11, 0.115) * exp(-depth * 2.6);
-  vec3 albedo = mix(bed, vec3(0.88, 0.92, 0.97), white);
+  // Broken water is not one white: it is brightest on its crests and grey in the troughs between.
+  vec3 albedo = mix(bed, vec3(0.93, 0.95, 0.97) * (0.74 + 0.26 * smoothstep(0.35, 0.95, ridden)), white);
   vec3 c = rigShade(vWorld, mix(vec3(0.0, 1.0, 0.0), n, white), v, albedo, 1.0, 1.0);
   // The sky lies on what is not white, more the lower the eye.
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -142,6 +152,8 @@ void main() {
   r.y = max(abs(r.y), 0.7);
   c = mix(c, 0.55 * skyRadiance(normalize(r)) * skyOpen(vWorld), (0.03 + 0.97 * pow(1.0 - nv, 5.0)) * (1.0 - white));
   c += (1.0 - white) * 0.6 * rigGlint(vWorld, n, v, 0.1);
+  // Froth is bubbles, each a small mirror of the whole sky: it stands brighter than a matt white would.
+  c *= 1.0 + 0.5 * white;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

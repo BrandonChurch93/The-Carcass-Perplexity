@@ -10,6 +10,7 @@ import { vnoise } from '../shared/noise';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { WARM_GLSL } from '../land/lod';
+import { SCULPT } from './sculpt';
 
 export const PARTS: readonly string[] = ['skeleton'];
 
@@ -65,7 +66,7 @@ void main() {
   // under a branch a pixel decides is not the same twice.
   if (vBone.x < 0.0) {
     // Weed: the dark amber of the mats, wet where it lies in the water.
-    vec3 weed = mix(vec3(0.36, 0.15, 0.035), vec3(0.62, 0.3, 0.07), vnoise(q.xz * 9.0 + vBone.y * 31.0)) * (0.75 + 0.5 * vnoise(q.xz * 160.0 + q.y * 90.0));
+    vec3 weed = mix(vec3(0.2, 0.1, 0.035), vec3(0.56, 0.27, 0.07), fract(vBone.y * 7.31) * (0.5 + 0.5 * vnoise(q.xz * 9.0))) * (0.75 + 0.5 * vnoise(q.xz * 160.0 + q.y * 90.0));
     float wet = smoothstep(0.05, 0.0, lift);
     // A strand is too thin to have a dark side: it is lit as the floor it lies on.
     n = normalize(n + vec3(0.0, 2.0, 0.0));
@@ -250,9 +251,9 @@ function shadeMap(geometry: THREE.BufferGeometry, sun: V3, sunk: number, inFromL
 type V3 = [number, number, number];
 
 // The bones are built at the size of a small animal and laid half as large again: it was a grown one.
-const SCALE = 1.95;
+const SCALE = 1.5;
 /** How deep the bones are sunk in the floor, in their own measure. */
-const SUNK = 0.025;
+const SUNK = 0.017;
 
 /** A number from 0 to 1 that belongs to three others: the bones are the same bones in every frame. */
 function hash(a: number, b: number, c: number): number {
@@ -260,309 +261,81 @@ function hash(a: number, b: number, c: number): number {
   return s - Math.floor(s);
 }
 
-/** Smooth lumps over a body, so that nothing is a turned shape: every corner is moved along its normal by `much` metres at most. */
-function lumpy(g: THREE.BufferGeometry, much: number, grainSize: number, seed: number): void {
-  const p = g.getAttribute('position') as THREE.BufferAttribute;
-  const n = g.getAttribute('normal') as THREE.BufferAttribute;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i) / grainSize;
-    const y = p.getY(i) / grainSize;
-    const z = p.getZ(i) / grainSize;
-    const k = Math.sin(x * 1.7 + seed) * Math.sin(y * 2.3 + seed * 1.3) * Math.sin(z * 1.9 + seed * 0.7) + 0.5 * Math.sin(x * 4.1 + y * 3.3 + z * 3.7 + seed * 2.1);
-    p.setXYZ(i, p.getX(i) + n.getX(i) * k * much, p.getY(i) + n.getY(i) * k * much, p.getZ(i) + n.getZ(i) * k * much);
-  }
-  g.computeVertexNormals();
-}
-
-/** Marks a finished body: its tone, how near its ends each point is (from `ends`), and how much sky it sees. */
-function mark(g: THREE.BufferGeometry, tone: number, ends: (i: number) => number, open: number | ((i: number) => number)): THREE.BufferGeometry {
-  const count = (g.getAttribute('position') as THREE.BufferAttribute).count;
-  const a = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    a[i * 3] = tone;
-    a[i * 3 + 1] = ends(i);
-    a[i * 3 + 2] = typeof open === 'number' ? open : open(i);
-  }
-  g.setAttribute('aBone', new THREE.BufferAttribute(a, 3));
-  if (g.getAttribute('uv')) g.deleteAttribute('uv');
-  return g.index ? g.toNonIndexed() : g;
-}
-
-/** A long bone from a to b: a shaft with a knuckle at each end, a little bent. */
-function longBone(a: V3, b: V3, radius: number, seed: number): THREE.BufferGeometry {
-  const from = new THREE.Vector3(...a);
-  const to = new THREE.Vector3(...b);
-  const length = from.distanceTo(to);
-  const profile: THREE.Vector2[] = [];
-  const CUTS = 18;
-  for (let i = 0; i <= CUTS; i++) {
-    const t = i / CUTS;
-    const knuckle = 1.25 * Math.exp(-((t / 0.085) ** 2)) + 1.0 * Math.exp(-(((1 - t) / 0.075) ** 2));
-    const cap = Math.sqrt(Math.max(0, 1 - (1 - Math.min(1, Math.min(t, 1 - t) / 0.035)) ** 2));
-    profile.push(new THREE.Vector2(Math.max(1e-4, radius * (0.56 + 1.05 * knuckle) * cap), t * length));
-  }
-  const g = new THREE.LatheGeometry(profile, 9);
-  const p = g.getAttribute('position') as THREE.BufferAttribute;
-  // A little bowed, and not round: flatter one way than the other.
-  for (let i = 0; i < p.count; i++) {
-    const t = p.getY(i) / length;
-    p.setXYZ(i, p.getX(i) * 1.15 + 0.06 * length * Math.sin(Math.PI * t) * (hash(seed, 1, 2) - 0.5), p.getY(i), p.getZ(i) * 0.85);
-  }
-  const merged = mergeVertices(g.deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
-  merged.computeVertexNormals();
-  lumpy(merged, radius * 0.22, radius * 1.3, seed);
-  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
-  const spin = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), hash(seed, 3, 4) * 6.28);
-  const mp = merged.getAttribute('position') as THREE.BufferAttribute;
-  const ts: number[] = [];
-  for (let i = 0; i < mp.count; i++) ts.push(mp.getY(i) / length);
-  merged.applyQuaternion(q.multiply(spin)).translate(from.x, from.y, from.z);
-  return mark(merged, 0.35 + 0.6 * hash(seed, 5, 6), (i) => Math.max(0, 1 - Math.min(ts[i] as number, 1 - (ts[i] as number)) / 0.16), 1);
-}
-
-/** A rib or any thin bent bone along the points given. */
-function bent(points: V3[], radius: number, seed: number, open: number): THREE.BufferGeometry {
-  const curve = new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(...p)));
-  const CUTS = 22;
-  const g = new THREE.TubeGeometry(curve, CUTS, radius, 6, false);
-  const p = g.getAttribute('position') as THREE.BufferAttribute;
-  const centre = new THREE.Vector3();
-  // It thins to its tip, and is thick where it joins the spine.
-  for (let i = 0; i <= CUTS; i++) {
-    const t = i / CUTS;
-    curve.getPointAt(t, centre);
-    const wide = (1.45 - 0.75 * t) * (t > 0.94 ? 0.6 : 1);
-    for (let j = 0; j <= 6; j++) {
-      const k = i * 7 + j;
-      p.setXYZ(k, centre.x + (p.getX(k) - centre.x) * wide, centre.y + (p.getY(k) - centre.y) * wide, centre.z + (p.getZ(k) - centre.z) * wide);
-    }
-  }
-  const merged = mergeVertices(g.deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
-  merged.computeVertexNormals();
-  lumpy(merged, radius * 0.11, radius * 2.2, seed);
-  const mp = merged.getAttribute('position') as THREE.BufferAttribute;
-  const first = new THREE.Vector3(...(points[0] as V3));
-  const last = new THREE.Vector3(...(points[points.length - 1] as V3));
-  const at = new THREE.Vector3();
-  return mark(
-    merged,
-    0.3 + 0.65 * hash(seed, 7, 8),
-    (i) => {
-      at.fromBufferAttribute(mp, i);
-      return Math.max(0, 1 - Math.min(at.distanceTo(first), at.distanceTo(last)) / (radius * 5));
-    },
-    open,
-  );
-}
-
-/** A lump of bone: a vertebra, a knuckle, a plate. `size` is its half extent on each of its own axes. */
-function lump(at: V3, size: V3, turn: V3, seed: number, detail = 2, open = 1): THREE.BufferGeometry {
-  const g = mergeVertices(new THREE.IcosahedronGeometry(1, detail).deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
-  const p = g.getAttribute('position') as THREE.BufferAttribute;
-  // Squared off a little: a vertebra is a block with wings, not a ball.
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i);
-    const y = p.getY(i);
-    const z = p.getZ(i);
-    const m = Math.max(Math.abs(x), Math.abs(y), Math.abs(z));
-    const k = 0.72 + 0.28 / m;
-    p.setXYZ(i, x * k * size[0], y * k * size[1], z * k * size[2]);
-  }
-  g.computeVertexNormals();
-  lumpy(g, Math.min(...size) * 0.3, Math.max(...size) * 0.45, seed);
-  g.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(...turn))).translate(...at);
-  return mark(g, 0.3 + 0.6 * hash(seed, 9, 1), () => 0.7, open);
-}
-
-/** The skull: small, long in the snout, lying on its cheek. It has no hollow in it that looks out. */
-function skull(at: V3, heading: number, seed: number): THREE.BufferGeometry[] {
-  const g = mergeVertices(new THREE.IcosahedronGeometry(1, 16).deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
-  const p = g.getAttribute('position') as THREE.BufferAttribute;
-  const shaded: number[] = [];
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i);
-    const y = p.getY(i);
-    const z = p.getZ(i);
-    // Along it: the round of the braincase behind, the long narrowing of the face before it.
-    const t = (x + 1) / 2;
-    const girth = 0.34 + 0.66 * Math.exp(-(((t - 0.24) / 0.3) ** 2)) - 0.1 * Math.exp(-(((t - 0.52) / 0.1) ** 2));
-    // The crown is ridged, the cheek below it flat.
-    const ridge = 1 + 0.12 * Math.max(0, y) * Math.exp(-(((t - 0.3) / 0.25) ** 2));
-    // Blunt at both ends, not drawn to a point, and wide at the cheeks.
-    const blunt = Math.max(1 - x * x, 0.03) ** -0.3;
-    const cheek = 1 + 0.2 * Math.exp(-(((t - 0.44) / 0.07) ** 2)) * (1 - 0.6 * Math.abs(y));
-    // Hollows of shade on the side that lies up: the long one behind the cheek, where the jaw's muscle sat, the notch of the nose, and
-    // the line the jaw closed along. None is round and none is deep, so that none looks out.
-    const side = Math.max(0, -z);
-    const fossa = side * Math.exp(-(((t - 0.36) / 0.13) ** 2) - ((y - 0.3) / 0.28) ** 2);
-    const nose = side * Math.exp(-(((t - 0.86) / 0.07) ** 2) - ((y - 0.25) / 0.3) ** 2);
-    const jaw = side * Math.exp(-(((y + 0.42 - 0.3 * (t - 0.6)) / 0.07) ** 2)) * Math.min(1, Math.max(0, (t - 0.3) / 0.12));
-    const hollow = Math.min(1, 0.55 * fossa + 0.4 * nose + 0.22 * jaw);
-    shaded.push(1 - Math.min(0.72, 1.2 * fossa + 0.9 * nose + 0.75 * jaw));
-    p.setXYZ(i, x * 0.25, y * 0.105 * girth * ridge * blunt, z * 0.085 * girth * blunt * cheek * (1 - hollow));
-  }
-  g.computeVertexNormals();
-  lumpy(g, 0.004, 0.035, seed);
-  // On its cheek, the snout tipped into the crust.
-  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(1.35, heading, -0.12, 'YXZ'));
-  g.applyQuaternion(q).translate(...at);
-  const mp = g.getAttribute('position') as THREE.BufferAttribute;
-  const head = mark(g, 0.62, (i) => 0.25 + 0.5 * hash(mp.getX(i) * 40, mp.getZ(i) * 40, seed), (i) => shaded[i] as number);
-  // The jaw has come away and lies beside it.
-  const c = Math.cos(heading);
-  const s = Math.sin(heading);
-  const place = (u: number, w: number, y: number): V3 => [at[0] + c * u + s * w, y, at[2] - s * u + c * w];
-  const jaw = bent([place(-0.13, 0.13, 0.03), place(-0.06, 0.145, 0.022), place(0.03, 0.15, 0.016), place(0.11, 0.17, 0.012), place(0.14, 0.2, 0.03)], 0.0085, seed + 3, 0.9);
-  return [head, jaw];
-}
-
-/** One strand of weed along the points given. */
+/** One strand of weed along the points given: a flat blade that narrows to nothing at its tip. */
 function strand(points: V3[], radius: number, seed: number): THREE.BufferGeometry {
   const curve = new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(...p)));
-  const g = new THREE.TubeGeometry(curve, Math.max(8, points.length * 4), radius, 4, false);
+  const cuts = Math.max(8, points.length * 3);
+  const g = new THREE.TubeGeometry(curve, cuts, radius, 4, false);
   g.deleteAttribute('uv');
-  const count = (g.getAttribute('position') as THREE.BufferAttribute).count;
+  const position = g.getAttribute('position') as THREE.BufferAttribute;
+  const count = position.count;
   const a = new Float32Array(count * 3);
+  const centre = new THREE.Vector3();
   for (let i = 0; i < count; i++) {
+    const t = Math.floor(i / 5) / cuts;
+    curve.getPointAt(t, centre);
+    const wide = Math.pow(Math.max(0, 1 - t), 0.6) * (0.55 + 0.45 * Math.min(1, t * 6)) * (0.8 + 0.4 * hash(seed, Math.floor(t * 9), 5));
+    position.setXYZ(i, centre.x + (position.getX(i) - centre.x) * wide, centre.y + (position.getY(i) - centre.y) * wide * 0.4, centre.z + (position.getZ(i) - centre.z) * wide);
     a[i * 3] = -1;
     a[i * 3 + 1] = hash(seed, 2, 9);
     a[i * 3 + 2] = 1;
   }
   g.setAttribute('aBone', new THREE.BufferAttribute(a, 3));
+  g.computeVertexNormals();
   return g.toNonIndexed();
 }
 
-/** The bones, in their own frame: x along the spine from the skull (negative) to the hind feet, y up from the floor, z toward the camera
- * of the edge shot. It lies on its side, its back to the deep and its belly to that camera. */
-function bones(next: () => number): THREE.BufferGeometry[] {
-  const out: THREE.BufferGeometry[] = [];
-  const range = (a: number, b: number): number => a + (b - a) * next();
-  // The spine from the root of the neck to the hips sags where the ribs have let go.
-  const spine = (x: number): V3 => [x, 0.055 + 0.035 * Math.sin((x + 0.35) * 3.2), -0.17 + 0.04 * Math.sin(x * 4.1 + 0.5)];
-  // How high the cage stands over the floor at x and z: the weed is drawn over this.
-  const RIBS = 12;
-  const ribX = (i: number): number => -0.31 + i * 0.066;
-  const full = (i: number): number => 0.62 + 0.38 * Math.sin((Math.PI * (i + 1.5)) / (RIBS + 2));
-  const stands: number[] = [];
-  for (let i = 0; i < RIBS; i++) {
-    // The cage is whole: every rib stands, each to its own height.
-    const r = next();
-    stands.push(0.86 + 0.14 * r);
+/** The bones as they were sculpted (assets-src/eye/skeleton/make_bones.py), in their own frame: x along the spine from the skull
+ * (negative) to the hind feet, y up from the floor, z toward the camera of the edge shot. It lies on its side, come apart, its back
+ * to the deep and its belly to that camera. */
+function sculpted(): THREE.BufferGeometry {
+  const bytes = (text: string): Uint8Array => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+  const at = new Uint16Array(bytes(SCULPT.position).buffer);
+  const marks = bytes(SCULPT.bone);
+  const position = new Float32Array(SCULPT.corners * 3);
+  const bone = new Float32Array(SCULPT.corners * 3);
+  for (let i = 0; i < position.length; i++) {
+    const low = SCULPT.low[i % 3] as number;
+    position[i] = low + ((at[i] as number) / 65535) * ((SCULPT.high[i % 3] as number) - low);
+    bone[i] = (marks[i] as number) / 255;
   }
-  for (let i = 0; i < RIBS; i++) {
-    const x = ribX(i);
-    const s = full(i);
-    // Each rib has its own length, height and twist: no two of a carcass that has lain a season keep step.
-    const own = (k: number): number => {
-      const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
-      return v - Math.floor(v);
-    };
-    const up = (stands[i] as number) * (0.72 + 0.33 * own(1));
-    const [, sy, sz] = spine(x);
-    // The vertebra it hangs from, and the blade that stands off its back.
-    out.push(lump([x, sy, sz], [0.026, 0.027, 0.03], [range(-0.3, 0.3), range(-0.2, 0.2), range(-0.3, 0.3)], i + 1));
-    out.push(bent([[x, sy + 0.01, sz - 0.02], [x + 0.012, sy + 0.03, sz - 0.07], [x + 0.03, sy + 0.035 * range(0.4, 1), sz - 0.085 - 0.05 * s]], 0.0075, i + 31, 1));
-    if (up < 0) continue;
-    // They have slumped together toward the hips, each a little out of step with the next.
-    const lean = 0.05 + 0.03 * Math.sin(i * 0.9 + 1) + range(-0.01, 0.01) + 0.04 * (own(2) - 0.42);
-    const w = 0.8 + 0.3 * own(3);
-    const tw = 0.05 * (own(4) - 0.5);
-    const short = next() < 0.0 ? range(0.55, 0.8) : 1;
-    const pts: V3[] = [
-      [x, sy + 0.012, sz + 0.015],
-      [x + lean * 0.3, sy + 0.14 * s * up + 0.02, sz + 0.035],
-      [x + lean * 0.7 + tw, 0.05 + 0.31 * s * up, sz + 0.15 * s * w],
-      [x + lean - tw, 0.045 + 0.29 * s * up, sz + 0.29 * s * w],
-      [x + lean * 1.25 - 2 * tw, 0.035 + 0.15 * s * up, sz + 0.39 * s * w],
-      [x + lean * 1.4 - tw, 0.02 + 0.04 * s * up, sz + 0.44 * s * w],
-    ];
-    const snapped = own(5) < 0.1;
-    const kept = short < 1 ? pts.slice(0, 4 + (short > 0.68 ? 1 : 0)) : snapped ? pts.slice(0, 5) : pts;
-    out.push(bent(kept, 0.0085 + 0.0015 * s, i + 51, 0.85));
-    // The rib of the side it lies on shows only where it comes out from under.
-    if (next() < 0.35) out.push(bent([[x + 0.01, 0.04, sz + 0.1], [x + 0.04, 0.048, sz + 0.26 * s], [x + 0.1, 0.044, sz + 0.4 * s], [x + 0.18, 0.03, sz + 0.47 * s]], 0.009, i + 71, 0.9));
-  }
-  // The loins and the hips.
-  for (let i = 0; i < 6; i++) {
-    const x = ribX(RIBS) + i * 0.058;
-    const [, sy, sz] = spine(x);
-    out.push(lump([x, sy, sz + range(-0.012, 0.012)], [0.03, 0.028, 0.034], [range(-0.3, 0.3), range(-0.3, 0.3), range(-0.3, 0.3)], i + 91));
-    out.push(bent([[x, sy, sz + 0.02], [x + 0.01, sy - 0.005, sz + 0.07], [x + 0.025, 0.02, sz + 0.11]], 0.008, i + 101, 0.9));
-  }
-  const hip = ribX(RIBS) + 6 * 0.058;
-  out.push(lump([hip + 0.06, 0.07, -0.13], [0.12, 0.035, 0.07], [0.5, 0.3, 0.35], 111, 3));
-  out.push(lump([hip + 0.1, 0.03, -0.02], [0.11, 0.02, 0.06], [0.1, -0.4, -0.1], 112, 3));
-  out.push(lump([hip + 0.2, 0.045, -0.16], [0.05, 0.02, 0.03], [0.2, 0.2, 0.2], 113, 2));
-  // The tail: a few small bones trailing off.
-  for (let i = 0; i < 6; i++) out.push(lump([hip + 0.22 + i * 0.045 + range(-0.008, 0.008), 0.018, -0.2 - i * 0.022 + range(-0.01, 0.01)], [0.017 - i * 0.0015, 0.011, 0.012], [0, range(-0.5, 0.5), 0], i + 121, 1));
-  // The neck lies out along the floor, its bones come a little apart, toward the skull.
-  let nx = -0.36;
-  let nz = -0.165;
-  let heading = 0.38;
-  for (let i = 0; i < 7; i++) {
-    heading += range(-0.05, 0.2);
-    const len = 0.082 - i * 0.003;
-    const mx = nx - Math.cos(heading) * len * 0.5;
-    const mz = nz + Math.sin(heading) * len * 0.5;
-    out.push(lump([mx + range(-0.006, 0.006), 0.03 + range(-0.006, 0.008), mz + range(-0.008, 0.008)], [len * 0.47, 0.022, 0.026], [range(-0.4, 0.4), heading + range(-0.15, 0.15), range(-0.15, 0.15)], i + 131, 2));
-    nx -= Math.cos(heading) * (len + 0.012);
-    nz += Math.sin(heading) * (len + 0.012);
-  }
-  out.push(...skull([nx - 0.14, 0.055, nz + 0.06], -heading - 0.5, 141));
-  // The shoulder blade has slid off the cage and lies on it.
-  out.push(lump([-0.2, 0.2, -0.03], [0.1, 0.008, 0.05], [0.5, 0.5, -0.5], 151, 3, 0.9));
-  // The limbs. The hind ones trail along the lip; one fore limb lies out before the cage and the other is under it.
-  const limb = (joints: V3[], radius: number, seed: number): void => {
-    for (let i = 0; i + 1 < joints.length; i++) {
-      const a = joints[i] as V3;
-      const b = joints[i + 1] as V3;
-      // The joints have come apart: each bone lies a little off the last.
-      const gap: V3 = [range(-0.006, 0.006), 0, range(-0.008, 0.008)];
-      const t = 0.025;
-      out.push(
-        longBone(
-          [a[0] + (b[0] - a[0]) * t + gap[0], a[1], a[2] + (b[2] - a[2]) * t + gap[2]],
-          [b[0] - (b[0] - a[0]) * t + gap[0], b[1], b[2] - (b[2] - a[2]) * t + gap[2]],
-          radius * (1 - 0.14 * i),
-          seed + i,
-        ),
-      );
-    }
-    const end = joints[joints.length - 1] as V3;
-    for (let i = 0; i < 3; i++) out.push(lump([end[0] + 0.03 + i * 0.035 + range(-0.01, 0.01), 0.014, end[2] + range(-0.03, 0.03)], [0.017, 0.01, 0.011], [0, range(-0.8, 0.8), 0], seed + 10 + i, 1));
-  };
-  limb([[hip + 0.08, 0.06, -0.04], [hip + 0.36, 0.035, 0.13], [hip + 0.7, 0.028, 0.02], [hip + 0.99, 0.022, 0.1], [hip + 1.1, 0.018, 0.13]], 0.03, 161);
-  limb([[hip + 0.1, 0.035, -0.17], [hip + 0.33, 0.03, -0.3], [hip + 0.66, 0.024, -0.22], [hip + 0.93, 0.02, -0.31], [hip + 1.02, 0.016, -0.3]], 0.028, 171);
-  limb([[-0.19, 0.035, 0.26], [-0.07, 0.03, 0.47], [0.24, 0.024, 0.55], [0.5, 0.02, 0.5], [0.58, 0.016, 0.52]], 0.026, 181);
-  limb([[-0.3, 0.03, 0.2], [-0.5, 0.026, 0.33], [-0.52, 0.022, 0.62]], 0.024, 191);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(position, 3));
+  g.setAttribute('aBone', new THREE.BufferAttribute(bone, 3));
+  g.setIndex(new THREE.BufferAttribute(new Uint16Array(bytes(SCULPT.index).buffer), 1));
+  g.computeVertexNormals();
+  return g.toNonIndexed();
+}
 
-  // The weed of the shelf: strands come up out of the water before it and lie over the limbs and the low bones.
-  const cage = (x: number, z: number): number => {
-    const i = Math.max(0, Math.min(RIBS - 1, Math.round((x + 0.31) / 0.066)));
-    if (x < -0.34 || x > ribX(RIBS - 1) + 0.03) return 0;
-    const up = Math.max(0, stands[i] as number);
-    const w = (z + 0.17) / (0.44 * full(i));
-    return w < 0 || w > 1 ? 0 : 0.27 * full(i) * up * Math.sin(Math.PI * Math.min(1, w * 1.15)) ** 0.7;
-  };
-  let lock = 0;
-  for (let k = 0; k < 18; k++) {
-    // They lie in locks of a few strands each.
-    if (k % 4 === 0) lock = range(-1.0, 1.5);
-    const x0 = lock + range(-0.06, 0.06);
-    const drift = range(-0.35, 0.35);
-    const z0 = range(0.3, 0.62);
-    const z1 = next() < 0.5 ? range(-0.02, 0.2) : range(-0.3, -0.12);
-    const wave = range(0, 6.28);
-    const pts: V3[] = [];
-    const CUTS = 14;
-    for (let i = 0; i <= CUTS; i++) {
-      const t = i / CUTS;
-      const z = z0 + (z1 - z0) * t;
-      const x = x0 + drift * t * t + 0.07 * Math.sin(t * 5 + wave);
-      // It lies on the floor and over the low bones, and under the cage on the ribs of the side that is down: none hangs on the cage.
-      pts.push([x, 0.008 + 0.006 * hash(k, i, 3) + (cage(x, z) > 0.02 ? 0.03 : 0), z]);
+function bones(next: () => number): THREE.BufferGeometry[] {
+  const out: THREE.BufferGeometry[] = [sculpted()];
+  const range = (a: number, b: number): number => a + (b - a) * next();
+  // The weed of the shelf has grown over it in tufts: each a root with a handful of short blades that lie where the water left
+  // them, most of them on the side the water comes from, some across the limbs, the fallen ribs and the low bones.
+  const over = (x: number, z: number): number => (x > -0.34 && x < 0.5 && z > -0.2 && z < 0.3 ? 0.03 : x < -0.6 && z > 0.1 ? 0.018 : 0.01);
+  for (let lock = 0; lock < 46; lock++) {
+    const rx = range(-1.15, 1.75);
+    const rz = next() < 0.7 ? range(0.05, 0.75) : range(-0.4, 0.05);
+    const lie = range(-0.9, 0.9) + (rz > 0.3 ? Math.PI : 0);
+    const blades = 4 + Math.floor(range(0, 6));
+    const reach = range(0.09, 0.3);
+    for (let b = 0; b < blades; b++) {
+      const turn = lie + range(-0.75, 0.75);
+      const length = reach * range(0.45, 1.1);
+      const curl = range(-1.6, 1.6);
+      const wave = range(0, 6.28);
+      const pts: V3[] = [];
+      const CUTS = 7;
+      for (let i = 0; i <= CUTS; i++) {
+        const t = i / CUTS;
+        const heading = turn + curl * t * t + 0.35 * Math.sin(t * 7 + wave);
+        const prev = pts[i - 1];
+        const x: number = prev ? prev[0] + (Math.sin(heading) * length) / CUTS : rx + range(-0.012, 0.012);
+        const z: number = prev ? prev[2] + (Math.cos(heading) * length) / CUTS : rz + range(-0.012, 0.012);
+        pts.push([x, SUNK + 0.003 + 0.005 * hash(lock, b * 16 + i, 3) + over(x, z) * Math.sin(Math.PI * Math.min(1, t * 1.3)), z]);
+      }
+      out.push(strand(pts, range(0.0035, 0.007), lock * 16 + b));
     }
-    out.push(strand(pts, range(0.006, 0.012), k));
   }
   return out;
 }
