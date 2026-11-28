@@ -67,14 +67,15 @@ void main() {
   // And it runs up the hide in strands where the animal has shaken and rolled: narrow tongues, each to its own height, none level with the next.
   float strandA = smoothstep(0.5, 0.92, vnoise(vec2(vRest.x * 17.0 + vRest.z * 6.0 + 0.6 * y, uSeed * 2.0 + 3.0)));
   float strandB = smoothstep(0.45, 0.95, vnoise(vec2(vRest.x * 41.0 - vRest.z * 13.0 + 1.1 * y, uSeed * 4.0 + 7.0)));
-  float tide = mix(uCoat.x + 0.3 * leg - 0.42 * snout + 0.75 * (patchy - 0.5) + 0.3 * (mid - 0.5) + 0.07 * (fine - 0.5) + 0.3 * lane + 0.22 * (1.0 - smoothstep(0.1, 0.7, fold)) + uStrand * (0.4 * strandA * (0.4 + 0.9 * patchy) + 0.18 * strandB), 9.0, uCoat.z);
+  float tide = mix(uCoat.x + 0.3 * leg - 0.42 * snout + 0.75 * (patchy - 0.5) + 0.3 * (mid - 0.5) + 0.07 * (fine - 0.5) + 0.3 * lane + 0.22 * (1.0 - smoothstep(0.1, 0.7, fold)) + uStrand * (0.2 * strandA * (0.4 + 0.9 * patchy) + 0.09 * strandB), 9.0, uCoat.z);
   float wet = 1.0 - smoothstep(-0.03, 0.03, y - tide);
   // Thrown up the flank as it wades: clots, thick by the line and thinning to nothing a stride above it.
   float above = clamp((y - tide) / 0.75, 0.0, 1.0);
   float clot = smoothstep(0.6, 0.63, 0.6 * mid + 0.4 * fine + 0.3 * (1.0 - above) * (1.0 - above)) * (1.0 - above);
   // (The horn at the lip roots in it all day and is never clean: a pale one on a dark muzzle reads as an eye.)
   float mud = max(max(wet, clot), horn * (1.0 - leg));
-  float damp = (1.0 - smoothstep(0.0, 0.25 + 0.4 * patchy, y - tide)) * (1.0 - mud);
+  // (It is wet from the line to the shoulder, and dries out only where the back turns to the sky.)
+  float damp = smoothstep(0.0, 0.6, 1.0 - (y - tide) / (1.1 + 0.6 * patchy + 0.25 * (mid - 0.5))) * (1.0 - mud);
   // The cake of other days lies on what looks at the sky, and breaks off at an edge.
   float up = smoothstep(uCoat.y - 0.45, uCoat.y + 0.45, y) + 0.5 * nr.y - 0.4 * leg;
   float lie = 0.5 * up + 0.3 * patchy + 0.3 * (cakeH - 0.5) + 0.14 * (mid - 0.5);
@@ -86,7 +87,8 @@ void main() {
   // The head is the darkest of it: heavy and grey.
   albedo *= 1.0 - 0.35 * smoothstep(1.0, 1.7, vRest.x) * (1.0 - leg);
   albedo *= mix(0.42, 1.06, smoothstep(0.05, 0.8, fold));
-  albedo = mix(albedo, albedo * vec3(0.6, 0.46, 0.4), damp);
+  // (The damp above the line is the red of the brine drawn up the hide.)
+  albedo = mix(albedo, albedo * mix(vec3(0.58, 0.52, 0.5), vec3(0.47, 0.29, 0.23), 1.0 - smoothstep(0.0, 0.5 + 0.35 * patchy, y - tide)), damp);
   // The cake: pale and matt, each plate dark at the edge where it has lifted, and the salt has come out of it white on the spine.
   vec3 plate = vec3(0.2, 0.17, 0.122) * mix(vec3(dot(cake, LUMA) / dot(CAKE_MEAN, LUMA)), cake / CAKE_MEAN, 0.7);
   plate *= 0.62 + 0.38 * smoothstep(0.525, 0.6, lie);
@@ -103,10 +105,13 @@ void main() {
   // What stands in the mud is mud.
   float wy = vWorld.y - vRaise;
   float deep = 1.0 - smoothstep(0.0, 0.1, wy - uMud + 0.08 * (mid - 0.5));
-  albedo = mix(albedo, mix(vec3(0.05, 0.021, 0.0145), vec3(0.06, 0.043, 0.036), uCoat.w) * (0.6 + 0.8 * skinH), max(deep, 0.9 * horn * leg));
+  // (It keeps the hide under it: the mud lies in the creases and runs off the folds, so each fold stands out of it wet and paler.)
+  float crease = smoothstep(0.3, 0.72, skinH);
+  vec3 sunk = mix(vec3(0.034, 0.013, 0.0095), vec3(0.085, 0.04, 0.029), crease) * mix(vec3(1.0), mix(vec3(dot(tone, LUMA)), tone, 0.6), 0.7);
+  albedo = mix(albedo, mix(sunk, vec3(0.06, 0.043, 0.036) * (0.6 + 0.8 * skinH), uCoat.w), max(deep, 0.9 * horn * leg));
 
   // The slope of each coat: the grain of the skin, the plates of the cake, and the mud lying thick enough to fill the pores.
-  float grainK = mix(mix(2.0, 0.8, mud), 0.5, dry) * (1.0 - 0.5 * leg);
+  float grainK = mix(mix(mix(2.0, 1.5, mud), 0.5, dry) * (1.0 - 0.5 * leg), 2.4, deep);
   vec2 sx = (hx.rg - 0.5) * grainK + (cx.rg - 0.5) * 2.2 * dry;
   vec2 sy = (hy.rg - 0.5) * grainK + (cy.rg - 0.5) * 2.2 * dry;
   vec2 sz = (hz.rg - 0.5) * grainK + (cz.rg - 0.5) * 2.2 * dry;
@@ -120,14 +125,18 @@ void main() {
   vec3 n = normalize(mix(normalize(r * nb), ng, 0.9 * graze));
 
   // Wet mud shows the sky on the top of every fold; the skin is dull, the cake dead.
-  float rough = mix(mix(0.9, 0.72, damp), 1.0, dry);
+  float rough = mix(mix(0.9, 0.55, damp), 1.0, dry);
   rough = mix(rough, mix(0.86, mix(0.5, 0.72, uCoat.z), smoothstep(0.5, 0.85, skinH)), mud);
-  rough = mix(rough, 0.3, deep);
+  rough = mix(rough, mix(0.3, 0.6, crease), deep);
   rough = mix(rough, 1.0, 0.7 * graze);
   float occ = vOpen * sqrt(vOpen) * (0.5 + 0.5 * smoothstep(0.0, 0.85, fold)) * mix(0.7 + 0.3 * smoothstep(0.15, 0.6, skinH), 0.7 + 0.3 * smoothstep(0.2, 0.6, cakeH), dry);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.4, 0.26, 0.21) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (0.4 + 0.6 * vOpen);
+  // The wet of it: every fold that stands out of the mud, and the hide a hand over the line, throws back the bright side of the sky.
+  float sheen = max(deep, max(0.7 * mud, damp)) * (1.0 - dry);
+  float glint = pow(clamp(dot(reflect(-v, n), normalize(vec3(-0.45, 0.72, -0.53))), 0.0, 1.0), 40.0);
+  c += skyRadiance(vec3(-0.45, 0.72, -0.53)) * skyOpen(vWorld) * (0.16 * glint * sheen * (0.4 + 0.6 * crease) * (0.3 + 0.7 * vOpen));
   // Nothing gives back less than no light, or more than the picture can hold: the brine's mirror takes this as it stands, ungraded.
   c = clamp(c, 0.0, 8.0);
   gl_FragColor = vec4(rigOut(c), 1.0);

@@ -29,20 +29,42 @@ uniform sampler2D tMudNh;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 const vec3 MUD_MEAN = vec3(0.318, 0.179, 0.155);
+// The sheet's level from the pixel's short side, the long side counted at most two and a half times it: a skimming lens keeps the clods.
+float skim(vec2 gx, vec2 gy) {
+  float a = dot(gx, gx);
+  float b = dot(gy, gy);
+  return 0.5 * log2(max(min(max(a, b), min(a, b) * 6.25), 1e-12) * 1048576.0);
+}
 void main() {
   vec2 p = vWorld.xz;
+  vec2 gx = dFdx(p);
+  vec2 gy = dFdy(p);
   vec2 q = p - uAt.xy;
   float r = length(q);
+  // Mud a live one treads (wetness 1) is drawn clod by clod; mud round the dead keeps its slower look.
+  float live = smoothstep(0.7, 1.0, uWetness);
   // Each heave sends a slow fold out through the mud, and it dies within two metres.
   float fold = cos(r * 5.5 - uHeave.y) * uHeave.x * exp(-r * 0.7);
-  vec3 wide = texture2D(tMudNh, p / 2.0).rgb;
-  vec3 fine = texture2D(tMudNh, vec2(p.x * 0.8 - p.y * 0.6, p.x * 0.6 + p.y * 0.8) / 1.37 + 0.3).rgb;
-  vec3 tone = texture2D(tMud, p / 2.0).rgb / MUD_MEAN;
-  tone = mix(vec3(1.0), mix(vec3(dot(tone, vec3(0.3, 0.5, 0.2))), tone, 0.5), 0.6) * (0.9 + 0.2 * fine.b);
-  float h0 = 0.62 * wide.b + 0.38 * fine.b;
-  vec2 slope = (textureLod(tMudNh, p / 2.0, 2.5).rg - 0.5) * 0.9 + (wide.rg - 0.5) * 0.25 + (fine.rg - 0.5) * 0.1 + (r > 0.001 ? q / r : vec2(0.0)) * fold * 0.9;
+  float lW = skim(gx / 2.0, gy / 2.0);
+  float lF = skim(gx / 1.37, gy / 1.37);
+  vec2 uF = vec2(p.x * 0.8 - p.y * 0.6, p.x * 0.6 + p.y * 0.8) / 1.37 + 0.3;
+  vec3 wide = textureLod(tMudNh, p / 2.0, lW).rgb;
+  vec3 fine = textureLod(tMudNh, uF, lF).rgb;
+  // Under a lens the sheet lies on it a third time at a hand's width, turned the other way: grit, crumbs and the lips of small pits.
+  float near = live * smoothstep(0.004, 0.0015, min(length(gx), length(gy)));
+  vec2 uG = vec2(p.x * 0.28 + p.y * 0.96, p.y * 0.28 - p.x * 0.96) / 0.43 + 0.61;
+  float lG = skim(gx / 0.43, gy / 0.43);
+  vec3 grit = mix(vec3(0.5), textureLod(tMudNh, uG, lG).rgb, near);
+  vec3 tone = textureLod(tMud, p / 2.0, lW).rgb / MUD_MEAN;
+  vec3 toneF = mix(vec3(1.0), textureLod(tMud, uF, lF).rgb / MUD_MEAN, live);
+  tone = mix(vec3(1.0), mix(vec3(dot(tone, vec3(0.3, 0.5, 0.2))), tone, 0.5), mix(0.6, 1.0, live)) * (0.9 + 0.2 * fine.b);
+  tone *= mix(vec3(1.0), sqrt(toneF) * (0.82 + 0.36 * grit.b), live);
+  float h0 = 0.62 * wide.b + 0.38 * fine.b + (grit.b - 0.5) * 0.14;
+  vec2 sF = fine.rg - 0.5;
+  vec2 sG = grit.rg - 0.5;
+  vec2 slope = (textureLod(tMudNh, p / 2.0, max(lW, 2.5)).rg - 0.5) * 0.9 + (wide.rg - 0.5) * mix(0.25, 1.1, live) + vec2(0.8 * sF.x + 0.6 * sF.y, 0.8 * sF.y - 0.6 * sF.x) * mix(0.5, 0.9, live) + vec2(0.28 * sG.x - 0.96 * sG.y, 0.96 * sG.x + 0.28 * sG.y) * 0.8 + (r > 0.001 ? q / r : vec2(0.0)) * fold * 0.9;
   float low = smoothstep(0.5, 0.34, h0);
-  slope *= 1.0 - 0.85 * low;
+  slope *= 1.0 - 0.85 * low * (1.0 - live);
   vec3 n = normalize(vec3(-slope.x, 1.0, slope.y));
   vec3 v = normalize(cameraPosition - vWorld);
   // Brine stands in the hollows; the high places have begun to dry and pale.
@@ -52,19 +74,43 @@ void main() {
   float well = 1.0 - smoothstep(0.25, 0.75, r / uAt.z);
   albedo = mix(albedo, vec3(0.07, 0.022, 0.016) * tone, 0.5 * well * smoothstep(0.35, 0.6, fbm(p * 2.3 + 7.0)));
   albedo = mix(albedo, uMud * 1.35 + 0.006, 0.6 * dry * (1.0 - uWetness));
-  // Trodden by a live one it is wet through, and red brine stands in every low place of it.
-  float pool = uWetness * smoothstep(0.52 + 0.12 * uWetness, 0.42 + 0.1 * uWetness, h0) * smoothstep(0.1, 0.4, vEdge);
-  albedo = mix(albedo, vec3(0.085, 0.012, 0.01), 0.9 * pool);
-  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.9 * pool));
-  albedo = mix(albedo, albedo * vec3(0.55, 0.36, 0.32), low);
+  // Trodden by a live one it is wet through, and red brine stands level in every pit of it, with a hard edge against the clod.
+  float brim = mix(0.52 + 0.12 * uWetness, 0.44, live);
+  float foot = mix(0.42 + 0.1 * uWetness, 0.415, live);
+  float pool = uWetness * smoothstep(brim, foot, h0) * smoothstep(0.1, 0.4, vEdge) * live;
+  // Mud thrown up by one that is stuck lies in clods on the liquid of its wallow (the land's, which gives back the sky): pushed up
+  // most in a ring round the body, in islands further out, and dark and wet where each clod goes under.
+  float stand = 0.8 * textureLod(tMudNh, p / 2.0, max(lW, 3.5)).b + 0.2 * h0 + 0.2 * exp(-pow((vEdge - 0.62) / 0.2, 2.0)) - 0.14 * smoothstep(0.5, 0.1, vEdge);
+  float isle = mix(smoothstep(0.5, 0.52, stand), 1.0, live);
+  albedo *= mix(0.6 + 0.4 * smoothstep(0.51, 0.6, stand), 1.0, live);
+  albedo = mix(albedo, mix(vec3(0.085, 0.012, 0.01), vec3(0.03, 0.007, 0.006), live), 0.9 * pool);
+  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), mix(0.9, 0.97, live) * pool));
+  albedo = mix(albedo, albedo * vec3(0.55, 0.36, 0.32), low * (1.0 - 0.6 * live));
+  // Salt trodden in: a few pale crumbs on the tops of the clods, dirty, never a drift.
+  float crumb = live * smoothstep(0.6, 0.72, h0) * smoothstep(0.6, 0.74, grit.b) * (1.0 - pool);
+  albedo = mix(albedo, vec3(0.2, 0.17, 0.155), 0.7 * crumb);
   // The sky's glint off a wet thing at a low angle is white, and whitens the whole patch: wet mud by a live one is dark, so it is kept dull.
   float rough = mix(mix(1.0, mix(0.86, 0.97, uWetness), low), mix(0.3, 0.96, uWetness), pool);
+  rough = mix(rough, 0.97, live);
   float occ = 0.6 + 0.4 * smoothstep(0.3, 0.6, h0);
-  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
+  // The wall of a pit is dark down to the brine in it.
+  occ = mix(occ, mix(0.3 + 0.7 * smoothstep(0.42, 0.62, h0), 1.0, pool), live);
+  // (Told the view is square on where a live one treads, as the land's trodden mud is: the wet is given below, clod by clod.)
+  vec3 c = rigShade(vWorld, n, normalize(mix(v, n, mix(0.75, 0.9, live))), albedo, rough, occ);
+  // (The stuck one's clods are wet too: a duller, broader glint.)
+  c += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.9, 0.85) * (1.0 - live) * occ * 0.22 * pow(max(dot(n, normalize(v + normalize(vec3(-0.86, 0.9, 0.5)))), 0.0), 40.0);
+  if (live > 0.0) {
+    // A pit's brine gives back a part of the sky, red through; a clod throws a small sharp glint from the face it turns to the light.
+    vec3 rm = reflect(-v, n);
+    rm.y = abs(rm.y);
+    c += skyRadiance(rm) * vec3(1.0, 0.6, 0.54) * live * pool * (0.02 + 0.1 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 4.0));
+    vec3 hc = normalize(v + normalize(vec3(-0.86, 0.9, 0.5)));
+    c += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.86, 0.8) * live * (1.0 - pool) * (1.0 - crumb) * occ * 0.6 * pow(max(dot(n, hc), 0.0), 70.0);
+  }
   // Wet mud drinks the light: it does not hold the sky as the crust does.
   c *= 0.75;
   // Its edge is not a line: it thins out over the crust it has run onto, clod by clod.
-  float a = smoothstep(0.04, 0.3, vEdge + 0.3 * (h0 - 0.5)) * smoothstep(0.0, 0.06, vEdge) * (1.0 - uSolo);
+  float a = smoothstep(0.04, 0.3, vEdge + 0.3 * (h0 - 0.5)) * smoothstep(0.0, 0.06, vEdge) * isle * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
 }`;
 
