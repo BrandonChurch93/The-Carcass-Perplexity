@@ -88,7 +88,7 @@ float bankAt(vec2 xz) {
   float torn = textureLod(tNoise, vec3(w / 97.0 + 0.3, 0.64 + 0.012 * uTime), 0.0).a;
   return 0.15 + 2.6 * smoothstep(0.4, 0.68, 0.62 * broad + 0.38 * torn);
 }
-const vec2 HIGH_HAZE = vec2(1.5e-5, 420.0);
+const vec2 HIGH_HAZE = vec2(9.0e-5, 420.0);
 // One layer between two heights: its mean thickness against its thickness at sea level.
 float layerOver(float y0, float y1, float scale) {
   return scale * abs(exp(-y0 / scale) - exp(-y1 / scale)) / max(abs(y1 - y0), 1e-3);
@@ -212,9 +212,10 @@ float vapourTop(vec3 p, float level, float west) {
 // with depth, so the drop is read through its first metres and lost below them.
 vec2 vapourRho(float under, float wells, float west, float surge, float spent, float lumps) {
   float tall = 1.3 + 5.0 * wells * wells + 6.0 * surge;
-  float skin = (0.004 + 0.01 * wells + 0.03 * surge) * (1.0 - 0.5 * spent);
+  float skin = (0.004 + 0.01 * wells + 0.016 * surge) * (1.0 - 0.5 * spent);
   // Billows: thick and thin by the block of noise, most over the top and in its first metres, evened out with depth.
-  float billow = 5.0 * smoothstep(0.43, 0.74, lumps);
+  // The noise is brought to a billow over a wide part of its range: brought over a narrow part a thick billow had a cut edge.
+  float billow = 4.0 * smoothstep(0.38, 0.8, lumps);
   if (under < 0.0) return vec2(skin * exp(under / tall) * mix(billow, 1.0, 0.05), 0.0);
   float grow = (0.006 + 0.004 * surge) * mix(0.35, 1.0, west);
   float deep = min(under, 9.0);
@@ -390,7 +391,7 @@ void main() {
               lumps = textureLod(tNoise, q.xzy / 23.0 + 0.19, 0.0).g;
               float small = textureLod(tNoise, q.xzy / 7.3 + 0.61, 0.0).r;
               // A billow's side toward the light is thinner that way than where it stands: it is lit, and its far side is dark.
-              edge = clamp(1.0 + 6.0 * (lumps - textureLod(tNoise, (q + lightWay * 3.0).xzy / 23.0 + 0.19, 0.0).g), 0.35, 1.9);
+              edge = clamp(1.0 + 5.0 * (lumps - textureLod(tNoise, (q + lightWay * 3.0).xzy / 23.0 + 0.19, 0.0).g), 0.5, 1.9);
               lumps += 0.28 * (small - 0.5);
             }
             cut = smoothstep(1.5, -3.0, out0 - leanOut(p.y, way, surge));
