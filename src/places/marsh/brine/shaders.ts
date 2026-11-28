@@ -198,7 +198,8 @@ void main() {
   float speed = length(flow);
   slope += (carriedFine.ba - 0.5) * (0.07 + 0.25 * speed) * smoothstep(0.02, 0.12, speed) * smoothstep(0.5, 0.1, px);
   // What stands in the current leaves a wake down the flow from it: the skin broken, and scum caught in it.
-  float wake = speed > 0.06 ? contactDrawn(p - vec3(flow.x, 0.0, flow.y) / speed * 0.7) * smoothstep(0.06, 0.25, speed) : 0.0;
+  // (The wake is longer than the thing is wide: it is asked for a stride up the flow and again two strides up, where it has thinned.)
+  float wake = speed > 0.06 ? max(contactDrawn(p - vec3(flow.x, 0.0, flow.y) / speed * 0.7), 0.6 * contactDrawn(p - vec3(flow.x, 0.0, flow.y) / speed * 1.9) * smoothstep(0.35, 0.6, carriedFine.g)) * smoothstep(0.06, 0.25, speed) : 0.0;
   slope += (carried.ba - 0.5) * 0.5 * wake;
   // Where the big ones wade the brine is churned: dark with mud and never still.
   brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
@@ -250,6 +251,9 @@ ${stirWaves}
   slope += ripples;
   // (Only for a lens that stands in the place: from the far bank the wallow is one more red reach of the vein.)
   brineSheen = 0.12 + 0.88 * max(brineMud, 1.0 - smoothstep(9.0, 24.0, length(p.xz - vec2(${STUCK_AT[0].toFixed(3)}, ${STUCK_AT[1].toFixed(3)})))) * smoothstep(40.0, 22.0, dist);
+  // (A lens that stands over the round pool on the far bank looks along it from a long way: every wavelet turns its face from that lens
+  // or hides behind the next, and what the pool gives back of the white sky is less than half of what glass would. It stays red.)
+  brineSheen *= 1.0 - 0.6 * inPool * smoothstep(1.8, 2.6, cameraPosition.y);
   brineRough = clamp(sqrt(lost) * 4.0 + 0.5 * smoothstep(0.02, 0.3, px) + 0.6 * inPool, 0.0, 1.0);
 
   // How much froth the domes and the bursts have left here.
@@ -330,11 +334,15 @@ ${stirWaves}
   float lip = smoothstep(8.5, 5.0, length(p.xz - vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
   want = max(want, lip * smoothstep(-0.9, -0.06, s) * smoothstep(0.6, 0.78, fleck.g * 0.4 + raft.g * 0.6 + 0.3 * smoothstep(-0.5, -0.04, s)));
   // What the flow carries off the banks goes down the channel in thin strings.
-  float strings = max(smoothstep(0.66, 0.76, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, speed) * 0.7, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
+  // (They are what shows the flow from the far bank: rafts a stride or two long that go down the channel at its own speed, more of
+  // them in the fast middle, and they are seen from further off than the froth that lies still at a bank.)
+  float seenFar = smoothstep(110.0, 45.0, dist);
+  float far = smoothstep(14.0, 38.0, dist);
+  float strings = max(smoothstep(0.66 - 0.07 * far, 0.76 - 0.06 * far, carriedFine.r * 0.55 + carried.g * 0.45 + 0.2 * far * (speed - 0.2)) * smoothstep(0.03, 0.1, speed) * 0.7, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
   // (And scum catches on whatever stands in it.)
   // A ring breaks on the bank: in the last hand before the lip its front stands up, and leaves a broken line of froth where it fell.
   float breaks = min(surf * 1.6, 0.75) * smoothstep(-0.34, -0.03, s) * smoothstep(0.25, 0.6, fleck.r * 0.6 + raft.a * 0.4);
-  want = max(max(max(want, breaks), strings), max(max(min(boil * 0.8, 0.45), footFoam * 0.7), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
+  want = max(max(max(want, breaks), max(max(min(boil * 0.8, 0.45), footFoam * 0.7), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen, strings * seenFar);
   // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
   float foam = 0.0;
   vec4 froth = vec4(0.0);
@@ -347,7 +355,7 @@ ${stirWaves}
     // brine behind it, and looks into none of its pits.
     float graze = 1.0 - smoothstep(0.1, 0.5, v.y);
     vec2 stand = v.xz / max(v.y, 0.12) * 0.014 * smoothstep(0.1, 0.7, want);
-    vec2 fuv = (p.xz + stand - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 0.62;
+    vec2 fuv = (p.xz + stand - flow * 9.0 * (pa - 0.5) * step(want, strings * seenFar + 1e-4)) / 0.62;
     vec4 relief = textureGrad(tFrothN, fuv, fdx, fdy);
     vec4 clump = textureLod(tFrothN, fuv * 0.31 + 0.37, log2(max(px / 2.0 * float(textureSize(tFrothN, 0).x), 1.0)));
     vec3 scum = textureLod(tFroth, fuv, log2(max(px / 0.62 * float(textureSize(tFroth, 0).x), 2.0)) - 1.0).rgb;
@@ -438,7 +446,7 @@ void main() {
     float gap = dot(at, from) + aLife.w * (0.1 * sin(about * 3.0 + aLife.y * 20.0) + 0.06 * sin(about * 5.0 - aLife.y * 45.0));
     float gone = 1.0 - 2.0 * aLife.w * (0.55 + 0.45 * aLife.w);
     float back = max(gone - gap, 0.0);
-    float fat = 0.035 + 0.07 * aLife.w;
+    float fat = 0.03 + 0.045 * aLife.w;
     float nearEdge = exp(-back / 0.35);
     float held = smoothstep(0.0, 0.22, position.y);
     float fold = 0.6 * sin(about * 9.0 + aLife.y * 50.0 + back * 6.0) + 0.4 * sin(about * 17.0 - aLife.y * 31.0);
@@ -519,7 +527,9 @@ void main() {
   float td = max(dot(rd, ${DOME_KEY}), 0.0);
   vec3 bead = vec3(0.11, 0.013, 0.009) * skyIrradiance(n) * (open / 3.14159);
   float graze = 1.0 - max(dot(n, v), 0.0);
-  bead += skyRadiance(normalize(vec3(rd.x, abs(rd.y) + 0.02, rd.z))) * (0.012 + 0.1 * graze * graze * graze * graze * max(rd.y, 0.0) + 0.7 * smoothstep(0.955, 0.992, td)) * mix(1.0, open, 0.5);
+  // (A string of brine is thin: toward its edge the lens looks through less of it, and the white sky behind comes through red.)
+  bead += vec3(0.2, 0.022, 0.014) * skyIrradiance(up) * (open / 3.14159) * graze * graze;
+  bead += skyRadiance(normalize(vec3(rd.x, abs(rd.y) + 0.02, rd.z))) * (0.012 + 0.1 * graze * graze * graze * graze * max(rd.y, 0.0) + 0.45 * smoothstep(0.955, 0.992, td)) * mix(1.0, open, 0.5);
   gl_FragColor = vec4(bead * (1.0 - uSolo), 1.0);
 #else
   vec3 at = normalize(vLocal);
@@ -545,7 +555,7 @@ void main() {
     float gone = 1.0 - 2.0 * vLife.w * (0.55 + 0.45 * vLife.w);
     if (gap > gone) discard;
     // A rolled bead, thicker the further it has run: dark, and round enough to carry a line of the sky along its back.
-    float fat = 0.035 + 0.07 * vLife.w;
+    float fat = 0.03 + 0.045 * vLife.w;
     rim = smoothstep(gone - fat, gone - fat * 0.6, gap);
     glint = smoothstep(gone - fat * 0.75, gone - fat * 0.5, gap) * smoothstep(gone - fat * 0.1, gone - fat * 0.4, gap);
     // (Behind the edge the film is gathered: thicker for a hand's breadth.)
@@ -578,15 +588,15 @@ void main() {
   fres *= mix(0.15, 1.0, smoothstep(0.02, 0.12, vLocal.y)) * (1.0 - 0.8 * rim);
   // Scum rides on the skin where the runs have left it, and grit from the pool's floor: both hide what is behind them.
   // (Scum is a stain, soft at its edge and never whole: what the runs left behind, rust in the red. The lumps in it are few and pale.)
-  float scum = 0.55 * smoothstep(0.6, 0.92, g.g * 0.75 + grit.r * 0.1 + 0.15 * scumTex.r + 0.12 * film.y) * smoothstep(0.03, 0.2, vLocal.y);
+  float scum = 0.3 * smoothstep(0.68, 0.94, g.g * 0.75 + grit.r * 0.1 + 0.15 * scumTex.r + 0.12 * film.y) * smoothstep(0.03, 0.2, vLocal.y);
   float speck = smoothstep(0.86, 0.885, grit.g * 0.6 + fleck.b * 0.4) * smoothstep(0.25, 0.45, vLocal.y);
   float covered = max(max(scum, speck), rim);
   // A lens down at the pool's level looks along the skin and not across it: the film stands thicker in the way from the crown down to
   // the wall, and hides the far bank's straight line behind it. (From a stride up the skin is looked through, and stays glass.)
-  float veil = 0.42 * smoothstep(0.85, 0.3, vLocal.y) * smoothstep(0.2, 0.07, v.y) * whole;
+  float veil = 0.16 * smoothstep(0.85, 0.3, vLocal.y) * smoothstep(0.2, 0.07, v.y) * whole;
 #ifdef THROUGH
   // (At its foot the skin stands in the meniscus the pool draws up it, which looks down at the dark pool: a dark line round the dome.)
-  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered) * (1.0 - veil) * mix(0.5, 1.0, smoothstep(0.01, 0.1, vLocal.y));
+  vec3 passes = through * throughFar * (1.0 - fres) * (1.0 - covered) * (1.0 - veil) * mix(0.86, 1.0, smoothstep(0.01, 0.1, vLocal.y));
   gl_FragColor = vec4(passes, 1.0);
 #else
   vec3 fallsOn = skyIrradiance(n) * (open / 3.14159);
@@ -595,7 +605,7 @@ void main() {
   vec3 lit = FILM_BODY * fallsOn * (1.0 - through.g);
   // The far wall is lit from outside and shows its lit side through itself: a red lamp behind the near wall. The gas between is steam,
   // and holds a little of that light.
-  vec3 inside = FILM_BODY * fromAbove * (1.0 - throughFar.g) + vec3(0.74, 0.65, 0.63) * fromAbove * 0.115 * (1.0 - 0.32 * top) * whole;
+  vec3 inside = FILM_BODY * fromAbove * (1.0 - throughFar.g) + vec3(0.74, 0.65, 0.63) * fromAbove * 0.045 * (1.0 - 0.32 * top) * whole;
   // (Under the far wall's foot the line of sight comes down on the pool inside, which mirrors that lit wall: brightest at its foot,
   // dying toward the near side. Without it a dome seen from low and close stands on a dark drum.)
   inside += FILM_BODY * fromAbove * 0.5 * (1.0 - far) * whole * smoothstep(-0.7, 0.0, leaves.y);
@@ -604,7 +614,7 @@ void main() {
   inside += uSkyZenith * 0.12 * smoothstep(0.9, 0.995, towardFar) * far;
   lit += through * inside;
   lit += veil * fromAbove * mix(vec3(0.23, 0.13, 0.125), vec3(0.12, 0.027, 0.023), smoothstep(0.75, 0.15, vLocal.y)) * mix(0.7, 1.1, through.g) * (1.0 - covered);
-  lit *= mix(0.45, 1.0, smoothstep(0.01, 0.1, vLocal.y));
+  lit *= mix(0.8, 1.0, smoothstep(0.01, 0.1, vLocal.y));
   vec3 r = reflect(-v, n);
   float horizon = r.y + (g.g - 0.5) * 0.05;
   vec3 sky = skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z)));
@@ -617,14 +627,14 @@ void main() {
   // The overcast is not even: its brighter quarter stands in the skin as one soft window with a hot middle, cut by the runs.
   // (Soft: a window in cloud has no edge, and the skin it stands in is not smooth.)
   float toward = max(dot(r, ${DOME_KEY}), 0.0) + (grit.r - 0.5) * 0.012;
-  float window = smoothstep(0.55, 0.97, toward);
-  float hot = smoothstep(0.93, 1.0, toward);
-  env += uSkyZenith * (2.4 * window * window + 26.0 * hot * hot * hot) * (1.0 - 0.6 * film.y) * (0.6 + 0.4 * g.r);
+  float window = smoothstep(0.8, 0.985, toward);
+  float hot = smoothstep(0.972, 1.0, toward);
+  env += uSkyZenith * (1.1 * window * window + 16.0 * hot * hot * hot) * (1.0 - 0.6 * film.y) * (0.6 + 0.4 * g.r);
   lit += env * fres * mix(1.0, open, 0.5) * vec3(1.0, 0.95, 0.93);
   lit += skyRadiance(up) * 0.035 * glint * smoothstep(0.35, 0.7, grit.r) * mix(1.0, open, 0.5);
   vec3 onTop = mix(vec3(0.34, 0.25, 0.2) * (0.5 + fleck.r), vec3(0.27, 0.11, 0.06) * (0.5 + 0.9 * scumTex.g), (1.0 - speck) * (1.0 - rim));
   // (The rolled edge of a torn skin is the brine itself, gathered: dark.)
-  onTop = mix(onTop, vec3(0.05, 0.008, 0.006), rim);
+  onTop = mix(onTop, vec3(0.085, 0.013, 0.01), rim);
   lit = mix(lit, onTop * fallsOn, covered);
   gl_FragColor = vec4(lit * (1.0 - uSolo), 0.0);
 #endif

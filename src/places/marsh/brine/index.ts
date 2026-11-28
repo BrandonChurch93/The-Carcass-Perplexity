@@ -2,7 +2,7 @@
 // seep pool (part `domes`), and the tearing of a dome: the drops its edge lets go, the mound the pool heaves up, and the rings they leave (part `burst`).
 // All of it is a function of the place's seconds: every dome has a period and a moment in it, and nothing is remembered between frames.
 import * as THREE from 'three';
-import { BEASTS, BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, keyTime, rel } from '../shared/anchors';
+import { BEASTS, BURST, HERO_DOME, K1_AT, K1_DIR, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, keyTime, rel } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { landShared } from '../land';
 import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_LIFE, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS, MAX_STIR, TEAR } from './shaders';
@@ -45,6 +45,18 @@ export function create(ctx: Context): Piece {
     const r = rng.range(0.6, POOL_R * 0.62);
     const period = rng.range(3.6, 7.5);
     domes.push({ x: Math.sin(a) * r - 1.5, z: Math.cos(a) * r - 1, size: rng.range(0.14, 0.36), period, burst: rng.range(0, period), seed: rng.next(), drops: 12 });
+  }
+  // Under the third lens's bank the gas comes up small and slow, and its bubbles gather against the salt rim in a cluster: a hand to
+  // two hands across, long in the swelling, so that they stand there through that lens's whole look and tear only after it.
+  const nook = ctx.rng('brine/nook');
+  for (let i = 0; i < 7; i++) {
+    const forward = nook.range(1.9, 3.3);
+    const right = nook.range(-1.5, 1.3);
+    const period = nook.range(15, 24);
+    const x = K1_AT[0] + K1_DIR[0] * forward - K1_DIR[1] * right;
+    const z = K1_AT[1] + K1_DIR[1] * forward + K1_DIR[0] * right;
+    if (Math.hypot(x, z) > POOL_R - 0.25) continue;
+    domes.push({ x, z, size: nook.range(0.07, 0.17), period, burst: BURST + nook.range(2.5, 0.5 * period), seed: nook.next(), drops: 6 });
   }
 
   const uniforms = { ...ctx.rig.uniforms, tGrain: { value: grain }, tPlates: { value: plates } };
@@ -275,7 +287,7 @@ export function create(ctx: Context): Piece {
         if (i < 3 && g === ligs - 1) {
           since = age < 0 ? -1 : age - TEAR - 0.1 * big;
           ax = (r1 - 0.5) * 0.35;
-          ay = (1.9 + 0.9 * r3) * big;
+          ay = (1.5 + 0.6 * r3) * big;
           az2 = (r2 - 0.5) * 0.35;
           bx = 0;
           by = 0.45 * big;
@@ -283,7 +295,7 @@ export function create(ctx: Context): Piece {
           x0 = d.x;
           y0 = 0;
           z0 = d.z;
-          r0 = 0.066 * (d.size / 0.6);
+          r0 = 0.078 * (d.size / 0.6);
           taper = -0.5;
           column = true;
           breaksAt = 0.62 * big;
@@ -307,7 +319,7 @@ export function create(ctx: Context): Piece {
           const parts = (breaksAt / drawn) * (1.15 - 0.3 * f);
           const joined = Math.min(Math.max(since, 0), parts);
           // (A string is never even: it swells and necks along its length, each string its own way, and the column carries a head.)
-          const swells = column ? 1 + 0.75 * Math.max(0, f - 0.7) * 3.3 : 1 + 0.38 * Math.sin(j * 2.6 + own * 23 + g);
+          const swells = column ? 1 + 0.4 * Math.max(0, f - 0.7) * 3.3 : 1 + 0.38 * Math.sin(j * 2.6 + own * 23 + g);
           const thin = r0 * Math.sqrt(0.18 / (0.18 + drawn * joined)) * (1 - 0.5 * taper + taper * f) * swells;
           // (The necks between the swellings draw in as the moment of parting comes.)
           const nearing = Math.min(1, joined / Math.max(parts, 1e-3));
@@ -409,8 +421,8 @@ export function create(ctx: Context): Piece {
           const fade = Math.min(1, since * 6) * Math.pow(1 - since / RING_LIFE, 1.5) * (k === 0 ? 1 : 0.6);
           (rings[ring++] as THREE.Vector4).set(d.x, d.z, d.size * 0.9 + RING_SPEED * since, fade * (0.4 + d.size));
         }
-      } else if (ring < MAX_RINGS && swell > 0.5) {
-        // A swelling dome pushes a ripple ahead of its foot.
+      } else if (ring < MAX_RINGS && swell > 0.5 && d.drops > 6) {
+        // A swelling dome pushes a ripple ahead of its foot. (Not the small ones of the cluster under the bank: they only stand.)
         // (Its height is written below nothing: the pool's shader knows the foot ring by that, and lays the froth line there.)
         (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.12, -0.65 * grow);
         // And, round the three great ones (every pixel of the pool asks every ring), ring after ring leaves it as the skin heaves: each
