@@ -435,6 +435,7 @@ void main() {
   // dark of the lake are what that water takes from the light on the way, nowhere a second surface.
   vec3 rf = refract(-v, n, 0.752);
   float fall = max(-rf.y, 0.3);
+  gSlide = rf.xz / fall;
   vec3 skyDown = skyIrradiance(vec3(0.0, 1.0, 0.0));
   vec3 under = vec3(0.0);
   float dry = 0.0;
@@ -473,6 +474,37 @@ void main() {
     vec3 through = exp(-uAbsorb * d * (1.0 + 1.0 / fall));
     vec3 shelf = lit * through + uDeep * skyDown * open * 0.7 * (1.0 - through);
     under = shelf * crusted;
+#if EYE_NEAR > 1
+    // Air comes up through the mats in threads: beads a few millimetres across that leave a vent one after another, wander as they
+    // rise and are gone at the surface. A thread stands in the water, so it is seen along the bent look, drawn toward the eye. Told
+    // only where a bead is as wide as a pixel.
+    {
+      float beadsTold = smoothstep(0.02, 0.006, covers);
+      if (beadsTold > 0.0) {
+        float run = max(length(gSlide), 1e-3);
+        vec2 on = gSlide / run;
+        float beads = 0.0;
+        vec2 home = floor(p.xz / 0.9);
+        for (int i = 0; i < 2; i++) {
+          vec2 cell = floor((p.xz + on * (0.5 * float(i))) / 0.9);
+          if (i == 1 && cell == home) break;
+          vec2 rnd = hash22(cell + 3.7);
+          if (rnd.x > 0.6) continue;
+          vec2 rel = (cell + 0.15 + 0.7 * hash22(cell + 11.3)) * 0.9 - p.xz;
+          float down = dot(rel, on) / run;
+          float reachDown = 0.18 + 0.3 * rnd.y;
+          if (down < 0.0 || down > reachDown) continue;
+          float side = rel.x * on.y - rel.y * on.x + 0.012 * sin(down * 38.0 + uTime * 2.6 + rnd.y * 40.0) * smoothstep(reachDown, 0.0, down);
+          float beat = down / 0.055 + uTime * (1.6 + 1.2 * rnd.y) + rnd.x * 20.0;
+          float size = max(0.004 + 0.004 * hash12(cell + floor(beat)), 0.9 * covers);
+          float along = (fract(beat) - 0.5) * 0.055 * run * max(v.y, 0.12);
+          float comes = smoothstep(0.25, 0.55, vnoise(vec2(uTime * 0.35 + rnd.x * 30.0, rnd.y * 9.0)));
+          beads += comes * smoothstep(size, 0.45 * size, length(vec2(side, along)));
+        }
+        under += dot(skyDown, vec3(0.3, 0.5, 0.2)) * vec3(0.5, 0.48, 0.42) * (beads * beadsTold * crusted);
+      }
+    }
+#endif
     // Where a slab, the crust of the lip or the top of a mat stands out of the water it is wet stone and weed, not a mirror.
     dry = bed.dry * crusted * exp(-sunk * 5.0);
     // A low eye that looks along the water finds only the mirror: wet weed that lies a finger out of it throws the sky back as the water
@@ -541,6 +573,10 @@ void main() {
     // Three looks are for the wall. Where the lowest of them still passes over its top all three find the sky, which one look tells as well.
     bool drawnOut = false;
     float softer = soft + log2(1.0 + spread * 420.0);
+#if EYE_RUFFLED
+    // Ruffled water holds no line of the wall: what it keeps of it is a soft glow, drawn out.
+    softer += 2.4;
+#endif
     // Far out the picture of the far world is pressed many times flatter in the water than it is wide. Read at the level of the
     // short side it broke into a row of blocks, so past eight to one the long side asks for a softer level.
     {
@@ -618,7 +654,7 @@ void main() {
     // It is told by its light alone: the hue of the evening sky is warm, and a tenth of the wall stays in the water as dim upright streaks.
     // Over the mats the wall is still in the water, dim: nearer than that the mirror is whole, and no line is drawn where it ends.
     refl *= mix(vec3(1.0), vec3(0.36, 0.39, 0.46), staged);
-    refl = mix(refl, dot(skyRadiance(normalize(vec3(rd.x, 0.85, rd.z))), vec3(0.3, 0.5, 0.2)) * uMirror.rgb, 0.9 * staged * smoothstep(uMirrorSpan.y * 0.7, uMirrorSpan.y * 2.2, away));
+    refl = mix(refl, dot(skyRadiance(normalize(vec3(rd.x, 0.85, rd.z))), vec3(0.3, 0.5, 0.2)) * uMirror.rgb, 0.9 * staged * smoothstep(uMirrorSpan.y * 0.45, uMirrorSpan.y * 1.5, away));
 #else
     refl *= mix(vec3(1.0), uMirror.rgb, staged);
 #endif
