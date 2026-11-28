@@ -31,14 +31,15 @@ vec3 swayAt(vec3 p, vec4 bush, float tall, float u, float phase, float t, float 
   // A gust does not take the bush as one: each stalk stands in its own air, answers a little after it comes, and the bend runs out along
   // the limb from the holdfast. A stiff stalk bows only at the gust's height and is up again early; a slack one stays down longer.
   // That is worked for the plume the lens stands by (uStagger 1); the growth seen from far off moves as it did.
-  float g = gustAt(p.xz + lee * (uStagger * (6.0 * fract(phase * 5.3) - 3.0)), lee, t - uStagger * (0.7 * fract(phase * 2.9) + 0.3 * u));
-  g = pow(g, mix(1.0, 0.7 + 0.9 * fract(phase * 4.3), uStagger));
-  float give = mix(1.0, 0.65 + 0.7 * fract(phase * 7.1), uStagger);
+  float g = gustAt(p.xz + lee * (uStagger * (1.6 * fract(phase * 5.3) - 0.8)), lee, t - uStagger * (0.3 * fract(phase * 2.9) + 0.2 * u));
+  g = pow(g, mix(1.0, 0.85 + 0.4 * fract(phase * 4.3), uStagger));
+  float give = mix(1.0, 0.85 + 0.35 * fract(phase * 7.1), uStagger);
   // The stalk leans with the gust and springs back on its own beat, the spring running out to its end; no two stalks keep time.
   float beat = 1.5 + 0.5 * fract(phase * 3.7);
   float own = sin(t * beat - u * 2.6 + phase) + 0.4 * sin(t * beat * 2.3 - u * 5.0 + phase * 1.9);
   float whole = sin(t * 0.83 + bush.w - r * 1.7);
-  float bend = (0.28 * give * (g - 0.4) + 0.05 * whole) * a + 0.036 * own * (0.35 + g) * uu;
+  // The plume by the lens stands a little further over to the lee than its limbs were grown: it has been blown that way all its life.
+  float bend = (0.28 * give * (g - 0.4) + 0.05 * whole + 0.08 * uStagger) * a + 0.036 * own * (0.35 + g) * uu;
   vec2 push = lee * (bend * tall);
   // Leaning over, an arched limb goes down; let go, it comes up again.
   float lift = (-0.45 * bend + 0.012 * own * (0.35 + g) * uu) * tall;

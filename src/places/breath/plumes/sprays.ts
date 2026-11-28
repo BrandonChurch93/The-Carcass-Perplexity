@@ -6,7 +6,7 @@
 // The light inside a bush is worked out here once: the strips are counted into a grid, and each strip and each ring of a tube is told how
 // much growth lies between it and the sun, and between it and the sky. The sun of the Breath does not move.
 import * as THREE from 'three';
-import type { Rng } from '../../../core/rng';
+import { Rng } from '../../../core/rng';
 import { SUN_DIR, WIND } from '../shared/anchors';
 
 export type V3 = [number, number, number];
@@ -112,7 +112,8 @@ function strip(segments: number): { position: THREE.BufferAttribute; index: numb
   return { position: new THREE.Float32BufferAttribute(position, 3), index };
 }
 
-export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => number, hairOnly = false): Grown {
+export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => number): Grown {
+  let rng = stream;
   const { tall, lean, habit } = bush;
   const extent = tall * (bush.reach ?? 1);
   const close = bush.detail >= 1;
@@ -254,14 +255,17 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   const half3 = tall * 0.0007;
   // A plume the lens comes close to is not hair: its limbs carry flat fleshy blades in two ranks, close set, so that a limb with what it
   // carries is one wet feather with a body, frayed to points at its edge. Between the blades a few fine hairs stand off.
-  const bladed = close && habit === 'sweep' && !hairOnly;
+  const bladed = close && habit === 'sweep';
+  // The blades are grown from a stream of their own, so that the limbs that carry them, and every bush grown after this one, are as
+  // they were when it was hair.
+  const bladeStream = new Rng(Math.floor(Math.abs(bush.x * 1009 + bush.z * 9176 + tall * 31)) + 17);
   /** The branchlets along a limb from `v0` of the way, each with its filaments. `scale`: how long they are against the bush's longest. */
-  const feather = (c: Path, v0: number, phase: number, scale: number, tone0: number): void => {
-    const spacing = bladed ? 0.0042 * tall : 0.013 * tall * coarse;
+  const featherOf = (c: Path, v0: number, phase: number, scale: number, tone0: number, blades: boolean): void => {
+    const spacing = blades ? 0.0042 * tall : 0.013 * tall * coarse;
     const n = Math.max(2, Math.round((c.length * (1 - v0)) / spacing));
     // The plane this frond lies in: nearer level than upright, each frond tilted its own way.
-    const tilt: V3 = bladed ? [rng.range(-0.6, 0.6), 1, rng.range(-0.6, 0.6)] : [0, 1, 0];
-    const turnOver = bladed ? rng.range(0, 6.283) : 0;
+    const tilt: V3 = blades ? [rng.range(-0.6, 0.6), 1, rng.range(-0.6, 0.6)] : [0, 1, 0];
+    const turnOver = blades ? rng.range(0, 6.283) : 0;
     const planeAt = (t: V3): V3 => {
       const d = tilt[0] * t[0] + tilt[1] * t[1] + tilt[2] * t[2];
       const q: V3 = [tilt[0] - t[0] * d, tilt[1] - t[1] * d, tilt[2] - t[2] * d];
@@ -275,7 +279,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       const tip = i === n;
       const v = tip ? 1 : v0 + (1 - v0) * ((i + rng.next()) / n);
       const g = on(c, v);
-      if (bladed) {
+      if (blades) {
         const plane = planeAt(g.t);
         const out = cross(plane, g.t);
         const rank = i % 2 === 0 ? 1 : -1;
@@ -299,7 +303,9 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
         const span = Math.hypot(reach[0], reach[1], reach[2]);
         const stray = 0.16;
         const d0: V3 = tip ? g.t : unit([reach[0] / span + rng.range(-stray, stray) + 0.1 * out[0] * rank, reach[1] / span + rng.range(-stray, stray) + 0.12, reach[2] / span + rng.range(-stray, stray) + 0.1 * out[2] * rank]);
-        const L = tip ? long2 * 0.6 * scale : span * rng.range(0.8, 1.12);
+        // Against the way the bush is combed a blade is short: the wind has it pressed back on its limb.
+        const windward = Math.max(0, -(reach[0] * leanDir[0] + reach[2] * leanDir[2]) / span);
+        const L = tip ? long2 * 0.6 * scale : span * rng.range(0.8, 1.12) * (1 - 0.7 * windward);
         // It leaves its limb a little outward and comes in to the point of its lock, hanging at its end.
         const d1h: V3 = unit([reach[0] / span - 0.1 * out[0] * rank + 0.25 * comb * leanDir[0], reach[1] / span - (habit === 'sweep' ? rng.range(0.15, 0.6) + 0.5 * v : rng.range(0.4, 1.0) + 0.4 * v) * wet, reach[2] / span - 0.1 * out[2] * rank + 0.25 * comb * leanDir[2]]);
         const d1 = tip ? heading(g.t, d0, 0.6) : d1h;
@@ -343,6 +349,22 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
         if (k === 0) tipAt.push(child);
       }
     }
+  };
+
+  const feather = (c: Path, v0: number, phase: number, scale: number, tone0: number): void => {
+    if (!bladed) {
+      featherOf(c, v0, phase, scale, tone0, false);
+      return;
+    }
+    // First the hair it had, which is taken off again: it is grown only to take from the stream what it took. Then the blades.
+    const strips = tA.length;
+    const tips = tipAt.length;
+    featherOf(c, v0, phase, scale, tone0, false);
+    for (const list of [tA, tB, tC, tSway, tTint, tFace]) list.length = strips;
+    tipAt.length = tips;
+    rng = bladeStream;
+    featherOf(c, v0, phase, scale, tone0, true);
+    rng = stream;
   };
 
   const full = bush.full ?? 1;
