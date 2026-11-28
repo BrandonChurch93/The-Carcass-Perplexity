@@ -2,6 +2,7 @@
 import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { loopAngle, loopText } from '../shared/looptext';
 import { openingText } from '../shared/opening';
+import { FLAT_RIPPLE_GLSL } from './ripples';
 import { SWELL } from './tide';
 
 const f = (v: number): string => (Number.isInteger(v) ? `${v}.0` : `${v}`);
@@ -640,6 +641,43 @@ const WET_EDGE: [string, string][] = [
   foamed = max(foamed, 0.8 * collar);
   col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);`,
   ],
+  // The film's ripples are computed, not read (ripples.ts). The second chop picture, which lay on the sheet at 0.83 m and slid, is not read
+  // in the film: its place is taken by the gusts, one read of the same picture laid wide, that cross the flat down the wind.
+  ['uniform vec2 uDrain;', `uniform vec2 uDrain;\n${FLAT_RIPPLE_GLSL}`],
+  [
+    '  vec4 c2 = textureLod(tChop, (vec2(p.y, -p.x) + bend.yx * 0.4) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3, rippleLevel(tChop, 0.83));',
+    '  vec4 c2 = textureLod(tChop, (p - uTime * uWind * 2.4) / 57.0 + 0.31, levelOf(tChop, 57.0));',
+  ],
+  [
+    '  float paw = smoothstep(0.3, 0.7, 0.6 * barA.a + 0.4 * barB.a + 0.25 * sin(uTime * 0.35 + barA.r * 12.0));',
+    '  float paw = smoothstep(0.3, 0.7, 0.5 * c2.a + 0.3 * barA.a + 0.2 * barB.a + 0.3 * (c2.b - 0.5));',
+  ],
+  [
+    '  vec2 slope = ((c1.xy - 0.5) * 0.3 + vec2(-s2.y, s2.x) * 0.26) * ruffle * smoothstep(0.0, 0.07, depth);',
+    `  vec3 rip = flatRipple(p, uTime, footX, footY);
+  // Thin water carries no wave: the ripples die out toward every bar and stone.
+  float worked = ruffle * smoothstep(0.0, 0.03, depth);
+  vec2 slope = rip.xy * worked;
+  float sigma = sqrt(rip.z) * worked;`,
+  ],
+  [
+    '  vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));',
+    // What the pixel cannot hold of the ripples it still sees: of all the small faces the ones turned to the eye, so the mean face leans to it.
+    '  vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y) + vec3(v.x, 0.0, v.z) / max(length(v.xz), 1e-4) * (sigma * sigma / (max(v.y, 0.0) + 1.25 * sigma + 1e-4)));',
+  ],
+  // And the sky they throw back is the sum of many pieces of it: read as wide as the faces are spread.
+  ['  vec3 refl = skyMirror(r, 1.0);', '  vec3 refl = skyMirror(r, max(1.0, log2(sigma * 400.0 + 1e-3))) * mix(1.0, 0.3, under0);'],
+  // A face turned from the eye throws the eye's line under the horizon: it holds no sky, only the dark of the water beyond it.
+  ['  r.y = abs(r.y) + 0.01;', '  float under0 = smoothstep(0.02, -0.05, r.y);\n  r.y = abs(r.y) + 0.01;'],
+  [
+    '  refl += mix(uSunColour, vec3(dot(uSunColour, vec3(0.3333))), 0.75) * 0.22 * smoothstep(0.8, 0.95, c2.a) * smoothstep(0.5, 0.75, c1.a) * ruffle * sun * smoothstep(0.02, 0.08, depth);',
+    '',
+  ],
+  [
+    '  refl += uSunColour * (pow(max(dot(n, hv), 0.0), 500.0) * 4.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;',
+    '  refl += uSunColour * (pow(max(dot(n, hv), 0.0), 500.0) * 4.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9) * sun;',
+  ],
+  ['uHaze * 1.9 * (0.4 + 0.8 * c2.a), 0.85 * lane);', 'uHaze * 1.9 * clamp(1.0 + 9.0 * slope.y, 0.4, 1.4) * (0.75 + 0.5 * c2.a), 0.85 * lane);'],
 ];
 export const POOL_FRAGMENT = (rings: number): string =>
   WET_EDGE.reduce((text, [from, to]) => {
