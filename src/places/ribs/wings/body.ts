@@ -232,11 +232,13 @@ export interface Pose {
   warm: number;
   /** How thick the leg is at the hip, 1 as the feeder's: the thigh swells by it and the shank a little. */
   thigh: number;
+  /** How thick the leg is from the joint down, 1 as the feeder's: one seen far off out of focus keeps its legs by it. */
+  shank: number;
 }
 export const pose = (): Pose => ({
   x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, size: 1, tone: 1,
   feet: [{ x: 0, y: 0, z: 0, yaw: 0, droop: 0 }, { x: 0, y: 0, z: 0, yaw: 0, droop: 0 }],
-  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, tuft: 1, rise: 0, shade: 0, seed: 0, girth: 1, neck: 1, open: [0, 0], warm: 0, thigh: 1,
+  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, tuft: 1, rise: 0, shade: 0, seed: 0, girth: 1, neck: 1, open: [0, 0], warm: 0, thigh: 1, shank: 1,
 });
 
 /** The body's frame in the place: the columns ahead, up and left of a pose. */
@@ -796,7 +798,7 @@ export class Bodies {
         const sx = ty * pz - tz * py;
         const sy = tz * px - tx * pz;
         const sz = tx * py - ty * px;
-        const w = (wide / PX) * size * (1 + (p.thigh - 1) * (upper ? 1 - 0.55 * part : lower ? 0.2 : 0.4));
+        const w = (wide / PX) * size * (1 + (p.thigh - 1) * (upper ? 1 - 0.55 * part : lower ? 0.2 : 0.4)) * (1 + (p.shank - 1) * (upper ? part : 1));
         this.ring(x0 + (x1 - x0) * part, y0 + (y1 - y0) * part, z0 + (z1 - z0) * part, px, py, pz, sx, sy, sz, w, w, LEG_SIDES, COS.leg, SIN.leg);
       }
       // The foot: three toes ahead and one behind, flat where it stands, hung where it is carried.

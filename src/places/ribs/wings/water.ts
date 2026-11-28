@@ -28,7 +28,8 @@ vec3 thrownAt(float u, float v) {
   float finger = 0.8 + 0.4 * vnoise(vec2(u * 3.1 + aLook.y * 61.0, aLook.y * 17.0 + 3.0));
   float quick = mix(1.0, 0.06, v * v) * finger;
   float lean = 0.7 + 0.6 * vnoise(vec2(u * 4.3 + aLook.y * 23.0, aLook.y * 41.0 + 9.0));
-  float turn = aThrow.x + 0.5 * aThrow.y * u;
+  // No string of it flies straight: each is turned aside by its own amount, most at its lip.
+  float turn = aThrow.x + 0.5 * aThrow.y * u + 0.8 * (vnoise(vec2(u * 2.7 + aLook.y * 13.0, aLook.y * 7.0)) - 0.5) * (1.0 - v);
   float reach = aLook.w + aThrow.z * quick * lean * a;
   float high = aThrow.w * quick * a - 4.9 * a * a;
   return vec3(aFrom.x + sin(turn) * reach, aFrom.y + high, aFrom.z + cos(turn) * reach);
@@ -78,13 +79,16 @@ void main() {
   // A string ends in beads: it is broken along its length as it thins.
   float beads = vnoise(vec2(u * 15.0 + own * 7.0, vFar * 16.0 + own * 3.0));
   cover *= mix(1.0, smoothstep(0.35, 0.6, beads), smoothstep(0.45, 0.9, torn));
+  // A streak ends in a drop: the water at its end has gathered.
+  float drop = (1.0 - smoothstep(0.02, 0.05, v)) * smoothstep(0.52, 0.64, vnoise(vec2(u * 21.0 + own * 37.0, own * 5.0)));
+  cover = max(cover, drop);
   float side = 1.0 - smoothstep(0.7, 1.0, abs(u));
   float fallen = smoothstep(0.0, 0.03, vOwn.x);
   float spent = 1.0 - smoothstep(0.75, 1.0, part);
   // A film of water is glass; the middle of a string and the rim of the lip are thick and full of air.
   float core = smoothstep(edge + 0.24, edge + 0.5, strings) * (0.45 + 0.9 * beads);
   float rim = (1.0 - smoothstep(0.0, 0.1, v)) * smoothstep(0.3, 0.62, vnoise(vec2(u * 11.0 + own * 37.0, own * 5.0)));
-  float air = clamp(0.55 * core * (0.3 + 0.7 * torn) + 0.4 * rim, 0.0, 1.0);
+  float air = clamp(0.55 * core * (0.3 + 0.7 * torn) + 0.4 * rim + 0.35 * drop, 0.0, 1.0);
   float glance = 1.0 - max(dot(n, view), 0.0);
   float fres = 0.05 + 0.95 * glance * glance * glance;
   vec3 back = reflect(-view, n);
