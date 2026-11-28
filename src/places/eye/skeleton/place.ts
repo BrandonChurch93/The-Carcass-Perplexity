@@ -7,7 +7,7 @@ import { DEG } from '../layout';
 /** Metres ahead of the edge shot's camera, degrees to its right, and the way the hind end points, degrees. */
 export const BONES = { ahead: 6.4, right: 16, along: 112 };
 // The bones are built at the size of a small animal and laid half as large again: it was a grown one.
-export const SCALE = 1.5;
+export const SCALE = 1.98;
 
 /** The middle of the bones on the ground, the way the spine runs (skull to hind feet) and the way to the camera of the edge shot. */
 export interface Seat {

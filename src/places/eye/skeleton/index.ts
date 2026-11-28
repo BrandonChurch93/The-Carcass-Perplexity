@@ -86,7 +86,7 @@ void main() {
   vec3 bone = mix(vec3(0.7, 0.63, 0.5), vec3(0.96, 0.93, 0.84), tone);
   bone = mix(bone, vec3(0.86, 0.84, 0.76), 0.5 * smoothstep(0.2, 0.9, n.y));
   float stain = 0.6 * vnoise(q.xz * 11.0 + q.y * 7.0 + tone * 40.0) + 0.4 * vnoise(q.xy * 37.0 + q.z * 29.0);
-  bone = mix(bone, bone * vec3(0.62, 0.45, 0.27), 0.7 * smoothstep(0.42, 0.64, stain));
+  bone = mix(bone, bone * vec3(0.62, 0.45, 0.27), 0.4 * smoothstep(0.42, 0.64, stain));
   // Grey where lichen and lime have taken it in patches.
   bone = mix(bone, vec3(0.56, 0.56, 0.5) * (0.7 + 0.6 * h), 0.3 * smoothstep(0.6, 0.74, vnoise(q.xz * 23.0 + q.y * 17.0 + 40.0 + tone * 13.0)));
   // Its ends are spongy and hold the dirt; its shafts are split along fine dark lines.
