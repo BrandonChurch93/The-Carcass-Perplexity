@@ -50,7 +50,7 @@ def marks(f, u, k, seed, which):
         length = (0.2 + 0.22 * h1(i * 2.9 + 5, seed)) * k
         dx, dy = np.cos(turn), np.sin(turn)
         along = np.clip((f - ax) * dx + (u - ay) * dy, 0, length)
-        taper = np.sin(np.pi * along / length) ** 0.7
+        taper = np.maximum(np.sin(np.pi * along / length), 0.0) ** 0.7
         # A scar is never straight: it wanders as it goes.
         bend = 0.012 * k * np.sin(along / (0.05 * k) + i)
         px, py = ax + dx * along - dy * bend, ay + dy * along + dx * bend
