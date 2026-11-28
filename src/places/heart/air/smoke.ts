@@ -279,7 +279,10 @@ void bodyOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     // base burns orange and its upper smoke is dark against it, lump by lump, and it is never one flat colour.
     if (G.w > 0.0) fire *= exp(-G.w * B.w * up * (0.4 + 1.2 * dens));
     light += fireOnSmoke(fire);
-    if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
+    // The round lights stand low (the fall, its foot, the pools): they light a billow from below as the lake does. Taken alike by every point
+    // of a body they laid one even orange over it, top and underside, and the bank beside the fall stood as a flat tint.
+    // What takes them is the side of a billow that has smoke over it (its underside), less where it is thick; a top that is open to the sky takes a third.
+    if (C.z > 0.0) light += C.z * roundLights(p) * (0.35 + 1.1 * skyward * mix(1.3, 0.5, dens)) * (0.55 + 0.45 * skyT);
     float a = 1.0 - exp(-dens * B.w * pace);
     lay(close, t, mid, E.rgb * light, a);
     through *= 1.0 - a;
@@ -427,7 +430,8 @@ bool groundSpan(int i, vec3 ro, vec3 rd, float far, out float t0, out float t1) 
   vec4 A = uSteamA[i];
   vec4 B = uSteamB[i];
   float len = B.z;
-  float top = 0.61 + 1.52 * A.w + 0.183 * len;
+  // The smoke of a fountain (C.w 4) climbs as it is carried: two and a half times as steeply as a vapour.
+  float top = 0.61 + 1.52 * A.w + 0.183 * len * (uSteamC[i].w > 3.5 ? 2.5 : 1.0);
   // Bounds: the wedge of the lake that holds the trail with all its swing (it opens downwind from the foot), and the slab of air it lies in.
   // Every pixel inside the bounds pays for the whole march, so they are drawn close.
   vec2 side = vec2(-B.y, B.x);
@@ -464,10 +468,12 @@ void groundOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     if (u <= 0.0 || u >= 1.0) continue;
     float out1 = max(s, 0.0);
     // The gusts that leave the crack ride the wind, and each carries its own swing and its own lift with it: the pattern travels, it does not swell in place.
-    vec4 w = noise(vec3(C.x, (s - C.y * uTime) / 11.0, C.x * 1.7 + 0.04 * s));
+    // C.w 4: the smoke of a fountain, laid down the same way. Its gusts are as long as its lumps are large.
+    bool sooty = C.w > 3.5;
+    vec4 w = noise(vec3(C.x, (s - C.y * uTime) / (sooty ? 3.5 * C.z : 11.0), C.x * 1.7 + 0.04 * s));
     float wide = 1.7 * A.w + 0.3 * out1;
     float c = dot(rel, side) - (w.g - 0.5) * (1.2 * A.w + 0.55 * out1);
-    float roof = (0.3 + 0.75 * A.w + 0.09 * out1) * (0.55 + 0.9 * w.a);
+    float roof = (0.3 + 0.75 * A.w + 0.09 * out1 * (sooty ? 2.5 : 1.0)) * (0.55 + 0.9 * w.a);
     if (abs(c) >= 1.25 * wide || h >= 1.4 * roof) continue;
     vec3 q = vec3(s - C.y * uTime, 2.2 * h + 0.35 * s, c) / C.z + C.x;
     float n1 = noise(q).r;
@@ -479,14 +485,17 @@ void groundOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     float wisps = smoothstep(0.34, 0.72, n1 * 0.6 + small.b * 0.4);
     float puff = mix(0.3, 1.45, smoothstep(0.3, 0.62, w.r));
     // It thins as it widens and is gone before the end of its run.
-    float dens = shape * (0.2 + 1.1 * wisps) * puff * smoothstep(0.0, 0.08, u) * pow(1.0 - u, 1.3) * mix(1.0, 1.7 * A.w / wide, 0.75);
+    // Smoke is lumps with air between them; steam is a veil with knots in it.
+    float dens = shape * (sooty ? 0.04 + 1.9 * wisps * wisps : 0.2 + 1.1 * wisps) * puff * smoothstep(0.0, 0.08, u) * pow(1.0 - u, 1.3) * mix(1.0, 1.7 * A.w / wide, 0.75);
     if (dens <= 0.0) continue;
     // The fire under it and round it: what is open within a few metres of the point, most where it lies low.
     vec3 below = lakeGlow(p.xz, 2.5 + 1.5 * h);
     vec3 light = skyLight(h) * (0.85 - 0.3 * min(dens, 1.0));
-    light += fireOnSmoke((0.7 + 1.4 * exp(-h / 2.5)) * below + 0.8 * roundLights(p));
+    // Smoke is dark, and what of it lies high in the bank is shaded from the fire by what lies under it: an underside that burns and a top that does not.
+    float fromFire = sooty ? 0.5 * (1.0 - 0.85 * smoothstep(0.1, 0.8, lid)) : 1.0;
+    light += fireOnSmoke(fromFire * ((0.7 + 1.4 * exp(-h / (sooty ? 6.0 : 2.5))) * below + 0.8 * roundLights(p)));
     float a = 1.0 - exp(-dens * B.w * dt);
-    lay(close, t, mid1, GROUND_ALBEDO * light, a);
+    lay(close, t, mid1, (sooty ? SMOKE_ALBEDO : GROUND_ALBEDO) * light, a);
   }
 }
 
