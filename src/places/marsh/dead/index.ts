@@ -5,7 +5,7 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { newDrive } from '../wallowers/animal';
 import { Beast } from '../wallowers/body';
-import { mudWallow } from './mud';
+import { heavePhase, mudWallow } from './mud';
 
 export const PARTS: readonly string[] = ['dead'];
 
@@ -20,45 +20,41 @@ const smooth = (a: number, b: number, v: number): number => {
 const DOME_GLSL = /* glsl */ `
 uniform sampler2D tSaltNh;
 uniform sampler2D tKnobN;
+uniform sampler2D tBodyNh;
+uniform sampler2D tBodyM;
 uniform vec4 uDome;
 uniform vec4 uLumps;
 uniform vec2 uTurn;
 // Half its length, half its width, its height, and 1 where there is a body at all.
 uniform vec4 uBody;
-// How far it has fallen in (0 to 1), the metres from rib to rib, how far the salt has grown over it (0 to 1).
+// How far it has fallen in (0 to 1), (unused), how far the salt has grown over it (0 to 1), and which flank is up (1 or -1).
 uniform vec4 uVar;
-// q: metres along the body (the head at +x) and across it. m: x, bone standing under the hide; y, how deep the hide has sunk there.
-float carcass(vec2 q, out vec2 m) {
-  float u = q.x / uBody.x;
-  float u2 = u * u;
-  float ends = sqrt(max(0.0, 1.0 - u2 * u2));
-  float e1 = (u - 0.35) / 0.5;
-  float w = uBody.y * (0.6 + 0.4 * exp(-e1 * e1)) * ends * (1.0 - 0.45 * smoothstep(0.62, 1.0, u));
-  float a = q.y / max(w, 0.001);
-  float arch = pow(max(0.0, 1.0 - a * a), 0.9);
-  float e2 = (u + 0.55) / 0.26;
-  float e3 = (u - 0.4) / 0.28;
-  float e4 = (u - 0.86) / 0.13;
-  float held = max(max(0.82 * exp(-e2 * e2), exp(-e3 * e3)), 0.6 * exp(-e4 * e4));
-  float body = uBody.z * mix(1.0, 0.24 + 0.76 * held, uVar.x) * arch;
-  float zone = smoothstep(-0.46, -0.28, u) * smoothstep(0.34, 0.2, u);
-  // (No two ribs stand alike: they have slipped along the body, and here and there one has broken off short.)
-  float ph = q.x / uVar.y + 0.45 * abs(a) + 0.24 * sin(q.x * 5.1 + uLumps.x) + 0.13 * sin(q.y * 9.0 + uLumps.x * 1.7);
-  float crest = pow(abs(cos(3.14159 * ph)), 4.0);
-  float rib = floor(ph + 0.5);
-  float broken = step(0.62, fract(sin(rib * 12.9898 + uLumps.x) * 43758.5453));
-  crest *= 1.0 - broken * smoothstep(0.25, 0.4, abs(a) + 0.25 * sin(rib * 3.7));
-  float flank = smoothstep(0.1, 0.35, abs(a)) * smoothstep(1.0, 0.8, abs(a));
-  float ribs = zone * flank;
-  body += uBody.z * arch * ribs * uVar.x * (0.13 * crest - 0.2);
-  float knuckle = pow(abs(cos(3.14159 * q.x / 0.14)), 2.0);
-  float spine = exp(-a * a * 30.0) * smoothstep(0.95, 0.7, abs(u));
-  body += uBody.z * spine * (0.04 + 0.07 * knuckle) * uVar.x;
-  m = vec2(max(ribs * crest, spine * knuckle), ribs * (1.0 - crest));
-  return body;
+// The sculpted body (dead/carcass-nh, dead/carcass-m: assets-src/marsh/dead/make-carcass.py), laid along the mound and half sunk in it.
+// q: metres along the body (the head at +x) and across it. t: where that is on the sheet, and z, how much of it is on the sheet at all.
+vec3 carcassAt(vec2 q) {
+  vec2 x = q / (uBody.x / 1.14);
+  vec2 t = vec2((x.x - 0.13) / 2.56 + 0.5, 0.5 + uVar.w * x.y / 1.6);
+  vec2 inside = smoothstep(vec2(0.5), vec2(0.47), abs(t - 0.5));
+  return vec3(t, inside.x * inside.y * uBody.w);
+}
+// How far the mud has taken it: one flank lies deeper than the other, and the hind end deepest.
+float carcassSunk(vec2 q) {
+  vec2 x = q / (uBody.x / 1.14);
+  return (0.02 + 0.03 * uVar.x) * (1.0 + 0.8 * x.y * uVar.w - 0.3 * x.x);
+}
+// (The back still stands: under its salt the hide of the back holds a dome from hip to shoulder, and it is the flank that has fallen
+// in to the ribs. cover: how far the dome stands over what the sheet has there.)
+float carcass(vec2 q, float bl, out float cover) {
+  vec3 t = carcassAt(q);
+  float s = uBody.x / 1.14;
+  float f = textureLod(tBodyNh, t.xy, bl).b;
+  vec2 d = (t.xy - vec2(0.33, 0.44)) / vec2(0.26, 0.155);
+  float back = 0.72 * pow(max(0.0, 1.0 - dot(d, d)), 0.85) * mix(1.0, 0.8, uVar.x);
+  cover = smoothstep(0.0, 0.07, back - f) * t.z;
+  return max(0.0, max(f, back) * 0.5 * mix(1.85, 1.55, uVar.x) - carcassSunk(q)) * s * t.z;
 }
 // m: x and y as the body gives them, z how much of the spot is salt, w where the hide between the ribs is torn through.
-float domeAt(vec2 xz, float level, out vec4 m) {
+float domeAt(vec2 xz, float level, float bl, out vec4 m) {
   vec2 d = xz - uDome.xy;
   vec2 along = vec2(d.x * uTurn.x + d.y * uTurn.y, -d.x * uTurn.y + d.y * uTurn.x);
   vec2 q = along * vec2(1.0, uLumps.y);
@@ -76,13 +72,21 @@ float domeAt(vec2 xz, float level, out vec4 m) {
   float h = uDome.w * body * (0.8 + 0.4 * knobs) + skirt * ((knobs - 0.42) * 0.1 + (fine - 0.4) * 0.03 + (kn - 0.4) * 0.07);
   m = vec4(0.0, 0.0, 1.0, 0.0);
   if (uBody.w > 0.5) {
-    vec2 bm;
-    float c = carcass(along, bm);
-    float on = smoothstep(0.0, 0.07, c);
-    float torn = smoothstep(0.46, 0.56, fine) * smoothstep(0.35, 0.7, bm.y) * on;
-    float grown = mix(1.0, smoothstep(0.4, 0.6, 0.5 * knobs + 0.5 * kn + uVar.z - 0.5 - 0.3 * bm.x - 0.95 * bm.y) * (1.0 - torn), on);
-    h += c + on * (grown * (kn - 0.2) * 0.05 - torn * 0.05);
-    m = vec4(bm * on, grown, torn);
+    float cover;
+    float c = carcass(along, bl, cover);
+    vec3 t = carcassAt(along);
+    // (Bone and torn hide show on the fallen flank alone: the other side lies whole under its salt, and no two dark places sit as a pair.)
+    float open = (1.0 - cover) * smoothstep(0.42, 0.56, t.y);
+    vec3 bm = textureLod(tBodyM, t.xy, bl).rgb * vec3(open, open, 1.0);
+    float on = smoothstep(0.0, 0.012, c);
+    float sunk = smoothstep(0.55, 0.2, bm.b) * (1.0 - cover);
+    float torn = bm.g * on;
+    // (Salt lies thickest on what faces the sky, the back and the tops of the masses: least on bare bone and in what hangs torn.)
+    // (Its edge on the hide is hairy: the salt creeps up in fine whiskers across the body, never in a clean line.)
+    float hair = textureLod(tSaltNh, vec2(along.x * 7.0, along.y * 0.8) + uLumps.x, max(level - 1.0, 0.0)).b;
+    float grown = mix(1.0, smoothstep(0.4, 0.6, 0.5 * knobs + 0.5 * kn + uVar.z - 0.38 - 0.6 * bm.r - 0.6 * sunk + 0.9 * (c / uBody.z - 0.72) + 0.5 * (hair - 0.5) * (1.0 - cover) + 0.7 * cover) * (1.0 - torn), on);
+    h = mix(h, max(h, 0.0) * 0.3, on) + c + on * grown * (kn - 0.2) * 0.03;
+    m = vec4(bm.r * on, sunk * on, grown, torn);
   }
   // (The grid's own border lies deep under the ground: no straight edge of it shows where the ground is low.)
   return h - 0.3 * smoothstep(1.3, 1.5, r);
@@ -94,7 +98,7 @@ ${DOME_GLSL}
 void main() {
   vec4 world = modelMatrix * vec4(position, 1.0);
   vec4 m;
-  world.y += domeAt(world.xz, 1.0, m);
+  world.y += domeAt(world.xz, 1.0, 3.0, m);
   vWorld = world.xyz;
   gl_Position = projectionMatrix * viewMatrix * world;
 }`;
@@ -115,9 +119,22 @@ void main() {
   float e = 0.015;
   vec4 m;
   vec4 m2;
-  domeAt(xz, 1.5, m);
-  float hx = domeAt(xz + vec2(e, 0.0), 1.5, m2) - domeAt(xz - vec2(e, 0.0), 1.5, m2);
-  float hz = domeAt(xz + vec2(0.0, e), 1.5, m2) - domeAt(xz - vec2(0.0, e), 1.5, m2);
+  // (The sculpt's sheet: its level from the pixel's short side, the long side counted at most three times it.)
+  vec2 fx = dFdx(xz);
+  vec2 fy = dFdy(xz);
+  float fa = dot(fx, fx);
+  float fb = dot(fy, fy);
+  float bl = max(0.0, 0.5 * log2(max(min(max(fa, fb), min(fa, fb) * 9.0), 1e-12)) - log2(2.56 * uBody.x / 1.14 / 1024.0));
+  float coarse = max(bl, 3.0);
+  domeAt(xz, 1.5, bl, m);
+  float hx = domeAt(xz + vec2(e, 0.0), 1.5, coarse, m2) - domeAt(xz - vec2(e, 0.0), 1.5, coarse, m2);
+  float hz = domeAt(xz + vec2(0.0, e), 1.5, coarse, m2) - domeAt(xz - vec2(0.0, e), 1.5, coarse, m2);
+  // (What the sheet's own normal has that the heights round the spot do not: ribs, folds, the edges of the tears.)
+  vec2 dq = xz - uDome.xy;
+  vec3 bt = carcassAt(vec2(dq.x * uTurn.x + dq.y * uTurn.y, -dq.x * uTurn.y + dq.y * uTurn.x));
+  vec2 bn = (textureLod(tBodyNh, bt.xy, bl).rg - textureLod(tBodyNh, bt.xy, coarse).rg) * 2.0 * bt.z * (1.0 - 0.5 * m.z);
+  bn.y *= uVar.w;
+  vec2 bw = vec2(bn.x * uTurn.x - bn.y * uTurn.y, bn.x * uTurn.y + bn.y * uTurn.x) * 1.6;
   float salt = m.z;
   vec2 uk = xz / 1.1 + uLumps.x;
   vec4 kn = texture2D(tKnobN, uk);
@@ -137,7 +154,7 @@ void main() {
   vec3 hideN = texture2D(tSaltNh, uh).rgb;
   float crease = dot(texture2D(tSalt, uh).rgb / RIME_MEAN, THIRD);
   vec2 hl = (hideN.rg - 0.5) * 1.1 * (1.0 - salt);
-  vec3 n = normalize(vec3(-hx / (2.0 * e) + lean.x - (hl.x * uTurn.x - hl.y * uTurn.y), 1.0, -hz / (2.0 * e) + lean.y - (hl.x * uTurn.y + hl.y * uTurn.x)));
+  vec3 n = normalize(vec3(-hx / (2.0 * e) + lean.x + bw.x - (hl.x * uTurn.x - hl.y * uTurn.y), 1.0, -hz / (2.0 * e) + lean.y + bw.y - (hl.x * uTurn.y + hl.y * uTurn.x)));
   vec3 v = normalize(cameraPosition - vWorld);
   // Salt: grey white on the knobs, the red of the brine dried in its hollows.
   // (It is old salt, grown thick: dirty grey white all through, its hollows a shade darker and faintly pink, never the wet red of the bank.)
@@ -148,9 +165,9 @@ void main() {
   // (Sunk between the ribs it is dark, damp and stained by what was under it.)
   hide = mix(hide, vec3(0.045, 0.016, 0.012) * (0.6 + 0.4 * crease), 0.7 * smoothstep(0.3, 0.8, m.y));
   // (Bone, where a rib or a knuckle of the spine has come through.)
-  hide = mix(hide, vec3(0.38, 0.32, 0.24) * (0.75 + 0.25 * crease), 0.9 * smoothstep(0.5, 0.85, m.x));
+  hide = mix(hide, vec3(0.2, 0.12, 0.07) * (0.7 + 0.3 * crease), 0.9 * smoothstep(0.3, 0.7, m.x));
   // (Where the hide is torn through, what is under it: dark, wet and red.)
-  hide = mix(hide, vec3(0.03, 0.009, 0.007), m.w);
+  hide = mix(hide, vec3(0.05, 0.02, 0.015) * (0.6 + 0.6 * crease), m.w);
   vec3 albedo = mix(hide, saltC, salt);
   // The brine wicks up into the foot of it, and what ran out of the body it grew on still stains it.
   float above = vWorld.y - uGround;
@@ -272,6 +289,8 @@ export function create(ctx: Context): Piece {
   const tSaltNh = ctx.assets.texture('mat/rime-nh.png', { kind: 'data', anisotropy: 4 });
   const tKnob = ctx.assets.texture('mat/knob.jpg', { kind: 'colour', repeat: true, anisotropy: 4 });
   const tKnobN = ctx.assets.texture('mat/knob-nh.jpg', { kind: 'data', repeat: true, anisotropy: 1 });
+  const tBodyNh = ctx.assets.texture('dead/carcass-nh.jpg', { kind: 'data', repeat: false, anisotropy: 4 });
+  const tBodyM = ctx.assets.texture('dead/carcass-m.jpg', { kind: 'data', repeat: false, anisotropy: 4 });
   const cards: { mesh: THREE.Mesh; material: THREE.ShaderMaterial; x: number; z: number; yaw: number; size: number }[] = [];
   const feelers: Horn[] = [];
   let heaps = 0;
@@ -302,11 +321,13 @@ export function create(ctx: Context): Piece {
         tSaltNh: { value: tSaltNh },
         tKnob: { value: tKnob },
         tKnobN: { value: tKnobN },
+        tBodyNh: { value: tBodyNh },
+        tBodyM: { value: tBodyM },
         uDome: { value: new THREE.Vector4(p[0], p[1], radius, high) },
         uLumps: { value: new THREE.Vector4(seed, heap ? 1.5 : rng.range(1.0, 1.7), 0.5 * Math.cos(lean), 0.5 * Math.sin(lean)) },
         uTurn: { value: new THREE.Vector2(Math.cos(yaw), Math.sin(yaw)) },
         uBody: { value: new THREE.Vector4(long, wide, tall, heap ? 1 : 0) },
-        uVar: { value: new THREE.Vector4(fallenIn, 0.16 * d.size * rng.range(0.9, 1.15), grown, 0) },
+        uVar: { value: new THREE.Vector4(fallenIn, 0.16 * d.size * rng.range(0.9, 1.15), grown, heaps % 2 === 0 ? 1 : -1) },
         uGround: { value: ground },
       },
       vertexShader: DOME_VERTEX,
@@ -403,9 +424,7 @@ export function create(ctx: Context): Piece {
   return {
     setTime: (seconds) => {
       // A heave every few seconds: it gathers, strains up and forward, holds, and sinks back to where it was.
-      const period = 5.2;
-      const c = seconds / period + 0.3;
-      const u = c - Math.floor(c);
+      const u = heavePhase(seconds);
       const heave = smooth(0.08, 0.34, u) * (1 - smooth(0.42, 0.9, u));
       const tremble = heave * 0.012 * Math.sin(seconds * 23);
       live.ox = at[0];
@@ -433,7 +452,7 @@ export function create(ctx: Context): Piece {
       });
       const stood = stuck.pose(live, seconds);
       ctx.rig.setDisc(discs, cards.length, stood.x, stood.z, 1.7, 0.3, 1.7, stood.yaw);
-      mud.set(heave, seconds);
+      mud.set(heave, seconds, u);
     },
     dispose: () => {
       fineGrid.dispose();
