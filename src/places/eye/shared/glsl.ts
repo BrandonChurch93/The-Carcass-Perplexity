@@ -240,7 +240,7 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   float swell = 0.35 + 0.3 * uMistE.x + (1.5 - 0.6 * uMistE.x) * mid.r;
   float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
   float top = uMistA.z * stands * (1.0 + uMistE.y * (0.4 * sun - 0.1)) * swell + sheetTop;
-  vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
+  vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.02, 60.0 / 1100.0 + uTime * 0.008));
   float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
   // A bank that is not torn stands in the mirror as one soft bank, not as a row of heaps.
   // And water that is never quite flat gives back no single heap: in the mirror the bank is nearly whole, with a soft top.

@@ -30,11 +30,11 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: Four; b: Four; c: Four; d?: Four; e?: Four; tone?: number }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.5, 0.75, 0.8, 0.4], c: [60, 560, 0.1, 1], e: [0, 0, 0.5, 1.0] },
-  low: { a: [600, 4.0, 50, 420], b: [0.9, 3.4, 0.35, 0.2], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0], e: [1, 0.6, 1.2, 3.2], tone: 0.78 },
+  low: { a: [600, 4.0, 44, 420], b: [0.9, 4.4, 0.35, 0.4], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0], e: [1, 0.6, 1.2, 4.4], tone: 0.78 },
   edge: { a: [560, 2.4, 44, 320], b: [0.25, 1.3, 0.5, 0.4], c: [0, 0, 0.1, 0.3], d: [1, 0, 0, 0], e: [1, 0.8, 0.6, 2.4], tone: 0.6 },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   // The last shot is seen from the water and then from straight above. From the water it is a low torn bank at the foot of the far wall.
-  centre: { a: [520, 2.0, 12, 200], b: [0.6, 2.2, 0.6, 0.2], c: [0, 0, 0.15, 0.6], d: [0.8, 1, 1, 1], e: [1, 1, 0.8, 0.7] },
+  centre: { a: [520, 3.5, 12, 200], b: [2.4, 3.0, 0.6, 0.35], c: [0, 0, 0.15, 0.6], d: [0.8, 1, 1, 1], e: [1, 1, 0.8, 0.7] },
   // From above the same bank has to be seen down through a dozen metres of itself and not along a thousand, and what the lens holds is
   // the shallows and the pool, not the foot of the wall: so as the camera climbs the bank is drawn thicker and stands farther out over
   // the shallows, in heaps as deep as they are long (d.w), without the threads that would lie as white strokes.
@@ -184,10 +184,12 @@ vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
   // water of the middle and leaves the middle itself clear, so the pool is seen whole. It lies where it lies: it comes into sight as the lens climbs over it and
   // does not travel.
   if (uMistRound > 0.0) {
-    // Its patches are as wide one way as the other: they are looked down on, and no lens draws them out.
-    vec4 round2 = texture(tMistNoise, vec3(lie.x / 560.0 + 0.11, lie.y / 560.0 + 0.37, 0.3 + stretch.z * 0.004));
-    float lying = smoothstep(0.42, 0.88, 0.5 * big.r + 0.5 * round2.g);
-    sheet += uMistRound * 3.8 * lying * smoothstep(290.0, 520.0, ROUND - q.z) * exp(-q.y / 6.0);
+    // Its patches are wide and torn: each is drawn out in strands that bend round one another, and the thinnest of them reach in
+    // over the rim of the pool. The patches themselves are told by the reads the bank has already made.
+    vec4 strand = texture(tMistNoise, vec3(lie.x / 330.0 + 0.11 + 0.5 * (mid.b - 0.5), lie.y / 190.0 + 0.37 + 0.5 * (mid.a - 0.5), 0.7 + stretch.z * 0.006));
+    float lying = smoothstep(0.34, 0.86, 0.6 * big.r + 0.4 * mid.r) * (0.45 + 1.3 * smoothstep(0.25, 0.85, 0.6 * strand.g + 0.4 * strand.b));
+    float rim = mix(0.3 * smoothstep(120.0, 400.0, ROUND - q.z), 1.0, smoothstep(290.0, 520.0, ROUND - q.z));
+    sheet += uMistRound * 3.8 * lying * rim * exp(-q.y / 6.0);
   }
   return vec3(sheet, top, uThin * cover * ramp * stands * stretch.y);
 }
@@ -216,8 +218,8 @@ float mistAt(vec3 q, out float h) {
     // is seen of them turns over and is never the same shape carried sideways.
     // From above (uMistD.w) the same heaps are as deep as they are long, since the lens then looks down on them and not through them.
     // Each stretch is carried up by its own lift (stretch.w), one at rest beside one that climbs, and turns over by its own clock.
-    vec4 g = texture(tMistNoise, vec3(lie.x / 130.0, q.y / 50.0 - stretch.w * 0.01, lie.y / mix(1100.0, 150.0, uMistD.w) + stretch.z * 0.004));
-    vec4 fine = texture(tMistNoise, vec3(lie.x / 37.0 + 0.4, q.y / 21.0 - stretch.w * 0.022, lie.y / mix(420.0, 44.0, uMistD.w) - stretch.z * 0.007));
+    vec4 g = texture(tMistNoise, vec3(lie.x / 130.0, q.y / 50.0 - stretch.w * 0.02, lie.y / mix(1100.0, 150.0, uMistD.w) + stretch.z * 0.008));
+    vec4 fine = texture(tMistNoise, vec3(lie.x / 37.0 + 0.4, q.y / 21.0 - stretch.w * 0.04, lie.y / mix(420.0, 44.0, uMistD.w) - stretch.z * 0.012));
     float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
     // A bank without a top is not a row of heaps either: it swells and sinks along the shore by half its height.
     heap = mix(heap, 0.72 + 0.3 * heap, uMistE.x);
@@ -226,11 +228,13 @@ float mistAt(vec3 q, out float h) {
     float body = pow(clamp(1.0 - h - 0.45 * (fine.b - 0.3) * smoothstep(0.15, 0.9, h), 0.0, 1.0), 1.6);
     if (uMistE.x > 0.0) body = mix(body, exp(-3.0 * h) * smoothstep(2.2, 1.2, h) * clamp(1.0 - 0.55 * (fine.b - 0.3) * smoothstep(0.1, 1.2, h), 0.0, 1.5), uMistE.x);
     // What leaves the top: thin threads that stand up out of the bank and lean over as they go. Off a bank without a top they are
-    // wisps: long along the shore and a metre or two thick, bent by the grain so that they curl, each lifting with its own stretch.
+    // wisps: long along the shore and a metre or two thick, bent by the grain so that they curl, each lifting with its own stretch,
+    // and finer and more broken the lower the bank stands, since a low bank is one the lens has come close to.
     vec3 upright = vec3(lie.x / 64.0 + 0.25 * h, q.y / 170.0 - uTime * 0.007, lie.y / mix(800.0, 90.0, uMistD.w) + stretch.z * 0.003);
-    vec3 lying = vec3(lie.x / 170.0 + 0.5 * (fine.r - 0.5), q.y / 14.0 - stretch.w * 0.03 + 1.5 * (fine.g - 0.5), upright.z);
-    float thread = uMistB.w <= 0.0 ? 0.0 : smoothstep(0.55, 0.8, texture(tMistNoise, mix(upright, lying, uMistE.x)).g + 0.3 * (fine.g - 0.5));
-    d += uMistB.y * form.z * smoothstep(0.2, 0.9, heap) * (body + uMistB.w * thread * smoothstep(3.0, 0.9, h) * smoothstep(0.3, 0.9, h));
+    float fineness = uMistA.z / 50.0;
+    vec3 lying = vec3(lie.x / (560.0 * fineness) + 0.3 * (g.b - 0.5), q.y / (12.0 * sqrt(fineness)) - stretch.w * 0.07 + 1.8 * (g.a - 0.5) + 2.4 * (1.0 - fineness) * (fine.r - 0.5), lie.y / 2600.0 + stretch.z * 0.012);
+    float thread = uMistB.w <= 0.0 ? 0.0 : smoothstep(0.55 + 0.09 * uMistE.x, 0.8 + 0.06 * uMistE.x, texture(tMistNoise, mix(upright, lying, uMistE.x)).g + 0.3 * (fine.g - 0.5));
+    d += uMistB.y * form.z * smoothstep(0.2, 0.9, heap) * (body + uMistB.w * thread * smoothstep(3.0 - 1.3 * uMistE.x, 0.9, h) * smoothstep(0.3, 0.9, h));
   }
   return d;
 }
@@ -308,7 +312,7 @@ void main() {
       // It is asked only by a way that comes within 320 m of the wall: nearer the lens the mist stands in the sun of the place alone.
       float nearest = shore.z - sqrt(max(max(qa * t0 * t0 + 2.0 * qb * t0 + qc, qa * t1 * t1 + 2.0 * qb * t1 + qc), 0.0));
       if (uPlateTone.w > 0.5 && nearest < 320.0) {
-        vec3 foot = farRadianceLevel(ro, normalize(vec3(rd.x, 0.0, rd.z) * wall + vec3(0.0, 0.05 * shore.z - ro.y, 0.0)), 7.5);
+        vec3 foot = farRadianceLevel(ro, normalize(vec3(rd.x, 0.0, rd.z) * wall + vec3(0.0, (0.05 + 0.07 * uMistE.x) * shore.z - ro.y, 0.0)), 7.5);
         wallSun = smoothstep(0.06, 0.34, (foot.r - foot.b) / max(foot.r + foot.b, 1e-3)) * smoothstep(0.04, 0.2, foot.r);
       }
       // The stretch of shore this way ends on, read once: where it meets the wall, or the water before it.

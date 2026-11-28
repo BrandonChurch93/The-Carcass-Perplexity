@@ -236,22 +236,23 @@ def long_bone(a, b, r, broken=False):
 
 def vertebra(at, length, size, heading, blade, tilt=(0, 0, 0)):
     """A body, the blade that stands off its back (toward -z here: the back is away from the camera), and a wing each side."""
-    parts = [ball((0, 0, 0), (length * 0.5, size, size * 1.05))]
-    v, f, _ = tube([(0, 0, -size * 0.6), (length * 0.15, 0, -size - blade * 0.5), (length * 0.4, 0, -size - blade)], lambda s: size * (0.5 - 0.22 * s), (0.6, 1.5), 7, 7)
+    parts = [ball((0, 0, 0), (length * 0.47, size * 0.7, size * 0.76))]
+    v, f, _ = tube([(0, 0, -size * 0.35), (length * 0.2, 0, -size * 0.7 - blade * 0.65), (length * 0.55, 0, -size * 0.7 - blade * 1.3)], lambda s: size * (0.4 - 0.1 * s), (0.5, 1.8), 7, 9)
     parts.append((v, f))
     for sgn in (1, -1):
-        v, f, _ = tube([(0, sgn * size * 0.5, -size * 0.2), (length * 0.1, sgn * (size * 1.5 + blade * 0.3), -size * 0.5)], lambda s: size * (0.42 - 0.2 * s), (1.4, 0.5), 6, 5)
+        v, f, _ = tube([(0, sgn * size * 0.35, -size * 0.2), (length * 0.12, sgn * (size * 1.5 + blade * 0.55), -size * 0.55)], lambda s: size * (0.36 - 0.14 * s), (1.6, 0.5), 6, 6)
         parts.append((v, f))
     v, f = join(parts)
     v = place(v, (tilt[0], heading + tilt[1], tilt[2]), at)
-    v, t = sculpt(v, f, 0.003, 300, worn=size * 0.18, pits=size * 0.12)
+    v, t = sculpt(v, f, 0.0022, 340, worn=size * 0.1, pits=size * 0.1, smooth=1)
     add(v, t)
 
 
 def rib(points, r, broken=0.0, tone=None):
+    tone = R.uniform(0.62, 0.95) if tone is None else tone
     """Thin, flat, uneven; thick at its head. broken: how much of it is left, 0 for whole."""
     k = R.uniform(0, 6)
-    w = R.uniform(1.25, 1.6)
+    w = R.uniform(1.6, 1.95)
 
     def rad(s):
         return r * (0.75 + 0.9 * np.exp(-((s / 0.07) ** 2)) + 0.22 * np.sin(s * 11 + k) + 0.12 * np.sin(s * 29 + 2 * k)) * (1 - 0.45 * s * s)
@@ -260,9 +261,9 @@ def rib(points, r, broken=0.0, tone=None):
     if broken:
         whole = spline(pts, 40)
         pts = whole[: max(4, int(40 * broken))][::3]
-        v, f, _ = tube(pts, lambda s: rad(s * broken), (w, 0.74), 7, max(6, int(26 * broken)), jag=r * 1.3)
+        v, f, _ = tube(pts, lambda s: rad(s * broken), (w, 0.6), 7, max(6, int(26 * broken)), jag=r * 1.3)
     else:
-        v, f, _ = tube(pts, rad, (w, 0.74), 7, 26)
+        v, f, _ = tube(pts, rad, (w, 0.6), 7, 26)
     v, t = sculpt(v, f, 0, 400, worn=r * 0.3, pits=r * 0.14, grain=0.0005)
     add(v, t, tone=tone, axis=(pts[0] - (pts[1] - pts[0]) * 3, pts[-1]))
 
@@ -310,7 +311,7 @@ for i in range(RIBS):
         (x + lean * 1.25 - 2 * tw, 0.035 + 0.15 * s * up, c[2] + 0.39 * s * wd),
         (x + lean * 1.4 - tw, 0.012 + 0.03 * s * up, c[2] + 0.44 * s * wd),
     ]
-    r = R.uniform(0.0062, 0.0088)
+    r = R.uniform(0.0095, 0.012)
     if state < 0.22:
         # Fallen: it lies flat where it dropped, turned some way round, half in the floor.
         yaw = R.uniform(-0.9, 0.9)
