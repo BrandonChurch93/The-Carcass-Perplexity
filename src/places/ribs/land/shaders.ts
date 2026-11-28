@@ -475,7 +475,8 @@ void main() {
   float hem = smoothstep(0.42, 0.72, wn.z + 0.25 * (fine - 1.0));
   albedo = mix(albedo, mix(vec3(0.06, 0.044, 0.016) * uDark, vec3(0.075, 0.046, 0.012), closeW) * (0.5 + 0.6 * fine), (0.45 - 0.1 * closeW) * hem);
   // Threads of water running down off the hems.
-  float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
+  // A thread is a stride long: threads the height of a hank, side by side, are grooves.
+  float thread = smoothstep(0.8, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 1.1 + uTime * 0.9))) * smoothstep(0.55, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
   // One place on the wall where the water of the shelf above runs off: a band a stride or two wide that wanders as it comes down.
   float along = dot(vWorld.xz - uRill.xy, uRill.zw);
   float wander = along + 1.1 * (vnoise(vec2(vWorld.y * 0.3, 3.0)) - 0.5) + 0.3 * (vnoise(vec2(vWorld.y * 1.3, 7.0)) - 0.5);
@@ -490,7 +491,9 @@ void main() {
   }
   albedo *= 1.0 - 0.4 * rill;
   // From far off the mass is matt: a wall of weed is no grey sheen of the sky, only its threads of water are bright.
-  float rough = mix(mix(0.9 + 0.08 * (1.0 - wn.z), mix(0.86, 0.7, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
+  float rough = mix(mix(0.9 + 0.08 * (1.0 - wn.z), mix(0.86, 0.7, hem), closeW), 0.12, max(0.6 * thread * (1.0 - closeW), runs));
+  // A hank seen along its flank from far off is no strip of the sky: its skin is rougher than the lens sees, and is lit as if it stood half toward the lens.
+  n = normalize(n + v * (max(0.0, 0.5 - dot(n, v)) * (1.0 - closeW)));
   float occ = (0.25 + 0.75 * smoothstep(0.08, 0.5, wn.z)) * (0.6 + 0.4 * smoothstep(0.2, 0.7, nh.z)) * (0.6 + 0.4 * vShade);
   // On a wall of beds the weed hangs in clumps from each ledge and thins toward the next one down: between the clumps the wall is bare
   // wet rock with its barnacles, dark under the ledge it hangs from.
