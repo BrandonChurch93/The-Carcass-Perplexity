@@ -1,0 +1,26 @@
+{
+  "phase": 6,
+  "at": "2026-11-28T08:04:01Z",
+  "only": [
+    "G14"
+  ],
+  "ok": true,
+  "failed": [],
+  "results": [
+    {
+      "id": "G14",
+      "title": "The seam of the loop",
+      "kind": "machine",
+      "phase": 5,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "loop frame 480 is the same picture as frame 0 at the draft, review, final tiers",
+        "frame 479 to frame 0 is a step of 1.25 levels; the largest elsewhere is 1.68, between frames 117 and 118, and 2 times that is allowed"
+      ],
+      "skipped": [],
+      "seconds": 1710.7
+    }
+  ]
+}
