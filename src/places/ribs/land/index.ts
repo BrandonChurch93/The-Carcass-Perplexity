@@ -255,8 +255,10 @@ export function create(ctx: Context): Piece {
   const weedNear = hangs(0.6);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.15, 0);
-  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
-  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uWarm: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  // The same rock under the feeders' lens, where the low sun comes through the weed on it: its straps are gold and amber, not black.
+  const kelpRock = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uWarm: { value: 0.7 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uWarm: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
   // The cobbles heaped on a bar stand clear of the film of water: drained, paler, each of its own tone.
   const cobble = material(RIG_VERTEX, COBBLE_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, uPool: { value: LEVELS.pool } });
 
@@ -546,9 +548,103 @@ export function create(ctx: Context): Piece {
   };
   few(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 1000, 1.6, 22, 0.66);
   few(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 650, 1.6, 18, 0.6);
-  const squat = [0.5, 0.58, 0.38, 0.45];
+  const squat4 = [0.5, 0.58, 0.38, 0.45];
+  const dummy4 = new THREE.Object3D();
+
+  // The shallows the feeders stand in. The bed there lies a hand or two under the film (height.ts), so a stone that lay on the bed
+  // was drowned and the floor a bare mirror. These stand by the water, not by the bed: each lies with its widest round at the film,
+  // so that nothing wider shows under the water, low and flat, thick in bars drawn out across the view with bare water between;
+  // and knots of weed-grown rock.
+  // Seen only in the feeders' shot: from any other lens they are half a kilometre off and under a pixel.
+  const shallows = new THREE.Group();
+  const feedShot = shotSpan('ribs-04');
+  {
+    const wade = ctx.rng('shallows');
+    const path = shots['ribs-04'] as (typeof shots)[string];
+    const pose = resolve(path, keyPart(shotById('ribs-04')), 0);
+    const yaw = yawOf(pose.aim, pose.position);
+    const ahead: [number, number] = [Math.sin(yaw), -Math.cos(yaw)];
+    const right: [number, number] = [Math.cos(yaw), Math.sin(yaw)];
+    const way: [number, number][] = [];
+    for (let k = 0; k <= 48; k++) {
+      const q = resolve(path, k / 48, 0);
+      way.push([q.position[0] as number, q.position[2] as number]);
+    }
+    const onWay = (x: number, z: number, reach: number): boolean => way.some((q) => Math.hypot(x - q[0], z - q[1]) < reach);
+    // Nothing under a foot or a tuft: the animals stand on the bed (wings/).
+    const feeding = STATIONS.feeders.filter((f) => Math.hypot(f[0] - (pose.position[0] as number), f[1] - (pose.position[2] as number)) < 200);
+    const clearOf = (x: number, z: number, reach: number): boolean => feeding.every((f) => Math.hypot(x - f[0], z - f[1]) > reach);
+    interface Wet { x: number; z: number; size: number; yaw: number; tilt: number; kind: number; high: number; out: number }
+    const stones: Wet[] = [];
+    const knots: Wet[] = [];
+    const put = (list: Wet[], f: number, r: number, size: number, high: number, shown: number): void => {
+      const x = (pose.position[0] as number) + ahead[0] * f + right[0] * r;
+      const z = (pose.position[2] as number) + ahead[1] * f + right[1] * r;
+      const kind = wade.int(KINDS);
+      const rise = 0.57 * (squat4[kind] as number) * size * high;
+      list.push({ x, z, size, yaw: wade.range(0, 6.283), tilt: wade.range(-0.3, 0.3), kind, high, out: rise * shown });
+    };
+    // Stones of a fist to a forearm, thickest where the lens is sharp (from ten metres on), thinning toward the far cage.
+    for (let i = 0; i < 30000; i++) {
+      const band = i % 10 < 7;
+      const f = band ? 7 + 62 * Math.pow(wade.next(), 1.5) : -16 + 170 * Math.pow(wade.next(), 1.4);
+      // The first lens of the shot stands 24 m behind the key's: what it sees is a wedge from there.
+      const r = wade.range(-1, 1) * (3 + 0.37 * (f + 24));
+      const far = 0.75 + Math.max(0, f) / 55;
+      const size = (0.016 + 0.036 * wade.next() + 0.16 * Math.pow(wade.next(), 6)) * far;
+      const shown = 0.95 + 0.25 * wade.next();
+      const pick = wade.next();
+      const x = (pose.position[0] as number) + ahead[0] * f + right[0] * r;
+      const z = (pose.position[2] as number) + ahead[1] * f + right[1] * r;
+      // Bars lie across the view, a few strides deep and many long.
+      const bar = 0.6 * noise3(x / 9 + 3.7, 0.5, z / 2.8) + 0.4 * noise3(x / 1.9, 2.5, z / 1.3);
+      if (bar < 0.5 + 0.22 * pick || onWay(x, z, 1.1 + size) || !clearOf(x, z, 3.2)) continue;
+      put(stones, f, r, size, 0.5 + 0.5 * wade.next(), shown);
+    }
+    // Knots of weed-grown rock, a stride or two across, out in the pools and along their edges: the dark marks of the middle distance.
+    for (let knot = 0; knot < 30; knot++) {
+      const f = 9 + 120 * Math.pow(wade.next(), 1.5);
+      const r = wade.range(-1, 1) * (2 + 0.33 * (f + 24));
+      const lumps = 3 + wade.int(6);
+      const spread = 0.7 + f / 60;
+      for (let i = 0; i < lumps; i++) {
+        const ff = f + wade.range(-0.6, 0.6) * spread;
+        const rr = r + wade.range(-1.6, 1.6) * spread;
+        const size = (0.16 + 0.36 * Math.pow(wade.next(), 1.7)) * (0.8 + f / 80);
+        const x = (pose.position[0] as number) + ahead[0] * ff + right[0] * rr;
+        const z = (pose.position[2] as number) + ahead[1] * ff + right[1] * rr;
+        const shown = 0.9 + 0.2 * wade.next();
+        if (onWay(x, z, 1.6 + size) || !clearOf(x, z, 3.4 + size)) continue;
+        put(knots, ff, rr, size, 0.8 + 0.4 * wade.next(), shown);
+      }
+    }
+    // Close under the key's lens, at its left: a heap of rock with weed over it, soft before the sharp band, as the picture has it.
+    const heap: [number, number, number][] = [[4.6, -2.7, 1.05], [5.6, -1.75, 0.8], [6.3, -3.4, 1.2], [5.2, -3.9, 0.9], [6.6, -0.7, 0.55], [7.4, -2.2, 0.7], [7.0, 0.5, 0.36], [8.3, -1.2, 0.42], [6.1, 1.6, 0.3], [8.8, -3.6, 0.8], [7.7, 2.6, 0.26]];
+    for (const [f, r, size] of heap) put(knots, f, r, size, 1.1, 0.95);
+    const set = (list: Wet[], stuff: THREE.Material, detail: number): void => {
+      for (let kind = 0; kind < KINDS; kind++) {
+        const mine = list.filter((p) => p.kind === kind);
+        if (mine.length === 0) continue;
+        const herd = new THREE.InstancedMesh(boulderShape(kind + 1, detail, squat4[kind] as number), stuff, mine.length);
+        herd.frustumCulled = false;
+        mine.forEach((p, i) => {
+          const rise = 0.57 * (squat4[kind] as number) * p.size * p.high;
+          dummy4.position.set(p.x, Math.max(LEVELS.pool, ground0(p.x, p.z)) + p.out - rise, p.z);
+          dummy4.rotation.set(p.tilt, p.yaw, p.tilt * 0.6);
+          dummy4.scale.set(p.size, p.size * p.high, p.size * 0.85);
+          dummy4.updateMatrix();
+          herd.setMatrixAt(i, dummy4.matrix);
+        });
+        herd.instanceMatrix.needsUpdate = true;
+        shallows.add(herd);
+      }
+    };
+    set(stones, pebble, 1);
+    set(knots, kelpRock, 4);
+  }
+  const squat = squat4;
   const rocks = new THREE.Group();
-  const dummy = new THREE.Object3D();
+  const dummy = dummy4;
   const shades = ctx.rig.contactDiscs(kept.filter((p) => p.size > 0.3).length);
   let shade = 0;
   // Three grades of shape: rock over a metre, stones, and pebbles of a few facets.
@@ -575,6 +671,7 @@ export function create(ctx: Context): Piece {
     herd.instanceMatrix.needsUpdate = true;
     rocks.add(herd);
   }
+  rocks.add(shallows);
   ctx.scene.add(ctx.parts.built('rocks', rocks));
 
   return {
@@ -582,13 +679,14 @@ export function create(ctx: Context): Piece {
       const staged = stagedSeconds();
       const atGate = staged >= gateShot.from && staged <= gateShot.to;
       for (const m of gateStacks) m.visible = atGate;
+      shallows.visible = staged >= feedShot.from && staged <= feedShot.to;
       for (const image of mirrors.children) (image as THREE.Mesh).material = loopPhase() === null ? glass : glassLoop;
     },
     dispose: () => {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of new Set([ground, roostRock, weed, weedNear, fronds, boulder, pebble, cobble, glass, glassLoop, ...stones.values()])) m.dispose();
+      for (const m of new Set([ground, roostRock, weed, weedNear, fronds, boulder, kelpRock, pebble, cobble, glass, glassLoop, ...stones.values()])) m.dispose();
     },
   };
 }

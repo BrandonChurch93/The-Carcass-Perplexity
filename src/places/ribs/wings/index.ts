@@ -136,6 +136,11 @@ interface Feeder {
   walks: number;
   /** In the card loop: the closed way one of the walkers goes round. */
   round: Way | null;
+  /**
+   * How it wades through one cycle of its own clock, in steps: `a` with the tuft in the pool, a halt, `b` more, and `c` with the head up.
+   * Each bout begins at its own second of the cycle and lasts its own seconds; `each` is the seconds of one step.
+   */
+  gait: { a: number; a0: number; aLong: number; b: number; b0: number; bLong: number; c: number; c0: number; cLong: number; each: number };
 }
 const RUN_SPEED = 5.2;
 /** A runner's step, metres at size 1. */
@@ -178,7 +183,24 @@ export function create(ctx: Context): Piece {
     const step = 1.1 * size * (0.92 + 0.16 * hash(seed, 31));
     const way: Way = { x, z, yaw, s0: 0.5 * step, pieces: [[1e6, (hash(seed, 33) - 0.5) * 0.12]], closed: false };
     const walks = habit === 0 ? ([0, 1, 1, 2, 2][Math.floor(hash(seed, 35) * 5)] as number) : 0;
-    const f: Feeder = { x, z, yaw, size, habit, seed, period, offset: scatter.range(0, 40), loopStart: 0, at, span, step, way, walks, round: null };
+    // Its pace: a kite-wing stands twice a man at the hips and takes a second and a half or two over a step. With the head up it takes
+    // a step or two more, and one that stands on a leg sets it down and wades on a few steps once in its cycle.
+    const staged = at >= 0 && habit === 0;
+    const down = period - 3.5;
+    const a0 = 0.25 + 0.5 * hash(seed, 53);
+    const each = 1.45 + 0.6 * hash(seed, 51);
+    const steps = habit === 0 ? Math.min(5, Math.max(1, Math.floor((down - a0 - 0.9) / each))) : 0;
+    const a = Math.ceil(steps / 2);
+    const b = steps - a;
+    const slack = Math.max(0, down - a0 - steps * each);
+    const c = habit === 0 ? Math.max(1, walks) : habit === 1 ? 1 + Math.floor(hash(seed, 57) * 2.99) : 0;
+    const cLong = habit === 0 ? 1.3 * c : c * each;
+    // The one stationed for a key is wading as the key comes: four steps, two before it and two after, so that the key has it on both
+    // feet at its station with its hips going over them. The bout begins in the cycle before.
+    const gait = staged
+      ? { a: 4, a0: 0.5 - 2.5 * each, aLong: 5 * each, b: 0, b0: 0, bLong: 1, c: 0, c0: 0, cLong: 1, each }
+      : { a, a0, aLong: Math.max(1, a) * each, b, b0: a0 + a * each + slack * (0.55 + 0.4 * hash(seed, 55)), bLong: Math.max(1, b) * each, c, c0: habit === 0 ? period - 0.9 - cLong : period - 1.1 - cLong, cLong, each };
+    const f: Feeder = { x, z, yaw, size, habit, seed, period, offset: scatter.range(0, 40), loopStart: 0, at, span, step, way, walks, round: null, gait };
     // One stationed for a key has had its tuft in the water for half a second when the key comes.
     if (at >= 0 && habit === 0) f.offset = period - ((at - 0.5) % period);
     // The loop's cycle ends as the film's does (the head up, then down again), so a feeder is at the loop's start what it is at the key.
@@ -297,6 +319,58 @@ export function create(ctx: Context): Piece {
     o[1] = 0 * n;
   };
 
+  // The film's shots, in seconds of the place, each with the second it is staged for: within a shot every wader is at its station at that
+  // second and wades from there, so that none is ever far from the ground it was given.
+  const SPANS = shotsOf(UNIT).map((shot) => {
+    const span = shotSpan(shot.id);
+    return { from: span.from, to: span.to, key: shot.key ? keySeconds(shot.key) : T0 };
+  });
+  /** A step is not gone through evenly: the animal gathers on both feet, goes over the one that bears it, and gathers again. */
+  const surge = (steps: number): number => {
+    const n = Math.floor(steps);
+    return n + (steps - n) - (0.5 * Math.sin(TAU * (steps - n))) / TAU;
+  };
+  /** The steps a feeder has waded by `at` seconds of its own clock: whole steps to a cycle, each bout picked up and slowed. */
+  const waded = (f: Feeder, at: number): number => {
+    const g = f.gait;
+    const cycle = Math.floor(at / f.period);
+    const ph = at - cycle * f.period;
+    return cycle * (g.a + g.b + g.c) + g.a * (ramp((ph - g.a0) / g.aLong) + ramp((ph - f.period - g.a0) / g.aLong)) + g.b * ramp((ph - g.b0) / g.bLong) + g.c * ramp((ph - g.c0) / g.cLong, 0.25);
+  };
+  /** The second a feeder is at its station in the shot that t is in: its own if that is in the shot, or the one the shot is staged for. */
+  const stationed = (f: Feeder, t: number): number => {
+    for (const span of SPANS) {
+      if (t >= span.from && t <= span.to) return f.at >= span.from && f.at <= span.to ? f.at : span.key;
+    }
+    return T0;
+  };
+  /**
+   * Whether it wades in the shot whose stationed second is `key`. One that stands on a leg does not if that second has its leg down:
+   * it stands the shot through as it stood when the key was approved.
+   */
+  const wades = (f: Feeder, key: number): boolean => {
+    if (f.habit !== 1) return f.habit === 0;
+    const at = key + f.offset;
+    const ph = at - Math.floor(at / f.period) * f.period;
+    return ph < Math.min(f.gait.c0 - 1.2, f.period - 2.9);
+  };
+  /** The whole steps it has waded before `key`, and the part of a step it is into at `key`, eased as the step is gone through. */
+  const part = { whole: 0, into: 0 };
+  const partAt = (f: Feeder, key: number): void => {
+    const at = waded(f, key + f.offset);
+    part.whole = Math.floor(at + 1e-6);
+    part.into = surge(at - part.whole);
+  };
+  const shifted: Way = { x: 0, z: 0, yaw: 0, s0: 0, pieces: [], closed: false };
+  /** No two prints alike: every place of a foot after the first two is a little ahead or behind and a little aside. */
+  let nudging: Feeder | null = null;
+  const printNudge = (n: number, o: [number, number]): void => {
+    const f = nudging;
+    const far = f === null || n === 0 || n === 1 ? 0 : 1;
+    o[0] = far * (hash((f?.seed ?? 0) * 9.1, n * 1.7 + 70) - 0.5) * 0.22 * (f?.step ?? 0);
+    o[1] = far * (hash((f?.seed ?? 0) * 7.3, n * 2.9 + 80) - 0.5) * 0.07 * (f?.size ?? 0);
+  };
+
   /** The body of one feeder at t into `p`: where its feet are, then its hips over them, then its head. Not for a runner. */
   const stand = (f: Feeder, t: number, p: Pose): void => {
     const size = f.size;
@@ -316,21 +390,52 @@ export function create(ctx: Context): Piece {
       way = f.round as Way;
       const long = 0.8 + 0.1 * hash(f.seed, 3);
       const u = ((((lp as number) - 0.03 - (0.97 - long) * hash(f.seed, 5)) % 1) + 1) % 1 / long;
-      s += 4 * f.step * (ramp(u / 0.43) + ramp((u - 0.55) / 0.43));
+      s += f.step * surge(4 * (ramp(u / 0.43) + ramp((u - 0.55) / 0.43)));
       dipHead = smooth(0.42, 0.47, u) * (1 - smooth(0.53, 0.57, u)) + smooth(0.985, 1.02, u) * (1 - smooth(1 / long - 0.06, 1 / long, u));
       span = 0;
     } else if (f.habit === 0) {
       // Probing, then the head comes up streaming, looks about, and goes back in: and while it is up the animal wades on a step or two.
       up = smooth(period - 3.4, period - 2.5, ph) * (1 - smooth(period - 0.75, period - 0.1, ph));
       shake = smooth(period - 0.5, period - 0.1, ph) + (1 - smooth(0, 0.7, ph));
-      if (lp === null && f.walks > 0) {
-        const gone = (c: number, q: number): number => f.walks * f.step * (c + ramp((q - (f.period - 3.1)) / 2.5, 0.25));
-        const ref = (f.at >= 0 ? f.at : T0) + f.offset;
-        const c0 = Math.floor(ref / f.period);
-        s += gone(cycle, ph) - gone(c0, ref - c0 * f.period);
-      }
     } else {
       span = period - 3;
+    }
+    // In the film it wades: step by step with the tuft in the pool, halts, wades on, and takes a step or two with its head up.
+    let moving = 0;
+    let brace = 0;
+    const key = lp === null ? stationed(f, t) : 0;
+    const wading = lp === null && wades(f, key);
+    if (wading) {
+      // It is at its station at the stationed second, part of the way through a step if it is wading then: its way is laid so.
+      partAt(f, key);
+      const gone = surge(waded(f, t + f.offset) - part.whole);
+      s += f.step * gone;
+      shifted.x = way.x;
+      shifted.z = way.z;
+      shifted.yaw = way.yaw;
+      shifted.pieces = way.pieces;
+      shifted.s0 = way.s0 + f.step * part.into;
+      way = shifted;
+      moving = clamp01(Math.abs(gone - surge(waded(f, t - 0.2 + f.offset) - part.whole)) * 5 * f.gait.each * 0.8);
+      span = 0;
+      // Before the neck goes down the weight goes back over the feet and the hips sink: it comes forward again as the tuft goes in.
+      if (f.habit === 0) brace = ph > 0.5 * period ? smooth(period - 1.7, period - 0.85, ph) : 1 - smooth(-0.2, 0.75, ph);
+    }
+
+    // In the card loop one that feeds cannot wade away: it treads round its tuft, which stays in the pool where it is. A step or two to
+    // one side, the near foot out and the other brought up to it, and later the same way back, each at its own time in the loop.
+    let tread = 0;
+    const treads = lp !== null && f.habit === 0 && !walker;
+    const treadWay = hash(f.seed, 63) < 0.5 ? 1 : -1;
+    const treadTurn = (0.4 + 0.14 * hash(f.seed, 67)) / HEAD_REST[0];
+    if (treads) {
+      const far = hash(f.seed, 65) < 0.55 ? 2 : 1;
+      const each = far === 2 ? 0.95 + 0.25 * hash(f.seed, 69) : 1.2 + 0.5 * hash(f.seed, 69);
+      const out = 0.2 + (far === 2 ? 0.9 : 2.2) * hash(f.seed, 71);
+      const back = out + far * each + 0.5 + (LOOP_SECONDS - 0.9 - out - 2 * far * each) * hash(f.seed, 73);
+      const q = LOOP_SECONDS * (lp as number);
+      tread = far * (ramp((q - out) / (far * each)) - ramp((q - back) / (far * each)));
+      span = 0;
     }
 
     // The feet.
@@ -341,8 +446,30 @@ export function create(ctx: Context): Piece {
     let bed = 0;
     for (let leg = 0; leg < 2; leg++) {
       const foot = p.feet[leg] as Pose['feet'][number];
-      footAt(way, leg, s, f.step, 0.13 * size, noNudge, stood);
-      let raised = 0.24 * size * Math.sin(Math.PI * stood.carry);
+      nudging = f;
+      footAt(way, leg, s, f.step, 0.13 * size, wading ? printNudge : noNudge, stood);
+      if (treads) {
+        // The foot on the side it goes to is put out through the first half of a tread, the other brought up through the second:
+        // and on the way back the other goes first, as it must. Each stands at its own place on the round between.
+        const n = Math.floor(tread);
+        const u = tread - n;
+        const leads = (treadWay === 1) === (leg === 0);
+        const c = leads ? clamp01(u / 0.5) : clamp01((u - 0.5) / 0.5);
+        const turned = f.yaw + treadWay * treadTurn * (n + c * c * (3 - 2 * c));
+        const reach = HEAD_REST[0] * size;
+        const fore = (leg === 0 ? -0.5 : 0.5) * f.step - reach;
+        const side = (leg === 0 ? 1 : -1) * 0.13 * size;
+        stood.x = f.x + Math.sin(f.yaw) * reach + Math.sin(turned) * fore - Math.cos(turned) * side;
+        stood.z = f.z + Math.cos(f.yaw) * reach + Math.cos(turned) * fore + Math.sin(turned) * side;
+        stood.yaw = turned;
+        stood.carry = c;
+        // The weight goes over the foot that stays down while the other is in the air.
+        const air = Math.sin(Math.PI * c);
+        lean.off += (leg === 0 ? -1 : 1) * 1.1 * air;
+        lean.dip += 0.5 * air;
+      }
+      // Drawn up out of the pool toes hanging, swung through, and set down flat.
+      let raised = (wading ? 0.3 : 0.24) * size * Math.sin(Math.PI * stood.carry);
       let droop = 0.7 * Math.sin(Math.PI * stood.carry);
       if (span > 0) {
         shuffle(f, leg, cycle, ph, span, span > 5 && lp === null ? 4 : 2, moved);
@@ -352,8 +479,10 @@ export function create(ctx: Context): Piece {
         droop += 0.6 * moved[2];
       }
       if (f.habit === 1 && !walker && leg === (hash(f.seed, 47) < 0.5 ? 0 : 1)) {
-        // It stands on one leg, the other drawn up under it, and once in its cycle sets that down, shifts, and draws it up again.
-        const down = smooth(period - 2.6, period - 1.9, ph) * (1 - smooth(period - 0.9, period - 0.2, ph));
+        // It stands on one leg, the other drawn up under it, and once in its cycle sets that down, shifts, and draws it up again:
+        // in the film it wades on a few steps while that leg is down.
+        const first = wading ? f.gait.c0 - 0.9 : period - 2.6;
+        const down = smooth(first, first + 0.7, ph) * (1 - smooth(period - 0.9, period - 0.2, ph));
         const tucked = 1 - down;
         stood.x += Math.sin(stood.yaw) * 0.22 * size * tucked;
         stood.z += Math.cos(stood.yaw) * 0.22 * size * tucked;
@@ -374,17 +503,25 @@ export function create(ctx: Context): Piece {
 
     // The hips: over the way, off towards the foot that bears the weight, and highest as they pass over it.
     wayAt(way, s, hips);
+    if (treads) {
+      const turned = f.yaw + treadWay * treadTurn * tread;
+      const reach = HEAD_REST[0] * size;
+      hips.x = f.x + Math.sin(f.yaw) * reach - Math.sin(turned) * reach;
+      hips.z = f.z + Math.cos(f.yaw) * reach - Math.cos(turned) * reach;
+      hips.yaw = turned;
+    }
     const along = (Math.PI * s) / f.step;
     const striding = Math.abs(Math.sin(along));
     // Standing, it is never square on both feet: the weight goes slowly from one to the other, and the hips sink and tip as it goes.
-    const idle = 0.05 * wave(t, 0.83, f.seed * 5) + 0.016 * wave(t, 1.9, f.seed * 17) + 0.06 * wave(t, 3.1, f.seed * 11) * (0.5 + 0.5 * wave(t, 0.6, f.seed * 3));
-    const aside = size * (0.05 * Math.cos(along) + 0.075 * lean.off + idle);
-    const fore = size * (0.03 * wave(t, 0.61, f.seed * 23) + 0.05 * dipHead - 0.03 * up);
-    p.yaw = hips.yaw + 0.04 * wave(t, 0.47, f.seed * 29) - 0.05 * lean.off;
+    // Wading, the stride carries the weight and the slow sway of one that stands all but goes.
+    const idle = (1 - 0.75 * moving) * (0.05 * wave(t, 0.83, f.seed * 5) + 0.016 * wave(t, 1.9, f.seed * 17) + 0.06 * wave(t, 3.1, f.seed * 11) * (0.5 + 0.5 * wave(t, 0.6, f.seed * 3)));
+    const aside = size * ((0.05 + 0.035 * moving) * Math.cos(along) + 0.075 * lean.off + idle);
+    const fore = size * (0.03 * wave(t, 0.61, f.seed * 23) + 0.05 * dipHead - 0.03 * up - 0.09 * brace);
+    p.yaw = hips.yaw + 0.04 * wave(t, 0.47, f.seed * 29) - 0.05 * lean.off + 0.045 * moving * Math.sin(along);
     p.x = hips.x - Math.cos(hips.yaw) * aside + Math.sin(hips.yaw) * fore;
     p.z = hips.z + Math.sin(hips.yaw) * aside + Math.cos(hips.yaw) * fore;
-    p.y = bed + size * (HIPS_HIGH + 0.035 * Math.cos(2 * along) - 0.05 * lean.dip - 0.02 * Math.abs(lean.off) - 0.3 * Math.abs(idle) + 0.012 * wave(t, 1.3, f.seed * 3));
-    p.roll = -0.5 * (0.05 * Math.cos(along) + 0.06 * lean.off) - 0.7 * idle + 0.01 * wave(t, 0.9, f.seed * 7);
+    p.y = bed + size * (HIPS_HIGH + 0.035 * Math.cos(2 * along) - 0.05 * lean.dip - 0.02 * Math.abs(lean.off) - 0.3 * Math.abs(idle) + 0.012 * wave(t, 1.3, f.seed * 3) - 0.05 * brace);
+    p.roll = -0.5 * ((0.05 + 0.03 * moving) * Math.cos(along) + 0.06 * lean.off) - 0.7 * idle + 0.01 * wave(t, 0.9, f.seed * 7);
     p.size = size;
     p.tone = 0.56 + 0.12 * f.seed;
     p.seed = f.seed;
@@ -397,23 +534,24 @@ export function create(ctx: Context): Piece {
     if (f.habit === 0 && !walker) {
       // Down, the tuft works the pool: along, across, and dipped; up, the animal looks about.
       const work = 1 - up;
-      const dx = HEAD_REST[0] + 0.1 * wave(t, 1.7, f.seed * 20) + 0.06 * wave(t, 3.9, f.seed * 7);
+      // Wading, the tuft is swept across the way from side to side, once to two steps, and hangs back as each foot takes the weight.
+      const dx = HEAD_REST[0] + 0.1 * wave(t, 1.7, f.seed * 20) + 0.06 * wave(t, 3.9, f.seed * 7) - 0.07 * moving * Math.cos(2 * along + 0.6);
       const dy = low + 0.07 * wave(t, 2.3, f.seed * 9) + 0.05 * wave(t, 5.1, f.seed * 4) - 0.1 * shake * work;
-      const dz = 0.3 * wave(t, 1.1, f.seed * 31) + 0.1 * wave(t, 2.9, f.seed * 37);
+      const dz = (1 - 0.6 * moving) * (0.3 * wave(t, 1.1, f.seed * 31) + 0.1 * wave(t, 2.9, f.seed * 37)) + 0.34 * moving * Math.sin(along + f.seed * 6);
       const look = wave(t, 0.9, f.seed * 3);
-      p.head[0] = dx + (1.4 + 0.1 * look - dx) * up;
+      p.head[0] = dx + (1.4 + 0.1 * look + 0.06 * moving * Math.cos(2 * along) - dx) * up;
       p.head[1] = dy + (1.72 + 0.06 * wave(t, 1.4, f.seed * 11) - dy) * up;
       p.head[2] = dz + (0.35 * look - dz) * up;
       p.headPitch = -0.8 + 0.1 * wave(t, 2.3, f.seed * 9) + (0.7 + 0.1 * wave(t, 1.4, f.seed * 11)) * up;
       p.headYaw = 0.25 * wave(t, 1.1, f.seed * 31) * work + 0.6 * look * up;
-      p.pitch = 0.07 * work - 0.03 * up + 0.015 * wave(t, 1.7, f.seed * 20);
-      p.sail = 0.04 + 0.05 * up + 0.03 * wave(t, 0.37, f.seed * 41);
+      p.pitch = 0.07 * work - 0.03 * up + 0.015 * wave(t, 1.7, f.seed * 20) - 0.05 * brace + 0.018 * moving * Math.cos(2 * along + 0.8);
+      p.sail = 0.04 + 0.05 * up + 0.03 * wave(t, 0.37, f.seed * 41) + 0.03 * moving * Math.cos(2 * along + 1.2);
       p.shake = 0.5 * shake;
     } else {
       // Head up at half its height: it looks about, and in bouts shakes its tuft dry. A walker nods to its stride and puts its head down where it stands.
       const bout = walker ? 0 : smooth(0.52, 0.66, heldAt(t, 2.6, f.seed));
       const look = wave(t, 0.5, f.seed * 11);
-      const nod = walker ? 0.06 * Math.cos(2 * along) * striding : 0;
+      const nod = 0.06 * Math.cos(2 * along) * (walker ? striding : moving);
       const hx = 1.95 + 0.08 * look + nod;
       const hy = 0.9 + 0.1 * wave(t, 0.8, f.seed * 7) + 0.06 * wave(t, 0.31, f.seed * 3) + 0.03 * bout * wave(t, 15, 0);
       const hz = 0.3 * look + 0.1 * bout * wave(t, 17, f.seed * 5);
@@ -423,7 +561,7 @@ export function create(ctx: Context): Piece {
       p.headPitch = -0.25 + 0.1 * wave(t, 0.8, f.seed * 7) - 0.5 * dipHead + 0.15 * bout * wave(t, 15, 0);
       p.headYaw = 0.45 * look * (1 - dipHead) + 0.3 * bout * wave(t, 17, f.seed * 5);
       p.pitch = 0.02 + 0.05 * dipHead + 0.012 * wave(t, 1.1, f.seed * 20) - 0.03 * lift;
-      p.sail = 0.05 + 0.04 * wave(t, 0.43, f.seed * 41) + 0.1 * bout;
+      p.sail = 0.05 + 0.04 * wave(t, 0.43, f.seed * 41) + 0.1 * bout + 0.03 * moving * Math.cos(2 * along + 1.2);
       p.shake = bout;
       shake = bout;
     }
@@ -1242,9 +1380,10 @@ export function create(ctx: Context): Piece {
   // top of the frame. Metres ahead of the lens at the start and lost each second, the bearing (right, up; tangents), when it turns
   // away and how far (left, up; metres), its bank and its size.
   const HEROES: { [k: number]: { ahead: number; closes: number; right: number; up: number; turns: number; left: number; climbs: number; bank: number; size: number } } = {
-    0: { ahead: 40, closes: 16, right: -0.0655, up: 0.0527, turns: 0.95, left: 12, climbs: 10, bank: 0.55, size: 1.15 },
+    0: { ahead: 40, closes: -4, right: -0.0655, up: 0.0527, turns: 0.95, left: 12, climbs: 10, bank: 0.55, size: 1.15 },
     3: { ahead: 150, closes: 52, right: -0.02, up: 0.14, turns: 1.85, left: 5, climbs: 11, bank: 0.6, size: 1.05 },
   };
+  const HERO_TONE = 0.4;
   const heroPlace = (k: number, t: number, out: Spot): void => {
     const h = HEROES[k] as (typeof HEROES)[number];
     const cam = openingCamera(t);
@@ -1467,6 +1606,8 @@ export function create(ctx: Context): Piece {
           const hero = HEROES[k];
           if (hero) {
             borne(hero.size, (leads[k] as (typeof leads)[number]).seed, seconds, 0.35);
+            // Against the bright gap it is a dark shape: the sky behind it is lit and it is seen from under, in its own shade.
+            F.tone *= HERO_TONE;
             // Banked into its turn from the first frame, and harder as it goes away.
             F.roll = hero.bank + 0.25 * smooth(hero.turns, hero.turns + 0.5, seconds) + 0.06 * Math.sin(seconds * 2.3 + k);
             // The lens comes up behind it, and from behind a level flier is two edges: it climbs with its head held off its way, so that
