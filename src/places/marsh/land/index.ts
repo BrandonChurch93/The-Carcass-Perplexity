@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { F, K1_AT, K1_DIR, R, STUCK, TAU, rel, smooth } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { ROCK, createField, fbm, vnoise, type Field } from './field';
+import { heavePhase } from '../dead/mud';
 import { patchGeometry, ringsGeometry } from './mesh';
 import { LAND_FRAGMENT, LAND_VERTEX, RELIEF } from './shaders';
 import { bakeGrain, bakePlates } from './tiles';
@@ -131,6 +132,7 @@ export function create(ctx: Context): Piece {
     fragmentShader: LAND_FRAGMENT,
     uniforms: {
       ...ctx.rig.uniforms,
+      uHeave: { value: 0 },
       tFieldNear: { value: field.near },
       tFieldFar: { value: field.far },
       tSilt: { value: ctx.assets.texture('mat/silt.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
@@ -188,6 +190,9 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('crust', patch));
 
   return {
+    setTime: (seconds) => {
+      (material.uniforms.uHeave as THREE.IUniform<number>).value = heavePhase(seconds);
+    },
     dispose: () => {
       ground.geometry.dispose();
       far.geometry.dispose();

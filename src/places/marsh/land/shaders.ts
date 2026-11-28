@@ -2,7 +2,8 @@
 // ground close to a lens is raised by those heights in its mesh, and the brine's level stands against them. What lies under the level is
 // flooded and mirrors the sky; what lies a little over it is dark and wet; the rims over that carry the salt. One rule draws the shore, the
 // wet margin, the puddles of the mud and the red pooled in the lows.
-import { DEAD, F, K1_AT, K1_DIR, STUCK, rel } from '../shared/anchors';
+import { DEAD, F, K1_AT, K1_DIR, STUCK, rel, relYaw } from '../shared/anchors';
+import { HEAVE_GLSL } from '../dead/mud';
 import { BRINE_GLSL } from '../shared/brine-glsl';
 import { RIG_GLSL } from '../shared/glsl';
 import { FAR, NEAR, ROCK } from './field';
@@ -64,9 +65,19 @@ vec2 panSheet(vec2 xz, vec2 r, out vec2 turn) {
 // altogether), and each is tipped its own way.
 // (Where the stuck one went through, the plates whose middles lay over the hole are gone into it, and those round it stand further apart.)
 const vec2 HOLE = vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)});
+// Where the stuck one is in its heave (0 to 1): the swell of it goes out under the plates round the hole.
+uniform float uHeave;
+${HEAVE_GLSL}
+const vec2 STUCK_DIR = vec2(${Math.cos(relYaw(-0.97, -0.03)).toFixed(4)}, ${(-Math.sin(relYaw(-0.97, -0.03))).toFixed(4)});
+// The metres from the stuck one, counted along its own long shape as its mud is laid; o, the way outward.
+float stuckR(vec2 xz, out vec2 o) {
+  vec2 d = xz - HOLE;
+  o = d / max(length(d), 0.05);
+  return length(vec2((dot(d, STUCK_DIR) - 0.32) * 0.833, dot(d, vec2(-STUCK_DIR.y, STUCK_DIR.x)) * 1.25));
+}
 float panGap(float thin, vec2 r, vec2 seed) {
   float d = length(seed - HOLE);
-  return smoothstep(0.0, 0.5, thin) * (0.012 + 0.07 * r.x * r.x + 3.0 * step(r.y, 0.06) + 3.0 * step(d, 2.1) + 0.035 * smoothstep(4.5, 2.1, d));
+  return smoothstep(0.0, 0.5, thin) * (0.03 + 0.12 * r.x * r.x + 3.0 * step(r.y, 0.06) + 3.0 * step(d, 2.1) + 0.035 * smoothstep(4.5, 2.1, d));
 }
 // The bank of the seep pool is a rind of salt knobs (mat/knob, a metre and a bit across), laid twice, turned unlike ways; at a spot
 // the lay that stands higher there is the one seen, so no stretch of the sheet is met twice in a row. KNOB_A and KNOB_B are (cos, sin).
@@ -259,6 +270,7 @@ uniform sampler2D tSlick;
 uniform sampler2D tSlickN;
 const vec3 PAN_MEAN = vec3(0.371, 0.346, 0.337);
 const vec3 SLICK_MEAN = vec3(0.193, 0.094, 0.076);
+const float SKIM = 2.5;
 uniform sampler2D tGrain;
 vec3 greyed(vec3 c, float keep) { return mix(vec3(dot(c, vec3(0.3, 0.5, 0.2))), c, keep); }
 ${RIG_GLSL}
@@ -274,6 +286,17 @@ float levelOf(sampler2D t, vec2 gx, vec2 gy) {
   gx *= n;
   gy *= n;
   return max(0.5 * log2(max(max(dot(gx, gx), dot(gy, gy)), 1e-12)), 0.0);
+}
+
+// The level for a sheet the lens skims: a pixel there is many times longer along the view than across it, and a level taken from its
+// long side smears the sheet to nothing. The long side is counted as no more than most times the short one.
+float levelSkim(sampler2D t, vec2 gx, vec2 gy, float most) {
+  vec2 n = vec2(textureSize(t, 0));
+  gx *= n;
+  gy *= n;
+  float a = dot(gx, gx);
+  float b = dot(gy, gy);
+  return max(0.5 * log2(max(min(max(a, b), min(a, b) * most * most), 1e-12)), 0.0);
 }
 
 void main() {
@@ -321,9 +344,16 @@ void main() {
   float ea = 0.01;
   float lift = 0.0;
   vec2 tilt = vec2(0.0);
+  vec2 heaveTip = vec2(0.0);
   // (The seep pool's bank is all knobs: no pan is worked out under them.)
   float bankDry = bankAt(tGrain, p.xz);
   bool onBank = bankDry >= 1.0;
+  // (The broken face of a thin plate's edge where it is turned to the lens: how much of this spot is that face, how far down it, and
+  // the way the face looks.)
+  float wall = 0.0;
+  float plateR = 0.0;
+  float wallDown = 0.0;
+  vec2 wallOut = vec2(0.0);
   if (big < 1.0 && !onBank) {
     float e;
     vec2 pc;
@@ -344,7 +374,7 @@ void main() {
     ax *= min(1.0, lo / max(la, 1e-7));
     ay *= min(1.0, lo / max(lb, 1e-7));
     vec4 nA = textureLod(tPanN, uv, levelOf(tPanN, ax, ay));
-    sheet = textureLod(tPan, uv, levelOf(tPan, ax, ay)).rgb / PAN_MEAN;
+    sheet = textureLod(tPan, uv, levelOf(tPanN, ax, ay)).rgb / PAN_MEAN;
     sh = nA.b;
     vec2 sl = nA.rg - 0.5;
     // Under a lens the sheet's grain is coarser than a pixel: the same sheet lies on it again a fifth the size, as the crystals.
@@ -352,7 +382,7 @@ void main() {
     if (crystal > 0.0) {
       vec2 uc = uv * 5.3 + pr.yx;
       vec4 nC = textureLod(tPanN, uc, levelOf(tPanN, ax * 5.3, ay * 5.3));
-      sheet *= mix(vec3(1.0), 0.45 + 0.55 * textureLod(tPan, uc, levelOf(tPan, ax * 5.3, ay * 5.3)).rgb / PAN_MEAN, crystal);
+      sheet *= mix(vec3(1.0), 0.45 + 0.55 * textureLod(tPan, uc, levelOf(tPanN, ax * 5.3, ay * 5.3)).rgb / PAN_MEAN, crystal);
       sl += (nC.rg - 0.5) * 0.7 * crystal;
       sh += (nC.b - 0.5) * 0.15 * crystal;
     }
@@ -373,14 +403,33 @@ void main() {
       vec4 bite = textureLod(tGrain, p.xz / 0.41 + 0.13, levelOf(tGrain, px / 0.41, py / 0.41));
       ep -= k * (0.05 * smoothstep(0.45, 0.8, bite.g) + 0.012 * smoothstep(0.3, 0.7, bite.a));
     }
+    lift = panLift(pr, pc);
+    // (A heave goes out under the plates: each rides the swell whole and is tipped by it, and its low edge goes under the mud.)
+    vec2 swOut;
+    float swTip = heaveSwell(stuckR(pw - pc, swOut), uHeave).y * k;
+    lift += dot(swOut, pc) * swTip;
+    heaveTip = swOut * swTip;
+    plateR = fract(pr.x * 5.7 + pr.y * 3.1);
+    if (k > 0.0) {
+      // The plates are relief: each stands a thumb or two over the mud, more at its lifted edge. Seen low, a plate's far edge reaches
+      // out over the gap behind it and its near edge shows its broken face, as high on the picture as the plate is thick. Both are
+      // had from the edge distance: it is shifted along the view by the plate's thickness over the view's fall.
+      float thick = clamp((lift - SUNK) * 1.3 + 0.014, 0.0, 0.038) * k * (1.0 - big);
+      float par = dot(pdir, -v.xz) * thick / max(v.y, 0.25) * (1.0 - smoothstep(0.16, 0.3, ep));
+      ep += par;
+      if (par < 0.0) {
+        wall = smoothstep(-ea, ea, ep - par) * (1.0 - smoothstep(-ea, ea, ep));
+        wallDown = clamp(ep / min(par, -1e-4), 0.0, 1.0);
+        wallOut = pdir;
+      }
+    }
     slab = smoothstep(-ea, ea, ep);
     rim = smoothstep(rimW + ea, rimW * 0.5 - ea, ep) * slab;
     prof = (1.0 - smoothstep(0.0, rimW * 1.6, ep)) * slab;
     footM = smoothstep(rimW * 3.0 + ea, rimW * 1.3, ep) * (1.0 - rim) * slab;
     bend -= pdir * prof * (1.0 - prof) * mix(2.0, 5.0, k);
     tone = 0.88 + 0.24 * pr.y;
-    tilt = panTilt(pr);
-    lift = panLift(pr, pc);
+    tilt = panTilt(pr) + heaveTip * 0.5;
     rim *= mix(0.55 + 0.45 * smoothstep(0.35, 0.6, rv), smoothstep(0.42, 0.6, rv * 0.5 + rv2 * 0.5), k);
     // (The low edge of a tipped plate is under the mud.)
     float drowned = smoothstep(SUNK + 0.008, SUNK - 0.002, lift + (sh - 0.5) * 0.014 + 0.014 * pr.y * exp(-max(ep, 0.0) / 0.08)) * k;
@@ -435,7 +484,7 @@ void main() {
   // Thin crust over mud: the same pans, loose. Each is a plate lying on wet mud, drawn back from its neighbours and tipped; the gaps
   // between them are a hand to a stride wide and brine stands in them. A lifted edge shows its broken section and throws its shade.
   if (k > 0.0) {
-    vec3 silt = textureLod(tSilt, p.xz / 3.0, levelOf(tSilt, px / 3.0, py / 3.0)).rgb;
+    vec3 silt = textureLod(tSilt, p.xz / 3.0, levelOf(tSiltN, px / 3.0, py / 3.0)).rgb;
     vec4 nS = textureLod(tSiltN, p.xz / 3.0, levelOf(tSiltN, px / 3.0, py / 3.0));
     // The wallow (painted into the fine patch): its mud is lower, wetter and darker than any other, and the slabs tipped round it are whole.
     float sunk = vPaint.x * k;
@@ -447,21 +496,43 @@ void main() {
     crack = smoothstep(-0.1, -0.02, ep) * smoothstep(0.62, 0.38, nS.b + (mid.b - 0.5) * 0.5) * (1.0 - slab) * k;
     float stirred = 1.0 - smoothstep(2.0, 5.5, length(p.xz - vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)})));
     vec3 mudCol = silt * mix(vec3(0.33, 0.255, 0.225), vec3(0.33, 0.27, 0.24), stirred) * mix(vec3(1.0), vec3(0.5, 0.42, 0.38), sunk);
-    vec2 grain = -(nS.rg - 0.5) * 0.8;
+    vec2 grain = -(nS.rg - 0.5) * 0.35;
+    float mudH = nS.b;
     if (close > 0.0) {
-      // Close to the lens the silt's own grain is on the mud.
-      vec4 nS2 = textureLod(tSiltN, p.xz / 0.7 + 0.31, levelOf(tSiltN, px / 0.7, py / 0.7));
-      mudCol *= mix(vec3(1.0), 0.6 + 0.4 * textureLod(tSilt, p.xz / 0.7 + 0.31, levelOf(tSilt, px / 0.7, py / 0.7)).rgb / vec3(0.32, 0.281, 0.257), close);
-      grain -= (nS2.rg - 0.5) * 0.5 * close;
+      // Close to the lens the mud is the trodden mud's own sheet (mat/slick) at its own size, turned: clods and dishes, kept grey.
+      vec2 uM = knobUv(p.xz, KNOB_B, 0.9) + 0.31;
+      vec2 uMx = knobUv(px, KNOB_B, 0.9);
+      vec2 uMy = knobUv(py, KNOB_B, 0.9);
+      vec4 nM = textureLod(tSlickN, uM, levelSkim(tSlickN, uMx, uMy, SKIM));
+      vec3 cM = min(textureLod(tSlick, uM, levelSkim(tSlickN, uMx, uMy, SKIM)).rgb / SLICK_MEAN, vec3(1.8));
+      mudCol *= mix(vec3(1.0), 0.5 + 0.5 * vec3(dot(cM, vec3(0.3, 0.4, 0.3))), close);
+      vec2 sM = nM.rg - 0.5;
+      grain -= vec2(KNOB_B.x * sM.x + KNOB_B.y * sM.y, KNOB_B.x * sM.y - KNOB_B.y * sM.x) * 0.9 * close;
+      mudH = mix(mudH, 0.5 * nS.b + 0.5 * nM.b, close);
     }
     mudCol *= mix(vec3(1.0), vec3(0.72, 0.46, 0.4), seep);
-    float shade = smoothstep(-(0.03 + max(lift, 0.0) * 1.6), 0.0, ep) * (1.0 - big);
-    mudCol *= 1.0 - 0.65 * shade;
-    float section = smoothstep(-0.03 - ea, -0.03 + ea, ep) * (0.35 + 0.65 * smoothstep(0.005, 0.035, lift)) * (1.0 - big);
-    // (A thin crust's edge is a few millimetres of pale salt, broken, and under it the dark it overhangs.)
-    mudCol = mix(mudCol, mix(vec3(0.06, 0.03, 0.025), vec3(0.4, 0.365, 0.34), smoothstep(-0.006, -0.002, ep) * smoothstep(0.4, 0.62, fine.a)) * (0.75 + 0.5 * sh), section);
-    colour = mix(colour, mix(mudCol, mix(greyed(colour, 0.6) * vec3(0.58, 0.52, 0.48), colour, rim * 0.45) * mix(vec3(1.0), vec3(0.6, 0.36, 0.31), 0.9 * seep * smoothstep(0.7, 0.35, sh + (nS.b - 0.5) * 0.5)), slab), k);
-    hgt = mix(hgt, mix(0.08 + 0.3 * nS.b, max(hgt, 0.5), slab), k);
+    // (The dark a plate's edge throws on the mud under it: deepest under a lifted edge, and never thinner than the lens can hold, so
+    // that from above every plate stands in its own dark line.)
+    float up = smoothstep(-0.004, 0.012, lift);
+    float shade = smoothstep(-max(0.045 + max(lift, 0.0) * 2.5, 3.0 * ea), 0.0, ep) * (1.0 - big);
+    mudCol *= 1.0 - (0.7 + 0.25 * up) * shade;
+    // (And its lip: dry pale salt curled up along the lifted edge, damp and dark along the edge that is down in the mud.)
+    float lipW = max(0.03 + 0.03 * plateR, 2.2 * ea);
+    float lip = smoothstep(lipW, lipW * 0.35, ep) * (1.0 - tipped) * (1.0 - big);
+    // (A plate's broken face: a few millimetres of pale salt at its top, broken; under it the dark it overhangs; red and wet where it
+    // stands in the mud.)
+    wall *= 1.0 - sunk;
+    vec3 face = mix(vec3(0.1, 0.068, 0.058), vec3(0.028, 0.015, 0.013), smoothstep(0.15, 0.75, wallDown)) * (0.7 + 0.6 * fine.a);
+    face = mix(face, vec3(0.43, 0.4, 0.375) * (0.75 + 0.5 * sh), (1.0 - smoothstep(0.1, 0.22, wallDown)) * (0.5 + 0.5 * smoothstep(0.35, 0.6, fine.b)));
+    face = mix(face, vec3(0.075, 0.016, 0.012), 0.8 * smoothstep(0.8, 1.0, wallDown));
+    face *= 1.0 + 0.3 * dot(wallOut, vec2(-0.86, 0.5));
+    mudCol = mix(mudCol, face, wall);
+    // (A plate sags in its middle, one plate much and the next not at all: a hair of grey water lies in the sag and gives back the
+    // sky, the plate is damp and dark round it, and only its lifted lip stands dry.)
+    float sag = smoothstep(0.42, 0.8, 0.4 * mid.b + 0.6 * textureLod(tGrain, p.xz / 3.7 + 0.43, 3.0).g + (0.5 - plateR) * 0.3) * smoothstep(0.03, 0.2, ep) * (1.0 - tipped);
+    colour = mix(colour, mix(mudCol, mix(greyed(colour, 0.6) * vec3(0.58, 0.52, 0.48) * (0.7 + 0.5 * plateR) * (1.0 - 0.3 * sag) * mix(0.9, mix(0.55, 1.5, up), lip) * (1.0 - 0.35 * up * smoothstep(lipW, lipW * 1.4, ep) * smoothstep(lipW * 2.4, lipW * 1.4, ep) * (1.0 - tipped)), colour, rim * 0.45) * mix(vec3(1.0), vec3(0.6, 0.36, 0.31), 0.9 * seep * smoothstep(0.7, 0.35, sh + (nS.b - 0.5) * 0.5)), slab), k);
+    // (The wallow itself is liquid: all of it stands under the level, and the mud the stuck one has thrown up lies on it in clods.)
+    hgt = mix(hgt, mix(mix(0.08 + 0.3 * mudH - 0.3 * sunk, 0.6, wall), max(hgt, 0.5) - 0.34 * sag, slab), k);
     bend = mix(bend, mix(grain, bend - tilt * 4.0, slab), k);
     occ = mix(occ, mix(0.72 - 0.3 * shade, occ, slab), k);
   }
@@ -495,7 +566,7 @@ void main() {
     vec4 nT = textureLod(tRockN, uT, levelOf(tRockN, uTx, uTy));
     vec4 nV = textureLod(tRockN, uV, levelOf(tRockN, uVx, uVy));
     float pickT = smoothstep(-0.1, 0.1, (mid.a - 0.5) * 2.5 + nT.b - nV.b);
-    vec3 pat = mix(textureLod(tRock, uV, levelOf(tRock, uVx, uVy)).rgb, textureLod(tRock, uT, levelOf(tRock, uTx, uTy)).rgb, pickT);
+    vec3 pat = mix(textureLod(tRock, uV, levelOf(tRockN, uVx, uVy)).rgb, textureLod(tRock, uT, levelOf(tRockN, uTx, uTy)).rgb, pickT);
     float pitT = mix(nV.b, nT.b, pickT);
     vec2 lT = mix(vec2(0.6 * (nV.r - 0.5) - 0.8 * (nV.g - 0.5), 0.8 * (nV.r - 0.5) + 0.6 * (nV.g - 0.5)), vec2(0.8 * (nT.r - 0.5) + 0.6 * (nT.g - 0.5), 0.8 * (nT.g - 0.5) - 0.6 * (nT.r - 0.5)), pickT) * 2.2;
     if (seen > 0.0) {
@@ -503,7 +574,7 @@ void main() {
       vec2 uUx = vec2(px.x * 0.28 + px.y * 0.96, px.y * 0.28 - px.x * 0.96) / 0.83;
       vec2 uUy = vec2(py.x * 0.28 + py.y * 0.96, py.y * 0.28 - py.x * 0.96) / 0.83;
       vec4 nU = textureLod(tRockN, uU, levelOf(tRockN, uUx, uUy));
-      pat *= mix(vec3(1.0), 0.5 + 0.5 * textureLod(tRock, uU, levelOf(tRock, uUx, uUy)).rgb / vec3(0.379, 0.317, 0.286), seen);
+      pat *= mix(vec3(1.0), 0.5 + 0.5 * textureLod(tRock, uU, levelOf(tRockN, uUx, uUy)).rgb / vec3(0.379, 0.317, 0.286), seen);
       pitT = mix(pitT, pitT * 0.6 + nU.b * 0.4, seen);
       lT += vec2(0.28 * (nU.r - 0.5) - 0.96 * (nU.g - 0.5), 0.96 * (nU.r - 0.5) + 0.28 * (nU.g - 0.5)) * 1.8 * seen;
     }
@@ -521,7 +592,7 @@ void main() {
       vec2 uZy = py3.xy / 1.7;
       vec4 nX = textureLod(tRockSN, uX, levelOf(tRockSN, uXx, uXy));
       vec4 nZ = textureLod(tRockSN, uZ, levelOf(tRockSN, uZx, uZy));
-      patS = mix(textureLod(tRockS, uZ, levelOf(tRockS, uZx, uZy)).rgb, textureLod(tRockS, uX, levelOf(tRockS, uXx, uXy)).rgb, ax);
+      patS = mix(textureLod(tRockS, uZ, levelOf(tRockSN, uZx, uZy)).rgb, textureLod(tRockS, uX, levelOf(tRockSN, uXx, uXy)).rgb, ax);
       pitS = mix(nZ.b, nX.b, ax);
       bendS = mix(vec3(nZ.r - 0.5, nZ.g - 0.5, 0.0), vec3(0.0, nX.g - 0.5, nX.r - 0.5), ax) * 2.6;
     }
@@ -587,7 +658,7 @@ void main() {
     vec2 uP = second ? uB : uA;
     vec2 gx = second ? uBx : uAx;
     vec2 gy = second ? uBy : uAy;
-    knobCol = textureLod(tKnob, uP, levelOf(tKnob, gx, gy)).rgb;
+    knobCol = textureLod(tKnob, uP, levelOf(tKnobN, gx, gy)).rgb;
     knobH = mix(nA.b, nB.b, pick);
     vec2 sA = nA.rg - 0.5;
     vec2 sB = nB.rg - 0.5;
@@ -597,7 +668,7 @@ void main() {
     if (crystal > 0.0) {
       vec2 uC = uP * 6.1 + 0.23;
       vec4 nC = textureLod(tKnobN, uC, levelOf(tKnobN, gx * 6.1, gy * 6.1));
-      vec3 cC = textureLod(tKnob, uC, levelOf(tKnob, gx * 6.1, gy * 6.1)).rgb;
+      vec3 cC = textureLod(tKnob, uC, levelOf(tKnobN, gx * 6.1, gy * 6.1)).rgb;
       knobCol *= mix(1.0, 0.55 + 0.45 * dot(cC, vec3(0.3333)) / 0.235, crystal * smoothstep(0.35, 0.6, knobH));
       knobFine = mix(0.5, nC.b, crystal);
       knobPale = mix(1.0, dot(cC, vec3(0.3333)) / 0.235, crystal);
@@ -617,7 +688,7 @@ void main() {
     vec3 g = vec3(1.0);
     vec4 ng2 = vec4(0.5);
     if (muddy > 0.0) {
-      g = textureLod(tSilt, uG, levelOf(tSilt, px / 0.62, py / 0.62)).rgb / vec3(0.32, 0.281, 0.257);
+      g = textureLod(tSilt, uG, levelOf(tSiltN, px / 0.62, py / 0.62)).rgb / vec3(0.32, 0.281, 0.257);
       ng2 = textureLod(tSiltN, uG, levelOf(tSiltN, px / 0.62, py / 0.62));
     }
     colour *= mix(vec3(1.0), 0.62 + 0.38 * g, muddy);
@@ -630,7 +701,7 @@ void main() {
       vec2 uKy = vec2(py.x * 0.6 - py.y * 0.8, py.x * 0.8 + py.y * 0.6) / 0.55;
       vec4 nk = textureLod(tCrustN, uK, levelOf(tCrustN, uKx, uKy));
       float lit2 = textureLod(tCrustN, uK + vec2(-0.86 * 0.6 - 0.5 * 0.8, -0.86 * 0.8 + 0.5 * 0.6) * 0.035, levelOf(tCrustN, uKx, uKy)).b;
-      vec3 ck = textureLod(tCrust, uK, levelOf(tCrust, uKx, uKy)).rgb / vec3(0.413, 0.304, 0.269);
+      vec3 ck = textureLod(tCrust, uK, levelOf(tCrustN, uKx, uKy)).rgb / vec3(0.413, 0.304, 0.269);
       vec3 knob = mix(vec3(0.2, 0.075, 0.06), mix(vec3(0.52, 0.5, 0.48), vec3(0.42, 0.3, 0.26), exp(-t / 0.4)) * (0.6 + 0.4 * greyed(ck, 0.4)), smoothstep(0.4, 0.72, nk.b));
       colour = mix(colour, knob, knobby * 0.85);
       bend -= (nk.rg - 0.5) * 2.4 * knobby;
@@ -646,6 +717,11 @@ void main() {
   // Where the big ones wade the banks are trodden mud: clods and prints, wet, with the red standing in every print.
   // (Not stopped at the shore: what stands out of the brine where they tread is trodden too.)
   float churn = smoothstep(13.0, 9.5, (mid.r - 0.5) * 5.0 + length(p.xz - vec2(${rel(34.3, 3)[0].toFixed(3)}, ${rel(34.3, 3)[1].toFixed(3)}))) * (1.0 - rock);
+  // (A low bank beside them is not trodden: its crust still lies on it, pale, in its plates.)
+  // (Broken: the mud shows dark in every crack between two plates, and the salt on them is dirty.)
+  float crusted = (1.0 - smoothstep(1.2, 2.0, length(p.xz - vec2(${rel(32.6, 5.3)[0].toFixed(3)}, ${rel(32.6, 5.3)[1].toFixed(3)})) + (fine.g - 0.5) * 0.9 + (mid.g - 0.5) * 0.8)) * smoothstep(0.012, 0.06, ep + (fine.b - 0.5) * 0.07);
+  churn *= 1.0 - crusted;
+  colour *= 1.0 - 0.38 * crusted * (1.0 - rim);
   if (churn > 0.0) {
     // (Where the brine lies against the trodden bank the ground is soaked dark for a foot or two back from it, unevenly.)
     colour *= mix(vec3(1.0), vec3(0.42, 0.3, 0.27), churn * smoothstep(0.6, 0.05, t + (mid.g - 0.5) * 0.5));
@@ -657,19 +733,42 @@ void main() {
     vec2 uAy = knobUv(py, KNOB_A, 1.5);
     vec2 uBx = knobUv(px, KNOB_B, 2.1);
     vec2 uBy = knobUv(py, KNOB_B, 2.1);
-    vec4 nA = textureLod(tSlickN, uA, levelOf(tSlickN, uAx, uAy));
-    vec4 nB = textureLod(tSlickN, uB, levelOf(tSlickN, uBx, uBy));
+    float lvA = levelSkim(tSlickN, uAx, uAy, SKIM);
+    float lvB = levelSkim(tSlickN, uBx, uBy, SKIM);
+    vec4 nA = textureLod(tSlickN, uA, lvA);
+    vec4 nB = textureLod(tSlickN, uB, lvB);
     float pick = smoothstep(-0.08, 0.08, nB.b - nA.b + (textureLod(tGrain, p.xz / 2.7 + 0.2, 3.0).r - 0.5) * 1.2);
     bool second = pick > 0.5;
     vec2 uP = second ? uB : uA;
-    vec3 cM = textureLod(tSlick, uP, levelOf(tSlick, second ? uBx : uAx, second ? uBy : uAy)).rgb / SLICK_MEAN;
+    vec3 cM = textureLod(tSlick, uP, second ? lvB : lvA).rgb / SLICK_MEAN;
     vec4 nP = textureLod(tGrain, p.xz / 3.7 + 0.21, levelOf(tGrain, px / 3.7, py / 3.7));
     float clod = mix(nA.b, nB.b, pick) * 0.5 + nP.g * 0.5;
     vec2 sA = nA.rg - 0.5;
     vec2 sB = nB.rg - 0.5;
     vec2 kb = mix(vec2(KNOB_A.x * sA.x + KNOB_A.y * sA.y, KNOB_A.x * sA.y - KNOB_A.y * sA.x), vec2(KNOB_B.x * sB.x + KNOB_B.y * sB.y, KNOB_B.x * sB.y - KNOB_B.y * sB.x), pick);
-    // (Dark and red with the brine in it, and wet through: it shines.)
-    colour = mix(colour, vec3(0.084, 0.042, 0.031) * cM * (0.5 + 0.8 * clod), churn);
+    // Under a lens the stride-wide sheet is coarser than a pixel: it lies on the mud again a quarter the size, turned with the lay that
+    // is seen, as the grit, the crumbs and the hair cracks.
+    float grit = smoothstep(0.0035, 0.0015, min(length(px), length(py)));
+    vec3 cG = vec3(1.0);
+    if (grit > 0.0) {
+      vec2 tG = second ? vec2(-0.6, 0.8) : vec2(0.96, 0.28);
+      vec2 uG = knobUv(p.xz, tG, 0.41) + (second ? 0.13 : 0.71);
+      vec2 uGx = knobUv(px, tG, 0.41);
+      vec2 uGy = knobUv(py, tG, 0.41);
+      vec4 nG = textureLod(tSlickN, uG, levelSkim(tSlickN, uGx, uGy, SKIM));
+      cG = mix(cG, min(textureLod(tSlick, uG, levelSkim(tSlickN, uGx, uGy, SKIM)).rgb / SLICK_MEAN, vec3(2.2)), grit);
+      vec2 sG = nG.rg - 0.5;
+      kb += vec2(tG.x * sG.x + tG.y * sG.y, tG.x * sG.y - tG.y * sG.x) * 0.6 * grit;
+      clod += (nG.b - 0.5) * 0.3 * grit;
+    }
+    // (Dark and red with the brine in it, and wet through. The sheet's pale crumbs are salt trodden into it: they stay salt where it
+    // lies in drifts, and are all but trodden under elsewhere.)
+    float lumM = dot(cM, vec3(0.3333));
+    float crumb = smoothstep(1.6, 2.6, lumM) * mix(0.45, smoothstep(0.95, 1.7, dot(cG, vec3(0.3333))), grit) * mix(0.3, 1.0, smoothstep(0.42, 0.6, mid.b * 0.6 + wide.a * 0.4));
+    // (Under this sky a tenth of the light given back is already cream: wet mud gives back a fiftieth.)
+    vec3 mudC = vec3(0.026, 0.0115, 0.0086) * min(cM, vec3(1.6)) * (0.5 + 0.5 * cG) * (0.45 + 0.9 * clod);
+    vec3 saltC = vec3(0.13, 0.112, 0.1) * (0.55 + 0.6 * clod) * mix(vec3(0.8, 0.56, 0.5), vec3(1.0), smoothstep(1.8, 3.0, lumM));
+    colour = mix(colour, mix(mudC, saltC, crumb), churn);
     hgt = mix(hgt, clod, churn);
     bend = mix(bend, kb * 2.2 - (nP.ba - 0.5) * 0.35, churn);
     occ = mix(occ, 1.0 - 0.5 * smoothstep(0.55, 0.25, clod), churn);
@@ -695,13 +794,15 @@ void main() {
   // (Between the plates of the thin crust it is mud that stands, grey and liquid: the brine shows only in the mud's lowest dishes.)
   level = mix(level, mix(0.2, 0.15, smoothstep(12.0, 40.0, dist)) + 0.08 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
   level *= 1.0 - 0.25 * bankDry;
-  level = mix(level, 0.24, churn);
+  level = mix(level, 0.16, churn);
   float over = hgt - level;
   float aa = max(0.02 + 0.1 * smoothstep(30.0, 200.0, dist) + 0.01 * churn, fwidth(over) * 1.3);
   float flood = smoothstep(aa, -aa, over);
   // At a shore the brine does not stand on ground that is over its level: there the ground is wet, not under.
   flood *= mix(1.0, smoothstep(0.05, 0.005, p.y), smoothstep(0.6, 0.2, t) * (1.0 - smoothstep(0.0, 0.5, f.g)) * (1.0 - churn)) * (1.0 - bankDry);
   float damp = smoothstep(0.34, 0.03, over);
+  // (Round every pit of the trodden mud the clod is wet and dark for a finger over the brine in it.)
+  colour *= 1.0 - 0.5 * churn * smoothstep(0.09, 0.0, over) * (1.0 - flood);
   // Damp ground is darker and redder, and what the brine has soaked is stained by it.
   // (Damp salt is grey, not pink: the red is only in what the brine itself has soaked, a foot from it. A stride made every island
   // and spit one salmon patch.)
@@ -719,7 +820,7 @@ void main() {
     vec2 uS = vec2(p.x * 0.6 + p.z * 0.8, p.z * 0.6 - p.x * 0.8) / 1.7;
     vec2 uSx = vec2(px.x * 0.6 + px.y * 0.8, px.y * 0.6 - px.x * 0.8) / 1.7;
     vec2 uSy = vec2(py.x * 0.6 + py.y * 0.8, py.y * 0.6 - py.x * 0.8) / 1.7;
-    vec3 cS = textureLod(tSlick, uS, levelOf(tSlick, uSx, uSy)).rgb / SLICK_MEAN;
+    vec3 cS = textureLod(tSlick, uS, levelOf(tSlickN, uSx, uSy)).rgb / SLICK_MEAN;
     vec2 sS = textureLod(tSlickN, uS, levelOf(tSlickN, uSx, uSy)).rg - 0.5;
     float seenS = smoothstep(60.0, 20.0, dist);
     float m = soaked * (1.0 - 0.75 * churn);
@@ -795,6 +896,10 @@ void main() {
   if (rock > 0.0) n = normalize(mix(n, normalize(rockN + rockBend), rock));
   // (Dark mud under a white sky is grey the moment the rig gives it any sheen at all: over the churned mud the rig is told the view is
   // square on, and the wet is given below as glints.)
+  // The swell at this spot: what it has just crossed is wet and dark, along the plates' edges most.
+  vec2 hOut;
+  vec3 swell = heaveSwell(stuckR(p.xz, hOut), uHeave) * smoothstep(0.0, 0.5, thin);
+  colour *= (1.0 - 0.5 * swell.z * (1.0 - 0.6 * slab * (1.0 - footM))) * (1.0 - min(abs(swell.y) * 0.9, 0.35));
   vec3 lit = rigShade(p, n, normalize(mix(v, n, 0.92 * max(churn, bankMud))), colour, rough, occ);
   // (The trodden mud is wet: every clod that leans from the lens shows a little of the sky, sharp and small, never a sheet of it.)
   // (So is the mud between the slabs of the thin crust, and the bare mud back from the rims.)
@@ -825,20 +930,28 @@ void main() {
     // (A hair of brine over salt is clear: the salt shows through it grey and wet, and only depth brings the red.)
     body = mix(body, colour * mix(mix(vec3(0.46, 0.36, 0.34), vec3(0.6, 0.53, 0.5), wet), vec3(0.5), slurry), exp(-deep * mix(60.0, 25.0, slurry)));
     // (Round the stuck one the film is its own slurry: grey brown, the mud of its pocket stirred into it.)
-    body = mix(body, vec3(0.125, 0.092, 0.078), 0.85 * (1.0 - smoothstep(1.8, 4.2, length(p.xz - vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)})))));
+    body = mix(body, vec3(0.105, 0.088, 0.08), 0.85 * (1.0 - smoothstep(1.8, 4.2, length(p.xz - vec2(${rel(STUCK[0], STUCK[1])[0].toFixed(3)}, ${rel(STUCK[0], STUCK[1])[1].toFixed(3)})))));
+    // (A film on a plate is clear: the plate shows through it, wet and darker.)
+    body = mix(body, colour * vec3(0.82, 0.78, 0.76), slab * smoothstep(0.0, 0.5, f.g));
     // (Along a plate's broken edge and in every narrow crack the brine itself stands, red; and what has run out of the dead is darker.)
     body = mix(body, mix(vec3(0.115, 0.022, 0.016), vec3(0.085, 0.012, 0.009), 1.0 - exp(-deep * 40.0)), crack * (1.0 - 0.5 * slurry * step(length(p.xz - HOLE), 3.0)));
     body = mix(body, vec3(0.05, 0.011, 0.009), 0.8 * seep);
     // (In the trodden mud what stands in the prints is the brine with the mud in it: brown red, never a bright sheet.)
-    body = mix(body, mix(vec3(0.1, 0.035, 0.028), vec3(0.085, 0.016, 0.012), 1.0 - exp(-deep * 30.0)), churn);
+    body = mix(body, mix(vec3(0.036, 0.011, 0.009), vec3(0.022, 0.005, 0.004), 1.0 - exp(-deep * 30.0)), churn);
     // Right at a pool's edge the film is the pool itself, come a hand's breadth over the shelf.
     body = mix(body, vec3(0.13, 0.03, 0.024), smoothstep(0.2, 0.05, t) * (1.0 - slurry));
-    vec3 nf = normalize(vec3(bend.x * 0.03 + (fine.b - 0.5) * 0.3 * close, 1.0, bend.y * 0.03 + (fine.a - 0.5) * 0.3 * close));
+    // (What stands between the plates of the thin crust is still: it gives the sky back level, as a pane.)
+    float still = mix(0.3, 0.03, k) * close;
+    // (And it rides the swell: the sky it gives back bends as the crest goes through.)
+    vec3 nf = normalize(vec3(bend.x * 0.03 + (fine.b - 0.5) * still - hOut.x * swell.y, 1.0, bend.y * 0.03 + (fine.a - 0.5) * still - hOut.y * swell.y));
     float share = mirrorShare(nf, v) * mix(1.0, 1.5, smoothstep(25.0, 120.0, dist));
     // (Clear water on pale salt gives back the sky by water's own law, and unstained: the brine's skin of scum is not on it.)
     float nvf = clamp(dot(nf, v), 0.0, 1.0);
     share = mix(share, 0.03 + 0.3 * pow(1.0 - nvf, 4.0), wet) * (1.0 - 0.6 * churn);
-    vec3 skin = vec3(1.0);
+    // (So does the grey water between the plates of the thin crust: it is the sky that is seen in it.)
+    share = mix(share, 0.03 + 0.5 * pow(1.0 - nvf, 3.0), k * (1.0 - 0.6 * seep));
+    // (What a trodden pit gives back of the sky comes through its own red.)
+    vec3 skin = mix(vec3(1.0), vec3(0.8, 0.62, 0.58), churn);
     float open = skyOpen(p) * mix(occ, 1.0, 0.5);
     vec3 film = body * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159) * (1.0 - share) + mirrorAt(p, nf) * skin * share * mix(1.0, open, 0.5);
     lit = mix(lit, film, flood);

@@ -492,7 +492,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       return [s.x + along * ux - across * uz, s.z + along * uz + across * ux];
     };
     // Fewer and stouter than a reed bed: a stand is counted in stalks, each with room for its head.
-    const count = s.far < 150 ? Math.round(0.52 * (s.tall ? 1.6 : 1) * many * Math.max(4, s.q * (40 - 30 * Math.min(1, s.far / 150)))) : 0;
+    const count = s.far < 150 ? Math.round(0.37 * (s.tall ? 1.6 : 1) * many * Math.max(4, s.q * (40 - 30 * Math.min(1, s.far / 150)))) : 0;
     const cores: [number, number][] = [];
     for (let k = 0; k < 1 + rng.int(4); k++) cores.push(around(s, 0.45));
     const farFrom = farStems.length;

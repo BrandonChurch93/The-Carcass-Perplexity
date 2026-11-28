@@ -210,6 +210,7 @@ uniform float uMud;
 varying float vRaise;
 varying vec2 vBlade;
 uniform float uTileGain;
+uniform vec3 uShade;
 #ifdef CRUSTED
 uniform sampler2D tRime;
 uniform sampler2D tRimeNh;
@@ -328,7 +329,7 @@ void main() {
   vec2 rsz = (rz.rg - 0.5) * 1.6 * saltOn;
   bump = bump * (1.0 - 0.8 * saltOn) + w.x * vec3(0.0, rsx.y, rsx.x) + w.y * vec3(rsy.x, 0.0, rsy.y) + w.z * vec3(rsz.x, rsz.y, 0.0);
   #endif
-  vec3 nb = normalize(nr - (bump - nr * dot(bump, nr)) * (1.0 - 0.7 * horn));
+  vec3 nb = normalize(nr - (bump - nr * dot(bump, nr)) * (1.0 - 0.7 * horn) * (1.0 - 0.85 * uMudded * smoothstep(0.03, 0.3, vInfo.z) * (1.0 - smoothstep(0.35, 0.75, vWorld.y - vRaise - uLine))));
   mat3 r = mat3(vR0, vR1, vR2);
   vec3 ng = normalize(r * nr);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -418,6 +419,8 @@ void main() {
   // The claws of the feet are never clean: they are black with the mud they stand in.
   albedo = mix(albedo, vec3(0.03, 0.017, 0.013) * (0.6 + 0.8 * grain), 0.85 * horn * vInfo.z);
   albedo = mix(albedo, albedo * vec3(0.6, 0.46, 0.41), damp * (1.0 - wet) * (1.0 - uMudded));
+  // (One of the herd, seen from far off: darker than the salt it walks on, or it is one more pale stone on it.)
+  albedo *= uShade;
   // The stuck one's head is the wettest of it: it has been under and come up again.
   float headWet = uMudded * smoothstep(0.5, 0.82, vRest.x / uPic.x) * (1.0 - horn);
   albedo = mix(albedo, vec3(0.15, 0.09, 0.07) * (0.5 + 0.8 * grain), 0.55 * headWet);
@@ -471,6 +474,8 @@ void main() {
   rough = mix(rough, min(rough, 0.6), 0.8 * near1 * (1.0 - 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0)));
   #endif
   if (vRaise > 0.0) rough = mix(max(rough, 0.5), mix(0.72, 0.96, smoothstep(0.3, 0.7, clod)), carried);
+  // One stuck in mud shows the root of a leg as it rears, and the hide there is pulled long: it wears the mud whole, with no grain to be drawn out into streaks.
+  albedo = mix(albedo, vec3(0.062, 0.046, 0.037) * (0.75 + 0.5 * patchy), 0.92 * uMudded * smoothstep(0.03, 0.3, vInfo.z) * (1.0 - horn) * (1.0 - smoothstep(0.35, 0.75, wy - uLine)));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it: the belly and the insides of the legs are red brown, not black.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * vec3(0.72, 0.42, 0.34) * (0.5 - 0.5 * ng.y) * skyOpen(vWorld) * (1.0 - 0.6 * uMudded);
@@ -500,8 +505,10 @@ void main() {
   float curl = max(0.3, 1.15 * uCurl + 0.16 * sin(uSeconds * (1.3 + 1.2 * fract(a)) + a) + 0.05 * sin(uSeconds * 3.3 + a * 2.3));
   // They hang: whatever way the head is held, each bends toward the ground under it.
   vec3 down = normalize(transpose(mat3(uHead)) * vec3(0.0, -1.0, 0.0));
-  vec3 dir = normalize(iOut + vec3(0.5, 0.35, 0.0) * uSplay + down * (0.9 * uHang + uDroop));
-  vec3 c = down + vec3(-0.25, 0.0, -0.25 * iOut.z);
+  // On one that wades they are the fingers of a spread hand: each goes out to its own side of the lip, and its tip turns out, not in.
+  float wading = 1.0 - smoothstep(0.6, 0.9, uTint);
+  vec3 dir = normalize(iOut * vec3(1.0, 1.0, 1.0 + 1.3 * wading) + vec3(0.5, 0.35, 0.0) * uSplay + down * (0.9 * uHang + uDroop));
+  vec3 c = down + vec3(-0.25, 0.0, mix(-0.25, 0.45, wading) * iOut.z);
   vec3 bend = normalize(c - dir * dot(c, dir));
   curl *= 1.0 + 0.5 * uHang;
   float t = curl * s;
@@ -513,7 +520,7 @@ void main() {
   vec3 n2 = cross(tangent, n1);
   // Thick where it leaves the lip, a long taper, a blunt tip.
   float knuckle = exp(-pow((s - 0.3) / 0.05, 2.0)) + 0.7 * exp(-pow((s - 0.58) / 0.045, 2.0));
-  float radius = iShape.y * (mix(0.035, 0.1, uHang) + 0.9 * pow(1.0 - s, mix(mix(1.15, 0.7, uHang), 0.22, 1.0 - smoothstep(0.6, 0.9, uTint)))) * (1.0 + 0.06 * sin(s * 23.0 + a) + mix(0.16, 0.34, 1.0 - smoothstep(0.6, 0.9, uTint)) * knuckle * (1.0 - uHang) + uHang * (0.22 * sin(s * 11.0 + a * 5.0) + 0.14 * sin(s * 29.0 + a * 2.0)));
+  float radius = iShape.y * (mix(0.035, 0.1, uHang) + 0.9 * pow(1.0 - s, mix(mix(1.15, 0.7, uHang), 0.62, wading))) * (1.0 + mix(0.06, 0.1, wading) * sin(s * mix(23.0, 34.0, wading) + a) + mix(0.16, 0.22, wading) * knuckle * (1.0 - uHang) + uHang * (0.22 * sin(s * 11.0 + a * 5.0) + 0.14 * sin(s * 29.0 + a * 2.0)));
   vec3 rim = n1 * position.y + n2 * position.z;
   // Where it has gone under the mud it is not there: a tube pressed flat on the surface draws as specks at a low lens.
   float sunk = smoothstep(0.0, 0.5 * radius + 0.004, uFloor - (uHead * vec4(centre, 1.0)).y);
@@ -521,7 +528,7 @@ void main() {
   world.y = max(world.y, uFloor + 0.004 * position.y * (1.0 - sunk));
   vWorld = world.xyz;
   // The end of a blunt finger faces along it, not out from it: without this the tip of one that points at the lens takes the sky at a skim and stands white.
-  vec3 facing = rim + tangent * (1.3 * smoothstep(0.7, 1.0, s) * (1.0 - smoothstep(0.6, 0.9, uTint)));
+  vec3 facing = rim + tangent * (1.3 * smoothstep(0.7, 1.0, s) * wading);
   // The middle of an end has no way out from the line: it faces along it. (Left without one, it has no direction at all, and the end of a finger
   // seen from behind stood on the muzzle as a white tooth.)
   if (dot(facing, facing) < 1e-6) facing = s > 0.5 ? tangent : -tangent;
@@ -557,7 +564,7 @@ void main() {
   albedo = mix(albedo, vec3(0.1, 0.075, 0.06), 0.5 * smoothstep(0.45, 0.7, vnoise(vec2(s * 9.0 + vLook.z * 30.0, vLook.y * 1.5))));
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
   // One that wades rakes the mud all day: they carry it when the head comes up, thinner toward the root.
-  wet = max(wet, (0.55 + 0.45 * smoothstep(0.08, 0.4, s)) * (1.0 - smoothstep(0.6, 0.9, uTint)));
+  wet = max(wet, (0.25 + 0.75 * smoothstep(0.4, 0.85, s)) * (1.0 - smoothstep(0.6, 0.9, uTint)));
   albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.45 * wet);
   // The mud they rake clings to them in clots, thickest toward the tips.
   albedo = mix(albedo, vec3(0.1, 0.064, 0.05) * (0.6 + 0.8 * groove), wet * (1.0 - uHang) * smoothstep(0.3, 0.55, vnoise(vec2(s * 7.0 + vLook.z * 40.0, vLook.y * 1.2)) + 0.35 * s));
@@ -571,41 +578,52 @@ void main() {
   albedo *= mix(vec3(1.0, 0.8, 0.62), vec3(1.0), smoothstep(0.6, 0.9, uTint));
   // Fingers of hide, not horn: the brown of the animal, and the red of the liquid mud where they carry it.
   float wade = 1.0 - smoothstep(0.6, 0.9, uTint);
-  albedo = mix(albedo, mix(vec3(0.165, 0.127, 0.088) * (0.6 + 0.6 * groove) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.058, 0.026, 0.017) * (0.75 + 0.6 * groove), wet), wade);
+  // (Paler than the wet hide they hang from, ringed where they grew and grooved along; the mud they stand in is on the last third.)
+  float grown = 0.5 + 0.5 * sin(s * 34.0 + vLook.z * 40.0);
+  // (Hide, and it folds across like the hide of a trunk: a dark crease every two fingers, none straight, none whole round.)
+  // (A line and not a band: bands of dark and pale read as the stripes of a tiger.)
+  float folds = 1.0 - smoothstep(0.86, 0.98, sin(s * 150.0 + 14.0 * vnoise(vec2(vLook.y * 1.1 + vLook.z * 20.0, s * 9.0))));
+  folds = mix(1.0, folds, wade * smoothstep(0.3, 0.6, vnoise(vec2(vLook.y * 0.9 + vLook.z * 11.0, s * 6.0)) + 0.1));
+  albedo = mix(albedo, mix(vec3(0.092, 0.068, 0.05) * (0.5 + 0.55 * groove + 0.3 * ring) * (0.72 + 0.28 * grown) * (0.6 + 0.4 * folds) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.042, 0.021, 0.015) * (0.75 + 0.6 * groove), wet), wade);
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   // (On one that wades they are wet with mud, not with water: no white sheen stands on them.)
   float rough = mix(0.95, mix(0.9, mix(0.93, 0.58, smoothstep(0.6, 0.9, uTint)), clamp(groove * ring * 2.0, 0.0, 1.0)), wet);
+  rough = mix(rough, 0.92, wade);
   rough = mix(rough, 1.0, wade * 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.0));
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   // The head stands over them and shuts off most of the sky: darkest at the lip, more open toward the tips.
-  occ *= mix(1.0, mix(0.38, 0.72, s), wade);
+  occ *= mix(1.0, mix(0.38, 0.72, s) * (0.75 + 0.25 * folds), wade);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   c = clamp(c, 0.0, 8.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
-const FEELER_RINGS = 14;
-const FEELER_SIDES = 9;
-let feelerTube: THREE.BufferGeometry | null = null;
-function tube(): THREE.BufferGeometry {
-  if (feelerTube) return feelerTube;
+// Two tubes: one for those the lens stands by, with rings enough for the bend to be a curve and the growth rings to stand in its
+// outline, and a plain one for the herd.
+const feelerTubes: (THREE.BufferGeometry | null)[] = [null, null];
+function tube(fine: boolean): THREE.BufferGeometry {
+  const made = feelerTubes[fine ? 1 : 0];
+  if (made) return made;
+  const rings = fine ? 36 : 14;
+  const sides = fine ? 12 : 9;
   const position: number[] = [];
   const index: number[] = [];
-  for (let i = 0; i < FEELER_RINGS; i++) {
-    for (let j = 0; j < FEELER_SIDES; j++) {
-      const a = (j / FEELER_SIDES) * Math.PI * 2;
-      position.push(i / (FEELER_RINGS - 1), Math.cos(a), Math.sin(a));
-      if (i < FEELER_RINGS - 1) {
-        const p = i * FEELER_SIDES + j;
-        const q = i * FEELER_SIDES + ((j + 1) % FEELER_SIDES);
-        index.push(p, q, p + FEELER_SIDES, q, q + FEELER_SIDES, p + FEELER_SIDES);
+  for (let i = 0; i < rings; i++) {
+    for (let j = 0; j < sides; j++) {
+      const a = (j / sides) * Math.PI * 2;
+      position.push(i / (rings - 1), Math.cos(a), Math.sin(a));
+      if (i < rings - 1) {
+        const p = i * sides + j;
+        const q = i * sides + ((j + 1) % sides);
+        index.push(p, q, p + sides, q, q + sides, p + sides);
       }
     }
   }
-  feelerTube = new THREE.BufferGeometry();
-  feelerTube.setAttribute('position', new THREE.BufferAttribute(new Float32Array(position), 3));
-  feelerTube.setIndex(index);
-  return feelerTube;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(position), 3));
+  geometry.setIndex(index);
+  feelerTubes[fine ? 1 : 0] = geometry;
+  return geometry;
 }
 
 export interface Look {
@@ -615,6 +633,8 @@ export interface Look {
   wet: number;
   /** 1 for the one stuck in grey mud. */
   mudded?: number;
+  /** What the dry hide is darkened by, red green blue; nothing when not given. For the herd in the wide views. */
+  shade?: [number, number, number];
   /** 0 a live one. A dead one is grown over with salt, the hide dark and dried where it shows through. */
   crust?: number;
   /** How many thin feelers hang from its lip in place of the hand of thick ones. */
@@ -698,6 +718,7 @@ export class Beast {
         tHideNh: { value: ctx.assets.texture(look.tile === 'hair' ? 'mat/hairhide-nh.png' : look.tile === 'mud' ? 'mat/mudhide-nh.png' : 'mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
         uTile: { value: look.tile ? (look.cover ?? 0.8) : 0 },
         uTileGain: { value: look.tile === 'mud' ? 0.8 : 1.0 },
+        uShade: { value: new THREE.Vector3(...(look.shade ?? [1, 1, 1])) },
         uPic: { value: new THREE.Vector4(2.5 * lx, -2.14 * lx, 0.76 * lx, -1.24 * lx) },
         uBones: { value: this.bones },
         uK: { value: b.k },
@@ -773,14 +794,14 @@ export class Beast {
     // The first of the row that an animal asks to go without are drawn with no thickness: nothing of them reaches the frame.
     for (let i = 0; i < Math.min(look.skip ?? 0, lip.length); i++) shape[i * 4 + 1] = 0;
     const geometry = new THREE.InstancedBufferGeometry();
-    geometry.index = tube().index;
-    geometry.setAttribute('position', tube().getAttribute('position'));
+    geometry.index = tube(!!look.coat).index;
+    geometry.setAttribute('position', tube(!!look.coat).getAttribute('position'));
     geometry.setAttribute('iAt', new THREE.InstancedBufferAttribute(at, 3));
     geometry.setAttribute('iOut', new THREE.InstancedBufferAttribute(out, 3));
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.3) : 1 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.3) : look.shade ? 0.75 : 1 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
