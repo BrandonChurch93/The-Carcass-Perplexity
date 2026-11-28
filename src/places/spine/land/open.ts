@@ -153,6 +153,8 @@ void main() {
   vec2 snowQx = dFdx(snowQ);
   vec2 snowQy = dFdy(snowQ);
   float footprint = length(fwidth(vWorld.xz));
+  // (Seen low a pixel is long down the view and thin across it: the mean of its two ways tells how far off a print still shows.)
+  float printSpan = sqrt(length(dFdx(vWorld.xz)) * length(dFdy(vWorld.xz)));
   float slabTone = 1.0;
   // (The face before its slabs are cut: what is heaped on the rock lies on this.)
   vec3 nFace = n0;
@@ -353,12 +355,21 @@ void main() {
     }
 #if KIND == 0
     // The prints of the herd: a line of pits to the mouth, seen as far as a pit is wider than a pixel.
-    float seen = smoothstep(0.3, 0.08, footprint);
+    float seen = smoothstep(0.12, 0.04, printSpan);
     if (seen > 0.0) {
       vec3 p = prints(vSL);
       g += 1.6 * p.yz * seen;
-      snowOcc *= 1.0 + 0.5 * min(p.x, 0.0) * seen;
+      snowOcc *= 1.0 + 0.66 * min(p.x, 0.0) * seen;
       snowTint *= mix(vec3(1.0), vec3(0.86, 0.93, 1.05), clamp(-p.x, 0.0, 1.0) * seen);
+    }
+    // The trail itself, seen farther than any one print: the snow the herd has trodden is packed, a shade greyer and bluer than the
+    // drift beside it, in a ragged band. (Seen low from beside the dead one a print is thinner than a pixel a few metres on, and the
+    // line that leads to the body was lost.)
+    if (vSL.x > TRAIL_FROM) if (vSL.x < MOUTH_S + 6.0) {
+      float off = abs(vSL.y - trailAt(vSL.x)) + 0.7 * (vnoise(vSL * vec2(0.5, 1.9)) - 0.5) + 0.3 * (vnoise(vSL * vec2(2.1, 4.3) + 3.0) - 0.5);
+      float trod = smoothstep(0.7, 0.2, off) * smoothstep(0.6, 0.15, printSpan) * (0.4 + 0.6 * vnoise(vSL * vec2(0.9, 0.6) + 5.0));
+      snowOcc *= 1.0 - 0.26 * trod;
+      snowTint *= mix(vec3(1.0), vec3(0.9, 0.95, 1.04), trod);
     }
 #endif
     // (The pack's slopes are on its own two level ways: back to the world's.)
