@@ -230,7 +230,7 @@ void main() {
       vec4 ring = uRing[j];
       float fj = float(j);
       // The long ones, as long as the swell that makes them is wide, cross the whole lake.
-      float reach = j < 4 ? 40.0 + 45.0 * fj : 350.0 + 550.0 * (fj - 4.0);
+      float reach = j < 4 ? (40.0 + 45.0 * fj) * (1.0 + 1.6 * uWake * (1.0 - uLeave.x)) : 350.0 + 550.0 * (fj - 4.0);
       // A length that has died on the way here is not counted.
       if (from > 3.2 * reach) continue;
       // Nor one too short for the pixels here: it would be no more than a softer mirror.
@@ -662,9 +662,12 @@ void main() {
     // Under the long lens the wall's gold lies on the water in long broken streaks, and the water between them is dark.
     if (uPlateTone.w > 1.5) {
       float held = dot(refl, vec3(0.3, 0.5, 0.2)) / 0.2;
-      refl *= clamp(pow(max(held, 1e-4), 0.7), 0.4, 1.5);
+      refl *= clamp(pow(max(held * 1.25, 1e-4), 0.9), 0.4, 1.9);
+      // Where it holds the lit wall it holds it as gold: the pale of the stone is lost in water, its warmth is not.
+      float gilt = smoothstep(0.55, 1.3, held);
+      refl = max(mix(vec3(dot(refl, vec3(0.3, 0.5, 0.2))), refl, 1.0 + 0.9 * gilt), 0.0) * (1.0 + 0.5 * gilt);
       // Between the streaks the water holds the sky over the wall: a cool slate, not the wall's brown let run.
-      refl = mix(refl, skyRadiance(normalize(vec3(rd.x, 0.6, rd.z))) * vec3(0.2, 0.25, 0.32), 0.6 * (1.0 - smoothstep(0.45, 1.1, held)));
+      refl = mix(refl, skyRadiance(normalize(vec3(rd.x, 0.6, rd.z))) * vec3(0.15, 0.2, 0.26), 0.7 * (1.0 - smoothstep(0.3, 0.8, held)));
     }
     // Whatever stands in the water or at its edge, drawn once more from under it.
 #if EYE_MIRRORED
