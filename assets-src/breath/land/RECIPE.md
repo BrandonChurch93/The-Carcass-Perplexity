@@ -43,35 +43,13 @@ Takes: 1 made, take 1 kept. The data picture was computed twice by the script: t
 Why this one: the shingle and grit of the near ground, each stone distinct, where the plate had only soft blots.
 Date: 2026-11-26
 
-## `public/assets/breath/land/travface.jpg` and `public/assets/breath/land/travface-h.png`
+## `public/assets/breath/land/ribskin-n.jpg` and `public/assets/breath/land/ribskin-m.jpg`
 
-The broken bedded face of a hoop of the main shaft: colour (sRGB), 1536 by 1024, and its height in one channel (pale beds stand out, dark recesses lie back). It is laid on the face of every hoop 6 m wide and 4 m tall by metres along the hoop and metres over its middle, mirrored at each repeat, and on a broken end by metres from the axis. The same height, made coarse (96 by 64), is the data module `src/places/breath/land/hoopbeds.ts`, which steps the mesh of the hoop in and out, so that a ledge of the mesh is a pale bed of the picture.
+The sculpted skin of a rib of the main shaft, 2048 by 512 each, unwrapped along the rib (32 m to a repeat) and once round it with no mirror, closing on itself both ways. `ribskin-n.jpg`: the lean of the skin along and round the rib in red and green, the baked occlusion in blue. `ribskin-m.jpg`: height in red, where the rust runs in green, the hollows in blue. The same height, coarse (256 by 64), is the data module `src/places/breath/land/ribrelief.ts`, which shapes the mesh. No colour is stored: the hoops' shader makes it.
 
-Made by: the image model behind `generate_image` (its default model, through Perplexity), then `assets-src/breath/land/make-hoop.py` on the system Python 3 with numpy, pillow and scipy.
-From: `assets-src/breath/land/src/travface.jpg`, the generated sheet, kept as a JPEG of quality 95. Picture passed to the model with the prompt: `references/approved/3-breath/breath-4-down-the-shaft.jpg`.
-Prompt or command: the prompt below, then `python3 assets-src/breath/land/make-hoop.py` from the repository root (it writes both sheets, both height pictures and `src/places/breath/land/hoopbeds.ts`).
-
-```
-A material texture photographed square on, orthographic: the broken vertical face of a thick bank of travertine, a patch about 2 metres wide: many thin horizontal beds of cream, ivory and bone-white flowstone stacked one on another, each two to eight centimetres thick and none the same, running level from the left edge to the right edge, their edges chipped and snapped so that some beds stand out as small ledges and others are eaten back into dark shadowless recesses; porous pitted layers full of small holes and vugs between denser smooth layers; rust-orange and brown iron stain seeping along some seams and running a little down from them; a trace of grey-green algae in a few damp hollows. Flat, even, shadowless overcast light so that no side is brighter than another, no cast shadows. The surface fills the whole frame edge to edge at one uniform scale as a seamless tileable texture. The reference image is the place this material belongs to: take the colour and character of its pale mineral arches from it and nothing of its composition. Photographic, real grain and micro detail, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no plants.
-```
-
-Takes: 1 made, take 1 kept.
-Why this one: the hoops were smooth tubes with beds drawn as a lean of the normal; this gives them real beds on edge, with pits and iron stain, and a height that the mesh and the light both use.
-Date: 2026-11-27
-
-
-## `public/assets/breath/land/travskin.jpg` and `public/assets/breath/land/travskin-h.png`
-
-The outer skin of a hoop of the main shaft: colour (sRGB), 1024 by 1024, and its height in one channel. It is laid on the top and the belly of every hoop and, at part strength, on the stretches of the face where the outer skin is whole, 3.2 m a repeat, mirrored at each repeat.
-
-Made by: the image model behind `generate_image` (its default model, through Perplexity), then `assets-src/breath/land/make-hoop.py` on the system Python 3 with numpy, pillow and scipy.
-From: `assets-src/breath/land/src/travskin.jpg`, the generated sheet, kept as a JPEG of quality 95. Picture passed to the model with the prompt: `references/approved/3-breath/breath-4-down-the-shaft.jpg`.
-Prompt or command: the prompt below, then `python3 assets-src/breath/land/make-hoop.py` from the repository root (it writes both sheets, both height pictures and `src/places/breath/land/hoopbeds.ts`).
-
-```
-A material texture photographed straight down from directly above, orthographic: a patch about 2.5 metres across of the outer skin of a massive old travertine flowstone bank: smooth pale ivory and cream mineral with a dull wet sheen, laid down in thin overlapping skins whose edges show as fine wandering contour lines and low rimstone lips, pitted with clusters of small solution holes, crossed by a few hairline cracks, here and there a shallow scar where a flake of the outer skin has come off and rougher chalky layers show under it; marbled with rust-orange and brown iron stain in broad soft patches with darker hearts and thin veins. Flat, even, shadowless overcast light so that no side is brighter than another, no cast shadows. The surface fills the whole frame edge to edge at one uniform scale as a seamless tileable texture. The reference image is the place this material belongs to: take the colour and character of its pale mineral arches from it and nothing of its composition. Photographic, real grain and micro detail, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no plants.
-```
-
-Takes: 1 made, take 1 kept.
-Why this one: the top of a hoop is flowstone skin, not broken beds: rimstone lips, solution pits and marbled rust at the scale of a hand.
+Made by: `assets-src/breath/land/rib_bake.py` (numpy for the sculpt, Blender 5.0.1 as `bpy` with Cycles on the CPU for the occlusion, baked from the sculpted rib itself), then `assets-src/breath/land/rib_pack.py` (numpy, pillow).
+From: nothing but the two scripts; no picture, no model, no download.
+Prompt or command: `THREADS=4 AO_SAMPLES=16 /home/user/bpyenv/bin/python assets-src/breath/land/rib_bake.py 7 rib-a`, then `python3 assets-src/breath/land/rib_pack.py rib-a`, both from the repository root.
+Takes: 1 made (seed 7), take 1 kept.
+Why this one: the hoops were banded tubes whose beds came from a generated sheet laid mirrored; this is one skin made for the rib's own shape, with plates, cracks, breaks across it and cords under its belly, and an occlusion that knows them.
 Date: 2026-11-27

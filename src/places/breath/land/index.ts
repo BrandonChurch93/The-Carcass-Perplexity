@@ -9,9 +9,10 @@ import { createCliff } from '../air/sky';
 import { bakeNear } from './field';
 import { createRock, type Surface } from './rock';
 import { block } from './ribs';
-import { FACE, archTop } from './arches';
+import { archTop } from './arches';
 import { buildWall } from './wall';
 import { collar, heap, mergeGeometries, open, talusHeight } from './shapes';
+import { RELIEF_LONG, RELIEF_RADIUS } from './ribrelief';
 import { farSheet, midSheet } from './sheets';
 import { scatter } from './stones';
 
@@ -95,15 +96,9 @@ export function create(ctx: Context): Piece {
   };
   const built = buildWall();
   const wall = rock.pit(0, seep);
-  // The hoops: the sheet of a broken bedded face and the sheet of the outer skin (assets-src/breath/land/RECIPE.md), mirrored at each repeat.
-  const sheet = (name: string, mean: [number, number, number], metres: number, relief: number): Surface => ({
-    colour: mirrored(`land/${name}.jpg`, 'colour', 1),
-    data: mirrored(`land/${name}-h.png`, 'data', 1),
-    mean,
-    metres,
-    relief,
-  });
-  const arches = rock.hoop(sheet('travface', [0.385, 0.259, 0.159], FACE.wide, 0.2), FACE.tall, sheet('travskin', [0.467, 0.29, 0.157], 3.2, 0.2));
+  // The hoops: the two pictures of the sculpted skin of a rib (assets-src/breath/land/RECIPE.md).
+  const skin = (name: string): THREE.Texture => ctx.assets.texture(`land/${name}.jpg`, { kind: 'data', repeat: true, anisotropy: 1 });
+  const arches = rock.hoop(skin('ribskin-n'), skin('ribskin-m'), RELIEF_LONG, 2 * Math.PI * RELIEF_RADIUS);
   const shaft = new THREE.Group();
   shaft.add(mesh(built.wall, wall));
   const rubble = rock.bone(0.55, [0.45, 0.41, 0.35], [0.2, 0.18, 0.15], surface('scree', [0.287, 0.229, 0.184], 2.2, 1.2), THREE.DoubleSide);
