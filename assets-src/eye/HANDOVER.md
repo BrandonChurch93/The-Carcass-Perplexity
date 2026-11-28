@@ -1,84 +1,74 @@
-# The Eye, frames 8305 to 9540: hand-over of the second wave of the wide polish
+# The Eye, frames 8305 to 9540: hand-over of the third wave of the wide polish
 
-Branch `agent/p7-eye-polish`, from `origin/main` at 4e84d7b. Written by the unit's lead at the end of the wave. Shots: eye-01 8305 to 8519 (key 8412), eye-02 8520 to 8680 (8600), eye-03 8681 to 8841 (8761), eye-04 8842 to 9164 (9003), eye-05 9165 to 9540 (9221). Approved pictures: `references/approved/6-eye/eye-0` to `eye-4`. The lead's machine cannot push; every state reached origin as a bundle pushed by the Builder.
+Written by the lead of the third wave at minute 206 of 240, from `agent/p8-eye-polish` at 7176230 (base `origin/main` 967bb1c). What came after that minute is in section 6. Builders: ground (`land/`, `skeleton/`), fluid (`lake/`), sky (`air/`, `shared/`), life (`drinkers/`). Keys: eye-0 is frame 8412, eye-1 9003, eye-2 8600, eye-3 8761, eye-4 9221.
 
 ## 1. Done, part by part
 
-Each line names the merge commit on this branch, then the builder's commit it took.
+**Lake (fluid).**
+- 1153964 (V1, ae1368d): the mats at 8412 are flats with pale pools between, no longer combed tongues.
+- 6f5184b (1ba046f): the mirror's level far out is softer. This ended the pale row in the box at the right of 9003 (x 83 to 100 percent, y 25 to 42 percent, uhd final). The row was drawn by part `eye/lake` alone, not by the engine.
+- 63a6af2 (V2, 275c92e): the swell at 9221 sheds in sheets with runnels; rings reach the near water; 8600 has two sliding mat beds, pale slabs, a wet line and bubble threads.
+- 2f230d3 (V3, 1bbacbf): the gold of the lit wall is back in the water at 9221, ring trains are torn and die with distance; the deep at 8761 is black-blue beyond a rounding ledge; no row in the 9221 box.
+- 3df14a0 (cf863df): the bed by the shore reads through ground's `shoreLay` (`land/lay.ts`).
+- 7176230 (1badd81, picked alone): no bubble threads in the shore shot. They stood as white squiggles over the stones at 9003.
 
-Land and skeleton (ground builder, branch `agent/p7-eye-ground`)
-- 1b799b8 (57a16c9): the large clean blocks in the lower corners of 8412 and 8305 are gone, in their place low scree and fractured slabs; the smooth egg pebbles at 9003 are gone; every sheet of the land is read at one level (`land/lod.ts`), which is both the cure of the land's part of the repeat fault and a cut in cost.
-- 238042e (b78a6eb): the skeleton at 8761 and 8841 is a whole cage of pale bone, larger, half sunk, with contact shade; white water in the stream; the outcrop relief is baked into three pictures, so each render starts about 7 s sooner (9.9 s to 0.02 s on the builder's machine). The shore at 9003 is byte for byte what it was before this merge.
-- 8d9afbe (339ab01): the skull at 8761 and 8841 is blunt, with cheeks, a hollow of shade, the notch of the nose and the jaw's line; stouter limbs; the grain of the bone coarser and weaker, the stains stronger; the stream is white in lumps at short riffles with glass between them.
+**Ground and skeleton (ground).**
+- eda93fc (V1, e7b9dd0): a bedrock bench at the lower left of 8412 with the stream on it, one crag (`land/knob.ts`).
+- e7da5bb (V2, 0eb47da): the left crag split along breaks with fallen slabs, a right crag, talus; the stream in white bars; the skeleton sculpted in Blender (`skeleton/sculpt.ts`, `assets-src/eye/skeleton/make_bones.py`).
+- 3df14a0 (V3b, 0338cde): ribs flat and pale, vertebrae with blades; the shore sheet at 9003 laid in turned and shifted bands (`SHORE_BANDS` on in `land/lay.ts`); the stream scrap under the bench gone; knob cuts lower.
 
-Lake (fluid builder, branch `agent/p7-eye-fluid`)
-- 24b258f (824fca6): the lake takes one footprint at the top of `main` and reads every picture with `textureLod`. This was the cause of the repeat fault: derivatives and implicit level reads under branches taken pixel by pixel.
-- 9b92897 (ff83a77): each frame's lake program holds only what that frame uses, which cut the lake by a third at 8412; the mirrored seam of the mats is gone; the far water at 8600 gives back high sky instead of a cut-off reflection.
-- c9b6aa5 (110a5b4): the deep at 8761 has a true surface, a mirror far off and a look into the water near the lip, over a stone wall; the risers are sunk before eye-04; the deep in the climb has no blotches and no radial rim; the far water at 8600 is dark blue with rings at the legs; the rings at 9003 are out of round.
-- b60cc57 (c3c5c85): the top of the wall under the lip at 8761 is pale in the sun, with weed hanging from the lip; the bed at 9003 is small stones in place of flat slabs; the tresses of the mats are bent by the ground, with bunches of olive and ochre among the rust; the pale rim of the deep varies in width.
+**Drinkers (life).**
+- c37578e (V1, c67a41b): the herd at 8412 walks on planted feet (`drinkers/gait.ts`); footfalls go into `ctx.laps` and ring the water.
+- 70ceac0 (V2, bc3478a): the herd's added sun is out and the hides are pale in the rig's shade, by `/root`'s ruling. Mean brightness of the herd at 8412: 119.2 before, 102.6 after, 99.3 in `eye-0`. At 9003: four builds, mottled hides, wet dark legs, shifting weight, falling drops (`drinkers/drips.ts`).
+- 988d3a2 (V3b, 7a77274): the two at 9221 are skinned bodies with heads, no longer cards. Their footfalls are not in `ctx.laps` and they are left out of the lake's mirror, for cost.
 
-Air and far pictures (sky builder, branch `agent/p7-eye-sky`)
-- 9d7096c (7e2e375): the rig's plate reads with explicit gradients (repeat fault, sky's part).
-- 5d8a9e0 (ed4dd2a): the eye-03 far wall taken from the approved picture, standing level.
-- 7a593c1 (922809c): the brow's shade falls off, so the round lit patch at 9420 is gone; mist banks with a torn top, cool sky light, a veil at the eye-03 wall.
-- a580f09 (d434545): the shade is carried cell to cell from the sun in `bakeGrid` (`shared/rig.ts`), so its edge in the climb is neither stepped nor ruled; climb banks thinner and softer; mist light cooler; the far bank at 8600 fuller.
-- dd320ac (1dcef75): the far rim picture at 8305 is carried on by one generated end (`far-wide.jpg`, recipe beside it), so the mirror seam on the far right cliff is gone; sky glow gold, not pink; the bank at 8761 in the wall's shade; the mist pass cheaper (early outs, 10 and 5 steps).
-- 385c76c (bf26adf): `drawn` of the eye-03 plate in `air/plates.ts` from 2.8 to 1.25, so the cliff lies in the water at its own height and the upright smear in the mirror at 8761 is gone. Found by the fluid builder.
-- e31e85c (4ef377d): seen from above, a low veil of mist in soft patches lies on the shallows and the mats round the pool from 9450 and laps its rim; it is gone before the pull (9505 is clear).
+**Air and far walls (sky).**
+- 99085e2 (V1, 5c807a7): the mist at 8600 and 9221 is a bank with a torn top; the wall behind it is softened.
+- a5ea200 (V2, 5179a09): the far wall of eye-4 is cut into three layers (scree foot, buttresses, far face) on cylinders 150 m apart, in a sky program of its own (`WALL_LAYERS`); the bank lower and warmer; cirrus drifts.
+- 98ee2bc (V3, 8014f23): wisps curl off the bank at 8600; a thicker sheet at the waterline of 9221; the veil from 9450 in torn patches.
 
-Drinkers (life builder, branch `agent/p7-eye-life`)
-- da2e616 (58ae7e9): pale creased hide on the four bodies at the shore.
-- a195c1c (6eb6047): a herd of 26 pale bodies at 8412 and 8500 in place of the small dark cards; cream hide, a resting leg, dark wet pasterns and a waterline at 9003; an upright animal at 8600. The necks of eye-05 keep the cards' geometry.
-- 1318389 (008d35d): one near pale animal with its head down at 8600, as in the approved picture; the trunk leans over the bearing hind leg and the flank breathes at 9003; herd legs and bellies darker.
-- 69d9c28 (dc5db0c): the animal at 8600 stands on the bed with the water half up the cannon and a dark waterline; skull and muzzle fuller; shoulder blade, ribs and hip as relief under the hide; a saddle of dirt; the three at 9003 change the resting leg at different times (9073, 9138). 9221 untouched.
-- c4dcee7 (5b619e1): the four animals of the shore shot, 8842 to 9164, carry streaks of old mud down ribs and haunch and thin healed scars, as tone. The last merge of the wave.
-
-Repeat fault. On the test machine (browser 147.0.7727.15, draft, 960 by 540) the baseline gave 6 results from 6 draws on each of 8305, 8412, 8600, 8761, 9003, 9221, 9300. At e31e85c, the state before the last merge, every one of those seven frames and 9450 gave 1 distinct byte result in each of two sets of six draws, and the two sets equal each other. The last merge (c4dcee7: tone on the animals of 8842 to 9164, no reads and no derivatives) was drawn there on 9003 and 8900 only, with 1 result twice on both; the other six frames of the fault were last drawn on e31e85c, not on the final head. Every set was draft tier at 960 by 540.
-
-Cost, lead's machine, uhd draft, one sample, whole frame, before the wave to c4dcee7: 8305 22.51 to 18.12 s, 8412 20.41 to 15.84 s, 9003 22.80 to 20.18 s, 9221 21.79 to 17.25 s. No frame measured costs more than before the wave; the lake is still the largest part.
+**Numbers at 7176230.** Guards 1241, 4409, 7234 byte equal to their before files at every report. Cost in seconds (uhd draft, before then now, cap): 8305 15.21, 15.67, 16.73; 8412 14.77, 15.21, 16.25; 9003 19.38, 20.06, 21.32; 9221 16.04, 17.59, 17.64. Size added: 0.81 MB of 12. Measures: all green where run (M3 at 8412 1.52, 9003 1.98, 8600 2.24 after report 2); see section 6 for 8761 and 9221.
 
 ## 2. Still wrong, worst first
 
-1. The animals. At 9003 the three stand small in the frame against the approved picture, where they fill it; the hide is still clean and even, the relief of rib and hip faint, the upright head a blunt wedge. They hold as stills but read as models when they move. The herd at 8412 is 26 like bodies with plain hides. Nothing walks: at 8580 the animals stand while the lens moves, which the film critics read as feet sliding. No footfall splash.
-2. The mats and the near shore of eye-01. At 8412 the mats are long parallel tongues of flame colour, brighter and more combed than approved; the last version bent the tongues, but all together, so the look is the same. The scree in front is a field of like stones, and the lower corners have loose stones and no low broken outcrop with the stream running through it, as approved has. The stream is thin, and its glass between the white lumps is hard to see.
-3. Eye-05, 9221 to 9365. The far wall is still one flat picture on a cylinder; cave, scree and cliff do not shift against each other as the lens rises. The necks in the foreground are the cards, striped faintly. The swell has no foam line and no wet edge; foam was tried by fluid and dropped as not better.
-4. The climb, 9400 to 9540. On this branch the old flight still runs; the Reveal's branch restages it (see section 5). The veil of mist round the pool from 9450 is new and breaks the drawn rim, but its patches are soft round puffs without wisps, and it has not been seen under the restaged flight. No white flecks of fallen swell at 9500. The motion pop at 9535 to 9546 and the soft cloud ring at 9541 named by the film critics are the flight's and the Reveal's cloud, not cured here.
-5. 8761. The pale wall under the lip and the weed are there now, but the weed is a short fringe, not long strands far down; the skull has a face, but its hollow is a slot and the whole is a squeezed ball; the bones are one even tone; the lake's far edge under the wall still carries a grey band.
-6. 9003, lower third. The bed under the shallow water is small stones now; the near shore above the water is still coarse dark ground with small rubble where approved has pale warm gravel out of focus, and there is no orange growth beyond the animals.
-7. Mist. Banks have torn tops now, but at uhd there are no fine wisps, and the pass costs more at 8412 than at the start of the wave (1.21 s against 0.8 s on the sky builder's machine).
+1. The swell at 9221. It is a glassy mound with drawn streaks and no breaking crest; rings at the right are still regular. From 9330 it reads as a bullseye.
+2. The two animals at 9221. The hide is peach where the herd is cream, the rumps carry hard dark patches, the outlines are sharp where the picture is out of focus, and the backs are seen from higher than in `eye-4`.
+3. The skeleton at 8761. It is small in the frame against `eye-3`, the spine is a row of beads, and it lies on mat, not on rock: the shelf has no craggy rock above the water. The water at the left is bright peach.
+4. The beach at 8412: even grey stones of one size, evenly spread. The left crag is soft and cool grey.
+5. The mist: no crisp wisps at 9221, the bank at 8600 whiter and taller than `eye-2`, its motion small.
+6. The animals at 9003: hind legs all fold alike, smooth cone tails, neck rings too even. The herd at 8412 is still one body shape in knots.
+7. The mats: flat and soft as watercolour at uhd at 8412 and 8600, more rust than amber.
+8. 9472: weather over the pool now, but the pool itself is near empty.
 
 ## 3. Held versions
 
-- ground V1, `agent/p7-eye-ground` bd8be63: over the cost limit, and smeared faces on the slabs at 8305.
-- life V2, `agent/p7-eye-life` f05bb71, and V2b, 52b8e47: at 9221 the two necks became thick ringed stumps with blunt knobs and read as fingers. The rest came in with V2c (6eb6047), which kept the cards there.
-- sky, `agent/p7-eye-sky` d4af72a: the shade march bent the way to the sun and threw a shadow sideways over the drinkers at 9003, who went grey and flat. Cured in d434545, merged.
-- ground V3, `agent/p7-eye-ground` caa2924: the new beach at 9003 was a dark rust-specked mound with a hard outline.
-- ground V3b, `agent/p7-eye-ground` b8ecf5a: the same beach as a flat pale tongue with a cut-out curve, which read as a sticker. V3c (b78a6eb, merged) leaves the lip out.
+- ground V3, `agent/p8-eye-ground` 9379c6c, the shelf rock (`land/shelf.ts`, in the tree and unused): a height field of broken plates that reads as a pink scaled slab with a cut outline laid on the mat, streaked on its steep faces. Worse than the before.
+- life V3, `agent/p8-eye-life` b299e83: the same bodies as V3b at 0.85 s more at 9221, which left no room under the cap. Replaced by V3b.
+- The herd's light is closed for this wave by `/root`: it was called dark in round 29 and bright in round 30, and is logged as contested. Do not change it again without `/root`'s word.
+- Tried and dropped by builders, not to be tried again as they were: foam on the swell (fluid); two sizings of the beach stones (ground); wind ripples on the lake and ear or tail flicks were ruled out by `/root` before the wave.
 
 ## 4. What to try next, for the worst three
 
-1. The animals. First light the shaded flank from one side: flat fill hides every bone and mark at 9003. Bring the lens nearer at 9003 only if a critic's open item names the framing; otherwise work on what the frame shows: a hide map with scars, dirt and bald patches at the scale of the approved picture, ribs and hip as relief that catches the low sun, and a weight change that moves the whole trunk and the far shoulder, not one leg. For the herd, three hide tones and two sizes, and one animal that walks with planted feet at 8580, then a few, each footfall told to the lake so that it rings (the lake already rings standing legs).
-2. The mats and shore of eye-01. The tongues are the comb picture (`tComb` in `lake/bed.ts`, where `EYE_RIM > 0`), which also decides where weed lies (`lies` by `combed`); bending its coordinates bends all tongues together. Let the round `cover` field alone say where weed lies, in patches with pale pools between as in approved eye-0, and keep the comb only as tone inside a patch, each patch turned its own way by `blobs`. Lower the chroma towards the approved amber. In the lower corners build one low broken outcrop each as a height field with eroded joints in `land/outcrop.ts`, rebaked, warm and weathered, with the stream falling through the left one in riffles between stones.
-3. Eye-05. Relief read from the picture's darkness failed (too rough at fine levels, nothing at coarse ones), and one surface gives under 2 px of shift whatever its relief, since the lens moves 130 m at a field of 8 degrees. Cut the eye-05 plate by hand into three layers (far face, buttresses, scree foot), fill the holes, and hang them on cylinders about 150 m apart. Then a thin line of foam and a wet edge where the swell meets the shingle, drawn on the surface only, and real necks in place of the cards (`shotOf` gives 'none' for eye-05).
+1. The swell. It is drawn on a height field in `lake/index.ts`; streaks painted on a smooth mound stay painted. Give the crest its own geometry where the height's slope passes a limit (a folding lip that falls), and let the fall feed the ring trains, so rings start where water lands and not on a ruled spacing. Cost at 9221 is the limit: 17.59 s against 17.64. Win cost first (the ring loop is the lake's dearest read, and the mirror reads the sky program).
+2. The two at 9221. Take the hide colour from the herd's (one constant, in `drinkers/herd.ts`), blur the outline by the lens (the picture's near animals are out of focus), and lower the lens's view of the backs only by moving the animals, never the camera.
+3. The shelf at 8761. A height field under a mat does not read as rock. Sculpt three or four real blocks in Blender as the crags were (`assets-src/eye/land/make_knobs.py`), set them at the lip with the skeleton across them, let the mat lie only in their hollows, and take their tone from the pale wall under water, not from the mat.
 
-After these: the skull from a sculpted profile instead of a squeezed ball; long weed down the wall at 8761; white flecks of the fallen swell at 9500.
+After these: beach stones in clusters with bare gaps and damp dark ones by the water; crisp wisps as separate thin sheets; hind legs and tails at 9003.
 
 ## 5. What a newcomer would trip over
 
-- `src/places/eye/handoff.json` and `src/places/eye/flight.ts` belong to the Reveal's climb builder and are untouched here. They are changed on the Reveal's branch (`agent/p7-reveal-polish`, climb V2 ec04289: flight restaged 9385 to 9540, cut at 310 m, lens lower at a slant, the deep fills the frame 9470 to 9505). So frames 9385 to 9540 drawn from this branch alone show the old flight. To see the join, check the two files out from the Reveal's branch for a look and put them back; never merge them here.
-- The repeat fault shows only on browser 147.0.7727.15. The lead's machine (159.0.8154.6) repeats everything and proves nothing. A shader that reads a picture with an implicit level, or takes `dFdx`, `dFdy` or `fwidth`, under a branch taken pixel by pixel brings the fault back: take one footprint at the top of `main` and read with `textureLod` (never `textureGrad`, which costs).
-- 8305 was the last frame to fail: one level at one to four pixels along the stream line at lower left, in only some draws. It went with the ground builder's removal of the glint branches along the stream bank (57a16c9). Twelve equal draws are good evidence, not proof.
-- Cost is measured with `npm run -s cost -- --frame 8412 --format uhd --tier draft --parts none`; without `--parts none` the tool also draws each part alone and takes the cheapest as the empty frame. The limit of this wave was the number before the wave, not 30 percent more. The lake is still the largest part (6.8 s of 15.9 s at 8412).
-- At 9003 the lip mesh in `land/lip.ts` is wound face down and the coarse ground lies over it. That is the look that was kept: two tries to show a beach there were held. Whoever turns the lip up must bring a beach that beats the coarse ground beside the approved picture.
-- `drawn` in `air/plates.ts` also sets how tall a far wall lies in the water (`farRadianceAt` in `shared/glsl.ts`). A wall made larger there stretches its mirror.
-- The review script copies the last still of a frame even if the render died (it happened once: "Target page, context or browser has been closed"). Look for the `rendered` line of each frame before judging a pair.
-- G8 wants a recipe beside every picture under `public/assets/eye/`, in `assets-src/eye/<folder>/RECIPE.md`. G8 passed at every report.
-- Who holds what: the `look` line of `index.ts` and the far walls are the sky builder's; the stream is the ground builder's; the bed under the water is the fluid builder's. The sky builder's machine lost its sign in to origin at 03:49 UTC and sent bundles until its pushes went through again, by 04:10.
+- `src/places/eye/handoff.json` and `src/places/eye/flight.ts` are the Reveal's `climb` builder's. The lid of cloud in `air/index.ts` (the lines that read `lidAt`, `lidUniforms`, `LID_GLSL`) changes only on the Reveal lead's ask, through the Eye's lead. In this wave the Reveal's lead asked once for `lid.sun` in `handoff.json` and withdrew it; both files are equal to `origin/main`.
+- The Eye's camera ends at 663.5 m and the cut is at 9540 to 9541. Neither moves. No camera path changes.
+- The repeat fault shows only on the pinned browser (Chrome for Testing 147.0.7727.15). Take footprints at the top of `main` and read with `textureLod`.
+- The renderer pays for every line of a shader on every pixel, taken or not. Only `#if` names save time: the layered wall is a second sky program for that reason, and the bubble threads are compiled out of the shore shot (`EYE_SHINGLE`).
+- A change in `shared/glsl.ts` moves lake and drinkers too. The rig changes only by sky, on the lead's word.
+- `ctx.laps` has 22 slots (x, z, strength, offset). The lake's ring loop over them is most of what an animal costs: the two at 9221 are left out of it.
+- The bed by the shore and the beach must read the same laying (`shoreLay` in `land/lay.ts`), or stones part at the waterline at 9003. `SHORE_BANDS` off gives the old single sheet in both.
+- At 9003 the lip mesh in `land/lip.ts` is wound face down and the coarse ground lies over it. It stays so unless a beach is brought that beats the coarse ground.
+- A change to `land/outcrop.ts` or `land/height.ts` needs the bake again: `npx tsx assets-src/eye/land/bake-outcrop.ts`. The knobs and the bones come from Blender scripts under `assets-src/eye/`.
+- G8 wants a recipe beside every picture under `public/assets/eye/`.
+- `npm run -s measure -- --unit eye --only 8761` once ran 22 minutes without ending on the lead's machine (it takes about 4.5). Run it under `timeout`.
+- Cost at 9221 varies by 0.3 s between runs on one machine. Compare pairs drawn back to back.
+- The lead's pushes to origin failed at times (EXIT 128, no sign in); bundles went to `/root` with each report.
+- The before set of this wave lies in `out/work/before/` on the lead's machine (scratch, not committed): preview draft of the five keys, the three guards and seven more frames, hd review of 8412, 8761 and 9003.
 - No em dashes and no exclamation points in any text, and every commit ends with the one trailer.
-- The renderer pays both sides of every branch in a shader, so in the lake only the `#if` names of `variantOf` (`lake/index.ts`, set in `beforeSample`) save time. The lake's measured time also holds the sky's mirror reads.
-- `still` reads `src` live: no edit and no checkout while a render runs.
-- Any change to `land/outcrop.ts` or `land/height.ts` needs the bake run again: `npx tsx assets-src/eye/land/bake-outcrop.ts`.
-- The bed by the shore (fluid's) must stay on the ground's sheet at `xz / vec2(2.0, 1.125)`, or the stones under the water and the stones beside it part at the waterline.
-- `uThin` fades all the air of the place over 9360 to 9462 and multiplies ring and banks inside `mistShape` (`air/index.ts`); only `uMistRound`, the veil seen from above, outlives it. `WIDER` must match `mat/far-wide.jpg`. Lake and drinkers read `RIG_GLSL` and `farRadiance`, so a change in `shared/` moves them too.
-- Eye-05 has no bodies: its necks are cards. In the drinkers, `pose.pelvis[0]` is a yaw.
-- The before set of this wave and the after set drawn from c4dcee7 lie in `out/work/before/` and `out/work/after/` on the lead's machine (preview draft, 1241 4409 7234 and fourteen frames of the Eye, with hd review stills of 8412, 8761 and 9003). They are scratch and not committed. At c4dcee7 the three guard frames are byte for byte their before files and G8 passes.
