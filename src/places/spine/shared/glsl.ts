@@ -84,6 +84,9 @@ const vec3 CANAL_FAR = vec3(${canalFar[0].toFixed(1)}, ${canalFar[1].toFixed(1)}
 // The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
 // ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
 const float EMITTER_CAST = 0.07;
+// How far in the mouth's light holds, in metres squared: at 10 m in it is half, at 30 m a tenth.
+const float CANAL_REACH = 100.0;
+const float CANAL_SKY = 1.8;
 // What a strike casts closes on this, about as much again as the dusk gives level snow: the approved frames with a bolt in them keep the dusk's shade.
 const float EMITTER_CEILING = 0.12;
 // The storm lit from inside, as the land and the sky take it: it closes on a ceiling too.
@@ -129,6 +132,9 @@ vec3 skyIrradiance(vec3 n) {
   // and the canal's own shader gives it from them.
   open = mix(open, uSkyStorm, 0.8 * stormShare) + flashCast() * (2.6 * stormShare * (uUnder > 1.5 ? 0.12 : 1.0));
   vec3 e = mix(uSkyGround, open, up) * uFill;
+  // In the shot inside the canal the sky's values are set low, for the rock by the mouths. What stands in the open air of the canal (the
+  // runners, the snow blown in) takes the mouths' light more nearly whole.
+  if (uUnder > 1.5) e *= CANAL_SKY;
   float w = clamp((dot(n, KEY_DIR) + 0.12) / 1.12, 0.0, 1.0);
   // One low source: what looks to it is lit warm, by the square, and what looks away keeps the cold of the sky alone.
   return 3.14159 * (e * (0.72 + 0.28 * (1.0 - w)) + uWarmColour * (0.26 * w * w * seen));
@@ -250,6 +256,8 @@ float landHollow(vec3 p, vec3 n, float reach) {
   return 1.0 - (0.35 + 0.65 * side) * rise * inversesqrt(1.0 + rise * rise);
 }
 
+// How far the point last asked about stands under the canal's roof: 0 in the open, 1 inside. Set by skyOpenOver.
+float rigUnderRoof = 0.0;
 // How much of the sky a point sees: the land's own horizon, opening with height above the ground, and whatever stands over it.
 float skyOpenOver(vec3 p, out float above) {
   vec4 land = landAt(p.xz);
@@ -259,6 +267,7 @@ float skyOpenOver(vec3 p, out float above) {
   float roof = CANAL_FLOOR + land.a;
   float under = smoothstep(0.3, 1.0, land.a) * smoothstep(roof + 1.5, roof + 0.5, p.y);
   vis = mix(vis, min(land.b * uUnder, 1.0), under);
+  rigUnderRoof = under;
   return vis * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above));
 }
 float skyOpen(vec3 p) {
@@ -294,7 +303,16 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     vec3 toNear = CANAL_NEAR - p;
     vec3 toLight = normalize(normalize(toFar) / (dot(toFar, toFar) + 400.0) + 0.35 * normalize(toNear) / (dot(toNear, toNear) + 400.0));
     float faces = smoothstep(0.0, 0.9, dot(n, toLight) + 0.45 * max(n.y, 0.0));
-    skyE *= mix(vec3(0.22, 0.2, 0.2), vec3(1.3, 1.16, 1.62), faces * faces);
+    // The dark falls away from the mouth: the light is what the mouth lets in, and it thins with the square of the way in. Deep in, the
+    // little that is left has come off the stone and is the stone's own warm; at the mouth it is the storm's violet.
+    float reach = min(1.0 / (1.0 + dot(toFar, toFar) / CANAL_REACH) + 0.3 / (1.0 + dot(toNear, toNear) / CANAL_REACH), 1.0);
+    // (Only under the roof. The ridge beyond the mouth stands in the open and keeps the level it had: the lens is set for the mouth.)
+    skyE *= mix(vec3(0.36, 0.25, 0.17), vec3(1.3, 1.16, 1.62), faces * faces * mix(0.35, 1.0, reach)) * mix(2.5, 0.2 + 1.25 * reach, rigUnderRoof) / CANAL_SKY;
+    // Deep in, the stone lights the stone: a low warm with no direction, most where the mouth's light is least.
+    skyE += vec3(0.34, 0.2, 0.105) * ((1.0 - reach) * (1.0 - reach) * rigUnderRoof);
+    // What stands edge on to the lens between it and the mouth is rimmed by the mouth: a line of violet on a back, a lip of rock.
+    float edge = 1.0 - clamp(dot(n, v), 0.0, 1.0);
+    skyE += skyIrradiance(toLight) * vec3(0.95, 0.8, 1.5) / CANAL_SKY * (edge * edge * edge * smoothstep(-0.25, 0.45, dot(n, toLight)) * (0.25 + 1.2 * reach));
   }
   vec3 warm = uWarmColour * (outside ? 0.4 * rim * rim * sqrt(sky) * mix(0.15, 1.0, paleOf) : 0.0);
   vec3 e = skyE * shut + warm * (0.35 + 0.65 * occ) + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));

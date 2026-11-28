@@ -340,7 +340,15 @@ void main() {
     c *= 1.0 + uSkyStage.y;
     // (It is read as the sea reads it, flash and all: in a strike the sea's far end and the sky's foot light as one.)
     vec3 seaAir = skyCloud(cameraPosition, normalize(vec3(d.x, 0.0003, d.z)), 0.0);
-    c = mix(c, seaAir, smoothstep(0.0, -0.005, d.y));
+    // Under the level the foot is the far sea's own last rows, pale cold cloud with a share of the sky's foot in it, and not the dark of
+    // the cloud over the band: left as that dark it lay under the band as a ruled bar a degree deep, between the band and a pale sea.
+    // (On the storm's side the sea goes into the wall's foot whole, and the foot stays the wall's.)
+    float inFall = smoothstep(0.05, 0.75, -dot(d.xz, GALE) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)));
+    float sunk = smoothstep(0.0, -0.005, d.y);
+    float banks = textureLod(tNoise, vec3(az * 3.1 + uTime * 0.0006, 0.31, 0.57), 0.0).g;
+    vec3 lastRows = mix(vec3(0.124, 0.14, 0.227) * (0.72 + 0.3 * banks), seaAir, 0.42);
+    seaAir = mix(seaAir, lastRows, sunk * (1.0 - inFall) * (1.0 - plateOn));
+    c = mix(c, seaAir, sunk);
     // The sky's foot stands in the air the far sea stands in: the horizon is no ruled line between a pale sea and a dark storm, the one goes
     // into the other over a degree or two. Toward the last light the band keeps its line.
     float toLast = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
@@ -348,7 +356,6 @@ void main() {
     float lumps = textureLod(tNoise, vec3(az * 3.1 + uTime * 0.0006, 0.31, 0.57), 0.0).g + 0.5 * textureLod(tNoise, vec3(az * 9.7 - uTime * 0.0011, 0.63, 0.19), 0.0).r;
     float tallAir = mix(0.02, 0.011, pow(toLast, 3.0)) * (0.2 + 1.2 * lumps);
     // On the storm's side the mist of its fall stands down to the sea and is the foot itself: no darker bar lies along the horizon there.
-    float inFall = smoothstep(0.05, 0.75, -dot(d.xz, GALE) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)));
     c = mix(c, seaAir, 0.92 * exp(-max(d.y, 0.0) / tallAir) * (1.0 - 0.8 * smoothstep(0.55, 0.85, toLast)) * (1.0 - 0.9 * inFall));
     // The last band of orange: a thin bright line low on the horizon toward the last light, broken along its length by the far cloud that
     // stands before it, with a little of its glow in the air over it. It is the one warm thing in the frame, in a flash too.
