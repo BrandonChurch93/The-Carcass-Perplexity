@@ -1,8 +1,9 @@
-// The liquid mud the ones by the lens of the wallowers stand in: a level sheet of thick red-brown mud in the wallow they have trodden, a hand
-// to two hands deep, lying over the bed of churned mud the ground builder lays. It is a liquid and is shaded as one: it lies level, it
-// mirrors what stands in it (the brine's own mirror picture, read a little lower because the sheet lies above the brine's level), it
-// climbs each leg in a sleeve, and a ring leaves a leg when the leg works. Its edge is no outline: it thins out over the bed, tongue by
-// tongue, and where the bed stands higher than its level it is only a wet film on it. A pure function of the seconds.
+// The wallow the ones by the lens of the wallowers stand in: churned mud with red brine standing in every pit of it. One height field
+// (the churn sheet, laid twice at two sizes, the second turned) says where a clod stands out of the brine and where the brine lies: the
+// mesh is lifted by it, so clods hide one another and stand against the legs, and the fragment shades the two as what they are. A clod is
+// wet mud, dark at the line of the brine and paler on its crumbs. The brine is level, dark, and mirrors what stands in it (the brine's own
+// mirror picture, read a little lower because the wallow lies above the brine's level) by Fresnel's law; a ring leaves each leg and the lip
+// that works it. Its edge is no outline: it thins out over the bed clod by clod. A pure function of the seconds.
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
@@ -10,57 +11,120 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 /** How many legs one sheet answers to. */
 export const MIRE_LEGS = 8;
 
+/** Metres one churn sheet covers, the broad lay and the fine one, and how high a clod stands at most. */
+const TILE_A = 1.7;
+const TILE_B = 0.53;
+const CLOD = 0.075;
+
+// The height the brine stands at in the sheet's own measure (0 the deepest pit, 1 the highest crumb): high in the middle of the wallow,
+// where only islands of mud stand out, and low at the rim, where it lies in the deepest pits alone.
+const CHURN_GLSL = /* glsl */ `
+// x, z: where the leg stands in the sheet. z: how hard it works, 0 to 1. w: its half thickness at the sheet, metres.
+uniform vec4 uLegs[${MIRE_LEGS}];
+float churnCut(vec2 p, float edge, float depth) {
+  float broad = vnoise(p * 0.9 + 3.3);
+  float inside = smoothstep(0.0, 0.07, depth) * smoothstep(0.2, 0.5, edge + 0.14 * (broad - 0.5));
+  return mix(0.14, 0.56, inside) + 0.24 * (broad - 0.5);
+}
+// The mud a leg has pushed aside stands round it as a collar: so much is added to the height of the mud at p.
+float churnCollar(vec2 p) {
+  float up = 0.0;
+  for (int i = 0; i < ${MIRE_LEGS}; i++) {
+    float off = (length(p - uLegs[i].xy) - uLegs[i].w - 0.035) / 0.05;
+    up = max(up, exp(-off * off));
+  }
+  return 0.3 * up;
+}
+vec2 churnTurn(vec2 p) {
+  return vec2(p.x * 0.8253 - p.y * 0.5646, p.x * 0.5646 + p.y * 0.8253) / ${TILE_B.toFixed(3)} + vec2(0.37, 0.61);
+}`;
+
 const VERTEX = /* glsl */ `
 attribute float aEdge;
 attribute float aDepth;
+attribute vec2 aLay;
 varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec2 vLay;
 varying float vEdge;
 varying float vDepth;
 uniform float uMirror;
+uniform sampler2D tChurnNh;
+${NOISE_GLSL}
+${CHURN_GLSL}
+float lift(vec2 lay, vec2 p, float cut) {
+  float h = textureLod(tChurnNh, lay / ${TILE_A.toFixed(3)}, 4.6).b + churnCollar(p);
+  // A clod is no peak: it stands up from the brine with a short bank and is round on top.
+  float over = max(h - cut, 0.0);
+  return (1.0 - exp(-5.0 * over) + 0.6 * over) * ${CLOD.toFixed(3)};
+}
 void main() {
   vEdge = aEdge;
   vDepth = aDepth;
-  vWorld = position;
+  vLay = aLay;
+  // The clods: what stands over the brine's line is lifted, the brine itself lies level.
+  float cut = churnCut(position.xz, aEdge, aDepth);
+  float rimmed = smoothstep(0.0, 0.12, aEdge);
+  float e = 0.03;
+  float h0 = lift(aLay, position.xz, cut);
+  float hx = lift(aLay + vec2(e, 0.0), position.xz + vec2(e, 0.0), cut);
+  float hz = lift(aLay + vec2(0.0, e), position.xz + vec2(0.0, e), cut);
+  vNormal = normalize(normal * sign(normal.y + 1e-5) + rimmed * vec3(h0 - hx, 0.0, h0 - hz) / e);
+  vWorld = position + vec3(0.0, h0 * rimmed, 0.0);
   // It is not drawn into the mirror: there it would read the picture it is being drawn into, and what comes back is not a number.
-  gl_Position = mix(projectionMatrix * viewMatrix * vec4(position, 1.0), vec4(2.0, 2.0, 2.0, 1.0), step(0.5, uMirror));
+  gl_Position = mix(projectionMatrix * viewMatrix * vec4(vWorld, 1.0), vec4(2.0, 2.0, 2.0, 1.0), step(0.5, uMirror));
 }`;
 
 const FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec2 vLay;
 varying float vEdge;
 varying float vDepth;
-// x, z: where the leg stands in the sheet. z: how hard it works, 0 to 1. w: its half thickness at the sheet, metres.
-uniform vec4 uLegs[${MIRE_LEGS}];
 // x, z: where a muzzle works the sheet. z: how hard, 0 to 1. w: its half width.
 uniform vec4 uSnouts[2];
 uniform float uSeconds;
 uniform float uShown;
 uniform float uLevel;
-uniform sampler2D tMudNh;
+uniform sampler2D tChurn;
+uniform sampler2D tChurnNh;
 ${NOISE_GLSL}
 ${RIG_GLSL}
-// The lie of thick mud that has been walked through: low swells a hand across that never quite level out.
-float lumps(vec2 p) {
-  return 0.6 * vnoise(p * 2.3 + 7.1) + 0.3 * vnoise(p * 6.1 + 2.7) + 0.1 * vnoise(p * 17.0);
-}
+${CHURN_GLSL}
+const vec3 CHURN_MEAN = vec3(0.136, 0.053, 0.041);
+const vec3 LUMA = vec3(0.3, 0.5, 0.2);
+const vec3 SKY_SIDE = vec3(-0.45, 0.72, -0.53);
 void main() {
   vec2 p = vWorld.xz;
-  // The mud of the rim, read before anything else is decided.
-  vec3 clod = texture2D(tMudNh, p * 0.55).rgb;
+  // One footprint, taken before anything is decided: every read below names its own level from it. (It is taken on the lay of the sheet
+  // and not on the ground plan: where the sheet falls to the bed the lay runs down the fall, so the mud is not drawn out into streaks.)
+  vec2 gx = dFdx(vLay);
+  vec2 gy = dFdy(vLay);
+  // (The lens skims the sheet: a pixel is five times as long as it is wide on it. The level is taken nearer the short side, or the
+  // whole sheet is soft; the samples of the final tier take up what that leaves.)
+  float foot = mix(min(length(gx), length(gy)), max(length(gx), length(gy)), 0.3);
+  float lodA = max(log2(foot * 1024.0 / ${TILE_A.toFixed(3)}), 0.0);
+  float lodB = max(log2(foot * 1024.0 / ${TILE_B.toFixed(3)}), 0.0);
+  vec2 ua = vLay / ${TILE_A.toFixed(3)};
+  vec2 ub = churnTurn(vLay);
+  vec3 nhA = textureLod(tChurnNh, ua, lodA).rgb;
+  vec3 nhB = textureLod(tChurnNh, ub, lodB).rgb;
+  vec3 colA = textureLod(tChurn, ua, lodA).rgb;
+  vec3 colB = textureLod(tChurn, ub, lodB).rgb;
   vec3 v = normalize(cameraPosition - vWorld);
   float away = length(cameraPosition - vWorld);
   float broad = vnoise(p * 0.9 + 3.3);
   float mid = vnoise(p * 4.7 + 1.9);
-  float fine = vnoise(p * 21.0);
-  // Where it is a liquid: inside the rim of mud the animals have pushed up round their wallow, and where it stands over the bed.
-  float body = smoothstep(0.0, 0.05, vDepth + 0.04 * (mid - 0.5) + 0.02 * (fine - 0.5));
-  float reach = vEdge + 0.12 * (broad - 0.5) + 0.06 * (mid - 0.5) + 0.04 * (clod.b - 0.5);
-  float liquid = body * smoothstep(0.3, 0.36, reach);
-  // The slope of it. Thick mud does not ripple: it lies in slow swells, stands up round what is pushed into it and lets a ring go slowly.
-  float e = 0.03;
-  float h0 = lumps(p);
-  vec2 slope = vec2(lumps(p + vec2(e, 0.0)) - h0, lumps(p + vec2(0.0, e)) - h0) / e * mix(0.05, 0.012, liquid);
+
+  // The height of the mud here against the line of the brine.
+  float h = nhA.b + 0.2 * (nhB.b - 0.5) + churnCollar(p);
+  float cut = churnCut(p, vEdge, vDepth);
+  float over = h - cut;
+  float liquid = 1.0 - smoothstep(-0.012, 0.012 + 2.0 * foot, over);
+
+  // What the legs and the lips do to the brine: a ring leaves each, slow, and is gone within two hands; it stands dark against the leg.
+  vec2 lean = vec2(0.0);
   float sleeve = 0.0;
   float churn = 0.0;
   for (int i = 0; i < ${MIRE_LEGS}; i++) {
@@ -69,14 +133,12 @@ void main() {
     float r = length(d);
     vec2 out2 = d / max(r, 1e-4);
     float off = max(r - leg.w, 0.0);
-    // The sleeve: the mud stands up the leg, a finger high, and falls away from it within a hand.
-    float climb = exp(-off / 0.045);
-    slope -= out2 * 0.85 * climb;
+    float climb = exp(-off / 0.04);
+    lean -= out2 * 0.5 * climb;
     sleeve = max(sleeve, climb);
-    // The rings: two or three, slow, and gone within two hands. A leg that stands still lets none go.
-    float ring = cos(off * 26.0 - uSeconds * 3.4 + float(i) * 1.9) * exp(-off / 0.22) * smoothstep(0.0, 0.05, off);
-    slope += out2 * 0.16 * leg.z * ring;
-    churn = max(churn, leg.z * exp(-off / 0.3));
+    float ring = cos(off * 30.0 - uSeconds * 3.1 + float(i) * 1.9) * exp(-off / 0.3) * smoothstep(0.0, 0.04, off);
+    lean += out2 * (0.05 + 0.14 * leg.z) * ring;
+    churn = max(churn, (0.3 + 0.7 * leg.z) * exp(-off / 0.35));
   }
   for (int i = 0; i < 2; i++) {
     vec4 snout = uSnouts[i];
@@ -84,42 +146,56 @@ void main() {
     float r = length(d);
     vec2 out2 = d / max(r, 1e-4);
     float off = max(r - snout.w, 0.0);
-    // The lip ploughs it: a low wall of mud stands before it and a furrow of rings leaves it.
-    slope -= out2 * 0.5 * exp(-off / 0.07) * snout.z;
-    slope += out2 * 0.12 * snout.z * cos(off * 22.0 - uSeconds * 2.7 + float(i) * 2.3) * exp(-off / 0.3) * smoothstep(0.0, 0.05, off);
-    churn = max(churn, snout.z * exp(-off / 0.35));
+    lean += out2 * 0.13 * snout.z * cos(off * 24.0 - uSeconds * 2.7 + float(i) * 2.3) * exp(-off / 0.35) * smoothstep(0.0, 0.05, off);
+    churn = max(churn, snout.z * exp(-off / 0.4));
   }
-  vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
 
-  // Its colour: the red of the vein gone to brown with the grey mud of the bank stirred in, paler in the streaks the legs have dragged
-  // up from the bed, and near black where it has stood and the water has come to the top of it.
-  vec3 thick = vec3(0.042, 0.019, 0.014);
-  vec3 stirred = vec3(0.07, 0.042, 0.034);
-  float streak = smoothstep(0.45, 0.75, vnoise(vec2(p.x * 1.1 + 2.0 * broad, p.y * 5.3)) + 0.5 * churn - 0.2);
-  vec3 albedo = mix(thick, stirred, 0.55 * streak) * (0.8 + 0.4 * mid);
-  // The rim is the bed pushed up and gone wet: clods, dark, each with a glint in the hollow beside it. Not level, and dull beside the sheet.
-  albedo = mix(vec3(0.05, 0.029, 0.023) * (0.5 + 1.0 * clod.b), albedo, liquid);
-  n = normalize(mix(vec3(-(clod.r - 0.5) * 2.0, 1.0, -(clod.g - 0.5) * 2.0), n, liquid));
-  // The light of the sky on it, and no sheen by the rig's law: at this lens's low angle that law would whiten all of it. The sheet's
-  // sheen is the mirror below; the rim has only the wet in the hollows between its clods.
+  // The mud: the sheet's own colour, the fine lay over the broad one, dark and wet at the line of the brine and paler up on the crumbs.
+  vec3 tone = colB / CHURN_MEAN;
+  vec3 mud = colA * mix(vec3(1.0), min(mix(vec3(dot(tone, LUMA)), tone, 0.5), vec3(1.7)), 0.6) * 0.27;
+  mud = max(mix(vec3(dot(mud, LUMA)), mud, 1.25), vec3(0.0));
+  float wetLine = 1.0 - smoothstep(0.0, 0.16, over);
+  mud *= mix(1.0, 0.5, wetLine);
+  vec2 sa = (nhA.rg - 0.5) * 2.2;
+  vec2 sb = (nhB.rg - 0.5) * 1.3;
+  // (The fine lay is turned: its slope is turned back.)
+  vec2 slope = vec2(sa.x, -sa.y) + vec2(sb.x * 0.8253 + sb.y * 0.5646, -(-sb.x * 0.5646 + sb.y * 0.8253));
+  vec3 nMud = normalize(normalize(vNormal) + vec3(-slope.x, 0.0, -slope.y));
+  float pit = smoothstep(-0.05, 0.3, over);
+  // Wet mud is no mirror: it is lit as a rough thing, and what shines on it is the sky caught on the few faces turned to it.
+  vec3 cMud = rigShade(vWorld, nMud, v, mud, 1.0, 0.4 + 0.6 * pit);
+  vec3 rMud = reflect(-v, nMud);
+  float wetMud = mix(1.0, 0.3, smoothstep(0.05, 0.35, over) * smoothstep(0.4, 0.7, nhB.b));
+  float catchSky = pow(clamp(dot(rMud, SKY_SIDE), 0.0, 1.0), 60.0);
+  cMud += skyRadiance(SKY_SIDE) * skyOpen(vWorld) * (0.13 * catchSky * wetMud);
+
+  // The brine: level, dark with the mud stirred into it where a leg works, the bed showing through its first finger of depth.
+  float depth = max(-over, 0.0);
+  vec3 body = mix(vec3(0.03, 0.006, 0.005), vec3(0.045, 0.02, 0.015), 0.7 * churn + 0.3 * smoothstep(0.4, 0.7, broad));
+  vec3 bed = mud * 0.55;
+  vec3 under = mix(bed, body, 1.0 - exp(-depth * 14.0));
+  float e = 0.04;
+  float l0 = vnoise(p * 9.0 + 5.0);
+  vec2 ruffle = vec2(vnoise(p * 9.0 + 5.0 + vec2(e * 9.0, 0.0)) - l0, vnoise(p * 9.0 + 5.0 + vec2(0.0, e * 9.0)) - l0) / e * 0.006;
+  vec2 tilt = lean + ruffle;
+  vec3 nWet = normalize(vec3(-tilt.x, 1.0, -tilt.y));
   float open = skyOpen(vWorld);
-  vec3 c = albedo * skyIrradiance(n) * (open * mix(0.6 + 0.4 * smoothstep(0.25, 0.6, clod.b), 1.0, liquid) / 3.14159);
-  vec3 up = reflect(-v, n);
-  up.y = abs(up.y);
-  // (Never the sun itself: a clod that throws the sun at the lens is a white dot, and past what the picture can hold a black one.)
-  c += 0.014 * (1.0 - smoothstep(0.25, 0.5, clod.b)) * (1.0 - liquid) * min(skyRadiance(up), vec3(3.0)) * open;
-  // The mirror. The sheet lies uLevel above the brine the picture was drawn for: a ray it throws up is the ray the brine would throw
+  vec3 cWet = under * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
+  // The mirror. The wallow lies uLevel above the brine the picture was drawn for: a ray it throws up is the ray the brine would throw
   // from the same place that far under its level again.
-  float nv = clamp(dot(n, v), 0.0, 1.0);
-  float share = (0.012 + 0.13 * pow(1.0 - nv, 8.0)) * liquid * (1.0 - 0.5 * streak * (1.0 - churn));
-  vec2 swing = n.xz * 2.0 * clamp(away * 0.22, 0.2, 6.0);
+  float nv = clamp(dot(nWet, v), 0.0, 1.0);
+  float share = 0.02 + 0.4 * pow(1.0 - nv, 5.0);
+  vec2 swing = nWet.xz * 2.0 * clamp(away * 0.22, 0.2, 6.0);
   vec4 q = uMirrorMatrix * vec4(p.x + swing.x, -uLevel, p.y + swing.y, 1.0);
-  float soft = max(log2(float(textureSize(tMirror, 0).x) / 240.0), 0.0);
-  vec3 seen = min(textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), soft).rgb, vec3(8.0)) * vec3(0.92, 0.8, 0.76);
-  c += share * seen * (1.0 - uMirror);
+  float soft = max(log2(float(textureSize(tMirror, 0).x) / 420.0), 0.0);
+  vec3 seen = clamp(textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), soft).rgb, vec3(0.0), vec3(8.0)) * vec3(0.95, 0.8, 0.75);
+  cWet = cWet * (1.0 - share) + share * seen * (1.0 - uMirror);
   // The dark wet line where it stands against a leg.
-  c *= 1.0 - 0.35 * sleeve * liquid;
+  cWet *= 1.0 - 0.4 * sleeve;
+
+  vec3 c = mix(cMud, cWet, liquid);
   // Its edge thins out over the bed clod by clod: no line anywhere.
+  float reach = vEdge + 0.12 * (broad - 0.5) + 0.06 * (mid - 0.5) + 0.1 * (nhA.b - 0.5);
   float a = smoothstep(0.0, 0.1, reach - 0.03) * smoothstep(0.0, 0.03, vEdge);
   c = clamp(c, 0.0, 8.0);
   gl_FragColor = vec4(rigOut(c), a * uShown * (1.0 - uMirror));
@@ -137,12 +213,15 @@ export class Mire {
   constructor(ctx: Context, x: number, z: number, dir: [number, number], long: number, wide: number, level: number) {
     const rng = ctx.rng('wallowers-mire');
     this.level = level;
-    const RINGS = 44;
-    const SIDES = 128;
+    // Fine enough for a clod a hand across to stand in the mesh.
+    const RINGS = 150;
+    const SIDES = 400;
     const position: number[] = [];
     const edge: number[] = [];
     const depth: number[] = [];
+    const lay: number[] = [];
     const index: number[] = [];
+    const spoke: [number, number, number][] = Array.from({ length: SIDES + 1 }, () => [0, 0, level]);
     const wobble = Array.from({ length: 9 }, () => [rng.range(0.03, 0.1), rng.range(0, Math.PI * 2)] as [number, number]);
     for (let i = 0; i <= RINGS; i++) {
       const u = i / RINGS;
@@ -164,7 +243,16 @@ export class Mire {
         const w = Math.min(1, e / 0.3);
         const fall = w * w * (3 - 2 * w);
         const rim = 0.035 * Math.exp(-(((e - 0.27) / 0.07) ** 2)) * (0.6 + 0.4 * Math.sin(a * 5 + (wobble[0] as [number, number])[1]));
-        position.push(px, Math.max(land + 0.02 + (level - land - 0.02) * fall + rim, land + 0.025), pz);
+        const py = Math.max(land + 0.02 + (level - land - 0.02) * fall + rim, land + 0.025);
+        position.push(px, py, pz);
+        // Where the sheet falls to the bed its mud is laid down the fall and not over the ground plan.
+        // (Each spoke is measured along the surface, and the mud is laid by that measure.)
+        const plan = Math.hypot(px - x, pz - z);
+        const was = spoke[j] as [number, number, number];
+        const run = was[0] + Math.hypot(plan - was[1], py - was[2]);
+        spoke[j] = [run, plan, py];
+        const stretch = plan > 1e-6 ? run / plan : 1;
+        lay.push(x + (px - x) * stretch, z + (pz - z) * stretch);
         edge.push(e);
         depth.push(Math.max(-0.2, Math.min(0.4, over)));
       }
@@ -179,14 +267,15 @@ export class Mire {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
     geometry.setAttribute('aEdge', new THREE.Float32BufferAttribute(edge, 1));
     geometry.setAttribute('aDepth', new THREE.Float32BufferAttribute(depth, 1));
+    geometry.setAttribute('aLay', new THREE.Float32BufferAttribute(lay, 2));
     geometry.setIndex(index);
+    geometry.computeVertexNormals();
     const material = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uLegs: { value: this.legs }, uSnouts: { value: this.snouts }, uSeconds: this.uSeconds, uShown: this.uShown, uLevel: { value: level }, tMudNh: { value: ctx.assets.texture('mat/mud-nh.png', { kind: 'data', anisotropy: 4 }) } },
+      uniforms: { ...ctx.rig.uniforms, uLegs: { value: this.legs }, uSnouts: { value: this.snouts }, uSeconds: this.uSeconds, uShown: this.uShown, uLevel: { value: level }, tChurn: { value: ctx.assets.texture('wallowers/churn.jpg', { kind: 'colour', anisotropy: 4 }) }, tChurnNh: { value: ctx.assets.texture('wallowers/churn-nh.jpg', { kind: 'data', anisotropy: 4 }) } },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       side: THREE.DoubleSide,
       transparent: true,
-      depthWrite: false,
     });
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.frustumCulled = false;
