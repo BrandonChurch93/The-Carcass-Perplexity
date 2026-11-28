@@ -28,6 +28,10 @@ export interface Drinker {
   alert?: number;
   /** How far it gives ground when that takes it, in its own sizes: it steps back, one hoof after another. */
   gives?: number;
+  /** How far it lifts its muzzle past level when that takes it. */
+  lifts?: number;
+  /** How far round it turns its head to what takes it, in radians, to its own left. */
+  looks?: number;
   /** It walks: how, when and on what way. It is where it is placed, facing as it is placed, at the gait's key. */
   gait?: Gait;
   /** Hooves it moves at moments of its own: which leg, when, and how far to the side and forward, in its own sizes. It stands as placed at its key. */
@@ -88,7 +92,7 @@ const build = (size: number, own: number, calf = false): Build =>
       };
 
 /** The two the last shot looks past: a small head on a long neck, as the approved picture has them. */
-const seenFromBehind = (d: Drinker, neck: number): Drinker => ({ ...d, build: { ...d.build, head: 0.6, neck, girth: 1.04, stem: 0.56 } });
+const seenFromBehind = (d: Drinker, more: Partial<Build>): Drinker => ({ ...d, build: { ...d.build, ...more } });
 
 /** Who of the herd is on its way, by its number in the herd: its pace in sizes a second, when it sets off or halts, how it is turned from where the draw faced it. */
 interface Does {
@@ -167,8 +171,8 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
       { leg: 2, at: SHORE_KEY + 1.75, by: [0, 0.12] },
     ]),
     // The two of the last shot, below the camera with their backs to it, cut by the foot of the frame. Each lifts its head to the swell, not together.
-    seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 8, 1.12, (t) => 0.8 - 0.5 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, key: riseAt + 1.7 }, 0.8),
-    seenFromBehind({ ...one(centre[0] + 1.0, centre[2] - 18.5, -8, 0.82, (t) => 0.86 - 0.62 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, key: riseAt + 1.7 }, 1.0),
+    seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 3, 1.12, (t) => 0.39 - 0.09 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, lifts: 0.1, looks: -0.3, key: riseAt + 1.7 }, { head: 0.74, neck: 0.8, girth: 1.12, depth: 1.05, stem: 0.74 }),
+    seenFromBehind({ ...one(centre[0] + 0.85, centre[2] - 18.5, -13, 0.82, (t) => 0.43 - 0.15 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, lifts: 0.16, key: riseAt + 1.7 }, { head: 0.62, neck: 0.9, girth: 0.95, stem: 0.78, long: 0.92 }),
     // The ones of the mats shot. One is near, alone, side on with its head down, as the approved picture has it; two are far off behind it, one
     // of them upright and watching.
     // It shifts a hind hoof and then a fore hoof in the shot, and the lake rings at each.
@@ -423,6 +427,8 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   for (let i = 0; i < 5; i++) neck[i] = drive(i) * reach + 0.045 * pace * Math.sin(round * Math.PI * 4 + 1.1 - 0.5 * i);
   // One that stares holds its head level, whatever its neck does.
   if (d.alert !== undefined) neck[4] *= 1 - 0.8 * ease(d.alert, d.alert + 0.5, t);
+  // One that looks up at what rises lifts its muzzle past level, and holds it there.
+  if (d.alert !== undefined && d.lifts) neck[4] -= d.lifts * ease(d.alert + 0.1, d.alert + 0.9, t);
   // With its mouth in the water it sips: the head works a little and each mouthful swells the neck on its way up to the chest.
   const sipping = ease(0.9, 0.99, low);
   neck[4] += sipping * 0.012 * Math.sin(t * 13.8 + o * 40);
@@ -440,6 +446,12 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const free = (1 - 0.85 * sipping) * (d.alert === undefined ? 1 : 1 - 0.9 * ease(d.alert, d.alert + 0.45, t));
   for (let i = 0; i < 4; i++) turn[i] = 0.12 * neckTurn * free;
   turn[4] = 0.52 * headTurn * free;
+  // What rises is off to one side of where it faces: the neck turns a little to it and the head the rest of the way.
+  if (d.alert !== undefined && d.looks) {
+    const to = d.looks * ease(d.alert + 0.05, d.alert + 0.75, t);
+    for (let i = 0; i < 4; i++) turn[i] += 0.1 * to;
+    turn[4] += 0.6 * to;
+  }
   // The tail hangs and now and then flicks.
   const flickEvery = 3.2 + 4 * hash(o * 23);
   const fu = t / flickEvery + hash(o * 67);
