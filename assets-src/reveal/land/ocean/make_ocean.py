@@ -135,8 +135,8 @@ LOW = [
     (3990, 95, 150, 70, 0.34, 20), (4200, 160, 70, 44, 0.26, -30), (3790, 40, 60, 36, 0.22, 60),
     # (From amount D a land at the top edge of the titan's frame, right of where the upper hand points, most of it above the frame;
     # and one beyond the storm, below and right of it, that the pull back uncovers.)
-    *([(3950, 30, 620, 330, 0.62, 12), (4420, 90, 600, 300, 0.7, -14), (4130, 200, 320, 160, 0.5, 25), (4800, -120, 560, 320, 0.55, 30),
-       (4790, 150, 380, 180, 0.5, -8),
+    *([(3950, 120, 620, 330, 0.62, 12), (4420, 180, 600, 300, 0.7, -14), (4130, 290, 320, 160, 0.5, 25), (4800, -30, 560, 320, 0.55, 30),
+       (4790, 240, 380, 180, 0.5, -8),
        (5400, 4030, 900, 520, 0.7, -15), (6050, 3960, 800, 460, 0.6, 20), (6600, 3700, 700, 420, 0.62, 50), (5750, 4350, 1100, 500, 0.66, 5)] if MAIN else []),
     (5640, 215, 150, 70, 0.36, -25), (5850, 415, 90, 50, 0.28, 30), (5545, 455, 54, 38, 0.24, 70), (5760, 610, 40, 30, 0.2, 10),
     (6230, 1650, 150, 70, 0.3, 70), (6120, 1950, 70, 44, 0.22, 20), (6400, 1380, 80, 40, 0.2, -40),
@@ -294,9 +294,11 @@ lead_small, rnd_small = floes(16.0, 72)
 loose = sstep(0.75, 0.0, pack)                       # how far toward the margin: there the floes part and thin out
 # (Not evenly: here the pack is driven together, there it lies open.)
 loose = np.clip(loose * (1.0 + 0.9 * fbm(330, 3, 79)) + 0.25 * sstep(0.1, 0.9, fbm(330, 3, 79)) * sstep(1.0, 0.6, pack), 0.0, 1.0)
+# (On the sea it is nowhere one smooth band along the shore, which read as a second coast: it is rafts to the land's edge.)
+loose = np.where(is_land, loose, np.maximum(loose, 0.6))
 # (The margin is torn by the swell at every size: tongues and bights of some tens of km, and the floes themselves.)
 # (Its seaward edge is hard and runs along the sides of the rafts: a cloud bank has no such edge.)
-there = sstep(0.0, 0.025, pack + 1.2 * (rnd_giant - 0.5) * loose + 0.5 * (rnd_huge - 0.5) * loose + 0.16 * fbm(260, 5, 73, gain=0.62))
+there = sstep(0.0, 0.025, pack + 2.0 * (rnd_giant - 0.5) * loose + 0.5 * (rnd_huge - 0.5) * loose + 0.16 * fbm(260, 5, 73, gain=0.62)) * sstep(-0.7, -0.5, pack)
 # (Leads in master px: hair lines in the sheet, open water between the floes of the margin.)
 part_big = 0.5 * sstep(0.1, 0.7, loose)
 part_small = 0.3 * np.clip((loose - 0.25) / 0.75, 0.0, 1.0)
@@ -304,7 +306,7 @@ ice = there * sstep(-2.0 + 3.4 * part_big, 0.3 + 3.7 * part_big, lead_big * S) *
 # (The largest floes are tens of km across and the water between them is wide and dark: what says ice from far off.)
 ice *= sstep(-1.0 + 9.0 * loose, 1.0 + 16.0 * loose, lead_huge * S)
 # (And those drift apart in rafts a few hundred km across with open sea between: the margin seen from the far orbit.)
-ice *= sstep(-2.0 + 14.0 * loose * (0.4 + 0.6 * rnd_giant), 2.0 + 30.0 * loose * (0.4 + 0.6 * rnd_giant), lead_giant * S)
+ice *= sstep(-2.0 + 24.0 * loose * (0.4 + 0.6 * rnd_giant), 2.0 + 44.0 * loose * (0.4 + 0.6 * rnd_giant), lead_giant * S)
 # (The sheet itself is whole but for a few long fractures, and it is not one white: old ice is thicker than new.)
 crack = np.minimum(np.abs(fbm(420, 5, 75, gain=0.55)), np.abs(fbm(300, 5, 76, gain=0.55)) + 0.02 * loose)
 ice *= 1.0 - 0.8 * (1.0 - sstep(0.008, 0.05, crack)) * sstep(0.1, 0.4, pack)
@@ -315,7 +317,10 @@ on_far = is_land & (far_land >= isle)
 # (Where the far land faces the body no pack lies off it: there the sheet stops short of the shore and a strip of bare rock
 # gives it its edge.)
 coast_px = cv2.distanceTransform(is_land.astype(np.uint8), cv2.DIST_L2, 5) * S
-bare = (1.0 - sstep(600.0, 900.0, body_px)) * (1.0 - sstep(0.0, 14.0, coast_px - 45.0 - 50.0 * fbm(240, 4, 78) - 30.0 * rnd_huge))
+strip = 1.0 - sstep(0.0, 14.0, coast_px - 80.0 - 80.0 * fbm(240, 4, 78) - 40.0 * rnd_huge)
+# (And behind the shore its peaks stand out of the ice: dark rock in a white field is what no cloud bank has.)
+peaks = sstep(0.2, 0.42, crag) * sstep(520.0, 140.0, coast_px)
+bare = (1.0 - sstep(700.0, 1100.0, body_px)) * np.maximum(strip, peaks)
 ice = np.where(on_far, ice * (1.0 - bare), ice * (1.0 - is_land) * (1.0 - (0.2 + 0.4 * sstep(0.0, 0.6, loose)) * (1.0 - rnd_huge ** 0.7 * (0.6 + 0.4 * rnd_big))))
 cold = sstep(-2.6, 0.2, pack) * (1.0 - is_land)
 ice_map = np.where(ice > 0.02, 0.5 + 0.5 * ice, 0.45 * cold * (1.0 - ice / 0.02))

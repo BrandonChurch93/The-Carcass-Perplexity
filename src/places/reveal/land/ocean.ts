@@ -67,7 +67,8 @@ vec3 oceanOther(vec3 water, vec3 landAt, vec3 bedAt, vec3 light, vec3 glare, vec
   float height = clamp((landAt.b - 0.3) / 0.7, 0.0, 1.0);
   float isle = smoothstep(0.292, 0.312, landAt.b) * seen;
   vec2 slope = (landAt.rg - 0.5) * 3.2;
-  float facing = (uSunDir.y - 1.6 * dot(slope, uSunDir.xz)) / sqrt(1.0 + 2.56 * dot(slope, slope));
+  float steep = sqrt(1.0 + 2.56 * dot(slope, slope));
+  float facing = (uSunDir.y - 1.6 * dot(slope, uSunDir.xz)) / steep;
   float lit = mix(1.0, clamp(facing / max(uSunDir.y, 0.2), 0.0, 2.2), 0.92);
   // (One geology with the body but another country: paler dun by the shore, green where it holds water, grey rock on the high
   // ground, a shade greener than the body's lowlands so that no piece of it is taken for a part of the body.)
@@ -79,13 +80,15 @@ vec3 oceanOther(vec3 water, vec3 landAt, vec3 bedAt, vec3 light, vec3 glare, vec
   float surf = smoothstep(0.262, 0.296, landAt.b) * (1.0 - isle) * smoothstep(0.3, 0.62, 1.0 - mottle) * seen;
   water = mix(water, vec3(0.6, 0.65, 0.68) * light / 3.14159, 0.5 * surf * surf);
   // (Under the moon the shelf is only a hint by the shore. The land is found by its own ground, grey and a little over the
-  // sea's value, lighter on its heights: a glow of one colour over land and shelf alike read as a blot. No light stands on it.)
+  // sea's value, with the relief its slopes take from the moon: a glow of one colour over land and shelf alike read as a blot.
+  // No light stands on it.)
   float nightShelf = smoothstep(0.12, 0.29, landAt.b);
   water += vec3(0.008, 0.03, 0.036) * light / 3.14159 * nightShelf * nightShelf * uEmber.x * seen;
   // (The air over the sun's image is bright: land that stands in it is seen through that light, as the body is.)
   vec3 groundLit = ground * light * lit / 3.14159 + 0.4 * glare;
-  vec3 groundMoon = ground * light / 3.14159 * (0.7 + 0.9 * height) * (0.75 + 0.5 * mottle);
-  water = mix(water, mix(groundLit, 0.6 * water + 0.55 * groundMoon, uEmber.x), isle);
+  float litMoon = mix(1.0, clamp((uMoonDir.y - 1.6 * dot(slope, uMoonDir.xz)) / (steep * max(uMoonDir.y, 0.2)), 0.0, 2.2), 0.85);
+  vec3 groundMoon = ground * light / 3.14159 * litMoon * (0.8 + 0.5 * height);
+  water = mix(water, mix(groundLit, 0.45 * water + 0.9 * groundMoon, uEmber.x), isle);
   // (The pack and the sheet on the far land: blue grey where it is thin and in its leads, blue white where it is thick, blue in
   // the shade of its own relief. Never the bone's ivory. Into the air of the planet's edge it goes bluer and dimmer.)
   float ice = smoothstep(0.52, 0.8, bedAt.b) * seen;
