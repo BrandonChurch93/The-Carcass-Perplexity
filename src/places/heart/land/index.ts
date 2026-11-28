@@ -39,6 +39,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tBoulder: { value: ctx.assets.texture('mat/boulder.jpg') },
     tBoulderNh: { value: ctx.assets.texture('mat/boulder-nh.png', { kind: 'data' }) },
     tSulphur: { value: ctx.assets.texture('mat/sulphur.jpg') },
+    tAa: { value: ctx.assets.texture('mat/aa-nh.jpg', { kind: 'data' }) },
     uCrackA: { value: new THREE.Vector4((cracks[0] as Crack).ax, (cracks[0] as Crack).az, (cracks[0] as Crack).bx, (cracks[0] as Crack).bz) },
     // Where the vent's stain sits on the crag of the line view: a point high on its lake face, and the stain's reach.
     uStain: { value: new THREE.Vector4(-505.0, 1.9, 203.6, 2.6) },
@@ -85,7 +86,7 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   // The slopes under the mouth fill the fall's lens: a slope got a row every five metres and showed its faces. There it gets three times its share.
   const underMouth = (x: number, z: number, y: number): number => 1 + 2.2 * unit01((250 - Math.abs(x - MOUTH.x)) / 50) * unit01(-(z + 150) / 40) * unit01((y - 0.5) / 2) * unit01((100 - y) / 15);
-  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip, underMouth);
+  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip, underMouth, 8);
   // The wall stands whole over the mouth and is opened only inside the arch, a little wider than the arch itself: the fall's rim covers the edge.
   open(wallAll, (x, y, z) => inArch(x, y, z, 1.03));
   // The wall is broken along its joints: blocks the size of a house stand back from the face and leave notches in the rim, smaller ones in them.
@@ -98,7 +99,27 @@ export function create(ctx: HeartContext): HeartPiece {
     { cell: [26, 40, 26], depth: 4.5, seed: 3 },
     { cell: [10, 16, 10], depth: 2, seed: 11 },
   ];
-  fracture(wallAll, WALL_JOINTS, (x, y, z) => unit01(-z / 40) * unit01((x + 700) / 40) * unit01((330 - x) / 40) * unit01((y - 45) / 30) * unit01((Math.abs(x - MOUTH.x) - 100) / 35));
+  // Where the long lenses look the face is broken once more, into clefts and ledges of some strides, and every joint of it is a dark crease:
+  // forms large enough to stand through the air and a lens focused far in front of them.
+  const FACE_JOINTS: Joints[] = [
+    { cell: [26, 40, 26], depth: 4.5, seed: 3, crease: 3.2 },
+    { cell: [10, 16, 10], depth: 2.6, seed: 11, crease: 2.6 },
+    { cell: [5.5, 7.5, 5.5], depth: 1.5, seed: 41, crease: 1.8 },
+  ];
+  fracture(wallAll, FACE_JOINTS, (x, y, z) => unit01(-z / 40) * unit01((x + 700) / 40) * unit01((330 - x) / 40) * unit01((y - 45) / 30) * unit01((Math.abs(x - MOUTH.x) - 100) / 35));
+  // How much of the sky a point sees is found rib by rib, and a flute narrower than two ribs made every other rib dark: lines up the face
+  // at the spacing of the ribs. It is evened over three ribs, twice.
+  {
+    const per = 190 + 11;
+    const land = wallAll.getAttribute('aLand') as THREE.BufferAttribute;
+    const was = new Float32Array(land.count);
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < land.count; i++) was[i] = land.getX(i);
+      for (let i = per; i + per < land.count; i++) {
+        if (i % per < 190) land.setX(i, 0.25 * (was[i - per] as number) + 0.5 * (was[i] as number) + 0.25 * (was[i + per] as number));
+      }
+    }
+  }
   // The shader's own test of a face (the steeper of the land's slope and the face's, with a twentieth of noise either way), made here for
   // every face: what is all cliff and what is all scree go to materials that have only that half. The rest keeps both.
   // A face that stands wholly above the reach of the lake's rind (4.7 m at most) is told as well (DRY).
