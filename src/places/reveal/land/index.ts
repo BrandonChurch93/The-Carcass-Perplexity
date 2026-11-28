@@ -975,6 +975,14 @@ ${BODY_VENTS}
     glow *= 0.5 + 0.5 * uEmber.w;
     // (Held down as it is for the open camera, the fire would lie flat: its swell is laid on after, on the lake and on the rock it lights.)
     glow *= 1.0 + 0.12 * (1.0 - aside) + 0.7 * work;
+    // (Once the beat is past the fire is seen to work: its light rises and sinks, never evenly, and round each lesser vent on its
+    // own time, none in step with the Heart or with another.)
+    float rise = 1.15 + 0.55 * sin(uTime * 2.9 + 0.7) + 0.38 * sin(uTime * 4.7 + 2.1) + 0.4 * (vnoise(vec2(uTime * 2.3, 63.0)) - 0.5);
+    for (int i = 0; i < 6; i++) {
+      vec2 q = fromLava - VENTS[i].xy;
+      rise += 1.6 * exp(-dot(q, q) / 6000.0) * (smoothstep(0.2, 0.8, vnoise(vec2(uTime * (1.15 + 0.31 * float(i)), 41.0 + 9.3 * float(i)))) - 0.5);
+    }
+    glow *= mix(1.0, max(rise, 0.1), smoothstep(1.4, 3.2, uEmber.y));
   }
 #endif
 
