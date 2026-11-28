@@ -24,25 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 225, 2026-11-28 11:44 UTC:
+Status 226, 2026-11-28 12:03 UTC:
 
-- `01-s225-ribs-wall-mend.jpg`: One patch of the Ribs' wall at the lower left of the frame at 0:34 (frame 2081), at full size, in two versions: one sheet made by the Ribs' detail builder for its mail of 4:21 AM and shown as it came; it prints no labels. By the builder's mail the left half is its fix before the mend (cda12ae) and the right half the mend (7fb3e9c); neither is in the film. Both halves: a black-brown mass of weed with small brown flecks at the left and in the middle, and ochre blades crossing from the top middle to the right edge, all soft, since the patch is near the lens. Left half: on the blackest part of the mass, a tall hollow in the middle, stands a group of some thirty round pale drops that read as white dots, and short pale dashes lie in rows along the blades' margins at the upper right. Right half: the group on the hollow is gone but for about six faint dots, the dashes are gone, and about ten single pale drops of unlike sizes stay on the blades. By the builder's measure, not checked by the Builder: fine detail at 0.8374 of the approved picture with the mend and 0.8772 before it, against a floor of 0.75.
-- `02-s225-ribs-0m34-mend.jpg`: The Ribs at 0:34 (frame 2081), the whole frame in two versions at 800 pixels wide each: one sheet made by the Ribs' detail builder for its mail of 4:21 AM and shown as it came; it prints no labels. By the builder's mail the left half is its fix before the mend (cda12ae) and the right half the mend (7fb3e9c); neither is in the film. Each half: a dark wall hung with ochre and black weed fills the left of the frame, a pale hung body with its ribs showing lies head up on the wall, wet grey shore with dark stones lies at the right, and giant pale rib bones arch in mist under a grey sky, with small pale animals far off on the shore and one flyer in the sky. At this size the Builder cannot tell the two halves apart: the mend changes fine detail only.
+- `01-s226-reveal-2m40-trial.jpg`: The Reveal at 2:40 (frame 9621) on the trial merge of the team's work for note 30, which is not in the film yet: one frame drawn by the prover on its fresh machine at the draft tier in 3840x2160 and sent at 1920x1080, shown as it came. Seen from straight above: blue-grey and tan mountains with fine eroded ridges; a thin dark river running down into a navy lake whose left shore carries an ochre band that curls into the water in two swirls; a small group of white clouds over the lake; a second navy lake with an ochre rim at the top right, a small dark lake below the middle and, at the lower right corner, a water of another colour, teal green; a broad pale band sweeps under the big lake. The Builder looked at it in two halves at its own size.
+- `02-s226-reveal-2m47-trial.jpg`: The titan frame at 2:47 (frame 10027) on the same trial merge, drawn by the prover the same way and shown as it came. Black space with small stars and a grey cratered moon stands in the top left corner over a thin blue line of air; under it lies pale ice land, and green-brown islands and another landmass lie at the lower left and along the top. In the middle the body: the skull as pale ridged bone with two round dark lakes for sockets, the ribs as pale ridges fanning from a middle line over brown land with one small bright orange point in the chest, and a red branching patch on pale ground further right. A spiral storm turns at the lower right, a broad tan haze covers the upper right corner, and small white cloud flecks of much the same size lie all over the dark blue sea with its teal shallows.
+- `03-s226-reveal-3m05-trial.jpg`: The Reveal at 3:05 (frame 11100) on the same trial merge, drawn by the prover the same way and shown as it came. The upper left is space with many stars, a faint band of dust and the grey moon; the planet's edge carries a blue line of air. Under it lies pale ice land, and below that a patch of sea covered with many-sided pale plates with dark lanes between them, which reads as pack ice. The skull stands in the middle with its dark sockets and the ribs right of it with the orange point; low warm light comes from the top, with a golden haze at the top middle, ridges lit gold and long dark shadows; the red patch and a white bar of cloud lie right of the middle, the spiral storm at the lower right and green-brown islands along the bottom left.
+- `04-s226-reveal-3m15-trial.jpg`: The Reveal at 3:15 (frame 11743), the night side, on the same trial merge, drawn by the prover the same way and shown as it came. Space with stars, the band of dust and a thin crescent moon fills the upper left; the planet is dark and its ridges pale blue; the skull with its sockets can be made out at the lower middle, the ribs right of it with an orange glow in the chest, the red patch very faintly, and the spiral storm pale grey at the right. The frame is very dark overall.
 
+Status 225, 2026-11-28 11:44 UTC, showed: One patch of the Ribs' wall at the lower left of the frame at 0:34 (frame 2081), at full size, in two versions: one sheet made by the Ribs'...
 Status 224, 2026-11-28 11:20 UTC, showed: The Reveal's four keys, each beside its approved picture: one sheet made by the Reveal team's lead for its last report on note 30 and shown...
 Status 223, 2026-11-28 10:54 UTC, showed: The titan frame at 2:47 (frame 10027) in two versions, one sheet made by the Reveal team's lead for its last report on note 30 and shown as...
-Status 222, 2026-11-28 10:29 UTC, showed: The Reveal's four keys, each beside its approved picture: one sheet made by the Reveal team's lead for its third report on note 30 and...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-28T11:44:57Z
-phase 6: 11.89 h used of 24.00 h
-build: 11.89 h used of 24.00 h
+2026-11-28T12:03:30Z
+phase 6: 12.20 h used of 24.00 h
+build: 12.20 h used of 24.00 h
 extra rounds: no
-minutes since the last status: 24
+half point: reached
+minutes since the last status: 19
 ```
 
 ## Phases
