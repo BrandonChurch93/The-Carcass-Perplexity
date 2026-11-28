@@ -5,7 +5,7 @@ Writes public/assets/reveal/sky/weather.png, 1024 x 576, on the rectangle WEATHE
 (px of the master: x -2600 to 8200, y -1400 to 4675), as the systems stand at the titan frame (10027). They travel slowly with
 the far low; the cloud itself is the photographs, which stream through them faster (see lowDepth in weather.ts).
 
-  red    how much low cloud a system holds: 0 clear sea, about 0.5 broken clusters of cumulus, 1 a front or a deck
+  red    how much low cloud a system holds: 0 clear sea, about 0.5 broken cumulus at the edge of a patch, 1 a front, a storm or a deck
   green  how much thin veil the wind draws out there
   blue   the kind: 0 open cells (rings of cloud round clear air, behind the front), 0.5 cumulus in chains, 1 closed cells
 
@@ -35,6 +35,9 @@ X0, Y0, WIDE, HIGH = -2600.0, -1400.0, 10800.0, 6075.0
 # The far low (LOW2 of weather.ts), the cyclone, the middle of the body, and the way the low wind blows (px of the master, y down).
 LOW2 = (300.0, 900.0)
 CYCLONE = (5557.0, 3007.0)
+LOW3 = (60.0, 3080.0)
+# How many storms the sea holds: 1 the cyclone alone, 2 with the far low and its front, 3 with the small one to the south-west.
+STORMS = int(os.environ.get('STORMS', '3'))
 BODY = (3000.0, 1750.0, 2900.0, 1700.0)
 WIND = (0.9511, 0.3090)
 
@@ -62,18 +65,19 @@ def weather():
     my = Y0 + (ys + 0.5) / H * HIGH
     turn = -np.degrees(np.arctan2(WIND[1], WIND[0]))
 
-    # Cumulus of the open sea: clusters 150 to 600 km across, longer down the wind, with lanes of clear sea between.
+    # The open sea holds its cloud in large patches, a few hundred km across and longer down the wind, with clear sea
+    # between them: each is a deck of closed cells, thick and thin, that breaks into cumulus at its edge. No even layer.
     wide = noise(rng, 30.0, 16.0, turn)
     mid = noise(rng, 11.0, 6.0, turn)
     small = noise(rng, 4.0, 2.5, turn)
-    field = 0.5 * wide + 0.33 * mid + 0.17 * small
-    red = smooth(0.46, 0.6, field)
-    kind = np.full((H, W), 0.5, np.float32)
-    # A few closed decks where a cluster is at its fullest.
-    # (Few, and none near the body: it is the subject. The body lies about (3000, 1750), 2900 by 1700 px of the master.)
-    clear_of_body = smooth(1.15, 1.6, np.hypot((mx - BODY[0]) / BODY[2], (my - BODY[1]) / BODY[3]))
-    kind = np.maximum(kind, 0.5 + 0.5 * smooth(0.65, 0.72, field) * smooth(0.52, 0.64, wide) * clear_of_body)
-    green = 0.9 * smooth(0.5, 0.66, 0.6 * noise(rng, 22.0, 9.0, turn) + 0.4 * noise(rng, 7.0, 3.0, turn))
+    field = 0.6 * wide + 0.4 * mid
+    # (None near the body: it is the subject. The body lies about (3000, 1750), 2900 by 1700 px of the master.)
+    clear_of_body = 0.45 + 0.55 * smooth(0.95, 1.3, np.hypot((mx - BODY[0]) / BODY[2], (my - BODY[1]) / BODY[3]))
+    patch = smooth(0.55, 0.63, field) * clear_of_body
+    fringe = smooth(0.48, 0.55, field) * smooth(0.42, 0.6, small)
+    red = np.maximum(patch * (0.62 + 0.38 * smooth(0.3, 0.7, small)), 0.5 * fringe)
+    kind = 0.5 + 0.5 * smooth(0.25, 0.75, patch)
+    green = 0.8 * smooth(0.45, 0.55, field) * smooth(0.4, 0.7, noise(rng, 7.0, 3.0, turn))
 
     # The far low and its front: a comma. The band winds out of the low as the low wind winds into it (weather.ts: the turn
     # falls by 2 for each e-fold of the distance), wide at the head and drawn thin down the tail, which ends in clear air.
@@ -83,21 +87,36 @@ def weather():
     # (How far round the arm a point is: the arm is the curve th + 2 ln r = const; s runs 0 at the head to 1 at the tail's end.)
     phase = th + 2.0 * np.log(r / 95.0) - np.radians(47.0)
     off = (phase + np.pi) % (2.0 * np.pi) - np.pi
-    along = np.log(r / 95.0) / np.log(1250.0 / 95.0)
-    width = 0.17 + 55.0 / r
+    along = np.log(r / 300.0) / np.log(1500.0 / 300.0)
+    width = 0.15 + 40.0 / r
     ragged = 1.2 * width * (noise(rng, 6.0, 6.0) - 0.5)
-    band = np.exp(-((off + ragged) / width) ** 2) * smooth(-0.25, 0.1, along) * (1.0 - smooth(0.8, 1.05, along))
-    head = np.exp(-(r / 210.0) ** 2)
-    front = np.clip(np.maximum(band, 0.9 * head), 0.0, 1.0)
+    band = np.exp(-((off + ragged) / width) ** 2) * smooth(-0.3, 0.05, along) * (1.0 - smooth(0.7, 1.05, along))
+    # (The head is one whole deck over the low and a little down the wind of it: with the tail it is a comma, never a ring.)
+    head = np.exp(-(np.hypot(dx - 60.0, dy + 40.0) / 250.0) ** 2)
+    front = 0.88 * np.clip(np.maximum(band, 0.9 * head), 0.0, 1.0)
     # (Ahead of the front, on the inside of the arm, the air is dry: a clear slot. Behind it, outside, cold air and open cells.)
     ahead = np.exp(-((off + 2.0 * width) / (1.0 * width)) ** 2) * smooth(0.1, 0.4, along) * (1.0 - smooth(0.85, 1.1, along))
     behind = np.exp(-((off - 3.2 * width) / (2.2 * width)) ** 2) * smooth(0.25, 0.5, along) * (1.0 - smooth(0.9, 1.2, along))
+    comma = 1.0 if STORMS >= 2 else 0.0
+    front, ahead, behind, head_veil = front * comma, ahead * comma, behind * comma, 0.9 * np.exp(-(r / 420.0) ** 2) * comma
     red = red * (1.0 - 0.9 * ahead)
-    red = np.maximum(red, 0.6 * behind * (0.6 + 0.4 * mid))
+    red = np.maximum(red, 0.5 * behind * (0.5 + 0.5 * smooth(0.35, 0.6, mid)))
     kind = kind * (1.0 - behind)
     red = np.maximum(red, front)
     kind = np.maximum(kind, front)
-    green = np.maximum(green * (1.0 - 0.8 * ahead), 0.9 * np.exp(-(r / 420.0) ** 2))
+    green = np.maximum(green * (1.0 - 0.8 * ahead), head_veil)
+
+    # A third storm, small, far out in the sea to the south-west: two arms wound the way the cyclone's are, round a whole heart.
+    if STORMS >= 3:
+        dx3, dy3 = mx - LOW3[0], my - LOW3[1]
+        r3 = np.maximum(np.hypot(dx3, dy3), 1.0)
+        wound = np.arctan2(dy3, dx3) + 2.0 * np.log(r3 / 40.0) + 1.0 * (mid - 0.5)
+        arms = smooth(0.15, 0.75, np.cos(2.0 * wound) + 0.5 * (noise(rng, 5.0, 5.0) - 0.5))
+        storm = np.maximum(np.exp(-(r3 / 150.0) ** 2), arms * np.exp(-(r3 / 430.0) ** 4)) * (1.0 - smooth(460.0, 640.0, r3))
+        moat = np.exp(-(r3 / 700.0) ** 4)
+        red = np.maximum(red * (1.0 - 0.95 * moat), storm)
+        kind = np.maximum(kind * (1.0 - moat) + 0.5 * moat, storm)
+        green = green * (1.0 - 0.7 * moat)
 
     # Nothing of this map stands over the cyclone's disc, nor crowds it: clear water round it.
     away = np.hypot(mx - CYCLONE[0], my - CYCLONE[1])
@@ -107,6 +126,10 @@ def weather():
 
     out = np.stack([red, green, kind], -1)
     out = ndimage.gaussian_filter(out, (1.6, 1.6, 0.0))
+    # (Past its border the map is read at its border: there it is one even thin field of cumulus, so nothing is drawn out in bars.)
+    inside = np.minimum.reduce([xs, W - 1.0 - xs, ys, H - 1.0 - ys])
+    rim = smooth(2.0, 40.0, inside)[..., None]
+    out = np.array([0.4, 0.25, 0.5], np.float32) * (1.0 - rim) + out * rim
     Image.fromarray((np.clip(out, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8), 'RGB').save(os.path.join(PUB, 'weather.png'), optimize=True)
     print('weather.png', os.path.getsize(os.path.join(PUB, 'weather.png')))
 
@@ -148,7 +171,9 @@ def held():
     deck = smooth(0.25, 0.7, edge) * (1.0 - 0.8 * smooth(0.8, 0.99, soft(ice, 170.0))) * (0.45 + 0.55 * smooth(0.3, 0.6, lumps))
     # Banks on the coast that faces the wind: where land lies just down the wind of sea or ice.
     faces = np.clip(soft(land, 25.0) - shifted(soft(land, 25.0), 90.0), 0.0, 1.0)
-    banks = smooth(0.12, 0.45, faces) * (0.5 + 0.5 * smooth(0.35, 0.6, lumps))
+    # (Of the far coast only: an island's cloud is small and broken, below.)
+    wide_land = smooth(0.15, 0.4, soft(land, 150.0))
+    banks = smooth(0.12, 0.45, faces) * (0.5 + 0.5 * smooth(0.35, 0.6, lumps)) * wide_land
     # In the lee of the far coast the land is clear, and the sea beyond it grows streets with the fetch.
     lee = np.zeros_like(land)
     for km in (150.0, 300.0, 450.0, 600.0):
@@ -161,11 +186,13 @@ def held():
     for km in range(20, 340, 20):
         wake = np.maximum(wake, shifted(soft(isles, 8.0), float(km) + 25.0) * (1.0 - km / 340.0))
     wake = 0.55 * smooth(0.05, 0.3, wake)
-    red = np.maximum.reduce([0.95 * deck, 0.9 * banks, streets, 0.6 * cap * (0.4 + 0.6 * smooth(0.4, 0.6, lumps)), wake])
+    red = np.maximum.reduce([0.8 * deck, 0.72 * banks, streets, 0.3 * cap * smooth(0.4, 0.6, lumps), wake])
     # (Clear over the cyclone, as the map of the systems is.)
     ys, xs = np.mgrid[0:CH, 0:CW].astype(np.float32)
     away = np.hypot(CX0 + (xs + 0.5) * px - CYCLONE[0], CY0 + (ys + 0.5) * px - CYCLONE[1])
     red *= smooth(850.0, 1450.0, away)
+    # (Past its border the cover is read at its border: nothing is held there.)
+    red *= smooth(2.0, 60.0, np.minimum.reduce([xs, CW - 1.0 - xs, ys, CH - 1.0 - ys]))
     cover[..., 0] = (np.clip(ndimage.gaussian_filter(red, 1.5), 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
     Image.fromarray(cover, 'RGB').save(path, optimize=True)
     print('cover.png', os.path.getsize(path))

@@ -182,6 +182,9 @@ const mat2 LOW_E = mat2(25.0, 10.0, -10.0, 25.0);
 // What other land and the ice hold at the point last asked of lowAmount (sky/cover.png, red): 0 none, about 0.5 a street in
 // the lee of an island or a coast, 1 a bank or a deck.
 float lowHeld = 0.0;
+// The body of the low field at the point last asked of lowDepth, soft, 0 to 1: where its clusters, fronts and decks stand, with
+// none of their cells. It is what the moon shows of the weather by night.
+float lowBody = 0.0;
 float lowAmount(vec2 at, vec2 w) {
   vec3 stands = coverAt(at);
   float lake = smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
@@ -242,24 +245,32 @@ float lowDepth(vec2 at) {
   lowGE = windG(gAt, LOW_E / 600.0);
   // (Where the wind of a storm cancels the wind of the sea the air is calm and the map draws a photograph out without end:
   // the sky stands clear there, a dry slot beside the storm.)
+  // (A deck stands whole over such a place: it has no streets to draw out.)
   float calm = dot(windFp, windFp);
-  amount *= smoothstep(0.1, 0.4, calm);
+  float slack = smoothstep(0.1, 0.4, calm);
   lowWeigh = vec3(0.0);
   lowNear = vec2(0.0);
+  lowBody = 0.0;
   if (amount <= 0.02 && lowHeld <= 0.0) return 0.0;
   // (The systems, read first, so most of the open sea, which is clear, costs one read and no more: red how much cloud a
   // system holds, green the veil, blue its kind (0 open cells, 0.5 cumulus in chains, 1 closed cells). The reads are all at
   // places and fineness worked out above: see GRADS.)
   vec3 systems = pic(uWeather, clamp(lowPatch, 0.0, 1.0), lowGPatch).rgb;
-  float cluster = max(amount * min(systems.r * LOW_MUCH, 1.0), lowHeld);
-  float veiled = amount * systems.g;
+  float cluster = max(amount * min(systems.r * LOW_MUCH, 1.0) * mix(slack, 1.0, clamp(2.0 * systems.b - 1.0, 0.0, 1.0)), lowHeld * slack);
+  float veiled = amount * slack * systems.g;
   if (cluster <= 0.004 && veiled <= 0.004) return 0.0;
   float closed = max(clamp(2.0 * systems.b - 1.0, 0.0, 1.0) * (amount * systems.r >= lowHeld ? 1.0 : 0.0), smoothstep(0.62, 0.85, lowHeld));
   float opened = clamp(1.0 - 2.0 * systems.b, 0.0, 1.0) * (1.0 - closed);
   float chain = dot(pic(uMatStreaks, lowUvA, lowGA, 1.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.31;
   // (Cumulus stands in chains down the wind; a front or a deck is cloud from side to side; open cells stand free of the chains.)
-  float density = cluster * mix(smoothstep(0.7, 1.8, chain), 1.0, max(closed, 0.7 * opened));
-  float drawn = 0.45 * veiled * pow(max(chain - 0.9, 0.0), 1.3);
+  // (In the heart of a cluster the chains stand closer.)
+  float density = cluster * mix(smoothstep(0.7 - 0.3 * cluster, 1.8 - 0.5 * cluster, chain), 1.0, max(0.6 * closed, 0.7 * opened));
+  // (Close round a low the map winds a photograph tight: its streaks would be drawn there as curved bars, so the veil stands
+  // back, and the deck at the heart of the low is whole, with no cells to crack it.)
+  float wound = max(smoothstep(1.6, 4.0, calm), 1.0 - slack);
+  lowBody = density;
+  // (Below orbit the veil reads as a smear on the lens: it is thinner there and comes to its full by orbit.)
+  float drawn = 0.45 * veiled * pow(max(chain - 0.9, 0.0), 1.3) * (1.0 - 0.85 * wound) * (0.4 + 0.6 * smoothstep(500.0, 1300.0, uViewKm));
   if (density <= 0.0) return drawn;
   float cell = cloudAt(uMatPopcorn, lowUvB, lowGB, 0.34);
   float puff = cloudAt(uMatSpecks, lowUvC, lowGC, 0.2);
@@ -270,11 +281,15 @@ float lowDepth(vec2 at) {
   lowNear = vec2(1.0 - smoothstep(240.0, 360.0, uViewKm), 1.0 - smoothstep(85.0, 130.0, uViewKm));
   if (lowNear.x > 0.0) lump = mix(1.0, cloudAt(uMatPopcorn, lowUvD, lowGD, 0.34), lowNear.x);
   if (lowNear.y > 0.0) grain = mix(1.0, cloudAt(uMatSpecks, lowUvE, lowGE, 0.2), lowNear.y);
-  // (Open cells are the photograph turned inside out: cloud in the walls between its cumulus, clear air where they stood.)
-  float knots = mix(cell, max(2.0 - 1.3 * cell, 0.0), opened) * (0.45 + 0.55 * puff) * mix(1.0, lump, 0.55) * mix(1.0, grain, 0.4);
+  // (Open cells are the photograph's cumulus hollowed: a wall of cloud round the clear air where each stood, clear between.)
+  float knots = mix(cell, 2.6 * smoothstep(0.25, 0.7, cell) * (1.0 - smoothstep(0.7, 1.5, cell)), opened) * (0.45 + 0.55 * puff) * mix(1.0, lump, 0.55) * mix(1.0, grain, 0.4);
   lowWeigh = vec3(1.0, 0.55, density);
-  // (A deck has a floor of cloud under its cells, cracked where the cells part.)
-  float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0) + 0.7 * closed * cluster * smoothstep(0.35, 0.9, knots);
+  // (A patch, a front or a storm has a body under its cells: the photograph of wind-drawn cloud itself, thick and thin as it
+  // is, cracked where the cells part. It is the start's large soft patch, with tops on it.)
+  // (At the heart of a low, where the wind's map is wound too tight to hold a cell, the deck's cells are read on the ground.)
+  float whole = 0.8;
+  if (wound * closed > 0.0) whole = clamp(0.35 + 0.5 * cloudAt(uMatPopcorn, (at - systemsRun() - uWx * vec2(6.0, 2.0)) / 170.0 + vec2(0.21, 0.63), gAt / 170.0 * lowSoft, 0.34), 0.0, 1.0);
+  float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0) + 1.7 * closed * cluster * mix(mix(pow(max(chain - 0.4, 0.0), 1.3), 1.0, 0.7 * smoothstep(0.9, 0.99, systems.r)) * (0.45 + 0.55 * smoothstep(0.35, 0.9, knots)), 0.6 * whole, wound);
   return 1.5 * dense + drawn;
 }
 

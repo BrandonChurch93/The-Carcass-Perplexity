@@ -39,25 +39,28 @@ y -820 to 3961.25). Where the weather stands:
 ## `public/assets/reveal/sky/weather.png`
 
 Made by: `assets-src/reveal/sky/make_weather.py` (Python 3 with numpy, scipy and Pillow), committed here
-From: nothing for `weather.png` (seeded noise and the places of the far low and the cyclone); for the red of `cover.png` the ocean builder's mask of other land and ice, `assets-src/reveal/land/ocean/ocean-mask.png`, read and never copied
-Prompt or command: `python3 assets-src/reveal/sky/make_weather.py [path of the mask]`, from the root of the repo, after `make_cover.py`; no model and no prompt; the only noise is of fixed seeds
-Takes: 4 made (an even field; clusters with lanes; the comma of the far low with its dry slot and open cells; the same with the decks kept away from the body and the islands' cloud set upwind and broken); the fourth is kept
-Why this one: the sea reads as clusters of cumulus with clear lanes between and the body stays clear
+From: nothing for `weather.png` (seeded noise and the places of the storms); for the red of `cover.png` the ocean builder's mask of other land and ice, `assets-src/reveal/land/ocean/ocean-mask.png`, read and never copied
+Prompt or command: `python3 assets-src/reveal/sky/make_weather.py`, from the root of the repo, after `make_cover.py`; `STORMS=1`, `2` or `3` before it sets how many storms the sea holds (3 is what is committed); no model and no prompt; the only noise is of fixed seeds
+Takes: 9 made (an even field of small cumulus; clusters with lanes; the comma of the far low with its dry slot and open cells; decks kept away from the body; then, after the lead's word that small marks read as an even speckle at 960 x 540, large patches with clear sea between; fewer of them; a third small storm; its arms left whole; the banks of the far coast thinner); the ninth is kept
+Why this one: at 960 x 540 the sea reads as large patches, a front and storms with clear water between, and the body stays clear
 Date: 2026-11-28
 
 1024 x 576, on the rectangle `WEATHER_RECT` of `src/places/reveal/shared/weather.ts` (px of the master: x -2600 to 8200, y -1400 to 4675).
-The weather systems as they stand at the titan frame; they travel slowly with the far low and the cloud streams through them faster.
+The weather systems as they stand at the titan frame; they travel slowly down the wind and the cloud streams through them faster.
 Used by: `src/places/reveal/shared/weather.ts` (`lowDepth`), read by the part `reveal/cloud` and by the shade on the land.
 
-- red: how much low cloud a system holds: 0 clear sea, about 0.5 broken clusters of cumulus, 1 a front or a deck.
+- red: how much low cloud a system holds: 0 clear sea, about 0.5 broken cumulus at the edge of a patch, 1 a front, a storm or a deck.
 - green: how much thin veil the wind draws out there.
-- blue: the kind: 0 open cells behind the front, 0.5 cumulus in chains, 1 closed cells.
+- blue: the kind: 0 open cells behind the front, 0.5 cumulus in chains, 1 a patch with a body (closed cells).
+
+The systems: large patches over the open sea, few near the body; the far low (`LOW2`, px 300, 900) with its front, a comma; a small
+storm to the south-west (px 60, 3080) with two arms round a whole heart; clear water 850 to 1450 px round the cyclone.
 
 The same script sets the red of `cover.png` (above); its green and blue are unchanged to the last bit.
 
 ### What is read as data
 
-- `assets-src/reveal/land/ocean/ocean-mask.png` (the ocean builder's, from the branch `agent/p10-reveal-ocean`): red other land, green ice.
+- `assets-src/reveal/land/ocean/ocean-mask.png` (the ocean builder's): red other land, green ice.
 
 ## `public/assets/reveal/sky/banks.png`
 

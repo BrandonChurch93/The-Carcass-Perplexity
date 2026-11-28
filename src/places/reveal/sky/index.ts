@@ -75,6 +75,7 @@ void main() {
   // (From orbit the field is read half again softer than the pixel: a tuft has form at two pixels and more.)
   lowSoft = mix(1.0, 1.5, smoothstep(500.0, 1300.0, uViewKm));
   vec2 low = lowField(xz);
+  float lowForm = lowBody;
   float flank = dot(lowSlope, toSun);
   float self = clamp(0.5 + 1.25 * flank, 0.0, 1.0);
   float high = highField(up);
@@ -164,7 +165,10 @@ void main() {
     float gone = uTerm.w * (1.0 - smoothstep(-0.1, 0.34, sunHeight(xz)));
     // (By night the low field is seen by the moon, dimmer and thinner than by day: its bodies stay, its thin is lost.)
     float sunk = 1.0 - smoothstep(-0.34, -0.06, sunHeight(xz));
-    float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone) * (1.0 - 0.35 * sunk);
+    float aNight = a * mix(1.0, 0.65 + 0.35 * a, gone) * (1.0 - 0.2 * sunk);
+    // (By night small cumulus spreads out under its lid: the moon shows where a cluster, a front or a deck stands as one
+    // thin pale body, dimmer than the bone, and the cells are bright points in it.)
+    aNight += (1.0 - aNight) * 0.34 * sunk * (1.0 - exp(-1.6 * lowForm));
     // (The thin ice far above is lost against the day; with the camera's eye open it is seen, a veil of fibres that catches the
     // moon and crosses the land on its own wind. It is the same ice as by day, the photograph's own, and it never hides the ground.)
     // (Brought up for the open eye it is eased toward its ceiling, never cut off at it: cut off, every sheet came out one even
