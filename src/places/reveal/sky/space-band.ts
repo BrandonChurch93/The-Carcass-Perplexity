@@ -1,0 +1,24 @@
+// How thick the far crowd of the galaxy stands, cell by cell of the picture sky/space-band.jpg: a is none, z the thickest.
+// Written by assets-src/reveal/space/make_space_band.py. Do not edit by hand.
+export const BAND_CELLS: readonly string[] = [
+  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'aaaaaaaaaaaaaaaaaaaaaabbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'aaaaabbbbbbbcbcdeeeedeeffddcccccccccbbbbbbbbaaaaaaaabbaaaaaaaaaaaaaaaaaaaaaa',
+  'aabcddedcbbbceegjijiiijmgffgihghgfffeedcccccccbbbccccccccccccccbbbbbbbbbccba',
+  'abcehhgddcbdegijmmpoooqrkiiknklkkkjhggeeeedcddddeeefeeddedddeeeddcccdddcccba',
+  'abdfiiidccdfgimptvwvvwusnliiihkijlkkliiggfdddeffgiiihddeffefgihheeddeefeffca',
+  'aadhhieccdffikomtqsyzzuusnligghjihmoljijfghdfikkkkihffeffeefhljkgffggfgghhdb',
+  'abcdccdddghihhkjkluvvwxtpiigjkjjheilnlkihjggehihhhjfhedeffeefgffhhhiimmmihca',
+  'accdddeehikmokholmnmplnljiihkijffefggeffghhljffgfdeehgghfeffeeghjkjmmokkhfeb',
+  'acedhggknllqpkkrrspkknollmnonplhgfeefedeffhlmihffeeefihlhfghhhijjkkillhffhfb',
+  'aceehiijjhhjjjosuwspmrtsqssplkkjihggggfefghiijkjhhfedeffgdeeffgfghiffegghhdb',
+  'abddeggghghggimnppqonppsrqpnkjiiihgegfedefffegghggfddcdddddccddddddcccdeeeca',
+  'aabccddddefeeghiiijjjjjklkjhhhgfefedddddddddcddddccbbbbbbbbbbbbbbbbbbbcccbba',
+  'aaaaabbbbbcbccddeeeeffffggfeeedcccbbbbbbbbbbabbaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'aaaaaaaaaaaaaaabbbbbbbbbccbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+];
