@@ -500,7 +500,10 @@ export function create(ctx: Context): Piece {
         // Rings where its mouth is in the water, and round a hoof that has just come down or is about to leave.
         const low = d.down(t);
         if (wetAt(solved.muzzle[0], solved.muzzle[2])) ring(solved.muzzle[0], solved.muzzle[2], 1.3 * Math.min(1, Math.max(0, (low - 0.86) / 0.1)));
+        // A hoof set down sends rings out for a second and a half after, each fainter than the last.
         const was = poseAt(d, t - 0.45, scratch).hooves.map((h) => h[1]);
+        const earlier = poseAt(d, t - 0.95, scratch).hooves.map((h) => h[1]);
+        const oldest = poseAt(d, t - 1.5, scratch).hooves.map((h) => h[1]);
         if (g.near.x > 0) {
           // The water it carries falls from it. Drops leave at moments of their own; each is where its fall from where it left has brought it.
           const every = 0.11;
@@ -563,8 +566,10 @@ export function create(ctx: Context): Piece {
           const stir = Math.max(a[1], b[1]) - g.own.z;
           const at = a[1] > b[1] ? a : b;
           // A hoof that stands still leaves the water still: the ring is there while it lifts and for a moment after it is set down.
-          const before = Math.max(was[pair * 2] as number, was[pair * 2 + 1] as number) - g.own.z;
-          if (wetAt(at[0], at[2]) && g.own.z < -0.02) ring(at[0], at[2], Math.min(1.2, 9 * Math.max(stir, 0.7 * before)));
+          const lifted = (from: number[]): number => Math.max(from[pair * 2] as number, from[pair * 2 + 1] as number) - g.own.z;
+          const before = Math.max(0.7 * lifted(was), 0.45 * lifted(earlier), 0.25 * lifted(oldest));
+          // And a leg that stands in the lake is never quite still in it: the animal breathes and shifts, and the water laps at the leg.
+          if (wetAt(at[0], at[2]) && g.own.z < -0.02) ring(at[0], at[2], Math.max(0.4, Math.min(1.2, 9 * Math.max(stir, before))));
         }
       }
       drips.end();

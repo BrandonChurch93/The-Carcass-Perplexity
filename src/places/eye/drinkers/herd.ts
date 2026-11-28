@@ -415,7 +415,8 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   if (g?.from !== undefined) shift[2] += s * (0.07 * ease(g.from - 0.1, g.from + 0.5, t) * (1 - ease(g.from + 0.6, g.from + 1.4, t)) - 0.05 * ease(g.from - 0.7, g.from - 0.25, t) * (1 - ease(g.from - 0.15, g.from + 0.3, t)));
   if (g?.to !== undefined) shift[2] += 0.06 * s * ease(g.to + 0.3, g.to + 0.9, t) * (1 - ease(g.to + 1.0, g.to + 2.0, t));
   // The neck: each joint follows the one below it a little late, the head last.
-  const drive = (i: number): number => d.down(t - (d.close ? 0.02 : 0.075) * i);
+  // Seen close, the head leads: it levels before the neck lifts it, and tips before the neck lets it down.
+  const drive = (i: number): number => (d.close ? d.down(i === 4 ? t + 0.16 : t - 0.02 * i) : d.down(t - 0.075 * i));
   const low = Math.min(1, Math.max(0, d.down(t)));
   const neck: [number, number, number, number, number] = [0, 0, 0, 0, 0];
   // A walking head nods: down as each fore hoof takes the weight, the head a little after the neck.
