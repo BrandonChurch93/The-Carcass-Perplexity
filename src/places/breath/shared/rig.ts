@@ -9,9 +9,6 @@ import { SHADOW_RUN, SUN_DIR } from './anchors';
 export const LAND = { minX: -190, maxX: 130, minZ: -200, maxZ: 120, width: 1024, height: 1024 };
 export const CONTACT = { size: 1024, minRadius: 14, maxRadius: 160 };
 export const MAX_EMITTERS = 0;
-// The sky as seen (dome, haze, what water mirrors) against the sky as measured for the light it gives: the pictures have it darker than
-// the first measure, with the gold of the sun standing out of a duller grey.
-const SKY_DIM = 0.86;
 
 export type Height = (x: number, z: number) => number;
 
@@ -178,18 +175,19 @@ export function createRig(): Rig {
     uLandRect: { value: new THREE.Vector4(LAND.minX, LAND.minZ, 1 / (LAND.maxX - LAND.minX), 1 / (LAND.maxZ - LAND.minZ)) },
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
-    // The dawn sky under fog, scene linear. Measured against the approved wide view: the sky away from the sun reads a cold grey,
-    // and pale rock in open shade reads about 0.3.
-    uSkyZenith: { value: new THREE.Vector3(0.15, 0.146, 0.146).multiplyScalar(SKY_DIM) },
-    uSkyHorizon: { value: new THREE.Vector3(0.2, 0.193, 0.19).multiplyScalar(SKY_DIM) },
+    // The dawn sky as it is seen (the dome, the haze, what water and wet rock mirror): a warm pink grey, measured on the approved pictures
+    // through the inverse of the film's tone curve (away from the sun their sky reads 0.24 to 0.47 in red, a third less in blue).
+    uSkyZenith: { value: new THREE.Vector3(0.247, 0.208, 0.192) },
+    uSkyHorizon: { value: new THREE.Vector3(0.33, 0.275, 0.25) },
     // What pale wet rock throws back up at the underside of things.
-    uSkyGround: { value: new THREE.Vector3(0.06, 0.054, 0.048).multiplyScalar(SKY_DIM) },
+    uSkyGround: { value: new THREE.Vector3(0.099, 0.077, 0.063) },
     uSunDir: { value: sunDirection },
     // The sun through the fog on a face turned to it, and the fog's own glow round it.
     uSunColour: { value: new THREE.Vector3(4.5, 2.9, 1.42) },
     uGlowColour: { value: new THREE.Vector3(0.37, 0.3, 0.25) },
-    // The fill is held where it was measured: what the sky loses to SKY_DIM it is given back here, so no lit face moves.
-    uFill: { value: new THREE.Vector3(0.44, 0.58, 0.86).multiplyScalar(1 / SKY_DIM) },
+    // The light the sky gives a face is held where it was measured under the colder sky of the first two waves (horizon 0.2, 0.193, 0.19
+    // times a fill of 0.44, 0.58, 0.86): the sky above times this is the same cold light, so no lit face moved when the seen sky warmed.
+    uFill: { value: new THREE.Vector3(0.2667, 0.4071, 0.6536) },
   };
 
   // Until the land folder says otherwise: the ground of the layout, with the shaft cut into it.
