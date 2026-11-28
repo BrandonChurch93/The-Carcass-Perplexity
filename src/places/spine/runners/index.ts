@@ -10,8 +10,8 @@ import { stagedSeconds } from '../shared/stage';
 import { FLOOR, MOUTH_S, canalL, first, flare, frameAt, locate, world } from '../ridge';
 import { floorRise } from '../land/meshes';
 import { flashAt } from '../strikes/bolt';
-import { BURN_NARROW, LOCK_FRAGMENT, LOCK_VERTEX, MARK_FRAGMENT, MARK_VERTEX, SKIN_FRAGMENT, SKIN_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
-import { BONES, carcassJoints, claws, coat, lockGeometry, skin, tendrilGeometry, type Joints, type LegPose, type Pose, type Skin, type V3 } from './skin';
+import { BURN_NARROW, LOCK_FRAGMENT, LOCK_VERTEX, STRAND_FRAGMENT, STRAND_VERTEX, MARK_FRAGMENT, MARK_VERTEX, SKIN_FRAGMENT, SKIN_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
+import { BONES, carcassJoints, claws, coat, lockGeometry, skin, strandGeometry, tendrilGeometry, type Joints, type LegPose, type Pose, type Skin, type V3 } from './skin';
 
 export const PARTS: readonly string[] = ['ridge-runners'];
 
@@ -102,6 +102,8 @@ const smooth = (a: number, b: number, v: number): number => {
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
   const strip = lockGeometry(5);
+  // The dead one's coat is seen from three metres: every lock of it is drawn as its hairs.
+  const hairs = strandGeometry(6, 8);
   const tendril = tendrilGeometry();
   // The dead one's are seen close: round, and bent in many places.
   const tendrilFine = tendrilGeometry(10, 44);
@@ -166,6 +168,7 @@ export function create(ctx: Context): Piece {
       uFace: { value: new THREE.Vector4(j.face[0], j.face[1], j.face[2], 0) },
       uLead: { value: new THREE.Vector4(j.lead[0], j.lead[1], j.lead[2], 0) },
       uWrithe: { value: writhe },
+      uStrand: { value: new THREE.Vector4(0.1, 1.0, 0.16, 0.4) },
     };
     const group = new THREE.Group();
     const hide = new THREE.ShaderMaterial({ vertexShader: SKIN_VERTEX, fragmentShader: SKIN_FRAGMENT, uniforms: shared });
@@ -183,8 +186,11 @@ export function create(ctx: Context): Piece {
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 || (n[2] > 0.5 && n[1] < 0.45) : undefined;
     const c = coat(body, rng, { clumps: role.clumps, locks: role.act === 'dead' ? 6 : 4, broad: role.act === 'dead' ? 0.55 : role.inside ? 0.62 : 1, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.08, 0.15, 0.115, 0.085, 0, 0.035] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.65) : 0, droop: role.inside ? (role.act === 'stand' ? 0.55 : 1) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
     const locks = new THREE.InstancedBufferGeometry();
-    locks.index = strip.index;
-    locks.setAttribute('position', strip.getAttribute('position'));
+    const asHair = role.act === 'dead';
+    const lockShape = asHair ? hairs : strip;
+    locks.index = lockShape.index;
+    locks.setAttribute('position', lockShape.getAttribute('position'));
+    if (asHair) locks.setAttribute('aStrand', lockShape.getAttribute('aStrand'));
     locks.setAttribute('aRoot', new THREE.InstancedBufferAttribute(c.root, 3));
     locks.setAttribute('aCtrl', new THREE.InstancedBufferAttribute(c.ctrl, 3));
     locks.setAttribute('aTip', new THREE.InstancedBufferAttribute(c.tip, 3));
@@ -192,7 +198,7 @@ export function create(ctx: Context): Piece {
     locks.setAttribute('aLockBones', new THREE.InstancedBufferAttribute(c.bones, 4));
     locks.instanceCount = c.count;
     locks.boundingSphere = body.geometry.boundingSphere;
-    const lockMesh = new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: LOCK_VERTEX, fragmentShader: LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide, transparent: true, depthWrite: true }));
+    const lockMesh = new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: asHair ? STRAND_VERTEX : LOCK_VERTEX, fragmentShader: asHair ? STRAND_FRAGMENT : LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide, transparent: true, depthWrite: true }));
     // Laid over the hide and the ground behind it, so that its edges can be soft; before the air's veils, which lie over it.
     lockMesh.renderOrder = -1;
     group.add(lockMesh);
@@ -657,11 +663,12 @@ export function create(ctx: Context): Piece {
       ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, mid[0], mid[2], 0.6 * dead.role.size, 0.75, 2.0, -DEAD_HEADING * RAD);
       // And where its weight is on the snow the shade is close and dark: under the trunk, under the head and its tendrils, under the limbs
       // that lie toward the lens.
-      ctx.rig.setDisc(discs, DEAD_DISC, mid[0], mid[2], 0.27 * dead.role.size, 1, 2.7, -DEAD_HEADING * RAD);
+      ctx.rig.setDisc(discs, DEAD_DISC, mid[0], mid[2], 0.24 * dead.role.size, 0.8, 2.7, -DEAD_HEADING * RAD);
       const brow = step(BODY_AT, DEAD_HEADING, 1.3 * dead.role.size);
       ctx.rig.setDisc(discs, DEAD_DISC + 1, brow[0], brow[2], 0.3 * dead.role.size, 0.85, 1.5, -DEAD_HEADING * RAD);
-      const limbs = step(mid, carcassView, -0.42 * dead.role.size);
-      ctx.rig.setDisc(discs, DEAD_DISC + 2, limbs[0], limbs[2], 0.24 * dead.role.size, 0.9, 2.6, -DEAD_HEADING * RAD);
+      // Toward the lens the coat lies out over the snow: the shade there is under it, and no black band stands between belly and snow.
+      const limbs = step(mid, carcassView, -0.3 * dead.role.size);
+      ctx.rig.setDisc(discs, DEAD_DISC + 2, limbs[0], limbs[2], 0.18 * dead.role.size, 0.5, 2.6, -DEAD_HEADING * RAD);
     },
   };
 }

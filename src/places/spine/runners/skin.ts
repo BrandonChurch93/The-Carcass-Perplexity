@@ -735,6 +735,32 @@ export function lockGeometry(segments: number): THREE.BufferGeometry {
   return g;
 }
 
+// A lock as hairs: so many ribbons side by side in one drawing, each with its own numbers (which hair it is, where round the lock's
+// root it stands, how long it is, how far out it stands), dealt out evenly and not by chance.
+export function strandGeometry(strands: number, segments: number): THREE.BufferGeometry {
+  const pos: number[] = [];
+  const own: number[] = [];
+  const index: number[] = [];
+  const part = (v: number): number => v - Math.floor(v);
+  for (let h = 0; h < strands; h++) {
+    const base = h * (segments + 1) * 2;
+    const k = h + 1;
+    for (let s = 0; s <= segments; s++) {
+      pos.push(-1, s / segments, 0, 1, s / segments, 0);
+      for (let e = 0; e < 2; e++) own.push(part(k * 0.6180339887), part(k * 0.7548776662), part(k * 0.5698402910), part(k * 0.3819660113 + 0.21));
+    }
+    for (let s = 0; s < segments; s++) {
+      const a = base + s * 2;
+      index.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('aStrand', new THREE.Float32BufferAttribute(own, 4));
+  g.setIndex(index);
+  return g;
+}
+
 export function tendrilGeometry(round = 7, along = 20): THREE.BufferGeometry {
   const g = new THREE.CylinderGeometry(1, 1, 1, round, along, true);
   g.translate(0, 0.5, 0);
