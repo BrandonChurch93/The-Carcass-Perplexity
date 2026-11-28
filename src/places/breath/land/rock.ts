@@ -746,7 +746,7 @@ void main() {
   // combed into upright stripes a finger apart from top to bottom.
   float streak = texture2D(tRock, vec2(vUv.x / 5.3, p.y / 8.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 2.9 + 0.3, p.y / 4.0)).a - 0.5);
   float wetRun = smoothstep(0.52, 0.36, streak + 0.12 * (bedLone - 0.5)) * (1.0 - up);
-  albedo *= mix(1.0, 0.5, wetRun) * mix(1.0, 0.62 + 0.3 * height, browOn) * mix(0.55, 1.0, smoothstep(0.0, 0.3, under));
+  albedo *= mix(1.0, 0.5, wetRun) * mix(1.0, 0.46 + 0.3 * height, browOn) * mix(0.45, 1.0, smoothstep(0.0, 0.12 + 0.5 * b.r, under));
   albedo = mix(albedo, vec3(0.3, 0.27, 0.2) * tone, 0.16 * smoothstep(0.66, 0.8, streak) * (1.0 - up));
   // The beds: one is not the tone of the next, and the foot of each is shut in under the lip of the one above.
   albedo *= mix(1.0, 0.55, bedFoot) * mix(1.0, 0.72 + 0.56 * bedLone, 0.7 * bedSeen);
@@ -754,7 +754,7 @@ void main() {
   occ *= mix(1.0, 0.6, bedFoot);
   // A ledge holds what falls: grit, paler than the face.
   albedo = mix(albedo, vec3(0.2, 0.185, 0.16) * tone, 0.6 * smoothstep(0.6, 0.9, up));
-  rough = mix(mix(0.3, 0.75, max(topBeds, smoothstep(1.8, 0.7, under))), 0.16, wetRun);
+  rough = mix(mix(0.3, 0.75, max(topBeds, smoothstep(1.8, 0.7, under))), mix(0.16, 0.5, browOn), wetRun);
   occ *= 0.75 + 0.5 * height;
   // The tiers carried on round the side that fell: bands of the arches' own stone, cream with rust in it, and under each the wall is
   // rust-dark and wet with what runs off it.
@@ -836,7 +836,7 @@ void main() {
   float hollow = tm.b;
   float baked = tn.b;
   // Ivory: paler where the skin stands out, deeper in its lows.
-  vec3 albedo = mix(vec3(0.64, 0.61, 0.54), vec3(0.93, 0.91, 0.855), clamp(0.5 + 1.1 * (a.r - 0.5) + 0.9 * (hollow - 0.5), 0.0, 1.0));
+  vec3 albedo = mix(vec3(0.52, 0.49, 0.425), vec3(0.84, 0.815, 0.755), clamp(0.5 + 1.1 * (a.r - 0.5) + 0.9 * (hollow - 0.5), 0.0, 1.0));
   // Rust: it starts at the cracks and the bare places and runs down round the nose and under the belly, where the water runs. The top
   // keeps its cream, with a wash of it here and there.
   float face = 1.0 - up;
@@ -861,7 +861,10 @@ void main() {
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.5 * dust);
   // The mist settles on it and runs: a smooth wet skin, duller where a plate has gone and where the dust lies.
   float rough = mix(mix(0.13, 0.3, smoothstep(0.55, 0.25, hollow)), 0.8, dust);
-  float occ = vOcc * mix(0.4, 1.0, baked) * mix(0.82, 1.06, hollow);
+  // A rib is round: its belly is shut in under itself and dark with what drips from it, and its face sees less of the sky than its top.
+  float belly = smoothstep(0.15, -0.55, n.y);
+  albedo = mix(albedo, vec3(0.2, 0.1, 0.045) * (0.7 + 0.6 * a.r), 0.55 * belly);
+  float occ = vOcc * mix(0.4, 1.0, baked) * mix(0.82, 1.06, hollow) * mix(0.72, 1.0, up) * mix(1.0, 0.5, belly);
 
   vec4 land = landAt(p.xz);
   float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);
