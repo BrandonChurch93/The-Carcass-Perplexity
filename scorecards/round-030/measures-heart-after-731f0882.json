@@ -1,0 +1,229 @@
+{
+  "unit": "heart",
+  "tier": "final",
+  "format": "uhd",
+  "measures": [
+    "M1",
+    "M2",
+    "M3"
+  ],
+  "colour": {
+    "M1": "green",
+    "M2": "green",
+    "M3": "green"
+  },
+  "missing": [],
+  "frames": [
+    {
+      "id": "heart-0",
+      "frame": 2722,
+      "key": true
+    },
+    {
+      "id": "heart-1",
+      "frame": 3477,
+      "key": true
+    },
+    {
+      "id": "heart-2",
+      "frame": 3685,
+      "key": true
+    },
+    {
+      "id": "heart-3",
+      "frame": 3156,
+      "key": true
+    },
+    {
+      "id": "heart-4",
+      "frame": 4006,
+      "key": true
+    }
+  ],
+  "results": [
+    {
+      "measure": "M1",
+      "id": "heart-0",
+      "frame": 2722,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "heart-1",
+      "frame": 3477,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "heart-2",
+      "frame": 3685,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "heart-3",
+      "frame": 3156,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "heart-4",
+      "frame": 4006,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "heart-0",
+      "frame": 2722,
+      "status": "pass",
+      "share": 0.20848,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "heart-1",
+      "frame": 3477,
+      "status": "pass",
+      "share": 0.358715,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "heart-2",
+      "frame": 3685,
+      "status": "pass",
+      "share": 0.33694,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "heart-3",
+      "frame": 3156,
+      "status": "pass",
+      "share": 0.494074,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "heart-4",
+      "frame": 4006,
+      "status": "pass",
+      "share": 0.266147,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M3",
+      "id": "heart-0",
+      "frame": 2722,
+      "status": "pass",
+      "ratio": 0.7896,
+      "floor": 0.75,
+      "frameEnergy": 182.8564,
+      "approvedEnergy": 231.5881,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/2-heart/heart-0-establishing.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "heart-1",
+      "frame": 3477,
+      "status": "pass",
+      "ratio": 1.0413,
+      "floor": 0.75,
+      "frameEnergy": 190.7892,
+      "approvedEnergy": 183.2209,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "heart-2",
+      "frame": 3685,
+      "status": "pass",
+      "ratio": 1.2746,
+      "floor": 0.75,
+      "frameEnergy": 206.2777,
+      "approvedEnergy": 161.8361,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/2-heart/heart-2-the-one-that-sank.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "heart-3",
+      "frame": 3156,
+      "status": "pass",
+      "ratio": 1.0056,
+      "floor": 0.75,
+      "frameEnergy": 117.9275,
+      "approvedEnergy": 117.266,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "heart-4",
+      "frame": 4006,
+      "status": "pass",
+      "ratio": 1.2238,
+      "floor": 0.75,
+      "frameEnergy": 239.182,
+      "approvedEnergy": 195.4403,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg"
+    }
+  ],
+  "usual": {
+    "tier": "final",
+    "format": "uhd"
+  },
+  "thresholds": {
+    "pixelThreshold": 4,
+    "checkGapSeconds": 1,
+    "minSharpnessRatio": 0.75
+  },
+  "sharpness": "The mean squared response of a four neighbour Laplacian on the Rec. 709 luminance of the 8 bit picture, over every pixel that is not on the border. The approved picture is cropped at its centre to the shape of the frame, and both pictures go through the same lanczos3 resize to the size of that crop.",
+  "state": {
+    "engine": "6714b45ff14a5941",
+    "units": {
+      "heart": "e26939d6334ba7c1",
+      "ribs": "b102a8a12e581c38",
+      "breath": "faeff2bfbd6618f8",
+      "marsh": "85689939a752b171",
+      "spine": "b141536f55a18b99",
+      "eye": "e224102a93b17dc2",
+      "reveal": "a285a6223a7f47ea",
+      "film": "51d802f37e2b75ab"
+    },
+    "browser": "147.0.7727.15"
+  }
+}
