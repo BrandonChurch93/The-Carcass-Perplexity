@@ -106,10 +106,10 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.roll = (s.stance === 2 ? -0.05 : -0.025) * shift + 0.06 * (k2 - 0.5);
   p.size = size;
   // Weathered, each to its own grey-brown: none is clean.
-  p.tone = 0.42 + 0.5 * k3 + 0.12 * young;
+  p.tone = 0.5 + 0.55 * k3 + 0.12 * young;
   p.girth = 0.86 + 0.34 * k5 + 0.16 * young;
   p.neck = 0.84 + 0.34 * k6 - 0.2 * young;
-  p.warm = 0.75 * k7 * k7 * (1 - young);
+  p.warm = -0.4 + 0.95 * k7 * k7 * (1 - young);
   p.shade = 1;
   for (let leg = 0; leg < 2; leg++) {
     const foot = p.feet[leg] as Pose['feet'][number];

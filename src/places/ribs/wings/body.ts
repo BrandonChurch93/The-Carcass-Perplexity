@@ -228,7 +228,7 @@ export interface Pose {
   neck: number;
   /** Each sail swung out from the flank about the ridge of the back, radians, left and right: 0 folded against it. */
   open: [number, number];
-  /** How much of the picture's amber its sails keep, 0 to 1: 0 as the feeder's. */
+  /** How much of the picture's amber its sails keep, -0.4 (bleached) to 1: 0 as the feeder's. */
   warm: number;
 }
 export const pose = (): Pose => ({
@@ -436,11 +436,13 @@ void main() {
   float skin = sail ? mix(0.3 * free, 1.0, amber) * mix(0.35, 1.0, free) : 0.0;
   // A sail that lies folded and dry on a back is as pale as the hide: only one held up to the light keeps the picture's deep amber.
   vec3 pale = min(pow(skinPic, vec3(0.8)) * 1.22, vec3(0.94));
-  float warm = sail ? clamp(vMix.x - 2.0, 0.0, 1.0) : 0.0;
+  float warm = sail ? clamp(vMix.x - 2.0, -0.4, 1.0) : 0.0;
   vec3 albedo = (sail ? mix(pale, pow(skinPic, vec3(0.92)), min(1.0, 0.3 + 0.7 * uThrough + 0.6 * warm)) : pale) * vMix.z;
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.02, 0.98, 0.93), uGrey * (1.0 - skin * (1.0 - uGrey)));
   // And a folded, dry one has lost most of its colour.
-  if (sail) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.05, 0.98, 0.9), 0.32 * (1.0 - uThrough) * (1.0 - warm));
+  if (sail) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.05, 0.98, 0.9), min(0.9, 0.32 * (1.0 - uThrough) * (1.0 - warm) + 1.3 * max(-warm, 0.0)));
+  // One bleached by a season on the ledges is as pale as bone.
+  if (sail) albedo *= 1.0 + 1.2 * max(-warm, 0.0);
   // Wet where it stands in the pool, and a hand over it.
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.45, vWorld.y);
   albedo *= 1.0 - 0.42 * wet;
