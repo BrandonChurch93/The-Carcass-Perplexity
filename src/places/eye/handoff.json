@@ -8,8 +8,8 @@
   "eyeHalfHeightMetres": 310,
   "revealHalfHeightKm": 41.5,
   "lid": {
-    "what": "The evening cloud over the socket, over which the cut lies. Both places draw it from these numbers. Lengths are in halves of the height of the view at the cut, heights in heights of the camera at the cut.",
-    "sun": [-0.5, 0.2, -0.84],
+    "what": "The evening cloud over the socket, over which the cut lies: one deck at one height, which the lens climbs through before the cut and leaves below after it. Both places draw it from these numbers. Lengths are in halves of the height of the view at the cut, heights in heights of the camera at the cut. sun: the sun of the rise, so the deck is lit from the side the land is lit from. The deck goes by the height of the lens: erodeFrames, erodePower, drift, water and waterReach are read by no drawing now and are kept for the tests that read them.",
+    "sun": [-0.2, 0.5, -0.78],
     "sunlit": [0.86, 0.75, 0.64],
     "shade": [0.19, 0.24, 0.33],
     "inside": [0.26, 0.29, 0.35],

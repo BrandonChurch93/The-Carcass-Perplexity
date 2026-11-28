@@ -2,10 +2,10 @@
 // and breaking up over the lake. It is laid over the whole frame, last, and is not drawn at all once the sheet is gone.
 import * as THREE from 'three';
 import { FPS } from '../../../config';
-import { AT, HALF_TAN, RISE_FIRST, X, Z, handoff, startOffsetAt } from '../shared/anchors';
+import { AT, HALF_TAN, RISE_FIRST, X, Z, halfHeightAt, handoff, startOffsetAt } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { LID_GLSL, lidAt, lidUniforms } from './lid';
+import { LID_GLSL, LID_GONE, lidUniforms } from './lid';
 
 // The Eye's finish is warmer and darker than the rise's, most in the deep water and least in the sunlit heads: the lid is weighed by these
 // here, its shade, its water and its sunlit side each by its own, so the frame has one level and one colour on both sides of the cut.
@@ -51,7 +51,7 @@ void main() {
 }`;
 
 // Cloud is soft: it is drawn half the size of the frame and laid over it.
-const SMALLER = 2.5;
+const SMALLER = 1.25;
 
 export function create(ctx: Context): Piece {
   // The banks stand under the lens on the first frame of the rise, wherever rise.json has put it over the lake.
@@ -102,11 +102,11 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: (seconds) => {
-      const now = lidAt(seconds, handoff.lid, FPS);
-      // Once the sheet has broken up it is not drawn: every frame after that is the rise alone.
-      on = now.eroded < 1;
+      // The deck goes by the height of the lens alone. Once the lens is so high that nothing is left of it, it is not drawn: every frame after that is the rise alone.
+      const high = halfHeightAt(seconds) / handoff.revealHalfHeightKm;
+      on = high < LID_GONE;
       sheet.visible = on;
-      state.set(on ? 1 : 0, now.tau, now.eroded, on ? handoff.lid.shadow : 0);
+      state.set(on ? 1 : 0, seconds, 0, on ? handoff.lid.shadow : 0);
     },
     beforeSample: (renderer, camera) => {
       if (!on || !sheet.visible) return;
