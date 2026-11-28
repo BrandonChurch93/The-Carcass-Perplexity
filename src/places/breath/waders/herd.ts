@@ -57,7 +57,8 @@ export const WIDE_EYE = { x: -41.5, z: 42.3 };
 const ROW = FAR_FLOCK.count + 16;
 const CROSSING = 7;
 const ROW_BEARING: [number, number] = [-18.5, 7];
-const ROW_DISTANCE: [number, number] = [186, 250];
+/** How far from that eye each band of it stands, metres, from the left of the view to the right. */
+const ROW_BANDS = [172, 318, 226, 148, 286, 204, 338, 250, 182];
 const ROW_HEADING = 59;
 
 export interface Member {
@@ -165,11 +166,22 @@ export function makeHerd(rng: Rng): Member[] {
   // The far herd, as the wide picture has it: a long loose row on the shallows, small and pale, most of them bent down feeding; a thin
   // second rank behind it; and a few that cross the flats between the row and the channel at a walk. No two do the same thing at one time.
   const far = rng;
+  // Not one rank at one distance: bands of a few animals each, one nearer, the next far out, with open water between them.
+  const share = ROW_BANDS.map((d) => Math.pow(d / 250, 1.8));
+  const whole = share.reduce((sum, w) => sum + w, 0);
   const place = (i: number): [number, number] => {
-    const along = Math.min(1, Math.max(0, (i + 1.7 * (hash(i * 3.1 + 1) - 0.5)) / ROW));
-    const bearing = (ROW_BEARING[0] + (ROW_BEARING[1] - ROW_BEARING[0]) * along + 1.4 * (hash(i * 2.3 + 11) - 0.5)) * RAD;
-    const behind = hash(i * 5.3 + 15) < 0.22 ? 30 + 80 * hash(i * 6.1 + 12) : 0;
-    const d = ROW_DISTANCE[0] + (ROW_DISTANCE[1] - ROW_DISTANCE[0]) * along + 30 * (hash(i * 4.3 + 17) - 0.5) + behind;
+    const along = Math.min(0.999, Math.max(0, (i + 1.7 * (hash(i * 3.1 + 1) - 0.5)) / ROW)) * whole;
+    // The far bands are long and hold many; a near one is a few animals well apart.
+    let band = 0;
+    let before = 0;
+    while (band < ROW_BANDS.length - 1 && before + (share[band] as number) < along) before += share[band++] as number;
+    const within = (along - before) / (share[band] as number);
+    const from = ROW_BEARING[0] + ((ROW_BEARING[1] - ROW_BEARING[0]) * band) / ROW_BANDS.length;
+    const wide = (ROW_BEARING[1] - ROW_BEARING[0]) / ROW_BANDS.length;
+    const far = ROW_BANDS[band] as number;
+    const reach = far < 200 ? 1.5 : 0.8;
+    const bearing = (from + wide * (0.5 + reach * (within - 0.5)) + 0.5 * (hash(i * 2.3 + 11) - 0.5)) * RAD;
+    const d = far + 16 * (within - 0.5) * (hash(band * 7.7 + 3) < 0.5 ? -1 : 1) + (far < 200 ? 50 : 26) * (hash(i * 4.3 + 17) - 0.5);
     return [WIDE_EYE.x + Math.sin(bearing) * d, WIDE_EYE.z - Math.cos(bearing) * d];
   };
   for (let i = 0; i < ROW + CROSSING; i++) {
