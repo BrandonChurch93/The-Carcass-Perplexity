@@ -35,7 +35,7 @@ light = np.zeros((N, N))
 # The dark plains: where slow noise runs high. (Kept off the middle of the disc and broken up, so that no two of them and a
 # third read as a face.)
 plains = slow(46, 7) + 0.5 * slow(19, 8) + 0.3 * slow(7, 9) + 0.14 * slow(2.5, 10) + 0.55 * (-0.8 * px + 0.6 * py)
-mare = np.clip((plains - 0.5) / 0.1, 0, 1)
+mare = np.clip((plains - 0.42) / 0.26, 0, 1)
 mare = mare * mare * (3 - 2 * mare)
 
 # Craters: the count of those wider than r falls as r to the power -2.
@@ -106,7 +106,7 @@ rough = 0.0035 * slow(2.2, 11) + 0.006 * slow(6, 12)
 height = height * (1 - 0.6 * mare) + rough * (1 - 0.7 * mare) - 0.01 * mare
 height = gaussian_filter(height, 0.6)
 tone = 0.62 + 0.1 * slow(14, 13) + 0.05 * slow(3, 14)
-albedo = np.clip(tone * (1 - 0.36 * mare) + light * (1 - 0.3 * mare), 0, 1)
+albedo = np.clip(tone * (1 - 0.3 * mare) + light * (1 - 0.3 * mare), 0, 1)
 
 gy, gx = np.gradient(height * R)
 SLOPE = 2.2  # the slope that reads 0 or 1
