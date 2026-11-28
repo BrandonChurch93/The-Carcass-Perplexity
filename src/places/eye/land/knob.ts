@@ -169,7 +169,7 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
 
   // Pale limestone, bed by bed of its own tone, the sheet giving it its mottle about its own mean.
-  vec3 tone = mix(vec3(0.56, 0.48, 0.39), vec3(0.8, 0.7, 0.56), form.b);
+  vec3 tone = mix(vec3(0.6, 0.48, 0.36), vec3(0.86, 0.7, 0.52), form.b);
   vec3 albedo = tone * mix(vec3(1.0), skin / vec3(0.34, 0.33, 0.31), 0.75) * (0.72 + 0.56 * broad);
   // Broad stains in the crag's own frame, so that a large face is not one tone, and the dark that rain leaves down a standing face.
   float stain = vnoise(q.xy * 0.5 + q.z * 0.4) * 0.6 + vnoise(q.zy * 1.7 + 5.0) * 0.4;

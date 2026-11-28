@@ -172,7 +172,7 @@ class Crag:
             h = np.clip(0.5 + 0.5 * (best - d) / 0.17, 0, 1)
             best = best * (1 - h) + d * h - 0.17 * h * (1 - h)
         # The heart of it, so that every line out of the middle meets stone.
-        core = (np.sqrt((((p - np.array([0, -0.3 * self.S[1], 0], F32)) / (self.S * F32(0.5))) ** 2).sum(-1)) - 1) * float(self.S.min()) * 0.5
+        core = (np.sqrt((((p - np.array([0, -0.25 * self.S[1], 0], F32)) / (self.S * F32(0.4))) ** 2).sum(-1)) - 1) * float(self.S.min()) * 0.4
         return np.minimum(np.maximum(best, cut), core)
 
     def detail(self, p, fine=True):
