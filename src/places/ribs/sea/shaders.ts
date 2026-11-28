@@ -496,6 +496,9 @@ void main() {
   // No branch round the work: a picture read inside one has no slope at its border, and the waterlines came out different on every page load.
   vec3 col = vec3(0.0);
   float alpha = 0.0;
+  // A pixel the sheet does not cover is thrown away in the last line: its water, its ripples and its mirror are not worked out. Every
+  // picture from here on is read at a named level and no slope is taken, so the branch draws the same on every render.
+  if (!dry) {
   vec2 s2 = c2.xy - 0.5;
   // The wind works the sheet in cats' paws: ruffled dark stretches and slack bright ones, a few metres each, that drift.
   float paw = smoothstep(0.3, 0.7, 0.6 * barA.a + 0.4 * barB.a + 0.25 * sin(uTime * 0.35 + barA.r * 12.0));
@@ -560,6 +563,7 @@ void main() {
   float band = wetBand / 0.42;
   col = mix(0.85 * fres * refl * band, col, edge);
   alpha = mix(band * max(0.42, 0.85 * fres), alpha, edge);
+  }
   // The sheet of the flat does not reach the sea: down the shelving shore it thins out in tongues. It lay over the surf to its own
   // last cell, a mirror with a ruled edge, and the surf is the sea's.
   float toSea = smoothstep(-0.1, 0.6, land.r + 0.5 * (barA.b - 0.5) + 0.2 * (barB.b - 0.5));

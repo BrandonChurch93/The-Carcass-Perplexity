@@ -466,8 +466,9 @@ void main() {
   vec4 before = landAt(vWorld.xz + n.xz * 14.0);
   float own = 1.0 / max(1.0 - contactDrawn(vWorld) * smoothstep(4.0, 0.0, vWorld.y - before.r), 0.3);
   vec3 col = rigShade(vWorld, n, v, albedo, mix(0.62, 0.22, wet), occ * own);
-  float sun = sunAt(vWorld, land);
-  col -= albedo * uSunColour * (max(dot(n, uSunDir), 0.0) * sunAt(vWorld, before) * occ * (own - 1.0)) / 3.14159;
+  // The cloud over this place is what rigShade has just read (rigGap): it is not read a second and a third time.
+  float sun = sunBaked(vWorld, land) * rigGap;
+  col -= albedo * uSunColour * (max(dot(n, uSunDir), 0.0) * (sunBaked(vWorld, before) * rigGap) * occ * (own - 1.0)) / 3.14159;
   // The wet flat and the pool send the sky back up at what stands over them.
   col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 1.0 + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));

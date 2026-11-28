@@ -199,8 +199,9 @@ void main() {
   // A dry hide has no sheen: seen along its surface it would take the whole sky as a pale glaze, and the animal would be a smooth doll.
   vec3 matte = normalize(n + 0.55 * v * (1.0 - wet));
   vec3 col = rigShade(vWorld, matte, v, albedo, mix(0.9, 0.22, wet), occ * own);
-  float sun = sunAt(vWorld, land);
-  col -= albedo * uSunColour * (max(dot(n, uSunDir), 0.0) * sunAt(vWorld, before) * occ * (own - 1.0)) / 3.14159;
+  // The cloud over this place is what rigShade has just read (rigGap): it is not read a second and a third time.
+  float sun = sunBaked(vWorld, land) * rigGap;
+  col -= albedo * uSunColour * (max(dot(n, uSunDir), 0.0) * (sunBaked(vWorld, before) * rigGap) * occ * (own - 1.0)) / 3.14159;
   // The wet flat and the sea send the sky back up at what flies over them.
   col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.5 - 0.2 * n.y) * vMix.y * (1.0 - 0.3 * sail);
   // The sun behind a sail comes through its skin warm, and the sky behind it a little and pale.

@@ -221,7 +221,8 @@ void main() {
   n = normalize(n + v * max(0.0, 0.55 - dot(n, v)));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
-  c += above * (0.14 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
+  // No bead, no glint asked of it (the term was times nought).
+  if (bead > 0.0) c += above * (0.14 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
   // The day through a frond that hangs free of the wall.
   c += amber * above * (0.07 * close * thin * smoothstep(0.45, 0.95, vTone.z) * occ);
   // The low sun through a thin wet frond.

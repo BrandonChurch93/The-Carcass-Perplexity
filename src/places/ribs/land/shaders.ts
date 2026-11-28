@@ -549,14 +549,15 @@ void main() {
   // No shade here is black: what faces away still takes the sky and the bounce of the wet floor. The wet hems hold a glint of the sky.
   c = max(c, albedo * above * (0.36 / 3.14159) * (0.6 + 0.4 * occ));
   // Close, the wet shows as small glints on the blades of weed that turn to the sky, not as a sheen over the whole wall.
-  c += above * vec3(1.0, 0.9, 0.7) * (0.05 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 60.0) * (0.4 + 0.6 * occ));
+  // Far off (closeW 0) these two glints were worked out and then weighed by nought: they are asked for only where they show.
+  if (closeW > 0.0) c += above * vec3(1.0, 0.9, 0.7) * (0.05 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 60.0) * (0.4 + 0.6 * occ));
   // The black wet between the fronds holds the sky in beads: points of light, none of them a stride from the next.
   float bead = 0.0;
   if (closeW > 0.0) {
     bead = smoothstep(0.91, 0.96, vnoise(vUv * vec2(43.0, 37.0)));
     if (bead > 0.0) bead *= smoothstep(0.3, 0.7, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * (0.3 + 0.7 * vnoise(vUv * vec2(7.0, 5.0)));
   }
-  c += above * (0.25 * closeW * closeW * bead * (0.3 + 0.7 * occ) * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 4.0));
+  if (bead > 0.0) c += above * (0.25 * closeW * closeW * bead * (0.3 + 0.7 * occ) * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 4.0));
   c += above * (rill * (0.02 + 1.8 * fall * fall));
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
   float run = 0.0;
@@ -589,14 +590,15 @@ uniform vec2 uGate;
 // and its slope in the world (x, z) with its height.
 // A floor seen along itself: the picture is read by the short side of the pixel's foot (to most times it), not by the long one, so that
 // stones stay stones at a low lens; the film's many samples a frame take up what that leaves.
-vec3 skimmed(sampler2D t, vec2 uv, float most) {
-  return textureLod(t, uv, footLevel(t, dFdx(uv), dFdy(uv), most)).rgb;
+// One laying of the plate: where it lies on the two pictures, and the read of them at levels taken beforehand (colour's, slope's),
+// so that the read can stand in a branch.
+vec2 plateUv(vec2 xz, vec2 cs, vec2 size, vec2 shift) {
+  return vec2(xz.x * cs.x + xz.y * cs.y, xz.y * cs.x - xz.x * cs.y) / size + shift;
 }
-void plateAt(vec2 xz, vec2 cs, vec2 size, vec2 shift, out vec3 colour, out vec3 slope) {
-  vec2 uv = vec2(xz.x * cs.x + xz.y * cs.y, xz.y * cs.x - xz.x * cs.y) / size + shift;
+void plateRead(vec2 uv, vec2 cs, vec2 levels, out vec3 colour, out vec3 slope) {
   vec2 m = 1.0 - 2.0 * mod(floor(uv), 2.0);
-  colour = skimmed(tPlate, uv, 3.0);
-  vec3 nh = skimmed(tPlateN, uv, 3.0);
+  colour = textureLod(tPlate, uv, levels.x).rgb;
+  vec3 nh = textureLod(tPlateN, uv, levels.y).rgb;
   vec2 g = (nh.xy - 0.5) * m;
   slope = vec3(g.x * cs.x + g.y * cs.y, g.x * cs.y - g.y * cs.x, nh.z);
 }
@@ -611,15 +613,23 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   // The floor is the plate laid twice, at unlike sizes and turns; which one shows is chosen in fields of a few strides, along the plate's
   // own bars and hollows, so that no bar comes round again.
-  vec3 ca;
-  vec3 sa;
-  vec3 cb;
-  vec3 sb;
-  plateAt(xz, vec2(0.966, 0.259), vec2(48.0, 27.0), vec2(0.31, 0.12), ca, sa);
-  plateAt(xz, vec2(0.342, -0.94), vec2(86.0, 48.4), vec2(0.77, 0.43), cb, sb);
+  vec3 ca = vec3(0.0);
+  vec3 sa = vec3(0.0);
+  vec3 cb = vec3(0.0);
+  vec3 sb = vec3(0.0);
+  // The feet of both layings are taken here, before the branch.
+  vec2 pua = plateUv(xz, vec2(0.966, 0.259), vec2(48.0, 27.0), vec2(0.31, 0.12));
+  vec2 pub = plateUv(xz, vec2(0.342, -0.94), vec2(86.0, 48.4), vec2(0.77, 0.43));
+  vec2 pla = vec2(footLevel(tPlate, dFdx(pua), dFdy(pua), 3.0), footLevel(tPlateN, dFdx(pua), dFdy(pua), 3.0));
+  vec2 plb = vec2(footLevel(tPlate, dFdx(pub), dFdy(pub), 3.0), footLevel(tPlateN, dFdx(pub), dFdy(pub), 3.0));
   float ha = plateHigh(xz, vec2(0.966, 0.259), vec2(48.0, 27.0), vec2(0.31, 0.12));
   float hb = plateHigh(xz, vec2(0.342, -0.94), vec2(86.0, 48.4), vec2(0.77, 0.43));
   float pick = smoothstep(-0.1, 0.1, 0.45 * (ha - hb) + vnoise(xz / 23.0 + 3.0) - 0.5);
+  // Where pick is 0 the first laying's colour and slope were read and then weighed by nought: there it is not read. (Where pick is 1
+  // the second is still read: the mix that takes all of the first is worked from both, and without it one value in a million rounds
+  // the other way.)
+  if (pick > 0.0) plateRead(pua, vec2(0.966, 0.259), pla, ca, sa);
+  plateRead(pub, vec2(0.342, -0.94), plb, cb, sb);
   // The plate's height as the map of the wet has it: nothing of the lens in it.
   float pz = mix(hb, ha, pick);
   vec3 plate = mix(cb, ca, pick);
@@ -693,7 +703,9 @@ void main() {
   // Cast weed lies in dark patches on the bars and at the edge of the pools.
   // Before the gate the flat is the weed's: dark mats of it between the sheets of standing water.
   float gateNear = smoothstep(90.0, 25.0, length(xz - uGate));
-  float castWeed = smoothstep(0.58, 0.625, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * vnoise(xz / 0.45 + 3.0) + 0.14 * bar + 0.06 * gateNear) * smoothstep(0.36, 0.5, vnoise(xz / 1.3 + 5.0) * 0.7 + 0.3 * vnoise(xz / 0.31 + 2.0));
+  float castWeed = smoothstep(0.58, 0.625, vnoise(xz / 7.3 + 7.0) * 0.55 + vnoise(xz / 2.1 + 1.0) * 0.3 + 0.15 * vnoise(xz / 0.45 + 3.0) + 0.14 * bar + 0.06 * gateNear);
+  // What is nought by its first term is not asked for its second.
+  if (castWeed > 0.0) castWeed *= smoothstep(0.36, 0.5, vnoise(xz / 1.3 + 5.0) * 0.7 + 0.3 * vnoise(xz / 0.31 + 2.0));
   // Wrack, not ripples: where weed is cast the floor is the Builder's own sheet of strap weed laid flat at its true size, olive and
   // brown straps over black gaps. Its level is taken here, outside the branch that reads it.
   vec2 uwf = vec2(xz.x * 0.8 + xz.y * 0.6, xz.y * 0.8 - xz.x * 0.6) / 2.6 + vec2(0.37, 0.11);
