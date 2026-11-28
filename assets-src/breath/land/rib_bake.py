@@ -41,12 +41,10 @@ U, V = np.meshgrid(u, v)
 
 # Plates: the mineral skin has come away in sheets, longer along the rib than round it. Each lies at its own height and a crack runs
 # between every two. Places are found on a warped lattice so that no edge is ruled.
-warp_u = 1.8 * field(1.6, 0.4, 6.0)
-warp_v = 0.7 * field(1.6, 0.4, 6.0)
-# Six plates along and four round, so that the lattice closes on itself: long sheets, as a tusk sheds them, not a row of joints.
-nu, nv = 6, 4
-CU, CV = LONG / nu, ROUND / nv
-PU, PV = (U + warp_u) / CU, (V + warp_v) / CV
+warp_u = 0.9 * field(1.6, 0.4, 6.0)
+warp_v = 0.6 * field(1.6, 0.4, 6.0)
+PU, PV = (U + warp_u) / 2.6, (V + warp_v) / 1.15
+nu, nv = int(round(LONG / 2.6)), int(round(ROUND / 1.15))
 site_u = rng.random((nv, nu))
 site_v = rng.random((nv, nu))
 site_h = rng.random((nv, nu))
@@ -59,14 +57,14 @@ for a in (-1, 0, 1):
         i, j = ci + a, cj + b
         su = i + site_u[j % nv, i % nu]
         sv = j + site_v[j % nv, i % nu]
-        d = np.hypot((PU - su) * CU, (PV - sv) * CV)
+        d = np.hypot((PU - su) * 2.6, (PV - sv) * 1.15)
         closer = d < d1
         d2 = np.where(closer, d1, np.minimum(d2, d))
         h1 = np.where(closer, site_h[j % nv, i % nu], h1)
         d1 = np.where(closer, d, d1)
 edge = d2 - d1  # metres to the plate's edge, about
-plate = 0.028 * (h1 - 0.5) * smooth(edge / 0.08)
-crack = -0.022 * (1 - smooth(edge / 0.028))
+plate = 0.05 * (h1 - 0.5) * smooth(edge / 0.05)
+crack = -0.035 * (1 - smooth(edge / 0.035))
 # Where a plate has gone the skin under it is bare and rough: one plate in six.
 gone = (h1 < 0.17).astype(float) * smooth(edge / 0.06)
 
@@ -77,7 +75,7 @@ swell = 0.06 * field(2.2, 0.8, 9.0)
 # Breaks across it: narrow, deep, chipped along their lips.
 rings = np.zeros((H, W))
 chips = np.zeros((H, W))
-for k in range(4):
+for k in range(9):
     at = rng.random() * LONG
     wob = 0.5 * field(1.8, 0.3, 4.0)[:, int(rng.integers(0, W))][:, None]
     d = np.abs(((U - at - wob + LONG / 2) % LONG) - LONG / 2)

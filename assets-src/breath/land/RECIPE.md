@@ -49,7 +49,7 @@ The sculpted skin of a rib of the main shaft, 2048 by 512 each, unwrapped along 
 
 Made by: `assets-src/breath/land/rib_bake.py` (numpy for the sculpt, Blender 5.0.1 as `bpy` with Cycles on the CPU for the occlusion, baked from the sculpted rib itself), then `assets-src/breath/land/rib_pack.py` (numpy, pillow).
 From: nothing but the two scripts; no picture, no model, no download.
-Prompt or command: `THREADS=4 AO_SAMPLES=16 /home/user/bpyenv/bin/python assets-src/breath/land/rib_bake.py 7 rib-b`, then `python3 assets-src/breath/land/rib_pack.py rib-b`, both from the repository root.
-Takes: 2 made (seed 7 both; the first had nine breaks and short plates and read as a row of joints), take 2 kept.
+Prompt or command: `THREADS=4 AO_SAMPLES=16 /home/user/bpyenv/bin/python assets-src/breath/land/rib_bake.py 7 rib-a`, then `python3 assets-src/breath/land/rib_pack.py rib-a`, both from the repository root.
+Takes: 1 made (seed 7), take 1 kept.
 Why this one: the hoops were banded tubes whose beds came from a generated sheet laid mirrored; this is one skin made for the rib's own shape, with plates, cracks, breaks across it and cords under its belly, and an occlusion that knows them.
 Date: 2026-11-27
