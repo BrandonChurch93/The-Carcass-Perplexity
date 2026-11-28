@@ -10,7 +10,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
 import { LEVELS, pairFor, type Level } from './levels';
 import { OCEAN_GLSL, oceanUniforms } from './ocean';
-import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PAN, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_WET } from './body';
+import { BODY_BIAS, BODY_CAST, BODY_FROM, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PAN, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_SURF, BODY_UNIFORMS, BODY_VENTS, BODY_WET } from './body';
 
 // The window of the first approved picture in the master (references/approved/7-reveal/pullback.json): the bed map covers it.
 const BED = { x: 1126.18, y: 1498.28, w: 293.34, h: 165.09 };
@@ -24,7 +24,7 @@ const FEEDER: [number, number][] = [[1224.0, 1440.0], [1226.8, 1468.5], [1221.0,
 const BODY_RELIEF = Number(import.meta.env.VITE_BODY_RELIEF ?? 1.6);
 const BODY_SHADOW = Number(import.meta.env.VITE_BODY_SHADOW ?? 1.0);
 const BODY_FINE = Number(import.meta.env.VITE_BODY_FINE ?? 0.7);
-const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.018);
+const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.024);
 
 export const PARTS = ['sea', 'continent', 'salt', 'lake', 'lava'] as const;
 
@@ -303,7 +303,7 @@ ${BODY_COARSE}
     if (abs(bedKm) < 16.0) {
       // (Under the east wall, where the picture's shore is one smooth line, it is broken into coves and spurs of fallen rock.)
       float east = smoothstep(-0.25, 0.5, fromLake.x) * (1.0 - smoothstep(1.3, 1.6, lakeFar)) * (1.0 - smoothstep(8.0, 16.0, abs(bedKm)));
-      if (east > 0.0) bedKm += east * (20.0 * (nWide - 0.5) + 9.0 * (nBay - 0.5));
+      if (east > 0.0) bedKm += east * (13.0 * (nWide - 0.5) + 8.0 * (nBay - 0.5));
       // (The fine notches of a shore are worked only near it: farther off they move nothing that is seen.)
       float fine = 1.0 - smoothstep(1.8, 2.6, abs(bedKm));
       if (fine > 0.0) {
@@ -921,6 +921,7 @@ ${BODY_CAST}
   glow += vec3(1.0, 0.16, 0.03) * 0.09 * max(pulse - 0.12, 0.0) * exp(-d0 / 30000.0) * land * (0.6 + 0.8 * clamp(0.5 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.0));
   vec3 glowSwell = glow;
   glow += vec3(1.0, 0.3, 0.06) * 0.26 * halo * land * clamp(0.4 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
+${BODY_VENTS}
 
   // By night the Heart is the brightest thing on the planet: the ember swells with the beat, its fire lights the rock and the
   // flanks of the ribs that face it, falling off with distance, and veins of fire run out between the ribs.
@@ -1193,6 +1194,7 @@ ${BODY_CAST}
   float surfAt = 0.0;
   if (shoreNear) surfAt = smoothstep(0.45, 0.7, readTile(uCloudTile, xz / 230.0 + vec2(0.63, 0.21) + uTime * vec2(0.0004, 0.0003), 1.0 / 230.0, 0.0).b) * smoothstep(0.35, 0.6, vnoise(xz / 9.0 + uTime * 0.05));
   float surf = (1.0 - smoothstep(0.15 * lineKm, 0.8 * lineKm, -coastKm)) * step(coastKm, 0.0) * (1.0 - land) * (1.0 - river) * (1.0 - drowned) * surfAt * coastSeen * (1.0 - shut) * smoothstep(1.3, 1.8, lakeFar);
+${BODY_SURF}
   water = mix(water, vec3(0.62, 0.66, 0.68) * light / 3.14159, 0.7 * surf);
   vec3 colour = mix(water, earth + 0.4 * glare, land);
   // (By night the low coast has no line: the wet plain is a shade over the sea beside it and the land rises out of that into the moon's light.)
@@ -1345,7 +1347,7 @@ export function create(ctx: Context): Piece {
       const window = rise.at(RISE_FIRST + seconds * FPS);
       const halfHeight = halfHeightAt(Math.max(0, seconds));
       const seenWhole = halfHeight >= 1380;
-      sheet.material = halfHeight < 600 ? material : seenWhole ? (seconds > LIVE_FROM ? wholeNight : whole) : seconds > LIVE_FROM ? night : halfHeight >= 940 ? crossing : orbit;
+      sheet.material = halfHeight < 600 ? material : seenWhole ? (seconds > LIVE_FROM ? wholeNight : whole) : seconds > LIVE_FROM ? night : halfHeight >= BODY_FROM ? crossing : orbit;
       const width = window.w;
       // (As the rise begins the camera may stand off its path: the maps are chosen for where it stands.)
       const [offX, offZ] = startOffsetAt(RISE_FIRST + seconds * FPS);
