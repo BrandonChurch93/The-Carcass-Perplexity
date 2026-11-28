@@ -99,7 +99,7 @@ export function create(ctx: Context): Piece {
     [2100, -1150, 520, 60, 230, 1.2],
     [150, -2700, 500, 45, 220, 0.1],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, 26, z], size: [rx, ry, rz], turn, dense: 0.0011, repeat: 460, open: 0.62, climb: 0.5, sun: 0.9 });
+    bodies.push({ part: 'fog', at: [x, 26, z], size: [rx, ry, rz], turn, dense: 0.0016, repeat: 460, open: 0.62, climb: 0.5, sun: 0.9 });
   }
 
   const vec4s = (): THREE.Vector4[] => Array.from({ length: MAX_BODIES }, () => new THREE.Vector4());
@@ -124,7 +124,7 @@ export function create(ctx: Context): Piece {
       uShow: { value: show },
       uBreath: { value: breath },
       uSpent: spent,
-      uHaze: { value: new THREE.Vector4(0.08e-4, 420, 0.85e-3, 14) },
+      uHaze: { value: new THREE.Vector4(1.6e-3, 6, 4.8e-4, 25) },
       uBodyCount: count,
       uBodyA: { value: bodyA },
       uBodyB: { value: bodyB },

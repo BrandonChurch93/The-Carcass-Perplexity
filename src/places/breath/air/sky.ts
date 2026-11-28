@@ -66,7 +66,9 @@ vec4 farPicture(vec3 d) {
   // Its rock is dark and its snow white: the picture's own shade is kept deep, so the haze is what pales it and it does not stand flat.
   float bright = dot(lin, vec3(0.2126, 0.7152, 0.0722));
   lin *= mix(1.0, mix(0.66, 1.06, smoothstep(0.08, 0.5, bright)), cliff);
-  lin = mix(lin, air, cliff * clamp(0.07 + 0.36 * away + 0.22 * foot + 1.6 * past, 0.0, 0.88));
+  // The air between is the volume pass's, by the cliff's distance and height (volume.ts, cliffFar): here only what the picture's far end
+  // and its drawn-out edge need beyond that.
+  lin = mix(lin, air, cliff * clamp(0.04 + 0.12 * away + 0.06 * foot + 1.6 * past, 0.0, 0.88));
   return vec4(lin, w);
 }`;
 
@@ -98,10 +100,10 @@ void main() {
   float low = smoothstep(0.0, 0.03, d.y) * smoothstep(0.2, 0.05, d.y);
   float streak = textureLod(tNoise, vec3(bearing * 0.42 + uTime * 0.0045, d.y * 3.4, 0.83 + uTime * 0.002), 0.0).g;
   c *= 1.0 + low * 0.2 * (streak - 0.5);
-  // The sun: a pale hot heart with no edge, inside the glare that the fog spreads and turns deep gold.
+  // The sun itself: a small disc, under a degree across, its edge taken off by the fog. The amber round it is the rig's (sunHalo).
   float s = dot(d, uSunDir);
-  float a2 = max(2.0 - 2.0 * s, 0.0);
-  c += uSunColour * (vec3(1.0, 0.8, 0.5) * (1.5 * exp(-a2 / 0.0035) + 0.45 * exp(-a2 / 0.02)) + vec3(1.0, 0.42, 0.1) * (0.5 * pow(max(s, 0.0), 500.0) + 0.3 * pow(max(s, 0.0), 60.0)));
+  float a2 = sqrt(max(2.0 - 2.0 * s, 0.0));
+  c += uSunColour * vec3(1.0, 0.86, 0.62) * (5.0 * smoothstep(0.02, 0.008, a2));
   vec4 far = farPicture(d);
   c = mix(c, far.rgb, far.a);
   gl_FragColor = vec4(rigOut(c), 1.0);
