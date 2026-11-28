@@ -327,8 +327,9 @@ void main() {
   // The crag is no one grey: whole masses of it, some ledges high, stand darker or paler than their neighbours.
   float mass = smoothstep(0.3, 0.7, vnoise(vec2(arc * 0.045, y * 0.06) + 31.0) * 0.6 + vnoise(vec2(arc * 0.12, y * 0.17) + 3.0) * 0.4);
   vec3 albedo = mix(vec3(0.265, 0.255, 0.24), vec3(0.35, 0.345, 0.325), top) * mix(vec3(grain), stone, 0.7) * (0.6 + 0.36 * macro + 0.44 * mass);
-  // Water seeps down its faces across the beds: dark wet runs some ledges long, in a few places and not in others.
-  float seep = smoothstep(0.52, 0.7, vnoise(vec2(arc * 0.55, y * 0.045) + 17.0) * 0.65 + vnoise(vec2(arc * 1.9, y * 0.12)) * 0.35) * smoothstep(0.35, 0.6, vnoise(vec2(arc * 0.07, y * 0.09) + 9.0)) * (1.0 - top);
+  // Water seeps out of its faces across the beds: dark damp patches a ledge or two high, in a few places and not in others. No run of
+  // it is long: a long one is a picture drawn out.
+  float seep = smoothstep(0.52, 0.7, vnoise(vec2(arc * 0.3, y * 0.13) + 17.0) * 0.65 + vnoise(vec2(arc * 1.1, y * 0.5)) * 0.35) * smoothstep(0.35, 0.6, vnoise(vec2(arc * 0.07, y * 0.09) + 9.0)) * (1.0 - top);
   albedo *= 1.0 - 0.5 * seep;
   // A seam of the sheet is a dark crack; the joints and bed lines stand at more than their own strength.
   albedo *= 0.62 + 0.38 * smoothstep(0.12, 0.5, hgt);
@@ -342,8 +343,9 @@ void main() {
   float splash = smoothstep(0.42, 0.58, vnoise(vWorld.xz * 0.45 + 3.0) * 0.5 + vnoise(vWorld.xz * 1.7) * 0.3 + 0.2 * hgt + 0.1 * grain);
   // The white hangs from the lip of a ledge deep enough to hold a roost: a rim at the lip and thin strings of unlike length under it.
   float lip = smoothstep(0.55, 0.9, vLay.y);
-  float reach = 0.4 + 3.4 * pow(vnoise(vec2(arc * 1.9, 3.5)), 2.0);
-  float strings = smoothstep(0.46, 0.58, vnoise(vec2(arc * 9.0, y * 0.3 + 7.0)) * 0.6 + vnoise(vec2(arc * 23.0, y * 0.8)) * 0.4 + 0.3 * smoothstep(0.35, 0.0, vLay.x));
+  // Each string has its own length, and is a finger wide: bars of one width and one length are a fence.
+  float reach = (0.4 + 3.4 * pow(vnoise(vec2(arc * 1.9, 3.5)), 2.0)) * (0.35 + 1.3 * vnoise(vec2(arc * 14.0, 1.5)));
+  float strings = smoothstep(0.5, 0.6, vnoise(vec2(arc * 15.0, y * 0.3 + 7.0)) * 0.6 + vnoise(vec2(arc * 37.0, y * 0.8)) * 0.4 + 0.3 * smoothstep(0.35, 0.0, vLay.x));
   float drip = lip * strings * smoothstep(reach, 0.35 * reach, vLay.x) * smoothstep(0.22, 0.42, vnoise(vec2(arc * 0.6, 11.5))) * (1.0 - top);
   float roost = smoothstep(0.34, 0.56, vnoise(vWorld.xz * 0.17 + y * 0.13 + 7.0));
   // The strings hang where the colony stands thick, and long stretches of lip have none.
