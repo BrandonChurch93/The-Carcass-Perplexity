@@ -81,7 +81,7 @@ export function create(ctx: Context): Piece {
     // A small vent near by is a low puff blown flat down the wind, white at its foot, as the approved pictures have it.
     const rise = r * (2.6 + 3.2 * tall) * (far ? 0.52 : 0.62);
     const lean: [number, number] = far ? [-0.2, 0.07] : [-1.0, 0.36];
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (far ? 1.0 + 0.7 * tall : 1.3 + 0.6 * tall), rise * 0.58, r * (far ? 1.0 + 0.7 * tall : 1.3 + 0.6 * tall)], lean, dense: (far ? 0.6 : 0.4) / r, repeat: r * (far ? 2.6 : 1.9), open: far ? 0.62 : 0.8, climb: far ? 6 + r * 0.04 : 4.5 + r * 0.2, sun: far ? 1.0 : 0.65 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (far ? 1.0 + 0.7 * tall : 1.3 + 0.6 * tall), rise * 0.58, r * (far ? 1.0 + 0.7 * tall : 1.3 + 0.6 * tall)], lean, dense: (far ? 0.42 : 0.4) / r, repeat: r * (far ? 2.6 : 1.9), open: far ? 0.62 : 0.8, climb: far ? 6 + r * 0.04 : 4.5 + r * 0.2, sun: far ? 0.8 : 0.65 });
     bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (2.4 + 1.6 * tall), rise * 0.3, r * (1.6 + 1.0 * tall)], lean: [-1.4, 0.5], dense: (far ? 0.008 : 0.022) / r, repeat: r * 4.0, open: 0.68, climb: 2.4, sun: 0.5 });
   }
   // The banks that lie out on the flats.

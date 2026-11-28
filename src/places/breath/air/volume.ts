@@ -104,7 +104,7 @@ float airSpan(vec3 ro, vec3 rd, float t, out float y0, out float y1) {
   y1 = max(low, -0.5);
   return t;
 }
-// How thick the banks are along a ray to t, against even steam: the mean of bankAt at four places, each a quarter of the low layer's
+// How thick the banks are along a ray to t, against even steam: the mean of bankAt at three places, each a third of the low layer's
 // own thickness on from the last (the layer thins with height, so they stand where the ray is low). Smooth from pixel to pixel: the
 // places move with the ray and are never shaken.
 float banksAlong(vec3 ro, vec3 rd, float t) {
@@ -114,14 +114,17 @@ float banksAlong(vec3 ro, vec3 rd, float t) {
   float e0 = exp(-y0 / uHaze.y);
   float e1 = exp(-y1 / uHaze.y);
   float level = smoothstep(0.02, 0.2, abs(y1 - y0));
+  // A ray that climbs steeply is out of the low steam in a few metres: the banks are not asked for it.
+  float low = smoothstep(0.5, 0.3, rd.y);
+  if (low <= 0.0) return 1.0;
   float sum = 0.0;
-  for (int i = 0; i < 4; i++) {
-    float q = (float(i) + 0.5) / 4.0;
+  for (int i = 0; i < 3; i++) {
+    float q = (float(i) + 0.5) / 3.0;
     float yq = -uHaze.y * log(max(mix(e0, e1, q), 1e-12));
     float tq = mix(q, clamp((yq - y0) / (y1 - y0 + (y1 >= y0 ? 1e-4 : -1e-4)), 0.0, 1.0), level) * span;
     sum += bankAt(ro.xz + rd.xz * tq);
   }
-  return 0.25 * sum;
+  return mix(1.0, sum / 3.0, low);
 }
 // Thickness of the air from the camera to t along the ray: three layers that thin with height, the lowest in banks.
 // The low steam is not counted over the first forty metres or so: what stands near the lens (the ground, the glints, an animal) stays
@@ -471,7 +474,8 @@ void main() {
         lit *= (cut / veiled) * (0.55 + 0.9 * grain);
         thru = 1.0 - cut;
       }
-      colour = lit;
+      // The grade of the place leans to gold, and a grey vapour under it is a brown one: its light leans as far the other way.
+      colour = lit * vec3(1.1, 1.14, 1.26);
       through = thru;
     }
   }
@@ -577,8 +581,8 @@ void main() {
         vec3 pw = ro + rd * (at + (f - 0.5) * span);
         float up = clamp(0.5 + 0.5 * qn.y, 0.0, 1.0);
         qn.xz += bend * (0.3 * (1.0 - qn.y * qn.y));
-        // Broad from its foot: steam off hot water spreads as soon as it leaves it.
-        float girth = 0.72 + 0.28 * up;
+        // Narrow at its vent and widening as it climbs: as broad at its foot as at its crown it stood on the horizon as a ball.
+        float girth = 0.34 + 0.66 * sqrt(up);
         // It leaves the water in heaves, and each heave climbs as a swelling of the column: its edge is a pile of them, never a ruled line.
         float rise = qn.y * uBodyB[i].y / uBodyB[i].x;
         // Three or four of them stand in its height at once and climb with its lumps, so it keeps its whole shape while they pass up it:
@@ -593,19 +597,19 @@ void main() {
         float fineN = textureLod(tNoise, q * 0.85 + 0.37, 0.0).b;
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
         float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up);
-        float body = smoothstep(0.0, 0.22, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.12, m);
+        float body = smoothstep(0.0, 0.42, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.3, m);
         float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * body;
         float tau = rho * span / 5.0;
         if (tau <= 0.0005) continue;
         // Backlit: where a billow is thin the sun comes through it and it burns, where it is thick it stands grey against its own rim.
-        float glow = (0.14 + 1.25 * exp(-3.6 * body * m * (1.3 - up))) * clamp(0.55 + 1.5 * (fineN - 0.45), 0.25, 1.4);
-        vec3 light = ambient * (0.3 + 0.6 * n0.r) + mix(uSunColour, vec3(2.2), 0.18) * (sunHere * min(phase, 3.2) * 0.5 * glow * D.z);
+        float glow = (0.3 + 1.0 * exp(-3.2 * body * m * (1.3 - up))) * clamp(0.55 + 1.5 * (fineN - 0.45), 0.25, 1.4);
+        vec3 light = ambient * (0.4 + 0.5 * n0.r) + mix(uSunColour, vec3(2.2), 0.3) * (sunHere * min(phase, 2.4) * 0.42 * glow * D.z);
         float gone = exp(-tau);
         lit += thru * (1.0 - gone) * light;
         thru *= gone;
       }
       // Far off it stands in the same haze as the ground under it and takes half its colour from that: never a white cut-out on the sky.
-      float seat = 0.3 * smoothstep(250.0, 700.0, at);
+      float seat = 0.5 * smoothstep(250.0, 700.0, at);
       colour += through * mix(VAPOUR_ALBEDO * lit, (1.0 - thru) * haze, seat);
       through *= thru;
       continue;
