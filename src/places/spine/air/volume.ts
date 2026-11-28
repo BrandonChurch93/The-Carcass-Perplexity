@@ -261,16 +261,19 @@ ${SEA_SHADE_GLSL}
       // threads. (One size of each for the whole plume: a size that grew along it would comb it into bars.)
       float tearAcross = 14.0 * size + 5.0;
       float torn = noise(vec3(along / (90.0 * size + 30.0), q.y / tearAcross, (q.x - q.z) / tearAcross)).r;
-      float frayed = noise(vec3(along / (60.0 * size + 20.0), q.y / (0.13 * tearAcross), (q.x - q.z) / (0.13 * tearAcross)) + 0.41).a;
       // Gusts go down it at the gale's own pace: where one passes the plume is thick and long, between two it is all but torn through.
       float gust = noise(vec3(along / 260.0, float(i) * 0.37, 0.11)).g;
       float k = x / reach;
       // It thins from its far end and from outside, in banks, and no bank has an outline: a plume is smoke, drawn out in threads.
       float eaten = 0.16 + 0.12 * sqrt(d2) + 0.3 * k - 0.3 * (gust - 0.5);
+      // (Where the broad tear has eaten the bank whole the plume is nought here: its fine fraying and its light are not asked for.)
+      if (torn <= eaten) continue;
+      float frayed = noise(vec3(along / (60.0 * size + 20.0), q.y / (0.13 * tearAcross), (q.x - q.z) / (0.13 * tearAcross)) + 0.41).a;
       float body = smoothstep(eaten, eaten + 0.55, torn) * (0.25 + 1.5 * frayed * frayed) * exp(-d2) * (1.0 - k) * (1.0 - k) * smoothstep(0.0, 0.05, k + 0.01);
       float thick = clamp(body * (0.5 + 1.3 * gust) * 2.6, 0.0, 0.55) * uShow.w * uStage.x * clearOf;
       // Staged by shot: before the long lens of the strike a plume is a thin smoke of snow, not a bank.
       thick *= 1.0 - 0.75 * uPlate.w;
+      if (thick <= 0.0) continue;
       // The sky lights it from above: its upper side is the paler.
       vec3 pale = (0.84 + 0.2 * clamp(off.y / wide, -1.0, 1.0)) * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
       light += through * thick * pale;
@@ -463,9 +466,12 @@ ${SEA_SHADE_GLSL}
     }
     // Against the open sky blown snow is the sky's own tone and all but lost: it shows against the rock and the snow.
     fly *= flown * (far > 50000.0 ? 0.45 : 1.0) * (uSkyStage.z > 0.0 ? 0.5 : 1.0);
-    vec3 flying = 1.45 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
-    light = light * (1.0 - fly) + flying * fly;
-    through *= 1.0 - fly;
+    // (A ray that met no streak, which is nearly every ray, is left as it was: the snow's light is asked for only where there is snow.)
+    if (fly > 0.0) {
+      vec3 flying = 1.45 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
+      light = light * (1.0 - fly) + flying * fly;
+      through *= 1.0 - fly;
+    }
   }
 
   // The snow before the lens: streaks in the gale, soft and few, each many times longer than it is wide, in gusts, at three depths. Each depth
