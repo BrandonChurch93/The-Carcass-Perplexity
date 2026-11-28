@@ -78,13 +78,14 @@ vec3 oceanOther(vec3 water, vec3 landAt, vec3 bedAt, vec3 light, vec3 glare, vec
   // (Surf where the open sea meets it, on some reaches and not on others.)
   float surf = smoothstep(0.262, 0.296, landAt.b) * (1.0 - isle) * smoothstep(0.3, 0.62, 1.0 - mottle) * seen;
   water = mix(water, vec3(0.6, 0.65, 0.68) * light / 3.14159, 0.5 * surf * surf);
-  // (Under the moon the pale water of its shelf is the first thing found of an island, faint; the land stands in it as a shade
-  // of the same value, never a dark hole in a pale ring. No light stands on it.)
-  float nightShelf = smoothstep(0.1, 0.29, landAt.b) * (0.55 + 0.9 * mottle);
-  water += vec3(0.017, 0.068, 0.08) * light / 3.14159 * nightShelf * nightShelf * uEmber.x * seen;
+  // (Under the moon the shelf is only a hint by the shore. The land is found by its own ground, grey and a little over the
+  // sea's value, lighter on its heights: a glow of one colour over land and shelf alike read as a blot. No light stands on it.)
+  float nightShelf = smoothstep(0.12, 0.29, landAt.b);
+  water += vec3(0.008, 0.03, 0.036) * light / 3.14159 * nightShelf * nightShelf * uEmber.x * seen;
   // (The air over the sun's image is bright: land that stands in it is seen through that light, as the body is.)
   vec3 groundLit = ground * light * lit / 3.14159 + 0.4 * glare;
-  water = mix(water, mix(groundLit, 0.95 * water + 2.6 * groundLit, uEmber.x), isle);
+  vec3 groundMoon = ground * light / 3.14159 * (0.7 + 0.9 * height) * (0.75 + 0.5 * mottle);
+  water = mix(water, mix(groundLit, 0.6 * water + 0.55 * groundMoon, uEmber.x), isle);
   // (The pack and the sheet on the far land: blue grey where it is thin and in its leads, blue white where it is thick, blue in
   // the shade of its own relief. Never the bone's ivory. Into the air of the planet's edge it goes bluer and dimmer.)
   float ice = smoothstep(0.52, 0.8, bedAt.b) * seen;
