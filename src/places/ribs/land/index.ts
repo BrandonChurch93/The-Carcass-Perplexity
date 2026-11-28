@@ -346,7 +346,7 @@ export function create(ctx: Context): Piece {
   {
     const hang = ctx.rng('curtain');
     // Drawn before the sheet they hang on: what a frond hides of it is not shaded.
-    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 9000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds).renderOrder = -1;
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 5000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds).renderOrder = -1;
   }
 
   // The two stacks of the gate, and the arch rock.
