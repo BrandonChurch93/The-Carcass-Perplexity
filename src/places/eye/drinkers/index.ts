@@ -465,7 +465,8 @@ export function create(ctx: Context): Piece {
     mesh.frustumCulled = false;
     mesh.visible = false;
     ctx.scene.add(mesh);
-    ctx.reflected.push(mesh);
+    // The two under the last camera stand at the frame's foot: what the lake would show of them lies under the frame, and is not drawn.
+    if (animal.level === undefined) ctx.reflected.push(mesh);
     return { animal, index, mesh, material, bones, own, pose, near, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
   });
   // Each body darkens the ground it stands on, as its card did.
