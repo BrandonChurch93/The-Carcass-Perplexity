@@ -1,4 +1,6 @@
 // What the three by the lens of the wallowers do through its shot: each is staged on its own clock about the key, a pure function of the seconds.
+// None of them walks in it (kit/03-METHOD.md section 5, step 1): the two that stand keep the four feet where the key has them, and what moves is
+// the trunk over those feet, the breath, and the head at the mud. The walk of gait.ts is asked for the one distance of the stand only.
 // The herd's walk() repeats every few seconds and has the three in step with the sheet a critic is shown; this does not repeat inside the shot.
 // Sides: z of the path frame is the animal's right. `near` is +1 when the lens stands on its left, -1 on its right; what is said here is for +1.
 // In the skin of body.ts a head yaw above 0 turns the head to the left, and a roll above 0 tips the back to the right.
@@ -42,8 +44,8 @@ function rake(out: Drive, b: Build, seconds: number, base: number): void {
   for (let f = 0; f < FEELERS; f++) out.curl[f] = base + 0.2 * Math.sin(seconds * 2.3 + f * 2.4 + b.seed * 31) + 0.08 * Math.sin(seconds * 4.1 + b.seed * 3);
 }
 
-/** The great one: it comes on at a walk with its head up, stands and shoves its head down into the mud at the key, swings the head to the lens's side and walks on.
- * Its feet, the height of its hips and shoulders and the side its weight is on come from the walk (gait.ts); what is here is the pace and the head. */
+/** The great one: it stands and roots. It shoves its head down into the mud at the key, swings the head to the lens's side, draws it half out late in the
+ * shot and lets it down again. Its feet stand where the walk (gait.ts) leaves them at the stand; what is here is the weight going over them, and the head. */
 export function great(plan: Plan, b: Build, seconds: number, t: number, near: number, out: Drive): Drive {
   const { k } = b;
   rest(out, plan, b);
@@ -51,14 +53,16 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
   const cycle = 3.4;
   // A cycle and a quarter to the stand, from one moment with all four feet down to another; then on.
   const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.55 - 0.9 - 1.25 * cycle, -0.55, 0.9) - 1.25 * cycle + runUp(v, 0.5, 0.9));
-  const up = 1 - ease(-2.0, -0.45, t);
+  // The head is at the mud from the first frame; it comes half out of it once, late, and goes back.
+  const up = 0.45 * pulse(2.8, 5.6, t);
   const shove = ease(-1.0, 0.25, t);
   const back = ease(0.6, 2.4, t);
   const swing = ease(0.15, 1.75, t);
   // The shove is from the shoulders: the trunk goes forward over feet that stand.
   const push = (v: number): number => k * (0.1 * ease(-1.0, 0.25, v) - 0.1 * ease(0.5, 1.5, v));
-  const w = walk(out, plan, b, far(t), far(t - 0.3), push(t), pace);
-  trod[0].s = far(t);
+  const stand = far(0);
+  const w = walk(out, plan, b, stand, stand, push(t), pace);
+  trod[0].s = stand;
   trod[0].pace = pace;
   // It blows: two breaths and more in the shot, the flanks going out and in, and the last of each a little deeper.
   out.breath = 1.7 * Math.sin(seconds * 2.7 + b.seed * 9) + 0.5 * Math.sin(seconds * 1.1 + b.seed * 2);
@@ -79,8 +83,8 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
   return out;
 }
 
-/** The young one: it comes along the bank a cycle and a quarter at more than twice the great one's beat, its head carried, stops and noses hard into the mud
- * through the key, then lifts its head and turns it to the great one (`toward`: +1 when that is to its left) as that one moves off. */
+/** The young one, on its own time and at more than twice the great one's beat: it stands with its head carried and looks about, drops it and noses hard into
+ * the mud through the key, then lifts its head and turns it to the great one (`toward`: +1 when that is to its left), and noses again at the end. */
 export function young(plan: Plan, b: Build, seconds: number, t: number, toward: number, out: Drive): Drive {
   const { k } = b;
   rest(out, plan, b);
@@ -88,12 +92,13 @@ export function young(plan: Plan, b: Build, seconds: number, t: number, toward: 
   const cycle = 1.45;
   // It walks on again once it has looked: a cycle and more, from a stand.
   const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.6 - 0.5 - 1.25 * cycle, -0.6, 0.5) - 1.25 * cycle + runUp(v, 1.5, 0.5));
-  const up = 1 - ease(-1.0, -0.25, t) + ease(0.95, 1.55, t);
-  const turn = ease(1.0, 1.8, t) * (1 - 0.6 * ease(2.0, 2.7, t));
-  const dig = (v: number): number => pulse(-0.45, 0.75, v) + pulse(0.6, 1.5, v);
+  const up = 1 - ease(-1.0, -0.25, t) + ease(0.95, 1.55, t) - ease(3.4, 4.3, t);
+  const turn = ease(1.0, 1.8, t) * (1 - 0.6 * ease(2.0, 2.7, t)) * (1 - ease(3.2, 4.0, t));
+  const dig = (v: number): number => pulse(-0.45, 0.75, v) + pulse(0.6, 1.5, v) + pulse(4.0, 5.4, v);
   const shove = dig(t) * (1 - up);
-  const w = walk(out, plan, b, far(t), far(t - 0.16), k * 0.1 * dig(t), pace);
-  trod[1].s = far(t);
+  const stand = far(0);
+  const w = walk(out, plan, b, stand, stand, k * 0.1 * dig(t), pace);
+  trod[1].s = stand;
   trod[1].pace = pace;
   out.breath = 1.6 * Math.sin(seconds * 4.3 + b.seed * 9);
   const lean = Math.sin(seconds * 2.6 + b.seed * 13);
@@ -102,7 +107,9 @@ export function young(plan: Plan, b: Build, seconds: number, t: number, toward: 
   out.pitch += 0.04 * shove - 0.03 * up + 0.006 * out.breath;
   out.bob += k * 0.01 * out.breath;
   out.bend += 0.1 * turn * toward + 0.03 * (1 - up) * Math.sin(seconds * 1.5 + b.seed * 21);
-  out.headYaw = (1 - up) * (0.42 * Math.sin(seconds * 3.1 + b.seed * 11) + 0.12 * Math.sin(seconds * 6.3 + b.seed * 3)) + toward * 0.6 * turn - 2.2 * w.yaw + 0.06 * up * Math.sin(seconds * 2.2 + b.seed * 4);
+  // (With its head up it looks about: a slow turn one way and the other, away from the great one first.)
+  const about = (1 - ease(-1.6, -0.6, t)) * Math.sin(seconds * 1.3 + b.seed * 4);
+  out.headYaw = (1 - up) * (0.42 * Math.sin(seconds * 3.1 + b.seed * 11) + 0.12 * Math.sin(seconds * 6.3 + b.seed * 3)) + toward * 0.6 * turn - 2.2 * w.yaw + 0.06 * up * Math.sin(seconds * 2.2 + b.seed * 4) - toward * 0.35 * about;
   out.headPitch = plan.hang - 0.45 * up - 0.2 * turn + 0.07 * shove - 1.1 * w.fore * up + 0.035 * Math.sin(seconds * 3.2 + b.seed * 5);
   out.splay = 0.55 + 0.25 * shove;
   rake(out, b, seconds, 0.5 + 0.25 * shove - 0.1 * up);
@@ -115,7 +122,8 @@ export function lying(plan: Plan, b: Build, seconds: number, t: number, near: nu
   const { k } = b;
   rest(out, plan, b);
   const over = ease(0.2, 2.5, t) - ease(3.2, 5.8, t);
-  const r = near * (-0.16 * (1 - ease(-2.9, -0.7, t)) + 0.04 + 0.92 * over);
+  // (It wallows where it lies: a third of the way over and back, not a roll.)
+  const r = near * (-0.16 * (1 - ease(-2.9, -0.7, t)) + 0.04 + 0.34 * over);
   const breath = Math.sin(seconds * 2.2 + b.seed * 9);
   // It turns about the middle of its trunk, not about its feet: the trunk is carried back over the place it lies in.
   out.roll = r;
