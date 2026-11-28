@@ -24,24 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 220, 2026-11-28 09:55 UTC:
+Status 221, 2026-11-28 10:14 UTC:
 
-- `01-s220-ribs-0034-film-and.jpg`: The Ribs at 0:34 (frame 2081) in two versions, one sheet made by the Ribs' detail builder for its second report and shown as it came; the halves carry no labels. Left, the film as it is: a near cliff face fills the left half of the frame, hung with brown and olive weed in long blades that fall down and to the right, matt, in soft brown strokes, with near black gaps between them. A pale dead animal hangs on the weed at the upper middle left, snout to the left, its rib cage open, thin legs hanging. Behind it two huge pale rib arches rise into grey storm cloud and a broad pale cliff stands at the far right; a wet grey shore with dark rocks, two rounded boulders at the cliff's foot, small pale thin animals far out on the flat and one flyer in the air. Right, the builder's first fix on its own branch, not in the film: the same view with body, sky, arches, shore and animals unchanged; the blades are a little darker with more streaks and skin, and the dark mass of the wall carries a fine pale speckle, the builder's drops of water. Higher on the wall the blades read better than on the left. At the lower left and along the wall's foot the speckle reads as an even blue-grey grain and not plainly as water, which the Builder has told the builder. At this size single drops cannot be told apart; the builder's full-size crops come with its last report. By the builder's own measure the frame's fine detail reads 0.9134 with the fix against 0.7470 in the film, with the floor at 0.75. By its mail its numbers are from draws at 4K and the final tier; the sheet is 1600 pixels wide. Not at the bar.
+- `01-s221-reveal-0247-start-and.jpg`: The Reveal's titan frame at 2:47 (frame 10027) in two versions, one sheet made by the Reveal team's lead for its third report on note 30 and shown as it came. Left, labelled before, start: the frame as the team started. The body lies across the frame, the skull at the left with two dark sockets, pale rib ridges either side of a spine line, arms and legs spread to the right, a red branching lake right of centre with a white streak of cloud beside it; brown and tan land with pale ridges and a turquoise rim, on a dark blue sea with many small white clouds; a thin blue line of air along the limb at the upper left over a black corner of space with nothing in it; sun glare at the upper right; one spiral storm in the lower right corner; no other land. Right, labelled after, 0581336: the same frame on the team's branch, which is not in the film. The black corner holds a small grey moon and a few faint stars. Other land stands in three places: at the top edge right of centre, under the limb at the left edge, and as a chain of grey-green islands down the lower left; the water is lighter and greener round all of it. The body's ribs are paler and more apart, its arms and legs carry more pale ridges and its coast is more broken. The red lake, the cloud streak, the sun glare, the storm and the small clouds read the same in both halves.
+- `02-s221-reveal-0305-0315.jpg`: The Reveal on the team's branch for note 30 at two later moments, one sheet made by the team's lead for its third report and shown as it came, drawn at the draft tier at the size of the preview; not in the film. Top, labelled 11100: the frame at 3:05. The limb curves from the lower left to the top middle with a thin bright blue line. Space fills the upper left with many white stars, a faint band of dust and a grey moon lit on its left side. The body lies in the middle, lit warm from the upper right with its right half in brown shadow: the skull with two sockets at its lower left, the ribs fanned above, the red lake right of centre. Other land stands on every side: a broad pale land at the left under the limb with a field of pale rafts cut by dark lines in the sea beside it, a chain of grey-green islands at the lower left, a grey and brown land at the top, small islands at the top right and dark land along the bottom edge. The spiral storm stands at the right in half shadow. Bottom, labelled 11743, the last frame that is not black: night at 3:15. Space at the left holds many stars, a pale band of dust and a thin crescent moon at the far left edge. The body is dark and drawn in pale grey-blue lines, the skull with its two sockets, the ribs, the arms and the legs, with one small orange glow at the chest. The other lands are dim shapes with faint pale edges and the storm is pale grey-blue.
 
+Status 220, 2026-11-28 09:55 UTC, showed: The Ribs at 0:34 (frame 2081) in two versions, one sheet made by the Ribs' detail builder for its second report and shown as it came; the...
 Status 219, 2026-11-28 09:37 UTC, showed: The Spine's five keys, each beside its approved picture: left the approved picture, right the Spine team's branch at its last report, one...
 Status 218, 2026-11-28 09:19 UTC, showed: The Reveal's titan frame at 2:47 (frame 10027) before and after on the Reveal team's branch for note 30, one sheet made by the team's lead...
-Status 217, 2026-11-28 09:02 UTC, showed: How much other land beside the body: the Reveal's titan frame at 2:47 (frame 10027) in three versions, one sheet made by the team's ocean...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-28T09:55:33Z
-phase 6: 10.07 h used of 24.00 h
-build: 10.07 h used of 24.00 h
+2026-11-28T10:14:59Z
+phase 6: 10.39 h used of 24.00 h
+build: 10.39 h used of 24.00 h
 extra rounds: no
-minutes since the last status: 18
+minutes since the last status: 19
 ```
 
 ## Phases
