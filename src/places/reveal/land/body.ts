@@ -13,6 +13,10 @@ uniform sampler2D uBodyLight;
 #endif
 // How strongly the relief of the body is lit from orbit, how long its ranges' shadows are drawn, and how much finer it is read.
 uniform vec4 uBodyRelief2;
+// The plate of the hips from orbit: the heights between which its salt ends, and how much thinner the red mark is drawn.
+#define PAN_LOW 0.135
+#define PAN_HIGH 0.165
+#define PAN_THIN 0.12
 `;
 
 /** The body's pictures are worked at the size the picture holds: from orbit they are read nearly at their own grain. */
@@ -106,6 +110,13 @@ mix(0.34, 0.045, smoothstep(940.0, 1380.0, uViewKm))
  *  round it, broken by their headlands, and nothing of it lies as a haze on the country beyond. */
 export const BODY_PAN = /* glsl */ `
 #ifdef BODY
-  panAt = mix(panAt, smoothstep(0.3, 0.5, panAt) * (1.0 - smoothstep(0.13, 0.19, height)), joined);
+  // (From orbit the plate of the hips is the floor of its basin and no ellipse: salt lies where the ground is level, out along the
+  // valleys that open on it, and the ranges stand into it as headlands. The red is a branching mark on it, thinner than the plate.)
+  if (joined > 0.0) {
+    float reach = length(fromPan / vec2(212.0, 168.0)) + 0.55 * (vnoise(xz / 95.0 + 3.0) - 0.5) + 0.25 * (vnoise(xz / 31.0 + 9.0) - 0.5);
+    float plate = (1.0 - smoothstep(0.8, 1.3, reach)) * (1.0 - smoothstep(PAN_LOW, PAN_HIGH, height)) * land;
+    panAt = mix(panAt, plate, joined);
+    rawBrine -= PAN_THIN * joined;
+  }
 #endif
 `;
