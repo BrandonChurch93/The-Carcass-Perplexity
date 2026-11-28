@@ -80,3 +80,17 @@ Takes: 1 picture of the crust made, take 1 kept; 1 picture of its height made, t
 Why this one: slabs of unlike size that lap over one another, rope festoons on some that bunch at one side and die out into smooth skin at the other, as the approved picture of the lava surface shows them; and a height drawn form for form on it, so that a slab stands over the next by its own height and not by its brightness. It is 2048 x 1024, linear, edges wrapped by the script: r, g the slope of the height, b the tone (a furrow dark, a crest pale, a crack black, with the photograph's own grain; 0.5 the mean). The crust's paint reads it once a slab, from the same script and the same two pictures as `coil-nh.jpg`, so the paint and the relief of a cord lie on each other.
 Date: 2026-11-26
 
+
+## `public/assets/heart/mat/rough-nt.jpg`
+
+Made by: the image tool `generate_image` with its default model (through Perplexity), once, then `assets-src/heart/fluid/make-rough.mjs` (Node with sharp, which the repository already has).
+From: `assets-src/heart/gen/rough-t1.jpg` (the crust seen straight down, the model's picture kept as a JPEG of quality 88; picture passed to the model with the prompt: `references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg`). Committed.
+Prompt or command: the prompt below (aspect 1:1 asked, 1254 x 1254 given), then `node assets-src/heart/fluid/make-rough.mjs`.
+
+```
+A material texture, seen straight down from above in an orthographic view: the young broken crust on an active lava lake, about 3 metres across. Rough, matte, dark charcoal basalt: a granular clinkery skin, torn and broken into irregular plates and crumbs of unlike sizes from a few centimetres to half a metre, with pitted vesicular faces, sharp broken edges, grit and small rubble in the joints, and many fine irregular hairline cracks that are dark, not glowing. No ropes, no coils, no swirls, no parallel wrinkles, no stripes. No glowing lava and no fire anywhere. No sheen, no gloss, no wet highlights: dead matte. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The reference image is the place this material belongs to (the dark floor under the animals' feet): take its colours, its age and its character from there. Output one square image. Photographic, as a camera records real stone with real grain and micro detail, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top.
+```
+
+Takes: 1 picture made, take 1 kept; 1 run of the script.
+Why this one: rough, matte, broken basalt in plates and crumbs of unlike sizes with dark hairline joints and no rope, no stripe and no sheen, which is the floor under the animals in the approved picture `heart-3`. Only its brightness is used. It is 1024 x 1024, linear, edges wrapped by the script: r, g the slope of a height taken from the brightness with the lighting flattened out, b the tone (0.5 the mean of the stone, a joint dark, a crumb pale). The crust reads it on the floor the group feeds on, at two sizes, each patch turned and shifted (`src/places/heart/lake/sheet.ts`, `ROUGH_GLSL`).
+Date: 2026-11-27

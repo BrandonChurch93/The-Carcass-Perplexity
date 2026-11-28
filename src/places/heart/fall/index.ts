@@ -3,6 +3,8 @@
 import * as THREE from 'three';
 import { MOUTH, smooth } from '../layout';
 import type { HeartContext, HeartPiece } from '../shared/context';
+import { secondsInPlace, shotById } from '../../../film/cut';
+import { UNIT } from '../shared/anchors';
 import { blackbody } from '../shared/rig';
 import { BED_DEPTH, BED_FRAGMENT, BED_VERTEX, FUME_FRAGMENT, FUME_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX, GOB_FRAGMENT, GOB_VERTEX, ROCK_DEPTH, ROCK_FRAGMENT, ROCK_VERTEX } from './look';
 import { FAN_FROM, TUBE, WINDOW, createCourse } from './path';
@@ -12,10 +14,12 @@ export const PARTS: readonly string[] = ['vessel-mouth', 'lava-fall', 'surge'];
 
 /** Seconds before the surge breaks over the lip in which the glow in the tube and the head at the lip come up. */
 const LEAD = 0.24;
-/** Metres from the lip of the front of the surge, `since` seconds after it breaks over the lip. It is lava, not water: it leaves at 9 m/s and gathers speed slowly down the slope. */
-const surgeFront = (since: number): number => (since < 0 ? 0 : 9 * since + 2 * since * since);
+/** Metres from the lip of the front of the surge, `since` seconds after it breaks over the lip. It is lava, not water: a thick front that leaves at 6.5 m/s and gathers speed slowly down the slope. */
+const surgeFront = (since: number): number => (since < 0 ? 0 : 6.5 * since + 1.4 * since * since);
 /** The second after its start at which the front is `len` metres down the course. */
-const surgeReaches = (len: number): number => (len <= 0 ? 0 : (-9 + Math.sqrt(81 + 8 * len)) / 4);
+const surgeReaches = (len: number): number => (len <= 0 ? 0 : (-6.5 + Math.sqrt(42.25 + 5.6 * len)) / 2.8);
+/** How much of the stream is under a pack of crust, 0 to 1, where the lava that left the lip `ride` seconds ago is. The same wave as packWave of look.ts, which gathers the packs it draws. */
+const packWave = (ride: number): number => 0.5 + 0.5 * Math.sin(ride * 0.62 + 1.4 * Math.sin(ride * 0.21 + 0.7));
 
 export function create(ctx: HeartContext): HeartPiece {
   const land = (x: number, z: number): number => ctx.rig.land.height(x, z);
@@ -34,6 +38,9 @@ export function create(ctx: HeartContext): HeartPiece {
     uArch: { value: new THREE.Vector4(MOUTH.x, TUBE.floor, TUBE.half(0), TUBE.crown(0)) },
     uFlare: { value: 1 },
     uSurge: { value: new THREE.Vector4(-1000, 0, 0, 0) },
+    // x: 1 in the shot of the feeding group, where the stream is seen small behind the walkers. y: how much of the light of the
+    // fall's body its fume has, less while a pack of crust passes under it.
+    uPass: { value: new THREE.Vector4(0, 1, 0, 0) },
     uFalls: { value: Array.from({ length: 12 }, (_, i) => course.falls[i] ?? 1e4) },
     tCliff: { value: ctx.assets.texture('mat/cliff.jpg') },
     tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
@@ -75,10 +82,12 @@ export function create(ctx: HeartContext): HeartPiece {
   const footLightAt = surgeReaches(FAN_FROM + 24);
 
   // The air over the fall: heat along it and at the mouth, fume where it meets the lake and from the mouth.
-  for (const len of [8, 40, 72, 104, 138]) {
+  const HEAT_AT = [8, 40, 72, 104, 138];
+  const heats = HEAT_AT.map((len) => {
     const p = spot(len, 0);
-    ctx.sources.heat.push({ at: [p.x, p.y, p.z], radius: 14, height: 40, strength: 0.8 });
-  }
+    return { at: [p.x, p.y, p.z] as [number, number, number], radius: 14, height: 40, strength: 0.8 };
+  });
+  ctx.sources.heat.push(...heats);
   ctx.sources.heat.push({ at: [MOUTH.x - 10, TUBE.floor, TUBE.lipZ - 6], radius: 40, height: 50, strength: 1 });
   // The fume leaves the east end of the fan, where its arm meets the lake, and leans east: it stands behind the two walkers and not
   // before the face of the fan.
@@ -90,7 +99,23 @@ export function create(ctx: HeartContext): HeartPiece {
   const fanSmoke = { at: [footAt.x + 62, 2, footAt.z - 27] as [number, number, number], radius: 10, strength: 0.14, rise: 22, kind: 'smoke' as const, lean };
   const toeSteam = { at: [footAt.x + 84, 1.5, footAt.z - 27] as [number, number, number], radius: 9, strength: 0.11, rise: 18, kind: 'smoke' as const, lean };
   // No smoke source stands in the opening: lit by the surge it drew as a pale round blob in the dark.
-  ctx.sources.steam.push(footFume, fanSmoke, toeSteam);
+  // The fall is seen through its own fume: three more stand west of the stream, up the wind of it, and what they give leans
+  // east across its face.
+  const westFume = [30, 70, 110].map((len, i) => {
+    const p = spot(len, 2);
+    return { at: [p.x - 12, p.y, p.z] as [number, number, number], radius: 8, strength: 0.1 + 0.015 * i, rise: 34, kind: 'smoke' as const, lean };
+  });
+  ctx.sources.steam.push(footFume, fanSmoke, toeSteam, ...westFume);
+  // None of them gives evenly: each swells and thins by a quarter on a beat of its own, 7 to 13 seconds long.
+  const fumes = [footFume, fanSmoke, toeSteam, ...westFume].map((source, i) => ({ source, strength: source.strength, beat: [7, 11, 13, 9, 12, 8][i] as number, phase: 1.7 * i }));
+  const tauAt = (len: number): number => course.at(len).tau;
+  const heatTau = HEAT_AT.map(tauAt);
+  const mouthTau = tauAt(2);
+  const bodyTau = tauAt(52);
+  const footTau = tauAt(course.length - 30);
+  const feedShot = shotById('heart-02');
+  const feedFrom = secondsInPlace(UNIT, feedShot.first) - 0.3 / 60;
+  const feedTo = secondsInPlace(UNIT, feedShot.last) + 0.7 / 60;
 
   // The surge's gobs: thrown from the lip when it starts and from each cascade as the front passes.
   const GOBS = 300;
@@ -144,14 +169,20 @@ export function create(ctx: HeartContext): HeartPiece {
   // the fan (one in the opening drew as a pale blob), so what rises along the cascade is drawn here.
   const PUFFS_A_DROP = 18;
   const leaves = [...course.falls.map((at) => at + 3), FAN_FROM + 6];
-  const PUFFS = leaves.length * PUFFS_A_DROP;
+  // Besides them, veils: broad thin sheets of fume that leave the ground west of the stream and are carried east across the
+  // face of the fall, so that the fall is seen through them.
+  const VEILS = 44;
+  const DROPS = leaves.length * PUFFS_A_DROP;
+  const PUFFS = DROPS + VEILS;
   const fumeGeometry = new THREE.InstancedBufferGeometry();
   fumeGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, -0.5, 0.5, 0]), 3));
   fumeGeometry.setIndex([0, 1, 2, 0, 2, 3]);
   const puffFrom = new Float32Array(PUFFS * 4);
   const puffLife = new Float32Array(PUFFS * 4);
   const puffSeed = new Float32Array(PUFFS * 4);
-  for (let i = 0; i < PUFFS; i++) {
+  // x: metres a second the wind carries it east besides what its rise gives it. y: how many times the size of a puff.
+  const puffWind = new Float32Array(PUFFS * 2);
+  for (let i = 0; i < DROPS; i++) {
     const from = (leaves[Math.floor(i / PUFFS_A_DROP)] as number) + own.range(-2, 3);
     const p = course.at(from);
     const side = own.range(-0.7, 0.7);
@@ -162,10 +193,25 @@ export function create(ctx: HeartContext): HeartPiece {
     const life = own.range(5, 8.5);
     puffLife.set([(((i % PUFFS_A_DROP) + own.next()) / PUFFS_A_DROP) * life, life, own.range(1.6, 3.2), own.next()], i * 4);
     puffSeed.set([own.next(), own.next(), own.next(), own.range(0.12, 0.26)], i * 4);
+    puffWind.set([0.5, 1.25], i * 2);
+  }
+  const veilRng = ctx.rng('fall/veils');
+  for (let k = 0; k < VEILS; k++) {
+    const i = DROPS + k;
+    const from = veilRng.range(34, FAN_FROM + 10);
+    const p = course.at(from);
+    const x = p.x - veilRng.range(16, 44);
+    const z = p.z + veilRng.range(-6, 6);
+    puffFrom.set([x, river.height(p.x, p.z) + veilRng.range(1, 9), z, from], i * 4);
+    const life = veilRng.range(9, 14);
+    puffLife.set([((k + veilRng.next()) / VEILS) * life * 3.7, life, veilRng.range(0.5, 1.2), veilRng.next()], i * 4);
+    puffSeed.set([veilRng.next(), veilRng.next(), veilRng.next(), veilRng.range(0.1, 0.17)], i * 4);
+    puffWind.set([veilRng.range(2.6, 4.2), veilRng.range(2.0, 3.0)], i * 2);
   }
   fumeGeometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(puffFrom, 4));
   fumeGeometry.setAttribute('aLife', new THREE.InstancedBufferAttribute(puffLife, 4));
   fumeGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(puffSeed, 4));
+  fumeGeometry.setAttribute('aWind', new THREE.InstancedBufferAttribute(puffWind, 2));
   fumeGeometry.instanceCount = PUFFS;
   const fumeMaterial = new THREE.ShaderMaterial({ vertexShader: FUME_VERTEX, fragmentShader: FUME_FRAGMENT, uniforms: shared, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
   const fume = new THREE.Mesh(fumeGeometry, fumeMaterial);
@@ -184,16 +230,25 @@ export function create(ctx: HeartContext): HeartPiece {
       // and from there each light rises as the front reaches what it lights.
       const up = smooth(-LEAD, 0.3, since);
       const after = Math.max(since, 0);
-      shared.uFlare.value = 1 + up * (0.6 + 1.4 * Math.exp(-after / 0.9));
+      // The packs of crust that ride down the stream pass under each light in turn: while one passes, the light is less.
+      const under = (tau: number): number => smooth(0.4, 0.9, packWave(tau - seconds));
+      const mouthUnder = under(mouthTau);
+      const bodyUnder = under(bodyTau);
+      const footUnder = under(footTau);
+      shared.uFlare.value = (1 + up * (0.6 + 1.4 * Math.exp(-after / 0.9))) * (1 - 0.16 * mouthUnder * (1 - up));
+      const feeding = seconds >= feedFrom && seconds < feedTo ? 1 : 0;
+      shared.uPass.value.set(feeding, 1 - 0.4 * bodyUnder * (1 - up), 0, 0);
+      for (let i = 0; i < heats.length; i++) (heats[i] as (typeof heats)[number]).strength = 0.8 * (1.25 - 0.5 * under(heatTau[i] as number));
+      for (const f of fumes) f.source.strength = f.strength * (1 + 0.25 * Math.sin((6.2832 * seconds) / f.beat + f.phase));
       shared.uSurge.value.set(front, smooth(-LEAD, 0.1, since), smooth(-LEAD, 0, since) * Math.exp(-after / 0.5), course.length);
       // The round light in the mouth also lights the fume before it, so it rises far less than the river's own light on the rim does.
-      mouthLight.radiance.copy(base[0] as THREE.Vector3).multiplyScalar(1 + up * (0.2 + 0.5 * Math.exp(-after / 0.9)));
-      bodyLight.radiance.copy(base[1] as THREE.Vector3).multiplyScalar(1 + 0.8 * smooth(bodyAt - 0.3, bodyAt + 0.5, since));
-      footLight.radiance.copy(base[2] as THREE.Vector3).multiplyScalar(1 + 0.9 * smooth(footLightAt - 0.3, footLightAt + 0.6, since));
+      mouthLight.radiance.copy(base[0] as THREE.Vector3).multiplyScalar((1 + up * (0.2 + 0.5 * Math.exp(-after / 0.9))) * (1 - 0.15 * mouthUnder));
+      bodyLight.radiance.copy(base[1] as THREE.Vector3).multiplyScalar((1 + 0.8 * smooth(bodyAt - 0.3, bodyAt + 0.5, since)) * (1.1 - 0.3 * bodyUnder) * (1 + 0.8 * feeding));
+      footLight.radiance.copy(base[2] as THREE.Vector3).multiplyScalar((1 + 0.9 * smooth(footLightAt - 0.3, footLightAt + 0.6, since)) * (1.1 - 0.3 * footUnder) * (1 + 0.8 * feeding));
       const p = course.at(Math.min(course.length - 10, Math.max(0, front + 6)));
       surgeLight.position.set(p.x, river.height(p.x, p.z) + 5, p.z);
-      surgeLight.radius = 9 + 3 * Math.exp(-after / 0.5);
-      surgeLight.radiance.set(...blackbody(1470)).multiplyScalar(0.8 * smooth(-0.05, 0.4, since) * (0.9 + 0.3 * Math.exp(-after / 0.5)) * smooth(FAN_FROM + 34, FAN_FROM - 12, front));
+      surgeLight.radius = 10 + 3 * Math.exp(-after / 0.8);
+      surgeLight.radiance.set(...blackbody(1470)).multiplyScalar(0.8 * smooth(-0.05, 0.4, since) * (0.9 + 0.3 * Math.exp(-after / 0.8)) * smooth(FAN_FROM + 34, FAN_FROM - 12, front));
 
       for (let i = 0; i < GOBS; i++) {
         const t = throws[i] as (typeof throws)[number];

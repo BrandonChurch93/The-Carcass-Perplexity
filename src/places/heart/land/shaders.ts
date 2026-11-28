@@ -105,6 +105,7 @@ uniform sampler2D tTalusNh;
 uniform sampler2D tBoulder;
 uniform sampler2D tBoulderNh;
 uniform sampler2D tSulphur;
+uniform sampler2D tAa;
 uniform vec4 uCrackA;
 uniform vec4 uCrackB;
 uniform vec4 uStain;
@@ -227,7 +228,9 @@ void main() {
   // But the side of a block that stands out of the wall looks a quarter turn away from the wall's own face: laid on the wall's plane its
   // picture is drawn out into streaks. Such a face is laid by its own direction.
   float kg = smoothstep(0.26, 0.74, ng.x * ng.x / (ng.x * ng.x + ng.z * ng.z + 1e-5));
-  kx = mix(kx, kg, smoothstep(0.45, 0.8, abs(kg - kx)) * smoothstep(0.75, 0.5, abs(ng.y)));
+  // Only a face turned a full quarter from the wall: a face turned half that far is a flute a rib wide, and laid by itself every other
+  // rib of the wall took the other plane and the face read as lines.
+  kx = mix(kx, kg, smoothstep(0.78, 0.96, abs(kg - kx)) * smoothstep(0.75, 0.5, abs(ng.y)));
   #endif
   #ifndef FLAT
   if (steep > 0.003 && byLens < 0.999) {
@@ -472,6 +475,8 @@ void main() {
   float closedIn = clamp(vLand.x * 1.7 - 0.25 * (height - 0.5), 0.0, 0.5);
   #else
   float closedIn = clamp(vLand.x * 1.7 - 0.25 * (height - 0.5), 0.0, 0.93);
+  // The broken edge of a block that stands proud of the wall (told by the mesh as less than no sky closed): fresh rock, paler than the face.
+  albedo *= 1.0 + 2.2 * clamp(-vLand.x * 4.0, 0.0, 1.0) * steep;
   #endif
   occ *= (1.0 - closedIn) * (1.0 - closedIn);
 
@@ -662,14 +667,29 @@ void main() {
     height = mix(height, grain, byLens);
   }
   #endif
-  // A slope of the bench is broken rock, and no picture laid from above is drawn out down it: its grain is read on three planes,
-  // lumps of a third of a metre and pits finer than that, and half of whatever was laid there gives way to it.
-  float broken = smoothstep(0.22, 0.42, slope) * (1.0 - byLens);
-  if (broken > 0.0) {
-    float lumpTone = (vnoise(vWorld.xz / 0.37 + 2.9) + vnoise(vWorld.xy / 0.37 + 6.1) + vnoise(vWorld.zy / 0.37 + 0.7)) / 3.0;
-    float pitTone = (vnoise(vWorld.xz / 0.07 + 4.3) + vnoise(vWorld.xy / 0.07 + 1.2) + vnoise(vWorld.zy / 0.07 + 8.8)) / 3.0;
+  // A slope of the bench is broken rock, and broken in fact: a bed of angular fragments of basalt, a finger to a stride across, built and
+  // looked down on (aa-nh), is read on the slope's own plane or on the level, so nothing is drawn out down a face. It bends the light as
+  // its faces do, the gaps between fragments are closed to the sky, and half of whatever colour was laid on a steep slope gives way to grey.
+  // The crag of the line view is the one rock under that lens that is a face and no heap: it is broken as every other slope is.
+  float cragFace = smoothstep(1.0, 1.8, vWorld.y) * step(-512.5, vWorld.x) * step(vWorld.x, -501.0) * step(196.0, vWorld.z) * step(vWorld.z, 207.5);
+  float jagged = smoothstep(0.1, 0.26, slope) * (1.0 - byLens * (1.0 - cragFace)) * (1.0 - 0.8 * sheet);
+  if (jagged > 0.0) {
+    const float BED = 11.0;
+    vec2 drift = vec2(big, -big) * 1.5;
+    float side = smoothstep(0.38, 0.52, slope);
+    vec3 top = vec3(0.5);
+    vec3 face = vec3(0.5);
+    if (side < 0.997) top = PICK(tAa, vWorld.xz / BED + drift, wx.xz / BED, wy.xz / BED).rgb;
+    if (side > 0.003) face = kx > 0.5 ? PICK(tAa, vWorld.zy / BED + drift, wx.zy / BED, wy.zy / BED).rgb : PICK(tAa, vWorld.xy / BED + drift, wx.xy / BED, wy.xy / BED).rgb;
+    vec2 ts = (top.rg - 0.5) * 6.0 * (1.0 - side);
+    vec2 fs = (face.rg - 0.5) * 6.0 * side;
+    vec3 across = kx > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    n = normalize(n + jagged * 1.2 * (vec3(ts.x, 0.0, -ts.y) + across * fs.x - vec3(0.0, 1.0, 0.0) * fs.y));
+    float stand = mix(top.b, face.b, side);
+    occ *= mix(1.0, 0.2 + 0.8 * smoothstep(0.03, 0.45, stand), jagged);
     vec3 even = vec3(dot(albedo, vec3(0.3333)));
-    albedo = mix(albedo, mix(albedo, even * vec3(1.05, 1.0, 0.95), 0.5) * (0.55 + 0.9 * lumpTone + 0.6 * (pitTone - 0.5) * sharp), 0.7 * broken);
+    albedo = mix(albedo, mix(albedo, even * vec3(1.05, 1.0, 0.95), 0.5), 0.7 * smoothstep(0.22, 0.42, slope) * (1.0 - byLens));
+    albedo *= mix(1.0, 0.62 + 0.85 * stand, jagged);
   }
   #ifndef CORE
   // The sulphur of the crack: pale crystals on the lips and on what faces up, yellow round them, orange-brown stain fading out over metres.
@@ -722,16 +742,30 @@ void main() {
   float gap = smoothstep(0.38, 0.56, vnoise(vWorld.xz / 0.33 + vWorld.y * vec2(1.1, 0.8) + 6.4));
   // A heap of crumbs, whole within a forearm of the crack and ragged at its edge: each crumb its own tone, a dark one here and there.
   float crumbTone = vnoise(vWorld.xz / 0.021 + vWorld.y * vec2(31.0, 23.0) + 3.9);
-  #ifdef RUBBLE
-  // On the heap the mound is built: lumps of crystal crust with holes between them. A lump is lemon on its crown and olive down its sides,
-  // and the holes are the dark rock under it: no tone is drawn that the shape does not carry.
-  float crown = smoothstep(0.5, 0.96, n0.y + 0.12 * (knob - 0.5));
-  float mound = smoothstep(0.36, 0.18, segmentDistance(vWorld.xz, vec4(mix(uCrackB.xy, uCrackB.zw, 0.3), mix(uCrackB.xy, uCrackB.zw, 0.7))) + 0.3 * (knob - 0.5) + 0.2 * (1.0 - gap)) * smoothstep(0.1, 0.5, vLand.y) * (0.75 + 0.25 * smoothstep(0.25, 0.45, crumbTone));
-  albedo = mix(albedo, mix(vec3(0.11, 0.09, 0.025), vec3(0.42, 0.36, 0.09), crown) * (0.6 + 0.6 * crumbTone), mound);
-  #else
-  float mound = smoothstep(0.42, 0.2, segmentDistance(vWorld.xz, uCrackB) + 0.2 * (knob - 0.5) + 0.25 * (1.0 - gap)) * (0.55 + 0.45 * smoothstep(0.25, 0.45, crumbTone));
-  albedo = mix(albedo, mix(vec3(0.6, 0.48, 0.1), vec3(1.0, 0.88, 0.36), smoothstep(0.35, 0.8, knob)) * (0.45 + 0.9 * crumbTone), mound);
-  #endif
+  // The crust of the vent, on rock sooted near black. The stones there carry the same (rock-shader.ts).
+  float dv = distance(vWorld.xz, 0.5 * (uCrackB.xy + uCrackB.zw));
+  float fume = smoothstep(1.7, 0.6, dv);
+  float mound = 0.0;
+  if (fume > 0.0) {
+    // Crumbs a finger across, each with its lit top and dark foot, gathered in the hollows and against the feet of the stones, thick near the
+    // vent and thinning to single crumbs: no edge but the edges of crumbs. An olive stain fades out round them.
+    float reach = smoothstep(1.25, 0.25, dv);
+    vec2 q = vWorld.xz / 0.022 + vWorld.y * vec2(7.3, 5.1) + 6.4;
+    float c0 = vnoise(q);
+    float cx = vnoise(q + vec2(0.28, 0.0));
+    float cz = vnoise(q + vec2(0.0, 0.28));
+    float soft = vnoise(vWorld.xz / 0.21 + vWorld.y * vec2(2.1, 1.6) + 1.3);
+    float held = max(smoothstep(0.6, 0.3, height), contactAt(vWorld));
+    float dens = clamp(reach * smoothstep(0.08, 0.5, n0.y + 0.15 * (knob - 0.5)) * (0.45 + 0.9 * soft) * (0.45 + 0.55 * held), 0.0, 1.0);
+    float edge = 1.0 - 1.15 * dens;
+    mound = smoothstep(edge - 0.1, edge + 0.1, c0 + 0.25 * (crumbTone - 0.5)) * smoothstep(0.02, 0.12, dens);
+    albedo *= mix(1.0, 0.45, fume);
+    albedo = mix(albedo, albedo * vec3(1.6, 1.3, 0.5) + vec3(0.03, 0.024, 0.004), 0.6 * smoothstep(0.0, 0.6, dens));
+    float top = smoothstep(edge, edge + 0.35, c0);
+    albedo = mix(albedo, mix(vec3(0.36, 0.27, 0.035), vec3(1.0, 0.7, 0.08), smoothstep(0.25, 0.7, dens)) * (0.5 + 0.75 * top) * (0.8 + 0.4 * crumbTone), 0.96 * mound);
+    n = normalize(n - vec3(cx - c0, 0.0, cz - c0) * 3.2 * mound);
+    occ *= mix(1.0, 0.55 + 0.45 * top, mound);
+  }
   rough = mix(rough, 0.95, mound);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
@@ -775,8 +809,14 @@ void main() {
   float longLens = smoothstep(0.3, 0.1, px) * (1.0 - steep) * smoothstep(110.0, 80.0, vWorld.y);
   if (longLens > 0.0) {
     float chips = smoothstep(0.63, 0.7, vnoise3(vWorld / 0.34 + 1.1));
-    float clods = smoothstep(0.58, 0.64, vnoise3(vWorld / 1.3 + 3.3));
-    albedo *= mix(1.0, 0.72 * (1.0 + 1.7 * chips) * (1.0 - 0.55 * clods), longLens);
+    albedo *= mix(1.0, 0.47 * (1.0 + 3.6 * chips), longLens);
+    // And the scree is fragments in fact (aa-nh, the built bed of broken basalt, here with its largest block a stride and a half across):
+    // each stands with a lit top over a dark gap, and its faces bend the light.
+    vec3 bed = PICK(tAa, vWorld.xz / 7.0 + vec2(big, -big) * 1.5, wx.xz / 7.0, wy.xz / 7.0).rgb;
+    vec2 bs = (bed.rg - 0.5) * 6.0;
+    n = normalize(n + longLens * vec3(bs.x, 0.0, -bs.y));
+    occ *= mix(1.0, 0.25 + 0.75 * smoothstep(0.03, 0.4, bed.b), longLens);
+    albedo *= mix(1.0, 0.3 + 2.0 * bed.b, longLens);
   }
   #endif
   // The wall that stands behind the ramp's head is the fire's own: baked buff, the palest rock of that frame.
@@ -793,6 +833,10 @@ void main() {
   // pale line along its brow, which is this.
   float cap = smoothstep(0.62, 0.9, n0.y) * smoothstep(34.0, 60.0, vWorld.y) * (0.6 + 0.4 * smoothstep(0.3, 0.6, mid));
   albedo = mix(albedo, vec3(0.25, 0.228, 0.2) * (0.5 + 1.0 * height), 0.7 * cap);
+  // And the brow itself, where the table turns over into the cliff, and the lip of every ledge under it, is bare broken edge that takes the
+  // sky: the palest line of the butte in its picture.
+  float brow = smoothstep(0.2, 0.42, n0.y) * smoothstep(0.8, 0.58, n0.y) * smoothstep(40.0, 62.0, vWorld.y);
+  albedo = mix(albedo, vec3(0.34, 0.3, 0.26) * (0.6 + 0.8 * height), 0.65 * brow);
   // A skirt of talus lies against its near side, in the shape and in cones of tone above it: paler than the cliffs and without their joints.
   float coneRun = dot(vWorld.xz, vec2(0.25, 0.97));
   float coneTop = 16.0 + 30.0 * vnoise(vec2(coneRun / 34.0, 1.7)) + 6.0 * (mid - 0.5);

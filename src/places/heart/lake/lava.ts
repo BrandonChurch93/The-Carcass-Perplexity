@@ -215,6 +215,8 @@ const vec2 RAFT = vec2(0.85, 0.6);
 // Metres a second the rafts ride down the stream, and the thin skin of the core.
 const float RAFT_SPEED = 0.6;
 const float CORE_SPEED = 0.9;
+// Metres a second the cooling skin of the line rides: it drags on the banks and the melt runs out from under it.
+const float SKIN_SPEED = 0.34;
 
 // What the stream carries, at a point of the pattern: how the ropes are pushed out of line, how alive the creases are, where the skin is stretched thin.
 vec3 carriedAt(vec2 p) {
@@ -549,6 +551,10 @@ void main() {
   float photo = (1.0 - feeding) * (1.0 - stir);
   vec2 hx = dFdx(here);
   vec2 hy = dFdy(here);
+  // The cooling skin of the line: how thick it is here (0 bare melt, 1 cold), and its slope in the stream's own axes.
+  float lineThick = 0.0;
+  vec2 lineLay = vec2(0.0);
+  float lineSkin = 0.0;
   if (photo > 0.0) {
     float plugEdge = lean + 0.35 * (fixedBig - 0.5) - coreTo - 0.22;
     float inPlug = (1.0 - smoothstep(-0.04, 0.04, plugEdge)) * (1.0 - inCoil);
@@ -588,9 +594,48 @@ void main() {
     heat -= bare * (0.14 * (lines - 0.2) + 0.16 * film) + bare * onLine * 0.28 * smoothstep(0.35, 0.75, coil);
     float sheared = (1.0 - smoothstep(0.0, 0.04 + grain, abs(plugEdge) * gape)) * smoothstep(0.35, 0.6, vnoise(vec2(here.x * 1.3 - 0.4 * uTime, 3.0 + vSeam.y))) * (1.0 - inCoil);
     heat = max(heat, 0.85 * sheared);
+    // The cooling skin of the line is a layer of its own. It rides slower than the melt under it. It is thin where the melt
+    // wells in mid stream and thick toward the banks, thicker where it is old, thinner in the furrows of its creases. Where the
+    // stream pulls it, it tears across the flow, and where the plug shears past the margin it is torn along it. What glows
+    // is the melt through the skin: the thicker the skin, the darker, and nothing else sets the glow.
+    if (onLine > 0.5) {
+      vec2 sk = vec2(here.x - SKIN_SPEED * uTime, here.y);
+      float leanN = lean / max(coreTo + 0.22, 1e-3);
+      float age = 0.6 * vnoise(sk * vec2(0.42, 1.5) + 61.0) + 0.4 * vnoise(sk * vec2(1.6, 4.1) + 17.0);
+      vec4 fold = textureGrad(tPour, sk * coilScale + 0.71, hx * coilScale, hy * coilScale);
+      float creased = fold.b;
+      float thick = 0.14 + 1.05 * smoothstep(0.0, 0.85, leanN) + 0.8 * (age - 0.42) + 0.55 * (creased - 0.45) + 0.2 * (film - 0.3);
+      // In the furrow of a crease the skin is thin: there the melt shows as a thread.
+      thick -= 0.6 * (1.0 - smoothstep(0.16, 0.42, creased)) * smoothstep(0.25, 0.6, age);
+      // Pulled apart: gashes across the flow, open to the melt, most where the skin is still thin.
+      float gash = smoothstep(0.6, 0.7, 0.75 * vnoise(vec2(sk.x * 2.4, sk.y * 0.8) + 37.0) + 0.25 * vnoise(sk * 6.5 + 3.0));
+      thick -= 0.7 * gash * (1.0 - smoothstep(0.5, 1.1, leanN));
+      thick = clamp(thick, 0.0, 1.0) * (1.0 - 0.9 * sheared);
+      // The open melt is no flat pale field: a film of new skin lies on all of it, drawn out in lines along the stream, and
+      // the melt is yellow where the film is thinnest and orange under the rest.
+      thick = max(thick, clamp(0.01 + 0.12 * lines + 0.08 * film + 0.08 * (creased - 0.45), 0.0, 0.25) * (1.0 - sheared));
+      // Fragments torn from the skin ride the open melt: those in mid stream fast, those nearer the banks slower, so that
+      // one overtakes the next.
+      for (int lane = 0; lane < 3; lane++) {
+        float fl = float(lane);
+        float pace = mix(0.84, 0.5, 0.5 * fl);
+        float off = abs(leanN - 0.12 - 0.26 * fl) / 0.2;
+        vec2 fp = vec2(here.x - pace * uTime, here.y);
+        float piece = 0.7 * vnoise(fp * vec2(1.3, 3.4) + 19.0 + 23.0 * fl) + 0.3 * vnoise(fp * vec2(4.1, 8.3) + 5.0 + 11.0 * fl) - 0.16 * off * off;
+        // No fragment is a cut-out: its rim is torn, and thin enough there for the melt to show red through it, and the
+        // furrows of its creases stay alight across it.
+        piece += 0.08 * (vnoise(fp * vec2(9.0, 21.0) + 3.0 + 7.0 * fl) - 0.5);
+        thick = max(thick, (0.5 + 0.7 * creased) * pow(smoothstep(0.57, 0.75, piece), 0.6) * (1.0 - 0.5 * gash));
+      }
+      float through = (1.0 - thick) * (1.0 - thick);
+      heat = mix(0.03, 1.0, through * mix(0.75, 1.0, mid));
+      lineThick = thick;
+      lineLay = vec2(fold.r - 0.5, 0.5 - fold.g) * 4.0 * smoothstep(0.25, 0.6, thick);
+      lineSkin = 1.0;
+    }
     hot = mix(hot, blackbody(800.0 + (780.0 + 60.0 * reachOpen * inPlug - 40.0 * farAway) * heat), photo);
     open = mix(open, smoothstep(0.1, 0.28, heat), photo);
-    vec2 lay = mix(side.xy, plug.xy, inPlug) * 0.02;
+    vec2 lay = mix(mix(side.xy, plug.xy, inPlug) * 0.02, lineLay, lineSkin);
     vec2 onLake = lay.x * vec2(vAcross.y, -vAcross.x) + lay.y * vAcross;
     nrm = normalize(mix(nrm, normalize(vec3(-onLake.x, 1.0, -onLake.y)), photo));
   }
@@ -608,15 +653,21 @@ void main() {
   float ripped = smoothstep(0.5, 0.66, vnoise(q * 3.3 + vec2(9.0, uTime * 0.04)) * 0.62 + vnoise(q * 9.5) * 0.38);
   float cling = (1.0 - smoothstep(reach * 0.55, reach, inside + 0.06 * (vnoise(q * 14.0) - 0.5))) * (1.0 - ripped * smoothstep(0.02, 0.09, inside));
   float shear = (1.0 - smoothstep(0.0, 0.03 + 2.0 * grain, abs(inside - reach))) * smoothstep(0.42, 0.62, vnoise(q * 1.4 + vec2(uTime * 0.11, 0.0))) * (1.0 - pool) * min(1.0, 0.03 / (0.03 + 2.0 * grain));
-  hot = mix(hot, blackbody(880.0 + 170.0 * vnoise(q * 6.1 + 2.0)), cling);
+  // It is creased as the stream drags it: crooked lines a finger wide where it has folded and split, alight in some stretches
+  // and dark in the next, and patches of it a shade apart. No even dark band.
+  float fret = abs(vnoise(q * 11.0 + 3.0 * vnoise(q * 2.3 + 5.0)) - 0.5);
+  float creased = (1.0 - smoothstep(0.015, 0.045 + 6.0 * grain, fret)) * smoothstep(0.38, 0.6, vnoise(q * 1.9 + 7.0)) * min(1.0, 0.04 / (0.04 + 6.0 * grain));
+  hot = mix(hot, blackbody(mix(830.0 + 230.0 * vnoise(q * 6.1 + 2.0), 1270.0, creased)), cling);
   skin = max(skin, cling);
   hot = mix(hot, blackbody(1330.0), shear * 0.85 * (1.0 - cling));
   // Where the melt meets the foot of the far wall it is torn open: the brightest thin line of the place, broken along its length.
   vec2 toBank = up / max(length(up), 1e-4);
   vec2 sightAt = normalize(vWorld.xz - cameraPosition.xz);
   float foot = (1.0 - smoothstep(0.12 + 0.03 * vnoise(q * 5.0) + grain, 0.14 + 0.03 * vnoise(q * 5.0) + 2.0 * grain, inside)) * smoothstep(0.1, 0.4, dot(toBank, sightAt))
-    * smoothstep(0.5, 0.58, vnoise(vec2(vFlow.x * 2.6 + uTime * 0.05, 5.0)) * 0.7 + vnoise(vec2(vFlow.x * 9.0, 11.0)) * 0.3) * (1.0 - feeding) * (1.0 - stir);
-  hot = mix(hot, blackbody(1400.0 + 170.0 * vnoise(q * 3.1 + 7.0)), foot);
+    * smoothstep(0.5 - 0.08 * lineSkin, 0.58 + 0.12 * lineSkin, vnoise(vec2(vFlow.x * 2.6 + uTime * 0.05, 5.0)) * 0.7 + vnoise(vec2(vFlow.x * 9.0, 11.0)) * 0.3) * (1.0 - feeding) * (1.0 - stir);
+  // On the line it is no row of yellow blocks: the tear is orange, thins out along its length, and is no brighter than the core.
+  foot *= 1.0 - 0.35 * lineSkin;
+  hot = mix(hot, blackbody(1400.0 - 150.0 * lineSkin + 170.0 * vnoise(q * 3.1 + 7.0)), foot);
   skin *= 1.0 - foot;
   // Under the crust nothing glows.
   hot *= 1.0 - smoothstep(0.0, 0.08, bank);
@@ -650,7 +701,7 @@ void main() {
   // A photographed plate is dark old skin: the sky lights its crests, and the melt it rides on lights the flanks that face it.
   if (photo > 0.0) {
     float faces = clamp(0.5 + 1.5 * dot(nrm.xz, fireFrom.xz), 0.0, 1.0);
-    lit = mix(lit, skin * (openSky * (0.035 * skyIrradiance(nrm) / 3.14159 + fresnel * 0.4 * skyRadiance(normalize(r))) + blackbody(1300.0) * (0.02 * (0.3 + 0.7 * faces)) * uLavaOn), photo);
+    lit = mix(lit, skin * (openSky * (0.035 * skyIrradiance(nrm) / 3.14159 + fresnel * 0.4 * skyRadiance(normalize(r))) + blackbody(1300.0) * (0.02 * (0.3 + 0.7 * faces)) * mix(1.0, (0.06 + 0.7 * faces * faces) * (1.0 - 0.6 * smoothstep(0.55, 0.95, lineThick)), lineSkin) * uLavaOn), photo);
   }
   gl_FragColor = vec4(rigOut(lit) + hot * uLavaOn, 1.0);
   // Last, after every derivative. The ribbon is wider than the gap: under the crust there is none, so a hollow of the crust never shows it.

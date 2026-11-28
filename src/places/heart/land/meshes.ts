@@ -61,7 +61,7 @@ export interface Rib {
  * Along a rib the rows are spread evenly over the length of the surface, not over the map, so a cliff gets as many as a flat.
  */
 /** `more(x, z, y)`, where given, is how many times its share of rows a stretch of a rib gets. */
-export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, flat = 0.3, radii: readonly number[] = [1.6, 5], dip?: Height, more?: (x: number, z: number, y: number) => number): THREE.BufferGeometry {
+export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, flat = 0.3, radii: readonly number[] = [1.6, 5], dip?: Height, more?: (x: number, z: number, y: number) => number, level = 0): THREE.BufferGeometry {
   const tail = list[0]?.tail?.length ?? 0;
   const per = rows + tail;
   const position = new Float32Array(list.length * per * 3);
@@ -70,8 +70,14 @@ export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, fla
   const closed = new Float32Array(list.length * per * 2);
   let hs = new Float64Array(0);
   let arc = new Float64Array(0);
+  // How far along its rib each row stands, and (where the rows are levelled) the heights read along every rib.
+  const along = new Float64Array(list.length * rows);
+  const built = new Uint8Array(list.length);
+  const read: Float32Array[] = [];
+  const steps = new Float64Array(list.length);
   list.forEach((rib, ci) => {
     if (!rib.on && !(list[ci - 1]?.on ?? false)) return;
+    built[ci] = 1;
     const count = Math.floor(rib.length / grain) + 1;
     if (hs.length < count) {
       hs = new Float64Array(count);
@@ -87,15 +93,64 @@ export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, fla
     }
     const total = arc[count - 1] as number;
     let k = 1;
+    for (let j = 0; j < rows; j++) {
+      const want = (total * j) / (rows - 1);
+      while (k < count - 1 && (arc[k] as number) < want) k++;
+      const a = arc[k - 1] as number;
+      const b = arc[k] as number;
+      along[ci * rows + j] = (k - 1 + (b > a ? Math.min(1, (want - a) / (b - a)) : 0)) * step;
+    }
+    if (level > 0) {
+      read[ci] = Float32Array.from(hs.subarray(0, count));
+      steps[ci] = step;
+    }
+  });
+  // Each rib spreads its rows by its own length, so on a cliff the same row stands metres higher on one rib than on the next and the
+  // strips between them are slivers drawn out up the face: the face read as streaks. The rows of a cliff are levelled: each is moved
+  // along its own rib, between the rows under and over it, toward the height its two neighbours stand at.
+  if (level > 0) {
+    const at = (ci: number, d: number): number => {
+      const r = read[ci] as Float32Array;
+      const f = Math.min(r.length - 1.001, Math.max(0, d / (steps[ci] as number)));
+      const k = Math.floor(f);
+      return (r[k] as number) + ((r[k + 1] as number) - (r[k] as number)) * (f - k);
+    };
+    for (let pass = 0; pass < level; pass++) {
+      for (let ci = 1; ci + 1 < list.length; ci++) {
+        if (!built[ci] || !built[ci - 1] || !built[ci + 1]) continue;
+        for (let j = 1; j + 1 < rows; j++) {
+          const i = ci * rows + j;
+          const lo = along[i - 1] as number;
+          const hi = along[i + 1] as number;
+          if (hi - lo < 1e-4) continue;
+          const yl = at(ci, lo);
+          const yh = at(ci, hi);
+          const steepness = Math.abs(yh - yl) / (hi - lo);
+          if (steepness < 0.8) continue;
+          const own = at(ci, along[i] as number);
+          const want = 0.25 * (at(ci - 1, along[i - rows] as number) + at(ci + 1, along[i + rows] as number)) + 0.5 * own;
+          // Only between the rows under and over it, and only where the face between them runs one way.
+          const a = Math.min(yl, yh) + 0.12 * Math.abs(yh - yl);
+          const b = Math.max(yl, yh) - 0.12 * Math.abs(yh - yl);
+          const target = Math.min(b, Math.max(a, want));
+          let d0 = lo;
+          let d1 = hi;
+          const rising = yh > yl;
+          for (let n = 0; n < 14; n++) {
+            const mid = 0.5 * (d0 + d1);
+            if (at(ci, mid) < target === rising) d0 = mid;
+            else d1 = mid;
+          }
+          const w = Math.min(1, (steepness - 0.8) / 1.2);
+          along[i] = (along[i] as number) + (0.5 * (d0 + d1) - (along[i] as number)) * w;
+        }
+      }
+    }
+  }
+  list.forEach((rib, ci) => {
+    if (!built[ci]) return;
     for (let j = 0; j < per; j++) {
-      let d: number;
-      if (j < rows) {
-        const want = (total * j) / (rows - 1);
-        while (k < count - 1 && (arc[k] as number) < want) k++;
-        const a = arc[k - 1] as number;
-        const b = arc[k] as number;
-        d = (k - 1 + (b > a ? Math.min(1, (want - a) / (b - a)) : 0)) * step;
-      } else d = rib.length + ((rib.tail as number[])[j - rows] as number);
+      const d = j < rows ? (along[ci * rows + j] as number) : rib.length + ((rib.tail as number[])[j - rows] as number);
       const x = rib.x + rib.dx * d;
       const z = rib.z + rib.dz * d;
       const i = ci * per + j;

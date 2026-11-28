@@ -137,6 +137,29 @@ Takes: 1 run.
 Why this one: it records the numbers of the script and the linear mean colour of each picture, which the surfaces use to keep their albedo in a real range.
 Date: 2026-11-25
 
+## `public/assets/heart/mat/char.jpg` and `public/assets/heart/mat/char-nh.jpg`
+
+Made by: `assets-src/heart/make-char.py` on Python 3 with numpy and Pillow. No picture went in and no model was asked: the script computes both files from one seed (3685).
+From: nothing but the script.
+Prompt or command: `/home/user/bpyenv/bin/python assets-src/heart/make-char.py`.
+
+Takes: 3 runs of the script while it was tuned, the last kept.
+Why this one: the hide of the one that sank, burnt through. Blocks a hand to a forearm long as burnt timber splits into, their edges bent and frayed so none is straight, some lifted and curled, some gone, small checks inside them, soot in the splits, a grey bloom on the edges that stand up and no pale patch. The first run had straight edges and read as stained glass; the second bent them; the third took the ash on the edges down.
+What it does: places the blocks on a jittered grid that wraps (so the sheet tiles), finds for each pixel how far it is from the edge of its block on a page bent by smooth noise, builds a height from the blocks, their lift, their curl, the checks and a fibre along the limb, writes the colour as JPEG and the two slopes of the height with the height as the second JPEG (slopes in red and green, height in blue, as `make-skins.py` packs them). 1024 px square.
+Date: 2026-11-28
+
+## `public/assets/heart/mat/aa-nh.jpg`
+
+Made by: Blender 5.0.1 as a Python module (`bpy`), Cycles on the CPU, then `numpy` and Pillow. No picture and no image model.
+From: nothing but the two scripts. The bed is built from numbers (seed 11): 5654 convex fragments, hulls of pulled boxes and of points on lumps, 4 cm to 84 cm across, few large and many small, heaped on a 4 m square that repeats.
+Prompt or command: `/home/user/bpyenv/bin/python assets-src/heart/make-aa.py out/work/aa`, then `python3 assets-src/heart/make-aa-maps.py out/work/aa public/assets/heart/mat/aa-nh.jpg`.
+
+The first script looks straight down on the bed through an orthographic lens and writes its height (2048 px square, 16 samples a pixel, no bounce). The second lays the pits of scoria on that height (noise through a band of the spectrum, so it repeats), softens it by one texel, takes the slopes and writes one linear 8 bit JPEG at quality 90 with full colour resolution: red and green hold 0.5 less a sixth of the slope across and down, blue holds the height over 0.48 m.
+
+Takes: 1 made, take 1 kept (one try an object).
+Why this one: broken basalt as built rock, angular faces with real gaps between them, for the slopes of the bench (`src/places/heart/land/shaders.ts`, `tAa`).
+Date: 2026-11-28
+
 ## What the script does
 
 With the numbers it holds in `RECIPE` at its top:

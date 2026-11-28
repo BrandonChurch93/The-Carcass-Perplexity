@@ -363,6 +363,8 @@ export function createRig(t0: number): Rig {
   const emitterPlaces = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector4(0, -1000, 0, 0));
   const emitterRadiance = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector3());
   const emitterCore = new Float32Array(MAX_EMITTERS);
+  const viewMatrix = new THREE.Matrix4();
+  const frustum = new THREE.Frustum();
   const streamRows = Array.from({ length: STREAM.rows }, () => new THREE.Vector4(0, 0, -1000, 0));
   const streamSpan = new THREE.Vector4(0, 1, STREAM.rows - 1, 0);
   const streamLen = new Float32Array(STREAM.rows);
@@ -615,15 +617,31 @@ export function createRig(t0: number): Rig {
       const swell = breath({ position: { x: streamSpan.x, y: 30, z: 0 } }, now);
       streamLight.x = streamRadiance[0] * STREAM.share * swell;
       streamLight.y = streamRadiance[1] * STREAM.share * swell;
-      const count = Math.min(MAX_EMITTERS, emitters.length);
-      for (let i = 0; i < count; i++) {
-        const e = emitters[i] as Emitter;
+      // Only the lights that can reach something in the picture go to the shaders, in their order. Every surface, the smoke and the air go
+      // through the whole list at every pixel and turn away the lights that are too far (emitterIrradiance: a share under 0.0015; the smoke and
+      // the air: under 0.004), and the renderer of the film pays for the sums of a light it turns away. A light whose share is under both at
+      // the nearest the view comes to it (less 12 m, for the corners of a mesh that are lit outside the frame) is turned away here, once.
+      frustum.setFromProjectionMatrix(viewMatrix.copy(camera.matrixWorld).invert().premultiply(camera.projectionMatrix));
+      let count = 0;
+      for (let k = 0; k < Math.min(MAX_EMITTERS, emitters.length); k++) {
+        const e = emitters[k] as Emitter;
+        const core = (EMITTER_CORE + (1 - EMITTER_CORE) * smooth(20, 60, e.radius)) * onStream(e);
+        let out = 0;
+        for (let side = 0; side < 4; side++) out = Math.max(out, -(frustum.planes[side] as THREE.Plane).distanceToPoint(e.position));
+        const least = Math.max(0, out * 0.98 - 12);
+        const r2 = e.radius * e.radius;
+        const d2 = least * least + r2;
+        const reach = Math.max(45 + 1.2 * e.radius, 3.2 * e.radius - 110);
+        const q = d2 / (reach * reach);
+        const fade = r2 / d2 / (1 + q * q);
+        if (Math.PI * fade * core < 0.0013 && fade * (4.5 + (1 - 4.5) * smooth(20, 60, e.radius)) < 0.0035) continue;
+        const i = count++;
         (emitterPlaces[i] as THREE.Vector4).set(e.position.x, e.position.y, e.position.z, e.radius);
         // A light of the fall (inside the stream's span of z, within 60 m of its first row across) and the bank breathe shallow, the rest deep.
         const at = (e.position.z - streamSpan.x) * streamSpan.y;
         const ofFall = at > -8 && at < STREAM.rows + 4 && Math.abs(e.position.x - (streamRows[Math.min(Math.max(Math.round(at), 0), STREAM.rows - 1)] as THREE.Vector4).x) < 60;
         (emitterRadiance[i] as THREE.Vector3).copy(e.radiance).multiplyScalar(breath(e, now, ofFall || e === bankLight ? 1 : BREATH.near));
-        emitterCore[i] = (EMITTER_CORE + (1 - EMITTER_CORE) * smooth(20, 60, e.radius)) * onStream(e);
+        emitterCore[i] = core;
       }
       (uniforms.uEmitterCount as THREE.IUniform<number>).value = count;
 
