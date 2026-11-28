@@ -108,7 +108,9 @@ void main() {
   float fogSelf = clamp(0.5 + 0.3 * dot(fogSlope, toSun), 0.0, 1.0);
   // (Read in every pixel, cloud under it or not: read only under cloud, the pixels at the edge of a cloud took the fineness of
   // the read from neighbours that had not made it, and one of them came out a level different from one run to the next.)
-  float under = highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
+  // (From orbit the shadow of the ice on the low field is too faint to see, and it is not read: it is eased out on the way up.)
+  float under = 0.0;
+  if (uViewKm < 1200.0) under = (1.0 - smoothstep(850.0, 1200.0, uViewKm)) * highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
 
   vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
   vec3 highColour = cloudLight(up, 0.5 + 0.45 * highFlank, 0.5 + 0.5 * high, 1.0);
@@ -147,8 +149,8 @@ void main() {
   lowColour *= 1.0 - 0.4 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
   float b = min(high * 0.46, 0.32);
-  // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
-  if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
+  // (The ice is no thicker held than at the titan frame: it stands there already, and held it only travels, ten kilometres
+  // over land and sea and across the wind of the low field.)
   // From the ground up: the fog, the low field, the banks, the ice.
   vec3 colour = fogColour * fogA * (1.0 - a);
   colour = (colour + lowColour * a + beatOnCloud(xz) * a) * (1.0 - bankA) + bankColour * bankA;
