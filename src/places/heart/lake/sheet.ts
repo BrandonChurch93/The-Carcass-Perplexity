@@ -172,10 +172,14 @@ vec3 roughAt(vec2 p, float span, float fp, float seed) {
     mat2 turn;
     vec2 shift;
     float w = sheetCorner(i, seed, 1.0, turn, shift);
-    vec3 nt = textureLod(tRough, (turn * p) / span + shift, lod).rgb;
-    float k = w * exp(5.0 * nt.b);
-    got += k * vec3(vec2(nt.r - 0.5, 0.5 - nt.g) * turn, nt.b);
-    sum += k;
+    // A corner that weighs next to nothing is not read: its weight falls to nothing before it is left out, so nothing jumps.
+    w = max(w - 0.002, 0.0);
+    if (w > 0.0) {
+      vec3 nt = textureLod(tRough, (turn * p) / span + shift, lod).rgb;
+      float k = w * exp(5.0 * nt.b);
+      got += k * vec3(vec2(nt.r - 0.5, 0.5 - nt.g) * turn, nt.b);
+      sum += k;
+    }
   }
   got /= sum;
   return vec3(got.xy * (320.0 / span), got.z);
