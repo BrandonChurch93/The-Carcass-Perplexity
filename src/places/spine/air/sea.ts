@@ -54,6 +54,13 @@ const float MIST_LONG = 240.0;
 const float SEA_KEY = 0.05;
 const float SEA_KEY_REACH = 1800.0;
 const float SEA_KEY_CEIL = 0.3;
+// The puffs on the heaps are cut from the storm's own noise (its red: round lumps at three sizes), which is a body and not a
+// picture: it flows through the heaps down the gale faster than they travel, and upward, so a head's top turns over as it goes.
+// Metres a repeat, their height as a share of a heap's, and metres a second along the gale and upward.
+const float PUFF_SPAN = 600.0;
+const float PUFF_TALL = 0.4;
+const float PUFF_RUN = 78.0;
+const float PUFF_CLIMB = 13.0;
 float seaLod = 1.0;
 // Laid a little turned from the ridge, so that no row of heads runs along it or straight away from the lens.
 vec2 heapUv(vec2 at) {
@@ -96,6 +103,13 @@ float seaLift(vec3 p, int detail, bool swell) {
     float small = textureLod(tHeaps, heapUv(q3.zx) * 3.7 + 0.37, max(seaLod + 2.25, 0.0)).g - 0.45;
     n += 0.14 * small * (0.35 + 1.3 * heap.r);
     seaHead += 0.1 * small;
+    // (Read at one size: they are there only as far as the lens holds them, and fade out with the distance.)
+    float seen = 1.0 - smoothstep(-0.8, 1.2, seaLod);
+    if (seen > 0.0) {
+      float puff = (noise(vec3(p.x - 0.2 * PUFF_RUN * uTime, p.y - PUFF_CLIMB * uTime, p.z - 0.98 * PUFF_RUN * uTime) / PUFF_SPAN).r - 0.5) * seen;
+      n += PUFF_TALL * puff * (0.3 + 1.2 * heap.r);
+      seaHead += 0.34 * puff;
+    }
   }
   seaN = n;
   return n;
@@ -157,6 +171,88 @@ float seaVeil(vec3 ro, vec3 rd, out float at) {
   vec2 gm = (pm.xz - vec2(0.2, 0.98) * (uTime * 39.0)) / 1700.0;
   float torn = textureLod(tSeaNh, vec2(0.629 * gm.x - 0.777 * gm.y, 0.777 * gm.x + 0.629 * gm.y) + 0.61, max(log2(max(at, 30.0) * seaPix) + 2.6, 1.0)).b;
   return 1.0 - exp(-seaMist * (0.45 + 1.5 * smoothstep(0.15, 0.95, torn)) / MIST_LONG);
+}
+// Over the walked deck stands its fog, a body of cloud asked at four distances from the lens (not quite twice as far each time): banks
+// of it, cut from the storm's noise in the world, rise off the deck to just under the crest, go down the gale and turn over upward,
+// and stand before whatever the ray meets behind them, so the lower spires go into them. rgb: light, a: what they hide.
+const float FOG_SPAN = 950.0;
+const float FOG_TALL = 110.0;
+vec4 seaFog(vec3 ro, vec3 rd, float until, float before) {
+  vec3 c = vec3(0.0);
+  float kept = 1.0;
+  vec2 round_ = rd.xz * inversesqrt(max(dot(rd.xz, rd.xz), 1e-6));
+  float toDusk = max(dot(round_, vec2(cos(DUSK_AZ), sin(DUSK_AZ))), 0.0);
+  vec3 pale = SEA_COLD * vec3(1.5, 1.52, 1.5) + SEA_WARM * (0.2 + 0.4 * toDusk * toDusk);
+  for (int i = 0; i < 4; i++) {
+    float ts = 600.0 * exp(0.6 * float(i));
+    if (ts > until) break;
+    vec3 p = ro + rd * ts;
+    vec3 ridge = ridgeAt(p.x);
+    float lee = p.z - ridge.x;
+    // (Over the heads of the walked deck, which stand to some sixty metres over its level: under them it is not seen.)
+    float level = ridge.y - CLOUD_UNDER + 70.0 - CLOUD_DEEP * smoothstep(150.0, 2000.0, abs(lee));
+    float h = (p.y - level) / FOG_TALL;
+    if (h > 1.3 || h < -1.5 || lee < 20.0) continue;
+    vec4 body = noise(vec3((p.x - 0.2 * 44.0 * uTime) / FOG_SPAN, (p.y - 9.0 * uTime) / (0.6 * FOG_SPAN), (p.z - 0.98 * 44.0 * uTime) / FOG_SPAN));
+    float inside = body.r + 0.3 * (body.b - 0.5) - 0.42 - 0.5 * max(h, 0.0);
+    // (It comes in over the first two distances: begun whole at the first, that one's edge lay on the deck as a ruled line.)
+    float thick = before * smoothstep(0.0, 0.3, inside) * smoothstep(-1.5, -0.6, h) * smoothstep(20.0, 200.0, lee) * smoothstep(450.0, 1100.0, ts);
+    if (thick <= 0.0) continue;
+    // A bank is pale on its top and blue in its foot, and takes a stroke as the deck's heads do.
+    float up = smoothstep(-0.8, 1.0, h);
+    vec3 tone = pale * mix(vec3(0.42, 0.5, 0.7), vec3(1.0), up) * (1.0 + 0.6 * (body.b - 0.5));
+    tone += STRIKE_COLOUR * min(uStrikeTop.w * 0.03, 0.06) * up;
+    c += kept * thick * tone;
+    kept *= 1.0 - thick;
+  }
+  return vec4(c, 1.0 - kept);
+}
+// Kilometres out the deck is not walked to as a surface: it is a body of cloud, asked at eight distances from the lens (a sixth
+// farther each time, the same for every ray) how thick it stands there. Its towers are cut from the storm's noise in the world, so
+// they pass one before another as the lens moves, drift down the gale and turn over upward; the long swell of the real deck says
+// where a range of them stands and where a gap lies. Each is lit on its crown and dark in its body. rgb: light, a: what they hide.
+const float CROWN_SPAN = 6800.0;
+const float CROWN_TALL = 200.0;
+vec4 seaCrowns(vec3 ro, vec3 rd, float until) {
+  vec3 c = vec3(0.0);
+  float kept = 1.0;
+  // (From a little under the height the deck's own far heads stop at, upward: that height is a level, and stood as a ruled line.
+  // Under it the deck is the walked surface's and they have no body: laid over its hollows they were a slab.)
+  float base = BANK_TOP - 60.0;
+  vec2 round_ = rd.xz * inversesqrt(max(dot(rd.xz, rd.xz), 1e-6));
+  float toDusk = max(dot(round_, vec2(cos(DUSK_AZ), sin(DUSK_AZ))), 0.0);
+  vec3 pale = SEA_COLD * vec3(1.05, 1.1, 1.26) + SEA_WARM * (0.12 + 0.3 * toDusk * toDusk);
+  // Toward the dusk there are none: the band lies clear over the deck's own far banks. (Low mounds there stood on the band as
+  // flat slabs at 7418, and from the low lens of 7579 as pale boxes with ruled sides.)
+  float low = 1.0 - smoothstep(0.3, 0.65, toDusk);
+  if (low <= 0.0) return vec4(0.0);
+  vec3 dark = SEA_COLD * vec3(0.4, 0.46, 0.66);
+  for (int i = 0; i < 8; i++) {
+    float ts = 5000.0 * exp(0.16 * float(i));
+    if (ts > until) break;
+    vec3 p = ro + rd * ts;
+    float h = (p.y - base) / CROWN_TALL;
+    if (h > 1.6 || h < -0.6) continue;
+    vec2 at = p.xz - vec2(0.42, 0.91) * (uTime * 31.0);
+    float range = textureLod(tSeaNh, at / 11000.0 + 0.27, 3.0).b;
+    vec4 body = noise(vec3(at.x / CROWN_SPAN, p.y / (0.5 * CROWN_SPAN) - uTime * 0.004, at.y / CROWN_SPAN));
+    // A tower stands only where the noise is at its fullest: between two of them the deck is low and the band of the dusk is seen over
+    // it. Its fine billows (the noise's blue) bite its outline and model its face.
+    float billow = body.b - 0.5;
+    float inside = smoothstep(0.38, 0.75, range) * 1.5 * smoothstep(0.4, 0.8, body.r) * low + 0.2 * billow - max(h, 0.0);
+    float thick = smoothstep(0.0, 0.3, inside) * smoothstep(-0.6, -0.1, h) * smoothstep(4400.0, 6200.0, ts);
+    if (thick <= 0.0) continue;
+    // Its crown takes the sky and the dusk and its foot is in the shade of the row before it (by its height, not by its edge: lit
+    // round its edge, each tower was a pale ring). The rows behind go into the air's slate, as the deck under them does.
+    float up = smoothstep(-0.3, 1.0, h);
+    vec3 tone = pale * (0.55 + 0.4 * up - 0.15 * smoothstep(0.1, 0.7, inside)) * (1.0 + 0.7 * billow);
+    tone = mix(tone, dark * (0.8 + 0.5 * up) * (1.0 + 0.5 * billow), 1.0 - exp(-ts * ts / 5.0e7));
+    tone += STRIKE_COLOUR * min(uStrikeTop.w * 0.02, 0.04) * up;
+    c += kept * thick * tone;
+    kept *= 1.0 - thick;
+    if (kept < 0.02) break;
+  }
+  return vec4(c, 1.0 - kept);
 }
 `;
 
@@ -292,6 +388,20 @@ export const SEA_MARCH_GLSL = /* glsl */ `
 
 /** In main, after the storm's air is measured: the deck's light, laid over what stands behind it. */
 export const SEA_SHADE_GLSL = /* glsl */ `
+  // The far towers of the deck stand before whatever the ray meets behind them: the deck's own far level, the land, the sky.
+  if (uShow.y > 0.0 && rd.y < 0.05 && through > 0.01 && uInvProjection[1][1] > 0.29) {
+    // (Before the land it is thick, before the deck's own heads thin: laid whole on them it took their modelling.)
+    vec4 fog = seaFog(ro, rd, seaAt > 0.0 ? min(seaAt, far) : far, seaAt > 0.0 || far > 50000.0 ? 0.22 : 0.65);
+    light += through * fog.rgb;
+    through *= 1.0 - fog.a;
+  }
+  // (Not behind the long lens of the strike: its few degrees hold one tower, which stood in the picture's dark sky as a pale ball.)
+  if (uShow.y > 0.0 && rd.y > -0.075 && rd.y < 0.06 && through > 0.01 && stormSide(rd) < 0.98 && uInvProjection[1][1] > 0.29) {
+    vec4 crowns = seaCrowns(ro, rd, seaAt > 0.0 ? min(seaAt, far) : far);
+    float hid = crowns.a * (1.0 - stormSide(rd));
+    light += through * crowns.rgb * (1.0 - stormSide(rd));
+    through *= 1.0 - hid;
+  }
   if (seaAt > 0.0 && through > 0.01) {
     float t = seaAt;
     vec3 p = ro + rd * t;
@@ -478,17 +588,23 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // Its edge against the land is soft: the cloud thins where it laps the rock.
     // (By the depth of cloud before the rock, as cloud hides: forty metres of it hide nearly all. Thinned evenly over some hundreds of
     // metres, the flank under the deck showed through every near head as a weave.)
-    float lap = 0.985 * max(1.0 - exp(-max(far - t, 0.0) * (1.0 + 1.4 * grain) / (40.0 + 0.03 * t)), seaCover);
+    // (Before the open sky it does not thin: the last row the march walks to lies at the sky's own distance, and thinned there it
+    // let the sky's dark foot through as a hairline along the horizon.)
+    float lap = 0.985 * max(1.0 - exp(-max((far > 50000.0 ? 1.0e9 : far) - t, 0.0) * (1.0 + 1.4 * grain) / (40.0 + 0.03 * t)), seaCover);
     // Where it has climbed into the storm its last heads thin into the wall's own air: they have no edge against the sky.
     lap *= 1.0 - inStorm * smoothstep(0.03, 0.15, rd.y);
     // And far along the ridge, where the lens looks down the wall's length, it is the sky's own dark foot and no more: kept whole there,
     // its top stood against the band of the dusk as a slab with a ruled edge.
     lap *= 1.0 - wallAt * smoothstep(3500.0, 8500.0, t) * smoothstep(-0.012, 0.012, rd.y);
+    // (Seen toward the dusk through an opening in the land, the wall's deck takes the air's haze as the land beside it does: left the
+    // storm's blue, it stood in the opening as a patch of water.)
+    float hazedW = wallAt * smoothstep(0.2, 0.5, intoDusk) * (1.0 - plate);
+    sea = mix(sea, dot(sea, vec3(0.3, 0.5, 0.2)) * vec3(0.92, 0.97, 1.13) + 0.03 * SEA_WARM, 0.85 * hazedW);
     light += through * sea * lap;
     through *= 1.0 - lap;
     // (And what is drawn after it, the scud and the glow of a stroke in the air, is drawn there as before the open sky.)
     far = inWall > 0.5 ? max(far, 60001.0) : min(far, t);
-  } else if (seaAt <= 0.0 && far > 50000.0 && rd.y > -0.004 && rd.y < 0.03 && through > 0.01 && stormSide(rd) < 0.98) {
+  } else if (seaAt <= 0.0 && far > 50000.0 && rd.y > -0.04 && rd.y < 0.03 && through > 0.01 && stormSide(rd) < 0.98) {
     // Past the last of the deck stand the tops of banks too far off to be walked to: a low uneven line of them before the band of
     // the dusk, each some degrees wide, which rise and sink slowly. Without them the deck ended against the band in a ruled line.
     vec2 round_ = normalize(rd.xz);
@@ -496,11 +612,17 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     float b2 = textureLod(tSeaNh, round_ * 2.3 - vec2(0.77, uTime * 0.0011), 2.0).b;
     // (Only before a short lens: a long one sees a few degrees of them, which is a level band.)
     float lensS = max(0.466 / uInvProjection[1][1], 1.0);
-    float topS = 0.0015 + 0.017 * smoothstep(0.3, 0.8, 0.65 * b1 + 0.35 * b2);
+    // (Their line is told wide: read as it came, the two fields stood near their middle and the line of the tops was level.)
+    float b3 = textureLod(tSeaNh, round_ * 6.1 + vec2(0.13, uTime * 0.0017), 1.0).b;
+    float topS = 0.0015 + 0.02 * smoothstep(0.2, 0.9, 0.5 + 2.2 * (0.55 * b1 + 0.3 * b2 + 0.15 * b3 - 0.5));
     float bankS = smoothstep(topS, 0.55 * topS - 0.002, rd.y) * (1.0 - stormSide(rd)) * 0.9 * clamp(2.6 - 1.6 * lensS, 0.0, 1.0);
     // They are the far deck's own pale vapour with a share of the sky's foot, and their tops take the band.
     vec3 footS = skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 2.5);
     vec3 toneS = mix(footS, SEA_COLD * vec3(1.1, 1.15, 1.3) + 0.3 * SEA_WARM, 0.55) * (0.85 + 0.3 * smoothstep(0.4 * topS, topS, rd.y));
+    // (They stand from the last row the march walks to, sixty kilometres out, which from a high lens lies a degree under the
+    // horizon, and their foot has that row's tone: begun at the horizon they left the sky's dark foot bare under them, a level
+    // band with a ruled edge on either hand.)
+    toneS *= mix(vec3(1.17, 1.22, 1.27), vec3(1.0), smoothstep(-0.02, 0.006, rd.y));
     light += through * toneS * bankS;
     through *= 1.0 - bankS;
   } else if (seaMist > 0.0 && through > 0.01) {
