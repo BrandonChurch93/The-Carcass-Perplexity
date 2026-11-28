@@ -9,6 +9,7 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
 import { LEVELS, pairFor, type Level } from './levels';
+import { OCEAN_GLSL, oceanUniforms } from './ocean';
 
 // The window of the first approved picture in the master (references/approved/7-reveal/pullback.json): the bed map covers it.
 const BED = { x: 1126.18, y: 1498.28, w: 293.34, h: 165.09 };
@@ -124,6 +125,7 @@ vec4 readTile(sampler2D t, vec2 uv, float perKm, float bias) {
   return textureLod(t, uv, groundLevel + log2(perKm * float(textureSize(t, 0).x)) + bias);
 }
 
+${OCEAN_GLSL}
 void main() {
   // The country is not laid out with a ruler: the maps are read through a bend of the ground itself, at three sizes, so no two
   // ranges keep one spacing or one line, no shore is a circle, and no rib is the twin of the next. (None in the country round the
@@ -973,7 +975,17 @@ void main() {
   float pale = pow(shallow, 1.3);
   // (From far the shallows along the coasts are a clear teal.)
   vec3 shoal = mix(max(ground * 0.34, vec3(0.006, 0.035, 0.04)), vec3(0.011, 0.075, 0.085) * (0.5 + 0.9 * pale * (1.0 - 0.45 * pale)), 0.6 * smoothstep(240.0, 640.0, uViewKm));
-  vec3 bed = mix(DEEP, shoal, pale);
+  // (From orbit the open sea has a bed of its own, and other land and ice stand in it: land/ocean.ts.)
+  vec3 seaDeep = DEEP;
+  float seaAir = 1.0;
+#ifdef ORBIT
+  float seaSeen = oceanSeen(uViewKm);
+  vec3 seaBed = oceanBedAt(xz);
+  vec3 seaLand = oceanLandAt(xz);
+  seaDeep = oceanDeep(seaBed, seaSeen);
+  seaAir = oceanAir(seaBed, seaSeen);
+#endif
+  vec3 bed = mix(seaDeep, shoal, pale);
   // The shelf: the water is pale over the ground that runs out under it from the shore, a few km here and tens of km there, and the
   // rivers (which the bake draws as water) lie shallow in their beds.
   float shelfLen = 6.0;
@@ -1118,7 +1130,7 @@ void main() {
   float glint = exp(-pow(dot(glintAt, glintAt) / 55000.0, 0.463));
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   vec3 waterBed = water;
-  water += uSkyColour * (0.003 + 0.028 * fresnel) * sparkle * (0.4 + 0.6 * shade);
+  water += uSkyColour * (0.003 + 0.028 * fresnel) * sparkle * (0.4 + 0.6 * shade) * (0.5 + 0.5 * seaAir);
   // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
 #ifdef NEAR
   water += uSkyColour * 0.006 * max(sparkle - 0.7, 0.0) * ruffle;
@@ -1147,14 +1159,14 @@ void main() {
   float fromOrbit = smoothstep(500.0, 1100.0, uViewKm);
   if (fromOrbit > 0.0 && glint > 0.004 && land < 1.0) {
     vec2 lane = mat2(0.86, 0.5, -0.5, 0.86) * (xz + uTime * vec2(2.0, 0.7)) / vec2(420.0, 70.0);
-    float slicks = mix(0.62, 1.06, smoothstep(0.3, 0.62, calm)) * (0.86 + 0.28 * vnoise(lane)) * (0.92 + 0.16 * vnoise(xz / 37.0 + 11.0));
+    float slicks = mix(0.74, 0.98, smoothstep(0.1, 0.9, calm)) * (0.86 + 0.28 * vnoise(lane)) * (0.92 + 0.16 * vnoise(xz / 37.0 + 11.0));
     surface = mix(surface, slicks, fromOrbit);
   }
   water += glare * (0.35 + 0.65 * shade) * surface;
   vec3 waterGlare = water;
 
   // (From orbit the sea is seen through the blue of the air over it.)
-  water += mix(vec3(0.0028, 0.0062, 0.0085) * smoothstep(150.0, 450.0, uViewKm), vec3(0.003, 0.007, 0.011), smoothstep(700.0, 1300.0, uViewKm)) * (0.5 + 0.5 * shade);
+  water += mix(vec3(0.0028, 0.0062, 0.0085) * smoothstep(150.0, 450.0, uViewKm), vec3(0.003, 0.007, 0.011), smoothstep(700.0, 1300.0, uViewKm)) * (0.5 + 0.5 * shade) * seaAir;
   if (uDusk > 0.0) {
     // The sky's image on the sea goes with the sky, the air over it with the air; and at night a faint cold sheen lies toward the moon.
     vec2 fromSheen = xz - uTerm.xy - 1500.0 * normalize(uMoonDir.xz);
@@ -1164,6 +1176,9 @@ void main() {
     // (Under the moon the sea has almost no colour.)
     water = mix(water, vec3(dot(water, vec3(0.3, 0.55, 0.15))) * vec3(0.8, 0.96, 1.2), 0.8 * uEmber.x);
   }
+#ifdef ORBIT
+  water = oceanOther(water, seaLand, seaBed, light, xz, seaSeen);
+#endif
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   // (A hollow is darker than a crest: less of the sky reaches it.)
   earth *= mix(1.0, 0.62 + 0.76 * skyShare, smoothstep(100.0, 200.0, uViewKm));
@@ -1293,6 +1308,7 @@ export function create(ctx: Context): Piece {
     uSalt: { value: new THREE.Vector2(X(AT.salt.x), Z(AT.salt.y) + 10 * KM) },
     // Where on the sea the sun's own image lies on the titan frame.
     uGlint: { value: new THREE.Vector2(X(5875), Z(703)) },
+    ...oceanUniforms(ctx),
   };
   // Three programs of the one sheet, for cost: what is drawn only from near (the feeder, the rim, the stain, the wind on the lake)
   // is left out of the ones for the heights where none of it is seen, the silt out of the one for near, and the fire of the night
