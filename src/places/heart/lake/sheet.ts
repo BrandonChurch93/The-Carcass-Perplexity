@@ -148,3 +148,35 @@ vec3 pourAt(vec2 q, vec2 gx, vec2 gy) {
   // The picture is loaded upside down, so its second slope is counted the other way.
   return vec3((vec2(nt.r - 0.5, 0.5 - nt.g) * gPourTurn) * (819.2 / gPourSpan), nt.b);
 }`;
+
+// The rough broken basalt of the floor the group feeds on (rough-nt: r, g the slope of its height, b its tone, 0.5 at the
+// mean of the stone), laid without a repeat at three sizes: plates and joints at ROUGH_C metres to the sheet, lumps a pad
+// wide at ROUGH_F, crumbs and pits at ROUGH_G for the nearest ground. Each corner of a patch reads the sheet turned any way and shifted, and the paler crumb of one lies on the other.
+// Read with an explicit level, so it may stand in a branch and in a vertex shader. GLSL; put SHEET_GLSL before it.
+export const ROUGH_GLSL = /* glsl */ `
+uniform sampler2D tRough;
+#define ROUGH_C 19.0
+#define ROUGH_F 5.5
+#define ROUGH_G 1.7
+// Metres from the lowest joint to the highest crumb at each size.
+#define ROUGH_TALL_C 0.2
+#define ROUGH_TALL_F 0.055
+#define ROUGH_TALL_G 0.017
+// fp: metres a texel of the reading should span. Returns the slope (of a height that runs 0 to 1, per metre) and the tone.
+vec3 roughAt(vec2 p, float span, float fp, float seed) {
+  sheetGrid(p, span);
+  float lod = max(log2(max(fp, 1e-6) * (1024.0 / span)), 0.0);
+  vec3 got = vec3(0.0);
+  float sum = 0.0;
+  for (int i = 0; i < 3; i++) {
+    mat2 turn;
+    vec2 shift;
+    float w = sheetCorner(i, seed, 1.0, turn, shift);
+    vec3 nt = textureLod(tRough, (turn * p) / span + shift, lod).rgb;
+    float k = w * exp(5.0 * nt.b);
+    got += k * vec3(vec2(nt.r - 0.5, 0.5 - nt.g) * turn, nt.b);
+    sum += k;
+  }
+  got /= sum;
+  return vec3(got.xy * (320.0 / span), got.z);
+}`;
