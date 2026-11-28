@@ -283,7 +283,7 @@ export function create(ctx: Context): Piece {
     material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uDark: { value: dark }, uRill: { value: rillAt } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
-  const weedNear = hangs(0.6, 0, 0.5);
+  const weedNear = hangs(0.6, 0, 0.4);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.15, 0);
   const feedLens = resolve(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 0).position;

@@ -213,9 +213,9 @@ void main() {
   float thin = smoothstep(0.1, 0.9, vUv.y) * (0.4 + 0.6 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
   float gold = (0.22 + 0.78 * vTone.y) * thin;
   // From far off the curtain is one dark mass: each frond stands in the shade of the rest, and no day comes through it.
-  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.28, 1.0, close);
+  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.24, 1.0, close);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
-  float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
+  float occ = vTone.z * mix(0.25 + 0.75 * vTone.z, 1.0, close) * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
   float rough = 0.74 + 0.2 * wr - 0.2 * bead;
   // A frond seen along itself is no mirror of the sky: its skin is ruffled finer than the lens sees, so it is lit as if it stood half toward the lens.
   n = normalize(n + v * max(0.0, 0.55 - dot(n, v)));
