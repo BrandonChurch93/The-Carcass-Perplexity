@@ -72,3 +72,28 @@ After these: beach stones in clusters with bare gaps and damp dark ones by the w
 - The lead's pushes to origin failed at times (EXIT 128, no sign in); bundles went to `/root` with each report.
 - The before set of this wave lies in `out/work/before/` on the lead's machine (scratch, not committed): preview draft of the five keys, the three guards and seven more frames, hd review of 8412, 8761 and 9003.
 - No em dashes and no exclamation points in any text, and every commit ends with the one trailer.
+
+## 6. After minute 206
+
+Last versions, each merged on a draft look (preview, draft tier), not measured, not proven by three draws or the invalid count by the lead (the builders ran their own):
+
+- ground V4 05bf120 (d2fba9d): beach stones at 8412 in heaps of mixed sizes with bare gaps, one in four bedded.
+- life V4 27eb487 (7f094df): the two at 9221 deeper in the bluff's shade, hide cream as the herd, dirt and damp line softer. Hind legs and tails at 9003 were not touched. Life's note: against the old drinkers 9003 and 8600 each differ in one pixel by one level at preview draft, cause not found.
+- fluid V4 7aab555 (ba3efb5): the wall under water at 8761 as a wider ribbed face fading to black-blue, finer sheets off the swell, ring cut-off tightened (no time saved).
+- sky V4 ae49364 (5f65c6f): mist asks its shade toward the sun only on steps that hold enough, sheet at 9221 back to V2's height, bank at 8600 lower (38 m) and less white. Lid lines untouched.
+- ground V5 660946d (1357152, from its bundle): skeleton `SCALE` 1.5 to 1.98 in `skeleton/place.ts`, rust stain on the bone 0.7 to 0.4 in `skeleton/index.ts`. Asked by `/root` after report 3. Cost at 8761 not measured.
+
+Cost with the four V4s (5f65c6f; s, uhd draft): 8305 15.26, 8412 14.25, 9003 19.57 (two runs each); 9221 17.10, best of three, with `origin/main` (a324836) back to back at 15.47. Against the lead's before number 16.04 the cap is 17.64; against main drawn back to back 17.10 is 10.5 percent over. `/root` holds the judgement.
+
+Measures: 9221 green at minute 211 (M1 0, M2 48.63 percent, M3 4.0462) on 7176230. 8761 was stopped after 147 s to make room for the last looks: not measured in this wave.
+
+Open, asked by `/root` after report 3 and not done:
+
+- 8412: the tan striped wedge at the lower right edge. Ground: it is the bench's sloping face, not the right knob; changing the knob's kind left it as it was. Make it grey and fractured as its neighbours, or take it out.
+- 9003: the drinkers stand farther off than in the approved picture (`/root` holds that against the earlier rounds).
+
+Open from the last versions, worst first: the swell at 9221 is a glassy mound with no breaking crest; the wall face under water at 8761 reads as combed strands, not rock; no shelf rock under the skeleton; silhouettes at 9221 sharp where the approved picture is out of focus; no crisp wisps at 9221; beach nearly bare and flat at 8490.
+
+Ground on the shelf rock (9379c6c, held back): a next one needs the mat's own broken edge as outline, and rock taking fluid's colour and wet, seen only where the mat thins.
+
+The Reveal's second ask (minute 208): `agent/p8-reveal-climb` at 3009dc0 changes `src/places/reveal/join/lid.ts`, so the Eye's frames 9488 to 9540 change; no line of `handoff.json` and no Eye file changes. The Eye's lead said yes for the picture on two conditions: at most 0.15 s more at 9221, drawn back to back, and the plate's ghost over the Eye's dark ground at 9500 faded in behind the deck or named open. Whether it merged is in the Reveal's hand-over.
