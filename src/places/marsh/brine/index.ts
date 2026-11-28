@@ -27,6 +27,8 @@ const DROP_LIFE = 1.5;
 /** A ligament is drawn as so many beads in a row, which part into so many drops. */
 const LIG_BEADS = 6;
 const LIG_LIFE = 1.7;
+/** How wide the column is from its foot to its head, bead by bead. */
+const COLUMN_SHAPE = [3.4, 1.4, 1.0, 0.72, 0.54, 1.0];
 const RING_LIFE = 5;
 const RING_SPEED = 0.9;
 
@@ -169,7 +171,7 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('domes', domeGroup));
 
   const dropCount = domes.reduce((n, d) => n + d.drops, 0);
-  const bead = new THREE.SphereGeometry(1, 12, 8);
+  const bead = new THREE.SphereGeometry(1, 18, 12);
   const dropLife = new THREE.InstancedBufferAttribute(new Float32Array(dropCount * 4), 4);
   bead.setAttribute('aLife', dropLife);
   const dropMesh = new THREE.InstancedMesh(bead, dropSkin, dropCount);
@@ -280,23 +282,23 @@ export function create(ctx: Context): Piece {
         let z0 = d.z + uz * d.size * 0.95;
         let r0 = (0.007 + 2.0 * (thrown[base * 5 + 3] as number)) * (0.6 + d.size) * (0.5 + 0.95 * own * own);
         let breaksAt = (0.16 + 0.4 * r3) * big;
-        let taper = 0.56;
+        let taper = -1.1;
         let column = false;
         // The last of a great dome's strings is the column: the pool closes over the place the gas left and throws one thick jet
         // straight up out of its middle, which stands, necks and lets its head go.
         if (i < 3 && g === ligs - 1) {
-          since = age < 0 ? -1 : age - TEAR - 0.1 * big;
-          ax = (r1 - 0.5) * 0.35;
-          ay = (1.5 + 0.6 * r3) * big;
-          az2 = (r2 - 0.5) * 0.35;
+          since = age < 0 ? -1 : age - TEAR * 0.55;
+          ax = (r1 - 0.5) * 1.1;
+          // (A small dome throws a low one.)
+          ay = (2.7 + 0.5 * r3) * big * Math.min(1, Math.pow(d.size / 0.62, 1.2));
+          az2 = (r2 - 0.5) * 1.1;
           bx = 0;
           by = 0.45 * big;
           bz = 0;
           x0 = d.x;
           y0 = 0;
           z0 = d.z;
-          r0 = 0.078 * (d.size / 0.6);
-          taper = -0.5;
+          r0 = 0.062 * (d.size / 0.6);
           column = true;
           breaksAt = 0.62 * big;
         }
@@ -311,6 +313,45 @@ export function create(ctx: Context): Piece {
         const sz = (dx / drawn) * bow;
         for (let j = 0; j < LIG_BEADS; j++, drop++) {
           const f = (j + 0.5) / LIG_BEADS;
+          if (column) {
+            // The column stands on the pool: its foot is the pool heaved up, wide and flared, its head is thrown and falls by its own
+            // weight, and what is between is drawn out from the one to the other. It goes back down as its head comes down.
+            const rise = since < 0 ? -1 : ay * since - 4.905 * since * since;
+            if (rise < 0.012) {
+              m.makeScale(0, 0, 0);
+              dropMesh.setMatrixAt(drop, m);
+              continue;
+            }
+            const grown = Math.min(1, since / 0.09);
+            // (Its head gathers as it rises: a short column has none yet.)
+            const gathers = j === LIG_BEADS - 1 ? 0.6 + 0.4 * Math.min(1, rise / 0.35) : 1;
+            const shape = (COLUMN_SHAPE[j] as number) * gathers * (1 + 0.04 * Math.sin(j * 2.3 + since * 11 + own * 20));
+            // (The same brine in a taller column is a thinner one, down to a half.)
+            const wide = r0 * shape * (0.5 + 0.5 * grown) * Math.max(0.55, Math.sqrt(0.3 / (0.3 + rise)));
+            // (Each bead reaches well into the next, so the column is one drawn shape and not a stack.)
+            const half = (rise / LIG_BEADS) * (j === LIG_BEADS - 1 ? 0.9 : 1.7) + wide * 0.4;
+            // Its head necks and comes away a little before the top of its rise.
+            const lets = j === LIG_BEADS - 1 ? Math.min(Math.max((since - 0.27 * big) / 0.12, 0), 1) : 0;
+            if (j === 0) {
+              // (Its foot is a low mound of the pool, drawn up round it.)
+              pos.set(x0, 0, z0);
+              scale.set(wide, Math.min(wide * 0.42, 0.02 + rise * 0.3), wide);
+              m.compose(pos, q.identity(), scale);
+              dropMesh.setMatrixAt(drop, m);
+              dropLife.setXYZW(drop, 0.5, own, wide, 0);
+              continue;
+            }
+            dir.set(ax * 0.25 * f, 1, az2 * 0.25 * f).normalize();
+            q.setFromUnitVectors(up, dir);
+            pos.set(x0 + ax * since * f * f, rise * ((f - 0.2) * 1.12 + 0.07 * lets), z0 + az2 * since * f * f);
+            scale.set(wide, half + (wide * 1.1 - half) * lets, wide);
+            m.compose(pos, q, scale);
+            dropMesh.setMatrixAt(drop, m);
+            dropLife.setXYZW(drop, 0.5, own, wide, 0);
+            continue;
+          }
+          // (A string is thick where it leaves the pool and a thread toward its tip, which carries a drop.)
+          const tip = j === LIG_BEADS - 1 ? 1 : 0;
           const vx = bx + f * dx + f * (1 - f) * sx;
           const vy = by + f * dy + f * (1 - f) * sy;
           const vz = bz + f * dz + f * (1 - f) * sz;
@@ -319,12 +360,12 @@ export function create(ctx: Context): Piece {
           const parts = (breaksAt / drawn) * (1.15 - 0.3 * f);
           const joined = Math.min(Math.max(since, 0), parts);
           // (A string is never even: it swells and necks along its length, each string its own way, and the column carries a head.)
-          const swells = column ? 1 + 0.4 * Math.max(0, f - 0.7) * 3.3 : 1 + 0.38 * Math.sin(j * 2.6 + own * 23 + g);
+          const swells = 1 + 0.38 * Math.sin(j * 2.6 + own * 23 + g) + 1.5 * tip;
           const thin = r0 * Math.sqrt(0.18 / (0.18 + drawn * joined)) * (1 - 0.5 * taper + taper * f) * swells;
           // (The necks between the swellings draw in as the moment of parting comes.)
           const nearing = Math.min(1, joined / Math.max(parts, 1e-3));
           const necks = 0.95 - 0.33 * nearing * nearing;
-          const halfJoined = ((drawn * joined) / LIG_BEADS) * necks + thin;
+          const halfJoined = ((drawn * joined) / LIG_BEADS) * necks * (1 - 0.7 * tip) + thin;
           const round = Math.cbrt(1.5 * thin * thin * halfJoined);
           if (since < 0 || since > LIG_LIFE || y < -round) {
             m.makeScale(0, 0, 0);
@@ -407,6 +448,12 @@ export function create(ctx: Context): Piece {
         dropLife.setXYZW(drop, 0.5, own, size, 0);
       }
 
+      // Where the lip of the burst fell back it leaves a line of froth on the pool, which widens slowly and thins out.
+      // (Written like a dome's foot ring, below nothing: the pool's shader lays froth on such a ring and no wave.)
+      if (age > TEAR * 0.7 && age < 3.2 && i < 3 && ring < MAX_RINGS) {
+        const since = age - TEAR * 0.7;
+        (rings[ring++] as THREE.Vector4).set(d.x, d.z, d.size * (0.72 + 0.5 * Math.min(1, since / 0.3)) + 0.16 * since, -0.9 * Math.min(1, since * 9) * Math.pow(1 - since / 3.1, 1.3));
+      }
       // Where each of the larger drops comes down it leaves a ring of its own.
       for (let k = 0; k < landed.length && ring < MAX_RINGS; k += 3) {
         const since = landed[k + 2] as number;

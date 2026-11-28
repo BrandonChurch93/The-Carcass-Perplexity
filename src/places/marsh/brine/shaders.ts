@@ -254,6 +254,10 @@ ${stirWaves}
   // (A lens that stands over the round pool on the far bank looks along it from a long way: every wavelet turns its face from that lens
   // or hides behind the next, and what the pool gives back of the white sky is less than half of what glass would. It stays red.)
   brineSheen *= 1.0 - 0.6 * inPool * smoothstep(1.8, 2.6, cameraPosition.y);
+  // What shows the flow: slicks. Where the brine wells up in the current its skin is swept clean and lies smooth, and gives back the
+  // sky; between them it is dull with what it carries. They go down the channel at its own speed and are drawn out by it.
+  float slick = smoothstep(0.42, 0.66, carried.g * 0.62 + carriedFine.r * 0.38) * smoothstep(0.03, 0.12, speed) * (1.0 - brineMud);
+  brineSheen *= 1.0 + 0.9 * slick - 0.35 * smoothstep(0.03, 0.12, speed) * (1.0 - brineMud);
   brineRough = clamp(sqrt(lost) * 4.0 + 0.5 * smoothstep(0.02, 0.3, px) + 0.6 * inPool, 0.0, 1.0);
 
   // How much froth the domes and the bursts have left here.
@@ -337,8 +341,7 @@ ${stirWaves}
   // (They are what shows the flow from the far bank: rafts a stride or two long that go down the channel at its own speed, more of
   // them in the fast middle, and they are seen from further off than the froth that lies still at a bank.)
   float seenFar = smoothstep(110.0, 45.0, dist);
-  float far = smoothstep(14.0, 38.0, dist);
-  float strings = max(smoothstep(0.66 - 0.07 * far, 0.76 - 0.06 * far, carriedFine.r * 0.55 + carried.g * 0.45 + 0.2 * far * (speed - 0.2)) * smoothstep(0.03, 0.1, speed) * 0.7, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
+  float strings = wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7;
   // (And scum catches on whatever stands in it.)
   // A ring breaks on the bank: in the last hand before the lip its front stands up, and leaves a broken line of froth where it fell.
   float breaks = min(surf * 1.6, 0.75) * smoothstep(-0.34, -0.03, s) * smoothstep(0.25, 0.6, fleck.r * 0.6 + raft.a * 0.4);
@@ -562,7 +565,7 @@ void main() {
     film.x += 0.3 * smoothstep(gone - 2.5 * fat, gone - fat, gap);
     // (What still stands is the same thin skin, seen from inside on the far side: it is not a wall of brine.)
     // (And it is stretched as it goes: the further the hole has run, the thinner and the paler what is left of it.)
-    film.x *= (gl_FrontFacing ? 0.75 : 0.45) * mix(1.0, 0.3, smoothstep(0.1, 0.8, vLife.w));
+    film.x *= (gl_FrontFacing ? 0.75 : 0.45) * mix(1.0, 0.55, smoothstep(0.1, 0.8, vLife.w));
   }
   // The skin is never smooth as blown glass: it carries the pool's small waves up with it, and they run down it.
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.07 + vec3(grit.b - 0.5, 0.0, grit.a - 0.5) * 0.05 * (1.0 - 0.5 * top));
@@ -590,6 +593,8 @@ void main() {
   // (Scum is a stain, soft at its edge and never whole: what the runs left behind, rust in the red. The lumps in it are few and pale.)
   float scum = 0.3 * smoothstep(0.68, 0.94, g.g * 0.75 + grit.r * 0.1 + 0.15 * scumTex.r + 0.12 * film.y) * smoothstep(0.03, 0.2, vLocal.y);
   float speck = smoothstep(0.86, 0.885, grit.g * 0.6 + fleck.b * 0.4) * smoothstep(0.25, 0.45, vLocal.y);
+  // (The rolled edge is not a wire: it is brine in beads, thick here and gone there where a string has just left it.)
+  rim *= 0.25 + 0.75 * smoothstep(0.3, 0.62, grit.r * 0.6 + fleck.g * 0.4);
   float covered = max(max(scum, speck), rim);
   // A lens down at the pool's level looks along the skin and not across it: the film stands thicker in the way from the crown down to
   // the wall, and hides the far bank's straight line behind it. (From a stride up the skin is looked through, and stays glass.)
@@ -721,7 +726,7 @@ void main() {
   // (It was drawn out unevenly: thick runs and thin between them, up the wall.)
   float thick = (mix(1.4, 0.55, smoothstep(0.05, 0.7, up01)) + 0.2 * bead + 0.5 * vLocal.z) * (0.55 + 0.9 * fine.g);
   // The brine itself, and the light that comes through the thin of it from the sky behind: red where it is thick, pale where it is film.
-  vec3 takes = exp(-vec3(0.95, 2.9, 3.2) * thick * 1.6);
+  vec3 takes = exp(-vec3(0.95, 2.9, 3.2) * thick * 2.7);
   vec3 lit = vec3(0.07, 0.011, 0.0085) * above * (1.0 - takes.g) + above * takes * 0.018;
   // It is wet on both sides: the sky stands in it over the mirrored horizon, the dark pool under, and the cloud's window on every bend.
   vec3 pond = vec3(0.05, 0.012, 0.01) * above + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
