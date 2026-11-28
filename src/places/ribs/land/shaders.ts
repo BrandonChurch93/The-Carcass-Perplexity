@@ -569,7 +569,13 @@ void main() {
     if (bead > 0.0) bead *= smoothstep(0.5, 0.66, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * smoothstep(0.35, 0.7, vnoise(vUv * vec2(7.0, 5.0)));
   }
   // A drop is a lens: whichever way the weed under it faces, it holds a point of the sky, and is no brighter on a pale hem than in the black.
-  if (bead > 0.0) c = mix(c, max(c, above * (DROP_SKY * (0.3 + 0.7 * occ))), closeW * closeW * bead * (1.0 - bare));
+  // And it shows only on weed that is lit enough to carry it: on the black of a hollow a drop is a white dot, not water, so it fades out there.
+  if (bead > 0.0) {
+    vec3 held = above * (DROP_SKY * (0.3 + 0.7 * occ));
+    vec3 weigh = vec3(0.2126, 0.7152, 0.0722);
+    bead *= smoothstep(0.03, 0.12, dot(c, weigh) / max(dot(held, weigh), 0.00001));
+    c = mix(c, max(c, held), closeW * closeW * bead * (1.0 - bare));
+  }
   c += above * (rill * (0.02 + 1.8 * fall * fall));
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
   float run = 0.0;

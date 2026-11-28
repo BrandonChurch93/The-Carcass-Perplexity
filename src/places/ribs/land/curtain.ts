@@ -217,7 +217,6 @@ float drops(vec2 p, float share) {
 #define PUCK_TONE 0.65
 #define PUCK_SHADE 0.55
 #define DROP_SKY 0.28
-#define RIM_SKY 0.2
 void main() {
   vec3 n0 = normalize(vNormal);
   if (!gl_FrontFacing) n0 = -n0;
@@ -233,7 +232,6 @@ void main() {
   float puck = 0.0;
   float rib = 0.0;
   float frill = 0.0;
-  float rim = 0.0;
   float close = 1.0 - smoothstep(2500.0, 4900.0, dot(toLens, toLens));
   if (close > 0.0) {
     vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
@@ -250,8 +248,6 @@ void main() {
     // The wet stands on a broad blade in drops, here on it and not there: points in no row. A thread of weed holds none: drops down a thread are a string of beads.
     float broad = smoothstep(0.05, 0.1, abs(vOff) / max(edge, 0.03));
     float wetHere = smoothstep(0.47, 0.62, wr2) * broad;
-    // The very margin of a broad blade is wet where its frill stands up: a thin line of the sky, broken as the frill is crinkled.
-    rim = close * broad * smoothstep(0.018, 0.006, abs(vOff) * (1.0 - edge) / max(edge, 0.05)) * smoothstep(0.45, 0.7, pk.x);
     if (wetHere > 0.0) bead = close * wetHere * (1.0 - rib) * drops(vec2(vOff * 24.0 + vTone.x * 23.0, vUv.y * vTone.w * 17.0 + vTone.x * 71.0) + 1.7 * vec2(wr, wr2), 0.3);
   }
   // A frond is no flat strap: it is ruffled at its edges and troughed along its midrib, so the wet light on it is a line and not a face.
@@ -278,7 +274,6 @@ void main() {
   // No bead, no glint asked of it (the term was times nought).
   // A drop is a lens: whichever way the blade under it faces, it holds a point of the sky, and is no brighter on a pale blade than on a dark one.
   if (bead > 0.0) c = mix(c, max(c, above * (DROP_SKY * (0.25 + 0.75 * occ))), bead);
-  if (rim > 0.0) c = mix(c, max(c, above * (RIM_SKY * (0.25 + 0.75 * occ))), rim);
   // The day through a frond that hangs free of the wall.
   c += amber * above * (0.07 * close * thin * smoothstep(0.45, 0.95, vTone.z) * occ);
   // The low sun through a thin wet frond.
