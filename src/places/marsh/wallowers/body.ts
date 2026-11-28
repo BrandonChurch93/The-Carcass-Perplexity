@@ -575,7 +575,11 @@ void main() {
   float wade = 1.0 - smoothstep(0.6, 0.9, uTint);
   // (Paler than the wet hide they hang from, ringed where they grew and grooved along; the mud they stand in is on the last third.)
   float grown = 0.5 + 0.5 * sin(s * 34.0 + vLook.z * 40.0);
-  albedo = mix(albedo, mix(vec3(0.19, 0.142, 0.108) * (0.5 + 0.55 * groove + 0.3 * ring) * (0.72 + 0.28 * grown) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.058, 0.026, 0.017) * (0.75 + 0.6 * groove), wet), wade);
+  // (Hide, and it folds across like the hide of a trunk: a dark crease every two fingers, none straight, none whole round.)
+  // (A line and not a band: bands of dark and pale read as the stripes of a tiger.)
+  float folds = 1.0 - smoothstep(0.86, 0.98, sin(s * 150.0 + 14.0 * vnoise(vec2(vLook.y * 1.1 + vLook.z * 20.0, s * 9.0))));
+  folds = mix(1.0, folds, wade * smoothstep(0.3, 0.6, vnoise(vec2(vLook.y * 0.9 + vLook.z * 11.0, s * 6.0)) + 0.1));
+  albedo = mix(albedo, mix(vec3(0.19, 0.142, 0.108) * (0.5 + 0.55 * groove + 0.3 * ring) * (0.72 + 0.28 * grown) * (0.6 + 0.4 * folds) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.058, 0.026, 0.017) * (0.75 + 0.6 * groove), wet), wade);
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   // (On one that wades they are wet with mud, not with water: no white sheen stands on them.)
   float rough = mix(0.95, mix(0.9, mix(0.93, 0.58, smoothstep(0.6, 0.9, uTint)), clamp(groove * ring * 2.0, 0.0, 1.0)), wet);
@@ -583,7 +587,7 @@ void main() {
   rough = mix(rough, 1.0, wade * 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.0));
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   // The head stands over them and shuts off most of the sky: darkest at the lip, more open toward the tips.
-  occ *= mix(1.0, mix(0.38, 0.72, s), wade);
+  occ *= mix(1.0, mix(0.38, 0.72, s) * (0.75 + 0.25 * folds), wade);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   c = clamp(c, 0.0, 8.0);
   gl_FragColor = vec4(rigOut(c), 1.0);

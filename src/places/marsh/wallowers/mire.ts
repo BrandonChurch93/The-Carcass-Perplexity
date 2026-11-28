@@ -144,7 +144,7 @@ void main() {
     lean -= out2 * 0.5 * climb;
     sleeve = max(sleeve, climb);
     float ring = cos(off * 30.0 - uSeconds * 3.1 + float(i) * 1.9) * exp(-off / 0.3) * smoothstep(0.0, 0.04, off);
-    lean += out2 * (0.05 + 0.14 * leg.z) * ring;
+    lean += out2 * (0.12 + 0.14 * leg.z) * ring;
     churn = max(churn, (0.3 + 0.7 * leg.z) * exp(-off / 0.35));
     shade += exp(-r * r / (22.0 * leg.w * leg.w));
   }
@@ -197,7 +197,7 @@ void main() {
   // from the same place that far under its level again.
   float nv = clamp(dot(nWet, v), 0.0, 1.0);
   // (Thick with mud, it gives back less of the sky than the open brine does: a pale sheen, never a white sheet between the legs.)
-  float share = min(0.02 + 0.4 * pow(1.0 - nv, 5.0), 0.17);
+  float share = min(0.02 + 0.4 * pow(1.0 - nv, 5.0), 0.07);
   vec2 swing = nWet.xz * 2.0 * clamp(away * 0.22, 0.2, 6.0);
   vec4 q = uMirrorMatrix * vec4(p.x + swing.x, -uLevel, p.y + swing.y, 1.0);
   float soft = max(log2(float(textureSize(tMirror, 0).x) / 420.0), 0.0);
