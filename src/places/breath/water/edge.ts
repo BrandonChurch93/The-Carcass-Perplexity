@@ -202,7 +202,9 @@ void main() {
   float lee = min(textureLod(tCarried, fu, 0.0).g * 2.0, 1.0);
   float left = smoothstep(-0.02, -0.004, up) * (1.0 - smoothstep(0.004, 0.004 + (0.03 + 0.03 * lee) * vnoise(xz * 3.3 + 5.0), up));
   // Above the wet the water has left its salts as it dried: a pale crust, a broken line a finger wide along the top of the wet.
-  float crust = smoothstep(reach - 0.012, reach + 0.004, up) * (1.0 - smoothstep(reach + 0.012, reach + 0.045, up)) * (1.0 - smoothstep(0.1, 0.3, vOut.z));
+  // Far off a finger of crust is less than a pixel and the eye still has the pale line along the bank: the band is as wide as can be seen.
+  float wide = 1.0 + min(far, 90.0) / 12.0;
+  float crust = smoothstep(reach - 0.012, reach + 0.004, up) * (1.0 - smoothstep(reach + 0.012 * wide, reach + 0.045 * wide, up)) * (1.0 - smoothstep(0.1, 0.3, vOut.z));
   // Most of the skin is dry rock above all of these: it is left before any light is worked out.
   if (film + wet + front + left + crust <= 0.0) discard;
   float fine = vnoise(xz * 31.0);

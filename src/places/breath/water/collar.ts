@@ -55,7 +55,10 @@ float collarHeight(vec2 away, vec4 src, vec2 drift, float t) {
   float lee = dot(dir, drift);
   // The meniscus: a finger high on the side the stream comes from, half that in the lee, gone a hand out.
   float out0 = max(d - r0, 0.0);
-  float climb = leg * (0.02 + 0.2 * r0) * (1.0 - 0.5 * lee) * exp(-out0 / (0.016 + 0.6 * r0));
+  // While the foot goes in or comes out (the amount is between none and all) the water is thrown up round it: a crown, for those frames only.
+  float event = 4.0 * src.y * (1.0 - src.y);
+  float climb = leg * (0.02 + 0.2 * r0) * (1.0 - 0.5 * lee) * exp(-out0 / (0.016 + 0.6 * r0)) * (1.0 + 2.5 * event);
+  climb += leg * event * 0.03 * exp(-abs(out0 - 0.07) / 0.03) * (0.6 + 0.4 * sin(5.0 * atan(dir.y, dir.x) + src.w));
   // The rings. The older a ring the further the stream and the wind have carried its middle, so the rings are not round the leg but
   // crowd upstream of it and open out in the lee. The long ones outrun the short ones.
   vec2 from = away - drift * (0.22 * d);
