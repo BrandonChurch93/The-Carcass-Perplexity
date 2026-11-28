@@ -86,6 +86,7 @@ attribute vec4 aSway;
 attribute vec4 aTint;
 attribute vec4 aFace;
 uniform float uPixel;
+uniform vec2 uLens;
 uniform vec4 uBush;
 uniform float uTall;
 varying vec3 vWorld;
@@ -108,6 +109,9 @@ void main() {
   vec3 side = normalize(cross(tangent, toEye));
   // It thins to a point. Far off it is thinner than a pixel and would break into dots: there it is drawn a pixel wide.
   float least = 0.55 * uPixel * far;
+  // Out of the lens's focus a thread a pixel wide is printed by the blur as a ring of points. There it is drawn as wide as a part of
+  // the blur it lies in (uLens: the radius of the lens in metres, one over the distance of sharp focus), which the blur then takes whole.
+  least = max(least, 0.6 * uLens.x * abs(far * uLens.y - 1.0));
   // A blade is flat flesh with a thickness (aFace.w of its width): what the lens sees of it is the ellipse of its section, as wide as
   // that is from where the lens stands, and its face is the part of that ellipse turned to the lens. A thread (1) is round.
   float k = aFace.w;

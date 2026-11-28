@@ -11,7 +11,7 @@ import { SUN_DIR, WIND } from '../shared/anchors';
 
 export type V3 = [number, number, number];
 
-export type Habit = 'sweep' | 'fountain' | 'hang';
+export type Habit = 'sweep' | 'fountain' | 'hang' | 'coral';
 
 export interface Bush {
   x: number;
@@ -23,7 +23,8 @@ export interface Bush {
   lean: number;
   /** 1 for the ones a camera comes close to, less for the far ones: how far down the forking is grown and how thick each strip is. */
   detail: number;
-  /** sweep: a fan of feathers combed one way. fountain: stalks all round that arch over to the rock. hang: a fan that falls from its root. */
+  /** sweep: a fan of feathers combed one way. fountain: stalks all round that arch over to the rock. hang: a fan that falls from its root.
+   *  coral: a bush of woody stems that fork and fork again, each bush of its own build, clothed in short brush. */
   habit: Habit;
   /** More or fewer stalks than its habit has. Unset: 1. */
   full?: number;
@@ -122,7 +123,8 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
   const bushPhase = rng.range(0, 6.283);
   const leanDir: V3 = [Math.sin(lean), 0, -Math.cos(lean)];
   // Far off a strip is thinner than a pixel: there the bush is grown of fewer, thicker strips, which read the same from there.
-  const coarse = close ? 1 : middle ? (habit === 'fountain' ? 1.25 : 2.2) : 4.5;
+  const coral = habit === 'coral';
+  const coarse = close ? 1 : middle ? (habit === 'fountain' || coral ? 1.25 : 2.2) : 4.5;
 
   const tA: number[] = [];
   const tB: number[] = [];
@@ -250,7 +252,7 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
   };
 
   // A fountain is finer brush than a swept plume: more stalks, shorter hair.
-  const long2 = tall * (habit === 'fountain' ? 0.16 : 0.2);
+  const long2 = tall * (coral ? 0.11 : habit === 'fountain' ? 0.16 : 0.2);
   const half2 = tall * 0.00105 * Math.sqrt(coarse);
   const half3 = tall * 0.0007;
   // A plume the lens comes close to is not hair: its limbs carry flat fleshy blades in two ranks, close set, so that a limb with what it
@@ -284,7 +286,7 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
         const out = cross(plane, g.t);
         const rank = i % 2 === 0 ? 1 : -1;
         if (i > lockEnd) {
-          const size = 5 + Math.floor(rng.next() * 10);
+          const size = 3 + Math.floor(rng.next() * 14);
           lockEnd = i + size - 1;
           const ve = Math.min(1, v0 + (1 - v0) * ((i + size * rng.range(0.5, 1.0)) / n));
           const e = on(c, ve);
@@ -293,11 +295,13 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
           for (let r = 0; r < 2; r++) {
             const theta = rng.range(0.3, 0.75);
             const lift = rng.range(-0.3, 0.3);
-            const far = long2 * 0.5 * scale * rng.range(0.5, 1.2) * (0.5 + 0.5 * smooth(0, 0.3, ve)) * (1 - 0.5 * ve);
+            const far = long2 * 0.5 * scale * rng.range(0.45, 1.55) * (0.5 + 0.5 * smooth(0, 0.3, ve)) * (1 - 0.5 * ve);
             const side = r === 0 ? 1 : -1;
-            lockTo[r] = [e.p[0] + (e.t[0] * Math.cos(theta) + eo[0] * Math.sin(theta) * side + ep[0] * lift) * far, e.p[1] + (e.t[1] * Math.cos(theta) + eo[1] * Math.sin(theta) * side + ep[1] * lift) * far - 0.25 * far * wet, e.p[2] + (e.t[2] * Math.cos(theta) + eo[2] * Math.sin(theta) * side + ep[2] * lift) * far];
+            lockTo[r] = [e.p[0] + (e.t[0] * Math.cos(theta) + eo[0] * Math.sin(theta) * side + ep[0] * lift) * far, e.p[1] + (e.t[1] * Math.cos(theta) + eo[1] * Math.sin(theta) * side + ep[1] * lift) * far - (0.2 + 1.1 * Math.abs(lift)) * far * wet, e.p[2] + (e.t[2] * Math.cos(theta) + eo[2] * Math.sin(theta) * side + ep[2] * lift) * far];
           }
         }
+        // No two blades are of one cut: here one is missing, there one is twice its neighbour's width, and each is turned its own way.
+        if (!tip && rng.next() < 0.1) continue;
         const to = lockTo[rank > 0 ? 0 : 1] as V3;
         const reach: V3 = [to[0] - g.p[0], to[1] - g.p[1], to[2] - g.p[2]];
         const span = Math.hypot(reach[0], reach[1], reach[2]);
@@ -310,10 +314,10 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
         const d1h: V3 = unit([reach[0] / span - 0.1 * out[0] * rank + 0.25 * comb * leanDir[0], reach[1] / span - (habit === 'sweep' ? rng.range(0.15, 0.6) + 0.5 * v : rng.range(0.4, 1.0) + 0.4 * v) * wet, reach[2] / span - 0.1 * out[2] * rank + 0.25 * comb * leanDir[2]]);
         const d1 = tip ? heading(g.t, d0, 0.6) : d1h;
         const tone = Math.min(0.999, Math.max(0, tone0 + rng.range(-0.2, 0.2)));
-        const face: V3 = unit([plane[0] + rng.range(-0.35, 0.35), plane[1] + rng.range(-0.35, 0.35), plane[2] + rng.range(-0.35, 0.35)]);
-        const blade = lay(g.p, d0, d1, L, tall * 0.0033 * rng.range(0.6, 1.4), tone, g.u, g.u + 0.16, rng.range(0, 6.283), phase, 2, face, rng.range(0.24, 0.4));
+        const face: V3 = unit([plane[0] + rng.range(-0.6, 0.6), plane[1] + rng.range(-0.6, 0.6), plane[2] + rng.range(-0.6, 0.6)]);
+        const blade = lay(g.p, d0, d1, L, tall * 0.0033 * (0.45 + 1.4 * rng.next() ** 1.6), tone, g.u, g.u + 0.16, rng.range(0, 6.283), phase, 2, face, rng.range(0.24, 0.4));
         if (i % 3 === 0) tipAt.push(blade);
-        if (rng.next() < 0.4) {
+        if (rng.next() < 0.7) {
           const e0 = leave(d0, 0.1, 0.42);
           const e2 = heading(g.t, e0, rng.range(0.5, 1.5));
           const e1: V3 = unit([e2[0] - 0.6 * g.t[0] + rng.range(-0.32, 0.32), e2[1] + rng.range(-0.45, 0.1), e2[2] - 0.6 * g.t[2] + rng.range(-0.32, 0.32)]);
@@ -368,8 +372,13 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
   };
 
   const full = bush.full ?? 1;
-  const stalks = Math.max(3, Math.round((habit === 'fountain' ? (close ? 34 : middle ? 32 : 13) : habit === 'hang' ? 9 : close ? 11 : middle ? 9 : 7) * full));
-  const spread = bush.spread ?? (habit === 'fountain' ? Math.PI : habit === 'hang' ? 0.6 : 0.95);
+  // A bush of coral is its own: how many stems it has, how wide its vase opens, how far its ends bow over, which side it has grown to,
+  // how much of each stem is bare wood and how close its forks are set. No two are of one build.
+  const build = coral
+    ? { stems: rng.range(0.75, 1.2), open: rng.range(0.6, 1.0), bow: rng.range(0.5, 1.2), side: rng.range(0, 6.283), skew: rng.range(0.15, 0.45), bare: rng.range(0.05, 0.15), fork: rng.range(0.75, 1.3) }
+    : { stems: 1, open: 0, bow: 0, side: 0, skew: 0, bare: 0, fork: 1 };
+  const stalks = Math.max(coral ? 4 : 3, Math.round((habit === 'fountain' || coral ? (close ? 34 : middle ? 32 : 13) : habit === 'hang' ? 9 : close ? 11 : middle ? 9 : 7) * full * build.stems));
+  const spread = bush.spread ?? (habit === 'fountain' || coral ? Math.PI : habit === 'hang' ? 0.6 : 0.95);
   for (let m = 0; m < stalks; m++) {
     // From the crown of the bush to its skirt: the first rise and bend over only at their ends, the last go out low and hang.
     const rank = Math.min(1, Math.max(0, (m + rng.range(-0.3, 0.3)) / (stalks - 1)));
@@ -383,6 +392,12 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
       el1 = -0.8 - 0.25 * rank + rng.range(-0.2, 0.15);
       length = tall * (1.25 - 0.32 * rank) * rng.range(0.8, 1.08);
       turn = 0.3;
+    } else if (coral) {
+      // Its stems leave the holdfast as a vase and arch over to the rock, the bush a low dome wider than it is tall.
+      el0 = 1.4 - 0.85 * build.open * rank + rng.range(-0.12, 0.12);
+      el1 = -0.3 - build.bow * (0.3 + 0.5 * rank) + rng.range(-0.25, 0.2);
+      length = tall * (0.95 - 0.3 * rank) * rng.range(0.65, 1.1);
+      turn = rng.range(0.7, 1.2);
     } else if (habit === 'fountain') {
       el0 = 1.4 - 0.75 * rank + rng.range(-0.12, 0.1);
       el1 = -0.7 - 0.5 * rank + rng.range(-0.25, 0.15);
@@ -396,24 +411,25 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
     }
     const az0 = lean + spread * k + rng.range(-0.15, 0.15);
     const az1 = lean + turn * spread * k + rng.range(-0.15, 0.15);
+    if (coral) length *= 1 + build.skew * Math.cos(az0 - build.side);
     const d0: V3 = [Math.sin(az0) * Math.cos(el0), Math.sin(el0), -Math.cos(az0) * Math.cos(el0)];
     const d1: V3 = [Math.sin(az1) * Math.cos(el1), Math.sin(el1), -Math.cos(az1) * Math.cos(el1)];
     const out = 0.085 * tall * Math.sqrt(rng.next());
     const from: V3 = [bush.x + Math.sin(az0) * out, bush.y + 0.02 * tall, bush.z - Math.cos(az0) * out];
     const phase = rng.range(0, 6.283);
     const tone0 = rng.range(0.25, 0.75);
-    const stalk = path(from, d0, d1, length, close ? 26 : middle ? 16 : 10, habit === 'fountain' ? rng.range(0.9, 1.3) : habit === 'hang' ? rng.range(2.0, 3.0) : rng.range(2.4, 3.2), rng.range(0.1, 0.22), 0, 1, true);
-    const thick = tall * 0.013 * (0.75 + 0.5 * (length / tall)) * rng.range(0.85, 1.15);
-    tube(stalk, thick, tall * 0.0012, habit === 'fountain' ? 0.35 : 0.6, phase, close ? 9 : middle ? 6 : 4);
+    const stalk = path(from, d0, d1, length, close ? 26 : middle ? 16 : 10, coral ? rng.range(1.0, 1.9) : habit === 'fountain' ? rng.range(0.9, 1.3) : habit === 'hang' ? rng.range(2.0, 3.0) : rng.range(2.4, 3.2), coral ? rng.range(0.15, 0.3) : rng.range(0.1, 0.22), 0, 1, true);
+    const thick = tall * (coral ? 0.011 : 0.013) * (0.75 + 0.5 * (length / tall)) * rng.range(0.85, 1.15);
+    tube(stalk, thick, tall * 0.0012, coral ? 0.25 : habit === 'fountain' ? 0.35 : 0.6, phase, close ? 9 : middle ? 6 : 4);
     // Its branches: none on the bare foot of the stalk, the longest a third of the way up, shorter to the end, as a feather's.
-    const bare = habit === 'hang' ? rng.range(0.42, 0.52) : rng.range(0.06, 0.11);
-    const gap = (close ? 0.06 : middle ? 0.085 : 0.13) * (habit === 'fountain' ? 1.3 : 1) * rng.range(0.85, 1.15);
+    const bare = coral ? build.bare * rng.range(0.8, 1.2) : habit === 'hang' ? rng.range(0.42, 0.52) : rng.range(0.06, 0.11);
+    const gap = (close ? 0.06 : middle ? 0.085 : 0.13) * (coral ? 1.3 * build.fork : habit === 'fountain' ? 1.3 : 1) * rng.range(0.85, 1.15);
     for (let v = bare; v < 0.97; v += gap * rng.range(0.6, 1.4)) {
       const g = on(stalk, v);
-      const e0 = habit === 'sweep' ? leave(g.t, 0.2, 0.5) : leave(g.t, 0.3, 0.7);
+      const e0 = habit === 'sweep' ? leave(g.t, 0.2, 0.5) : coral ? leave(g.t, 0.35, 0.8) : leave(g.t, 0.3, 0.7);
       const e1 = heading(g.t, e0, rng.range(0.3, 0.9) + (habit === 'hang' ? 0.25 : 0));
       const shape = smooth(bare - 0.04, bare + 0.07, v) * (1 - 0.72 * v ** 1.4);
-      const bl = length * rng.range(0.26, 0.46) * shape;
+      const bl = length * (coral ? rng.range(0.3, 0.6) : rng.range(0.26, 0.46)) * shape;
       if (bl < 0.03 * tall) continue;
       const branch = path(g.p, e0, e1, bl, close ? 9 : middle ? 6 : 4, rng.range(0.8, 1.4), rng.range(0.05, 0.2), g.u, g.u + (1 - g.u) * 0.6 + 0.1, true);
       const bt = Math.min(thick * 0.5, tall * 0.0034 * (0.5 + 0.5 * shape));
@@ -426,9 +442,20 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
         tube(branch, bt, tall * 0.0008, 0, phase, close ? 5 : 4);
       }
       feather(branch, 0.06, phase, 0.55 + 0.45 * shape, tone0);
+      // On a bush of coral a branch forks again: twigs leave it forward, each with its own brush.
+      if (coral && !far && bl > 0.12 * tall) {
+        for (let w = rng.range(0.25, 0.45); w < 0.85; w += rng.range(0.2, 0.35)) {
+          const h = on(branch, w);
+          const f0 = leave(h.t, 0.35, 0.8);
+          const f1 = heading(h.t, f0, rng.range(0.2, 0.8));
+          const twig = path(h.p, f0, f1, bl * rng.range(0.3, 0.55) * (1 - 0.4 * w), 4, rng.range(0.8, 1.4), rng.range(0.05, 0.2), h.u, h.u + (1 - h.u) * 0.5 + 0.1, true);
+          tube(twig, bt * 0.55, tall * 0.0007, 0, phase, 4);
+          feather(twig, 0.06, phase, 0.45, tone0);
+        }
+      }
     }
     // Past its middle the stalk is thin and carries branchlets itself, to its end.
-    feather(stalk, habit === 'hang' ? 0.55 : habit === 'fountain' ? 0.12 : 0.24, phase, 0.8, tone0);
+    feather(stalk, coral ? Math.min(0.7, bare + 0.12) : habit === 'hang' ? 0.55 : habit === 'fountain' ? 0.12 : 0.24, phase, 0.8, tone0);
   }
   // The toes of the holdfast: they leave it low, thick as a wrist, and go into the cracks of the rock.
   const toes = close ? 12 : middle ? 6 : 0;
@@ -445,6 +472,24 @@ export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => n
       p[1] = Math.min(Math.max(p[1], f - 0.03 * tall), f + 0.04 * tall * (1 - smooth(0.0, 0.25, v)) - 0.006 * tall) - 0.07 * tall * smooth(0.45, 1, v);
     });
     tube(c, tall * (close ? rng.range(0.014, 0.026) : rng.range(0.012, 0.022)), tall * 0.002, 0.85, 0, close ? 10 : 7, true);
+  }
+  // By the lens the holdfast is fibrous: fine roots leave it all round, lie on the rock and go down into its cracks.
+  if (bladed) {
+    rng = bladeStream;
+    for (let f = 0; f < 110; f++) {
+      const az = rng.range(0, 6.283);
+      const r0 = tall * rng.range(0.008, 0.05);
+      const x = bush.x + Math.sin(az) * r0;
+      const z = bush.z - Math.cos(az) * r0;
+      const from: V3 = [x, floor(x, z) + 0.004 * tall, z];
+      const az1 = az + rng.range(-0.8, 0.8);
+      const long = tall * rng.range(0.03, 0.1);
+      const slope = (floor(x + Math.sin(az1) * long, z - Math.cos(az1) * long) - 0.012 * tall - from[1]) / long;
+      const d0 = unit([Math.sin(az), slope + rng.range(0.1, 0.4), -Math.cos(az)]);
+      const d1 = unit([Math.sin(az1), slope - rng.range(0.3, 0.6), -Math.cos(az1)]);
+      lay(from, d0, d1, long, tall * 0.0011 * rng.range(0.6, 1.7), rng.range(0.1, 0.9), 0, 0, -1, 0, 1);
+    }
+    rng = stream;
   }
 
   // The light inside the bush. Every strip is counted into the cell its middle lies in, as the area it shows; from that, what part of the
