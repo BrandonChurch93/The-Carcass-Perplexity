@@ -189,7 +189,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float cAng = atan(vAway.y, vAway.x);
   float cBits = vnoise(vec2(cAng * 2.2 + vSrc.w, cOut * 55.0 - 0.7 * uTime)) * 0.6 + 0.4 * vnoise(xz * 61.0 + 0.4 * uTime);
   float cTail = smoothstep(0.45, 0.95, cLee) * exp(-cOut / 0.3);
-  float cHug = cLeg * exp(-cOut / (0.045 + 0.05 * max(cLee, 0.0))) + (1.0 - cLeg) * (1.0 - smoothstep(0.5 * vSrc.x, 1.3 * vSrc.x, cd)) * 0.75;
+  float cHug = cLeg * exp(-cOut / (0.045 + 0.05 * max(cLee, 0.0))) + (1.0 - cLeg) * (1.0 - smoothstep(0.6 * vSrc.x, 2.4 * vSrc.x, cd)) * 0.7;
   flecks = max(flecks, vSrc.y * smoothstep(0.5, 0.72, cBits * (0.4 + 0.6 * max(cHug, 0.9 * cTail)) + 0.42 * cHug));
   stirred = max(stirred, vSrc.y * min(1.0, 3.0 * length(lifted)));
 #endif
@@ -252,10 +252,9 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float path = depth / max(nv, 0.25);
   // It is milky: in the body of the channel the silt hides the bed a hand deep. With clearer water there the wide view showed the gravel of
   // the bed through the whole channel as a speckle. Toward a bank, a bar or a shelf the water thins and clears, and the rock shows through it.
-  float clear = exp(-path * mix(5.0, 14.0, smoothstep(0.06, 0.45, around)));
+  float clear = exp(-path * mix(4.0, 14.0, smoothstep(0.05, 0.35, around)));
   // Its colour goes with how much of it there is: a pale green wash at the margins, the milky teal over the flats, a dark one in the deep lane.
-  vec3 tone = mix(vec3(0.215, 0.3, 0.275), mix(vec3(0.12, 0.255, 0.24), vec3(0.05, 0.165, 0.175), smoothstep(0.42, 0.95, around)), smoothstep(0.06, 0.45, around));
-  tone *= 1.0 - 0.2 * smoothstep(0.15, 0.6, depth);
+  vec3 tone = mix(vec3(0.23, 0.3, 0.25), mix(vec3(0.125, 0.26, 0.245), vec3(0.045, 0.155, 0.165), smoothstep(0.45, 0.9, around)), smoothstep(0.05, 0.4, around));
   // Seen from low down and against the light the body of shallow water is not green: what comes back out of it is the low sun in its silt,
   // a dull warm olive, as under the feeding waders in the picture. From above it is the teal of the wide view.
   // Only where the eye is low and the look is flat: looked down on by more than a quarter of a right angle the teal comes through again,

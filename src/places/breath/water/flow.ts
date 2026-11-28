@@ -24,7 +24,9 @@ const CELL = 0.5;
 const AREA = { minX: -150, maxX: 0, minZ: -180, maxZ: 112 };
 const ACROSS = 24;
 /** Metres of water round a place at which the channel has its deepest tone. */
-const FULL = 0.3;
+const FULL = 0.55;
+/** Metres a bank stands over the water at which it takes the most from the water beside it. */
+const BANK = 0.4;
 
 export function flowMap(height: (x: number, z: number) => number, sea: number, middle: (z: number) => number): Flow {
   const w = Math.round((AREA.maxX - AREA.minX) / CELL);
@@ -233,12 +235,15 @@ export function flowMap(height: (x: number, z: number) => number, sea: number, m
     }
   }
 
-  // How much water lies round a place: the depth averaged over some metres, dry ground counted as none. The water takes its colour and
+  // How much water lies round a place: the depth averaged over some metres, dry ground counted as less than none by its height (to BANK). The water takes its colour and
   // its silt from this and not from the depth under one pixel, so the body of the channel is one deep tone that pales toward every bank,
   // bar and shelf, and a stone a pace wide does not print a pale dot.
-  const round2 = Float32Array.from(depth);
+  const round2 = new Float32Array(n);
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) round2[j * w + i] = Math.min(1.2, Math.max(-BANK, sea - height(AREA.minX + (i + 0.5) * CELL, AREA.minZ + (j + 0.5) * CELL)));
+  }
   const tmp = new Float32Array(n);
-  const REACH = 4;
+  const REACH = 5;
   for (let turn = 0; turn < 2; turn++) {
     for (let j = 0; j < h; j++) {
       let sum = 0;
@@ -268,7 +273,7 @@ export function flowMap(height: (x: number, z: number) => number, sea: number, m
     carried[o * 4] = Math.round(255 * Math.min(1, (speed[o] as number) / FASTEST));
     carried[o * 4 + 1] = Math.round(255 * Math.min(1, (froth[o] as number) / 2));
     carried[o * 4 + 2] = Math.round(255 * (broken[o] as number));
-    carried[o * 4 + 3] = Math.round(255 * Math.min(1, (round2[o] as number) / FULL));
+    carried[o * 4 + 3] = Math.round(255 * Math.min(1, Math.max(0, round2[o] as number) / FULL));
   }
   const set = (t: THREE.DataTexture): THREE.DataTexture => {
     t.colorSpace = THREE.NoColorSpace;
