@@ -33,6 +33,10 @@ def smooth(a, b, x):
 def bell(x, w):
     return np.exp(-(x / w) ** 2)
 
+def bands(across, along, period, seed):
+    """Creases across a limb: no two a like distance apart, none all the way round. About -1 to 1."""
+    return 2 * (vnoise(across, along / period, seed) - 0.5) + (vnoise(across * 2.3 + 4.0, along / (period * 0.45), seed + 1) - 0.5)
+
 def marks(f, u, k, seed, which):
     """The old hurts of this one animal: scars as (distance to it, metres) and lumps as heights. Returns (groove, lump)."""
     groove = np.zeros_like(f)
@@ -81,7 +85,7 @@ def press(f, u, nf, nu, leg, neck, rib, cage, k, seed, which, broad=False, leg_l
         h = h + 0.0026 * k * folds * bell(d - 0.24 * k, 0.11 * k) * trunk * (1 - cage)
     # 7a. Slack skin in deep folds across the root of the neck.
     slack = bell(neck - 0.07, 0.07) * smooth(0.0, 0.02, neck)
-    h = h + 0.003 * k * slack * np.sin(neck * neck_len / (0.026 * k) * 2 * np.pi + 3.0 * vnoise(nu * 2.0, neck * 14.0, seed + 5))
+    h = h + 0.003 * k * slack * bands(nu * 1.4, neck * neck_len, 0.04 * k, seed + 5)
     groove, lump = marks(f, u, k, seed, which)
     h = h + lump * trunk
     if broad:
@@ -92,12 +96,12 @@ def press(f, u, nf, nu, leg, neck, rib, cage, k, seed, which, broad=False, leg_l
     # 4. The joints: knotted, the skin over them creased across the leg.
     for at, w in ((0.47, 0.05), (0.94, 0.03)):
         j = bell(leg - at, w)
-        rings = np.sin(leg * leg_len / (0.012 * k) * 2 * np.pi + 2.5 * vnoise(nf * 2.5, leg * 60.0, seed + at))
-        h = h + 0.0012 * k * j * rings + 0.0012 * k * j * (vnoise(nf * 4.0, leg * 40.0, seed + 3 + at) - 0.5)
+        # Creases across the joint, none of them all the way round and no two a like distance apart; between them the skin is lumped.
+        h = h + 0.0014 * k * j * bands(nf * 1.6, leg * leg_len, 0.021 * k, seed + at) + 0.002 * k * j * (vnoise(nf * 4.0, leg * 40.0, seed + 3 + at) - 0.5)
     # 5. The shank: a cord down the back of it with a furrow before the cord, and plates down the front, row on row.
     shank = smooth(0.5, 0.55, leg) * (1 - smooth(0.9, 0.94, leg))
     h = h + 0.002 * k * shank * (bell(nf + 0.82, 0.2) - 1.15 * bell(nf + 0.38, 0.15))
-    row = leg * leg_len / (0.017 * k) + 0.35 * vnoise(nf * 3.0, leg * 30.0, seed + 11)
+    row = leg * leg_len / (0.019 * k) + 1.4 * vnoise(nf * 2.0, leg * 14.0, seed + 11)
     plate = 1 - np.abs(2 * (row - np.floor(row)) - 1) ** 3
     h = h + 0.001 * k * shank * smooth(-0.1, 0.3, nf) * (plate - 0.7)
     # 6. The foot: horn in rings.
@@ -106,9 +110,7 @@ def press(f, u, nf, nu, leg, neck, rib, cage, k, seed, which, broad=False, leg_l
     # 7b. The neck: ringed all its length, more underneath, with two cords along the throat.
     onneck = smooth(0.03, 0.12, neck)
     # No two rings are one width, each gives out part of the way round, and in places there are none.
-    rings = np.sin(neck * neck_len / (0.03 * k) * 2 * np.pi + 7.0 * vnoise(nu * 1.6, neck * 11.0, seed + 13) + 5.0 * vnoise(neck * 5.0, 0.5, seed + 14))
-    some = smooth(0.3, 0.6, vnoise(neck * 9.0, nu * 1.3, seed + 15))
-    h = h + 0.0011 * k * onneck * rings * some * (0.3 + 0.7 * smooth(0.2, -0.6, nu))
+    h = h + 0.0011 * k * onneck * bands(nu * 1.5, neck * neck_len, 0.03 * k, seed + 13) * (0.3 + 0.7 * smooth(0.2, -0.6, nu))
     h = h + 0.0014 * k * onneck * (bell(nu + 0.55, 0.14) - 0.8 * bell(nu + 0.25, 0.1)) * (1 - smooth(0.7, 0.95, neck))
     # 8. The skin everywhere: a net of fine wrinkles, finer on the legs.
     cell = np.where(leg > 0.3, 0.016, 0.028) * k
