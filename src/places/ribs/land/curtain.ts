@@ -45,6 +45,7 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
   const positions = new Float32Array(options.count * rows * 3 * 3);
   const uvs = new Float32Array(options.count * rows * 3 * 2);
   const tones = new Float32Array(options.count * rows * 3 * 4);
+  const offs = new Float32Array(options.count * rows * 3);
   const index: number[] = [];
   const c = new THREE.Vector3();
   const c2 = new THREE.Vector3();
@@ -123,6 +124,7 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
         tones[o + 1] = amber;
         tones[o + 2] = behind ? 0.3 + 0.3 * layer : (0.35 + 0.65 * layer) * mass;
         tones[o + 3] = yTop - yEnd;
+        offs[v0 + k * 3 + s] = w * e;
       }
     }
     // Away from the one who hangs there no lens comes near: a frond is one strip of half as many lengths.
@@ -147,6 +149,8 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
   g.setAttribute('position', new THREE.BufferAttribute(positions.subarray(0, made * rows * 9), 3));
   g.setAttribute('uv', new THREE.BufferAttribute(uvs.subarray(0, made * rows * 6), 2));
   g.setAttribute('aTone', new THREE.BufferAttribute(tones.subarray(0, made * rows * 12), 4));
+  // How far a place on the frond lies off its midrib, metres: its skin is laid by this, at its true size.
+  g.setAttribute('aOff', new THREE.BufferAttribute(offs.subarray(0, made * rows * 3), 1));
   g.setIndex(index);
   g.computeVertexNormals();
   g.computeBoundingSphere();
@@ -158,7 +162,9 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec4 vTone;
+varying float vOff;
 attribute vec4 aTone;
+attribute float aOff;
 uniform float uTime;
 void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
@@ -172,6 +178,7 @@ void main() {
   vWorld = w.xyz;
   vUv = uv;
   vTone = aTone;
+  vOff = aOff;
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -182,8 +189,34 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec4 vTone;
+varying float vOff;
 ${RIG_GLSL}
 ${NOISE_GLSL}
+// The noise of vnoise with its slope: the height of the skin and which way it leans, from the same four lots.
+vec3 puckers(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  float a = hash12(i);
+  float b = hash12(i + vec2(1.0, 0.0)) - a;
+  float c = hash12(i + vec2(0.0, 1.0)) - a;
+  float d = hash12(i + vec2(1.0, 1.0)) - a - b - c;
+  return vec3(a + b * u.x + c * u.y + d * u.x * u.y, 6.0 * f * (1.0 - f) * vec2(b + d * u.y, c + d * u.x));
+}
+// Drops of water, one to a cell at most (share: how many cells of ten hold one), each round and anywhere in its cell that it fits:
+// drops that keep to the middles of their cells stand in rows. Most are small and a few are fat: drops of one size are a grain.
+float drops(vec2 p, float share) {
+  vec2 i = floor(p);
+  vec2 h = hash22(i);
+  float big = 0.09 + 0.27 * h.y * h.y * h.y;
+  return (h.x < share ? 1.0 : 0.0) * smoothstep(big, 0.4 * big, length(p - i - big - (1.0 - 2.0 * big) * fract(h * vec2(41.0, 67.0))));
+}
+#define PUCK_ACROSS 30.0
+#define PUCK_ALONG 20.0
+#define PUCK_DEEP 0.85
+#define PUCK_TONE 0.65
+#define PUCK_SHADE 0.55
+#define DROP_SKY 0.28
 void main() {
   vec3 n0 = normalize(vNormal);
   if (!gl_FrontFacing) n0 = -n0;
@@ -195,34 +228,52 @@ void main() {
   float wr2 = 0.5;
   // Wet through, but no hose and no mirror: the film on it stands in beads, so the sky on it is a scatter of points and not a sheen.
   float bead = 0.0;
+  vec3 pk = vec3(0.5, 0.0, 0.0);
+  float puck = 0.0;
+  float rib = 0.0;
+  float frill = 0.0;
   float close = 1.0 - smoothstep(2500.0, 4900.0, dot(toLens, toLens));
   if (close > 0.0) {
     vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
     wr = mix(0.5, vnoise(at), close);
     wr2 = mix(0.5, vnoise(at * vec2(2.7, 0.6) + 7.0), close);
-    bead = close * smoothstep(0.915, 0.96, vnoise(vec2(vUv.x * 9.0 + vTone.x * 17.0, vUv.y * vTone.w * 45.0 + vTone.x * 131.0)));
+    // The skin of a blade is no smooth strap: it is puckered in blisters two fingers across, laid at their true size by the metres
+    // across the blade and along it, deep at its margins and shallow down its middle, as sugar kelp is.
+    pk = puckers(vec2(vOff * PUCK_ACROSS + vTone.x * 17.0, vUv.y * vTone.w * PUCK_ALONG + vTone.x * 131.0));
+    // Down the middle of a blade two hands broad or more runs its rib, a cord two fingers thick, smooth and dark.
+    rib = close * smoothstep(0.022, 0.008, abs(vOff)) * smoothstep(0.35, 0.2, edge);
+    // Its margin is a frill a finger or two deep, thin and paler: how far in from the margin, metres.
+    frill = close * smoothstep(0.03, 0.008, abs(vOff) * (1.0 - edge) / max(edge, 0.05));
+    puck = close * (0.4 + 0.6 * smoothstep(0.15, 0.7, edge)) * (1.0 - rib);
+    // The wet stands on a broad blade in drops, here on it and not there: points in no row. A thread of weed holds none: drops down a thread are a string of beads.
+    float broad = smoothstep(0.05, 0.1, abs(vOff) / max(edge, 0.03));
+    float wetHere = smoothstep(0.47, 0.62, wr2) * broad;
+    if (wetHere > 0.0) bead = close * wetHere * (1.0 - rib) * drops(vec2(vOff * 24.0 + vTone.x * 23.0, vUv.y * vTone.w * 17.0 + vTone.x * 71.0) + 1.7 * vec2(wr, wr2), 0.3);
   }
   // A frond is no flat strap: it is ruffled at its edges and troughed along its midrib, so the wet light on it is a line and not a face.
   vec3 du = dFdx(vWorld) * dFdy(vUv.y) - dFdy(vWorld) * dFdx(vUv.y);
   vec3 across = normalize(du - n0 * dot(du, n0) + vec3(1e-7, 0.0, 0.0)) * sign(dFdx(vUv.x) * dFdy(vUv.y) - dFdy(vUv.x) * dFdx(vUv.y) + 1e-12);
   float ruffle = sin(vUv.y * 60.0 + vTone.x * 40.0 + 3.0 * wr) * smoothstep(0.3, 0.9, edge);
-  vec3 n = normalize(n0 + across * ((vUv.x * 2.0 - 1.0) * 0.28) + 0.5 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5) + 0.6 * ruffle, wr2 - 0.5));
+  vec3 n = normalize(n0 + across * ((vUv.x * 2.0 - 1.0) * 0.28) + 0.5 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5) + 0.6 * ruffle, wr2 - 0.5) - (across * pk.y + cross(n0, across) * pk.z) * (PUCK_DEEP * puck) + across * (rib * 20.0 * vOff));
   // Olive brown where it is thick, amber toward its thin end and its edges, where the day comes through it.
   vec3 olive = mix(vec3(0.03, 0.021, 0.006), vec3(0.075, 0.052, 0.014), vTone.x);
   vec3 amber = vec3(0.21, 0.12, 0.02);
   float thin = smoothstep(0.1, 0.9, vUv.y) * (0.4 + 0.6 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
   float gold = (0.22 + 0.78 * vTone.y) * thin;
   // From far off the curtain is one dark mass: each frond stands in the shade of the rest, and no day comes through it.
-  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.24, 1.0, close);
+  // A blister's crown is thin and the day comes through it; its foot is thick and dark.
+  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.24, 1.0, close) * (1.0 + PUCK_TONE * puck * (pk.x - 0.62)) * (1.0 - 0.45 * rib);
+  albedo = mix(albedo, amber * (0.45 + 0.8 * pk.x), 0.55 * frill);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
-  float occ = vTone.z * mix(0.25 + 0.75 * vTone.z, 1.0, close) * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
+  float occ = vTone.z * mix(0.25 + 0.75 * vTone.z, 1.0, close) * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5)) * (1.0 - PUCK_SHADE * puck * smoothstep(0.55, 0.2, pk.x));
   float rough = 0.74 + 0.2 * wr - 0.2 * bead;
   // A frond seen along itself is no mirror of the sky: its skin is ruffled finer than the lens sees, so it is lit as if it stood half toward the lens.
   n = normalize(n + v * max(0.0, 0.55 - dot(n, v)));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
   // No bead, no glint asked of it (the term was times nought).
-  if (bead > 0.0) c += above * (0.14 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
+  // A drop is a lens: whichever way the blade under it faces, it holds a point of the sky, and is no brighter on a pale blade than on a dark one.
+  if (bead > 0.0) c = mix(c, max(c, above * (DROP_SKY * (0.25 + 0.75 * occ))), bead);
   // The day through a frond that hangs free of the wall.
   c += amber * above * (0.07 * close * thin * smoothstep(0.45, 0.95, vTone.z) * occ);
   // The low sun through a thin wet frond.
