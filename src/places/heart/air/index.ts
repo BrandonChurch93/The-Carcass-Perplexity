@@ -278,7 +278,7 @@ export function create(ctx: HeartContext): HeartPiece {
           const windX = GROUND_WIND[0] * Math.cos(turn) - GROUND_WIND[1] * Math.sin(turn);
           const windZ = GROUND_WIND[0] * Math.sin(turn) + GROUND_WIND[1] * Math.cos(turn);
           (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], Math.max(0.3, s.radius * (1 + 0.5 * own(1))));
-          (steamB[i] as THREE.Vector4).set(windX, windZ, Math.min(18, s.rise * (2.6 + 1.2 * own(2))), s.strength * (1.7 + 1.0 * own(3)));
+          (steamB[i] as THREE.Vector4).set(windX, windZ, Math.min(12, s.rise * (1.8 + 0.8 * own(2))), s.strength * (1.0 + 0.6 * own(3)));
           (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, 0.9 + 0.5 * own(4), 3.4, 3);
           continue;
         }

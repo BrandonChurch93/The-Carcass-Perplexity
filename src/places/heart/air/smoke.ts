@@ -477,7 +477,7 @@ void groundOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     vec4 w = noise(vec3(C.x, (s - C.y * uTime) / 11.0, C.x * 1.7 + 0.04 * s));
     float wide = 1.7 * A.w + 0.3 * out1;
     float c = dot(rel, side) - (w.g - 0.5) * (1.2 * A.w + 0.55 * out1);
-    float roof = (0.3 + 0.75 * A.w + 0.09 * out1) * (0.55 + 0.9 * w.a);
+    float roof = (0.3 + 0.75 * A.w + 0.06 * out1) * (0.55 + 0.9 * w.a);
     if (abs(c) >= 1.25 * wide || h >= 1.4 * roof) continue;
     vec3 q = vec3(s - C.y * uTime, 2.2 * h + 0.35 * s, c) / C.z + C.x;
     float n1 = noise(q).r;
@@ -487,11 +487,11 @@ void groundOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     if (edge >= 1.0 || lid >= 1.0) continue;
     float shape = (1.0 - smoothstep(0.25, 1.0, edge)) * (1.0 - smoothstep(0.35, 1.0, lid));
     float wisps = smoothstep(0.4, 0.68, n1 * 0.6 + small.b * 0.4);
-    float puff = mix(0.12, 1.7, smoothstep(0.3, 0.62, w.r));
+    float puff = 1.9 * smoothstep(0.4, 0.66, w.r);
     // It thins as it widens and is gone before the end of its run.
-    // A trail of vapour was a veil with knots in it, and gust and lump were so little apart that it lay as one
-    // even smear: it is lumps too, with a little veil between them, and its gusts come and go.
-    float dens = shape * (0.04 + 2.0 * wisps * wisps) * puff * smoothstep(0.0, 0.08, u) * pow(1.0 - u, 1.3) * mix(1.0, 1.7 * A.w / wide, 0.75);
+    // A trail of vapour was a veil with knots in it, and gust and lump were so little apart that it lay as one even smear over the rough crust and
+    // took its fine detail. It is lumps with nothing between them, and between two gusts the crust is clear.
+    float dens = shape * 2.2 * wisps * wisps * puff * smoothstep(0.0, 0.08, u) * pow(1.0 - u, 1.3) * mix(1.0, 1.7 * A.w / wide, 0.75);
     if (dens <= 0.0) continue;
     // The fire under it and round it: what is open within a few metres of the point, most where it lies low.
     vec3 below = lakeGlow(p.xz, 2.5 + 1.5 * h);
