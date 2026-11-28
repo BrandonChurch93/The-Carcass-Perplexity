@@ -589,29 +589,32 @@ void main() {
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
-// (Enough rings for the bend of one near the lens to be a curve and for the growth rings to stand in its outline.)
-const FEELER_RINGS = 36;
-const FEELER_SIDES = 12;
-let feelerTube: THREE.BufferGeometry | null = null;
-function tube(): THREE.BufferGeometry {
-  if (feelerTube) return feelerTube;
+// Two tubes: one for those the lens stands by, with rings enough for the bend to be a curve and the growth rings to stand in its
+// outline, and a plain one for the herd.
+const feelerTubes: (THREE.BufferGeometry | null)[] = [null, null];
+function tube(fine: boolean): THREE.BufferGeometry {
+  const made = feelerTubes[fine ? 1 : 0];
+  if (made) return made;
+  const rings = fine ? 36 : 14;
+  const sides = fine ? 12 : 9;
   const position: number[] = [];
   const index: number[] = [];
-  for (let i = 0; i < FEELER_RINGS; i++) {
-    for (let j = 0; j < FEELER_SIDES; j++) {
-      const a = (j / FEELER_SIDES) * Math.PI * 2;
-      position.push(i / (FEELER_RINGS - 1), Math.cos(a), Math.sin(a));
-      if (i < FEELER_RINGS - 1) {
-        const p = i * FEELER_SIDES + j;
-        const q = i * FEELER_SIDES + ((j + 1) % FEELER_SIDES);
-        index.push(p, q, p + FEELER_SIDES, q, q + FEELER_SIDES, p + FEELER_SIDES);
+  for (let i = 0; i < rings; i++) {
+    for (let j = 0; j < sides; j++) {
+      const a = (j / sides) * Math.PI * 2;
+      position.push(i / (rings - 1), Math.cos(a), Math.sin(a));
+      if (i < rings - 1) {
+        const p = i * sides + j;
+        const q = i * sides + ((j + 1) % sides);
+        index.push(p, q, p + sides, q, q + sides, p + sides);
       }
     }
   }
-  feelerTube = new THREE.BufferGeometry();
-  feelerTube.setAttribute('position', new THREE.BufferAttribute(new Float32Array(position), 3));
-  feelerTube.setIndex(index);
-  return feelerTube;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(position), 3));
+  geometry.setIndex(index);
+  feelerTubes[fine ? 1 : 0] = geometry;
+  return geometry;
 }
 
 export interface Look {
@@ -779,8 +782,8 @@ export class Beast {
     // The first of the row that an animal asks to go without are drawn with no thickness: nothing of them reaches the frame.
     for (let i = 0; i < Math.min(look.skip ?? 0, lip.length); i++) shape[i * 4 + 1] = 0;
     const geometry = new THREE.InstancedBufferGeometry();
-    geometry.index = tube().index;
-    geometry.setAttribute('position', tube().getAttribute('position'));
+    geometry.index = tube(!!look.coat).index;
+    geometry.setAttribute('position', tube(!!look.coat).getAttribute('position'));
     geometry.setAttribute('iAt', new THREE.InstancedBufferAttribute(at, 3));
     geometry.setAttribute('iOut', new THREE.InstancedBufferAttribute(out, 3));
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));

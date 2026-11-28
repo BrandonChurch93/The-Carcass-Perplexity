@@ -51,6 +51,7 @@ varying vec2 vLay;
 varying float vEdge;
 varying float vDepth;
 uniform float uMirror;
+uniform float uRelief;
 uniform sampler2D tChurnNh;
 ${NOISE_GLSL}
 ${CHURN_GLSL}
@@ -71,8 +72,8 @@ void main() {
   float h0 = lift(aLay, position.xz, cut);
   float hx = lift(aLay + vec2(e, 0.0), position.xz + vec2(e, 0.0), cut);
   float hz = lift(aLay + vec2(0.0, e), position.xz + vec2(0.0, e), cut);
-  vNormal = normalize(normal * sign(normal.y + 1e-5) + rimmed * vec3(h0 - hx, 0.0, h0 - hz) / e);
-  vWorld = position + vec3(0.0, h0 * rimmed, 0.0);
+  vNormal = normalize(normal * sign(normal.y + 1e-5) + rimmed * uRelief * vec3(h0 - hx, 0.0, h0 - hz) / e);
+  vWorld = position + vec3(0.0, h0 * rimmed * uRelief, 0.0);
   // It is not drawn into the mirror: there it would read the picture it is being drawn into, and what comes back is not a number.
   gl_Position = mix(projectionMatrix * viewMatrix * vec4(vWorld, 1.0), vec4(2.0, 2.0, 2.0, 1.0), step(0.5, uMirror));
 }`;
@@ -131,6 +132,8 @@ void main() {
   vec2 lean = vec2(0.0);
   float sleeve = 0.0;
   float churn = 0.0;
+  // What stands over the sheet: the belly between the four legs of each. The brine under it shows the belly and not the sky.
+  float shade = 0.0;
   for (int i = 0; i < ${MIRE_LEGS}; i++) {
     vec4 leg = uLegs[i];
     vec2 d = p - leg.xy;
@@ -143,7 +146,9 @@ void main() {
     float ring = cos(off * 30.0 - uSeconds * 3.1 + float(i) * 1.9) * exp(-off / 0.3) * smoothstep(0.0, 0.04, off);
     lean += out2 * (0.05 + 0.14 * leg.z) * ring;
     churn = max(churn, (0.3 + 0.7 * leg.z) * exp(-off / 0.35));
+    shade += exp(-r * r / (22.0 * leg.w * leg.w));
   }
+  shade = min(shade, 1.0);
   for (int i = 0; i < 2; i++) {
     vec4 snout = uSnouts[i];
     vec2 d = p - snout.xy;
@@ -169,7 +174,7 @@ void main() {
   vec3 nMud = normalize(normalize(vNormal) + vec3(-slope.x, 0.0, -slope.y));
   float pit = smoothstep(-0.05, 0.3, over);
   // Wet mud is no mirror: it is lit as a rough thing, and what shines on it is the sky caught on the few faces turned to it.
-  vec3 cMud = rigShade(vWorld, nMud, v, mud, 1.0, 0.4 + 0.6 * pit);
+  vec3 cMud = rigShade(vWorld, nMud, v, mud, 1.0, (0.4 + 0.6 * pit) * (1.0 - 0.35 * shade));
   vec3 rMud = reflect(-v, nMud);
   float wetMud = max(mix(1.0, 0.3, smoothstep(0.05, 0.35, over) * smoothstep(0.4, 0.7, nhB.b)), foot2);
   float catchSky = pow(clamp(dot(rMud, SKY_SIDE), 0.0, 1.0), 60.0);
@@ -191,11 +196,13 @@ void main() {
   // The mirror. The wallow lies uLevel above the brine the picture was drawn for: a ray it throws up is the ray the brine would throw
   // from the same place that far under its level again.
   float nv = clamp(dot(nWet, v), 0.0, 1.0);
-  float share = 0.02 + 0.4 * pow(1.0 - nv, 5.0);
+  // (Thick with mud, it gives back less of the sky than the open brine does: a pale sheen, never a white sheet between the legs.)
+  float share = min(0.02 + 0.4 * pow(1.0 - nv, 5.0), 0.17);
   vec2 swing = nWet.xz * 2.0 * clamp(away * 0.22, 0.2, 6.0);
   vec4 q = uMirrorMatrix * vec4(p.x + swing.x, -uLevel, p.y + swing.y, 1.0);
   float soft = max(log2(float(textureSize(tMirror, 0).x) / 420.0), 0.0);
-  vec3 seen = clamp(textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), soft).rgb, vec3(0.0), vec3(8.0)) * vec3(0.95, 0.8, 0.75);
+  vec3 seen = clamp(textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), soft).rgb, vec3(0.0), vec3(8.0)) * vec3(0.93, 0.72, 0.66);
+  seen = mix(seen, vec3(0.05, 0.036, 0.03) * above, 0.85 * shade);
   cWet = cWet * (1.0 - share) + share * seen * (1.0 - uMirror);
   // The dark wet line where it stands against a leg.
   cWet *= 1.0 - 0.4 * sleeve;
@@ -210,26 +217,23 @@ void main() {
 }`;
 
 export class Mire {
+  /** The sheet by the lens, every clod in its mesh. */
   readonly mesh: THREE.Mesh;
+  /** The same sheet for a lens that stands far off: a twentieth of the mesh, and level. Only one of the two is ever drawn. */
+  readonly far: THREE.Mesh;
   readonly level: number;
+  private readonly centre: THREE.Vector3;
   private readonly legs: THREE.Vector4[] = Array.from({ length: MIRE_LEGS }, () => new THREE.Vector4(0, 0, 0, 0.1));
   private readonly snouts: THREE.Vector4[] = [new THREE.Vector4(0, 0, 0, 0.1), new THREE.Vector4(0, 0, 0, 0.1)];
   private readonly uSeconds = { value: 0 };
   private readonly uShown = { value: 1 };
+  private readonly uRelief = { value: 1 };
 
   /** A sheet about (x, z), `long` metres each way along `dir` and `wide` each way across it, its top at `level` in the world. */
   constructor(ctx: Context, x: number, z: number, dir: [number, number], long: number, wide: number, level: number) {
     const rng = ctx.rng('wallowers-mire');
     this.level = level;
-    // Fine enough for a clod a hand across to stand in the mesh.
-    const RINGS = 150;
-    const SIDES = 400;
-    const position: number[] = [];
-    const edge: number[] = [];
-    const depth: number[] = [];
-    const lay: number[] = [];
-    const index: number[] = [];
-    const spoke: [number, number, number][] = Array.from({ length: SIDES + 1 }, () => [0, 0, level]);
+    this.centre = new THREE.Vector3(x, level, z);
     const wobble = Array.from({ length: 9 }, () => [rng.range(0.03, 0.1), rng.range(0, Math.PI * 2)] as [number, number]);
     const place = (u: number, a: number): [number, number] => {
       let reach = 1;
@@ -240,79 +244,118 @@ export class Mire {
       const across = Math.sin(a) * wide * reach * u;
       return [x + dir[0] * along - dir[1] * across, z + dir[1] * along + dir[0] * across];
     };
-    // The bed is asked for at every third ring and fourth side, about as many places as the sheet of wave 2 asked, and laid between them:
-    // the land answers slowly, and asked at every vertex it showed in the cost of frames the sheet is not in.
-    const CI = 3;
-    const CJ = 4;
-    const NI = RINGS / CI;
-    const NJ = SIDES / CJ;
-    const bed = new Float32Array((NI + 1) * (NJ + 1) * 2);
-    for (let i = 0; i <= NI; i++) {
-      for (let j = 0; j <= NJ; j++) {
-        const [px, pz] = place((i * CI) / RINGS, ((j * CJ) / SIDES) * Math.PI * 2);
-        bed[(i * (NJ + 1) + j) * 2] = ctx.rig.land.height(px, pz);
-        bed[(i * (NJ + 1) + j) * 2 + 1] = ctx.rig.land.shore(px, pz);
-      }
-    }
-    const laid = (i: number, j: number, c: number): number => {
-      const fi = Math.min(NI - 1, Math.floor(i / CI));
-      const fj = Math.min(NJ - 1, Math.floor(j / CJ));
-      const ti = i / CI - fi;
-      const tj = j / CJ - fj;
-      const at = (a: number, b: number): number => bed[(a * (NJ + 1) + b) * 2 + c] as number;
-      return (at(fi, fj) * (1 - tj) + at(fi, fj + 1) * tj) * (1 - ti) + (at(fi + 1, fj) * (1 - tj) + at(fi + 1, fj + 1) * tj) * ti;
-    };
-    for (let i = 0; i <= RINGS; i++) {
-      const u = i / RINGS;
-      for (let j = 0; j <= SIDES; j++) {
-        const a = (j / SIDES) * Math.PI * 2;
-        const [px, pz] = place(u, a);
-        const land = laid(i, j, 0);
-        const over = level - land;
-        // It does not run out over the brine: its rim stands on the bank before the shore.
-        const e = Math.min(1 - u, Math.max(0, (laid(i, j, 1) - 0.05) / 0.8));
-        // Level inside the rim; the rim is mud pushed up a little over the sheet, and falls from there to the bed it lies on.
-        const w = Math.min(1, e / 0.3);
-        const fall = w * w * (3 - 2 * w);
-        const rim = 0.035 * Math.exp(-(((e - 0.27) / 0.07) ** 2)) * (0.6 + 0.4 * Math.sin(a * 5 + (wobble[0] as [number, number])[1]));
-        const py = Math.max(land + 0.02 + (level - land - 0.02) * fall + rim, land + 0.025);
-        position.push(px, py, pz);
-        // (Each spoke is measured along the surface, and the mud is laid by that measure.)
-        const plan = Math.hypot(px - x, pz - z);
-        const was = spoke[j] as [number, number, number];
-        const run = was[0] + Math.hypot(plan - was[1], py - was[2]);
-        spoke[j] = [run, plan, py];
-        const stretch = plan > 1e-6 ? run / plan : 1;
-        lay.push(x + (px - x) * stretch, z + (pz - z) * stretch);
-        edge.push(e);
-        depth.push(Math.max(-0.2, Math.min(0.4, over)));
-      }
-    }
-    for (let i = 0; i < RINGS; i++) {
-      for (let j = 0; j < SIDES; j++) {
-        const a = i * (SIDES + 1) + j;
-        index.push(a, a + SIDES + 1, a + 1, a + 1, a + SIDES + 1, a + SIDES + 2);
-      }
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-    geometry.setAttribute('aEdge', new THREE.Float32BufferAttribute(edge, 1));
-    geometry.setAttribute('aDepth', new THREE.Float32BufferAttribute(depth, 1));
-    geometry.setAttribute('aLay', new THREE.Float32BufferAttribute(lay, 2));
-    geometry.setIndex(index);
-    geometry.computeVertexNormals();
     const material = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uLegs: { value: this.legs }, uSnouts: { value: this.snouts }, uSeconds: this.uSeconds, uShown: this.uShown, uLevel: { value: level }, tChurn: { value: ctx.assets.texture('wallowers/churn.jpg', { kind: 'colour', anisotropy: 4 }) }, tChurnNh: { value: ctx.assets.texture('wallowers/churn-nh.jpg', { kind: 'data', anisotropy: 4 }) } },
+      uniforms: {
+        ...ctx.rig.uniforms,
+        uLegs: { value: this.legs },
+        uSnouts: { value: this.snouts },
+        uSeconds: this.uSeconds,
+        uShown: this.uShown,
+        uRelief: this.uRelief,
+        uLevel: { value: level },
+        tChurn: {
+          value: ctx.assets.texture('wallowers/churn.jpg', {
+            kind: 'colour',
+            anisotropy: 4,
+          }),
+        },
+        tChurnNh: {
+          value: ctx.assets.texture('wallowers/churn-nh.jpg', {
+            kind: 'data',
+            anisotropy: 4,
+          }),
+        },
+      },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       side: THREE.DoubleSide,
       transparent: true,
     });
-    this.mesh = new THREE.Mesh(geometry, material);
-    // Nothing of it is drawn where no lens sees it: the clods stand at most a hand over the sheet, and the sphere is that much wider.
-    geometry.computeBoundingSphere();
-    if (geometry.boundingSphere) geometry.boundingSphere.radius += 0.3;
-    this.mesh.renderOrder = 2;
+    // The bed is asked for at every CI th ring and CJ th side and laid between them: the land answers slowly.
+    const sheet = (RINGS: number, SIDES: number, CI: number, CJ: number): THREE.Mesh => {
+      const position: number[] = [];
+      const edge: number[] = [];
+      const depth: number[] = [];
+      const lay: number[] = [];
+      const index: number[] = [];
+      const spoke: [number, number, number][] = Array.from({ length: SIDES + 1 }, () => [0, 0, level]);
+      const NI = RINGS / CI;
+      const NJ = SIDES / CJ;
+      const bed = new Float32Array((NI + 1) * (NJ + 1) * 2);
+      for (let i = 0; i <= NI; i++) {
+        for (let j = 0; j <= NJ; j++) {
+          const [px, pz] = place((i * CI) / RINGS, ((j * CJ) / SIDES) * Math.PI * 2);
+          bed[(i * (NJ + 1) + j) * 2] = ctx.rig.land.height(px, pz);
+          bed[(i * (NJ + 1) + j) * 2 + 1] = ctx.rig.land.shore(px, pz);
+        }
+      }
+      const laid = (i: number, j: number, c: number): number => {
+        const fi = Math.min(NI - 1, Math.floor(i / CI));
+        const fj = Math.min(NJ - 1, Math.floor(j / CJ));
+        const ti = i / CI - fi;
+        const tj = j / CJ - fj;
+        const at = (a: number, b: number): number => bed[(a * (NJ + 1) + b) * 2 + c] as number;
+        return (at(fi, fj) * (1 - tj) + at(fi, fj + 1) * tj) * (1 - ti) + (at(fi + 1, fj) * (1 - tj) + at(fi + 1, fj + 1) * tj) * ti;
+      };
+      for (let i = 0; i <= RINGS; i++) {
+        const u = i / RINGS;
+        for (let j = 0; j <= SIDES; j++) {
+          const a = (j / SIDES) * Math.PI * 2;
+          const [px, pz] = place(u, a);
+          const land = laid(i, j, 0);
+          const over = level - land;
+          // It does not run out over the brine: its rim stands on the bank before the shore.
+          const e = Math.min(1 - u, Math.max(0, (laid(i, j, 1) - 0.05) / 0.8));
+          // Level inside the rim; the rim is mud pushed up a little over the sheet, and falls from there to the bed it lies on.
+          const w = Math.min(1, e / 0.3);
+          const fall = w * w * (3 - 2 * w);
+          const rim = 0.035 * Math.exp(-(((e - 0.27) / 0.07) ** 2)) * (0.6 + 0.4 * Math.sin(a * 5 + (wobble[0] as [number, number])[1]));
+          const py = Math.max(land + 0.02 + (level - land - 0.02) * fall + rim, land + 0.025);
+          position.push(px, py, pz);
+          // (Each spoke is measured along the surface, and the mud is laid by that measure.)
+          const plan = Math.hypot(px - x, pz - z);
+          const was = spoke[j] as [number, number, number];
+          const run = was[0] + Math.hypot(plan - was[1], py - was[2]);
+          spoke[j] = [run, plan, py];
+          const stretch = plan > 1e-6 ? run / plan : 1;
+          lay.push(x + (px - x) * stretch, z + (pz - z) * stretch);
+          edge.push(e);
+          depth.push(Math.max(-0.2, Math.min(0.4, over)));
+        }
+      }
+      for (let i = 0; i < RINGS; i++) {
+        for (let j = 0; j < SIDES; j++) {
+          const a = i * (SIDES + 1) + j;
+          index.push(a, a + SIDES + 1, a + 1, a + 1, a + SIDES + 1, a + SIDES + 2);
+        }
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+      geometry.setAttribute('aEdge', new THREE.Float32BufferAttribute(edge, 1));
+      geometry.setAttribute('aDepth', new THREE.Float32BufferAttribute(depth, 1));
+      geometry.setAttribute('aLay', new THREE.Float32BufferAttribute(lay, 2));
+      geometry.setIndex(index);
+      geometry.computeVertexNormals();
+      const mesh = new THREE.Mesh(geometry, material);
+      // Nothing of it is drawn where no lens sees it: the clods stand at most a hand over the sheet, and the sphere is that much wider.
+      geometry.computeBoundingSphere();
+      if (geometry.boundingSphere) geometry.boundingSphere.radius += 0.3;
+      mesh.renderOrder = 2;
+      return mesh;
+    };
+    // Fine enough for a clod a hand across to stand in the mesh.
+    this.mesh = sheet(150, 400, 3, 4);
+    this.far = sheet(30, 80, 1, 1);
+    this.far.visible = false;
+  }
+
+  /** Which of the two is drawn for a lens at `eye`. The clods sink into the sheet before the meshes change, so nothing jumps where they do. */
+  seenFrom(eye: THREE.Vector3): void {
+    const away = eye.distanceTo(this.centre);
+    const t = Math.min(1, Math.max(0, (away - 16) / 8));
+    this.uRelief.value = 1 - t * t * (3 - 2 * t);
+    this.mesh.visible = away < 24;
+    this.far.visible = !this.mesh.visible;
   }
 
   /** Leg `i` stands at (x, z), `half` metres thick, and works the mud `work` hard (0 to 1). */
@@ -332,6 +375,7 @@ export class Mire {
 
   dispose(): void {
     this.mesh.geometry.dispose();
+    this.far.geometry.dispose();
     (this.mesh.material as THREE.Material).dispose();
   }
 }

@@ -113,7 +113,7 @@ export function create(ctx: Context): Piece {
   // (The sheet has a body of its own now and hides what goes into it: the tips go a hand under its level and are sunk in it, not laid on it.)
   great0.floor = mireLevel - 0.09;
   young0.floor = Math.max(mireLevel, ctx.rig.land.height(young0.plan.at[0], young0.plan.at[1]) + 0.025) - 0.06;
-  const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh), tread.mesh, mire.mesh];
+  const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh), tread.mesh, mire.mesh, mire.far];
   ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
 
@@ -175,7 +175,8 @@ export function create(ctx: Context): Piece {
           ctx.rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, 0.55 * k * (1 + 0.6 * off), on ? 0.85 * (1 - 0.7 * off) * dry : 0);
         }
         ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, on ? (ctx.rig.land.shore(stood.x, stood.z) > 0.05 ? 0.6 : 0.3) : 0, 1.9, stood.yaw);
-        wet.set(i, stood, k, seconds, on ? 1 : 0, i > 2);
+        // The two that stand in the wallow drip onto its sheet, and the mud leaves their bellies in strings.
+        wet.set(i, stood, k, seconds, on ? 1 : 0, i !== 2, i < 2 ? mireLevel : -1e9, i < 2);
         if (i < 2) {
           for (let j = 0; j < 4; j++) {
             const foot = stood.feet[j] as (typeof stood.feet)[number];
@@ -189,6 +190,9 @@ export function create(ctx: Context): Piece {
       mire.set(seconds, 1);
       wet.touch();
       tread.touch();
+    },
+    beforeSample: (_renderer, camera) => {
+      mire.seenFrom(camera.position);
     },
     dispose: () => {
       for (const h of herd) h.beast.dispose();
