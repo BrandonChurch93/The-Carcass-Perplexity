@@ -3,8 +3,8 @@
 // higher of the two layings is the one that is seen, so the join runs round the stones and never through one. Everything that
 // reads the sheet at the size of the lip (land/lip.ts, the near ground of land/rock.ts, the bed of the lake by the shore) asks
 // here, so a stone half in the water is one stone. It stands by itself and can be put in a vertex shader.
-/** Off until the bed of the lake reads through `shoreLay` too: with it off every reader gets the sheet as it always lay. */
-export const SHORE_BANDS = false;
+/** With it off every reader gets the sheet as it always lay. The bed of the lake (lake/bed.ts) reads through `shoreLay` too. */
+export const SHORE_BANDS = true;
 
 export const SHORE_LAY_GLSL = /* glsl */ `
 #define SHORE_BANDS ${SHORE_BANDS ? 1 : 0}

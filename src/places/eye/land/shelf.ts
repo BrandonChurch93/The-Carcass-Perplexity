@@ -1,3 +1,4 @@
+// Held back in the third wave and not built (nothing imports this file): at 8761 it read as a scaled slab with a cut outline.
 // The rock of the shelf round the bones: craggy limestone that stands out of the water at the lip. It is a height field of plates,
 // each a slab of its own height and tilt with open joints between, pitted by the water, on a fine mesh of its own. A plate either
 // stands or lies under the water whole, so the edge of the rock is the broken line of the plates and not a contour. Above the
