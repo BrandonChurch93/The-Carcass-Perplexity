@@ -24,16 +24,22 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
   const [at, bt] = radii(rib, tTide);
   const foot = new THREE.Vector3();
   const reach = (at + bt) / 2 + 10;
-  // The weed's own face, as the skirt has it, and `out` metres off it.
-  const face = (phi: number, y: number, out: number, p: THREE.Vector3): void => {
+  // The part of the blade at a height, read off a table: the fronds ask for it eighty thousand times, and the blade answers by halving.
+  const HIGH = 48;
+  const STEPS = 2048;
+  const parts = new Float64Array(STEPS + 2);
+  for (let i = 0; i < STEPS + 2; i++) parts[i] = partAtHeight(rib, (i * HIGH) / STEPS);
+  const partAt = (y: number): number => {
+    const f = (Math.min(HIGH, Math.max(0, y)) / HIGH) * STEPS;
+    const i = Math.floor(f);
+    return (parts[i] as number) + ((parts[i + 1] as number) - (parts[i] as number)) * (f - i);
+  };
+  // The weed's own face, as the skirt has it: how far it stands off the blade at an angle and a height where the blade is `a` across.
+  const padAt = (phi: number, y: number, a: number): number => {
     foot.copy(surface(rib, tTide, phi, at, bt));
-    const yy = Math.max(0, y);
-    const t = partAtHeight(rib, yy);
-    const [a, b] = radii(rib, t);
     const calm = smooth(3, 9, Math.hypot((phi - options.focus[0]) * (a + 10), y - options.focus[1]));
     const plinth = 2.5 * smooth(5, 0, y) * (0.4 + 1.2 * noise2(foot.x / 11 + 5, foot.z / 11)) * calm;
-    const pad = skirtPad(yy) + (0.6 * weedLump(foot.x, y, foot.z) + 0.3 * weedTier(foot.x, y, foot.z)[0]) * calm + plinth + out;
-    p.copy(surface(rib, t, phi, a + pad, b + pad));
+    return skirtPad(Math.max(0, y)) + (0.6 * weedLump(foot.x, y, foot.z) + 0.3 * weedTier(foot.x, y, foot.z)[0]) * calm + plinth;
   };
   const rows = SEGMENTS + 1;
   const positions = new Float32Array(options.count * rows * 3 * 3);
@@ -44,7 +50,6 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
   const c2 = new THREE.Vector3();
   const side = new THREE.Vector3();
   const outward = new THREE.Vector3();
-  const down = new THREE.Vector3();
   let made = 0;
   // The weed hangs in hanks: half a dozen fronds from one hold, fanned a little, of one length and one colour, more or less.
   let hank = { phi: 0, top: 0, length: 0, layer: 0, tone: 0, amber: 0 };
@@ -55,7 +60,7 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
       foot.copy(surface(rib, tTide, phi, at, bt));
       // Its hold lies well under the weed's upper line: a frond that began at the line stood over it as a spike.
       const top = weedTop(foot.x, foot.z) - 2.2;
-      hank = { phi, top: 3 + (top - 3) * Math.sqrt(options.next()), length: 1.5 + 4.5 * options.next() ** 1.5, layer: options.next(), tone: options.next(), amber: options.next() < 0.42 ? 0.5 + 0.5 * options.next() : 0 };
+      hank = { phi, top: 2 + (top - 2) * options.next() ** 0.62, length: 1.5 + 4.5 * options.next() ** 1.5, layer: options.next(), tone: options.next(), amber: options.next() < 0.42 ? 0.5 + 0.5 * options.next() : 0 };
     }
     // A hank is a clump: its fronds lie over one another, and the wall is dark between it and the next.
     const phi0 = hank.phi + (0.5 * (options.next() - 0.5)) / reach;
@@ -77,24 +82,31 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
     const tone = Math.min(1, Math.max(0, hank.tone + 0.3 * (options.next() - 0.5)));
     const amber = Math.max(hank.amber * options.next(), 0.07 * options.next());
     const yEnd = Math.max(0.5, yTop - length);
+    // The wall is no one brown: whole masses of the weed, some strides across, lie in the shade of what hangs over them.
+    const mass = 0.4 + 0.6 * smooth(0.32, 0.68, 0.65 * noise2(arc / 17 + 3.1, yTop / 6.5 + 7.7) + 0.35 * noise2(arc / 5 + 1.3, yTop / 2.6));
     // Behind the one who hangs there they lie flat on the wall, in its shade.
     const behind = Math.abs(arc) < 2.6 && yTop > options.focus[1] - 7 && yEnd < options.focus[1] + 2.5;
     const v0 = made * rows * 3;
+    let w = 0;
     for (let k = 0; k < rows; k++) {
       const f = k / SEGMENTS;
       const y = yTop + (yEnd - yTop) * f;
       const phi = phi0 + (drift * f + swing * Math.sin(wave + 4.4 * f) + 0.05 * Math.sin(wave * 2.3 + 11 * f)) / reach;
       const out = behind ? 0.05 + 0.2 * layer : 0.15 + 0.6 * layer + 0.12 * Math.sin(Math.PI * f) * (0.3 + layer);
-      face(phi, y, out, c);
-      face(phi + 0.01, y, out, c2);
-      side.copy(c2).sub(c).normalize();
-      face(phi, y, out + 1, c2);
-      outward.copy(c2).sub(c).normalize();
-      const turn = twist + 0.35 * Math.sin(wave * 1.7 + 4.3 * f);
-      side.multiplyScalar(Math.cos(turn)).addScaledVector(outward, Math.sin(turn)).normalize();
-      // Narrow where it holds, broad a third of the way down, drawn to a point.
-      const w = 0.5 * breadth * (0.4 + 0.6 * smooth(0, 0.22, f)) * (1 - 0.6 * smooth(0.7, 1, f)) * (1 + 0.25 * Math.sin(wave + 7 * f));
-      down.crossVectors(side, outward);
+      // A far frond is drawn through every second of its places: the ones between are not asked where they lie.
+      if (!far || k % 2 === 0) {
+        const t = partAt(y);
+        const [a, b] = radii(rib, t);
+        const pad = padAt(phi, y, a) + out;
+        c.copy(surface(rib, t, phi, a + pad, b + pad));
+        const pad2 = padAt(phi + 0.01, y, a) + out;
+        side.copy(surface(rib, t, phi + 0.01, a + pad2, b + pad2)).sub(c).normalize();
+        outward.copy(surface(rib, t, phi, a + pad + 1, b + pad + 1)).sub(c).normalize();
+        const turn = twist + 0.35 * Math.sin(wave * 1.7 + 4.3 * f);
+        side.multiplyScalar(Math.cos(turn)).addScaledVector(outward, Math.sin(turn)).normalize();
+        // Narrow where it holds, broad a third of the way down, drawn to a point.
+        w = 0.5 * breadth * (0.4 + 0.6 * smooth(0, 0.22, f)) * (1 - 0.6 * smooth(0.7, 1, f)) * (1 + 0.25 * Math.sin(wave + 7 * f));
+      }
       for (let s = 0; s < 3; s++) {
         const q = (v0 + k * 3 + s) * 3;
         const e = s - 1;
@@ -109,7 +121,7 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
         const o = (v0 + k * 3 + s) * 4;
         tones[o] = tone;
         tones[o + 1] = amber;
-        tones[o + 2] = behind ? 0.3 + 0.3 * layer : 0.35 + 0.65 * layer;
+        tones[o + 2] = behind ? 0.3 + 0.3 * layer : (0.35 + 0.65 * layer) * mass;
         tones[o + 3] = yTop - yEnd;
       }
     }
@@ -181,11 +193,14 @@ void main() {
   // The frond's own wrinkles, across it and along. Every fragment of the curtain that is seen is paid for: from 70 m they are not seen, nor asked.
   float wr = 0.5;
   float wr2 = 0.5;
+  // Wet through, but no hose and no mirror: the film on it stands in beads, so the sky on it is a scatter of points and not a sheen.
+  float bead = 0.0;
   float close = 1.0 - smoothstep(2500.0, 4900.0, dot(toLens, toLens));
   if (close > 0.0) {
     vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
     wr = mix(0.5, vnoise(at), close);
     wr2 = mix(0.5, vnoise(at * vec2(2.7, 0.6) + 7.0), close);
+    bead = close * smoothstep(0.915, 0.96, vnoise(vec2(vUv.x * 9.0 + vTone.x * 17.0, vUv.y * vTone.w * 45.0 + vTone.x * 131.0)));
   }
   // A frond is no flat strap: it is ruffled at its edges and troughed along its midrib, so the wet light on it is a line and not a face.
   vec3 du = dFdx(vWorld) * dFdy(vUv.y) - dFdy(vWorld) * dFdx(vUv.y);
@@ -201,8 +216,6 @@ void main() {
   vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.34, 1.0, close);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
-  // Wet through, but no hose and no mirror: the film on it stands in beads, so the sky on it is a scatter of points and not a sheen.
-  float bead = close * smoothstep(0.915, 0.96, vnoise(vec2(vUv.x * 9.0 + vTone.x * 17.0, vUv.y * vTone.w * 45.0 + vTone.x * 131.0)));
   float rough = 0.74 + 0.2 * wr - 0.2 * bead;
   // A frond seen along itself is no mirror of the sky: its skin is ruffled finer than the lens sees, so it is lit as if it stood half toward the lens.
   n = normalize(n + v * max(0.0, 0.55 - dot(n, v)));

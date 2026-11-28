@@ -324,7 +324,12 @@ void main() {
   float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
   float grain = clamp(dot(stone, vec3(0.333)), 0.3, 1.9);
   // Dry broken grey rock: darker on its faces, pale and dusted on its tops.
-  vec3 albedo = mix(vec3(0.265, 0.255, 0.24), vec3(0.35, 0.345, 0.325), top) * mix(vec3(grain), stone, 0.7) * (0.82 + 0.36 * macro);
+  // The crag is no one grey: whole masses of it, some ledges high, stand darker or paler than their neighbours.
+  float mass = smoothstep(0.3, 0.7, vnoise(vec2(arc * 0.045, y * 0.06) + 31.0) * 0.6 + vnoise(vec2(arc * 0.12, y * 0.17) + 3.0) * 0.4);
+  vec3 albedo = mix(vec3(0.265, 0.255, 0.24), vec3(0.35, 0.345, 0.325), top) * mix(vec3(grain), stone, 0.7) * (0.6 + 0.36 * macro + 0.44 * mass);
+  // Water seeps down its faces across the beds: dark wet runs some ledges long, in a few places and not in others.
+  float seep = smoothstep(0.52, 0.7, vnoise(vec2(arc * 0.55, y * 0.045) + 17.0) * 0.65 + vnoise(vec2(arc * 1.9, y * 0.12)) * 0.35) * smoothstep(0.35, 0.6, vnoise(vec2(arc * 0.07, y * 0.09) + 9.0)) * (1.0 - top);
+  albedo *= 1.0 - 0.5 * seep;
   // A seam of the sheet is a dark crack; the joints and bed lines stand at more than their own strength.
   albedo *= 0.62 + 0.38 * smoothstep(0.12, 0.5, hgt);
   // Lichen: rust and ochre crusts in patches some strides across, their edges the sheet's own, on faces and tops alike.
@@ -341,7 +346,9 @@ void main() {
   float strings = smoothstep(0.46, 0.58, vnoise(vec2(arc * 9.0, y * 0.3 + 7.0)) * 0.6 + vnoise(vec2(arc * 23.0, y * 0.8)) * 0.4 + 0.3 * smoothstep(0.35, 0.0, vLay.x));
   float drip = lip * strings * smoothstep(reach, 0.35 * reach, vLay.x) * smoothstep(0.22, 0.42, vnoise(vec2(arc * 0.6, 11.5))) * (1.0 - top);
   float roost = smoothstep(0.34, 0.56, vnoise(vWorld.xz * 0.17 + y * 0.13 + 7.0));
-  float white = max(0.8 * splash * top * (0.4 + 0.6 * roost), 0.9 * drip * (0.5 + 0.5 * roost));
+  // The strings hang where the colony stands thick, and long stretches of lip have none.
+  float flock = smoothstep(0.38, 0.6, vnoise(vec2(arc * 0.11, y * 0.16) + 44.0));
+  float white = max(0.8 * splash * top * (0.4 + 0.6 * roost), 0.9 * drip * (0.12 + 0.88 * flock) * (0.5 + 0.5 * roost));
   albedo = mix(albedo, mix(crust, vec3(0.4, 0.26, 0.07), 0.45) * vec3(0.8, 0.78, 0.7) * (0.75 + 0.25 * grain), 0.9 * patchL * (1.0 - white));
   albedo = mix(albedo, vec3(0.68, 0.675, 0.64) * (0.7 + 0.3 * grain), white);
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (hgt - 0.5);
@@ -362,10 +369,11 @@ void main() {
   albedo = mix(albedo, kelp, weed);
   // The weed is no mirror of the rock: it lies over the stone's cracks, and its straps catch the sky each its own way.
   n = normalize(mix(n, n0 + (round0 * (wk.g - wk.r) + rise * (wl - 0.06)) * 3.0, weed));
-  float rough = mix(mix(mix(0.74, 0.88, top), 0.6, max(band, 0.7 * low)), 0.56, weed);
+  float rough = mix(mix(mix(0.74, 0.88, top), 0.6, max(max(band, 0.7 * low), 0.6 * seep)), 0.56, weed);
   // Ledges of unequal depth: here and there, for some strides along the crag, a ledge overhangs deep and the face under its lip stands in its shade.
-  float deep = smoothstep(0.42, 0.6, vnoise(vec2(arc * 0.09, y * 0.19) + 21.0)) * (1.0 - top) * smoothstep(2.8, 0.2, vLay.x) * (1.0 - white);
-  albedo *= 1.0 - 0.4 * deep;
+  float hang = vnoise(vec2(arc * 0.09, y * 0.19) + 21.0);
+  float deep = smoothstep(0.36, 0.56, hang) * (1.0 - top) * smoothstep(1.2 + 4.0 * hang, 0.2, vLay.x) * (1.0 - white);
+  albedo *= 1.0 - 0.5 * deep;
   float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4) * (1.0 - 0.6 * deep);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
