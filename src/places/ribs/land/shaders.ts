@@ -416,11 +416,23 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec2 uw = vUv / 40.0 + vec2(0.0, 0.93);
   vec2 m = 1.0 - 2.0 * mod(floor(uw), 2.0);
-  vec3 wall = texture2D(tWall, uw).rgb;
-  vec3 wn = texture2D(tWallN, uw).rgb;
   vec2 ud = vUv / 2.7;
-  vec3 det = texture2D(tWeed, ud).rgb;
   vec3 nh = texture2D(tWeedN, ud).rgb;
+  // Slopes are taken here, before any branch: taken inside one they differ from one run to the next.
+  vec3 dpx = dFdx(vWorld);
+  vec3 dpy = dFdy(vWorld);
+  vec2 dux = dFdx(vUv);
+  vec2 duy = dFdy(vUv);
+  float closeW = smoothstep(90.0, 30.0, length(cameraPosition - vWorld));
+  // Within thirty strides the wall's far sheet gives nothing that is seen: there it is not read. The reads are the wall's cost.
+  vec3 wall = vec3(0.1);
+  vec3 wn = vec3(0.5);
+  vec3 det = vec3(0.039);
+  if (closeW < 1.0) {
+    wall = textureGrad(tWall, uw, dux / 40.0, duy / 40.0).rgb;
+    wn = textureGrad(tWallN, uw, dux / 40.0, duy / 40.0).rgb;
+    det = textureGrad(tWeed, ud, dux / 2.7, duy / 2.7).rgb;
+  }
   vec3 n = bump(n0, vWorld, uw, (wn.xy - 0.5) * m * 1.5);
   n = normalize(n + (bump(n0, vWorld, ud, (nh.xy - 0.5) * 1.1) - n0));
   float fine = dot(det, vec3(0.333)) / 0.039;
@@ -429,13 +441,7 @@ void main() {
   vec3 albedo = mix(vec3(dot(wall, vec3(0.333))), wall, 0.85) * mix(1.0, fine, 0.45) * 0.11 * vec3(1.08, 0.96, 0.7) * uDark;
   // Close under a lens the weed is the strap weed itself at its true size (a frond a stride long), laid twice at unlike sizes so that
   // no hank comes round again; the wall's sheet gives only where it is thick and where thin.
-  float closeW = smoothstep(90.0, 30.0, length(cameraPosition - vWorld));
   vec3 nc = n;
-  // Slopes are taken here, before the branch: taken inside it they differ from one run to the next.
-  vec3 dpx = dFdx(vWorld);
-  vec3 dpy = dFdy(vWorld);
-  vec2 dux = dFdx(vUv);
-  vec2 duy = dFdy(vUv);
   if (closeW > 0.001) {
     // Fronds a stride wide and two long: the lens that comes this close looks along the wall, and narrower ones close up to threads.
     vec2 u1 = vUv / vec2(17.0, 8.0) + vec2(0.17, 0.0);
@@ -444,15 +450,26 @@ void main() {
     vec2 s1 = 1.0 / vec2(17.0, 8.0);
     vec2 s2 = 1.0 / vec2(26.0, 12.6);
     vec2 s3 = 1.0 / vec2(11.0, 5.3);
-    vec3 w1 = mix(textureGrad(tWeed, u1, dux * s1, duy * s1).rgb, textureGrad(tWeed, u2, dux * s2, duy * s2).rgb, pickW);
-    vec3 n1 = mix(textureGrad(tWeedN, u1, dux * s1, duy * s1).rgb, textureGrad(tWeedN, u2, dux * s2, duy * s2).rgb, pickW);
+    // One laying or the other, and both only where the one gives way to the other.
+    vec3 w1;
+    vec3 n1;
+    if (pickW <= 0.0) {
+      w1 = textureGrad(tWeed, u1, dux * s1, duy * s1).rgb;
+      n1 = textureGrad(tWeedN, u1, dux * s1, duy * s1).rgb;
+    } else if (pickW >= 1.0) {
+      w1 = textureGrad(tWeed, u2, dux * s2, duy * s2).rgb;
+      n1 = textureGrad(tWeedN, u2, dux * s2, duy * s2).rgb;
+    } else {
+      w1 = mix(textureGrad(tWeed, u1, dux * s1, duy * s1).rgb, textureGrad(tWeed, u2, dux * s2, duy * s2).rgb, pickW);
+      n1 = mix(textureGrad(tWeedN, u1, dux * s1, duy * s1).rgb, textureGrad(tWeedN, u2, dux * s2, duy * s2).rgb, pickW);
+    }
     vec2 u3 = vUv / vec2(11.0, 5.3) + vec2(0.3, 0.7);
     vec3 n3 = textureGrad(tWeedN, u3, dux * s3, duy * s3).rgb;
     // The sheet gives only the broad tone here, read soft: its hanks a stride wide are not this weed's.
     float tone = dot(textureLod(tWall, uw, 5.0).rgb, vec3(0.333)) / 0.1;
     vec3 strap = w1 * vec3(0.24, 0.17, 0.06) * (0.6 + 0.4 * tone) * (0.6 + 0.4 * dot(textureGrad(tWeed, u3, dux * s3, duy * s3).rgb, vec3(0.333)) / 0.039);
     albedo = mix(albedo, strap, closeW);
-    nc = normalize(n0 + 0.12 * (n - n0) + (bumpD(n0, dpx, dpy, dux * s1, duy * s1, (n1.xy - 0.5) * 1.5) - n0) + (bumpD(n0, dpx, dpy, dux * s3, duy * s3, (n3.xy - 0.5) * 0.7) - n0));
+    nc = normalize(n0 + 0.12 * smoothstep(1.0, 0.8, closeW) * (n - n0) + (bumpD(n0, dpx, dpy, dux * s1, duy * s1, (n1.xy - 0.5) * 1.5) - n0) + (bumpD(n0, dpx, dpy, dux * s3, duy * s3, (n3.xy - 0.5) * 0.7) - n0));
     n = normalize(mix(n, nc, closeW));
     fine = mix(fine, dot(w1, vec3(0.333)) / 0.039, closeW);
     wn.z = mix(wn.z, 0.25 + 0.5 * n1.z, closeW);
@@ -461,14 +478,24 @@ void main() {
   float hem = smoothstep(0.42, 0.72, wn.z + 0.25 * (fine - 1.0));
   albedo = mix(albedo, mix(vec3(0.06, 0.044, 0.016) * uDark, vec3(0.075, 0.046, 0.012), closeW) * (0.5 + 0.6 * fine), (0.45 - 0.1 * closeW) * hem);
   // Threads of water running down off the hems.
-  float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
+  // What is nought by its first term is not asked for its others: the wall is half the frame under the near lens.
+  float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9)));
+  if (thread > 0.0) thread *= smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
   // One place on the wall where the water of the shelf above runs off: a band a stride or two wide that wanders as it comes down.
   float along = dot(vWorld.xz - uRill.xy, uRill.zw);
-  float wander = along + 1.1 * (vnoise(vec2(vWorld.y * 0.3, 3.0)) - 0.5) + 0.3 * (vnoise(vec2(vWorld.y * 1.3, 7.0)) - 0.5);
-  float rill = smoothstep(1.0, 0.15, abs(wander)) * smoothstep(50.0, 25.0, length(vWorld.xz - uRill.xy));
-  // It falls in threads that break into drops, not in a ribbon.
-  float fall = smoothstep(0.55, 0.85, vnoise(vec2(wander * 17.0, vWorld.y * 0.5 + uTime * 6.0))) * (0.45 + 0.55 * vnoise(vec2(wander * 3.1, vWorld.y * 2.3 + uTime * 9.0))) * smoothstep(0.3, 0.75, vnoise(vec2(wander * 29.0, vWorld.y * 6.0 + uTime * 16.0)));
-  float runs = rill * smoothstep(0.42, 0.7, vnoise(vec2(wander * 6.0, vWorld.y * 0.4 + uTime * 4.0))) * smoothstep(0.4, 0.7, vnoise(vec2(wander * 21.0, vWorld.y * 3.0 + uTime * 8.0)));
+  float rill = 0.0;
+  float fall = 0.0;
+  float runs = 0.0;
+  // The band wanders seven tenths of a stride at most: farther from its line than that there is none of it.
+  if (abs(along) < 1.8) {
+    float wander = along + 1.1 * (vnoise(vec2(vWorld.y * 0.3, 3.0)) - 0.5) + 0.3 * (vnoise(vec2(vWorld.y * 1.3, 7.0)) - 0.5);
+    rill = smoothstep(1.0, 0.15, abs(wander)) * smoothstep(50.0, 25.0, length(vWorld.xz - uRill.xy));
+  if (rill > 0.0) {
+    // It falls in threads that break into drops, not in a ribbon.
+    fall = smoothstep(0.55, 0.85, vnoise(vec2(wander * 17.0, vWorld.y * 0.5 + uTime * 6.0))) * (0.45 + 0.55 * vnoise(vec2(wander * 3.1, vWorld.y * 2.3 + uTime * 9.0))) * smoothstep(0.3, 0.75, vnoise(vec2(wander * 29.0, vWorld.y * 6.0 + uTime * 16.0)));
+    runs = rill * smoothstep(0.42, 0.7, vnoise(vec2(wander * 6.0, vWorld.y * 0.4 + uTime * 4.0))) * smoothstep(0.4, 0.7, vnoise(vec2(wander * 21.0, vWorld.y * 3.0 + uTime * 8.0)));
+  }
+  }
   albedo *= 1.0 - 0.4 * rill;
   float rough = mix(mix(0.42 + 0.3 * (1.0 - wn.z), mix(0.86, 0.7, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
   float occ = (0.25 + 0.75 * smoothstep(0.08, 0.5, wn.z)) * (0.6 + 0.4 * smoothstep(0.2, 0.7, nh.z)) * (0.6 + 0.4 * vShade);
@@ -492,18 +519,26 @@ void main() {
   occ = mix(occ, (0.45 + 0.55 * smoothstep(0.15, 0.6, rn.z)) * (0.55 + 0.45 * smoothstep(1.0, 0.6, under)), bare);
   }
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
-  c += thread * 0.035 * uDark * skyIrradiance(vec3(0.0, 1.0, 0.0)) * skyOpen(vWorld);
-  // No shade here is black: what faces away still takes the sky and the bounce of the wet floor. The wet hems hold a glint of the sky.
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
+  c += thread * 0.035 * uDark * above * skyOpen(vWorld);
+  // No shade here is black: what faces away still takes the sky and the bounce of the wet floor. The wet hems hold a glint of the sky.
   c = max(c, albedo * above * (0.36 / 3.14159) * (0.6 + 0.4 * occ));
   // Close, the wet shows as small glints on the blades of weed that turn to the sky, not as a sheen over the whole wall.
   c += above * vec3(1.0, 0.9, 0.7) * (0.1 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 60.0) * (0.4 + 0.6 * occ));
   // The black wet between the fronds holds the sky in beads: points of light, none of them a stride from the next.
-  float bead = smoothstep(0.84, 0.92, vnoise(vUv * vec2(43.0, 37.0))) * smoothstep(0.3, 0.7, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * (0.3 + 0.7 * vnoise(vUv * vec2(7.0, 5.0)));
+  float bead = 0.0;
+  if (closeW > 0.0) {
+    bead = smoothstep(0.84, 0.92, vnoise(vUv * vec2(43.0, 37.0)));
+    if (bead > 0.0) bead *= smoothstep(0.3, 0.7, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * (0.3 + 0.7 * vnoise(vUv * vec2(7.0, 5.0)));
+  }
   c += above * (0.6 * closeW * closeW * bead * (0.3 + 0.7 * occ) * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 4.0));
   c += above * (rill * (0.02 + 1.8 * fall * fall));
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
-  float run = smoothstep(0.8, 0.96, vnoise(vec2(vUv.x * 9.0, vUv.y * 0.3 + uTime * 1.6))) * smoothstep(0.55, 0.8, vnoise(vec2(vUv.x * 1.1, vUv.y * 0.13 - uTime * 0.07) + 3.0));
+  float run = 0.0;
+  if (closeW > 0.0) {
+    run = smoothstep(0.8, 0.96, vnoise(vec2(vUv.x * 9.0, vUv.y * 0.3 + uTime * 1.6)));
+    if (run > 0.0) run *= smoothstep(0.55, 0.8, vnoise(vec2(vUv.x * 1.1, vUv.y * 0.13 - uTime * 0.07) + 3.0));
+  }
   c += above * (0.05 * closeW * run * (0.4 + 0.6 * occ));
   c += above * ((1.0 - 0.7 * closeW) * 0.05 * uDark * uDark * hem * (1.0 - bare) * smoothstep(0.55, 0.9, nh.z + 0.3 * vnoise(vUv * 3.0 + uTime * 0.25)));
   gl_FragColor = vec4(rigOut(c), 1.0);
