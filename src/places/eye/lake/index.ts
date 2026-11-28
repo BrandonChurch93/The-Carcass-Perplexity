@@ -240,7 +240,7 @@ void main() {
       // The long ones, as long as the swell that makes them is wide, cross the whole lake.
       float reach = j < 4 ? (40.0 + 45.0 * fj) * (1.0 + 0.9 * uWake * (1.0 - uLeave.x)) : 350.0 + 550.0 * (fj - 4.0);
       // A length that has died on the way here is not counted.
-      if (from > 3.2 * reach) continue;
+      if (from > 2.7 * reach) continue;
       // Nor one too short for the pixels here: it would be no more than a softer mirror.
       float told = smoothstep(1.2, 0.45, ring.x * fp);
       if (told <= 0.0) continue;
@@ -544,7 +544,7 @@ void main() {
     // buttresses and back in gullies; where the look runs out over the shaft it meets nothing, and the water is black-blue.
     float lapAt = atan(p.x, p.z) * 480.0;
     float towards = dot(rf.xz, vec2(lip.z, -lip.y)) / fall;
-    float sheer = 4.2 * (0.4 + 1.2 * vnoise(vec2(lapAt / 7.5, 3.0)) + 0.35 * (vnoise(vec2(lapAt / 1.9, 11.0)) - 0.5));
+    float sheer = 1.0 * (0.45 + 1.1 * vnoise(vec2(lapAt / 7.5, 3.0)) + 0.35 * (vnoise(vec2(lapAt / 1.9, 11.0)) - 0.5));
     float meets = 1.0 + sheer * towards;
     // Under the lip a ledge of the shelf's own stone stands out a little way, here a stride and there three, before the face drops.
     float ledgeOut = 0.5 + 3.4 * vnoise(vec2(lapAt / 5.3, 9.0)) * vnoise(vec2(lapAt / 23.0, 4.0));
@@ -553,7 +553,7 @@ void main() {
     float lipDeep = 0.25 + 0.7 * ledgeOut;
     float outAt = (inside - towards * onLedge) / ledgeOut;
     // The ledge rounds off into the drop: its outer half goes down faster than it goes out.
-    down = outAt < 1.0 ? onLedge + 7.0 * smoothstep(0.35, 1.0, outAt) * outAt : meets > 0.05 ? (lipDeep + 7.0 + sheer * (inside - ledgeOut)) / meets : 400.0;
+    down = outAt < 1.0 ? onLedge + 2.5 * smoothstep(0.35, 1.0, outAt) * outAt : meets > 0.05 ? (lipDeep + 2.5 + sheer * (inside - ledgeOut)) / meets : 400.0;
     b = p.xz + rf.xz * (min(down, 60.0) / fall);
 #endif
     vec3 at = vec3(p.x, 0.0, p.z);
@@ -563,10 +563,14 @@ void main() {
     vec3 e = skyDown * open + uSunColour * 0.05;
 #if EYE_EDGE
     // Beside the edge the sun that lights the lip goes on down its face for a few metres, bent steep by the surface: the top of the wall is pale.
-    e += uSunColour * (0.55 * exp(-down / 3.5));
+    e = e * 2.1 + uSunColour * (0.14 * exp(-down / 6.0));
 #endif
     // Down to the rock from the sky overhead, and up again along the look.
+#if EYE_EDGE
+    vec3 through = exp(-uAbsorb * 0.8 * down * (1.0 + 1.0 / fall));
+#else
     vec3 through = exp(-uAbsorb * mix(1.5, uClear, rimEye) * down * (1.0 + 1.0 / fall));
+#endif
     vec3 deep = uDeep * skyDown * open * (1.0 - through);
     noRock = 1.0 - smoothstep(0.08, 0.6, through.b);
     // Where no light comes back from the rock it is not looked for.
@@ -726,7 +730,7 @@ void main() {
       float gilt = smoothstep(0.4, 1.0, held);
       refl = max(mix(vec3(dot(refl, vec3(0.3, 0.5, 0.2))), refl, 1.0 + 0.9 * gilt), 0.0) * (1.0 + 0.8 * gilt);
       // Between the streaks the water holds the sky over the wall: a cool slate, not the wall's brown let run.
-      refl = mix(refl, skyRadiance(normalize(vec3(rd.x, 0.6, rd.z))) * vec3(0.15, 0.2, 0.26), 0.7 * (1.0 - smoothstep(0.2, 0.55, held)));
+      if (held < 0.55) refl = mix(refl, skyRadiance(normalize(vec3(rd.x, 0.6, rd.z))) * vec3(0.15, 0.2, 0.26), 0.7 * (1.0 - smoothstep(0.2, 0.55, held)));
     }
     // Whatever stands in the water or at its edge, drawn once more from under it.
 #if EYE_MIRRORED
