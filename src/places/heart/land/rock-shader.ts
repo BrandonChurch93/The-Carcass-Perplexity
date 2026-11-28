@@ -206,23 +206,34 @@ void main() {
   // The crust itself is crumbs of a finger to a hand, heaped along that crack (rocks.ts): three in four are lemon through, the rest dark rock.
   float crumbs = smoothstep(0.6, 0.3, segmentDistance(vWorld.xz, uCrackB)) * (1.0 - smoothstep(0.085, 0.11, size)) * smoothstep(0.25, 0.3, fract(rnd * 3.7));
   albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.035), vec3(0.5, 0.42, 0.09), smoothstep(0.3, 0.8, height)) * (0.6 + 0.5 * fract(rnd * 7.3)), 0.92 * crumbs);
-  // The vent's own crust, as its picture has it: lemon crystals on what looks up within a stride of the vent, in broken patches a hand or two
-  // across with the bare rock between them, olive where they thin out. The rock they stand on is sooted near black by the fume.
+  // The vent's own crust: crumbs of sulphur a finger across, each standing on the rock with its own lit top and dark foot. They gather where
+  // crumbs lie, round the feet of the stones and in their hollows, thick near the vent and thinning to single crumbs: the crust has no edge
+  // but the edges of its crumbs. An olive stain fades out round it. The rock they stand on is sooted near black by the fume.
   float dv = distance(vWorld.xz, 0.5 * (uCrackB.xy + uCrackB.zw));
   float fume = smoothstep(1.7, 0.6, dv) * (1.0 - afloat);
   // The fume and the crag's fallen blocks stand between the fire and the stones round the vent: its light thins over three strides.
   float veil = smoothstep(3.4, 1.3, dv) * (1.0 - afloat);
   float crust = 0.0;
   if (veil > 0.0) {
-    float reach = smoothstep(1.15, 0.3, dv);
-    float lump = vnoise3(vWorld / 0.05 + 6.4);
-    float grit = vnoise3(vWorld / 0.017 + 3.9);
-    float torn = smoothstep(0.425, 0.525, vnoise3(vWorld / 0.14 + 1.3) + 0.3 * (reach - 0.62));
-    // It lies low: on the ground, on the small stones and round the feet of the boulders, whose tops stay black.
-    float low = 1.0 - smoothstep(0.34, 0.62, vWorld.y - max(land.r, 0.0));
-    crust = reach * torn * low * smoothstep(0.08, 0.5, n0.y + 0.2 * (0.5 - vCave)) * smoothstep(0.3, 0.46, lump + 0.35 * (grit - 0.5));
+    float reach = smoothstep(1.25, 0.25, dv);
+    vec3 q = vWorld / 0.022 + 6.4;
+    float c0 = vnoise3(q);
+    float cx = vnoise3(q + vec3(0.28, 0.0, 0.0));
+    float cz = vnoise3(q + vec3(0.0, 0.0, 0.28));
+    float grit = vnoise3(vWorld / 0.007 + 3.9);
+    float soft = vnoise3(vWorld / 0.21 + 1.3);
+    float over = vWorld.y - ground;
+    float feet = 1.0 - smoothstep(0.04, 0.2 + 0.14 * soft, over);
+    float hollow = smoothstep(0.58, 0.28, vCave) * (1.0 - smoothstep(0.34, 0.62, over));
+    float dens = clamp(reach * max(feet, 0.8 * hollow) * smoothstep(0.0, 0.45, n0.y + 0.2 * (0.5 - vCave)) * (0.45 + 0.9 * soft), 0.0, 1.0);
+    float edge = 1.0 - 1.15 * dens;
+    crust = smoothstep(edge - 0.1, edge + 0.1, c0 + 0.25 * (grit - 0.5)) * smoothstep(0.02, 0.12, dens);
     albedo *= mix(1.0, 0.4, fume);
-    albedo = mix(albedo, mix(vec3(0.36, 0.27, 0.035), vec3(1.0, 0.7, 0.08), smoothstep(0.4, 0.72, lump)) * (0.7 + 0.6 * grit), 0.96 * crust);
+    albedo = mix(albedo, albedo * vec3(1.6, 1.3, 0.5) + vec3(0.03, 0.024, 0.004), 0.6 * smoothstep(0.0, 0.6, dens));
+    float top = smoothstep(edge, edge + 0.35, c0);
+    albedo = mix(albedo, mix(vec3(0.36, 0.27, 0.035), vec3(1.0, 0.7, 0.08), smoothstep(0.25, 0.7, dens)) * (0.5 + 0.75 * top) * (0.8 + 0.4 * grit), 0.96 * crust);
+    n = normalize(n - vec3(cx - c0, 0.0, cz - c0) * 3.2 * crust);
+    occ *= mix(1.0, 0.55 + 0.45 * top, crust);
   }
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld) * (1.0 - afloat) * (1.0 - crust));
   // Undersides and the faces that lean over see the ground, not the sky.

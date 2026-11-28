@@ -39,6 +39,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tBoulder: { value: ctx.assets.texture('mat/boulder.jpg') },
     tBoulderNh: { value: ctx.assets.texture('mat/boulder-nh.png', { kind: 'data' }) },
     tSulphur: { value: ctx.assets.texture('mat/sulphur.jpg') },
+    tAa: { value: ctx.assets.texture('mat/aa-nh.jpg', { kind: 'data', anisotropy: 4 }) },
     uCrackA: { value: new THREE.Vector4((cracks[0] as Crack).ax, (cracks[0] as Crack).az, (cracks[0] as Crack).bx, (cracks[0] as Crack).bz) },
     // Where the vent's stain sits on the crag of the line view: a point high on its lake face, and the stain's reach.
     uStain: { value: new THREE.Vector4(-505.0, 1.9, 203.6, 2.6) },
