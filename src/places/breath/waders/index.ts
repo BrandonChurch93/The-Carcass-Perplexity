@@ -1,10 +1,10 @@
 // The waders: the herd in the tide channel, the far flock on the shallows, and the one that stands over the drop at the rim.
 // Each animal is a skin of tubes posed on the processor from the time alone (animal.ts); who each one is and what it does is in herd.ts.
 import * as THREE from 'three';
-import { NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, shotSpan } from '../shared/anchors';
+import { NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, keySeconds, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
-import { Wader, type Env } from './animal';
+import { Wader, shuffle, type Env } from './animal';
 import { makeHerd } from './herd';
 import { DEPTH_FRAGMENT, FRAGMENT, VERTEX } from './material';
 import { makeDrips } from './drips';
@@ -98,6 +98,10 @@ export function create(ctx: Context): Piece {
   // Staged: in the view of the rim it stands clear of the growth, before it, where the picture of the rim has it.
   const RIM_NEAR = { x: -28.0, z: 17.4, heading: 38 };
   const rimUp = rim.plan.up;
+  // Staged: in the wide view it comes up to the rim in two strides, a foot at a time, stands at the moment of the picture, and then turns
+  // toward the drop on the spot. In the other views it stands.
+  const WIDE_KEY = keySeconds('breath-0');
+  const rimSteps = [...shuffle(rim.b, WIDE_KEY - 3.56, 0.7 * rim.b.k, 0, 0, 0.42, 0.01), ...shuffle(rim.b, WIDE_KEY - 1.84, 0.7 * rim.b.k, 0, 0, 0.42, 0.01), ...shuffle(rim.b, WIDE_KEY + 0.8, 0.12 * rim.b.k, 0, 0.45, 0.55, 0.1, 1)];
   const rimCarry = rim.plan.carry;
   const MIST_UP: [number, number][] = [[-5, 60]];
   const RAD = Math.PI / 180;
@@ -109,6 +113,12 @@ export function create(ctx: Context): Piece {
   const wide = shotSpan('breath-01');
   const WIDE_FROM = { x: -41.5, z: 42.3 };
   const outer = herd.map((animal, i) => (i >= 3 && i !== NEAR_WADERS.length && wading.includes(i) ? { animal, x: animal.plan.x, z: animal.plan.z } : null)).filter((o) => o !== null);
+
+  // Staged: the far herd stands in its row for the wide view and the view down the shaft. The three close views that follow look low across the
+  // flats, where the pictures have a few small ones far off and no more: there one in six of the row is where it was and the others are far
+  // out on the shallows to the west, out of every lens.
+  const row = members.map((m, i) => (m.row && hash(i * 1.7 + 71) > 0.16 ? { animal: herd[i] as Wader, x: m.plan.x } : null)).filter((o) => o !== null);
+  const ROW_OUT = 2400;
 
   // Staged: in the wide view the three in the channel do not stand in a row all one way: two of them have turned and stand apart.
   const TURNED: [number, number, number][] = [[0, 0, 0], [-1.5, -5.5, -80], [3.5, 2, 140]];
@@ -128,12 +138,17 @@ export function create(ctx: Context): Piece {
       rim.plan.heading = (misted ? MIST.heading : nearRim ? RIM_NEAR.heading : RIM_WADER.heading) * RAD;
       rim.plan.up = misted ? MIST_UP : rimUp;
       rim.plan.carry = misted ? 0.55 : nearRim ? 2.3 : rimCarry;
+      const inWide = at >= wide[0] && at <= wide[1];
+      rim.plan.steps = inWide ? rimSteps : [];
+      rim.plan.stepsRef = WIDE_KEY;
       veiled.value.set(MIST.x, MIST.z, misted ? 1 : 0);
-      const out = at >= wide[0] && at <= wide[1] ? 1.5 : 1;
+      const out = inWide ? 1.5 : 1;
       for (const o of outer) {
         o.animal.plan.x = WIDE_FROM.x + (o.x - WIDE_FROM.x) * out;
         o.animal.plan.z = WIDE_FROM.z + (o.z - WIDE_FROM.z) * out;
       }
+      const few = at > shaft[1];
+      for (const o of row) o.animal.plan.x = o.x - (few ? ROW_OUT : 0);
       trio.forEach((o, i) => {
         const turn = out > 1 ? (TURNED[i] as [number, number, number]) : [0, 0, 0];
         o.animal.plan.x = o.x + (turn[0] as number);
