@@ -1205,7 +1205,7 @@ export function create(ctx: Context): Piece {
   const wet = [...new Set([...ringed, ...feeders.map((f, i) => (f.habit === 2 ? i : -1)).filter((i) => i >= 0)])];
   const splash = new Spray(wet.length * SPLASH + FLEEING * KICK_DROPS, { ...rig.uniforms, tFoam: { value: foamTexture(ctx.rng('kite-wings-splash')) } });
   /** Sheets a tuft at work throws at once, and those of one footfall of a runner. */
-  const SHEETS = 16;
+  const SHEETS = 26;
   const FOOT_SHEETS = 3;
   const thrown = new Thrown(wet.length * (SHEETS + 2 * 2 * FOOT_SHEETS), rig.uniforms);
   const lands: At = { x: 0, z: 0, yaw: 0 };
@@ -1233,7 +1233,7 @@ export function create(ctx: Context): Piece {
         const hard = (0.9 + 0.6 * Math.min(1, tuft.shake)) * Math.sqrt(f.size) * (0.7 + 0.6 * rand(key, born + 4));
         // Off to one side of the neck or the other, and ahead of it more often than back.
         const way = P.yaw + P.headYaw + (rand(key, born + 5) < 0.5 ? 1 : -1) * (0.3 + 2.8 * rand(key, born + 7) * (0.4 + 0.6 * rand(key, born + 8)));
-        thrown.put(tuft.x, LEVELS.pool + 0.01, tuft.z, age, way, 0.9 + 1.2 * rand(key, born + 9), (1.0 + 1.4 * rand(key, born + 11)) * hard, (1.4 + 1.3 * rand(key, born + 13)) * hard, life, rand(key, born + 15), 0.95, (0.12 + 0.18 * rand(key, born + 17)) * f.size);
+        thrown.put(tuft.x, LEVELS.pool + 0.01, tuft.z, age, way, 0.6 + 1.1 * rand(key, born + 9), (0.9 + 1.3 * rand(key, born + 11)) * hard, (1.7 + 1.7 * rand(key, born + 13)) * hard, life, rand(key, born + 15), 2.2, (0.12 + 0.18 * rand(key, born + 17)) * f.size);
       }
     } else if (f.habit === 2 && lp === null) {
       const step = RUN_STEP * f.size;
@@ -1793,7 +1793,9 @@ export function create(ctx: Context): Piece {
         }
         const bout = smooth(0.25, 0.45, heldAt(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
         const y = s.y + 1.2 * Math.sin(at * 0.6 + s.seed * 20);
-        const amp = i < SKEIN ? 0.25 + 0.75 * bout : lp === null ? 0.7 : 1;
+        // Once the wall is through nothing glides: they beat away at full stroke.
+        const alarm = lp === null ? smooth(BORE + 0.1, BORE + 0.6, seconds) : 0;
+        const amp = i < SKEIN ? 0.25 + 0.75 * Math.max(bout, alarm) : lp === null ? 0.7 + 0.3 * alarm : 1;
         if (lp === null) {
           straight(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp);
           escort.put(i, F);

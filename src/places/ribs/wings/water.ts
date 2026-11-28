@@ -68,7 +68,7 @@ void main() {
   vec3 n = dot(vNormal, vNormal) > 1e-8 ? normalize(vNormal) : vec3(0.0, 1.0, 0.0);
   if (dot(n, view) < 0.0) n = -n;
   // Torn into strings from the first, least at its foot and most at its lip, and everywhere as it falls. The strings run the way the water flies.
-  float torn = clamp(0.36 + 0.8 * part + 0.42 * (1.0 - v), 0.0, 1.0);
+  float torn = clamp(0.44 + 0.8 * part + 0.42 * (1.0 - v), 0.0, 1.0);
   float strings = 0.6 * vnoise(vec2(u * 5.5 + own * 91.0, v * 1.9 + own * 13.0)) + 0.4 * vnoise(vec2(u * 15.0 + own * 7.0, v * 2.6 + own * 29.0));
   float edge = 0.78 * torn - 0.22;
   float cover = smoothstep(edge, edge + 0.2, strings);
