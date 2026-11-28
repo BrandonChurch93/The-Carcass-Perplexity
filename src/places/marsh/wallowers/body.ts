@@ -799,7 +799,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.3) : 1 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.3) : look.shade ? 0.75 : 1 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
