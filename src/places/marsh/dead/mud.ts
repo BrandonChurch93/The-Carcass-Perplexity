@@ -3,15 +3,44 @@ import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
+/** Where the stuck one is in its heave, 0 to 1: it gathers, strains up, holds and sinks back, once in 5.2 seconds. */
+export function heavePhase(seconds: number): number {
+  const c = seconds / 5.2 + 0.3;
+  return c - Math.floor(c);
+}
+
+// What the mud does with a heave. u is where the heave is (0 to 1, or less than 0 for mud nothing heaves in); r is the metres from the
+// body. A swell goes out from it at half a metre a second and dies within three; a smaller one follows as the body sinks back. What comes
+// back: x, the swell's height in metres; y, its slope outward; z, how wet the mud the swell has just crossed still is.
+export const HEAVE_GLSL = /* glsl */ `
+vec3 heaveSwell(float r, float u) {
+  float far = exp(-max(r - 0.9, 0.0) * 0.45);
+  float t = (u - 0.08) * 5.2;
+  float at = 0.55 + 0.5 * t;
+  float d = (r - at) / 0.22;
+  float a = 0.065 * smoothstep(0.0, 0.5, t) * (1.0 - smoothstep(2.6, 4.7, t)) * far * exp(-d * d);
+  float t2 = (u - 0.5) * 5.2;
+  float at2 = 0.55 + 0.5 * t2;
+  float d2 = (r - at2) / 0.2;
+  float b = 0.03 * smoothstep(0.0, 0.4, t2) * (1.0 - smoothstep(1.4, 2.5, t2)) * far * exp(-d2 * d2);
+  float wet = smoothstep(at + 0.15, at - 0.1, r) * smoothstep(at - 1.1, at - 0.3, r) * smoothstep(0.0, 0.6, t) * (1.0 - smoothstep(3.2, 4.75, t));
+  return vec3(a + b, -2.0 * (a * d / 0.22 + b * d2 / 0.2), wet);
+}`;
+
 const VERTEX = /* glsl */ `
 attribute float aEdge;
 uniform sampler2D tMudNh;
+uniform vec3 uHeave;
+${HEAVE_GLSL}
 varying vec3 vWorld;
 varying float vEdge;
 void main() {
   // Clods: the mud picture's own height lifts it, least at the edge where it runs out over the crust.
   float clod = 1.5 * textureLod(tMudNh, position.xz / 2.0, 2.0).b;
   vWorld = position + vec3(0.0, (clod - 0.6) * 0.06 * smoothstep(0.0, 0.35, aEdge), 0.0);
+  // The heave: the mud at the body comes up with it, and the swell lifts every clod it passes under.
+  float rr = (1.0 - aEdge) * 2.2;
+  vWorld.y += heaveSwell(rr, uHeave.z).x + 0.03 * uHeave.x * exp(-rr * rr / 0.6) * step(0.0, uHeave.z);
   vEdge = aEdge;
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
@@ -21,13 +50,14 @@ precision highp float;
 varying vec3 vWorld;
 varying float vEdge;
 uniform vec4 uAt;
-uniform vec2 uHeave;
+uniform vec3 uHeave;
 uniform vec3 uMud;
 uniform float uWetness;
 uniform sampler2D tMud;
 uniform sampler2D tMudNh;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+${HEAVE_GLSL}
 const vec3 MUD_MEAN = vec3(0.318, 0.179, 0.155);
 // The sheet's level from the pixel's short side, the long side counted at most two and a half times it: a skimming lens keeps the clods.
 float skim(vec2 gx, vec2 gy) {
@@ -45,6 +75,8 @@ void main() {
   float live = smoothstep(0.7, 1.0, uWetness);
   // Each heave sends a slow fold out through the mud, and it dies within two metres.
   float fold = cos(r * 5.5 - uHeave.y) * uHeave.x * exp(-r * 0.7);
+  // (And a swell that goes out from the one that is stuck.)
+  vec3 swell = heaveSwell((1.0 - vEdge) * 2.2, uHeave.z);
   float lW = skim(gx / 2.0, gy / 2.0);
   float lF = skim(gx / 1.37, gy / 1.37);
   vec2 uF = vec2(p.x * 0.8 - p.y * 0.6, p.x * 0.6 + p.y * 0.8) / 1.37 + 0.3;
@@ -66,6 +98,9 @@ void main() {
   float low = smoothstep(0.5, 0.34, h0);
   slope *= 1.0 - 0.85 * low * (1.0 - live);
   vec3 n = normalize(vec3(-slope.x, 1.0, slope.y));
+  // (The swell leans every clod it is under, outward before its crest and back behind it.)
+  vec2 outward = q / max(r, 0.05);
+  n = normalize(n - vec3(outward.x, 0.0, outward.y) * swell.y * 2.0);
   vec3 v = normalize(cameraPosition - vWorld);
   // Brine stands in the hollows; the high places have begun to dry and pale.
   float dry = smoothstep(0.55, 0.75, h0) * smoothstep(0.3, 0.8, vEdge);
@@ -81,7 +116,10 @@ void main() {
   // Mud thrown up by one that is stuck lies in clods on the liquid of its wallow (the land's, which gives back the sky): pushed up
   // most in a ring round the body, in islands further out, and dark and wet where each clod goes under.
   float stand = 0.8 * textureLod(tMudNh, p / 2.0, max(lW, 3.5)).b + 0.2 * h0 + 0.2 * exp(-pow((vEdge - 0.62) / 0.2, 2.0)) - 0.14 * smoothstep(0.5, 0.1, vEdge);
+  // (The crest takes the low clods under as it passes; what it has crossed is left wet and dark, and dries back slowly.)
+  stand -= 1.4 * swell.x;
   float isle = mix(smoothstep(0.5, 0.52, stand), 1.0, live);
+  albedo *= (1.0 - 0.6 * swell.z * (1.0 - live)) * (1.0 - min(abs(swell.y) * 1.1, 0.4));
   albedo *= mix(0.6 + 0.4 * smoothstep(0.51, 0.6, stand), 1.0, live);
   albedo = mix(albedo, mix(vec3(0.085, 0.012, 0.01), vec3(0.03, 0.007, 0.006), live), 0.9 * pool);
   n = normalize(mix(n, vec3(0.0, 1.0, 0.0), mix(0.9, 0.97, live) * pool));
@@ -98,7 +136,7 @@ void main() {
   // (Told the view is square on where a live one treads, as the land's trodden mud is: the wet is given below, clod by clod.)
   vec3 c = rigShade(vWorld, n, normalize(mix(v, n, mix(0.75, 0.9, live))), albedo, rough, occ);
   // (The stuck one's clods are wet too: a duller, broader glint.)
-  c += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.9, 0.85) * (1.0 - live) * occ * 0.22 * pow(max(dot(n, normalize(v + normalize(vec3(-0.86, 0.9, 0.5)))), 0.0), 40.0);
+  c += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.9, 0.85) * (1.0 - live) * occ * (0.22 + 0.5 * swell.z) * pow(max(dot(n, normalize(v + normalize(vec3(-0.86, 0.9, 0.5)))), 0.0), 40.0);
   if (live > 0.0) {
     // A pit's brine gives back a part of the sky, red through; a clod throws a small sharp glint from the face it turns to the light.
     vec3 rm = reflect(-v, n);
@@ -114,7 +152,7 @@ void main() {
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
 }`;
 
-export function mudWallow(ctx: Context, x: number, z: number, dir: [number, number], size = 1, tone: [number, number, number] = [0.1, 0.072, 0.054], name = 'dead-mud', wetness = 0, hollow = 0, fine = true): { mesh: THREE.Mesh; set(heave: number, seconds: number): void; dispose(): void } {
+export function mudWallow(ctx: Context, x: number, z: number, dir: [number, number], size = 1, tone: [number, number, number] = [0.1, 0.072, 0.054], name = 'dead-mud', wetness = 0, hollow = 0, fine = true): { mesh: THREE.Mesh; set(heave: number, seconds: number, phase?: number): void; dispose(): void } {
   const rng = ctx.rng(name);
   // A stain round one of the dead is a low dark patch: it wants a tenth of the points the mud a live one treads does.
   const RINGS = fine ? 40 : 14;
@@ -156,7 +194,7 @@ export function mudWallow(ctx: Context, x: number, z: number, dir: [number, numb
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
   geometry.setAttribute('aEdge', new THREE.Float32BufferAttribute(edge, 1));
   geometry.setIndex(index);
-  const uHeave = { value: new THREE.Vector2(0, 0) };
+  const uHeave = { value: new THREE.Vector3(0, 0, -1) };
   const material = new THREE.ShaderMaterial({
     uniforms: { ...ctx.rig.uniforms, uAt: { value: new THREE.Vector4(x, z, 3.0 * size, 0) }, uHeave, uMud: { value: new THREE.Vector3(tone[0], tone[1], tone[2]) }, uWetness: { value: wetness }, tMud: { value: ctx.assets.texture('mat/mud.jpg', { kind: 'colour', anisotropy: 4 }) }, tMudNh: { value: ctx.assets.texture('mat/mud-nh.png', { kind: 'data', anisotropy: 4 }) } },
     vertexShader: VERTEX,
@@ -170,8 +208,8 @@ export function mudWallow(ctx: Context, x: number, z: number, dir: [number, numb
   mesh.renderOrder = 1;
   return {
     mesh,
-    set: (heave, seconds) => {
-      uHeave.value.set(heave, seconds * 1.6);
+    set: (heave, seconds, phase = -1) => {
+      uHeave.value.set(heave, seconds * 1.6, phase);
     },
     dispose: () => {
       geometry.dispose();
