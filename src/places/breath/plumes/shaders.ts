@@ -11,6 +11,7 @@ export const SWAY_GLSL = /* glsl */ `
 uniform float uSeconds;
 uniform float uSurge;
 uniform vec2 uWind;
+uniform float uStagger;
 // The wind at a place, 0 in a lull to 1 in a gust: three trains of gusts of unlike length that travel to the lee at their own pace,
 // the longest 19 m from crest to crest at 4 m/s, the shortest shorter than a bush, so a gust is seen to go through it.
 float gustAt(vec2 xz, vec2 lee, float t) {
@@ -27,12 +28,18 @@ vec3 swayAt(vec3 p, vec4 bush, float tall, float u, float phase, float t, float 
   float uu = u * u;
   // At the lip the air is drawn to the shaft: a bush is combed that way, and that way the gusts go through it and bow it further.
   vec2 lee = -normalize(bush.xz);
-  float g = gustAt(p.xz, lee, t);
+  // A gust does not take the bush as one: each stalk stands in its own air, answers a little after it comes, and the bend runs out along
+  // the limb from the holdfast. A stiff stalk bows only at the gust's height and is up again early; a slack one stays down longer.
+  // That is worked for the plume the lens stands by (uStagger 1); the growth seen from far off moves as it did.
+  float g = gustAt(p.xz + lee * (uStagger * (1.6 * fract(phase * 5.3) - 0.8)), lee, t - uStagger * (0.3 * fract(phase * 2.9) + 0.2 * u));
+  g = pow(g, mix(1.0, 0.85 + 0.4 * fract(phase * 4.3), uStagger));
+  float give = mix(1.0, 0.85 + 0.35 * fract(phase * 7.1), uStagger);
   // The stalk leans with the gust and springs back on its own beat, the spring running out to its end; no two stalks keep time.
   float beat = 1.5 + 0.5 * fract(phase * 3.7);
   float own = sin(t * beat - u * 2.6 + phase) + 0.4 * sin(t * beat * 2.3 - u * 5.0 + phase * 1.9);
   float whole = sin(t * 0.83 + bush.w - r * 1.7);
-  float bend = (0.28 * (g - 0.4) + 0.05 * whole) * a + 0.036 * own * (0.35 + g) * uu;
+  // The plume by the lens stands a little further over to the lee than its limbs were grown: it has been blown that way all its life.
+  float bend = (0.28 * give * (g - 0.4) + 0.05 * whole + 0.08 * uStagger) * a + 0.036 * own * (0.35 + g) * uu;
   vec2 push = lee * (bend * tall);
   // Leaning over, an arched limb goes down; let go, it comes up again.
   float lift = (-0.45 * bend + 0.012 * own * (0.35 + g) * uu) * tall;
@@ -77,6 +84,7 @@ attribute vec4 aB;
 attribute vec4 aC;
 attribute vec4 aSway;
 attribute vec4 aTint;
+attribute vec4 aFace;
 uniform float uPixel;
 uniform vec4 uBush;
 uniform float uTall;
@@ -86,6 +94,8 @@ varying vec3 vSide;
 varying vec4 vTint;
 varying vec4 vAt;
 varying vec3 vLight;
+varying vec4 vFace;
+varying float vBead;
 ${RIG_GLSL}
 ${SWAY_GLSL}
 void main() {
@@ -97,10 +107,24 @@ void main() {
   float far = length(toEye);
   vec3 side = normalize(cross(tangent, toEye));
   // It thins to a point. Far off it is thinner than a pixel and would break into dots: there it is drawn a pixel wide.
-  float thin = 1.0 - 0.8 * s * sqrt(s);
   float least = 0.55 * uPixel * far;
-  float wide = max(aA.w * thin, least);
+  // A blade is flat flesh with a thickness (aFace.w of its width): what the lens sees of it is the ellipse of its section, as wide as
+  // that is from where the lens stands, and its face is the part of that ellipse turned to the lens. A thread (1) is round.
+  float k = aFace.w;
+  vec3 broad = cross(tangent, aFace.xyz);
+  float bl = length(broad);
+  broad = bl > 1e-3 ? broad / bl : side;
+  vec3 flat_ = cross(broad, tangent);
+  float cw = dot(side, broad);
+  float cn = dot(side, flat_);
+  float shown = sqrt(cw * cw + k * k * cn * cn);
+  float lance = (0.45 + 0.55 * smoothstep(0.0, 0.22, s)) * (1.0 - 0.94 * s * s);
+  float thin = k < 0.99 ? lance : 1.0 - 0.8 * s * sqrt(s);
+  float wide = max(aA.w * thin * shown, least);
   p += side * (position.y * wide);
+  vec3 d = toEye / far;
+  vFace = vec4(normalize(broad * (dot(d, broad) * k * k) + flat_ * dot(d, flat_) + d * 1e-3), k);
+  vBead = wide / max(length(aB.xyz), 1e-4);
   vWorld = p;
   vAlong = tangent;
   vSide = side;
@@ -120,15 +144,24 @@ varying vec3 vSide;
 varying vec4 vTint;
 varying vec4 vAt;
 varying vec3 vLight;
+varying vec4 vFace;
+varying float vBead;
 uniform float uGlow;
+uniform float uShade;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 t = normalize(vAlong);
   float across = vAt.y;
-  // The strip is a round thread: its normal turns from one edge to the other.
-  vec3 n = normalize(normalize(vSide) * across + v * sqrt(max(1.0 - across * across, 0.0)));
+  // A thread is round: its normal turns from one edge to the other. A blade holds its face across its middle, is keeled along its
+  // midrib and rolls over only at its rims.
+  float blade = 1.0 - vFace.w;
+  float ar = abs(across);
+  float roll = mix(across, across * ar * ar, blade);
+  vec3 sideN = normalize(vSide);
+  vec3 facing = blade > 0.01 ? normalize(vFace.xyz) : v;
+  vec3 n = normalize(sideN * (roll + 0.45 * blade * sign(across) * (1.0 - ar)) + facing * sqrt(max(1.0 - roll * roll, 0.0)));
   float s = vAt.x;
   float dead = step(1.5, vAt.z);
   float tone = fract(vAt.z);
@@ -145,6 +178,8 @@ void main() {
   float end = smoothstep(0.6, 1.0, s) * (0.3 + 0.7 * smoothstep(0.7, 1.2, tone + 0.5 * own));
   vec3 albedo = mix(wine * (0.6 + 0.4 * smoothstep(0.0, 0.35, s)), vec3(0.45, 0.16, 0.16), 0.5 * end);
   albedo = mix(albedo, vec3(0.2, 0.12, 0.07) * (0.6 + 0.8 * tone), dead);
+  // A blade is flesh with blood in it, not a dark wire.
+  albedo = mix(albedo, albedo * 1.7 + vec3(0.035, 0.0, 0.006), blade * (1.0 - dead));
   // Far off a thread is drawn wider than it is and the gaps between threads are gone: what is seen there is the light among them,
   // and the dark between them is in it.
   float mass = clamp((vLight.z - 1.0) / 6.0, 0.0, 1.0);
@@ -152,16 +187,17 @@ void main() {
   // The light that reaches it: the sky from above, less of it the deeper in the bush, and the sun where it finds a way in. A thin wet
   // thread takes the light on all sides of it.
   float wrap = 0.2 + 0.8 * max(dot(n, uSunDir), 0.0);
-  vec3 colour = albedo * (skyIrradiance(n) * (open * (0.32 + 0.68 * skyLeft)) + uSunColour * (3.14159 * wrap * lit * (0.05 + 0.95 * sunLeft))) / 3.14159;
+  vec3 colour = albedo * (skyIrradiance(n) * (open * mix(0.32 + 0.68 * skyLeft, 0.55 + 0.45 * skyLeft, blade)) + uSunColour * (3.14159 * wrap * lit * (0.05 + 0.95 * sunLeft))) / 3.14159;
   // Against the low sun the light comes through: every thread between the lens and the sun that the sun still reaches is ruby, hot
   // at its edges and at its pale end. Deep in the bush nothing comes through and it stays near black.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = across * across;
-  float through = (0.06 + 0.94 * against * against) * sunLeft * sqrt(sunLeft) * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
+  // A blade is thin flesh over its whole width: lit from behind, all of it glows, and it glows deeper into the bush than a thread does.
+  float through = (0.06 + 0.94 * against * against) * mix(sunLeft * sqrt(sunLeft), 0.16 + 0.84 * sunLeft, blade) * mix(0.35 + 0.65 * edge, 0.75 + 0.25 * edge, blade) * (1.0 - 0.85 * dead);
   // Toward its end a lock is thin and the sun is through all of it: there it glows orange red.
   float thin = smoothstep(0.3, 1.0, s);
-  vec3 blood = mix(mix(vec3(0.42, 0.008, 0.035), vec3(0.8, 0.15, 0.045), thin), vec3(0.9, 0.3, 0.26), 0.25 * end);
-  colour += blood * uSunColour * (0.4 * (0.5 + 0.5 * smoothstep(1.5, 3.0, vTint.z)) * (0.3 + 2.2 * thin * thin) * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.75 * mass) * uGlow;
+  vec3 blood = mix(mix(vec3(0.42, 0.008, 0.035), mix(vec3(0.8, 0.15, 0.045), vec3(0.8, 0.085, 0.06), blade), thin), vec3(0.9, 0.3, 0.26), 0.25 * end);
+  colour += blood * uSunColour * (0.4 * (0.5 + 0.5 * smoothstep(1.5, 3.0, vTint.z)) * mix(0.3 + 2.2 * thin * thin, 1.3 + 1.2 * thin * thin, blade) * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.75 * mass) * uGlow;
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
@@ -172,9 +208,20 @@ void main() {
   // And the film of water on it gives back the bright air round it, most at its edges: its dark is wine and never black.
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  float f = 0.03 + 0.97 * pow(1.0 - sqrt(max(1.0 - edge, 0.0)), 4.0);
-  colour += min(skyRadiance(r), vec3(1.2)) * (f * 0.12 * open * (0.1 + 0.9 * skyLeft * skyLeft) * (1.0 - 0.7 * dead) * (1.0 - 0.75 * mass));
-  gl_FragColor = vec4(rigOut(colour), 1.0);
+  float nv = abs(dot(n, v));
+  float f = mix(0.03 + 0.97 * pow(1.0 - sqrt(max(1.0 - edge, 0.0)), 4.0), 0.05 + 0.95 * pow(1.0 - nv, 4.0), blade);
+  colour += min(skyRadiance(r), vec3(1.2)) * (f * mix(0.12, 0.5, blade) * open * (0.1 + 0.9 * skyLeft * skyLeft) * (1.0 - 0.7 * dead) * (1.0 - 0.75 * mass));
+  // The flat of a wet blade mirrors the sun where it lies right to it.
+  colour += uSunColour * vec3(1.0, 0.82, 0.62) * (blade * 0.22 * sunLobe(n, v, 0.32) * max(dot(n, uSunDir), 0.0) * lit * sunLeft);
+  // Beads of water sit on it, strung along its length: each a small lens that holds the bright air and a point of the sun.
+  float cell = floor(s * 6.0);
+  float pick = hash12(vec2(cell + own * 53.0, own * 91.0 + 3.0));
+  vec2 q = vec2((s - (cell + 0.3 + 0.4 * fract(pick * 7.0)) / 6.0) / max(0.55 * vBead, 1e-4), (across - (fract(pick * 13.0) - 0.5)) / 0.55);
+  float bead = smoothstep(1.0, 0.55, dot(q, q)) * step(0.8, pick) * step(0.05, blade) * (1.0 - mass);
+  vec2 hot = q - vec2(0.25, -0.3);
+  colour = mix(colour, colour * 0.7 + (uSkyHorizon + uGlowColour * (0.9 * against)) * (0.2 - 0.14 * q.y), bead);
+  colour += uSunColour * vec3(1.0, 0.85, 0.6) * (bead * (0.15 + 1.3 * against * against * against) * lit * (0.25 + 0.75 * sunLeft) * smoothstep(0.35, 0.0, dot(hot, hot)));
+  gl_FragColor = vec4(rigOut(colour * uShade), 1.0);
 }`;
 
 export const STEM_VERTEX = /* glsl */ `
@@ -204,6 +251,7 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec4 vVane;
 varying vec4 vTint;
+uniform float uShade;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -217,7 +265,7 @@ void main() {
   // The flesh is sinew: cords run along it, mauve on their backs and wine in the creases between them, with a vein here and there.
   float cords = 0.5 + 0.5 * sin(vVane.y * 19.0 + vVane.z + 2.5 * vnoise(vec2(vVane.x * 5.0 + vVane.z, vVane.y * 2.0)));
   float vein = smoothstep(0.12, 0.0, abs(vnoise(vec2(vVane.x * 4.0 + vVane.z * 3.0, vVane.y * 5.0)) - 0.5));
-  vec3 fleshy = mix(vec3(0.13, 0.035, 0.04), vec3(0.46, 0.2, 0.19), strings * (0.35 + 0.65 * cords));
+  vec3 fleshy = mix(vec3(0.16, 0.04, 0.045), vec3(0.56, 0.27, 0.25), strings * (0.35 + 0.65 * cords));
   fleshy = mix(fleshy, vec3(0.2, 0.035, 0.07), 0.5 * vein);
   vec3 albedo = mix(dark, fleshy, flesh * (0.55 + 0.45 * strings)) * (1.0 - 0.45 * knots);
   n = normalize(n + (0.25 * (strings - 0.5) + 0.3 * flesh * (cords - 0.5)) * cross(n, vec3(0.0, 1.0, 0.0)));
@@ -236,8 +284,8 @@ void main() {
   colour += f * min(skyRadiance(r), vec3(1.5)) * open * occ * 0.45 + uSunColour * ((f + 0.05) * sunLobe(n, v, 0.22) * nl * lit * occ);
   // Wet flesh is not opaque: against the low sun the light comes through its edges, pink.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
-  colour += mix(vec3(0.7, 0.08, 0.07), vec3(0.8, 0.14, 0.1), flesh) * uSunColour * (0.045 * against * against * pow(1.0 - nv, 1.5) * lit * smoothstep(0.1, 0.4, vTint.z));
-  gl_FragColor = vec4(rigOut(colour), 1.0);
+  colour += mix(vec3(0.7, 0.08, 0.07), vec3(0.8, 0.14, 0.1), flesh) * uSunColour * (against * against * (0.045 * pow(1.0 - nv, 1.5) * lit + 0.16 * flesh * sunAt(vWorld + vec3(0.0, 0.3, 0.0)) * (0.35 + 0.65 * vTint.x)) * smoothstep(0.1, 0.4, vTint.z));
+  gl_FragColor = vec4(rigOut(colour * uShade), 1.0);
 }`;
 
 /** The drops: one that hangs at the point of a lock and swells, and one that has left it and falls. Each is where the time alone puts it. */
@@ -274,8 +322,8 @@ void main() {
   // A drop is a few millimetres: it is drawn no narrower than a pixel and dimmed by as much as it was widened.
   float wide = max(size, 0.75 * uPixel * far);
   // A hanging drop is a bead at the end of a neck of water drawn out from the point of the lock, and the neck grows as the bead
-  // does. The shutter is open a 120th of a second: one that falls is drawn out along its fall.
-  float tall = mix(wide * (1.6 + 1.4 * smoothstep(0.3 * aDrop.x, aDrop.x, since)), wide + 9.8 * since * 0.012, falls);
+  // does. One that falls is a drop, a little longer than it is wide and no streak.
+  float tall = mix(wide * (1.6 + 1.4 * smoothstep(0.3 * aDrop.x, aDrop.x, since)), wide * (1.0 + 0.9 * smoothstep(0.0, 0.25, since)), falls);
   c.y -= mix(tall, tall + 4.9 * since * since, falls);
   vec3 p = c + across * aCorner.x * wide + vec3(0.0, aCorner.y * tall, 0.0);
   vFalls = falls;
