@@ -526,6 +526,9 @@ void main() {
   vec3 up = vec3(0.0, 1.0, 0.0);
 #ifdef DROP
   // A bead of dark brine: one small window of the sky on its upper side and no pale limb.
+  // (Thrown brine is never a turned shape: its skin runs in lumps, laid by place so that they pass from bead to bead unbroken.)
+  vec4 lumps = textureLod(tGrain, vWorld.xy * 1.3 + vWorld.z * 0.7, 2.0);
+  n = normalize(n + (lumps.rgb - 0.5) * 0.22);
   vec3 rd = reflect(-v, n);
   float td = max(dot(rd, ${DOME_KEY}), 0.0);
   vec3 bead = vec3(0.095, 0.011, 0.008) * skyIrradiance(n) * (open / 3.14159);

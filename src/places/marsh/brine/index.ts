@@ -292,7 +292,7 @@ export function create(ctx: Context): Piece {
           since = age < 0 ? -1 : age - TEAR * 0.55;
           ax = (r1 - 0.5) * 1.1;
           // (A small dome throws a low one.)
-          ay = (2.7 + 0.5 * r3) * big * Math.min(1, Math.pow(d.size / 0.62, 1.2));
+          ay = (2.5 + 0.45 * r3) * big * Math.min(1, Math.pow(d.size / 0.62, 1.2));
           az2 = (r2 - 0.5) * 1.1;
           bx = 0;
           by = 0.45 * big;
