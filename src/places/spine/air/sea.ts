@@ -178,7 +178,7 @@ float seaVeil(vec3 ro, vec3 rd, out float at) {
 // where a range of them stands and where a gap lies. Each is lit on its crown and dark in its body. rgb: light, a: what they hide.
 const float CROWN_SPAN = 6800.0;
 const float CROWN_TALL = 200.0;
-vec4 seaCrowns(vec3 ro, vec3 rd, float until, float plate) {
+vec4 seaCrowns(vec3 ro, vec3 rd, float until) {
   vec3 c = vec3(0.0);
   float kept = 1.0;
   // (From a little under the height the deck's own far heads stop at, upward: that height is a level, and stood as a ruled line.
@@ -186,10 +186,11 @@ vec4 seaCrowns(vec3 ro, vec3 rd, float until, float plate) {
   float base = BANK_TOP - 60.0;
   vec2 round_ = rd.xz * inversesqrt(max(dot(rd.xz, rd.xz), 1e-6));
   float toDusk = max(dot(round_, vec2(cos(DUSK_AZ), sin(DUSK_AZ))), 0.0);
-  vec3 pale = mix(SEA_COLD * vec3(1.05, 1.1, 1.26) + SEA_WARM * (0.12 + 0.3 * toDusk * toDusk), SEA_COLD * vec3(0.4, 0.45, 0.6), plate);
-  // Toward the heart of the dusk they stand lower, and behind the long lens, which sees a few degrees, lower still.
-  float low = (1.0 - 0.55 * pow(toDusk, 4.0)) * (1.0 - 0.5 * plate);
-  vec3 dark = mix(SEA_COLD * vec3(0.4, 0.46, 0.66), SEA_COLD * vec3(0.2, 0.23, 0.32), plate);
+  vec3 pale = SEA_COLD * vec3(1.05, 1.1, 1.26) + SEA_WARM * (0.12 + 0.3 * toDusk * toDusk);
+  // Toward the heart of the dusk they are low mounds: the band lies clear over them, and a tower before a gap in the far spires
+  // filled the gap.
+  float low = 1.0 - 0.75 * smoothstep(0.78, 0.97, toDusk);
+  vec3 dark = SEA_COLD * vec3(0.4, 0.46, 0.66);
   for (int i = 0; i < 8; i++) {
     float ts = 5000.0 * exp(0.16 * float(i));
     if (ts > until) break;
@@ -203,8 +204,7 @@ vec4 seaCrowns(vec3 ro, vec3 rd, float until, float plate) {
     // it. Its fine billows (the noise's blue) bite its outline and model its face.
     float billow = body.b - 0.5;
     float inside = smoothstep(0.38, 0.75, range) * 1.5 * smoothstep(0.4, 0.8, body.r) * low + 0.2 * billow - max(h, 0.0);
-    // (Behind the long lens only the farthest stand: nearer ones filled its few degrees as a slab.)
-    float thick = smoothstep(0.0, 0.3, inside) * smoothstep(-0.6, -0.1, h) * smoothstep(4400.0, 6200.0, ts) * mix(1.0, smoothstep(8000.0, 11000.0, ts), plate);
+    float thick = smoothstep(0.0, 0.3, inside) * smoothstep(-0.6, -0.1, h) * smoothstep(4400.0, 6200.0, ts);
     if (thick <= 0.0) continue;
     // Its crown takes the sky and the dusk and its foot is in the shade of the row before it (by its height, not by its edge: lit
     // round its edge, each tower was a pale ring). The rows behind go into the air's slate, as the deck under them does.
@@ -353,9 +353,9 @@ export const SEA_MARCH_GLSL = /* glsl */ `
 /** In main, after the storm's air is measured: the deck's light, laid over what stands behind it. */
 export const SEA_SHADE_GLSL = /* glsl */ `
   // The far towers of the deck stand before whatever the ray meets behind them: the deck's own far level, the land, the sky.
-  if (uShow.y > 0.0 && rd.y > -0.075 && rd.y < 0.06 && through > 0.01 && stormSide(rd) < 0.98) {
-    vec2 uvC = vec2(0.0);
-    vec4 crowns = seaCrowns(ro, rd, seaAt > 0.0 ? min(seaAt, far) : far, uPlate.w > 0.0 ? plateAt(atan(rd.z, rd.x), rd.y, uvC) : 0.0);
+  // (Not behind the long lens of the strike: its few degrees hold one tower, which stood in the picture's dark sky as a pale ball.)
+  if (uShow.y > 0.0 && rd.y > -0.075 && rd.y < 0.06 && through > 0.01 && stormSide(rd) < 0.98 && uInvProjection[1][1] > 0.29) {
+    vec4 crowns = seaCrowns(ro, rd, seaAt > 0.0 ? min(seaAt, far) : far);
     float hid = crowns.a * (1.0 - stormSide(rd));
     light += through * crowns.rgb * (1.0 - stormSide(rd));
     through *= 1.0 - hid;
