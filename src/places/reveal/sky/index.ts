@@ -108,10 +108,14 @@ void main() {
   float fogSelf = clamp(0.5 + 0.3 * dot(fogSlope, toSun), 0.0, 1.0);
   // (Read in every pixel, cloud under it or not: read only under cloud, the pixels at the edge of a cloud took the fineness of
   // the read from neighbours that had not made it, and one of them came out a level different from one run to the next.)
-  float under = highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
+  // (From orbit the shadow of the ice on the low field is too faint to see, and it is not read: it is eased out on the way up.)
+  float under = 0.0;
+  if (uViewKm < 1200.0) under = (1.0 - smoothstep(850.0, 1200.0, uViewKm)) * highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
 
   vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
   vec3 highColour = cloudLight(up, 0.5 + 0.45 * highFlank, 0.5 + 0.5 * high, 1.0);
+  // (By night the moon is on the ice, and it is seen to the last frame crossing the dark sea.)
+  if (uDusk > 0.0) highColour *= 1.0 + 1.0 * uEmber.x;
   vec3 bankColour = cloudLight(bankAt, 0.12 + 0.95 * bankSelf, 0.35 + 0.65 * bankA, 0.25) * (0.72 + 0.5 * clamp(bankIs / 3.5, 0.0, 1.0));
   // (Fog is seen from above as a level pale floor, a little blue, with no relief of its own.)
   // (Stratus has a top all the same: long low swells that the sun grazes, and it is thin and blue toward its edge.)
@@ -147,8 +151,8 @@ void main() {
   lowColour *= 1.0 - 0.4 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
   float b = min(high * 0.46, 0.32);
-  // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
-  if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
+  // (The ice is no thicker held than at the titan frame: it stands there already, and held it only travels, ten kilometres
+  // over land and sea and across the wind of the low field.)
   // From the ground up: the fog, the low field, the banks, the ice.
   vec3 colour = fogColour * fogA * (1.0 - a);
   colour = (colour + lowColour * a + beatOnCloud(xz) * a) * (1.0 - bankA) + bankColour * bankA;
@@ -282,8 +286,8 @@ void main() {
   float self = clamp(0.62 - 0.6 * clamp(0.014 * dot(fall, sunStep), -0.6, 0.6), 0.0, 1.0);
   float tall = 1.0 - smoothstep(0.02, 0.2, r);
   vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (0.74 + 0.34 * thick);
-  // (By night the cyclone is a dim wheel, no brighter than the bone.)
-  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
+  // (By night the cyclone is a wheel under the moon, dimmer than by day and lit to the last frame: it is what is seen to turn.)
+  if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
   // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
   float veil = 0.04 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.5) + 0.1 * (1.0 - smoothstep(0.004, 0.05, r));
