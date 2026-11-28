@@ -1082,7 +1082,7 @@ void main() {
       // Under the long lens the water round the swell is ringed by its breathing, as far as the eye goes; from over it the rings are few and broken.
       const over = during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0;
       centre.y = during('eye-05') ? 3.2 - 2.7 * over : 1;
-      centre.z = during('eye-05') ? 0.55 * (1 - over) : 0;
+      centre.z = during('eye-05') ? 0.25 * (1 - over) : 0;
       centre.w = during('eye-05') ? 1.6 * (1 - over) : 0;
       (material.uniforms.uRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-05') ? ringsClimb : during('eye-01') ? ringsRim : ringsLake;
       (material.uniforms.uLapRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-01') ? lapRingsRim : during('eye-02') ? lapRingsFar : during('eye-04') ? lapRingsShore : lapRingsNear;
