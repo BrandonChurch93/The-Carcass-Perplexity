@@ -45,7 +45,7 @@ vec3 oceanLandAt(vec2 xz) {
 vec3 oceanDeep(vec3 bedAt, float seen) {
   float depth = bedAt.r;
   vec3 c = mix(vec3(0.0004, 0.0016, 0.0048), DEEP, smoothstep(0.1, 0.32, depth));
-  c = mix(c, vec3(0.003, 0.014, 0.027), ${(0.85 * SHELF_STRENGTH).toFixed(3)} * smoothstep(0.35, 0.62, depth));
+  c = mix(c, vec3(0.0036, 0.019, 0.036), ${(0.9 * SHELF_STRENGTH).toFixed(3)} * smoothstep(0.32, 0.6, depth));
   c = mix(c, vec3(0.014, 0.07, 0.078), ${(0.9 * SHELF_STRENGTH).toFixed(3)} * smoothstep(0.68, 1.0, depth));
   float cold = min(bedAt.b / 0.45, 1.0);
   c = mix(c, vec3(0.0058, 0.014, 0.0155), 0.7 * cold * cold);
@@ -55,7 +55,7 @@ vec3 oceanDeep(vec3 bedAt, float seen) {
 // The silt of three rivers, carried by the current: pale tan where it is thick at the mouth, a grey green veil where it has thinned.
 vec3 oceanSilt(vec3 bed, vec3 bedAt, float seen) {
   float silt = max(2.0 * bedAt.g - 1.0, 0.0);
-  return mix(bed, mix(vec3(0.05, 0.08, 0.055), vec3(0.2, 0.15, 0.075), smoothstep(0.2, 0.9, silt)), 0.85 * smoothstep(0.02, 0.6, silt) * seen);
+  return mix(bed, mix(vec3(0.05, 0.08, 0.055), vec3(0.2, 0.15, 0.075), smoothstep(0.08, 0.6, silt)), 0.85 * smoothstep(0.0, 0.32, silt) * seen);
 }
 // (The blue of the air over the sea stands for the water's own scatter too: over a basin less of it comes back.)
 float oceanAir(vec3 bedAt, float seen) {
@@ -71,22 +71,26 @@ vec3 oceanOther(vec3 water, vec3 landAt, vec3 bedAt, vec3 light, vec3 glare, vec
   float lit = mix(1.0, clamp(facing / max(uSunDir.y, 0.2), 0.0, 2.2), 0.92);
   // (The body's own lowland colours, muted: dun plain by the shore, olive where it holds water, dark rock on the high ground.)
   float mottle = vnoise(xz / 46.0 + 5.0);
-  vec3 ground = mix(mix(vec3(0.17, 0.132, 0.092), vec3(0.092, 0.1, 0.066), smoothstep(0.35, 0.7, mottle)), vec3(0.076, 0.067, 0.06), smoothstep(0.12, 0.62, height));
+  vec3 ground = mix(mix(vec3(0.17, 0.12, 0.078), vec3(0.092, 0.09, 0.056), smoothstep(0.35, 0.7, mottle)), vec3(0.076, 0.064, 0.054), smoothstep(0.12, 0.62, height));
+  // (A strand of sand where the land comes down to the water: by day the coast is a lit line, under the bone's ivory.)
+  ground = mix(ground, vec3(0.23, 0.185, 0.125), 0.7 * (1.0 - smoothstep(0.0, 0.07, height)));
   // (Surf where the open sea meets it, on some reaches and not on others.)
-  float surf = smoothstep(0.262, 0.296, landAt.b) * (1.0 - isle) * smoothstep(0.3, 0.62, vnoise(xz / 19.0 + 31.0)) * seen;
+  float surf = smoothstep(0.262, 0.296, landAt.b) * (1.0 - isle) * smoothstep(0.3, 0.62, 1.0 - mottle) * seen;
   water = mix(water, vec3(0.6, 0.65, 0.68) * light / 3.14159, 0.5 * surf * surf);
-  // (By night the land is a shade on the sea, no more: no light stands on it.)
+  // (Under the moon the pale water of its shelf is the first thing found of an island, faint; the land stands in it as a shade
+  // of the same value, never a dark hole in a pale ring. No light stands on it.)
+  water += vec3(0.017, 0.068, 0.08) * light / 3.14159 * clamp(landAt.b / 0.29, 0.0, 1.0) * uEmber.x * seen;
   // (The air over the sun's image is bright: land that stands in it is seen through that light, as the body is.)
   vec3 groundLit = ground * light * lit / 3.14159 + 0.4 * glare;
-  water = mix(water, mix(groundLit, 0.6 * water + 2.2 * groundLit, uEmber.x), isle);
+  water = mix(water, mix(groundLit, 0.95 * water + 2.6 * groundLit, uEmber.x), isle);
   // (The pack and the sheet on the far land: blue grey where it is thin and in its leads, blue white where it is thick, blue in
   // the shade of its own relief. Never the bone's ivory. Into the air of the planet's edge it goes bluer and dimmer.)
   float ice = smoothstep(0.52, 0.8, bedAt.b) * seen;
-  vec3 pack = mix(vec3(0.2, 0.3, 0.37), vec3(0.4, 0.47, 0.53), smoothstep(0.7, 0.98, bedAt.b)) * (0.9 + 0.2 * vnoise(xz / 31.0 + 9.0));
+  vec3 pack = mix(vec3(0.2, 0.3, 0.37), vec3(0.46, 0.53, 0.6), smoothstep(0.7, 0.98, bedAt.b));
   pack *= mix(vec3(1.0), mix(vec3(0.5, 0.64, 0.84), vec3(1.0), clamp(lit, 0.0, 1.0)) * min(lit, 1.25), isle);
   pack *= mix(vec3(0.42, 0.56, 0.74), vec3(1.0), smoothstep(0.04, 0.3, mu));
-  // (Under the moon it is a grey well under the cloud's.)
-  return mix(water, pack * light * (1.0 - 0.93 * uEmber.x) / 3.14159, ice);
+  // (Under the moon it is a grey a little over the sea's and well under the cloud's.)
+  return mix(water, pack * light * (1.0 - 0.93 * uEmber.x) / 3.14159 + 0.7 * uEmber.x * water, ice);
 }
 #endif
 `;

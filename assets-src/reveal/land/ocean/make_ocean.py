@@ -8,7 +8,7 @@
   assets-src/reveal/land/ocean/ocean-mask.png  for the weather: red other land, green ice (1024 px wide, the same rectangle)
 
 All cover one rectangle of the master picture (px): x -1800 to 7416, y -800 to 4834.
-Run from the repo root: python3 assets-src/reveal/land/ocean/make_ocean.py [--amount A|B|C] [--ice 1.0] [--quick] [--out DIR]
+Run from the repo root: python3 assets-src/reveal/land/ocean/make_ocean.py [--amount A|C|B|D|E] [--ice 1.0] [--quick] [--out DIR]
 Everything is computed from fixed seeds; nothing is drawn by hand and no picture is generated.
 """
 import sys
@@ -23,7 +23,7 @@ def arg(name, default):
 
 QUICK = '--quick' in sys.argv
 FAST = QUICK or '--fast' in sys.argv      # no erosion and short streaks: for trying the layout, the bed or the silt
-AMOUNT = arg('--amount', 'C')
+AMOUNT = arg('--amount', 'D')
 ICE = float(arg('--ice', '1.0'))
 W, H = (1024, 626) if QUICK else (4096, 2504)
 X0, Y0, PW = -1800.0, -800.0, 9216.0
@@ -32,7 +32,11 @@ LIMB = (4241.0, 9956.0, 10183.0)
 OUT = arg('--out', 'out/work/ocean' if QUICK else 'public/assets/reveal/land')
 # How much of the other land there is: A as first sketched, B the arc's two largest grown to real islands and the far coast
 # further in from the edge, C between the two.
-GROW = {'A': 0.0, 'C': 0.5, 'B': 1.0}[AMOUNT]
+GROW = {'A': 0.0, 'C': 0.5, 'B': 1.0, 'D': 1.0, 'E': 1.45}[AMOUNT]
+# (D and E: the far coast comes further in from the planet's edge and a mainland stands behind the island arc, at the lower left
+# corner of the titan's frame; E has the arc's largest islands larger too.)
+FAR = {'A': 0.0, 'C': 0.5, 'B': 1.0, 'D': 2.3, 'E': 2.3}[AMOUNT]
+MAIN = AMOUNT in ('D', 'E')
 
 xs = X0 + (np.arange(W, dtype=np.float32) + 0.5) * S
 ys = Y0 + (np.arange(H, dtype=np.float32) + 0.5) * S
@@ -146,12 +150,20 @@ isle = arc_field + 0.3 * shore_rough * sstep(-0.7, -0.05, arc_field) + 0.2 * (0.
 ldx, ldy = MX - LIMB[0], MY - LIMB[1]
 lth = np.degrees(np.arctan2(ldx, -ldy))            # 0 straight up, negative to the left
 inside = LIMB[2] - np.hypot(ldx + 0.6 * warp_x, ldy + 0.6 * warp_y)   # master px inside the edge of the planet
-reach = 215.0 + 115.0 * GROW + 60.0 * fbm(700, 3, 31) + 36.0 * fbm(160, 4, 32) + (90.0 + 60.0 * GROW) * sstep(-24.0, -34.0, lth)
+reach = 215.0 + 115.0 * FAR + 60.0 * fbm(700, 3, 31) + 36.0 * fbm(160, 4, 32) + (90.0 + 60.0 * FAR) * sstep(-24.0, -34.0, lth)
 # (It ends before the body's shoulder: past 17 degrees left of the top it sinks under the sea.)
 ends = sstep(-17.0, -20.5, lth) * sstep(-47.0, -41.0, lth)
 far = (reach - inside) / 150.0 - 3.0 * (1.0 - ends)
 far_land = np.clip(far, -1.0, 1.6) * 0.5 + 0.2 * shore_rough * sstep(-0.6, 0.1, far) + 0.34 * (0.5 + 0.5 * crag) * sstep(0.0, 0.9, far)
 far_land[inside < -420.0] = -1.0
+# The mainland behind the arc: the arc's trench faces the body, a shallow sea lies behind the islands, and behind that sea a coast.
+main_land = np.full((H, W), -1.0, np.float32)
+if MAIN:
+    # (It is no island: away from the body it runs on out of the map, and only its coast toward the arc is ever seen.)
+    away = np.maximum(sstep(100.0, 150.0, ang), sstep(-12.0, -60.0, ang))
+    back = (800.0 + 3500.0 * away + 170.0 * fbm(700, 3, 33) + 70.0 * fbm(170, 4, 34) - rad) / 150.0
+    main_land = (np.clip(back, -1.0, 1.6) * 0.5 + 0.2 * shore_rough * sstep(-0.6, 0.1, back) + 0.34 * (0.5 + 0.5 * crag) * sstep(0.0, 0.9, back)).astype(np.float32)
+isle = np.maximum(isle, main_land)
 land = np.maximum(isle, far_land)
 
 # (Nothing of it near the body: a limb's width and more of open water round the body's own shelf, whatever the noise did.)
@@ -216,7 +228,7 @@ slope_y = np.clip(0.5 + 0.5 * gy * RISE / 1.6, 0.0, 1.0)
 land_map = np.stack([slope_x, slope_y, blue], axis=-1)
 
 # ---- ocean-bed red: the sea bed ----
-bed = 0.27 + 0.1 * fbm(1500, 4, 51) + 0.03 * fbm(300, 4, 52, ridged=True)
+bed = 0.27 + 0.15 * fbm(1500, 4, 51) + 0.04 * fbm(300, 4, 52, ridged=True)
 # (The floor climbs to the body from far out, on one side early and on another late.)
 bed += 0.17 * np.exp(-body_px / (200.0 * (0.4 + 1.2 * sstep(-1.0, 1.0, fbm(1100, 2, 53)))))
 # (The deepest basin lies west of the skull, which stands out of it alone, and another off the far coast's shelf.)
@@ -242,7 +254,7 @@ bed += 0.42 * np.exp(-np.maximum(inside - reach, 0.0) / (120.0 + 60.0 * sstep(-1
 bed = np.clip(bed, 0.02, 0.78)
 # (Every coast of the other land stands on its own shelf, uneven.)
 # (Wide enough that an island is found by its pale water before its rock is, as the body is.)
-bed = np.maximum(bed, np.exp(-land_px / (95.0 + 110.0 * sstep(-1.0, 1.0, fbm(260, 3, 57)))))
+bed = np.maximum(bed, np.minimum(1.15 * np.exp(-(land_px / (150.0 + 130.0 * sstep(-1.0, 1.0, fbm(260, 3, 57)))) ** 1.5), 1.0))
 bed = blur(bed.astype(np.float32), 3.0)
 
 # ---- ocean-bed blue: the ice. A pack off the far coast, widest in its bays; floes, and leads that widen to its margin ----
