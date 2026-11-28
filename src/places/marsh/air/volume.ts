@@ -90,17 +90,17 @@ export const BANKS = {
   near: 10,
   far: 420,
   top: 11,
-  thick: 0.07,
+  thick: 0.095,
   across: 170,
-  lit: [0.42, 0.385, 0.4] as [number, number, number],
-  deep: [0.33, 0.285, 0.28] as [number, number, number],
+  lit: [0.45, 0.412, 0.426] as [number, number, number],
+  deep: [0.3, 0.256, 0.25] as [number, number, number],
   drift: 0.9,
   rise: 0.3,
   shots: [
-    { from: 0, amount: 0.2, start: [70, 260] },
+    { from: 0, amount: 0.15, start: [70, 260] },
     { from: (5833 - 5618) / 60, amount: 0.7, start: [16, 60] },
-    { from: (6048 - 5618) / 60, amount: 0.2, start: [60, 220] },
-    { from: (6263 - 5618) / 60, amount: 1.0, start: [20, 70] },
+    { from: (6048 - 5618) / 60, amount: 0.15, start: [60, 220] },
+    { from: (6263 - 5618) / 60, amount: 1.0, start: [26, 80] },
     { from: (6586 - 5618) / 60, amount: 0.85, start: [20, 64] },
   ] as { from: number; amount: number; start: [number, number] }[],
 };
@@ -600,7 +600,7 @@ ${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${
       vec4 big = textureLod(tNoise, vec3(at / BANK_ACROSS, 0.37 + uTime * 0.0018), clamp(log2(dt / (BANK_ACROSS / 28.0)), 0.0, 6.0));
       // Where a bank stands and how high: the banks gather into masses with open flat between them, and no two are one height.
       // (Far off the banks close up: between two of them stands a third.)
-      float stand = max(smoothstep(0.38, 0.6, big.g * 0.72 + big.a * 0.28), 0.55 * smoothstep(90.0, 320.0, tk));
+      float stand = max(smoothstep(0.42, 0.57, big.g * 0.72 + big.a * 0.28), 0.5 * smoothstep(110.0, 340.0, tk));
       float top = BANK_TOP * (0.12 + 0.88 * stand) * (0.4 + 1.0 * big.a);
       // Its lumps, which climb: the crown is cut by them, and so is its side. (Never read at the tile's finest: a lump is metres across.)
       vec4 lump = textureLod(tNoise, vec3(at.x, p.y * 1.5 - uTime * BANK_RISE, at.y) / 60.0 + vec3(0.0, 0.0, uTime * 0.004), clamp(log2(dt / 7.5), 1.0, 6.0));
@@ -614,7 +614,8 @@ ${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${
       past *= exp(-sigma * dt);
       // The sky lights the crown; the heart and the underside have the bank's own body over them and are grey and warm.
       float lit = smoothstep(0.3, 1.0, h + (0.5 - lump.r) * 0.5) * (0.85 + 0.3 * lump.b);
-      vec3 light = mix(bankDeep, bankLit, lit) * airLit;
+      // (No two banks stand in one light: the sheet over one is thinner than over the next.)
+      vec3 light = mix(bankDeep, bankLit, lit) * airLit * (0.86 + 0.28 * smoothstep(0.3, 0.7, big.r));
       // (What of the stretch is plain haze takes the haze's light.)
       float share = sigma * dt / max(tau, 1e-6);
       sum += trans * a * mix(mix(LOW_LIGHT * 1.12, airLight, smoothstep(0.0, 10.0, p.y)) * airLit * mix(1.0, dusk, smoothstep(200.0, 2000.0, t0)), light, share);
