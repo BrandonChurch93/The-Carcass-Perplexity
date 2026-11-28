@@ -211,8 +211,11 @@ float vapourTop(vec3 p, float level, float west) {
 // the wells, in billows (lumps: the block of noise there, 0 to 1); at the top it is thin, and the wall is read through it; it thickens
 // with depth, so the drop is read through its first metres and lost below them.
 vec2 vapourRho(float under, float wells, float west, float surge, float spent, float lumps) {
-  float tall = 1.3 + 5.0 * wells * wells + 6.0 * surge;
-  float skin = (0.004 + 0.01 * wells + 0.016 * surge) * (1.0 - 0.5 * spent);
+  // In the breath the steam stands taller, most over the wells. It is never let stand shorter than a step of the march is long
+  // where the pool is thick: a top that thin was drawn as a crease at every step.
+  float tall = 1.3 + (5.0 + 3.0 * surge) * wells * wells + 4.0 * surge;
+  // The breath's steam is gathered over the wells, a column and no veil: spread evenly it hid the lower hoops.
+  float skin = (0.004 + 0.01 * wells + (0.007 + 0.016 * wells) * surge) * (1.0 - 0.5 * spent);
   // Billows: thick and thin by the block of noise, most over the top and in its first metres, evened out with depth.
   // The noise is brought to a billow over a wide part of its range: brought over a narrow part a thick billow had a cut edge.
   float billow = 4.0 * smoothstep(0.38, 0.8, lumps);
@@ -381,7 +384,7 @@ void main() {
         if (out0 < 9.0 + 0.9 * max(p.y, 0.0) + 5.0 * uBreath.y) {
           float level = poolLevel(p, surge, wells, west);
           // No picture is read where the place stands clear over all the steam can reach.
-          if (p.y < level + 10.5 + 4.0 * (1.3 + 5.0 * wells * wells + 6.0 * surge)) {
+          if (p.y < level + 10.5 + 4.0 * (1.3 + (5.0 + 3.0 * surge) * wells * wells + 4.0 * surge)) {
             float top = vapourTop(p, level, west);
             under = top - p.y;
             // The steam climbs at a walk and is bent down the wind once it clears the brim.
@@ -564,7 +567,7 @@ void main() {
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
         // The crown is eaten away by the air: it ends in rags, never in a round cap.
         float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up + 1.1 * smoothstep(0.55, 1.0, up));
-        float body = smoothstep(0.0, 0.42, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.3, m);
+        float body = smoothstep(0.0, 0.42, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.5, m);
         float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * body;
         float tau = rho * span / 5.0;
         if (tau <= 0.0005) continue;
