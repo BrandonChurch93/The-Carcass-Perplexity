@@ -42,8 +42,10 @@ const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
 
 /** Staged for shot breath-02: where each hanging one is rooted (x, z), how tall, and the point on the ground it leans over (x, z). */
 const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
-  [-14.1, 27.6, 4.2, -8.9, 24.6],
-  [-15.0, 26.0, 3.8, -10.0, 23.0],
+  [-18.3, 24.8, 7.9, -9.1, 19.5],
+  [-19.9, 22.0, 7.0, -11.1, 16.7],
+  // A lower one: the mass goes on down the left edge of that frame, as key breath-4 has it, and no nearer its middle.
+  [-16.5, 28.0, 5.9, -11.0, 26.6],
 ];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
@@ -137,7 +139,7 @@ export function create(ctx: Context): Piece {
   const hangRng = ctx.rng('gill-plume-hang');
   const hangBushes: Bush[] = HANG.map(([hx, hz, tall, tx, tz]) => {
     const [x, z] = onBrim(hx, hz);
-    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: tall < 3 ? 1.3 : 2.4 };
+    return { x, y: floor(x, z), z, tall, lean: Math.atan2(tx - x, z - tz), detail: 1, habit: 'hang', reach: 1.65, full: tall < 6.5 ? 1 : 2.4 };
   });
   const hangGrown: Grown[] = hangBushes.map((bush) => grow(bush, hangRng, floor));
 
