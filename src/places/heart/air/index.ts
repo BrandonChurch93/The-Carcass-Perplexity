@@ -100,7 +100,7 @@ const BODIES: readonly Body[] = [
   // The plume of the wide view: it stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture into the deck of smoke the sky draws (sky.ts). Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
   // As one dense mass with a hard edge it stood as a grey column cut out against the sky. It is smoke that is seen into: separate billows with air between them, thin enough to pass the sky at its rim,
   // and the glowing floor lights its lower third, so that it is warm where it leaves the buttress and grey where it joins the deck.
-  { at: [571, -400], radius: 50, height: 1000, lean: [0.3, 0.4], dense: 0.024, widen: 10, foot: 0.1, repeat: 260, hard: 4, climb: 42, colour: UMBER, floor: [1.1, 240], tops: 1.4, solid: 0.38, streak: 0.8, shots: { 'heart-02': 0, 'heart-05': 0 } },
+  { at: [571, -400], radius: 50, height: 1000, lean: [0.3, 0.4], dense: 0.03, widen: 10, foot: 0.1, repeat: 260, hard: 5, climb: 42, colour: UMBER, floor: [0.5, 150], tops: 1.6, solid: 0.45, streak: 0.8, shots: { 'heart-02': 0, 'heart-05': 0 } },
   // The smoke that rises from the seam the hero feeds at, lit by the melt in it: it lies low behind the animal in the feeding shot, under the horizon of that lens, and what is behind the animal is the dark of the far smoke.
   { at: [-397, 181], radius: 11, height: 6.5, lean: BANK_LEAN, dense: 0.035, repeat: 9, hard: 2.6, climb: 1.6, colour: SOOT, foot: 0.1, lake: [1.1, 3], floor: [1.6, 3], lights: 0.6, tops: 0.7, solid: 0.4, shots: { 'heart-02': 1, rest: 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
@@ -178,6 +178,19 @@ export function create(ctx: HeartContext): HeartPiece {
     ((su.uBodyG as THREE.IUniform<THREE.Vector4[]>).value[i] as THREE.Vector4).set(Math.max(0.2, b.streak ?? 1), b.taper ?? 0, b.sparse ?? 0, b.through ?? 0);
   }
   (su.uBodyCount as THREE.IUniform<number>).value = count;
+  // What the view can hold: the four sides of its frame, from the camera of the sample. A ball that lies wholly
+  // outside one of them is in no pixel. Each thing of the smoke is held in a ball a little larger than the bounds its march keeps (smoke.ts).
+  const steamLive = (su.uSteamLive as THREE.IUniform<Int32Array>).value;
+  const bodyLive = (su.uBodyLive as THREE.IUniform<Int32Array>).value;
+  const viewMatrix = new THREE.Matrix4();
+  const frustum = new THREE.Frustum();
+  const ball = new THREE.Vector3();
+  const inView = (x: number, y: number, z: number, radius: number): boolean => {
+    ball.set(x, y, z);
+    for (let k = 0; k < 4; k++) if ((frustum.planes[k] as THREE.Plane).distanceToPoint(ball) < -(radius * 1.03 + 0.5)) return false;
+    return true;
+  };
+  const mix = (a: number, b: number, t: number): number => a + (b - a) * t;
   let phase = 0;
   const show = { air: { value: 1 }, fume: { value: 1 } };
 
@@ -291,6 +304,35 @@ export function create(ctx: HeartContext): HeartPiece {
         (steamC[i] as THREE.Vector4).set(seed, speed, s.kind === 'fume' ? radius * 2.5 : smoke ? Math.max(3.5, radius * 3) : Math.max(2.2, radius * 6), s.kind === 'fume' ? 2 : smoke ? 1 : 0);
       }
       (su.uSteamCount as THREE.IUniform<number>).value = drawn;
+      // The lists of what is in the view. The numbers are those of the bounds in smoke.ts (steamSpan, groundSpan, bodySpan).
+      frustum.setFromProjectionMatrix(viewMatrix.copy(camera.matrixWorld).invert().premultiply(camera.projectionMatrix));
+      let live = 0;
+      for (let i = 0; i < drawn; i++) {
+        const A = steamA[i] as THREE.Vector4;
+        const B = steamB[i] as THREE.Vector4;
+        const kind = Math.min((steamC[i] as THREE.Vector4).w, 1);
+        let seen: boolean;
+        if ((steamC[i] as THREE.Vector4).w > 2.5) {
+          const top = 0.61 + 1.52 * A.w + 0.183 * B.z;
+          seen = inView(A.x + B.x * B.z * 0.5, top * 0.5, A.z + B.y * B.z * 0.5, Math.hypot(B.z * 0.5 + A.w, 3.4 * A.w + 0.65 * B.z, top * 0.5));
+        } else {
+          const top = B.z * mix(0.92, 0.86, kind);
+          const shear = mix(0.6, 1.2, kind);
+          const lean = Math.hypot(B.x, B.y);
+          const tower = 1.25 * (1.4 * (A.w + top * mix(0.34, 0.3, kind)) + B.z * mix(0.12, 0.16, kind) * lean + (A.w * 0.3 + top * 0.125));
+          seen = inView(A.x + B.x * shear * top * 0.5, A.y + top * 0.5, A.z + B.y * shear * top * 0.5, top * 0.5 * Math.hypot(1, shear * lean) + tower);
+        }
+        if (seen) steamLive[live++] = i;
+      }
+      (su.uSteamLiveCount as THREE.IUniform<number>).value = live;
+      live = 0;
+      for (let i = 0; i < count; i++) {
+        const b = BODIES[i] as Body;
+        if ((bodyB[i] as THREE.Vector4).w <= 0) continue;
+        const reach = b.radius * (1 + Math.max(b.widen ?? 0, 0)) * 1.45;
+        if (inView(b.at[0] + b.lean[0] * b.height * 0.5, (b.base ?? 0) + b.height * 0.5, b.at[1] + b.lean[1] * b.height * 0.5, b.height * 0.5 * Math.hypot(1, b.lean[0], b.lean[1]) + reach)) bodyLive[live++] = i;
+      }
+      (su.uBodyLiveCount as THREE.IUniform<number>).value = live;
       if (show.fume.value > 0.5) smoke.render(renderer, camera, phase);
 
       const heat = ctx.sources.heat.length > 0 ? ctx.sources.heat : local.heat;

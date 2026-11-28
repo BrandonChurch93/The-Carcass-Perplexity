@@ -29,6 +29,10 @@ uniform highp sampler3D tLumps;
 uniform float uLumpsMean;
 uniform vec3 uSkyMean;
 uniform int uSteamCount;
+uniform int uSteamLiveCount;
+uniform int uSteamLive[${MAX_STEAM}];
+uniform int uBodyLiveCount;
+uniform int uBodyLive[${MAX_BODIES}];
 uniform vec4 uSteamA[${MAX_STEAM}];
 uniform vec4 uSteamB[${MAX_STEAM}];
 uniform vec4 uSteamC[${MAX_STEAM}];
@@ -502,8 +506,12 @@ void main() {
   int listed[${MAX_STEAM}];
   vec2 spans[${MAX_STEAM}];
   int count = 0;
-  for (int i = 0; i < ${MAX_STEAM}; i++) {
-    if (i >= uSteamCount) break;
+  // Only what can be in the picture is gone through at all (uSteamLive, uBodyLive: the caller's lists, in the same order). The renderer of the
+  // film runs the sums of every turn of a loop for every pixel whether the bounds are met or not, so a thing that stands outside the view, or a
+  // body that is off in this shot, is left out of the loop and not turned away inside it.
+  for (int l = 0; l < ${MAX_STEAM}; l++) {
+    if (l >= uSteamLiveCount) break;
+    int i = uSteamLive[l];
     float t0;
     float t1;
     bool low = uSteamC[i].w > 2.5;
@@ -523,8 +531,9 @@ void main() {
     else steamOne(i, ro, rd, spans[j].x, spans[j].y, fract(jitter + 0.618 * float(i + 1)));
   }
   count = 0;
-  for (int i = 0; i < ${MAX_BODIES}; i++) {
-    if (i >= uBodyCount) break;
+  for (int l = 0; l < ${MAX_BODIES}; l++) {
+    if (l >= uBodyLiveCount) break;
+    int i = uBodyLive[l];
     float t0;
     float t1;
     if (bodySpan(i, ro, rd, far, t0, t1)) {
@@ -619,6 +628,10 @@ export function createSmoke(rig: Record<string, THREE.IUniform>, noise: THREE.Da
     uSteamB: { value: vectors(MAX_STEAM) },
     uSteamC: { value: vectors(MAX_STEAM) },
     uBodyCount: { value: 0 },
+    uSteamLiveCount: { value: 0 },
+    uSteamLive: { value: new Int32Array(MAX_STEAM) },
+    uBodyLiveCount: { value: 0 },
+    uBodyLive: { value: new Int32Array(MAX_BODIES) },
     uBodyA: { value: vectors(MAX_BODIES) },
     uBodyB: { value: vectors(MAX_BODIES) },
     uBodyC: { value: vectors(MAX_BODIES) },
