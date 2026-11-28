@@ -40,7 +40,7 @@ Cost, uhd draft, best of two, seconds (`npm run -s cost -- --frame N --format uh
 - Last measured, on `a6e958f` with all three last versions in: 22.68, 25.04, 22.63. Inside the cap at each frame.
 - The sky builder timed its last version 0.28 s over its own before at 4010 (the larger fall bank, repeat 165); on the lead's machine, with fluid's last version beside it, the unit stays inside. The room left at 2722 and 2507 is about 0.2 s, less than the machine's swing.
 
-Size: the unit's two asset folders grew by 4.50 MB of the 12 allowed.
+Size: the unit's two asset folders grew by 4.51 MB of the 12 allowed, this file counted.
 
 Guards 1241, 4409 and 7234: byte equal to the before set at reports 1, 2 and 3. Three draws of 3156 byte equal each time. Invalid count at 2722, uhd final: 0 each time. G8 passes.
 
