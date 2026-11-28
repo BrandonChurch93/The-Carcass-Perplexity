@@ -607,6 +607,11 @@ void main() {
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
     return;
   }
+  // Far off a husk is a pixel or two of the rock's own dark: it is left out, and nothing is worked out for it.
+  if (length(cameraPosition - aAnchor) * uReach > 700.0) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
   vec3 on = rootCentre(aPod.x);
   vec3 tangent = normalize(rootCentre(aPod.x + 0.2) - rootCentre(aPod.x - 0.2));
   vec3 beside = normalize(cross(tangent, vec3(0.0, 1.0, 0.0)));
@@ -886,7 +891,7 @@ export function create(ctx: Context): Piece {
 
   // The husks: a few round each cord where it leaves the rock, strung a little way down the wind's line so that the rock, whose face
   // is not the layout's, always has some of them standing out of it.
-  const ball = new THREE.SphereGeometry(1, 14, 20);
+  const ball = new THREE.SphereGeometry(1, 10, 12);
   const podGeometry = new THREE.InstancedBufferGeometry();
   podGeometry.index = ball.index;
   podGeometry.setAttribute('position', ball.getAttribute('position'));
