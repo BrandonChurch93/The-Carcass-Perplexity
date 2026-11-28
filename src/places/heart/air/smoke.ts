@@ -406,7 +406,14 @@ void steamOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     // less than what lies under it, and to the same height.
     // A vent in the rock of the bank stands over no lava and takes none of this: it is pale. Only a vapour whose foot is on the lake does.
     float onLake = smoothstep(2.0, 0.6, A.y);
-    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + (onLake > 0.0 ? onLake * mix(0.3, 0.2, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) : vec3(0.0)) + roundLights(p));
+    // A smoke that stands a few metres from one of the round lights (the fume up the wind of the fall, beside its mouth) took all of it and stood as
+    // a pale glowing lump. What smoke takes of them is bent over at ten times what the sky gives it: it is lit warm from below and stays smoke.
+    if (near > 0.0) {
+      vec3 round1 = roundLights(p);
+      float knee = 10.0 * skyLight(p.y).r;
+      round1 *= knee / (knee + kind * round1.r);
+      light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + (onLake > 0.0 ? onLake * mix(0.3, 0.2, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) : vec3(0.0)) + round1);
+    }
     float a = 1.0 - exp(-sigma * dt);
     lay(close, t, mid, albedo * light, a);
   }
