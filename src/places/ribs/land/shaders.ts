@@ -416,6 +416,15 @@ void main() {
 // with the strap picture under it for what the lens sees from a stride away.
 export const WEED_FRAGMENT = /* glsl */ `
 ${HEAD}
+// Drops of water, one to a cell at most (share: how many cells of ten hold one), each round and anywhere in its cell that it fits:
+// drops that keep to the middles of their cells stand in rows. Most are small and a few are fat: drops of one size are a grain.
+float drops(vec2 p, float share) {
+  vec2 i = floor(p);
+  vec2 h = hash22(i);
+  float big = 0.09 + 0.27 * h.y * h.y * h.y;
+  return (h.x < share ? 1.0 : 0.0) * smoothstep(big, 0.4 * big, length(p - i - big - (1.0 - 2.0 * big) * fract(h * vec2(41.0, 67.0))));
+}
+#define DROP_SKY 0.32
 varying vec2 vUv;
 varying float vShade;
 uniform sampler2D tWall;
@@ -554,10 +563,19 @@ void main() {
   // The black wet between the fronds holds the sky in beads: points of light, none of them a stride from the next.
   float bead = 0.0;
   if (closeW > 0.0) {
-    bead = smoothstep(0.91, 0.96, vnoise(vUv * vec2(43.0, 37.0)));
-    if (bead > 0.0) bead *= smoothstep(0.3, 0.7, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * (0.3 + 0.7 * vnoise(vUv * vec2(7.0, 5.0)));
+    // The wet stands in the mass in drops, in groups where it is soaked, with drained weed between the groups and none in the deep shade:
+    // a few fine ones and fewer fat ones that have run together, longer down the hang than across it.
+    bead = max(0.7 * drops(vUv * vec2(43.0, 37.0), 0.3), drops(vUv * vec2(21.0, 13.0) + 3.7, 0.35)) * smoothstep(0.35, 0.6, occ);
+    if (bead > 0.0) bead *= smoothstep(0.5, 0.66, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * smoothstep(0.35, 0.7, vnoise(vUv * vec2(7.0, 5.0)));
   }
-  if (bead > 0.0) c += above * (0.25 * closeW * closeW * bead * (0.3 + 0.7 * occ) * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 4.0));
+  // A drop is a lens: whichever way the weed under it faces, it holds a point of the sky, and is no brighter on a pale hem than in the black.
+  // And it shows only on weed that is lit enough to carry it: on the black of a hollow a drop is a white dot, not water, so it fades out there.
+  if (bead > 0.0) {
+    vec3 held = above * (DROP_SKY * (0.3 + 0.7 * occ));
+    vec3 weigh = vec3(0.2126, 0.7152, 0.0722);
+    bead *= smoothstep(0.03, 0.12, dot(c, weigh) / max(dot(held, weigh), 0.00001));
+    c = mix(c, max(c, held), closeW * closeW * bead * (1.0 - bare));
+  }
   c += above * (rill * (0.02 + 1.8 * fall * fall));
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
   float run = 0.0;
