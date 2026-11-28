@@ -94,7 +94,7 @@ const BODIES: readonly Body[] = [
   // As thin streaks of many small lumps it added up, through its depth, to one even brown veil right of the cliff. It is fewer, rounder billows
   // 25 m across with air between them: each has an underside the flow lights and a top that is dark, the cliff shows between them, and the
   // fire is spent on the way up through it.
-  { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.05, widen: 0.85, repeat: 230, hard: 7, climb: 13, colour: ROSE, foot: 0.22, lake: [0.7, 14], floor: [0.18, 22], lights: 1.5, tops: 0.5, solid: 0.2, streak: 1.2, taper: 1.0, sparse: 0.4, through: 1.0, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.04, widen: 0.85, repeat: 165, hard: 7, climb: 13, colour: ROSE, foot: 0.22, lake: [0.7, 14], floor: [0.18, 22], lights: 0.9, tops: 0.5, solid: 0.2, streak: 1.3, taper: 1.0, sparse: 0.4, through: 1.0, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(14, -4), radius: 26, height: 62, lean: [0.5, 0.2], dense: 0.007, widen: 0.9, repeat: 64, hard: 3.2, climb: 9, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(58, 44), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.005, widen: 0.3, repeat: 64, hard: 3.2, climb: 7, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, streak: 1.6, shots: { 'heart-05': 1, rest: 0.08 } },
   // The plume of the wide view: it stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture into the deck of smoke the sky draws (sky.ts). Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
@@ -279,21 +279,7 @@ export function create(ctx: HeartContext): HeartPiece {
           const windZ = GROUND_WIND[0] * Math.sin(turn) + GROUND_WIND[1] * Math.cos(turn);
           (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], Math.max(0.3, s.radius * (1 + 0.5 * own(1))));
           (steamB[i] as THREE.Vector4).set(windX, windZ, Math.min(18, s.rise * (2.6 + 1.2 * own(2))), s.strength * (1.7 + 1.0 * own(3)));
-          (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, 0.9 + 0.5 * own(4), 2.4, 3);
-          continue;
-        }
-        // The smoke of a fountain on the lake goes the same way: it stood over its pool as one round lump that swelled and sank in place. The low
-        // wind carries it off along the crust as a bank that widens and thins down the wind (its own lean gives the way), lit by the fire under it.
-        if (s.kind === 'smoke' && s.at[1] < 0.6 && ctx.rig.land.height(s.at[0], s.at[2]) <= 0) {
-          const own = (k: number): number => steamOwn[(index % 64) * 5 + k - 1] as number;
-          const lean = Math.hypot(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0);
-          const wayX = lean > 0.05 ? (s.lean?.[0] ?? 0) / lean : GROUND_WIND[0];
-          const wayZ = lean > 0.05 ? (s.lean?.[1] ?? 0) / lean : GROUND_WIND[1];
-          const turn = (own(5) - 0.5) * 0.3;
-          const foot = Math.max(1, s.radius * 0.6);
-          (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], foot);
-          (steamB[i] as THREE.Vector4).set(wayX * Math.cos(turn) - wayZ * Math.sin(turn), wayX * Math.sin(turn) + wayZ * Math.cos(turn), Math.min(110, s.rise * 1.4), (0.9 * Math.min(s.strength * 2.4, 1)) / s.radius);
-          (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, 3.5 + 1.0 * own(4), Math.max(6, s.radius * 0.9), 4);
+          (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, 0.9 + 0.5 * own(4), 3.4, 3);
           continue;
         }
         // No two vents are alike. The sources of a row of pools come with one size, one height and no lean, and stood as the same upright puff
@@ -327,7 +313,7 @@ export function create(ctx: HeartContext): HeartPiece {
         const kind = Math.min((steamC[i] as THREE.Vector4).w, 1);
         let seen: boolean;
         if ((steamC[i] as THREE.Vector4).w > 2.5) {
-          const top = 0.61 + 1.52 * A.w + 0.183 * B.z * ((steamC[i] as THREE.Vector4).w > 3.5 ? 2.5 : 1);
+          const top = 0.61 + 1.52 * A.w + 0.183 * B.z;
           seen = inView(A.x + B.x * B.z * 0.5, top * 0.5, A.z + B.y * B.z * 0.5, Math.hypot(B.z * 0.5 + A.w, 3.4 * A.w + 0.65 * B.z, top * 0.5));
         } else {
           const top = B.z * mix(0.92, 0.86, kind);
