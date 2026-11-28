@@ -188,12 +188,17 @@ void main() {
   float damp = smoothstep(tide + 40.0 + 30.0 * (macro - 0.5), tide + 2.0, y);
   // The run of water and of white down a face: by the level way across it and the height, whichever plane it is laid on.
   vec2 fall = vec2(mix(vBlade.w, vBlade.z, kB * (1.0 - top)), y);
+  // On rock that is no blade a run of water is a few strides long and wanders: runs the height of the rock, side by side, are a picture drawn out.
+  float plain = (1.0 - uFin) * (1.0 - step(0.5, uTier));
+  vec2 fall0 = fall;
+  fall = vec2(fall.x + plain * 1.6 * (vnoise(vec2(fall.x * 0.21, y * 0.19)) - 0.5), y * mix(1.0, 4.5, plain));
   float stain = smoothstep(0.42, 0.7, vnoise(fall * vec2(0.23, 0.021)) * 0.6 + vnoise(fall * vec2(0.9, 0.06) + 7.0) * 0.4);
+  stain *= 1.0 - 0.6 * plain * smoothstep(0.35, 0.65, vnoise(vWorld.xz * 0.07 + y * 0.05 + 3.0));
   // Dark water streaks run down a blade by the fall line, thin and long.
   // A few, broad and broken, in the places where the water gathers: never an even hatch over the face.
   float streak = smoothstep(0.5, 0.78, vnoise(fall * vec2(0.3, 0.008) + 23.0) * 0.7 + vnoise(fall * vec2(0.085, 0.004) + 5.0) * 0.3) * smoothstep(0.42, 0.62, vnoise(fall * vec2(0.021, 0.013) + 40.0)) * uFin;
   albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.6), max(stain * 0.7, 0.5 * streak) * (1.0 - step(0.5, uTier)));
-  float roost = vnoise(fall * vec2(0.031, 0.045) + 2.0) * 0.65 + vnoise(fall * vec2(0.11, 0.13)) * 0.35;
+  float roost = vnoise(fall0 * vec2(0.031, 0.045) + 2.0) * 0.65 + vnoise(fall0 * vec2(0.11, 0.13)) * 0.35;
   float run = vnoise(fall * vec2(1.3, 0.05) + 11.0) * 0.6 + vnoise(fall * vec2(4.1, 0.16)) * 0.4;
   // On a blade the runs are wide and few: a fine one over the whole face is a hatch.
   run = mix(run, vnoise(fall * vec2(0.37, 0.016) + 11.0) * 0.65 + vnoise(fall * vec2(0.11, 0.006)) * 0.35, uFin);
@@ -226,7 +231,7 @@ void main() {
     albedo = mix(albedo, vec3(0.8, 0.79, 0.76) * (0.6 + 1.3 * det.g), 0.6 * white);
   }
   albedo *= mix(1.0, 0.42, damp) * mix(1.0, 0.14, band);
-  vec3 wc = texture2D(tWeed, fall / 7.0).rgb;
+  vec3 wc = texture2D(tWeed, fall0 / 7.0).rgb;
   albedo = mix(albedo, wc * 0.9, weed);
   float rough = mix(0.92, 0.45, max(weed, band));
   float occ = (0.45 + 0.55 * smoothstep(0.2, 0.6, nh.z)) * (mix(0.55, 0.72, uFin) + mix(0.45, 0.28, uFin) * smoothstep(0.25, 0.6, nhW.z)) * mix(1.0, 0.45, weed) * vShade * (1.0 - 0.3 * soft * (1.0 - uFin));
@@ -421,7 +426,8 @@ void main() {
   vec2 ud = vUv / 2.7;
   vec3 det = texture2D(tWeed, ud).rgb;
   vec3 nh = texture2D(tWeedN, ud).rgb;
-  vec3 n = bump(n0, vWorld, uw, (wn.xy - 0.5) * m * 1.5);
+  // The sheet's hanks stand out of it here more and there less: one depth of groove over the whole wall is a comb's work.
+  vec3 n = bump(n0, vWorld, uw, (wn.xy - 0.5) * m * (0.3 + 1.3 * vnoise(vUv / vec2(9.0, 6.0) + 2.0)));
   n = normalize(n + (bump(n0, vWorld, ud, (nh.xy - 0.5) * 1.1) - n0));
   float fine = dot(det, vec3(0.333)) / 0.039;
   // Wet weed: dark olive and brown, its own colour where a hem turns to the light.
@@ -467,10 +473,16 @@ void main() {
   float wander = along + 1.1 * (vnoise(vec2(vWorld.y * 0.3, 3.0)) - 0.5) + 0.3 * (vnoise(vec2(vWorld.y * 1.3, 7.0)) - 0.5);
   float rill = smoothstep(1.0, 0.15, abs(wander)) * smoothstep(50.0, 25.0, length(vWorld.xz - uRill.xy));
   // It falls in threads that break into drops, not in a ribbon.
-  float fall = smoothstep(0.55, 0.85, vnoise(vec2(wander * 17.0, vWorld.y * 0.5 + uTime * 6.0))) * (0.45 + 0.55 * vnoise(vec2(wander * 3.1, vWorld.y * 2.3 + uTime * 9.0))) * smoothstep(0.3, 0.75, vnoise(vec2(wander * 29.0, vWorld.y * 6.0 + uTime * 16.0)));
-  float runs = rill * smoothstep(0.42, 0.7, vnoise(vec2(wander * 6.0, vWorld.y * 0.4 + uTime * 4.0))) * smoothstep(0.4, 0.7, vnoise(vec2(wander * 21.0, vWorld.y * 3.0 + uTime * 8.0)));
+  // Asked only where the water runs: the rest of the wall does not pay for it.
+  float fall = 0.0;
+  float runs = 0.0;
+  if (rill > 0.0) {
+    fall = smoothstep(0.55, 0.85, vnoise(vec2(wander * 17.0, vWorld.y * 0.5 + uTime * 6.0))) * (0.45 + 0.55 * vnoise(vec2(wander * 3.1, vWorld.y * 2.3 + uTime * 9.0))) * smoothstep(0.3, 0.75, vnoise(vec2(wander * 29.0, vWorld.y * 6.0 + uTime * 16.0)));
+    runs = rill * smoothstep(0.42, 0.7, vnoise(vec2(wander * 6.0, vWorld.y * 0.4 + uTime * 4.0))) * smoothstep(0.4, 0.7, vnoise(vec2(wander * 21.0, vWorld.y * 3.0 + uTime * 8.0)));
+  }
   albedo *= 1.0 - 0.4 * rill;
-  float rough = mix(mix(0.42 + 0.3 * (1.0 - wn.z), mix(0.86, 0.7, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
+  // From far off the mass is matt: a wall of weed is no grey sheen of the sky, only its threads of water are bright.
+  float rough = mix(mix(0.9 + 0.08 * (1.0 - wn.z), mix(0.86, 0.7, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
   float occ = (0.25 + 0.75 * smoothstep(0.08, 0.5, wn.z)) * (0.6 + 0.4 * smoothstep(0.2, 0.7, nh.z)) * (0.6 + 0.4 * vShade);
   // On a wall of beds the weed hangs in clumps from each ledge and thins toward the next one down: between the clumps the wall is bare
   // wet rock with its barnacles, dark under the ledge it hangs from.
@@ -499,13 +511,13 @@ void main() {
   // Close, the wet shows as small glints on the blades of weed that turn to the sky, not as a sheen over the whole wall.
   c += above * vec3(1.0, 0.9, 0.7) * (0.1 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 60.0) * (0.4 + 0.6 * occ));
   // The black wet between the fronds holds the sky in beads: points of light, none of them a stride from the next.
-  float bead = smoothstep(0.84, 0.92, vnoise(vUv * vec2(43.0, 37.0))) * smoothstep(0.3, 0.7, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * (0.3 + 0.7 * vnoise(vUv * vec2(7.0, 5.0)));
-  c += above * (0.6 * closeW * closeW * bead * (0.3 + 0.7 * occ) * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 4.0));
+  float bead = smoothstep(0.91, 0.96, vnoise(vUv * vec2(43.0, 37.0))) * smoothstep(0.3, 0.7, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * (0.3 + 0.7 * vnoise(vUv * vec2(7.0, 5.0)));
+  c += above * (0.25 * closeW * closeW * bead * (0.3 + 0.7 * occ) * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 4.0));
   c += above * (rill * (0.02 + 1.8 * fall * fall));
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
   float run = smoothstep(0.8, 0.96, vnoise(vec2(vUv.x * 9.0, vUv.y * 0.3 + uTime * 1.6))) * smoothstep(0.55, 0.8, vnoise(vec2(vUv.x * 1.1, vUv.y * 0.13 - uTime * 0.07) + 3.0));
   c += above * (0.05 * closeW * run * (0.4 + 0.6 * occ));
-  c += above * ((1.0 - 0.7 * closeW) * 0.05 * uDark * uDark * hem * (1.0 - bare) * smoothstep(0.55, 0.9, nh.z + 0.3 * vnoise(vUv * 3.0 + uTime * 0.25)));
+  c += above * vec3(1.0, 0.9, 0.72) * ((1.0 - 0.7 * closeW) * 0.03 * uDark * uDark * hem * (1.0 - bare) * smoothstep(0.55, 0.9, nh.z + 0.3 * vnoise(vUv * 3.0 + uTime * 0.25)));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -791,12 +803,14 @@ void main() {
   float tuft = smoothstep(0.45, 0.6, 0.45 * vnoise(vWorld.xz * 2.1 + 4.0) + 0.3 * vnoise(vWorld.xz * 6.3 + vWorld.y * 3.0) + 0.25 * vnoise(vWorld.xz * 19.0 + vWorld.y * 11.0) + 0.3 * (n0.y - 0.6)) * (0.25 + 0.75 * smoothstep(0.02, 0.075, wc.g));
   // Where the feeders' lens stands every rock wears it so.
   float warm = max(uWarm, uFeed.z * smoothstep(45.0, 20.0, length(vWorld.xz - uFeed.xy)));
-  gold = mix(gold, mix(vec3(0.022, 0.018, 0.012), vec3(0.23, 0.125, 0.02), tuft) * (0.75 + 0.5 * smoothstep(0.015, 0.11, wc.g)), warm);
+  // Elsewhere the same tufts in olive brown: a rock of the flat is grown over and matt, no black glass.
+  vec3 grown = mix(vec3(0.022, 0.018, 0.012), mix(vec3(0.1, 0.068, 0.02), vec3(0.23, 0.125, 0.02), warm), tuft) * (0.75 + 0.5 * smoothstep(0.015, 0.11, wc.g));
+  gold = mix(gold, grown, max(warm, 0.75));
   float crust = smoothstep(0.55, 0.7, vnoise(flat2 * 3.1 + 2.0) * 0.5 + vnoise(flat2 * 23.0) * 0.5 + 0.3 * (nh.z - 0.5)) * (1.0 - cover) * uWeedy;
   vec3 albedo = mix(side * mix(0.55 + 0.85 * tone, 0.6, uWeedy), gold, 0.85 * cover);
   albedo = mix(albedo, vec3(0.3, 0.29, 0.26), 0.6 * crust);
   // Weed is no mirror: wet straps, matt in the mass, bright only in small glints.
-  float rough = mix(mix(mix(0.3, 0.66, uDry), 0.45, uWeedy), 0.66 - 0.5 * smoothstep(0.62, 0.8, wn.z), cover);
+  float rough = mix(mix(mix(0.3, 0.66, uDry), 0.45, uWeedy), 0.72 - 0.34 * smoothstep(0.62, 0.8, wn.z), cover);
   // What stands in the pool or just out of it is soaked: near black and bright where it turns to the sky.
   float soak = smoothstep(uPool + mix(0.75, 0.035, uDry), uPool + mix(0.15, 0.004, uDry), vWorld.y + mix(0.3, 0.02, uDry) * (vnoise(vWorld.xz * mix(1.7, 11.0, uDry)) - 0.5));
   albedo *= mix(1.0, mix(0.58, 0.7, uWeedy) * mix(1.0, 0.55, uDry), soak);

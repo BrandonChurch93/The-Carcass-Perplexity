@@ -53,19 +53,26 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
       const near = options.next() < 0.4;
       const phi = near ? options.focus[0] + 0.22 * (options.next() + options.next() - 1) : options.from + (options.to - options.from) * options.next();
       foot.copy(surface(rib, tTide, phi, at, bt));
-      const top = weedTop(foot.x, foot.z) - 1.5;
+      // Its hold lies well under the weed's upper line: a frond that began at the line stood over it as a spike.
+      const top = weedTop(foot.x, foot.z) - 2.2;
       hank = { phi, top: 3 + (top - 3) * Math.sqrt(options.next()), length: 1.5 + 4.5 * options.next() ** 1.5, layer: options.next(), tone: options.next(), amber: options.next() < 0.42 ? 0.5 + 0.5 * options.next() : 0 };
     }
-    const phi0 = hank.phi + (0.9 * (options.next() - 0.5)) / reach;
+    // A hank is a clump: its fronds lie over one another, and the wall is dark between it and the next.
+    const phi0 = hank.phi + (0.5 * (options.next() - 0.5)) / reach;
     const yTop = hank.top - 0.9 * options.next();
-    const length = hank.length * (0.55 + 0.45 * options.next());
     // Where a lens comes near, a frond is a hand or two broad; far off they are broader, so that the wall keeps its hem.
     const arc = (phi0 - options.focus[0]) * reach;
     const far = Math.abs(arc) > 34;
-    const breadth = far ? 0.12 + 0.3 * options.next() : 0.07 + 0.2 * options.next();
+    // Near, of every breadth: a few threads, most a hand or two, one in five a blade as broad as a forearm is long.
+    const lot = options.next();
+    const breadth = far ? 0.12 + 0.3 * lot : lot < 0.34 ? 0.05 + 0.27 * lot : lot < 0.82 ? 0.15 + 0.36 * (lot - 0.34) : 0.34 + 1.4 * (lot - 0.82);
+    // A broad blade is a short one.
+    const length = hank.length * (0.55 + 0.45 * options.next()) * (1 - 0.35 * smooth(0.3, 0.55, breadth));
     const layer = Math.min(1, hank.layer * 0.8 + 0.25 * options.next());
     const twist = 0.7 * (options.next() - 0.5);
-    const drift = 0.6 * (options.next() - 0.5);
+    // Most hang by the fall line; one in six lies across its neighbours.
+    const drift = (options.next() < 0.17 ? 2.8 : 0.6) * (options.next() - 0.5);
+    const swing = 0.06 + 0.22 * options.next();
     const wave = options.next() * 6.283;
     const tone = Math.min(1, Math.max(0, hank.tone + 0.3 * (options.next() - 0.5)));
     const amber = Math.max(hank.amber * options.next(), 0.07 * options.next());
@@ -76,7 +83,7 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
     for (let k = 0; k < rows; k++) {
       const f = k / SEGMENTS;
       const y = yTop + (yEnd - yTop) * f;
-      const phi = phi0 + (drift * f + 0.14 * Math.sin(wave + 4.4 * f) + 0.05 * Math.sin(wave * 2.3 + 11 * f)) / reach;
+      const phi = phi0 + (drift * f + swing * Math.sin(wave + 4.4 * f) + 0.05 * Math.sin(wave * 2.3 + 11 * f)) / reach;
       const out = behind ? 0.05 + 0.2 * layer : 0.15 + 0.6 * layer + 0.12 * Math.sin(Math.PI * f) * (0.3 + layer);
       face(phi, y, out, c);
       face(phi + 0.01, y, out, c2);
@@ -86,7 +93,7 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
       const turn = twist + 0.35 * Math.sin(wave * 1.7 + 4.3 * f);
       side.multiplyScalar(Math.cos(turn)).addScaledVector(outward, Math.sin(turn)).normalize();
       // Narrow where it holds, broad a third of the way down, drawn to a point.
-      const w = 0.5 * breadth * (0.2 + 0.8 * smooth(0, 0.22, f)) * (1 - 0.6 * smooth(0.7, 1, f)) * (1 + 0.25 * Math.sin(wave + 7 * f));
+      const w = 0.5 * breadth * (0.4 + 0.6 * smooth(0, 0.22, f)) * (1 - 0.6 * smooth(0.7, 1, f)) * (1 + 0.25 * Math.sin(wave + 7 * f));
       down.crossVectors(side, outward);
       for (let s = 0; s < 3; s++) {
         const q = (v0 + k * 3 + s) * 3;
@@ -195,13 +202,13 @@ void main() {
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
   // Wet through, but no hose and no mirror: the film on it stands in beads, so the sky on it is a scatter of points and not a sheen.
-  float bead = close * smoothstep(0.86, 0.93, vnoise(vec2(vUv.x * 9.0 + vTone.x * 17.0, vUv.y * vTone.w * 45.0 + vTone.x * 131.0)));
-  float rough = 0.74 + 0.2 * wr - 0.45 * bead;
+  float bead = close * smoothstep(0.915, 0.96, vnoise(vec2(vUv.x * 9.0 + vTone.x * 17.0, vUv.y * vTone.w * 45.0 + vTone.x * 131.0)));
+  float rough = 0.74 + 0.2 * wr - 0.2 * bead;
   // A frond seen along itself is no mirror of the sky: its skin is ruffled finer than the lens sees, so it is lit as if it stood half toward the lens.
   n = normalize(n + v * max(0.0, 0.55 - dot(n, v)));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
-  c += above * (0.35 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
+  c += above * (0.14 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
   // The day through a frond that hangs free of the wall.
   c += amber * above * (0.07 * close * thin * smoothstep(0.45, 0.95, vTone.z) * occ);
   // The low sun through a thin wet frond.
