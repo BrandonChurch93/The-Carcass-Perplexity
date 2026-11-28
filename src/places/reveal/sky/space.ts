@@ -250,10 +250,11 @@ const MOON_VERTEX = /* glsl */ `
 uniform vec4 uSky;
 uniform vec3 uMoon;
 varying vec2 vDisc;
+varying vec2 vOver;
 void main() {
   vDisc = position.xy * 1.06;
-  vec2 xz = uSky.xy + (uMoon.xy + vDisc * uMoon.z) * uSky.z;
-  gl_Position = projectionMatrix * viewMatrix * vec4(xz.x, 12.0, xz.y, 1.0);
+  vOver = uSky.xy + (uMoon.xy + vDisc * uMoon.z) * uSky.z;
+  gl_Position = projectionMatrix * viewMatrix * vec4(vOver.x, 12.0, vOver.y, 1.0);
 }`;
 
 const MOON_FRAGMENT = /* glsl */ `
@@ -263,11 +264,14 @@ uniform vec2 uLevels;
 uniform vec3 uMoon;
 uniform sampler2D uMoonMap;
 varying vec2 vDisc;
+varying vec2 vOver;
 void main() {
   float r = length(vDisc);
-  // (The rim of the disc is softened over a pixel of this picture.)
+  // (The rim of the disc is softened over a pixel of this picture. And the moon is behind the planet: it is not there where the
+  // planet or its lit air stands before it, as the stars are not.)
   float pixel = 1.0 / (uMoon.z * uSky.w);
-  float a = 1.0 - smoothstep(1.0 - pixel, 1.0 + pixel, r);
+  float km = (length(vOver - uLimb.xy) * uLimb.w - 1.0) * uLimb.z;
+  float a = (1.0 - smoothstep(1.0 - pixel, 1.0 + pixel, r)) * smoothstep(16.0, 90.0, km);
   vec3 face = textureLod(uMoonMap, vDisc * (252.0 / 512.0) + 0.5, uLevels.y).rgb;
   // In the sky's measure: x right, y down the master, z toward the eye. The sun of the rig is x, up, z.
   float pz = sqrt(max(1.0 - r * r, 0.0));
