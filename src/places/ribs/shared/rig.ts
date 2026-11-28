@@ -63,7 +63,7 @@ export const DOME = { gain: 1.0, veil: 0.035, lift: 1.2, shut: 0.62, storm: 0.85
 /** The low sun on what stands high: from this height, whole by this one, how much thinner the cloud counts there (0.2 is a whole step of its edge); and the floor under every shade, as a share of the ground's light. */
 export const HEADS = { from: 60, to: 260, thin: 0.3, floor: 0.9, storm: 1.0 };
 /** The strait's held shot: what the sky's light and the lit flats' bounce are given there, so the near cliff and the stones keep the picture's blacks. */
-const HELD = { shade: 0.8, bounce: 0.45 };
+const HELD = { shade: 0.64, bounce: 0.45, sun: 1.15, mirror: 2.6 };
 /** The sun of the approach: the low warm light of the first wave on the first blade, going to the place's ivory as the storm ends. */
 const STORM_SUN = [7.6, 5.2, 3.0] as const;
 /** What the lit flats and sea throw back up of the sun's light, by colour: wet sand and shingle, warm. */
@@ -453,6 +453,8 @@ export function createRig(): Rig {
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const deck = new THREE.Vector4(DECK.shut, DECK.open, DECK.whole, DECK.under);
+  const breakWarm = new THREE.Vector3(1, 1, 1);
+  const mirrorLift = { value: 0 };
   const deckEdge = new THREE.Vector3(DECK.from, DECK.to, DECK.dome);
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 0);
@@ -529,7 +531,9 @@ export function createRig(): Rig {
     uLoop: { value: loopAt },
     // The scud's seconds: its own, a second sheet's in the card loop, and that sheet's share (glsl.ts, skyDome).
     uScud: { value: scud },
-    uBreakWarm: { value: new THREE.Vector3(...BREAK_WARM) },
+    uBreakWarm: { value: breakWarm },
+    // How much more of the break a mirror of the sky is given than the dome (glsl.ts, domeTone).
+    uMirrorLift: mirrorLift,
     // How hard the lumps cut the dome picture's soft edges anew (glsl.ts, skyDome).
     uDomeCut: { value: DOME_CUT },
     uSolo: { value: 0 },
@@ -700,6 +704,9 @@ export function createRig(): Rig {
       deck.w = share === undefined ? DECK.under : 1 - (1 - DECK.staged) * share;
       deckEdge.z = DECK.dome * (stagedBreak().deck ?? 1) + (stagedBreak().dome ?? 0);
       const warm = stagedBreak().warm ?? 0;
+      // The cloud round the break takes the low sun's colour only where the shot's own light is warm: over the strait it stands white.
+      const glow = Math.min(1, Math.max(0, warm));
+      breakWarm.set(1 + (BREAK_WARM[0] - 1) * glow, 1 + (BREAK_WARM[1] - 1) * glow, 1 + (BREAK_WARM[2] - 1) * glow);
       if (warm !== 0) {
         skyWarm.set(1 + SKY_WARM[0] * warm, 1 + SKY_WARM[1] * warm, 1 + SKY_WARM[2] * warm);
         skyZenith.multiply(skyWarm);
@@ -707,7 +714,10 @@ export function createRig(): Rig {
         skyGround.multiply(skyWarm);
         haze.multiply(skyWarm);
       }
-      sunColour.set(...SUN.colour).multiply(sunWarm);
+      // Held on the strait the storm's shade is deeper and what the sun strikes through the deck's gaps burns: the wet flat throws the
+      // break back brighter than the dome shows it (HELD.mirror), and the ridges are struck (HELD.sun).
+      sunColour.set(...SUN.colour).multiply(sunWarm).multiplyScalar(held ? HELD.sun : 1);
+      mirrorLift.value = held ? HELD.mirror : 0;
       if (weight !== 0) {
         // The burning break stands in the right of the frame as the film opens, and drifts to its own place.
         const turn = STORM.turn * weight;

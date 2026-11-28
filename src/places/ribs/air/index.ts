@@ -115,8 +115,12 @@ vec2 fogAt(vec2 x, float far) {
   float body = 0.16 * sheet + pool * (0.3 + 0.7 * sheet) + 1.2 * tail;
   if (body < 0.02) return vec2(0.0, 1.0);
   float mid = textureLod(tCloudShade, q / 430.0 + vec2(0.37, 0.61), level).g;
-  float fine = textureLod(tCloudShade, vec2(q.x + ${glslFloat(WIND.speed * 0.4)} * uFog.y, q.y) / 150.0 + 0.29, level + 1.5).g;
-  float lump = mix(mid, 0.5 * mid + 0.8 * fine - 0.15, smoothstep(240.0, 70.0, far));
+  // The fine lumps count only in a stride short enough to show them: a longer one does not read them at all.
+  float lump = mid;
+  if (far < 240.0) {
+    float fine = textureLod(tCloudShade, vec2(q.x + ${glslFloat(WIND.speed * 0.4)} * uFog.y, q.y) / 150.0 + 0.29, level + 1.5).g;
+    lump = mix(mid, 0.5 * mid + 0.8 * fine - 0.15, smoothstep(240.0, 70.0, far));
+  }
   float torn = smoothstep(0.3, 0.72, lump);
   vec2 h = x - uFogHole.xy;
   float blown = 1.0 - exp(-dot(h, h) / (uFogHole.z * uFogHole.z));
@@ -344,8 +348,9 @@ export function create(ctx: Context): Piece {
   // Staged for the colony's shot only: the air itself stands thicker, so that the blade behind the colony's rock is a pale shape far off
   // and the roosts read against it. (It was a column of mist round that blade, which read as a flat card.)
   const colonyShot = shotSpan('ribs-03');
-  // The bore's shot: the spray's own air stands round the lens, and the low mist with it.
+  // The bore's shot and the drowned one's: the spray's own air and the weed's wet air stand round the lens, and the low mist with them.
   const boreShot = shotSpan('ribs-06');
+  const drownedShot = shotSpan('ribs-05');
   const nearMist = new THREE.Vector2(AIR.clearTo, AIR.wholeAt);
   const air = new THREE.Vector4(AIR.haze, AIR.high, AIR.mist, AIR.low);
   const volume = new THREE.ShaderMaterial({
@@ -400,7 +405,7 @@ export function create(ctx: Context): Piece {
       const phase = loopPhase();
       const mist = phase === null ? 1 : 1 + LOOP_MIST * (1 - Math.cos(phase * Math.PI * 2)) * 0.5;
       farAir.value = thick ? AIR.colony - 1 : 0;
-      if (staged >= boreShot.from && staged < boreShot.to) nearMist.set(30, 380);
+      if ((staged >= boreShot.from && staged < boreShot.to) || (staged >= drownedShot.from && staged < drownedShot.to)) nearMist.set(30, 380);
       else nearMist.set(AIR.clearTo, AIR.wholeAt);
       if (phase === null) driftAt.set(seconds, 0, 0);
       else driftAt.set(T0 + LOOP_BANKS * config.deliver.cardLoop.seconds * phase, T0 + LOOP_BANKS * config.deliver.cardLoop.seconds * (phase - 1), phase);
