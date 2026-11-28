@@ -400,9 +400,10 @@ void main() {
   // A strand is thin all through, not only at its edge.
   edge = mix(edge, 0.36, tendril);
   colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.3, tendril));
-  // Staged: the sun breaks through on the one far off in the vapour, so it is paler than the vapour it stands in.
+  // Staged: the sun breaks through on the one far off in the vapour, so it is paler than the vapour it stands in, and it keeps its body:
+  // the back that faces the sun is brightest and the belly and the side in its own shade the least.
   float veil = uVeiled.z * smoothstep(8.0, 5.0, length(vWorld.xz - uVeiled.xy));
-  colour = mix(colour, max(colour * 8.0, (0.66 * albedo + vec3(0.2, 0.16, 0.14) * (1.0 - tendril)) * fogColour * 16.0 * (0.76 + 0.3 * n.y) * (0.62 + 0.38 * occ)), veil);
+  colour = mix(colour, max(colour * 8.0, (0.66 * albedo + vec3(0.2, 0.16, 0.14) * (1.0 - tendril)) * fogColour * mix(8.5, 25.0, clamp(0.45 + 0.4 * n.y + 0.3 * dot(n, flat_), 0.0, 1.0)) * (0.75 + 0.25 * occ)), veil);
   if (uMirror > 0.5) {
     if (vWorld.y < uSea) discard;
     gl_FragColor = vec4(colour * (1.0 - uSolo), 1.0);

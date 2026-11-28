@@ -905,8 +905,11 @@ export class Wader {
       let dy = footY - hy;
       let dz = footZ - hz;
       let d = Math.hypot(dx, dy, dz);
-      // A leg that stands is all but straight: the little it has to give is taken up in the joints, not shown as a bend.
-      const long = Math.min(whole * 1.02, Math.max(d * (leg.fore > 0 ? 1.004 : 1.011), whole * 0.972));
+      // A leg that stands is all but straight: the little it has to give is taken up in the joints, not shown as a bend. One that bears
+      // alone, while the foot across from it is in the air, gives at its joint under the weight.
+      const across = feet[(j + 2) % 4] as Foot;
+      const alone = smooth(0, 0.3 * b.stepH, across.lift) * (1 - smooth(0, 0.1 * b.stepH, foot.lift));
+      const long = Math.min(whole * (1.02 + 0.014 * alone), Math.max(d * ((leg.fore > 0 ? 1.004 : 1.011) + (leg.fore > 0 ? 0.01 : 0.02) * alone), whole * 0.972));
       const l1 = (long * b.knee * b.legLen) / whole;
       const l2 = long - l1;
       const reach = Math.min(d, (l1 + l2) * 0.9995);

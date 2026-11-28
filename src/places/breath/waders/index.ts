@@ -1,7 +1,7 @@
 // The waders: the herd in the tide channel, the far flock on the shallows, and the one that stands over the drop at the rim.
 // Each animal is a skin of tubes posed on the processor from the time alone (animal.ts); who each one is and what it does is in herd.ts.
 import * as THREE from 'three';
-import { MIST_WADER, NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, keySeconds, shotSpan } from '../shared/anchors';
+import { NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, keySeconds, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
 import { Wader, shuffle, type Env } from './animal';
@@ -96,7 +96,7 @@ export function create(ctx: Context): Piece {
   // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
   // Staged: in the view of the plumes it is a whole animal at mid distance in the glare, large and white, seen in the gap between the fronds,
   // side on with its neck up, as the picture has it: a sixth of the frame high.
-  const MIST = { x: MIST_WADER.x, z: MIST_WADER.z, heading: MIST_WADER.heading };
+  const MIST = { x: -37.7, z: -23.6, heading: 95 };
   // Staged: in the view of the rim it stands clear of the growth, before it, where the picture of the rim has it.
   const RIM_NEAR = { x: -28.0, z: 17.4, heading: 38 };
   const rimUp = rim.plan.up;
