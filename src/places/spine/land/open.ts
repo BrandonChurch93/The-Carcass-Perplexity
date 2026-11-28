@@ -365,7 +365,7 @@ void main() {
     // The trail itself, seen farther than any one print: the snow the herd has trodden is packed, a shade greyer and bluer than the
     // drift beside it, in a ragged band. (Seen low from beside the dead one a print is thinner than a pixel a few metres on, and the
     // line that leads to the body was lost.)
-    if (vSL.x > TRAIL_FROM) if (vSL.x < MOUTH_S + 6.0) {
+    if (vSL.x > TRAIL_FROM) if (vSL.x < MOUTH_S + 6.0) if (abs(vSL.y - trailAt(vSL.x)) < 1.3) {
       float off = abs(vSL.y - trailAt(vSL.x)) + 0.7 * (vnoise(vSL * vec2(0.5, 1.9)) - 0.5) + 0.3 * (vnoise(vSL * vec2(2.1, 4.3) + 3.0) - 0.5);
       float trod = smoothstep(0.7, 0.2, off) * smoothstep(0.6, 0.15, printSpan) * (0.4 + 0.6 * vnoise(vSL * vec2(0.9, 0.6) + 5.0));
       snowOcc *= 1.0 - 0.26 * trod;
