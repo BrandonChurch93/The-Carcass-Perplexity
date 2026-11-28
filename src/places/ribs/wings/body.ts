@@ -223,11 +223,18 @@ export interface Pose {
   shade: number;
   /** Each animal's own number, for what differs strand by strand. */
   seed: number;
+  /** Its build: how deep and wide the trunk is and how long the neck, 1 as the feeder's. */
+  girth: number;
+  neck: number;
+  /** Each sail swung out from the flank about the ridge of the back, radians, left and right: 0 folded against it. */
+  open: [number, number];
+  /** How much of the picture's amber its sails keep, -0.4 (bleached) to 1: 0 as the feeder's. */
+  warm: number;
 }
 export const pose = (): Pose => ({
   x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, size: 1, tone: 1,
   feet: [{ x: 0, y: 0, z: 0, yaw: 0, droop: 0 }, { x: 0, y: 0, z: 0, yaw: 0, droop: 0 }],
-  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, tuft: 1, rise: 0, shade: 0, seed: 0,
+  head: [HEAD_REST[0], HEAD_REST[1], 0], headPitch: -0.75, headYaw: 0, floor: 0, trail: [0, 0, 0], shake: 0, clock: 0, beat: 0, sail: 0, tuft: 1, rise: 0, shade: 0, seed: 0, girth: 1, neck: 1, open: [0, 0], warm: 0,
 });
 
 /** The body's frame in the place: the columns ahead, up and left of a pose. */
@@ -261,13 +268,14 @@ export function inPlace(p: Pose, at: V3): V3 {
 
 /** The neck: a curve from the shoulder to the head that keeps its length. Fills `curve` with NECK_RINGS points and ways, in the body's frame. */
 const curve = { p: new Float32Array((NECK_RINGS + 1) * 3), t: new Float32Array((NECK_RINGS + 1) * 3) };
-function bend(head: V3, pitch: number, yaw: number, rise = 0): void {
+function bend(head: V3, pitch: number, yaw: number, rise = 0, scale = 1): void {
+  const whole = NECK_LONG * scale;
   let hx = head[0] - SHOULDER[0];
   let hy = head[1] - SHOULDER[1];
   let hz = head[2] - SHOULDER[2];
   const far = Math.hypot(hx, hy, hz) || 1e-6;
   // A neck cannot reach past its own length.
-  const reach = Math.min(1, (0.985 * NECK_LONG) / far);
+  const reach = Math.min(1, (0.985 * whole) / far);
   hx *= reach;
   hy *= reach;
   hz *= reach;
@@ -304,7 +312,7 @@ function bend(head: V3, pitch: number, yaw: number, rise = 0): void {
   let hi = 2.2;
   for (let i = 0; i < 9; i++) {
     const mid = 0.5 * (lo + hi);
-    if (long(mid) < NECK_LONG) lo = mid;
+    if (long(mid) < whole) lo = mid;
     else hi = mid;
   }
   const h = 0.5 * (lo + hi);
@@ -323,7 +331,7 @@ function bend(head: V3, pitch: number, yaw: number, rise = 0): void {
 
 /** Where the root of the tuft is in the place for a pose, and the way the neck ends there. */
 export function headInPlace(p: Pose): { at: V3; way: V3 } {
-  bend(p.head, p.headPitch, p.headYaw, p.rise);
+  bend(p.head, p.headPitch, p.headYaw, p.rise, p.neck);
   const n = NECK_RINGS * 3;
   const at = inPlace(p, [curve.p[n] as number, curve.p[n + 1] as number, curve.p[n + 2] as number]);
   frame(p, basis);
@@ -428,10 +436,13 @@ void main() {
   float skin = sail ? mix(0.3 * free, 1.0, amber) * mix(0.35, 1.0, free) : 0.0;
   // A sail that lies folded and dry on a back is as pale as the hide: only one held up to the light keeps the picture's deep amber.
   vec3 pale = min(pow(skinPic, vec3(0.8)) * 1.22, vec3(0.94));
-  vec3 albedo = (sail ? mix(pale, pow(skinPic, vec3(0.92)), 0.3 + 0.7 * uThrough) : pale) * vMix.z;
+  float warm = sail ? clamp(vMix.x - 2.0, -0.4, 1.0) : 0.0;
+  vec3 albedo = (sail ? mix(pale, pow(skinPic, vec3(0.92)), min(1.0, 0.3 + 0.7 * uThrough + 0.6 * warm)) : pale) * vMix.z;
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.02, 0.98, 0.93), uGrey * (1.0 - skin * (1.0 - uGrey)));
   // And a folded, dry one has lost most of its colour.
-  if (sail) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.05, 0.98, 0.9), 0.32 * (1.0 - uThrough));
+  if (sail) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.05, 0.98, 0.9), min(0.9, 0.32 * (1.0 - uThrough) * (1.0 - warm) + 1.3 * max(-warm, 0.0)));
+  // One bleached by a season on the ledges is as pale as bone.
+  if (sail) albedo *= 1.0 + 1.2 * max(-warm, 0.0);
   // Wet where it stands in the pool, and a hand over it.
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.45, vWorld.y);
   albedo *= 1.0 - 0.42 * wet;
@@ -676,9 +687,9 @@ export class Bodies {
       const ring = torso[r] as (typeof torso)[number];
       const c = out((ring.x - HIPS[0]) / PX, (HIPS[1] - ring.y) / PX, 0);
       const up = turn(ring.ty, ring.tx, 0);
-      this.ring(c[0], c[1], c[2], up[0], up[1], up[2], l[0], l[1], l[2], (ring.r / PX) * size, ((ring.r * (WIDE[0] as number)) / PX) * size, SIDES, COS.trunk, SIN.trunk);
+      this.ring(c[0], c[1], c[2], up[0], up[1], up[2], l[0], l[1], l[2], (ring.r / PX) * size * p.girth, ((ring.r * (WIDE[0] as number)) / PX) * size * p.girth, SIDES, COS.trunk, SIN.trunk);
     }
-    bend(p.head, p.headPitch, p.headYaw, p.rise);
+    bend(p.head, p.headPitch, p.headYaw, p.rise, p.neck);
     // The ring keeps its top as the neck bends: carried along the curve from the shoulder, never spun about it.
     let ux = (torso[TORSO_RINGS - 1] as (typeof torso)[number]).ty;
     let uy = (torso[TORSO_RINGS - 1] as (typeof torso)[number]).tx;
@@ -705,7 +716,9 @@ export class Bodies {
       const up = turn(ux, uy, uz);
       const side: V3 = [t[1] * up[2] - t[2] * up[1], t[2] * up[0] - t[0] * up[2], t[0] * up[1] - t[1] * up[0]];
       const wide = (WIDE[0] as number) + ((WIDE[1] as number) - (WIDE[0] as number)) * smooth(0, 0.4, (r + 1) / NECK_RINGS);
-      this.ring(c[0], c[1], c[2], up[0], up[1], up[2], side[0], side[1], side[2], (ring.r / PX) * size, ((ring.r * wide) / PX) * size, SIDES, COS.trunk, SIN.trunk);
+      // A deep trunk runs into its neck: the neck is its own width by a third of its length.
+      const deep = size * (1 + (p.girth - 1) * (1 - smooth(0, 0.35, (r + 1) / NECK_RINGS)));
+      this.ring(c[0], c[1], c[2], up[0], up[1], up[2], side[0], side[1], side[2], (ring.r / PX) * deep, ((ring.r * wide) / PX) * deep, SIDES, COS.trunk, SIN.trunk);
       if (r === NECK_RINGS - 2) {
         tip = c;
         tipWay = t;
@@ -898,25 +911,41 @@ export class Bodies {
     let n = (v0 + AT.sails) * 3;
     for (let side = 0; side < 2; side++) {
       const sign = side === 0 ? 1 : -1;
+      const open = p.open[side] as number;
       for (let k = 0; k < sail.count; k++) {
-        const x = ((sail.points[k * 6] as number) - HIPS[0]) / PX - wx0;
-        const y = (HIPS[1] - (sail.points[k * 6 + 1] as number)) / PX - wy0;
-        const z = (sail.points[k * 6 + 2] as number) * sign;
+        const px = sail.points[k * 6] as number;
+        const x = (px - HIPS[0]) / PX - wx0;
+        let y = (HIPS[1] - (sail.points[k * 6 + 1] as number)) / PX - wy0;
+        let z = (sail.points[k * 6 + 2] as number) * p.girth;
+        let nx = sail.points[k * 6 + 3] as number;
+        let ny = sail.points[k * 6 + 4] as number;
+        let nz = sail.points[k * 6 + 5] as number;
+        if (open !== 0) {
+          // Swung out about the ridge of the back, where it hangs from: less at its far edge, which droops.
+          const ridge = (HIPS[1] - along(RIDGE, px)) / PX - wy0;
+          const hung = y - ridge;
+          const o = open * (1 - 0.22 * Math.min(1, Math.abs(hung) / 1.2));
+          const co = Math.cos(o);
+          const so = Math.sin(o);
+          y = ridge + hung * co + z * so;
+          z = z * co - hung * so;
+          const my = ny * co + nz * so;
+          nz = nz * co - ny * so;
+          ny = my;
+        }
         // Lifted about the wrist: the further out along the sail, the more.
         const a = -p.sail * (0.6 + 0.5 * Math.min(1, Math.hypot(x, y) / 2.4));
         const c = Math.cos(a);
         const s = Math.sin(a);
-        const at = out(wx0 + x * c - y * s, wy0 + x * s + y * c, z * (1 + 0.6 * p.sail));
-        const nx = sail.points[k * 6 + 3] as number;
-        const ny = sail.points[k * 6 + 4] as number;
-        const nz = (sail.points[k * 6 + 5] as number) * sign;
-        const w = turn(nx * c - ny * s, nx * s + ny * c, nz);
+        const at = out(wx0 + x * c - y * s, wy0 + x * s + y * c, z * sign * (1 + 0.6 * p.sail));
+        const w = turn(nx * c - ny * s, nx * s + ny * c, nz * sign);
         this.at[n] = at[0];
         this.at[n + 1] = at[1];
         this.at[n + 2] = at[2];
         this.way[n] = w[0];
         this.way[n + 1] = w[1];
         this.way[n + 2] = w[2];
+        this.mix[(v0 + AT.sails + side * sail.count + k) * 3] = 2 + p.warm;
         n += 3;
       }
     }
