@@ -97,7 +97,7 @@ export const BANKS = {
   drift: 0.9,
   rise: 0.3,
   shots: [
-    { from: 0, amount: 0.15, start: [70, 260] },
+    { from: 0, amount: 0.06, start: [120, 500] },
     { from: (5833 - 5618) / 60, amount: 0.7, start: [16, 60] },
     { from: (6048 - 5618) / 60, amount: 0.15, start: [60, 220] },
     { from: (6263 - 5618) / 60, amount: 1.0, start: [26, 80] },
@@ -560,7 +560,11 @@ void main() {
   float airLit = mix(1.0, 0.8 + 0.4 * lightField, farShare);
   float airBody = mix(1.0, 0.25 + 1.5 * mix(0.5 * patchy.g + 0.5 * banks.g, strata, 0.4), farShare);
   // (Low over the flats the far air takes the warm light of the low air: the flats fade into pink grey, not into white.)
-  vec3 farLight = mix(airLight, LOW_LIGHT * 1.18, 0.55 * exp(-abs(elev) / 0.03)) * airLit;
+  // (The first lens stands high and looks over kilometres of flat: from there the far air is the sky's, cool and grey, and the warm
+  // light of the low air is seen only near. The far flats lie in plainer stretches of light and shade under it.)
+  float first = step(uTime, ${f((5833 - 5618) / 60)});
+  float farCool = first * smoothstep(120.0, 500.0, far);
+  vec3 farLight = mix(airLight, LOW_LIGHT * 1.18, 0.55 * (1.0 - 0.6 * first) * exp(-abs(elev) / 0.03)) * airLit;
 
   // The banks. A bank is a body: it stands where the slow fields say, as high as it is thick, its crown is cut into lumps that climb and
   // turn over, and the sky lights it from above, so its crown is white and its heart and its foot are grey and warm. The view is cut
@@ -586,8 +590,9 @@ ${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${
     float ratio = pow(tb / ta, 1.0 / float(BANK_STEPS));
     float t0 = ta;
     vec2 wind = vec2(-0.96, -0.27) * BANK_DRIFT * uTime;
-    vec3 bankLit = BANK_LIT * mix(1.0, dusk, 0.5);
-    vec3 bankDeep = BANK_DEEP * mix(1.0, dusk, 0.5);
+    // (Seen from high up and far off the banks are thin and take the sky's cool light.)
+    vec3 bankLit = mix(BANK_LIT, airLight * 0.84, first) * mix(1.0, dusk, 0.5);
+    vec3 bankDeep = mix(BANK_DEEP, airLight * 0.7, first) * mix(1.0, dusk, 0.5);
     // (Where in its stretch each is read: the texel's own place, moved on by the golden share at each sample of a frame, so that the
     // frame's samples between them read the whole stretch evenly and the banks come out smooth.)
     float where = fract(float(hash2(uint(here.x), uint(here.y)) & 1023u) / 1024.0 + float(uSampleIndex) * 0.61803);
@@ -596,7 +601,7 @@ ${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${
       float dt = t1 - t0;
       // (A near stretch is read about its middle, so that its banks keep their shape: read anywhere along it, the samples of a frame
       // made one even fog of them. A far stretch is read all along, and comes out as the mean of what it crosses.)
-      float spread = mix(0.3, 1.0, smoothstep(36.0, 120.0, t0));
+      float spread = mix(0.45, 1.0, smoothstep(36.0, 120.0, t0));
       float tk = t0 + dt * (0.5 + (where - 0.5) * spread);
       vec3 p = ro + rd * tk;
       vec2 at = p.xz - wind;
@@ -610,7 +615,7 @@ ${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${
       float h = max(p.y, 0.0) / top;
       // Some banks have left the ground: under them the flat is seen, and the bank shows its underside.
       float lift = top * 0.38 * smoothstep(0.28, 0.5, big.r);
-      float body = smoothstep(1.0, mix(0.66, 0.15, spread * spread), h + (0.5 - lump.r) * 0.9) * smoothstep(0.0, 0.5, stand * 0.55 + (lump.r - 0.38) * 1.3) * smoothstep(lift * 0.4, lift * 1.2 + 0.01, p.y + (lump.b - 0.5) * lift);
+      float body = smoothstep(1.0, mix(0.6, 0.15, spread * spread), h + (0.5 - lump.r) * 1.4) * smoothstep(0.0, 0.5, stand * 0.55 + (lump.r - 0.38) * 1.3) * smoothstep(lift * 0.4, lift * 1.2 + 0.01, p.y + (lump.b - 0.5) * lift);
       float sigma = weather.x * BANK_THICK * body * smoothstep(weather.y, weather.z, tk);
       float tau = sigma * dt + hazeBetween(ro, rd, t0, t1) * nearThin(t0 + 0.5 * dt);
       float a = 1.0 - exp(-tau);
@@ -644,11 +649,11 @@ ${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${
   low += VEIL_SHARE * step(VEIL_FROM, uTime) * step(uTime, VEIL_TO) * (1.0 - exp(-far * 0.4));
   // (The low air lies far off for the most part, and a bank that stands before it hides it as it hides the flat.)
   float lowTaken = (1.0 - exp(-low)) * show * mix(0.2, 1.0, past);
-  sum = sum * (1.0 - lowTaken) + LOW_LIGHT * airLit * mix(1.0, dusk, LOW_DUSK) * lowTaken;
+  sum = sum * (1.0 - lowTaken) + mix(LOW_LIGHT, airLight * 0.86, 0.55 * farCool) * airLit * mix(1.0, dusk, LOW_DUSK) * lowTaken;
   trans *= 1.0 - lowTaken;
   // What the nearness of things takes from a surface's light is taken before the air lies over it.
   // So is the slow shade of the cloud that crosses the flats.
   // (And the far flats stand in the same lit and shaded stretches as the air over them: a white flat in shade is grey, and has distance.)
-  if (open < 0.5) trans *= closedIn(2 * here) * mix(rigCloud((ro + rd * far).xz), 1.0, smoothstep(2000.0, 6000.0, far)) * mix(1.0, 0.52 + 0.6 * lightField, farShare);
+  if (open < 0.5) trans *= closedIn(2 * here) * mix(rigCloud((ro + rd * far).xz), 1.0, smoothstep(2000.0, 6000.0, far)) * mix(1.0, 0.52 + 0.6 * lightField, farShare) * mix(1.0, 0.64 + 0.62 * strata, first * smoothstep(100.0, 400.0, far));
   gl_FragColor = vec4(sum, trans);
 }`;
