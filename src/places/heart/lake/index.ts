@@ -670,7 +670,7 @@ float heightAt(vec2 q, float c) {
     // so a pad that stands on it meets broken ground and not a level line.
     float roughHeld = roughOn(freshAt(q)) * (1.0 - smoothstep(0.05, 0.12, c)) * off * calm * (1.0 - shoreUp);
     if (roughHeld > 0.0) {
-      float roughHigh = (ROUGH_TALL_C * (roughAt(q, ROUGH_C, 1.5 * gFine, 3.0).z - 0.5) + ROUGH_TALL_F * (roughAt(q, ROUGH_F, 1.5 * gFine, 41.0).z - 0.5)) * roughHeld;
+      float roughHigh = ROUGH_TALL_C * (roughAt(q, ROUGH_C, 1.5 * gFine, 3.0).z - 0.5) * roughHeld;
       gSheetHigh += roughHigh;
       fine += roughHigh;
     }
@@ -748,6 +748,9 @@ float heightAt(vec2 q, float c) {
     // shades each triangle its own way and stands as a row of teeth.
     float wallWide = max(5.0 * c, 0.1);
     float wallRough = 0.35 * wallWide * (vnoise(q / max(8.0 * c, 0.25) + 3.0) - 0.5);
+    // Where the cells are fine the brim is a broken edge: scallops a hand or two deep where a piece of the skin stands out
+    // over the melt, never a bite into the bank.
+    wallRough += (0.13 * smoothstep(0.38, 0.7, vnoise(q / 0.37 + 9.0)) + 0.05 * vnoise(q / 0.11 + 5.0)) * (1.0 - smoothstep(0.02, 0.06, c)) * named;
     // Its top and its foot are rounded over a cell and a half: a sharp crease askew to the lattice stands as a saw.
     float cut = smoothstep(0.0, 1.0, (wallTop - bank - wallRough) / wallWide) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
     // An island in the stream is a raft of thin crust: it floats a hand above the melt, it does not stand as high as the banks.

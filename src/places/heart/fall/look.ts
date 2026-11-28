@@ -124,6 +124,9 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   // stream's side it is gone within the first third of the arch.
   float reach = mix(1.0, 0.0, smoothstep(0.08, 0.62, east)) * smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor + 15)}, p.y) * mix(1.0, 0.33, smoothstep(${f(TUBE.floor + 8)}, ${f(TUBE.floor + 62)}, p.y));
   float e = poolLight(p, n, vec3(${f(MOUTH.x - 34)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 9)}), 13.0) * uFlare * shade * reach;
+  // The cut is broken rock: a face of it is turned to the pool and the next is not, so the light lies on it in patches a
+  // metre or two across and not as one even band.
+  e *= mix(0.22, 1.5, smoothstep(0.3, 0.7, 0.6 * vnoise(vec2(p.x + 0.6 * p.z, p.y) / 2.6 + 3.0) + 0.4 * vnoise(vec2(p.x - 0.6 * p.z, p.y) / 0.8 + 17.0)));
   // The crusted shelf east of the pool gives the east wall just enough to show it as rock against the dark.
   e += 0.009 * poolLight(p, n, vec3(${f(MOUTH.x + 16)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 26.0) * smoothstep(46.0, 8.0, d) * smoothstep(0.6, 3.5, d);
   // The river further in runs under a broken crust and lights the roof and the ribs over it from below, less with every rib.
@@ -291,6 +294,7 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec4 vFlow;
 varying vec4 vBank;
+varying float vOver;
 varying vec3 vIn;
 varying float vApron;
 uniform vec4 uSurge;
@@ -302,7 +306,14 @@ void main() {
   float across = aIn.y / max(aFlow.z * (1.0 + 0.5 * full + 1.0 * head), 0.1);
   vec3 p = position;
   // The stream has a body: it stands a forearm proud of its bed at any time.
-  p.y += (0.32 * smoothstep(1.0, 6.0, aFlow.w) + 0.7 * full + 1.8 * head) * sqrt(max(1.0 - across * across, 0.0)) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, aFlow.w)) * (1.0 - aIn.z);
+  // The surge stands as a dome, not a slab: its margins slope to the banks, where a body with upright sides stood as a block of
+  // one cell with the melt's streaks drawn down its wall.
+  float dome = max(1.0 - across * across, 0.0);
+  // The surge is wider than the bed, but it does not climb what stands over it: a heap of roof fall or a ledge that stands
+  // higher than the surge keeps its place and stays rock. vOver is how far this ground stands over the surge, in metres.
+  vOver = position.y - aBank.z - 1.3 - 0.7 * full - 1.8 * head;
+  float climbs = 1.0 - smoothstep(0.0, 0.8, vOver);
+  p.y += (0.32 * smoothstep(1.0, 6.0, aFlow.w) * sqrt(dome) + (0.7 * full + 1.8 * head) * dome * climbs) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, aFlow.w)) * (1.0 - aIn.z);
   vWorld = p;
   vNormal = normal;
   vFlow = aFlow;
@@ -634,8 +645,11 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   if (behind > 0.0 && lay < 1.0) {
     // Down a drop the fuller sheet thins as it quickens and parts into strands: yellow ropes of melt, and between them a film so
     // thin that it has reddened and the rock shows dark through it.
-    float strand = vnoise(vec2(s * 0.75 + 2.0, age * 0.9 + 3.0)) + 0.3 * (vnoise(vec2(s * 2.3 + 9.0, age * 2.1)) - 0.5) * seenAt(0.43);
-    kelvin = mix(kelvin, mix(1150.0, 1545.0, smoothstep(0.34, 0.6, strand)), 0.85 * drop * behind * smoothstep(1.0, 7.0, len) * (1.0 - raft));
+    // The ropes are of unlike width and wander as they fall, and the film between them is still orange: ruled, and red between,
+    // a drop behind the front stood as a striped wall.
+    float sw = s + 1.1 * (vnoise(vec2(age * 0.55 + 5.0, s * 0.3 + 1.0)) - 0.5);
+    float strand = vnoise(vec2(sw * 0.42 + 2.0, age * 0.9 + 3.0)) + 0.3 * (vnoise(vec2(sw * 1.7 + 9.0, age * 2.1)) - 0.5) * seenAt(0.43);
+    kelvin = mix(kelvin, mix(1290.0, 1545.0, smoothstep(0.3, 0.66, strand)), 0.75 * drop * behind * smoothstep(1.0, 7.0, len) * (1.0 - raft));
     // It lands in a pool that churns: paler than the reach above it, and mottled as it turns over.
     float churn = vnoise(vec2(s * 0.9 + 1.0, age * 5.0)) ;
     kelvin = mix(kelvin, 1505.0 + 55.0 * churn, pool * behind * (1.0 - drop) * (1.0 - raft) * (1.0 - 0.6 * smoothstep(0.5, 0.95, u)));
@@ -679,6 +693,7 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec4 vFlow;
 varying vec4 vBank;
+varying float vOver;
 varying vec3 vIn;
 varying float vApron;
 uniform sampler2D tCliff;
@@ -703,6 +718,11 @@ void main() {
   gFlowDx = fDx;
   gFlowDy = fDy;
   vec2 lava = stream(vFlow, vBank.w, vIn.yz, vWorld.xz);
+  // Behind the surge's front the melt spreads past its bed, and there it lies only on ground the surge stands over.
+  float surged = clamp(uSurge.y * smoothstep(uSurge.x + 6.0, uSurge.x - 2.0, vFlow.w), 0.0, 1.0);
+  lava.x *= 1.0 - smoothstep(0.0, 0.8, vOver) * surged;
+  // Nor on a face that stands beside the bed: one cell of the ground spans it, and the melt drawn on it stood as a striped wall.
+  lava.x *= 1.0 - surged * smoothstep(0.55, 0.3, abs(flat_.y)) * smoothstep(0.7, 0.95, abs(vFlow.y) / max(vFlow.z, 0.1));
   // Where the toe of the fan goes under the lake its skin is broken by the lake's heave, and the edge glows.
   // There the melt pools behind its own crust in a ragged band, near white where it breaks out, and small flames stand along it.
   float toeFan = smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * lava.x;
@@ -920,7 +940,7 @@ void main() {
   // The river behind the surge's front gives off more.
   float more = 1.0 + 1.2 * smoothstep(uSurge.x + 4.0, uSurge.x - 12.0, aFrom.w) * uSurge.y;
   // Before the dark of the opening a puff would stand as a pale disc: by the height of the lip it has thinned to nothing.
-  float below = smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor - 9)}, centre.y + 0.5 * size);
+  float below = smoothstep(${f(TUBE.floor - 0.5)}, ${f(TUBE.floor - 10)}, centre.y + 0.6 * size);
   vPuff = vec4(k, aSeed.z, smoothstep(0.0, aWind.y > 1.6 ? 0.3 : 0.14, k) * pow(1.0 - k, 1.4) * more * aSeed.w * below, age);
   vCentre = centre;
   // A veil is lit by the fall it drifts before, less the higher it stands and less while crust passes under it.

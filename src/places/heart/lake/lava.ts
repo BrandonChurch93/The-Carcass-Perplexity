@@ -647,7 +647,11 @@ void main() {
   float ripped = smoothstep(0.5, 0.66, vnoise(q * 3.3 + vec2(9.0, uTime * 0.04)) * 0.62 + vnoise(q * 9.5) * 0.38);
   float cling = (1.0 - smoothstep(reach * 0.55, reach, inside + 0.06 * (vnoise(q * 14.0) - 0.5))) * (1.0 - ripped * smoothstep(0.02, 0.09, inside));
   float shear = (1.0 - smoothstep(0.0, 0.03 + 2.0 * grain, abs(inside - reach))) * smoothstep(0.42, 0.62, vnoise(q * 1.4 + vec2(uTime * 0.11, 0.0))) * (1.0 - pool) * min(1.0, 0.03 / (0.03 + 2.0 * grain));
-  hot = mix(hot, blackbody(880.0 + 170.0 * vnoise(q * 6.1 + 2.0)), cling);
+  // It is creased as the stream drags it: crooked lines a finger wide where it has folded and split, alight in some stretches
+  // and dark in the next, and patches of it a shade apart. No even dark band.
+  float fret = abs(vnoise(q * 11.0 + 3.0 * vnoise(q * 2.3 + 5.0)) - 0.5);
+  float creased = (1.0 - smoothstep(0.015, 0.045 + 6.0 * grain, fret)) * smoothstep(0.38, 0.6, vnoise(q * 1.9 + 7.0)) * min(1.0, 0.04 / (0.04 + 6.0 * grain));
+  hot = mix(hot, blackbody(mix(830.0 + 230.0 * vnoise(q * 6.1 + 2.0), 1270.0, creased)), cling);
   skin = max(skin, cling);
   hot = mix(hot, blackbody(1330.0), shear * 0.85 * (1.0 - cling));
   // Where the melt meets the foot of the far wall it is torn open: the brightest thin line of the place, broken along its length.
