@@ -667,30 +667,26 @@ void main() {
     height = mix(height, grain, byLens);
   }
   #endif
-  // A slope of the bench is broken rock, and no picture laid from above is drawn out down it: its grain is read on three planes,
-  // lumps of a third of a metre and pits finer than that, and half of whatever was laid there gives way to it.
-  float broken = smoothstep(0.22, 0.42, slope) * (1.0 - byLens);
-  if (broken > 0.0) {
-    float lumpTone = (vnoise(vWorld.xz / 0.37 + 2.9) + vnoise(vWorld.xy / 0.37 + 6.1) + vnoise(vWorld.zy / 0.37 + 0.7)) / 3.0;
-    float pitTone = (vnoise(vWorld.xz / 0.07 + 4.3) + vnoise(vWorld.xy / 0.07 + 1.2) + vnoise(vWorld.zy / 0.07 + 8.8)) / 3.0;
-    vec3 even = vec3(dot(albedo, vec3(0.3333)));
-    albedo = mix(albedo, mix(albedo, even * vec3(1.05, 1.0, 0.95), 0.5) * (0.55 + 0.9 * lumpTone + 0.6 * (pitTone - 0.5) * sharp), 0.7 * broken);
-  }
-  // And it is broken in fact: a bed of angular fragments of basalt, a finger to a stride across, built and looked down on (aa-nh), is read
-  // on the slope's own plane and on the level, and bends the light as its faces do. The gaps between fragments are closed to the sky.
+  // A slope of the bench is broken rock, and broken in fact: a bed of angular fragments of basalt, a finger to a stride across, built and
+  // looked down on (aa-nh), is read on the slope's own plane or on the level, so nothing is drawn out down a face. It bends the light as
+  // its faces do, the gaps between fragments are closed to the sky, and half of whatever colour was laid on a steep slope gives way to grey.
   float jagged = smoothstep(0.06, 0.24, slope) * (1.0 - byLens) * (1.0 - 0.8 * sheet);
   if (jagged > 0.0) {
     const float BED = 11.0;
     vec2 drift = vec2(big, -big) * 1.5;
     float side = smoothstep(0.3, 0.6, slope);
-    vec3 top = PICK(tAa, vWorld.xz / BED + drift, wx.xz / BED, wy.xz / BED).rgb;
-    vec3 face = kx > 0.5 ? PICK(tAa, vWorld.zy / BED + drift, wx.zy / BED, wy.zy / BED).rgb : PICK(tAa, vWorld.xy / BED + drift, wx.xy / BED, wy.xy / BED).rgb;
+    vec3 top = vec3(0.5);
+    vec3 face = vec3(0.5);
+    if (side < 0.997) top = PICK(tAa, vWorld.xz / BED + drift, wx.xz / BED, wy.xz / BED).rgb;
+    if (side > 0.003) face = kx > 0.5 ? PICK(tAa, vWorld.zy / BED + drift, wx.zy / BED, wy.zy / BED).rgb : PICK(tAa, vWorld.xy / BED + drift, wx.xy / BED, wy.xy / BED).rgb;
     vec2 ts = (top.rg - 0.5) * 6.0 * (1.0 - side);
     vec2 fs = (face.rg - 0.5) * 6.0 * side;
     vec3 across = kx > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
     n = normalize(n + jagged * 1.2 * (vec3(ts.x, 0.0, -ts.y) + across * fs.x - vec3(0.0, 1.0, 0.0) * fs.y));
     float stand = mix(top.b, face.b, side);
     occ *= mix(1.0, 0.2 + 0.8 * smoothstep(0.03, 0.45, stand), jagged);
+    vec3 even = vec3(dot(albedo, vec3(0.3333)));
+    albedo = mix(albedo, mix(albedo, even * vec3(1.05, 1.0, 0.95), 0.5), 0.7 * smoothstep(0.22, 0.42, slope) * (1.0 - byLens));
     albedo *= mix(1.0, 0.62 + 0.85 * stand, jagged);
   }
   #ifndef CORE
