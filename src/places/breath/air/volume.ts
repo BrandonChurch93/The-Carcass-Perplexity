@@ -13,7 +13,7 @@ import { NOISE_SIZE } from './noise';
 export const MAX_BODIES = 32;
 
 /** March steps of the vapour of the main shaft. The cost of the pass is close to linear in this wherever the vapour is in view. */
-export const STEPS = 20;
+export const STEPS = 18;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -88,7 +88,7 @@ float bankAt(vec2 xz) {
   float torn = textureLod(tNoise, vec3(w / 97.0 + 0.3, 0.64 + 0.012 * uTime), 0.0).a;
   return 0.15 + 2.6 * smoothstep(0.4, 0.68, 0.62 * broad + 0.38 * torn);
 }
-const vec2 HIGH_HAZE = vec2(1.5e-5, 420.0);
+const vec2 HIGH_HAZE = vec2(9.0e-5, 420.0);
 // One layer between two heights: its mean thickness against its thickness at sea level.
 float layerOver(float y0, float y1, float scale) {
   return scale * abs(exp(-y0 / scale) - exp(-y1 / scale)) / max(abs(y1 - y0), 1e-3);
@@ -198,7 +198,7 @@ float poolLevel(vec3 p, float surge, out float wells, out float west) {
 float vapourTop0(vec3 p, float level) {
   // It stands high against the west wall, over the well, and lies deep under the hoops in the middle and the east of the shaft.
   vec2 ds = p.xz - vec2(-16.0, -6.0);
-  return level + 3.5 * exp(-dot(ds, ds) / 450.0) - 6.0 * smoothstep(-12.0, 2.0, p.x);
+  return level + 4.2 * exp(-dot(ds, ds) / 450.0) - 6.0 * smoothstep(-12.0, 2.0, p.x);
 }
 float vapourTop(vec3 p, float level, float west) {
   vec2 w = p.xz - WINDV * (0.9 * uTime);
@@ -211,14 +211,18 @@ float vapourTop(vec3 p, float level, float west) {
 // the wells, in billows (lumps: the block of noise there, 0 to 1); at the top it is thin, and the wall is read through it; it thickens
 // with depth, so the drop is read through its first metres and lost below them.
 vec2 vapourRho(float under, float wells, float west, float surge, float spent, float lumps) {
-  float tall = 2.6 + 3.5 * wells + 6.0 * surge;
-  float skin = (0.005 + 0.013 * wells + 0.03 * surge) * (1.0 - 0.5 * spent);
+  // In the breath the steam stands taller, most over the wells. It is never let stand shorter than a step of the march is long
+  // where the pool is thick: a top that thin was drawn as a crease at every step.
+  float tall = 1.3 + (5.0 + 3.0 * surge) * wells * wells + 4.0 * surge;
+  // The breath's steam is gathered over the wells, a column and no veil: spread evenly it hid the lower hoops.
+  float skin = (0.004 + 0.01 * wells + (0.007 + 0.016 * wells) * surge) * (1.0 - 0.5 * spent);
   // Billows: thick and thin by the block of noise, most over the top and in its first metres, evened out with depth.
-  float billow = 3.6 * smoothstep(0.4, 0.72, lumps);
-  if (under < 0.0) return vec2(skin * exp(under / tall) * mix(1.0, billow, smoothstep(0.0, -2.5, under)), 0.0);
-  float grow = (0.009 + 0.004 * surge) * mix(0.35, 1.0, west);
+  // The noise is brought to a billow over a wide part of its range: brought over a narrow part a thick billow had a cut edge.
+  float billow = 4.0 * smoothstep(0.38, 0.8, lumps);
+  if (under < 0.0) return vec2(skin * exp(under / tall) * mix(billow, 1.0, 0.05), 0.0);
+  float grow = (0.006 + 0.004 * surge) * mix(0.35, 1.0, west);
   float deep = min(under, 9.0);
-  float even = mix(billow, 1.0, 0.05 + 0.95 * smoothstep(5.0, 16.0, under));
+  float even = mix(billow, 1.0, 0.1 + 0.6 * smoothstep(6.0, 20.0, under));
   return vec2((skin + grow * deep) * even, skin * under + grow * deep * (under - 0.5 * deep));
 }
 // The ground the sheet lies on at a place: the rock, or the tide. Inside the brim the land is the pit, so there it is the lip beside it.
@@ -380,7 +384,7 @@ void main() {
         if (out0 < 9.0 + 0.9 * max(p.y, 0.0) + 5.0 * uBreath.y) {
           float level = poolLevel(p, surge, wells, west);
           // No picture is read where the place stands clear over all the steam can reach.
-          if (p.y < level + 10.5 + 4.0 * (2.6 + 3.5 * wells + 6.0 * surge)) {
+          if (p.y < level + 10.5 + 4.0 * (1.3 + (5.0 + 3.0 * surge) * wells * wells + 4.0 * surge)) {
             float top = vapourTop(p, level, west);
             under = top - p.y;
             // The steam climbs at a walk and is bent down the wind once it clears the brim.
@@ -388,8 +392,10 @@ void main() {
             q.xz -= WINDV * (0.2 * max(p.y + 1.0, 0.0));
             if (under < 16.0) {
               lumps = textureLod(tNoise, q.xzy / 23.0 + 0.19, 0.0).g;
+              float small = textureLod(tNoise, q.xzy / 7.3 + 0.61, 0.0).r;
               // A billow's side toward the light is thinner that way than where it stands: it is lit, and its far side is dark.
-              edge = clamp(1.0 + 4.5 * (lumps - textureLod(tNoise, (q + lightWay * 3.0).xzy / 23.0 + 0.19, 0.0).g), 0.45, 1.7);
+              edge = clamp(1.0 + 5.0 * (lumps - textureLod(tNoise, (q + lightWay * 3.0).xzy / 23.0 + 0.19, 0.0).g), 0.5, 1.9);
+              lumps += 0.28 * (small - 0.5);
             }
             cut = smoothstep(1.5, -3.0, out0 - leanOut(p.y, way, surge));
             // The hollow between two heaps sees less of the sky than a heap's crown.
@@ -419,7 +425,7 @@ void main() {
         // The rim's shadow in the vapour is three metres deep: light gets about in it.
         float sun = smoothstep(-2.6, 1.2, p.y - land.b) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead, and what lies deep under the top is in the shade of what lies over it.
-        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 40.0, 0.45, 1.0);
+        float sunk = max(exp(min(p.y + 0.5, 0.0) / 5.0), 0.08);
         // The top is smooth, but the vapour under it thickens and darkens within a stride: a step that took it at one depth drew
         // a ring wherever a step crossed the top. Each step is cut in four along the ray, the depth under the top carried across
         // it on the slope: no picture is read for the cuts.
@@ -430,8 +436,8 @@ void main() {
           float sunTau = 3.0 * v.y + sheetSun * sheet / max(v.x + sheet, 1e-5);
           float gone = exp(-rho * dl / 4.0);
           float w = thru * (1.0 - gone);
-          litSky += w * (skyGrey * 2.3 + skyGlow * 0.7) * (sunk * edge * (0.15 + 0.85 * exp(-4.0 * v.y) * sky));
-          litSun += w * sunLight * (sun * edge * (0.16 * min(phase, 1.9) * exp(-1.5 * sunTau) + (0.012 + 0.04 * toSun * toSun) * exp(-0.22 * sunTau)));
+          litSky += w * (skyGrey * 1.6 + skyGlow * 0.6) * (sunk * edge * (0.15 + 0.85 * exp(-4.0 * v.y) * sky));
+          litSun += w * sunLight * (sun * edge * (0.1 * min(phase, 1.9) * exp(-1.5 * sunTau) + (0.012 + 0.04 * toSun * toSun) * exp(-0.22 * sunTau)));
           thru *= gone;
         }
         if (thru < 0.015) break;
@@ -559,8 +565,9 @@ void main() {
         vec4 n0 = textureLod(tNoise, q * 0.5, 0.0);
         float fineN = textureLod(tNoise, q * 0.85 + 0.37, 0.0).b;
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
-        float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up);
-        float body = smoothstep(0.0, 0.42, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.3, m);
+        // The crown is eaten away by the air: it ends in rags, never in a round cap.
+        float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up + 1.1 * smoothstep(0.55, 1.0, up));
+        float body = smoothstep(0.0, 0.42, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.5, m);
         float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * body;
         float tau = rho * span / 5.0;
         if (tau <= 0.0005) continue;
