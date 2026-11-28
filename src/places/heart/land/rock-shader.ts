@@ -206,7 +206,25 @@ void main() {
   // The crust itself is crumbs of a finger to a hand, heaped along that crack (rocks.ts): three in four are lemon through, the rest dark rock.
   float crumbs = smoothstep(0.6, 0.3, segmentDistance(vWorld.xz, uCrackB)) * (1.0 - smoothstep(0.085, 0.11, size)) * smoothstep(0.25, 0.3, fract(rnd * 3.7));
   albedo = mix(albedo, mix(vec3(0.2, 0.16, 0.035), vec3(0.5, 0.42, 0.09), smoothstep(0.3, 0.8, height)) * (0.6 + 0.5 * fract(rnd * 7.3)), 0.92 * crumbs);
-  albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld) * (1.0 - afloat));
+  // The vent's own crust, as its picture has it: lemon crystals on what looks up within a stride of the vent, in broken patches a hand or two
+  // across with the bare rock between them, olive where they thin out. The rock they stand on is sooted near black by the fume.
+  float dv = distance(vWorld.xz, 0.5 * (uCrackB.xy + uCrackB.zw));
+  float fume = smoothstep(1.7, 0.6, dv) * (1.0 - afloat);
+  // The fume and the crag's fallen blocks stand between the fire and the stones round the vent: its light thins over three strides.
+  float veil = smoothstep(3.4, 1.3, dv) * (1.0 - afloat);
+  float crust = 0.0;
+  if (veil > 0.0) {
+    float reach = smoothstep(1.15, 0.3, dv);
+    float lump = vnoise3(vWorld / 0.05 + 6.4);
+    float grit = vnoise3(vWorld / 0.017 + 3.9);
+    float torn = smoothstep(0.425, 0.525, vnoise3(vWorld / 0.14 + 1.3) + 0.3 * (reach - 0.62));
+    // It lies low: on the ground, on the small stones and round the feet of the boulders, whose tops stay black.
+    float low = 1.0 - smoothstep(0.34, 0.62, vWorld.y - max(land.r, 0.0));
+    crust = reach * torn * low * smoothstep(0.08, 0.5, n0.y + 0.2 * (0.5 - vCave)) * smoothstep(0.3, 0.46, lump + 0.35 * (grit - 0.5));
+    albedo *= mix(1.0, 0.4, fume);
+    albedo = mix(albedo, mix(vec3(0.36, 0.27, 0.035), vec3(1.0, 0.7, 0.08), smoothstep(0.4, 0.72, lump)) * (0.7 + 0.6 * grit), 0.96 * crust);
+  }
+  albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld) * (1.0 - afloat) * (1.0 - crust));
   // Undersides and the faces that lean over see the ground, not the sky.
   occ *= mix(0.25, 1.0, smoothstep(-0.6, 0.1, n0.y)) * mix(0.6, 1.0, smoothstep(0.0, 0.55, n0.y));
   // The light, as the land takes it (land/shaders.ts), and nothing thrown back as a sheen: clinker and ash are matte.
@@ -216,6 +234,8 @@ void main() {
   if (vWorld.y > 8.0) lake = lakeIrradianceFar(vWorld, n);
   else if (vWorld.y < 5.0) lake = lakeIrradiance(vWorld, n);
   else lake = mix(lakeIrradiance(vWorld, n), lakeIrradianceFar(vWorld, n), (vWorld.y - 5.0) / 3.0);
-  vec3 e = skyIrradiance(n) * (vis * occ) + (lake + emitterIrradiance(vWorld, n)) * sqrt(occ);
+  // The stones of the vent lie behind the crag's fallen blocks and in its fume, as the ground there does (land/shaders.ts): the fire reaches them
+  // thinly, and the crust, which looks up, takes the sky.
+  vec3 e = skyIrradiance(n) * (vis * mix(occ, max(occ, 0.8), crust)) + (lake + emitterIrradiance(vWorld, n)) * (sqrt(occ) * mix(1.0, 0.16 + 0.3 * crust, veil));
   gl_FragColor = vec4(rigOut(albedo * e / 3.14159), 1.0);
 }`;
