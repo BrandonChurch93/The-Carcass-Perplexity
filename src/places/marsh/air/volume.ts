@@ -67,7 +67,10 @@ export const STEAM_LOOK = { most: 0.7, near: [0.5, 2.5], foot: [0.56, 0.45, 0.46
 export const RAIN_TOP = 0.1;
 /** The fourth shot (film frames 6263 to 6585 of a place that opens at 5618, 60 a second) stands low in the wallow's own vapour: the share
  *  of the view the near air takes there and nowhere else. It lifts that shot's darks to the picture's. */
-export const WALLOW_VEIL = { from: (6263 - 5618) / 60, to: (6586 - 5618) / 60, share: 0.016 };
+export const WALLOW_VEIL = { from: (6263 - 5618) / 60, to: (6586 - 5618) / 60, share: 0 };
+/** The first metres from any lens are clear air: the haze and the low air come in between these two distances (metres). A veil that near
+ *  adds its light to the darks of whatever the lens is set on, and the fine detail of a dark hide or of wet mud goes out in it. */
+export const NEAR_CLEAR: [number, number] = [6, 34];
 /** The seconds of the place between which each zone that is kept clear of low steam holds: the wallow's from the fourth shot on, the
  *  colony's through the second shot (film frames 5833 to 6047). */
 export const CLEAR_FROM = { wallow: (6263 - 5618) / 60, colony: [(5833 - 5618) / 60, (6048 - 5618) / 60] as [number, number] };
@@ -120,6 +123,8 @@ precision highp float;
 #define VEIL_FROM ${f(WALLOW_VEIL.from)}
 #define VEIL_TO ${f(WALLOW_VEIL.to)}
 #define VEIL_SHARE ${f(WALLOW_VEIL.share)}
+#define NEAR_CLEAR_A ${f(NEAR_CLEAR[0])}
+#define NEAR_CLEAR_B ${f(NEAR_CLEAR[1])}
 precision highp sampler3D;
 uniform highp sampler2D tDepth;
 uniform mat4 uInvProjection;
@@ -242,7 +247,7 @@ float closedIn(ivec2 pixel) {
 
 // How much of the haze counts at t metres: the near air is clear and the far closes, as over a salt flat on a still wet day.
 float nearThin(float t) {
-  return mix(0.45, 0.8, smoothstep(80.0, 1400.0, t));
+  return mix(0.45, 0.8, smoothstep(80.0, 1400.0, t)) * smoothstep(NEAR_CLEAR_A, NEAR_CLEAR_B, t);
 }
 
 // Thickness of the haze along the view from a to b metres: it thins with height, so the sum has a closed form.
@@ -575,7 +580,7 @@ void main() {
     trans *= 1.0 - r;
   }
   // The low air lies over all of it: the foot of the rain and the last of the flats go out in it, and the horizon has no line.
-  float low = lowBetween(ro, rd, 0.0, mix(far, LOW_OVER_SKY, open)) * mix(LOW_NEAR, 1.0, smoothstep(LOW_WHOLE_A, LOW_WHOLE_B, far)) * mix(1.0, LOW_SKY_SHARE, open) * airBody;
+  float low = lowBetween(ro, rd, 0.0, mix(far, LOW_OVER_SKY, open)) * mix(LOW_NEAR, 1.0, smoothstep(LOW_WHOLE_A, LOW_WHOLE_B, far)) * smoothstep(NEAR_CLEAR_A, NEAR_CLEAR_B, far) * mix(1.0, LOW_SKY_SHARE, open) * airBody;
   low += VEIL_SHARE * step(VEIL_FROM, uTime) * step(uTime, VEIL_TO) * (1.0 - exp(-far * 0.4));
   float lowTaken = (1.0 - exp(-low)) * show;
   sum = sum * (1.0 - lowTaken) + LOW_LIGHT * airLit * mix(1.0, dusk, LOW_DUSK) * lowTaken;
