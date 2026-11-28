@@ -302,8 +302,8 @@ float highDepth(vec2 at) {
   vec2 hv = at + uTime * vec2(6.5, -3.8);
   vec2 hs = hv;
   if (uLive > 0.0) {
-    hv += uWx * vec2(36.0, -21.0);
-    hs += uWx * vec2(44.0, -16.0);
+    hv += uWx * vec2(52.0, -30.0);
+    hs += uWx * vec2(62.0, -22.0);
   }
   highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
   highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1250.0, 900.0) + vec2(0.7, 0.2);
@@ -317,8 +317,15 @@ float highDepth(vec2 at) {
   vec2 h = mat2(0.5, 0.87, -0.87, 0.5) * hv;
   float wide = 0.5 + 0.5 * sin(g.x / 480.0 + 1.7 * sin(g.y / 620.0 + 0.4)) * sin(g.y / 530.0 + 1.3 * sin(g.x / 700.0 + 1.9));
   float fine = 0.5 + 0.5 * sin(h.x / 205.0 + 1.5 * sin(h.y / 260.0)) * sin(h.y / 225.0 + 1.2 * sin(h.x / 310.0 + 0.8));
-  float where = 0.8 * smoothstep(0.56, 0.96, 0.6 * wide + 0.4 * fine) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
+  // (Away from the heart of the land more of the sky has ice in it, and the swells stand wider, so the sheets are of unlike
+  // size, a few hundred kilometres to a thousand. That is a fact of the place and not of the time: the ice stands so before the
+  // titan frame and after it, and only travels.)
+  float more = smoothstep(380.0, 800.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+  float where = mix(0.8, 1.0, more) * smoothstep(mix(0.56, 0.47, more), mix(0.96, 0.9, more), 0.6 * wide + 0.4 * fine) * (1.0 - 0.95 * smoothstep(0.08, 0.4, sunImage(at)));
   if (where <= 0.0) return 0.0;
+  // (And it is ice of the open sea: over the land and round the cyclone, where the painted cover (sky/cover.png, green, read
+  // wide and soft) keeps the low field off, a sheet that travels in thins to a breath, so the bone under it stays white.)
+  where *= 0.12 + 0.88 * smoothstep(0.12, 0.4, textureLod(uCover, clamp((at - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0), 5.0).g);
   float sheet = cloudAt(uMatVeil, highUvSheet, highGSheet, 0.27);
   float thread = cloudAt(uMatStreaks, highUvThread, highGThread, 0.31);
   float depth = sheet * mix(1.0, thread, 0.55) * where * 1.7 - 0.85;
