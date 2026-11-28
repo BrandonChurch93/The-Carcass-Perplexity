@@ -252,10 +252,10 @@ float storm(vec2 p, float px, float shorter, float feed) {
   // (How many of the cells stand: nearly all in the middle of a band near the eye, only the tallest at a band's edge and far
   // out, where the air between them widens. So a band thins to separate cells at its sides and at its end, and is cut nowhere.)
   float full = max(0.7 * core, gate * (1.0 - 0.5 * out2));
-  float least = mix(1.3, 0.42, full);
-  float cells = smoothstep(least, least + 1.1, fine);
+  float least = mix(1.2, 0.24, full);
+  float cells = smoothstep(least, least + 1.0, fine);
   // (And outward the cloud is thinner as well as sparser.)
-  float depth = 3.4 * body * cells * cells * (1.0 - 0.4 * out2);
+  float depth = 2.5 * body * cells * (1.0 - 0.3 * out2);
   // The eye is clear to the sea, wide and soft: the wall round it is the same cells, standing closer, and its rim is theirs.
   depth *= smoothstep(0.018, 0.09, r - 0.02 * (fine - 1.0)) * (1.0 - smoothstep(0.56, 0.86, reach));
   return depth;
@@ -278,6 +278,8 @@ void main() {
   float side = atan(p.y, p.x);
   float shorter = 1.2 - 0.26 * cos(side - 3.4) - 0.1 * cos(2.0 * side + 1.0) + 0.4 * (textureLod(uCloudTile, p * 0.17 + vec2(0.71, 0.38), 3.0).b - 0.5);
   float depth = storm(body, px, max(shorter, 0.92), feed);
+  // (By night there is no sun to pick the cells out, and the moon shows a band whole: its thin counts as its thick.)
+  if (uDusk > 0.0) depth *= 1.0 + 3.0 * uEmber.x;
   float thick = 1.0 - exp(-1.25 * depth);
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
   // (How its thickness falls toward the sun, from the change of it across the pixel.)
