@@ -488,8 +488,8 @@ void main() {
   // The dead one's are not smooth: cords run down them as down a root, and rime stands on the side that looks up, in crusts.
   float around = atan(position.z, position.x);
   float cords = sin(around * 3.0 + t * (7.0 + 9.0 * fract(seed * 4.1)) + seed * 30.0) + 0.5 * sin(around * 5.0 - t * 13.0 + seed * 11.0);
-  float crust = max(ring.y, 0.0) * (0.5 + 0.5 * sin(t * (61.0 + 30.0 * fract(seed * 6.7)) + seed * 90.0) * sin(t * 23.0 + seed * 17.0)) * smoothstep(0.03, 0.15, t);
-  vec3 p = centre + ring * r * (1.0 + uWrithe.y * (0.17 * cords + 0.9 * crust));
+  float crust = max(ring.y, 0.0) * (0.5 + 0.5 * sin(t * (37.0 + 16.0 * fract(seed * 6.7)) + seed * 90.0) * sin(t * 17.0 + seed * 17.0)) * smoothstep(0.03, 0.15, t);
+  vec3 p = centre + ring * r * (1.0 + uWrithe.y * (0.17 * cords + 0.45 * crust));
   vWorld = p;
   vNormal = normalize(ring);
   vAt = vec3(t, around, seed);
@@ -526,7 +526,8 @@ void main() {
   float cords = sin(vAt.y * 3.0 + t * (7.0 + 9.0 * fract(vAt.z * 4.1)) + vAt.z * 30.0) + 0.5 * sin(vAt.y * 5.0 - t * 13.0 + vAt.z * 11.0);
   float furrow = smoothstep(-0.9, 0.5, cords);
   albedo = mix(albedo, mix(vec3(0.035, 0.028, 0.025), vec3(0.3, 0.26, 0.23), furrow) * (0.55 + 0.7 * blotch) * (0.75 + 0.4 * rings), 0.92 * uWrithe.y);
-  rime = mix(rime, 0.9 * smoothstep(0.66, 0.92, n.y * 0.5 + 0.5 + 0.4 * (crystals - 0.5) + 0.5 * (vnoise3(vWorld * 45.0) - 0.5) + 0.3 * (vnoise3(vWorld * 9.0) - 0.5)), uWrithe.y);
+  // On the dead one's the rime lies in grains and broken patches along what looks up, and the dark cord shows through it.
+  rime = mix(rime, 0.78 * smoothstep(0.74, 0.98, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5) + 0.65 * (vnoise3(vWorld * 45.0) - 0.5) + 0.4 * (vnoise3(vWorld * 9.0) - 0.5)), uWrithe.y);
   // On a living one in the cold its own breath has frozen on them: they hang frosted, pale as the coat.
   rime = max(rime, (1.0 - uWrithe.y) * (0.45 + 0.4 * crystals));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);

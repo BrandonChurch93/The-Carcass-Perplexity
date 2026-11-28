@@ -164,7 +164,8 @@ export function create(ctx: Context): Piece {
       uLead: { value: new THREE.Vector4(j.lead[0], j.lead[1], j.lead[2], 0) },
       uWrithe: { value: writhe },
       uStrand: { value: role.act === 'dead' ? new THREE.Vector4(0.1, 1.0, 0.16, 0.4) : new THREE.Vector4(0.14, 1.15, 0.3, 0.35) },
-      uHair: { value: role.act === 'dead' ? new THREE.Vector4(0.72, 3.0, 1, 0) : new THREE.Vector4(1, 1.2, 0.5, 0) },
+      // Those that lie have the frost of a night on them: the coat shorter under it, so that the animal under the coat is seen, and crusted where it looks up.
+      uHair: { value: role.act === 'dead' ? new THREE.Vector4(0.72, 3.0, 1, 0) : role.act === 'lie' ? new THREE.Vector4(0.78, 1.6, 0.95, 0) : new THREE.Vector4(1, 1.2, 0.5, 0) },
     };
     const group = new THREE.Group();
     const hide = new THREE.ShaderMaterial({ vertexShader: SKIN_VERTEX, fragmentShader: SKIN_FRAGMENT, uniforms: shared });
