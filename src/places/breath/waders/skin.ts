@@ -21,6 +21,7 @@ export class Skin {
   private readonly restN: number[] = [];
   private readonly pic: number[] = [];
   private readonly limb: number[] = [];
+  private readonly bake: number[] = [];
   /** The animal the tubes made from now on belong to. */
   who = 0;
   position = new Float32Array(0);
@@ -77,6 +78,13 @@ export class Skin {
     this.limb[v] = limb;
   }
 
+  /** Where a vertex of a blob is in the sheet of sculpted relief (waders/relief.jpg), and how much of it is laid there. */
+  sculpted(v: number, x: number, y: number, much: number): void {
+    this.bake[v * 3] = x;
+    this.bake[v * 3 + 1] = y;
+    this.bake[v * 3 + 2] = much;
+  }
+
   /** What does not change: `along` and `around` in metres over the skin, how pale, how hidden from the light, the radius of the tube there, a number for the animal. */
   describe(t: Tube, ring: number, side: number, along: number, around: number, pale: number, shade: number, radius: number, seed: number, kind: number, rib: number): void {
     const v = t.start + ring * (t.sides + 1) + side;
@@ -116,6 +124,7 @@ export class Skin {
     g.setAttribute('aRestN', new THREE.BufferAttribute(fill(this.restN, 3), 3));
     g.setAttribute('aPic', new THREE.BufferAttribute(fill(this.pic, 4), 4));
     g.setAttribute('aLimb', new THREE.BufferAttribute(fill(this.limb, 1), 1));
+    g.setAttribute('aBake', new THREE.BufferAttribute(fill(this.bake, 3), 3));
     g.setIndex(this.index);
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
     this.geometry = g;

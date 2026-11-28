@@ -159,7 +159,7 @@ export function arch(a: Arch, fine: number): THREE.BufferGeometry {
   const rows = Math.max(28, Math.round((2 * Math.PI * a.thick * 1.15) / (fine * 1.25)));
   const s0 = a.seed * 7.31;
   const E = 0.6;
-  return tube(columns, rows, (t, turn) => {
+  const g = tube(columns, rows, (t, turn) => {
     const deg = lerp(a.from, a.to, t);
     const b = deg * RAD;
     const q = sectionAt(a, deg);
@@ -205,6 +205,23 @@ export function arch(a: Arch, fine: number): THREE.BufferGeometry {
       occ: lerp(0.38, 1, smooth(0.6 + 0.5 * sa + 0.3 * ca)) * lerp(0.62, 1.06, smooth(0.5 + 1.4 * push)),
     };
   });
+  // Where the arch has closed (in a break, and under the rock at its two ends) nothing of it is drawn. Kept, it was a thread of skin a
+  // thumb wide and metres long, sunk in the rock: faces a twentieth of a pixel across from the far lens, the normals on their two sides
+  // opposed, so that between them the normal passes through nothing and has no direction to be given. One such face came out as the
+  // pixel with no number in it at frame 4409 (the bottom row, uhd, final tier), and went when the thread did.
+  const shut = new Uint8Array(columns + 1);
+  for (let i = 0; i <= columns; i++) shut[i] = sectionAt(a, lerp(a.from, a.to, i / columns)).end <= 0.03 ? 1 : 0;
+  const all = (g.getIndex() as THREE.BufferAttribute).array;
+  const kept: number[] = [];
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < columns; i++) {
+      if (shut[i] === 1 && shut[i + 1] === 1) continue;
+      const at = (j * columns + i) * 6;
+      for (let n = 0; n < 6; n++) kept.push(all[at + n] as number);
+    }
+  }
+  g.setIndex(new THREE.BufferAttribute(new Uint32Array(kept), 1));
+  return g;
 }
 
 /** Each tier is carried on round the side that fell as a narrower band of the same stone, standing a stride out of the wall, from where

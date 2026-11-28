@@ -35,7 +35,7 @@ function courseBack(arc: number, depth: number): number {
 
 export interface WallPoint {
   at: [number, number, number];
-  /** Metres round the shaft and metres up: the stains are laid by these. */
+  /** Metres round the shaft and metres down from the top of the wall: the stains are laid by the first, the top beds by the second. */
   u: number;
   v: number;
   /** How near an arch the place is, 0 to 1, and how much of the sky overhead the place sees. */
@@ -73,7 +73,7 @@ export function wallPoint(b: number, depth: number): WallPoint {
   // The tiers carried on round the side that fell: each a band that stands a stride out of the wall.
   const band = bandAt(deg, y);
   const r = r0 + 0.03 - inset * 0.6 - 12 * down + back * (1 - 0.5 * over.back) * (1 - band) + 2.3 * over.back + broad - drape * (1 - band) - 0.95 * band;
-  return { at: [Math.sin(b) * r, y, -Math.cos(b) * r], u: deg * RAD * 30, v: y, relief: over.on, open: (1 - 0.88 * over.shut) * (1 - 0.3 * sat(back / 0.9)) };
+  return { at: [Math.sin(b) * r, y, -Math.cos(b) * r], u: deg * RAD * 30, v: depth, relief: over.on, open: (1 - 0.88 * over.shut) * (1 - 0.3 * sat(back / 0.9)) };
 }
 
 /** The top of the arch of the nth tier down from the brim at a bearing (degrees): where a fallen block can lie. */

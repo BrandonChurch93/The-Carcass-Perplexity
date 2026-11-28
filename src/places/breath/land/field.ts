@@ -226,7 +226,7 @@ export function bakeNear(rng: Rng): NearMap {
       const r = Math.hypot(x, z);
       const rim = r < 42 ? rimRadius(bearingOf(x, z)) : 0;
       if (r >= rim) {
-        p.setY(i, heightAt(x, z) - (inFine(x, z, step * 0.5) ? 0 : 0.5));
+        p.setY(i, heightAt(x, z));
         continue;
       }
       // Inside the shaft: the first ring of the grid is drawn out to the rim itself, the rest is not drawn.
@@ -249,8 +249,11 @@ export function bakeNear(rng: Rng): NearMap {
       kept.push(i0, i1, i2);
     }
     g.setIndex(kept);
-    p.needsUpdate = true;
     g.computeVertexNormals();
+    // The outermost ring is tucked a finger under the edge of the sheet beyond it (land/sheets.ts), once its normals are taken: dropped
+    // half a metre before them, as it was, the ring beside it leaned after it and the edge of this sheet was a dark line.
+    for (let i = 0; i < p.count; i++) if (!inFine(p.getX(i), p.getZ(i), step * 0.5)) p.setY(i, p.getY(i) - 0.02);
+    p.needsUpdate = true;
     g.computeBoundingSphere();
     return g;
   };

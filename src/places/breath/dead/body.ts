@@ -4,6 +4,7 @@
 // rock, z toward the lens of the rim. `place` puts a point of it into the world.
 import * as THREE from 'three';
 import { noise3 } from '../land/ribs';
+import { OCC_COUNT, OCC_DATA } from './bodyocc';
 
 export type V3 = [number, number, number];
 
@@ -197,21 +198,21 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
   const trunk: V3[] = [
     [-0.82, 0.15, -0.26],
     [-0.5, 0.2, -0.33],
-    [-0.05, 0.15, -0.37],
-    [0.42, 0.17, -0.35],
+    [-0.05, 0.12, -0.37],
+    [0.42, 0.125, -0.35],
     [0.9, 0.16, -0.27],
   ];
   sweep(
     skin,
     trunk,
-    120,
-    64,
+    168,
+    96,
     KIND.trunk,
     (t) => {
       const round = closed(t, 0.16, 0.13);
       const chest = bell(t, 0.3, 0.24);
       const hip = bell(t, 0.82, 0.1);
-      return { wide: (0.37 + 0.05 * chest + 0.03 * hip) * round, tall: (0.25 + 0.06 * chest + 0.04 * hip) * round };
+      return { wide: (0.37 + 0.05 * chest + 0.03 * hip) * round, tall: (0.21 + 0.05 * chest + 0.07 * hip - 0.06 * bell(t, 0.58, 0.16)) * round };
     },
     (t, ang) => {
       const round = closed(t, 0.16, 0.13);
@@ -228,13 +229,18 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
       // The flank between the last rib and the hip has fallen in, and the belly under it lies on the rock.
       const flank = -0.075 * bell(t, 0.64, 0.13) * smooth((ang - 0.7) / 0.5) * smooth((3.3 - ang) / 0.6) - 0.04 * bell(t, 0.45, 0.2) * bell(ang, 2.6, 0.5);
       // The hip's point and the blade of the shoulder, each with the hide drawn tight over it.
-      const hipPoint = 0.13 * bell(t, 0.84, 0.042) * bell(ang, 1.5, 0.36) + 0.055 * bell(t, 0.75, 0.035) * bell(ang, 2.1, 0.3);
-      const blade = 0.085 * bell(t, 0.17, 0.05) * bell(ang, 1.75, 0.5) + 0.05 * bell(t, 0.1, 0.035) * bell(ang, 2.5, 0.3);
+      const hipPoint = 0.175 * bell(t, 0.84, 0.042) * bell(ang, 1.5, 0.36) + 0.055 * bell(t, 0.75, 0.035) * bell(ang, 2.1, 0.3);
+      const blade = 0.115 * bell(t, 0.17, 0.05) * bell(ang, 1.75, 0.5) + 0.05 * bell(t, 0.1, 0.035) * bell(ang, 2.5, 0.3);
       // Slack hide: long folds that hang down the side, deepest low on it.
       // They lean toward the shoulder as they come down, and a skirt of it lies out on the rock on the side of the lens.
       const drape = 1 - 2 * Math.abs(noise3(t * 3.1 + 0.9 * (ang - 1.5), ang * 0.9, 4.4));
-      const fold = (0.008 + 0.024 * smooth((ang - 1.5) / 1.3) * smooth((4.3 - ang) / 0.6)) * drape * (1 - 0.4 * cage) + 0.006 * noise3(t * 31, ang * 6, 9.1);
-      const skirt = 0.07 * bell(ang, 3.45, 0.32) * (0.6 + 0.4 * noise3(t * 9, 2.2, 6.6)) * smooth((t - 0.12) / 0.1) * smooth((0.9 - t) / 0.1);
+      // Under the long folds a finer set, as a cloth has that was wet and dried where it fell.
+      const fine = 1 - 2 * Math.abs(noise3(t * 9.3 + 1.4 * (ang - 1.5), ang * 2.3, 12.7));
+      const fold =
+        (0.012 + 0.038 * smooth((ang - 1.5) / 1.3) * smooth((4.3 - ang) / 0.6)) * drape * (1 - 0.4 * cage) +
+        0.009 * fine * smooth((ang - 0.9) / 0.8) * smooth((4.4 - ang) / 0.5) * (1 - 0.5 * cage) +
+        0.006 * noise3(t * 31, ang * 6, 9.1);
+      const skirt = 0.115 * bell(ang, 3.45, 0.34) * sat(0.5 + 0.5 * noise3(t * 9, 2.2, 6.6) + 0.35 * noise3(t * 27, 1.1, 3.3)) * smooth((t - 0.12) / 0.1) * smooth((0.9 - t) / 0.1);
       const out = (rib + spine + flank + hipPoint + blade + fold + skirt) * round;
       return [out, sat(0.86 + 9 * (rib + flank * 0.6 + fold))];
     },
@@ -245,14 +251,14 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
 
   // The neck: from the shoulder along the rock in a slack curve to the root of the mop. The knuckles of its spine stand along its top.
   const neck: V3[] = [
-    [-0.6, 0.17, -0.3],
-    [-0.9, 0.14, 0.08],
-    [-1.2, 0.1, 0.14],
-    [-1.5, 0.09, -0.32],
-    [-1.75, 0.085, -0.8],
-    [-2.0, 0.075, -0.74],
-    [-2.13, 0.065, -0.36],
-    [-2.1, 0.055, -0.02],
+    [-0.6, 0.14, -0.3],
+    [-0.9, 0.094, 0.08],
+    [-1.2, 0.066, 0.14],
+    [-1.5, 0.058, -0.32],
+    [-1.75, 0.055, -0.8],
+    [-2.0, 0.05, -0.74],
+    [-2.13, 0.044, -0.36],
+    [-2.1, 0.04, -0.02],
   ];
   sweep(
     skin,
@@ -262,12 +268,14 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     (t) => KIND.limb + 0.2 * smooth((t - 0.72) / 0.25),
     (t) => {
       const r = lerp(0.14, 0.06, smooth(t / 0.9)) * closed(t, 0.02, 0.1);
-      return { wide: r * 1.12, tall: r * 0.86 };
+      // Slack and fallen in: flat on the rock, thinner in one stretch than the next.
+      const fallen = 0.85 + 0.3 * noise3(t * 6, 1.3, 4.4);
+      return { wide: r * 1.22 * (1.12 - 0.2 * fallen), tall: r * 0.55 * fallen };
     },
     (t, ang) => {
-      const knuckle = 0.011 * bell(ang, 1.2, 0.35) * (0.5 + 0.5 * Math.cos(2 * Math.PI * t * 26));
-      const ring = 0.007 * (1 - 2 * Math.abs(noise3(t * 24, Math.sin(ang) * 0.8, 2.2))) + 0.004 * noise3(t * 60, ang * 3, 7.7);
-      return [(knuckle + ring) * closed(t, 0.04, 0.05), sat(0.85 + 22 * ring)];
+      const knuckle = 0.022 * bell(ang, 1.2, 0.35) * (0.5 + 0.5 * Math.cos(2 * Math.PI * t * 26));
+      const ring = 0.013 * (1 - 2 * Math.abs(noise3(t * 24, Math.sin(ang) * 0.8, 2.2))) + 0.005 * noise3(t * 60, ang * 3, 7.7);
+      return [(knuckle + ring) * closed(t, 0.04, 0.05), sat(0.85 + 14 * ring)];
     },
     true,
   );
@@ -282,20 +290,20 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     [0.4, 0.075, 0.44],
     [0.62, 0.07, 0.4],
     [0.95, 0.12, 0.24],
-    [1.3, 0.06, 0.2],
-    [1.62, 0.045, 0.24],
+    [1.42, 0.065, 0.2],
+    [1.86, 0.05, 0.27],
   ];
-  limb(skin, hindOver, [0.1, 0.034], [[0.13, 0.085], [0.49, 0.066], [0.74, 0.052], [0.985, 0.043]], 1.3);
-  hoof(skin, [1.65, 0.04, 0.245], [1, 0.1], 1.15);
+  limb(skin, hindOver, [0.12, 0.043], [[0.13, 0.098], [0.49, 0.078], [0.74, 0.062], [0.985, 0.052]], 1.3);
+  hoof(skin, [1.89, 0.046, 0.276], [1, 0.14], 1.25);
   const hindUnder: V3[] = [
     [0.8, 0.13, -0.2],
     [0.95, 0.075, -0.02],
     [1.07, 0.055, 0.1],
-    [1.3, 0.045, 0.42],
-    [1.52, 0.04, 0.74],
+    [1.4, 0.05, 0.5],
+    [1.72, 0.046, 0.95],
   ];
-  limb(skin, hindUnder, [0.08, 0.032], [[0.5, 0.052], [0.985, 0.042]], 4.1);
-  hoof(skin, [1.54, 0.036, 0.765], [0.57, 0.82], 1.15);
+  limb(skin, hindUnder, [0.098, 0.041], [[0.5, 0.062], [0.985, 0.05]], 4.1);
+  hoof(skin, [1.74, 0.042, 0.978], [0.57, 0.82], 1.25);
   const fore: V3[] = [
     [-0.5, 0.15, -0.14],
     [-0.54, 0.1, 0.16],
@@ -303,18 +311,18 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     [-0.42, 0.055, 0.4],
     [-0.1, 0.05, 0.31],
     [0.03, 0.05, 0.27],
-    [0.2, 0.042, 0.42],
-    [0.31, 0.04, 0.55],
+    [0.24, 0.046, 0.5],
+    [0.42, 0.044, 0.74],
   ];
-  limb(skin, fore, [0.075, 0.03], [[0.4, 0.055], [0.72, 0.048], [0.985, 0.04]], 6.6);
-  hoof(skin, [0.325, 0.034, 0.57], [0.6, 0.8], 1.05);
+  limb(skin, fore, [0.09, 0.038], [[0.4, 0.066], [0.72, 0.057], [0.985, 0.048]], 6.6);
+  hoof(skin, [0.436, 0.04, 0.762], [0.6, 0.8], 1.2);
   const foreUnder: V3[] = [
     [-0.36, 0.1, -0.1],
     [-0.2, 0.05, 0.12],
     [0.12, 0.04, 0.05],
     [0.34, 0.035, 0.12],
   ];
-  limb(skin, foreUnder, [0.06, 0.03], [[0.4, 0.048]], 8.8);
+  limb(skin, foreUnder, [0.072, 0.036], [[0.4, 0.056]], 8.8);
 
   // The mop: cords from the end of the neck, matted where they leave it and spread in a fan on the rock, each in its own slack curve, some
   // of them forked. They lie on one another near the root and singly at the ends.
@@ -359,26 +367,30 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     // The fan opens away from the neck's end: toward the low end of the animal and toward the lens. The cords leave the neck as one
     // matted bundle as thick as it is.
     const bearing = Math.PI * lerp(0.3, 1.02, u ** 1.3) + 0.1 * (random() - 0.5);
-    const thick = 0.011 + 0.03 * random() ** 2.2;
+    const thick = 0.015 + 0.04 * random() ** 2.2;
     cord([root[0] + 0.05 * (random() - 0.5), root[1] + 0.05 * random(), root[2] - 0.12 + 0.07 * (random() - 0.5)], bearing, 1.0 + 0.9 * random(), thick, 0.05 * random(), 2);
   }
 
   // Into the world: every point at its height over the rock under it, sunk a little, the low points more.
   const count = skin.position.length / 3;
   const position = new Float32Array(count * 3);
-  const data = new Float32Array(count * 3);
+  const data = new Float32Array(count * 4);
+  // How much of the sky each point sees past the rest of the animal and the rock: baked from this very model (dead/bodyocc.ts), and
+  // left out if the model is no longer the one it was baked from.
+  const baked = count === OCC_COUNT ? atob(OCC_DATA) : null;
   for (let i = 0; i < count; i++) {
     const y = skin.position[i * 3 + 1] as number;
     const w = place([(skin.position[i * 3] as number) * k, (y - 0.035) * k, (skin.position[i * 3 + 2] as number) * k]);
     position.set(w, i * 3);
-    data[i * 3] = skin.data[i * 3] as number;
-    data[i * 3 + 1] = skin.data[i * 3 + 1] as number;
-    data[i * 3 + 2] = y * k;
+    data[i * 4] = skin.data[i * 3] as number;
+    data[i * 4 + 1] = skin.data[i * 3 + 1] as number;
+    data[i * 4 + 2] = y * k;
+    data[i * 4 + 3] = baked ? baked.charCodeAt(i) / 255 : 1;
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(position, 3));
   geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(skin.uv.map((v) => v * k)), 2));
-  geometry.setAttribute('aData', new THREE.BufferAttribute(data, 3));
+  geometry.setAttribute('aData', new THREE.BufferAttribute(data, 4));
   geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(skin.index), 1));
   geometry.computeVertexNormals();
   // No line where a skin closes on itself: both points of the seam take the mean of their two normals.
@@ -403,8 +415,8 @@ export function buildBody(place: (p: V3) => V3, random: () => number, k: number)
     lines: [
       [s([-0.8, 0, 0.02]), s([-0.4, 0, 0.1]), s([0.1, 0, 0.02]), s([0.5, 0, 0.0]), s([0.9, 0, -0.05])],
       [s([-0.9, 0, 0.2]), s([-1.2, 0, 0.26]), s([-1.5, 0, -0.15]), s([-1.8, 0, -0.6]), s([-2.1, 0, -0.2])],
-      [s([0.4, 0, 0.5]), s([0.95, 0, 0.32]), s([1.3, 0, 0.3]), s([1.62, 0, 0.3])],
-      [s([1.0, 0, 0.1]), s([1.3, 0, 0.48]), s([1.52, 0, 0.8])],
+      [s([0.4, 0, 0.5]), s([0.95, 0, 0.32]), s([1.4, 0, 0.3]), s([1.86, 0, 0.33])],
+      [s([1.0, 0, 0.1]), s([1.4, 0, 0.56]), s([1.72, 0, 1.0])],
     ],
     spots: [
       [s([-0.5, 0, -0.3]), 0.5, 0.95],

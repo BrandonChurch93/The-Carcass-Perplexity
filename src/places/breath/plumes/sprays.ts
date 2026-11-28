@@ -6,12 +6,12 @@
 // The light inside a bush is worked out here once: the strips are counted into a grid, and each strip and each ring of a tube is told how
 // much growth lies between it and the sun, and between it and the sky. The sun of the Breath does not move.
 import * as THREE from 'three';
-import type { Rng } from '../../../core/rng';
+import { Rng } from '../../../core/rng';
 import { SUN_DIR, WIND } from '../shared/anchors';
 
 export type V3 = [number, number, number];
 
-export type Habit = 'sweep' | 'fountain' | 'hang';
+export type Habit = 'sweep' | 'fountain' | 'hang' | 'coral';
 
 export interface Bush {
   x: number;
@@ -23,7 +23,8 @@ export interface Bush {
   lean: number;
   /** 1 for the ones a camera comes close to, less for the far ones: how far down the forking is grown and how thick each strip is. */
   detail: number;
-  /** sweep: a fan of feathers combed one way. fountain: stalks all round that arch over to the rock. hang: a fan that falls from its root. */
+  /** sweep: a fan of feathers combed one way. fountain: stalks all round that arch over to the rock. hang: a fan that falls from its root.
+   *  coral: a bush of woody stems that fork and fork again, each bush of its own build, clothed in short brush. */
   habit: Habit;
   /** More or fewer stalks than its habit has. Unset: 1. */
   full?: number;
@@ -112,7 +113,8 @@ function strip(segments: number): { position: THREE.BufferAttribute; index: numb
   return { position: new THREE.Float32BufferAttribute(position, 3), index };
 }
 
-export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => number): Grown {
+export function grow(bush: Bush, stream: Rng, floor: (x: number, z: number) => number): Grown {
+  let rng = stream;
   const { tall, lean, habit } = bush;
   const extent = tall * (bush.reach ?? 1);
   const close = bush.detail >= 1;
@@ -121,13 +123,15 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   const bushPhase = rng.range(0, 6.283);
   const leanDir: V3 = [Math.sin(lean), 0, -Math.cos(lean)];
   // Far off a strip is thinner than a pixel: there the bush is grown of fewer, thicker strips, which read the same from there.
-  const coarse = close ? 1 : middle ? (habit === 'fountain' ? 1.25 : 2.2) : 4.5;
+  const coral = habit === 'coral';
+  const coarse = close ? 1 : middle ? (habit === 'fountain' || coral ? 1.25 : 2.2) : 4.5;
 
   const tA: number[] = [];
   const tB: number[] = [];
   const tC: number[] = [];
   const tSway: number[] = [];
   const tTint: number[] = [];
+  const tFace: number[] = [];
   const tipAt: number[] = [];
   const stemPosition: number[] = [];
   const stemNormal: number[] = [];
@@ -212,7 +216,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   };
 
   /** One strip: it leaves `a` along `d0`, `long` metres of it, and has turned to `d1` by its end. Returns where its numbers start. */
-  const lay = (a: V3, d0: V3, d1: V3, long: number, half: number, tone: number, u0: number, u1: number, tremble: number, phase: number, level: number): number => {
+  const lay = (a: V3, d0: V3, d1: V3, long: number, half: number, tone: number, u0: number, u1: number, tremble: number, phase: number, level: number, face: V3 = [0, 1, 0], thick = 1): number => {
     const at = tA.length;
     // a + b s + c s s: its tangent is b at the root and b + 2 c at the end.
     const b: V3 = [d0[0] * long, d0[1] * long, d0[2] * long];
@@ -226,6 +230,8 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     tC.push(c[0], c[1], c[2], rng.next());
     tSway.push(u0, u1, tremble, phase);
     tTint.push(1, 1, level, 0);
+    // A blade: the normal of the frond it lies in, and how thick it is against its width. 1 is a round thread.
+    tFace.push(face[0], face[1], face[2], thick);
     return at;
   };
   const along = (at: number, s: number): { p: V3; t: V3 } => ({
@@ -246,23 +252,92 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   };
 
   // A fountain is finer brush than a swept plume: more stalks, shorter hair.
-  const long2 = tall * (habit === 'fountain' ? 0.16 : 0.2);
+  const long2 = tall * (coral ? 0.08 : habit === 'fountain' ? 0.16 : 0.2);
   const half2 = tall * 0.00105 * Math.sqrt(coarse);
   const half3 = tall * 0.0007;
+  // A plume the lens comes close to is not hair: its limbs carry flat fleshy blades in two ranks, close set, so that a limb with what it
+  // carries is one wet feather with a body, frayed to points at its edge. Between the blades a few fine hairs stand off.
+  const bladed = close && (habit === 'sweep' || habit === 'hang');
+  // One that hangs over the pit weeps: its blades are long and fall from their limbs.
+  const weep = habit === 'hang';
+  // The blades are grown from a stream of their own, so that the limbs that carry them, and every bush grown after this one, are as
+  // they were when it was hair.
+  const bladeStream = new Rng(Math.floor(Math.abs(bush.x * 1009 + bush.z * 9176 + tall * 31)) + 17);
   /** The branchlets along a limb from `v0` of the way, each with its filaments. `scale`: how long they are against the bush's longest. */
-  const feather = (c: Path, v0: number, phase: number, scale: number, tone0: number): void => {
-    const spacing = 0.013 * tall * coarse;
+  const featherOf = (c: Path, v0: number, phase: number, scale: number, tone0: number, blades: boolean): void => {
+    // Weeping fronds are fewer and fleshy.
+    const spacing = blades ? (weep ? 0.0085 : 0.0042) * tall : 0.013 * tall * coarse;
     const n = Math.max(2, Math.round((c.length * (1 - v0)) / spacing));
+    // The plane this frond lies in: nearer level than upright, each frond tilted its own way.
+    const tilt: V3 = blades ? [rng.range(-0.6, 0.6), 1, rng.range(-0.6, 0.6)] : [0, 1, 0];
+    const turnOver = blades ? rng.range(0, 6.283) : 0;
+    const planeAt = (t: V3): V3 => {
+      const d = tilt[0] * t[0] + tilt[1] * t[1] + tilt[2] * t[2];
+      const q: V3 = [tilt[0] - t[0] * d, tilt[1] - t[1] * d, tilt[2] - t[2] * d];
+      return Math.hypot(q[0], q[1], q[2]) < 0.25 ? aside(t, turnOver) : unit(q);
+    };
+    // Wet, the blades gather into locks: those of one stretch of the limb run to one point, a lock on each side, no two stretches alike.
+    let lockEnd = -1;
+    const lockTo: [V3, V3] = [[0, 0, 0], [0, 0, 0]];
     for (let i = 0; i <= n; i++) {
       // The last one is the end of the limb itself, which thins into a branchlet.
       const tip = i === n;
       const v = tip ? 1 : v0 + (1 - v0) * ((i + rng.next()) / n);
       const g = on(c, v);
+      if (blades) {
+        const plane = planeAt(g.t);
+        const out = cross(plane, g.t);
+        const rank = i % 2 === 0 ? 1 : -1;
+        if (i > lockEnd) {
+          const size = 3 + Math.floor(rng.next() * 14);
+          lockEnd = i + size - 1;
+          const ve = Math.min(1, v0 + (1 - v0) * ((i + size * rng.range(0.5, 1.0)) / n));
+          const e = on(c, ve);
+          const ep = planeAt(e.t);
+          const eo = cross(ep, e.t);
+          for (let r = 0; r < 2; r++) {
+            const theta = rng.range(0.3, 0.75);
+            const lift = rng.range(-0.3, 0.3);
+            const far = long2 * (weep ? 0.42 : 0.5) * scale * rng.range(0.45, 1.55) * (0.5 + 0.5 * smooth(0, 0.3, ve)) * (1 - 0.5 * ve);
+            const side = r === 0 ? 1 : -1;
+            lockTo[r] = [e.p[0] + (e.t[0] * Math.cos(theta) + eo[0] * Math.sin(theta) * side + ep[0] * lift) * far, e.p[1] + (e.t[1] * Math.cos(theta) + eo[1] * Math.sin(theta) * side + ep[1] * lift) * far - (0.2 + 1.1 * Math.abs(lift) + (weep ? 0.4 : 0)) * far * wet, e.p[2] + (e.t[2] * Math.cos(theta) + eo[2] * Math.sin(theta) * side + ep[2] * lift) * far];
+          }
+        }
+        // No two blades are of one cut: here one is missing, there one is twice its neighbour's width, and each is turned its own way.
+        if (!tip && rng.next() < 0.1) continue;
+        const to = lockTo[rank > 0 ? 0 : 1] as V3;
+        const reach: V3 = [to[0] - g.p[0], to[1] - g.p[1], to[2] - g.p[2]];
+        const span = Math.hypot(reach[0], reach[1], reach[2]);
+        const stray = 0.16;
+        // A weeping blade leaves its limb outward and a little up, and arches over before it falls.
+        const off = weep ? 0.6 : 0.1;
+        const rise = weep ? rng.range(0.5, 1.0) : 0.12;
+        const d0: V3 = tip ? g.t : unit([reach[0] / span + rng.range(-stray, stray) + off * out[0] * rank, reach[1] / span + rng.range(-stray, stray) + rise, reach[2] / span + rng.range(-stray, stray) + off * out[2] * rank]);
+        // Against the way the bush is combed a blade is short: the wind has it pressed back on its limb.
+        const windward = Math.max(0, -(reach[0] * leanDir[0] + reach[2] * leanDir[2]) / span);
+        const L = tip ? long2 * 0.6 * scale : span * rng.range(0.8, 1.12) * (1 - (weep ? 0.3 : 0.7) * windward);
+        // It leaves its limb a little outward and comes in to the point of its lock, hanging at its end.
+        const d1h: V3 = unit([reach[0] / span - 0.1 * out[0] * rank + 0.25 * comb * leanDir[0], reach[1] / span - (habit === 'sweep' ? rng.range(0.15, 0.6) + 0.5 * v : rng.range(0.9, 2.0) + 0.4 * v) * wet, reach[2] / span - 0.1 * out[2] * rank + 0.25 * comb * leanDir[2]]);
+        // A weeping blade does not hang plumb: its end strays to one side and curls under, back toward its limb.
+        const d1 = tip ? heading(g.t, d0, 0.6) : weep ? unit([d1h[0] + rng.range(-0.55, 0.55) - 0.35 * g.t[0], d1h[1], d1h[2] + rng.range(-0.55, 0.55) - 0.35 * g.t[2]]) : d1h;
+        const tone = Math.min(0.999, Math.max(0, tone0 + rng.range(-0.2, 0.2)));
+        const face: V3 = unit([plane[0] + rng.range(-0.6, 0.6), plane[1] + rng.range(-0.6, 0.6), plane[2] + rng.range(-0.6, 0.6)]);
+        const blade = lay(g.p, d0, d1, L, tall * (weep ? 0.0048 : 0.0033) * (0.45 + 1.4 * rng.next() ** 1.6), tone, g.u, g.u + 0.16, rng.range(0, 6.283), phase, 2, face, rng.range(0.24, 0.4));
+        if (i % 3 === 0) tipAt.push(blade);
+        if (!weep && rng.next() < 0.7) {
+          const e0 = leave(d0, 0.1, 0.42);
+          const e2 = heading(g.t, e0, rng.range(0.5, 1.5));
+          const e1: V3 = unit([e2[0] - 0.6 * g.t[0] + rng.range(-0.32, 0.32), e2[1] + rng.range(-0.45, 0.1), e2[2] - 0.6 * g.t[2] + rng.range(-0.32, 0.32)]);
+          lay(g.p, e0, e1, L * rng.range(0.7, 1.25), half3 * rng.range(0.8, 1.3), Math.min(0.999, Math.max(0, tone + rng.range(-0.12, 0.12))), g.u, g.u + 0.2, rng.range(0, 6.283), phase, 3);
+        }
+        continue;
+      }
       const d0 = tip ? g.t : leave(g.t, 0.16, 0.5);
       const L = long2 * scale * rng.range(0.55, 1.25) * (tip ? 1.2 : 1 - (habit === 'sweep' ? 0.55 : 0.35) * v);
       const d1h = heading(g.t, d0, (habit === 'sweep' ? rng.range(0.15, 0.8) + 0.9 * v : rng.range(0.35, 1.1) + 0.5 * v));
-      // On a plume the lens comes close to, an end does not hang straight: it curls under, back toward the limb it left.
-      const d1 = (habit === 'sweep' || habit === 'hang') && close && !tip ? unit([d1h[0] - 0.4 * g.t[0], d1h[1] - 0.15, d1h[2] - 0.4 * g.t[2]]) : d1h;
+      // On a mass of hair by the lens, an end does not hang straight: it curls under, back toward the limb it left.
+      const frizz = (habit === 'sweep' || habit === 'hang') && close;
+      const d1 = frizz && !tip ? unit([d1h[0] - 0.4 * g.t[0], d1h[1] - 0.15, d1h[2] - 0.4 * g.t[2]]) : d1h;
       const tone = Math.min(0.999, Math.max(0, tone0 + rng.range(-0.2, 0.2)));
       const u1 = g.u + 0.22;
       // A branchlet that carries filaments does not tremble on its own: its filaments are rooted on where it is.
@@ -275,8 +350,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       for (let k = 0; k < twigs; k++) {
         const s = rng.range(0.05, 0.6);
         const h = along(parent, s);
-        // On a plume the lens comes close to, the finest hair is not combed: it stands off its branchlet and curls, each its own way.
-        const frizz = (habit === 'sweep' || habit === 'hang') && close;
+        // There the finest hair is not combed either: it stands off its branchlet and curls, each its own way.
         const e0 = frizz ? leave(h.t, 0.1, 0.42) : leave(h.t, 0.08, 0.3);
         const e2 = heading(h.t, e0, rng.range(0.5, 1.5));
         const curl = 0.35 + 0.7 * s;
@@ -288,9 +362,30 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     }
   };
 
+  const feather = (c: Path, v0: number, phase: number, scale: number, tone0: number): void => {
+    if (!bladed) {
+      featherOf(c, v0, phase, scale, tone0, false);
+      return;
+    }
+    // First the hair it had, which is taken off again: it is grown only to take from the stream what it took. Then the blades.
+    const strips = tA.length;
+    const tips = tipAt.length;
+    featherOf(c, v0, phase, scale, tone0, false);
+    for (const list of [tA, tB, tC, tSway, tTint, tFace]) list.length = strips;
+    tipAt.length = tips;
+    rng = bladeStream;
+    featherOf(c, v0, phase, scale, tone0, true);
+    rng = stream;
+  };
+
   const full = bush.full ?? 1;
-  const stalks = Math.max(3, Math.round((habit === 'fountain' ? (close ? 34 : middle ? 32 : 13) : habit === 'hang' ? 9 : close ? 11 : middle ? 9 : 7) * full));
-  const spread = bush.spread ?? (habit === 'fountain' ? Math.PI : habit === 'hang' ? 0.6 : 0.95);
+  // A bush of coral is its own: how many stems it has, how wide its vase opens, how far its ends bow over, which side it has grown to,
+  // how much of each stem is bare wood and how close its forks are set. No two are of one build.
+  const build = coral
+    ? { stems: rng.range(1.0, 1.6), open: rng.range(0.7, 1.1), bow: rng.range(0.6, 1.2), side: rng.range(0, 6.283), skew: rng.range(0.15, 0.45), bare: rng.range(0.05, 0.15), fork: rng.range(0.75, 1.3) }
+    : { stems: 1, open: 0, bow: 0, side: 0, skew: 0, bare: 0, fork: 1 };
+  const stalks = Math.max(coral ? 4 : 3, Math.round((habit === 'fountain' || coral ? (close ? 34 : middle ? 32 : 13) : habit === 'hang' ? 9 : close ? 11 : middle ? 9 : 7) * full * build.stems));
+  const spread = bush.spread ?? (habit === 'fountain' || coral ? Math.PI : habit === 'hang' ? 0.6 : 0.95);
   for (let m = 0; m < stalks; m++) {
     // From the crown of the bush to its skirt: the first rise and bend over only at their ends, the last go out low and hang.
     const rank = Math.min(1, Math.max(0, (m + rng.range(-0.3, 0.3)) / (stalks - 1)));
@@ -304,6 +399,12 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       el1 = -0.8 - 0.25 * rank + rng.range(-0.2, 0.15);
       length = tall * (1.25 - 0.32 * rank) * rng.range(0.8, 1.08);
       turn = 0.3;
+    } else if (coral) {
+      // Its stems leave the holdfast as a vase and arch over to the rock, the bush a low dome wider than it is tall.
+      el0 = 1.4 - 0.85 * build.open * rank + rng.range(-0.12, 0.12);
+      el1 = -0.3 - build.bow * (0.3 + 0.5 * rank) + rng.range(-0.25, 0.2);
+      length = tall * (0.86 - 0.3 * rank) * rng.range(0.65, 1.1);
+      turn = rng.range(0.7, 1.2);
     } else if (habit === 'fountain') {
       el0 = 1.4 - 0.75 * rank + rng.range(-0.12, 0.1);
       el1 = -0.7 - 0.5 * rank + rng.range(-0.25, 0.15);
@@ -317,24 +418,25 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
     }
     const az0 = lean + spread * k + rng.range(-0.15, 0.15);
     const az1 = lean + turn * spread * k + rng.range(-0.15, 0.15);
+    if (coral) length *= 1 + build.skew * Math.cos(az0 - build.side);
     const d0: V3 = [Math.sin(az0) * Math.cos(el0), Math.sin(el0), -Math.cos(az0) * Math.cos(el0)];
     const d1: V3 = [Math.sin(az1) * Math.cos(el1), Math.sin(el1), -Math.cos(az1) * Math.cos(el1)];
     const out = 0.085 * tall * Math.sqrt(rng.next());
     const from: V3 = [bush.x + Math.sin(az0) * out, bush.y + 0.02 * tall, bush.z - Math.cos(az0) * out];
     const phase = rng.range(0, 6.283);
     const tone0 = rng.range(0.25, 0.75);
-    const stalk = path(from, d0, d1, length, close ? 26 : middle ? 16 : 10, habit === 'fountain' ? rng.range(0.9, 1.3) : habit === 'hang' ? rng.range(2.0, 3.0) : rng.range(2.4, 3.2), rng.range(0.1, 0.22), 0, 1, true);
-    const thick = tall * 0.013 * (0.75 + 0.5 * (length / tall)) * rng.range(0.85, 1.15);
-    tube(stalk, thick, tall * 0.0012, habit === 'fountain' ? 0.35 : 0.6, phase, close ? 9 : middle ? 6 : 4);
+    const stalk = path(from, d0, d1, length, close ? 26 : middle ? 16 : 10, coral ? rng.range(1.0, 1.9) : habit === 'fountain' ? rng.range(0.9, 1.3) : habit === 'hang' ? rng.range(2.0, 3.0) : rng.range(2.4, 3.2), coral ? rng.range(0.15, 0.3) : rng.range(0.1, 0.22), 0, 1, true);
+    const thick = tall * (coral ? 0.011 : 0.013) * (0.75 + 0.5 * (length / tall)) * rng.range(0.85, 1.15);
+    tube(stalk, thick, tall * 0.0012, coral ? 0.25 : habit === 'fountain' ? 0.35 : 0.6, phase, close ? 9 : middle ? 6 : 4);
     // Its branches: none on the bare foot of the stalk, the longest a third of the way up, shorter to the end, as a feather's.
-    const bare = habit === 'hang' ? rng.range(0.42, 0.52) : rng.range(0.06, 0.11);
-    const gap = (close ? 0.06 : middle ? 0.085 : 0.13) * (habit === 'fountain' ? 1.3 : 1) * rng.range(0.85, 1.15);
+    const bare = coral ? build.bare * rng.range(0.8, 1.2) : habit === 'hang' ? rng.range(0.32, 0.42) : rng.range(0.06, 0.11);
+    const gap = (close ? 0.06 : middle ? 0.085 : 0.13) * (coral ? 1.3 * build.fork : habit === 'fountain' ? 1.3 : habit === 'hang' ? 0.7 : 1) * rng.range(0.85, 1.15);
     for (let v = bare; v < 0.97; v += gap * rng.range(0.6, 1.4)) {
       const g = on(stalk, v);
-      const e0 = habit === 'sweep' ? leave(g.t, 0.2, 0.5) : leave(g.t, 0.3, 0.7);
+      const e0 = habit === 'sweep' ? leave(g.t, 0.2, 0.5) : coral ? leave(g.t, 0.35, 0.8) : leave(g.t, 0.3, 0.7);
       const e1 = heading(g.t, e0, rng.range(0.3, 0.9) + (habit === 'hang' ? 0.25 : 0));
       const shape = smooth(bare - 0.04, bare + 0.07, v) * (1 - 0.72 * v ** 1.4);
-      const bl = length * rng.range(0.26, 0.46) * shape;
+      const bl = length * (coral ? rng.range(0.3, 0.6) : rng.range(0.26, 0.46)) * shape;
       if (bl < 0.03 * tall) continue;
       const branch = path(g.p, e0, e1, bl, close ? 9 : middle ? 6 : 4, rng.range(0.8, 1.4), rng.range(0.05, 0.2), g.u, g.u + (1 - g.u) * 0.6 + 0.1, true);
       const bt = Math.min(thick * 0.5, tall * 0.0034 * (0.5 + 0.5 * shape));
@@ -347,9 +449,20 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
         tube(branch, bt, tall * 0.0008, 0, phase, close ? 5 : 4);
       }
       feather(branch, 0.06, phase, 0.55 + 0.45 * shape, tone0);
+      // On a bush of coral a branch forks again: twigs leave it forward, each with its own brush.
+      if (coral && !far && bl > 0.12 * tall) {
+        for (let w = rng.range(0.25, 0.45); w < 0.85; w += rng.range(0.2, 0.35)) {
+          const h = on(branch, w);
+          const f0 = leave(h.t, 0.35, 0.8);
+          const f1 = heading(h.t, f0, rng.range(0.2, 0.8));
+          const twig = path(h.p, f0, f1, bl * rng.range(0.3, 0.55) * (1 - 0.4 * w), 4, rng.range(0.8, 1.4), rng.range(0.05, 0.2), h.u, h.u + (1 - h.u) * 0.5 + 0.1, true);
+          tube(twig, bt * 0.55, tall * 0.0007, 0, phase, 4);
+          feather(twig, 0.06, phase, 0.45, tone0);
+        }
+      }
     }
     // Past its middle the stalk is thin and carries branchlets itself, to its end.
-    feather(stalk, habit === 'hang' ? 0.55 : habit === 'fountain' ? 0.12 : 0.24, phase, 0.8, tone0);
+    feather(stalk, coral ? Math.min(0.7, bare + 0.12) : habit === 'hang' ? 0.55 : habit === 'fountain' ? 0.12 : 0.24, phase, 0.8, tone0);
   }
   // The toes of the holdfast: they leave it low, thick as a wrist, and go into the cracks of the rock.
   const toes = close ? 12 : middle ? 6 : 0;
@@ -366,6 +479,24 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
       p[1] = Math.min(Math.max(p[1], f - 0.03 * tall), f + 0.04 * tall * (1 - smooth(0.0, 0.25, v)) - 0.006 * tall) - 0.07 * tall * smooth(0.45, 1, v);
     });
     tube(c, tall * (close ? rng.range(0.014, 0.026) : rng.range(0.012, 0.022)), tall * 0.002, 0.85, 0, close ? 10 : 7, true);
+  }
+  // By the lens the holdfast is fibrous: fine roots leave it all round, lie on the rock and go down into its cracks.
+  if (bladed && !weep) {
+    rng = bladeStream;
+    for (let f = 0; f < 170; f++) {
+      const az = rng.range(0, 6.283);
+      const r0 = tall * rng.range(0.03, 0.12);
+      const x = bush.x + Math.sin(az) * r0;
+      const z = bush.z - Math.cos(az) * r0;
+      const from: V3 = [x, floor(x, z) + 0.004 * tall, z];
+      const az1 = az + rng.range(-0.8, 0.8);
+      const long = tall * rng.range(0.04, 0.16);
+      const slope = (floor(x + Math.sin(az1) * long, z - Math.cos(az1) * long) - 0.012 * tall - from[1]) / long;
+      const d0 = unit([Math.sin(az), slope + rng.range(0.1, 0.4), -Math.cos(az)]);
+      const d1 = unit([Math.sin(az1), slope - rng.range(0.3, 0.6), -Math.cos(az1)]);
+      lay(from, d0, d1, long, tall * 0.0015 * rng.range(0.6, 1.8), rng.range(0.1, 0.9), 0, 0, -1, 0, 1);
+    }
+    rng = stream;
   }
 
   // The light inside the bush. Every strip is counted into the cell its middle lies in, as the area it shows; from that, what part of the
@@ -463,7 +594,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   }
 
   const threads = new THREE.InstancedBufferGeometry();
-  const made = strip(close ? 5 : 3);
+  const made = strip(bladed ? 8 : close ? 5 : 3);
   threads.setAttribute('position', made.position);
   threads.setIndex(made.index);
   threads.setAttribute('aA', new THREE.InstancedBufferAttribute(new Float32Array(tA), 4));
@@ -471,6 +602,7 @@ export function grow(bush: Bush, rng: Rng, floor: (x: number, z: number) => numb
   threads.setAttribute('aC', new THREE.InstancedBufferAttribute(new Float32Array(tC), 4));
   threads.setAttribute('aSway', new THREE.InstancedBufferAttribute(new Float32Array(tSway), 4));
   threads.setAttribute('aTint', new THREE.InstancedBufferAttribute(new Float32Array(tTint), 4));
+  threads.setAttribute('aFace', new THREE.InstancedBufferAttribute(new Float32Array(tFace), 4));
   threads.instanceCount = count;
   // A bush that is out of the frame is not drawn. The sphere holds it with its sway.
   const sphere = new THREE.Sphere(new THREE.Vector3(bush.x, bush.y + 0.3 * extent, bush.z), 1.9 * extent + 1);

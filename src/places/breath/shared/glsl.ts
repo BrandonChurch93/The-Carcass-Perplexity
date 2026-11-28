@@ -54,12 +54,13 @@ uniform vec3 uFill;`;
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 
-// The fog's glow round the sun, toward d: an orange core a quarter of a radian wide inside a pale one that reaches half the sky. Measured on the
-// approved wide view. The dome, the air and every mirror read this one function. sunGlow is its brightness alone.
+// The fog's glow round the sun, toward d, fitted to the approved pictures through the inverse of the tone curve: a deep amber that
+// reaches a quarter of the sky and stays under white (ten degrees out it reads 0.65 in red, a third of that in green, no blue), a hotter
+// orange inside four degrees, and the sun's own aureole, two degrees wide, the only part far over white. The dome, the air and every
+// mirror read this one function. sunGlow is its brightness alone.
 vec3 sunHalo(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
-  // The innermost term is the sun's own aureole in the fog: pale gold and far over white, so the lens blooms on it as it does in the pictures.
-  return uGlowColour * (vec3(1.25, 0.92, 0.58) * exp(-a / 0.8) + vec3(1.4, 0.62, 0.1) * exp(-a / 0.34) + vec3(7.0, 2.6, 0.5) * exp(-a / 0.1) + vec3(26.0, 17.0, 7.5) * exp(-a / 0.035));
+  return uGlowColour * (vec3(2.7, 1.0, 0.12) * exp(-a / 0.25) + vec3(16.2, 5.7, 0.4) * exp(-a / 0.05) + vec3(54.0, 43.0, 24.0) * exp(-a / 0.018));
 }
 float sunGlow(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));

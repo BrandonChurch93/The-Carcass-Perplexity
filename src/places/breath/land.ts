@@ -89,7 +89,9 @@ export function plates(x: number, z: number): number {
 
 export function lipHeight(bearing: number, r: number): number {
   const out = r - rimRadius(bearing);
-  const north = 3.4 * bump(bearing, 40, 95) * (1 - smooth((out - 3) / 13));
+  // The north lip stands lower to the north-north-west than to the north-east: from the south lip (shot breath-02, the lens 4.4 m up)
+  // the far rim then lies under the eye by more than its own height, and the plain shows over it.
+  const north = 3.4 * bump(bearing, 40, 95) * (1 - 0.65 * bump(bearing, 8, 50)) * (1 - smooth((out - 3) / 13));
   const south = 2.6 * bump(bearing, 158, 34) * (1 - smooth((out - 1) / 11));
   const west = 1.5 * bump(bearing, -72, 50) * (1 - smooth((out - 1) / 7));
   return north + south + west;

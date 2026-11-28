@@ -9,7 +9,8 @@ import { EDGE_FRAGMENT, EDGE_VERTEX, edgeGeometry } from './edge';
 import { SEA_LEVEL, WIND, channelX, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { MIRROR } from '../waders/mirror';
-import { RIPPLES } from '../waders/ripples';
+import { CONTACT, RIPPLES } from '../waders/ripples';
+import { COLLAR_VERTEX, collarGeometry } from './collar';
 
 export const PARTS: readonly string[] = ['sea'];
 
@@ -92,8 +93,30 @@ export function create(ctx: Context): Piece {
   const edge = new THREE.Mesh(edgeShape, edgeMaterial);
   edge.frustumCulled = false;
   edge.renderOrder = 11;
+  // The lifted water round what stands in it (collar.ts): the sheet's own shading on a disc at every contact the waders name.
+  const collarMaterial = new THREE.ShaderMaterial({
+    vertexShader: COLLAR_VERTEX,
+    fragmentShader: FRAGMENT,
+    defines: { COLLAR: '' },
+    uniforms: { ...material.uniforms, uContact: CONTACT.points },
+    transparent: true,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
+    blending: THREE.CustomBlending,
+    blendEquation: THREE.AddEquation,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+    blendSrcAlpha: THREE.OneFactor,
+    blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
+  });
+  const collarShape = collarGeometry();
+  const collar = new THREE.Mesh(collarShape, collarMaterial);
+  collar.frustumCulled = false;
+  collar.renderOrder = 12;
   const sea = new THREE.Group();
-  sea.add(sheet, edge);
+  sea.add(sheet, edge, collar);
   ctx.scene.add(ctx.parts.built('sea', sea));
 
   return {
@@ -109,6 +132,8 @@ export function create(ctx: Context): Piece {
       material.dispose();
       edgeShape.dispose();
       edgeMaterial.dispose();
+      collarShape.dispose();
+      collarMaterial.dispose();
       far.dispose();
       waves.dispose();
       ripples.dispose();
