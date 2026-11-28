@@ -21,7 +21,9 @@ export function axisOf(x: number, z: number): [number, number] {
 }
 
 /** The stream: it leaves the lake left of the spur and runs out through the rim. `across` of its middle at `along`, and the level of its bed. */
-export const streamAcross = (along: number): number => -11.5 - 22 * smooth(138, 96, along) - 4 * smooth(96, 30, along) + 2.2 * Math.sin(along / 11 + 0.6) * smooth(150, 120, along) + 1.2 * Math.sin(along / 4.7 + 2);
+// Down the fan it keeps to the left shoulder, where the wide camera sees it fall past the foot of the left knob, and it turns to its mouth
+// only on the beach: the mouth itself lies where it lay.
+export const streamAcross = (along: number): number => -11.5 - 15.5 * smooth(138, 108, along) - 10.5 * smooth(62, 22, along) + 2.2 * Math.sin(along / 11 + 0.6) * smooth(150, 120, along) + 1.2 * Math.sin(along / 4.7 + 2);
 export const streamBed = (along: number): number =>
   -0.35 + 0.012 * Math.min(17, Math.max(0, along)) + 33.5 * smooth(17, 105, along) + 9 * smooth(150, 320, along) + 0.9 * smooth(112, 116, along) + 1.1 * smooth(127, 130, along) + 1.3 * smooth(141, 145, along);
 
@@ -77,6 +79,9 @@ export function wallAt(a: number): { foot: number; scree: number; top: number } 
     9 * (block(90, 7.1, 0.4, 0.6) - 0.5);
   return { foot: Math.max(46, foot), scree: Math.max(3, Math.min(scree, 0.6 * Math.max(26, top))), top: Math.max(26, top) };
 }
+
+/** The bench of the fan's left shoulder: the level of its top at its end, and where it ends, metres along the axis. */
+export const BENCH = { level: 24.5, end: 74 };
 
 const BEACH = 30;
 const FACE = 62;
@@ -164,6 +169,12 @@ function landBase(x: number, z: number): number {
       const shoulder = 1 + 0.6 * smooth(14, 52, Math.abs(across + 6 * Math.sin(along / 17)));
       const fan = (0.2 * g + 0.0016 * g * g) * shoulder * (0.9 + 0.2 * fbm(x / 19, z / 19, 3)) * sides * (1 - smooth(118, 135, along));
       if (fan > y) y = fan;
+      // The left shoulder of the fan is a bench of bedrock: a step of the spur that lies nearly level and ends in a drop to the beach. The wide
+      // camera looks down on its top, where the fan itself runs away under the foot of its picture: the stream crosses the bench in its
+      // sight and falls from the end, and the left knob stands on it.
+      const top = BENCH.level + (along > BENCH.end ? 0.16 : 0.05) * (along - BENCH.end) + 0.7 * (fbm(x / 9, z / 9, 3) - 0.5);
+      const on = smooth(-8, -19, across) * smooth(-68, -55, across) * smooth(BENCH.end - 14, BENCH.end, along + 3 * (vnoise(across / 4.1, 4.4) - 0.5)) * smooth(122, 108, along);
+      if (top > y) y += (top - y) * on;
     }
 
   }

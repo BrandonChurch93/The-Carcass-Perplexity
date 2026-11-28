@@ -8,7 +8,7 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { during } from '../shared/anchors';
 import { FAR_DATA, LEVELS, MID_DATA } from './body.data';
 import { createCards } from './cards';
-import { CLOSE_COUNT, herd, standPose, wadeOf, type Drinker } from './herd';
+import { CLOSE_COUNT, footfalls, herd, standPose, wadeOf, type Drinker } from './herd';
 import { BONES, solve, type Solved } from './skeleton';
 
 export const PARTS: readonly string[] = ['drinkers'];
@@ -54,6 +54,8 @@ const FRAGMENT = /* glsl */ `
 uniform vec4 uOwn;
 // x how far its head is up, y how much of the low sun still reaches its back where the ground it stands on is in shade.
 uniform vec3 uPose;
+// The tone of its hide: the herd is of three.
+uniform vec3 uTone;
 // The hide sheet: rgb its colour, a its relief.
 uniform sampler2D tHide;
 // The broad sheet: the loose folds, the scars and the dirt.
@@ -243,7 +245,7 @@ void main() {
   // The hide is rubbed pale on the bones and lies in its own shade between the ribs and in the hollow of the flank.
   skin *= 1.0 + (1.0 - smoothstep(0.022, 0.05, px)) * (0.2 * bone - 0.3 * hollow - 0.11 * (0.4 + 1.2 * w2) * (ribs * (0.5 + w1) - ribbed));
   // Each a tone of its own.
-  skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3));
+  skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3)) * uTone;
   // The belly and the inside of the legs are paler; the joints of the legs are rubbed dark.
   skin *= 1.0 + 0.1 * smoothstep(0.2, -0.6, rn.y) * trunk;
   float above = (vWorld.y - max(uOwn.z, 0.0)) / uOwn.y;
@@ -368,8 +370,11 @@ export function create(ctx: Context): Piece {
     const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.45);
     // z: the four of the shore shot, the first four of the list, are seen long and near: they carry the marks of their years.
     const pose = new THREE.Vector3(0, index < CLOSE ? 0 : 0.45, index < 4 ? 1 : 0);
+    // Three hides in the herd: pale cream, sand going to rust, and a grey dun. Together they are as light as the one hide was.
+    const kindOf = (animal.own * 37.7) % 1;
+    const tone = index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.09, 1.07, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.05, 0.93, 0.78) : new THREE.Vector3(0.86, 0.87, 0.9);
     const material = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, tHide, tFolds, tSlope },
+      uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, uTone: { value: tone }, tHide, tFolds, tSlope },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       // The surface is wound with its outside as its back: only that side is drawn.
@@ -393,7 +398,8 @@ export function create(ctx: Context): Piece {
 
   // The pose at t: one that drinks has its neck let down just as far as brings its mouth to the water where it stands.
   const poseAt = (d: Drinker, t: number, into: Float32Array): Solved => {
-    if (d.down(t) < 0.5 || d.level !== undefined) return solve(d.build, standPose(d, t, ground, 1), into);
+    const low = d.down(t);
+    if (low < 0.3 || d.level !== undefined) return solve(d.build, standPose(d, t, ground, 1), into);
     let lo = 0.6;
     let hi = 1.3;
     for (let i = 0; i < 12; i++) {
@@ -402,7 +408,9 @@ export function create(ctx: Context): Piece {
       if (muzzle[1] > Math.max(0, ground(muzzle[0], muzzle[2])) - 0.04 * d.build.size) lo = mid;
       else hi = mid;
     }
-    return solve(d.build, standPose(d, t, ground, 0.5 * (lo + hi)), into);
+    // The reach comes on as the neck goes down, so a head on its way to the water or up from it never jumps.
+    const on = Math.min(1, Math.max(0, (low - 0.3) / 0.4));
+    return solve(d.build, standPose(d, t, ground, 1 + (0.5 * (lo + hi) - 1) * on * on * (3 - 2 * on)), into);
   };
 
   return {
@@ -441,7 +449,11 @@ export function create(ctx: Context): Piece {
         g.own.z = d.level ?? Math.max(wadeOf(d), ground(cx, cz));
         // The herd is far off: one ring round each that wades, and one where a mouth is in the water, while there are rings to give.
         if (herdOf) {
-          if (wetAt(cx, cz) && g.own.z < -0.02) ring(cx, cz, 0.7);
+          if (d.gait) {
+            // One that walks in the lake: the hoof it set down last rings where it stands, strongest just after it lands and gone before the next.
+            const newest = footfalls(d, t).reduce((a, b) => (b.stands >= 0 && (a.stands < 0 || b.stands < a.stands) ? b : a));
+            if (newest.stands >= 0 && wetAt(newest.x, newest.z) && g.own.z < -0.02) ring(newest.x, newest.z, 1.1 * newest.pace * Math.sin(Math.PI * Math.min(1, newest.stands * d.gait.duty / 0.25)));
+          } else if (wetAt(cx, cz) && g.own.z < -0.02) ring(cx, cz, 0.7);
           if (wetAt(solved.muzzle[0], solved.muzzle[2]) && d.down(t) > 0.9) ring(solved.muzzle[0], solved.muzzle[2], 1.0);
           continue;
         }

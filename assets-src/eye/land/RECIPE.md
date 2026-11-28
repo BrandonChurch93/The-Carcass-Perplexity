@@ -37,3 +37,12 @@ Prompt or command: `npx tsx assets-src/eye/land/bake-outcrop.ts`, from the repos
 Takes: computed; the one result is kept. Run it again after any change to `outcrop.ts` or `height.ts`, or the relief drawn and the ground the stones stand on part company.
 Why this one: the relief of the outcrop took ten seconds to work out at the start of every render. The map holds its lie both ways (r, g) and how much sky each place sees (b); the rock picture holds rock or rubble at half the size; the mesh picture holds every corner of the mesh, a texel each, in two tiles side by side (left: height in r and g, standing rock in b; right: the smooth ground's normal in r and g, wet beside the stream in b).
 Date: 2026-11-26
+
+## `public/assets/eye/land/knob-r.png`, `public/assets/eye/land/knob-n.jpg` and `public/assets/eye/land/knob-m.jpg`
+
+Made by: `assets-src/eye/land/make_knobs.py` on Python 3.11 with numpy and Pillow.
+From: no input file: two crags of bedded limestone are sculpted as solids from fixed seeds (columns of stacked beds parted by joints, fallen blocks at the foot, worn edges, grooves along the beds, cracks and pits) and baked.
+Prompt or command: `python3 assets-src/eye/land/make_knobs.py`, from the repository root. It writes two crags side by side, each on an octahedral map: the radius for every direction from the crag's middle in `knob-r.png` (16 bits in r and g, at half the size), the normal in `knob-n.jpg`, and occlusion, edge and the tone of the bed in `knob-m.jpg`.
+Takes: computed; 3 made, take 3 kept (the first two stood in even courses like laid stone).
+Why this one: lets `src/places/eye/land/knob.ts` raise a ball into a crag with upright faces and open joints, which the height field of the outcrop cannot hold, and light it with no unwrapping.
+Date: 2026-11-27

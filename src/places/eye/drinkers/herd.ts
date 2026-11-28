@@ -3,6 +3,7 @@
 import { KEYS, SHORE_HEADING } from '../cameras';
 import { DEG, at, shoreAt } from '../layout';
 import type { Rng } from '../../../core/rng';
+import { goneAt, paceAt, stepAt, wayAt, type Gait } from './gait';
 import { restHoof, standing, type Build, type Hoof, type Pose, type V3 } from './skeleton';
 
 export interface Drinker {
@@ -27,8 +28,8 @@ export interface Drinker {
   alert?: number;
   /** How far it gives ground when that takes it, in its own sizes: it steps back, one hoof after another. */
   gives?: number;
-  /** It walks: its own sizes a second, the way it faces. It is where it is placed at the key of the wide shot. */
-  walks?: number;
+  /** It walks: how, when and on what way. It is where it is placed, facing as it is placed, at the gait's key. */
+  gait?: Gait;
   /** It lies on the gravel with its legs folded under it. */
   lies?: boolean;
   /** A number of its own, 0 to 1: its coat, its clocks. */
@@ -46,9 +47,8 @@ const MATS_KEY = (8600 - 8305) / 60;
 const WIDE_KEY = (8412 - 8305) / 60;
 /** The first of the list are the animals the close shots are about; the herd of the wide shot follows them. */
 export const CLOSE_COUNT = 9;
-/** A walk: the part of its stride a hoof stands, and how far the body passes over it meanwhile, in the animal's sizes. */
-const STANCE = 0.68;
-const STRIDE = 0.44;
+/** How long the herd is looked at, seconds into the place: the wide shot, and the six seconds a critic holds its key with the world running on. */
+const WIDE_ENDS = WIDE_KEY + 6.2;
 
 /** How deep they wade: the bed they stand on is never further under the water than this, metres. */
 export const WADE = -0.34;
@@ -79,6 +79,39 @@ const build = (size: number, own: number, calf = false): Build =>
 
 /** The two the last shot looks past: a small head on a long neck, as the approved picture has them. */
 const seenFromBehind = (d: Drinker, neck: number): Drinker => ({ ...d, build: { ...d.build, head: 0.6, neck, girth: 1.04, stem: 0.56 } });
+
+/** Who of the herd is on its way, by its number in the herd: its pace in sizes a second, when it sets off or halts, how it is turned from where the draw faced it. */
+interface Does {
+  pace: number;
+  from?: number;
+  to?: number;
+  again?: number;
+  /** Seconds before the key at which it was where it is placed. */
+  ahead?: number;
+  facing?: number | 'in' | 'out';
+  curve?: number;
+  trot?: boolean;
+}
+const WAYS: Record<number, Does> = {
+  0: { pace: 0.6, from: 5.4 },
+  1: { pace: 0.62, to: 4.3 },
+  2: { pace: 0.72, from: 3.8, facing: 'out' },
+  3: { pace: 0.78, to: 5.2 },
+  6: { pace: 0.7, from: 0.45, facing: 'out' },
+  // This one is placed before one that lies, as the camera sees them: it has walked clear of it by the key.
+  8: { pace: 0.55, ahead: 5.2, to: 3.9 },
+  10: { pace: 0.85, facing: 'in', to: 4.9 },
+  11: { pace: 0.74, to: 1.25, facing: 'in', again: 6.1 },
+  13: { pace: 1.9, trot: true, to: 3.1 },
+  15: { pace: 0.66, from: 1.5, facing: 'in' },
+  17: { pace: 0.9, to: 3.6, again: 6.4 },
+  // One has had enough and leaves: it swings round away from the rest and goes off up the bank.
+  19: { pace: 1.0, from: 0.7, facing: 'out', curve: 0.22 },
+  20: { pace: 0.7, to: 2.9, again: 5.0 },
+  21: { pace: 0.8, to: 2.0 },
+  23: { pace: 0.64, from: 4.6 },
+  24: { pace: 0.5 },
+};
 
 export function herd(rng: Rng, riseAt: number): Drinker[] {
   // One that drinks: mouth in the water and sipping, then the head comes half up and it swallows, then it stands and looks, then down again.
@@ -116,7 +149,8 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     // The ones of the mats shot. One is near, alone, side on with its head down, as the approved picture has it; two are far off behind it, one
     // of them upright and watching.
     mats(from(KEYS.mats, -15, 16.5, 84, 1.05, sips(5, MATS_KEY, 0.3), false)),
-    mats(from(KEYS.mats, -25, 62, 262, 1, up(1.4), true)),
+    // The upright one far off is on its way along the shelf, through the shallows.
+    { ...mats(from(KEYS.mats, -25, 62, 262, 1, (t) => 0.14 + 0.04 * Math.sin(t * 0.7), true)), gait: { pace: 0.6, cycle: 1.2, duty: 0.66, curve: 0.004, key: MATS_KEY } },
     mats(from(KEYS.mats, -21.5, 74, 96, 0.9, sips(9, MATS_KEY, 0.42), false)),
   ];
   // The herd along the south shore, as the wide shot sees it. They are placed from that picture: loose knots of unequal number strung along the
@@ -148,19 +182,78 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
       const way = rng.next() < 0.5 ? 1 : -1;
       const dry = out > -0.5;
       const edge = out > -3 && out <= 0.5;
-      // A few walk along the bank, each at a pace of its own, and a few lie on the gravel. One at the edge drinks with its back to the camera.
-      const walks = i === 3 || i === 8 || i === 13 || i === 17;
-      const lies = dry && !walks && out > 4 && (i === 5 || i === 7 || i === 16 || i === 18);
+      // The same draws as ever, so every animal stands where it stood: what it does is laid over that by its number.
+      const walked = i === 3 || i === 8 || i === 13 || i === 17;
       const kind = i % 9 === 4 ? 'calf' : edge ? 'edge' : dry || i % 3 === 2 ? 'up' : i % 5 === 1 ? 'back' : 'down';
-      const facing = walks ? 18 + 90 * way + rng.range(-14, 14) : kind === 'back' || kind === 'edge' ? 18 + (hash(i * 3.1) - 0.5) * 70 : 18 + 90 * way + rng.range(-34, 34);
-      const size = rng.range(1.35, 2.1) * (kind === 'calf' ? 1.1 : 1);
-      const drinks = !walks && !lies && (kind === 'down' || kind === 'edge' || (kind === 'calf' && !dry));
-      const head = walks ? () => 0.16 + 0.1 * phase : drinks ? sips(period, 0, phase) : up(phase * 6);
-      list.push({
-        ...one(x, z, facing, size, head, !walks && !drinks, false, kind === 'calf'),
-        ...(walks ? { walks: 0.26 + 0.14 * hash(i * 5.3) } : {}),
-        ...(lies ? { lies: true } : {}),
+      const drawn = walked ? 18 + 90 * way + rng.range(-14, 14) : kind === 'back' || kind === 'edge' ? 18 + (hash(i * 3.1) - 0.5) * 70 : 18 + 90 * way + rng.range(-34, 34);
+      const span = rng.range(1.35, 2.1) * (kind === 'calf' ? 1.1 : 1);
+      // Two sizes: the grown, and the half grown of the last two years, lighter in the trunk and longer in the leg.
+      const young = kind !== 'calf' && hash(i * 2.7 + 0.4) < 0.3;
+      const size = span * (young ? 0.7 : 1);
+      // What it does in the shot. Half the herd is on its way somewhere: along the bank, down to the water, out of it, one away from the rest.
+      // Some set off in the shot and some come to a stand in it. No two keep one pace.
+      const does = WAYS[i];
+      const lies = dry && !does && out > 4 && (i === 5 || i === 7 || i === 16 || i === 18);
+      const facing = does?.facing === undefined ? drawn : does.facing === 'in' ? 18 + (hash(i * 3.1) - 0.5) * 50 : does.facing === 'out' ? 198 + (hash(i * 3.1) - 0.5) * 50 : drawn + does.facing;
+      const drinks = !does && !lies && (kind === 'down' || kind === 'edge' || (kind === 'calf' && !dry));
+      // Every head has its own moment: one that drinks lifts it, one that stands lets it down, each at a time no other has; the rest sip or look.
+      const when = 0.25 + 2.3 * part(i * 0.618 + 0.11);
+      const plan = hash(i * 4.7 + 1.3);
+      // One that walks carries its head at a height of its own: some high and looking about, some low and reaching.
+      const carried = 0.04 + 0.34 * hash(i * 8.3 + 0.7);
+      const sipping = sips(period * 0.5, 0, phase);
+      const head = does
+        ? does.to !== undefined
+          ? (t: number) => carried + (1 - carried) * ease((does.to as number) + 0.6, (does.to as number) + 1.9, t) * (does.again === undefined ? 1 : 1 - ease(does.again - 1.1, does.again - 0.2, t))
+          : does.from !== undefined
+            ? (t: number) => carried + (0.98 - carried) * (1 - ease((does.from as number) - 1.0, (does.from as number) - 0.15, t))
+            : () => carried
+        : drinks
+          ? plan < 0.45
+            ? (t: number) => 1 - 0.9 * ease(when, when + 0.85, t) * (1 - ease(when + 2.6 + 2 * plan, when + 3.9 + 2 * plan, t))
+            : sipping
+          : !lies && plan < 0.4
+            ? (t: number) => 0.05 + 0.95 * ease(when, when + 1.25, t) * (1 - 0.93 * ease(when + 3.4 + 3 * plan, when + 4.2 + 3 * plan, t))
+            : up(phase * 6);
+      const o = one(x, z, facing, size, head, !does && !drinks, false, kind === 'calf');
+      const gait: Gait | undefined = does && {
+        pace: does.pace,
+        cycle: does.trot ? 1.9 : 1.12 + 0.2 * hash(i * 5.3),
+        duty: does.trot ? 0.44 : 0.64 + 0.05 * hash(i * 9.1),
+        curve: (does.curve ?? (hash(i * 6.7) - 0.5) * 0.04) / size,
+        key: WIDE_KEY - (does.ahead ?? 0),
+        ...(does.from === undefined ? {} : { from: does.from }),
+        ...(does.to === undefined ? {} : { to: does.to }),
+        ...(does.again === undefined ? {} : { again: does.again }),
+        ...(does.trot ? { trot: true } : {}),
+      };
+      list.push({ ...o, build: young ? { ...o.build, girth: o.build.girth * 0.9, depth: o.build.depth * 0.92, leg: o.build.leg * 1.05, head: o.build.head * 1.08 } : o.build, ...(gait ? { gait } : {}), ...(lies ? { lies: true } : {}) });
+    }
+  }
+  // None walks into another: one whose way would bring it too near a neighbour inside the shot is turned about, and if that does not clear it, stands.
+  const whereAt = (d: Drinker, t: number): [number, number] => {
+    if (!d.gait) return [d.x, d.z];
+    const w = wayAt(d.gait, d.x, d.z, d.facing * DEG, goneAt(d.gait, d.build.size, t));
+    return [w.x, w.z];
+  };
+  const clear = (d: Drinker, k: number): boolean =>
+    [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1].every((f) => {
+      const t = f * WIDE_ENDS;
+      const [x, z] = whereAt(d, t);
+      return list.every((other, j) => {
+        if (j < CLOSE_COUNT || j === k) return true;
+        const [ox, oz] = whereAt(other, t);
+        return Math.hypot(ox - x, oz - z) > Math.min(Math.hypot(other.x - d.x, other.z - d.z) - 0.2, 1.45 * (d.build.size + other.build.size));
       });
+    });
+  for (let k = CLOSE_COUNT; k < list.length; k++) {
+    const d = list[k] as Drinker;
+    if (!d.gait || clear(d, k)) continue;
+    const about = [180, 90, -90, 45, -45, 135, -135].map((turn) => ({ ...d, facing: d.facing + turn })).find((c) => clear(c, k));
+    if (about) list[k] = about;
+    else {
+      const { gait: _gait, ...stands } = d;
+      list[k] = stands;
     }
   }
   return list;
@@ -175,15 +268,19 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const b = d.build;
   const s = b.size;
   const o = d.own;
-  const bearing = d.facing * DEG;
+  // One that walks is where its way has taken it, facing as its way runs there. Its hooves stand on places of that way (gait.ts).
+  const g = d.gait;
+  const gone = g ? goneAt(g, s, t) : 0;
+  const way = g ? wayAt(g, d.x, d.z, d.facing * DEG, gone) : { x: d.x, z: d.z, bearing: d.facing * DEG };
+  const pace = g ? paceAt(g, t) : 0;
+  const bearing = way.bearing;
   const sinB = Math.sin(bearing);
   const cosB = Math.cos(bearing);
-  // One that walks is carried along the way it faces at one speed; its hooves stand still on the ground meanwhile.
-  const gone = d.walks ? d.walks * s * (t - WIDE_KEY) : 0;
-  const px = d.x + sinB * gone;
-  const pz = d.z - cosB * gone;
+  const px = way.x;
+  const pz = way.z;
   const y = d.level ?? Math.max(wadeOf(d), ground(px, pz));
-  const stride = d.walks ? STRIDE / (STANCE * d.walks) : 1;
+  // Where in the round of its four legs it is.
+  const round = g ? gone / (g.cycle * s) + o : 0;
   const shift: V3 = [0, 0, 0];
   let roll = 0;
   const hooves: Hoof[] = [];
@@ -195,7 +292,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const swapped = Math.floor(change);
   const into = change - swapped;
   const restLeg = Math.abs(swapped + (hash(o * 47) < 0.5 ? 0 : 1)) % 2;
-  const rests = d.walks || d.lies ? 0 : 0.8 * ease(0.07, 0.2, into) * (1 - ease(0.92, 1, into)) * (d.alert === undefined ? 1 : 1 - ease(d.alert - 0.1, d.alert + 0.3, t));
+  const rests = g || d.lies ? 0 : 0.8 * ease(0.07, 0.2, into) * (1 - ease(0.92, 1, into)) * (d.alert === undefined ? 1 : 1 - ease(d.alert - 0.1, d.alert + 0.3, t));
   for (let k = 0; k < 4; k++) {
     const every = d.stepEvery * (0.75 + 0.6 * hash(o * 17 + k));
     const u = (t - d.key) / every + 0.22 + 0.56 * hash(o * 31 + k * 3.7);
@@ -221,15 +318,21 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
       weight = Math.max(weight, ease(start - 0.3, start - 0.04, t) * (1 - ease(start + 0.36, start + 0.75, t)));
       shift[2] -= 0.25 * d.gives * s * ease(start + 0.1, start + 0.7, t);
     }
-    if (d.walks) {
-      // A walk, in the order hind left, fore left, hind right, fore right. While a hoof stands the body passes over it at the speed the animal
-      // is carried at, so the hoof stays where it was set down; then it swings forward to the next place.
-      const wu = part(t / stride + o + ([0, 0.5, 0.25, 0.75][k] as number));
-      const swung = Math.max(0, (wu - STANCE) / (1 - STANCE));
-      hx = rest[0];
-      hz = rest[2] + STRIDE * s * (wu < STANCE ? 0.5 - wu / STANCE : swung * swung * (3 - 2 * swung) - 0.5);
-      arcUp = Math.sin(Math.PI * swung);
-      weight = wu < STANCE ? Math.max(ease(STANCE - 0.1, STANCE, wu), 1 - ease(0, 0.1, wu)) : 1;
+    let lean = 0;
+    if (g) {
+      // The hoof stands on its place in the world while the trunk passes over it, then swings to the next. Told in the animal's own frame as
+      // it is now, so a way that bends leaves no hoof turning on the ground.
+      const step = stepAt(g, s, d.x, d.z, d.facing * DEG, gone, k, rest[0], rest[2], o);
+      const dx = step.x - px;
+      const dz = step.z - pz;
+      hx = -cosB * dx - sinB * dz;
+      hz = sinB * dx - cosB * dz;
+      // A hoof in the air when it comes to a stand is set down where it is.
+      arcUp = step.lift * Math.min(1, 2.5 * pace) * (g.trot ? 1.25 : 1);
+      // Its weight is off the leg from just before the hoof leaves the ground until just after it is set down.
+      weight = step.stands < 0 ? Math.min(1, 2.5 * pace) : Math.max(ease(0.82, 1, step.stands), 1 - ease(0, 0.14, step.stands)) * Math.min(1, 2.5 * pace);
+      // The cannon goes with the leg: forward at the top as the hoof is left behind, back as it reaches out.
+      lean = -0.42 * (hz - rest[2]) / s;
     }
     if (d.lies) {
       hx = rest[0] * 0.85;
@@ -244,14 +347,14 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     const wx = px - cosB * hx + sinB * hz;
     const wz = pz - sinB * hx - cosB * hz;
     const floor = d.level === undefined ? Math.max(wadeOf(d), ground(wx, wz)) - y : 0;
-    hooves.push({ at: [hx, floor + 0.17 * s * arcUp + 0.012 * s * slack + 0.045 * s * Math.sin(Math.PI * slack / 0.8), hz], fold: d.lies ? 1 : Math.max(arcUp, 0.42 * slack) });
+    hooves.push({ at: [hx, floor + (g ? 0.2 : 0.17) * s * arcUp + 0.012 * s * slack + 0.045 * s * Math.sin(Math.PI * slack / 0.8), hz], fold: d.lies ? 1 : Math.max(arcUp, 0.42 * slack), lean });
     // Its weight goes off the leg before the hoof leaves the ground and comes back on after it lands.
     const side = k % 2 === 0 ? 1 : -1;
     const hind = k < 2;
-    shift[0] -= side * 0.08 * s * weight;
-    shift[2] += (hind ? 1 : -1) * 0.03 * s * weight;
-    shift[1] -= 0.012 * s * weight;
-    roll += side * (0.018 * weight + 0.075 * slack);
+    shift[0] -= side * (g ? 0.035 : 0.08) * s * weight;
+    shift[2] += (hind ? 1 : -1) * (g ? 0 : 0.03) * s * weight;
+    shift[1] -= (g ? 0.006 : 0.012) * s * weight;
+    roll += side * ((g ? (hind ? 0.03 : 0.012) : 0.018) * weight + 0.075 * slack);
     shift[1] -= 0.01 * s * slack;
     // The hip over a leg at rest hangs, and the trunk stands over the other hind leg.
     shift[0] -= side * 0.085 * s * slack;
@@ -262,13 +365,18 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   shift[1] -= 0.018 * s * taken;
   // One that lies has its belly on the gravel. One that walks rises and sinks twice in a stride.
   if (d.lies) shift[1] -= standing(b) - 0.6 * s * b.depth;
-  const tread = d.walks ? Math.cos((t / stride + o) * Math.PI * 4) : 0;
-  shift[1] += 0.012 * s * tread;
+  // One that walks sinks as each pair of legs takes its weight and rises over them, twice in a round; a trot throws it up off the ground.
+  const tread = pace * Math.cos(round * Math.PI * 4 + 0.6);
+  shift[1] += (g?.trot ? 0.05 : 0.02) * s * tread;
+  // Before it sets off it leans back onto its haunches and then forward into the first step; as it halts the trunk runs on over the fore legs and settles back.
+  if (g?.from !== undefined) shift[2] += s * (0.07 * ease(g.from - 0.1, g.from + 0.5, t) * (1 - ease(g.from + 0.6, g.from + 1.4, t)) - 0.05 * ease(g.from - 0.7, g.from - 0.25, t) * (1 - ease(g.from - 0.15, g.from + 0.3, t)));
+  if (g?.to !== undefined) shift[2] += 0.06 * s * ease(g.to + 0.3, g.to + 0.9, t) * (1 - ease(g.to + 1.0, g.to + 2.0, t));
   // The neck: each joint follows the one below it a little late, the head last.
   const drive = (i: number): number => d.down(t - 0.075 * i);
   const low = Math.min(1, Math.max(0, d.down(t)));
   const neck: [number, number, number, number, number] = [0, 0, 0, 0, 0];
-  for (let i = 0; i < 5; i++) neck[i] = drive(i) * reach;
+  // A walking head nods: down as each fore hoof takes the weight, the head a little after the neck.
+  for (let i = 0; i < 5; i++) neck[i] = drive(i) * reach + 0.045 * pace * Math.sin(round * Math.PI * 4 + 1.1 - 0.5 * i);
   // One that stares holds its head level, whatever its neck does.
   if (d.alert !== undefined) neck[4] *= 1 - 0.8 * ease(d.alert, d.alert + 0.5, t);
   // With its mouth in the water it sips: the head works a little and each mouthful swells the neck on its way up to the chest.
@@ -304,11 +412,12 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     z: pz,
     bearing,
     shift,
-    pitch: 0.05 * low + 0.004 * Math.sin(t * 0.53 + o * 7) - 0.03 * taken + 0.01 * tread,
+    pitch: 0.05 * low + 0.004 * Math.sin(t * 0.53 + o * 7) - 0.03 * taken + 0.014 * pace * Math.sin(round * Math.PI * 4 - 0.4),
     roll,
     yaw: 0.01 * Math.sin(t * 0.37 + o * 3),
-    chest: [0.04 * neckTurn * free, 0.03 * low],
-    pelvis: [0.3 * roll, 0],
+    // In a walk the hind end swings with the hind legs and the fore end against it: the spine bends from side to side once in a round.
+    chest: [0.04 * neckTurn * free - 0.05 * pace * Math.sin(round * Math.PI * 2 + 0.9), 0.03 * low],
+    pelvis: [0.3 * roll + 0.07 * pace * Math.sin(round * Math.PI * 2 + 0.9), 0],
     neck,
     turn,
     gulp,
@@ -316,4 +425,18 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     hooves: hooves as [Hoof, Hoof, Hoof, Hoof],
     breath,
   };
+}
+
+/** The four hooves of one that walks, in the world: where each is, how far through its stand (negative: in the air), and the animal's pace, 0 to 1. */
+export function footfalls(d: Drinker, t: number): { x: number; z: number; stands: number; pace: number }[] {
+  const g = d.gait;
+  if (!g) return [];
+  const s = d.build.size;
+  const gone = goneAt(g, s, t);
+  const pace = paceAt(g, t);
+  return [0, 1, 2, 3].map((k) => {
+    const rest = restHoof(d.build, k);
+    const step = stepAt(g, s, d.x, d.z, d.facing * DEG, gone, k, rest[0], rest[2], d.own);
+    return { x: step.x, z: step.z, stands: step.stands, pace };
+  });
 }

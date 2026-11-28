@@ -157,7 +157,9 @@ export function createStream(ctx: Context, stones: Standing[], to: number, grit:
     const along = FROM + i * STEP;
     const half = halfWidth(along);
     const level = levelAt(along);
-    const fall = fallAt(along);
+    // Where the whole reach goes down fast it is a rapid, white from bank to bank whether or not the bed steps just here.
+    const rapid = smooth(0.06, 0.22, (levelAt(along + 5) - levelAt(along - 5)) / 10);
+    const fall = Math.max(fallAt(along), 0.8 * rapid);
     // Below a fall the water is white for a few metres more.
     let churned = 0;
     for (let u = 0.5; u <= 6; u += 0.5) churned = Math.max(churned, fallAt(along + u) * Math.exp(-u / 2.4));
