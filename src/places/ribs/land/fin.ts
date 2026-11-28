@@ -79,9 +79,12 @@ void main() {
   // The metres one pixel covers here: every picture laid by the world takes its level from it.
   float foot = max(length(dFdx(vWorld)), length(dFdy(vWorld)));
   float macro = vnoise(vWorld.xz * 0.006 + vWorld.y * 0.004) * 0.6 + vnoise(vBlade.yx * vec2(0.06, 0.027) + 5.0) * 0.4;
-  float crack = vCrag.x;
-  float tone = vCrag.y;
-  float deep = vCrag.z;
+  // Kept to what the mesh holds (blade.ts gives 0 to 1, and -1 to 1 for the tone). At a rim pixel on the frame's border these have
+  // arrived far outside that; squared into the stone's tone and shade they left one pixel hundreds of times too bright, and the
+  // lens spread it into a white disc.
+  float crack = clamp(vCrag.x, 0.0, 1.0);
+  float tone = clamp(vCrag.y, -1.0, 1.0);
+  float deep = clamp(vCrag.z, 0.0, 1.0);
 
   // The rock is laid by the world, never along the blade: on the upright plane the face looks along. Twice: beds of a house's height,
   // and the same sheet again a third the size, turned and shifted, for the breaks a man could climb.
@@ -242,9 +245,9 @@ void main() {
   float thin = step(0.5, edge);
   float foot = max(length(dFdx(vWorld)), length(dFdy(vWorld)));
   float macro = vnoise(vWorld.xz * 0.006 + vWorld.y * 0.004) * 0.6 + vnoise(vBlade.yx * vec2(0.06, 0.027) + 5.0) * 0.4;
-  float crack = vCrag.x;
-  float tone = vCrag.y;
-  float deep = vCrag.z;
+  float crack = clamp(vCrag.x, 0.0, 1.0);
+  float tone = clamp(vCrag.y, -1.0, 1.0);
+  float deep = clamp(vCrag.z, 0.0, 1.0);
   // The stone is bedded in the world, not along the blade: its beds lie near level, dip one way over the whole reef, and the sweep
   // of a blade cuts across them. A sheet laid along the spine made grooves the length of the blade, which read as grain or as horn.
   // The sheet is laid on the upright plane a face looks out of most squarely, x or z, and on a top by the ground; the height of a
