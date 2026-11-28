@@ -205,8 +205,8 @@ vec3 mistSkyLight(vec3 low) {
 // clock of this stretch, w: how far it has lifted. Vapour in still air: each stretch thickens, thins and lifts at a slow rate of its own,
 // one nearly at rest beside one that climbs, so the bank never changes everywhere at once and nothing crosses it. The clocks run ahead
 // of and behind the film's by a bounded span, not at fixed unequal rates, which would shear the bank more the later the frame.
-// along is metres along the far shore. Worked out and not read from a picture, and not worked out at all where the bank is even:
-// every look of every mirror asks for mistStands.
+// along is metres along the far shore. Worked out and not read from a picture. A mirror does not ask for it: this renderer pays for
+// every line of every look of every mirror whether its branch is taken or not, and the bank in the water is soft.
 vec2 mistStands(float along) {
   if (uMistE.y <= 0.0) return vec2(1.0);
   float a = along / 1000.0;
@@ -229,8 +229,6 @@ float stillUp(vec3 ro, vec3 rd, float t) {
 
 vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   if (uMistOn <= 0.0 || uMistA.x <= 0.0) return vec4(0.0);
-  // A mirror holds the bank's height and thickness over each stretch, and not the stretch's own clock: it is soft in the water.
-  vec2 stretch = mistStands(along);
   vec4 big = texture(tMistNoise, vec3(along / 1300.0, 60.0 / 1300.0, uTime * 0.0042));
   vec4 mid = texture(tMistNoise, vec3(along / 410.0 + 0.31, 60.0 / 900.0 + 0.17, 0.5 + uTime * 0.0085));
   float cover = smoothstep(0.0, 0.55, 0.9 - uMistC.z + uMistB.z * (2.6 * (big.g - 0.5) + 1.2 * (mid.a - 0.5)));
@@ -239,16 +237,16 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
   stands = mix(stands, 1.0, 0.6);
   cover = mix(cover, 1.0, 0.5);
-  float swell = mix(0.35 + 1.5 * mid.r, 0.65 + 0.9 * mid.r, uMistE.x);
+  float swell = 0.35 + 0.3 * uMistE.x + (1.5 - 0.6 * uMistE.x) * mid.r;
   float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
-  float top = uMistA.z * stands * stretch.x * mix(1.0, 0.9 + 0.4 * sun, uMistE.y) * swell + sheetTop;
+  float top = uMistA.z * stands * (1.0 + uMistE.y * (0.4 * sun - 0.1)) * swell + sheetTop;
   vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
   float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
   // A bank that is not torn stands in the mirror as one soft bank, not as a row of heaps.
   // And water that is never quite flat gives back no single heap: in the mirror the bank is nearly whole, with a soft top.
   heap = mix(1.0, heap, 0.3 * uMistB.z);
   float h = up / (top * heap);
-  float bank = uMistB.y * cover * stands * stretch.y * 0.6 * min(uMistA.w, 320.0) * (uMistE.x > 0.0 ? mix(pow(clamp(1.0 - h, 0.0, 1.0), 2.4), exp(-3.0 * h) * smoothstep(2.2, 1.2, h), uMistE.x) : pow(clamp(1.0 - h, 0.0, 1.0), 2.4));
+  float bank = uMistB.y * cover * stands * 0.6 * min(uMistA.w, 320.0) * pow(clamp(1.0 - h / (1.0 + 1.2 * uMistE.x), 0.0, 1.0), 2.4 + 2.6 * uMistE.x);
   float sheet = uMistB.x * cover * min(sheetTop / max(rd.y, 1e-3), 0.5 * uMistA.x) * exp(-up / max(sheetTop, 0.05));
   float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * uMistC.w * (1.0 - uSolo);
   float toSun = dot(rd, uSunDir);
@@ -328,7 +326,7 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
   float level = 0.5 * log2(max(max(min(fa, fb), 0.25 * max(fa, fb)), 1e-8));
   // Seen straight, the wall stands behind the bank of mist and the damp air over it, and what is seen through them is soft: softest at
   // the water. A level of the picture and not of the frame, so that the wall is as soft at every size the film is drawn at.
-  if (bias <= 0.0 && uMistE.w > 0.0) level = max(level, uMistE.w * uMistOn * (0.5 + 0.5 * exp(-max(q.y, 0.0) / max(0.8 * uMistA.z, 1.0))));
+  if (bias <= 0.0 && uMistE.w > 0.0) level = max(level, uMistE.w * uMistOn * (0.5 + 0.5 * clamp(1.0 - q.y / max(2.0 * uMistA.z, 1.0), 0.0, 1.0)));
   vec3 plate = ungrade(textureLod(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), level + bias + uPlateSoft + 2.5 * over + 2.0 * drawn).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
   if (tall) {
