@@ -689,9 +689,13 @@ void main() {
   vec2 uby = vec2(dqy[me.y], dqy[me.z]);
   vec2 w = clamp((vec2(an[ma.x], an[me.x]) - 0.5773) / 0.4227, 0.0, 1.0) + 1e-4;
   w /= w.x + w.y;
-  vec3 m0 = textureGrad(tMat, ua, uax, uay).rgb * w.x + textureGrad(tMat, ub, ubx, uby).rgb * w.y;
-  vec3 sa = textureGrad(tMatN, ua, uax, uay).rgb;
-  vec3 sb = textureGrad(tMatN, ub, ubx, uby).rgb;
+  // One level for each of the two lays, from its footprint: a read by level costs less than a read by gradient.
+  float matWide = float(textureSize(tMat, 0).x);
+  float la = log2(max(max(length(uax), length(uay)) * matWide, 1.0));
+  float lb = log2(max(max(length(ubx), length(uby)) * matWide, 1.0));
+  vec3 m0 = textureLod(tMat, ua, la).rgb * w.x + textureLod(tMat, ub, lb).rgb * w.y;
+  vec3 sa = textureLod(tMatN, ua, la).rgb;
+  vec3 sb = textureLod(tMatN, ub, lb).rgb;
   vec3 ga = vec3(0.0);
   ga[ma.y] = sa.r - 0.5;
   ga[ma.z] = sa.g - 0.5;
@@ -724,6 +728,10 @@ void main() {
   float bedLone = fract(sin(floor(bedAt) * 12.9898 + 2.3) * 43758.5453);
   float bedSeen = smoothstep(0.8, 0.3, fwidth(bedAt)) * (1.0 - up);
   float browOn = brow * smoothstep(0.3, 0.6, face);
+  // The terrace's crust comes over the brim as a lip, a finger deep in one place and a forearm in the next, broken off ragged, the wall
+  // dark in its shade under it: with the wall dark from the brim down, its top was one clean line against the terrace.
+  float lipDeep = 0.03 + 0.34 * smoothstep(0.3, 0.7, b.r + 0.5 * (c.a - 0.5)) * (0.5 + 0.5 * bedLone);
+  float lip = smoothstep(lipDeep, 0.7 * lipDeep, under);
   float bedFoot = bedSeen * smoothstep(0.22, 0.0, bedIn) * (0.4 + 0.6 * bedLone);
   // The picture's own blocks are held down: at full strength, on courses, the wall was laid masonry with moss in the joints.
   n = normalize(n - mix(0.55, 1.5, brow) * uMat.y * (lean - n * dot(lean, n)));
@@ -746,7 +754,7 @@ void main() {
   // combed into upright stripes a finger apart from top to bottom.
   float streak = texture2D(tRock, vec2(vUv.x / 5.3, p.y / 8.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 2.9 + 0.3, p.y / 4.0)).a - 0.5);
   float wetRun = smoothstep(0.52, 0.36, streak + 0.12 * (bedLone - 0.5)) * (1.0 - up);
-  albedo *= mix(1.0, 0.5, wetRun) * mix(1.0, 0.46 + 0.3 * height, browOn) * mix(0.45, 1.0, smoothstep(0.0, 0.12 + 0.5 * b.r, under));
+  albedo *= mix(1.0, 0.5, wetRun) * mix(1.0, 0.46 + 0.3 * height, browOn) * mix(0.45, 1.0, smoothstep(lipDeep, lipDeep + 0.12 + 0.4 * b.r, under));
   albedo = mix(albedo, vec3(0.3, 0.27, 0.2) * tone, 0.16 * smoothstep(0.66, 0.8, streak) * (1.0 - up));
   // The beds: one is not the tone of the next, and the foot of each is shut in under the lip of the one above.
   albedo *= mix(1.0, 0.55, bedFoot) * mix(1.0, 0.72 + 0.56 * bedLone, 0.7 * bedSeen);
@@ -754,6 +762,7 @@ void main() {
   occ *= mix(1.0, 0.6, bedFoot);
   // A ledge holds what falls: grit, paler than the face.
   albedo = mix(albedo, vec3(0.2, 0.185, 0.16) * tone, 0.6 * smoothstep(0.6, 0.9, up));
+  albedo = mix(albedo, vec3(0.27, 0.245, 0.2) * tone * (0.75 + 0.5 * height), 0.85 * lip);
   rough = mix(mix(0.3, 0.75, max(topBeds, smoothstep(1.8, 0.7, under))), mix(0.16, 0.5, browOn), wetRun);
   occ *= 0.75 + 0.5 * height;
   // The tiers carried on round the side that fell: bands of the arches' own stone, cream with rust in it, and under each the wall is
