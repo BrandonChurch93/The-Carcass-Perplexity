@@ -299,15 +299,27 @@ const SCORCH_BLOCK = /* glsl */ `#if SCORCH == 1
       float dv = (textureGrad(tScorchH, uvS + vec2(0.0, px.y), uvSx, uvSy).r - h0) / (px.y * 5.91);
       // Burned rock, wet but broken: it is rough, and only its hollows hold a little water. The relief is laid at a low strength.
       vec3 nS = normalize(vec3(0.0, 1.0, 0.0) - 0.022 * (vec3(uScorchAxes.x, 0.0, uScorchAxes.y) * du + vec3(uScorchAxes.z, 0.0, uScorchAxes.w) * dv));
-      // Slush lies on it in clots, grey and granular, thickest in its hollows and down the gale of every head of rock: it is ice, not water.
-      float clot = vnoise(dS * 2.3 + 4.1) * 0.6 + vnoise(dS * 7.1 + 1.3) * 0.4;
-      float slush = smoothstep(0.5, 0.62, clot + 0.35 * (0.5 - h0) + 0.25 * (tongue - 0.5));
-      sc = mix(sc, vec3(0.34, 0.38, 0.45) * (0.75 + 0.5 * clot), 0.85 * slush);
+      // The burned rock is in ledges: long slabs broken across their beds, each with its own tilt, tone and wet, and a dark open joint
+      // between them. (The plate alone, seen low, was one smooth dark sheet with pale swirls in it, and read as water.)
+      vec2 inPlate = vec2(dot(dS, uScorchAxes.xy), dot(dS, uScorchAxes.zw));
+      vec3 slab = shards(vec2(0.9 * inPlate.x + 0.43 * inPlate.y, 0.9 * inPlate.y - 0.43 * inPlate.x) / vec2(1.2, 0.42) + 3.3);
+      // (Only under the lens: from the air a pixel is as wide as a joint, and slabs each of its own tone are a paved yard.)
+      float ledges = smoothstep(0.02, 0.007, spanS);
+      // (No line is ruled between them: a joint is the step of tone and tilt from one slab to the next, and a little dark at its foot.)
+      float joint = ledges * smoothstep(0.1, 0.0, slab.x);
+      sc *= mix(vec3(1.0), mix(vec3(0.45), vec3(1.5, 1.2, 0.95), slab.z) * (1.0 - 0.3 * joint), ledges);
+      nS = normalize(nS - ledges * 0.32 * (vec3(uScorchAxes.x, 0.0, uScorchAxes.y) * (slab.y - 0.5) + vec3(uScorchAxes.z, 0.0, uScorchAxes.w) * (slab.z - 0.5)));
+      // Slush lies on it in clots, pale and granular, in its joints, on its low slabs and down the gale of every head of rock: it is ice, not water.
+      float clot = vnoise(dS * 2.3 + 4.1) * 0.5 + vnoise(dS * 7.1 + 1.3) * 0.3 + vnoise(dS * 23.0 + 9.7) * 0.2;
+      float slush = smoothstep(0.53, 0.63, clot + 0.3 * (0.5 - h0) + 0.25 * (tongue - 0.5) + ledges * 0.22 * (0.5 - slab.y));
+      float grain_ = vnoise(dS * 61.0 + 2.9);
+      sc = mix(sc, vec3(0.52, 0.57, 0.65) * (0.7 + 0.6 * clot) * (0.75 + 0.5 * grain_), 0.9 * slush);
       albedo = mix(albedo, sc, scorch);
       n = normalize(mix(n, normalize(mix(nS, vec3(0.0, 1.0, 0.0), 0.6 * slush)), scorch));
       // The rock is glazed, not flooded: a wet skin on a rough stone gives a broad dull shine, and no mirror for the sky to ripple in.
-      rough = mix(rough, mix(0.34 + 0.4 * smoothstep(0.25, 0.6, h0), 0.9, slush), scorch);
-      occ = mix(occ, 0.6 + 0.4 * h0, scorch);
+      // (Slab by slab: one is wet glass, the next is dull.)
+      rough = mix(rough, mix(mix(0.34, 0.26 + 0.4 * slab.y, ledges) + 0.4 * smoothstep(0.25, 0.6, h0), 0.9, slush), scorch);
+      occ = mix(occ, (0.6 + 0.4 * h0) * (1.0 - 0.3 * joint), scorch);
     }
   }
 #endif`;

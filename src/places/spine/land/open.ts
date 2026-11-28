@@ -357,7 +357,7 @@ void main() {
     if (seen > 0.0) {
       vec3 p = prints(vSL);
       g += 1.6 * p.yz * seen;
-      snowOcc *= 1.0 + 0.75 * min(p.x, 0.0) * seen;
+      snowOcc *= 1.0 + 0.5 * min(p.x, 0.0) * seen;
       snowTint *= mix(vec3(1.0), vec3(0.86, 0.93, 1.05), clamp(-p.x, 0.0, 1.0) * seen);
     }
 #endif
