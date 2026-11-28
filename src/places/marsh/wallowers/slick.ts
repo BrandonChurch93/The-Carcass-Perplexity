@@ -137,7 +137,7 @@ void main() {
   rough = mix(rough, mix(0.88, 0.76, smoothstep(0.5, 0.85, skinH)), mud);
   rough = mix(rough, mix(0.6, 0.8, crease), deep);
   rough = mix(rough, 1.0, 0.7 * graze);
-  float occ = mix(vOpen * sqrt(vOpen), max(vOpen, 0.55), 0.6 * leg) * (0.5 + 0.5 * smoothstep(0.0, 0.85, fold)) * mix(0.7 + 0.3 * smoothstep(0.15, 0.6, skinH), 0.7 + 0.3 * smoothstep(0.2, 0.6, cakeH), dry);
+  float occ = mix(vOpen * sqrt(vOpen), max(vOpen, 0.62), 0.85 * leg) * (0.5 + 0.5 * smoothstep(0.0, 0.85, fold)) * mix(0.7 + 0.3 * smoothstep(0.15, 0.6, skinH), 0.7 + 0.3 * smoothstep(0.2, 0.6, cakeH), dry);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it.
   vec3 skyUp = skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
