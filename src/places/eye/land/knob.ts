@@ -51,7 +51,7 @@ function talus(at: [number, number], to: [number, number], wide: number, count: 
       lean: [(rnd(i, seed + 6) - 0.5) * 0.9, (rnd(i, seed + 7) - 0.5) * 0.9],
       size: [s * (0.8 + 0.5 * rnd(i, seed + 8)), sy, s * (0.8 + 0.5 * rnd(i, seed + 9))],
       kind,
-      cut: s > 0.2 ? 30 : 18,
+      cut: s > 0.2 ? 22 : 12,
     });
   }
   return out;
@@ -59,7 +59,7 @@ function talus(at: [number, number], to: [number, number], wide: number, count: 
 
 export const KNOBS: Knob[] = [
   { along: 82, across: -39, lift: 2.4, turn: -1.6, lean: [0.1, -0.22], size: [2.0, 2.0, 2.0], kind: 0, cut: 110 },
-  { along: 113, across: 29, lift: 3.4, turn: 4.5, lean: [-0.06, 0.1], size: [2.4, 2.3, 2.4], kind: 1, cut: 110 },
+  { along: 113, across: 29, lift: 3.4, turn: 4.5, lean: [-0.06, 0.1], size: [2.4, 2.3, 2.4], kind: 1, cut: 84 },
   ...talus([88, -27], [76, -24], 9, 14, 3, 0.34),
   ...talus([110, 17], [70, 44], 12, 34, 11, 0.4),
 ];
@@ -213,6 +213,7 @@ export function createKnobs(ctx: Context, depthFragment: string, sheets: Record<
     return ball;
   };
   const materials: THREE.ShaderMaterial[] = [];
+  const owned: THREE.BufferGeometry[] = [];
   const meshes = KNOBS.map((k, i) => {
     const [x, z] = onAxis(k.along, k.across);
     const ground = landHeight(x, z);
@@ -221,7 +222,15 @@ export function createKnobs(ctx: Context, depthFragment: string, sheets: Record<
     const gz = (landHeight(x, z + e) - landHeight(x, z - e)) / (2 * e);
     const base = SIZES[k.kind] as [number, number, number];
     const size = new THREE.Vector3(base[0] * k.size[0], base[1] * k.size[1], base[2] * k.size[2]);
-    const mesh = new THREE.Mesh(ballOf(k.cut));
+    // The ball is shared, and what it is raised to is not: each knob has the bounds of its own crag, so that a camera that looks
+    // away from it does not pay for raising it.
+    const ball = ballOf(k.cut);
+    const own = new THREE.BufferGeometry();
+    own.setAttribute('position', ball.getAttribute('position'));
+    own.setIndex(ball.getIndex());
+    own.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 2.2 * Math.max(size.x, size.y, size.z));
+    owned.push(own);
+    const mesh = new THREE.Mesh(own);
     mesh.position.set(x, ground + k.lift, z);
     mesh.rotation.set(k.lean[0], k.turn, k.lean[1]);
     mesh.updateMatrixWorld();
@@ -248,12 +257,12 @@ export function createKnobs(ctx: Context, depthFragment: string, sheets: Record<
     material.userData.depthFragment = depthFragment;
     mesh.material = material;
     materials.push(material);
-    mesh.frustumCulled = false;
     return mesh;
   });
   return {
     meshes,
     dispose: () => {
+      for (const g of owned) g.dispose();
       for (const b of balls.values()) b.dispose();
       for (const m of materials) m.dispose();
     },
