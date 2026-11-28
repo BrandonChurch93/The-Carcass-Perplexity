@@ -5,6 +5,7 @@ import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
 import { smooth } from '../layout';
 import { FPS } from '../../../config';
+import { keyPart, shotById, shotLength } from '../../../film/cut';
 import { LID_GLSL, lidAt, lidUniforms } from '../../reveal/join/lid';
 import { FLIGHT, KEYS } from '../cameras';
 import { flight } from '../flight';
@@ -28,17 +29,20 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 // holds, and the level of its picture the wall behind it is softened to at the water (uMistE in shared/glsl.ts).
 type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: Four; b: Four; c: Four; d?: Four; e?: Four; tone?: number }> = {
-  wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1], e: [0, 0, 0.4, 1.0] },
-  low: { a: [600, 4.0, 62, 420], b: [0.9, 3.4, 0.35, 0.12], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0], e: [1, 0.6, 1, 3.2] },
+  wide: { a: [420, 2.5, 30, 320], b: [0.5, 0.75, 0.8, 0.4], c: [60, 560, 0.1, 1], e: [0, 0, 0.5, 1.0] },
+  low: { a: [600, 4.0, 50, 420], b: [0.9, 3.4, 0.35, 0.2], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0], e: [1, 0.6, 1.2, 3.2], tone: 0.78 },
   edge: { a: [560, 2.4, 44, 320], b: [0.25, 1.3, 0.5, 0.4], c: [0, 0, 0.1, 0.3], d: [1, 0, 0, 0], e: [1, 0.8, 0.6, 2.4], tone: 0.6 },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   // The last shot is seen from the water and then from straight above. From the water it is a low torn bank at the foot of the far wall.
-  centre: { a: [520, 2.0, 32, 200], b: [0.6, 2.2, 1.0, 0], c: [0, 0, 0.3, 0.6], d: [0.8, 1, 1, 1], e: [1, 1, 0.8, 1.2] },
+  centre: { a: [520, 2.0, 12, 200], b: [0.6, 2.2, 0.6, 0.2], c: [0, 0, 0.15, 0.6], d: [0.8, 1, 1, 1], e: [1, 1, 0.8, 0.7] },
   // From above the same bank has to be seen down through a dozen metres of itself and not along a thousand, and what the lens holds is
   // the shallows and the pool, not the foot of the wall: so as the camera climbs the bank is drawn thicker and stands farther out over
   // the shallows, in heaps as deep as they are long (d.w), without the threads that would lie as white strokes.
   over: { a: [560, 2.0, 5, 800], b: [0.6, 14, 0.8, 0], c: [0, 0, 0.1, 0], d: [0, 1, 0, 1] },
 };
+
+// How far the streaks of high cloud are carried in a second, in widths of the far picture: a hand's breadth of the frame in the hold.
+const CIRRUS_DRIFT = 0.0022;
 
 // The heights of the camera (metres over the water) between which the bank of the last shot takes the form it has from above.
 const OVER = [15, 220] as const;
@@ -56,12 +60,39 @@ const SKY_FRAGMENT = /* glsl */ `
 varying vec3 vDir;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+#ifdef WALL_LAYERS
+// tPlateCut: which layer each part of the picture of the wall stands in (red the buttresses, green the scree foot, neither the far
+// face), and in blue how far above a covered point the far face begins. uPlateKey: the lens the picture was laid for, and in w the
+// metres between one layer and the next.
+uniform sampler2D tPlateCut;
+uniform vec4 uPlateKey;
+// The picture's u and v for a layer that stands nearer by so many metres than the far face, as the lens the picture was laid for
+// sees it. From that lens the layers lie as the picture has them; as the lens climbs away from it they part.
+vec2 layerUv(vec3 ro, vec3 rd, float nearer) {
+  vec2 o = ro.xz - uPlateAt.xz;
+  float a = max(dot(rd.xz, rd.xz), 1e-6);
+  float b = dot(o, rd.xz);
+  float r = uPlateAt.w - nearer;
+  vec3 p = ro + rd * ((-b + sqrt(max(b * b - a * (dot(o, o) - r * r), 0.0))) / a);
+  return plateAt(uPlateKey.xyz, p - uPlateKey.xyz).xy;
+}
+#endif
 void main() {
   vec3 d = normalize(vDir);
   // The footprint of a pixel on the far picture, taken here before any branch so that the frame repeats.
   vec4 plateSpot = plateAt(cameraPosition, d);
   vec2 plateGx = dFdx(plateSpot.xy);
   vec2 plateGy = dFdy(plateSpot.xy);
+#ifdef WALL_LAYERS
+  {
+    vec2 foot = layerUv(cameraPosition, d, 2.0 * uPlateKey.w);
+    vec2 buttress = layerUv(cameraPosition, d, uPlateKey.w);
+    vec3 behind = textureLod(tPlateCut, plateSpot.xy, 0.0).rgb;
+    // Where a nearer layer has moved off the far face, the face shown is the one above the cut edge, folded down about it.
+    vec2 face = plateSpot.xy + vec2(0.0, step(0.5, max(behind.r, behind.g)) * (2.0 * behind.b * 40.0 + 4.0) / float(textureSize(tPlateCut, 0).y));
+    plateSpot.xy = textureLod(tPlateCut, foot, 0.0).g > 0.5 ? foot : textureLod(tPlateCut, buttress, 0.0).r > 0.5 ? buttress : face;
+  }
+#endif
   if (uPlateTone.w > 0.5) {
     gl_FragColor = vec4(rigOut(farRadianceAt(cameraPosition, d, 0.0, plateSpot, plateGx, plateGy)), 1.0);
     return;
@@ -189,13 +220,16 @@ float mistAt(vec3 q, out float h) {
     vec4 fine = texture(tMistNoise, vec3(lie.x / 37.0 + 0.4, q.y / 21.0 - stretch.w * 0.022, lie.y / mix(420.0, 44.0, uMistD.w) - stretch.z * 0.007));
     float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
     // A bank without a top is not a row of heaps either: it swells and sinks along the shore by half its height.
-    heap = mix(heap, 0.55 + 0.47 * heap, uMistE.x);
+    heap = mix(heap, 0.72 + 0.3 * heap, uMistE.x);
     h /= heap;
     // A heaped top where uMistE.x is 0. Where it is 1 the bank has no top: it thins out upward, and its upper part is in wisps.
     float body = pow(clamp(1.0 - h - 0.45 * (fine.b - 0.3) * smoothstep(0.15, 0.9, h), 0.0, 1.0), 1.6);
     if (uMistE.x > 0.0) body = mix(body, exp(-3.0 * h) * smoothstep(2.2, 1.2, h) * clamp(1.0 - 0.55 * (fine.b - 0.3) * smoothstep(0.1, 1.2, h), 0.0, 1.5), uMistE.x);
-    // What leaves the top: thin threads that stand up out of the bank and lean over as they go.
-    float thread = uMistB.w <= 0.0 ? 0.0 : smoothstep(0.55, 0.8, texture(tMistNoise, vec3(lie.x / 64.0 + 0.25 * h, q.y / 170.0 - uTime * 0.007, lie.y / mix(800.0, 90.0, uMistD.w) + stretch.z * 0.003)).g + 0.3 * (fine.g - 0.5));
+    // What leaves the top: thin threads that stand up out of the bank and lean over as they go. Off a bank without a top they are
+    // wisps: long along the shore and a metre or two thick, bent by the grain so that they curl, each lifting with its own stretch.
+    vec3 upright = vec3(lie.x / 64.0 + 0.25 * h, q.y / 170.0 - uTime * 0.007, lie.y / mix(800.0, 90.0, uMistD.w) + stretch.z * 0.003);
+    vec3 lying = vec3(lie.x / 170.0 + 0.5 * (fine.r - 0.5), q.y / 14.0 - stretch.w * 0.03 + 1.5 * (fine.g - 0.5), upright.z);
+    float thread = uMistB.w <= 0.0 ? 0.0 : smoothstep(0.55, 0.8, texture(tMistNoise, mix(upright, lying, uMistE.x)).g + 0.3 * (fine.g - 0.5));
     d += uMistB.y * form.z * smoothstep(0.2, 0.9, heap) * (body + uMistB.w * thread * smoothstep(3.0, 0.9, h) * smoothstep(0.3, 0.9, h));
   }
   return d;
@@ -342,6 +376,11 @@ void main() {
 
 export function create(ctx: Context): Piece {
   const skyMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, side: THREE.BackSide });
+  // The sky of a shot whose far wall is cut into layers is a program of its own: this renderer pays for every line of a program on
+  // every pixel, taken or not, and the other shots are not to pay for the layers.
+  const layered = PLATES.find((p) => p.cut);
+  const cutUniforms = { tPlateCut: { value: layered?.cut ? ctx.assets.texture(layered.cut.file, { kind: 'data', repeat: false, anisotropy: 1 }) : null }, uPlateKey: { value: new THREE.Vector4() } };
+  const skyLayered = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...cutUniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, defines: { WALL_LAYERS: 1 }, side: THREE.BackSide });
   const sky = new THREE.Mesh(new THREE.SphereGeometry(20000, 64, 32), skyMaterial);
   sky.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('sky', sky));
@@ -409,11 +448,13 @@ export function create(ctx: Context): Piece {
       const i = plateFor();
       const tone = (rig.uPlateTone as THREE.IUniform<THREE.Vector4>).value;
       const near = (rig.uNear as THREE.IUniform<THREE.Vector4>).value;
+      sky.material = i >= 0 && PLATES[i]?.cut ? skyLayered : skyMaterial;
       if (i < 0) {
         tone.w = 0;
         near.w = 0;
       } else {
         const p = PLATES[i] as (typeof PLATES)[number];
+        if (p.cut) cutUniforms.uPlateKey.value.set(KEYS[p.key].position[0], KEYS[p.key].position[1], KEYS[p.key].position[2], p.cut.gap);
         (rig.tPlate as THREE.IUniform).value = pictures[i];
         (rig.uPlateAt as THREE.IUniform<THREE.Vector4>).value.set(p.at[0], p.at[1], p.at[2], p.radius);
         (rig.uPlateLens as THREE.IUniform<THREE.Vector4>).value.set((p.bearing * Math.PI) / 180, p.tanAcross, p.tanUp, p.horizon);
@@ -424,8 +465,11 @@ export function create(ctx: Context): Piece {
         // The streaks are given in the picture's u and v and handed on in tan from its middle and its waterline.
         const streaks = [rig.uCirrusA, rig.uCirrusB] as THREE.IUniform<THREE.Vector4>[];
         const shown = (rig.uCirrus as THREE.IUniform<THREE.Vector2>).value.set(0, 0);
+        // High cloud is carried level and slowly at its own height, and lies as the approved picture has it at the shot's key frame.
+        const shot = shotById(p.shots[0] as string);
+        const sinceKey = t - end - (shot.first + keyPart(shot) * shotLength(shot) - FLIGHT.riseFrame) / FPS;
         (p.cirrus ?? []).slice(0, 2).forEach((c, k) => {
-          (streaks[k] as THREE.IUniform<THREE.Vector4>).value.set((c[0] - 0.5) * 2 * p.tanAcross, (c[1] - p.horizon) * 2 * p.tanUp, c[2] * 2 * p.tanAcross, (c[3] * p.tanUp) / p.tanAcross);
+          (streaks[k] as THREE.IUniform<THREE.Vector4>).value.set((c[0] + CIRRUS_DRIFT * (1 + 0.4 * k) * sinceKey - 0.5) * 2 * p.tanAcross, (c[1] - p.horizon) * 2 * p.tanUp, c[2] * 2 * p.tanAcross, (c[3] * p.tanUp) / p.tanAcross);
           shown.setComponent(k, c[4]);
         });
         near.set(KEYS[p.key].position[0], KEYS[p.key].position[2], p.near, 1);
@@ -441,6 +485,7 @@ export function create(ctx: Context): Piece {
     dispose: () => {
       sky.geometry.dispose();
       skyMaterial.dispose();
+      skyLayered.dispose();
       volume.dispose();
       mistSun.dispose();
       noise.dispose();
