@@ -198,7 +198,7 @@ float poolLevel(vec3 p, float surge, out float wells, out float west) {
 float vapourTop0(vec3 p, float level) {
   // It stands high against the west wall, over the well, and lies deep under the hoops in the middle and the east of the shaft.
   vec2 ds = p.xz - vec2(-16.0, -6.0);
-  return level + 5.0 * exp(-dot(ds, ds) / 450.0) - 6.0 * smoothstep(-12.0, 2.0, p.x);
+  return level + 4.2 * exp(-dot(ds, ds) / 450.0) - 6.0 * smoothstep(-12.0, 2.0, p.x);
 }
 float vapourTop(vec3 p, float level, float west) {
   vec2 w = p.xz - WINDV * (0.9 * uTime);
@@ -211,14 +211,14 @@ float vapourTop(vec3 p, float level, float west) {
 // the wells, in billows (lumps: the block of noise there, 0 to 1); at the top it is thin, and the wall is read through it; it thickens
 // with depth, so the drop is read through its first metres and lost below them.
 vec2 vapourRho(float under, float wells, float west, float surge, float spent, float lumps) {
-  float tall = 1.6 + 2.2 * wells + 6.0 * surge;
+  float tall = 1.3 + 5.0 * wells * wells + 6.0 * surge;
   float skin = (0.004 + 0.01 * wells + 0.03 * surge) * (1.0 - 0.5 * spent);
   // Billows: thick and thin by the block of noise, most over the top and in its first metres, evened out with depth.
-  float billow = 3.6 * smoothstep(0.4, 0.72, lumps);
+  float billow = 5.0 * smoothstep(0.43, 0.74, lumps);
   if (under < 0.0) return vec2(skin * exp(under / tall) * mix(billow, 1.0, 0.05), 0.0);
   float grow = (0.006 + 0.004 * surge) * mix(0.35, 1.0, west);
   float deep = min(under, 9.0);
-  float even = mix(billow, 1.0, 0.05 + 0.95 * smoothstep(5.0, 16.0, under));
+  float even = mix(billow, 1.0, 0.1 + 0.6 * smoothstep(6.0, 20.0, under));
   return vec2((skin + grow * deep) * even, skin * under + grow * deep * (under - 0.5 * deep));
 }
 // The ground the sheet lies on at a place: the rock, or the tide. Inside the brim the land is the pit, so there it is the lip beside it.
@@ -380,7 +380,7 @@ void main() {
         if (out0 < 9.0 + 0.9 * max(p.y, 0.0) + 5.0 * uBreath.y) {
           float level = poolLevel(p, surge, wells, west);
           // No picture is read where the place stands clear over all the steam can reach.
-          if (p.y < level + 10.5 + 4.0 * (2.6 + 3.5 * wells + 6.0 * surge)) {
+          if (p.y < level + 10.5 + 4.0 * (1.3 + 5.0 * wells * wells + 6.0 * surge)) {
             float top = vapourTop(p, level, west);
             under = top - p.y;
             // The steam climbs at a walk and is bent down the wind once it clears the brim.
@@ -390,7 +390,7 @@ void main() {
               lumps = textureLod(tNoise, q.xzy / 23.0 + 0.19, 0.0).g;
               float small = textureLod(tNoise, q.xzy / 7.3 + 0.61, 0.0).r;
               // A billow's side toward the light is thinner that way than where it stands: it is lit, and its far side is dark.
-              edge = clamp(1.0 + 4.5 * (lumps - textureLod(tNoise, (q + lightWay * 3.0).xzy / 23.0 + 0.19, 0.0).g), 0.45, 1.7);
+              edge = clamp(1.0 + 6.0 * (lumps - textureLod(tNoise, (q + lightWay * 3.0).xzy / 23.0 + 0.19, 0.0).g), 0.35, 1.9);
               lumps += 0.28 * (small - 0.5);
             }
             cut = smoothstep(1.5, -3.0, out0 - leanOut(p.y, way, surge));
@@ -433,7 +433,7 @@ void main() {
           float gone = exp(-rho * dl / 4.0);
           float w = thru * (1.0 - gone);
           litSky += w * (skyGrey * 1.6 + skyGlow * 0.6) * (sunk * edge * (0.15 + 0.85 * exp(-4.0 * v.y) * sky));
-          litSun += w * sunLight * (sun * edge * (0.16 * min(phase, 1.9) * exp(-1.5 * sunTau) + (0.012 + 0.04 * toSun * toSun) * exp(-0.22 * sunTau)));
+          litSun += w * sunLight * (sun * edge * (0.1 * min(phase, 1.9) * exp(-1.5 * sunTau) + (0.012 + 0.04 * toSun * toSun) * exp(-0.22 * sunTau)));
           thru *= gone;
         }
         if (thru < 0.015) break;
@@ -561,7 +561,8 @@ void main() {
         vec4 n0 = textureLod(tNoise, q * 0.5, 0.0);
         float fineN = textureLod(tNoise, q * 0.85 + 0.37, 0.0).b;
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
-        float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up);
+        // The crown is eaten away by the air: it ends in rags, never in a round cap.
+        float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up + 1.1 * smoothstep(0.55, 1.0, up));
         float body = smoothstep(0.0, 0.42, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.3, m);
         float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * body;
         float tau = rho * span / 5.0;
