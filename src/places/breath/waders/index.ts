@@ -17,7 +17,7 @@ export const PARTS: readonly string[] = ['waders'];
 /** Discs of contact shade for an animal that stands on rock: four feet. Its long shadow is one more. */
 const DISCS = 5;
 /** Drops in the air under one lifted tuft, at most. */
-const DROPS = 104;
+const DROPS = 120;
 /** Metres of water a wader stands in at most. */
 const WADE = 0.14;
 const hash = (n: number): number => {
@@ -224,10 +224,10 @@ export function create(ctx: Context): Piece {
             for (let d = 0; d < count; d++) {
               // Ten of the tips run in streams, a bead after a bead down one line; the rest drip singly.
               const stream = d % 10;
-              const run = d < 40;
+              const run = d < 80;
               const tipAt = run ? stream : d;
-              const period = run ? 0.4 + 0.1 * hash(seed + stream * 7.7) : 0.22 + 0.26 * hash(seed + d * 7.7);
-              const turn = (stood.sinceLift + (run ? (Math.floor(d / 10) / 4 + 0.12 * hash(seed + d * 1.3)) * period : 3 * hash(seed + d * 1.3))) / period;
+              const period = run ? 0.5 + 0.16 * hash(seed + stream * 7.7) : 0.22 + 0.26 * hash(seed + d * 7.7);
+              const turn = (stood.sinceLift + (run ? (Math.floor(d / 10) / 8 + 0.1 * hash(seed + d * 1.3)) * period : 3 * hash(seed + d * 1.3))) / period;
               const tip = Math.floor(hash(seed + tipAt * 3.3) * (tips.length / 3)) * 3;
               const n = Math.floor(turn);
               if (hash(seed + d * 5.1 + n * 9.7) > 0.25 + 0.75 * pour) continue;
@@ -238,7 +238,8 @@ export function create(ctx: Context): Piece {
               const z = (tips[tip + 2] as number) + fling * (hash(seed + d * 6.9 + n * 2.3) - 0.5) * fall;
               const y = (tips[tip + 1] as number) - 4.9 * fall * fall;
               const heavy = hash(seed + d * 9.3 + n * 4.7);
-              if (y > sea) drips.add(x, y, z, 9.8 * fall * 0.0083, 0.0012 + 0.0016 * heavy + 0.0034 * heavy * heavy * heavy * heavy);
+              // What runs off a strand hangs from its tip as a short thread before it breaks into beads.
+              if (y > sea) drips.add(x, y, z, Math.max(9.8 * fall * 0.0083, run ? 0.03 * (1 - fall / 0.14) : 0), 0.0018 + 0.0024 * heavy + 0.0044 * heavy * heavy * heavy * heavy);
               else if (d % 4 === 0) ripples.add(x, z, 0.55, 0.5 * pour + 0.12, (sea - y) / 3, seed + d, 48, 0.24);
             }
             ripples.add(stood.tuft.x, stood.tuft.z, 0.9, 0.2 + 0.45 * pour, 5, seed, 40, 0.26);
