@@ -732,6 +732,9 @@ export class Wader {
     let dipSum = 0;
     let nose = 0;
     let holdSide = 0;
+    let caught = 0;
+    let caughtFore = 0;
+    let caughtSide = 0;
     const cyc = turns + base + 1000;
     for (let j = 0; j < 4; j++) {
       const leg = LEGS[j] as (typeof LEGS)[number];
@@ -811,6 +814,12 @@ export class Wader {
       dipSum += off;
       nose += leg.fore * off;
       holdSide += leg.side * off;
+      // A foot that has just come down takes the weight: the body sinks onto it, tips toward it and comes up again over it.
+      const landed = since / 0.2;
+      const taken = landed < 9 ? landed * Math.exp(1 - landed) * (walk ? 1 - smooth(DUTY * 0.6, DUTY * 0.95, f) : 1 - off) : 0;
+      caught += taken;
+      caughtFore += leg.fore * taken;
+      caughtSide += leg.side * taken;
       feet.push({ x, y: groundY + lift, z, lift, wet: Math.max(0, env.sea - groundY), since, carried });
     }
 
@@ -829,16 +838,16 @@ export class Wader {
     };
     const sway = walk ? over(cyc) : -holdSide;
     const lurch = walk ? Math.cos((cyc - 0.15) * Math.PI * 4) : 0;
-    const side = (walk ? 0.125 : script ? 0.2 : 0.1) * k * sway + (0.02 + 0.045 * still) * k * habit;
+    const side = (walk ? 0.15 : script ? 0.2 : 0.1) * k * sway + (0.02 + 0.045 * still) * k * habit + 0.028 * k * caughtSide;
     // The body of one that steps about is carried by its feet: it goes where they have gone, a little before each and settling after it.
     const cx = o[0] + rx * (side + (script ? script.side : 0)) + fx * (script ? script.fore : 0);
     const cz = o[1] + rz * (side + (script ? script.side : 0)) + fz * (script ? script.fore : 0);
     const base4 = (feet[0]!.y - feet[0]!.lift + feet[1]!.y - feet[1]!.lift + feet[2]!.y - feet[2]!.lift + feet[3]!.y - feet[3]!.lift) / 4;
     // The legs are never locked: it stands a little under its full height, sinks as a foot leaves the ground and rises over the one that takes the weight.
-    const cy = base4 + b.standH * (1 - 0.8 * (plan.rest ?? 0)) - 0.012 * k - 0.036 * k * dipSum - 0.016 * k * lurch * (1 - still) - 0.012 * k * down + 0.006 * k * habit2;
+    const cy = base4 + b.standH * (1 - 0.8 * (plan.rest ?? 0)) - 0.012 * k - 0.036 * k * dipSum - 0.024 * k * caught - 0.022 * k * lurch * (1 - still) - 0.012 * k * down + 0.006 * k * habit2;
     const yaw = plan.heading + (script ? script.yaw : 0) + b.skew + 0.13 * weightAt + (0.02 + 0.06 * still) * habit + (walk ? 0.046 * Math.sin((cyc - 0.02) * Math.PI * 2) : -0.03 * holdSide);
-    const pitch = (4 - 7 * down) * (Math.PI / 180) + 0.055 * nose + 0.012 * habit2 + (walk ? 0.018 * Math.sin((cyc + 0.1) * Math.PI * 4) : 0) - 0.04 * Math.max(-1, Math.min(1, gained / (0.15 * k)));
-    const lean = (walk ? 0.05 * Math.cos((cyc - 0.08) * Math.PI * 2) : -0.07 * holdSide) + 0.015 * habit;
+    const pitch = (4 - 7 * down) * (Math.PI / 180) + 0.055 * nose + 0.012 * habit2 + (walk ? 0.018 * Math.sin((cyc + 0.1) * Math.PI * 4) : 0) - 0.04 * Math.max(-1, Math.min(1, gained / (0.15 * k))) - 0.022 * caughtFore;
+    const lean = (walk ? 0.07 * Math.cos((cyc - 0.08) * Math.PI * 2) : -0.07 * holdSide) + 0.015 * habit - 0.028 * caughtSide;
 
     // The body's frame: F along the spine toward the chest, R to its right, U out of its back.
     const sy = Math.sin(yaw);

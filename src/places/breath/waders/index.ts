@@ -104,6 +104,16 @@ export function create(ctx: Context): Piece {
   // toward the drop on the spot. In the other views it stands.
   const WIDE_KEY = keySeconds('breath-0');
   const rimSteps = [...shuffle(rim.b, WIDE_KEY - 3.56, 0.7 * rim.b.k, 0, 0, 0.42, 0.01), ...shuffle(rim.b, WIDE_KEY - 1.84, 0.7 * rim.b.k, 0, 0, 0.42, 0.01), ...shuffle(rim.b, WIDE_KEY + 0.8, 0.12 * rim.b.k, 0, 0.45, 0.55, 0.1, 1)];
+  // Staged: in the view of the rim it comes to its place a foot at a time before the moment of the picture, stands there, and shifts back
+  // onto its hind feet before the neck comes up.
+  const RIM_KEY = keySeconds('breath-2');
+  const rk = rim.b.k;
+  const rimNearSteps = [
+    { at: RIM_KEY - 1.62, take: 0.56, leg: 0, fore: 0.3 * rk, side: 0.02 * rk },
+    { at: RIM_KEY - 0.92, take: 0.5, leg: 3, fore: 0.24 * rk, side: -0.05 * rk },
+    { at: RIM_KEY + 0.24, take: 0.5, leg: 2, fore: -0.14 * rk, side: 0.04 * rk },
+    { at: RIM_KEY + 0.98, take: 0.46, leg: 1, fore: 0.1 * rk, side: -0.06 * rk },
+  ];
   const rimCarry = rim.plan.carry;
   const MIST_UP: [number, number][] = [[-5, 60]];
   const RAD = Math.PI / 180;
@@ -141,8 +151,8 @@ export function create(ctx: Context): Piece {
       rim.plan.up = misted ? MIST_UP : rimUp;
       rim.plan.carry = misted ? 0.55 : nearRim ? 2.3 : rimCarry;
       const inWide = at >= wide[0] && at <= wide[1];
-      rim.plan.steps = inWide ? rimSteps : [];
-      rim.plan.stepsRef = WIDE_KEY;
+      rim.plan.steps = inWide ? rimSteps : nearRim ? rimNearSteps : [];
+      rim.plan.stepsRef = nearRim ? RIM_KEY : WIDE_KEY;
       veiled.value.set(MIST.x, MIST.z, misted ? 1 : 0);
       const out = inWide ? 1.5 : 1;
       for (const o of outer) {
