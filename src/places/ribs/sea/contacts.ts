@@ -116,15 +116,22 @@ precision highp float;
 ${RIG_GLSL}
 ${FLAT_RIPPLE_GLSL}
 uniform float uPoolLevel;
+uniform sampler2D tChop;
+uniform vec2 uWind;
 varying vec3 vWorld;
 varying vec3 vStrip;
 void main() {
   vec2 footX = dFdx(vWorld.xz);
   vec2 footY = dFdy(vWorld.xz);
   vec3 rip = flatRipple(vWorld.xz, uTime, footX, footY);
+  // The same gusts as the sheet's (shaders.ts, WET_EDGE): in the slack between them an image stands nearly whole.
+  float texels = float(textureSize(tChop, 0).x) * max(length(footX), length(footY));
+  vec4 gusts = textureLod(tChop, (vWorld.xz - uTime * uWind * 2.4) / 57.0 + 0.31, log2(max(texels / 57.0, 1.0)));
+  float paw = smoothstep(0.3, 0.7, 0.5 * gusts.a + 0.3 * textureLod(tChop, vWorld.xz / 29.0, log2(max(texels / 29.0, 1.0))).a
+    + 0.2 * textureLod(tChop, vWorld.xz / 7.3, log2(max(texels / 7.3, 1.0))).a + 0.3 * (gusts.b - 0.5));
   vec4 land = textureLod(tLand, (vWorld.xz - uLandRect.xy) * uLandRect.zw, 0.0);
   float depth = uPoolLevel - land.r;
-  float worked = 0.78 * smoothstep(0.0, 0.03, depth);
+  float worked = (0.34 + 0.9 * paw) * smoothstep(0.0, 0.03, depth);
   vec2 slope = rip.xy * worked;
   vec3 v = normalize(cameraPosition - vWorld);
   // The eye's line thrown back off the water climbs as it came down: so high over the water it meets the animal.
@@ -132,7 +139,7 @@ void main() {
   float high = back * v.y / max(length(v.xz), 1e-3);
   float cut = flatBreak(slope, v, high);
   // Ripples too small for the pixel smear the image where they cannot break it.
-  cut = max(cut, 0.3 * smoothstep(0.3, 1.2, sqrt(rip.z) * worked * 2.0 * (0.15 + back)));
+  cut = max(cut, 0.2 * smoothstep(0.3, 1.2, sqrt(rip.z) * worked * 2.0 * (0.15 + back)));
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float fres = 0.02 + 0.98 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
   vec3 r = reflect(-v, n);
@@ -149,7 +156,7 @@ void main() {
   float murk = 1.0 - exp(-max(depth, 0.0) * 1.3);
   vec3 col = fres * refl + (1.0 - fres) * mix(vec3(0.075, 0.07, 0.06), vec3(0.125, 0.11, 0.085), murk) * e / 3.14159;
   cut *= (1.0 - smoothstep(0.6, 1.0, abs(vStrip.x))) * (1.0 - smoothstep(0.85, 1.0, abs(vStrip.y))) * smoothstep(0.0, 0.05, depth) * (1.0 - uSolo);
-  cut *= 0.85;
+  cut *= 0.8;
   gl_FragColor = vec4(rigOut(col) * cut, cut);
 }`;
 
