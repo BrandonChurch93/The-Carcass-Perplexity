@@ -639,7 +639,7 @@ void main() {
     // The face of the swell leans to the eye and looks up past the wall: it holds the open sky of the hour, and every small wave on it holds another part of it.
 #if EYE_SWELL
     // A sheet of water lies smooth on it and is bright with that sky; the runnels between the sheets are broken water and dark.
-    if (skirt > 0.0) refl = mix(refl, skyRadiance(rd) * mix(vec3(0.13, 0.165, 0.22), vec3(0.42, 0.48, 0.58), smoothstep(0.44, 0.7, shed)), max(lifted, 0.7 * skirt) * smoothstep(0.06, 0.3, rd.y));
+    if (skirt > 0.0) refl = mix(refl, skyRadiance(rd) * mix(vec3(0.13, 0.165, 0.22), vec3(0.34, 0.4, 0.5), smoothstep(0.3, 0.85, shed)), max(lifted, 0.7 * skirt) * smoothstep(0.06, 0.3, rd.y));
 #endif
     // From over the water the mirror looks up past the top of the wall: what it holds there is the sky, not the wall drawn out in straight lines.
 #if EYE_LEAVE
@@ -716,7 +716,7 @@ void main() {
     c += uSunColour * vec3(0.3, 0.14, 0.02) * spark * sunAt(vec3(p.x, 0.5, p.z));
   }
 #if EYE_SWELL
-  if (runnel > 0.0) c = mix(c, skyDown * (0.8 / 3.14159), min(0.75 * runnel, 0.75) * (1.0 - uLeave.x));
+  if (runnel > 0.0) c = mix(c, skyDown * (0.8 / 3.14159), min(0.5 * runnel, 0.5) * (1.0 - uLeave.x));
 #endif
   // The swell is wet in the last sun.
 #if EYE_SWELL
