@@ -16,12 +16,12 @@ export const CLOUD = { height: 1500, repeat: 5200, shade: 0.12, size: 512 };
 /**
  * The deck: the sun comes down only through the cloud's own gaps. Where the staged break stands the deck is thin, and the gaps of the
  * mask's third field open in it: `shut` is what the break is given where the field is closed, `open` what it is given over that where a
- * gap stands whole, `under` the share of the sky's own light a surface keeps under the shut deck, `dome` how much further the dome's white is shut than a mirror's, `from` and `to` the field's values a gap's edge runs between, `whole` how far the break is cut by the gaps (0 is the
+ * gap stands whole, `under` the share of the sky's own light a surface keeps under the shut deck in the approach and the strait (`staged` in a shot that names its own `deck`), `dome` how much further the dome's white is shut than a mirror's, `from` and `to` the field's values a gap's edge runs between, `whole` how far the break is cut by the gaps (0 is the
  * smooth pool of the first two waves). The gaps go with the cloud, so the lit patches cross blades, flats and water at the wind's pace.
  */
 /** How many times faster than in the film the scud crosses the dome in the card loop, where the lens is held on the arches. */
 export const LOOP_SCUD = 2.5;
-export const DECK = { shut: 0.3, open: 1.05, from: 0.36, to: 0.6, whole: 1, under: 0.4, dome: 0.2 };
+export const DECK = { shut: 0.3, open: 1.05, from: 0.42, to: 0.54, whole: 1, under: 0.3, staged: 0.55, dome: 0.1, at: [340, 170] };
 export const MAX_EMITTERS = 8;
 /** The fine relief of the floor, laid over the bed twice from one tiling picture: metres of a repeat and metres of relief, wide and small. */
 export const FINE = { size: 256, wide: 37, wideAmp: 0.2, small: 9.7, smallAmp: 0.07 };
@@ -33,13 +33,15 @@ export const BREAK = { x: 60, z: -560, radius: 760, gain: 0.8, cover: 0.62, boun
  * it stands where the next shot wants it, as a crew waits for the light: on the colony's rock (whose faces to the lens are its lee: there
  * the light the lit sea and flats throw back is raised, `bounce` times, as a crew would hold a white sheet), on the feeders and the water behind them, on the flats behind the one that hangs in the weed (pale against a cliff in shade), on the
  * bore's spray in the gate. `sky` is what the cloud's own brightness is given in the shot: the bore comes in under a heavier sky.
+ * `deck` is how far the deck's gaps cut the light in the shot (1 where no row names it): the feeders stand in the break's open middle.
+ * `warm` is how far the sky's light and the air go to the low sun's colour: the feeders' water is warm grey under a pale warm break.
  * `shade` is what the sky's own light on things is given: the colony's rock keeps its folds dark under a sun that only tops its ledges.
  */
-const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number }[] = [
-  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 1.6, sky: 0.54, shade: 0.5, deck: 0.5 },
-  { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23, sky: 0.75 },
-  { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4 },
-  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.54, heads: 0.4 },
+const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number; warm?: number }[] = [
+  { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 1.6, sky: 0.58, shade: 0.5, deck: 0.5, warm: -1 },
+  { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23, sky: 0.81, deck: 0.25, warm: 1 },
+  { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4, deck: 0.1, warm: 0.5 },
+  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.6, heads: 0.4, deck: 0.2 },
 ];
 /** Where the break stands in the sky at the establishing key, degrees right of north: upper right of the strait's frame, left of the sun that burns through its edge. */
 const BREAK_YAW = 42;
@@ -68,6 +70,12 @@ const BOUNCE = [0.2, 0.185, 0.16] as const;
 /** The colour a depth of air goes to: the horizon's pale slate. */
 const HAZE = [0.172, 0.232, 0.312] as const;
 const SKY_LIGHT = { zenith: [0.14, 0.18, 0.25], horizon: [0.33, 0.39, 0.48], ground: [0.085, 0.095, 0.11] } as const;
+/** What the sun's colour of the anchors is given: the break's light is the one warm light of the place. */
+const SUN_WARM = [1.04, 0.995, 0.9] as const;
+/** What a shot's `warm` adds to the sky's light and the haze, by channel. */
+const SKY_WARM = [0.09, 0.0, -0.11] as const;
+/** What the sky and its air take of the sun's warmth at the break itself, falling off round it. */
+const BREAK_WARM = [1.24, 1.0, 0.76] as const;
 
 
 export type Height = (x: number, z: number) => number;
@@ -278,7 +286,9 @@ function cloudMask(): { texture: THREE.DataTexture; cover: (u: number, v: number
   for (let i = 0; i < n * n; i++) {
     data[i * 4] = Math.round(255 * Math.min(1, Math.max(0, ((cover[i] as number) - 0.5) * 2.2 + 0.5)));
     data[i * 4 + 1] = Math.round(255 * Math.min(1, Math.max(0, ((lumps[i] as number) - 0.5) * 2.2 + 0.5)));
-    data[i * 4 + 2] = Math.round(255 * Math.min(1, Math.max(0, ((gaps[i] as number) - 0.5) * 2.6 + 0.5)));
+    // The gaps stand where the strait's key wants them: the field is laid DECK.at texels off its own corner.
+    const moved = (((Math.floor(i / n) + DECK.at[1]) % n) * n + (((i % n) + DECK.at[0]) % n)) as number;
+    data[i * 4 + 2] = Math.round(255 * Math.min(1, Math.max(0, ((gaps[moved] as number) - 0.5) * 2.6 + 0.5)));
     data[i * 4 + 3] = 255;
   }
   const t = new THREE.DataTexture(data, n, n, THREE.RGBAFormat, THREE.UnsignedByteType);
@@ -447,7 +457,7 @@ export function createRig(): Rig {
   const straitSpan = shotSpan('ribs-02');
   const staging = BREAK_BY_SHOT.map((b) => ({ ...b, span: shotSpan(b.shot), at: keySeconds(b.key) }));
   /** The break's staging for the shot the camera stands in: its own, or the strait's. */
-  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number } => {
+  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number; warm?: number } => {
     const staged = stagedSeconds();
     const own = loopPhase() === null ? staging.find((b) => staged >= b.span.from && staged < b.span.to) : undefined;
     return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0, bounce: BREAK.bounce };
@@ -506,7 +516,9 @@ export function createRig(): Rig {
   const haze = new THREE.Vector3(...HAZE);
   const bounce = new THREE.Vector3(...BOUNCE);
   const heads = new THREE.Vector4(HEADS.from, HEADS.to, HEADS.thin, HEADS.floor);
-  const sunColour = new THREE.Vector3(...SUN.colour);
+  const sunWarm = new THREE.Vector3(...SUN_WARM);
+  const skyWarm = new THREE.Vector3(1, 1, 1);
+  const sunColour = new THREE.Vector3(...SUN.colour).multiply(sunWarm);
   const stormSun = new THREE.Vector3(...STORM_SUN);
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
@@ -514,6 +526,7 @@ export function createRig(): Rig {
     uLoop: { value: loopAt },
     // The scud's seconds: its own, a second sheet's in the card loop, and that sheet's share (glsl.ts, skyDome).
     uScud: { value: scud },
+    uBreakWarm: { value: new THREE.Vector3(...BREAK_WARM) },
     uSolo: { value: 0 },
     tLand: { value: null },
     uLandRect: { value: rect(LAND) },
@@ -678,7 +691,18 @@ export function createRig(): Rig {
       dome.set(DOME.gain * (stagedBreak().sky ?? 1), DOME.veil, DOME.lift, DOME.shut);
       heads.z = HEADS.thin * (stagedBreak().heads ?? 1);
       deck.z = DECK.whole * (stagedBreak().deck ?? 1);
-      sunColour.set(...SUN.colour);
+      const share = stagedBreak().deck;
+      deck.w = share === undefined ? DECK.under : 1 - (1 - DECK.staged) * share;
+      deckEdge.z = DECK.dome * (stagedBreak().deck ?? 1);
+      const warm = stagedBreak().warm ?? 0;
+      if (warm !== 0) {
+        skyWarm.set(1 + SKY_WARM[0] * warm, 1 + SKY_WARM[1] * warm, 1 + SKY_WARM[2] * warm);
+        skyZenith.multiply(skyWarm);
+        skyHorizon.multiply(skyWarm);
+        skyGround.multiply(skyWarm);
+        haze.multiply(skyWarm);
+      }
+      sunColour.set(...SUN.colour).multiply(sunWarm);
       if (weight !== 0) {
         // The burning break stands in the right of the frame as the film opens, and drifts to its own place.
         const turn = STORM.turn * weight;
@@ -695,7 +719,7 @@ export function createRig(): Rig {
         dome.w = DOME.shut + (DOME.storm - DOME.shut) * dark;
         dome.x = DOME.gain * (1 - 0.5 * STORM.dim * dark);
         heads.z = HEADS.thin * (1 + HEADS.storm * dark);
-        sunColour.set(...SUN.colour).lerp(stormSun, dark);
+        sunColour.set(...SUN.colour).multiply(sunWarm).lerp(stormSun, dark);
         skyZenith.multiplyScalar(dim);
         skyHorizon.multiplyScalar(dim);
         skyGround.multiplyScalar(dim);

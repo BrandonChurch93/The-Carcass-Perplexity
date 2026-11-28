@@ -36,6 +36,7 @@ uniform vec4 uCloudBreak2;
 uniform vec4 uDeck;
 uniform vec3 uDeckEdge;
 uniform vec3 uScud;
+uniform vec3 uBreakWarm;
 uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
@@ -173,8 +174,12 @@ vec3 domeTone(vec3 c, vec3 d, float el, float mirror) {
   // the sky and not at water), so the heads away from the break stand as slate with their shapes kept.
   float shut = min(uDome.w * (1.0 - 0.2 * mirror) + uDeckEdge.z * max(1.0 - mirror / 0.6, 0.0), 0.92);
   c *= mix(1.0 - shut * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z, near);
+  // The break is where the low sun comes through: the cloud round it and the air under it take the sun's warmth, widely and
+  // faintly, and the rest of the sky keeps its slate.
+  float glow = s2 * s2 * s2 * s2;
+  vec3 warm = mix(vec3(1.0), uBreakWarm, glow);
   float veil = 1.0 - exp(-uDome.y / max(d.y, 0.008));
-  return uDome.x * mix(c, uHaze * (0.85 + 0.5 * s2 * s2), veil);
+  return uDome.x * warm * mix(c, uHaze * (0.85 + 0.5 * s2 * s2), veil);
 }
 vec2 domeAt(vec3 d, out float el) {
   float az = atan(d.x, -d.z);
@@ -273,7 +278,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   // it the higher it stands over its own shadow. This is what keeps a lee face from going to the sky's cold grey alone.
   vec3 bounce = uSunColour * uBounce * (uSunDir.y * (gap - uCloudShade.w) * (0.5 - 0.5 * n.y) * (0.3 + 0.7 * clamp(above / 90.0, 0.0, 1.0)));
   // No wall goes to nothing: wet ground and water all round it throw the sky back into its darkest fold (uHeads.w of the ground's light), but not under what stands on it.
-  vec3 e = (skyIrradiance(n) * under + bounce) * open + 3.14159 * uSkyGround * (uHeads.w * occ * stood * (0.5 + 0.5 * under)) + uSunColour * (nl * sun);
+  vec3 e = (skyIrradiance(n) * under + bounce) * open + 3.14159 * uSkyGround * (uHeads.w * occ * stood * (0.8 + 0.2 * under)) + uSunColour * (nl * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
