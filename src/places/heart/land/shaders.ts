@@ -227,7 +227,9 @@ void main() {
   // But the side of a block that stands out of the wall looks a quarter turn away from the wall's own face: laid on the wall's plane its
   // picture is drawn out into streaks. Such a face is laid by its own direction.
   float kg = smoothstep(0.26, 0.74, ng.x * ng.x / (ng.x * ng.x + ng.z * ng.z + 1e-5));
-  kx = mix(kx, kg, smoothstep(0.45, 0.8, abs(kg - kx)) * smoothstep(0.75, 0.5, abs(ng.y)));
+  // Only a face turned a full quarter from the wall: a face turned half that far is a flute a rib wide, and laid by itself every other
+  // rib of the wall took the other plane and the face read as lines.
+  kx = mix(kx, kg, smoothstep(0.78, 0.96, abs(kg - kx)) * smoothstep(0.75, 0.5, abs(ng.y)));
   #endif
   #ifndef FLAT
   if (steep > 0.003 && byLens < 0.999) {
@@ -472,6 +474,8 @@ void main() {
   float closedIn = clamp(vLand.x * 1.7 - 0.25 * (height - 0.5), 0.0, 0.5);
   #else
   float closedIn = clamp(vLand.x * 1.7 - 0.25 * (height - 0.5), 0.0, 0.93);
+  // The broken edge of a block that stands proud of the wall (told by the mesh as less than no sky closed): fresh rock, paler than the face.
+  albedo *= 1.0 + 2.2 * clamp(-vLand.x * 4.0, 0.0, 1.0) * steep;
   #endif
   occ *= (1.0 - closedIn) * (1.0 - closedIn);
 
