@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
-import { DUSK_GLSL, RAIN_APART, RAIN_AT, RAIN_TURN, RAIN_WALK } from './volume';
+import { DUSK_GLSL, RAIN_APART, RAIN_AT, RAIN_DECK_GLSL, RAIN_TURN, RAIN_WALK } from './volume';
 
 const VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -28,6 +28,7 @@ const float RAIN_AT = ${RAIN_AT.toFixed(1)};
 const float RAIN_APART = ${RAIN_APART.toFixed(4)};
 ${RIG_GLSL}
 ${DUSK_GLSL}
+${RAIN_DECK_GLSL}
 
 void main() {
   vec3 d = normalize(vDir);
@@ -45,11 +46,12 @@ void main() {
   // The raining cloud: a darker belly over the curtain.
   float az = atan(d.x, -d.z);
   float walk = az - uRain.x - ${RAIN_TURN.toFixed(4)} + RAIN_WALK * (uTime - RAIN_AT);
-  walk -= floor(walk / RAIN_APART + 0.5) * RAIN_APART;
-  float side = abs(walk) / uRain.y;
+  float shaft = floor(walk / RAIN_APART + 0.5);
+  walk -= shaft * RAIN_APART;
+  float own = fract(sin(shaft * 12.9898 + 4.1) * 43758.5453);
   float el = d.y / max(length(d.xz), 0.05);
-  float belly = smoothstep(2.4, 0.3, side + (big - 0.5) * 1.6) * smoothstep(0.02, 0.14, el) * smoothstep(0.75, 0.3, el);
-  c *= 1.0 - 0.42 * belly;
+  // (The air pass hangs the veil from this belly: both read the one cloud.)
+  float belly = rainDeck(walk + 0.02 * el, el, own).x * step(abs(shaft), 0.5);
   // The overcast's own picture, laid round the horizon (its painted rain taken out: the air pass draws the rain, moving): it gives the sheet its soft lumps and its
   // weight. It is turned over at each end so that it has no seam, it climbs to forty degrees, and it drifts with the wind.
   float span = 1.9;
@@ -81,6 +83,8 @@ void main() {
   // The sheet is brightest overhead, as an overcast is, and greys toward the far picture.
   c *= mix(1.25, 1.7, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
+  // The raining cloud's belly lies over the far picture's own bellies too: the veil hangs from it.
+  c *= 1.0 - 0.45 * belly;
   // The overcast thickens as the rain comes on (the air pass greys the far air with it).
   c *= duskAt(uTime);
   gl_FragColor = vec4(rigPlain(c), 1.0);

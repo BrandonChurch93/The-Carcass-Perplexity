@@ -10,9 +10,6 @@ export const MAX_MIST = 8;
 /** True: the low steam is drawn as drifting sheets, each column is marched in its own stretch of the view, and the far flats lie under a bank
  *  of mist. False: the columns only, marched together (version 2 of this folder, the cheaper one). */
 export const SHEETS: boolean = true;
-/** The ground mist: the stretches a view is cut into, where it starts and ends (metres along the view), how high it is read (metres),
- *  how deep a bank stands (metres) and how much of a surface's light a metre of it takes at the ground. */
-export const MIST = { steps: 10, near: 5, far: 2400, top: 26, deep: 1.6, thick: 0.0045 };
 /** The shade of what stands close: reads of the frame's depth round each texel, the reach as a share of the distance, how far off it
  *  ends (metres) and how deep it goes. */
 export const OCC = { ways: 4, taps: 3, reach: 0.12, far: 420, depth: 2.0 };
@@ -44,11 +41,6 @@ float duskAt(float t) {
 ${DUSK_SHOTS.map((shot) => `  d = mix(d, ${shot.share.toFixed(4)}, step(${shot.from.toFixed(5)}, t));`).join('\n')}
   return d;
 }`;
-// The lenses that stand low and close (on the colony, the pool and the animals) see the distance go out in the vapour of the flats: their pictures have no far
-// flats and no far hills, only a warm grey in which the nearer stalks stand faint. From the place's second `from` the air beyond the
-// animals takes up to `depth` (an optical depth) of what lies behind it, coming on between `reach` metres, and gives `light` for it.
-// Nothing of it lies between the lens and the animals. It changes on a cut and never inside a shot.
-export const SWALLOW = { shots: [{ from: (5833 - 5618) / 60, depth: 0.6 }, { from: (6048 - 5618) / 60, depth: 0.5 }, { from: (6263 - 5618) / 60, depth: 1.3 }, { from: (6586 - 5618) / 60, depth: 0.3 }], reach: [20, 140], light: [0.36, 0.33, 0.35] };
 // The cast shade of what stands over the ground: ways up into the sky, reads on each, reach in metres as a share of the distance, depth.
 export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.68 };
 
@@ -65,9 +57,53 @@ export const LOW_AIR = { density: 0.0012, height: 9, light: [0.45, 0.375, 0.405]
 export const STEAM_LOOK = { most: 0.7, near: [0.5, 2.5], foot: [0.56, 0.45, 0.46], whole: 1.6, dusk: 0.8, grey: 0.74 };
 /** The rain hangs from its cloud to the flats and no higher: the top of the curtain as the tangent of its height over the horizon. */
 export const RAIN_TOP = 0.1;
+
+/** The raining cloud, for the sky that draws its dark belly and the air that hangs the veil from it: one function, so that the veil
+ *  ends where the belly begins. lean is the bearing from the middle of the rain (radians), el the tangent of the height over the
+ *  horizon, own the shaft's own number. Returns x how much of the belly stands there, y how far above its underside the direction
+ *  is (0 under it, 1 inside it). Needs tNoise, uRain and uTime. */
+export const RAIN_DECK_GLSL = /* glsl */ `
+vec2 rainDeck(float lean, float el, float own) {
+  float u = lean / (uRain.y * (0.9 + 0.4 * own));
+  if (abs(u) > 4.0) return vec2(0.0, 1.0);
+  // The mass of the cloud: wide, in lumps that close up toward the horizon as a level sheet's do, and slow.
+  vec2 under = vec2(lean, 1.0) / (el + 0.12);
+  float lumps = textureLod(tNoise, vec3(under * vec2(0.5, 0.11) + own, 0.3 + uTime * 0.004), 0.0).g;
+  float billow = textureLod(tNoise, vec3(under * vec2(1.7, 0.37) + 0.3, 0.55 + uTime * 0.007), 0.0).r;
+  float mass = exp(-u * u * 0.16) * smoothstep(4.0, 2.8, abs(u)) * smoothstep(0.22, 0.75, lumps * 0.75 + 0.5 * exp(-u * u * 0.5));
+  // Its underside: lower in one place than in another, and never a line.
+  float base = ${RAIN_TOP.toFixed(3)} * (0.72 + 0.8 * (lumps - 0.5) + 0.25 * (billow - 0.4));
+  float above = smoothstep(base * 0.55, base * 1.5, el);
+  return vec2(mass * above * (0.7 + 0.55 * billow) * smoothstep(0.7, 0.3, el), above);
+}`;
 /** The fourth shot (film frames 6263 to 6585 of a place that opens at 5618, 60 a second) stands low in the wallow's own vapour: the share
  *  of the view the near air takes there and nowhere else. It lifts that shot's darks to the picture's. */
 export const WALLOW_VEIL = { from: (6263 - 5618) / 60, to: (6586 - 5618) / 60, share: 0 };
+/** The banks of vapour that stand on the wet flats and over the brine: bodies some tens of metres across with a crown and a foot, which
+ *  drift slowly (the place has no wind) while their crowns turn over. They are marched: `steps` stretches of the view between `near` and
+ *  `far` metres, inside a layer `top` metres deep; a metre inside a bank takes `thick` of a surface's light. `drift` is their pace in
+ *  metres a second and `rise` that of their crowns. Each shot has its own weather (it changes on a cut and never inside a shot): from the
+ *  place's second `from`, `amount` of the banks stands, and none nearer the lens than `start` (they come in between its two distances,
+ *  metres), so that whatever the lens is set on stands in clear air and the distance goes out behind it. */
+export const BANKS = {
+  steps: 10,
+  near: 10,
+  far: 420,
+  top: 11,
+  thick: 0.07,
+  across: 170,
+  lit: [0.42, 0.385, 0.4] as [number, number, number],
+  deep: [0.33, 0.285, 0.28] as [number, number, number],
+  drift: 0.9,
+  rise: 0.3,
+  shots: [
+    { from: 0, amount: 0.2, start: [70, 260] },
+    { from: (5833 - 5618) / 60, amount: 0.7, start: [16, 60] },
+    { from: (6048 - 5618) / 60, amount: 0.2, start: [60, 220] },
+    { from: (6263 - 5618) / 60, amount: 1.0, start: [20, 70] },
+    { from: (6586 - 5618) / 60, amount: 0.85, start: [20, 64] },
+  ] as { from: number; amount: number; start: [number, number] }[],
+};
 /** The first metres from any lens are clear air: the haze and the low air come in between these two distances (metres). A veil that near
  *  adds its light to the darks of whatever the lens is set on, and the fine detail of a dark hide or of wet mud goes out in it. */
 export const NEAR_CLEAR: [number, number] = [6, 34];
@@ -80,12 +116,6 @@ const v3 = (v: readonly number[]): string => `vec3(${v.map(f).join(', ')})`;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
-#define MIST_STEPS ${MIST.steps}
-#define MIST_NEAR ${f(MIST.near)}
-#define MIST_FAR ${f(MIST.far)}
-#define MIST_TOP ${f(MIST.top)}
-#define MIST_DEEP ${f(MIST.deep)}
-#define MIST_THICK ${f(MIST.thick)}
 #define HAZE_OVER_SKY ${f(HAZE_OVER_SKY)}
 #define RAIN_WALK ${f(RAIN_WALK)}
 #define RAIN_AT ${f(RAIN_AT)}
@@ -100,9 +130,6 @@ precision highp float;
 #define CAST_REACH ${f(CAST.reach)}
 #define CAST_DEPTH ${f(CAST.depth)}
 #define RAIN_APART ${f(RAIN_APART)}
-#define SWALLOW_A ${f(SWALLOW.reach[0] as number)}
-#define SWALLOW_B ${f(SWALLOW.reach[1] as number)}
-#define SWALLOW_LIGHT ${v3(SWALLOW.light)}
 #define LOW_DENSITY ${f(LOW_AIR.density)}
 #define LOW_K ${f(1 / LOW_AIR.height)}
 #define LOW_LIGHT ${v3(LOW_AIR.light)}
@@ -123,6 +150,16 @@ precision highp float;
 #define VEIL_FROM ${f(WALLOW_VEIL.from)}
 #define VEIL_TO ${f(WALLOW_VEIL.to)}
 #define VEIL_SHARE ${f(WALLOW_VEIL.share)}
+#define BANK_STEPS ${BANKS.steps}
+#define BANK_NEAR ${f(BANKS.near)}
+#define BANK_FAR ${f(BANKS.far)}
+#define BANK_TOP ${f(BANKS.top)}
+#define BANK_THICK ${f(BANKS.thick)}
+#define BANK_ACROSS ${f(BANKS.across)}
+#define BANK_LIT ${v3(BANKS.lit)}
+#define BANK_DEEP ${v3(BANKS.deep)}
+#define BANK_DRIFT ${f(BANKS.drift)}
+#define BANK_RISE ${f(BANKS.rise)}
 #define NEAR_CLEAR_A ${f(NEAR_CLEAR[0])}
 #define NEAR_CLEAR_B ${f(NEAR_CLEAR[1])}
 precision highp sampler3D;
@@ -150,6 +187,7 @@ varying vec2 vUv;
 ${HASH_GLSL}
 ${RIG_GLSL}
 ${DUSK_GLSL}
+${RAIN_DECK_GLSL}
 
 void viewRay(out vec3 ro, out vec3 rd, out float far, out float open) {
   // The engine lays this half-size pass over the scene by depth, and takes each texel to have been marched to the depth of the full-size pixel at twice its index.
@@ -476,31 +514,29 @@ void main() {
   // The foot of a shaft trails behind its cloud: every streak leans the same way.
   // (Far off and seen square on, the trails hang straight.)
   float lean = walk + 0.02 * elev;
-  float side = abs(lean) / (uRain.y * (0.8 + 0.5 * own) * (1.0 + 1.6 * max(elev, 0.0)));
+  // The rain hangs from the dark belly of its cloud, and the belly is drawn with it, by the same fields: the veil has no top of its own.
+  // Over it and to either hand of it the overcast is a heavy mass with a ragged underside; under that underside the rain comes down as
+  // veils of unlike width and weight, whole under the cloud and thinner toward the flats, where much of it never arrives.
   float rain = 0.0;
-  if (uShow.y > 0.5 && far > curtain && side < 2.6 && rd.y > -0.02 && elev < RAIN_TOP * 1.9 && abs(shaft) < 0.5) {
+  float u0 = lean / (uRain.y * (0.9 + 0.4 * own));
+  if (uShow.y > 0.5 && far > curtain && rd.y > -0.02 && elev < RAIN_TOP * 2.0 && abs(u0) < 2.6 && abs(shaft) < 0.5) {
     float el = elev;
-    // It has no side: it thins away to either hand, and what is seen of it is slanting trails in veils of unlike weight, each veil
-    // its own width and its own height. The veils walk with the shaft, change as they go, and their trails come down.
-    float veils = textureLod(tNoise, vec3(lean * 2.3 + own, el * 0.9 + uTime * 0.018, 0.4 + uTime * 0.03), 0.0).g;
-    float torn = textureLod(tNoise, vec3(lean * 7.0 + uTime * 0.005, el * 2.6 + 0.3 + uTime * 0.05, 0.8 + uTime * 0.04 + lean * 1.47), 0.0).b;
-    // The trails: broad ones a degree or two across, which a small screen still shows, and fine ones inside them. They are the
-    // lesser part of the veil: where the gaps between them are narrow, the gaps are what is seen, as pale beams.
-    // (The noise is a tile, and a trail is a small part of it: each field slides through the tile's depth as it goes along the horizon,
-    // so that no trail comes again a tile further on. Read flat, the veil was a comb of the same few teeth.)
-    float broad = textureLod(tNoise, vec3(lean * 15.0 + own * 3.0, el * 0.22 + uTime * 0.02, 0.7 + uTime * 0.01 + lean * 2.55), 0.0).g;
-    float fine = textureLod(tNoise, vec3(lean * 58.0, el * 0.5 + uTime * 0.045, 0.13 + lean * 9.86), 0.0).b;
-    // The trails come down: each is made of heavier and lighter lengths, and those fall the height of the veil in two and a half seconds.
-    float fall = textureLod(tNoise, vec3(lean * 31.0 + 0.4, el * 12.0 + uTime * 0.6, 0.37 + uTime * 0.02 + lean * 5.89), 0.0).g;
-    float streaks = smoothstep(0.3, 0.75, broad * 0.14 + fine * 0.36 + fall * 0.5);
-    float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
-    // It hangs from the belly of its cloud, whole under it and thinner as it comes down: much of it never reaches the flats.
-    // (Its top is the cloud's belly, soft and ragged: a veil stands half as tall again as its neighbour, and the tears in it go up into
-    // the cloud. Each trail is its own length, and few come all the way down.)
-    float top = RAIN_TOP * (0.9 + 0.9 * (veils - 0.5) + 0.4 * (torn - 0.5));
-    float reachDown = 0.3 + 0.6 * textureLod(tNoise, vec3(lean * 61.0 + 0.7, 0.21 + uTime * 0.05 + lean * 7.93, 0.6 + uTime * 0.01 + lean * 14.03), 0.0).g;
-    float base = smoothstep(top * 1.2, top * 0.5, el) * mix(reachDown, 1.0, smoothstep(0.0, top * 0.45, el)) * smoothstep(-0.004, 0.012, el);
-    rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.66 + 0.5 * streaks);
+    float u = u0;
+    float above = rainDeck(lean, el, own).y;
+    float base = RAIN_TOP * 0.72;
+    // The veils: each field slides through the tile's depth as it goes along the horizon, so that no veil and no trail comes again a
+    // tile further on (read flat, the veil was a comb of the same few teeth).
+    float veils = textureLod(tNoise, vec3(lean * 2.9 + own, el * 0.6 + uTime * 0.006, 0.4 + uTime * 0.012 + lean * 0.83), 0.0).g;
+    float torn = textureLod(tNoise, vec3(lean * 8.5, el * 1.3 + 0.3 + uTime * 0.02, 0.8 + uTime * 0.016 + lean * 1.47), 0.0).a;
+    float body = exp(-u * u * 0.9) * smoothstep(0.26, 0.7, veils * 0.62 + torn * 0.38 + 0.26 * exp(-u * u * 2.5));
+    // The trails inside a veil: soft, each its own weight, and they come down (the height of the veil in some twenty seconds: it is far off).
+    float fine = textureLod(tNoise, vec3(lean * 29.0, el * 0.8 + uTime * 0.012, 0.13 + lean * 9.86), 0.0).g;
+    float fall = textureLod(tNoise, vec3(lean * 13.0 + 0.4, el * 5.0 + uTime * 0.06, 0.37 + uTime * 0.008 + lean * 5.89), 0.0).a;
+    float trails = 0.62 + 0.75 * smoothstep(0.3, 0.72, fine * 0.55 + fall * 0.45);
+    // How far down a veil comes: few come all the way, and each ends in a fringe.
+    float reachDown = smoothstep(0.25, 0.7, torn * 0.6 + fine * 0.4);
+    float hang = mix(0.25 + 0.75 * reachDown, 1.0, smoothstep(0.0, base * 0.8, el)) * smoothstep(-0.006, 0.012, el);
+    rain = uRain.w * 1.6 * (0.7 + 0.6 * own) * body * hang * trails * (1.0 - above);
   }
   float show = uShow.x;
   // Where the view ends on the sky only the near air lies over it (the far picture has its own), but for its foot: there the air closes
@@ -526,44 +562,62 @@ void main() {
   // (Low over the flats the far air takes the warm light of the low air: the flats fade into pink grey, not into white.)
   vec3 farLight = mix(airLight, LOW_LIGHT * 1.18, 0.55 * exp(-abs(elev) / 0.03)) * airLit;
 
-  // The ground mist. It lies on the flats a few strides deep, thick in banks and thin between them, and the banks travel with the wind.
-  // The view is cut into stretches that lengthen with distance, and each stretch reads the banks no finer than its own length (the noise's
-  // smaller copies), so a far stretch takes the mean of what it crosses and nothing in it can flicker.
-  float ta = MIST_NEAR;
-  float tb = min(reach, MIST_FAR);
-  if (rd.y > 1e-4) tb = min(tb, (MIST_TOP - ro.y) / rd.y);
-  if (ro.y > MIST_TOP) {
-    if (rd.y < -1e-4) ta = max(ta, (MIST_TOP - ro.y) / rd.y);
+  // The banks. A bank is a body: it stands where the slow fields say, as high as it is thick, its crown is cut into lumps that climb and
+  // turn over, and the sky lights it from above, so its crown is white and its heart and its foot are grey and warm. The view is cut
+  // into stretches that lengthen with distance, and each reads the fields no finer than its own length (the noise's smaller copies):
+  // a near bank has its lumps, a far one is the mean of what the stretch crosses, and nothing in it can flicker.
+  vec3 weather = vec3(0.0, 1.0, 2.0);
+${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${f(shot.start[0])}, ${f(shot.start[1])}), step(${f(shot.from)}, uTime));`).join('\n')}
+  float ta = BANK_NEAR;
+  // (Over the sky the banks are marched to their own far end: they stand in front of the far picture and take its hills.)
+  float tb = min(mix(reach, BANK_FAR, open), BANK_FAR);
+  if (rd.y > 1e-4) tb = min(tb, (BANK_TOP - ro.y) / rd.y);
+  if (ro.y > BANK_TOP) {
+    if (rd.y < -1e-4) ta = max(ta, (BANK_TOP - ro.y) / rd.y);
     else tb = -1.0;
   }
   float done = 0.0;
+  // What the banks leave of the view behind them.
+  float past = 1.0;
   if (show > 0.5 && tb > ta * 1.02) {
     float a0 = 1.0 - exp(-hazeBetween(ro, rd, 0.0, ta) * nearThin(0.5 * ta));
     sum += trans * a0 * airLight;
     trans *= 1.0 - a0;
-    float ratio = pow(tb / ta, 1.0 / float(MIST_STEPS));
+    float ratio = pow(tb / ta, 1.0 / float(BANK_STEPS));
     float t0 = ta;
-    vec2 wind = vec2(-0.96, -0.27) * 1.6 * uTime;
-    for (int k = 0; k < MIST_STEPS; k++) {
+    vec2 wind = vec2(-0.96, -0.27) * BANK_DRIFT * uTime;
+    vec3 bankLit = BANK_LIT * mix(1.0, dusk, 0.5);
+    vec3 bankDeep = BANK_DEEP * mix(1.0, dusk, 0.5);
+    // (Where in its stretch each is read: the texel's own place, moved on by the golden share at each sample of a frame, so that the
+    // frame's samples between them read the whole stretch evenly and the banks come out smooth.)
+    float where = fract(float(hash2(uint(here.x), uint(here.y)) & 1023u) / 1024.0 + float(uSampleIndex) * 0.61803);
+    for (int k = 0; k < BANK_STEPS; k++) {
       float t1 = t0 * ratio;
       float dt = t1 - t0;
-      vec3 p = ro + rd * (t0 + dt * jitter);
+      float tk = t0 + dt * where;
+      vec3 p = ro + rd * tk;
       vec2 at = p.xz - wind;
-      float lodBig = clamp(log2(dt / 20.0), 0.0, 6.0);
-      float lodSmall = clamp(log2(dt / 6.0), 0.0, 6.0);
-      vec4 big = textureLod(tNoise, vec3(at / 640.0, 0.37 + uTime * 0.002), lodBig);
-      vec4 small = textureLod(tNoise, vec3(at / 190.0 + 0.5, 0.71 + uTime * 0.006), lodSmall);
-      float shape = smoothstep(0.4, 0.68, big.g * 0.68 + small.a * 0.32);
-      // Its top stands higher in a bank than between two. (Near the lens a bank is thinner than far off: seen from within, mist is
-      // mostly the white of the distance.)
-      float top = MIST_DEEP * (0.45 + 0.9 * shape + 0.5 * small.g);
-      float sigma = MIST_THICK * (0.12 + 2.3 * shape) * exp(-max(p.y, 0.0) / top) * smoothstep(MIST_NEAR, MIST_NEAR * 6.0, t0 + dt * jitter) * mix(0.08, 1.0, smoothstep(60.0, 700.0, t0));
+      vec4 big = textureLod(tNoise, vec3(at / BANK_ACROSS, 0.37 + uTime * 0.0018), clamp(log2(dt / (BANK_ACROSS / 28.0)), 0.0, 6.0));
+      // Where a bank stands and how high: the banks gather into masses with open flat between them, and no two are one height.
+      // (Far off the banks close up: between two of them stands a third.)
+      float stand = max(smoothstep(0.38, 0.6, big.g * 0.72 + big.a * 0.28), 0.55 * smoothstep(90.0, 320.0, tk));
+      float top = BANK_TOP * (0.12 + 0.88 * stand) * (0.4 + 1.0 * big.a);
+      // Its lumps, which climb: the crown is cut by them, and so is its side. (Never read at the tile's finest: a lump is metres across.)
+      vec4 lump = textureLod(tNoise, vec3(at.x, p.y * 1.5 - uTime * BANK_RISE, at.y) / 60.0 + vec3(0.0, 0.0, uTime * 0.004), clamp(log2(dt / 7.5), 1.0, 6.0));
+      float h = max(p.y, 0.0) / top;
+      // Some banks have left the ground: under them the flat is seen, and the bank shows its underside.
+      float lift = top * 0.3 * smoothstep(0.5, 0.75, big.r);
+      float body = smoothstep(1.0, 0.3, h + (0.5 - lump.r) * 0.9) * smoothstep(0.0, 0.5, stand + (lump.r - 0.45) * 0.5) * smoothstep(lift * 0.4, lift * 1.2 + 0.01, p.y + (lump.b - 0.5) * lift);
+      float sigma = weather.x * BANK_THICK * body * smoothstep(weather.y, weather.z, tk);
       float tau = sigma * dt + hazeBetween(ro, rd, t0, t1) * nearThin(t0 + 0.5 * dt);
       float a = 1.0 - exp(-tau);
-      // A bank is white on top, where the whole sky lights it, and greyer in its depth, where its own top stands over it.
-      float lit = exp(-sigma * top * 22.0 * exp(-max(p.y, 0.0) / top));
-      // (A bank's foot stands in the low air and takes its light.)
-      sum += trans * a * mix(LOW_LIGHT * 1.12, airLight, smoothstep(0.0, 10.0, p.y)) * airLit * mix(0.8, 1.08, lit) * mix(1.0, dusk, smoothstep(200.0, 2000.0, t0));
+      past *= exp(-sigma * dt);
+      // The sky lights the crown; the heart and the underside have the bank's own body over them and are grey and warm.
+      float lit = smoothstep(0.3, 1.0, h + (0.5 - lump.r) * 0.5) * (0.85 + 0.3 * lump.b);
+      vec3 light = mix(bankDeep, bankLit, lit) * airLit;
+      // (What of the stretch is plain haze takes the haze's light.)
+      float share = sigma * dt / max(tau, 1e-6);
+      sum += trans * a * mix(mix(LOW_LIGHT * 1.12, airLight, smoothstep(0.0, 10.0, p.y)) * airLit * mix(1.0, dusk, smoothstep(200.0, 2000.0, t0)), light, share);
       trans *= 1.0 - a;
       t0 = t1;
     }
@@ -573,24 +627,19 @@ void main() {
   sum += trans * a * farLight * mix(1.0, dusk, smoothstep(200.0, 2000.0, 0.5 * (done + max(reach, done))));
   trans *= 1.0 - a;
   if (rain > 0.0) {
-    // The veil hangs far off in the air and is seen through it. Falling rain under an overcast is darker than whatever is behind it,
-    // the sky or the far flats: it takes their light and gives little of its own.
-    float r = 0.72 * (1.0 - exp(-rain)) * exp(-0.3 * hazeBetween(ro, rd, 0.0, curtain) * show);
-    sum *= 1.0 - 0.8 * r;
+    // The veil and its cloud hang far off, behind all the air drawn so far, and are seen through it. Falling rain under an overcast is
+    // darker than whatever is behind it, the sky or the far flats: it takes their light and gives little of its own.
+    float r = 0.8 * (1.0 - exp(-rain)) * exp(-0.3 * hazeBetween(ro, rd, 0.0, curtain) * show);
+    sum += trans * r * airLight * 0.3 * dusk;
     trans *= 1.0 - r;
   }
   // The low air lies over all of it: the foot of the rain and the last of the flats go out in it, and the horizon has no line.
   float low = lowBetween(ro, rd, 0.0, mix(far, LOW_OVER_SKY, open)) * mix(LOW_NEAR, 1.0, smoothstep(LOW_WHOLE_A, LOW_WHOLE_B, far)) * smoothstep(NEAR_CLEAR_A, NEAR_CLEAR_B, far) * mix(1.0, LOW_SKY_SHARE, open) * airBody;
   low += VEIL_SHARE * step(VEIL_FROM, uTime) * step(uTime, VEIL_TO) * (1.0 - exp(-far * 0.4));
-  float lowTaken = (1.0 - exp(-low)) * show;
+  // (The low air lies far off for the most part, and a bank that stands before it hides it as it hides the flat.)
+  float lowTaken = (1.0 - exp(-low)) * show * mix(0.2, 1.0, past);
   sum = sum * (1.0 - lowTaken) + LOW_LIGHT * airLit * mix(1.0, dusk, LOW_DUSK) * lowTaken;
   trans *= 1.0 - lowTaken;
-  // The distance swallowed, for the lenses set close on the animals (SWALLOW). Over the sky it lies on the far picture's hills only.
-  float swallow = 0.0;
-${SWALLOW.shots.map((shot) => `  swallow = mix(swallow, ${shot.depth.toFixed(3)}, step(${shot.from.toFixed(5)}, uTime));`).join('\n')}
-  float swallowed = (1.0 - exp(-swallow * smoothstep(SWALLOW_A, SWALLOW_B, far) * mix(1.0, exp(-max(elev, 0.0) / 0.05), open))) * show;
-  sum = sum * (1.0 - swallowed) + SWALLOW_LIGHT * swallowed;
-  trans *= 1.0 - swallowed;
   // What the nearness of things takes from a surface's light is taken before the air lies over it.
   // So is the slow shade of the cloud that crosses the flats.
   // (And the far flats stand in the same lit and shaded stretches as the air over them: a white flat in shade is grey, and has distance.)
