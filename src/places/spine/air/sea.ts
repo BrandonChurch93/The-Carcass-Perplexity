@@ -222,9 +222,10 @@ vec4 seaCrowns(vec3 ro, vec3 rd, float until) {
   vec2 round_ = rd.xz * inversesqrt(max(dot(rd.xz, rd.xz), 1e-6));
   float toDusk = max(dot(round_, vec2(cos(DUSK_AZ), sin(DUSK_AZ))), 0.0);
   vec3 pale = SEA_COLD * vec3(1.05, 1.1, 1.26) + SEA_WARM * (0.12 + 0.3 * toDusk * toDusk);
-  // Toward the heart of the dusk they are low mounds: the band lies clear over them, and a tower before a gap in the far spires
-  // filled the gap.
-  float low = 1.0 - 0.75 * smoothstep(0.78, 0.97, toDusk);
+  // Toward the dusk there are none: the band lies clear over the deck's own far banks. (Low mounds there stood on the band as
+  // flat slabs at 7418, and from the low lens of 7579 as pale boxes with ruled sides.)
+  float low = 1.0 - smoothstep(0.3, 0.65, toDusk);
+  if (low <= 0.0) return vec4(0.0);
   vec3 dark = SEA_COLD * vec3(0.4, 0.46, 0.66);
   for (int i = 0; i < 8; i++) {
     float ts = 5000.0 * exp(0.16 * float(i));
