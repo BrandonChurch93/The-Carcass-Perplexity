@@ -6,6 +6,7 @@ import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
 import { Fronds, crownOf, dropMesh, frondMesh, matOf, plumeDrawn, plumeOf, stemMesh, trunkOf, tuftOf, type GrowthUniforms } from './grown';
 import { COLLAR_FRAGMENT, COLLAR_VERTEX } from './palms';
+import { insectMesh } from './insects';
 import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX } from './shaders';
 import { growStands, lineAt, type Wild } from './stands';
 
@@ -521,8 +522,10 @@ export function create(ctx: Context): Piece {
       'marsh-04': (w) => Math.hypot(w.x - k3[0], w.z - k3[1]),
       'marsh-05': (w) => Math.hypot(w.x - k4[0], w.z - k4[1]),
     };
-    const fineOf = (d: number): number => (d < 9 ? 40 : d < 18 ? 28 : d < 36 ? 13 : d < 80 ? 5 : 3);
-    const broadOf = (d: number): number => (d < 9 ? 0.62 : d < 18 ? 1.05 : d < 36 ? 1.6 : d < 80 ? 2.5 : 3.6);
+    const fineOf = (d: number): number => (d < 9 ? 40 : d < 18 ? 28 : d < 36 ? 13 : d < 60 ? 5 : d < 90 ? 3 : 2);
+    // STAGED for the wide: from its height a stand is pale stalks under small heads, so there no head is made as the full mop it is from among them.
+    const wideFine = (d: number): number => (d <= 6 ? fineOf(d) : d < 36 ? 9 : d < 60 ? 4 : d < 90 ? 2.5 : 1);
+    const broadOf = (d: number): number => (d < 9 ? 0.62 : d < 18 ? 1.05 : d < 36 ? 1.6 : d < 60 ? 2.5 : d < 90 ? 3.4 : d < 200 ? 5 : 7);
     {
       const footed = wilds.filter((w) => w.foot && !w.bare);
       const foot = new Float32Array(footed.length * 4);
@@ -562,21 +565,39 @@ export function create(ctx: Context): Piece {
     {
       // STAGED by shot: a head is made as fine as the lens of the shot needs it, and no finer. Each shot has the heads made for its own lens;
       // the others are not drawn. The stalks, their lines and the size of their heads are the same in every shot.
+      // What no lens of a shot can see is not made for it: each shot's lens keeps within a wedge of the ground, its walk and its turn allowed for.
+      const wedge = (at: [number, number], dx: number, dz: number, back: number, spread: number, room: number) => (w: Wild): boolean => {
+        const along = (w.x - at[0]) * dx + (w.z - at[1]) * dz + back;
+        return along > 0 && Math.abs((w.z - at[1]) * dx - (w.x - at[0]) * dz) < along * spread + room;
+      };
+      const k4to = rel(27.6, 10.07);
+      const k4l = Math.hypot(k4to[0] - k4[0], k4to[1] - k4[1]);
+      const seesOf: Record<string, (w: Wild) => boolean> = {
+        'marsh-01': wedge(EYE, AHEAD[0], AHEAD[1], 7, 1.33, 8.5),
+        'marsh-02': wedge(K2_AT, K2_DIR[0], K2_DIR[1], 6, 0.9, 6),
+        'marsh-03': wedge(K1_AT, K1_DIR[0], K1_DIR[1], 6, 1.15, 5),
+        'marsh-04': wedge(k3, AHEAD[0], AHEAD[1], 12, 0.9, 6),
+        'marsh-05': wedge(k4, (k4to[0] - k4[0]) / k4l, (k4to[1] - k4[1]) / k4l, 12, 1.12, 5),
+      };
       SHOTS.forEach((shot, which) => {
         const from = lensOf[shot.id] ?? reach;
         const nearF = new Fronds();
+        const midF = new Fronds();
         const farF = new Fronds();
         const own = ctx.rng('stalks-fronds-' + shot.id);
-        // STAGED for the wide: from its height a stand is pale stalks under small tufts, so there no head is made as the full mop it is from among them.
-        const fineIn = (w: Wild): number => (shot.id === 'marsh-01' && from(w) > 6 ? Math.min(13, fineOf(from(w))) : fineOf(from(w)));
-        for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineIn(w), broadOf(from(w)), false);
+        const sees = seesOf[shot.id] ?? ((): boolean => true);
+        const fineIn = (w: Wild): number => (shot.id === 'marsh-01' ? wideFine(from(w)) : fineOf(from(w)));
+        // A head outside the wedge is still grown, into a list that is never drawn, so that every head that is seen keeps its own strands.
+        const unseen = new Fronds();
+        for (const w of wilds) crownOf(from(w) < 22 ? nearF : !sees(w) ? unseen : from(w) < 60 ? midF : farF, w, own, fineIn(w), broadOf(from(w)), false);
         // The stems the same way: by the lens of the shot the ledges of the bark are the mesh, far off a stem is a plain tube.
         const closeW = wilds.filter((w) => from(w) < 7);
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
-        const farW = wilds.filter((w) => from(w) >= 22);
+        const farW = wilds.filter((w) => from(w) >= 22 && from(w) < 90 && sees(w));
+        const awayW = wilds.filter((w) => from(w) >= 90 && sees(w));
         const meshes = [
-          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 4, { small: true }),
-          stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 6, 5, 0, true),
+          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, midF, 4, { small: true }), frondMesh(ctx, growth, farF, 2, { small: true }),
+          stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 6, 5, 0, true), stemMesh(ctx, growth, awayW.length, lines(awayW), 3, 4, 0, true),
         ];
         crowns[which] = meshes;
         group.add(...meshes);
@@ -601,7 +622,7 @@ export function create(ctx: Context): Piece {
       const low = new Fronds();
       const listOf = (d: number): Fronds => (d < 20 ? nearF : d < 38 ? midF : farF);
       const wideOf = lensOf['marsh-01'] ?? reach;
-      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, wideOf(w) > 6 ? Math.min(13, fineOf(wideOf(w))) : fineOf(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
+      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, wideFine(wideOf(w)), broadOf(wideOf(w)), false, 0.75);
       // No leaf hangs down these stems in the wide: its picture has pale bare stalks under a small red tuft.
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
@@ -684,6 +705,25 @@ export function create(ctx: Context): Piece {
   const home = new Float32Array(COUNT * 4);
   const rate = new Float32Array(COUNT * 4);
   const phase = new Float32Array(COUNT * 4);
+  // The two trunks nearest each one's home, which its path goes round: where the top is, how thick, and how the trunk leans under it.
+  const perchA = new Float32Array(COUNT * 4);
+  const perchB = new Float32Array(COUNT * 4);
+  const leans = new Float32Array(COUNT * 4);
+  const trunks = clings.map((w) => {
+    const top = lineAt(w, 1);
+    const under = lineAt(w, 0.8);
+    const drop = Math.max(top[1] - under[1], 1e-3);
+    return { top, lean: [(top[0] - under[0]) / drop, (top[2] - under[2]) / drop] as [number, number], r: w.R * 1.1 + 0.05 };
+  });
+  const keepOff = (i: number, p: [number, number, number]): void => {
+    const by = trunks.map((t) => ({ t, d: Math.hypot(t.top[0] - p[0], t.top[2] - p[2]) })).sort((a, b) => a.d - b.d);
+    [perchA, perchB].forEach((list, k) => {
+      const t = by[k]?.t;
+      if (!t || (by[k]?.d ?? 9) > 1.6) return;
+      list.set([t.top[0], t.top[2], t.top[1], t.r], i * 4);
+      leans.set(t.lean, i * 4 + k * 2);
+    });
+  };
   const stuck = rel(STUCK[0], STUCK[1]);
   const ahead = (u: [number, number, number]): number => (u[0] - K2_AT[0]) * K2_DIR[0] + (u[2] - K2_AT[1]) * K2_DIR[1];
   const aside = (u: [number, number, number]): number => Math.abs((u[0] - K2_AT[0]) * K2_RIGHT[0] + (u[2] - K2_AT[1]) * K2_RIGHT[1]);
@@ -710,13 +750,14 @@ export function create(ctx: Context): Piece {
       phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1, 1.45)], i * 4);
       continue;
     }
-    if (i < 38 && nearPerches.length > 0) {
+    if (i < 56 && nearPerches.length > 0) {
       // STAGED for the lens of the colony: a dozen keep to the two plumes nearest it, close in among the strands.
       const perch = nearPerches[i % nearPerches.length] as [number, number, number];
       p = [perch[0] + swarm.range(-0.45, 0.45), perch[1] + swarm.range(0.1, 0.6), perch[2] + swarm.range(-0.45, 0.45)];
       home.set([p[0], p[1], p[2], swarm.range(0.16, 0.34)], i * 4);
       rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
       phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1.3, 1.9)], i * 4);
+      keepOff(i, p);
       continue;
     }
     if (i < 106 && perches.length > 0) {
@@ -728,6 +769,7 @@ export function create(ctx: Context): Piece {
     home.set([p[0], p[1], p[2], swarm.range(0.2, 0.7)], i * 4);
     rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
     phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), i >= 106 && i < 146 ? swarm.range(0.45, 0.8) : swarm.range(1.3, 2.1)], i * 4);
+    if (i < 106) keepOff(i, p);
   }
   // One insect: the photograph cut in three, the body and the wings of each side, hinged along the body.
   const bug = new THREE.BufferGeometry();
@@ -751,7 +793,11 @@ export function create(ctx: Context): Piece {
   );
   (bugs.material as THREE.ShaderMaterial).userData.depthFragment = INSECT_DEPTH;
   bugs.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('insects', bugs));
+  // Among the colony the lens is close enough to see what an insect is made of: there each is a body with legs and veined wings, lit by the rig.
+  const bodies = insectMesh(ctx, uSeconds, COUNT, home, rate, phase, perchA, perchB, leans);
+  const insects = new THREE.Group();
+  insects.add(bugs, bodies);
+  ctx.scene.add(ctx.parts.built('insects', insects));
 
   return {
     setTime: (seconds) => {
@@ -779,6 +825,8 @@ export function create(ctx: Context): Piece {
       const among = SHOTS[on]?.id === 'marsh-02';
       closeSet.visible = among;
       closeFar.visible = !among;
+      bodies.visible = among;
+      bugs.visible = !among;
     },
     resize: (_width, height) => {
       uViewH.value = height;
