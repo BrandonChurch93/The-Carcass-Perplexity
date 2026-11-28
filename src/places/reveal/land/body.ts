@@ -70,7 +70,11 @@ export const BODY_GROUND = /* glsl */ `
   ground = mix(ground, body, joined);
   // (By night the bones are broad pale ranges under the moon, each in its whole body, as the high ground stands: not their crest lines alone.)
   float boneBody = joined * land * smoothstep(0.25, 0.45, height) * smoothstep(0.14, 0.32, dot(coarseGround, vec3(0.3, 0.55, 0.15)));
-  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.35 * uEmber.x * boneBody);
+#ifdef BODYONLY
+  // (The limbs are thin ranges: read no coarser than they are broad, they keep the skull's value under the moon.)
+  if (uEmber.x > 0.0) boneBody = joined * land * smoothstep(0.2, 0.4, height) * smoothstep(0.14, 0.3, max(dot(coarseGround, vec3(0.3, 0.55, 0.15)), dot(readWide(uMapWide, clamp(uvWide, 0.0, 1.0), 3.0).rgb, vec3(0.3, 0.55, 0.15))));
+#endif
+  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.55 * uEmber.x * boneBody);
 #endif
 `;
 
@@ -87,7 +91,7 @@ export const BODY_LIGHT = /* glsl */ `
   ground *= 1.0 - 0.45 * saltFlat * uEmber.x * joined;
   // (By night the moon lights the ranges in their whole body, broad, as it does the high ground of any land seen from orbit: the
   // body of a bone stands toward it, and the fine relief is a grain on that, not a wire drawing.)
-  slope = mix(slope, 0.7 * slope, uEmber.x * joined) - uBodyRelief2.w * boneBody * uEmber.x * normalize(uMoonDir.xz);
+  slope = mix(slope, 0.5 * slope, uEmber.x * joined) - uBodyRelief2.w * boneBody * uEmber.x * normalize(uMoonDir.xz);
 #endif
 `;
 

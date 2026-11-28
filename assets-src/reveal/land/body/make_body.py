@@ -41,6 +41,8 @@ KM_PER_MASTER_PX = 4536.0 / 5295.59
 RELIEF_KM = float(os.environ.get('RELIEF_KM', '16'))
 # How much of a bone's whole body is pale, beside its crest line: the width of bone against country.
 BODYW = float(os.environ.get('BODYW', '1.0'))
+RIBFLAT = float(os.environ.get('RIBFLAT', '0.7'))
+LESSFLAT = float(os.environ.get('LESSFLAT', '0.75'))
 ONLY = os.environ.get('ONLY', '')
 TURN = math.atan2(-0.2, 0.78) - math.radians(3.0)
 SUN = (math.sin(TURN), -math.cos(TURN))
@@ -177,6 +179,15 @@ def pan_reach(W, H):
     return r + 1.1 * (fbm((H, W), np.random.default_rng(SEED + 7), 110.0 / F, 4) - 0.5)
 
 
+def lesser_ranges(W, H):
+    """1 on the ranges of the chest that are not the six a side nearest the shoulders, in px of the full map."""
+    y, x = np.mgrid[0:H, 0:W].astype(np.float32)
+    fx, fy = x * F, y * F
+    upper = smooth(1790.0, 1850.0, fx - 0.33 * (900.0 - fy)) * smooth(45.0, 80.0, 1010.0 - fy) * (1.0 - smooth(2300.0, 2400.0, fx))
+    lower = smooth(1740.0, 1800.0, fx - 0.4 * (fy - 1050.0)) * smooth(45.0, 80.0, fy - 1010.0) * (1.0 - smooth(2300.0, 2400.0, fx - 0.4 * (fy - 1050.0)))
+    return np.clip(upper + lower, 0.0, 1.0)
+
+
 def zone(W, H, at, inner, outer):
     """1 inside an ellipse given in px of the full map, falling to 0 between inner and outer of its radius."""
     y, x = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -230,9 +241,19 @@ def outputs():
     # ---- relief: the encoding of relief-a.jpg ----
     gx = ndimage.sobel(e, axis=1) / 8.0 / px
     gy = ndimage.sobel(e, axis=0) / 8.0 / px
+    # (One range a rib: lit as it stands, the two flanks of a bone read from orbit as two pale lines with the crest's shade
+    # between them. So the light is given a land on which the broad form of each bone is lower than it is, a pale tableland
+    # ridged by its spurs and gullies, which keep their whole height: the bone is one band, and every ridge on it still casts.)
+    body = smooth(float(os.environ.get('BODY0', '0.36')), float(os.environ.get('BODY1', '0.68')), ndimage.gaussian_filter(h_old, 5.0 * px))
+    e_lit = e - RIBFLAT * np.clip(body * 1.5, 0.0, 1.0) * (ndimage.gaussian_filter(e, 6.0 * px) - ndimage.gaussian_filter(e, 22.0 * px))
+    # (And the lesser ranges of the chest, toward the belly, stand lower in the light than they are, so their crests do not
+    # count as ribs.)
+    e_lit = e_lit - LESSFLAT * lesser_ranges(W, H) * (e - ndimage.gaussian_filter(e, 22.0 * px))
+    gx_lit = ndimage.sobel(e_lit, axis=1) / 8.0 / px
+    gy_lit = ndimage.sobel(e_lit, axis=0) / 8.0 / px
     relief_old = np.asarray(Image.open(os.path.join(LAND, 'relief-a.jpg')).convert('RGB').resize((W, H), Image.LANCZOS), dtype=np.float32) / 255.0
-    r = 0.5 + 0.5 * np.tanh(gx * 17.0)
-    g = 0.5 + 0.5 * np.tanh(gy * 17.0)
+    r = 0.5 + 0.5 * np.tanh(gx_lit * 17.0)
+    g = 0.5 + 0.5 * np.tanh(gy_lit * 17.0)
     b = np.where(dom, 0.3 + 0.7 * (0.07 + 0.93 * e), np.minimum(relief_old[..., 2], 0.25))
     # (The strait of the Ribs: the land sheet lets the sea into the low ground there by this height. Its water stays where the
     # old relief had it, so the coast of the strait does not move.)
@@ -251,7 +272,7 @@ def outputs():
 
     # ---- light: the encoding of light-a.jpg ----
     if ONLY != 'colour':
-        up = 0.07 + 0.93 * e
+        up = 0.07 + 0.93 * e_lit
         up = up * dom
         if F == 1:
             half = np.asarray(Image.fromarray(up).resize((W // 2, H // 2), Image.BOX), dtype=np.float32)
@@ -277,7 +298,6 @@ def outputs():
     # ---- colour: the country, with no light in it ----
     slope = np.hypot(gx, gy) * top * 0.5  # about the true fall, cell for cell
     # (The bones themselves, as the old map has them: a range that is a bone is pale in its whole body, stained, its valleys dark.)
-    body = smooth(float(os.environ.get('BODY0', '0.36')), float(os.environ.get('BODY1', '0.68')), ndimage.gaussian_filter(h_old, 5.0 * px))
     ridge = e - ndimage.gaussian_filter(e, 5.0 * px)
     broad = ndimage.gaussian_filter(e, 14.0 * px)
     wet = np.log10(np.maximum(area, 1.0))
@@ -357,18 +377,16 @@ def outputs():
     crest = smooth(0.012, 0.08, ridge) * smooth(0.3, 0.6, e)
     # (Of the ranges of the chest, the six a side nearest the shoulders are the great ones and carry the pale; those toward the
     # belly are lesser ranges of dark rock, so each side reads five or six ribs from orbit.)
-    upper = smooth(1790.0, 1850.0, fx - 0.33 * (900.0 - fy)) * smooth(45.0, 80.0, 1010.0 - fy) * (1.0 - smooth(2050.0, 2150.0, fx))
-    lower = smooth(1740.0, 1800.0, fx - 0.4 * (fy - 1050.0)) * smooth(45.0, 80.0, fy - 1010.0) * (1.0 - smooth(2150.0, 2250.0, fx - 0.4 * (fy - 1050.0)))
-    lesser = np.clip(upper + lower, 0.0, 1.0)
+    lesser = lesser_ranges(W, H)
     # (A bone keeps its mass: its whole body is pale, as broad as the old map has it, ridged by the relief, and stained where
     # water gathers in its gullies and where the rock is rotten.)
     gully = smooth(2.3, 3.3, wet) * (1.0 - smooth(0.5, 0.8, e))
     rot = smooth(0.52, 0.7, fbm((H, W), rng, 22 * px, 4)) * (1.0 - smooth(0.35, 0.7, e))
     mass = BODYW * body * (0.8 + 0.4 * mott) * (1.0 - 0.6 * gully) * (1.0 - 0.45 * rot) * (1.0 - 0.3 * smooth(0.0, 0.05, -ridge))
-    paleness = np.clip(np.maximum(0.85 * crest + 0.5 * smooth(0.6, 0.95, e), mass), 0.0, 1.0) * (1.0 - 0.8 * lesser)
+    paleness = np.clip(np.maximum(0.85 * crest + 0.5 * smooth(0.6, 0.95, e), mass), 0.0, 1.0) * (1.0 - 0.9 * lesser)
     rock = mixc(rock, bone, paleness)
-    rock = mixc(rock, srgb(232, 232, 228), smooth(0.88, 0.98, e) * smooth(0.0, 0.05, ridge))
-    colour = mixc(country, rock, np.maximum(smooth(0.13, 0.36, e + 0.25 * np.maximum(ridge, 0.0) * 4.0), np.clip(BODYW * 1.2 * body, 0.0, 1.0) * (1.0 - 0.8 * lesser)))
+    rock = mixc(rock, srgb(232, 232, 228), smooth(0.88, 0.98, e) * smooth(0.0, 0.05, ridge) * (1.0 - lesser))
+    colour = mixc(country, rock, np.maximum(smooth(0.13, 0.36, e + 0.25 * np.maximum(ridge, 0.0) * 4.0), np.clip(BODYW * 1.2 * body, 0.0, 1.0) * (1.0 - 0.9 * lesser)))
     # The coast: a pale hairline of beach on low shores, dark rock where the land meets the sea steep.
     low_shore = (1.0 - smooth(0.02, 0.07, ndimage.gaussian_filter(e, 2.0 * px))) * smooth(0.42, 0.56, fbm((H, W), rng, 120 * px, 3))
     beach = (1.0 - smooth(0.6, 2.2, d_shore)) * low_shore * dom

@@ -24,7 +24,7 @@ const FEEDER: [number, number][] = [[1224.0, 1440.0], [1226.8, 1468.5], [1221.0,
 const BODY_RELIEF = Number(import.meta.env.VITE_BODY_RELIEF ?? 1.6);
 const BODY_SHADOW = Number(import.meta.env.VITE_BODY_SHADOW ?? 1.0);
 const BODY_FINE = Number(import.meta.env.VITE_BODY_FINE ?? 0.7);
-const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.018);
+const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.024);
 
 export const PARTS = ['sea', 'continent', 'salt', 'lake', 'lava'] as const;
 
