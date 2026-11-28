@@ -30,6 +30,10 @@ export interface Drinker {
   gives?: number;
   /** It walks: how, when and on what way. It is where it is placed, facing as it is placed, at the gait's key. */
   gait?: Gait;
+  /** Hooves it moves at moments of its own: which leg, when, and how far to the side and forward, in its own sizes. It stands as placed at its key. */
+  moves?: Move[];
+  /** How it stands: each hoof before or behind where the body was made to set it, in its own sizes. */
+  stance?: [number, number, number, number];
   /** It lies on the gravel with its legs folded under it. */
   lies?: boolean;
   /** A number of its own, 0 to 1: its coat, its clocks. */
@@ -38,6 +42,12 @@ export interface Drinker {
   stepEvery: number;
   /** The moment its shot is judged by: it stands on all four then. */
   key: number;
+}
+
+export interface Move {
+  leg: number;
+  at: number;
+  by: [number, number];
 }
 
 /** Seconds into the place at the keys of the shore shot (frame 9003) and of the mats shot (frame 8600), at 60 frames a second. */
@@ -131,6 +141,7 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, down: (t: number) => number, watches: boolean, calf = false): Drinker =>
     one(key.position[0] + Math.sin(bearing * DEG) * distance, key.position[2] - Math.cos(bearing * DEG) * distance, facing, size, down, watches, true, calf);
   const shore = (d: Drinker): Drinker => ({ ...d, key: SHORE_KEY });
+  const made = (d: Drinker, as: Partial<Build>, stance: [number, number, number, number], moves: Move[]): Drinker => ({ ...d, build: { ...d.build, ...as }, stance, moves });
   // Out on the mats the bed is knee deep, and they stand on it: the lake cuts each leg half way up the cannon.
   const mats = (d: Drinker): Drinker => ({ ...d, key: MATS_KEY, wade: -0.44 });
   const centre = KEYS.centre.position;
@@ -139,16 +150,32 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     // Each of the close ones has a time of its own inside its shot: one lifts its head soon after the key, one late, one has only just come
     // down to the water, one drinks on. The periods are short, for the shots are: five seconds, and under three.
     // The four of the shore shot: they stand off in the shallows, side on, the low sun behind them. One has its head up, a calf beside it, two drink.
-    shore(from(KEYS.shore, H - 7.5, 31, H + 84, 1, up(0.3), true)),
-    shore(from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, sips(4.6, SHORE_KEY, 0.36), false, true)),
-    shore(from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(7.5, SHORE_KEY, 0.14), false)),
-    shore(from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(6.2, SHORE_KEY, 0.27), false)),
+    // No two are of one build: a tall rangy one, its calf, a short deep-chested one, and the big one, long in the back. Each stands its own
+    // way and shifts a hoof at its own moment, and the trunk goes with the hoof. The calf lifts its head and takes a few steps on.
+    made(shore(from(KEYS.shore, H - 7.5, 31, H + 84, 1, up(0.3), true)), { leg: 1.1, neck: 1.12, girth: 1.0, depth: 0.88, long: 1.07, head: 0.96 }, [0.05, -0.07, 0.02, 0.1], [
+      { leg: 1, at: SHORE_KEY - 1.9, by: [0.02, 0.15] },
+      { leg: 2, at: SHORE_KEY + 0.7, by: [-0.02, 0.16] },
+    ]),
+    { ...shore(from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, sips(4.6, SHORE_KEY, 0.36), false, true)), gait: { pace: 0.5, cycle: 0.98, duty: 0.64, curve: 0.01, key: SHORE_KEY, from: SHORE_KEY + 1.35 } },
+    made(shore(from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(7.5, SHORE_KEY, 0.14), false)), { leg: 0.95, neck: 0.93, girth: 1.32, depth: 1.08, long: 0.93, head: 1.04 }, [-0.11, 0.06, 0.12, -0.02], [
+      { leg: 0, at: SHORE_KEY - 0.75, by: [0, 0.17] },
+      { leg: 3, at: SHORE_KEY + 1.55, by: [0.02, -0.13] },
+    ]),
+    made(shore(from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(6.2, SHORE_KEY, 0.27), false)), { leg: 1.04, neck: 1.05, girth: 1.2, depth: 1.0, long: 1.09, head: 1.0 }, [0.1, -0.08, -0.05, 0.13], [
+      { leg: 3, at: SHORE_KEY - 1.45, by: [0, 0.18] },
+      { leg: 0, at: SHORE_KEY + 0.35, by: [0.02, 0.16] },
+      { leg: 2, at: SHORE_KEY + 1.75, by: [0, 0.12] },
+    ]),
     // The two of the last shot, below the camera with their backs to it, cut by the foot of the frame. Each lifts its head to the swell, not together.
     seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 8, 1.12, (t) => 0.8 - 0.5 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, key: riseAt + 1.7 }, 0.8),
     seenFromBehind({ ...one(centre[0] + 1.0, centre[2] - 18.5, -8, 0.82, (t) => 0.86 - 0.62 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, key: riseAt + 1.7 }, 1.0),
     // The ones of the mats shot. One is near, alone, side on with its head down, as the approved picture has it; two are far off behind it, one
     // of them upright and watching.
-    mats(from(KEYS.mats, -15, 16.5, 84, 1.05, sips(5, MATS_KEY, 0.3), false)),
+    // It shifts a hind hoof and then a fore hoof in the shot, and the lake rings at each.
+    made(mats(from(KEYS.mats, -15, 16.5, 84, 1.05, sips(5, MATS_KEY, 0.3), false)), {}, [0, 0, 0, 0], [
+      { leg: 1, at: MATS_KEY - 0.95, by: [0, 0.17] },
+      { leg: 2, at: MATS_KEY + 0.4, by: [0.02, 0.16] },
+    ]),
     // The upright one far off is on its way along the shelf, through the shallows.
     { ...mats(from(KEYS.mats, -25, 62, 262, 1, (t) => 0.14 + 0.04 * Math.sin(t * 0.7), true)), gait: { pace: 0.6, cycle: 1.2, duty: 0.66, curve: 0.004, key: MATS_KEY } },
     mats(from(KEYS.mats, -21.5, 74, 96, 0.9, sips(9, MATS_KEY, 0.42), false)),
@@ -283,6 +310,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const round = g ? gone / (g.cycle * s) + o : 0;
   const shift: V3 = [0, 0, 0];
   let roll = 0;
+  let tip = 0;
   const hooves: Hoof[] = [];
   // It stands on three legs and rests the fourth, a hind one: that hock is slack and forward, the toe only touches, the hip on that side hangs
   // and the trunk is carried over the three that bear. What takes its attention puts the leg back under it.
@@ -306,9 +334,21 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     const c = offset(m);
     const rest = restHoof(b, k);
     let hx = rest[0] + a[0] + (c[0] - a[0]) * e;
-    let hz = rest[2] + a[1] + (c[1] - a[1]) * e;
+    let hz = rest[2] + a[1] + (c[1] - a[1]) * e + (d.stance?.[k] ?? 0) * s;
     let arcUp = Math.sin(Math.PI * e);
     let weight = Math.max(ease(1.0, 0.2, until), 1 - ease(swing * 0.6, swing + 0.7, since));
+    // A hoof it moves at a moment of its own: the weight comes off the leg, the hoof is lifted and set down further on, and the trunk follows
+    // it there. It has made the move by its key if the move is before the key, so it stands at the key as it was placed.
+    for (const move of d.moves ?? []) {
+      if (move.leg !== k) continue;
+      const done = ease(move.at, move.at + 0.6, t);
+      const far = done - (move.at < d.key ? 1 : 0);
+      hx += move.by[0] * s * far;
+      hz += move.by[1] * s * far;
+      arcUp = Math.max(arcUp, Math.sin(Math.PI * done));
+      weight = Math.max(weight, ease(move.at - 0.55, move.at - 0.05, t) * (1 - ease(move.at + 0.55, move.at + 1.05, t)));
+      shift[2] += 0.32 * move.by[1] * s * (ease(move.at + 0.25, move.at + 1.2, t) - (move.at < d.key ? 1 : 0));
+    }
     // One that gives ground: a hind hoof goes back, then the fore hoof across from it, then the other two. The trunk goes back with them.
     if (d.alert !== undefined && d.gives) {
       const start = d.alert + ([1.0, 0.32, 0.62, 1.3][k] as number);
@@ -352,9 +392,12 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     const side = k % 2 === 0 ? 1 : -1;
     const hind = k < 2;
     shift[0] -= side * (g ? 0.035 : 0.08) * s * weight;
-    shift[2] += (hind ? 1 : -1) * (g ? 0 : 0.03) * s * weight;
-    shift[1] -= (g ? 0.006 : 0.012) * s * weight;
-    roll += side * ((g ? (hind ? 0.03 : 0.012) : 0.018) * weight + 0.075 * slack);
+    // Seen close and side on, the weight coming off a leg is the whole trunk going the other way: forward off a hind leg, back off a fore
+    // leg, down a little, and the far shoulder up as the near one sinks.
+    shift[2] += (hind ? 1 : -1) * (g ? 0 : d.close ? 0.06 : 0.03) * s * weight;
+    shift[1] -= (g ? 0.006 : d.close ? 0.02 : 0.012) * s * weight;
+    roll += side * ((g ? (hind ? 0.03 : 0.012) : d.close ? 0.034 : 0.018) * weight + 0.075 * slack);
+    tip += d.close && !g ? (hind ? 0.014 : -0.012) * weight : 0;
     shift[1] -= 0.01 * s * slack;
     // The hip over a leg at rest hangs, and the trunk stands over the other hind leg.
     shift[0] -= side * 0.085 * s * slack;
@@ -372,7 +415,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   if (g?.from !== undefined) shift[2] += s * (0.07 * ease(g.from - 0.1, g.from + 0.5, t) * (1 - ease(g.from + 0.6, g.from + 1.4, t)) - 0.05 * ease(g.from - 0.7, g.from - 0.25, t) * (1 - ease(g.from - 0.15, g.from + 0.3, t)));
   if (g?.to !== undefined) shift[2] += 0.06 * s * ease(g.to + 0.3, g.to + 0.9, t) * (1 - ease(g.to + 1.0, g.to + 2.0, t));
   // The neck: each joint follows the one below it a little late, the head last.
-  const drive = (i: number): number => d.down(t - 0.075 * i);
+  const drive = (i: number): number => d.down(t - (d.close ? 0.02 : 0.075) * i);
   const low = Math.min(1, Math.max(0, d.down(t)));
   const neck: [number, number, number, number, number] = [0, 0, 0, 0, 0];
   // A walking head nods: down as each fore hoof takes the weight, the head a little after the neck.
@@ -412,7 +455,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     z: pz,
     bearing,
     shift,
-    pitch: 0.05 * low + 0.004 * Math.sin(t * 0.53 + o * 7) - 0.03 * taken + 0.014 * pace * Math.sin(round * Math.PI * 4 - 0.4),
+    pitch: tip + 0.05 * low + 0.004 * Math.sin(t * 0.53 + o * 7) - 0.03 * taken + 0.014 * pace * Math.sin(round * Math.PI * 4 - 0.4),
     roll,
     yaw: 0.01 * Math.sin(t * 0.37 + o * 3),
     // In a walk the hind end swings with the hind legs and the fore end against it: the spine bends from side to side once in a round.
