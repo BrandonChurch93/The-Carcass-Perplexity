@@ -257,7 +257,7 @@ export function create(ctx: Context): Piece {
   /** The approach: how much more of the sky's light the open water keeps than the ground under the shut cloud. */
   const SEA_OPEN = { lift: 1.5, swell: 0.7 };
   // A sea of the set breaking on a blade: where the open water meets its foot on the side the swell comes from, and the stone's face above it.
-  const strikeOn = (rib: Rib, seconds: number, height: number, width: number, id: number, at: [number, number], out: [number, number], slam = false): Strike => {
+  const strikeOn = (rib: Rib, seconds: number, height: number, width: number, id: number, at: [number, number], out: [number, number], slam = false, leans?: [number, number]): Strike => {
     const cs = Math.cos(rib.yaw);
     const sn = Math.sin(rib.yaw);
     const STEP = 3;
@@ -298,7 +298,9 @@ export function create(ctx: Context): Piece {
         seconds,
         width,
         height,
-        lean: [(up[0] - x) / (height * 0.6), (up[1] - z) / (height * 0.6)],
+        // `out` sets only the line of the burst; where the opening names the face over the foot (metres east and north a metre up) the
+        // water leans by that, else by the rim along `out`.
+        lean: leans ?? [(up[0] - x) / (height * 0.6), (up[1] - z) / (height * 0.6)],
         // What runs back down is on the stone itself, and comes out to the foot as it comes down.
         face: (along, y) => {
           const on = face(along, y);
@@ -325,7 +327,7 @@ export function create(ctx: Context): Piece {
     };
   };
   // The opening's strikes: the place, the times and the height are the opening's own (shared/opening.ts), read here and not copied.
-  const strikes: Strike[] = STRIKES.map((s, n) => strikeOn(RIBS.find((r) => r.name === s.blade) as Rib, s.time, s.height, s.half * 2, n + 1, [s.foot[0], s.foot[2]], s.out, n === 0));
+  const strikes: Strike[] = STRIKES.map((s, n) => strikeOn(RIBS.find((r) => r.name === s.blade) as Rib, s.time, s.height, s.half * 2, n + 1, [s.foot[0], s.foot[2]], s.out, n === 0, s.lean));
   // The sea that broke on the breaker's blade before the film opens: its white water still lies at that foot and runs off the stone.
   strikes.push({ ...strikeOn(RIBS.find((r) => r.name === STRIKE.blade) as Rib, STRIKE.times[0], STRIKE.height, STRIKE.half * 2, 3, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]), wash: true });
   const windTo: [number, number] = [WIND.to[0] * WIND.speed, WIND.to[1] * WIND.speed];
