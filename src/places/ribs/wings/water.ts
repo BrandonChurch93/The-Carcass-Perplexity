@@ -19,6 +19,7 @@ varying vec3 vNormal;
 varying vec4 vAt;
 varying vec3 vLight;
 varying vec2 vOwn;
+varying float vFar;
 // Where the water that is u across the sheet and v down it from the lip has got to. The lip left first and fastest; the foot of the
 // sheet last and slowest; each string across it at its own speed, so the lip is drawn into fingers.
 vec3 thrownAt(float u, float v) {
@@ -41,6 +42,7 @@ void main() {
   vec3 n = cross(across, down);
   vNormal = dot(n, n) > 1e-14 ? normalize(n) : vec3(0.0, 1.0, 0.0);
   vOwn = vec2(p.y - aFrom.y, aLook.y);
+  vFar = length(p - aFrom.xyz);
   p.y = max(p.y, aFrom.y - 0.01);
   vWorld = p;
   vAt = vec4(u, v, clamp(aFrom.w / aLook.x, 0.0, 1.0), aLook.z);
@@ -59,6 +61,7 @@ varying vec3 vNormal;
 varying vec4 vAt;
 varying vec3 vLight;
 varying vec2 vOwn;
+varying float vFar;
 void main() {
   float u = vAt.x;
   float v = vAt.y;
@@ -73,7 +76,7 @@ void main() {
   float edge = 0.78 * torn - 0.22;
   float cover = smoothstep(edge, edge + 0.2, strings);
   // A string ends in beads: it is broken along its length as it thins.
-  float beads = vnoise(vec2(u * 15.0 + own * 7.0, v * 13.0 + own * 3.0));
+  float beads = vnoise(vec2(u * 15.0 + own * 7.0, vFar * 16.0 + own * 3.0));
   cover *= mix(1.0, smoothstep(0.35, 0.6, beads), smoothstep(0.45, 0.9, torn));
   float side = 1.0 - smoothstep(0.7, 1.0, abs(u));
   float fallen = smoothstep(0.0, 0.03, vOwn.x);
