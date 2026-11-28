@@ -316,6 +316,15 @@ def outputs():
     scree = srgb(62, 58, 56)
     sand = srgb(202, 186, 152)
     cliff = srgb(64, 58, 54)
+    if os.environ.get('PAL', 'a') == 'b':
+        # (The second palette of the low country, for the choice: green and slate in place of brown and rust.)
+        rust = srgb(74, 52, 44)
+        dune = srgb(84, 80, 60)
+        olive = srgb(50, 64, 44)
+        fan = srgb(62, 64, 52)
+        growth = srgb(24, 48, 38)
+        slate = srgb(54, 60, 64)
+        dull = srgb(58, 58, 52)
     country = np.broadcast_to(fan, (H, W, 3)).copy()
     # (The low country is dark: growth where the ground is low and wet, olive plain, ochre dry ground, slate toward the ranges.
     # Pale is the bone's alone.)
