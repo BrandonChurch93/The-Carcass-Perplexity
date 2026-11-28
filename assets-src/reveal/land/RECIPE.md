@@ -19,9 +19,9 @@ Third wave: the land no longer reads this file (it reads `relief-<level>.jpg`, n
 
 Made by: `assets-src/reveal/land/make_relief_native.py` on Python 3 with numpy, scipy and Pillow.
 From: `public/assets/reveal/maps/map-<level>-h.png` (the height), `public/assets/reveal/maps/map-<level>.jpg` (only how light the water is) and `public/assets/reveal/land/basins.png` (the pools, cut as bowls).
-Prompt or command: `python3 assets-src/reveal/land/make_relief_native.py` from the root of the repo (about six minutes for the four levels; `LEVELS=ab` bakes some, `PREVIEW=1` also writes a lit picture of each under `out/work/`).
-Takes: not generated. Five passes of the numbers at the top of the script (the size worked at, the unevenness, the depth of the cut), each judged on a lit preview and on frames 9675, 9739 and 10027.
-Why this one: the second wave's relief was the slope of an enlarged 1672 px painted height, so every level was soft and the only fine structure was the colour map's combed strokes. Here each level is worked at 3072 x 1728: the height is made uneven at sizes that are a few texels to a few hundred texels of that level and anchored in the world (so two levels agree where they overlap), the pools of `basins.png` are sunk as bowls with a low rim, water is traced down it (pits closed, eight neighbours, the count of cells that drain through each) and the land is cut where water gathers, deeper where more gathers and less on the crests. The slopes are then taken as before: red and green the slope on x and y (0.5 is level), blue over 0.3 the height of the land, blue under 0.25 water and how shallow. Stored as JPEG at quality 86 with no chroma subsampling: 3.4 MB for the four against 10.3 MB for the PNGs, and at that quality the coast code in blue shows no speckle (looked at on 9675 and 10027 at uhd).
+Prompt or command: `python3 assets-src/reveal/land/make_relief_native.py` from the root of the repo (about eight minutes for the four levels; `LEVELS=ab` bakes some, `PREVIEW=1` also writes a lit picture of each under `out/work/`). It writes `light-<level>.jpg` too: see below.
+Takes: not generated. Nine passes of the numbers at the top of the script (the size worked at, the unevenness, the depth and width of the cut, the valleys), each judged on a lit preview and on frames 9675, 9739 and 10027.
+Why this one: the second wave's relief was the slope of an enlarged 1672 px painted height, so every level was soft and the only fine structure was the colour map's combed strokes. Here each level is worked at 3072 x 1728: the height is made uneven at sizes that are a few texels to a few hundred texels of that level and anchored in the world (so two levels agree where they overlap), the pools of `basins.png` are sunk as bowls with a low rim, water is traced down it (pits closed, eight neighbours, the count of cells that drain through each) and the land is cut where water gathers: ravines where hundreds of cells gather, and valleys some tens of texels apart where thousands do, which is the drainage the film sees from the height each level is read at. The slopes of the cut ground are written three times steeper than they are, so a ravine a pixel or two wide still reads in the light. The slopes are then taken as before: red and green the slope on x and y (0.5 is level), blue over 0.3 the height of the land, blue under 0.25 water and how shallow. Stored as JPEG at quality 86 with no chroma subsampling: 4.0 MB for the four against 10.3 MB for the PNGs, and at that quality the coast code in blue shows no speckle (looked at on 9675 and 10027).
 Date: 2026-11-28
 
 ## `public/assets/reveal/land/basins.png`
@@ -53,12 +53,12 @@ Date: 2026-11-26
 
 ## `public/assets/reveal/land/light-{a,b,c,d}.jpg`
 
-Made by: `assets-src/reveal/land/make_bake.py` on Python 3 with numpy, scipy and Pillow.
-From: `public/assets/reveal/maps/map-<level>-h.png` (the height) and `public/assets/reveal/land/relief-<level>.png` (land or water).
-Prompt or command: `python3 assets-src/reveal/land/make_bake.py` from the root of the repo (under a minute).
-Takes: not generated. The numbers at the top of the script were set by looking at the keys.
-Why this one: red is the height of the horizon toward the azimuth of the sun, so the shader compares it with the sun's height and the shadows lengthen as the day ends; green is how much sky a point sees; blue marks water shut inside the land. A fixed shadow would have stood still through the ending.
-Date: 2026-11-26
+Made by: `assets-src/reveal/land/make_relief_native.py` on Python 3 with numpy, scipy and Pillow, which writes them after each `relief-<level>.jpg`. (`assets-src/reveal/land/make_bake.py` wrote them before and still writes `shore-<level>.png`: where both are run, run `make_bake.py` first.)
+From: `public/assets/reveal/maps/map-<level>-h.png` (the height) and `public/assets/reveal/land/basins.png`, through the worn height the relief is taken from.
+Prompt or command: `python3 assets-src/reveal/land/make_relief_native.py` from the root of the repo (about eight minutes for the four levels).
+Takes: not generated. Five passes: the painted height blurred, then the worn height, then the worn height with its painted spurs smoothed away, then the cut made deeper for the shadows by four times and by two and a half (kept).
+Why this one: the channels are as before: red is the height of the horizon toward the azimuth of the sun, so the shader compares it with the sun's height and the shadows lengthen as the day ends; green is how much sky a point sees; blue marks water shut inside the land. What changed is the ground they are cast from. The painted height has spurs drawn as even strokes, and their shadows stood on every range as a comb, a herringbone at 9675 and 9739. Here the painted height is blurred wider for the light alone (3 to 6 px of a 1672 px picture) so no painted spur throws a shadow, and the ravines and valleys that the relief script cuts by drainage are put back two and a half times deeper, so the shadows lie in branching valleys and no two are alike. Level a is 3072 x 1728, since the film reads it enlarged and alone from frame 9720 on, and levels b to d are 2048 x 1152 (they were 1365 x 768), 3.0 MB together.
+Date: 2026-11-28
 
 ## `assets-src/reveal/land/chest/chest-take3.jpg`, `chest-take3-h.png`
 

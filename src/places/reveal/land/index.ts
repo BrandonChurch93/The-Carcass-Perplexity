@@ -78,6 +78,9 @@ const float TILE_RELIEF = 0.085;
 // (How much of the rib ranges the low country buries below the top of the rise. Off: it read as a wash, away from the approved pictures.)
 const float RIB_BURIAL = 0.0;
 // The lesser vents: x and z from the Heart, km, and their size beside it.
+// The mouths of the silt plumes, from the pan: east and south in km, the length of the plume and its width at the mouth, in km; and the way each sets out.
+const vec4 SILT[6] = vec4[6](vec4(383.0, 420.0, 900.0, 14.0), vec4(-200.0, 700.0, 1000.0, 46.0), vec4(893.0, 160.0, 1200.0, 30.0), vec4(-67.0, -560.0, 700.0, 18.0), vec4(-517.0, 830.0, 600.0, 10.0), vec4(833.0, 460.0, 1100.0, 44.0));
+const vec2 SILT_WAY[6] = vec2[6](vec2(0.1, 0.995), vec2(0.5, 0.866), vec2(0.9, 0.436), vec2(0.707, -0.707), vec2(0.4, 0.917), vec2(0.707, 0.707));
 const vec3 VENTS[6] = vec3[6](vec3(-42.0, -98.0, 0.5), vec3(76.0, -33.0, 0.55), vec3(170.0, -66.0, 0.45), vec3(124.0, 24.0, 0.4), vec3(-52.0, 50.0, 0.45), vec3(43.0, 79.0, 0.4));
 
 const vec2 FEED[12] = vec2[12](${FEEDER.map(([x, y]) => `vec2(${X(x).toFixed(2)}, ${Z(y).toFixed(2)})`).join(', ')});
@@ -677,7 +680,7 @@ void main() {
   acrossRun /= 60.0 + 170.0 * alongRun;
   float plume = 0.0;
   if (alongRun > 0.05 && alongRun < 1.25 && abs(acrossRun) < 2.2) plume = exp(-acrossRun * acrossRun * 1.6) * smoothstep(0.06, 0.16, alongRun) * (1.0 - smoothstep(0.35 * (0.9 + 0.6 * grown), 0.9 + 0.34 * grown, alongRun)) * smoothstep(0.3, 0.75, readTile(uCloudTile, vec2(alongRun * 0.9 - 0.006 * uTime, acrossRun * 0.55 + 0.3) + 0.04 * slope, 0.55 / (60.0 + 170.0 * alongRun), 1.0).b + 0.25 * (1.0 - alongRun));
-  ground = mix(ground, vec3(0.3, 0.07, 0.035) * (0.5 + 1.6 * lum), 0.8 * plume * (1.0 - 0.6 * smoothstep(0.35, 0.6, height)));
+  ground = mix(ground, vec3(0.36, 0.09, 0.045) * (0.6 + 1.6 * lum), 0.75 * plume * (1.0 - smoothstep(0.16, 0.36, height)));
 
   // ---- the light ----
   // The maps hold soft light from the upper left, and the place's sun stands on that side: the relief is lit from the slope, on top of it.
@@ -869,7 +872,7 @@ void main() {
   float seenFar = 1.0 + 2.2 * smoothstep(500.0, 1380.0, uViewKm);
   float d0 = dot(fromLava, fromLava);
   float heat = exp(-d0 / (26.0 * seenFar)) * 1.5 * swell;
-  float halo = exp(-d0 / (700.0 * seenFar)) * (0.5 + 1.5 * pulse) * waver;
+  float halo = exp(-d0 / (700.0 * seenFar * seenFar)) * (0.5 + 1.5 * pulse) * waver;
   if (d0 < 160000.0) for (int i = 0; i < 6; i++) {
     vec3 vent = VENTS[i];
     vec2 q = fromLava - vent.xy;
@@ -877,16 +880,16 @@ void main() {
     // (The lesser vents work each on its own, slow and out of step.)
     float answer = 0.72 + 0.2 * vnoise(vec2(uTime * (0.17 + 0.06 * float(i)), 31.0 + 7.3 * float(i))) + 0.3 * pulse * (0.5 + 0.5 * sin(float(i) * 2.4));
     heat += exp(-dd / (11.0 * vent.z * seenFar)) * 2.2 * vent.z * answer;
-    halo += exp(-dd / (260.0 * vent.z)) * 0.3 * vent.z * answer;
+    halo += exp(-dd / (260.0 * vent.z * seenFar * seenFar)) * 0.4 * vent.z * answer;
   }
   float vein = d0 < 18000.0 ? cracks(xz / 7.0) * exp(-d0 / 2200.0) * (0.2 + 0.6 * pulse) : 0.0;
   heat = (heat + vein) * land;
-  vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.17 * smoothstep(0.03, 0.6, heat);
+  vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4) * (1.25 - 0.25 * seenFar)) * 0.17 * smoothstep(0.03, 0.6, heat);
   vec3 glowCore = glow;
   // (The beat itself: a dull red swell in the whole chest, on the ground and on the flanks of the ribs that face the Heart.)
   glow += vec3(1.0, 0.16, 0.03) * 0.09 * max(pulse - 0.12, 0.0) * exp(-d0 / 30000.0) * land * (0.6 + 0.8 * clamp(0.5 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.0));
   vec3 glowSwell = glow;
-  glow += vec3(1.0, 0.3, 0.06) * 0.26 * halo * land * clamp(0.4 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
+  glow += vec3(1.0, 0.3, 0.06) * 0.26 * seenFar * halo * land * clamp(0.4 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
 
   // By night the Heart is the brightest thing on the planet: the ember swells with the beat, its fire lights the rock and the
   // flanks of the ribs that face it, falling off with distance, and veins of fire run out between the ribs.
@@ -954,14 +957,15 @@ void main() {
   shallow = mix(shallow, 0.06, river);
   // (The strait shoals to its shores and is dark down its middle: the map has land there and tells nothing of its depth.)
   shallow = mix(shallow, 0.75 * exp(min(coastKm, 0.0) / 4.0) * (1.0 - land), smoothstep(0.05, 0.25, strait));
-  float pale = pow(shallow, 1.3);
+  float shelfVar = 0.5;
+  if (high && land < 1.0) shelfVar = smoothstep(0.25, 0.75, readTile(uCloudTile, xz / 620.0 + vec2(0.71, 0.13), 1.0 / 620.0, 2.0).r);
+  float shelfLen = mix(6.0, 55.0, shelfVar);
+  float pale = pow(shallow, 1.3) * mix(1.0, 0.15 + 1.2 * shelfVar, smoothstep(600.0, 1100.0, uViewKm));
   // (From far the shallows along the coasts are a clear teal.)
   vec3 shoal = mix(max(ground * 0.34, vec3(0.006, 0.035, 0.04)), vec3(0.011, 0.075, 0.085) * (0.5 + 0.9 * pale * (1.0 - 0.45 * pale)), 0.6 * smoothstep(240.0, 640.0, uViewKm));
   vec3 bed = mix(DEEP, shoal, pale);
   // The shelf: the water is pale over the ground that runs out under it from the shore, a few km here and tens of km there, and the
   // rivers (which the bake draws as water) lie shallow in their beds.
-  float shelfLen = 6.0;
-  if (high && land < 1.0) shelfLen = mix(6.0, 55.0, smoothstep(0.25, 0.75, readTile(uCloudTile, xz / 620.0 + vec2(0.71, 0.13), 1.0 / 620.0, 2.0).r));
   // (Not over the drowned ground west of the skull, which has its own shelf below: its low islands would show as spots.)
   float onShelf = exp(min(coastKm, 0.0) / shelfLen) * (1.0 - land) * smoothstep(100.0, 200.0, uViewKm) * (1.0 - smoothstep(0.0, 0.22, west)) * (1.0 - shut) * (1.0 - 0.55 * smoothstep(0.05, 0.3, strait));
   bed = mix(bed, mix(vec3(0.006, 0.04, 0.052), vec3(0.03, 0.105, 0.1), onShelf * onShelf), 0.75 * onShelf);
@@ -983,27 +987,20 @@ void main() {
   bed = mix(bed, vec3(0.01, 0.06, 0.07) * (0.55 + 0.75 * shelf), 0.88 * shelf);
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
   bed = mix(bed, vec3(0.3, 0.06, 0.02), 0.85 * plume * (1.0 - land));
-  // (South of it, round the lower leg, the currents carry ochre silt: long curling threads of it, drawn out by the water.)
-  vec2 fromSilt = (xz - uSalt - vec2(240.0, 350.0)) / vec2(760.0, 400.0);
-  float siltAt = exp(-dot(fromSilt, fromSilt)) * smoothstep(680.0, 1100.0, uViewKm);
-  if (siltAt > 0.05 && land < 1.0) {
-    vec2 sc = xz / 520.0 + 0.5 * (readTile(uCloudTile, xz / 900.0 + vec2(0.2, 0.7) + uTime * vec2(0.0006, -0.0004), 1.0 / 900.0, 1.0).rg - 0.5);
-    float thread = readTile(uCloudTile, sc * vec2(0.8, 1.7) + vec2(0.4, 0.1), 1.7 / 520.0, 0.5).b;
-    // (The currents wind it into plumes: soft threads of unlike width and strength that curl, part and thin out to sea, some reaches clear.)
-    vec2 calm = xz / 300.0 + uTime * vec2(0.0008, -0.0005);
-    vec2 wound = calm * vec2(1.0, 1.7);
-    wound += 0.9 * vec2(vnoise(wound * 1.3 + 3.0), vnoise(wound * 1.3 + 41.0));
-    wound += 0.3 * vec2(vnoise(wound * 3.3 + 7.0), vnoise(wound * 3.3 + 19.0));
-    float wide = 1.0 - abs(2.0 * vnoise(wound * 2.1) - 1.0);
-    float fine = 1.0 - abs(2.0 * vnoise(wound * 4.7 + 13.0) - 1.0);
-    float reach = smoothstep(0.2, 0.62, vnoise(calm * 0.9 + 8.0));
-    // (Each has a dense core and a skirt of thinner water, and its strength comes and goes along its length: silt, not a line.)
-    float along = 0.25 + 0.75 * smoothstep(0.3, 0.7, vnoise(wound * 1.1 + 23.0));
-    float core = smoothstep(0.6, 0.97, wide);
-    float swirl = (0.45 * core + 0.85 * core * core) * reach * along;
-    core = smoothstep(0.6, 0.98, fine);
-    swirl += 0.38 * core * core * (1.0 - 0.6 * reach) * smoothstep(0.3, 0.6, thread);
-    bed = mix(bed, vec3(0.24, 0.15, 0.028), min(0.7, 0.75 * min(1.0, 1.6 * siltAt) * swirl) * exp(min(coastKm, 0.0) / 420.0) * (1.0 - land));
+  // (Round the pan the rivers carry ochre silt to sea: a few long plumes of unlike width, each dense at its mouth, widening and
+  // thinning as it goes, drawn out in streaks, and all of them bent the one way by the one current.)
+  float siltAt = smoothstep(680.0, 1100.0, uViewKm) * (1.0 - land);
+  if (siltAt > 0.0 && abs(fromPan.x - 500.0) < 1500.0 && abs(fromPan.y) < 1500.0) {
+    float silt = 0.0;
+    for (int i = 0; i < 6; i++) {
+      vec4 mouth = SILT[i];
+      vec2 way = SILT_WAY[i];
+      vec2 q = fromPan - mouth.xy;
+      float along = dot(q, way) / mouth.z;
+      float across = (dot(q, vec2(-way.y, way.x)) + mouth.z * along * (0.3 * along * way.y + 0.07 * sin(7.0 * along + 2.1 * float(i)))) / (mouth.w * (1.0 + 2.6 * along));
+      if (along > 0.0 && along < 1.0) silt += (0.5 * exp(-2.5 * across * across) + 0.5 * exp(-0.35 * across * across)) * smoothstep(0.0, 0.05, along) * (1.0 - along) * exp(-1.3 * along) * (0.15 + 2.0 * vnoise(vec2(along * 3.0 - 0.003 * uTime, across * 3.4 + 7.3 * float(i))));
+    }
+    bed = mix(bed, mix(vec3(0.04, 0.095, 0.07), vec3(0.2, 0.13, 0.03), smoothstep(0.1, 0.5, silt)), 0.8 * (1.0 - exp(-2.4 * silt)) * siltAt);
   }
   // The lake of the Eye and the pools beside it, one water: its colour is its depth and what stands in it. Deep navy over the
   // deep, darkest far from any shore; a shelf at the shore where the bed shows through, grey green; over the shelf the silt the
