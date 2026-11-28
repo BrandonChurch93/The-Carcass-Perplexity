@@ -298,9 +298,9 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float path = depth / max(nv, 0.25);
   // It is milky: in the body of the channel the silt hides the bed a hand deep. With clearer water there the wide view showed the gravel of
   // the bed through the whole channel as a speckle. Toward a bank, a bar or a shelf the water thins and clears, and the rock shows through it.
-  float clear = exp(-path * mix(4.0, 14.0, smoothstep(0.05, 0.35, around)));
+  float clear = exp(-path * mix(4.0, 14.0, smoothstep(0.05 + 0.05 * uHigh, 0.35 + 0.1 * uHigh, around)));
   // Its colour goes with how much of it there is: a pale green wash at the margins, the milky teal over the flats, a dark one in the deep lane.
-  vec3 tone = mix(vec3(0.19, 0.31, 0.27), mix(vec3(0.085, 0.27, 0.27), vec3(0.03, 0.16, 0.18), smoothstep(0.45, 0.9, around)), smoothstep(0.05, 0.4, around));
+  vec3 tone = mix(mix(vec3(0.19, 0.31, 0.27), vec3(0.24, 0.345, 0.285), uHigh), mix(vec3(0.085, 0.27, 0.27), vec3(0.03, 0.16, 0.18), smoothstep(0.45 + 0.05 * uHigh, 0.9, around)), smoothstep(0.05 + 0.05 * uHigh, 0.4 + 0.12 * uHigh, around));
   // Seen from low down and against the light the body of shallow water is not green: what comes back out of it is the low sun in its silt,
   // a dull warm olive, as under the feeding waders in the picture. From above it is the teal of the wide view.
   // Only where the eye is low and the look is flat: looked down on by more than a quarter of a right angle the teal comes through again,
