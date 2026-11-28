@@ -93,11 +93,14 @@ export const STRIKE = {
  * half the frame high at 1 s, and its fall and its mist cross the right of the view as the lens passes at 1.5 to 2 s. The foot is at
  * 0.60 of the frame's width in the first frame, 0.74 at 0.67 s, 0.91 at 1.33 s, and out of it at 1.7 s. Its height is 90 and not more
  * for the cost of its cards near the lens: at 130 the frame at 1 s cost a quarter more than without it, at 90 a fifth.
+ * `lean`, where a row has it, is the way that water climbs the stone: metres along x and z for each metre up. The slam's is 0.5 east
+ * and 0.3 north (z falls to the north) for each metre up, the face of OR over [466, 626]: it goes up the dark wall above its own foot
+ * and stays in frame, with the line of the burst still broadside to the lens as `out` sets it. A row without it leans as the sea finds.
  * The breaker is STRIKE's second pulse, to the number. The lesser pulse that stood on L1's foot in the first second is not drawn: it was
  * white on a pale blade 800 m off, and the eye is given one event at a time. STRIKE's own numbers stay, for the air's hole in the fog.
  */
-export const STRIKES: readonly { blade: string; foot: [number, number, number]; out: [number, number]; half: number; time: number; height: number }[] = [
-  { blade: 'OR', foot: [466, 0, 626], out: [-0.3, 0.954], half: 30, time: -0.95, height: 90 },
+export const STRIKES: readonly { blade: string; foot: [number, number, number]; out: [number, number]; half: number; time: number; height: number; lean?: [number, number] }[] = [
+  { blade: 'OR', foot: [466, 0, 626], out: [-0.3, 0.954], half: 30, time: -0.95, height: 90, lean: [0.5, -0.3] },
   { blade: STRIKE.blade, foot: STRIKE.foot, out: [0, 1], half: STRIKE.half, time: STRIKE.times[1], height: STRIKE.height * STRIKE.lesser },
 ];
 
