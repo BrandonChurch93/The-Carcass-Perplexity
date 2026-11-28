@@ -219,23 +219,45 @@ float storm(vec2 p, float px, float shorter, float feed) {
   float bands = lum(textureLod(uStreaks, wound + 0.5 * along + vec2(0.71, 0.09), max(level, 0.0) + 4.2).rgb) / 0.31;
   // (Toward the eye the bands close into one wound body; outward fewer and fewer of them are left, the strongest longest.)
   float reach = r * shorter;
-  float need = mix(0.8, 1.42, smoothstep(0.06, 0.9, reach));
-  float gate = smoothstep(need - 0.2, need + 0.16, bands);
-  float core = 1.0 - smoothstep(0.03, 0.17, r);
-  float body = max(gate, core * core);
+  float need = mix(0.92, 1.42, smoothstep(0.04, 0.9, reach));
+  // (The gate is soft across a band: its middle stands full and its edges thin, and the cells below break it there.)
+  float gate = smoothstep(need - 0.2, need + 0.2, bands);
+  float core = 1.0 - smoothstep(0.03, 0.13, r);
+  float body = max(gate, 0.55 * core);
   // (Between two bands nothing more is read: every read sets its own fineness, so this way out costs no pixel its level.)
   if (body <= 0.0) return 0.0;
-  float a = lum(textureLod(uStreaks, wound + along + vec2(0.13, 0.41), max(level, 0.0)).rgb);
-  float b = lum(textureLod(uStreaks, 2.0 * wound + 1.6 * along + vec2(0.57, 0.22), max(level + 1.0, 0.0)).rgb);
-  // (And once more as it is, not drawn out, twice as fine: the tufts a band is made of.)
-  vec2 square = vec2(8.0 * around + 0.63662 * lr, 4.0 * around - 1.27324 * lr);
-  float tufts = lum(textureLod(uStreaks, square + 3.0 * along + vec2(0.21, 0.73), max(level + 1.0, 0.0)).rgb) / 0.304;
-  float fine = mix(a, b, mix(0.25, 0.6, out2)) / 0.304 * mix(1.0, 0.45 + 0.55 * tufts, smoothstep(0.08, 0.3, r));
-  float depth = max(fine * (0.1 + 1.6 * body + 0.7 * core) - mix(0.7, 0.45, core), 0.0);
-  // The wall round the eye stands thick and whole, and the eye itself is clear to the sea.
-  float wall = smoothstep(0.01, 0.026, r) * (1.0 - smoothstep(0.03, 0.07, r));
-  depth += 1.1 * wall * (0.5 + 0.5 * fine);
-  depth *= smoothstep(0.006, 0.026, r) * (1.0 - smoothstep(0.82, 1.0, reach));
+  // What a band is made of: the photograph of streaks of small cells, laid in the coordinates of the spiral that keep a square
+  // square (twice round the eye one way, once the other), at three sizes, the finer the farther out. A cell is as wide as it is
+  // long, so a band is a crowd of tops and not a stroke; the bands above only say where the crowd stands.
+  vec2 even = vec2(2.0 * around + 0.1592 * lr, around - 0.3183 * lr) + along;
+  float evenLevel = log2(364.0 * px / r);
+  // (And once drawn out along the winding, four to one: the wind's own grain in a band, which the cells stand in rows along.)
+  float clumps = lum(textureLod(uStreaks, wound + along + vec2(0.13, 0.41), max(level, 0.0)).rgb);
+  float mid = lum(textureLod(uStreaks, 2.0 * even + vec2(0.21, 0.73), max(evenLevel + 1.0, 0.0)).rgb);
+  float small = lum(textureLod(uStreaks, 4.0 * even + vec2(0.83, 0.37), max(evenLevel + 2.1, 0.0)).rgb);
+  // (Each against its own surroundings, read three levels softer: a cell counts for how far it stands over the cloud round
+  // it. A thick lump of the photograph, bright over a wide patch, would else stand whole in a band as a smooth dash.)
+  mid /= 0.4 * 0.304 + 0.6 * lum(textureLod(uStreaks, 2.0 * even + vec2(0.21, 0.73), max(evenLevel + 1.0, 0.0) + 3.0).rgb);
+  small /= 0.4 * 0.304 + 0.6 * lum(textureLod(uStreaks, 4.0 * even + vec2(0.83, 0.37), max(evenLevel + 2.1, 0.0) + 3.0).rgb);
+  // (Multiplied, not added: a clump of cells stands where all three sizes have cloud, and between clumps the sea is open.)
+  // (The grain counts only near the eye, where it is wound tight; farther out it is not in the cloud at all, or a clump of the
+  // photograph, drawn out four to one, would stand in a band as a dash.)
+  float fine = pow(min(clumps / 0.304, 1.35), 0.7 * (1.0 - smoothstep(0.12, 0.42, r))) * pow(mid, mix(0.7, 0.9, out2)) * pow(small, mix(0.6, 0.9, out2));
+  // (Near the eye the wound lays have shrunk under a pixel. There the same cells are laid in rings round the eye, a few pixels
+  // each, so the inner bands are crowds of tops too.)
+  if (r < 0.34) {
+    float ringed = lum(textureLod(uStreaks, vec2(8.0 * around, 9.0 * r) + vec2(0.31, 0.57), max(log2(1024.0 * px * max(1.27 / r, 9.0)) + 0.5, 0.0)).rgb) / 0.304;
+    fine *= mix(0.5 + 0.5 * ringed, 1.0, smoothstep(0.12, 0.34, r));
+  }
+  // (How many of the cells stand: nearly all in the middle of a band near the eye, only the tallest at a band's edge and far
+  // out, where the air between them widens. So a band thins to separate cells at its sides and at its end, and is cut nowhere.)
+  float full = max(0.7 * core, gate * (1.0 - 0.5 * out2));
+  float least = mix(1.3, 0.42, full);
+  float cells = smoothstep(least, least + 1.1, fine);
+  // (And outward the cloud is thinner as well as sparser.)
+  float depth = 3.4 * body * cells * cells * (1.0 - 0.4 * out2);
+  // The eye is clear to the sea, wide and soft: the wall round it is the same cells, standing closer, and its rim is theirs.
+  depth *= smoothstep(0.018, 0.09, r - 0.02 * (fine - 1.0)) * (1.0 - smoothstep(0.56, 0.86, reach));
   return depth;
 }
 void main() {
@@ -269,9 +291,9 @@ void main() {
   vec3 colour = cloudLight(vWorld.xz, 0.7 + 0.12 * thick + 0.22 * self, 0.86 + 0.14 * tall, 0.5 * tall) * (0.56 + 0.4 * thick);
   // (By night the moon is on it: a pale wheel that is seen to turn, a little under the bone.)
   // (With no sun to show the relief of its bands, the thick of a band stands brighter than its thin, so its arms are read.)
-  if (uDusk > 0.0) colour *= (1.0 - 0.12 * uEmber.x) * mix(1.0, 0.42 + 0.85 * (1.0 - exp(-0.4 * depth)), uEmber.x);
+  if (uDusk > 0.0) colour *= (1.0 - 0.12 * uEmber.x) * mix(1.0, 0.9 + 1.3 * (1.0 - exp(-0.4 * depth)), uEmber.x);
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
-  float veil = 0.05 * pow(1.0 - smoothstep(0.03, 0.8, r), 1.5) + 0.16 * (1.0 - smoothstep(0.012, 0.03, r));
+  float veil = 0.05 * pow(1.0 - smoothstep(0.03, 0.8, r), 1.5) * smoothstep(0.03, 0.1, r);
   float bands = 0.97 * thick;
   float alpha = bands + veil * (1.0 - bands);
   colour = mix(dot(colour, vec3(0.3, 0.55, 0.15)) * vec3(0.6, 0.74, 0.98), colour, bands / max(alpha, 1e-3));
