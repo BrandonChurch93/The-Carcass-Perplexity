@@ -50,7 +50,7 @@ float domeAt(vec2 xz) {
   float stood = clamp((uDome.x - 2.5) / 3.5, 0.0, 1.0);
   float fold = 1.0 - abs(2.0 * domeNoise(xz / 10.0 + vec2(51.0, 23.0 + t * 0.1)) - 1.0);
   gCrest = stood * k * smoothstep(0.5, 0.97, fold) * smoothstep(0.25, 0.7, domeNoise(xz / 31.0 + 77.0));
-  return uDome.x * k * k * (0.74 + 0.26 * k + 0.3 * boil) + 1.1 * k * gCrest;
+  return uDome.x * k * k * (0.74 + 0.26 * k + 0.3 * boil) + 0.7 * k * gCrest;
 }`;
 
 const WATER_VERTEX = /* glsl */ `
@@ -301,7 +301,9 @@ void main() {
         float share = 1.0 - abs(2.0 * beatA - 1.0);
         vec2 runA = waveRead(tWave1, (p.xz - way * carry * beatA), ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[1].toFixed(1)}));
         vec2 runB = waveRead(tWave1, (p.xz - way * carry * beatB) + 19.0, ${WAVE_TILES[1].toFixed(1)}, waveLevel(covers, ${WAVE_TILES[1].toFixed(1)}));
-        slope += mix(runB, runA, share) * (lifted * (0.07 + 0.1 * min(uDome.w, 1.0)) * inversesqrt(share * share + (1.0 - share) * (1.0 - share)));
+        vec2 chop = mix(runB, runA, share) * inversesqrt(share * share + (1.0 - share) * (1.0 - share));
+        // On a crest the carried water is thrown about: it is steeper there by far, and that is what breaks.
+        slope += chop * (lifted * (0.07 + 0.1 * min(uDome.w, 1.0)) * (1.0 + 3.0 * crested));
         // It sheds what it lifted in sheets with runnels between them, down its own fall: three widths of them, each told only where a
         // pixel holds it, each on its way out at its own pace.
         vec2 down2 = normalize(out2 + way * (0.2 * min(steepness * 6.0, 1.0)));
@@ -312,12 +314,12 @@ void main() {
         float holdMid = smoothstep(1.2, 3.0, r / (17.0 * covers));
         float holdThin = smoothstep(1.2, 3.0, r / (43.0 * covers));
         shed = 0.5 + 0.5 * (wide - 0.5) + holdMid * 0.35 * (mid - 0.5) + holdThin * 0.3 * (thin - 0.5);
-        slope += across * (lifted * (0.2 * (wide - 0.5) + holdMid * 0.22 * (mid - 0.5) + holdThin * 0.2 * (thin - 0.5)));
+        slope += across * (lifted * (0.2 * (wide - 0.5) + holdMid * 0.3 * (mid - 0.5) + holdThin * 0.34 * (thin - 0.5)));
         // A runnel is white where two sheets meet, more as the fall steepens.
         // It runs in lengths, not in lines: each length on its way down.
         runnel = lifted * min(steepness * 7.0, 1.0) * smoothstep(0.3, 0.62, vnoise(p.xz / 2.6 - down2 * (3.5 * uTime) + 17.0)) * (holdMid * smoothstep(0.07, 0.0, abs(mid - 0.5)) * smoothstep(0.45, 0.7, wide) + holdThin * 0.7 * smoothstep(0.06, 0.0, abs(thin - 0.47)) * smoothstep(0.4, 0.7, mid));
         // The top of a crest breaks white, in bits.
-        runnel += lifted * 0.8 * smoothstep(0.4, 0.85, crested) * smoothstep(0.35, 0.6, mix(wide, thin, holdThin));
+        runnel += 0.35 * lifted * smoothstep(0.25, 0.7, crested) * smoothstep(0.35, 0.6, mix(wide, thin, holdThin));
       }
 #endif
       // Where the water it has lifted runs off it and meets the lake, the lake is churned: a torn band of short steep water round its foot,
