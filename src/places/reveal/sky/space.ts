@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { FILM_ASPECT, HALF_TAN, KM, LIMB, LIMB_FOLLOW, RISE_LAST, X, Z, driftAt, poseAt } from '../shared/anchors';
 import type { Context } from '../shared/context';
-import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
+import { RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 
 /** How rich the field is: 1 is the film's. The count of stars goes with it, and their brightness a little. */
 const RICH: number = 1;
@@ -114,11 +114,11 @@ void main() {
 function tintOf(heat: number, keep: number): [number, number, number] {
   const stops: [number, number, number][] = [
     [1.0, 0.62, 0.36],
-    [1.0, 0.8, 0.58],
-    [1.0, 0.93, 0.82],
-    [1.0, 1.0, 1.0],
-    [0.82, 0.89, 1.0],
-    [0.66, 0.78, 1.0],
+    [1.0, 0.84, 0.66],
+    [1.0, 0.97, 0.92],
+    [0.88, 0.93, 1.0],
+    [0.76, 0.85, 1.0],
+    [0.64, 0.76, 1.0],
   ];
   const at = Math.min(heat * (stops.length - 1), stops.length - 1.001);
   const a = stops[Math.floor(at)] as [number, number, number];
@@ -203,3 +203,76 @@ export function createStars(ctx: Context, space: THREE.Mesh): { geometry: THREE.
   space.add(points);
   return { geometry, material };
 }
+
+// The edge of the planet. Inside it the air thickens to a blue band; outside it thins into the black within a few tens of kilometres,
+// and behind the black stand the stars (points under the mesh of space, above).
+// The line of lit air is a few kilometres deep, and on a small picture that is less than a pixel: drawn as it stands it broke into
+// beads. So every layer of the air is drawn as its mean over the pixel it falls in (the footprint is taken once, at the top), and
+// the line is one clean line at any size, only fainter where the picture is too small to hold it.
+const EDGE_GLSL = /* glsl */ `
+${RIG_GLSL}
+varying vec3 vWorld;
+// The mean, over a width w about x, of a layer that is nothing below 0 and exp(-x / deep) above it.
+float layerOver(float x, float deep, float w) {
+  float h = 0.5 * w;
+  if (x <= -h) return 0.0;
+  if (x < h) return deep * (1.0 - exp(-(x + h) / deep)) / w;
+  float q = h / deep;
+  return exp(-x / deep) * (q < 0.3 ? 1.0 + q * q / 6.0 : (exp(q) - exp(-q)) / (2.0 * q));
+}
+// The dense air seen edge on, by day: a deep clear blue, never white.
+const vec3 LINE = vec3(0.035, 0.27, 1.0);
+`;
+
+/** The black beyond the edge, and the last of the air against it. */
+export const EDGE_SPACE_FRAGMENT = /* glsl */ `
+${EDGE_GLSL}
+void main() {
+  float km = (limbShare(vWorld.xz) - 1.0) * uLimb.z;
+  float w = max(1.5 * fwidth(km), 0.001);
+  float cover = max(3.0, 0.75 * w);
+  float a = smoothstep(-cover, cover, km);
+  // (The air stands in layers, each thinner than the one under it: the dense air is one crisp bright blue line a few kilometres
+  // deep against the planet, the clear air above it a narrow deeper blue, and the last thin air is all but black.)
+  vec3 glow = LINE * 0.78 * layerOver(km, 7.0, w) + vec3(0.03, 0.16, 0.8) * 0.2 * layerOver(km, 20.0, w) + vec3(0.02, 0.06, 0.3) * 0.05 * layerOver(km, 64.0, w);
+  vec3 colour = glow;
+  if (uDusk > 0.0) {
+    // The air at the edge keeps the sun longest, on the side the sun went: a twilight arc, warm against the planet and blue above,
+    // and when that has gone a thin line of airglow all round.
+    float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.08;
+    // (Layered as it is seen from orbit: red against the planet, orange, a pale band, and blue above. Held under the opening exposure.)
+    float lowSun = uTerm.w * (1.0 - smoothstep(0.05, 0.32, sunH));
+    vec3 layers = mix(mix(vec3(0.85, 0.13, 0.03), vec3(1.0, 0.46, 0.12), smoothstep(1.0, 12.0, km)), mix(vec3(0.8, 0.78, 0.7), vec3(0.2, 0.4, 0.95), smoothstep(22.0, 62.0, km)), smoothstep(9.0, 30.0, km));
+    vec3 arc = mix(glow, layers * exp(-max(km, 0.0) / 34.0) * 0.5 * a, lowSun) * mix(1.0, sunSeen(sunH - 0.05) + 0.03 * skySeen(sunH), uTerm.w);
+    float airglow = exp(-pow((km - 16.0) / 20.0, 2.0));
+    colour = exposed(arc * uEmber.w * pow(uGain, -0.88) + vec3(0.2, 0.36, 0.8) * 0.0011 * airglow * uDusk * a);
+  }
+  gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
+}`;
+
+/** The air inside the edge, added over the planet. */
+export const EDGE_AIR_FRAGMENT = /* glsl */ `
+${EDGE_GLSL}
+void main() {
+  float d = limbShare(vWorld.xz);
+  float km = (d - 1.0) * uLimb.z;
+  float w = max(1.5 * fwidth(km), 0.001);
+  float cover = max(3.0, 0.75 * w);
+  float inside = 1.0 - smoothstep(-cover, cover, km);
+  // Inside the edge the eye looks along the air, not down through it: how much air the ray crosses is one over the cosine of its
+  // slant, and at the very edge, where the planet curves away under it, some thirty times the air straight down. The clear air
+  // scatters blue all the way in; it is thick only toward the edge.
+  float mu = sqrt(max(1.0 - d * d, 0.0));
+  float path = 1.0 / sqrt(mu * mu + 0.0009);
+  // (Where this sheet begins the air it adds is nothing: the ground and the cloud carry their own air up to there.)
+  float beyond = max(path - 2.3, 0.0);
+  float clearAir = 1.0 - exp(-0.08 * beyond);
+  // (And the dense air seen edge on is the same crisp blue line as outside the edge, sharper on this side: never a pale band.)
+  vec3 colour = vec3(0.05, 0.17, 0.55) * 0.2 * clearAir * inside + LINE * (0.78 * layerOver(-km, 2.6, w) + 0.06 * layerOver(-km, 14.0, w));
+  if (uDusk > 0.0) {
+    float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.05;
+    vec3 arc = mix(vec3(1.0), mix(vec3(1.25, 0.5, 0.16), vec3(0.75, 0.85, 1.1), sunSeen(sunH - 0.12)) * sunSeen(sunH - 0.03) + 0.04 * skySeen(sunH), uTerm.w);
+    colour = exposed(colour * arc * pow(uGain, -0.88));
+  }
+  gl_FragColor = vec4(colour * (1.0 - uSolo), 0.0);
+}`;
