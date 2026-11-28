@@ -215,12 +215,12 @@ vec2 vapourRho(float under, float wells, float west, float surge, float spent, f
   // where the pool is thick: a top that thin was drawn as a crease at every step.
   float tall = 1.3 + (5.0 + 3.0 * surge) * wells * wells + 4.0 * surge;
   // The breath's steam is gathered over the wells, a column and no veil: spread evenly it hid the lower hoops.
-  float skin = (0.004 + 0.01 * wells + (0.007 + 0.016 * wells) * surge) * (1.0 - 0.5 * spent);
+  float skin = (0.004 + 0.01 * wells + (0.005 + 0.016 * wells) * surge) * (1.0 - 0.5 * spent);
   // Billows: thick and thin by the block of noise, most over the top and in its first metres, evened out with depth.
   // The noise is brought to a billow over a wide part of its range: brought over a narrow part a thick billow had a cut edge.
   float billow = 4.0 * smoothstep(0.38, 0.8, lumps);
   if (under < 0.0) return vec2(skin * exp(under / tall) * mix(billow, 1.0, 0.05), 0.0);
-  float grow = (0.006 + 0.004 * surge) * mix(0.35, 1.0, west);
+  float grow = (0.006 + 0.001 * surge) * mix(0.35, 1.0, west);
   float deep = min(under, 9.0);
   float even = mix(billow, 1.0, 0.1 + 0.6 * smoothstep(6.0, 20.0, under));
   return vec2((skin + grow * deep) * even, skin * under + grow * deep * (under - 0.5 * deep));
@@ -567,7 +567,7 @@ void main() {
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
         // The crown is eaten away by the air: it ends in rags, never in a round cap.
         float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up + 1.1 * smoothstep(0.55, 1.0, up));
-        float body = smoothstep(0.0, 0.42, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.5, m);
+        float body = smoothstep(0.0, 0.7, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.5, m);
         float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * body;
         float tau = rho * span / 5.0;
         if (tau <= 0.0005) continue;
