@@ -1,5 +1,6 @@
 // The sky of the Heart: a dome that shows the same dusk the rig lights every surface with (skyRadiance), with the slow structure of a real one:
-// a picture of thin high cloud for the large shapes, streaks of noise for the small ones, a pale band over the rim.
+// a picture of thin high cloud for the large shapes, streaks of noise for the small ones, a pale band over the rim, and under them the smoke
+// of the place in banks.
 import * as THREE from 'three';
 import type { HeartContext } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
@@ -31,6 +32,37 @@ float streaks(vec3 d, float t) {
   float b = textureLod(tNoise, vec3(q.x * 0.16 + 0.3, q.y * 0.55, 0.53), 0.0).g;
   float c = textureLod(tNoise, vec3(q.x * 0.61, q.y * 2.1 + 0.7, 0.81), 0.0).a;
   return a * 0.55 + b * 0.3 + c * 0.15;
+}
+
+// The smoke of the place hangs under the dusk as a deck some 700 m up, fed by the plume: banks drawn out along the high wind, with open air
+// between them. Their middles are dark against the sky, their thin edges pass it, and the fire of the lake lights their undersides, most over
+// the open lava of the east. It stands in the world, so every lens sees the same banks from its own place, and it rides the wind.
+// rgb: the fire's light on its underside. a: how much of the sky it hides.
+const float DECK_HIGH = 700.0;
+const vec2 DECK_ALONG = vec2(0.6, 0.8);
+const float DECK_SPEED = 9.0;
+const vec3 DECK_FIRE = vec3(650.0, -60.0, 1500.0);
+const vec3 DECK_GLOW = vec3(0.15, 0.072, 0.038);
+const vec3 DECK_BODY = vec3(0.5, 0.47, 0.45);
+vec4 deck(vec3 d, float t) {
+  if (d.y < 0.02) return vec4(0.0);
+  vec2 at = cameraPosition.xz + d.xz * ((DECK_HIGH - cameraPosition.y) / d.y);
+  vec2 q = vec2(dot(at, DECK_ALONG) - DECK_SPEED * t, dot(at, vec2(-DECK_ALONG.y, DECK_ALONG.x)));
+  vec2 bend = textureLod(tNoise, vec3(q / 9000.0, 0.21), 0.0).ga - 0.5;
+  q += bend * 1300.0;
+  float large = textureLod(tNoise, vec3(q.x / 6400.0, q.y / 2700.0, 0.43), 0.0).g;
+  vec4 lumps = textureLod(tNoise, vec3(q.x / 2100.0 + 0.3, q.y / 1250.0, 0.77), 0.0);
+  float fine = textureLod(tNoise, vec3(q.x / 560.0, q.y / 340.0 + 0.7, 0.13), 0.0).r;
+  float n = large + 0.34 * (lumps.r - 0.4) + 0.1 * (fine - 0.4);
+  float thick = smoothstep(0.43, 0.68, n);
+  // A sheet seen aslant is looked through for longer; far off it goes into the air and the pale band over the rim.
+  float a = 1.0 - exp(-2.2 * thick * min(1.0 / d.y, 4.0));
+  a *= smoothstep(0.02, 0.11, d.y);
+  vec2 off = at - DECK_FIRE.xy;
+  float fire = 1.0 / (1.0 + dot(off, off) / (DECK_FIRE.z * DECK_FIRE.z));
+  // The underside is in lumps: each catches the fire on its low side, and the thick middle of a bank takes less of it than its rim.
+  float under = (0.35 + 1.3 * lumps.r) * (1.15 - 0.5 * thick);
+  return vec4(DECK_GLOW * (fire * under), a);
 }
 
 void main() {
@@ -68,6 +100,8 @@ void main() {
   float band = exp(-pow((el - 0.12) / 0.14, 2.0));
   float west = 0.5 - 0.5 * dot(normalize(d.xz + 1e-5), normalize(uWarmDir.xz));
   c *= 1.0 + band * (0.14 + 0.18 * west);
+  vec4 smoke = deck(d, uTime);
+  c = mix(c, c * DECK_BODY + smoke.rgb, smoke.a);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
