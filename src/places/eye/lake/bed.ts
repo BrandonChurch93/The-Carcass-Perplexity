@@ -8,13 +8,6 @@ import { mirrored } from '../land/rock';
 /** Per metre of water: red goes first, so that the deep is blue and then black. */
 export const ABSORB: [number, number, number] = [0.12, 0.045, 0.03];
 
-/** A picture that is laid round the lake and meets itself from left to right: it runs on round and is turned over only the way in. */
-function round(t: THREE.Texture): THREE.Texture {
-  t.wrapS = THREE.RepeatWrapping;
-  t.wrapT = THREE.MirroredRepeatWrapping;
-  return t;
-}
-
 export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, THREE.IUniform> {
   return {
     tLip: { value: lip },
@@ -23,7 +16,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     tMat: { value: mirrored(ctx.assets.texture('mat/matplate.jpg', { anisotropy: 8 })) },
     tMatH: { value: mirrored(ctx.assets.texture('mat/matplate-h.png', { kind: 'data', anisotropy: 4 })) },
     tMatTile: { value: mirrored(ctx.assets.texture('mat/matdark.jpg', { anisotropy: 8 })) },
-    tComb: { value: round(ctx.assets.texture('lake/matcomb-round.jpg', { anisotropy: 4 })) },
+    tFlat: { value: mirrored(ctx.assets.texture('lake/matflat.jpg', { anisotropy: 4 })) },
     tLipPlate: { value: mirrored(ctx.assets.texture('mat/lip.jpg', { anisotropy: 8 })) },
     tLipPlateH: { value: mirrored(ctx.assets.texture('mat/lip-h.png', { kind: 'data', anisotropy: 4 })) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
@@ -44,7 +37,7 @@ uniform float uLipIn;
 uniform sampler2D tMat;
 uniform sampler2D tMatH;
 uniform sampler2D tMatTile;
-uniform sampler2D tComb;
+uniform sampler2D tFlat;
 uniform sampler2D tLipPlate;
 uniform sampler2D tLipPlateH;
 uniform sampler2D tSinter;
@@ -90,14 +83,6 @@ vec4 readAt(sampler2D t, vec2 q, mat2 m, float coarser) {
 vec4 readAt(sampler2D t, vec2 q, mat2 m) {
   return readAt(t, q, m, 0.0);
 }
-// The same where q is counted round the lake and in toward its centre: across is the size of q.x for a metre round at this place, inward that of q.y for a metre out.
-vec4 readRound(sampler2D t, vec2 q, vec2 b, float across, float inward) {
-  float r2 = max(dot(b, b), 1.0);
-  float r = sqrt(r2);
-  vec2 size = vec2(textureSize(t, 0));
-  return textureLod(t, q, levelOf(vec2(across * (b.y * gFx.x - b.x * gFx.y) / r2, inward * dot(b, gFx) / r) * size, vec2(across * (b.y * gFy.x - b.x * gFy.y) / r2, inward * dot(b, gFy) / r) * size));
-}
-
 // Metres from the centre to the lip of the shaft, at the bearing of this point.
 float lipRadius(vec2 xz) {
   // Drawn in, the deep keeps its reach toward the wide camera and gives way at the sides: an oval lying along the look.
@@ -136,10 +121,11 @@ vec3 lipNear(vec2 xz, vec2 from, vec3 lip) {
 const float MAT_REACH = 260.0;
 const float MAT_A = 6.5;
 const float MAT_B = 9.2;
-// Metres round the lake that one repeat of the combed picture covers, at its three sizes: 2 pi 640 over 61, 18 and 237.
-const float COMB_A = 65.9217;
-const float COMB_B = 223.4021;
-const float COMB_C = 16.9672;
+// The flats seen from the rim are one picture of them from straight above (1671 by 941), laid by the ground in metres at two sizes,
+// each turned its own way. Metres that the long side of it covers, and its short side as a share of the long.
+const float FLAT_A = 170.0;
+const float FLAT_B = 290.0;
+const float FLAT_SHAPE = 0.5631;
 const float LIP_OUT = 0.9;
 const float LIP_DEEP = 5.63;
 vec2 lipPlateAt(vec2 xz, vec3 lip) {
@@ -170,6 +156,22 @@ float shelfDepthAt(vec2 xz, float inShore, float w, float barsAt) {
   return mix(crust, depth, smoothstep(0.8, 9.0, w));
 }
 
+// The picture of the flats where this ground is. It is laid twice, and which laying has a place goes by patches some tens of metres
+// across, so each patch of the flats is turned its own way and nothing on them runs toward the centre. The picture turns over at each
+// repeat: a laying is let go as it nears the lines where it turns, and the other, whose lines lie elsewhere, has the ground there.
+vec3 flatsAt(vec2 b) {
+  mat2 ma = mat2(0.829, -0.559 / FLAT_SHAPE, 0.559, 0.829 / FLAT_SHAPE) / FLAT_A;
+  mat2 mb = mat2(0.326, 0.945 / FLAT_SHAPE, -0.945, 0.326 / FLAT_SHAPE) / FLAT_B;
+  vec2 qa = ma * b + 0.13;
+  vec2 qb = mb * b + vec2(0.61, 0.27);
+  vec2 ta = 0.5 - abs(fract(qa) - 0.5);
+  vec2 tb = 0.5 - abs(fract(qb) - 0.5);
+  float clearA = smoothstep(0.0, 0.07, min(ta.x, ta.y));
+  float clearB = smoothstep(0.0, 0.07, min(tb.x, tb.y));
+  float pick = smoothstep(-0.2, 0.2, vnoise(b / 61.0 + 21.0) - 0.5 + 0.9 * (clearB - clearA));
+  return mix(readAt(tFlat, qa, ma).rgb, readAt(tFlat, qb, mb).rgb, pick);
+}
+
 // barsAt: what shelfBars gives here (the depth was told from it, and the pale slabs are the same bars).
 Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt) {
   Bed o;
@@ -191,7 +193,9 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
   vec3 pale = sinter * (sinterFar / vec3(0.501, 0.351, 0.19)) * vec3(0.84, 1.02, 1.3);
   float slabs = smoothstep(0.5, 0.68, barsAt) * (1.0 - 0.85 * smoothstep(150.0, 230.0, w));
   float crust = smoothstep(9.0, 1.5, w);
-  vec3 silt = mix(vec3(0.07, 0.05, 0.035), vec3(0.2, 0.185, 0.165), smoothstep(150.0, 230.0, w)) * (0.5 + 1.0 * snh.b);
+  // Seen from the rim the open water between the flats lies over pale silt from a little way out from the pool: it is the sky's colour.
+  float fromAbove = smoothstep(8.0, 40.0, cameraPosition.y);
+  vec3 silt = mix(vec3(0.07, 0.05, 0.035), vec3(0.2, 0.185, 0.165), smoothstep(mix(150.0, 40.0, fromAbove), mix(230.0, 150.0, fromAbove), w + 60.0 * fromAbove * (vnoise(b / 53.0 + 2.0) - 0.5))) * (0.5 + 1.0 * snh.b);
   vec3 bare = mix(silt, pale * mix(vec3(1.0), vec3(0.36, 0.38, 0.42), smoothstep(8.0, 40.0, cameraPosition.y) * (1.0 - crust)), max(slabs, crust));
   float stands = 0.0;
   vec2 stoneLean = vec2(0.0);
@@ -256,7 +260,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
 #if EYE_RIM > 0
   {
     float channels = smoothstep(0.045, 0.012, abs(0.6 * vnoise(b / 31.0 + 9.0) + 0.4 * vnoise(b / 11.0 + 4.0) - 0.5)) * smoothstep(8.0, 50.0, w);
-    float pools = smoothstep(0.66, 0.84, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
+    float pools = smoothstep(0.58, 0.76, 0.7 * vnoise(b / 19.0 + 31.0) + 0.3 * vnoise(b / 6.0 + 2.0));
     lanes = mix(lanes, max(0.7 * channels * smoothstep(0.35, 0.6, vnoise(b / 57.0 + 13.0)), pools), rimEye);
   }
 #endif
@@ -264,7 +268,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
   float thin = smoothstep(4.0, 46.0, inShore + 30.0 * (blobs - 0.5)) * (1.0 - 0.8 * slabs * (1.0 - crust));
   // And they lie thick toward the pool and thin away to bare grey silt at the shore.
   thin = mix(thin, smoothstep(8.0, 60.0, inShore + 44.0 * (blobs - 0.5)), rimEye);
-  float edge = mix(0.53, 0.35, toLip) - 0.2 * smoothstep(8.0, 40.0, cameraPosition.y);
+  float edge = mix(0.53, 0.35, toLip) - 0.13 * smoothstep(8.0, 40.0, cameraPosition.y);
   float cover = smoothstep(edge - 0.02, edge + 0.07, field) * thin * (1.0 - 0.92 * lanes);
   // Toward the lip the weed thins to loose strands over the pale crust.
   // An eye that stands on the lip sees them run over the whole of it to the edge.
@@ -334,29 +338,27 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     far3 *= mix(vec3(0.5, 0.42, 0.38), vec3(1.0), smoothstep(4.0, 60.0, w));
     // Far off no strand is told: the patch has its own tone and the streaks of its lie.
     float told = smoothstep(0.25, 0.03, px);
-    // From the rim the mats are seen whole: tresses of fine strands combed toward the centre, gold in the heart of a tress and rust at its
-    // edge, with dark clear water between them. The picture of them is laid along the way in, twice, tresses within tresses.
     float fromRim = smoothstep(8.0, 40.0, cameraPosition.y);
     float combed = 0.5;
+    float threads = 0.0;
 #if EYE_RIM > 0
     {
-      // Laid by the way round and the way in, and bent by the ground as the patches are: a tress wanders and is crossed by the next.
-      // (Hardly bent, every tress ran straight to the centre and the mats were long parallel tongues, flames from the rim.) Round the lake the picture runs on
-      // into itself and is never turned over (turned over, the tresses either side of the turn were a butterfly). Each size goes round
-      // a whole number of times (61, 18 and 237), so the place where the way round begins again shows no seam.
-      vec2 cq = vec2(a2 * 640.0 + bend.x * 24.0, r + bend.y * 44.0);
-      vec3 ca = readRound(tComb, cq / vec2(COMB_A, 44.0), b, 640.0 / COMB_A, 1.0 / 44.0).rgb;
-      vec3 cb = readRound(tComb, cq / vec2(COMB_B, 152.0), b, 640.0 / COMB_B, 1.0 / 152.0).rgb;
-      float la = dot(ca, vec3(0.4, 0.5, 0.1));
-      float lb = dot(cb, vec3(0.4, 0.5, 0.1));
-      // The finest size is hair on the tresses, told only as near as a pixel can hold it.
-      float hairy = smoothstep(0.5, 0.12, px);
-      vec3 cc = vec3(0.34, 0.105, 0.0065);
-      if (hairy > 0.0) cc = readRound(tComb, cq / vec2(COMB_C, 11.3), b, 640.0 / COMB_C, 1.0 / 11.3).rgb;
-      float lc = dot(cc, vec3(0.4, 0.5, 0.1));
-      combed = clamp(2.4 * la + 2.0 * lb - 0.14 + hairy * 1.6 * (lc - 0.19), 0.0, 1.0);
-      vec3 strands = ca * (0.45 + 2.9 * lb) * mix(vec3(1.0), cc / vec3(0.34, 0.105, 0.0065) * vec3(1.0, 1.0, 0.25) + vec3(0.0, 0.0, 0.75), 0.6 * hairy) * vec3(0.92, 1.25, 3.4);
-      far3 = mix(far3, mix(far3 * 0.7, strands, 0.8), fromRim);
+      // From the rim the mats are flats: matte beds of weed and mineral in patches of every size, mottled, with dark wet threads of open
+      // water that wander and fork between them and small pale islands of crust. The picture of them gives a patch its mottle, its
+      // threads and its islands; the hue of a patch is its own (far3), by where it lies.
+      vec3 flat3 = flatsAt(b);
+      float fl = dot(flat3, vec3(0.3, 0.5, 0.2));
+      threads = smoothstep(0.12, 0.06, fl);
+      float isle = smoothstep(0.3, 0.55, flat3.b / max(flat3.r, 1e-3)) * smoothstep(0.2, 0.4, fl);
+      // How thick the weed lies: its bright beds stand in the surface, its dark seams are under it.
+      combed = clamp((fl - 0.06) / 0.2, 0.0, 1.0);
+      // The same picture a quarter the size gives a bed its grain, as far as the frame can hold it.
+      mat2 mf = mat2(0.469, 0.883 / FLAT_SHAPE, -0.883, 0.469 / FLAT_SHAPE) / 43.0;
+      float grain = dot(readAt(tFlat, mf * b + 0.37, mf).rgb, vec3(0.3, 0.5, 0.2)) / 0.17;
+      vec3 mottle = flat3 / vec3(0.354, 0.124, 0.0314) * mix(1.0, clamp(grain, 0.4, 2.2), 0.55);
+      mottle = pow(mix(vec3(dot(mottle, vec3(0.3333))), mottle, 0.5), vec3(0.65));
+      vec3 flats = mix(far3 * mottle * vec3(1.3, 1.45, 1.7), mix(vec3(fl), flat3, 0.45) * vec3(1.0, 1.0, 1.05), isle);
+      far3 = mix(far3, flats, fromRim);
     }
 #endif
     // The streaks of the far patch are not worked out where every strand is told.
@@ -381,16 +383,16 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     weed *= mix(vec3(1.0), vec3(1.5, 1.38, 0.95), told * smoothstep(0.42, 0.85, mh));
     // At the torn edge of a patch only the strands that stand highest are left: wisps, not a line.
     float lies = smoothstep(0.0, 0.22, cover * 1.25 - (1.0 - high) * 0.7 * told * smoothstep(0.95, 0.5, cover) - 0.12 * (1.0 - told));
-    // From the rim it is the tresses that say where the weed is: the water between them is open even in the thick of a bed.
-    lies = mix(lies, smoothstep(0.0, 0.2, cover * 1.15 - (1.0 - combed) * 0.6), fromRim * (1.0 - told));
+    // From the rim it is the picture of the flats that says where the weed is: its channels are open water even in the thick of a bed.
+    lies = mix(lies, smoothstep(0.0, 0.2, cover * 1.15 - (1.0 - combed) * 0.6) * (1.0 - 0.8 * threads), fromRim * (1.0 - told));
     o.albedo = mix(bare, weed, lies);
     // Its relief says what lies where: the strands that stand highest lie in the surface, the gaps between are a hand deeper.
     float up = (high - 0.62) * 0.34;
     o.depth = mix(depth, max(-up, 0.0) + 0.015, lies);
     // From far off and low, the tops of the mats that lie in the surface take the mirror from the water.
     float afloat = mix(0.2, mix(0.08, 0.95, smoothstep(6.0, 30.0, cameraPosition.y)), smoothstep(0.03, 0.4, px)) * smoothstep(0.3, 0.6, high);
-    // Seen whole from the rim, a tress that lies in the surface is wet weed and no mirror, whatever the size of the picture.
-    afloat = mix(afloat, 0.92 * smoothstep(0.22, 0.6, combed), fromRim);
+    // Seen whole from the rim, a bed that lies in the surface is wet weed and no mirror, whatever the size of the picture.
+    afloat = mix(afloat, 0.8 + 0.15 * smoothstep(0.15, 0.6, combed), fromRim);
     o.dry = mix(o.dry, max(smoothstep(0.0, 0.035, up) * 0.9, afloat), lies);
     o.occ = mix(o.occ, 0.45 + 0.55 * smoothstep(0.1, 0.5, high), lies);
     // The low sun comes through the strands that stand up into it.
