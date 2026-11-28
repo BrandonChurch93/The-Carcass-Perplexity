@@ -720,21 +720,6 @@ export function coat(body: Skin, rng: Rng, o: CoatOptions): Coat {
   return { root, ctrl, tip, card, bones, count };
 }
 
-/** One lock, before it is laid on its curve: x across it (-1 to 1), y along it (0 at the root). */
-export function lockGeometry(segments: number): THREE.BufferGeometry {
-  const pos: number[] = [];
-  const index: number[] = [];
-  for (let s = 0; s <= segments; s++) pos.push(-1, s / segments, 0, 1, s / segments, 0);
-  for (let s = 0; s < segments; s++) {
-    const a = s * 2;
-    index.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setIndex(index);
-  return g;
-}
-
 // A lock as hairs: so many ribbons side by side in one drawing, each with its own numbers (which hair it is, where round the lock's
 // root it stands, how long it is, how far out it stands), dealt out evenly and not by chance.
 export function strandGeometry(strands: number, segments: number, under = 0): THREE.BufferGeometry {
