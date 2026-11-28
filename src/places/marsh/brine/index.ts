@@ -24,6 +24,9 @@ interface Dome {
 /** The share of a dome's period it spends swelling; the rest is the burst and the still water after it. */
 const SWELL = 0.8;
 const DROP_LIFE = 1.5;
+/** A ligament is drawn as so many beads in a row, which part into so many drops. */
+const LIG_BEADS = 6;
+const LIG_LIFE = 1.7;
 const RING_LIFE = 5;
 const RING_SPEED = 0.9;
 
@@ -32,8 +35,8 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('brine/domes');
 
   const domes: Dome[] = [
-    { x: HERO_DOME[0], z: HERO_DOME[1], size: 0.62, period: 10.4, burst: BURST, seed: 0.37, drops: 220 },
-    { x: SMALL_DOME[0], z: SMALL_DOME[1], size: 0.4, period: 7.6, burst: SMALL_BURST - 0.2, seed: 0.81, drops: 80 },
+    { x: HERO_DOME[0], z: HERO_DOME[1], size: 0.62, period: 10.4, burst: BURST, seed: 0.37, drops: 440 },
+    { x: SMALL_DOME[0], z: SMALL_DOME[1], size: 0.4, period: 7.6, burst: SMALL_BURST - 0.2, seed: 0.81, drops: 240 },
     // The one the second lens ends on: it stands full in the middle of that pool and tears a second after the key frame.
     { x: -4.0, z: 0.6, size: 0.6, period: 12.4, burst: keyTime('marsh-2') + 1, seed: 0.53, drops: 100 },
   ];
@@ -225,7 +228,110 @@ export function create(ctx: Context): Piece {
       const fy = 0.69 / fh;
       const fz = (Math.sin(d.seed * 40) * 0.72) / fh;
       const landed: number[] = [];
-      for (let k = 0; k < d.drops; k++, drop++) {
+      // Ligaments. Where the edge of the hole runs over the skin the brine it has rolled up is flung off in strings: each is rooted
+      // near the pool and thrown at its tip, so it is drawn out, thins as it lengthens (the same brine in a longer string), necks
+      // between its swellings and parts into drops, the tip first. Every point of a string flies its own thrown path from the
+      // moment it left, so string and drops are one motion and a pure function of the seconds.
+      const big = Math.sqrt(d.size / 0.4);
+      const ligs = Math.floor((d.drops * 0.5) / LIG_BEADS);
+      for (let g = 0; g < ligs; g++) {
+        const base = drop;
+        const r1 = thrown[base * 5 + 1] as number;
+        const r2 = thrown[base * 5 + 2] as number;
+        const r3 = thrown[(base + 1) * 5 + 1] as number;
+        const r4 = thrown[(base + 1) * 5 + 2] as number;
+        const own = thrown[base * 5 + 4] as number;
+        const az = thrown[base * 5] as number;
+        const uy = 0.08 + 0.8 * r1;
+        const ur = Math.sqrt(1 - uy * uy);
+        const ux = Math.cos(az) * ur;
+        const uz = Math.sin(az) * ur;
+        const c = ux * fx + uy * fy + uz * fz;
+        let since = age < 0 ? -1 : age - ((-1.1 + Math.sqrt(1.21 + 3.6 * (1 - c))) / 1.8) * TEAR - 0.03 * own;
+        let tx = ux * c - fx;
+        let ty = uy * c - fy;
+        let tz = uz * c - fz;
+        const tl = Math.hypot(tx, ty, tz) || 1;
+        tx = (tx / tl) * (0.25 + 0.5 * r3) + ux * 0.8;
+        ty = Math.abs(ty / tl) * 0.4 + uy * 0.5 + 0.3 + 0.7 * r4;
+        tz = (tz / tl) * (0.25 + 0.5 * r3) + uz * 0.8;
+        const tipSpeed = (2.5 * big * (0.35 + 0.65 * r2 * r2)) / Math.hypot(tx, ty, tz);
+        let ax = tx * tipSpeed;
+        let ay = ty * tipSpeed;
+        let az2 = tz * tipSpeed;
+        const held = 0.1 + 0.16 * own;
+        let bx = ax * held;
+        let by = ay * held + 0.25 * big;
+        let bz = az2 * held;
+        let x0 = d.x + ux * d.size * 0.95;
+        let y0 = uy * d.size * 0.66;
+        let z0 = d.z + uz * d.size * 0.95;
+        let r0 = (0.007 + 2.0 * (thrown[base * 5 + 3] as number)) * (0.6 + d.size);
+        let breaksAt = (0.16 + 0.4 * r3) * big;
+        let taper = 0.56;
+        // The last of a great dome's strings is the column: the pool closes over the place the gas left and throws one thick jet
+        // straight up out of its middle, which stands, necks and lets its head go.
+        if (i < 3 && g === ligs - 1) {
+          since = age < 0 ? -1 : age - TEAR - 0.1 * big;
+          ax = (r1 - 0.5) * 0.35;
+          ay = (1.9 + 0.9 * r3) * big;
+          az2 = (r2 - 0.5) * 0.35;
+          bx = 0;
+          by = 0.45 * big;
+          bz = 0;
+          x0 = d.x;
+          y0 = 0;
+          z0 = d.z;
+          r0 = 0.066 * (d.size / 0.6);
+          taper = -0.5;
+          breaksAt = 0.62 * big;
+        }
+        const dx = ax - bx;
+        const dy = ay - by;
+        const dz = az2 - bz;
+        const drawn = Math.hypot(dx, dy, dz) || 1;
+        // (No string is ruled: it is bowed to one side, by what the edge gave it across its way.)
+        const bow = (r4 - 0.5) * 1.7 * drawn;
+        const sx = (-dz / drawn) * bow;
+        const sy = (own - 0.5) * 0.9 * drawn;
+        const sz = (dx / drawn) * bow;
+        for (let j = 0; j < LIG_BEADS; j++, drop++) {
+          const f = (j + 0.5) / LIG_BEADS;
+          const vx = bx + f * dx + f * (1 - f) * sx;
+          const vy = by + f * dy + f * (1 - f) * sy;
+          const vz = bz + f * dz + f * (1 - f) * sz;
+          const y = since < 0 ? -1 : y0 + vy * since - 4.905 * since * since;
+          // The tip parts first, the root last.
+          const parts = (breaksAt / drawn) * (1.15 - 0.3 * f);
+          const joined = Math.min(Math.max(since, 0), parts);
+          const thin = r0 * Math.sqrt(0.18 / (0.18 + drawn * joined)) * (1 - 0.5 * taper + taper * f);
+          const halfJoined = ((drawn * joined) / LIG_BEADS) * 0.85 + thin;
+          const round = Math.cbrt(1.5 * thin * thin * halfJoined);
+          if (since < 0 || since > LIG_LIFE || y < -round) {
+            m.makeScale(0, 0, 0);
+            dropMesh.setMatrixAt(drop, m);
+            continue;
+          }
+          const apart = Math.min(Math.max((since - parts) / 0.07, 0), 1);
+          const parted = apart * apart * (3 - 2 * apart);
+          const fall = vy - 9.81 * since;
+          const speed = Math.hypot(vx, fall, vz);
+          // Joined, a bead lies along the string; let go, it is a drop drawn out a little along its own way.
+          dir.set(dx + (1 - 2 * f) * sx, dy + (1 - 2 * f) * sy, dz + (1 - 2 * f) * sz).normalize().multiplyScalar(1 - parted);
+          dir.x += (vx / (speed || 1)) * parted;
+          dir.y += (fall / (speed || 1)) * parted;
+          dir.z += (vz / (speed || 1)) * parted;
+          q.setFromUnitVectors(up, dir.normalize());
+          const wide = thin + (round - thin) * parted;
+          const half = halfJoined + (round * (1 + 0.12 * speed) - halfJoined) * parted;
+          pos.set(x0 + vx * since, y, z0 + vz * since);
+          scale.set(wide, half, wide);
+          m.compose(pos, q, scale);
+          dropMesh.setMatrixAt(drop, m);
+          dropLife.setXYZW(drop, 0.5, own, wide, 0);
+        }
+      }
+      for (let k = 0; k < d.drops - ligs * LIG_BEADS; k++, drop++) {
         const az = thrown[drop * 5] as number;
         const uy = 0.06 + 0.9 * (thrown[drop * 5 + 1] as number);
         const ur = Math.sqrt(1 - uy * uy);
@@ -252,7 +358,6 @@ export function create(ctx: Context): Piece {
         // One in three is not the skin's: it is a bead the wall of fingers lets go from a tip as it stands, later, slower, up and a little
         // out, to fall back beside the wall.
         if (k >= 9 && k % 3 === 2) {
-          const big = Math.sqrt(d.size / 0.4);
           const out = (0.35 + 0.9 * (thrown[drop * 5 + 2] as number)) * big;
           fl = age < 0 ? -1 : age - TEAR * 0.2 - (0.08 + 0.3 * own) * big;
           x0 = d.x + Math.cos(az) * d.size * 0.98;
