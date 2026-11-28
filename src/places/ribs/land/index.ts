@@ -612,6 +612,15 @@ export function create(ctx: Context): Piece {
     // Nothing under a foot or a tuft: the animals stand on the bed (wings/).
     const feeding = STATIONS.feeders.filter((f) => Math.hypot(f[0] - (pose.position[0] as number), f[1] - (pose.position[2] as number)) < 200);
     const clearOf = (x: number, z: number, reach: number): boolean => feeding.every((f) => Math.hypot(x - f[0], z - f[1]) > reach);
+    // Nor a bar across the water that holds an animal's image: from its feet toward the lens, as long as the animal is seen in it.
+    const lens: [number, number] = [pose.position[0] as number, pose.position[2] as number];
+    const imaged = (x: number, z: number, reach: number): boolean =>
+      feeding.some((f) => {
+        const far = Math.hypot(lens[0] - f[0], lens[1] - f[1]);
+        const along = ((x - f[0]) * (lens[0] - f[0]) + (z - f[1]) * (lens[1] - f[1])) / far;
+        const off = Math.abs((x - f[0]) * (lens[1] - f[1]) - (z - f[1]) * (lens[0] - f[0])) / far;
+        return along > 0 && along < 0.6 * far && off < reach;
+      });
     interface Wet { x: number; z: number; size: number; yaw: number; tilt: number; kind: number; high: number; out: number; tone: number }
     const stones: Wet[] = [];
     const knots: Wet[] = [];
@@ -708,7 +717,7 @@ export function create(ctx: Context): Piece {
       const x = (pose.position[0] as number) + ahead[0] * f + right[0] * r;
       const z = (pose.position[2] as number) + ahead[1] * f + right[1] * r;
       const bar = 0.6 * noise3(x / 9 + 3.7, 0.5, z / 2.8) + 0.4 * noise3(x / 1.9, 2.5, z / 1.3);
-      if (bar < 0.55 || onWay(x, z, 1.1 + 2.4 * size) || !clearOf(x, z, 3.2 + 2.4 * size)) continue;
+      if (bar < 0.55 || onWay(x, z, 1.1 + 2.4 * size) || !clearOf(x, z, 3.2 + 2.4 * size) || imaged(x, z, 1.3 + 1.6 * size)) continue;
       bars.push({ x, z, size, yaw, lift });
     }
     const banks = new THREE.InstancedMesh(mound, sandbar, bars.length);

@@ -195,13 +195,13 @@ void main() {
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
   // Wet through, but no hose and no mirror: the film on it stands in beads, so the sky on it is a scatter of points and not a sheen.
-  float bead = close * smoothstep(0.8, 0.9, vnoise(vec2(vUv.x * 9.0 + vTone.x * 17.0, vUv.y * vTone.w * 45.0 + vTone.x * 131.0)));
+  float bead = close * smoothstep(0.86, 0.93, vnoise(vec2(vUv.x * 9.0 + vTone.x * 17.0, vUv.y * vTone.w * 45.0 + vTone.x * 131.0)));
   float rough = 0.74 + 0.2 * wr - 0.45 * bead;
   // A frond seen along itself is no mirror of the sky: its skin is ruffled finer than the lens sees, so it is lit as if it stood half toward the lens.
   n = normalize(n + v * max(0.0, 0.55 - dot(n, v)));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
-  c += above * (0.5 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
+  c += above * (0.35 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
   // The day through a frond that hangs free of the wall.
   c += amber * above * (0.07 * close * thin * smoothstep(0.45, 0.95, vTone.z) * occ);
   // The low sun through a thin wet frond.
