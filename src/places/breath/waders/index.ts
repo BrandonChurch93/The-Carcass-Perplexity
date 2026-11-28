@@ -51,6 +51,8 @@ export function create(ctx: Context): Piece {
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
     uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 0 }, uVeiled: veiled },
+    // Where a leg is drawn far from its rest the skin at its root can fold over on itself: drawn from both sides, a fold is skin and not a hole.
+    side: THREE.DoubleSide,
   });
   material.userData.depthFragment = DEPTH_FRAGMENT;
   const mesh = new THREE.Mesh(geometry, material);

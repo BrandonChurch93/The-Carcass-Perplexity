@@ -105,6 +105,9 @@ void main() {
   vec3 v = toEye / far;
   // The dead one is drawn from both sides: whatever the lens sees of it faces the lens.
   if (uDead > 0.5 && dot(n, v) < 0.0) n = -n;
+  // Where the skin folds over at the root of a leg its inner side is seen: it is skin facing the lens, in the shade of the fold.
+  float inner = gl_FrontFacing || uMirror > 0.5 || uDead > 0.5 ? 0.0 : 1.0;
+  n = mix(n, -n, inner);
   float kind = vLook.x;
   float u = vLook.y;
   float seed = vInfo.w;
@@ -378,6 +381,7 @@ void main() {
   if (tendril > 0.5) n = normalize(mix(n, v, 0.25));
 
   // The shade an animal throws on the water under it is not on the animal: the light is asked for above the reach of that shade.
+  occ *= 1.0 - 0.4 * inner;
   vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, rough, occ);
   // The bright water and the fog all round throw the low sun back up at them, and a little of it wraps round through the thin skin.
   float lit = sunAt(vWorld);
