@@ -162,17 +162,10 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     // Nor does anything lie on the shore's rind or beyond it where that view looks down on the shore.
     if (!o.stand && benchDistance(x, z) < 0.75 + half && Math.hypot(x + 510.5, z - 215.5) < 70) return false;
     const [from, to] = o.only ?? ALWAYS;
-    // The slope the wide view looks down on is broken black lava in its picture: its blocks are dark, with ash on few of them.
-    // So is the wide view's own foreground. And the small stones on the flank of the crag beside the line view's lens carry no ash: pale,
-    // in their rows up the flank, they read as a lattice at the left edge of that frame.
-    const dark =
-      x > -566 && x < -508 && z > 228 && z < 280 && height(x, z) > 0.25 && height(x, z) < 11
-        ? 0.6
-        : Math.hypot(x - vx, z - vz) < 60
-          ? 0.65
-          : !o.stand && size < 0.5 && g > 0.9 && Math.hypot(x + 510.5, z - 215.5) < 20
-            ? 0.45
-            : 1;
+    // The small stones on the flank of the crag beside the line view's lens carry no ash: pale, in their rows up the flank, they read as
+    // a lattice at the left edge of that frame. (The blocks of the wide view's slope and foreground were tried dark as well, at 0.6: that
+    // took a fiftieth of the fine contrast of its frame, which has none to spare. Not taken.)
+    const dark = !o.stand && size < 0.5 && g > 0.9 && Math.hypot(x + 510.5, z - 215.5) < 20 ? 0.45 : 1;
     const seed: [number, number, number, number] = [rng.next(), size, base, (o.tone ?? rng.range(0.6, 1.25)) * dark];
     if (now < g - 0.005 && !o.onLake) {
       if (now < 0.05) return true;
