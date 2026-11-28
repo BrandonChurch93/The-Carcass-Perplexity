@@ -261,6 +261,9 @@ float skyOpen(vec3 p) {
   return vis * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above));
 }
 
+// What rigShade found of the cloud over the place it last shaded (cloudShade of its p): a surface that needs the same again, for its rim
+// or its fill, takes it from here and does not read the deck and its two breaks a second and a third time.
+float rigGap = 1.0;
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the surface's own small-scale occlusion, 1 for none.
 vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   // The baked land knows nothing finer than ten metres, and inside a blade's own foot it is dark: an upright face asks for the land in front of it.
@@ -269,6 +272,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float stood = 1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above);
   float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * stood * occ;
   float gap = cloudShade(p);
+  rigGap = gap;
   float sun = sunBaked(p, land) * gap * occ;
   // Under the shut deck the sky itself is the storm's: a surface takes uDeck.w of the sky's light there, and all of it where a gap
   // stands over it. This is what lays the lit patches beside real shade: the sky's even light was most of what a blade showed.

@@ -201,7 +201,7 @@ void main() {
   // Against the light the edge of the stone burns.
   float rim = 1.0 - max(dot(n, v), 0.0);
   float back = max(dot(-v, uSunDir), 0.0);
-  if (back * rim > 0.2) lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
+  if (back * rim > 0.2) lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * (sunBaked(vWorld, landAt(vWorld.xz)) * rigGap) * occ);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -356,7 +356,7 @@ void main() {
   // Against the light the edge of the stone burns.
   float rim = 1.0 - max(dot(n, v), 0.0);
   float back = max(dot(-v, uSunDir), 0.0);
-  if (back * rim > 0.2) lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
+  if (back * rim > 0.2) lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * (sunBaked(vWorld, landAt(vWorld.xz)) * rigGap) * occ);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -415,10 +415,10 @@ void main() {
   float rough = mix(0.8, 0.42, weedy);
   float occ = 0.55 + 0.45 * smoothstep(0.25, 0.6, nhp.z);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
-  vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * uSunColour * cloudShade(vWorld)) * (0.2 / 3.14159) * (0.7 + 0.3 * occ);
+  vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * uSunColour * rigGap) * (0.2 / 3.14159) * (0.7 + 0.3 * occ);
   lit = max(lit, fill);
   float rim = 1.0 - max(dot(n, v), 0.0);
   float back = max(dot(-v, uSunDir), 0.0);
-  lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
+  lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * (sunBaked(vWorld, landAt(vWorld.xz)) * rigGap) * occ);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;

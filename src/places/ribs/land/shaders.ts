@@ -196,12 +196,13 @@ void main() {
   stain *= 1.0 - 0.6 * plain * smoothstep(0.35, 0.65, vnoise(vWorld.xz * 0.07 + y * 0.05 + 3.0));
   // Dark water streaks run down a blade by the fall line, thin and long.
   // A few, broad and broken, in the places where the water gathers: never an even hatch over the face.
-  float streak = smoothstep(0.5, 0.78, vnoise(fall * vec2(0.3, 0.008) + 23.0) * 0.7 + vnoise(fall * vec2(0.085, 0.004) + 5.0) * 0.3) * smoothstep(0.42, 0.62, vnoise(fall * vec2(0.021, 0.013) + 40.0)) * uFin;
+  // This stone is laid on no blade (uFin is 0 on every rock that wears it, index.ts): the blade's streaks, three noises times nought, are not worked out.
+  float streak = 0.0;
   albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.6), max(stain * 0.7, 0.5 * streak) * (1.0 - step(0.5, uTier)));
   float roost = vnoise(fall0 * vec2(0.031, 0.045) + 2.0) * 0.65 + vnoise(fall0 * vec2(0.11, 0.13)) * 0.35;
   float run = vnoise(fall * vec2(1.3, 0.05) + 11.0) * 0.6 + vnoise(fall * vec2(4.1, 0.16)) * 0.4;
   // On a blade the runs are wide and few: a fine one over the whole face is a hatch.
-  run = mix(run, vnoise(fall * vec2(0.37, 0.016) + 11.0) * 0.65 + vnoise(fall * vec2(0.11, 0.006)) * 0.35, uFin);
+  // (The blade's wide runs were mixed in here by uFin, which is 0: two noises for nothing.)
   // Fine upright fractures and runs of water down a blade's face.
   float white = smoothstep(0.45, 0.75, run * (0.35 + 1.1 * roost) + 0.25 * (nh.z - 0.5)) * smoothstep(0.3, 0.55, roost);
   white = max(white, 0.8 * smoothstep(0.55, 0.9, n0.y) * smoothstep(0.3, 0.6, roost + 0.3 * (nh.z - 0.5)));
@@ -242,7 +243,7 @@ void main() {
   // Against the light the edge of the stone burns: the sun grazes round the rough rim toward the lens.
   float edge = 1.0 - max(dot(n, v), 0.0);
   float back = max(dot(-v, uSunDir), 0.0);
-  lit += albedo * uSunColour * (0.3 * edge * edge * edge * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
+  lit += albedo * uSunColour * (0.3 * edge * edge * edge * back * back * (sunBaked(vWorld, landAt(vWorld.xz)) * rigGap) * occ);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -379,7 +380,7 @@ void main() {
   float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4) * (1.0 - 0.6 * deep);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
-  vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * vec3(dot(uSunColour, vec3(0.36, 0.36, 0.28))) * cloudShade(vWorld)) * (0.3 / 3.14159) * (0.75 + 0.25 * occ);
+  vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * vec3(dot(uSunColour, vec3(0.36, 0.36, 0.28))) * rigGap) * (0.3 / 3.14159) * (0.75 + 0.25 * occ);
   lit = max(lit, fill);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
@@ -543,7 +544,8 @@ void main() {
 #endif
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
-  c += thread * 0.035 * uDark * above * skyOpen(vWorld);
+  // Where no thread runs, the land and what stands on it are not read for it (neither picture has levels: read in a branch they are the same).
+  if (thread > 0.0) c += thread * 0.035 * uDark * above * skyOpen(vWorld);
   // No shade here is black: what faces away still takes the sky and the bounce of the wet floor. The wet hems hold a glint of the sky.
   c = max(c, albedo * above * (0.36 / 3.14159) * (0.6 + 0.4 * occ));
   // Close, the wet shows as small glints on the blades of weed that turn to the sky, not as a sheen over the whole wall.
