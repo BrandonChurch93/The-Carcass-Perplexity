@@ -472,3 +472,13 @@ Complete this picture to the right. The left half is a telephoto photograph at e
 Takes: 1 made of each of the four, take 1 kept.
 Why this one: the north wall of the last shot three times as wide, so that it can hang at two thirds of its size as in approved eye-4 (gold across the left half, the cave small, scree at the right) and never repeats as the camera climbs (asked for by `eye_sky_builder`).
 Date: 2026-11-26
+
+## `public/assets/eye/mat/far-long3-cut.png`
+
+Made by: `assets-src/eye/mat/cut-layers.py` on Python 3 with OpenCV 5.1 and NumPy.
+From: `public/assets/eye/mat/far-long3.jpg`, and the lines drawn by hand over it that stand as numbers in the script: where the scree meets the rock, and the edges of the two buttresses of the middle third.
+Prompt or command: `python3 assets-src/eye/mat/cut-layers.py`
+
+Takes: 1 made, take 1 kept.
+Why this one: the far wall of the last shot stood as one flat picture. Cut into the scree foot, the buttresses and the far face, each on its own cylinder, the wall parts as the lens climbs. Red is buttress, green is scree foot, blue is how far above a covered point the far face begins (what the shader shows where the layers part); it is half the picture's size.
+Date: 2026-11-28

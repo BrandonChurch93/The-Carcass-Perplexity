@@ -251,7 +251,8 @@ export function landHeight(x: number, z: number): number {
     const reach = 7 + 5 * vnoise(along / 31, 7.7);
     if (off < reach) {
       // On the beach it has cut itself a narrow bed with short banks; on the fan and in the ravine the ground opens wide to it.
-      const wet = 1.2 + 1.2 * vnoise(along / 9, 3.3);
+      // Over the bench it spreads: bedrock gives it no bed to keep to.
+      const wet = 1.2 + 1.2 * vnoise(along / 9, 3.3) + 1.7 * smooth(66, 78, along) * smooth(124, 110, along);
       const open = smooth(wet, wet + 1.5 + (reach - wet - 1.5) * smooth(28, 60, along), off);
       const floor = streamFloor(along);
       const bed = floor + 0.4 * (vnoise(x / 2.3, z / 2.3) - 0.5) * smooth(18, 40, along);

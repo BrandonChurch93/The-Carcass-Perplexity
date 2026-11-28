@@ -61,6 +61,8 @@ export interface Build {
   stem?: number;
   leg: number;
   head: number;
+  /** How long the trunk is from the hip to the shoulder, of what it was made with. */
+  long?: number;
 }
 
 export interface Hoof {
@@ -156,7 +158,7 @@ export function solve(b: Build, p: Pose, out: Float32Array): Solved {
     }
   };
 
-  const trunkShape = diag(s * b.girth * (1 + p.breath), s * b.depth * (1 + 0.35 * p.breath), s);
+  const trunkShape = diag(s * b.girth * (1 + p.breath), s * b.depth * (1 + 0.35 * p.breath), s * (b.long ?? 1));
   const rootTurn = mul(rotY(p.yaw), mul(rotX(p.pitch), rotZ(p.roll)));
   const root: V3 = [p.shift[0], standing(b) + p.shift[1], J('root')[2] * s + p.shift[2]];
   const trunk = mul(rootTurn, trunkShape);
@@ -261,5 +263,6 @@ export function solve(b: Build, p: Pose, out: Float32Array): Solved {
 export function restHoof(b: Build, k: number): V3 {
   const leg = LEGS[k] as (typeof LEGS)[number];
   const fet = J(leg.hind ? 'hfet' : 'ffet');
-  return [fet[0] * leg.side * b.size * b.girth, 0, fet[2] * b.size];
+  const mid = J('root')[2];
+  return [fet[0] * leg.side * b.size * b.girth, 0, (mid + (fet[2] - mid) * (b.long ?? 1)) * b.size];
 }

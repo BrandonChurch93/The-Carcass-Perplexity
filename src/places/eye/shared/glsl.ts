@@ -205,8 +205,8 @@ vec3 mistSkyLight(vec3 low) {
 // clock of this stretch, w: how far it has lifted. Vapour in still air: each stretch thickens, thins and lifts at a slow rate of its own,
 // one nearly at rest beside one that climbs, so the bank never changes everywhere at once and nothing crosses it. The clocks run ahead
 // of and behind the film's by a bounded span, not at fixed unequal rates, which would shear the bank more the later the frame.
-// along is metres along the far shore. Worked out and not read from a picture, and not worked out at all where the bank is even:
-// every look of every mirror asks for mistStands.
+// along is metres along the far shore. Worked out and not read from a picture. A mirror does not ask for it: this renderer pays for
+// every line of every look of every mirror whether its branch is taken or not, and the bank in the water is soft.
 vec2 mistStands(float along) {
   if (uMistE.y <= 0.0) return vec2(1.0);
   float a = along / 1000.0;
@@ -229,8 +229,6 @@ float stillUp(vec3 ro, vec3 rd, float t) {
 
 vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   if (uMistOn <= 0.0 || uMistA.x <= 0.0) return vec4(0.0);
-  // A mirror holds the bank's height and thickness over each stretch, and not the stretch's own clock: it is soft in the water.
-  vec2 stretch = mistStands(along);
   vec4 big = texture(tMistNoise, vec3(along / 1300.0, 60.0 / 1300.0, uTime * 0.0042));
   vec4 mid = texture(tMistNoise, vec3(along / 410.0 + 0.31, 60.0 / 900.0 + 0.17, 0.5 + uTime * 0.0085));
   float cover = smoothstep(0.0, 0.55, 0.9 - uMistC.z + uMistB.z * (2.6 * (big.g - 0.5) + 1.2 * (mid.a - 0.5)));
@@ -239,16 +237,16 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
   stands = mix(stands, 1.0, 0.6);
   cover = mix(cover, 1.0, 0.5);
-  float swell = mix(0.35 + 1.5 * mid.r, 0.65 + 0.9 * mid.r, uMistE.x);
+  float swell = 0.35 + 0.3 * uMistE.x + (1.5 - 0.6 * uMistE.x) * mid.r;
   float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
-  float top = uMistA.z * stands * stretch.x * mix(1.0, 0.9 + 0.4 * sun, uMistE.y) * swell + sheetTop;
-  vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
+  float top = uMistA.z * stands * (1.0 + uMistE.y * (0.4 * sun - 0.1)) * swell + sheetTop;
+  vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.02, 60.0 / 1100.0 + uTime * 0.008));
   float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
   // A bank that is not torn stands in the mirror as one soft bank, not as a row of heaps.
   // And water that is never quite flat gives back no single heap: in the mirror the bank is nearly whole, with a soft top.
   heap = mix(1.0, heap, 0.3 * uMistB.z);
   float h = up / (top * heap);
-  float bank = uMistB.y * cover * stands * stretch.y * 0.6 * min(uMistA.w, 320.0) * (uMistE.x > 0.0 ? mix(pow(clamp(1.0 - h, 0.0, 1.0), 2.4), exp(-3.0 * h) * smoothstep(2.2, 1.2, h), uMistE.x) : pow(clamp(1.0 - h, 0.0, 1.0), 2.4));
+  float bank = uMistB.y * cover * stands * 0.6 * min(uMistA.w, 320.0) * pow(clamp(1.0 - h / (1.0 + 1.2 * uMistE.x), 0.0, 1.0), 2.4 + 2.6 * uMistE.x);
   float sheet = uMistB.x * cover * min(sheetTop / max(rd.y, 1e-3), 0.5 * uMistA.x) * exp(-up / max(sheetTop, 0.05));
   float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * uMistC.w * (1.0 - uSolo);
   float toSun = dot(rd, uSunDir);
@@ -296,6 +294,23 @@ vec2 plateUv(vec3 ro, vec3 rd) {
 // The far world along a ray, with the screen gradients of plateUv(ro, rd) handed in: gx = dFdx(uv), gy = dFdy(uv), both taken at the
 // top of main before any branch. Nothing in here takes a derivative or reads a mipmapped picture at an implicit level, so it may be
 // called under a branch, in a loop or after a discard and repeats from render to render. bias softens it by that many mip levels.
+// This renderer pays for every line of it at every call, taken or not, so a program that knows more than its uniforms tell says so by
+// name before RIG_GLSL, and what it cannot reach is left out of it. EYE_FAR_STRAIGHT 1: every call of this program is a straight look
+// (bias 0), never a mirror. EYE_TALL 1: the picture hung is a wall alone (uPlateTone.w over 1.5) in every frame this program draws,
+// 0: it never is. EYE_CIRRUS 0: the picture hung has no streak of high cloud (uCirrus.x + uCirrus.y is 0). EYE_PLATE_AIR 0: its air is
+// plain (uPlateAir.x is 1 and uPlateAir.z is 0). Unnamed, every test is made as written. The names only repeat tests the lines below make themselves.
+#ifndef EYE_FAR_STRAIGHT
+#define EYE_FAR_STRAIGHT 0
+#endif
+#ifndef EYE_TALL
+#define EYE_TALL -1
+#endif
+#ifndef EYE_CIRRUS
+#define EYE_CIRRUS 1
+#endif
+#ifndef EYE_PLATE_AIR
+#define EYE_PLATE_AIR 1
+#endif
 vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
   vec3 sky = skyRadiance(rd);
   if (uPlateTone.w < 0.5) return sky;
@@ -304,11 +319,14 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
   float phi = at.z;
   float t = at.w;
   vec3 q = ro + rd * t - uPlateAt.xyz;
+#if !EYE_FAR_STRAIGHT
   if (bias > 0.0 && uPlateDraw > 1.0 && v > uPlateLens.w) {
     v = uPlateLens.w + (v - uPlateLens.w) / uPlateDraw;
     gx.y /= uPlateDraw;
     gy.y /= uPlateDraw;
   }
+#endif
+#if !EYE_FAR_STRAIGHT && EYE_TALL != 0
   bool tall = uPlateTone.w > 1.5 && bias > 0.0;
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
@@ -316,6 +334,13 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
   float drawn = tall ? smoothstep(0.015, 0.22, v - uPlateLens.w) : 0.0;
   // The footprint follows what is read: half as tall where a tall wall is folded back on itself, and level where the picture's edge is held.
   float held = (vv < 0.004 || vv > 0.996) ? 0.0 : (tall && v > 0.95 ? 0.495 : 1.0);
+#else
+  // Never a wall alone seen in a mirror: nothing is drawn out, and the picture is read where it stands.
+  float over = 0.0;
+  float vv = v;
+  float drawn = 0.0;
+  float held = (vv < 0.004 || vv > 0.996) ? 0.0 : 1.0;
+#endif
   gx.y *= held;
   gy.y *= held;
   // The level of the picture a pixel's footprint asks for, worked out here and read with textureLod: the renderer's own textureGrad
@@ -328,22 +353,27 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
   float level = 0.5 * log2(max(max(min(fa, fb), 0.25 * max(fa, fb)), 1e-8));
   // Seen straight, the wall stands behind the bank of mist and the damp air over it, and what is seen through them is soft: softest at
   // the water. A level of the picture and not of the frame, so that the wall is as soft at every size the film is drawn at.
-  if (bias <= 0.0 && uMistE.w > 0.0) level = max(level, uMistE.w * uMistOn * (0.5 + 0.5 * exp(-max(q.y, 0.0) / max(0.8 * uMistA.z, 1.0))));
+  if (bias <= 0.0 && uMistE.w > 0.0) level = max(level, uMistE.w * uMistOn * (0.5 + 0.5 * clamp(1.0 - q.y / max(2.0 * uMistA.z, 1.0), 0.0, 1.0)));
   vec3 plate = ungrade(textureLod(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), level + bias + uPlateSoft + 2.5 * over + 2.0 * drawn).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
+#if !EYE_FAR_STRAIGHT && EYE_TALL != 0
   if (tall) {
     float wider = level + bias + 3.2 * drawn + 2.5 * over;
     plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(textureLod(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), wider).rgb)
       + ungrade(textureLod(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), wider).rgb));
   }
+#endif
   // The low sun comes through thin high cloud: what it lights on the far wall swells and fades a little where it stands, the shade never.
   float lit = smoothstep(0.2, 0.4, (plate.r - plate.b) / max(plate.r + plate.b, 1e-3));
   plate *= 1.0 + lit * (0.05 * sin(u * 7.0 + 1.3) * sin(uTime * 0.45) + 0.035 * sin(u * 13.0) * sin(uTime * 0.27 + 2.0));
+#if EYE_CIRRUS
   if (uCirrus.x + uCirrus.y > 0.0) {
     vec2 xy = vec2(tan(phi), (v - uPlateLens.w) * 2.0 * uPlateLens.z);
     float streak = uCirrus.x * cirrus(xy, uCirrusA) + uCirrus.y * cirrus(xy, uCirrusB);
     if (streak > 0.0) plate += vec3(1.0, 0.84, 0.78) * (dot(plate, vec3(0.3, 0.5, 0.2)) * streak / (1.0 + 0.5 * bias));
   }
+#endif
+#if EYE_PLATE_AIR
   if (uPlateAir.x != 1.0 || uPlateAir.z > 0.0) {
     float grey = max(dot(plate, vec3(0.3, 0.5, 0.2)), 1e-4);
     float lowDown = smoothstep(uPlateAir.w, 0.35 * uPlateAir.w, v - uPlateLens.w);
@@ -351,7 +381,9 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
     plate = mix(plate, grey * vec3(0.72, 0.78, 0.88), uPlateAir.z * lowDown * warm);
     plate *= pow(grey / uPlateAir.y, uPlateAir.x - 1.0);
   }
+#endif
   // Seen from high on the rim the sky of the picture is the pale sky of the hour, more silver than blue, in the air and in the water alike.
+#if EYE_TALL != 1
   if (uPlateTone.w < 1.5) {
     float paler = smoothstep(0.0, 0.25, (plate.b - plate.r) / max(plate.b, 1e-3)) * smoothstep(8.0, 40.0, cameraPosition.y);
     plate = mix(plate, dot(plate, vec3(0.3, 0.5, 0.2)) * vec3(1.04, 1.05, 1.1), 0.6 * paler);
@@ -362,13 +394,16 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
     plate *= mix(1.0, clamp(pow(max(lum, 1e-4) / uPlateShade.y, 0.45), 0.5, 1.0), fromHigh * rockish * uPlateShade.x);
     plate *= mix(1.0, 0.62, fromHigh * rockish * uPlateShade.x * smoothstep(0.42, 0.72, atan(q.x, -q.z)));
   }
+#endif
   // The sky of the picture itself, in a mirror, is the low warm sky: water that is never quite still gives back less of the blue overhead.
+#if !EYE_FAR_STRAIGHT
   if (bias > 0.0) {
     // That is how a low eye sees it. An eye that stands high over the water looks down into the mirror and finds the sky overhead in it.
     float high = smoothstep(8.0, 40.0, cameraPosition.y);
     float blue = smoothstep(0.0, 0.25, (plate.b - plate.r) / max(plate.b, 1e-3));
     plate = mix(plate, dot(plate, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.72, 0.56), 0.85 * blue * (1.0 - high));
     sky = mix(skyRadiance(normalize(vec3(rd.x, min(rd.y, 0.1), rd.z))) * vec3(0.5, 0.46, 0.44), sky * 1.25, high);
+#if EYE_TALL != 0
     if (tall) {
       vec3 slate = skyRadiance(normalize(vec3(rd.x, max(rd.y, 0.35), rd.z))) * mix(0.62, 0.26, smoothstep(0.03, 0.3, rd.y));
       float lum = dot(plate, vec3(0.3, 0.5, 0.2));
@@ -376,9 +411,13 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
       vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, stillUp(ro, rd, t), plate);
       return mix(plate, bank.rgb, bank.a);
     }
+#endif
+#if EYE_TALL != 1
     vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, stillUp(ro, rd, t), plate);
     return mix(mix(plate, sky, smoothstep(0.9, 0.995, v)), bank.rgb, bank.a);
+#endif
   }
+#endif
   return mix(plate, sky, smoothstep(0.9, 0.995, v));
 }
 
@@ -535,3 +574,15 @@ void main() {
   vNormal = normalize(mat3(modelMatrix) * n);
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
+
+/** The names by which a program leaves out of farRadianceAt what the picture hung in this frame never asks of it. Each is the test
+ * farRadianceAt itself makes, made of the value the shader is handed (a 32 bit float). */
+export function farNames(uniforms: Record<string, { value: unknown } | undefined>): Record<string, number> {
+  const f = Math.fround;
+  const cirrus = uniforms.uCirrus?.value as { x: number; y: number } | undefined;
+  const air = uniforms.uPlateAir?.value as { x: number; z: number } | undefined;
+  return {
+    EYE_CIRRUS: !cirrus || f(f(cirrus.x) + f(cirrus.y)) > 0 ? 1 : 0,
+    EYE_PLATE_AIR: !air || f(air.x) !== 1 || f(air.z) > 0 ? 1 : 0,
+  };
+}

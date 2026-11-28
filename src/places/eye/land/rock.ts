@@ -3,6 +3,7 @@
 //   tCliff, tCliffNh (cliff, 120 m a repeat, beds level, rubble at its foot), tTalus, tTalusNh (shore, 4 m), tSinter, tSinterNh (sinter, 3 m): the pictures in public/assets/eye/mat/.
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
+import { SHORE_LAY_GLSL } from './lay';
 
 /** A plate is one piece of ground and does not repeat: laid end to end it is turned over at every edge, so no seam shows. */
 export function mirrored(t: THREE.Texture): THREE.Texture {
@@ -37,6 +38,7 @@ uniform sampler2D tScree;
 uniform sampler2D tScreeH;
 uniform sampler2D tGravel;
 uniform sampler2D tGravelNh;
+${SHORE_LAY_GLSL}
 
 // The plate of the scree slope, 24 m by 13.5 m of broken grey stone seen from above, laid on the ground as it lies. Returns colour and, in a, its height.
 vec3 gDx;
@@ -231,7 +233,8 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     if (fine > 0.02) {
       // The picture of the shore itself, two metres of it, a quarter of its own size, as the lip has it (lip.ts): stones of every size in wet grit, with weed dried on them.
       // From the rim the same picture is laid two and a half times larger and turned: cobbles are boulders there, in beds of gravel.
-      vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6, p.xz * 4.0, lowEye) / vec2(8.0, 4.5);
+      vec4 lay = shoreLay(tShorePH, p.xz);
+      vec2 su = mix(vec2(p.x * 0.88 + p.z * 0.47, -p.x * 0.47 + p.z * 0.88) / 2.6 / vec2(8.0, 4.5), lay.xy, lowEye);
       float seen = fine;
       float sl = AT(1672.0, mix(20.8, 2.0, lowEye));
       vec3 sc = textureLod(tShoreP, su, sl).rgb;
@@ -241,7 +244,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
       if (lowEye > 0.01) {
         sh = textureLod(tShorePH, su, sl).r;
         float es = 0.004;
-        lean = 2.0 * vec2(textureLod(tShorePH, su + vec2(es / 2.0, 0.0), sl).r - sh, textureLod(tShorePH, su + vec2(0.0, es / 1.125), sl).r - sh);
+        lean = shoreLean(lay, 2.0 * vec2(textureLod(tShorePH, su + vec2(es / 2.0, 0.0), sl).r - sh, textureLod(tShorePH, su + vec2(0.0, es / 1.125), sl).r - sh));
       } else {
         // Its grit is finer gravel of the same stone, read from the picture again at its own size.
         vec3 grit = textureLod(tShoreP, p.xz / vec2(8.0, 4.5) + 0.37, AT(1672.0, 8.0)).rgb;

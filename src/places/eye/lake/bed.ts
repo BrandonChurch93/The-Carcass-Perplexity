@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { KEYS } from '../cameras';
 import { mirrored } from '../land/rock';
+import { SHORE_LAY_GLSL } from '../land/lay';
 
 /** Per metre of water: red goes first, so that the deep is blue and then black. */
 export const ABSORB: [number, number, number] = [0.12, 0.045, 0.03];
@@ -43,6 +44,7 @@ uniform sampler2D tLipPlateH;
 uniform sampler2D tSinter;
 uniform sampler2D tShore;
 uniform sampler2D tShoreH;
+${SHORE_LAY_GLSL}
 uniform sampler2D tWall;
 // How steeply the wall falls from the lip, against the wide shot's.
 uniform float uWallFall;
@@ -66,6 +68,8 @@ struct Bed {
 vec2 gFx;
 vec2 gFy;
 float gCovers;
+// How far the bent look travels along the bed for each metre it goes down.
+vec2 gSlide;
 
 // How coarse a picture is read where one pixel covers ax and ay of it, in its own texels: the level at which the short side of that is one
 // texel, and never finer than half the long side. The level is worked out and the picture read at it (textureLod): a read that is handed
@@ -119,8 +123,8 @@ vec3 lipNear(vec2 xz, vec2 from, vec3 lip) {
 // turned over at each end, from 0.9 m outside the line of the lip to 4.7 m inside it.
 // The mats reach this far out from the lip before they thin; the two sizes the picture of them is laid at, metres.
 const float MAT_REACH = 260.0;
-const float MAT_A = 6.5;
-const float MAT_B = 9.2;
+const float MAT_A = 3.4;
+const float MAT_B = 4.9;
 // The flats seen from the rim are one picture of them from straight above (1671 by 941), laid by the ground in metres at two sizes,
 // each turned its own way. Metres that the long side of it covers, and its short side as a share of the long.
 const float FLAT_A = 170.0;
@@ -212,13 +216,15 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     float under = beach * smoothstep(40.0, 16.0, away);
     if (under > 0.0) {
       // The shore's lip (land/lip.ts) goes on under the water as the same ground: its sheet at its size and place (two metres a repeat,
-      // not turned, not moved) and its height sheet read as it reads it, so a stone half in the water is one stone. The height is read
+      // turned and shifted band by band as land/lay.ts lays it) and its height sheet read as it reads it, so a stone half in the water is one stone. The height is read
       // three times, a finger apart, for the lean of each stone's side: it is what the light and the rings have to tell the bed by.
-      const mat2 laid = mat2(0.5, 0.0, 0.0, 1.0 / 1.125);
-      vec2 q = b / vec2(2.0, 1.125);
+      vec4 lay = shoreLay(tShoreH, b);
+      vec2 q = lay.xy;
+      mat2 laid = mat2(lay.z * 0.5, -lay.w / 1.125, lay.w * 0.5, lay.z / 1.125);
       vec3 grit = readAt(tShore, q, laid).rgb;
       float fine = readAt(tShoreH, q, laid, 3.0).r;
       vec2 lean = vec2(readAt(tShoreH, q + vec2(0.0125, 0.0), laid, 3.0).r, readAt(tShoreH, q + vec2(0.0, 0.0222), laid, 3.0).r) - fine;
+      lean = shoreLean(lay, lean);
       vec2 t = vec2(b.x * 0.82 + b.y * 0.57, -b.x * 0.57 + b.y * 0.82);
       float stand = smoothstep(0.42, 0.9, readAt(tShoreH, t / vec2(6.4, 3.6) + 0.37, mat2(0.82 / 6.4, -0.57 / 3.6, 0.57 / 6.4, 0.82 / 3.6), 4.0).r);
       // Under the water they are lower than on the lip, where the wash has not laid them: fine gravel, and a cobble here and there.
@@ -313,12 +319,21 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
       float fine = smoothstep(0.012, 0.004, px);
       near3 = mix(readAt(tMat, qa, ma, 1.2 * fine).rgb, readAt(tMat, qb, mb, 1.2 * fine).rgb, pick);
       mh = mix(ha, hb, pick);
+      // The mat is not one sheet. Under the strands that lie in the surface there is a second bed of them a hand down, with its own
+      // pale rock: it is seen in the gaps of the first, soft and rust with the water over it, and it slides under the first as the eye moves.
+      {
+        mat2 mc = mat2(0.829, 0.559, -0.559, 0.829) / (MAT_B * 0.73);
+        vec2 qc = mc * (b + gSlide * 0.11 + sway * 0.5) + 0.21;
+        vec3 low3 = readAt(tMat, qc, mc, 1.0).rgb;
+        float gap = smoothstep(0.55, 0.22, mh);
+        near3 = mix(near3, low3 * vec3(0.66, 0.45, 0.28), 0.85 * gap);
+      }
       if (fine > 0.0) {
         vec3 tile = readAt(tMatTile, vec2(qa.y, qa.x) * (MAT_A / 2.6) + sway * 0.4, mat2(-0.309, 0.951, 0.951, 0.309) / 2.6).rgb;
         float hair = smoothstep(0.06, 0.3, dot(tile, vec3(0.4, 0.5, 0.1)));
         // The hair lies on the weed, not on the bare slab.
         float weedy = fine * smoothstep(0.75, 0.5, mh) * 0.85;
-        near3 = mix(near3, mix(near3 * 0.55, tile * 1.3, hair), weedy);
+        near3 = mix(near3, mix(near3 * 0.75, tile * 1.3, hair), weedy);
         mh += weedy * 0.2 * (hair - 0.45);
       }
     }
@@ -381,6 +396,13 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     float high = mix(mix(0.5, combed, fromRim), mh, told);
     // The strands that stand highest are the palest: gold where the low sun finds them.
     weed *= mix(vec3(1.0), vec3(1.5, 1.38, 0.95), told * smoothstep(0.42, 0.85, mh));
+    // Near enough to tell strand from strand they are amber and rust, not the tan of the patch seen whole.
+    // The slabs among them are limestone: pale, hardly dyed.
+    float slabby = told * smoothstep(0.68, 0.84, mh);
+    weed = max(mix(vec3(dot(weed, vec3(0.3, 0.6, 0.1))), weed, 1.0 + 0.28 * smoothstep(0.03, 0.006, px) * (1.0 - slabby)), 0.0) * mix(vec3(1.0), vec3(0.93, 1.07, 0.9), smoothstep(0.03, 0.006, px) * (1.0 - slabby));
+    // Rust is the dye of the deep strands; no bunch near the eye is red through and through.
+    weed.g = max(weed.g, weed.r * 0.56 * smoothstep(0.03, 0.006, px));
+    weed = mix(weed, dot(weed, vec3(0.3, 0.6, 0.1)) * vec3(1.0, 0.97, 0.9), 0.7 * slabby);
     // At the torn edge of a patch only the strands that stand highest are left: wisps, not a line.
     float lies = smoothstep(0.0, 0.22, cover * 1.25 - (1.0 - high) * 0.7 * told * smoothstep(0.95, 0.5, cover) - 0.12 * (1.0 - told));
     // From the rim it is the picture of the flats that says where the weed is: its channels are open water even in the thick of a bed.
@@ -388,6 +410,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     o.albedo = mix(bare, weed, lies);
     // Its relief says what lies where: the strands that stand highest lie in the surface, the gaps between are a hand deeper.
     float up = (high - 0.62) * 0.34;
+    // Where a slab or a tuft comes out of the water it is ringed dark and wet at the waterline.
+    o.albedo *= 1.0 - 0.45 * told * lies * smoothstep(0.02, 0.004, abs(up - 0.006));
     o.depth = mix(depth, max(-up, 0.0) + 0.015, lies);
     // From far off and low, the tops of the mats that lie in the surface take the mirror from the water.
     float afloat = mix(0.2, mix(0.08, 0.95, smoothstep(6.0, 30.0, cameraPosition.y)), smoothstep(0.03, 0.4, px)) * smoothstep(0.3, 0.6, high);
@@ -430,19 +454,27 @@ Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   // From beside the edge the wall is rock under the eye, a few metres off: broken pale stone that falls away in ledges, seen from over it.
   // The Builder's picture of the wall is a face seen from in front; laid down under the eye its beds are the lines of a map and its shading
   // is a hanging cloth. So here it is the pale stone of the shelf itself, seen from above as the eye sees it, that goes down into the water.
+#if EYE_EDGE
+  // Beside the edge it is a face: the stone is laid on it by its length round the lip and its depth, and it is ribbed down its fall.
+  vec2 face = vec2(atan(b.x, b.y) * 480.0, down * 1.3);
+  vec3 c = readAt(tSinter, face / 4.1 + 0.3, mat2(1.0 / 4.1), 2.8).rgb;
+  float great = dot(readAt(tSinter, face / 13.0 + 0.6, mat2(1.0 / 13.0)).rgb, vec3(0.33));
+  o.albedo = clamp(c * 1.45, 0.0, 0.95) * vec3(0.9, 0.95, 0.94) * (0.5 + 0.4 * vnoise(vec2(face.x / 2.6, down / 3.0 + 3.0)) + 0.4 * vnoise(vec2(face.x / 9.0 + 5.0, down / 1.1)) * vnoise(vec2(face.x / 1.3 + 9.0, down / 7.0)));
+#else
   vec3 c = readAt(tSinter, b / 4.1 + 0.3, mat2(1.0 / 4.1)).rgb;
   float great = dot(readAt(tSinter, b / 13.0 + 0.6, mat2(1.0 / 13.0)).rgb, vec3(0.33));
   o.albedo = clamp(c * 1.45, 0.0, 0.95) * vec3(0.9, 0.95, 0.94);
+#endif
   float ledge = (0.35 + 0.65 * smoothstep(0.25, 0.6, great)) * (0.6 + 0.4 * smoothstep(0.1, 0.45, dot(c, vec3(0.33))));
   // Ledge under ledge it turns to a wall that the sky overhead no longer lights: past a few metres down only its highest ledges are seen.
 #if EYE_LEAVE
   ledge *= 1.0 - smoothstep(3.5, 17.0, down - 5.0 * great);
 #else
-  ledge *= 1.0 - smoothstep(1.5, 9.0, down - 3.0 * great);
+  ledge *= 1.0 - smoothstep(5.0, 30.0, down - 3.0 * great);
   // The weed of the lip hangs over its edge into the water: strands a hand wide and a metre or two long, each of its own length.
   float alongLip = atan(b.x, b.y) * 480.0;
   float strand = vnoise(vec2(alongLip / 0.22, down / 3.5 + 2.0));
-  float hangs = smoothstep(0.52, 0.7, strand + 0.25 * (vnoise(vec2(alongLip / 1.9 + 5.0, 0.5)) - 0.5)) * smoothstep(1.5 + 4.5 * vnoise(vec2(alongLip / 0.6, 7.0)), 0.2, down);
+  float hangs = smoothstep(0.52, 0.7, strand + 0.25 * (vnoise(vec2(alongLip / 1.9 + 5.0, 0.5)) - 0.5)) * smoothstep(0.7 + 2.2 * vnoise(vec2(alongLip / 0.6, 7.0)), 0.2, down);
   o.albedo = mix(o.albedo, vec3(0.3, 0.14, 0.04), 0.85 * hangs);
   ledge = mix(ledge, 0.8, hangs);
 #endif
