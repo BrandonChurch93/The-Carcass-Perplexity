@@ -521,9 +521,10 @@ void main() {
     deep += vec3(0.11, 0.12, 0.115) * skyDown * pale * (0.5 + 0.5 * smoothstep(0.1, 0.6, v.y));
     // And what it trails: pale lengths under the water that leave it on all sides, no two alike, lost within a few of its widths.
     float trail = r / uDome.y;
-    float ribs = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * smoothstep(0.35, 0.9, trail) * smoothstep(2.8, 1.0, trail + 0.8 * (vnoise(out2 * 2.3 + 7.0) - 0.5))
-      * smoothstep(0.5, 0.7, vnoise(out2 * 5.5 + vec2(0.004, 0.003) * r + 3.1) + 0.25 * (vnoise(out2 * 14.0 + 9.0) - 0.5));
-    deep += vec3(0.2, 0.235, 0.215) * skyDown * ribs * smoothstep(0.75, 1.15, trail);
+    float ribs = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * smoothstep(0.35, 0.9, trail) * smoothstep(2.3, 0.9, trail + 1.2 * (vnoise(out2 * 3.3 + 7.0) - 0.5))
+      * smoothstep(0.56, 0.72, vnoise(out2 * 10.0 + vec2(0.022, -0.016) * r + 3.1) + 0.3 * (vnoise(p.xz / 9.0 + 9.0) - 0.5));
+    // Only a low eye, looking along the water, has them: from over it the deep is the deep.
+    deep += vec3(0.17, 0.2, 0.185) * skyDown * ribs * smoothstep(0.75, 1.15, trail) * smoothstep(0.2, 0.09, v.y) * (1.0 - uLeave.x);
     // Seen low, what comes up out of the shaft is green and blue: the warm of the evening does not go down there.
     deep *= mix(vec3(1.0), vec3(0.55, 0.84, 0.98), smoothstep(12.0, 4.0, cameraPosition.y));
     under += deep * (1.0 - crusted);
