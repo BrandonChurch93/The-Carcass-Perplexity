@@ -450,15 +450,23 @@ Bed wallAt(vec2 b, float down, float inside, vec2 fell) {
   // From beside the edge the wall is rock under the eye, a few metres off: broken pale stone that falls away in ledges, seen from over it.
   // The Builder's picture of the wall is a face seen from in front; laid down under the eye its beds are the lines of a map and its shading
   // is a hanging cloth. So here it is the pale stone of the shelf itself, seen from above as the eye sees it, that goes down into the water.
+#if EYE_EDGE
+  // Beside the edge it is a face: the stone is laid on it by its length round the lip and its depth, and it is ribbed down its fall.
+  vec2 face = vec2(atan(b.x, b.y) * 480.0, down);
+  vec3 c = readAt(tSinter, face / 4.1 + 0.3, mat2(1.0 / 4.1)).rgb;
+  float great = dot(readAt(tSinter, face / 13.0 + 0.6, mat2(1.0 / 13.0)).rgb, vec3(0.33));
+  o.albedo = clamp(c * 1.45, 0.0, 0.95) * vec3(0.9, 0.95, 0.94) * (0.55 + 0.6 * vnoise(vec2(face.x / 2.3, down / 11.0 + 3.0)) + 0.25 * (vnoise(vec2(face.x / 0.7 + 11.0, down / 4.0)) - 0.5));
+#else
   vec3 c = readAt(tSinter, b / 4.1 + 0.3, mat2(1.0 / 4.1)).rgb;
   float great = dot(readAt(tSinter, b / 13.0 + 0.6, mat2(1.0 / 13.0)).rgb, vec3(0.33));
   o.albedo = clamp(c * 1.45, 0.0, 0.95) * vec3(0.9, 0.95, 0.94);
+#endif
   float ledge = (0.35 + 0.65 * smoothstep(0.25, 0.6, great)) * (0.6 + 0.4 * smoothstep(0.1, 0.45, dot(c, vec3(0.33))));
   // Ledge under ledge it turns to a wall that the sky overhead no longer lights: past a few metres down only its highest ledges are seen.
 #if EYE_LEAVE
   ledge *= 1.0 - smoothstep(3.5, 17.0, down - 5.0 * great);
 #else
-  ledge *= 1.0 - smoothstep(1.5, 9.0, down - 3.0 * great);
+  ledge *= 1.0 - smoothstep(5.0, 30.0, down - 3.0 * great);
   // The weed of the lip hangs over its edge into the water: strands a hand wide and a metre or two long, each of its own length.
   float alongLip = atan(b.x, b.y) * 480.0;
   float strand = vnoise(vec2(alongLip / 0.22, down / 3.5 + 2.0));
