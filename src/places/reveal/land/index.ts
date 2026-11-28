@@ -9,7 +9,7 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
 import { LEVELS, pairFor, type Level } from './levels';
-import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_READ, BODY_UNIFORMS } from './body';
+import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_WET } from './body';
 
 // The window of the first approved picture in the master (references/approved/7-reveal/pullback.json): the bed map covers it.
 const BED = { x: 1126.18, y: 1498.28, w: 293.34, h: 165.09 };
@@ -23,6 +23,7 @@ const FEEDER: [number, number][] = [[1224.0, 1440.0], [1226.8, 1468.5], [1221.0,
 const BODY_RELIEF = Number(import.meta.env.VITE_BODY_RELIEF ?? 1.6);
 const BODY_SHADOW = Number(import.meta.env.VITE_BODY_SHADOW ?? 1.0);
 const BODY_FINE = Number(import.meta.env.VITE_BODY_FINE ?? 0.7);
+const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.4);
 
 export const PARTS = ['sea', 'continent', 'salt', 'lake', 'lava'] as const;
 
@@ -488,6 +489,7 @@ ${BODY_COARSE}
   vec3 natural = ground;
 
   // ---- the colour of this place: cold. The growth of the lowlands is dark slate and teal, the rock blue grey, the high crests the pale of old bone. ----
+${BODY_PILE}
   lum = dot(ground, vec3(0.3, 0.55, 0.15));
   // (The red of the map itself, before this place's colour is laid on it: the brine of the pan.)
   float rawBrine = (ground.r - ground.g) / max(lum, 0.02);
@@ -659,6 +661,7 @@ ${BODY_COARSE}
   // (The same low country as on the way up, a little darker under the air of orbit: no change of colour at the top of the rise.)
   vec3 countryColour = 0.55 * floorTone * (0.34 + 2.3 * lowLum);
   ground = mix(ground, countryColour, 0.7 * lowCountry);
+${BODY_PILE_END}
 ${BODY_GROUND}
   // From orbit the skull is one pale dome of old bone, its valleys gone into it, and the basin beside the lake of the Eye lies in
   // shade: the second socket. (Only from that height: lower down it is a massif like any other.)
@@ -1197,7 +1200,7 @@ ${BODY_CAST}
   water = mix(water, vec3(0.62, 0.66, 0.68) * light / 3.14159, 0.7 * surf);
   vec3 colour = mix(water, earth + 0.4 * glare, land);
   // (By night the low coast has no line: the wet plain is a shade over the sea beside it and the land rises out of that into the moon's light.)
-  if (uDusk > 0.0) colour = mix(colour, max(colour, water) * 0.35 + water * 0.95, 0.8 * (1.0 - smoothstep(0.04, 0.34, height)) * land * uEmber.x);
+  if (uDusk > 0.0) colour = mix(colour, max(colour, water) * 0.35 + water * 0.95, 0.8 * (1.0 - smoothstep(0.04, ${BODY_WET}, height)) * land * uEmber.x);
   // (A pale crust lies at the foot of the lake's rim, where the water has stood higher.)
   // (And below it, at the water, a narrow band of wet ground, dark, wide in one reach and a thread in the next.)
 #ifdef NEAR
@@ -1323,7 +1326,7 @@ export function create(ctx: Context): Piece {
   uniforms.uBodyMap = { value: bodyMap };
   uniforms.uBodyRelief = { value: bodyRelief };
   uniforms.uBodyLight = { value: bodyLight };
-  uniforms.uBodyRelief2 = { value: new THREE.Vector3(BODY_RELIEF, BODY_SHADOW, BODY_FINE) };
+  uniforms.uBodyRelief2 = { value: new THREE.Vector4(BODY_RELIEF, BODY_SHADOW, BODY_FINE, BODY_NIGHT) };
   const crossing = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT, defines: { ORBIT: 1, BODY: 1 } });
   const whole = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT, defines: { ORBIT: 1, BODY: 1, BODYONLY: 1 } });
   const wholeNight = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT, defines: { ORBIT: 1, NIGHT: 1, BODY: 1, BODYONLY: 1 } });

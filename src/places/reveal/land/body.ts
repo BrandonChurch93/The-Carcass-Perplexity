@@ -12,13 +12,13 @@ uniform sampler2D uBodyRelief;
 uniform sampler2D uBodyLight;
 #endif
 // How strongly the relief of the body is lit from orbit, how long its ranges' shadows are drawn, and how much finer it is read.
-uniform vec3 uBodyRelief2;
+uniform vec4 uBodyRelief2;
 `;
 
 /** The body's pictures are worked at the size the picture holds: from orbit they are read nearly at their own grain. */
 export const BODY_BIAS = /* glsl */ `
 #ifdef BODY
-  orbitBias *= 1.0 - uBodyRelief2.z * smoothstep(940.0, 1380.0, uViewKm);
+  orbitBias *= 1.0 - uBodyRelief2.z * smoothstep(940.0, 1380.0, uViewKm) * (1.0 - 0.3 * uEmber.x);
 #endif
 `;
 
@@ -43,18 +43,43 @@ export const BODY_COARSE = /* glsl */ `
 #endif
 `;
 
-/** Before the places are laid on the ground: from orbit the country is the body's own picture. */
-export const BODY_GROUND = /* glsl */ `
-#ifdef BODY
-  ground = mix(ground, body, top);
+/** The colours the land sheet lays on the old maps on the way up are not compiled into the programs that draw the body alone:
+ *  there the country is the body's own picture, and what the places after it read is set here to what it is at that height. */
+export const BODY_PILE = /* glsl */ `
+#ifndef BODYONLY
+`;
+export const BODY_PILE_END = /* glsl */ `
+#else
+  lum = dot(ground, vec3(0.3, 0.55, 0.15));
+  float rawBrine = (ground.r - ground.g) / max(lum, 0.02);
+  float top = smoothstep(940.0, 1380.0, uViewKm) * land;
+  float buried = 0.0;
+  float eased = 0.0;
 #endif
 `;
 
-/** The light of the relief from orbit: the crests are not eased, every ridge has a lit side and a shaded one. */
+/** Before the places are laid on the ground: from orbit the country is the body's own picture. */
+export const BODY_GROUND = /* glsl */ `
+#ifdef BODY
+  ground = mix(ground, body, joined);
+  // (By night the bones are broad pale ranges under the moon, each in its whole body, as the high ground stands: not their crest lines alone.)
+  float boneBody = joined * land * smoothstep(0.25, 0.45, height) * smoothstep(0.09, 0.24, dot(coarseGround, vec3(0.3, 0.55, 0.15)));
+  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.5 * uEmber.x * boneBody);
+#endif
+`;
+
+/** The light of the relief from orbit: the crests are not eased, every ridge has a lit side and a shaded one, and the low
+ *  country lies quieter than the ranges. (By night the moon rakes it already: the relief is not drawn stronger twice.) */
 export const BODY_LIGHT = /* glsl */ `
 #ifdef BODY
-  // (By night the moon rakes it already: the relief is not drawn stronger twice.)
-  slope *= mix(1.0, uBodyRelief2.x * (1.0 - 0.5 * uEmber.x) / (1.0 - 0.6 * smoothstep(0.3, 0.62, height)), joined);
+  float bodySlope = uBodyRelief2.x * (1.0 - 0.65 * uEmber.x) * mix(0.55, 1.0, smoothstep(0.12, 0.5, height)) / (1.0 - 0.6 * (1.0 - uEmber.x) * smoothstep(0.3, 0.62, height));
+#ifndef BODYONLY
+  bodySlope /= mix(1.0, 0.55, lowness * wide);
+#endif
+  slope *= mix(1.0, bodySlope, joined);
+  // (By night the moon lights the ranges by their whole form, broad, as it does the high ground of any land seen from orbit:
+  // the fine relief is a grain on it, not a wire drawing.)
+  slope = mix(slope, uBodyRelief2.w * boneBody * (coarse.rg * 2.0 - 1.0) + 0.7 * slope, uEmber.x * joined);
 #endif
 `;
 
@@ -62,5 +87,15 @@ export const BODY_LIGHT = /* glsl */ `
 export const BODY_CAST = /* glsl */ `
 #ifdef BODY
   castKm *= mix(1.0, uBodyRelief2.y, joined);
+#endif
+`;
+
+/** How high the wet plain that lies as dark as the sea by night reaches: the body's own country is low over most of its width,
+ *  and only its coastal flats are that plain. (The old maps' figure where they are drawn.) */
+export const BODY_WET = /* glsl */ `
+#ifdef BODY
+mix(0.34, 0.045, smoothstep(940.0, 1380.0, uViewKm))
+#else
+0.34
 #endif
 `;
