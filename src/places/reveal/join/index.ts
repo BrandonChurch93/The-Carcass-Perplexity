@@ -117,6 +117,8 @@ export function create(ctx: Context): Piece {
     },
     resize: (width, height) => {
       target.setSize(Math.max(8, Math.ceil(width / SMALLER)), Math.max(8, Math.ceil(height / SMALLER)));
+      // On the frames of the cut the deck is read here for the rows the Eye draws it on, half the rows of its frame: both sides are then as fine.
+      (lid.uLidRows as THREE.IUniform<number>).value = Math.min(720, height / 2);
     },
     dispose: () => {
       sheet.geometry.dispose();

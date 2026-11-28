@@ -128,24 +128,27 @@ const float LID_RELIEF = ${G(LID_DECK.relief)};
 const vec2 LID_LAST = vec2(${G(LID_DECK.last[0] as number)}, ${G(LID_DECK.last[1] as number)});
 const float LID_TILE = ${G(512)};
 
-// The deck at a place, read from the photographs. x: how much cloud stands there, in banks with open places between them. y: how high
-// its heads stand, 0 to 1: the banks, smaller heads on them, and smaller again. 'lod' is how coarse the eye sees the place: nothing
-// finer than a pixel is read, so nothing swims.
+// The deck at a place, read from the photographs of banks of cumulus. x: how much cloud stands there: a bank with its smaller heads,
+// and open places between the banks. y: how high its heads stand, 0 to 1: the banks, the same banks smaller on them, and smaller again,
+// so the top has heads of every size the lens is near enough to see. 'lod' is how coarse the eye sees the place: nothing finer than a
+// pixel is read, so nothing swims.
 vec2 lidHeads(vec2 p, float lod, bool fine) {
-  float big = textureLod(uLidMap, p * 1.6 + vec2(0.31, 0.62), max(lod + 0.68, 1.5)).r;
+  float big = textureLod(uLidMap, p * 1.6 + vec2(0.31, 0.62), max(lod + 0.68, 0.0)).r;
   vec2 p2 = vec2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y);
-  float mid = textureLod(uLidMap, p2 * 7.9 + 0.37, max(lod + 2.98, 0.0)).r;
-  float small = textureLod(uLidMap, p2.yx * 4.7 + vec2(0.63, 0.18), max(lod + 2.23, 0.0)).g;
-  float h = 0.45 * big + 0.3 * mid + 0.25 * small;
-  if (fine) h += 0.14 * (textureLod(uLidMap, p.yx * 27.0 + 0.11, max(lod + 4.75, 0.0)).r - 0.3) * (1.0 - smoothstep(4.0, 7.0, lod + 4.75));
-  return vec2(smoothstep(0.04, 0.5, big), h);
+  float mid = textureLod(uLidMap, p2 * 5.3 + 0.37, max(lod + 2.41, 0.0)).r;
+  float small = textureLod(uLidMap, p2.yx * 13.0 + vec2(0.63, 0.18), max(lod + 3.7, 0.0)).r;
+  // Between the banks lies lower cloud in small heads.
+  float low = textureLod(uLidMap, p2 * 8.3 + vec2(0.21, 0.77), max(lod + 3.05, 0.0)).g;
+  float h = 0.4 * big + 0.3 * mid + 0.2 * small + 0.1 * low;
+  if (fine) h += 0.12 * (textureLod(uLidMap, p.yx * 31.0 + 0.11, max(lod + 4.95, 0.0)).r - 0.3) * (1.0 - smoothstep(4.0, 7.0, lod + 4.95));
+  return vec2(big * (0.7 + 0.3 * mid), h);
 }
 
 // How much cloud stands at a place of the deck, over nothing: the deck is thickest about its last heads and thins away from them, and
-// 'open' is how much of it the height of the lens has opened. The banks stay longest, and their edges are those of their heads.
+// 'open' is how much of it the height of the lens has opened. The banks stay longest, and their edges are those of the photographs.
 float lidBody(vec2 p, vec2 h, float open) {
   float m = 1.1 - 1.75 * length(p - LID_LAST);
-  return m + 0.9 * h.x + 0.3 * (h.y - 0.3) - open;
+  return m + 0.9 * smoothstep(0.03, 0.42, h.x) - open;
 }
 
 // How open the deck is to a lens at a height: whole while the lens is in it and just over it, then gaps open as the lens sees more of
@@ -184,7 +187,9 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       h = lidHeads(q, lod, true);
     }
     float body = lidBody(q, h, open);
-    float alpha = smoothstep(0.0, 0.22, body);
+    float alpha = smoothstep(0.0, 0.3, body);
+    // Once the lens is high enough for gaps to open, no cloud stands where the photograph has none: the deck leaves no veil behind it.
+    alpha *= mix(1.0, smoothstep(0.02, 0.2, h.x), smoothstep(0.11, 0.45, above));
     if (alpha > 0.0) {
       // One low sun: a head is lit where the cloud a little way toward the sun stands no higher, and in its own shade on the other side.
       vec2 hs = lidHeads(q + sunSide * 0.02, lod + 0.5, false);
@@ -192,17 +197,21 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       vec2 hb = lidHeads(q + sunSide * 0.06, lod + 1.5, false);
       // Slow swells in the top of the deck, wider than the heads: no place of it is one flat tone.
       float swell = 0.6 * vnoise(q * 23.0 + 3.7) + 0.4 * vnoise(q * 61.0 + 8.1);
-      float lit = 0.42 * h.y + 1.3 * (h.y - hs.y) + 1.5 * (h.y - hf.y) + 1.0 * (h.y - hb.y);
+      // The photographs are of cloud in the light: where they are bright a head stands in the sun, where they are dark lies a fold.
+      // Near the deck the heads of every size tell; from high over it, the banks as the photographs have them, with their own soft light.
+      float far = smoothstep(0.15, 0.6, above);
+      float lit = mix(0.6 * h.y + 0.12 * h.x, 0.08 + 0.8 * h.x + 0.25 * (h.y - 0.3), far) + mix(1.0, 0.45, far) * (1.0 * (h.y - hs.y) + 1.0 * (h.y - hf.y) + 0.9 * (h.y - hb.y));
       // A head throws its shade on the lower cloud behind it.
       lit -= 0.3 * smoothstep(0.08, 0.3, hb.y - h.y);
-      // The edge of the deck toward the sun is lit and the edge away from it is in shade.
+      // A bank is lit on its side toward the sun and in its own shade on the other, and so is the edge of the deck.
+      lit += 1.3 * clamp(h.x - hs.x, -0.3, 0.3) + 0.9 * clamp(h.x - hb.x, -0.3, 0.3);
       float edge = clamp(body - lidBody(q + sunSide * 0.02, hs, open), -0.4, 0.4);
-      lit += (edge > 0.0 ? 1.1 : 1.6) * edge * (1.0 - smoothstep(0.25, 0.9, body));
+      lit += (edge > 0.0 ? 0.8 : 1.3) * edge * (1.0 - smoothstep(0.25, 0.9, body));
       // The low cloud between the heads lies in their shade, and is not one tone either.
-      lit = clamp(max(lit, -0.06) + 0.14 + 0.3 * swell, 0.0, 1.0);
+      lit = clamp(max(lit, -0.04) + 0.06 + 0.24 * swell, 0.0, 1.0);
       // The shade of a bank is not one blue: the light that comes through the cloud warms it where the bank is heaped.
       vec3 shade = mix(uLidShade, uLidInside * 1.25, 0.5 * smoothstep(0.35, 0.95, h.y));
-      vec3 colour = mix(shade, uLidSunlit * 1.3, lit);
+      vec3 colour = mix(shade, uLidSunlit * 1.22, smoothstep(0.0, 0.9, lit));
       // Where the cloud is thin the light goes through it: a veil is pale, not a sheet of shade.
       colour = mix(colour, mix(uLidShade, uLidSunlit, 0.42 + 0.4 * lit), 0.7 * (1.0 - smoothstep(0.1, 0.9, alpha)));
       // Inside the deck and just over it the cloud is the white before the glass, with no more than a breath of the heads in it.
@@ -221,7 +230,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     vec2 q = g + sunSide * 0.42 * (LID_TOP - floorA);
     float lod = log2(max(reach * (camA - floorA) * LID_TILE, 1.0));
     vec2 h = lidHeads(q, lod + 1.0, false);
-    tr *= 1.0 - 0.75 * shadeIn * smoothstep(0.0, 0.3, lidBody(q, h, open));
+    tr *= 1.0 - 0.9 * shadeIn * smoothstep(0.0, 0.3, lidBody(q, h, open)) * mix(1.0, smoothstep(0.02, 0.2, h.x), smoothstep(0.11, 0.45, above));
   }
   return vec4(sum, tr);
 }`;
