@@ -14,6 +14,12 @@ uniform sampler2D uBodyLight;
 // How strongly the relief of the body is lit from orbit, how long its ranges' shadows are drawn, and how much finer it is read.
 uniform vec4 uBodyRelief2;
 // The plate of the hips from orbit: the heights between which its salt ends, and how much thinner the red mark is drawn.
+// The view heights, km, between which the old maps give way to the body's pictures: low, while the rise is still fast, and
+// done before it slows, so the change is under the motion and nothing dissolves on a frame that stands.
+#define JOIN_FROM 700.0
+#define JOIN_TO 1150.0
+// How bright the surf line stands from orbit.
+#define SURF_SEEN 1.0
 #define PAN_LOW 0.135
 #define PAN_HIGH 0.165
 #define PAN_THIN 0.12
@@ -31,7 +37,7 @@ export const BODY_BIAS = /* glsl */ `
 /** After the maps are read: how far the body has come together, and its own colour, relief and light. */
 export const BODY_READ = /* glsl */ `
 #ifdef BODY
-  float joined = smoothstep(940.0, 1380.0, uViewKm);
+  float joined = smoothstep(JOIN_FROM, JOIN_TO, uViewKm);
   vec3 body = ground;
 #ifndef BODYONLY
   body = readWide(uBodyMap, clamp(uvWide, 0.0, 1.0), orbitBias).rgb;
@@ -144,3 +150,18 @@ export const BODY_VENTS = /* glsl */ `
   }
 #endif
 `;
+
+/** From orbit the surf is a white line that can be seen: broader than a pixel, bright, on the reaches the open sea beats on (headlands and straight
+ *  coasts, not the heads of bays) and not on the others, never up a river or on shut water. */
+export const BODY_SURF = /* glsl */ `
+#ifdef BODY
+  if (joined > 0.0 && high && coastKm <= 0.0 && -coastKm < 2.4 * lineKm) {
+    float beaten = (1.0 - smoothstep(0.25, 0.31, broadB)) * smoothstep(0.42, 0.64, readTile(uCloudTile, xz / 230.0 + vec2(0.63, 0.21) + uTime * vec2(0.0004, 0.0003), 1.0 / 230.0, 0.0).b) * smoothstep(0.3, 0.55, vnoise(xz / 9.0 + uTime * 0.05));
+    float breaker = (1.0 - smoothstep(0.6 * lineKm, 2.2 * lineKm, -coastKm)) * (1.0 - land) * (1.0 - river) * (1.0 - drowned) * beaten * coastSeen * (1.0 - shut) * smoothstep(1.3, 1.8, lakeFar);
+    surf = max(surf, SURF_SEEN * breaker * joined);
+  }
+#endif
+`;
+
+/** The view height, km, from which the program that crosses to the body's pictures draws (JOIN_FROM above). */
+export const BODY_FROM = 700;

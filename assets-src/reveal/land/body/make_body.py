@@ -318,7 +318,7 @@ def outputs():
     e_low = ndimage.gaussian_filter(e, 1.2 * px)
     s_lava = np.clip(smooth(0.5, 0.7, p1) + 0.95 * smooth(0.25, 0.6, near_heart * (0.6 + 0.8 * mott)), 0.0, 1.0)
     w_lava = smooth(-0.03, 0.03, 0.015 + 0.15 * s_lava + 0.03 * (mott - 0.5) - e_low) * smooth(0.0, 0.12, s_lava)
-    w_rust = np.clip(0.35 * smooth(0.57, 0.7, p3) * (1.0 - smooth(2400.0, 2900.0, fx)) + smooth(0.3, 0.7, near_throat) + 0.22 * smooth(0.3, 0.7, east_hips * (0.5 + mott)), 0.0, 1.0) * (1.0 - w_lava)
+    w_rust = np.clip(0.6 * smooth(0.5, 0.68, p3) * (1.0 - smooth(2400.0, 2900.0, fx)) + smooth(0.3, 0.7, near_throat) + 0.22 * smooth(0.3, 0.7, east_hips * (0.5 + mott)), 0.0, 1.0) * (1.0 - w_lava)
     s_dune = smooth(0.5, 0.7, p2)
     w_dune = smooth(-0.03, 0.03, 0.01 + 0.1 * s_dune + 0.03 * (mott - 0.5) - e_low) * smooth(0.0, 0.25, s_dune) * (1.0 - w_lava) * (1.0 - 0.7 * w_rust)
     w_olive = smooth(0.5, 0.64, 1.0 - p1) * (1.0 - w_dune) * (1.0 - w_rust)
@@ -326,7 +326,7 @@ def outputs():
     rust = srgb(88, 52, 40)
     dune = srgb(100, 82, 58)
     olive = srgb(60, 63, 45)
-    fan = srgb(80, 62, 49)
+    fan = srgb(84, 60, 46)
     growth = srgb(30, 44, 35)
     slate = srgb(60, 58, 57)
     salt = srgb(206, 201, 190)
@@ -389,6 +389,13 @@ def outputs():
     colour = mixc(country, rock, np.maximum(smooth(0.13, 0.36, e + 0.25 * np.maximum(ridge, 0.0) * 4.0), np.clip(BODYW * 1.2 * body, 0.0, 1.0) * (1.0 - 0.9 * lesser)))
     # The coast: a pale hairline of beach on low shores, dark rock where the land meets the sea steep.
     low_shore = (1.0 - smooth(0.02, 0.07, ndimage.gaussian_filter(e, 2.0 * px))) * smooth(0.42, 0.56, fbm((H, W), rng, 120 * px, 3))
+    # The coastal plain: dark wet growth and grey flats behind the beach, deep in one reach and a strip in the next, so no low
+    # shore runs to the water as one fill.
+    reach = 8.0 + 40.0 * fbm((H, W), np.random.default_rng(SEED + 11), 90 * px, 3)
+    coastal = (1.0 - smooth(0.3 * reach, reach, d_shore)) * (1.0 - smooth(0.05, 0.14, e_low)) * dom
+    tide = smooth(0.42, 0.6, fbm((H, W), np.random.default_rng(SEED + 12), 26 * px, 4))
+    colour = mixc(colour, srgb(38, 50, 40), 0.7 * coastal * tide)
+    colour = mixc(colour, srgb(74, 68, 60), 0.5 * coastal * (1.0 - tide))
     beach = (1.0 - smooth(0.6, 2.2, d_shore)) * low_shore * dom
     colour = mixc(colour, sand, 0.85 * beach)
     steep_shore = (1.0 - smooth(1.0, 5.0, d_shore)) * smooth(0.05, 0.14, ndimage.gaussian_filter(e, 2.0 * px))

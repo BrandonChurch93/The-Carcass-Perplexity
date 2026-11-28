@@ -10,7 +10,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
 import { LEVELS, pairFor, type Level } from './levels';
 import { OCEAN_GLSL, oceanUniforms } from './ocean';
-import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PAN, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_VENTS, BODY_WET } from './body';
+import { BODY_BIAS, BODY_CAST, BODY_FROM, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PAN, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_SURF, BODY_UNIFORMS, BODY_VENTS, BODY_WET } from './body';
 
 // The window of the first approved picture in the master (references/approved/7-reveal/pullback.json): the bed map covers it.
 const BED = { x: 1126.18, y: 1498.28, w: 293.34, h: 165.09 };
@@ -1214,6 +1214,7 @@ ${BODY_VENTS}
   float surfAt = 0.0;
   if (shoreNear) surfAt = smoothstep(0.45, 0.7, readTile(uCloudTile, xz / 230.0 + vec2(0.63, 0.21) + uTime * vec2(0.0004, 0.0003), 1.0 / 230.0, 0.0).b) * smoothstep(0.35, 0.6, vnoise(xz / 9.0 + uTime * 0.05));
   float surf = (1.0 - smoothstep(0.15 * lineKm, 0.8 * lineKm, -coastKm)) * step(coastKm, 0.0) * (1.0 - land) * (1.0 - river) * (1.0 - drowned) * surfAt * coastSeen * (1.0 - shut) * smoothstep(1.3, 1.8, lakeFar);
+${BODY_SURF}
   water = mix(water, vec3(0.62, 0.66, 0.68) * light / 3.14159, 0.7 * surf);
   vec3 colour = mix(water, earth + 0.4 * glare, land);
   // (By night the low coast has no line: the wet plain is a shade over the sea beside it and the land rises out of that into the moon's light.)
@@ -1366,7 +1367,7 @@ export function create(ctx: Context): Piece {
       const window = rise.at(RISE_FIRST + seconds * FPS);
       const halfHeight = halfHeightAt(Math.max(0, seconds));
       const seenWhole = halfHeight >= 1380;
-      sheet.material = halfHeight < 600 ? material : seenWhole ? (seconds > LIVE_FROM ? wholeNight : whole) : seconds > LIVE_FROM ? night : halfHeight >= 940 ? crossing : orbit;
+      sheet.material = halfHeight < 600 ? material : seenWhole ? (seconds > LIVE_FROM ? wholeNight : whole) : seconds > LIVE_FROM ? night : halfHeight >= BODY_FROM ? crossing : orbit;
       const width = window.w;
       // (As the rise begins the camera may stand off its path: the maps are chosen for where it stands.)
       const [offX, offZ] = startOffsetAt(RISE_FIRST + seconds * FPS);
