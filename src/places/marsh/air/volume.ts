@@ -100,7 +100,7 @@ export const BANKS = {
     { from: 0, amount: 0.2, start: [70, 260] },
     { from: (5833 - 5618) / 60, amount: 0.7, start: [16, 60] },
     { from: (6048 - 5618) / 60, amount: 0.2, start: [60, 220] },
-    { from: (6263 - 5618) / 60, amount: 1.0, start: [36, 130] },
+    { from: (6263 - 5618) / 60, amount: 1.0, start: [20, 70] },
     { from: (6586 - 5618) / 60, amount: 0.85, start: [20, 64] },
   ] as { from: number; amount: number; start: [number, number] }[],
 };
