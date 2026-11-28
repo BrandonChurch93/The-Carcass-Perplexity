@@ -1233,7 +1233,7 @@ export function create(ctx: Context): Piece {
         const hard = (0.9 + 0.6 * Math.min(1, tuft.shake)) * Math.sqrt(f.size) * (0.7 + 0.6 * rand(key, born + 4));
         // Off to one side of the neck or the other, and ahead of it more often than back.
         const way = P.yaw + P.headYaw + (rand(key, born + 5) < 0.5 ? 1 : -1) * (0.3 + 2.8 * rand(key, born + 7) * (0.4 + 0.6 * rand(key, born + 8)));
-        thrown.put(tuft.x, LEVELS.pool + 0.01, tuft.z, age, way, 0.9 + 1.2 * rand(key, born + 9), (0.8 + 1.3 * rand(key, born + 11)) * hard, (1.9 + 1.4 * rand(key, born + 13)) * hard, life, rand(key, born + 15), 0.95, (0.12 + 0.18 * rand(key, born + 17)) * f.size);
+        thrown.put(tuft.x, LEVELS.pool + 0.01, tuft.z, age, way, 0.9 + 1.2 * rand(key, born + 9), (1.0 + 1.4 * rand(key, born + 11)) * hard, (1.4 + 1.3 * rand(key, born + 13)) * hard, life, rand(key, born + 15), 0.95, (0.12 + 0.18 * rand(key, born + 17)) * f.size);
       }
     } else if (f.habit === 2 && lp === null) {
       const step = RUN_STEP * f.size;
@@ -1254,7 +1254,7 @@ export function create(ctx: Context): Piece {
             // One out to each side and ahead as the foot goes in, and one up and back off the foot behind it.
             const way = lands.yaw + (k === 0 ? 0.75 + 0.5 * rand(key, n + 5) : k === 1 ? -0.75 - 0.5 * rand(key, n + 5) : Math.PI + 0.6 * (rand(key, n + 5) - 0.5));
             const late = k === 2 ? 0.07 : 0;
-            thrown.put(x, level, z, age - late, way, k === 2 ? 1.1 : 1.7 + 0.5 * rand(key, n + 9), (k === 2 ? 1.6 : 2.4 + 0.9 * rand(key, n + 11)) * hard, (k === 2 ? 3.0 : 2.0 + 0.8 * rand(key, n + 13)) * hard, 0.62 + 0.2 * rand(key, n + 3), rand(key, n + 15), 2.4, 0.12 * f.size);
+            thrown.put(x, level, z, age - late, way, k === 2 ? 1.2 : 2.0 + 0.6 * rand(key, n + 9), (k === 2 ? 1.6 : 2.7 + 0.9 * rand(key, n + 11)) * hard, (k === 2 ? 2.8 : 1.6 + 0.7 * rand(key, n + 13)) * hard, 0.66 + 0.2 * rand(key, n + 3), rand(key, n + 15), 3, 0.12 * f.size);
           }
         }
       }
