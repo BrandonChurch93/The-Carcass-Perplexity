@@ -278,7 +278,7 @@ void main() {
   float scar = (1.0 - smoothstep(0.0, 0.1, abs(torn - 0.5))) * smoothstep(0.52, 0.68, n3(at * 1.7 + 31.0));
   dirt = clamp(dirt + aged * (0.9 * streak + 0.9 * scar), 0.0, 1.0);
 #endif
-  skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt);
+  skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt * (1.0 - 0.45 * under05));
   // The hide is rubbed pale on the bones and lies in its own shade between the ribs and in the hollow of the flank.
   skin *= 1.0 + (1.0 - smoothstep(0.022, 0.05, px)) * (0.2 * bone - 0.3 * hollow - 0.11 * (0.4 + 1.2 * w2) * (ribs * (0.5 + w1) - ribbed));
   // Each a tone of its own.
@@ -320,7 +320,7 @@ void main() {
   if (near > 0.0) {
     damp = max((1.0 - smoothstep(0.7, 1.25, above + 0.4 * ragged)) * leg, under * smoothstep(0.3, 0.6, n3(at * vec3(2.0, 2.0, 5.0) + 41.0) + 0.5 * under));
     // The two under the last camera have waded to the belly: the hide is dark and damp up the haunch and the flank, to a ragged line.
-    damp = max(damp, 0.55 * under05 * trunk * (1.0 - smoothstep(1.3, 1.72, vRest.y + 0.3 * (ragged - 0.5) + 0.3 * (drift - 0.5))));
+    damp = max(damp, 0.4 * under05 * trunk * (1.0 - smoothstep(1.3, 1.72, vRest.y + 0.3 * (ragged - 0.5) + 0.3 * (drift - 0.5))));
 #ifndef BACK
     // Drops hang under the belly and at the back of the legs, swell, and fall: each in a place of its own, each at its own time.
     vec2 cell = vec2(vRest.z * 34.0, vRest.x * 34.0 + vRest.y * 9.0);
@@ -446,12 +446,12 @@ export function create(ctx: Context): Piece {
   const drawn: Drawn[] = animals.map((animal, i) => {
     const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
-    const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.5);
+    const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.68);
     // z: the four of the shore shot, the first four of the list, are seen long and near: they carry the marks of their years.
     const pose = new THREE.Vector3(0, index < CLOSE ? 0 : 0.45, index < 4 ? 1 : 0);
     // Three hides in the herd: pale cream, sand going to rust, and a grey dun. Together they are as light as the one hide was.
     const kindOf = (animal.own * 37.7) % 1;
-    const tone = animal.level !== undefined ? new THREE.Vector3(1.17, 1.12, 0.97) : index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.1, 1.08, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.0, 0.95, 0.88) : new THREE.Vector3(0.86, 0.87, 0.9);
+    const tone = animal.level !== undefined ? new THREE.Vector3(1.21, 1.2, 1.09) : index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.1, 1.08, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.0, 0.95, 0.88) : new THREE.Vector3(0.86, 0.87, 0.9);
     const near = new THREE.Vector2(index < CLOSE ? 1 : 0, 0);
     const material = new THREE.ShaderMaterial({
       uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, uTone: { value: tone }, uKin: { value: near }, tHide, tFolds, tSlope },
